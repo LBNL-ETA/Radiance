@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.35 2003/10/04 14:39:53 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.36 2004/03/28 16:31:14 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -80,7 +80,7 @@ double  minweight = 2e-3;		/* minimum ray weight */
 char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
-double  ambacc = 0.1;			/* ambient accuracy */
+double  ambacc = 0.15;			/* ambient accuracy */
 int  ambres = 256;			/* ambient resolution */
 int  ambdiv = 1024;			/* ambient divisions */
 int  ambssamp = 512;			/* ambient super-samples */

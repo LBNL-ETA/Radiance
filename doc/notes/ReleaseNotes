@@ -1264,3 +1264,7 @@ need it, so input commands will not receive a hangup signal.
 
 Wrote ra_bmp program to convert to and from Windows BMP files (finally).
 It's the most horrible image format I've ever seen, and I've seen a lot.
+
+Increased -aa default value for all renderers (and also -ad and -as in
+rview) at Schorsch's suggestion.  I think this undid my earlier decrease
+of -aa last time, which I guess was ill-considered.
