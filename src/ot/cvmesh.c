@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.6 2003/06/26 00:58:10 schorsch Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.7 2003/09/18 16:53:53 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -301,9 +301,10 @@ cvmeshbounds()			/* set mesh boundaries */
 		ourmesh->uvlim[1][0] = ourmesh->uvlim[1][1] = 0.;
 	} else {
 		for (i = 0; i < 2; i++) {
-			double	marg;
-			marg = 1e-6*(ourmesh->uvlim[1][i] -
-					ourmesh->uvlim[0][i]);
+			double	marg;		/* expand past endpoints */
+			marg = (2./(1L<<(8*sizeof(uint16)))) *
+					(ourmesh->uvlim[1][i] -
+					 ourmesh->uvlim[0][i]);
 			ourmesh->uvlim[0][i] -= marg;
 			ourmesh->uvlim[1][i] += marg;
 		}

@@ -1189,3 +1189,7 @@ Added -dF and -dD options to pvalue for byte-swapped floats and
 doubles, respectively.
 
 Changed meta2tga to output correct colors.
+
+****** COMPATIBILITY CHANGE ********
+Changed local coordinate index from 32-bits to 16-bits, which requires
+that Radiance mesh files be recompiled.

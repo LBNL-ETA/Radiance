@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.8 2003/07/30 10:11:06 schorsch Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.9 2003/09/18 16:53:53 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -145,7 +145,7 @@ register MESHPATCH	*pp;
 	} else
 		pp->norm = NULL;
 	if (flags & MT_UV) {
-		pp->uv = (uint32 (*)[2])calloc(pp->nverts, 2*sizeof(uint32));
+		pp->uv = (uint16 (*)[2])calloc(pp->nverts, 2*sizeof(uint16));
 		if (pp->uv == NULL)
 			goto nomem;
 	} else
@@ -162,7 +162,7 @@ register MESHPATCH	*pp;
 	if (flags & MT_UV)
 		for (i = 0; i < pp->nverts; i++)
 			for (j = 0; j < 2; j++)
-				pp->uv[i][j] = mgetint(4);
+				pp->uv[i][j] = mgetint(2);
 					/* local triangles */
 	pp->ntris = mgetint(2);
 	if (pp->ntris < 0 || pp->ntris > 512)
