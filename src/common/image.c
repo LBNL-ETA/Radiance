@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.26 2004/01/02 11:36:26 schorsch Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.27 2004/02/12 18:55:50 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: image.c,v 2.26 2004/01/02 11:36:26 schorsch Ex
 #include "copyright.h"
 
 #include  "rtio.h"
+#include  "paths.h"
 #include  "view.h"
 
 

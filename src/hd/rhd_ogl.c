@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.24 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.25 2004/02/12 18:55:50 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -28,6 +28,7 @@ static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.24 2004/01/01 11:21:55 schorsch 
 #include "standard.h"
 #include "rhd_odraw.h"
 #include "rhdisp.h"
+#include "paths.h"
 #ifdef DOBJ
 #include "rhdobj.h"
 #endif

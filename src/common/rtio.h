@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.6 2003/11/14 17:22:06 schorsch Exp $ */
+/* RCSid $Id: rtio.h,v 3.7 2004/02/12 18:55:50 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -11,12 +11,9 @@
 #include  <fcntl.h>
 #include  <string.h>
 
-#include  "paths.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 					/* defined in badarg.c */
 extern int	badarg(int ac, char **av, char *fl);
 					/* defined in expandarg.c */

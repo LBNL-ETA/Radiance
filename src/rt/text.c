@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.23 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.24 2004/02/12 18:55:50 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: text.c,v 2.23 2003/07/27 22:12:03 schorsch Exp
 #include "copyright.h"
 
 #include  "ray.h"
+
+#include  "paths.h"
 
 #include  "otypes.h"
 

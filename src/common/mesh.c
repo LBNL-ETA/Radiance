@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.16 2004/01/30 00:08:31 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.17 2004/02/12 18:55:50 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: mesh.c,v 2.16 2004/01/30 00:08:31 greg Exp $";
 #include "rtio.h"
 #include "rtmath.h"
 #include "rterror.h"
+#include "paths.h"
 #include "octree.h"
 #include "object.h"
 #include "otypes.h"
