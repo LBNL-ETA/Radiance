@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.20 2003/10/21 19:19:28 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.21 2004/10/30 04:59:41 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -97,7 +97,7 @@
     #define PATHSEP		':'
 	#define CURDIR		'.'
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
-    #define TEMPLATE	"/usr/tmp/rtXXXXXX"
+    #define TEMPLATE	"/tmp/rtXXXXXX"
     #define TEMPLEN		17
     #define ULIBVAR		"RAYPATH"
     #ifndef DEFPATH

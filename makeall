@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.11 2003/12/11 23:42:54 greg Exp $
+# RCSid $Id: makeall,v 1.12 2004/10/30 04:59:40 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -264,13 +264,6 @@ if (! $inpath ) then
 	echo 'For Bourne shell users, put the following into $HOME/profile'
 	echo "	PATH=$idir"':$PATH'
 	echo "	export PATH"
-endif
-if (! -d /usr/tmp) then
-	ln -s /tmp /usr/tmp
-	if ($status) then
-		echo ""
-		echo "IMPORTANT: Execute 'sudo ln -s /tmp /usr/tmp'"
-	endif
 endif
 else
 cd src
