@@ -48,6 +48,7 @@ PROGS = (
 ('ra_avs',   ['ra_avs.c'],    ['rtpic','rtio','rtmem']),
 ('ra_ps',    ['ra_ps.c'],     ['rtpic','rtio','rtargs','rtmem']),
 ('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
+('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtio','rtmem']),
 ('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
 ('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
 ('ra_bn',    ['ra_bn.c'],     ['rtpic','rtio','rtmem']),
