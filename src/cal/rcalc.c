@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.14 2004/10/11 10:02:15 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.15 2004/12/09 22:09:40 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -634,10 +634,10 @@ getrec(void)				/* get next record from file */
 	register struct field  *f;
 
 	while (ipb.chr != EOF) {
-		eatline = !igneol && ipb.chr != '\n';
 		if (blnkeq)             /* beware of nbsynch() */
 			while (isblnk(ipb.chr))
 				resetinp();
+		eatline = (!igneol && ipb.chr != '\n');
 		clearrec();		/* start with fresh record */
 		for (f = inpfmt; f != NULL; f = f->next)
 			if (getfield(f) == -1)
