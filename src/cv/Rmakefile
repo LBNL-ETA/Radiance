@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.19 2003/03/10 19:38:19 greg Exp $
+# RCSid $Id: Rmakefile,v 2.20 2003/06/05 17:04:19 schorsch Exp $
 #
 # Makefile for conversion programs
 #
@@ -16,6 +16,8 @@ MLIB = -lm
 INSTDIR = /usr/local/bin
 
 LIBDIR = /usr/local/lib/ray
+
+MGF_LIB = ../lib/libmgf.a
 
 PROGS = thf2rad ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv
@@ -54,13 +56,13 @@ tmesh2rad:	tmesh2rad.o
 obj2rad:	obj2rad.o trans.o
 	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o -lrt $(MLIB)
 
-mgf2rad:	MGF_LIB mgf2rad.o
+mgf2rad:	$(MGF_LIB) mgf2rad.o
 	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o -lmgf -lrt $(MLIB)
 
 rad2mgf:	rad2mgf.o
 	$(CC) $(CFLAGS) -o rad2mgf rad2mgf.o -lrt $(MLIB)
 
-mgf2meta:	MGF_LIB mgf2meta.o
+mgf2meta:	$(MGF_LIB) mgf2meta.o
 	$(CC) $(CFLAGS) -o mgf2meta mgf2meta.o -lmgf -lmeta -lrt $(MLIB)
 
 mgfilt:
@@ -75,7 +77,7 @@ mgf2inv:
 		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
 	mv mgf2inv ..
 
-MGF_LIB:
+$(MGF_LIB):
 	cd mgflib ; rm -f libmgf.a ; \
 	make libmgf.a CC=$(CC) \
 		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
