@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.15 2004/09/14 02:53:50 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.16 2005/02/09 00:00:17 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -174,14 +174,19 @@ register FILE  *fp;
 		    code &= 127;
 		    if ((val = getc(fp)) == EOF)
 			return -1;
+		    if (j + code > len)
+		    	return -1;	/* overrun */
 		    while (code--)
 			scanline[j++][i] = val;
-		} else			/* non-run */
+		} else {		/* non-run */
+		    if (j + code > len)
+		    	return -1;	/* overrun */
 		    while (code--) {
 			if ((val = getc(fp)) == EOF)
 			    return -1;
 			scanline[j++][i] = val;
 		    }
+		}
 	    }
 	return(0);
 }
