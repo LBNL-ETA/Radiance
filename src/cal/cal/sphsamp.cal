@@ -1,6 +1,7 @@
-{ RCSid $Id: sphsamp.cal,v 1.2 2005/02/15 23:36:10 greg Exp $ }
+{ RCSid $Id: sphsamp.cal,v 1.3 2005/02/15 23:45:14 greg Exp $ }
 {
-	Uniform sampling of sphere
+	Jittered sampling of a sphere
+
 	2/15/2005	G. Ward
 
 	Constant:
@@ -8,8 +9,9 @@
 	Input:
 		i -		sample number [0,N-1]
 	Output:
-		theta	- polar angle (radians)
-		phi	- azimuthal angle (radians)
+		theta	- polar angle (0-PI)
+		phi_un	- azimuthal angle (unnormalized)
+		phi	- azimuthal angle (0-2*PI)
 		Dx	- X-component of direction vector
 		Dy	- Y-component of direction vector
 		Dz	- Z-component of direction vector
@@ -18,10 +20,13 @@ S : .7;			{ jitter amount (0-1) }
 
 k : 2*sqrt(PI/N);	{ k^2 is solid angle of each sample }
 
+mod(n,d) : n - floor(n/d)*d;
+
 alpha0 = asin(2/N*(i+.5) - 1);
 
 theta = alpha0 + PI/2 + k*S*(rand(.35*i+10.3) - .5);
-phi = sqrt(PI*N)*alpha0 + k*S*(rand(-.83*i-17.9) - .5);
+phi_un = sqrt(PI*N)*alpha0 + k*S*(rand(-.83*i-17.9) - .5);
+phi = mod(phi_un, 2*PI);
 
 sint = sin(theta);
 Dx = cos(phi)*sint;
