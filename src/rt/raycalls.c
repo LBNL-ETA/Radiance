@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.7 2003/09/24 14:55:54 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.8 2003/10/04 14:39:53 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -121,8 +121,8 @@ void	(*addobjnotify[8])() = {ambnotify, NULL};
 int	do_irrad = 0;			/* compute irradiance? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
-double	shadthresh = .05;		/* shadow threshold */
-double	shadcert = .5;			/* shadow certainty */
+double	shadthresh = .03;		/* shadow threshold */
+double	shadcert = .75;			/* shadow certainty */
 int	directrelay = 2;		/* number of source relays */
 int	vspretest = 512;		/* virtual source pretest density */
 int	directvis = 1;			/* sources visible? */
@@ -138,16 +138,16 @@ double	specjitter = 1.;		/* specular sampling jitter */
 
 int	backvis = 1;			/* back face visibility */
 
-int	maxdepth = 6;			/* maximum recursion depth */
-double	minweight = 4e-3;		/* minimum ray weight */
+int	maxdepth = 8;			/* maximum recursion depth */
+double	minweight = 2e-3;		/* minimum ray weight */
 
 char	*ambfile = NULL;		/* ambient file name */
 COLOR	ambval = BLKCOLOR;		/* ambient value */
 int	ambvwt = 0;			/* initial weight for ambient value */
-double	ambacc = 0.2;			/* ambient accuracy */
-int	ambres = 128;			/* ambient resolution */
-int	ambdiv = 512;			/* ambient divisions */
-int	ambssamp = 0;			/* ambient super-samples */
+double	ambacc = 0.1;			/* ambient accuracy */
+int	ambres = 256;			/* ambient resolution */
+int	ambdiv = 1024;			/* ambient divisions */
+int	ambssamp = 512;			/* ambient super-samples */
 int	ambounce = 0;			/* ambient bounces */
 char	*amblist[AMBLLEN+1];		/* ambient include/exclude list */
 int	ambincl = -1;			/* include == 1, exclude == 0 */
@@ -339,8 +339,8 @@ RAYPARAMS	*rp;
 
 	rp->do_irrad = 0;
 	rp->dstrsrc = 0.0;
-	rp->shadthresh = .05;
-	rp->shadcert = .5;
+	rp->shadthresh = .03;
+	rp->shadcert = .75;
 	rp->directrelay = 2;
 	rp->vspretest = 512;
 	rp->directvis = 1;
