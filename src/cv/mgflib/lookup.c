@@ -1,11 +1,9 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 1.10 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 1.11 2003/11/21 07:15:29 greg Exp $";
 #endif
 /*
  * Table lookup routines
  */
-
-#include "copyright.h"
 
 #include <stdio.h>
 #include <stdlib.h>

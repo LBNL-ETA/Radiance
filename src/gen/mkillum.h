@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.5 2003/11/16 10:29:38 schorsch Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.6 2003/11/21 07:15:30 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -7,13 +7,11 @@
 
 #include  "standard.h"
 #include  "object.h"
-#include  "otypes.h"
 #include  "rtprocess.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 				/* illum flags */
 #define  IL_LIGHT	0x1		/* light rather than illum */
 #define  IL_COLDST	0x2		/* use color distribution */
@@ -50,5 +48,9 @@ extern void roundout(struct illum_args  *il, float  *da, int  n, int  m);
 #ifdef __cplusplus
 }
 #endif
+
+#define FUN_ARGLIST	OBJREC *, struct illum_args *, struct rtproc *, char *
+#include  "otypes.h"
+
 #endif /* _RAD_MKILLUM_H_ */
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.13 2003/09/15 17:01:52 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.14 2003/11/21 07:15:29 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -17,6 +17,12 @@ typedef struct {
 	int  (*funp)();			/* pointer to function */
 #endif
 }  FUN;
+
+#ifdef FUN_ARGLIST
+extern int  o_default(FUN_ARGLIST);
+#else
+extern int  o_default();
+#endif
 				/* object types in decreasing frequency */
 #define  OBJ_FACE	0		/* polygon */
 #define  OBJ_CONE	1		/* cone */
@@ -103,8 +109,6 @@ extern FUN  ofun[];			/* our type list */
 #define  hasfunc(t)	(ofun[t].flags & (T_F|T_D|T_I))
 #define  hastext(t)	(ofun[t].flags & T_E)
 #define  isflat(t)	((t)==OBJ_FACE || (t)==OBJ_RING)
-
-extern int  o_default();
 
 #define  ALIASKEY	"alias"			/* alias keyword */
 #define  ALIASMOD	"inherit"		/* inherit target modifier */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.12 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.13 2003/11/21 07:15:30 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -12,10 +12,11 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.12 2003/11/16 10:29:38 schorsch
 #include  "cone.h"
 #include  "random.h"
 
-//void o_default(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
-void o_face(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
-void o_sphere(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
-void o_ring(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
+
+int o_default(FUN_ARGLIST);
+int o_face(FUN_ARGLIST);
+int o_sphere(FUN_ARGLIST);
+int o_ring(FUN_ARGLIST);
 void raysamp(float res[3], FVECT org, FVECT dir, struct rtproc *rt);
 void rayflush(struct rtproc *rt);
 void mkaxes(FVECT u, FVECT v, FVECT n);
@@ -35,10 +36,11 @@ o_default(	/* default illum action */
 			nm, ofun[ob->otype].funame, ob->oname);
 	error(WARNING, errmsg);
 	printobj(il->altmat, ob);
+	return(1);
 }
 
 
-void
+int
 o_face(		/* make an illum face */
 	OBJREC  *ob,
 	struct illum_args  *il,
@@ -61,8 +63,7 @@ o_face(		/* make an illum face */
 	fa = getface(ob);
 	if (fa->area == 0.0) {
 		freeface(ob);
-		o_default(ob, il, rt, nm);
-		return;
+		return(o_default(ob, il, rt, nm));
 	}
 				/* set up sampling */
 	if (il->sampdens <= 0)
@@ -129,8 +130,7 @@ o_face(		/* make an illum face */
 			rt->nrays = 0;
 			freeface(ob);
 			free((void *)distarr);
-			o_default(ob, il, rt, nm);
-			return;
+			return(o_default(ob, il, rt, nm));
 		    }
 		    for (j = 0; j < 3; j++)
 			org[j] += .001*fa->norm[j];
@@ -152,7 +152,7 @@ o_face(		/* make an illum face */
 }
 
 
-void
+int
 o_sphere(	/* make an illum sphere */
 	register OBJREC  *ob,
 	struct illum_args  *il,
@@ -220,10 +220,11 @@ o_sphere(	/* make an illum sphere */
 		printobj(il->altmat, ob);
 				/* clean up */
 	free((void *)distarr);
+	return(1);
 }
 
 
-void
+int
 o_ring(		/* make an illum ring */
 	OBJREC  *ob,
 	struct illum_args  *il,
@@ -291,6 +292,7 @@ o_ring(		/* make an illum ring */
 				/* clean up */
 	freecone(ob);
 	free((void *)distarr);
+	return(1);
 }
 
 
