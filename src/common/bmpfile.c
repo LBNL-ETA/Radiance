@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.11 2004/07/28 00:17:58 schorsch Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.12 2004/09/14 02:53:50 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -11,6 +11,8 @@ static const char RCSid[] = "$Id: bmpfile.c,v 2.11 2004/07/28 00:17:58 schorsch 
 #include "bmpfile.h"
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#undef putc
 #define getc    getc_unlocked
 #define putc    putc_unlocked
 #endif

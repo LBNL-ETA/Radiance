@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.12 2004/04/29 14:36:49 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.13 2004/09/14 02:53:50 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -15,6 +15,7 @@ static const char RCSid[] = "$Id: readmesh.c,v 2.12 2004/04/29 14:36:49 greg Exp
 #include  "resolu.h"
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
 #define getc    getc_unlocked
 #endif
 

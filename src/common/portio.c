@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.10 2003/12/09 15:51:42 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.11 2004/09/14 02:53:50 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -16,6 +16,8 @@ static const char	RCSid[] = "$Id: portio.c,v 2.10 2003/12/09 15:51:42 greg Exp $
 #include <math.h>
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#undef putc
 #define getc    getc_unlocked
 #define putc    putc_unlocked
 #endif
