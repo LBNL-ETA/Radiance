@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.7 2004/09/17 14:27:33 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.8 2004/09/17 21:43:50 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -500,8 +500,8 @@ ray_pclose(		/* close one or more child processes */
 		ray_pnprocs--;
 		close(r_proc[ray_pnprocs].fd_recv);
 		close(r_proc[ray_pnprocs].fd_send);
-		while (wait(&status) != r_proc[ray_pnprocs].pid)
-			;
+		if (waitpid(r_proc[ray_pnprocs].pid, &status, 0) < 0)
+			status = 127<<8;
 		if (status) {
 			sprintf(errmsg,
 				"rendering process %d exited with code %d",

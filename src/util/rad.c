@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.77 2004/09/09 20:08:21 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.78 2004/09/17 21:43:50 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -472,7 +472,7 @@ static void
 oconv(void)				/* run oconv and mkillum if necessary */
 {
 	static char	illumtmp[] = "ilXXXXXX";
-	char	combuf[PATH_MAX], ocopts[64], mkopts[64];
+	char	combuf[PATH_MAX], ocopts[64], mkopts[1024];
 
 	oconvopts(ocopts);		/* get options */
 	if (octreedate < scenedate) {	/* check date on original octree */
@@ -599,12 +599,17 @@ oconvopts(				/* get oconv options */
 
 static void
 mkillumopts(				/* get mkillum options */
-	register char	*mo
+	char	*mo
 )
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
 
-	*mo = '\0';
+	if (nprocs > 1) {
+		sprintf(mo, " -n %d", nprocs);
+		while (*mo)
+			mo++;
+	} else
+		*mo = '\0';
 	if (vdef(MKILLUM))
 		addarg(mo, vval(MKILLUM));
 }

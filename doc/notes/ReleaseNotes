@@ -1308,3 +1308,5 @@ Antonutto for spotting this problem.
 
 Modified gensky behavior so if time is given with standard time zone
 designation, any -m option is ignored.
+
+Added -n option to mkillum for (shared memory) parallel processing.

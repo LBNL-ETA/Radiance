@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.34 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.35 2004/09/17 21:43:50 greg Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -335,7 +335,7 @@ io_process(void)		/* just act as go-between for actual process */
 				} while ((nr -= n) > 0);
 		}
 	}
-	wait(0);		/* wait for feeder process */ /* XXX platform */
+	waitpid(pid, 0, 0);	/* wait for feeder process */
 	_exit(status);
 formerr:
 	error(USER, "format error in persist file");

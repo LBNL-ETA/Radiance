@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.4 2003/11/11 16:24:06 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.5 2004/09/17 21:43:49 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -67,12 +67,13 @@ SUBPROC *pd
 {
 	int	pid, status;
 
+	if (!pd->running)
+		return(0);
 	close(pd->r);
 	close(pd->w);
 	pd->running = 0;
-	while ((pid = wait(&status)) != -1)
-		if (pid == pd->pid)
-			return(status>>8 & 0xff);
+	if (waitpid(pd->pid, &status, 0) == pd->pid)
+		return(status>>8 & 0xff);
 	return(-1);		/* ? unknown status */
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.19 2003/11/16 10:29:38 schorsch Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.20 2004/09/17 21:43:50 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -31,7 +31,7 @@ int  rtargc = 14;
 char  *myrtopts[] = { "-I-", "-i-", "-ld-", "-ov", "-h-",
 			"-fff", "-y", "0", NULL };
 
-struct rtproc	rt;		/* our rtrace process */
+struct rtproc	rt0;		/* head of rtrace process list */
 
 struct illum_args  thisillum = {	/* our illum and default values */
 		0,
@@ -49,6 +49,8 @@ int	matselect = S_ALL;	/* selection criterion */
 
 FUN	ofun[NUMOTYPE] = INIT_OTYPE;	/* object types */
 
+char	persistfn[] = "pfXXXXXX";	/* persist file name */
+
 int	gargc;			/* global argc */
 char	**gargv;		/* global argv */
 #define  progname	gargv[0]
@@ -58,7 +60,7 @@ int	doneheader = 0;		/* printed header yet? */
 
 int	warnings = 1;		/* print warnings? */
 
-void init(void);
+void init(int np);
 void filter(register FILE	*infp, char	*name);
 void xoptions(char	*s, char	*nm);
 void printopts(void);
@@ -72,13 +74,22 @@ main(		/* compute illum distributions using rtrace */
 	char	*argv[]
 )
 {
+	int	nprocs = 1;
 	char	*rtpath;
 	FILE	*fp;
 	register int	i;
 				/* set global arguments */
 	gargv = argv;
+				/* check for -n option */
+	if (!strcmp(argv[1], "-n")) {
+		nprocs = atoi(argv[2]);
+		if (nprocs <= 0)
+			error(USER, "illegal number of processes");
+		i = 3;
+	} else
+		i = 1;
 				/* set up rtrace command */
-	for (i = 1; i < argc; i++) {
+	for ( ; i < argc; i++) {
 		if (argv[i][0] == '<' && argv[i][1] == '\0')
 			break;
 		rtargv[rtargc++] = argv[i];
@@ -102,13 +113,19 @@ main(		/* compute illum distributions using rtrace */
 			}
 	}
 	gargc = i;
-	rtargc--;
+	if (!strcmp(rtargv[--rtargc], "-defaults"))
+		nprocs = 0;
+	if (nprocs > 1) {	/* add persist file if parallel invocation */
+		rtargv[rtargc++] = "-PP";
+		rtargv[rtargc++] = mktemp(persistfn);
+	}
+				/* add "mandatory" rtrace options */
 	for (i = 0; myrtopts[i] != NULL; i++)
 		rtargv[rtargc++] = myrtopts[i];
+				/* finally, put back final argument */
 	rtargv[rtargc++] = argv[gargc-1];
 	rtargv[rtargc] = NULL;
-				/* just asking for defaults? */
-	if (!strcmp(argv[gargc-1], "-defaults")) {
+	if (!nprocs) {		/* just asking for defaults? */
 		printopts(); fflush(stdout);
 		rtpath = getpath(rtargv[0], getenv("PATH"), X_OK);
 		if (rtpath == NULL) {
@@ -117,13 +134,13 @@ main(		/* compute illum distributions using rtrace */
 			exit(1);
 		}
 		execv(rtpath, rtargv);
-		perror(rtpath);
+		perror(rtpath);	/* execv() should not return */
 		exit(1);
 	}
 	if (gargc < 2 || argv[gargc-1][0] == '-')
 		error(USER, "missing octree argument");
 				/* else initialize and run our calculation */
-	init();
+	init(nprocs);
 	if (gargc+1 < argc)
 		for (i = gargc+1; i < argc; i++) {
 			if ((fp = fopen(argv[i], "r")) == NULL) {
@@ -136,31 +153,49 @@ main(		/* compute illum distributions using rtrace */
 		}
 	else
 		filter(stdin, "standard input");
-	return 0;
+	quit(0);
 }
 
+static void
+killpersist(void)			/* kill persistent process */
+{
+	FILE	*fp = fopen(persistfn, "r");
+	int	pid;
+
+	if (fp == NULL)
+		return;
+	if (fscanf(fp, "%*s %d", &pid) != 1 || kill(pid, SIGALRM) < 0)
+		unlink(persistfn);
+	fclose(fp);
+}
 
 void
-quit(status)			/* exit with status */
-int  status;
+quit(int status)			/* exit with status */
 {
+	struct rtproc	*rtp;
 	int	rtstat;
 
-	rtstat = close_process(&(rt.pd));
-	if (status == 0) {
-		if (rtstat < 0)
-			error(WARNING,
-			"unknown return status from rtrace process");
-		else
-			status = rtstat;
+	if (rt0.next != NULL)		/* terminate persistent rtrace */
+		killpersist();
+					/* clean up rtrace process(es) */
+	for (rtp = &rt0; rtp != NULL; rtp = rtp->next) {
+		rtstat = close_process(&rtp->pd);
+		if (status == 0) {
+			if (rtstat < 0)
+				error(WARNING,
+				"unknown return status from rtrace process");
+			else
+				status = rtstat;
+		}
 	}
 	exit(status);
 }
 
 void
-init(void)				/* start rtrace and set up buffers */
+init(int np)				/* start rtrace and set up buffers */
 {
-	extern int  o_face(), o_sphere(), o_ring();
+	struct rtproc	*rtp;
+	int	i;
 	int	maxbytes;
 					/* set up object functions */
 	ofun[OBJ_FACE].funp = o_face;
@@ -170,22 +205,33 @@ init(void)				/* start rtrace and set up buffers */
 #ifdef SIGPIPE /* not present on Windows */
 	signal(SIGPIPE, quit);
 #endif
-					/* start rtrace process */
-	errno = 0;
-	maxbytes = open_process(&(rt.pd), rtargv);
-	if (maxbytes == 0) {
-		eputs(rtargv[0]);
-		eputs(": command not found\n");
-		exit(1);
+	rtp = &rt0;			/* start rtrace process(es) */
+	for (i = 0; i++ < np; ) {
+		errno = 0;
+		maxbytes = open_process(&rtp->pd, rtargv);
+		if (maxbytes == 0) {
+			eputs(rtargv[0]);
+			eputs(": command not found\n");
+			exit(1);
+		}
+		if (maxbytes < 0)
+			error(SYSTEM, "cannot start rtrace process");
+		if (!i && np > 1)
+			sleep(2);	/* wait for persist file */
+		rtp->bsiz = maxbytes/(6*sizeof(float));
+		rtp->buf = (float *)malloc(6*sizeof(float)*rtp->bsiz--);
+		rtp->dest = (float **)calloc(rtp->bsiz, sizeof(float *));
+		if (rtp->buf == NULL || rtp->dest == NULL)
+			error(SYSTEM, "out of memory in init");
+		rtp->nrays = 0;
+		if (i == np)		/* last process? */
+			break;
+		rtp->next = (struct rtproc *)malloc(sizeof(struct rtproc));
+		if (rtp->next == NULL)
+			error(SYSTEM, "out of memory in init");
+		rtp = rtp->next;
 	}
-	if (maxbytes < 0)
-		error(SYSTEM, "cannot start rtrace process");
-	rt.bsiz = maxbytes/(6*sizeof(float));
-	rt.buf = (float *)malloc(6*sizeof(float)*rt.bsiz--);
-	rt.dest = (float **)malloc(sizeof(float *)*rt.bsiz);
-	if (rt.buf == NULL || rt.dest == NULL)
-		error(SYSTEM, "out of memory in init");
-	rt.nrays = 0;
+	rtp->next = NULL;
 					/* set up urand */
 	initurand(16384);
 }
@@ -506,7 +552,7 @@ xobject(				/* translate an object from fp */
 	checkhead();
 						/* process object */
 	if (doit)
-		(*ofun[thisobj.otype].funp)(&thisobj, &thisillum, &rt, nm);
+		(*ofun[thisobj.otype].funp)(&thisobj, &thisillum, &rt0, nm);
 	else
 		printobj(thisillum.altmat, &thisobj);
 						/* free arguments */

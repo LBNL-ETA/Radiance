@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: process.c,v 2.7 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: process.c,v 2.8 2004/09/17 21:43:49 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -29,6 +29,8 @@ int	nbr, int nbs
 )
 {
 	if (nbs > PIPE_BUF)
+		return(-1);
+	if (!pd->running)
 		return(-1);
 	if (writebuf(pd->w, sendbuf, nbs) < nbs)
 		return(-1);

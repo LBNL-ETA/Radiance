@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.6 2003/11/21 07:15:30 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.7 2004/09/17 21:43:50 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -31,6 +31,7 @@ struct illum_args {
 };				/* illum options */
 
 struct rtproc {
+	struct rtproc	*next;		/* next in list of processes */
 	SUBPROC pd;			/* rtrace pipe descriptors */
 	float	*buf;			/* rtrace i/o buffer */
 	int	bsiz;			/* maximum rays for rtrace buffer */
@@ -45,12 +46,28 @@ extern void flatout(struct illum_args  *il, float  *da, int  n, int  m,
 extern void illumout(register struct illum_args  *il, OBJREC  *ob);
 extern void roundout(struct illum_args  *il, float  *da, int  n, int  m);
 
+/* The header file otypes.h has to follow definition of our struct's */
+#define FUN_ARGLIST	OBJREC *, struct illum_args *, struct rtproc *, char *
+#ifdef __cplusplus
+}
+#include  "otypes.h"
+extern "C" {
+#else
+#include  "otypes.h"
+#endif
+
+extern int o_default(FUN_ARGLIST);
+extern int o_face(FUN_ARGLIST);
+extern int o_sphere(FUN_ARGLIST);
+extern int o_ring(FUN_ARGLIST);
+extern void raysamp(float res[3], FVECT org, FVECT dir, struct rtproc *rt0);
+extern void rayflush(struct rtproc *rt, int doall);
+extern struct rtproc *raywait(struct rtproc *rt0);
+
+
 #ifdef __cplusplus
 }
 #endif
-
-#define FUN_ARGLIST	OBJREC *, struct illum_args *, struct rtproc *, char *
-#include  "otypes.h"
 
 #endif /* _RAD_MKILLUM_H_ */
 
