@@ -33,7 +33,7 @@ PROGS = [
 ('ies2rad',   ['ies2rad.c'],       ['rtlamps','rtcolor','rtio','rtpath']+ mlib),
 ('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
 ('nff2rad',   ['nff2rad.c'],       []),
-('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtpath']),
+('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtio','rtpath']),
 ('tmesh2rad', ['tmesh2rad.c'],     ['rtscene','rtmath'] + mlib),
 ('obj2rad',   ['obj2rad.c',trans], 
     ['rtscene','rtargs','rtio','rtcont','rtmem','rtmath','rterror'] + mlib),
