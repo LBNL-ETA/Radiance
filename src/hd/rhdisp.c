@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.45 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.46 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -275,7 +275,7 @@ register VIEW	*v;
 	static unsigned	nhist;
 	VIEW	*dv;
 	int	i, res[2];
-	int2	*slist;
+	int16	*slist;
 	char	*err;
 				/* restore previous view? */
 	if (v == NULL) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.7 2003/05/13 17:58:32 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.8 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -14,9 +14,9 @@ static const char RCSid[] = "$Id: mesh.c,v 2.7 2003/05/13 17:58:32 greg Exp $";
 /* An encoded mesh vertex */
 typedef struct {
 	int		fl;
-	uint4		xyz[3];
-	int4		norm;
-	uint4		uv[2];
+	uint32		xyz[3];
+	int32		norm;
+	uint32		uv[2];
 } MCVERT;
 
 #define  MPATCHBLKSIZ	128		/* patch allocation block size */
@@ -136,7 +136,7 @@ int	flags;
 
 int
 getmeshtrivid(tvid, mo, mp, ti)		/* get triangle vertex ID's */
-int4	tvid[3];
+int32	tvid[3];
 OBJECT	*mo;
 MESH	*mp;
 OBJECT	ti;
@@ -199,7 +199,7 @@ int
 getmeshvert(vp, mp, vid, what)	/* get triangle vertex from ID */
 MESHVERT	*vp;
 MESH		*mp;
-int4		vid;
+int32		vid;
 int		what;
 {
 	int		pn = vid >> 8;
@@ -269,7 +269,7 @@ MESH		*mp;
 OBJECT		ti;
 int		wha;
 {
-	int4	tvid[3];
+	int32	tvid[3];
 
 	if (!getmeshtrivid(tvid, mo, mp, ti))
 		return(0);
@@ -282,7 +282,7 @@ int		wha;
 }
 
 
-int4
+int32
 addmeshvert(mp, vp)		/* find/add a mesh vertex */
 register MESH	*mp;
 MESHVERT	*vp;
@@ -299,7 +299,7 @@ MESHVERT	*vp;
 			return(-1);
 		if (vp->v[i] >= mp->mcube.cuorg[i] + mp->mcube.cusize)
 			return(-1);
-		cv.xyz[i] = (uint4)(4294967296. *
+		cv.xyz[i] = (uint32)(4294967296. *
 				(vp->v[i] - mp->mcube.cuorg[i]) /
 				mp->mcube.cusize);
 	}
@@ -311,7 +311,7 @@ MESHVERT	*vp;
 				return(-1);
 			if (vp->uv[i] >= mp->uvlim[1][i])
 				return(-1);
-			cv.uv[i] = (uint4)(4294967296. *
+			cv.uv[i] = (uint32)(4294967296. *
 					(vp->uv[i] - mp->uvlim[0][i]) /
 					(mp->uvlim[1][i] - mp->uvlim[0][i]));
 		}
@@ -328,7 +328,7 @@ MESHVERT	*vp;
 	if (lvp == NULL)
 		goto nomem;
 	if (lvp->key == NULL) {
-		lvp->key = (char *)malloc(sizeof(MCVERT)+sizeof(int4));
+		lvp->key = (char *)malloc(sizeof(MCVERT)+sizeof(int32));
 		bcopy((void *)&cv, (void *)lvp->key, sizeof(MCVERT));
 	}
 	if (lvp->data == NULL) {	/* new vertex */
@@ -353,7 +353,7 @@ MESHVERT	*vp;
 		}
 		pp = &mp->patch[mp->npatches-1];
 		if (pp->xyz == NULL) {
-			pp->xyz = (uint4 (*)[3])calloc(256, 3*sizeof(int4));
+			pp->xyz = (uint32 (*)[3])calloc(256, 3*sizeof(int32));
 			if (pp->xyz == NULL)
 				goto nomem;
 		}
@@ -361,7 +361,7 @@ MESHVERT	*vp;
 			pp->xyz[pp->nverts][i] = cv.xyz[i];
 		if (cv.fl & MT_N) {
 			if (pp->norm == NULL) {
-				pp->norm = (int4 *)calloc(256, sizeof(int4));
+				pp->norm = (int32 *)calloc(256, sizeof(int32));
 				if (pp->norm == NULL)
 					goto nomem;
 			}
@@ -369,8 +369,8 @@ MESHVERT	*vp;
 		}
 		if (cv.fl & MT_UV) {
 			if (pp->uv == NULL) {
-				pp->uv = (uint4 (*)[2])calloc(256,
-						2*sizeof(uint4));
+				pp->uv = (uint32 (*)[2])calloc(256,
+						2*sizeof(uint32));
 				if (pp->uv == NULL)
 					goto nomem;
 			}
@@ -379,9 +379,9 @@ MESHVERT	*vp;
 		}
 		pp->nverts++;
 		lvp->data = lvp->key + sizeof(MCVERT);
-		*(int4 *)lvp->data = (mp->npatches-1) << 8 | (pp->nverts-1);
+		*(int32 *)lvp->data = (mp->npatches-1) << 8 | (pp->nverts-1);
 	}
-	return(*(int4 *)lvp->data);
+	return(*(int32 *)lvp->data);
 nomem:
 	error(SYSTEM, "out of memory in addmeshvert");
 	return(-1);
@@ -394,7 +394,7 @@ MESH		*mp;
 MESHVERT	tv[3];
 OBJECT		mo;
 {
-	int4			vid[3], t;
+	int32			vid[3], t;
 	int			pn[3], i;
 	register MESHPATCH	*pp;
 
@@ -428,8 +428,8 @@ OBJECT		mo;
 			if (pp->ntris == 0)
 				pp->solemat = mo;
 			else if (pp->trimat == NULL && mo != pp->solemat) {
-				pp->trimat = (int2 *)malloc(
-						512*sizeof(int2));
+				pp->trimat = (int16 *)malloc(
+						512*sizeof(int16));
 				if (pp->trimat == NULL)
 					goto nomem;
 				for (i = pp->ntris; i--; )
@@ -611,9 +611,9 @@ FILE	*fp;
 	fprintf(fp, "\t%d materials\n", ms->nmats);
 	fprintf(fp, "\t%d patches (%.2f MBytes)\n", ms->npatches,
 			(ms->npatches*sizeof(MESHPATCH) +
-			vcnt*3*sizeof(uint4) +
-			nscnt*sizeof(int4) +
-			uvscnt*2*sizeof(uint4) +
+			vcnt*3*sizeof(uint32) +
+			nscnt*sizeof(int32) +
+			uvscnt*2*sizeof(uint32) +
 			tcnt*sizeof(struct PTri) +
 			t1cnt*sizeof(struct PJoin1) +
 			t2cnt*sizeof(struct PJoin2))/(1024.*1024.));

@@ -537,7 +537,7 @@ getras()				/* get raster file */
 			goto fail;
 		getmono();
 	} else if (ourvis.class == TrueColor | ourvis.class == DirectColor) {
-		int  datsiz = ourvis.depth>16 ? sizeof(int4) : sizeof(int2);
+		int  datsiz = ourvis.depth>16 ? sizeof(int32) : sizeof(int16);
 		ourdata = (unsigned char *)malloc(datsiz*xmax*ymax);
 		if (ourdata == NULL)
 			goto fail;
@@ -1152,14 +1152,14 @@ COLR  *scan;
 getfull()			/* get full (24-bit) data */
 {
 	int	y;
-	register unsigned int4	*dp;
-	register unsigned int2	*dph;
+	register uint32	*dp;
+	register uint16	*dph;
 	register int	x;
 					/* initialize tone mapping */
 	make_tonemap();
 					/* read and convert file */
-	dp = (unsigned int4 *)ourdata;
-	dph = (unsigned int2 *)ourdata;
+	dp = (uint32 *)ourdata;
+	dph = (uint16 *)ourdata;
 	for (y = 0; y < ymax; y++) {
 		getscan(y);
 		add2icon(y, scanline);
@@ -1167,15 +1167,15 @@ getfull()			/* get full (24-bit) data */
 		switch (ourras->image->blue_mask) {
 		case 0xff:		/* 24-bit RGB */
 			for (x = 0; x < xmax; x++)
-				*dp++ =	(unsigned int4)scanline[x][RED] << 16 |
-					(unsigned int4)scanline[x][GRN] << 8 |
-					(unsigned int4)scanline[x][BLU] ;
+				*dp++ =	(uint32)scanline[x][RED] << 16 |
+					(uint32)scanline[x][GRN] << 8 |
+					(uint32)scanline[x][BLU] ;
 			break;
 		case 0xff0000:		/* 24-bit BGR */
 			for (x = 0; x < xmax; x++)
-				*dp++ =	(unsigned int4)scanline[x][RED] |
-					(unsigned int4)scanline[x][GRN] << 8 |
-					(unsigned int4)scanline[x][BLU] << 16 ;
+				*dp++ =	(uint32)scanline[x][RED] |
+					(uint32)scanline[x][GRN] << 8 |
+					(uint32)scanline[x][BLU] << 16 ;
 			break;
 #if 0
 		case 0x1f:		/* 15-bit RGB */
@@ -1231,7 +1231,7 @@ getgrey()			/* get greyscale data */
 		tmap_colrs(scanline, xmax);
 		if (maxcolors < 256)
 			for (x = 0; x < xmax; x++)
-				*dp++ =	((int4)scanline[x][GRN] *
+				*dp++ =	((int32)scanline[x][GRN] *
 					maxcolors + maxcolors/2) >> 8;
 		else
 			for (x = 0; x < xmax; x++)
@@ -1239,7 +1239,7 @@ getgrey()			/* get greyscale data */
 	}
 	for (x = 0; x < maxcolors; x++)
 		clrtab[x][RED] = clrtab[x][GRN] =
-			clrtab[x][BLU] = ((int4)x*256 + 128)/maxcolors;
+			clrtab[x][BLU] = ((int32)x*256 + 128)/maxcolors;
 }
 
 
@@ -1252,7 +1252,7 @@ getmapped()			/* get color-mapped data */
 					/* initialize tone mapping */
 	make_tonemap();
 					/* make histogram */
-	if (new_histo((int4)xmax*ymax) == -1)
+	if (new_histo((int32)xmax*ymax) == -1)
 		quiterr("cannot initialize histogram");
 	for (y = 0; y < ymax; y++) {
 		if (getscan(y) < 0)

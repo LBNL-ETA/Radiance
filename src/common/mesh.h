@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: mesh.h,v 2.6 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -14,9 +14,6 @@ extern "C" {
 
 #include "lookup.h"
 
-#ifndef uint4
-#define uint4	unsigned int4
-#endif
 #ifndef BYTE
 #define BYTE	unsigned char
 #endif
@@ -52,22 +49,22 @@ extern "C" {
 
 /* A triangle mesh patch */
 typedef struct {
-	uint4		(*xyz)[3];	/* up to 256 patch vertices */
-	int4		*norm;		/* vertex normals */
-	uint4		(*uv)[2];	/* vertex local coordinates */
+	uint32		(*xyz)[3];	/* up to 256 patch vertices */
+	int32		*norm;		/* vertex normals */
+	uint32		(*uv)[2];	/* vertex local coordinates */
 	struct PTri {
 		BYTE		v1, v2, v3;	/* local vertices */
 	}		*tri;		/* local triangles */
 	short		solemat;	/* sole material */
-	int2		*trimat;	/* or local material indices */
+	int16		*trimat;	/* or local material indices */
 	struct PJoin1 {
-		int4		v1j;		/* non-local vertex */
-		int2		mat;		/* material index */
+		int32		v1j;		/* non-local vertex */
+		int16		mat;		/* material index */
 		BYTE		v2, v3;		/* local vertices */
 	}		*j1tri;		/* joiner triangles */
 	struct PJoin2 {
-		int4		v1j, v2j;	/* non-local vertices */
-		int2		mat;		/* material index */
+		int32		v1j, v2j;	/* non-local vertices */
+		int16		mat;		/* material index */
 		BYTE		v3;		/* local vertex */
 	}		*j2tri;		/* double joiner triangles */
 	short		nverts;		/* vertex count */
@@ -120,13 +117,13 @@ typedef struct {
 
 extern MESH	*getmesh(char *mname, int flags);
 extern MESHINST	*getmeshinst(OBJREC *o, int flags);
-extern int	getmeshtrivid(int4 tvid[3], OBJECT *mo,
+extern int	getmeshtrivid(int32 tvid[3], OBJECT *mo,
 				MESH *mp, OBJECT ti);
-extern int	getmeshvert(MESHVERT *vp, MESH *mp, int4 vid, int what);
+extern int	getmeshvert(MESHVERT *vp, MESH *mp, int32 vid, int what);
 extern int	getmeshtri(MESHVERT tv[3], OBJECT *mo,
 				MESH *mp, OBJECT ti, int what);
 extern OBJREC	*getmeshpseudo(MESH *mp, OBJECT mo);
-extern int4	addmeshvert(MESH *mp, MESHVERT *vp);
+extern int32	addmeshvert(MESH *mp, MESHVERT *vp);
 extern OBJECT	addmeshtri(MESH *mp, MESHVERT tv[3], OBJECT mo);
 extern char	*checkmesh(MESH *mp);
 extern void	printmeshstats(MESH *ms, FILE *fp);

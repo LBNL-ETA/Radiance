@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp2.c,v 3.34 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.35 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Holodeck beam tracking for display process
@@ -147,12 +147,12 @@ int	fresh;
 }
 
 
-int2 *
+int16 *
 beam_view(vn, hr, vr)		/* add beam view (if advisable) */
 VIEW	*vn;
 int	hr, vr;
 {
-	int2	*slist;
+	int16	*slist;
 	BEAMLIST	blist;
 	double	eravg, d;
 	register HOLO	*hp;

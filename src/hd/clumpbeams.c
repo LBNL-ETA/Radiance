@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clumpbeams.c,v 3.3 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: clumpbeams.c,v 3.4 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Bundle holodeck beams together into clumps.
@@ -98,10 +98,10 @@ int	maxcnt, maxsiz;
 int	(*cf)();
 {
 	static short	primes[] = {9431,6803,4177,2659,1609,887,587,251,47,1};
-	unsigned int4	*bflags;
+	uint32	*bflags;
 	int	*bqueue;
 	int	bqlen;
-	int4	bqtotal;
+	int32	bqtotal;
 	int	bc, bci, bqc, myprime;
 	register int	i;
 					/* get clump size */
@@ -110,8 +110,8 @@ int	(*cf)();
 	maxsiz /= sizeof(RAYVAL);
 					/* allocate beam queue */
 	bqueue = (int *)malloc(maxcnt*sizeof(int));
-	bflags = (unsigned int4 *)calloc((nbeams(hp)>>5)+1,
-			sizeof(unsigned int4));
+	bflags = (uint32 *)calloc((nbeams(hp)>>5)+1,
+			sizeof(uint32));
 	if (bqueue == NULL | bflags == NULL)
 		error(SYSTEM, "out of memory in clumpbeams");
 					/* mark empty beams as done */

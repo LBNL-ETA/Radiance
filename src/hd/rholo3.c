@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.36 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.37 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
@@ -260,7 +260,7 @@ int	bi;
 
 ambient_list()			/* compute ambient beam list */
 {
-	int4	wtotal, minrt;
+	int32	wtotal, minrt;
 	double	frac;
 	int	i;
 	register int	j, k;

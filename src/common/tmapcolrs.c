@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.11 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.12 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -117,11 +117,11 @@ int	len;
 		} else if (tmTop->flags & TM_F_BW) {
 			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
 		}
-		bi = ( (int4)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
 		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int4)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 8;
 		cs[3*i+1] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int4)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 8;
 		cs[3*i+2] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
 	}
 	returnOK;

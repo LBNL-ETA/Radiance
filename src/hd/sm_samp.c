@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_samp.c,v 3.7 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_samp.c,v 3.8 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * sm_samp.c
@@ -9,14 +9,14 @@ static const char	RCSid[] = "$Id: sm_samp.c,v 3.7 2003/02/22 02:07:25 greg Exp $
 #include "rhd_sample.h"
 
 SAMP rsL;
-int4 *samp_flag=NULL;
+int32 *samp_flag=NULL;
 
 /* Each sample has a world coord point, and direction, brightness,chrominance,
    and RGB triples
  */
 
 #define TMSIZE sizeof(TMbright)
-#define SAMPSIZ (3*sizeof(SFLOAT)+sizeof(int4)+ 6*sizeof(BYTE) + TMSIZE + 2*sizeof(int))
+#define SAMPSIZ (3*sizeof(SFLOAT)+sizeof(int32)+ 6*sizeof(BYTE) + TMSIZE + 2*sizeof(int))
 
  /* Extra points world space point, vert flag and qt flag */
 #define POINTSIZ (3*sizeof(SFLOAT) + 2*sizeof(int))
@@ -82,7 +82,7 @@ int *nptr,extra_points;
 
   /* assign larger alignment types earlier */
   S_W_PT(s) = (SFLOAT(*)[3])S_BASE(s);
-  S_W_DIR(s) = (int4 *)(S_W_PT(s) + n + extra_points);
+  S_W_DIR(s) = (int32 *)(S_W_PT(s) + n + extra_points);
   S_BRT(s) = (TMbright *)(S_W_DIR(s) + n);
   S_CHR(s) = (BYTE (*)[3])(S_BRT(s) + n);
   S_RGB(s) = (BYTE (*)[3])(S_CHR(s) + n);
@@ -92,7 +92,7 @@ int *nptr,extra_points;
   S_MAX_BASE_PT(s) = n + extra_points;
 
   /* Allocate memory for a per/sample bit flag */
-  if(!(samp_flag = (int4 *)malloc(FLAG_BYTES(n+extra_points))))
+  if(!(samp_flag = (int32 *)malloc(FLAG_BYTES(n+extra_points))))
     error(SYSTEM,"sAlloc(): Unable to allocate flag memory");
   sInit(s);
   sClear_all_flags(s);

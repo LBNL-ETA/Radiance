@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.14 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.15 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -30,8 +30,6 @@ static const char	RCSid[] = "$Id: header.c,v 2.14 2003/06/07 12:50:20 schorsch E
 #include  <string.h>
 #include  <time.h>
 #include  <ctype.h>
-
-#include  "standard.h"
 
 #define	 MAXLINE	512
 

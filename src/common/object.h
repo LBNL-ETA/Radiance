@@ -1,6 +1,8 @@
-/* RCSid $Id: object.h,v 2.13 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: object.h,v 2.14 2003/06/20 00:25:49 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
+ *
+ *  Include after "standard.h"
  */
 #ifndef _RAD_OBJECT_H_
 #define _RAD_OBJECT_H_
@@ -42,9 +44,9 @@ typedef struct {
 
 #ifndef  OBJECT
 #ifdef  SMLMEM
-#define  OBJECT		int2		/* index to object array */
+#define  OBJECT		int16		/* index to object array */
 #else
-#define  OBJECT		int4		/* index to object array */
+#define  OBJECT		int32		/* index to object array */
 #endif
 #endif
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.5 2003/03/14 21:27:46 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.6 2003/06/20 00:25:50 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -39,7 +39,7 @@ struct EdgeCache {
 	OBJREC		*o;	/* mesh object */
 	MESHINST	*mi;	/* current mesh instance */
 	struct EdgeSide {
-		int4	v1i, v2i;	/* vertex indices (lowest first) */
+		int32	v1i, v2i;	/* vertex indices (lowest first) */
 		short	signum;		/* signed volume */
 	}		cache[EDGE_CACHE_SIZ];
 }	edge_cache;
@@ -59,13 +59,13 @@ OBJREC	*o;
 static int
 signed_volume(r, v1, v2)	/* get signed volume for ray and edge */
 register RAY	*r;
-int4		v1, v2;
+int32		v1, v2;
 {
 	int				reversed = 0;
 	register struct EdgeSide	*ecp;
 	
 	if (v1 > v2) {
-		int4	t = v2; v2 = v1; v1 = t;
+		int32	t = v2; v2 = v1; v1 = t;
 		reversed = 1;
 	}
 	ecp = &edge_cache.cache[((v2<<11 ^ v1) & 0x7fffffff) % EDGE_CACHE_SIZ];
@@ -102,7 +102,7 @@ mesh_hit(oset, r)		/* intersect ray with mesh triangle(s) */
 OBJECT	*oset;
 RAY	*r;
 {
-	int4		tvi[3];
+	int32		tvi[3];
 	int		sv1, sv2, sv3;
 	MESHVERT	tv[3];
 	OBJECT		tmod;

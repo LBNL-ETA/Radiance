@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.21 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.22 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -28,7 +28,7 @@ struct rleaves	qtL;		/* our pile of leaves */
 
 int	rayqleft = 0;		/* rays left to queue before flush */
 
-static int4	falleaves;	/* our list of fallen leaves */
+static int32	falleaves;	/* our list of fallen leaves */
 
 #define composted(li)	(qtL.bl <= qtL.tl ? \
 					((li) < qtL.bl || (li) >= qtL.tl) : \
@@ -92,7 +92,7 @@ int	really;
 }
 
 
-#define	LEAFSIZ		(3*sizeof(float)+sizeof(int4)+\
+#define	LEAFSIZ		(3*sizeof(float)+sizeof(int32)+\
 			sizeof(TMbright)+6*sizeof(BYTE))
 
 int
@@ -119,7 +119,7 @@ register int	n;
 		return(0);
 				/* assign larger alignment types earlier */
 	qtL.wp = (float (*)[3])qtL.base;
-	qtL.wd = (int4 *)(qtL.wp + n);
+	qtL.wd = (int32 *)(qtL.wp + n);
 	qtL.brt = (TMbright *)(qtL.wd + n);
 	qtL.chr = (BYTE (*)[3])(qtL.brt + n);
 	qtL.rgb = (BYTE (*)[3])(qtL.chr + n);
@@ -166,7 +166,7 @@ int
 qtCompost(pct)			/* free up some leaves */
 int	pct;
 {
-	register int4	*fl;
+	register int32	*fl;
 	int	nused, nclear, nmapped;
 				/* figure out how many leaves to clear */
 	nclear = qtL.nl * pct / 100;

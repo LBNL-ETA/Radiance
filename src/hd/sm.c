@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm.c,v 3.17 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: sm.c,v 3.18 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  *  sm.c
@@ -327,7 +327,7 @@ int max_verts,max_tris;
       goto memerr;
 
     for(i=0; i< T_FLAGS; i++)
-      if(!(SM_NTH_FLAGS(sm,i)=(int4 *)malloc(fbytes)))
+      if(!(SM_NTH_FLAGS(sm,i)=(int32 *)malloc(fbytes)))
 	goto memerr;
 
     SM_MAX_VERTS(sm) = max_verts;

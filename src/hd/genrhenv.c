@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhenv.c,v 3.4 2003/05/29 16:26:21 greg Exp $";
+static const char	RCSid[] = "$Id: genrhenv.c,v 3.5 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Create a closed environment from a holodeck section
@@ -57,7 +57,7 @@ int	sect;
 {
 	FILE	*fp;
 	int	fd;
-	int4	nextloc;
+	int32	nextloc;
 	int	n;
 					/* open holodeck file */
 	if ((fp = fopen(fname, "r")) == NULL) {

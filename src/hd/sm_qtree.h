@@ -1,4 +1,4 @@
-/* RCSid: $Id: sm_qtree.h,v 3.14 2003/05/15 05:13:35 greg Exp $ */
+/* RCSid: $Id: sm_qtree.h,v 3.15 2003/06/20 00:25:49 greg Exp $ */
 /*
  *  sm_qtree.h - header file for routines using spherical quadtrees.
  *
@@ -105,11 +105,11 @@ typedef struct _FUNC {
 extern QUADTREE  qtnewleaf(), qtaddelem(), qtdelelem();
 
 extern QUADTREE  *quad_block[QT_MAX_BLK];	/* quadtree blocks */
-extern int4  *quad_flag;			/* zeroeth quadtree flag */
+extern int32  *quad_flag;			/* zeroeth quadtree flag */
 
 extern OBJECT	**qtsettab;		/* quadtree leaf node table */
 extern QUADTREE  qtnumsets;		/* number of used set indices */
-extern int4   *qtsetflag;
+extern int32   *qtsetflag;
 #ifdef DEBUG
 extern OBJECT	*qtqueryset();
 #else

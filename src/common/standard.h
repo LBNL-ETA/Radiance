@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.26 2003/06/08 12:03:09 schorsch Exp $ */
+/* RCSid $Id: standard.h,v 2.27 2003/06/20 00:25:49 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -18,12 +18,9 @@ extern "C" {
 #include  <stdlib.h>
 #include  <string.h>
 
+#include  "tifftypes.h"
+
 #include  "mat4.h"
-
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 				/* regular transformation */
 typedef struct {
@@ -50,13 +47,6 @@ typedef struct {
 #define	 W_OK		2		/* writable */
 #define	 X_OK		1		/* executable */
 #define	 F_OK		0		/* exists */
-#endif
-
-#ifndef  int2
-#define  int2		short		/* two-byte integer */
-#endif
-#ifndef  int4
-#define  int4		int		/* four-byte integer */
 #endif
 
 				/* error codes */
@@ -200,10 +190,10 @@ extern int	fullxf(FULLXF *fx, int ac, char *av[]);
 					/* defined in zeroes.c */
 extern int	quadtratic(double *r, double a, double b, double c);
 					/* defined in dircode.c */
-extern int4	encodedir(FVECT dv);
-extern void	decodedir(FVECT dv, int4 dc);
-extern double	dir2diff(int4 dc1, int4 dc2);
-extern double	fdir2diff(int4 dc1, FVECT v2);
+extern int32	encodedir(FVECT dv);
+extern void	decodedir(FVECT dv, int32 dc);
+extern double	dir2diff(int32 dc1, int32 dc2);
+extern double	fdir2diff(int32 dc1, FVECT v2);
 					/* defined in lamp.c */
 extern float * matchlamp(char *s);
 extern int loadlamps(char *file);

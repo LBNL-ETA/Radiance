@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdisp.h,v 3.13 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid: $Id: rhdisp.h,v 3.14 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Header for holodeck display drivers.
  */
@@ -42,8 +42,8 @@
 #endif
 
 typedef struct {
-	int2	type;		/* message type */
-	int4	nbytes;		/* number of additional bytes */
+	int16	type;		/* message type */
+	int32	nbytes;		/* number of additional bytes */
 } MSGHEAD;		/* message head */
 
 /*

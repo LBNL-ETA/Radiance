@@ -1,4 +1,4 @@
-/* RCSid: $Id: sm.h,v 3.11 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm.h,v 3.12 2003/06/20 00:25:49 greg Exp $ */
 /*
  *  sm.h
  */
@@ -101,7 +101,7 @@ typedef struct _SM {
     int free_tris;        /* pointer to free_list */
     int max_verts;        /* Maximum number of vertices in the mesh */
     TRI *tris;            /* Pointer to list of triangle structs */
-    int4 *flags[T_FLAGS]; /* Bit 0 set if active(in current frustum) */
+    int32 *flags[T_FLAGS]; /* Bit 0 set if active(in current frustum) */
                           /* Bit 1 set if not rendered since created */
                           /* Bit 2 set if base triangle */
 }SM;

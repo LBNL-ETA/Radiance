@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.14 2003/03/04 05:49:21 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.15 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Routines for drawing samples using depth buffer checks.
@@ -47,7 +47,7 @@ static int	needmapping;	/* what needs doing with tone map */
 
 
 #define SAMP32	(32*(2*sizeof(short)+sizeof(union ODfunion)+sizeof(TMbright)+\
-			6*sizeof(BYTE))+sizeof(int4))
+			6*sizeof(BYTE))+sizeof(int32))
 
 int
 odInit(n)				/* initialize drawing routines */
@@ -87,7 +87,7 @@ int	n;
 			return(0);
 				/* assign larger alignment types earlier */
 		odS.f = (union ODfunion *)odS.base;
-		odS.redraw = (int4 *)(odS.f + n);
+		odS.redraw = (int32 *)(odS.f + n);
 		odS.ip = (short (*)[2])(odS.redraw + n/32);
 		odS.brt = (TMbright *)(odS.ip + n);
 		odS.chr = (BYTE (*)[3])(odS.brt + n);
@@ -117,8 +117,8 @@ int	n;
 		if (odView[i].vlow < 1) odView[i].vlow = 1;
 		odView[i].emap = NULL;
 		odView[i].dmap = NULL;
-		odView[i].pmap = (int4 *)calloc(FL4NELS(res[0]*res[1]),
-				sizeof(int4));
+		odView[i].pmap = (int32 *)calloc(FL4NELS(res[0]*res[1]),
+				sizeof(int32));
 		if (odView[i].pmap == NULL)
 			return(0);
 		j = odView[i].hlow*odView[i].vlow;
@@ -387,8 +387,8 @@ GLfloat	*dm;
 			"bad view number in odDepthMap");
 	odView[vn].dmap = dm;			/* initialize edge map */
 	if (odView[vn].emap == NULL) {
-		odView[vn].emap = (int4 *)malloc(
-			FL4NELS(odView[vn].hlow*odView[vn].vlow)*sizeof(int4));
+		odView[vn].emap = (int32 *)malloc(
+			FL4NELS(odView[vn].hlow*odView[vn].vlow)*sizeof(int32));
 		if (odView[vn].emap == NULL)
 			error(SYSTEM, "out of memory in odDepthMap");
 	}

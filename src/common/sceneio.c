@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sceneio.c,v 2.2 2003/06/07 12:50:20 schorsch Exp $";
+static const char RCSid[] = "$Id: sceneio.c,v 2.3 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  *  Portable, binary Radiance i/o routines.
@@ -137,7 +137,7 @@ register OBJREC  *o;
 
 void
 writescene(firstobj, nobjs, fp)		/* write binary scene description */
-OBJECT	firstobj, nobjs;
+int	firstobj, nobjs;
 FILE	*fp;
 {
 	int	i;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.47 2003/06/13 15:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.48 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -612,7 +612,7 @@ int
 hdfragOK(fd, listlen, listsiz)	/* get fragment list status for file */
 int	fd;
 int	*listlen;
-register int4	*listsiz;
+register int32	*listsiz;
 {
 	register struct fraglist	*f;
 	register int	i;
@@ -635,7 +635,7 @@ register int4	*listsiz;
 off_t
 hdallocfrag(fd, nrays)		/* allocate a file fragment */
 int	fd;
-unsigned int4	nrays;
+uint32	nrays;
 {
 	register struct fraglist	*f;
 	register int	j;
@@ -667,7 +667,7 @@ register HOLO	*hp;
 register int	i;
 {
 	int	fragfreed;
-	unsigned int4	nrays;
+	uint32	nrays;
 	unsigned int	n;
 	off_t	nfo;
 					/* check file status */

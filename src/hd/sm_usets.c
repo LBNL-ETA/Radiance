@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_usets.c,v 3.3 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: sm_usets.c,v 3.4 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Quadtree-specific set operations with unsorted sets.
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: sm_usets.c,v 3.3 2003/04/23 00:52:34 greg Exp 
 OBJECT	**qtsettab= NULL;		/* quadtree leaf node table */
 QUADTREE  qtnumsets=0;			/* number of used set indices */
 static int  qtfreesets = EMPTY;		/* free set index list */
-int4 *qtsetflag = NULL;
+int32 *qtsetflag = NULL;
 static int qtallocsets =0;
 
 qtclearsetflags()
@@ -50,7 +50,7 @@ OBJECT  *oset;
 				(unsigned)(osi+QTSETIBLK)*sizeof(OBJECT *));
 		if (qtsettab == NULL)
 			goto memerr;
-		qtsetflag = (int4 *)realloc((void *)qtsetflag,
+		qtsetflag = (int32 *)realloc((void *)qtsetflag,
 				   FLAG_BYTES(osi+ QTSETIBLK));
 		if (qtsetflag == NULL)
 			goto memerr;

@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.8 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.9 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -15,6 +15,7 @@ extern "C" {
 #endif
 #include	"color.h"
 #include	"tonemap.h"
+#include	"tifftypes.h"
 
 				/* required constants */
 #ifndef M_LN2
@@ -47,18 +48,14 @@ extern "C" {
 #define BMESLOWER	((int)(-5.18*TM_BRTSCALE-.5))
 #define BMESUPPER	((int)(1.73*TM_BRTSCALE+.5))
 #endif
-
-#ifndef	int4
-#define	int4		int			/* assume 32-bit integers */
-#endif
 						/* approximate scotopic lum. */
 #define	SCO_rf		0.062
 #define SCO_gf		0.608
 #define SCO_bf		0.330
 #define scotlum(c)	(SCO_rf*(c)[RED] + SCO_gf*(c)[GRN] + SCO_bf*(c)[BLU])
-#define normscot(c)	( (	(int4)(SCO_rf*256.+.5)*(c)[RED] + \
-				(int4)(SCO_gf*256.+.5)*(c)[GRN] + \
-				(int4)(SCO_bf*256.+.5)*(c)[BLU]	) >> 8 )
+#define normscot(c)	( (	(int32)(SCO_rf*256.+.5)*(c)[RED] + \
+				(int32)(SCO_gf*256.+.5)*(c)[GRN] + \
+				(int32)(SCO_bf*256.+.5)*(c)[BLU]	) >> 8 )
 
 #ifndef	malloc
 MEM_PTR		malloc();

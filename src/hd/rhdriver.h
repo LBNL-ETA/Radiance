@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdriver.h,v 3.21 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: rhdriver.h,v 3.22 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Header file for holodeck device driver routines.
  */
@@ -162,4 +162,4 @@ Set odev.v.type=0 and odev.hres=odev.vres=0 when done.
 
 extern VIEW	*dev_auxview();
 
-extern int2	*beam_view();
+extern int16	*beam_view();

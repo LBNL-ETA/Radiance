@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_qtree.c,v 3.15 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: sm_qtree.c,v 3.16 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
 *  sm_qtree.c: adapted from octree.c from radiance code
@@ -19,7 +19,7 @@ static const char	RCSid[] = "$Id: sm_qtree.c,v 3.15 2003/04/23 00:52:34 greg Exp
 QUADTREE  *quad_block[QT_MAX_BLK];	  /* our quadtree */
 static QUADTREE  quad_free_list = EMPTY;  /* freed octree nodes */
 static QUADTREE  treetop = 0;		  /* next free node */
-int4 *quad_flag= NULL;                    /* quadtree flags */
+int32 *quad_flag= NULL;                    /* quadtree flags */
 
 
 qtremovelast(qt,id)
@@ -52,7 +52,7 @@ qtAlloc()			/* allocate a quadtree */
 	   error(SYSTEM,"qtAlloc(): Unable to allocate memory\n");
 
 	/* Realloc the per/node flags */
-	quad_flag = (int4 *)realloc((void *)quad_flag,
+	quad_flag = (int32 *)realloc((void *)quad_flag,
 			(QT_BLOCK(freet)+1)*((QT_BLOCK_SIZE+7)>>3));
 	if (quad_flag == NULL)
 	   error(SYSTEM,"qtAlloc(): Unable to allocate memory\n");

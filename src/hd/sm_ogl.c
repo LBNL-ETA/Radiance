@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_ogl.c,v 3.16 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_ogl.c,v 3.17 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * sm_ogl.c
@@ -333,7 +333,7 @@ VIEW *view;
   int i, n,ntarget;
   int lvlcnt[QT_MAX_LEVELS];
   STREE *st;
-  int4 *active_flag;
+  int32 *active_flag;
 
   if (qual <= 0)
     return;
@@ -467,7 +467,7 @@ int bg0,bg1,bg2;
  * smRender_bg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
  * SM *sm;                         : mesh
  * FVECT vp;                       : current viewpoint
- * int4  *t_flag,*bg_flag;         : triangle flags: t_flag is generic, 
+ * int32  *t_flag,*bg_flag;         : triangle flags: t_flag is generic, 
  *                                   and bg_flag indicates if background tri;
  * SFLOAT (*wp)[3];BYTE  (*rgb)[3]; : arrays of sample points and RGB colors
  *
@@ -478,7 +478,7 @@ int bg0,bg1,bg2;
 smRender_bg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
 SM *sm;
 FVECT vp;
-int4 *t_flag,*bg_flag;
+int32 *t_flag,*bg_flag;
 SFLOAT (*wp)[3];
 BYTE  (*rgb)[3];
 {
@@ -532,7 +532,7 @@ BYTE  (*rgb)[3];
  * smRender_new_bg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
  * SM *sm;                         : mesh
  * FVECT vp;                       : current viewpoint
- * int4  *new_flag,*active,*bg_flag; : triangle flags: idicates if tri is, 
+ * int32  *new_flag,*active,*bg_flag; : triangle flags: idicates if tri is, 
  *                                   new,active,bg_flag 
  * SFLOAT (*wp)[3];BYTE  (*rgb)[3]; : arrays of sample points and RGB colors
  *
@@ -542,7 +542,7 @@ BYTE  (*rgb)[3];
 smRender_new_bg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
 SM *sm;
 FVECT vp;
-int4 *new_flag,*active_flag,*bg_flag;
+int32 *new_flag,*active_flag,*bg_flag;
 SFLOAT (*wp)[3];
 BYTE  (*rgb)[3];
 {
@@ -689,7 +689,7 @@ int b0,b1,b2;
  * smRender_fg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
  * SM *sm;                        : mesh
  * FVECT vp;                      : current viewpoint
- * int4  *t_flag,*bg_flag;        : triangle flags: t_flag is generic,bg_flag 
+ * int32  *t_flag,*bg_flag;        : triangle flags: t_flag is generic,bg_flag 
  *                                  indicates if background tri;
  * SFLOAT (*wp)[3];BYTE (*rgb)[3]; : arrays of sample points and RGB colors
  *
@@ -699,7 +699,7 @@ int b0,b1,b2;
 smRender_fg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
 SM *sm;
 FVECT vp;
-int4  *t_flag,*bg_flag;
+int32  *t_flag,*bg_flag;
 SFLOAT (*wp)[3];
 BYTE  (*rgb)[3];
 {
@@ -736,7 +736,7 @@ BYTE  (*rgb)[3];
  * smRender_new_fg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
  * SM *sm;                        : mesh
  * FVECT vp;                      : current viewpoint
- * int4  *new_flag,*active_flag,*bg_flag; : triangle flags: indicate if
+ * int32  *new_flag,*active_flag,*bg_flag; : triangle flags: indicate if
  *                                tri is new,active,background
  * SFLOAT (*wp)[3];BYTE (*rgb)[3]; : arrays of sample points and RGB colors
  *
@@ -746,7 +746,7 @@ BYTE  (*rgb)[3];
 smRender_new_fg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
 SM *sm;
 FVECT vp;
-int4  *new_flag,*active_flag,*bg_flag;
+int32  *new_flag,*active_flag,*bg_flag;
 SFLOAT (*wp)[3];
 BYTE  (*rgb)[3];
 {
@@ -812,7 +812,7 @@ FVECT vp;
   TRI *tri;
   double d,min_d;
   FVECT diff;
-  int4 *new_flag,*bg_flag,*active_flag;
+  int32 *new_flag,*bg_flag,*active_flag;
   
  td = (T_DEPTH *)tempbuf(NEW_TRI_CNT*sizeof(T_DEPTH),FALSE);
  size = NEW_TRI_CNT;
@@ -894,7 +894,7 @@ FVECT vp;
   TRI *tri;
   SFLOAT (*wp)[3];
   BYTE  (*rgb)[3];
-  int4  *new_flag,*bg_flag,*active_flag;
+  int32  *new_flag,*bg_flag,*active_flag;
   T_DEPTH *td = NULL;
 
 
@@ -1268,7 +1268,7 @@ SM *sm;
 VIEW *view;
 int render_flag;
 {
-  int4  *active_flag,*bg_flag;
+  int32  *active_flag,*bg_flag;
   SFLOAT (*wp)[3];
   BYTE  (*rgb)[3];
 

@@ -1,15 +1,13 @@
-/* RCSid $Id: rhd_odraw.h,v 3.8 2003/03/04 05:49:21 greg Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.9 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
+ *
+ * Include after "standard.h"
  */
 
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
-
-#ifndef int4
-#define int4	int
-#endif
 
 extern struct ODview {
 	int	sfirst, snext;	/* first sample and first in next view */
@@ -23,8 +21,8 @@ extern struct ODview {
 		int	free;		/* index for block free list */
 		float	pthresh;	/* proximity threshold */
 	}	*bmap;		/* low resolution image map */
-	int4	*emap;		/* low resolution edge presence map */
-	int4	*pmap;		/* high resolution presence map */
+	int32	*emap;		/* low resolution edge presence map */
+	int32	*pmap;		/* high resolution presence map */
 	GLfloat	*dmap;		/* high resolution depth map */
 } *odView;		/* our view list */
 
@@ -33,14 +31,14 @@ extern int	odNViews;	/* number of views in our list */
 extern struct ODsamp {
 	union ODfunion {
 		float	prox;			/* viewpoint proximity */
-		int4	next;			/* next in free list */
+		int32	next;			/* next in free list */
 		
 	} *f;				/* free list next or proximity */
 	short		(*ip)[2];	/* image position array */
 	TMbright	*brt;		/* encoded brightness array */
 	BYTE		(*chr)[3];	/* encoded chrominance array */
 	BYTE		(*rgb)[3];	/* tone-mapped color array */
-	int4		*redraw;	/* redraw flags */
+	int32		*redraw;	/* redraw flags */
 	int		nsamp;		/* total number of samples */
 	char		*base;		/* base of allocated memory */
 } odS;			/* sample values */
@@ -52,7 +50,7 @@ extern struct ODsamp {
 #define CLR4(f,i)	FL4OP(f,i,&=~)
 #define TGL4(f,i)	FL4OP(f,i,^=)
 #define FL4NELS(n)	(((n)+0x1f)>>5)
-#define CLR4ALL(f,n)	bzero((char *)(f),FL4NELS(n)*sizeof(int4))
+#define CLR4ALL(f,n)	bzero((char *)(f),FL4NELS(n)*sizeof(int32))
 #endif
 
 #define OMAXDEPTH	32000			/* maximum depth value */

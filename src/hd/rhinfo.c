@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.6 2003/05/29 16:26:22 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.7 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -40,7 +40,7 @@ FILE	*fout;
 	FILE	*fp;
 	HOLO	*hdsect;
 	int	fd;
-	int4	nextloc;
+	int32	nextloc;
 	int	n;
 					/* open holodeck file */
 	if ((fp = fopen(fname, "r")) == NULL) {

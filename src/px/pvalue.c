@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.19 2003/06/08 12:03:10 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.20 2003/06/20 00:25:50 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -13,8 +13,6 @@ static const char RCSid[] = "$Id: pvalue.c,v 2.19 2003/06/08 12:03:10 schorsch E
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
-
-typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
 
 #define	 min(a,b)		((a)<(b)?(a):(b))
 

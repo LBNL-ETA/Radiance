@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.5 2003/06/08 12:03:09 schorsch Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.6 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -133,17 +133,17 @@ register MESHPATCH	*pp;
 	pp->nverts = mgetint(2);
 	if (pp->nverts <= 0 || pp->nverts > 256)
 		mesherror(USER, "bad number of patch vertices");
-	pp->xyz = (uint4 (*)[3])malloc(pp->nverts*3*sizeof(uint4));
+	pp->xyz = (uint32 (*)[3])malloc(pp->nverts*3*sizeof(uint32));
 	if (pp->xyz == NULL)
 		goto nomem;
 	if (flags & MT_N) {
-		pp->norm = (int4 *)calloc(pp->nverts, sizeof(int4));
+		pp->norm = (int32 *)calloc(pp->nverts, sizeof(int32));
 		if (pp->norm == NULL)
 			goto nomem;
 	} else
 		pp->norm = NULL;
 	if (flags & MT_UV) {
-		pp->uv = (uint4 (*)[2])calloc(pp->nverts, 2*sizeof(uint4));
+		pp->uv = (uint32 (*)[2])calloc(pp->nverts, 2*sizeof(uint32));
 		if (pp->uv == NULL)
 			goto nomem;
 	} else
@@ -179,7 +179,7 @@ register MESHPATCH	*pp;
 		pp->tri = NULL;
 					/* local triangle material(s) */
 	if (mgetint(2) > 1) {
-		pp->trimat = (int2 *)malloc(pp->ntris*sizeof(int2));
+		pp->trimat = (int16 *)malloc(pp->ntris*sizeof(int16));
 		if (pp->trimat == NULL)
 			goto nomem;
 		for (i = 0; i < pp->ntris; i++)

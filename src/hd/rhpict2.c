@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.10 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.11 2003/06/20 00:25:49 greg Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -35,10 +35,10 @@ static const char	RCSid[] = "$Id: rhpict2.c,v 3.10 2003/02/22 02:07:25 greg Exp 
 #define CLR4(f,i)	FL4OP(f,i,&=~)
 #define TGL4(f,i)	FL4OP(f,i,^=)
 #define FL4NELS(n)	(((n)+0x1f)>>5)
-#define CLR4ALL(f,n)	bzero((char *)(f),FL4NELS(n)*sizeof(int4))
+#define CLR4ALL(f,n)	bzero((char *)(f),FL4NELS(n)*sizeof(int32))
 #endif
 
-static int4	*pixFlags;	/* pixel occupancy flags */
+static int32	*pixFlags;	/* pixel occupancy flags */
 static float	pixWeight[MAXRAD2];	/* pixel weighting function */
 static short	isqrttab[MAXRAD2];	/* integer square root table */
 
@@ -61,7 +61,7 @@ register HDBEAMI	*hb;
 	double	d, prox;
 	COLOR	col;
 	int	n;
-	register int4	p;
+	register int32	p;
 
 	if (!hdbcoord(gc, hb->h, hb->b))
 		error(CONSISTENCY, "bad beam in render_beam");
@@ -118,7 +118,7 @@ int	n;
 	short	forequad[2][2];
 	int	d;
 	register int	i;
-	register int4	p;
+	register int32	p;
 
 	if (n <= 0) {
 #ifdef DEBUG
@@ -152,7 +152,7 @@ int	n;
 	COLOR	mykern[MAXRAD2];
 	int	maxr2;
 	double	d;
-	register int4	p;
+	register int32	p;
 	register int	r2;
 	int	i, r, maxr, h2, v2;
 
@@ -213,7 +213,7 @@ double	*rf;
 {
 	float	rnt[NNEIGH];
 	double	rvar;
-	register int4	p, pn;
+	register int32	p, pn;
 	register int	ni;
 
 	if (n <= 0)
@@ -256,10 +256,10 @@ double	ransamp;
 
 reset_flags()			/* allocate/set/reset occupancy flags */
 {
-	register int4	p;
+	register int32	p;
 
 	if (pixFlags == NULL) {
-		pixFlags = (int4 *)calloc(FL4NELS(hres*vres), sizeof(int4));
+		pixFlags = (int32 *)calloc(FL4NELS(hres*vres), sizeof(int32));
 		CHECK(pixFlags==NULL, SYSTEM, "out of memory in reset_flags");
 	} else
 		CLR4ALL(pixFlags, hres*vres);

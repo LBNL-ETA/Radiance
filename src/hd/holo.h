@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.21 2003/05/29 16:26:21 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.22 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -22,7 +22,7 @@
 typedef struct {
 	BYTE 	r[2][2];	/* ray direction index */
 	COLR 	v;		/* color value */
-	unsigned int2	d;	/* depth code (from entry wall) */
+	uint16	d;		/* depth code (from entry wall) */
 } RAYVAL;		/* ray value */
 
 /*
@@ -43,12 +43,12 @@ typedef struct {
 } GCOORD;		/* grid coordinates (two for beam) */
 
 typedef struct {
-	unsigned int4	nrd;	/* number of beam rays bundled on disk */
+	uint32	nrd;		/* number of beam rays bundled on disk */
 	off_t	fo;		/* position in file */
 } BEAMI;		/* beam index */
 
 typedef struct {
-	unsigned int4	nrm;	/* number of beam rays bundled in memory */
+	uint32	nrm;		/* number of beam rays bundled in memory */
 	unsigned long	tick;	/* clock tick for LRU replacement */
 } BEAM;			/* followed by nrm RAYVAL's */
 
@@ -58,13 +58,13 @@ typedef struct {
 typedef struct {
 	FVECT	orig;		/* prism origin (first) */
 	FVECT	xv[3];		/* side vectors (second) */
-	int2	grid[3];	/* grid resolution (third) */
+	int16	grid[3];	/* grid resolution (third) */
 } HDGRID;		/* holodeck section grid (must match HOLO struct) */
 
 typedef struct holo {
 	FVECT	orig;		/* prism origin (first) */
 	FVECT	xv[3];		/* side vectors (second) */
-	int2	grid[3];	/* grid resolution (third) */
+	int16	grid[3];	/* grid resolution (third) */
 	int	fd;		/* file descriptor */
 	struct {
 		int	s, n;		/* dirty section start, length */

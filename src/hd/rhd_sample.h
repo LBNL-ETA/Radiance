@@ -1,18 +1,13 @@
-/* RCSid: $Id: rhd_sample.h,v 3.8 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid: $Id: rhd_sample.h,v 3.9 2003/06/20 00:25:49 greg Exp $ */
 /*
  * Sample data structures for holodeck display drivers.
+ *
+ * Include after "standard.h"
  */
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
 #include "object.h"
-
-#ifndef int2
-#define int2	short
-#endif
-#ifndef int4
-#define int4	int
-#endif
 
 #ifndef INVALID
 #define INVALID  -1
@@ -26,7 +21,7 @@ typedef OBJECT S_ID;
 
 typedef struct samp {
 	SFLOAT		(*wp)[3];	/* world intersection point array */
-	int4		*wd;		/* world direction array */
+	int32		*wd;		/* world direction array */
 	TMbright	*brt;		/* encoded brightness array */
 	BYTE		(*chr)[3];	/* encoded chrominance array */
 	BYTE		(*rgb)[3];	/* tone-mapped color array */
@@ -90,10 +85,10 @@ typedef struct samp {
 
 extern	SAMP rsL;			
 extern double	sDepthEps;	/* epsilon to compare depths (z fraction) */
-extern int4	encodedir();    /* Encodes FVECT direction */
+extern int32	encodedir();    /* Encodes FVECT direction */
 extern void     decodedir();    /* Decodes dir-> FVECT */
 extern double	fdir2diff(), dir2diff(); /* Compare dir and FVECT */
-extern int4    *samp_flag;     /* Per/sample flags s */
+extern int32    *samp_flag;     /* Per/sample flags s */
 
 /* These values are set by the driver, and used in the OGL call for glFrustum*/
 extern double dev_zmin,dev_zmax;

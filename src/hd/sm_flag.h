@@ -1,4 +1,4 @@
-/* RCSid: $Id: sm_flag.h,v 3.2 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm_flag.h,v 3.3 2003/06/20 00:25:49 greg Exp $ */
 /* sm_flag.h */
 
 /* 32 bit FLAGS */
@@ -8,4 +8,4 @@
 #define IS_FLAG(f,t)		F_OP(f,t,&)
 #define SET_FLAG(f,t)		F_OP(f,t,|=)
 #define CLR_FLAG(f,t)		F_OP(f,t,&=~)
-#define FLAG_BYTES(n)            ((((n)+31) >>5)*sizeof(int4))
+#define FLAG_BYTES(n)            ((((n)+31) >>5)*sizeof(int32))
