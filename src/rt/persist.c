@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.30 2003/07/14 20:02:30 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.31 2003/08/30 09:03:31 schorsch Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -23,10 +23,6 @@ static const char	RCSid[] = "$Id: persist.c,v 2.30 2003/07/14 20:02:30 schorsch 
 
 #ifndef TIMELIM
 #define TIMELIM		(8*3600)	/* time limit for holding pattern */
-#endif
-
-#ifndef freebsd
-#define	mkfifo(fn,md)	mknod(fn, S_IFIFO|(md), 0)
 #endif
 
 extern void	io_process();
