@@ -1,0 +1,213 @@
+# xform -e -s 3.14159
+### lights  (light, illum, glow)
+
+void light light.def
+0
+0
+3                100                100                100
+
+void spotlight spotlight.def
+0
+0
+7                100                100                100                 50
+	                 0                  0           0.314159
+
+void illum illum.def
+0
+0
+3                100                100                100
+
+void glow glow.def
+0
+0
+4                100                100                100            31.4159
+### materials
+
+void plastic plastic.def
+0
+0
+5                0.7                0.7                0.7                  0                  0
+
+void plastic2 plastic2.def
+8 ux uy uz test.cal -i 1 -s 3.14159
+0
+6                0.7                0.7                0.7                  0                  0                  0
+
+void plasfunc plasfunc.def
+6 refl test.cal -i 1 -s 3.14159
+0
+4                0.7                0.7                0.7                  0
+
+void plasdata plasdata.def
+8 func default.dat test.cal x1 -i 1 -s 3.14159
+0
+4                0.7                0.7                0.7                  0
+
+void metal metal.def
+0
+0
+5                0.7                0.7                0.7                  0                  0
+
+void metal2 metal2.def
+8 ux uy uz test.cal -i 1 -s 3.14159
+0
+6                0.7                0.7                0.7                  0                  0                  0
+
+void metfunc metfunc.def
+6 refl test.cal -i 1 -s 3.14159
+0
+4                0.7                0.7                0.7                  0
+
+void metdata metdata.def
+8 func default.dat test.cal x1 -i 1 -s 3.14159
+0
+4                0.7                0.7                0.7                  0
+
+void trans trans.def
+0
+0
+7                0.7                0.7                0.7                  0                  0                  1                0.5
+
+void trans2 trans2.def
+8 ux uy uz test.cal -i 1 -s 3.14159
+0
+8                0.7                0.7                0.7                  0                  0                  0                  1                0.5
+
+void transfunc transfunc.def
+6 brtd test.cal -i 1 -s 3.14159
+0
+6                0.7                0.7                0.7                  0                  1                0.5
+
+void transdata transdata.def
+8 func default.dat test.cal x1 -i 1 -s 3.14159
+0
+6                0.7                0.7                0.7                  0                  1                0.5
+
+void mirror mirror.def
+0
+0
+3               0.85               0.85               0.85
+
+void prism1 prism1.def
+9 coef1 dx1 dy1 dz1 prism.cal -i 1 -s 3.14159
+0
+4                1.5              0.012              0.012                  0
+
+void prism2 prism2.def
+13 coef1 dx1 dy1 dz1 coef2 dx2 dy2 dz2 prism.cal -i 1 -s 3.14159
+0
+4                1.5               0.01            0.00866              0.005
+
+void mist mist.def
+0
+0
+0
+
+void dielectric dielectric.def
+0
+0
+5     0.931435     0.931435     0.931435          1.5            0
+
+void interface interface.def
+0
+0
+8
+    0.949584     0.949584     0.949584          1.5
+    0.949584     0.949584     0.949584          1.5
+
+void glass glass.def
+0
+0
+3                0.7                0.7                0.7
+
+void BRTDfunc BRTDfunc.def
+14 rrefl grefl brefl rtrns gtrns btrns rbrtd gbrtd bbrtd test.cal -i 1 -s 3.14159
+0
+9                0.1                0.2                0.3                0.4                0.5                0.6                0.7                0.8                0.9
+
+void antimatter antimatter.def
+1 default_material
+0
+0
+### textures
+
+void texfunc texfunc.def
+8 xpert ypert zpert test.cal -i 1 -s 3.14159
+0
+0
+
+void texdata texdata.def
+12 xfunc yfunc zfunc default.dat default.dat default.dat test.cal x0 -i 1 -s 3.14159
+0
+0
+### patterns
+
+void colorfunc colorfunc.def
+8 red green blue test.cal -i 1 -s 3.14159
+0
+0
+
+void brightfunc brightfunc.def
+6 refl test.cal -i 1 -s 3.14159
+0
+0
+
+void colordata colordata.def
+12 rfunc gfunc bfunc default.dat default.dat default.dat test.cal x0 -i 1 -s 3.14159
+0
+0
+
+void brightdata brightdata.def
+8 func default.dat test.cal x0 -i 1 -s 3.14159
+0
+0
+
+void colorpict colorpict.def
+11 rfunc gfunc bfunc default.pic test.cal u v -i 1 -s 3.14159
+0
+0
+
+void colortext colortext.def
+9 helvet.fnt . this is a default line of text
+0
+16
+            31.4159            31.4159            31.4159
+            3.14159                  0                  0
+                  0           -3.14159                  0
+                0.1                0.1                0.1
+                0.8                0.8                0.8
+                0.3
+
+void brighttext brighttext.def
+9 helvet.fnt . this is a default line of text
+0
+12
+            31.4159            31.4159            31.4159
+            3.14159                  0                  0
+                  0           -3.14159                  0
+                0.1                0.8                0.3
+### mixtures
+
+void mixfunc mixfunc.def
+8 default_material default_material func test.cal -i 1 -s 3.14159
+0
+0
+
+void mixdata mixdata.def
+12 default_material default_material func default.dat test.cal x0 xy x2 -i 1 -s 3.14159
+0
+0
+
+void mixpict mixpict.def
+11 default_material default_material func default.pic test.cal u v -i 1 -s 3.14159
+0
+0
+
+void mixtext mixtext.def
+11 default_material default_material helvet.fnt . this is a default line of text
+0
+10
+            31.4159            31.4159            31.4159
+            3.14159                  0                  0
+                  0           -3.14159                  0
+                0.3

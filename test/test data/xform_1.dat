@@ -1,0 +1,228 @@
+### lights  (light, illum, glow)
+
+void light light.def
+0
+0
+3 100.0 100.0 100.0
+
+void spotlight spotlight.def
+0
+0
+7 100.0 100.0 100.0 50.0 0.0 0.0 0.1
+
+void illum illum.def
+0
+0
+3 100.0 100.0 100.0
+
+void glow glow.def
+0
+0
+4 100.0 100.0 100.0 10.0
+
+
+### materials
+
+void plastic plastic.def
+0
+0
+5 0.7 0.7 0.7 0.0 0.0
+
+void plastic2 plastic2.def
+4 ux uy uz test.cal
+0
+6 0.7 0.7 0.7 0.0 0.0 0.0
+
+void plasfunc plasfunc.def
+2 refl test.cal
+0
+4 0.7 0.7 0.7 0.0
+
+void plasdata plasdata.def
+4 func default.dat test.cal x1
+0
+4 0.7 0.7 0.7 0.0
+
+
+void metal metal.def
+0
+0
+5 0.7 0.7 0.7 0.0 0.0
+
+void metal2 metal2.def
+4 ux uy uz test.cal
+0
+6 0.7 0.7 0.7 0.0 0.0 0.0
+
+void metfunc metfunc.def
+2 refl test.cal
+0
+4 0.7 0.7 0.7 0.0
+
+void metdata metdata.def
+4 func default.dat test.cal x1
+0
+4 0.7 0.7 0.7 0.0
+
+
+void trans trans.def
+0
+0
+7 0.7 0.7 0.7 0.0 0.0 1.0 0.5
+
+void trans2 trans2.def
+4 ux uy uz test.cal
+0
+8 0.7 0.7 0.7 0.0 0.0 0.0 1.0 0.5
+
+void transfunc transfunc.def
+2 brtd test.cal
+0
+6 0.7 0.7 0.7 0.0 1.0 0.5
+
+void transdata transdata.def
+4 func default.dat test.cal x1
+0
+6 0.7 0.7 0.7 0.0 1.0 0.5
+
+
+void mirror mirror.def
+0
+0
+3 0.85 0.85 0.85
+
+void prism1 prism1.def
+5 coef1 dx1 dy1 dz1 prism.cal
+0
+4 1.5 0.012 0.012 0.0
+
+void prism2 prism2.def
+9 coef1 dx1 dy1 dz1 coef2 dx2 dy2 dz2 prism.cal
+0
+4 1.5 0.01 0.00866 0.005
+
+void mist mist.def
+0
+0
+0
+
+
+void dielectric dielectric.def
+0
+0
+5 0.8 0.8 0.8 1.5 0.0
+
+void interface interface.def
+0
+0
+8 0.85 0.85 0.85 1.5 0.85 0.85 0.85 1.5
+
+void glass glass.def
+0
+0
+3 0.7 0.7 0.7
+
+
+void BRTDfunc BRTDfunc.def
+10 rrefl grefl brefl
+   rtrns gtrns btrns
+   rbrtd gbrtd bbrtd
+   test.cal
+0
+9 0.1 0.2 0.3
+  0.4 0.5 0.6
+  0.7 0.8 0.9
+
+
+void antimatter antimatter.def
+1 default_material
+0
+0
+
+
+
+### textures
+
+void texfunc texfunc.def
+4 xpert ypert zpert test.cal
+0
+0
+
+void texdata texdata.def
+8 xfunc yfunc zfunc default.dat default.dat default.dat test.cal x0
+0
+0
+
+
+
+### patterns
+
+void colorfunc colorfunc.def
+4 red green blue test.cal
+0
+0
+
+void brightfunc brightfunc.def
+2 refl test.cal
+0
+0
+
+void colordata colordata.def
+8 rfunc gfunc bfunc default.dat default.dat default.dat test.cal x0
+0
+0
+
+void brightdata brightdata.def
+4 func default.dat test.cal x0
+0
+0
+
+void colorpict colorpict.def
+7 rfunc gfunc bfunc default.pic test.cal u v
+0
+0
+
+void colortext colortext.def
+9 helvet.fnt . this is a default line of text
+0
+16  10 10 10
+    1 0 0
+	0 -1 0
+	.1 .1 .1
+	.8 .8 .8
+	.3
+
+void brighttext brighttext.def
+9 helvet.fnt . this is a default line of text
+0
+12  10 10 10
+    1 0 0
+	0 -1 0
+	.1 .8 .3
+
+
+### mixtures
+
+void mixfunc mixfunc.def
+4 default_material default_material func test.cal
+0
+0
+
+void mixdata mixdata.def
+8 default_material default_material func default.dat test.cal x0 xy x2
+0
+0
+
+void mixpict mixpict.def
+7 default_material default_material func default.pic test.cal u v
+0
+0
+
+void mixtext mixtext.def
+11 default_material default_material helvet.fnt . this is a default line of text
+0
+10  10 10 10
+    1 0 0
+	0 -1 0
+	.3
+
