@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.23 2003/10/20 15:10:18 greg Exp $
+# RCSid $Id: Rmakefile,v 2.24 2003/11/17 13:20:10 schorsch Exp $
 #
 # Makefile for conversion programs
 #
@@ -8,6 +8,7 @@ OPT = -O
 MACH = -DBSD
 
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
+METACFLAGS = -I../meta
 
 CC = cc
 
@@ -87,7 +88,7 @@ mgf2rad.o:	mgf2rad.c mgflib/parser.h ../common/tmesh.h ../common/color.h
 	$(CC) $(CFLAGS) -c mgf2rad.c
 
 mgf2meta.o:	mgf2meta.c mgflib/parser.h
-	$(CC) $(CFLAGS) -c mgf2meta.c
+	$(CC) $(CFLAGS) $(METACFLAGS) -c mgf2meta.c
 
 arch2rad.o trans.o:	trans.h
 
