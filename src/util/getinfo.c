@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.8 2004/01/02 11:44:24 schorsch Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -8,14 +8,21 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.7 2003/07/21 22:30:19 schorsch E
  */
 
 #include  <stdio.h>
+#include  <string.h>
 
 #include  "platform.h"
+#include  "resolu.h"
+
+static gethfunc tabstr;
+static void getdim(register FILE *fp);
+static void copycat(void);
 
 
-
-int
-tabstr(s)				/* put out line followed by tab */
-register char  *s;
+static int
+tabstr(				/* put out line followed by tab */
+	register char  *s,
+	void *p
+)
 {
 	while (*s) {
 		putchar(*s);
@@ -27,9 +34,11 @@ register char  *s;
 }
 
 
-main(argc, argv)
-int  argc;
-char  **argv;
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
 	int  dim = 0;
 	FILE  *fp;
@@ -45,7 +54,7 @@ char  **argv;
 		SET_FILE_BINARY(stdout);
 		getheader(stdin, NULL, NULL);
 		copycat();
-		exit(0);
+		return 0;
 	}
 	for (i = 1; i < argc; i++) {
 		fputs(argv[i], stdout);
@@ -56,7 +65,7 @@ char  **argv;
 				fputs(": ", stdout);
 				getdim(fp);
 			} else {
-				tabstr(":\n");
+				tabstr(":\n", NULL);
 				getheader(fp, tabstr, NULL);
 				putchar('\n');
 			}
@@ -67,16 +76,18 @@ char  **argv;
 		if (dim) {
 			getdim(stdin);
 		} else {
-			getheader(stdin, fputs, stdout);
+			getheader(stdin, (gethfunc*)fputs, stdout);
 			putchar('\n');
 		}
 	}
-	exit(0);
+	return 0;
 }
 
 
-getdim(fp)				/* get dimensions from file */
-register FILE  *fp;
+static void
+getdim(				/* get dimensions from file */
+	register FILE  *fp
+)
 {
 	int  j;
 	register int  c;
@@ -110,7 +121,8 @@ register FILE  *fp;
 }
 
 
-copycat()			/* copy input to output */
+static void
+copycat(void)			/* copy input to output */
 {
 	register int	c;
 
