@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.15 2003/03/11 17:08:55 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.16 2003/05/09 22:18:03 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -190,6 +190,7 @@ extern void	raycont();
 extern void	raytrans();
 extern int	rayshade();
 extern void	rayparticipate();
+extern void	raytexture();
 extern int	raymixture();
 extern double	raydist();
 extern double	raynormal();
@@ -243,6 +244,7 @@ extern void	raycont(RAY *r);
 extern void	raytrans(RAY *r);
 extern int	rayshade(RAY *r, int mod);
 extern void	rayparticipate(RAY *r);
+extern void	raytexture(RAY *r, OBJECT mod);
 extern int	raymixture(RAY *r, OBJECT fore, OBJECT back, double coef);
 extern double	raydist(RAY *r, int flags);
 extern double	raynormal(FVECT norm, RAY *r);

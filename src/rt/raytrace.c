@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.38 2003/03/11 19:29:05 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.39 2003/05/09 22:18:03 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -228,9 +228,10 @@ register RAY  *r;
 }
 
 
+void
 raytexture(r, mod)			/* get material modifiers */
 RAY  *r;
-int  mod;
+OBJECT  mod;
 {
 	register OBJREC  *m;
 #if  MAXLOOP
