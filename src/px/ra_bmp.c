@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.6 2004/04/30 17:56:06 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.7 2004/04/30 21:16:58 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -162,8 +162,7 @@ main(int argc, char *argv[])
 		if (hdr == NULL)
 			quiterr("cannot initialize BMP header");
 					/* set up output direction */
-		hdr->yIsDown = (rs.rt & YDECR) &&
-				((outfile == NULL) | (hdr->compr == BI_RLE8));
+		hdr->yIsDown = ((outfile == NULL) | (hdr->compr == BI_RLE8));
 					/* open BMP output */
 		if (outfile != NULL)
 			wtr = BMPopenOutputFile(outfile, hdr);
@@ -172,7 +171,7 @@ main(int argc, char *argv[])
 		if (wtr == NULL)
 			quiterr("cannot allocate writer structure");
 					/* convert file */
-		rad2bmp(stdin, wtr, !hdr->yIsDown && rs.rt&YDECR, rgbp==NULL);
+		rad2bmp(stdin, wtr, !hdr->yIsDown, rgbp==NULL);
 					/* flush output */
 		if (fflush((FILE *)wtr->c_data) < 0)
 			quiterr("error writing BMP output");
@@ -349,9 +348,7 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 					/* write to BMP file */
 	while (wtr->yscan < yr) {
 		BYTE    *scn = pa + xr*((tmflags & TM_F_BW) ? 1 : 3)*
-					((rs.rt & YDECR) ?
-						(yr-1 - wtr->yscan) :
-						wtr->yscan);
+						(yr-1 - wtr->yscan);
 		if (tmflags & TM_F_BW)
 			memcpy((void *)wtr->scanline, (void *)scn, xr);
 		else
