@@ -1,4 +1,4 @@
-{ RCSid: $Id: tmesh.cal,v 2.1 2003/03/10 19:38:19 greg Exp $ }
+{ RCSid: $Id: tmesh.cal,v 2.2 2004/03/11 23:16:01 greg Exp $ }
 {
 	Interpolate triangle-mesh values using barycentric coordinates.
 
@@ -19,6 +19,6 @@ nf = 1/sqrt(v1*v1 + v2*v2 + v3*v3);
 dx = v1*nf - Nx;
 dy = v2*nf - Ny;
 dz = v3*nf - Nz;
-					{ Lookup table index }
-u = v1;
-v = v2;
+					{ Tiled texture coordinates }
+u = frac(v1);
+v = frac(v2);
