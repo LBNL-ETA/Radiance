@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.17 2004/02/12 18:55:50 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.18 2004/03/16 19:56:27 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -546,8 +546,6 @@ register MESH	*mp;
 				if (nouvbounds && pp->uv != NULL)
 					return("unreferenced uv coordinates");
 			}
-			if (pp->ntris + pp->nj1tris + pp->nj2tris <= 0)
-				error(WARNING, "no triangles in patch");
 			if (pp->ntris > 0 && pp->tri == NULL)
 				return("missing patch triangle list");
 			if (pp->nj1tris > 0 && pp->j1tri == NULL)
