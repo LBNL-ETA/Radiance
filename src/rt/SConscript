@@ -23,8 +23,8 @@ ambio = env.Object(source="ambio.c")
 RAY = Split('''ambcomp.c ambient.c freeobjmem.c initotypes.c preload.c
 		raytrace.c renderopts.c Version.c''') + [ambio]
 
-SURF = Split('''sphere.c source.c srcsupp.c virtuals.c o_face.c
-		srcsamp.c o_cone.c o_instance.c o_mesh.c''')
+SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
+		o_face.c o_cone.c o_instance.c o_mesh.c''')
 
 MAT = Split('''aniso.c normal.c m_clip.c glass.c m_brdf.c m_mirror.c
 		m_direct.c m_mist.c fprism.c m_alias.c''') + [dielectric]
