@@ -1,0 +1,41 @@
+{ RCSid $Id: genSH.cal,v 1.1 2005/02/16 15:51:45 greg Exp $ }
+{
+	Synthesize light probe using Spherical Harmonic coefficients
+
+	2/16/2005	G. Ward
+
+	Constants:
+		map -		light probe mapping (1=angular, 2=mirror)
+		rcoef(i) -	red coefficient array
+		gcoef(i) -	green coefficient array
+		bcoef(i) -	blue coefficient array
+	Usage:
+		pcomb -x 640 -y 640 -e 'map:1' -f spharm.cal -f genSH.cal \
+			-f coef.cal > probe.pic
+}
+map : 1;			{ just angular for now }
+
+h = 1/xres*x - .5;
+v = 1/yres*y - .5;
+
+beta_ang = 2*PI*sqrt(h*h + v*v);
+gamma_ang = atan2(v, h);
+sine_beta_ang = sin(beta_ang);
+Dx_ang = cos(beta_ang);
+Dy_ang = cos(gamma_ang)*sine_beta_ang;
+Dz_ang = sin(gamma_ang)*sine_beta_ang;
+theta_ang = acos(Dz_ang);
+phi_ang = atan2(Dy_ang, Dx_ang);
+
+cond = select(map, PI-1e-4-beta_ang);
+theta = select(map, theta_ang);
+phi = select(map, phi_ang);
+
+ro = if(cond, SphericalHarmonicF(rcoef,theta_ang,phi_ang), 0);
+go = if(cond, SphericalHarmonicF(gcoef,theta_ang,phi_ang), 0);
+bo = if(cond, SphericalHarmonicF(bcoef,theta_ang,phi_ang), 0);
+
+				{ Uncomment for luminance only }
+{
+lo = if(cond, SphericalHarmonicF(lcoef,theta_ang,phi_ang), 0);
+}

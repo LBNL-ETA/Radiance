@@ -1,0 +1,130 @@
+{ RCSid $Id: fitSH.cal,v 1.1 2005/02/16 15:51:45 greg Exp $ }
+{
+	Fit Spherical Harmonic Coefficients for a Light Probe
+
+	2/16/2005	G. Ward
+
+	Constants:
+		xres -		horizontal input resolution
+		yres -		vertical input resolution
+		map -		light probe mapping (1=angular, 2=mirror)
+	Usage:
+		pvalue -h -H -pR -d probe.hdr \
+			| rcalc -e 'xres:512;yres:512;map:1' \
+				-f spharm.cal -f fitSH.cal \
+			| total > coef_R.dat
+	Repeat for green and blue components if desired
+}
+map : 1;			{ just angular for now }
+
+mod(n,d) : n - floor(n/d)*d;
+sq(x) : x*x;
+
+x = mod(recno-1, xres);
+y = yres-1 - floor((recno-1)/xres);
+h = 1/xres*x - .5;
+v = 1/yres*y - .5;
+
+beta_ang = 2*PI*sqrt(h*h + v*v);
+gamma_ang = atan2(v, h);
+sine_beta_ang = sin(beta_ang);
+Dx_ang = cos(beta_ang);
+Dy_ang = cos(gamma_ang)*sine_beta_ang;
+Dz_ang = sin(gamma_ang)*sine_beta_ang;
+theta_ang = acos(Dz_ang);
+phi_ang = atan2(Dy_ang, Dx_ang);
+omega_ang = sq(4*PI/(xres+yres))*if(beta_ang-.01, sine_beta_ang/beta_ang, 1);
+
+cond = select(map, PI-1e-4-beta_ang);
+theta = select(map, theta_ang);
+phi = select(map, phi_ang);
+omega = select(map, omega_ang);
+
+			{ Level 0-2 harmonics }
+$1 = $1*SphericalHarmonicB(1,theta,phi)*omega;
+$2 = $1*SphericalHarmonicB(2,theta,phi)*omega;
+$3 = $1*SphericalHarmonicB(3,theta,phi)*omega;
+$4 = $1*SphericalHarmonicB(4,theta,phi)*omega;
+$5 = $1*SphericalHarmonicB(5,theta,phi)*omega;
+$6 = $1*SphericalHarmonicB(6,theta,phi)*omega;
+$7 = $1*SphericalHarmonicB(7,theta,phi)*omega;
+$8 = $1*SphericalHarmonicB(8,theta,phi)*omega;
+$9 = $1*SphericalHarmonicB(9,theta,phi)*omega;
+			{ Level 3 harmonics }
+$10 = $1*SphericalHarmonicB(10,theta,phi)*omega;
+$11 = $1*SphericalHarmonicB(11,theta,phi)*omega;
+$12 = $1*SphericalHarmonicB(12,theta,phi)*omega;
+$13 = $1*SphericalHarmonicB(13,theta,phi)*omega;
+$14 = $1*SphericalHarmonicB(14,theta,phi)*omega;
+$15 = $1*SphericalHarmonicB(15,theta,phi)*omega;
+$16 = $1*SphericalHarmonicB(16,theta,phi)*omega;
+			{ Level 4 harmonics }
+$17 = $1*SphericalHarmonicB(17,theta,phi)*omega;
+$18 = $1*SphericalHarmonicB(18,theta,phi)*omega;
+$19 = $1*SphericalHarmonicB(19,theta,phi)*omega;
+$20 = $1*SphericalHarmonicB(20,theta,phi)*omega;
+$21 = $1*SphericalHarmonicB(21,theta,phi)*omega;
+$22 = $1*SphericalHarmonicB(22,theta,phi)*omega;
+$23 = $1*SphericalHarmonicB(23,theta,phi)*omega;
+$24 = $1*SphericalHarmonicB(24,theta,phi)*omega;
+$25 = $1*SphericalHarmonicB(25,theta,phi)*omega;
+			{ Level 5 harmonics }
+$26 = $1*SphericalHarmonicB(26,theta,phi)*omega;
+$27 = $1*SphericalHarmonicB(27,theta,phi)*omega;
+$28 = $1*SphericalHarmonicB(28,theta,phi)*omega;
+$29 = $1*SphericalHarmonicB(29,theta,phi)*omega;
+$30 = $1*SphericalHarmonicB(30,theta,phi)*omega;
+$31 = $1*SphericalHarmonicB(31,theta,phi)*omega;
+$32 = $1*SphericalHarmonicB(32,theta,phi)*omega;
+$33 = $1*SphericalHarmonicB(33,theta,phi)*omega;
+$34 = $1*SphericalHarmonicB(34,theta,phi)*omega;
+$35 = $1*SphericalHarmonicB(35,theta,phi)*omega;
+$36 = $1*SphericalHarmonicB(36,theta,phi)*omega;
+			{ Level 6 harmonics }
+$37 = $1*SphericalHarmonicB(37,theta,phi)*omega;
+$38 = $1*SphericalHarmonicB(38,theta,phi)*omega;
+$39 = $1*SphericalHarmonicB(39,theta,phi)*omega;
+$40 = $1*SphericalHarmonicB(40,theta,phi)*omega;
+$41 = $1*SphericalHarmonicB(41,theta,phi)*omega;
+$42 = $1*SphericalHarmonicB(42,theta,phi)*omega;
+$43 = $1*SphericalHarmonicB(43,theta,phi)*omega;
+$44 = $1*SphericalHarmonicB(44,theta,phi)*omega;
+$45 = $1*SphericalHarmonicB(45,theta,phi)*omega;
+$46 = $1*SphericalHarmonicB(46,theta,phi)*omega;
+$47 = $1*SphericalHarmonicB(47,theta,phi)*omega;
+$48 = $1*SphericalHarmonicB(48,theta,phi)*omega;
+$49 = $1*SphericalHarmonicB(49,theta,phi)*omega;
+			{ Level 7 harmonics }
+$50 = $1*SphericalHarmonicB(50,theta,phi)*omega;
+$51 = $1*SphericalHarmonicB(51,theta,phi)*omega;
+$52 = $1*SphericalHarmonicB(52,theta,phi)*omega;
+$53 = $1*SphericalHarmonicB(53,theta,phi)*omega;
+$54 = $1*SphericalHarmonicB(54,theta,phi)*omega;
+$55 = $1*SphericalHarmonicB(55,theta,phi)*omega;
+$56 = $1*SphericalHarmonicB(56,theta,phi)*omega;
+$57 = $1*SphericalHarmonicB(57,theta,phi)*omega;
+$58 = $1*SphericalHarmonicB(58,theta,phi)*omega;
+$59 = $1*SphericalHarmonicB(59,theta,phi)*omega;
+$60 = $1*SphericalHarmonicB(60,theta,phi)*omega;
+$61 = $1*SphericalHarmonicB(61,theta,phi)*omega;
+$62 = $1*SphericalHarmonicB(62,theta,phi)*omega;
+$63 = $1*SphericalHarmonicB(63,theta,phi)*omega;
+$64 = $1*SphericalHarmonicB(64,theta,phi)*omega;
+			{ Level 8 harmonics }
+$65 = $1*SphericalHarmonicB(65,theta,phi)*omega;
+$66 = $1*SphericalHarmonicB(66,theta,phi)*omega;
+$67 = $1*SphericalHarmonicB(67,theta,phi)*omega;
+$68 = $1*SphericalHarmonicB(68,theta,phi)*omega;
+$69 = $1*SphericalHarmonicB(69,theta,phi)*omega;
+$70 = $1*SphericalHarmonicB(70,theta,phi)*omega;
+$71 = $1*SphericalHarmonicB(71,theta,phi)*omega;
+$72 = $1*SphericalHarmonicB(72,theta,phi)*omega;
+$73 = $1*SphericalHarmonicB(73,theta,phi)*omega;
+$74 = $1*SphericalHarmonicB(74,theta,phi)*omega;
+$75 = $1*SphericalHarmonicB(75,theta,phi)*omega;
+$76 = $1*SphericalHarmonicB(76,theta,phi)*omega;
+$77 = $1*SphericalHarmonicB(77,theta,phi)*omega;
+$78 = $1*SphericalHarmonicB(78,theta,phi)*omega;
+$79 = $1*SphericalHarmonicB(79,theta,phi)*omega;
+$80 = $1*SphericalHarmonicB(80,theta,phi)*omega;
+$81 = $1*SphericalHarmonicB(81,theta,phi)*omega;
