@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.2 2003/06/26 00:49:15 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 1.3 2003/07/14 16:07:41 greg Exp $
 #
 #  Compiles:
 #
@@ -186,7 +186,7 @@ mgraph.o:	mgraph.h
 misc.o syscalls.o mfio.o hfio.o cvhfio.o palloc.o segment.o sort.o expand.o \
 plot.o mplot.o primout.o tgraph.o mt160l.o mt160.o mx80.o plotout.o \
 psort.o pexpand.o cv.o tcurve.o tscat.o mtext.o tbar.o plot4.o \
-xmeta.o metacalls.o xplot.o meta2tga.o rplot.o:	meta.h
+xmeta.o metacalls.o xplot.o meta2tga.o rplot.o:	meta.h ../common/rterror.h
 
 plot.o mplot.o mt160l.o mt160.o mx80.o xmeta.o xplot.o \
 meta2tga.o rplot.o implot.o:	plot.h

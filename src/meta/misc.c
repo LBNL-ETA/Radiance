@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: misc.c,v 1.2 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: misc.c,v 1.3 2003/07/14 16:05:45 greg Exp $";
 #endif
 /*
  *   Miscellaneous functions for meta-files
@@ -12,44 +12,6 @@ static const char	RCSid[] = "$Id: misc.c,v 1.2 2003/07/03 22:41:44 schorsch Exp 
 char  coms[] = COML;
 
 char  errmsg[128];
-
-
-
-error(errtype, emsg)		/* report error */
-
-int  errtype;
-char  *emsg;
-
-{
-
- switch (errtype)  {
-
-    case WARNING:
-       wputs(progname);
-       wputs(": warning - ");
-       wputs(emsg);
-       wputs("\n");
-       break;
-
-    case USER:
-       eputs(progname);
-       eputs(": fatal - ");
-       eputs(emsg);
-       eputs("\n");
-       exit(1);
-       break;
-
-    case SYSTEM:
-       eputs(progname);
-       eputs(": system - ");
-       eputs(emsg);
-       eputs("\n");
-       exit(1);
-       break;
-    }
-
- }
-
 
 
 
