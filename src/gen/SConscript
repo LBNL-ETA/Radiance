@@ -8,28 +8,32 @@ mlib = env['RAD_MLIB']
 # standard targets
 PROGS = (
 # name        sources                  libs
-('genbeads',  Split('genbeads.c hermite3.c'),    mlib),
-('genbox',    Split('genbox.c'),       mlib),
-('genmarble', Split('genmarble.c'),    mlib),
-('gensky',    Split('gensky.c sun.c'), mlib),
-('genblinds', Split('genblinds.c'),    mlib),
-('genprism',  Split('genprism.c'),     mlib),
-('xform',     Split('xform.c'),        ['rt'] + mlib),
-('replmarks', Split('replmarks.c'),    ['rt'] + mlib),
-('mkillum',   Split('mkillum.c mkillum2.c mkillum3.c'), ['rt'] + mlib),
-('genvev',    Split('genrev.c'),       ['rt'] + mlib),
-('gencat',    Split('gencat.c'),       ['rt'] + mlib),
-('genworm',   Split('genworm.c'),      ['rt'] + mlib),
-('gensurf',   Split('gensurf.c'),      ['rt'] + mlib),
-('genclock',  Split('genclock.c'),     mlib),
-('genbranch', Split('genbranch.c'),    mlib),
+('genbeads',  Split('genbeads.c hermite3.c'),  []),
+('genbox',    ['genbox.c',],       []),
+('genmarble', ['genmarble.c',],    []),
+('gensky',    Split('gensky.c sun.c',), []),
+('genblinds', ['genblinds.c',],    []),
+('genprism',  ['genprism.c',],     []),
+('genrev',    ['genrev.c',],       ['rterror','rtfunc','rtcont','rtmem']),
+('gencat',    ['gencat.c',],       []),
+('genworm',   ['genworm.c',],      ['rtfunc','rtmem','rtcont','rtmath']),
+('gensurf',   ['gensurf.c',],      ['rtfunc','rtmem','rtcont','rtmath','rtio']),
+('genclock',  ['genclock.c',],     []),
+('genbranch', ['genbranch.c',],    []),
+('replmarks', ['replmarks.c',],
+	['rtproc','rtpath','rtmath','rtio','rterror']),
+('mkillum',   Split('mkillum.c mkillum2.c mkillum3.c'),
+    ['rtscene','rtproc','rtpath','rtmath','rtio','rtcont','rterror']),
+('xform',     ['xform.c',],
+    ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror']),
 )
 for p in PROGS:
     prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
-            source=p[1], LIBS=p[2])
+            source=p[1], LIBS=p[2] + mlib)
     Default(prog)
     env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 #surf.cal clockface.hex
 LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
+

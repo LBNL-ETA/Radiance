@@ -25,21 +25,25 @@ for p in MGFPROGS:
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
+trans = env.Object(source="trans.c")
+
 # standard targets
 PROGS = [
-('thf2rad',   Split('thf2rad.c'),           []),
-('ies2rad',   Split('ies2rad.c'),           ['rt'] + mlib),
-('arch2rad',  Split('arch2rad.c trans.c'),  ['rt'] + mlib),
-('nff2rad',   Split('nff2rad.c'),           []),
-('lampcolor', Split('lampcolor.c'),         ['rt']),
-('tmesh2rad', Split('tmesh2rad.c'),         ['rt'] + mlib),
-('obj2rad',   Split('obj2rad.c trans.c'),   ['rt'] + mlib),
-#('mgf2rad',   Split('mgf2rad.c')+[libmgf],  ['rt'] + mlib),
-('rad2mgf',   Split('rad2mgf.c'),           ['rt'] + mlib),
-('mgf2meta',  Split('mgf2meta.c')+[libmgf], ['meta','rt'] + mlib),
+('thf2rad',   ['thf2rad.c'],       []),
+('ies2rad',   ['ies2rad.c'],       ['rtlamps','rtcolor','rtio','rtpath']+ mlib),
+('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
+('nff2rad',   ['nff2rad.c'],       []),
+('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtpath']),
+('tmesh2rad', ['tmesh2rad.c'],     ['rtscene','rtmath'] + mlib),
+('obj2rad',   ['obj2rad.c',trans], 
+    ['rtscene','rtargs','rtio','rtcont','rtmem','rtmath','rterror'] + mlib),
+('mgf2rad',   ['mgf2rad.c'],       ['rtscene','rtcolor','mgf'] + mlib),
+('rad2mgf',   ['rad2mgf.c'],
+	['rtproc', 'rtpath', # for win_popen()
+    'rtscene','rtio','rtcolor','rtcont','rtmem','rterror'] + mlib),
+('mgf2meta',  ['mgf2meta.c'],
+    ['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib),
 ]
-if not os.name == 'nt': # XXX until we sort out the library conflicts
-	PROGS.append(('mgf2rad',   Split('mgf2rad.c')+[libmgf],  ['rt'] + mlib))
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2])
 	Default(prog)

@@ -2,28 +2,36 @@ import os
 
 Import('env')
 
-
 # math libs
 mlib = env['RAD_MLIB']
 
 # common objects
 viewbeams = env.Object(source='viewbeams.c')
 holo = env.Object(source='holo.c')
+holofile = env.Object(source='holofile.c')
+Version = env.Object(source='Version.c')
+
 
 # standard targets
 PROGS = (
-('rholo',    Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c
-				   holofile.c Version.c''') + [holo, viewbeams]),
-('rhpict', Split('rhpict.c rhpict2.c holofile.c Version.c')+[holo, viewbeams]),
-('rhcopy', Split('rhcopy.c clumpbeams.c holofile.c') + [holo]),
-('rhinfo', Split('rhinfo.c holofile.c') + [holo]),
-#('genrhenv', Split('genrhenv.c holofile.c') + [holo]), # XXX broken
-('genrhgrid', Split('genrhgrid.c') + [holo]),
+('rholo', Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c''')
+	 + [Version, holofile, holo, viewbeams],
+	['rtpic','rtio','rtproc','rtpath','rtargs','rtmath','rtmem','rterror']),
+('rhpict', Split('rhpict.c rhpict2.c')+[Version, holofile, holo, viewbeams],
+	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
+('rhcopy', Split('rhcopy.c clumpbeams.c') + [holofile, holo],
+	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
+('rhinfo', Split('rhinfo.c') + [holofile, holo],
+	['rtio','rtproc', 'rtmath','rterror']),
+#('genrhenv', Split('genrhenv.c') + [holofile, holo],
+# []), # XXX broken
+('genrhgrid', Split('genrhgrid.c') + [holofile, holo],
+ ['rtio','rtmath','rtproc','rterror']),
 )
 if os.name != 'nt': # pending some major work...
 	for p in PROGS:
 		prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
-				source=p[1], LIBS=['rt'] + mlib)
+				source=p[1], LIBS=p[2] + mlib)
 		Default(prog)
 		env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
@@ -44,6 +52,7 @@ if env.has_key('X11INCLUDE'):
 	# XXX the .hdi extension will cause problems on Windows
 	xenv['PROGSUFFIX'] = '.hdi'
 
+	dlibs = ['rtpic','rtio','rtmath','rtcont','rtmem','rtargs','rterror']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
 		prog = xenv.Program(target=os.path.join(devdir, p[0]),
@@ -57,13 +66,14 @@ if env.has_key('X11INCLUDE'):
 
 	# (name, sources,   libs,   obj, objsrc, objflags)
 	XHDI = (('x11',  Split('rhd_ctab.c rhd_qtree2r.c') + [rhd_qtree],
-				['rt','X11'] + mlib,
+				dlibs + ['X11'] + mlib,
 				'rhd_x11', 'rhd_x11.c', []),
 		   )
 	for p in XHDI:
 		make_hdi(p)
 
 	if env.has_key('OGL'):
+		rgllibs = ['rgl','rtscene','rtpath']
 		# XXX There's a BITS(x) macro missing in sm_geom.h
 		#sm_common_s = Split('''sm_samp.c sm_qtree.c sm_stree.c sm_geom.c
 		#		sm_list.c sm_del.c sm_ogl.c sm_usets.c sm.c''')
@@ -74,23 +84,23 @@ if env.has_key('X11INCLUDE'):
 
 		GLHDI = (
 			('glx1', ['rhd_qtree2c.c', rhd_qtree],
-			 ['rt','GLU','GL','X11'] + mlib,
+			 dlibs + ['GLU','GL','X11'] + mlib,
 			 'rhd_glx1', 'rhd_glx1.c', ['-DNOSTEREO']),
 
 			#('glx',  sm_common,
-			# ['rt','GLU','GL','X11'] + mlib,
+			# dlibs + ['GLU','GL','X11'] + mlib,
 			# 'rhd_glx0', 'rhd_glx.c', ['-DNOSTEREO']),
 
 			#('glxo', [rhdobj] + sm_common,
-			# ['rgl','rt','GLU','GL','X11'] + mlib,
+			# rgllibs+dlibs+['GLU','GL','X11'] + mlib,
 			# 'rhd_glxo', 'rhd_glx.c', ['-DDOBJ', '-DNOSTEREO']),
 
 			('ogl', ogl_common,
-			 ['rgl','rt','GLU','GL','X11'] + mlib,
+			 rgllibs+dlibs+['GLU','GL','X11'] + mlib,
 			 'rhd_ogl0', 'rhd_ogl.c', ['-DNOSTEREO']),
 
 			('oglo', [rhdobj] + ogl_common,
-			 ['rgl','rt','GLU','GL','X11'] + mlib,
+			 rgllibs+['rtproc']+dlibs+['GLU','GL','X11'] + mlib,
 			 'rhd_oglo', 'rhd_ogl.c', ['-DDOBJ', '-DNOSTEREO']),
 			)
 		for p in GLHDI:
@@ -99,19 +109,19 @@ if env.has_key('X11INCLUDE'):
 
 			GLSHDI = (
 				#('glxs',  sm_common,
-				# ['rt','GLU','GL','X11','Xext'] + mlib,
+				# dlibs + ['GLU','GL','X11','Xext'] + mlib,
 				# 'rhd_glxs', 'rhd_glx.c' ['-DSTEREO']),
 
 				#('glxso', [rhdobj] + sm_common,
-				# ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				# rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
 				# 'rhd_glxo', 'rhd_glx.c' ['-DDOBJ', '-DSTEREO']),
 
 				('ogls', ogl_common,
-				 ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
 				 'rhd_ogls', 'rhd_ogl.c' ['-DSTEREO']),
 					
 				('oglso', [rhdobj] + ogl_common,
-				 ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
 				 'rhd_oglso', 'rhd_ogl.c' ['-DDOBJ', '-DSTEREO']),
 					)
 			for p in GLHDI:

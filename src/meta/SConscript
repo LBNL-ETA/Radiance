@@ -2,48 +2,77 @@ import os
 
 Import ('env')
 
-# make a modified local copy
-meta = env.Copy(LIBS=['rt'] + env['RAD_MLIB'])
-
 # compose paths
-def radbin(name): return os.path.join(meta['RAD_BUILDBIN'], name)
-def radlib(name): return os.path.join(meta['RAD_BUILDLIB'], name)
+def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
+def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
 
-#meta.Append(CPPFLAGS = ' -DMDIR=\\"' + meta['RAD_RLIBDIR'] + '\\"')
+# extra flag
+MDIRFLAGS = env.get('CPPFLAGS', []) + [
+	'-DMDIR=\\"%s\\"' % os.path.join(env['RAD_RLIBDIR'], 'meta')]
+bgraph = env.Object(source='bgraph.c', CPPFLAGS=MDIRFLAGS)
+igraph = env.Object(source='igraph.c', CPPFLAGS=MDIRFLAGS)
+dgraph = env.Object(source='dgraph.c', CPPFLAGS=MDIRFLAGS)
+gcomp = env.Object(source='gcomp.c', CPPFLAGS=MDIRFLAGS)
+syscalls = env.Object(source='syscalls.c', CPPFLAGS=MDIRFLAGS)
+# used by several targets
+mfio = env.Object(source='mfio.c')
+misc = env.Object(source='misc.c')
+primout = env.Object(source='primout.c')
+plot = env.Object(source='plot.c')
+palloc = env.Object(source='palloc.c')
+mplot = env.Object(source='mplot.c')
+plotin = env.Object(source='plotin.c')
+tgraph = env.Object(source='tgraph.c')
+mgvars = env.Object(source='mgvars.c')
+mgraph = env.Object(source='mgraph.c')
+cgraph = env.Object(source='cgraph.c')
+gcalc = env.Object(source='gcalc.c')
+# multiple output from same source
+plotout = env.Object(source='plotout.c')
+t4014 = env.Object(target="t4014", source='plotout.c',
+		CPPFLAGS=env.get('CPPFLAGS',[]) + ['-DFORTEK'])
 
-# some files need an extra flag
-MDIRFLAGS = meta.get('CPPFLAGS', []) + [
-	'-DMDIR=\\"%s\\"' % os.path.join(meta['RAD_RLIBDIR'], 'meta')]
-bgraph = meta.Object(source='bgraph.c', CPPFLAGS=MDIRFLAGS)
-igraph = meta.Object(source='igraph.c', CPPFLAGS=MDIRFLAGS)
-dgraph = meta.Object(source='dgraph.c', CPPFLAGS=MDIRFLAGS)
-gcomp = meta.Object(source='gcomp.c', CPPFLAGS=MDIRFLAGS)
-syscalls = meta.Object(source='syscalls.c', CPPFLAGS=MDIRFLAGS)
+common = [mfio, misc, syscalls]
 
-common = Split('mfio.c misc.c') + [syscalls]
-
-libmeta = meta.StaticLibrary(radlib('meta'),
-	Split ('metacalls.c primout.c progname.c') + common)
+libmeta = env.StaticLibrary(radlib('meta'),
+	Split ('metacalls.c progname.c') +[primout] + common)
 
 # standard targets
 PROGS = (
-('meta2tga', Split('meta2tga.c rplot.c plot.c palloc.c') + common),
-('pexpand',  Split('pexpand.c expand.c segment.c palloc.c') + common),
-('psort',    Split('psort.c sort.c palloc.c') + common),
-('cv',       Split('cv.c cvhfio.c') + common),
-('psmeta',   Split('psmeta.c psplot.c') + common),
-('plotin',   Split('plotin.c primout.c') + common),
-('bgraph',   Split('mgvars.c mgraph.c') + [bgraph, libmeta]),
-('igraph',   Split('mgvars.c mgraph.c gcalc.c cgraph.c') + [igraph, libmeta]),
-('dgraph',   Split('cgraph.c mgvars.c') + [dgraph]),
-('gcomp',    Split('gcalc.c mgvars.c') + [gcomp]),
-('plot4',    Split('plot4.c primout.c') + common),
+('meta2tga', Split('meta2tga.c rplot.c') +[palloc, plot] + common,
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtcont','rtmem','rterror']),
+('pexpand',  Split('pexpand.c expand.c segment.c') +[palloc]+ common,
+	['rtcont','rtmem','rterror']),
+('psort',    Split('psort.c sort.c') +[palloc]+ common,
+	['rtpath','rtcont','rtmem','rterror']),
+('cv',       Split('cv.c cvhfio.c') + common,
+	['rtcont','rtmem','rterror']),
+('psmeta',   Split('psmeta.c psplot.c') + common,
+	['rtcont','rtmem','rterror']),
+('plotin',   [plotin, primout] + common,
+	['rtcont','rtmem','rterror']),
+('bgraph',   [bgraph, mgraph, mgvars],
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtfunc','rtcont','rtmem','rterror','meta']),
+('igraph',   [igraph, gcalc, cgraph, mgraph, mgvars],
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtfunc','rtcont','rtmem','rterror','meta']),
+('dgraph',   [dgraph, cgraph, mgvars],
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtfunc','rtcont','rtmem','rterror']),
+('gcomp',    [gcomp, gcalc, mgvars],
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtfunc','rtcont','rtmem','rterror']),
+('plot4',    Split('plot4.c') +[primout]+ common,
+	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
+	'rtcont','rtmem','rterror']),
 )
 for p in PROGS:
-	prog = meta.Program(target=radbin(p[0]),
-			source=p[1])
+	prog = env.Program(target=radbin(p[0]), source=p[1],
+			LIBS=p[2]+env['RAD_MLIB'])
 	Default(prog)
-	env.Append(RAD_BININSTALL=[meta.Install(meta['RAD_BINDIR'], prog)])
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 
 lib4014srcs = Split('''arc.c box.c circle.c close.c dot.c erase.c label.c
@@ -51,42 +80,53 @@ lib4014srcs = Split('''arc.c box.c circle.c close.c dot.c erase.c label.c
 lib4014 = env.Library(os.path.join(env['RAD_BUILDLIB'], '4014'),
 		source=map(lambda s:os.path.join('lib4014', s), lib4014srcs))
 
-plotsrc = Split('mplot.c plot.c palloc.c')
+plotsrc = [mplot, palloc, plot]
 
 SPECIAL = (
-('mt160l',   Split('mt160l.c') + plotsrc + common), # rt
-('mt160',    Split('mt160.c') + plotsrc + common), # rt m
-('mtext',    Split('mtext.c primout.c') + common), # rt
-('okimate',  Split('okimate.c') + plotsrc + common), # rt
-('mx80',     Split('mx80.c') + plotsrc + common), # rt m
-('imagew',   Split('imagew.c') + plotsrc + common), # rt m
-('impress',  Split('impress.c implot.c imPfuncs.c plot.c') + common), # rt m
-('aed5',     Split('aed5.c') + common), # rt m
-('tcurve',   Split('tcurve.c tgraph.c primout.c') + common), # m
-('tscat',    Split('tscat.c tgraph.c primout.c') + common), # rt m
-('tbar',     Split('tbar.c tgraph.c primout.c') + common), # rt m
+('mt160l',   Split('mt160l.c') + plotsrc + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('mt160',    Split('mt160.c') + plotsrc + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('mtext',    Split('mtext.c') +[primout]+ common,
+	['rtcont','rtmem','rterror']),
+('okimate',  Split('okimate.c') + plotsrc + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('mx80',     Split('mx80.c') + plotsrc + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('imagew',   Split('imagew.c') + plotsrc + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('impress',  Split('impress.c implot.c imPfuncs.c') +[plot]+ common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('aed5',     Split('aed5.c') + common,
+	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('tcurve',   Split('tcurve.c') +[tgraph, primout]+ common,
+	['rtcont','rtmem','rterror']),
+('tscat',    Split('tscat.c') +[tgraph, primout]+ common,
+	['rtpath','rtcont','rtmem','rterror']),
+('tbar',     Split('tbar.c') +[tgraph, primout]+ common,
+	['rtcont','rtmem','rterror']),
+('plotout',  [plotout] + common,
+	['4014', 'rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
+('t4014',    [t4014] + common,
+	['4014', 'rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
 )
 sbin = []
 sinst = []
 for p in SPECIAL:
-	prog = meta.Program(target=radbin(p[0]), source=p[1])
+	prog = env.Program(target=radbin(p[0]), source=p[1],
+			LIBS=p[2]+env['RAD_MLIB'])
 	sbin.append(prog)
-	sinst.append(meta.Install(meta['RAD_BINDIR'], prog))
-#plotout = meta.Program(target=radbin('plotout'), source=['plotout.c'] + common,
-#	LIBS=['plot', '4014', 'rt', 'm'])
-#t4014 = meta.Program(target=radbin('t4014'), source=['plotout.c'] + common,
-#	LIBS=['4014', 'rt', 'm'], CPPFLAGS=meta.get('CPPFLAGS',[]) + ['-DFORTEK'])
-meta.Alias('meta_special', sbin)# + [plotout, t4014])
-meta.Alias('meta_special_install', sinst)
+	sinst.append(env.Install(env['RAD_BINDIR'], prog))
+env.Alias('meta_special', sbin)
+env.Alias('meta_special_install', sinst)
 
 # X11 targets
-if meta.has_key('X11LIB'):
-	meta.Append(CPPPATH=meta['X11INCLUDE'])
-	meta.Append(LIBS='X11')
-	meta.Append(LIBPATH=meta['X11LIB'])
-	x11meta = meta.Program(radbin('x11meta'),
-			Split('plotin.c primout.c') + common)
+if env.has_key('X11LIB'):
+	x11meta = env.Program(radbin('x11meta'), [plotin, primout]+ common,
+		CPPPATH=env.get('CPPPATH',[])+[env['X11INCLUDE']],
+		LIBPATH=env.get('LIBPATH',[])+[env['X11LIB']],
+		LIBS=['rtcont','rtmem','rterror', 'X11'] + env['RAD_MLIB'])
 	Default(x11meta)
-	env.Append(RAD_BININSTALL=[meta.Install(meta['RAD_BINDIR'], x11meta)])
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], x11meta)])
 
 

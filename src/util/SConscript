@@ -2,69 +2,86 @@ import os
 
 Import('env') # inherit from parent
 
-# make a modified local copy
-util = env.Copy(LIBS=['rt'] + env['RAD_MLIB'])
+mlib = env['RAD_MLIB']
 
 # compose paths
 def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
 def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
 
+setscan = env.Object(source='setscan.c')
+
 # standard targets
 PROGS = [
-('findglare', Split('findglare.c glareval.c glaresrc.c setscan.c')),
-('glarendx',  Split('glarendx.c')),
-('vwright',   Split('vwright.c')),
-('vwrays',    Split('vwrays.c')),
-('rad',       Split('rad.c')),
-('rpiece',    Split('rpiece.c Version.c')),
+('findglare', Split('findglare.c glareval.c glaresrc.c')+[setscan],
+	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem','rterror']),
+('glarendx',  Split('glarendx.c'), ['rtpic','rtio','rtargs','rtmath']),
+('vwright',   Split('vwright.c'),  ['rtpic','rtio','rtargs','rtmath']),
+('vwrays',    Split('vwrays.c'),   ['rtpic','rtio','rtargs','rtmath']),
+('rad',       Split('rad.c'),
+	['rtpic','rtproc','rtpath','rtio','rtmath','rtargs','rtcont','rtmem','rterror']),
+('rpiece',    Split('rpiece.c Version.c'),
+	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
 ]
-if os.name != 'nt': # XXX pending Windows version of netproc.c
-	PROGS.append(('ranimate',  Split('ranimate.c netproc.c')))
-for p in PROGS:
-    prog = util.Program(target=radbin(p[0]), source=p[1])
-    Default(prog)
-    env.Append(RAD_BININSTALL=[util.Install(util['RAD_BINDIR'], prog)])
+if os.name == 'nt': # XXX should be set in a *.cfg file
+	netproc = 'win_netproc.c'
+	netlib = ['ws2_32']
+else:
+	netproc = 'netproc.c'
+	netlib = []
 
-if os.name != 'nt': # XXX pending resolution of free_os() conflict
+PROGS.append(('ranimate',  ['ranimate.c', netproc],
+	['rtpic','rtargs','rtio','rtcont','rtmem','rtpath','rtmath','rtnet','rterror'] + netlib))
+for p in PROGS:
+	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
+	Default(prog)
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+if os.name != 'nt': # XXX pending Windows version of raypcalls.c
 	# targets with different includes/libs
 	rs = Split('ranimove.c ranimove1.c ranimove2.c')
-	for l in ['raycalls', 'radiance']: # XXX ugly
-		rs.append(radlib(util['LIBPREFIX'] + l + util['LIBSUFFIX']))
-	ranimove = util.Program(target=radbin('ranimove'), source=rs,
-			CPPPATH=util.get('CPPPATH', []) + ['#src/rt'])
+	ranimove = env.Program(target=radbin('ranimove'), source=rs,
+			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
+			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtio',
+			'rtmath','rtcont','rtmem','rtargs','rtproc','rtpath','rterror'] + mlib)
 	Default(ranimove)
-	env.Append(RAD_BININSTALL=[util.Install(util['RAD_BINDIR'], ranimove)])
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ranimove)])
 
-getinfo = util.Program(target=radbin('getinfo'), source='getinfo.c',
-		LIBS=['rt'])
+getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
+		LIBS=['rtio'])
 Default(getinfo)
-env.Append(RAD_BININSTALL=[util.Install(util['RAD_BINDIR'], getinfo)])
+env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], getinfo)])
 
 # special targets not normally built
-scanner = util.Program(target=radbin('scanner'), source='scanner.c', LIBS=['m'])
-makedist = util.Program(target=radbin('makedist'),
-		source=Split('makedist.c setscan.c'))
-scanner_i = util.Install(util['RAD_BINDIR'], scanner)
-makedist_i = util.Install(util['RAD_BINDIR'], makedist)
-util.Alias('util_special', [scanner, makedist])
-util.Alias('util_special_install', [scanner_i, makedist_i])
+if os.name != 'nt': # XXX pending replacement of fork() and friends
+	scanner = env.Program(target=radbin('scanner'), source='scanner.c',
+			LIBS=mlib)
+	scanner_i = env.Install(env['RAD_BINDIR'], scanner)
+	makedist = env.Program(target=radbin('makedist'),
+			source=Split('makedist.c')+[setscan])
+	makedist_i = env.Install(env['RAD_BINDIR'], makedist)
+	env.Alias('util_special', [scanner, makedist])
+	env.Alias('util_special_install', [scanner_i, makedist_i])
 
 # X11 targets
-if util.has_key('X11LIB'):
-    util.Append(CPPPATH=util['X11INCLUDE'])
-    util.Append(LIBS='X11')
-    util.Append(LIBPATH=util['X11LIB'])
-    xglaresrc = util.Program(target=radbin('xglaresrc'),
-			source=Split('xglaresrc.c x11findwind.c'),)
-    Default(xglaresrc)
-    env.Append(RAD_BININSTALL=[util.Install(util['RAD_BINDIR'], xglaresrc)])
+if env.has_key('X11LIB'):
+	xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
+	xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
+	xglaresrc = env.Program(target=radbin('xglaresrc'),
+			source=Split('xglaresrc.c x11findwind.c'),
+			LIBPATH=xlibp, CPPPATH=xincl,
+			LIBS=['rtpic','rtmath','rtargs','rtio','X11']+ mlib)
+	Default(xglaresrc)
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], xglaresrc)])
 
-    # OpenGL targets that also depend on X11
-    if util.has_key('OGL'):
-        glrad = util.Program(target=radbin('glrad'), source=Split('glrad.c'),
-            CPPFLAGS=util.get('CPPFLAGS', []) + [util['RAD_STEREO']],
-            LIBS=['rgl', 'GL', 'GLU']+util['LIBS'],)
-        Default(glrad)
-        env.Append(RAD_BININSTALL=[util.Install(util['RAD_BINDIR'], glrad)])
+	# OpenGL targets that also depend on X11
+	if env.has_key('OGL'):
+		glrad = env.Program(target=radbin('glrad'), source=Split('glrad.c'),
+			CPPFLAGS=env.get('CPPFLAGS', []) + [env['RAD_STEREO']],
+			LIBPATH=xlibp, CPPPATH=xincl,
+			LIBS=['rgl','rtpic','rtscene','rtio','rtproc','rtpath','rtargs',
+			'rtmath','rtcont','rtmem','rterror',
+			'GL', 'GLU','X11'],)
+		Default(glrad)
+		env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], glrad)])
 
 

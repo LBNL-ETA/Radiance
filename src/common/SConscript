@@ -12,28 +12,56 @@ tmapcolrs = env.StaticObject(source='tmapcolrs.c',
         CPPFLAGS='-DPCOND=\\"pcond\\"')
 
 # source and object dependencies
-RT = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c otypes.c
-        objset.c octree.c readfargs.c modobject.c addobjnotify.c zeroes.c
-        mesh.c readmesh.c tmesh.c sceneio.c''') + [getlibpath]
+RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
+		otypes.c objset.c octree.c readfargs.c modobject.c addobjnotify.c
+		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''')
 
-PIC = Split('''color.c header.c image.c lamps.c resolu.c rexpr.c spec_rgb.c
-        colrops.c font.c tonemap.c tmapluv.c tmaptiff.c tmap16bit.c'''
-        ) + [tmapcolrs]
+RTCOLOR = Split('''spec_rgb.c''')
+RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
+RTPIC = Split('''color.c colrops.c resolu.c image.c''') + RTCOLOR + RTTMAP
 
-STD = Split('''fgetline.c fropen.c linregr.c xf.c mat4.c invmat4.c fvect.c
-        urand.c urind.c calexpr.c caldefn.c calfunc.c calprnt.c biggerlib.c
-        multisamp.c process.c getpath.c error.c savestr.c savqstr.c badarg.c
-        fgetword.c words.c expandarg.c wordfile.c fgetval.c clip.c plocate.c
-        eputs.c wputs.c quit.c lookup.c loadvars.c tcos.c fputword.c
-        chanvalue.c dircode.c paths.c''') + env.get('RAD_PROCESS', [])
+RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
+RTCONT = Split('''lookup.c savestr.c savqstr.c''')
+RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
+		zeroes.c dircode.c clip.c multisamp.c plocate.c'''
+		) + env.get('RAD_MATHCOMPAT', [])
+RTFUNC = Split('''biggerlib.c caldefn.c calexpr.c calfunc.c calprnt.c
+		chanvalue.c''')
+RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
+		portio.c wordfile.c words.c header.c''')
+RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
+RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
+RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
 
-SYS = Split('ealloc.c fdate.c portio.c myhostname.c')
+RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
-ALL = RT + PIC + STD + SYS + env['RAD_COMPAT']
+RTMEM = Split('ealloc.c') + env.get('RAD_MEMCOMPAT', [])
+RTNET = Split('myhostname.c')
+
+STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
+		RTFUNC + RTPROC + RTLAMPS)
+
+ALL = RTSCENE + RTPIC + STD + RTNET + env.get('RAD_COMPAT',[])
 
 # build libraries
-librt = env.StaticLibrary(target=radlib('rt'), source=ALL)
-Default(librt)
+rtscene = env.StaticLibrary(target=radlib('rtscene'), source=RTSCENE)
+
+rterror = env.StaticLibrary(target=radlib('rterror'), source=RTERROR)
+rtpath = env.StaticLibrary(target=radlib('rtpath'), source=RTPATH)
+rtargs = env.StaticLibrary(target=radlib('rtargs'), source=RTARGS)
+rtio = env.StaticLibrary(target=radlib('rtio'), source=RTIO)
+rtmath = env.StaticLibrary(target=radlib('rtmath'), source=RTMATH)
+rtcont = env.StaticLibrary(target=radlib('rtcont'), source=RTCONT)
+rtmem = env.StaticLibrary(target=radlib('rtmem'), source=RTMEM)
+rtfunc = env.StaticLibrary(target=radlib('rtfunc'), source=RTFUNC)
+rtproc = env.StaticLibrary(target=radlib('rtproc'), source=RTPROC)
+rtcolor = env.StaticLibrary(target=radlib('rtcolor'), source=RTCOLOR)
+rtlamps = env.StaticLibrary(target=radlib('rtlamps'), source=RTLAMPS)
+rtpic = env.StaticLibrary(target=radlib('rtpic'), source=RTPIC)
+rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
+
+#librt = env.StaticLibrary(target=radlib('rt'), source=ALL)
+#Default(librt)
 
 LIBFILES = Split('tmesh.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

@@ -1,9 +1,4 @@
 
-# Notes to people who come after:
-#
-# In general, only use '/' as a path separator in *nix-specific code, use
-# os.path.join() for everythign else
-
 import os
 import sys
 import string
@@ -17,6 +12,7 @@ def set_opts(env):
     opts.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
     opts.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
     opts.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
+    opts.Add('RAD_DEBUG',   'Build a debug version',  0)
     opts.Update(env) 
     opts.Save(OPTFILE, env)
     Help(opts.GenerateHelpText(env, sort=cmp))
@@ -51,7 +47,7 @@ env = Environment()
 
 # configure platform-specific stuff
 from build_utils import load_plat
-load_plat.load_plat(env, platform=None)
+load_plat.load_plat(env, ARGUMENTS, platform=None)
 
 # override options
 set_opts(env)
@@ -93,6 +89,7 @@ env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 # px_special   -> ra_im, t4027, paintjet, mt160t, greyscale, colorscale, d48c
 # px_special_install
 
-# util_special -> scanner, makedist
+# util_special -> scanner, makedist (not for Windows yet)
 # util_special_install
+
 

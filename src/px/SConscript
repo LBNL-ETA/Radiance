@@ -2,86 +2,99 @@ import os
 
 Import('env') # inherit from parent
 
-# make a modified local copy
-px = env.Copy(LIBS=['rt'] + env['RAD_MLIB'])
+mlib = env['RAD_MLIB']
 
 # compose paths
-def radbin(name): return os.path.join(px['RAD_BUILDBIN'], name)
-def radlib(name): return os.path.join(px['RAD_BUILDLIB'], name)
+def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
+def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
+
+warp3d = env.Object(source="warp3d.c")
+clrtab = env.Object(source="clrtab.c")
+neuclrtab = env.Object(source="neuclrtab.c")
+ciq = env.Object(source="ciq.c")
+cut = env.Object(source="cut.c")
+closest = env.Object(source="closest.c")
 
 # standard targets
 PROGS = (
-('macbethcal', Split('macbethcal.c pmapgen.c mx3.c warp3d.c')),
-('pcond',      Split('pcond.c pcond2.c pcond3.c pcond4.c warp3d.c')),
-('pfilt',      Split('pfilt.c pf2.c pf3.c')),
-('pcwarp',     Split('pcwarp.c warp3d.c')),
-('pvalue',     Split('pvalue.c')),
-('pcompos',    Split('pcompos.c')),
-('psign',      Split('psign.c')),
-('protate',    Split('protate.c')),
-('pextrem',    Split('pextrem.c')),
-('pflip',      Split('pflip.c')),
-('pcomb',      Split('pcomb.c')),
-('pinterp',    Split('pinterp.c')),
+# name          files            libs
+('macbethcal', Split('macbethcal.c pmapgen.c mx3.c')+[warp3d],
+	['rtpic','rtproc','rtpath','rtio','rtargs','rtcont','rtmem','rterror']),
+('pcond',    Split('pcond.c pcond2.c pcond3.c pcond4.c')+[warp3d],
+	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtcont','rtmem','rterror']),
+('pfilt',    Split('pfilt.c pf2.c pf3.c'),
+	['rtlamps','rtpic','rtio','rtpath','rtargs','rtmath']),
+('pcwarp',   ['pcwarp.c', warp3d],
+	['rtpic','rtio','rtcont','rtmem','rterror']),
+('pvalue',   ['pvalue.c'],    ['rtpic','rtio','rtargs','rtmath']),
+('pcompos',  ['pcompos.c'],   ['rtpic','rtproc','rtpath','rtio','rterror']),
+('psign',    ['psign.c'],
+	['rtpic','rtscene','rtio','rtpath','rtargs','rtcont','rtmem','rterror']),
+('protate',  ['protate.c'],   ['rtpic','rtio']),
+('pextrem',  ['pextrem.c'],   ['rtpic','rtio']),
+('pflip',    ['pflip.c'],     ['rtpic','rtio']),
+('pcomb',    ['pcomb.c'],
+	['rtpic','rtproc','rtpath','rtio','rtfunc','rtargs','rtmath','rtcont','rtmem']),
+('pinterp',  ['pinterp.c'],
+	['rtproc','rtpic','rtio','rtpath','rtargs','rtmath','rtmem','rterror']),
 
-('oki20c',     Split('oki20c.c')),
-('oki20',      Split('oki20.c')),
+('oki20c',   ['oki20c.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
+('oki20',    ['oki20.c'], ['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
 
-('ra_gif',     Split('ra_gif.c clrtab.c neuclrtab.c')),
-('ra_pr',      Split('ra_pr.c ciq.c cut.c closest.c biq.c')),
-('ra_pr24',    Split('ra_pr24.c')),
-('ra_avs',     Split('ra_avs.c')),
-('ra_ps',      Split('ra_ps.c')),
-('ra_ppm',     Split('ra_ppm.c')),
-('ra_t8',      Split('ra_t8.c clrtab.c neuclrtab.c')),
-('ra_t16',     Split('ra_t16.c')),
-('ra_bn',      Split('ra_bn.c')),
-('ra_rgbe',    Split('ra_rgbe.c')),
-('ra_pict',    Split('ra_pict.c')),
-('ra_hexbit',  Split('ra_hexbit.c')),
-('ra_xyze',    Split('ra_xyze.c')),
+('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
+('ra_pr',    Split('ra_pr.c biq.c')+ [ciq, cut, closest],
+	['rtpic','rtio','rtmem']),
+('ra_pr24',  ['ra_pr24.c'],   ['rtpic','rtio','rtmem']),
+('ra_avs',   ['ra_avs.c'],    ['rtpic','rtio','rtmem']),
+('ra_ps',    ['ra_ps.c'],     ['rtpic','rtio','rtargs','rtmem']),
+('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
+('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
+('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
+('ra_bn',    ['ra_bn.c'],     ['rtpic','rtio','rtmem']),
+('ra_rgbe', ['ra_rgbe.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
+('ra_pict',  ['ra_pict.c'],   ['rtpic','rtio','rtmem']),
+('ra_hexbit',['ra_hexbit.c'], ['rtpic','rtio','rtmem']),
+('ra_xyze',  ['ra_xyze.c'],   ['rtpic','rtio','rtmem']),
 
-('ttyimage',   Split('ttyimage.c')),
+('ttyimage', ['ttyimage.c'],  ['rtpic','rtio','rtmem']),
 )
 for p in PROGS:
-    prog = px.Program(target=radbin(p[0]), source=p[1])
+    prog = env.Program(target=radbin(p[0]), source=p[1],
+		LIBS=p[2]+mlib)
     Default(prog)
-    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], prog)])
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 
 # special targets not normally built
 SPECIAL = (
-#('psum',       Split('psum.c'), ['rt']),  # (errors)
-#('panim',      Split('panim.c'), px['LIBS]+['client','rpcsvc']),
+# name          files             libs
+('psum',       ['psum.c'],       ['rtpic','rtio']),
+#('panim',      ['panim.c'],      ['client','rpcsvc']),# missing externals
 
-('ra_im',     Split('ra_im.c')),
+('ra_im',      ['ra_im.c'],      ['rtproc','rtpath','rtio','rterror']),
 
-#('aedimage',   Split('aedimage.c ciq.c cut.c closest.c'), []), # (errors)
-('t4027',      Split('t4027.c'), ['rt']),
-('paintjet',   Split('paintjet.c')),
-('mt160r',     Split('mt160r.c')),
-('greyscale',  Split('greyscale.c')),
-('colorscale', Split('colorscale.c')),
-('d48c',       Split('d48c.c'), ['rt']),   # (warnings)
+#('aedimage',   Split('aedimage.c')+[ciq, cut, closest],[]),# missing externals
+('t4027',      ['t4027.c'],      ['rtpic']),
+('paintjet',   ['paintjet.c'],   ['rtpic','rtio','rtmem']),
+('mt160r',     ['mt160r.c'],     ['rtpic','rtio','rtmem']),
+('greyscale',  ['greyscale.c'],  ['rtpic']),
+('colorscale', ['colorscale.c'], ['rtpic']),
+('d48c',       ['d48c.c'],       ['rtpic']),
 )
 specprogs = []
 specinst = []
 for p in SPECIAL:
-	if len(p) > 2:
-		prog = px.Program(target=radbin(p[0]), source=p[1],
-			LIBS=p[2])
-	else: 
-		prog = px.Program(target=radbin(p[0]), source=p[1])
+	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	specprogs.append(prog)
-	specinst.append(px.Install(px['RAD_BINDIR'], prog))
-px.Alias('px_special', specprogs)
-px.Alias('px_special_install', specinst)
+	specinst.append(env.Install(env['RAD_BINDIR'], prog))
+env.Alias('px_special', specprogs)
+env.Alias('px_special_install', specinst)
 
 
 # tiff library (unix-specific for the moment)
 if os.name == 'posix':
 	cwd = os.getcwd()
-	libtiff = px.Command(radlib(px['LIBPREFIX'] + 'tiff' + px['LIBSUFFIX']),
+	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
 		'tiff/config.local',
 	['cd "%s";'
 	'sh ./configure -quiet -noninteractive -with-CC=$CC -with-ENVOPTS=$CCFLAGS;'
@@ -89,48 +102,50 @@ if os.name == 'posix':
 	'make install;' % os.path.join(cwd, 'tiff')])
 
 	# tiff programs
-	ra_tiff = px.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
-		LIBS=['tiff'] + px['LIBS'])
+	ra_tiff = env.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
+		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	Default(ra_tiff)
-	env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ra_tiff)])
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ra_tiff)])
 
-	normtiff = px.Program(target=radbin('normtiff'), source=Split('normtiff.c'),
-		LIBS=['tiff'] + px['LIBS'])
+	normtiff = env.Program(target=radbin('normtiff'), source=Split('normtiff.c'),
+		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	Default(normtiff)
-	env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], normtiff)])
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], normtiff)])
 
 
 # pixar format requires extra lib
-if px.has_key('PIXAR_LIB'):
-    ra_pixar = px.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
-		LIBS=['rt', px['PIXAR_LIB']])
+if env.has_key('PIXAR_LIB'):
+    ra_pixar = env.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
+		LIBS=['rtpic', env['PIXAR_LIB']])
     Default(ra_pixar)
-    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ra_pixar)])
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ra_pixar)])
 
 
 # X11 targets
-if px.has_key('X11LIB'):
-    px.Append(CPPPATH=px['X11INCLUDE'])
-    px.Append(LIBS=['X11'])
-    px.Append(LIBPATH=px['X11LIB'])
+if env.has_key('X11LIB'):
+    xcppp = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
+    xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
+    xlibs = ['X11','rtpic','rtio','rtmath','rtargs','rtmem']
 
-    ximage = px.Program(target=radbin('ximage'),
-        source=Split('x11image.c x11raster.c clrtab.c'),)
+    ximage = env.Program(target=radbin('ximage'),
+        source=Split('x11image.c x11raster.c')+[clrtab],
+        CPPPATH=xcppp, LIBPATH=xlibp, LIBS=xlibs + mlib)
     Default(ximage)
-    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ximage)])
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ximage)])
 
-    xshowtrace = px.Program(target=radbin('xshowtrace'),
-        source=Split('xshowtrace.c x11findwind.c'),)
+    xshowtrace = env.Program(target=radbin('xshowtrace'),
+        source=Split('xshowtrace.c x11findwind.c'),
+        CPPPATH=xcppp, LIBPATH=xlibp, LIBS=xlibs + mlib)
     Default(xshowtrace)
-    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], xshowtrace)])
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], xshowtrace)])
 
 # NeWS ?!?
-#    if px.has_key('OGL'):
-#        glimage = px.Program(target=radbin('glimage'),
-#            CPPFLAGS=px.get('CPPFLAGS', []) + [px['RAD_STEREO']],
+#    if env.has_key('OGL'):
+#        glimage = env.Program(target=radbin('glimage'),
+#            CPPFLAGS=env.get('CPPFLAGS', []) + [env['RAD_STEREO']],
 #            source=Split('glimage.c'),
-#            LIBS=['gl_s']+px['LIBS'],)
+#            LIBS=['gl_s']+env['LIBS'],)
 #        Default(glimage)
-#        env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], glimage)])
+#        env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], glimage)])
 
 
