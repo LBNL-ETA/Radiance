@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: ra_pfm.csh,v 2.1 2004/11/25 14:47:03 greg Exp $
+# RCSid $Id: ra_pfm.csh,v 2.2 2004/12/25 04:14:25 greg Exp $
 #
 # Convert to/from Poskanzer Float Map image format using pvalue
 #
@@ -26,7 +26,7 @@ if ($?reverse) then
 		exit 1
 	endif
 	set res=($hl[2])
-	tail +4 $inp:q | pvalue -r -h -y $res[1] +x $res[2] $format
+	tail +4 $inp:q | pvalue -r -h -y $res[2] +x $res[1] $format
 	exit $status
 endif
 if (! $?inp) then
