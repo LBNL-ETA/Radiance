@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.12 2004/09/28 17:54:18 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.13 2005/03/17 06:38:45 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -26,7 +26,7 @@ static const char RCSid[] = "$Id: replmarks.c,v 2.12 2004/09/28 17:54:18 greg Ex
 #define  FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
 
 #define  MAXVERT	6	/* maximum number of vertices for markers */
-#define  MAXMARK	32	/* maximum number of markers */
+#define  MAXMARK	128	/* maximum number of markers */
 
 #define  USE_XFORM	1	/* use !xform inline command */
 #define  USE_INSTANCE	2	/* use instance primitive */
@@ -43,7 +43,7 @@ struct mrkr {
 	char	*modin;			/* input modifier indicating marker */
 	char	*objname;		/* output object file or octree */
 	int	usetype;		/* one of USE_* above */
-}  marker[MAXMARK];		/* array of markers */
+}  marker[MAXMARK+1];		/* array of markers */
 int	nmarkers = 0;		/* number of markers */
 
 int	expand;			/* expand commands? */
@@ -102,9 +102,11 @@ main(
 		} while (argv[i][0] == '-');
 		if (marker[nmarkers].objname == NULL)
 			goto userr;
+		if (nmarkers >= MAXMARK) {
+			fprintf(stderr, "%s: too many markers\n", progname);
+			return 1;
+		}
 		marker[nmarkers++].modin = argv[i++];
-		if (nmarkers >= MAXMARK)
-			break;
 		marker[nmarkers].mscale = marker[nmarkers-1].mscale;
 	}
 	if (nmarkers == 0)
