@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.10 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.11 2003/09/13 17:31:35 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -241,7 +241,7 @@ register RAY  *r;
 	v[1] = r->rorg[1] - vp[1];
 	v[2] = r->rorg[2] - vp[2];
 	vp = source[si->sn].snorm;
-	if (DOT(v,vp) <= FTINY) {	/* behind source */
+	if (DOT(v,vp) <= 0.) {		/* behind source */
 		si->np = 0;
 		return;
 	}
