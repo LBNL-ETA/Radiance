@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.28 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.29 2003/04/18 17:29:22 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -90,7 +90,7 @@ int  ambincl = -1;			/* include == 1, exclude == 0 */
 
 static RAY  thisray;			/* for our convenience */
 
-static void  oputo(), oputd(), oputv(), oputl(), oputL(),
+static void  oputo(), oputd(), oputv(), oputl(), oputL(), oputc(),
 		oputp(), oputn(), oputN(), oputs(), oputw(), oputm();
 
 static void  ourtrace(), tabin();
@@ -233,6 +233,9 @@ register char  *vs;
 		case 'l':				/* effective distance */
 			*table++ = oputl;
 			castonly = 0;
+			break;
+		case 'c':				/* local coordinates */
+			*table++ = oputc;
 			break;
 		case 'L':				/* single ray length */
 			*table++ = oputL;
@@ -429,7 +432,7 @@ RAY  *r;
 
 static void
 oputo(r)				/* print origin */
-register RAY  *r;
+RAY  *r;
 {
 	(*putreal)(r->rorg[0]);
 	(*putreal)(r->rorg[1]);
@@ -439,7 +442,7 @@ register RAY  *r;
 
 static void
 oputd(r)				/* print direction */
-register RAY  *r;
+RAY  *r;
 {
 	(*putreal)(r->rdir[0]);
 	(*putreal)(r->rdir[1]);
@@ -449,7 +452,7 @@ register RAY  *r;
 
 static void
 oputv(r)				/* print value */
-register RAY  *r;
+RAY  *r;
 {
 	COLR  cout;
 	
@@ -468,7 +471,7 @@ register RAY  *r;
 
 static void
 oputl(r)				/* print effective distance */
-register RAY  *r;
+RAY  *r;
 {
 	(*putreal)(r->rt);
 }
@@ -476,15 +479,24 @@ register RAY  *r;
 
 static void
 oputL(r)				/* print single ray length */
-register RAY  *r;
+RAY  *r;
 {
 	(*putreal)(r->rot);
 }
 
 
 static void
+oputc(r)				/* print local coordinates */
+RAY  *r;
+{
+	(*putreal)(r->uv[0]);
+	(*putreal)(r->uv[1]);
+}
+
+
+static void
 oputp(r)				/* print point */
-register RAY  *r;
+RAY  *r;
 {
 	if (r->rot < FHUGE) {
 		(*putreal)(r->rop[0]);
@@ -500,7 +512,7 @@ register RAY  *r;
 
 static void
 oputN(r)				/* print unperturbed normal */
-register RAY  *r;
+RAY  *r;
 {
 	if (r->rot < FHUGE) {
 		(*putreal)(r->ron[0]);
@@ -535,7 +547,7 @@ RAY  *r;
 
 static void
 oputs(r)				/* print name */
-register RAY  *r;
+RAY  *r;
 {
 	if (r->ro != NULL)
 		fputs(r->ro->oname, stdout);
@@ -547,7 +559,7 @@ register RAY  *r;
 
 static void
 oputw(r)				/* print weight */
-register RAY  *r;
+RAY  *r;
 {
 	(*putreal)(r->rweight);
 }
@@ -555,7 +567,7 @@ register RAY  *r;
 
 static void
 oputm(r)				/* print modifier */
-register RAY  *r;
+RAY  *r;
 {
 	if (r->ro != NULL)
 		if (r->ro->omod != OVOID)
