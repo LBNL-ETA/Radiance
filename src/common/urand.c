@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.8 2004/05/14 20:49:13 greg Exp $";
+static const char	RCSid[] = "$Id: urand.c,v 2.9 2004/05/16 14:49:42 greg Exp $";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -43,7 +43,7 @@ int  size;
 		eputs("out of memory in initurand\n");
 		quit(1);
 	}
-	urperm[0] = (random() & 0x4000) != 0;
+	urperm[0] = 0;
 	for (n = 1, offset = 1; n <= order; n++, offset <<= 1)
 		for (i = offset; i--; ) {
 			urperm[i+offset] = urperm[i] <<= 1;
