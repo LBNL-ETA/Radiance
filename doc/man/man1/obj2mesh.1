@@ -1,4 +1,4 @@
-.\" RCSid "$Id: obj2mesh.1,v 1.4 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: obj2mesh.1,v 1.5 2003/12/15 17:14:28 greg Exp $"
 .TH OBJ2MESH 1 03/11/03 RADIANCE
 .SH NAME
 obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
@@ -177,9 +177,10 @@ those causing the problem.
 This error is caused by too many surfaces, and there is
 little hope of compiling this mesh.
 .SH EXAMPLE
-To create a compiled triangle mesh from the scene file mesh.obj:
+To create a compiled triangle mesh from the scene file mesh.obj
+using materials from the file mesh.mat:
 .IP "" .2i
-oconv mesh.obj mesh.rtm
+obj2mesh -a mesh.mat mesh.obj mesh.rtm
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
