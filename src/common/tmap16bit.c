@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.1 2003/07/14 18:21:07 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.2 2003/07/15 00:23:36 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -60,6 +60,8 @@ normShift16(int i)
 {
 	int	s = 0;
 	
+	if (!i)
+		return(-1);
 	while (!(i & 0x8000)) {
 		i <<= 1;
 		++s;
@@ -81,18 +83,26 @@ normShift48(uint16 clr48[3])
 
 /* convert at 48-bit tristimulus value to a COLOR */
 static void
-rgb48_color(COLOR col, uint16 clr48[3])
+rgb48_color(COLOR col, uint16 clr48[3], double gv)
 {
 	int	nshft;
 
-	if (cur_gam == 1.) {			/* linear case */
+	if (gv == 1.) {				/* linear case */
 		col[0] = clr48[0]*(1./(1L<<16));
 		col[1] = clr48[1]*(1./(1L<<16));
 		col[2] = clr48[2]*(1./(1L<<16));
 		return;
 	}
 						/* non-linear case */
+	/* XXX Uncomment if routine is made public
+	if (gv != cur_gam)
+		mkGamTable(gv);
+	*/
 	nshft = normShift48(clr48);
+	if (nshft < 0) {
+		col[0] = col[1] = col[2] = .0f;
+		return;
+	}
 	col[0] = gamtab[imultpow2(clr48[0],GAMTABBITS-16+nshft)] * 
 			gammul[nshft];
 	col[1] = gamtab[imultpow2(clr48[1],GAMTABBITS-16+nshft)] *
@@ -114,8 +124,10 @@ tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv)
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0 | gv <= MINGAM)
+	if (ls == NULL | scan == NULL | len < 0)
 		returnErr(TM_E_ILLEGAL);
+	if (gv <= 0.)
+		gv = DEFGAM;
 						/* initialize log table */
 	if (logtab[0] == 0.f)
 		mkLogTable();
@@ -124,6 +136,11 @@ tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv)
 						/* convert 16-bit grays */
 	while (len--) {
 		nshft = normShift16(*scan);
+		if (nshft < 0) {		/* bogus value */
+			*ls++ = TM_NOBRT;
+			scan++;
+			continue;
+		}
 		d = logtab[ imultpow2(*scan,LOGTABBITS-15+nshft) &
 					((1L<<LOGTABBITS)-1) ]
 				- M_LN2*nshft;
@@ -145,8 +162,10 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv)
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0 | gv <= MINGAM)
+	if (ls == NULL | scan == NULL | len < 0)
 		returnErr(TM_E_ILLEGAL);
+	if (gv <= 0.)
+		gv = DEFGAM;
 						/* update gamma table */
 	if (gv != 1. & gv != cur_gam)
 		mkGamTable(gv);
@@ -160,7 +179,7 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv)
 		if (newscan == NULL)
 			returnErr(TM_E_NOMEM);
 		for (i = len; i--; )
-			rgb48_color(newscan[i], scan[i]);
+			rgb48_color(newscan[i], scan[i], gv);
 		return(tmCvColors(ls, cs, newscan, len));
 	}
 #if 0
