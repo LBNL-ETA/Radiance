@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: hfio.c,v 1.2 2003/03/10 19:38:19 greg Exp $";
+static const char RCSid[] = "$Id: hfio.c,v 1.3 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *    Human-readable file I/O
@@ -8,12 +8,6 @@ static const char RCSid[] = "$Id: hfio.c,v 1.2 2003/03/10 19:38:19 greg Exp $";
 
 #include  "meta.h"
 
-
-
-#if  CPM || MAC
-#define  getc  agetc
-#define  putc  aputc
-#endif
 
 
 static PRIMITIVE  peof = {PEOF, 0200, -1, -1, -1, -1, NULL};

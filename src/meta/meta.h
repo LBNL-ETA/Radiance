@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.6 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: meta.h,v 1.7 2003/08/01 14:14:24 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -54,30 +54,18 @@ extern "C" {
 #define  SPAT2  06		/* set pattern 2 */
 #define  SPAT3  07		/* set pattern 3 */
 
-#ifdef  UNIX
+
+#ifdef  _WIN32  /* XXX */
+#define MDIR "c\\tmp\\" /* XXX we just need something to compile for now */
+#define TTY "CON:"   /* XXX this probably doesn't work */
+#else  /* XXX */
+
 #define  TDIR  "/tmp/"		/* directory for temporary files */
 #ifndef  MDIR
 #define  MDIR  "/usr/local/lib/meta/"	/* directory for metafiles */
 #endif
 #define  TTY  "/dev/tty"	/* console name */
 #endif
-
-#ifdef  MAC
-#define  TDIR  "5:tmp/"		/* directory for temporary files */
-#define  MDIR  "/meta/"		/* directory for metafiles */
-#define  TTY  ".con"		/* console name */
-#endif
-
-#ifdef  CPM
-#define  TDIR  "0/"		/* directory for temporary files */
-#define  MDIR  "0/"		/* directory for metafiles */
-#define  TTY  "CON:"		/* console name */
-#endif
-
-#ifdef  _WIN32  /* XXX */
-#define MDIR "c\\tmp\\" /* XXX we just need something to compile for now */
-#define TTY "CON:"   /* XXX this probably doesn't work */
-#endif  /* XXX */
 
 #define  MAXFNAME  64		/* maximum file name length */
 

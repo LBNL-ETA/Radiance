@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: syscalls.c,v 1.3 2003/07/14 20:02:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: syscalls.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  System calls for meta-file routines
@@ -37,11 +37,9 @@ char  *mode;
 
 {
     char  *mdir, stemp[MAXFNAME];
-#if  UNIX || MAC || _WIN32
     char  *getenv();
 
     if ((mdir = getenv("MDIR")) == NULL)
-#endif
 	mdir = MDIR;
     sprintf(stemp, "%s%s", mdir, fname);
 
@@ -49,23 +47,3 @@ char  *mode;
 }
 
 
-
-#ifdef  CPM
-getpid()			/* for CP/M, get user number */
-
-{
-
- return(getusr());
- }
-#endif
-
-
-
-#ifdef  MAC
-getpid()			/* dummy value for MacIntosh */
-
-{
-
- return(0);
- }
-#endif

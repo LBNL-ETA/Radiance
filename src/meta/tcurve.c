@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcurve.c,v 1.3 2003/07/14 20:02:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: tcurve.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *       PROGRAM TO PLOT TEL-A-GRAF CURVES TO METAFILE
@@ -67,10 +67,6 @@ char  **argv;
  char  tfname[MAXFNAME];
  FILE  *fp;
  int  axflag;
-
-#ifdef  CPM
- fixargs("tcurve", &argc, &argv);
-#endif
 
  progname = *argv++;
  argc--;

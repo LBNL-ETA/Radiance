@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mtext.c,v 1.4 2003/06/26 00:49:15 schorsch Exp $";
+static const char	RCSid[] = "$Id: mtext.c,v 1.5 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  Program to convert ascii file to metafile
@@ -43,10 +43,6 @@ char  **argv;
 {
     FILE  *fp;
     
-#ifdef  CPM
-    fixargs("mtext", &argc, &argv);
-#endif
-
     progname = *argv++;
     argc--;
 

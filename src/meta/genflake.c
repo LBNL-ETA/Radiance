@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genflake.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: genflake.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  genflake.c - program to make snowflakes
@@ -29,9 +29,6 @@ char  *argv[];
 	int  seed = 0;
 	int  nflakes = 1;
 	
-#ifdef  CPM
-	fixargs("genflake", &argc, &argv);
-#endif
 	progname = argv[0];
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

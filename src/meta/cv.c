@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cv.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: cv.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *    Human-readable file I/O conversion program
@@ -24,10 +24,6 @@ char  **argv;
  FILE  *fp;
  PRIMITIVE  curp;
  short  htom = TRUE;
-
-#ifdef  CPM
- fixargs("cv", &argc, &argv);
-#endif
 
  progname = *argv++;
  argc--;

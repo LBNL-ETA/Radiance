@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mt160l.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mt160l.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  Program to print meta-files on a dot-matrix printer
@@ -98,35 +98,23 @@ char  **argv;
 
 {
  FILE  *fp;
-#ifdef  UNIX
  FILE  *popen();
-#endif
  char  comargs[200], command[300];
-
-#ifdef  CPM
- fixargs("mt160l", &argc, &argv);
-#endif
 
  progname = *argv++;
  argc--;
  
  condonly = FALSE;
-#ifdef  CPM
- conditioned = TRUE;
-#else
  conditioned = FALSE;
-#endif
 
  while (argc && **argv == '-')  {
     switch (*(*argv+1))  {
-#ifdef  UNIX
        case 'c':
 	  condonly = TRUE;
 	  break;
        case 'r':
 	  conditioned = TRUE;
 	  break;
-#endif
        default:
 	  error(WARNING, "unknown option");
 	  break;
@@ -159,7 +147,6 @@ char  **argv;
        argc--;
        }
     sprintf(command, XCOM, comargs);
-#ifdef  UNIX
     if (condonly)
        return(system(command));
     else  {
@@ -172,7 +159,6 @@ char  **argv;
 	  nextpage();
        fputs(PUNINIT, stdout);
        }
-#endif
     }
 
  return(0);

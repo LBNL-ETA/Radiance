@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cvmaze.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: cvmaze.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *      THE MAZE GAME  definitions and global structures
@@ -95,8 +95,6 @@ int  cellsize;		/* the size of a maze cell (in metacoordinates) */
 
 char  *progname;
 
-#define  CPMEOF  0x1a
-
 
 main(argc, argv)
 
@@ -106,9 +104,6 @@ char  **argv;
 {
     FILE  *fp;
 
-#ifdef  CPM
-    fixargs("cvmaze", &argc, &argv);
-#endif
     progname = *argv++;
     argc--;
         

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pexpand.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: pexpand.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *   Program to expand meta-file commands
@@ -29,10 +29,6 @@ char  **argv;
  char  *cp;
  int  com;
  short  exlist[NCOMMANDS];	/* 1==expand, 0==pass, -1==discard */
-
-#ifdef  CPM
- fixargs("pexpand", &argc, &argv);
-#endif
 
  progname = *argv++;
  argc--;

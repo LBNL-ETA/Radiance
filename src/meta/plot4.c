@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plot4.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: plot4.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  plot4.c - program to put four metafile pages onto one.
@@ -25,21 +25,13 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-#ifdef  UNIX
 	FILE  *popen();
-#endif
 	FILE  *fp;
 	int  i;
 
-#ifdef  CPM
-	fixargs("plot4", &argc, &argv);
-#endif
-
 	progname = argv[0];
 
-#ifdef  UNIX
 	pout = popen(OUTFILT, "w");
-#endif
 
 	if (argc > 1)
 		for (i = 1; i < argc; i++) {
@@ -52,11 +44,7 @@ char  *argv[];
 	
 	pglob(PEOF, 0200, NULL);
 
-#ifdef  UNIX
 	return(pclose(pout));
-#else
-	return(0);
-#endif
 }
 
 

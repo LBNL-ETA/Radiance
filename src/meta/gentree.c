@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gentree.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: gentree.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  gentree.c - program to generate 2-D Christmas trees.
@@ -25,9 +25,6 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-#ifdef  CPM
-	fixargs("gentree", &argc, &argv);
-#endif
 	progname = argv[0];
 	if (argc != 7) {
 		sprintf(errmsg, "Usage: %s x0 y0 x1 y1 nbranch depth", progname);

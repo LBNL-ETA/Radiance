@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bgraph.c,v 1.2 2003/07/16 01:32:53 greg Exp $";
+static const char	RCSid[] = "$Id: bgraph.c,v 1.3 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  bgraph.c - program to send plots to metafile graphics programs.
@@ -26,14 +26,8 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-#if  UNIX || MAC
 	char  *getenv();
-#endif
 	int  i, file0;
-#ifdef  CPM
-#define getenv(s) NULL
-	fixargs("bgraph", &argc, &argv);
-#endif
 	progname = argv[0];
 	libpath[0] = "";
 	if ((libpath[i=1] = getenv("MDIR")) != NULL)

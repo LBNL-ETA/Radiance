@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psort.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: psort.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *   Program to sort a meta-file
@@ -33,10 +33,6 @@ char  **argv;
 {
  FILE  *fp;
  int  i, pcompare();
-
-#ifdef  CPM
- fixargs("psort", &argc, &argv);
-#endif
 
  progname = *argv++;
  argc--;

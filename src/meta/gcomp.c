@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gcomp.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: gcomp.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  gcomp.c - program to calculate things from graph files.
@@ -24,34 +24,15 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-#if  UNIX || MAC
 	char  *getenv();
-#endif
 	int  i, file0;
 
-#ifdef  CPM
-	fixargs("gcomp", &argc, &argv);
-	progname = argv[0];
-	libpath[0] = "";
-	libpath[1] = "0/";
-	libpath[2] = NULL;
-#endif
-#ifdef  MAC
-	progname = argv[0];
-	libpath[0] = "./";
-	if ((libpath[i=1] = getenv("MDIR")) != NULL)
-		i++;
-	libpath[i++] = "/meta/";
-	libpath[i] = NULL;
-#endif
-#ifdef  UNIX
 	progname = argv[0];
 	libpath[0] = "./";
 	if ((libpath[i=1] = getenv("MDIR")) != NULL)
 		i++;
 	libpath[i++] = MDIR;
 	libpath[i] = NULL;
-#endif
 
 	for (file0 = 1; file0 < argc; )
 		if (istyp(argv[file0]))

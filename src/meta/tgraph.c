@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tgraph.c,v 1.3 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: tgraph.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *   Routines for tel-a-graph file plotting
@@ -262,14 +262,7 @@ int  flag;
  if (flag & ORIGIN)
     plseg(010, XBEG, yorg, XBEG+XSIZ-1, yorg);
 
-#if  CPM || MAC
- if (xstep > 1.0)
-    format = "%5.0f";
- else
-    format = "%5.3f";
-#else
  format = "%5g";
-#endif
  if (logx)
     format = "1e%-3.0f";
 
@@ -302,14 +295,7 @@ int  flag;
  if (flag & ORIGIN)
     plseg(010, xorg, YBEG, xorg, YBEG+YSIZ-1);
 
-#if  CPM || MAC
- if (ystep > 1.0)
-    format = "%5.0f";
- else
-    format = "%5.3f";
-#else
  format = "%5g";
-#endif
  if (logy)
     format = "1e%-3.0f";
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgvars.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mgvars.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
 #endif
 /*
  *  mgvars.c - routines dealing with graph variables.
@@ -330,7 +330,6 @@ char  *string;
 			}
 			if (!*s) {
 				loaddata(fname, fp, &vp->v.d);
-#ifdef  UNIX
 			} else if (*s == '!') {
 				if ((fp2 = popen(s+1, "r")) == NULL) {
 					fprintf(stderr, "%s\n", string);
@@ -341,7 +340,6 @@ char  *string;
 				}
 				loaddata(s, fp2, &vp->v.d);
 				pclose(fp2);
-#endif
 			} else {
 				if ((fp2 = fopen(s, "r")) == NULL) {
 				    fprintf(stderr, "%s\n", string);

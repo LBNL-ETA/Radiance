@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.3 2003/07/14 16:07:41 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.4 2003/08/01 14:14:24 schorsch Exp $
 #
 #  Compiles:
 #
@@ -19,7 +19,7 @@ EXEC2 = $(INSTDIR)
 
 CC = cc
 
-CFLAGS = -DUNIX -DMDIR=\"$(MLIBDIR)/\" $(OPT) $(MACH) -I../common -L../lib
+CFLAGS = -DMDIR=\"$(MLIBDIR)/\" $(OPT) $(MACH) -I../common -L../lib
 
 io = mfio.o
 
