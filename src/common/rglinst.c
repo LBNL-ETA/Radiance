@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.14 2004/05/25 06:30:46 greg Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.15 2004/05/25 22:04:13 greg Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -90,7 +90,7 @@ register OBJREC	*o;
 
 static int
 buildoctlist(lp, p)			/* build octree list */
-LUENT	*lp;
+const LUENT	*lp;
 void	*p;
 {
 	int	old_dolights = dolights, old_domats = domats;

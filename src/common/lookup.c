@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.14 2004/05/25 06:30:46 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.15 2004/05/25 22:04:13 greg Exp $";
 #endif
 /*
  * Table lookup routines
@@ -48,7 +48,7 @@ lu_init(		/* initialize tbl for at least nel elements */
 
 extern unsigned long
 lu_shash(			/* hash a nul-terminated string */
-	void	*s
+	const void	*s
 )
 {
 	static unsigned char shuffle[256] = {
@@ -79,7 +79,7 @@ lu_shash(			/* hash a nul-terminated string */
 	};
 	register int	i = 0;
 	register unsigned long	h = 0;
-	register unsigned char *t = (unsigned char *)s;
+	register unsigned const char *t = (unsigned const char *)s;
 
 	while (*t)
 	    	h ^= (unsigned long)shuffle[*t++] << ((i+=11) & 0xf);
@@ -91,7 +91,7 @@ lu_shash(			/* hash a nul-terminated string */
 extern LUENT *
 lu_find(		/* find a table entry */
 	register LUTAB	*tbl,
-	char	*key
+	const char	*key
 )
 {
 	unsigned long	hval;
@@ -147,7 +147,7 @@ tryagain:
 extern void
 lu_delete(		/* delete a table entry */
 	register LUTAB	*tbl,
-	char	*key
+	const char	*key
 )
 {
 	register LUENT	*le;
@@ -165,14 +165,14 @@ lu_delete(		/* delete a table entry */
 
 extern int
 lu_doall(		/* loop through all valid table entries */
-	register LUTAB	*tbl,
-	//int	(*f)(LUENT *)
+	register const LUTAB	*tbl,
+	//int	(*f)(const LUENT *)
 	lut_doallf_t *f,
 	void *p
 )
 {
 	int	rval = 0;
-	register LUENT	*tp;
+	register const LUENT	*tp;
 
 	for (tp = tbl->tabl + tbl->tsiz; tp-- > tbl->tabl; )
 		if (tp->data != NULL) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.19 2004/03/28 20:33:12 schorsch Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.20 2004/05/25 22:04:13 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -37,9 +37,9 @@ static lut_hashf_t cvhash;
 static unsigned long
 cvhash(p)				/* hash an encoded vertex */
 //MCVERT	*cvp;
-void	*p;
+const void	*p;
 {
-	MCVERT	*cvp = p;
+	const MCVERT	*cvp = (const MCVERT *)p;
 	unsigned long	hval;
 	
 	if (!(cvp->fl & MT_V))
