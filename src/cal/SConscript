@@ -7,13 +7,13 @@ mlib = env['RAD_MLIB']
 # standard targets
 PROGS = (
 # name     sources             libs
-('calc',   Split('calc.c'),    ['rtfunc','rtmem','rtcont'] + mlib),
+('icalc',  Split('calc.c'),    ['rtfunc','rtmem','rtcont'] + mlib),
 ('ev',     Split('ev.c'),      ['rtfunc','rtmem','rtcont'] + mlib),
 ('rcalc',  Split('rcalc.c'),   ['rtfunc','rtmem','rtcont'] + mlib),
 ('total',  Split('total.c'),   mlib),
 ('cnt',    Split('cnt.c'),     []),
-('neat',   Split('neat.c'),    []),
-('lam',    Split('lam.c'),     ['rtproc','rtpath','rtio','rterror']),
+('neaten', Split('neat.c'),    []),
+('rlam',   Split('lam.c'),     ['rtproc','rtpath','rtio','rterror']),
 ('tabfunc',Split('tabfunc.c'), ['rtio'] + mlib),
 ('histo',  Split('histo.c'),   mlib),
 )
