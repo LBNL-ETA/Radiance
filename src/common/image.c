@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.30 2005/02/07 20:13:55 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.31 2005/02/18 17:42:14 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -34,6 +34,8 @@ register VIEW  *v;
 	if (v->vaft < -FTINY || (v->vaft > FTINY && v->vaft <= v->vfore))
 		return("illegal fore/aft clipping plane");
 
+	if (v->vdist <= FTINY)
+		return("illegal view distance");
 	v->vdist *= normalize(v->vdir);		/* normalize direction */
 	if (v->vdist == 0.0)
 		return("zero view direction");
