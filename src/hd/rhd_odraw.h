@@ -1,10 +1,8 @@
-/* RCSid: $Id: rhd_odraw.h,v 3.7 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.8 2003/03/04 05:49:21 greg Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  */
 
-#undef NOPROTO
-#define NOPROTO 1
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"

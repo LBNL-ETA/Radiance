@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.13 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.14 2003/03/04 05:49:21 greg Exp $";
 #endif
 /*
  * Routines for drawing samples using depth buffer checks.
@@ -297,7 +297,7 @@ FVECT	d, p;
 		if (id < 0)
 			continue;		/* not good enough */
 							/* convert color */
-		tmCvColrs(&odS.brt[id], odS.chr[id], c, 1);
+		tmCvColrs(&odS.brt[id], odS.chr[id], (COLR *)c, 1);
 		if (imm_mode | needmapping)		/* if immediate mode */
 			needmapping |= NEWRGB;		/* map it later */
 		else					/* else map it now */
@@ -461,7 +461,8 @@ int	vn;
 			needmapping &= ~NEWMAP;
 			odRedrawAll();			/* redraw everything */
 		}
-		if (tmMapPixels(odS.rgb,odS.brt,odS.chr,odS.nsamp) != TM_E_OK)
+		if (tmMapPixels((BYTE *)(odS.rgb), odS.brt,
+				(BYTE *)(odS.chr), odS.nsamp) != TM_E_OK)
 			return;
 		needmapping &= ~NEWRGB;
 	}

@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.17 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: standard.h,v 2.18 2003/03/04 05:49:21 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -170,6 +170,10 @@ extern int	xf();
 extern int	invxf();
 extern int	fullxf();
 extern int	quadtratic();
+extern int4	encodedir();
+extern void	decodedir();
+extern double	dir2diff();
+extern double	fdir2diff();
 extern void	eputs();
 extern void	wputs();
 extern void	quit();
@@ -251,6 +255,11 @@ extern int	invxf(XF *ret, int ac, char *av[]);
 extern int	fullxf(FULLXF *fx, int ac, char *av[]);
 					/* defined in zeroes.c */
 extern int	quadtratic(double *r, double a, double b, double c);
+					/* defined in dircode.c */
+extern int4	encodedir(FVECT dv);
+extern void	decodedir(FVECT dv, int4 dc);
+extern double	dir2diff(int4 dc1, int4 dc2);
+extern double	fdir2diff(int4 dc1, FVECT v2);
 					/* miscellaneous */
 extern void	eputs(char *s);
 extern void	wputs(char *s);

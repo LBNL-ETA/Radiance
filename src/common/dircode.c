@@ -1,16 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dircode.c,v 3.4 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: dircode.c,v 2.1 2003/03/04 05:49:21 greg Exp $";
 #endif
 /*
  * Compute 4-byte direction code (assume this fits into int)
  */
 
-#include <math.h>
-#include "fvect.h"
-
-#ifndef int4
-#define int4	int
-#endif
+#include "standard.h"
 
 #define	DCSCALE		11585.2		/* (1<<13)*sqrt(2) */
 #define FXNEG		01
@@ -51,6 +46,7 @@ FVECT	dv;
 }
 
 
+void
 decodedir(dv, dc)	/* decode a normalized direction vector */
 register FVECT	dv;	/* returned */
 register int4	dc;

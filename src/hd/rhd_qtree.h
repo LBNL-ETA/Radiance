@@ -1,10 +1,8 @@
-/* RCSid: $Id: rhd_qtree.h,v 3.13 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid $Id: rhd_qtree.h,v 3.14 2003/03/04 05:49:21 greg Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */
 
-#undef NOPROTO
-#define NOPROTO 1
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"

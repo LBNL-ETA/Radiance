@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: instance.c,v 2.6 2003/02/25 02:47:21 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.7 2003/03/04 05:49:21 greg Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -40,7 +40,7 @@ int  flags;
 	if (sc == NULL) {
 		sc = (SCENE *)malloc(sizeof(SCENE));
 		if (sc == NULL)
-			error(SYSTEM, "out of memory ins getscene");
+			error(SYSTEM, "out of memory in getscene");
 		sc->name = savestr(sname);
 		sc->nref = 1;
 		sc->ldflags = 0;
@@ -77,7 +77,7 @@ int  flags;
 	flags &= ~IO_ILLEGAL;		/* not allowed */
 	if ((ins = (INSTANCE *)o->os) == NULL) {
 		if ((ins = (INSTANCE *)malloc(sizeof(INSTANCE))) == NULL)
-			error(SYSTEM, "out of memory ins getinstance");
+			error(SYSTEM, "out of memory in getinstance");
 		if (o->oargs.nsargs < 1)
 			objerror(o, USER, "bad # of arguments");
 		if (fullxf(&ins->x, o->oargs.nsargs-1,
@@ -134,6 +134,6 @@ OBJREC  *o;
 	if (o->os == NULL)
 		return;
 	freescene((*(INSTANCE *)o->os).obj);
-	free(o->os);
+	free((void *)o->os);
 	o->os = NULL;
 }
