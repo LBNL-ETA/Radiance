@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xf.c,v 2.6 2003/06/27 06:53:22 greg Exp $";
+static const char	RCSid[] = "$Id: xf.c,v 2.7 2003/06/27 22:27:45 greg Exp $";
 #endif
 /*
  *  xf.c - routines to convert transform arguments into 4X4 matrix.
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: xf.c,v 2.6 2003/06/27 06:53:22 greg Exp $";
  *  External symbols declared in rtmath.h
  */
 
+#include  <stdlib.h>
 #include  "rtmath.h"
 #include  "rtio.h"
 
