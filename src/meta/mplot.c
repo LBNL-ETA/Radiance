@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mplot.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mplot.c,v 1.2 2003/07/01 21:21:40 greg Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to line-at-a-time printers
@@ -87,7 +87,7 @@ PRIMITIVE  *g;
 	        error(USER, "illegal continue direction in doglobal");
 	    break;
 
-	case PPAUSE:
+	case PPAUS:
 	    fflush(stdout);
 	    tty = open(TTY, O_RDWR);
 	    if (g->args != NULL) {

@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.3 2003/06/16 14:54:54 greg Exp $ */
+/* RCSid: $Id: meta.h,v 1.4 2003/07/01 21:21:40 greg Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -21,7 +21,7 @@ extern "C" {
 
 #define  PEOF  'F'		/* end of file global */
 #define  PEOP  'E'		/* end of page global */
-#define  PPAUSE  'P'		/* pause global */
+#define  PPAUS  'P'		/* pause global */
 #define  PDRAW  'D'		/* draw global */
 #define  POPEN  'O'		/* open segment */
 #define  PCLOSE  'C'		/* close segment */

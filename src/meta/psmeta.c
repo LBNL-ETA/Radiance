@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psmeta.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: psmeta.c,v 1.2 2003/07/01 21:21:40 greg Exp $";
 #endif
 /*
 *  Program to convert meta-files to PostScript.
@@ -83,7 +83,7 @@ PRIMITIVE  *g;
 	case PEOF:
 		return(0);
 
-	case PPAUSE:
+	case PPAUS:
 		break;
 
 	case PINCL:
