@@ -1,4 +1,4 @@
-/* RCSid $Id: tifftypes.h,v 3.1 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid $Id: tifftypes.h,v 3.2 2004/10/27 23:23:47 greg Exp $ */
 /* The following is lifted straight out of tiff.h */
 #ifndef _TIFF_DATA_TYPEDEFS_
 #define _TIFF_DATA_TYPEDEFS_
@@ -17,7 +17,7 @@ typedef	char int8;
 typedef	unsigned char uint8;
 typedef	short int16;
 typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
-#if defined(__alpha) || (defined(_MIPS_SZLONG) && _MIPS_SZLONG == 64)
+#if defined(__alpha) || (defined(_MIPS_SZLONG) && _MIPS_SZLONG == 64) || defined(__LP64__) || defined(__x86_64)
 typedef	int int32;
 typedef	unsigned int uint32;	/* sizeof (uint32) must == 4 */
 #else

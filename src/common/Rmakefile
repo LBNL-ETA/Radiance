@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.49 2004/03/26 03:11:50 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.50 2004/10/27 23:23:47 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -95,7 +95,7 @@ multisamp.o urand.o:	random.h
 cone.o face.o free_os.o image.o instance.o objset.o \
 octree.o modobject.o readfargs.o otypes.o mesh.o \
 readmesh.o readobj.o readoct.o sceneio.o:	standard.h \
-rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h
+rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h tifftypes.h
 
 image.o:	view.h
 

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.12 2004/08/21 11:54:06 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.13 2004/10/27 23:23:47 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -81,7 +81,7 @@ genworm.o replmarks.o:	../common/fvect.h
 gensurf.o xform.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/rterror.h \
-../common/mat4.h ../common/fvect.h
+../common/mat4.h ../common/fvect.h ../common/tifftypes.h
 
 genworm.o genrev.o gensurf.o:	../common/resolu.h ../common/rterror.h
 
