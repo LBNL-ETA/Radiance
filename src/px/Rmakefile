@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.45 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.46 2003/04/29 19:09:43 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -194,7 +194,7 @@ normtiff:	normtiff.o ../lib/libtiff.a
 	$(CC) $(CFLAGS) -o normtiff normtiff.o -lrt -ltiff $(MLIB)
 
 ../lib/libtiff.a:	tiff/config.local
-	cd tiff ; ./configure -quiet -noninteractive -with-CC=$(CC) \
+	cd tiff ; sh configure -quiet -noninteractive -with-CC=$(CC) \
 		"-with-ENVOPTS=$(OPT)" ; \
 	cd libtiff ; make install
 
