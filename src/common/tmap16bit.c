@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.2 2003/07/15 00:23:36 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.3 2003/07/15 07:28:09 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -15,11 +15,14 @@ static const char RCSid[] = "$Id: tmap16bit.c,v 1.2 2003/07/15 00:23:36 greg Exp
 
 #define LOGTABBITS	11	/* log table is 1<<LOGTABBITS long */
 #define GAMTABBITS	9	/* gamma table is 1<<GAMTABBITS long */
+#define MONGAMTSZ	1024	/* monitor gamma table length */
 
 static float	logtab[1<<LOGTABBITS];
 static float	gamtab[1<<GAMTABBITS];
 static float	gammul[16];
 static double	cur_gam = 0.;
+static BYTE	mongamtab[MONGAMTSZ];
+static double	cur_mongam = 0.;
 
 #define imultpow2(i,s)	((s)>=0 ? (i)<<(s) : (i)>>-(s))
 
@@ -38,7 +41,7 @@ mkLogTable()
 }
 
 
-/* Fill our gamma table */
+/* Fill our input gamma table */
 static void
 mkGamTable(double gv)
 {
@@ -51,6 +54,20 @@ mkGamTable(double gv)
 	for (i = 16; i--; )
 		gammul[i] = pow((double)(1L<<i), -gv);
 	cur_gam = gv;
+}
+
+
+/* Fill our monitor gamma table */
+static void
+mkMonGamTable()
+{
+	int	i;
+	
+	if (tmTop->mongam == cur_mongam)
+		return;
+	for (i = MONGAMTSZ; i--; )
+		mongamtab[i] = 256.*pow((i+.5)*(1./MONGAMTSZ), 1./tmTop->mongam);
+	cur_mongam = tmTop->mongam;
 }
 
 
@@ -94,7 +111,7 @@ rgb48_color(COLOR col, uint16 clr48[3], double gv)
 		return;
 	}
 						/* non-linear case */
-	/* XXX Uncomment if routine is made public
+	/* XXX Uncomment if this routine is made public
 	if (gv != cur_gam)
 		mkGamTable(gv);
 	*/
@@ -142,8 +159,8 @@ tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv)
 			continue;
 		}
 		d = logtab[ imultpow2(*scan,LOGTABBITS-15+nshft) &
-					((1L<<LOGTABBITS)-1) ]
-				- M_LN2*nshft;
+					((1L<<LOGTABBITS)-1) ];
+		d -= M_LN2*nshft;
 		d = (double)TM_BRTSCALE * (gv*d + log_inpsf);
 		*ls++ = (d>0. ? d+.5 : d-.5);
 		scan++;
@@ -166,14 +183,10 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv)
 		returnErr(TM_E_ILLEGAL);
 	if (gv <= 0.)
 		gv = DEFGAM;
-						/* update gamma table */
+						/* sync input gamma table */
 	if (gv != 1. & gv != cur_gam)
 		mkGamTable(gv);
-#if 0
 	if (tmNeedMatrix(tmTop)) {		/* need floating point */
-#else
-	{
-#endif
 		COLOR	*newscan;
 		newscan = (COLOR *)tempbuffer(len*sizeof(COLOR));
 		if (newscan == NULL)
@@ -182,52 +195,74 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv)
 			rgb48_color(newscan[i], scan[i], gv);
 		return(tmCvColors(ls, cs, newscan, len));
 	}
-#if 0
+						/* sync monitor gamma table */
+	if (cs != TM_NOCHROM && tmTop->mongam != cur_mongam)
+		mkMonGamTable();
 						/* initialize log table */
 	if (logtab[0] == 0.f)
 		mkLogTable();
 	if (cur_inpsf != tmTop->inpsf)
 		log_inpsf = log(cur_inpsf = tmTop->inpsf);
+	if (tmTop->flags & TM_F_MESOPIC)
+		tmMkMesofact();
 						/* convert scanline */
 	for (i = len; i--; ) {
-		copycolr(cmon, scan[i]);
-							/* world luminance */
-		li =  ( cd->clfb[RED]*cmon[RED] +
-			cd->clfb[GRN]*cmon[GRN] +
-			cd->clfb[BLU]*cmon[BLU] ) >> 8;
-		bi = BRT2SCALE(cmon[EXP]-COLXS) +
-				logi[li] + cd->inpsfb;
-		if (li <= 0) {
+		int	nshft = normShift48(scan[i]);
+		COLOR	cmon;
+		double	lum;
+		int	bi;
+		
+		if (nshft < 0) {
 			bi = TM_NOBRT;			/* bogus value */
-			li = 1;				/* avoid li==0 */
+			lum = 1.;
+		} else {
+			int	j = GAMTABBITS-16+nshft;
+			int	nshft2;
+			double	d;
+							/* normalized linear */
+			setcolor(cmon,	gamtab[imultpow2(scan[i][0],j)],
+					gamtab[imultpow2(scan[i][1],j)],
+					gamtab[imultpow2(scan[i][2],j)] );
+			lum =	tmTop->clf[RED]*cmon[RED];
+			lum +=	tmTop->clf[GRN]*cmon[GRN];
+			lum +=	tmTop->clf[BLU]*cmon[BLU];
+							/* convert to log Y */
+			j = lum * (double)(1L<<16);
+			nshft2 = normShift16(j);
+			d = logtab[ imultpow2(j,LOGTABBITS-15+nshft2) &
+						((1L<<LOGTABBITS)-1) ];
+			d -= M_LN2*(gv*nshft + nshft2);
+			d = (double)TM_BRTSCALE*(d + log_inpsf);
+			bi = (int)(d>0. ? d+.5 : d-.5);
 		}
+							/* world luminance */
 		ls[i] = bi;
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
 							/* mesopic adj. */
 		if (tmTop->flags & TM_F_MESOPIC && bi < BMESUPPER) {
-			int	pf, sli = normscot(cmon);
+			double	slum = scotlum(cmon);
 			if (bi < BMESLOWER)
-				cmon[RED] = cmon[GRN] = cmon[BLU] = sli;
+				setcolor(cmon, slum, slum, slum);
 			else {
+				double	pf;
+				pf = (1./256.)*tmMesofact[bi-BMESLOWER];
 				if (tmTop->flags & TM_F_BW)
-					cmon[RED] = cmon[GRN] = cmon[BLU] = li;
-				pf = tmMesofact[bi-BMESLOWER];
-				sli *= 256 - pf;
-				cmon[RED] = ( sli + pf*cmon[RED] ) >> 8;
-				cmon[GRN] = ( sli + pf*cmon[GRN] ) >> 8;
-				cmon[BLU] = ( sli + pf*cmon[BLU] ) >> 8;
+					cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
+				slum *= 1. - pf;
+				cmon[RED] = slum + pf*cmon[RED];
+				cmon[GRN] = slum + pf*cmon[GRN];
+				cmon[BLU] = slum + pf*cmon[BLU];
 			}
 		} else if (tmTop->flags & TM_F_BW) {
-			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
+			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
 		}
-		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
-		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 8;
-		cs[3*i+1] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 8;
-		cs[3*i+2] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
+		bi = (double)MONGAMTSZ*tmTop->clf[RED]*cmon[RED]/lum;
+		cs[3*i  ] = bi>=MONGAMTSZ ? 255 : mongamtab[bi];
+		bi = (double)MONGAMTSZ*tmTop->clf[GRN]*cmon[GRN]/lum;
+		cs[3*i+1] = bi>=MONGAMTSZ ? 255 : mongamtab[bi];
+		bi = (double)MONGAMTSZ*tmTop->clf[BLU]*cmon[BLU]/lum;
+		cs[3*i+2] = bi>=MONGAMTSZ ? 255 : mongamtab[bi];
 	}
 	returnOK;
-#endif
 }

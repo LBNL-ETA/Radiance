@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.7 2003/07/01 16:20:04 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.8 2003/07/15 07:28:09 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -215,7 +215,7 @@ int	len;
 			continue;
 						/* get chrominance */
 		if (tmTop->flags & TM_F_MESOPIC && ls[i] < BMESUPPER) {
-			if (uv_decode(uvp, uvp+1, luvs[i]&0x3fff) < 0) {
+			if (uv_decode(&uvp[0], &uvp[1], luvs[i]&0x3fff) < 0) {
 				uvp[0] = U_NEU;		/* should barf? */
 				uvp[1] = V_NEU;
 			}
