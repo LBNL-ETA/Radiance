@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.12 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.13 2003/07/03 20:59:00 schorsch Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -11,7 +11,7 @@ static const char	RCSid[] = "$Id: getpath.c,v 2.12 2003/06/30 14:59:11 schorsch 
 
 #include  <string.h>
 #include  <ctype.h>
-#ifndef	 RHAS_GETPWNAM
+#ifdef	 RHAS_GETPWNAM
   #include  <pwd.h>
   #include  <sys/types.h>
 #endif
@@ -33,7 +33,7 @@ register char  *searchpath,
 int  mode
 )
 {
-#ifndef	 RHAS_GETPWNAM
+#ifdef	 RHAS_GETPWNAM
 	struct passwd  *pwent;
 #endif
 	static char  pname[PATH_MAX];
@@ -64,7 +64,7 @@ int  mode
 					strncat(pname, fname, sizeof(pname)-strlen(pname)-1);
 					break;
 				}
-#ifndef RHAS_GETPWNAM
+#ifdef RHAS_GETPWNAM
 				/* XXX Should we request our own home directory from the
 				   XXX system as well if the above fails? */
 				/* XXX In any case, we need do the same thing on Windows... */
