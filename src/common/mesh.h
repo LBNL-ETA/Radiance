@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.9 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: mesh.h,v 2.10 2003/08/26 04:24:26 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -67,7 +67,7 @@ typedef struct {
 		BYTE		v3;		/* local vertex */
 	}		*j2tri;		/* double joiner triangles */
 	short		nverts;		/* vertex count */
-	short		ntris;		/* triangle count */
+	short		ntris;		/* local triangle count */
 	short		nj1tris;	/* joiner triangle count */
 	short		nj2tris;	/* double joiner triangle count */
 } MESHPATCH;

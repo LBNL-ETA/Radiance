@@ -1,10 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fropen.c,v 2.13 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: fropen.c,v 2.14 2003/08/26 04:24:26 greg Exp $";
 #endif
 /*
  * Find and open a Radiance library file.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
@@ -19,7 +19,6 @@ FILE *
 frlibopen(fname)		/* find file and open for reading */
 register char  *fname;
 {
-	extern char  *getrlibpath();
 	FILE  *fp;
 	char  pname[PATH_MAX];
 	register char  *sp, *cp;
