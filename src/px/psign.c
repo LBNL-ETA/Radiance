@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.20 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.21 2003/06/21 15:05:01 greg Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -33,6 +33,12 @@ int  cwidth;				/* computed character width */
 unsigned char  *ourbitmap;		/* our output bitmap */
 int  xsiz, ysiz;			/* bitmap dimensions */
 int  xdim;				/* size of horizontal scan (bytes) */
+
+				/* conflicting def's in param.h */
+#undef	tstbit
+#undef	setbit
+#undef	clrbit
+#undef	tglbit
 
 #define	 bitop(x,y,op)		(ourbitmap[(y)*xdim+((x)>>3)] op (1<<((x)&7)))
 #define	 tstbit(x,y)		bitop(x,y,&)

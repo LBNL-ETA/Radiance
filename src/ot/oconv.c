@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.16 2003/06/08 12:03:10 schorsch Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.17 2003/06/21 15:05:01 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -191,6 +191,11 @@ register char  *s;
 		inln = 0;
 }
 
+				/* conflicting def's in param.h */
+#undef  tstbit
+#undef  setbit
+#undef  clrbit
+#undef  tglbit
 
 #define	 bitop(f,i,op)		(f[((i)>>3)] op (1<<((i)&7)))
 #define	 tstbit(f,i)		bitop(f,i,&)
