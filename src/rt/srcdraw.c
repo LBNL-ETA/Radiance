@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.13 2004/09/02 16:02:56 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.14 2004/10/20 18:19:22 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -444,16 +444,12 @@ drawsources(
 				if (source[sp->sn].sflags & SSPOT &&
 						spotout(&sr, source[sp->sn].sl.s))
 					continue;	/* outside spot */
-				w = poly_area(ppoly, npv) * hres * vres;
-				if (w < .95) {		/* subpixel source */
-					rayorigin(&sr, NULL, SHADOW, 1.0);
-					sr.rsrc = sp->sn;
-				} else
-					rayorigin(&sr, NULL, PRIMARY, 1.0);
+				rayorigin(&sr, NULL, PRIMARY, 1.0);
 				rayvalue(&sr);		/* compute value */
 				if (bright(sr.rcol) <= FTINY)
 					continue;	/* missed/blocked */
 							/* modify pixel */
+				w = poly_area(ppoly, npv) * hres * vres;
 				if (zbf[y-y0] != NULL &&
 						sr.rt < 0.99*zbf[y-y0][x-x0]) {
 					zbf[y-y0][x-x0] = sr.rt;
