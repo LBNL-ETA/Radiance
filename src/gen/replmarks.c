@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id";
+static const char RCSid[] = "$Id: replmarks.c,v 2.12 2004/09/28 17:54:18 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.

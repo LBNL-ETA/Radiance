@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id";
+static const char RCSid[] = "$Id: x11image.c,v 2.68 2004/09/28 17:54:18 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
