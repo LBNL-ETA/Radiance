@@ -1327,3 +1327,6 @@ This was a serious mistake I made in the original model, which went
 undiscovered (at least to my knowledge) for over a decade.  I think
 Bruce Walter of Cornell may have known about it, but I never heard
 the details of his discovery.
+
+Enabled the -p option for primary conversion without tone-mapping
+in ra_bmp.  Also provides for XYZE input conversion to RGB.

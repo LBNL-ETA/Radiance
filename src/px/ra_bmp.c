@@ -1,11 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.8 2004/07/20 03:08:42 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.9 2004/09/23 18:00:54 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
  */
 
 #include  <stdio.h>
+#include  <math.h>
 #include  <string.h>
 
 #include  "platform.h"
@@ -14,17 +15,22 @@ static const char RCSid[] = "$Id: ra_bmp.c,v 2.8 2004/07/20 03:08:42 greg Exp $"
 #include  "resolu.h"
 #include  "bmpfile.h"
 
-int  bradj = 0;				/* brightness adjustment */
+int		bradj = 0;		/* brightness adjustment */
 
-double	gamcor = 2.2;			/* gamma correction value */
+double		gamcor = 2.2;		/* gamma correction value */
 
-char  *progname;
+char		*progname;
 
 static void quiterr(const char *err);
 static void tmap2bmp(char *fnin, char *fnout, char *expec,
 				RGBPRIMP monpri, double gamval);
-static void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry);
+static void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri);
 static void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
+
+static RGBPRIMP	rgbinp = stdprims;	/* RGB input primitives */
+static RGBPRIMS	myinprims;		/* custom primitives holder */
+
+static gethfunc headline;
 
 
 int
@@ -147,7 +153,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 					/* get header info. */
-		if (checkheader(stdin, COLRFMT, NULL) < 0 ||
+		if (getheader(stdin, headline, NULL) < 0 ||
 				!fgetsresolu(&rs, stdin))
 			quiterr("bad Radiance picture format");
 					/* initialize BMP header */
@@ -171,7 +177,7 @@ main(int argc, char *argv[])
 		if (wtr == NULL)
 			quiterr("cannot allocate writer structure");
 					/* convert file */
-		rad2bmp(stdin, wtr, !hdr->yIsDown, rgbp==NULL);
+		rad2bmp(stdin, wtr, !hdr->yIsDown, rgbp);
 					/* flush output */
 		if (fflush((FILE *)wtr->c_data) < 0)
 			quiterr("error writing BMP output");
@@ -199,17 +205,58 @@ quiterr(const char *err)
 	exit(0);
 }
 
+/* process header line (don't echo) */
+static int
+headline(char *s, void *p)
+{
+	char	fmt[32];
+
+	if (formatval(fmt, s)) {	/* check if format string */
+		if (!strcmp(fmt,COLRFMT))
+			return(0);
+		if (!strcmp(fmt,CIEFMT)) {
+			rgbinp = TM_XYZPRIM;
+			return(0);
+		}
+		return(-1);
+	}
+	if (isprims(s)) {		/* get input primaries */
+		primsval(myinprims, s);
+		rgbinp = myinprims;
+		return(0);
+	}
+					/* should I grok colcorr also? */
+	return(0);
+}
+
+
 /* convert Radiance picture to BMP */
 static void
-rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry)
+rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 {
+	int	usexfm = 0;
+	COLORMAT	xfm;
 	COLR	*scanin;
+	COLOR	cval;
 	int	y, yend, ystp;
 	int     x;
 						/* allocate scanline */
 	scanin = (COLR *)malloc(bwr->hdr->width*sizeof(COLR));
 	if (scanin == NULL)
 		quiterr("out of memory in rad2bmp");
+						/* set up color conversion */
+	usexfm = (monpri != NULL ? rgbinp != monpri :
+			rgbinp != TM_XYZPRIM && rgbinp != stdprims);
+	if (usexfm) {
+		double	expcomp = pow(2.0, (double)bradj);
+		if (rgbinp == TM_XYZPRIM)
+			compxyz2rgbWBmat(xfm, monpri);
+		else
+			comprgb2rgbWBmat(xfm, rgbinp, monpri);
+		for (y = 0; y < 3; y++)
+			for (x = 0; x < 3; x++)
+				xfm[y][x] *= expcomp;
+	}
 						/* convert image */
 	if (inv) {
 		y = bwr->hdr->height - 1;
@@ -222,12 +269,21 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry)
 	for ( ; y != yend; y += ystp) {
 		if (freadcolrs(scanin, bwr->hdr->width, rfp) < 0)
 			quiterr("error reading Radiance picture");
-		if (bradj)
+		if (usexfm)
+			for (x = bwr->hdr->width; x--; ) {
+				colr_color(cval, scanin[x]);
+				colortrans(cval, xfm, cval);
+				setcolr(scanin[x], colval(cval,RED),
+						colval(cval,GRN),
+						colval(cval,BLU));
+			}
+		else if (bradj)
 			shiftcolrs(scanin, bwr->hdr->width, bradj);
-		for (x = gry ? bwr->hdr->width : 0; x--; )
-			scanin[x][GRN] = normbright(scanin[x]);
+		if (monpri == NULL && rgbinp != TM_XYZPRIM)
+			for (x = bwr->hdr->width; x--; )
+				scanin[x][GRN] = normbright(scanin[x]);
 		colrs_gambs(scanin, bwr->hdr->width);
-		if (gry)
+		if (monpri == NULL)
 			for (x = bwr->hdr->width; x--; )
 				bwr->scanline[x] = scanin[x][GRN];
 		else

@@ -55,8 +55,7 @@ respectively.
 Otherwise, the exposure specification is interpreted as a
 linear compensation value in integer f-stops, which must
 be proceeded by a '+' or '-'.
-If tone-mapping is applied, then CRT output
-primaries may also be specified with the
+The CRT color output primaries may be specified with the
 .I \-p
 option.
 .PP
@@ -75,9 +74,11 @@ A hyphen ('-') may be specified to indicate standard input for
 either forward or reverse conversion so that an output file may be
 specified.
 If the BMP input is taken from the standard input or sent to the
-standard output, then the scanlines may be reversed from their
-usual ordering.
-This sometimes causes difficulties for programs attempting
+standard output without tone-mapping, then the scanlines may
+be reversed from their usual ordering.
+Scanlines are also reversed when output to a BMP file without
+tone-mapping using the grayscale option.
+Reversed scanlines sometimes causes difficulties for programs attempting
 to interpret the resulting RADIANCE picture or BMP image, which
 may be rejected or displayed inverted.
 .SH AUTHOR
