@@ -5,6 +5,8 @@ obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
 .SH SYNOPSIS
 .B obj2mesh
 [
+.B "\-a matinput"
+][
 .B "\-n objlim"
 ][
 .B "\-r maxres"
@@ -25,6 +27,9 @@ reads a Wavefront .OBJ file from
 which is sent to
 .I output.rtm
 (or standard output).
+Any RADIANCE material descriptions included via one or more
+.I \-a
+options will be compiled and stored in the mesh as well.
 This mesh may be included in a RADIANCE scene description via the
 .I mesh
 primitive, thus:
@@ -39,8 +44,12 @@ mod mesh id
 .PP
 The syntax and semantics are identical to the RADIANCE
 .I instance
-primitive, except that the mesh modifier may not be "void", since
-materials are not included in a compiled mesh file.
+primitive.
+If
+.I mod
+is "void", then the stored mesh materials will be applied during rendering.
+Otherwise, the given material will be substituted on
+all the mesh surfaces.
 .PP
 The
 .I \-n
@@ -95,6 +104,20 @@ A local vertex texture coordinate.
 These coordinates will be interpolated and passed
 to the "Lu" and "Lv" variables during rendering.
 Local coordinates can extend over any desired range of values.
+.TP
+.BI usemtl " mname"
+A material name.
+The following faces will use the named material, which is
+taken from the material definitions in the
+.I \-a
+input file(s).
+.TP
+.BI g " gname"
+Group association.
+The following faces are associated with the named group.
+If no "usemtl" statement has been
+encountered, the current group is used for the surface material
+identifier.
 .TP
 .BI f " v1/t1/n1 v2/t2/n2 v3/t3/n3" " .."
 A polygonal face.

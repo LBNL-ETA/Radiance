@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.3 2003/03/12 17:26:58 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.4 2003/03/14 21:27:45 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -8,8 +8,8 @@ static const char RCSid[] = "$Id: mesh.c,v 2.3 2003/03/12 17:26:58 greg Exp $";
 #include "standard.h"
 #include "octree.h"
 #include "object.h"
+#include "otypes.h"
 #include "mesh.h"
-#include "lookup.h"
 
 /* An encoded mesh vertex */
 typedef struct {
@@ -135,48 +135,61 @@ int	flags;
 
 
 int
-getmeshtrivid(tvid, mp, ti)		/* get triangle vertex ID's */
-int4		tvid[3];
-register MESH	*mp;
-OBJECT		ti;
+getmeshtrivid(tvid, mo, mp, ti)		/* get triangle vertex ID's */
+int4	tvid[3];
+OBJECT	*mo;
+MESH	*mp;
+OBJECT	ti;
 {
 	int		pn = ti >> 10;
+	MESHPATCH	*pp;
 
 	if (pn >= mp->npatches)
 		return(0);
+	pp = &mp->patch[pn];
 	ti &= 0x3ff;
 	if (!(ti & 0x200)) {		/* local triangle */
 		struct PTri	*tp;
-		if (ti >= mp->patch[pn].ntris)
+		if (ti >= pp->ntris)
 			return(0);
-		tp = &mp->patch[pn].tri[ti];
+		tp = &pp->tri[ti];
 		tvid[0] = tvid[1] = tvid[2] = pn << 8;
 		tvid[0] |= tp->v1;
 		tvid[1] |= tp->v2;
 		tvid[2] |= tp->v3;
+		if (pp->trimat != NULL)
+			*mo = pp->trimat[ti];
+		else
+			*mo = pp->solemat;
+		if (*mo != OVOID)
+			*mo += mp->mat0;
 		return(1);
 	}
 	ti &= ~0x200;
 	if (!(ti & 0x100)) {		/* single link vertex */
 		struct PJoin1	*tp1;
-		if (ti >= mp->patch[pn].nj1tris)
+		if (ti >= pp->nj1tris)
 			return(0);
-		tp1 = &mp->patch[pn].j1tri[ti];
+		tp1 = &pp->j1tri[ti];
 		tvid[0] = tp1->v1j;
 		tvid[1] = tvid[2] = pn << 8;
 		tvid[1] |= tp1->v2;
 		tvid[2] |= tp1->v3;
+		if ((*mo = tp1->mat) != OVOID)
+			*mo += mp->mat0;
 		return(1);
 	}
 	ti &= ~0x100;
 	{				/* double link vertex */
 		struct PJoin2	*tp2;
-		if (ti >= mp->patch[pn].nj2tris)
+		if (ti >= pp->nj2tris)
 			return(0);
-		tp2 = &mp->patch[pn].j2tri[ti];
+		tp2 = &pp->j2tri[ti];
 		tvid[0] = tp2->v1j;
 		tvid[1] = tp2->v2j;
 		tvid[2] = pn << 8 | tp2->v3;
+		if ((*mo = tp2->mat) != OVOID)
+			*mo += mp->mat0;
 	}
 	return(1);
 }
@@ -184,10 +197,10 @@ OBJECT		ti;
 
 int
 getmeshvert(vp, mp, vid, what)	/* get triangle vertex from ID */
-MESHVERT	*vp;
-register MESH	*mp;
-int4		vid;
-int		what;
+MESHVERT*vp;
+MESH	*mp;
+int4	vid;
+int	what;
 {
 	int		pn = vid >> 8;
 	MESHPATCH	*pp;
@@ -226,21 +239,44 @@ int		what;
 }
 
 
+OBJREC *
+getmeshpseudo(mp, mo)		/* get mesh pseudo object for material */
+MESH	*mp;
+OBJECT	mo;
+{
+	if (mo < mp->mat0 || mo >= mp->mat0 + mp->nmats)
+		error(INTERNAL, "modifier out of range in getmeshpseudo");
+	if (mp->pseudo == NULL) {
+		register int	i;
+		mp->pseudo = (OBJREC *)calloc(mp->nmats, sizeof(OBJREC));
+		if (mp->pseudo == NULL)
+			error(SYSTEM, "out of memory in getmeshpseudo");
+		for (i = mp->nmats; i--; ) {
+			mp->pseudo[i].omod = mp->mat0 + i;
+			mp->pseudo[i].otype = OBJ_FACE;
+			mp->pseudo[i].oname = "M-Tri";
+		}
+	}
+	return(&mp->pseudo[mo - mp->mat0]);
+}
+
+
 int
-getmeshtri(tv, mp, ti, what)	/* get triangle vertices */
+getmeshtri(tv, mo, mp, ti, wha)	/* get triangle vertices */
 MESHVERT	tv[3];
+OBJECT		*mo;
 MESH		*mp;
 OBJECT		ti;
-int		what;
+int		wha;
 {
 	int4	tvid[3];
 
-	if (!getmeshtrivid(tvid, mp, ti))
+	if (!getmeshtrivid(tvid, mo, mp, ti))
 		return(0);
 
-	getmeshvert(&tv[0], mp, tvid[0], what);
-	getmeshvert(&tv[1], mp, tvid[1], what);
-	getmeshvert(&tv[2], mp, tvid[2], what);
+	getmeshvert(&tv[0], mp, tvid[0], wha);
+	getmeshvert(&tv[1], mp, tvid[1], wha);
+	getmeshvert(&tv[2], mp, tvid[2], wha);
 
 	return(tv[0].fl & tv[1].fl & tv[2].fl);
 }
@@ -251,7 +287,6 @@ addmeshvert(mp, vp)		/* find/add a mesh vertex */
 register MESH	*mp;
 MESHVERT	*vp;
 {
-	LUTAB		*ltp;
 	LUENT		*lvp;
 	MCVERT		cv;
 	register int	i;
@@ -281,20 +316,15 @@ MESHVERT	*vp;
 					(mp->uvlim[1][i] - mp->uvlim[0][i]));
 		}
 	cv.fl = vp->fl;
-	ltp = (LUTAB *)mp->cdata;	/* get lookup table */
-	if (ltp == NULL) {
-		ltp = (LUTAB *)calloc(1, sizeof(LUTAB));
-		if (ltp == NULL)
+	if (mp->lut.tsiz == 0) {
+		mp->lut.hashf = cvhash;
+		mp->lut.keycmp = cvcmp;
+		mp->lut.freek = free;
+		if (!lu_init(&mp->lut, 50000))
 			goto nomem;
-		ltp->hashf = cvhash;
-		ltp->keycmp = cvcmp;
-		ltp->freek = free;
-		if (!lu_init(ltp, 50000))
-			goto nomem;
-		mp->cdata = (char *)ltp;
 	}
 					/* find entry */
-	lvp = lu_find(ltp, (char *)&cv);
+	lvp = lu_find(&mp->lut, (char *)&cv);
 	if (lvp == NULL)
 		goto nomem;
 	if (lvp->key == NULL) {
@@ -359,9 +389,10 @@ nomem:
 
 
 OBJECT
-addmeshtri(mp, tv)		/* add a new mesh triangle */
+addmeshtri(mp, tv, mo)		/* add a new mesh triangle */
 MESH		*mp;
 MESHVERT	tv[3];
+OBJECT		mo;
 {
 	int4			vid[3], t;
 	int			pn[3], i;
@@ -375,6 +406,12 @@ MESHVERT	tv[3];
 			return(OVOID);
 		pn[i] = vid[i] >> 8;
 	}
+				/* normalize material index */
+	if (mo != OVOID)
+		if ((mo -= mp->mat0) >= mp->nmats)
+			mp->nmats = mo+1;
+		else if (mo < 0)
+			error(INTERNAL, "modifier range error in addmeshtri");
 				/* assign triangle */
 	if (pn[0] == pn[1] && pn[1] == pn[2]) {	/* local case */
 		pp = &mp->patch[pn[0]];
@@ -388,6 +425,18 @@ MESHVERT	tv[3];
 			pp->tri[pp->ntris].v1 = vid[0] & 0xff;
 			pp->tri[pp->ntris].v2 = vid[1] & 0xff;
 			pp->tri[pp->ntris].v3 = vid[2] & 0xff;
+			if (pp->ntris == 0)
+				pp->solemat = mo;
+			else if (pp->trimat == NULL && mo != pp->solemat) {
+				pp->trimat = (int2 *)malloc(
+						512*sizeof(int2));
+				if (pp->trimat == NULL)
+					goto nomem;
+				for (i = pp->ntris; i--; )
+					pp->trimat[i] = pp->solemat;
+			}
+			if (pp->trimat != NULL)
+				pp->trimat[pp->ntris] = mo;
 			return(pn[0] << 10 | pp->ntris++);
 		}
 	}
@@ -410,6 +459,7 @@ MESHVERT	tv[3];
 			pp->j1tri[pp->nj1tris].v1j = vid[0];
 			pp->j1tri[pp->nj1tris].v2 = vid[1] & 0xff;
 			pp->j1tri[pp->nj1tris].v3 = vid[2] & 0xff;
+			pp->j1tri[pp->nj1tris].mat = mo;
 			return(pn[1] << 10 | 0x200 | pp->nj1tris++);
 		}
 	}
@@ -426,10 +476,80 @@ MESHVERT	tv[3];
 	pp->j2tri[pp->nj2tris].v1j = vid[0];
 	pp->j2tri[pp->nj2tris].v2j = vid[1];
 	pp->j2tri[pp->nj2tris].v3 = vid[2] & 0xff;
+	pp->j2tri[pp->nj2tris].mat = mo;
 	return(pn[2] << 10 | 0x300 | pp->nj2tris++);
 nomem:
 	error(SYSTEM, "out of memory in addmeshtri");
 	return(OVOID);
+}
+
+
+char *
+checkmesh(mp)				/* validate mesh data */
+register MESH	*mp;
+{
+	static char	embuf[128];
+	int		nouvbounds = 1;
+	register int	i;
+					/* basic checks */
+	if (mp == NULL)
+		return("NULL mesh pointer");
+	if (!mp->ldflags)
+		return("unassigned mesh");
+	if (mp->name == NULL)
+		return("missing mesh name");
+	if (mp->nref <= 0)
+		return("unreferenced mesh");
+					/* check boundaries */
+	if (mp->ldflags & IO_BOUNDS) {
+		if (mp->mcube.cusize <= FTINY)
+			return("illegal octree bounds in mesh");
+		nouvbounds = (mp->uvlim[0][1] - mp->uvlim[0][0] <= FTINY ||
+				mp->uvlim[1][1] - mp->uvlim[1][0] <= FTINY);
+	}
+					/* check octree */
+	if (mp->ldflags & IO_TREE) {
+		if (isempty(mp->mcube.cutree))
+			error(WARNING, "empty mesh octree");
+	}
+					/* check scene data */
+	if (mp->ldflags & IO_SCENE) {
+		if (!(mp->ldflags & IO_BOUNDS))
+			return("unbounded scene in mesh");
+		if (mp->mat0 < 0 || mp->mat0+mp->nmats > nobjects)
+			return("bad mesh modifier range");
+		for (i = mp->mat0+mp->nmats; i-- > mp->mat0; ) {
+			int	otyp = objptr(i)->otype;
+			if (!ismodifier(otyp)) {
+				sprintf(embuf,
+					"non-modifier in mesh (%s \"%s\")",
+					ofun[otyp].funame, objptr(i)->oname);
+				return(embuf);
+			}
+		}
+		if (mp->npatches <= 0)
+			error(WARNING, "no patches in mesh");
+		for (i = 0; i < mp->npatches; i++) {
+			register MESHPATCH	*pp = &mp->patch[i];
+			if (pp->nverts <= 0)
+				error(WARNING, "no vertices in patch");
+			else {
+				if (pp->xyz == NULL)
+					return("missing patch vertex list");
+				if (nouvbounds && pp->uv != NULL)
+					return("unreferenced uv coordinates");
+			}
+			if (pp->ntris + pp->nj1tris + pp->nj2tris <= 0)
+				error(WARNING, "no triangles in patch");
+			if (pp->ntris > 0 && pp->tri == NULL)
+				return("missing patch triangle list");
+			if (pp->nj1tris > 0 && pp->j1tri == NULL)
+				return("missing patch joiner triangle list");
+			if (pp->nj2tris > 0 && pp->j2tri == NULL)
+				return("missing patch double-joiner list");
+		}
+	}
+	return(NULL);			/* seems OK */
 }
 
 
@@ -488,6 +608,7 @@ FILE	*fp;
 		t2cnt += pp->nj2tris;
 	}
 	fprintf(fp, "Mesh statistics:\n");
+	fprintf(fp, "\t%d materials\n", ms->nmats);
 	fprintf(fp, "\t%d patches (%.2f MBytes)\n", ms->npatches,
 			(ms->npatches*sizeof(MESHPATCH) +
 			vcnt*3*sizeof(uint4) +
@@ -511,7 +632,7 @@ FILE	*fp;
 
 void
 freemesh(ms)			/* free mesh data */
-MESH	*ms;
+register MESH	*ms;
 {
 	MESH	mhead;
 	MESH	*msp;
@@ -537,8 +658,7 @@ MESH	*ms;
 				/* free mesh data */
 	freestr(ms->name);
 	octfree(ms->mcube.cutree);
-	if (ms->cdata != NULL)
-		lu_done((LUTAB *)ms->cdata);
+	lu_done(&ms->lut);
 	if (ms->npatches > 0) {
 		register MESHPATCH	*pp = ms->patch + ms->npatches;
 		while (pp-- > ms->patch) {
@@ -557,6 +677,8 @@ MESH	*ms;
 		}
 		free((void *)ms->patch);
 	}
+	if (ms->pseudo != NULL)
+		free((void *)ms->pseudo);
 	free((void *)ms);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.3 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -31,7 +31,9 @@ main(argc, argv)		/* compile a .OBJ file into a mesh */
 int  argc;
 char  *argv[];
 {
-	int  i;
+	int  nmatf = 0;
+	char  *matinp[32];
+	int  i, j;
 
 	progname = argv[0];
 	ofun[OBJ_FACE].funp = o_face;
@@ -44,6 +46,9 @@ char  *argv[];
 		case 'r':				/* resolution limit */
 			resolu = atoi(argv[++i]);
 			break;
+		case 'a':				/* material file */
+			matinp[nmatf++] = argv[++i];
+			break;
 		case 'w':				/* supress warnings */
 			nowarn = 1;
 			break;
@@ -54,8 +59,11 @@ char  *argv[];
 		}
 					/* initialize mesh */
 	cvinit(i==argc-2 ? argv[i+1] : "<stdout>");
-
-	if (i == argc)			/* read .OBJ file into triangles */
+					/* load material input */
+	for (j = 0; j < nmatf; j++)
+		readobj(matinp[j]);
+					/* read .OBJ file into triangles */
+	if (i == argc)
 		wfreadobj(NULL);
 	else
 		wfreadobj(argv[i]);
@@ -76,7 +84,8 @@ char  *argv[];
 	mincusize = ourmesh->mcube.cusize / resolu - FTINY;
 
 	for (i = 0; i < nobjects; i++)	/* add triangles to octree */
-		addface(&ourmesh->mcube, i);
+		if (objptr(i)->otype == OBJ_FACE)
+			addface(&ourmesh->mcube, i);
 
 					/* optimize octree */
 	ourmesh->mcube.cutree = combine(ourmesh->mcube.cutree);

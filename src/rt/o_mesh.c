@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.4 2003/03/12 17:26:58 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.5 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -105,12 +105,13 @@ RAY	*r;
 	int4		tvi[3];
 	int		sv1, sv2, sv3;
 	MESHVERT	tv[3];
+	OBJECT		tmod;
 	FVECT		va, vb, nrm;
 	double		d;
 	int		i;
 					/* check each triangle */
 	for (i = oset[0]; i > 0; i--) {
-		if (!getmeshtrivid(tvi, curmsh, oset[i]))
+		if (!getmeshtrivid(tvi, &tmod, curmsh, oset[i]))
 			objerror(edge_cache.o, INTERNAL,
 				"missing triangle vertices in mesh_hit");
 		sv1 = signed_volume(r, tvi[0], tvi[1]);
@@ -151,6 +152,7 @@ register RAY	*r;
 	RAY		rcont;
 	int		flags;
 	MESHVERT	tv[3];
+	OBJECT		tmod;
 	FLOAT		wt[3];
 	int		i;
 					/* get the mesh instance */
@@ -169,19 +171,23 @@ register RAY	*r;
 		return(0);			/* missed */
 	if (rcont.rot * curmi->x.f.sca >= r->rot)
 		return(0);			/* not close enough */
-
-	r->robj = objndx(o);		/* record new hit */
-	r->ro = o;
 					/* transform ray back */
 	r->rot = rcont.rot * curmi->x.f.sca;
 	multp3(r->rop, rcont.rop, curmi->x.f.xfm);
 	multv3(r->ron, rcont.ron, curmi->x.f.xfm);
 	normalize(r->ron);
 	r->rod = -DOT(r->rdir, r->ron);
-					/* compute barycentric weights */
-	flags = getmeshtri(tv, curmsh, rcont.robj, MT_ALL);
+					/* get triangle */
+	flags = getmeshtri(tv, &tmod, curmsh, rcont.robj, MT_ALL);
 	if (!(flags & MT_V))
 		objerror(o, INTERNAL, "missing mesh vertices in o_mesh");
+	r->robj = objndx(o);		/* set object and material */
+	if (o->omod == OVOID && tmod != OVOID) {
+		r->ro = getmeshpseudo(curmsh, tmod);
+		r->rox = &curmi->x;
+	} else
+		r->ro = o;
+					/* compute barycentric weights */
 	if (flags & (MT_N|MT_UV))
 		if (get_baryc(wt, rcont.rop, tv[0].v, tv[1].v, tv[2].v) < 0) {
 			objerror(o, WARNING, "bad triangle in o_mesh");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.3 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -69,7 +69,8 @@ nomem:
 
 
 int
-cvpoly(n, vp, vn, vc)		/* convert a polygon to extended triangles */
+cvpoly(mo, n, vp, vn, vc)	/* convert a polygon to extended triangles */
+OBJECT	mo;
 int	n;
 FVECT	*vp;
 FVECT	*vn;
@@ -97,7 +98,7 @@ FLOAT	(*vc)[2];
 		tc[0] = tc[1] = tc[2] = NULL;
 	}
 	if (n == 3)		/* output single triangle */
-		return(cvtri(vp[0], vp[1], vp[2],
+		return(cvtri(mo, vp[0], vp[1], vp[2],
 				tn[0], tn[1], tn[2],
 				tc[0], tc[1], tc[2]));
 
@@ -114,12 +115,9 @@ FLOAT	(*vc)[2];
 		if (flags & MT_UV)
 			for (i = 3; i--; )
 				tc[i] = vc[ord[i]];
-		i = cvtri(vp[ord[0]], vp[ord[1]], vp[ord[2]],
+		tcnt += cvtri(mo, vp[ord[0]], vp[ord[1]], vp[ord[2]],
 				tn[0], tn[1], tn[2],
 				tc[0], tc[1], tc[2]);
-		if (i < 0)
-			return(i);
-		tcnt += i;
 			/* remove vertex and rotate */
 		n--;
 		j = ord[0];
@@ -157,49 +155,56 @@ FLOAT	vc[2];
 
 
 int				/* create an extended triangle */
-cvtri(vp1, vp2, vp3, vn1, vn2, vn3, vc1, vc2, vc3)
+cvtri(mo, vp1, vp2, vp3, vn1, vn2, vn3, vc1, vc2, vc3)
+OBJECT	mo;
 FVECT	vp1, vp2, vp3;
 FVECT	vn1, vn2, vn3;
 FLOAT	vc1[2], vc2[2], vc3[2];
 {
-	char	buf[32];
-	int	flags;
-	TRIDATA	*ts;
-	OBJECT	fobj;
-	FACE	*f;
-	OBJREC	*fop;
-	int	j;
+	static OBJECT	fobj = OVOID;
+	char		buf[32];
+	int		flags;
+	TRIDATA		*ts;
+	FACE		*f;
+	OBJREC		*fop;
+	int		j;
 	
 	flags = MT_V;
 	if (vn1 != NULL && vn2 != NULL && vn3 != NULL)
 		flags |= MT_N;
 	if (vc1 != NULL && vc2 != NULL && vc3 != NULL)
 		flags |= MT_UV;
-				/* create extended triangle */
-	fobj = newobject();
-	if (fobj == OVOID)
-		return(-1);
-	fop = objptr(fobj);
-	fop->omod = OVOID;
-	fop->otype = OBJ_FACE;
-	sprintf(buf, "t%d", fobj);
-	fop->oname = savqstr(buf);
-	fop->oargs.nfargs = 9;
-	fop->oargs.farg = (FLOAT *)malloc(9*sizeof(FLOAT));
-	if (fop->oargs.farg == NULL)
-		goto nomem;
+	if (fobj == OVOID) {	/* create new triangle object */
+		fobj = newobject();
+		if (fobj == OVOID)
+			goto nomem;
+		fop = objptr(fobj);
+		fop->omod = mo;
+		fop->otype = OBJ_FACE;
+		sprintf(buf, "t%d", fobj);
+		fop->oname = savqstr(buf);
+		fop->oargs.nfargs = 9;
+		fop->oargs.farg = (FLOAT *)malloc(9*sizeof(FLOAT));
+		if (fop->oargs.farg == NULL)
+			goto nomem;
+	} else {		/* else reuse failed one */
+		fop = objptr(fobj);
+		if (fop->otype != OBJ_FACE || fop->oargs.nfargs != 9)
+			error(CONSISTENCY, "code error 1 in cvtri");
+	}
 	for (j = 3; j--; ) {
 		fop->oargs.farg[j] = vp1[j];
 		fop->oargs.farg[3+j] = vp2[j];
 		fop->oargs.farg[6+j] = vp3[j];
 	}
 				/* create face record */
-	if ((f = getface(fop)) == NULL || f->area == 0.) {
-		freeobjects(fobj, 1);
+	f = getface(fop);
+	if (f->area == 0.) {
+		free_os(fop);
 		return(0);
 	}
 	if (fop->os != (char *)f)
-		error(CONSISTENCY, "code error in cvtri");
+		error(CONSISTENCY, "code error 2 in cvtri");
 				/* follow with auxliary data */
 	f = (FACE *)realloc((void *)f, sizeof(FACE)+tdsize(flags));
 	if (f == NULL)
@@ -226,6 +231,7 @@ FLOAT	vc1[2], vc2[2], vc3[2];
 	add2bounds(vp1, vc1);
 	add2bounds(vp2, vc2);
 	add2bounds(vp3, vc3);
+	fobj = OVOID;		/* we used this one */
 	return(1);
 nomem:
 	error(SYSTEM, "out of memory in cvtri");
@@ -263,7 +269,7 @@ OBJECT	obj;
 		for (i = 3; i--; )
 			for (j = 2; j--; )
 				vert[i].uv[j] = ts->vc[i][j];
-	ts->obj = addmeshtri(ourmesh, vert);
+	ts->obj = addmeshtri(ourmesh, vert, o->omod);
 	if (ts->obj == OVOID)
 		error(INTERNAL, "addmeshtri failed");
 	return(ts->obj);

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.37 2003/03/10 19:38:19 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.38 2003/03/14 21:27:45 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -15,7 +15,7 @@ LIBDIR = /usr/local/lib/ray
 
 RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
 	objset.o octree.o readfargs.o modobject.o getlibpath.o \
-	addobjnotify.o zeroes.o mesh.o readmesh.o tmesh.o
+	addobjnotify.o zeroes.o mesh.o readmesh.o tmesh.o sceneio.o
 
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o
@@ -82,17 +82,18 @@ mat4.o invmat4.o:		mat4.h fvect.h
 
 cone.o face.o instance.o objset.o otypes.o \
 mesh.o modobject.o readfargs.o readmesh.o \
-readobj.o readoct.o:	object.h
+readobj.o readoct.o sceneio.o:	object.h
 
-mesh.o objset.o octree.o readmesh.o readoct.o:	octree.h
+mesh.o objset.o octree.o readmesh.o readoct.o sceneio.o:	octree.h
 
-cone.o modobject.o otypes.o readobj.o readoct.o:	otypes.h
+cone.o mesh.o modobject.o otypes.o \
+readobj.o readoct.o sceneio.o:	otypes.h
 
 multisamp.o urand.o:	random.h
 
 cone.o face.o free_os.o image.o instance.o error.o objset.o \
 octree.o modobject.o readfargs.o otypes.o dircode.o mesh.o \
-readmesh.o readobj.o readoct.o xf.o:	standard.h mat4.h fvect.h
+readmesh.o readobj.o readoct.o sceneio.o xf.o:	standard.h mat4.h fvect.h
 
 image.o:	view.h
 
@@ -106,11 +107,11 @@ font.o:	font.h
 
 fropen.o getpath.o image.o:	paths.h
 
-lookup.o mesh.o:	lookup.h
+lookup.o:	lookup.h
 
 loadvars.o:	vars.h
 
-mesh.o readmesh.o:	mesh.h
+mesh.o readmesh.o:	mesh.h lookup.h
 
 tonemap.o tmapcolrs.o tmapluv.o:	tmprivat.h tonemap.h color.h
 

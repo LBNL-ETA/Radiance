@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.2 2003/03/12 04:59:04 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.3 2003/03/14 21:27:45 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -6,6 +6,8 @@
  */
 
 #include "copyright.h"
+
+#include "lookup.h"
 
 #ifndef uint4
 #define uint4	unsigned int4
@@ -40,7 +42,7 @@
  * a lot of effort, but it can reduce mesh storage by a factor of 3
  * or more.  This is important, as the whole point is to model very
  * complicated geometry with this structure, and memory is the main
- * limitation.  (We also optimize intersection tests for triangles.)
+ * limitation.
  */
 
 /* A triangle mesh patch */
@@ -51,12 +53,16 @@ typedef struct {
 	struct PTri {
 		BYTE		v1, v2, v3;	/* local vertices */
 	}		*tri;		/* local triangles */
+	short		solemat;	/* sole material */
+	int2		*trimat;	/* or local material indices */
 	struct PJoin1 {
 		int4		v1j;		/* non-local vertex */
+		int2		mat;		/* material index */
 		BYTE		v2, v3;		/* local vertices */
 	}		*j1tri;		/* joiner triangles */
 	struct PJoin2 {
 		int4		v1j, v2j;	/* non-local vertices */
+		int2		mat;		/* material index */
 		BYTE		v3;		/* local vertex */
 	}		*j2tri;		/* double joiner triangles */
 	short		nverts;		/* vertex count */
@@ -72,9 +78,12 @@ typedef struct mesh {
 	int		ldflags;	/* what we've loaded */
 	CUBE		mcube;		/* bounds and octree */
 	FLOAT		uvlim[2][2];	/* local coordinate extrema */
+	OBJECT		mat0;		/* base material index */
+	OBJECT		nmats;		/* number of materials */
 	MESHPATCH	*patch;		/* mesh patch list */
 	int		npatches;	/* number of mesh patches */
-	char		*cdata;		/* opaque client data pointer */
+	OBJREC		*pseudo;	/* mesh pseudo objects */
+	LUTAB		lut;		/* vertex lookup table */
 	struct mesh	*next;		/* next mesh in list */
 } MESH;
 
@@ -101,7 +110,7 @@ typedef struct {
 				/* mesh format identifier */
 #define MESHFMT		"Radiance_tmesh"
 				/* magic number for mesh files */
-#define MESHMAGIC	( 0 *MAXOBJSIZ+311)	/* increment first value */
+#define MESHMAGIC	( 1 *MAXOBJSIZ+311)	/* increment first value */
 
 #ifdef NOPROTO
 
@@ -110,8 +119,10 @@ extern INSTANCE	*getmeshinst();
 extern int	getmeshtrivid();
 extern int	getmeshvert();
 extern int	getmeshtri();
+extern OBJREC	*getmeshpseudo();
 extern int4	addmeshvert();
 extern OBJECT	addmeshtri();
+extern char	*checkmesh();
 extern void	printmeshstats();
 extern void	freemesh();
 extern void	freemeshinst();
@@ -122,11 +133,15 @@ extern void	writemesh();
 
 extern MESH	*getmesh(char *mname, int flags);
 extern MESHINST	*getmeshinst(OBJREC *o, int flags);
-extern int	getmeshtrivid(int4 tvid[3], MESH *mp, OBJECT ti);
+extern int	getmeshtrivid(int4 tvid[3], OBJECT *mo,
+				MESH *mp, OBJECT ti);
 extern int	getmeshvert(MESHVERT *vp, MESH *mp, int4 vid, int what);
-extern int	getmeshtri(MESHVERT tv[3], MESH *mp, OBJECT ti, int what);
+extern int	getmeshtri(MESHVERT tv[3], OBJECT *mo,
+				MESH *mp, OBJECT ti, int what);
+extern OBJREC	*getmeshpseudo(MESH *mp, OBJECT mo);
 extern int4	addmeshvert(MESH *mp, MESHVERT *vp);
-extern OBJECT	addmeshtri(MESH *mp, MESHVERT tv[3]);
+extern OBJECT	addmeshtri(MESH *mp, MESHVERT tv[3], OBJECT mo);
+extern char	*checkmesh(MESH *mp);
 extern void	printmeshstats(MESH *ms, FILE *fp);
 extern void	freemesh(MESH *ms);
 extern void	freemeshinst(OBJREC *o);

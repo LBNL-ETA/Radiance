@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.14 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.15 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -19,7 +19,7 @@ static double  ogetflt();
 static long  ogetint();
 static char  *ogetstr();
 static int  nonsurfinset();
-static int  getobj(), octerror(), skiptree();
+static int  octerror(), skiptree();
 static OCTREE  getfullnode(), gettree();
 
 static char  *infn;			/* input file specification */
@@ -27,7 +27,6 @@ static FILE  *infp;			/* input file stream */
 static int  objsize;			/* size of stored OBJECT's */
 static OBJECT  objorig;			/* zeroeth object */
 static OBJECT  fnobjects;		/* number of objects in this file */
-static short  otypmap[NUMOTYPE+8];	/* object type map */
 
 
 int
@@ -39,7 +38,7 @@ char  *ofn[];
 {
 	char  sbuf[512];
 	int  nf;
-	register int  i;
+	int  i;
 	long  m;
 	
 	if (inpspec == NULL) {
@@ -101,13 +100,9 @@ char  *ofn[];
 		
 	if (load & IO_SCENE)		/* get the scene */
 	    if (nf == 0) {
-		for (i = 0; *ogetstr(sbuf); i++)
-			if ((otypmap[i] = otype(sbuf)) < 0) {
-				sprintf(errmsg, "unknown type \"%s\"", sbuf);
-				octerror(WARNING, errmsg);
-			}
-		while (getobj() != OVOID)
-			;
+					/* load binary scene data */
+		readscene(infp, objsize);
+
 	    } else {			/* consistency checks */
 				/* check object count */
 		if (nobjects != objorig+fnobjects)
@@ -244,69 +239,6 @@ skiptree()				/* skip octree on input */
 	default:
 		octerror(USER, "damaged octree");
 	}
-}
-
-
-static
-getobj()				/* get next object */
-{
-	char  sbuf[MAXSTR];
-	int  obj;
-	register int  i;
-	register long  m;
-	register OBJREC	 *objp;
-
-	i = ogetint(1);
-	if (i == -1)
-		return(OVOID);		/* terminator */
-	if ((obj = newobject()) == OVOID)
-		error(SYSTEM, "out of object space");
-	objp = objptr(obj);
-	if ((objp->otype = otypmap[i]) < 0)
-		octerror(USER, "reference to unknown type");
-	if ((m = ogetint(objsize)) != OVOID) {
-		m += objorig;
-		if ((OBJECT)m != m)
-			octerror(USER, "too many objects");
-	}
-	objp->omod = m;
-	objp->oname = savqstr(ogetstr(sbuf));
-	if (objp->oargs.nsargs = ogetint(2)) {
-		objp->oargs.sarg = (char **)malloc
-				(objp->oargs.nsargs*sizeof(char *));
-		if (objp->oargs.sarg == NULL)
-			goto memerr;
-		for (i = 0; i < objp->oargs.nsargs; i++)
-			objp->oargs.sarg[i] = savestr(ogetstr(sbuf));
-	} else
-		objp->oargs.sarg = NULL;
-#ifdef	IARGS
-	if (objp->oargs.niargs = ogetint(2)) {
-		objp->oargs.iarg = (long *)malloc
-				(objp->oargs.niargs*sizeof(long));
-		if (objp->oargs.iarg == NULL)
-			goto memerr;
-		for (i = 0; i < objp->oargs.niargs; i++)
-			objp->oargs.iarg[i] = ogetint(4);
-	} else
-		objp->oargs.iarg = NULL;
-#endif
-	if (objp->oargs.nfargs = ogetint(2)) {
-		objp->oargs.farg = (FLOAT *)malloc
-				(objp->oargs.nfargs*sizeof(FLOAT));
-		if (objp->oargs.farg == NULL)
-			goto memerr;
-		for (i = 0; i < objp->oargs.nfargs; i++)
-			objp->oargs.farg[i] = ogetflt();
-	} else
-		objp->oargs.farg = NULL;
-						/* initialize */
-	objp->os = NULL;
-						/* insert */
-	insertobject(obj);
-	return(obj);
-memerr:
-	error(SYSTEM, "out of memory in getobj");
 }
 
 

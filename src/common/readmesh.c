@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.2 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -174,6 +174,17 @@ register MESHPATCH	*pp;
 		}
 	} else
 		pp->tri = NULL;
+					/* local triangle material(s) */
+	if (mgetint(2) > 1) {
+		pp->trimat = (int2 *)malloc(pp->ntris*sizeof(int2));
+		if (pp->trimat == NULL)
+			goto nomem;
+		for (i = 0; i < pp->ntris; i++)
+			pp->trimat[i] = mgetint(2);
+	} else {
+		pp->solemat = mgetint(2);
+		pp->trimat = NULL;
+	}
 					/* joiner triangles */
 	pp->nj1tris = mgetint(2);
 	if (pp->nj1tris < 0 || pp->nj1tris > 512)
@@ -187,6 +198,7 @@ register MESHPATCH	*pp;
 			pp->j1tri[i].v1j = mgetint(4);
 			pp->j1tri[i].v2 = mgetint(1);
 			pp->j1tri[i].v3 = mgetint(1);
+			pp->j1tri[i].mat = mgetint(2);
 		}
 	} else
 		pp->j1tri = NULL;
@@ -203,6 +215,7 @@ register MESHPATCH	*pp;
 			pp->j2tri[i].v1j = mgetint(4);
 			pp->j2tri[i].v2j = mgetint(4);
 			pp->j2tri[i].v3 = mgetint(1);
+			pp->j2tri[i].mat = mgetint(2);
 		}
 	} else
 		pp->j2tri = NULL;
@@ -218,6 +231,7 @@ MESH	*mp;
 char	*path;
 int	flags;
 {
+	char	*err;
 	char	sbuf[64];
 	int	i;
 					/* check what's loaded */
@@ -259,8 +273,11 @@ int	flags;
 		mp->mcube.cutree = gettree();
 	else if (flags & IO_SCENE)
 		skiptree();
-					/* read the patches */
+					/* read materials and patches */
 	if (flags & IO_SCENE) {
+		mp->mat0 = nobjects;
+		readscene(meshfp, objsize);
+		mp->nmats = nobjects - mp->mat0;
 		mp->npatches = mgetint(4);
 		mp->patch = (MESHPATCH *)calloc(mp->npatches,
 					sizeof(MESHPATCH));
@@ -272,4 +289,7 @@ int	flags;
 					/* clean up */
 	fclose(meshfp);
 	mp->ldflags |= flags;
+					/* verify data */
+	if ((err = checkmesh(mp)) != NULL)
+		mesherror(USER, err);
 }

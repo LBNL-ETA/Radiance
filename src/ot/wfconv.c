@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.3 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -11,24 +11,39 @@ static const char RCSid[] = "$Id: wfconv.c,v 2.2 2003/03/12 04:59:04 greg Exp $"
 #include "cvmesh.h"
 #include <ctype.h>
 
-FVECT	*vlist;			/* our vertex list */
-int	nvs;			/* number of vertices in our list */
-FVECT	*vnlist;		/* vertex normal list */
-int	nvns;
-FLOAT	(*vtlist)[2];		/* map vertex list */
-int	nvts;
-
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
 #define CHUNKSIZ	1024	/* vertex allocation chunk size */
 
 #define MAXARG		64	/* maximum # arguments in a statement */
 
-char	*inpfile;		/* input file name */
-int	lineno;			/* current line number */
-int	faceno;			/* current face number */
+static FVECT	*vlist;		/* our vertex list */
+static int	nvs;		/* number of vertices in our list */
+static FVECT	*vnlist;	/* vertex normal list */
+static int	nvns;
+static FLOAT	(*vtlist)[2];	/* map vertex list */
+static int	nvts;
+
+static char	*inpfile;	/* input file name */
+static int	havemats;	/* materials available? */
+static char	material[64];	/* current material name */
+static char	group[64];	/* current group name */
+static int	lineno;		/* current line number */
+static int	faceno;		/* current face number */
+
+static int	getstmt();
+static int	cvtndx();
+static OBJECT	getmod();
+static int	putface();
+static int	puttri();
+static void	freeverts();
+static int	newv();
+static int	newvn();
+static int	newvt();
+static void	syntax();
 
 
+void
 wfreadobj(objfn)		/* read in .OBJ file and convert */
 char	*objfn;
 {
@@ -45,7 +60,10 @@ char	*objfn;
 		sprintf(errmsg, "cannot open \"%s\"", inpfile);
 		error(USER, errmsg);
 	}
+	havemats = (nobjects > 0);
 	nstats = nunknown = 0;
+	material[0] = '\0';
+	group[0] = '\0';
 	lineno = 0; faceno = 0;
 					/* scan until EOF */
 	while (argc = getstmt(argv, fp)) {
@@ -96,18 +114,27 @@ char	*objfn;
 				break;
 			}
 			break;
-		case 'u':
-			if (strcmp(argv[0], "usemtl") &&
-					strcmp(argv[0], "usemap"))
+		case 'u':				/* usemtl/usemap */
+			if (!strcmp(argv[0], "usemap"))
+				break;
+			if (strcmp(argv[0], "usemtl"))
 				goto unknown;
+			if (argc > 1)
+				strcpy(material, argv[1]);
+			else
+				material[0] = '\0';
 			break;
 		case 'o':		/* object name */
 			if (argv[0][1])
 				goto unknown;
 			break;
-		case 'g':		/* group name(s) */
+		case 'g':		/* group name */
 			if (argv[0][1])
 				goto unknown;
+			if (argc > 1)
+				strcpy(group, argv[1]);
+			else
+				group[0] = '\0';
 			break;
 		case '#':		/* comment */
 			break;
@@ -129,12 +156,12 @@ char	*objfn;
 }
 
 
-int
+static int
 getstmt(av, fp)				/* read the next statement from fp */
 register char	*av[MAXARG];
 FILE	*fp;
 {
-	static char	sbuf[MAXARG*10];
+	static char	sbuf[MAXARG*16];
 	register char	*cp;
 	register int	i;
 
@@ -162,6 +189,7 @@ FILE	*fp;
 }
 
 
+static int
 cvtndx(vi, vs)				/* convert vertex string to index */
 register VNDX	vi;
 register char	*vs;
@@ -209,6 +237,7 @@ register char	*vs;
 }
 
 
+static int
 putface(ac, av)				/* put out an N-sided polygon */
 int	ac;
 register char	**av;
@@ -229,6 +258,33 @@ register char	**av;
 }
 
 
+static OBJECT
+getmod()				/* get current modifier ID */
+{
+	char	*mnam;
+	OBJECT	mod;
+
+	if (!havemats)
+		return(OVOID);
+	if (!strcmp(material, VOIDID))
+		return(OVOID);
+	if (material[0])		/* prefer usemtl statements */
+		mnam = material;
+	else if (group[0])		/* else use group name */
+		mnam = group;
+	else
+		return(OVOID);
+	mod = modifier(mnam);
+	if (mod == OVOID) {
+		sprintf(errmsg, "%s: undefined modifier \"%s\"",
+				inpfile, mnam);
+		error(USER, errmsg);
+	}
+	return(mod);
+}
+
+
+static int
 puttri(v1, v2, v3)			/* convert a triangle */
 char	*v1, *v2, *v3;
 {
@@ -253,11 +309,12 @@ char	*v1, *v2, *v3;
 	} else
 		v1n = v2n = v3n = NULL;
 	
-	return(cvtri(vlist[v1i[0]], vlist[v2i[0]], vlist[v3i[0]],
+	return(cvtri(getmod(), vlist[v1i[0]], vlist[v2i[0]], vlist[v3i[0]],
 			v1n, v2n, v3n, v1c, v2c, v3c) >= 0);
 }
 
 
+static void
 freeverts()			/* free all vertices */
 {
 	if (nvs) {
@@ -275,7 +332,7 @@ freeverts()			/* free all vertices */
 }
 
 
-int
+static int
 newv(x, y, z)			/* create a new vertex */
 double	x, y, z;
 {
@@ -296,7 +353,7 @@ double	x, y, z;
 }
 
 
-int
+static int
 newvn(x, y, z)			/* create a new vertex normal */
 double	x, y, z;
 {
@@ -319,7 +376,7 @@ double	x, y, z;
 }
 
 
-int
+static int
 newvt(x, y)			/* create a new texture map vertex */
 double	x, y;
 {
@@ -339,6 +396,7 @@ double	x, y;
 }
 
 
+static void
 syntax(er)			/* report syntax error and exit */
 char	*er;
 {

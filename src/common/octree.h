@@ -1,4 +1,4 @@
-/* RCSid $Id: octree.h,v 2.6 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: octree.h,v 2.7 2003/03/14 21:27:46 greg Exp $ */
 /*
  *  octree.h - header file for routines using octrees.
  */
@@ -88,8 +88,9 @@ extern OCTREE	combine();
 extern void	culocate();
 extern void	cucopy();
 extern int	incube();
-
 extern int	readoct();
+extern void	readscene();
+extern void	writescene();
 
 #else
 
@@ -102,5 +103,8 @@ extern void	cucopy(CUBE *cu1, CUBE *cu2);
 extern int	incube(CUBE *cu, FVECT pt);
 
 extern int	readoct(char *fname, int load, CUBE *scene, char *ofn[]);
+
+extern void	readscene(FILE *fp, int objsiz);
+extern void	writescene(int firstobj, int nobjs, FILE *fp);
 
 #endif

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writemesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: writemesh.c,v 2.2 2003/03/14 21:27:46 greg Exp $";
 #endif
 /*
  *  Routines for writing compiled mesh to a file stream
@@ -82,12 +82,22 @@ FILE			*fp;
 		putint((long)pp->tri[i].v2, 1, fp);
 		putint((long)pp->tri[i].v3, 1, fp);
 	}
+					/* local triangle material(s) */
+	if (pp->trimat == NULL) {
+		putint(1L, 2, fp);
+		putint((long)pp->solemat, 2, fp);
+	} else {
+		putint((long)pp->ntris, 2, fp);
+		for (i = 0; i < pp->ntris; i++)
+			putint((long)pp->trimat[i], 2, fp);
+	}
 					/* joiner triangles */
 	putint((long)pp->nj1tris, 2, fp);
 	for (i = 0; i < pp->nj1tris; i++) {
 		putint((long)pp->j1tri[i].v1j, 4, fp);
 		putint((long)pp->j1tri[i].v2, 1, fp);
 		putint((long)pp->j1tri[i].v3, 1, fp);
+		putint((long)pp->j1tri[i].mat, 2, fp);
 	}
 					/* double joiner triangles */
 	putint((long)pp->nj2tris, 2, fp);
@@ -95,6 +105,7 @@ FILE			*fp;
 		putint((long)pp->j2tri[i].v1j, 4, fp);
 		putint((long)pp->j2tri[i].v2j, 4, fp);
 		putint((long)pp->j2tri[i].v3, 1, fp);
+		putint((long)pp->j2tri[i].mat, 2, fp);
 	}
 }
 
@@ -104,12 +115,16 @@ writemesh(mp, fp)			/* write mesh structures to fp */
 MESH	*mp;
 FILE	*fp;
 {
+	char	*err;
 	char	sbuf[64];
 	int	i;
-					/* check that we have everything */
+					/* do we have everything? */
 	if ((mp->ldflags & (IO_SCENE|IO_TREE|IO_BOUNDS)) !=
 			(IO_SCENE|IO_TREE|IO_BOUNDS))
 		error(INTERNAL, "missing data in writemesh");
+					/* validate mesh data */
+	if ((err = checkmesh(mp)) != NULL)
+		error(USER, err);
 					/* write format number */
 	putint((long)(MESHMAGIC+sizeof(OBJECT)), 2, fp);
 					/* write boundaries */
@@ -125,6 +140,8 @@ FILE	*fp;
 	}
 					/* write the octree */
 	puttree(mp->mcube.cutree, fp);
+					/* write the materials */
+	writescene(mp->mat0, mp->nmats, fp);
 					/* write the patches */
 	putint((long)mp->npatches, 4, fp);
 	for (i = 0; i < mp->npatches; i++)

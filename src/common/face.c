@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.8 2003/03/12 17:26:58 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.9 2003/03/14 21:27:45 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -25,9 +25,9 @@ static const char RCSid[] = "$Id: face.c,v 2.8 2003/03/12 17:26:58 greg Exp $";
  */
 
 #ifdef  SMLFLT
-#define  VERTEPS	1e-2		/* allowed vertex error */
+#define  VERTEPS	1e-3		/* allowed vertex error */
 #else
-#define  VERTEPS	1e-4		/* allowed vertex error */
+#define  VERTEPS	1e-5		/* allowed vertex error */
 #endif
 
 
@@ -86,11 +86,11 @@ OBJREC  *o;
 	f->offset = DOT(f->norm, VERTEX(f,0));
 	for (i = 1; i < f->nv; i++) {
 		d1 = DOT(f->norm, VERTEX(f,i));
-		badvert += fabs(d1 - f->offset/i) > VERTEPS;
+		badvert += fabs(1.0 - d1*i/f->offset) > VERTEPS;
 		f->offset += d1;
 	}
 	f->offset /= (double)f->nv;
-	if (badvert)
+	if (f->nv > 3 && badvert)
 		objerror(o, WARNING, "non-planar vertex");
 						/* find axis */
 	f->ax = fabs(f->norm[0]) > fabs(f->norm[1]) ? 0 : 1;
