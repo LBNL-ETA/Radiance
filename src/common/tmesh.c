@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh.c,v 2.3 2003/02/22 02:07:23 greg Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.1 2003/03/10 19:38:19 greg Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
@@ -48,7 +48,7 @@ FLOAT	*v1, *v2, *v3;
 	FVECT	va, vab, vcb;
 	double	d;
 	int	ax0, ax1;
-	register int	i, j;
+	register int	i;
 					/* compute major axis */
 	for (i = 0; i < 3; i++) {
 		vab[i] = v1[i] - v2[i];
@@ -59,7 +59,7 @@ FLOAT	*v1, *v2, *v3;
 	bcm->ax = ABS(va[bcm->ax]) > ABS(va[2]) ? bcm->ax : 2;
 	ax0 = (bcm->ax + 1) % 3;
 	ax1 = (bcm->ax + 2) % 3;
-	for (j = 0; j < 2; j++) {
+	for (i = 0; i < 2; i++) {
 		vab[0] = v1[ax0] - v2[ax0];
 		vcb[0] = v3[ax0] - v2[ax0];
 		vab[1] = v1[ax1] - v2[ax1];
@@ -73,9 +73,10 @@ FLOAT	*v1, *v2, *v3;
 		d = va[0]*va[0] + va[1]*va[1];
 		if (d <= FTINY*FTINY)
 			return(-1);
-		bcm->tm[j][0] = va[0] /= d;
-		bcm->tm[j][1] = va[1] /= d;
-		bcm->tm[j][2] = -(v2[ax0]*va[0]+v2[ax1]*va[1]);
+		d = 1.0/d;
+		bcm->tm[i][0] = va[0] *= d;
+		bcm->tm[i][1] = va[1] *= d;
+		bcm->tm[i][2] = -(v2[ax0]*va[0]+v2[ax1]*va[1]);
 					/* rotate vertices */
 		vt = v1;
 		v1 = v2;

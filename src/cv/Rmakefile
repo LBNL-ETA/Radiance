@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.18 2003/02/22 02:07:23 greg Exp $
+# RCSid $Id: Rmakefile,v 2.19 2003/03/10 19:38:19 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -20,7 +20,7 @@ LIBDIR = /usr/local/lib/ray
 PROGS = thf2rad ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv
 
-LIBFILES = source.cal tilt.cal lamp.tab tmesh.cal
+LIBFILES = source.cal tilt.cal lamp.tab
 
 all:	$(PROGS)
 
@@ -48,14 +48,14 @@ nff2rad:	nff2rad.o
 lampcolor:	lampcolor.o
 	$(CC) $(CFLAGS) -o lampcolor lampcolor.o -lrt
 
-tmesh2rad:	tmesh2rad.o tmesh.o
-	$(CC) $(CFLAGS) -o tmesh2rad tmesh2rad.o tmesh.o -lrt $(MLIB)
+tmesh2rad:	tmesh2rad.o
+	$(CC) $(CFLAGS) -o tmesh2rad tmesh2rad.o -lrt $(MLIB)
 
-obj2rad:	obj2rad.o trans.o tmesh.o
-	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o tmesh.o -lrt $(MLIB)
+obj2rad:	obj2rad.o trans.o
+	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o -lrt $(MLIB)
 
-mgf2rad:	MGF_LIB mgf2rad.o tmesh.o
-	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o tmesh.o -lmgf -lrt $(MLIB)
+mgf2rad:	MGF_LIB mgf2rad.o
+	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o -lmgf -lrt $(MLIB)
 
 rad2mgf:	rad2mgf.o
 	$(CC) $(CFLAGS) -o rad2mgf rad2mgf.o -lrt $(MLIB)
@@ -81,7 +81,7 @@ MGF_LIB:
 		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
 	cp libmgf.a ../../lib
 
-mgf2rad.o:	mgf2rad.c mgflib/parser.h tmesh.h ../common/color.h
+mgf2rad.o:	mgf2rad.c mgflib/parser.h ../common/tmesh.h ../common/color.h
 	$(CC) $(CFLAGS) -DNOPROTO -c mgf2rad.c
 
 mgf2meta.o:	mgf2meta.c mgflib/parser.h
@@ -93,12 +93,10 @@ ies2rad.o lampcolor.o:	../common/color.h
 
 ies2rad.o:	../common/paths.h
 
-obj2rad.o tmesh2rad.o:	tmesh.h \
+obj2rad.o tmesh2rad.o:	../common/tmesh.h \
 ../common/standard.h ../common/mat4.h ../common/fvect.h
 
 obj2rad.o:	trans.h
-
-tmesh.o:	tmesh.h ../common/fvect.h
 
 rad2mgf.o:	../common/standard.h ../common/mat4.h ../common/fvect.h \
 ../common/object.h ../common/color.h ../common/lookup.h
