@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.24 2004/01/01 19:31:45 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.25 2004/01/01 19:47:05 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -490,7 +490,7 @@ int
 isview(s)				/* is this a view string? */
 char  *s;
 {
-	static char  *altname[]={NULL,VIEWSTR,"rpict","rvu","rpiece","pinterp",NULL};
+	static char  *altname[]={NULL,VIEWSTR,"rpict","rview","rvu","rpiece","pinterp",NULL};
 	extern char  *progname;
 	register char  *cp;
 	register char  **an;
