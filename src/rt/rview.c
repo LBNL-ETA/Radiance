@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.20 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.21 2003/07/02 01:15:20 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -121,13 +121,11 @@ char  *dname;
 				error(USER, errmsg);
 			} else
 				return;
-#ifndef RHAS_FORK_EXEC /* XXX otherwise we do nothing? */
 						/* not there, try exec */
 	if ((dev = comm_init(dname, id)) == NULL) {
 		sprintf(errmsg, "cannot start device \"%s\"", dname);
 		error(USER, errmsg);
 	}
-#endif
 }
 
 
