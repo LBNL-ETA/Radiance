@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.4 2003/10/21 19:19:28 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.5 2004/10/23 18:55:52 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -287,36 +287,45 @@ open_process(SUBPROC *proc, char *av[])
 }
 
 
+int win_kill(RT_PID pid, int sig) /* we ignore sig... */
+{
+	HANDLE hProc;
+
+	hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, pid);
+	/*  it looks like we want to ignore errors here */
+	if(hProc != NULL) {
+#ifdef OBSOLETE_WINDOWS
+#define KILL_TIMEOUT 10 * 1000 /* milliseconds */
+		/* it might have some windows open... */
+		EnumWindows((WNDENUMPROC)TerminateAppEnum, (LPARAM)pid);
+		if(WaitForSingleObject(hProc, KILL_TIMEOUT)!=WAIT_OBJECT_0) {
+			/* No way to avoid dangling DLLs here. */
+			TerminateProcess(hProc, 0);
+		}
+#else
+		SafeTerminateProcess(hProc, 0);
+#endif
+		/* WaitForSingleObject(hProc, 0); */
+		/* not much use to wait on Windows */
+		CloseHandle(hProc);
+	}
+	return 0; /* XXX we need to figure out more here... */
+}
+
+
 int
 close_process(SUBPROC *proc) {
 	int icres, ocres;
 	DWORD pid;
-	HANDLE hProc;
 
 	ocres = close(proc->w);
 	icres = close(proc->r);
 	pid = proc->pid;
 	if(ocres != 0 || icres != 0) {
-		hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, pid);
 		/* something went wrong: enforce infanticide */
 		/* other than that, it looks like we want to ignore errors here */
 		if (proc->running) {
-			if(hProc != NULL) {
-#ifdef OBSOLETE_WINDOWS
-#define KILL_TIMEOUT 10 * 1000 /* milliseconds */
-				/* it might have some windows open... */
-				EnumWindows((WNDENUMPROC)TerminateAppEnum, (LPARAM)pid);
-				if(WaitForSingleObject(hProc, KILL_TIMEOUT)!=WAIT_OBJECT_0) {
-					/* No way to avoid dangling DLLs here. */
-					TerminateProcess(hProc, 0);
-				}
-#else
-				SafeTerminateProcess(hProc, 0);
-#endif
-				/* WaitForSingleObject(hProc, 0); */
-				/* not much use to wait on Windows */
-				CloseHandle(hProc);
-			}
+			int win_kill(pid, 0);
 		}
 	}
 	proc->running = 0;

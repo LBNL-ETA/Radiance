@@ -89,6 +89,11 @@ if os.name == 'posix': # XXX ignoring trad.wsh
 	for s in Split('''objview objline objpict
 			glare dayfact debugcal rlux raddepend compamb vinfo genambpos'''):
 		Default(env.InstallCsh(radbin(s), s + '.csh'))
+# Those don't really work yet
+#else:
+#	for s in Split('''objview glare rlux '''):
+#		prog = env.Program(target=radbin(s), source=s+'.c')
+#		progs.append(prog)
 
 Default('#src/util')
 env.Install('$RAD_BINDIR', progs)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_netproc.c,v 2.3 2004/03/26 23:34:24 schorsch Exp $";
+static const char RCSid[] = "$Id: win_netproc.c,v 2.4 2004/10/23 18:55:53 schorsch Exp $";
 #endif
 
 /*
@@ -112,11 +112,6 @@ PSERVER* findjob(int *pnp)
 	return &ps;
 }
 
-int
-kill(pid_t pid, int sig)
-{
-	return 0;
-}
 
 int startjob(
 	PSERVER* pPS,

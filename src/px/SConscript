@@ -50,7 +50,7 @@ PROGS = (
 ('ra_avs',   ['ra_avs.c'],    ['rtpic','rtio','rtmem']),
 ('ra_ps',    ['ra_ps.c'],     ['rtpic','rtio','rtargs','rtmem']),
 ('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
-('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtio','rtmem']),
+('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtproc','rtio','rtmem']),
 ('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
 ('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
 ('ra_bn',    ['ra_bn.c'],     ['rtpic','rtio','rtmem']),
@@ -116,7 +116,7 @@ if os.name == 'posix':
 
 # pixar format requires extra lib
 if env.has_key('PIXAR_LIB'):
-    ra_pixar = env.Program(radbin('ra_pixar'), source='ra_pixar.c',
+    ra_pixar = env.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
         LIBS=['rtpic', '$PIXAR_LIB'])
     progs.append(ra_pixar)
 
@@ -152,6 +152,10 @@ if os.name == 'posix': # XXX ignoring trad.wsh
 	for s in Split('''normpat falsecolor pdfblur
 			pmblur xyzimage phisto pdelta pgblur'''):
 		Default(env.InstallCsh(radbin(s), s + '.csh'))
+# XXX probably needs fixing
+#else:
+#	for s in Split('''falsecolor'''):
+#		Default(env.InstallCsh(radbin(s), s + '.csh'))
 
 Default('#src/px')
 env.Install('$RAD_BINDIR', progs)

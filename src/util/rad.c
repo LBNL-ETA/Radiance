@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.79 2004/10/04 04:42:33 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.80 2004/10/23 18:55:53 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1145,6 +1145,11 @@ myprintview(			/* print out selected view */
 	VIEW	vwr;
 	char	buf[128];
 	register char	*cp;
+#ifdef _WIN32
+/* XXX Should we allow something like this for all platforms? */
+/* XXX Or is it still required at all? */
+again:
+#endif
 	if (vopts == NULL)
 		return(-1);
 #ifdef _WIN32

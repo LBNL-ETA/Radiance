@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.27 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.28 2004/10/23 18:55:52 schorsch Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: data.c,v 2.27 2004/03/30 16:13:01 schorsch Exp
 #include  <time.h>
 
 #include  "platform.h"
+#include  "paths.h"
 #include  "standard.h"
 #include  "color.h"
 #include  "resolu.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.15 2004/01/02 11:36:26 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.16 2004/10/23 18:55:52 schorsch Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -13,8 +13,10 @@ static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.15 2004/01/02 11:36:26 schorsc
 #include	<string.h>
 #include	<math.h>
 #include	<time.h>
+
 #include	"tmprivat.h"
 #include	"resolu.h"
+#include	"rtprocess.h"
 
 #ifndef TM_PIC_CTRANS
 #define TM_PIC_CTRANS	1		/* transform colors? (expensive) */

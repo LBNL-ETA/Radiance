@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.70 2004/09/28 17:54:19 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.71 2004/10/23 18:55:53 schorsch Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -202,7 +202,7 @@ report(int dummy)		/* report progress */
 }
 #else
 static void
-report(int)		/* report progress */
+report(int dummy)		/* report progress */
 {
 	tlastrept = time((time_t *)NULL);
 	sprintf(errmsg, "%lu rays, %4.2f%% after %5.4f hours\n",

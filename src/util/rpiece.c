@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.44 2004/06/08 19:48:31 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.45 2004/10/23 18:55:53 schorsch Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -9,7 +9,9 @@ static const char	RCSid[] = "$Id: rpiece.c,v 2.44 2004/06/08 19:48:31 greg Exp $
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+#ifndef NON_POSIX /* XXX need abstraction for process management */
+ #include <sys/wait.h>
+#endif
 
 #include "platform.h"
 #include "standard.h"

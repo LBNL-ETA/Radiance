@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.10 2004/01/28 12:42:22 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.11 2004/10/23 18:55:52 schorsch Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -21,6 +21,8 @@
   #endif
   extern FILE *win_popen(char *command, char *type);
   extern int win_pclose(FILE *p);
+  int win_kill(RT_PID pid, int sig /* ignored */);
+  #define kill(pid,sig) win_kill(pid,sig)
   #ifdef __cplusplus
   }
   #endif
