@@ -1,4 +1,4 @@
-/* RCSid $Id: radogl.h,v 3.8 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: radogl.h,v 3.9 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include "standard.h"
 #include <GL/glu.h>

@@ -1,4 +1,4 @@
-/* RCSid $Id: face.h,v 2.5 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: face.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  face.h - header for routines using polygonal faces.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #define  VERTEX(f,n)	((f)->va + 3*(n))
 

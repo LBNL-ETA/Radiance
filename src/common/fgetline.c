@@ -1,15 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetline.c,v 2.3 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: fgetline.c,v 2.4 2003/06/27 06:53:21 greg Exp $";
 #endif
 /*
  * fgetline.c - read line with escaped newlines.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
-#include  <stdio.h>
+#include  "rtio.h"
 
 
 char *

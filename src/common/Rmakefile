@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.41 2003/06/26 00:58:09 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.42 2003/06/27 06:53:21 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -91,9 +91,10 @@ readobj.o readoct.o sceneio.o:	otypes.h
 
 multisamp.o urand.o:	random.h
 
-cone.o face.o free_os.o image.o instance.o error.o objset.o \
-octree.o modobject.o readfargs.o otypes.o dircode.o mesh.o \
-readmesh.o readobj.o readoct.o sceneio.o xf.o:	standard.h mat4.h fvect.h
+cone.o face.o free_os.o image.o instance.o objset.o \
+octree.o modobject.o readfargs.o otypes.o mesh.o \
+readmesh.o readobj.o readoct.o sceneio.o:	standard.h \
+rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h
 
 image.o:	view.h
 
@@ -127,3 +128,12 @@ standard.h mat4.h fvect.h color.h object.h otypes.h lookup.h
 free_os.o:	octree.h object.h otypes.h face.h cone.h instance.h
 
 tmesh.o:	tmesh.h fvect.h
+
+fgetword.o fputword.o fgetval.o fgetline.o fdate.o \
+expandarg.o badarg.o xf.o:	rtio.h
+
+expandarg.o:	rtmisc.h
+
+dircode.o xf.o:	rtmath.h mat4.h fvect.h
+
+error.o:	rterror.h

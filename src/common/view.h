@@ -1,4 +1,4 @@
-/* RCSid $Id: view.h,v 2.10 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: view.h,v 2.11 2003/06/27 06:53:22 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
@@ -10,8 +10,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #include  "resolu.h"
 

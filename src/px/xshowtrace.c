@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xshowtrace.c,v 2.7 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.8 2003/06/27 06:53:22 greg Exp $";
 #endif
 /*
  *  Display an image and watch the rays get traced.
@@ -136,10 +136,12 @@ mainloop()				/* get and process input */
 freetree(tp)				/* free a trace tree */
 struct node	*tp;
 {
-	register struct node	*kid;
+	register struct node	*kid, *k2;
 
-	for (kid = tp->daughter; kid != NULL; kid = kid->sister)
+	for (kid = tp->daughter; kid != NULL; kid = k2) {
+		k2 = kid->sister;
 		freetree(kid);
+	}
 	free((void *)tp);
 }
 

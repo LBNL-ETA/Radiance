@@ -1,9 +1,7 @@
-/* RCSid $Id: xraster.h,v 3.2 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: xraster.h,v 3.3 2003/06/27 06:53:22 greg Exp $ */
 /*
  * xraster.h - header file for X routines using images.
  */
-
-#include "copyright.h"
 
 typedef struct {
 	int	width, height;			/* image size */

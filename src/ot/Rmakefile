@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.11 2003/03/15 17:55:48 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.12 2003/06/27 06:53:22 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -44,7 +44,9 @@ clean:
 bbox.o initotypes.o o_cone.o o_face.o \
 o_instance.o oconv.o sphere.o \
 cvmesh.o obj2mesh.o wfconv.o \
-writeoct.o:	../common/standard.h ../common/mat4.h ../common/fvect.h
+writeoct.o:	../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 initotypes.o o_cone.o o_face.o oconv.o \
 sphere.o writeoct.o:	../common/octree.h

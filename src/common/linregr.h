@@ -1,4 +1,4 @@
-/* RCSid $Id: linregr.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: linregr.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Header file for linear regression calculation.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef struct {
 	double	xs, ys, xxs, yys, xys;

@@ -1,9 +1,7 @@
-/* RCSid $Id: netproc.h,v 2.4 2003/02/25 02:47:24 greg Exp $ */
+/* RCSid $Id: netproc.h,v 2.5 2003/06/27 06:53:23 greg Exp $ */
 /*
  * Header file for network processing routines
  */
-
-#include "copyright.h"
 
 typedef struct {
 	char	*com;		/* command (stored on client side) */

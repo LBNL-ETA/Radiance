@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.10 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: fvect.h,v 2.11 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #ifdef  SMLFLT
 #define  RREAL		float

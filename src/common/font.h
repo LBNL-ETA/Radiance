@@ -1,4 +1,4 @@
-/* RCSid $Id: font.h,v 2.6 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: font.h,v 2.7 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Header file for font handling routines
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef unsigned char  GORD;
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.1 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.2 2003/06/27 06:53:21 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -10,9 +10,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include  <sys/types.h>
 #ifdef _WIN32

@@ -1,4 +1,4 @@
-/* RCSid $Id: octree.h,v 2.9 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: octree.h,v 2.10 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  octree.h - header file for routines using octrees.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 /*
  *	An octree is expressed as an integer which is either

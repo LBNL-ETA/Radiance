@@ -1,4 +1,4 @@
-/* RCSid $Id: selcall.h,v 3.7 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: selcall.h,v 3.8 2003/06/27 06:53:22 greg Exp $ */
 /*
  * header file for select call compatibility
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #include <sys/types.h>
 #ifdef _WIN32

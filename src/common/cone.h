@@ -1,4 +1,4 @@
-/* RCSid $Id: cone.h,v 2.5 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: cone.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  cone.h - header file for cones (cones, cylinders, rings, cups, tubes).
  *
@@ -14,8 +14,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef struct cone {
 	RREAL  *ca;		/* cone arguments (o->oargs.farg) */

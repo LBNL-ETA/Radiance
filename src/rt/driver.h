@@ -1,4 +1,4 @@
-/* RCSid $Id: driver.h,v 2.6 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: driver.h,v 2.7 2003/06/27 06:53:22 greg Exp $ */
 /*
  *  driver.h - header file for interactive device drivers.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 struct driver {				/* driver functions */
 	void  (*close)();			/* close device */

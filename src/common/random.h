@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.12 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: random.h,v 2.13 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #ifdef  NORANDOM
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: rpaint.h,v 2.4 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: rpaint.h,v 2.5 2003/06/27 06:53:23 greg Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include  "driver.h"
 

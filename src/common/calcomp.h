@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.10 2003/06/07 12:50:20 schorsch Exp $ */
+/* RCSid $Id: calcomp.h,v 2.11 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include <stdio.h>
 

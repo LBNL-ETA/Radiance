@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.7 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.8 2003/06/27 06:53:23 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -411,8 +411,8 @@ initscans()				/* initialize scanline buffers */
 		hashtab[i] = NULL;
 					/* allocate scanline buffers */
 	scansize = sizeof(SCAN) + pxsiz*sizeof(COLR);
-#ifdef ALIGN
-	scansize = scansize+(sizeof(ALIGN)-1) & ~(sizeof(ALIGN)-1);
+#ifdef ALIGNT
+	scansize = scansize+(sizeof(ALIGNT)-1) & ~(sizeof(ALIGNT)-1);
 #endif
 	i = MAXSBUF / scansize;		/* compute number to allocate */
 	if (i > HSIZE)

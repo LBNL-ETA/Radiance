@@ -1,15 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fdate.c,v 2.7 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: fdate.c,v 2.8 2003/06/27 06:53:21 greg Exp $";
 #endif
 /*
  * Return file date (UNIX seconds as returned by time(2) call)
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
-#include  <sys/types.h>
+#include  "rtio.h"
 #include  <sys/stat.h>
 #ifdef _WIN32
   #include  <sys/utime.h>

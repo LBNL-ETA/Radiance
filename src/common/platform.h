@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.3 2003/06/08 12:03:09 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.4 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #ifdef _WIN32
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: lookup.h,v 2.8 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: lookup.h,v 2.9 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 typedef struct {
 	char	*key;			/* key name */

@@ -1,17 +1,17 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: badarg.c,v 2.4 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: badarg.c,v 2.5 2003/06/27 06:53:21 greg Exp $";
 #endif
 /*
  * Check argument list against format string.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
 #include <ctype.h>
 
-#include "standard.h"
+#include "rtio.h"
 
 
 int

@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.11 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: otypes.h,v 2.12 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef struct {
 	char  *funame;			/* function name */

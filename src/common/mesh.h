@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.7 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: mesh.h,v 2.8 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -9,8 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #include "lookup.h"
 

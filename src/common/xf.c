@@ -1,15 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xf.c,v 2.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: xf.c,v 2.6 2003/06/27 06:53:22 greg Exp $";
 #endif
 /*
  *  xf.c - routines to convert transform arguments into 4X4 matrix.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtmath.h
  */
 
-#include "copyright.h"
-
-#include  "standard.h"
+#include  "rtmath.h"
+#include  "rtio.h"
 
 #define  d2r(a)		((PI/180.)*(a))
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: func.h,v 2.4 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: func.h,v 2.5 2003/06/27 06:53:22 greg Exp $ */
 /*
  * Header file for modifiers using function files.
  *
@@ -9,9 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include  "calcomp.h"
 

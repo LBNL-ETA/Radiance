@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.18 2003/06/26 00:58:10 schorsch Exp $ */
+/* RCSid $Id: ray.h,v 2.19 2003/06/27 06:53:22 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #include  "standard.h"
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.15 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: object.h,v 2.16 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -9,8 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #ifndef  OCTREE
 #define  OCTREE		int

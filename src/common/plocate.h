@@ -1,4 +1,4 @@
-/* RCSid $Id: plocate.h,v 2.6 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: plocate.h,v 2.7 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  plocate.h - header for 3D vector location.
  *
@@ -9,8 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #define  EPSILON	FTINY		/* acceptable location error */
 

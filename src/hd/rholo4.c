@@ -1,15 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.30 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.31 2003/06/27 06:53:22 greg Exp $";
 #endif
 /*
  * Holodeck display process communication
  */
 
-#include <sys/uio.h>
-
 #include "rholo.h"
 #include "rhdisp.h"
 #include "rtprocess.h"
+
+#include <sys/uio.h>
 
 #ifndef HDSUF
 #define HDSUF		".hdi"

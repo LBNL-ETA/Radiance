@@ -1,15 +1,19 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: expandarg.c,v 2.6 2003/05/13 17:58:32 greg Exp $";
+static const char	RCSid[] = "$Id: expandarg.c,v 2.7 2003/06/27 06:53:21 greg Exp $";
 #endif
 /*
  * Get additional command arguments from file or environment.
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
-#include "standard.h"
+#include "rtio.h"
+
+#include "rtmisc.h"
+
+#include <errno.h>
 
 #define MAXARGEXP	512		/* maximum argument expansion */
 

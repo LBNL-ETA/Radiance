@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.34 2003/06/06 18:38:19 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.35 2003/06/27 06:53:23 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -114,15 +114,20 @@ t16anim.o pranim.o:	client/clnt.h
 setscan.o makedist.o:	setscan.h
 
 findglare.o glareval.o \
-glaresrc.o:	glare.h ../common/standard.h ../common/mat4.h \
-../common/fvect.h ../common/view.h ../common/color.h setscan.h
+glaresrc.o:	glare.h ../common/standard.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h \
+../common/view.h ../common/color.h setscan.h
 
 glaresrc.o:	../common/linregr.h
 
 rpiece.o:	../common/color.h ../common/view.h ../common/resolu.h
 
 rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
-../common/mat4.h ../common/fvect.h
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 xglaresrc.o:	../common/view.h
 
@@ -147,15 +152,20 @@ netproc.o:	../common/paths.h
 rad.o ranimate.o ranimove.o:	../common/view.h ../common/resolu.h
 
 glrad.o:	../common/radogl.h \
-../common/standard.h ../common/mat4.h ../common/fvect.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h \
 ../common/color.h ../common/object.h ../common/otypes.h ../common/lookup.h
 
 glrad.o:	glradicon.h ../common/view.h ../common/paths.h
 
 ranimove.o ranimove1.o ranimove2.o:	ranimove.h \
 ../common/vars.h ../common/view.h \
-../rt/ray.h ../common/standard.h ../common/octree.h \
-../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
+../rt/ray.h ../common/octree.h \
+../common/object.h ../common/color.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 Version.c:	../rt/Version.c
 	cp ../rt/Version.c .

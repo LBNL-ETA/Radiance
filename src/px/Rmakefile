@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.46 2003/04/29 19:09:43 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.47 2003/06/27 06:53:22 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -239,7 +239,9 @@ ra_ps.o ra_pr.o pvalue.o pcomb.o pinterp.o ximage.o:	../common/color.h
 
 neuclrtab.o pvalue.o protate.o biq.o ciq.o pinterp.o ximage.o psign.o \
 xshowtrace.o clrtab.o pcomb.o pfilt.o pf3.o image.o:	../common/standard.h \
-../common/mat4.h ../common/fvect.h
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 ximage.o xraster.o:	xraster.h
 
@@ -270,7 +272,9 @@ pfilt.o:	../common/paths.h
 psign.o:	../common/font.h
 
 pcond.o pcond2.o pcond3.o pcond4.o:	pcond.h ../common/standard.h \
-../common/mat4.h ../common/fvect.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h \
 ../common/color.h ../common/view.h ../common/resolu.h
 
 normtiff.o:	../common/color.h ../common/tonemap.h ../common/resolu.h

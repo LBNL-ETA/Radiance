@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.14 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.15 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #include <stdlib.h>
 #include <string.h>

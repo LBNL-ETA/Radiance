@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: vars.h,v 2.6 2003/06/27 06:53:22 greg Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef struct {
 	char	*name;		/* variable name */

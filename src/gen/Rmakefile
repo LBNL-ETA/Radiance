@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.7 2003/02/22 02:07:23 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.8 2003/06/27 06:53:22 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -76,12 +76,14 @@ genclock:	genclock.o
 genbranch:	genbranch.o
 	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
 
-gensurf.o:	../common/standard.h ../common/mat4.h ../common/fvect.h
-
 genworm.o replmarks.o:	../common/fvect.h
 
-xform.o:	../common/standard.h ../common/mat4.h ../common/fvect.h \
-../common/otypes.h ../common/object.h
+gensurf.o xform.o:	../common/standard.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/rterror.h \
+../common/mat4.h ../common/fvect.h \
+
+xform.o:	../common/otypes.h ../common/object.h
 
 mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/standard.h \
 ../common/mat4.h ../common/fvect.h ../common/otypes.h ../common/object.h

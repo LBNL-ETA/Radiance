@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.22 2003/03/04 05:49:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.23 2003/06/27 06:53:22 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -228,13 +228,17 @@ holo.o holofile.o rhdisp.o rhdisp2.o viewbeams.o genrhenv.o genrhgrid.o \
 rhcopy.o rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
 rhinfo.o clumpbeams.o rhoptimize.o rhpict.o rhpict2.o:	holo.h \
 ../common/vars.h ../common/color.h \
-../common/standard.h ../common/mat4.h ../common/fvect.h
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 rhcopy.o:	../common/resolu.h ../common/view.h
 
 rhd_x11.o rhd_qtree.o rhd_sets.o rhd_qtree2r.o rhd_odraw.o rhd_ogl0.o \
 rhd_oglo.o rhd_ogls.o rhd_oglso.o:	../common/standard.h \
-../common/mat4.h ../common/fvect.h
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 rhd_x11.o rhd_qtree.o rhd_qtree2r.o:	rhd_qtree.h rhdriver.h \
 ../common/view.h ../common/tonemap.h ../common/color.h
@@ -243,17 +247,24 @@ rhd_x11.o:	x11icon.h
 
 rhd_glx0.o rhd_glxo.o rhd_glxs.o rhd_glxso.o:	rhd_sample.h rhdriver.h \
 x11icon.h ../common/tonemap.h ../common/view.h \
-../common/standard.h ../common/mat4.h ../common/fvect.h
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 rhd_glxo.o rhd_glxso.o rhdobj.o:	rhdobj.h
 
 rhdobj.o:	rhdisp.h rhdriver.h ../common/view.h ../common/tonemap.h \
-../common/radogl.h ../common/standard.h ../common/fvect.h ../common/mat4.h \
+../common/radogl.h  ../common/standard.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h \
 ../common/object.h ../common/otypes.h ../common/lookup.h
 
 sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
 sm_ogl.o sm.o:	sm.h rhd_sample.h \
-../common/standard.h ../common/mat4.h ../common/fvect.h
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 sm.o:		sm_flag.h
 
@@ -274,8 +285,10 @@ sm_qtree.o:	sm_flag.h sm_geom.h sm_qtree.h ../common/object.h
 sm_stree.o:	sm_flag.h sm_stree.h sm_qtree.h sm_geom.h ../common/object.h
 
 rhd_glx1.o:	rhd_qtree.h rhdriver.h x11icon.h ../common/view.h \
-../common/color.h ../common/tonemap.h ../common/standard.h ../common/fvect.h \
-../common/mat4.h
+../common/color.h ../common/tonemap.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
 
 rhd_odraw.o rhd_ogl0.o rhd_oglo.o rhd_ogls.o rhd_oglso.o:	rhd_odraw.h \
 rhdriver.h ../common/view.h ../common/color.h ../common/tonemap.h
@@ -285,8 +298,9 @@ rhd_ogl0.o rhd_oglo.o rhd_ogls.o rhd_oglso.o:	x11icon.h
 rhd_oglo.o rhd_oglso.o:	rhdobj.h
 
 rhd_geom.o:	rhdriver.h ../common/view.h \
-../common/radogl.h ../common/standard.h ../common/fvect.h \
-../common/mat4.h ../common/object.h ../common/otypes.h ../common/lookup.h
+../common/radogl.h ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h ../common/object.h ../common/otypes.h ../common/lookup.h
 
 Version.c:	../rt/Version.c
 	cp ../rt/Version.c .

@@ -1,4 +1,4 @@
-/* RCSid $Id: instance.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: instance.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
 /*
  *  instance.h - header file for routines using octree objects.
  *
@@ -9,8 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 typedef struct scene {
 	char  *name;			/* octree name */

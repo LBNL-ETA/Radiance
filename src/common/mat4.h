@@ -1,4 +1,4 @@
-/* RCSid $Id: mat4.h,v 2.9 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid $Id: mat4.h,v 2.10 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Definitions for 4x4 matrix operations
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #include  <string.h>
 

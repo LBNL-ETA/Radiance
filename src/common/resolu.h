@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: resolu.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -19,8 +19,7 @@
 extern "C" {
 #endif
 
-#include "copyright.h"
-
+#include <stdio.h>
 			/* flags for scanline ordering */
 #define  XDECR			1
 #define  YDECR			2
@@ -73,7 +72,6 @@ extern void	fputformat(char *s, FILE *fp);
 extern int	getheader(FILE *fp, int (*f)(), char *p);
 extern int	globmatch(char *pat, char *str);
 extern int	checkheader(FILE *fin, char *fmt, FILE *fout);
-
 
 #ifdef __cplusplus
 }

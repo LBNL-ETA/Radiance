@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.2 2003/02/25 02:47:24 greg Exp $ */
+/* RCSid $Id: ranimove.h,v 3.3 2003/06/27 06:53:23 greg Exp $ */
 /*
  *  ranimove.h
  *
@@ -16,8 +16,6 @@
  *
  * See the ranimove(1) man page for further details.
  */
-
-#include "copyright.h"
 
 #include "ray.h"
 #include "view.h"

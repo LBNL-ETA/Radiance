@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.13 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: tonemap.h,v 3.14 2003/06/27 06:53:22 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -9,9 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 /****    Argument Macros    ****/
 				/* Flags of what to do */

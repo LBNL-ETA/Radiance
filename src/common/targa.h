@@ -1,4 +1,4 @@
-/* RCSid $Id: targa.h,v 2.4 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: targa.h,v 2.5 2003/06/27 06:53:22 greg Exp $ */
 /*
  *  tardev.h - header file for reading and writing Targa format files.
  */
@@ -8,8 +8,6 @@
 extern "C" {
 #endif
  
-#include "copyright.h"
-
 			/* header structure adapted from tardev.h */
 struct hdStruct {
 	char textSize;			/* size of info. line ( < 256) */

@@ -1,13 +1,13 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.6 2003/06/21 14:48:53 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.7 2003/06/27 06:53:21 greg Exp $";
 #endif
 /*
- * Compute a 4-byte direction code (int32 type defined in standard.h).
+ * Compute a 4-byte direction code (externals defined in rtmath.h).
  *
  * Mean accuracy is 0.0022 degrees, with a maximum error of 0.0058 degrees.
  */
 
-#include "standard.h"
+#include "rtmath.h"
 
 #define	DCSCALE		11585.2		/* (1<<13)*sqrt(2) */
 #define FXNEG		01

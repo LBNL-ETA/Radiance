@@ -1,4 +1,4 @@
-/* RCSid $Id: x11twind.h,v 2.5 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: x11twind.h,v 2.6 2003/06/27 06:53:23 greg Exp $ */
 /*
  *  xtwind.h - header for X text window routines.
  *
@@ -13,9 +13,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "copyright.h"
 
 #define LEFTMAR	2			/* left margin width */
 

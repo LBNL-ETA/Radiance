@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.9 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.10 2003/06/27 06:53:22 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "copyright.h"
 
 #ifndef	MEM_PTR
 #define	MEM_PTR		void *
