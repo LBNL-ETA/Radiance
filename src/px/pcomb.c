@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.35 2005/01/24 19:29:39 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.36 2005/02/16 03:26:33 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -601,7 +601,7 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 		if (input[fn].vw.type == 0)
 			errno = EDOM;
 		else if (input[fn].vw.type != VT_PAR &&
-				funvalue(vray[6], 1, &d) > FTINY) {
+				funvalue(vray[6], 1, &d) >= -FTINY) {
 			for (i = 0; i < 3; i++)
 				dir0[i] = funvalue(vray[3+i], 1, &d);
 			pix2loc(locx, &input[fn].rs, xscan+1, ymax-1-yscan);
