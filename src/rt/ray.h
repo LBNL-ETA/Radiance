@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.22 2004/03/30 16:13:01 schorsch Exp $ */
+/* RCSid $Id: ray.h,v 2.23 2004/11/05 17:36:55 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -119,8 +119,10 @@ extern int	ambincl;	/* include == 1, exclude == 0 */
 extern int	ray_pnprocs;	/* number of child processes */
 extern int	ray_pnidle;	/* number of idle processes */
 
-#define AMBLLEN		128	/* max. ambient list length */
-#define AMBWORD		8	/* average word length */
+#ifndef AMBLLEN
+#define AMBLLEN		512	/* max. ambient list length */
+#endif
+#define AMBWORD		12	/* average word length */
 
 typedef struct {		/* rendering parameter holder */
 	int	do_irrad;

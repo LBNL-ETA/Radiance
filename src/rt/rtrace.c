@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.37 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.38 2004/11/05 17:36:56 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -85,7 +85,7 @@ int  ambres = 256;			/* ambient resolution */
 int  ambdiv = 1024;			/* ambient divisions */
 int  ambssamp = 512;			/* ambient super-samples */
 int  ambounce = 0;			/* ambient bounces */
-char  *amblist[128];			/* ambient include/exclude list */
+char  *amblist[AMBLLEN];		/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
 static int  castonly = 0;

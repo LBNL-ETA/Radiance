@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.56 2004/03/30 16:13:00 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.57 2004/11/05 17:36:55 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -24,7 +24,9 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.56 2004/03/30 16:13:00 schorsch 
 
 extern char  *shm_boundary;	/* memory sharing boundary */
 
-#define	 MAXASET	511	/* maximum number of elements in ambient set */
+#ifndef  MAXASET
+#define	 MAXASET	2047	/* maximum number of elements in ambient set */
+#endif
 OBJECT	ambset[MAXASET+1]={0};	/* ambient include/exclude set */
 
 double	maxarad;		/* maximum ambient radius */

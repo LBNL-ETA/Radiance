@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.25 2004/03/28 16:31:14 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.26 2004/11/05 17:36:56 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -67,7 +67,7 @@ int  ambres = 32;			/* ambient resolution */
 int  ambdiv = 256;			/* ambient divisions */
 int  ambssamp = 64;			/* ambient super-samples */
 int  ambounce = 0;			/* ambient bounces */
-char  *amblist[128];			/* ambient include/exclude list */
+char  *amblist[AMBLLEN];		/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
 int  greyscale = 0;			/* map colors to brightness? */

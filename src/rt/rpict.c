@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.71 2004/10/23 18:55:53 schorsch Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.72 2004/11/05 17:36:55 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -94,7 +94,7 @@ int  ambres = 64;			/* ambient resolution */
 int  ambdiv = 512;			/* ambient divisions */
 int  ambssamp = 128;			/* ambient super-samples */
 int  ambounce = 0;			/* ambient bounces */
-char  *amblist[128];			/* ambient include/exclude list */
+char  *amblist[AMBLLEN];		/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
 int  ralrm = 0;				/* seconds between reports */
