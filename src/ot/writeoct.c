@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writeoct.c,v 2.4 2003/03/14 21:27:46 greg Exp $";
+static const char RCSid[] = "$Id: writeoct.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  writeoct.c - routines for writing octree information to stdout.
@@ -10,16 +10,23 @@ static const char RCSid[] = "$Id: writeoct.c,v 2.4 2003/03/14 21:27:46 greg Exp 
 #include  "standard.h"
 
 #include  "octree.h"
-
 #include  "object.h"
+#include  "oconv.h"
 
-static int  oputint(), oputstr(), puttree();
+
+static void oputstr(char *s);
+static void putfullnode(OCTREE fn);
+static void oputint(long i, int siz);
+static void oputflt(double f);
+static void puttree(OCTREE ot);
 
 
-writeoct(store, scene, ofn)		/* write octree structures to stdout */
-int  store;
-CUBE  *scene;
-char  *ofn[];
+void
+writeoct(		/* write octree structures to stdout */
+	int  store,
+	CUBE  *scene,
+	char  *ofn[]
+)
 {
 	char  sbuf[64];
 	int  i;
@@ -55,9 +62,10 @@ char  *ofn[];
 }
 
 
-static
-oputstr(s)			/* write null-terminated string to stdout */
-register char  *s;
+static void
+oputstr(			/* write null-terminated string to stdout */
+	register char  *s
+)
 {
 	putstr(s, stdout);
 	if (ferror(stdout))
@@ -65,9 +73,10 @@ register char  *s;
 }
 
 
-static
-putfullnode(fn)			/* write out a full node */
-OCTREE  fn;
+static void
+putfullnode(			/* write out a full node */
+	OCTREE  fn
+)
 {
 	OBJECT  oset[MAXSET+1];
 	register int  i;
@@ -78,10 +87,11 @@ OCTREE  fn;
 }
 
 
-static
-oputint(i, siz)			/* write a siz-byte integer to stdout */
-register long  i;
-register int  siz;
+static void
+oputint(			/* write a siz-byte integer to stdout */
+	register long  i,
+	register int  siz
+)
 {
 	putint(i, siz, stdout);
 	if (ferror(stdout))
@@ -89,9 +99,10 @@ register int  siz;
 }
 
 
-static
-oputflt(f)			/* put out floating point number */
-double  f;
+static void
+oputflt(			/* put out floating point number */
+	double  f
+)
 {
 	putflt(f, stdout);
 	if (ferror(stdout))
@@ -99,9 +110,10 @@ double  f;
 }
 
 
-static
-puttree(ot)			/* write octree to stdout in pre-order form */
-register OCTREE  ot;
+static void
+puttree(			/* write octree to stdout in pre-order form */
+	register OCTREE  ot
+)
 {
 	register int  i;
 	

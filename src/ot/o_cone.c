@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_cone.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: o_cone.c,v 2.3 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  o_cone.c - routines for intersecting cubes with cones.
@@ -8,11 +8,8 @@ static const char	RCSid[] = "$Id: o_cone.c,v 2.2 2003/02/22 02:07:26 greg Exp $"
  */
 
 #include  "standard.h"
-
 #include  "octree.h"
-
 #include  "object.h"
-
 #include  "cone.h"
 
 #define  ROOT3		1.732050808
@@ -32,19 +29,27 @@ static const char	RCSid[] = "$Id: o_cone.c,v 2.2 2003/02/22 02:07:26 greg Exp $"
 
 extern double  mincusize;		/* minimum cube size */
 
+static double findcseg(FVECT ep0, FVECT ep1, CONE *co, FVECT p);
 
-o_cone(o, cu)			/* determine if cone intersects cube */
-OBJREC  *o;
-register CUBE  *cu;
+
+
+/* XXX o_cone() is extern, but not declared in any header file */
+int
+o_cone(			/* determine if cone intersects cube */
+	OBJREC  *o,
+	register CUBE  *cu
+)
 {
-	double  dist2lseg(), findcseg();
 	CONE  *co;
 	FVECT  ep0, ep1;
+#ifdef STRICT
 	FVECT  cumin, cumax;
 	CUBE  cukid;
+	register int  j;
+#endif
 	double  r;
 	FVECT  p;
-	register int  i, j;
+	register int  i;
 					/* get cone arguments */
 	co = getcone(o, 0);
 					/* get cube center */
@@ -88,11 +93,13 @@ register CUBE  *cu;
 }
 
 
-double
-findcseg(ep0, ep1, co, p)	/* find line segment from cone closest to p */
-FVECT  ep0, ep1;
-register CONE  *co;
-FVECT  p;
+static double
+findcseg(	/* find line segment from cone closest to p */
+	FVECT  ep0,
+	FVECT  ep1,
+	register CONE  *co,
+	FVECT  p
+)
 {
 	double  d;
 	FVECT  v;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writemesh.c,v 2.4 2004/01/30 00:08:31 greg Exp $";
+static const char RCSid[] = "$Id: writemesh.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  Routines for writing compiled mesh to a file stream
@@ -11,10 +11,16 @@ static const char RCSid[] = "$Id: writemesh.c,v 2.4 2004/01/30 00:08:31 greg Exp
 #include  "mesh.h"
 
 
+static void putfullnode(OCTREE fn, FILE *fp);
+static void puttree(OCTREE ot, FILE *fp);
+static void putpatch(MESHPATCH *pp, FILE *fp);
+
+
 static void
-putfullnode(fn, fp)		/* write out a full node */
-OCTREE	fn;
-FILE	*fp;
+putfullnode(		/* write out a full node */
+	OCTREE	fn,
+	FILE	*fp
+)
 {
 	OBJECT  oset[MAXSET+1];
 	register int  i;
@@ -26,9 +32,10 @@ FILE	*fp;
 
 
 static void
-puttree(ot, fp)			/* write octree to fp in pre-order form */
-register OCTREE	ot;
-FILE		*fp;
+puttree(			/* write octree to fp in pre-order form */
+	register OCTREE	ot,
+	FILE		*fp
+)
 {
 	
 	if (istree(ot)) {
@@ -48,9 +55,10 @@ FILE		*fp;
 
 
 static void
-putpatch(pp, fp)			/* write out a mesh patch */
-register MESHPATCH	*pp;
-FILE			*fp;
+putpatch(			/* write out a mesh patch */
+	register MESHPATCH	*pp,
+	FILE			*fp
+)
 {
 	int	flags = MT_V;
 	int	i, j;

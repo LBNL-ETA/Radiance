@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.18 2003/10/22 02:06:34 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.19 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -13,6 +13,8 @@ static const char RCSid[] = "$Id: oconv.c,v 2.18 2003/10/22 02:06:34 greg Exp $"
 #include  "object.h"
 #include  "otypes.h"
 #include  "paths.h"
+#include  "resolu.h"
+#include  "oconv.h"
 
 #define	 OMARGIN	(10*FTINY)	/* margin around global cube */
 
@@ -35,10 +37,15 @@ double	mincusize;			/* minimum cube size from resolu */
 
 void  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
 
+static void addobject(CUBE  *cu, OBJECT	obj);
+static void add2full(CUBE  *cu, OBJECT	obj, int  inc);
 
-main(argc, argv)		/* convert object files to an octree */
-int  argc;
-char  *argv[];
+
+int
+main(		/* convert object files to an octree */
+	int  argc,
+	char  *argv[]
+)
 {
 	FVECT  bbmin, bbmax;
 	char  *infile = NULL;
@@ -49,7 +56,7 @@ char  *argv[];
 
 	progname = argv[0] = fixargv0(argv[0]);
 
-	initotypes();
+	ot_initotypes();
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
@@ -149,27 +156,30 @@ breakopt:
 	writeoct(outflags, &thescene, ofname);	/* write structures to stdout */
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
 void
-quit(code)				/* exit program */
-int  code;
+quit(				/* exit program */
+	int  code
+)
 {
 	exit(code);
 }
 
 
 void
-cputs()					/* interactive error */
+cputs(void)					/* interactive error */
 {
 	/* referenced, but not used */
 }
 
 
 void
-wputs(s)				/* warning message */
-char  *s;
+wputs(				/* warning message */
+	char  *s
+)
 {
 	if (!nowarn)
 		eputs(s);
@@ -177,8 +187,9 @@ char  *s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  inln = 0;
 
@@ -204,9 +215,11 @@ register char  *s;
 #define	 tglbit(f,i)		bitop(f,i,^=)
 
 
-addobject(cu, obj)			/* add an object to a cube */
-register CUBE  *cu;
-OBJECT	obj;
+static void
+addobject(			/* add an object to a cube */
+	register CUBE  *cu,
+	OBJECT	obj
+)
 {
 	int  inc;
 
@@ -242,10 +255,12 @@ OBJECT	obj;
 }
 
 
-add2full(cu, obj, inc)			/* add object to full node */
-register CUBE  *cu;
-OBJECT	obj;
-int  inc;
+static void
+add2full(			/* add object to full node */
+	register CUBE  *cu,
+	OBJECT	obj,
+	int  inc
+)
 {
 	OCTREE	ot;
 	OBJECT	oset[MAXSET+1];

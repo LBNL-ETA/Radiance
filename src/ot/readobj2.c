@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readobj2.c,v 2.8 2003/10/27 10:29:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.9 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  readobj2.c - routines for reading in object descriptions.
@@ -15,13 +15,17 @@ static const char	RCSid[] = "$Id: readobj2.c,v 2.8 2003/10/27 10:29:29 schorsch 
 #include  "rterror.h"
 #include  "object.h"
 #include  "otypes.h"
+#include  "oconv.h"
 
 
-static void getobject2(char  *name, FILE  *fp, int  (*f)());
+static void getobject2(char  *name, FILE  *fp, ro_cbfunc f);
 
-readobj2(input, callback)	/* read in an object file or stream */
-char  *input;
-int  (*callback)();
+
+void
+readobj2(	/* read in an object file or stream */
+	char  *input,
+	ro_cbfunc callback
+)
 {
 	char  *fgetline();
 	FILE  *infp;
@@ -63,9 +67,9 @@ int  (*callback)();
 
 static void
 getobject2(			/* read the next object */
-char  *name,
-FILE  *fp,
-int  (*f)()
+	char  *name,
+	FILE  *fp,
+	ro_cbfunc f
 )
 {
 	char  sbuf[MAXSTR];

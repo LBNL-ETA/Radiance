@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.8 2004/01/29 22:21:34 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.9 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -37,10 +37,16 @@ MESH	*ourmesh = NULL;		/* our global mesh data structure */
 
 FVECT	meshbounds[2];			/* mesh bounding box */
 
+static void add2bounds(FVECT vp, RREAL vc[2]);
+static OBJECT cvmeshtri(OBJECT obj);
+static OCTREE cvmeshoct(OCTREE ot);
+
+
 
 MESH *
-cvinit(nm)			/* initialize empty mesh */
-char	*nm;
+cvinit(			/* initialize empty mesh */
+	char	*nm
+)
 {
 				/* free old mesh, first */
 	if (ourmesh != NULL) {
@@ -70,12 +76,13 @@ nomem:
 
 
 int
-cvpoly(mo, n, vp, vn, vc)	/* convert a polygon to extended triangles */
-OBJECT	mo;
-int	n;
-FVECT	*vp;
-FVECT	*vn;
-RREAL	(*vc)[2];
+cvpoly(	/* convert a polygon to extended triangles */
+	OBJECT	mo,
+	int	n,
+	FVECT	*vp,
+	FVECT	*vn,
+	RREAL	(*vc)[2]
+)
 {
 	int	tcnt = 0;
 	int	flags;
@@ -132,9 +139,10 @@ RREAL	(*vc)[2];
 
 
 static void
-add2bounds(vp, vc)		/* add point and uv coordinate to bounds */
-FVECT	vp;
-RREAL	vc[2];
+add2bounds(		/* add point and uv coordinate to bounds */
+	FVECT	vp,
+	RREAL	vc[2]
+)
 {
 	register int	j;
 
@@ -156,11 +164,18 @@ RREAL	vc[2];
 
 
 int				/* create an extended triangle */
-cvtri(mo, vp1, vp2, vp3, vn1, vn2, vn3, vc1, vc2, vc3)
-OBJECT	mo;
-FVECT	vp1, vp2, vp3;
-FVECT	vn1, vn2, vn3;
-RREAL	vc1[2], vc2[2], vc3[2];
+cvtri(
+	OBJECT	mo,
+	FVECT	vp1,
+	FVECT	vp2,
+	FVECT	vp3,
+	FVECT	vn1,
+	FVECT	vn2,
+	FVECT	vn3,
+	RREAL	vc1[2],
+	RREAL	vc2[2],
+	RREAL	vc3[2]
+)
 {
 	static OBJECT	fobj = OVOID;
 	char		buf[32];
@@ -203,7 +218,7 @@ RREAL	vc1[2], vc2[2], vc3[2];
 		fop = objptr(fobj);
 		fop->omod = mo;
 		fop->otype = OBJ_FACE;
-		sprintf(buf, "t%d", fobj);
+		sprintf(buf, "t%ld", fobj);
 		fop->oname = savqstr(buf);
 		fop->oargs.nfargs = 9;
 		fop->oargs.farg = (RREAL *)malloc(9*sizeof(RREAL));
@@ -262,8 +277,9 @@ nomem:
 
 
 static OBJECT
-cvmeshtri(obj)			/* add an extended triangle to our mesh */
-OBJECT	obj;
+cvmeshtri(			/* add an extended triangle to our mesh */
+	OBJECT	obj
+)
 {
 	OBJREC		*o = objptr(obj);
 	TRIDATA		*ts;
@@ -299,7 +315,7 @@ OBJECT	obj;
 
 
 void
-cvmeshbounds()			/* set mesh boundaries */
+cvmeshbounds(void)			/* set mesh boundaries */
 {
 	int	i;
 
@@ -336,8 +352,9 @@ cvmeshbounds()			/* set mesh boundaries */
 
 
 static OCTREE
-cvmeshoct(ot)			/* convert triangles in subtree */
-OCTREE	ot;
+cvmeshoct(			/* convert triangles in subtree */
+	OCTREE	ot
+)
 {
 	int	i;
 
@@ -361,7 +378,7 @@ OCTREE	ot;
 
 
 MESH *
-cvmesh()			/* convert mesh and octree leaf nodes */
+cvmesh(void)			/* convert mesh and octree leaf nodes */
 {
 	if (ourmesh == NULL)
 		return(NULL);

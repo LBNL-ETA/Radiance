@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.7 2004/01/29 22:21:34 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.8 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -31,27 +31,27 @@ static char	group[64];	/* current group name */
 static int	lineno;		/* current line number */
 static int	faceno;		/* current face number */
 
-static int	getstmt();
-static int	cvtndx();
-static OBJECT	getmod();
-static int	putface();
-static int	puttri();
-static void	freeverts();
-static int	newv();
-static int	newvn();
-static int	newvt();
-static void	syntax();
+static int getstmt(char	*av[MAXARG], FILE	*fp);
+static int cvtndx(VNDX	vi, char	*vs);
+static int putface(int	ac, char	**av);
+static OBJECT getmod(void);
+static int puttri(char	*v1, char	*v2, char	*v3);
+static void freeverts(void);
+static int newv(double	x, double	y, double	z);
+static int newvn(double	x, double	y, double	z);
+static int newvt(double	x, double	y);
+static void syntax(char	*er);
 
 
 void
-wfreadobj(objfn)		/* read in .OBJ file and convert */
-char	*objfn;
+wfreadobj(		/* read in .OBJ file and convert */
+	char	*objfn
+)
 {
 	FILE	*fp;
 	char	*argv[MAXARG];
 	int	argc;
 	int	nstats, nunknown;
-	int	i;
 
 	if (objfn == NULL) {
 		inpfile = "<stdin>";
@@ -157,9 +157,10 @@ char	*objfn;
 
 
 static int
-getstmt(av, fp)				/* read the next statement from fp */
-register char	*av[MAXARG];
-FILE	*fp;
+getstmt(				/* read the next statement from fp */
+	register char	*av[MAXARG],
+	FILE	*fp
+)
 {
 	static char	sbuf[MAXARG*16];
 	register char	*cp;
@@ -190,9 +191,10 @@ FILE	*fp;
 
 
 static int
-cvtndx(vi, vs)				/* convert vertex string to index */
-register VNDX	vi;
-register char	*vs;
+cvtndx(				/* convert vertex string to index */
+	register VNDX	vi,
+	register char	*vs
+)
 {
 					/* get point */
 	vi[0] = atoi(vs);
@@ -238,9 +240,10 @@ register char	*vs;
 
 
 static int
-putface(ac, av)				/* put out an N-sided polygon */
-int	ac;
-register char	**av;
+putface(				/* put out an N-sided polygon */
+	int	ac,
+	register char	**av
+)
 {
 	char		*cp;
 	register int	i;
@@ -259,7 +262,7 @@ register char	**av;
 
 
 static OBJECT
-getmod()				/* get current modifier ID */
+getmod(void)				/* get current modifier ID */
 {
 	char	*mnam;
 	OBJECT	mod;
@@ -285,8 +288,11 @@ getmod()				/* get current modifier ID */
 
 
 static int
-puttri(v1, v2, v3)			/* convert a triangle */
-char	*v1, *v2, *v3;
+puttri(			/* convert a triangle */
+	char	*v1,
+	char	*v2,
+	char	*v3
+)
 {
 	VNDX	v1i, v2i, v3i;
 	RREAL	*v1c, *v2c, *v3c;
@@ -316,7 +322,7 @@ char	*v1, *v2, *v3;
 
 
 static void
-freeverts()			/* free all vertices */
+freeverts(void)			/* free all vertices */
 {
 	if (nvs) {
 		free((void *)vlist);
@@ -334,8 +340,11 @@ freeverts()			/* free all vertices */
 
 
 static int
-newv(x, y, z)			/* create a new vertex */
-double	x, y, z;
+newv(			/* create a new vertex */
+	double	x,
+	double	y,
+	double	z
+)
 {
 	if (!(nvs%CHUNKSIZ)) {		/* allocate next block */
 		if (nvs == 0)
@@ -355,8 +364,11 @@ double	x, y, z;
 
 
 static int
-newvn(x, y, z)			/* create a new vertex normal */
-double	x, y, z;
+newvn(			/* create a new vertex normal */
+	double	x,
+	double	y,
+	double	z
+)
 {
 	if (!(nvns%CHUNKSIZ)) {		/* allocate next block */
 		if (nvns == 0)
@@ -378,8 +390,10 @@ double	x, y, z;
 
 
 static int
-newvt(x, y)			/* create a new texture map vertex */
-double	x, y;
+newvt(			/* create a new texture map vertex */
+	double	x,
+	double	y
+)
 {
 	if (!(nvts%CHUNKSIZ)) {		/* allocate next block */
 		if (nvts == 0)
@@ -398,8 +412,9 @@ double	x, y;
 
 
 static void
-syntax(er)			/* report syntax error and exit */
-char	*er;
+syntax(			/* report syntax error and exit */
+	char	*er
+)
 {
 	sprintf(errmsg, "%s: Wavefront syntax error near line %d: %s\n",
 			inpfile, lineno, er);

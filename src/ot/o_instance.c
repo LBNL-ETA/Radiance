@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_instance.c,v 2.4 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  o_instance.c - routines for creating octrees for other octrees
@@ -40,11 +40,15 @@ static const char RCSid[] = "$Id: o_instance.c,v 2.4 2003/07/27 22:12:03 schorsc
  */
 
 
+static int o_cube(CUBE  *cu1, FULLXF  *fxf, CUBE  *cu);
+
+
 static int
-o_cube(cu1, fxf, cu)			/* determine if cubes intersect */
-CUBE  *cu1;
-FULLXF  *fxf;
-CUBE  *cu;
+o_cube(			/* determine if cubes intersect */
+	CUBE  *cu1,
+	FULLXF  *fxf,
+	CUBE  *cu
+)
 {
 	static int  vstart[4] = {0, 3, 5, 6};
 	FVECT  cumin, cumax;
@@ -106,10 +110,12 @@ CUBE  *cu;
 }
 
 
+/* XXX o_instance() is extern, but not declared in any header file */
 int
-o_instance(o, cu)			/* determine if instance intersects */
-OBJREC  *o;
-CUBE  *cu;
+o_instance(			/* determine if instance intersects */
+	OBJREC  *o,
+	CUBE  *cu
+)
 {
 	INSTANCE  *ins;
 					/* get octree bounds */
@@ -119,10 +125,12 @@ CUBE  *cu;
 }
 
 
+/* XXX o_mesh() is extern, but not declared in any header file */
 int
-o_mesh(o, cu)				/* determine if mesh intersects */
-OBJREC  *o;
-CUBE  *cu;
+o_mesh(				/* determine if mesh intersects */
+	OBJREC  *o,
+	CUBE  *cu
+)
 {
 	MESHINST	*mip;
 					/* get mesh bounds */

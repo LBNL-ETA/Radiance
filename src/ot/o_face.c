@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_face.c,v 2.3 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: o_face.c,v 2.4 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  o_face.c - routines for creating octrees for polygonal faces.
@@ -37,10 +37,12 @@ static const char	RCSid[] = "$Id: o_face.c,v 2.3 2003/07/27 22:12:03 schorsch Ex
  *	5) If test 4 fails, we have no intersection.
  */
 
-
-o_face(o, cu)			/* determine if face intersects cube */
-OBJREC  *o;
-CUBE  *cu;
+/* XXX this is extern, but not declared in any header file yet */
+int
+o_face(			/* determine if face intersects cube */
+	OBJREC  *o,
+	CUBE  *cu
+)
 {
 	FVECT  cumin, cumax;
 	FVECT  v1, v2;

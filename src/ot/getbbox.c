@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getbbox.c,v 2.5 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: getbbox.c,v 2.6 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  getbbox.c - compute bounding box for scene files
@@ -8,10 +8,9 @@ static const char	RCSid[] = "$Id: getbbox.c,v 2.5 2003/02/22 02:07:26 greg Exp $
  */
 
 #include  "standard.h"
-
 #include  "octree.h"
-
 #include  "object.h"
+#include  "oconv.h"
 
 char  *progname;			/* argv[0] */
 
@@ -21,16 +20,24 @@ void  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
 
 FVECT  bbmin, bbmax;			/* bounding box */
 
-addobject(o)			/* add object to bounding box */
-OBJREC	*o;
+static void addobject(OBJREC	*o);
+
+
+
+static void
+addobject(			/* add object to bounding box */
+	OBJREC	*o
+)
 {
 	add2bbox(o, bbmin, bbmax);
 }
 
 
-main(argc, argv)		/* read object files and compute bounds */
-int  argc;
-char  **argv;
+int
+main(		/* read object files and compute bounds */
+	int  argc,
+	char  **argv
+)
 {
 	extern char  *getenv();
 	int  nohead = 0;
@@ -69,27 +76,30 @@ char  **argv;
 	printf("%9g %9g %9g %9g %9g %9g\n", bbmin[0], bbmax[0],
 			bbmin[1], bbmax[1], bbmin[2], bbmax[2]);
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
 void
-quit(code)				/* exit program */
-int  code;
+quit(				/* exit program */
+	int  code
+)
 {
 	exit(code);
 }
 
 
 void
-cputs()					/* interactive error */
+cputs(void)					/* interactive error */
 {
 	/* referenced, but not used */
 }
 
 
 void
-wputs(s)				/* warning message */
-char  *s;
+wputs(				/* warning message */
+	char  *s
+)
 {
 	if (!nowarn)
 		eputs(s);
@@ -97,8 +107,9 @@ char  *s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  inln = 0;
 

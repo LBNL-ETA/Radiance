@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.7 2003/07/14 05:00:45 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.8 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -8,10 +8,11 @@ static const char RCSid[] = "$Id: obj2mesh.c,v 2.7 2003/07/14 05:00:45 greg Exp 
 #include "copyright.h"
 #include "platform.h"
 #include "standard.h"
+#include "resolu.h"
 #include "cvmesh.h"
 #include "otypes.h"
 
-extern int	o_face();
+extern int	o_face(); /* XXX should go to a header file */
 
 int	o_default() { return(O_MISS); }
 
@@ -27,10 +28,15 @@ int  resolu = 16384;			/* octree resolution limit */
 
 double	mincusize;			/* minimum cube size from resolu */
 
+static void addface(CUBE  *cu, OBJECT	obj);
+static void add2full(CUBE  *cu, OBJECT	obj);
 
-main(argc, argv)		/* compile a .OBJ file into a mesh */
-int  argc;
-char  *argv[];
+
+int
+main(		/* compile a .OBJ file into a mesh */
+	int  argc,
+	char  *argv[]
+)
 {
 	int  nmatf = 0;
 	char  *matinp[32];
@@ -102,27 +108,30 @@ char  *argv[];
 	/* printmeshstats(ourmesh, stderr); */
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
 void
-quit(code)				/* exit program */
-int  code;
+quit(				/* exit program */
+	int  code
+)
 {
 	exit(code);
 }
 
 
 void
-cputs()					/* interactive error */
+cputs(void)					/* interactive error */
 {
 	/* referenced, but not used */
 }
 
 
 void
-wputs(s)				/* warning message */
-char  *s;
+wputs(				/* warning message */
+	char  *s
+)
 {
 	if (!nowarn)
 		eputs(s);
@@ -130,8 +139,9 @@ char  *s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  inln = 0;
 
@@ -145,9 +155,11 @@ register char  *s;
 }
 
 
-addface(cu, obj)			/* add a face to a cube */
-register CUBE  *cu;
-OBJECT	obj;
+static void
+addface(			/* add a face to a cube */
+	register CUBE  *cu,
+	OBJECT	obj
+)
 {
 
 	if (o_face(objptr(obj), cu) == O_MISS)
@@ -180,9 +192,11 @@ OBJECT	obj;
 }
 
 
-add2full(cu, obj)			/* add object to full node */
-register CUBE  *cu;
-OBJECT	obj;
+static void
+add2full(			/* add object to full node */
+	register CUBE  *cu,
+	OBJECT	obj
+)
 {
 	OCTREE	ot;
 	OBJECT	oset[MAXSET+1];

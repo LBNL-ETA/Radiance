@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bbox.c,v 2.4 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: bbox.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
 #endif
 /*
  *  bbox.c - routines for bounding box computation.
@@ -8,25 +8,26 @@ static const char RCSid[] = "$Id: bbox.c,v 2.4 2003/03/11 17:08:55 greg Exp $";
 #include  "copyright.h"
 
 #include  "standard.h"
-
 #include  "object.h"
-
 #include  "octree.h"
-
 #include  "otypes.h"
-
 #include  "face.h"
-
 #include  "cone.h"
-
 #include  "instance.h"
-
 #include  "mesh.h"
+#include  "oconv.h"
 
 
-add2bbox(o, bbmin, bbmax)		/* expand bounding box to fit object */
-register OBJREC  *o;
-FVECT  bbmin, bbmax;
+static void point2bbox(FVECT  p, FVECT  bbmin, FVECT  bbmax);
+static void circle2bbox(FVECT  cent, FVECT  norm, double  rad, FVECT  bbmin, FVECT  bbmax);
+
+
+void
+add2bbox(		/* expand bounding box to fit object */
+	register OBJREC  *o,
+	FVECT  bbmin,
+	FVECT  bbmax
+)
 {
 	CONE  *co;
 	FACE  *fo;
@@ -92,8 +93,12 @@ FVECT  bbmin, bbmax;
 }
 
 
-point2bbox(p, bbmin, bbmax)		/* expand bounding box to fit point */
-register FVECT  p, bbmin, bbmax;
+static void
+point2bbox(		/* expand bounding box to fit point */
+	register FVECT  p,
+	register FVECT  bbmin,
+	register FVECT  bbmax
+)
 {
 	register int  i;
 
@@ -106,10 +111,14 @@ register FVECT  p, bbmin, bbmax;
 }
 
 
-circle2bbox(cent, norm, rad, bbmin, bbmax)	/* expand bbox to fit circle */
-FVECT  cent, norm;
-double  rad;
-FVECT  bbmin, bbmax;
+static void
+circle2bbox(	/* expand bbox to fit circle */
+	FVECT  cent,
+	FVECT  norm,
+	double  rad,
+	FVECT  bbmin,
+	FVECT  bbmax
+)
 {
 	FVECT  v1, v2;
 	register int  i, j;
