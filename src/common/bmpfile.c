@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.5 2004/03/27 05:43:37 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.6 2004/03/27 16:33:31 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -255,7 +255,7 @@ BMPisGrayscale(const BMPHeader *hdr)
 		return -1;
 	if (hdr->bpp > 8)		/* assume they had a reason for it */
 		return 0;
-	for (rgbp = hdr->palette, n = hdr->impColors; n-- > 0; rgbp++)
+	for (rgbp = hdr->palette, n = hdr->nColors; n-- > 0; rgbp++)
 		if (((rgbp->r != rgbp->g) | (rgbp->g != rgbp->b)))
 			return 0;
 	return 1;			/* all colors neutral in map */
@@ -279,10 +279,10 @@ BMPreadScanline(BMPReader *br)
 	 *
 	 * Certain aspects of this scheme are completely insane, so
 	 * we don't support them.  Fortunately, they rarely appear.
-	 * One is the mid-file EOD (0x0001) and another is the insane
+	 * One is the mid-file EOD (0x0001) and another is the ill-conceived
 	 * "delta" (0x0002), which is like a "goto" statement for bitmaps.
 	 * Whoever thought this up should be shot, then told why
-	 * it's impossible to support in any reasonable way.
+	 * it's impossible to support such a scheme in any reasonable way.
 	 * Also, RLE4 mode allows runs to stop halfway through a byte,
 	 * which is likewise uncodeable, so we don't even try.
 	 * Finally, the scanline break is ambiguous -- we assume here that
@@ -291,7 +291,7 @@ BMPreadScanline(BMPReader *br)
 	 * the end of the scanline, assuming the next bit of data belongs
 	 * the following scan.  If a break follows the last pixel, as it
 	 * seems to in the files I've tested out of Photoshop, you end up
-	 * painting every other line black.  BTW, I assume any skipped
+	 * painting every other line black.  Also, I assume any skipped
 	 * pixels are painted with color 0, which is often black.  Nowhere
 	 * is it specified what we should assume for missing pixels.  This
 	 * is undoubtedly the most brain-dead format I've ever encountered.
@@ -323,6 +323,7 @@ BMPreadScanline(BMPReader *br)
 		case 0:			/* end of line */
 			while (n--)
 				*sp++ = 0;
+			/* leaves n == -1 as flag for test after loop */
 			continue;
 		case 1:			/* end of bitmap */
 		case 2:			/* delta */
@@ -347,8 +348,8 @@ BMPreadScanline(BMPReader *br)
 			return BIR_TRUNCATED;
 	}
 					/* verify break at end of line */
-	if (rdbyte(n, br) != 0 || (rdbyte(n, br) != 0 &&
-				(n != 1 || br->yscan != br->hdr->height-1)))
+	if (!n && (rdbyte(n, br) != 0 || (rdbyte(n, br) != 0 &&
+				(n != 1 || br->yscan != br->hdr->height-1))))
 		return BIR_RLERROR;
 	if (br->seek != NULL)		/* record next scanline position */
 		br->scanpos[br->yscan + 1] = br->fpos;
@@ -763,7 +764,7 @@ BMPwriteScanline(BMPWriter *bw)
 		if (bw->seek == NULL || (*bw->seek)(2, bw->c_data) != 0)
 			return BIR_OK;		/* no one may care */
 		bw->fpos = 2;
-		wrint32(bw->flen-bw->fbmp, bw); /* output correct bitmap length */
+		wrint32(bw->flen-bw->fbmp, bw); /* correct bitmap length */
 	} else {
 		wrbyte(0, bw); wrbyte(0, bw);   /* end of line marker */
 	}
