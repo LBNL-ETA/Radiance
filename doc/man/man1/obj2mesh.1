@@ -1,4 +1,4 @@
-.\" RCSid "$Id: obj2mesh.1,v 1.6 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: obj2mesh.1,v 1.7 2004/02/01 22:31:19 greg Exp $"
 .TH OBJ2MESH 1 03/11/03 RADIANCE
 .SH NAME
 obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
@@ -96,7 +96,7 @@ direction components, which will be normalized by
 .I obj2mesh.
 Normals will be interpolated over the mesh
 during rendering to produce a smooth surface.
-If no vertex normals are present, the mess will appear tesselated.
+If no vertex normals are present, the mesh will appear tesselated.
 A zero length normal (i.e., 0 0 0) will generate a syntax error.
 .TP
 .BI vt " u v"
@@ -176,11 +176,30 @@ those causing the problem.
 .IP "Hash table overflow in fullnode"
 This error is caused by too many surfaces, and there is
 little hope of compiling this mesh.
-.SH EXAMPLE
+.SH EXAMPLES
 To create a compiled triangle mesh from the scene file mesh.obj
 using materials from the file mesh.mat:
 .IP "" .2i
 obj2mesh -a mesh.mat mesh.obj mesh.rtm
+.PP
+To use local coordinates to place a square tiled image on a mesh object:
+.sp
+.nf
+void colorpict tiled_pat
+7 red green blue mytile.pic . frac(Lu) frac(Lv)
+0
+0
+
+tiled_pat plastic tiled_mat
+0
+0
+5 .9 .9 .9 0 0
+
+tiled_mat mesh tiled_mesh
+1 mymesh.rtm
+0
+0
+.fi
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
