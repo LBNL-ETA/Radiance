@@ -1375,3 +1375,6 @@ reinstate it.
 Fixed bug in pcond's acuity simulation for small view angles (less than
 4 degrees horizontally or vertically).  Thanks to James Lee for figuring
 this out.
+
+Added script to convert to/from ICT's Poskanzer Float Map, which I don't
+care to support officially due to its machine-dependent byte order.
