@@ -1,5 +1,5 @@
 		TRANSLATING TO MGF FROM OTHER FORMATS
-		SCCSid "$SunId$ LBL"
+		RCSid "$Id: translat.txt,v 1.3 2003/02/28 20:19:26 greg Exp $"
 
 The description of the parser and the MGF specification should provide
 enough information to get you started using MGF scene files, but we

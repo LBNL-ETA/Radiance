@@ -1,5 +1,5 @@
 		Enclosing IES File Notes
-		SCCSid "$SunId$ LBL"
+		RCSid "$Id: iesnotes.txt,v 1.2 2003/02/28 20:19:26 greg Exp $"
 
 The following notes describe how MGF data is to be referred to by
 an enclosing IES luminaire file, and these notes are in a state of flux.
