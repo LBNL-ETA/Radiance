@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.20 2003/06/05 17:04:19 schorsch Exp $
+# RCSid $Id: Rmakefile,v 2.21 2003/06/06 19:40:34 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -68,26 +68,26 @@ mgf2meta:	$(MGF_LIB) mgf2meta.o
 mgfilt:
 	cd mgflib ; rm -f mgfilt ; \
 	make mgfilt CC=$(CC) \
-		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
+		CFLAGS="$(OPT) $(MACH)" ; \
 	mv mgfilt ..
 
 mgf2inv:
 	cd mgflib ; rm -f mgf2inv ; \
 	make mgf2inv CC=$(CC) \
-		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
+		CFLAGS="$(OPT) $(MACH)" ; \
 	mv mgf2inv ..
 
 $(MGF_LIB):
 	cd mgflib ; rm -f libmgf.a ; \
 	make libmgf.a CC=$(CC) \
-		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
-	cp libmgf.a ../../lib
+		CFLAGS="$(OPT) $(MACH)" ; \
+	mv libmgf.a ../../lib
 
 mgf2rad.o:	mgf2rad.c mgflib/parser.h ../common/tmesh.h ../common/color.h
-	$(CC) $(CFLAGS) -DNOPROTO -c mgf2rad.c
+	$(CC) $(CFLAGS) -c mgf2rad.c
 
 mgf2meta.o:	mgf2meta.c mgflib/parser.h
-	$(CC) $(CFLAGS) -DNOPROTO -c mgf2meta.c
+	$(CC) $(CFLAGS) -c mgf2meta.c
 
 arch2rad.o trans.o:	trans.h
 

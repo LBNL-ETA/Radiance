@@ -12,7 +12,7 @@ CC = cc
 OBJS = parser.o context.o xf.o object.o lookup.o badarg.o \
 words.o fvect.o
 
-all:	libmgf.a mgfilt mgf2inv
+all:	libmgf.a mgfilt mgf2inv 3ds2mgf
 
 mgfilt:	libmgf.a mgfilt.o
 	$(CC) $(CFLAGS) -o mgfilt mgfilt.o libmgf.a -lm
