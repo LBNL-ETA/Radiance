@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.39 2003/03/12 17:26:58 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.40 2003/08/28 03:22:16 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -8,6 +8,8 @@ static const char RCSid[] = "$Id: aniso.c,v 2.39 2003/03/12 17:26:58 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
+
+#include  "ambient.h"
 
 #include  "otypes.h"
 

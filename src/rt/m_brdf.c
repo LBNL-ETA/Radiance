@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.19 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.20 2003/08/28 03:22:16 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: m_brdf.c,v 2.19 2003/07/27 22:12:03 schorsch E
 #include "copyright.h"
 
 #include  "ray.h"
+
+#include  "ambient.h"
 
 #include  "data.h"
 
