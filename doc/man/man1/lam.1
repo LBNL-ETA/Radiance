@@ -1,0 +1,34 @@
+.\" RCSid "$Id"
+.TH LAM 1 7/8/97 RADIANCE
+.SH NAME
+lam - laminate lines of multiple files
+.SH SYNOPSIS
+.B lam
+[
+.B \-tC
+]
+input1 input2 ..
+.SH DESCRIPTION
+.I Lam
+simply joins lines from multiple inputs, separating them with
+the given tab character (TAB by default).
+An input is either a stream or a command.
+Commands are given in quotes, and begin with an exclamantion point ('!').
+If the inputs do not have the same number of lines, then
+shorter files will stop contributing to the output as they
+run out.
+.PP
+A hyphen ('-') by itself can be used to indicate the standard
+input.
+.SH EXAMPLE
+To join files output1 and output2, separated by a comma:
+.IP "" .2i
+lam -t, output1 output2
+.PP
+To join a file with line numbers (starting at 0) and its reverse:
+.IP "" .2i
+cnt `wc -l < lam.c` | lam - -t: lam.c -t\| '\!tail -r lam.c'
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), neat(1), rcalc(1), tabfunc(1), total(1)

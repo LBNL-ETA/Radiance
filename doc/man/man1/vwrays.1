@@ -1,0 +1,128 @@
+.\" RCSid "$Id"
+.TH VWRAYS 1 1/15/99 RADIANCE
+.SH NAME
+vwrays - compute rays for a given picture or view
+.SH SYNOPSIS
+.B vwrays
+.B "[ -i -f{a|f|d} | -d ]"
+{
+.B "view opts .."
+|
+.B picture
+.B [zbuf]
+}
+.SH DESCRIPTION
+.I Vwrays
+takes a picture or view specification and computes the ray origin and
+direction corresponding to each pixel in the image.
+This information may then be passed to
+.I rtrace(1)
+to perform other calculations.
+If a given pixel has no corresponding ray (because it is outside the
+legal view boundaries), then six zero values are sent instead.
+.PP
+The
+.I -i
+option may be used to specify desired pixel positions on the standard
+input rather than generating all the pixels for a given view.
+.PP
+The
+.I -f
+option may be used to set the record format to something other than the
+default ASCII.
+Using raw float or double records for example can reduce the time
+requirements of transferring and interpreting information in
+.I rtrace.
+.PP
+View options may be any combination of standard view parameters described
+in the
+.I rpict(1)
+manual page, including input from a view file with the
+.I \-vf
+option.
+Additionally, the target X and Y dimensions may be specified with
+.I -x
+and
+.I -y
+options, and the pixel aspect ratio may be given with
+.I -p.
+The default dimensions are 512x512, with a pixel aspect ratio of 1.0.
+Just as in
+.I rpict,
+the X or the Y dimension will be reduced if necessary
+to best match the specified pixel
+aspect ratio, unless this ratio is set to zero.
+.PP
+If the
+.I -d
+option is given, then
+.I vwrays
+just prints the computed image dimensions, which are based on the view
+aspect and the pixel aspect ratio just described.
+The
+.I -ld
+switch will also be printed, with
+.I -ld+
+if the view file has an aft clipping plane, and
+.I -ld-
+otherwise.
+This is useful for passing options to the
+.I rtrace
+command line.
+(See below.)
+.PP
+If the view contains an aft clipping plane
+.I (-va
+option), then the magnitudes of the ray directions will
+equal the maximum distance for each pixel, which will be interpreted
+correctly by
+.I rtrace
+with the
+.I -ld+
+option.
+Note that this option should not be given unless there is an aft
+clipping plane, since the ray direction vectors will be normalized
+otherwise, which would produce a uniform clipping distance of 1.
+.PP
+If a picture is given on the command line rather than a set of view options,
+then the view and image dimensions are taken from the picture file, and
+the reported ray origins and directions will exactly match the center of each
+pixel in the picture.
+.PP
+If a depth buffer file is given as well, then
+.I vwrays
+computes the intersection point of each pixel ray (equal to the ray origin
+plus the depth times the ray direction), and reports this instead of the
+ray origin.
+The reported ray direction will also be reversed.
+The interpretation of this data is an image of origins and directions
+for light rays leaving the scene surfaces to strike each pixel.
+.SH EXAMPLES
+To compute the ray intersection points and returned directions corresponding
+to a picture and its depth buffer:
+.IP "" .2i
+vwrays scene_v2.pic scene_v2.zbf > scene_v2.pts
+.PP
+To determine what the dimensions of a given view would be:
+.IP "" .2i
+vwrays -d -vf myview.vf -x 2048 -y 2048
+.PP
+To generate a RADIANCE picture using
+.I rtrace
+instead of
+.I rpict:
+.IP "" .2i
+vwrays -ff -vf view1.vf -x 1024 -y 1024 |
+rtrace `vwrays -d -vf view1.vf -x 1024 -y 1024` -ffc scene.oct > view1.pic
+.SH AUTHOR
+Greg Ward Larson
+.SH ACKNOWLEDGMENT
+This work was supported by Silicon Graphics, Inc.
+.SH BUGS
+Although
+.I vwrays
+can reproduce any pixel ordering (i.e., any image orientation) when given
+a rendered picture, it will only produce standard scanline-ordered rays when 
+given a set of view parameters.
+.SH "SEE ALSO"
+rcalc(1), rpict(1), rtrace(1)

@@ -1,0 +1,114 @@
+.\" RCSid "$Id"
+.TH TRAD 1 1/24/96 RADIANCE
+.SH NAME
+trad - graphical user interface to Radiance rad(1) program
+.SH SYNOPSIS
+.B trad
+[
+.B rfile
+]
+.SH DESCRIPTION
+.I Trad
+is a graphical user interface to
+.I rad(1),
+which controls the operation of the basic Radiance scene compiling,
+rendering and picture filtering programs.
+Trad also includes links to a few utilities for displaying and
+converting results, but most of what it does can be done by editing
+a small text file, called the "rad input file".
+Scene creation still requires the use of a text or graphical editor,
+or translation from some external CAD format.
+.PP
+.I Trad
+is based on the Tcl/Tk
+.I wish(1)
+"windowing shell" written by John Ousterhout.
+(See below for instructions on installing this package if you do not
+have it already.)\0
+.PP
+The
+.I trad
+interface divides the rendering problem into seven screens:
+File, Scene, Zone, Views, Options, Action and Results.
+The File screen is used to load and save rad input files
+(a.k.a. project files).
+The Scene screen is used to name the Radiance input files associated
+with a particular project.
+The Zone screen is used to assign
+.I rad
+variables specific to the section of the model being rendered.
+The Views screen is used to define specific views to be rendered and
+set the picture file names and dimensions.
+The Options screen is used to adjust rendering quality and other
+parameters.
+The Action screen is used to initiate interactive and batch
+renderings.
+The Results screen is used to display, convert and print the
+rendered Radiance pictures.
+.PP
+If
+.I trad
+is called with no rad input file name on the command line, it will
+start with the File screen and you must enter a valid project file
+before you will be allowed to continue.
+If
+.I rfile
+is given, then
+.I trad
+attempts to open this file.
+If no such file exists,
+.I trad
+assumes you are creating a new file by this name and goes to the
+Scene screen so you may identify the appropriate Radiance input files.
+If the file exists but not all renderings have been finished,
+.I trad
+goes first to the Action screen, assuming you will want to do
+something.
+If the file exists and all renderings have completed and are
+up-to-date,
+.I trad
+goes to the Results screen so that you may examine the final
+pictures.
+.PP
+.I Trad
+includes an extensive help facility, which may be accessed either by
+pressing the "HELP" button and searching through the category and
+topic menus, or by holding the Control key and
+pressing the left mouse button on the mysterious
+widget (i.e. the button, entry window, or list box you are curious
+about).
+.SH "INSTALLING TCL/TK"
+The Tcl/Tk package is available by anonymous ftp from
+ftp.smli.com (204.153.12.45) in the /pub/tcl directory.
+(Tcl stands for "Tool Command Language," and is pronounced
+"tickle".)
+.I Trad
+is based on Tk release 4.0, which in turn is based on Tcl release 7.4.
+Although
+.I trad
+uses only the
+.I wish
+program from this package,
+.I wish
+itself depends on
+additional Tcl and Tk libraries, and the two toolkits must be
+compiled one after the other.
+.PP
+To compile the Tcl/Tk package, download the files "tcl7.4.tar.Z" and
+"tk4.0.tar.Z" and uncompress and untar them.
+Then, follow the instructions in the README file in the tcl7.4/
+directory to configure the Makefile for your system and install the
+software.
+(Usually, it is best to do this as root or have it done by your
+system administrator if you do not have root privileges.)\0
+Then, do the same in the tk4.0/ directory.
+.PP
+.I Trad
+should run without modification once this is done correctly.
+.SH AUTHOR
+Greg Ward
+.br
+.I wish
+and Tcl/Tk language by John Ousterhout
+.SH "SEE ALSO"
+oconv(1), pfilt(1), rad(1), rpict(1), rview(1), wish(1), ximage(1)

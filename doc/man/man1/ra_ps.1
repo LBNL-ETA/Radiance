@@ -1,0 +1,182 @@
+.\" RCSid "$Id"
+.TH RA_PS 1 8/28/98 RADIANCE
+.SH NAME
+ra_ps - convert RADIANCE picture to a PostScript file
+.SH SYNOPSIS
+.B ra_ps
+[
+.B \-b|c
+][
+.B \-A|B|C
+][
+.B "\-n ncopies"
+][
+.B "\-e +/-stops"
+][
+.B "\-g gamma"
+][
+.B "\-p paper"
+][
+.B "\-m[h|v] margin"
+][
+.B "\-d dpi"
+]
+[
+.B input
+[
+.B output
+]
+]
+.SH DESCRIPTION
+.I Ra_ps
+translates a RADIANCE picture to a color or greyscale
+Adobe PostScript file for printing on
+a laser printer or importing to a page layout program.
+The
+.I \-b
+option tells
+.I ra_ps
+to produce greyscale output.
+(The default is color, which may be specified explicitly with the
+.I \-c
+option.)\0
+.PP
+The
+.I \-A
+option specifies that the output should be in uncompressed ASCII
+hexstring format (the default).
+The
+.I \-B
+option specifies that the output should be in uncompressed binary
+string format.
+The file size will be roughly half that of the ASCII equivalent,
+but some printers and especially some printer connections do not
+support binary transfer, so this option should be used with caution.
+The
+.I \-C
+option specifies that the output should be in run-length compressed
+ASCII format.
+The file size will be one half to one tenth as large as the
+hexstring equivalent and can be sent over any network or by e-mail.
+The only disadvantage is that it will actually take longer to print
+on some printers, since the "readhexstring" procedure is generally
+faster than a custom replacement.
+.PP
+The
+.I \-n
+option specifies the number of copies to print of this image.
+It is often preferable to use this option instead of the
+multiple copy option of the print spooler program,
+since the latter often results in duplication of the input
+file with a large associated cost.
+.PP
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+The
+.I \-g
+option specifies a power law for the printer
+transfer function.
+The default gamma setting for greyscale printers is 1.0 (linear),
+and the default gamma for color printers is 1.8 (commonly used in prepress).
+If your output seems to have too much contrast relative to its screen
+equivalent, print out the file "ray/lib/lib/gamma.pic" to your printer 
+without any gamma correction and using the
+.I \-d
+option to set the dots-per-inch (see below).
+The best match between the small lines and the grey patch next to it indicate
+the approximate gamma of your printer, which you should use with the
+.I \-g
+option for best contrast reproduction in subsequent conversions.
+.PP
+The standard print area assumes 8.5 by 11 inch (U.S. letter)
+paper, with 0.5 inch margins on all sides.
+The image will be rotated 90 degrees
+if it fits better that way in the available print area, and
+it will always be centered on the page.
+The
+.I \-p
+and
+.I \-m
+options to control the paper size and margins, respectively.
+The argument to the
+.I \-p
+option is the common name for a given paper size, or WWxHH, where
+WW is the width (in inches) and HH is the height.
+If millimeters or centimeters are the preferred measurement unit,
+the 'x' may be replaced by 'm' or 'c', respectively.
+The WW and HH values are decimal quantities, of course.
+The current paper identifiers understood by the program may be discovered
+by giving a 0 argument to the
+.I \-p
+option.
+They are currently:
+.PP
+.nf
+_Name________Width_Height_(inches)
+envelope      4.12   9.50
+executive     7.25  10.50
+letter        8.50  11.00
+lettersmall   7.68  10.16
+legal         8.50  14.00
+monarch       3.87   7.50
+statement     5.50   8.50
+tabloid      11.00  17.00
+A3           11.69  16.54
+A4            8.27  11.69
+A4small       7.47  10.85
+A5            6.00   8.27
+A6            4.13   6.00
+B4           10.12  14.33
+B5            7.17  10.12
+C5            6.38   9.01
+C6            4.49   6.38
+DL            4.33   8.66
+hagaki        3.94   5.83
+.fi
+.PP
+The paper size name may be abbreviated with three or more letters, and
+character case is ignored.
+The argument to the
+.I \-m
+option is the margin width, which is 0.5 inches by default.
+A millimeter or centimeter quantity may be given instead of inches
+by immediately following the value with a 'm' or 'c' character, respectively.
+(Leave no space between the quantity and its unit letter.)\0
+If you wish to specify the horizontal and vertical margins separately,
+use the
+.I \-mh
+and
+.I \-mv
+options, instead.
+.PP
+The
+.I \-d
+option may be used to explicitly set the print density (in dots per inch).
+If the input picture is lower resolution than the printer and has square
+pixels, then
+.I ra_ps
+will adjust the image size so that pixels map to dot regions exactly.
+This may improve the appearance of fine detail, and may speed up the
+printing process as well, at the expense of a slightly smaller image area.
+If you wish to maximize print area and the input image contains no fine
+detail, then do not specify this option.
+.PP
+The output from
+.I ra_ps
+is designed to be compatible with the Encapsulated PostScript standard,
+which means that the resulting file may be incorporated into
+documents by page layout programs that can read in EPS files.
+Unfortunately, there is currently no option for generating a preview
+bitmap, so the image will show up on the screen as a rectangular area only.
+To control the EPS image size directly, use the
+.I \-p
+option as explained above with the WWxHH specification, and set
+.I "\-m 0"
+to turn off the margins.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+pfilt(1), ra_bn(1), ra_pr(1), ra_pr24(1), ra_t8(1), ra_t16(1),
+ra_ppm(1), ra_tiff(1), ximage(1)

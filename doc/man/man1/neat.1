@@ -1,0 +1,43 @@
+.\" RCSid "$Id"
+.TH NEAT 1 11/15/93 RADIANCE
+.SH NAME
+neat - neaten up output columns
+.SH SYNOPSIS
+.B neat
+[
+.B format
+]
+.SH DESCRIPTION
+.I Neat
+reads from its standard input and neatens up columns separated
+by white space using the specified format.
+The format is a string consisting of a positive integer followed
+by an alignment character and another integer.
+The alignment character is usually a decimal point ('.'), but it can
+be any non-digit.
+.PP
+The alignment character is used as the central point of each column.
+The total column field width will be the number to the
+left of the alignment character plus one for the alignment character
+itself plus the number to the right of the alignment character.
+.PP
+If a field does not contain the alignment character, it will be
+printed to the left of where the alignment character would have
+appeared.
+If a field is too long to print within the specified format, the entire
+field will be printed and that row will not be aligned with the rest.
+.PP
+The default format is "8.8".
+.SH EXAMPLE
+To examine a file with columns of numbers:
+.IP "" .2i
+neat 10.8 < input | more
+.SH BUGS
+Columns wider than the total width of the format specification
+will be printed without any separating white space.
+.PP
+The program does not do anything special with tabs on the input.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), lam(1), rcalc(1), total(1)

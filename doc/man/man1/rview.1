@@ -1,0 +1,330 @@
+.\" RCSid "$Id"
+.TH RVIEW 1 2/14/96 RADIANCE
+.SH NAME
+rview - generate RADIANCE images interactively
+.SH SYNOPSIS
+.B rview
+[
+.B "rpict options"
+][
+.B "\-o dev"
+][
+.B \-b
+][
+.B "\-pe exposure"
+]
+[
+.B $EVAR
+]
+[
+.B @file
+]
+.B octree
+.br
+.B "rview [ options ] \-defaults"
+.br
+.B "rview \-devices"
+.SH DESCRIPTION
+.I Rview
+generates RADIANCE images using
+.I octree.
+(The octree may be given as the output of a command enclosed in quotes
+and preceded by a `!'.)\0
+Options specify the viewing parameters as well as
+giving some control over the calculation.
+Options may be given on the command line and/or read from the
+environment and/or read from a file.
+A command argument beginning with a dollar sign ('$') is immediately
+replaced by the contents of the given environment variable.
+A command argument beginning with an at sign ('@') is immediately
+replaced by the contents of the given file.
+The options are the same as for rpict(1), with a few notable exceptions.
+The
+.I "\-r, \-z, \-S, \-P, \-PP"
+and
+.I \-t
+options are not supported, and
+.I \-o
+specifies which output device is being used instead of the output
+file.
+The
+.I "\-x, \-y"
+and
+.I \-pa
+options are unnecessary, since
+.I rview
+scales the display image to the specified output device.
+Additionally, the
+.I \-b
+option improves the display on greyscale monitors, and
+.I \-pe
+may be used to set an initial exposure value.
+.PP
+In the second form, the default values
+for the options are printed with a brief explanation.
+In the third form, the list of supported output devices
+is displayed.
+.PP
+.I Rview
+starts rendering the image from the selected viewpoint and
+gradually improves the resolution of the display until
+interrupted by keyboard input.
+.I Rview
+then issues a prompt (usually ':') and accepts a command
+line from the user.
+.I Rview
+may also stop its calculation and wait for command input if
+the resolution of the display has reached the resolution of the
+graphics device.
+At this point, it will give the 'done:' prompt and await further
+instructions.
+If
+.I rview
+runs out of memory due to lack of resources to store its computed
+image, it will give the 'out of memory:' prompt.
+At this prompt, the user can save the image, quit, or even restart
+a new image, although this is not generally recommended
+on virtual memory machines for efficiency reasons.
+.PP
+.I Rview
+is not meant to be a rendering program, and we strongly recommend that
+.I rpict(1)
+be used instead for that purpose.
+Since
+.I rpict(1)
+does not store its image in memory or update any display of its output,
+it is much faster and less wasteful of its resources than
+.I rview.
+.I Rview
+is intended as a quick interactive program for deciding viewpoints
+and debugging scene descriptions and is not suited for producing
+polished images.
+.SH COMMANDS
+Once the program starts, a number of commands can be used
+to control it.
+A command is given by its name, which can be abbreviated,
+followed by its arguments.
+.TP 10n
+.BI aim " [ mag [ x y z ] ]"
+Zoom in by
+.I "mag"
+on point
+.I "x y z".
+The view point is held constant;
+only the view direction and size are changed.
+If
+.I "x y z"
+is missing, the cursor is used to select the view center.
+A negative magnification factor means zoom out.
+The default factor is one.
+.TP
+.BR ^C
+Interrupt.
+Go to the command line.
+.TP
+.BI exposure " [ spec ]"
+Adjust exposure.
+The number
+.I spec
+is a multiplier used to compensate the average exposure.
+A value of 1 renormalizes the image to the computed average, which
+is usually done immediately after startup.
+If
+.I spec
+begins with a '+' or '-', 
+the compensation is interpreted in f-stops (ie. the power of two).
+If
+.I spec
+begins with an '=', an absolute setting is performed.
+An '=' by itself permits interactive display and setting of the exposure.
+If
+.I spec
+begins with an '@', the exposure is adjusted to present similar
+visibility to what would be experienced in the real environment.
+If
+.I spec
+is absent, or an '@' is followed by nothing, then
+the cursor is used to pick a specific image
+location for normalization.
+.TP
+.BI frame " [ xmin ymin xmax ymax ]"
+Set frame for refinement.
+If coordinates are absent, the cursor is used to
+pick frame boundaries.
+If ``all'' is specified, the frame is reset to the entire image.
+.TP
+.BR free
+Free cached object structures and associated data.
+This command may be useful when memory is low and a completely
+different view is being generated from the one previous.
+.TP
+.BI last " [ file ]"
+Restore the previous view.
+If a view or picture
+.I file
+is specified, the parameters are taken from the last view entry
+in the file.
+.TP
+.BI L " [ vw [ rfile ] ]"
+Load parameters for view
+.I vw
+from the
+.I rad(1)
+input file,
+.I rfile.
+Both
+.I vw
+and
+.I rfile
+must be given the first call, but subsequent calls will use the last
+.I rfile
+as a default, and "1" as the default view (ie. the first view
+appearing in
+.I rfile).
+If
+.I rview
+was started by
+.I rad,
+then the
+.I rfile
+parameter will initially default to the rad input file used.
+.TP
+.BI move " [ mag [ x y z ] ]"
+Move camera
+.I mag
+times closer to point
+.I "x y z".
+For a perspective projection (or fisheye view),
+only the view point is changed;
+the view direction and size remain constant.
+The view size must be modified in a parallel projection since
+it determines magnification.
+If
+.I "x y z"
+is missing, the cursor is used to select the view center.
+A negative magnification factor decreases the object size.
+The default factor is one.
+Care must be taken to avoid moving behind or inside other objects.
+.TP
+.BR new
+Restart the image.
+Usually used after the "set" command.
+.TP
+.BI pivot " angle [ elev [ mag [ x y z ] ] ]"
+Similar to the "move" command, but pivots the view about a selected point.
+The
+.I angle
+is measured in degrees around the view up vector using the right hand rule.
+The optional
+.I elev
+is the elevation in degrees from the pivot point; positive raises the view point
+to look downward and negative lowers the view point to look upward.
+.TP
+.BR quit
+Quit the program.
+.TP
+.BR ^R
+Redraw the image.
+Use when the display gets corrupted.
+On some displays, occassionally forcing a redraw can improve appearance,
+as more color information is available and the driver can make a better
+color table selection.
+.TP
+.BI rotate " angle [ elev [ mag ] ]"
+Rotate the camera horizontally by
+.I angle
+degrees.
+If an elevation is specified, the camera looks upward
+.I elev
+degrees.
+(Negative means look downward.)
+.TP
+.BI set " [ var [ val ] ]"
+Check/change program variable.
+If
+.I var
+is absent, the list of available variables is displayed.
+If
+.I val
+is absent, the current value of the variable is displayed
+and changed interactively.
+Otherwise, the variable
+.I var
+assumes the value
+.I val.
+Variables include:
+ambient value (av),
+ambient value weight (aw),
+ambient bounces (ab),
+ambient accuracy (aa),
+ambient divisions (ad),
+ambient radius (ar),
+ambient samples (as),
+black&white (b),
+direct jitter (dj),
+direct sampling (ds),
+direct threshold (dt),
+direct visibility (dv),
+irradiance (i),
+limit weight (lw),
+limit recursion (lr),
+medium extinction (me),
+medium albedo (ma),
+medium eccentricity (mg),
+medium sampling (ms),
+pixel sample (ps),
+pixel threshold (pt),
+back face visibility (bv),
+specular jitter (sj), and
+specular threshold (st).
+Once a variable has been changed, the "new" command can be used
+to recompute the image with the new parameters.
+If a program variable is not available here, it may show up under
+some other command or it may be impossible to change
+once the program is running.
+.TP
+.BI trace " [ xbeg ybeg zbeg xdir ydir zdir ]"
+Trace a ray.
+If the ray origin and direction are absent, the cursor is used
+to pick a location in the image to trace.
+The object intersected and its material, location and value are displayed.
+.TP
+.BI view " [ file [ comments ] ]"
+Check/change view parameters.
+If
+.I file
+is present, the view parameters are appended to a file, followed by
+.I comments
+if any.
+Alternatively, view options may be given directly on the command line
+instead of an output view file.
+Otherwise, view parameters are displayed and changed interactively.
+.TP
+.BI V " [ vw [ rfile ] ]"
+Append the current view as view
+.I vw
+in the rad file
+.I rfile.
+Compliment to
+.I L
+command.
+Note that the view is simply appended to the file, and previous
+views with the same name should be removed before using the file
+with
+.I rad.
+.TP
+.BI write " [ file ]"
+Write picture to
+.I file.
+If argument is missing, the current file name is used.
+.TP
+.BR ^Z
+Stop the program.
+The screen will be redrawn when the program resumes.
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
+DISPLAY_GAMMA		the value to use for monitor gamma correction.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), lookamb(1), oconv(1), pfilt(1), rad(1), rpict(1), rtrace(1)

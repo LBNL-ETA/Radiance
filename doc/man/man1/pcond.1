@@ -1,0 +1,221 @@
+.\" RCSid "$Id"
+.TH PCOND 1 10/27/98 RADIANCE
+.SH NAME
+pcond - condition a RADIANCE picture for output
+.SH SYNOPSIS
+.B pcond
+[
+.B options
+]
+.B input
+[
+.B output
+]
+.SH DESCRIPTION
+.I Pcond
+conditions a Radiance picture for output to a display or hard copy
+device.
+If the dynamic range of the scene exceeds that of the display (as is
+usually the case),
+.I pcond
+will compress the dynamic range of the picture such that both
+dark and bright regions are visible.
+In addition, certain limitations in human vision may be mimicked in
+order to provide an appearance similar to the experience one might
+have in the actual scene.
+.PP
+Command line switches turn flags off and on, changing program behavior.
+A switch given by itself toggles the flag from off to on or on to
+off depending on its previous state.
+A switch followed by a '+' turns the option on explicitly.
+A switch followed by a '-' turns the option off.
+The default is all switches off.
+Other options specify output device parameters in order to get more
+accurate color and contrast.
+.TP 10n
+.BI -h [+-]
+Mimic human visual response in the output.
+The goal of this process is to produce output that correlates
+strongly with a person's subjective impression of a scene.
+This switch is a bundle of the
+.I \-a,
+.I \-v,
+.I \-s
+and
+.I \-c
+options.
+.TP
+.BI -a [+-]
+Defocus darker regions of the image to simulate human visual acuity loss.
+This option will not affect well-lit scenes.
+.TP
+.BI -v [+-]
+Add veiling glare due to very bright regions in the image.
+This simulates internal scattering in the human eye, which
+results in a loss of visible contrast near bright sources.
+.TP
+.BI -s [+-]
+Use the human contrast sensitivity function in determining the
+exposure for the image.
+A darker scene will have relatively lower exposure with lower
+contrast than a well-lit scene.
+.TP
+.BI -c [+-]
+If parts of the image are in the mesopic or scotopic range where
+the cone photoreceptors lose their efficiency, this switch will
+cause a corresponding loss of color visibility in the output and a
+shift to a scotopic (blue-dominant) response function.
+.TP
+.BI -w [+-]
+Use a center-weighted average for the exposure rather than the
+default uniform average.
+This may improve the exposure for scenes with high or low peripheral
+brightness.
+.TP
+.BI -i \ fixfrac
+Set the relative importance of fixation points to
+.I fixfrac,
+which is a value between 0 and 1.
+If
+.I fixfrac
+is zero (the default), then no fixation points are used in
+determining the local or global adaptation.
+If
+.I fixfrac
+is greater than zero, then a list of fixation points is read from
+the standard input.
+These points are given as tab-separated (x,y) picture
+coordinates, such as those produced by the
+.I \-op
+option of
+.I ximage(1).
+The foveal samples about these fixation points will then be weighted
+together with the global averaging scheme such that the fixations receive
+.I fixfrac
+of the total weight.
+If
+.I fixfrac
+is one, then only the fixation points are considered for
+adaptation.
+.TP
+.BI -I [+-]
+Rather than computing a histogram of foveal samples from the source picture,
+use the precomputed histogram provided on the standard input.
+This data should be given in pairs of the base-10 logarithm of
+world luminance and a count for each bin in ascending order, as
+computed by the
+.I phisto(1)
+script.
+This option is useful for producing identical exposures of multiple
+pictures (as in an animation), and provides greater control
+over the histogram computation.
+.TP
+.BI -l [+-]
+Use a linear response function rather than the standard dynamic
+range compression algorithm.
+This will prevent the loss of usable physical values in the output
+picture, although some parts of the resulting image may be too
+dark or too bright to see.
+.TP
+.BI -e \ expval
+Set the exposure adjustment for the picture to
+.I expval.
+This may either be a real multiplier, or a (fractional) number of
+f-stops preceeded by a '+' or '-'.
+This option implies a linear response (see the
+.I \-l
+option above).
+.TP
+.BI -u \ Ldmax
+Specifies the top of the luminance range for the target output device.
+That is, the luminance (in candelas/m^2) for an output pixel value
+of (R,G,B)=(1,1,1).
+The default value is 100 cd/m^2.
+.TP
+.BI -d \ Lddyn
+Specifies the dynamic range for the target output device, which is
+the ratio of the maximum and minimum usable display luminances.
+The default value is 32.
+.TP
+.BI -p " xr yr xg yg xb yb xw yw"
+Specifies the RGB primaries for the target output device.
+These are the 1931 CIE (x,y) chromaticity values for red, green,
+blue and white, respectively.
+.TP
+.BI -f \ macbeth.cal
+Use the given output file from
+.I macbethcal(1)
+to precorrect the color and contrast for the target output device.
+This does a more thorough job than a simple primary correction
+using the
+.I \-p
+option.
+Only one of
+.I \-f
+or
+.I \-p
+may be given.
+.TP
+.BI -x \ mapfile
+Put out the final mapping from world luminance to display luminance to
+.I mapfile.
+This file will contain values from the minimum usable world
+luminance to the maximum (in candelas/m^2) in one column, and their
+corresponding display luminance values (also in candelas/m^2) in the
+second column.
+This file may be used for debugging purposes, or to plot the mapping
+function created by
+.I pcond.
+.SH EXAMPLES
+To display an image as a person might perceive it
+in the actual scene:
+.IP "" .2i
+pcond -h final.pic > display.pic
+.br
+ximage display.pic ; rm display.pic &
+.PP
+To do the same on a 24-bit display with known primary values:
+.IP "" .2i
+setenv DISPLAY_PRIMARIES ".580 .340 .281 .570 .153 .079 .333 .333"
+.br
+pcond -h -p $DISPLAY_PRIMARIES final.pic | ximage &
+.PP
+To prepare a picture to be sent to a film recorder destined eventually
+for a slide projector with a minimum and maximum screen luminance of
+1.5 and 125 candelas/m^2, respectively:
+.IP "" .2i
+pcond -d 83 -u 125 final.pic > film.pic
+.PP
+To do the same if the output colors of the standard image
+"ray/lib/lib/macbeth_spec.pic" have been measured:
+.IP "" .2i
+macbethcal -c mbfilm.xyY > film.cal
+.br
+pcond -d 83 -u 125 -f film.cal final.pic > film.pic
+.PP
+To further tweak the exposure to bring out certain areas indicated by
+dragging the right mouse button over them in
+.I ximage:
+.IP "" .2i
+ximage -op -t 75 final.pic | pcond -i .5 -d 83 -u 125 -f film.cal
+final.pic > film.pic
+.PP
+To use a histogram computed on every 10th animation frame:
+.IP "" .2i
+phisto frame*0.pic > global.hist
+.br
+pcond -I -s -c frame0352.pic < global.hist | ra_tiff - frame0352.tif
+.SH REFERENCE
+Greg Ward Larson, Holly Rushmeier, Christine Piatko,
+``A Visibility Matching Tone Reproduction Operator for High Dynamic Range
+Scenes,''
+.I "IEEE Transactions on Visualization and Computer Graphics",
+December 1997.
+.PP
+http://www.sgi.com/Technology/pixformat/Larsonetal.html
+.SH AUTHOR
+Greg Ward Larson
+.SH "SEE ALSO"
+getinfo(1), macbethcal(1), normtiff(1),
+pcompos(1), pflip(1), phisto(1), pinterp(1),
+pvalue(1), protate(1), ra_xyze(1), rad(1), rpict(1), ximage(1)

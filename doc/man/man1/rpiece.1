@@ -1,0 +1,227 @@
+.\" RCSid "$Id"
+.TH RPIECE 1 10/1/98 RADIANCE
+.SH NAME
+rpiece - render pieces of a RADIANCE picture
+.SH SYNOPSIS
+.B rpiece
+[
+.B \-v
+][
+.B "\-x xres"
+][
+.B "\-y yres"
+][
+.B "\-X xdiv"
+][
+.B "\-Y ydiv"
+][
+.B "\-F|R syncfile"
+][
+.B "\-T timelim"
+]
+[
+.B $EVAR
+]
+[
+.B @file
+]
+[
+rpict options
+]
+.B "\-o picture"
+.B octree
+.SH DESCRIPTION
+.I Rpiece
+renders a RADIANCE picture a piece at a time, calling
+.I rpict(1)
+to do the actual work.
+This is useful for running multiple
+.I rpict
+processes on cooperating machines to render a single picture,
+which is a shared file specified with the
+.I \-o
+option.
+The overall picture dimensions will be
+.I xres
+by
+.I yres
+(or smaller, depending on the
+.I \-pa
+option and other view options), and the picture will be rendered in
+.I xdiv
+by
+.I ydiv
+pieces.
+.PP
+There are two basic methods for telling
+.I rpiece
+which piece(s) of a picture to render.
+The explicit method is to write on the standard input the
+.I X
+and
+.I Y
+position of the desired piece(s), where
+.I X
+runs from zero to
+.I xdiv\-\1
+and
+.I Y
+runs from zero to
+.I ydiv\-\1.
+(The lower left piece of a picture corresponds to (0,0) in this
+system.)\0
+Alternatively, the implicit specification method uses a
+synchronization file to
+determine which piece is to be rendered next.
+Specified with the
+.I \-F
+option,
+.I syncfile
+initially contains the values for
+.I xdiv
+and
+.I ydiv,
+so the
+.I \-X
+and
+.I \-Y
+options are unnecessary.
+(However, they are used if
+.I syncfile
+does not exist.)\0
+The first
+.I rpiece
+process puts a lock on
+.I syncfile
+and modifies its contents before
+starting work on the first piece of the image.
+It writes the
+.I X
+and
+.I Y
+position of the piece it will work on, so the next
+.I rpiece
+process to modify
+.I syncfile
+will start on the next piece.
+(When it finishes with its piece, it appends the index to the end of
+.I syncfile.)
+This procedure continues until all the pieces are done, at which point all
+of the
+.I rpiece
+processes will terminate.
+.PP
+The
+.I \-R
+option may be used instead of
+.I \-F
+if some of the pieces were not properly finished by previous (killed)
+runs of
+.I rpiece.
+This option should be used by at most one
+.I rpiece
+process, which must be started first and with
+.I "no other rpiece processes running"
+or else it will rerender the same pieces other processes have begun.
+Once the recover process is started, you may start other
+.I rpiece
+processes using the
+.I \-F
+option to run simultaneously.
+If some processes die during execution, leaving one or more half-finished
+pieces in the picture even though the other processes think the
+work is done, you may run a single
+.I rpiece
+with the
+.I \-R
+option by itself to repair the holes.
+.PP
+The
+.I \-v
+flag switches on verbose mode, where
+.I rpiece
+reports to the standard output after each piece begins and
+after each piece is finished.
+.PP
+Options may be given on the command line and/or read from the
+environment and/or read from a file.
+A command argument beginning with a dollar sign ('$') is immediately
+replaced by the contents of the given environment variable.
+A command argument beginning with an at sign ('@') is immediately
+replaced by the contents of the given file.
+.SH EXAMPLE
+First
+.I rpiece
+process is started on the machine "goober":
+.IP "" .2i
+goober% echo 1 8 > syncfile
+.br
+goober% echo -F syncfile -x 1024 -y 1024 -vf view -o picture octree > args
+.br
+goober% rpiece @args &
+.PP
+Second
+.I rpiece
+processes is started on the machine "sucker":
+.IP "" .2i
+sucker% rpiece @args &
+.SH NOTES
+Due to NFS file buffering, the network lock manager is employed to
+guarantee consistency in the output file even though non-overlapping
+writes are used.
+This would tend to slow the process down if
+.I rpiece
+were to wait for this I/O to complete before starting on the next
+piece, so
+.I rpiece
+forks separate processes to hang around waiting for I/O completion.
+The number of processes thus designated is set by the MAXFORK macro
+in the program (compiled in the src/util directory).
+If the fork call is slow on a system, it may actually be better to
+set MAXFORK to zero.
+In other cases, the network lock manager may be so slow that this
+value should be increased to get the best utilization.
+.PP
+The output picture is not run-length encoded, and can be quite
+large.
+The approximate size (in kilobytes) can be computed by the simple
+formula:
+.IP "" .2i
+filesize = xres*yres/256
+.PP
+Make sure that there is enough space on the filesystem to hold the
+entire picture before beginning.
+Once the picture is finished, the
+.I ra_rgbe(1)
+program with the -r option may be used to convert to a run-length
+encoded picture for more efficient storage, although
+.I pfilt(1)
+or any of the other Radiance picture filters will do the same
+thing.
+.PP
+The ALRM signal may be used to gracefully terminate an
+.I rpiece
+process after it finishes the current piece.
+This permits other currently running or subsequently started
+.I rpiece
+process(es) to continue rendering the picture without loss.
+The
+.I \-T
+option will send the ALRM signal to
+.I rpiece
+after the specified number of (decimal) hours.
+This is the best way to force a time limit on the computation,
+since information will not be lost, though the process may continue
+for some time afterwards to finish its current piece.
+.SH BUGS
+This program may not work on some systems whose NFS lock manager is
+unreliable.
+In particular, some System V derivative UNIX systems often have
+problems with the network lock manager.
+If the output is scrambled or rpict aborts with some ambient file
+related problem, you should just remove the ambient file and go
+back to normal rendering.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), pfilt(1), ra_rgbe(1), rpict(1), ximage(1)

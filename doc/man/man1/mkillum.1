@@ -1,0 +1,191 @@
+.\" RCSid "$Id"
+.TH MKILLUM 1 10/6/95 RADIANCE
+.SH NAME
+mkillum - compute illum sources for a RADIANCE scene
+.SH SYNOPSIS
+.B mkillum
+[
+.B "rtrace options"
+]
+.B octree
+.B "[ \< file .. ]"
+.br
+.B "mkillum [ rtrace options ] \-defaults"
+.SH DESCRIPTION
+.I Mkillum
+takes a prepared RADIANCE scene description and an octree and computes
+light source distributions for each surface, replacing them with
+secondary sources whose contributions can be computed more efficiently by
+.I rpict(1)
+and
+.I rview(1).
+This type of optimization is most useful for windows and skylights which
+represent concentrated sources of indirect illumination.
+.I Mkillum
+is not appropriate for very large sources or sources with highly
+directional distributions.
+These are best handled respectively by the ambient calculation
+and the secondary source types in RADIANCE.
+.PP
+The arguments to
+.I mkillum
+are passed directly to
+.I rtrace(1),
+which is used to compute the light distributions for the input surfaces.
+These surfaces can be any combination of polygons, spheres and rings.
+Other surfaces may be included, but
+.I mkillum
+cannot compute their distributions.
+.PP
+By default,
+.I mkillum
+reads from its standard input and writes to its standard output.
+It is possible to specify multiple input files in a somewhat
+unconventional fashion by placing a lesser-than symbol ('<') before
+the file names.
+(Note that this character must be escaped from most shells.)
+This is necessary so
+.I mkillum
+can tell where the arguments to
+.I rtrace(1)
+end and its own input files begin.
+.SH VARIABLES
+.I Mkillum
+has a number of parameters that can be changed by
+comments in the input file of the form:
+.nf
+
+	#@mkillum variable=value option switch{+|-} ..
+
+.fi
+String or integer variables are separated from their values by the
+equals sign ('=').
+Options appear by themselves.
+Switches are followed either by a
+plus sign to turn them on or a minus sign to turn them off.
+.PP
+Parameters are usually changed many times within the
+same input file to tailor the calculation, specify different
+labels and so on.
+The parameters and their meanings are described below.
+.TP 10n
+.BI o =string
+Set the output file to
+.I string.
+All subsequent scene data will be sent to this file.
+If this appears in the first comment in the input, nothing will be
+sent to the standard output.
+Note that this is not recommended when running
+.I mkillum
+from
+.I rad(1),
+which expects the output to be on the standard output.
+.TP
+.BI m =string
+Set the material identifier to
+.I string.
+This name will be used not only as the new surface modifier, but it
+will also be used to name the distribution pattern and the data files.
+The distribution name will be
+.I string
+plus the suffix ".dist".
+The data file will be named
+.I string
+plus possibly an integer plus a ".dat" suffix.
+The integer is used to avoid accidently writing over an existing
+file.
+If overwriting the file is desired, use the
+.I f
+variable below.
+.TP
+.BI f =string
+Set the data file name to
+.I string.
+The next data file will be given this name plus a ".dat" suffix.
+Subsequent files will be named
+.I string
+plus an integer plus the ".dat" suffix.
+An existing file with the same name will be clobbered.
+This variable may be unset by leaving off the value.
+(See also the
+.I m
+variable above.)
+.TP
+.BR a
+Produce secondary sources for all of the surfaces in the input.
+This is the default.
+.TP
+.BI e =string
+Produce secondary sources for all surfaces except those modified by
+.I string.
+Surfaces modified by
+.I string
+will be passed to the output unchanged.
+.TP
+.BI i =string
+Only produce secondary sources for surfaces modified by
+.I string.
+.TP
+.BR n
+Do not produce any secondary sources.
+All input will be passed to the output unaffected.
+.TP
+.BI b =real
+Do not produce a secondary source for a surface if its average
+brightness (radiance) is less than the value
+.I real.
+.TP
+.BI c ={d|a|n}
+Use color information according to the given character.
+If the character is
+.I d,
+then color information will be used in three separate data files and
+the distribution will be fully characterized in terms of color.
+If the character is
+.I a,
+then only the average color is computed and the distribution will
+not contain color information.
+If the character is
+.I n,
+even the average distribution color will be thrown away,
+producing secondary sources that are completely uncolored.
+This may be desirable from a color-balancing point of view.
+.TP
+.BI d =integer
+Set the number of direction samples per projected steradian to
+.I integer.
+The number of directions stored in the associated data file will be
+approximately this number multiplied by pi for polygons and rings, and
+by 4pi for spheres.
+If
+.I integer
+is zero, then a diffuse source is assumed and no distribution is
+created.
+.TP
+.BI s =integer
+Set the number of ray samples per direction to
+.I integer.
+This variable affects the accuracy of the distribution value for
+each direction as well as the computation time for
+.I mkillum.
+.TP
+.BR l{+|-}
+Switch between light sources and illum sources.
+If this switch is enabled
+.I (l+),
+.I mkillum
+will use the material type "light" to represent surfaces.
+If disabled
+.I (l-),
+.I mkillum
+will use the material type "illum" with the input surface modifier
+as its alternate material.
+The default is
+.I l-.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+oconv(1), rad(1), rpict(1), rtrace(1), rview(1)

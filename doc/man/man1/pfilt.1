@@ -1,0 +1,148 @@
+.\" RCSid "$Id"
+.TH PFILT 1 11/8/96 RADIANCE
+.SH NAME
+pfilt - filter a RADIANCE picture
+.SH SYNOPSIS
+.B pfilt
+[
+.B options
+]
+[
+.B file
+]
+.SH DESCRIPTION
+.I Pfilt
+performs anti-aliasing and scaling on a RADIANCE picture.
+The program makes two passes on the picture file in order to
+set the exposure to the correct average value.
+If no
+.I file
+is given, the standard input is read.
+.TP 10n
+.BI -x \ res
+Set the output x resolution to
+.I res.
+This must be less than or equal to the x dimension
+of the target device.
+If
+.I res
+is given as a slash followed by a real number, the input resolution
+is divided by this number to get the output resolution.
+By default, the output resolution is the same as the input.
+.TP
+.BI -y \ res
+Set the output y resolution to
+.I res,
+similar to the specification of the x resolution above.
+.TP
+.BI -p \ rat
+Set the pixel aspect ratio to
+.I rat.
+Either the x or the y resolution will be reduced so that the pixels have
+this ratio for the specified picture.
+If
+.I rat
+is zero, then the x and y resolutions will adhere to the given maxima.
+Zero is the default.
+.TP
+.BI -c
+Pixel aspect ratio is being corrected, so do not write PIXASPECT
+variable to output file.
+.TP
+.BI -e \ exp
+Adjust the exposure.
+If
+.I exp
+is preceded by a '+' or '-', the exposure is interpreted in f-stops
+(ie. the power of two).
+Otherwise,
+.I exp
+is interpreted as a straight multiplier.
+The individual primaries can be changed using
+.I \-er,
+.I \-eg
+and
+.I \-eb.
+Multiple exposure options have a cumulative effect.
+.TP
+.BR -t \ lamp
+Color-balance the image as if it were illuminated by fixtures of
+the given type.
+The specification must match a pattern listed in the lamp
+lookup table (see the -f option below).
+.TP
+.BR -f \ lampdat
+Use the specified lamp lookup table rather than the default (lamp.tab).
+.TP
+.BR \-1
+Use only one pass on the file.
+This allows the exposure to be controlled absolutely, without
+any averaging.
+Note that a single pass is much quicker and should be used whenever
+the desired exposure is known and star patterns are not required.
+.TP
+.BR \-2
+Use two passes on the input.
+This is the default.
+.TP
+.BR \-b
+Use box filtering (default).
+Box filtering averages the input pixels corresponding
+to each separate output pixel.
+.TP
+.BI -r \ rad
+Use Gaussian filtering with a radius of
+.I rad
+relative to the output pixel size.
+This option with a radius around 0.6 and a reduction in image width and
+height of 2 or 3 produces the highest quality pictures.
+A radius greater than 0.7 results in a defocused picture.
+.TP
+.BI -m \ frac
+Limit the influence of any given input pixel to
+.I frac
+of any given output pixel.
+This option may be used to mitigate the problems associated with
+inadequate image sampling, at the expense of a slightly blurred
+image.
+The fraction given should not exceed the output picture dimensions
+over the input picture dimensions (x_o*y_o/x_i/y_i), or blurring
+will occur over the entire image.
+This option implies the
+.I \-r
+option for Gaussian filtering, which defaults to a radius of 0.6.
+.TP
+.BI -h \ lvl
+Set intensity considered ``hot'' to
+.I lvl.
+This is the level above which areas of the image will begin
+to exhibit star diffraction patterns (see below).
+The default is 100 watts/sr/m2.
+.TP
+.BI -n \ N
+Set the number of points on star patterns to
+.I N.
+A value of zero turns star patterns off.
+The default is 0.
+(Note that two passes are required for star patterns.)\0
+.TP
+.BI -s \ val
+Set the spread for star patterns to
+.I val.
+This is the value a star pattern will have at the
+edge of the image.
+The default is .0001.
+.TP
+.BR \-a
+Average hot spots as well.
+By default, the areas of the picture above the hot level
+are not used in setting the exposure.
+.SH ENVIRONMENT
+RAYPATH		directories to search for lamp lookup table
+.SH FILES
+/usr/tmp/rt??????
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), ies2rad(1), pcompos(1), pflip(1), pinterp(1),
+pvalue(1), protate(1), rad(1), rpict(1), ximage(1)

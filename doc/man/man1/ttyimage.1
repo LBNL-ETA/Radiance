@@ -1,0 +1,26 @@
+.\" RCSid "$Id"
+.TH TTYIMAGE 1 10/9/97 RADIANCE
+.SH NAME
+ttyimage - RADIANCE driver for dumb ASCII terminal
+.SH SYNOPSIS
+.B ttyimage
+[
+.B "\-c resolu"
+][
+.B \-r
+]
+[
+.B pixfile
+]
+.SH DESCRIPTION
+.I Ttyimage
+takes the RADIANCE picture file
+.I pixfile
+and displays it on a dumb terminal.
+If no 
+.I pixfile
+is given, the standard input is read.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+pfilt(1), rpict(1), ximage(1)

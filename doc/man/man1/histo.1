@@ -1,0 +1,48 @@
+.\" RCSid "$Id"
+.TH HISTO 1 9/6/96 RADIANCE
+.SH NAME
+histo - compute 1-dimensional histogram of N data columns
+.SH SYNOPSIS
+.B "histo [-c] xmin xmax nbins"
+.br
+.B "histo [-c] imin imax"
+.SH DESCRIPTION
+.I Histo
+bins columnular data on the standard input between the given minimum
+and maximum values.
+If three command line arguments are given, the third is taken as the
+number of data bins between the first two real numbers.
+If only two arguments are given, they are both assumed to be integers,
+and the number of data bins will be equal to their difference plus one.
+The bins are always of equal size.
+.PP
+The output is N+1 columns of data (for N columns input), where the
+first column is the centroid of each division, and each row
+corresponds to the frequencies for each column around that value.
+.PP
+If the
+.I \-c
+option is present, then
+.I histo
+computes the cumulative histogram for each column instead of the
+straight frequencies.
+The upper value of each bin is printed also instead of the centroid.
+This may be useful in computing percentiles, for example.
+.PP
+All input data is interpreted as real values, and columns must be
+white-space separated.
+If any value is less than the minimum or greater than the maximum,
+it will be ignored on the input.
+(I.e., it will not contribute to any frequency count.)
+.SH EXAMPLE
+To count data values between -1 and 1 in 50 bins:
+.IP "" .2i
+histo -1 1 50 < input.dat
+.PP
+To count frequencies of integers between 0 and 255:
+.IP "" .2i
+histo 0 255 < input.dat
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), lam(1), neat(1), rcalc(1), tabfunc(1), total(1)

@@ -1,0 +1,59 @@
+.\" RCSid "$Id"
+.TH GLARENDX 1 3/24/94 RADIANCE
+.SH NAME
+glarendx - calculate glare index
+.SH SYNOPSIS
+.B glarendx
+.B "\-t type"
+[
+.B \-h
+]
+[
+.B glarefile
+]
+.SH DESCRIPTION
+.I Glarendx
+computes the selected glare index
+.I type
+from the given
+.I glarefile
+produced by
+.I findglare(1).
+.I Glarendx
+computes one value for each (indirect illuminance) angle in the input file.
+If no
+.I glarefile
+is given,
+.I glarendx
+reads from the standard input.
+The
+.I \-h
+option can be used to remove the information header from the output.
+.PP
+.I Glarendx
+understands the following arguments for
+.I type:
+.sp .5
+.nf
+	    guth_vcp	Guth Visual Comfort Probability
+	     cie_cgi	CIE Glare Index (Einhorn)
+	         ugr	Unified Glare Rating
+	      brs_gi	BRS Glare Index
+	         dgi	Daylight Glare Index
+	    guth_dgr	Guth Disability Glare Rating
+	    vert_dir	Direct Vertical Illuminance
+	    vert_ill	Total Vertical Illuminance
+	    vert_ind	Indirect Vertical Illuminance
+.fi
+.PP
+Alternatively, a symbolic or hard link to the program with
+any of the above names may be used in place of the
+.I type
+argument.
+.SH AUTHORS
+Greg Ward, Raphael Compagnon
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+findglare(1), glare(1), igraph(1), rpict(1), xglaresrc(1), ximage(1)

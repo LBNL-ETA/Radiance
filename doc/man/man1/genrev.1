@@ -1,0 +1,60 @@
+.\" RCSid "$Id"
+.TH GENREV 1 11/15/93 RADIANCE
+.SH NAME
+genrev - generate a RADIANCE description of surface of revolution
+.SH SYNOPSIS
+.B "genrev mat name 'z(t)' 'r(t)' nseg"
+[
+.B "\-e expr"
+][
+.B "\-f file"
+][
+.B \-s
+]
+.SH DESCRIPTION
+.I Genrev
+produces a RADIANCE scene description of a
+surface of revolution.
+The object will be composed of
+.I nseg
+cones, cups, cylinders, tubes or rings
+following the parametric curve defined by
+.I z(t)
+(height)
+and
+.I r(t)
+(radius).
+When
+.I z
+is increasing with t, the surface normal points outward.
+When
+.I z
+is decreasing, the normal points inward.
+The variable
+.I t
+used in the function expressions varies
+from 0 to 1 in even steps of
+.I 1/nseg.
+The expressions are of the same type used in RADIANCE
+function files.
+Auxiliary expressions and/or files may be specified
+in any number of
+.I \-e
+and
+.I \-f
+options.
+The
+.I \-s
+option smooths the surfaces using Phong normal interpolation.
+.SH EXAMPLE
+To generate a torus with an inner radius of 1 and an outer radius
+of 3:
+.IP "" .2i
+genrev steel torus 'sin(2*PI*t)' '1+cos(2*PI*t)' 32
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The -s option doesn't modify the surface normal correctly
+for the opposite side.
+.SH "SEE ALSO"
+calc(1), genbox(1), gensurf(1), genworm(1), rpict(1), rview(1), xform(1)

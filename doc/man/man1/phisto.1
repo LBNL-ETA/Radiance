@@ -1,0 +1,40 @@
+.\" RCSid "$Id"
+.TH PHISTO 1 3/12/98 RADIANCE
+.SH NAME
+phisto - compute a luminance histogram from one or more RADIANCE pictures
+.SH SYNOPSIS
+.B phisto
+.B "picture .."
+.SH DESCRIPTION
+.I Phisto
+is a script that calls
+.I pfilt(1),
+.I rcalc(1)
+and
+.I histo(1)
+to compute a histogram of log luminance values for foveal samples in
+the given picture files.
+A foveal sample covers approximately 1 degree, though this script does
+not use this exact area.
+The minimum and maximum values are determined, and 100 histogram bins
+are uniformly divided between these extrema.
+Foveal samples less than 1e-7 candelas/sq.meter are silently ignored.
+If no picture is named on the command line, the standard input is read.
+.PP
+The primary function of this script is to precompute histograms for the
+.I pcond(1)
+program, which may then be used to compute multiple, identical exposures.
+This is especially useful for animations and image comparisons.
+.SH EXAMPLE
+.PP
+To compute two identical tone mappings for image1.pic and image2.pic:
+.IP "" .2i
+phisto image1.pic image2.pic > both.histo
+.br
+pcond -I -h image1.pic < both.histo > image1m.pic
+.br
+pcond -I -h image2.pic < both.histo > image2m.pic
+.SH AUTHOR
+Greg Ward Larson
+.SH "SEE ALSO"
+histo(1), pcond(1), pfilt(1), pvalue(1), rcalc(1), total(1)

@@ -1,0 +1,45 @@
+.\" RCSid "$Id"
+.TH PEXPAND 1 6/24/98 RADIANCE
+.SH NAME
+pexpand - expand requested commands in metafile
+.SH SYNOPSIS
+.B pexpand
+[
+.B +/\-EPDOCSURIlrtmvsp
+]
+file ..
+.SH DESCRIPTION
+.I Pexpand
+reads each metafile
+.I file
+in sequence and expands any commands specified in a '+' option,
+and deletes any commands specified in a '-' option.
+This is necessary because most drivers will not support many
+metafile commands such as 'v' (vector string) and 'O', 'C', and 's'
+(segments).
+.I Pexpand
+will expand '+' instances into the corresponding primitives which
+are supported, and delete all '-' instances.
+.PP
+Certain commands are currently considered basic, and must be supported
+by all drivers.
+The commands 'D', 'E', 'S', 'U', 'R', 'l', 'r', and 't' are
+basic (see metafile(5)).
+.PP
+If no input files are specified, the standard input is read.
+.TP 10n
+.BR +EPDOCSURIlrtmvsp
+Expand the requested command(s).
+.TP
+.BR \-EPDOCSURIlrtmvsp
+Delete the requested command(s).
+.SH EXAMPLE
+To expand vector strings and segements, and delete pauses from "meta":
+.IP "" .2i
+pexpand +vOCs -P meta
+.SH FILES
+/usr/lib/meta/vchars.mta  (see metafile(5))
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+metafile(5), psort(1)

@@ -1,0 +1,68 @@
+.\" RCSid "$Id"
+.TH RA_GIF 1 6/10/94 RADIANCE
+.SH NAME
+ra_gif - convert RADIANCE picture to Compuserve GIF
+.SH SYNOPSIS
+.B ra_gif
+[
+.B \-b
+][
+.B \-d
+][
+.B "\-c ncolors"
+][
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+][
+.B "-n sampfac"
+]
+.B input
+[
+.B output
+]
+.SH DESCRIPTION
+.I Ra_gif
+converts from RADIANCE to Compuserve GIF color-mapped,
+compressed image files.
+In the default mode, a RADIANCE picture is converted to a
+color-mapped GIF file of the same horizontal and vertical dimensions with
+8-bits per pixel.
+The
+.I \-b
+option converts the image to black and white.
+The
+.I \-d
+option turns off dithering.
+The
+.I \-c
+option allows fewer than 256 colors (and fewer than 8 bits per
+pixel).
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.2.
+An exponent of 1.0 turns gamma correction off.
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+The
+.I \-n
+option specifies a sampling factor for neural network color
+quantization.
+This value should be between 1 and 80, where 1 takes the longest and
+produces the best results in small areas of the image.
+If no value is given, a faster median cut algorithm is used.
+If the output file is missing, the standard output is used.
+.SH AUTHORS
+Greg Ward
+.br
+Paul Haeberli
+.br
+David Rowley
+.br
+Anthony Dekker provided the code for neural network color quantization
+.SH "SEE ALSO"
+pfilt(1), ra_bn(1), ra_ppm(1), ra_pr(1), ra_pr24(1), ra_t8(1), ra_t16(1),
+ra_tiff(1), ximage(1)

@@ -1,0 +1,111 @@
+.\" RCSid "$Id"
+.TH RHCOPY 1 1/15/99 RADIANCE
+.SH NAME
+rhcopy - copy ray information into a holodeck
+.SH SYNOPSIS
+.B rhcopy
+.B dest_holo
+[
+.B \-u
+][
+.B \-d
+]
+.B "\-h src_holo .."
+.br
+or
+.br
+.B rhcopy
+.B dest_holo
+[
+.B \-u
+][
+.B \-d
+]
+.B "\-p src_pic src_zbf .."
+.SH DESCRIPTION
+.I Rhcopy
+adds ray sample data to the existing holodeck
+.I dest_holo.
+In the first form, the ray samples are taken from one or more holodeck files
+given after the
+.I \-h
+option.
+In the second form, the ray samples are taken from one or more RADIANCE
+picture files and their depth buffers, which must be paired on the
+command line after the
+.I \-p
+option.
+.PP
+The
+.I \-u
+option turns on duplicate ray checking.
+In some cases, the same ray may already exist in the destination holodeck,
+and it would be redundant to add it.
+By default,
+.I rhcopy
+does not check for duplicates, because it takes extra time, and in many
+invocations is not necessary, as when copying into an empty holodeck.
+.PP
+The
+.I \-d
+option turns off depth checking.
+Normally,
+.I rhcopy
+checks the OBSTRUCTIONS variable of the destination holodeck, and if it is
+set to True, makes sure that all contributing rays start outside each
+section.
+If OBSTRUCTIONS is set to False, then
+.I rhcopy
+makes sure that any contributing rays end outside each section.
+If OBSTRUCTIONS is not set, then this option has no effect.
+(See the
+.I rholo(1)
+man page for a definition of the OBSTRUCTIONS variable.)\0
+.PP
+.I Rcopy
+cannot be used to create a holodeck -- use
+.I rholo
+for this purpose.
+For example, to create an empty holodeck, run
+.I rholo
+without either the
+.I \-n
+or
+.I \-o
+option.
+Whatever variables are set by
+.I rholo
+when the new holodeck is created
+are the ones that will have effect when later rendering or viewing.
+Since the ray sample data may be taken from any source,
+.I rholo
+and
+.I rhcopy
+may be used together to change certain unalterable holodeck parameters,
+such as the section grid geometry.
+.SH EXAMPLE
+To take data from an existing holodeck after changing the section grid:
+.IP "" .2i
+rholo new.hdk new.hif
+.br
+rhcopy new.hdk -h old.hdk
+.PP
+To add ray samples from two pictures to the new holodeck:
+.IP "" .2i
+rhcopy new.hdk -p view1.pic view1.zbf view2.pic view2.zbf
+.SH NOTES
+.I Rhcopy
+attempts to place the beams in the holodeck in a good
+order for quick access, but if the data comes from multiple sources,
+the results may not be optimal.
+For large holodecks, it is sometimes useful to run the
+.I rhoptimize(1)
+program once all runs of
+.I rhcopy
+are through.
+.SH AUTHOR
+Greg Ward Larson
+.SH ACKNOWLEDGMENT
+This work was supported by Silicon Graphics, Inc.
+.SH "SEE ALSO"
+getinfo(1), pfilt(1), psign(1), rhinfo(1), rholo(1), rhoptimize(1), rpict(1)

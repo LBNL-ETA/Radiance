@@ -1,0 +1,53 @@
+.\" RCSid "$Id"
+.TH RA_BN 1 11/15/93 RADIANCE
+.SH NAME
+ra_bn - convert RADIANCE picture to/from Barneyscan image
+.SH SYNOPSIS
+.B ra_bn
+[
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+{
+.B input|-
+}
+[
+.B output
+]
+.br
+.B ra_bn
+.B \-r
+[
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+.B input
+[
+.B output
+]
+.SH DESCRIPTION
+.I Ra_bn
+converts between RADIANCE and Barneyscan native RGB image files.
+Since Barneyscan images are stored in three files, one for each
+color component, only the root file name is given and the program
+appends the suffixes "red", "grn" and "blu".
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.0.
+An exponent of 1.0 turns gamma correction off.
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+The
+.I \-r
+option invokes a reverse conversion, from a Barneyscan image
+to a RADIANCE picture.
+.SH AUTHORS
+Greg Ward
+.SH "SEE ALSO"
+pfilt(1), ra_ppm(1), ra_pr(1), ra_pr24(1), ra_t8(1), ra_t16(1),
+ra_tiff(1), ximage(1)

@@ -1,0 +1,68 @@
+.\" RCSid "$Id"
+.TH XGLARESRC 1 11/15/93 RADIANCE
+.SH NAME
+xglaresrc - dislpay glare sources under X11
+.SH SYNOPSIS
+.B xglaresrc
+[
+.B "\-n windowname"
+][
+.B "\-c r g b"
+]
+.B pictfile
+[
+.B glarefile
+]
+.SH DESCRIPTION
+.I Xglaresrc
+displays the sources located by
+.I findglare(1)
+in the picture
+.I pictfile
+by displaying their average luminance and
+drawing circles around them in the image.
+If
+.I pictfile
+is already being displayed by
+.I ximage(1),
+.I xglaresrc
+will raise (or deiconify) this window.
+If
+.I pictfile
+is not being displayed,
+.I xglaresrc
+will start
+.I ximage(1)
+in the background automatically.
+(To quit from
+.I ximage(1),
+you can type 'q' in its display window.)
+Usually,
+.I pictfile
+will be the image that was used by
+.I findglare(1)
+to locate glare sources.
+.PP
+If the desired image is being displayed under a different
+name, perhaps even by a different display program than
+.I ximage(1),
+the
+.I \-n
+option can be used to give an alternative 
+.I windowname
+for locating the correct display window, and the
+.I \-c
+option can be used to specify a different line and text color
+(default 1 0 0).
+If the inpute
+.I glarefile
+is not given,
+.I xglaresrc
+reads from its standard input.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+findglare(1), glare(1), glarendx(1), ximage(1)

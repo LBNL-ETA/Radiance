@@ -1,0 +1,53 @@
+.\" RCSid "$Id"
+.TH COMPAMB 1 1/23/98 RADIANCE
+.SH NAME
+compamb - compute good ambient value for a rad input file
+.SH SYNOPSIS
+.B compamb
+[
+.B \-c
+][
+.B \-e
+]
+.B rad_input_file
+.SH DESCRIPTION
+.I Compamb
+computes a good ambient value for the specified
+.I rad(1)
+variable file and appends it to the file as a "render= -av" option.
+If the
+.I \-c
+option is specified, then
+.I compamb
+includes color information in the computed ambient value, rather than
+estimating a grey value to avoid rendering color shifts.
+If the
+.I \-e
+option is specified, then
+.I compamb
+also computes a good exposure value for this scene, and appends it to
+the
+.I rad
+file as well.
+.PP
+.I Compamb
+is a shell script that makes calls to other RADIANCE programs and utilities
+to do the actual work.
+A substantial amount of time may be required to complete this script, since
+.I compamb
+calls
+.I rpict(1)
+to render low resolution frames for each view in the
+.I rad
+file, setting "QUALITY=High" to compute interreflections.
+The resulting ambient file is thrown away, since it would disagree
+with the new -av setting used for the final renderings.
+This method is preferable to setting the
+.I \-aw
+option of
+.I rpict,
+which frequently results in splotchy artifacts.
+.SH AUTHOR
+Greg Ward Larson
+.SH "SEE ALSO"
+lookamb(1), rad(1), rpict(1)

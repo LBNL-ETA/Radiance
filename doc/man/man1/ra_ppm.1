@@ -1,0 +1,83 @@
+.\" RCSid "$Id"
+.TH RA_PPM 1 2/10/99 RADIANCE
+.SH NAME
+ra_ppm - convert RADIANCE picture to/from a Poskanzer Portable Pixmap
+.SH SYNOPSIS
+.B ra_ppm
+[
+.B \-r
+][
+.B \-a
+][
+.B \-b
+][
+.B "\-s maxv"
+][
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+[
+.B input
+[
+.B output
+]
+]
+.SH DESCRIPTION
+.I Ra_ppm
+converts between RADIANCE and Poskanzer Portable Pixmap formats.
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.2.
+An exponent of 1 turns gamma correction off.
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+The
+.I \-r
+option invokes a reverse conversion, from a Pixmap to
+a RADIANCE picture.
+If the output file is missing, the standard output is used.
+If the input file is missing as well, the standard input is used.
+.PP
+The
+.I \-a
+option produces a standard ASCII Pixmap representation instead of
+the default binary file.
+The file is much larger and the conversion is much slower, which is
+why this format is not normally used.
+The
+.I \-b
+option forces greyscale output.
+The
+.I \-s
+option controls the output scale, which is 255 by default.
+If this value is set above 255, then two bytes will be output for each
+component in binary mode.
+This may not be understood by some PPM readers, which do not understand
+files with maximum values greater than 255.
+The maximum allowed setting for this parameter is 65535.
+.PP
+With the
+.I \-r
+option, the type of the Pixmap input file is determined automatically.
+.I Ra_ppm
+will read either greyscale or color Pixmaps, with any precision up
+to a maximum scale of 65535.
+.SH NOTES
+The Poskanzer Portable Bitmap Plus package contains translators between the
+Pixmap format and many of the dozen or so image
+file "standards" that exist.
+At the time of this writing, the software is free and available by
+anonymous ftp from export.lcs.mit.edu (18.30.0.238) in the file
+"contrib/pbmplus.tar.Z".
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland and Silicon Graphics, Inc.
+.SH "SEE ALSO"
+pfilt(1), ra_bn(1), ra_pr(1), ra_pr24(1), ra_t8(1), ra_t16(1),
+ra_tiff(1), ximage(1)

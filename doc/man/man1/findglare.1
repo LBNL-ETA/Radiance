@@ -1,0 +1,160 @@
+.\" RCSid "$Id"
+.TH FINDGLARE 1 11/15/93 RADIANCE
+.SH NAME
+findglare - locate glare sources in a RADIANCE scene
+.SH SYNOPSIS
+.B findglare
+[
+.B \-v
+][
+.B "\-ga angles"
+][
+.B "\-t threshold"
+][
+.B "\-r resolution"
+][
+.B \-c
+][
+.B "\-p picture"
+][
+view options
+] [[
+rtrace options
+]
+.B octree
+]
+.SH DESCRIPTION
+.I Findglare
+locates sources of glare in a specific set of horizontal directions
+by computing luminance samples from a RADIANCE picture and/or octree.
+.I Findglare
+is intended primarily as a preprocessor for glare calculation
+programs such as
+.I glarendx(1),
+and is usually accessed through the executive script
+.I glare(1).
+.PP
+If only an octree is given,
+.I findglare
+calls rtrace to compute the samples it needs.
+If both an octree and a picture are specified,
+.I findglare
+calls rtrace only for samples that are outside the frame of
+the picture.
+If 
+.I findglare
+does not have an octree and the picture does not completely cover
+the area of interest, a warning will be issued and everything
+outside the picture will be treated as if it were black.
+It is preferable to use a picture with a fisheye view
+and a horizontal and vertical size of at least 180 degrees (more
+horizontally if the
+.I \-ga
+option is used -- see below).
+Note that the picture file must contain correct view specifications,
+as maintained by
+.I rpict(1),
+.I rview(1),
+.I pfilt(1)
+and
+.I pinterp(1).
+Specifically,
+.I findglare
+will not work on pictures processed by
+.I pcompos(1)
+or
+.I pcomb(1).
+It is also essential to give the proper rtrace options when an
+octree is used so that the calculated luminance values are correct.
+.PP
+The output of
+.I findglare
+is a list of glare source directions, solid angles and average
+luminances, plus a list of indirect vertical illuminance values
+as a function of angle.
+Angles are measured in degrees from the view center,
+with positive angles to the left and negative angles to the right.
+.PP
+By default,
+.I findglare
+only computes glare sources and indirect vertical illuminance
+for the given view (taken from the picture if none is specified).
+If the view direction is not horizontal to begin with
+(ie. perpendicular to the view up vector),
+.I findglare
+will substitute the closest horizontal direction as its view
+center.
+The
+.I \-ga
+option can be used to specify a set of directions to consider
+about the center of view.
+This specification is given by a starting angle, ending angle, and
+step angle like so:
+.nf
+	start-end:step
+.fi
+All angles must be whole degrees within the range 1 to 180.
+Multiple angle ranges may be separated by commas, and individual
+angles may be given without the ending and step angles.
+Note that
+.I findglare
+will complain if the same angle is given twice either explicitly
+or implicitly by two ranges.
+.PP
+.I Findglare
+normally identifies glare sources as directions that are
+brighter than 7 times the average luminance level.
+It is possible to override this determination by giving an
+explicit luminance threshold with the
+.I \-t
+option.
+It usually works best to use the 'l' command within
+.I ximage(1)
+to decide what this value should be.
+Alternatively, one can use the 't' command within
+.I rview(1).
+The idea is to pick a threshold that is well above the average level
+but smaller than the source areas.
+.PP
+If the sources in the scene are small, it may be necessary to
+increase the default sample resolution of
+.I findglare(1)
+using the
+.I \-r
+option.
+The default resolution is 150 vertical samples and a proportional number
+of horizontal samples.
+If besides being small, the sources are not much brighter than the
+threshold, the
+.I \-c
+flag should be used to override
+.I findglare's
+default action of absorbing small sources it deems to be
+insignificant.
+.PP
+The
+.I \-v
+flag switches on verbose mode, where
+.I findglare
+reports its progress during the calculation.
+.SH EXAMPLE
+To calculate the glare sources in the image "scene.pic":
+.IP "" .2i
+findglare -p scene.pic > scene.glr
+.PP
+To compute the Guth visual comfort probability from this result:
+.IP "" .2i
+glarendx -t guth_vcp scene.glr
+.PP
+To compute the glare for a set of angles around the view "good.vp"
+from the octree "scene.oct" using an ambient level of .1:
+.IP "" .2i
+findglare -vf good.vp -ga 10-60:10 -av .1 .1 .1 scene.oct > scene.glr
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+getinfo(1), glare(1), glarendx(1), pfilt(1), rpict(1), rtrace(1),
+rview(1), xglaresrc(1), ximage(1)

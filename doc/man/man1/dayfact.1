@@ -1,0 +1,25 @@
+.\" RCSid "$Id"
+.TH DAYFACT 1 11/15/93 RADIANCE
+.SH NAME
+dayfact - compute illuminance and daylight factor on workplane
+.SH SYNOPSIS
+.B dayfact
+[
+falsecolor options
+]
+.SH DESCRIPTION
+.I Dayfact
+is an interactive script for computing workplane illuminance,
+and daylight factors and potential daylight savings using
+.I rtrace(1).
+The script
+.I falsecolor(1)
+is then used to draw contour lines on the resulting Radiance
+picture.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+falsecolor(1), glare(1), rtrace(1), ximage(1)

@@ -1,0 +1,42 @@
+.\" RCSid "$Id"
+.TH XSHOWTRACE 1 11/15/93 RADIANCE
+.SH NAME
+xshowtrace - interactively show rays traced on RADIANCE image under X11
+.SH SYNOPSIS
+.B xshowtrace
+[
+.B \-s
+][
+.B "rtrace options"
+]
+.B octree
+.B picture
+.SH DESCRIPTION
+.I Xshowtrace
+takes a RADIANCE octree and a picture file
+and displays it on an X11 window server using
+.I ximage(1).
+The picture should have been created from a previous
+.I rpict(1)
+or
+.I rview(1)
+calculation using the given octree.
+Once the image is displayed, the user can use the 't' command of
+.I ximage
+to select points on the image to display the ray tree.
+.I Rtrace
+then produces a ray tree, which
+.I xshowtrace
+will display (in red on a color screen).
+The
+.I \-s
+option slows the display of each ray traced to make it easier to
+follow the process.
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+If the pointer is moved between the time 't' is pressed and
+.I xshowtrace
+starts drawing rays, the rays will be displaced.
+.SH "SEE ALSO"
+oconv(1), rpict(1), rtrace(1), rview(1), ximage(1)

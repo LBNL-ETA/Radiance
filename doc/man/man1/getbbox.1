@@ -1,0 +1,58 @@
+.\" RCSid "$Id"
+.TH GETBBOX 1 11/15/93 RADIANCE
+.SH NAME
+getbbox - compute bounding box for RADIANCE scene
+.SH SYNOPSIS
+.B getbbox
+[
+.B \-w
+][
+.B \-h
+]
+[
+.B "input .."
+]
+.SH DESCRIPTION
+.I Getbbox
+reads each scene description
+.I input
+and computes the minimum axis-aligned parallelopiped that
+will enclose all of the objects.
+Each
+.I input
+can be either a file name, or a command (enclosed in quotes
+and preceded by a `!').
+If no arguments are given, the standard input is read.
+A hyphen ('-') can also be used to indicate the standard input.
+.PP
+The
+.I \-w
+option suppresses warnings.
+The
+.I \-h
+option suppresses the header line "xmin xmax ymin ymax zmin zmax".
+.SH EXAMPLE
+To compute the bounding box for the object ``thingy'':
+.IP "" .2i
+getbbox thingy
+.PP
+To preview ``scene'':
+.IP "" .2i
+preview -v FOUR -b `getbbox -h scene` scene
+.SH NOTES
+Since expanding a scene can require considerable overhead, it
+is better to use the bounding cube produced by
+.I oconv(1)
+and read by
+.I getinfo(1)
+if an octree exists for the scene.
+However, there are certain circumstances, such as foreign object
+placement, that require knowing the bounding box rather than
+just the bounding cube.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+getinfo(1), oconv(1), xform(1)

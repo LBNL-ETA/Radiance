@@ -1,0 +1,120 @@
+.\" RCSid "$Id"
+.TH RA_XYZE 1 5/30/96 RADIANCE
+.SH NAME
+ra_xyze - convert between RADIANCE RGBE and XYZE formats
+.SH SYNOPSIS
+.B ra_xyze
+[
+.B \-r
+][
+.B "\-e exposure"
+][
+.B \-c
+|
+.B \-u
+][
+.B "\-p xr yr xg yg xb yb xw yw"
+]
+[
+.B input
+[
+.B output
+]
+]
+.SH DESCRIPTION
+.I Ra_xyze
+converts between RADIANCE RGBE (red,green,blue,exponent) and XYZE
+(CIE X,Y,Z,exponent) formats.
+The
+.I \-e
+option specifies an exposure compensation, which may be given as
+a decimal multiplier or in f-stops (powers of two).
+By default,
+.I ra_xyze
+produces a flat XYZE RADIANCE picture file from any type of RADIANCE
+input picture.
+To override these defaults, the
+.I \-c
+option may be used to specify run-length encoded output,
+or the
+.I \-u
+option may be used to specify a flat output.
+.PP
+The
+.I \-r
+option causes
+.I ra_xyze
+to produce a run-length encoded RGBE file instead.
+The
+.I \-p
+option may be used to override the standard RADIANCE RGB primary
+colors to tailor the image for a particular output device or
+representation.
+The eight floating-point arguments to this option are the 1931
+CIE (x,y) chromaticity coordinates of the three RGB primaries
+plus the white point, in that order.
+The new primaries will be recorded in the header of the output file,
+so that the original information may be fully recovered later.
+It is not necessary that the input file by in XYZE format.
+Th
+.I \-r
+option may therefore be used to convert from one RGB primary
+representation to another using the
+.I \-p
+option.
+.PP
+If the output file is missing, the standard output is used.
+If the input file is missing as well, the standard input is used.
+.SH NOTES
+The CIE standard used is the 1931 2-degree observer, and the
+correct output representation relies on the original RADIANCE
+input description being defined properly in terms of the standard
+RADIANCE RGB primaries, whose CIE (x,y) chromaticity values are
+defined in the header file in src/common/color.h.
+In this same file is a standard for the luminous efficacy of white
+light (WHTEFFICACY), which is used as a conversion between lumens
+and watts throughout RADIANCE.
+This same factor is applied by
+.I ra_xyze
+when converting between the radiometric units of the RGBE format
+and the photometric units of the XYZE format.
+The purpose of this factor is to ensure that the Y component of
+the CIE representation is luminance in units of candelas/meter^2.
+.PP
+Most of the RADIANCE picture filters should work uniformly on either
+RGBE or XYZE files, so it is not necessary to convert back to RGBE
+format except for conversion or display, in which case the correct
+primaries for the chosen output device should be specified with the
+.I \-p
+option if they are known.
+.SH EXAMPLES
+To convert RGBE output from
+.I rpict(1)
+into run-length encoded XYZE format:
+.IP "" .2i
+rpict [options] scene.oct | ra_xyze -c > scene_xyz.pic
+.PP
+To prepare a RADIANCE picture for display on a calibrated NTSC monitor:
+.IP "" .2i
+ra_xyze -r -p .670 .330 .210 .710 .140 .080 .333 .333 stand.pic ntsc.pic
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Any color correction applied to the original image is not removed
+or translated by
+.I ra_xyze,
+and it may result in color shifts in the output.
+If color preservation is important and the correction is unwanted,
+it is best to remove it with
+.I pfilt(1)
+using the
+.I \-er,
+.I \-eg
+and
+.I \-eb
+options first.
+(Simply look at the header and apply the reciprocal primaries of all
+COLORCORR= lines multiplied together.)
+Better still, get the picture before color correction is applied.
+.SH "SEE ALSO"
+pfilt(1), ra_rgbe(1), rpict(1)

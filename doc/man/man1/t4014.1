@@ -1,0 +1,44 @@
+.\" RCSid "$Id"
+.TH T4014 1 6/24/98 RADIANCE
+.SH NAME
+t4014 - output metafile to Tektronix t4014 graphics terminal
+.SH SYNOPSIS
+.B t4014
+[
+.B \-c | \-r
+]
+file ..
+.SH DESCRIPTION
+.I t4014
+reads each metafile
+.I file
+in sequence and converts it to output suitable for the Tektronix
+t4014 and 4016 graphics terminals.
+If the option
+.I c
+is specified, the input files are only conditioned for output, ie.
+expanded and sorted (see pexpand and psort).  This is useful if many
+copies of the same output is desired.
+If the option
+.I r
+is instead specified, the input is assumed already to be conditioned.
+If no input files are specified, the standard input is read.
+.TP 10n
+.BR \-c
+Condition the input only.
+.TP
+.BR \-r
+Input is already conditioned, output only.
+.SH EXAMPLE
+To display the plot example.plt:
+.IP "" .2i
+bgraph example.plt | t4014
+.SH FILES
+see pexpand(1)
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Area fill is noticably lacking.  Line textures fail on most
+4014 emulators.
+.SH "SEE ALSO"
+bgraph(1), cv(1), igraph(1), pexpand(1)

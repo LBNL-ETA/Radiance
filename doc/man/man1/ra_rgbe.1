@@ -1,0 +1,101 @@
+.\" RCSid "$Id"
+.TH RA_RGBE 1 1/23/98 RADIANCE
+.SH NAME
+ra_rgbe - convert between different RADIANCE picture types
+.SH SYNOPSIS
+.B ra_rgbe
+[
+.B \-r
+][
+.B "\-e +/-stops"
+][
+.B \-f
+][
+.B "\-n frameno"
+]
+[
+.B input
+[
+.B outspec
+]
+]
+.SH DESCRIPTION
+.I Ra_rgbe
+converts between RADIANCE run-length encoded and flat formats, and
+separates concatanated animation frames produced by
+.I rpict(1).
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+By default,
+.I ra_rgbe
+produces a flat RADIANCE picture file from any type of RADIANCE
+input picture.
+The
+.I \-r
+option causes
+.I ra_rgbe
+to produce a run-length encoded file instead.
+.PP
+If the input file consists of multiple animation frames as produced by
+.I rpict
+with the
+.I \-S
+option,
+.I ra_rgbe
+will read each frame and write it to the output file created by calling
+.I printf(3)
+with the output specification and frame number as arguments.
+If the output specification begins with an exclamation mark ('!'),
+then this interpreted as a command spec., which is also run through
+.I printf
+with the frame number to get the final command.
+This command must accept a Radiance picture on its standard input,
+and may write results either to a file or to the standard output.
+The
+.I \-n
+option may be used to select a specific frame for output, and
+other frames in the input will be skipped.
+Normally, all frames will be read and written.
+.PP
+.I Ra_rgbe
+will report an error and exit if the target output file already exists,
+unless the
+.I \-f
+option is given.
+If the output file is missing, the standard output is used.
+If the input file is missing or set to '-', the standard input is used.
+.SH NOTES
+The file format for RADIANCE pictures was changed between release
+1.4 and release 2.0.
+The older format can still be read by all the programs, but only
+the newer format is produced.
+This newer format cannot be read by RADIANCE software prior to
+release 2.0.
+.PP
+.I Ra_rgbe
+provides some downward compatibility by producing files that can
+be read by older RADIANCE software.
+The resultant files are also easier to manipulate with programs
+designed to read raw raster data.
+.PP
+The other use for
+.I ra_rgbe
+is as a quicker way to adjust the exposure of a RADIANCE picture than
+.I pfilt(1),
+since
+.I ra_rgbe
+only allows integer f-stop changes.
+In this mode,
+.I ra_rgbe
+should be used with the
+.I \-r
+option.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+pfilt(1), printf(1), ra_xyze(1), rpict(1)

@@ -1,0 +1,57 @@
+.\" RCSid "$Id"
+.TH GENCLOCK 1 4/9/97 RADIANCE
+.SH NAME
+genclock - generate a RADIANCE description of a clock
+.SH SYNOPSIS
+.B genclock
+[
+.B "\-f face_mat"
+][
+.B "\-c case_mat"
+][
+.B "\-n name"
+]
+{
+.B HH:MM
+|
+.B hours
+}
+.SH DESCRIPTION
+.I Genclock
+produces a RADIANCE scene description of an analog clock showing the
+given hour.
+The hour may either be given as
+.I HH:MM
+or decimal
+.I hours.
+.PP
+The face of the clock will have a radius of 1.0 units, with the
+surrounding case 1.1 (2.2 diameter).
+The origin is at the center of the back, and the face looks in the
+positive X-direction.
+The 12 o'clock direction corresponds to the positive Z-axis.
+(The Y-axis direction is 3 o'clock.)\0
+The
+.I xform(1)
+command may be used to resize and relocate the clock as desired.
+.PP
+Normally,
+.I genclock
+produces all of the materials necessary for its own description, but
+options are provided to specify alternate materials for the face and
+case.
+The numbers on the face are in dark lettering, so the face material
+must be relatively light for them to show up well.
+By default, the clock is given the name "clock," but this may be
+changed with the
+.I \-n
+option.
+.SH EXAMPLE
+To produce a 12 inch diameter clock showing 10:35
+and hang it at 60 on a wall facing the Y-direction at Y=10:
+.IP "" .2i
+genclock 10:35 | xform -s 6 -rz 90 -t 20 10 60
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+genbox(1), genrev(1), gensurf(1), genworm(1), rpict(1), rview(1), xform(1)

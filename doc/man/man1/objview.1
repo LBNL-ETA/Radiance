@@ -1,0 +1,47 @@
+.\" RCSid "$Id"
+.TH OBJVIEW 1 6/10/98 RADIANCE
+.SH NAME
+objview - view RADIANCE object(s)
+.SH SYNOPSIS
+.B objview
+[
+.B "\-u updirection"
+][
+rad options
+]
+input ..
+.br
+.B objview
+[
+.B \-g
+][
+.B "\-u updirection"
+][
+glrad options
+]
+input ..
+.SH DESCRIPTION
+.I Objview
+renders a RADIANCE object interactively using
+.I rad(1)
+or
+.I glrad(1).
+This program is merely a shell script that adds some light
+sources to a scene then calls
+.I rad(1)
+or
+.I glrad(1)
+to make an octree and view the scene interactively.
+.PP
+If the default up vector (+Z) is inappropriate
+for this object, then specify a different one using the
+.I \-u
+option to
+.I objview.
+.PP
+Any number of material and scene files may be given,
+but no in-line commands or standard input.
+.SH AUTHOR
+Greg Ward Larson
+.SH "SEE ALSO"
+glrad(1), oconv(1), rad(1), rview(1)

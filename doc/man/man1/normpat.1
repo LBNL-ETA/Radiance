@@ -1,0 +1,50 @@
+.\" RCSid "$Id"
+.TH NORMPAT 1 11/15/93 RADIANCE
+.SH NAME
+normpat - normalize RADIANCE pictures for use as patterns.
+.SH SYNOPSIS
+.B normpat
+[
+.B \-v
+][
+.B \-b
+][
+.B \-f
+][
+.B "\-r maxres"
+]
+.B "picture .."
+.SH DESCRIPTION
+.I Normpat
+normalizes one or more RADIANCE pictures to an average brightness of 1.0
+and optionally removes fundamental frequencies and blends the edges
+of the image.
+The original images are overwritten during this process, and it is
+recommended that the program work on copies of the pictures for this reason.
+.PP
+The
+.I \-r
+option can be used to set the maximum horizontal or vertical resolution
+of the final result, which should not be greater than 256 for most
+patterns (due to the associated memory burden during rendering).
+The
+.I \-f
+option uses a Fourier transform to remove the lowest frequencies
+from the image, reducing the noticeability of pattern repitition.
+The
+.I \-b
+option can be used to blend the edges of the image so that when
+it is tiled, the seams are less apparent.
+The
+.I \-v
+option turns on the verbose flag, which prints on the standard output
+progress messages as the script runs.
+.PP
+.I Normpat
+is a shell script that makes calls to other RADIANCE programs
+that do the actual work.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), pcomb(1), pcompos(1), pfilt(1), pflip(1), protate(1),
+psign(1), ra_bn(1), ra_pr(1), ra_t8(1), ra_t16(1), rpict(1)

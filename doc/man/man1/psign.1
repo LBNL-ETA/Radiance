@@ -1,0 +1,132 @@
+.\" RCSid "$Id"
+.TH PSIGN 1 10/9/97 RADIANCE
+.SH NAME
+psign - produce a RADIANCE picture from text.
+.SH SYNOPSIS
+.B psign
+[
+.B options
+]
+[
+.B text
+]
+.SH DESCRIPTION
+.I Psign
+produces a RADIANCE picture of the given
+.I text.
+The output dimensions are determined by the character height, aspect
+ratio, number of lines and line length.
+(Also the character size if text squeezing is used.)\0
+If no
+.I text
+is given, the standard input is read.
+.TP 10n
+.BI -cb " r g b"
+Set the background color to
+.I "r g b"
+The default is white (1 1 1).
+.TP
+.BI -cf " r g b"
+Set the foreground color to
+.I "r g b"
+The default is black (0 0 0).
+.TP
+.BR \-dr
+Text reads to the right (default).
+.TP
+.BR \-du
+Text reads upwards.
+.TP
+.BR \-dl
+Text reads to the left (upside down).
+.TP
+.BR \-dd
+Text reads downwards.
+.TP
+.BI -h \ cheight
+Set the character height to
+.I cheight.
+The default is 32 pixels.
+.TP
+.BI -a \ aspect
+Set the character aspect ratio (height/width) to
+.I aspect.
+The default value is 1.67.
+.TP
+.BI -x \ xsize
+Set the horizontal image size to
+.I xsize.
+Use with
+.I \-y
+option (below) in place of the
+.I \-h
+specification to control output image size directly.
+If the character aspect ratio
+.I (\-a
+option, above) is non-zero, then one of the specified x or y output
+dimensions may be reduced to maintain this ratio.
+If direction is right
+.I (\-dr)
+or left
+.I (\-dl),
+then it is not necessary to give the
+.I \-y
+option, since it can be computed from the character height
+.I (\-h).
+.TP
+.BI -y \ ysize
+Set the vertical image size to
+.I ysize.
+Use with the
+.I \-x
+option (described above).
+If direction is up
+.I (\-du)
+or down
+.I (\-dd),
+then it is not necessary to give the
+.I \-x
+option, since it can be computed from the character height
+.I (\-h).
+.TP
+.BI -s \ spacing
+Set the intercharacter spacing to
+.I spacing.
+The magnitude of this value is multiplied by the character height over
+the aspect ratio (ie. the character width) to compute the desired
+distance between characters in the output.
+The sign of the value, positive or negative, determines how this
+ideal spacing is used in the actual placement of characters.
+If
+.I spacing
+is positive, then the overall width of the line will not be affected,
+nor will indentation of textual elements.
+Thus, the text format will be mostly unaffected.
+However, spacing between characters will reflect their relative size
+for a more natural appearance.
+If
+.I spacing
+is negative, characters will be squeezed together to meet the
+spacing critereon, regardless of how it might affect the format of
+the output.
+The default value for
+.I spacing
+is zero, which is interpreted as uniformly spaced characters.
+.TP
+.BI -f \ fontfile
+Load the font from
+.I fontfile.
+The default font is helvet.fnt
+.SH EXAMPLE
+To put a big "Hi!" on the terminal:
+.IP "" .2i
+psign -h 22 -a 1 -cb 0 0 0 -cf 1 1 1 Hi\\! | ttyimage
+.SH ENVIRONMENT
+RAYPATH		path to search for font files
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The entire bitmap is stored in memory, which can be a problem for
+large and/or high-resolution signs.
+.SH "SEE ALSO"
+getinfo(1), pcompos(1), pfilt(1), ttyimage(1)

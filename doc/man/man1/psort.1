@@ -1,0 +1,46 @@
+.\" RCSid "$Id"
+.TH PSORT 1 6/24/98 RADIANCE
+.SH NAME
+psort - sort primitives in metafile as requested
+.SH SYNOPSIS
+.B psort
+[
+.B +/\-x
+][
+.B +/\-y
+][
+.B +/\-X
+][
+.B +/\-Y
+]
+file ..
+.SH DESCRIPTION
+.I Psort
+reads each metafile
+.I file
+in sequence and sorts primitives between globals according to
+the option specification.
+Lower case options mean the corresponding minimum, upper case
+indicates the maximum value.
+A '+' before the option means sort in order of increasing
+values, '-' means decreasing.
+The order the options appear on the command line is the order
+in which the extrema are examined.
+For example, the options
+.I \-Y +x
+would mean "sort on decreasing ymax, then increasing xmin values".
+.PP
+If no input files are specified, the standard input is read.
+.SH EXAMPLE
+To sort the file "meta" in order of increasing xmax, then
+decreasing ymin:
+.IP "" .2i
+psort +X -y meta
+.SH FILES
+/usr/tmp/psXXXXa /usr/tmp/psXXXXb
+.SH BUGS
+Aborting the program will sometimes leave files in /usr/tmp.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+metafile(5), pexpand(1)

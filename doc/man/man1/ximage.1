@@ -1,0 +1,242 @@
+.\" RCSid "$Id"
+.TH XIMAGE 1 10/27/98 RADIANCE
+.SH NAME
+ximage - RADIANCE driver for X window system
+.SH SYNOPSIS
+.B ximage
+[
+.B \=geometry
+][
+.B "\-di display"
+][
+.B "\-c ncolors"
+][
+.B \-d
+][
+.B \-b
+][
+.B \-m
+][
+.B "\-g gamma"
+][
+.B \-f
+][
+.B "\-e spec
+][
+.BI -o spec
+][
+.B "\-t intvl"
+][
+.B \-s
+]
+.B "picture .."
+.SH DESCRIPTION
+.I Ximage
+takes one or more RADIANCE picture files
+and displays them on an X server.
+The
+.I \-c
+option specifies the number of colors to use (default fills color table).
+The
+.I \-d
+option turns off color dithering.
+The
+.I \-b
+option displays the image in black and white (greyscale).
+The
+.I \-m
+option forces monochrome output.
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.2.
+The
+.I \-f
+option stores a Pixmap on the server side for faster refresh.
+This may not work with large images on some servers.
+The
+.I \-o
+option specifies a sequence of information to print to the standard
+output for the 't' command (see below).
+The
+.I \-t
+option specifies a minimum interval (in milliseconds)
+between successive ray outputs
+in mouse tracking mode (right button pressed).
+.PP
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+If the special word,
+.I auto
+is given instead of a number of stops, then
+.I ximage
+performs an automatic exposure adjustment similar to
+.I pcond(1),
+compressing the dynamic range of the image to fit
+within the dynamic range of the display.
+If the special word,
+.I human
+is given instead, then
+.I ximage
+performs an exposure adjustment similar to
+.I pcond
+with the
+.I \-s
+and
+.I \-c
+options, which compensate for human contrast and color sensitivity
+at the corresponding scene luminance levels.
+This option yeilds and appearance of the scene on the display that
+closely matches what would be experienced in the real world.
+.PP
+The
+.I \-s
+option tells
+.I ximage
+to display multiple pictures sequentially, rather than all at once.
+If no
+.I picture
+is given, input is read from stdin provided either the
+.I \-b
+or
+.I \-m
+option is in effect, or the X server is capable of 24-bit color.
+However, many of the commands given below will not work.
+.SH COMMANDS
+Once a picture is displayed, the user
+may perform a number of operations.
+Some of the operations make use of an area of interest, defined by pressing
+the left mouse button and dragging the cursor over a section of the image.
+Pressing the button and immediately releasing it defines a single point as
+the area of interest.
+A command is a single character.
+.TP 10n
+.BR q
+Quit picture.
+(Also Q or ^D.)\0
+.TP 10
+.BR <space>
+Redraw the area of interest.
+.TP 10
+.BR ^R
+Redraw the entire image.
+.TP
+.BR <return>
+Display the radiance averaged over the area of interest.
+.TP
+.BR l
+Display the luminance value in the area of interest.
+This assumes that the image was correctly computed in terms of
+luminance.
+.TP
+.BR c
+Display the color in the area of interest.
+.TP
+.BR p
+Display the x and y location of the cursor.
+.TP
+.BR i
+Identify identical pixels by assigning a random color at the cursor position.
+This is useful for displaying contours, especially when combined
+with the -b option.
+.TP
+.BR t
+Print information about the pixel under the cursor
+according to the string following the
+.I \-o
+command line option.
+The valid characters for this option correspond roughly to the other
+.I ximage
+commands:
+.IP
+o	ray origin
+.IP
+d	ray direction
+.IP
+v	radiance value
+.IP
+l	luminance value
+.IP
+p	pixel position
+.IP
+The default output is "-ood", which prints
+the ray origin and direction.
+This can be used as input to rtrace(1) to get additional information
+about the image (ie. pipe the output of ximage into rtrace).
+Pressing the middle mouse button is equivalent to typing the 't' key.
+Pressing and holding the right mouse button is equivalent to
+continuously pressing the 't' key.
+.TP
+.BR =
+Adjust the exposure to the area of interest.
+A crude adjustment is made immediately, and the number of stops
+is printed while the colors are resampled.
+After a few seconds to a minute, the final image is redisplayed.
+If the area of interest is already within 1/2 stop of the ideal,
+no adjustment is made.
+.TP
+.BR @
+Same as '=' command, only the exposure is adjusted to provide
+roughly the same visibility for the selected region
+on screen as a viewer would experience
+in the actual space.
+Like the 'l' command, this adjustment assumes that the image
+has been correctly computed in terms of luminance.
+(See also the 'h' command, below.)
+.TP
+.BR a
+Perform automatic exposure compensation, as if
+.I ximage
+were started with the
+.I "\-e auto"
+option.
+If a rectangular area has been selected, the pixels in this region
+will be emphasized in the histogram, offering this area exposure preference.
+(Each pixel within the rectangle will be weighted as 21 outside pixels.)
+.TP
+.BR h
+Perform human expsoure compensation, as if
+.I ximage
+were started with the
+.I "\-e human"
+option.
+See the 'a' command above regarding pixel weighting.
+.TP
+.BR 0
+Reset the origin to the upper left corner of the image.
+This command is used to restore the original image position after
+using the shift or control key with the mouse to relocate the image
+within the frame (see below).
+.TP
+.BR f
+Switch on the fast redraw option
+.I (\-f),
+loading the image pixmap over to the server side.
+This command is useful when network delays are causing slow image
+refresh, and the user didn't notice it until after
+.I ximage
+was started.
+.TP
+.BR F
+Switch off the fast redraw option.
+This frees up some memory on the server, as well as the color table
+for other windows.
+.PP
+In addition to the commands listed above, the control or shift key may
+be held while the cursor is dragged to reposition the image within the
+window.
+.SH "X RESOURCES"
+radiance.gamma	the default gamma correction value
+.SH ENVIRONMENT
+DISPLAY_GAMMA		the default gamma correction value
+.SH AUTHORS
+Greg Ward
+.br
+Anat Grynberg (Paris)
+.br
+Philip Thompson (MIT)
+.SH "SEE ALSO"
+aedimage(1), normtiff(1), pcond(1), pfilt(1), rpict(1), rtrace(1),
+rview(1), xglaresrc(1), xshowtrace(1)

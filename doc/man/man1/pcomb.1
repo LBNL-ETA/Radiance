@@ -1,0 +1,208 @@
+.\" RCSid "$Id"
+.TH PCOMB 1 8/31/96 RADIANCE
+.SH NAME
+pcomb - combine RADIANCE pictures.
+.SH SYNOPSIS
+.B pcomb
+[
+.B -w
+][
+.B "\-x xres"
+][
+.B "\-y yres"
+][
+.B "\-f file"
+][
+.B "\-e expr"
+]
+[
+[
+.B -o
+][
+.B "\-s factor"
+][
+.B "\-c r g b"
+]
+.B "input .."
+]
+.SH DESCRIPTION
+.I Pcomb
+combines equal-sized RADIANCE pictures and sends the result to the
+standard output.
+By default, the result is just a linear combination of
+the input pictures multiplied by
+.I \-s
+and
+.I \-c
+coefficients,
+but an arbitrary mapping can be assigned with the
+.I \-e
+and
+.I \-f
+options.
+Negative coefficients and functions are allowed, and
+.I pcomb
+will produce color values of zero where they would be negative.
+.PP
+The variables
+.I ro,
+.I go
+and
+.I bo
+specify the red, green and blue output values, respectively.
+Alternatively, the single variable
+.I lo
+can be used to specify a brightness value for black and white output.
+The predefined functions
+.I ri(n),
+.I gi(n)
+and
+.I bi(n)
+give the red, green and blue input values for
+picture
+.I n.
+To access a pixel that is nearby the current one, these functions
+also accept optional x and y offsets.
+For example,
+.I ri(3,-2,1)
+would return the red component of the pixel from picture 3
+that is left 2 and up 1 from the current position.
+Although x offsets may be as large as width of the picture,
+y offsets are limited to a small window (+/- 8 pixels) due to efficiency
+considerations.
+However, it is not usually necessary to worry about this problem --
+if the requested offset is not available, the next best pixel is
+returned instead.
+.PP
+For additional convenience, the function
+.I li(n)
+is defined as the input brightness for picture
+.I n.
+This function also accepts x and y offsets.
+.PP
+The constant
+.I nfiles
+gives the number of input files present,
+and
+.I WE
+gives the white efficacy (lumens/brightness) for pixel values.
+The variables
+.I x
+and
+.I y
+give the current output pixel location for use in
+spatially dependent functions, the constants
+.I xmax
+and
+.I ymax
+give the input resolution, and the constants
+.I xres
+and 
+.I yres
+give the output resolution (usually the same, but see below).
+The constant functions
+.I "re(n), ge(n), be(n),"
+and
+.I le(n)
+give the exposure values for picture
+.I n,
+and
+.I pa(n)
+gives the corresponding pixel aspect ratio.
+Finally, for pictures with stored view parameters,
+the functions
+.I "Ox(n), Oy(n)"
+and
+.I Oz(n)
+return the ray origin in world coordinates for the current pixel
+in picture
+.I n,
+and
+.I "Dx(n), Dy(n)"
+and
+.I Dz(n)
+return the normalized ray direction.
+In addition, the function
+.I T(n)
+returns the distance from the origin to the aft clipping plane
+(or zero if there is no aft plane), and the function
+.I S(n)
+returns the solid angle of the current pixel in steradians
+(always zero for parallel views).
+If the current pixel is outside the view region,
+.I T(n)
+will return a negative value, and
+.I S(n)
+will return zero.
+.PP
+The
+.I \-w
+option can be used to suppress warning messages about invalid
+calculations.
+The
+.I \-o
+option indicates that original pixel values are to be used for the next
+picture, undoing any previous exposure changes or color correction.
+.PP
+The
+.I \-x
+and
+.I \-y
+options can be used to specify the desired output resolution,
+.I xres
+and
+.I yres,
+and can be expressions involving other constants such as
+.I xmax
+and
+.I ymax.
+The constants
+.I xres
+and
+.I yres
+may also be specified in a file or expression.
+The default output resolution is the same as the input resolution.
+.PP
+The
+.I \-x
+and
+.I \-y
+options must be present if there are no input files, when
+the definitions of
+.I ro,
+.I go
+and
+.I bo
+will be used to compute each output pixel.
+This is useful for producing simple test pictures for various
+purposes.
+(Theoretically, one could write a complete renderer using just the
+functional language...)
+.PP
+The standard input can be specified with a hyphen ('-').
+A command that produces a RADIANCE picture can be given in place of a file 
+by preceeding it with an exclamation point ('!').
+.SH EXAMPLES
+To produce a picture showing the difference between pic1 and pic2:
+.IP "" .2i
+pcomb -e 'ro=ri(1)-ri(2);go=gi(1)-gi(2);bo=bi(1)-bi(2)' pic1 pic2 > diff
+.PP
+Or, more efficiently:
+.IP "" .2i
+pcomb pic1 -s -1 pic2 > diff
+.PP
+To precompute the gamma correction for a picture:
+.IP "" .2i
+pcomb -e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' pic > pic.gam
+.PP
+To perform some special filtering:
+.IP "" .2i
+pcomb -f myfilt.cal -x xmax/2 -y ymax/2 input.pic > filtered.pic
+.PP
+To make a picture of a dot:
+.IP "" .2i
+pcomb -x 100 -y 100 -e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2-25^2,0,1)' > dot
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+calc(1), getinfo(1), pcompos(1), pfilt(1), rpict(1)

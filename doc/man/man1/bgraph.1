@@ -1,0 +1,284 @@
+.\" RCSid "$Id"
+.TH BGRAPH 1 6/24/98 RADIANCE
+.SH NAME
+bgraph - do a set of batch graphs to a metafile
+.SH SYNOPSIS
+.B bgraph
+[
+.B \-type ..
+][
+.B +variable value ..
+][
+.B file ..
+]
+.SH DESCRIPTION
+.I Bgraph
+reads each graph
+.I file
+in sequence and converts it to a plot suitable
+for use by a metafile driver program.
+If no files are given, the standard input is read.
+.PP
+The graph type can be defined with a
+.I \-type
+option.
+Types are simply include files which set default values for
+certain variables.
+The actual include file name is the type concatanated with ".plt".
+Typical types are "scatter", "line", and "curve".
+A scatter graph shows only points.
+A line graph shows only lines connecting points.
+A curve graph shows both points and connecting lines.
+.PP
+Variables can be set explicitly with
+.I +variable value
+options.
+The following standard graph variables are supported:
+.TP 10n
+.BR fthick
+The frame thickness, valued from 0 to 4.
+A value of 0 turns the frame off.
+.TP
+.BR grid
+The grid: 1 is on, 0 is off.
+.TP
+.BR include
+The include file name.
+Graph input is taken from the file.
+If the file is not found in the current directory, it is
+searched for in a set of standard locations.
+.TP
+.BR legend
+The legend title.
+.TP
+.BR othick
+The origin axis thickness, valued from 0 to 4.
+A value of 0 turns the origin off.
+.TP
+.BR period
+The period for a polar plot.
+For a plot in degrees, use 360.
+For radians, use 6.283.
+A value of 0 (the default) indicates a Cartesian plot.
+.TP
+.BR subtitle
+The graph subtitle.
+.TP
+.BR symfile
+The point symbol metafile.
+.TP
+.BR tstyle
+The frame tick mark style.
+The default value is 1, which is outward tick marks.
+A value of 2 is inward ticks, 3 is cross ticks.
+A value of 0 disables frame tick marks.
+.TP
+.BR title
+The graph title.
+.TP
+.BR xlabel
+The x axis label.
+.TP
+.BR xmap
+The x axis mapping function.
+An x axis mapping xmap(x)=log(x) produces a log x axis.
+.TP
+.BR xmax
+The x axis maximum.
+.TP
+.BR xmin
+The x axis minimum.
+.TP
+.BR xstep
+The x axis step.
+.TP
+.BR ylabel
+The y axis label.
+.TP
+.BR ymap
+The y axis mapping function.
+An y axis mapping ymap(y)=log(y) produces a log y axis.
+.TP
+.BR ymax
+The y axis maximum.
+.TP
+.BR ymin
+The y axis minimum.
+.TP
+.BR ystep
+The y axis step.
+.PP
+In addition to the standard graph variables, each curve
+has a set of variables.
+The variables for curve 'A' all begin with the letter 'A';
+the variables for curve 'B' all begin with the letter 'B',
+and so on.
+Up to 8 curves are supported on a single graph, 'A'
+through 'H'.
+The variables for curve 'A' are:
+.TP 10n
+.BR A
+The function for curve 'A'.
+If
+.I Adata
+is undefined,
+.I xmin,
+.I xmax
+and
+.I Anpoints
+are used to determine which x values to plot.
+If
+.I Adata
+is defined and
+.I A
+is a function of a single variable (ie. A(x)),
+data values are interpreted as x values to be plotted.
+If
+.I Adata
+is defined and
+.I A
+is a function of two variables (ie. A(x,y)),
+data values are interpreted as (x,y) pairs and
+.I A
+becomes a mapping function for the data.
+.TP
+.BR Acolor
+The color for curve A.
+The values 1-4 map to black, red, green, and blue respectively.
+A value of 0 turns curve A off.
+.TP
+.BR Adata
+The point data for curve 'A'.
+If
+.I Adata
+is set to the name of a file,
+data is read and interpreted from that file.
+If
+.I Adata
+is set to a command (beginning with an exclamation, '!'),
+the output of the command is read as data.
+Otherwise, data is read from the current file.
+Data values are separated by white space and/or commas.
+A semicolon or end of file indicates the end of data.
+.TP
+.BR Alabel
+The label for curve 'A'.
+The curve label is printed in the legend when a curve is defined.
+.TP
+.BR Alintype
+The line type for curve 'A', valued from 0 to 4.
+A value of 0 turns line drawing off.
+A value of 1 is solid, 2 is dashed, 3 is dotted, and 4 is dot-dashed.
+.TP
+.BR Anpoints
+The number of symbol points for curve 'A'.
+If
+.I Adata
+is defined, all points will be connected with the selected
+curve line, but only
+.I Anpoints
+points will be indicated with a symbol.
+This prevents messy graphs when large number of points are defined.
+If
+.I A
+is defined and
+.I Adata
+is not,
+.I Anpoints
+is used along with
+.I xmin
+and
+.I xmax
+to determine which x values to plot.
+.TP
+.BR Asymsize
+The symbol radius for curve 'A'.
+The default size is 100.
+A value of 0 turns symbols off.
+.TP
+.BR Asymtype
+This is the name of a segment in
+.I symfile
+which defines the graphics symbol for curve 'A'.
+.TP
+.BR Athick
+The line thickness for curve 'A', valued from 0 to 4.
+A thickness of 0 turns line drawing off.
+.SH "GRAPH FILE FORMAT"
+A graph file contains definitions for graph and curve
+variables.
+These definitions fall one per line in the following formats:
+.nf
+
+	vreal        = expression       # real variable
+	vfunction(x) = expression(x)    # function
+	vstring      = "string"         # string variable
+	vdata        = filename         # data file
+	vdata        = "!command"       # data generator
+	variable     = continued \\
+	        line                    # newline escaped
+	vdata        =                  # data
+		v1 v2 v3 v4 ... ;
+
+.fi
+Comments are preceded by a '#', and continue to the end
+of the line.
+Except for comments, the newline can be escaped with a backslash.
+Note that in the special case where data is contained in
+the graph file, a definition will continue over more than
+one line.
+Data values can be separated by commas or white space, and
+reading continues until a semicolon is reached.
+No comments are allowed in the data section of a file.
+.PP
+An expression is an algebraic formula containing numbers,
+variables, functions, and the standard operators
+{+,-,*,/,^,(,)} (see calc(1)).
+Besides the variables described in the last section,
+definitions of intermediate real variables and functions
+are allowed for convenience.
+They may be used in expressions of graph and curve variables.
+.SH EXAMPLE
+A file to graph the sine function is:
+.nf
+
+	title = "Sine Function from 0 to Pi"
+	PI = 3.141592653589793
+	A(x) = sin(x)
+	xmin = 0
+	xmax = PI
+	Anpoints = 100
+
+.fi
+Or, to graph selected points:
+.nf
+
+	title = "Sine Function at 0, .2, .6, and .8"
+	A(x) = sin(x)
+	Adata =
+		0 , .2
+		.6 , .8
+	;
+
+.fi
+The commands to plot these files might be:
+.nf
+
+	bgraph -line sine1.plt | impress | ipr
+
+	bgraph -curve +ymin -1 +ymax 1 sine2.plt | t4014
+
+.fi
+.SH FILES
+/usr/local/lib/meta/*.mta
+/usr/local/lib/meta/*.plt
+*.plt
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+There is no mechanism provided for undefining a variable.
+An axis mapping function which is not invertible (monotonically
+increasing or decreasing) confuses the program terribly.
+.SH "SEE ALSO"
+calc(1), dgraph(1), gcomp(1), igraph(1), impress(1),
+metafile(5), mx80(1), mt160l(1), t4014(1), x11meta(1)

@@ -1,0 +1,259 @@
+.\" RCSid "$Id"
+.TH RCALC 1 4/6/99 RADIANCE
+.SH NAME
+rcalc - record calculator
+.SH SYNOPSIS
+.B rcalc
+[
+.B \-b
+][
+.B \-l
+][
+.B \-n
+][
+.B \-w
+][
+.B \-u
+][
+.B \-tS
+][
+.B "\-i format"
+][
+.B "\-o format"
+][
+.B "\-f source"
+][
+.B "\-e expr"
+][
+.B "\-s svar=sval"
+]
+file ..
+.SH DESCRIPTION
+.I Rcalc
+transforms ``records'' from each
+.I file
+according to the given set of literal and relational information.
+By default, records are separated by newlines, and contain
+numeric fields separated by tabs.
+The
+.I \-tS
+option is used to specify an alternate tab character.
+A
+.I \-i format
+option specifies a template for an alternate
+input record format.
+.I Format
+is interpreted as a specification string if it contains a dollar sign '$'.
+Otherwise, it is interpreted as the name of the file containing
+the format specification.
+In either case, if the format does not end with a newline, one will be added
+automatically.
+A
+.I \-o format
+option specifies an alternate output record format.
+It is interpreted the same as an input specification.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled.
+The
+.I \-e expr
+option can be used to define variables on the command line.
+Since many of the characters in an expression have special meaning
+to the shell, it should usually be enclosed in single quotes.
+The
+.I \-s svar=sval
+option can be used to assign a string variable a string value.
+If this string variable appears in an input format, only records
+with the specified value will be processed.
+The
+.I \-b
+option instructs the program to accept only exact matches.
+By default, tabs and spaces are ignored except
+as field separators.
+The
+.I \-l
+option instructs the program to ignore newlines in the input,
+basically treating them the same as tabs and spaces.
+Normally, the beginning of the input format matches the beginning of
+a line, and the end of the format matches the end of a line.
+With the
+.I \-l
+option, the input format can match anywhere on a line.
+The
+.I \-w
+option causes non-fatal error messages (such as division by zero) to
+be supressed.
+The
+.I \-u
+option causes output to be flushed after each record.
+The
+.I \-n
+option tells the program not to get any input, but to produce a
+single output record.
+Otherwise, if no files are given, the standard input is read.
+.PP
+Format files associate names with string and numeric fields
+separated by literal information in a record.
+A numeric field is given in a format file as a dollar sign, followed
+by curly braces enclosing a variable name:
+.PP
+	This is a numeric field: ${vname}
+.PP
+A string variable is enclosed in parentheses:
+.PP
+	This is a string field: $(sname)
+.PP
+The program attempts to match literal information in
+the input format to its input and assign string and numeric
+fields accordingly.
+If a string or numeric field variable appears more than once in
+the input format, input values for the corresponding fields must
+match (ie. have the same value) for the whole record to match.
+Numeric values are allowed some deviation, on the order of 0.1%, but
+string variables must match exactly.
+Thus, dummy variables for "don't care" fields should be given unique
+names so that they are not all required to take on the same value.
+.PP
+For each valid input record, an output record is produced
+in its corresponding format.
+Output field widths are given implicitly by the space occupied
+in the format file, including the dollar sign and braces.
+This makes it impossible to produce fields with fewer than four
+characters.
+If the
+.I \-b
+option is specified, input records must exactly match the
+template.
+By default, the character following each input field is used as
+a delimiter.
+This implies that string fields that are followed by white space
+cannot contain strings with white space.
+Also, numeric fields followed but not preceded by white space
+will not accept numbers preceded by white space.
+Adjacent input fields are advisable only with the
+.I \-b
+option.
+Numeric output fields may contain expressions as well as variables.
+A dollar sign may appear in a literal as two dollar signs ($$).
+.PP
+The definitions specified in
+.I \-e
+and
+.I \-f
+options relate numeric output fields to numeric input fields.
+For the default record format, a field is a variable of the form
+$N, where N is the column number, beginning with 1.
+Output columns appear on the left-hand side of assignments, input
+columns appear on the right-hand side.
+.PP
+A variable definition has the form:
+.PP
+
+	var = expression ;
+
+.PP
+Any instance of the variable in an expression will be replaced
+with its definition.
+.PP
+An expression contains real numbers, variable names, function calls,
+and the following operators:
+.PP
+	+  -  *  /  ^
+.PP
+Operators are evaluated left to right.
+Powers have the highest precedence; multiplication and
+division are evaluated before addition and subtraction.
+Expressions can be grouped with parentheses.
+All values are double precision real.
+.PP
+A function definition has the form:
+.PP
+
+	func(a1, a2, ..) = expression ;
+
+.PP
+The expression can contain instances of the function arguments
+as well as other variables and functions.
+Function names can be passed as arguments.
+Recursive functions can be defined using calls to the defined
+function or other functions calling the defined function.
+.PP
+The variable
+.I cond,
+if defined, will determine whether the current input record produces
+an output record.
+If
+.I cond
+is positive, output is produced.
+If
+.I cond
+is less than or equal to zero, the record is skipped and no other expressions
+are evaluated.
+This provides a convenient method for avoiding inappropriate calculations.
+The following library of pre-defined functions and variables is provided:
+.TP 10n
+.BR "if(cond, then, else)"
+if cond is greater than zero,
+then is evaluated, otherwise else is evaluated.
+This function is necessary for recursive definitions.
+.TP
+.BR "select(N, a1, a2, ..)"
+return aN (N is rounded to the nearest integer).
+This function provides array capabilities.
+If
+.I N
+is zero, the number of available arguments is returned.
+.TP
+.BR "rand(x)"
+compute a random number between 0 and 1 based on x.
+.TP
+.BR "floor(x)"
+return largest integer not greater than x.
+.TP
+.BR "ceil(x)"
+return smallest integer not less than x.
+.TP
+.BR "sqrt(x)"
+return square root of x.
+.TP
+.BR "exp(x)"
+compute e to the power of x (e approx = 2.718281828).
+.TP
+.BR "log(x)"
+compute the logarithm of x to the base e.
+.TP
+.BR "log10(x)"
+compute the logarithm of x to the base 10.
+.TP
+.BR PI
+the ratio of a circle's circumference to its diameter.
+.TP
+.BR recno
+the number of records recognized thus far.
+.TP
+.BR outno
+the number or records output thus far (including this one).
+.TP
+.BR "sin(x), cos(x), tan(x)"
+trigonometric functions.
+.TP
+.BR "asin(x), acos(x), atan(x)"
+inverse trigonometric functions.
+.TP
+.BR "atan2(y, x)"
+inverse tangent of y/x (range -pi to pi).
+.SH EXAMPLE
+To print the square root of column two in column one,
+and column one times column three in column two:
+.IP "" .2i
+rcalc -e '$1=sqrt($2);$2=$1*$3' inputfile > outputfile
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+String variables can only be used in input and output formats and
+.I \-s
+options, not in definitions.
+.PP
+Tabs count as single spaces inside fields.
+.SH "SEE ALSO"
+calc(1), cnt(1), ev(1), lam(1), tabfunc(1), total(1)

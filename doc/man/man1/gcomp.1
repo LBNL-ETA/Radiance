@@ -1,0 +1,65 @@
+.\" RCSid "$Id"
+.TH GCOMP 1 6/24/98 RADIANCE
+.SH NAME
+gcomp - do computations on a graph file.
+.SH SYNOPSIS
+.B gcomp
+[
+.B -amilh
+][
+.B +variable value ..
+][
+.B file ..
+]
+.SH DESCRIPTION
+.I Gcomp
+reads each graph
+.I file
+in sequence and computes the specified calculations.
+The type options are as follows:
+.TP 10n
+.BR \-n
+Print the name of each curve.
+.TP
+.BR \-a
+Print average and standard deviation of each curve.
+.TP
+.BR \-m
+Print minimum and maximum for each curve.
+.TP
+.BR \-i
+Print Romberg's approximation to the integral of each curve.
+.TP
+.BR \-l
+Print the slope, intercept, and correlation coefficient using
+the least squares method of linear regression.
+.TP
+.BR \-h
+Do not print a header in the output.
+.PP
+The calculations will be displayed as columns in the order
+they are specified on the command line.
+If no files are given, the standard input is read.
+.PP
+Variables can be set explicitly with
+.I +variable value
+options.
+The only truely useful variables for this program
+are xmin and xmax.
+They determine boundaries for the calculations.
+.SH EXAMPLE
+To compute the approximate integral of sin(x)/log(x) from 2 to 4:
+.nf
+	gcomp -i
+	A(x)=sin(x)/log(x);
+	Anpoints=100;
+	xmin=2;
+	xmax=4;
+	^D
+.fi
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Only the y values can be used for computation.
+.SH "SEE ALSO"
+bgraph(1), calc(1), dgraph(1), igraph(1)

@@ -1,0 +1,172 @@
+.\" RCSid "$Id"
+.TH RHOLO 1 6/10/98 RADIANCE
+.SH NAME
+glrad - render a RADIANCE scene using OpenGL
+.SH SYNOPSIS
+.B glrad
+[
+.B \-w
+][
+.B \-b
+][
+.B \-s
+][
+.B \-S
+][
+.B "\-v view"
+]
+.B rfile
+[
+.B "VAR\=value .."
+]
+.SH DESCRIPTION
+.I Glrad
+renders a Radiance scene description in OpenGL.
+Its syntax and behavior is similar to
+.I rad(1)
+with the
+.I \-o
+option, where the output device is assumed to be an X11 server
+with GLX extensions.
+.PP
+The
+.I \-w
+option turns off warnings.
+The
+.I \-s
+option tells
+.I glrad
+to run
+.I rad
+silently, not echoing
+.I oconv(1)
+command.
+The
+.I \-b
+option turns off back face visibility (i.e., enables back face culling).
+This is equivalent to the
+.I \-bv
+option of
+.I rpict(1)
+and
+.I rview(1).
+The
+.I \-S
+option turns on full-screen stereo for displays that support it.
+(Be sure to run
+.I /usr/gfx/setmon(1)
+or its equivalent to set STR_TOP or STR_BOT, first.)\0
+The
+.I \-v
+option may be used to specify a starting view, either by symbolic name
+as entered in the
+.I view
+assignments in
+.I rfile,
+or by a complete view specification, enclosed in quotes.
+If no view is specified, then the first standard view from
+.I rfile
+is used to start.
+.PP
+Variables permitted in
+.I rfile
+are described in the
+.I rad
+manual page.
+Additional or overriding assignments may be given on the command line
+following
+.I rfile.
+.PP
+The view is controlled via the mouse and simple one-character commands,
+listed below:
+.TP 10n
+.BR "(mouse)"
+Modify the current view.
+The mouse is used to control the current view in the following ways:
+.sp
+.nf
+CONTROL	MOUSE	ACTION
+(none)	left	Move forward towards cursor position
+(none)	right	Move backward away from cursor position
+(none)	middle	Rotate in place (usually safe)
+shift	left	Orbit left around cursor position
+shift	right	Orbit right around cursor position
+shift	middle	Orbit skyward
+cntl	middle	Orbit earthward
+.fi
+.sp
+For all movements but rotating in place, the cursor must be placed over some
+bit of visible geometry, otherwise the program has no reference point from
+which to work.
+It is best to just experiment with these controls until you learn to fly
+safely in your model.
+And if you run into trouble, the 'l' command is very useful.
+(See below.)\0
+.TP
+.BR '+'
+Zoom in on the current cursor position.
+(Beware of repeating keys that go faster than the display updates.)
+.TP
+.BR '-'
+Zoom out from the current cursor position.
+.TP
+.BR 'l'
+Return to the last saved view.
+Each time a new command changes the current view, the last view
+is saved, and may be recalled with this command.
+Multiple uses of the same command (e.g., rotation, zoom) will
+save only the view before the first such command.
+This way, it is easy to get back to where you were before a sequence
+of view changes.
+.TP
+.BR 'h'
+Fix the head height.
+All mouse-controlled view motions will be adjusted so that the head height
+does not change (where vertical is determined by the current
+view up vector).
+.TP
+.BR 'H'
+Release the head height, allowing it to change again during mouse-controlled
+movements.
+.TP
+.BR 'v'
+Print the current view parameters to the standard output.
+This is useful for finding out where you are, or for saving specific
+views in a keyframe file for animations or returning to later.
+.TP
+.BR 'V'
+Append the current view to the original
+.I rfile.
+This view will be unnamed, but can be referred to by number or the
+user may add a name later with a text editor.
+The current view number becomes the last standard view.
+(See the 'n' and 'p' commands, below.)
+.TP
+.BR 'n'
+Go to the next standard view stored in
+.I rfile.
+If the last view is currently displayed, then cycle to the first one.
+.TP
+.BR 'p'
+Go to the previous standard view stored in
+.I rfile.
+If the first view is currently displayed, then cycle to the last one.
+.TP
+.BR 'q'
+Quit
+.I glrad.
+This is the normal way to exit the program.
+.SH AUTHOR
+Greg Ward Larson
+.SH BUGS
+It would be nice if
+.I glrad
+set the appropriate video format for stereo viewing automatically,
+but the process is different on different systems and there is no
+single, sure-fire way to do it for all systems.
+On systems that do not support stereo extensions, the program
+may be compiled with the -DNOSTEREO option, which will avoid
+undefined symbol errors.
+.SH "SEE ALSO"
+chmod(1), getinfo(1), ls(1), objview(1), oconv(1), ps(1), rad(1),
+ranimate(1), rhcopy(1), rholo(1), rpict(1), rtrace(1), rview(1), setmon(1)

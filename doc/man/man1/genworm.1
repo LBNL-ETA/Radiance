@@ -1,0 +1,49 @@
+.\" RCSid "$Id"
+.TH GENWORM 1 11/15/93 RADIANCE
+.SH NAME
+genworm - generate a RADIANCE description of a functional worm
+.SH SYNOPSIS
+.B "genworm mat name 'x(t)' 'y(t)' 'z(t)' 'r(t)' nseg"
+[
+.B "\-e expr"
+][
+.B "\-f file"
+]
+.SH DESCRIPTION
+.I Genworm
+produces a RADIANCE scene description of a
+worm defined by the parametric equations
+.I x(t),
+.I y(t),
+.I z(t),
+and
+.I r(t)
+(the radius).
+.I T
+will vary from 0 to 1 in steps of
+.I 1/nseg.
+The surface will be composed of
+.I nseg
+cones or cylinders and
+.I nseg+1
+spheres.
+The expressions are of the same type used in RADIANCE
+function files.
+Auxiliary expressions and/or files may be specified
+in any number of
+.I \-e
+and
+.I \-f
+options.
+.SH EXAMPLE
+To generate a banana:
+.IP "" .2i
+genworm yellow banana '0' '5*sin(t)' '5*cos(t)' '.4-(.5-t)*(.5-t)' 20
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Since the worm is constructed of intersecting surfaces, only
+opaque materials should be used with this object.
+Also, a worm cannot double back inside itself without making a mess.
+.SH "SEE ALSO"
+calc(1), genbox(1), genrev(1), gensurf(1), rpict(1), rview(1), xform(1)

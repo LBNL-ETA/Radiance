@@ -1,0 +1,24 @@
+.\" RCSid "$Id"
+.TH PSMETA 1 6/24/98 RADIANCE
+.SH NAME
+psmeta - convert metafile to PostScript
+.SH SYNOPSIS
+.B psmeta
+file ..
+.SH DESCRIPTION
+.I Psmeta
+reads each metafile
+.I file
+in sequence and converts it to PostScript output suitable for a standard
+letter-size page.
+The file produced may also be read into programs that can
+handle Encapsulated PostScript.
+If no input files are specified, the standard input is read.
+.SH EXAMPLE
+To print the plot file example.plt to the ap5 printer:
+.IP "" .2i
+bgraph example.plt | psmeta | lpr -P ap5
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bgraph(1), igraph(1), imagew(1), lpr(1), mx80(1), t4014(1)

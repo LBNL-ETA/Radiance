@@ -1,0 +1,37 @@
+.\" RCSid "$Id"
+.TH PFLIP 1 11/15/93 RADIANCE
+.SH NAME
+pflip - flip a RADIANCE picture.
+.SH SYNOPSIS
+.B pflip
+[
+.B \-h
+][
+.B \-v
+][
+.B \-c
+]
+.B input
+[
+.B output
+]
+.SH DESCRIPTION
+.I Pflip
+flips a RADIANCE picture horizontally and/or vertically.
+The
+.I \-h
+option results in a horizontal exchange,
+and the
+.I \-v
+option results in a vertical exchange.
+Both options may be applied.
+.PP
+The
+.I \-c
+option indicates that the action is to correct an improper original
+image orientation, thus the recorded scanline ordering should not
+be changed.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), pcompos(1), pfilt(1), protate(1), psign(1), rpict(1)

@@ -1,0 +1,49 @@
+.\" RCSid "$Id"
+.TH OBJLINE 1 10/27/95 RADIANCE
+.SH NAME
+objline - create metafile line drawings of RADIANCE object(s)
+.SH SYNOPSIS
+.B objline
+[input ..]
+.SH DESCRIPTION
+.I Objline
+takes one or more RADIANCE scene files and produces four parallel
+line projections using calls to
+.I rad2mgf(1)
+and
+.I mgf2meta(1).
+The output must be redirected to a suitable destination for
+.I metafile(5)
+2-d graphics, such as
+.I x11meta(1)
+or
+.I psmeta(1).
+.PP
+The four projections presented are along the X-axis (displayed in the
+upper left quadrant), along the Y-axis (upper right), along the Z-axis
+(lower left) and an oblique view (lower right).
+If multiple RADIANCE input files are given, they are shown in
+different colors and line styles.
+(Materials are ignored, so materials files are best left out.)\0
+If no input files are given on the command line, the standard input
+is read.
+.SH EXAMPLES
+To create a line drawing of the RADIANCE file "myfile.rad" and
+display under X11:
+.IP "" .2i
+objline myfile.rad | x11meta -r &
+.PP
+To create a line drawing of three objects in different colors
+and send to the printer:
+.IP "" .2i
+objline obj1.rad obj2.rad obj3.rad | psmeta | lpr
+.PP
+To create a line drawing of a room and convert into a 1024x1024 RADIANCE
+picture:
+.IP "" .2i
+objline room.rad | meta2tga -x 1024 -y 1024 | ra_t8 -r > drawing.pic
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+meta2tga(1), metafile(5), mgf2meta(1), psmeta(1), ra_t8(1),
+rad2mgf(1), x11meta(1)

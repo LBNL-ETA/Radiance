@@ -1,0 +1,23 @@
+.\" RCSid "$Id"
+.TH RHINFO 1 1/15/99 RADIANCE
+.SH NAME
+rhinfo - print information about a RADIANCE holodeck file
+.SH SYNOPSIS
+.B "rhinfo input.hdk"
+.SH DESCRIPTION
+.I Rhinfo
+reads the RADIANCE holodeck file
+.I input.hdk
+and writes out the header and section information, including
+the grid sizes, number of beams and a histogram of samples/beam
+for each section.
+.SH EXAMPLE
+To print the header and section information from scene1.hdk:
+.IP "" .2i
+rhinfo scene1.hdk
+.SH AUTHOR
+Greg Ward Larson
+.SH ACKNOWLEDGMENT
+This work was supported by Silicon Graphics, Inc.
+.SH "SEE ALSO"
+getinfo(1), rhcopy(1), rholo(1), rhoptimize(1)

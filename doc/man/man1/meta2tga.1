@@ -1,0 +1,67 @@
+.\" RCSid "$Id"
+.TH META2TGA 1 6/24/98 RADIANCE
+.SH NAME
+meta2tga - convert metafile to Targa image format
+.SH SYNOPSIS
+.B meta2tga
+[
+.B \-c | \-r
+][
+.B "\-x width"
+][
+.B "\-y height"
+][
+.B "\-m minrad"
+][
+.B "\-o outname"
+]
+file ..
+.SH DESCRIPTION
+.I Meta2tga
+reads each metafile
+.I file
+in sequence and converts it to a compressed, color-mapped Targa file.
+The result is sent to the standard output (which must be redirected)
+unless the
+.I \-o
+option is used.
+The argument to the
+.I \-o
+option specifies the base file name, to which a page number and ".tga" is added
+as a suffix.
+Note that this option must be present in order to produce more than a single
+page of output.
+.PP
+The default output resolution is 400 by 400, but a different resolution
+can be given with the
+.I \-x
+and
+.I \-y
+options.
+.PP
+The
+.I \-m
+option can be used to set a minimum value for the line radius in pixels.
+This may be helpful for improving the readability of high resolution output.
+The default value is 0, which allows lines of one pixel thickness.
+.PP
+If the option
+.I \-c
+is specified, the input files are only conditioned for output, ie.
+expanded (see pexpand).
+This is useful if many copies of the same output is desired.
+If the option
+.I \-r
+is instead specified, the input is assumed already to be conditioned.
+If no input files are specified, the standard input is read.
+.SH EXAMPLE
+To convert the plots examp1.plt and examp2.plt to 1024x1024 Targa files:
+.IP "" .2i
+bgraph examp1.plt examp2.plt | meta2tga -o examp -x 1024 -y 1024
+.SH FILES
+see pexpand(1) and psort(1)
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bgraph(1), igraph(1), imagew(1), mx80(1), pexpand(1),
+psort(1), ra_t8(1), t4014(1)

@@ -1,0 +1,41 @@
+.\" RCSid "$Id"
+.TH IMPRESS 1 6/24/98 RADIANCE
+.SH NAME
+impress - convert metafile to imPress language for imagen
+.SH SYNOPSIS
+.B impress
+[
+.B \-c | \-r
+]
+file ..
+.SH DESCRIPTION
+.I Impress
+reads each metafile
+.I file
+in sequence and converts it to output suitable for the imagen
+line of printers.
+If the option
+.I c
+is specified, the input files are only conditioned for output, ie.
+expanded (see pexpand).
+This is useful if many copies of the same output is desired.
+If the option
+.I r
+is instead specified, the input is assumed already to be conditioned.
+If no input files are specified, the standard input is read.
+.TP 10n
+.BR \-c
+Condition the input only.
+.TP
+.BR \-r
+Input is already conditioned, output only.
+.SH EXAMPLE
+To print the plot file example.plt to the Impress printer ip4:
+.IP "" .2i
+bgraph example.plt | impress | lpr -P ip4
+.SH FILES
+see pexpand(1)
+.SH AUTHORS
+William LeFebvre and Greg Ward
+.SH "SEE ALSO"
+bgraph(1), igraph(1), imagew(1), mx80(1), t4014(1)

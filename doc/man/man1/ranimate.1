@@ -1,0 +1,588 @@
+.\" RCSid "$Id"
+.TH RANIMATE 1 6/24/98 RADIANCE
+.SH NAME
+ranimate - compute a RADIANCE animation
+.SH SYNOPSIS
+.B ranimate
+[
+.B \-s
+][
+.B \-n
+][
+.B \-e
+][
+.B \-w
+]
+.B ranfile
+.SH DESCRIPTION
+.I Ranimate
+is an executive program that reads the given
+.I ranfile
+and makes appropriate calls to
+.I rad(1),
+.I rpict(1),
+.I pinterp(1),
+and/or
+.I pfilt(1)
+to render an animation.
+Variables in
+.I ranfile
+indicate input files, process servers (execution hosts), output
+directories and file names, and various other controls and options.
+.PP
+Normally, commands are echoed to the standard output as they are
+executed.
+The
+.I \-s
+option tells
+.I ranimate
+to do its work silently.
+The
+.I \-n
+option tells
+.I ranimate
+not to take any action (ie. not to actually execute any commands).
+The
+.I \-e
+option tells
+.I ranimate
+to explicate all variables used for the animation, including
+default values not specified in the input file, and print them on
+the standard output.
+.PP
+The
+.I \-w
+option turns off warnings about multiply and misassigned variables.
+.PP
+Normally,
+.I ranimate
+will produce one animation frame for each view given in the specified
+view file.
+If an animation has ended or been killed in an incomplete state, however,
+.I ranimate
+will attempt to pick up where the earlier process left off.
+If the process is still running, or was started on another machine,
+.I ranimate
+will report this information and exit.
+.PP
+Animation variable assignments appear one per line in
+.I ranfile.
+The name of the variable is followed by an equals sign
+('=') and its value(s).
+The end of line may be escaped with a backslash ('\\'), though it is
+not usually necessary since additional variable values may be given
+in multiple assignments.
+Variables that should have only one value are given in upper case.
+Variables that may have multiple values are given in lower case.
+Variables may be abbreviated by their first three letters, except
+for "host", which must have all four.
+Comments in
+.I ranfile
+start with a pound sign ('#') and proceed to the end of line.
+.PP
+The animation variables, their interpretations and default values
+are given below.
+.TP 10n
+.BR DIRECTORY
+The name of the animation directory.
+All temporary files generated during the animation will be placed in
+this directory, which will be created by
+.I ranimate
+if it does not exist.
+A file named "STATUS" will also be created there, and will contain current
+information about the animation process.
+This variable has no default value, and its setting is required.
+.TP
+.BR OCTREE
+The name of the octree file for a static scene walk-through
+animation.
+There is no default value for this variable, and any
+setting will be ignored if the
+.I ANIMATE
+variable is also set (see below).
+.TP
+.BR ANIMATE
+The scene generation command for a dynamic animation.
+This command, if given, will be executed with the frame number as the
+final argument, and on its standard output it must produce
+the complete octree for that frame.
+Care must be taken that this command does not create any temporary files
+that might collide with same-named files created by other
+animation commands running in parallel.
+Also, the command should produce no output to the standard error, unless
+there is a fatal condition.
+(I.e., switch all warnings off;
+see the BUGS section, below.)\0
+There is no default animation command, and either this variable or the
+.I OCTREE
+variable must be set.
+.TP
+.BR VIEWFILE
+This variable names a file from which
+.I ranimate
+may extract the view for each frame in the animation.
+This file should contain one valid view per frame, starting with
+frame 1 on line 1, regardless of the setting of the
+.I START
+variable.
+An exception is made for a view file with only a single view, which
+is used for every frame of a dynamic scene animation.
+This variable is required, and there is no default value.
+.TP
+.BR START
+The initial frame number in this animation sequence.
+The minimum value is 1, and if a later starting frame is given,
+.I ranimate
+assumes that the earlier frames are included in some other
+.I ranfile,
+which has been previously executed.
+(See the
+.I NEXTANIM
+variable, below.)\0
+The default value is 1.
+.TP
+.BR END
+The final frame number in this sequence.
+The minimum value is equal to the
+.I START
+frame,
+and the default value is computed from the number of views in the
+given
+.I VIEWFILE.
+.TP
+.BR EXPOSURE
+This variable tells
+.I ranimate
+how to adjust the exposure for each frame.
+As in
+.I pfilt,
+the exposure setting may be given either as a multiplier or as a
+number of f-stop adjustments (eg. +2 or -1.5).
+Alternatively, a file name may be given, which
+.I ranimate
+will interpret as having one exposure value per line per frame,
+beginning with frame 1 at line 1.
+(See also the
+.I VIEWFILE
+variable, above.)\0
+There is no default value for this variable.
+If it is not given, an average level will be computed by
+.I pfilt
+for each frame.
+.TP
+.BR BASENAME
+The base output file name for the final frames.
+This string will be passed to the
+.I \-o
+and
+.I \-z
+options of rpict, along with appropriate suffixes,
+and thus should contain a
+.I printf(3)
+style integer field to distinguish one frame number from another.
+The final frames will use this name with a ".pic" suffix.
+The default value is the assigned
+.I DIRECTORY
+followed by "/frame%03d".
+.TP
+.BR host
+A host to use for command execution.
+This variable may be assigned a host name, followed by an optional
+number of parallel processes, followed by an optional
+directory (relative to the user's home directory on that machine),
+followed by an alternate user name.
+Multiple
+.I host
+assignments may appear.
+It is not advisable to specify more than one process on a single-CPU
+host, as this just tends to slow things down.
+The default value is "localhost", which starts a single process in
+the current directory of the local machine.
+.TP
+.BR RIF
+This variable specifies a
+.I rad
+input file to use as a source of rendering options and other
+variable settings.
+If given,
+.I ranimate
+will execute
+.I rad
+and create an options file to later pass to
+.I rpict
+or
+.I rtrace.
+Besides prepending the
+.I render
+variable,
+.I ranimate
+will also extract default settings for the common variables:
+.I OCTREE,
+.I RESOLUTION,
+.I EXPOSURE
+and
+.I pfilt.
+Following the file name, overriding variable settings may be given,
+which will be passed to
+.I rad
+on the command line.
+Settings with spaces in them should be enclosed in quotes.
+The execution of
+.I rad
+will also update the contents of the octree, if necessary.
+There is no default value for this variable.
+.TP
+.BR DISKSPACE
+Specify the amount of disk space (in megabytes) available on the
+destination file system for temporary file storage.
+.I Ranimate
+will coordinate its batch operations based on this amount of storage,
+assuming that there is either enough additional space for all the
+final frames, or that the given
+.I TRANSFER
+command will move the finished frames to some other location (see
+below).
+The default value is 100 megabytes.
+.TP
+.BR ARCHIVE
+After each batch rendering is finished and checked for completeness,
+.I ranimate
+will execute the given command, passing the names of all the
+original pictures and z-buffer files generated by
+.I rpict.
+(The command is executed in the destination directory, and file names
+will be simple.)\0
+Normally, the archive command copies the original files to a tape device
+or somewhere that they can be retrieved in the event of failure in
+the frame interpolation stages.
+After the archive command has successfully completed, the original
+renderings are removed.
+There is no default value for this variable, meaning that the
+original unfiltered frames will simply be removed.
+Note that the last one or two rendered frames may not be copied, archived
+or removed in case there is a another sequence picking up where this
+one left off.
+.TP
+.BR TRANSFER
+The command to transfer the completed animation frames.
+The shell changes to the destination directory and appends
+the names of all the finished frames to this command
+before it is executed.
+Normally, the transfer command does something such as convert the
+frames to another format and/or copy them to tape or some other
+destination device before removing them.
+If this variable is not given, the final frames are left where they
+are.
+(See
+.I BASENAME,
+above.)\0
+.TP
+.BR RSH
+The command to use instead of
+.I rsh(1)
+to execute commands remotely on another machine.
+The arguments and behavior of this program must be identical to the UNIX
+.I rsh
+command, except that the
+.I -l
+option will always be used to specify an alternate user name rather than the
+.I "user@host"
+convention.
+Th
+.I -l
+option may or may not appear, but the
+.I -n
+option will always be used, and the expected starting directory will
+be that of the remote user, just as with
+.I rsh.
+.TP
+.BR NEXTANIM
+This variable specifies the next
+.I ranfile
+to use after this sequence is completed.
+This offers a convenient means to continue an animation that
+requires different control options in different segments.
+It is important in this case to correctly set the
+.I START
+and
+.I END
+variables in each
+.I ranfile
+so that the segments do not overlap frames.
+.TP
+.BR OVERSAMPLE
+This variable sets the multiplier of the original image size
+relative to the final size given by the
+.I RESOLUTION
+variable.
+This determines the quality of anti-aliasing in the final frames.
+A value of 1 means no anti-aliasing, and a value of 3 produces very
+good anti-aliasing.
+The default value is 2.
+(A fractional value may be used for previews, causing low
+resolution frames with large, blocky pixels to be produced.)\0
+.TP
+.BR INTERPOLATE
+This variable sets the number of frames to interpolate between each
+rendered frame in a static scene walk-through.
+Z-buffers for each rendered frame will be generated by
+.I rpict,
+and
+.I pinterp
+will be called to perform the actual "tweening."
+This results in a potentially large savings in rendering time, but
+should be used with caution since certain information may be lost or
+inaccurate, such as specular highlights and reflections, and objects
+may even break apart if too few renderings are used to interpolate
+too much motion.
+The default value for this variable is 0, meaning no interpolation.
+Interpolation is also switched off if the
+.I ANIMATE
+variable is specified.
+.TP
+.BR MBLUR
+This variable specifies the fraction of a frame time that the shutter
+is simulated as being open for motion blur.
+A number of samples may be given as a second argument, which
+controls the number of additional frames computed and averaged
+together by
+.I pinterp.
+If this number is less than 2, then bluring is performed by
+.I rpict
+only, resulting in greater noise than the combination of
+.I rpict
+and
+.I pinterp used otherwise.
+(The default value for number of samples is 5.)\0
+The
+.I pmblur(1)
+command is used to generate the given number of additional views for
+.I pinterp
+to average together.
+The default value is 0, meaning no motion blurring.
+This option does not currently work with the
+.I ANIMATE
+variable, since pinterp only works for static environments.
+.TP
+.BR RTRACE
+This boolean variable tells
+.I ranimate
+whether or not to employ
+.I rtrace
+during frame interpolation using the
+.I \-fr
+option to
+.I pinterp.
+If set to True, then the same rendering options and static octree
+are passed to
+.I rtrace
+as are normally used by
+.I rpict.
+The default value is False.
+Note that this variable only applies to static environment
+walk-throughs (i.e., no
+.I ANIMATE
+command).
+.TP
+.BR RESOLUTION
+This variable specifies the desired final picture resolution.
+If only a single number is given, this value will be used for both
+the horizontal and vertical picture dimensions.
+If two numbers are given, the first is the horizontal resolution and
+the second is the vertical resolution.
+If three numbers are given, the third is taken as the pixel aspect
+ratio for the final picture (a real value).
+If the pixel aspect ratio is zero, the exact dimensions given will
+be those produced.
+Otherwise, they will be used as a frame in which the final image
+must fit.
+The default value for this variable is 640.
+.TP
+.BR render
+This variable may be used to specify additional options to
+.I rpict
+or
+.I rtrace.
+These options will appear after the options set automatically by
+.I rad,
+and thus will override the default values.
+.TP
+.BR pinterp
+This variable may be used to specify additional options to
+.I pinterp,
+which is used to interpolate frames for a static scene walk-through.
+(See the
+.I pinterp
+man page, and the
+.I INTERPOLATE
+variable.)\0
+Do not use this variable to set the
+.I pinterp
+.I \-fr
+option, but use the
+.I RTRACE
+setting instead.
+.TP
+.BR pfilt
+This variable may be used to specify additional options to
+.I pfilt.
+If this variable is given in the
+.I ranfile,
+then
+.I pfilt
+will always be used.
+(Normally,
+.I pfilt
+is called only if
+.I pinterp
+is not needed or automatic exposure is required.)\0
+See the
+.I pfilt
+manual page for details.
+.SH EXAMPLES
+A minimal input file for
+.I ranimate
+might look like this:
+.IP "" .3i
+.nf
+::::::::::
+sample.ran
+::::::::::
+# The rad input file for our static scene:
+RIF= tutor.rif
+# The spool directory:
+DIRECTORY= anim1
+# The view file containing one view per frame:
+VIEWFILE= anim1.vf
+# The amount of temporary disk space available:
+DISKSPACE= 50	# megabytes
+.fi
+.PP
+Note that most of the variables are not set in this file.
+If we only want to see what default values
+.I ranimate
+would use without actually executing anything, we can invoke it
+thus:
+.IP "" .2i
+ranimate -n -e sample.ran
+.PP
+This will print the variables we have given as well as default
+values
+.I ranimate
+has assigned for us.
+Also, we will see the list of commands that
+.I ranimate
+would have executed had the
+.I \-n
+option not been present.
+.PP
+Usually, we execute
+.I ranimate
+in the background, redirecting the standard output and standard
+error to a file:
+.IP "" .2i
+ranimate sample.ran >& sample.err &
+.PP
+If we decide that the default values
+.I ranimate
+has chosen for our variables are not all appropriate, we can add
+some more assignments to the file:
+.IP "" .3i
+.nf
+host= rays 3 ~greg/obj/tutor ray 	# execute as ray on multi-host "rays"
+host= thishost				# execute one copy on this host also
+INTERP= 3				# render every fourth frame
+RES= 1024				# shoot for 1024x resolution
+MBLUR= .25				# apply camera motion blur
+EXP= anim1.exp				# adjust exposure according to file
+pfilt= -r .9				# use Gaussian filtering
+ARCHIVE= tar cf /dev/nrtape		# save original renderings to tape
+.fi
+.PP
+Note the use of abbreviation for variable names.
+.SH FILES
+$(DIRECTORY)/STATUS	animation status file
+$(DIRECTORY)/*		other temporary files
+$(BASENAME).pic		final animation frames
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Due to the difficulty of controlling processes on multiple execution
+hosts, the
+.I \-n
+option of
+.I ranimate
+is not useful in the same way as
+.I rad
+for generating a script of executable commands to render the
+sequence.
+It may give an idea of the sequence of events, but certain temporary
+files and so forth will not be in the correct state if the user
+attempts to create a separate batch script.
+.PP
+If multiple processors are available on a given host and the
+.I RTRACE
+variable is set to True, then the
+.I \-PP
+option of
+.I rtrace
+should be employed, but it is not.
+There is no easy way around this problem, but it has only minor
+consequences in most cases.
+(The
+.I \-PP
+option is used for
+.I rpict,
+however.)\0
+.I
+.PP
+The current implementation of the remote shell does not return the
+exit status of the remote process, which makes it difficult to
+determine for sure if there has been a serious error or not.
+Because of this,
+.I ranimate
+normally turns off warnings on all rendering processes, and takes
+any output to standard error from a remote command as a sign that a
+fatal error has occurred.
+(This also precludes the use of the
+.I \-t
+option to report rendering progress.)\0
+If the error was caused by a process server going down, the server
+is removed from the active list and frame recovery takes place.
+Otherwise,
+.I ranimate
+quits at that point in the animation.
+.PP
+The current execution environment, in particular the RAYPATH variable,
+will not be passed during remote command execution, so it is necessary
+to set whatever variables are important in the remote startup script
+(e.g., ".cshrc" for the C-shell).
+This requirement may be circumvented by substituting the
+.I on(1)
+command for
+.I rsh(1)
+using the
+.I RSH
+control variable, or by writing a custom remote execution script.
+.PP
+If a different remote user name is used,
+.I ranimate
+first attempts to change to the original user's directory with a
+command of the form
+.I "cd \~uname".
+This works under
+.I csh(1),
+but may fail under other shells such as
+.I sh(1).
+.PP
+If multiple hosts with different floating point formats are used,
+.I pinterp
+will fail because the Z-buffer files will be inconsistent.
+(Recall that
+.I pinterp
+is called if INTERPOLATE > 0 and/or MBLUR is assigned.)\0
+Since most modern machines use IEEE floating point, this is not
+usually a problem, but it is something to keep in mind.
+.SH "SEE ALSO"
+pfilt(1), pinterp(1), pmblur(1), rad(1),
+ranimove(1), rpict(1), rsh(1), rtrace(1)

@@ -1,0 +1,81 @@
+.\" RCSid "$Id"
+.TH VWRIGHT 1 8/29/96 RADIANCE
+.SH NAME
+vwright - normalize a RADIANCE view, shift it to the right
+.SH SYNOPSIS
+.B vwright
+.B distance
+.br
+.B vwright
+.B name
+.SH DESCRIPTION
+.I Vwright
+shifts a RADIANCE view from a picture or view file given on the standard input
+the specified distance to the right, putting out a complete set of
+view parameters in a single line on the standard output.
+This utility is most often used to compute a right-eyed view from
+a left-eye view for stereo imaging.
+.PP
+The
+.I distance
+given is in world coordinate units.
+A negative value indicates a shift to the left rather than the
+right.
+.PP
+The second form substitutes a name prefix in place of the shift
+distance, and produces constant assignments on the standard output
+suitable for passing directly to
+.I rcalc(1).
+For a given prefix
+.I N,
+the constant names are as follows:
+.sp
+.nf
+Nt:	view type ('v'==1,'l'==2,'a'==3,'h'==4,'c'==5)
+Npx:	view point x value
+Npy:	view point y value
+Npz:	view point z value
+Ndx:	view direction x value (normalized)
+Ndy:	view direction y value (normalized)
+Ndz:	view direction z value (normalized)
+Nux:	view up vector x value (normalized)
+Nuy:	view up vector y value (normalized)
+Nuz:	view up vector z value (normalized)
+Nh:	view horizontal size
+Nv:	view vertical size
+Ns:	view shift
+Nl:	view lift
+No:	view fore clipping distance
+Na:	view aft clipping distance
+Nhx:	derived horizontal image vector x value (normalized)
+Nhy:	derived horizontal image vector y value (normalized)
+Nhz:	derived horizontal image vector z value (normalized)
+Nhn:	derived horizontal image vector multiplier
+Nvx:	derived vertical image vector x value (normalized)
+Nvy:	derived vertical image vector y value (normalized)
+Nvz:	derived vertical image vector z value (normalized)
+Nvn:	derived vertical image vector multiplier
+.fi
+.SH EXAMPLES
+To start
+.I rpict(1)
+on a view .06 meters left of the view in the file "right.vf":
+.IP "" .2i
+rpict `vwright -.06 < right.vf` scene.oct > right.pic &
+.PP
+To move the
+.I rad(1)
+view named "left" 2.5 inches to the right
+and render from there:
+.IP "" .2i
+rad -v "right `rad -n -s -V -v left examp.rif | vwright 2.5`" examp.rif &
+.PP
+To pass a view to
+.I rcalc
+for conversion to some other view:
+.IP "" .2i
+rcalc -n -e `vwright orig < orig.vf` -f viewmod.cal -o view.fmt > new.vf
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+pdfblur(1), rad(1), rcalc(1), rpict(1), rview(1)

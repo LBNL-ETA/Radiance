@@ -1,0 +1,46 @@
+.\" RCSid "$Id"
+.TH GLARE 1 5/2/95 RADIANCE
+.SH NAME
+glare - perform glare and visual comfort calculations
+.SH SYNOPSIS
+.B glare
+[
+.B glarefile
+[
+.B picture
+[
+.B octree
+]
+]
+]
+.SH DESCRIPTION
+.I Glare
+is an interactive script for executing programs used to locate
+glare sources and compute glare indices and visual comfort probability.
+If no
+.I glarefile
+is given, the program prompts the user for a one.
+If the file does not exist,
+.I glare
+asks the user some questions about the scene in question then runs
+.I findglare(1)
+to compute values to store in the file.
+.I Glare
+then presents the user a menu of available glare index calculations.
+After choosing a calculation,
+.I glare
+offers to store the result (usually not useful) or plot the information
+(but only for multiple glare angles).
+.PP
+If you are creating a new
+.I glarefile,
+it usually works best to start with a displayed image for reference
+during the interrogation.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+dayfact(1), findglare(1), glarendx(1), igraph(1),
+rpict(1), xglaresrc(1), ximage(1)

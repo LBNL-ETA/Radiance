@@ -1,0 +1,59 @@
+.\" RCSid "$Id"
+.TH LOOKAMB 1 11/15/93 RADIANCE
+.SH NAME
+lookamb - examine ambient file values
+.SH SYNOPSIS
+.B lookamb
+[
+.B \-d
+][
+.B \-r
+][
+.B \-h
+]
+[
+.B ambfile
+]
+.SH DESCRIPTION
+.I Lookamb
+examines an ambient file produced by
+.I rpict(1),
+.I rtrace(1),
+or
+.I rview(1).
+The default mode prints the position, direction, level, weight,
+radius, value, position gradient and direction gradient
+for each stored ambient value preceded by a
+label appropriate for human interpretation.
+The 
+.I \-d
+option prints the same quantities in 18 columns without any expanatory
+text, and is more appropriate as input to another program.
+.PP
+The
+.I \-r
+option performs the reverse conversion, taking the output of lookamb
+and reproducing the original ambient file on the standard output.
+.PP
+The
+.I \-h
+option causes lookamb not to print out the header information on the
+output, or not to expect it on the input with the
+.I \-r
+option.
+.PP
+If no file is given,
+.I lookamb
+reads from the standard input.
+.SH NOTES
+Before release 2.2 of Radiance, ambient files were in a
+machine-dependent format.
+Since that is no longer the case, ambient files can now be moved
+freely between machines without any conversions.
+Thus, the only reason to use
+.I lookamb
+now is to examine the contents of an ambient file.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), oconv(1), pfilt(1), pinterp(1), rpict(1), rtrace(1), rview(1)

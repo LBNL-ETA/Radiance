@@ -1,0 +1,120 @@
+.\" RCSid "$Id"
+.TH PMBLUR 1 3/3/98 RADIANCE
+.SH NAME
+pmblur - generate views for camera motion blurring
+.SH SYNOPSIS
+.B pmblur
+.B speed
+.B nsamp
+.B v0file
+.B v1file
+.SH DESCRIPTION
+.I Pmblur
+takes two viewfiles and generates
+.I nsamp
+views starting from
+.I v0file
+and moving towards
+.I v1file.
+When rendered and averaged together, these views will result in
+a picture with motion blur due to a camera changing from v0 to v1
+in a relative time unit of 1, whose shutter is open starting at v0 for
+.I speed
+of these time units.
+Either
+.I pinterp(1)
+or
+.I rpict(1)
+may be called to do the actual work.
+(The given
+.I v0file
+must also be passed on the command line to the chosen renderer, since
+.I pmblur
+provides supplemental view specifications only.)\0
+.PP
+For
+.I pinterp,
+feed the output of
+.I pmblur
+to the standard input of
+.I pinterp
+and apply the
+.I \-B
+option to blur views together.
+In most cases, two pictures with z-buffers at v0 and v1 will
+get a satisfactory result, though the perfectionist may wish to
+apply the
+.I \-ff
+option together with the
+.I \-fr
+option of
+.I pinterp.
+.PP
+To use
+.I pmblur
+with
+.I rpict,
+apply the
+.I \-S
+option to indicate a rendering sequence, and set the
+.I \-o
+option with a formatted file name to save multiple output
+pictures.
+When all the renderings are finished, combine them with the
+.I pcomb(1)
+program, using appropriate scalefactors to achieve an average.
+Note that using
+.I rpict
+is MUCH more expensive than using
+.I pinterp,
+and it is only recommended if the scene and application
+absolutely demand it (e.g. there is prominent refraction that
+must be modeled accurately).
+.PP
+For both
+.I pinterp
+and
+.I rpict,
+the computation time will be proportional to the number of views from
+.I pmblur.
+We have found a
+.I nsamp
+setting somewhere between 5 and 10 to be adequate for most images.
+Relatively larger values are appropriate for faster camera motion.
+.PP
+The
+.I \-pm
+option of
+.I rpict
+may be used instead or in combination to blur animated frames, with
+the added advantage of blurring reflections and refractions according
+to their proper motion.
+However, this option will result in more noise and expense than using
+.I pmblur
+with
+.I pinterp
+as a post-process.
+If both blurring methods are used, a smaller value should be given to the
+.I rpict
+.I \-pm
+option equal to the shutter speed divided by the number of pmblur views.
+This will be just enough to blur the boundaries of the ghosts
+which may appear using
+.I pmblur
+with a small number of time samples.
+.SH EXAMPLES
+To use
+.I pinterp
+to simulate motion blur between two frames of a walk-through
+animation, where the camera shutter is open for 1/4 of the
+interframe distance:
+.IP "" .2i
+pmblur .25 8 fr1023.pic fr1024.pic | pinterp -B -vf fr1023.pic -x 640 -y 480
+fr1023.pic fr1023.zbf fr1024.pic fr1024.zbf > fr1023b.pic
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Changes in the view shift and lift vectors or the fore and aft
+clipping planes are not blurred.
+.SH "SEE ALSO"
+pcomb(1), pdfblur(1), pinterp(1), rcalc(1), rpict(1), vwright(1)

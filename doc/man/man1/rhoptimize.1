@@ -1,0 +1,62 @@
+.\" RCSid "$Id"
+.TH RHOPTIMIZE 1 1/25/99 RADIANCE
+.SH NAME
+rhoptimize - optimize beam locations in holodeck file
+.SH SYNOPSIS
+.B rhoptimize
+[
+.B \-u
+]
+.B src_holo
+[
+.B dest_holo
+]
+.SH DESCRIPTION
+.I Rhoptimize
+optimizes beam positions and eliminates fragment waste in the holodeck file
+.I src_holo,
+writing the result to
+.I dest_holo,
+or back into
+.I src_holo
+if only one argument is given.
+This may improve rendering speed on large holodecks, which tend to have
+widely dispersed beam positions that cause delays due to long file seeks.
+It may also reduce the size of the file, since large holodecks become
+fragmented as they fill up with new ray samples.
+(Use the
+.I rhinfo(1)
+program to determine holodeck file fragmentation.)
+The
+.I \-u
+option adds a check to make sure that each ray sample is unique, i.e., the same sample
+is never given twice.
+This check is usually unnecessary, but may eliminate redundant samples from some
+holodeck files.
+.SH EXAMPLE
+To optimize the beam order in old.hdk and write the results to new.hdk:
+.IP "" .2i
+rhoptimize old.hdk new.hdk
+.PP
+To optimize beam order in scene.hdk:
+.IP "" .2i
+rhoptimize scene.hdk
+.SH NOTES
+If
+.I rhoptimize
+is given only one file argument,
+it creates a temporary file in the same directory, and moves it onto
+the original file once it has successfully completed its operation.
+If the operation fails for some reason, the temporary file is removed
+and the original holodeck is left unchanged.
+.PP
+This program generally takes several minutes to run and offers no progress
+reports.
+.SH FILES
+rho????.hdk	temporary file to hold new holodeck
+.SH AUTHOR
+Greg Ward Larson
+.SH ACKNOWLEDGMENT
+This work was supported by Silicon Graphics, Inc.
+.SH "SEE ALSO"
+getinfo(1), pfilt(1), psign(1), rhcopy(1), rhinfo(1), rholo(1), rpict(1)

@@ -1,0 +1,170 @@
+.\" RCSid "$Id"
+.TH META 3 11/15/93 Radiance
+.SH NAME
+libmeta.a - simplified interface to metafile(5)
+.SH SYNOPSIS
+.B extern FILE  *pout;
+.PP
+.B mline(x, y, type, thick, color)
+.PP
+.B mpoly(x, y, border, pat, color)
+.PP
+.B mdraw(x, y)
+.PP
+.B mtext(x, y, s, cpi, color)
+.br
+.B char  *s;
+.PP
+mvstr(xmin, ymin, xmax, ymax, s, d, thick, color)
+.br
+.B char  *s;
+.PP
+mrectangle(xmin, ymin, xmax, ymax, pat, color)
+.PP
+mtriangle(xmin, ymin, xmax, ymax, d, pat, color)
+.PP
+msegment(xmin, ymin, xmax, ymax, sname, d, thick, color)
+.br
+.B char  *sname;
+.PP
+.B msetpat(pat, pattern)
+.br
+.B char  *pattern;
+.PP
+.B mopenseg(sname)
+.br
+.B char  *sname;
+.PP
+.B mcloseseg()
+.PP
+.B minclude(fname)
+.br
+.B char  *fname;
+.PP
+.B mendpage()
+.PP
+.B mdone()
+.SH DESCRIPTION
+The routines in
+.I libmeta
+provide a simple interface to the metafile(5) 2D graphics stream.
+Output from these routines is sent to 
+.I pout.
+.I Pout
+defaults to the standard output,
+and should be piped to the appropriate device driver.
+.PP
+All coordinates range from 0 to 16383 and map to a square area on
+the output device.
+.I D
+values are one of 'r', 'u', 'l' and 'd' corresponding to right,
+up, left, and down respectively.
+.I Color
+values range from 0 to 3 and normally correspond to black,
+cyan, green and blue.
+.I Pattern
+values range from 0 to 3 and default to solid, thick lines,
+thin lines, and candystripe.
+Pattern value mapping may be changed via
+.I setpat.
+All strings are null-terminated, and do not contain newlines.
+.PP
+.I Mline
+starts a line at the given coordinates.
+The line
+.I type
+is a number from 0 to 3 corresponding to solid, dashed, dotted,
+and dot-dashed.
+The line thickness,
+.I thick,
+is a number from 0 to 3.
+Connected lines are drawn with successive calls to
+.I mdraw.
+.PP
+.I Mpoly
+starts a polygon at the given coordinates.
+The boolean
+.I border
+specifies whether or not a border is desired around the polygon.
+.I Mdraw
+is used to add vertices to the polygon.
+The polygon will be closed automatically after the last call.
+.PP
+.I Mtext
+prints a string of hardware characters starting at the given
+coordinates.
+The characters per inch are
+.I cpi.
+Text is always oriented to the right.
+.PP
+.I Mvstr
+places a vector character string within the given boundaries.
+The string is oriented according to
+.I d.
+The character line thickness is given by
+.I thick.
+.PP
+.I Mrectangle
+fills the given box with
+.I pat.
+.I Mtriangle
+fills the half-box with orientation
+.I d
+in the given boundaries.
+Right corresponds to a triangle in the lower right half of the
+box.
+Up corresponds to a triangle in the upper right, left is upper
+left, and down is lower left.
+.PP
+.I Msegment
+places an instance of the segment
+.I sname
+within the given boundaries.
+The segment is oriented according to
+.I d,
+where 'r' is null rotation.
+If either
+.I thick
+or
+.I color
+is nonzero,
+its value will replace corresponding values in the segment
+primitives.  (For area filling, thick changes the fill pattern.)
+.PP
+.I Msetpat
+maps
+.I pat
+to
+.I pattern.
+.I Pattern
+is a string of the form "Pn" where n is a number between 0 and 11.
+.PP
+.I Mopenseg
+opens the segment named
+.I sname.
+All graphics calls up to a matching call to
+.I mcloseseg
+are stored under
+.I sname.
+An instance of the segment is obtained with a call to
+.I msegment.
+Segments can be nested to any level, and redefining segments
+is allowed.
+Beware of calls to
+.I mtext
+within a segment, since text will not rotate or scale.
+.PP
+.I Minclude
+includes the graphics metafile
+.I fname
+in the output stream.
+.I Mendpage
+advances to the next screen or page.
+On a terminal, the bell rings and a line is read to prevent
+premature erasure.
+.I Mdone
+completes metafile output, and is the only required call.
+.SH DIAGNOSTICS
+None.
+.SH SEE ALSO
+t4014(1), mx80(1), impress(1), primout(3), metafile(5)

@@ -1,0 +1,172 @@
+.\" RCSid "$Id"
+.TH OCONV 1 8/15/95 RADIANCE
+.SH NAME
+oconv - create an octree from a RADIANCE scene description
+.SH SYNOPSIS
+.B oconv
+[
+.B "\-i octree"
+|
+.B "\-b xmin ymin zmin size
+][
+.B "\-n objlim"
+][
+.B "\-r maxres"
+][
+.B \-f
+][
+.B \-w
+][
+-
+]
+[
+.B "input .."
+]
+.SH DESCRIPTION
+.I Oconv
+adds each scene description
+.I input
+to
+.I octree
+and sends the result to the standard output.
+Each
+.I input
+can be either a file name, or a command (enclosed in quotes
+and preceded by a `!').
+Similarly, the octree input may be given as a command preceded
+by a `!'.
+If any of the surfaces will not fit in
+.I octree,
+an error message is printed and the program aborts.
+If no
+.I octree
+is given, a new one is created large enough for
+all of the surfaces.
+.PP
+The
+.I \-b
+option allows the user to give a bounding cube for the
+scene, starting at
+.I "xmin ymin zmin"
+and having a side length
+.I size.
+If the cube does not contain all of the surfaces, an error results.
+The
+.I \-b
+and
+.I \-i
+options are mutually exclusive.
+.PP
+The
+.I \-n
+option specifies the maximum surface set size for
+each voxel.
+Larger numbers result in quicker octree generation,
+but potentially slower rendering.
+Smaller values may or may not produce faster renderings,
+since the default number (5) is close to optimal for most scenes.
+.PP
+The
+.I \-r
+option specifies the maximum octree resolution.
+This should be greater than or equal to the ratio of the largest
+and smallest dimensions in the scene (ie. surface size or distance between 
+surfaces).
+The default is 8192.
+.PP
+The
+.I \-f
+option produces a frozen octree containing all the scene information.
+Normally, only a reference to the scene files is stored in the
+octree, and changes to those files may invalidate the result.
+The freeze option is useful when the octree file's
+integrity and loading speed is more important than its size, or
+when the octree is to be relocated to another directory, and is
+especially useful for creating library objects for the "instance"
+primitive type.
+If the input octree is frozen, the output will be also.
+.PP
+The
+.I \-w
+option suppresses warnings.
+.PP
+A hyphen by itself ('-') tells
+.I oconv
+to read scene data from its standard input.
+This also implies the
+.I \-f
+option.
+.PP
+The only scene file changes that do not require octree regeneration are
+modifications to non-surface parameters.
+If the coordinates of a surface are changed, or any primitives are added
+or deleted, oconv must be run again.
+Programs will abort with a "stale octree" message
+if they detect any dangerous inconsistencies between
+the octree and the input files.
+.PP
+Although the octree file format is binary, it is meant to be portable
+between machines.
+The only limitation is that machines with radically different integer
+sizes will not work together.
+For the best results, the -f option should be used if an octree is
+to be used in different environments.
+.SH DIAGNOSTICS
+There are four basic error types reported by oconv:
+.IP
+warning - a non-fatal input-related error
+.IP
+fatal - an unrecoverable input-related error
+.IP
+system - a system-related error
+.IP
+internal - a fatal error related to program limitations
+.IP
+consistency - a program-caused error
+.PP
+Most errors are self-explanatory.
+However, the following internal errors should be mentioned:
+.IP "Too many scene files"
+Reduce the number of scene files by combining them or using calls
+to xform(1) within files to create a hierarchy.
+.IP "Set overflow in addobject (id)"
+This error occurs when too many surfaces are close together in a
+scene.
+Sometimes a dense scene can be accomodated by increasing
+the maximum resolution (by powers of two) using the
+.I \-r
+option, but usually this error indicates something is wrong.
+Either too many surfaces are lying right on top of each other,
+or the bounding cube is inflated from an oversized object
+or an improper
+.I \-b
+specification.
+Chances are, the surface "id" is near one of those causing the problem.
+.IP "Hash table overflow in fullnode"
+This error is caused by too many surfaces.
+If it is possible to create an octree for the scene at all,
+it will have to be done in stages using the
+.I \-i
+option.
+.SH EXAMPLE
+To add book1, book2 and a
+transformed book3 to the octree ``scene.oct'':
+.IP "" .2i
+oconv -i scene.oct book1 book2 '\\!xform -rz 30 book3' > newscene.oct
+.SH AUTHOR
+Greg Ward
+.SH NOTES
+In the octree, the names of the scene files are stored rather
+than the scene information.
+This means that a new octree must be generated whenever the
+scene files are changed or moved.
+Also, an octree that has been moved to a new directory will not be able to find
+scene files with relative pathnames.
+The freeze option avoids these problems.
+.I make(1)
+or
+.I rad(1)
+can be used to automate octree creation and maintenance.
+.SH "SEE ALSO"
+getbbox(1), getinfo(1), make(1), rad(1),
+rpict(1), rview(1), rtrace(1), xform(1)

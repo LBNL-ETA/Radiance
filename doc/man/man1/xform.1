@@ -1,0 +1,187 @@
+.\" RCSid "$Id"
+.TH XFORM 1 6/4/99 RADIANCE
+.SH NAME
+xform - transform a RADIANCE scene description
+.SH SYNOPSIS
+.B xform
+[
+.B \-c
+][
+.B \-I
+][
+.B "\-n name"
+][
+.B "\-m newmod"
+][
+.B "\-f argfile"
+][
+.B xf0
+][
+.B "\-a n1 xf1 .."
+][
+.B "\-i 1 xff"
+]
+.B "file .."
+.SH DESCRIPTION
+.I Xform
+transforms each scene description
+.I file
+according to the options given.
+If no
+.I file
+is specified, the standard input is read.
+The
+.I \-c
+option causes commands in the input not to be expanded.
+The default is to execute all in line commands.
+(See note below about file names.)\0
+The
+.I \-n
+option causes all identifiers to be prefixed with
+.I name.
+The
+.I \-m
+option causes all surfaces to be given the modifier
+.I newmod.
+The
+.I \-I
+option causes all surfaces to be inverted, reversing their
+surface normal orientations.
+These options are followed by the transformation options,
+which are described below.
+.PP
+The
+.I \-f
+option causes the
+.I xform
+command line to be constructed from the given file,
+by inserting each line of the file at the
+current point in the command argument list.
+Each line in the file will result in a logically separate invocation of
+.I xform,
+and may may contain any valid
+.I xform
+arguments, including nested
+.I \-f
+options.
+This is a convenient way to specify multiple copies of an object that
+do not fit a regular array pattern, without having to actually execute
+.I xform
+many times.
+Separate scene files may be specified this way as well, but remember
+that the constructed command line must fit the format of initial options
+.I "(-n, -m, -c, -I)"
+followed by the transform then the scene files.
+No initial options may appear after the first transform option, and
+no transform options will be understood after the first named file.
+In the special case where the argument to the
+.I \-f
+option is a hyphen ('-'),
+.I xform
+will take its arguments from the standard input.
+Note that
+.I xform
+cannot simultaneously take its scene information from the standard input
+if the option is used in this way.
+Competely empty lines and lines beginning with a pound sign ('#') will be
+silently ignored.
+Beginning "!xform" or "xform" command names will also be ignored.
+.PP
+If one or more scene files are given on the command line,
+.I xform
+will search the RADIANCE library directories for each file.
+(No search takes place if a file name begins with a '.', '/' or '~'
+character.)\0
+Unless the
+.I \-c
+option is present,
+.I xform
+will also change to that file's directory before loading it.
+Thus, any commands executed within that file will happen in that
+file's directory, which simplifies object hierarchy construction.
+.PP
+The transformation consists of a sequence of operations which
+are executed in the order they appear.
+.SH OPTIONS
+.TP 10n
+.BI -t " x y z"
+Translate the scene along the vector
+.I "x y z".
+.TP
+.BI -rx \ degrees
+Rotate the scene
+.I degrees
+about the x axis.
+A positive rotation corresponds to counter-clockwise
+when looking down the axis.
+.TP
+.BI -ry \ degrees
+Rotate the scene
+.I degrees
+about the y axis.
+.TP
+.BI -rz \ degrees
+Rotate the scene
+.I degrees
+about the z axis.
+.TP
+.BI -s \ factor
+Scale the scene by
+.I factor.
+.TP
+.BR \-mx
+Mirror the scene about the yz plane.
+.TP
+.BR \-my
+Mirror the scene about the xz plane.
+.TP
+.BR \-mz
+Mirror the scene about the xy plane.
+.TP
+.BI -i \ count
+Iterate (repeat) the following transformation (up to the next
+.I \-i
+option)
+.I count
+times.
+This option is primarily to support the
+.I \-a
+option, which is described below.
+.SS Arrays
+An array is a repeated transformation that results in a repeated object.
+It is specified using the
+.I \-a
+option, which takes the number to repeat as its argument.
+The objects will step by the transformation given between
+this
+.I \-a
+option and the next
+.I \-a
+or
+.I \-i
+option.
+The first object will have zero applications of the transform.
+A two-dimensional array is given by two different transformations
+each preceded by an array count.
+.SH EXAMPLE
+To rotate ``book'' 30 degrees about the x axis then
+move 20 in y, prepending the name book1:
+.IP "" .2i
+xform -n book1 -rx 30 -t 0 20 0 book > book1
+.PP
+To expand all commands and see what information is actually used by RADIANCE:
+.IP "" .2i
+xform scene | more
+.PP
+To create a two-dimensional array of 20 lights, after an initial rotation
+and followed by a global translation (no command expansion):
+.IP "" .2i
+xform -c -rz 90 -a 5 -t 2 0 0 -a 4 -t 0 1.5 0 -i 1 -t 0 0 10 light
+.SH ENVIRONMENT
+RAYPATH		path to search for scene files
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Only regular (distortion-free) transformations are allowed.
+.SH "SEE ALSO"
+genbox(1), gensurf(1), oconv(1), replmarks(1), rpict(1), rview(1)

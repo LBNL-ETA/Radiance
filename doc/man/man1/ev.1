@@ -1,0 +1,71 @@
+.\" RCSid "$Id"
+.TH EV 1 10/28/96 RADIANCE
+.SH NAME
+ev - evaluate expressions
+.SH SYNOPSIS
+.B ev 'expr' ..
+.SH DESCRIPTION
+.I Ev
+evaluates expressions given on the command line, and sends the
+results to the standard output, one per line.
+An expression contains real numbers, function calls,
+and the following operators:
+.PP
+	+  -  *  /  ^
+.PP
+Operators are evaluated left to right, except '^',
+which is right associative.
+Powers have the highest precedence; multiplication and
+division are evaluated before addition and subtraction.
+Expressions can be grouped with parentheses.
+All values are double precision real.
+.PP
+The following library of functions is available:
+.TP 10n
+.BR "if(cond, then, else)"
+if cond is greater than zero,
+then is evaluated, otherwise else is evaluated.
+.TP
+.BR "select(N, a1, a2, ..)"
+return aN (N is rounded to the nearest integer).
+If
+.I N
+is zero, the number of available arguments is returned.
+.TP
+.BR "rand(x)"
+compute a random number between 0 and 1 based on x.
+.TP
+.BR "floor(x)"
+return largest integer not greater than x.
+.TP
+.BR "ceil(x)"
+return smallest integer not less than x.
+.TP
+.BR "sqrt(x)"
+return square root of x.
+.TP
+.BR "exp(x)"
+compute e to the power of x (e approx = 2.718281828).
+.TP
+.BR "log(x)"
+compute the logarithm of x to the base e.
+.TP
+.BR "log10(x)"
+compute the logarithm of x to the base 10.
+.TP
+.BR "sin(x), cos(x), tan(x)"
+trigonometric functions.
+.TP
+.BR "asin(x), acos(x), atan(x)"
+inverse trigonometric functions.
+.TP
+.BR "atan2(y, x)"
+inverse tangent of y/x (range -pi to pi).
+.SH EXAMPLE
+To pass the square root of two and the sine of .5 to a program:
+.IP "" .2i
+program `ev 'sqrt(2)' 'sin(.5)'`
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+calc(1), rcalc(1)

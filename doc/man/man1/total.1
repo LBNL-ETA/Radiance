@@ -1,0 +1,110 @@
+.\" RCSid "$Id"
+.TH TOTAL 1 2/3/95 RADIANCE
+.SH NAME
+total - sum up columns
+.SH SYNOPSIS
+.B total
+[
+.B \-m
+][
+.B \-sE
+|
+.B \-p
+|
+.B \-u
+|
+.B \-l
+][
+.B \-tC
+][
+.B \-N
+[
+.B \-r
+]]
+[
+file ..
+]
+.SH DESCRIPTION
+.I Total
+sums up columns of real numbers from one or more files
+and prints out the result on its standard output.
+.PP
+By default,
+.I total
+computes the straigt sum of each input column, but multiplication
+can be specified instead with the
+.I \-p
+option.
+Likewise, the
+.I \-u
+option means find the upper limit (maximum), and
+.I \-l
+means find the lower limit (minimum).
+.PP
+Sums of powers can be computed by giving an exponent with the
+.I \-s
+option.
+(Note that there is no space between the 
+.I \-s
+and the exponent.)
+This exponent can be any real number, positive or negative.
+The absolute value of the input is always taken before the
+power is computed in order to avoid complex results.
+Thus,
+.I \-s1
+will produce a sum of absolute values.
+The default power (zero) is interpreted as a straight sum without
+taking absolute values.
+.PP
+The
+.I \-m
+option can be used to compute the mean rather than the total.
+For sums, the arithmetic mean is computed.
+For products, the geometric mean is computed.
+(A logarithmic sum of absolute values is used to avoid overflow, and 
+zero values are silently ignored.)
+.PP
+A count can be given as the number of lines to read before
+computing a result.
+By default,
+.I total
+reads each file to its end before producing its result, but the
+.I \-N
+option (where N is a decimal integer) tells
+.I total
+to produce a result and reset the calculation after
+every N input lines.
+In addition, the
+.I \-r
+option can be specified to override reinitialization and thus
+give a running total every N lines.
+If the end of file is reached, the current total is printed
+and the calculation is reset before the next file (with or without the
+.I \-r
+option).
+.PP
+The
+.I \-tC
+option can be used to specify the input and output tab character.
+The default tab character is TAB.
+.PP
+If no files are given, the standard input is read.
+.SH EXAMPLE
+To compute the RMS value of colon-separated columns in a file:
+.IP "" .2i
+total -t: -m -s2 input
+.PP
+To produce a running product of values from a file:
+.IP "" .2i
+total -p -1 -r input
+.SH BUGS
+If the input files have varying numbers of columns, mean values
+will certainly be off.
+.I Total
+will ignore missing column entries if the tab separator is a non-white
+character, but cannot tell where a missing column should have been if
+the tab character is white.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), lam(1), neat(1), rcalc(1), tabfunc(1)

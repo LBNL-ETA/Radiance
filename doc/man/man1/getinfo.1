@@ -1,0 +1,50 @@
+.\" RCSid "$Id"
+.TH GETINFO 1 1/15/99 RADIANCE
+.SH NAME
+getinfo - get header information from a RADIANCE file
+.SH SYNOPSIS
+.B getinfo
+[
+.B -d
+][
+.B "file .."
+]
+.br
+.B getinfo
+-
+.SH DESCRIPTION
+.I Getinfo
+reads the header of each RADIANCE
+.I file
+and writes it to the standard output.
+Octree and picture files are in a binary format, which makes
+it difficult to determine their content.
+Therefore, a few lines of text are placed at the beginning
+of each file by the RADIANCE program that creates it.
+The end of the header information and the start of the
+data is indicated by an empty line.
+The
+.I \-d
+option can be used to print the dimensions of an octree or
+picture file instead.
+For an octree,
+.I "getinfo \-d"
+prints the bounding cube (xmin ymin zmin size).
+For a picture,
+.I "getinfo \-d"
+prints the y and x resolution (-Y yres +X xres).
+If no
+.I file
+is given, the standard input is read.
+.PP
+The second form of getinfo with a hyphen simply removes the header
+and copies the body of the file from the standard
+input to the standard output.
+.SH EXAMPLE
+To print the header information from scene1.oct and scene2.pic:
+.IP "" .2i
+getinfo scene1.oct scene2.pic
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+oconv(1), pfilt(1), rhinfo(1), rpict(1), rview(1)

@@ -1,0 +1,30 @@
+.\" RCSid "$Id"
+.TH CV 1 6/24/98 RADIANCE
+.SH NAME
+cv - convert between metafile formats
+.SH SYNOPSIS
+.B cv
+[
+\-r
+][
+file ..
+]
+.SH DESCRIPTION
+.I Cv
+reads each human readable metafile
+.I file
+in sequence and converts it to a binary form.
+If the option
+.I \-r
+is specified, the reverse conversion is performed.
+.PP
+If no input files are specified, the standard input is read.
+.SH EXAMPLE
+To convert the binary file meta.bin to its human-readable equivalent,
+and put the result in meta.human
+.IP "" .2i
+cv -r meta.bin > meta.human
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+meta(3), metafile(5), pexpand(1), psort(1)

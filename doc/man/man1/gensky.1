@@ -1,0 +1,230 @@
+.\" RCSid "$Id"
+.TH GENSKY 1 4/24/98 RADIANCE
+.SH NAME
+gensky - generate a RADIANCE description of the sky
+.SH SYNOPSIS
+.B "gensky month day time"
+[
+.B options
+]
+.br
+.B "gensky -ang altitude azimuth"
+[
+.B options
+]
+.br
+.B "gensky -defaults"
+.SH DESCRIPTION
+.I Gensky
+produces a RADIANCE scene description for the CIE standard
+sky distribution at the given month, day and time.
+By default, the time is interpreted as local standard
+time on a 24-hour clock.
+The time value may be given either as decimal hours, or using a
+colon to separate hours and minutes.
+If the time is immediately followed (no white space)
+by a North American or European time zone designation,
+then this determines the standard meridian, which may
+be specified alternatively with the
+.I \-m
+option.
+The following time zones are understood, with their corresponding
+hour differences from Greenwich Mean Time:
+.sp .5
+.nf
+Standard time:
+YST   PST   MST   CST   EST   GMT
+ 9     8     7     6     5     0
+
+CET   EET   AST   GST   IST   JST  NZST
+-1    -2    -3    -4    -5.5  -9   -12
+
+Daylight savings time:
+YDT   PDT   MDT   CDT   EDT   BST
+ 8     7     6     5     4     -1
+
+CEST  EEST  ADT   GDT   IDT   JDT  NZDT
+ -2    -3   -4    -5   -6.5   -10  -13
+.fi
+.PP
+If the time is preceded by a plus sign ('+'), then it is interpreted
+as local solar time instead.
+It is very important to specify the correct latitude and longitude
+(unless local solar time is given) using the
+.I \-a
+and
+.I \-o
+options to get the correct solar angles.
+.PP
+The second form gives the solar angles explicitly.
+The altitude is measured in degrees above the horizon, and the
+azimuth is measured in degrees west of South.
+.PP
+The third form prints the default option values.
+.PP
+The output sky distribution is given as a brightness function,
+.I skyfunc.
+Its value is in watts/steradian/meter2.
+The x axis points east,
+the y axis points north, and the z axis corresponds to the zenith.
+The actual material and surface(s) used for the sky is left
+up to the user.
+For a hemispherical blue sky, the description might be:
+.sp
+.nf
+!gensky 4 1 14
+
+skyfunc glow skyglow
+0
+0
+4 .9 .9 1 0
+
+skyglow source sky
+0
+0
+4 0 0 1 180
+.fi
+.sp
+Often,
+.I skyfunc
+will actually be used to characterize the light coming in from
+a window.
+.PP
+In addition to the specification of
+a sky distribution function,
+.I gensky
+suggests an ambient value in a comment at the beginning of the
+description to use with the
+.I \-av
+option of the RADIANCE rendering programs.
+(See rview(1) and rpict(1).)
+This value is the cosine-weighted radiance of the sky in
+watts/steradian/meter2.
+.PP
+.I Gensky
+supports the following options.
+.TP 10n
+.BR \-s
+Sunny sky without sun.
+The sky distribution will correspond to a standard CIE clear day.
+.TP
+.BR \+s
+Sunny sky with sun.
+In addition to the sky distribution function, a source
+description of the sun is generated.
+.TP
+.BR \-c
+Cloudy sky.
+The sky distribution will correspond to a standard CIE overcast day.
+.TP
+.BR \-i
+Intermediate sky without sun.
+The sky will correspond to a standard CIE intermediate day.
+.TP
+.BR \+i
+Intermediate sky with sun.
+In addition to the sky distribution, a (somewhat subdued) sun
+is generated.
+.TP
+.BR \-u
+Uniform cloudy sky.
+The sky distribution will be completely uniform.
+.TP
+.BI -g \ rfl
+Average ground reflectance is
+.I rfl.
+This value is used to compute
+.I skyfunc
+when Dz is negative.
+Ground plane brightness is the same for
+.I \-s
+as for
+.I \+s.
+(Likewise for
+.I \-i
+and
+.I \+i,
+but see the
+.I \-r
+option below.)
+.TP
+.BI -b \ brt
+The zenith brightness is
+.I brt.
+Zenith radiance (in watts/steradian/meter2) is normally computed
+from the sun angle and sky turbidity (for sunny sky).
+It can be given directly instead, using this option.
+.TP
+.BI -B \ irrad
+Same as
+.I \-b,
+except zenith brightness is computed from the horizontal
+diffuse irradiance (in watts/meter2).
+.TP
+.BI -r \ rad
+The solar radiance is
+.I rad.
+Solar radiance (in watts/steradian/meter2) is normally computed from
+the solar altitude.
+This option may be used to override the default calculation.
+If a value of zero is given, no sun description is produced, and the
+contribution of direct solar to ground brightness is neglected.
+.TP
+.BI -R \ irrad
+Same as
+.I \-r,
+except solar radiance is computed from the horizontal direct
+irradiance (in watts/meter2).
+.TP
+.BI -t \ trb
+The turbidity factor is
+.I trb.
+Greater turbidity factors
+correspond to greater atmospheric scattering.
+A turbidity factor of 1.0 indicates an ideal clear atmosphere (i.e.
+a completely dark sky).
+Values less than 1.0 are physically impossible.
+.PP
+The following options do not apply when the solar
+altitude and azimuth are given explicitly.
+.TP
+.BI -a \ lat
+The site latitude is
+.I lat
+degrees north.
+(Use negative angle for south latitude.)
+This is used in the calculation of sun angle.
+.TP
+.BI -o \ lon
+The site longitude is
+.I lon
+degrees west.
+(Use negative angle for east longitude.)
+This is used in the calculation of solar time and sun angle.
+Be sure to give the corresponding standard meridian also!
+If solar time is given directly, then this option has no effect.
+.TP
+.BI -m \ mer
+The site standard meridian is
+.I mer
+degrees west of Greenwich.
+(Use negative angle for east.)
+This is used in the calculation of solar time.
+Be sure to give the correct longitude also!
+If solar time is given directly, then this option has no effect.
+.SH EXAMPLE
+To produce a sunny sky for July 4th at 2:30pm Eastern daylight time at a
+site latitude of 42 degrees, 89 degrees west longitude:
+.IP "" .2i
+gensky 7 4 14:30EDT +s -a 42 -o 89
+.PP
+To produce a sunny sky distribution for a specific sun position but
+without the sun description:
+.IP "" .2i
+gensky -ang 23 -40 -s
+.SH FILES
+/usr/local/lib/ray/skybright.cal
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+rpict(1), rview(1), xform(1)

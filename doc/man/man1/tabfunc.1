@@ -1,0 +1,55 @@
+.\" RCSid "$Id"
+.TH TABFUNC 1 10/8/97 RADIANCE
+.SH NAME
+tabfunc - convert table to functions for rcalc, etc.
+.SH SYNOPSIS
+.B tabfunc
+[
+.B \-i
+]
+func1 [func2 ..]
+.SH DESCRIPTION
+.I Tabfunc
+reads a table of numbers from the standard input and converts it to
+an expression suitable for
+.I calc(1),
+.I rcalc(1)
+and their cousins.
+The input must consist of a M x N matrix of real numbers, with exactly
+one row per line.
+The number of columns must always be the same in each line,
+separated by whitespace and/or commas, with no missing values.
+The first column is always the independent variable, whose value
+indexes all of the other elements.
+This value does not need to be evenly spaced, but it must be either
+monotonically increasing or monotonically decreasing.
+(I.e. it cannot go up and then down, or down and then up.)\0
+Maximum input line width is 4096 characters and the maximum number of
+data rows is 1024.
+Input lines not beginning with a numerical value will be silently ignored.
+.PP
+The command-line arguments given to
+.I tabfunc
+are the names to be assigned to each column.
+.I Tabfunc
+then produces a single function for each column given.
+If there are some columns which should be skipped, the dummy name
+"0" may be given instead of a valid identifier.
+(It is not necessary to specify a dummy name for extra columns at
+the end of the matrix.)\0
+.PP
+The
+.I \-i
+option causes
+.I tabfunc
+to produce a description that will interpolate values in between
+those given for the independent variable on the input.
+.SH EXAMPLE
+To convert a small data table and feed it to rcalc for some
+calculation:
+.IP "" .2i
+rcalc -e `tabfunc f1 f2 < table.dat` -f com.cal
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), lam(1), neat(1), rcalc(1), total(1)

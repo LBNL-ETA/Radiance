@@ -1,0 +1,60 @@
+.\" RCSid "$Id"
+.TH GENBLINDS 1 10/10/94 RADIANCE
+.SH NAME
+genblinds - generate a RADIANCE description of venetian blinds
+.SH SYNOPSIS
+.B "genblinds mat name depth width height nslats angle"
+[
+.B "\-r|+r rcurv"
+]
+.SH DESCRIPTION
+.I Genblinds
+produces a RADIANCE scene description of a set of venetian blinds.
+The
+.I depth
+of the blinds (X dimension) is given first, followed by the
+.I width
+(Y dimension), followed by the
+.I height
+(Z dimension).
+The number of slats to place evenly within this height is given as
+.I nslats.
+The
+.I angle
+of the blind, where zero is perfectly horizontal and a
+positive angle tilts the positive X edge upwards, is
+given in degrees.
+The blinds are initially situated so that the corner of the bottom blind is
+.I "height/nslats/2"
+above the XY plane, and all coordinates are positive.
+Each new slat is placed
+.I "height/nslats"
+above the previous one, until the top slat is at
+.I "height - height/nslats/2".
+The blinds may of course be moved from this starting point with the
+.I "xform(1)"
+command.
+.PP
+If curved blinds are desired, a radius of curvature may be given
+with the
+.I "+/-r"
+option.
+If given as
+.I -r,
+The curvature is downward (which is the usual configuration).
+If the option is given as
+.I +r,
+then the curvature is upward.
+The radius indicates how far from each slat its effective
+cylindrical center resides.
+Each slat will be broken into as many polygons as is necessary to
+keep the delta changes in angle less than 10 degrees.
+(Note that this may result in a rather large number of polygons.)\0
+.SH EXAMPLE
+To produce a curved set of blinds with 15 slats:
+.IP "" .2i
+genblinds white blind 1 46 88 118 15 -r 1 > blinds.rad
+.SH AUTHOR
+Jean-Louis Scartezzini and Greg Ward
+.SH "SEE ALSO"
+genbox(1), genrev(1), gensurf(1), genworm(1), rpict(1), rview(1), xform(1)

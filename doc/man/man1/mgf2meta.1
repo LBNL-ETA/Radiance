@@ -1,0 +1,69 @@
+.\" RCSid "$Id"
+.TH MGF2META 1 11/20/95 RADIANCE
+.SH NAME
+mgf2meta - convert Materials and Geometry Format file to Metafile graphics
+.SH SYNOPSIS
+.B mgf2meta
+[
+.B "-t threshold"
+]
+.B "{x|y|z} xmin xmax ymin ymax zmin zmax"
+[
+.B input ..
+]
+.SH DESCRIPTION
+.I Mgf2meta
+converts one or more Materials and Geometry Format (MGF)
+files to a 2-D orthographic projection along the selected axis in the
+.I metafile(1)
+graphics format.
+All geometry is clipped to the specified bounding box, and the
+resulting orientation is as follows:
+.sp .5
+.nf
+	Projection	Orientation
+	==========	===========
+	x		Y-axis right, Z-axis up
+	y		Z-axis right, X-axis up
+	z		X-axis right, Y-axis up
+.fi
+.PP
+If multiple input files are given, the first file prints in black,
+the second prints in red, the third in green and the fourth in blue.
+If more than four input files are given, they cycle through the
+colors again in three other line types:  dashed, dotted and
+dot-dashed.
+.PP
+The
+.I \-t
+option may be used to randomly throw out line segments that are
+shorter than the given
+.I threshold
+(given as a fraction of the plot width).
+Segments are included with a
+probability equal to the square of the line length over the square
+of the threshold.
+This can greatly reduce the number of lines in the drawing (and
+therefore improve the drawing speed) with only a modest loss in
+quality.
+A typical value for this parameter is 0.005.
+.PP
+All MGF material information is ignored on the input.
+.SH EXAMPLE
+To project two MGF files along the Z-axis and display them under
+X11:
+.IP "" .2i
+mgf2meta z 0 10 0 15 0 9 building1.mgf building2.mgf | x11meta -r
+.PP
+To convert a RADIANCE scene to a line drawing in RADIANCE picture
+format:
+.IP "" .2i
+rad2mgf scene.rad | mgf2meta x `getbbox -h scene.rad` | meta2tga |
+ra_t8 -r > scene.pic
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getbbox(1), meta2tga(1), metafile(5), mgf2rad(1), pflip(1),
+protate(1), psmeta(1), ra_t8(1), rad2mgf(1), t4014(1), x11meta(1)
+.PP
+MGF web site "http://radsite.lbl.gov/mgf/HOME.html"

@@ -1,0 +1,64 @@
+.\" RCSid "$Id"
+.TH RA_PICT 1 11/15/93 RADIANCE
+.SH NAME
+ra_pict - convert Radiance pictures to Macintosh PICT files
+.SH SYNOPSIS
+.B ra_pict
+[
+.B \-e +/-
+.I stops
+] [
+.B \-v
+] [
+.B \-g
+.I gamma
+] [
+.I infile
+[
+.I outfile
+]]
+.SH DESCRIPTION
+.B Ra_pict
+converts a Radiance picture, as produced by
+.B rpict
+(1) to a Macintosh PICT file. The picture will be a 24 bit PICT 2 picture,
+using a single bit map (DirectRect).
+.SH OPTIONS
+.TP 10n
+.BI \-g " gamma"
+This sets an explict gamma correction for the image. If it is not
+specified, the default value of 2.0 is used.
+.TP
+.B \-v
+Invokes verbose mode, and gives line on standard error giving the
+size of the picture and the gamma correction used.
+.TP
+.BI "\-e +/\-" " stops"
+Adjusts the exposure by stops.
+.TP
+.I infile
+Specifies the file to read the picture from. If none is specified,
+it takes it from standard input. If standard input is used, then
+the picture is sent to standard output.
+.TP
+.I outfile
+Specifies the file to send the PICT file to. If none is specified,
+it is sent to standard output.
+.SH EXAMPLES
+.PP
+    ra_pict mypict.pic mypict.pict
+.PP
+Will convert the Radiance picture mypict.pic, giving the Macintosh
+PICT mypict.pict.
+.PP
+    ra_pict -g 2.2 mypict.pic mypict.pict
+.PP
+Will convert the file using a gamma of 2.2.
+.SH "SEE ALSO"
+rpict(1)
+.SH BUGS
+Does not yet do Macintosh PICT to Radiance PIC, as this PICT files
+are a lot more complex than just one bit map. This is left as an
+exercise for the reader :-)
+.SH AUTHOR
+Russell Street

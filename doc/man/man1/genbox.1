@@ -1,0 +1,45 @@
+.\" RCSid "$Id"
+.TH GENBOX 1 11/15/93 RADIANCE
+.SH NAME
+genbox - generate a RADIANCE description of a box
+.SH SYNOPSIS
+.B "genbox mat name xsiz ysiz zsiz"
+[
+.B \-i
+][
+.B "\-r rad"
+|
+.B "\-b bev"
+]
+.SH DESCRIPTION
+.I Genbox
+produces a RADIANCE scene description of a parallelepiped
+with one corner at the origin and the opposite corner at
+.I "(xsiz, ysiz, zsiz)."
+The sides of the box will be parallel to the three coordinate
+planes.
+The surfaces that make up the box will be modified by
+.I mat
+and their identifiers will begin with
+.I name.
+The
+.I \-i
+option can be used to produce a box with inward directed surface
+normals.
+The
+.I \-r
+option can be used to specify the radius for rounded edges.
+The
+.I \-b
+option can be used to specify the indentation for beveled edges.
+.SH EXAMPLE
+To produce a rectangular box made of wood with beveled edges:
+.IP "" .2i
+genbox wood box1 5 8 3 -b .5 > box1
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Because spheres and cylinders are used to construct boxes with
+rounded edges, a transparent box of this type appears quite messy.
+.SH "SEE ALSO"
+genrev(1), gensurf(1), genworm(1), rpict(1), rview(1), xform(1)

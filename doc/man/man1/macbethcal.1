@@ -1,0 +1,233 @@
+.\" RCSid "$Id"
+.TH MACBETHCAL 1 1/16/97 RADIANCE
+.SH NAME
+macbethcal - compute color compensation based on measured Macbeth chart
+.SH SYNOPSIS
+.B macbethcal
+[
+.B "\-d debug.pic"
+][
+.B "\-p xul yul xur yur xll yll xlr ylr"
+]
+.B scannedin.pic
+[
+.B calibout.cal
+]
+.br
+.B macbethcal
+.B \-c
+[
+.B "\-d debug.pic"
+]
+[
+.B measured.xyY
+[
+.B calibout.cal
+]
+]
+.SH DESCRIPTION
+.I Macbethcal
+takes a scanned image or measurement set
+of a Macbeth ColorChecker\u\s-3TM\s+3\d color
+rendition chart and computes a color mapping
+function suitable as input to
+.I pcomb(1).
+.PP
+In the first form,
+.I macbethcal
+takes a scanned image of a Macbeth chart that has been converted
+into a Radiance picture using a fixed procedure.
+When used properly as input to
+.I pcomb,
+the computed calibration file will adjust the
+brightness and color of any similarly scanned and converted image
+so as to best match the original.
+If the lighting conditions are carefully controlled (as in the case
+of a flatbed scanner), it is even possible to get reliable
+reflectance values this way, at least within 10% or so.
+The input picture is named on the command line.
+The output calibration file will be written to the standard output
+if no file name is given on the command line.
+.PP
+In the second form, the input is from a file containing measured
+values for each Macbeth color.
+This file must contain entries of the form:
+.sp
+.nf
+N	x	y	Y
+.fi
+.sp
+Where
+.I N
+is the number of the corresponding Macbeth color.
+(See back of ColorChecker chart
+for color names and indexing, but it basically starts from the upper
+left with 1 and proceeds in English text order to the lower right,
+which is 24.)
+The values
+.I x,
+.I y
+and
+.I Y
+are the 1931 CIE (x,y) chromaticity coordinates followed by the
+luminance for that color, which can be in any units.
+If a white value is known (i.e. maximum output level), then it may
+be given as entry number 0.
+The entries may be in any order, and comments may be included
+delimited by a pound sign ('#') and continuing to the end of line.
+It is recommended that measurements be done for all 24 colors,
+but the only required entries are the 6 neutral values on the bottom
+row of the chart.
+.PP
+Computing a mapping from measured colors is usually more convenient
+when calibrating a particular output device.
+This is accomplished by printing the picture
+.I macbeth_spec.pic
+(which may be found in the standard RADIANCE library directory in
+the lib subdirectory) and measuring the output with a chroma meter
+or spectrophotometer.
+.PP
+For a scanned image, the locations of the 24 Macbeth patches
+in the input picture must be known.
+If the chart borders are not at the edges of the input picture, or
+the chart has been reversed or rotated or is uncentered or at an
+oblique angle, then it is necessary to specify the pixel locations
+of the corners of the chart with the
+.I \-p
+option.
+The corner postions (x,y pixel addresses as given by the
+.I ximage(1)
+"p" command)
+are ordered on the command line:
+upper-left, upper-right, lower-left, lower-right
+(i.e. English text ordering).
+These coordinates should be the outside corner positions of
+the following patches:
+.sp
+.nf
+upper-left	= 1. dark skin
+upper-right	= 6. bluish green
+lower-left	= 19. white
+lower-right	= 24. black
+.fi
+.sp
+If the chart has been flipped or rotated, simply give the pixel
+positions of the appropriate patch corners, wherever
+they are in the image.
+(Note: if the Radiance picture has been flipped or rotated with
+.I pflip(1)
+or
+.I protate(1),
+.I ximage
+will report the original pixel positions if the
+.I \-c
+option was not used by the reorienting program(s).
+This will be wrong, so be sure to use the
+.I \-c
+option.)
+.I Macbethcal
+can handle a chart with any orientation or perspective warping if
+the corner coordinates are given correctly.
+The debug picture output is the best way to check for consistency.
+(See the
+.I \-d
+option, below.)
+.PP
+The
+.I \-d
+option may be used to specify an additional output file, which will
+be a picture comparing the scanned image processed according to the
+computed mapping against the standard Macbeth colors.
+It is a good idea to use the debug option to check that the color
+patches are being located correctly, and to see how well
+.I macbethcal
+does at matching colors.
+The center of each patch will show the target color;
+the left side of each patch will show the original
+color, and the right side will show the corrected value.
+If the match works well, the debug picture should have a sort of
+"notch on the left" look in each patch.
+Macbeth colors that could not be matched because they were out of
+gamut on this device are indicated with diagonal lines drawn
+through the associated target colors.
+.SH METHOD
+.I Macbethcal
+computes the color mapping in two stages.
+The first stage uses the six neutral color patches at the bottom of
+the Macbeth chart to compute a piecewise linear approximation to the
+brightness mapping of each RGB primary.
+The second stage looks at all the colors that are within the
+device's gamut to compute a
+least-sqaures fit for a linear color transformation from the
+measured space into the standard Radiance RGB space (as defined by
+the three primaries in src/common/color.h).
+.PP
+Thanks to the nature of inverse mappings, this method should work
+either for converting scanned data to match the original, or for
+preconditioning pictures to be sent to specific output devices.
+In other words, the same calibration file works either for
+correcting scanned images OR precorrecting images before printing.
+.PP
+A warning is printed if some unsaturated colors are determined to
+be out of gamut, as this may indicate a poor rendition or improper
+picture alignment.
+The debug picture will show which colors were excluded by drawing
+diagonal lines through their entries.
+.SH NOTE
+It is very important that the same settings be applied when
+scanning or printing other images to be calibrated with the computed file.
+In particular, all exposure adjustments should be fixed manually,
+and no tweaking of the settings should be done along the way.
+The final result will be best if the original scanned image is not
+too far off from what it should be.
+In the case of slide and negative scanners, it is best to apply the
+recommended calibration file for the type of film used, so long as
+this calibration is fixed and not adjusted on a per-image basis.
+.SH CHART AVAILABILITY
+The Macbeth chart is available at most photographic supply stores,
+or may be ordered directly from Macbeth:
+.sp
+.nf
+Macbeth
+Munsell Color
+405 Little Britain Rd.
+New Windsor, NY  12553-6148
+tel. 1-800-622-2384 (USA)
+fax. 1-914-561-0267
+.fi
+.sp
+The chart sells for under $50 US at the time of this writing.
+.SH EXAMPLES
+To compute a calibration for a FunkyThing scanner and check the
+results:
+.IP "" .2i
+ra_tiff -r mbscan.tif mbscan.pic
+.br
+macbethcal -d debug.pic mbscan.pic FunkyThing.cal
+.br
+ximage debug.pic
+.PP
+To apply this computed calibration to another scanned image:
+.IP "" .2i
+ra_tiff -r another.tif | pcomb -f FunkyThing.cal - > another_calib.pic
+.PP
+To compute a calibration file for the BigWhiz film recorder, after
+taking measurements of a slide made from macbeth_spec.pic:
+.IP "" .2i
+macbethcal -c macbeth_spec.xyY BigWhiz.cal
+.PP
+To prepare a picture prior to output on the same film recorder:
+.IP "" .2i
+pcomb -f BigWhiz.cal standard.pic > toprint.pic
+.PP
+To use
+.I pcond(1)
+to also adjust the image for human response:
+.IP "" .2i
+pcond -f BigWhiz.cal -h standard.pic > toprint.pic
+.SH AUTHOR
+Greg Ward
+.br
+Paul Heckbert supplied code for perspective projective mapping
+.SH "SEE ALSO"
+calc(1), pcomb(1), pcond(1), pfilt(1), ximage(1)

@@ -1,0 +1,115 @@
+.\" RCSid "$Id"
+.TH PDFBLUR 1 1/24/96 RADIANCE
+.SH NAME
+pdfblur - generate views for depth-of-field blurring
+.SH SYNOPSIS
+.B pdfblur
+.B aperture
+.B distance
+.B nsamp
+.B viewfile
+.SH DESCRIPTION
+.I Pdfblur
+takes the given
+.I viewfile
+and computes
+.I nsamp
+views based on a focus distance of
+.I distance
+and an aperture diameter of
+.I aperture
+(both in world coordinate units).
+When rendered and averaged together, these views will result in
+a picture with the specified depth of field.
+Either
+.I pinterp(1)
+or
+.I rpict(1)
+may be called to do the actual work.
+(The given
+.I viewfile
+must also be passed on the command line to the chosen renderer, since
+.I pdfblur
+provides supplemental view specifications only.)\0
+.PP
+For
+.I pinterp,
+feed the output of
+.I pdfblur
+to the standard input of
+.I pinterp
+and apply the
+.I \-B
+option to blur views together.
+In most cases, a single picture with z-buffer is all that is required
+to get a satisfactory result, though the perfectionist may wish to
+apply three pictures arranged in a triangle about the aperature, or
+alternatively apply the
+.I \-ff
+option together with the
+.I \-fr
+option of
+.I pinterp.
+(The latter may actually work out to be faster, since rendering
+three views takes three times as long as a single view, and the
+.I \-fr
+option will end up recomputing relatively few pixels by
+comparison.)\0
+.PP
+To use
+.I pdfblur
+with
+.I rpict,
+apply the
+.I \-S
+option to indicate a rendering sequence, and set the
+.I \-o
+option with a formatted file name to save multiple output
+pictures.
+When all the renderings are finished, combine them with the
+.I pcomb(1)
+program, using appropriate scalefactors to achieve an average.
+Note that using
+.I rpict
+is MUCH more expensive than using
+.I pinterp,
+and it is only recommended if the scene and application
+absolutely demand it (e.g. there is prominent refraction that
+must be modeled accurately).
+.PP
+For both
+.I pinterp
+and
+.I rpict,
+the computation time will be proportional to the number of views from
+.I pdfblur.
+We have found a
+.I nsamp
+setting somewhere between 5 and 10 to be adequate for most images.
+Relatively larger values are appropriate for larger aperatures.
+.SH EXAMPLES
+To use
+.I pinterp
+to simulate an aperture of 0.5 inches on a lens focused at a
+distance of 57 inches:
+.IP "" .2i
+rpict -vf myview -x 640 -y 480 -z orig.zbf scene.oct > orig.pic
+.br
+pdfblur 0.5 57 8 orig.pic | pinterp -B -vf orig.pic -x 640 -y 480
+orig.pic orig.zbf > blurry.pic
+.PP
+To use
+.I rpict
+exclusively to do the same:
+.IP "" .2i
+pdfblur .5 57 5 myview | rpict -S 1 -vf myview -x 640 -y 480
+-o view%d.pic scene.oct
+.br
+pcomb -s .2 view1.pic -s .2 view2.pic -s .2 view3.pic -s .2
+view4.pic -s .2 view5.pic > blurry.pic
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+This program really only works with perspective views.
+.SH "SEE ALSO"
+pcomb(1), pinterp(1), pmblur(1), rcalc(1), rpict(1), vwright(1)

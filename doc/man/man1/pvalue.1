@@ -1,0 +1,235 @@
+.\" RCSid "$Id"
+.TH PVALUE 1 1/15/99 RADIANCE
+.SH NAME
+pvalue - convert RADIANCE picture to/from alternate formats
+.SH SYNOPSIS
+.B pvalue
+[
+.B options
+]
+[
+.B file
+]
+.br
+.B "pvalue -r"
+[
+.B options
+]
+[
+.B file1
+[
+.B "file2 file3"
+]
+]
+.SH DESCRIPTION
+.I Pvalue
+converts the pixels of a RADIANCE picture to or from another format.
+In the default mode, pixels are sent to the
+standard output, one per line, in the following ascii format:
+
+	xpos	ypos	red	green	blue
+
+If no
+.I file
+is given, the standard input is read.
+.PP
+The reverse conversion option
+.I (-r)
+may be used with a single input file or when reading from the
+standard input, but if the second form is used with three separate
+input files, the three primaries are presumed to be separated in
+these files.
+.TP 10n
+.BR \-u
+Print only unique values in the output, skipping runs of equal pixels.
+Specifying
+.I \+u
+turns this option off, which is the default.
+.TP
+.BR \-o
+Print original values, before exposure compensation.
+Specifying
+.I \+o
+uses final values, which is the default.
+.TP
+.BR \-h
+Do not print header.
+Specifying
+.I \+h
+causes the header to be printed, which is the default.
+.TP
+.BI \-H
+Do not print the resolution string.
+(See also the
+.I \-r
+option below.)
+Specifying an input resolution for reverse conversion also turns
+this option off.
+Specifying
+.I \+H
+causes the resolution string to be printed, which is the default.
+.TP
+.BI \-s \ nbytes
+Skip the specified number of bytes on the input header.
+This option is useful for skipping unintelligible headers in
+foreign file formats.
+(Does not work when reading from standard input.)
+.TP
+.BI \-e \ exposure
+Adjust the exposure by the amount specified.
+If the exposure is being given as a conversion factor, use
+.I \+e
+instead, so an EXPOSURE line will not be recorded in the header
+(if any).
+.TP
+.BI \-g \ gamma
+Set gamma correction for conversion.
+When converting from a RADIANCE picture to another format,
+the inverse gamma is applied to correct for monitor response.
+When converting to a RADIANCE picture
+.I (\-r
+option), the gamma is applied directly to recover the linear values.
+By default,
+.I gamma
+is set to 1.0, meaning no gamma correction is performed.
+.TP
+.BR \-d
+Data only,
+do not print x and y pixel position.
+.TP
+.BR \-da
+Same as
+.I \-d.
+.TP
+.BR \-di
+Print ascii integer values from 0 to 255+.
+If
+.I \+di
+is given, the integer values will be preceded by
+the x and y pixel locations.
+.TP
+.BR \-db
+Output binary byte values from 0 to 255.
+.TP
+.BR \-dw
+Output binary 16-bit words from 0 to 65535.
+.TP
+.BR \-dW
+Output binary 16-bit words from 0 to 65535, byte-swapped.
+.TP
+.BR \-df
+Output binary float values.
+.TP
+.BR \-dd
+Output binary double values.
+.TP
+.BR \-R
+Reverse ordering of colors so that the output is blue then green
+then red.
+The default ordering (specified with
+.I \+R)
+is red then green then blue.
+.TP
+.BR \-n
+The RGB values are non-interleaved, meaning that all the red, green
+and blue data are stored together in separate chunks.
+Interleaving may be turned on with the
+.I \+n
+option, which is the default.
+.TP
+.BR \-b
+Print brightness values rather than RGB.
+Specifying
+.I \+b
+turns this option off, which is the default.
+.TP
+.BI \-p P
+Put out only the primary
+.I P,
+where
+.I P
+is one of upper or lower case 'R', 'G' or 'B' for red, green or
+blue, respectively.
+This option may be used to separate the Radiance primaries into
+three files with three separate runs of
+.I pvalue,
+or only one file when only one primary is needed.
+Note that there is no space between this option and its argument.
+.TP
+.BR \-r
+Perform reverse conversion.
+Input is in the format given by the other options.
+The x and y resolution must be specified on the command line, unless
+the image file contains a Radiance resolution string at the
+beginning (see 
+.I \-H
+option above and
+.I \-y
+option below).
+Specifying
+.I \+r
+converts from a Radiance picture to other values, which is the
+default.
+.TP
+.BI -y \ res
+Set the output y resolution to
+.I res.
+If
+.I \+y
+is specified, then the scanlines are assumed to be in
+increasing order (ie. bottom to top).
+The default value for this option is 0, which means
+that the picture size and scanline order must appear
+as the first line after the header (if any) in the
+input file.
+Either an upper or lower case 'Y' may be used for this option.
+Since Radiance files always contain such a line, 
+this option has no effect for forward conversions.
+.TP
+.BI +x \ res
+Set the output x resolution to
+.I res.
+If
+.I \-x
+is specified, then the scanlines are assumed to be in
+decreasing order (ie. right to left).
+The ordering of the
+.I \-y
+and
+.I \+x
+options determines whether the scanlines are sorted along
+x or along y.
+Most Radiance pictures are sorted top to bottom, then left
+to right.
+This corresponds to a specification of the form "-y yres +x xres".
+Either an upper or lower case 'X' may be used for this option.
+Like the
+.I \-y
+option,
+.I \-x
+options have no effect for forward conversions.
+.SH EXAMPLE
+To look at the original, unique pixels in picture:
+.IP "" .2i
+pvalue -o -u picture | more
+.PP
+To convert from a 512x400 8-bit greyscale image in bottom to top,
+left to right scanline ordering:
+.IP "" .2i
+pvalue -r -db -b -h +y 400 +x 512 input.im > flipped.pic
+.br
+pflip -v flipped.pic > final.pic
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The
+.I \-r
+option does not work with the
+.I \-u
+option.
+Also, input pixel locations are ignored during a reverse
+conversion, so this information is not used in determining
+the scanline ordering or picture size.
+.SH "SEE ALSO"
+getinfo(1), pcompos(1), pfilt(1), pflip(1),
+protate(1), rpict(1), rtrace(1), rview(1)

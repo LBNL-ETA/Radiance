@@ -1,0 +1,507 @@
+.\" RCSid "$Id"
+.\"Print with tbl and eqn or neqn with -ms macro package
+.vs 12
+.nr VS 12
+.nr PD .5v	\" paragraph distance (inter-paragraph spacing)
+.EQ L
+delim $$
+.EN
+.DA
+.TL
+Behavior of Materials in RADIANCE
+.AU
+Greg Ward
+.br
+Lawrence Berkeley Laboratory
+.NH 1
+Definitions
+.LP
+This document describes in gory detail how each material type in RADIANCE
+behaves in terms of its parameter values.
+The following variables are given:
+.LP
+.vs 14
+.nr VS 14
+.TS
+center;
+l8 l.
+$bold R ( P vec , v hat )$	Value of a ray starting at $P vec$ in direction $v hat$ (in watts/sr/m^2)
+$P vec sub o$	Eye ray origin
+$v hat$	Eye ray direction
+$P vec sub s$	Intersection point of ray with surface
+$n hat$	Unperturbed surface normal at intersection
+$a sub n$	Real argument number $n$
+$bold C$	Material color, $"{" a sub 1 , a sub 2 , a sub 3 "}"$
+$bold p$	Material pattern value, $"{" 1, 1, 1 "}"$ if none
+$d vec$	Material texture vector, $[ 0, 0, 0 ]$ if none
+$b vec$	Orientation vector given by the string arguments of anisotropic types
+$n sub 1$	Index of refraction on eye ray side
+$n sub 2$	Index of refraction on opposite side
+$bold A$	Indirect irradiance (in watts/m^2)
+$bold A sub t$	Indirect irradiance from opposite side (in watts/m^2)
+$m hat$	Mirror direction, which can vary with Monte Carlo sampling
+$t sub s$	Specular threshold (set by -st option)
+$bold B sub i$	Radiance of light source sample $i$ (in watts/sr/m^2)
+$q hat sub i$	Direction to source sample $i$
+$omega sub i$	Solid angle of source sample $i$ (in sr)
+.TE
+.vs 12
+.nr VS 12
+.LP
+Variables with an arrow over them are vectors.
+Variables with a circumflex are unit vectors (ie. normalized).
+All variables written in bold represent color values.
+.NH 2
+Derived Variables
+.LP
+The following values are computed from the variables above:
+.LP
+.vs 14
+.nr VS 14
+.TS
+center;
+l8 l.
+$cos sub 1$	Cosine of angle between surface normal and eye ray
+$cos sub 2$	Cosine of angle between surface normal and transmitted direction
+$n hat sub p$	Perturbed surface normal (after texture application)
+$h vec sub i$	Bisecting vector between eye ray and source sample $i$
+$F sub TE$	Fresnel coefficient for $TE$-polarized light
+$F sub TM$	Fresnel coefficient for $TM$-polarized light
+$F$	Fresnel coefficient for unpolarized light
+.TE
+.vs 12
+.nr VS 12
+.LP
+These values are computed as follows:
+.EQ I
+cos sub 1	mark ==~ - v hat cdot n hat sub p
+.EN
+.EQ I
+cos sub 2	lineup ==~ sqrt { 1~-~( n sub 1 / n sub 2 )
+  sup 2 (1~-~cos sub 1 sup 2 )}
+.EN
+.EQ I
+n hat sub p	lineup ==~ { n hat ~+~ d vec } over { ||~ n hat ~+~ d vec ~|| }
+.EN
+.EQ I
+h vec sub i	lineup ==~ q hat sub i ~-~ v hat
+.EN
+.EQ I
+F sub TE	lineup ==~ left [ { n sub 1 cos sub 1
+~-~ n sub 2 cos sub 2 } over { n sub 1 cos sub 1
+~+~ n sub 2 cos sub 2 } right ] sup 2
+.EN
+.EQ I
+F sub TM	lineup ==~ left [ {n sub 1 / cos sub 1
+~-~ n sub 2 / cos sub 2} over {n sub 1 / cos sub 1
+~+~ n sub 2 / cos sub 2} right ] sup 2
+.EN
+.EQ I
+F	lineup ==~ 1 over 2 F sub TE ~+~ 1 over 2 F sub TM
+.EN
+.NH 2
+Vector Math
+.LP
+Variables that represent vector values are written with an arrow above
+(eg. $ v vec $).
+Unit vectors (ie. vectors whose lengths are normalized to 1) have a hat
+(eg. $ v hat $).
+Equations containing vectors are implicitly repeated three times,
+once for each component.
+Thus, the equation:
+.EQ I
+v vec ~=~ 2 n hat ~+~ P vec
+.EN
+is equivalent to the three equations:
+.EQ I
+v sub x ~=~ 2 n sub x ~+~ P sub x
+.EN
+.EQ I
+v sub y ~=~ 2 n sub y ~+~ P sub y
+.EN
+.EQ I
+v sub z ~=~ 2 n sub z ~+~ P sub z
+.EN
+There are also cross and dot product operators defined for vectors, as
+well as the vector norm:
+.RS
+.LP
+.UL "Vector Dot Product"
+.EQ I
+a vec cdot b vec ~==~ a sub x b sub x ~+~ a sub y b sub y ~+~ a sub z b sub z
+.EN
+.LP
+.UL "Vector Cross Product"
+.EQ I
+a vec ~ times ~ b vec ~==~ left | matrix {
+  ccol { i hat above a sub x above b sub x }
+  ccol { j hat above a sub y above b sub y }
+  ccol { k hat above a sub z above b sub z }
+} right |
+.EN
+or, written out:
+.EQ I
+a vec ~ times ~ b vec ~=~ [ a sub y b sub z ~-~ a sub z b sub y ,~
+a sub z b sub x ~-~ a sub x b sub z ,~ a sub x b sub y ~-~ a sub y b sub x ]
+.EN
+.LP
+.UL "Vector Norm"
+.EQ I
+|| v vec || ~==~ sqrt {{v sub x} sup 2 ~+~ {v sub y} sup 2 ~+~ {v sub z} sup 2}
+.EN
+.RE
+.LP
+Values are collected into a vector using square brackets:
+.EQ I
+v vec ~=~ [ v sub x , v sub y , v sub z ]
+.EN
+.NH 2
+Color Math
+.LP
+Variables that represent color values are written in boldface type.
+Color values may have any number of spectral samples.
+Currently, RADIANCE uses only three such values, referred to generically
+as red, green and blue.
+Whenever a color variable appears in an equation, that equation is
+implicitly repeated once for each spectral sample.
+Thus, the equation:
+.EQ I
+bold C ~=~ bold A^bold B ~+~ d bold F
+.EN
+is shorthand for the set of equations:
+.EQ I
+C sub 1 ~=~ A sub 1 B sub 1 ~+~ d F sub 1
+.EN
+.EQ I
+C sub 2 ~=~ A sub 2 B sub 2 ~+~ d F sub 2
+.EN
+.EQ I
+C sub 3 ~=~ A sub 3 B sub 3 ~+~ d F sub 3
+.EN
+	...
+.LP
+And so on for however many spectral samples are used.
+Note that color math is not the same as vector math.
+For example, there is no such thing as
+a dot product for colors.
+.LP
+Curly braces are used to collect values into a single color, like so:
+.EQ I
+bold C ~=~ "{" r, g, b "}"
+.EN
+.sp 2
+.NH
+Light Sources
+.LP
+Light sources are extremely simple in their behavior when viewed directly.
+Their color in a particular direction is given by the equation:
+.EQ L
+bold R ~=~ bold p^bold C
+.EN
+.LP
+The special light source material types, glow, spotlight, and illum,
+differ only in their affect on the direct calculation, ie. which rays
+are traced to determine shadows.
+These differences are explained in the RADIANCE reference manual, and
+will not be repeated here.
+.sp 2
+.NH
+Specular Types
+.LP
+Specular material types do not involve special light source testing and
+are thus are simpler to describe than surfaces with a diffuse component.
+The output radiance is usually a function of one or two other ray 
+evaluations.
+.NH 2
+Mirror
+.LP
+The value at a mirror surface is a function of the ray value in
+the mirror direction:
+.EQ L
+bold R ~=~ bold p^bold C^bold R ( P vec sub s ,~ m hat )
+.EN
+.NH 2
+Dieletric
+.LP
+The value of a dieletric material is computed from Fresnel's equations:
+.EQ L
+bold R ~=~ bold p^bold C sub t ( 1 - F )^bold R ( P vec sub s ,~ t hat ) ~+~
+  bold C sub t^F^bold R ( P vec sub s ,~ m hat )
+.EN
+where:
+.EQ I
+bold C sub t ~=~ bold C sup {|| P vec sub s ~-~ P vec sub o ||}
+.EN
+.EQ I
+t hat ~=~ n sub 1 over n sub 2 v hat ~+~ left ( n sub 1 over n sub 2 cos sub 1
+  ~-~ cos sub 2 right ) n hat sub p
+.EN
+.LP
+The Hartmann constant is used only to calculate the index of refraction
+for a dielectric, and does not otherwise influence the above equations.
+In particular, transmitted directions are not sampled based on dispersion.
+Dispersion is only modeled in a very crude way when a light source is
+casting a beam towards the eye point.
+We will not endeavor to explain the algorithm here as it is rather
+nasty.
+.LP
+For the material type "interface", the color which is used for $bold C$
+as well as the indices of refraction $n sub 1$ and $n sub 2$ is determined
+by which direction the ray is headed.
+.NH 2
+Glass
+.LP
+Glass uses an infinite series solution to the interreflection inside a pane
+of thin glass.
+.EQ L
+bold R ~=~ bold p^bold C sub t^bold R ( P vec sub s ,~ t hat )
+  left [ 1 over 2 {(1 ~-~ F sub TE )} sup 2 over {1 ~-~ F sub TE sup 2
+     bold C sub t sup 2 } ~+~ 1 over 2 {(1 ~-~ F sub TM )} sup 2
+     over {1 ~-~ F sub TM sup 2 bold C sub t sup 2 } right ] ~+~
+  bold R ( P vec sub s ,~ m hat ) left [ 1 over 2 {F sub TE (1 ~+~
+     (1 ~-~ 2 F sub TE ) bold C sub t sup 2 )} over {1 ~-~ F sub TE sup 2
+     bold C sub t sup 2 } ~+~ 1 over 2 {F sub TM (1 ~+~
+     (1 ~-~ 2 F sub TM ) bold C sub t sup 2 )} over {1 ~-~ F sub TM sup 2
+     bold C sub t sup 2 } right ]
+.EN
+where:
+.EQ I
+bold C sub t ~=~ bold C sup {(1/ cos sub 2 )}
+.EN
+.EQ I
+t hat ~=~ v hat~+~2(1^-^n sub 2 ) d vec
+.EN
+.sp 2
+.NH
+Basic Reflection Model
+.LP
+The basic reflection model used in RADIANCE takes into account both specular
+and diffuse interactions with both sides of a surface.
+Most RADIANCE material types are special cases of this more general formula:
+.EQ L (1)
+bold R ~=~ mark size +3 sum from sources bold B sub i omega sub i
+  left { Max(0,~ q hat sub i cdot n hat sub p )
+    left ( bold rho sub d over pi ~+~ bold rho sub si right ) ~+~
+    Max(0,~ - q hat sub i cdot n hat sub p )
+    left ( bold tau sub d over pi ~+~ bold tau sub si right ) right }
+.EN
+.EQ L
+lineup ~~+~~ bold rho sub s bold R ( P vec sub s ,~ m hat ) ~~+~~
+  bold tau sub s bold R ( P vec sub s ,~ t hat )
+.EN
+.EQ L
+lineup ~~+~~ bold rho sub a over pi bold A ~~+~~
+  bold tau sub a over pi bold A sub t
+.EN
+Note that only one of the transmitted or reflected components in the first
+term of the above equation can be non-zero, depending on whether the given
+light source is in front of or behind the surface.
+The values of the various $ bold rho $ and $ bold tau $ variables will be
+defined differently for each material type, and are given in the following
+sections for plastic, metal and trans.
+.NH 2
+Plastic
+.LP
+A plastic surface has uncolored highlights and no transmitted component.
+If the surface roughness ($a sub 5$) is zero or the specularity
+($bold r sub s$) is greater than the threshold ($t sub s$)
+then a ray is traced in or near the mirror direction.
+An approximation to the Fresnel reflection coefficient
+($bold r sub s ~approx~ 1 - F$) is used to modify the specularity to account
+for the increase in specular reflection near grazing angles.
+.LP
+The reflection formula for plastic is obtained by adding the following
+definitions to the basic formula given in equation (1):
+.EQ I
+bold rho sub d ~=~ bold p^bold C (1 ~-~ a sub 4 )
+.EN
+.EQ I
+bold rho sub si ~=~ left {~ lpile {{bold r sub s
+  {f sub s ( q hat sub i )} over
+  sqrt{( q hat sub i cdot n hat sub p ) cos sub 1}} above
+  0 } ~~~ lpile { {if~a sub 5 >0} above otherwise }
+.EN
+.EQ I
+bold rho sub s ~=~ left {~ lpile {{bold r sub s} above 0 } ~~~
+  lpile {{if~a sub 5^=^0~or~bold r sub s^>^t sub s} above otherwise }
+.EN
+.EQ I
+bold rho sub a ~=~ left {~ lpile {{ bold p^bold C^(1~-~bold r sub s )} above
+  {bold p^bold C}} ~~~ lpile
+  {{if~a sub 5^=^0~or~bold r sub s^>^t sub s} above otherwise }
+.EN
+.EQ I
+bold tau sub a ,~ bold tau sub d ,~ bold tau sub si ,~ bold tau sub s ~=~ 0
+.EN
+.EQ I
+bold r sub s ~=~ a sub 4
+.EN
+.EQ I
+f sub s ( q hat sub i ) ~=~ e sup{[ ( h vec sub i cdot n hat sub p ) sup 2
+  ~-~ || h vec || sup 2 ]/
+  ( h vec sub i cdot n hat sub p ) sup 2 / alpha sub i}
+  over {4 pi alpha sub i}
+.EN
+.EQ I
+alpha sub i ~=~ a sub 5 sup 2 ~+~ omega sub i over {4 pi}
+.EN
+.LP
+There is one additional caveat to the above formulas.
+If the roughness is greater than zero and the reflected ray,
+$bold R ( P vec sub s ,~ r hat )$,
+intersects a light source, then it is not used in the calculation.
+Using such a ray would constitute double-counting, since the direct
+component has already been included in the source sample summation.
+.NH 2
+Metal
+.LP
+Metal is identical to plastic, except for the definition of $ bold r sub s $,
+which now includes the color of the material:
+.EQ I
+bold r sub s ~=~
+  "{" a sub 1 a sub 4 ,~
+  a sub 2 a sub 4 ,~
+  a sub 3 a sub 4 "}"
+.EN
+.NH 2
+Trans
+.LP
+The trans type adds transmitted and colored specular and diffuse components
+to the colored diffuse and uncolored specular components of the plastic type.
+Again, the roughness value and specular threshold determine
+whether or not specular rays will be followed for this material.
+.EQ I
+bold rho sub d ~=~ bold p^bold C^(1 ~-~ a sub 4 ) ( 1 ~-~ a sub 6 )
+.EN
+.EQ I
+bold rho sub si ~=~ left {~ lpile {{bold r sub s
+  {f sub s ( q hat sub i )} over
+  sqrt{( q hat sub i cdot n hat sub p ) cos sub 1}} above
+  0 } ~~~ lpile { {if~a sub 5 >0} above otherwise }
+.EN
+.EQ I
+bold rho sub s ~=~ left {~ lpile {{bold r sub s} above 0 } ~~~
+  lpile {{if~a sub 5^=^0~or~bold r sub s^>^t sub s} above otherwise }
+.EN
+.EQ I
+bold rho sub a ~=~ left {~ lpile {{ bold p^bold C^
+  (1~-~bold r sub s ) (1~-~a sub 6 )} above
+  {bold p^bold C^(1~-~a sub 6 )}} ~~~ lpile
+  {{if~a sub 5^=^0~or~bold r sub s^>^t sub s} above otherwise }
+.EN
+.EQ I
+bold tau sub d ~=~ a sub 6 (1~-~bold r sub s ) (1~-~a sub 7 )^bold p^bold C
+.EN
+.EQ I
+bold tau sub si ~=~ left {~ lpile {{a sub 6 a sub 7 (1~-~bold r sub s )^
+  bold p^bold C {g sub s ( q hat sub i )} over
+  sqrt{(- q hat sub i cdot n hat sub p ) cos sub 1}} above
+  0 } ~~~ lpile { {if~a sub 5^>^0} above otherwise }
+.EN
+.EQ I
+bold tau sub s ~=~ left {~ lpile {{a sub 6 a sub 7 (1~-~bold r sub s )^
+  bold p^bold C} above 0} ~~~ lpile
+  {{if~a sub 5^=^0~or~a sub 6 a sub 7 (1~-~bold r sub s )^>^t sub s}
+  above otherwise}
+.EN
+.EQ I
+bold tau sub a ~=~ left {~ lpile {{a sub 6 (1~-~bold r sub s ) (1~-~a sub 7 )
+  ^bold p^bold C} above {a sub 6 (1~-~bold r sub s )^bold p^bold C}} ~~~
+  lpile {{if~a sub 5^=^0~or~a sub 6 a sub 7 (1~-~bold r sub s )^>^t sub s}
+  above otherwise}
+.EN
+.EQ I
+bold r sub s ~=~ a sub 4
+.EN
+.EQ I
+f sub s ( q hat sub i ) ~=~ e sup{[ ( h vec sub i cdot n hat sub p ) sup 2
+  ~-~ || h vec || sup 2 ]/
+  ( h vec sub i cdot n hat sub p ) sup 2 / alpha sub i}
+  over {4 pi alpha sub i}
+.EN
+.EQ I
+alpha sub i ~=~ a sub 5 sup 2 ~+~ omega sub i over {4 pi}
+.EN
+.EQ I
+g sub s ( q hat sub i ) ~=~ e sup{( 2 q hat sub i cdot t hat~-~2)/ beta sub i}
+  over {pi beta sub i}
+.EN
+.EQ I
+t hat ~=~ {v hat~-~d vec}over{|| v hat~-~d vec ||}
+.EN
+.EQ I
+beta sub i ~=~ a sub 5 sup 2 ~+~ omega sub i over pi
+.EN
+.LP
+The same caveat applies to specular rays generated for trans type as did
+for plastic and metal.
+Namely, if the roughness is greater than zero and the reflected ray,
+$bold R ( P vec sub s ,~ r hat )$,
+or the transmitted ray,
+$bold R ( P vec sub s ,~ t hat )$,
+intersects a light source, then it is not used in the calculation.
+.NH 2
+Anisotropic Types
+.LP
+The anisotropic reflectance types (plastic2, metal2, trans2) use the
+same formulas as their counterparts with the exception of the
+exponent terms, $f sub s ( q hat sub i )$ and
+$g sub s ( q hat sub i )$.
+These terms now use an additional vector, $b vec$, to
+orient an elliptical highlight.
+(Note also that the argument numbers for the type trans2 have been
+changed so that $a sub 6$ is $a sub 7$ and $a sub 7$ is $a sub 8$.)\0
+.EQ I
+f sub s ( q hat sub i ) ~=~
+  1 over {4 pi sqrt {alpha sub ix alpha sub iy} }
+  exp left [ -^{{( h vec sub i cdot x hat )} sup 2 over{alpha sub ix}
+  ~+~ {( h vec sub i cdot y hat )} sup 2 over{alpha sub iy}} over
+  {( h vec sub i cdot n hat sub p ) sup 2}right ]
+.EN
+.EQ I
+x hat ~=~ y hat~times~n hat sub p
+.EN
+.EQ I
+y hat ~=~ {n hat sub p~times~b vec}over{|| n hat sub p~times~b vec ||}
+.EN
+.EQ I
+alpha sub ix ~=~ a sub 5 sup 2 ~+~ omega sub i over {4 pi}
+.EN
+.EQ I
+alpha sub iy ~=~ a sub 6 sup 2 ~+~ omega sub i over {4 pi}
+.EN
+.EQ I
+g sub s ( q hat sub i ) ~=~
+  1 over {pi sqrt {beta sub ix beta sub iy} }
+  exp left [ {{( c vec sub i cdot x hat )} sup 2 over{beta sub ix}
+  ~+~ {( c vec sub i cdot y hat )} sup 2 over{beta sub iy}} over
+  {{( n hat sub p cdot c vec sub i )}sup 2 over
+  {|| c vec sub i ||}sup 2 ~-~ 1}
+  right ]
+.EN
+.EQ I
+c vec sub i ~=~ q hat sub i~-~t hat
+.EN
+.EQ I
+t hat ~=~ {v hat~-~d vec}over{|| v hat~-~d vec ||}
+.EN
+.EQ I
+beta sub ix ~=~ a sub 5 sup 2 ~+~ omega sub i over pi
+.EN
+.EQ I
+beta sub iy ~=~ a sub 6 sup 2 ~+~ omega sub i over pi
+.EN
+.NH 2
+BRDF Types
+.LP
+The more general brdf types (plasfunc, plasdata, metfunc, metdata,
+BRTDfunc) use the same basic formula given in equation (1),
+but allow the user to specify $bold rho sub si$ and $bold tau sub si$ as
+either functions or data, instead of using the default
+Gaussian formulas.
+Note that only the exponent terms, $f sub s ( q hat sub i )$ and
+$g sub s ( q hat sub i )$ with the radicals in their denominators
+are replaced, and not the coefficients preceding them.
+It is very important that the user give properly normalized functions (ie.
+functions that integrate to 1 over the hemisphere) to maintain correct
+energy balance.

@@ -1,0 +1,42 @@
+.\" RCSid "$Id"
+.TH IMAGEW 1 6/24/98 RADIANCE
+.SH NAME
+imagew - output metafile to Apple Imagewriter
+.SH SYNOPSIS
+.B imagew
+[
+.B \-c | \-r
+]
+file ..
+.SH DESCRIPTION
+.I Imagew
+reads each metafile
+.I file
+in sequence and converts it to output suitable for the Apple
+Imagewriter dot-matrix printer.
+If the option
+.I c
+is specified, the input files are only conditioned for output, ie.
+expanded and sorted (see pexpand and psort).  This is useful if many
+copies of the same output is desired.
+If the option
+.I r
+is instead specified, the input is assumed already to be conditioned.
+If no input files are specified, the standard input is read.
+.TP 10n
+.BR \-c
+Condition the input only.
+.TP
+.BR \-r
+Input is already conditioned, output only.
+.SH EXAMPLE
+To print the plot file example.plt:
+.IP "" .2i
+bgraph example.plt | output imagew
+.SH FILES
+see pexpand(1) and psort(1)
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bgraph(1), cv(1), igraph(1), impress(1), mx80(1), output(1), 
+pexpand(1), psort(1)

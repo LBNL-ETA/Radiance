@@ -1,0 +1,73 @@
+.\" RCSid "$Id"
+.TH RA_T16 1 11/15/93 RADIANCE
+.SH NAME
+ra_t16 - convert RADIANCE picture to/from Targa 16 or 24-bit image file
+.SH SYNOPSIS
+.B ra_t16
+[
+.B \-2
+][
+.B \-3
+][
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+[
+.B input
+[
+.B output
+]
+]
+.br
+.B ra_t16
+.B \-r
+[
+.B "\-g gamma"
+][
+.B "\-e +/-stops"
+]
+[
+.B input
+[
+.B output
+]
+]
+.SH DESCRIPTION
+.I Ra_t16
+converts between RADIANCE and Targa 16-bit or 24-bit RGB image files
+(type 2 in Targa's documentation).
+In the default mode, a RADIANCE picture is converted to an
+RGB file of the same horizontal and vertical dimensions with
+16-bits per pixel.
+The
+.I \-3
+option tells the program to produce a 24-bit image file instead.
+The
+.I \-g
+option specifies the exponent used in gamma correction;
+the default value is 2.2.
+An exponent of 1.0 turns gamma correction off.
+The
+.I \-e
+option specifies an exposure compensation in f-stops (powers of two).
+Only integer stops are allowed, for efficiency.
+The
+.I \-r
+option invokes a reverse conversion, from a 16-bit or 24-bit
+Targa file to a RADIANCE picture.
+The determination of depth is made automatically on reverse
+translation, so the
+.I \-2
+and
+.I \-3
+options are not necessary.
+If the output file is missing, the standard output is used.
+.SH AUTHORS
+Greg Ward
+.SH BUGS
+Run-length encoded files can be read but not written with this
+program.
+.SH "SEE ALSO"
+pfilt(1), ra_bn(1), ra_ppm(1), ra_pr(1), ra_pr24(1),
+ra_t8(1), ra_tiff(1), ximage(1)

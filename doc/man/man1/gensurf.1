@@ -1,0 +1,103 @@
+.\" RCSid "$Id"
+.TH GENSURF 1 11/15/93 RADIANCE
+.SH NAME
+gensurf - generate a RADIANCE description of a curved surface
+.SH SYNOPSIS
+.B "gensurf mat name 'x(s,t)' 'y(s,t)' 'z(s,t)' m n"
+[
+.B "\-e expr"
+][
+.B "\-f file"
+][
+.B \-s
+]
+.br
+.B "gensurf mat name 'x(s,t)' 'y(s,t)' dfile m n"
+[
+.B "\-e expr"
+][
+.B "\-f file"
+][
+.B \-s
+]
+.br
+.B "gensurf mat name dfile dfile dfile m n"
+[
+.B \-s
+]
+.SH DESCRIPTION
+.I Gensurf
+produces a RADIANCE scene description of a
+functional surface defined by the parametric equations
+.I x(s,t),
+.I y(s,t),
+and
+.I z(s,t).
+The surface normal is defined by the right hand rule as
+applied to
+.I (s,t).
+.I S
+will vary from 0 to 1 in steps of
+.I 1/m,
+and
+.I t
+will vary from 0 to 1 in steps of
+.I 1/n.
+The surface will be composed of
+.I 2*m*n
+or fewer triangles and quadrilaterals.
+The expressions are of the same type used in RADIANCE
+function files.
+Auxiliary expressions and/or files may be specified
+in any number of
+.I \-e
+and
+.I \-f
+options.
+The
+.I \-s
+option adds smoothing (surface normal interpolation) to the surface.
+.PP
+Rough holes may be cut in the mesh by defining a valid(s,t) function.
+Where this function is positive, polygon vertices will be produced.
+Where it is negative, no geometry will be output.
+Surface normal interpolation will ignore any invalid vertices.
+.PP
+The second invocation form reads z data values from the file
+.I dfile.
+This file must give either m*n or (m+1)*(n+1) floating point z
+values.
+If m*n values are given, then the values correspond to the centroid
+of each quadrilateral region.
+If (m+1)*(n+1) values are given, then the values correspond to the
+vertices of each quadrilateral region.
+The ordering of the data in the file is such that the s values are
+changing faster than the t values.
+If a minus ('-') is given for
+.I dfile,
+then the values are read from the standard input.
+.PP
+The third invocation form is used to read coordinate triplets from a
+file or the standard input.
+The three
+.I dfile
+arguments must all be the same, and the corresponding file must
+contain three floating point values for each point location.
+The ordering and other details are the same as those described
+for z value files above.
+.SH EXAMPLE
+To generate a tesselated sphere:
+.IP "" .2i
+gensurf crystal ball 'sin(PI*s)*cos(2*PI*t)' 'cos(PI*s)' 'sin(PI*s)*sin(2*PI*t)' 7 10
+.PP
+To generate a 10x20 smoothed height field from 12 recorded vertex
+z values:
+.IP "" .2i
+gensurf dirt ground '10*s' '20*t' height.dat 2 3 -s
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The smoothing operation requires that functions be defined
+beyond the [0,1] boundaries of s and t.
+.SH "SEE ALSO"
+calc(1), genbox(1), genrev(1), genworm(1), rpict(1), rview(1), xform(1)

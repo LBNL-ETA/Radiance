@@ -1,0 +1,60 @@
+.\" RCSid "$Id"
+.TH GENPRISM 1 3/19/96 RADIANCE
+.SH NAME
+genprism - generate a RADIANCE description of a prism
+.SH SYNOPSIS
+.B "genprism mat name"
+{
+.B -
+|
+.B vfile
+|
+.B "N v1 v2 .. vN"
+}
+[
+.B "\-l lvect"
+][
+.B "\-r radius"
+][
+.B \-c
+][
+.B \-e
+]
+.SH DESCRIPTION
+.I Genprism
+produces a RADIANCE scene description of a prism, or extruded polygon.
+The polygon to extrude lies in the z==0 plane, and
+is given as a list of (x,y) pairs on the
+standard input (-), or from the file
+.I vfile,
+or on the command line preceded by the number of vertices,
+.I N.
+The order of the vertices and the extrusion vector
+.I lvect
+(default (0,0,1)) determine the surface orientations.
+The surfaces that make up the prism will be modified by
+.I mat
+and their identifiers will begin with
+.I name.
+The
+.I \-r
+option may be used to round the corners of the object using spheres
+and cylinders.
+The
+.I \-c
+option inhibits generation of a face connecting the last vertex to the first.
+The
+.I \-e
+option inhibits generation of the end polygons.
+.SH EXAMPLE
+To produce a equilateral triangular prism:
+.IP "" .2i
+genprism clear_plastic prism 3 0 0 .5 .866 1 0
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The rounding option only works for opaque prisms with outward facing
+normals.
+If the normals face inward, the appearance will be bizarre.
+.SH "SEE ALSO"
+genbox(1), genrev(1), gensurf(1), genworm(1), rpict(1), rview(1), xform(1)

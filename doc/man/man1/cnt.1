@@ -1,0 +1,26 @@
+.\" RCSid "$Id"
+.TH CNT 1 11/15/93 RADIANCE
+.SH NAME
+cnt - index counter
+.SH SYNOPSIS
+.B cnt
+N ..
+.SH DESCRIPTION
+.I Cnt
+counts from 0 to N-1, producing N lines of output.
+If multiple arguments are given,
+.I cnt
+produces a nested array of values where the final counter
+rotates fastest through its range.
+.I Cnt
+is most useful in conjunction with
+.I rcalc(1)
+to produce array values.
+.SH EXAMPLE
+To create a 3 by 5 array:
+.IP "" .2i
+cnt 3 5
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+lam(1), neat(1), rcalc(1), total(1)

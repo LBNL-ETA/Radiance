@@ -1,0 +1,56 @@
+.\" RCSid "$Id"
+.TH DGRAPH 1 6/24/98 RADIANCE
+.SH NAME
+dgraph - do a set of graphs to a dumb terminal
+.SH SYNOPSIS
+.B dgraph
+[
+.B -w width
+][
+.B -l length
+][
+.B +variable value ..
+][
+.B file ..
+]
+.SH DESCRIPTION
+.I Dgraph
+reads each graph
+.I file
+in sequence and converts it to a character plot
+displayable on any ascii device.
+If no files are given, the standard input is read.
+.PP
+Across the top of the plot, the extrema are printed.
+This is the only indication of the axis size.
+Curves are represented with their respective letter ('A' for
+curve A, etc.) at each point.
+Where two or more curves cross, a number is shown instead.
+.PP
+The size of the output array can be specified as a
+certain
+.I width
+and
+.I length.
+The default size is 79 by 22.
+.PP
+Variables can be set explicitly with
+.I +variable value
+options.
+See bgraph(1) for details.
+.SH EXAMPLE
+To get a quick glimpse of the sine function from 0 to 4.
+.nf
+	dgraph
+	A(x)=sin(x)
+	Anpoints=100
+	xmin=0
+	xmax=4
+	^D
+.fi
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+There is no mechanism provided for undefining a variable.
+.SH "SEE ALSO"
+bgraph(1), calc(1), gcomp(1), igraph(1)

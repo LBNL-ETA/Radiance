@@ -1,0 +1,42 @@
+.\" RCSid "$Id"
+.TH PROTATE 1 10/27/98 RADIANCE
+.SH NAME
+protate - rotate a RADIANCE picture.
+.SH SYNOPSIS
+.B protate
+[
+.B \-c
+][
+.B \-r
+]
+.B input
+[
+.B output
+]
+.SH DESCRIPTION
+.I Protate
+rotates a RADIANCE picture 90 degrees.
+This is useful for output on hardcopy devices with aspect ratios opposite
+to the input picture.
+By default, the image is rotated clockwise.
+The
+.I \-r
+option may be used to rotate the image counter-clockwise instead.
+.PP
+The
+.I \-c
+option indicates that the action is to correct an improper original
+image orientation, thus the recorded scanline ordering should not
+be changed.
+.SH NOTES
+To rotate an image 180 degrees, use
+.I pflip(1)
+with both the
+.I -h
+and
+.I -v
+options.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), pcompos(1), pfilt(1), pflip(1), psign(1), rpict(1)

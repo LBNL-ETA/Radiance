@@ -1,0 +1,214 @@
+.\" RCSid "$Id"
+.TH IES2RAD 1 6/14/96 RADIANCE
+.SH NAME
+ies2rad - convert IES luminaire data to RADIANCE description
+.SH SYNOPSIS
+.B ies2rad
+[
+.B options
+]
+[
+.B input ..
+]
+.SH DESCRIPTION
+.I Ies2rad
+converts one or more IES luminaire data files to the equivalent RADIANCE
+scene description.
+The light source geometry will always be centered at the origin aimed
+in the negative z direction, with the 0 degree plane along the x axis.
+Usually, two output files will be created for every input file, one
+scene file (with a ".rad" suffix) and one data file (with a ".dat"
+suffix).
+If the IES input file includes tilt data, then another data file
+will be created (with a "+.dat" suffix).
+If the
+.I \-s
+option is used, the scene data will be sent to the standard output
+instead of being written to a file.
+Since the data file does not change with other options to
+.I ies2rad,
+this is a convenient way to specify different lamp colors and
+multipliers inline in a scene description.
+If the
+.I \-g
+option is used, then an octree file will be created (with the ".oct"
+suffix).
+The root portion of the output file names will be the same as the
+corresponding input file, unless the
+.I \-o
+option is used.
+The output files will be created in the current directory (no matter
+which directory the input files came from) unless the
+.I \-l
+or
+.I \-p
+options are used.
+.PP
+.I Ies2rad
+assigns light source colors based on information in a lamp lookup table.
+Since most lamps are distinctly colored,
+it is often desirable to override this lookup procedure and use
+a neutral value that will produced color-balanced renderings.
+In general, it is important to consider lamp color when an odd assortment
+of fixture types is being used to illuminate the same scene, and
+the rendering can always be balanced by pfilt(1) to a specific white value
+later.
+.TP 10n
+.BI -l \ libdir
+Set the library directory path to
+.I libdir.
+This is where all relative pathnames will begin for output file names.
+For light sources that will be used by many people, this should be
+set to some central location included in the RAYPATH environment variable.
+The default is the current working directory.
+.TP
+.BI -p \ prefdir
+Set the library subdirectory path to
+.I prefdir.
+This is the subdirectory from the library where all output files will
+be placed.
+It is often most convenient to use a subdirectory for the storage of
+light sources, since there tend to be many files and placing them all
+in one directory is very messy.
+The default value is the empty string.
+.TP
+.BI -o \ outname
+Set the output file name root to
+.I outname.
+This overrides the default output file name root which is the same as the
+input file.
+This option may be used for only one input file, and is required when
+reading data from the standard input.
+.TP
+.BR -s
+Send the scene information to the standard output rather than a
+separate file.
+This is appropriate when calling
+.I ies2rad
+from within a scene description via an inline command.
+The data file(s) will still be written based on the output file name
+root, but since this information is unaffected by command line options,
+it is safe to have multiple invocations of
+.I ies2rad
+using the same input file and different output options.
+The
+.I \-s
+option may be used for only one input file.
+.TP
+.BI -d units
+Output dimensions are in
+.I units,
+which is one of the letters 'm', 'c', 'f', or 'i' for meters,
+centimeters, feet or inches, respectively.
+The letter specification may be followed by a slash ('/') and an
+optional divisor.
+For example,
+.I \-dm/1000
+would be millimeters.
+The default output is in meters, regardless of the original units in
+the IES input file.
+Note that there is no space in this option.
+.TP
+.BI -i \ rad
+Ignore the crude geometry given by the IES input file and use instead an illum
+sphere with radius
+.I rad.
+This option may be useful when the user wishes to add a more accurate
+geometric description to the light source model, though this need
+is obviated by the recent LM-63-1995 specification, which uses MGF
+detail geometry.
+(See
+.I \-g
+option below.)\0
+.TP
+.BR -g
+If the IES file contains MGF detail geometry, compile this geometry into
+a separate octree and create a single instance referencing it
+instead of including the converted geometry directly in the Radiance
+output file.
+This can result in a considerable memory savings for luminaires
+which are later duplicated many times in a scene, though the
+appearance may suffer for certain luminaires since the enclosed glow
+sources will not light the local geometry as they would otherwise.
+.TP
+.BI -f \ lampdat
+Use
+.I lampdat
+instead of the default lamp lookup table (lamp.tab) to map lamp
+names to xy chromaticity and lumen depreciation data.
+It is often helpful to have customized lookup tables for specific
+manufacturers and applications.
+.TP
+.BI -t \ lamp
+Use the given lamp type for all input files.
+Normally,
+.I ies2rad
+looks at the header lines of the IES file to try and determine
+what lamp is being used in the fixture.
+If any of the lines is matched by a pattern in the lamp lookup
+table (see the -f option above), that color and depreciation factor will
+be used instead of the default (see the -c and -u options).
+The
+.I lamp
+specification is also looked up in the lamp table unless it is
+set to "default", in which case the default color is used instead.
+.TP
+.BI -c " red grn blu"
+Use the given color if the type of the lamp is unknown or
+the -t option is set to "default".
+If unspecified, the default color will be white.
+.TP
+.BI -u \ lamp
+Set the default lamp color according to the entry for
+.I lamp
+in the lookup table (see the -f option).
+This is the color that will be used if the input specification
+does not match any lamp type patterns.
+This option is used instead of the -c option.
+.TP
+.BI -m \ factor
+Multiply all output quantities by
+.I factor.
+This is the best way to scale fixture brightness for different lamps, but care
+should be taken when this option is applied to multiple files.
+.SH EXAMPLE
+To convert a single IES data file in inches with color balanced output
+and 15% lumen depreciation,
+creating the files "fluor01.rad" and "fluor01.dat" in the current directory:
+.IP "" .2i
+ies2rad -di -t default -m .85 fluor01.ies
+.PP
+To convert three IES files of various types to tenths of a foot and put
+them in the library "/usr/local/lib/ray" subdirectory "source/ies":
+.IP "" .2i
+ies2rad -df/10 -l /usr/local/lib/ray -p source/ies ies01 ies02 ies03
+.PP
+To convert a single file and give the output a different name:
+.IP "" .2i
+ies2rad -o fluorescent ies03
+.SH ENVIRONMENT
+RAYPATH		directories to search for lamp lookup table
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+In pre-1991 standard IES files, all header lines will be examined
+for a lamp table string match.
+In post-1991 standard files, only those lamps with the [LAMP] or
+[LAMPCAT] keywords will be searched.
+The first match found in the file is always the one used.
+This method of assigning colors to fixtures is less than perfect,
+and the IES would do well to include explicit spectral information
+somehow in their specification.
+.PP
+The IESNA LM-63 specification prior to 1995 provided three basic source
+shapes, rectangular, round, and elliptical.
+The details of these shapes is vague at best.
+Rectangular sources will always be rectangular, but ies2rad will
+approximate round sources as spherical if the height is close to
+or greater than the width and length, and as a ring otherwise.
+Elliptical sources are treated the same as round sources.
+The 1995 standard rectifies this problem by including detailed
+luminaire geometry as MGF data, though nothing in the standard
+requires manufacturers to provide this information.
+.SH "SEE ALSO"
+mgf2rad(1), oconv(1), pfilt(1), rad2mgf(1), rpict(1), xform(1)

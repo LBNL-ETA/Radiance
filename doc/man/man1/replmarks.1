@@ -1,0 +1,115 @@
+.\" RCSid "$Id"
+.TH REPLMARKS 1 3/24/94 RADIANCE
+.SH NAME
+replmarks - replace triangular markers in a RADIANCE scene description
+.SH SYNOPSIS
+.B replmarks
+[
+.B \-e
+][
+.B "\-m newmod"
+][
+.B "\-s scale"
+]
+{
+.B "\-x objfile"
+|
+.B "\-i octree"
+}
+.B "modname .."
+[
+.B "file .."
+]
+.SH DESCRIPTION
+.I Replmarks
+replaces triangular markers identified by the modifier
+.I modname
+in each scene description
+.I file
+and writes the result to the standard output.
+The
+.I \-x
+option indicates that each marker should be replaced by an appropriate
+.I xform(1)
+command on
+.I objfile.
+The
+.I \-i
+option indicates that each marker should be replaced by an instance of
+.I octree.
+One of these two options must appear on the command line, along with
+.I modname,
+the modifier used by markers in the file.
+.PP
+Multiple modifiers may be given, as long as each one is preceded
+by its own
+.I \-x
+or
+.I \-i
+option.
+.PP
+The transformation for each marker is determined by its location
+and orientation.
+A marker should be a right triangle pointing like a half-arrow in
+the direction of the transformed x-axis, x'.
+The longest side is the hypoteneuse, the second longest side is
+the x'-axis, and the third longest side indicates the direction of
+the y'-axis.
+Any additional sides will be ignored (ie. a quadrilateral may be
+used instead of a triangle if the extra side is small).
+The z'-axis is determined by the cross product of the x' and y'
+axes, and the origin is the common vertex between x' and y'.
+.PP
+The size of the marker is ignored unless the
+.I \-s
+option is used, where
+.I scale
+is a multiplier for the x'-axis length to indicate the total scale
+factor.
+For example, a
+.I scale
+value of 5 with a marker length of .5 would result in a total
+scale factor of 2.5 to be used in the transformation.
+.PP
+The
+.I \-e
+option causes commands in the file to be expanded, and
+is required to replace markers from commands in the input file.
+Even with this option,
+.I replmarks
+will not examine objects for markers.
+Specifically, an object included by
+.I replmarks
+as a result of a
+.I \-x
+expansion will be transferred verbatim, without regard
+to any surfaces therein that might have been considered
+as marks if they were on the main input.
+.PP
+The
+.I \-m
+option causes all replaced objects to be given the modifier
+.I newmod.
+Otherwise, the new object surfaces will use their originally defined
+modifiers.
+A different replacement modifier may be given for each marker type.
+The marker modifier name itself is only used to identify markers,
+and will not appear in the output in any form.
+.PP
+If no input
+.I file
+is given, the standard input is read.
+.SH EXAMPLE
+To replace all polygons with the modifier ``knobs'' in the file input
+with a transformed ``knob.rad'' and write the result to output:
+.IP "" .2i
+replmarks -x knob.rad knobs input > output
+.PP
+To use instances of ``tree.oct'' with scaling set to three times the
+tree marker length:
+.IP "" .2i
+replmarks -s 3 -i tree.oct tree input > output
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+arch2rad(1), ies2rad(1), xform(1)

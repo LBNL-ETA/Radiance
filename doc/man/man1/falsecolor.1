@@ -1,0 +1,130 @@
+.\" RCSid "$Id"
+.TH FALSECOLOR 1 11/15/93 RADIANCE
+.SH NAME
+falsecolor - make a false color RADIANCE picture
+.SH SYNOPSIS
+.B falsecolor
+[
+.B "\-i input"
+][
+.B "\-p picture"
+][
+.B "\-cb | \-cl"
+][
+.B \-e
+][
+.B "\-s scale"
+][
+.B "\-l label"
+][
+.B "\-n ndivs"
+][
+.B "\-log decades"
+][
+.B "\-m mult"
+][
+.B "\-r redv"
+][
+.B "\-g grnv"
+][
+.B "\-b bluv"
+]
+.SH DESCRIPTION
+.I Falsecolor
+produces a false color picture for lighting analysis.
+Input is a rendered Radiance picture.
+.PP
+By default, luminance is displayed on a linear scale from 0 to 1000 nits, where
+dark areas are blue and brighter areas move through the spectrum to red.
+A different scale can be given with the
+.I \-s
+option.
+The default multiplier is 179, which converts from radiance or irradiance
+to luminance or illuminance, respectively.
+A different multiplier can be given with
+.I \-m
+to get daylight factors or whatever.
+For a logarithmic rather than a linear mapping, the
+.I \-log
+option can be used, where
+.I decades
+is the number of decades below the maximum scale desired.
+.PP
+A legend is produced for the new image with a label given by the
+.I \-l
+option.
+The default label is "Nits", which is appropriate for standard Radiance
+images.
+If the
+.I -i
+option of
+.I rpict(1)
+was used to produce the image, then the appropriate label would be "Lux".
+.PP
+If contour lines are desired rather than just false color, the
+.I \-cl
+option can be used.
+These lines can be placed over another Radiance picture using the
+.I -p
+option.
+If the input picture is given with
+.I \-ip
+instead of
+.I \-i,
+then it will be used both as the source of values and as the picture
+to overlay with contours.
+The
+.I \-cb
+option produces contour bands instead of lines, where the thickness of
+the bands is related to the rate of change in the image.
+The
+.I \-n
+option can be used to change the number of contours (and corresponding
+legend entries) from the default value of 8.
+.PP
+The
+.I \-e
+option causes extrema points to be printed on the brightest and
+darkest pixels of the input picture.
+.PP
+The remaining options,
+.I "\-r, \-g,"
+and
+.I \-b
+are for changing the mapping of values to colors.
+These are expressions of the variable 
+.I v,
+where
+.I v
+varies from 0 to 1.
+These options are not recommended for the casual user.
+.PP
+If no
+.I \-i
+or
+.I \-ip
+option is used, input is taken from the standard input.
+The output image is always written to standard output, which should
+be redirected.
+.SH EXAMPLES
+To create a false color image directly from
+.I rpict(1):
+.IP "" .2i
+rpict -vf default.vp scene.oct | falsecolor > scene.pic
+.PP
+To create a logarithmic contour plot of illuminance values on a
+Radiance image:
+.IP "" .2i
+rpict -i -vf default.vp scene.oct > irrad.pic
+.br
+rpict -vf default.vp scene.oct > rad.pic
+.br
+falsecolor -i irrad.pic -p rad.pic -cl -log 2 -l Lux > lux.pic
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was initiated and sponsored by the LESO
+group at EPFL in Switzerland.
+.SH "SEE ALSO"
+getinfo(1), pcomb(1), pcompos(1), pextrem(1), pfilt(1), pflip(1), protate(1),
+psign(1), rpict(1), ximage(1)

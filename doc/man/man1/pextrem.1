@@ -1,0 +1,44 @@
+.\" RCSid "$Id"
+.TH PEXTREM 1 11/15/93 RADIANCE
+.SH NAME
+pextrem - find minimum and maximum values in RADIANCE picture
+.SH SYNOPSIS
+.B pextrem
+[
+.B \-o
+]
+[
+picture
+]
+.SH DESCRIPTION
+.I Pextrem
+locates the minimum and maximum values for the input
+.I picture,
+and prints their pixel locations and color values.
+The first line printed contains the x and y pixel location
+(x measured from the left margin, y measured from the bottom),
+followed by the red, green and blue values.
+The second line printed contains the same information for the
+maximum value.
+.PP
+The
+.I \-o
+option prints the original (radiance) values, undoing any exposure
+or color correction done on the picture.
+.PP
+If no input 
+.I picture
+is given, the standard input is read.
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+The luminance value is used for comparison of pixels, although in
+certain anomolous cases (ie. highly saturated colors) it is possible that
+.I pextrem
+will not pick the absolute minimum or maximum luminance value.
+This is because a fast integer-space comparison is used.
+A more reliable floating-point comparison would be slower by
+an order of magnitude.
+.SH "SEE ALSO"
+falsecolor(1), getinfo(1), pcomb(1), pcompos(1), pextrem(1), pfilt(1),
+pflip(1), protate(1), psign(1), rpict(1), ximage(1)

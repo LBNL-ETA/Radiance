@@ -1,0 +1,39 @@
+.\" RCSid "$Id"
+.TH X11META 1
+.SH NAME
+x11meta - output metafile graphics to X11
+.SH SYNOPSIS
+.B x11meta
+[
+.B \-c | \-r
+]
+file ..
+.SH DESCRIPTION
+.I X11meta
+reads each metafile
+.I file
+in sequence and sends it to the default X window system.
+If the option
+.I c
+is specified, the input files are only conditioned for output, ie.
+expanded and sorted (see pexpand and psort).
+If the option
+.I r
+is instead specified, the input is assumed already to be conditioned.
+If no input files are specified, the standard input is read.
+.TP 10n
+.BR \-c
+Condition the input only.
+.TP
+.BR \-r
+Input is already conditioned, output only.
+.SH EXAMPLE
+To plot the chart example.bar:
+.IP "" .2i
+bgraph example.plt | x11meta
+.SH FILES
+see pexpand(1) and psort(1)
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bgraph(1), cv(1), igraph(1), metafile(5), pexpand(1), psmeta(1), psort(1)

@@ -1,0 +1,40 @@
+.\" RCSid "$Id"
+.TH RADDEPEND 1 4/15/94 RADIANCE
+.SH NAME
+raddepend - find RADIANCE scene dependencies
+.SH SYNOPSIS
+.B raddepend
+file ..
+.SH DESCRIPTION
+.I Raddepend
+uses
+.I getbbox(1)
+to expand scene file arguments and find file dependencies for
+.I make(1)
+or
+.I rad(1).
+.I Raddepend
+looks only in the current directory,
+so dependencies hidden elsewhere in the filesystem will not be found
+or named.
+.PP
+The output is the name of files, one per line, that were accessed
+during the expansion of the input file arguments.
+The file arguments are excluded from the list.
+If no input files are given, the standard input is read.
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+On some older NFS systems, the file access dates are not updated
+promptly.
+As a result,
+.I raddepend
+may not be 100% reliable on these systems.
+If the output seems to be missing essential files, this is
+no doubt why.
+The only fix is to put in a longer sleep time between the
+.I getbbox
+call and the final
+.I ls(1).
+.SH "SEE ALSO"
+make(1), oconv(1), rad(1), xform(1)

@@ -1,0 +1,649 @@
+.\" RCSid "$Id"
+.TH RAD 1 2/1/99 RADIANCE
+.SH NAME
+rad - render a RADIANCE scene
+.SH SYNOPSIS
+.B rad
+[
+.B \-s
+][
+.B \-n
+][
+.B \-t
+][
+.B \-e
+][
+.B \-V
+][
+.B \-w
+][
+.B "\-v view"
+][
+.B "\-o device"
+]
+.B rfile
+[
+.B "VAR\=value .."
+]
+.SH DESCRIPTION
+.I Rad
+is an executive program that reads the given
+.I rfile
+and makes appropriate calls to
+.I oconv(1),
+.I mkillum(1),
+.I rpict(1),
+.I pfilt(1),
+and/or
+.I rview(1)
+to render a specific scene.
+Variables in
+.I rfile
+give input files and qualitative information about the rendering(s)
+desired that together enable
+.I rad
+to intelligently set parameter values and control the simulation.
+.PP
+Normally, commands are echoed to the standard output as they are
+executed.
+The
+.I \-s
+option tells
+.I rad
+to do its work silently.
+The
+.I \-n
+option tells
+.I rad
+not to take any action (ie. not to actually execute any commands).
+The
+.I \-t
+option tells
+.I rad
+to bring rendering files up to date relative to the input
+(scene description) files, without performing any actual
+calculations.
+If no octree exists, it is still necessary to run
+.I oconv(1)
+to create one, since the
+.I \-t
+option will not create invalid (i.e. empty) files, and
+a valid octree is necessary for the correct operation of
+.I rad.
+The
+.I \-e
+option tells
+.I rad
+to explicate all variables used for the simulation, including
+default values not specified in the input file, and print them on
+the standard output.
+.PP
+Normally,
+.I rad
+will produce one picture for each view given in
+.I rfile.
+The
+.I \-v
+option may be used to specify a single desired view.
+The 
+.I view
+argument may either be a complete view specification
+(enclosed in quotes and beginning with an optional identifier)
+or a number or single-word identifier to match a view defined in
+.I rfile.
+If the argument is one of the standard view identifiers,
+it may or may not be further elaborated in
+.I rfile.
+(See "view" variable description, below.)\0
+If the argument does not match any views in
+.I rfile
+and is not one of the standard views, no rendering will take place.
+This may be convenient when the only action desired of
+.I rad
+is the rebuilding of the octree.
+In particular, the argument "0" will never match a view.
+.PP
+If the
+.I \-V
+option is given,
+each view will be printed on the standard output before
+being applied, in a form suitable for use in a view file or
+.I rpict
+rendering sequence.
+This is helpful as feedback or for accessing the
+.I rad
+view assignments without necessarily starting a rendering.
+.PP
+By default,
+.I rad
+will run
+.I rpict
+and
+.I pfilt
+to produce a picture for each view.
+The
+.I \-o
+option specifies an output device for
+.I rview
+(usually "x11")
+and runs this interactive program instead, using the first view in
+.I rfile
+or the view given with the
+.I \-v
+option as the starting point.
+.PP
+Additional variable settings may be added or overridden on the
+command line following
+.I rfile.
+Upper case variables specified more than once will result in
+a warning message (unless the
+.I \-w
+option is present),
+and the last value given will be the one used.
+.PP
+The
+.I \-w
+option turns off warnings about multiply and misassigned variables.
+.PP
+Rendering variable assignments appear one per line in
+.I rfile.
+The name of the variable is followed by an equals sign
+('=') and its value(s).
+The end of line may be escaped with a backslash ('\\'), though it is
+not usually necessary since additional variable values may be given
+in multiple assignments.
+Variables that should have only one value are given in upper case.
+Variables that may have multiple values are given in lower case.
+Variables may be abbreviated by their first three letters.
+Comments in
+.I rfile
+start with a pound sign ('#') and proceed to the end of line.
+.PP
+The rendering variables, their interpretations and default values
+are given below.
+.TP 10n
+.BR OCTREE
+The name of the octree file.
+The default name is the same as
+.I rfile
+but with any suffix replaced by ".oct".
+(The octree must be a file --
+.I rad
+cannot work with commands that produce octrees.)\0
+.TP
+.BR ZONE
+This variable specifies the volume of interest for this simulation.
+The first word is either "Interior" or "Exterior", depending on
+whether the zone is to be observed from the inside or the outside,
+respectively.
+(A single letter may be given, and case does not matter.)\0
+The following six numbers are the minimum and maximum
+X coordinates, minimum and maximum Y, and minimum and maximum Z
+for the zone perimeter.
+It is important to give the zone as it is used to determine many of
+the rendering parameters.
+The default exterior zone is the bounding cube for the scene as
+computed by
+.I oconv.
+.TP
+.BR EXPOSURE
+This variable tells
+.I rad
+how to adjust the exposure for display.
+It is important to set this variable properly as it is used to
+determine the ambient value.
+An appropriate setting may be discovered by running 
+.I rview
+and noting the exposure given by the "exposure =" command.
+As in
+.I rview
+and
+.I pfilt,
+the exposure setting may be given either as a multiplier or as a
+number of f-stop adjustments (eg. +2 or -1.5).
+There is no default value for this variable.
+If it is not given, an average level will be computed by
+.I pfilt
+and the ambient value will be set to 10 for exterior zones
+and 0.01 for interior zones.
+.TP
+.BR EYESEP
+The interocular spacing for stereo viewing.
+I.e., the world distance between the pupils of the left and right eyes.
+The default value is the sum of the three "ZONE" dimensions divided by 100.
+.TP
+.BR scene
+This variable is used to specify one or more scene input files.
+These files will be given together with the materials file(s)
+and any options specified by the "oconv" variable to
+.I oconv
+to produce the octree given by the "OCTREE" variable.
+In-line commands may be specified in quotes instead of a file,
+beginning with an exclamation mark ('!').
+If the "scene" variable is not present, then the octree must already exist
+in order for
+.I rad
+to work.
+Even if this variable is given,
+.I oconv
+will not be run unless the octree is out of date with respect to
+the input files.
+Note that the order of files in this variable is important for
+.I oconv
+to work properly, and files given in later variable assignments will
+appear after previous ones on the
+.I oconv
+command line.
+.TP
+.BR materials
+This variable is used to specify files that, although they must
+appear on the 
+.I oconv
+command line, do not affect the actual octree itself.
+Keeping the materials in separate files allows them to be modified
+without requiring the octree to be rebuilt (a sometimes costly
+procedure).
+These files should not contain any geometry, and the
+.I \-f
+option must not be given in the "oconv" variable for this to work.
+.TP
+.BR illum
+This variable is used to specify files with surfaces to be converted into
+illum sources by
+.I mkillum(1).
+When this variable is given, additional octree files will be created
+to contain the scene before and after illum source conversion.
+These files will be named according to the (default) value of the
+.I OCTREEE
+variable, with either a '0' or a '1' appearing just before the file
+type suffix (usually ".oct").
+.TP
+.BR objects
+This variable is used for files that, although they do not appear
+on the
+.I oconv
+command line, contain geometric information that is referenced
+indirectly by the scene files.
+If any of these files is changed, the octree will be rebuilt.
+(The
+.I raddepend(1)
+command may be used to find these dependencies automatically.)\0
+.TP
+.BR view
+This variable is used to specify a desired view for this zone.
+Any number of "view" lines may be given, and each will result in a
+rendered picture (unless the
+.I \-v
+or
+.I \-o
+option is specified).
+The value for this variable is an optional identifier followed by
+any number of view options (see
+.I rpict(1)
+for a complete listing).
+The identifier is used in file naming and associating a desired view
+with the
+.I \-v
+command line option.
+Also, there are several standard view identifiers defined by
+.I rad.
+These standard views are specified by strings of the form
+"[Xx]?[Yy]?[Zz]?[vlcah]?".
+(That is, an optional upper or lower case X followed by an optional
+upper or lower case Y followed by an optional upper or lower case Z
+followed by an optional lower case V, L, C, A or H.)\0
+The letters indicate the desired view position, where upper case X
+means maximum X, lower case means minimum and so on.
+The final letter is the view type, where 'v' is perspective (the
+default), 'l' is parallel, 'c' is a cylindrical panorama,
+'a' is angular fisheye, and 'h' is hemispherical fisheye.
+A perspective view from maximum X, minimum Y would be "Xy" or "Xyv".
+A parallel view from maximum Z would be "Zl".
+If "ZONE" is an interior zone, the standard views will
+be inside the perimeter.
+If it is an exterior zone, the standard views will be outside.
+Note that the standard views are best used as starting points,
+and additional arguments may be given after the
+identifier to modify a standard view to suit a particular model.
+The default view is "X" if no views are specified.
+A single specified view of "0" means no views will be automatically
+generated.
+.TP
+.BR UP
+The vertical axis for this scene.
+A negative axis may be specified with a minus sign (eg. "-Y").
+There is no default value for this variable, although the standard
+views assume Z is up if no other axis is specified.
+.TP
+.BR RESOLUTION
+This variable specifies the desired final picture resolution.
+If only a single number is given, this value will be used for both
+the horizontal and vertical picture dimensions.
+If two numbers are given, the first is the horizontal resolution and
+the second is the vertical resolution.
+If three numbers are given, the third is taken as the pixel aspect
+ratio for the final picture (a real value).
+If the pixel aspect ratio is zero, the exact dimensions given will
+be those produced.
+Otherwise, they will be used as a frame in which the final image
+must fit.
+The default value for this variable is 512.
+.TP
+.BR QUALITY
+This variable sets the overall rendering quality desired.
+It can have one of three values, "LOW", "MEDIUM" or "HIGH".
+These may be abbreviated by their first letter, and may be
+in upper or lower case.
+Most of the rendering options will be affected by this setting.
+The default value is "L".
+.TP
+.BR PENUMBRAS
+This is a boolean variable indicating whether or not penumbras are
+desired.
+A value of "TRUE" will result in penumbras (soft shadows), and a
+value of "FALSE" will result in no penumbras (sharp shadows).
+True and false may be written in upper or lower case, and may be
+abbreviated by a single letter.
+Renderings generally proceed much faster without penumbras.
+The default value is "F".
+.TP
+.BR INDIRECT
+This variable indicates how many diffuse reflections are important in the
+general lighting of this zone.
+A direct lighting system (eg. fluorescent troffers recessed in the
+ceiling) corresponds to an indirect level of 0.
+An indirect lighting system (eg. hanging fluorescents directed at a
+reflective ceiling) corresponds to an indirect level of 1.
+A diffuse light shelf reflecting sunlight onto the ceiling would
+correspond to an indirect level of 2.
+The setting of this variable partially determines how many interreflections
+will be calculated.
+The default value is 0.
+.TP
+.BR PICTURE
+This is the root name of the output picture file(s).
+This name will have appended the view identifier (or a number if no
+id was used) and a ".pic" suffix.
+If a picture corresponding to a specific view exists and is not out
+of date with respect to the given octree, it will not be
+re-rendered.
+The default value for this variable is the root portion of
+.I rfile.
+.TP
+.BR RAWFILE
+This is the root name of the finished, raw
+.I rpict
+output file.
+If specified,
+.I rad
+will rename the original
+.I rpict
+output file once it is finished and filtered
+rather than removing it, which is the default action.
+The given root name will be expanded in the same way as the
+"PICTURE" variable, and if the "RAWFILE" and "PICTURE" variables
+are identical, then no filtering will take place.
+.TP
+.BR ZFILE
+This is the root name of the raw distance file produced by the
+.I \-z
+option of
+.I rpict.
+To this root name, an underscore plus the view name plus a ".zbf"
+suffix will be added.
+If no "ZFILE" is specified, none will be produced.
+.TP
+.BR AMBFILE
+This is the name of the file where "ambient" or diffuse interreflection
+values will be stored by
+.I rpict
+or
+.I rview.
+Although it is not required, an ambient file should be given whenever
+an interreflection calculation is expected.
+This will optimize successive runs and minimize artifacts.
+An interreflection calculation will take place when the
+"QUALITY" variable is set to HIGH, or when the "QUALITY"
+variable is set to MEDIUM and "INDIRECT" is positive.
+There is no default value for this variable.
+.TP
+.BR DETAIL
+This variable specifies the level of visual detail in this zone,
+and is used to determine image sampling rate, among other things.
+If there are few surfaces and simple shading, then this should be set
+to LOW.
+For a zone with some furniture it might be set to MEDIUM.
+If the space is very cluttered or contains a lot of geometric detail
+and textures, then it should be set to HIGH.
+The default value is "M".
+.TP
+.BR VARIABILITY
+This variable tells
+.I rad
+how much light varies over the surfaces of this zone, and is
+used to determine what level of sampling is necessary in the
+indirect calculation.
+For an electric lighting system with uniform coverage, the value
+should be set to LOW.
+For a space with spot lighting or a window with sky illumination
+only, it might be set to MEDIUM.
+For a space with penetrating sunlight casting bright patches in a
+few places, it should be set to HIGH.
+The default value is "L".
+.TP
+.BR OPTFILE
+This is the name of a file in which
+.I rad
+will place the appropriate rendering options.
+This file can later be accessed by
+.I rpict
+or
+.I rview
+in subsequent manual runs using the at-sign ('@') file insert option.
+(Using an "OPTFILE" also reduces the length of the rendering
+command, which improves appearance and may even be necessary on some
+systems.)\0
+There is no default value for this variable.
+.TP
+.BR REPORT
+This variable may be used to specify a reporting interval for
+batch rendering.
+Given in minutes, this value is multiplied by 60 and passed to
+.I rpict
+with the
+.I \-t
+option.
+If a filename is given after the interval, it will be used as the
+error file for reports and error messages instead of the standard error.
+(See the
+.I \-e
+option of
+.I rpict(1).\)\0
+There is no default value for this variable.
+.TP
+.BR oconv
+This variable may be used to specify special options to
+.I oconv.
+See the
+.I oconv(1)
+manual page for a list of valid options.
+.TP
+.BR mkillum
+This variable may be used to specify additional options to
+.I mkillum.
+See the
+.I rtrace(1)
+manual page for a list of valid options.
+.TP
+.BR render
+This variable may be used to specify additional options to
+.I rpict
+or
+.I rview.
+These options will appear after the options set automatically by
+.I rad,
+and thus will override the default values.
+.TP
+.BR pfilt
+This variable may be used to specify additional options to
+.I pfilt.
+See the
+.I pfilt(1)
+manual page for details.
+.SH EXAMPLES
+A minimal input file for
+.I rad
+might look like this:
+.IP "" .3i
+.nf
+::::::::::
+sample.rif
+::::::::::
+# The octree we want to use:
+OCTREE= tutor.oct		# w/o this line, name would be "sample.oct"
+# Our scene input files:
+scene= sky.rad outside.rad room.rad srcwindow.rad
+# The interior zone cavity:
+ZONE= I  0 3  0 2  0 1.75		# default would be scene bounding cube
+# The z-axis is up:
+UP= Z				# no default - would use view spec.
+# Our exposure needs one f-stop boost:
+EXPOSURE= +1			# default is computed ex post facto
+.fi
+.PP
+Note that we have not specified any views in the file above.
+The standard default view "X" would be used if we were to run
+.I rad
+on this file.
+If we only want to see what default values
+.I rad
+would use without actually executing anything, we can invoke it thus:
+.IP "" .2i
+rad -n -e sample.rif
+.PP
+This will print the variables we have given as well as default
+values
+.I rad
+has assigned for us.
+Also, we will see the list of commands that
+.I rad
+would have executed had the
+.I \-n
+option not been present.
+(Note if the octree, "tutor.oct", is not present, an error will
+result as it is needed to determine some of the opiton settings.)\0
+.PP
+Different option combinations have specific uses, ie:
+.IP "" .2i
+.br
+rad -v 0 sample.rif OPT=samp.opt	# build octree, put options in "sample.opt"
+.br
+rad -n -e -s sample.rif > full.rif	# make a complete rad file
+.br
+rad -n sample.rif > script.sh	# make a script of commands
+.br
+rad -V -v Zl -n -s sample.rif > plan.vf	# make a plan view file
+.br
+rad -t sample.rif		# update files after minor change to input
+.br
+rad -s sample.rif &		# execute silently in the background
+.PP
+If we decide that the default values
+.I rad
+has chosen for our variables are not all appropriate, we can add
+some more assignments to the file:
+.IP "" .3i
+.nf
+QUAL= MED		# default was low
+DET= low		# default was medium - our space is almost empty
+PEN= True		# we want to see soft shadows from our window
+VAR= hi		# daylight can result in fairly harsh lighting
+view= XYa -vv 120	# let's try a fisheye view
+PICT= tutor		# our picture name will be "tutor_XYa.pic"
+.fi
+.PP
+Note the use of abbreviations, and the modification of a standard
+view.
+Now we can invoke
+.I rad
+to take a look at our scene interactively with
+.I rview:
+.IP "" .2i
+rad -o x11 sample.rif
+.PP
+.I Rad
+will run
+.I oconv
+first to create the octree (assuming it doesn't
+already exist), then
+.I rview
+with a long list of options.
+Let's say that from within
+.I rview,
+we wrote out the view files "view1.vp" and "view2.vp".
+We could add these to "sample.rif" like so:
+.IP "" .2i
+.nf
+view= vw1 -vf view1.vp		# Our first view
+view= vw2 -vf view2.vp		# Our second view
+RESOLUTION= 1024		# Let's go for a higher resolution result
+.fi
+.PP
+To start
+.I rview
+again using vw2 instead of the default, we use:
+.IP "" .2i
+rad -o x11 -v vw2 sample.rif
+.PP
+Once we are happy with the variable settings in our file, we can run
+.I rad
+in the background to produce one image for each view:
+.IP "" .2i
+rad sample.rif REP=5 >& errfile &
+.PP
+This will report progress every five minutes to "errfile".
+.SH FILES
+$(PICTURE)_$(view).unf	Unfinished output of
+.I rpict
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+Incremental building of octrees is not supported as it would add
+considerable complexity to
+.I rad.
+Complicated scene builds should still be left to
+.I make(1),
+which has a robust mechanism for handling hierarchical
+dependencies.
+If
+.I make
+is used in this fashion, then only the
+"OCTREE" variable of
+.I rad
+is needed.
+.PP
+The use of some
+.I pfilt
+options is awkward, since the "EXPOSURE" variable results in a
+single pass invocation (the
+.I \-1
+option of
+.I pfilt\)
+and two passes are necessary for certain effects, such as star
+patterns.
+The way around this problem is to specify
+a "RAWFILE" that is the same as the "PICTURE" variable so that no
+filtering takes place, then call
+.I pfilt
+manually.
+This is preferable to leaving out the
+"EXPOSURE" variable, since the exposure level is needed to
+accurately determine the ambient value for
+.I rpict.
+.PP
+The use of upper and lower case naming for the standard views may be
+problematic on systems that don't distinguish case in filenames.
+.SH "SEE ALSO"
+glrad(1), make(1), mkillum(1), objview(1), oconv(1),
+pfilt(1), raddepend(1), ranimate(1),
+rholo(1), rpict(1), rtrace(1), rview(1), touch(1), vgaimage(1), ximage(1)
