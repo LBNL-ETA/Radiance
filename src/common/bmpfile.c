@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.10 2004/04/30 17:00:29 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.11 2004/07/28 00:17:58 schorsch Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -143,10 +143,10 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	BMPReader       *br;
 	uint32		bmPos, hdrSiz;
 	int		palLen;
+	int     magic[2];		/* check magic number */
 
 	if (cget == NULL)
 		return NULL;
-	int     magic[2];		/* check magic number */
 	magic[0] = (*cget)(c_data);
 	if (magic[0] != 'B')
 		return NULL;
