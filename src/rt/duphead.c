@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: duphead.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: duphead.c,v 2.5 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  * Duplicate header on stdout.
@@ -52,9 +52,7 @@ dupheader()			/* repeat header on standard output */
 	if (headfp == NULL) {
 		if ((headfp = fopen(headfname, "r")) == NULL)
 			error(SYSTEM, "error reopening header file");
-#ifdef MSDOS
-		setmode(fileno(headfp), O_BINARY);
-#endif
+		SET_FILE_BINARY(headfp);
 	} else if (fseek(headfp, 0L, 0) < 0)
 		error(SYSTEM, "seek error on header file");
 	while ((c = getc(headfp)) != EOF)

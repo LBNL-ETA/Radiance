@@ -1,16 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: oki20.c,v 2.9 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: oki20.c,v 2.10 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  oki20.c - program to dump pixel file to OkiMate 20 printer.
  */
 
 #include  <stdio.h>
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
 #include  <time.h>
 
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -33,12 +31,9 @@ int  argc;
 char  *argv[];
 {
 	int  i, status = 0;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	if (argc > 1 && !strcmp(argv[1], "-p")) {
 		dofilter++;
 		argv++; argc--;

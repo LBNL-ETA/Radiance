@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.14 2003/03/12 17:26:58 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.15 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -85,9 +85,7 @@ char  *argv[];
 			break;
 		}
 breakopt:
-#ifdef MSDOS
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_FILE_BINARY(stdout);
 	if (infile != NULL) {		/* get old octree & objects */
 		if (thescene.cusize > FTINY)
 			error(USER, "only one of '-b' or '-i'");

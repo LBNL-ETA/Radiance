@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.2 2003/02/25 02:47:24 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.3 2003/06/05 19:29:35 schorsch Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: ranimove1.c,v 3.2 2003/02/25 02:47:24 greg Exp
 
 #include "copyright.h"
 
+#include "platform.h"
 #include "ranimove.h"
 #include "otypes.h"
 #include "random.h"
@@ -873,9 +874,7 @@ send_frame()			/* send frame to destination */
 		sprintf(errmsg, "cannot open output frame \"%s\"", pfname);
 		error(SYSTEM, errmsg);
 	}
-#ifdef MSDOS
-	setmode(fileno(fp), O_BINARY);
-#endif
+	SET_FILE_BINARY(fp);
 	if (!silent) {
 		printf("\tWriting to \"%s\"\n", pfname);
 		fflush(stdout);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pict.c,v 2.8 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_pict.c,v 2.9 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*		Convert an Radiance image to APPLE pict format.
  *
@@ -18,11 +18,9 @@ static const char	RCSid[] = "$Id: ra_pict.c,v 2.8 2003/02/22 02:07:27 greg Exp $
 
 #include <stdio.h>
 #include <math.h>
-#ifdef MSDOS
-#include <fcntl.h>
-#endif
 #include  <time.h>
 
+#include "platform.h"
 #include "pict.h"
 #include "color.h"
 #include "resolu.h"
@@ -97,12 +95,9 @@ char **argv;
     int xsize, ysize;
     int i, picsize;
     int ssizepos, lsizepos;
-#ifdef MSDOS
-    extern int	_fmode;
-    _fmode = O_BINARY;
-    setmode(fileno(stdin), O_BINARY);
-    setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+    SET_FILE_BINARY(stdin);
+    SET_FILE_BINARY(stdout);
     progname = argv[0];
 
     for (i = 1; i < argc ; i++)

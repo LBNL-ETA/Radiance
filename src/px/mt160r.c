@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mt160r.c,v 2.6 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: mt160r.c,v 2.7 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  mt160r.c - program to dump pixel file to Mannesman-Tally 160.
@@ -8,11 +8,9 @@ static const char	RCSid[] = "$Id: mt160r.c,v 2.6 2003/02/22 02:07:27 greg Exp $"
  */
 
 #include  <stdio.h>
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
 #include  <time.h>
 
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -25,12 +23,9 @@ char  *argv[];
 {
 	int  i;
 	int  status = 0;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	if (argc < 2)
 		status += printp(NULL) == -1;
 	else

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.24 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.25 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
@@ -8,9 +8,8 @@ static const char	RCSid[] = "$Id: ra_ps.c,v 2.24 2003/02/22 02:07:28 greg Exp $"
 #include  <stdio.h>
 #include  <math.h>
 #include  <ctype.h>
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
+
+#include  "platform.h"
 #include  "color.h"
 
 #define UPPER(c)	((c)&~0x20)		/* ASCII trick */
@@ -156,9 +155,7 @@ char  *argv[];
 				progname, argv[i+1]);
 		exit(1);
 	}
-#ifdef MSDOS
-	setmode(fileno(stdin), O_BINARY);
-#endif
+	SET_FILE_BINARY(stdin);
 				/* get our header */
 	getheader(stdin, headline, NULL);
 	if (wrongformat || fgetresolu(&xmax, &ymax, stdin) < 0)

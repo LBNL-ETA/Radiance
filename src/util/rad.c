@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.62 2003/03/21 18:48:46 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.63 2003/06/05 19:29:35 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -821,7 +821,7 @@ char	*ro;
 			syserr(vval(OPTFILE));
 		sprintf(ro, " @%s", vval(OPTFILE));
 	}
-#ifdef MSDOS
+#ifdef _WIN32
 	else if (n > 50) {
 		setenv("ROPT", ro+1);
 		strcpy(ro, " $ROPT");
@@ -977,7 +977,7 @@ register char	*vs;
 	if (cp == viewopts)		/* append any additional options */
 		vs++;		/* skip prefixed space if unneeded */
 	strcpy(cp, vs);
-#ifdef MSDOS
+#ifdef _WIN32
 	if (strlen(viewopts) > 40) {
 		setenv("VIEW", viewopts);
 		return("$VIEW");
@@ -1037,7 +1037,7 @@ register char	*vopts;
 again:
 	if (vopts == NULL)
 		return(-1);
-#ifdef MSDOS
+#ifdef _WIN32
 	if (vopts[0] == '$') {
 		vopts = getenv(vopts+1);
 		goto again;
@@ -1245,7 +1245,7 @@ rmfile(fn)			/* remove a file */
 char	*fn;
 {
 	if (!silent)
-#ifdef MSDOS
+#ifdef _WIN32
 		printf("\tdel %s\n", fn);
 #else
 		printf("\trm -f %s\n", fn);
@@ -1260,7 +1260,7 @@ mvfile(fold, fnew)		/* move a file */
 char	*fold, *fnew;
 {
 	if (!silent)
-#ifdef MSDOS
+#ifdef _WIN32
 		printf("\trename %s %s\n", fold, fnew);
 #else
 		printf("\tmv %s %s\n", fold, fnew);
@@ -1271,7 +1271,7 @@ char	*fold, *fnew;
 }
 
 
-#ifdef MSDOS
+#ifdef _WIN32
 setenv(vname, value)		/* set an environment variable */
 char	*vname, *value;
 {

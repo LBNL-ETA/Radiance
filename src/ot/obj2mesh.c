@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.4 2003/04/18 21:47:45 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.5 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -73,9 +73,7 @@ char  *argv[];
 	if (i == argc-2)		/* open output file */
 		if (freopen(argv[i+1], "w", stdout) == NULL)
 			error(SYSTEM, "cannot open output file");
-#ifdef MSDOS
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);	/* new binary file header */
 	printargs(i<argc ? i+1 : argc, argv, stdout);
 	fputformat(MESHFMT, stdout);

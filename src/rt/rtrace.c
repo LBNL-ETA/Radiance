@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.29 2003/04/18 17:29:22 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.30 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -21,10 +21,9 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.29 2003/04/18 17:29:22 greg Exp $
  *  irradiance values are desired.
  */
 
+#include  "platform.h"
 #include  "ray.h"
-
 #include  "otypes.h"
-
 #include  "resolu.h"
 
 CUBE  thescene;				/* our scene */
@@ -146,9 +145,9 @@ char  *fname;
 		sprintf(errmsg, "cannot open input file \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}
-#ifdef MSDOS
+#ifdef _WIN32
 	if (inform != 'a')
-		setmode(fileno(fp), O_BINARY);
+		SET_FILE_BINARY(fp);
 #endif
 					/* set up output */
 	setoutput(outvals);

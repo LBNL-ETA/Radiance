@@ -1,20 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.5 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.6 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
  */
 
 #include <stdio.h>
-
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
-
 #include  <time.h>
 
+#include "platform.h"
 #include "color.h"
-
 #include "resolu.h"
 
 int	order;				/* input orientation */
@@ -55,11 +50,8 @@ char	*argv[];
 {
 	static char	picfmt[LPICFMT+1] = PICFMT;
 	int	i, rval;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdout);
 	progname = argv[0];
 
 	for (i = 1; i < argc; i++)

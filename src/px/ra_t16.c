@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t16.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t16.c,v 2.7 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  ra_t16.c - program to convert between RADIANCE and
@@ -9,21 +9,13 @@ static const char	RCSid[] = "$Id: ra_t16.c,v 2.6 2003/02/22 02:07:28 greg Exp $"
  */
 
 #include  <stdio.h>
-
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
-
 #include  <time.h>
-
 #include  <math.h>
 
+#include  "platform.h"
 #include  "color.h"
-
 #include  "resolu.h"
-
 #include  "random.h"
-
 #include  "targa.h"
 
 #define  goodpic(h)	(((h)->dataType==IM_RGB || (h)->dataType==IM_CRGB) \
@@ -55,12 +47,9 @@ char  *argv[];
 	struct hdStruct  head;
 	int  reverse = 0;
 	int  i;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	progname = argv[0];
 
 	head.dataBits = 16;

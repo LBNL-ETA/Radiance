@@ -21,15 +21,14 @@ static const char RCSid[] = "$Id";
 #endif
 #endif
 
-extern time_t	time();
-
+#include  <time.h>
 #include  <signal.h>
 
+#include  "platform.h"
 #include  "view.h"
-
 #include  "random.h"
-
 #include  "paths.h"
+
 
 #define	 RFTEMPLATE	"rfXXXXXX"
 
@@ -108,7 +107,7 @@ int  hres, vres;			/* resolution for this frame */
 
 static VIEW	lastview;		/* the previous view input */
 
-extern char  *mktemp();
+extern char  *mktemp();  /* XXX should be in stdlib.h or unistd.h */
 
 void  report();
 
@@ -289,9 +288,7 @@ char  *pout, *zout, *prvr;
 					"cannot open output file \"%s\"", fbuf);
 				error(SYSTEM, errmsg);
 			}
-#ifdef MSDOS
-			setmode(fileno(stdout), O_BINARY);
-#endif
+			SET_FILE_BINARY(stdout);
 			dupheader();
 		}
 		hres = hresolu; vres = vresolu; pa = pixaspect;
@@ -393,9 +390,7 @@ char  *zfile, *oldfile;
 			sprintf(errmsg, "cannot open z-file \"%s\"", zfile);
 			error(SYSTEM, errmsg);
 		}
-#ifdef MSDOS
-		setmode(zfd, O_BINARY);
-#endif
+		SET_FD_BINARY(zfd);
 		for (i = 0; i <= psample; i++) {
 			zbar[i] = (float *)malloc(hres*sizeof(float));
 			if (zbar[i] == NULL)
@@ -677,9 +672,7 @@ char  *oldfile;
 		error(WARNING, errmsg);
 		goto gotzip;
 	}
-#ifdef MSDOS
-	setmode(fileno(fp), O_BINARY);
-#endif
+	SET_FILE_BINARY(fp);
 				/* discard header */
 	getheader(fp, NULL, NULL);
 				/* get picture size */

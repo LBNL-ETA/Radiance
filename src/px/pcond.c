@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.14 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.15 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
  *  Added white-balance adjustment 10/01 (GW).
  */
 
+#include "platform.h"
 #include "pcond.h"
 
 
@@ -162,10 +163,8 @@ char	*argv[];
 					/* open output file */
 	if (i+2 == argc && freopen(argv[i+1], "w", stdout) == NULL)
 		syserror(argv[i+1]);
-#ifdef MSDOS
-	setmode(fileno(infp), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_FILE_BINARY(infp);
+	SET_FILE_BINARY(stdout);
 	getahead();			/* load input header */
 	printargs(argc, argv, stdout);	/* add to output header */
 	if (mbcalfile == NULL & outprims != stdprims)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_bn.c,v 2.7 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_bn.c,v 2.8 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  ra_bn.c - program to convert between RADIANCE and barneyscan picture format.
@@ -8,17 +8,11 @@ static const char	RCSid[] = "$Id: ra_bn.c,v 2.7 2003/02/22 02:07:27 greg Exp $";
  */
 
 #include  <stdio.h>
-
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
-
 #include  <time.h>
-
 #include  <math.h>
 
+#include  "platform.h"
 #include  "color.h"
-
 #include  "resolu.h"
 
 double	gamcor = 2.0;			/* gamma correction */
@@ -40,12 +34,9 @@ char  *argv[];
 {
 	int  reverse = 0;
 	int  i;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	progname = argv[0];
 
 	for (i = 1; i < argc; i++)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.15 2003/03/14 21:27:46 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.16 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -58,9 +58,7 @@ char  *ofn[];
 			error(SYSTEM, errmsg);
 		}
 	}
-#ifdef MSDOS
-	setmode(fileno(infp), O_BINARY);
-#endif
+	SET_FILE_BINARY(infp);
 					/* get header */
 	if (checkheader(infp, OCTFMT, load&IO_INFO ? stdout : (FILE *)NULL) < 0)
 		octerror(USER, "not an octree");

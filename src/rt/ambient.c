@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.49 2003/05/15 05:13:35 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.50 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -9,12 +9,10 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.49 2003/05/15 05:13:35 greg Exp 
 
 #include "copyright.h"
 
+#include  "platform.h"
 #include  "ray.h"
-
 #include  "otypes.h"
-
 #include  "ambient.h"
-
 #include  "random.h"
 
 #ifndef  OCTSCALE
@@ -474,9 +472,7 @@ int  creat;
 #ifdef	F_SETLKW
 	aflock(creat ? F_WRLCK : F_RDLCK);
 #endif
-#ifdef MSDOS
-	setmode(fileno(ambfp), O_BINARY);
-#endif
+	SET_FILE_BINARY(ambfp);
 	if (mybuf == NULL)
 		mybuf = (char *)bmalloc(BUFSIZ+8);
 	setbuf(ambfp, mybuf);

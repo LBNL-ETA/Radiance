@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.2 2003/03/14 21:27:46 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.3 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -244,9 +244,7 @@ int	flags;
 		sprintf(errmsg, "cannot open mesh file \"%s\"", path);
 		error(SYSTEM, errmsg);
 	}
-#ifdef MSDOS
-	setmode(fileno(meshfp), O_BINARY);
-#endif
+	SET_FILE_BINARY(meshfp);
 					/* read header */
 	checkheader(meshfp, MESHFMT, flags&IO_INFO ? stdout : (FILE *)NULL);
 					/* read format number */

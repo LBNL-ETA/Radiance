@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.18 2003/05/15 05:13:35 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.19 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -8,11 +8,8 @@ static const char	RCSid[] = "$Id: data.c,v 2.18 2003/05/15 05:13:35 greg Exp $";
 #include "copyright.h"
 
 #include  "standard.h"
-
 #include  "color.h"
-
 #include  "resolu.h"
-
 #include  "data.h"
 
 				/* picture memory usage before warning */
@@ -184,9 +181,7 @@ char  *pname;
 		sprintf(errmsg, "cannot open picture file \"%s\"", pfname);
 		error(SYSTEM, errmsg);
 	}
-#ifdef MSDOS
-	setmode(fileno(fp), O_BINARY);
-#endif
+	SET_FILE_BINARY(fp);
 						/* get dimensions */
 	inpaspect = 1.0;
 	getheader(fp, headaspect, (char *)&inpaspect);

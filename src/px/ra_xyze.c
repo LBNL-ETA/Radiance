@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.7 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -10,12 +10,10 @@ static const char	RCSid[] = "$Id: ra_xyze.c,v 2.6 2003/02/22 02:07:28 greg Exp $
 #include  <string.h>
 #include  <math.h>
 #include  <time.h>
+
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
-
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
 
 int  rgbinp = -1;			/* input is RGBE? */
 
@@ -61,12 +59,9 @@ int  argc;
 char  *argv[];
 {
 	int  i;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	progname = argv[0];
 
 	for (i = 1; i < argc; i++)

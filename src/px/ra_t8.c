@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.11 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.12 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -9,24 +9,14 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.11 2003/05/13 17:58:33 greg Exp $"
  */
 
 #include  <stdio.h>
-
 #include  <time.h>
-
-#include  "color.h"
-
-#include  "resolu.h"
-
-#include  "targa.h"
-
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
-
 #include  <math.h>
 
-#ifndef	 BSD
-#define	 bcopy(s,d,n)		(void)memcpy(d,s,n)
-#endif
+#include  "platform.h"
+#include  "color.h"
+#include  "resolu.h"
+#include  "targa.h"
+
 
 #define	 goodpic(h)	(my_imType(h) && my_mapType(h))
 #define	 my_imType(h)	(((h)->dataType==IM_CMAP || (h)->dataType==IM_CCMAP) \
@@ -69,12 +59,9 @@ char  *argv[];
 	int  ncolors = 256;
 	int  greyscale = 0;
 	int  i;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	progname = argv[0];
 	samplefac = 0;
 

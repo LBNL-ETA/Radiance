@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.39 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.40 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -7,15 +7,14 @@ static const char	RCSid[] = "$Id: rv2.c,v 2.39 2003/02/25 02:47:23 greg Exp $";
  *  External symbols declared in rpaint.h
  */
 
+#include  <ctype.h>
+
 #include "copyright.h"
 
+#include  "platform.h"
 #include  "ray.h"
-
 #include  "otypes.h"
-
 #include  "rpaint.h"
-
-#include  <ctype.h>
 
 extern int  psample;			/* pixel sample size */
 extern double  maxdiff;			/* max. sample difference */
@@ -754,9 +753,7 @@ char  *s;
 		error(COMMAND, errmsg);
 		return;
 	}
-#ifdef MSDOS
-	setmode(fileno(fp), O_BINARY);
-#endif
+	SET_FILE_BINARY(fp);
 	(*dev->comout)("writing \"");
 	(*dev->comout)(fname);
 	(*dev->comout)("\"...\n");

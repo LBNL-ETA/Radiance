@@ -1,25 +1,24 @@
-/* RCSid $Id: standard.h,v 2.22 2003/05/13 17:58:32 greg Exp $ */
+/* RCSid $Id: standard.h,v 2.23 2003/06/05 19:29:34 schorsch Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
 
+#ifndef _RAD_STANDARD_H_
+#define _RAD_STANDARD_H_
+
 #include "copyright.h"
 
 #include  <stdio.h>
-
 #include  <sys/types.h>
-
 #include  <fcntl.h>
-
 #include  <math.h>
-
 #include  <errno.h>
-
 #include  <stdlib.h>
-
 #include  <string.h>
 
+#include  "platform.h"
 #include  "mat4.h"
+
 				/* regular transformation */
 typedef struct {
 	MAT4  xfm;				/* transform matrix */
@@ -116,69 +115,7 @@ extern off_t  lseek();
 #define NIX 1
 #endif
 
-#ifdef NOPROTO
 
-extern int	badarg();
-extern char	*bmalloc();
-extern void	bfree();
-extern void	error();
-extern int	expandarg();
-extern time_t	fdate();
-extern int	setfdate();
-extern char	*fgetline();
-extern int	fgetval();
-extern char	*fgetword();
-extern void	fputword();
-extern char	*fixargv0();
-extern FILE	*frlibopen();
-extern char	*getrlibpath();
-extern char	*getpath();
-extern void	putstr();
-extern void	putint();
-extern void	putflt();
-extern char	*getstr();
-extern long	getint();
-extern double	getflt();
-extern int	open_process();
-extern int	process();
-extern int	close_process();
-extern int	readbuf();
-extern int	writebuf();
-extern int	ecompile();
-extern char	*expsave();
-extern void	expset();
-extern char	*eindex();
-extern char	*savestr();
-extern void	freestr();
-extern int	shash();
-extern char	*savqstr();
-extern void	freeqstr();
-extern double	tcos();
-extern int	wordfile();
-extern int	wordstring();
-extern char	*atos();
-extern char	*nextword();
-extern char	*sskip();
-extern char	*sskip2();
-extern char	*iskip();
-extern char	*fskip();
-extern int	isint();
-extern int	isintd();
-extern int	isflt();
-extern int	isfltd();
-extern int	xf();
-extern int	invxf();
-extern int	fullxf();
-extern int	quadtratic();
-extern int4	encodedir();
-extern void	decodedir();
-extern double	dir2diff();
-extern double	fdir2diff();
-extern void	eputs();
-extern void	wputs();
-extern void	quit();
-
-#else
 					/* defined in badarg.c */
 extern int	badarg(int ac, char **av, char *fl);
 					/* defined in bmalloc.c */
@@ -265,4 +202,5 @@ extern void	eputs(char *s);
 extern void	wputs(char *s);
 extern void	quit(int code);
 
-#endif
+
+#endif /* _RAD_STANDARD_H_ */

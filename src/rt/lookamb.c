@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.8 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.9 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -7,8 +7,8 @@ static const char	RCSid[] = "$Id: lookamb.c,v 2.8 2003/02/25 02:47:22 greg Exp $
 
 #include "copyright.h"
 
+#include  "platform.h"
 #include  "ray.h"
-
 #include  "ambient.h"
 
 
@@ -62,15 +62,11 @@ char  *argv[];
 		}
 		fputformat(AMBFMT, stdout);
 		putchar('\n');
-#ifdef MSDOS
-		setmode(fileno(stdout), O_BINARY);
-#endif
+		SET_FILE_BINARY(stdout);
 		putambmagic(stdout);
 		writamb(fp);
 	} else {
-#ifdef MSDOS
-		setmode(fileno(fp), O_BINARY);
-#endif
+		SET_FILE_BINARY(fp);
 		if (checkheader(fp, AMBFMT, header ? stdout : (FILE *)NULL) < 0)
 			goto formaterr;
 		if (!hasambmagic(fp))

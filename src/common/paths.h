@@ -1,11 +1,11 @@
-/* RCSid $Id: paths.h,v 2.10 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.11 2003/06/05 19:29:34 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
 
 #include "copyright.h"
 
-#ifdef MSDOS
+#ifdef _WIN32
 
 #define DIRSEP		'/'
 #define ISDIRSEP(c)	((c)=='/' || (c)=='\\')

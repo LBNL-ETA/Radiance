@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.4 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -7,19 +7,16 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.3 2003/05/13 17:58:33 greg Exp $"
 
 #include "copyright.h"
 
+#include  <sys/types.h>
+#include  <signal.h>
+
+#include  "platform.h"
 #include  "ray.h"
-
 #include  "source.h"
-
 #include  "ambient.h"
-
 #include  "random.h"
-
 #include  "paths.h"
 
-#include  <sys/types.h>
-
-#include  <signal.h>
 					/* persistent processes define */
 #ifdef  F_SETLKW
 #define  PERSIST	1		/* normal persist */
@@ -274,11 +271,11 @@ char  *argv[];
 		openheader();
 	}
 #endif
-#ifdef	MSDOS
+#ifdef	_WIN32
 	if (outform != 'a')
-		setmode(fileno(stdout), O_BINARY);
+		SET_FILE_BINARY(stdout);
 	if (octname == NULL)
-		setmode(fileno(stdin), O_BINARY);
+		SET_FILE_BINARY(stdin);
 #endif
 	readoct(octname, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.22 2003/02/25 00:26:05 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.23 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -8,14 +8,11 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.22 2003/02/25 00:26:05 greg Exp $"
  *     6/23/93	Added additional buffers for value spreading
  */
 
-#include  "standard.h"
-
 #include  <signal.h>
 
+#include  "standard.h"
 #include  "color.h"
-
 #include  "view.h"
-
 #include  "paths.h"
 
 extern float  *matchlamp();
@@ -95,12 +92,9 @@ char  **argv;
 	double	outaspect = 0.0;
 	double	d;
 	int  i, j;
-#ifdef MSDOS
-	extern int  _fmode;
-	_fmode = O_BINARY;
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_DEFAULT_BINARY();
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	if (signal(SIGINT, quit) == SIG_IGN)
 		signal(SIGINT, SIG_IGN);
 	if (signal(SIGHUP, quit) == SIG_IGN)

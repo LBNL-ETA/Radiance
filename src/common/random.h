@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.10 2003/03/27 16:33:38 greg Exp $ */
+/* RCSid $Id: random.h,v 2.11 2003/06/05 19:29:34 schorsch Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -17,7 +17,7 @@
 
 #else
 
-#ifdef	MSDOS
+#ifdef	_WIN32
 
 #if (RAND_MAX <= 65536)
 #define random()	((long)rand()<<16^(long)rand()<<6^(long)rand()>>4)

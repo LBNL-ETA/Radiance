@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.18 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.19 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -8,9 +8,7 @@ static const char	RCSid[] = "$Id: psign.c,v 2.18 2003/02/22 02:07:27 greg Exp $"
  */
 
 #include  "standard.h"
-
 #include  "color.h"
-
 #include  "font.h"
 
 #ifndef	 SSS
@@ -59,9 +57,7 @@ int  argc;
 char  *argv[];
 {
 	int  an;
-#ifdef MSDOS
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_FILE_BINARY(stdout);
 	for (an = 1; an < argc && argv[an][0] == '-'; an++)
 		switch (argv[an][1]) {
 		case 'c':			/* color */

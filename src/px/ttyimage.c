@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ttyimage.c,v 2.3 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ttyimage.c,v 2.4 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  ttyimage.c - program to dump pixel file to dumb terminal.
@@ -8,11 +8,9 @@ static const char	RCSid[] = "$Id: ttyimage.c,v 2.3 2003/02/22 02:07:28 greg Exp 
  */
 
 #include  <stdio.h>
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
 #include  <time.h>
 
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -35,9 +33,7 @@ char  **argv;
 		fprintf(stderr, "%s: can't open file \"%s\"\n", argv[0], argv[1]);
 		exit(1);
 	}
-#ifdef MSDOS
-	setmode(fileno(input), O_BINARY);
-#endif
+	SET_FILE_BINARY(input);
 				/* get picture dimensions */
 	if (checkheader(input, COLRFMT, NULL) < 0 ||
 			fgetresolu(&xres, &yres, input) < 0) {

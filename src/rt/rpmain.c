@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.2 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.3 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -7,23 +7,17 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.2 2003/02/25 02:47:23 greg Exp $"
 
 #include "copyright.h"
 
-#include  "ray.h"
-
-#include  "source.h"
-
-#include  "ambient.h"
-
-#include  "random.h"
-
-#include  "paths.h"
-
 #include  <sys/types.h>
-
 #include  <signal.h>
 
+#include  "platform.h"
+#include  "ray.h"
+#include  "source.h"
+#include  "ambient.h"
+#include  "random.h"
+#include  "paths.h"
 #include  "view.h"
 
-#include  "paths.h"
 					/* persistent processes define */
 #ifdef  F_SETLKW
 #define  PERSIST	1		/* normal persist */
@@ -278,10 +272,10 @@ char  *argv[];
 #endif
 	if (outfile != NULL)
 		openheader();
-#ifdef	MSDOS
-	setmode(fileno(stdout), O_BINARY);
+#ifdef	_WIN32
+	SET_FILE_BINARY(stdout);
 	if (octname == NULL)
-		setmode(fileno(stdin), O_BINARY);
+		SET_FILE_BINARY(stdin);
 #endif
 	readoct(octname, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;

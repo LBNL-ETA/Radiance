@@ -1,4 +1,4 @@
-/* RCSid: $Id: tiff.h,v 3.1 2003/02/22 02:07:22 greg Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.2 2003/06/05 19:29:34 schorsch Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

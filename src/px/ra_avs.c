@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_avs.c,v 2.9 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_avs.c,v 2.10 2003/06/05 19:29:34 schorsch Exp $";
 #endif
 /*
  *  Convert Radiance file to/from AVS file.
@@ -7,10 +7,9 @@ static const char	RCSid[] = "$Id: ra_avs.c,v 2.9 2003/02/22 02:07:27 greg Exp $"
 
 #include  <stdio.h>
 #include  <math.h>
-#ifdef MSDOS
-#include  <fcntl.h>
-#endif
 #include  <time.h>
+
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -65,10 +64,8 @@ char  *argv[];
 				progname, argv[i+1]);
 		exit(1);
 	}
-#ifdef MSDOS
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
-#endif
+	SET_FILE_BINARY(stdin);
+	SET_FILE_BINARY(stdout);
 	setcolrgam(gamcor);		/* set up gamma correction */
 	if (reverse) {
 					/* get their image resolution */
