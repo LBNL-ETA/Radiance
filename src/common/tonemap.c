@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.16 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.17 2005/01/07 21:41:06 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -21,9 +21,6 @@ static const char	RCSid[] = "$Id: tonemap.c,v 3.16 2005/01/07 20:33:02 greg Exp 
 					/* our list of conversion packages */
 struct tmPackage	*tmPkg[TM_MAXPKG];
 int	tmNumPkgs = 0;			/* number of registered packages */
-
-int	tmLastError;			/* last error incurred by library */
-char	*tmLastFunction;		/* error-generating function name */
 
 
 TMstruct *
@@ -78,6 +75,8 @@ double	gamval
 						/* zero private data */
 	for (i = TM_MAXPKG; i--; )
 		tmnew->pd[i] = NULL;
+	tmnew->lastError = TM_E_OK;
+	tmnew->lastFunc = "NoErr";
 						/* return new TMstruct */
 	return(tmnew);
 }
@@ -90,7 +89,7 @@ RGBPRIMP	pri,
 double	sf
 )
 {
-	static char	funcName[] = "tmSetSpace";
+	static const char funcName[] = "tmSetSpace";
 	int	i, j;
 						/* error check */
 	if (tms == NULL)
@@ -167,7 +166,7 @@ COLOR	*scan,
 int	len
 )
 {
-	static char	funcName[] = "tmCvColors";
+	static const char funcName[] = "tmCvColors";
 	static COLOR	csmall = {.5*MINLUM, .5*MINLUM, .5*MINLUM};
 	COLOR	cmon;
 	double	lum, slum;
@@ -245,7 +244,7 @@ float	*scan,
 int	len
 )
 {
-	static char	funcName[] = "tmCvGrays";
+	static const char funcName[] = "tmCvGrays";
 	double	d;
 	int	i;
 
@@ -272,7 +271,7 @@ int	len,
 int	wt
 )
 {
-	static char	funcName[] = "tmAddHisto";
+	static const char funcName[] = "tmAddHisto";
 	int	oldorig=0, oldlen, horig, hlen;
 	int	i, j;
 
@@ -375,7 +374,7 @@ double	expmult,
 double	gamval
 )
 {
-	static char	funcName[] = "tmFixedMapping";
+	static const char funcName[] = "tmFixedMapping";
 	double		d;
 	int	i;
 	
@@ -402,7 +401,7 @@ double	Lddyn,
 double	Ldmax
 )
 {
-	static char	funcName[] = "tmComputeMapping";
+	static const char funcName[] = "tmComputeMapping";
 	int	*histo;
 	float	*cumf;
 	int	brt0, histlen, threshold, ceiling, trimmings;
@@ -510,7 +509,7 @@ BYTE	*cs,
 int	len
 )
 {
-	static char	funcName[] = "tmMapPixels";
+	static const char funcName[] = "tmMapPixels";
 	int32	li, pv;
 
 	if (tms == NULL || tms->lumap == NULL)
@@ -622,15 +621,17 @@ tmMkMesofact()				/* build mesopic lookup factor table */
 
 int
 tmErrorReturn(				/* error return (with message) */
-char	*func,
+const char	*func,
 TMstruct	*tms,
 int	err
 )
 {
-	tmLastFunction = func;
-	tmLastError = err;
-	if (tms != NULL && tms->flags & TM_F_NOSTDERR)
-		return(err);
+	if (tms != NULL) {
+		tms->lastFunc = func;
+		tms->lastError = err;
+		if (tms->flags & TM_F_NOSTDERR)
+			return(err);
+	}
 	fputs(func, stderr);
 	fputs(": ", stderr);
 	fputs(tmErrorMessage[err], stderr);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.17 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.18 2005/01/07 21:41:06 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -52,7 +52,7 @@ COLR	*scan,
 int	len
 )
 {
-	static char	funcName[] = "tmCvColrs";
+	static const char	funcName[] = "tmCvColrs";
 	COLR	cmon;
 	register COLRDATA	*cd;
 	register int	i, bi, li;

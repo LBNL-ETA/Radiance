@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.5 2005/01/07 20:33:02 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.6 2005/01/07 21:41:06 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -133,7 +133,7 @@ rgb48_color(COLOR col, uint16 clr48[3], double gv)
 int
 tmCvGray16(TMstruct *tms, TMbright *ls, uint16 *scan, int len, double gv)
 {
-	static char	funcName[] = "tmCvGray16";
+	static const char	funcName[] = "tmCvGray16";
 	static double	cur_inpsf = 1.;
 	static double	log_inpsf = 0.;
 	int		nshft;
@@ -173,7 +173,7 @@ int
 tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs,
 		uint16 (*scan)[3], int len, double gv)
 {
-	static char	funcName[] = "tmCvRGB48";
+	static const char	funcName[] = "tmCvRGB48";
 	static double	cur_inpsf = 1.;
 	static double	log_inpsf = 0.;
 	int		i;

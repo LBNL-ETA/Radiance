@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.17 2005/01/07 20:33:02 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.18 2005/01/07 21:41:06 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -66,8 +66,6 @@ extern "C" {
 #endif
 
 extern char	*tmErrorMessage[];	/* error messages */
-extern int	tmLastError;		/* last error incurred by library */
-extern char	*tmLastFunction;	/* error-generating function name */
 
 typedef short	TMbright;		/* encoded luminance type */
 
@@ -86,6 +84,8 @@ typedef struct tmStruct {
 	TMbright	mbrmin, mbrmax;	/* mapped brightness limits */
 	unsigned short	*lumap;		/* computed luminance map */
 	MEM_PTR		pd[TM_MAXPKG];	/* pointers to private data */
+	int		lastError;	/* last error incurred */
+	const char	*lastFunc;	/* error-generating function name */
 } TMstruct;
 
 				/* conversion package functions */
@@ -175,6 +175,7 @@ tmFixedMapping(TMstruct *tms, double expmult, double gamval);
 	tms	-	tone mapping structure pointer.
 	expmult	-	the fixed exposure multiplier to use.
 	gamval	-	display gamma response (0. for default).
+
 	returns -	0 on success, TM_E_* on error.
 */
 
@@ -214,6 +215,7 @@ tmDup(TMstruct *orig);
 	Duplicate the given tone mapping into a new struct.
 
 	orig	-	tone mapping structure to duplicate.
+
 	returns	-	pointer to new struct, or NULL on error.
 */
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.10 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.11 2005/01/07 21:41:06 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -131,7 +131,7 @@ uint32	*luvs,
 int	len
 )
 {
-	static char	funcName[] = "tmCvLuv32";
+	static const char	funcName[] = "tmCvLuv32";
 	double	uvp[2];
 	register LUV32DATA	*ld;
 	register int	i, j;
@@ -255,7 +255,7 @@ uint16	*l16s,
 int	len
 )
 {
-	static char	funcName[] = "tmCvL16";
+	static const char	funcName[] = "tmCvL16";
 	static double	lastsf;
 	static int	offset;
 	register int	i;

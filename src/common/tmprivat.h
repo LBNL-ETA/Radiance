@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.14 2005/01/07 20:33:02 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.15 2005/01/07 21:41:06 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -59,7 +59,7 @@ extern "C" {
 MEM_PTR		malloc();
 MEM_PTR		calloc();
 #endif
-extern int	tmErrorReturn(char *, TMstruct *, int);
+extern int	tmErrorReturn(const char *, TMstruct *, int);
 
 						/* lookup for mesopic scaling */
 extern BYTE	tmMesofact[BMESUPPER-BMESLOWER];
