@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.16 2004/12/10 05:52:14 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.17 2005/02/16 17:20:22 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -210,6 +210,11 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 		}
 
 	if (noinput) {          /* produce a single output record */
+		if (i < argc) {
+			eputs(argv[0]);
+			eputs(": file argument(s) incompatible with -n\n");
+			quit(1);
+		}
 		eclock++;
 		putout();
 		quit(0);
