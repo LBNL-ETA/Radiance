@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.21 2003/07/30 10:11:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.22 2004/01/02 11:35:17 schorsch Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -40,13 +40,14 @@ char  FMTSTR[] = "FORMAT=";	/* format identifier */
 
 char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
 
-static int mycheck();
+static gethfunc mycheck;
 
 
-void
-newheader(s, fp)		/* identifying line of information header */
-char  *s;
-register FILE  *fp;
+extern void
+newheader(		/* identifying line of information header */
+	char  *s,
+	register FILE  *fp
+)
 {
 	fputs(HDRSTR, fp);
 	fputs(s, fp);
@@ -54,9 +55,11 @@ register FILE  *fp;
 }
 
 
-int
-headidval(r,s)			/* get header id (return true if is id) */
-register char  *r, *s;
+extern int
+headidval(			/* get header id (return true if is id) */
+	register char  *r,
+	register char	*s
+)
 {
 	register char  *cp = HDRSTR;
 
@@ -68,18 +71,20 @@ register char  *r, *s;
 }
 
 
-int
-isheadid(s)			/* check to see if line is header id */
-char  *s;
+extern int
+isheadid(			/* check to see if line is header id */
+	char  *s
+)
 {
 	return(headidval(NULL, s));
 }
 
 
-int
-dateval(tloc, s)		/* get capture date value */
-time_t	*tloc;
-char	*s;
+extern int
+dateval(		/* get capture date value */
+	time_t	*tloc,
+	char	*s
+)
 {
 	struct tm	tms;
 	register char  *cp = TMSTR;
@@ -101,18 +106,20 @@ char	*s;
 }
 
 
-int
-isdate(s)			/* is the given line a capture date? */
-char *s;
+extern int
+isdate(			/* is the given line a capture date? */
+	char *s
+)
 {
 	return(dateval(NULL, s));
 }
 
 
-void
-fputdate(tv, fp)		/* write out the given time value */
-time_t	tv;
-FILE	*fp;
+extern void
+fputdate(		/* write out the given time value */
+	time_t	tv,
+	FILE	*fp
+)
 {
 	struct tm	*tm = localtime(&tv);
 	if (tm == NULL)
@@ -123,9 +130,10 @@ FILE	*fp;
 }
 
 
-void
-fputnow(fp)			/* write out the current time */
-FILE	*fp;
+extern void
+fputnow(			/* write out the current time */
+	FILE	*fp
+)
 {
 	time_t	tv;
 	time(&tv);
@@ -133,11 +141,12 @@ FILE	*fp;
 }
 
 
-void
-printargs(ac, av, fp)		/* print arguments to a file */
-int  ac;
-char  **av;
-FILE  *fp;
+extern void
+printargs(		/* print arguments to a file */
+	int  ac,
+	char  **av,
+	FILE  *fp
+)
 {
 	while (ac-- > 0) {
 		fputword(*av++, fp);
@@ -146,10 +155,11 @@ FILE  *fp;
 }
 
 
-int
-formatval(r, s)			/* get format value (return true if format) */
-register char  *r;
-register char  *s;
+extern int
+formatval(			/* get format value (return true if format) */
+	register char  *r,
+	register char  *s
+)
 {
 	register char  *cp = FMTSTR;
 
@@ -165,18 +175,20 @@ register char  *s;
 }
 
 
-int
-isformat(s)			/* is line a format line? */
-char  *s;
+extern int
+isformat(			/* is line a format line? */
+	char  *s
+)
 {
 	return(formatval(NULL, s));
 }
 
 
-void
-fputformat(s, fp)		/* put out a format value */
-char  *s;
-FILE  *fp;
+extern void
+fputformat(		/* put out a format value */
+	char  *s,
+	FILE  *fp
+)
 {
 	fputs(FMTSTR, fp);
 	fputs(s, fp);
@@ -184,11 +196,12 @@ FILE  *fp;
 }
 
 
-int
-getheader(fp, f, p)		/* get header from file */
-FILE  *fp;
-int  (*f)(char *, char *);
-char  *p;
+extern int
+getheader(		/* get header from file */
+	FILE  *fp,
+	gethfunc *f,
+	void  *p
+)
 {
 	char  buf[MAXLINE];
 
@@ -219,19 +232,24 @@ struct check {
 
 
 static int
-mycheck(s, cp)			/* check a header line for format info. */
-char  *s;
-register struct check  *cp;
+mycheck(			/* check a header line for format info. */
+	char  *s,
+	void  *cp
+)
 {
-	if (!formatval(cp->fs, s) && cp->fp != NULL)
-		fputs(s, cp->fp);
+	if (!formatval(((struct check*)cp)->fs, s)
+			&& ((struct check*)cp)->fp != NULL) {
+		fputs(s, ((struct check*)cp)->fp);
+	}
 	return(0);
 }
 
 
-int
-globmatch(p, s)			/* check for match of s against pattern p */
-register char	*p, *s;
+extern int
+globmatch(			/* check for match of s against pattern p */
+	register char	*p,
+	register char	*s
+)
 {
 	int	setmatch;
 
@@ -295,18 +313,19 @@ register char	*p, *s;
  * if fout is not NULL.
  */
 
-int
-checkheader(fin, fmt, fout)
-FILE  *fin;
-char  *fmt;
-FILE  *fout;
+extern int
+checkheader(
+	FILE  *fin,
+	char  *fmt,
+	FILE  *fout
+)
 {
 	struct check	cdat;
 	register char	*cp;
 
 	cdat.fp = fout;
 	cdat.fs[0] = '\0';
-	if (getheader(fin, mycheck, (char *)&cdat) < 0)
+	if (getheader(fin, mycheck, &cdat) < 0)
 		return(-1);
 	if (!cdat.fs[0])
 		return(0);

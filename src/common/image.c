@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.25 2004/01/01 19:47:05 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.26 2004/01/02 11:36:26 schorsch Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -18,6 +18,8 @@ static const char	RCSid[] = "$Id: image.c,v 2.25 2004/01/01 19:47:05 greg Exp $"
 				&& FEQ((v)[2],(w)[2]))
 
 VIEW  stdview = STDVIEW;		/* default view parameters */
+
+static gethfunc gethview;
 
 
 char *
@@ -522,12 +524,13 @@ struct myview {
 
 
 static int
-gethview(s, v)				/* get view from header */
-char  *s;
-register struct myview  *v;
+gethview(				/* get view from header */
+	char  *s,
+	void  *v
+)
 {
-	if (isview(s) && sscanview(v->hv, s) > 0)
-		v->ok++;
+	if (isview(s) && sscanview(((struct myview*)v)->hv, s) > 0)
+		((struct myview*)v)->ok++;
 	return(0);
 }
 
@@ -549,7 +552,7 @@ RESOLU  *rp;
 	mvs.hv = vp;
 	mvs.ok = 0;
 
-	getheader(fp, (int (*)(char *, char *))&gethview, (char *)&mvs);
+	getheader(fp, gethview, &mvs);
 
 	if (rp != NULL && !fgetsresolu(rp, fp))
 		mvs.ok = 0;

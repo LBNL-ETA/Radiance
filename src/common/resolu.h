@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.8 2003/10/27 10:19:31 schorsch Exp $ */
+/* RCSid $Id: resolu.h,v 2.9 2004/01/02 11:35:17 schorsch Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -72,7 +72,8 @@ extern void	printargs(int ac, char **av, FILE *fp);
 extern int	isformat(char *s);
 extern int	formatval(char *r, char *s);
 extern void	fputformat(char *s, FILE *fp);
-extern int	getheader(FILE *fp, int (*f)(), char *p);
+typedef int gethfunc(char *s, void *p); /* callback to process header lines */
+extern int	getheader(FILE *fp, gethfunc *f, void *p);
 extern int	globmatch(char *pat, char *str);
 extern int	checkheader(FILE *fin, char *fmt, FILE *fout);
 
