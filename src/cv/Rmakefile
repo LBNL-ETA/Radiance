@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.22 2003/06/27 06:53:22 greg Exp $
+# RCSid $Id: Rmakefile,v 2.23 2003/10/20 15:10:18 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -28,7 +28,7 @@ all:	$(PROGS)
 
 install:	$(PROGS) $(LIBFILES)
 	cp $(PROGS) $(INSTDIR)
-	cd $(LIBDIR) ; rm -f $(LIBFILES)
+	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
 clean:

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: installib,v 1.1 2003/02/28 20:06:51 greg Exp $
+# RCSid $Id: installib,v 1.2 2003/10/20 15:10:17 greg Exp $
 #
 # Install library files
 #
@@ -15,14 +15,14 @@ else if ( "$ldir" !~ /* ) then
 	echo "Directory must be relative to root, please reenter"
 	goto again2
 endif
-if ( $ldir != $cwd/lib ) then
-	if ( ! -d $ldir ) then
-		mkdir $ldir
-		if ( $status ) then
-			echo "Cannot create directory, please reenter"
-			goto again2
-		endif
+if ( ! -d $ldir ) then
+	mkdir $ldir
+	if ( $status ) then
+		echo "Cannot create directory, please reenter"
+		goto again2
 	endif
+endif
+if ( $ldir != $cwd/lib ) then
 	set d1=(`ls -id lib`)
 	set d2=(`ls -id $ldir`)
 	if ($d1[1] != $d2[1]) then

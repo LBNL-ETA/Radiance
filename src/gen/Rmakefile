@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.9 2003/08/04 22:37:53 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.10 2003/10/20 15:10:18 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -25,7 +25,7 @@ install:	$(PROGS) $(LIBFILES) glaze.csh
 	cp $(PROGS) $(INSTDIR)
 	cp glaze.csh $(INSTDIR)/glaze
 	chmod 755 $(INSTDIR)/glaze
-	cd $(LIBDIR) ; rm -f $(LIBFILES)
+	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
 clean:
