@@ -1,9 +1,6 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.7 2003/07/12 08:38:44 schorsch Exp $
+# RCSid $Id: makeall,v 1.8 2003/07/17 15:31:26 greg Exp $
 # 
-#Added macosX 2001-04-11 by Jean Brange
-#Deleted obsolete systems 2001-04-18 by Greg Ward
-#
 # Make all the Radiance programs
 #
 if ( $#argv < 1 ) then
@@ -14,6 +11,7 @@ if ( $#argv < 1 ) then
 endif
 if ( "$1" == library ) then
 	source installib
+	cp -f src/*/*.{cal,tab,hex} $ldir
 	echo ""
 	echo "Set the environment variable RAYPATH=.:$ldir"
 	echo 'For C-shell users, put the following into ~/.cshrc'
