@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.7 2004/03/30 16:24:25 schorsch Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.8 2004/04/10 02:54:44 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -600,13 +600,8 @@ wrseek(uint32 pos, BMPWriter *bw)
 {
 	if (pos == bw->fpos)
 		return BIR_OK;
-	if (bw->seek == NULL) {
-		if (pos < bw->fpos)
-			return BIR_SEEKERR;
-		while (bw->fpos < pos)
-			wrbyte(0, bw);
-		return BIR_OK;
-	}
+	if (bw->seek == NULL)
+		return BIR_SEEKERR;
 	if ((*bw->seek)(pos, bw->c_data) != 0)
 		return BIR_SEEKERR;
 	bw->fpos = pos;
@@ -761,9 +756,11 @@ BMPwriteScanline(BMPWriter *bw)
 	bw->yscan++;				/* write line break or EOD */
 	if (bw->yscan == bw->hdr->height) {
 		wrbyte(0, bw); wrbyte(1, bw);   /* end of bitmap marker */
-		if (bw->seek == NULL || (*bw->seek)(2, bw->c_data) != 0)
+		if (wrseek(2, bw) != BIR_OK)
 			return BIR_OK;		/* no one may care */
-		bw->fpos = 2;
+		wrint32(bw->flen, bw);		/* correct file length */
+		if (wrseek(34, bw) != BIR_OK)
+			return BIR_OK;
 		wrint32(bw->flen-bw->fbmp, bw); /* correct bitmap length */
 	} else {
 		wrbyte(0, bw); wrbyte(0, bw);   /* end of line marker */
