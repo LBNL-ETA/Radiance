@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.13 2004/01/29 22:21:34 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.14 2004/03/27 12:43:30 schorsch Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -55,6 +55,8 @@ bbox.o o_cone.o o_face.o o_instance.o oconv.o \
 sphere.o writeoct.o:	../common/object.h
 
 bbox.o initotypes.o oconv.o obj2mesh.o sphere.o:	../common/otypes.h
+
+bbox.o getbbox.o initotypes.o oconv.o readobj2.o writeoct.o: oconv.h
 
 oconv.o:	../common/paths.h
 
