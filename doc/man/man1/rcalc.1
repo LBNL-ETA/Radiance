@@ -38,6 +38,7 @@ numeric fields separated by tabs.
 The
 .I \-tS
 option is used to specify an alternate tab character.
+.PP
 A
 .I \-i format
 option specifies a template for an alternate
@@ -48,10 +49,24 @@ Otherwise, it is interpreted as the name of the file containing
 the format specification.
 In either case, if the format does not end with a newline, one will be added
 automatically.
+A special form of the
+.I \-i
+option may be followed immediately by a 'd' or an 'f' and an optional
+count, which defaults to 1, indicating the number of double or float
+binary values to read per record on the input file.
+If binary input is specified, no format string or file is needed.
+.PP
 A
 .I \-o format
 option specifies an alternate output record format.
-It is interpreted the same as an input specification.
+It is interpreted the same as an input specification, except that
+the special
+.I \-od
+or
+.I \-of
+options do not require a count, as this will be determined by the
+number of output channels in the given expressions.
+.PP
 The variable and function definitions in each
 .I \-f source
 file are read and compiled.
@@ -65,6 +80,7 @@ The
 option can be used to assign a string variable a string value.
 If this string variable appears in an input format, only records
 with the specified value will be processed.
+.PP
 The
 .I \-b
 option instructs the program to accept only exact matches.
@@ -79,6 +95,7 @@ a line, and the end of the format matches the end of a line.
 With the
 .I \-l
 option, the input format can match anywhere on a line.
+.PP
 The
 .I \-w
 option causes non-fatal error messages (such as division by zero) to
@@ -256,4 +273,4 @@ options, not in definitions.
 .PP
 Tabs count as single spaces inside fields.
 .SH "SEE ALSO"
-calc(1), cnt(1), ev(1), lam(1), tabfunc(1), total(1)
+calc(1), cnt(1), ev(1), getinfo(1), lam(1), tabfunc(1), total(1)

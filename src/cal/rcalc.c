@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.2 2003/02/28 20:29:01 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.3 2003/04/27 06:08:03 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -69,6 +69,8 @@ int  blnkeq = 1;                /* blanks compare equal? */
 int  igneol = 0;                /* ignore end of line? */
 char  sepchar = '\t';           /* input/output separator */
 int  noinput = 0;               /* no input records? */
+int  nbicols = 0;		/* number of binary input columns */
+int  bocols = 0;		/* produce binary output columns */
 char  inpbuf[INBSIZ];           /* input buffer */
 double  colval[MAXCOL];         /* input column values */
 unsigned long  colflg = 0;      /* column retrieved flags */
@@ -124,10 +126,46 @@ char  *argv[];
 			noinput = 1;
 			break;
 		case 'i':
-			readfmt(argv[++i], 0);
+			switch (argv[i][2]) {
+			case '\0':
+				nbicols = 0;
+				readfmt(argv[++i], 0);
+				break;
+			case 'a':
+				nbicols = 0;
+				break;
+			case 'd':
+				if (isdigit(argv[i][3]))
+					nbicols = atoi(argv[i]+3);
+				else
+					nbicols = 1;
+				break;
+			case 'f':
+				if (isdigit(argv[i][3]))
+					nbicols = -atoi(argv[i]+3);
+				else
+					nbicols = -1;
+				break;
+			default:
+				goto userr;
+			}
 			break;
 		case 'o':
-			readfmt(argv[++i], 1);
+			switch (argv[i][2]) {
+			case '\0':
+				bocols = 0;
+				readfmt(argv[++i], 1);
+				break;
+			case 'a':
+				bocols = 0;
+				break;
+			case 'd':
+				bocols = 1;
+				break;
+			case 'f':
+				bocols = -1;
+				break;
+			}
 			break;
 		case 'w':
 			nowarn = !nowarn;
@@ -135,7 +173,8 @@ char  *argv[];
 		case 'u':
 			unbuff = !unbuff;
 			break;
-		default:
+		default:;
+		userr:
 			eputs("Usage: ");
 			eputs(argv[0]);
 eputs(" [-b][-l][-n][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
@@ -172,6 +211,22 @@ nbsynch()               /* non-blank starting synch character */
 }
 
 
+int
+getinputrec(fp)		/* get next input record */
+FILE  *fp;
+{
+	if (inpfmt != NULL)
+		return(getrec());
+	if (nbicols > 0)
+		return(fread(inpbuf, sizeof(double),
+					nbicols, fp) == nbicols);
+	if (nbicols < 0)
+		return(fread(inpbuf, sizeof(float),
+					-nbicols, fp) == -nbicols);
+	return(fgets(inpbuf, INBSIZ, fp) != NULL);
+}
+
+
 execute(file)           /* process a file */
 char  *file;
 {
@@ -189,8 +244,8 @@ char  *file;
 	}
 	if (inpfmt != NULL)
 		initinp(fp);
-		
-	while (inpfmt != NULL ? getrec() : fgets(inpbuf, INBSIZ, fp) != NULL) {
+	
+	while (getinputrec(fp)) {
 		varset("recno", '=', (double)++nrecs);
 		colflg = 0;
 		eclock++;
@@ -205,14 +260,16 @@ char  *file;
 
 putout()                /* produce an output record */
 {
-	extern int  chanset();
+	extern void  chanset(), bchanset();
 
 	colpos = 0;
 	if (outfmt != NULL)
 		putrec();
+	else if (bocols)
+		chanout(bchanset);
 	else
 		chanout(chanset);
-	if (colpos)
+	if (colpos && !bchanset)
 		putchar('\n');
 	if (unbuff)
 		fflush(stdout);
@@ -233,6 +290,18 @@ int  n;
 	if (n < 1) {
 		eputs("illegal channel number\n");
 		quit(1);
+	}
+	if (nbicols > 0) {
+		if (n > nbicols)
+			return(0.0);
+		cp = inpbuf + (n-1)*sizeof(double);
+		return(*(double *)cp);
+	}
+	if (nbicols < 0) {
+		if (n > -nbicols)
+			return(0.0);
+		cp = inpbuf + (n-1)*sizeof(float);
+		return(*(float *)cp);
 	}
 	if (n <= MAXCOL && colflg & 1L<<(n-1))
 		return(colval[n-1]);
@@ -259,6 +328,7 @@ int  n;
 }
 
 
+void
 chanset(n, v)                   /* output column n */
 int  n;
 double  v;
@@ -270,6 +340,26 @@ double  v;
 		colpos++;
 	}
 	printf("%.9g", v);
+}
+
+
+void
+bchanset(n, v)                   /* output binary channel n */
+int  n;
+double  v;
+{
+	static char	zerobuf[sizeof(double)];
+
+	while (++colpos < n)
+		fwrite(zerobuf,
+			bocols>0 ? sizeof(double) : sizeof(float),
+			1, stdout);
+	if (bocols > 0)
+		fwrite(&v, sizeof(double), 1, stdout);
+	else {
+		float	fval = v;
+		fwrite(&fval, sizeof(float), 1, stdout);
+	}
 }
 
 

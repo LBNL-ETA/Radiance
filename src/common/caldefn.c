@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.14 2003/03/10 17:13:29 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.15 2003/04/27 06:08:03 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -316,7 +316,7 @@ register char  *qn;
 
 void
 chanout(cs)			/* set output channels */
-int  (*cs)();
+void  (*cs)();
 {
     register EPNODE  *ep;
 

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.38 2003/03/14 21:27:45 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.39 2003/04/27 06:08:03 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -97,7 +97,7 @@ readmesh.o readobj.o readoct.o sceneio.o xf.o:	standard.h mat4.h fvect.h
 
 image.o:	view.h
 
-calprnt.o:	calcomp.h
+caldefn.o calexpr.o calfunc.o calprnt.o:	calcomp.h
 
 process.o:	vfork.h
 
