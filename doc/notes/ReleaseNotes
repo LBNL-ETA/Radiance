@@ -1199,3 +1199,6 @@ containing large, constant regions.
 
 Improved interaction with rholo -o ogl driver under OS X, which was
 returning bad values from the depth buffer.
+
+Minor bug fix in ranimove where it was restarting processes when it
+didn't need to.

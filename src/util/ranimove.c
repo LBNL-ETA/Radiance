@@ -141,7 +141,7 @@ char	*argv[];
 						/* all done */
 	if (lorendoptf[0])
 		unlink(lorendoptf);
-	if (hirendoptf[0])
+	if (hirendoptf[0] && strcmp(hirendoptf, lorendoptf))
 		unlink(hirendoptf);
 	if (objtmpf[0])
 		unlink(objtmpf);
@@ -334,8 +334,8 @@ char		*qval;
 	if (qval != NULL && qval[0] == '-')
 		ac += wordstring(av+ac, qval);
 
-				/* start with default parameters */
-	ray_defaults(NULL);
+				/* restore default parameters */
+	ray_restore(NULL);
 				/* set what we have */
 	for (i = 0; i < ac; i++) {
 		while ((rval = expandarg(&ac, &av, i)) > 0)
@@ -349,12 +349,11 @@ char		*qval;
 			continue;
 		}
 		rval = getrenderopt(ac-i, av+i);
-		if (rval >= 0) {
-			i += rval;
-			continue;
+		if (rval < 0) {
+			sprintf(errmsg, "bad render option at '%s'", av[i]);
+			error(USER, errmsg);
 		}
-		sprintf(errmsg, "bad render option at '%s'", av[i]);
-		error(USER, errmsg);
+		i += rval;
 	}
 }
 
