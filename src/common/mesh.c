@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.4 2003/03/14 21:27:45 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.5 2003/04/18 22:10:20 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -504,8 +504,8 @@ register MESH	*mp;
 	if (mp->ldflags & IO_BOUNDS) {
 		if (mp->mcube.cusize <= FTINY)
 			return("illegal octree bounds in mesh");
-		nouvbounds = (mp->uvlim[0][1] - mp->uvlim[0][0] <= FTINY ||
-				mp->uvlim[1][1] - mp->uvlim[1][0] <= FTINY);
+		nouvbounds = (mp->uvlim[1][0] - mp->uvlim[0][0] <= FTINY ||
+				mp->uvlim[1][1] - mp->uvlim[0][1] <= FTINY);
 	}
 					/* check octree */
 	if (mp->ldflags & IO_TREE) {
