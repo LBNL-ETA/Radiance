@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.18 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.19 2004/09/09 06:46:07 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -74,6 +74,9 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 	COLOR  ctrans;
 	COLOR  talb;
 	int  hastexture;
+	double  transdist, transtest=0;
+	double  mirdist, mirtest=0;
+	int	flatsurface;
 	double  refl, trans;
 	FVECT  dnorm;
 	double  d1, d2;
@@ -91,6 +94,8 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 		VCOPY(dnorm, r->ron);
 		cos1 = r->rod;
 	}
+	flatsurface = !hastexture && r->ro != NULL && isflat(r->ro->otype);
+
 						/* index of refraction */
 	if (m->otype == MAT_DIELECTRIC)
 		nratio = m->oargs.farg[3] + m->oargs.farg[4]/MLAMBDA;
@@ -189,8 +194,13 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 				rayvalue(&p);
 				scalecolor(p.rcol, trans);
 				addcolor(r->rcol, p.rcol);
-				if (nratio >= 1.0-FTINY && nratio <= 1.0+FTINY)
-					r->rt = r->rot + p.rt;
+						/* virtual distance */
+				if (flatsurface ||
+					(1.-FTINY <= nratio &&
+						nratio <= 1.+FTINY)) {
+					transtest = 2*bright(p.rcol);
+					transdist = r->rot + p.rt;
+				}
 			}
 		}
 	}
@@ -210,7 +220,18 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 
 		scalecolor(p.rcol, refl);	/* color contribution */
 		addcolor(r->rcol, p.rcol);
+						/* virtual distance */
+		if (flatsurface) {
+			mirtest = 2*bright(p.rcol);
+			mirdist = r->rot + p.rt;
+		}
 	}
+				/* check distance to return */
+	d1 = bright(r->rcol);
+	if (transtest > d1)
+		r->rt = transdist;
+	else if (mirtest > d1)
+		r->rt = mirdist;
 				/* rayvalue() computes absorption */
 	return(1);
 }
