@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.9 2004/04/29 14:36:49 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.10 2004/04/30 17:00:29 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -237,9 +237,8 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 				sizeof(br->scanpos[0])*br->hdr->height);
 	}
 	br->scanpos[0] = br->fpos;
-	if (BMPreadScanline(br) != BIR_OK)
-		goto err;
-	return br;
+	if (BMPreadScanline(br) == BIR_OK)
+		return br;
 err:
 	if (br->hdr != NULL)
 		free((void *)br->hdr);
@@ -280,14 +279,14 @@ BMPreadScanline(BMPReader *br)
 	if (br->hdr->compr == BI_UNCOMPR || br->hdr->compr == BI_BITFIELDS)
 		return rdbytes((char *)br->scanline, n, br);
 	/*
-	 * RLE/RLE8 Decoding
+	 * RLE4/RLE8 Decoding
 	 *
 	 * Certain aspects of this scheme are completely insane, so
 	 * we don't support them.  Fortunately, they rarely appear.
 	 * One is the mid-file EOD (0x0001) and another is the ill-conceived
 	 * "delta" (0x0002), which is like a "goto" statement for bitmaps.
-	 * Whoever thought this up should be shot, then told why
-	 * it's impossible to support such a scheme in any reasonable way.
+	 * Whoever thought this up should be wrestled to the ground and told
+	 * why it's impossible to support such a scheme in any reasonable way.
 	 * Also, RLE4 mode allows runs to stop halfway through a byte,
 	 * which is likewise uncodeable, so we don't even try.
 	 * Finally, the scanline break is ambiguous -- we assume here that
@@ -302,6 +301,9 @@ BMPreadScanline(BMPReader *br)
 	 * is undoubtedly the most brain-dead format I've ever encountered.
 	 */
 	sp = br->scanline;
+	n = br->hdr->width;
+	if (br->hdr->compr == BI_RLE4)
+		n = (n + 1) >> 1;
 	while (n > 0) {
 		int     skipOdd, len, val;
 
@@ -322,6 +324,7 @@ BMPreadScanline(BMPReader *br)
 				*sp++ = val;
 			continue;
 		}
+					/* check for escape */
 		switch (rdbyte(len, br)) {
 		case EOF:
 			return BIR_TRUNCATED;
@@ -737,9 +740,8 @@ BMPwriteScanline(BMPWriter *bw)
 	n = bw->hdr->width;
 	while (n > 0) {
 		int     cnt, val;
-
 		cnt = findNextRun(sp, n);       /* 0-255 < n */
-		if (cnt >= 3) {			/* output non-run */
+		if (cnt >= 3) {			/* output absolute */
 			int     skipOdd = cnt & 1;
 			wrbyte(0, bw);
 			wrbyte(cnt, bw);
@@ -752,8 +754,8 @@ BMPwriteScanline(BMPWriter *bw)
 		if (n <= 0)			/* was that it? */
 			break;
 		val = *sp;			/* output run */
-		for (cnt = 1; cnt < 255; cnt++)
-			if ((!--n) | (*++sp != val))
+		for (cnt = 1; --n && cnt < 255; cnt++)
+			if (*++sp != val)
 				break;
 		wrbyte(cnt, bw);
 		wrbyte(val, bw);

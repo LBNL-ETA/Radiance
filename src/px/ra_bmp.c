@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.3 2004/03/28 20:33:14 schorsch Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.4 2004/04/30 17:00:29 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: ra_bmp.c,v 2.3 2004/03/28 20:33:14 schorsch Ex
 
 #include  "platform.h"
 #include  "color.h"
+#include  "tonemap.h"
 #include  "resolu.h"
 #include  "bmpfile.h"
 
@@ -19,7 +20,9 @@ double	gamcor = 2.2;			/* gamma correction value */
 
 char  *progname;
 
-static void quiterr(const char *);
+static void quiterr(const char *err);
+static void tmap2bmp(char *fnin, char *fnout, char *expec,
+				RGBPRIMP monpri, double gamval);
 static void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry);
 static void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
 
@@ -27,11 +30,13 @@ static void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
 int
 main(int argc, char *argv[])
 {
-	char    *inpfile=NULL, *outfile=NULL;
-	int     gryflag = 0;
-	int     reverse = 0;
-	RESOLU  rs;
-	int     i;
+	char		*inpfile=NULL, *outfile=NULL;
+	char		*expec = NULL;
+	int		reverse = 0;
+	RGBPRIMP	rgbp = stdprims;
+	RGBPRIMS	myprims;
+	RESOLU		rs;
+	int		i;
 	
 	progname = argv[0];
 
@@ -39,15 +44,30 @@ main(int argc, char *argv[])
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
 			case 'b':
-				gryflag = 1;
+				rgbp = NULL;
 				break;
 			case 'g':
 				gamcor = atof(argv[++i]);
 				break;
 			case 'e':
 				if (argv[i+1][0] != '+' && argv[i+1][0] != '-')
+					expec = argv[++i];
+				else
+					bradj = atoi(argv[++i]);
+				break;
+			case 'p':
+				if (argc-i < 9)
 					goto userr;
-				bradj = atoi(argv[++i]);
+				myprims[RED][CIEX] = atof(argv[++i]);
+				myprims[RED][CIEY] = atof(argv[++i]);
+				myprims[GRN][CIEX] = atof(argv[++i]);
+				myprims[GRN][CIEY] = atof(argv[++i]);
+				myprims[BLU][CIEX] = atof(argv[++i]);
+				myprims[BLU][CIEY] = atof(argv[++i]);
+				myprims[WHT][CIEX] = atof(argv[++i]);
+				myprims[WHT][CIEY] = atof(argv[++i]);
+				if (rgbp == stdprims)
+					rgbp = myprims;
 				break;
 			case 'r':
 				reverse = !reverse;
@@ -72,6 +92,13 @@ main(int argc, char *argv[])
 
 	if (i == argc-2 && strcmp(argv[i+1], "-"))
 		outfile = argv[i+1];
+					/* check for tone-mapping */
+	if (expec != NULL) {
+		if (reverse)
+			goto userr;
+		tmap2bmp(inpfile, outfile, expec, rgbp, gamcor);
+		return(0);
+	}
 
 	setcolrgam(gamcor);		/* set up conversion */
 
@@ -126,14 +153,14 @@ main(int argc, char *argv[])
 				!fgetsresolu(&rs, stdin))
 			quiterr("bad Radiance picture format");
 					/* initialize BMP header */
-		if (gryflag) {
-			hdr = BMPmappedHeader(numscans(&rs),
-						scanlen(&rs), 0, 256);
+		if (rgbp == NULL) {
+			hdr = BMPmappedHeader(scanlen(&rs),
+						numscans(&rs), 0, 256);
 			if (outfile != NULL)
 				hdr->compr = BI_RLE8;
 		} else
-			hdr = BMPtruecolorHeader(numscans(&rs),
-						scanlen(&rs), 0);
+			hdr = BMPtruecolorHeader(scanlen(&rs),
+						numscans(&rs), 0);
 		if (hdr == NULL)
 			quiterr("cannot initialize BMP header");
 					/* set up output direction */
@@ -147,19 +174,21 @@ main(int argc, char *argv[])
 		if (wtr == NULL)
 			quiterr("cannot allocate writer structure");
 					/* convert file */
-		rad2bmp(stdin, wtr, !hdr->yIsDown && (rs.rt&YDECR), gryflag);
+		rad2bmp(stdin, wtr, !hdr->yIsDown && rs.rt&YDECR, rgbp==NULL);
 					/* flush output */
 		if (fflush((FILE *)wtr->c_data) < 0)
 			quiterr("error writing BMP output");
 		BMPcloseOutput(wtr);
 	}
-	exit(0);			/* success */
+	return(0);			/* success */
 userr:
 	fprintf(stderr,
-		"Usage: %s [-r][-g gamma][-e +/-stops] [input [output]]\n",
+"Usage: %s [-b][-g gamma][-e spec][-p xr yr xg yg xb yb xw yw] [input|- [output]]\n",
 			progname);
-	exit(1);
-	return(1);      /* gratis return */
+	fprintf(stderr,
+		"   or: %s -r [-g gamma][-e +/-stops] [input|- [output]]\n",
+			progname);
+	return(1);
 }
 
 /* print message and exit */
@@ -257,4 +286,88 @@ bmp2rad(BMPReader *brd, FILE *rfp, int inv)
 	}
 						/* clean up */
 	free((void *)scanout);
+}
+
+/* Tone-map and convert Radiance picture */
+static void
+tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
+{
+	int		tmflags;
+	BMPHeader       *hdr;
+	BMPWriter       *wtr;
+	RESOLU		rs;
+	FILE		*fp;
+	int		xr, yr;
+	BYTE		*pa;
+	int		i;
+					/* check tone-mapping spec */
+	i = strlen(expec);
+	if (i && !strncmp(expec, "auto", i))
+		tmflags = TM_F_CAMERA;
+	else if (i && !strncmp(expec, "human", i))
+		tmflags = TM_F_HUMAN & ~TM_F_UNIMPL;
+	else if (i && !strncmp(expec, "linear", i))
+		tmflags = TM_F_LINEAR;
+	else
+		quiterr("illegal exposure specification (auto|human|linear)");
+	if (monpri == NULL) {
+		tmflags |= TM_F_BW;
+		monpri = stdprims;
+	}
+					/* open Radiance input */
+	if (fnin == NULL)
+		fp = stdin;
+	else if ((fp = fopen(fnin, "r")) == NULL) {
+		fprintf(stderr, "%s: cannot open\n", fnin);
+		exit(1);
+	}
+					/* get picture orientation */
+	if (fnin != NULL) {
+		if (getheader(fp, NULL, NULL) < 0 || !fgetsresolu(&rs, fp))
+			quiterr("bad Radiance picture format");
+		rewind(fp);
+	} else				/* assume stdin has normal orient */
+		rs.rt = PIXSTANDARD;
+					/* tone-map picture */
+	if (tmMapPicture(&pa, &xr, &yr, tmflags, monpri, gamval,
+			0., 0., fnin, fp) != TM_E_OK)
+		exit(1);
+					/* initialize BMP header */
+	if (tmflags & TM_F_BW) {
+		hdr = BMPmappedHeader(xr, yr, 0, 256);
+		hdr->compr = BI_RLE8;
+	} else
+		hdr = BMPtruecolorHeader(xr, yr, 0);
+	if (hdr == NULL)
+		quiterr("cannot initialize BMP header");
+					/* open BMP output */
+	if (fnout != NULL)
+		wtr = BMPopenOutputFile(fnout, hdr);
+	else
+		wtr = BMPopenOutputStream(stdout, hdr);
+	if (wtr == NULL)
+		quiterr("cannot allocate writer structure");
+					/* write to BMP file */
+	while (wtr->yscan < yr) {
+		BYTE    *scn = pa + xr*((tmflags & TM_F_BW) ? 1 : 3)*
+					((rs.rt & YDECR) ?
+						(yr-1 - wtr->yscan) :
+						wtr->yscan);
+		if (tmflags & TM_F_BW)
+			memcpy((void *)wtr->scanline, (void *)scn, xr);
+		else
+			for (i = xr; i--; ) {
+				wtr->scanline[3*i] = scn[3*i+BLU];
+				wtr->scanline[3*i+1] = scn[3*i+GRN];
+				wtr->scanline[3*i+2] = scn[3*i+RED];
+			}
+		if ((i = BMPwriteScanline(wtr)) != BIR_OK)
+			quiterr(BMPerrorMessage(i));
+	}
+					/* flush output */
+	if (fflush((FILE *)wtr->c_data) < 0)
+		quiterr("error writing BMP output");
+					/* clean up */
+	free((void *)pa);
+	BMPcloseOutput(wtr);
 }

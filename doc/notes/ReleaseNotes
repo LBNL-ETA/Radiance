@@ -1280,3 +1280,7 @@ locations.
 
 Increased polygon vertex limit to 512 in obj2mesh and obj2rad and added
 warning if this limit is exceeded.
+
+Added tone-mapping and monitor primary options to ra_bmp.  This gives
+new functionality similar to normtiff and ximage.  It would be nice to
+add this feature to the other ra_* programs as well...  someday.

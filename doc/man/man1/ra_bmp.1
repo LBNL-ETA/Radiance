@@ -8,7 +8,9 @@ ra_bmp - convert RADIANCE picture to/from Windows BMP image
 ][
 .B "\-g gamma"
 ][
-.B "\-e +/-stops"
+.B "\-e spec"
+][
+.B "-p xr yr xg yg xb yb xw yw"
 ]
 [
 [
@@ -35,22 +37,36 @@ ra_bmp - convert RADIANCE picture to/from Windows BMP image
 .SH DESCRIPTION
 .I Ra_bmp
 converts between RADIANCE and a Windows BMP image.
-The
+During forward conversion, the
 .I \-b
 option produces 8-bit grayscale output rather than 24-bit RGB.
 The
 .I \-g
-option specifies the exponent used in gamma correction;
+option specifies the exponent used in monitor gamma correction;
 the default value is 2.2.
 The
 .I \-e
-option specifies an exposure compensation in f-stops (powers of two
-and proceeded by +/-).
-Only integer stops are allowed, for efficiency.
+option specifies a tone-mapping method or exposure compensation.
+If the argument is one of the special words "auto", "human", or "linear",
+the image will be tone-mapped with histogram adjustment,
+human vision simulation, or an averaged linear exposure,
+respectively.
+(These words may be abbreviated by one or more letters.)\0
+Otherwise, the exposure specification is interpreted as a
+linear compensation value in integer f-stops, which must
+be proceeded by a '+' or '-'.
+If tone-mapping is applied, then CRT output
+primaries may also be specified with the
+.I \-p
+option.
+.PP
 The
 .I \-r
 option invokes a reverse conversion, from a Windows BMP image
 to a RADIANCE picture.
+Tone-mapping and monitor primaries are not
+supported for reverse conversion.
+.PP
 .I Ra_bmp
 can accept 16-bit or color-mapped BMP files on input,
 but cannot not produce them on output.
