@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rglsurf.c,v 3.8 2003/05/25 06:09:44 greg Exp $";
+static const char RCSid[] = "$Id: rglsurf.c,v 3.9 2003/05/25 15:41:31 greg Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -259,6 +259,9 @@ register OBJREC *o;
 		if (o->oargs.farg[7] < 0.)
 			o->oargs.farg[7] = 0.;
 	}
+	h = sqrt(dist2(o->oargs.farg,o->oargs.farg+3));
+	if (h <= FTINY)
+		return;
 	cent[0] = .5*(o->oargs.farg[0] + o->oargs.farg[3]);
 	cent[1] = .5*(o->oargs.farg[1] + o->oargs.farg[4]);
 	cent[2] = .5*(o->oargs.farg[2] + o->oargs.farg[5]);
@@ -274,9 +277,6 @@ register OBJREC *o;
 	glTranslated((GLdouble)o->oargs.farg[0], (GLdouble)o->oargs.farg[1],
 			(GLdouble)o->oargs.farg[2]);
 					/* compute height & rotation angle */
-	h = sqrt(dist2(o->oargs.farg,o->oargs.farg+3));
-	if (h <= FTINY)
-		return;
 	x1 = o->oargs.farg[1] - o->oargs.farg[4];
 	y1 = o->oargs.farg[3] - o->oargs.farg[0];
 	/* z1 = 0; */
@@ -315,6 +315,9 @@ register OBJREC	*o;
 		o->oargs.farg[6] = 0.;
 	if (o->oargs.farg[7] - o->oargs.farg[6] <= FTINY)
 		return;
+	h = VLEN(o->oargs.farg+3);
+	if (h <= FTINY)
+		return;
 	if (dolights)
 		doflatsrc((MATREC *)o->os, o->oargs.farg, o->oargs.farg+3, 
 				PI*(o->oargs.farg[7]*o->oargs.farg[7] -
@@ -329,9 +332,6 @@ register OBJREC	*o;
 	glTranslated((GLdouble)o->oargs.farg[0], (GLdouble)o->oargs.farg[1],
 			(GLdouble)o->oargs.farg[2]);
 					/* compute rotation angle */
-	h = VLEN(o->oargs.farg+3);
-	if (h <= FTINY)
-		return;
 	x1 = -o->oargs.farg[4];
 	y1 = o->oargs.farg[3];
 	/* z1 = 0; */
