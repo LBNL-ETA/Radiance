@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: normpat.csh,v 2.4 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: normpat.csh,v 2.5 2004/01/29 22:18:26 greg Exp $
 #
 # Normalize a pattern for tiling (-b option blends edges) by removing
 # lowest frequencies from image (-f option) and reducing to
@@ -37,6 +37,7 @@ dofiles:
 onintr quit
 set td=/usr/tmp/np$$
 mkdir $td
+goto skipthis
 cat > $td/coef.fmt << '_EOF_'
    rm:${  $25   };    gm:${  $26   };    bm:${  $27   };
   rcx:${   $1   };   gcx:${   $9   };   bcx:${  $17   };
@@ -72,6 +73,7 @@ cx=cos(wx); cy=cos(wy);
 sx=sin(wx); sy=sin(wy);
 wx=2*PI/xres*(x+.5); wy=2*PI/yres*(y+.5);
 '_EOF_'
+skipthis:
 foreach f ($*)
 	if ( $?verb ) then
 		echo $f\:
@@ -86,23 +88,26 @@ $ha
 w
 q
 _EOF_
-	set resolu=`getinfo -d < $td/pf | sed 's/-Y \([0-9]*\) +X \([0-9]*\)/\2 \1/'`
+	set resolu=`getinfo -d < $td/pf | sed 's/-Y \([1-9][0-9]*\) +X \([1-9][0-9]*\)/\2 \1/'`
 	if ( ! $?dofsub ) then
 		mv $td/pf $td/hf
 		goto donefsub
 	endif
+	# if ( $?verb ) then
+	#	echo computing Fourier coefficients...
+	# endif
+	# pfilt -1 -x 32 -y 32 $td/pf | pvalue -h \
+	#	| rcalc -e 'xres:32;yres:32' -f $td/coef.cal \
+	#	| total -m | rcalc -o $td/coef.fmt \
+	#	> $td/coef
 	if ( $?verb ) then
-		echo computing Fourier coefficients...
-	endif
-	pfilt -1 -x 32 -y 32 $td/pf | pvalue -h \
-		| rcalc -e 'xres:32;yres:32' -f $td/coef.cal \
-		| total -m | rcalc -o $td/coef.fmt \
-		> $td/coef
-	if ( $?verb ) then
-		cat $td/coef
+		# cat $td/coef
 		echo removing low frequencies...
 	endif
-	pcomb -f $td/coef -f $td/fsub.cal $td/pf > $td/hf
+	pgblur -r `ev "sqrt($resolu[1]*$resolu[2])/8"` $td/pf > $td/lf
+	pcomb -e 's=1/li(2);ro=s*ri(1);go=s*gi(1);bo=s*bi(1)' \
+			$td/pf $td/lf > $td/hf
+	# pcomb -f $td/coef -f $td/fsub.cal $td/pf > $td/hf
 	donefsub:
 	if ( $?blend ) then
 		if ( $?verb ) then
