@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.21 2003/07/21 22:30:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.22 2003/08/29 16:46:51 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -201,7 +201,7 @@ gettree()			/* get a pre-ordered octree */
 	default:
 		octerror(USER, "damaged octree");
 	}
-	return NULL; /* pro forma return */
+	return EMPTY; /* pro forma return */
 }
 
 
