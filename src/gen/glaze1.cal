@@ -1,4 +1,4 @@
-{ RCSid: $Id: glaze1.cal,v 2.1 2003/02/22 02:07:23 greg Exp $ }
+{ RCSid: $Id: glaze1.cal,v 2.2 2003/06/30 18:12:24 greg Exp $ }
 {
 	glaze1.cal - single-pane fritted and low-E glazings
 
@@ -23,7 +23,7 @@
 		arg(19) - transmittance (blue)
 }
 				{ Fresnel approximation }
-fresne = exp(-6*abs(Rdot)) - exp(-6);
+fresne = exp(-5.85*abs(Rdot)) - exp(-5.85);
 fresne_refl(r) = r + fresne*(1 - r);
 fresne_trans(t) = t*(1 - fresne);
 				{ glass reflectance and transmittance }

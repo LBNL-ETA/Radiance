@@ -1,9 +1,11 @@
 #!/bin/csh -f
-# RCSid: $Id: glaze.csh,v 2.1 2003/02/22 02:07:23 greg Exp $
+# RCSid: $Id: glaze.csh,v 2.2 2003/06/30 18:12:24 greg Exp $
 #
 # Complex glazing model (goes with glaze1.cal and glaze2.cal)
 #
 # Oct. 2002 Greg Ward
+# Funding for this development generously provided by Visarc, Inc.
+# (http://www.vizarc.com)
 #
 
 #################################################################

@@ -1,4 +1,4 @@
-{ RCSid: $Id: glaze2.cal,v 2.1 2003/02/22 02:07:23 greg Exp $ }
+{ RCSid: $Id: glaze2.cal,v 2.2 2003/06/30 18:12:24 greg Exp $ }
 {
 	glaze2.cal - double-pane fritted and low-E glazings
 
@@ -9,7 +9,7 @@
 	spat out for dual-glazings by glaze.csh.
 }
 				{ Fresnel approximation }
-fresne = exp(-6*abs(Rdot)) - exp(-6);
+fresne = exp(-5.85*abs(Rdot)) - exp(-5.85);
 fr(r) = r + fresne*(1 - r);
 ft(t) = t*(1 - fresne);
 				{ glass reflectance and transmittance }
