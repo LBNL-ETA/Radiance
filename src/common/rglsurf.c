@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglsurf.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
+static const char RCSid[] = "$Id: rglsurf.c,v 3.8 2003/05/25 06:09:44 greg Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -280,7 +280,11 @@ register OBJREC *o;
 	x1 = o->oargs.farg[1] - o->oargs.farg[4];
 	y1 = o->oargs.farg[3] - o->oargs.farg[0];
 	/* z1 = 0; */
-	d = 180./PI * asin(sqrt(x1*x1 + y1*y1) / h);
+	d = x1*x1 + y1*y1;
+	if (d <= FTINY*FTINY)
+		x1 = 1.;
+	else
+		d = 180./PI * asin(sqrt(d) / h);
 	if (o->oargs.farg[5] < o->oargs.farg[2])
 		d = 180. - d;
 	if (d > FTINY)
@@ -296,7 +300,7 @@ int
 o_ring(o)			/* convert a ring */
 register OBJREC	*o;
 {
-	double	x1, y1, d;
+	double	x1, y1, d, h;
 
 	if (o->oargs.nfargs != 8)
 		objerror(o, USER, "bad # real arguments");
@@ -325,13 +329,17 @@ register OBJREC	*o;
 	glTranslated((GLdouble)o->oargs.farg[0], (GLdouble)o->oargs.farg[1],
 			(GLdouble)o->oargs.farg[2]);
 					/* compute rotation angle */
-	d = VLEN(o->oargs.farg+3);
-	if (d <= FTINY)
+	h = VLEN(o->oargs.farg+3);
+	if (h <= FTINY)
 		return;
 	x1 = -o->oargs.farg[4];
 	y1 = o->oargs.farg[3];
 	/* z1 = 0; */
-	d = 180./PI * asin(sqrt(x1*x1 + y1*y1) / d);
+	d = x1*x1 + y1*y1;
+	if (d <= FTINY*FTINY)
+		x1 = 1.;
+	else
+		d = 180./PI * asin(sqrt(d) / h);
 	if (o->oargs.farg[5] < 0.)
 		d = 180. - d;
 	if (d > FTINY)
