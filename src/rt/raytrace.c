@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raytrace.c,v 2.35 2003/02/25 02:47:23 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.36 2003/03/04 19:02:22 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -95,6 +95,7 @@ register RAY  *r;
 {
 	r->rno = raynum++;
 	r->newcset = r->clipset;
+	r->hitf = rayhit;
 	r->robj = OVOID;
 	r->ro = NULL;
 	r->rox = NULL;
@@ -409,6 +410,22 @@ register RAY  *r;
 }
 
 
+void
+rayhit(oset, r)			/* standard ray hit test */
+OBJECT  *oset;
+RAY  *r;
+{
+	OBJREC  *o;
+	int	i;
+
+	for (i = oset[0]; i > 0; i--) {
+		o = objptr(oset[i]);
+		if ((*ofun[o->otype].funp)(o, r))
+			r->robj = oset[i];
+	}
+}
+
+
 int
 localhit(r, scene)		/* check for hit in the octree */
 register RAY  *r;
@@ -564,17 +581,13 @@ CUBE  *cu;
 OBJECT  *cxs;
 {
 	OBJECT  oset[MAXSET+1];
-	register OBJREC  *o;
-	register int  i;
 
 	objset(oset, cu->cutree);
-	checkset(oset, cxs);			/* eliminate double-checking */
-	for (i = oset[0]; i > 0; i--) {
-		o = objptr(oset[i]);
-		if ((*ofun[o->otype].funp)(o, r))
-			r->robj = oset[i];
-	}
-	if (r->ro == NULL)
+	checkset(oset, cxs);			/* avoid double-checking */
+
+	(*r->hitf)(oset, r);			/* test for hit in set */
+
+	if (r->robj == OVOID)
 		return(0);			/* no scores yet */
 
 	return(incube(cu, r->rop));		/* hit OK if in current cube */

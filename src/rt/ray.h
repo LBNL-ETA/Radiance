@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.13 2003/02/25 02:47:23 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.14 2003/03/04 19:02:22 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -41,6 +41,7 @@ typedef struct ray {
 	OBJECT	*clipset;	/* set of objects currently clipped */
 	OBJECT	*newcset;	/* next clipset, used for transmission */
 	void	(*revf)();	/* evaluation function for this ray */
+	void	(*hitf)();	/* custom hit test for this traversal */
 	OBJECT	robj;		/* intersected object number */
  	OBJREC	*ro;		/* intersected object (one with material) */
 	double	rot;		/* distance to object */
@@ -183,6 +184,7 @@ extern void	ray_pclose();
 extern int	rayorigin();
 extern void	rayclear();
 extern void	raytrace();
+extern void	rayhit();
 extern void	raycont();
 extern void	raytrans();
 extern int	rayshade();
@@ -235,6 +237,7 @@ extern void	ray_pclose(int nsub);
 extern int	rayorigin(RAY *r, RAY *ro, int rt, double rw);
 extern void	rayclear(RAY *r);
 extern void	raytrace(RAY *r);
+extern void	rayhit(OBJECT *oset, RAY *r);
 extern void	raycont(RAY *r);
 extern void	raytrans(RAY *r);
 extern int	rayshade(RAY *r, int mod);
