@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mtext.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: mtext.c,v 1.3 2003/06/16 14:54:54 greg Exp $";
 #endif
 /*
  *  Program to convert ascii file to metafile
@@ -9,7 +9,6 @@ static const char	RCSid[] = "$Id: mtext.c,v 1.2 2003/06/08 12:03:10 schorsch Exp
  *  cc mtext.c mfio.o syscalls.o misc.o
  */
 
-#include <malloc.h>
 #include <string.h>
 
 #include  "meta.h"

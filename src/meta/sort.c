@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.4 2003/06/10 14:51:15 schorsch Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.5 2003/06/16 14:54:54 greg Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
@@ -83,7 +83,7 @@ int  (*pcmp)()		/* compares pointers to pointers to primitives! */
  */
 
 void
-mergesort(	/* merge sorted files with list */
+pmergesort(	/* merge sorted files with list */
 
 FILE  *fi[],		/* array of input files */
 int  nf,		/* number of input files */
@@ -105,7 +105,7 @@ FILE  *ofp		/* output file */
 
     for (i = 0; i < nf; i++) {		/* initialize input files */
 	if ((pp[i] = palloc()) == NULL)
-	    error(SYSTEM, "memory exhausted in mergesort");
+	    error(SYSTEM, "memory exhausted in pmergesort");
 	readp(pp[i], fi[i]);
     }
 
@@ -167,7 +167,7 @@ FILE  *ofp
 	if ((fp = ofp) == NULL)
 	    fp = efopen(tfname(height + 1, nt), "w");
 	
-	mergesort(fi, nf, pl, pcmp, fp);
+	pmergesort(fi, nf, pl, pcmp, fp);
 	
 	for (i = 0; i < nf; i++) {
 	    fclose(fi[i]);
