@@ -1,39 +1,29 @@
+{ RCSid $Id: sphsamp.cal,v 1.2 2005/02/15 23:36:10 greg Exp $ }
 {
 	Uniform sampling of sphere
+	2/15/2005	G. Ward
 
-	Define:
-		N	- total number of samples
-		i	- sample number
-
+	Constant:
+		N -		total number of samples on sphere
+	Input:
+		i -		sample number [0,N-1]
 	Output:
-		theta	- polar angle (degrees)
-		phi	- azimuthal angle (degrees)
+		theta	- polar angle (radians)
+		phi	- azimuthal angle (radians)
 		Dx	- X-component of direction vector
 		Dy	- Y-component of direction vector
 		Dz	- Z-component of direction vector
 }
+S : .7;			{ jitter amount (0-1) }
 
-DEGREE : PI/180;
-bound(a,x,b) : if(a-x, a, if(x-b, b, x));
-Acos(x) : acos(bound(-1,x,1));
-Sqrt(x) : if(x, sqrt(x), 0);
+k : 2*sqrt(PI/N);	{ k^2 is solid angle of each sample }
 
-nalt = floor(sqrt(2/PI*N) + .5);
-nazi = floor(PI/2*nalt + .5);
+alpha0 = asin(2/N*(i+.5) - 1);
 
-cond = nalt*nazi-.9999 - i;
+theta = alpha0 + PI/2 + k*S*(rand(.35*i+10.3) - .5);
+phi = sqrt(PI*N)*alpha0 + k*S*(rand(-.83*i-17.9) - .5);
 
-ialt = floor(i/nazi);
-iazi = i - ialt*nazi;
-
-ralt = (ialt + rand(i*.328+.112))/nalt;
-razi = (iazi + rand(i*-.731+.318))/nazi;
-
-rtheta = Acos(Dz);
-rphi = 2*PI*razi;
-Dxy = Sqrt(1 - Dz*Dz);
-theta = rtheta/DEGREE;
-phi = rphi/DEGREE;
-Dx = Dxy*cos(rphi);
-Dy = Dxy*sin(rphi);
-Dz = 1 - 2*ralt;
+sint = sin(theta);
+Dx = cos(phi)*sint;
+Dy = sin(phi)*sint;
+Dz = cos(theta);
