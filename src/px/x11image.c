@@ -892,7 +892,7 @@ int  x0, y0, x1, y1;
 }
 
 
-int
+void
 colavg(scn, n, cavg)
 register COLR	*scn;
 register int	n;
@@ -926,7 +926,7 @@ COLOR	cavg;
 
 int
 dobox(f, p)				/* run function over bbox */
-int	(*f)();			/* function to call for each subscan */
+void	(*f)();			/* function to call for each subscan */
 char	*p;			/* pointer to private data */
 {
 	int  left, right, top, bottom;
@@ -957,7 +957,7 @@ char	*p;			/* pointer to private data */
 }
 
 
-int
+void
 addfix(scn, n)			/* add fixation points to histogram */
 COLR	*scn;
 int	n;

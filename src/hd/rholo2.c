@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.24 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.25 2003/07/07 17:21:51 greg Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -277,7 +277,7 @@ done_rtrace()			/* clean up and close rtrace calculation */
 	int	status;
 					/* already closed? */
 	if (!nprocs)
-		return;
+		return(0);
 					/* flush beam queue */
 	done_packets(flush_queue());
 					/* sync holodeck */

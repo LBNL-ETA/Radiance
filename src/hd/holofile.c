@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.49 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.50 2003/07/07 17:21:50 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -491,7 +491,7 @@ register HDBEAMI	*hb1, *hb2;
 hdloadbeams(hb, n, bf)	/* load a list of beams in optimal order */
 register HDBEAMI	*hb;	/* list gets sorted by hdfilord() */
 int	n;			/* list length */
-int	(*bf)();		/* callback function (optional) */
+void	(*bf)();		/* callback function (optional) */
 {
 	unsigned	origcachesize, memuse;
 	int	bytesloaded, needbytes, bytes2free;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.38 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.39 2003/07/07 17:21:51 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
@@ -77,7 +77,7 @@ register PACKHEAD	*b0, *b1;
 }
 
 
-int
+void
 dispbeam(b, hb)				/* display a holodeck beam */
 register BEAM	*b;
 register HDBEAMI	*hb;

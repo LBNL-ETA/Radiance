@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.11 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.12 2003/07/07 17:21:51 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -169,7 +169,7 @@ render_frame(bl, nb)		/* render frame from beam values */
 register PACKHEAD	*bl;
 int	nb;
 {
-	extern int	pixBeam();
+	extern void	pixBeam();
 	register HDBEAMI	*bil;
 	register int	i;
 

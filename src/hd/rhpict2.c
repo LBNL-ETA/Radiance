@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.12 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.13 2003/07/07 17:21:51 greg Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -53,6 +53,7 @@ extern float	*mydepth;	/* depth values (visibility culling) */
 extern int	hres, vres;	/* current horizontal and vertical res. */
 
 
+void
 pixBeam(bp, hb)			/* render a particular beam */
 BEAM	*bp;
 register HDBEAMI	*hb;
