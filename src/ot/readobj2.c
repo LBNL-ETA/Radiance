@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readobj2.c,v 2.9 2004/03/27 12:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.10 2004/09/28 23:55:02 greg Exp $";
 #endif
 /*
  *  readobj2.c - routines for reading in object descriptions.
@@ -29,7 +29,7 @@ readobj2(	/* read in an object file or stream */
 {
 	char  *fgetline();
 	FILE  *infp;
-	char  buf[512];
+	char  buf[2048];
 	register int  c;
 
 	if (input == NULL) {
