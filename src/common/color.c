@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.10 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.11 2003/04/07 15:43:08 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -253,9 +253,19 @@ double  r, g, b;
 
 	d = frexp(d, &e) * 255.9999 / d;
 
-	clr[RED] = r * d;
-	clr[GRN] = g * d;
-	clr[BLU] = b * d;
+	if (r > 0.0)
+		clr[RED] = r * d;
+	else
+		clr[RED] = 0;
+	if (g > 0.0)
+		clr[GRN] = g * d;
+	else
+		clr[GRN] = 0;
+	if (b > 0.0)
+		clr[BLU] = b * d;
+	else
+		clr[BLU] = 0;
+
 	clr[EXP] = e + COLXS;
 }
 
