@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dircode.c,v 2.1 2003/03/04 05:49:21 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.2 2003/03/04 19:02:47 greg Exp $";
 #endif
 /*
  * Compute 4-byte direction code (assume this fits into int)
@@ -42,6 +42,8 @@ FVECT	dv;
 		dc |= F2Z | cd[2] << F2SFT;
 	else
 		dc |= cm << F2SFT;
+	if (!dc)	/* don't generate 0 code */
+		dc = F1X;
 	return(dc);
 }
 
