@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pdfblur.1,v 1.4 2005/01/18 03:59:40 greg Exp $"
+.\" RCSid "$Id: pdfblur.1,v 1.5 2005/01/18 20:19:56 greg Exp $"
 .TH PDFBLUR 1 1/24/96 RADIANCE
 .SH NAME
 pdfblur - generate views for depth-of-field blurring
@@ -102,6 +102,13 @@ option to the overall
 divided by
 .I nsamp
 to minimize ghosting in the output.
+.PP
+To simulate a particular camera's aperture, divide the focal length of
+the lens by the f-number, then convert to the corresponding
+world coordinate units.
+For example, if you wish to simulate a 50mm lens at f/2.0 in
+a scene modeled in meters, then you divide 50mm by 2.0 to get 25mm,
+which corresponds to an effective aperture of 0.025 meters.
 .SH EXAMPLES
 To use
 .I pinterp

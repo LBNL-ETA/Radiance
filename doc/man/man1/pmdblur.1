@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pmdblur.1,v 1.1 2005/01/18 03:59:40 greg Exp $"
+.\" RCSid "$Id: pmdblur.1,v 1.2 2005/01/18 20:19:56 greg Exp $"
 .TH PMDBLUR 1 1/17/05 NAME
 pmdblur - generate views for combined camera motion and depth blurring
 .SH SYNOPSIS
@@ -110,6 +110,13 @@ This will be just enough to blur the boundaries of the ghosts
 which may appear using
 .I pmdblur
 with a small number of time samples.
+.PP
+To simulate a particular camera's aperture, divide the focal length of
+the lens by the f-number, then convert to the corresponding
+world coordinate units.
+For example, if you wish to simulate a 50mm lens at f/2.0 in
+a scene modeled in meters, then you divide 50mm by 2.0 to get 25mm,
+which corresponds to an effective aperture of 0.025 meters.
 .SH EXAMPLES
 To use
 .I pinterp
