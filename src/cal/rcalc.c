@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.15 2004/12/09 22:09:40 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.16 2004/12/10 05:52:14 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.15 2004/12/09 22:09:40 greg Exp $"
 
 #define  isblnk(c)      (igneol ? isspace(c) : (c)==' '||(c)=='\t')
 
-#define  INBSIZ         4096    /* longest record */
+#define  INBSIZ         16384	/* longest record */
 #define  MAXCOL         32      /* number of columns recorded */
 
 				/* field type specifications */
