@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.17 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.18 2003/07/12 15:14:44 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -26,12 +26,11 @@ static const char	RCSid[] = "$Id: header.c,v 2.17 2003/06/30 14:59:11 schorsch E
 
 #include "copyright.h"
 
-#include  <stdio.h>
-#include  <string.h>
 #include  <time.h>
 #include  <ctype.h>
 
-#include "resolu.h"
+#include  "rtio.h"
+#include  "resolu.h"
 
 #define	 MAXLINE	512
 
@@ -40,8 +39,6 @@ char  HDRSTR[] = "#?";		/* information header magic number */
 char  FMTSTR[] = "FORMAT=";	/* format identifier */
 
 char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
-
-extern void	fputword(char *s, FILE *fp);
 
 static int mycheck();
 

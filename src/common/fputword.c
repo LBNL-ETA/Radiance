@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fputword.c,v 3.5 2003/07/01 16:20:04 greg Exp $";
+static const char	RCSid[] = "$Id: fputword.c,v 3.6 2003/07/12 15:14:44 greg Exp $";
 #endif
 /*
  * Read white space separated words from stream
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: fputword.c,v 3.5 2003/07/01 16:20:04 greg Exp 
 
 #include "copyright.h"
 
-#include <stdio.h>
+#include "rtio.h"
 
 #include <ctype.h>
 
