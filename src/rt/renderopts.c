@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.6 2004/08/13 22:57:56 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.7 2004/08/20 20:03:00 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -144,7 +144,7 @@ getrenderopt(		/* get next render option */
 					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,
-			"cannot open ambient include file \"%s\"", av[0]);
+			"cannot open ambient include file \"%s\"", av[1]);
 					error(SYSTEM, errmsg);
 				}
 				amblp += rval;
@@ -165,7 +165,7 @@ getrenderopt(		/* get next render option */
 					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,
-			"cannot open ambient exclude file \"%s\"", av[0]);
+			"cannot open ambient exclude file \"%s\"", av[1]);
 					error(SYSTEM, errmsg);
 				}
 				amblp += rval;
