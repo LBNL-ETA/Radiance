@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.17 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.18 2003/03/04 01:42:29 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -557,6 +557,7 @@ char	*v1, *v2, *v3;
 	BARYCCM	bvecs;
 	FLOAT	bcoor[3][3];
 	int	texOK, patOK;
+	int	flatness;
 	register int	i;
 
 	if ((mod = getmtl()) == NULL)
@@ -565,21 +566,25 @@ char	*v1, *v2, *v3;
 	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
 		return(0);
 					/* compute barycentric coordinates */
-	if (!flatten && v1i[2]>=0 && v2i[2]>=0 && v3i[2]>=0)
-		switch (flat_tri(vlist[v1i[0]], vlist[v2i[0]], vlist[v3i[0]],
-			vnlist[v1i[2]], vnlist[v2i[2]], vnlist[v3i[2]])) {
-		case DEGEN:		/* zero area */
-			return(-1);
-		case RVFLAT:		/* reversed normals, but flat */
-		case ISFLAT:		/* smoothing unnecessary */
-			texOK = 0;
-			break;
-		case RVBENT:		/* reversed normals with smoothing */
-		case ISBENT:		/* proper smoothing */
-			texOK = 1;
-			break;
-		}
+	if (v1i[2]>=0 && v2i[2]>=0 && v3i[2]>=0)
+		flatness = flat_tri(vlist[v1i[0]], vlist[v2i[0]], vlist[v3i[0]],
+				vnlist[v1i[2]], vnlist[v2i[2]], vnlist[v3i[2]]);
 	else
+		flatness = ISFLAT;
+
+	switch (flatness) {
+	case DEGEN:			/* zero area */
+		return(-1);
+	case RVFLAT:			/* reversed normals, but flat */
+	case ISFLAT:			/* smoothing unnecessary */
+		texOK = 0;
+		break;
+	case RVBENT:			/* reversed normals with smoothing */
+	case ISBENT:			/* proper smoothing */
+		texOK = 1;
+		break;
+	}
+	if (flatten)
 		texOK = 0;
 #ifdef TEXMAPS
 	patOK = mapname[0] && (v1i[1]>=0 && v2i[1]>=0 && v3i[1]>=0);
@@ -618,13 +623,18 @@ char	*v1, *v2, *v3;
 		put_baryc(&bvecs, bcoor, 2);
 	}
 #endif
-					/* put out triangle */
+					/* put out (reversed) triangle */
 	printf("\n%s polygon %s.%d\n", mod, getonm(), faceno);
 	printf("0\n0\n9\n");
-	pvect(vlist[v1i[0]]);
-	pvect(vlist[v2i[0]]);
-	pvect(vlist[v3i[0]]);
-
+	if (flatness == RVFLAT || flatness == RVBENT) {
+		pvect(vlist[v3i[0]]);
+		pvect(vlist[v2i[0]]);
+		pvect(vlist[v1i[0]]);
+	} else {
+		pvect(vlist[v1i[0]]);
+		pvect(vlist[v2i[0]]);
+		pvect(vlist[v3i[0]]);
+	}
 	return(1);
 }
 
