@@ -1,0 +1,110 @@
+{
+	Calculation of relay directions for prismatic glazing
+
+	31 July 1991	Greg Ward
+
+	Prism is oriented with flat side in xz plane
+	and normal in -y direction.  The prism is
+	extruded along the x axis.
+
+	Reflections are not computed.
+
+	Parameters:
+		A1		- index of refraction
+		A2		- thickness of prism triangle
+		A3		- height of upper side (segment 1)
+		A4		- height of lower side (segment 2)
+
+	Computes:
+		coef1	- transmission coefficient for upper side
+		dx1, dy1,
+		dz1	- transmission direction for upper side
+		coef2	- transmission coefficient for lower side
+		dx2, dy2,
+		dz2	- transmission direction for lower side
+}
+					{ required formulae }
+tan2sin(a) = sqrt(a*a/(1+a*a));
+stb(sta,ca,sa) = ca*sta - sa*sqrt(A1*A1-sta*sta);
+cos_p = Sqrt(1-Dx*Dx);
+dtrans(c1,c2) = dtransb(c1, sqrt(1+(c1*c1-1)/A1/A1),
+					c2, sqrt(1+(c2*c2-1)/A1/A1));
+dtransb(c1o,c1i,c2o,c2i) = 8*A1*A1 *
+		( c1o*c1i*c2o*c2i/sq((A1*c1o+c1i)*(A1*c2o+c2i)) +
+			1/c1o/c1i/c2o/c2i/sq((A1/c1o+1/c1i)*(A1/c2o+1/c2i)) );
+
+{************************************************
+		Definitions for Segment 1
+}
+					{ slope angle (always positive) }
+sin_a1 = tan2sin(A2/A3/cos_p);
+cos_a1 = Sqrt(1-sin_a1*sin_a1);
+					{ computed coefficeint }
+coef1 = A3/(A3+A4) * if(Dy,
+		if(1-abs(sin_tB1o),
+			dtrans(cos_tA1i, cos_tB1o),
+			0),
+		if (Dy*cos_a1 + Dz*sin_a1,
+			0,
+			if (1-abs(sin_tA1o),
+				dtrans(cos_tB1i, cos_tA1o),
+				0)));
+					{ computed direction }
+dx1 = Dx;
+dy1 = if(Dy,
+	(cos_a1*cos_tB1o-sin_a1*sin_tB1o)*cos_p,
+	-cos_tA1o*cos_p);
+dz1 = if(Dy,
+	(sin_a1*cos_tB1o+cos_a1*sin_tB1o)*cos_p,
+	-sin_tA1o*cos_p);
+					{ incident angle (flat side) }
+sin_tA1i = Dz/cos_p;
+cos_tA1i = Sqrt(1-sin_tA1i*sin_tA1i);
+					{ transmitted angle (steep side) }
+sin_tB1o = stb(sin_tA1i, cos_a1, sin_a1);
+cos_tB1o = Sqrt(1-sin_tB1o*sin_tB1o);
+					{ incident angle (steep side) }
+sin_tB1i = -Dz/cos_p*cos_a1 -
+		Sqrt(1-sq(Dz/cos_p))*sin_a1;
+cos_tB1i = Sqrt(1-sin_tB1i*sin_tB1i);
+					{ transmitted angle (flat side) }
+sin_tA1o = stb(sin_tB1i, cos_a1, -sin_a1);
+cos_tA1o = Sqrt(1-sin_tA1o*sin_tA1o);
+
+{************************************************
+		Definitions for Segment 2
+}
+					{ slope angle (always negative) }
+sin_a2 = -tan2sin(A2/A4/cos_p);
+cos_a2 = Sqrt(1-sin_a2*sin_a2);
+					{ computed coefficeint }
+coef2 = A4/(A3+A4) * if(Dy,
+		if(1-abs(sin_tB2o),
+			dtrans(cos_tA2i, cos_tB2o),
+			0),
+		if (Dy*cos_a2 + Dz*sin_a2,
+			0,
+			if (1-abs(sin_tA2o),
+				dtrans(cos_tB2i, cos_tA2o),
+				0)));
+					{ computed direction }
+dx2 = Dx;
+dy2 = if(Dy,
+	(cos_a2*cos_tB2o-sin_a2*sin_tB2o)*cos_p,
+	-cos_tA2o*cos_p);
+dz2 = if(Dy,
+	(sin_a2*cos_tB2o+cos_a2*sin_tB2o)*cos_p,
+	-sin_tA2o*cos_p);
+					{ incident angle (flat side) }
+sin_tA2i = Dz/cos_p;
+cos_tA2i = Sqrt(1-sin_tA2i*sin_tA2i);
+					{ transmitted angle (steep side) }
+sin_tB2o = stb(sin_tA2i, cos_a2, sin_a2);
+cos_tB2o = Sqrt(1-sin_tB2o*sin_tB2o);
+					{ incident angle (steep side) }
+sin_tB2i = -Dz/cos_p*cos_a2 -
+		Sqrt(1-sq(Dz/cos_p))*sin_a2;
+cos_tB2i = Sqrt(1-sin_tB2i*sin_tB2i);
+					{ transmitted angle (flat side) }
+sin_tA2o = stb(sin_tB2i, cos_a2, -sin_a2);
+cos_tA2o = Sqrt(1-sin_tA2o*sin_tA2o);

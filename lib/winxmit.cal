@@ -1,0 +1,7 @@
+{
+	winxmit.cal - window transmittance function.
+
+	4/24/86
+}
+
+winxmit = 1.018 * Rdot * (1 + (1 - Rdot*Rdot)^1.5);

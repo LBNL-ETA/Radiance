@@ -1,0 +1,148 @@
+{
+	He-Torrance Reflectance Model (Siggraph 1991)
+
+	This is the simplified version that doesn't account for
+  changes in reflection due to changes in wavelength.  Also,
+  specular and directional-diffuse hightlights are left uncolored
+  because coloring them requires multiple evaluations of some
+  very expensive functions.
+
+	The primitive for this function should look something like:
+
+	void BRTDfunc name
+	10
+		s s s
+		0 0 0
+		dd dd dd
+		He.cal
+	0
+	13	amb_r amb_g amb_b
+		amb_r amb_g amb_b
+		0 0 0
+		sigma0 tau
+		n_real n_imag
+
+	For metals, the specular color may be modified like so:
+
+	void BRTDfunc name
+	10
+		s_r s_g s_b
+		0 0 0
+		dd dd dd
+		He.cal
+	0
+	13	amb_r amb_g amb_b
+		amb_r amb_g amb_b
+		0 0 0
+		sigma0 tau
+		n_real n_imag
+
+	This doesn't work for the directional diffuse component, unfortunately.
+	A second set of functions dd_r, dd_g and dd_b may be used, but they
+	cost three times as much to compute!
+}
+
+			{ Constants }
+lambda : .5;			{ wavelength (microns) }
+z0err : .0001;			{ accepted error in value of z0 }
+Dsumlim : .000001;		{ last term of D summation }
+Dsummax : 200;			{ maximum terms in D summation }
+
+			{ Parameters }
+sigma0 = arg(10);		{ surface height deviation (microns) }
+tau = arg(11);			{ correlation distance (microns) }
+n_real = arg(12);		{ real part of index of refraction }
+n_imag = arg(13);		{ imaginary part of index of refraction }
+			{ Derived parameters }
+n_k = n_imag/n_real;
+			{ Constant functions }
+Exp(x) : if(-x-400, 0, exp(x));	{ rayinit.cal version too timid for D() }
+
+			{ Repeated formulas }
+cotexp(t) = tau/sigma0/2/tan(t);
+shadowf2(et,erfcet) = (1-.5*erfcet) /
+		((Exp(-sq(et))/sqrt(PI)/et - erfcet)/2 + 1);
+shadowf1(t) = or(FTINY-sigma0, .01-abs(t));
+shadowf0(t) = abs(t) - (PI/2-.0001);
+shadowf(t) = if(shadowf0(t), 0, if(shadowf1(t), 1,
+		shadowf2(cotexp(t), erfc(cotexp(t)))));
+K(t) = if(abs(t)-FTINY, tan(t) * erfc(cotexp(t)), 0);
+fuvA(ct) = sq(n_real)*(1-sq(n_k)) - (1-sq(ct));
+fuvB(ct) = sqrt(sq(fuvA(ct)) + 4*sq(sq(n_real)*n_k));
+fu2(ct) = (fuvA(ct) + fuvB(ct))/2;
+fv2(ct) = (-fuvA(ct) + fuvB(ct))/2;
+fperp2(ct) = (sq(ct-sqrt(fu2(ct))) + fv2(ct)) /
+		(sq(ct+sqrt(fu2(ct))) + fv2(ct));
+fpara2(ct) = (sq(sq(n_real)*(1-sq(n_k))*ct - sqrt(fu2(ct))) +
+		sq(2*sq(n_real)*n_k*ct - Sqrt(fv2(ct)))) /
+		(sq(sq(n_real)*(1-sq(n_k))*ct + sqrt(fu2(ct))) +
+		sq(2*sq(n_real)*n_k*ct + Sqrt(fv2(ct))));
+fresnel2(ct) = (fperp2(ct) + fpara2(ct))/2;
+
+			{ Formulas dependent only on reflected direction }
+theta_r = acos(RdotP);
+shadowf_r = shadowf(theta_r);
+K_r = K(theta_r);
+srx = Dy*NzP - Dz*NyP; sry = Dz*NxP - Dx*NzP; srz = Dx*NyP - Dy*NxP;
+srn2 = sq(srx) + sq(sry) + sq(srz);
+prx = sry*Dz - srz*Dy;
+pry = srz*Dx - srx*Dz;
+prz = srx*Dy - sry*Dx;
+s = fresnel2(RdotP)*Exp(-g(RdotP))*sq(shadowf_r);
+s_r = s*arg(1)*CrP;
+s_g = s*arg(2)*CgP;
+s_b = s*arg(3)*CbP;
+
+			{ Formulas dependent on incident direction }
+		{ z0 }
+z0d(Ki,z) = -(Ki+K_r)/(4*sigma0)*z*Exp(-sq(z/sigma0)/2) - sqrt(PI/2);
+z0lim(x) = if(x, max(x,z0err), min(x,-z0err));
+z0off(Ki,z) = (sigma0/4*(Ki+K_r)*Exp(-sq(z/sigma0)/2)-sqrt(PI/2)*z)/
+		z0lim(z0d(Ki,z));
+z0root(Ki, x0, x1, i) = if(i,
+			if(z0err-abs(x1-x0),
+				x1,
+				z0root(Ki,x1,x1-z0off(Ki,x1),i-1)),
+			0);
+z0(ti) = z0root(K(ti), .1, -z0off(K(ti),.1), 100);
+		{ sigma }
+sigma(ti) = if( FTINY-sigma0, sigma0,
+		sigma0/sqrt(1+sq(z0(ti)/sigma0)) );
+		{ g }
+g(cti) = sq(2*PI/lambda*sigma(Acos(cti))*(cti+RdotP));
+		{ |F|^2 }
+fresnel2dd(kix,kiy,kiz) = fresnel2(sqrt(sq(kix-Dx) + sq(kiy-Dy) +
+					sq(kiz-Dz))/2);
+		{ G }
+{ The bulk of G was found by Andrew Willmott to cancel.  This is the original:
+G2( kix,kiy,kiz, six,siy,siz ) =
+	sq( (sq(kix-Dx)+sq(kiy-Dy)+sq(kiz-Dz)) /
+	(NxP*(kix-Dx)+NyP*(kiy-Dy)+NzP*(kiz-Dz)) ) /
+	sq(sq(Dy*kiz-Dz*kiy)+sq(Dz*kix-Dx*kiz)+sq(Dx*kiy-Dy*kix)) *
+	(sq(srx*kix+sry*kiy+srz*kiz) + 
+	 sq(prx*kix+pry*kiy+prz*kiz)) *
+	(sq(six*Dx+siy*Dy+siz*Dz) +
+	 sq((siy*kiz-siz*kiy)*Dx+(siz*kix-six*kiz)*Dy+(six*kiy-siy*kix)*Dz)) /
+	srn2 / (sq(six)+sq(siy)+sq(siz));
+G(kix,kiy,kiz) = G2(kix,kiy,kiz,
+			kiy*NzP-kiz*NyP, kiz*NxP-kix*NzP, kix*NyP-kiy*NxP);
+-- Newer version below is much simpler: }
+G(kix,kiy,kiz) = sq( (sq(kix-Dx)+sq(kiy-Dy)+sq(kiz-Dz)) /
+			(NxP*(kix-Dx)+NyP*(kiy-Dy)+NzP*(kiz-Dz)) );
+		{ D }
+Dsum2(m,lt,c,t,e,g) = if(or(m-Dsummax,and(lt-t,Dsumlim-t)),t,
+	t+Dsum2(m+1,t,c*g/(m+1),c*g/(m+1)*Exp(-g-e/(m+1))/(m+1),e,g));
+Dsum(e,g) = Dsum2(1,0,g,g*Exp(-g-e),e,g);
+D(kix,kiy,kiz) = sq(PI)/4/sq(lambda)*sq(tau) *
+	Dsum(sq(2*PI/lambda)/4*sq(tau)*
+		(sq(kix-Dx)+sq(kiy-Dy)+sq(kiz-Dz) -
+			sq(NxP*(kix-Dx)+NyP*(kiy-Dy)+NzP*(kiz-Dz))),
+		g(kix*NxP+kiy*NyP+kiz*NzP));
+		{ rho_dd }
+dd2(cti) = shadowf_r*shadowf(Acos(cti))/cti/RdotP;
+dd(kix,kiy,kiz) = dd2(kix*NxP+kiy*NyP+kiz*NzP)*G(kix,kiy,kiz)*
+		fresnel2dd(kix,kiy,kiz)/PI*D(kix,kiy,kiz);
+						{ Color version 3x as slow! }
+dd_r(kix,kiy,kiz) = dd(kix,kiy,kiz)*arg(1)*CrP;
+dd_g(kix,kiy,kiz) = dd(kix,kiy,kiz)*arg(2)*CgP;
+dd_b(kix,kiy,kiz) = dd(kix,kiy,kiz)*arg(3)*CbP;

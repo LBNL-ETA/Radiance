@@ -1,0 +1,68 @@
+
+
+
+
+
+
+
+
+
+                        The RADIANCE
+                  Synthetic Imaging System
+
+
+                         Greg Ward
+                Lawrence Berkeley Laboratory
+                      1 Cyclotron Rd.
+                    Berkeley, CA  94720
+                       (415) 486-4757
+
+
+
+
+
+
+1.  Introduction
+
+     RADIANCE was developed as a research tool for  predict-
+ing  the  distribution  of  visible radiation in illuminated
+spaces.  It takes as  input  a  three-dimensional  geometric
+model  of  the  physical  environment, and produces a map of
+spectral radiance values as a color image.  The technique of
+ray-tracing  follows light backwards from the image plane to
+the source(s).  Because it can produce realistic images from
+a  simple description, RADIANCE has a wide range of applica-
+tions in  graphics  arts,  lighting  design,  computer-aided
+engineering and architecture.
+
+     The diagram in Figure 1 shows the flow between programs
+(boxes)  and  data  (ovals).   The central program is rpict,
+which produces a picture from a scene description.  Rview is
+a  variation  of  rpict  that  computes  and displays images
+interactively.
+
+     A scene description file lists the surfaces and materi-
+als  that  make up a specific environment.  The current sur-
+face types are  spheres,  polygons,  cones,  and  cylinders.
+They  can be made from materials such as plastic, metal, and
+glass.  Light sources can be distant disks as well as  local
+spheres and polygons.
+
+     From a three-dimensional scene description and a speci-
+fied  view,  rpict produces a two-dimensional image.  A pic-
+ture file is a compressed binary representation of the  pix-
+els  in  the  image.  This picture can be scaled in size and
+brightness, anti-aliased, and sent to a graphics output dev-
+ice.
+
+     A header in each picture file lists the program(s)  and
+parameters that produced it.  This is useful for identifying
+a picture without having to display it.  The information can
+
+
+
+
+
+
+
+                          - 220 -

@@ -1,0 +1,10 @@
+{
+	Dirt pattern.
+
+	This is probably the simplest application
+	imaginable for the fractal noise function.
+
+	A1	- degree of "dirtiness"; 1 is very dirty.
+}
+
+dirt = 1 - A1*.5*(1+fnoise3(Px,Py,Pz));

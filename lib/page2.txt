@@ -1,0 +1,68 @@
+be read by the program getinfo.
+
+2.  Scene Description
+
+     A scene description file represents a three-dimensional
+physical  environment in Cartesian (rectilinear) world coor-
+dinates.  It is stored as ascii  text,  with  the  following
+basic format:
+
+        # comment
+
+        modifier type identifier
+        n S1 S2 S3 ... Sn
+        0
+        m R1 R2 R3 ... Rm
+
+        ! command
+
+         ...
+
+
+     A comment line begins with a pound sign, `#'.
+
+     The scene description primitives all have the same gen-
+eral  format,  and  can  be either surfaces or modifiers.  A
+primitive has a modifier, a  type,  and  an  identifier.   A
+modifier  is  either  the identifier of a previously defined
+primitive, or void.  An identifier can be  any  string  (ie.
+sequence of non-blank characters).  The arguments associated
+with a primitive can be strings or real numbers.  The  first
+integer  following  the  identifier  is the number of string
+arguments, and it is followed by the  arguments  themselves.
+The  next integer is the number of integer arguments, and is
+followed by the integer arguments.  (There are currently  no
+primitives  that use them, however.) The next integer is the
+real argument count, and it is followed by  the  real  argu-
+ments.
+
+     A line beginning with an  exclamation  point,  `!',  is
+interpreted  as a command.  It is executed by the shell, and
+its output is read as input to  the  program.   The  command
+must  not  try to read from its standard input, or confusion
+will result.
+
+     Blank space is generally ignored, except as  a  separa-
+tor.  The exception is the newline character after a command
+or comment.  Commands, comments and primitives may appear in
+any combination, so long as they are not intermingled.
+
+2.1.  Primitive Types
+
+     Primitives can be surfaces, materials, textures or pat-
+terns.   Materials  modify  surfaces,  textures and patterns
+modify textures, patterns and materials.
+
+2.1.1.  Surfaces
+
+     A scene description will consist  mostly  of  surfaces.
+The basic types are given below.
+
+
+
+
+
+
+
+
+                          - 201 -

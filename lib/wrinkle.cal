@@ -1,0 +1,19 @@
+{
+	A texture function for wrinkled materials.
+
+	11/23/93	Greg Ward
+
+	A1	- average rise of wrinkles
+	A2	- average run of wrinkles
+	A3	- average spacing of wrinkles
+}
+
+diri = noise3(Px/A2/3,Py/A2/3,Pz/A2/3);
+
+mx = Sqrt(-diri);
+my = Sqrt(1-abs(diri));
+mz = Sqrt(diri);
+
+xwrink = Rdot*A1/A3*mx*fnoise3(Px/A3,Py/A2,Pz/A2);
+ywrink = Rdot*A1/A3*my*fnoise3(Px/A2,Py/A3,Pz/A2);
+zwrink = Rdot*A1/A3*mz*fnoise3(Py/A2,Py/A2,Pz/A3);

@@ -1,0 +1,49 @@
+{
+	Compute distribution on ceiling or wall of cove lighting
+	system employing linear fixtures.
+
+		10Feb91		Greg Ward
+
+	This is the closed-form solution to the integral of
+	illumination from a one-dimensional extended source.
+	Solution assumes that both fixture endpoints are in front
+	of surface element -- negative values may result if this
+	assumption is wrong!
+
+	Multiply cove_mult by radiant flux per unit source length
+	times cove surface reflectance.  To account for interreflection
+	with room surfaces, multiply this value by 1/(1-RcRr), where
+	Rc is the average ceiling reflectance and Rr is the average
+	reflectance of the floor and walls (biased towards the floor).
+
+	A1-A6			- Begin and end point coord's of first fixture
+	A7-A12, A13-A18, ...	- Coord's for second, third, ... fixtures
+}
+
+cove_mult = cove_sum(arg(0)/6, 1);
+
+cove_sum(n, i0) = if(n-.5,
+			cove_coef(
+				(arg(i0)-Px)*Nx
+					+(arg(i0+1)-Py)*Ny
+					+(arg(i0+2)-Pz)*Nz,
+				(arg(i0+3)-arg(i0))*Nx
+					+(arg(i0+4)-arg(i0+1))*Ny
+					+(arg(i0+5)-arg(i0+2))*Nz,
+				sq(arg(i0)-Px)
+					+sq(arg(i0+1)-Py)
+					+sq(arg(i0+2)-Pz),
+				(Px-arg(i0))*(arg(i0+3)-arg(i0))
+					+(Py-arg(i0+1))*(arg(i0+4)-arg(i0+1))
+					+(Pz-arg(i0+2))*(arg(i0+5)-arg(i0+2)),
+				sq(arg(i0+3)-arg(i0))
+					+sq(arg(i0+4)-arg(i0+1))
+					+sq(arg(i0+5)-arg(i0+2)))
+			+ cove_sum(n-1, i0+6),
+			0);
+
+cove_coef(a, b, g, h, k) = 1/Sqrt(g*k-h*h)/(2*PI*PI*PI)
+		*( (a*k+b*h)/Sqrt(g*k-h*h)
+			*(atan((k-h)/Sqrt(g*k-h*h))+atan(h/Sqrt(g*k-h*h)))
+			+ (a*k+b*h-a*h-b*g)/(k-2*h+g)
+			+ (a*h+b*g)/g );

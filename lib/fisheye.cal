@@ -1,0 +1,12 @@
+{
+	Calculate coordinates for a 180 degree fisheye lens.
+	Assume view direction is (0,1,0), view up (0,0,1), (1,0,0) right.
+
+	4/30/90
+}
+
+fish_u = .5 + Dx/fish_Rxz * fish_Ry;
+fish_v = .5 + Dz/fish_Rxz * fish_Ry;
+
+fish_Rxz = sqrt(Dx*Dx + Dz*Dz);
+fish_Ry = acos(Dy) / PI;

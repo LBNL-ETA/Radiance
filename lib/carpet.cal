@@ -1,0 +1,31 @@
+{
+        Carpet function.
+
+        Scale pattern to tuft size.
+
+        A1      - tuft red color
+        A2      - tuft green color
+        A3      - tuft blue color
+        A4      - degree of variation
+}
+                                        { carpet tuft position }
+{ Varies from [(1-A4),1] based on Perlin 3D noise function, a random wave
+  function over 3D space, with scalar value everywhere between about -1 and 1.
+  Sense of this is 0 means bottom of tuft and 1 means top (carpet surface). }
+carpt = 1 - A4*(.5+.5*noise3(Px,Py,Pz));
+                                        { exponent for carpet color }
+{ Takes [(1-A4),1] range and maps it to [1,(1+4*A4)]  for # interreflections }
+carpe = 1 + 4*(1-carpt);
+                                        { coefficient (with fuzzies) }
+{ Takes square of carpt as general shading coefficient (self-shadowing)
+  and multiplies by some fractal noise hovering around 1 with a base frequency
+  10 times the tuft frequency (fuzzies).  The noneg() function guarantees
+  positive results for outlying values of the noise functions. }
+coef = noneg( carpt*carpt * (1 + .25*A4*fnoise3(Px*10,Py*10,Pz*10)) );
+                                        { carpet color }
+{ Final color is shading coefficient times carpet color raised to the power
+  of the number of interreflections, which causes both darkening and
+  deepening of color in between tufts. }
+carpr = coef * A1^carpe;
+carpg = coef * A2^carpe;
+carpb = coef * A3^carpe;

@@ -1,0 +1,7 @@
+{
+	marble.cal - classic marble pattern
+
+	A1 - Magnitude
+}
+
+marble = (1-A1) + A1*turbulence(Px,Py,Pz,.05);
