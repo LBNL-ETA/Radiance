@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.6 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.7 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * 3D warping routines.
@@ -8,6 +8,9 @@ static const char	RCSid[] = "$Id: warp3d.c,v 3.6 2003/04/23 00:52:34 greg Exp $"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "rterror.h"
+#include "rtio.h"
 #include "fvect.h"
 #include "warp3d.h"
 
@@ -24,9 +27,23 @@ typedef struct {
 #define AHUNK	24		/* number of points to allocate at a time */
 
 
+double wpdist2(W3VEC p1, W3VEC p2);
+static int gridpoint(GNDX ndx, W3VEC rem, W3VEC ipt, struct grid3d *gp);
+static int get3dgpt(W3VEC ov, GNDX ndx, WARP3D *wp);
+static int get3dgin(W3VEC ov, GNDX ndx, W3VEC rem, WARP3D *wp);
+static void l3interp(W3VEC vo, W3VEC *cl, W3VEC dv, int n);
+static int warp3dex(W3VEC ov, W3VEC pi, WARP3D *wp);
+//static unsigned long gridhash(void *gp);
+static lut_hashf_t gridhash;
+static int new3dgrid(WARP3D *wp);
+static void done3dgrid(struct grid3d *gp);
+
+
 double
-wpdist2(p1, p2)			/* compute square of distance between points */
-register W3VEC	p1, p2;
+wpdist2(			/* compute square of distance between points */
+	register W3VEC	p1,
+	register W3VEC	p2
+)
 {
 	double	d, d2;
 
@@ -38,9 +55,11 @@ register W3VEC	p1, p2;
 
 
 int
-warp3d(po, pi, wp)		/* warp 3D point according to the given map */
-W3VEC	po, pi;
-register WARP3D	*wp;
+warp3d(		/* warp 3D point according to the given map */
+	W3VEC	po,
+	W3VEC	pi,
+	register WARP3D	*wp
+)
 {
 	int	rval = W3OK;
 	GNDX	gi;
@@ -62,11 +81,13 @@ register WARP3D	*wp;
 }
 
 
-int
-gridpoint(ndx, rem, ipt, gp)	/* compute grid position for ipt */
-GNDX	ndx;
-W3VEC	rem, ipt;
-register struct grid3d	*gp;
+static int
+gridpoint(	/* compute grid position for ipt */
+	GNDX	ndx,
+	W3VEC	rem,
+	W3VEC	ipt,
+	register struct grid3d	*gp
+)
 {
 	int	rval = W3OK;
 	register int	i;
@@ -87,11 +108,12 @@ register struct grid3d	*gp;
 }
 
 
-int
-get3dgpt(ov, ndx, wp)		/* get value for voxel */
-W3VEC	ov;
-GNDX	ndx;
-register WARP3D	*wp;
+static int
+get3dgpt(		/* get value for voxel */
+	W3VEC	ov,
+	GNDX	ndx,
+	register WARP3D	*wp
+)
 {
 	W3VEC	gpt;
 	register LUENT	*le;
@@ -122,11 +144,13 @@ register WARP3D	*wp;
 }
 
 
-int
-get3dgin(ov, ndx, rem, wp)	/* interpolate from warp grid */
-W3VEC	ov, rem;
-GNDX	ndx;
-WARP3D	*wp;
+static int
+get3dgin(	/* interpolate from warp grid */
+	W3VEC	ov,
+	GNDX	ndx,
+	W3VEC	rem,
+	WARP3D	*wp
+)
 {
 	W3VEC	cv[8];
 	GNDX	gi;
@@ -146,9 +170,13 @@ WARP3D	*wp;
 }
 
 
-l3interp(vo, cl, dv, n)		/* trilinear interpolation (recursive) */
-W3VEC	vo, *cl, dv;
-int	n;
+static void
+l3interp(		/* trilinear interpolation (recursive) */
+	W3VEC	vo,
+	W3VEC	*cl,
+	W3VEC	dv,
+	int	n
+)
 {
 	W3VEC	v0, v1;
 	register int	i;
@@ -165,10 +193,12 @@ int	n;
 }
 
 
-int
-warp3dex(ov, pi, wp)		/* compute warp using 1/r^2 weighted avg. */
-W3VEC	ov, pi;
-register WARP3D	*wp;
+static int
+warp3dex(		/* compute warp using 1/r^2 weighted avg. */
+	W3VEC	ov,
+	W3VEC	pi,
+	register WARP3D	*wp
+)
 {
 	double	d2, w, wsum;
 	W3VEC	vt;
@@ -195,8 +225,9 @@ register WARP3D	*wp;
 
 
 WARP3D *
-new3dw(flgs)			/* allocate and initialize WARP3D struct */
-int	flgs;
+new3dw(			/* allocate and initialize WARP3D struct */
+	int	flgs
+)
 {
 	register WARP3D  *wp;
 
@@ -217,9 +248,10 @@ int	flgs;
 
 
 WARP3D *
-load3dw(fn, wp)			/* load 3D warp from file */
-char	*fn;
-WARP3D	*wp;
+load3dw(			/* load 3D warp from file */
+	char	*fn,
+	WARP3D	*wp
+)
 {
 	FILE	*fp;
 	W3VEC	inp, outp;
@@ -247,10 +279,11 @@ cleanup:
 }
 
 
-int
-set3dwfl(wp, flgs)		/* reset warp flags */
-register WARP3D	*wp;
-int	flgs;
+extern int
+set3dwfl(		/* reset warp flags */
+	register WARP3D	*wp,
+	int	flgs
+)
 {
 	if (flgs == wp->grid.flags)
 		return(0);
@@ -265,9 +298,11 @@ int	flgs;
 
 
 int
-add3dpt(wp, pti, pto)		/* add 3D point pair to warp structure */
-register WARP3D	*wp;
-W3VEC	pti, pto;
+add3dpt(		/* add 3D point pair to warp structure */
+	register WARP3D	*wp,
+	W3VEC	pti,
+	W3VEC	pto
+)
 {
 	double	d2;
 	register W3VEC	*na;
@@ -317,8 +352,10 @@ W3VEC	pti, pto;
 }
 
 
-free3dw(wp)			/* free WARP3D data */
-register WARP3D	*wp;
+extern void
+free3dw(			/* free WARP3D data */
+	register WARP3D	*wp
+)
 {
 	done3dgrid(&wp->grid);
 	free((void *)wp->ip);
@@ -327,17 +364,21 @@ register WARP3D	*wp;
 }
 
 
-unsigned long
-gridhash(gp)			/* hash a grid point index */
-GNDX	gp;
+static unsigned long
+gridhash(			/* hash a grid point index */
+	//GNDX	gp
+	void	*gp
+)
 {
-	return(((unsigned long)gp[0]<<GNBITS | gp[1])<<GNBITS | gp[2]);
+	//return(((unsigned long)gp[0]<<GNBITS | gp[1])<<GNBITS | gp[2]);
+	return(((unsigned long)((unsigned char*)gp)[0]<<GNBITS | ((unsigned char*)gp)[1])<<GNBITS | ((unsigned char*)gp)[2]);
 }
 
 
-int
-new3dgrid(wp)			/* initialize interpolating grid for warp */
-register WARP3D	*wp;
+static int
+new3dgrid(			/* initialize interpolating grid for warp */
+	register WARP3D	*wp
+)
 {
 	W3VEC	gmax;
 	double	gridstep, d;
@@ -383,8 +424,10 @@ register WARP3D	*wp;
 }
 
 
-done3dgrid(gp)			/* free interpolating grid for warp */
-register struct grid3d	*gp;
+static void
+done3dgrid(			/* free interpolating grid for warp */
+	register struct grid3d	*gp
+)
 {
 	if (gp->gn[0] == 0)
 		return;

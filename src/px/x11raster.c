@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11raster.c,v 2.12 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: x11raster.c,v 2.13 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * x11raster.c - routines to handle images for X windows.
@@ -15,14 +15,16 @@ static const char	RCSid[] = "$Id: x11raster.c,v 2.12 2003/07/27 22:12:03 schorsc
 #include "x11raster.h"
 
 
-XRASTER *
-make_raster(disp, vis, npixbits, data, width, height, bm_pad)
-Display	*disp;
-XVisualInfo	*vis;
-int	npixbits;
-char	*data;
-int	width, height;
-int	bm_pad;
+extern XRASTER *
+make_raster(
+	Display	*disp,
+	XVisualInfo	*vis,
+	int	npixbits,
+	char	*data,
+	int	width, 
+	int height,
+	int	bm_pad
+)
 {
 	static long	swaptest = 1;
 	register XRASTER	*xr;
@@ -56,10 +58,11 @@ int	bm_pad;
 }
 
 
-int
-init_rcolors(xr, cmap)			/* initialize colors */
-register XRASTER	*xr;
-BYTE	cmap[][3];
+extern int
+init_rcolors(			/* initialize colors */
+	register XRASTER	*xr,
+	BYTE	cmap[][3]
+)
 {
 	register unsigned char	*p;
 	register int	i;
@@ -93,11 +96,12 @@ BYTE	cmap[][3];
 }
 
 
-Colormap
-newcmap(disp, scrn, vis)		/* get colormap and fix b & w */
-Display	*disp;
-int	scrn;
-Visual	*vis;
+extern Colormap
+newcmap(		/* get colormap and fix b & w */
+	Display	*disp,
+	int	scrn,
+	Visual	*vis
+)
 {
 	XColor	thiscolor;
 	unsigned long	*pixels;
@@ -136,10 +140,11 @@ Visual	*vis;
 }
 
 
-unsigned long *
-map_rcolors(xr, w)			/* get and assign pixels */
-register XRASTER	*xr;
-Window	w;
+extern unsigned long *
+map_rcolors(			/* get and assign pixels */
+	register XRASTER	*xr,
+	Window	w
+)
 {
 	register int	i;
 	register unsigned char	*p;
@@ -186,10 +191,11 @@ Window	w;
 }
 
 
-Pixmap
-make_rpixmap(xr, w)			/* make pixmap for raster */
-register XRASTER	*xr;
-Window	w;
+extern Pixmap
+make_rpixmap(			/* make pixmap for raster */
+	register XRASTER	*xr,
+	Window	w
+)
 {
 	XWindowAttributes	xwattr;
 	Pixmap	pm;
@@ -206,12 +212,17 @@ Window	w;
 	return(xr->pm = pm);
 }
 
-
-patch_raster(d, xsrc, ysrc, xdst, ydst, width, height, xr)	/* redraw */
-Drawable	d;
-int	xsrc, ysrc, xdst, ydst;
-int	width, height;
-register XRASTER	*xr;
+extern void
+patch_raster(	/* redraw */
+	Drawable	d,
+	int	xsrc,
+	int	ysrc,
+	int	xdst,
+	int	ydst,
+	int	width,
+	int	height,
+	register XRASTER	*xr
+)
 {
 	if (xsrc >= xr->image->width || ysrc >= xr->image->height)
 		return;
@@ -244,8 +255,10 @@ register XRASTER	*xr;
 }
 
 
-unmap_rcolors(xr)			/* free colors */
-register XRASTER	*xr;
+extern void
+unmap_rcolors(			/* free colors */
+	register XRASTER	*xr
+)
 {
 	if (xr->pixels == NULL)
 		return;
@@ -257,8 +270,10 @@ register XRASTER	*xr;
 }
 
 
-free_rpixmap(xr)			/* release Pixmap */
-register XRASTER	*xr;
+extern void
+free_rpixmap(			/* release Pixmap */
+	register XRASTER	*xr
+)
 {
 	if (xr->pm == 0)
 		return;
@@ -267,8 +282,10 @@ register XRASTER	*xr;
 }
 
 
-free_raster(xr)				/* free raster data */
-register XRASTER	*xr;
+extern void
+free_raster(				/* free raster data */
+	register XRASTER	*xr
+)
 {
 	free_rpixmap(xr);
 	if (xr->ncolors > 0) {

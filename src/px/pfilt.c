@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.28 2004/01/02 12:47:01 schorsch Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.29 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -15,11 +15,12 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.28 2004/01/02 12:47:01 schorsch Ex
 
 #include  "platform.h"
 #include  "standard.h"
+#include  "rtio.h"
 #include  "color.h"
 #include  "view.h"
 #include  "paths.h"
+#include  "pfilt.h"
 
-extern float  *matchlamp();
 
 #define	 FEQ(a,b)	((a) >= .98*(b) && (a) <= 1.02*(b))
 
@@ -84,11 +85,21 @@ int  orad = 0;			/* output window radius */
 char  *progname;
 
 static gethfunc headline;
+static double rgb_bright(COLOR  clr);
+static double xyz_bright(COLOR  clr);
+static void copyfile(FILE  *in, FILE  *out);
+static void pass1(FILE  *in);
+static void pass2(FILE  *in);
+static void scan2init(void);
+static void scan2sync(int  r);
+static void scan2flush(void);
 
 
-main(argc, argv)
-int  argc;
-char  **argv;
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
 	FILE  *fin;
 	float  *lampcolor;
@@ -307,20 +318,23 @@ char  **argv;
 	pass2(fin);
 
 	quit(estatus);
+	return estatus; /* pro forma return */
 }
 
 
-double
-rgb_bright(clr)
-COLOR  clr;
+static double
+rgb_bright(
+	COLOR  clr
+)
 {
 	return(bright(clr));
 }
 
 
-double
-xyz_bright(clr)
-COLOR  clr;
+static double
+xyz_bright(
+	COLOR  clr
+)
 {
 	return(clr[CIEY]);
 }
@@ -356,8 +370,11 @@ headline(				/* process line from header */
 }
 
 
-copyfile(in, out)			/* copy a file */
-register FILE  *in, *out;
+static void
+copyfile(			/* copy a file */
+	register FILE  *in,
+	register FILE  *out
+)
 {
 	register int  c;
 
@@ -371,8 +388,10 @@ register FILE  *in, *out;
 }
 
 
-pass1(in)				/* first pass of picture file */
-FILE  *in;
+static void
+pass1(				/* first pass of picture file */
+	FILE  *in
+)
 {
 	int  i;
 	COLOR  *scan;
@@ -404,8 +423,10 @@ FILE  *in;
 }
 
 
-pass2(in)			/* last pass on file, write to stdout */
-FILE  *in;
+static void
+pass2(			/* last pass on file, write to stdout */
+	FILE  *in
+)
 {
 	int  yread;
 	int  ycent, xcent;
@@ -455,7 +476,8 @@ FILE  *in;
 }
 
 
-scan2init()			/* prepare scanline arrays */
+static void
+scan2init(void)			/* prepare scanline arrays */
 {
 	COLOR	ctmp;
 	double	d;
@@ -532,8 +554,10 @@ memerr:
 }
 
 
-scan2sync(r)			/* synchronize grey averages and output scan */
-int  r;
+static void
+scan2sync(			/* synchronize grey averages and output scan */
+	int  r
+)
 {
 	static int  nextrow = 0;
 	COLOR  ctmp;
@@ -558,7 +582,8 @@ int  r;
 }
 
 
-scan2flush()			/* flush output buffer */
+static void
+scan2flush(void)			/* flush output buffer */
 {
 	register int  r;
 

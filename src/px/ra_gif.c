@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_gif.c,v 2.10 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.11 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Convert from Radiance picture file to Compuserve GIF.
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: ra_gif.c,v 2.10 2003/07/27 22:12:03 schorsch E
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
+#include  "clrtab.h"
 
 #define MAXCOLORS		256
 
@@ -21,38 +22,38 @@ int gmap[MAXCOLORS];
 int bmap[MAXCOLORS];
 
 int currow;
-
-extern long  ftell();
-
 long  picstart;
-
 BYTE  clrtab[256][3];
 
 extern int  samplefac;
 
-extern int  getgifpix();
 
 COLR	*scanln;
 BYTE	*pixscan;
 
 int  xmax, ymax;			/* picture size */
-
 double	gamv = 2.2;			/* gamma correction */
-
 int  greyscale = 0;			/* convert to B&W? */
-
 int  dither = 1;			/* dither colors? */
-
 int  bradj = 0;				/* brightness adjustment */
-
 int  ncolors = 0;			/* number of colors requested */
 
 char  *progname;
 
+typedef int ifun_t(int x, int y); /* required by the GIF code below */
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+static void getrow(int  y);
+static void mkclrmap(int	nc);
+static void mkgrymap(int	nc);
+static ifun_t getgifpix;
+
+static void GIFEncode(FILE *fp, int GWidth, int GHeight, int GInterlace,
+		int Background, int BitsPerPixel, int Red[], int Green[], int Blue[],
+		ifun_t* GetPixel);
+
+
+int
+main(int  argc, char  *argv[])
 {
 	int  bitsperpix;
 	int  i;
@@ -139,8 +140,10 @@ userr:
 }
 
 
-getrow(y)			/* get the specified row from our image */
-int  y;
+static void
+getrow(			/* get the specified row from our image */
+	int  y
+)
 {
 	if (y == currow)
 		return;
@@ -167,8 +170,10 @@ int  y;
 }
 
 
-mkclrmap(nc)			/* make our color map */
-int	nc;
+static void
+mkclrmap(			/* make our color map */
+	int	nc
+)
 {
 	register int	i;
 
@@ -199,8 +204,10 @@ memerr:
 }
 
 
-mkgrymap(nc)
-int	nc;
+static void
+mkgrymap(
+	int	nc
+)
 {
 	register int	i;
 
@@ -212,12 +219,12 @@ int	nc;
 }
 
 
-int
-getgifpix(x, y)			/* get a single pixel from our picture */
-int  x, y;
+static int
+getgifpix(			/* get a single pixel from our picture */
+	int  x,
+	int  y
+)
 {
-	int pix;
-
 	getrow(y);
 	if (greyscale)
 		return((normbright(scanln[x])*ncolors)>>8);
@@ -231,7 +238,7 @@ int  x, y;
  * SCARY GIF code follows . . . . sorry.
  *
  * Based on GIFENCOD by David Rowley <mgardi@watdscu.waterloo.edu>.A
- * Lempel-Zim compression based on "compress".
+ * Lempel-Ziv compression based on "compress".
  *
  */
 
@@ -243,7 +250,6 @@ int  x, y;
  *            BitsPerPixel, Red, Green, Blue, GetPixel )
  *
  *****************************************************************************/
-typedef int (* ifunptr)();
 
 #define TRUE 1
 #define FALSE 0
@@ -256,10 +262,33 @@ int Interlace;
 unsigned long cur_accum = 0;
 int cur_bits = 0;
 
+static void BumpPixel(void);
+static int GIFNextPixel(ifun_t* getpixel);
+static void Putword(int w, FILE *fp);
+static void compress(int init_bits, FILE *outfile, ifun_t* ReadValue);
+
+
+/* a code_int must be able to hold 2**CBITS values of type int, and also -1 */
+typedef int             code_int;
+typedef long int        count_int;
+typedef unsigned char  	char_type;
+
+static void output(code_int  code);
+static void cl_block(void);
+static void cl_hash(count_int hsize);
+static void writeerr(void);
+
+static void char_init(void);
+static void char_out(int c);
+static void flush_char(void);
+static void gammawarp(short *sbuf, float gam, int n);
+
+
 /*
  * Bump the 'curx' and 'cury' to point to the next pixel
  */
-BumpPixel()
+static void
+BumpPixel(void)
 {
     curx++;
     if( curx == Width ) {
@@ -300,8 +329,10 @@ BumpPixel()
 /*
  * Return the next pixel from the image
  */
-GIFNextPixel( getpixel )
-ifunptr getpixel;
+static int
+GIFNextPixel(
+	ifun_t* getpixel
+)
 {
     int r;
 
@@ -316,15 +347,19 @@ ifunptr getpixel;
 /*
  * public GIFEncode
  */
-GIFEncode( fp, GWidth, GHeight, GInterlace, Background,
-           BitsPerPixel, Red, Green, Blue, GetPixel )
-FILE *fp;
-int GWidth, GHeight;
-int GInterlace;
-int Background;
-int BitsPerPixel;
-int Red[], Green[], Blue[];
-ifunptr GetPixel;
+static void
+GIFEncode(
+	FILE *fp,
+	int GWidth,
+	int GHeight,
+	int GInterlace,
+	int Background,
+	int BitsPerPixel,
+	int Red[],
+	int Green[],
+	int Blue[],
+	ifun_t* GetPixel
+)
 {
     int B;
     int RWidth, RHeight;
@@ -334,7 +369,7 @@ ifunptr GetPixel;
     int InitCodeSize;
     int i;
 
-    long cur_accum = 0;
+    cur_accum = 0; /* globals */
     cur_bits = 0;
 
     Interlace = GInterlace;
@@ -384,9 +419,11 @@ ifunptr GetPixel;
 /*
  * Write out a word to the GIF file
  */
-Putword( w, fp )
-int w;
-FILE *fp;
+static void
+Putword(
+	int w,
+	FILE *fp
+)
 {
     fputc( w & 0xff, fp );
     fputc( (w/256) & 0xff, fp );
@@ -404,13 +441,6 @@ FILE *fp;
 
 #define CBITS    12
 #define HSIZE  5003            /* 80% occupancy */
-
-/*
- * a code_int must be able to hold 2**CBITS values of type int, and also -1
- */
-typedef int             code_int;
-typedef long int        count_int;
-typedef unsigned char  	char_type;
 
 /*
  *
@@ -487,10 +517,12 @@ FILE *g_outfile;
 int ClearCode;
 int EOFCode;
 
-compress( init_bits, outfile, ReadValue )
-int init_bits;
-FILE *outfile;
-ifunptr ReadValue;
+static void
+compress(
+	int init_bits,
+	FILE *outfile,
+	ifun_t* ReadValue
+)
 {
     register long fcode;
     register code_int i = 0;
@@ -529,7 +561,7 @@ ifunptr ReadValue;
     while ( (c = GIFNextPixel( ReadValue )) != EOF ) {
         in_count++;
         fcode = (long) (((long) c << maxbits) + ent);
-        /* i = (((code_int)c << hshift) ~ ent);    /* xor hashing */
+        /* i = (((code_int)c << hshift) ~ ent); */   /* xor hashing */
         i = (((code_int)c << hshift) ^ ent);    /* xor hashing */
         if ( HashTabOf (i) == fcode ) {
             ent = CodeTabOf (i);
@@ -589,8 +621,10 @@ unsigned long masks[] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
                                   0x01FF, 0x03FF, 0x07FF, 0x0FFF,
                                   0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
 
-output( code )
-code_int  code;
+static void
+output(
+	code_int  code
+)
 {
     cur_accum &= masks[ cur_bits ];
     if( cur_bits > 0 )
@@ -639,7 +673,8 @@ code_int  code;
 /*
  * Clear out the hash table
  */
-cl_block ()             /* table clear for block compress */
+static void
+cl_block (void)             /* table clear for block compress */
 {
         cl_hash ( (count_int) hsize );
         free_ent = ClearCode + 2;
@@ -647,8 +682,10 @@ cl_block ()             /* table clear for block compress */
         output( (code_int)ClearCode );
 }
 
-cl_hash(hsize)          /* reset code table */
-register count_int hsize;
+static void
+cl_hash(          /* reset code table */
+	register count_int hsize
+)
 {
         register count_int *htab_p = htab+hsize;
         register long i;
@@ -678,7 +715,8 @@ register count_int hsize;
                 *--htab_p = m1;
 }
 
-writeerr()
+static void
+writeerr(void)
 {
         printf( "error writing output file\n" );
         exit(1);
@@ -698,7 +736,8 @@ int a_count;
 /*
  * Set up the 'byte output' routine
  */
-char_init()
+static void
+char_init(void)
 {
         a_count = 0;
 }
@@ -712,8 +751,10 @@ char accum[256];
  * Add a character to the end of the current packet, and if it is 254
  * characters, flush the packet to disk.
  */
-char_out( c )
-int c;
+static void
+char_out(
+	int c
+)
 {
         accum[ a_count++ ] = c;
         if( a_count >= 254 )
@@ -723,7 +764,8 @@ int c;
 /*
  * Flush the packet to disk, and reset the accumulator
  */
-flush_char()
+static void
+flush_char(void)
 {
         if( a_count > 0 ) {
                 fputc( a_count, g_outfile );
@@ -735,13 +777,14 @@ flush_char()
 static float curgamma;
 static short gamtab[256];
 
-gammawarp(sbuf,gam,n)
-short *sbuf;
-float gam;
-int n;
+static void
+gammawarp(
+	short *sbuf,
+	float gam,
+	int n
+)
 {
     int i;
-    float f;
 
     if(gam!=curgamma) {
 	for(i=0; i<256; i++) 

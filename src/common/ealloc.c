@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.8 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.9 2004/03/28 20:33:12 schorsch Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -12,16 +12,17 @@ static const char	RCSid[] = "$Id: ealloc.c,v 2.8 2003/11/14 17:22:06 schorsch Ex
 #include  <stdlib.h>
 
 #include "rterror.h"
+#include "rtmisc.h"
 
-extern char *	/* return pointer to n uninitialized bytes */
-emalloc(unsigned int  n)
+extern void *	/* return pointer to n uninitialized bytes */
+emalloc(size_t  n)
 {
-	register char  *cp;
+	register void  *cp;
 	
 	if (n == 0)
 		return(NULL);
 
-	if ((cp = (char *)malloc(n)) != NULL)
+	if ((cp = malloc(n)) != NULL)
 		return(cp);
 
 	eputs("Out of memory in emalloc\n");
@@ -30,8 +31,8 @@ emalloc(unsigned int  n)
 }
 
 
-extern char *			/* return pointer to initialized memory */
-ecalloc(register unsigned int ne, unsigned int es)
+extern void *			/* return pointer to initialized memory */
+ecalloc(register size_t ne, size_t es)
 {
 	register char  *cp;
 	
@@ -39,7 +40,7 @@ ecalloc(register unsigned int ne, unsigned int es)
 	if (ne == 0)
 		return(NULL);
 
-	if ((cp = (char *)malloc(ne)) == NULL) {
+	if ((cp = malloc(ne)) == NULL) {
 		eputs("Out of memory in ecalloc\n");
 		quit(1);
 	}
@@ -50,19 +51,19 @@ ecalloc(register unsigned int ne, unsigned int es)
 }
 
 
-extern char *			/* reallocate cp to size n */
-erealloc(register char  *cp, unsigned int  n)
+extern void *			/* reallocate cp to size n */
+erealloc(register void  *cp, size_t  n)
 {
 	if (n == 0) {
 		if (cp != NULL)
-			free((void *)cp);
+			free(cp);
 		return(NULL);
 	}
 
 	if (cp == NULL)
-		cp = (char *)malloc(n);
+		cp = malloc(n);
 	else 
-		cp = (char *)realloc((void *)cp, n);
+		cp = realloc(cp, n);
 
 	if (cp != NULL)
 		return(cp);
@@ -74,7 +75,7 @@ erealloc(register char  *cp, unsigned int  n)
 
 
 extern void			/* free memory allocated by above */
-efree(char  *cp)
+efree(void  *cp)
 {
-	free((void *)cp);
+	free(cp);
 }

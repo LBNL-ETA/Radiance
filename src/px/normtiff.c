@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.7 2004/01/02 11:42:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.8 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: normtiff.c,v 3.7 2004/01/02 11:42:37 schorsch 
 #include "tiffio.h"
 #include "color.h"
 #include "tonemap.h"
+#include "tmaptiff.h"
 #include "resolu.h"
 
 
@@ -42,11 +43,18 @@ typedef struct {
 	RESOLU	rs;		/* picture resolution */
 } PICTURE;
 
-extern PICTURE	*openpicture();
+//extern PICTURE	*openpicture();
 
 #define closepicture(p)		(fclose((p)->fp),free((void *)(p)))
 
 static gethfunc headline;
+
+static int headline(char	*s, void *pp);
+static PICTURE * openpicture(char	*fname);
+static int tmap_picture(char	*fname, PICTURE	*pp);
+static int tmap_tiff(char	*fname, TIFF	*tp);
+static int putimage(uint16	or, uint32	xs, uint32	ys, float	xr, float	yr,
+	uint16 ru, BYTE	*pd);
 
 
 int
@@ -151,9 +159,10 @@ headline(				/* process line from header */
 }
 
 
-PICTURE *
-openpicture(fname)			/* open/check Radiance picture file */
-char	*fname;
+static PICTURE *
+openpicture(			/* open/check Radiance picture file */
+	char	*fname
+)
 {
 	FILE	*fp;
 	register PICTURE	*pp;
@@ -192,10 +201,11 @@ char	*fname;
 }
 
 
-int
-tmap_picture(fname, pp)			/* tone map Radiance picture */
-char	*fname;
-register PICTURE	*pp;
+static int
+tmap_picture(			/* tone map Radiance picture */
+	char	*fname,
+	register PICTURE	*pp
+)
 {
 	uint16	orient;
 	int	xsiz, ysiz;
@@ -219,9 +229,11 @@ register PICTURE	*pp;
 }
 
 
-tmap_tiff(fname, tp)			/* tone map SGILOG TIFF */
-char	*fname;
-TIFF	*tp;
+static int
+tmap_tiff(			/* tone map SGILOG TIFF */
+	char	*fname,
+	TIFF	*tp
+)
 {
 	float	xres, yres;
 	uint16	orient, resunit, phot;
@@ -250,12 +262,16 @@ TIFF	*tp;
 }
 
 
-putimage(or, xs, ys, xr, yr, ru, pd)	/* write out our image */
-uint16	or;
-uint32	xs, ys;
-float	xr, yr;
-uint16 ru;
-BYTE	*pd;
+static int
+putimage(	/* write out our image */
+	uint16	or,
+	uint32	xs,
+	uint32	ys,
+	float	xr,
+	float	yr,
+	uint16 ru,
+	BYTE	*pd
+)
 {
 	register int	y;
 	uint32	rowsperstrip;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.16 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.17 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: clrtab.c,v 2.16 2003/07/27 22:12:03 schorsch E
 
 #include "standard.h"
 #include "color.h"
+#include "clrtab.h"
 
 				/* histogram resolution */
 #define NRED		36
@@ -29,7 +30,7 @@ extern BYTE	clrtab[256][3];
 static unsigned	histo[NRED][NGRN][NBLU];
 #define cndx(c)		histo[((c)[RED]*NRED)>>8][((c)[GRN]*NGRN)>>8][((c)[BLU]*NBLU)>>8]
 				/* initial color cube boundary */
-static int	CLRCUBE[3][2] = {0,NRED,0,NGRN,0,NBLU};
+static int	CLRCUBE[3][2] = {{0,NRED},{0,NGRN},{0,NBLU}};
 				/* maximum propagated error during dithering */
 #define MAXERR		20
 				/* define CLOSEST to get closest colors */
@@ -41,29 +42,42 @@ static int	CLRCUBE[3][2] = {0,NRED,0,NGRN,0,NBLU};
 #endif
 #endif
 
-static	cut(), mktabent(), closest(), addneigh(), setclosest();
-static int	split();
-static unsigned	dist();
+
+#ifdef CLOSEST
+static void closest(int n);
+static void setclosest(BYTE *nl[], int r, int g, int b);
+static void addneigh(BYTE *nl[], int i, int j);
+static unsigned int dist(BYTE col[3], int r, int g, int b);
+#endif
+static void cut(int box[3][2], int c0, int c1);
+static int split(int box[3][2]);
+static void mktabent(int p, int box[3][2]);
 
 
-new_histo(n)		/* clear our histogram */
-int	n;
+extern int
+new_histo(		/* clear our histogram */
+	int	n
+)
 {
 	memset((void *)histo, '\0', sizeof(histo));
 	return(0);
 }
 
 
-cnt_pixel(col)		/* add pixel to our histogram */
-register BYTE	col[];
+extern void
+cnt_pixel(		/* add pixel to our histogram */
+	register BYTE	col[]
+)
 {
 	cndx(col)++;
 }
 
 
-cnt_colrs(cs, n)		/* add a scanline to our histogram */
-register COLR	*cs;
-register int	n;
+extern void
+cnt_colrs(		/* add a scanline to our histogram */
+	register COLR	*cs,
+	register int	n
+)
 {
 	while (n-- > 0) {
 		cndx(cs[0])++;
@@ -72,8 +86,10 @@ register int	n;
 }
 
 
-new_clrtab(ncolors)		/* make new color table using ncolors */
-int	ncolors;
+extern int
+new_clrtab(		/* make new color table using ncolors */
+	int	ncolors
+)
 {
 	if (ncolors < 1)
 		return(0);
@@ -91,18 +107,21 @@ int	ncolors;
 }
 
 
-int
-map_pixel(col)			/* get pixel for color */
-register BYTE	col[];
+extern int
+map_pixel(			/* get pixel for color */
+	register BYTE	col[]
+)
 {
     return(cndx(col));
 }
 
 
-map_colrs(bs, cs, n)		/* convert a scanline to color index values */
-register BYTE	*bs;
-register COLR	*cs;
-register int	n;
+extern void
+map_colrs(		/* convert a scanline to color index values */
+	register BYTE	*bs,
+	register COLR	*cs,
+	register int	n
+)
 {
 	while (n-- > 0) {
 		*bs++ = cndx(cs[0]);
@@ -111,10 +130,12 @@ register int	n;
 }
 
 
-dith_colrs(bs, cs, n)		/* convert scanline to dithered index values */
-register BYTE	*bs;
-register COLR	*cs;
-int	n;
+extern void
+dith_colrs(		/* convert scanline to dithered index values */
+	register BYTE	*bs,
+	register COLR	*cs,
+	int	n
+)
 {
 	static short	(*cerr)[3] = NULL;
 	static int	N = 0;
@@ -159,10 +180,12 @@ int	n;
 }
 
 
-static
-cut(box, c0, c1)			/* partition color space */
-register int	box[3][2];
-int	c0, c1;
+static void
+cut(			/* partition color space */
+	register int	box[3][2],
+	int	c0,
+	int	c1
+)
 {
 	register int	branch;
 	int	kb[3][2];
@@ -185,8 +208,9 @@ int	c0, c1;
 
 
 static int
-split(box)				/* find median cut for box */
-register int	box[3][2];
+split(				/* find median cut for box */
+	register int	box[3][2]
+)
 {
 #define c0	r
 	register int	r, g, b;
@@ -242,10 +266,11 @@ register int	box[3][2];
 }
 
 
-static
-mktabent(p, box)	/* compute average color for box and assign */
-int	p;
-register int	box[3][2];
+static void
+mktabent(	/* compute average color for box and assign */
+	int	p,
+	register int	box[3][2]
+)
 {
 	unsigned long	sum[3];
 	unsigned	r, g;
@@ -285,9 +310,10 @@ register int	box[3][2];
 
 #ifdef CLOSEST
 #define NBSIZ		32
-static
-closest(n)			/* make sure we have the closest colors */
-int	n;
+static void
+closest(			/* make sure we have the closest colors */
+	int	n
+)
 {
 	BYTE	*neigh[256];
 	register int	r, g, b;
@@ -324,11 +350,12 @@ int	n;
 }
 
 
-static
-addneigh(nl, i, j)		/* i and j are neighbors; add them to list */
-register BYTE	*nl[];
-register int	i;
-int	j;
+static void
+addneigh(		/* i and j are neighbors; add them to list */
+	register BYTE	*nl[],
+	register int	i,
+	int	j
+)
 {
 	int	nc;
 	char	*nnl;
@@ -354,10 +381,13 @@ int	j;
 }
 
 
-static unsigned
-dist(col, r, g, b)		/* find distance from clrtab entry to r,g,b */
-register BYTE	col[3];
-int	r, g, b;
+static unsigned int
+dist(		/* find distance from clrtab entry to r,g,b */
+	register BYTE	col[3],
+	int	r,
+	int	g,
+	int	b
+)
 {
 	register int	tmp;
 	register unsigned	sum;
@@ -372,10 +402,13 @@ int	r, g, b;
 }
 
 
-static
-setclosest(nl, r, g, b)		/* find index closest to color and assign */
-BYTE	*nl[];
-int	r, g, b;
+static void
+setclosest(		/* find index closest to color and assign */
+	BYTE	*nl[],
+	int	r,
+	int	g,
+	int	b
+)
 {
 	int	ident;
 	unsigned	min;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_im.c,v 2.3 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_im.c,v 2.4 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ra_im.c - convert Radiance picture to imagetools raw format.
@@ -19,9 +19,11 @@ static const char	RCSid[] = "$Id: ra_im.c,v 2.3 2003/10/27 10:24:51 schorsch Exp
 extern FILE	*freopen();
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	register int	c;
 	register FILE	*fp;

@@ -1,4 +1,4 @@
-/* RCSid: $Id: x11raster.h,v 2.3 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: x11raster.h,v 2.4 2004/03/28 20:33:14 schorsch Exp $ */
 /*
  * x11raster.h - header file for X routines using images.
  *
@@ -26,13 +26,17 @@ typedef struct {
 	Pixmap	pm;				/* storage on server side */
 }	XRASTER;
 
-extern Colormap	newcmap();
-
-extern unsigned long	*map_rcolors();
-
-extern Pixmap	make_rpixmap();
-
-extern XRASTER	*make_raster();
+extern Colormap newcmap(Display	*disp, int	scrn, Visual	*vis);
+extern int init_rcolors(XRASTER	*xr, BYTE	cmap[][3]);
+extern unsigned long * map_rcolors(XRASTER	*xr, Window	w);
+extern Pixmap make_rpixmap(XRASTER	*xr, Window	w);
+extern XRASTER * make_raster( Display	*disp, XVisualInfo	*vis,
+	int	npixbits, char	*data, int	width, int height, int	bm_pad);
+extern void patch_raster(Drawable	d, int	xsrc, int	ysrc,
+	int	xdst, int	ydst, int	width, int	height, register XRASTER	*xr);
+extern void unmap_rcolors(XRASTER *xr);
+extern void free_rpixmap(XRASTER *xr);
+extern void free_raster(XRASTER *xr);
 
 #define put_raster(d,xdst,ydst,xr) patch_raster(d,0,0,xdst,ydst, \
 				(xr)->image->width,(xr)->image->height,xr)

@@ -1,4 +1,4 @@
-/* RCSid: $Id: ciq.h,v 2.4 2003/07/27 22:12:03 schorsch Exp $ */
+/* RCSid: $Id: ciq.h,v 2.5 2004/03/28 20:33:13 schorsch Exp $ */
 
 #ifndef _RAD_CIQ_H_
 #define _RAD_CIQ_H_
@@ -23,8 +23,6 @@ extern int n;		/* number of colors in it */
 
 #define linealloc(xdim)		(pixel *)emalloc(sizeof(pixel)*xdim)
 #define line3alloc(xdim)	(rgbpixel *)emalloc(sizeof(rgbpixel)*xdim)
-
-extern char	*emalloc();
 
 
 #ifdef __cplusplus

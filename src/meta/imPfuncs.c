@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: imPfuncs.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: imPfuncs.c,v 1.3 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  imPfuncs - functional interface to imPress, support for imPfuncs.h
@@ -123,7 +123,7 @@ im_putstring(
 }
 
 
-void
+extern void
 imCreateFamilyTable(va_alist)
 
 va_dcl
@@ -159,7 +159,7 @@ va_dcl
 }
 
 
-void
+extern void
 imCreatePath(va_alist)
 
 va_dcl

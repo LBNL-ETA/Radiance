@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.25 2004/01/02 12:47:01 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.26 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: pvalue.c,v 2.25 2004/01/02 12:47:01 schorsch E
 #include  "standard.h"
 #include  "color.h"
 #include  "resolu.h"
+#include  "view.h"
 
 #define	 min(a,b)		((a)<(b)?(a):(b))
 
@@ -19,34 +20,20 @@ static const char RCSid[] = "$Id: pvalue.c,v 2.25 2004/01/02 12:47:01 schorsch E
 #define  BRIGHT		4
 
 RESOLU	picres;			/* resolution of picture */
-
 int  uniq = 0;			/* print only unique values? */
-
 int  doexposure = 0;		/* exposure change? (>100 to print) */
-
 int  dataonly = 0;		/* data only format? */
-
 int  putprim = ALL;		/* what to put out */
-
 int  reverse = 0;		/* reverse conversion? */
-
 int  format = 'a';		/* input/output format */
 char  *fmtid = "ascii";		/* format identifier for header */
-
 int  header = 1;		/* do header? */
-
 long  skipbytes = 0;		/* skip bytes in input? */
-
 int  swapbytes = 0;		/* swap bytes? */
-
 int  interleave = 1;		/* file is interleaved? */
-
 int  resolution = 1;		/* put/get resolution string? */
-
 int  original = 0;		/* convert to original values? */
-
 int  wrongformat = 0;		/* wrong input format? */
-
 double	gamcor = 1.0;		/* gamma correction */
 
 int  ord[3] = {RED, GRN, BLU};	/* RGB ordering */
@@ -59,37 +46,58 @@ char  *progname;
 FILE  *fin;
 FILE  *fin2 = NULL, *fin3 = NULL;	/* for other color channels */
 
-int  (*getval)(), (*putval)();
+
+typedef int getfunc_t(COLOR  col);
+typedef int putfunc_t(COLOR  col);
+typedef double brightfunc_t(COLOR  col);
+
+getfunc_t *getval;
+putfunc_t *putval;
+brightfunc_t *mybright;
 
 static gethfunc checkhead;
+static brightfunc_t rgb_bright, xyz_bright;
+static getfunc_t getbascii, getbint, getbdouble, getbfloat, getbbyte, getbword;
+static getfunc_t getcascii, getcint, getcdouble, getcfloat, getcbyte, getcword;
+static putfunc_t putbascii, putbint, putbdouble, putbfloat, putbbyte, putbword;
+static putfunc_t putcascii, putcint, putcdouble, putcfloat, putcbyte, putcword;
+static putfunc_t putpascii, putpint, putpdouble, putpfloat, putpbyte, putpword;
+
+static void set_io(void);
+static void pixtoval(void);
+static void valtopix(void);
+static void swap16(uint16  *wp, int  n);
+static void swap32(uint32  *wp, int  n);
+static void swap64(char  *wp, int  n);
 
 
-double
-rgb_bright(clr)
-COLOR  clr;
+static double
+rgb_bright(
+	COLOR  clr
+)
 {
 	return(bright(clr));
 }
 
-double
-xyz_bright(clr)
-COLOR  clr;
+static double
+xyz_bright(
+	COLOR  clr
+)
 {
 	return(clr[CIEY]);
 }
 
-double  (*mybright)() = &rgb_bright;
-
-
-main(argc, argv)
-int  argc;
-char  **argv;
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
-	extern long  atol();
 	double  d, expval = 1.0;
 	int  i;
 
 	progname = argv[0];
+	mybright = &rgb_bright; /* default */
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-' || argv[i][0] == '+')
@@ -352,6 +360,7 @@ unkopt:
 	}
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
@@ -392,7 +401,8 @@ checkhead(				/* deal with line from header */
 }
 
 
-pixtoval()				/* convert picture to values */
+static void
+pixtoval(void)				/* convert picture to values */
 {
 	register COLOR	*scanln;
 	int  dogamma;
@@ -465,7 +475,8 @@ pixtoval()				/* convert picture to values */
 }
 
 
-valtopix()			/* convert values to a pixel file */
+static void
+valtopix(void)			/* convert values to a pixel file */
 {
 	int  dogamma;
 	register COLOR	*scanln;
@@ -517,9 +528,11 @@ int  code;
 }
 
 
-swap16(wp, n)		/* swap n 16-bit words */
-register uint16  *wp;
-int  n;
+static void
+swap16(		/* swap n 16-bit words */
+	register uint16  *wp,
+	int  n
+)
 {
 	while (n-- > 0) {
 		*wp = *wp << 8 | ((*wp >> 8) & 0xff);
@@ -528,9 +541,11 @@ int  n;
 }
 
 
-swap32(wp, n)		/* swap n 32-bit words */
-register uint32  *wp;
-int  n;
+static void
+swap32(		/* swap n 32-bit words */
+	register uint32  *wp,
+	int  n
+)
 {
 	while (n-- > 0) {
 		*wp = *wp << 24 | ((*wp >> 24) & 0xff) |
@@ -540,9 +555,11 @@ int  n;
 }
 
 
-swap64(wp, n)		/* swap n 64-bit words */
-register char  *wp;
-int  n;
+static void
+swap64(		/* swap n 64-bit words */
+	register char  *wp,
+	int  n
+)
 {
 	register int	t;
 
@@ -556,8 +573,10 @@ int  n;
 }
 
 
-getcascii(col)		/* get an ascii color value from stream(s) */
-COLOR  col;
+static int
+getcascii(		/* get an ascii color value from stream(s) */
+	COLOR  col
+)
 {
 	double	vd[3];
 
@@ -575,8 +594,10 @@ COLOR  col;
 }
 
 
-getcdouble(col)		/* get a double color value from stream(s) */
-COLOR  col;
+static int
+getcdouble(		/* get a double color value from stream(s) */
+	COLOR  col
+)
 {
 	double	vd[3];
 
@@ -596,8 +617,10 @@ COLOR  col;
 }
 
 
-getcfloat(col)		/* get a float color value from stream(s) */
-COLOR  col;
+static int
+getcfloat(		/* get a float color value from stream(s) */
+	COLOR  col
+)
 {
 	float  vf[3];
 
@@ -617,8 +640,10 @@ COLOR  col;
 }
 
 
-getcint(col)		/* get an int color value from stream(s) */
-COLOR  col;
+static int
+getcint(		/* get an int color value from stream(s) */
+	COLOR  col
+)
 {
 	int  vi[3];
 
@@ -637,8 +662,10 @@ COLOR  col;
 }
 
 
-getcbyte(col)		/* get a byte color value from stream(s) */
-COLOR  col;
+static int
+getcbyte(		/* get a byte color value from stream(s) */
+	COLOR  col
+)
 {
 	BYTE  vb[3];
 
@@ -657,8 +684,10 @@ COLOR  col;
 }
 
 
-getcword(col)		/* get a 16-bit color value from stream(s) */
-COLOR  col;
+static int
+getcword(		/* get a 16-bit color value from stream(s) */
+	COLOR  col
+)
 {
 	uint16  vw[3];
 
@@ -679,8 +708,10 @@ COLOR  col;
 }
 
 
-getbascii(col)		/* get an ascii brightness value from fin */
-COLOR  col;
+static int
+getbascii(		/* get an ascii brightness value from fin */
+	COLOR  col
+)
 {
 	double	vd;
 
@@ -691,8 +722,10 @@ COLOR  col;
 }
 
 
-getbdouble(col)		/* get a double brightness value from fin */
-COLOR  col;
+static int
+getbdouble(		/* get a double brightness value from fin */
+	COLOR  col
+)
 {
 	double	vd;
 
@@ -705,8 +738,10 @@ COLOR  col;
 }
 
 
-getbfloat(col)		/* get a float brightness value from fin */
-COLOR  col;
+static int
+getbfloat(		/* get a float brightness value from fin */
+	COLOR  col
+)
 {
 	float  vf;
 
@@ -719,8 +754,10 @@ COLOR  col;
 }
 
 
-getbint(col)		/* get an int brightness value from fin */
-COLOR  col;
+static int
+getbint(		/* get an int brightness value from fin */
+	COLOR  col
+)
 {
 	int  vi;
 	double	d;
@@ -733,8 +770,10 @@ COLOR  col;
 }
 
 
-getbbyte(col)		/* get a byte brightness value from fin */
-COLOR  col;
+static int
+getbbyte(		/* get a byte brightness value from fin */
+	COLOR  col
+)
 {
 	BYTE  vb;
 	double	d;
@@ -747,8 +786,10 @@ COLOR  col;
 }
 
 
-getbword(col)		/* get a 16-bit brightness value from fin */
-COLOR  col;
+static int
+getbword(		/* get a 16-bit brightness value from fin */
+	COLOR  col
+)
 {
 	uint16  vw;
 	double	d;
@@ -763,8 +804,10 @@ COLOR  col;
 }
 
 
-putcascii(col)			/* put an ascii color to stdout */
-COLOR  col;
+static int
+putcascii(			/* put an ascii color to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%15.3e %15.3e %15.3e\n",
 			colval(col,ord[0]),
@@ -775,8 +818,10 @@ COLOR  col;
 }
 
 
-putcfloat(col)			/* put a float color to stdout */
-COLOR  col;
+static int
+putcfloat(			/* put a float color to stdout */
+	COLOR  col
+)
 {
 	float  vf[3];
 
@@ -791,8 +836,10 @@ COLOR  col;
 }
 
 
-putcdouble(col)			/* put a double color to stdout */
-COLOR  col;
+static int
+putcdouble(			/* put a double color to stdout */
+	COLOR  col
+)
 {
 	double	vd[3];
 
@@ -807,8 +854,10 @@ COLOR  col;
 }
 
 
-putcint(col)			/* put an int color to stdout */
-COLOR  col;
+static int
+putcint(			/* put an int color to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%d %d %d\n",
 			(int)(colval(col,ord[0])*256.),
@@ -819,8 +868,10 @@ COLOR  col;
 }
 
 
-putcbyte(col)			/* put a byte color to stdout */
-COLOR  col;
+static int
+putcbyte(			/* put a byte color to stdout */
+	COLOR  col
+)
 {
 	long  i;
 	BYTE  vb[3];
@@ -837,8 +888,10 @@ COLOR  col;
 }
 
 
-putcword(col)			/* put a 16-bit color to stdout */
-COLOR  col;
+static int
+putcword(			/* put a 16-bit color to stdout */
+	COLOR  col
+)
 {
 	long  i;
 	uint16  vw[3];
@@ -857,8 +910,10 @@ COLOR  col;
 }
 
 
-putbascii(col)			/* put an ascii brightness to stdout */
-COLOR  col;
+static int
+putbascii(			/* put an ascii brightness to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%15.3e\n", (*mybright)(col));
 
@@ -866,8 +921,10 @@ COLOR  col;
 }
 
 
-putbfloat(col)			/* put a float brightness to stdout */
-COLOR  col;
+static int
+putbfloat(			/* put a float brightness to stdout */
+	COLOR  col
+)
 {
 	float  vf;
 
@@ -880,8 +937,10 @@ COLOR  col;
 }
 
 
-putbdouble(col)			/* put a double brightness to stdout */
-COLOR  col;
+static int
+putbdouble(			/* put a double brightness to stdout */
+	COLOR  col
+)
 {
 	double	vd;
 
@@ -894,8 +953,10 @@ COLOR  col;
 }
 
 
-putbint(col)			/* put an int brightness to stdout */
-COLOR  col;
+static int
+putbint(			/* put an int brightness to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%d\n", (int)((*mybright)(col)*256.));
 
@@ -903,8 +964,10 @@ COLOR  col;
 }
 
 
-putbbyte(col)			/* put a byte brightness to stdout */
-COLOR  col;
+static int
+putbbyte(			/* put a byte brightness to stdout */
+	COLOR  col
+)
 {
 	register int  i;
 	BYTE  vb;
@@ -917,8 +980,10 @@ COLOR  col;
 }
 
 
-putbword(col)			/* put a 16-bit brightness to stdout */
-COLOR  col;
+static int
+putbword(			/* put a 16-bit brightness to stdout */
+	COLOR  col
+)
 {
 	long  i;
 	uint16  vw;
@@ -933,8 +998,10 @@ COLOR  col;
 }
 
 
-putpascii(col)			/* put an ascii primary to stdout */
-COLOR  col;
+static int
+putpascii(			/* put an ascii primary to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%15.3e\n", colval(col,putprim));
 
@@ -942,8 +1009,10 @@ COLOR  col;
 }
 
 
-putpfloat(col)			/* put a float primary to stdout */
-COLOR  col;
+static int
+putpfloat(			/* put a float primary to stdout */
+	COLOR  col
+)
 {
 	float  vf;
 
@@ -956,8 +1025,10 @@ COLOR  col;
 }
 
 
-putpdouble(col)			/* put a double primary to stdout */
-COLOR  col;
+static int
+putpdouble(			/* put a double primary to stdout */
+	COLOR  col
+)
 {
 	double	vd;
 
@@ -970,8 +1041,10 @@ COLOR  col;
 }
 
 
-putpint(col)			/* put an int primary to stdout */
-COLOR  col;
+static int
+putpint(			/* put an int primary to stdout */
+	COLOR  col
+)
 {
 	fprintf(stdout, "%d\n", (int)(colval(col,putprim)*256.));
 
@@ -979,8 +1052,10 @@ COLOR  col;
 }
 
 
-putpbyte(col)			/* put a byte primary to stdout */
-COLOR  col;
+static int
+putpbyte(			/* put a byte primary to stdout */
+	COLOR  col
+)
 {
 	long  i;
 	BYTE  vb;
@@ -993,8 +1068,10 @@ COLOR  col;
 }
 
 
-putpword(col)			/* put a 16-bit primary to stdout */
-COLOR  col;
+static int
+putpword(			/* put a 16-bit primary to stdout */
+	COLOR  col
+)
 {
 	long  i;
 	uint16  vw;
@@ -1009,7 +1086,8 @@ COLOR  col;
 }
 
 
-set_io()			/* set put and get functions */
+static void
+set_io(void)			/* set put and get functions */
 {
 	switch (format) {
 	case 'a':					/* ascii */
@@ -1137,7 +1215,7 @@ set_io()			/* set put and get functions */
 		}
 		return;
 	}
-badopt:
+/* badopt: */ /* label not used */
 	fprintf(stderr, "%s: botched file type\n", progname);
 	quit(1);
 namerr:

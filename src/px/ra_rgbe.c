@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.16 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.17 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -18,13 +18,9 @@ static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.16 2004/01/02 12:47:01 schorsch 
 #define dumpheader(fp)	fwrite(headlines, 1, headlen, fp)
 
 int  bradj = 0;				/* brightness adjustment */
-
 int  doflat = 1;			/* produce flat file */
-
 int  force = 0;				/* force file overwrite? */
-
 int  findframe = 0;			/* find a specific frame? */
-
 int  frameno = 0;			/* current frame number */
 int  fmterr = 0;			/* got input format error */
 char  *headlines;			/* current header info. */
@@ -33,11 +29,12 @@ int  headlen;				/* current header length */
 char  *progname;
 
 static gethfunc addhline;
+static int transfer(char *ospec);
+static int loadheader(FILE *fp);
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(int  argc, char  *argv[])
 {
 	char	*ospec;
 	int  i;
@@ -90,8 +87,10 @@ userr:
 }
 
 
-transfer(ospec)			/* transfer a Radiance picture */
-char	*ospec;
+static int
+transfer(			/* transfer a Radiance picture */
+	char	*ospec
+)
 {
 	char	oname[PATH_MAX];
 	FILE	*fp;
@@ -220,8 +219,10 @@ addhline(			/* add a line to our info. header */
 }
 
 
-loadheader(fp)			/* load an info. header into memory */
-FILE	*fp;
+static int
+loadheader(			/* load an info. header into memory */
+	FILE	*fp
+)
 {
 	fmterr = 0; frameno = 0;
 	if (headlen) {			/* free old header */

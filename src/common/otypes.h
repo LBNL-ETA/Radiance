@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.14 2003/11/21 07:15:29 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.15 2004/03/28 20:33:12 schorsch Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -21,8 +21,11 @@ typedef struct {
 #ifdef FUN_ARGLIST
 extern int  o_default(FUN_ARGLIST);
 #else
-extern int  o_default();
+extern int  o_default(); /* XXX conflict with radogl.h */
 #endif
+
+/* extern void initotypes(void);*/ /* XXX don't mess with the linker... */
+
 				/* object types in decreasing frequency */
 #define  OBJ_FACE	0		/* polygon */
 #define  OBJ_CONE	1		/* cone */

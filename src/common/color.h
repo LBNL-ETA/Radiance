@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.27 2003/10/18 04:46:24 greg Exp $ */
+/* RCSid $Id: color.h,v 2.28 2004/03/28 20:33:12 schorsch Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -33,7 +33,8 @@ extern "C" {
 
 typedef BYTE  COLR[4];		/* red, green, blue (or X,Y,Z), exponent */
 
-typedef float  COLOR[3];	/* red, green, blue (or X,Y,Z) */
+typedef float COLORV;
+typedef COLORV  COLOR[3];	/* red, green, blue (or X,Y,Z) */
 
 typedef float  RGBPRIMS[4][2];	/* (x,y) chromaticities for RGBW */
 typedef float  (*RGBPRIMP)[2];	/* pointer to RGBPRIMS array */

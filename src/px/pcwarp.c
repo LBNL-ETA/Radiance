@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcwarp.c,v 3.3 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcwarp.c,v 3.4 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Warp colors in Radiance picture to correct for input/output changes.
  */
 
 #include <stdio.h>
+
+#include "resolu.h"
 #include "color.h"
 #include "warp3d.h"
 
@@ -18,10 +20,15 @@ WARP3D	*cwarp;				/* our warp map */
 int	iclip = CGAMUT_UPPER;		/* input value gamut clipping */
 int	oclip = CGAMUT_LOWER;		/* output value gamut clipping */
 
+static void syserror(char *s);
+static void picwarp(void);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	static char	picfmt[LPICFMT+1] = PICFMT;
 	int	cwflags = 0;
@@ -88,8 +95,10 @@ userr:
 }
 
 
-syserror(s)			/* print system error and exit */
-char	*s;
+static void
+syserror(			/* print system error and exit */
+	char	*s
+)
 {
 	fprintf(stderr, "%s: ", progname);
 	perror(s);
@@ -97,7 +106,8 @@ char	*s;
 }
 
 
-picwarp()			/* warp our picture scanlines */
+static void
+picwarp(void)			/* warp our picture scanlines */
 {
 	register COLOR	*scan;
 	long	ngamut = 0;
@@ -139,7 +149,7 @@ picwarp()			/* warp our picture scanlines */
 		}
 	}
 	if (ngamut >= (long)xres*yres/100)
-		fprintf(stderr, "%s: warning - %d%% of pixels out of gamut\n",
+		fprintf(stderr, "%s: warning - %ld%% of pixels out of gamut\n",
 				progname, 100*ngamut/((long)xres*yres));
 	free((void *)scan);
 }

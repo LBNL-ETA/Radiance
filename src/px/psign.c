@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.24 2003/10/22 02:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.25 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: psign.c,v 2.24 2003/10/22 02:06:35 greg Exp $"
 
 #include  "platform.h"
 #include  "standard.h"
+#include  "resolu.h"
 #include  "color.h"
 #include  "font.h"
 
@@ -62,10 +63,21 @@ LINE  *ourtext;				/* our text */
 int  nlines, maxline;			/* text dimensions */
 int  maxwidth;				/* maximum line width (dvi) */
 
+static void makemap(void);
+static void gettext(FILE  *fp);
+static void arg_text(int  ac, char  *av[]);
+static void maptext(void);
+static void mapglyph(GLYPH  *gl, int  tx0, int  ty0);
+static void mapcoord(int  p[2], int  tx, int  ty);
+static void mapedge(int  x, int  y, int  run, int  rise);
+static void writemap(FILE  *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  an;
 	SET_FILE_BINARY(stdout);
@@ -149,7 +161,8 @@ unkopt:
 }
 
 
-makemap()			/* create the bit map */
+static void
+makemap(void)			/* create the bit map */
 {
 	double	pictaspect;
 	
@@ -212,8 +225,10 @@ makemap()			/* create the bit map */
 }
 
 
-gettext(fp)			/* get text from a file */
-FILE  *fp;
+static void
+gettext(			/* get text from a file */
+	FILE  *fp
+)
 {
 	char  buf[MAXLINE];
 	register LINE  *curl;
@@ -255,9 +270,11 @@ memerr:
 }
 
 
-arg_text(ac, av)			/* get text from arguments */
-int  ac;
-char  *av[];
+static void
+arg_text(			/* get text from arguments */
+	int  ac,
+	char  *av[]
+)
 {
 	register char  *cp;
 
@@ -293,7 +310,8 @@ memerr:
 }
 
 
-maptext()			/* map our text */
+static void
+maptext(void)			/* map our text */
 {
 	register LINE  *curl;
 	int  l, len;
@@ -309,9 +327,12 @@ maptext()			/* map our text */
 }
 
 
-mapglyph(gl, tx0, ty0)		/* convert a glyph */
-GLYPH  *gl;
-int  tx0, ty0;
+static void
+mapglyph(		/* convert a glyph */
+	GLYPH  *gl,
+	int  tx0,
+	int  ty0
+)
 {
 	int  n;
 	register GORD  *gp;
@@ -332,8 +353,12 @@ int  tx0, ty0;
 }
 
 
-mapcoord(p, tx, ty)		/* map text to picture coordinates */
-int  p[2], tx, ty;
+static void
+mapcoord(		/* map text to picture coordinates */
+	int  p[2],
+	int  tx,
+	int  ty
+)
 {
 	tx = (long)tx*cwidth >> 8;
 	ty = (long)ty*cheight >> 8;
@@ -359,9 +384,13 @@ int  p[2], tx, ty;
 }
 
 
-mapedge(x, y, run, rise)		/* map an edge */
-register int  x, y;
-int  run, rise;
+static void
+mapedge(		/* map an edge */
+	register int  x,
+	register int  y,
+	int  run,
+	int  rise
+)
 {
 	int  xstep;
 	int  rise2, run2;
@@ -396,8 +425,10 @@ int  run, rise;
 }
 
 
-writemap(fp)			/* write out bitmap */
-FILE  *fp;
+static void
+writemap(			/* write out bitmap */
+	FILE  *fp
+)
 {
 	COLR  pixval[SSS*SSS+1];	/* possible pixel values */
 	COLOR  ctmp0, ctmp1;

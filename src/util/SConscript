@@ -58,7 +58,8 @@ if os.name != 'nt': # XXX pending replacement of fork() and friends
 			LIBS=mlib)
 	scanner_i = env.Install(env['RAD_BINDIR'], scanner)
 	makedist = env.Program(target=radbin('makedist'),
-			source=Split('makedist.c')+[setscan])
+			source=Split('makedist.c')+[setscan],
+			LIBS=['rtmath']+mlib)
 	makedist_i = env.Install(env['RAD_BINDIR'], makedist)
 	env.Alias('util_special', [scanner, makedist])
 	env.Alias('util_special_install', [scanner_i, makedist_i])

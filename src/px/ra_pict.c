@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pict.c,v 2.9 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_pict.c,v 2.10 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*		Convert an Radiance image to APPLE pict format.
  *
@@ -31,10 +31,26 @@ int	verbose = 0;
 float	gamcor = 2.0;
 int	bradj = 0;
 
-	/* First some utility routines */
+static void putrect(int xorg, int yorg, int xsize, int ysize);
+static void putfprect(int xorg, int yorg, int xsize, int ysize);
+static void putalong(long l);
+static void putashort(short s);
+static void putbyte(int b);
+static void putbytes(unsigned char *buf, int n );
+static void putpict(int xsize, int ysize);
+static void getrow(FILE *in, char *cbuf, int xsize);
+static int packbits(unsigned char *ibits, unsigned char *pbits, int nbits);
+static void usage(void);
 
-putrect(xorg,yorg,xsize,ysize)
-int xorg, yorg, xsize, ysize;
+
+	/* First some utility routines */
+static void
+putrect(
+	int xorg,
+	int yorg,
+	int xsize,
+	int ysize
+)
 {
     putashort(yorg);
     putashort(xorg);
@@ -42,8 +58,13 @@ int xorg, yorg, xsize, ysize;
     putashort(xsize);
 }
 
-putfprect(xorg,yorg,xsize,ysize)
-int xorg, yorg, xsize, ysize;
+static void
+putfprect(
+	int xorg,
+	int yorg,
+	int xsize,
+	int ysize
+)
 {
     putalong(yorg<<16);
     putalong(xorg<<16);
@@ -51,8 +72,10 @@ int xorg, yorg, xsize, ysize;
     putalong(xsize<<16);
 }
 
-putalong(l)
-long l;
+static void
+putalong(
+	long l
+)
 {
     putbyte((l>>24)&0xff);
     putbyte((l>>16)&0xff);
@@ -60,15 +83,19 @@ long l;
     putbyte((l>>0)&0xff);
 }
 
-putashort(s)
-short s;
+static void
+putashort(
+	short s
+)
 {
     putbyte((s>>8)&0xff);
     putbyte((s>>0)&0xff);
 }
 
-putbyte(b)
-int b;
+static void
+putbyte(
+	int b
+)
 {
     if (putc(b,stdout) == EOF && ferror(stdout)) {
 	fprintf(stderr,"%s: error on write\n", progname);
@@ -77,9 +104,11 @@ int b;
     outbytes++;
 }
 
-putbytes(buf,n)
-unsigned char *buf;
-int n;
+static void
+putbytes(
+	unsigned char *buf,
+	int n
+)
 {
     if(!fwrite(buf,n,1,stdout)) {
 	fprintf(stderr,"%s: error on write\n", progname);
@@ -88,9 +117,11 @@ int n;
     outbytes+=n;
 }
 
-main(argc,argv)
-int argc;
-char **argv;
+int
+main(
+	int argc,
+	char **argv
+)
 {
     int xsize, ysize;
     int i, picsize;
@@ -123,7 +154,8 @@ char **argv;
 				goto outofparse;
 				break;		    /* NOTREACHED */
 
-		otherwise:	usage();
+		default:
+				usage();
 				break;
 		 }
 	else
@@ -207,9 +239,11 @@ outofparse:
     return 0;	    /* lint fodder */
 }
 
-putpict(xsize, ysize)
-int xsize;
-int ysize;
+static void
+putpict(
+	int xsize,
+	int ysize
+)
 {
     int	    y;
     int	    nbytes, rowbytes;
@@ -280,10 +314,12 @@ int ysize;
     free(pbuf);
 }
 
-int getrow(in, cbuf, xsize)
-FILE *in;
-char *cbuf;
-int xsize;
+static void
+getrow(
+	FILE *in,
+	char *cbuf,
+	int xsize
+)
 {
     extern char *tempbuffer();		/* defined in color.c */
     COLR    *scanin = NULL;
@@ -314,11 +350,13 @@ int xsize;
 }
 
 
-packbits(ibits,pbits,nbits)
-unsigned char *ibits, *pbits;
-int nbits;
+static int
+packbits(
+	unsigned char *ibits,
+	unsigned char *pbits,
+	int nbits
+)
 {
-    int bytes;			    /* UNUSED */
     unsigned char *sptr;
     unsigned char *ibitsend;
     unsigned char *optr = pbits;
@@ -359,7 +397,8 @@ int nbits;
     return optr-pbits;
 }
 
-usage()
+static void
+usage(void)
 {
     fprintf(stderr, "Usage: %s [-v] [-g gamma] [infile [outfile]]\n",
 	progname);

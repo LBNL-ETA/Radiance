@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: protate.c,v 2.8 2003/05/15 05:13:35 greg Exp $";
+static const char	RCSid[] = "$Id: protate.c,v 2.9 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * prot.c - program to rotate picture file 90 degrees clockwise.
@@ -37,9 +37,14 @@ short	ordertab[4][2] = {
 	{0,XDECR}, {XDECR,XDECR|YDECR}, {XDECR|YDECR,YDECR}, {YDECR,0}
 };
 
+static int neworder(void);
+static void rotatecw(FILE *fp);
+static void rotateccw(FILE *fp);
 
-int
-neworder()		/* return corrected order */
+
+
+static int
+neworder(void)		/* return corrected order */
 {
 	register int	i;
 
@@ -52,10 +57,11 @@ neworder()		/* return corrected order */
 	exit(2);
 }
 
-
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	static char	picfmt[LPICFMT+1] = PICFMT;
 	int	rval;
@@ -118,8 +124,10 @@ userr:
 }
 
 
-rotatecw(fp)			/* rotate picture clockwise */
-FILE	*fp;
+static void
+rotatecw(			/* rotate picture clockwise */
+	FILE	*fp
+)
 {
 	register COLR	*inln;
 	register int	xoff, inx, iny;
@@ -154,8 +162,10 @@ FILE	*fp;
 }
 
 
-rotateccw(fp)			/* rotate picture counter-clockwise */
-FILE	*fp;
+static void
+rotateccw(			/* rotate picture counter-clockwise */
+	FILE	*fp
+)
 {
 	register COLR	*inln;
 	register int	xoff, inx, iny;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.22 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.23 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -16,10 +16,12 @@ static const char	RCSid[] = "$Id: macbethcal.c,v 2.22 2003/11/10 12:28:56 schors
 
 #include "platform.h"
 #include "rtprocess.h"
+#include "rtio.h"
 #include "color.h"
 #include "resolu.h"
 #include "pmap.h"
 #include "warp3d.h"
+#include "mx3.h"
 
 				/* MacBeth colors */
 #define	DarkSkin	0
@@ -123,10 +125,29 @@ WARP3D	*wcor = NULL;		/* color space warp */
 FILE	*debugfp = NULL;	/* debug output picture */
 char	*progname;
 
+static void init(void);
+static int chartndx(int	x, int y, int	*np);
+static void getpicture(void);
+static void getcolors(void);
+static void bresp(COLOR	y, COLOR	x);
+static void compute(void);
+static void putmapping(void);
+static void compsoln(COLOR	cin[], COLOR	cout[], int	n);
+static void cwarp(void);
+static int cvtcolor(COLOR	cout, COLOR	cin);
+static int cresp(COLOR	cout, COLOR	cin);
+static void xyY2RGB(COLOR	rgbout, float	xyYin[3]);
+static void picdebug(void);
+static void clrdebug(void);
+static void getpos(char	*name, int	bnds[2], FILE	*fp);
+static void pickchartpos(char	*pfn);
 
-main(argc, argv)
-int	argc;
-char	**argv;
+
+int
+main(
+	int	argc,
+	char	**argv
+)
 {
 	int	i;
 
@@ -256,10 +277,12 @@ userr:
 	fprintf(stderr, "   or: %s [-d dbg.pic][-i irrad][-m] -c [xyY.dat [output.{cal|cwp}]]\n",
 			progname);
 	exit(1);
+	return 1; /* pro forma return */
 }
 
 
-init()				/* initialize */
+static void
+init(void)				/* initialize */
 {
 	double	quad[4][2];
 	register int	i;
@@ -285,10 +308,12 @@ init()				/* initialize */
 }
 
 
-int
-chartndx(x, y, np)			/* find color number for position */
-int	x, y;
-int	*np;
+static int
+chartndx(			/* find color number for position */
+	int	x,
+	int y,
+	int	*np
+)
 {
 	double	ipos[3], cpos[3];
 	int	ix, iy;
@@ -317,7 +342,8 @@ int	*np;
 }
 
 
-getpicture()				/* load in picture colors */
+static void
+getpicture(void)				/* load in picture colors */
 {
 	COLR	*scanln;
 	COLOR	pval;
@@ -359,7 +385,8 @@ getpicture()				/* load in picture colors */
 }
 
 
-getcolors()			/* get xyY colors from standard input */
+static void
+getcolors(void)			/* get xyY colors from standard input */
 {
 	int	gotwhite = 0;
 	COLOR	whiteclr;
@@ -407,8 +434,11 @@ getcolors()			/* get xyY colors from standard input */
 }
 
 
-bresp(y, x)		/* piecewise linear interpolation of primaries */
-COLOR	y, x;
+static void
+bresp(		/* piecewise linear interpolation of primaries */
+	COLOR	y,
+	COLOR	x
+)
 {
 	register int	i, n;
 
@@ -425,7 +455,8 @@ COLOR	y, x;
 }
 
 
-compute()			/* compute color mapping */
+static void
+compute(void)			/* compute color mapping */
 {
 	COLOR	clrin[24], clrout[24];
 	long	cflags;
@@ -483,7 +514,8 @@ compute()			/* compute color mapping */
 }
 
 
-putmapping()			/* put out color mapping */
+static void
+putmapping(void)			/* put out color mapping */
 {
 	static char	cchar[3] = {'r', 'g', 'b'};
 	register int	i, j;
@@ -531,9 +563,12 @@ putmapping()			/* put out color mapping */
 }
 
 
-compsoln(cin, cout, n)		/* solve 3xN system using least-squares */
-COLOR	cin[], cout[];
-int	n;
+static void
+compsoln(		/* solve 3xN system using least-squares */
+	COLOR	cin[],
+	COLOR	cout[],
+	int	n
+)
 {
 	extern double	mx3d_adjoint(), fabs();
 	double	mat[3][3], invmat[3][3];
@@ -591,7 +626,8 @@ int	n;
 }
 
 
-cwarp()				/* compute color warp map */
+static void
+cwarp(void)				/* compute color warp map */
 {
 	register int	i;
 
@@ -607,9 +643,11 @@ memerr:
 }
 
 
-int
-cvtcolor(cout, cin)		/* convert color according to our mapping */
-COLOR	cout, cin;
+static int
+cvtcolor(		/* convert color according to our mapping */
+	COLOR	cout,
+	COLOR	cin
+)
 {
 	COLOR	ctmp;
 	int	clipped;
@@ -628,18 +666,22 @@ COLOR	cout, cin;
 }
 
 
-int
-cresp(cout, cin)		/* transform color according to matrix */
-COLOR	cout, cin;
+static int
+cresp(		/* transform color according to matrix */
+	COLOR	cout,
+	COLOR	cin
+)
 {
 	colortrans(cout, solmat, cin);
 	return(clipgamut(cout, bright(cout), CGAMUT, colmin, colmax));
 }
 
 
-xyY2RGB(rgbout, xyYin)		/* convert xyY to RGB */
-COLOR	rgbout;
-register float	xyYin[3];
+static void
+xyY2RGB(		/* convert xyY to RGB */
+	COLOR	rgbout,
+	register float	xyYin[3]
+)
 {
 	COLOR	ctmp;
 	double	d;
@@ -653,7 +695,8 @@ register float	xyYin[3];
 }
 
 
-picdebug()			/* put out debugging picture */
+static void
+picdebug(void)			/* put out debugging picture */
 {
 	static COLOR	blkcol = BLKCOLOR;
 	COLOR	*scan;
@@ -709,7 +752,8 @@ picdebug()			/* put out debugging picture */
 }
 
 
-clrdebug()			/* put out debug picture from color input */
+static void
+clrdebug(void)			/* put out debug picture from color input */
 {
 	static COLR	blkclr = BLKCOLR;
 	COLR	mbclr[24], cvclr[24], orclr[24];
@@ -779,10 +823,12 @@ clrdebug()			/* put out debug picture from color input */
 }
 
 
-getpos(name, bnds, fp)		/* get boundary position */
-char	*name;
-int	bnds[2];
-FILE	*fp;
+static void
+getpos(		/* get boundary position */
+	char	*name,
+	int	bnds[2],
+	FILE	*fp
+)
 {
 	char	buf[64];
 
@@ -796,8 +842,10 @@ FILE	*fp;
 }
 
 
-pickchartpos(pfn)		/* display picture and pick chart location */
-char	*pfn;
+static void
+pickchartpos(		/* display picture and pick chart location */
+	char	*pfn
+)
 {
 	char	combuf[PATH_MAX];
 	FILE	*pfp;

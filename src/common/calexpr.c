@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.28 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.29 2004/03/28 20:33:12 schorsch Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -26,6 +26,8 @@ static const char	RCSid[] = "$Id: calexpr.c,v 2.28 2003/11/14 17:22:06 schorsch 
 #include  <math.h>
 #include  <stdlib.h>
 
+#include  "rtmisc.h"
+#include  "rtio.h"
 #include  "rterror.h"
 #include  "calcomp.h"
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colorscale.c,v 2.4 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: colorscale.c,v 2.5 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  colorscale.c - program to produce color pallets
@@ -16,10 +16,15 @@ static const char	RCSid[] = "$Id: colorscale.c,v 2.4 2003/02/22 02:07:27 greg Ex
 int  primary = -1;
 double  prival = 0.0;
 
+static void colorscale(void);
+static void printargs(int  ac, char  **av, FILE  *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i;
 
@@ -53,7 +58,8 @@ userr:
 }
 
 
-colorscale()			/* output our color scale */
+static void
+colorscale(void)			/* output our color scale */
 {
 	COLOR  scanline[256];
 	int  j;
@@ -82,10 +88,12 @@ writerr:
 }
 
 
-printargs(ac, av, fp)		/* print arguments to a file */
-int  ac;
-char  **av;
-FILE  *fp;
+static void
+printargs(		/* print arguments to a file */
+	int  ac,
+	char  **av,
+	FILE  *fp
+)
 {
 	while (ac-- > 0) {
 		fputs(*av++, fp);

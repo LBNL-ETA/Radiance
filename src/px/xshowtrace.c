@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xshowtrace.c,v 2.9 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.10 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  Display an image and watch the rays get traced.
@@ -45,10 +45,19 @@ struct node {				/* ray tree node */
 
 int	slow = 0;		/* slow trace? */
 
+void mainloop(void);
+static void freetree(struct node	*tp);
+static void tracerays(struct node	*tp);
+static int strtoipt(int	ipt[2], char	*str);
+static void setvec(int	ipt[2]);
+static void vector(int	ip1[2], int	ip2[2]);
 
-main(argc, argv)		/* takes both the octree and the image */
-int	argc;
-char	*argv[];
+
+int
+main(		/* takes both the octree and the image */
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 	char	combuf[PATH_MAX];
@@ -96,7 +105,8 @@ char	*argv[];
 }
 
 
-mainloop()				/* get and process input */
+void
+mainloop(void)				/* get and process input */
 {
 	static struct node	*sis[MAXDEPTH];
 	register struct node	*newp;
@@ -135,8 +145,10 @@ mainloop()				/* get and process input */
 }
 
 
-freetree(tp)				/* free a trace tree */
-struct node	*tp;
+static void
+freetree(				/* free a trace tree */
+	struct node	*tp
+)
 {
 	register struct node	*kid, *k2;
 
@@ -148,8 +160,10 @@ struct node	*tp;
 }
 
 
-tracerays(tp)				/* trace a ray tree */
-struct node	*tp;
+static void
+tracerays(				/* trace a ray tree */
+	struct node	*tp
+)
 {
 	register struct node	*kid;
 
@@ -160,9 +174,11 @@ struct node	*tp;
 }
 
 
-strtoipt(ipt, str)		/* convert string x y z to image point */
-int	ipt[2];
-char	*str;
+static int
+strtoipt(		/* convert string x y z to image point */
+	int	ipt[2],
+	char	*str
+)
 {
 	FVECT	im_pt, pt;
 
@@ -186,8 +202,10 @@ Window	gwind = 0;
 int	xoff, yoff;
 
 
-setvec(ipt)			/* set up vector drawing for pick */
-int	ipt[2];
+static void
+setvec(			/* set up vector drawing for pick */
+	int	ipt[2]
+)
 {
 	extern Window	xfindwind();
 	XWindowAttributes	wa;
@@ -226,8 +244,11 @@ int	ipt[2];
 }
 
 
-vector(ip1, ip2)		/* draw a vector */
-int	ip1[2], ip2[2];
+static void
+vector(		/* draw a vector */
+	int	ip1[2],
+	int	ip2[2]
+)
 {
 	if (ip2[0] == -1 && ip2[1] == -1)
 		return;			/* null vector */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.50 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.51 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -325,7 +325,7 @@ again:
 				return;
 			}
 			*v = *(viewhist + ((nhist-1)%VIEWHISTLEN));
-			goto again;	/* poss. overloading dev_section()? */
+			goto again;	/* XXX overloading dev_section()? */
 		}
 		DCHECK(*slist < 0, WARNING, "no visible sections in new_view");
 		for ( ; *slist >= 0; slist++)

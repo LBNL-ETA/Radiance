@@ -1,4 +1,4 @@
-/* RCSid: $Id: warp3d.h,v 3.4 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: warp3d.h,v 3.5 2004/03/28 20:33:14 schorsch Exp $ */
 /*
  * Header file for 3D warping routines.
  */
@@ -43,7 +43,12 @@ typedef struct {
 	struct grid3d	grid;		/* point conversion grid */
 } WARP3D;			/* a warp map */
 
-extern WARP3D	*new3dw(), *load3dw();
+extern int warp3d(W3VEC po, W3VEC pi, WARP3D *wp);
+extern int add3dpt(WARP3D* wp, W3VEC pti, W3VEC pto);
+extern WARP3D* new3dw(int flgs);
+extern WARP3D* load3dw(char *fn, WARP3D *wp);
+extern void free3dw(WARP3D *wp);
+extern int set3dwfl(WARP3D *wp, int flgs);
 
 #define  W3VCPY(v1,v2)	((v1)[0]=(v2)[0],(v1)[1]=(v2)[1],(v1)[2]=(v2)[2])
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neuclrtab.c,v 2.10 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.11 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: neuclrtab.c,v 2.10 2003/06/30 14:59:12 schorsc
 #include "standard.h"
 #include "color.h"
 #include "random.h"
+#include "clrtab.h"
 
 #ifdef COMPAT_MODE
 #define neu_init	new_histo
@@ -50,11 +51,21 @@ static long	skipcount;
 
 #define setskip(sp,n)	((sp)[0]=(n)>>16,(sp)[1]=((n)>>8)&255,(sp)[2]=(n)&255)
 
-static	cpyclrtab();
+static void initnet(void);
+static void inxbuild(void);
+static int inxsearch(int b, int g, int r);
+static int contest(int b, int g, int r);
+static void altersingle(int alpha, int i, int b, int g, int r);
+static void alterneigh(int rad, int i, int b, int g, int r);
+static void learn(void);
+static void unbiasnet(void);
+static void cpyclrtab(void);
 
 
-neu_init(npixels)		/* initialize our sample array */
-long	npixels;
+extern int
+neu_init(		/* initialize our sample array */
+	long	npixels
+)
 {
 	register int	nsleft;
 	register long	sv;
@@ -91,8 +102,10 @@ long	npixels;
 }
 
 
-neu_pixel(col)			/* add pixel to our samples */
-register BYTE	col[];
+extern void
+neu_pixel(			/* add pixel to our samples */
+	register BYTE	col[]
+)
 {
 	if (!skipcount--) {
 		skipcount = nskip(cursamp);
@@ -104,9 +117,11 @@ register BYTE	col[];
 }
 
 
-neu_colrs(cs, n)		/* add a scanline to our samples */
-register COLR	*cs;
-register int	n;
+extern void
+neu_colrs(		/* add a scanline to our samples */
+	register COLR	*cs,
+	register int	n
+)
 {
 	while (n > skipcount) {
 		cs += skipcount;
@@ -122,8 +137,10 @@ register int	n;
 }
 
 
-neu_clrtab(ncolors)		/* make new color table using ncolors */
-int	ncolors;
+extern int
+neu_clrtab(		/* make new color table using ncolors */
+	int	ncolors
+)
 {
 	clrtabsiz = ncolors;
 	if (clrtabsiz > 256) clrtabsiz = 256;
@@ -141,18 +158,21 @@ int	ncolors;
 }
 
 
-int
-neu_map_pixel(col)		/* get pixel for color */
-register BYTE	col[];
+extern int
+neu_map_pixel(		/* get pixel for color */
+	register BYTE	col[]
+)
 {
 	return(inxsearch(col[BLU],col[GRN],col[RED]));
 }
 
 
-neu_map_colrs(bs, cs, n)	/* convert a scanline to color index values */
-register BYTE	*bs;
-register COLR	*cs;
-register int	n;
+extern void
+neu_map_colrs(	/* convert a scanline to color index values */
+	register BYTE	*bs,
+	register COLR	*cs,
+	register int	n
+)
 {
 	while (n-- > 0) {
 		*bs++ = inxsearch(cs[0][BLU],cs[0][GRN],cs[0][RED]);
@@ -161,10 +181,12 @@ register int	n;
 }
 
 
-neu_dith_colrs(bs, cs, n)	/* convert scanline to dithered index values */
-register BYTE	*bs;
-register COLR	*cs;
-int	n;
+extern void
+neu_dith_colrs(	/* convert scanline to dithered index values */
+	register BYTE	*bs,
+	register COLR	*cs,
+	int	n
+)
 {
 	static short	(*cerr)[3] = NULL;
 	static int	N = 0;
@@ -309,7 +331,8 @@ int radpower[initrad];	/* radpower for precomputation */
 
 /* initialise network in range (0,0,0) to (255,255,255) */
 
-initnet()	
+static void
+initnet(void)	
 {
 	register int i;
 	register int *p;
@@ -325,7 +348,8 @@ initnet()
 
 /* do after unbias - insertion sort of network and build netindex[0..255] */
 
-inxbuild()
+static void
+inxbuild(void)
 {
 	register int i,j,smallpos,smallval;
 	register int *p,*q;
@@ -366,8 +390,12 @@ inxbuild()
 }
 
 
-int inxsearch(b,g,r)  /* accepts real BGR values after net is unbiased */
-register int b,g,r;
+static int
+inxsearch(  /* accepts real BGR values after net is unbiased */
+	register int b,
+	register int g,
+	register int r
+)
 {
 	register int i,j,dist,a,bestd;
 	register int *p;
@@ -421,8 +449,12 @@ register int b,g,r;
 /* for frequently chosen neurons, freq[i] is high and bias[i] is negative */
 /* bias[i] = gamma*((1/netsize)-freq[i]) */
 
-int contest(b,g,r)	/* accepts biased BGR values */
-register int b,g,r;
+static int
+contest(	/* accepts biased BGR values */
+	register int b,
+	register int g,
+	register int r
+)
 {
 	register int i,dist,a,biasdist,betafreq;
 	int bestpos,bestbiaspos,bestd,bestbiasd;
@@ -457,8 +489,14 @@ register int b,g,r;
 
 /* move neuron i towards (b,g,r) by factor alpha */
 
-altersingle(alpha,i,b,g,r)	/* accepts biased BGR values */
-register int alpha,i,b,g,r;
+static void
+altersingle(	/* accepts biased BGR values */
+	register int alpha,
+	register int i,
+	register int b,
+	register int g,
+	register int r
+)
 {
 	register int *n;
 
@@ -474,9 +512,14 @@ register int alpha,i,b,g,r;
 /* move neurons adjacent to i towards (b,g,r) by factor */
 /* alpha*(1-((i-j)^2/[r]^2)) precomputed as radpower[|i-j|]*/
 
-alterneigh(rad,i,b,g,r)	/* accents biased BGR values */
-int rad,i;
-register int b,g,r;
+static void
+alterneigh(	/* accents biased BGR values */
+	int rad,
+	int i,
+	register int b,
+	register int g,
+	register int r
+)
 {
 	register int j,k,lo,hi,a;
 	register int *p, *q;
@@ -511,7 +554,8 @@ register int b,g,r;
 }
 
 
-learn()
+static void
+learn(void)
 {
 	register int i,j,b,g,r;
 	int radius,rad,alpha,step,delta,samplepixels;
@@ -569,7 +613,8 @@ learn()
 /* which can then be used for colour map */
 /* and record position i to prepare for sort */
 
-unbiasnet()
+static void
+unbiasnet(void)
 {
 	int i,j;
 
@@ -583,8 +628,8 @@ unbiasnet()
 
 /* Don't do this until the network has been unbiased (GW) */
 		
-static
-cpyclrtab()
+static void
+cpyclrtab(void)
 {
 	register int i,j,k;
 	

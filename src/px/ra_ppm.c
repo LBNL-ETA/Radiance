@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.11 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.12 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -14,28 +14,37 @@ static const char	RCSid[] = "$Id: ra_ppm.c,v 2.11 2003/07/27 22:12:03 schorsch E
 #include  "color.h"
 #include  "resolu.h"
 
-
-int  agryscan(), bgryscan(), aclrscan(), bclrscan();
-int  agryscan2(), bgryscan2(), aclrscan2(), bclrscan2();
-int  normval();
-unsigned int	scanint(), intv(), getby2();
-
 #define	fltv(i)		(((i)+.5)/(maxval+1.))
-
 int  bradj = 0;				/* brightness adjustment */
-
 double	gamcor = 2.2;			/* gamma correction value */
-
 int  maxval = 255;			/* maximum primary value */
-
 char  *progname;
-
 int  xmax, ymax;
 
+typedef int colrscanf_t(COLR *scan, int len, FILE *fp);
+typedef int colorscanf_t(COLOR *scan, int len, FILE *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+static colrscanf_t agryscan, bgryscan, aclrscan, bclrscan;
+static void ppm2ra(colrscanf_t *getscan);
+static void ra2ppm(int  binary, int  grey);
+
+static colorscanf_t agryscan2, bgryscan2, aclrscan2, bclrscan2;
+static void ppm2ra2(colorscanf_t *getscan);
+static void ra2ppm2(int  binary, int  grey);
+
+static int normval(unsigned int  v);
+static unsigned int scanint(FILE  *fp);
+static unsigned int intv(double	v);
+static unsigned int getby2(FILE	*fp);
+static void putby2(unsigned int	w, FILE	*fp);
+static void quiterr(char  *err);
+
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	char  inpbuf[2];
 	int  gryflag = 0;
@@ -171,8 +180,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -182,8 +193,10 @@ char  *err;
 }
 
 
-ppm2ra(getscan)		/* convert 1-byte Pixmap to Radiance picture */
-int  (*getscan)();
+static void
+ppm2ra(		/* convert 1-byte Pixmap to Radiance picture */
+	colrscanf_t *getscan
+)
 {
 	COLR	*scanout;
 	int	y;
@@ -206,8 +219,11 @@ int  (*getscan)();
 }
 
 
-ra2ppm(binary, grey)	/* convert Radiance picture to Pixmap */
-int  binary, grey;
+static void
+ra2ppm(	/* convert Radiance picture to Pixmap */
+	int  binary,
+	int  grey
+)
 {
 	COLR	*scanin;
 	register int	x;
@@ -252,8 +268,10 @@ int  binary, grey;
 }
 
 
-ppm2ra2(getscan)	/* convert 2-byte Pixmap to Radiance picture */
-int  (*getscan)();
+static void
+ppm2ra2(	/* convert 2-byte Pixmap to Radiance picture */
+	colorscanf_t *getscan
+)
 {
 	COLOR	*scanout;
 	double	mult;
@@ -287,8 +305,11 @@ int  (*getscan)();
 }
 
 
-ra2ppm2(binary, grey)	/* convert Radiance picture to Pixmap (2-byte) */
-int  binary, grey;
+static void
+ra2ppm2(	/* convert Radiance picture to Pixmap (2-byte) */
+	int  binary,
+	int  grey
+)
 {
 	COLOR	*scanin;
 	double	mult, d;
@@ -351,10 +372,12 @@ int  binary, grey;
 }
 
 
-agryscan(scan, len, fp)			/* get an ASCII greyscale scanline */
-register COLR  *scan;
-register int  len;
-FILE  *fp;
+static int
+agryscan(			/* get an ASCII greyscale scanline */
+	register COLR  *scan,
+	register int  len,
+	FILE  *fp
+)
 {
 	while (len-- > 0) {
 		scan[0][RED] =
@@ -366,10 +389,12 @@ FILE  *fp;
 }
 
 
-bgryscan(scan, len, fp)			/* get a binary greyscale scanline */
-register COLR  *scan;
-int  len;
-register FILE  *fp;
+static int
+bgryscan(			/* get a binary greyscale scanline */
+	register COLR  *scan,
+	int  len,
+	register FILE  *fp
+)
 {
 	register int  c;
 
@@ -387,10 +412,12 @@ register FILE  *fp;
 }
 
 
-aclrscan(scan, len, fp)			/* get an ASCII color scanline */
-register COLR  *scan;
-register int  len;
-FILE  *fp;
+static int
+aclrscan(			/* get an ASCII color scanline */
+	register COLR  *scan,
+	register int  len,
+	FILE  *fp
+)
 {
 	while (len-- > 0) {
 		scan[0][RED] = normval(scanint(fp));
@@ -402,10 +429,12 @@ FILE  *fp;
 }
 
 
-bclrscan(scan, len, fp)			/* get a binary color scanline */
-register COLR  *scan;
-int  len;
-register FILE  *fp;
+static int
+bclrscan(			/* get a binary color scanline */
+	register COLR  *scan,
+	int  len,
+	register FILE  *fp
+)
 {
 	int  r, g, b;
 
@@ -429,10 +458,12 @@ register FILE  *fp;
 }
 
 
-agryscan2(scan, len, fp)		/* get an ASCII greyscale scanline */
-register COLOR  *scan;
-register int  len;
-FILE  *fp;
+static int
+agryscan2(		/* get an ASCII greyscale scanline */
+	register COLOR  *scan,
+	register int  len,
+	FILE  *fp
+)
 {
 	while (len-- > 0) {
 		colval(scan[0],RED) =
@@ -444,10 +475,12 @@ FILE  *fp;
 }
 
 
-bgryscan2(scan, len, fp)		/* get a binary greyscale scanline */
-register COLOR  *scan;
-int  len;
-register FILE  *fp;
+static int
+bgryscan2(		/* get a binary greyscale scanline */
+	register COLOR  *scan,
+	int  len,
+	register FILE  *fp
+)
 {
 	register int  c;
 
@@ -463,10 +496,12 @@ register FILE  *fp;
 }
 
 
-aclrscan2(scan, len, fp)		/* get an ASCII color scanline */
-register COLOR  *scan;
-register int  len;
-FILE  *fp;
+static int
+aclrscan2(		/* get an ASCII color scanline */
+	register COLOR  *scan,
+	register int  len,
+	FILE  *fp
+)
 {
 	while (len-- > 0) {
 		colval(scan[0],RED) = fltv(scanint(fp));
@@ -478,10 +513,12 @@ FILE  *fp;
 }
 
 
-bclrscan2(scan, len, fp)		/* get a binary color scanline */
-register COLOR  *scan;
-int  len;
-register FILE  *fp;
+static int
+bclrscan2(		/* get a binary color scanline */
+	register COLOR  *scan,
+	int  len,
+	register FILE  *fp
+)
 {
 	int  r, g, b;
 
@@ -499,9 +536,10 @@ register FILE  *fp;
 }
 
 
-unsigned int
-scanint(fp)			/* scan the next positive integer value */
-register FILE  *fp;
+static unsigned int
+scanint(			/* scan the next positive integer value */
+	register FILE  *fp
+)
 {
 	register int  c;
 	register unsigned int  i;
@@ -527,9 +565,10 @@ tryagain:
 }
 
 
-int
-normval(v)			/* normalize a value to [0,255] */
-register unsigned int  v;
+static int
+normval(			/* normalize a value to [0,255] */
+	register unsigned int  v
+)
 {
 	if (v >= maxval)
 		return(255);
@@ -539,9 +578,10 @@ register unsigned int  v;
 }
 
 
-unsigned int
-getby2(fp)			/* return 2-byte quantity from fp */
-register FILE	*fp;
+static unsigned int
+getby2(			/* return 2-byte quantity from fp */
+	register FILE	*fp
+)
 {
 	register int	lowerb, upperb;
 
@@ -553,9 +593,11 @@ register FILE	*fp;
 }
 
 
-putby2(w, fp)			/* put 2-byte quantity to fp */
-register unsigned int	w;
-register FILE	*fp;
+static void
+putby2(			/* put 2-byte quantity to fp */
+	register unsigned int	w,
+	register FILE	*fp
+)
 {
 	putc(w & 0xff, fp);
 	putc(w>>8 & 0xff, fp);
@@ -566,9 +608,10 @@ register FILE	*fp;
 }
 
 
-unsigned int
-intv(v)				/* return integer quantity for v */
-register double	v;
+static unsigned int
+intv(				/* return integer quantity for v */
+	register double	v
+)
 {
 	if (v >= 0.99999)
 		return(maxval);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: subr.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: subr.c,v 1.3 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ cont(
 	hiy=(y>>7) & 037;
 	lox = (x>>2)&037;
 	loy=(y>>2)&037;
-	extra=x&03+(y<<2)&014;
+	extra=x&(03+(y<<2))&014;
 	n = (abs(hix-ohix) + abs(hiy-ohiy) + 6) / 12;
 	if(hiy != ohiy){
 		putch(hiy|040);

@@ -1,4 +1,4 @@
-/* RCSid: $Id: pcond.h,v 3.11 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: pcond.h,v 3.12 2004/03/28 20:33:14 schorsch Exp $ */
 /*
  * Header file for picture file conditioning.
  */
@@ -58,7 +58,6 @@ extern char	*progname;		/* global argv[0] */
 
 extern char	*infn;			/* input file name */
 extern FILE	*infp;			/* input stream */
-extern double	rgblum(), cielum();	/* luminance functions */
 extern double	(*lumf)();		/* input luminance function */
 extern double	inpexp;			/* input exposure value */
 
@@ -99,13 +98,38 @@ extern RESOLU	inpres;			/* input picture resolution */
 extern char	*mbcalfile;		/* macbethcal mapping file */
 extern char	*cwarpfile;		/* color warp mapping file */
 
-extern double	hacuity();		/* human acuity func. (cycles/deg.) */
-extern double	htcontrs();		/* human contrast sens. func. */
-extern double	clampf();		/* histogram clamping function */
-extern double	crfactor();		/* contrast reduction factor */
 
-extern COLOR	*firstscan();		/* first processed scanline */
-extern COLOR	*nextscan();		/* next processed scanline */
+
+	/* defined in pcond.c */
+extern void syserror(char *s);
+
+	/* defined in pcond2.c */
+extern double rgblum(COLOR clr, int scotopic);	/* compute (scotopic) luminance of RGB color */
+extern double cielum(COLOR xyz, int scotopic);	/* compute (scotopic) luminance of CIE color */
+extern COLOR	*nextscan(void);		/* next processed scanline */
+extern COLOR	*firstscan(void);		/* first processed scanline */
+
+	/* defined in pcond3.c */
+extern void getfixations(FILE *fp);	/* load fixation history list */
+extern void gethisto(FILE *fp);		/* load precomputed luminance histogram */
+extern void comphist(void);		/* create foveal sampling histogram */
+extern double htcontrs(double La);	/* human contrast sens. func. */
+extern double clampf(double La);	/* histogram clamping function */
+extern double crfactor(double La);	/* contrast reduction factor */
+extern int mkbrmap(void);		/* make dynamic range map */
+extern void putmapping(FILE	*fp);	/* put out mapping function */
+extern void scotscan(COLOR *scan, int xres);	/* apply scotopic color sensitivity loss */
+extern void mapscan(COLOR *scan, int xres);	/* apply tone mapping operator to scanline */
+
+	/* defined in pcond4.c */
+extern void compveil(void);		/* compute veiling image */
+#if ADJ_VEIL
+extern void adjveil(void);		/* adjust veil image */
+#endif
+extern void acuscan(COLOR *scln, int y);	/* get acuity-sampled scanline */
+extern void addveil(COLOR *sl, int y);		/* add veil to scanline */
+extern void initacuity(void);	/* initialize variable acuity sampling */
+extern double hacuity(double La);	/* human acuity func. (cycles/deg.) */
 
 #ifdef __cplusplus
 }

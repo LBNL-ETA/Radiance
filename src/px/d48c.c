@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: d48c.c,v 1.4 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: d48c.c,v 1.5 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  d48c.c - driver for dicomed D48 film recorder w/ color optics.
@@ -8,8 +8,10 @@ static const char	RCSid[] = "$Id: d48c.c,v 1.4 2003/10/27 10:24:51 schorsch Exp 
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <signal.h>
 
+#include  "paths.h"
 #include  "rterror.h"
 #include  "color.h"
 
@@ -114,18 +116,27 @@ float  neumap[] = {			/* neutral map, log w/ E6 */
 };
 
 
-#define  TEMPLATE	"/tmp/dXXXXXX"
-
 int  docolor = 1;		/* color? */
 
 int  cftype = C_35FFRA;		/* configuration type */
 
 char  *progname;		/* program name */
 
+static void settype(char  *cname);
+static void dofile(char  *fname);
+static void d_init(void);
+static void scanout(COLOR  *scan, int  y);
+static void d_done(void);
+static void runlength(COLOR  *scan, int  f);
+static double mapfilter(COLOR  col, int  f);
+static void transfer(FILE  *fin, FILE  *fout);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i;
 
@@ -173,11 +184,14 @@ char  *argv[];
 		dofile(NULL);
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
-settype(cname)			/* set configuration type */
-char  *cname;
+static void
+settype(			/* set configuration type */
+	char  *cname
+)
 {
 	for (cftype = 0; cftype < NCONF; cftype++)
 		if (!strcmp(cname, ctab[cftype].name))
@@ -200,8 +214,10 @@ quit(int code)			/* quit program */
 }
 
 
-dofile(fname)			/* convert file to dicomed format */
-char  *fname;
+static void
+dofile(			/* convert file to dicomed format */
+	char  *fname
+)
 {
 	FILE  *fin;
 	char  sbuf[128];
@@ -257,9 +273,10 @@ char  *fname;
 }
 
 
-d_init()			/* set up dicomed, files */
+static void
+d_init(void)			/* set up dicomed, files */
 {
-	char  *mktemp();
+	//char  *mktemp();
 					/* initial condition select */
 	putw(O_ICS|ctab[cftype].icsfield, stdout);
 					/* configuration code */
@@ -317,9 +334,11 @@ d_init()			/* set up dicomed, files */
 }
 
 
-scanout(scan, y)			/* output scan line */
-COLOR  *scan;
-int  y;
+static void
+scanout(			/* output scan line */
+	COLOR  *scan,
+	int  y
+)
 {
 	int  i;
 						/* uses horiz. flyback */
@@ -331,7 +350,8 @@ int  y;
 }
 
 
-d_done()				/* flush files, finish frame */
+static void
+d_done(void)				/* flush files, finish frame */
 {
 	if (docolor) {
 		transfer(ftab[RED].fp, stdout);
@@ -346,11 +366,13 @@ d_done()				/* flush files, finish frame */
 }
 
 
-runlength(scan, f)			/* do scanline for filter f */
-COLOR  *scan;
-int  f;
+static void
+runlength(			/* do scanline for filter f */
+	COLOR  *scan,
+	int  f
+)
 {
-	double  mapfilter();
+	//double  mapfilter();
 	BYTE  ebuf[2*HSIZE];
 	register int  j;
 	register BYTE  *ep;
@@ -382,10 +404,11 @@ int  f;
 }
 
 
-double
-mapfilter(col, f)			/* map filter value */
-COLOR  col;
-register int  f;
+static double
+mapfilter(			/* map filter value */
+	COLOR  col,
+	register int  f
+)
 {
 	static float  *mp[4] = {neumap, neumap, neumap, neumap};
 	double  x, y;
@@ -406,17 +429,24 @@ register int  f;
 }
 
 
-putw(w, fp)			/* output a (short) word */
-int  w;
-register FILE  *fp;
+/* XXX replaces putw() from stdio.h. Do we really need this? */
+int
+putw(			/* output a (short) word */
+	int  w,
+	register FILE  *fp
+)
 {
 	putc(w&0377, fp);		/* in proper order! */
 	putc(w>>8, fp);
+	return 0;
 }
 
 
-transfer(fin, fout)		/* transfer fin contents to fout, close fin */
-register FILE  *fin, *fout;
+static void
+transfer(		/* transfer fin contents to fout, close fin */
+	register FILE  *fin,
+	register FILE  *fout
+)
 {
 	register int  c;
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biq.c,v 2.4 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: biq.c,v 2.5 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  biq.c - simple greyscale quantization.
@@ -12,13 +12,17 @@ static const char	RCSid[] = "$Id: biq.c,v 2.4 2003/06/30 14:59:12 schorsch Exp $
 #include "standard.h"
 #include "ciq.h"
 
+static void draw_grey(colormap ocm);
 
-biq(dith,nw,synth,cm)
-int dith;		/* is dithering desired? 0=no, 1=yes */
-int nw;			/* number of colors wanted in output image */
-int synth;		/* synthesize colormap? 0=no, 1=yes */
-colormap cm;		/* quantization colormap */
-			/* read if synth=0; always written */
+
+
+void
+biq(
+	int dith,		/* is dithering desired? 0=no, 1=yes */
+	int nw,			/* number of colors wanted in output image */
+	int synth,		/* synthesize colormap? 0=no, 1=yes */
+	colormap cm		/* quantization colormap */
+)			/* read if synth=0; always written */
 {
     colormap ocm;
 
@@ -36,8 +40,10 @@ colormap cm;		/* quantization colormap */
 
 /*----------------------------------------------------------------------*/
 
-draw_grey(ocm)
-colormap ocm;
+static void
+draw_grey(
+	colormap ocm
+)
 {
     register rgbpixel *linin;
     register pixel *linout;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ciq.c,v 2.4 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: ciq.c,v 2.5 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
 CIQ - main program for color image quantization
@@ -25,14 +25,21 @@ int n;			/* number of colors in it */
 #define ERRMAX 20	/* maximum allowed propagated error,
 			   if >=255 then no clamping */
 
+static void sample(colormap ocm);
+static void convertmap(colormap in, colormap out);
+static void draw_nodith(colormap ocm);
+static void draw_dith(colormap ocm);
+
+
 /*----------------------------------------------------------------------*/
 
-ciq(dith,nw,synth,cm)
-int dith;		/* is dithering desired? 0=no, 1=yes */
-int nw;			/* number of colors wanted in output image */
-int synth;		/* synthesize colormap? 0=no, 1=yes */
-colormap cm;		/* quantization colormap */
-			/* read if synth=0; always written */
+void
+ciq(
+	int dith,		/* is dithering desired? 0=no, 1=yes */
+	int nw,			/* number of colors wanted in output image */
+	int synth,		/* synthesize colormap? 0=no, 1=yes */
+	colormap cm		/* quantization colormap */
+)			/* read if synth=0; always written */
 {
     int na,i;
     colormap ocm;
@@ -66,8 +73,10 @@ colormap cm;		/* quantization colormap */
 
 /*----------------------------------------------------------------------*/
 
-sample(ocm)		/* make color frequency table (histogram) */
-colormap ocm;
+static void
+sample(		/* make color frequency table (histogram) */
+	colormap ocm
+)
 {
     register int x,y;
     register rgbpixel *lp;
@@ -88,8 +97,11 @@ colormap ocm;
     free((void *)line);
 }
 
-convertmap(in,out)		/* convert to shifted color map */
-register colormap in,out;
+static void
+convertmap(		/* convert to shifted color map */
+	register colormap in,
+	register colormap out
+)
 {
     register int j;
 
@@ -100,8 +112,10 @@ register colormap in,out;
     }
 }
 
-draw_nodith(ocm)	/* quantize without dithering */
-colormap ocm;			/* colormap for orig */
+static void
+draw_nodith(	/* quantize without dithering */
+	colormap ocm			/* colormap for orig */
+)
 {
     register int x,y;
     register rgbpixel *lp;
@@ -123,8 +137,10 @@ colormap ocm;			/* colormap for orig */
     free((void *)oline);
 }
 
-draw_dith(ocm)			/* quantize with dithering */
-colormap ocm;			/* colormap for orig */
+static void
+draw_dith(			/* quantize with dithering */
+	colormap ocm			/* colormap for orig */
+)
 {
     register int *p,*q,rr,gg,bb,v,x,y,*P,*Q,*R;
     int *buf;

@@ -1,4 +1,4 @@
-/* RCSid $Id: lookup.h,v 2.11 2003/07/30 10:11:06 schorsch Exp $ */
+/* RCSid $Id: lookup.h,v 2.12 2004/03/28 20:33:12 schorsch Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
@@ -11,7 +11,9 @@
 extern "C" {
 #endif
 
-typedef void lut_free_t(void*);
+typedef void lut_free_t(void *p);
+typedef unsigned long lut_hashf_t(void*);
+typedef int lut_keycmpf_t(const void*, const void*);
 
 typedef struct {
 	char	*key;			/* key name */
@@ -20,8 +22,8 @@ typedef struct {
 } LUENT;
 
 typedef struct {
-	unsigned long (*hashf)(char*);	/* key hash function */
-	int (*keycmp)(const char*, const char*);	/* key comparison function */
+	lut_hashf_t *hashf;	/* key hash function */
+	lut_keycmpf_t *keycmp;	/* key comparison function */
 	lut_free_t *freek;		/* free a key */
 	lut_free_t *freed;		/* free the data */
 	int	tsiz;			/* current table size */
@@ -29,9 +31,6 @@ typedef struct {
 	int	ndel;			/* number of deleted entries */
 } LUTAB;
 
-#undef strcmp
-#define LU_SINIT(fk,fd)		{lu_shash,strcmp,fk,\
-				fd,0,NULL,0}
 
 /*
  * The lu_init routine is called to initialize a table.  The number of
@@ -80,13 +79,17 @@ typedef struct {
  * allocated table itself.
  */
 
+typedef int lut_doallf_t(LUENT *p);
+
+extern lut_keycmpf_t lu_strcmp;
 extern int	lu_init(LUTAB *tbl, int nel);
-extern unsigned long	lu_shash(char *s);
+extern unsigned long	lu_shash(void *s);
 extern LUENT	*lu_find(LUTAB *tbl, char *key);
 extern void	lu_delete(LUTAB *tbl, char *key);
-extern int	lu_doall(LUTAB *tbl, int (*f)(LUENT*));
+extern int	lu_doall(LUTAB *tbl, lut_doallf_t *f);
 extern void	lu_done(LUTAB *tbl);
 
+#define LU_SINIT(fk,fd) {lu_shash,lu_strcmp,fk,fd,0,NULL,0}
 
 #ifdef __cplusplus
 }

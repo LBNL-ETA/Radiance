@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_bn.c,v 2.8 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_bn.c,v 2.9 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ra_bn.c - program to convert between RADIANCE and barneyscan picture format.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: ra_bn.c,v 2.8 2003/06/05 19:29:34 schorsch Exp
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <time.h>
 #include  <math.h>
 
@@ -16,21 +17,25 @@ static const char	RCSid[] = "$Id: ra_bn.c,v 2.8 2003/06/05 19:29:34 schorsch Exp
 #include  "resolu.h"
 
 double	gamcor = 2.0;			/* gamma correction */
-
 int  bradj = 0;				/* brightness adjustment */
-
 char  *progname;
-
 char  errmsg[128];
-
 FILE	*rafp, *bnfp[3];
-
 int  xmax, ymax;
 
+static void quiterr(char *err);
+static int openbarney(char *fname, char *mode);
+static int getint(FILE *fp);
+static void putint(int val, FILE *fp);
+static void ra2bn(void);
+static void bn2ra(void);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  reverse = 0;
 	int  i;
@@ -114,8 +119,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -125,9 +132,11 @@ char  *err;
 }
 
 
-openbarney(fname, mode)			/* open barneyscan files */
-char	*fname;
-char	*mode;
+static int
+openbarney(			/* open barneyscan files */
+	char	*fname,
+	char	*mode
+)
 {
 	static char	suffix[3][4] = {"red", "grn", "blu"};
 	int	i;
@@ -154,9 +163,10 @@ char	*mode;
 }
 
 
-int
-getint(fp)				/* get short int from barneyscan file */
-register FILE	*fp;
+static int
+getint(				/* get short int from barneyscan file */
+	register FILE	*fp
+)
 {
 	register short	val;
 
@@ -167,16 +177,19 @@ register FILE	*fp;
 }
 
 
-putint(val, fp)				/* put short int to barneyscan file */
-register int	val;
-register FILE	*fp;
+static void
+putint(				/* put short int to barneyscan file */
+	register int	val,
+	register FILE	*fp
+)
 {
 	putc(val&0xff, fp);
 	putc((val >> 8)&0xff, fp);
 }
 
 
-ra2bn()					/* convert radiance to barneyscan */
+static void
+ra2bn(void)					/* convert radiance to barneyscan */
 {
 	register int	i;
 	register COLR	*inl;
@@ -202,7 +215,8 @@ ra2bn()					/* convert radiance to barneyscan */
 }
 
 
-bn2ra()					/* convert barneyscan to radiance */
+static void
+bn2ra(void)					/* convert barneyscan to radiance */
 {
 	register int	i;
 	register COLR	*outline;

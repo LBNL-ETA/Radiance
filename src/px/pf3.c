@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.17 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.18 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -12,40 +12,11 @@ static const char RCSid[] = "$Id: pf3.c,v 2.17 2003/07/27 22:12:03 schorsch Exp 
 #include  <string.h>
 
 #include  "color.h"
+#include  "pfilt.h"
 
 #define  RSCA		1.13	/* square-radius multiplier: sqrt(4/PI) */
 #define  TEPS		0.2	/* threshold proximity goal */
 #define  REPS		0.1	/* radius proximity goal */
-
-extern double  CHECKRAD;	/* radius over which gaussian is summed */
-
-extern double  rad;		/* output pixel radius for filtering */
-
-extern double  thresh;		/* maximum contribution for subpixel */
-
-extern int  nrows;		/* number of rows for output */
-extern int  ncols;		/* number of columns for output */
-
-extern int  xres, yres;		/* resolution of input */
-
-extern double  x_c, y_r;	/* conversion factors */
-
-extern int  xrad;		/* x search radius */
-extern int  yrad;		/* y search radius */
-extern int  xbrad;		/* x box size */
-extern int  ybrad;		/* y box size */
-
-extern int  barsize;		/* size of input scan bar */
-extern COLOR  **scanin;		/* input scan bar */
-extern COLOR  *scanout;		/* output scan line */
-extern COLOR  **scoutbar;	/* output scan bar (if thresh > 0) */
-extern float  **greybar;	/* grey-averaged input values */
-extern int  obarsize;		/* size of output scan bar */
-extern int  orad;		/* output window radius */
-
-extern int  wrapfilt;		/* wrap filter horizontally? */
-
-extern char  *progname;
 
 float  *gausstable;		/* gauss lookup table */
 
@@ -54,14 +25,14 @@ short  *ringwt;			/* weight (count) of ring values */
 short  *ringndx;		/* ring index table */
 float  *warr;			/* array of pixel weights */
 
-extern double  (*ourbright)();	/* brightness computation function */
-
-double  pickfilt();
-
 #define	 lookgauss(x)		gausstable[(int)(10.*(x)+.5)]
 
+static double pickfilt(double  p0);
+static void sumans(int  px, int  py, int  rcent, int  ccent, double  m);
 
-initmask()			/* initialize gaussian lookup table */
+
+extern void
+initmask(void)			/* initialize gaussian lookup table */
 {
 	int  gtabsiz;
 	double  gaussN;
@@ -110,10 +81,14 @@ memerr:
 }
 
 
-dobox(csum, xcent, ycent, c, r)			/* simple box filter */
-COLOR  csum;
-int  xcent, ycent;
-int  c, r;
+extern void
+dobox(			/* simple box filter */
+	COLOR  csum,
+	int  xcent,
+	int  ycent,
+	int  c,
+	int  r
+)
 {
 	int  wsum;
 	double  d;
@@ -148,10 +123,14 @@ int  c, r;
 }
 
 
-dogauss(csum, xcent, ycent, c, r)		/* gaussian filter */
-COLOR  csum;
-int  xcent, ycent;
-int  c, r;
+extern void
+dogauss(		/* gaussian filter */
+	COLOR  csum,
+	int  xcent,
+	int  ycent,
+	int  c,
+	int  r
+)
 {
 	double  dy, dx, weight, wsum;
 	COLOR  ctmp;
@@ -183,9 +162,13 @@ int  c, r;
 }
 
 
-dothresh(xcent, ycent, ccent, rcent)	/* gaussian threshold filter */
-int  xcent, ycent;
-int  ccent, rcent;
+extern void
+dothresh(	/* gaussian threshold filter */
+	int  xcent,
+	int  ycent,
+	int  ccent,
+	int  rcent
+)
 {
 	double  d;
 	int  r, y, offs;
@@ -230,9 +213,10 @@ int  ccent, rcent;
 }
 
 
-double
-pickfilt(p0)			/* find filter multiplier for p0 */
-double  p0;
+static double
+pickfilt(			/* find filter multiplier for p0 */
+	double  p0
+)
 {
 	double  m = 1.0;
 	double  t, num, denom, avg, wsum;
@@ -290,10 +274,14 @@ double  p0;
 }
 
 
-sumans(px, py, rcent, ccent, m)		/* sum input pixel to output */
-int  px, py;
-int  rcent, ccent;
-double  m;
+static void
+sumans(		/* sum input pixel to output */
+	int  px,
+	int  py,
+	int  rcent,
+	int  ccent,
+	double  m
+)
 {
 	double  dy2, dx;
 	COLOR  pval, ctmp;

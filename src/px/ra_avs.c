@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_avs.c,v 2.10 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_avs.c,v 2.11 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  Convert Radiance file to/from AVS file.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: ra_avs.c,v 2.10 2003/06/05 19:29:34 schorsch E
 #include  <time.h>
 
 #include  "platform.h"
+#include  "rtio.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -21,12 +22,17 @@ char  *progname;
 
 int  xmax, ymax;
 
+static void quiterr(char  *err);
+static void avs2ra(void);
+static void ra2avs(void);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
-	extern long  getint();
 	int  reverse = 0;
 	int  i;
 	
@@ -101,8 +107,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -112,7 +120,8 @@ char  *err;
 }
 
 
-avs2ra()		/* convert 24-bit scanlines to Radiance picture */
+static void
+avs2ra(void)		/* convert 24-bit scanlines to Radiance picture */
 {
 	COLR	*scanout;
 	register int	x;
@@ -143,7 +152,8 @@ avs2ra()		/* convert 24-bit scanlines to Radiance picture */
 }
 
 
-ra2avs()		/* convert Radiance scanlines to 24-bit */
+static void
+ra2avs(void)		/* convert Radiance scanlines to 24-bit */
 {
 	COLR	*scanin;
 	register int	x;

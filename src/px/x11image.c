@@ -20,6 +20,9 @@ static const char RCSid[] = "$Id";
 
 #include  <string.h>
 #include  <signal.h>
+#include  <unistd.h>
+#include  <sys/types.h>
+#include  <wait.h>
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
@@ -27,6 +30,7 @@ static const char RCSid[] = "$Id";
 
 #include  "color.h"
 #include  "tonemap.h"
+#include  "clrtab.h"
 #include  "view.h"
 #include  "x11raster.h"
 #include  "random.h"
@@ -117,9 +121,6 @@ char  errmsg[128];
 
 BYTE  clrtab[256][3];			/* global color map */
 
-extern long  ftell();
-
-extern char  *getenv();
 
 Display  *thedisplay;
 Atom  closedownAtom, wmProtocolsAtom;
@@ -128,12 +129,38 @@ int  sigrecv;
 
 void  onsig(int i) { sigrecv++; }
 
+typedef void doboxf_t(COLR *scn, int n, void *);
+
 static gethfunc headline;
+static void init(int argc, char **argv);
+static void quiterr(char *err);
+static int viscmp(XVisualInfo *v1, XVisualInfo *v2);
+static void getbestvis(void);
+static void getras(void);
+static void getevent(void);
+static int traceray(int xpos, int ypos);
+static int docom(XKeyPressedEvent *ekey);
+static void moveimage(XButtonPressedEvent *ebut);
+static void getbox(XButtonPressedEvent *ebut);
+static void trackrays(XButtonPressedEvent *ebut);
+static void revbox(int x0, int y0, int x1, int y1);
+static doboxf_t colavg;
+static doboxf_t addfix;
+static int avgbox(COLOR cavg);
+static int dobox(doboxf_t *f, void *p);
+static void make_tonemap(void);
+static void tmap_colrs(COLR *scn, int len);
+static void getmono(void);
+static void add2icon(int y, COLR *scan);
+static void getfull(void);
+static void getgrey(void);
+static void getmapped(void);
+static void scale_rcolors(XRASTER *xr, double sf);
+static int getscan(int y);
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(int  argc, char  *argv[])
 {
 	int  i;
 	int  pid;
@@ -265,9 +292,11 @@ headline(		/* get relevant info from header */
 }
 
 
-init(argc, argv)			/* get data and open window */
-int argc;
-char **argv;
+static void
+init(			/* get data and open window */
+	int argc,
+	char **argv
+)
 {
 	XSetWindowAttributes	ourwinattr;
 	XClassHint	xclshints;
@@ -381,8 +410,10 @@ char **argv;
 } /* end of init */
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	register int  es;
 	int  cs;
@@ -404,8 +435,10 @@ char  *err;
 
 
 static int
-viscmp(v1,v2)		/* compare visual to see which is better, descending */
-register XVisualInfo	*v1, *v2;
+viscmp(		/* compare visual to see which is better, descending */
+	register XVisualInfo	*v1,
+	register XVisualInfo	*v2
+)
 {
 	int	bad1 = 0, bad2 = 0;
 	register int  *rp;
@@ -445,7 +478,8 @@ register XVisualInfo	*v1, *v2;
 }
 
 
-getbestvis()			/* get the best visual for this screen */
+static void
+getbestvis(void)			/* get the best visual for this screen */
 {
 #ifdef DEBUG
 static char  vistype[][12] = {
@@ -527,10 +561,9 @@ static char  vistype[][12] = {
 }
 
 
-getras()				/* get raster file */
+static void
+getras(void)				/* get raster file */
 {
-	XVisualInfo	vinfo;
-
 	if (maxcolors <= 2) {		/* monochrome */
 		ourdata = (unsigned char *)malloc(ymax*((xmax+7)/8));
 		if (ourdata == NULL)
@@ -571,7 +604,8 @@ fail:
 }
 
 
-getevent()				/* process the next event */
+static void
+getevent(void)				/* process the next event */
 {
 	XEvent xev;
 
@@ -626,8 +660,11 @@ getevent()				/* process the next event */
 }
 
 
-traceray(xpos, ypos)			/* print requested pixel data */
-int  xpos, ypos;
+static int
+traceray(			/* print requested pixel data */
+	int  xpos,
+	int  ypos
+)
 {
 	RREAL  hv[2];
 	FVECT  rorg, rdir;
@@ -669,8 +706,10 @@ int  xpos, ypos;
 }
 
 
-docom(ekey)				/* execute command */
-XKeyPressedEvent  *ekey;
+static int
+docom(				/* execute command */
+	XKeyPressedEvent  *ekey
+)
 {
 	char  buf[80];
 	COLOR  cval;
@@ -813,8 +852,10 @@ XKeyPressedEvent  *ekey;
 }
 
 
-moveimage(ebut)				/* shift the image */
-XButtonPressedEvent  *ebut;
+static void
+moveimage(				/* shift the image */
+	XButtonPressedEvent  *ebut
+)
 {
 	XEvent	e;
 	int	mxo, myo;
@@ -838,8 +879,10 @@ XButtonPressedEvent  *ebut;
 }
 
 
-getbox(ebut)				/* get new bbox */
-XButtonPressedEvent  *ebut;
+static void
+getbox(				/* get new bbox */
+	XButtonPressedEvent  *ebut
+)
 {
 	XEvent	e;
 
@@ -866,8 +909,10 @@ XButtonPressedEvent  *ebut;
 }
 
 
-trackrays(ebut)				/* trace rays as mouse moves */
-XButtonPressedEvent  *ebut;
+static void
+trackrays(				/* trace rays as mouse moves */
+	XButtonPressedEvent  *ebut
+)
 {
 	XEvent	e;
 	unsigned long	lastrept;
@@ -885,8 +930,13 @@ XButtonPressedEvent  *ebut;
 }
 
 
-revbox(x0, y0, x1, y1)			/* draw bbox with reversed lines */
-int  x0, y0, x1, y1;
+static void
+revbox(			/* draw bbox with reversed lines */
+	int  x0,
+	int  y0,
+	int  x1,
+	int  y1
+)
 {
 	revline(x0, y0, x1, y0);
 	revline(x0, y1, x1, y1);
@@ -895,24 +945,26 @@ int  x0, y0, x1, y1;
 }
 
 
-void
-colavg(scn, n, cavg)
-register COLR	*scn;
-register int	n;
-COLOR	cavg;
+static void
+colavg(
+	register COLR	*scn,
+	register int	n,
+	void *cavg
+)
 {
 	COLOR	col;
 
 	while (n--) {
 		colr_color(col, *scn++);
-		addcolor(cavg, col);
+		addcolor((COLORV*)cavg, col);
 	}
 }
 
 
-int
-avgbox(cavg)				/* average color over current bbox */
-COLOR	cavg;
+static int
+avgbox(				/* average color over current bbox */
+	COLOR	cavg
+)
 {
 	double	d;
 	register int	rval;
@@ -927,10 +979,12 @@ COLOR	cavg;
 }
 
 
-int
-dobox(f, p)				/* run function over bbox */
-void	(*f)();			/* function to call for each subscan */
-char	*p;			/* pointer to private data */
+static int
+dobox(				/* run function over bbox */
+	//void	(*f)(),			/* function to call for each subscan */
+	doboxf_t *f,			/* function to call for each subscan */
+	void	*p			/* pointer to private data */
+)
 {
 	int  left, right, top, bottom;
 	int  y;
@@ -960,10 +1014,12 @@ char	*p;			/* pointer to private data */
 }
 
 
-void
-addfix(scn, n)			/* add fixation points to histogram */
-COLR	*scn;
-int	n;
+static void
+addfix(			/* add fixation points to histogram */
+	COLR	*scn,
+	int	n,
+	void	*p  /*NOTUSED*/
+)
 {
 	if (tmCvColrs(lscan, TM_NOCHROM, scn, n))
 		goto tmerr;
@@ -975,7 +1031,8 @@ tmerr:
 }
 
 
-make_tonemap()			/* initialize tone mapping */
+static void
+make_tonemap(void)			/* initialize tone mapping */
 {
 	int  flags, y;
 
@@ -1030,9 +1087,11 @@ tmerr:
 }
 
 
-tmap_colrs(scn, len)		/* apply tone mapping to scanline */
-register COLR  *scn;
-int  len;
+static void
+tmap_colrs(		/* apply tone mapping to scanline */
+	register COLR  *scn,
+	int  len
+)
 {
 	register BYTE  *ps;
 
@@ -1069,7 +1128,8 @@ tmerr:
 }
 
 
-getmono()			/* get monochrome data */
+static void
+getmono(void)			/* get monochrome data */
 {
 	register unsigned char	*dp;
 	register int	x, err;
@@ -1101,9 +1161,11 @@ getmono()			/* get monochrome data */
 }
 
 
-add2icon(y, scan)		/* add a scanline to our icon data */
-int  y;
-COLR  *scan;
+static void
+add2icon(		/* add a scanline to our icon data */
+	int  y,
+	COLR  *scan
+)
 {
 	static short  cerr[ICONSIZ];
 	static int  ynext;
@@ -1153,7 +1215,8 @@ COLR  *scan;
 }
 
 
-getfull()			/* get full (24-bit) data */
+static void
+getfull(void)			/* get full (24-bit) data */
 {
 	int	y;
 	register uint32	*dp;
@@ -1220,7 +1283,8 @@ getfull()			/* get full (24-bit) data */
 }
 
 
-getgrey()			/* get greyscale data */
+static void
+getgrey(void)			/* get greyscale data */
 {
 	int	y;
 	register unsigned char	*dp;
@@ -1247,7 +1311,8 @@ getgrey()			/* get greyscale data */
 }
 
 
-getmapped()			/* get color-mapped data */
+static void
+getmapped(void)			/* get color-mapped data */
 {
 	int	y;
 					/* make sure we can do it first */
@@ -1279,9 +1344,11 @@ getmapped()			/* get color-mapped data */
 }
 
 
-scale_rcolors(xr, sf)			/* scale color map */
-register XRASTER	*xr;
-double	sf;
+static void
+scale_rcolors(			/* scale color map */
+	register XRASTER	*xr,
+	double	sf
+)
 {
 	register int	i;
 	long	maxv;
@@ -1307,8 +1374,10 @@ double	sf;
 }
 
 
-getscan(y)
-int  y;
+static int
+getscan(
+	int  y
+)
 {
 	static int  trunced = -1;		/* truncated file? */
 skipit:

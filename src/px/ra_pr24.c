@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pr24.c,v 2.11 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_pr24.c,v 2.12 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and 24-bit rasterfiles.
@@ -16,17 +16,17 @@ static const char	RCSid[] = "$Id: ra_pr24.c,v 2.11 2003/07/03 22:41:44 schorsch 
 #include  "resolu.h"
 
 double	gamcor = 2.2;			/* gamma correction */
-
 int  bradj = 0;				/* brightness adjustment */
-
 char  *progname;
-
 int  xmax, ymax;
 
+static void quiterr(char  *err);
+static void pr2ra(int	rf, int	pad);
+static void ra2pr(int	rf, int	pad);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(int  argc, char  *argv[])
 {
 	struct rasterfile  head;
 	int  reverse = 0;
@@ -119,8 +119,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -130,9 +132,11 @@ char  *err;
 }
 
 
-pr2ra(rf, pad)		/* convert 24-bit scanlines to Radiance picture */
-int	rf;
-int	pad;
+static void
+pr2ra(		/* convert 24-bit scanlines to Radiance picture */
+	int	rf,
+	int	pad
+)
 {
 	COLR	*scanout;
 	register int	x;
@@ -169,9 +173,11 @@ int	pad;
 }
 
 
-ra2pr(rf, pad)		/* convert Radiance scanlines to 24-bit rasterfile */
-int	rf;
-int	pad;
+static void
+ra2pr(		/* convert Radiance scanlines to 24-bit rasterfile */
+	int	rf,
+	int	pad
+)
 {
 	int	ord[3];
 	COLR	*scanin;

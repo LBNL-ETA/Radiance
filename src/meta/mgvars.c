@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgvars.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgvars.c,v 1.6 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  mgvars.c - routines dealing with graph variables.
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: mgvars.c,v 1.5 2003/11/15 02:13:37 schorsch Ex
 #include  <ctype.h>
 
 #include  "rtprocess.h"
+#include  "rtmisc.h"
 #include  "rterror.h"
 #include  "rtio.h"
 #include  "calcomp.h"

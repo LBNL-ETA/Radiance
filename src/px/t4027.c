@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t4027.c,v 2.3 2004/01/02 12:46:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: t4027.c,v 2.4 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  t4027.c - program to dump pixel file to Tektronix 4027.
@@ -8,6 +8,9 @@ static const char	RCSid[] = "$Id: t4027.c,v 2.3 2004/01/02 12:46:13 schorsch Exp
  */
 
 #include  <stdio.h>
+#ifndef _WIN32
+ #include  <unistd.h>
+#endif
 
 #include  "color.h"
 
@@ -19,10 +22,19 @@ static const char	RCSid[] = "$Id: t4027.c,v 2.3 2004/01/02 12:46:13 schorsch Exp
 
 char  *progname;
 
+static void plotscan(COLOR  scan[], int  len, int  y);
+static int colormap(COLOR  col);
+static void vector(int  x0, int  y0, int  x1, int  y1);
+static void setdcolr(int  col);
+static void printpat(int  p);
+static int rorb(int  b);
 
-main(argc, argv)
-int  argc;
-char  **argv;
+
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
 	int  xres, yres;
 	COLOR  scanline[NCOLS];
@@ -65,6 +77,7 @@ char  **argv;
 	}
 	fclose(fp);
 
+#ifndef _WIN32  /* XXX extract console functions */
 	if (isatty(fileno(stdout))) {
 		printf("Hit return when done: ");
 		fflush(stdout);
@@ -74,15 +87,19 @@ char  **argv;
 		printf("%cMON34", COM);
 	}
 	putchar('\r');
+#endif
 
 	exit(0);
+	return 0; /* pro forma return */
 }
 
 
-plotscan(scan, len, y)			/* plot a scanline */
-COLOR  scan[];
-int  len;
-int  y;
+static void
+plotscan(			/* plot a scanline */
+	COLOR  scan[],
+	int  len,
+	int  y
+)
 {
 	int  color, lastcolor = -1;
 	int  lastpos = -1;
@@ -105,9 +122,10 @@ int  y;
 }
 
 
-int
-colormap(col)			/* compute 4027 color value for col */
-COLOR  col;
+static int
+colormap(			/* compute 4027 color value for col */
+	COLOR  col
+)
 {
 	register int  red, grn, blu;
 
@@ -119,15 +137,22 @@ COLOR  col;
 }
 
 
-vector(x0, y0, x1, y1)		/* output a vector */
-int  x0, y0, x1, y1;
+static void
+vector(		/* output a vector */
+	int  x0,
+	int  y0,
+	int  x1,
+	int  y1
+)
 {
 	printf("%cVEC%d %d %d %d", COM, x0, y0, x1, y1);
 }
 
 
-setdcolr(col)			/* set dithered pattern for terminal */
-int  col;
+static void
+setdcolr(			/* set dithered pattern for terminal */
+	int  col
+)
 {
 	static int  cmask[3][4] = {
 		{ 0, 0x88, 0xca, 0xff },
@@ -190,8 +215,10 @@ int  col;
 }
 
 
-printpat(p)			/* print out a pattern */
-register int  p;
+static void
+printpat(			/* print out a pattern */
+	register int  p
+)
 {
 	register int  i;
 	
@@ -203,9 +230,10 @@ register int  p;
 }
 
 
-int
-rorb(b)				/* rotate a byte to the right */
-register int  b;
+static int
+rorb(				/* rotate a byte to the right */
+	register int  b
+)
 {
 	b |= (b&01) << 8;
 	b >>= 1;

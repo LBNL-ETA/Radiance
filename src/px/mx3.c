@@ -1,10 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx3.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: mx3.c,v 2.3 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 
-double
-mx3d_adjoint(a, b)
-register double a[3][3], b[3][3];
+#include "mx3.h"
+
+extern double
+mx3d_adjoint(
+	register double a[3][3],
+	register double b[3][3]
+)
 {
     b[0][0] =  ((a[1][1])*( a[2][2]) - ( a[1][2])*( a[2][1]));
     b[1][0] =  ((a[1][2])*( a[2][0]) - ( a[1][0])*( a[2][2]));
@@ -19,8 +23,12 @@ register double a[3][3], b[3][3];
 }
 
 
-mx3d_mul(a, b, c)
-register double a[3][3], b[3][3], c[3][3];
+extern void
+mx3d_mul(
+	register double a[3][3],
+	register double b[3][3],
+	register double c[3][3]
+)
 {
     c[0][0] = a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0];
     c[0][1] = a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1];
@@ -34,9 +42,12 @@ register double a[3][3], b[3][3], c[3][3];
 }
 
 
-mx3d_transform(p, a, q)
-register double p[3], q[3];
-register double a[3][3];
+extern void
+mx3d_transform(
+	register double p[3],
+	register double a[3][3],
+	register double q[3]
+)
 {
     q[0] = p[0]*a[0][0] + p[1]*a[1][0] + p[2]*a[2][0];
     q[1] = p[0]*a[0][1] + p[1]*a[1][1] + p[2]*a[2][1];
@@ -44,10 +55,12 @@ register double a[3][3];
 }
 
 
-double
-mx3d_transform_div(p, a, q)
-register double p[3], q[2];
-register double a[3][3];
+extern double
+mx3d_transform_div(
+	register double p[3],
+	register double a[3][3],
+	register double q[2]
+)
 {
     double q2;
     q2 = p[0]*a[0][2] + p[1]*a[1][2] + p[2]*a[2][2];
@@ -59,9 +72,12 @@ register double a[3][3];
 }
 
 
-mx3d_translate_mat(tx, ty, m)
-double tx, ty;
-register double m[3][3];
+extern void
+mx3d_translate_mat(
+	double tx,
+	double ty,
+	register double m[3][3]
+)
 {
     m[0][0] = 1.; m[0][1] = 0.; m[0][2] = 0.;
     m[1][0] = 0.; m[1][1] = 1.; m[1][2] = 0.;
@@ -69,9 +85,12 @@ register double m[3][3];
 }
 
 
-mx3d_translate(m, tx, ty)
-register double m[3][3];
-double tx, ty;
+extern void
+mx3d_translate(
+	register double m[3][3],
+	double tx,
+	double ty
+)
 {
     m[3][0] += tx*m[0][0]+ty*m[1][0];
     m[3][1] += tx*m[0][1]+ty*m[1][1];
@@ -79,9 +98,12 @@ double tx, ty;
 }
 
 
-mx3d_scale_mat(sx, sy, m)
-double sx, sy;
-register double m[3][3];
+extern void
+mx3d_scale_mat(
+	double sx,
+	double sy,
+	register double m[3][3]
+)
 {
     m[0][0] = sx; m[0][1] = 0.; m[0][2] = 0.;
     m[1][0] = 0.; m[1][1] = sy; m[1][2] = 0.;
@@ -89,9 +111,12 @@ register double m[3][3];
 }
 
 
-mx3d_scale(m, sx, sy)
-register double m[3][3];
-double sx, sy;
+extern void
+mx3d_scale(
+	register double m[3][3],
+	double sx,
+	double sy
+)
 {
     m[0][0] *= sx; m[0][1] *= sx; m[0][2] *= sx;
     m[1][0] *= sy; m[1][1] *= sy; m[1][2] *= sy;

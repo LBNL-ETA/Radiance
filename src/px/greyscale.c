@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: greyscale.c,v 2.6 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: greyscale.c,v 2.7 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
  *  greyscale.c - program to produce grey test levels.
@@ -16,10 +16,15 @@ static const char	RCSid[] = "$Id: greyscale.c,v 2.6 2003/02/22 02:07:27 greg Exp
 
 double  minlog = 0.0;		/* minimum for log scale (0 == linear) */
 
+static void greyscale(COLOR  col0);
+static void printargs(int  ac, char  **av, FILE  *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	COLOR  col;
 	double  d1,d2,d3;
@@ -53,11 +58,14 @@ char  *argv[];
 	printf("\n");
 	printf("-Y 512 +X 512\n");
 	greyscale(col);
+	return 0;
 }
 
 
-greyscale(col0)			/* output our grey scale */
-COLOR  col0;
+static void
+greyscale(			/* output our grey scale */
+	COLOR  col0
+)
 {
 	COLOR  col1, col2, scanline[512];
 	double  x;
@@ -102,10 +110,12 @@ writerr:
 }
 
 
-printargs(ac, av, fp)		/* print arguments to a file */
-int  ac;
-char  **av;
-FILE  *fp;
+static void
+printargs(		/* print arguments to a file */
+	int  ac,
+	char  **av,
+	FILE  *fp
+)
 {
 	while (ac-- > 0) {
 		fputs(*av++, fp);

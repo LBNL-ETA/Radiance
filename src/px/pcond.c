@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.20 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.21 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -45,11 +45,18 @@ double	bwavg;				/* mean brightness */
 double	scalef = 0.;			/* linear scaling factor */
 
 static gethfunc headline;
+static void getahead(void);
+static void mapimage(void);
+static void getfovimg(void);
+static void check2do(void);
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	static RGBPRIMS	outprimS;
 	int	i;
@@ -187,12 +194,15 @@ userr:
 	fprintf(stderr, "Usage: %s [-{h|a|v|s|c|l|w}[+-]][-I|-i ffrac][-e ev][-p xr yr xg yg xb yb xw yw|-f mbf.cal|-m rgb.cwp][-u Ldmax][-d Lddyn][-x mapfile] inpic [outpic]\n",
 			progname);
 	exit(1);
+	return 1; /* pro forma return */
 #undef bool
 }
 
 
-syserror(s)				/* report system error and exit */
-char	*s;
+extern void
+syserror(				/* report system error and exit */
+	char	*s
+)
 {
 	fprintf(stderr, "%s: ", progname);
 	perror(s);
@@ -232,7 +242,8 @@ headline(				/* process header line */
 }
 
 
-getahead()			/* load picture header */
+static void
+getahead(void)			/* load picture header */
 {
 	char	*err;
 
@@ -270,7 +281,8 @@ getahead()			/* load picture header */
 }
 
 
-mapimage()				/* map picture and send to stdout */
+static void
+mapimage(void)				/* map picture and send to stdout */
 {
 	COLOR	*scan;
 
@@ -310,7 +322,8 @@ mapimage()				/* map picture and send to stdout */
 }
 
 
-getfovimg()			/* load foveal sampled image */
+static void
+getfovimg(void)			/* load foveal sampled image */
 {
 	char	combuf[PATH_MAX];
 	FILE	*fp;
@@ -345,7 +358,8 @@ readerr:
 }
 
 
-check2do()		/* check histogram to see what isn't worth doing */
+static void
+check2do(void)		/* check histogram to see what isn't worth doing */
 {
 	double	sum;
 	double	b, l;

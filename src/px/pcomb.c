@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.31 2004/03/15 21:16:54 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.32 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: pcomb.c,v 2.31 2004/03/15 21:16:54 greg Exp $"
 #include "platform.h"
 #include "rtprocess.h"
 #include "rterror.h"
+#include "rtmisc.h"
 #include "color.h"
 #include "calcomp.h"
 #include "view.h"
@@ -72,17 +73,29 @@ int	wrongformat = 0;
 int	gotview;
 
 
-extern char	*emalloc();
-
 static gethfunc tabputs;
+static void checkfile(void);
+static double rgb_bright(COLOR  clr);
+static double xyz_bright(COLOR  clr);
+static void init(void);
+static void combine(void);
+static void advance(void);
+static double l_expos(char	*nam);
+static double l_pixaspect(char *nm);
+static double l_colin(char	*nam);
+static double l_ray(char	*nam);
+static double l_psize(char *nm);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	original;
 	double	f;
-	int	a, i;
+	int	a;
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
@@ -218,6 +231,7 @@ usage:
 	eputs(
 " [-w][-x xr][-y yr][-e expr][-f file] [ [-o][-s f][-c r g b] pic ..]\n");
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
@@ -257,7 +271,8 @@ tabputs(			/* put out string preceded by a tab */
 }
 
 
-checkfile()			/* ready a file */
+static void
+checkfile(void)			/* ready a file */
 {
 	register int	i;
 					/* process header */
@@ -296,17 +311,19 @@ checkfile()			/* ready a file */
 }
 
 
-double
-rgb_bright(clr)
-COLOR  clr;
+static double
+rgb_bright(
+	COLOR  clr
+)
 {
 	return(bright(clr));
 }
 
 
-double
-xyz_bright(clr)
-COLOR  clr;
+static double
+xyz_bright(
+	COLOR  clr
+)
 {
 	return(clr[CIEY]);
 }
@@ -315,7 +332,8 @@ COLOR  clr;
 double	(*ourbright)() = rgb_bright;
 
 
-init()					/* perform final setup */
+static void
+init(void)					/* perform final setup */
 {
 	double	l_colin(char *), l_expos(char *), l_pixaspect(char *),
 			l_ray(char *), l_psize(char *);
@@ -345,7 +363,8 @@ init()					/* perform final setup */
 }
 
 
-combine()			/* combine pictures */
+static void
+combine(void)			/* combine pictures */
 {
 	EPNODE	*coldef[3], *brtdef;
 	COLOR	*scanout;
@@ -403,7 +422,8 @@ combine()			/* combine pictures */
 }
 
 
-advance()			/* read in data for next scanline */
+static void
+advance(void)			/* read in data for next scanline */
 {
 	int	ytarget;
 	register COLOR	*st;
@@ -431,9 +451,10 @@ advance()			/* read in data for next scanline */
 }
 
 
-double
-l_expos(nam)			/* return picture exposure */
-register char	*nam;
+static double
+l_expos(			/* return picture exposure */
+	register char	*nam
+)
 {
 	register int	fn, n;
 
@@ -448,10 +469,11 @@ register char	*nam;
 			return(colval(input[fn].expos,n));
 	eputs("Bad call to l_expos()!\n");
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-double
+static double
 l_pixaspect(char *nm)		/* return pixel aspect ratio */
 {
 	register int	fn;
@@ -463,9 +485,10 @@ l_pixaspect(char *nm)		/* return pixel aspect ratio */
 }
 
 
-double
-l_colin(nam)			/* return color value for picture */
-register char	*nam;
+static double
+l_colin(			/* return color value for picture */
+	register char	*nam
+)
 {
 	int	fn;
 	register int	n, xoff, yoff;
@@ -514,12 +537,14 @@ register char	*nam;
 		return(colval(input[fn].scan[MIDSCN+yoff][xscan+xoff],n));
 	eputs("Bad call to l_colin()!\n");
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-double
-l_ray(nam)		/* return ray origin or direction */
-register char	*nam;
+static double
+l_ray(		/* return ray origin or direction */
+	register char	*nam
+)
 {
 	static unsigned long	ltick[MAXINP];
 	static FVECT	lorg[MAXINP], ldir[MAXINP];
@@ -553,10 +578,11 @@ register char	*nam;
 			return(i < 3 ? lorg[fn][i] : ldir[fn][i-3]);
 	eputs("Bad call to l_ray()!\n");
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-double
+static double
 l_psize(char *nm)		/* compute pixel size in steradians */
 {
 	static unsigned long	ltick[MAXINP];

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pmapgen.c,v 2.3 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pmapgen.c,v 2.4 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * pmapgen.c: general routines for 2-D perspective mappings.
@@ -9,7 +9,6 @@ static const char	RCSid[] = "$Id: pmapgen.c,v 2.3 2003/02/22 02:07:27 greg Exp $
  * Paul Heckbert	5 Nov 85, 12 Dec 85
  */
 
-static char rcsid[] = "$Header: /home/cvsd/radiance/ray/src/px/pmapgen.c,v 2.3 2003/02/22 02:07:27 greg Exp $";
 #include <stdio.h>
 #include "pmap.h"
 #include "mx3.h"
@@ -33,10 +32,15 @@ static char rcsid[] = "$Header: /home/cvsd/radiance/ray/src/px/pmapgen.c,v 2.3 2
  * computing it symbolically.
  */
 	
-pmap_quad_rect(u0, v0, u1, v1, qdrl, QR)
-double u0, v0, u1, v1;		/* bounds of rectangle */
-double qdrl[4][2];		/* vertices of quadrilateral */
-double QR[3][3];		/* qdrl->rect transform (returned) */
+extern int
+pmap_quad_rect(
+	double u0,		/* bounds of rectangle */
+	double v0,
+	double u1,
+	double v1,
+	double qdrl[4][2],		/* vertices of quadrilateral */
+	double QR[3][3]		/* qdrl->rect transform (returned) */
+)
 {
     int ret;
     double du, dv;
@@ -81,9 +85,11 @@ double QR[3][3];		/* qdrl->rect transform (returned) */
  *	(0,1) --> qdrl[3]
  */
 
-pmap_square_quad(qdrl, SQ)
-register double qdrl[4][2];	/* vertices of quadrilateral */
-register double SQ[3][3];	/* square->qdrl transform */
+extern int
+pmap_square_quad(
+	register double qdrl[4][2],	/* vertices of quadrilateral */
+	register double SQ[3][3]	/* square->qdrl transform */
+)
 {
     double px, py;
 

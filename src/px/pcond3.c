@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.14 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.15 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -19,9 +19,20 @@ double	modhist[HISTRES];		/* modified histogram */
 double	mhistot;			/* modified histogram total */
 double	cumf[HISTRES+1];		/* cumulative distribution function */
 
+static double centprob(int	x, int	y);
+static void mkcumf(void);
+static double cf(double	b);
+static double BLw(double	Lw);
+#if ADJ_VEIL
+static void mkcrfimage(void);
+#endif
 
-getfixations(fp)		/* load fixation history list */
-FILE	*fp;
+
+
+extern void
+getfixations(		/* load fixation history list */
+FILE	*fp
+)
 {
 #define	FIXHUNK		128
 	RESOLU	fvres;
@@ -81,12 +92,14 @@ FILE	*fp;
 }
 
 
-gethisto(fp)			/* load precomputed luminance histogram */
-FILE	*fp;
+extern void
+gethisto(			/* load precomputed luminance histogram */
+	FILE	*fp
+)
 {
 	double	histo[MAXPREHIST];
 	double	histart, histep;
-	double	l, b, lastb, w;
+	double	b, lastb, w;
 	int	n;
 	register int	i;
 					/* load data */
@@ -149,9 +162,11 @@ FILE	*fp;
 }
 
 
-double
-centprob(x, y)			/* center-weighting probability function */
-int	x, y;
+static double
+centprob(			/* center-weighting probability function */
+	int	x,
+	int	y
+)
 {
 	double	xr, yr, p;
 				/* paraboloid, 0 at 90 degrees from center */
@@ -162,7 +177,8 @@ int	x, y;
 }
 
 
-comphist()			/* create foveal sampling histogram */
+extern void
+comphist(void)			/* create foveal sampling histogram */
 {
 	double	l, b, w, lwmin, lwmax;
 	register int	x, y;
@@ -230,7 +246,8 @@ comphist()			/* create foveal sampling histogram */
 }
 
 
-mkcumf()			/* make cumulative distribution function */
+static void
+mkcumf(void)			/* make cumulative distribution function */
 {
 	register int	i;
 	register double	sum;
@@ -248,9 +265,10 @@ mkcumf()			/* make cumulative distribution function */
 }
 
 
-double
-cf(b)				/* return cumulative function at b */
-double	b;
+static double
+cf(				/* return cumulative function at b */
+	double	b
+)
 {
 	double	x;
 	register int	i;
@@ -261,9 +279,10 @@ double	b;
 }
 
 
-double
-BLw(Lw)				/* map world luminance to display brightness */
-double	Lw;
+static double
+BLw(				/* map world luminance to display brightness */
+	double	Lw
+)
 {
 	double	b;
 
@@ -275,9 +294,10 @@ double	Lw;
 }
 
 
-double
-htcontrs(La)		/* human threshold contrast sensitivity, dL(La) */
-double	La;
+extern double
+htcontrs(		/* human threshold contrast sensitivity, dL(La) */
+	double	La
+)
 {
 	double	l10La, l10dL;
 				/* formula taken from Ferwerda et al. [SG96] */
@@ -297,9 +317,10 @@ double	La;
 }
 
 
-double
-clampf(Lw)			/* histogram clamping function */
-double	Lw;
+extern double
+clampf(			/* histogram clamping function */
+	double	Lw
+)
 {
 	double	bLw, ratio;
 
@@ -308,9 +329,10 @@ double	Lw;
 	return(ratio/(Lb1(bLw)*(Bldmax-Bldmin)*Bl1(Lw)));
 }
 
-double
-crfactor(Lw)			/* contrast reduction factor */
-double	Lw;
+extern double
+crfactor(			/* contrast reduction factor */
+	double	Lw
+)
 {
 	int	i = HISTRES*(Bl(Lw) - bwmin)/(bwmax - bwmin);
 	double	bLw, ratio, Tdb;
@@ -327,7 +349,8 @@ double	Lw;
 
 
 #if ADJ_VEIL
-mkcrfimage()			/* compute contrast reduction factor image */
+static void
+mkcrfimage(void)			/* compute contrast reduction factor image */
 {
 	int	i;
 	float	*crfptr;
@@ -345,8 +368,8 @@ mkcrfimage()			/* compute contrast reduction factor image */
 #endif
 
 
-int
-mkbrmap()			/* make dynamic range map */
+extern int
+mkbrmap(void)			/* make dynamic range map */
 {
 	double	Tdb, b, s;
 	double	ceiling, trimmings;
@@ -378,9 +401,11 @@ mkbrmap()			/* make dynamic range map */
 }
 
 
-scotscan(scan, xres)		/* apply scotopic color sensitivity loss */
-COLOR	*scan;
-int	xres;
+extern void
+scotscan(		/* apply scotopic color sensitivity loss */
+	COLOR	*scan,
+	int	xres
+)
 {
 	COLOR	ctmp;
 	double	incolor, b, Lw;
@@ -409,9 +434,11 @@ int	xres;
 }
 
 
-mapscan(scan, xres)		/* apply tone mapping operator to scanline */
-COLOR	*scan;
-int	xres;
+extern void
+mapscan(		/* apply tone mapping operator to scanline */
+	COLOR	*scan,
+	int	xres
+)
 {
 	double	mult, Lw, b;
 	register int	x;
@@ -430,8 +457,10 @@ int	xres;
 }
 
 
-putmapping(fp)			/* put out mapping function */
-FILE	*fp;
+extern void
+putmapping(			/* put out mapping function */
+	FILE	*fp
+)
 {
 	double	b, s;
 	register int	i;

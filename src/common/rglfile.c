@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.10 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.11 2004/03/28 20:33:12 schorsch Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
@@ -21,8 +21,8 @@ FUN  ofun[NUMOTYPE] = INIT_OTYPE;
 static int	nextlist, nlistleft = 0;
 
 
-static void
-initotypes()			/* initialize ofun array */
+void
+initotypes(void)			/* initialize ofun array */
 {
 	if (ofun[OBJ_SPHERE].funp == o_sphere)
 		return;			/* already done */

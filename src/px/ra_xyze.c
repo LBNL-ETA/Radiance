@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.8 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.9 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -16,20 +16,17 @@ static const char	RCSid[] = "$Id: ra_xyze.c,v 2.8 2004/01/02 12:47:01 schorsch E
 #include  "resolu.h"
 
 int  rgbinp = -1;			/* input is RGBE? */
-
 int  rgbout = 0;			/* output should be RGBE? */
-
 RGBPRIMS  inprims = STDPRIMS;		/* input primaries */
-
 RGBPRIMS  outprims = STDPRIMS;		/* output primaries */
-
 double	expcomp = 1.0;			/* exposure compensation */
-
 int  doflat = -1;			/* produce flat file? */
-
 char  *progname;
 
 static gethfunc headline;
+static void quiterr(char *err);
+static void convert(void);
+
 
 
 static int
@@ -58,9 +55,8 @@ headline(				/* process header line */
 }
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(int  argc, char  *argv[])
 {
 	int  i;
 	SET_DEFAULT_BINARY();
@@ -132,8 +128,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -143,7 +141,8 @@ char  *err;
 }
 
 
-convert()				/* convert to XYZE or RGBE picture */
+static void
+convert(void)				/* convert to XYZE or RGBE picture */
 {
 	int	order;
 	int	xmax, ymax;

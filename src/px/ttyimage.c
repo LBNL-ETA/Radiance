@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ttyimage.c,v 2.4 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ttyimage.c,v 2.5 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ttyimage.c - program to dump pixel file to dumb terminal.
@@ -17,10 +17,11 @@ static const char	RCSid[] = "$Id: ttyimage.c,v 2.4 2003/06/05 19:29:34 schorsch 
 
 #define	 NCOLS		133
 
+static int shade(COLR clr);
 
-main(argc, argv)
-int  argc;
-char  **argv;
+
+int
+main(int  argc, char  **argv)
 {
 	FILE  *input;
 	int  xres, yres;
@@ -60,9 +61,10 @@ char  **argv;
 }
 
 
-int
-shade(clr)			/* return character for color */
-COLR  clr;
+static int
+shade(			/* return character for color */
+	COLR  clr
+)
 {
 #define NSHADES	 13
 

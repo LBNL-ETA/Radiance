@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.7 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.8 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
@@ -27,8 +27,13 @@ FILE	*fin;				/* input file */
 char	*progname;
 
 
-int
-neworder()			/* figure out new order from old */
+static void memerr(void);
+static void scanfile(void);
+static void flip(void);
+
+
+static int
+neworder(void)			/* figure out new order from old */
 {
 	register int  no;
 
@@ -44,10 +49,11 @@ neworder()			/* figure out new order from old */
 	return(no);
 }
 
-
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	static char	picfmt[LPICFMT+1] = PICFMT;
 	int	i, rval;
@@ -103,14 +109,16 @@ char	*argv[];
 }
 
 
-memerr()
+static void
+memerr(void)
 {
 	fprintf(stderr, "%s: out of memory\n", progname);
 	exit(1);
 }
 
 
-scanfile()				/* scan to the end of file */
+static void
+scanfile(void)				/* scan to the end of file */
 {
 	extern long	ftell();
 	COLR	*scanin;
@@ -132,7 +140,8 @@ scanfile()				/* scan to the end of file */
 }
 
 
-flip()					/* flip the picture */
+static void
+flip(void)					/* flip the picture */
 {
 	COLR	*scanin, *scanout;
 	int	y;

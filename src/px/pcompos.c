@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.28 2004/03/15 21:16:54 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.29 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: pcompos.c,v 2.28 2004/03/15 21:16:54 greg Exp 
 
 #include  "platform.h"
 #include  "rtprocess.h"
+#include  "rterror.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -59,10 +60,12 @@ int  nfile;			/* number of files */
 char  ourfmt[LPICFMT+1] = PICFMT;
 int  wrongformat = 0;
 
-FILE  *lblopen();
-void  quit();
 
 static gethfunc tabputs;
+static void compos(void);
+static int cmpcolr(COLR  c1, COLR  c2);
+static FILE * lblopen(char  *s, int  *xp, int  *yp);
+
 
 
 static int
@@ -89,9 +92,11 @@ tabputs(			/* print line preceded by a tab */
 }
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  ncolumns = 0;
 	int  autolabel = 0;
@@ -316,10 +321,12 @@ toomany:
 labelerr:
 	fprintf(stderr, "%s: error opening label\n", progname);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-compos()				/* composite pictures */
+static void
+compos(void)				/* composite pictures */
 {
 	COLR  *scanin, *scanout;
 	int  y;
@@ -385,9 +392,11 @@ memerr:
 }
 
 
-int
-cmpcolr(c1, c2)			/* compare two colr's (improvisation) */
-register COLR  c1, c2;
+static int
+cmpcolr(			/* compare two colr's (improvisation) */
+	register COLR  c1,
+	register COLR  c2
+)
 {
 	register int  i, j;
 
@@ -399,10 +408,12 @@ register COLR  c1, c2;
 }
 
 
-FILE *
-lblopen(s, xp, yp)		/* open pipe to label generator */
-char  *s;
-int  *xp, *yp;
+static FILE *
+lblopen(		/* open pipe to label generator */
+	char  *s,
+	int  *xp,
+	int  *yp
+)
 {
 	char  com[PATH_MAX];
 	FILE  *fp;

@@ -1,41 +1,21 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pf2.c,v 2.6 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pf2.c,v 2.7 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  pf2.c - routines used by pfilt.
  */
 
 #include  <stdio.h>
-
 #include  <stdlib.h>
-
 #include  <math.h>
 
+#include  "rterror.h"
 #include  "random.h"
-
 #include  "color.h"
+#include  "pfilt.h"
 
 #define	 PI		3.14159265359
-
 #define	 FTINY		(1e-6)
-
-extern int  nrows, ncols;	/* number of rows and columns for output */
-
-extern int  xres, yres;		/* x and y resolution */
-
-extern int  avghot;		/* true means average in avgbrt spots */
-
-extern double  hotlvl;		/* brightness considered "hot" */
-
-extern int  npts;		/* # of points for stars */
-
-extern double  spread;		/* spread for star points */
-
-extern char  *progname;
-
-extern COLOR  exposure;		/* exposure for frame */
-
-extern double  (*ourbright)();	/* brightness calculation function */
 
 #define	 AVGLVL		0.5	/* target mean brightness */
 
@@ -53,8 +33,11 @@ HOTPIX	*head;			/* head of avgbrt pixel list */
 
 double	sprdfact;		/* computed spread factor */
 
+static void starpoint(COLOR  fcol, int  x, int  y, HOTPIX	 *hp);
 
-pass1init()			/* prepare for first pass */
+
+extern void
+pass1init(void)			/* prepare for first pass */
 {
 	avgbrt = 0.0;
 	npix = 0;
@@ -62,7 +45,8 @@ pass1init()			/* prepare for first pass */
 }
 
 
-pass1default()			/* for single pass */
+extern void
+pass1default(void)			/* for single pass */
 {
 	avgbrt = AVGLVL;
 	npix = 1;
@@ -70,9 +54,11 @@ pass1default()			/* for single pass */
 }
 
 
-pass1scan(scan, y)		/* process first pass scanline */
-register COLOR	*scan;
-int  y;
+extern void
+pass1scan(		/* process first pass scanline */
+	register COLOR	*scan,
+	int  y
+)
 {
 	double	cbrt;
 	register int  x;
@@ -107,7 +93,8 @@ int  y;
 }
 
 
-pass2init()			/* prepare for final pass */
+extern void
+pass2init(void)			/* prepare for final pass */
 {
 	if (!npix) {
 		fprintf(stderr, "%s: picture too dark or too bright\n",
@@ -123,9 +110,11 @@ pass2init()			/* prepare for final pass */
 }
 
 
-pass2scan(scan, y)		/* process final pass scanline */
-register COLOR	*scan;
-int  y;
+extern void
+pass2scan(		/* process final pass scanline */
+	register COLOR	*scan,
+	int  y
+)
 {
 	int  xmin, xmax;
 	register int  x;
@@ -157,10 +146,13 @@ int  y;
 }
 
 
-starpoint(fcol, x, y, hp)		/* pixel is on the star's point */
-COLOR  fcol;
-int  x, y;
-register HOTPIX	 *hp;
+static void
+starpoint(		/* pixel is on the star's point */
+	COLOR  fcol,
+	int  x,
+	int  y,
+	register HOTPIX	 *hp
+)
 {
 	COLOR  ctmp;
 	double	d2;

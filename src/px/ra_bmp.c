@@ -1,11 +1,13 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.2 2004/03/27 05:43:37 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.3 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
  */
 
 #include  <stdio.h>
+#include  <string.h>
+
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -17,9 +19,9 @@ double	gamcor = 2.2;			/* gamma correction value */
 
 char  *progname;
 
-void    quiterr(const char *);
-void    rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry);
-void    bmp2rad(BMPReader *brd, FILE *rfp, int inv);
+static void quiterr(const char *);
+static void rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry);
+static void bmp2rad(BMPReader *brd, FILE *rfp, int inv);
 
 
 int
@@ -136,7 +138,7 @@ main(int argc, char *argv[])
 			quiterr("cannot initialize BMP header");
 					/* set up output direction */
 		hdr->yIsDown = (rs.rt & YDECR) &&
-				(outfile == NULL | hdr->compr == BI_RLE8);
+				((outfile == NULL) | (hdr->compr == BI_RLE8));
 					/* open BMP output */
 		if (outfile != NULL)
 			wtr = BMPopenOutputFile(outfile, hdr);
@@ -161,7 +163,7 @@ userr:
 }
 
 /* print message and exit */
-void
+static void
 quiterr(const char *err)
 {
 	if (err != NULL) {
@@ -172,7 +174,7 @@ quiterr(const char *err)
 }
 
 /* convert Radiance picture to BMP */
-void
+static void
 rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry)
 {
 	COLR	*scanin;
@@ -218,7 +220,7 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, int gry)
 }
 
 /* convert BMP file to Radiance */
-void
+static void
 bmp2rad(BMPReader *brd, FILE *rfp, int inv)
 {
 	COLR	*scanout;

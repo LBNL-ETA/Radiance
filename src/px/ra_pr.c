@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pr.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_pr.c,v 2.7 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ra_pr.c - program to convert between RADIANCE and pixrect picture format.
@@ -9,17 +9,13 @@ static const char	RCSid[] = "$Id: ra_pr.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
  */
 
 #include  <stdio.h>
-
 #include  <math.h>
-
 #include  <time.h>
 
+#include  "rtmisc.h"
 #include  "rasterfile.h"
-
 #include  "color.h"
-
 #include  "resolu.h"
-
 #include  "pic.h"
 
 			/* descriptor for a picture file or frame buffer */
@@ -34,30 +30,23 @@ typedef struct {
 	} pos;				/* position(s) */
 } pic;
 
-extern pic	*openinput(), *openoutput();
-
-extern char	*ecalloc(), *emalloc();
-
-extern long  ftell();
 
 double	gamcor = 2.2;			/* gamma correction */
-
 int  bradj = 0;				/* brightness adjustment */
-
 pic	*inpic, *outpic;
-
 char  *progname;
-
 char  errmsg[128];
-
 COLR	*inl;
-
 int  xmax, ymax;
 
+static void quiterr(char  *err);
+static pic * openinput(char  *fname, struct rasterfile  *h);
+static pic * openoutput(char  *fname, struct rasterfile  *h);
+static void pr2ra(struct rasterfile  *h);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(int  argc, char  *argv[])
 {
 	colormap  rasmap;
 	struct rasterfile  head;
@@ -157,8 +146,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -184,10 +175,11 @@ int code;
 }
 
 
-pic *
-openinput(fname, h)		/* open RADIANCE input file */
-char  *fname;
-register struct rasterfile  *h;
+static pic *
+openinput(		/* open RADIANCE input file */
+	char  *fname,
+	register struct rasterfile  *h
+)
 {
 	register pic  *p;
 
@@ -221,10 +213,11 @@ register struct rasterfile  *h;
 }
 
 
-pic *
-openoutput(fname, h)		/* open output rasterfile */
-char  *fname;
-register struct rasterfile  *h;
+static pic *
+openoutput(		/* open output rasterfile */
+	char  *fname,
+	register struct rasterfile  *h
+)
 {
 	register pic  *p;
 
@@ -244,8 +237,10 @@ register struct rasterfile  *h;
 }
 
 
-pr2ra(h)			/* pixrect file to RADIANCE file */
-struct rasterfile  *h;
+static void
+pr2ra(			/* pixrect file to RADIANCE file */
+	struct rasterfile  *h
+)
 {
 	BYTE  cmap[3][256];
 	COLR  ctab[256];
@@ -281,9 +276,11 @@ struct rasterfile  *h;
 }
 
 
-picreadline3(y, l3)			/* read in 3-byte scanline */
-int  y;
-register rgbpixel  *l3;
+extern void
+picreadline3(			/* read in 3-byte scanline */
+	int  y,
+	register rgbpixel  *l3
+)
 {
 	register int	i;
 
@@ -314,9 +311,11 @@ register rgbpixel  *l3;
 }
 
 
-picwriteline(y, l)			/* write out scanline */
-int  y;
-register pixel  *l;
+extern void
+picwriteline(			/* write out scanline */
+	int  y,
+	register pixel  *l
+)
 {
 	if (outpic->nexty != y) {			/* seek to scanline */
 		if (outpic->bytes_line == 0) {
@@ -338,8 +337,10 @@ register pixel  *l;
 }
 
 
-picwritecm(cm)			/* write out color map */
-colormap  cm;
+extern void
+picwritecm(			/* write out color map */
+	colormap  cm
+)
 {
 	register int  i, j;
 
@@ -357,8 +358,10 @@ colormap  cm;
 }
 
 
-picreadcm(map)			/* do gamma correction if requested */
-colormap  map;
+extern void
+picreadcm(			/* do gamma correction if requested */
+	colormap  map
+)
 {
 	register int  i, val;
 

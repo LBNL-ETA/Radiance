@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.3 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Create a 4x1 hex bitmap from a Radiance picture.
@@ -7,24 +7,27 @@ static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.2 2003/02/22 02:07:27 greg Exp
 
 #include  <stdio.h>
 #include  <time.h>
+
 #include  "color.h"
 #include  "resolu.h"
 
 char  *progname;
-
 int  xmax, ymax;
-
 double	thresh = 0.5;		/* threshold value */
-
 COLR	threshclr;
 
 #define abovethresh(c)	((c)[EXP]>threshclr[EXP] || \
 			((c)[EXP]==threshclr[EXP] && (c)[GRN]>threshclr[GRN]))
 
+static void quiterr(char *err);
+static void ra2hex(void);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i;
 	
@@ -70,8 +73,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -81,7 +86,8 @@ char  *err;
 }
 
 
-ra2hex()		/* convert Radiance scanlines to 4x1 bit hex */
+static void
+ra2hex(void)		/* convert Radiance scanlines to 4x1 bit hex */
 {
 	static char	cmap[] = "0123456789ABCDEF";
 	COLR	*scanin;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond4.c,v 3.16 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcond4.c,v 3.17 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Routines for veiling glare and loss of acuity.
@@ -19,8 +19,14 @@ static float	(*raydir)[3] = NULL;	/* ray direction for each pixel */
 
 #define rdirscan(y)	(raydir+(y)*fvxr)
 
+static void compraydir(void);
+#if ADJ_VEIL
+static void smoothveil(void);
+#endif
 
-compraydir()				/* compute ray directions */
+
+static void
+compraydir(void)				/* compute ray directions */
 {
 	FVECT	rorg, rdir;
 	double	h, v;
@@ -69,7 +75,8 @@ compraydir()				/* compute ray directions */
 }
 
 
-compveil()				/* compute veiling image */
+extern void
+compveil(void)				/* compute veiling image */
 {
 	double	t2, t2sum;
 	COLOR	ctmp, vsum;
@@ -130,7 +137,8 @@ compveil()				/* compute veiling image */
  * and added to the foveal image, and the mapping has been
  * determined.
  */
-adjveil()				/* adjust veil image */
+extern void
+adjveil(void)				/* adjust veil image */
 {
 	float	*crfptr = crfimg;
 	COLOR	*fovptr = fovimg;
@@ -176,7 +184,8 @@ adjveil()				/* adjust veil image */
 }
 
 
-smoothveil()				/* smooth veil image */
+static void
+smoothveil(void)				/* smooth veil image */
 {
 	COLOR 	*nveilimg;
 	COLOR	*ovptr, *nvptr;
@@ -245,9 +254,11 @@ smoothveil()				/* smooth veil image */
 }
 #endif
 
-addveil(sl, y)				/* add veil to scanline */
-COLOR	*sl;
-int	y;
+extern void
+addveil(				/* add veil to scanline */
+	COLOR	*sl,
+	int	y
+)
 {
 	int	vx, vy;
 	double	dx, dy;
@@ -291,20 +302,26 @@ float	*inpacuD;		/* input acuity data (cycles/degree) */
 
 #define tsampr(x,y)	inpacuD[(y)*fvxr+(x)]
 
+static COLOR * getascan(SCANBAR	*sb, int	y);
+static void acusample(COLOR	col, int	x, int	y, double	sr);
+static void ascanval(COLOR	col, int	x, int	y, SCANBAR	*sb);
+static SCANBAR	*sballoc(int	se, int	ns, int	sl);
 
-double
-hacuity(La)			/* return visual acuity in cycles/degree */
-double	La;
+extern double
+hacuity(			/* return visual acuity in cycles/degree */
+	double	La
+)
 {
 					/* functional fit */
 	return(17.25*atan(1.4*log10(La) + 0.35) + 25.72);
 }
 
 
-COLOR *
-getascan(sb, y)			/* find/read scanline y for scanbar sb */
-register SCANBAR	*sb;
-int	y;
+static COLOR *
+getascan(			/* find/read scanline y for scanbar sb */
+	register SCANBAR	*sb,
+	int	y
+)
 {
 	register COLOR	*sl0, *sl1, *mysl;
 	register int	i;
@@ -337,9 +354,11 @@ int	y;
 }
 
 
-acuscan(scln, y)		/* get acuity-sampled scanline */
-COLOR	*scln;
-int	y;
+extern void
+acuscan(		/* get acuity-sampled scanline */
+	COLOR	*scln,
+	int	y
+)
 {
 	double	sr;
 	double	dx, dy;
@@ -363,10 +382,13 @@ int	y;
 }
 
 
-acusample(col, x, y, sr)	/* interpolate sample at (x,y) using rate sr */
-COLOR	col;
-int	x, y;
-double	sr;
+static void
+acusample(	/* interpolate sample at (x,y) using rate sr */
+	COLOR	col,
+	int	x,
+	int	y,
+	double	sr
+)
 {
 	COLOR	c1;
 	double	d;
@@ -385,10 +407,13 @@ double	sr;
 }
 
 
-ascanval(col, x, y, sb)		/* interpolate scanbar at orig. coords (x,y) */
-COLOR	col;
-int	x, y;
-SCANBAR	*sb;
+static void
+ascanval(		/* interpolate scanbar at orig. coords (x,y) */
+	COLOR	col,
+	int	x,
+	int	y,
+	SCANBAR	*sb
+)
 {
 	COLOR	*sl0, *sl1, c1, c1y;
 	double	dx, dy;
@@ -433,11 +458,12 @@ SCANBAR	*sb;
 }
 
 
-SCANBAR	*
-sballoc(se, ns, sl)		/* allocate scanbar */
-int	se;		/* sampling rate exponent */
-int	ns;		/* number of scanlines */
-int	sl;		/* original scanline length */
+static SCANBAR	*
+sballoc(		/* allocate scanbar */
+	int	se,		/* sampling rate exponent */
+	int	ns,		/* number of scanlines */
+	int	sl		/* original scanline length */
+)
 {
 	SCANBAR	*sbarr;
 	register SCANBAR	*sb;
@@ -462,7 +488,8 @@ int	sl;		/* original scanline length */
 }
 
 
-initacuity()			/* initialize variable acuity sampling */
+extern void
+initacuity(void)			/* initialize variable acuity sampling */
 {
 	FVECT	diffx, diffy, cp;
 	double	omega, maxsr;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: oki20c.c,v 2.15 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: oki20c.c,v 2.16 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  oki20c.c - program to dump pixel file to OkiMate 20 color printer.
@@ -31,10 +31,16 @@ long  lpat[NCOLS][3];
 
 int  dofilter = 0;		/* filter through pfilt first? */
 
+static int printp(char  *fname);
+static void plotscan(COLR  scan[], int  len, int  y);
+static int colbit(COLR  col, int  x, int  s);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i, status = 0;
 	SET_DEFAULT_BINARY();
@@ -53,8 +59,10 @@ char  *argv[];
 }
 
 
-printp(fname)				/* print a picture */
-char  *fname;
+static int
+printp(				/* print a picture */
+	char  *fname
+)
 {
 	char  buf[PATH_MAX];
 	FILE  *input;
@@ -116,10 +124,12 @@ char  *fname;
 }
 
 
-plotscan(scan, len, y)			/* plot a scanline */
-COLR  scan[];
-int  len;
-int  y;
+static void
+plotscan(			/* plot a scanline */
+	COLR  scan[],
+	int  len,
+	int  y
+)
 {
 	int  bpos;
 	register long  c;
@@ -161,10 +171,12 @@ int  y;
 }
 
 
-colbit(col, x, s)		/* determine bit value for primary at x */
-COLR  col;
-register int  x;
-int  s;
+static int
+colbit(		/* determine bit value for primary at x */
+	COLR  col,
+	register int  x,
+	int  s
+)
 {
 	static int  cerr[NCOLS][3];
 	static int  err[3];

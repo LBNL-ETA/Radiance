@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.27 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.28 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -30,6 +30,8 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.27 2004/01/02 12:47:01 schorsch 
 #define C_TWRD		0x80		/* TIFF data is 16-bit */
 #define C_PRIM		0x100		/* has assigned primaries */
 
+typedef void colcvf_t(uint32 y);
+
 struct {
 	uint16	flags;		/* conversion flags (defined above) */
 	char	capdate[20];	/* capture date/time */
@@ -58,7 +60,7 @@ struct {
 		float	*fp;		/* float pointer */
 		char	*p;		/* generic pointer */
 	} t;			/* TIFF scanline */
-	void	(*tf)();	/* translation procedure */
+	colcvf_t *tf;	/* translation procedure */
 }	cvts = {	/* conversion structure */
 	0, "", "", COMPRESSION_NONE, PHOTOMETRIC_RGB,
 	PLANARCONFIG_CONTIG, GAMCOR, 0, 1, 1., 1.,
@@ -69,9 +71,19 @@ struct {
 #define CLR(f)		(cvts.flags &= ~(f))
 #define TGL(f)		(cvts.flags ^= (f))
 
-void	Luv2Color(), L2Color(), RGB2Colr(), Gry2Colr();
-void	Color2Luv(), Color2L(), Colr2RGB(), Colr2Gry();
-void	RRGGBB2Color(), GGry2Color(), Color2RRGGBB(), Color2GGry();
+static colcvf_t Luv2Color, L2Color, RGB2Colr, Gry2Colr;
+static colcvf_t Color2Luv, Color2L, Colr2RGB, Colr2Gry;
+static colcvf_t RRGGBB2Color, GGry2Color, Color2RRGGBB, Color2GGry;
+
+static gethfunc headline;
+static void quiterr(char *err);
+static void allocbufs(void);
+static void initfromtif(void);
+static void tiff2ra(int  ac, char  *av[]);
+static void initfromrad(void);
+static void ra2tiff(int  ac, char  *av[]);
+
+
 
 #define RfGfBf2Color	Luv2Color
 #define Gryf2Color	L2Color
@@ -96,12 +108,9 @@ char		OWNSTR[] = "OWNER=";
 
 char  *progname;
 
-static gethfunc headline;
 
-
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(int  argc, char  *argv[])
 {
 	int  reverse = 0;
 	int  i;
@@ -191,8 +200,10 @@ userr:
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -202,7 +213,8 @@ char  *err;
 }
 
 
-allocbufs()			/* allocate scanline buffers */
+static void
+allocbufs(void)			/* allocate scanline buffers */
 {
 	int	rsiz, tsiz;
 
@@ -217,7 +229,8 @@ allocbufs()			/* allocate scanline buffers */
 }
 
 
-initfromtif()		/* initialize conversion from TIFF input */
+static void
+initfromtif(void)		/* initialize conversion from TIFF input */
 {
 	uint16	hi;
 	char	*cp;
@@ -385,9 +398,11 @@ initfromtif()		/* initialize conversion from TIFF input */
 }
 
 
-tiff2ra(ac, av)		/* convert TIFF image to Radiance picture */
-int  ac;
-char  *av[];
+static void
+tiff2ra(		/* convert TIFF image to Radiance picture */
+	int  ac,
+	char  *av[]
+)
 {
 	int32	y;
 					/* open TIFF input */
@@ -476,7 +491,8 @@ headline(			/* process Radiance input header line */
 }
 
 
-initfromrad()			/* initialize input from a Radiance picture */
+static void
+initfromrad(void)			/* initialize input from a Radiance picture */
 {
 	int	i1, i2, po;
 						/* read Radiance header */
@@ -603,9 +619,11 @@ initfromrad()			/* initialize input from a Radiance picture */
 }
 
 
-ra2tiff(ac, av)		/* convert Radiance picture to TIFF image */
-int  ac;
-char  *av[];
+static void
+ra2tiff(		/* convert Radiance picture to TIFF image */
+	int  ac,
+	char  *av[]
+)
 {
 	uint32	y;
 						/* open Radiance file */
@@ -627,9 +645,10 @@ char  *av[];
 }
 
 
-void
-Luv2Color(y)			/* read/convert/write Luv->COLOR scanline */
-uint32	y;
+static void
+Luv2Color(			/* read/convert/write Luv->COLOR scanline */
+	uint32	y
+)
 {
 	register int	x;
 
@@ -662,9 +681,10 @@ uint32	y;
 }
 
 
-void
-RRGGBB2Color(y)			/* read/convert/write RGB16->COLOR scanline */
-uint32	y;
+static void
+RRGGBB2Color(			/* read/convert/write RGB16->COLOR scanline */
+	uint32	y
+)
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	register double	d;
@@ -704,9 +724,10 @@ uint32	y;
 }
 
 
-void
-L2Color(y)			/* read/convert/write Lfloat->COLOR scanline */
-uint32	y;
+static void
+L2Color(			/* read/convert/write Lfloat->COLOR scanline */
+	uint32	y
+)
 {
 	float	m = pow(2., (double)cvts.bradj);
 	register int	x;
@@ -727,9 +748,10 @@ uint32	y;
 }
 
 
-void
-RGB2Colr(y)			/* read/convert/write RGB->COLR scanline */
-uint32	y;
+static void
+RGB2Colr(			/* read/convert/write RGB->COLR scanline */
+	uint32	y
+)
 {
 	COLOR	ctmp;
 	register int	x;
@@ -783,9 +805,10 @@ readerr:
 }
 
 
-void
-Gry2Colr(y)			/* read/convert/write G8->COLR scanline */
-uint32	y;
+static void
+Gry2Colr(			/* read/convert/write G8->COLR scanline */
+	uint32	y
+)
 {
 	register int	x;
 
@@ -809,9 +832,10 @@ uint32	y;
 }
 
 
-void
-GGry2Color(y)			/* read/convert/write G16->COLOR scanline */
-uint32	y;
+static void
+GGry2Color(			/* read/convert/write G16->COLOR scanline */
+	uint32	y
+)
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	double	m;
@@ -839,9 +863,10 @@ uint32	y;
 }
 
 
-void
-Color2GGry(y)			/* read/convert/write COLOR->G16 scanline */
-uint32	y;
+static void
+Color2GGry(			/* read/convert/write COLOR->G16 scanline */
+	uint32	y
+)
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
@@ -873,9 +898,10 @@ uint32	y;
 }
 
 
-void
-Color2L(y)			/* read/convert/write COLOR->Lfloat scanline */
-uint32	y;
+static void
+Color2L(			/* read/convert/write COLOR->Lfloat scanline */
+	uint32	y
+)
 {
 	float	m = pow(2.,(double)cvts.bradj);
 	register int	x;
@@ -895,9 +921,10 @@ uint32	y;
 }
 
 
-void
-Color2Luv(y)			/* read/convert/write COLOR->Luv scanline */
-uint32	y;
+static void
+Color2Luv(			/* read/convert/write COLOR->Luv scanline */
+	uint32	y
+)
 {
 	register int	x;
 
@@ -928,9 +955,10 @@ uint32	y;
 }
 
 
-void
-Color2RRGGBB(y)			/* read/convert/write COLOR->RGB16 scanline */
-uint32	y;
+static void
+Color2RRGGBB(			/* read/convert/write COLOR->RGB16 scanline */
+	uint32	y
+)
 {
 	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
@@ -961,9 +989,10 @@ uint32	y;
 }
 
 
-void
-Colr2Gry(y)			/* read/convert/write COLR->RGB scanline */
-uint32	y;
+static void
+Colr2Gry(			/* read/convert/write COLR->RGB scanline */
+	uint32	y
+)
 {
 	register int	x;
 
@@ -987,9 +1016,10 @@ uint32	y;
 }
 
 
-void
-Colr2RGB(y)			/* read/convert/write COLR->RGB scanline */
-uint32	y;
+static void
+Colr2RGB(			/* read/convert/write COLR->RGB scanline */
+	uint32	y
+)
 {
 	COLOR	ctmp;
 	register int	x;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.12 2003/11/21 07:15:29 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.13 2004/03/28 20:33:12 schorsch Exp $";
 #endif
 /*
  * Table lookup routines
@@ -10,11 +10,20 @@ static const char	RCSid[] = "$Id: lookup.c,v 2.12 2003/11/21 07:15:29 greg Exp $
 
 #include "lookup.h"
 
+extern int
+lu_strcmp(
+	const void *s1,
+	const void *s2
+)
+{
+	return strcmp((const char*)s1,(const char*)s2);
+}
 
-int
-lu_init(tbl, nel)		/* initialize tbl for at least nel elements */
-register LUTAB	*tbl;
-int	nel;
+extern int
+lu_init(		/* initialize tbl for at least nel elements */
+	register LUTAB	*tbl,
+	int	nel
+)
 {
 	static int  hsiztab[] = {
 		31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 
@@ -37,9 +46,10 @@ int	nel;
 }
 
 
-unsigned long
-lu_shash(s)			/* hash a nul-terminated string */
-char	*s;
+extern unsigned long
+lu_shash(			/* hash a nul-terminated string */
+	void	*s
+)
 {
 	static unsigned char shuffle[256] = {
 		0, 157, 58, 215, 116, 17, 174, 75, 232, 133, 34,
@@ -78,10 +88,11 @@ char	*s;
 }
 
 
-LUENT *
-lu_find(tbl, key)		/* find a table entry */
-register LUTAB	*tbl;
-char	*key;
+extern LUENT *
+lu_find(		/* find a table entry */
+	register LUTAB	*tbl,
+	char	*key
+)
 {
 	unsigned long	hval;
 	int	i, n;
@@ -133,10 +144,11 @@ tryagain:
 }
 
 
-void
-lu_delete(tbl, key)		/* delete a table entry */
-register LUTAB	*tbl;
-char	*key;
+extern void
+lu_delete(		/* delete a table entry */
+	register LUTAB	*tbl,
+	char	*key
+)
 {
 	register LUENT	*le;
 
@@ -151,10 +163,12 @@ char	*key;
 }
 
 
-int
-lu_doall(tbl, f)		/* loop through all valid table entries */
-register LUTAB	*tbl;
-int	(*f)(LUENT *);
+extern int
+lu_doall(		/* loop through all valid table entries */
+	register LUTAB	*tbl,
+	//int	(*f)(LUENT *)
+	lut_doallf_t *f
+)
 {
 	int	rval = 0;
 	register LUENT	*tp;
@@ -170,9 +184,10 @@ int	(*f)(LUENT *);
 }
 
 
-void
-lu_done(tbl)			/* free table and contents */
-register LUTAB	*tbl;
+extern void
+lu_done(			/* free table and contents */
+	register LUTAB	*tbl
+)
 {
 	register LUENT	*tp;
 

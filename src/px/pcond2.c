@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.11 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.12 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -31,11 +31,18 @@ static WARP3D	*cwarp;			/* color warping structure */
 static COLOR	*scanbuf;		/* scanline processing buffer */
 static int	nread;			/* number of scanlines processed */
 
+static void sfscan(COLOR *sl, int len, double sf);
+static void matscan(COLOR *sl, int len, COLORMAT mat);
+static void mbscan(COLOR *sl, int len, struct mbc *mb);
+static void cwscan(COLOR *sl, int len, WARP3D *wp);
+static void getmbcalfile(char *fn, struct mbc *mb);
 
-double
-rgblum(clr, scotopic)		/* compute (scotopic) luminance of RGB color */
-COLOR	clr;
-int	scotopic;
+
+extern double
+rgblum(		/* compute (scotopic) luminance of RGB color */
+	COLOR	clr,
+	int	scotopic
+)
 {
 	if (scotopic)		/* approximate */
 		return( WHTSEFFICACY * (colval(clr,RED)*.062 +
@@ -46,10 +53,11 @@ int	scotopic;
 }
 
 
-double
-cielum(xyz, scotopic)		/* compute (scotopic) luminance of CIE color */
-COLOR	xyz;
-int	scotopic;
+extern double
+cielum(		/* compute (scotopic) luminance of CIE color */
+	COLOR	xyz,
+	int	scotopic
+)
 {
 	if (scotopic)		/* approximate */
 		return(colval(xyz,CIEY) *
@@ -59,8 +67,8 @@ int	scotopic;
 }
 
 
-COLOR *
-nextscan()				/* read and condition next scanline */
+extern COLOR *
+nextscan(void)				/* read and condition next scanline */
 {
 	if (nread >= numscans(&inpres)) {
 		if (cwarpfile != NULL)
@@ -94,8 +102,8 @@ nextscan()				/* read and condition next scanline */
 }
 
 
-COLOR *
-firstscan()				/* return first processed scanline */
+extern COLOR *
+firstscan(void)				/* return first processed scanline */
 {
 	if (mbcalfile != NULL)		/* load macbethcal file */
 		getmbcalfile(mbcalfile, &mbcond);
@@ -117,10 +125,12 @@ firstscan()				/* return first processed scanline */
 }
 
 
-sfscan(sl, len, sf)			/* apply scalefactor to scanline */
-register COLOR	*sl;
-int	len;
-double	sf;
+static void
+sfscan(			/* apply scalefactor to scanline */
+	register COLOR	*sl,
+	int	len,
+	double	sf
+)
 {
 	while (len--) {
 		scalecolor(sl[0], sf);
@@ -129,10 +139,12 @@ double	sf;
 }
 
 
-matscan(sl, len, mat)			/* apply color matrix to scaline */
-register COLOR	*sl;
-int	len;
-COLORMAT	mat;
+static void
+matscan(			/* apply color matrix to scaline */
+	register COLOR	*sl,
+	int	len,
+	COLORMAT	mat
+)
 {
 	while (len--) {
 		colortrans(sl[0], mat, sl[0]);
@@ -142,10 +154,12 @@ COLORMAT	mat;
 }
 
 
-mbscan(sl, len, mb)			/* apply macbethcal adj. to scaline */
-COLOR	*sl;
-int	len;
-register struct mbc	*mb;
+static void
+mbscan(			/* apply macbethcal adj. to scaline */
+	COLOR	*sl,
+	int	len,
+	register struct mbc	*mb
+)
 {
 	double	d;
 	register int	i, j;
@@ -166,10 +180,12 @@ register struct mbc	*mb;
 }
 
 
-cwscan(sl, len, wp)			/* apply color space warp to scaline */
-COLOR	*sl;
-int	len;
-WARP3D	*wp;
+static void
+cwscan(			/* apply color space warp to scaline */
+	COLOR	*sl,
+	int	len,
+	WARP3D	*wp
+)
 {
 	int	rval;
 
@@ -188,11 +204,12 @@ WARP3D	*wp;
 }
 
 
-getmbcalfile(fn, mb)			/* load macbethcal file */
-char	*fn;
-register struct mbc	*mb;
+static void
+getmbcalfile(			/* load macbethcal file */
+	char	*fn,
+	register struct mbc	*mb
+)
 {
-	extern char	*fgets();
 	char	buf[128];
 	FILE	*fp;
 	int	inpflags = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.40 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.41 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -68,8 +68,6 @@ char	*progname;
 
 int	fillo = F_FORE|F_BACK;		/* selected fill options */
 int	fillsamp = 0;			/* sample separation (0 == inf) */
-extern int	backfill(), rcalfill();	/* fill functions */
-int	(*fillfunc)() = backfill;	/* selected fill function */
 COLR	backcolr = BLKCOLR;		/* background color */
 COLOR	backcolor = BLKCOLOR;		/* background color (float) */
 double	backz = 0.0;			/* background z value */
@@ -92,14 +90,39 @@ unsigned short	queue[PACKSIZ][2];	/* pending pixels */
 int	packsiz;			/* actual packet size */
 int	queuesiz = 0;			/* number of pixels pending */
 
-extern double	movepixel();
+typedef void fillfunc_t(int x, int y);
 
 static gethfunc headline;
+static int nextview(FILE *fp);
+static void compavgview(void);
+static void addpicture(char *pfile, char *zspec);
+static int pixform(MAT4 xfmat, VIEW *vw1, VIEW *vw2);
+static void addscanline(struct bound *xl, int y,
+	COLR *pline, float *zline, struct position *lasty);
+static void addpixel(struct position *p0, struct position *p1,
+	struct position *p2, COLR pix, double w, double z);
+static double movepixel(FVECT pos);
+static int getperim(struct bound *xl, struct bound *yl, float *zline, int zfd);
+static void backpicture(fillfunc_t *fill, int samp);
+static void fillpicture(fillfunc_t *fill);
+static int clipaft(void);
+static int addblur(void);
+static void writepicture(void);
+static void writedistance(char *fname);
+static fillfunc_t backfill;
+static fillfunc_t rcalfill;
+static void calstart(char *prog, char *args);
+static void caldone(void);
+static void clearqueue(void);
+static void syserror(char *s);
 
+fillfunc_t *fillfunc = backfill;	/* selected fill function */
 
-main(argc, argv)			/* interpolate pictures */
-int	argc;
-char	*argv[];
+int
+main(			/* interpolate pictures */
+	int	argc,
+	char	*argv[]
+)
 {
 #define  check(ol,al)		if (argv[an][ol] || \
 				badarg(argc-an-1,argv+an+1,al)) \
@@ -361,8 +384,10 @@ headline(				/* process header string */
 }
 
 
-nextview(fp)				/* get and set next view */
-FILE	*fp;
+static int
+nextview(				/* get and set next view */
+	FILE	*fp
+)
 {
 	char	linebuf[256];
 	char	*err;
@@ -399,7 +424,8 @@ FILE	*fp;
 }
 
 
-compavgview()				/* compute average view */
+static void
+compavgview(void)				/* compute average view */
 {
 	register int	i;
 	double	f;
@@ -424,8 +450,11 @@ compavgview()				/* compute average view */
 }
 
 
-addpicture(pfile, zspec)		/* add picture to output */
-char	*pfile, *zspec;
+static void
+addpicture(		/* add picture to output */
+	char	*pfile,
+	char	*zspec
+)
 {
 	FILE	*pfp;
 	int	zfd;
@@ -522,9 +551,12 @@ char	*pfile, *zspec;
 }
 
 
-pixform(xfmat, vw1, vw2)		/* compute view1 to view2 matrix */
-register MAT4	xfmat;
-register VIEW	*vw1, *vw2;
+static int
+pixform(		/* compute view1 to view2 matrix */
+	register MAT4	xfmat,
+	register VIEW	*vw1,
+	register VIEW	*vw2
+)
 {
 	double	m4t[4][4];
 
@@ -563,12 +595,14 @@ register VIEW	*vw1, *vw2;
 }
 
 
-addscanline(xl, y, pline, zline, lasty)	/* add scanline to output */
-struct bound	*xl;
-int	y;
-COLR	*pline;
-float	*zline;
-struct position	*lasty;		/* input/output */
+static void
+addscanline(	/* add scanline to output */
+	struct bound	*xl,
+	int	y,
+	COLR	*pline,
+	float	*zline,
+	struct position	*lasty		/* input/output */
+)
 {
 	FVECT	pos;
 	struct position	lastx, newpos;
@@ -595,11 +629,15 @@ struct position	*lasty;		/* input/output */
 }
 
 
-addpixel(p0, p1, p2, pix, w, z)		/* fill in pixel parallelogram */
-struct position	*p0, *p1, *p2;
-COLR	pix;
-double	w;
-double	z;
+static void
+addpixel(		/* fill in pixel parallelogram */
+	struct position	*p0,
+	struct position	*p1,
+	struct position	*p2,
+	COLR	pix,
+	double	w,
+	double	z
+)
 {
 	double	zt = 2.*zeps*p0->z;		/* threshold */
 	COLOR	pval;				/* converted+weighted pixel */
@@ -672,9 +710,10 @@ double	z;
 }
 
 
-double
-movepixel(pos)				/* reposition image point */
-register FVECT	pos;
+static double
+movepixel(				/* reposition image point */
+	register FVECT	pos
+)
 {
 	FVECT	pt, tdir, odir;
 	double	d;
@@ -737,11 +776,13 @@ register FVECT	pos;
 }
 
 
-getperim(xl, yl, zline, zfd)		/* compute overlapping image area */
-register struct bound	*xl;
-struct bound	*yl;
-float	*zline;
-int	zfd;
+static int
+getperim(		/* compute overlapping image area */
+	register struct bound	*xl,
+	struct bound	*yl,
+	float	*zline,
+	int	zfd
+)
 {
 	int	step;
 	FVECT	pos;
@@ -821,9 +862,11 @@ int	zfd;
 }
 
 
-backpicture(fill, samp)			/* background fill algorithm */
-int	(*fill)();
-int	samp;
+static void
+backpicture(			/* background fill algorithm */
+	fillfunc_t *fill,
+	int	samp
+)
 {
 	int	*yback, xback;
 	int	y;
@@ -929,8 +972,10 @@ int	samp;
 }
 
 
-fillpicture(fill)		/* paint in empty pixels using fill */
-int	(*fill)();
+static void
+fillpicture(		/* paint in empty pixels using fill */
+	fillfunc_t *fill
+)
 {
 	register int	x, y;
 
@@ -943,7 +988,8 @@ int	(*fill)();
 }
 
 
-clipaft()			/* perform aft clipping as indicated */
+static int
+clipaft(void)			/* perform aft clipping as indicated */
 {
 	register int	x, y;
 	int	adjtest = (ourview.type == VT_PER) & zisnorm;
@@ -979,7 +1025,8 @@ clipaft()			/* perform aft clipping as indicated */
 }
 
 
-addblur()				/* add to blurred picture */
+static int
+addblur(void)				/* add to blurred picture */
 {
 	COLOR	cval;
 	double	d;
@@ -1019,7 +1066,8 @@ addblur()				/* add to blurred picture */
 }
 
 
-writepicture()				/* write out picture (alters buffer) */
+static void
+writepicture(void)				/* write out picture (alters buffer) */
 {
 	int	y;
 	register int	x;
@@ -1050,8 +1098,10 @@ writepicture()				/* write out picture (alters buffer) */
 }
 
 
-writedistance(fname)			/* write out z file (alters buffer) */
-char	*fname;
+static void
+writedistance(			/* write out z file (alters buffer) */
+	char	*fname
+)
 {
 	int	donorm = normdist & !zisnorm ? 1 :
 			(ourview.type == VT_PER) & !normdist & zisnorm ? -1 : 0;
@@ -1083,8 +1133,11 @@ char	*fname;
 }
 
 
-backfill(x, y)				/* fill pixel with background */
-int	x, y;
+static void
+backfill(				/* fill pixel with background */
+	int	x,
+	int	y
+)
 {
 	if (averaging) {
 		copycolor(sscan(y)[x], backcolor);
@@ -1095,8 +1148,11 @@ int	x, y;
 }
 
 
-calstart(prog, args)                    /* start fill calculation */
-char	*prog, *args;
+static void
+calstart(                    /* start fill calculation */
+	char	*prog,
+	char	*args
+)
 {
 	char	combuf[512];
 	char	*argv[64];
@@ -1135,7 +1191,8 @@ char	*prog, *args;
 }
 
 
-caldone()                               /* done with calculation */
+static void
+caldone(void)                               /* done with calculation */
 {
 	if (!PDesc.running)
 		return;
@@ -1144,8 +1201,11 @@ caldone()                               /* done with calculation */
 }
 
 
-rcalfill(x, y)				/* fill with ray-calculated pixel */
-int	x, y;
+static void
+rcalfill(				/* fill with ray-calculated pixel */
+	int	x,
+	int	y
+)
 {
 	if (queuesiz >= packsiz)	/* flush queue if needed */
 		clearqueue();
@@ -1156,7 +1216,8 @@ int	x, y;
 }
 
 
-clearqueue()				/* process queue */
+static void
+clearqueue(void)				/* process queue */
 {
 	FVECT	orig, dir;
 	float	fbuf[6*(PACKSIZ+1)];
@@ -1212,8 +1273,10 @@ clearqueue()				/* process queue */
 }
 
 
-syserror(s)			/* report error and exit */
-char	*s;
+static void
+syserror(			/* report error and exit */
+	char	*s
+)
 {
 	perror(s);
 	exit(1);

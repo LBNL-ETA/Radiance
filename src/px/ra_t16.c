@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t16.c,v 2.7 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_t16.c,v 2.8 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ra_t16.c - program to convert between RADIANCE and
@@ -9,10 +9,12 @@ static const char	RCSid[] = "$Id: ra_t16.c,v 2.7 2003/06/05 19:29:34 schorsch Ex
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <time.h>
 #include  <math.h>
 
 #include  "platform.h"
+#include  "rtmisc.h"
 #include  "color.h"
 #include  "resolu.h"
 #include  "random.h"
@@ -23,26 +25,32 @@ static const char	RCSid[] = "$Id: ra_t16.c,v 2.7 2003/06/05 19:29:34 schorsch Ex
 
 #define  taralloc(h)	(unsigned char *)emalloc((h)->x*(h)->y*(h)->dataBits/8)
 
-#define  readtarga(h,d,f)	((h)->dataBits==16 ? readt16(h,d,f) : \
-					readt24(h,d,f))
+#define  readtarga(h,d,f)	((h)->dataBits==16 ? \
+			readt16(h,(unsigned short*)d,f) : readt24(h,d,f))
 
-#define  writetarga(h,d,f)	((h)->dataBits==16 ? writet16(h,d,f) : \
-					writet24(h,d,f))
-
-extern char	*ecalloc(), *emalloc();
+#define  writetarga(h,d,f)	((h)->dataBits==16 ? \
+			writet16(h,(unsigned short*)d,f) : writet24(h,d,f))
 
 double	gamcor = 2.2;			/* gamma correction */
-
 int  bradj = 0;				/* brightness adjustment */
-
 char  *progname;
-
 char  msg[128];
 
+static int getint2(FILE *fp);
+static void putint2(int i, FILE *fp);
+static void quiterr(char *err);
+static int getthead(struct hdStruct *hp, char *ip, FILE *fp);
+static int putthead(struct hdStruct *hp, char *ip, FILE *fp);
+static void tg2ra(struct hdStruct *hp);
+static void ra2tg(struct hdStruct *hp);
+static void writet24(struct hdStruct *h, unsigned char *d, FILE *fp);
+static void writet16(struct hdStruct *h, unsigned short *d, FILE *fp);
+static void readt24(struct hdStruct *h, unsigned char *data, FILE *fp);
+static void readt16(struct hdStruct *h, unsigned short *data, FILE *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(int  argc, char  *argv[])
 {
 	struct hdStruct  head;
 	int  reverse = 0;
@@ -132,9 +140,10 @@ userr:
 }
 
 
-int
-getint2(fp)			/* get a 2-byte positive integer */
-register FILE	*fp;
+static int
+getint2(			/* get a 2-byte positive integer */
+	register FILE	*fp
+)
 {
 	register int  b1, b2;
 
@@ -145,17 +154,21 @@ register FILE	*fp;
 }
 
 
-putint2(i, fp)			/* put a 2-byte positive integer */
-register int  i;
-register FILE	*fp;
+static void
+putint2(			/* put a 2-byte positive integer */
+	register int  i,
+	register FILE	*fp
+)
 {
 	putc(i&0xff, fp);
 	putc(i>>8&0xff, fp);
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	fprintf(stderr, "%s: %s\n", progname, err);
 	exit(1);
@@ -163,25 +176,29 @@ char  *err;
 
 
 void
-eputs(s)
-char *s;
+eputs(
+	char *s
+)
 {
 	fputs(s, stderr);
 }
 
 
 void
-quit(code)
-int code;
+quit(
+	int code
+)
 {
 	exit(code);
 }
 
 
-getthead(hp, ip, fp)		/* read header from input */
-struct hdStruct  *hp;
-char  *ip;
-register FILE  *fp;
+static int
+getthead(		/* read header from input */
+	struct hdStruct  *hp,
+	char  *ip,
+	register FILE  *fp
+)
 {
 	int	nidbytes;
 
@@ -211,10 +228,12 @@ register FILE  *fp;
 }
 
 
-putthead(hp, ip, fp)		/* write header to output */
-struct hdStruct  *hp;
-char  *ip;
-register FILE  *fp;
+static int
+putthead(		/* write header to output */
+	struct hdStruct  *hp,
+	char  *ip,
+	register FILE  *fp
+)
 {
 	if (ip != NULL)
 		putc(strlen(ip), fp);
@@ -239,8 +258,10 @@ register FILE  *fp;
 }
 
 
-tg2ra(hp)			/* targa file to RADIANCE file */
-struct hdStruct  *hp;
+static void
+tg2ra(			/* targa file to RADIANCE file */
+	struct hdStruct  *hp
+)
 {
 	COLR  *scanline;
 	unsigned char  *tarData;
@@ -286,8 +307,10 @@ struct hdStruct  *hp;
 }
 
 
-ra2tg(hp)			/* convert radiance to targa file */
-struct hdStruct  *hp;
+static void
+ra2tg(			/* convert radiance to targa file */
+	struct hdStruct  *hp
+)
 {
 	register int	i, j;
 	unsigned char  *tarData;
@@ -335,10 +358,12 @@ struct hdStruct  *hp;
 }
 
 
-writet24(h, d, fp)		/* write out 24-bit targa data */
-struct hdStruct  *h;
-unsigned char  *d;
-FILE  *fp;
+static void
+writet24(		/* write out 24-bit targa data */
+	struct hdStruct  *h,
+	unsigned char  *d,
+	FILE  *fp
+)
 {
 	if (h->dataType == IM_RGB) {		/* uncompressed */
 		if (fwrite((char *)d, 3*h->x, h->y, fp) != h->y)
@@ -349,10 +374,12 @@ FILE  *fp;
 }
 
 
-writet16(h, d, fp)		/* write out 16-bit targa data */
-struct hdStruct  *h;
-register unsigned short  *d;
-FILE  *fp;
+static void
+writet16(		/* write out 16-bit targa data */
+	struct hdStruct  *h,
+	register unsigned short  *d,
+	FILE  *fp
+)
 {
 	register int  cnt;
 
@@ -367,10 +394,12 @@ FILE  *fp;
 }
 
 
-readt24(h, data, fp)		/* read in 24-bit targa data */
-register struct hdStruct  *h;
-unsigned char  *data;
-FILE  *fp;
+static void
+readt24(		/* read in 24-bit targa data */
+	register struct hdStruct  *h,
+	unsigned char  *data,
+	FILE  *fp
+)
 {
 	register int  cnt, c;
 	register unsigned char  *dp;
@@ -408,10 +437,12 @@ readerr:
 }
 
 
-readt16(h, data, fp)		/* read in 16-bit targa data */
-register struct hdStruct  *h;
-unsigned short  *data;
-FILE  *fp;
+static void
+readt16(		/* read in 16-bit targa data */
+	register struct hdStruct  *h,
+	unsigned short  *data,
+	FILE  *fp
+)
 {
 	register int  cnt, c;
 	register unsigned short  *dp;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: closest.c,v 2.3 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: closest.c,v 2.4 2004/03/28 20:33:13 schorsch Exp $";
 #endif
 /*
 CLOSEST - nearest-color lookup by locally ordered search
@@ -11,6 +11,8 @@ About 6 times faster than exhaustive.
 
 Paul Heckbert
 */
+
+#include <stdlib.h>
 
 #include "ciq.h"
 
@@ -25,15 +27,24 @@ static int nfill,tests,calls;
 static char filled[512];		/* has bucket[key] been filled yet? */
 static int sq[511];
 
-initializeclosest() {			/* reset the buckets */
+static int compare(const void *a, const void *b);
+static void fillbucket(int k);
+
+
+void
+initializeclosest(void) {			/* reset the buckets */
     int k;
     nfill = tests = calls = 0;
     for (k=0; k<512; k++) filled[k] = 0;
     next = space;
 }
 
-closest(r,g,b)		/* find pv of colormap color closest to (r,g,b) */
-int r,g,b;
+int
+closest(		/* find pv of colormap color closest to (r,g,b) */
+	int r,
+	int g,
+	int b
+)
 {
     register struct thing *p;
     register int *rsq,*gsq,*bsq,dist,min;
@@ -63,14 +74,19 @@ int r,g,b;
 
 #define H 16	/* half-width of a bucket */
 
-compare(a,b)
-register struct thing *a,*b;
+static int
+compare(
+	const void *a,
+	const void *b
+)
 {
-    return a->mindist-b->mindist;
+    return ((struct thing*)a)->mindist - ((struct thing*)b)->mindist;
 }
 
-fillbucket(k)	/* make list of colormap colors which could be closest */
-int k;		/* matches for colors in bucket #k */
+static void
+fillbucket(	/* make list of colormap colors which could be closest */
+	int k		/* matches for colors in bucket #k */
+)
 {
     register int r,g,b,j,dist,*rsq,*gsq,*bsq,min,best;
     struct thing *p,*q;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.12 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.13 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -9,12 +9,15 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.12 2003/06/05 19:29:34 schorsch Ex
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <time.h>
 #include  <math.h>
 
 #include  "platform.h"
+#include  "rtmisc.h"
 #include  "color.h"
 #include  "resolu.h"
+#include  "clrtab.h"
 #include  "targa.h"
 
 
@@ -27,31 +30,33 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.12 2003/06/05 19:29:34 schorsch Ex
 #define	 taralloc(h)	(BYTE *)emalloc((h)->x*(h)->y)
 
 BYTE  clrtab[256][3];
-
 extern int	samplefac;
-
-extern char	*ecalloc(), *emalloc();
-
-extern long  ftell();
-
 double	gamv = 2.2;			/* gamv correction */
-
 int  bradj = 0;				/* brightness adjustment */
-
 char  *progname;
-
 char  errmsg[128];
-
 COLR	*inl;
-
 BYTE	*tarData;
-
 int  xmax, ymax;
 
+static int getint2(FILE	*fp);
+static void putint2(int  i, FILE	*fp);
+static void quiterr(char  *err);
+static int getthead(struct hdStruct	 *hp, char  *ip, FILE  *fp);
+static int putthead(struct hdStruct	 *hp, char  *ip, FILE  *fp);
+static int getrhead(struct hdStruct  *h, FILE  *fp);
+static void tg2ra(struct hdStruct	 *hp);
+static void getmapped(int  nc, int  dith);
+static void getgrey(int  nc);
+static void writetarga(struct hdStruct	 *h, BYTE  *d, FILE  *fp);
+static void readtarga(struct hdStruct	 *h, BYTE  *data, FILE  *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	struct hdStruct	 head;
 	int  dither = 1;
@@ -147,9 +152,10 @@ userr:
 }
 
 
-int
-getint2(fp)			/* get a 2-byte positive integer */
-register FILE	*fp;
+static int
+getint2(			/* get a 2-byte positive integer */
+	register FILE	*fp
+)
 {
 	register int  b1, b2;
 
@@ -160,17 +166,21 @@ register FILE	*fp;
 }
 
 
-putint2(i, fp)			/* put a 2-byte positive integer */
-register int  i;
-register FILE	*fp;
+static void
+putint2(			/* put a 2-byte positive integer */
+	register int  i,
+	register FILE	*fp
+)
 {
 	putc(i&0xff, fp);
 	putc(i>>8&0xff, fp);
 }
 
 
-quiterr(err)		/* print message and exit */
-char  *err;
+static void
+quiterr(		/* print message and exit */
+	char  *err
+)
 {
 	if (err != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -196,10 +206,12 @@ int code;
 }
 
 
-getthead(hp, ip, fp)		/* read header from input */
-struct hdStruct	 *hp;
-char  *ip;
-register FILE  *fp;
+static int
+getthead(		/* read header from input */
+	struct hdStruct	 *hp,
+	char  *ip,
+	register FILE  *fp
+)
 {
 	int	nidbytes;
 
@@ -229,10 +241,12 @@ register FILE  *fp;
 }
 
 
-putthead(hp, ip, fp)		/* write header to output */
-struct hdStruct	 *hp;
-char  *ip;
-register FILE  *fp;
+static int
+putthead(		/* write header to output */
+	struct hdStruct	 *hp,
+	char  *ip,
+	register FILE  *fp
+)
 {
 	if (ip != NULL)
 		putc(strlen(ip), fp);
@@ -257,9 +271,11 @@ register FILE  *fp;
 }
 
 
-getrhead(h, fp)			/* load RADIANCE input file header */
-register struct hdStruct  *h;
-FILE  *fp;
+static int
+getrhead(			/* load RADIANCE input file header */
+	register struct hdStruct  *h,
+	FILE  *fp
+)
 {
 					/* get header info. */
 	if (checkheader(fp, COLRFMT, NULL) < 0 ||
@@ -287,8 +303,10 @@ FILE  *fp;
 }
 
 
-tg2ra(hp)			/* targa file to RADIANCE file */
-struct hdStruct	 *hp;
+static void
+tg2ra(			/* targa file to RADIANCE file */
+	struct hdStruct	 *hp
+)
 {
 	union {
 		BYTE  c3[256][3];
@@ -336,9 +354,11 @@ struct hdStruct	 *hp;
 }
 
 
-getmapped(nc, dith)		/* read in and quantize image */
-int  nc;		/* number of colors to use */
-int  dith;		/* use dithering? */
+static void
+getmapped(		/* read in and quantize image */
+	int  nc,		/* number of colors to use */
+	int  dith		/* use dithering? */
+)
 {
 	long  fpos;
 	register int  y;
@@ -384,8 +404,10 @@ int  dith;		/* use dithering? */
 }
 
 
-getgrey(nc)			/* read in and convert to greyscale image */
-int  nc;		/* number of colors to use */
+static void
+getgrey(			/* read in and convert to greyscale image */
+	int  nc		/* number of colors to use */
+)
 {
 	int  y;
 	register BYTE  *dp;
@@ -416,10 +438,12 @@ int  nc;		/* number of colors to use */
 }
 
 
-writetarga(h, d, fp)		/* write out targa data */
-struct hdStruct	 *h;
-BYTE  *d;
-FILE  *fp;
+static void
+writetarga(		/* write out targa data */
+	struct hdStruct	 *h,
+	BYTE  *d,
+	FILE  *fp
+)
 {
 	register int  i, j;
 
@@ -435,10 +459,12 @@ FILE  *fp;
 }
 
 
-readtarga(h, data, fp)		/* read in targa data */
-struct hdStruct	 *h;
-BYTE  *data;
-FILE  *fp;
+static void
+readtarga(		/* read in targa data */
+	struct hdStruct	 *h,
+	BYTE  *data,
+	FILE  *fp
+)
 {
 	register int  cnt, c;
 	register BYTE	*dp;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.11 2003/11/14 17:31:24 schorsch Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.12 2004/03/28 20:33:12 schorsch Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -15,8 +15,10 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.11 2003/11/14 17:31:24 schorsch Ex
 #include  <ctype.h>
 
 #include  "platform.h"
-#include  "calcomp.h"
 #include  "rterror.h"
+#include  "rtmisc.h"
+#include  "rtio.h"
+#include  "calcomp.h"
 
 #define  isnum(c)       (isdigit(c) || (c)=='-' || (c)=='.' \
 				|| (c)=='+' || (c)=='e' || (c)=='E')

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.9 2004/01/02 12:47:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.10 2004/03/28 20:33:14 schorsch Exp $";
 #endif
 /*
  * Find extrema points in a Radiance picture.
@@ -50,9 +50,11 @@ headline(			/* check header line */
 }
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i;
 	int  xres, yres;

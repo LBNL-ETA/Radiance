@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.7 2004/02/12 18:55:50 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.8 2004/03/28 20:33:12 schorsch Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -24,7 +24,7 @@ extern int	setfdate(char *fname, long ftim);
 					/* defined in fgetline.c */
 extern char	*fgetline(char *s, int n, FILE *fp);
 					/* defined in fgetval.c */
-extern int	fgetval(FILE *fp, int ty, char *vp);
+extern int	fgetval(FILE *fp, int ty, void *vp);
 					/* defined in fgetword.c */
 extern char	*fgetword(char *s, int n, FILE *fp);
 					/* defined in fputword.c */
