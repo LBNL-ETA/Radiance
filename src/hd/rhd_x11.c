@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.35 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.36 2003/09/19 18:33:05 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -613,7 +613,7 @@ waitabit()				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
-	ts.tv_nsec = 50000000;
+	ts.tv_nsec = 100000000;
 	nanosleep(&ts, NULL);
 }
 

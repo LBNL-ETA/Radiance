@@ -1196,3 +1196,6 @@ that Radiance mesh files be recompiled.
 
 Changed integer tone-mapping routines to better deal with images
 containing large, constant regions.
+
+Improved interaction with rholo -o ogl driver under OS X, which was
+returning bad values from the depth buffer.

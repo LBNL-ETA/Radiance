@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx.c,v 3.30 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_glx.c,v 3.31 2003/09/19 18:33:04 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -543,6 +543,8 @@ FVECT	direc;
 	if (dx<0 | dx>=odev.hres | dy<0 | dy>=odev.vres)
 		return(FHUGE);
 	glReadPixels(dx,dy, 1,1, GL_DEPTH_COMPONENT,GL_FLOAT, &gldepth);
+	if (gldepth <= FTINY)
+		return (FHUGE);	/* call failed */
 	dist = mapdepth(gldepth);
 	if (dist >= .99*FHUGE)
 		return(FHUGE);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.22 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.23 2003/09/19 18:33:05 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -589,6 +589,8 @@ FVECT	direc;
 	else {
 		glReadPixels(dx,dy, 1,1, GL_DEPTH_COMPONENT,
 				GL_FLOAT, &gldepth);
+		if (gldepth <= FTINY)
+			return (FHUGE);	/* call failed */
 		dist = mapdepth(gldepth);
 	}
 	if (dist >= .99*FHUGE)
@@ -793,7 +795,7 @@ waitabit()				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
-	ts.tv_nsec = 50000000;
+	ts.tv_nsec = 100000000L;
 	nanosleep(&ts, NULL);
 }
 
