@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.10 2003/11/10 16:52:25 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.11 2003/11/11 16:24:06 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -12,8 +12,6 @@ static const char	RCSid[] = "$Id: devcomm.c,v 2.10 2003/11/10 16:52:25 greg Exp 
 #include "platform.h"
 
 #include "standard.h"
-
-#include "paths.h"
 
 #include "driver.h"
 
@@ -82,7 +80,7 @@ char	*dname, *id;
 						/* open communication pipes */
 	if (pipe(p1) == -1 || pipe(p2) == -1)
 		goto syserr;
-	if ((devchild = vfork()) == 0) {	/* fork driver process */
+	if ((devchild = fork()) == 0) {	/* fork driver process */
 		close(p1[1]);
 		close(p2[0]);
 		sprintf(pin, "%d", p1[0]);

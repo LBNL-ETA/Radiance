@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xglaresrc.c,v 2.7 2003/11/10 16:52:24 greg Exp $";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.8 2003/11/11 16:24:06 greg Exp $";
 #endif
 /*
  *  Circle sources in a displayed image.
@@ -9,7 +9,6 @@ static const char	RCSid[] = "$Id: xglaresrc.c,v 2.7 2003/11/10 16:52:24 greg Exp
 
 #include "standard.h"
 #include "view.h"
-#include "paths.h"
 #include <signal.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -117,7 +116,7 @@ char	*pname, *wname;
 			exit(2);
 		}
 					/* start ximage */
-		if (vfork() == 0) {
+		if (fork() == 0) {
 			execlp(XIM, XIM, "-c", "256", pname, 0);
 			perror(XIM);
 			fprintf(stderr, "%s: cannot start %s\n",
