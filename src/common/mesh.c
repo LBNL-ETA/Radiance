@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.10 2003/07/10 03:30:11 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.11 2003/07/10 03:47:00 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -79,13 +79,16 @@ int	flags;
 
 	flags &= IO_LEGAL;
 	for (ms = mlist; ms != NULL; ms = ms->next)
-		if (!strcmp(mname, ms->name))
+		if (!strcmp(mname, ms->name)) {
+			ms->nref++;	/* increase reference count */
 			break;
+		}
 	if (ms == NULL) {		/* load first time */
 		ms = (MESH *)calloc(1, sizeof(MESH));
 		if (ms == NULL)
 			error(SYSTEM, "out of memory in getmesh");
 		ms->name = savestr(mname);
+		ms->nref = 1;
 		ms->mcube.cutree = EMPTY;
 		ms->next = mlist;
 		mlist = ms;
@@ -97,7 +100,6 @@ int	flags;
 	flags &= ~ms->ldflags;
 	if (flags)
 		readmesh(ms, pathname, flags);
-	ms->nref++;			/* increase reference count */
 	return(ms);
 }
 

@@ -1170,3 +1170,6 @@ IEEE float.)
 
 Added -N option to rad to start multiple rendering processes in
 parallel.
+
+Fixed bug where mesh instances were not being freed, so subsequent calls
+in programs like ranimate would refer to bogus data.

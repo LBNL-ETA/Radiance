@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: freeobjmem.c,v 2.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: freeobjmem.c,v 2.6 2003/07/10 03:47:00 greg Exp $";
 #endif
 /*
  * Free memory associated with object(s)
@@ -41,6 +41,9 @@ register OBJREC	*op;
 		return(1);
 	case OBJ_INSTANCE:	/* octree instance */
 		freeinstance(op);
+		return(1);
+	case OBJ_MESH:		/* mesh instance */
+		freemeshinst(op);
 		return(1);
 	case PAT_BTEXT:		/* monochromatic text */
 	case PAT_CTEXT:		/* colored text */
