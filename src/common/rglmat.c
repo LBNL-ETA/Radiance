@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglmat.c,v 3.3 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rglmat.c,v 3.4 2003/04/23 02:28:06 greg Exp $";
 #endif
 /*
  * Routines for Radiance -> OpenGL materials.
@@ -57,9 +57,19 @@ register OBJREC	*o;
 		freemtl((MATREC *)lup->data);
 	if ((lup->data = o->os) != NULL)	/* make material reference */
 		((MATREC *)lup->data)->nlinks++;
-	return;
+	return(0);
 memerr:
 	error(SYSTEM, "out of memory in o_default");
+	return(0);
+}
+
+
+int
+o_unsupported(o)		/* unsupported object primitive */
+OBJREC	*o;
+{
+	objerror(o, WARNING, "unsupported type");
+	return(0);
 }
 
 
@@ -126,6 +136,7 @@ register OBJREC	*o;
 		m->u.m.specexp = 2./(o->oargs.farg[4]*o->oargs.farg[4]);
 	if (m->u.m.specexp > MAXSPECEXP)
 		m->u.m.specexp = MAXSPECEXP;
+	return(0);
 }
 
 
@@ -158,6 +169,7 @@ register OBJREC	*o;
 		m->u.m.specexp = 2./(o->oargs.farg[4]*o->oargs.farg[5]);
 	if (m->u.m.specexp > MAXSPECEXP)
 		m->u.m.specexp = MAXSPECEXP;
+	return(0);
 }
 
 
@@ -172,6 +184,7 @@ OBJREC	*o;
 	setcolor(m->u.m.ambdiff, 0., 0., 0.);
 	setcolor(m->u.m.specular, .08, .08, .08);
 	m->u.m.specexp = MAXSPECEXP;
+	return(0);
 }
 
 
@@ -199,6 +212,7 @@ register OBJREC	*o;
 		scalecolor(m->u.m.ambdiff, 1.-o->oargs.farg[4]);
 	}
 	m->u.m.specexp = UNKSPECEXP;
+	return(0);
 }
 
 
@@ -219,6 +233,7 @@ register OBJREC	*o;
 					/* guess the rest */
 	setcolor(m->u.m.specular, .1, .1, .1);
 	m->u.m.specexp = UNKSPECEXP;
+	return(0);
 }
 
 
@@ -248,6 +263,7 @@ register OBJREC	*o;
 		m->u.l.spotdir[0] = m->u.l.spotdir[1] = 0.;
 		m->u.l.spotdir[2] = -1.;
 	}
+	return(0);
 }
 
 
@@ -265,6 +281,7 @@ register OBJREC	*o;
 	setcolor(m->u.m.specular, o->oargs.farg[0],
 			o->oargs.farg[1], o->oargs.farg[2]);
 	m->u.m.specexp = MAXSPECEXP;
+	return(0);
 }
 
 
@@ -279,4 +296,5 @@ register OBJREC	*o;
 	setcolor(m->u.m.ambdiff, 0.2, 0.2, 0.2);
 	setcolor(m->u.m.specular, 0.1, 0.1, 0.1);
 	m->u.m.specexp = UNKSPECEXP;
+	return(0);
 }

@@ -1,4 +1,4 @@
-/* RCSid $Id: radogl.h,v 3.5 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: radogl.h,v 3.6 2003/04/23 02:28:06 greg Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
@@ -62,6 +62,7 @@ extern int	loadoct();
 extern void	rgl_matclear();
 extern MATREC	*getmatp();
 extern int	o_default();
+extern int	o_unsupported();
 extern MATREC	*newmaterial();
 extern void	freemtl();
 extern int	m_normal();
@@ -106,6 +107,7 @@ extern int	loadoct(char *fname);
 extern void	rgl_matclear(void);
 extern MATREC	*getmatp(char *nam);
 extern int	o_default(OBJREC *o);
+extern int	o_unsupported(OBJREC *o);
 extern MATREC	*newmaterial(char *nam);
 extern void	freemtl(MATREC *mp);
 extern int	m_normal(OBJREC *o);

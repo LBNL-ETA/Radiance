@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglsurf.c,v 3.6 2003/03/27 04:16:33 greg Exp $";
+static const char	RCSid[] = "$Id: rglsurf.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -142,7 +142,7 @@ register OBJREC	*o;
 		objerror(o, USER, "bad # real arguments");
 	area = polyarea(cent, norm, o->oargs.nfargs/3, (FVECT *)o->oargs.farg);
 	if (area <= FTINY)
-		return;
+		return(0);
 	if (dolights)					/* check for source */
 		doflatsrc((MATREC *)o->os, cent, norm, area);
 	setmaterial((MATREC *)o->os, cent, 1);		/* set material */
@@ -177,6 +177,7 @@ register OBJREC	*o;
 					(GLdouble)o->oargs.farg[3*i+1],
 					(GLdouble)o->oargs.farg[3*i+2]);
 	}
+	return(0);
 }
 
 
@@ -207,7 +208,7 @@ register OBJREC	*o;
 		o->otype = o->otype==OBJ_SPHERE ? OBJ_BUBBLE : OBJ_SPHERE;
 		o->oargs.farg[3] = -o->oargs.farg[3];
 	} else if (o->oargs.farg[3] <= FTINY)
-		return;
+		return(0);
 	if (dolights)
 		dosphsrc((MATREC *)o->os, o->oargs.farg,
 				PI*o->oargs.farg[3]*o->oargs.farg[3]);
@@ -223,6 +224,7 @@ register OBJREC	*o;
 			(GLdouble)o->oargs.farg[2]);
 	gluSphere(gluqo, (GLdouble)o->oargs.farg[3], NSLICES, NSTACKS);
 	glPopMatrix();
+	return(0);
 }
 
 
@@ -286,6 +288,7 @@ register OBJREC *o;
 	gluCylinder(gluqo, o->oargs.farg[6], o->oargs.farg[iscyl ? 6 : 7],
 			h, NSLICES, 1);
 	glPopMatrix();
+	return(0);
 }
 
 
@@ -335,4 +338,5 @@ register OBJREC	*o;
 		glRotated(d, (GLdouble)x1, (GLdouble)y1, 0.);
 	gluDisk(gluqo, o->oargs.farg[6], o->oargs.farg[7], NSLICES, 1);
 	glPopMatrix();
+	return(0);
 }

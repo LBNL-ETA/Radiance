@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.6 2003/03/11 19:29:04 greg Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
@@ -34,6 +34,7 @@ initotypes()			/* initialize ofun array */
 	ofun[OBJ_RING].funp = o_ring;
 	ofun[OBJ_SOURCE].funp = o_source;
 	ofun[OBJ_INSTANCE].funp = o_instance;
+	ofun[OBJ_MESH].funp = o_unsupported;
 						/* assign material types */
 	ofun[MAT_TRANS].funp =
 	ofun[MAT_PLASTIC].funp =

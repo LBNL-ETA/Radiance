@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.6 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -77,6 +77,7 @@ register OBJREC	*o;
 		glPopAttrib();
 	}
 	rgl_checkerr("creating instance");
+	return(0);
 }
 
 
