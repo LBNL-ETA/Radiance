@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.12 2004/09/14 02:53:50 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.13 2005/03/18 21:04:05 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -71,12 +71,15 @@ BMPheaderOK(const BMPHeader *hdr)
 	if (hdr->compr == BI_BITFIELDS && (BMPbitField(hdr)[0] &
 				BMPbitField(hdr)[1] & BMPbitField(hdr)[2]))
 		return 0;
-	if ((hdr->nColors < 0) | (hdr->impColors < 0))
-		return 0;
-	if (hdr->impColors > hdr->nColors)
-		return 0;
-	if (hdr->nColors > BMPpalLen(hdr))
-		return 0;
+	if (hdr->bpp > 8) {
+		if (hdr->nColors != 0)
+			return 0;
+	} else {
+		if ((hdr->nColors < 0) | (hdr->nColors > 1<<hdr->bpp))
+			return 0;
+		if ((hdr->impColors < 0) | (hdr->impColors > hdr->nColors))
+			return 0;
+	}
 	return 1;
 }
 
@@ -143,9 +146,8 @@ BMPReader *
 BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 {
 	BMPReader       *br;
-	uint32		bmPos, hdrSiz;
-	int		palLen;
-	int     magic[2];		/* check magic number */
+	uint32		bmPos, hdrSiz, palSiz;
+	int		magic[2];		/* check magic number */
 
 	if (cget == NULL)
 		return NULL;
@@ -191,22 +193,17 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 		goto err;			/* catch premature EOF */
 	if (!BMPheaderOK(br->hdr))
 		goto err;
-	palLen = BMPpalLen(br->hdr);
-	if (br->hdr->bpp <= 8) {		/* normalize color counts */
-		if (br->hdr->nColors <= 0)
-			br->hdr->nColors = palLen;
-		if (br->hdr->impColors <= 0)
-			br->hdr->impColors = br->hdr->nColors;
-	}
+	palSiz = sizeof(RGBquad)*br->hdr->nColors;
+	if (br->hdr->impColors <= 0)
+		br->hdr->impColors = br->hdr->nColors;
 						/* extend header */
-	if (bmPos < hdrSiz + sizeof(RGBquad)*palLen)
+	if (bmPos < hdrSiz + palSiz)
 		goto err;
-	br->hdr->infoSiz = bmPos - (hdrSiz + sizeof(RGBquad)*palLen);
-	if (palLen > 0 || br->hdr->infoSiz > 0) {
+	br->hdr->infoSiz = bmPos - (hdrSiz + palSiz);
+	if (br->hdr->nColors > 0 || br->hdr->infoSiz > 0) {
 		br->hdr = (BMPHeader *)realloc((void *)br->hdr,
 					sizeof(BMPHeader) +
-					sizeof(RGBquad)*palLen +
-					br->hdr->infoSiz);
+					palSiz + br->hdr->infoSiz);
 		if (br->hdr == NULL)
 			goto err;
 	}
@@ -215,8 +212,7 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 		BMPbitField(br->hdr)[0] = (uint32)rdint32(br);
 		BMPbitField(br->hdr)[1] = (uint32)rdint32(br);
 		BMPbitField(br->hdr)[2] = (uint32)rdint32(br);
-	} else if (rdbytes((char *)br->hdr->palette,
-			sizeof(RGBquad)*palLen, br) != BIR_OK)
+	} else if (rdbytes((char *)br->hdr->palette, palSiz, br) != BIR_OK)
 		goto err;
 						/* read add'l information */
 	if (rdbytes(BMPinfo(br->hdr), br->hdr->infoSiz, br) != BIR_OK)
@@ -642,7 +638,7 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 	hdrSiz = 2 + 6*4 + 2*2 + 6*4;
 	if (hdr->compr == BI_BITFIELDS)
 		hdrSiz += sizeof(uint32)*3;
-	palSiz = sizeof(RGBquad)*BMPpalLen(hdr);
+	palSiz = sizeof(RGBquad)*hdr->nColors;
 	scanSiz = getScanSiz(hdr);
 	bmSiz = hdr->height*scanSiz;		/* wrong if compressed */
 						/* initialize writer */

@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.3 2004/03/27 05:43:37 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.4 2005/03/18 21:04:05 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -41,15 +41,12 @@ typedef struct {
 	/* but the color table should be filled by writer before open call */
 	RGBquad		palette[3];     /* color palette (extends struct) */
 } BMPHeader;
-
-					/* color palette length */
-#define BMPpalLen(h)    ((h)->bpp <= 8 ? 1<<(h)->bpp : 0)
 				
 					/* access to bit field triple */
 #define BMPbitField(h)  ((uint32 *)(h)->palette)
 
 					/* info buffer access */
-#define BMPinfo(h)      ((char *)((h)->palette + BMPpalLen(h)))
+#define BMPinfo(h)      ((char *)((h)->palette + (h)->nColors))
 
 					/* function return values */
 #define BIR_OK			0		/* all is well */
