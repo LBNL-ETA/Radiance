@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.34 2004/08/31 18:52:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.35 2005/01/24 19:29:39 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -601,22 +601,22 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 		if (input[fn].vw.type == 0)
 			errno = EDOM;
 		else if (input[fn].vw.type != VT_PAR &&
-				funvalue(vray[6], 1, &d) >= 0) {
+				funvalue(vray[6], 1, &d) > FTINY) {
 			for (i = 0; i < 3; i++)
 				dir0[i] = funvalue(vray[3+i], 1, &d);
 			pix2loc(locx, &input[fn].rs, xscan+1, ymax-1-yscan);
 			pix2loc(locy, &input[fn].rs, xscan, ymax-yscan);
 			if (viewray(org, dirx, &input[fn].vw,
-					locx[0], locx[1]) >= 0 &&
+					locx[0], locx[1]) >= -FTINY &&
 					viewray(org, diry, &input[fn].vw,
-					locy[0], locy[1]) >= 0) {
+					locy[0], locy[1]) >= -FTINY) {
 						/* approximate solid angle */
 				for (i = 0; i < 3; i++) {
 					dirx[i] -= dir0[i];
 					diry[i] -= dir0[i];
 				}
 				fcross(dir0, dirx, diry);
-				psize[fn] = sqrt(DOT(dir0,dir0));
+				psize[fn] = VLEN(dir0);
 			}
 		}
 		ltick[fn] = eclock;
