@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.12 2003/08/04 22:37:53 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.13 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -15,7 +15,10 @@ static const char RCSid[] = "$Id: gensurf.c,v 2.12 2003/08/04 22:37:53 greg Exp 
  *	4/16/02	Added conditional vertex output
  */
 
-#include  "standard.h"
+#include  "rtmath.h"
+#include  "rterror.h"
+#include  "rtio.h"
+#include  "calcomp.h"
 
 char  XNAME[] =		"X`SYS";		/* x function name */
 char  YNAME[] =		"Y`SYS";		/* y function name */
@@ -48,8 +51,8 @@ struct {
 	RREAL	*data;			/* the data itself, s major sort */
 } datarec;			/* our recorded data */
 
+/* XXX this is redundant with rt/noise3.c, should go to a library */
 double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
-extern double  funvalue(), argument();
 
 typedef struct {
 	int  valid;	/* point is valid (vertex number) */
@@ -59,11 +62,21 @@ typedef struct {
 } POINT;
 
 
+void loaddata(char *file, int m, int n, int pointsize);
+double l_dataval(char *nam);
+void putobjrow(POINT *rp, int n);
+void putsquare(POINT *p0, POINT *p1, POINT *p2, POINT *p3);
+void comprow(double s, POINT *row, int siz);
+void compnorms(POINT *r0, POINT *r1, POINT *r2, int siz);
+int norminterp(FVECT resmat[4], POINT *p0, POINT *p1, POINT *p2, POINT *p3);
+void printhead(int ac, char **av);
+
+
+int
 main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	extern long	eclock;
 	POINT  *row0, *row1, *row2, *rp;
 	int  i, j, m, n;
 	char  stmp[256];
@@ -163,19 +176,22 @@ char  *argv[];
 		}
 	}
 
-	quit(0);
+	return 0;
 
 userror:
 	fprintf(stderr, "Usage: %s material name ", argv[0]);
 	fprintf(stderr, "x(s,t) y(s,t) z(s,t) m n [-s][-e expr][-f file]\n");
-	quit(1);
+	return 1;
 }
 
 
-loaddata(file, m, n, pointsize)		/* load point data from file */
-char  *file;
-int  m, n;
-int  pointsize;
+void
+loaddata(		/* load point data from file */
+	char  *file,
+	int  m,
+	int  n,
+	int  pointsize
+)
 {
 	FILE  *fp;
 	char  word[64];
@@ -231,8 +247,9 @@ int  pointsize;
 
 
 double
-l_dataval(nam)				/* return recorded data value */
-char  *nam;
+l_dataval(				/* return recorded data value */
+	char  *nam
+)
 {
 	double  u, v;
 	register int  i, j;
@@ -272,9 +289,11 @@ char  *nam;
 }
 
 
-putobjrow(rp, n)			/* output vertex row to .OBJ */
-register POINT  *rp;
-int  n;
+void
+putobjrow(			/* output vertex row to .OBJ */
+	register POINT  *rp,
+	int  n
+)
 {
 	static int	nverts = 0;
 
@@ -292,8 +311,13 @@ int  n;
 }
 
 
-putsquare(p0, p1, p2, p3)		/* put out a square */
-POINT  *p0, *p1, *p2, *p3;
+void
+putsquare(		/* put out a square */
+	POINT *p0,
+	POINT *p1,
+	POINT *p2,
+	POINT *p3
+)
 {
 	static int  nout = 0;
 	FVECT  norm[4];
@@ -417,10 +441,12 @@ POINT  *p0, *p1, *p2, *p3;
 }
 
 
-comprow(s, row, siz)			/* compute row of values */
-double  s;
-register POINT  *row;
-int  siz;
+void
+comprow(			/* compute row of values */
+	double  s,
+	register POINT  *row,
+	int  siz
+)
 {
 	double  st[2];
 	int  end;
@@ -457,9 +483,13 @@ int  siz;
 }
 
 
-compnorms(r0, r1, r2, siz)		/* compute row of averaged normals */
-register POINT  *r0, *r1, *r2;
-int  siz;
+void
+compnorms(		/* compute row of averaged normals */
+	register POINT  *r0,
+	register POINT  *r1,
+	register POINT  *r2,
+	int  siz
+)
 {
 	FVECT  v1, v2;
 
@@ -497,9 +527,13 @@ int  siz;
 
 
 int
-norminterp(resmat, p0, p1, p2, p3)	/* compute normal interpolation */
-register FVECT  resmat[4];
-POINT  *p0, *p1, *p2, *p3;
+norminterp(	/* compute normal interpolation */
+	register FVECT  resmat[4],
+	POINT  *p0,
+	POINT  *p1,
+	POINT  *p2,
+	POINT  *p3
+)
 {
 #define u  ((ax+1)%3)
 #define v  ((ax+2)%3)
@@ -576,9 +610,11 @@ int  code;
 }
 
 
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
+void
+printhead(		/* print command header */
+	register int  ac,
+	register char  **av
+)
 {
 	putchar('#');
 	while (ac--) {

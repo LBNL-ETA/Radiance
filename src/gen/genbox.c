@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -99,6 +99,7 @@ int  v0, v1;
 }
 
 
+static void
 sphere(v0)			/* generate a sphere */
 int  v0;
 {
@@ -109,6 +110,7 @@ int  v0;
 }
 
 
+static void
 printhead(ac, av)		/* print command header */
 register int  ac;
 register char  **av;
@@ -122,6 +124,7 @@ register char  **av;
 }
 
 
+int
 main(argc, argv)
 int  argc;
 char  **argv;

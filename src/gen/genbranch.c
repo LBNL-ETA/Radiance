@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbranch.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genbranch.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genbranch.c - program to generate 3D Christmas tree branches.
@@ -103,6 +103,7 @@ int  lvl;
 }
 
 
+void
 printhead(ac, av)		/* print command header */
 register int  ac;
 register char  **av;
@@ -116,6 +117,7 @@ register char  **av;
 }
 
 
+int
 main(argc, argv)
 int  argc;
 char  *argv[];

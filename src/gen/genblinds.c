@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.10 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.11 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -30,9 +30,17 @@ double  height;
 int  nslats,  nsurf;
 
 
+static void makeflat(double w, double d, double a);
+static void printslat(int n);
+static void printhead(register int  ac, register char  **av);
 
-makeflat(w,d,a)
-double  w, d, a;
+
+void
+makeflat(
+	double w,
+	double d,
+	double a
+)
 {
 	double  h;
 
@@ -54,8 +62,10 @@ double  w, d, a;
 }
 
 
-printslat(n)			/* print slat # n */
-int  n;
+void
+printslat(			/* print slat # n */
+	int  n
+)
 {
 	register int  i, k;
 
@@ -71,9 +81,11 @@ int  n;
 }
 
 
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
+void
+printhead(		/* print command header */
+	register int  ac,
+	register char  **av
+)
 {
 	putchar('#');
 	while (ac--) {
@@ -84,41 +96,43 @@ register char  **av;
 }
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
-	double  width, delem, depth, rcurv = 0.0, angle;
-	double  beta, gamma, theta, chi;
-	int     i, j, k, l;
+    double  width, delem, depth, rcurv = 0.0, angle;
+    double  beta, gamma, theta, chi = 0;
+    int     i, j, k, l;
 
 
-	if (argc != 8 && argc != 10)
-		goto userr;
-	material = argv[1];
-	name = argv[2];
-	depth = atof(argv[3]);
-	width = atof(argv[4]);
-	height = atof(argv[5]);
-	nslats  = atoi(argv[6]);
-	angle = atof(argv[7]);
-	if (argc == 10)
-		if (!strcmp(argv[8], "-r"))
-			rcurv = atof(argv[9]);
-		else if (!strcmp(argv[8], "+r"))
-			rcurv = -atof(argv[9]);
-		else
-			goto userr;
+    if (argc != 8 && argc != 10)
+	goto userr;
+    material = argv[1];
+    name = argv[2];
+    depth = atof(argv[3]);
+    width = atof(argv[4]);
+    height = atof(argv[5]);
+    nslats  = atoi(argv[6]);
+    angle = atof(argv[7]);
+    if (argc == 10)
+	if (!strcmp(argv[8], "-r"))
+	    rcurv = atof(argv[9]);
+	else if (!strcmp(argv[8], "+r"))
+	    rcurv = -atof(argv[9]);
+	else
+	    goto userr;
 
-/* CURVED BLIND CALCULATION */
+    /* CURVED BLIND CALCULATION */
 
-	if (rcurv != 0) {
+    if (rcurv != 0) {
 
 	/* BLINDS SUSTAINED ANGLE */
 
 	theta = 2*asin(depth/(2*fabs(rcurv)));
 
- 	/* HOW MANY ELEMENTARY SURFACES SHOULD BE CALCULATED ? */
+	/* HOW MANY ELEMENTARY SURFACES SHOULD BE CALCULATED ? */
 
 	nsurf = (int)(theta / ((PI/180.)*DELTA)) + 1;
 
@@ -132,72 +146,72 @@ char  *argv[];
 
 
 	if (rcurv < 0) {
-		A[0]=fabs(rcurv)*cos(gamma);
-		A[0] *= -1;
-		A[1]=0.;
-		A[2]=fabs(rcurv)*sin(gamma);
+	    A[0]=fabs(rcurv)*cos(gamma);
+	    A[0] *= -1;
+	    A[1]=0.;
+	    A[2]=fabs(rcurv)*sin(gamma);
 	}
 	if (rcurv > 0) {
-		A[0]=fabs(rcurv)*cos(gamma+theta);
-		A[1]=0.;
-		A[2]=fabs(rcurv)*sin(gamma+theta);
-		A[2] *= -1;
+	    A[0]=fabs(rcurv)*cos(gamma+theta);
+	    A[1]=0.;
+	    A[2]=fabs(rcurv)*sin(gamma+theta);
+	    A[2] *= -1;
 	}
 
 	for (k=0; k < nsurf; k++) {
-	if (rcurv < 0) {
-        chi=(PI/180.)*((180.-DELTA)/2.) - (gamma+(k*(PI/180.)*DELTA));
-	}
-	if (rcurv > 0) {
-   	chi=(PI-(gamma+theta)+(k*(PI/180.)*DELTA))-(PI/180.)*   
-        ((180.-DELTA)/2.);
-	}
-		makeflat(width, delem, chi);
-	if (rcurv < 0.) {
+	    if (rcurv < 0) {
+		chi=(PI/180.)*((180.-DELTA)/2.) - (gamma+(k*(PI/180.)*DELTA));
+	    }
+	    if (rcurv > 0) {
+		chi=(PI-(gamma+theta)+(k*(PI/180.)*DELTA))-(PI/180.)*   
+		    ((180.-DELTA)/2.);
+	    }
+	    makeflat(width, delem, chi);
+	    if (rcurv < 0.) {
 		X[0]=(-fabs(rcurv))*cos(gamma+(k*(PI/180.)*DELTA))-A[0];
 		X[1]=0.;
 		X[2]=fabs(rcurv)*sin(gamma+(k*(PI/180.)*DELTA))-A[2];
-	}
-	if (rcurv > 0.) {
+	    }
+	    if (rcurv > 0.) {
 		X[0]=fabs(rcurv)*cos(gamma+theta-(k*(PI/180.)*DELTA))-A[0];
 		X[1]=0.;
 		X[2]=(-fabs(rcurv))*sin(gamma+theta-(k*(PI/180.)*DELTA))-A[2];
+	    }
+
+	    for (i=0; i < 4; i++)  {
+		for (j=0; j < 3; j++) {
+		    baseblind[i][j][k] = baseflat[i][j]+X[j];
+		} 
+	    }	
 	}
+    }
 
-	 	for (i=0; i < 4; i++)  {
-		    for (j=0; j < 3; j++) {
-			baseblind[i][j][k] = baseflat[i][j]+X[j];
-		    } 
-		}	
- 	}
+    /* FLAT BLINDS CALCULATION */
+
+    if (rcurv == 0.) {
+
+	nsurf=1;
+	makeflat(width,depth,angle*(PI/180.));
+	for (i=0; i < 4; i++) {
+	    for (j=0; j < 3; j++) {
+		baseblind[i][j][0] = baseflat[i][j];
+	    }
 	}
+    }
 
- /* FLAT BLINDS CALCULATION */
-	
-	if (rcurv == 0.) {
-
-		nsurf=1;
-		makeflat(width,depth,angle*(PI/180.));
-		for (i=0; i < 4; i++) {
-		    for (j=0; j < 3; j++) {
-			baseblind[i][j][0] = baseflat[i][j];
-		    }
-		}
-	}
-	
-	printhead(argc, argv);
+    printhead(argc, argv);
 
 
-/* REPEAT THE BASIC CURVED OR FLAT SLAT TO GET THE OVERALL BLIND */
+    /* REPEAT THE BASIC CURVED OR FLAT SLAT TO GET THE OVERALL BLIND */
 
-	for (l = 1; l <= nslats; l++)
-		printslat(l);
-	exit(0);
+    for (l = 1; l <= nslats; l++)
+	printslat(l);
+    exit(0);
 userr:
-	fprintf(stderr,
-	"Usage: %s mat name depth width height nslats angle [-r|+r rcurv]\n",
-			argv[0]);
-	exit(1);
+    fprintf(stderr,
+	    "Usage: %s mat name depth width height nslats angle [-r|+r rcurv]\n",
+	    argv[0]);
+    exit(1);
 }
 
 

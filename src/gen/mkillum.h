@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.4 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.5 2003/11/16 10:29:38 schorsch Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -40,6 +40,12 @@ struct rtproc {
 	int	nrays;			/* current length of rtrace buffer */
 };				/* rtrace process */
 
+extern void printobj(char  *mod, register OBJREC  *obj);
+extern int average(register struct illum_args  *il, float  *da, int  n);
+extern void flatout(struct illum_args  *il, float  *da, int  n, int  m,
+	FVECT  u, FVECT  v, FVECT  w);
+extern void illumout(register struct illum_args  *il, OBJREC  *ob);
+extern void roundout(struct illum_args  *il, float  *da, int  n, int  m);
 
 #ifdef __cplusplus
 }

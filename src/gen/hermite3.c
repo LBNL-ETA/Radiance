@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: hermite3.c,v 2.3 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: hermite3.c,v 2.4 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  hermite.c - routines for 3D hermite curves.
@@ -33,6 +33,7 @@ double  t		/* position parameter */
 }
 
 
+void
 htan3(		/* compute tangent on hermite curve */
 double  ht[3],		/* returned hermite tangent */
 double  p0[3],		/* first endpoint */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.18 2003/10/22 02:06:34 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.19 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.18 2003/10/22 02:06:34 greg Exp 
 
 #include  "platform.h"
 #include  "mkillum.h"
+#include  "random.h"
 
 				/* default parameters */
 #define  SAMPDENS	48		/* points per projected steradian */
@@ -57,10 +58,19 @@ int	doneheader = 0;		/* printed header yet? */
 
 int	warnings = 1;		/* print warnings? */
 
+void init(void);
+void filter(register FILE	*infp, char	*name);
+void xoptions(char	*s, char	*nm);
+void printopts(void);
+void printhead(register int  ac, register char  **av);
+void xobject(FILE  *fp, char  *nm);
 
-main(argc, argv)		/* compute illum distributions using rtrace */
-int	argc;
-char	*argv[];
+
+int
+main(		/* compute illum distributions using rtrace */
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*rtpath;
 	FILE	*fp;
@@ -126,7 +136,7 @@ char	*argv[];
 		}
 	else
 		filter(stdin, "standard input");
-	quit(0);
+	return 0;
 }
 
 
@@ -147,8 +157,8 @@ int  status;
 	exit(status);
 }
 
-
-init()				/* start rtrace and set up buffers */
+void
+init(void)				/* start rtrace and set up buffers */
 {
 	extern int  o_face(), o_sphere(), o_ring();
 	int	maxbytes;
@@ -182,8 +192,9 @@ init()				/* start rtrace and set up buffers */
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -206,9 +217,11 @@ char  *s;
 }
 
 
-filter(infp, name)		/* process stream */
-register FILE	*infp;
-char	*name;
+void
+filter(		/* process stream */
+	register FILE	*infp,
+	char	*name
+)
 {
 	char	buf[512];
 	FILE	*pfp;
@@ -238,9 +251,11 @@ char	*name;
 }
 
 
-xoptions(s, nm)			/* process options in string s */
-char	*s;
-char	*nm;
+void
+xoptions(			/* process options in string s */
+	char	*s,
+	char	*nm
+)
 {
 	extern FILE	*freopen();
 	char	buf[64];
@@ -399,8 +414,8 @@ char	*nm;
 	printf("# %s", s+2);
 }
 
-
-printopts()			/* print out option default values */
+void
+printopts(void)			/* print out option default values */
 {
 	printf("m=%-15s\t\t# material name\n", thisillum.matname);
 	printf("f=%-15s\t\t# data file name\n", thisillum.datafile);
@@ -421,9 +436,11 @@ printopts()			/* print out option default values */
 }
 
 
-printhead(ac, av)			/* print out header */
-register int  ac;
-register char  **av;
+void
+printhead(			/* print out header */
+	register int  ac,
+	register char  **av
+)
 {
 	putchar('#');
 	while (ac-- > 0) {
@@ -434,9 +451,11 @@ register char  **av;
 }
 
 
-xobject(fp, nm)				/* translate an object from fp */
-FILE  *fp;
-char  *nm;
+void
+xobject(				/* translate an object from fp */
+	FILE  *fp,
+	char  *nm
+)
 {
 	OBJREC  thisobj;
 	char  str[MAXSTR];

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.21 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.22 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -11,18 +11,18 @@ static const char	RCSid[] = "$Id: gensky.c,v 2.21 2003/07/27 22:12:02 schorsch E
  */
 
 #include  <stdio.h>
-
 #include  <stdlib.h>
-
 #include  <string.h>
-
 #include  <math.h>
-
 #include  <ctype.h>
 
 #include  "color.h"
 
-extern double  stadj(), sdec(), sazi(), salt(), tz2mer();
+extern int jdate(int month, int day);
+extern double stadj(int  jd);
+extern double sdec(int  jd);
+extern double salt(double sd, double st);
+extern double sazi(double sd, double st);
 
 #ifndef  PI
 #define  PI		3.14159265358979323846
@@ -51,22 +51,22 @@ struct {
 	char	zname[8];	/* time zone name (all caps) */
 	float	zmer;		/* standard meridian */
 } tzone[] = {
-	"YST", 135, "YDT", 120,
-	"PST", 120, "PDT", 105,
-	"MST", 105, "MDT", 90,
-	"CST", 90, "CDT", 75,
-	"EST", 75, "EDT", 60,
-	"AST", 60, "ADT", 45,
-	"NST", 52.5, "NDT", 37.5,
-	"GMT", 0, "BST", -15,
-	"CET", -15, "CEST", -30,
-	"EET", -30, "EEST", -45,
-	"AST", -45, "ADT", -60,
-	"GST", -60, "GDT", -75,
-	"IST", -82.5, "IDT", -97.5,
-	"JST", -135, "NDT", -150,
-	"NZST", -180, "NZDT", -195,
-	"", 0
+	{"YST", 135}, {"YDT", 120},
+	{"PST", 120}, {"PDT", 105},
+	{"MST", 105}, {"MDT", 90},
+	{"CST", 90}, {"CDT", 75},
+	{"EST", 75}, {"EDT", 60},
+	{"AST", 60}, {"ADT", 45},
+	{"NST", 52.5}, {"NDT", 37.5},
+	{"GMT", 0}, {"BST", -15},
+	{"CET", -15}, {"CEST", -30},
+	{"EET", -30}, {"EEST", -45},
+	{"AST", -45}, {"ADT", -60},
+	{"GST", -60}, {"GDT", -75},
+	{"IST", -82.5}, {"IDT", -97.5},
+	{"JST", -135}, {"NDT", -150},
+	{"NZST", -180}, {"NZDT", -195},
+	{"", 0}
 };
 					/* required values */
 int  month, day;				/* date */
@@ -90,7 +90,16 @@ int	u_solar = 0;				/* -1=irradiance, 1=radiance */
 char  *progname;
 char  errmsg[128];
 
+void computesky(void);
+void printsky(void);
+void printdefaults(void);
+void userror(char  *msg);
+double normsc(void);
+void cvthour(char  *hs);
+void printhead(register int  ac, register char  **av);
 
+
+int
 main(argc, argv)
 int  argc;
 char  *argv[];
@@ -180,7 +189,8 @@ char  *argv[];
 }
 
 
-computesky()			/* compute sky parameters */
+void
+computesky(void)			/* compute sky parameters */
 {
 	double	normfactor;
 					/* compute solar direction */
@@ -265,7 +275,8 @@ computesky()			/* compute sky parameters */
 }
 
 
-printsky()			/* print out sky */
+void
+printsky(void)			/* print out sky */
 {
 	if (dosun) {
 		printf("\nvoid light solar\n");
@@ -288,7 +299,8 @@ printsky()			/* print out sky */
 }
 
 
-printdefaults()			/* print default values */
+void
+printdefaults(void)			/* print default values */
 {
 	switch (skytype) {
 	case S_OVER:
@@ -321,8 +333,10 @@ printdefaults()			/* print default values */
 }
 
 
-userror(msg)			/* print usage error and quit */
-char  *msg;
+void
+userror(			/* print usage error and quit */
+	char  *msg
+)
 {
 	if (msg != NULL)
 		fprintf(stderr, "%s: Use error - %s\n", progname, msg);
@@ -334,7 +348,7 @@ char  *msg;
 
 
 double
-normsc()			/* compute normalization factor (E0*F2/L0) */
+normsc(void)			/* compute normalization factor (E0*F2/L0) */
 {
 	static double  nfc[2][5] = {
 				/* clear sky approx. */
@@ -356,8 +370,10 @@ normsc()			/* compute normalization factor (E0*F2/L0) */
 }
 
 
-cvthour(hs)			/* convert hour string */
-char  *hs;
+void
+cvthour(			/* convert hour string */
+	char  *hs
+)
 {
 	register char  *cp = hs;
 	register int	i, j;
@@ -397,9 +413,11 @@ char  *hs;
 }
 
 
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
+void
+printhead(		/* print command header */
+	register int  ac,
+	register char  **av
+)
 {
 	putchar('#');
 	while (ac--) {

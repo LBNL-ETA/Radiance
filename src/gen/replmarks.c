@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id";
 #include <stdio.h>
 
 #include "platform.h"
+#include "rtio.h"
 #include "rtprocess.h"
 #include "fvect.h"
 
@@ -45,10 +46,20 @@ int	expand;			/* expand commands? */
 
 char	*progname;
 
+static void convert(char *name, FILE *fin);
+static void cvcomm(char *fname, FILE *fin);
+static void cvobject(char *fname, FILE *fin);
+static void replace(char *fname, struct mrkr *m, char *mark, FILE *fin);
+static int edgecmp(const void *e1, const void *e2);
+static int buildxf(char *xf, double markscale, FILE *fin);
+static int addrot(char *xf, FVECT xp, FVECT yp, FVECT zp);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	FILE	*fp;
 	int	i, j;
@@ -108,18 +119,20 @@ char	*argv[];
 			convert(argv[i], fp);
 			fclose(fp);
 		}
-	exit(0);
+	return 0;
 userr:
 	fprintf(stderr,
 "Usage: %s [-e][-s size][-m modout] {-x objfile|-i octree} modname .. [file ..]\n",
 		progname);
-	exit(1);
+	return 1;
 }
 
 
-convert(name, fin)		/* replace marks in a stream */
-char	*name;
-register FILE	*fin;
+void
+convert(		/* replace marks in a stream */
+	char	*name,
+	register FILE	*fin
+)
 {
 	register int	c;
 
@@ -144,9 +157,11 @@ register FILE	*fin;
 }
 
 
-cvcomm(fname, fin)		/* convert a command */
-char	*fname;
-FILE	*fin;
+void
+cvcomm(		/* convert a command */
+	char	*fname,
+	FILE	*fin
+)
 {
 	FILE	*pin;
 	char	buf[512], *fgetline();
@@ -166,9 +181,11 @@ FILE	*fin;
 }
 
 
-cvobject(fname, fin)		/* convert an object */
-char	*fname;
-FILE	*fin;
+void
+cvobject(		/* convert an object */
+	char	*fname,
+	FILE	*fin
+)
 {
 	extern char	*fgetword();
 	char	buf[128], typ[16], nam[128];
@@ -211,11 +228,13 @@ readerr:
 }
 
 
-replace(fname, m, mark, fin)		/* replace marker */
-char	*fname;
-register struct mrkr	*m;
-char	*mark;
-FILE	*fin;
+void
+replace(		/* replace marker */
+	char	*fname,
+	register struct mrkr	*m,
+	char	*mark,
+	FILE	*fin
+)
 {
 	int	n;
 	char	buf[256];
@@ -248,22 +267,26 @@ badxf:
 }
 
 
-edgecmp(e1, e2)			/* compare two edges, descending order */
-EDGE	*e1, *e2;
+int
+edgecmp(			/* compare two edges, descending order */
+	const void *e1,
+	const void *e2
+)
 {
-	if (e1->len2 > e2->len2)
+	if (((EDGE*)e1)->len2 > ((EDGE*)e2)->len2)
 		return(-1);
-	if (e1->len2 < e2->len2)
+	if (((EDGE*)e1)->len2 < ((EDGE*)e2)->len2)
 		return(1);
 	return(0);
 }
 
 
 int
-buildxf(xf, markscale, fin)		/* build transform for marker */
-register char	*xf;
-double	markscale;
-FILE	*fin;
+buildxf(		/* build transform for marker */
+	register char	*xf,
+	double	markscale,
+	FILE	*fin
+)
 {
 	static FVECT	vlist[MAXVERT];
 	static EDGE	elist[MAXVERT];
@@ -341,9 +364,13 @@ FILE	*fin;
 }
 
 
-addrot(xf, xp, yp, zp)		/* compute rotation (x,y,z) => (xp,yp,zp) */
-register char	*xf;
-FVECT	xp, yp, zp;
+int
+addrot(		/* compute rotation (x,y,z) => (xp,yp,zp) */
+	register char	*xf,
+	FVECT xp,
+	FVECT yp,
+	FVECT zp
+)
 {
 	int	n;
 	double	theta;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genmarble.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genmarble.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genmarble.c - generate a marble with bubbles inside.
@@ -22,7 +22,7 @@ typedef double  FVECT[3];
 static double  bubble();	/* pretty cute, huh? */
 static void sphere_cart();
 
-
+int
 main(argc, argv)
 int  argc;
 char  **argv;

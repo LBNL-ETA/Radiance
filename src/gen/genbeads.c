@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbeads.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genbeads.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genbeads.c - generate a string of spheres using Hermite
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: genbeads.c,v 2.6 2003/06/08 12:03:09 schorsch 
 
 void hermite3(double hp[3], double p0[3], double p1[3],
 		double r0[3], double r1[3], double t);
-htan3(double ht[3], double p0[3], double p1[3],
+void htan3(double ht[3], double p0[3], double p1[3],
 		double r0[3], double r1[3], double t);
 
 static void genstring(

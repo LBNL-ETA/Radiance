@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.11 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.12 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -12,12 +12,24 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.11 2003/06/30 14:59:11 schorsch
 #include  "cone.h"
 #include  "random.h"
 
+//void o_default(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
+void o_face(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
+void o_sphere(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
+void o_ring(OBJREC *ob, struct illum_args *il, struct rtproc *rt, char *nm);
+void raysamp(float res[3], FVECT org, FVECT dir, struct rtproc *rt);
+void rayflush(struct rtproc *rt);
+void mkaxes(FVECT u, FVECT v, FVECT n);
+void rounddir(FVECT dv, double alt, double azi);
+void flatdir(FVECT dv, double alt, double azi);
 
-o_default(ob, il, rt, nm)	/* default illum action */
-OBJREC  *ob;
-struct illum_args  *il;
-struct rtproc  *rt;
-char  *nm;
+
+int /* XXX type conflict with otypes.h */
+o_default(	/* default illum action */
+	OBJREC  *ob,
+	struct illum_args  *il,
+	struct rtproc  *rt,
+	char  *nm
+)
 {
 	sprintf(errmsg, "(%s): cannot make illum for %s \"%s\"",
 			nm, ofun[ob->otype].funame, ob->oname);
@@ -26,11 +38,13 @@ char  *nm;
 }
 
 
-o_face(ob, il, rt, nm)		/* make an illum face */
-OBJREC  *ob;
-struct illum_args  *il;
-struct rtproc  *rt;
-char  *nm;
+void
+o_face(		/* make an illum face */
+	OBJREC  *ob,
+	struct illum_args  *il,
+	struct rtproc  *rt,
+	char  *nm
+)
 {
 #define MAXMISS		(5*n*il->nsamps)
 	int  dim[3];
@@ -138,11 +152,13 @@ char  *nm;
 }
 
 
-o_sphere(ob, il, rt, nm)	/* make an illum sphere */
-register OBJREC  *ob;
-struct illum_args  *il;
-struct rtproc  *rt;
-char  *nm;
+void
+o_sphere(	/* make an illum sphere */
+	register OBJREC  *ob,
+	struct illum_args  *il,
+	struct rtproc  *rt,
+	char  *nm
+)
 {
 	int  dim[3];
 	int  n, nalt, nazi;
@@ -207,11 +223,13 @@ char  *nm;
 }
 
 
-o_ring(ob, il, rt, nm)		/* make an illum ring */
-OBJREC  *ob;
-struct illum_args  *il;
-struct rtproc  *rt;
-char  *nm;
+void
+o_ring(		/* make an illum ring */
+	OBJREC  *ob,
+	struct illum_args  *il,
+	struct rtproc  *rt,
+	char  *nm
+)
 {
 	int  dim[3];
 	int  n, nalt, nazi;
@@ -276,10 +294,13 @@ char  *nm;
 }
 
 
-raysamp(res, org, dir, rt)	/* compute a ray sample */
-float  res[3];
-FVECT  org, dir;
-register struct rtproc  *rt;
+void
+raysamp(	/* compute a ray sample */
+	float  res[3],
+	FVECT  org,
+	FVECT  dir,
+	register struct rtproc  *rt
+)
 {
 	register float  *fp;
 
@@ -292,8 +313,10 @@ register struct rtproc  *rt;
 }
 
 
-rayflush(rt)			/* flush buffered rays */
-register struct rtproc  *rt;
+void
+rayflush(			/* flush buffered rays */
+	register struct rtproc  *rt
+)
 {
 	register int  i;
 
@@ -316,8 +339,12 @@ register struct rtproc  *rt;
 }
 
 
-mkaxes(u, v, n)			/* compute u and v to go with n */
-FVECT  u, v, n;
+void
+mkaxes(			/* compute u and v to go with n */
+	FVECT  u,
+	FVECT  v,
+	FVECT  n
+)
 {
 	register int  i;
 
@@ -332,9 +359,12 @@ FVECT  u, v, n;
 }
 
 
-rounddir(dv, alt, azi)		/* compute uniform spherical direction */
-register FVECT  dv;
-double  alt, azi;
+void
+rounddir(		/* compute uniform spherical direction */
+	register FVECT  dv,
+	double  alt,
+	double  azi
+)
 {
 	double  d1, d2;
 
@@ -346,9 +376,12 @@ double  alt, azi;
 }
 
 
-flatdir(dv, alt, azi)		/* compute uniform hemispherical direction */
-register FVECT  dv;
-double  alt, azi;
+void
+flatdir(		/* compute uniform hemispherical direction */
+	register FVECT  dv,
+	double  alt,
+	double  azi
+)
 {
 	double  d1, d2;
 

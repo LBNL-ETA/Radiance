@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.11 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: genprism.c,v 2.12 2003/11/16 10:29:38 schorsch Exp $";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -302,6 +302,7 @@ register char  **av;
 }
 
 
+int
 main(argc, argv)
 int  argc;
 char  **argv;

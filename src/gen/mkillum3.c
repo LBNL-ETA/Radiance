@@ -14,10 +14,21 @@ char	DATSUF[] = ".dat";		/* data file suffix */
 char	DSTSUF[] = ".dist";		/* distribution suffix */
 char	FNCFNM[] = "illum.cal";		/* function file name */
 
+void compinv(float *rinv, float *rp, int m);
+void colorout(int p, float *da, int n, int m, double mult, FILE *fp);
+void fputnum(double d, FILE *fp);
+void brightout(float *da, int n, int m, double mult, FILE *fp);
+void fputeol(FILE *fp);
+void compavg(float col[3], float *da, int n);
+char * dfname(struct illum_args *il, int c);
+FILE * dfopen(struct illum_args *il, int c);
 
-printobj(mod, obj)		/* print out an object */
-char  *mod;
-register OBJREC  *obj;
+
+void
+printobj(		/* print out an object */
+	char  *mod,
+	register OBJREC  *obj
+)
 {
 	register int  i;
 
@@ -45,9 +56,10 @@ register OBJREC  *obj;
 
 
 char *
-dfname(il, c)			/* return data file name */
-struct illum_args  *il;
-int  c;
+dfname(			/* return data file name */
+	struct illum_args  *il,
+	int  c
+)
 {
 	char  fname[MAXSTR];
 	register char  *s;
@@ -65,9 +77,10 @@ int  c;
 
 
 FILE *
-dfopen(il, c)			/* open data file */
-register struct illum_args  *il;
-int  c;
+dfopen(			/* open data file */
+	register struct illum_args  *il,
+	int  c
+)
 {
 	char  *fn;
 	FILE  *fp;
@@ -85,11 +98,16 @@ int  c;
 }
 
 
-flatout(il, da, n, m, u, v, w)		/* write hemispherical distribution */
-struct illum_args  *il;
-float  *da;
-int  n, m;
-FVECT  u, v, w;
+extern void
+flatout(		/* write hemispherical distribution */
+	struct illum_args  *il,
+	float  *da,
+	int  n,
+	int  m,
+	FVECT  u,
+	FVECT  v,
+	FVECT  w
+)
 {
 	float  *Ninv;
 	FILE  *dfp;
@@ -137,10 +155,13 @@ FVECT  u, v, w;
 }
 
 
-roundout(il, da, n, m)			/* write spherical distribution */
-struct illum_args  *il;
-float  *da;
-int  n, m;
+extern void
+roundout(			/* write spherical distribution */
+	struct illum_args  *il,
+	float  *da,
+	int  n,
+	int  m
+)
 {
 	float  *Ninv, *Sinv;
 	FILE  *dfp;
@@ -190,9 +211,11 @@ int  n, m;
 }
 
 
-illumout(il, ob)		/* print illum object */
-register struct illum_args  *il;
-OBJREC  *ob;
+extern void
+illumout(		/* print illum object */
+	register struct illum_args  *il,
+	OBJREC  *ob
+)
 {
 	double  cout[3];
 
@@ -219,10 +242,12 @@ OBJREC  *ob;
 }
 
 
-compavg(col, da, n)		/* compute average for set of data values */
-float  col[3];
-register float  *da;
-int  n;
+void
+compavg(		/* compute average for set of data values */
+	float  col[3],
+	register float  *da,
+	int  n
+)
 {
 	register int  i;
 
@@ -238,9 +263,12 @@ int  n;
 }
 
 
-compinv(rinv, rp, m)		/* compute other side of row average */
-register float  *rinv, *rp;
-int  m;
+void
+compinv(		/* compute other side of row average */
+	register float  *rinv,
+	register float  *rp,
+	int  m
+)
 {
 	float  avg[3];
 
@@ -253,10 +281,12 @@ int  m;
 }
 
 
-average(il, da, n)		/* evaluate average value for distribution */
-register struct illum_args  *il;
-float  *da;
-int  n;
+extern int
+average(		/* evaluate average value for distribution */
+	register struct illum_args  *il,
+	float  *da,
+	int  n
+)
 {
 	compavg(il->col, da, n);	/* average */
 	if (il->nsamps > 1) {
@@ -271,9 +301,11 @@ int  n;
 
 static int	colmcnt = 0;	/* count of columns written */
 
-fputnum(d, fp)			/* put out a number to fp */
-double  d;
-FILE  *fp;
+void
+fputnum(			/* put out a number to fp */
+	double  d,
+	FILE  *fp
+)
 {
 	if (colmcnt++ % 5 == 0)
 		putc('\n', fp);
@@ -281,20 +313,25 @@ FILE  *fp;
 }
 
 
-fputeol(fp)			/* write end of line to fp */
-register FILE  *fp;
+void
+fputeol(			/* write end of line to fp */
+	register FILE  *fp
+)
 {
 	putc('\n', fp);
 	colmcnt = 0;
 }
 
 
-colorout(p, da, n, m, mult, fp)	/* put out color distribution data */
-int  p;
-register float  *da;
-int  n, m;
-double  mult;
-FILE  *fp;
+void
+colorout(	/* put out color distribution data */
+	int  p,
+	register float  *da,
+	int  n,
+	int  m,
+	double  mult,
+	FILE  *fp
+)
 {
 	register int  i, j;
 
@@ -308,11 +345,14 @@ FILE  *fp;
 }
 
 
-brightout(da, n, m, mult, fp)	/* put out brightness distribution data */
-register float  *da;
-int  n, m;
-double  mult;
-FILE  *fp;
+void
+brightout(	/* put out brightness distribution data */
+	register float  *da,
+	int  n,
+	int  m,
+	double  mult,
+	FILE  *fp
+)
 {
 	register int  i, j;
 
