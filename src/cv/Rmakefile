@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.24 2003/11/17 13:20:10 schorsch Exp $
+# RCSid $Id: Rmakefile,v 2.25 2004/10/27 23:36:09 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -98,7 +98,8 @@ ies2rad.o:	../common/paths.h
 
 obj2rad.o tmesh2rad.o:	../common/tmesh.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
-../common/rtmath.h ../common/rterror.h ../common/mat4.h ../common/fvect.h
+../common/rtmath.h ../common/rterror.h ../common/mat4.h \
+../common/fvect.h ../common/tifftypes.h
 
 obj2rad.o:	trans.h
 
