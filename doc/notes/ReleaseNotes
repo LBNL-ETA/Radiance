@@ -1395,7 +1395,10 @@ which is now preserved by the various view file routines, and reported
 by the vwright command.
 
 Added DBLUR variable to ranimate and pmdblur script to handle simultaneous
-motion and depth-of-field blurring.
+motion and depth-of-field blurring.  Thanks to Visarc for funding this work.
 
 Added setting of focus distance in rvu ("focus" command) and rholo
 ('f'/"frame" command).
+
+Changed default remote shell in ranimate to "ssh" rather than "rsh",
+which has been abandoned on most Unix systems due to security issues.

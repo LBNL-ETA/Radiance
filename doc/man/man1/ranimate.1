@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimate.1,v 1.4 2005/01/18 20:19:56 greg Exp $"
+.\" RCSid "$Id: ranimate.1,v 1.5 2005/02/07 17:08:16 greg Exp $"
 .TH RANIMATE 1 6/24/98 RADIANCE
 .SH NAME
 ranimate - compute a RADIANCE animation
@@ -279,10 +279,10 @@ above.)\0
 .TP
 .BR RSH
 The command to use instead of
-.I rsh(1)
+.I ssh(1)
 to execute commands remotely on another machine.
 The arguments and behavior of this program must be identical to the UNIX
-.I rsh
+.I ssh
 command, except that the
 .I -l
 option will always be used to specify an alternate user name rather than the
@@ -294,7 +294,7 @@ option may or may not appear, but the
 .I -n
 option will always be used, and the expected starting directory will
 be that of the remote user, just as with
-.I rsh.
+.I ssh.
 .TP
 .BR NEXTANIM
 This variable specifies the next
@@ -581,7 +581,7 @@ to set whatever variables are important in the remote startup script
 This requirement may be circumvented by substituting the
 .I on(1)
 command for
-.I rsh(1)
+.I ssh(1)
 using the
 .I RSH
 control variable, or by writing a custom remote execution script.
@@ -606,4 +606,4 @@ Since most modern machines use IEEE floating point, this is not
 usually a problem, but it is something to keep in mind.
 .SH "SEE ALSO"
 pfilt(1), pinterp(1), pmblur(1), rad(1),
-ranimove(1), rpict(1), rsh(1), rtrace(1)
+ranimove(1), rpict(1), ssh(1), rtrace(1)
