@@ -1,4 +1,4 @@
-/* RCSid $Id: view.h,v 2.13 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: view.h,v 2.14 2003/10/24 05:29:42 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
@@ -8,6 +8,7 @@
 #ifndef _RAD_VIEW_H_
 #define _RAD_VIEW_H_
 
+#include  <time.h>
 #include  "resolu.h"
 
 #ifdef __cplusplus
