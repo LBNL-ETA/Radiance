@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.11 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.12 2004/09/02 04:16:58 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -299,8 +299,12 @@ sourcepoly(			/* compute image polygon for source */
 	register int	i, j;
 
 	if (s->sflags & (SDISTANT|SFLAT)) {
-		if (s->sflags & SDISTANT && ourview.type == VT_PAR)
-			return(0);		/* all or nothing case */
+		if (s->sflags & SDISTANT) {
+			if (ourview.type == VT_PAR)
+				return(0);	/* all or nothing case */
+			if (s->srad >= 0.05)
+				return(0);	/* should never be a problem */
+		}
 		if (s->sflags & SFLAT) {
 			for (i = 0; i < 3; i++)
 				ap[i] = s->sloc[i] - ourview.vp[i];
@@ -455,10 +459,12 @@ drawsources(
 					zbf[y-y0][x-x0] = sr.rt;
 				else if (!bigdiff(sr.rcol, pic[y-y0][x-x0],
 						0.01))	/* source sample */
-					setcolor(pic[y-y0][x-x0], 0., 0., 0.);
-				scalecolor(sr.rcol, w);
-				scalecolor(pic[y-y0][x-x0], 1.-w);
-				addcolor(pic[y-y0][x-x0], sr.rcol);
+					scalecolor(pic[y-y0][x-x0], w);
+				else {
+					scalecolor(sr.rcol, w);
+					scalecolor(pic[y-y0][x-x0], 1.-w);
+					addcolor(pic[y-y0][x-x0], sr.rcol);
+				}
 			}
 	}
 }
