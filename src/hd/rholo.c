@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.53 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.54 2003/05/29 16:26:22 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -45,7 +45,7 @@ time_t	starttime;		/* time we got started */
 time_t	endtime;		/* time we should end by */
 time_t	reporttime;		/* time for next report */
 
-long	maxdisk;		/* maximum file space (bytes) */
+off_t	maxdisk;		/* maximum file space (bytes) */
 
 int	rtargc = 1;		/* rtrace command */
 char	*rtargv[128] = {"rtrace", NULL};
@@ -214,7 +214,7 @@ initrholo()			/* get our holodeck running */
 		init_global();
 						/* record disk space limit */
 	if (!vdef(DISKSPACE))
-		maxdisk = (1L<<(sizeof(long)*8-2)) - 1024;
+		maxdisk = (1L<<(sizeof(off_t)*8-2)) - 1024;
 	else
 		maxdisk = 1024.*1024.*vflt(DISKSPACE);
 						/* set up memory cache */
@@ -287,7 +287,7 @@ rholo()				/* holodeck main loop */
 	static long	nextfragwarn = 100*(1L<<20);
 	static int	idle = 0;
 	PACKET	*pl = NULL, *plend;
-	long	fsiz;
+	off_t	fsiz;
 	int	pksiz;
 	register PACKET	*p;
 	time_t	t;
@@ -475,7 +475,6 @@ char	*s;
 
 loadholo()			/* start loading a holodeck from fname */
 {
-	extern long	ftell();
 	FILE	*fp;
 	int	fd;
 	int	n;
@@ -608,7 +607,7 @@ int	ec;
 		if (nprocs > 0)
 			status = done_rtrace();		/* calls hdsync() */
 		if (ncprocs > 0 & force >= 0 && vdef(REPORT)) {
-			long	fsiz, fuse;
+			off_t	fsiz, fuse;
 			fsiz = hdfilen(hdlist[0]->fd);
 			fuse = hdfiluse(hdlist[0]->fd, 1);
 			fprintf(stderr,

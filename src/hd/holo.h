@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.20 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.21 2003/05/29 16:26:21 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -44,7 +44,7 @@ typedef struct {
 
 typedef struct {
 	unsigned int4	nrd;	/* number of beam rays bundled on disk */
-	long	fo;		/* position in file */
+	off_t	fo;		/* position in file */
 } BEAMI;		/* beam index */
 
 typedef struct {
@@ -96,7 +96,7 @@ extern HOLO	*hdinit(), *hdalloc();
 extern BEAM	*hdgetbeam();
 extern RAYVAL	*hdnewrays();
 extern unsigned	hdmemuse();
-extern long	hdfiluse(), hdfilen(), hdallocfrag();
+extern off_t	hdfiluse(), hdfilen(), hdallocfrag();
 extern double	hdray(), hdinter();
 extern unsigned	hdcode();
 extern int	hdfilord();
@@ -124,7 +124,7 @@ extern int	hdwg1[6];		/* wall grid 1 index */
 
 #define HOLOFMT		"Holodeck"	/* file format identifier */
 #define HOLOVERS	0		/* file format version number */
-#define HOLOMAGIC	(323+sizeof(long)+8*HOLOVERS)	/* file magic number */
+#define HOLOMAGIC	(323+sizeof(off_t)+8*HOLOVERS)	/* file magic number */
 
 /*
  * A holodeck file consists of an information header terminated by a

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.9 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.10 2003/05/29 16:26:22 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -172,7 +172,7 @@ static int
 bpcmp(b1p, b2p)			/* compare beam positions on disk */
 int	*b1p, *b2p;
 {
-	register long	pdif = beamdir[*b1p].fo - beamdir[*b2p].fo;
+	register off_t	pdif = beamdir[*b1p].fo - beamdir[*b2p].fo;
 
 	if (pdif < 0L) return(-1);
 	return(pdif > 0L);

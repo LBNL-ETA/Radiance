@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.8 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.9 2003/05/29 16:26:22 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -260,7 +260,6 @@ endpicture()			/* finish and write out pixels */
 
 initialize()			/* initialize holodeck and buffers */
 {
-	extern long	ftell();
 	int	fd;
 	FILE	*fp;
 	int	n;
