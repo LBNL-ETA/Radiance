@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.1 2003/02/22 02:07:26 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.2 2003/06/26 00:49:15 schorsch Exp $
 #
 #  Compiles:
 #
@@ -36,9 +36,10 @@ $(INSTDIR)/x11meta ../lib/libmeta.a $(INSTDIR)/bgraph $(INSTDIR)/igraph \
 $(INSTDIR)/dgraph $(INSTDIR)/gcomp $(INSTDIR)/plot4
 
 special:	$(EXEC2)/mt160l $(EXEC2)/mt160 $(EXEC2)/mtext \
-$(EXEC2)/plotout $(EXEC2)/xmeta $(EXEC2)/okimate $(EXEC2)/tbar \
+$(EXEC2)/plotout $(EXEC2)/okimate $(EXEC2)/tbar \
 $(EXEC2)/mx80 $(EXEC2)/t4014 $(EXEC2)/imagew $(EXEC2)/impress \
 $(EXEC2)/aed5 $(EXEC2)/tscat $(EXEC2)/tbar
+#$(EXEC2)/xmeta 
 
 $(INSTDIR)/meta2tga $(EXEC2)/okimate $(EXEC2)/impress \
 $(EXEC2)/mx80 $(EXEC2)/t4014 $(INSTDIR)/plotout $(INSTDIR)/x11meta \
@@ -103,10 +104,9 @@ $(INSTDIR)/psmeta:	psmeta.o psplot.o
 	$(CC) $(CFLAGS) psmeta.o psplot.o $(common) -lrt $(MLIB)
 	cp a.out $(INSTDIR)/psmeta
 
-$(INSTDIR)/plotout:	plotout.c
-	$(CC) $(CFLAGS) plotout.c $(common) -lplot $(MLIB)
+$(INSTDIR)/plotout:	plotout.o 
+	$(CC) $(CFLAGS) plotout.o $(common) -lplot -lrt -l4014 $(MLIB)
 	cp a.out $(INSTDIR)/plotout
-	rm -f plotout.o
 
 $(INSTDIR)/plotin:	plotin.o primout.o
 	$(CC) $(CFLAGS) plotin.o primout.o $(common) -lrt $(MLIB)
