@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.40 2003/12/31 19:38:27 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.41 2004/01/09 05:37:11 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -415,7 +415,7 @@ char  *p			/* data for f */
 			if (bright(sr.rcol) <= FTINY) {
 #if SHADCACHE
 				if ((scp <= srccnt || scp[-1].sno != scp->sno)
-						&& (scp >= srccnt+ncnts ||
+						&& (scp >= srccnt+ncnts-1 ||
 						    scp[1].sno != scp->sno))
 					srcblocker(&sr);
 #endif

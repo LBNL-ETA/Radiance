@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.2 2004/01/01 19:31:46 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.3 2004/01/09 05:37:12 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -136,7 +136,7 @@ initobscache(int sn)
 				else
 					VSUM(rdir, srcp->obscache->p.f.v,
 						srcp->obscache->p.f.u, d);
-				d = 2./SHADCACHE*(j+.5);
+				d = 1. - 2./SHADCACHE*(j+.5);
 				VSUM(rdir, rdir, srcp->snorm, d);
 				normalize(rdir);
 				castshadow(sn, rorg, rdir);
@@ -219,7 +219,7 @@ srcobstructp(register RAY *r)
 			if (sd[0] < 0)
 				ondx += ((SHADCACHE+1)>>1)*SHADCACHE;
 			ondx += SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
-					sd[2]/sd0m);
+					(1. - sd[2]/sd0m));
 			ondx += (int)(SHADCACHE*(.5-FTINY) *
 					(1. + sd[1]/sd0m));
 		} else /* sd1m > sd0m */ {
@@ -228,10 +228,13 @@ srcobstructp(register RAY *r)
 			if (sd[1] < 0)
 				ondx += ((SHADCACHE+1)>>1)*SHADCACHE;
 			ondx += SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
-					sd[2]/sd1m);
+					(1. - sd[2]/sd1m));
 			ondx += (int)(SHADCACHE*(.5-FTINY) *
 					(1. + sd[0]/sd1m));
 		}
+		DCHECK(ondx < 0 | ondx >= SHADCACHE*SHADCACHE*3 +
+				(SHADCACHE&1)*SHADCACHE*4, CONSISTENCY,
+				"flat source cache index out of bounds");
 	} else /* spherical distribution */ {
 		int     ax, ax1, ax2;
 		RREAL   amax = 0;
@@ -249,6 +252,8 @@ srcobstructp(register RAY *r)
 					(1. + r->rdir[ax1]/amax));
 		ondx += (int)(SHADCACHE*(.5-FTINY) *
 				(1. + r->rdir[ax2]/amax));
+		DCHECK(ondx < 0 | ondx >= SHADCACHE*SHADCACHE*6, CONSISTENCY,
+				"radial source cache index out of bounds");
 	}
 					/* return cache pointer */
 	return(&srcp->obscache->obs[ondx]);
