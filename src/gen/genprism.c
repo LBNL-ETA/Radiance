@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.9 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: genprism.c,v 2.10 2003/07/12 09:41:41 schorsch Exp $";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -36,7 +36,7 @@ int  do_ends = 1;		/* include end caps */
 int  iscomplete = 0;		/* polygon is already completed */
 double  crad = 0.0;		/* radius for corners (sign from lvdir) */
 
-extern double  compute_rounding();
+static double  compute_rounding(void);
 
 
 static void
