@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pvalue.c,v 2.14 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pvalue.c,v 2.15 2003/02/25 16:22:05 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -14,6 +14,8 @@ static const char	RCSid[] = "$Id: pvalue.c,v 2.14 2003/02/22 02:07:27 greg Exp $
 #include  <time.h>
 
 #include  "resolu.h"
+
+typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
 
 #define	 min(a,b)		((a)<(b)?(a):(b))
 
@@ -167,6 +169,11 @@ char  **argv;
 					format = 'b';
 					fmtid = "byte";
 					break;
+				case 'w':		/* 16-bit */
+					dataonly = 1;
+					format = 'w';
+					fmtid = "16-bit";
+					break;
 				case 'f':		/* float */
 					dataonly = 1;
 					format = 'f';
@@ -212,6 +219,11 @@ unkopt:
 			fmtid = "8-bit_grey";
 		else
 			fmtid = "24-bit_rgb";
+	if (dataonly && format == 'w')
+		if (brightonly)
+			fmtid = "16-bit_grey";
+		else
+			fmtid = "48-bit_rgb";
 					/* assign reverse ordering */
 	rord[ord[0]] = 0;
 	rord[ord[1]] = 1;
@@ -594,6 +606,26 @@ COLOR  col;
 }
 
 
+getcword(col)		/* get a 16-bit color value from stream(s) */
+COLOR  col;
+{
+	uint16  vw[3];
+
+	if (fin2 == NULL) {
+		if (fread((char *)vw, sizeof(uint16), 3, fin) != 3)
+			return(-1);
+	} else {
+		if (fread((char *)vw, sizeof(uint16), 1, fin) != 1 ||
+			fread((char *)(vw+1), sizeof(uint16), 1, fin2) != 1 ||
+			fread((char *)(vw+2), sizeof(uint16), 1, fin3) != 1)
+			return(-1);
+	}
+	setcolor(col, (vw[rord[RED]]+.5)/65536.,
+			(vw[rord[GRN]]+.5)/65536., (vw[rord[BLU]]+.5)/65536.);
+	return(0);
+}
+
+
 getbascii(col)		/* get an ascii brightness value from fin */
 COLOR  col;
 {
@@ -658,6 +690,20 @@ COLOR  col;
 }
 
 
+getbword(col)		/* get a 16-bit brightness value from fin */
+COLOR  col;
+{
+	uint16  vw;
+	double	d;
+
+	if (fread((char *)&vw, sizeof(uint16), 1, fin) != 1)
+		return(-1);
+	d = (vw+.5)/65536.;
+	setcolor(col, d, d, d);
+	return(0);
+}
+
+
 putcascii(col)			/* put an ascii color to stdout */
 COLOR  col;
 {
@@ -713,7 +759,7 @@ COLOR  col;
 putcbyte(col)			/* put a byte color to stdout */
 COLOR  col;
 {
-	register int  i;
+	long  i;
 	BYTE  vb[3];
 
 	i = colval(col,ord[0])*256.;
@@ -723,6 +769,24 @@ COLOR  col;
 	i = colval(col,ord[2])*256.;
 	vb[2] = min(i,255);
 	fwrite((char *)vb, sizeof(BYTE), 3, stdout);
+
+	return(ferror(stdout) ? -1 : 0);
+}
+
+
+putcword(col)			/* put a 16-bit color to stdout */
+COLOR  col;
+{
+	long  i;
+	uint16  vw[3];
+
+	i = colval(col,ord[0])*65536.;
+	vw[0] = min(i,65535);
+	i = colval(col,ord[1])*65536.;
+	vw[1] = min(i,65535);
+	i = colval(col,ord[2])*65536.;
+	vw[2] = min(i,65535);
+	fwrite((char *)vw, sizeof(uint16), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -784,6 +848,20 @@ COLOR  col;
 }
 
 
+putbword(col)			/* put a 16-bit brightness to stdout */
+COLOR  col;
+{
+	long  i;
+	uint16  vw;
+
+	i = (*mybright)(col)*65536.;
+	vw = min(i,65535);
+	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
+
+	return(ferror(stdout) ? -1 : 0);
+}
+
+
 putpascii(col)			/* put an ascii primary to stdout */
 COLOR  col;
 {
@@ -829,12 +907,26 @@ COLOR  col;
 putpbyte(col)			/* put a byte primary to stdout */
 COLOR  col;
 {
-	register int  i;
+	long  i;
 	BYTE  vb;
 
 	i = colval(col,putprim)*256.;
 	vb = min(i,255);
 	fwrite((char *)&vb, sizeof(BYTE), 1, stdout);
+
+	return(ferror(stdout) ? -1 : 0);
+}
+
+
+putpword(col)			/* put a 16-bit primary to stdout */
+COLOR  col;
+{
+	long  i;
+	uint16  vw;
+
+	i = colval(col,putprim)*65536.;
+	vw = min(i,65535);
+	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -941,6 +1033,28 @@ set_io()			/* set put and get functions */
 					goto seekerr;
 				if (fseek(fin3,
 				(long)sizeof(BYTE)*2*picres.xr*picres.yr, 1))
+					goto seekerr;
+			}
+		}
+		return;
+	case 'w':					/* 16-bit */
+		if (putprim == BRIGHT) {
+			getval = getbword;
+			putval = putbword;
+		} else if (putprim != ALL) {
+			getval = getbword;
+			putval = putpword;
+		} else {
+			getval = getcword;
+			putval = putcword;
+			if (reverse && !interleave) {
+				if (fin2 == NULL)
+					goto namerr;
+				if (fseek(fin2,
+				(long)sizeof(uint16)*picres.xr*picres.yr, 1))
+					goto seekerr;
+				if (fseek(fin3,
+				(long)sizeof(uint16)*2*picres.xr*picres.yr, 1))
 					goto seekerr;
 			}
 		}
