@@ -1,19 +1,22 @@
-/* RCSid $Id: driver.h,v 2.7 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: driver.h,v 2.8 2003/08/20 10:00:09 schorsch Exp $ */
 /*
  *  driver.h - header file for interactive device drivers.
  */
 #ifndef _RAD_DRIVER_H_
 #define _RAD_DRIVER_H_
+
+#include "color.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct driver {				/* driver functions */
-	void  (*close)();			/* close device */
-	void  (*clear)();			/* clear device */
-	void  (*paintr)();			/* paint rectangle */
-	int  (*getcur)();			/* get cursor position */
-	void  (*comout)();			/* command line output */
+	void  (*close)(void);			/* close device */
+	void  (*clear)(int, int);			/* clear device */
+	void  (*paintr)(COLOR  col, int  xmin, int ymin, int xmax, int ymax);			/* paint rectangle */
+	int  (*getcur)(int*,int*);			/* get cursor position */
+	void  (*comout)(char*);			/* command line output */
 	void  (*comin)();			/* command line input */
 	void  (*flush)();			/* flush output */
 	double  pixaspect;			/* pixel aspect ratio */

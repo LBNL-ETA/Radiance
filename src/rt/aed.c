@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aed.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: aed.c,v 2.5 2003/08/20 10:00:09 schorsch Exp $";
 #endif
 /*
  *  aed.c - driver for AED 512 terminal.
@@ -9,9 +9,9 @@ static const char	RCSid[] = "$Id: aed.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
 
 #include  <stdio.h>
 
-#include  "driver.h"
-
+#include  "rterror.h"
 #include  "color.h"
+#include  "driver.h"
 
 
 	/* AED command characters */
@@ -53,8 +53,17 @@ static const char	RCSid[] = "$Id: aed.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
 #define  COMHT		16		/* height of command line */
 #define  COMCW		63		/* maximum chars on command line */
 
-int  aed_close(), aed_clear(), aed_paintr(),
-		aed_getcur(), aed_comout(), aed_errout();
+static void  aed_close(void);
+static void aed_errout(char*);
+static void longwait(int t);
+static void aedgetcap(int  *xp, int *yp);
+static void aedsetcap(int  x, int y);
+static void anewcolr(int  index, int  r,int g,int b);
+static void aed_paintr(COLOR  col, int  xmin, int ymin, int xmax, int ymax);
+static void aedcoord(int  x, int y);
+static void aed_comout(char  *out);
+static int aed_getcur(int  *xp, int *yp);
+static aed_clear(int  x, int y);
 
 static struct driver  aed_driver = {
 	aed_close, aed_clear, aed_paintr, aed_getcur,
@@ -95,8 +104,8 @@ char  *name, *id;
 }
 
 
-static
-aed_close()					/* close AED */
+static void
+aed_close(void)					/* close AED */
 {
 	erract[USER].pf = 			/* reset error vector */
 	erract[SYSTEM].pf =
@@ -125,12 +134,11 @@ int  x, y;
 }
 
 
-static
+static void
 aed_paintr(col, xmin, ymin, xmax, ymax)		/* paint a rectangle */
 COLOR  col;
 int  xmin, ymin, xmax, ymax;
 {
-	extern int  anewcolr();
 	int  ndx;
 
 	ndx = get_pixel(col, anewcolr);		/* calls anewcolr() */
@@ -158,7 +166,7 @@ int  *xp, *yp;
 }
 
 
-static
+static void
 aed_comout(out)				/* output to command line */
 register char  *out;
 {
@@ -201,7 +209,7 @@ register char  *out;
 }
 
 
-static
+static void
 aed_errout(msg)				/* print an error message */
 char  *msg;
 {
@@ -215,7 +223,7 @@ char  *msg;
  * aedsetcap - sets AED's current access pointer to (x, y).
  */
 
-static
+static void
 aedsetcap(x, y)
 register int  x, y;
 {
@@ -227,7 +235,7 @@ register int  x, y;
  * aedcoord - puts out an (x, y) coordinate in AED 8 bit format.
  */
 
-static
+static void
 aedcoord(x, y)
 register int  x, y;
 {
@@ -237,7 +245,7 @@ register int  x, y;
 }
 
 
-static
+static void
 aedgetcap(xp, yp)		/* get cursor postion */
 int  *xp, *yp;
 {
@@ -253,7 +261,7 @@ int  *xp, *yp;
 }
 
 
-static
+static void
 anewcolr(index, r, g, b)		/* enter a color into our table */
 int  index;
 int  r, g, b;
@@ -268,7 +276,7 @@ int  r, g, b;
 }
 
 
-static
+static void
 longwait(t)		/* longer wait */
 int  t;
 {
