@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.10 2003/07/17 09:21:29 schorsch Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.11 2003/09/30 00:13:58 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -158,7 +158,7 @@ register struct ohtab  *tab;
 	hval = shash(name);
 tryagain:
 	for (i = 0; i < tab->hsiz; i++) {
-		ndx = (hval + i*i) % tab->hsiz;
+		ndx = (hval + (unsigned long)i*i) % tab->hsiz;
 		if (tab->htab[ndx] == OVOID ||
 				!strcmp(objptr(tab->htab[ndx])->oname, name))
 			return(ndx);
