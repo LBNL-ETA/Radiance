@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.10 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.11 2004/01/02 12:51:54 schorsch Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -39,10 +39,19 @@ struct illum	*indirect;		/* array of indirect illuminances */
 long	npixinvw;			/* number of pixels in view */
 long	npixmiss;			/* number of pixels missed */
 
+static int angcmp(const void	*ap1, const void	*ap2);
+static void init(void);
+static void cleanup(void);
+static void printsources(void);
+static void printillum(void);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	combine = 1;
 	int	gotview = 0;
@@ -221,14 +230,16 @@ userr:
 }
 
 
-int
-angcmp(ap1, ap2)		/* compare two angles */
-ANGLE	*ap1, *ap2;
+static int
+angcmp(		/* compare two angles */
+	const void	*ap1,
+	const void	*ap2
+)
 {
 	register int	a1, a2;
 
-	a1 = *ap1;
-	a2 = *ap2;
+	a1 = *(ANGLE *)ap1;
+	a2 = *(ANGLE *)ap2;
 	if (a1 == a2) {
 		fprintf(stderr, "%s: duplicate glare angle (%d)\n",
 				progname, a1);
@@ -238,7 +249,8 @@ ANGLE	*ap1, *ap2;
 }
 
 
-init()				/* initialize global variables */
+static void
+init(void)				/* initialize global variables */
 {
 	double	d;
 	register int	i;
@@ -314,7 +326,8 @@ init()				/* initialize global variables */
 }
 
 
-cleanup()				/* close files, wait for children */
+static void
+cleanup(void)				/* close files, wait for children */
 {
 	if (verbose)
 		fprintf(stderr, "%s: cleaning up...        \n", progname);
@@ -328,9 +341,12 @@ cleanup()				/* close files, wait for children */
 }
 
 
-compdir(vd, x, y)			/* compute direction for x,y */
-FVECT	vd;
-int	x, y;
+extern int
+compdir(			/* compute direction for x,y */
+	FVECT	vd,
+	int	x,
+	int	y
+)
 {
 	int	hl;
 	FVECT	org;			/* dummy variable */
@@ -358,9 +374,11 @@ int	x, y;
 }
 
 
-double
-pixsize(x, y)		/* return the solid angle of pixel at (x,y) */
-int	x, y;
+extern double
+pixsize(		/* return the solid angle of pixel at (x,y) */
+	int	x,
+	int	y
+)
 {
 	register int	hl, xo;
 	double	disc;
@@ -379,15 +397,18 @@ int	x, y;
 }
 
 
-memerr(s)			/* malloc failure */
-char	*s;
+extern void
+memerr(			/* malloc failure */
+	char	*s
+)
 {
 	fprintf(stderr, "%s: out of memory for %s\n", progname, s);
 	exit(1);
 }
 
 
-printsources()			/* print out glare sources */
+static void
+printsources(void)			/* print out glare sources */
 {
 	register struct source	*sp;
 
@@ -400,7 +421,8 @@ printsources()			/* print out glare sources */
 }
 
 
-printillum()			/* print out indirect illuminances */
+static void
+printillum(void)			/* print out indirect illuminances */
 {
 	register int	i;
 

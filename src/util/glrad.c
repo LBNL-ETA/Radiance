@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.17 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.18 2004/01/02 12:51:54 schorsch Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -82,7 +82,7 @@ int	backvis = 1;			/* back faces visible? */
 int	stereo = 0;			/* do stereo? */
 
 #ifdef NOSTEREO
-#define setstereobuf(bid)	0
+#define setstereobuf(bid)	
 #else
 #define setstereobuf(bid)	(glXWaitGL(), \
 				XSGISetStereoBuffer(ourdisplay, gwind, bid), \
@@ -93,13 +93,37 @@ int	displist;			/* our scene display list */
 
 int	no_render = 0;			/* don't rerender */
 
-extern char	*fgetline(), *atos(), *scan4var();
 extern int	nowarn;			/* turn warnings off? */
 
+static void startrtrace(char	*octname);
+static void runrad(int	ac, char	**av);
+static int findvw(register char	*nm);
+static int varmatch(register char	*s, register char	*vn);
+static char * scan4var(char	*buf, int	buflen, char	*vname, FILE	*fp);
+static void dev_open(char  *id);
+static void dev_close(void);
+static int dev_view(register VIEW	*nv);
+static int dev_input(int	nsecs);
+static void render(void);
+static int moveview(int	dx, int	dy, int	mov, int	orb);
+static void waitabit(void);
+static void getmove(XButtonPressedEvent	*ebut);
+static int getintersect(FVECT	wp, FVECT	org, FVECT	dir, double	md);
+static void setglpersp(register VIEW	*vp);
+static int getkey(register XKeyPressedEvent  *ekey);
+static void zoomview(int	pct, int	dx, int	dy);
+static void gotoview(int	vwnum);
+static void appendview(char	*nm, VIEW	*vp);
+static void copylastv(char	*cause);
+static void fixwindow(register XExposeEvent  *eexp);
+static void resizewindow(register XConfigureEvent  *ersz);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*viewsel = NULL;
 	long	vwintvl = 0;
@@ -174,6 +198,7 @@ userr:
 		"Usage: %s [-w][-s][-b][-S][-v view] rfile [VAR=value]..\n",
 			argv[0]);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
@@ -193,8 +218,10 @@ int	code;
 }
 
 
-startrtrace(octname)			/* start rtrace on octname */
-char	*octname;
+static void
+startrtrace(			/* start rtrace on octname */
+	char	*octname
+)
 {
 	static char	*av[12] = {"rtrace", "-h", "-fff", "-ld+",
 					"-opL", "-x", "1"};
@@ -208,14 +235,15 @@ char	*octname;
 }
 
 
-runrad(ac, av)				/* run rad and load variables */
-int	ac;
-char	**av;
+static void
+runrad(				/* run rad and load variables */
+	int	ac,
+	char	**av
+)
 {
 	static char	optfile[] = TEMPLATE;
 	int	nvn = 0, nvv = 0;
 	FILE	*fp;
-	int	cval;
 	register char	*cp;
 	char	radcomm[256], buf[128], nam[32];
 					/* set rad commmand */
@@ -243,7 +271,7 @@ char	**av;
 						/* get exposure */
 	if ((cp = scan4var(buf, sizeof(buf), "EXPOSURE", fp)) != NULL) {
 		expval = atof(cp);
-		if (*cp == '-' | *cp == '+')
+		if ((*cp == '-') | (*cp == '+'))
 			expval = pow(2., expval);
 		expval *= 0.5;		/* compensate for local shading */
 	}
@@ -304,13 +332,14 @@ char	**av;
 }
 
 
-int
-findvw(nm)			/* find named view */
-register char	*nm;
+static int
+findvw(			/* find named view */
+	register char	*nm
+)
 {
 	register int	n;
 
-	if (*nm >= '1' & *nm <= '9' &&
+	if ((*nm >= '1') & (*nm <= '9') &&
 			(n = atoi(nm)-1) <= MAXVIEW && vwl[n].v != NULL)
 		return(n);
 	for (n = 0; vwl[n].v != NULL; n++)
@@ -320,9 +349,11 @@ register char	*nm;
 }
 
 
-int
-varmatch(s, vn)				/* match line to variable */
-register char	*s, *vn;
+static int
+varmatch(				/* match line to variable */
+	register char	*s,
+	register char	*vn
+)
 {
 	register int	c;
 
@@ -338,12 +369,13 @@ register char	*s, *vn;
 }
 
 
-char *
-scan4var(buf, buflen, vname, fp)	/* scan for variable from fp */
-char	*buf;
-int	buflen;
-char	*vname;
-FILE	*fp;
+static char *
+scan4var(	/* scan for variable from fp */
+	char	*buf,
+	int	buflen,
+	char	*vname,
+	FILE	*fp
+)
 {
 	int	cval;
 	register char	*cp;
@@ -363,8 +395,10 @@ FILE	*fp;
 }
 
 
-dev_open(id)			/* initialize GLX driver */
-char  *id;
+static void
+dev_open(			/* initialize GLX driver */
+	char  *id
+)
 {
 	static int	atlBest[] = {GLX_RGBA, GLX_RED_SIZE,4,
 				GLX_GREEN_SIZE,4, GLX_BLUE_SIZE,4,
@@ -446,13 +480,14 @@ char  *id;
 	no_render++;
 	do
 		dev_input(0);		/* get resize event */
-	while (hres == 0 & vres == 0);
+	while ((hres == 0) & (vres == 0));
 	no_render--;
 	rgl_checkerr("initializing GLX");
 }
 
 
-dev_close()			/* close our display and free resources */
+static void
+dev_close(void)			/* close our display and free resources */
 {
 	glXMakeCurrent(ourdisplay, None, NULL);
 	glXDestroyContext(ourdisplay, gctx);
@@ -463,9 +498,10 @@ dev_close()			/* close our display and free resources */
 }
 
 
-int
-dev_view(nv)			/* assign new driver view */
-register VIEW	*nv;
+static int
+dev_view(			/* assign new driver view */
+	register VIEW	*nv
+)
 {
 	int	newhres = hres, newvres = vres;
 	double	wa, va;
@@ -474,14 +510,14 @@ register VIEW	*nv;
 		error(COMMAND, "illegal view type");
 		nv->type = VT_PER;
 	}
-	if (nv->horiz > 160. | nv->vert > 160.) {
+	if ((nv->horiz > 160.) | (nv->vert > 160.)) {
 		error(COMMAND, "illegal view angle");
 		if (nv->horiz > 160.)
 			nv->horiz = 160.;
 		if (nv->vert > 160.)
 			nv->vert = 160.;
 	}
-	if (hres != 0 & vres != 0) {
+	if ((hres != 0) & (vres != 0)) {
 		wa = (vres*pheight)/(hres*pwidth);
 		va = viewaspect(nv);
 		if (va > wa+.05) {
@@ -497,12 +533,12 @@ register VIEW	*nv;
 				newvres = (pwidth/pheight)*va*newhres + .5;
 			}
 		}
-		if (newhres != hres | newvres != vres) {
+		if ((newhres != hres) | (newvres != vres)) {
 			no_render++;
 			XResizeWindow(ourdisplay, gwind, newhres, newvres);
 			do
 				dev_input(0);		/* get resize event */
-			while (newhres != hres | newvres != vres);
+			while ((newhres != hres) | (newvres != vres));
 			no_render--;
 		}
 	}
@@ -513,9 +549,10 @@ register VIEW	*nv;
 }
 
 
-int
-dev_input(nsecs)		/* get next input event */
-int	nsecs;
+static int
+dev_input(		/* get next input event */
+	int	nsecs
+)
 {
 #if 0
 	static time_t	lasttime = 0;
@@ -553,7 +590,8 @@ int	nsecs;
 }
 
 
-render()			/* render our display list and swap buffers */
+static void
+render(void)			/* render our display list and swap buffers */
 {
 	double	d;
 
@@ -579,8 +617,13 @@ render()			/* render our display list and swap buffers */
 }
 
 
-moveview(dx, dy, mov, orb)	/* move our view */
-int	dx, dy, mov, orb;
+static int
+moveview(	/* move our view */
+	int	dx,
+	int	dy,
+	int	mov,
+	int	orb
+)
 {
 	VIEW	nv;
 	FVECT	odir, v1, wp;
@@ -624,8 +667,8 @@ int	dx, dy, mov, orb;
 }
 
 
-static
-waitabit()				/* pause a moment */
+static void
+waitabit(void)				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
@@ -634,8 +677,10 @@ waitabit()				/* pause a moment */
 }
 
 
-getmove(ebut)				/* get view change */
-XButtonPressedEvent	*ebut;
+static void
+getmove(				/* get view change */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	movdir = MOVDIR(ebut->button);
 	int	movorb = MOVORB(ebut->state);
@@ -672,10 +717,13 @@ XButtonPressedEvent	*ebut;
 }
 
 
-getintersect(wp, org, dir, md)		/* intersect ray with scene geometry */
-FVECT	wp;		/* returned world intersection point */
-FVECT	org, dir;
-double	md;
+static int
+getintersect(		/* intersect ray with scene geometry */
+	FVECT	wp,		/* returned world intersection point */
+	FVECT	org,
+	FVECT	dir,
+	double	md
+)
 {
 	float	fbuf[6];
 				/* check to see if rtrace is running */
@@ -698,8 +746,10 @@ double	md;
 }
 
 
-setglpersp(vp)			/* set perspective view in GL */
-register VIEW	*vp;
+static void
+setglpersp(			/* set perspective view in GL */
+	register VIEW	*vp
+)
 {
 	double	d, xmin, xmax, ymin, ymax, zmin, zmax;
 
@@ -730,9 +780,10 @@ register VIEW	*vp;
 }
 
 
-int
-getkey(ekey)				/* get input key */
-register XKeyPressedEvent  *ekey;
+static int
+getkey(				/* get input key */
+	register XKeyPressedEvent  *ekey
+)
 {
 	int  n;
 	char	buf[8];
@@ -786,14 +837,16 @@ register XKeyPressedEvent  *ekey;
 }
 
 
-zoomview(pct, dx, dy)			/* zoom in or out around (dx,dy) */
-int	pct;
-int	dx, dy;
+static void
+zoomview(			/* zoom in or out around (dx,dy) */
+	int	pct,
+	int	dx,
+	int	dy
+)
 {
 	double	h, v;
-	FVECT	direc;
 
-	if (pct == 100 | pct <= 0)
+	if ((pct == 100) | (pct <= 0))
 		return;
 	copylastv("zooming");
 	h = (dx+.5)/hres - 0.5;
@@ -812,8 +865,10 @@ int	dx, dy;
 }
 
 
-gotoview(vwnum)				/* go to specified view number */
-int	vwnum;
+static void
+gotoview(				/* go to specified view number */
+	int	vwnum
+)
 {
 	if (vwnum < 0)
 		for (vwnum = currentview; vwl[vwnum+1].v != NULL; vwnum++)
@@ -825,9 +880,11 @@ int	vwnum;
 }
 
 
-appendview(nm, vp)			/* append standard view */
-char	*nm;
-VIEW	*vp;
+static void
+appendview(			/* append standard view */
+	char	*nm,
+	VIEW	*vp
+)
 {
 	FILE	*fp;
 					/* check if already in there */
@@ -858,8 +915,10 @@ VIEW	*vp;
 }
 
 
-copylastv(cause)			/* copy last view position */
-char	*cause;
+static void
+copylastv(			/* copy last view position */
+	char	*cause
+)
 {
 	static char	*lastvc;
 
@@ -870,10 +929,12 @@ char	*cause;
 }
 
 
-fixwindow(eexp)				/* repair damage to window */
-register XExposeEvent  *eexp;
+static void
+fixwindow(				/* repair damage to window */
+	register XExposeEvent  *eexp
+)
 {
-	if (hres == 0 | vres == 0) {	/* first exposure */
+	if ((hres == 0) | (vres == 0)) {	/* first exposure */
 		resizewindow((XConfigureEvent *)eexp);
 		return;
 	}
@@ -884,8 +945,10 @@ register XExposeEvent  *eexp;
 }
 
 
-resizewindow(ersz)			/* resize window */
-register XConfigureEvent  *ersz;
+static void
+resizewindow(			/* resize window */
+	register XConfigureEvent  *ersz
+)
 {
 	static char	resizing[] = "resizing window";
 	double	wa, va;

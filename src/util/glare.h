@@ -1,4 +1,4 @@
-/* RCSid: $Id: glare.h,v 2.5 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: glare.h,v 2.6 2004/01/02 12:51:54 schorsch Exp $ */
 /*
  * Common data structures for glare source finding routines
  */
@@ -73,13 +73,25 @@ extern struct source {
 	struct source	*next;	/* next source in list */
 } *donelist;			/* finished sources */
 
-extern double	getviewpix(int vh, int vv);
-extern double	pixsize(int x, int y);
 
 extern long	npixinvw;	/* number of samples in view */
 extern long	npixmiss;	/* number of samples missing */
 
-
+	/* defined in findglare.c */;
+extern void memerr(char	*s);
+extern int compdir(FVECT vd, int x, int y);
+extern double pixsize(int x, int y);
+	/* defined in glaresrc.c */
+extern void comp_thresh(void);
+extern void analyze(void);
+extern void absorb_specks(void);
+	/* defined in glareval.c */
+extern void open_pict(char *fn);
+extern void fork_rtrace(char *av[]);
+extern void close_pict(void);
+extern void done_rtrace(void);
+extern void getviewspan(int vv, float *vb);
+extern double getviewpix(int vh, int vv);
 
 #ifdef __cplusplus
 }
