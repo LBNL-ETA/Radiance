@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: parser.c,v 1.27 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: parser.c,v 1.28 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Parse an MGF file, converting or discarding unsupported entities
@@ -59,15 +59,19 @@ int	mg_nqcdivs = MG_NQCD;	/* number of divisions per quarter circle */
 #define e_ies e_any_toss
 				/* alternate handler routines */
 
-static int	e_any_toss(),		/* discard unneeded entity */
-		e_ies(),		/* IES luminaire file */
-		e_cct(),		/* color temperature */
-		e_cmix(),		/* color mixtures */
-		e_cspec();		/* color spectra */
+static void make_axes(FVECT u, FVECT v, FVECT w);
+static int put_cxy(void);
+static int put_cspec(void);
+
+static int e_any_toss(int ac, char **av); /* discard an unwanted entity */
+static int e_cspec(int ac, char **av); /* handle spectral color */
+static int e_cmix(int ac, char **av); /* handle mixing of colors */
+static int e_cct(int ac, char **av); /* handle color temperature */
+
 
 				/* alternate handler support functions */
 
-static int	(*e_supp[MG_NENTITIES])();
+static int	(*e_supp[MG_NENTITIES])(int ac, char **av);
 
 static char	FLTFMT[] = "%.12g";
 
@@ -75,7 +79,7 @@ static int	warpconends;		/* hack for generating good normals */
 
 
 void
-mg_init()			/* initialize alternate entity handlers */
+mg_init(void)			/* initialize alternate entity handlers */
 {
 	unsigned long	ineed = 0, uneed = 0;
 	register int	i;
@@ -176,8 +180,9 @@ mg_init()			/* initialize alternate entity handlers */
 
 
 int
-mg_entity(name)			/* get entity number from its name */
-char	*name;
+mg_entity(			/* get entity number from its name */
+	char	*name
+)
 {
 	static LUTAB	ent_tab = LU_SINIT(NULL,NULL);	/* lookup table */
 	register char	*cp;
@@ -197,10 +202,11 @@ char	*name;
 
 
 int
-mg_handle(en, ac, av)		/* pass entity to appropriate handler */
-register int	en;
-int	ac;
-char	**av;
+mg_handle(		/* pass entity to appropriate handler */
+	register int	en,
+	int	ac,
+	char	**av
+)
 {
 	int	rv;
 
@@ -218,9 +224,10 @@ char	**av;
 
 
 int
-mg_open(ctx, fn)			/* open new input file */
-register MG_FCTXT	*ctx;
-char	*fn;
+mg_open(			/* open new input file */
+	register MG_FCTXT	*ctx,
+	char	*fn
+)
 {
 	static int	nfids;
 	register char	*cp;
@@ -251,7 +258,7 @@ char	*fn;
 
 
 void
-mg_close()			/* close input file */
+mg_close(void)			/* close input file */
 {
 	register MG_FCTXT	*ctx = mg_file;
 
@@ -262,8 +269,9 @@ mg_close()			/* close input file */
 
 
 void
-mg_fgetpos(pos)			/* get current position in input file */
-register MG_FPOS	*pos;
+mg_fgetpos(			/* get current position in input file */
+	register MG_FPOS	*pos
+)
 {
 	pos->fid = mg_file->fid;
 	pos->lineno = mg_file->lineno;
@@ -272,8 +280,9 @@ register MG_FPOS	*pos;
 
 
 int
-mg_fgoto(pos)			/* reposition input file pointer */
-register MG_FPOS	*pos;
+mg_fgoto(			/* reposition input file pointer */
+	register MG_FPOS	*pos
+)
 {
 	if (pos->fid != mg_file->fid)
 		return(MG_ESEEK);
@@ -289,7 +298,7 @@ register MG_FPOS	*pos;
 
 
 int
-mg_read()			/* read next line from file */
+mg_read(void)			/* read next line from file */
 {
 	register int	len = 0;
 
@@ -308,7 +317,7 @@ mg_read()			/* read next line from file */
 
 
 int
-mg_parse()			/* parse current input line */
+mg_parse(void)			/* parse current input line */
 {
 	char	abuf[MG_MAXLINE];
 	char	*argv[MG_MAXARGC];
@@ -339,8 +348,9 @@ mg_parse()			/* parse current input line */
 
 
 int
-mg_load(fn)			/* load an MGF file */
-char	*fn;
+mg_load(			/* load an MGF file */
+	char	*fn
+)
 {
 	MG_FCTXT	cntxt;
 	int	rval;
@@ -369,9 +379,10 @@ char	*fn;
 
 
 int
-mg_defuhand(ac, av)		/* default handler for unknown entities */
-int	ac;
-char	**av;
+mg_defuhand(		/* default handler for unknown entities */
+	int	ac,
+	char	**av
+)
 {
 	if (mg_nunknown++ == 0)		/* report first incident */
 		fprintf(stderr, "%s: %d: %s: %s\n", mg_file->fname,
@@ -381,7 +392,7 @@ char	**av;
 
 
 void
-mg_clear()			/* clear parser history */
+mg_clear(void)			/* clear parser history */
 {
 	c_clearall();			/* clear context tables */
 	while (mg_file != NULL)		/* reset our file context */
@@ -395,18 +406,20 @@ mg_clear()			/* clear parser history */
 
 
 static int
-e_any_toss(ac, av)		/* discard an unwanted entity */
-int	ac;
-char	**av;
+e_any_toss(		/* discard an unwanted entity */
+	int	ac,
+	char	**av
+)
 {
 	return(MG_OK);
 }
 
 
 int
-e_include(ac, av)		/* include file */
-int	ac;
-char	**av;
+e_include(		/* include file */
+	int	ac,
+	char	**av
+)
 {
 	char	*xfarg[MG_MAXARGC];
 	MG_FCTXT	ictx;
@@ -457,9 +470,10 @@ char	**av;
 
 
 int
-e_faceh(ac, av)			/* replace face+holes with single contour */
-int	ac;
-char	**av;
+e_faceh(			/* replace face+holes with single contour */
+	int	ac,
+	char	**av
+)
 {
 	char	*newav[MG_MAXARGC];
 	int	lastp = 0;
@@ -489,8 +503,11 @@ char	**av;
 
 
 static void
-make_axes(u, v, w)		/* compute u and v given w (normalized) */
-FVECT	u, v, w;
+make_axes(		/* compute u and v given w (normalized) */
+	FVECT	u,
+	FVECT	v,
+	FVECT	w
+)
 {
 	register int	i;
 
@@ -506,9 +523,10 @@ FVECT	u, v, w;
 
 
 int
-e_sph(ac, av)			/* expand a sphere into cones */
-int	ac;
-char	**av;
+e_sph(			/* expand a sphere into cones */
+	int	ac,
+	char	**av
+)
 {
 	static char	p2x[24], p2y[24], p2z[24], r1[24], r2[24];
 	static char	*v1ent[5] = {mg_ename[MG_E_VERTEX],"_sv1","=","_sv2"};
@@ -558,9 +576,10 @@ char	**av;
 
 
 int
-e_torus(ac, av)			/* expand a torus into cones */
-int	ac;
-char	**av;
+e_torus(			/* expand a torus into cones */
+	int	ac,
+	char	**av
+)
 {
 	static char	p2[3][24], r1[24], r2[24];
 	static char	*v1ent[5] = {mg_ename[MG_E_VERTEX],"_tv1","=","_tv2"};
@@ -650,9 +669,10 @@ char	**av;
 
 
 int
-e_cyl(ac, av)			/* replace a cylinder with equivalent cone */
-int	ac;
-char	**av;
+e_cyl(			/* replace a cylinder with equivalent cone */
+	int	ac,
+	char	**av
+)
 {
 	static char	*avnew[6] = {mg_ename[MG_E_CONE]};
 
@@ -667,9 +687,10 @@ char	**av;
 
 
 int
-e_ring(ac, av)			/* turn a ring into polygons */
-int	ac;
-char	**av;
+e_ring(			/* turn a ring into polygons */
+	int	ac,
+	char	**av
+)
 {
 	static char	p3[3][24], p4[3][24];
 	static char	*nzent[5] = {mg_ename[MG_E_NORMAL],"0","0","0"};
@@ -765,9 +786,10 @@ char	**av;
 
 
 int
-e_cone(ac, av)			/* turn a cone into polygons */
-int	ac;
-char	**av;
+e_cone(			/* turn a cone into polygons */
+	int	ac,
+	char	**av
+)
 {
 	static char	p3[3][24], p4[3][24], n3[3][24], n4[3][24];
 	static char	*v1ent[5] = {mg_ename[MG_E_VERTEX],"_cv1","="};
@@ -935,9 +957,10 @@ char	**av;
 
 
 int
-e_prism(ac, av)			/* turn a prism into polygons */
-int	ac;
-char	**av;
+e_prism(			/* turn a prism into polygons */
+	int	ac,
+	char	**av
+)
 {
 	static char	p[3][24];
 	static char	*vent[5] = {mg_ename[MG_E_VERTEX],NULL,"="};
@@ -1042,7 +1065,7 @@ char	**av;
 
 
 static int
-put_cxy()			/* put out current xy chromaticities */
+put_cxy(void)			/* put out current xy chromaticities */
 {
 	static char	xbuf[24], ybuf[24];
 	static char	*ccom[4] = {mg_ename[MG_E_CXY], xbuf, ybuf};
@@ -1054,7 +1077,7 @@ put_cxy()			/* put out current xy chromaticities */
 
 
 static int
-put_cspec()			/* put out current color spectrum */
+put_cspec(void)			/* put out current color spectrum */
 {
 	char	wl[2][6], vbuf[C_CNSS][24];
 	char	*newav[C_CNSS+4];
@@ -1081,9 +1104,10 @@ put_cspec()			/* put out current color spectrum */
 
 
 static int
-e_cspec(ac, av)			/* handle spectral color */
-int	ac;
-char	**av;
+e_cspec(			/* handle spectral color */
+	int	ac,
+	char	**av
+)
 {
 				/* convert to xy chromaticity */
 	c_ccvt(c_ccolor, C_CSXY);
@@ -1095,9 +1119,10 @@ char	**av;
 
 
 static int
-e_cmix(ac, av)			/* handle mixing of colors */
-int	ac;
-char	**av;
+e_cmix(			/* handle mixing of colors */
+	int	ac,
+	char	**av
+)
 {
 	/*
 	 * Contorted logic works as follows:
@@ -1118,9 +1143,10 @@ char	**av;
 
 
 static int
-e_cct(ac, av)			/* handle color temperature */
-int	ac;
-char	**av;
+e_cct(			/* handle color temperature */
+	int	ac,
+	char	**av
+)
 {
 	/*
 	 * Logic is similar to e_cmix here.  Support handler has already

@@ -1,13 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: badarg.c,v 1.2 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: badarg.c,v 1.3 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Check argument list against format string.
  */
 
 #include <ctype.h>
+#include <stdio.h>
 
-#define NULL		0
+#include "parser.h"
+
 
 int
 badarg(ac, av, fl)		/* check argument list */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.21 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.22 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -10,13 +10,16 @@ static const char	RCSid[] = "$Id: obj2rad.c,v 2.21 2003/07/27 22:12:02 schorsch 
  * I'm not sure they work correctly.  (Taken out -- see TEXMAPS defines.)
  */
 
-#include "standard.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 
+#include "rtmath.h"
+#include "rtio.h"
+#include "resolu.h"
 #include "trans.h"
-
 #include "tmesh.h"
 
-#include <ctype.h>
 
 #define PATNAME		"M-pat"		/* mesh pattern name (reused) */
 #define TEXNAME		"M-nor"		/* mesh texture name (reused) */
@@ -65,8 +68,6 @@ char	*defobj = DEFOBJ;	/* default (starting) object name */
 
 int	flatten = 0;		/* discard surface normal information */
 
-char	*getmtl(), *getonm();
-
 char	mapname[128];		/* current picture file */
 char	matname[64];		/* current material name */
 char	group[16][32];		/* current group names */
@@ -75,10 +76,28 @@ char	*inpfile;		/* input file name */
 int	lineno;			/* current line number */
 int	faceno;			/* current face number */
 
+static void getnames(FILE *fp);
+static void convert(FILE *fp);
+static int getstmt(char *av[MAXARG], FILE *fp);
+static char * getmtl(void);
+static char * getonm(void);
+static int matchrule(RULEHD *rp);
+static int cvtndx(VNDX vi, char *vs);
+static int nonplanar(int ac, char **av);
+static int putface(int ac, char **av);
+static int puttri(char *v1, char *v2, char *v3);
+static void freeverts(void);
+static int newv(double x, double y, double z);
+static int newvn(double x, double y, double z);
+static int newvt(double x, double y);
+static void syntax(char *er);
 
-main(argc, argv)		/* read in .obj file and convert */
-int	argc;
-char	*argv[];
+
+int
+main(		/* read in .obj file and convert */
+	int	argc,
+	char	*argv[]
+)
 {
 	int	donames = 0;
 	int	i;
@@ -129,8 +148,10 @@ userr:
 }
 
 
-getnames(fp)			/* get valid qualifier names */
-FILE	*fp;
+void
+getnames(			/* get valid qualifier names */
+	FILE	*fp
+)
 {
 	char	*argv[MAXARG];
 	int	argc;
@@ -178,8 +199,10 @@ FILE	*fp;
 }
 
 
-convert(fp)			/* convert a T-mesh */
-FILE	*fp;
+void
+convert(			/* convert a T-mesh */
+	FILE	*fp
+)
 {
 	char	*argv[MAXARG];
 	int	argc;
@@ -282,9 +305,10 @@ FILE	*fp;
 
 
 int
-getstmt(av, fp)				/* read the next statement from fp */
-register char	*av[MAXARG];
-FILE	*fp;
+getstmt(				/* read the next statement from fp */
+	register char	*av[MAXARG],
+	FILE	*fp
+)
 {
 	extern char	*fgetline();
 	static char	sbuf[MAXARG*10];
@@ -316,7 +340,7 @@ FILE	*fp;
 
 
 char *
-getmtl()				/* figure material for this face */
+getmtl(void)				/* figure material for this face */
 {
 	register RULEHD	*rp = ourmapping;
 
@@ -342,7 +366,7 @@ getmtl()				/* figure material for this face */
 
 
 char *
-getonm()				/* invent a good name for object */
+getonm(void)				/* invent a good name for object */
 {
 	static char	name[64];
 	register char	*cp1, *cp2;
@@ -367,8 +391,10 @@ getonm()				/* invent a good name for object */
 }
 
 
-matchrule(rp)				/* check for a match on this rule */
-register RULEHD	*rp;
+int
+matchrule(				/* check for a match on this rule */
+	register RULEHD	*rp
+)
 {
 	ID	tmpid;
 	int	gotmatch;
@@ -418,9 +444,11 @@ register RULEHD	*rp;
 }
 
 
-cvtndx(vi, vs)				/* convert vertex string to index */
-register VNDX	vi;
-register char	*vs;
+int
+cvtndx(				/* convert vertex string to index */
+	register VNDX	vi,
+	register char	*vs
+)
 {
 					/* get point */
 	vi[0] = atoi(vs);
@@ -465,9 +493,11 @@ register char	*vs;
 }
 
 
-nonplanar(ac, av)			/* are vertices non-planar? */
-register int	ac;
-register char	**av;
+int
+nonplanar(			/* are vertices non-planar? */
+	register int	ac,
+	register char	**av
+)
 {
 	VNDX	vi;
 	RREAL	*p0, *p1;
@@ -516,9 +546,11 @@ register char	**av;
 }
 
 
-putface(ac, av)				/* put out an N-sided polygon */
-int	ac;
-register char	**av;
+int
+putface(				/* put out an N-sided polygon */
+	int	ac,
+	register char	**av
+)
 {
 	VNDX	vi;
 	char	*cp;
@@ -549,14 +581,18 @@ register char	**av;
 }
 
 
-puttri(v1, v2, v3)			/* put out a triangle */
-char	*v1, *v2, *v3;
+int
+puttri(			/* put out a triangle */
+	char *v1,
+	char *v2,
+	char *v3
+)
 {
 	char	*mod;
 	VNDX	v1i, v2i, v3i;
 	BARYCCM	bvecs;
 	RREAL	bcoor[3][3];
-	int	texOK, patOK;
+	int	texOK = 0, patOK;
 	int	flatness;
 	register int	i;
 
@@ -639,7 +675,8 @@ char	*v1, *v2, *v3;
 }
 
 
-freeverts()			/* free all vertices */
+void
+freeverts(void)			/* free all vertices */
 {
 	if (nvs) {
 		free((void *)vlist);
@@ -657,8 +694,11 @@ freeverts()			/* free all vertices */
 
 
 int
-newv(x, y, z)			/* create a new vertex */
-double	x, y, z;
+newv(			/* create a new vertex */
+	double	x,
+	double	y,
+	double	z
+)
 {
 	if (!(nvs%CHUNKSIZ)) {		/* allocate next block */
 		if (nvs == 0)
@@ -681,8 +721,11 @@ double	x, y, z;
 
 
 int
-newvn(x, y, z)			/* create a new vertex normal */
-double	x, y, z;
+newvn(			/* create a new vertex normal */
+	double	x,
+	double	y,
+	double	z
+)
 {
 	if (!(nvns%CHUNKSIZ)) {		/* allocate next block */
 		if (nvns == 0)
@@ -707,8 +750,10 @@ double	x, y, z;
 
 
 int
-newvt(x, y)			/* create a new texture map vertex */
-double	x, y;
+newvt(			/* create a new texture map vertex */
+	double	x,
+	double	y
+)
 {
 	if (!(nvts%CHUNKSIZ)) {		/* allocate next block */
 		if (nvts == 0)
@@ -730,8 +775,10 @@ double	x, y;
 }
 
 
-syntax(er)			/* report syntax error and exit */
-char	*er;
+void
+syntax(			/* report syntax error and exit */
+	char	*er
+)
 {
 	fprintf(stderr, "%s: Wavefront syntax error near line %d: %s\n",
 			inpfile, lineno, er);

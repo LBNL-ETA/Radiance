@@ -29,10 +29,5 @@ The Makefile creates three useful items:
 	3ds2mgf		- a translator from 3D-Studio to MGF
 
 Before you compile, you should probably check to make sure that the
-compiler and flags you like are included.  If you're like me and lack
-an ANSII-compatible C compiler on your machine, use the -DNOPROTO flag
-to take out function prototypes and get back K&R compatibility.
+compiler and flags you like are included.
 
-The exception to this is 3ds2mgf, which requires an ANSI-C compiler with
-prototypes.  Because of this requirement, the program must be built
-explicitly with "make 3ds2mgf".

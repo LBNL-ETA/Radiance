@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: thf2rad.c,v 2.7 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: thf2rad.c,v 2.8 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /* Copyright (c) 1988 Regents of the University of California */
 
@@ -9,8 +9,9 @@ static const char	RCSid[] = "$Id: thf2rad.c,v 2.7 2003/07/27 22:12:02 schorsch E
  *	12/21/88
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #define MAXSTR		128		/* maximum string or id length */
@@ -22,10 +23,20 @@ typedef struct {
 
 double	rad = 0.0;			/* line radius */
 
+static void thf2rad(char *name, char *file);
+static int cvobject(char *name, char *file, FILE *fp);
+static void header(int ac, char **av);
+static void point(char *mat, char *nam, POINT *pos);
+static void line(char *mat, char *nam, POINT *p1, POINT *p2);
+static void loc(POINT *p);
+static void readerr(char *file, char *err);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*name = NULL;
 	int	an;
@@ -57,8 +68,11 @@ char	*argv[];
 }
 
 
-thf2rad(name, file)		/* convert things file */
-char	*name, *file;
+void
+thf2rad(		/* convert things file */
+	char	*name,
+	char	*file
+)
 {
 	char	nambuf[MAXSTR];
 	register char	*cp;
@@ -87,9 +101,12 @@ char	*name, *file;
 }
 
 
-cvobject(name, file, fp)	/* convert next object in things file */
-char	*name, *file;
-FILE	*fp;
+int
+cvobject(	/* convert next object in things file */
+	char	*name,
+	char	*file,
+	FILE	*fp
+)
 {
 	static POINT	parr[MAXPTS];
 	static unsigned char	haspt[MAXPTS/8];
@@ -155,9 +172,11 @@ FILE	*fp;
 }
 
 
-header(ac, av)			/* print header */
-int	ac;
-char	**av;
+void
+header(			/* print header */
+	int	ac,
+	char	**av
+)
 {
 	putchar('#');
 	while (ac--) {
@@ -168,9 +187,12 @@ char	**av;
 }
 
 
-point(mat, nam, pos)		/* print point */
-char	*mat, *nam;
-POINT	*pos;
+void
+point(		/* print point */
+	char	*mat,
+	char	*nam,
+	POINT	*pos
+)
 {
 	if (rad <= 0.0)
 		return;
@@ -181,9 +203,13 @@ POINT	*pos;
 }
 
 
-line(mat, nam, p1, p2)		/* print line */
-char	*mat, *nam;
-POINT	*p1, *p2;
+void
+line(		/* print line */
+	char	*mat,
+	char	*nam,
+	POINT	*p1,
+	POINT	*p2
+)
 {
 	if (rad <= 0.0)
 		return;
@@ -195,15 +221,20 @@ POINT	*p1, *p2;
 }
 
 
-loc(p)				/* print location */
-register POINT	*p;
+void
+loc(				/* print location */
+	register POINT	*p
+)
 {
 	printf("\t%14.8g\t%14.8g\t%14.8g\n", p->x, p->y, p->z);
 }
 
 
-readerr(file, err)		/* print read error and exit */
-char	*file, *err;
+void
+readerr(		/* print read error and exit */
+	char	*file,
+	char	*err
+)
 {
 	fprintf(stderr, "%s: %s\n", file, err);
 	exit(1);

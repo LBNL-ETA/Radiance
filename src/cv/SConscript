@@ -41,13 +41,16 @@ PROGS = [
 ('rad2mgf',   ['rad2mgf.c'],
 	['rtproc', 'rtpath', # for win_popen()
     'rtscene','rtio','rtcolor','rtcont','rtmem','rterror'] + mlib),
-('mgf2meta',  ['mgf2meta.c'],
-    ['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib),
 ]
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2])
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+# meta targets
+prog = env.Program(target=radbin('mgf2meta'), source=['mgf2meta.c'],
+		CPPPATH=env.get('CPPPATH', []) + [os.path.join('#src','meta')],
+		LIBS=['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib)
 
 LIBFILES = Split('source.cal tilt.cal')# lamp.tab')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

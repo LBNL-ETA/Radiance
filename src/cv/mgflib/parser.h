@@ -1,4 +1,4 @@
-/* RCSid: $Id: parser.h,v 1.36 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid: $Id: parser.h,v 1.37 2003/11/15 17:54:06 schorsch Exp $ */
 /*
  * Header file for MGF interpreter
  */
@@ -373,6 +373,9 @@ extern void	multmat4(MAT4, MAT4, MAT4);	/* m4a = m4b X m4c */
 extern void	multv3(FVECT, FVECT, MAT4);	/* v3a = v3b X m4 (vectors) */
 extern void	multp3(FVECT, FVECT, MAT4);	/* p3a = p3b X m4 (points) */
 extern int	xf(XF *, int, char **);		/* interpret transform spec. */
+
+	/* cvrgb.c */
+extern void mgf2rgb(C_COLOR *cin, double intensity, float cout[3]);
 
 
 /************************************************************************

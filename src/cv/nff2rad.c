@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: nff2rad.c,v 2.6 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: nff2rad.c,v 2.7 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert Neutral File Format input to Radiance scene description.
@@ -66,16 +66,52 @@ These are explained in depth below:	{ see conversion routines }
 
 ***********************************************************************/
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "rtmath.h"
+
+typedef double Flt ;
+typedef Flt Vec[3] ;
+typedef Vec Point ;
+typedef Vec Color ;
+
+#define VecCopy(a,b)     (b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];
+#define		NCOLORS		(738)
+
+typedef struct t_color_entry {
+	char *	ce_name ;
+	Vec 	ce_color ;
+} ColorEntry ;
+
+#define LESS_THAN -1
+#define GREATER_THAN 1
+#define EQUAL_TO 0
 
 char	*viewfile = NULL;	/* view parameters file */
 
 char	*progname;
 
+void init(void);
+void nff2rad(void);
+void comment(void);
+void view(void);
+void light(void);
+void background(void);
+void fill(void);
+void cone(void);
+void sphere(void);
+void poly(void);
+int LookupColorByName(char * name, Vec color);
+int BinarySearch(char * name, int l, int h, ColorEntry array[]);
 
-main(argc, argv)		/* convert NFF file to Radiance */
-int	argc;
-char	*argv[];
+
+int
+main(		/* convert NFF file to Radiance */
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 	
@@ -102,7 +138,8 @@ userr:
 }
 
 
-init()			/* spit out initial definitions */
+void
+init(void)			/* spit out initial definitions */
 {
 	printf("# File created by %s\n", progname);
 	printf("\nvoid light light\n");
@@ -112,7 +149,8 @@ init()			/* spit out initial definitions */
 }
 
 
-nff2rad()		/* convert NFF on stdin to Radiance on stdout */
+void
+nff2rad(void)		/* convert NFF on stdin to Radiance on stdout */
 {
 	register int	c;
 	
@@ -168,7 +206,8 @@ Format:
     
 ******************/
 
-comment()
+void
+comment(void)
 {
 	register int	c;
 	
@@ -225,7 +264,8 @@ The parameters are:
 
 ***************/
 
-view()
+void
+view(void)
 {
 	static FILE	*fp = NULL;
 	float	from[3], at[3], up[3], angle;
@@ -274,7 +314,8 @@ Format:
 
 **************************/
 
-light()
+void
+light(void)
 {
 	static int	nlights = 0;
 	register int	c;
@@ -303,7 +344,8 @@ Format:
 
 ********************/
 
-background()
+void
+background(void)
 {
 	float	r, g, b;
 	char colname[50];
@@ -350,7 +392,8 @@ Format:
 
 *********************/
 
-fill()
+void
+fill(void)
 {
 	float	r, g, b, d, s, p, t, n;
 	char colname[50];
@@ -415,7 +458,8 @@ Format:
 
 ************************/
 
-cone()
+void
+cone(void)
 {
 	static int	ncs = 0;
 	int	invert;
@@ -460,7 +504,8 @@ Format:
 
 ******************/
 
-sphere()
+void
+sphere(void)
 {
 	static int	nspheres = 0;
 	float	x, y, z, r;
@@ -515,7 +560,8 @@ Format:
 
 *******************/
 
-poly()
+void
+poly(void)
 {
 	static int	npolys = 0;
 	int	ispatch;
@@ -545,9 +591,12 @@ fmterr:
 }
 /***********************************************************************
  * $Author: schorsch $ (Mark VandeWettering, drizzle.cs.uoregon.edu)
- * $Revision: 2.6 $
- * $Date: 2003/07/27 22:12:01 $
+ * $Revision: 2.7 $
+ * $Date: 2003/11/15 17:54:06 $
  * $Log: nff2rad.c,v $
+ * Revision 2.7  2003/11/15 17:54:06  schorsch
+ * Continued ANSIfication and reduced compile warnings.
+ *
  * Revision 2.6  2003/07/27 22:12:01  schorsch
  * Added grouping parens to reduce ambiguity warnings.
  *
@@ -568,23 +617,6 @@ fmterr:
  * for nff2rad
  * 
  ***********************************************************************/
-
-typedef double Flt ;
-typedef Flt Vec[3] ;
-typedef Vec Point ;
-typedef Vec Color ;
-
-#define VecCopy(a,b)     (b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];
-#define		NCOLORS		(738)
-
-typedef struct t_color_entry {
-	char *	ce_name ;
-	Vec 	ce_color ;
-} ColorEntry ;
-
-#define LESS_THAN -1
-#define GREATER_THAN 1
-#define EQUAL_TO 0
 
 /*
  * Note: These colors must be in sorted order, because we binary search
@@ -1335,9 +1367,10 @@ ColorEntry Colors[] = {
 } ;
 
 int
-LookupColorByName(name, color)
- char * name ;
- Vec color ;
+LookupColorByName(
+		char * name,
+		Vec color
+)
 {
 	int rc ;
 	rc = BinarySearch(name, 0, NCOLORS - 1 , Colors) ;
@@ -1351,10 +1384,12 @@ LookupColorByName(name, color)
 
 
 int 
-BinarySearch(name, l, h, array)
- char * name ;
- int l, h ;
- ColorEntry array[] ;
+BinarySearch(
+	char * name,
+	int l,
+	int h,
+	ColorEntry array[]
+)
 {
 	int m, rc ;
 	if (l > h)

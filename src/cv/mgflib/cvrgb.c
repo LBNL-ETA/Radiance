@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cvrgb.c,v 1.2 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: cvrgb.c,v 1.3 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert MGF color to RGB representation defined below.
@@ -47,10 +47,12 @@ float	xyz2rgbmat[3][3] = {		/* XYZ to RGB conversion matrix */
 };
 
 
-mgf2rgb(cin, intensity, cout)		/* convert MGF color to RGB */
-register C_COLOR	*cin;	/* input MGF chrominance */
-double	intensity;		/* input luminance or reflectance */
-register float	cout[3];	/* output RGB color */
+void
+mgf2rgb(		/* convert MGF color to RGB */
+	register C_COLOR	*cin,	/* input MGF chrominance */
+	double	intensity,		/* input luminance or reflectance */
+	register float	cout[3]	/* output RGB color */
+)
 {
 	static double	cie[3];
 					/* get CIE XYZ representation */

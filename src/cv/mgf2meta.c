@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2meta.c,v 2.8 2003/10/21 19:19:28 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.9 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
@@ -9,14 +9,16 @@ static const char	RCSid[] = "$Id: mgf2meta.c,v 2.8 2003/10/21 19:19:28 schorsch 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#include "meta.h"
 #include "random.h"
 #include "mgflib/parser.h"
+#include "plocate.h" /* XXX shouldn't this rather be in rtmath.h? */
 
 #define MSIZE	((1<<14)-1)
 #define	MX(v)	(int)(MSIZE*(v)[(proj_axis+1)%3])
 #define	MY(v)	(int)(MSIZE*(v)[(proj_axis+2)%3])
 
-int	r_face(int ac, char **av);
 int	proj_axis;
 double	limit[3][2];
 int	layer;
@@ -24,10 +26,16 @@ long	rthresh = 1;
 
 extern int	mg_nqcdivs;
 
+static int r_face(int ac, char **av);
+static void newlayer(void);
+static int doline(int v1x, int v1y, int v2x, int v2y);
 
-main(argc, argv)		/* convert files to stdout */
-int	argc;
-char	*argv[];
+
+int
+main(		/* convert files to stdout */
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 				/* initialize dispatch table */
@@ -70,9 +78,10 @@ userr:
 
 
 int
-r_face(ac, av)			/* convert a face */
-int	ac;
-char	**av;
+r_face(			/* convert a face */
+	int	ac,
+	char	**av
+)
 {
 	static FVECT	bbmin = {0,0,0}, bbmax = {1,1,1};
 	register int	i, j;
@@ -110,7 +119,8 @@ short	hshtab[HTBLSIZ][4];		/* done line segments */
 					(long)(mx2)<<5 ^ (long)(my2))
 
 
-newlayer()				/* start a new layer */
+void
+newlayer(void)				/* start a new layer */
 {
 	(void)memset((char *)hshtab, '\0', sizeof(hshtab));
 	if (++layer >= 16) {
@@ -121,8 +131,12 @@ newlayer()				/* start a new layer */
 
 
 int
-doline(v1x, v1y, v2x, v2y)		/* draw line conditionally */
-int	v1x, v1y, v2x, v2y;
+doline(		/* draw line conditionally */
+	int	v1x,
+	int v1y,
+	int v2x,
+	int v2y
+)
 {
 	register int	h;
 

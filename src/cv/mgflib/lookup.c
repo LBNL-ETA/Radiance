@@ -1,17 +1,16 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 1.9 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 1.10 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Table lookup routines
  */
 
+#include "copyright.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "lookup.h"
 
-#ifndef MEM_PTR
-#define MEM_PTR		void *
-#endif
+#include "lookup.h"
 
 
 int
@@ -75,7 +74,7 @@ char	*s;
 	register unsigned char *t = (unsigned char *)s;
 
 	while (*t)
-	    	h ^= (long)shuffle[*t++] << ((i+=11) & 0xf);
+	    	h ^= (unsigned long)shuffle[*t++] << ((i+=11) & 0xf);
 
 	return(h);
 }
@@ -127,11 +126,11 @@ tryagain:
 	while (ndx--)
 		if (le[ndx].key != NULL) {
 			if (le[ndx].data != NULL)
-				*lu_find(tbl, le[ndx].key) = le[ndx];
+				*lu_find(tbl,le[ndx].key) = le[ndx];
 			else if (tbl->freek != NULL)
 				(*tbl->freek)(le[ndx].key);
 		}
-	free((MEM_PTR)le);
+	free((void *)le);
 	goto tryagain;			/* should happen only once! */
 }
 
@@ -154,6 +153,25 @@ char	*key;
 }
 
 
+int
+lu_doall(tbl, f)		/* loop through all valid table entries */
+register LUTAB	*tbl;
+int	(*f)(LUENT *);
+{
+	int	rval = 0;
+	register LUENT	*tp;
+
+	for (tp = tbl->tabl + tbl->tsiz; tp-- > tbl->tabl; )
+		if (tp->data != NULL) {
+			if (f != NULL)
+				rval += (*f)(tp);
+			else
+				rval++;
+		}
+	return(rval);
+}
+
+
 void
 lu_done(tbl)			/* free table and contents */
 register LUTAB	*tbl;
@@ -169,7 +187,7 @@ register LUTAB	*tbl;
 			if (tp->data != NULL && tbl->freed != NULL)
 				(*tbl->freed)(tp->data);
 		}
-	free((MEM_PTR)tbl->tabl);
+	free((void *)tbl->tabl);
 	tbl->tabl = NULL;
 	tbl->tsiz = 0;
 	tbl->ndel = 0;

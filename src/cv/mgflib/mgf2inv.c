@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 1.10 2003/08/05 20:40:16 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 1.11 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -61,15 +61,24 @@ char	tabs[MAXIND*SHIFTW+1];	/* current tab-in string */
 
 int	outtype = O_INV2;	/* output format */
 
-extern int	i_comment(), i_object(), i_xf(),
-		i_cyl(), i_face(), i_sph();
+int i_comment(int ac, char **av);
+int i_object(int ac, char **av);
+int i_xf(int ac, char **av);
+int put_xform(register XF_SPEC *spec);
+int put_material(void);
+int i_face(int ac, char **av);
+int i_sph(int ac, char **av);
+int i_cyl(int ac, char **av);
+char * to_id(register char *name);
+char * to_id(register char *name);
+void flush_cache(void); 
 
-extern char	*to_id();
 
-
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 				/* initialize dispatch table */
@@ -154,8 +163,10 @@ userr:
 }
 
 
-indent(deeper)				/* indent in or out */
-int	deeper;
+void
+indent(				/* indent in or out */
+	int	deeper
+)
 {
 	static int	level;		/* current nesting level */
 	register int	i;
@@ -175,9 +186,10 @@ int	deeper;
 
 
 int
-i_comment(ac, av)			/* transfer comment as is */
-int	ac;
-char	**av;
+i_comment(			/* transfer comment as is */
+	int	ac,
+	char	**av
+)
 {
 	fputs(tabs, stdout);
 	putchar('#');			/* Inventor comment character */
@@ -191,9 +203,10 @@ char	**av;
 
 
 int
-i_object(ac, av)			/* group object name */
-int	ac;
-char	**av;
+i_object(			/* group object name */
+	int	ac,
+	char	**av
+)
 {
 	static int	objnest;
 
@@ -217,9 +230,10 @@ char	**av;
 
 
 int
-i_xf(ac, av)				/* transform object(s) */
-int	ac;
-char	**av;
+i_xf(				/* transform object(s) */
+	int	ac,
+	char	**av
+)
 {
 	static long	xfid;
 	register XF_SPEC	*spec;
@@ -285,8 +299,9 @@ char	**av;
 
 
 int
-put_xform(spec)			/* translate and print transform */
-register XF_SPEC	*spec;
+put_xform(			/* translate and print transform */
+	register XF_SPEC	*spec
+)
 {
 	register char	**av;
 	register int	n;
@@ -316,7 +331,7 @@ register XF_SPEC	*spec;
 
 
 int
-put_material()			/* put out current material */
+put_material(void)			/* put out current material */
 {
 	char	*mname = curmatname;
 	float	rgbval[3];
@@ -363,9 +378,10 @@ put_material()			/* put out current material */
 
 
 int
-i_face(ac, av)			/* translate an N-sided face */
-int	ac;
-char	**av;
+i_face(			/* translate an N-sided face */
+	int	ac,
+	char	**av
+)
 {
 	static char	lastmat[MAXID];
 	struct face	*newf;
@@ -413,9 +429,10 @@ char	**av;
 
 
 int
-i_sph(ac, av)			/* translate sphere description */
-int	ac;
-char	**av;
+i_sph(			/* translate sphere description */
+	int	ac,
+	char	**av
+)
 {
 	register C_VERTEX	*cent;
 
@@ -443,9 +460,10 @@ char	**av;
 
 
 int
-i_cyl(ac, av)			/* translate a cylinder description */
-int	ac;
-char	**av;
+i_cyl(			/* translate a cylinder description */
+	int	ac,
+	char	**av
+)
 {
 	register C_VERTEX	*v1, *v2;
 	FVECT	va;
@@ -491,8 +509,9 @@ char	**av;
 
 
 char *
-to_id(name)			/* make sure a name is a valid Inventor ID */
-register char	*name;
+to_id(			/* make sure a name is a valid Inventor ID */
+	register char	*name
+)
 {
 	static char	id[MAXID];
 	register char	*cp;
@@ -507,7 +526,8 @@ register char	*name;
 }
 
 
-flush_cache()			/* put out cached faces */
+void
+flush_cache(void)			/* put out cached faces */
 {
 	int	donorms = 0;
 	register struct face	*f;

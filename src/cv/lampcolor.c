@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lampcolor.c,v 2.8 2003/06/21 15:05:01 greg Exp $";
+static const char	RCSid[] = "$Id: lampcolor.c,v 2.9 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Program to convert lamp color from table and compute radiance.
@@ -9,7 +9,8 @@ static const char	RCSid[] = "$Id: lampcolor.c,v 2.8 2003/06/21 15:05:01 greg Exp
 #include <string.h>
 #include <math.h>
 
-#include "standard.h"
+#include "rtmath.h"
+#include "rtio.h"
 #include "color.h"
 
 				/* lamp parameters */
@@ -25,6 +26,7 @@ static int geomcheck(char *s);
 static int outpcheck(char *s);
 static void compute(void);
 static int getpolygon(void), getsphere(void), getcylinder(void), getring(void);
+static int getd(char *name, double *dp, char *help);
 
 
 float	*lampcolor;		/* the lamp color (RGB) */
@@ -56,9 +58,11 @@ for fluorescent fixtures." },
 };
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*lamptab = "lamp.tab";
 	char	buf[64];
@@ -75,7 +79,7 @@ char	*argv[];
 		while (i < NPARAMS) {
 			printf("Enter %s [%s]: ", param[i].name,
 					param[i].value);
-			if (gets(buf) == NULL)
+			if (fgets(buf, sizeof(buf), stdin) == NULL)
 				exit(0);
 			if (buf[0] == '?') {
 				puts(param[i].help);
@@ -97,7 +101,7 @@ char	*argv[];
 
 static int
 typecheck(			/* check lamp type */
-char	*s
+	char	*s
 )
 {
 	lampcolor = matchlamp(s);
@@ -107,7 +111,7 @@ char	*s
 
 static int
 unitcheck(			/* compute conversion to meters */
-char	*s
+	char	*s
 )
 {
 	int	len = strlen(s);
@@ -140,7 +144,7 @@ char	*s
 
 static int
 geomcheck(			/* check/set lamp geometry */
-char	*s
+	char	*s
 )
 {
 	int	len = strlen(s);
@@ -169,7 +173,7 @@ char	*s
 
 static int
 outpcheck(			/* check lumen output value */
-register char	*s
+	register char	*s
 )
 {
 	if ((*s < '0' || *s > '9') && *s != '.')
@@ -193,15 +197,17 @@ compute(void)			/* compute lamp radiance */
 }
 
 
-getd(name, dp, help)		/* get a positive double from stdin */
-char	*name;
-double	*dp;
-char	*help;
+static int
+getd(		/* get a positive double from stdin */
+	char	*name,
+	double	*dp,
+	char	*help
+)
 {
 	char	buf[32];
 again:
 	printf("%s [%g]: ", name, *dp);
-	if (gets(buf) == NULL)
+	if (fgets(buf, sizeof(buf), stdin) == NULL)
 		return(0);
 	if (buf[0] == '?') {
 		puts(help);

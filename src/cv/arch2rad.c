@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: arch2rad.c,v 2.2 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: arch2rad.c,v 2.3 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert Architrion file to Radiance
@@ -7,10 +7,11 @@ static const char	RCSid[] = "$Id: arch2rad.c,v 2.2 2003/02/22 02:07:23 greg Exp 
  *	Greg Ward
  */
 
-#include <stdio.h>
-
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
+#include "rtio.h"
 #include "trans.h"
 
 #define DEFMAPFILE	"/usr/local/lib/ray/lib/arch.map"
@@ -93,10 +94,39 @@ char	openmod[] = "opening";
 
 char	*progname;		/* argv[0] */
 
+void arch2rad(FILE	*inp, FILE	*out);
+void arch2names(FILE	*inp);
 
-main(argc, argv)		/* translate Architrion file */
-int	argc;
-char	*argv[];
+int hasmatch(BLOCK	*bp, RULEHD	*mp);
+
+void getfhead(FILE	*fp);
+void puthead(FILE	*fp);
+
+int getblock(BLOCK	*bp, FILE	*fp);
+void putblock(BLOCK	*bp, FILE	*fp);
+void doneblock(BLOCK	*bp);
+
+int getopening(OPNG	*op, FILE	*fp);
+void add2quals(BLOCK	*bp);
+int matchrule(BLOCK	*bp, RULEHD	*rp);
+
+void putopenmod(char	*sm, char	*ml[], int	nm, FILE	*fp);
+void putface(char	*m, char	*bn, char	*fn, PRISM	*p,
+	int	a, int b, int c, int d, FILE	*fp);
+void putfaces(char	*m, BLOCK	*bp, int	ff, FILE	*fp);
+void putpoint(PRISM	*p, int	n, FILE	*fp);
+void putopening(OPNG	*op, FILE	*fp);
+
+int checkface(PRISM	*p, int	a, int b, int c, int d);
+
+void lcross(long	vr[3], long	v1[3], long	v2[3]);
+
+
+int
+main(		/* translate Architrion file */
+	int	argc,
+	char	*argv[]
+)
 {
 	int	donames = 0;		/* -n flag, produce namelist */
 	int	i;
@@ -138,8 +168,11 @@ userr:
 }
 
 
-arch2rad(inp, out)	/* translate Architrion file to Radiance */
-FILE	*inp, *out;
+void
+arch2rad(	/* translate Architrion file to Radiance */
+	FILE	*inp,
+	FILE	*out
+)
 {
 	int	nbs, nos;
 	BLOCK	blk;
@@ -163,8 +196,10 @@ FILE	*inp, *out;
 }
 
 
-arch2names(inp)		/* get name list from an Architrion file */
-FILE	*inp;
+void
+arch2names(		/* get name list from an Architrion file */
+	FILE	*inp
+)
 {
 	BLOCK	blk;
 	
@@ -176,9 +211,11 @@ FILE	*inp;
 }
 
 
-hasmatch(bp, mp)		/* check for any match in rule list */
-BLOCK	*bp;
-RULEHD	*mp;
+int
+hasmatch(		/* check for any match in rule list */
+	BLOCK	*bp,
+	RULEHD	*mp
+)
 {
 	if (mp == NULL)
 		return(0);
@@ -188,8 +225,10 @@ RULEHD	*mp;
 }
 
 
-getfhead(fp)			/* get file header */
-FILE	*fp;
+void
+getfhead(			/* get file header */
+	FILE	*fp
+)
 {
 	char	buf[MAXSTR];
 	int	i, n;
@@ -243,8 +282,10 @@ readerr:
 }
 
 
-puthead(fp)			/* put out header information */
-FILE	*fp;
+void
+puthead(			/* put out header information */
+	FILE	*fp
+)
 {
 	register int	i;
 	
@@ -259,9 +300,11 @@ FILE	*fp;
 }
 
 
-getblock(bp, fp)			/* get an Architrion block */
-register BLOCK	*bp;
-FILE	*fp;
+int
+getblock(			/* get an Architrion block */
+	register BLOCK	*bp,
+	FILE	*fp
+)
 {
 	char	word[32];
 	int	i;
@@ -300,9 +343,11 @@ memerr:
 }
 
 
-getopening(op, fp)		/* read in opening from fp */
-register OPNG	*op;
-FILE	*fp;
+int
+getopening(		/* read in opening from fp */
+	register OPNG	*op,
+	FILE	*fp
+)
 {
 	register int	c;
 	char	word[32];
@@ -339,8 +384,10 @@ FILE	*fp;
 }
 
 
-doneblock(bp)			/* free data associated with bp */
-register BLOCK	*bp;
+void
+doneblock(			/* free data associated with bp */
+	register BLOCK	*bp
+)
 {
 	register int	i;
 
@@ -353,8 +400,10 @@ register BLOCK	*bp;
 }
 
 
-add2quals(bp)			/* add to qualifier lists */
-register BLOCK	*bp;
+void
+add2quals(			/* add to qualifier lists */
+	register BLOCK	*bp
+)
 {
 	ID	tmpid;
 
@@ -373,9 +422,11 @@ register BLOCK	*bp;
 }
 
 
-putblock(bp, fp)			/* put out a block */
-BLOCK	*bp;
-FILE	*fp;
+void
+putblock(			/* put out a block */
+	BLOCK	*bp,
+	FILE	*fp
+)
 {
 	RULEHD	*rp;
 	char	*mod[NFACES], *sillmod;
@@ -410,10 +461,13 @@ FILE	*fp;
 }
 
 
-putopenmod(sm, ml, nm, fp)		/* put out opening modifier */
-char	*sm, *ml[];
-int	nm;
-FILE	*fp;
+void
+putopenmod(		/* put out opening modifier */
+	char	*sm,
+	char	*ml[],
+	int	nm,
+	FILE	*fp
+)
 {
 	int	rept, nrepts;
 	register int	i, j;
@@ -446,9 +500,11 @@ FILE	*fp;
 }
 
 
-putopening(op, fp)			/* put out an opening */
-OPNG	*op;
-FILE	*fp;
+void
+putopening(			/* put out an opening */
+	OPNG	*op,
+	FILE	*fp
+)
 {
 	static int	nopens = 0;
 	char	buf[32];
@@ -497,9 +553,10 @@ FILE	*fp;
 
 
 int
-matchrule(bp, rp)			/* see if block matches this rule */
-register BLOCK	*bp;
-register RULEHD	*rp;
+matchrule(			/* see if block matches this rule */
+	register BLOCK	*bp,
+	register RULEHD	*rp
+)
 {
 	register int	i;
 	ID	tmpid;
@@ -530,11 +587,13 @@ register RULEHD	*rp;
 }		
 
 
-putfaces(m, bp, ff, fp)			/* put out faces */
-char	*m;
-BLOCK	*bp;
-register int	ff;
-FILE	*fp;
+void
+putfaces(			/* put out faces */
+	char	*m,
+	BLOCK	*bp,
+	register int	ff,
+	FILE	*fp
+)
 {
 	char	*blkname(), *bn;
 
@@ -557,8 +616,9 @@ FILE	*fp;
 
 
 char *
-blkname(bp)		/* think up a good name for this block */
-register BLOCK	*bp;
+blkname(		/* think up a good name for this block */
+	register BLOCK	*bp
+)
 {
 	static char	nambuf[32];
 	static int	blkcnt = 0;
@@ -591,12 +651,18 @@ register BLOCK	*bp;
 }
 
 
-putface(m, bn, fn, p, a, b, c, d, fp)	/* put out a face */
-char	*m;
-char	*bn, *fn;
-PRISM	*p;
-int	a, b, c, d;
-FILE	*fp;
+void
+putface(	/* put out a face */
+	char	*m,
+	char	*bn,
+	char	*fn,
+	PRISM	*p,
+	int	a,
+	int b,
+	int c,
+	int d,
+	FILE	*fp
+)
 {
 	int	cf;
 	
@@ -630,9 +696,12 @@ FILE	*fp;
 #define ldot(v1,v2)	(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
 
 
-long
-lcross(vr, v1, v2)			/* compute cross product */
-register long	vr[3], v1[3], v2[3];
+void
+lcross(			/* compute cross product */
+	register long	vr[3],
+	register long	v1[3],
+	register long	v2[3]
+)
 {
 	vr[0] = v1[1]*v2[2] - v1[2]*v2[1];
 	vr[1] = v1[2]*v2[0] - v1[0]*v2[2];
@@ -643,9 +712,14 @@ register long	vr[3], v1[3], v2[3];
 #define labs(a)		((a)>0 ? (a) : -(a))
 
 
-checkface(p, a, b, c, d)		/* check a face for validity */
-register PRISM	*p;
-int	a, b, c, d;
+int
+checkface(		/* check a face for validity */
+	register PRISM	*p,
+	int	a,
+	int b,
+	int c,
+	int d
+)
 {
 	int	rval = 0;
 	long	lt;
@@ -693,10 +767,12 @@ int	a, b, c, d;
 }
 
 
-putpoint(p, n, fp)			/* put out a point */
-register PRISM	*p;
-int	n;
-FILE	*fp;
+void
+putpoint(			/* put out a point */
+	register PRISM	*p,
+	int	n,
+	FILE	*fp
+)
 {
 	register int	i = n&3;
 	
@@ -706,16 +782,19 @@ FILE	*fp;
 
 
 void
-eputs(s)
-char	*s;
+eputs(
+	char	*s
+)
 {
 	fputs(s, stderr);
 }
 
 
 void
-quit(code)
-int	code;
+quit(
+	int	code
+)
 {
 	exit(code);
 }
+

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: 3ds2mgf.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: 3ds2mgf.c,v 1.7 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
       3DS2POV.C  Copyright (c) 1996 Steve Anger and Jeff Bowermaster
@@ -926,6 +926,9 @@ void write_summary (FILE *f)
 	case MGF:
 	    comstr = "# ";
 	    break;
+	default:
+		printf ("Illegal format in write_summary() '%c'\n", format);
+		exit(1);
     }
     fprintf (f, "%s   Object    CenterX    CenterY    CenterZ    LengthX    LengthY    LengthZ\n", comstr);
     fprintf (f, "%s ---------- ---------- ---------- ---------- ---------- ---------- ----------\n", comstr);
@@ -1600,7 +1603,6 @@ void write_mgf_material (FILE *f, MatProp *m)
 /* Write a mesh file */
 void write_mesh (FILE *f, Mesh *mesh)
 {
-    FILE *fi;
     int i;
     char curmat[80];
     Vector va, vb, vc;

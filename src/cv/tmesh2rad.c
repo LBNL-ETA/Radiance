@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.14 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.15 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -29,7 +29,10 @@ static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.14 2003/07/27 22:12:02 schorsc
  * It is not necessary for the normal vectors to have unit length.
  */
 
-#include "standard.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "rtmath.h"
 
 #include "tmesh.h"
 
@@ -62,10 +65,17 @@ char	*defmat = VOIDID;	/* default (starting) material name */
 char	*defpat = "";		/* default (starting) picture name */
 char	*defobj = "T";		/* default (starting) object name */
 
+void convert(char *fname, FILE *fp);
+void triangle(char *pn,char *mod,char *obj, VERTEX *v1,VERTEX *v2,VERTEX *v3);
+VERTEX *vnew(int id, double x, double y, double z);
+void syntax(char *fn, FILE *fp, char *er);
 
-main(argc, argv)		/* read in T-mesh files and convert */
-int	argc;
-char	*argv[];
+
+int
+main(		/* read in T-mesh files and convert */
+	int	argc,
+	char	*argv[]
+)
 {
 	FILE	*fp;
 	int	i;
@@ -102,9 +112,11 @@ char	*argv[];
 }
 
 
-convert(fname, fp)		/* convert a T-mesh */
-char	*fname;
-FILE	*fp;
+void
+convert(		/* convert a T-mesh */
+	char	*fname,
+	FILE	*fp
+)
 {
 	char	typ[4];
 	int	id[3];
@@ -195,9 +207,15 @@ FILE	*fp;
 }
 
 
-triangle(pn, mod, obj, v1, v2, v3)	/* put out a triangle */
-char	*pn, *mod, *obj;
-register VERTEX	*v1, *v2, *v3;
+void
+triangle(	/* put out a triangle */
+	char	*pn,
+	char	*mod,
+	char	*obj,
+	register VERTEX	*v1,
+	register VERTEX	*v2,
+	register VERTEX	*v3
+)
 {
 	static char	vfmt[] = "%18.12g %18.12g %18.12g\n";
 	static int	ntri = 0;
@@ -258,9 +276,12 @@ register VERTEX	*v1, *v2, *v3;
 
 
 VERTEX *
-vnew(id, x, y, z)			/* create a new vertex */
-register int	id;
-double	x, y, z;
+vnew(			/* create a new vertex */
+	register int	id,
+	double	x,
+	double	y,
+	double	z
+)
 {
 	register int	i;
 
@@ -290,10 +311,12 @@ double	x, y, z;
 }
 
 
-syntax(fn, fp, er)			/* report syntax error and exit */
-char	*fn;
-register FILE	*fp;
-char	*er;
+void
+syntax(			/* report syntax error and exit */
+	char	*fn,
+	register FILE	*fp,
+	char	*er
+)
 {
 	extern long	ftell();
 	register long	cpos;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgfilt.c,v 1.7 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgfilt.c,v 1.8 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Filter MGF stream, removing entities that won't be understood
@@ -14,9 +14,10 @@ short	nentlist[MG_VMAJOR] = MG_NELIST;
 
 
 int
-put_entity(ac, av)		/* general output routine */
-register int	ac;
-register char	**av;
+put_entity(		/* general output routine */
+	register int	ac,
+	register char	**av
+)
 {
 	while (ac-- > 0) {
 		fputs(*av++, stdout);
@@ -26,9 +27,11 @@ register char	**av;
 }
 
 
-main(argc, argv)	/* first argument is understood entities, comma-sep. */
-int	argc;
-char	*argv[];
+int
+main(	/* first argument is understood entities, comma-sep. */
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*cp1, *cp2;
 	int	i, en;

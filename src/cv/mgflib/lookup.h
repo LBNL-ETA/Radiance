@@ -1,32 +1,37 @@
-/* RCSid: $Id: lookup.h,v 1.11 2003/06/07 01:11:17 schorsch Exp $ */
+/* RCSid $Id: lookup.h,v 1.12 2003/11/15 17:54:06 schorsch Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
-#ifndef _MGF_LOOKUP_H_
-#define _MGF_LOOKUP_H_
+#ifndef _RAD_LOOKUP_H_
+#define _RAD_LOOKUP_H_
+
+#include <string.h> /* strcmp() */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef void lut_free_t(void*);
 
 typedef struct {
-	char	*key;		/* key name */
-	long	hval;		/* key hash value (for efficiency) */
-	char	*data;		/* pointer to client data */
+	char	*key;			/* key name */
+	unsigned long	hval;		/* key hash value (for efficiency) */
+	char	*data;			/* pointer to client data */
 } LUENT;
 
 typedef struct {
-	unsigned long	(*hashf)(char *);	/* key hash function */
-	int	(*keycmp)(const char *, const char *);	/* key comparison function */
-	void	(*freek)(char *);	/* free a key */
-	void	(*freed)(char *);	/* free the data */
-	int	tsiz;		/* current table size */
-	LUENT	*tabl;		/* table, if allocated */
-	int	ndel;		/* number of deleted entries */
+	unsigned long (*hashf)(char*);	/* key hash function */
+	int (*keycmp)(const char*, const char*);	/* key comparison function */
+	lut_free_t *freek;		/* free a key */
+	lut_free_t *freed;		/* free the data */
+	int	tsiz;			/* current table size */
+	LUENT	*tabl;			/* table, if allocated */
+	int	ndel;			/* number of deleted entries */
 } LUTAB;
 
-#define LU_SINIT(fk,fd)		{lu_shash,strcmp,(void (*)())(fk),\
-				(void (*)())(fd),0,NULL,0}
+#undef strcmp
+#define LU_SINIT(fk,fd)		{lu_shash,strcmp,fk,\
+				fd,0,NULL,0}
 
 /*
  * The lu_init routine is called to initialize a table.  The number of
@@ -62,6 +67,12 @@ typedef struct {
  * It is therefore an error to reuse or do anything with the key
  * field after calling lu_delete.
  *
+ * The lu_doall routine loops through every filled table entry, calling
+ * the given function once on each entry.  If a NULL pointer is passed
+ * for this function, then lu_doall simply returns the total number of
+ * active entries.  Otherwise, it returns the sum of all the function
+ * evaluations.
+ *
  * The lu_done routine calls the given free function once for each
  * assigned table entry (i.e. each entry with an assigned key value).
  * The user must define these routines to free the key and the data
@@ -69,15 +80,16 @@ typedef struct {
  * allocated table itself.
  */
 
-extern int	lu_init(LUTAB *, int);
-extern LUENT	*lu_find(LUTAB *, char *);
-extern void	lu_delete(LUTAB *, char *);
-extern void	lu_done(LUTAB *);
-extern unsigned long	lu_shash(char *);
+extern int	lu_init(LUTAB *tbl, int nel);
+extern unsigned long	lu_shash(char *s);
+extern LUENT	*lu_find(LUTAB *tbl, char *key);
+extern void	lu_delete(LUTAB *tbl, char *key);
+extern int	lu_doall(LUTAB *tbl, int (*f)(LUENT*));
+extern void	lu_done(LUTAB *tbl);
 
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _MGF_LOOKUP_H_ */
+#endif /* _RAD_LOOKUP_H_ */
 

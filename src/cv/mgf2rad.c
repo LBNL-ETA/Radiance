@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.27 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.28 2003/11/15 17:54:06 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -9,6 +9,8 @@ static const char	RCSid[] = "$Id: mgf2rad.c,v 2.27 2003/07/27 22:12:01 schorsch 
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+
+#include "platform.h"
 #include "mgflib/parser.h"
 #include "color.h"
 #include "tmesh.h"
@@ -23,13 +25,26 @@ double  emult = 1.;			/* emitter multiplier */
 
 FILE	*matfp;				/* material output file */
 
-int	r_comment(), r_cone(), r_cyl(), r_face(), r_ies(), r_ring(), r_sph();
-char	*material(), *object(), *addarg();
+
+int r_comment(int ac, char **av);
+int r_cone(int ac, char **av);
+int r_cyl(int ac, char **av);
+int r_sph(int ac, char **av);
+int r_ring(int ac, char **av);
+int r_face(int ac, char **av);
+int r_ies(int ac, char **av);
+char * material(void);
+char * object(void);
+char * addarg(char *op, char *arg);
+void do_tri(char *mat, C_VERTEX *cv1, C_VERTEX *cv2, C_VERTEX *cv3, int iv);
+void cvtcolor(COLOR radrgb, register C_COLOR *ciec, double intensity);
 
 
-main(argc, argv)		/* convert files to stdout */
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 
@@ -120,9 +135,10 @@ userr:
 
 
 int
-r_comment(ac, av)		/* repeat a comment verbatim */
-register int	ac;
-register char	**av;
+r_comment(		/* repeat a comment verbatim */
+	register int	ac,
+	register char	**av
+)
 {
 	putchar('#');		/* use Radiance comment character */
 	while (--ac) {			/* pass through verbatim */
@@ -135,9 +151,10 @@ register char	**av;
 
 
 int
-r_cone(ac, av)			/* put out a cone */
-int	ac;
-char	**av;
+r_cone(			/* put out a cone */
+	int	ac,
+	char	**av
+)
 {
 	static int	ncones;
 	char	*mat;
@@ -183,9 +200,10 @@ char	**av;
 
 
 int
-r_cyl(ac, av)			/* put out a cylinder */
-int	ac;
-char	**av;
+r_cyl(			/* put out a cylinder */
+	int	ac,
+	char	**av
+)
 {
 	static int	ncyls;
 	char	*mat;
@@ -221,9 +239,10 @@ char	**av;
 
 
 int
-r_sph(ac, av)			/* put out a sphere */
-int	ac;
-char	**av;
+r_sph(			/* put out a sphere */
+	int	ac,
+	char	**av
+)
 {
 	static int	nsphs;
 	char	*mat;
@@ -254,9 +273,10 @@ char	**av;
 
 
 int
-r_ring(ac, av)			/* put out a ring */
-int	ac;
-char	**av;
+r_ring(			/* put out a ring */
+	int	ac,
+	char	**av
+)
 {
 	static int	nrings;
 	char	*mat;
@@ -291,9 +311,10 @@ char	**av;
 
 
 int
-r_face(ac, av)			/* convert a face */
-int	ac;
-char	**av;
+r_face(			/* convert a face */
+	int	ac,
+	char	**av
+)
 {
 	static int	nfaces;
 	int		myi = invert;
@@ -301,7 +322,7 @@ char	**av;
 	register int	i;
 	register C_VERTEX	*cv;
 	FVECT	v;
-	int	rv;
+
 					/* check argument count and type */
 	if (ac < 4)
 		return(MG_EARGC);
@@ -350,9 +371,10 @@ char	**av;
 
 
 int
-r_ies(ac, av)				/* convert an IES luminaire file */
-int	ac;
-char	**av;
+r_ies(				/* convert an IES luminaire file */
+	int	ac,
+	char	**av
+)
 {
 	int	xa0 = 2;
 	char	combuf[128];
@@ -414,10 +436,14 @@ char	**av;
 }
 
 
-do_tri(mat, cv1, cv2, cv3, iv)		/* put out smoothed triangle */
-char	*mat;
-C_VERTEX	*cv1, *cv2, *cv3;
-int	iv;
+void
+do_tri(		/* put out smoothed triangle */
+	char	*mat,
+	C_VERTEX	*cv1,
+	C_VERTEX	*cv2,
+	C_VERTEX	*cv3,
+	int	iv
+)
 {
 	static int	ntris;
 	BARYCCM	bvecs;
@@ -459,12 +485,11 @@ int	iv;
 
 
 char *
-material()			/* get (and print) current material */
+material(void)			/* get (and print) current material */
 {
 	char	*mname = "mat";
 	COLOR	radrgb, c2;
 	double	d;
-	register int	i;
 
 	if (c_cmname != NULL)
 		mname = c_cmname;
@@ -579,10 +604,12 @@ material()			/* get (and print) current material */
 }
 
 
-cvtcolor(radrgb, ciec, intensity)	/* convert a CIE XYZ color to RGB */
-COLOR	radrgb;
-register C_COLOR	*ciec;
-double	intensity;
+void
+cvtcolor(	/* convert a CIE XYZ color to RGB */
+	COLOR	radrgb,
+	register C_COLOR	*ciec,
+	double	intensity
+)
 {
 	static COLOR	ciexyz;
 
@@ -595,7 +622,7 @@ double	intensity;
 
 
 char *
-object()			/* return current object name */
+object(void)			/* return current object name */
 {
 	static char	objbuf[64];
 	register int	i;
@@ -617,8 +644,10 @@ object()			/* return current object name */
 
 
 char *
-addarg(op, arg)				/* add argument and advance pointer */
-register char	*op, *arg;
+addarg(				/* add argument and advance pointer */
+	register char *op,
+	register char *arg
+)
 {
 	*op = ' ';
 	while ( (*++op = *arg++) )

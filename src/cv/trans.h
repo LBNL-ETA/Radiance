@@ -1,4 +1,4 @@
-/* RCSid: $Id: trans.h,v 2.3 2003/06/07 01:10:23 schorsch Exp $ */
+/* RCSid: $Id: trans.h,v 2.4 2003/11/15 17:54:06 schorsch Exp $ */
 /*
  * Translator definitions
  *
@@ -53,6 +53,11 @@ typedef struct rule {
 char	*savestr(char *str);
 	/* defined in trans.c */
 RULEHD	*getmapping(char *file, QLIST *qlp);
+
+extern int fgetid(ID *idp, char *dls, FILE *fp);
+extern int findid(IDLIST *idl, ID *idp, int insert);
+extern int matchid(ID *it, IDMATCH *im);
+extern void write_quals(QLIST *qlp, IDLIST idl[], FILE *fp);
 
 
 #ifdef __cplusplus
