@@ -1,4 +1,4 @@
-/* RCSid $Id: rpaint.h,v 2.6 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: rpaint.h,v 2.7 2005/01/21 00:52:59 greg Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
@@ -64,6 +64,7 @@ extern void	getview(char *s);
 extern void	lastview(char *s);
 extern void	saveview(char *s);
 extern void	loadview(char *s);
+extern void	getfocus(char *s);
 extern void	getaim(char *s);
 extern void	getmove(char *s);
 extern void	getrotate(char *s);

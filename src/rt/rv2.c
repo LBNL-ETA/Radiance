@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.44 2005/01/18 00:33:16 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.45 2005/01/21 00:52:59 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -109,12 +109,16 @@ getview(				/* get/show view parameters */
 	if (sscanvec(buf, nv.vp))
 		change++;
 	sprintf(buf, "view direction (%.6g %.6g %.6g): ",
-			ourview.vdir[0], ourview.vdir[1], ourview.vdir[2]);
+			ourview.vdir[0]*ourview.vdist,
+			ourview.vdir[1]*ourview.vdist,
+			ourview.vdir[2]*ourview.vdist);
 	(*dev->comout)(buf);
 	(*dev->comin)(buf, NULL);
 	if (buf[0] == CTRL('C')) return;
-	if (sscanvec(buf, nv.vdir))
+	if (sscanvec(buf, nv.vdir)) {
+		nv.vdist = 1.;
 		change++;
+	}
 	sprintf(buf, "view up (%.6g %.6g %.6g): ",
 			ourview.vup[0], ourview.vup[1], ourview.vup[2]);
 	(*dev->comout)(buf);
@@ -276,6 +280,41 @@ getaim(				/* aim camera */
 		return;
 	zoomview(&nv, zfact);
 	newview(&nv);
+}
+
+
+extern void
+getfocus(				/* set focus distance */
+	char *s
+)
+{
+	FVECT  vc;
+	double	dist;
+
+	if (sscanf(s, "%lf", &dist) < 1) {
+		int	x, y;
+		RAY	thisray;
+		if (dev->getcur == NULL)
+			return;
+		(*dev->comout)("Pick focus point\n");
+		if ((*dev->getcur)(&x, &y) == ABORT)
+			return;
+		if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir,
+			&ourview, (x+.5)/hresolu, (y+.5)/vresolu)) < -FTINY) {
+			error(COMMAND, "not on image");
+			return;
+		}
+		rayorigin(&thisray, NULL, PRIMARY, 1.0);
+		if (!localhit(&thisray, &thescene)) {
+			error(COMMAND, "not a local object");
+			return;
+		}
+		dist = thisray.rot;
+	} else if (dist <= .0) {
+		error(COMMAND, "focus distance must be positive");
+		return;
+	}
+	ourview.vdist = dist;
 }
 
 

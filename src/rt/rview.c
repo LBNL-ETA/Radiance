@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.26 2004/11/05 17:36:56 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.27 2005/01/21 00:52:59 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -215,11 +215,15 @@ again:
 	else *++args = '\0';
 	
 	switch (inpbuf[0]) {
-	case 'f':				/* new frame (or free mem.) */
+	case 'f':				/* new frame (|focus|free) */
 		if (badcom("frame")) {
-			if (badcom("free"))
-				goto commerr;
-			free_objmem();
+			if (badcom("focus")) {
+				if (badcom("free"))
+					goto commerr;
+				free_objmem();
+				break;
+			}
+			getfocus(args);
 			break;
 		}
 		getframe(args);

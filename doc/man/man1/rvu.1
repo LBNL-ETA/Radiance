@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.1 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.2 2005/01/21 00:52:59 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -146,6 +146,19 @@ If
 is absent, or an '@' is followed by nothing, then
 the cursor is used to pick a specific image
 location for normalization.
+.TP
+.BI focus " [distance]"
+Set focus distance for depth-of-field sampling.
+If a distance in world coordinates is absent, then the cursor
+is used to choose a point in the scene on which to focus.
+(The focus distance setting does not affect rendering in
+.I rview,
+but can be used in
+.I rpict
+with the
+.I \-pd
+option to simulate depth-of-field on views saved from
+.I rview.)
 .TP
 .BI frame " [ xmin ymin xmax ymax ]"
 Set frame for refinement.

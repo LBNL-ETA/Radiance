@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.38 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.39 2005/01/21 00:52:59 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -640,15 +640,23 @@ getframe(				/* get focus frame */
 )
 {
 	int	startx = ebut->x, starty = ebut->y;
-	int	endx, endy;
-
+	int	endx, endy, midx, midy;
+	FVECT	v1;
+	int	li;
+					/* get mouse drag */
 	XMaskEvent(ourdisplay, ButtonReleaseMask, levptr(XEvent));
 	endx = levptr(XButtonReleasedEvent)->x;
 	endy = levptr(XButtonReleasedEvent)->y;
-	if ((endx == startx) | (endy == starty)) {
-		XBell(ourdisplay, 0);
+	midx = (startx + endx) >> 1;
+	midy = (starty + endy) >> 1;
+					/* set focus distance */
+	if ((li = qtFindLeaf(midx, midy)) < 0)
+		return(0);		/* not on window */
+	VCOPY(v1, qtL.wp[li]);
+	odev.v.vdist = sqrt(dist2(odev.v.vp, v1));
+					/* set frame for rendering */
+	if ((endx == startx) | (endy == starty))
 		return;
-	}
 	if (endx < startx) {register int c = endx; endx = startx; startx = c;}
 	if (endy < starty) {register int c = endy; endy = starty; starty = c;}
 	sprintf(odev_args, "%.3f %.3f %.3f %.3f",

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.14 2005/01/18 00:33:16 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.15 2005/01/21 00:52:59 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -122,11 +122,14 @@ double  *mp;
 				VCOPY(vec, thisray.rdir);
 		else
 			VCOPY(vec, thisray.rop);
-	} else if (direc)
-			for (i = 0; i < 3; i++)
-				vec[i] -= ourview.vp[i];
-	if (normalize(vec) == 0.0)
-		return(-1);
+	} else if (direc) {
+		for (i = 0; i < 3; i++)
+			vec[i] -= ourview.vp[i];
+		if (normalize(vec) == 0.0) {
+			error(COMMAND, "point at view origin");
+			return(-1);
+		}
+	}
 	return(0);
 }
 
@@ -397,22 +400,23 @@ FVECT  vc;
 		normalize(v1);
 		spinvector(nv.vdir, nv.vdir, v1, elev*(PI/180.));
 	}
-	if ((nv.type = ourview.type) == VT_PAR) {
-		nv.horiz = ourview.horiz / mag;
-		nv.vert = ourview.vert / mag;
+	if (nv.type == VT_PAR) {
+		nv.horiz /= mag;
+		nv.vert /= mag;
 		d = 0.0;			/* don't move closer */
 		for (i = 0; i < 3; i++)
 			d += (vc[i] - ourview.vp[i])*ourview.vdir[i];
 	} else {
 		d = sqrt(dist2(ourview.vp, vc)) / mag;
-		if ((nv.vfore = ourview.vfore) > FTINY) {
+		if (nv.vfore > FTINY) {
 			nv.vfore += d - d*mag;
 			if (nv.vfore < 0.0) nv.vfore = 0.0;
 		}
-		if ((nv.vaft = ourview.vaft) > FTINY) {
+		if (nv.vaft > FTINY) {
 			nv.vaft += d - d*mag;
 			if (nv.vaft <= nv.vfore) nv.vaft = 0.0;
 		}
+		nv.vdist += d - d*mag;
 	}
 	for (i = 0; i < 3; i++)
 		nv.vp[i] = vc[i] - d*nv.vdir[i];
