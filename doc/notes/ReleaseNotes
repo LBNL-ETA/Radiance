@@ -1180,7 +1180,8 @@ files.
 Changed marksources() routine (src/rt/source.c) to check all
 primitives in the modifier chain for emitting types, not only
 the first.  This permits sources to be described with intervening
-modifiers before the light/illum/glow primitive.
+modifiers before the light/illum/glow primitive and allows aliases
+as well.
 
 Fixed bug in xform where it was neglecting to add transform arguments
 to new mesh primitive.
@@ -1251,3 +1252,6 @@ rpict options on the command line, and puts everything into the right
 coordinate position automatically rather than requiring the user to do it.
 
 Added -I option to replmarks for mesh instancing.
+
+Made similar change for virtual sources to allow modifiers and aliases
+on the mirror and prism types to work properly.
