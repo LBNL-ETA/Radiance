@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.10 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.11 2003/07/12 09:55:13 schorsch Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -7,9 +7,14 @@ static const char	RCSid[] = "$Id: rglinst.c,v 3.10 2003/06/26 00:58:09 schorsch 
 
 #include "copyright.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+#include "platform.h"
+#include "resolu.h"
 #include "radogl.h"
 #include "octree.h"
-#include "platform.h"
 
 #define MAXLEVEL	16		/* maximum instance hierarchy level */
 
@@ -20,13 +25,13 @@ typedef struct {
 	char	octfile[256];			/* octree file path */
 } OCTINST;				/* octree to instantiate */
 
-static double  ogetflt();
-static long  ogetint();
-static char  *ogetstr();
-static int  loadobj();
-static void  skiptree();
-static void  octerror();
-static OCTINST	*getoct();
+static double  ogetflt(void);
+static long  ogetint(int);
+static char  *ogetstr(char *);
+static int  loadobj(void);
+static void  skiptree(void);
+static void  octerror(int etyp, char *msg);
+static OCTINST	*getoct(char *);
 
 static char  *infn;			/* input file name */
 static FILE  *infp;			/* input file stream */
@@ -176,7 +181,7 @@ FVECT	cent;
 					/* check format */
 	if ((objsize = ogetint(2)-OCTMAGIC) <= 0 ||
 			objsize > MAXOBJSIZ || objsize > sizeof(long))
-		octerror("incompatible octree format");
+		octerror(USER, "incompatible octree format");
 	if (cent != NULL) {		/* get boundaries (compute center) */
 		for (i = 0; i < 3; i++)
 			cent[i] = atof(ogetstr(sbuf));
