@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.4 2005/01/18 00:33:15 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.5 2005/01/18 01:13:23 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -89,6 +89,9 @@ center of a parallel projection.
 .BI -vd " xd yd zd"
 Set the view direction vector to
 .I "xd yd zd".
+The length of this vector indicates the focal distance as needed by the
+.I \-pd
+option, described below.
 .TP
 .BI -vu " xd yd zd"
 Set the view up vector (vertical direction) to
