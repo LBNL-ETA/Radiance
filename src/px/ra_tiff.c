@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.20 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.21 2003/07/01 19:04:08 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -53,7 +53,7 @@ struct {
 		float	*fp;		/* float pointer */
 		char	*p;		/* generic pointer */
 	} t;			/* TIFF scanline */
-	int	(*tf)();	/* translation procedure */
+	void	(*tf)();	/* translation procedure */
 }	cvts = {	/* conversion structure */
 	0, COMPRESSION_NONE, PHOTOMETRIC_RGB,
 	PLANARCONFIG_CONTIG, GAMCOR, 0, 1, 1., 1.,
@@ -64,9 +64,14 @@ struct {
 #define CLR(f)		(cvts.flags &= ~(f))
 #define TGL(f)		(cvts.flags ^= (f))
 
-int	Luv2Color(), L2Color(), RGB2Colr(), Gry2Colr();
-int	Color2Luv(), Color2L(), Colr2RGB(), Colr2Gry();
-int	RRGGBB2Color(), GGry2Color();
+void	Luv2Color(), L2Color(), RGB2Colr(), Gry2Colr();
+void	Color2Luv(), Color2L(), Colr2RGB(), Colr2Gry();
+void	RRGGBB2Color(), GGry2Color(), Color2RRGGBB(), Color2GGry();
+
+#define RfGfBf2Color	Luv2Color
+#define Gryf2Color	L2Color
+#define	Color2Gryf	Color2L
+#define Color2RfGfBf	Color2Luv
 
 short	ortab[8] = {		/* orientation conversion table */
 	YMAJOR|YDECR,
@@ -113,6 +118,12 @@ char  *argv[];
 				cvts.comp = COMPRESSION_SGILOG24;
 				cvts.phot = PHOTOMETRIC_LOGLUV;
 				break;
+			case 'w':		/* 16-bit/primary output? */
+				TGL(C_TWRD);
+				break;
+			case 'f':		/* IEEE float output? */
+				TGL(C_TFLT);
+				break;
 			case 'b':		/* greyscale output? */
 				TGL(C_GRY);
 				break;
@@ -143,14 +154,16 @@ doneopts:
 
 		if (i != argc-2)
 			goto userr;
-
-		if (CHK(C_GRY))		/* consistency corrections */
+						/* consistency checks */
+		if (CHK(C_GRY))
 			if (cvts.phot == PHOTOMETRIC_RGB)
 				cvts.phot = PHOTOMETRIC_MINISBLACK;
 			else {
 				cvts.phot = PHOTOMETRIC_LOGL;
 				cvts.comp = COMPRESSION_SGILOG;
 			}
+		if (CHK(C_TWRD|C_TFLT) == (C_TWRD|C_TFLT))
+			goto userr;
 
 		ra2tiff(i, argv);
 	}
@@ -158,7 +171,7 @@ doneopts:
 	exit(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-z|-L|-l][-b][-e +/-stops][-g gamma] {in.pic|-} out.tif\n",
+	"Usage: %s [-z|-L|-l|-f|-w][-b][-e +/-stops][-g gamma] {in.pic|-} out.tif\n",
 			progname);
 	fprintf(stderr,
 	"   Or: %s -r [-x][-e +/-stops][-g gamma] in.tif [out.pic|-]\n",
@@ -198,7 +211,7 @@ initfromtif()		/* initialize conversion from TIFF input */
 	uint16	hi;
 	float	*fa, f1, f2;
 
-	CLR(C_GRY|C_GAMMA|C_PRIM|C_RFLT|C_TFLT|C_CXFM);
+	CLR(C_GRY|C_GAMMA|C_PRIM|C_RFLT|C_TFLT|C_TWRD|C_CXFM);
 
 	TIFFGetFieldDefaulted(cvts.tif, TIFFTAG_PLANARCONFIG, &cvts.pconf);
 
@@ -271,14 +284,22 @@ initfromtif()		/* initialize conversion from TIFF input */
 		if (!TIFFGetField(cvts.tif, TIFFTAG_SAMPLESPERPIXEL, &hi) ||
 				hi != 3)
 			quiterr("unsupported samples per pixel for RGB");
-		if (!TIFFGetField(cvts.tif, TIFFTAG_BITSPERSAMPLE, &hi) ||
-				hi != 8 & hi != 16)
-			quiterr("unsupported bits per sample for RGB");
-		if (hi == 8)
+		if (!TIFFGetField(cvts.tif, TIFFTAG_BITSPERSAMPLE, &hi))
+			hi = -1;
+		switch (hi) {
+		case 8:
 			cvts.tf = RGB2Colr;
-		else {
+			break;
+		case 16:
 			cvts.tf = RRGGBB2Color;
 			SET(C_RFLT|C_TWRD);
+			break;
+		case 32:
+			cvts.tf = RfGfBf2Color;
+			SET(C_RFLT|C_TFLT);
+			break;
+		default:
+			quiterr("unsupported bits per sample for RGB");
 		}
 		break;
 	case PHOTOMETRIC_MINISBLACK:
@@ -288,14 +309,22 @@ initfromtif()		/* initialize conversion from TIFF input */
 		if (!TIFFGetField(cvts.tif, TIFFTAG_SAMPLESPERPIXEL, &hi) ||
 				hi != 1)
 			quiterr("unsupported samples per pixel for greyscale");
-		if (!TIFFGetField(cvts.tif, TIFFTAG_BITSPERSAMPLE, &hi) ||
-				hi != 8 & hi != 16)
-			quiterr("unsupported bits per sample for greyscale");
-		if (hi == 8)
+		if (!TIFFGetField(cvts.tif, TIFFTAG_BITSPERSAMPLE, &hi))
+			hi = -1;
+		switch (hi) {
+		case 8:
 			cvts.tf = Gry2Colr;
-		else {
+			break;
+		case 16:
 			cvts.tf = GGry2Color;
 			SET(C_RFLT|C_TWRD);
+			break;
+		case 32:
+			cvts.tf = Gryf2Color;
+			SET(C_RFLT|C_TFLT);
+			break;
+		default:
+			quiterr("unsupported bits per sample for Gray");
 		}
 		break;
 	default:
@@ -393,7 +422,7 @@ initfromrad()			/* initialize input from a Radiance picture */
 {
 	int	i1, i2, po;
 						/* read Radiance header */
-	CLR(C_RFLT|C_TFLT|C_XYZE|C_PRIM|C_GAMMA|C_CXFM);
+	CLR(C_RFLT|C_XYZE|C_PRIM|C_GAMMA|C_CXFM);
 	cvts.stonits = 1.;
 	cvts.pixrat = 1.;
 	cvts.pconf = PLANARCONFIG_CONTIG;
@@ -419,7 +448,7 @@ initfromrad()			/* initialize input from a Radiance picture */
 	switch (cvts.phot) {
 	case PHOTOMETRIC_LOGLUV:
 		SET(C_RFLT|C_TFLT);
-		CLR(C_GRY);
+		CLR(C_GRY|C_TWRD);
 		if (!CHK(C_XYZE)) {
 			comprgb2xyzWBmat(cvts.cmat,
 					CHK(C_PRIM) ? cvts.prims : stdprims);
@@ -434,6 +463,7 @@ initfromrad()			/* initialize input from a Radiance picture */
 		break;
 	case PHOTOMETRIC_LOGL:
 		SET(C_GRY|C_RFLT|C_TFLT);
+		CLR(C_TWRD);
 		if (cvts.comp != COMPRESSION_SGILOG)	
 			quiterr("internal error 3 in initfromrad");
 		TIFFSetField(cvts.tif, TIFFTAG_SGILOGDATAFMT,
@@ -455,12 +485,26 @@ initfromrad()			/* initialize input from a Radiance picture */
 			TIFFSetField(cvts.tif, TIFFTAG_WHITEPOINT,
 					(float *)cvts.prims[WHT]);
 		}
-		cvts.tf = Colr2RGB;
+		if (CHK(C_TWRD)) {
+			cvts.tf = Color2RRGGBB;
+			SET(C_RFLT);
+		} else if (CHK(C_TFLT)) {
+			cvts.tf = Color2RfGfBf;
+			SET(C_RFLT);
+		} else
+			cvts.tf = Colr2RGB;
 		break;
 	case PHOTOMETRIC_MINISBLACK:
 		SET(C_GRY|C_GAMMA|C_GAMUT);
 		setcolrgam(cvts.gamcor);
-		cvts.tf = Colr2Gry;
+		if (CHK(C_TWRD)) {
+			cvts.tf = Color2GGry;
+			SET(C_RFLT);
+		} else if (CHK(C_TFLT)) {
+			cvts.tf = Color2Gryf;
+			SET(C_RFLT);
+		} else
+			cvts.tf = Colr2Gry;
 		break;
 	default:
 		quiterr("internal error 4 in initfromrad");
@@ -470,7 +514,8 @@ initfromrad()			/* initialize input from a Radiance picture */
 	TIFFSetField(cvts.tif, TIFFTAG_IMAGEWIDTH, cvts.xmax);
 	TIFFSetField(cvts.tif, TIFFTAG_IMAGELENGTH, cvts.ymax);
 	TIFFSetField(cvts.tif, TIFFTAG_SAMPLESPERPIXEL, CHK(C_GRY) ? 1 : 3);
-	TIFFSetField(cvts.tif, TIFFTAG_BITSPERSAMPLE, CHK(C_TFLT) ? 32 : 8);
+	TIFFSetField(cvts.tif, TIFFTAG_BITSPERSAMPLE,
+			CHK(C_TFLT) ? 32 : CHK(C_TWRD) ? 16 : 8);
 	TIFFSetField(cvts.tif, TIFFTAG_XRESOLUTION, 72.);
 	TIFFSetField(cvts.tif, TIFFTAG_YRESOLUTION, 72./cvts.pixrat);
 	TIFFSetField(cvts.tif, TIFFTAG_ORIENTATION, cvts.orient);
@@ -514,7 +559,7 @@ char  *av[];
 }
 
 
-int
+void
 Luv2Color(y)			/* read/convert/write Luv->COLOR scanline */
 uint32	y;
 {
@@ -525,11 +570,12 @@ uint32	y;
 
 	if (TIFFReadScanline(cvts.tif, cvts.t.p, y, 0) < 0)
 		quiterr("error reading TIFF input");
-	
+					/* also works for float RGB */
 	for (x = cvts.xmax; x--; ) {
-		colval(cvts.r.colors[x],CIEX) = cvts.t.fp[3*x];
-		colval(cvts.r.colors[x],CIEY) = cvts.t.fp[3*x + 1];
-		colval(cvts.r.colors[x],CIEZ) = cvts.t.fp[3*x + 2];
+		setcolor(cvts.r.colors[x], 
+				cvts.t.fp[3*x],
+				cvts.t.fp[3*x + 1],
+				cvts.t.fp[3*x + 2]);
 		if (CHK(C_CXFM))
 			colortrans(cvts.r.colors[x], cvts.cmat,
 					cvts.r.colors[x]);
@@ -548,7 +594,7 @@ uint32	y;
 }
 
 
-int
+void
 RRGGBB2Color(y)			/* read/convert/write RGB16->COLOR scanline */
 uint32	y;
 {
@@ -590,10 +636,11 @@ uint32	y;
 }
 
 
-int
-L2Color(y)			/* read/convert/write L16->COLOR scanline */
+void
+L2Color(y)			/* read/convert/write Lfloat->COLOR scanline */
 uint32	y;
 {
+	float	m = pow(2., (double)cvts.bradj);
 	register int	x;
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_RFLT|C_TFLT|C_GRY))
@@ -601,19 +648,18 @@ uint32	y;
 
 	if (TIFFReadScanline(cvts.tif, cvts.t.p, y, 0) < 0)
 		quiterr("error reading TIFF input");
-	
-	for (x = cvts.xmax; x--; )
-		colval(cvts.r.colors[x],RED) =
-		colval(cvts.r.colors[x],GRN) =
-		colval(cvts.r.colors[x],BLU) =
-				cvts.t.fp[x] > 0. ? cvts.t.fp[x] : 0.;
-
+					/* also works for float greyscale */
+	for (x = cvts.xmax; x--; ) {
+		register float	f = cvts.t.fp[x];
+		if (cvts.bradj) f *= m;
+		setcolor(cvts.r.colors[x], f, f, f);
+	}
 	if (fwritescan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
 		quiterr("error writing Radiance picture");
 }
 
 
-int
+void
 RGB2Colr(y)			/* read/convert/write RGB->COLR scanline */
 uint32	y;
 {
@@ -669,7 +715,7 @@ readerr:
 }
 
 
-int
+void
 Gry2Colr(y)			/* read/convert/write G8->COLR scanline */
 uint32	y;
 {
@@ -695,7 +741,7 @@ uint32	y;
 }
 
 
-int
+void
 GGry2Color(y)			/* read/convert/write G16->COLOR scanline */
 uint32	y;
 {
@@ -725,11 +771,45 @@ uint32	y;
 }
 
 
-int
-Color2L(y)			/* read/convert/write COLOR->L16 scanline */
+void
+Color2GGry(y)			/* read/convert/write COLOR->G16 scanline */
 uint32	y;
 {
-	double	m = pow(2.,(double)cvts.bradj);
+	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	float	m = pow(2.,(double)cvts.bradj);
+	register int	x;
+
+	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TWRD|C_GRY))
+		quiterr("internal error 1 in Color2GGry");
+
+	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
+		quiterr("error reading Radiance picture");
+
+	for (x = cvts.xmax; x--; ) {
+		register float	f = m*( CHK(C_XYZE) ?
+						colval(cvts.r.colors[x],CIEY)
+						: bright(cvts.r.colors[x]) );
+		if (f <= 0)
+			cvts.t.wp[x] = 0;
+		else if (f >= 1)
+			cvts.t.wp[x] = 0xffff;
+		else if (dogamma)
+			cvts.t.wp[x] = (int)((float)(1L<<16) *
+						pow(f, 1./cvts.gamcor));
+		else
+			cvts.t.wp[x] = (int)((float)(1L<<16) * f);
+	}
+
+	if (TIFFWriteScanline(cvts.tif, cvts.t.p, y, 0) < 0)
+		quiterr("error writing TIFF output");
+}
+
+
+void
+Color2L(y)			/* read/convert/write COLOR->Lfloat scanline */
+uint32	y;
+{
+	float	m = pow(2.,(double)cvts.bradj);
 	register int	x;
 
 	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TFLT|C_GRY))
@@ -747,7 +827,7 @@ uint32	y;
 }
 
 
-int
+void
 Color2Luv(y)			/* read/convert/write COLOR->Luv scanline */
 uint32	y;
 {
@@ -768,7 +848,7 @@ uint32	y;
 		for (x = cvts.xmax; x--; )
 			scalecolor(cvts.r.colors[x], m);
 	}
-
+					/* also works for float RGB */
 	for (x = cvts.xmax; x--; ) {
 		cvts.t.fp[3*x] = colval(cvts.r.colors[x],CIEX);
 		cvts.t.fp[3*x+1] = colval(cvts.r.colors[x],CIEY);
@@ -780,7 +860,40 @@ uint32	y;
 }
 
 
-int
+void
+Color2RRGGBB(y)			/* read/convert/write COLOR->RGB16 scanline */
+uint32	y;
+{
+	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	float	m = pow(2.,(double)cvts.bradj);
+	register int	x, i;
+
+	if (CHK(C_RFLT|C_TFLT|C_TWRD|C_GRY) != (C_RFLT|C_TWRD))
+		quiterr("internal error 1 in Color2RRGGBB");
+
+	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
+		quiterr("error reading Radiance picture");
+
+	for (x = cvts.xmax; x--; )
+	    for (i = 3; i--; ) {
+		register float	f = m*colval(cvts.r.colors[x],i);
+		if (f <= 0)
+			cvts.t.wp[3*x + i] = 0;
+		else if (f >= 1)
+			cvts.t.wp[3*x + i] = 0xffff;
+		else if (dogamma)
+			cvts.t.wp[3*x + i] = (int)((float)(1L<<16) *
+						pow(f, 1./cvts.gamcor));
+		else
+			cvts.t.wp[3*x + i] = (int)((float)(1L<<16)*f);
+	    }
+
+	if (TIFFWriteScanline(cvts.tif, cvts.t.p, y, 0) < 0)
+		quiterr("error writing TIFF output");
+}
+
+
+void
 Colr2Gry(y)			/* read/convert/write COLR->RGB scanline */
 uint32	y;
 {
@@ -806,7 +919,7 @@ uint32	y;
 }
 
 
-int
+void
 Colr2RGB(y)			/* read/convert/write COLR->RGB scanline */
 uint32	y;
 {

@@ -5,7 +5,7 @@ ra_tiff - convert RADIANCE picture to/from a TIFF color or greyscale image
 .SH SYNOPSIS
 .B ra_tiff
 [
-.B "-z|-L|-l"
+.B "-z|-L|-l|-f|-w"
 ][
 .B -b
 ][
@@ -55,9 +55,18 @@ However, since many TIFF readers do not yet support this format,
 use this option under advisement.
 The
 .I \-l
-option specifies SGILOG24 compressed output, which has slightly
+option specifies SGILOG24 compressed output, which has
 less dynamic range than SGILOG, but may be smaller in some cases.
-(It may also be larger in some cases.)\0
+(It is usually larger.)\0
+The
+.I \-f
+option specifies 32-bit IEEE floating-point/primary output, which
+is the highest resolution format but results in very large files, since
+each RGB pixel takes 96 bits (12 bytes) and there is no compression.
+The
+.I \-w
+option specifies 16-bit/primary output, which is understood by
+some photo editing software, such as Adobe Photoshop.
 Decompression is automatically determined for TIFF input.
 .PP
 The
