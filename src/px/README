@@ -6,16 +6,11 @@ picture files and converters to and from other image formats.
 
 pcond.h		header file for picture conditioning program pcond
 pic.h		header file for reading and writing pictures
-ciq.h		header file for color quantization routines
 pict.h		header file defining Macintosh PICT format
 rasterfile.h	header description for Sun rasterfiles
 x11raster.h	header file for X11 routines using images
 aedimage.c	display program for AED 512 color graphics terminal
-biq.c		simple greyscale quantization
-ciq.c		color quantization routine
-closest.c	color quantization - find closest color
-clrtab.c	more compact but slower replacement for ciq.c+split.c+closest.c
-cut.c		color quantization - median cut algorithm
+clrtab.c	median-cut color quantization routines for 8-bit output
 macbethcal.c	program to calibrate image conversion using Macbeth chart
 neuclrtab.c	neural network color quantization code
 pcomb.c		combine picture files according to calcomp functions

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.54 2004/11/05 03:31:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.55 2004/11/08 18:49:18 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -44,8 +44,8 @@ pdfblur.csh pmblur.csh xyzimage.csh pgblur.csh
 		pmblur xyzimage phisto pdelta pgblur
 
 clean:
-	set nonomatch; rm -f $(PROGS) $(SPECIAL) *.o core
-	-cd tiff; make distclean
+	rm -f $(PROGS) $(SPECIAL) *.o core
+	cd tiff; make distclean
 
 pfilt:	pfilt.o pf2.o pf3.o
 	$(CC) $(CFLAGS) -o pfilt pfilt.o pf2.o pf3.o -lrt $(MLIB)
@@ -162,7 +162,7 @@ psign.o protate.o ra_hexbit.o pextrem.o pcompos.o \
 pflip.o ra_t8.o ra_t16.o ra_tiff.o ra_pict.o \
 ra_ps.o pvalue.o pcomb.o pinterp.o:	../common/color.h
 
-neuclrtab.o pvalue.o protate.o biq.o ciq.o pinterp.o psign.o \
+neuclrtab.o pvalue.o protate.o pinterp.o psign.o \
 xshowtrace.o clrtab.o pcomb.o pfilt.o pf3.o image.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
@@ -177,8 +177,6 @@ ra_t8.o:	../common/targa.h
 ra_tiff.o normtiff.o:	../common/tiff.h ../common/tiffio.h
 
 ra_t8.o:	pic.h
-
-ciq.o cut.o closest.o biq.o:	pic.h ciq.h
 
 pcomb.o pfilt.o pinterp.o x11image.o x11showtrace.o \
 image.o:	../common/view.h ../common/resolu.h
