@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.4 2003/04/23 00:52:34 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.5 2003/05/14 03:08:22 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -27,7 +27,7 @@ typedef struct {
 } TRIDATA;
 
 #define tdsize(fl)	((fl)&MT_UV ? sizeof(TRIDATA) : \
-				(fl)&MT_N ? sizeof(TRIDATA)-2*sizeof(FLOAT) : \
+				(fl)&MT_N ? sizeof(TRIDATA)-6*sizeof(FLOAT) : \
 				sizeof(int)+sizeof(OBJECT))
 
 #define	 OMARGIN	(10*FTINY)	/* margin around global cube */
@@ -285,7 +285,7 @@ cvmeshbounds()			/* set mesh boundaries */
 		return;
 				/* fix coordinate bounds */
 	for (i = 0; i < 3; i++) {
-		if (meshbounds[0][i] >= meshbounds[1][i])
+		if (meshbounds[0][i] > meshbounds[1][i])
 			error(USER, "no polygons in mesh");
 		meshbounds[0][i] -= OMARGIN;
 		meshbounds[1][i] += OMARGIN;
