@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.19 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.20 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -366,11 +366,11 @@ getcolors()			/* get xyY colors from standard input */
 	float	xyYin[3];
 
 	while (fgetval(stdin, 'i', &n) == 1) {		/* read colors */
-		if (n < 0 | n > 24 ||
+		if ((n < 0) | (n > 24) ||
 				fgetval(stdin, 'f', &xyYin[0]) != 1 ||
 				fgetval(stdin, 'f', &xyYin[1]) != 1 ||
 				fgetval(stdin, 'f', &xyYin[2]) != 1 ||
-				xyYin[0] < 0. | xyYin[1] < 0. ||
+				(xyYin[0] < 0.) | (xyYin[1] < 0.) ||
 				xyYin[0] + xyYin[1] > 1.) {
 			fprintf(stderr, "%s: bad color input data\n",
 					progname);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: oki20c.c,v 2.12 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: oki20c.c,v 2.13 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  oki20c.c - program to dump pixel file to OkiMate 20 color printer.
@@ -125,7 +125,7 @@ int  y;
 	register long  c;
 	register int  i, j;
 
-	if (bpos = y % 23) {
+	if ( (bpos = y % 23) ) {
 
 		for (j = 0; j < 3; j++)
 			for (i = 0; i < len; i++)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.17 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.18 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -263,7 +263,7 @@ char	*id;
 		*cp2++ = 'O';
 	}
 	for (cp = id; cp < end; *cp2++ = *cp++) {
-		if (*cp < '!' | *cp > '~')	/* limit to visible chars */
+		if ((*cp < '!') | (*cp > '~'))	/* limit to visible chars */
 			*cp = '?';
 		diff += *cp != *cp2;
 	}
@@ -428,7 +428,7 @@ FUNARGS	*fa;
 	register char	*cp;
 	register int	i;
 
-	if (fa->nfargs < 9 | fa->nfargs % 3)
+	if ((fa->nfargs < 9) | (fa->nfargs % 3))
 		return(-1);
 	setmat(mod);
 	setobj(id);

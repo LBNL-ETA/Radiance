@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.34 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.35 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -124,7 +124,7 @@ int	block;
 			dpout = NULL;
 			error(USER, "display process died");
 		}
-		if (errno != EAGAIN & errno != EINTR)
+		if ((errno != EAGAIN) & (errno != EINTR))
 			goto readerr;
 		return(2);		/* acceptable failure */
 	}
@@ -215,7 +215,7 @@ int	block;
 	case DR_CLOBBER:	/* clobber holodeck */
 		if (msg.nbytes)
 			error(INTERNAL, "bad DR_CLOBBER from display process");
-		if (force <= 0 | ncprocs <= 0)
+		if ((force <= 0) | (ncprocs <= 0))
 			error(WARNING, "request to clobber holodeck denied");
 		else {
 			error(WARNING, "clobbering holodeck contents");

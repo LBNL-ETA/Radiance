@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.22 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.23 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -229,7 +229,7 @@ FILE  *fp;
 		len = strlen(buf);
 		curl->s = (char *)malloc(len);
 		curl->sp = (short *)malloc(sizeof(short)*len--);
-		if (curl->s == NULL | curl->sp == NULL)
+		if ((curl->s == NULL) | (curl->sp == NULL))
 			goto memerr;
 		if (len > maxline)
 			maxline = len;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.4 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.5 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -189,7 +189,7 @@ ray_pflush()			/* send queued rays to idle children */
 {
 	int	nc, n, nw, i, sfirst;
 
-	if ((ray_pnidle <= 0 | r_send_next <= 0))
+	if ((ray_pnidle <= 0) | (r_send_next <= 0))
 		return(0);		/* nothing we can send */
 	
 	sfirst = 0;			/* divvy up labor */
@@ -469,7 +469,7 @@ int	nsub;
 		return;
 	inclose++;
 					/* check argument */
-	if ((nsub <= 0 | nsub > ray_pnprocs))
+	if ((nsub <= 0) | (nsub > ray_pnprocs))
 		nsub = ray_pnprocs;
 					/* clear our ray queue */
 	while (ray_presult(&res,0) > 0)

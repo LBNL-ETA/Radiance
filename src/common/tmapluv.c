@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.8 2003/07/15 07:28:09 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.9 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -136,7 +136,7 @@ int	len;
 					/* check arguments */
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | luvs == NULL | len < 0)
+	if ((ls == NULL) | (luvs == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 					/* check package registration */
 	if (luv32Reg < 0) {
@@ -196,7 +196,7 @@ int	len;
 					/* check arguments */
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | luvs == NULL | len < 0)
+	if ((ls == NULL) | (luvs == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 					/* check package registration */
 	if (luv24Reg < 0) {
@@ -256,7 +256,7 @@ int	len;
 					/* check arguments */
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | l16s == NULL | len < 0)
+	if ((ls == NULL) | (l16s == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 					/* check scaling offset */
 	if (!FEQ(tmTop->inpsf, lastsf)) {

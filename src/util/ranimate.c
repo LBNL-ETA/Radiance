@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.40 2003/07/21 22:30:19 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.41 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -888,7 +888,7 @@ int	rvr;
 		quit(1);
 	}
 	usepinterp = (nblur > 1);
-	usepfilt = pfiltalways | ep==NULL;
+	usepfilt = pfiltalways | (ep==NULL);
 	if (ep != NULL && !strcmp(ep, "1"))
 		ep = "+0";
 	nora_rgbe = strcmp(vval(OVERSAMP),"1") || ep==NULL ||

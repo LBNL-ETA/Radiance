@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.41 2003/07/21 22:30:19 schorsch Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.42 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -488,7 +488,7 @@ register CUBE  *scene;
 	}
 	cxset[0] = 0;
 	raymove(curpos, cxset, sflags, r, scene);
-	return(r->ro != NULL & r->ro != &Aftplane);
+	return((r->ro != NULL) & (r->ro != &Aftplane));
 }
 
 

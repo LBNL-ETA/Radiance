@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.59 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.60 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -278,7 +278,7 @@ initrholo()			/* get our holodeck running */
 	sigdie(SIGXFSZ, "File size exceeded");
 #endif
 					/* protect holodeck file */
-	orig_mode = resfmode(hdlist[0]->fd, ncprocs>0&force>=0 ? 0 : 0444);
+	orig_mode = resfmode(hdlist[0]->fd, (ncprocs>0) & (force>=0) ? 0 : 0444);
 	return;
 memerr:
 	error(SYSTEM, "out of memory in initrholo");
@@ -483,7 +483,7 @@ loadholo()			/* start loading a holodeck from fname */
 	int	n;
 	int32	nextloc;
 	
-	if (ncprocs > 0 & force >= 0)
+	if ((ncprocs > 0) & (force >= 0))
 		fp = fopen(hdkfile, "r+");
 	else
 		fp = NULL;
@@ -562,11 +562,12 @@ register char	*rn, *fn;
 {
 	char	*tp, *dp;
 
-	for (tp = NULL, dp = rn; *rn = *fn++; rn++)
+	for (tp = NULL, dp = rn; (*rn = *fn++); rn++) {
 		if (*rn == '/')
 			dp = rn;
 		else if (*rn == '.')
 			tp = rn;
+	}
 	if (tp != NULL && tp > dp)
 		*tp = '\0';
 }
@@ -609,7 +610,7 @@ int	ec;
 	if (hdlist[0] != NULL) {	/* close holodeck */
 		if (nprocs > 0)
 			status = done_rtrace();		/* calls hdsync() */
-		if (ncprocs > 0 & force >= 0 && vdef(REPORT)) {
+		if ((ncprocs > 0) & (force >= 0) && vdef(REPORT)) {
 			off_t	fsiz, fuse;
 			fsiz = hdfilen(hdlist[0]->fd);
 			fuse = hdfiluse(hdlist[0]->fd, 1);

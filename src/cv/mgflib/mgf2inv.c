@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 1.8 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 1.9 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -459,7 +459,7 @@ char	**av;
 	if (put_material() < 0)
 		return(MG_EBADMAT);
 				/* get endpoints */
-	if ((v1 = c_getvert(av[1])) == NULL | (v2 = c_getvert(av[3])) == NULL)
+	if (((v1 = c_getvert(av[1])) == NULL) | ((v2 = c_getvert(av[3])) == NULL))
 		return(MG_EUNDEF);
 				/* get radius */
 	if (!isflt(av[2]))

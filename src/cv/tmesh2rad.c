@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.13 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.14 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -52,7 +52,7 @@ typedef struct {
 VERTEX	*vlist = NULL;		/* our vertex list */
 int	nverts = 0;		/* number of vertices in our list */
 
-#define novert(i)	((i)<0|(i)>=nverts || !(vlist[i].flags&V_DEFINED))
+#define novert(i)	(((i)<0)|((i)>=nverts) || !(vlist[i].flags&V_DEFINED))
 
 #define CHUNKSIZ	128	/* vertex allocation chunk size */
 

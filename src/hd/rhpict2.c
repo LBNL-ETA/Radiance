@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.13 2003/07/07 17:21:51 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.14 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -301,13 +301,13 @@ register short	(*rnl)[NNEIGH];
 	nd[NNEIGH-1] = MAXRAD2;
 	for (hoff = 0; hoff < hres; hoff = (hoff<=0) - hoff) {
 		h2 = h + hoff;
-		if (h2 < 0 | h2 >= hres)
+		if ((h2 < 0) | (h2 >= hres))
 			continue;
 		if ((h2-h)*(h2-h) >= nd[NNEIGH-1])
 			break;
 		for (n = 0; n < NNEIGH && rnl[h2][n] < NINF; n++) {
 			d = (h2-h)*(h2-h) + (v-rnl[h2][n])*(v-rnl[h2][n]);
-			if (d == 0 | d >= nd[NNEIGH-1])
+			if ((d == 0) | (d >= nd[NNEIGH-1]))
 				continue;
 			if (nn < NNEIGH)	/* insert neighbor */
 				nn++;

@@ -384,12 +384,12 @@ char  *err;
 	register int  es;
 	int  cs;
 
-	if (es = err != NULL)
+	if ( (es = err != NULL) )
 		fprintf(stderr, "%s: %s: %s\n", progname, 
 				fname==NULL?"<stdin>":fname, err);
 	if (thedisplay != NULL)
 		XCloseDisplay(thedisplay);
-	if (parent < 0 & sigrecv == 0)
+	if ((parent < 0) & (sigrecv == 0))
 		kill(getppid(), SIGCONT);
 	while (parent > 0 && wait(&cs) != -1) {	/* wait for any children */
 		if (es == 0)
@@ -537,7 +537,7 @@ getras()				/* get raster file */
 		if (ourras == NULL)
 			goto fail;
 		getmono();
-	} else if (ourvis.class == TrueColor | ourvis.class == DirectColor) {
+	} else if ((ourvis.class == TrueColor) | (ourvis.class == DirectColor)) {
 		int  datsiz = ourvis.depth>16 ? sizeof(int32) : sizeof(int16);
 		ourdata = (unsigned char *)malloc(datsiz*xmax*ymax);
 		if (ourdata == NULL)
@@ -585,7 +585,7 @@ getevent()				/* process the next event */
 		map_rcolors(ourras, wind);
 		if (fast)
 			make_rpixmap(ourras, wind);
-		if (!sequential & parent < 0 & sigrecv == 0) {
+		if ((!sequential) & (parent < 0) & (sigrecv == 0)) {
 			kill(getppid(), SIGCONT);
 			sigrecv--;
 		}
@@ -794,7 +794,7 @@ XKeyPressedEvent  *ekey;
 		free_rpixmap(ourras);
 		return(0);
 	case '0':				/* recenter origin */
-		if (xoff == 0 & yoff == 0)
+		if ((xoff == 0) & (yoff == 0))
 			return(0);
 		xoff = yoff = 0;
 		XClearWindow(thedisplay, wind);

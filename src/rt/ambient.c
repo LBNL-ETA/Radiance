@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.53 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.54 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -280,7 +280,7 @@ FVECT  nrm;
 		return;
 dumbamb:					/* return global value */
 	copycolor(acol, ambval);
-	if (ambvwt <= 0 | navsum == 0)
+	if ((ambvwt <= 0) | (navsum == 0))
 		return;
 	l = bright(ambval);			/* average in computations */
 	if (l > FTINY) {
@@ -831,7 +831,7 @@ ambsync()			/* synchronize ambient file */
 				/* see if file has grown */
 	if ((flen = lseek(fileno(ambfp), (off_t)0L, 2)) < 0)
 		goto seekerr;
-	if (n = flen - lastpos) {		/* file has grown */
+	if ( (n = flen - lastpos) ) {		/* file has grown */
 		if (ambinp == NULL) {		/* use duplicate filedes */
 			ambinp = fdopen(dup(fileno(ambfp)), "r");
 			if (ambinp == NULL)

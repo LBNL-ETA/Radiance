@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.14 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.15 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -191,7 +191,7 @@ int	poll;
 		n = read(rtpd[pn].r, (char *)rtbuf,
 				4*sizeof(float)*RPACKSIZ*pqlen[pn]);
 		if (n < 0) {
-			if (errno == EINTR | errno == EAGAIN)
+			if ((errno == EINTR) | (errno == EAGAIN))
 				goto reread;
 			error(SYSTEM, "read error in get_packets");
 		}

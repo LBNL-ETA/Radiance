@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.10 2003/03/05 16:16:53 greg Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.11 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -203,7 +203,7 @@ int  n;
 			pm[i][j] += nv[i]*h[j];
 		pm[3][j] = -od*h[j];
 	}
-	if (newdot > 0.0 ^ olddot > 0.0)	/* add mirroring */
+	if ((newdot > 0.0) ^ (olddot > 0.0))	/* add mirroring */
 		for (j = 0; j < 3; j++) {
 			for (i = 0; i < 3; i++)
 				pm[i][j] -= 2.*nv[i]*nv[j];

@@ -243,7 +243,7 @@ char  *pout, *zout, *prvr;
 		setview(&ourview);
 		prvr = fbuf;			/* mark for renaming */
 	}
-	if (pout != NULL & prvr != NULL) {
+	if ((pout != NULL) & (prvr != NULL)) {
 		sprintf(fbuf, pout, seq);
 		if (!strcmp(prvr, fbuf)) {	/* rename */
 			strcpy(fbuf2, fbuf);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.22 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.23 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -325,7 +325,7 @@ register GLYPH  *gl;
 					/* positive x axis cross test */
 	while (n--) {
 		if ((p0[1]<<1 > ylb) ^ (p1[1]<<1 > ylb)) {
-			tv = p0[0]<<1 > xlb | (p1[0]<<1 > xlb) << 1;
+			tv = (p0[0]<<1 > xlb) | ((p1[0]<<1 > xlb) << 1);
 			if (tv == 03)
 				ncross++;
 			else if (tv)

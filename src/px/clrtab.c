@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.15 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.16 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -257,7 +257,7 @@ register int	box[3][2];
 	for (r = box[RED][0]; r < box[RED][1]; r++)
 	    for (g = box[GRN][0]; g < box[GRN][1]; g++)
 	    	for (b = box[BLU][0]; b < box[BLU][1]; b++) {
-	    	    if (c = histo[r][g][b]) {
+	    	    if ( (c = histo[r][g][b]) ) {
 			n += c;
 			sum[RED] += (long)c*r;
 			sum[GRN] += (long)c*g;

@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.9 2003/07/21 22:30:17 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.10 2003/07/27 22:12:01 schorsch Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

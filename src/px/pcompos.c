@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.23 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.24 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -381,7 +381,7 @@ register COLR  c1, c2;
 
 	j = 4;				/* check exponents first! */
 	while (j--)
-		if (i = c1[j] - c2[j])
+		if ( (i = c1[j] - c2[j]) )
 			return(i);
 	return(0);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.5 2003/06/26 00:58:10 schorsch Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.6 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -66,7 +66,7 @@ char	*objfn;
 	group[0] = '\0';
 	lineno = 0; faceno = 0;
 					/* scan until EOF */
-	while (argc = getstmt(argv, fp)) {
+	while ( (argc = getstmt(argv, fp)) ) {
 		switch (argv[0][0]) {
 		case 'v':		/* vertex */
 			switch (argv[0][1]) {

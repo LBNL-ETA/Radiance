@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_face.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: o_face.c,v 2.3 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  o_face.c - routines for creating octrees for polygonal faces.
@@ -59,7 +59,7 @@ CUBE  *cu;
 
 	vloc = ABOVE | BELOW;		/* check vertices */
 	for (i = 0; i < f->nv; i++)
-		if (j = plocate(VERTEX(f,i), cumin, cumax))
+		if ( (j = plocate(VERTEX(f,i), cumin, cumax)) )
 			vloc &= j;
 		else
 			return(O_HIT);	/* vertex inside */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: histo.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: histo.c,v 1.3 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Compute a histogram from input data
@@ -113,7 +113,7 @@ char	*argv[]
 		minv -= 0.5;
 		ndiv = maxv - minv + 0.5;
 	}
-	if (minv >= maxv | ndiv <= 0)
+	if ((minv >= maxv) | (ndiv <= 0))
 		goto userr;
 	if (ndiv > MAXDIV) {
 		fprintf(stderr, "%s: maximum number of divisions: %d\n",

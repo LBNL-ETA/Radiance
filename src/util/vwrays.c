@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.6 2003/07/03 22:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.7 2003/07/27 22:12:04 schorsch Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -100,7 +100,7 @@ char	*argv[];
 		default:
 			goto userr;
 		}
-	if (i > argc | i+2 < argc)
+	if ((i > argc) | (i+2 < argc))
 		goto userr;
 	if (i < argc) {
 		rval = viewfile(argv[i], &vw, &rs);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.3 2003/07/15 07:28:09 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.4 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -141,7 +141,7 @@ tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv)
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0)
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	if (gv <= 0.)
 		gv = DEFGAM;
@@ -179,12 +179,12 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv)
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0)
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	if (gv <= 0.)
 		gv = DEFGAM;
 						/* sync input gamma table */
-	if (gv != 1. & gv != cur_gam)
+	if ((gv != 1.) & (gv != cur_gam))
 		mkGamTable(gv);
 	if (tmNeedMatrix(tmTop)) {		/* need floating point */
 		COLOR	*newscan;

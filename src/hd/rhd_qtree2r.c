@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.4 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.5 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Quadtree display support routines for rectangle output.
@@ -112,8 +112,8 @@ int	x0, y0, x1, y1;
 
 	if (is_stump(&qtrunk))
 		return;
-	if (!qtMapLeaves((lim[0][0]=x0) <= 0 & (lim[1][0]=y0) <= 0 &
-		(lim[0][1]=x1) >= odev.hres-1 & (lim[1][1]=y1) >= odev.vres-1))
+	if (!qtMapLeaves(((lim[0][0]=x0) <= 0) & ((lim[1][0]=y0) <= 0) &
+		((lim[0][1]=x1) >= odev.hres-1) & ((lim[1][1]=y1) >= odev.vres-1)))
 		return;
 	redraw(&qtrunk, 0, 0, odev.hres, odev.vres, lim);
 }

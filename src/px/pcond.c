@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.16 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.17 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -106,7 +106,7 @@ char	*argv[];
 		case 'e':
 			if (i+1 >= argc) goto userr;
 			scalef = atof(argv[++i]);
-			if (argv[i][0] == '+' | argv[i][0] == '-')
+			if ((argv[i][0] == '+') | (argv[i][0] == '-'))
 				scalef = pow(2.0, scalef);
 			what2do |= DO_LINEAR;
 			break;
@@ -151,7 +151,7 @@ char	*argv[];
 				progname);
 		exit(1);
 	}
-	if (outprims == stdprims & inprims != stdprims)
+	if ((outprims == stdprims) & (inprims != stdprims))
 		outprims = inprims;
 	Bldmin = Bl(ldmax/lddyn);
 	Bldmax = Bl(ldmax);
@@ -167,7 +167,7 @@ char	*argv[];
 	SET_FILE_BINARY(stdout);
 	getahead();			/* load input header */
 	printargs(argc, argv, stdout);	/* add to output header */
-	if (mbcalfile == NULL & outprims != stdprims)
+	if ((mbcalfile == NULL) & (outprims != stdprims))
 		fputprims(outprims, stdout);
 	if ((what2do & (DO_PREHIST|DO_VEIL|DO_ACUITY)) != DO_PREHIST)
 		getfovimg();		/* get foveal sample image? */
@@ -325,7 +325,7 @@ getfovimg()			/* load foveal sampled image */
 	if ((fp = popen(combuf, "r")) == NULL)
 		syserror("popen");
 	getheader(fp, NULL, NULL);	/* skip header */
-	if (fgetresolu(&x, &y, fp) < 0 || x != fvxr | y != fvyr)
+	if (fgetresolu(&x, &y, fp) < 0 || (x != fvxr) | (y != fvyr))
 		goto readerr;
 	for (y = 0; y < fvyr; y++)
 		if (freadscan(fovscan(y), fvxr, fp) < 0)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.12 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.13 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -49,7 +49,7 @@ register FILE  *fp;
 	register int  i, j, beg, cnt = 1;
 	int  c2;
 	
-	if (len < MINELEN | len > MAXELEN)	/* OOBs, write out flat */
+	if ((len < MINELEN) | (len > MAXELEN))	/* OOBs, write out flat */
 		return(fwrite((char *)scanline,sizeof(COLR),len,fp) - len);
 					/* put magic header */
 	putc(2, fp);
@@ -139,7 +139,7 @@ register FILE  *fp;
 	register int  i, j;
 	int  code, val;
 					/* determine scanline type */
-	if (len < MINELEN | len > MAXELEN)
+	if ((len < MINELEN) | (len > MAXELEN))
 		return(oldreadcolrs(scanline, len, fp));
 	if ((i = getc(fp)) == EOF)
 		return(-1);

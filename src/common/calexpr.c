@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.25 2003/07/21 22:30:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.26 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -128,7 +128,7 @@ register EPNODE  *ep1, *ep2;
 		if (ep2->v.num == 0)
 			return(ep1->v.num != 0);
 		d = ep1->v.num / ep2->v.num;
-		return(d > 1.000000000001 | d < 0.999999999999);
+		return((d > 1.000000000001) | (d < 0.999999999999));
 
 	case CHAN:
 	case ARG:
@@ -527,10 +527,10 @@ getnum()			/* scan a positive float */
 	    lnext = scan();
 	}
     }
-    if ((lnext == 'e' | lnext == 'E') && i < RMAXWORD) {
+    if ((lnext == 'e') | (lnext == 'E') && i < RMAXWORD) {
 	str[i++] = lnext;
 	lnext = scan();
-	if ((lnext == '-' | lnext == '+') && i < RMAXWORD) {
+	if ((lnext == '-') | (lnext == '+') && i < RMAXWORD) {
 	    str[i++] = lnext;
 	    lnext = scan();
 	}

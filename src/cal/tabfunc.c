@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.4 2003/07/14 20:02:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.5 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -187,7 +187,7 @@ char	*xe
 
 	xelen = strlen(xe);
 	for (i = 0; i < nfuncs; i++) {
-		if (func[i][0] == '\0' | func[i][0] == '0')
+		if ((func[i][0] == '\0') | (func[i][0] == '0'))
 			continue;
 		if (interpolate) {
 			printf("%s`%s(i):select(i,", func[i], locID);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ev.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: ev.c,v 1.3 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  ev.c - program to evaluate expression arguments
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: ev.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $"
 #include  <stdio.h>
 
 #include  "calcomp.h"
+#include  "rterror.h"
 
 
 main(argc, argv)

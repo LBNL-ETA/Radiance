@@ -176,7 +176,7 @@ register RAY  *r;
 	} else {				/* leaving ray */
 		if (myslist != NULL) {			/* delete from list */
 			for (j = myslist[0]; j > 0; j--)
-				if (i = inslist(p.slights, myslist[j]))
+				if ( (i = inslist(p.slights, myslist[j])) )
 					p.slights[i] = -1;
 			for (i = 0, j = 1; j <= p.slights[0]; j++)
 				if (p.slights[j] != -1)

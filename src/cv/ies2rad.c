@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.21 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.22 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -421,7 +421,7 @@ register char	*kwd, *hdl;
 	while (islower(*hdl) ? toupper(*hdl) == *kwd++ : *hdl == *kwd++)
 		if (!*hdl++)
 			return(0);
-	return(!*kwd & *hdl == ']');
+	return((!*kwd) & (*hdl == ']'));
 }
 
 
@@ -985,7 +985,7 @@ register FILE	*fp;
 		if (isspace(c) || c == ',') {
 			while (isspace(c))
 				c = getc(fp);
-			if (c != EOF & c != ',')
+			if ((c != EOF) & (c != ','))
 				ungetc(c, fp);
 			*cp = '\0';
 			return(wrd);

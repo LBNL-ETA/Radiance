@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.36 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.37 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -27,7 +27,7 @@ static const char	RCSid[] = "$Id: pinterp.c,v 2.36 2003/07/21 22:30:18 schorsch 
 #define averaging	(ourweigh != NULL)
 #define blurring	(ourbpict != NULL)
 #define usematrix	(hasmatrix & !averaging)
-#define zisnorm		(!usematrix | ourview.type != VT_PER)
+#define zisnorm		((!usematrix) | (ourview.type != VT_PER))
 
 #define MAXWT		1000.		/* maximum pixel weight (averaging) */
 
@@ -233,7 +233,7 @@ char	*argv[];
 	if (doavg < 0)
 		doavg = (argc-an) > 2;
 	if (expcomp != NULL) {
-		if (expcomp[0] == '+' | expcomp[0] == '-') {
+		if ((expcomp[0] == '+') | (expcomp[0] == '-')) {
 			expadj = atof(expcomp) + (expcomp[0]=='+' ? .5 : -.5);
 			if (doavg | doblur)
 				rexpadj = pow(2.0, atof(expcomp));
@@ -259,7 +259,7 @@ char	*argv[];
 	if (doavg) {
 		ourspict = (COLOR *)bmalloc(hresolu*vresolu*sizeof(COLOR));
 		ourweigh = (float *)bmalloc(hresolu*vresolu*sizeof(float));
-		if (ourspict == NULL | ourweigh == NULL)
+		if ((ourspict == NULL) | (ourweigh == NULL))
 			syserror(progname);
 	} else {
 		ourpict = (COLR *)bmalloc(hresolu*vresolu*sizeof(COLR));
@@ -299,13 +299,13 @@ char	*argv[];
 		fprintview(&avgview, stdout);
 		putc('\n', stdout);
 	}
-	if (pixaspect < .99 | pixaspect > 1.01)
+	if ((pixaspect < .99) | (pixaspect > 1.01))
 		fputaspect(pixaspect, stdout);
 	if (ourexp > 0)
 		ourexp *= rexpadj;
 	else
 		ourexp = rexpadj;
-	if (ourexp < .995 | ourexp > 1.005)
+	if ((ourexp < .995) | (ourexp > 1.005))
 		fputexpos(ourexp, stdout);
 	if (strcmp(ourfmt, PICFMT))		/* print format if known */
 		fputformat(ourfmt, stdout);
@@ -448,7 +448,7 @@ char	*pfile, *zspec;
 		ourexp = theirexp;
 	else if (ABS(theirexp-ourexp) > .01*ourexp)
 		fprintf(stderr, "%s: different exposure (warning)\n", pfile);
-	if (err = setview(&theirview)) {
+	if ( (err = setview(&theirview)) ) {
 		fprintf(stderr, "%s: %s\n", pfile, err);
 		exit(1);
 	}
@@ -482,7 +482,7 @@ char	*pfile, *zspec;
 	scanin = (COLR *)malloc(scanlen(&tresolu)*sizeof(COLR));
 	plast = (struct position *)calloc(scanlen(&tresolu),
 			sizeof(struct position));
-	if (scanin == NULL | plast == NULL)
+	if ((scanin == NULL) | (plast == NULL))
 		syserror(progname);
 					/* skip to starting point */
 	for (y = 0; y < ylim.min; y++)
@@ -522,9 +522,9 @@ register VIEW	*vw1, *vw2;
 {
 	double	m4t[4][4];
 
-	if (vw1->type != VT_PER & vw1->type != VT_PAR)
+	if ((vw1->type != VT_PER) & (vw1->type != VT_PAR))
 		return(0);
-	if (vw2->type != VT_PER & vw2->type != VT_PAR)
+	if ((vw2->type != VT_PER) & (vw2->type != VT_PAR))
 		return(0);
 	setident4(xfmat);
 	xfmat[0][0] = vw1->hvec[0];
@@ -608,7 +608,7 @@ double	z;
 		s1x = p1->x - p0->x;
 		s1y = p1->y - p0->y;
 		l1 = ABS(s1x);
-		if (p1isy = (ABS(s1y) > l1))
+		if ( (p1isy = (ABS(s1y) > l1)) )
 			l1 = ABS(s1y);
 		else if (l1 < 1)
 			l1 = 1;
@@ -641,10 +641,10 @@ double	z;
 		y1 = p0->y + c1*s1y/l1;
 		for (c2 = l2; c2-- > 0; ) {
 			x = x1 + c2*s2x/l2;
-			if (x < 0 | x >= hresolu)
+			if ((x < 0) | (x >= hresolu))
 				continue;
 			y = y1 + c2*s2y/l2;
-			if (y < 0 | y >= vresolu)
+			if ((y < 0) | (y >= vresolu))
 				continue;
 			if (averaging) {
 				if (zscan(y)[x] <= 0 || zscan(y)[x]-z
@@ -678,7 +678,7 @@ register FVECT	pos;
 	if (usematrix) {
 		pos[0] += theirview.hoff - .5;
 		pos[1] += theirview.voff - .5;
-		if (normdist & theirview.type == VT_PER)
+		if (normdist & (theirview.type == VT_PER))
 			d = sqrt(1. + pos[0]*pos[0]*theirview.hn2
 					+ pos[1]*pos[1]*theirview.vn2);
 		else
@@ -702,7 +702,7 @@ register FVECT	pos;
 	} else {
 		if (viewray(pt, tdir, &theirview, pos[0], pos[1]) < -FTINY)
 			return(0);
-		if (!normdist & theirview.type == VT_PER)	/* adjust */
+		if ((!normdist) & (theirview.type == VT_PER))	/* adjust */
 			pos[2] *= sqrt(1. + pos[0]*pos[0]*theirview.hn2
 					+ pos[1]*pos[1]*theirview.vn2);
 		pt[0] += tdir[0]*pos[2];
@@ -712,7 +712,7 @@ register FVECT	pos;
 		if (pos[2] <= 0)
 			return(0);
 	}
-	if (pos[0] < 0 | pos[0] >= 1-FTINY | pos[1] < 0 | pos[1] >= 1-FTINY)
+	if ((pos[0] < 0) | (pos[0] >= 1-FTINY) | (pos[1] < 0) | (pos[1] >= 1-FTINY))
 		return(0);
 	if (!averaging)
 		return(1);
@@ -940,7 +940,7 @@ int	(*fill)();
 clipaft()			/* perform aft clipping as indicated */
 {
 	register int	x, y;
-	int	adjtest = ourview.type == VT_PER & zisnorm;
+	int	adjtest = (ourview.type == VT_PER) & zisnorm;
 	double	tstdist;
 	double	yzn2, vx;
 
@@ -1048,7 +1048,7 @@ writedistance(fname)			/* write out z file (alters buffer) */
 char	*fname;
 {
 	int	donorm = normdist & !zisnorm ? 1 :
-			ourview.type == VT_PER & !normdist & zisnorm ? -1 : 0;
+			(ourview.type == VT_PER) & !normdist & zisnorm ? -1 : 0;
 	int	fd;
 	int	y;
 

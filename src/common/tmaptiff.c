@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.3 2003/07/14 04:56:54 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.4 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -94,8 +94,8 @@ tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 					/* check arguments */
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (lpp == NULL | xp == NULL | yp == NULL |
-			(fname == NULL & tp == NULL))
+	if ((lpp == NULL) | (xp == NULL) | (yp == NULL) |
+			((fname == NULL) & (tp == NULL)))
 		returnErr(TM_E_ILLEGAL);
 					/* check/get TIFF tags */
 	sl.p = NULL; *lpp = NULL;
@@ -160,7 +160,7 @@ tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 		goto done;
 	}
 	*lpp = (TMbright *)malloc(width*height*sizeof(TMbright));
-	if (sl.p == NULL | *lpp == NULL) {
+	if ((sl.p == NULL) | (*lpp == NULL)) {
 		err = TM_E_NOMEM;
 		goto done;
 	}
@@ -257,8 +257,8 @@ tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	BYTE	*cp;
 	int	err;
 					/* check arguments */
-	if (psp == NULL | xp == NULL | yp == NULL | monpri == NULL |
-			(fname == NULL & tp == NULL))
+	if ((psp == NULL) | (xp == NULL) | (yp == NULL) | (monpri == NULL) |
+			((fname == NULL) & (tp == NULL)))
 		returnErr(TM_E_ILLEGAL);
 	if (gamval < MINGAM) gamval = DEFGAM;
 	if (Lddyn < MINLDDYN) Lddyn = DEFLDDYN;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 1.8 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 1.9 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Table lookup routines
@@ -125,11 +125,12 @@ tryagain:
 	 * recursive call to lu_find().
 	 */
 	while (ndx--)
-		if (le[ndx].key != NULL)
+		if (le[ndx].key != NULL) {
 			if (le[ndx].data != NULL)
 				*lu_find(tbl, le[ndx].key) = le[ndx];
 			else if (tbl->freek != NULL)
 				(*tbl->freek)(le[ndx].key);
+		}
 	free((MEM_PTR)le);
 	goto tryagain;			/* should happen only once! */
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.18 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.19 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -91,9 +91,9 @@ int	*hf;
 	if (!strncmp(s, "OBSTRUCTIONS=", 13)) {
 		s += 13;
 		while (*s == ' ') s++;
-		if (*s == 't' | *s == 'T')
+		if ((*s == 't') | (*s == 'T'))
 			*hf |= H_OBST;
-		else if (*s == 'f' | *s == 'F')
+		else if ((*s == 'f') | (*s == 'F'))
 			*hf |= H_OBSF;
 		else
 			error(WARNING, "bad OBSTRUCTIONS value in holodeck");
@@ -333,11 +333,11 @@ char	*pcf, *zbf;
 		error(WARNING, errmsg);
 	}
 				/* figure out what to do about exposure */
-	if (phd.expos < 0.99 | phd.expos > 1.01) {
+	if ((phd.expos < 0.99) | (phd.expos > 1.01)) {
 		emult = -log(phd.expos)/log(2.);
 		eshft = emult >= 0. ? emult+.5 : emult-.5;
 		emult -= (double)eshft;
-		if (emult <= 0.01 & emult >= -0.01)
+		if ((emult <= 0.01) & (emult >= -0.01))
 			emult = -1.;
 		else {
 			emult = 1./phd.expos;
@@ -350,7 +350,7 @@ char	*pcf, *zbf;
 				/* allocate buffers */
 	cscn = (COLR *)malloc(scanlen(&prs)*sizeof(COLR));
 	zscn = (float *)malloc(scanlen(&prs)*sizeof(float));
-	if (cscn == NULL | zscn == NULL)
+	if ((cscn == NULL) | (zscn == NULL))
 		error(SYSTEM, "out of memory in addpicz");
 				/* read and process each scanline */
 	for (j = 0; j < numscans(&prs); j++) {

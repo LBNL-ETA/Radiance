@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp2.c,v 3.35 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.36 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Holodeck beam tracking for display process
@@ -103,9 +103,9 @@ int	bi;
 		if (cbeam[n].bi == bi && cbeam[n].hd == hd)
 			return(n);
 				/* check legality */
-	if (hd < 0 | hd >= HDMAX || hdlist[hd] == NULL)
+	if ((hd < 0) | (hd >= HDMAX) || hdlist[hd] == NULL)
 		error(INTERNAL, "illegal holodeck number in getcbeam");
-	if (bi < 1 | bi > nbeams(hdlist[hd]))
+	if ((bi < 1) | (bi > nbeams(hdlist[hd])))
 		error(INTERNAL, "illegal beam index in getcbeam");
 	n = newcbeam();		/* allocate and assign */
 	cbeam[n].hd = hd; cbeam[n].bi = bi; cbeam[n].nr = cbeam[n].nc = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.48 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.49 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -249,7 +249,7 @@ register PACKHEAD	*p;
 	double	d;
 	register int	i;
 					/* get beam coordinates */
-	if (p->hd < 0 | p->hd >= HDMAX || hdlist[p->hd] == NULL)
+	if ((p->hd < 0) | (p->hd >= HDMAX) || hdlist[p->hd] == NULL)
 		error(INTERNAL, "bad holodeck number in disp_bundle");
 	if (!hdbcoord(gc, hdlist[p->hd], p->bi))
 		error(INTERNAL, "bad beam index in disp_bundle");

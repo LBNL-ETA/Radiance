@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cut.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: cut.c,v 2.3 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
 CUT - Median bisection (k-d tree) algorithm for color image quantization
@@ -120,6 +120,6 @@ struct index *ii,*io;	/* box ii will go into io, the other half into io+1 */
     }
     io[0].o = o1;
     io[0].freq = (freq>>1)-count;
-    io[1].freq = (freq+1>>1)+count;
+    io[1].freq = ((freq+1)>>1)+count;
     /* printf(" at %3d %d=%d+%d\n",io[1].o-off,freq,io[0].freq,io[1].freq); */
 }

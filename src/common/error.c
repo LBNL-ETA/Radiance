@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: error.c,v 2.9 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: error.c,v 2.10 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  error.c - standard error reporting function
@@ -28,7 +28,7 @@ char  *emsg;
 {
 	register struct erract	*ep;
 
-	if (etype < 0 | etype >= NERRS)
+	if ((etype < 0) | (etype >= NERRS))
 		return;
 	ep = erract + etype;
 	if (ep->pf != NULL) {

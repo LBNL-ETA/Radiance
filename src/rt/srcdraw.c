@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.7 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.8 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -285,9 +285,9 @@ RREAL	sp[MAXVERT][2];
 		for (j = 0; j < 4; j++) {	/* four corners */
 			for (i = 0; i < 3; i++) {
 				ap[i] = s->sloc[i];
-				if (j==1|j==2) ap[i] += s->ss[SU][i];
+				if ((j==1)|(j==2)) ap[i] += s->ss[SU][i];
 				else ap[i] -= s->ss[SU][i];
-				if (j==2|j==3) ap[i] += s->ss[SV][i];
+				if ((j==2)|(j==3)) ap[i] += s->ss[SV][i];
 				else ap[i] -= s->ss[SV][i];
 				if (s->sflags & SDISTANT) {
 					ap[i] *= 1. + ourview.vfore;

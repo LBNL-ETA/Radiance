@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgfilt.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: mgfilt.c,v 1.7 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Filter MGF stream, removing entities that won't be understood
@@ -41,7 +41,7 @@ char	*argv[];
 	}
 	if (isint(argv[1])) {
 		i = atoi(argv[1]);
-		if (i < 1 | i > MG_VMAJOR) {
+		if ((i < 1) | (i > MG_VMAJOR)) {
 			fprintf(stderr, "%s: bad version number: %d\n",
 					argv[0], i);
 			exit(1);

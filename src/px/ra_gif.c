@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_gif.c,v 2.9 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.10 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Convert from Radiance picture file to Compuserve GIF.
@@ -118,7 +118,7 @@ char  *argv[];
 				/* set up gamma correction */
 	setcolrgam(gamv);
 				/* figure out the bits per pixel */
-	if (ncolors < 2 | ncolors > MAXCOLORS)
+	if ((ncolors < 2) | (ncolors > MAXCOLORS))
 		ncolors = MAXCOLORS;
 	for (bitsperpix = 1; ncolors > 1<<bitsperpix; bitsperpix++)
 		;

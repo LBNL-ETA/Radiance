@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.26 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.27 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -163,7 +163,7 @@ char	**av;
 		if (r2 == 0.)
 			return(MG_EILL);
 		inv = r2 < 0.;
-	} else if (r2 != 0. && inv ^ r2 < 0.)
+	} else if (r2 != 0. && inv ^ (r2 < 0.))
 		return(MG_EILL);
 	if (inv) {
 		r1 = -r1;
@@ -276,7 +276,7 @@ char	**av;
 	xf_rotvect(norm, cv->n);		/* rotate normal */
 	r1 = xf_scale(atof(av[2]));		/* scale radii */
 	r2 = xf_scale(atof(av[3]));
-	if (r1 < 0. | r2 <= r1)
+	if ((r1 < 0.) | (r2 <= r1))
 		return(MG_EILL);
 	if ((mat = material()) == NULL)		/* get material */
 		return(MG_EBADMAT);
@@ -490,7 +490,7 @@ material()			/* get (and print) current material */
 	}
 	d = c_cmaterial->rd + c_cmaterial->td +
 			c_cmaterial->rs + c_cmaterial->ts;
-	if (d < 0. | d > 1.)
+	if ((d < 0.) | (d > 1.))
 		return(NULL);
 					/* check for glass/dielectric */
 	if (c_cmaterial->nr > 1.1 &&
@@ -621,7 +621,7 @@ addarg(op, arg)				/* add argument and advance pointer */
 register char	*op, *arg;
 {
 	*op = ' ';
-	while (*++op = *arg++)
+	while ( (*++op = *arg++) )
 		;
 	return(op);
 }

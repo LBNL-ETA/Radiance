@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.34 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.35 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -595,7 +595,7 @@ XButtonPressedEvent	*ebut;
 	XMaskEvent(ourdisplay, ButtonReleaseMask, levptr(XEvent));
 	endx = levptr(XButtonReleasedEvent)->x;
 	endy = levptr(XButtonReleasedEvent)->y;
-	if (endx == startx | endy == starty) {
+	if ((endx == startx) | (endy == starty)) {
 		XBell(ourdisplay, 0);
 		return;
 	}

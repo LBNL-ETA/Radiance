@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.10 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.11 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -87,7 +87,7 @@ nextscan()				/* read and condition next scanline */
 		mbscan(scanbuf, scanlen(&inpres), &mbcond);
 	else if (cwarpfile != NULL)		/* device color space warp */
 		cwscan(scanbuf, scanlen(&inpres), cwarp);
-	else if (lumf == cielum | inprims != outprims)
+	else if ((lumf == cielum) | (inprims != outprims))
 		matscan(scanbuf, scanlen(&inpres), mbcond.cmat);
 	nread++;
 	return(scanbuf);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.13 2003/03/12 04:59:05 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.14 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -73,7 +73,7 @@ register RAY  *r;
 	mirtest = transtest = 0;
 	mirdist = transdist = r->rot;
 						/* perturb normal */
-	if (hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY)) {
+	if ( (hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY)) ) {
 		pdot = raynormal(pnorm, r);
 	} else {
 		VCOPY(pnorm, r->ron);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.26 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.27 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -106,7 +106,7 @@ int	tight;
 				d*(c*d-b*e) + f*b*b);
 		while (n-- > 0) {
 			if (gc->w>>1 == gi[i] &&
-					(gc->w&1) ^ root[n] < gp[gc->w>>1]) {
+					(gc->w&1) ^ (root[n] < gp[gc->w>>1])) {
 				if (gc->w&1)
 					gcl->gmin[i] = -FHUGE;
 				else
@@ -132,7 +132,7 @@ int	tight;
 			n = quadratic(root, a, b*yex+d, yex*(yex*c+e)+f);
 			while (n-- > 0) {
 				if (gc->w>>1 == gi[i] &&
-					(gc->w&1) ^ root[n] < gp[gc->w>>1])
+					(gc->w&1) ^ (root[n] < gp[gc->w>>1]))
 					continue;
 				if (root[n] < gcl->gmin[i])
 					gcl->gmin[i] = root[n];

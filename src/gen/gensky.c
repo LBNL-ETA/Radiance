@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.20 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.21 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -35,7 +35,7 @@ extern double  stadj(), sdec(), sazi(), salt(), tz2mer();
 #define  S_UNIF		3
 #define  S_INTER	4
 
-#define  overcast	(skytype==S_OVER|skytype==S_UNIF)
+#define  overcast	((skytype==S_OVER)|(skytype==S_UNIF))
 
 double  normsc();
 					/* sun calculation constants */
@@ -362,7 +362,7 @@ char  *hs;
 	register char  *cp = hs;
 	register int	i, j;
 
-	if (tsolar = *cp == '+') cp++;		/* solar time? */
+	if ( (tsolar = *cp == '+') ) cp++;		/* solar time? */
 	while (isdigit(*cp)) cp++;
 	if (*cp == ':')
 		hour = atoi(hs) + atoi(++cp)/60.0;

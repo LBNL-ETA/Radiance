@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_instance.c,v 2.3 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.4 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  o_instance.c - routines for creating octrees for other octrees
@@ -64,7 +64,7 @@ CUBE  *cu;
 				v1[j] += cu->cusize;
 		}
 		multp3(v2, v1, fxf->b.xfm);
-		if (j = plocate(v2, cumin, cumax))
+		if ( (j = plocate(v2, cumin, cumax)) )
 			vout++;
 		vloc &= j;
 	}
@@ -85,7 +85,7 @@ CUBE  *cu;
 				v1[j] += cu1->cusize;
 		}
 		multp3(vert[i], v1, fxf->f.xfm);
-		if (j = plocate(vert[i], cumin, cumax))
+		if ( (j = plocate(vert[i], cumin, cumax)) )
 			vloc &= j;
 		else
 			return(O_HIT);	/* vertex inside */

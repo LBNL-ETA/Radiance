@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.20 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.21 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -100,7 +100,7 @@ char	*argv[];
 		default:
 			goto userr;
 		}
-	if (i > argc | i < argc-1)
+	if ((i > argc) | (i < argc-1))
 		goto userr;
 	if (i == argc)
 		inpfile = "<stdin>";
@@ -137,7 +137,7 @@ FILE	*fp;
 	ID	tmpid;
 	register int	i;
 
-	while (argc = getstmt(argv, fp))
+	while ( (argc = getstmt(argv, fp)) )
 		switch (argv[0][0]) {
 		case 'f':				/* face */
 			if (!argv[0][1])
@@ -188,7 +188,7 @@ FILE	*fp;
 
 	nstats = nunknown = 0;
 					/* scan until EOF */
-	while (argc = getstmt(argv, fp)) {
+	while ( (argc = getstmt(argv, fp)) ) {
 		switch (argv[0][0]) {
 		case 'v':		/* vertex */
 			switch (argv[0][1]) {
@@ -357,7 +357,7 @@ getonm()				/* invent a good name for object */
 		cp2 = group[i];
 		if (cp1 > name)
 			*cp1++ = '.';
-		while (*cp1 = *cp2++)
+		while ( (*cp1 = *cp2++) )
 			if (++cp1 >= name+sizeof(name)-2) {
 				*cp1 = '\0';
 				return(name);

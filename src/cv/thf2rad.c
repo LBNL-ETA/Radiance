@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: thf2rad.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: thf2rad.c,v 2.7 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /* Copyright (c) 1988 Regents of the University of California */
 
@@ -78,7 +78,7 @@ char	*name, *file;
 		if (name == NULL)
 			name = file;
 	}
-	for (cp = nambuf; *cp = *name++; cp++)
+	for (cp = nambuf; (*cp = *name++); cp++)
 		;
 				/* get objects from file */
 	on = 0;

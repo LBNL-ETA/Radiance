@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.51 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.52 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -143,7 +143,7 @@ int	wr;
 hdrelease(fd)		/* stop tracking file fragments for some section */
 register int	fd;
 {
-	if (fd < 0 | fd >= nhdfragls || !hdfragl[fd].nlinks)
+	if ((fd < 0) | (fd >= nhdfragls) || !hdfragl[fd].nlinks)
 		return;
 	if (!--hdfragl[fd].nlinks && hdfragl[fd].nfrags) {
 		free((void *)hdfragl[fd].fi);
@@ -213,12 +213,13 @@ HDGRID	*hproto;		/* holodeck section grid */
 	fpos = hdfilen(fd);
 	biglob(hp)->nrd = rtrunc = 0;
 	for (n = hproto == NULL ? nbeams(hp) : 0; n > 0; n--)
-		if (hp->bi[n].nrd)
+		if (hp->bi[n].nrd) {
 			if (hp->bi[n].fo+hp->bi[n].nrd*sizeof(RAYVAL) > fpos) {
 				rtrunc += hp->bi[n].nrd;
 				hp->bi[n].nrd = 0;
 			} else
 				biglob(hp)->nrd += hp->bi[n].nrd;
+		}
 	if (rtrunc) {
 		sprintf(errmsg, "truncated section, %ld rays lost (%.1f%%)",
 				rtrunc, 100.*rtrunc/(rtrunc+biglob(hp)->nrd));
@@ -405,7 +406,7 @@ int	nr;			/* number of new rays desired */
 	int	n;
 
 	if (nr <= 0) return(NULL);
-	CHECK(i < 1 | i > nbeams(hp),
+	CHECK((i < 1) | (i > nbeams(hp)),
 			CONSISTENCY, "bad beam index given to hdnewrays");
 	if (hp->bl[i] != NULL)
 		hp->bl[i]->tick = hdclock;	/* preempt swap */
@@ -446,7 +447,7 @@ register int	i;
 {
 	register int	n;
 
-	CHECK(i < 1 | i > nbeams(hp),
+	CHECK((i < 1) | (i > nbeams(hp)),
 			CONSISTENCY, "bad beam index given to hdgetbeam");
 	if (hp->bl[i] == NULL) {		/* load from disk */
 		if (!(n = hp->bi[i].nrd))
@@ -500,7 +501,7 @@ void	(*bf)();		/* callback function (optional) */
 					/* precheck consistency */
 	if (n <= 0) return;
 	for (i = n; i--; )
-		if (hb[i].h==NULL || hb[i].b<1 | hb[i].b>nbeams(hb[i].h))
+		if (hb[i].h==NULL || (hb[i].b<1) | (hb[i].b>nbeams(hb[i].h)))
 			error(CONSISTENCY, "bad beam in hdloadbeams");
 					/* sort list for optimal access */
 	qsort((void *)hb, n, sizeof(HDBEAMI), hdfilord);
@@ -621,7 +622,7 @@ register int32	*listsiz;
 	register struct fraglist	*f;
 	register int	i;
 
-	if (fd < 0 | fd >= nhdfragls || !(f = &hdfragl[fd])->nlinks)
+	if ((fd < 0) | (fd >= nhdfragls) || !(f = &hdfragl[fd])->nlinks)
 		return(0);		/* listless */
 	if (listlen != NULL)
 		*listlen = f->nfrags;
@@ -761,7 +762,7 @@ register int	i;
 		return(nchanged);
 	}
 	if (i == 0) {			/* clobber entire holodeck */
-		if (biglob(hp)->nrd == 0 & blglob(hp)->nrm == 0)
+		if ((biglob(hp)->nrd == 0) & (blglob(hp)->nrm == 0))
 			return(0);		/* already empty */
 		nchanged = 0;
 		nchanged = 0;

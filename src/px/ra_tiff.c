@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.25 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.26 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -208,7 +208,7 @@ allocbufs()			/* allocate scanline buffers */
 			(CHK(C_GRY) ? 1 : 3);
 	cvts.r.p = (char *)malloc(rsiz*cvts.xmax);
 	cvts.t.p = (char *)malloc(tsiz*cvts.xmax);
-	if (cvts.r.p == NULL | cvts.t.p == NULL)
+	if ((cvts.r.p == NULL) | (cvts.t.p == NULL))
 		quiterr("no memory to allocate scanline buffers");
 }
 
@@ -660,7 +660,7 @@ void
 RRGGBB2Color(y)			/* read/convert/write RGB16->COLOR scanline */
 uint32	y;
 {
-	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	register double	d;
 	register int	x;
 
@@ -807,7 +807,7 @@ void
 GGry2Color(y)			/* read/convert/write G16->COLOR scanline */
 uint32	y;
 {
-	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	double	m;
 	register double	d;
 	register int	x;
@@ -837,7 +837,7 @@ void
 Color2GGry(y)			/* read/convert/write COLOR->G16 scanline */
 uint32	y;
 {
-	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
 	register int	x;
 
@@ -926,7 +926,7 @@ void
 Color2RRGGBB(y)			/* read/convert/write COLOR->RGB16 scanline */
 uint32	y;
 {
-	int	dogamma = cvts.gamcor < 0.99 | cvts.gamcor > 1.01;
+	int	dogamma = (cvts.gamcor < 0.99) | (cvts.gamcor > 1.01);
 	float	m = pow(2.,(double)cvts.bradj);
 	register int	x, i;
 

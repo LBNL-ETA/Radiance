@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.13 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.14 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -58,7 +58,7 @@ int	len;
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0)
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 #if TM_PIC_CTRANS
 	if (tmNeedMatrix(tmTop)) {		/* need floating point */
@@ -187,8 +187,8 @@ FILE	*fp;
 						/* check arguments */
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (lpp == NULL | xp == NULL | yp == NULL |
-			(fname == NULL & fp == TM_GETFILE))
+	if ((lpp == NULL) | (xp == NULL) | (yp == NULL) |
+			((fname == NULL) & (fp == TM_GETFILE)))
 		returnErr(TM_E_ILLEGAL);
 	*xp = *yp = 0;				/* error precaution */
 	if ((inpf = fp) == TM_GETFILE && (inpf = fopen(fname, "r")) == NULL)
@@ -197,7 +197,7 @@ FILE	*fp;
 	if (cpp != TM_NOCHROMP) *cpp = NULL;
 	info = rhdefault;			/* get our header */
 	getheader(inpf, headline, (char *)&info);
-	if (info.format == FMTBAD | info.expos <= 0. ||
+	if ((info.format == FMTBAD) | (info.expos <= 0.) ||
 			fgetresolu(xp, yp, inpf) < 0) {
 		err = TM_E_BADFILE; goto done;
 	}
@@ -305,7 +305,7 @@ char	*fname;
 		rp = (BYTE *)malloc(sizeof(BYTE) * *xp * *yp);
 	else
 		rp = (BYTE *)malloc(3*sizeof(BYTE) * *xp * *yp);
-	if ((*psp = rp) == NULL | scan == NULL) {
+	if (((*psp = rp) == NULL) | (scan == NULL)) {
 		pclose(infp);
 		returnErr(TM_E_NOMEM);
 	}
@@ -351,8 +351,8 @@ FILE	*fp;
 	TMbright	*lp;
 	int	err;
 						/* check arguments */
-	if (psp == NULL | xp == NULL | yp == NULL | monpri == NULL |
-			(fname == NULL & fp == TM_GETFILE))
+	if ((psp == NULL) | (xp == NULL) | (yp == NULL) | (monpri == NULL) |
+			((fname == NULL) & (fp == TM_GETFILE)))
 		returnErr(TM_E_ILLEGAL);
 						/* set defaults */
 	if (gamval < MINGAM) gamval = DEFGAM;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.13 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.14 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -56,7 +56,7 @@ char	*argv[];
 				pixaspect = atof(argv[++i]);
 			else if (argv[i][2] == 'e') {
 				expval = atof(argv[++i]);
-				if (argv[i][0] == '-' | argv[i][0] == '+')
+				if ((argv[i][0] == '-') | (argv[i][0] == '+'))
 					expval = pow(2., expval);
 			} else
 				goto userr;
@@ -212,9 +212,9 @@ int	fn;
 	fputs(VIEWSTR, stdout);
 	fprintview(&myview, stdout);
 	fputc('\n', stdout);
-	if (pa < 0.99 | pa > 1.01)
+	if ((pa < 0.99) | (pa > 1.01))
 		fputaspect(pa, stdout);
-	if (expval < 0.99 | expval > 1.01)
+	if ((expval < 0.99) | (expval > 1.01))
 		fputexpos(expval, stdout);
 	fputformat(COLRFMT, stdout);
 	fputc('\n', stdout);
@@ -292,7 +292,7 @@ initialize()			/* initialize holodeck and buffers */
 	mypixel = (COLOR *)bmalloc(xres*yres*sizeof(COLOR));
 	myweight = (float *)bmalloc(xres*yres*sizeof(float));
 	mydepth = (float *)bmalloc(xres*yres*sizeof(float));
-	if (mypixel == NULL | myweight == NULL | mydepth == NULL)
+	if ((mypixel == NULL) | (myweight == NULL) | (mydepth == NULL))
 		error(SYSTEM, "out of memory in initialize");
 }
 

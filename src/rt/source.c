@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.34 2003/06/24 15:37:01 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.35 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -115,7 +115,7 @@ marksources()			/* find and mark source objects */
 	maxcntr = nsources + MAXSPART;	/* start with this many */
 	srccnt = (CONTRIB *)malloc(maxcntr*sizeof(CONTRIB));
 	cntord = (CNTPTR *)malloc(maxcntr*sizeof(CNTPTR));
-	if (srccnt == NULL | cntord == NULL)
+	if ((srccnt == NULL) | (cntord == NULL))
 		goto memerr;
 	return;
 memerr:
@@ -297,7 +297,7 @@ char  *p;			/* data for f */
 					maxcntr*sizeof(CONTRIB));
 			cntord = (CNTPTR *)realloc((void *)cntord,
 					maxcntr*sizeof(CNTPTR));
-			if (srccnt == NULL | cntord == NULL)
+			if ((srccnt == NULL) | (cntord == NULL))
 				error(SYSTEM, "out of memory in direct");
 		}
 		cntord[sn].sndx = sn;
@@ -493,7 +493,7 @@ register RAY  *r;
 
 static int weaksrcmod(obj) int obj;	/* efficiency booster function */
 {register OBJREC *o = objptr(obj);
-return(o->otype==MAT_ILLUM|o->otype==MAT_GLOW);}
+return((o->otype==MAT_ILLUM)|(o->otype==MAT_GLOW));}
 
 #define  illumblock(m, r)	(!(source[r->rsrc].sflags&SVIRTUAL) && \
 				r->rod > 0.0 && \

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.16 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.17 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -79,7 +79,7 @@ register RAY  *r;
 
 	raytexture(r, m->omod);			/* get modifiers */
 
-	if (hastexture = DOT(r->pert,r->pert) > FTINY*FTINY)
+	if ( (hastexture = DOT(r->pert,r->pert) > FTINY*FTINY) )
 		cos1 = raynormal(dnorm, r);	/* perturb normal */
 	else {
 		VCOPY(dnorm, r->ron);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: savqstr.c,v 2.7 2003/07/17 09:21:29 schorsch Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.8 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -30,7 +30,7 @@ register char  *s;
 		eputs("out of memory in savqstr");
 		quit(1);
 	}
-	for (cp = newp; *cp++ = *s++; )		/* inline strcpy() */
+	for (cp = newp; (*cp++ = *s++); )		/* inline strcpy() */
 		;
 	return(newp);				/* return new location */
 }

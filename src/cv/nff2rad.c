@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: nff2rad.c,v 2.5 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: nff2rad.c,v 2.6 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Convert Neutral File Format input to Radiance scene description.
@@ -427,7 +427,7 @@ cone()
 				progname);
 		exit(1);
 	}
-	if (invert = r0 < 0.) {
+	if ( (invert = r0 < 0.) ) {
 		r0 = -r0;
 		r1 = -r1;
 	}
@@ -544,10 +544,13 @@ fmterr:
 	exit(1);
 }
 /***********************************************************************
- * $Author: greg $ (Mark VandeWettering, drizzle.cs.uoregon.edu)
- * $Revision: 2.5 $
- * $Date: 2003/02/22 02:07:23 $
+ * $Author: schorsch $ (Mark VandeWettering, drizzle.cs.uoregon.edu)
+ * $Revision: 2.6 $
+ * $Date: 2003/07/27 22:12:01 $
  * $Log: nff2rad.c,v $
+ * Revision 2.6  2003/07/27 22:12:01  schorsch
+ * Added grouping parens to reduce ambiguity warnings.
+ *
  * Revision 2.5  2003/02/22 02:07:23  greg
  * Changes and check-in for 3.5 release
  * Includes new source files and modifications not recorded for many years

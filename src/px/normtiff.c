@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.5 2003/07/14 04:56:54 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.6 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -222,7 +222,7 @@ TIFF	*tp;
 	BYTE	*pix;
 					/* check to make sure it's SGILOG */
 	TIFFGetFieldDefaulted(tp, TIFFTAG_PHOTOMETRIC, &phot);
-	if (phot == PHOTOMETRIC_LOGL | phot == PHOTOMETRIC_MINISBLACK)
+	if ((phot == PHOTOMETRIC_LOGL) | (phot == PHOTOMETRIC_MINISBLACK))
 		flags |= TM_F_BW;
 					/* read and tone map TIFF */
 	if (tmMapTIFF(&pix, &xsiz, &ysiz, flags,

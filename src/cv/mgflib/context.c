@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: context.c,v 1.27 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: context.c,v 1.28 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Context handlers
@@ -152,8 +152,8 @@ register char	**av;
 		c_ccolor->cx = atof(av[1]);
 		c_ccolor->cy = atof(av[2]);
 		c_ccolor->flags = C_CDXY|C_CSXY;
-		if (c_ccolor->cx < 0. | c_ccolor->cy < 0. |
-				c_ccolor->cx + c_ccolor->cy > 1.)
+		if ((c_ccolor->cx < 0.) | (c_ccolor->cy < 0.) |
+				(c_ccolor->cx + c_ccolor->cy > 1.))
 			return(MG_EILL);
 		c_ccolor->clock++;
 		return(MG_OK);
@@ -278,7 +278,7 @@ register char	**av;
 		if (!isflt(av[1]))
 			return(MG_ETYPE);
 		c_cmaterial->rd = atof(av[1]);
-		if (c_cmaterial->rd < 0. | c_cmaterial->rd > 1.)
+		if ((c_cmaterial->rd < 0.) | (c_cmaterial->rd > 1.))
 			return(MG_EILL);
 		c_cmaterial->rd_c = *c_ccolor;
 		c_cmaterial->clock++;
@@ -300,7 +300,7 @@ register char	**av;
 		if (!isflt(av[1]))
 			return(MG_ETYPE);
 		c_cmaterial->td = atof(av[1]);
-		if (c_cmaterial->td < 0. | c_cmaterial->td > 1.)
+		if ((c_cmaterial->td < 0.) | (c_cmaterial->td > 1.))
 			return(MG_EILL);
 		c_cmaterial->td_c = *c_ccolor;
 		c_cmaterial->clock++;
@@ -312,8 +312,8 @@ register char	**av;
 			return(MG_ETYPE);
 		c_cmaterial->rs = atof(av[1]);
 		c_cmaterial->rs_a = atof(av[2]);
-		if (c_cmaterial->rs < 0. | c_cmaterial->rs > 1. |
-				c_cmaterial->rs_a < 0.)
+		if ((c_cmaterial->rs < 0.) | (c_cmaterial->rs > 1.) |
+				(c_cmaterial->rs_a < 0.))
 			return(MG_EILL);
 		c_cmaterial->rs_c = *c_ccolor;
 		c_cmaterial->clock++;
@@ -325,8 +325,8 @@ register char	**av;
 			return(MG_ETYPE);
 		c_cmaterial->ts = atof(av[1]);
 		c_cmaterial->ts_a = atof(av[2]);
-		if (c_cmaterial->ts < 0. | c_cmaterial->ts > 1. |
-				c_cmaterial->ts_a < 0.)
+		if ((c_cmaterial->ts < 0.) | (c_cmaterial->ts > 1.) |
+				(c_cmaterial->ts_a < 0.))
 			return(MG_EILL);
 		c_cmaterial->ts_c = *c_ccolor;
 		c_cmaterial->clock++;
@@ -573,7 +573,7 @@ char	**av;
 	double	wl0, wlstep;
 	double	boxpos, boxstep;
 					/* check bounds */
-	if (wlmax <= C_CMINWL | wlmax <= wlmin | wlmin >= C_CMAXWL)
+	if ((wlmax <= C_CMINWL) | (wlmax <= wlmin) | (wlmin >= C_CMAXWL))
 		return(MG_EILL);
 	wlstep = (wlmax - wlmin)/(ac-1);
 	while (wlmin < C_CMINWL) {
@@ -618,14 +618,14 @@ char	**av;
 	wl0 = wlmin;
 	pos = 0;
 	for (i = 0, wl = C_CMINWL; i < C_CNSS; i++, wl += C_CWLI)
-		if (wl < wlmin | wl > wlmax)
+		if ((wl < wlmin) | (wl > wlmax))
 			clr->ssamp[i] = 0;
 		else {
 			while (wl0 + wlstep < wl+FTINY) {
 				wl0 += wlstep;
 				pos++;
 			}
-			if (wl+FTINY >= wl0 & wl-FTINY <= wl0)
+			if ((wl+FTINY >= wl0) & (wl-FTINY <= wl0))
 				clr->ssamp[i] = scale*va[pos] + .5;
 			else		/* interpolate if necessary */
 				clr->ssamp[i] = .5 + scale / wlstep *

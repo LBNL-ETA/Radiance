@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11raster.c,v 2.11 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: x11raster.c,v 2.12 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * x11raster.c - routines to handle images for X windows.
@@ -64,7 +64,7 @@ BYTE	cmap[][3];
 	register unsigned char	*p;
 	register int	i;
 
-	if (xr->image->depth > 8 | xr->ncolors != 0)
+	if ((xr->image->depth > 8) | (xr->ncolors != 0))
 		return(xr->ncolors);
 	xr->pmap = (short *)malloc(256*sizeof(short));
 	if (xr->pmap == NULL)

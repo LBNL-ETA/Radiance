@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psplot.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: psplot.c,v 1.2 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  *  psplot.c - routines for generating PostScript output.
@@ -318,7 +318,7 @@ register PRIMITIVE	*p;
 		printf("%d %d lineto\n", curx = p->xy[XMX], cury = y2);
 	} else if (curx == p->xy[XMX] && cury == y2) {
 		printf("%d %d lineto\n", curx = p->xy[XMN], cury = y1);
-	} else if (right = !right) {
+	} else if ( (right = !right) ) {
 		printf("%d %d moveto ", p->xy[XMN], y1);
 		printf("%d %d lineto\n", curx = p->xy[XMX], cury = y2);
 	} else {

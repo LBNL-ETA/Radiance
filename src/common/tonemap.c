@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.12 2003/07/15 00:30:09 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.13 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -170,7 +170,7 @@ int	len;
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0)
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	for (i = len; i--; ) {
 		if (tmNeedMatrix(tmTop))		/* get monitor RGB */
@@ -243,7 +243,7 @@ int	len;
 
 	if (tmTop == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ls == NULL | scan == NULL | len < 0)
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	for (i = len; i--; )
 		if (scan[i] <= TM_NOLUM) {
@@ -428,7 +428,7 @@ double	Ldmax;
 					/* clamp histogram */
 	histo = (int *)malloc(histlen*sizeof(int));
 	cumf = (float *)malloc((histlen+2)*sizeof(float));
-	if (histo == NULL | cumf == NULL)
+	if ((histo == NULL) | (cumf == NULL))
 		returnErr(TM_E_NOMEM);
 	cumf[histlen+1] = 1.;		/* guard for assignment code */
 	for (i = histlen; i--; )	/* make malleable copy */
@@ -496,7 +496,7 @@ int	len;
 
 	if (tmTop == NULL || tmTop->lumap == NULL)
 		returnErr(TM_E_TMINVAL);
-	if (ps == NULL | ls == NULL | len < 0)
+	if ((ps == NULL) | (ls == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	while (len--) {
 		if ((li = *ls++) < tmTop->mbrmin) {
@@ -538,7 +538,7 @@ register struct tmStruct	*tms;
 {
 	register struct tmStruct	*tms2;
 					/* special cases first */
-	if (tms == NULL | tmTop == NULL)
+	if ((tms == NULL) | (tmTop == NULL))
 		return(0);
 	if (tms == tmTop) {
 		tmTop = tms->tmprev;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.4 2003/07/07 17:21:51 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.5 2003/07/27 22:12:04 schorsch Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -51,10 +51,10 @@ refine_first()			/* initial refinement pass */
 		if (xmbuffer[n] == MO_UNK)
 			continue;
 		xp = x + xmbuffer[n];
-		if ((xp < 0 | xp >= hres))
+		if ((xp < 0) | (xp >= hres))
 			continue;
 		yp = y + ymbuffer[n];
-		if ((yp < 0 | yp >= vres))
+		if ((yp < 0) | (yp >= vres))
 			continue;
 		np = fndx(xp, yp);
 					/* make sure we hit same object */
@@ -135,7 +135,7 @@ static void
 sum_consp(cdest, cs)		/* sum in conspicuity result */
 register struct ConspSum	*cdest, *cs;
 {
-	if ((cdest == NULL | cs == NULL))
+	if ((cdest == NULL) | (cs == NULL))
 		return;
 	addcolor(cdest->vsum, cs->vsum);
 	addcolor(cdest->v2sum, cs->v2sum);
@@ -165,7 +165,7 @@ register struct ConspSum	*cs;
 	} else
 		eest = estimaterr(cs->vsum, cs->v2sum, cs->nsamp, cs->nsamp);
 	
-	if ((x0 == x1-1 & y0 == y1-1)) {	/* update pixel error */
+	if ((x0 == x1-1) & (y0 == y1-1)) {	/* update pixel error */
 		int	n = fndx(x0, y0);
 		int	ai;
 		int	ne;
@@ -235,12 +235,12 @@ struct ConspSum	*cs;
 	struct ConspSum	mysum;
 	int	i;
 
-	if ((x0 >= x1 | y0 >= y1))
+	if ((x0 >= x1) | (y0 >= y1))
 		error(CONSISTENCY, "bad call to subconspicuity");
 
 	clr_consp(&mysum);			/* prepare sum */
 
-	if ((x0 == x1-1 & y0 == y1-1)) {	/* single pixel */
+	if ((x0 == x1-1) & (y0 == y1-1)) {	/* single pixel */
 		double	hls;
 		register int	n = fndx(x0, y0);
 		if (sbuffer[n]) {
@@ -389,9 +389,9 @@ register int	n;
 		if (sbuffer[n] != 1)
 			error(CONSISTENCY, "bad code in ray_refine");
 		if (getambcolor(ctmp, obuffer[n]) &&
-				(colval(ctmp,RED) > 0.01 &
-				 colval(ctmp,GRN) > 0.01 &
-				 colval(ctmp,BLU) > 0.01)) {
+				(colval(ctmp,RED) > 0.01) &
+				(colval(ctmp,GRN) > 0.01) &
+				(colval(ctmp,BLU) > 0.01)) {
 			for (i = 0; i < 3; i++)
 				asump->diffsum[i] +=
 				    (colval(ir.rcol,i) - colval(cbuffer[n],i))
@@ -471,13 +471,13 @@ int	pass;
 	static long	ray_cnt = 0;
 	static double	ctime_used = 0;
 	static int	csp_cnt = 0;
-	int	timed = (fcur > fbeg | pass > 0 | quickstart);
+	int	timed = (fcur > fbeg) | (pass > 0) | (quickstart);
 	double	time_start, rtime_start, time_done;
 	struct AmbSum	myAmbSum;
 	long	rays_todo, nr;
 	register int	n;
 					/* IBR refinement? */
-	if ((pass == 0 & fcur > fbeg))
+	if ((pass == 0) & (fcur > fbeg))
 		return(refine_first());
 					/* any time left? */
 	time_start = getTime();
@@ -599,7 +599,7 @@ if (pass == 1) {
 	return(1);
 nomore:
 					/* make sure error map is updated */
-	if ((fcur == fbeg | pass > 1))
+	if ((fcur == fbeg) | (pass > 1))
 		comp_frame_error();
 	return(0);
 }

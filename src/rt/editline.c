@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: editline.c,v 2.6 2003/06/30 19:04:29 greg Exp $";
+static const char	RCSid[] = "$Id: editline.c,v 2.7 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  editline.c - routine for editing raw input for rview.
@@ -84,7 +84,7 @@ register struct driver  *d;
 	for (cp = mybuf; *cp; cp++)
 		;
 	comstart = cp;
-	while (*cp++ = *b)
+	while ( (*cp++ = *b) )
 		if (cp >= mybuf+sizeof(mybuf)) {
 			*comstart = '\0';
 			return;		/* what should I do about this? */

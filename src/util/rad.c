@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.70 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.71 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -169,7 +169,7 @@ char	*argv[];
 		goto userr;
 	rifname = argv[i];
 				/* check command-line options */
-	if (nprocs > 1 & viewselect != NULL)
+	if ((nprocs > 1) & (viewselect != NULL))
 		nprocs = 1;
 				/* assign Radiance root file name */
 	rootname(radname, rifname);
@@ -216,7 +216,7 @@ register char	*rn, *fn;
 {
 	char	*tp, *dp;
 
-	for (tp = NULL, dp = rn; *rn = *fn++; rn++)
+	for (tp = NULL, dp = rn; (*rn = *fn++); rn++)
 		if (ISDIRSEP(*rn))
 			dp = rn;
 		else if (*rn == '.')
@@ -448,11 +448,11 @@ oconv()				/* run oconv and mkillum if necessary */
 	}
 	if (oct1name == vval(OCTREE))		/* no mkillum? */
 		oct1date = octreedate > matdate ? octreedate : matdate;
-	if (oct1date >= octreedate & oct1date >= matdate
-			& oct1date >= illumdate)	/* all done */
+	if ((oct1date >= octreedate) & (oct1date >= matdate)
+			& (oct1date >= illumdate))	/* all done */
 		return;
 						/* make octree0 */
-	if (oct0date < scenedate | oct0date < illumdate) {
+	if ((oct0date < scenedate) | (oct0date < illumdate)) {
 		if (touchonly && oct0date)
 			touch(oct0name);
 		else {				/* build command */
@@ -523,7 +523,7 @@ addarg(op, arg)				/* add argument and advance pointer */
 register char	*op, *arg;
 {
 	*op = ' ';
-	while (*++op = *arg++)
+	while ( (*++op = *arg++) )
 		;
 	return(op);
 }
@@ -613,7 +613,7 @@ char	*po;
 			&siz[0], &org[1], &siz[1], &org[2], &siz[2]) != 6)
 		badvalue(ZONE);
 	siz[0] -= org[0]; siz[1] -= org[1]; siz[2] -= org[2];
-	if (siz[0] <= FTINY | siz[1] <= FTINY | siz[2] <= FTINY)
+	if ((siz[0] <= FTINY) | (siz[1] <= FTINY) | (siz[2] <= FTINY))
 		badvalue(ZONE);
 	getoctcube(org, &d);
 	d *= 3./(siz[0]+siz[1]+siz[2]);
@@ -681,7 +681,7 @@ char	*po;
 			&siz[0], &org[1], &siz[1], &org[2], &siz[2]) != 6)
 		badvalue(ZONE);
 	siz[0] -= org[0]; siz[1] -= org[1]; siz[2] -= org[2];
-	if (siz[0] <= FTINY | siz[1] <= FTINY | siz[2] <= FTINY)
+	if ((siz[0] <= FTINY) | (siz[1] <= FTINY) | (siz[2] <= FTINY))
 		badvalue(ZONE);
 	getoctcube(org, &d);
 	asz = (siz[0]+siz[1]+siz[2])/3.;
@@ -718,7 +718,7 @@ char	*po;
 	else
 		op = addarg(op, "-ds .3");
 	op = addarg(op, "-dt .1 -dc .5 -dr 1 -sj .7 -st .1");
-	if (overture = vint(INDIRECT)) {
+	if ( (overture = vint(INDIRECT)) ) {
 		sprintf(op, " -ab %d", overture);
 		op += strlen(op);
 	}
@@ -759,7 +759,7 @@ char	*po;
 			&siz[0], &org[1], &siz[1], &org[2], &siz[2]) != 6)
 		badvalue(ZONE);
 	siz[0] -= org[0]; siz[1] -= org[1]; siz[2] -= org[2];
-	if (siz[0] <= FTINY | siz[1] <= FTINY | siz[2] <= FTINY)
+	if ((siz[0] <= FTINY) | (siz[1] <= FTINY) | (siz[2] <= FTINY))
 		badvalue(ZONE);
 	getoctcube(org, &d);
 	asz = (siz[0]+siz[1]+siz[2])/3.;
@@ -907,7 +907,7 @@ register char	*vs;
 			upax = 1-'X'+UPPER(vval(UP)[1]);
 		else
 			upax = 1-'X'+vlet(UP);
-		if (upax < 1 | upax > 3)
+		if ((upax < 1) | (upax > 3))
 			badvalue(UP);
 		if (vval(UP)[0] == '-')
 			upax = -upax;
@@ -930,7 +930,7 @@ register char	*vs;
 		zpos = -1; vs++;
 	}
 	viewtype = 'v';
-	if (*vs == 'v' | *vs == 'l' | *vs == 'a' | *vs == 'h' | *vs == 'c')
+	if((*vs == 'v') | (*vs == 'l') | (*vs == 'a') | (*vs == 'h') | (*vs == 'c'))
 		viewtype = *vs++;
 	cp = viewopts;
 	if ((!*vs || isspace(*vs)) && (xpos|ypos|zpos)) {	/* got one! */
@@ -1041,7 +1041,7 @@ char	*vn;		/* returned view name */
 		return(specview(viewselect));	/* standard view? */
 	}
 	mv = nvalue(VIEWS, n);		/* use view n */
-	if (vn != NULL & mv != NULL) {
+	if ((vn != NULL) & (mv != NULL)) {
 		register char	*mv2 = mv;
 		if (*mv2 != '-')
 			while (*mv2 && !isspace(*mv2))
@@ -1159,7 +1159,7 @@ char	*opts, *po;
 			badvalue(REPORT);
 	}
 					/* set up parallel rendering */
-	if (nprocs > 1 & !vdef(ZFILE)) {
+	if ((nprocs > 1) & (!vdef(ZFILE))) {
 		strcpy(rppopt, "-S 1 -PP pfXXXXXX");
 		pfile = rppopt+9;
 		if (mktemp(pfile) == NULL)
@@ -1380,7 +1380,7 @@ int	all;
 		status = status>>8 & 0xff;
 		--children_running;
 		if (status != 0) {	/* child's problem is our problem */
-			if (ourstatus == 0 & children_running > 0)
+			if ((ourstatus == 0) & (children_running > 0))
 				fprintf(stderr, "%s: waiting for remaining processes\n",
 						progname);
 			ourstatus = status;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.9 2003/06/30 19:04:29 greg Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.10 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -135,7 +135,7 @@ int	len;
 {
 	register int	nexpo;
 
-	if (g_mant == NULL | g_nexp == NULL)
+	if ((g_mant == NULL) | (g_nexp == NULL))
 		return(-1);
 	while (len-- > 0) {
 		nexpo = g_nexp[scan[0][RED]];

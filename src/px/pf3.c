@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.16 2003/06/30 14:59:12 schorsch Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.17 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -101,7 +101,7 @@ initmask()			/* initialize gaussian lookup table */
 	ringsum = (float *)malloc((orad+1)*sizeof(float));
 	ringwt = (short *)malloc((orad+1)*sizeof(short));
 	warr = (float *)malloc(obarsize*obarsize*sizeof(float));
-	if (ringsum == NULL | ringwt == 0 | warr == NULL)
+	if ((ringsum == NULL) | (ringwt == 0) | (warr == NULL))
 		goto memerr;
 	return;
 memerr:

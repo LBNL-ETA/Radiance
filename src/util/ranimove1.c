@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.5 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.6 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -106,7 +106,7 @@ next_frame()			/* prepare next frame buffer */
 			pixaspect = 1.;
 			/* fall through */
 		case 3:
-			if ((hres > 0 & vres > 0))
+			if ((hres > 0) & (vres > 0))
 				break;
 			/* fall through */
 		default:
@@ -125,11 +125,11 @@ next_frame()			/* prepare next frame buffer */
 		zprev = (float *)malloc(sizeof(float)*hres*vres);
 		oprev = (OBJECT *)malloc(sizeof(OBJECT)*hres*vres);
 		aprev = (BYTE *)malloc(sizeof(BYTE)*hres*vres);
-		if ((cbuffer==NULL | zbuffer==NULL | obuffer==NULL |
-				xmbuffer==NULL | ymbuffer==NULL |
-				abuffer==NULL | sbuffer==NULL |
-				cprev==NULL | zprev == NULL |
-				oprev==NULL | aprev==NULL))
+		if ((cbuffer==NULL) | (zbuffer==NULL) | (obuffer==NULL) |
+				(xmbuffer==NULL) | (ymbuffer==NULL) |
+				(abuffer==NULL) | (sbuffer==NULL) |
+				(cprev==NULL) | (zprev == NULL) |
+				(oprev==NULL) | (aprev==NULL))
 			error(SYSTEM, "out of memory in init_frame");
 		frm_stop = getTime() + rtperfrm;
 	} else {
@@ -224,8 +224,8 @@ int	x, y;
 					/* get our object number */
 	myobj = obuffer[fndx(x, y)];
 					/* special case for borders */
-	if ((x < SAMPDIST | x >= hres-SAMPDIST |
-			y < SAMPDIST | y >= vres-SAMPDIST)) {
+	if ((x < SAMPDIST) | (x >= hres-SAMPDIST) |
+			(y < SAMPDIST) | (y >= vres-SAMPDIST)) {
 		int	tndx[NSCHECK][2];
 		nf = 0;
 		for (j = y - SAMPDIST; j <= y + SAMPDIST; j++) {
@@ -237,7 +237,7 @@ int	x, y;
 			i0 = fndx(i, j);
 			if (!sbuffer[i0])
 				continue;
-			if ((myobj != OVOID & obuffer[i0] != myobj))
+			if ((myobj != OVOID) & (obuffer[i0] != myobj))
 				continue;
 			tndx[nf][0] = (i-x)*(i-x) + (j-y)*(j-y);
 			tndx[nf][1] = i0;
@@ -252,7 +252,7 @@ int	x, y;
 		return(nf);
 	}
 					/* initialize offset array */
-	if ((hres != hro | vres != vro)) {
+	if ((hres != hro) | (vres != vro)) {
 		int	toffs[NSCHECK][2];
 		i0 = fndx(SAMPDIST, SAMPDIST);
 		nf = 0;
@@ -271,9 +271,9 @@ int	x, y;
 	}
 					/* find up to nc neighbors */
 	i0 = fndx(x, y);
-	for (j = 0, nf = 0; (j < NSCHECK & nf < nc); j++) {
+	for (j = 0, nf = 0; (j < NSCHECK) & (nf < nc); j++) {
 		i = i0 + ioffs[j];
-		if (sbuffer[i] && (myobj == OVOID | obuffer[i] == myobj))
+		if (sbuffer[i] && (myobj == OVOID) | (obuffer[i] == myobj))
 			iarr[nf++] = i;
 	}
 					/* return number found */
@@ -309,12 +309,12 @@ FVECT	wpos;
 	yp = (int)(ovp[1]*vres);
 	xmbuffer[n] = xp - (n % hres);
 	ymbuffer[n] = yp - (n / hres);
-	if ((xp < 0 | xp >= hres))
+	if ((xp < 0) | (xp >= hres))
 		return;
-	if ((yp < 0 | yp >= vres))
+	if ((yp < 0) | (yp >= vres))
 		return;
 	n = fndx(xp, yp);
-	if ((zprev[n] < 0.97*ovp[2] | zprev[n] > 1.03*ovp[2]))
+	if ((zprev[n] < 0.97*ovp[2]) | (zprev[n] > 1.03*ovp[2]))
 		oprev[n] = OVOID;	/* assume it's a bad match */
 }
 
@@ -407,11 +407,11 @@ init_frame_sample()		/* sample our initial frame */
 		n = fndx(x, y);
 		if ((obj = obuffer[n]) == OVOID)
 			continue;
-		if ((obuffer[n+1] != OVOID & obuffer[n+1] != obj)) {
+		if ((obuffer[n+1] != OVOID) & (obuffer[n+1] != obj)) {
 			obuffer[n] = OVOID;
 			obuffer[n+1] = OVOID;
 		}
-		if ((obuffer[n+hres] != OVOID & obuffer[n+hres] != obj)) {
+		if ((obuffer[n+hres] != OVOID) & (obuffer[n+hres] != obj)) {
 			obuffer[n] = OVOID;
 			obuffer[n+hres] = OVOID;
 		}
@@ -432,7 +432,7 @@ int	obj;
 	if (obj == OVOID)
 		return(0);
 	op = objptr(obj);
-	if ((op->otype == OBJ_INSTANCE & op->omod == OVOID))
+	if ((op->otype == OBJ_INSTANCE) & (op->omod == OVOID))
 		return(0);
 					/* search for material */
 	do {
@@ -529,7 +529,7 @@ int	ns0;
 					/* add together samples */
 	setcolor(csum, 0., 0., 0.);
 	setcolor(csum2, 0., 0., 0.);
-	for (i = 0, ns = 0; (i < nc & ns < NSAMPOK); i++) {
+	for (i = 0, ns = 0; (i < nc) & (ns < NSAMPOK); i++) {
 		n = neigh[i];
 		addcolor(csum, cbuffer[n]);
 		if (val2map != NULL) {
@@ -581,7 +581,7 @@ comp_frame_error()		/* initialize frame error values */
 		for (y = vres; y--; )
 		    for (x = hres; x--; ) {
 			n = fndx(x, y);
-			if ((abuffer[n] != ALOWQ | obuffer[n] == OVOID))
+			if ((abuffer[n] != ALOWQ) | (obuffer[n] == OVOID))
 				continue;
 			if (!getambcolor(objamb, obuffer[n]))
 				continue;
@@ -790,8 +790,8 @@ write_map(cerrmap, "outcmap.pic");
 				scalecolor(cval, w);
 				while (cnt)
 					if (rise2 >= run2) {
-						if ((xl >= 0 & xl < hres &
-							yl >= 0 & yl < vres)) {
+						if ((xl >= 0) & (xl < hres) &
+							(yl >= 0) & (yl < vres)) {
 							n2 = fndx(xl, yl);
 							addcolor(outbuffer[n2],
 									cval);
@@ -811,8 +811,8 @@ write_map(cerrmap, "outcmap.pic");
 				scalecolor(cval, w);
 				while (cnt)
 					if (run2 >= rise2) {
-						if ((xl >= 0 & xl < hres &
-							yl >= 0 & yl < vres)) {
+						if ((xl >= 0) & (xl < hres) &
+							(yl >= 0) & (yl < vres)) {
 							n2 = fndx(xl, yl);
 							addcolor(outbuffer[n2],
 									cval);
@@ -845,7 +845,7 @@ for (n = hres*vres; n--; )
 		setcolor(outbuffer[n], 0., 0., 0.);
 */
 				/* adjust exposure */
-	if ((expval < 0.99 | expval > 1.01))
+	if ((expval < 0.99) | (expval > 1.01))
 		for (n = hres*vres; n--; )
 			scalecolor(outbuffer[n], expval);
 return;
@@ -890,10 +890,10 @@ send_frame()			/* send frame to destination */
 	fputnow(fp);
 	fputs(VIEWSTR, fp); fprintview(&vw, fp); fputc('\n', fp);
 	d = expspec_val(getexp(fcur));
-	if ((d < 0.99 | d > 1.01))
+	if ((d < 0.99) | (d > 1.01))
 		fputexpos(d, fp);
 	d = viewaspect(&vw) * hres / vres;
-	if ((d < 0.99 | d > 1.01))
+	if ((d < 0.99) | (d > 1.01))
 		fputaspect(d, fp);
 	fputformat(COLRFMT, fp);
 	fputc('\n', fp);		/* end header */

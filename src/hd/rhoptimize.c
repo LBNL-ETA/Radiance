@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.14 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.15 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -38,7 +38,7 @@ char	*argv[];
 		dupchecking++;
 		argv++; argc--;
 	}
-	if (argc < 1 | argc > 2) {
+	if ((argc < 1) | (argc > 2)) {
 		fprintf(stderr, "Usage: %s [-u] input.hdk [output.hdk]\n",
 				progname);
 		exit(1);

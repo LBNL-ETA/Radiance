@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.30 2003/07/14 20:02:29 schorsch Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.31 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -72,14 +72,14 @@ char  *argv[];
 		if (argv[a][0] == '-')
 			switch (argv[a][1]) {
 			case 'm':
-				if (argv[a][2] | a+1 >= argc)
+				if (argv[a][2] | (a+1 >= argc))
 					break;
 				a++;
 				if (newmod == NULL)
 					newmod = argv[a];
 				continue;
 			case 'n':
-				if (argv[a][2] | a+1 >= argc)
+				if (argv[a][2] | (a+1 >= argc))
 					break;
 				a++;
 				if (idprefix == NULL)
@@ -121,7 +121,7 @@ char  *argv[];
 
 	a += xf(&tot, argc-a, argv+a);
 
-	if (reverse = tot.sca < 0.0)
+	if ( (reverse = tot.sca < 0.0) )
 		tot.sca = -tot.sca;
 	if (invert)
 		reverse = !reverse;
@@ -220,7 +220,7 @@ int  ac, fi;
 		skipspaces:
 			while (isspace(*cp))	/* nullify spaces */
 				*cp++ = '\0';
-			if ((*cp == '"' | *cp == '\''))
+			if ((*cp == '"') | (*cp == '\''))
 				inquote = *cp++;
 			if (!*cp)		/* all done? */
 				break;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.6 2003/07/03 22:41:44 schorsch Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.7 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -15,6 +15,7 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.6 2003/07/03 22:41:44 schorsch Exp
 
 #include  "platform.h"
 #include  "calcomp.h"
+#include  "rterror.h"
 
 #ifdef  CPM
 #define  getc           agetc   /* text files only, right? */

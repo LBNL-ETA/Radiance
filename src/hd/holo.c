@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holo.c,v 3.19 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: holo.c,v 3.20 2003/07/27 22:12:02 schorsch Exp $";
 #endif
 /*
  * Routines for converting holodeck coordinates, etc.
@@ -35,7 +35,7 @@ register HOLO	*hp;
 	for (i = 0; i < 3; i++) {
 		fcross(hp->wg[i], hp->xv[(i+1)%3], hp->xv[(i+2)%3]);
 		d = DOT(hp->wg[i],hp->xv[i]);
-		if (d <= FTINY & d >= -FTINY)
+		if ((d <= FTINY) & (d >= -FTINY))
 			error(USER, "degenerate holodeck section");
 		d = hp->grid[i] / d;
 		hp->wg[i][0] *= d; hp->wg[i][1] *= d; hp->wg[i][2] *= d;
@@ -63,9 +63,9 @@ register int	i;
 	int	n2, reverse;
 	GCOORD	g2[2];
 					/* check range */
-	if (i < 1 | i > nbeams(hp))
+	if ((i < 1) | (i > nbeams(hp)))
 		return(0);
-	if (reverse = i >= hp->wi[5])
+	if ( (reverse = i >= hp->wi[5]) )
 		i -= hp->wi[5] - 1;
 	for (j = 0; j < 5; j++)		/* find w0 */
 		if (hp->wi[j+1] > i)
@@ -107,13 +107,13 @@ register GCOORD	gc[2];
 	int	reverse;
 	register int	i, j;
 					/* check ordering and limits */
-	if (reverse = gc[0].w > gc[1].w) {
+	if ( (reverse = gc[0].w > gc[1].w) ) {
 		*g2 = *(gc+1);
 		*(g2+1) = *gc;
 		gc = g2;
 	} else if (gc[0].w == gc[1].w)
 		return(0);
-	if (gc[0].w < 0 | gc[1].w > 5)
+	if ((gc[0].w < 0) | (gc[1].w > 5))
 		return(0);
 	i = 0;				/* compute index */
 	for (j = gc[0].w+1; j < gc[1].w; j++)
@@ -296,7 +296,7 @@ FVECT	ro, rd;		/* normalization of rd affects distances */
 			}
 		}
 	}
-	if (gc[0].w < 0 | gc[1].w < 0)		/* paranoid check */
+	if ((gc[0].w < 0) | (gc[1].w < 0))		/* paranoid check */
 		return(FHUGE);
 						/* compute intersections */
 	VSUM(p[0], ro, rd, t0);

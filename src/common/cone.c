@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cone.c,v 2.8 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: cone.c,v 2.9 2003/07/27 22:12:01 schorsch Exp $";
 #endif
 /*
  *  cone.c - routines for making cones
@@ -56,7 +56,7 @@ int  getxf;
 
 		co->ca = o->oargs.farg;
 						/* get radii */
-		if (o->otype == OBJ_CYLINDER | o->otype == OBJ_TUBE) {
+		if ((o->otype == OBJ_CYLINDER) | (o->otype == OBJ_TUBE)) {
 			if (o->oargs.nfargs != 7)
 				goto argcerr;
 			if (co->ca[6] < -FTINY) {
@@ -79,7 +79,7 @@ int  getxf;
 			else sgn1 = 0;
 			if (sgn0+sgn1 == 0)
 				goto raderr;
-			if (sgn0 < 0 | sgn1 < 0) {
+			if ((sgn0 < 0) | (sgn1 < 0)) {
 				objerror(o, o->otype==OBJ_RING?USER:WARNING,
 					"negative radii");
 				o->otype = o->otype == OBJ_CONE ?
@@ -126,7 +126,7 @@ int  getxf;
 		if (o->otype == OBJ_RING) {
 			co->al = 0.0;
 			co->sl = CO_R1(co) - CO_R0(co);
-		} else if (o->otype == OBJ_CONE | o->otype == OBJ_CUP) {
+		} else if ((o->otype == OBJ_CONE) | (o->otype == OBJ_CUP)) {
 			co->sl = co->ca[7] - co->ca[6];
 			co->sl = sqrt(co->sl*co->sl + co->al*co->al);
 		} else { /* OBJ_CYLINDER or OBJ_TUBE */
@@ -206,7 +206,7 @@ register CONE  *co;
 	multmat4(co->tm, co->tm, m4);
 
 				/* scale z-axis */
-	if (co->p0 != co->p1 & co->r0 != co->r1) {
+	if ((co->p0 != co->p1) & (co->r0 != co->r1)) {
 		setident4(m4);
 		m4[2][2] = (CO_R1(co) - CO_R0(co)) / co->al;
 		multmat4(co->tm, co->tm, m4);

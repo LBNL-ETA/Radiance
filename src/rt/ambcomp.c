@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.11 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.12 2003/07/27 22:12:03 schorsch Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -34,7 +34,7 @@ AMBSAMP  *d1, *d2;
 {
 	register int  c;
 
-	if (c = d1->t - d2->t)
+	if ( (c = d1->t - d2->t) )
 		return(c);
 	return(d1->p - d2->p);
 }

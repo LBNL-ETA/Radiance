@@ -97,7 +97,7 @@ char	*argv[];
 		case 'f':			/* frame range */
 			switch (sscanf(argv[++i], "%d,%d", &fbeg, &fend)) {
 			case 2:
-				if ((fbeg <= 0 | fend < fbeg))
+				if ((fbeg <= 0) | (fend < fbeg))
 					goto userr;
 				break;
 			case 1:
@@ -299,7 +299,7 @@ char	*ms;
 		if (isflt(om->prio_file)) {
 			om->prio = atof(om->prio_file);
 			om->prio_file[0] = '\0';
-			haveprio |= (om->prio < 0.95 | om->prio > 1.05);
+			haveprio |= ((om->prio < 0.95) | (om->prio > 1.05));
 		} else
 			haveprio = 1;
 	} else
@@ -572,7 +572,7 @@ char	*s;
 		return(1.0);
 
 	expval = atof(s);
-	if ((s[0] == '+' | s[0] == '-'))
+	if ((s[0] == '+') | (s[0] == '-'))
 		return(pow(2.0, expval));
 	return(expval);
 }
@@ -792,7 +792,7 @@ OBJECT	obj;
 		objnm = obj_move[i].name;
 		len = strlen(objnm);
 		if (!strncmp(onm, objnm, len)) {
-			if ((obj_move[i].parent < 0 & onm[len] == '.'))
+			if ((obj_move[i].parent < 0) & (onm[len] == '.'))
 				break;
 			objnm = getobjname(&obj_move[i]) + len;
 			len2 = strlen(objnm);
