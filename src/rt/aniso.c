@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aniso.c,v 2.35 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: aniso.c,v 2.36 2003/03/03 00:10:51 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -192,9 +192,19 @@ register RAY  *r;
 
 	if (m->oargs.nfargs != (m->otype == MAT_TRANS2 ? 8 : 6))
 		objerror(m, USER, "bad number of real arguments");
+						/* check for back side */
+	if (r->rod < 0.0) {
+		if (!backvis && m->otype != MAT_TRANS2) {
+			raytrans(r);
+			return(1);
+		}
+		raytexture(r, m->omod);
+		flipsurface(r);			/* reorient if backvis */
+	} else
+		raytexture(r, m->omod);
+						/* get material color */
 	nd.mp = m;
 	nd.rp = r;
-						/* get material color */
 	setcolor(nd.mcolor, m->oargs.farg[0],
 			   m->oargs.farg[1],
 			   m->oargs.farg[2]);
@@ -204,16 +214,7 @@ register RAY  *r;
 	nd.v_alpha = m->oargs.farg[5];
 	if (nd.u_alpha < FTINY || nd.v_alpha <= FTINY)
 		objerror(m, USER, "roughness too small");
-						/* check for back side */
-	if (r->rod < 0.0) {
-		if (!backvis && m->otype != MAT_TRANS2) {
-			raytrans(r);
-			return(1);
-		}
-		flipsurface(r);			/* reorient if backvis */
-	}
-						/* get modifiers */
-	raytexture(r, m->omod);
+
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for diraniso() */

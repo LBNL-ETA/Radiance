@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.16 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.17 2003/03/03 00:10:51 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -224,7 +224,7 @@ register RAY  *r;
 	setcolor(nd.tdiff, m->oargs.farg[6],
 			m->oargs.farg[7],
 			m->oargs.farg[8]);
-					/* get modifiers */
+						/* get modifiers */
 	raytexture(r, m->omod);
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
 	if (r->rod < 0.0) {			/* orient perturbed values */
@@ -338,6 +338,18 @@ register RAY  *r;
 	if (m->oargs.nsargs < (hasdata(m->otype)?4:2) | m->oargs.nfargs <
 			(m->otype==MAT_TFUNC|m->otype==MAT_TDATA?6:4))
 		objerror(m, USER, "bad # arguments");
+						/* check for back side */
+	if (r->rod < 0.0) {
+		if (!backvis && m->otype != MAT_TFUNC
+				&& m->otype != MAT_TDATA) {
+			raytrans(r);
+			return(1);
+		}
+		raytexture(r, m->omod);
+		flipsurface(r);			/* reorient if backvis */
+	} else
+		raytexture(r, m->omod);
+
 	nd.mp = m;
 	nd.pr = r;
 						/* get material color */
@@ -359,17 +371,6 @@ register RAY  *r;
 						/* compute reflectance */
 	dtmp = 1.0 - nd.trans - nd.rspec;
 	setcolor(nd.rdiff, dtmp, dtmp, dtmp);
-						/* check for back side */
-	if (r->rod < 0.0) {
-		if (!backvis && m->otype != MAT_TFUNC
-				&& m->otype != MAT_TDATA) {
-			raytrans(r);
-			return(1);
-		}
-		flipsurface(r);			/* reorient if backvis */
-	}
-						/* get modifiers */
-	raytexture(r, m->omod);
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
 	multcolor(nd.mcolor, r->pcol);		/* modify material color */
 	multcolor(nd.rdiff, nd.mcolor);
