@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.18 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.19 2003/08/16 15:54:30 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -288,6 +288,7 @@ init()			/* initialize dispatch table and output */
 	add2dispatch("tube", o_cylinder);
 	add2dispatch("ring", o_ring);
 	add2dispatch("instance", o_instance);
+	add2dispatch("mesh", o_instance);
 	add2dispatch("plastic", o_plastic);
 	add2dispatch("plastic2", o_plastic);
 	add2dispatch("metal", o_metal);
@@ -533,7 +534,7 @@ register FUNARGS	*fa;
 
 
 int
-o_instance(mod, typ, id, fa)	/* convert an instance */
+o_instance(mod, typ, id, fa)	/* convert an instance (or mesh) */
 char	*mod, *typ, *id;
 FUNARGS	*fa;
 {
