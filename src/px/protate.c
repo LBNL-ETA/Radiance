@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: protate.c,v 2.9 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: protate.c,v 2.10 2004/04/30 20:29:24 greg Exp $";
 #endif
 /*
  * prot.c - program to rotate picture file 90 degrees clockwise.
@@ -34,8 +34,9 @@ int	nrows;				/* number of rows output at once */
 char	*progname;
 
 short	ordertab[4][2] = {
-	{0,XDECR}, {XDECR,XDECR|YDECR}, {XDECR|YDECR,YDECR}, {YDECR,0}
+	{0,0}, {XDECR,XDECR|YDECR}, {XDECR|YDECR,YDECR}, {YDECR,XDECR}
 };
+
 
 static int neworder(void);
 static void rotatecw(FILE *fp);
@@ -46,13 +47,26 @@ static void rotateccw(FILE *fp);
 static int
 neworder(void)		/* return corrected order */
 {
+	static short    ordercw[8];
 	register int	i;
 
 	if (correctorder)
 		return(order);
-	for (i = 4; i--; )
-		if ((order&~YMAJOR) == ordertab[i][ccw])
-			return(ordertab[i][1-ccw] | ((order&YMAJOR)^YMAJOR));
+	if (!ordercw[0]) {
+		ordercw[YMAJOR|YDECR] = 0;
+		ordercw[0] = YMAJOR|XDECR;
+		ordercw[YMAJOR|XDECR] = XDECR|YDECR;
+		ordercw[XDECR|YDECR] = YMAJOR|YDECR;
+		ordercw[YMAJOR|XDECR|YDECR] = XDECR;
+		ordercw[XDECR] = YMAJOR;
+		ordercw[YMAJOR] = YDECR;
+		ordercw[YDECR] = YMAJOR|XDECR|YDECR;
+	}
+	if (!ccw)
+		return(ordercw[order]);
+	for (i = 8; i--; )
+		if (ordercw[i] == order)
+			return(i);
 	fputs("Order botch!\n", stderr);
 	exit(2);
 }
