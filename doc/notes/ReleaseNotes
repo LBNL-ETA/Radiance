@@ -1341,3 +1341,16 @@ under which output scanline order is reversed.
 
 Fixed bug in rcalc where it sometimes wasn't parsing the input format
 correctly.
+
+=====================
+Version 3.7
+
+Fixed bug in source occluder cache which caused consistency error
+for distant sources and mist materials.  (Thanks to Mark Stock for
+finding the problem.)
+
+Fixed serious bug in source drawing routines for rpict, where the edges
+of light sources were appearing through obstructions.  (Thanks to Veronica
+Sundstedt for pointing this out.)
+
+(The above were included in the 3.6.1 patch release.)
