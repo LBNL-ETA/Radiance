@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.55 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.56 2004/09/09 01:06:19 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -403,8 +403,7 @@ hdfilen(		/* return file length for fd */
 
 extern off_t
 hdfiluse(	/* compute file usage (in bytes) */
-	int	fd,			/* open file descriptor to check */
-	int	all			/* include overhead and unflushed data */
+	int	fd			/* open file descriptor to check */
 )
 {
 	off_t	total = 0;
@@ -414,15 +413,13 @@ hdfiluse(	/* compute file usage (in bytes) */
 		if (hdlist[j]->fd != fd)
 			continue;
 		total += biglob(hdlist[j])->nrd * sizeof(RAYVAL);
-		if (all) {
-			for (i = nbeams(hdlist[j]); i > 0; i--)
-				if (hdlist[j]->bl[i] != NULL)
-					total += sizeof(RAYVAL) *
+		i = nbeams(hdlist[j]);
+		total += i*sizeof(BEAMI) + sizeof(HDGRID);
+		for ( ; i > 0; i--)
+			if (hdlist[j]->bl[i] != NULL)
+				total += sizeof(RAYVAL) *
 						(hdlist[j]->bl[i]->nrm -
 						hdlist[j]->bi[i].nrd);
-			total += sizeof(HDGRID) +
-					nbeams(hdlist[j])*sizeof(BEAMI);
-		}
 	}
 	return(total);		/* does not include fragments */
 }

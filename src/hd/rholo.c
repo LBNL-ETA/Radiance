@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.66 2004/09/09 00:25:59 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.67 2004/09/09 01:06:19 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -323,7 +323,7 @@ rholo(void)				/* holodeck main loop */
 	static long	nextfragwarn = 100*(1L<<20);
 	static int	idle = 0;
 	PACKET	*pl = NULL, *plend;
-	off_t	fsiz;
+	off_t	fsiz, fuse;
 	int	pksiz;
 	register PACKET	*p;
 	time_t	t;
@@ -345,14 +345,11 @@ rholo(void)				/* holodeck main loop */
 	}
 #if FRAGWARN
 	if (fsiz >= nextfragwarn &&
-		    (fsiz-hdfiluse(hdlist[0]->fd,0))/(fsiz/100) > FRAGWARN) {
-		double	pctfrag = 100.*(fsiz-hdfiluse(hdlist[0]->fd,1))/fsiz;
-		if (pctfrag >= (double)FRAGWARN) {
-			sprintf(errmsg, "holodeck file fragmentation is %.0f%%",
-					pctfrag);
-			error(WARNING, errmsg);
-			nextfragwarn = fsiz + (fsiz>>2);
-		}
+		(fsiz-(fuse=hdfiluse(hdlist[0]->fd)))/(fsiz/100) > FRAGWARN) {
+		sprintf(errmsg, "holodeck file fragmentation is %.0f%%",
+					 100.*(fsiz-fuse)/fsiz);
+		error(WARNING, errmsg);
+		nextfragwarn = fsiz + (fsiz>>2);
 	}
 #endif
 	t = time(NULL);			/* check time */
@@ -662,7 +659,7 @@ int	ec;
 		if ((ncprocs > 0) & (force >= 0) && vdef(REPORT)) {
 			off_t	fsiz, fuse;
 			fsiz = hdfilen(hdlist[0]->fd);
-			fuse = hdfiluse(hdlist[0]->fd, 1);
+			fuse = hdfiluse(hdlist[0]->fd);
 			fprintf(stderr,
 			"%s: %.1f Mbyte holodeck file, %.1f%% fragmentation\n",
 					hdkfile, fsiz/(1024.*1024.),

@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.24 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid: $Id: holo.h,v 3.25 2004/09/09 01:06:19 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -173,7 +173,7 @@ extern HOLO * hdinit(int fd, HDGRID *hproto);
 extern void hddone(HOLO *hp);
 extern int hdsync(HOLO *hp, int all);
 extern off_t hdfilen(int fd);
-extern off_t hdfiluse(int fd, int all);
+extern off_t hdfiluse(int fd);
 extern RAYVAL * hdnewrays(HOLO *hp, int i, int nr);
 extern BEAM * hdgetbeam(HOLO *hp, int i);
 extern void hdloadbeams(HDBEAMI *hb, int n, void (*bf)(BEAM *bp, HDBEAMI *hb));

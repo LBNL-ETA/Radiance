@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.10 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.11 2004/09/09 01:06:19 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -77,7 +77,7 @@ gethdinfo(		/* get information on holodeck */
 			samptot, beamtot, (double)samptot/beamtot);
 	fprintf(fout, "%.1f Mbyte file, %.1f%% fragmentation\n",
 			nextloc/(1024.*1024.),
-			100.*(nextloc-hdfiluse(fd,1))/nextloc);
+			100.*(nextloc-hdfiluse(fd))/nextloc);
 						/* don't bother with cleanup */
 #if 0
 	hddone(NULL);				/* free sections */
