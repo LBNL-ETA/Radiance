@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetline.c,v 2.4 2003/06/27 06:53:21 greg Exp $";
+static const char	RCSid[] = "$Id: fgetline.c,v 2.5 2004/02/11 22:11:33 greg Exp $";
 #endif
 /*
  * fgetline.c - read line with escaped newlines.
@@ -22,8 +22,10 @@ register FILE  *fp;
 	register int  c = EOF;
 
 	while (--n > 0 && (c = getc(fp)) != EOF) {
-		if (c == '\r')
-			continue;
+		if (c == '\r' && (c = getc(fp)) != '\n') {
+			ungetc(c, fp);		/* must be Apple file */
+			c = '\n';
+		}
 		if (c == '\n' && (cp == s || cp[-1] != '\\'))
 			break;
 		*cp++ = c;
