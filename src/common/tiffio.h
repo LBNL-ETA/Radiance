@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/tiffio.h,v 3.9 2003/07/27 22:12:01 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiffio.h,v 3.10 2003/09/09 15:01:22 greg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -203,9 +203,9 @@ typedef struct {
 #include <stdio.h>
 #include <stdarg.h>
 
-			/* share internal LogLuv conversion routines */
+/* share internal LogLuv conversion routines? */
 #ifndef LOGLUV_PUBLIC
-#define LOGLUV_PUBLIC		1
+#define LOGLUV_PUBLIC		1	
 #endif
 
 #if defined(__cplusplus)
@@ -273,6 +273,7 @@ extern	int TIFFUnlinkDirectory(TIFF*, tdir_t);
 extern	int TIFFSetField(TIFF*, ttag_t, ...);
 extern	int TIFFVSetField(TIFF*, ttag_t, va_list);
 extern	int TIFFWriteDirectory(TIFF *);
+extern	int TIFFRewriteDirectory(TIFF *);
 extern	int TIFFReassignTagToIgnore(enum TIFFIgnoreSense, int);
 
 #if defined(c_plusplus) || defined(__cplusplus)

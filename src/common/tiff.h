@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.10 2003/07/27 22:12:01 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.11 2003/09/09 15:01:22 greg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -42,8 +42,26 @@
 #define	TIFF_BIGENDIAN		0x4d4d
 #define	TIFF_LITTLEENDIAN	0x4949
 
+/*
+ * The so called TIFF types conflict with definitions from inttypes.h 
+ * included from sys/types.h on AIX (at least using VisualAge compiler). 
+ * We try to work around this by detecting this case.  Defining 
+ * _TIFF_DATA_TYPEDEFS_ short circuits the later definitions in tiff.h, and
+ * we will in the holes not provided for by inttypes.h. 
+ *
+ * See http://bugzilla.remotesensing.org/show_bug.cgi?id=39
+ */
+#if defined(_H_INTTYPES) && defined(_ALL_SOURCE)
+
 #ifndef _TIFF_DATA_TYPEDEFS_
 #define _TIFF_DATA_TYPEDEFS_
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+#endif
+
+#endif
+
 /*
  * Intrinsic data types required by the file format:
  *
@@ -52,6 +70,9 @@
  * 32-bit quantities	int32/uint32
  * strings		unsigned char*
  */
+#ifndef _TIFF_DATA_TYPEDEFS_
+#define _TIFF_DATA_TYPEDEFS_
+
 #ifdef __STDC__
 typedef	signed char int8;	/* NB: non-ANSI compilers may not grok */
 #else
@@ -60,7 +81,7 @@ typedef	char int8;
 typedef	unsigned char uint8;
 typedef	short int16;
 typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
-#if defined(__alpha) || (defined(_MIPS_SZLONG) && _MIPS_SZLONG == 64)
+#if defined(__alpha) || (defined(_MIPS_SZLONG) && _MIPS_SZLONG == 64) || defined(__LP64__)
 typedef	int int32;
 typedef	unsigned int uint32;	/* sizeof (uint32) must == 4 */
 #else
@@ -150,7 +171,9 @@ typedef	enum {
 #define	    COMPRESSION_NONE		1	/* dump mode */
 #define	    COMPRESSION_CCITTRLE	2	/* CCITT modified Huffman RLE */
 #define	    COMPRESSION_CCITTFAX3	3	/* CCITT Group 3 fax encoding */
+#define     COMPRESSION_CCITT_T4        3       /* CCITT T.4 (TIFF 6 name) */
 #define	    COMPRESSION_CCITTFAX4	4	/* CCITT Group 4 fax encoding */
+#define     COMPRESSION_CCITT_T6        4       /* CCITT T.6 (TIFF 6 name) */
 #define	    COMPRESSION_LZW		5       /* Lempel-Ziv  & Welch */
 #define	    COMPRESSION_OJPEG		6	/* !6.0 JPEG */
 #define	    COMPRESSION_JPEG		7	/* %JPEG DCT compression */
@@ -182,6 +205,7 @@ typedef	enum {
 #define	    PHOTOMETRIC_SEPARATED	5	/* !color separations */
 #define	    PHOTOMETRIC_YCBCR		6	/* !CCIR 601 */
 #define	    PHOTOMETRIC_CIELAB		8	/* !1976 CIE L*a*b* */
+#define	    PHOTOMETRIC_ITULAB		10	/* ITU L*a*b* */
 #define     PHOTOMETRIC_LOGL		32844	/* CIE Log2(L) */
 #define     PHOTOMETRIC_LOGLUV		32845	/* CIE Log2(L) (u',v') */
 #define	TIFFTAG_THRESHHOLDING		263	/* +thresholding used on data */
@@ -230,10 +254,12 @@ typedef	enum {
 #define	    GRAYRESPONSEUNIT_100000S	5	/* hundred-thousandths */
 #define	TIFFTAG_GRAYRESPONSECURVE	291	/* $gray scale response curve */
 #define	TIFFTAG_GROUP3OPTIONS		292	/* 32 flag bits */
+#define	TIFFTAG_T4OPTIONS		292	/* TIFF 6.0 proper name alias */
 #define	    GROUP3OPT_2DENCODING	0x1	/* 2-dimensional coding */
 #define	    GROUP3OPT_UNCOMPRESSED	0x2	/* data not compressed */
 #define	    GROUP3OPT_FILLBITS		0x4	/* fill to byte boundary */
 #define	TIFFTAG_GROUP4OPTIONS		293	/* 32 flag bits */
+#define TIFFTAG_T6OPTIONS               293     /* TIFF 6.0 proper name */
 #define	    GROUP4OPT_UNCOMPRESSED	0x2	/* data not compressed */
 #define	TIFFTAG_RESOLUTIONUNIT		296	/* units of resolutions */
 #define	    RESUNIT_NONE		1	/* no meaningful units */
@@ -369,10 +395,10 @@ typedef	enum {
 #define	TIFFTAG_FAXRECVPARAMS		34908	/* encoded Class 2 ses. parms */
 #define	TIFFTAG_FAXSUBADDRESS		34909	/* received SubAddr string */
 #define	TIFFTAG_FAXRECVTIME		34910	/* receive time (secs) */
-/* tag 34929 is a private tag registered to FedEx */
-#define	TIFFTAG_FEDEX_EDR		34929	/* unknown use */
 /* tags 37439-37443 are registered to SGI <gregl@sgi.com> */
 #define TIFFTAG_STONITS			37439	/* Sample value to Nits */
+/* tag 34929 is a private tag registered to FedEx */
+#define	TIFFTAG_FEDEX_EDR		34929	/* unknown use */
 /* tag 65535 is an undefined tag used by Eastman Kodak */
 #define TIFFTAG_DCSHUESHIFTVALUES       65535   /* hue shift correction data */
 
@@ -438,7 +464,7 @@ typedef	enum {
 #define     SGILOGDATAFMT_16BIT		1	/* 16-bit samples */
 #define     SGILOGDATAFMT_RAW		2	/* uninterpreted data */
 #define     SGILOGDATAFMT_8BIT		3	/* 8-bit RGB monitor values */
-#define TIFFTAG_SGILOGENCODE		65561	/* SGILog data encoding control */
-#define     SGILOGENCODE_NODITHER	0	/* do not dither encoded values */
-#define     SGILOGENCODE_RANDITHER	1	/* randomly dither encoded values */ 
+#define TIFFTAG_SGILOGENCODE		65561 /* SGILog data encoding control*/
+#define     SGILOGENCODE_NODITHER	0     /* do not dither encoded values*/
+#define     SGILOGENCODE_RANDITHER	1     /* randomly dither encd values */
 #endif /* _TIFF_ */
