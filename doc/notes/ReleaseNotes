@@ -1311,6 +1311,9 @@ designation, any -m option is ignored.
 
 Added -n option to mkillum for (shared memory) parallel processing.
 
-Fixed long-standing bug in parallel processing code that only seemed
-to manifest with the new mkillum -n option, where rtrace would
-deadlock upon termination.
+Fixed a long-standing bug in parallel processing code that only
+seemed to manifest with the new mkillum -n option, where rtrace
+would deadlock upon termination.  The reason it never showed up
+before is because I always closed processes in the reverse order
+of opening them in other programs.  I went through and found similar
+(potential) bugs in the rview device subprocess code and util/netproc.c.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.8 2004/09/17 21:43:50 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.9 2004/09/20 16:26:58 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -468,6 +468,12 @@ ray_popen(			/* open the specified # processes */
 		if (r_proc[ray_pnprocs].pid < 0)
 			error(SYSTEM, "cannot fork child process");
 		close(p1[0]); close(p0[1]);
+		/*
+		 * Close write stream on exec to avoid multiprocessing deadlock.
+		 * No use in read stream without it, so set flag there as well.
+		 */
+		fcntl(p1[1], F_SETFD, FD_CLOEXEC);
+		fcntl(p0[0], F_SETFD, FD_CLOEXEC);
 		r_proc[ray_pnprocs].fd_send = p1[1];
 		r_proc[ray_pnprocs].fd_recv = p0[0];
 		r_proc[ray_pnprocs].npending = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.12 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.13 2004/09/20 16:26:58 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -105,6 +105,12 @@ comm_init(			/* set up and execute driver */
 		goto syserr;
 	close(p1[0]);
 	close(p2[1]);
+	/*
+	 * Close write stream on exec to avoid multiprocessing deadlock.
+	 * No use in read stream without it, so set flag there as well.
+	 */
+	fcntl(p1[1], F_SETFD, FD_CLOEXEC);
+	fcntl(p2[0], F_SETFD, FD_CLOEXEC);
 	if ((devout = fdopen(p1[1], "w")) == NULL)
 		goto syserr;
 	if ((devin = fdopen(p2[0], "r")) == NULL)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.15 2004/03/26 21:36:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.16 2004/09/20 16:26:58 greg Exp $";
 #endif
 /*
  * Parallel network process handling routines
@@ -229,7 +229,7 @@ startjob(	/* start a job on a process server */
 	ps->proc[i].pid = pid;
 	close(pfd[1]);			/* get piped stderr file descriptor */
 	ps->proc[i].efd = pfd[0];
-	fcntl(pfd[0], F_SETFD, 1);	/* set close on exec flag */
+	fcntl(pfd[0], F_SETFD, FD_CLOEXEC);	/* set close on exec flag */
 	pindex[pfd[0]] = ps->proc + i;	/* assign error fd index */
 	FD_SET(pfd[0], &errdesc);	/* add to select call parameter */
 	if (pfd[0] > maxfd)
