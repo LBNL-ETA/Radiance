@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.13 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.14 2003/05/19 16:32:19 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -90,13 +90,8 @@ int	displist;			/* our scene display list */
 
 int	no_render = 0;			/* don't rerender */
 
-#ifdef BSD
-#define strchr		index
-#endif
-
-extern char	*strchr(), *fgets(), *fgetline(), *atos(), *scan4var();
+extern char	*fgetline(), *atos(), *scan4var();
 extern int	nowarn;			/* turn warnings off? */
-extern time_t	time();
 
 
 main(argc, argv)
