@@ -1,7 +1,21 @@
 #!/bin/csh -f
-# RCSid: $Id: genambpos.csh,v 3.1 2003/02/22 02:07:30 greg Exp $
+# RCSid $Id: genambpos.csh,v 3.2 2004/05/17 16:35:14 greg Exp $
 
-# Mark ambient locations   J.Mardaljevic, edu@uk.ac.dmu
+# Mark ambient locations 
+#
+# John Mardaljevic                     
+# Institute of Energy and Sustainable Development
+# De Montfort University
+# The Gateway
+# Leicester
+# LE1 9BH, UK
+# +44 (0) 116 257 7972   
+# +44 (0) 116 257 7981 (fax)
+# 
+# jm@dmu.ac.uk   
+# http://www.iesd.dmu.ac.uk/~jm
+
+
 
 set ambdat=none
 set radius=0.05
@@ -29,6 +43,8 @@ To view the locations, include the file "amb_pos.rad" when re-creating
 the octree.
 
 _EOF_
+
+rm -f amb_pos.rad
 
 echo "Input ambient file"
 readvar ambdat
