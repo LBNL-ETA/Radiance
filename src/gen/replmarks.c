@@ -241,7 +241,7 @@ replace(		/* replace marker */
 
 	buf[0] = '\0';			/* bug fix thanks to schorsch */
 	if (m->doxform) {
-		sprintf(buf, "xform -e -n %s", mark);
+		sprintf(buf, "xform -n %s", mark);
 		if (m->modout != NULL)
 			sprintf(buf+strlen(buf), " -m %s", m->modout);
 		if (buildxf(buf+strlen(buf), m->mscale, fin) < 0)
