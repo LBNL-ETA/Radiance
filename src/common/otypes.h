@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.12 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.13 2003/09/15 17:01:52 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -11,7 +11,11 @@ extern "C" {
 typedef struct {
 	char  *funame;			/* function name */
 	int  flags;			/* type flags */
+#ifdef FUN_ARGLIST
+	int  (*funp)(FUN_ARGLIST);	/* pointer to function */
+#else
 	int  (*funp)();			/* pointer to function */
+#endif
 }  FUN;
 				/* object types in decreasing frequency */
 #define  OBJ_FACE	0		/* polygon */
