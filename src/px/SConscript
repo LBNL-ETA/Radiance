@@ -125,20 +125,21 @@ if env.has_key('PIXAR_LIB'):
 
 # X11 targets
 if env.has_key('X11LIB'):
-    xcppp = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
+    xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
     xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
     xlibs = ['X11','rtpic','rtio','rtmath','rtargs','rtmem']
-    x11findwind = env.Object(source='../common/x11findwind.c') # XXX ../
+    x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
+		CPPPATH=xincl)
 
     ximage = env.Program(target=radbin('ximage'),
         source=Split('x11image.c x11raster.c')+[clrtab],
-        CPPPATH=xcppp, LIBPATH=xlibp, LIBS=xlibs + mlib)
+        CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
     Default(ximage)
     env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ximage)])
 
     xshowtrace = env.Program(target=radbin('xshowtrace'),
         source=Split('xshowtrace.c') + [x11findwind],
-        CPPPATH=xcppp, LIBPATH=xlibp, LIBS=xlibs + mlib)
+        CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
     Default(xshowtrace)
     env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], xshowtrace)])
 

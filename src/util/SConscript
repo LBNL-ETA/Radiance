@@ -69,7 +69,8 @@ if os.name != 'nt': # XXX pending replacement of fork() and friends
 if env.has_key('X11LIB'):
 	xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
 	xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
-	x11findwind = env.Object(source='../common/x11findwind.c') # XXX ../
+	x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
+			CPPPATH=xincl)
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
 			source=Split('xglaresrc.c') + [x11findwind],
 			LIBPATH=xlibp, CPPPATH=xincl,
