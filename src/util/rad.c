@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.72 2003/09/24 14:55:54 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.73 2003/10/18 04:46:24 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1264,7 +1264,7 @@ char	*opts, *po;
 			mvfile(rawfile, combuf);
 		} else
 			rmfile(rawfile);
-		finish_process();		/* leave if child */
+		finish_process();		/* exit if child */
 	}
 	wait_process(1);		/* wait for children to finish */
 	if (pfile != NULL) {		/* clean up rpict persistent mode */
@@ -1272,7 +1272,7 @@ char	*opts, *po;
 		fp = fopen(pfile, "r");
 		if (fp != NULL) {
 			if (fscanf(fp, "%*s %d", &pid) != 1 ||
-					kill(pid, 1) == -1)
+					kill(pid, 1) < 0)
 				unlink(pfile);
 			fclose(fp);
 		}
@@ -1343,7 +1343,7 @@ next_process()			/* fork the next process (max. nprocs) */
 	if (nprocs <= 1)
 		return(0);		/* it's us or no one */
 	if (inchild()) {
-		fprintf(stderr, "%s: internal error 1 in spawn_process()\n",
+		fprintf(stderr, "%s: internal error 1 in next_process()\n",
 				progname);
 		quit(1);
 	}

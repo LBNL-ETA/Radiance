@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.26 2003/07/30 10:11:06 schorsch Exp $ */
+/* RCSid $Id: color.h,v 2.27 2003/10/18 04:46:24 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -113,7 +113,7 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  D65EFFICACY		203.		/* standard illuminant D65 */
 #define  INCEFFICACY		160.		/* illuminant A (incand.) */
 #define  SUNEFFICACY		208.		/* illuminant B (solar dir.) */
-#define  SKYEFFICACY		D65EFFICACY	/* skylight */
+#define  SKYEFFICACY		D65EFFICACY	/* skylight (should be 110) */
 #define  DAYEFFICACY		D65EFFICACY	/* combined sky and solar */
 
 #define  luminance(col)		(WHTEFFICACY * bright(col))
