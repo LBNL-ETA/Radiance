@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.7 2003/07/27 22:12:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.8 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -162,10 +162,10 @@ pix2rays(FILE *fp)
 		if (zfd >= 0) {
 			loc2pix(pp, &rs, px/rs.xr, py/rs.yr);
 			if (lseek(zfd,
-				(pp[1]*scanlen(&rs)+pp[0])*sizeof(float), 0)
-					< 0 ||
+				(pp[1]*scanlen(&rs)+pp[0])*sizeof(float),
+						SEEK_SET) < 0 ||
 					read(zfd, &zval, sizeof(float))
-					< sizeof(float)) {
+						< sizeof(float)) {
 				fprintf(stderr, "%s: depth buffer read error\n",
 						progname);
 				exit(1);

@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.5 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.6 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
  */
 
 #include "holo.h"
+#include "platform.h"
 
 char	*progname;		/* global argv[0] */
 
@@ -60,7 +61,7 @@ int	sect;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the section(s) */
-		lseek(fd, (off_t)nextloc, 0);
+		lseek(fd, (off_t)nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		if ((sect < 0) | (n == sect)) {
 			read(fd, (char *)&hdsect, sizeof(HDGRID));

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.15 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.16 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rhoptimize.c,v 3.15 2003/07/27 22:12:02 schors
 
 #include "rtprocess.h" /* getpid() */
 #include "holo.h"
+#include "platform.h"
 
 #ifndef BKBSIZE
 #define BKBSIZE		256		/* beam clump size (kilobytes) */
@@ -65,14 +66,14 @@ char	*argv[];
 	lastopos = 0L;			/* copy sections one by one */
 	while (nextipos != 0L) {
 					/* set input position; get next */
-		lseek(hdfd[0], (off_t)nextipos, 0);
+		lseek(hdfd[0], (off_t)nextipos, SEEK_SET);
 		read(hdfd[0], (char *)&nextipos, sizeof(nextipos));
 					/* get output position; set last */
-		thisopos = lseek(hdfd[1], (off_t)0, 2);
+		thisopos = lseek(hdfd[1], (off_t)0, SEEK_END);
 		if (lastopos > 0L) {
-			lseek(hdfd[1], (off_t)lastopos, 0);
+			lseek(hdfd[1], (off_t)lastopos, SEEK_SET);
 			write(hdfd[1], (char *)&thisopos, sizeof(thisopos));
-			lseek(hdfd[1], (off_t)0, 2);
+			lseek(hdfd[1], (off_t)0, SEEK_END);
 		}
 		lastopos = thisopos;
 		thisopos = 0L;		/* write place holder */

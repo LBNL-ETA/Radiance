@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: rtio.h,v 3.4 2003/10/20 16:01:55 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -22,9 +22,6 @@ extern "C" {
 #define	 X_OK		1		/* executable */
 #define	 F_OK		0		/* exists */
 #endif
-
-			/* <unistd.h> is missing on some systems */
-extern off_t	lseek(int, off_t, int);
 
 					/* defined in badarg.c */
 extern int	badarg(int ac, char **av, char *fl);

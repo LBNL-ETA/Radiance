@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhenv.c,v 3.5 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: genrhenv.c,v 3.6 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Create a closed environment from a holodeck section
  */
 
 #include "holo.h"
+#include "platform.h"
 
 #define	ourhp		(hdlist[0])
 
@@ -73,7 +74,7 @@ int	sect;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the indicated section */
-		lseek(fd, (off_t)nextloc, 0);
+		lseek(fd, (off_t)nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		if (n == sect) {
 			hdinit(fd, NULL);

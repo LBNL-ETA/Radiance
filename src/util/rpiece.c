@@ -1,10 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.41 2003/07/27 22:12:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.42 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
  */
  
+#include "platform.h"
 #include "standard.h"
 
 #ifndef F_SETLKW
@@ -505,7 +506,7 @@ int  xpos, ypos;
 		filerr("lock");
 #endif
 				/* write new piece to file */
-	if (lseek(outfd, (off_t)fls.l_start, 0) < 0)
+	if (lseek(outfd, (off_t)fls.l_start, SEEK_SET) < 0)
 		filerr("seek");
 	if (hmult == 1) {
 		if (writebuf(outfd, (char *)pbuf,
@@ -518,7 +519,7 @@ int  xpos, ypos;
 				filerr("write");
 			if (y < vr-1 && lseek(outfd,
 					(off_t)(hmult-1)*hr*sizeof(COLR),
-					1) < 0)
+					SEEK_CUR) < 0)
 				filerr("seek");
 		}
 #if NFS

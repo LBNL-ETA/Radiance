@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.54 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.55 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -158,7 +158,7 @@ setambient()				/* initialize calculation */
 		}
 						/* align file pointer */
 		pos += (long)nambvals*AMBVALSIZ;
-		flen = lseek(fileno(ambfp), (off_t)0L, 2);
+		flen = lseek(fileno(ambfp), (off_t)0, SEEK_END);
 		if (flen != pos) {
 			sprintf(errmsg,
 			"ignoring last %ld values in ambient file (corrupted)",
@@ -829,7 +829,7 @@ ambsync()			/* synchronize ambient file */
 				/* gain exclusive access */
 	aflock(F_WRLCK);
 				/* see if file has grown */
-	if ((flen = lseek(fileno(ambfp), (off_t)0L, 2)) < 0)
+	if ((flen = lseek(fileno(ambfp), (off_t)0, SEEK_END)) < 0)
 		goto seekerr;
 	if ( (n = flen - lastpos) ) {		/* file has grown */
 		if (ambinp == NULL) {		/* use duplicate filedes */
@@ -852,7 +852,7 @@ ambsync()			/* synchronize ambient file */
 		}
 		/*** seek always as safety measure
 		if (n) ***/			/* alignment */
-			if (lseek(fileno(ambfp), (off_t)(flen-n), 0) < 0)
+			if (lseek(fileno(ambfp), (off_t)(flen-n), SEEK_SET) < 0)
 				goto seekerr;
 	}
 #ifdef  DEBUG
@@ -865,7 +865,7 @@ ambsync()			/* synchronize ambient file */
 #endif
 syncend:
 	n = fflush(ambfp);			/* calls write() at last */
-	if ((lastpos = lseek(fileno(ambfp), (off_t)0L, 1)) < 0)
+	if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
 		goto seekerr;
 	aflock(F_UNLCK);			/* release file */
 	nunflshed = 0;

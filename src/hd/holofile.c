@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.52 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.53 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -12,6 +12,8 @@ static const char	RCSid[] = "$Id: holofile.c,v 3.52 2003/07/27 22:12:02 schorsch
 #include <string.h>
 
 #include "holo.h"
+
+#include "platform.h"
 
 #ifndef CACHESIZE
 #ifdef SMLMEM
@@ -133,7 +135,8 @@ int	wr;
 	}
 	hdfragl[fd].nlinks++;
 	hdfragl[fd].writable = wr;		/* set writable flag */
-	hdfragl[fd].flen = lseek(fd, (off_t)0, 2);	/* get file length */
+						/* get file length */
+	hdfragl[fd].flen = lseek(fd, (off_t)0, SEEK_END);
 }
 
 
@@ -165,7 +168,7 @@ HDGRID	*hproto;		/* holodeck section grid */
 	register int	n;
 					/* prepare for system errors */
 	errno = 0;
-	if ((fpos = lseek(fd, (off_t)0, 1)) < 0)
+	if ((fpos = lseek(fd, (off_t)0, SEEK_CUR)) < 0)
 		error(SYSTEM, "cannot determine holodeck file position");
 	if (hproto == NULL) {		/* assume we're loading it */
 		HDGRID	hpr;
@@ -190,7 +193,7 @@ HDGRID	*hproto;		/* holodeck section grid */
 		if (fd < nhdfragls && hdfragl[fd].nlinks)
 			writable = hdfragl[fd].writable;
 		else
-			writable = lseek(fd, fpos, 0) == fpos &&
+			writable = lseek(fd, fpos, SEEK_SET) == fpos &&
 				write(fd, (char *)hp, sizeof(HDGRID)) ==
 							sizeof(HDGRID);
 	} else {			/* else assume we're creating it */
@@ -247,8 +250,9 @@ int	i;
 	register int	j;
 
 	if (!hp->dirty++) {			/* write smudge first time */
-		if (lseek(hp->fd, biglob(hp)->fo+(i-1)*sizeof(BEAMI), 0) < 0
-				|| write(hp->fd, (char *)&smudge,
+		if (lseek(hp->fd, biglob(hp)->fo+(i-1)*sizeof(BEAMI),
+					SEEK_SET) < 0 ||
+				write(hp->fd, (char *)&smudge,
 					sizeof(BEAMI)) != sizeof(BEAMI))
 			error(SYSTEM, "seek/write error in hdmarkdirty");
 		hp->dirseg[0].s = i;
@@ -311,7 +315,7 @@ int	all;
 	errno = 0;			/* write dirty segments */
 	for (j = 0; j < hp->dirty; j++) {
 		if (lseek(hp->fd, biglob(hp)->fo +
-				(hp->dirseg[j].s-1)*sizeof(BEAMI), 0) < 0)
+			    (hp->dirseg[j].s-1)*sizeof(BEAMI), SEEK_SET) < 0)
 			error(SYSTEM, "cannot seek on holodeck file");
 		n = hp->dirseg[j].n * sizeof(BEAMI);
 		if (write(hp->fd, (char *)(hp->bi+hp->dirseg[j].s), n) != n)
@@ -360,10 +364,10 @@ int	fd;
 	if (fd < 0)
 		return(-1);
 	if (fd >= nhdfragls || !hdfragl[fd].nlinks) {
-		if ((fpos = lseek(fd, (off_t)0, 1)) < 0)
+		if ((fpos = lseek(fd, (off_t)0, SEEK_CUR)) < 0)
 			return(-1);
-		flen = lseek(fd, (off_t)0, 2);
-		lseek(fd, fpos, 0);
+		flen = lseek(fd, (off_t)0, SEEK_END);
+		lseek(fd, fpos, SEEK_SET);
 		return(flen);
 	}
 	return(hdfragl[fd].flen);
@@ -418,7 +422,7 @@ int	nr;			/* number of new rays desired */
 		blglob(hp)->nrm += n;
 		if ((n = hp->bl[i]->nrm = hp->bi[i].nrd)) {
 			errno = 0;
-			if (lseek(hp->fd, hp->bi[i].fo, 0) < 0)
+			if (lseek(hp->fd, hp->bi[i].fo, SEEK_SET) < 0)
 				error(SYSTEM, "seek error on holodeck file");
 			n *= sizeof(RAYVAL);
 			if (read(hp->fd, (char *)hdbray(hp->bl[i]), n) != n)
@@ -457,7 +461,7 @@ register int	i;
 		hp->bl[i] = (BEAM *)hdrealloc(NULL, hdbsiz(n), "hdgetbeam");
 		blglob(hp)->nrm += hp->bl[i]->nrm = n;
 		errno = 0;
-		if (lseek(hp->fd, hp->bi[i].fo, 0) < 0)
+		if (lseek(hp->fd, hp->bi[i].fo, SEEK_SET) < 0)
 			error(SYSTEM, "seek error on holodeck file");
 		n *= sizeof(RAYVAL);
 		if (read(hp->fd, (char *)hdbray(hp->bl[i]), n) != n)
@@ -688,7 +692,7 @@ register int	i;
 	if (nrays) {			/* get and write new fragment */
 		nfo = hdallocfrag(hp->fd, nrays);
 		errno = 0;
-		if (lseek(hp->fd, nfo, 0) < 0)
+		if (lseek(hp->fd, nfo, SEEK_SET) < 0)
 			error(SYSTEM, "cannot seek on holodeck file");
 		n = hp->bl[i]->nrm * sizeof(RAYVAL);
 		if (write(hp->fd, (char *)hdbray(hp->bl[i]), n) != n) {

@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.19 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.20 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
  */
 
 #include "holo.h"
+#include "platform.h"
 #include "view.h"
 
 #ifndef BKBSIZE
@@ -128,7 +129,7 @@ int	append;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (off_t)nextloc, 0);
+		lseek(fd, (off_t)nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL)->priv = hflags&H_OBST ? &obstr :
 				hflags&H_OBSF ? &unobstr : (char *)NULL;

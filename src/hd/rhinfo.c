@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.7 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.8 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
  */
 
 #include "holo.h"
+#include "platform.h"
 
 #ifndef NHBINS
 #define NHBINS		12	/* number of histogram bins to use for stats */
@@ -56,7 +57,7 @@ FILE	*fout;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the section(s) */
-		lseek(fd, (off_t)nextloc, 0);
+		lseek(fd, (off_t)nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		fprintf(fout, "Section %d:\n", n);
 		hdsect = hdinit(fd, NULL);	/* load section directory */

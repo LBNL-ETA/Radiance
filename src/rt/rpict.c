@@ -413,7 +413,7 @@ char  *zfile, *oldfile;
 	if (i >= vres)
 		goto alldone;
 	if (zfd != -1 && i > 0 &&
-			lseek(zfd, (off_t)i*hres*sizeof(float), 0) < 0)
+			lseek(zfd, (off_t)i*hres*sizeof(float), SEEK_SET) < 0)
 		error(SYSTEM, "z-file seek error in render");
 	pctdone = 100.0*i/vres;
 	if (ralrm > 0)			/* report init stats */

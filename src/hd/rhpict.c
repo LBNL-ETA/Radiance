@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.14 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.15 2003/10/20 16:01:55 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: rhpict.c,v 3.14 2003/07/27 22:12:02 schorsch E
 #include <string.h>
 
 #include "rholo.h"
+#include "platform.h"
 #include "view.h"
 
 char	*progname;		/* our program name */
@@ -284,7 +285,7 @@ initialize()			/* initialize holodeck and buffers */
 	fd = dup(fileno(fp));			/* dup file descriptor */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (off_t)nextloc, 0);
+		lseek(fd, (off_t)nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL);
 	}
