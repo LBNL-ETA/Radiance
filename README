@@ -26,15 +26,15 @@ We have attempted to make it easy for you (and for us) to install
 the software on differently configured systems using a global make
 script.  To install the software, just type:
 
-	makeall install
+	./makeall install
 
 You can clean up the .o files and so forth with:
 
-	makeall clean
+	./makeall clean
 
 Or, if you are confident you can do both at the same time with:
 
-	makeall install clean
+	./makeall install clean
 
 You can give other make options at the end of the command as well.  For
 example, the -n option will tell you what makeall is going to do without
@@ -43,7 +43,7 @@ actually doing it.
 If you downloaded the binaries, so compilation is not necessary,
 run the following command to install the library files only:
 
-	makeall library
+	./makeall library
 
 The makeall may script ask you questions about your system and where you
 want to install the executables and library files.  The pathnames you

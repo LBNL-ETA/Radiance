@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.61 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.62 2003/03/21 18:48:46 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1031,7 +1031,6 @@ char	*vn;		/* returned view name */
 printview(vopts)			/* print out selected view */
 register char	*vopts;
 {
-	extern char	*strstr(), *atos(), *getenv();
 	VIEW	vwr;
 	char	buf[128];
 	register char	*cp;

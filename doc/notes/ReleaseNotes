@@ -921,7 +921,7 @@ Fixed bug in Type B photometry angle calculation in source.cal discovered
 by Erich Phillips.
 
 ==============================
-Version 3.5 (Released 3/14/03)
+Version 3.5 (Released 3/21/03)
 
 Fixed bug in replmarks pointed out by Georg Mischler, which caused
 garbage to be output under specific conditions (unscaled, unrotated

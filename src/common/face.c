@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.9 2003/03/14 21:27:45 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.10 2003/03/21 18:48:46 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -36,7 +36,7 @@ getface(o)			/* get arguments for a face */
 OBJREC  *o;
 {
 	double  d1;
-	int  badvert;
+	int  smalloff, badvert;
 	FVECT  v1, v2, v3;
 	register FACE  *f;
 	register int  i;
@@ -84,9 +84,13 @@ OBJREC  *o;
 						/* compute offset */
 	badvert = 0;
 	f->offset = DOT(f->norm, VERTEX(f,0));
+	smalloff = fabs(f->offset) <= VERTEPS;
 	for (i = 1; i < f->nv; i++) {
 		d1 = DOT(f->norm, VERTEX(f,i));
-		badvert += fabs(1.0 - d1*i/f->offset) > VERTEPS;
+		if (smalloff)
+			badvert += fabs(d1 - f->offset/i) > VERTEPS;
+		else
+			badvert += fabs(1.0 - d1*i/f->offset) > VERTEPS;
 		f->offset += d1;
 	}
 	f->offset /= (double)f->nv;
