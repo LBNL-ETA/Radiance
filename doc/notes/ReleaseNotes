@@ -1261,3 +1261,7 @@ legend dimensions.  Made it so -lw 0 and/or -lh 0 turns legend off.
 
 Made it so pcompos will read everything from a stream even if it doesn't
 need it, so input commands will not receive a hangup signal.
+
+Wrote ra_bmp program to convert to and from Windows BMP files (finally).
+It's a nasty format in so many ways -- I don't yet support conversion
+from compressed 8-bit or 4-bit modes, but may in the near future.
