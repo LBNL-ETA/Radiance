@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.16 2003/02/25 16:47:23 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.17 2003/02/27 02:00:12 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -22,8 +22,6 @@ typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
 				/* what to put out (also RED, GRN, BLU) */
 #define  ALL		3
 #define  BRIGHT		4
-
-#define  brightonly	(putprim==BRIGHT)
 
 RESOLU	picres;			/* resolution of picture */
 
@@ -219,15 +217,15 @@ unkopt:
 			break;
 					/* recognize special formats */
 	if (dataonly && format == 'b')
-		if (brightonly)
-			fmtid = "8-bit_grey";
-		else
+		if (putprim == ALL)
 			fmtid = "24-bit_rgb";
-	if (dataonly && format == 'w')
-		if (brightonly)
-			fmtid = "16-bit_grey";
 		else
+			fmtid = "8-bit_grey";
+	if (dataonly && format == 'w')
+		if (putprim == ALL)
 			fmtid = "48-bit_rgb";
+		else
+			fmtid = "16-bit_grey";
 					/* assign reverse ordering */
 	rord[ord[0]] = 0;
 	rord[ord[1]] = 1;
@@ -241,7 +239,7 @@ unkopt:
 						progname, argv[i]);
 			quit(1);
 		}
-		if (reverse && !brightonly && i == argc-3) {
+		if (reverse && putprim != BRIGHT && i == argc-3) {
 			if ((fin2 = fopen(argv[i+1], "r")) == NULL) {
 				fprintf(stderr, "%s: can't open file \"%s\"\n",
 						progname, argv[i+1]);
@@ -255,7 +253,7 @@ unkopt:
 			interleave = -1;
 		} else if (i != argc-1)
 			fin = NULL;
-		if (reverse && !brightonly && !interleave) {
+		if (reverse && putprim != BRIGHT && !interleave) {
 			fin2 = fopen(argv[i], "r");
 			fin3 = fopen(argv[i], "r");
 		}
