@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.17 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.18 2004/03/26 21:29:19 schorsch Exp $";
 #endif
 /*
  * Polygonal font handling routines
  */
 
 #include "copyright.h"
+
+#include <stdlib.h>
 
 #include "rtio.h"
 #include "rterror.h"

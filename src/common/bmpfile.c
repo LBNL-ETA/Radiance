@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.1 2004/03/26 03:11:50 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.2 2004/03/26 21:29:19 schorsch Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -135,7 +135,7 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 		goto err;
 	br->hdr->width = rdint32(br);		/* bitmap width */
 	br->hdr->height = rdint32(br);		/* bitmap height */
-	if ((br->hdr->width <= 0 | br->hdr->height == 0))
+	if (((br->hdr->width <= 0) | (br->hdr->height == 0)))
 		goto err;
 	if ((br->hdr->yIsDown = br->hdr->height < 0))
 		br->hdr->height = -br->hdr->height;
@@ -230,7 +230,7 @@ BMPisGrayscale(const BMPHeader *hdr)
 	if (hdr->bpp > 8)		/* assume they had a reason for it */
 		return 0;
 	for (rgbp = hdr->palette, n = hdr->impColors; n-- > 0; rgbp++)
-		if ((rgbp->r != rgbp->g | rgbp->g != rgbp->b))
+		if (((rgbp->r != rgbp->g) | (rgbp->g != rgbp->b)))
 			return 0;
 	return 1;			/* all colors neutral in map */
 }
@@ -299,7 +299,7 @@ BMPdecodePixel(int i, BMPReader *br)
 {
 	static const RGBquad    black = {0, 0, 0, 0};
 	
-	if ((br == NULL | i < 0) || i >= br->hdr->width)
+	if (((br == NULL) | (i < 0)) || i >= br->hdr->width)
 		return black;
 
 	switch (br->hdr->bpp) {

@@ -18,7 +18,7 @@ RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
 
 RTCOLOR = Split('''spec_rgb.c''')
 RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
-RTPIC = Split('''color.c colrops.c resolu.c image.c''') + RTCOLOR + RTTMAP
+RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c')+ RTCOLOR + RTTMAP
 
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
 RTCONT = Split('''lookup.c savestr.c savqstr.c''')
