@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.18 2003/10/27 10:19:31 schorsch Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.19 2004/07/02 16:45:32 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -30,7 +30,7 @@ char  *inpspec;
 {
 	OBJECT  lastobj;
 	FILE  *infp;
-	char  buf[1024];
+	char  buf[2048];
 	register int  c;
 
 	lastobj = nobjects;

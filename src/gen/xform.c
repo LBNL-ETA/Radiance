@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.36 2004/03/28 20:33:12 schorsch Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.37 2004/07/02 16:45:32 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -181,7 +181,7 @@ doargf(			/* take argument list from file */
 {
 	int  inquote;
 	char  *newav[256], **avp;
-	char  argbuf[1024];
+	char  argbuf[2048];
 	char  newid[128];
 	char  *oldid;
 	register char	*cp;
