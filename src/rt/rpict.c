@@ -28,6 +28,7 @@ static const char RCSid[] = "$Id";
 #include  "view.h"
 #include  "random.h"
 #include  "paths.h"
+#include  "rtmisc.h" /* myhostname() */
 
 
 #define	 RFTEMPLATE	"rfXXXXXX"
@@ -149,7 +150,6 @@ int  code;
 void
 report()		/* report progress */
 {
-	extern char  *myhostname();
 	double  u, s;
 #ifdef BSD
 	struct rusage  rubuf;

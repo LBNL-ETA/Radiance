@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.17 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.18 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: pcond.c,v 3.17 2003/07/27 22:12:03 schorsch Ex
  */
 
 #include "platform.h"
+#include "rtprocess.h"
 #include "pcond.h"
 
 
@@ -305,7 +306,6 @@ mapimage()				/* map picture and send to stdout */
 
 getfovimg()			/* load foveal sampled image */
 {
-	extern FILE	*popen();
 	char	combuf[128];
 	FILE	*fp;
 	int	x, y;

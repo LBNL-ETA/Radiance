@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: impress.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: impress.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  Program to convert meta-files to imPress format
@@ -9,10 +9,9 @@ static const char	RCSid[] = "$Id: impress.c,v 1.2 2003/08/01 14:14:24 schorsch E
  */
 
 
+#include  "rtprocess.h"
 #include  "meta.h"
-
 #include  "imPcodes.h"
-
 #include  "imPfuncs.h"
 
 
@@ -34,7 +33,6 @@ char  **argv;
 
 {
  FILE  *fp;
- FILE  *popen();
  short  condonly, conditioned;
  char  comargs[200], command[300];
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.20 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.21 2003/10/27 10:26:45 schorsch Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: rad2mgf.c,v 2.20 2003/10/22 02:06:34 greg Exp 
 #include <string.h>
 #include <stdio.h>
 
+#include "rtprocess.h"
 #include "object.h"
 #include "color.h"
 #include "lookup.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xmeta.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: xmeta.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  Program to output meta-files to X window system.
@@ -9,9 +9,8 @@ static const char	RCSid[] = "$Id: xmeta.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
  *     2/26/86
  */
 
-
+#include  "rtprocess.h"
 #include  "meta.h"
-
 #include  "plot.h"
 
 
@@ -40,7 +39,6 @@ char  **argv;
 
 {
  FILE  *fp;
- FILE  *popen();
  char  *geometry = NULL;
  short  condonly, conditioned;
  char  comargs[500], command[600];

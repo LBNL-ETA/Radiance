@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.7 2003/08/01 14:14:24 schorsch Exp $ */
+/* RCSid: $Id: meta.h,v 1.8 2003/10/27 10:28:59 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -56,8 +56,9 @@ extern "C" {
 
 
 #ifdef  _WIN32  /* XXX */
-#define MDIR "c\\tmp\\" /* XXX we just need something to compile for now */
+#define MDIR "C:\\tmp\\" /* XXX we just need something to compile for now */
 #define TTY "CON:"   /* XXX this probably doesn't work */
+#define TDIR "C:\\tmp\\" /* XXX we just need something to compile for now */
 #else  /* XXX */
 
 #define  TDIR  "/tmp/"		/* directory for temporary files */

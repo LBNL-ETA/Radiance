@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgvars.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgvars.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  mgvars.c - routines dealing with graph variables.
@@ -10,13 +10,13 @@ static const char	RCSid[] = "$Id: mgvars.c,v 1.2 2003/08/01 14:14:24 schorsch Ex
  */
 
 #include  <stdio.h>
-
 #include  <stdlib.h>
-
 #include  <math.h>
-
 #include  <ctype.h>
 
+#include  "rtprocess.h"
+#include  "rtmisc.h"
+#include  "rtio.h"
 #include  "mgvars.h"
 
 #define  MAXLINE	512
@@ -25,8 +25,8 @@ static const char	RCSid[] = "$Id: mgvars.c,v 1.2 2003/08/01 14:14:24 schorsch Ex
 
 #define  isnum(c) (isdigit(c)||(c)=='-'||(c)=='+'||(c)=='.'||(c)=='e'||(c)=='E')
 
-char  *findfile(), *emalloc(), *ecalloc(), *erealloc(), *savestr(), *strcpy();
-FILE  *fopen(), *popen();
+char  *findfile();
+
 extern char  *progname, *libpath[];
 
 #ifdef  DCL_ATOF

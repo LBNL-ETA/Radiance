@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: d48c.c,v 1.3 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: d48c.c,v 1.4 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  *  d48c.c - driver for dicomed D48 film recorder w/ color optics.
@@ -8,9 +8,9 @@ static const char	RCSid[] = "$Id: d48c.c,v 1.3 2003/02/22 02:07:27 greg Exp $";
  */
 
 #include  <stdio.h>
-
 #include  <signal.h>
 
+#include  "rterror.h"
 #include  "color.h"
 
 
@@ -127,17 +127,24 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	int  quit();
 	int  i;
 
 	if (signal(SIGINT, quit) == SIG_IGN)
 		signal(SIGINT, SIG_IGN);
+#ifdef SIGHUP
 	if (signal(SIGHUP, quit) == SIG_IGN)
 		signal(SIGINT, SIG_IGN);
+#endif
 	signal(SIGTERM, quit);
+#ifdef SIGPIPE
 	signal(SIGPIPE, quit);
+#endif
+#ifdef SIGXCPU
 	signal(SIGXCPU, quit);
+#endif
+#ifdef SIGXFSZ
 	signal(SIGXFSZ, quit);
+#endif
 
 	progname = argv[0];
 
@@ -182,8 +189,7 @@ char  *cname;
 
 
 void
-quit(code)			/* quit program */
-int  code;
+quit(int code)			/* quit program */
 {
 	int  i;
 

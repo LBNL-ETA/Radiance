@@ -1,31 +1,22 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.3 2003/09/16 06:32:21 greg Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.4 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
  */
 
+#include  "copyright.h"
 
-#define  MAXALLOC  5000
-
-#define  DXSIZE  400		/* default x resolution */
-
-#define  DYSIZE  400		/* default y resolution */
-
-#define  XCOM  "pexpand +vOCImsp -DP %s | psort +y"
-
-
-
-
+#include  "rtprocess.h"
 #include  "meta.h"
-
 #include  "plot.h"
-
 #include  "rast.h"
-
 #include  "targa.h"
 
-
+#define  MAXALLOC  5000
+#define  DXSIZE  400		/* default x resolution */
+#define  DYSIZE  400		/* default y resolution */
+#define  XCOM  "pexpand +vOCImsp -DP %s | psort +y"
 
 
 char  *progname;
@@ -65,7 +56,6 @@ char  **argv;
 
 {
  FILE  *fp;
- FILE  *popen();
  char  comargs[200], command[300];
 
   fout = stdout;

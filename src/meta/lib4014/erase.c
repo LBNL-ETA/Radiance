@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: erase.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: erase.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 #ifndef lint
 static char sccsid[] = "@(#)erase.c	4.1 (Berkeley) 6/27/83";
 #endif
 
 #include <stdio.h>
+
+#include "platform.h"
 
 extern int ohiy;
 extern int ohix;

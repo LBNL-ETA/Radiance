@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: panim.c,v 2.3 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: panim.c,v 2.4 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  *  Send pictures to PC animation system.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: panim.c,v 2.3 2003/06/30 14:59:12 schorsch Exp
 #include <stdio.h>
 #include <string.h>
 
+#include "rtprocess.h"
 #include "random.h"
 #include "color.h"
 #include "clntrpc.h"
@@ -17,7 +18,6 @@ static const char	RCSid[] = "$Id: panim.c,v 2.3 2003/06/30 14:59:12 schorsch Exp
 
 #define GAMMA		2.0		/* gamma correction factor */
 
-FILE	*popen();
 
 char	*pcom = NULL;			/* pipe command */
 

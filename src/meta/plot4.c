@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plot4.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: plot4.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  plot4.c - program to put four metafile pages onto one.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: plot4.c,v 1.2 2003/08/01 14:14:24 schorsch Exp
  *	7/10/86
  */
 
+#include  "rtprocess.h"
 #include  "meta.h"
 
 
@@ -25,7 +26,6 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	FILE  *popen();
 	FILE  *fp;
 	int  i;
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plotout.c,v 1.2 2003/07/01 21:21:40 greg Exp $";
+static const char	RCSid[] = "$Id: plotout.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  Program to send meta-files to plot(3X) drivers
@@ -21,6 +21,7 @@ static const char	RCSid[] = "$Id: plotout.c,v 1.2 2003/07/01 21:21:40 greg Exp $
 
 #include  <fcntl.h>
 
+#include  "rtprocess.h"
 #include  "meta.h"
 
 
@@ -48,7 +49,7 @@ int  argc;
 char  **argv;
 
 {
- FILE  *fp, *popen();
+ FILE  *fp;
  char  comargs[200], command[300];
  short  condonly = FALSE, conditioned = FALSE;
 

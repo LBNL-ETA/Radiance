@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: oki20c.c,v 2.13 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: oki20c.c,v 2.14 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  *  oki20c.c - program to dump pixel file to OkiMate 20 color printer.
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: oki20c.c,v 2.13 2003/07/27 22:12:03 schorsch E
 #include  <time.h>
 
 #include  "platform.h"
+#include  "rtprocess.h"
 #include  "color.h"
 #include  "resolu.h"
 
@@ -28,8 +29,6 @@ static const char	RCSid[] = "$Id: oki20c.c,v 2.13 2003/07/27 22:12:03 schorsch E
 long  lpat[NCOLS][3];
 
 int  dofilter = 0;		/* filter through pfilt first? */
-
-extern FILE  *popen();
 
 
 main(argc, argv)

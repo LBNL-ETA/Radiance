@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mt160.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: mt160.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  Program to print meta-files on a dot-matrix printer
@@ -39,15 +39,10 @@ static const char	RCSid[] = "$Id: mt160.c,v 1.2 2003/08/01 14:14:24 schorsch Exp
 #define  XCOM  "pexpand +vOCIsp %s | psort -Y +x"
 
 
-
-
+#include  "rtprocess.h"
 #include  "meta.h"
-
 #include  "plot.h"
-
 #include  "span.h"
-
-
 
 
 char  *progname;
@@ -96,7 +91,6 @@ char  **argv;
 
 {
  FILE  *fp;
- FILE  *popen();
  char  comargs[200], command[300];
 
  progname = *argv++;

@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id";
 #include <stdio.h>
 
 #include "platform.h"
+#include "rtprocess.h"
 #include "fvect.h"
 
 #ifdef  M_PI
@@ -147,7 +148,7 @@ cvcomm(fname, fin)		/* convert a command */
 char	*fname;
 FILE	*fin;
 {
-	FILE	*pin, *popen();
+	FILE	*pin;
 	char	buf[512], *fgetline();
 
 	fgetline(buf, sizeof(buf), fin);

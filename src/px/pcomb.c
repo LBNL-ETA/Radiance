@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.28 2003/10/22 02:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.29 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -8,7 +8,8 @@ static const char	RCSid[] = "$Id: pcomb.c,v 2.28 2003/10/22 02:06:35 greg Exp $"
  */
 
 #include "platform.h"
-#include "standard.h"
+#include "rtprocess.h"
+#include "rterror.h"
 #include "color.h"
 #include "calcomp.h"
 #include "view.h"
@@ -69,7 +70,6 @@ char	*progname;			/* global argv[0] */
 int	wrongformat = 0;
 int	gotview;
 
-FILE	*popen();
 
 extern char	*emalloc();
 
@@ -597,26 +597,23 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 }
 
 
-void
-wputs(msg)
-char	*msg;
+extern void
+wputs(char	*msg)
 {
 	if (!nowarn)
 		eputs(msg);
 }
 
 
-void
-eputs(msg)
-char	*msg;
+extern void
+eputs(char *msg)
 {
 	fputs(msg, stderr);
 }
 
 
-void
-quit(code)		/* exit gracefully */
-int  code;
+extern void
+quit(int code)		/* exit gracefully */
 {
 	register int  i;
 				/* close input files */

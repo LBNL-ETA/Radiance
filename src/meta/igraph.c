@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: igraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: igraph.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
 #endif
 /*
  *  igraph.c - interactive graphing program.
@@ -15,6 +15,7 @@ static const char	RCSid[] = "$Id: igraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
 
 #include  <setjmp.h>
 
+#include  "rtprocess.h"
 #include  "mgvars.h"
 
 typedef struct {
@@ -226,7 +227,7 @@ settype()			/* set plot type */
 
 plotout()			/* output our graph */
 {
-	extern FILE  *pout, *popen();
+	extern FILE  *pout;
 	char  sbuf[128];
 	char  *command;
 	int  i;

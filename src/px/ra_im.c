@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_im.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_im.c,v 2.3 2003/10/27 10:24:51 schorsch Exp $";
 #endif
 /*
  *  ra_im.c - convert Radiance picture to imagetools raw format.
@@ -9,13 +9,14 @@ static const char	RCSid[] = "$Id: ra_im.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 
 #include <stdio.h>
 
+#include "rtprocess.h"
 
 #define PCOMM		"pvalue -h -b -db"
 
 #define MINVAL		1
 #define MAXVAL		252
 
-extern FILE	*popen(), *freopen();
+extern FILE	*freopen();
 
 
 main(argc, argv)
