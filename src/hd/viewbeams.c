@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: viewbeams.c,v 3.2 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.3 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Convert view to beam list.
@@ -37,7 +37,7 @@ int	hd, bi, nr;
 		}
 	i = blist.nb++;				/* else add beam to list */
 	if (i % BALLOCBLK == 0) {
-		blist.bl = (PACKHEAD *)realloc((char *)blist.bl,
+		blist.bl = (PACKHEAD *)realloc((void *)blist.bl,
 				(i+BALLOCBLK)*sizeof(PACKHEAD));
 		CHECK(blist.bl==NULL, SYSTEM, "out of memory in add2blist");
 	}

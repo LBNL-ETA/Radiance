@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.20 2003/03/04 05:49:21 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.21 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -53,7 +53,7 @@ newtwig()			/* allocate a twig */
 	}
 	bi = nexttwig / TBUNDLESIZ;
 	if (twigbundle[bi] == NULL) {	/* new block */
-		twigbundle = (RTREE **)realloc((char *)twigbundle,
+		twigbundle = (RTREE **)realloc((void *)twigbundle,
 					(bi+2)*sizeof(RTREE *));
 		if (twigbundle == NULL)
 			goto memerr;

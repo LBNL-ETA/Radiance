@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.42 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.43 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -101,7 +101,7 @@ char	*rout;
 	register char	*newp;
 					/* call malloc/realloc */
 	if (ptr == NULL) newp = (char *)malloc(siz);
-	else newp = (char *)realloc(ptr, siz);
+	else newp = (char *)realloc((void *)ptr, siz);
 					/* check success */
 	if (newp == NULL && rout != NULL) {
 		hdfreecache(25, NULL);	/* free some memory */
@@ -569,7 +569,7 @@ int	i;
 		if (f->fi == NULL)
 			newp = (BEAMI *)malloc((j+FRAGBLK)*sizeof(BEAMI));
 		else
-			newp = (BEAMI *)realloc((char *)f->fi,
+			newp = (BEAMI *)realloc((void *)f->fi,
 					(j+FRAGBLK)*sizeof(BEAMI));
 		if (newp == NULL) {
 			f->nfrags--;	/* graceful failure */

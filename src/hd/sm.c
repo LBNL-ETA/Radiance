@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm.c,v 3.16 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm.c,v 3.17 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  sm.c
@@ -257,7 +257,7 @@ int resize;
 #endif
 	if (len > tempbuflen) {
 		if (tempbuflen > 0)
-			tempbuf = realloc(tempbuf, len);
+			tempbuf = realloc((void *)tempbuf, len);
 		else
 			tempbuf = malloc(len);
 		tempbuflen = tempbuf==NULL ? 0 : len;

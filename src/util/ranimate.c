@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.31 2003/02/25 02:47:24 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.32 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -798,7 +798,7 @@ int	frame;
 		return(1);
 					/* add frame to recovered list */
 	if (nrfrms)
-		rfrm = (int *)realloc((char *)rfrm, (nrfrms+1)*sizeof(int));
+		rfrm = (int *)realloc((void *)rfrm, (nrfrms+1)*sizeof(int));
 	else
 		rfrm = (int *)malloc(sizeof(int));
 	if (rfrm == NULL) {

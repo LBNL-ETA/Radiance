@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.10 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.11 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -94,7 +94,7 @@ VARIABLE	*(*mv)();
 			while (*cp++)
 				;
 		i = cp - vp->value;
-		vp->value = (char *)realloc(vp->value, i+n+1);
+		vp->value = (char *)realloc((void *)vp->value, i+n+1);
 	} else
 		vp->value = (char *)malloc(n+1);
 	if (vp->value == NULL) {

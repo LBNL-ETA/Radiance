@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.3 2003/03/14 21:27:46 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.4 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines

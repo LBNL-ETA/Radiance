@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.3 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.4 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -58,7 +58,7 @@ unsigned int  n;
 {
 	if (n == 0) {
 		if (cp != NULL)
-			free(cp);
+			free((void *)cp);
 		return(NULL);
 	}
 
@@ -79,5 +79,5 @@ void
 efree(cp)			/* free memory allocated by above */
 char  *cp;
 {
-	free((char *)cp);
+	free((void *)cp);
 }

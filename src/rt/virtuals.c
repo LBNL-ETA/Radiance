@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.8 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.9 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -49,7 +49,7 @@ markvirtuals()			/* find and mark virtual sources */
 		if (nvobjects == 0)
 			vobject = (OBJECT *)malloc(sizeof(OBJECT));
 		else
-			vobject = (OBJECT *)realloc((char *)vobject,
+			vobject = (OBJECT *)realloc((void *)vobject,
 				(unsigned)(nvobjects+1)*sizeof(OBJECT));
 		if (vobject == NULL)
 			error(SYSTEM, "out of memory in addvirtuals");

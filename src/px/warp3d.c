@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.5 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.6 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * 3D warping routines.
@@ -284,11 +284,11 @@ W3VEC	pti, pto;
 		W3VCPY(wp->ulim, pti);
 	} else {
 		if (wp->npts % AHUNK == 0) {	/* allocate another hunk */
-			na = (W3VEC *)realloc((char *)wp->ip,
+			na = (W3VEC *)realloc((void *)wp->ip,
 					(wp->npts+AHUNK)*sizeof(W3VEC));
 			if (na == NULL) return(0);
 			wp->ip = na;
-			na = (W3VEC *)realloc((char *)wp->ov,
+			na = (W3VEC *)realloc((void *)wp->ov,
 					(wp->npts+AHUNK)*sizeof(W3VEC));
 			if (na == NULL) return(0);
 			wp->ov = na;

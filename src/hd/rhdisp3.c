@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.12 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.13 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -292,7 +292,7 @@ VIEW	*vp;
 	 * sorted automatically by visit_cells(), so we don't need this.
 	 */
 					/* optimize memory use */
-	cl.cl = (GCOORD *)realloc((char *)cl.cl, cl.n*sizeof(GCOORD));
+	cl.cl = (GCOORD *)realloc((void *)cl.cl, cl.n*sizeof(GCOORD));
 	if (cl.cl == NULL)
 		goto memerr;
 					/* sort the list */

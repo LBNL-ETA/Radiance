@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.12 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.13 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -337,7 +337,8 @@ int	j;
 		if (nl[i][t] == i) {		/* add to list */
 			nl[i][t++] = j;
 			if (t % NBSIZ == 0) {	/* enlarge list */
-				if ((nnl = realloc(nl[i], t+NBSIZ)) == NULL)
+				if ((nnl = realloc((void *)nl[i],
+						t+NBSIZ)) == NULL)
 					t--;
 				else
 					nl[i] = (BYTE *)nnl;

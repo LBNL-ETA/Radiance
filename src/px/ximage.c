@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ximage.c,v 2.9 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ximage.c,v 2.10 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  ximage.c - driver for X-windows
@@ -597,7 +597,7 @@ colormap	cmap;
 			xr->cdefs[xr->ncolors].pixel = *p;
 			xr->pmap[*p] = xr->ncolors++;
 		}
-	xr->cdefs = (Color *)realloc((char *)xr->cdefs, xr->ncolors*sizeof(Color));
+	xr->cdefs = (Color *)realloc((void *)xr->cdefs, xr->ncolors*sizeof(Color));
 	if (xr->cdefs == NULL)
 		return(0);
 	return(1);

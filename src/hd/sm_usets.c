@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_usets.c,v 3.2 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_usets.c,v 3.3 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Quadtree-specific set operations with unsorted sets.
@@ -46,11 +46,11 @@ OBJECT  *oset;
 		osi = qtfreesets;
 		qtfreesets = (int)qtsettab[osi];
 	} else if ((osi = qtnumsets++) % QTSETIBLK == 0) {
-		qtsettab = (OBJECT **)realloc((char *)qtsettab,
+		qtsettab = (OBJECT **)realloc((void *)qtsettab,
 				(unsigned)(osi+QTSETIBLK)*sizeof(OBJECT *));
 		if (qtsettab == NULL)
 			goto memerr;
-		qtsetflag = (int4 *)realloc((char *)qtsetflag,
+		qtsetflag = (int4 *)realloc((void *)qtsetflag,
 				   FLAG_BYTES(osi+ QTSETIBLK));
 		if (qtsetflag == NULL)
 			goto memerr;
@@ -126,7 +126,7 @@ OBJECT  id;
 	}
 	deletuelem(qtsettab[lf], id);
 	if (QTONTHRESH(qtsettab[lf][0]))
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0])*sizeof(OBJECT));
 	return(qt);
 }
@@ -161,7 +161,7 @@ OBJECT  id;
 	}
 	deletelem(qtsettab[lf], id);
 	if (QTONTHRESH(qtsettab[lf][0]))
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0])*sizeof(OBJECT));
 	return(qt);
 }
@@ -198,7 +198,7 @@ OBJECT  id;
 	  return(qt);
 	}
 	if (QTONTHRESH(qtsettab[lf][0])) {
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0]+1)*sizeof(OBJECT));
 		if (qtsettab[lf] == NULL)
 			error(SYSTEM, "out of memory in qtaddelem");
@@ -230,7 +230,7 @@ qtcompressuelem(qt,compress_set)
 	osize = os[0];
 	if((i=compress_set(os)) < osize)
 	{
-	  qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+	  qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 					   QTNODESIZ(i+1)*sizeof(OBJECT));
 	  if (qtsettab[lf] == NULL)
 	    error(SYSTEM, "out of memory in qtaddelem");
@@ -262,7 +262,7 @@ OBJECT  id;
 	lf = QT_SET_INDEX(qt);
 #endif
 	if (QTONTHRESH(qtsettab[lf][0])) {
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0]+1)*sizeof(OBJECT));
 		if (qtsettab[lf] == NULL)
 			error(SYSTEM, "out of memory in qtaddelem");

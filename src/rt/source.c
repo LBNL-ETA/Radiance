@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.31 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.32 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -293,9 +293,9 @@ char  *p;			/* data for f */
 	for (sn = 0; srcray(&sr, r, &si); sn++) {
 		if (sn >= maxcntr) {
 			maxcntr = sn + MAXSPART;
-			srccnt = (CONTRIB *)realloc((char *)srccnt,
+			srccnt = (CONTRIB *)realloc((void *)srccnt,
 					maxcntr*sizeof(CONTRIB));
-			cntord = (CNTPTR *)realloc((char *)cntord,
+			cntord = (CNTPTR *)realloc((void *)cntord,
 					maxcntr*sizeof(CNTPTR));
 			if (srccnt == NULL | cntord == NULL)
 				error(SYSTEM, "out of memory in direct");

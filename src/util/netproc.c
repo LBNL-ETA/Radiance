@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.9 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.10 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Parallel network process handling routines
@@ -245,7 +245,7 @@ int	fd;
 	if (pp->elen == 0)
 		pp->errs = (char *)malloc(nr+1);
 	else
-		pp->errs = (char *)realloc(pp->errs, pp->elen+nr+1);
+		pp->errs = (char *)realloc((void *)pp->errs, pp->elen+nr+1);
 	if (pp->errs == NULL) {
 		perror("malloc failed");
 		exit(1);

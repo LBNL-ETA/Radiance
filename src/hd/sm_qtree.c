@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_qtree.c,v 3.14 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_qtree.c,v 3.15 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
 *  sm_qtree.c: adapted from octree.c from radiance code
@@ -52,7 +52,7 @@ qtAlloc()			/* allocate a quadtree */
 	   error(SYSTEM,"qtAlloc(): Unable to allocate memory\n");
 
 	/* Realloc the per/node flags */
-	quad_flag = (int4 *)realloc((char *)quad_flag,
+	quad_flag = (int4 *)realloc((void *)quad_flag,
 			(QT_BLOCK(freet)+1)*((QT_BLOCK_SIZE+7)>>3));
 	if (quad_flag == NULL)
 	   error(SYSTEM,"qtAlloc(): Unable to allocate memory\n");

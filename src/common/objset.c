@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.9 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.10 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -217,7 +217,7 @@ tryagain:
 						/* remember position */
 		i = os - ostable[osentry];
 		os = ostable[osentry] = (OBJECT *)realloc(
-				(char *)ostable[osentry],
+				(void *)ostable[osentry],
 				(unsigned)(i+oset[0]+2)*sizeof(OBJECT));
 		if (os == NULL)
 			goto memerr;

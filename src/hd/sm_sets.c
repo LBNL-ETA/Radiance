@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_sets.c,v 3.6 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_sets.c,v 3.7 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Quadtree-specific set operations.
@@ -34,7 +34,7 @@ OBJECT  *oset;
     osi = qtfreesets;
     qtfreesets = (int)qtsettab[osi];
   } else if ((osi = qtnumsets++) % QTSETIBLK == 0) {
-    qtsettab = (OBJECT **)realloc((char *)qtsettab,
+    qtsettab = (OBJECT **)realloc((void *)qtsettab,
 				  (unsigned)(osi+QTSETIBLK)*sizeof(OBJECT *));
     if (qtsettab == NULL)
       goto memerr;
@@ -74,7 +74,7 @@ OBJECT  id;
 	}
 	deletelem(qtsettab[lf], id);
 	if (QTONTHRESH(qtsettab[lf][0]))
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0])*sizeof(OBJECT));
 	return(qt);
 }
@@ -105,7 +105,7 @@ OBJECT  id;
 	lf = QT_SET_INDEX(qt);
 #endif
 	if (QTONTHRESH(qtsettab[lf][0])) {
-		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+		qtsettab[lf] = (OBJECT *)realloc((void *)qtsettab[lf],
 				QTNODESIZ(qtsettab[lf][0]+1)*sizeof(OBJECT));
 		if (qtsettab[lf] == NULL)
 			error(SYSTEM, "out of memory in qtaddelem");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.11 2003/03/04 01:42:29 greg Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.12 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -270,7 +270,7 @@ double	x, y, z;
 		if (vlist == NULL)
 			vlist = (VERTEX *)malloc(nverts*sizeof(VERTEX));
 		else
-			vlist = (VERTEX *)realloc((char *)vlist,
+			vlist = (VERTEX *)realloc((void *)vlist,
 					nverts*sizeof(VERTEX));
 		if (vlist == NULL) {
 			fprintf(stderr,

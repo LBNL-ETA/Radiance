@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: trans.c,v 2.2 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: trans.c,v 2.3 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Translator utilities
@@ -88,7 +88,7 @@ int	insert;
     		if (idl->id == NULL)
     			goto memerr;
     	} else {				/* grow old list */
-    		idl->id = (ID *)realloc((char *)idl->id,(idl->nids+1)*sizeof(ID));
+    		idl->id = (ID *)realloc((void *)idl->id,(idl->nids+1)*sizeof(ID));
     		if (idl->id == NULL)
     			goto memerr;
     		for (i = idl->nids; i > upper; i--) {

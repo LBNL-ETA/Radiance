@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 1.2 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -7,9 +7,8 @@ static const char	RCSid[] = "$Id: ealloc.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
 
 
 #include  <stdio.h>
+#include  <stdlib.h>
 
-
-char  *malloc(), *realloc(), *emalloc(), *ecalloc(), *erealloc();
 
 
 char *
@@ -65,7 +64,7 @@ unsigned  n;
 	if (cp == NULL)
 		cp = malloc(n);
 	else 
-		cp = realloc(cp, n);
+		cp = realloc((void *)cp, n);
 
 	if (cp != NULL)
 		return(cp);
@@ -78,5 +77,5 @@ unsigned  n;
 efree(cp)			/* free memory allocated by above */
 char  *cp;
 {
-	free(cp);
+	free((void *)cp);
 }

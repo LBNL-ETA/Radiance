@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fprism.c,v 2.4 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: fprism.c,v 2.5 2003/04/23 00:52:34 greg Exp $";
 #endif
 /* Ce programme calcule les directions et les energies des rayons lumineux
    resultant du passage d'un rayon au travers d'un vitrage prismatique
@@ -400,7 +400,7 @@ if(r.e > seuil)
  if (egalite == 0)
   {
    if (nbrayons == 0) ray = (TRAYON *)calloc(1,sizeof(TRAYON));
-   else ray = (TRAYON *)realloc(ray, (nbrayons+1)*(sizeof(TRAYON)));         
+   else ray = (TRAYON *)realloc((void *)ray, (nbrayons+1)*(sizeof(TRAYON)));         
    if (ray == NULL)
      error(SYSTEM, "out of memory in sortie\n");
    raytemp = &ray[nbrayons];

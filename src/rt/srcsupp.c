@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.10 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.11 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -54,7 +54,7 @@ newsource()			/* allocate new source in our array */
 	if (nsources == 0)
 		source = (SRCREC *)malloc(SRCINC*sizeof(SRCREC));
 	else if (nsources%SRCINC == 0)
-		source = (SRCREC *)realloc((char *)source,
+		source = (SRCREC *)realloc((void *)source,
 				(unsigned)(nsources+SRCINC)*sizeof(SRCREC));
 	if (source == NULL)
 		return(-1);

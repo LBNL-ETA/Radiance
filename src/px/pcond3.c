@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.11 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.12 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -54,7 +54,7 @@ FILE	*fp;
 				if (nfixations % FIXHUNK == 0) {
 					if (nfixations)
 						fixlst = (short (*)[2])
-							realloc((char *)fixlst,
+							realloc((void *)fixlst,
 							(nfixations+FIXHUNK)*
 							2*sizeof(short));
 					else

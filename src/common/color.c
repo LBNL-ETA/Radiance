@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.11 2003/04/07 15:43:08 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.12 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -31,7 +31,7 @@ unsigned int  len;
 
 	if (len > tempbuflen) {
 		if (tempbuflen > 0)
-			tempbuf = (char *)realloc(tempbuf, len);
+			tempbuf = (char *)realloc((void *)tempbuf, len);
 		else
 			tempbuf = (char *)malloc(len);
 		tempbuflen = tempbuf==NULL ? 0 : len;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_del.c,v 3.13 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: sm_del.c,v 3.14 2003/04/23 00:52:34 greg Exp $";
 #endif
 /*
  *  sm_del.c
@@ -62,7 +62,7 @@ eNew_edge()
 	error(CONSISTENCY,"Too many edges in vertex loop\n");
 #endif
       Max_edges += 100;
-      if(!(Edges = (EDGE *)realloc(Edges,(Max_edges+1)*sizeof(EDGE))))
+      if(!(Edges = (EDGE *)realloc((void *)Edges,(Max_edges+1)*sizeof(EDGE))))
 	goto memerr;
     }
 #ifdef DEBUG

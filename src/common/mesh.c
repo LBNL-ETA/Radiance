@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.5 2003/04/18 22:10:20 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.6 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -197,10 +197,10 @@ OBJECT	ti;
 
 int
 getmeshvert(vp, mp, vid, what)	/* get triangle vertex from ID */
-MESHVERT*vp;
-MESH	*mp;
-int4	vid;
-int	what;
+MESHVERT	*vp;
+MESH		*mp;
+int4		vid;
+int		what;
 {
 	int		pn = vid >> 8;
 	MESHPATCH	*pp;

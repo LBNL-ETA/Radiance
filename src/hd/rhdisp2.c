@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp2.c,v 3.33 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.34 2003/04/23 00:52:33 greg Exp $";
 #endif
 /*
  * Holodeck beam tracking for display process
@@ -34,7 +34,7 @@ newcbeam()		/* allocate new entry at end of cbeam array */
 			cbeam = (PACKHEAD *)malloc(
 					maxcbeam*sizeof(PACKHEAD) );
 		else
-			cbeam = (PACKHEAD *)realloc( (char *)cbeam,
+			cbeam = (PACKHEAD *)realloc((void *)cbeam,
 					maxcbeam*sizeof(PACKHEAD) );
 		if (cbeam == NULL)
 			error(SYSTEM, "out of memory in newcbeam");
