@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.27 2004/12/15 22:02:04 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.28 2004/12/16 19:31:36 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -225,7 +225,7 @@ nonsurfintree(OCTREE ot)		/* check tree for modifiers */
 		return(0);
 	}
 	objset(set, ot);
-	for (i = set[0]; i-- > 0; )
+	for (i = set[0]; i > 0; i-- )
 		if (ismodifier(objptr(set[i])->otype))
 			return(1);
 	return(0);
