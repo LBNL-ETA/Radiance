@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.57 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.58 2003/06/21 14:48:54 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -215,7 +215,7 @@ initrholo()			/* get our holodeck running */
 		init_global();
 						/* record disk space limit */
 	if (!vdef(DISKSPACE))
-		maxdisk = (1L<<(sizeof(off_t)*8-2)) - 1024;
+		maxdisk = ((off_t)1<<(sizeof(off_t)*8-2)) - 1024;
 	else
 		maxdisk = 1024.*1024.*vflt(DISKSPACE);
 						/* set up memory cache */

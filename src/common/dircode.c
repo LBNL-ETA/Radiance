@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.5 2003/06/20 00:25:49 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.6 2003/06/21 14:48:53 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (int32 type defined in standard.h).
@@ -33,6 +33,8 @@ FVECT	dv;
 			dc |= FXNEG<<i;
 		} else
 			cd[i] = (int)(dv[i] * DCSCALE);
+	if (!(cd[0] | cd[1] | cd[2]))
+		return(0);		/* zero normal */
 	if (cd[0] <= cd[1]) {
 		dc |= F1X | cd[0] << F1SFT;
 		cm = cd[1];
@@ -44,7 +46,7 @@ FVECT	dv;
 		dc |= F2Z | cd[2] << F2SFT;
 	else
 		dc |= cm << F2SFT;
-	if (!dc)	/* don't generate 0 code */
+	if (!dc)	/* don't generate 0 code normally */
 		dc = F1X;
 	return(dc);
 }
@@ -57,6 +59,10 @@ register int32	dc;
 {
 	double	d1, d2, der;
 
+	if (!dc) {		/* special code for zero normal */
+		dv[0] = dv[1] = dv[2] = 0.;
+		return;
+	}
 	d1 = ((dc>>F1SFT & FMASK)+.5)*(1./DCSCALE);
 	d2 = ((dc>>F2SFT & FMASK)+.5)*(1./DCSCALE);
 	der = sqrt(1. - d1*d1 - d2*d2);

@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.28 2003/06/20 16:12:39 greg Exp $ */
+/* RCSid $Id: standard.h,v 2.29 2003/06/21 14:48:54 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -103,7 +103,9 @@ extern char  errmsg[];			/* global buffer for error messages */
 #define	 index			strchr
 #define	 rindex			strrchr
 #endif
-extern off_t  lseek();
+
+			/* <unistd.h> is missing on some systems */
+extern off_t  lseek(int, off_t, int);
 
 #ifdef _WIN32
 #define NIX 1
