@@ -1202,3 +1202,9 @@ returning bad values from the depth buffer.
 
 Minor bug fix in ranimove where it was restarting processes when it
 didn't need to.
+
+Increased accuracy of default ambient parameters in rpict, rview, and
+rtrace.  In rad program, doubled -ar value, -ad value, and -as value,
+and decreased -aa value a bit.  Also adjusted -lr upwards and -lw
+downwards.  I should have done these things long ago, as processors
+have been getting faster and faster over the years.

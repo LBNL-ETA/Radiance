@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.6 2003/08/26 04:24:26 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.7 2003/09/24 14:55:54 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -352,15 +352,15 @@ RAYPARAMS	*rp;
 	rp->specthresh = .15;
 	rp->specjitter = 1.;
 	rp->backvis = 1;
-	rp->maxdepth = 6;
-	rp->minweight = 4e-3;
+	rp->maxdepth = 8;
+	rp->minweight = 2e-3;
 	setcolor(rp->ambval, 0., 0., 0.);
 	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
 	rp->ambvwt = 0;
-	rp->ambres = 128;
-	rp->ambacc = 0.2;
-	rp->ambdiv = 512;
-	rp->ambssamp = 0;
+	rp->ambres = 256;
+	rp->ambacc = 0.1;
+	rp->ambdiv = 1024;
+	rp->ambssamp = 512;
 	rp->ambounce = 0;
 	rp->ambincl = -1;
 	memset(rp->amblval, '\0', sizeof(rp->amblval));

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.33 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.34 2003/09/24 14:55:54 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -74,16 +74,16 @@ double  specjitter = 1.;		/* specular sampling jitter */
 
 int  backvis = 1;			/* back face visibility */
 
-int  maxdepth = 6;			/* maximum recursion depth */
-double  minweight = 4e-3;		/* minimum ray weight */
+int  maxdepth = 8;			/* maximum recursion depth */
+double  minweight = 2e-3;		/* minimum ray weight */
 
 char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
-double  ambacc = 0.2;			/* ambient accuracy */
-int  ambres = 128;			/* ambient resolution */
-int  ambdiv = 512;			/* ambient divisions */
-int  ambssamp = 0;			/* ambient super-samples */
+double  ambacc = 0.1;			/* ambient accuracy */
+int  ambres = 256;			/* ambient resolution */
+int  ambdiv = 1024;			/* ambient divisions */
+int  ambssamp = 512;			/* ambient super-samples */
 int  ambounce = 0;			/* ambient bounces */
 char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */

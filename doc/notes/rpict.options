@@ -22,12 +22,12 @@ Param   Description             Min     Fast    Accur   Max     Notes
 -st	specular threshold	1	.85	.15	0	C
 -aw	ambient weight		0	100	10	inf	A
 -ab	ambient bounces		0	0	2	8
--aa	ambient accuracy	.5	.2	.15	0	C
--ar	ambient resolution	8	32	128	0	C
--ad	ambient divisions	0	32	512	4096
--as	ambient super-samples	0	32	256	1024
+-aa	ambient accuracy	.5	.2	.1	0	C
+-ar	ambient resolution	8	32	256	0	C
+-ad	ambient divisions	0	128	1024	8192
+-as	ambient super-samples	0	32	512	2048
 -ms	mist sampling dist.	0	10	1	.01
--lr	limit reflection	0	4	8	16
+-lr	limit reflection	0	6	8	16
 -lw	limit weight		.05	.01	.002	0	C
 
 NOTES:

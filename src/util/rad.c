@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.71 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.72 2003/09/24 14:55:54 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -621,19 +621,19 @@ char	*po;
 	case LOW:
 		po = addarg(po, "-ps 16");
 		op = addarg(op, "-dp 64");
-		sprintf(op, " -ar %d", (int)(4*d));
+		sprintf(op, " -ar %d", (int)(8*d));
 		op += strlen(op);
 		break;
 	case MEDIUM:
 		po = addarg(po, "-ps 8");
 		op = addarg(op, "-dp 128");
-		sprintf(op, " -ar %d", (int)(8*d));
+		sprintf(op, " -ar %d", (int)(16*d));
 		op += strlen(op);
 		break;
 	case HIGH:
 		po = addarg(po, "-ps 4");
 		op = addarg(op, "-dp 256");
-		sprintf(op, " -ar %d", (int)(16*d));
+		sprintf(op, " -ar %d", (int)(32*d));
 		op += strlen(op);
 		break;
 	}
@@ -650,20 +650,20 @@ char	*po;
 		overture = 0;
 	switch (vscale(VARIABILITY)) {
 	case LOW:
-		op = addarg(op, "-aa .4 -ad 64");
+		op = addarg(op, "-aa .3 -ad 256");
 		break;
 	case MEDIUM:
-		op = addarg(op, "-aa .3 -ad 128");
+		op = addarg(op, "-aa .25 -ad 512");
 		break;
 	case HIGH:
-		op = addarg(op, "-aa .25 -ad 256");
+		op = addarg(op, "-aa .2 -ad 1024");
 		break;
 	}
 	op = addarg(op, "-as 0");
 	d = ambval();
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
-	op = addarg(op, "-lr 3 -lw .02");
+	op = addarg(op, "-lr 6 -lw .01");
 	if (vdef(RENDER))
 		op = addarg(op, vval(RENDER));
 }
@@ -690,7 +690,7 @@ char	*po;
 	case LOW:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 4" : "-ps 8");
 		op = addarg(op, "-dp 256");
-		sprintf(op, " -ar %d", (int)(8*d));
+		sprintf(op, " -ar %d", (int)(16*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/20.);
 		op += strlen(op);
@@ -698,7 +698,7 @@ char	*po;
 	case MEDIUM:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 3" : "-ps 6");
 		op = addarg(op, "-dp 512");
-		sprintf(op, " -ar %d", (int)(16*d));
+		sprintf(op, " -ar %d", (int)(32*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/40.);
 		op += strlen(op);
@@ -706,7 +706,7 @@ char	*po;
 	case HIGH:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 2" : "-ps 4");
 		op = addarg(op, "-dp 1024");
-		sprintf(op, " -ar %d", (int)(32*d));
+		sprintf(op, " -ar %d", (int)(64*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/80.);
 		op += strlen(op);
@@ -729,19 +729,19 @@ char	*po;
 		overture = 0;
 	switch (vscale(VARIABILITY)) {
 	case LOW:
-		op = addarg(op, "-aa .25 -ad 196 -as 0");
+		op = addarg(op, "-aa .2 -ad 329 -as 42");
 		break;
 	case MEDIUM:
-		op = addarg(op, "-aa .2 -ad 400 -as 64");
+		op = addarg(op, "-aa .15 -ad 800 -as 128");
 		break;
 	case HIGH:
-		op = addarg(op, "-aa .15 -ad 768 -as 196");
+		op = addarg(op, "-aa .1 -ad 1536 -as 392");
 		break;
 	}
 	d = ambval();
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
-	op = addarg(op, "-lr 6 -lw .002");
+	op = addarg(op, "-lr 8 -lw .002");
 	if (vdef(RENDER))
 		op = addarg(op, vval(RENDER));
 }
@@ -768,7 +768,7 @@ char	*po;
 	case LOW:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 1" : "-ps 8");
 		op = addarg(op, "-dp 1024");
-		sprintf(op, " -ar %d", (int)(16*d));
+		sprintf(op, " -ar %d", (int)(32*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/40.);
 		op += strlen(op);
@@ -776,7 +776,7 @@ char	*po;
 	case MEDIUM:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 1" : "-ps 5");
 		op = addarg(op, "-dp 2048");
-		sprintf(op, " -ar %d", (int)(32*d));
+		sprintf(op, " -ar %d", (int)(64*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/80.);
 		op += strlen(op);
@@ -784,7 +784,7 @@ char	*po;
 	case HIGH:
 		po = addarg(po, vbool(PENUMBRAS) ? "-ps 1" : "-ps 3");
 		op = addarg(op, "-dp 4096");
-		sprintf(op, " -ar %d", (int)(64*d));
+		sprintf(op, " -ar %d", (int)(128*d));
 		op += strlen(op);
 		sprintf(op, " -ms %.2g", asz/160.);
 		op += strlen(op);
@@ -805,13 +805,13 @@ char	*po;
 		overture = 0;
 	switch (vscale(VARIABILITY)) {
 	case LOW:
-		op = addarg(op, "-aa .15 -ad 256 -as 0");
+		op = addarg(op, "-aa .125 -ad 512 -as 64");
 		break;
 	case MEDIUM:
-		op = addarg(op, "-aa .125 -ad 512 -as 256");
+		op = addarg(op, "-aa .1 -ad 1536 -as 768");
 		break;
 	case HIGH:
-		op = addarg(op, "-aa .08 -ad 1024 -as 512");
+		op = addarg(op, "-aa .075 -ad 4096 -as 2048");
 		break;
 	}
 	d = ambval();

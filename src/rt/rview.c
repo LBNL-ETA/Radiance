@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.23 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.24 2003/09/24 14:55:54 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -56,16 +56,16 @@ double	specjitter = 1.;		/* specular sampling jitter */
 
 int  backvis = 1;			/* back face visibility */
 
-int  maxdepth = 4;			/* maximum recursion depth */
+int  maxdepth = 6;			/* maximum recursion depth */
 double	minweight = 1e-2;		/* minimum ray weight */
 
 char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
 double	ambacc = 0.2;			/* ambient accuracy */
-int  ambres = 8;			/* ambient resolution */
-int  ambdiv = 32;			/* ambient divisions */
-int  ambssamp = 0;			/* ambient super-samples */
+int  ambres = 32;			/* ambient resolution */
+int  ambdiv = 128;			/* ambient divisions */
+int  ambssamp = 32;			/* ambient super-samples */
 int  ambounce = 0;			/* ambient bounces */
 char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
