@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.19 2003/08/26 04:24:26 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.20 2003/08/29 23:03:13 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -394,8 +394,10 @@ register char  *s;
 	int  na;
 	int  nvopts = 0;
 
-	while (*s && *s != ' ')
+	while (*s == ' ')
 		s++;
+	if (*s != '-')
+		s = sskip2(s,1);
 	while (*s) {
 		ac = 0;
 		do {
