@@ -1,9 +1,15 @@
-/* RCSid $Id: func.h,v 2.3 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: func.h,v 2.4 2003/06/07 00:54:58 schorsch Exp $ */
 /*
  * Header file for modifiers using function files.
  *
  * Include after ray.h
  */
+#ifndef _RAD_FUNC_H_
+#define _RAD_FUNC_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -20,18 +26,15 @@ typedef struct {
 extern XF  unitxf;		/* identity transform */
 extern XF  funcxf;		/* current transform */
 
-#ifdef NOPROTO
-
-extern MFUNC	*getfunc();
-extern void	freefunc();
-extern int	setfunc();
-extern void	loadfunc();
-
-#else
 
 extern MFUNC	*getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
 extern void	freefunc(OBJREC *m);
 extern int	setfunc(OBJREC *m, RAY *r);
 extern void	loadfunc(char *fname);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_FUNC_H_ */
+

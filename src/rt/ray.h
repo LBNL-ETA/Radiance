@@ -1,7 +1,13 @@
-/* RCSid $Id: ray.h,v 2.16 2003/05/09 22:18:03 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.17 2003/06/07 00:54:58 schorsch Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
+#ifndef _RAD_RAY_H_
+#define _RAD_RAY_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -155,56 +161,6 @@ typedef struct {		/* rendering parameter holder */
 #define rpambmod(p,i)	( (i)>=AMBLLEN||(p)->amblndx[i]<0 ? \
 			  (char *)NULL : (p)->amblval+(p)->amblndx[i] )
 
-#ifdef NOPROTO
-
-extern void	headclean();
-extern void	openheader();
-extern void	dupheader();
-extern void	pfdetach();
-extern void	pfclean();
-extern void	pflock();
-extern void	pfhold();
-extern void	io_process();
-extern int	free_objs();
-extern void	free_objmem();
-extern int	load_os();
-extern void	preload_objs();
-extern void	ray_init();
-extern void	ray_trace();
-extern void	ray_done();
-extern void	ray_save();
-extern void	ray_restore();
-extern void	ray_defaults();
-extern void	ray_pinit();
-extern void	ray_psend();
-extern int	ray_pqueue();
-extern int	ray_presult();
-extern void	ray_pdone();
-extern void	ray_popen();
-extern void	ray_pclose();
-extern int	rayorigin();
-extern void	rayclear();
-extern void	raytrace();
-extern void	rayhit();
-extern void	raycont();
-extern void	raytrans();
-extern int	rayshade();
-extern void	rayparticipate();
-extern void	raytexture();
-extern int	raymixture();
-extern double	raydist();
-extern double	raynormal();
-extern void	newrayxf();
-extern void	flipsurface();
-extern int	localhit();
-extern int	getrenderopt();
-extern void	print_rdefaults();
-extern void	drawsources();
-extern void	rtrace();
-extern void	rview();
-extern void	rpict();
-
-#else
 					/* defined in duphead.c */
 extern void	headclean(void);
 extern void	openheader(void);
@@ -262,4 +218,9 @@ extern void	rtrace(char *fname);
 extern void	rview(void);
 extern void	rpict(int seq, char *pout, char *zout, char *prvr);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_RAY_H_ */
+

@@ -1,7 +1,13 @@
-/* RCSid $Id: rpaint.h,v 2.3 2003/02/25 02:47:23 greg Exp $ */
+/* RCSid $Id: rpaint.h,v 2.4 2003/06/07 00:54:58 schorsch Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
+#ifndef _RAD_RPAINT_H_
+#define _RAD_RPAINT_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -44,49 +50,6 @@ extern double  exposure;	/* exposure for scene */
 
 extern struct driver  *dev;	/* driver functions */
 
-#ifdef NOPROTO
-
-extern void	devopen();
-extern void	devclose();
-extern void	printdevices();
-extern void	fillreserves();
-extern void	freereserves();
-extern void	command();
-extern void	rsample();
-extern int	refine();
-extern void	getframe();
-extern void	getrepaint();
-extern void	getview();
-extern void	lastview();
-extern void	saveview();
-extern void	loadview();
-extern void	getaim();
-extern void	getmove();
-extern void	getrotate();
-extern void	getpivot();
-extern void	getexposure();
-extern int	getparam();
-extern void	setparam();
-extern void	traceray();
-extern void	writepict();
-extern int	getrect();
-extern int	getinterest();
-extern float	*greyof();
-extern void	paint();
-extern void	newimage();
-extern void	redraw();
-extern void	repaint();
-extern void	paintrec();
-extern PNODE	*findrect();
-extern void	scalepict();
-extern void	getpictcolrs();
-extern void	freepkids();
-extern void	newview();
-extern void	moveview();
-extern void	pcopy();
-extern void	zoomview();
-
-#else
 				/* defined in rview.c */
 extern void	devopen(char *dname);
 extern void	devclose(void);
@@ -133,4 +96,9 @@ extern void	moveview(double angle, double elev, double mag, FVECT vc);
 extern void	pcopy(PNODE *p1, PNODE *p2);
 extern void	zoomview(VIEW *vp, double zf);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_RPAINT_H_ */
+

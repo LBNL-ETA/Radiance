@@ -1,9 +1,15 @@
-/* RCSid $Id: source.h,v 2.6 2003/02/25 02:47:23 greg Exp $ */
+/* RCSid $Id: source.h,v 2.7 2003/06/07 00:54:58 schorsch Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
  *  Include after ray.h
  */
+#ifndef _RAD_SOURCE_H_
+#define _RAD_SOURCE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -112,52 +118,6 @@ extern int  nsources;			/* the number of sources */
 #define  getmaxdisk(c,o)	(*sfun[(o)->otype].of->getdisk)(c,o)
 #define  setsource(s,o)		(*sfun[(o)->otype].of->setsrc)(s,o)
 
-#ifdef NOPROTO
-
-extern void	marksources();
-extern void	freesources();
-extern int	srcray();
-extern void	srcvalue();
-extern int	sourcehit();
-extern void	direct();
-extern void	srcscatter();
-extern int	m_light();
-extern double	nextssamp();
-extern int	skipparts();
-extern void	nopart();
-extern void	cylpart();
-extern void	flatpart();
-extern double	scylform();
-extern void	initstypes();
-extern int	newsource();
-extern void	setflatss();
-extern void	fsetsrc();
-extern void	ssetsrc();
-extern void	sphsetsrc();
-extern void	rsetsrc();
-extern void	cylsetsrc();
-extern SPOT	*makespot();
-extern int	spotout();
-extern double	fgetmaxdisk();
-extern double	rgetmaxdisk();
-extern double	fgetplaneq();
-extern double	rgetplaneq();
-extern int	commonspot();
-extern int	commonbeam();
-extern int	checkspot();
-extern double	spotdisk();
-extern double	beamdisk();
-extern double	intercircle();
-extern void	markvirtuals();
-extern void	addvirtuals();
-extern void	vproject();
-extern OBJREC	*vsmaterial();
-extern int	makevsrc();
-extern double	getdisk();
-extern int	vstestvis();
-extern void	virtverb();
-
-#else
 					/* defined in source.c */
 extern void	marksources(void);
 extern void	freesources(void);
@@ -206,4 +166,9 @@ extern double	getdisk(FVECT oc, OBJREC *op, int sn);
 extern int	vstestvis(int f, OBJREC *o, FVECT oc, double or2, int sn);
 extern void	virtverb(int sn, FILE *fp);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_SOURCE_H_ */
+
