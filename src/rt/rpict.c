@@ -296,8 +296,7 @@ char  *pout, *zout, *prvr;
 		}
 		hres = hresolu; vres = vresolu; pa = pixaspect;
 		if (prvr != NULL) {
-			if (viewfile(prvr, &ourview, &rs) <= 0
-					|| rs.rt != PIXSTANDARD) {
+			if (viewfile(prvr, &ourview, &rs) <= 0) {
 				sprintf(errmsg,
 			"cannot recover view parameters from \"%s\"", prvr);
 				error(WARNING, errmsg);
