@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.9 2003/11/15 02:13:37 schorsch Exp $ */
+/* RCSid: $Id: meta.h,v 1.10 2004/03/22 02:24:23 greg Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -46,7 +46,7 @@ extern "C" {
 #define  ADELIM  '`'		/* additional argument delimiter */
 #define  CDELIM  '#'		/* comment delimiter */
 
-#define  MAXARGS  512		/* maximum # of arguments for primitive */
+#define  MAXARGS  2048		/* maximum argument string for primitive */
 
 #define  SALL  0		/* set all */
 #define  SPAT0  04		/* set pattern 0 */
