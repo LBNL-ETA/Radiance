@@ -2,11 +2,13 @@ import os
 
 Import('env') # inherit from parent
 
-mlib = env['RAD_MLIB']
+mlib = ['$RAD_MLIB']
+progs = []
 
 # compose paths
-def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
-def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
+def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
+#def radbin(name): return name
+def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 
 warp3d = env.Object(source="warp3d.c")
 clrtab = env.Object(source="clrtab.c")
@@ -61,9 +63,8 @@ PROGS = (
 )
 for p in PROGS:
     prog = env.Program(target=radbin(p[0]), source=p[1],
-		LIBS=p[2]+mlib)
-    Default(prog)
-    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+        LIBS=p[2]+mlib)
+    progs.append(prog)
 
 
 # special targets not normally built
@@ -87,7 +88,7 @@ specinst = []
 for p in SPECIAL:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	specprogs.append(prog)
-	specinst.append(env.Install(env['RAD_BINDIR'], prog))
+	specinst.append(env.Install('$RAD_BINDIR', prog))
 env.Alias('px_special', specprogs)
 env.Alias('px_special_install', specinst)
 
@@ -106,42 +107,37 @@ if os.name == 'posix':
 	# tiff programs
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
-	Default(ra_tiff)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ra_tiff)])
+	progs.append(ra_tiff)
 
 	normtiff = env.Program(target=radbin('normtiff'), source=Split('normtiff.c'),
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
-	Default(normtiff)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], normtiff)])
+	progs.append(normtiff)
 
 
 # pixar format requires extra lib
 if env.has_key('PIXAR_LIB'):
-    ra_pixar = env.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
-        LIBS=['rtpic', env['PIXAR_LIB']])
-    Default(ra_pixar)
-    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ra_pixar)])
+    ra_pixar = env.Program(radbin('ra_pixar'), source='ra_pixar.c',
+        LIBS=['rtpic', '$PIXAR_LIB'])
+    progs.append(ra_pixar)
 
 
 # X11 targets
 if env.has_key('X11LIB'):
-    xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
-    xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
+    xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
+    xlibp = env.get('LIBPATH', []) + ['$X11LIB']
     xlibs = ['X11','rtpic','rtio','rtmath','rtargs','rtmem']
     x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
-		CPPPATH=xincl)
+        CPPPATH=xincl)
 
     ximage = env.Program(target=radbin('ximage'),
         source=Split('x11image.c x11raster.c')+[clrtab],
         CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
-    Default(ximage)
-    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ximage)])
+    progs.append(ximage)
 
     xshowtrace = env.Program(target=radbin('xshowtrace'),
         source=Split('xshowtrace.c') + [x11findwind],
         CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
-    Default(xshowtrace)
-    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], xshowtrace)])
+    progs.append(xshowtrace)
 
 # NeWS ?!?
 #    if env.has_key('OGL'):
@@ -149,7 +145,14 @@ if env.has_key('X11LIB'):
 #            CPPFLAGS=env.get('CPPFLAGS', []) + [env['RAD_STEREO']],
 #            source=Split('glimage.c'),
 #            LIBS=['gl_s']+env['LIBS'],)
-#        Default(glimage)
-#        env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], glimage)])
+#        progs.append(glimage)
 
+
+if os.name == 'posix': # XXX ignoring trad.wsh
+	for s in Split('''normpat falsecolor pdfblur
+			pmblur xyzimage phisto pdelta pgblur'''):
+		Default(env.InstallCsh(radbin(s), s + '.csh'))
+
+Default('#src/px')
+env.Install('$RAD_BINDIR', progs)
 

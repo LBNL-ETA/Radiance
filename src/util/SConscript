@@ -2,11 +2,12 @@ import os
 
 Import('env') # inherit from parent
 
-mlib = env['RAD_MLIB']
+mlib = ['$RAD_MLIB']
+progs = []
 
 # compose paths
-def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
-def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
+def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
+def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 
 setscan = env.Object(source='setscan.c')
 Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
@@ -35,8 +36,7 @@ PROGS.append(('ranimate',  ['ranimate.c', netproc],
 	['rtpic','rtargs','rtio','rtcont','rtmem','rtpath','rtmath','rtnet','rterror'] + netlib))
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
-	Default(prog)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+	progs.append(prog)
 
 if os.name != 'nt': # XXX pending Windows version of raypcalls.c
 	# targets with different includes/libs
@@ -45,48 +45,51 @@ if os.name != 'nt': # XXX pending Windows version of raypcalls.c
 			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
 			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtio',
 			'rtmath','rtcont','rtmem','rtargs','rtproc','rtpath','rterror'] + mlib)
-	Default(ranimove)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], ranimove)])
+	progs.append(ranimove)
 
 getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
 		LIBS=['rtio'])
-Default(getinfo)
-env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], getinfo)])
+progs.append(getinfo)
 
 # special targets not normally built
 if os.name != 'nt': # XXX pending replacement of fork() and friends
 	scanner = env.Program(target=radbin('scanner'), source='scanner.c',
 			LIBS=mlib)
-	scanner_i = env.Install(env['RAD_BINDIR'], scanner)
+	scanner_i = env.Install('$RAD_BINDIR', scanner)
 	makedist = env.Program(target=radbin('makedist'),
 			source=Split('makedist.c')+[setscan],
 			LIBS=['rtmath']+mlib)
-	makedist_i = env.Install(env['RAD_BINDIR'], makedist)
+	makedist_i = env.Install('$RAD_BINDIR', makedist)
 	env.Alias('util_special', [scanner, makedist])
 	env.Alias('util_special_install', [scanner_i, makedist_i])
 
 # X11 targets
 if env.has_key('X11LIB'):
-	xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
-	xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
+	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
+	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
 	x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
 			CPPPATH=xincl)
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
 			source=Split('xglaresrc.c') + [x11findwind],
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rtpic','rtmath','rtargs','rtio','X11']+ mlib)
-	Default(xglaresrc)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], xglaresrc)])
+	progs.append(xglaresrc)
 
 	# OpenGL targets that also depend on X11
 	if env.has_key('OGL'):
 		glrad = env.Program(target=radbin('glrad'), source=Split('glrad.c'),
-			CPPFLAGS=env.get('CPPFLAGS', []) + [env['RAD_STEREO']],
+			CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rgl','rtpic','rtscene','rtio','rtproc','rtpath','rtargs',
 			'rtmath','rtcont','rtmem','rterror',
 			'GL', 'GLU','X11'],)
-		Default(glrad)
-		env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], glrad)])
+		progs.append(glrad)
 
+if os.name == 'posix': # XXX ignoring trad.wsh
+	for s in Split('''objview objline objpict
+			glare dayfact debugcal rlux raddepend compamb vinfo genambpos'''):
+		Default(env.InstallCsh(radbin(s), s + '.csh'))
+
+Default('#src/util')
+env.Install('$RAD_BINDIR', progs)
 

@@ -4,7 +4,7 @@ import sys
 import string
 
 OPTFILE = 'rayopts.py'
-
+SourceSignatures('timestamp')
 def set_opts(env):
     # XXX add some caching
     opts = Options(OPTFILE, ARGUMENTS)
@@ -45,6 +45,12 @@ def shareinstall_setup(env):
 # Set up build environment
 env = Environment()
 
+if os.name == 'posix':
+	from build_utils import install
+	csh_b = Builder(action = install.install_cshscript,
+			suffix = '', src_suffix = '.csh')
+	env.Append(BUILDERS={'InstallCsh': csh_b})
+
 # configure platform-specific stuff
 from build_utils import load_plat
 load_plat.load_plat(env, ARGUMENTS, platform=None)
@@ -60,6 +66,8 @@ if not env['SKIP'] and not '-c' in sys.argv:
 # fill in generic config
 allplats_setup(env)
 
+		
+
 # Bring in all the actual things to build
 Export('env')
 SConscript(os.path.join('src', 'common', 'SConscript'))
@@ -72,10 +80,9 @@ if string.find(string.join(sys.argv[1:]), 'install') > -1:
 	shareinstall_setup(env)
 
 # virtual targets
-# RAD_XXXINSTALL are filled in by the local scripts
-env.Alias('bininstall',  env.get('RAD_BININSTALL', []))
-env.Alias('rlibinstall', env.get('RAD_RLIBINSTALL',[]))
-env.Alias('maninstall',  env.get('RAD_MANINSTALL', []))
+env.Alias('bininstall',  '$RAD_BINDIR')
+env.Alias('rlibinstall', '$RAD_RLIBDIR')
+env.Alias('maninstall',  '$RAD_MANDIR')
 
 env.Alias('build',   ['#bin'])
 env.Alias('test',    ['#src/test'])

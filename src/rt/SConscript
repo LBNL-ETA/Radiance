@@ -36,7 +36,7 @@ SUP = Split('func.c noise3.c data.c')
 rsrc = RAY + SURF + MAT + MOD + SUP
 env.Command('Version.c', 'VERSION', vstamp.build_version_c)
 env.Depends('Version.c', rsrc)
-Version = env.Object(source='Version.c')
+Version = env.Object(source=['Version.c'])
 rlib = env.Library(target=radlib('rttrace'), source=rsrc + [Version])
 
 if os.name == 'nt': # XXX until we get around fork() and friends
@@ -51,21 +51,22 @@ lasrc = ['lookamb.c', ambio]
 lookamb = env.Program(target=radbin('lookamb'), source=lasrc,
 	LIBS=['rtio', 'rtpic'])
 Default(lookamb)
-env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], lookamb)])
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', lookamb)])
 
 rtmain = env.Object(source=['rtmain.c'],
 		CCFLAGS=env.get('CCFLAGS',[]) + ['-DNICE=4'])
 rtsrc = ['rtrace.c', duphead, persist, rtmain]
 rtrace = env.Program(target=radbin('rtrace'), source=rtsrc,
-	LIBS=fullib + ['rtproc'] + mlib) # rtproc for win_nice()
+	LIBS=fullib + mlib
+	)
 Default(rtrace)
-env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rtrace)])
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rtrace)])
 
 rpsrc = Split('rpmain.c rpict.c srcdraw.c') + [duphead, persist]
 rpict = env.Program(target=radbin('rpict'), source=rpsrc,
 	LIBS=fullib+['rtnet']+mlib)
 Default(rpict)
-env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rpict)])
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rpict)])
 
 if env.has_key('X11LIB'): # lots of special requirements for rvu
 	x11incls = [env['X11INCLUDE']] + env['CPPPATH']
@@ -74,7 +75,8 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 	rvmain = env.Object(source='rvmain.c',
 		CCFLAGS=env['CCFLAGS'] + ['-DNICE=6'])
 	rv3 = env.Object(source='rv3.c', # XXX we should get rid of SPEED
-		CCFLAGS=env['CCFLAGS'] + [env.get('RAD_SPEED', '')])
+		CCFLAGS=env['CCFLAGS'] + ['$RAD_SPEED']
+		)
 
 	devsrc  = Split('devtable.c devcomm.c colortab.c editline.c')
 	rvobjs = [x11, x11twind, rv3, rvmain, rlib]
@@ -83,8 +85,8 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 		LIBPATH=env['LIBPATH'] + [env['X11LIB']],
 		LIBS=fullib + ['X11'] + mlib)
 	Default(rvu)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rvu)])
+	env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rvu)])
 
 LIBFILES = Split('rayinit.cal')
-env.Append(RAD_RLIBINSTALL=[env.Install(env['RAD_RLIBDIR'], LIBFILES)])
+env.Append(RAD_RLIBINSTALL=[env.Install('$RAD_RLIBDIR', LIBFILES)])
 

@@ -34,3 +34,10 @@ def install_manfiles(env):
 	env.Append(RAD_MANINSTALL=il)
 
 
+def install_cshscript(target, source, env):
+	for t,s in map(None,target,source):
+		sf = open(str(s), 'r')
+		tf = open(str(t), 'w')
+		tf.write(sf.read())
+		os.chmod(str(t), 00755)
+

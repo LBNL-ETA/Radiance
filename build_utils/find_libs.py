@@ -25,23 +25,28 @@ def find_x11(env):
 				break
 			env = conf.Finish ()
 
+
 def find_gl(env):
 	# Check for libGL, set flag
-	conf = SConf(env)
-	if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
-		env['OGL'] = 1
-	elif env.has_key('X11INCLUDE'): # sometimes found there
-		incdir = env['X11INCLUDE']
-		libdir = env['X11LIB']
-		env.Append(CPPPATH=[incdir]) # add temporarily
-		#env.Append(LIBPATH=[libdir])
+	dl = [(None,None)] # standard search path
+	if env.has_key('X11INCLUDE'): # sometimes found there (Darwin)
+		dl.append((env['X11INCLUDE'], env['X11LIB']))
+	#if os.name == 'nt':
+	#	dl.append((some win specific dirs))
+	#if some other weirdness:
+	#	...
+	for incdir, libdir in dl:
+		if incdir: env.Append(CPPPATH=[incdir]) # add temporarily
+		if libdir: env.Append(LIBPATH=[libdir])
+		conf = SConf(env)
 		if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
 			env['OGL'] = 1
-			env.Replace(OGLINCLUDE=incdir)
-			env.Replace(OGLLIB=libdir)
 		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
-		#if libdir: env['LIBPATH'].remove(libdir)
-	conf.Finish()
-
-
+		if libdir: env['LIBPATH'].remove(libdir)
+		if env.has_key('OGL'):
+			if incdir: env.Replace(OGLINCLUDE=[incdir])
+			#if libdir: env.Replace(OGLLIB=[libdir])
+			conf.Finish()
+			break
+		conf.Finish()
 

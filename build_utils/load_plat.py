@@ -17,7 +17,8 @@ def read_plat(env, args, fn):
 	cfig = ConfigParser.ConfigParser(env.Dictionary())
 	cfig.read(fn)
 	buildvars = [['CC'], # replace
-			['CPPPATH','CPPFLAGS','CCFLAGS','LIBPATH','LINKFLAGS']] # append
+			['CPPPATH', 'CPPDEFINES', 'CPPFLAGS', 'CCFLAGS',
+			'LIBPATH', 'LINKFLAGS']] # append
 	vars = [
 		['install',
 			['RAD_BASEDIR', 'RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR'],

@@ -27,13 +27,20 @@ PROGS = (
 ('xform',       ['xform.c',],
     ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror']),
 )
+progs = []
 for p in PROGS:
     prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
             source=p[1], LIBS=p[2] + mlib)
-    Default(prog)
-    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+    progs.append(prog)
+
+if os.name == 'posix':
+	Default(env.InstallCsh(os.path.join('$RAD_BUILDBIN', 'glaze'), 'glaze.csh'))
+
+Default('#src/gen')
+env.Install('$RAD_BINDIR', progs)
 
 #surf.cal clockface.hex
 LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal')
-env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
+env.Append(RAD_RLIBINSTALL=env.Install('$RAD_RLIBDIR', LIBFILES))
+
 
