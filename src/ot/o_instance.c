@@ -1,10 +1,8 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_instance.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.3 2003/03/11 17:08:55 greg Exp $";
 #endif
 /*
- *  o_instance.c - routines for creating octrees for other octrees.
- *
- *     11/11/88
+ *  o_instance.c - routines for creating octrees for other octrees
  */
 
 #include  "standard.h"
@@ -14,6 +12,8 @@ static const char	RCSid[] = "$Id: o_instance.c,v 2.2 2003/02/22 02:07:26 greg Ex
 #include  "octree.h"
 
 #include  "instance.h"
+
+#include  "mesh.h"
 
 #include  "plocate.h"
 
@@ -40,23 +40,21 @@ static const char	RCSid[] = "$Id: o_instance.c,v 2.2 2003/02/22 02:07:26 greg Ex
  */
 
 
-o_instance(o, cu)			/* determine if cubes intersect */
-OBJREC  *o;
+static int
+o_cube(cu1, fxf, cu)			/* determine if cubes intersect */
+CUBE  *cu1;
+FULLXF  *fxf;
 CUBE  *cu;
 {
 	static int  vstart[4] = {0, 3, 5, 6};
 	FVECT  cumin, cumax;
 	FVECT  vert[8];
 	FVECT  v1, v2;
-	register INSTANCE  *in;
 	int  vloc, vout;
 	register int  i, j;
-					/* get octree arguments */
-	in = getinstance(o, IO_BOUNDS);
 					/* check if cube vertex in octree */
 	for (j = 0; j < 3; j++)
-		cumax[j] = (cumin[j] = in->obj->scube.cuorg[j]) +
-				in->obj->scube.cusize;
+		cumax[j] = (cumin[j] = cu1->cuorg[j]) + cu1->cusize;
 	vloc = ABOVE | BELOW;
 	vout = 0;
 	for (i = 0; i < 8; i++) {
@@ -65,7 +63,7 @@ CUBE  *cu;
 			if (i & 1<<j)
 				v1[j] += cu->cusize;
 		}
-		multp3(v2, v1, in->x.b.xfm);
+		multp3(v2, v1, fxf->b.xfm);
 		if (j = plocate(v2, cumin, cumax))
 			vout++;
 		vloc &= j;
@@ -82,11 +80,11 @@ CUBE  *cu;
 	vloc = ABOVE | BELOW;
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 3; j++) {
-			v1[j] = in->obj->scube.cuorg[j];
+			v1[j] = cu1->cuorg[j];
 			if (i & 1<<j)
-				v1[j] += in->obj->scube.cusize;
+				v1[j] += cu1->cusize;
 		}
-		multp3(vert[i], v1, in->x.f.xfm);
+		multp3(vert[i], v1, fxf->f.xfm);
 		if (j = plocate(vert[i], cumin, cumax))
 			vloc &= j;
 		else
@@ -105,4 +103,30 @@ CUBE  *cu;
 		}
 
 	return(O_MISS);			/* no intersection */
+}
+
+
+int
+o_instance(o, cu)			/* determine if instance intersects */
+OBJREC  *o;
+CUBE  *cu;
+{
+	INSTANCE  *ins;
+					/* get octree bounds */
+	ins = getinstance(o, IO_BOUNDS);
+					/* call o_cube to do the work */
+	return(o_cube(&ins->obj->scube, &ins->x, cu));
+}
+
+
+int
+o_mesh(o, cu)				/* determine if mesh intersects */
+OBJREC  *o;
+CUBE  *cu;
+{
+	MESHINST	*mip;
+					/* get mesh bounds */
+	mip = getmeshinst(o, IO_BOUNDS);
+					/* call o_cube to do the work */
+	return(o_cube(&mip->msh->mcube, &mip->x, cu));
 }

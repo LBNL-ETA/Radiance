@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.7 2003/02/22 02:07:26 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.8 2003/03/11 17:08:55 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -17,7 +17,7 @@ LIBDIR = /usr/local/lib/ray
 
 INSTDIR = /usr/local/bin
 
-all:	oconv getbbox
+all:	oconv getbbox obj2mesh
 
 oconv:	oconv.o sphere.o writeoct.o o_face.o \
 o_cone.o o_instance.o bbox.o initotypes.o
@@ -29,14 +29,19 @@ getbbox:	getbbox.o readobj2.o bbox.o init2otypes.o
 	$(CC) $(CFLAGS) -o getbbox getbbox.o readobj2.o \
 bbox.o init2otypes.o -lrt $(MLIB)
 
-install:	oconv getbbox
-	cp oconv getbbox $(INSTDIR)
+obj2mesh:	obj2mesh.o cvmesh.o wfconv.o o_face.o writemesh.o
+	$(CC) $(CFLAGS) -o obj2mesh obj2mesh.o cvmesh.o wfconv.o \
+o_face.o writemesh.o -lrt
+
+install:	oconv getbbox obj2mesh
+	cp oconv getbbox obj2mesh $(INSTDIR)
 
 clean:
 	set nonomatch; rm -f oconv getbbox *.o core
 
 bbox.o initotypes.o o_cone.o o_face.o \
 o_instance.o oconv.o sphere.o \
+cvmesh.o obj2mesh.o wfconv.o \
 writeoct.o:	../common/standard.h ../common/mat4.h ../common/fvect.h
 
 initotypes.o o_cone.o o_face.o oconv.o \
@@ -45,7 +50,7 @@ sphere.o writeoct.o:	../common/octree.h
 bbox.o o_cone.o o_face.o o_instance.o oconv.o \
 sphere.o writeoct.o:	../common/object.h
 
-bbox.o initotypes.o oconv.o \
+bbox.o initotypes.o oconv.o obj2mesh.o \
 sphere.o writeoct.o:	../common/otypes.h
 
 oconv.o:	../common/paths.h
@@ -54,10 +59,16 @@ bbox.o o_cone.o:	../common/cone.h
 
 bbox.o o_face.o:	../common/face.h
 
-bbox.o getbbox.o o_instance.o:	../common/instance.h ../common/octree.h
+bbox.o getbbox.o o_instance.o:	../common/instance.h \
+../common/mesh.h ../common/octree.h
 
 o_face.o:	../common/plocate.h
 
 clip.o plocate.o:	../common/fvect.h
 
 initotypes.o init2otypes.o:	../common/otypes.h
+
+cvmesh.o obj2mesh.o wfconv.o:	cvmesh.h \
+../common/octree.h ../common/object.h ../common/mesh.h
+
+cvmesh.o:	../common/otypes.h ../common/face.h

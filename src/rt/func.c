@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.15 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.16 2003/03/11 17:08:55 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -63,6 +63,7 @@ int  dofwd;
 		scompile("Ix=$16;Iy=$17;Iz=$18;", NULL, 0);
 		scompile("Jx=$19;Jy=$20;Jz=$21;", NULL, 0);
 		scompile("Kx=$22;Ky=$23;Kz=$24;", NULL, 0);
+		scompile("Lu=$25;Lv=$26;", NULL, 0);
 		funset("arg", 1, '=', l_arg);
 		funset("erf", 1, ':', l_erf);
 		funset("erfc", 1, ':', l_erfc);
@@ -300,8 +301,12 @@ register int  n;
 	if (n < 24)			/* k unit vector */
 		return(funcxf.xfm[2][n-21] / funcxf.sca);
 
-	if (n == 24)			/* single ray (shadow) distance */
+	if (n < 25)			/* single ray (shadow) distance */
 		return((fray->rot+raydist(fray->parent,SHADOW)) * funcxf.sca);
+
+	if (n < 27)			/* local (u,v) coordinates */
+		return(fray->uv[n-26]);
 badchan:
 	error(USER, "illegal channel number");
+	return(0.0);
 }

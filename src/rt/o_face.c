@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_face.c,v 2.3 2003/02/25 02:47:23 greg Exp $";
+static const char RCSid[] = "$Id: o_face.c,v 2.4 2003/03/11 17:08:55 greg Exp $";
 #endif
 /*
  *  o_face.c - compute ray intersection with faces.
@@ -54,6 +54,8 @@ register RAY  *r;
 	VCOPY(r->rop, pisect);
 	VCOPY(r->ron, f->norm);
 	r->rod = rdot;
+	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
+	r->uv[0] = r->uv[1] = 0.0;
 	r->rox = NULL;
 
 	return(1);				/* hit */

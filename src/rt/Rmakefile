@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.33 2003/02/22 02:07:28 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.34 2003/03/11 17:08:55 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -67,9 +67,9 @@ RAYSRC = ambcomp.c ambient.c ambio.c freeobjmem.c initotypes.c \
 	preload.c raytrace.c renderopts.c
 
 SURFOBJS = source.o sphere.o srcsupp.o srcsamp.o virtuals.o o_face.o \
-	o_cone.o o_instance.o
+	o_cone.o o_instance.o o_mesh.o
 SURFSRC = sphere.c source.c srcsupp.c virtuals.c o_face.c \
-	srcsamp.c o_cone.c o_instance.c
+	srcsamp.c o_cone.c o_instance.c o_mesh.c
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
 	m_mirror.o m_direct.o m_mist.o fprism.o
@@ -187,7 +187,7 @@ freeobjmem.o o_face.o srcsupp.o:	../common/face.h
 ambient.o raytrace.o rpmain.o rtmain.o \
 rtrace.o rvmain.o rv2.o rv3.o source.o:	../common/octree.h
 
-o_instance.o:	../common/instance.h ../common/octree.h
+o_instance.o:	../common/instance.h
 
 ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o initotypes.o \
 m_brdf.o m_direct.o m_mirror.o normal.o o_cone.o preload.o \
@@ -199,7 +199,7 @@ rtmain.o rpmain.o persist.o source.o rv3.o \
 srcsamp.o virtuals.o:	../common/random.h
 
 ambcomp.o ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o \
-m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o \
+m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o o_mesh.o \
 mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcsamp.o srcsupp.o t_data.o t_func.o text.o \
@@ -235,7 +235,7 @@ aniso.o func.o m_brdf.o m_direct.o mx_data.o mx_func.o p_data.o \
 p_func.o t_data.o t_func.o:	func.h
 
 preload.o:	../common/object.h ../common/face.h ../common/cone.h \
-../common/instance.h ../common/color.h data.h
+../common/instance.h ../common/mesh.h ../common/color.h data.h
 
 devcomm.o:	../common/vfork.h
 
@@ -244,3 +244,5 @@ rtmain.o rpmain.o rvmain.o persist.o duphead.o rpict.o:	../common/paths.h
 freeobjmem.o raycalls.o text.o:	../common/font.h
 
 raypcalls.o:	../common/selcall.h
+
+o_mesh.o:	../common/mesh.h

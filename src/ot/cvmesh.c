@@ -1,0 +1,344 @@
+#ifndef lint
+static const char RCSid[] = "$Id: cvmesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+#endif
+/*
+ *  Radiance triangle mesh conversion routines
+ */
+
+#include "copyright.h"
+#include "standard.h"
+#include "cvmesh.h"
+#include "otypes.h"
+#include "face.h"
+
+/*
+ * We need to divide faces into triangles and record auxiliary information
+ * if given (surface normal and uv coordinates).  We do this by extending
+ * the face structure linked to the OBJREC os member and putting our
+ * auxiliary after it -- a bit sly, but it works.
+ */
+
+/* Auxiliary data for triangle */
+typedef struct {
+	int		fl;		/* flags of what we're storing */
+	OBJECT		obj;		/* mesh triangle ID */
+	FVECT		vn[3];		/* normals */
+	FLOAT		vc[3][2];	/* uv coords. */
+} TRIDATA;
+
+#define tdsize(fl)	((fl)&MT_UV ? sizeof(TRIDATA) : \
+				(fl)&MT_N ? sizeof(TRIDATA)-2*sizeof(FLOAT) : \
+				sizeof(int)+sizeof(OBJECT))
+
+#define	 OMARGIN	(10*FTINY)	/* margin around global cube */
+
+MESH	*ourmesh = NULL;		/* our global mesh data structure */
+
+FVECT	meshbounds[2];			/* mesh bounding box */
+
+
+MESH *
+cvinit(nm)			/* initialize empty mesh */
+char	*nm;
+{
+				/* free old mesh, first */
+	if (ourmesh != NULL) {
+		freemesh(ourmesh);
+		ourmesh = NULL;
+		freeobjects(0, nobjects);
+		donesets();
+	}
+	if (nm == NULL)
+		return(NULL);
+	ourmesh = (MESH *)calloc(1, sizeof(MESH));
+	if (ourmesh == NULL)
+		goto nomem;
+	ourmesh->name = savestr(nm);
+	ourmesh->nref = 1;
+	ourmesh->ldflags = 0;
+	ourmesh->mcube.cutree = EMPTY;
+	ourmesh->uvlim[0][0] = ourmesh->uvlim[1][0] = FHUGE;
+	ourmesh->uvlim[0][1] = ourmesh->uvlim[1][1] = -FHUGE;
+	meshbounds[0][0] = meshbounds[0][1] = meshbounds[0][2] = FHUGE;
+	meshbounds[1][0] = meshbounds[1][1] = meshbounds[1][2] = -FHUGE;
+	return(ourmesh);
+nomem:
+	error(SYSTEM, "out of memory in cvinit");
+	return(NULL);
+}
+
+
+int
+cvpoly(n, vp, vn, vc)		/* convert a polygon to extended triangles */
+int	n;
+FVECT	*vp;
+FVECT	*vn;
+FLOAT	(*vc)[2];
+{
+	int	tcnt = 0;
+	int	flags;
+	FLOAT	*tn[3], *tc[3];
+	int	*ord;
+	int	i, j;
+
+	if (n < 3)		/* degenerate face */
+		return(0);
+	flags = MT_V;
+	if (vn != NULL) {
+		tn[0] = vn[0]; tn[1] = vn[1]; tn[2] = vn[2];
+		flags |= MT_N;
+	} else {
+		tn[0] = tn[1] = tn[2] = NULL;
+	}
+	if (vc != NULL) {
+		tc[0] = vc[0]; tc[1] = vc[1]; tc[2] = vc[2];
+		flags |= MT_UV;
+	} else {
+		tc[0] = tc[1] = tc[2] = NULL;
+	}
+	if (n == 3)		/* output single triangle */
+		return(cvtri(vp[0], vp[1], vp[2],
+				tn[0], tn[1], tn[2],
+				tc[0], tc[1], tc[2]));
+
+				/* decimate polygon (assumes convex) */
+	ord = (int *)malloc(n*sizeof(int));
+	if (ord == NULL)
+		error(SYSTEM, "out of memory in cvpoly");
+	for (i = n; i--; )
+		ord[i] = i;
+	while (n >= 3) {
+		if (flags & MT_N)
+			for (i = 3; i--; )
+				tn[i] = vn[ord[i]];
+		if (flags & MT_UV)
+			for (i = 3; i--; )
+				tc[i] = vc[ord[i]];
+		i = cvtri(vp[ord[0]], vp[ord[1]], vp[ord[2]],
+				tn[0], tn[1], tn[2],
+				tc[0], tc[1], tc[2]);
+		if (i < 0)
+			return(i);
+		tcnt += i;
+			/* remove vertex and rotate */
+		n--;
+		j = ord[0];
+		for (i = 0; i < n-1; i++)
+			ord[i] = ord[i+2];
+		ord[i] = j;
+	}
+	free((void *)ord);
+	return(tcnt);
+}
+
+
+static void
+add2bounds(vp, vc)		/* add point and uv coordinate to bounds */
+FVECT	vp;
+FLOAT	vc[2];
+{
+	register int	j;
+
+	for (j = 3; j--; ) {
+		if (vp[j] < meshbounds[0][j])
+			meshbounds[0][j] = vp[j];
+		if (vp[j] > meshbounds[1][j])
+			meshbounds[1][j] = vp[j];
+	}
+	if (vc == NULL)
+		return;
+	for (j = 2; j--; ) {
+		if (vc[j] < ourmesh->uvlim[0][j])
+			ourmesh->uvlim[0][j] = vc[j];
+		if (vc[j] > ourmesh->uvlim[1][j])
+			ourmesh->uvlim[1][j] = vc[j];
+	}
+}
+
+
+int				/* create an extended triangle */
+cvtri(vp1, vp2, vp3, vn1, vn2, vn3, vc1, vc2, vc3)
+FVECT	vp1, vp2, vp3;
+FVECT	vn1, vn2, vn3;
+FLOAT	vc1[2], vc2[2], vc3[2];
+{
+	char	buf[32];
+	int	flags;
+	TRIDATA	*ts;
+	OBJECT	fobj;
+	FACE	*f;
+	OBJREC	*fop;
+	int	j;
+	
+	flags = MT_V;
+	if (vn1 != NULL && vn2 != NULL && vn3 != NULL)
+		flags |= MT_N;
+	if (vc1 != NULL && vc2 != NULL && vc3 != NULL)
+		flags |= MT_UV;
+				/* create extended triangle */
+	fobj = newobject();
+	if (fobj == OVOID)
+		return(-1);
+	fop = objptr(fobj);
+	fop->omod = OVOID;
+	fop->otype = OBJ_FACE;
+	sprintf(buf, "t%d", fobj);
+	fop->oname = savqstr(buf);
+	fop->oargs.nfargs = 9;
+	fop->oargs.farg = (FLOAT *)malloc(9*sizeof(FLOAT));
+	if (fop->oargs.farg == NULL)
+		goto nomem;
+	for (j = 3; j--; ) {
+		fop->oargs.farg[j] = vp1[j];
+		fop->oargs.farg[3+j] = vp2[j];
+		fop->oargs.farg[6+j] = vp3[j];
+	}
+				/* create face record */
+	if ((f = getface(fop)) == NULL || f->area == 0.) {
+		freeobjects(fobj, 1);
+		return(0);
+	}
+	if (fop->os != (char *)f)
+		error(CONSISTENCY, "code error in cvtri");
+				/* follow with auxliary data */
+	f = (FACE *)realloc((void *)f, sizeof(FACE)+tdsize(flags));
+	if (f == NULL)
+		goto nomem;
+	fop->os = (char *)f;
+	ts = (TRIDATA *)(f+1);
+	ts->fl = flags;
+	ts->obj = OVOID;
+	if (flags & MT_N)
+		for (j = 3; j--; ) {
+			ts->vn[0][j] = vn1[j];
+			ts->vn[1][j] = vn2[j];
+			ts->vn[2][j] = vn3[j];
+		}
+	if (flags & MT_UV)
+		for (j = 2; j--; ) {
+			ts->vc[0][j] = vc1[j];
+			ts->vc[1][j] = vc2[j];
+			ts->vc[2][j] = vc3[j];
+		}
+	else
+		vc1 = vc2 = vc3 = NULL;
+				/* update bounds */
+	add2bounds(vp1, vc1);
+	add2bounds(vp2, vc2);
+	add2bounds(vp3, vc3);
+	return(1);
+nomem:
+	error(SYSTEM, "out of memory in cvtri");
+	return(0);
+}
+
+
+static OBJECT
+cvmeshtri(obj)			/* add an extended triangle to our mesh */
+OBJECT	obj;
+{
+	OBJREC		*o = objptr(obj);
+	TRIDATA		*ts;
+	MESHVERT	vert[3];
+	int		i, j;
+	
+	if (o->otype != OBJ_FACE)
+		error(CONSISTENCY, "non-face in mesh");
+	if (o->oargs.nfargs != 9)
+		error(CONSISTENCY, "non-triangle in mesh");
+	if (o->os == NULL)
+		error(CONSISTENCY, "missing face record in cvmeshtri");
+	ts = (TRIDATA *)((FACE *)o->os + 1);
+	if (ts->obj != OVOID)	/* already added? */
+		return(ts->obj);
+	vert[0].fl = vert[1].fl = vert[2].fl = ts->fl;
+	for (i = 3; i--; )
+		for (j = 3; j--; )
+			vert[i].v[j] = o->oargs.farg[3*i+j];
+	if (ts->fl & MT_N)
+		for (i = 3; i--; )
+			for (j = 3; j--; )
+				vert[i].n[j] = ts->vn[i][j];
+	if (ts->fl & MT_UV)
+		for (i = 3; i--; )
+			for (j = 2; j--; )
+				vert[i].uv[j] = ts->vc[i][j];
+	ts->obj = addmeshtri(ourmesh, vert);
+	if (ts->obj == OVOID)
+		error(INTERNAL, "addmeshtri failed");
+	return(ts->obj);
+}
+
+
+void
+cvmeshbounds()			/* set mesh boundaries */
+{
+	int	i;
+
+	if (ourmesh == NULL)
+		return;
+				/* fix coordinate bounds */
+	for (i = 0; i < 3; i++) {
+		if (meshbounds[0][i] >= meshbounds[1][i])
+			error(USER, "no polygons in mesh");
+		meshbounds[0][i] -= OMARGIN;
+		meshbounds[1][i] += OMARGIN;
+		if (meshbounds[1][i]-meshbounds[0][i] > ourmesh->mcube.cusize)
+			ourmesh->mcube.cusize = meshbounds[1][i] -
+						meshbounds[0][i];
+	}
+	for (i = 0; i < 3; i++)
+		ourmesh->mcube.cuorg[i] = (meshbounds[1][i]+meshbounds[0][i] -
+						ourmesh->mcube.cusize)*.5;
+	if (ourmesh->uvlim[0][0] >= ourmesh->uvlim[1][0]) {
+		ourmesh->uvlim[0][0] = ourmesh->uvlim[0][1] = 0.;
+		ourmesh->uvlim[1][0] = ourmesh->uvlim[1][1] = 0.;
+	} else {
+		for (i = 0; i < 2; i++) {
+			double	marg;
+			marg = 1e-6*(ourmesh->uvlim[1][i] -
+					ourmesh->uvlim[0][i]);
+			ourmesh->uvlim[0][i] -= marg;
+			ourmesh->uvlim[1][i] += marg;
+		}
+	}
+	ourmesh->ldflags |= IO_BOUNDS;
+}
+
+
+static OCTREE
+cvmeshoct(ot)			/* convert triangles in subtree */
+OCTREE	ot;
+{
+	int	i;
+
+	if (isempty(ot))
+		return(EMPTY);
+
+	if (isfull(ot)) {
+		OBJECT	oset1[MAXSET+1];
+		OBJECT	oset2[MAXSET+1];
+		objset(oset1, ot);
+		oset2[0] = 0;
+		for (i = oset1[0]; i > 0; i--)
+			insertelem(oset2, cvmeshtri(oset1[i]));
+		return(fullnode(oset2));
+	}
+
+	for (i = 8; i--; )
+		octkid(ot, i) = cvmeshoct(octkid(ot, i));
+	return(ot);
+}
+
+
+MESH *
+cvmesh()			/* convert mesh and octree leaf nodes */
+{
+	if (ourmesh == NULL)
+		return(NULL);
+				/* convert triangles in octree nodes */
+	ourmesh->mcube.cutree = cvmeshoct(ourmesh->mcube.cutree);
+	ourmesh->ldflags |= IO_SCENE|IO_TREE;
+
+	return(ourmesh);
+}

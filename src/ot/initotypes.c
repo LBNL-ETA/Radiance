@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: initotypes.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: initotypes.c,v 2.3 2003/03/11 17:08:55 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for octree generator
@@ -15,6 +15,7 @@ extern int  o_sphere();
 extern int  o_face();
 extern int  o_cone();
 extern int  o_instance();
+extern int  o_mesh();
 
 FUN  ofun[NUMOTYPE] = INIT_OTYPE;
 
@@ -30,6 +31,7 @@ initotypes()			/* initialize ofun array */
 	ofun[OBJ_TUBE].funp =
 	ofun[OBJ_RING].funp = o_cone;
 	ofun[OBJ_INSTANCE].funp = o_instance;
+	ofun[OBJ_MESH].funp = o_mesh;
 }
 
 

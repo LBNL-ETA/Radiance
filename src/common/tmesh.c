@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmesh.c,v 2.1 2003/03/10 19:38:19 greg Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.2 2003/03/11 17:08:55 greg Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
@@ -21,9 +21,9 @@ FVECT	v1, v2, v3, n1, n2, n3;
 	double	d1, d2, d3;
 	FVECT	vt1, vt2, vn;
 					/* compute default normal */
-	vt1[0] = v2[0] - v1[0]; vt1[1] = v2[1] - v1[1]; vt1[2] = v2[2] - v1[2];
-	vt2[0] = v3[0] - v2[0]; vt2[1] = v3[1] - v2[1]; vt2[2] = v3[2] - v2[2];
-	fcross(vn, vt1, vt2);
+	VSUB(vt1, v2, v1);
+	VSUB(vt2, v3, v2);
+	VCROSS(vn, vt1, vt2);
 	if (normalize(vn) == 0.0)
 		return(DEGEN);
 					/* compare to supplied normals */
@@ -42,7 +42,7 @@ FVECT	v1, v2, v3, n1, n2, n3;
 int
 comp_baryc(bcm, v1, v2, v3)		/* compute barycentric vectors */
 register BARYCCM	*bcm;
-FLOAT	*v1, *v2, *v3;
+FLOAT			*v1, *v2, *v3;
 {
 	FLOAT	*vt;
 	FVECT	va, vab, vcb;
@@ -50,11 +50,9 @@ FLOAT	*v1, *v2, *v3;
 	int	ax0, ax1;
 	register int	i;
 					/* compute major axis */
-	for (i = 0; i < 3; i++) {
-		vab[i] = v1[i] - v2[i];
-		vcb[i] = v3[i] - v2[i];
-	}
-	fcross(va, vab, vcb);
+	VSUB(vab, v1, v2);
+	VSUB(vcb, v3, v2);
+	VCROSS(va, vab, vcb);
 	bcm->ax = ABS(va[0]) > ABS(va[1]) ? 0 : 1;
 	bcm->ax = ABS(va[bcm->ax]) > ABS(va[2]) ? bcm->ax : 2;
 	ax0 = (bcm->ax + 1) % 3;
@@ -87,10 +85,70 @@ FLOAT	*v1, *v2, *v3;
 }
 
 
-put_baryc(bcm, com, n)			/* put barycentric coord. vectors */
+void
+eval_baryc(wt, p, bcm)		/* evaluate barycentric weights at p */
+FLOAT	wt[3];
+FVECT	p;
 register BARYCCM	*bcm;
-register FLOAT	com[][3];
-int	n;
+{
+	double	u, v;
+	
+	u = p[(bcm->ax + 1) % 3];
+	v = p[(bcm->ax + 2) % 3];
+	wt[0] = u*bcm->tm[0][0] + v*bcm->tm[0][1] + bcm->tm[0][2];
+	wt[1] = u*bcm->tm[1][0] + v*bcm->tm[1][1] + bcm->tm[1][2];
+	wt[2] = 1. - wt[1] - wt[0];
+}
+
+
+int
+get_baryc(wt, p, v1, v2, v3)	/* compute barycentric weights at p */
+FLOAT	wt[3];
+FVECT	p;
+FVECT	v1, v2, v3;
+{
+	BARYCCM	bcm;
+	
+	if (comp_baryc(&bcm, v1, v2, v3) < 0)
+		return(-1);
+	eval_baryc(wt, p, &bcm);
+	return(0);
+}
+
+
+#if 0
+int
+get_baryc(wt, p, v1, v2, v3)	/* compute barycentric weights at p */
+FLOAT	wt[3];
+FVECT	p;
+FVECT	v1, v2, v3;
+{
+	FVECT	ac, bc, pc, cros;
+	double	normf;
+				/* area formula w/o 2-D optimization */
+	VSUB(ac, v1, v3);
+	VSUB(bc, v2, v3);
+	VSUB(pc, p, v3);
+	VCROSS(cros, ac, bc);
+	normf = DOT(cros,cros)
+	if (normf <= 0.0)
+		return(-1);
+	normf = 1./sqrt(normf);
+	VCROSS(cros, bc, pc);
+	wt[0] = VLEN(cros) * normf;
+	VCROSS(cros, ac, pc);
+	wt[1] = VLEN(cros) * normf;
+	wt[2] = 1. - wt[1] - wt[0];
+	return(0);
+}
+#endif
+
+
+void
+put_baryc(bcm, com, n)		/* put barycentric coord. vectors */
+register BARYCCM	*bcm;
+register FLOAT		com[][3];
+int			n;
 {
 	double	a, b;
 	register int	i, j;
