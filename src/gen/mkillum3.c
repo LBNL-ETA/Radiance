@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum3.c,v 2.7 2003/02/22 02:07:24 greg Exp $";
+static const char RCSid[] = "$Id";
 #endif
 /*
  * Routines to print mkillum objects
@@ -49,7 +49,6 @@ dfname(il, c)			/* return data file name */
 struct illum_args  *il;
 int  c;
 {
-	extern char  *getpath(), *strcpy();
 	char  fname[MAXSTR];
 	register char  *s;
 

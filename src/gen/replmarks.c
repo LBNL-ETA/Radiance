@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: replmarks.c,v 2.5 2003/02/22 02:07:24 greg Exp $";
+static const char RCSid[] = "$Id";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -168,6 +168,7 @@ cvobject(fname, fin)		/* convert an object */
 char	*fname;
 FILE	*fin;
 {
+	extern char	*fgetword();
 	char	buf[128], typ[16], nam[128];
 	int	i, n;
 	register int	j;
