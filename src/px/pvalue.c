@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.27 2004/10/01 07:45:30 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.28 2004/10/01 07:46:26 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -384,7 +384,6 @@ checkhead(				/* deal with line from header */
 	} else if (original && isexpos(line)) {
 		d = 1.0/exposval(line);
 		scalecolor(exposure, d);
-fprintf(stderr, "scaled exposure by %f, now at %f\n", d, bright(exposure));
 		doexposure++;
 	} else if (original && iscolcor(line)) {
 		colcorval(ctmp, line);
