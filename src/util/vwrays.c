@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.9 2003/10/22 02:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.10 2004/03/26 23:34:23 schorsch Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -9,9 +9,14 @@ static const char	RCSid[] = "$Id: vwrays.c,v 3.9 2003/10/22 02:06:35 greg Exp $"
 #include "standard.h"
 #include "view.h"
 
-extern int	putf(), putd(), puta();
+typedef void putfunc(FVECT ro, FVECT rd);
+static putfunc puta;
+static putfunc putf;
+static putfunc putd;
+static void pix2rays(FILE *fp);
+static void putrays(void);
 
-int	(*putr)() = puta;
+static putfunc *putr = puta;
 
 VIEW	vw = STDVIEW;
 
@@ -26,9 +31,11 @@ int	fromstdin = 0;
 char	*progname;
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*err;
 	int	rval, getdim = 0;
@@ -140,7 +147,10 @@ userr:
 }
 
 
-pix2rays(FILE *fp)
+static void
+pix2rays(
+	FILE *fp
+)
 {
 	static FVECT	rorg, rdir;
 	float	zval;
@@ -190,11 +200,12 @@ pix2rays(FILE *fp)
 }
 
 
-putrays()
+static void
+putrays(void)
 {
 	static RREAL	loc[2];
 	static FVECT	rorg, rdir;
-	float	*zbuf;
+	float	*zbuf = NULL;
 	int	sc;
 	double	d;
 	register int	si, i;
@@ -237,8 +248,11 @@ putrays()
 }
 
 
-puta(ro, rd)		/* put out ray in ASCII format */
-FVECT	ro, rd;
+static void
+puta(		/* put out ray in ASCII format */
+	FVECT	ro,
+	FVECT	rd
+)
 {
 	printf("%.5e %.5e %.5e %.5e %.5e %.5e\n",
 			ro[0], ro[1], ro[2],
@@ -246,8 +260,11 @@ FVECT	ro, rd;
 }
 
 
-putf(ro, rd)		/* put out ray in float format */
-FVECT	ro, rd;
+static void
+putf(		/* put out ray in float format */
+	FVECT	ro,
+	FVECT	rd
+)
 {
 	float v[6];
 
@@ -257,8 +274,11 @@ FVECT	ro, rd;
 }
 
 
-putd(ro, rd)		/* put out ray in double format */
-FVECT	ro, rd;
+static void
+putd(		/* put out ray in double format */
+	FVECT	ro,
+	FVECT	rd
+)
 {
 	double v[6];
 

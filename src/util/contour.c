@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: contour.c,v 1.3 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: contour.c,v 1.4 2004/03/26 23:34:23 schorsch Exp $";
 #endif
 /*
  *  contour.c - program to make contour plots, mappings from 3 to
@@ -28,12 +28,19 @@ int  maxset = 0;			/* user set maximum? */
 
 int  ncurves = 6;			/* number of contours */
 
+static void getdata(FILE  *fp);
+static int xycmp(const void*  p1, const void* p2);
+static void contour(int  n);
+static void crossings(double  z);
+static void cross(DATAPT  p0, DATAPT  p1, double  z);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
-	extern int  xycmp();
 	FILE  *fp;
 	int  i;
 
@@ -76,8 +83,10 @@ char  *argv[];
 }
 
 
-getdata(fp)			/* read input data */
-FILE  *fp;
+static void
+getdata(			/* read input data */
+	FILE  *fp
+)
 {
 	register int  i;
 
@@ -87,16 +96,20 @@ FILE  *fp;
 				break;
 		if (i != 3)
 			break;
-		if (xyz[xyzsiz][2] < zmin)
-			if (minset)
+		if (xyz[xyzsiz][2] < zmin) {
+			if (minset) {
 				continue;
-			else
+			} else {
 				zmin = xyz[xyzsiz][2];
-		if (xyz[xyzsiz][2] > zmax)
-			if (maxset)
+			}
+		}
+		if (xyz[xyzsiz][2] > zmax) {
+			if (maxset) {
 				continue;
-			else
+			} else {
 				zmax = xyz[xyzsiz][2];
+			}
+		}
 		xyzsiz++;
 	}
 	if (!feof(fp)) {
@@ -106,24 +119,30 @@ FILE  *fp;
 }
 
 
-int
-xycmp(p1, p2)			/* -1 if p1 < p2, 0 if equal, 1 if p1 > p2 */
-DATAPT  p1, p2;
+static int
+xycmp(			/* -1 if p1 < p2, 0 if equal, 1 if p1 > p2 */
+	const void*  p1,
+	const void*	p2
+)
 {
-	if (p1[0] > p2[0])
+	const float* pp1 = p1;
+	const float* pp2 = p2;
+	if (pp1[0] > pp2[0])
 		return(1);
-	if (p1[0] < p2[0])
+	if (pp1[0] < pp2[0])
 		return(-1);
-	if (p1[1] > p2[1])
+	if (pp1[1] > pp2[1])
 		return(1);
-	if (p1[1] < p2[1])
+	if (pp1[1] < pp2[1])
 		return(-1);
 	return(0);
 }
 
 
-contour(n)			/* make contour n */
-int  n;
+static void
+contour(			/* make contour n */
+	int  n
+)
 {
 	double  z;
 
@@ -135,8 +154,10 @@ int  n;
 }
 
 
-crossings(z)			/* find crossings for z */
-double  z;
+static void
+crossings(			/* find crossings for z */
+	double  z
+)
 {
 	register DATAPT  *p0, *p1;
 
@@ -156,9 +177,12 @@ double  z;
 }
 
 
-cross(p0, p1, z)		/* mark crossing between p0 and p1 */
-register DATAPT  p0, p1;
-double  z;
+static void
+cross(		/* mark crossing between p0 and p1 */
+	register DATAPT  p0,
+	register DATAPT  p1,
+	double  z
+)
 {
 	if (p1[2] - p0[2] == 0.0)
 		return;

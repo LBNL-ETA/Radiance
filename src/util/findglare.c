@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.11 2004/01/02 12:51:54 schorsch Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.12 2004/03/26 23:34:23 schorsch Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -39,7 +39,7 @@ struct illum	*indirect;		/* array of indirect illuminances */
 long	npixinvw;			/* number of pixels in view */
 long	npixmiss;			/* number of pixels missed */
 
-static int angcmp(const void	*ap1, const void	*ap2);
+static int angcmp(const void *ap1, const void *ap2);
 static void init(void);
 static void cleanup(void);
 static void printsources(void);

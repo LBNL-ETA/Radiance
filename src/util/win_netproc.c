@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_netproc.c,v 2.2 2004/03/26 21:36:20 schorsch Exp $";
+static const char RCSid[] = "$Id: win_netproc.c,v 2.3 2004/03/26 23:34:24 schorsch Exp $";
 #endif
 
 /*
@@ -27,7 +27,14 @@ static char	*ourshell;
 static char	ouruser[32];
 PSERVER	*pslist = NULL;
 
-PSERVER* addpserver(char* host, char* dir, char* usr, int np) {
+PSERVER*
+addpserver(
+	char* host,
+	char* dir,
+	char* usr,
+	int np
+)
+{
 	PSERVER* ps;
 	if (np < 1)
 		return(NULL);

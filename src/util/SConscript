@@ -14,6 +14,7 @@ setscan = env.Object(source='setscan.c')
 PROGS = [
 ('findglare', Split('findglare.c glareval.c glaresrc.c')+[setscan],
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem','rterror']),
+#('contour',   Split('contour.c'),  ['rtmath']), # XXX what is this?
 ('glarendx',  Split('glarendx.c'), ['rtpic','rtio','rtargs','rtmath']),
 ('vwright',   Split('vwright.c'),  ['rtpic','rtio','rtargs','rtmath']),
 ('vwrays',    Split('vwrays.c'),   ['rtpic','rtio','rtargs','rtmath']),

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: scanner.c,v 1.4 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: scanner.c,v 1.5 2004/03/26 23:34:23 schorsch Exp $";
 #endif
 /*
  *  scanner.c - program to simulate bi-directional scanner.
@@ -8,12 +8,12 @@ static const char	RCSid[] = "$Id: scanner.c,v 1.4 2003/06/26 00:58:11 schorsch E
  */
 
 #include  <stdio.h>
-
+#include  <string.h>
 #include  <stdlib.h>
-
 #include  <ctype.h>
-
 #include  <signal.h>
+#include  <math.h>
+#include  <unistd.h> /* XXX pipe() fork() etc, use common/process.c instead */
 
 #include  "random.h"
 
@@ -33,7 +33,7 @@ char  *sourcetemp,			/* temp files */
 
 ANGLE  alpha[181] = {90, AEND};
 ANGLE  beta[181] = {30, 60, 90, 120, 150, AEND};
-ANGLE  gamma[181] = {45, AEND};
+ANGLE  sgamma[181] = {45, AEND}; /* gamma() is a function from gnu <math.h> */
 
 char  *target;				/* target file name */
 double  targetw = 3.0;			/* target width (inches) */
@@ -42,12 +42,21 @@ int  xres = 16;				/* x sample resolution */
 int  yres = 16;				/* y sample resolution */
 
 static void  quit(int code);
+static void setscan(ANGLE  *ang, char  *arg);
+static void doscan(void);
+static void scanend(FILE  *fp);
+static void makesource(ANGLE  g);
+static void sendsamples(FILE  *fp);
+static void writesample(FILE	*fp, ANGLE	a, ANGLE	b);
+static FILE * scanstart(ANGLE  g);
+static double readsample(FILE  *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
-	char  *strcat(), *mktemp();
 	int  i;
 
 #ifdef SIGHUP
@@ -99,7 +108,7 @@ char  *argv[];
 			break;
 		case 'g':
 			if (!strcmp(argv[i], "-gamma"))
-				setscan(gamma, argv[++i]);
+				setscan(sgamma, argv[++i]);
 			else
 				goto badopt;
 			break;
@@ -149,24 +158,26 @@ badopt:
 	doscan();
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
 void
-quit(code)			/* unlink temp files and exit */
-int  code;
+quit(			/* unlink temp files and exit */
+	int  code
+)
 {
-	int  i;
-
 	unlink(sourcetemp);
 	unlink(octreetemp);
 	exit(code);
 }
 
 
-setscan(ang, arg)			/* set up scan according to arg */
-register ANGLE  *ang;
-register char  *arg;
+static void
+setscan(			/* set up scan according to arg */
+	register ANGLE  *ang,
+	register char  *arg
+)
 {
 	int  start = 0, finish = -1, step = 1;
 
@@ -215,15 +226,14 @@ register char  *arg;
 }
 
 
-doscan()				/* do scan for target */
+static void
+doscan(void)				/* do scan for target */
 {
-	FILE  *fopen(), *scanstart();
-	double  readsample();
 	FILE  *fp;
 	ANGLE  *a, *b, *g;
 
 	printf("Alpha\tBeta\tGamma\tDistribution for \"%s\"\n", target);
-	for (g = gamma; *g != AEND; g++) {
+	for (g = sgamma; *g != AEND; g++) {
 		fp = scanstart(*g);
 		for (b = beta; *b != AEND; b++)		/* read data */
 			for (a = alpha; *a != AEND; a++)
@@ -234,11 +244,11 @@ doscan()				/* do scan for target */
 }
 
 
-FILE *
-scanstart(g)		/* open scanner pipeline */
-ANGLE  g;
+static FILE *
+scanstart(		/* open scanner pipeline */
+	ANGLE  g
+)
 {
-	char  *fgets();
 	int  p1[2], p2[2];
 	int  pid;
 	FILE  *fp;
@@ -288,21 +298,26 @@ ANGLE  g;
 err:
 	fprintf(stderr, "System error in scanstart\n");
 	quit(1);
+	return NULL; /* pro forma return */
 }
 
 
-scanend(fp)		/* done with scanner input */
-FILE  *fp;
+static void
+scanend(		/* done with scanner input */
+	FILE  *fp
+)
 {
 	fclose(fp);
 }
 
 
-makesource(g)		/* make a source (output normalized) */
-ANGLE  g;
+static void
+makesource(		/* make a source (output normalized) */
+	ANGLE  g
+)
 {
-	FILE  *fp, *fopen();
-	double  srcdir[3], sin(), cos();
+	FILE  *fp;
+	double  srcdir[3];
 
 	srcdir[0] = sin(atorad(g));
 	srcdir[1] = 0.0;
@@ -320,8 +335,10 @@ ANGLE  g;
 }
 
 
-sendsamples(fp)			/* send our samples to fp */
-FILE  *fp;
+static void
+sendsamples(			/* send our samples to fp */
+	FILE  *fp
+)
 {
 	ANGLE  *a, *b;
 
@@ -331,11 +348,13 @@ FILE  *fp;
 }
 
 
-writesample(fp, a, b)		/* write out sample ray grid */
-FILE  *fp;
-ANGLE  a, b;
+static void
+writesample(		/* write out sample ray grid */
+	FILE	*fp,
+	ANGLE	a,
+	ANGLE	b
+)
 {
-	double  sin(), cos();
 	float  sp[6];
 	int  i, j;
 
@@ -359,9 +378,10 @@ ANGLE  a, b;
 }
 
 
-double
-readsample(fp)			/* read in sample ray grid */
-FILE  *fp;
+static double
+readsample(			/* read in sample ray grid */
+	FILE  *fp
+)
 {
 	double  sum;
 	float  col[3];

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xglaresrc.c,v 2.8 2003/11/11 16:24:06 greg Exp $";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.9 2004/03/26 23:34:24 schorsch Exp $";
 #endif
 /*
  *  Circle sources in a displayed image.
@@ -8,10 +8,13 @@ static const char	RCSid[] = "$Id: xglaresrc.c,v 2.8 2003/11/11 16:24:06 greg Exp
  */
 
 #include "standard.h"
-#include "view.h"
+
+#include <unistd.h>
 #include <signal.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+#include "view.h"
 
 #define XIM		"ximage"
 
@@ -34,10 +37,17 @@ Display	*theDisplay = NULL;		/* connection to server */
 GC	vecGC, strGC;
 Window	gwind;
 
+static void init(char *pname, char *wname);
+static void circle_sources(FILE *fp);
+static void circle(FVECT dir, double dom);
+static void value(FVECT dir, double v);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*windowname = NULL;
 	FILE	*fp;
@@ -76,8 +86,11 @@ char	*argv[];
 }
 
 
-init(pname, wname)		/* get view and find window */
-char	*pname, *wname;
+static void
+init(		/* get view and find window */
+	char	*pname,
+	char	*wname
+)
 {
 	extern Window	xfindwind();
 	XWindowAttributes	wa;
@@ -176,8 +189,10 @@ char	*pname, *wname;
 }
 
 
-circle_sources(fp)		/* circle sources listed in fp */
-FILE	*fp;
+static void
+circle_sources(		/* circle sources listed in fp */
+	FILE	*fp
+)
 {
 	char	linbuf[256];
 	int	reading = 0;
@@ -204,9 +219,11 @@ FILE	*fp;
 }
 
 
-circle(dir, dom)		/* indicate a solid angle on image */
-FVECT	dir;
-double	dom;
+static void
+circle(		/* indicate a solid angle on image */
+	FVECT	dir,
+	double	dom
+)
 {
 	FVECT	start, cur;
 	XPoint	pt[NSEG+1];
@@ -238,9 +255,11 @@ fail:
 }
 
 
-value(dir, v)			/* print value on image */
-FVECT	dir;
-double	v;
+static void
+value(			/* print value on image */
+	FVECT	dir,
+	double	v
+)
 {
 	FVECT	pos;
 	FVECT	pp;

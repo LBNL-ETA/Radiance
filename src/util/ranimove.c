@@ -168,8 +168,9 @@ userr:
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 

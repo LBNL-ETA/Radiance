@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.18 2004/01/02 12:51:54 schorsch Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.19 2004/03/26 23:34:23 schorsch Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -203,8 +203,9 @@ userr:
 
 
 void
-quit(code)				/* exit gracefully */
-int	code;
+quit(				/* exit gracefully */
+	int	code
+)
 {
 	if (ourdisplay != NULL)
 		dev_close();
