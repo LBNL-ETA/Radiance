@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.11 2003/09/30 00:13:58 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.12 2004/07/14 02:37:23 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -32,7 +32,7 @@ register OBJREC  *op;
 
 	for (i = nobjects>>OBJBLKSHFT; i >= 0; i--) {
 		j = op - objblock[i];
-		if (j >= 0 && j < OBJBLKSIZ)
+		if ((j >= 0) & (j < OBJBLKSIZ))
 			return((i<<OBJBLKSHFT) + j);
 	}
 	return(OVOID);
@@ -48,7 +48,7 @@ char  *mname;
 	register int  i;
 
 	i = modifier(mname);		/* try hash table first */
-	if (i < obj)
+	if ((obj == OVOID) | (i < obj))
 		return(i);
 	for (i = obj; i-- > 0; ) {	/* need to search */
 		op = objptr(i);
