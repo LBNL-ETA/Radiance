@@ -1,4 +1,4 @@
-/* RCSid $Id: x11twind.h,v 2.3 2003/02/25 02:47:23 greg Exp $ */
+/* RCSid $Id: x11twind.h,v 2.4 2003/04/11 16:01:27 greg Exp $ */
 /*
  *  xtwind.h - header for X text window routines.
  *
@@ -47,7 +47,7 @@ extern TEXTWIND	*xt_open(Display *dpy, Window parent,
 			int bw, unsigned long fore, unsigned long back,
 			char *fontname);
 extern void	xt_puts(char *s, TEXTWIND *t);
-extern void	xt_putc(char c, TEXTWIND *t);
+extern void	xt_putc(int c, TEXTWIND *t);
 extern void	xt_delete(TEXTWIND *t, int r);
 extern void	xt_insert(TEXTWIND *t, int r);
 extern void	xt_redraw(TEXTWIND *t);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11twind.c,v 2.6 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: x11twind.c,v 2.7 2003/04/11 16:01:26 greg Exp $";
 #endif
 /*
  *  x11twind.c - routines for X11 text windows.
@@ -89,22 +89,8 @@ char  *fontname;
 
 
 void
-xt_puts(s, t)				/* output a string */
-register char  *s;
-TEXTWIND  *t;
-{
-	int	oldcurs;
-
-	oldcurs = xt_cursor(t, TNOCURS);	/* for efficiency */
-	while (*s)
-		xt_putc(*s++, t);
-	xt_cursor(t, oldcurs);
-}
-
-
-void
 xt_putc(c, t)				/* output a character */
-char  c;
+int  c;
 register TEXTWIND  *t;
 {
 	checkcurs(t);
@@ -133,6 +119,20 @@ register TEXTWIND  *t;
 		break;
 	}
 	restorecurs(t);
+}
+
+
+void
+xt_puts(s, t)				/* output a string */
+register char  *s;
+TEXTWIND  *t;
+{
+	int	oldcurs;
+
+	oldcurs = xt_cursor(t, TNOCURS);	/* for efficiency */
+	while (*s)
+		xt_putc(*s++, t);
+	xt_cursor(t, oldcurs);
 }
 
 
