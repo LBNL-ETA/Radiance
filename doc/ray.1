@@ -2,7 +2,7 @@
 .\" Print using the -ms macro package
 .DA 1/20/99
 .LP
-.tl """Copyright \(co 1996 Regents, University of California
+.tl """Copyright \(co 2003 Regents, University of California
 .sp 2
 .TL
 The
@@ -10,15 +10,13 @@ The
 .br
 Synthetic Imaging System
 .AU
-Greg Ward
+Building Technologies Department
 .br
 Lawrence Berkeley Laboratory
 .br
-1 Cyclotron Rd.
+1 Cyclotron Rd., MS 90-3111
 .br
 Berkeley, CA  94720
-.br
-(510) 486-4757
 .NH 1
 Introduction
 .PP
@@ -49,15 +47,28 @@ which produces a picture from a scene description.
 is a variation of
 .I rpict
 that computes and displays images interactively.
+Other programs (not shown) connect many of these elements together, 
+such as the executive programs
+.I rad
+and
+.I ranimate,
+the interactive rendering program
+.I rholo,
+and the animation program
+.I ranimove.
+The program
+.I obj2mesh
+acts as both a converter and scene compiler, converting a Wavefront .OBJ
+file into a compiled mesh octree for efficient rendering.
 .PP
 A scene description file lists the surfaces and materials
-that make up a specific environment.
-The current surface types are spheres, polygons, cones,
-and cylinders.
-They can be made from materials such as plastic, metal,
-and glass.
-Light sources can be distant disks as well as local spheres, discs and
-polygons.
+that  make up a specific environment.  
+The current surface types are  spheres,  polygons,  cones,  and  cylinders.
+There is also a composite surface type, called mesh, and a pseudosurface
+type, called instance, which facilitates very complex geometries.
+Surfaces can be made from materials such as plastic, metal, and glass.  
+Light sources can be distant disks as well as  local spheres, disks
+and polygons.
 .PP
 From a three-dimensional scene description and a specified view,
 .I rpict
@@ -84,7 +95,7 @@ It is stored as ASCII text, with the following basic format:
 # comment
 
 modifier type identifier
-n S1 S2 S3 .. Sn
+n S1 S2 "S 3" .. Sn
 0
 m R1 R2 R3 .. Rm
 
@@ -112,14 +123,13 @@ primitives.
 Thus, the same identifier may be used repeatedly, and each new
 definition will apply to the primitives following it.
 .FE
-An identifier can be any string (i.e. sequence of non-blank
-characters).
+An identifier can be any string (i.e., any sequence of non-white characters).
 The
 .I arguments
 associated with a primitive can be strings or real numbers.
 The first integer following the identifier is the number
 of string arguments, and it is followed by the arguments themselves
-(separated by white space).
+(separated by white space or enclosed in quotes).
 The next integer is the number of integer arguments, and is followed
 by the integer arguments.
 (There are currently no primitives that use them, however.)
@@ -142,7 +152,7 @@ confusion will result.
 A command may be continued over multiple lines using a backslash, `\\',
 to escape the newline.
 .PP
-Blank space is generally ignored, except as a separator.
+White space is generally ignored, except as a separator.
 The exception is the newline character after a command or comment.
 Commands, comments and primitives may appear in any combination, so long
 as they are not intermingled.
@@ -150,7 +160,7 @@ as they are not intermingled.
 Primitive Types
 .PP
 Primitives can be surfaces, materials, textures or patterns.
-Modifiers can be materials, textures or patterns.
+Modifiers can be materials, mixtures, textures or patterns.
 Simple surfaces must have one material in their modifier list.
 .NH 3
 Surfaces
@@ -223,7 +233,7 @@ mod cone id
 .LP
 .UL Cup
 .PP
-A cup is an inverted cone (i.e. has an inward surface normal).
+A cup is an inverted cone (i.e., has an inward surface normal).
 .LP
 .UL Cylinder
 .PP
@@ -262,7 +272,8 @@ mod ring id
 A mesh is a compound surface, made up of many triangles and
 an octree data structure to accelerate ray intersection.
 It is typically converted from a Wavefront .OBJ file using the
-obj2mesh program.
+.I obj2mesh
+program.
 .DS
 mod mesh id
 1+ meshfile transform
@@ -283,7 +294,7 @@ permitting very detailed geometries that would otherwise exhaust the
 available memory.
 In addition, the mesh primitive can have associated (u,v) coordinates
 for pattern and texture mapping.
-These are made available to function files via the Lu and Lu variables.
+These are made available to function files via the Lu and Lv variables.
 .LP
 .UL Instance
 .PP
@@ -321,7 +332,7 @@ The basic types are given below.
 .LP
 .UL Light
 .PP
-Light is the basic material for self-luminous surfaces (i.e. light
+Light is the basic material for self-luminous surfaces (i.e., light
 sources).
 In addition to the source surface type, spheres, discs (rings with zero
 inner radius), cylinders (provided they are long enough), and
@@ -381,7 +392,7 @@ Spotlight is used for self-luminous surfaces having directed output.
 As well as radiance, the full cone angle (in degrees)
 and orientation (output direction) vector are given.
 The length of the orientation vector is the distance
-of the effective focus behind the source center (i.e. the focal length).
+of the effective focus behind the source center (i.e., the focal length).
 .DS
 mod spotlight id
 0
@@ -416,7 +427,7 @@ mod mirror id
 .PP
 The prism1 material is for general light redirection from prismatic
 glazings, generating secondary light sources.
-It can only be used to modify a planar surface (i.e. a polygon or disk)
+It can only be used to modify a planar surface (i.e., a polygon or disk)
 and should not result in either light concentration or scattering.
 The new direction of the ray can be on either side of the material,
 and the definitions must have the correct bidirectional properties
@@ -569,7 +580,7 @@ direction vector
 These three expressions (separated by white space) are evaluated in
 the context of the function file
 .I funcfile.
-If no function file is required (i.e. no special variables or
+If no function file is required (i.e., no special variables or
 functions are required), a period (`.') may be given in its
 place.
 (See the discussion of Function Files in the Auxiliary Files section).
@@ -1202,11 +1213,17 @@ and they are listed in the file
 The following variables are particularly important:
 .DS
 	Dx, Dy, Dz		- incident ray direction
-	Px, Py, Pz		- intersection point
 	Nx, Ny, Nz		- surface normal at intersection point
+	Px, Py, Pz		- intersection point
+	T			- distance from start
+	Ts			- single ray (shadow) distance
 	Rdot			- cosine between ray and normal
 	arg(0)			- number of real arguments
 	arg(i)			- i'th real argument
+.DE
+For mesh objects, the local surface coordinates are available:
+.DS
+	Lu, Lv			- local (u,v) coordinates
 .DE
 For BRDF types, the following variables are defined as well:
 .DS
@@ -1223,7 +1240,7 @@ variables are global, a period (`.') can be given in
 place of the file name.
 It is also possible to give an expression instead of a straight
 variable name in a scene file, although such expressions should
-be kept simple as they cannot contain any white space.
+be kept simple if possible.
 Also, functions (requiring parameters)
 must be given as names and not as expressions.
 .PP
@@ -1413,38 +1430,56 @@ converts to and from Radiance CIE picture format.
 .NH 1
 License
 .PP
-Radiance is a registered copyright of The Regents of the University of
-California ("The Regents"). The Regents grant to you a nonexclusive,
-nontransferable license ("License") to use Radiance source code without fee.
-You may not sell or distribute Radiance to others without the prior express
-written permission of The Regents.
-You may compile and use this software on any machines to which you have
-personal access, and may share its use with others who have access to the
-same machines.
-.PP
-NEITHER THE UNITED STATES NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY
-OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY
-LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR
-USEFULNESS OF ANY INFORMATION, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR
-REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
-By downloading, using or copying this software, you agree to abide by the
-intellectual property laws and all other applicable laws of the United
-States, and by the terms of this License Agreement. Ownership of the software
-shall remain solely in The Regents.
-The Regents shall have the right to terminate this License immediately by
-written notice upon your breach of, or noncompliance with, any of its terms.
-You shall be liable for any infringement or damages resulting from your
-failure to abide by the terms of this License Agreement.
-.PP
-NOTICE: The Government is granted for itself and others acting on its behalf
-a paid-up, nonexclusive irrevocable worldwide license in this data to
-reproduce, prepare derivative works, and perform publicly and display
-publicly. Beginning five (5) years after permission to assert copyright is
-granted, subject to two possible five year renewals, the Government is
-granted for itself and others acting on its behalf a paid-up, non-exclusive,
-irrevocable worldwide license in this data to reproduce, prepare derivative
-works, distribute copies to the public, perform publicly and display
-publicly, and to permit others to do so. 
+.DS
+The Radiance Software License, Version 1.0
+
+Copyright (c) 1990 - 2002 The Regents of the University of California,
+through Lawrence Berkeley National Laboratory.   All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in
+      the documentation and/or other materials provided with the
+      distribution.
+
+3. The end-user documentation included with the redistribution,
+          if any, must include the following acknowledgment:
+            "This product includes Radiance software
+                (http://radsite.lbl.gov/)
+                developed by the Lawrence Berkeley National Laboratory
+              (http://www.lbl.gov/)."
+      Alternately, this acknowledgment may appear in the software itself,
+      if and wherever such third-party acknowledgments normally appear.
+
+4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+      and "The Regents of the University of California" must
+      not be used to endorse or promote products derived from this
+      software without prior written permission. For written
+      permission, please contact radiance@radsite.lbl.gov.
+
+5. Products derived from this software may not be called "Radiance",
+      nor may "Radiance" appear in their name, without prior written
+      permission of Lawrence Berkeley National Laboratory.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+.DE
 .NH 1
 Acknowledgements
 .PP
@@ -1460,6 +1495,36 @@ the Ecole Polytechnique Federale de Lausanne (EPFL University)
 in Lausanne, Switzerland.
 .NH 1
 References
+.LP
+Ward, G., Elena Eydelberg-Vileshin,
+``Picture Perfect RGB Rendering Using Spectral Prefiltering and
+Sharp Color Primaries,''
+13th Eurographics Workshop on Rendering, P. Debevec and
+S. Gibson (Editors), June 2002.
+.LP
+Ward, G. and M. Simmons,
+``The Holodeck Ray Cache: An Interactive Rendering System for Global
+Illumination in Nondiffuse Environments,''
+.I "ACM Transactions on Graphics,"
+18(4):361-98, October 1999.
+.LP
+Larson, G.W., H. Rushmeier, C. Piatko,
+``A Visibility Matching Tone Reproduction Operator for High Dynamic
+Range Scenes,''
+.I "IEEE Transactions on Visualization and Computer Graphics",
+3(4), 291-306, December 1997.
+.LP
+Ward, G.,
+``Making Global Illumination User Friendly,''
+.I "Sixth Eurographics Workshop on Rendering",
+proceedings to be published by Springer-Verlag,
+Dublin, Ireland, June 1995.
+.LP
+Rushmeier, H., G. Ward, C. Piatko, P. Sanders, B. Rust,
+``Comparing Real and Synthetic Images: Some Ideas about Metrics,''
+.I "Sixth Eurographics Workshop on Rendering",
+proceedings to be published by Springer-Verlag,
+Dublin, Ireland, June 1995.
 .LP
 Ward, G.,
 ``The Radiance Lighting Simulation and Rendering System,''

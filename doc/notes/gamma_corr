@@ -1,0 +1,60 @@
+		SETTING GAMMA FOR A SPECIFIC MONITOR
+
+Gamma correction is a crude way of compensating for the nonlinear
+response function of a display device.  Most CRT monitors roughly follow
+a power law in their response function, ie:
+
+	output luminance = signal ^ gamma
+
+where gamma is typically between 1.5 and 3.  Some system software
+attempts to partially compensate for this natural response function, but
+usually does not completely eliminate it (which would have other
+undesirable effects).
+
+Most of the Radiance display drivers look at an environment variable
+called "DISPLAY_GAMMA" to determine how to set the gamma correction for the
+current monitor.  Many programs also have a -g option for setting the
+gamma value explicitly, but the environment variable is the only way to
+control gamma correction for rview, for example.
+
+To determine the approximate gamma for your monitor, display of the
+distributed picture file ray/lib/lib/gamma.pic like so:
+
+	% ximage -g 1 -b ray/lib/lib/gamma.pic &
+
+Note that the gamma here has been explicitly set to 1, effectively
+turning gamma correction off for this test.
+
+Now, set the contrast and brightness controls on the monitor to what you
+would consider your normal settings.  Stand back from the monitor a bit
+and try to match up the average brightness of the stripes on the left of
+the image with a patch on the right of the image.  This will be the
+gamma value for this monitor.
+
+All that's left to do is to put a line of the form:
+
+	setenv DISPLAY_GAMMA 2.2
+
+in your .login or .cshrc file for C-shell users, or:
+
+	DISPLAY_GAMMA=2.2
+	export DISPLAY_GAMMA
+
+in your .profile for Bourne shell users.  You may also use a more
+complicated setting for different monitors if you use many displays, eg:
+
+	if ( $?DISPLAY && ! $?DISPLAY_GAMMA ) then
+		switch ($DISPLAY)
+		case pink*:
+		case floyd*:
+			setenv DISPLAY_GAMMA 1.8
+			breaksw
+		case hobbes*:
+		case demo460*:
+			setenv DISPLAY_GAMMA 2.6
+			breaksw
+		case wimsey*:
+			setenv DISPLAY_GAMMA 1.7
+			breaksw
+		endsw
+	endif

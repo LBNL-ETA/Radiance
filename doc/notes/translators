@@ -1,0 +1,186 @@
+A general scheme has been defined for writing translators from CAD
+files to Radiance.  This scheme should be used by anyone who writes a
+new translator, since it is both useful and general.
+
+One of the biggest problems encountered when importing CAD descriptions
+to a lighting simulation (or any good rendering program) is assigning
+materials to the surface geometry.  Even if the creator of the model
+has been careful to make 3d surfaces instead of points and lines, most
+people don't even think about what a surface is made of until they're
+all done.  At that point, of course, it's too late.  Even if the user
+does give a little thought to materials, most CAD systems only permit
+the assignment of a color index to each surface, which is a start but
+far short of the information needed to make a good simulation.
+
+There are only a few CAD systems that "do the right thing" and allow the
+user to assign material identifiers to objects and individual surfaces.
+Such a program, GDS for example, makes writing a translator almost
+trivial, since the material identifiers can refer back to a library of
+materials maintained by the user, or even imported from the CAD system.
+
+Most CAD programs, like AutoCAD or Architrion, don't really use the
+notion of materials in their models at all.  Instead, they
+differentiate surfaces by layer, color, block name, and so forth, none
+of which clearly makes sense to use as a material identifier.  Even if
+the user creates a model with an intent to perform lighting
+simulations, he or she has no way to assign materials directly to the
+objects in the model.
+
+The only general solution is to use every available piece of information
+from the CAD model to assign materials.  We can do this by using a set
+of mapping rules, created somehow by the user.  (We are working on
+a HyperCard interface for selecting materials that should be very nice
+if we ever finish it.)  The mapping rules are an ordered list of
+materials and the conditions a surface must satisfy in order to have
+that material.
+
+For example, if we wanted all surfaces in the Block "thingy" with the
+Color 152 to use the material "wood", and all other surfaces to use the
+material "default", we would create the following mapping file:
+
+	default ;
+	wood (Block "thingy") (Color 152) ;
+
+All surfaces would satisfy the first set of conditions (which is empty),
+but only the surfaces in Block "thingy" with Color 152 would satisfy the
+second set of conditions.
+
+Each rule can have up to one condition per qualifier, and different
+translators will use different qualifiers.  A qualifier is simply an
+attribute that can be used to distinguish surfaces, such as Color,
+Layer, Reference ID, etc.  A condition is either a single value for a
+specific attribute, or an integer range of values.  (Integer ranges are
+specified in brackets and separated by a colon, eg. [-15:27], and are
+always inclusive.)  A semicolon is used to indicate the end of a rule,
+which can extend over several lines if necessary.
+
+The semantics of the rule are such that "and" is the implied conjunction
+between conditions.  Thus, it makes no sense to have more than one
+condition in a rule for a given qualifier.  If the user wants the same
+material to be used for surfaces that satisfy different conditions,
+they simply add more rules.  For example, if the user also wanted
+surfaces in Block "yohey" with Colors between 50 and 100 to use "wood",
+they would add the following rule to the end of the example above:
+
+	wood (Color [50:100]) (Block "yohey") ;
+
+Note that the order of conditions in a rule is irrelevant.  However,
+the order of rules is very important, since the last rule satisfied
+determines which material a surface is assigned.
+
+By convention, the identifier "void" is used to delete unwanted
+surfaces.  It is used in a rule as any other material, but it has the
+effect of excluding all matching surfaces from the translator output.
+For example, the following mapping would delete all surfaces in the
+Layer 2 except those with the color "beige", to which it would assign 
+the material "beige_cloth", and all other surfaces would be "tacky":
+
+	tacky ;
+	void (Layer 2) ;
+	beige_cloth (Layer 2) (Color "beige") ;
+
+Hopefully, the meaning of the mapping rules is now clear, so we can
+discuss ways to help the user create the mapping for a given model.
+
+A translator should provide at least two basic options.  The first
+option, "-n", simply reads the CAD input file and creates a list of
+qualifiers and values that can be used to differentiate surfaces in the
+model.  The output of the program with "-n" should be something like:
+
+	filename "Example Input File"
+	filetype "Architrion"
+	qualifier Color begin
+	35
+	[100:110]
+	200
+	end
+	qualifier RefId begin
+	1103
+	[5306:5307]
+	"BIG Things"
+	"little Things"
+	end
+	EOF
+
+This information can be used either by the user or by a program such as
+HyperCard to create the rules for assigning materials to surfaces in
+the file.  (The "EOF" is literally there, since HyperCard has trouble
+detecting the end of file.)
+
+The second option, "-m mapfile" is used to specify the mapping file to
+be used by the translator.  If no mapfile is provided by the user, the
+translator should have a standard mapping to assign material names
+based on some set of default paramters.  (For example, arch2rad uses
+color alone to assign materials "c0" through "c255".)  To accompany the
+default mapping, there should be a default materials file with
+corresponding definitions.  These files should be placed in the
+Radiance library directory under "lib" (ie. "/usr/local/lib/ray/lib").
+
+To just look at an Architrion building, a user might issue the following
+commands:
+
+	oconv '\!gensky 6 15 12' /usr/local/lib/ray/lib/arch.mat \
+			'\!arch2rad model.txt' > model.oct
+	rview -av 3 3 3 -vp -20 -20 5 -vd 1 1 0 model.oct
+
+Note that by giving oconv commands instead of input files, no temporary
+files (other than the octree) are necessary.  In a more complete
+example, the user might first create a qualifier list, then run the
+HyperCard stack for assigning materials, then convert the model
+with his own materials file, thus:
+
+	arch2rad -n model.txt > model.qual
+	HyperCard MatPick.stack		# creates model.map from model.qual
+	arch2rad -m model.map model.txt > model.rad
+	oconv source.rad materials.rad model.rad > model.oct
+	rview -vf model.vp model.oct
+
+To write a new translator, include the "trans.h" file in ray/src/cv and
+link with trans.o and the standard Radiance library.  You will need to
+define your own list of valid qualifiers and use the following routines
+from trans.c:
+
+	fgetid(ID *idp; char *dls; FILE *fp)
+	/*
+	 * Read an id (either a string or an integer) from fp
+	 * up to a character in dls.  The delimiter will be discarded.
+	 * Return EOF at end of file, 0 otherwise.  You should free
+	 * the id with the macro doneid(idp).
+	 */
+
+	int
+	findid(IDLIST *ilp; ID *idp; int insert)
+	/*
+	 * Find (or insert) idp in the list ilp.  Uses binary search
+	 * to find (or if insert is true, insert) an id in a sorted id
+	 * list.  Returns index into ilp->id, or -1 if not found and no
+	 * insert.
+	 */
+
+	int
+	idcmp(ID *id1, *id2)
+	/*
+	 * Compares two identifiers.  Numbers compare less than strings.
+	 */
+
+	write_quals(QLIST *qlp; IDLIST idl[]; FILE *fp)
+	/*
+	 * Write out qualifiers in array of id lists idl[] to fp.
+	 * The qualifier list qlp is used to determine how many and
+	 * what to call the qualifiers.
+	 */
+
+	RULEHD *
+	getmapping(char *file; QLIST *qlp)
+	/*
+	 * Read mapping rules from "file" and create a list of rules
+	 * in reverse order.  Prints various syntax errors using eputs()
+	 * and calls quit() if there's a serious problem with the input.
+	 */
+
+	matchid(ID *idp; IDMATCH *idm)
+	/*
+	 * Checks to see if idp matches the id or range in idm.
+	 */
+
+Good luck!  I will be happy to answer questions (GJWard@lbl.gov).

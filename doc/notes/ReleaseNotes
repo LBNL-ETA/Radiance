@@ -1,0 +1,1140 @@
+=========================
+Version 1.2 (Released 3/9/90)
+
+Added a -p option to rpict and pfilt to set the pixel aspect ratio for
+output.  Instead of giving the absolute x and y resolutions, the user
+now gives rpict and pfilt the maximum desired resolution for x and y
+and the pixel aspect ratio is used along with the given view to
+calculate appropriate values within this boundary.  This makes for
+much more natural view specifications.  For example, for a 512x400
+device with a pixel aspect ratio of 1.0, the pfilt command:
+
+	pfilt -x 512 -y 400 -p 1
+
+will always produce the appropriate output, regardless of the aspect
+ratio of the input picture.  If necessary, the x or y output resolution
+will be reduced to accommodate the device's resolution.  A square image
+would occupy a region of 400x400 pixels.
+
+View shift and lift options were added to the list of standard view
+parameters, for specifying views for panoramas and holograms.
+
+Rview no longer takes options for x and y resolution, but instead
+gets them from the device driver along with the pixel ratio.  This
+makes it much easier to change the view aspect ratio (with the vh
+and vv parameters).
+
+A -z option was added to rpict to write out the distances for each
+pixel in an image.  This may be useful for z-buffer operations, and
+is used by the new program pinterp, described below.
+
+A program called pinterp was added to the burgeoning list of
+picture filters and converters.  This program is designed primarily
+to interpolate animated frames for walk-throughs of static scenes,
+but it has a number of other useful functions besides.  It takes as
+its input one or more rendered pictures (with their corresponding z
+value files) and desired viewpoint (hopefully not too far afield from
+the given images).  Pinterp then takes the input frames and moves the
+pixels to their new computed location.  Filling operations make sure
+that the final image does not have large unpainted regions.
+
+Added smoothing option to gensurf, using bilinear Phong surface normal
+interpolation.  Not perfect, but it's better than nothing and permits
+the use of fewer polygons to represent smoothly curved surfaces.
+
+=========================
+Version 1.3 (Released 10/22/90)
+
+Added conversion utility for IES (Illuminating Engineering Society) standard
+format luminaire data.  The translator, called ies2rad, takes any number
+of luminaire data files and creates the necessary Radiance geometric
+descriptions and data files and puts them in the specified library location.
+A new data format was added to accommodate irregularly-spaced data points.
+
+Added rview driver for NeWS for Sun and Silicon Graphics workstations.
+This work was done by Isaac Kwo.
+
+Fixed oconv for scenes with many overlapping instances (runs faster now).
+
+Added consitency checks intended to detect stale octrees without restricting
+changes to surface modifiers.  (But you still can't change total number of
+objects).  Stale octrees caused some of the strangest behavior...
+
+Finally broke down and wrote my own malloc(3) routines.  There is a
+CalTech module floating around Berkeley that caused a lot of trouble
+for bmalloc(), resulting in about twice the needed memory use.
+
+Added translator for Architrion.  Arch2rad uses mapping rules to assign
+materials to surfaces from input file.  This is a general method (dreamed
+up by Charles Ehrlich) that allows users to assign materials based on
+whatever information is available from the CAD file.  See the accompanying
+description file on translators in the ray/doc/notes directory.
+
+Added fisheye view types to rpict and rview, useful for looking at
+entire scenes and for LEEP virtual reality wide field stereo viewer.
+
+Wrote xshowtrace, a fun program for watching rays as they are being
+traced on an X11 display.
+
+Write ra_pr24 for converting between 24-bit Sun rasterfiles and
+Radiance pictures.  Perhaps this should be incorporated in ra_pr, as
+ra_t8 and ra_t16 should be one program, but the algorithms and memory
+requirements are totally different for colormapped images.
+
+Added routines for performing 24-bit gamma correction in integer domain,
+making programs like ra_pr24 and ra_t16 run faster.
+
+=========================
+Version 1.4 (Released early 1991?)
+
+Fixed bug in IES translator that resulted in the incorrect
+interpretation of type B photometric data.  (1.3.1)
+
+Added types for using BRDF data:  plasfunc, metfunc, plasdata and metdata.
+
+Added interpretation of source color to ies2rad and color corrective
+filtering to pfilt.  Reference file used by both is "lamp.tab" in
+library directory.
+
+Added picture flipping program, pflip, and pattern preprocessing script,
+normpat.csh, to the px directory.
+
+Fixed bug in ra_pr24 that caused the reversal of red and blue values.
+New version accepts both RT_STANDARD and RT_FORMAT_RGB files but
+produces only RT_STANDARD rasterfiles as output.
+
+Added -m option to xform to change modifiers for surfaces.
+
+Wrote replmarks program to replace markers in a Radiance scene file
+for light sources or other objects.
+
+Added global compilation script, makeall.
+
+Fixed calculation of luminance in display programs and gensky to use
+white light assumption.
+
+Added options and features to pcomb.
+
+Added FORMAT= line to all Radiance file headers for improved error
+checking and clarity.
+
+Added icon bitmaps for rview and x11image under X11 and fixed a bug
+that caused x11image to ignore keyboard input.
+
+****** COMPATIBILITY CHANGE ********
+Added constant definitions to cal files using ':' instead of '='.
+This makes for faster calculations since many more constant
+expressions can be reduced at "compile" time.
+
+Created glare calculation programs in util directory.  Findglare locates
+glare sources, xglaresrc circles sources on a displayed image, and
+glarendx computes various glare indices.
+
+=========================
+Version 2.0 (Released 11/26/91)
+
+Added -i option to renderers for computing irradiance rather than
+radiance.  Eliminated redundant -oI option from rtrace and added
+-I option to replace old -oi.  This hack ignores glass and similar
+surfaces during the calculation.
+
+Changed icon for x11image (renamed ximage) to miniature bitmap of
+picture.
+
+Fixed bug in xshowtrace that prevented it from working with twm.
+
+Added memory recovery feature to rview so that when it refines
+itself out of memory it doesn't quit but instead gives the user
+a command line saying "out of memory:", which allows the output to
+be written and so forth before quitting or restarting the image.
+
+Added -g (gamma correction) option to pvalue.
+
+Added the more general BRTDfunc for procedural definition of bidirectional
+reflectance-transmittance distribution functions.  Also added transfunc
+and transdata types.
+
+Changed trans types to modify the color of the transmitted specular
+component.
+
+Fixed a bug in ra_t16 introduced in the last change which caused
+problems for the (default) 16-bit output mode.
+
+Improved Monte Carlo sampling for penumbras (-dj) and ambient
+super-samples (-as) using stratified random number sequence introduced
+by Christophe Schlick at '91 Eurographics workshop on rendering.
+
+Wrote falsecolor program to transform images to false color with
+value labels.
+
+Modified pcomb to allow different output sizes and access to local
+pixel neighborhood for specialty filtering applications.
+
+Made cone and sphere routines more forgiving of negative radii,
+switching between inverted types as necessary and giving warning
+messages instead of bombing.  Cones with equal radii are now
+silently converted into cylinders.  Hopefully, these changes will
+make writing Radiance scene file translators a little bit easier.
+Unfortunately, we still bomb for zero-sized cones and spheres.
+
+Wrote a program called getbbox that just computes the bounding box
+for a set of Radiance scene files.  It is basically a modified version
+of oconv that doesn't store objects in memory and doesn't care about
+undefined modifiers.
+
+Added -a and -l options to pcompos and made both pcompos and pcomb
+read from commands as well as files.
+
+Substantially improved the accuracy and appearance of the interreflection
+calculation by computing gradients at the same time as primary values and
+then using a first order interpolation scheme.  This affects the information
+stored in ambient files, so old files will have to be thrown away.
+
+Added secondary light sources from planar mirror, prismatic and
+holographic surfaces.  This created the new options -dr (direct relays)
+and -dp (direct presample density) to the renderers.  The document
+secsrc.note describes this feature in greater detail.
+
+Put many of the routines into a common library.
+
+Wrote a replacement for makedist, called mkillum, which generates
+light distribtuions and illum descriptions for windows, skylights,
+etc. in a much more natural and automatic fashion.
+
+Fixed long-standing bug in text routines which caused slanted text
+to slant the wrong way!
+
+Added -e option to ra_bn, ra_pr, ra_pr24, ra_t8 and ra_t16 programs
+for faster and more convenient image conversion w/o using pfilt.
+
+****** COMPATIBILITY CHANGE ********
+Finally added contexts to calcomp routines so identical names in
+different function files no longer conflict.  Loading of function
+files also works automatically without those nasty "key" variables.
+New context marks (backquote characters) appear in some local variables
+defined in some of the cal files.  This is inconsistent with older
+versions, and must be changed back to and underscore or some other legal
+character if these files are used by 1.4 and earlier.
+
+Wrote ra_tiff program, using Sam Leffler's libtiff package to read
+and write 24-bit TIFF images.
+
+Wrote ra_ppm program to convert to and from Poskanzer Pixmaps.
+
+****** COMPATIBILITY CHANGE ********
+Changed run-length encoding of Radiance pictures to gain better
+compression.  Routines can still read old format, but new ra_rgbe
+program must be used to write convert images to a more generic format
+that can be read by release 1.4 and earlier.
+
+Defined U and V parameters in rayinit.cal for more convenient (and
+sloppy) use of 2-dimensional textures and patterns on planar surfaces.
+
+Beefed up lampcolor program to compute spectral radiance for diffuse
+emitters.  This was a previously a pain in the butt and a serious
+source of error for scenes not modeled using IES data files.
+
+Added version reporting to rpict, rtrace and rview.  Use standalone
+-version option.
+
+Changed to quincunx initial sampling pattern in rpict.  This should
+reduce artifacts from adaptive image sampling at no added cost.
+
+Added -rgb option to ra_pr24 to produce RT_FORMAT_RGB files.
+
+Added -ds option to renderers to make source sampling more accurate
+for large area sources.  It is no longer necessary or recommended
+to break large sources (such as windows) into smaller pieces with
+gensurf unless their output distribution changes over their surface.
+Also, cylinders can now be used as light sources, provided they are not
+too short compared to their radius (causing them to be frequently missed).
+
+Added -I option to xform to invert surfaces.
+
+Added SMLFLT and BIGMEM defines to better control the sizes of data
+structures during compilation.  Made their setting relatively
+straightforward in makeall and created a separate rmake program to
+hold the options generated by makeall.
+
+Made the programs more forgiving of machine differences on octrees.
+
+****** COMPATIBILITY CHANGE ********
+Fixed incorrect conversion factor between radiance and luminance.
+The correct luminous efficacy value is now defined in color.h as
+WHTEFFICACY.  It was 470 lumens/watt previously, now it has been
+corrected to 179 lumens/watt.  This affects the absolute values
+in the output of programs like gensky and ies2rad.  Thus, these
+programs should be rerun to generate corrected files for this
+version of Radiance.  Also, the new versions of display programs
+like ximage will give different values with the 'l' command on 
+an image generated with 1.4 and previous releases.  The following
+alias may be used to fix the radiance values in a picture generated
+using previous versions of gensky and ies2rad:
+
+alias pfixabs '( echo EXPOSURE=.381 ; cat \!:1 ) > \!:1.$$ ; mv \!:1.$$ \!:1'
+
+Improved accuracy of glass material type and added option for
+user-supplied index of refraction.
+
+Added sgi to rt/Makefile and px/Makefile SPECIAL category for compiling
+Isaac Kwo's NeWS driver for rview and the glimage program by Jim Winget.
+Also fixed various compile problems for the SGI.
+
+Improved handling of alternate scanline orientations.  The programs
+pflip and protate (used to be prot) now affect the scanline ordering
+of the file without messing up the view parameters for programs like
+pinterp and findglare.
+
+==========================
+Version 2.1 (Released 5/20/92)
+
+****** COMPATIBILITY CHANGE ********
+Changed function specifications to allow the use of expressions as
+well as variables in scene files.  Use of this feature may result
+in some loss of backwards compatibility as older software does not
+support it.
+
+Added makeall option for NeXT machine and changed code to suit.
+
+****** COMPATIBILITY CHANGE ********
+Added off-specular sampling and anisotropic materials plastic2,
+metal2 and trans2.  The old options -sp, -sj, -st and -p have
+been renamed to -ps, -pj, -pt and -pa, respectively.  New options
+-sj and -st have been introduced.
+
+Improved ray intersection calculations using -DSMLFLT option by
+increasing epsilon used in tests.  This eliminates most of the
+errors that occured when this compile option was used in version 2.0.
+
+Added capability to gensurf to read height or point data from a
+file.  This makes it more convenient to make (optionally smoothed)
+landscapes from recorded measurements and the like.
+
+Corrected irradiance gradient calculation.  New formula predicts
+gradient better and thus reduces artifacts in indirect calculation.
+
+Modified replmarks to accept multiple markers.
+
+Added -aI and -aE options to read ambient include/exclude materials
+from a file.
+
+Reduced effect of light leaks during interreflection calculation.
+
+Added -ang option to gensky for giving solar angles explicitly.
+
+Added ability of "view" command within rview to accept view options.
+
+Fixed a long-standing bug in gensky that caused it to report
+inaccurate values for the ground ambient level.  Since the dayfact
+script uses this value in calculating its results, version 2.0 will
+be in error (by as much as 30 or 40%).
+
+Fixed a bug in the reflectance normalization for isotropic and
+anisotropic Gaussian highlights that caused too much light to
+be reflected near grazing angles.  Much thanks to the folks at
+Ohio State University (Steve Spencer and Kevin Simon) who
+pointed this out to me!
+
+Fixed bug in xshowtrace introduced in 2.0.  It absolutely didn't work
+after my most recent changes to image.c.  (Sorry about that!)
+
+Finally fixed shortcoming of view reading routines so they can get
+the views from pictures created with absolute program paths
+(eg. /usr/local/bin/rpict).  This affects programs like
+xshowtrace and glare, as well as the recover option of rpict.
+
+Fixed isotropic Gaussian distribution (highlights for types "metal"
+and "plastic") to make them more accurate and bring them into line
+with the new anisotropic Gaussian models ("metal2" and "plastic2").
+This may affect the appearance of some hightlights.
+
+Added -H and -R options to pvalue to control resolution strings
+and color ordering.
+
+Fixed byte ordering for 24-bit color displays in ximage.
+
+==========================
+Version 2.2 (No official release)
+
+Made more fixes in rview and ximage for different display hardware.
+Philip Thompson and Peter Apian helped with suggestions and testing.
+
+Fixed bug in -e option of xform that kept it from fully expanding
+some scene files.
+
+Added proportional text spacing (-s option for psign, new argument
+for text primitives).  Added antialiasing (3x3 super-sampling) to psign.
+
+Added code in display drivers to read environment variable called
+"GAMMA" to set gamma correction for different monitors.  See notes in
+this directory on gamma_corr.
+
+Added CC defines to all the Rmakefiles so that other C compilers may be
+used consistently.
+
+Added -x and -y options to psign to control output dimensions directly.
+
+Decreased value of FTINY with SMLFLT option once again in an attempt to
+further reduce errors.
+
+Reinstated rtrace's capability to produce 32-bit_rle_rgbe directly.
+
+Added -S and -o options to rpict for more flexible production of
+multiple images and slave operation.  Rpict will also accept a recover
+file name the same as the output file for more convenient recovery.
+
+Added ra_ps program to translate Radiance picture into PostScript file.
+
+****** COMPATIBILITY CHANGE ********
+Made ambient files machine-independent so they can be conveniently moved
+and reused on any system.  Also added coordinated reads and writes so
+that multiple processes may use the same ambient file at the same time.
+Along with the -S option of rpict, this should greatly facilitate parallel
+rendering.  The new ambient file format also contains a header that
+can be read by getinfo.  Lookamb now has a -h option.
+
+Created rpiece program for parallel rendering of a single image on
+multiple processors and workstations.
+
+Eliminated star artifacts in mkillum distribution patterns by improving
+data interpolation method.  Improved ability of mkillum to correctly
+sample non-axis-aligned polygons.
+
+Added -s and -o options to pcompos for slightly more convenient use
+of the -a option.  Also eliminated incompatibility between -a and -y
+options.
+
+Fixed bug in spotlight sources that caused incorrect boundaries to be
+cast by mirrors.
+
+Fixed rounding of scanlines in ra_pr24 to 16-bit boundaries.
+
+Added @file and $envar expansion capabilities to rtrace, rpict and
+rview.  This is primarily to overcome the 128-byte command limit of
+MS-DOS.
+
+Added -r option to gensky for the direct specification of solar
+brightness.
+
+Added -oN option to rtrace for reporting unperturbed surface normals,
+and changed -on to report perturbed surface normals (used to be
+unperturbed).
+
+Changed -di switch of rtrace, rpict and rview to -dv and changed
+sense.  Thus, instead of having a boolean variable called "source
+invisibility" that is normally off, there is now a boolean variable
+called "source visibility" that is normally on.  More logical, and
+also allows for the addition of -di and -de options for direct
+include and exclude in the future.
+
+Fixed bug in image.c associated with -DSMLFLT that caused angular
+fisheye views to repeat the center pixel in the middle of an image.
+
+Modified colordata and colorpict to take functions of a single variable
+instead of always requiring functions of three variables (red, green, blue).
+
+Modified objview script to work in original object coordinates.
+
+Added -P and -PP options to rpict and rtrace for persistent and parallel
+processing, respectively.  The -P option is most useful with the -fr
+option of pinterp, since rtrace doesn't have to be restarted for every
+frame in a long animation sequence.  The -PP option is most useful when
+running rpiece on a multiprocessing platform, to get acceptable memory
+sharing without the hassle of threaded code.
+
+Changed signal handling in rpict so CONT is now used to elicit
+asynchronous progress reports.  ALRM now causes rpict to die
+unconditionally.
+
+Created executive program called "rad" to run oconv, rview, rpict and
+pfilt automatically.  This should greatly simplify use of Radiance and
+reduce the problems associated with poorly chosen parameter values.
+
+Added slave driver to rview to make it easier to run from other
+graphics applications.  (Thanks to Chris Nicholas of Sun for the
+suggestion.)
+
+Fixed error in ies2rad.c and source.cal that caused incorrect
+interpretation of asymmetric Type C (A) fixture photometry.  Note the
+new definition of src_phi in source.cal.  This change may affect
+manually entered photometry.
+
+Added '@' command to ximage to adjust exposure based on Blackwell's
+model of human contrast sensitivity.
+
+Added functions to pcomb to get the ray origin and direction from the
+input picture view specifications.
+
+Removed Fresnel approximation to specular reflection from Radiance materials,
+since the direct component was not being computed correctly.  This
+may have a slight affect on the appearance of surfaces, but it can't be
+helped.
+
+****** COMPATIBILITY CHANGE ********
+Changed the definition of the BRTDfunc type so as to be more general and to
+allow for different reflection properties depending on what side of the
+surface the ray is incident.  Any scene and function files using the
+old definition of BRTDfunc must be updated.   Implemented the approximation
+used in Window 4 to reflection from coated glazings in lib/glazing.cal.
+
+Added -ti, -te, -tI and -tE options to rtrace for including or
+excluding surfaces from those reported by the trace output specifier.
+
+Fixed long-standing bug in pfilt gaussian filter option, which caused
+the image to be excessively defocused.
+
+Added -m option to pfilt for image sample smoothing.  This helps get rid
+of some of the "speckle" associated with specular sampling.
+
+Made -ovt* compatible with -I option of rtrace.
+
+Changed ximage to work with multiple pictures.  It now opens one window
+for each picture file.
+
+Fixed error reporting in rpict for most machines.  (Many thanks to Peter
+Apian-Bennewitz for his help and suggestions.)
+
+****** COMPATIBILITY CHANGE ********
+Added intermediate sky to gensky and changed its options slightly.
+The new gensky uses a new version of skybright.cal, so any old
+gensky output in files must be recomputed with the new gensky before
+it will work.  (A "skybright: undefined" error should clue you in.)
+
+==========================
+Version 2.3 (Released 11/16/93)
+
+No changes from the above, but the official release was designated 2.3
+to avoid confusion with previous beta releases of 2.2.
+
+==========================
+Version 2.4 (Released 4/20/94)
+
+Philip Thompson of MIT added use of a radiance.gamma resource to ximage
+and we added it to the x11 driver of rview as well.  This is an alternative
+to setting the GAMMA environment variable for X11 servers.
+
+Added MLIB variable to Rmakefile's for defining alternate math libraries.
+I discovered that the default version of sqrt() under IRIX is a whole
+lot slower than what's in the libfastm.a library, and not much better.
+This can make a significant difference to the renderers, since sqrt()
+is relied on quite a bit, and it's assumed to be fast.
+
+Added =SS option to pcompos to allow anchor points for image positions
+other than the lower left corner.
+
+Wrote raddepend script for finding dependencies in scene files.
+
+Fixed a bug in mkillum that caused it to incorrectly sample ring sources.
+
+Finally allowed mixtures to work with materials, thanks to the encouragement
+and advice of Peter Apian-Bennewitz.
+
+Wrote a triangular mesh converter, called tmesh2rad.  I defined my own
+format, since I wasn't too familiar with anyone else's format and I
+wanted to support some additional possibilities (most notably patterns).
+
+Added initial "#?RADIANCE" line to headers to simplify Radiance file
+identification by programs used to magic numbers.
+
+Created a translator for Wavefront .obj files, called obj2rad.  It uses
+the same type of mapping rules as arch2rad.
+
+=============================
+Version 2.5 (Released 6/26/95)
+
+Wrote translators to and from the new MGF (Materials and Geometry
+Format) specification.
+
+Changed color conversion routines to make light source colors (from
+lamp.tab) consistent with uniform white light standard.
+
+Fixed a bug that caused very small local sources not to be sampled
+at all!
+
+Added the ability for rview to read commands from its standard input
+under X11.
+
+****************** COMPATIBILITY CHANGE ***********************
+Changed GAMMA environment variable to DISPLAY_GAMMA, to bring it in
+line with the xli program, so users don't have to give two variables
+for the same value!
+
+Added -t (touch) option to rad, to make it easier to deal with minor
+changes to input files.
+
+Created graphical user interface to rad, called trad.  Based on Tcl/Tk,
+this should finally get people to start using this program!
+
+Added -vo and -va (view fore and view aft) clipping plane options to
+Radiance view parameters.
+
+Added -bv option for (opaque) back face visibility control.
+
+Added -q, -a and -e options to pinterp, and made it faster.  (These
+should be big improvements.)
+
+Created tabfunc program for converting data tables to functional
+language.
+
+Wrote mgf2meta program to convert MGF data to line drawing.
+
+Updated ies2rad program to interpret MGF geometry in IESNA-LM-63-1995
+files.
+
+Added sorting of ambient values according to access times to improve
+reference locality for better virtual memory performance.
+
+Added source solid angle argument to BRTD functions for averaging
+values.
+
+Wrote genclock program to create an analog clock.
+
+Fixed a bug for bitmaps using hexbit4x1.fnt with brighttext, which
+caused thin lines to appear.
+
+=============================
+Version 3.0 (Released 6/19/96)
+
+Added comments to data and font files.
+
+Changed behavior of mirror to allow void alternate material.
+
+Added cylindrical view type for Quicktime VR authoring and other
+interesting applications.
+
+Increased default rtrace parameters for more accurate calculations when
+options are not specified.
+
+Added RAWFILE and ZFILE variables to rad for saving raw picture file and
+Z (distance) information from rpict.
+
+Ported trad for newer (4.0) version of Tk (wish).  Thanks to Bob Lipman
+of NIST for helping me track down the changes.
+
+Added -B option to pinterp to blur multiple views into a single image,
+useful for motion blur and depth of field simulation.
+
+Created pdfblur script and modified vwright to automate depth-of-field
+simulation with pinterp.
+
+Added -c option for color PostScript output from ra_ps, and made both
+this program and psmeta produce EPS-compatible files.
+
+Created macbethcal program for calibrating color image scanners and
+film recorders or printers using the Macbeth ColorChecker chart.
+
+Created ra_xyze program for converting to and from new Radiance CIE XYZE
+picture type and calibrating monitor colors.  Modified Radiance picture
+filters (pcompos, pflip, pcomb, pinterp, protate and pfilt) to handle
+new picture type without complaint.
+
+Added automatic ambient value computation to improve accuracy of results
+no matter what -av value is given.  (Only works for -ab > 0.)  This was
+a fairly obvious optomization I should have thought of ages ago.
+(Default is old behavior -- -aw option puts in new code.)
+
+Modified interreflection calculation to take textures (surface normal
+perturbations) into account in indirect illumination.  This should
+improve the accuracy and appearance of textured surfaces in shadowed
+regions.
+
+Added -T option to rpiece to limit execution time.
+
+Fixed bug in mixtext type introduced in last release -- caused improper
+calculation of mixed modifiers.
+
+Added basic options and functionality for participating media.  New material
+type "mist" and rendering options -me, -ma, -mg and -ms.  This should permit
+the modeling of visible light beams, uniform smoke, fog, and some types
+of clouds.
+
+Added -o option to ximage to control output of 't' command (and
+middle mouse button).  This adds the ability to produce pixel
+position, radiance value and luminance.  The default action is
+the same as before.
+
+Created pmblur script to generate views for camera motion blur in
+walk-through animations.
+
+Added "inpic" variable to picture.cal for determining when the edge
+of a non-repeating image has been reached.  Use with mixfunc primitive.
+
+Created ranimate program to control walk-through and dynamic animations
+on multiple hosts.
+
+Fixed problem with antimatter type referring to final definition of
+material names.  Now, it uses the most recent ones.
+
+Added an MC macro for true Monte Carlo sampling rather than the default
+Quasi Monte Carlo.  To enable, add -DMC to the OPT= line in rmake.
+
+Fixed bug in pfilt -m option that caused floating point exceptions on
+Alphas.
+
+Wrote xyzimage script for X11 display of XYZE and corrected RGBE pictures.
+Takes the same options as ximage with an added -p option, and checks
+the environment variable DISPLAY_PRIMARIES for setting of monitor
+primaries.  (See the ra_xyze manual page for further explanation.)
+
+Made colorpict's use much less memory by storing data in RGBE format
+rather than floating point (takes 1/3 the space).  This should help with
+large image patterns.
+
+At the insistence of Henrik Wann Jensen, changed the specular sampling
+code so that very rough specular surfaces will sample more truly,
+eliminating some strange mirror appearances evident using the old
+method.
+
+Added drawing of small and skinny light sources so rpict won't miss
+these from inadequate image sampling.  The method used may not work
+perfectly for warped views (-vta, -vth and -vtc) having long,
+cylindrical light sources.  (Rob Shakespeare, take note!)
+
+Added corner rounding to genprism command (-r option).
+
+Changed mixtures so that mixing material with void is allowed, allowing
+for opacity maps.  Also altered general behavior so that surfaces
+without materials in their modifier list are invisible, not only
+surfaces with void modifiers.
+
+****************** COMPATIBILITY CHANGE ***********************
+The behavior of xform has been changed to make object library
+organization and usage simpler.  
+        1)  The RAYPATH directories are searched for matching file names.
+        2)  Filenames beginning with '.', '/' or '~' do not result in searches.
+        3)  Xform performs a chdir to the found file's directory, obviating
+                the need for peculiar inclusion names in subdirectories.
+	4)  The array option (-a) now works when xform reads from stdin.
+	5)  The expand option (-e) is now the default -- -c gets
+		back old behavior.
+
+=============================
+Version 3.1 (Released 7/24/97)
+
+Changed gensky so it will accept hour specifications as HH:MM, with
+designations for standard North American and European time zones.
+
+Increased buffer size for in-line commands from 512 to 1024.
+
+Added T(n), S(n), WE and pa(n) functions and constants to pcomb.
+
+Created histo utility to compute 1-dimensional histograms from data files.
+
+Created pacuity, pveil and psquish scripts (later combined in "pcond"):
+
+o	The pacuity program takes a Radiance picture and defocuses it
+	in places where the human eye loses resolution.  Unless the
+	scene contains very low luminances (below .1 cd/m^2 or so),
+	this will not have an appreciable effect.  The output can then
+	be adjusted according to the Ferwerda, Pattanaik and Shirley
+	tone mapping function using pcomb with the file
+	src/cal/cal/ferwerda.cal.  (See the header comments therein.)
+
+o	The pveil program finds sources of glare in an image and adds
+	a corresponding amount of background luminance surrounding each
+	glare source according to the adaptation response of the human
+	eye.  This has the effect of reducing contrast around glare
+	sources.
+
+o	The psquish program is probably the most useful of the three,
+	and must be applied after the other two if the others are
+	used.  With the -a option, psquish uses the human visual
+	response to compress the dynamic range of an image to fit within
+	the limited dynamic range of a display (assumed to go from 1 to
+	100 cd/m^2), and also reduces color visibility in pictures with
+	low light levels (below 1 cd/m^2).  Without the -a option,
+	psquish simply does the best it can to fit a picture's dynamic
+	range into what can be readily displayed, without regard to
+	human visual response.  This has the effect of making problem
+	scenes viewable, such as indoor scenes with windows looking out
+	to bright exteriors.
+
+Created pcond program, which combines pacuity, pveil and psquish in a
+more efficient, robust package.  (See man page for details.)
+
+Renamed Perlin noise function partial functions, noise3a(), noise3b()
+and noise3c() to noise3x(), noise3y() and noise3z().  Added backward
+compatibility defines to rayinit.cal so nothing should be broken.
+
+Fixed double-counting bug in calculation of specular transmission of
+light sources for trans type.  This might have caused unrealistically
+high estimates for illumination beneath trans surfaces with non-zero
+roughnesses when the interreflection calculation was used (-ab 1).
+
+Added routines for reading and writing separate RGB files in pvalue.
+Also added -pP (where P is one of 'R', 'G' or 'B' upper or lower case)
+and -s option to skip specified number of bytes on header.  Finally,
+added a -n option for non-interleaved RGB input and output.
+
+Fixed obscure bug in rcalc that caused it to return "Bad call to
+argument!" for certain combinations of function and output channel
+definitions.
+
+Added "-e auto" and "-e human" options to ximage(1) and corresponding
+'a' and 'h' commands to perform dynamic range compression similar to
+pcond(1).
+
+==============================
+Version 3.4 (Released 1/28/02)
+
+Fixed bug in rpiece that caused it to incorrectly compute -vs and -vl
+(view shift and lift) offsets.  (Included in 3.1.1.)
+
+Fixed bug in xform handling mist's with > 5 real arguments.
+(Included in 3.1.1.)
+
+Fixed bug in mist handling routines that caused some incorrect calculations
+for distant sources.  (Included in 3.1.1.)
+
+Added ability for lam utility to read from commands.
+
+Created vwrays command to compute ray origins and directions for specified
+views or pictures.
+
+Changed rtrace behavior to send bogus record when ray direction is zero.
+(Before, it only flushed values with no corresponding record.)  This
+change was needed to facilitate its use with the new vwrays program.
+
+Modified ies2rad so that it no longer produces glow sources for the sides
+of objects, which caused unnatural dark bands near the ceilings of
+direct/indirect installations.  (Included in 3.1.4.)
+
+Fixed bug in rpiece that caused the -pa option to fail.  (Included in 3.1.2.)
+
+Made ximage emphasize pixels in the selected region for the 'a' and 'h'
+commands to adjust the exposure using histogram compression.
+(Included in 3.1.4.)
+
+Fixed bug in trad which caused it to fail when there were tabs in the input.
+(Included in 3.1.3.)
+
+Fixed bug in pcond that caused it to white-out borders of some fisheye views.
+(Included in 3.1.3.)
+
+Added facility to ra_tiff to read and write new LogLuv high dynamic-range
+image formats.
+
+Changed ambient value averaging in rendering programs (-aw option) to use
+geometric mean rather than arithmetic mean, which tended to arrive at
+too-high estimates and cause runaway calculations.  (Included in 3.1.4.)
+
+Added -g, -p, -m and -d options for gamma, paper size, margins and dpi
+to the ra_ps program.  This allows for much better control over output
+to PostScript printers.
+
+Fixed compiles for AIX -- select() incompatibility and macro conflicts.
+(Included in 3.1.6.)
+
+Increased table sizes to allow up to 4 million primitives when -DBIGMEM
+is defined, provided there's enough virtual memory to hold them!
+
+Fixed error in viewloc() for computing view locations for cylindrical views.
+
+Wrote rholo, rhcopy, rhpict, and rhoptimize programs for holodeck
+creation, display, and manipulation.  This is a much more powerful way
+to view a model than rview, though it lacks many of the utility commands.
+
+Added the ability to separate concatanated animation frames using ra_rgbe.
+This output facility of rpict was previously useless because nothing could
+get anything past the first frame.
+
+Wrote compamb program to compute a good ambient value for a rad input file.
+Using this script is preferable to setting the -aw option of rpict, which
+seems to result in splotchy artifacts in many situations.
+
+Changed rad so it doesn't use the -aw option, which was causing some rather
+annoying artifacts.  (Added as patch to 3.1.8.)
+
+Modified ranimate to change directories before running transfer or archive
+commands.
+
+Added -pm option to rpict to perform jittered motion blurring.
+
+Created phisto script and added -I option to pcond for computing
+multiple, identical exposures.
+
+Fixed time zone specifications in gensky.  (Added as patch to 3.1.9.)
+
+Fixed bug in mixture functions that caused erroneous modifier loops.
+(Added as patch to 3.1.10.)
+
+Wrote glrad program for interactive display of Radiance scenes using OpenGL.
+Modified objview program to use rad and glrad for rendering.
+
+Changed the way ray weights are computed for participating media (including
+dielectrics) so they more accurately reflect a ray's contribution, avoiding
+some artifacts with unsealed dielectric objects and the ambient calculation.
+
+Fixed problem with dielectric materials with textures where rays that should
+have penetrated or reflected do the opposite.
+
+Created ra_hexbit program to generate bitmap files for use with hexbit4x1.fnt.
+
+****************** COMPATIBILITY CHANGE ***********************
+Altered mixtures to take the most recent modifier definition
+rather than the last one in the entire description.  Made the
+same change for illum's and mirror's.  Also, fixed a bug in
+the antimatter type where it didn't always get the correct
+material for shading.
+
+Wrote normtiff program to quickly tone-map and convert Radiance pictures
+and SGILOG-encoded TIFF's to flat RGB TIFF output.
+
+Added -r option to protate for CCW rotations.
+
+Added ability to load values from read-only ambient file in rpict,
+rtrace and rview.  This may be useful when starting with the same
+values on many processors, where NFS lock contention would slow
+things down if they also wrote values back to the file.
+
+Wrote rhinfo program for printing out holodeck section information.
+
+Modified rad "scene" variable to allow in-line command specifications.
+
+Added added -s and -b options to ra_ppm for changing output scale and
+forcing greyscale output.
+
+Now allow negative distances for the fore clipping plane in rpict.
+This may be useful for rendering holographic stereograms.
+
+Added -f option to xform to read arguments from files.  This can save
+a lot of scene loading time by reducing multiple xform invocations.
+
+Added support for 15-bit TrueColor visuals in ximage.
+
+Added (undocumented) -P option to macbethcal for picking chart corners
+directly using ximage.
+
+Added -r option to rholo for opening holodeck files read-only.
+
+Added correction factor for solid angle change in dielectrics as
+noted in Eric Veach's thesis.
+
+Added von Kries white balance transform for color conversion using
+CMCCAT2000 matrix.
+
+Added CAPDATE field to rendering headers to record render date.
+
+Added mixpict primitive for using pictures to generate mixtures.
+
+Fixed bug in Type B photometry angle calculation in source.cal discovered
+by Erich Phillips.
+
+==============================
+Version 3.5 (Released 3/14/03)
+
+Fixed bug in replmarks pointed out by Georg Mischler, which caused
+garbage to be output under specific conditions (unscaled, unrotated
+instances).
+
+Fixed bug in normtiff that caused occassional weird colors
+on human tone-mapping of 32-bit LogLuv inputs (tmapluv.c).
+
+Fixed -o option of pcomb so it resets le(i) and color exposure functions
+to unity.
+
+Fixed a bug in Type B photometry in ies2rad source.cal introduced
+in last fix where spherical sources were getting symmetric
+distributions front-to-back.
+
+Fixed another bug in ies2rad for 90-270 bilaterally symmetric fixtures, which
+seems to have been there from the beginning.  Thanks to Jack de Valpine
+for pointing it out.
+
+Added NORANDOM symbol for tests with all random sampling turned off.
+
+Fixed a bug in expression evaluation code that was causing unneeded
+evaluations of constants.  This is a fix on an earlier fix of a more
+serious bug prior to the 3.4 release, where the expression clock
+was wrapping silently and allowing values to go stale.
+
+Fixed an even more serious bug in ies2rad for thin fixtures, where
+it was using "flatcorr" without the proper correction for the
+emitting area.  Thanks again to Jack de Valpine for spotting this.
+
+--- All of the above was put into a 3.4.1 patch release 4/1/2002
+
+Added a facility to gensurf to make holes in the mesh using a
+valid(s,t) function.
+
+Fixed bug in pcond that caused a bus error on images with large dark
+regions when acuity switch was set.
+
+Fixed bug in pcomb that caused the S(n) function to return half
+the solid angle value it should have.  (Thanks to John Mardaljevic
+for discovering this error.)
+
+Made rpict/rpiece/vwrays -vf option accept "-" as a synonym
+for standard input.
+
+Fixed bug in persist functions (-P and -PP) with FreeBSD
+(including MacOS X) having to do with altered system function
+behaviors.  Neither mknod() nor freopen() behave as they
+used to.
+
+Improved accuracy of irradiance gradient calculation near
+specular surfaces by using the effective ray distance
+rather than the first surface intersection.  (John
+Mardaljevic had pointed out some errors he was seeing
+with a particular atrium model.)
+
+Reinstated my favorite little Fresnel approximation for
+perfectly smooth materials, so grazing angles show an
+accurate gradient.  Simultaneously revised the computation
+of the direct component for proper energy balance.
+(Thanks to Phillip Greenup for nagging John M. who nagged me.)
+
+Improved the accuracy and appearance of indirect irradiance
+interpolation for smoothed surfaces.  (Thanks to Bernhard
+Spanlang for noticing the problem.)
+
+Fixed intolerance for carriage-returns in mkillum's input files,
+which caused problems for files imported from DOS/Windows.
+
+Fixed apparent bug that I couldn't reproduce in rpict for very
+narrow views, which sent it into an infinite loop under Linux.
+(Rich Gillibrand of Bristol Univ. pointed it out.)
+
+Improved movement in rholo for low-detail holodecks on fast
+graphics processors by inserting 50 ms pause during motion
+feedback.
+
+Finally fixed ages-old consistency error where ambient value
+lists were sorted incorrectly with the GNU-C compiler,
+causing the dreaded "address not found in avlmemi" crash.  All
+this time, I thought it was due to a faulty qsort(3) routine,
+when in fact it was due to the way GNU-C compares pointers.
+The fix was to change a single word in ambient.c from "AMBVAL"
+to "char" and now it all magically works.  No more -Dtracktime=0,
+hurrah!
+
+Fixed pcond veil behavior for scenes that have their contrast
+reduced by primary tone-mapping algorithms.  Previously, the
+veil would come out looking like a fog because it was applied
+prior to dynamic range compression and did not consider the
+overall effect.  In the new version, the veil is adjusted
+after dynamic range compression so that the net reduction
+in visibility is approximately correct over the whole image.
+(Later made this optional on compile with the ADJ_VEIL symbol, as I
+noticed more artifacts than improvements in the resulting images.)
+
+Fixed bug in BRTDfunc that caused an error in the calculation
+of the diffuse transmitted ambient component.  This must have
+been introduced early on, but never noticed by me or anyone.
+
+Wrote an interactive script called "glaze" (src/gen/glaze.csh)
+that computes a good material model for fritted and low-E glazing
+systems.  Thanks to Visarc (Jack de Valpine) for paying for its
+development and permitting it into the general distribution.
+
+Increased scanline window in pcomb to 64 (+/- 32 pixels) to allow
+for larger kernels in filtered images.
+
+****************** COMPATIBILITY CHANGE ***********************
+Changed behavior of pfilt gaussian blur to match more precise
+definition.  A blur radius of 0.6 is now preferred over the
+previous value of 1.0.
+
+Added ANSI function prototypes to the header files in
+src/common/ and src/rt/ and cleaned up the options processing
+in the rpict, rtrace, and rview main procedures so that the
+core Radiance rendering code can be more easily
+called by new application programs.  Changed src/rt/Rmakefile
+to create a rendering library called "libradiance.a" and
+to install it in the src/lib/ directory along with the new
+raycalls.o module, which should facilitate the building
+of new applications outside the src/rt/ directory.  The
+raypcalls.o module, also included in -lradiance, manages
+parallel rendering on multiprocessors with shared memories.
+
+Wrote new ranimove animation rendering program, which is an
+alternative to ranimate.  The key difference is that
+ranimove is optimized for moving scenes, and includes
+a complete blur simulation for camera and object motion.
+It also incorporates an sophisticated model of perceivable
+error based on visual focus, and allows progressive
+animation so one can explicitly control rendering time
+and/or accuracy.  See the man page for details.
+
+****************** COMPATIBILITY CHANGE ***********************
+The sense of the MBLUR setting has been changed for the ranimate
+command.  The first value is now the fraction of a frame during
+which the shutter is open, and the _second_ argument (which is
+optional) is the number of samples to specify to pmblur.
+
+Enhanced octree reader behavior so it will accept command
+specifications preceded by an exclamation mark ('!').  This
+enables rtrace and rview to take octrees from commands similar
+to rpict reading its octree from the standard input.  All
+programs taking octrees as arguments will be affected by this
+change.  However, since rad needs to get the modified date
+from the octree, rad will refuse such an octree command
+specification.
+
+Fixed a bug in src/common/fgetline.c where it failed to elide
+carriage-returns in Windows files.
+
+Modified src/common/fgetword.c so it accepts single- or
+double-quoted words with spaces in preparation for the
+Windows version, which needs to allow spaces in file
+paths.  Since fgetword() is called by all programs that
+read in string arguments in scene files, these may now
+be quoted with the expected behavior.  Also added a
+fputword() call to the library to automatically quote
+words on output that contain white space.  This routine
+is now called from all the right places, I hope!  The
+code does not support spaces in primitive identifiers,
+and you will get peculiar errors if you try them.
+
+Eliminated virtually all symbolic links from the source
+tree, most of which were links to compatibility routines
+and the calcomp functions for expression parsing.
+Replaced -D* defines used in cal* routines with "esupport"
+global that allows calling programs to set which language
+options they want to support at runtime.  More programs now
+link against the -lrt library.  Consolidated the src/cal
+subdirectories in the process.
+
+Added -dw option to pvalue program to input and output
+16-bit word values (-dW for byte swapping).
+
+Changed call ordering in material shaders to ensure
+proper surface normal perturbation for two-sided,
+textured surfaces.
+
+Added a new "mesh" primitive, which permits very
+complicated geometries with associated (u,v) coordinates
+using the new obj2mesh converter and the new -o option
+of gensurf for .OBJ output.  Mesh compilation takes
+roughly 500 bytes/triangle in obj2mesh, but memory
+access is well-ordered compared to rendering, which
+takes about 50 bytes/triangle with full surface normal
+and (u,v) coordinate interpolation.  (The actual mesh
+is represented in 15 bytes/triangle, and the rest is
+taken by the octree structure and malloc overhead.)
+Local coordinates are set with the "vt" statement
+in the Wavefront .OBJ file and accessed via the new
+"Lu" and "Lv" variables in a Radiance .cal file.
+Multiple instances of the same mesh with different
+transformations take little additional space during
+rendering, permitting scanned relief surfaces and
+displacement-map-like effects to be repeated as desired.
+
+Changed internal representation of alias'es in order
+to maintain information about links for programs like
+rshow that work from frozen octrees.  Added a special
+alias modifier keyword, "inherit", to indicate that
+an alias should get the same modifier as the original
+target to simplify common alias usage for material
+substitution.
+
+Increased default oconv -n value to 6.  Since triangle
+meshes commonly have six faces joining at each vertex,
+values less than this cause resolution-limited voxel
+subdivision.  Increased default -r option to 16384
+as well.  Also increased maximum internal set size
+from 127 to 511, to accommodate difficult mesh
+models where many faces come together at a point.
+This required a little reprogramming in for couple
+of recursive routines using sets to avoid overrunning
+the stack limit.

@@ -1,0 +1,129 @@
+.TH NORMTIFF 1 2/25/99 RADIANCE
+.SH NAME
+normtiff - tone-map and convert RADIANCE picture or SGILOG TIFF to RGB TIFF
+.SH SYNOPSIS
+.B normtiff
+[
+.B options
+]
+.B input
+.B output.tif
+.SH DESCRIPTION
+.I Normtiff
+prepares a Radiance picture or SGILOG (high dynamic range) TIFF
+for output to a display or hard copy device.
+If the dynamic range of the scene exceeds that of the display (as is
+usually the case),
+.I normtiff
+will compress the dynamic range of the picture such that both
+dark and bright regions are visible.
+In addition, certain limitations in human vision may be mimicked in
+order to provide an appearance similar to the experience one might
+have in the actual scene.
+.PP
+Output is always an uncompressed RGB TIFF, which must be named
+on the command line along with the input file.
+If the input file has a ".tif" or ".tiff" extension,
+.I normtiff
+attempts to read it as a TIFF.
+Otherwise,
+.I normtiff
+first tries opening it as a RADIANCE picture, only opening it
+as a TIFF if it fails header inspection.
+(See the
+.I getinfo(1)
+program.)\0
+If the input is neither a RADIANCE picture nor an SGILOG-encoded TIFF,
+the program reports an error and exits.
+.PP
+The following command line options are understood.
+Since this program is very similar to
+.I pcond(1),
+several of the switches are identical.
+.TP 10n
+.BR -b
+Toggle 8-bit black and white (grayscale) TIFF output.
+If the input is a 16-bit SGILOG luminance-only TIFF, this switch is
+automatically selected.
+Otherwise, the output defaults to 24-bit RGB.
+.TP
+.BR -h
+Mimic human visual response in the output.
+The goal of this process is to produce output that correlates
+strongly with a person's subjective impression of a scene.
+This switch turns on both the
+.I \-s
+and
+.I \-c
+switches, described below.
+.TP
+.BR -s
+Toggle the use of the human contrast sensitivity function in determining the
+exposure for the image.
+A darker scene will have relatively lower exposure with lower
+contrast than a well-lit scene.
+.TP
+.BR -c
+Toggle mesopic color correction.
+If parts of the image are in the mesopic or scotopic range where
+the cone photoreceptors lose their efficiency, this switch will
+cause a corresponding loss of color visibility in the output and a
+shift to a scotopic (blue-dominant) response function.
+.TP
+.BR -l
+Toggle the use of a linear response function versus the standard dynamic
+range compression algorithm.
+This may make some parts of the resulting image too
+dark or too bright to see.
+.TP
+.BI -u \ Ldmax
+Specifies the top of the luminance range for the target output device.
+That is, the luminance (in candelas/m^2) for an output pixel value
+of (R,G,B)=(255,255,255).
+This parameter affects tone mapping only when the
+.I \-s
+switch is on.
+The default value is 100 cd/m^2.
+.TP
+.BI -d \ Lddyn
+Specifies the dynamic range for the target output device, which is
+the ratio of the maximum and minimum usable display luminances.
+The default value is 32, which is typical for CRT monitors.
+.TP
+.BI -p " xr yr xg yg xb yb xw yw"
+Specifies the RGB primaries for the target output device.
+These are the 1931 CIE (x,y) chromaticity values for red, green,
+blue and white, respectively.
+.TP
+.BI -g \ gamma
+Specifies the output device gamma correction value.
+The default value is 2.2, which is appropriate for most CRT monitors.
+(A value of 1.8 is common in color prepress and color printers.)\0
+.SH EXAMPLES
+To convert a RADIANCE picture to an 8-bit grayscale TIFF:
+.IP "" .2i
+normtiff -b scene.pic sceneb.tif
+.PP
+To condition an SGILOG TIFF for a particular film recorder with
+known color primaries, dynamic range and gamma response:
+.IP "" .2i
+pcond -d 50 -g 2.5 -p .580 .340 .281 .570 .153 .079 .333 .333 orig.tif filmrgb.tif
+.PP
+To simulate human visual response on a monitor with known maximum luminance:
+.IP "" .2i
+normtiff -h -u 80 scene.pic sceneh.tif
+.SH REFERENCE
+Greg Ward Larson, Holly Rushmeier, Christine Piatko,
+``A Visibility Matching Tone Reproduction Operator for High Dynamic Range
+Scenes,''
+.I "IEEE Transactions on Visualization and Computer Graphics",
+December 1997.
+.PP
+http://positron.cs.berkeley.edu/gwlarson/pixformat/
+.SH AUTHOR
+Greg Ward Larson
+.SH ACKNOWLEDGMENT
+This work was supported by Silicon Graphics, Inc.
+.SH "SEE ALSO"
+getinfo(1), pcond(1), pflip(1), 
+pvalue(1), protate(1), ra_xyze(1), rpict(1), ximage(1)

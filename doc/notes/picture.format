@@ -1,0 +1,1310 @@
+		The RADIANCE Picture File Format
+
+Radiance is a lighting simulation and rendering system available by
+anonymous ftp from hobbes.lbl.gov (128.3.12.38).  The picture file
+format used by the program uses a floating point representation that
+provides greater fidelity and numerical accuracy over a 24-bit
+image, without taking much extra space.
+
+At the end of this message I have put a shar file of the routines you
+need to read and write Radiance pictures.  The format has been
+enhanced slightly for the next release (in an upward compatible
+way), so you should definitely use these newer routines.
+
+The file format, like most binary files used by Radiance, contains
+an ASCII information header that is terminated by an empty line.
+This header typically begins with the line "#?RADIANCE", followd
+by the commands used to generate the file, along with variables
+indicating exposure, view parameters, and so on.  Next there is a
+single line that indicates the resolution and pixel scanning order of
+the image.  For Radiance pictures, the pixels are order as English
+text, left to right and top to bottom.  This is indicated with a line
+of the form:
+
+-Y M +X N
+
+Where M and N are the y and x resolutions, respectively.  The x and y
+image coordinates are always the same, starting with (0,0) at the lower
+left corner, (N,0) at the lower right, and (0,M) at the upper left.
+The y resolution appears first in our specification because it is the
+major sort, and is preceded by a minus sign because it is decreasing in
+the file.
+
+Finally, the floating point scanlines follow.  Each pixel is represented by
+at most 4 bytes.  The first three bytes are the red, green and blue mantissas
+(in that order), and the fourth byte is a common exponent.  The floating point
+color (R,G,B)=(1.,.5,.25) would be represented by the bytes (128,64,32,129).
+The conversion back to floating point is possible using the ldexp() library
+routine, or it's better to use the colr_color() routine included in color.c.
+
+The scanlines are usually run-length encoded.  My previous scheme (release 1.4
+and earlier) used a simple count for repeated pixels.  My new scheme is
+more complicated and encodes the four components separately.  I don't
+recommend writing your own routine to decode it -- use what's in color.c.
+
+A skeletal program to read a Radiance picture file and convert to 24-bit
+gamma-corrected color looks like this:
+
+/* Copyright (c) 1992 Regents of the University of California */
+
+#ifndef lint
+static char SCCSid[] = "@(#)ra_skel.c 2.9 2/27/94 LBL";
+#endif
+
+/*
+ *  Skeletal 24-bit image conversion program.  Replace "skel"
+ *  in this file with a more appropriate image type identifier.
+ *
+ *  The Rmakefile entry should look something like this:
+ *	ra_skel:	ra_skel.o
+ *		cc $(CFLAGS) -o ra_skel ra_skel.o -lrt -lm
+ *	ra_skel.o:	../common/color.h ../common/resolu.h
+ *
+ *  If you like to do things the hard way, you can link directly
+ *  to the object files "color.o colrops.o resolu.o header.o" in
+ *  the common subdirectory instead of using the -lrt library.
+ */
+
+#include  <stdio.h>
+#include  <math.h>
+#ifdef MSDOS
+#include  <fcntl.h>
+#endif
+#include  "color.h"
+#include  "resolu.h"
+
+extern char  *malloc();
+
+double	gamcor = 2.2;			/* gamma correction */
+
+int  bradj = 0;				/* brightness adjustment */
+
+char  *progname;
+
+int  xmax, ymax;
+
+
+main(argc, argv)
+int  argc;
+char  *argv[];
+{
+	int  reverse = 0;
+	int  i;
+	
+	progname = argv[0];
+
+	for (i = 1; i < argc; i++)
+		if (argv[i][0] == '-')
+			switch (argv[i][1]) {
+			case 'g':		/* gamma correction */
+				gamcor = atof(argv[++i]);
+				break;
+			case 'e':		/* exposure adjustment */
+				if (argv[i+1][0] != '+' && argv[i+1][0] != '-')
+					goto userr;
+				bradj = atoi(argv[++i]);
+				break;
+			case 'r':		/* reverse conversion */
+				reverse = 1;
+				break;
+			default:
+				goto userr;
+			}
+		else
+			break;
+
+	if (i < argc-2)
+		goto userr;
+	if (i <= argc-1 && freopen(argv[i], "r", stdin) == NULL) {
+		fprintf(stderr, "%s: can't open input \"%s\"\n",
+				progname, argv[i]);
+		exit(1);
+	}
+	if (i == argc-2 && freopen(argv[i+1], "w", stdout) == NULL) {
+		fprintf(stderr, "%s: can't open output \"%s\"\n",
+				progname, argv[i+1]);
+		exit(1);
+	}
+#ifdef MSDOS
+	setmode(fileno(stdin), O_BINARY);
+	setmode(fileno(stdout), O_BINARY);
+#endif
+	setcolrgam(gamcor);		/* set up gamma correction */
+	if (reverse) {
+					/* get their image resolution */
+		read_skel_head(&xmax, &ymax);
+					/* put our header */
+		newheader("RADIANCE", stdout);
+		printargs(i, argv, stdout);
+		fputformat(COLRFMT, stdout);
+		putchar('\n');
+		fprtresolu(xmax, ymax, stdout);
+					/* convert file */
+		skel2ra();
+	} else {
+					/* get our header */
+		if (checkheader(stdin, COLRFMT, NULL) < 0 ||
+				fgetresolu(&xmax, &ymax, stdin) < 0)
+			quiterr("bad picture format");
+					/* write their header */
+		write_skel_head(xmax, ymax);
+					/* convert file */
+		ra2skel();
+	}
+	exit(0);
+userr:
+	fprintf(stderr,
+		"Usage: %s [-r][-g gamma][-e +/-stops] [input [output]]\n",
+			progname);
+	exit(1);
+}
+
+
+quiterr(err)		/* print message and exit */
+char  *err;
+{
+	if (err != NULL) {
+		fprintf(stderr, "%s: %s\n", progname, err);
+		exit(1);
+	}
+	exit(0);
+}
+
+
+skel2ra()		/* convert 24-bit scanlines to Radiance picture */
+{
+	COLR	*scanout;
+	register int	x;
+	int	y;
+						/* allocate scanline */
+	scanout = (COLR *)malloc(xmax*sizeof(COLR));
+	if (scanout == NULL)
+		quiterr("out of memory in skel2ra");
+						/* convert image */
+	for (y = ymax-1; y >= 0; y--) {
+		for (x = 0; x < xmax; x++) {
+			scanout[x][RED] = getc(stdin);
+			scanout[x][GRN] = getc(stdin);
+			scanout[x][BLU] = getc(stdin);
+		}
+		if (feof(stdin) | ferror(stdin))
+			quiterr("error reading skel image");
+						/* undo gamma */
+		gambs_colrs(scanout, xmax);
+		if (bradj)			/* adjust exposure */
+			shiftcolrs(scanout, xmax, bradj);
+		if (fwritecolrs(scanout, xmax, stdout) < 0)
+			quiterr("error writing Radiance picture");
+	}
+						/* free scanline */
+	free((char *)scanout);
+}
+
+
+ra2skel()		/* convert Radiance scanlines to 24-bit */
+{
+	COLR	*scanin;
+	register int	x;
+	int	y;
+						/* allocate scanline */
+	scanin = (COLR *)malloc(xmax*sizeof(COLR));
+	if (scanin == NULL)
+		quiterr("out of memory in ra2skel");
+						/* convert image */
+	for (y = ymax-1; y >= 0; y--) {
+		if (freadcolrs(scanin, xmax, stdin) < 0)
+			quiterr("error reading Radiance picture");
+		if (bradj)			/* adjust exposure */
+			shiftcolrs(scanin, xmax, bradj);
+		colrs_gambs(scanin, xmax);	/* gamma correction */
+		for (x = 0; x < xmax; x++) {
+			putc(scanin[x][RED], stdout);
+			putc(scanin[x][GRN], stdout);
+			putc(scanin[x][BLU], stdout);
+		}
+		if (ferror(stdout))
+			quiterr("error writing skel file");
+	}
+						/* free scanline */
+	free((char *)scanin);
+}
+--------------------------------------------------------------
+
+You will find all the routines you need in ray/src/common.  The
+checkheader() routine is in the module header.c, fgetresolu is in resolu.c,
+freadcolrs() is in color.c, and setcolrgam() and colrs_gambs() are
+in the module colrops.c.
+
+If you want to convert the file to 8-bit color, the process is quite a
+bit more complicated.  I suggest you take a look at the ra_t8.c program
+in the ray/src/px directory to get a better idea of what is involved.
+
+------------------------------
+#! /bin/sh
+# This is a shell archive, meaning:
+# 1. Remove everything above the #! /bin/sh line.
+# 2. Save the resulting text in a file.
+# 3. Execute the file with /bin/sh (not csh) to create:
+#	color.h
+#	resolu.h
+#	resolu.c
+#	header.c
+#	color.c
+#	colrops.c
+# This archive created: Tue Apr  5 14:07:02 1994
+export PATH; PATH=/bin:/usr/bin:$PATH
+if test -f 'color.h'
+then
+	echo shar: "will not over-write existing file 'color.h'"
+else
+sed 's/^X//' << \SHAR_EOF > 'color.h'
+X/* Copyright (c) 1991 Regents of the University of California */
+X
+X/* SCCSid "@(#)color.h 2.6 8/2/93 LBL" */
+X
+X/*
+X *  color.h - header for routines using pixel color values.
+X *
+X *     12/31/85
+X *
+X *  Two color representations are used, one for calculation and
+X *  another for storage.  Calculation is done with three floats
+X *  for speed.  Stored color values use 4 bytes which contain
+X *  three single byte mantissas and a common exponent.
+X */
+X
+X#define  RED		0
+X#define  GRN		1
+X#define  BLU		2
+X#define  EXP		3
+X#define  COLXS		128	/* excess used for exponent */
+X
+Xtypedef unsigned char  BYTE;	/* 8-bit unsigned integer */
+X
+Xtypedef BYTE  COLR[4];		/* red, green, blue, exponent */
+X
+X#define  copycolr(c1,c2)	(c1[0]=c2[0],c1[1]=c2[1], \
+X				c1[2]=c2[2],c1[3]=c2[3])
+X
+Xtypedef float  COLOR[3];	/* red, green, blue */
+X
+X#define  colval(col,pri)	((col)[pri])
+X
+X#define  setcolor(col,r,g,b)	((col)[RED]=(r),(col)[GRN]=(g),(col)[BLU]=(b))
+X
+X#define  copycolor(c1,c2)	((c1)[0]=(c2)[0],(c1)[1]=(c2)[1],(c1)[2]=(c2)[2])
+X
+X#define  scalecolor(col,sf)	((col)[0]*=(sf),(col)[1]*=(sf),(col)[2]*=(sf))
+X
+X#define  addcolor(c1,c2)	((c1)[0]+=(c2)[0],(c1)[1]+=(c2)[1],(c1)[2]+=(c2)[2])
+X
+X#define  multcolor(c1,c2)	((c1)[0]*=(c2)[0],(c1)[1]*=(c2)[1],(c1)[2]*=(c2)[2])
+X
+X#ifdef  NTSC
+X#define  bright(col)		(.295*(col)[RED]+.636*(col)[GRN]+.070*(col)[BLU])
+X#define  normbright(c)		(int)((74L*(c)[RED]+164L*(c)[GRN]+18L*(c)[BLU])>>8)
+X#else
+X#define  bright(col)		(.263*(col)[RED]+.655*(col)[GRN]+.082*(col)[BLU])
+X#define  normbright(c)		(int)((67L*(c)[RED]+168L*(c)[GRN]+21L*(c)[BLU])>>8)
+X#endif
+X
+X				/* luminous efficacies over visible spectrum */
+X#define  MAXEFFICACY		683.		/* defined maximum at 550 nm */
+X#define  WHTEFFICACY		179.		/* uniform white light */
+X#define  D65EFFICACY		203.		/* standard illuminant D65 */
+X#define  INCEFFICACY		160.		/* illuminant A (incand.) */
+X#define  SUNEFFICACY		208.		/* illuminant B (solar dir.) */
+X#define  SKYEFFICACY		D65EFFICACY	/* skylight */
+X#define  DAYEFFICACY		D65EFFICACY	/* combined sky and solar */
+X
+X#define  luminance(col)		(WHTEFFICACY * bright(col))
+X
+X#define  intens(col)		( (col)[0] > (col)[1] \
+X				? (col)[0] > (col)[2] ? (col)[0] : (col)[2] \
+X				: (col)[1] > (col)[2] ? (col)[1] : (col)[2] )
+X
+X#define  colrval(c,p)		( (c)[EXP] ? \
+X				ldexp((c)[p]+.5,(int)(c)[EXP]-(COLXS+8)) : \
+X				0. )
+X
+X#define  WHTCOLOR		{1.0,1.0,1.0}
+X#define  BLKCOLOR		{0.0,0.0,0.0}
+X#define  WHTCOLR		{128,128,128,COLXS+1}
+X#define  BLKCOLR		{0,0,0,0}
+X
+X				/* picture format identifier */
+X#define  COLRFMT		"32-bit_rle_rgbe"
+X
+X				/* macros for exposures */
+X#define  EXPOSSTR		"EXPOSURE="
+X#define  LEXPOSSTR		9
+X#define  isexpos(hl)		(!strncmp(hl,EXPOSSTR,LEXPOSSTR))
+X#define  exposval(hl)		atof((hl)+LEXPOSSTR)
+X#define  fputexpos(ex,fp)	fprintf(fp,"%s%e\n",EXPOSSTR,ex)
+X
+X				/* macros for pixel aspect ratios */
+X#define  ASPECTSTR		"PIXASPECT="
+X#define  LASPECTSTR		10
+X#define  isaspect(hl)		(!strncmp(hl,ASPECTSTR,LASPECTSTR))
+X#define  aspectval(hl)		atof((hl)+LASPECTSTR)
+X#define  fputaspect(pa,fp)	fprintf(fp,"%s%f\n",ASPECTSTR,pa)
+X
+X				/* macros for color correction */
+X#define  COLCORSTR		"COLORCORR="
+X#define  LCOLCORSTR		10
+X#define  iscolcor(hl)		(!strncmp(hl,COLCORSTR,LCOLCORSTR))
+X#define  colcorval(cc,hl)	sscanf(hl+LCOLCORSTR,"%f %f %f", \
+X					&(cc)[RED],&(cc)[GRN],&(cc)[BLU])
+X#define  fputcolcor(cc,fp)	fprintf(fp,"%s %f %f %f\n",COLCORSTR, \
+X					(cc)[RED],(cc)[GRN],(cc)[BLU])
+X
+X#ifdef  DCL_ATOF
+Xextern double  atof(), ldexp(), frexp();
+X#endif
+SHAR_EOF
+fi
+if test -f 'resolu.h'
+then
+	echo shar: "will not over-write existing file 'resolu.h'"
+else
+sed 's/^X//' << \SHAR_EOF > 'resolu.h'
+X/* Copyright (c) 1991 Regents of the University of California */
+X
+X/* SCCSid "@(#)resolu.h 2.2 6/4/93 LBL" */
+X
+X/*
+X * Definitions for resolution line in image file.
+X *
+X * True image orientation is defined by an xy coordinate system
+X * whose origin is at the lower left corner of the image, with
+X * x increasing to the right and y increasing in the upward direction.
+X * This true orientation is independent of how the pixels are actually
+X * ordered in the file, which is indicated by the resolution line.
+X * This line is of the form "{+-}{XY} xyres {+-}{YX} yxres\n".
+X * A typical line for a 1024x600 image might be "-Y 600 +X 1024\n",
+X * indicating that the scanlines are in English text order (PIXSTANDARD).
+X */
+X
+X			/* flags for scanline ordering */
+X#define  XDECR			1
+X#define  YDECR			2
+X#define  YMAJOR			4
+X
+X			/* standard scanline ordering */
+X#define  PIXSTANDARD		(YMAJOR|YDECR)
+X#define  PIXSTDFMT		"-Y %d +X %d\n"
+X
+X			/* structure for image dimensions */
+Xtypedef struct {
+X	int	or;		/* orientation (from flags above) */
+X	int	xr, yr;		/* x and y resolution */
+X} RESOLU;
+X
+X			/* macros to get scanline length and number */
+X#define  scanlen(rs)		((rs)->or & YMAJOR ? (rs)->xr : (rs)->yr)
+X#define  numscans(rs)		((rs)->or & YMAJOR ? (rs)->yr : (rs)->xr)
+X
+X			/* resolution string buffer and its size */
+X#define  RESOLU_BUFLEN		32
+Xextern char  resolu_buf[RESOLU_BUFLEN];
+X
+X			/* macros for reading/writing resolution struct */
+X#define  fputsresolu(rs,fp)	fputs(resolu2str(resolu_buf,rs),fp)
+X#define  fgetsresolu(rs,fp)	str2resolu(rs, \
+X					fgets(resolu_buf,RESOLU_BUFLEN,fp))
+X
+X			/* reading/writing of standard ordering */
+X#define  fprtresolu(sl,ns,fp)	fprintf(fp,PIXSTDFMT,ns,sl)
+X#define  fscnresolu(sl,ns,fp)	(fscanf(fp,PIXSTDFMT,ns,sl)==2)
+X
+Xextern char  *resolu2str();
+SHAR_EOF
+fi
+if test -f 'resolu.c'
+then
+	echo shar: "will not over-write existing file 'resolu.c'"
+else
+sed 's/^X//' << \SHAR_EOF > 'resolu.c'
+X/* Copyright (c) 1991 Regents of the University of California */
+X
+X#ifndef lint
+Xstatic char SCCSid[] = "@(#)resolu.c 2.2 11/28/91 LBL";
+X#endif
+X
+X/*
+X * Read and write image resolutions.
+X */
+X
+X#include <stdio.h>
+X
+X#include "resolu.h"
+X
+X
+Xchar  resolu_buf[RESOLU_BUFLEN];	/* resolution line buffer */
+X
+X
+Xfputresolu(ord, sl, ns, fp)		/* put out picture dimensions */
+Xint  ord;			/* scanline ordering */
+Xint  sl, ns;			/* scanline length and number */
+XFILE  *fp;
+X{
+X	RESOLU  rs;
+X
+X	if ((rs.or = ord) & YMAJOR) {
+X		rs.xr = sl;
+X		rs.yr = ns;
+X	} else {
+X		rs.xr = ns;
+X		rs.yr = sl;
+X	}
+X	fputsresolu(&rs, fp);
+X}
+X
+X
+Xint
+Xfgetresolu(sl, ns, fp)			/* get picture dimensions */
+Xint  *sl, *ns;			/* scanline length and number */
+XFILE  *fp;
+X{
+X	RESOLU  rs;
+X
+X	if (!fgetsresolu(&rs, fp))
+X		return(-1);
+X	if (rs.or & YMAJOR) {
+X		*sl = rs.xr;
+X		*ns = rs.yr;
+X	} else {
+X		*sl = rs.yr;
+X		*ns = rs.xr;
+X	}
+X	return(rs.or);
+X}
+X
+X
+Xchar *
+Xresolu2str(buf, rp)		/* convert resolution struct to line */
+Xchar  *buf;
+Xregister RESOLU  *rp;
+X{
+X	if (rp->or&YMAJOR)
+X		sprintf(buf, "%cY %d %cX %d\n",
+X				rp->or&YDECR ? '-' : '+', rp->yr,
+X				rp->or&XDECR ? '-' : '+', rp->xr);
+X	else
+X		sprintf(buf, "%cX %d %cY %d\n",
+X				rp->or&XDECR ? '-' : '+', rp->xr,
+X				rp->or&YDECR ? '-' : '+', rp->yr);
+X	return(buf);
+X}
+X
+X
+Xstr2resolu(rp, buf)		/* convert resolution line to struct */
+Xregister RESOLU  *rp;
+Xchar  *buf;
+X{
+X	register char  *xndx, *yndx;
+X	register char  *cp;
+X
+X	if (buf == NULL)
+X		return(0);
+X	xndx = yndx = NULL;
+X	for (cp = buf; *cp; cp++)
+X		if (*cp == 'X')
+X			xndx = cp;
+X		else if (*cp == 'Y')
+X			yndx = cp;
+X	if (xndx == NULL || yndx == NULL)
+X		return(0);
+X	rp->or = 0;
+X	if (xndx > yndx) rp->or |= YMAJOR;
+X	if (xndx[-1] == '-') rp->or |= XDECR;
+X	if (yndx[-1] == '-') rp->or |= YDECR;
+X	if ((rp->xr = atoi(xndx+1)) <= 0)
+X		return(0);
+X	if ((rp->yr = atoi(yndx+1)) <= 0)
+X		return(0);
+X	return(1);
+X}
+SHAR_EOF
+fi
+if test -f 'header.c'
+then
+	echo shar: "will not over-write existing file 'header.c'"
+else
+sed 's/^X//' << \SHAR_EOF > 'header.c'
+X/* Copyright (c) 1994 Regents of the University of California */
+X
+X#ifndef lint
+Xstatic char SCCSid[] = "@(#)header.c 2.4 2/27/94 LBL";
+X#endif
+X
+X/*
+X *  header.c - routines for reading and writing information headers.
+X *
+X *	8/19/88
+X *
+X *  newheader(t,fp)	start new information header identified by string t
+X *  isheadid(s)		returns true if s is a header id line
+X *  headidval(r,s)	copy header identifier value in s to r
+X *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
+X *  isformat(s)		returns true if s is of the form "FORMAT=*"
+X *  formatval(r,s)	copy the format value in s to r
+X *  fputformat(s,fp)	write "FORMAT=%s" to fp
+X *  getheader(fp,f,p)	read header from fp, calling f(s,p) on each line
+X *  checkheader(i,p,o)	check header format from i against p and copy to o
+X *
+X *  To copy header from input to output, use getheader(fin, fputs, fout)
+X */
+X
+X#include  <stdio.h>
+X#include  <ctype.h>
+X
+X#define	 MAXLINE	512
+X
+X#ifndef BSD
+X#define	 index	strchr
+X#endif
+X
+Xextern char  *index();
+X
+Xchar  HDRSTR[] = "#?";		/* information header magic number */
+X
+Xchar  FMTSTR[] = "FORMAT=";	/* format identifier */
+X
+X
+Xnewheader(s, fp)		/* identifying line of information header */
+Xchar  *s;
+Xregister FILE  *fp;
+X{
+X	fputs(HDRSTR, fp);
+X	fputs(s, fp);
+X	putc('\n', fp);
+X}
+X
+X
+Xheadidval(r,s)			/* get header id (return true if is id) */
+Xregister char  *r, *s;
+X{
+X	register char  *cp = HDRSTR;
+X
+X	while (*cp) if (*cp++ != *s++) return(0);
+X	if (r == NULL) return(1);
+X	while (*s) *r++ = *s++;
+X	*r = '\0';
+X	return(1);
+X}
+X
+X
+Xisheadid(s)			/* check to see if line is header id */
+Xchar  *s;
+X{
+X	return(headidval(NULL, s));
+X}
+X
+X
+Xprintargs(ac, av, fp)		/* print arguments to a file */
+Xint  ac;
+Xchar  **av;
+Xregister FILE  *fp;
+X{
+X	int  quote;
+X
+X	while (ac-- > 0) {
+X		if (index(*av, ' ') != NULL) {		/* quote it */
+X			if (index(*av, '\'') != NULL)
+X				quote = '"';
+X			else
+X				quote = '\'';
+X			putc(quote, fp);
+X			fputs(*av++, fp);
+X			putc(quote, fp);
+X		} else
+X			fputs(*av++, fp);
+X		putc(' ', fp);
+X	}
+X	putc('\n', fp);
+X}
+X
+X
+Xformatval(r, s)			/* get format value (return true if format) */
+Xregister char  *r;
+Xregister char  *s;
+X{
+X	register char  *cp = FMTSTR;
+X
+X	while (*cp) if (*cp++ != *s++) return(0);
+X	while (isspace(*s)) s++;
+X	if (!*s) return(0);
+X	if (r == NULL) return(1);
+X	while(*s) *r++ = *s++;
+X	while (isspace(r[-1])) r--;
+X	*r = '\0';
+X	return(1);
+X}
+X
+X
+Xisformat(s)			/* is line a format line? */
+Xchar  *s;
+X{
+X	return(formatval(NULL, s));
+X}
+X
+X
+Xfputformat(s, fp)		/* put out a format value */
+Xchar  *s;
+XFILE  *fp;
+X{
+X	fputs(FMTSTR, fp);
+X	fputs(s, fp);
+X	putc('\n', fp);
+X}
+X
+X
+Xgetheader(fp, f, p)		/* get header from file */
+XFILE  *fp;
+Xint  (*f)();
+Xchar  *p;
+X{
+X	char  buf[MAXLINE];
+X
+X	for ( ; ; ) {
+X		buf[MAXLINE-2] = '\n';
+X		if (fgets(buf, MAXLINE, fp) == NULL)
+X			return(-1);
+X		if (buf[0] == '\n')
+X			return(0);
+X#ifdef MSDOS
+X		if (buf[0] == '\r' && buf[1] == '\n')
+X			return(0);
+X#endif
+X		if (buf[MAXLINE-2] != '\n') {
+X			ungetc(buf[MAXLINE-2], fp);	/* prevent false end */
+X			buf[MAXLINE-2] = '\0';
+X		}
+X		if (f != NULL)
+X			(*f)(buf, p);
+X	}
+X}
+X
+X
+Xstruct check {
+X	FILE	*fp;
+X	char	fs[64];
+X};
+X
+X
+Xstatic
+Xmycheck(s, cp)			/* check a header line for format info. */
+Xchar  *s;
+Xregister struct check  *cp;
+X{
+X	if (!formatval(cp->fs, s) && cp->fp != NULL)
+X		fputs(s, cp->fp);
+X}
+X
+X
+X/*
+X * Copymatch(pat,str) checks pat for wildcards, and
+X * copies str into pat if there is a match (returning true).
+X */
+X
+X#ifdef COPYMATCH
+Xcopymatch(pat, str)
+Xchar	*pat, *str;
+X{
+X	int	docopy = 0;
+X	register char	*p = pat, *s = str;
+X
+X	do {
+X		switch (*p) {
+X		case '?':			/* match any character */
+X			if (!*s++)
+X				return(0);
+X			docopy++;
+X			break;
+X		case '*':			/* match any string */
+X			while (p[1] == '*') p++;
+X			do
+X				if ( (p[1]=='?' || p[1]==*s)
+X						&& copymatch(p+1,s) ) {
+X					strcpy(pat, str);
+X					return(1);
+X				}
+X			while (*s++);
+X			return(0);
+X		case '\\':			/* literal next */
+X			p++;
+X		/* fall through */
+X		default:			/* normal character */
+X			if (*p != *s)
+X				return(0);
+X			s++;
+X			break;
+X		}
+X	} while (*p++);
+X	if (docopy)
+X		strcpy(pat, str);
+X	return(1);
+X}
+X#else
+X#define copymatch(pat, s)	(!strcmp(pat, s))
+X#endif
+X
+X
+X/*
+X * Checkheader(fin,fmt,fout) returns a value of 1 if the input format
+X * matches the specification in fmt, 0 if no input format was found,
+X * and -1 if the input format does not match or there is an
+X * error reading the header.  If fmt is empty, then -1 is returned
+X * if any input format is found (or there is an error), and 0 otherwise.
+X * If fmt contains any '*' or '?' characters, then checkheader
+X * does wildcard expansion and copies a matching result into fmt.
+X * Be sure that fmt is big enough to hold the match in such cases!
+X * The input header (minus any format lines) is copied to fout
+X * if fout is not NULL.
+X */
+X
+Xcheckheader(fin, fmt, fout)
+XFILE  *fin;
+Xchar  *fmt;
+XFILE  *fout;
+X{
+X	struct check	cdat;
+X
+X	cdat.fp = fout;
+X	cdat.fs[0] = '\0';
+X	if (getheader(fin, mycheck, &cdat) < 0)
+X		return(-1);
+X	if (cdat.fs[0] != '\0')
+X		return(copymatch(fmt, cdat.fs) ? 1 : -1);
+X	return(0);
+X}
+SHAR_EOF
+fi
+if test -f 'color.c'
+then
+	echo shar: "will not over-write existing file 'color.c'"
+else
+sed 's/^X//' << \SHAR_EOF > 'color.c'
+X/* Copyright (c) 1991 Regents of the University of California */
+X
+X#ifndef lint
+Xstatic char SCCSid[] = "@(#)color.c 2.8 3/26/94 LBL";
+X#endif
+X
+X/*
+X *  color.c - routines for color calculations.
+X *
+X *     10/10/85
+X */
+X
+X#include  <stdio.h>
+X
+X#include  <math.h>
+X
+X#include  "color.h"
+X
+X#define  MINELEN	8	/* minimum scanline length for encoding */
+X#define  MAXELEN	0x7fff	/* maximum scanline length for encoding */
+X#define  MINRUN		4	/* minimum run length */
+X
+X
+Xchar *
+Xtempbuffer(len)			/* get a temporary buffer */
+Xunsigned  len;
+X{
+X	extern char  *malloc(), *realloc();
+X	static char  *tempbuf = NULL;
+X	static unsigned  tempbuflen = 0;
+X
+X	if (len > tempbuflen) {
+X		if (tempbuflen > 0)
+X			tempbuf = realloc(tempbuf, len);
+X		else
+X			tempbuf = malloc(len);
+X		tempbuflen = tempbuf==NULL ? 0 : len;
+X	}
+X	return(tempbuf);
+X}
+X
+X
+Xfwritecolrs(scanline, len, fp)		/* write out a colr scanline */
+Xregister COLR  *scanline;
+Xunsigned  len;
+Xregister FILE  *fp;
+X{
+X	register int  i, j, beg, cnt;
+X	int  c2;
+X	
+X	if (len < MINELEN | len > MAXELEN)	/* OOBs, write out flat */
+X		return(fwrite((char *)scanline,sizeof(COLR),len,fp) - len);
+X					/* put magic header */
+X	putc(2, fp);
+X	putc(2, fp);
+X	putc(len>>8, fp);
+X	putc(len&255, fp);
+X					/* put components seperately */
+X	for (i = 0; i < 4; i++) {
+X	    for (j = 0; j < len; j += cnt) {	/* find next run */
+X		for (beg = j; beg < len; beg += cnt) {
+X		    for (cnt = 1; cnt < 127 && beg+cnt < len &&
+X			    scanline[beg+cnt][i] == scanline[beg][i]; cnt++)
+X			;
+X		    if (cnt >= MINRUN)
+X			break;			/* long enough */
+X		}
+X		if (beg-j > 1 && beg-j < MINRUN) {
+X		    c2 = j+1;
+X		    while (scanline[c2++][i] == scanline[j][i])
+X			if (c2 == beg) {	/* short run */
+X			    putc(128+beg-j, fp);
+X			    putc(scanline[j][i], fp);
+X			    j = beg;
+X			    break;
+X			}
+X		}
+X		while (j < beg) {		/* write out non-run */
+X		    if ((c2 = beg-j) > 128) c2 = 128;
+X		    putc(c2, fp);
+X		    while (c2--)
+X			putc(scanline[j++][i], fp);
+X		}
+X		if (cnt >= MINRUN) {		/* write out run */
+X		    putc(128+cnt, fp);
+X		    putc(scanline[beg][i], fp);
+X		} else
+X		    cnt = 0;
+X	    }
+X	}
+X	return(ferror(fp) ? -1 : 0);
+X}
+X
+X
+Xfreadcolrs(scanline, len, fp)		/* read in an encoded colr scanline */
+Xregister COLR  *scanline;
+Xint  len;
+Xregister FILE  *fp;
+X{
+X	register int  i, j;
+X	int  code, val;
+X					/* determine scanline type */
+X	if (len < MINELEN | len > MAXELEN)
+X		return(oldreadcolrs(scanline, len, fp));
+X	if ((i = getc(fp)) == EOF)
+X		return(-1);
+X	if (i != 2) {
+X		ungetc(i, fp);
+X		return(oldreadcolrs(scanline, len, fp));
+X	}
+X	scanline[0][GRN] = getc(fp);
+X	scanline[0][BLU] = getc(fp);
+X	if ((i = getc(fp)) == EOF)
+X		return(-1);
+X	if (scanline[0][GRN] != 2 || scanline[0][BLU] & 128) {
+X		scanline[0][RED] = 2;
+X		scanline[0][EXP] = i;
+X		return(oldreadcolrs(scanline+1, len-1, fp));
+X	}
+X	if ((scanline[0][BLU]<<8 | i) != len)
+X		return(-1);		/* length mismatch! */
+X					/* read each component */
+X	for (i = 0; i < 4; i++)
+X	    for (j = 0; j < len; ) {
+X		if ((code = getc(fp)) == EOF)
+X		    return(-1);
+X		if (code > 128) {	/* run */
+X		    code &= 127;
+X		    val = getc(fp);
+X		    while (code--)
+X			scanline[j++][i] = val;
+X		} else			/* non-run */
+X		    while (code--)
+X			scanline[j++][i] = getc(fp);
+X	    }
+X	return(feof(fp) ? -1 : 0);
+X}
+X
+X
+Xoldreadcolrs(scanline, len, fp)		/* read in an old colr scanline */
+Xregister COLR  *scanline;
+Xint  len;
+Xregister FILE  *fp;
+X{
+X	int  rshift;
+X	register int  i;
+X	
+X	rshift = 0;
+X	
+X	while (len > 0) {
+X		scanline[0][RED] = getc(fp);
+X		scanline[0][GRN] = getc(fp);
+X		scanline[0][BLU] = getc(fp);
+X		scanline[0][EXP] = getc(fp);
+X		if (feof(fp) || ferror(fp))
+X			return(-1);
+X		if (scanline[0][RED] == 1 &&
+X				scanline[0][GRN] == 1 &&
+X				scanline[0][BLU] == 1) {
+X			for (i = scanline[0][EXP] << rshift; i > 0; i--) {
+X				copycolr(scanline[0], scanline[-1]);
+X				scanline++;
+X				len--;
+X			}
+X			rshift += 8;
+X		} else {
+X			scanline++;
+X			len--;
+X			rshift = 0;
+X		}
+X	}
+X	return(0);
+X}
+X
+X
+Xfwritescan(scanline, len, fp)		/* write out a scanline */
+Xregister COLOR  *scanline;
+Xint  len;
+XFILE  *fp;
+X{
+X	COLR  *clrscan;
+X	int  n;
+X	register COLR  *sp;
+X					/* get scanline buffer */
+X	if ((sp = (COLR *)tempbuffer(len*sizeof(COLR))) == NULL)
+X		return(-1);
+X	clrscan = sp;
+X					/* convert scanline */
+X	n = len;
+X	while (n-- > 0) {
+X		setcolr(sp[0], scanline[0][RED],
+X				  scanline[0][GRN],
+X				  scanline[0][BLU]);
+X		scanline++;
+X		sp++;
+X	}
+X	return(fwritecolrs(clrscan, len, fp));
+X}
+X
+X
+Xfreadscan(scanline, len, fp)		/* read in a scanline */
+Xregister COLOR  *scanline;
+Xint  len;
+XFILE  *fp;
+X{
+X	register COLR  *clrscan;
+X
+X	if ((clrscan = (COLR *)tempbuffer(len*sizeof(COLR))) == NULL)
+X		return(-1);
+X	if (freadcolrs(clrscan, len, fp) < 0)
+X		return(-1);
+X					/* convert scanline */
+X	colr_color(scanline[0], clrscan[0]);
+X	while (--len > 0) {
+X		scanline++; clrscan++;
+X		if (clrscan[0][RED] == clrscan[-1][RED] &&
+X			    clrscan[0][GRN] == clrscan[-1][GRN] &&
+X			    clrscan[0][BLU] == clrscan[-1][BLU] &&
+X			    clrscan[0][EXP] == clrscan[-1][EXP])
+X			copycolor(scanline[0], scanline[-1]);
+X		else
+X			colr_color(scanline[0], clrscan[0]);
+X	}
+X	return(0);
+X}
+X
+X
+Xsetcolr(clr, r, g, b)		/* assign a short color value */
+Xregister COLR  clr;
+Xdouble  r, g, b;
+X{
+X	double  d;
+X	int  e;
+X	
+X	d = r > g ? r : g;
+X	if (b > d) d = b;
+X
+X	if (d <= 1e-32) {
+X		clr[RED] = clr[GRN] = clr[BLU] = 0;
+X		clr[EXP] = 0;
+X		return;
+X	}
+X
+X	d = frexp(d, &e) * 255.9999 / d;
+X
+X	clr[RED] = r * d;
+X	clr[GRN] = g * d;
+X	clr[BLU] = b * d;
+X	clr[EXP] = e + COLXS;
+X}
+X
+X
+Xcolr_color(col, clr)		/* convert short to float color */
+Xregister COLOR  col;
+Xregister COLR  clr;
+X{
+X	double  f;
+X	
+X	if (clr[EXP] == 0)
+X		col[RED] = col[GRN] = col[BLU] = 0.0;
+X	else {
+X		f = ldexp(1.0, (int)clr[EXP]-(COLXS+8));
+X		col[RED] = (clr[RED] + 0.5)*f;
+X		col[GRN] = (clr[GRN] + 0.5)*f;
+X		col[BLU] = (clr[BLU] + 0.5)*f;
+X	}
+X}
+X
+X
+Xbigdiff(c1, c2, md)			/* c1 delta c2 > md? */
+Xregister COLOR  c1, c2;
+Xdouble  md;
+X{
+X	register int  i;
+X
+X	for (i = 0; i < 3; i++)
+X		if (colval(c1,i)-colval(c2,i) > md*colval(c2,i) ||
+X			colval(c2,i)-colval(c1,i) > md*colval(c1,i))
+X			return(1);
+X	return(0);
+X}
+SHAR_EOF
+fi
+if test -f 'colrops.c'
+then
+	echo shar: "will not over-write existing file 'colrops.c'"
+else
+sed 's/^X//' << \SHAR_EOF > 'colrops.c'
+X/* Copyright (c) 1992 Regents of the University of California */
+X
+X#ifndef lint
+Xstatic char SCCSid[] = "@(#)colrops.c 2.4 10/2/92 LBL";
+X#endif
+X
+X/*
+X * Integer operations on COLR scanlines
+X */
+X
+X#include "color.h"
+X
+X#define NULL		0
+X
+Xextern char	*bmalloc();
+X
+X#define MAXGSHIFT	31		/* maximum shift for gamma table */
+X
+Xstatic BYTE	*g_mant = NULL, *g_nexp = NULL;
+X
+Xstatic BYTE	(*g_bval)[256] = NULL;
+X
+X#ifndef pow
+Xextern double	pow();
+X#endif
+X
+X
+Xsetcolrcor(f, a2)		/* set brightness correction */
+Xdouble	(*f)();
+Xdouble	a2;
+X{
+X	double	mult;
+X	register int	i, j;
+X					/* allocate tables */
+X	if (g_bval == NULL && (g_bval =
+X			(BYTE (*)[256])bmalloc((MAXGSHIFT+1)*256)) == NULL)
+X		return(-1);
+X					/* compute colr -> gamb mapping */
+X	mult = 1.0/256.0;
+X	for (i = 0; i <= MAXGSHIFT; i++) {
+X		for (j = 0; j < 256; j++)
+X			g_bval[i][j] = 256.0 * (*f)((j+.5)*mult, a2);
+X		mult *= 0.5;
+X	}
+X	return(0);
+X}
+X
+X
+Xsetcolrinv(f, a2)		/* set inverse brightness correction */
+Xdouble	(*f)();
+Xdouble	a2;
+X{
+X	double	mult;
+X	register int	i, j;
+X					/* allocate tables */
+X	if (g_mant == NULL && (g_mant = (BYTE *)bmalloc(256)) == NULL)
+X		return(-1);
+X	if (g_nexp == NULL && (g_nexp = (BYTE *)bmalloc(256)) == NULL)
+X		return(-1);
+X					/* compute gamb -> colr mapping */
+X	i = 0;
+X	mult = 256.0;
+X	for (j = 255; j > 0; j--) {
+X		while ((g_mant[j] = mult * (*f)(j/256.0, a2)) < 128) {
+X			i++;
+X			mult *= 2.0;
+X		}
+X		g_nexp[j] = i;
+X	}
+X	g_mant[0] = 0;
+X	g_nexp[0] = COLXS;
+X	return(0);
+X}
+X
+X
+Xsetcolrgam(g)			/* set gamma conversion */
+Xdouble	g;
+X{
+X	if (setcolrcor(pow, 1.0/g) < 0)
+X		return(-1);
+X	return(setcolrinv(pow, g));
+X}
+X
+X
+Xcolrs_gambs(scan, len)		/* convert scanline of colrs to gamma bytes */
+Xregister COLR	*scan;
+Xint	len;
+X{
+X	register int	i, expo;
+X
+X	if (g_bval == NULL)
+X		return(-1);
+X	while (len-- > 0) {
+X		expo = scan[0][EXP] - COLXS;
+X		if (expo < -MAXGSHIFT) {
+X			if (expo < -MAXGSHIFT-8) {
+X				scan[0][RED] =
+X				scan[0][GRN] =
+X				scan[0][BLU] = 0;
+X			} else {
+X				i = (-MAXGSHIFT-1) - expo;
+X				scan[0][RED] = 
+X				g_bval[MAXGSHIFT][((scan[0][RED]>>i)+1)>>1];
+X				scan[0][GRN] =
+X				g_bval[MAXGSHIFT][((scan[0][GRN]>>i)+1)>>1];
+X				scan[0][BLU] =
+X				g_bval[MAXGSHIFT][((scan[0][BLU]>>i)+1)>>1];
+X			}
+X		} else if (expo > 0) {
+X			if (expo > 8) {
+X				scan[0][RED] =
+X				scan[0][GRN] =
+X				scan[0][BLU] = 255;
+X			} else {
+X				i = (scan[0][RED]<<1 | 1) << (expo-1);
+X				scan[0][RED] = i > 255 ? 255 : g_bval[0][i];
+X				i = (scan[0][GRN]<<1 | 1) << (expo-1);
+X				scan[0][GRN] = i > 255 ? 255 : g_bval[0][i];
+X				i = (scan[0][BLU]<<1 | 1) << (expo-1);
+X				scan[0][BLU] = i > 255 ? 255 : g_bval[0][i];
+X			}
+X		} else {
+X			scan[0][RED] = g_bval[-expo][scan[0][RED]];
+X			scan[0][GRN] = g_bval[-expo][scan[0][GRN]];
+X			scan[0][BLU] = g_bval[-expo][scan[0][BLU]];
+X		}
+X		scan[0][EXP] = COLXS;
+X		scan++;
+X	}
+X	return(0);
+X}
+X
+X
+Xgambs_colrs(scan, len)		/* convert gamma bytes to colr scanline */
+Xregister COLR	*scan;
+Xint	len;
+X{
+X	register int	nexpo;
+X
+X	if (g_mant == NULL | g_nexp == NULL)
+X		return(-1);
+X	while (len-- > 0) {
+X		nexpo = g_nexp[scan[0][RED]];
+X		if (g_nexp[scan[0][GRN]] < nexpo)
+X			nexpo = g_nexp[scan[0][GRN]];
+X		if (g_nexp[scan[0][BLU]] < nexpo)
+X			nexpo = g_nexp[scan[0][BLU]];
+X		if (nexpo < g_nexp[scan[0][RED]])
+X			scan[0][RED] = g_mant[scan[0][RED]]
+X					>> (g_nexp[scan[0][RED]]-nexpo);
+X		else
+X			scan[0][RED] = g_mant[scan[0][RED]];
+X		if (nexpo < g_nexp[scan[0][GRN]])
+X			scan[0][GRN] = g_mant[scan[0][GRN]]
+X					>> (g_nexp[scan[0][GRN]]-nexpo);
+X		else
+X			scan[0][GRN] = g_mant[scan[0][GRN]];
+X		if (nexpo < g_nexp[scan[0][BLU]])
+X			scan[0][BLU] = g_mant[scan[0][BLU]]
+X					>> (g_nexp[scan[0][BLU]]-nexpo);
+X		else
+X			scan[0][BLU] = g_mant[scan[0][BLU]];
+X		scan[0][EXP] = COLXS - nexpo;
+X		scan++;
+X	}
+X	return(0);
+X}
+X
+X
+Xshiftcolrs(scan, len, adjust)	/* shift a scanline of colors by 2^adjust */
+Xregister COLR	*scan;
+Xregister int	len;
+Xregister int	adjust;
+X{
+X	int	minexp;
+X
+X	if (adjust == 0)
+X		return;
+X	minexp = adjust < 0 ? -adjust : 0;
+X	while (len-- > 0) {
+X		if (scan[0][EXP] <= minexp)
+X			scan[0][RED] = scan[0][GRN] = scan[0][BLU] =
+X			scan[0][EXP] = 0;
+X		else
+X			scan[0][EXP] += adjust;
+X		scan++;
+X	}
+X}
+X
+X
+Xnormcolrs(scan, len, adjust)	/* normalize a scanline of colrs */
+Xregister COLR  *scan;
+Xint  len;
+Xint  adjust;
+X{
+X	register int  c;
+X	register int  shift;
+X
+X	while (len-- > 0) {
+X		shift = scan[0][EXP] + adjust - COLXS;
+X		if (shift > 0) {
+X			if (shift > 8) {
+X				scan[0][RED] =
+X				scan[0][GRN] =
+X				scan[0][BLU] = 255;
+X			} else {
+X				shift--;
+X				c = (scan[0][RED]<<1 | 1) << shift;
+X				scan[0][RED] = c > 255 ? 255 : c;
+X				c = (scan[0][GRN]<<1 | 1) << shift;
+X				scan[0][GRN] = c > 255 ? 255 : c;
+X				c = (scan[0][BLU]<<1 | 1) << shift;
+X				scan[0][BLU] = c > 255 ? 255 : c;
+X			}
+X		} else if (shift < 0) {
+X			if (shift < -8) {
+X				scan[0][RED] =
+X				scan[0][GRN] =
+X				scan[0][BLU] = 0;
+X			} else {
+X				shift = -1-shift;
+X				scan[0][RED] = ((scan[0][RED]>>shift)+1)>>1;
+X				scan[0][GRN] = ((scan[0][GRN]>>shift)+1)>>1;
+X				scan[0][BLU] = ((scan[0][BLU]>>shift)+1)>>1;
+X			}
+X		}
+X		scan[0][EXP] = COLXS - adjust;
+X		scan++;
+X	}
+X}
+SHAR_EOF
+fi
+exit 0
+#	End of shell archive

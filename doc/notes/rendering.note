@@ -1,0 +1,46 @@
+		Photo-realistic vs. Physically-based Rendering
+
+Photo-realistic rendering places emphasis on the appearance of its
+output rather than the techniques used to derive it.  Anything goes,
+basically, as long as the final image looks nice.  There is no
+attempt to use physically realistic values for the light sources
+or the surface reflectances.  In fact, the light sources themselves
+often have physically impossible characteristics like 1/r falloff (as
+opposed to 1/r^2) or there is a lot of ambient lighting that comes from
+nowhere but somehow manages to illuminate the room.  (You are probably
+saying, "Hey!  Doesn't Radiance use an ambient term?"  The answer is
+yes, but only as a final approximation to the interreflected component.
+The renderers I'm talking about use the ambient level as a main source
+of illumination!)  Also, surfaces typically have color but there is no
+reflectance given, so all the surfaces appear to have roughly the same
+brightness.
+
+Such numerical shortcuts are often just conveniences provided so the
+user can get results easily and quickly without having to worry about
+fussy details, like where to put the light sources and what to use
+for reflectances.  As you might expect, there is a penalty paid besides
+meaningless values, and that is fake-looking images.  Have you noticed
+how these renderings always look pastel and glowing?  You're seeing
+the visual equivalent of AM radio.
+
+Physically-based rendering, on the other hand, follows the physical
+behavior of light as closely as possible in an effort to *predict*
+what the final appearance of a design will be.  This is not an
+artist's conception anymore, it is a numerical simulation.  The
+light sources start in the calculation by emitting with a
+specific distribution, and the simulation computes the reflections
+between surfaces until the solution converges.  The most popular
+technique for this computation is usually referred to as "radiosity",
+or flux transfer, and it does this by dividing all the surfaces into
+patches that exchange light energy within a closed system.  This type
+of calculation is limited for the most part to simple scenes with
+diffuse surfaces where the visibility calculation and the solution
+matrix are manageable.
+
+Radiance, in contrast to most flux transfer methods, uses ray tracing
+to follow light in the reverse direction and does not require the same
+discretization as radiosity techniques.  This has significant
+advantages when the scene geometry is complex, and permits the modeling
+of some specular interactions between surfaces.  In general, Radiance
+is faster than radiosity if the scene contains more than a few thousand
+surfaces or has significant specularity.

@@ -1,0 +1,137 @@
+Materials and their reasonable values:
+
+Material:
+	parameter 1
+	(open:closed]
+	interpretation
+
+	parameter 2
+	[closed:approximate>
+	interpretation
+
+Light:
+	color
+	(0:inf),(0:inf),(0:inf)
+	output brightness
+
+Glow:
+	color		
+	(0:inf),(0:inf),(0:inf)
+	output brightness
+
+	maximum radius
+	[0:inf)
+	no shadows - always shadows
+
+Spotlight:
+	color		
+	(0:inf),(0:inf),(0:inf)
+	output brightness
+
+	maximum angle
+	[0:360]
+	no shadows - always shadows
+
+	direction
+	any
+	aimed orientation
+
+Mirror:
+	color
+	[0:1],[0:1],[0:1]
+	black - silver
+
+Plastic:
+	color
+	[0:1],[0:1],[0:1]
+	black - white
+
+	specularity
+	[0:.07>
+	matte - satin
+
+	roughness
+	[0:.2>
+	polished - low gloss
+
+Metal:
+	color
+	[0:1],[0:1],[0:1]
+	0-100% reflectance
+
+	specularity
+	<.5:1]
+	dirty - clean
+
+	roughness
+	[0:.5>
+	polished - roughened
+
+Trans:
+	color
+	[0:1],[0:1],[0:1]
+	black - white
+
+	specularity
+	[0:.07>
+	matte - satin
+
+	roughness
+	[0:.2>
+	polished - low gloss
+
+	transmission
+	[0:1]
+	opaque - transparent
+
+	transmitted specularity
+	[0:1]
+	diffuse - clear
+
+Dielectric:
+	transmission
+	[0:1],[0:1],[0:1]
+	black - transparent
+
+	refractive index
+	(1:2>
+	vacuum - diamond
+
+	Hartmann's constant
+	<-20:30>
+	negative dispersion - positive dispersion
+
+Interface:
+	interior transmission
+	[0:1],[0:1],[0:1]
+	black - transparent
+
+	interior refractive index
+	(1:2>
+	vacuum - diamond
+
+	exterior transmission
+	[0:1],[0:1],[0:1]
+	black - transparent
+
+	exterior refractive index
+	(1:2>
+	vacuum - diamond
+
+Glass:
+	transmission
+	[0:1],[0:1],[0:1]
+	black - transparent
+
+Mist:
+	extinction (interaction density in fraction/distance)
+	[0:inf),[0:inf),[0:inf)
+	transparent - solid
+
+	albedo (particle reflectivity)
+	[0:1],[0:1],[0:1]
+	black - white
+
+	Heyney-Greeenstein scattering parameter
+	[0:1)
+	isotropic - pure forward scattering

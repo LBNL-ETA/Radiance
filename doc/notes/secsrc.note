@@ -1,0 +1,50 @@
+			Virtual Light Sources
+			     in Radiance
+
+Radiance now supports virtual light sources in planar surfaces such as
+mirrors.  The method of virtual sources is used to create the appearance
+of a new source in a virtual world on the other side of the transferring
+surface, or "relay object."  Shadow rays are then sent to these virtual
+sources along with the regular sources, testing not only for occlusion
+but also for the geometric boundaries of the virtual source path.
+This is necessary to yield the correct light patch shape.
+
+The method used for specifying virtual sources in Radiance is quite
+simple.  Certain materials possess the "virtual source" attribute.
+When such a material modifies a planar surface, virtual light
+sources are created.  It is an error to use a virtual source material
+on a non-planar surface such as a sphere.  Currently, the materials
+"mirror," "prism1" and "prism2" have the virtual light source attribute.
+
+If multiple facing mirrors appear in a scene, the number of virtual
+sources can multiply quite rapidly.  We therefore introduce a limit to
+the number of virtual source "relays" allowed, with the rendering
+option -dr.  A setting of -dr 0 means that virtual sources will not
+be considered at all.  Another technique that can limit the growth of
+virtual sources is called "virtual source presampling," which is
+controlled with the -dp option.  Presampling tests a virtual source
+for visibility before adding it to the calculation, thus avoiding the
+inclusion of virtual sources that would never appear and the shadow
+testing of virtual sources that are never occluded.  A presampling
+density of -dp 0 means that all virtual sources will be included and
+fully tested for shadows.  This is potentially much more expensive, but it
+is the only way to guarantee absolute shadow accuracy at any resolution.
+
+Even without presampling, Radiance performs many checks of virtual
+sources before including them in the calculation.  In addition to the
+obvious tests to insure that a source is on the correct side of the
+relay object, facing the proper direction and so on, Radiance also
+computes the solid angle that corresponds to the maximum influence of
+each virtual source.  This greatly speeds up the direct calculation by
+avoiding virtual source shadow tests that could not possibly pay off.
+
+Nevertheless, virtual light sources can be quite costly, especially if
+there are many mirror surfaces that see each other.  Presampling avoids
+most of the costs associated with fruitless testing, but in scenes with
+mutual reflections, there may still be hundreds or even thousands of
+virtual light sources created.  Even with the solid angle limits, each
+virtual source must be considered at least briefly before it is rejected.
+It is therefore very important for efficiency to minimize the number of
+mirror surfaces in a scene as much as possible.  In particular, do not
+make relay objects from many small mirror elements.  Such elements should
+be consolidated into the largest polygons possible.

@@ -1,0 +1,20 @@
+Francis found the appropriate equation for film exposure in the IES
+handbook.  There isn't an exact relation, but the following formula
+can be used to get an approximate answer for 35mm photography:
+
+	Radiance EXPOSURE = K * T * S / f^2
+
+		where:
+			T = exposure time (in seconds)
+			S = film speed (ISO ASA)
+			f = f-stop
+			K = 2.81 (conversion factor 179*PI/200)
+
+This came from the IES Lighting Handbook, 1987 Application Volume, section 11,
+page 24.
+
+So, if you were trying to produce an image as it would appear shot at
+1/60 sec. on ISO ASA 100 (DIN 21) film at f-4, you would apply pfilt
+thusly:
+
+	pfilt -1 -e `ev "2.81*1/60*100/4^2"` raw.pic > fin.pic
