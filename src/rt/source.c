@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.46 2004/09/08 17:10:16 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.47 2005/03/10 22:37:00 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -250,11 +250,28 @@ nomat:
 }
 
 
+static int
+transillum(			/* check if material is transparent illum */
+	OBJECT	obj
+)
+{
+	OBJREC *m = findmaterial(objptr(obj));
+	
+	if (m == NULL)
+		return(1);
+	if (m->otype != MAT_ILLUM)
+		return(0);
+	return(!m->oargs.nsargs || !strcmp(m->oargs.sarg[0], VOIDID));
+}
+
+
 extern int
 sourcehit(			/* check to see if ray hit distant source */
 	register RAY  *r
 )
 {
+	int  glowsrc = -1;
+	int  transrc = -1;
 	int  first, last;
 	register int  i;
 
@@ -263,30 +280,56 @@ sourcehit(			/* check to see if ray hit distant source */
 	} else {			/* otherwise check all */
 		first = 0; last = nsources-1;
 	}
-	for (i = first; i <= last; i++)
-		if ((source[i].sflags & (SDISTANT|SVIRTUAL)) == SDISTANT)
-			/*
-			 * Check to see if ray is within
-			 * solid angle of source.
-			 */
-			if (2.0*PI * (1.0 - DOT(source[i].sloc,r->rdir))
-					<= source[i].ss2) {
-				r->ro = source[i].so;
-				if (!(source[i].sflags & SSKIP))
-					break;
-			}
-
-	if (r->ro != NULL) {
-		r->robj = objndx(r->ro);
-		for (i = 0; i < 3; i++)
-			r->ron[i] = -r->rdir[i];
-		r->rod = 1.0;
-		r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
-		r->uv[0] = r->uv[1] = 0.0;
-		r->rox = NULL;
-		return(1);
+	for (i = first; i <= last; i++) {
+		if ((source[i].sflags & (SDISTANT|SVIRTUAL)) != SDISTANT)
+			continue;
+		/*
+		 * Check to see if ray is within
+		 * solid angle of source.
+		 */
+		if (2.*PI*(1. - DOT(source[i].sloc,r->rdir)) > source[i].ss2)
+			continue;
+					/* is it the only possibility? */
+		if (first == last) {
+			r->ro = source[i].so;
+			break;
+		}
+		/*
+		 * If it's a glow or transparent illum, just remember it.
+		 */
+		if (source[i].sflags & SSKIP) {
+			glowsrc = i;
+			continue;
+		}
+		if (transillum(source[i].so->omod)) {
+			transrc = i;
+			continue;
+		}
+		r->ro = source[i].so;	/* otherwise, use first hit */
+		break;
 	}
-	return(0);
+	/*
+	 * Do we need fallback?
+	 */
+	if (r->ro == NULL) {
+		if (transrc >= 0 && r->crtype & (AMBIENT|SPECULAR))
+			return(0);	/* avoid overcounting */
+		if (glowsrc >= 0)
+			r->ro = source[glowsrc].so;
+		else
+			return(0);	/* nothing usable */
+	}
+	/*
+	 * Make assignments.
+	 */
+	r->robj = objndx(r->ro);
+	for (i = 0; i < 3; i++)
+		r->ron[i] = -r->rdir[i];
+	r->rod = 1.0;
+	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
+	r->uv[0] = r->uv[1] = 0.0;
+	r->rox = NULL;
+	return(1);
 }
 
 
@@ -553,10 +596,10 @@ srcscatter(			/* compute source scattering into ray */
 static int
 weaksrcmat(OBJECT obj)		/* identify material */
 {
-	OBJREC *o = findmaterial(objptr(obj));
+	OBJREC *m = findmaterial(objptr(obj));
 	
-	if (o == NULL) return 0;
-	return((o->otype==MAT_ILLUM)|(o->otype==MAT_GLOW));
+	if (m == NULL) return(0);
+	return((m->otype==MAT_ILLUM) | (m->otype==MAT_GLOW));
 }
 
 #define  illumblock(m, r)	(!(source[r->rsrc].sflags&SVIRTUAL) && \

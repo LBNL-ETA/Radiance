@@ -1402,3 +1402,10 @@ Added setting of focus distance in rvu ("focus" command) and rholo
 
 Changed default remote shell in ranimate to "ssh" rather than "rsh",
 which has been abandoned on most Unix systems due to security issues.
+
+Fixed behavior of source primitive using illum with no alternate
+material.  These now become transparent so one can see the sky or
+light-probe background for use in image-based lighting.  Previously,
+the user needed to specify the background glow as the alternate
+material for a distant illum source to behave properly.  (This still
+works.)
