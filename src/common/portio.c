@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.8 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.9 2003/11/13 16:42:17 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -13,12 +13,7 @@ static const char	RCSid[] = "$Id: portio.c,v 2.8 2003/07/17 09:21:29 schorsch Ex
 
 #include "rtio.h"
 
-#ifndef frexp
-extern double  frexp();
-#endif
-#ifndef ldexp
-extern double  ldexp();
-#endif
+#include <math.h>
 
 
 void
