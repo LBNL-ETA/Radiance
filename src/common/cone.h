@@ -1,4 +1,4 @@
-/* RCSid $Id: cone.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: cone.h,v 2.7 2003/11/14 17:22:06 schorsch Exp $ */
 /*
  *  cone.h - header file for cones (cones, cylinders, rings, cups, tubes).
  *
@@ -25,8 +25,8 @@ typedef struct cone {
 	RREAL  (*tm)[4];	/* pointer to transformation matrix */
 }  CONE;
 
-#define  CO_R0(co)	((co)->ca[(co)->r0])
-#define  CO_R1(co)	((co)->ca[(co)->r1])
+#define  CO_R0(co)	((co)->ca[(int)((co)->r0)])
+#define  CO_R1(co)	((co)->ca[(int)((co)->r1)])
 #define  CO_P0(co)	((co)->ca+(co)->p0)
 #define  CO_P1(co)	((co)->ca+(co)->p1)
 

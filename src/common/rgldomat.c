@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rgldomat.c,v 3.3 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rgldomat.c,v 3.4 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Invocation routines for Radiance -> OpenGL materials.
@@ -17,7 +17,7 @@ FVECT	cent;
 {
 	GLfloat	vec[4];
 
-	if (mp == NULL | !domats)
+	if ((mp == NULL) | !domats)
 		return;
 	if (islight(mp->type)) {
 		vec[0] = colval(mp->u.l.emission,RED);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rglsurf.c,v 3.10 2003/07/17 09:21:29 schorsch Exp $";
+static const char RCSid[] = "$Id: rglsurf.c,v 3.11 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -37,8 +37,9 @@ int	ispoly;
 	if (mp != curmat && domats) {
 		NOPOLY();
 		domatobj(curmat = mp, cent);
-	} else if (!ispoly)
+	} else if (!ispoly) {
 		NOPOLY();
+	}
 }
 
 
@@ -138,7 +139,7 @@ register OBJREC	*o;
 	FVECT	norm, cent;
 	register int	i;
 
-	if (o->oargs.nfargs < 9 | o->oargs.nfargs % 3)
+	if ((o->oargs.nfargs < 9) | (o->oargs.nfargs % 3))
 		objerror(o, USER, "bad # real arguments");
 	area = polyarea(cent, norm, o->oargs.nfargs/3, (FVECT *)o->oargs.farg);
 	if (area <= FTINY)
@@ -236,7 +237,7 @@ register OBJREC *o;
 	FVECT	cent;
 	register int	iscyl;
 
-	iscyl = o->otype==OBJ_CYLINDER | o->otype==OBJ_TUBE;
+	iscyl = (o->otype==OBJ_CYLINDER) | (o->otype==OBJ_TUBE);
 	if (o->oargs.nfargs != (iscyl ? 7 : 8))
 		objerror(o, USER, "bad # real arguments");
 	if (o->oargs.farg[6] < -FTINY) {
@@ -252,7 +253,7 @@ register OBJREC *o;
 	} else if (!iscyl && o->oargs.farg[7] < -FTINY)
 		objerror(o, USER, "illegal radii");
 	if (o->oargs.farg[6] <= FTINY && (iscyl || o->oargs.farg[7] <= FTINY))
-		return;
+		return; /* XXX we should return a value here */
 	if (!iscyl) {
 		if (o->oargs.farg[6] < 0.)	/* complains for tiny neg's */
 			o->oargs.farg[6] = 0.;
@@ -261,14 +262,14 @@ register OBJREC *o;
 	}
 	h = sqrt(dist2(o->oargs.farg,o->oargs.farg+3));
 	if (h <= FTINY)
-		return;
+		return; /* XXX we should return a value here */
 	cent[0] = .5*(o->oargs.farg[0] + o->oargs.farg[3]);
 	cent[1] = .5*(o->oargs.farg[1] + o->oargs.farg[4]);
 	cent[2] = .5*(o->oargs.farg[2] + o->oargs.farg[5]);
 	setmaterial((MATREC *)o->os, cent, 0);
 	if (gluqo == NULL) newquadric();
 	glu_rout = "making cylinder";
-	gluQuadricOrientation(gluqo, o->otype==OBJ_CUP | o->otype==OBJ_TUBE ?
+	gluQuadricOrientation(gluqo, (o->otype==OBJ_CUP) | (o->otype==OBJ_TUBE) ?
 			GLU_INSIDE : GLU_OUTSIDE);
 	gluQuadricNormals(gluqo, GLU_SMOOTH);
 	glMatrixMode(GL_MODELVIEW);
@@ -314,10 +315,10 @@ register OBJREC	*o;
 	if (o->oargs.farg[6] < 0.)		/* complains for tiny neg's */
 		o->oargs.farg[6] = 0.;
 	if (o->oargs.farg[7] - o->oargs.farg[6] <= FTINY)
-		return;
+		return; /* XXX we should return a value here */
 	h = VLEN(o->oargs.farg+3);
 	if (h <= FTINY)
-		return;
+		return; /* XXX we should return a value here */
 	if (dolights)
 		doflatsrc((MATREC *)o->os, o->oargs.farg, o->oargs.farg+3, 
 				PI*(o->oargs.farg[7]*o->oargs.farg[7] -

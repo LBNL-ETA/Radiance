@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bcopy.c,v 1.4 2003/05/13 17:58:32 greg Exp $";
+static const char	RCSid[] = "$Id: bcopy.c,v 1.5 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * bcopy.c - substitutes for library routines.
@@ -8,18 +8,21 @@ static const char	RCSid[] = "$Id: bcopy.c,v 1.4 2003/05/13 17:58:32 greg Exp $";
 #include "copyright.h"
 
 
-bcopy(src, dest, nbytes)
-register char	*src, *dest;
-register int	nbytes;
+bcopy(
+register char *src,
+register char *dest,
+register int  nbytes
+)
 {
 	while (nbytes-- > 0)
 		*dest++ = *src++;
 }
 
 
-bzero(b, nbytes)
-register char	*b;
-register int	nbytes;
+bzero(
+register char	*b,
+register int	nbytes
+)
 {
 	while (nbytes-- > 0)
 		*b++ = 0;
@@ -27,9 +30,11 @@ register int	nbytes;
 
 
 int
-bcmp(b1, b2, nbytes)
-register unsigned char	*b1, *b2;
-register int	nbytes;
+bcmp(
+register unsigned char *b1,
+register unsigned char *b2,
+register int	nbytes
+)
 {
 	while (nbytes-- > 0)
 		if (*b1++ - *b2++)

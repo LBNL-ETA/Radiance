@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.16 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.17 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -7,8 +7,8 @@ static const char	RCSid[] = "$Id: font.c,v 2.16 2003/07/27 22:12:01 schorsch Exp
 
 #include "copyright.h"
 
-#include "standard.h"
-
+#include "rtio.h"
+#include "rterror.h"
 #include "font.h"
 
 #define galloc(nv)	(GLYPH *)malloc(sizeof(GLYPH)+2*sizeof(GORD)*(nv))
@@ -24,7 +24,7 @@ getfont(fname)				/* return font fname */
 char  *fname;
 {
 	FILE  *fp;
-	char  *pathname, *err;
+	char  *pathname, *err = NULL;
 	unsigned  wsum, hsum, ngly;
 	int  gn, ngv, gv;
 	register GLYPH	*g;
@@ -208,7 +208,7 @@ FONT  *f;			/* font */
 int  cis;			/* target intercharacter spacing */
 int  nsi;			/* minimum number of spaces for indent */
 {
-	register char  *end, *tab;
+	register char  *end, *tab = NULL;
 	GLYPH  *gp;
 	short  *nsp;
 	int  alen, len, width;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.21 2003/09/07 05:32:02 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.22 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -9,11 +9,9 @@ static const char	RCSid[] = "$Id: image.c,v 2.21 2003/09/07 05:32:02 greg Exp $"
 
 #include "copyright.h"
 
-#include  "standard.h"
-
+#include  "rtio.h"
 #include  "view.h"
 
-#include  "paths.h"
 
 #define  FEQ(x,y)	(fabs((x)-(y)) <= FTINY)
 #define  VEQ(v,w)	(FEQ((v)[0],(w)[0]) && FEQ((v)[1],(w)[1]) \

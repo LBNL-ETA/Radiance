@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.8 2003/11/11 16:24:06 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.9 2003/11/14 17:22:06 schorsch Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -28,6 +28,7 @@
   #define popen(cmd,mode) win_popen(cmd,mode)
   #define pclose(p) win_pclose(p)
 #else
+  #include <stdio.h>
   #include <sys/param.h>
 #endif
 

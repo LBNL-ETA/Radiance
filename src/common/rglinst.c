@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.12 2003/07/21 22:30:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.13 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rglinst.c,v 3.12 2003/07/21 22:30:17 schorsch 
 #include <time.h>
 
 #include "platform.h"
+#include "paths.h"
 #include "resolu.h"
 #include "radogl.h"
 #include "octree.h"
@@ -60,7 +61,7 @@ register OBJREC	*o;
 				o->oargs.nsargs-1)
 			objerror(o, USER, "bad transform");
 		glPushAttrib(GL_TRANSFORM_BIT);
-		if (xfs.sca < 1.-FTINY | xfs.sca > 1.+FTINY)
+		if ((xfs.sca < 1.-FTINY) | (xfs.sca > 1.+FTINY))
 			glEnable(GL_NORMALIZE);
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -156,6 +157,7 @@ char	*name;
 	return(op);
 memerr:
 	error(SYSTEM, "out of memory in getoct");
+	return NULL; /* pro forma return */
 }
 
 
@@ -338,7 +340,7 @@ loadobj()				/* get next object */
 					/* get name id */
 	ob.oname = ogetstr(idbuf);
 					/* get string arguments */
-	if (ob.oargs.nsargs = ogetint(2)) {
+	if ((ob.oargs.nsargs = ogetint(2))) {
 		ob.oargs.sarg = (char **)malloc
 				(ob.oargs.nsargs*sizeof(char *));
 		if (ob.oargs.sarg == NULL)
@@ -360,7 +362,7 @@ loadobj()				/* get next object */
 		ob.oargs.iarg = NULL;
 #endif
 					/* get real arguments */
-	if (ob.oargs.nfargs = ogetint(2)) {
+	if ((ob.oargs.nfargs = ogetint(2))) {
 		ob.oargs.farg = (RREAL *)malloc
 				(ob.oargs.nfargs*sizeof(RREAL));
 		if (ob.oargs.farg == NULL)
@@ -382,6 +384,7 @@ loadobj()				/* get next object */
 	return(nobjects++);		/* return object id */
 memerr:
 	error(SYSTEM, "out of memory in loadobj");
+	return OVOID; /* pro forma return */
 }
 
 

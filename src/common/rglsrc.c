@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglsrc.c,v 3.5 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglsrc.c,v 3.6 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Routines for handling OpenGL light sources
@@ -43,7 +43,6 @@ void
 lightinit()			/* initialize lighting */
 {
 	GLfloat	ambv[4];
-	register int	i;
 
 	if (!dolights)
 		return;
@@ -73,8 +72,6 @@ lightclean()			/* clean up light source commands */
 void
 lightdefs()			/* define light source list */
 {
-	register int	i;
-
 	if (!nlights)
 		return;
 	glNewList(lightlist, GL_COMPILE);

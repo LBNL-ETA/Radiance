@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.5 2003/10/27 10:19:31 schorsch Exp $ */
+/* RCSid $Id: rtio.h,v 3.6 2003/11/14 17:22:06 schorsch Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -11,16 +11,10 @@
 #include  <fcntl.h>
 #include  <string.h>
 
+#include  "paths.h"
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/* XXX include paths.h instead */
-#ifndef	 F_OK			/* mode bits for access(2) call */
-#define	 R_OK		4		/* readable */
-#define	 W_OK		2		/* writable */
-#define	 X_OK		1		/* executable */
-#define	 F_OK		0		/* exists */
 #endif
 
 					/* defined in badarg.c */
@@ -38,8 +32,6 @@ extern int	fgetval(FILE *fp, int ty, char *vp);
 extern char	*fgetword(char *s, int n, FILE *fp);
 					/* defined in fputword.c */
 extern void	fputword(char *s, FILE *fp);
-					/* defined in fixargv0.c */
-/*extern char	*fixargv0(char *av0);*/ /* XXX include paths.h instead */
 					/* defined in fropen.c */
 extern FILE	*frlibopen(char *fname);
 					/* defined in getlibpath.c */

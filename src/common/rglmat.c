@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglmat.c,v 3.5 2003/09/16 06:31:48 greg Exp $";
+static const char	RCSid[] = "$Id: rglmat.c,v 3.6 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Routines for Radiance -> OpenGL materials.
@@ -95,6 +95,7 @@ char	*nam;
 	return((MATREC *)lup->data);
 memerr:
 	error(SYSTEM, "out of memory in newmaterial");
+	return NULL; /* pro forma return */
 }
 
 

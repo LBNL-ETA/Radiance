@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.13 2003/08/04 22:37:53 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.14 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -193,7 +193,7 @@ argument(n)			/* return nth argument for active function */
 register int  n;
 {
     register ACTIVATION  *actp = curact;
-    register EPNODE  *ep;
+    register EPNODE  *ep = NULL;
     double  aval;
 
     if (actp == NULL || --n < 0) {

@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.9 2003/10/27 10:19:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.10 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
  */
 
 #include "copyright.h"
+
+#include <ctype.h>
 
 #include "rtprocess.h"
 #include "radogl.h"

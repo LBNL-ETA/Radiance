@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calprnt.c,v 2.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: calprnt.c,v 2.5 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  calprint.c - routines for printing calcomp expressions.
@@ -19,7 +19,7 @@ register EPNODE  *ep;
 FILE  *fp;
 {
     static EPNODE  *curdef = NULL;
-    register EPNODE  *ep1;
+    register EPNODE  *ep1 = NULL;
 
     switch (ep->type) {
 

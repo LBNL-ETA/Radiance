@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.7 2003/10/27 10:19:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.8 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -26,6 +26,7 @@ emalloc(unsigned int  n)
 
 	eputs("Out of memory in emalloc\n");
 	quit(1);
+	return NULL; /* pro forma return */
 }
 
 
@@ -68,6 +69,7 @@ erealloc(register char  *cp, unsigned int  n)
 
 	eputs("Out of memory in erealloc\n");
 	quit(1);
+	return NULL; /* pro forma return */
 }
 
 

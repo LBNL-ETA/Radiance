@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmesh.c,v 2.3 2003/06/26 00:58:09 schorsch Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.4 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
@@ -151,7 +151,7 @@ register RREAL		com[][3];
 int			n;
 {
 	double	a, b;
-	register int	i, j;
+	register int	i;
 
 	printf("%d\t%d\n", 1+3*n, bcm->ax);
 	for (i = 0; i < n; i++) {

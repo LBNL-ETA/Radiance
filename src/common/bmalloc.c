@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bmalloc.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: bmalloc.c,v 2.6 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  * Bmalloc provides basic memory allocation without overhead (no free lists).
@@ -31,8 +31,9 @@ static unsigned int  nremain = 0;
 
 
 char *
-bmalloc(n)		/* allocate a block of n bytes */
-register unsigned int  n;
+bmalloc(		/* allocate a block of n bytes */
+register unsigned int  n
+)
 {
 	if (n > nremain && (n > MBLKSIZ || nremain > MBLKSIZ/WASTEFRAC))
 		return(malloc(n));			/* too big */
@@ -50,9 +51,10 @@ register unsigned int  n;
 
 
 void
-bfree(p, n)			/* free random memory */
-register char	*p;
-register unsigned int	n;
+bfree(			/* free random memory */
+register char	*p,
+register unsigned int	n
+)
 {
 	register unsigned int	bsiz;
 					/* check alignment */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: instance.c,v 2.9 2003/07/10 03:30:11 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.10 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -7,12 +7,12 @@ static const char RCSid[] = "$Id: instance.c,v 2.9 2003/07/10 03:30:11 greg Exp 
 
 #include "copyright.h"
 
-#include  "standard.h"
+#include  "rtmath.h"
+#include  "rterror.h"
+#include  "rtio.h"
 
 #include  "octree.h"
-
 #include  "object.h"
-
 #include  "instance.h"
 
 #define  IO_ILLEGAL	(IO_FILES|IO_INFO)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.27 2003/08/04 19:20:26 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.28 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -82,8 +82,9 @@ static int  linepos;			/* position in buffer */
 
 
 EPNODE *
-eparse(expr)			/* parse an expression string */
-char  *expr;
+eparse(			/* parse an expression string */
+    char  *expr
+)
 {
     EPNODE  *ep;
 
@@ -97,8 +98,9 @@ char  *expr;
 
 
 double
-eval(expr)			/* evaluate an expression string */
-char  *expr;
+eval(			/* evaluate an expression string */
+    char  *expr
+)
 {
     register EPNODE  *ep;
     double  rval;
@@ -111,8 +113,10 @@ char  *expr;
 
 
 int
-epcmp(ep1, ep2)			/* compare two expressions for equivalence */
-register EPNODE  *ep1, *ep2;
+epcmp(			/* compare two expressions for equivalence */
+    register EPNODE  *ep1,
+    register EPNODE  *ep2
+)
 {
 	double  d;
 
@@ -159,8 +163,9 @@ register EPNODE  *ep1, *ep2;
 
 
 void
-epfree(epar)			/* free a parse tree */
-register EPNODE	 *epar;
+epfree(			/* free a parse tree */
+    register EPNODE	 *epar
+)
 {
     register EPNODE  *ep;
 
@@ -194,22 +199,25 @@ register EPNODE	 *epar;
 
 				/* the following used to be a switch */
 static double
-eargument(ep)
-EPNODE	*ep;
+eargument(
+    EPNODE	*ep
+)
 {
     return(argument(ep->v.chan));
 }
 
 static double
-enumber(ep)
-EPNODE	*ep;
+enumber(
+    EPNODE	*ep
+)
 {
     return(ep->v.num);
 }
 
 static double
-euminus(ep)
-EPNODE	*ep;
+euminus(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
 
@@ -217,15 +225,17 @@ EPNODE	*ep;
 }
 
 static double
-echannel(ep)
-EPNODE	*ep;
+echannel(
+    EPNODE	*ep
+)
 {
     return(chanvalue(ep->v.chan));
 }
 
 static double
-eadd(ep)
-EPNODE	*ep;
+eadd(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
 
@@ -233,8 +243,9 @@ EPNODE	*ep;
 }
 
 static double
-esubtr(ep)
-EPNODE	*ep;
+esubtr(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
 
@@ -242,8 +253,9 @@ EPNODE	*ep;
 }
 
 static double
-emult(ep)
-EPNODE	*ep;
+emult(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
 
@@ -251,8 +263,9 @@ EPNODE	*ep;
 }
 
 static double
-edivi(ep)
-EPNODE	*ep;
+edivi(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
     double  d;
@@ -267,8 +280,9 @@ EPNODE	*ep;
 }
 
 static double
-epow(ep)
-EPNODE	*ep;
+epow(
+    EPNODE	*ep
+)
 {
     register EPNODE  *ep1 = ep->v.kid;
     double  d;
@@ -290,8 +304,9 @@ EPNODE	*ep;
 }
 
 static double
-ebotch(ep)
-EPNODE	*ep;
+ebotch(
+    EPNODE	*ep
+)
 {
     eputs("Bad expression!\n");
     quit(1);
@@ -300,9 +315,10 @@ EPNODE	*ep;
 
 
 EPNODE *
-ekid(ep, n)			/* return pointer to a node's nth kid */
-register EPNODE	 *ep;
-register int  n;
+ekid(			/* return pointer to a node's nth kid */
+    register EPNODE	 *ep,
+    register int  n
+)
 {
 
     for (ep = ep->v.kid; ep != NULL; ep = ep->sibling)
@@ -314,8 +330,9 @@ register int  n;
 
 
 int
-nekids(ep)			/* return # of kids for node ep */
-register EPNODE	 *ep;
+nekids(			/* return # of kids for node ep */
+    register EPNODE	 *ep
+)
 {
     register int  n = 0;
 
@@ -327,10 +344,11 @@ register EPNODE	 *ep;
 
 
 void
-initfile(fp, fn, ln)		/* prepare input file */
-FILE  *fp;
-char  *fn;
-int  ln;
+initfile(		/* prepare input file */
+    FILE  *fp,
+    char  *fn,
+    int  ln
+)
 {
     static char	 inpbuf[MAXLINE];
 
@@ -345,10 +363,11 @@ int  ln;
 
 
 void
-initstr(s, fn, ln)		/* prepare input string */
-char  *s;
-char  *fn;
-int  ln;
+initstr(		/* prepare input string */
+    char  *s,
+    char  *fn,
+    int  ln
+)
 {
     infp = NULL;
     infile = fn;
@@ -360,11 +379,12 @@ int  ln;
 
 
 void
-getscanpos(fnp, lnp, spp, fpp)	/* return current scan position */
-char  **fnp;
-int  *lnp;
-char  **spp;
-FILE  **fpp;
+getscanpos(	/* return current scan position */
+    char  **fnp,
+    int  *lnp,
+    char  **spp,
+    FILE  **fpp
+)
 {
     if (fnp != NULL) *fnp = infile;
     if (lnp != NULL) *lnp = lineno;
@@ -374,7 +394,7 @@ FILE  **fpp;
 
 
 int
-scan()				/* scan next character, return literal next */
+scan(void)		/* scan next character, return literal next */
 {
     register int  lnext = 0;
 
@@ -406,8 +426,9 @@ scan()				/* scan next character, return literal next */
 
 
 char *
-long2ascii(l)			      /* convert long to ascii */
-long  l;
+long2ascii(			      /* convert long to ascii */
+    long  l
+)
 {
     static char	 buf[16];
     register char  *cp;
@@ -432,8 +453,9 @@ long  l;
 
 
 void
-syntax(err)			/* report syntax error and quit */
-char  *err;
+syntax(			/* report syntax error and quit */
+    char  *err
+)
 {
     register int  i;
 
@@ -458,9 +480,10 @@ char  *err;
 
 
 void
-addekid(ep, ekid)			/* add a child to ep */
-register EPNODE	 *ep;
-EPNODE	*ekid;
+addekid(			/* add a child to ep */
+    register EPNODE	 *ep,
+    EPNODE	*ekid
+)
 {
     if (ep->v.kid == NULL)
 	ep->v.kid = ekid;
@@ -474,7 +497,7 @@ EPNODE	*ekid;
 
 
 char *
-getname()			/* scan an identifier */
+getname(void)			/* scan an identifier */
 {
     static char	 str[RMAXWORD+1];
     register int  i, lnext;
@@ -491,7 +514,7 @@ getname()			/* scan an identifier */
 
 
 int
-getinum()			/* scan a positive integer */
+getinum(void)			/* scan a positive integer */
 {
     register int  n, lnext;
 
@@ -506,7 +529,7 @@ getinum()			/* scan a positive integer */
 
 
 double
-getnum()			/* scan a positive float */
+getnum(void)			/* scan a positive float */
 {
     register int  i, lnext;
     char  str[RMAXWORD+1];
@@ -548,7 +571,7 @@ getnum()			/* scan a positive float */
 
 
 EPNODE *
-getE1()				/* E1 -> E1 ADDOP E2 */
+getE1(void)				/* E1 -> E1 ADDOP E2 */
 				/*	 E2 */
 {
     register EPNODE  *ep1, *ep2;
@@ -570,7 +593,7 @@ getE1()				/* E1 -> E1 ADDOP E2 */
 
 
 EPNODE *
-getE2()				/* E2 -> E2 MULOP E3 */
+getE2(void)				/* E2 -> E2 MULOP E3 */
 				/*	 E3 */
 {
     register EPNODE  *ep1, *ep2;
@@ -592,7 +615,7 @@ getE2()				/* E2 -> E2 MULOP E3 */
 
 
 EPNODE *
-getE3()				/* E3 -> E4 ^ E3 */
+getE3(void)				/* E3 -> E4 ^ E3 */
 				/*	 E4 */
 {
     register EPNODE  *ep1, *ep2;
@@ -614,7 +637,7 @@ getE3()				/* E3 -> E4 ^ E3 */
 
 
 EPNODE *
-getE4()				/* E4 -> ADDOP E5 */
+getE4(void)				/* E4 -> ADDOP E5 */
 				/*	 E5 */
 {
     register EPNODE  *ep1, *ep2;
@@ -642,7 +665,7 @@ getE4()				/* E4 -> ADDOP E5 */
 
 
 EPNODE *
-getE5()				/* E5 -> (E1) */
+getE5(void)			/* E5 -> (E1) */
 				/*	 VAR */
 				/*	 NUM */
 				/*	 $N */
@@ -720,8 +743,9 @@ getE5()				/* E5 -> (E1) */
 
 
 EPNODE *
-rconst(epar)			/* reduce a constant expression */
-register EPNODE	 *epar;
+rconst(			/* reduce a constant expression */
+    register EPNODE	 *epar
+)
 {
     register EPNODE  *ep;
 
@@ -738,8 +762,9 @@ register EPNODE	 *epar;
 
 
 int
-isconstvar(ep)			/* is ep linked to a constant expression? */
-register EPNODE	 *ep;
+isconstvar(			/* is ep linked to a constant expression? */
+    register EPNODE	 *ep
+)
 {
     register EPNODE  *ep1;
 
@@ -763,8 +788,9 @@ register EPNODE	 *ep;
 
 
 int
-isconstfun(ep)			/* is ep linked to a constant function? */
-register EPNODE	 *ep;
+isconstfun(			/* is ep linked to a constant function? */
+    register EPNODE	 *ep
+)
 {
     register EPNODE  *dp;
     register LIBR  *lp;

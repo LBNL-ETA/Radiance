@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.8 2003/10/27 10:19:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.9 2003/11/14 17:22:06 schorsch Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -24,6 +24,8 @@ static const char	RCSid[] = "$Id: savestr.c,v 2.8 2003/10/27 10:19:31 schorsch E
 #include <stdlib.h>
 
 #include "rtmisc.h"
+#include "rterror.h"
+#include "rtio.h"
 
 #ifndef  NHASH
 #define  NHASH		509		/* hash table size (prime!) */
@@ -46,8 +48,7 @@ static S_HEAD  *stab[NHASH];
 
 
 char *
-savestr(str)				/* save a string */
-char  *str;
+savestr(char *str)				/* save a string */
 {
 	register int  hval;
 	register S_HEAD  *sp;
@@ -73,8 +74,7 @@ char  *str;
 
 
 void
-freestr(s)				/* free a string */
-char  *s;
+freestr(char *s)				/* free a string */
 {
 	int  hval;
 	register S_HEAD  *spl, *sp;
@@ -97,8 +97,7 @@ char  *s;
 
 
 int
-shash(s)
-register char  *s;
+shash(register char  *s)
 {
 	register int  h = 0;
 
