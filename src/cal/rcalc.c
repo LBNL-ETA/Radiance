@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.9 2003/11/05 19:03:03 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.10 2003/11/06 05:39:33 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -54,6 +54,7 @@ struct field {                  /* record format structure */
 #define  savqstr(s)     strcpy(emalloc(strlen(s)+1),s)
 #define  freqstr(s)     efree(s)
 
+static int getinputrec(FILE *fp);
 static void scaninp(void), advinp(void), resetinp(void);
 static void putrec(void), putout(void), nbsynch(void);
 static int getrec(void);
@@ -66,6 +67,7 @@ static int getfield(struct field *f);
 static void chanset(int n, double v);
 static void bchanset(int n, double v);
 static struct strvar* getsvar(char *svname);
+static double l_in(char *);
 
 struct field  *inpfmt = NULL;   /* input record format */
 struct field  *outfmt = NULL;   /* output record structure */
@@ -109,6 +111,7 @@ char  *argv[]
 	biggerlib();
 #endif
 	varset("PI", ':', 3.14159265358979323846);
+	funset("in", 1, '=', &l_in);
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
@@ -230,7 +233,7 @@ nbsynch(void)               /* non-blank starting synch character */
 }
 
 
-int
+static int
 getinputrec(		/* get next input record */
 FILE  *fp
 )
@@ -297,6 +300,38 @@ putout(void)                /* produce an output record */
 		fflush(stdout);
 }
 
+
+static double
+l_in(char *funame)	/* function call for $channel */
+{
+	int  n;
+	register char  *cp;
+			/* get argument as integer */
+	n = (int)(argument(1) + .5);
+	if (n != 0)	/* return channel value */
+		return(chanvalue(n));
+			/* determine number of channels */
+	if (noinput || inpfmt != NULL)
+		return(0);
+	if (nbicols > 0)
+		return(nbicols);
+	if (nbicols < 0)
+		return(-nbicols);
+	cp = inpbuf;	/* need to count */
+	for (n = 0; *cp; )
+		if (blnkeq && isspace(sepchar)) {
+			while (isspace(*cp))
+				cp++;
+			n += *cp != '\0';
+			while (*cp && !isspace(*cp))
+				cp++;
+		} else {
+			n += *cp != '\n';
+			while (*cp && *cp++ != sepchar)
+				;
+		}
+	return(n);
+}
 
 double
 chanvalue(            /* return value for column n */

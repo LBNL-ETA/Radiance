@@ -1214,3 +1214,5 @@ when it was given too many modifiers.
 
 Fixed problem with rpict where it was drawing illum sources badly
 even when they weren't all that small in the view.
+
+Added in(i) function to rcalc for more flexible channel evaluation.

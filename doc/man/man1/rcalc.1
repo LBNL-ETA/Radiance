@@ -209,6 +209,16 @@ are evaluated.
 This provides a convenient method for avoiding inappropriate calculations.
 The following library of pre-defined functions and variables is provided:
 .TP 10n
+.BR "in(n)"
+Return the value for input column
+.I n,
+or the number of columns available in this record if
+.I n
+is 0.
+This is an alternate way to get a column value instead of using
+the $N notation, and is more flexible since it is programmable.
+This function is disabled if an input format is used.
+.TP
 .BR "if(cond, then, else)"
 if cond is greater than zero,
 then is evaluated, otherwise else is evaluated.
