@@ -1,14 +1,12 @@
-/* RCSid: $Id: rholo.h,v 3.24 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid: $Id: rholo.h,v 3.25 2004/06/08 19:48:30 greg Exp $ */
 /*
  * Header file for rholo program
  */
 #ifndef _RAD_RHOLO_H_
 #define _RAD_RHOLO_H_
 
-#include <stdio.h>
-
-#include "view.h"
 #include "holo.h"
+#include "view.h"
 #include "vars.h"
 
 #ifdef __cplusplus

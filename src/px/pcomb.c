@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.32 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.33 2004/06/08 19:48:30 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -8,9 +8,8 @@ static const char	RCSid[] = "$Id: pcomb.c,v 2.32 2004/03/28 20:33:14 schorsch Ex
  */
 
 #include "platform.h"
+#include "standard.h"
 #include "rtprocess.h"
-#include "rterror.h"
-#include "rtmisc.h"
 #include "color.h"
 #include "calcomp.h"
 #include "view.h"

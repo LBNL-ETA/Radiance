@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.15 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.16 2004/06/08 19:48:30 greg Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -7,7 +7,6 @@ static const char	RCSid[] = "$Id: rhdisp3.c,v 3.15 2004/01/01 11:21:55 schorsch 
 
 #include "rholo.h"
 #include "rhdisp.h"
-#include "view.h"
 
 struct cellist {
 	GCOORD	*cl;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.46 2004/03/26 21:36:20 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.47 2004/06/08 19:48:31 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -23,9 +23,7 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.46 2004/03/26 21:36:20 schorsch
 
 #include "platform.h"
 #include "paths.h"
-#include "rtio.h"
-#include "rterror.h"
-#include "rtmisc.h"
+#include "standard.h"
 #include "view.h"
 #include "vars.h"
 #include "netproc.h"

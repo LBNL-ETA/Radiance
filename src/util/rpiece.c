@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.43 2004/03/26 21:36:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.44 2004/06/08 19:48:31 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -12,8 +12,7 @@ static const char	RCSid[] = "$Id: rpiece.c,v 2.43 2004/03/26 21:36:20 schorsch E
 #include <sys/wait.h>
 
 #include "platform.h"
-#include "rtio.h"
-#include "rtmisc.h"
+#include "standard.h"
 #include "color.h"
 #include "view.h"
 #include "rtprocess.h"

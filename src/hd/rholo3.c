@@ -1,15 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.41 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.42 2004/06/08 19:48:30 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
  */
 
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
-
-#include "view.h"
 #include "rholo.h"
 
 #ifndef NFRAG2CHUNK
