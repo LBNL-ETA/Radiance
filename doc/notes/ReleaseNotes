@@ -1256,7 +1256,7 @@ Added -I option to replmarks for mesh instancing.
 Made similar change for virtual sources to allow modifiers and aliases
 on the mirror and prism types to work properly.
 
-Rob Guglielmetti dded -lw and -lh options to falsecolor to control the
+Rob Guglielmetti added -lw and -lh options to falsecolor to control the
 legend dimensions.  Made it so -lw 0 and/or -lh 0 turns legend off.
 
 Made it so pcompos will read everything from a stream even if it doesn't
@@ -1296,7 +1296,7 @@ Fixed a very obscure bug in rpict that caused a dark horizontal
 line in certain cylindrical projections due to improper drawing
 of the sky dome source in rt/srcdraw.c.
 
-Fixed problems with effective ray lenths computed for dielectric
+Fixed problems with effective ray lengths computed for dielectric
 and BRTDfunc materials.  This was most evident in breakup of holodeck
 views when VDISTANCE=True.
 
