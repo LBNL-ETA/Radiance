@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.13 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.14 2004/05/25 06:30:46 greg Exp $";
 #endif
 /*
  * Table lookup routines
@@ -167,7 +167,8 @@ extern int
 lu_doall(		/* loop through all valid table entries */
 	register LUTAB	*tbl,
 	//int	(*f)(LUENT *)
-	lut_doallf_t *f
+	lut_doallf_t *f,
+	void *p
 )
 {
 	int	rval = 0;
@@ -175,9 +176,12 @@ lu_doall(		/* loop through all valid table entries */
 
 	for (tp = tbl->tabl + tbl->tsiz; tp-- > tbl->tabl; )
 		if (tp->data != NULL) {
-			if (f != NULL)
-				rval += (*f)(tp);
-			else
+			if (f != NULL) {
+				int	r = (*f)(tp, p);
+				if (r < 0)
+					return(-1);
+				rval += r;
+			} else
 				rval++;
 		}
 	return(rval);

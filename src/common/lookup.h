@@ -1,4 +1,4 @@
-/* RCSid $Id: lookup.h,v 2.12 2004/03/28 20:33:12 schorsch Exp $ */
+/* RCSid $Id: lookup.h,v 2.13 2004/05/25 06:30:46 greg Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
@@ -79,14 +79,14 @@ typedef struct {
  * allocated table itself.
  */
 
-typedef int lut_doallf_t(LUENT *p);
+typedef int lut_doallf_t(LUENT *e, void *p);
 
 extern lut_keycmpf_t lu_strcmp;
 extern int	lu_init(LUTAB *tbl, int nel);
 extern unsigned long	lu_shash(void *s);
 extern LUENT	*lu_find(LUTAB *tbl, char *key);
 extern void	lu_delete(LUTAB *tbl, char *key);
-extern int	lu_doall(LUTAB *tbl, lut_doallf_t *f);
+extern int	lu_doall(LUTAB *tbl, lut_doallf_t *f, void *p);
 extern void	lu_done(LUTAB *tbl);
 
 #define LU_SINIT(fk,fd) {lu_shash,lu_strcmp,fk,fd,0,NULL,0}
