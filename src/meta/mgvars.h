@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgvars.h,v 1.3 2003/11/14 00:14:40 schorsch Exp $ */
+/* RCSid: $Id: mgvars.h,v 1.4 2003/11/15 02:13:37 schorsch Exp $ */
 /*
  *  mgvars.h - header file for graphing routines using variables.
  *
@@ -116,7 +116,7 @@ extern void mgclearall(void);
 extern void mgload(char *file);
 extern void mgsave(char *file);
 extern void setmgvar(char *fname, FILE *fp, char *string);
-extern int mgcurve(int c, int (*f)());
+extern int mgcurve(int c, void (*f)(int c, double x, double y));
 extern void mgtoa(register char *s, VARIABLE *vp);
 
 

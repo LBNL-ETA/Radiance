@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: imagew.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: imagew.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to print meta-files on a dot-matrix printer
@@ -52,6 +52,11 @@ static const char	RCSid[] = "$Id: imagew.c,v 1.3 2003/10/27 10:28:59 schorsch Ex
 #include  "span.h"
 
 
+static int flipbyte(register int  b);
+static void pinit(void);
+static void pclear(void);
+static void puninit(void);
+
 
 char  *progname;
 
@@ -92,10 +97,11 @@ static short  condonly = FALSE,
 	      conditioned = FALSE;
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
+int
+main(
+int  argc,
+char  **argv
+)
 
 {
  FILE  *fp;
@@ -165,14 +171,9 @@ char  **argv;
  }
 
 
-
-
-
-
-thispage()		/* rewind and initialize current page */
-
+void
+thispage(void)		/* rewind and initialize current page */
 {
-
     if (lineno != 0) {
         fputs(LFREV, stdout);
 	while (lineno) {
@@ -181,14 +182,11 @@ thispage()		/* rewind and initialize current page */
 	}
 	fputs(LFNORM, stdout);
     }
-
 }
 
 
-
-
-nextpage()		/* advance to next page */
-
+void
+nextpage(void)		/* advance to next page */
 {
 
     fputs("\f\r", stdout);
@@ -198,9 +196,8 @@ nextpage()		/* advance to next page */
 }
 
 
-
-contpage()		/* continue on this page */
-
+void
+contpage(void)		/* continue on this page */
 {
 
     while (lineno++ < NLINES)
@@ -211,9 +208,8 @@ contpage()		/* continue on this page */
 }
 
 
-
-printspan()		/* output span to printer */
-
+void
+printspan(void)		/* output span to printer */
 {
     register int  i;
 
@@ -241,10 +237,9 @@ printspan()		/* output span to printer */
 
 
 int
-flipbyte(b)		/* flip an 8-bit byte end-to-end */
-
-register int  b;
-
+flipbyte(		/* flip an 8-bit byte end-to-end */
+    register int  b
+)
 {
     register int  i, a = 0;
 
@@ -259,11 +254,10 @@ register int  b;
 }
 
 
-
-
-printstr(p)		/* output a string to the printer */
-
-PRIMITIVE  *p;
+void
+printstr(		/* output a string to the printer */
+    PRIMITIVE  *p
+)
 
 {
 
@@ -278,12 +272,11 @@ PRIMITIVE  *p;
     fputs(p->args, stdout);
     fputs(PNORM, stdout);
     putc('\r', stdout);
-
 }
 
 
-
-pinit()				/* initialize printer for output */
+void
+pinit(void)				/* initialize printer for output */
 {
     pclear();
 				/* get eighth bit */
@@ -294,14 +287,15 @@ pinit()				/* initialize printer for output */
 }
 
 
-puninit()			/* uninitialize printer */
+void
+puninit(void)			/* uninitialize printer */
 {
     pclear();
 }
 
 
-pclear()			/* clear printer and sleep */
-
+void
+pclear(void)			/* clear printer and sleep */
 {
     register int  i, j;
 

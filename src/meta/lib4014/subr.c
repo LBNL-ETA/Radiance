@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: subr.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
-#endif
-#ifndef lint
-static char sccsid[] = "@(#)subr.c	4.1 (Berkeley) 6/27/83";
+static const char	RCSid[] = "$Id: subr.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 
 #include <stdio.h>
+
+#include "local4014.h"
+#include "lib4014.h"
+
 float obotx = 0.;
 float oboty = 0.;
 float botx = 0.;
@@ -18,7 +19,13 @@ int oloy = -1;
 int ohiy = -1;
 int ohix = -1;
 int oextra = -1;
-cont(x,y){
+
+extern void
+cont(
+	int x,
+	int y
+)
+{
 	int hix,hiy,lox,loy,extra;
 	int n;
 	x = (x-obotx)*scalex + botx;
@@ -60,6 +67,11 @@ cont(x,y){
 		putch(0);
 }
 
-putch(c){
+extern void
+putch(
+	int c
+)
+{
 	putc(c,stdout);
 }
+

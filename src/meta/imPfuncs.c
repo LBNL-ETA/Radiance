@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: imPfuncs.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: imPfuncs.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  imPfuncs - functional interface to imPress, support for imPfuncs.h
@@ -22,22 +22,26 @@ static const char	RCSid[] = "$Id: imPfuncs.c,v 1.1 2003/02/22 02:07:26 greg Exp 
 
 /* commands with word operands: */
 
-im_w(code, w)
 
-int code;
-unsigned int w;
+void
+im_w(
+	int code,
+	unsigned int w
+)
 
 {
     putc(code, imout);
     im_putword(w);
 }
 
-im_www(code, wa, wb, wc)
 
-int code;
-unsigned int wa;
-unsigned int wb;
-unsigned int wc;
+void
+im_www(
+	int code,
+	unsigned int wa,
+	unsigned int wb,
+	unsigned int wc
+)
 
 {
     putc(code, imout);
@@ -46,14 +50,16 @@ unsigned int wc;
     im_putword(wc);
 }
 
-im_wwwww(code, wa, wb, wc, wd, we)
 
-int code;
-unsigned int wa;
-unsigned int wb;
-unsigned int wc;
-unsigned int wd;
-unsigned int we;
+void
+im_wwwww(
+	int code,
+	unsigned int wa,
+	unsigned int wb,
+	unsigned int wc,
+	unsigned int wd,
+	unsigned int we
+)
 
 {
     putc(code, imout);
@@ -66,46 +72,58 @@ unsigned int we;
 
 /* commands with bit operands: */
 
-im_21(code, b2, b1)		/* pads 5 bits on left */
-
-unsigned int b2;
-unsigned int b1;
+void
+im_21(		/* pads 5 bits on left */
+	int code,
+	unsigned int b2,
+	unsigned int b1
+)
 
 {
     putc(code, imout);
     im_putbyte((b2 << 1) | b1);
 }
 
-im_223(code, b2a, b2b, b3)	/* pads 1 bit on left */
 
-unsigned int b2a;
-unsigned int b2b;
-unsigned int b3;
+void
+im_223(		/* pads 1 bit on left */
+	int code,
+	unsigned int b2a,
+	unsigned int b2b,
+	unsigned int b3
+)
 
 {
     putc(code, imout);
     im_putbyte((b2a << 5) | (b2b << 3) | b3);
 }
 
-im_77(code, b7a, b7b)		/* pads 2 bits on left */
 
-unsigned int b7a;
-unsigned int b7b;
+void
+im_77(		/* pads 2 bits on left */
+	int code,
+	unsigned int b7a,
+	unsigned int b7b
+)
 
 {
     putc(code, imout);
     im_putword((b7a << 7) | b7b);
 }
 
-im_putstring(string)
 
-char *string;
+void
+im_putstring(
+	char *string
+)
 
 {
     fputs(string, imout);
     im_putbyte(0);
 }
 
+
+void
 imCreateFamilyTable(va_alist)
 
 va_dcl
@@ -140,6 +158,8 @@ va_dcl
     va_end(vars);
 }
 
+
+void
 imCreatePath(va_alist)
 
 va_dcl
@@ -169,10 +189,12 @@ va_dcl
     }
 }
 
-imCreatePathV(count, vec)
 
-unsigned int count;
-unsigned int *vec;
+void
+imCreatePathV(
+	unsigned int count,
+	unsigned int *vec
+)
 
 {
     /* write the first part of the command */

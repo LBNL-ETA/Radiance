@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tbar.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: tbar.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *       PROGRAM TO PLOT TEL-A-GRAF POINTS TO METAFILE
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: tbar.c,v 1.4 2003/08/01 14:14:24 schorsch Exp 
 
 #include "rtprocess.h" /* getpid() */
 #include "tgraph.h"
+#include "plot.h"
 
 
 #define  XLEGEND  (XBEG+XSIZ+4*TSIZ)	/* x start of legend */
@@ -47,20 +48,19 @@ int    symrad = SYMRAD;			/* symbol radius */
 
 char  *progname;
 
+static void barout(int  cn, double  x, double  y);
+static void boxout(int  a0, int  xmn, int ymn, int xmx, int ymx);
 
 
-
-
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 /*
  *     Take Tel-A-Graf runnable files and convert them to
  *  metafile primitives to send to standard output
  */
-
 {
  char  tfname[MAXFNAME];
  FILE  *fp;
@@ -120,12 +120,10 @@ char  **argv;
 
 
 
-
-
-plot(fp)			/* read file and generate plot */
-
-FILE  *fp;
-
+void
+plot(			/* read file and generate plot */
+	FILE  *fp
+)
 {
  int  ncur = 0; 		/* curves seen so far */
  char  line[255], *s;
@@ -188,12 +186,12 @@ FILE  *fp;
  }
 
 
-
-barout(cn, x, y)		/* output bar for curve cn, value (x,y) */
-
-int  cn;
-double  x, y;
-
+void
+barout(		/* output bar for curve cn, value (x,y) */
+	int  cn,
+	double  x,
+	double  y
+)
 {
     int  barleft, barwidth;
     int  barlower, barheight;
@@ -213,22 +211,22 @@ double  x, y;
     }
     boxout(curtype[cn], barleft, barlower,
 		barleft+barwidth, barlower+barheight);
-    
 }
 
 
-
-boxout(a0, xmn, ymn, xmx, ymx)			/* output a box */
-
-int  a0;
-int  xmn, ymn, xmx, ymx;
-
+void
+boxout(			/* output a box */
+	int  a0,
+	int  xmn,
+	int ymn,
+	int xmx,
+	int ymx
+)
 {
-    
     pprim(PRFILL, a0, xmn, ymn, xmx, ymx, NULL);
     plseg(0, xmn, ymn, xmx, ymn);
     plseg(0, xmn, ymn, xmn, ymx);
     plseg(0, xmn, ymx, xmx, ymx);
     plseg(0, xmx, ymn, xmx, ymx);
-    
 }
+

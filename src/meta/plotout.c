@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plotout.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: plotout.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to send meta-files to plot(3X) drivers
@@ -17,14 +17,12 @@ static const char	RCSid[] = "$Id: plotout.c,v 1.3 2003/10/27 10:28:59 schorsch E
 #endif
 
 
-
-
 #include  <fcntl.h>
 
 #include  "rtprocess.h"
 #include  "meta.h"
-
-
+#include  "plot.h"
+#include  "lib4014/lib4014.h"
 
 
 char  *progname;
@@ -41,13 +39,15 @@ static char  lmode[4][16] = {"solid", "shortdashed",
 
 static PRIMITIVE  nextp;
 
+static void doglobal(PRIMITIVE  *g);
+static void doprim(register PRIMITIVE  *p);
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
  FILE  *fp;
  char  comargs[200], command[300];
@@ -107,12 +107,10 @@ char  **argv;
 
 
 
-
-
-plot(infp)		/* plot meta-file */
-
-FILE  *infp;
-
+void
+plot(		/* plot meta-file */
+	FILE  *infp
+)
 {
 
     openpl();
@@ -135,12 +133,10 @@ FILE  *infp;
 
 
 
-
-
-doglobal(g)			/* execute a global command */
-
-PRIMITIVE  *g;
-
+void
+doglobal(			/* execute a global command */
+	PRIMITIVE  *g
+)
 {
     int  tty;
     char  c;
@@ -185,11 +181,10 @@ PRIMITIVE  *g;
 
 
 
-
-doprim(p)		/* plot primitive */
-
-register PRIMITIVE  *p;
-
+void
+doprim(		/* plot primitive */
+	register PRIMITIVE  *p
+)
 {
 
     if (newpage) {
@@ -217,13 +212,10 @@ register PRIMITIVE  *p;
 
 
 
-
-
-
-printstr(p)		/* output a string */
-
-register PRIMITIVE  *p;
-
+void
+printstr(		/* output a string */
+	register PRIMITIVE  *p
+)
 {
 
     move(p->xy[XMN], p->xy[YMX]);
@@ -234,13 +226,10 @@ register PRIMITIVE  *p;
 }
 
 
-
-
-
-plotlseg(p)		/* plot a line segment */
-
-register PRIMITIVE  *p;
-
+void
+plotlseg(		/* plot a line segment */
+	register PRIMITIVE  *p
+)
 {
     static short  right = FALSE;
     int  y1, y2;
@@ -267,7 +256,7 @@ register PRIMITIVE  *p;
 	cont(p->xy[XMN], y1);
 	curx = p->xy[XMN];
 	cury = y1;
-    } else if (right = !right) {
+    } else if ((right = !right)) {
 	line(p->xy[XMN], y1, p->xy[XMX], y2);
 	curx = p->xy[XMX];
 	cury = y2;

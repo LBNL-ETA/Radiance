@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pexpand.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: pexpand.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Program to expand meta-file commands
@@ -11,18 +11,16 @@ static const char	RCSid[] = "$Id: pexpand.c,v 1.2 2003/08/01 14:14:24 schorsch E
 #include  "meta.h"
 
 
-
 char  *progname;
 
 int  maxalloc = 0;		/* no limit */
 
 
-
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
  FILE  *fp;
  int  i;

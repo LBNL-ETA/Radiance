@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: primout.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: primout.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Routines for primitive output
@@ -14,9 +14,14 @@ static const char	RCSid[] = "$Id: primout.c,v 1.1 2003/02/22 02:07:26 greg Exp $
 FILE  *pout = NULL;		/* the primitive output stream */
 
 
-plseg(a0, xstart, ystart, xend, yend)		/* plot line segment */
-
-int	a0, xstart, ystart, xend, yend;
+void
+plseg(		/* plot line segment */
+	int	a0,
+	int xstart,
+	int ystart,
+	int xend,
+	int yend
+)
 
 {
     PRIMITIVE	p;
@@ -46,18 +51,19 @@ int	a0, xstart, ystart, xend, yend;
     p.args = NULL;
 
     writep(&p, pout);
-
 }
 
 
-
-
-
-
-pprim(co, a0, xmin, ymin, xmax, ymax, s)	/* print primitive */
-
-int	co, a0, xmin, ymin, xmax, ymax;
-char	*s;
+void
+pprim(	/* print primitive */
+	int	co,
+	int a0,
+	int xmin,
+	int ymin,
+	int xmax,
+	int ymax,
+	char	*s
+)
 
 {
     PRIMITIVE	p;
@@ -76,12 +82,12 @@ char	*s;
 
 
 
-
-pglob(co, a0, s)			/* print global */
-
-int  co, a0;
-char  *s;
-
+void
+pglob(			/* print global */
+	int  co,
+	int  a0,
+	char  *s
+)
 {
     PRIMITIVE  p;
     

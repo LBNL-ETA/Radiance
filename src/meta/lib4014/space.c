@@ -1,18 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: space.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
-#endif
-#ifndef lint
-static char sccsid[] = "@(#)space.c	4.1 (Berkeley) 6/27/83";
+static const char	RCSid[] = "$Id: space.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 
-extern float botx;
-extern float boty;
-extern float obotx;
-extern float oboty;
-extern float scalex;
-extern float scaley;
-extern int scaleflag;
-space(x0,y0,x1,y1){
+#include "local4014.h"
+#include "lib4014.h"
+
+extern void
+space(
+	int x0,
+	int y0,
+	int x1,
+	int y1
+)
+{
 	botx = 0.;
 	boty = 0.;
 	obotx = x0;

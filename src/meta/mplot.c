@@ -1,17 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mplot.c,v 1.2 2003/07/01 21:21:40 greg Exp $";
+static const char	RCSid[] = "$Id: mplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to line-at-a-time printers
  */
 
 
+#include  <stdio.h>
+#include  <string.h>
 #include  <fcntl.h>
 
+#include  "platform.h"
 #include  "meta.h"
-
 #include  "plot.h"
-
 #include  "span.h"
 
 
@@ -22,12 +23,22 @@ static PLIST  inqueue = {NULL, NULL};
 
 static PRIMITIVE  nextp;
 
+static void initplot(void);
+static void plotspan(FILE *infp);
+static void doglobal(PRIMITIVE *g);
+static void doprim(PRIMITIVE *p);
+static void outputspan(void);
+static void tfill(PRIMITIVE *p);
+static void fill(int attrib, int xmin, int ymin, int xmax, int ymax);
+static void paintline(int x, int y, int run, int rise, int hrad, int vrad,
+	int lpat, long run2, long rise2, int n);
+static void nextspan(void);
 
 
-plot(infp)		/* plot meta-file */
-
-FILE  *infp;
-
+void
+plot(		/* plot meta-file */
+	FILE  *infp
+)
 {
 
     do {
@@ -42,13 +53,9 @@ FILE  *infp;
 }
 
 
-
-
-
-initplot()			/* initialize this plot */
-
+void
+initplot(void)			/* initialize this plot */
 {
-
     thispage();
     outspan.xleft = 0;
     outspan.xright = dxsize - 1;
@@ -59,12 +66,10 @@ initplot()			/* initialize this plot */
 
 
 
-
-
-doglobal(g)			/* execute a global command */
-
-PRIMITIVE  *g;
-
+void
+doglobal(			/* execute a global command */
+	PRIMITIVE  *g
+)
 {
     char  c;
     int  tty;
@@ -124,12 +129,10 @@ PRIMITIVE  *g;
 
 
 
-
-
-plotspan(infp)			/* plot next span */
-
-FILE  *infp;
-
+void
+plotspan(			/* plot next span */
+	FILE  *infp
+)
 {
     PLIST  lastinq;
     register PRIMITIVE  *p;
@@ -156,11 +159,8 @@ FILE  *infp;
 }
 
 
-
-
-
-nextspan()		/* prepare next span */
-
+void
+nextspan(void)		/* prepare next span */
 {
     register int  i;
     register char  *colp, *tcolp;
@@ -182,8 +182,8 @@ nextspan()		/* prepare next span */
 }
 
 
-
-outputspan()		/* output span to printer */
+void
+outputspan(void)		/* output span to printer */
 {
     register int  i;
     register char  *colp, *tcolp;
@@ -200,11 +200,10 @@ outputspan()		/* output span to printer */
 }
 
 
-
-doprim(p)		/* plot primitive */
-
-register PRIMITIVE  *p;
-
+void
+doprim(		/* plot primitive */
+register PRIMITIVE  *p
+)
 {
     register PRIMITIVE  *newp;
     
@@ -247,12 +246,10 @@ register PRIMITIVE  *p;
 
 
 
-
-
-plotlseg(p)		/* plot a line segment */
-
-register PRIMITIVE  *p;
-
+void
+plotlseg(		/* plot a line segment */
+	register PRIMITIVE  *p
+)
 {
     register int  ti;
     long  run2 = 0L, rise2 = 0L;
@@ -310,16 +307,19 @@ register PRIMITIVE  *p;
  *  This routine paints a line with calls to fill().  The line can
  *    start and end at arbitrary points on a longer line segment.
  */
-
-paintline(x, y, run, rise, hrad, vrad, lpat, run2, rise2, n)
-
-register int  x, y;
-int  run, rise;
-int  hrad, vrad;
-int  lpat;
-long  run2, rise2;
-int  n;
-
+void
+paintline(
+	register int  x,
+	register int  y,
+	int  run,
+	int  rise,
+	int  hrad,
+	int  vrad,
+	int  lpat,
+	long  run2,
+	long  rise2,
+	int  n
+)
 {
     int  xstep, ystep;
 
@@ -364,9 +364,10 @@ int  n;
 }
 
 
-
-tfill(p)			/* fill a triangle */
-register PRIMITIVE  *p;
+void
+tfill(			/* fill a triangle */
+	register PRIMITIVE  *p
+)
 {
     register int  x, txmin, txmax;	
     int  xmn, ymn, tpat;
@@ -410,12 +411,14 @@ register PRIMITIVE  *p;
 
 
 
-
-fill(attrib, xmin, ymin, xmax, ymax)	/* fill rectangle with attribute */
-
-int  attrib;
-int  xmin, ymin, xmax, ymax;
-
+void
+fill(	/* fill rectangle with attribute */
+	int  attrib,
+	int  xmin,
+	int ymin,
+	int xmax,
+	int ymax
+)
 {
     int  filpat;
     int  rpos;

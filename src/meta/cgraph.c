@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: cgraph.c,v 1.2 2003/11/15 02:13:36 schorsch Exp $";
 #endif
 /*
  *  cgraph.c - routines for sending graphs to tty's.
@@ -11,6 +11,8 @@ static const char	RCSid[] = "$Id: cgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
 
 #include  <stdio.h>
 
+#include  "rterror.h"
+#include  "meta.h"
 #include  "mgvars.h"
 
 
@@ -29,9 +31,15 @@ static int  dwidth, dlength;		/* device width and length */
 
 static int  nplottable;		/* number of plottable points */
 
+static void climits(void);
+static void cstretch(int  c, double  x, double  y);
 
-cgraph(width, length)		/* do a character graph to stdout */
-int  width, length;
+
+extern void
+cgraph(		/* do a character graph to stdout */
+	int width,
+	int length
+)
 {
 	if (width * length > MAXSIZE) {
 		fprintf(stderr, "%s: page too big\n", progname);
@@ -44,9 +52,10 @@ int  width, length;
 }
 
 
-climits()			/* get min & max values */
+static void
+climits(void)			/* get min & max values */
 {
-	int  i, cstretch();
+	int  i;
 
 	xmin = gparam[XMIN].flags & DEFINED ?
 			varvalue(gparam[XMIN].name) :
@@ -74,9 +83,12 @@ climits()			/* get min & max values */
 }
 
 
-cstretch(c, x, y)			/* stretch our boundaries */
-int  c;
-double  x, y;
+void
+cstretch(			/* stretch our boundaries */
+	int  c,
+	double  x,
+	double  y
+)
 {
 	if (gparam[XMIN].flags & DEFINED &&
 			x < xmin)
@@ -104,9 +116,9 @@ double  x, y;
 }
 
 
-cplot()				/* do character  plot */
+extern void
+cplot(void)				/* do character  plot */
 {
-	int  cpoint();
 	int  i, j;
 	register char  *op;
 
@@ -124,9 +136,12 @@ cplot()				/* do character  plot */
 }
 
 
-cpoint(c, x, y)			/* store a point */
-int  c;
-double  x, y;
+extern void
+cpoint(			/* store a point */
+	int  c,
+	double  x,
+	double  y
+)
 {
 	register int  ndx;
 

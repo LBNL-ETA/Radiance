@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rplot.c,v 1.2 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to raster files
@@ -7,9 +7,7 @@ static const char	RCSid[] = "$Id: rplot.c,v 1.2 2003/07/21 22:30:18 schorsch Exp
 
 
 #include  "meta.h"
-
 #include  "plot.h"
-
 #include  "rast.h"
 
 
@@ -19,13 +17,22 @@ static PLIST  inqueue = {NULL, NULL};
 
 static PRIMITIVE  nextp;
 
+static void initplot(void);
+static void doglobal(PRIMITIVE  *g);
+static void plotblock(FILE  *infp);
+static void doprim(PRIMITIVE  *p);
+static void doprim(PRIMITIVE  *p);
+static void paintline(int  x, int  y, int  run, int  rise, int  hrad, int  vrad,
+	int  lpat, long  run2, long  rise2, int  n);
+static void tfill(PRIMITIVE  *p);
+static void fill(int  attrib, int  xmin, int ymin, int xmax, int ymax);
 
-plot(infp)		/* plot meta-file */
 
-FILE  *infp;
-
+void
+plot(		/* plot meta-file */
+	FILE  *infp
+)
 {
-
     do {
 	readp(&nextp, infp);
 	initplot();
@@ -34,15 +41,11 @@ FILE  *infp;
 	doglobal(&nextp);
 	fargs(&nextp);
     } while (nextp.com != PEOF);
-
 }
 
 
-
-
-
-initplot()			/* initialize this plot */
-
+void
+initplot(void)			/* initialize this plot */
 {
     int  i;
 
@@ -66,17 +69,11 @@ initplot()			/* initialize this plot */
 }
 
 
-
-
-
-doglobal(g)			/* execute a global command */
-
-PRIMITIVE  *g;
-
+void
+doglobal(			/* execute a global command */
+	PRIMITIVE  *g
+)
 {
-    char  c;
-    int  tty;
-
     switch (g->com) {
 
 	case PEOF:
@@ -106,17 +103,14 @@ PRIMITIVE  *g;
 	    error(WARNING, errmsg);
 	    break;
 	}
-
 }
 
 
 
-
-
-plotblock(infp)			/* plot next block */
-
-FILE  *infp;
-
+void
+plotblock(			/* plot next block */
+	FILE  *infp
+)
 {
     PLIST  lastinq;
     register PRIMITIVE  *p;
@@ -144,10 +138,8 @@ FILE  *infp;
 
 
 
-
-
-nextblock()		/* prepare next block */
-
+extern void
+nextblock(void)		/* prepare next block */
 {
     register int  i, n;
     register unsigned char  *colp;
@@ -167,13 +159,11 @@ nextblock()		/* prepare next block */
 	outblock.ybot += NUMSCANS;
     }
     return;
-memerr:
-    error(SYSTEM, "out of memory in nextblock");
 }
 
 
-
-outputblock()		/* output block to printer */
+void
+outputblock(void)		/* output block to printer */
 {
     register int  i, n;
     register unsigned char  *colp;
@@ -191,11 +181,10 @@ outputblock()		/* output block to printer */
 }
 
 
-
-doprim(p)		/* plot primitive */
-
-register PRIMITIVE  *p;
-
+void
+doprim(		/* plot primitive */
+	register PRIMITIVE  *p
+)
 {
     register PRIMITIVE  *newp;
     
@@ -229,17 +218,13 @@ register PRIMITIVE  *p;
 	newp->args = savestr(p->args);
         add(newp, &inqueue);
     }
-        
 }
 
 
-
-
-
-plotlseg(p)		/* plot a line segment */
-
-register PRIMITIVE  *p;
-
+void
+plotlseg(		/* plot a line segment */
+	register PRIMITIVE  *p
+)
 {
     register int  ti;
     long  run2 = 0L, rise2 = 0L;
@@ -297,16 +282,19 @@ register PRIMITIVE  *p;
  *  This routine paints a line with calls to fill().  The line can
  *    start and end at arbitrary points on a longer line segment.
  */
-
-paintline(x, y, run, rise, hrad, vrad, lpat, run2, rise2, n)
-
-register int  x, y;
-int  run, rise;
-int  hrad, vrad;
-int  lpat;
-long  run2, rise2;
-int  n;
-
+void
+paintline(
+	register int  x,
+	register int  y,
+	int  run,
+	int  rise,
+	int  hrad,
+	int  vrad,
+	int  lpat,
+	long  run2,
+	long  rise2,
+	int  n
+)
 {
     int  xstep, ystep;
 
@@ -351,9 +339,10 @@ int  n;
 }
 
 
-
-tfill(p)			/* fill a triangle */
-register PRIMITIVE  *p;
+void
+tfill(			/* fill a triangle */
+	register PRIMITIVE  *p
+)
 {
     register int  x, txmin, txmax;	
     int  xmn, ymn, tpat;
@@ -397,12 +386,14 @@ register PRIMITIVE  *p;
 
 
 
-
-fill(attrib, xmin, ymin, xmax, ymax)	/* fill rectangle with attribute */
-
-register int  attrib;
-int  xmin, ymin, xmax, ymax;
-
+void
+fill(	/* fill rectangle with attribute */
+	register int  attrib,
+	int  xmin,
+	int ymin,
+	int xmax,
+	int ymax
+)
 {
     register int  i, j;
 

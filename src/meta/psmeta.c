@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psmeta.c,v 1.3 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: psmeta.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
 *  Program to convert meta-files to PostScript.
@@ -9,21 +9,22 @@ static const char	RCSid[] = "$Id: psmeta.c,v 1.3 2003/07/21 22:30:18 schorsch Ex
 
 
 #include  "meta.h"
-
 #include  "plot.h"
+#include  "psplot.h"
 
 
 char  *progname;
 
 static short  newpage = TRUE;
 
+static void doprim(PRIMITIVE  *p);
+static int doglobal(PRIMITIVE  *g);
 
-
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
 	FILE  *fp;
 
@@ -51,11 +52,10 @@ char  **argv;
 
 
 
-
-plot(infp)		/* plot meta-file */
-
-FILE  *infp;
-
+void
+plot(		/* plot meta-file */
+	FILE  *infp
+)
 {
 	PRIMITIVE  nextp;
 
@@ -70,13 +70,12 @@ FILE  *infp;
 }
 
 
-
-doglobal(g)			/* execute a global command */
-
-PRIMITIVE  *g;
-
+int
+doglobal(			/* execute a global command */
+	PRIMITIVE  *g
+)
 {
-	FILE  *fp;
+	FILE  *fp = NULL;
 
 	switch (g->com) {
 
@@ -142,11 +141,10 @@ PRIMITIVE  *g;
 
 
 
-
-doprim(p)		/* plot primitive */
-
-PRIMITIVE  *p;
-
+void
+doprim(		/* plot primitive */
+	PRIMITIVE  *p
+)
 {
 
 	switch (p->com) {
@@ -185,5 +183,5 @@ PRIMITIVE  *p;
 		return;
 	}
 	newpage = FALSE;
-
 }
+

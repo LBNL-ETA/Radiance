@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mtext.c,v 1.5 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: mtext.c,v 1.6 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to convert ascii file to metafile
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: mtext.c,v 1.5 2003/08/01 14:14:24 schorsch Exp
 #include <string.h>
 
 #include  "meta.h"
+#include  "plot.h"
 
 #define  MAXLINE  1024
 
@@ -33,13 +34,17 @@ static int  cwidth = CWIDTH,
 
 char  *progname;
 
+static void execute(FILE  *fp);
+static void sectout(char  **sect, int  nlines, int  maxlen);
+static void plotstr(int  lino, char  *s);
 
 
-main(argc, argv)
 
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
     FILE  *fp;
     
@@ -109,19 +114,17 @@ return(0);
 }
 
 
-
-
-execute(fp)		/* execute a file */
-
-FILE  *fp;
-
+void
+execute(		/* execute a file */
+	FILE  *fp
+)
 {
     static char  linbuf[MAXLINE];
     int  nlines;
     char  **section;
     int  maxlen;
     int  done;
-    int  i, j, k;
+    int  j, k;
     
     nlines = XYSIZE/cheight;
     done = FALSE;
@@ -132,7 +135,7 @@ FILE  *fp;
     while (!done) {
         maxlen = 0;
         for (j = 0; j < nlines; j++) {
-            if (done = fgets(linbuf, MAXLINE, fp) == NULL)
+            if ((done = fgets(linbuf, MAXLINE, fp) == NULL))
                 break;
             k = strlen(linbuf);
             if (linbuf[k-1] == '\n')
@@ -156,14 +159,12 @@ FILE  *fp;
 }
 
 
-
-
-sectout(sect, nlines, maxlen)		/* write out a section */
-
-char  **sect;
-int  nlines;
-int  maxlen;
-
+void
+sectout(		/* write out a section */
+	char  **sect,
+	int  nlines,
+	int  maxlen
+)
 {
     int  linwidt;
     char  *slin;
@@ -194,12 +195,11 @@ int  maxlen;
 }
 
 
-
-plotstr(lino, s)		/* plot string on line lino */
-
-int  lino;
-char  *s;
-
+void
+plotstr(		/* plot string on line lino */
+	int  lino,
+	char  *s
+)
 {
     int  a0;
     register int  bottom, right;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bgraph.c,v 1.3 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: bgraph.c,v 1.4 2003/11/15 02:13:36 schorsch Exp $";
 #endif
 /*
  *  bgraph.c - program to send plots to metafile graphics programs.
@@ -12,6 +12,8 @@ static const char	RCSid[] = "$Id: bgraph.c,v 1.3 2003/08/01 14:14:24 schorsch Ex
 #include  <stdio.h>
 
 #include  "meta.h"
+#include  "mgvars.h"
+#include  "mgraph.h"
 
 #define  istyp(s)	(s[0] == '-')
 
@@ -21,10 +23,14 @@ char  *progname;
 
 char  *libpath[4];
 
+static void dofile(int  optc, char  *optv[], char  *file);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	char  *getenv();
 	int  i, file0;
@@ -50,13 +56,16 @@ char  *argv[];
 			dofile(file0-1, argv+1, argv[i]);
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
-dofile(optc, optv, file)		/* plot a file */
-int  optc;
-char  *optv[];
-char  *file;
+static void
+dofile(		/* plot a file */
+	int  optc,
+	char  *optv[],
+	char  *file
+)
 {
 	char  stmp[256];
 	int  i;

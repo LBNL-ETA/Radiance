@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: misc.c,v 1.3 2003/07/14 16:05:45 greg Exp $";
+static const char	RCSid[] = "$Id: misc.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Miscellaneous functions for meta-files
  */
 
 
+#include  "rtio.h"
 #include  "meta.h"
 
 
@@ -16,9 +17,9 @@ char  errmsg[128];
 
 
 int
-comndx(c)		/* return index for command */
-
-register int  c;
+comndx(		/* return index for command */
+	register int  c
+)
 
 {
  register char  *cp;
@@ -39,9 +40,9 @@ register int  c;
 
 
 PRIMITIVE  *
-pop(pl)			/* pop top off plist */
-
-register PLIST  *pl;
+pop(			/* pop top off plist */
+	register PLIST  *pl
+)
 
 {
  register PRIMITIVE  *p;
@@ -57,11 +58,11 @@ register PLIST  *pl;
 
 
 
-
-push(p, pl)		/* push primitive onto plist */
-
-register PRIMITIVE  *p;
-register PLIST  *pl;
+void
+push(		/* push primitive onto plist */
+	register PRIMITIVE  *p,
+	register PLIST  *pl
+)
 
 {
 
@@ -73,12 +74,11 @@ register PLIST  *pl;
 
 
 
-
-add(p, pl)		/* add primitive to plist */
-
-register PRIMITIVE  *p;
-register PLIST  *pl;
-
+void
+add(		/* add primitive to plist */
+	register PRIMITIVE  *p,
+	register PLIST  *pl
+)
 {
 
  if (pl->ptop == NULL)
@@ -92,10 +92,11 @@ register PLIST  *pl;
 
 
 
-
-append(pl1, pl2)		/* append pl1 to the end of pl2 */
-
-register PLIST  *pl1, *pl2;
+void
+append(		/* append pl1 to the end of pl2 */
+	register PLIST  *pl1,
+	register PLIST  *pl2
+)
 
 {
 
@@ -111,10 +112,10 @@ register PLIST  *pl1, *pl2;
 
 
 
-
-fargs(p)		/* free any arguments p has */
-
-register PRIMITIVE  *p;
+void
+fargs(		/* free any arguments p has */
+register PRIMITIVE  *p
+)
 
 {
 
@@ -128,11 +129,11 @@ register PRIMITIVE  *p;
 
 
 char *
-nextscan(start, format, result)		/* scan and advance through string */
-
-register char  *start;
-char  *format;
-char  *result;
+nextscan(		/* scan and advance through string */
+	register char  *start,
+	char  *format,
+	char  *result
+)
 
 {
 
@@ -148,11 +149,12 @@ char  *result;
 }
 
 
-
-mcopy(p1, p2, n)	/* copy p2 into p1 size n */
-
-register char  *p1, *p2;
-register int  n;
+void
+mcopy(	/* copy p2 into p1 size n */
+register char  *p1,
+register char  *p2,
+register int  n
+)
 
 {
 

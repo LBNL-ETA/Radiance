@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgvars.c,v 1.4 2003/11/14 00:14:40 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgvars.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  mgvars.c - routines dealing with graph variables.
@@ -577,8 +577,8 @@ register char  **pathlist
 
 int
 mgcurve(			/* get a curve's (unmapped) values */
-int  c,
-int  (*f)()
+	int  c,
+	void (*f)(int c, double x, double y)
 )
 {
 	int  nargs;

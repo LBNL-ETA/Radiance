@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.7 2003/10/21 19:19:28 schorsch Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.8 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
@@ -92,7 +92,7 @@ FILE  *ofp		/* output file */
 {
     PRIMITIVE  *plp;		/* position in list */
     PRIMITIVE  *pp[NFILES];	/* input primitives */
-    int  minf;
+    int  minf = 0;
     PRIMITIVE  *minp;
     register int i;
 
@@ -201,7 +201,6 @@ int  (*pcmp)()
 {
     static int  nf = 0,
     		intree = FALSE;
-    FILE  *fp;
 
     if (isglob(pl->pbot->com)) {
 

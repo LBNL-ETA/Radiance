@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgraph.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: mgraph.h,v 1.3 2003/11/15 02:13:37 schorsch Exp $ */
 /*
  *  mgraph.h - header file for graphing routines.
  *
@@ -108,6 +108,8 @@ extern "C" {
 typedef struct {
 	double  min, max, step;
 }  BOUNDS;
+
+extern void mgraph(void);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.8 2003/10/27 10:28:59 schorsch Exp $ */
+/* RCSid: $Id: meta.h,v 1.9 2003/11/15 02:13:37 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -134,8 +134,8 @@ extern char  *progname;
 extern void expand(FILE *infp, short *exlist);
 	/* palloc.c */
 extern PRIMITIVE *palloc(void);
-extern void pfree(register PRIMITIVE *p);
-extern void plfree(register PLIST *pl);
+extern void pfree(PRIMITIVE *p);
+extern void plfree(PLIST *pl);
 	/* sort.c */
 extern void sort(FILE *infp, int (*pcmp)());
 extern void pmergesort(FILE *fi[], int nf, PLIST *pl, int (*pcmp)(), FILE *ofp);
@@ -158,6 +158,32 @@ extern void msetpat(int pn, char *pat);
 extern void minclude(char *fname);
 extern void mdone(void);
 extern void mendpage(void);
+	/* misc.c */
+extern int comndx(int c);
+extern PRIMITIVE  *pop(PLIST  *pl);
+extern void push(PRIMITIVE  *p, PLIST  *pl);
+extern void add(PRIMITIVE  *p, PLIST  *pl);
+extern void append(PLIST  *pl1, PLIST  *pl2);
+extern void fargs(PRIMITIVE  *p);
+extern char * nextscan(char  *start, char  *format, char  *result);
+extern void mcopy(char  *p1, char  *p2, int  n);
+	/* segment.c */
+extern int inseg(void);
+extern void closeseg(void);
+extern void openseg(char *name);
+extern void segprim(PRIMITIVE  *p);
+extern void segment(PRIMITIVE *p, void (*funcp)(PRIMITIVE *p));
+extern int xlate(short extrema, PRIMITIVE *p, PRIMITIVE *px);
+	/* cgraph.c */
+extern void cgraph(int width, int length);
+extern void cplot(void);
+extern void cpoint(int  c, double  x, double  y);
+	/* gcalc.c */
+extern void gcalc(char  *types);
+	/* hfio.c, mfio.c */
+extern int readp(PRIMITIVE  *p, FILE  *fp);
+extern void writep(PRIMITIVE  *p, FILE  *fp);
+extern void writeof(FILE  *fp); 
 
 
 #ifdef __cplusplus

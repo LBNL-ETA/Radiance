@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: implot.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: implot.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Impress plotting functions
@@ -51,9 +51,13 @@ static int  fontmap[16] = {3,4,4,5,2,4,4,5,1,2,2,3,0,2,2,3};
 
 int  dxsize, dysize;		/* page size */
 
+static void settex(int  pp);
+static void setpen(register int  ps);
 
 
-imInit()		/* initialize imagen */
+
+void
+imInit(void)		/* initialize imagen */
 {
 
     imout = stdout;
@@ -70,10 +74,10 @@ imInit()		/* initialize imagen */
 }
 
 
-
-printstr(p)		/* output a string */
-
-register PRIMITIVE  *p;
+void
+printstr(		/* output a string */
+	register PRIMITIVE  *p
+)
 
 {
     static int  curfont = -1;
@@ -106,10 +110,10 @@ register PRIMITIVE  *p;
 
 
 
-
-plotlseg(p)		/* plot a line segment */
-
-register PRIMITIVE  *p;
+void
+plotlseg(		/* plot a line segment */
+	register PRIMITIVE  *p
+)
 
 {
     int  x1, x2, y1, y2;
@@ -140,10 +144,10 @@ register PRIMITIVE  *p;
 
 
 
-
-setfill(a0)			/* set filling mode */
-
-register int  a0;
+void
+setfill(			/* set filling mode */
+	register int  a0
+)
 
 {
 
@@ -152,10 +156,10 @@ register int  a0;
 }
 
 
-
-setpen(ps)			/* set pen size to ps */
-
-register int  ps;
+void
+setpen(			/* set pen size to ps */
+	register int  ps
+)
 
 {
     static int  curpsiz = -1;		/* current pen size */
@@ -175,10 +179,10 @@ register int  ps;
 }
 
 
-
-settex(pp)			/* set texture pattern to pp */
-
-int  pp;
+void
+settex(			/* set texture pattern to pp */
+	int  pp
+)
 
 {
     static int  curtex = -1;		/* current texture */
@@ -222,10 +226,10 @@ int  pp;
 }
 
 
-
-fillrect(p)			/* fill a rectangle */
-
-register PRIMITIVE  *p;
+void
+fillrect(			/* fill a rectangle */
+	register PRIMITIVE  *p
+)
 
 {
     int  left, right, top, bottom;
@@ -242,10 +246,10 @@ register PRIMITIVE  *p;
 }
 
 
-
-filltri(p)			/* fill a triangle */
-
-register PRIMITIVE  *p;
+void
+filltri(			/* fill a triangle */
+	register PRIMITIVE  *p
+)
 
 {
     int  left, right, top, bottom;
@@ -278,14 +282,15 @@ register PRIMITIVE  *p;
 
 
 
-
-xform(xp, yp, p)		/* transform a point according to p */
-
-register int  *xp, *yp;
-register PRIMITIVE  *p;
+void
+xform(		/* transform a point according to p */
+	register int  *xp,
+	register int  *yp,
+	register PRIMITIVE  *p
+)
 
 {
-    int  x, y;
+    int  x = 0, y = 0;
 
     switch (p->arg0 & 060) {
 	case 0:			/* right */
@@ -312,27 +317,26 @@ register PRIMITIVE  *p;
 }
 
 
-
-fillpoly(p)			/* fill a polygon */
-
-register PRIMITIVE  *p;
+void
+fillpoly(			/* fill a polygon */
+	register PRIMITIVE  *p
+)
 
 {
     int  points[128];
     register int  *pp;
-    char  *nextscan();
     register char  *s;
 
     pp = points;
 
-    if ((s = nextscan(nextscan(p->args, "%d", pp), "%d", pp+1)) == NULL)
+    if ((s = nextscan(nextscan(p->args,"%d",(char*)pp),"%d",(char*)pp+1))==NULL)
         error(USER, "illegal polygon spec in fillpoly");
     
     xform(pp, pp+1, p);
     pp[0] = mapx(pp[0]); pp[1] = mapy(pp[1]);
     pp += 2;
     
-    while ((s = nextscan(nextscan(s, "%d", pp), "%d", pp+1)) != NULL) {
+    while ((s = nextscan(nextscan(s,"%d",(char*)pp),"%d",(char*)pp+1))!=NULL) {
         xform(pp, pp+1, p);
 	pp[0] = mapx(pp[0]); pp[1] = mapy(pp[1]);
 	pp += 2;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plotin.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: plotin.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to convert plot(5) files to metafiles
@@ -9,8 +9,10 @@ static const char	RCSid[] = "$Id: plotin.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
  *     5/20/85
  */
 
-#include  "meta.h"
+#include  <string.h>
 
+#include  "meta.h"
+#include  "plot.h"
 
 #define  getsi(f, m)  ICONV(geti(f)-(m), size)
 
@@ -26,13 +28,28 @@ static int  curx = -1,		/* current position */
 
 static short  curmod = 0;	/* current line drawing mode */
 
+static void convert(FILE  *infp);
+static int geti(FILE  *fp);
+static int quadr(int x, int y, int xp, int yp);
+static void step(int d);
+
+static void linemod(char  s[]);
+static void erase(void);
+static void space(int  xmn, int ymn, int xmx, int ymx);
+static void move(int  x, int  y);
+static void cont(int  x, int  y);
+static void line(int  x0, int y0, int x1, int y1);
+static void label(register char  *s);
+static void point(int  x, int  y);
+static void arc(int x, int y, int x0, int y0, int x1, int y1);
+static void circle(int x, int y, int r);
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
  FILE  *fp;
 
@@ -63,16 +80,15 @@ char  **argv;
  pglob(PEOF, 0200, NULL);
 
  return(0);
- }
+}
 
 
 
 
-
-convert(infp)		/* convert to meta-file */
-
-FILE  *infp;
-
+void
+convert(		/* convert to meta-file */
+	FILE  *infp
+)
 {
     char  *fgets(), sbuf[BUFSIZ];
     int  command;
@@ -146,10 +162,9 @@ FILE  *infp;
 
 
 int
-geti(fp)		/* get two-byte integer from file */
-
-register FILE  *fp;
-
+geti(		/* get two-byte integer from file */
+	register FILE  *fp
+)
 {
     register int  i;
 
@@ -165,81 +180,86 @@ register FILE  *fp;
 
 
 
-
-move(x, y)			/* move to new position */
-
-register int  x, y;
-
+void
+move(			/* move to new position */
+	register int  x,
+	register int  y
+)
 {
-
     curx = x;
     cury = y;
-
 }
 
 
 
-
-cont(x, y)			/* draw line to point */
-
-register int  x, y;
-
+void
+cont(			/* draw line to point */
+	register int  x,
+	register int  y
+)
 {
-
     plseg(curmod, curx, cury, x, y);
     curx = x;
     cury = y;
-
 }
 
 
-
-point(x, y)			/* draw a point */
-
-register int  x, y;
-
+void
+point(			/* draw a point */
+	register int  x,
+	register int  y
+)
 {
-
     plseg(0, x, y, x, y);
     curx = x;
     cury = y;
-
 }
 
 
 
-
-line(x0, y0, x1, y1)		/* draw a line segment */
-
-int  x0, y0, x1, y1;
-
+void
+line(		/* draw a line segment */
+	int  x0,
+	int y0,
+	int x1,
+	int y1
+)
 {
-
     move(x0, y0);
     cont(x1, y1);
-
 }
 
 
-
-label(s)			/* print a label */
-
-register char  *s;
-
+void
+label(			/* print a label */
+	register char  *s
+)
 {
-
     pprim(PMSTR, 0, curx, cury, curx, cury, s);
-
 }
-
 
 
 
 static int del = 100;
-static step(d){
+
+void
+step(
+	int d
+)
+{
 	del = d;
 }
-arc(x,y,x0,y0,x1,y1){
+
+void
+arc(
+	int x,
+	int y,
+	int x0,
+	int y0,
+	int x1,
+	int y1
+)
+{
 	double pc;
 	double sqrt();
 	int flg,m,xc,yc,xs,ys,qs,qf;
@@ -330,7 +350,15 @@ arc(x,y,x0,y0,x1,y1){
 		}
 	}
 }
-quadr(x,y,xp,yp){
+
+int
+quadr(
+	int x,
+	int y,
+	int xp,
+	int yp
+)
+{
 	if(x < xp)
 		if(y <= yp)return(1);
 		else return(4);
@@ -342,33 +370,30 @@ quadr(x,y,xp,yp){
 }
 
 
-
-circle(x,y,r){
+void
+circle(
+	int x,
+	int y,
+	int r
+)
+{
 	arc(x,y,x+r,y,x+r,y);
 }
 
 
 
-
-erase()				/* erase plot */
-
+void
+erase(void)				/* erase plot */
 {
-
     pglob(PEOP, 0200, NULL);
-
 }
 
 
-
-
-
-
-linemod(s)		/* set line mode according to s */
-
-char  s[];
-
+void
+linemod(		/* set line mode according to s */
+	char  s[]
+)
 {
-
     switch (s[2]) {
 	case 'l':		/* solid */
 	    curmod = 0;
@@ -386,23 +411,21 @@ char  s[];
 	    error(WARNING, "unknown line mode in linemod");
 	    break;
     }
-
 }
 
 
-
-
-space(xmn, ymn, xmx, ymx)	/* change space */
-
-int  xmn, ymn, xmx, ymx;
-
+void
+space(	/* change space */
+	int  xmn,
+	int ymn,
+	int xmx,
+	int ymx
+)
 {
-
     if (xmn >= xmx || ymn >= ymx)
 	error(USER, "illegal space specification in space");
     
     xmin = xmn;
     ymin = ymn;
     size = min(xmx-xmn, ymx-ymn);
-
 }

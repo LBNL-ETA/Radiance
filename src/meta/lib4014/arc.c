@@ -1,15 +1,28 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: arc.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
-#endif
-#ifndef lint
-static char sccsid[] = "@(#)arc.c	4.1 (Berkeley) 6/27/83";
+static const char	RCSid[] = "$Id: arc.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 
+#include "local4014.h"
+#include "lib4014.h"
+
 int del = 20;
-step(d){
+
+extern void
+step(int d)
+{
 	del = d;
 }
-arc(x,y,x0,y0,x1,y1){
+
+extern void
+arc(
+	int x,
+	int y,
+	int x0,
+	int y0,
+	int x1,
+	int y1
+)
+{
 	double pc;
 	double sqrt();
 	int flg,m,xc,yc,xs,ys,qs,qf;
@@ -100,7 +113,15 @@ arc(x,y,x0,y0,x1,y1){
 		}
 	}
 }
-quad(x,y,xp,yp){
+
+extern int
+quad(
+	int x,
+	int y,
+	int xp,
+	int yp
+)
+{
 	if(x < xp)
 		if(y <= yp)return(1);
 		else return(4);
@@ -110,7 +131,12 @@ quad(x,y,xp,yp){
 	else if(y < yp)return(2);
 	else return(4);
 }
-abs_(a){ /* Windows complains that abs() is an "internal function" */
+
+extern int
+abs_( /* Windows complains that abs() is an "internal function" */
+	int a
+)
+{
 	if(a < 0)return(-a);
 	return(a);
 }

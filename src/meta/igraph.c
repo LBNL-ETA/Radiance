@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: igraph.c,v 1.3 2003/11/14 00:14:40 schorsch Exp $";
+static const char	RCSid[] = "$Id: igraph.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  igraph.c - interactive graphing program.
@@ -15,6 +15,8 @@ static const char	RCSid[] = "$Id: igraph.c,v 1.3 2003/11/14 00:14:40 schorsch Ex
 
 #include  "rtprocess.h"
 #include  "rterror.h"
+#include  "meta.h"
+#include  "mgraph.h"
 #include  "mgvars.h"
 
 typedef struct {
@@ -96,6 +98,7 @@ char  *argv[];
 	mainmenu();
 
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 extern void
@@ -173,7 +176,7 @@ mainmenu(void)			/* the main menu loop */
 			else
 				break;
 			if (sbuf[0] < MAXCUR)
-				setvars(NCVARS, cparam[sbuf[0]]);
+				setvars(NCVARS, cparam[(int)sbuf[0]]);
 			break;
 		case 7:				/* output plot */
 			plotout();
@@ -236,7 +239,7 @@ plotout(void)			/* output our graph */
 {
 	extern FILE  *pout;
 	char  sbuf[128];
-	char  *command;
+	char  *command = NULL;
 	int  i;
 
 	printf("\nOUTPUT PLOT\n");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aed5.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: aed5.c,v 1.4 2003/11/15 02:13:36 schorsch Exp $";
 #endif
 /*
  *  aed.c - driver for AED 512 terminal.
@@ -75,8 +75,22 @@ static short  lmode[4] = {255, 15, 85, 39};	/* line map */
 
 static PRIMITIVE  nextp;
 
+static void init(void);
+static void plot(FILE  *infp);
+static void doprim(register PRIMITIVE  *p);
+static void doglobal(PRIMITIVE  *g);
+static void longwait(int  t);
+static void shortwait(int  t);
+static void plotlseg(register PRIMITIVE  *p);
+static void printstr(register PRIMITIVE  *p);
+static void fillrect(register PRIMITIVE  *p);
+static void setcolor(int  cn);
+static void move(int x, int y);
+static void draw(int  x, int  y);
+static void aedcoord(register int  x, register int  y);
 
 
+int
 main(argc, argv)
 int  argc;
 char  **argv;
@@ -141,10 +155,10 @@ char  **argv;
 
 
 
-
-plot(infp)		/* plot meta-file */
-
-FILE  *infp;
+static void
+plot(		/* plot meta-file */
+	FILE  *infp
+)
 
 {
 
@@ -165,10 +179,10 @@ FILE  *infp;
 
 
 
-
-doglobal(g)			/* execute a global command */
-
-PRIMITIVE  *g;
+static void
+doglobal(			/* execute a global command */
+	PRIMITIVE  *g
+)
 
 {
 	int  tty;
@@ -216,10 +230,10 @@ PRIMITIVE  *g;
 
 
 
-
-doprim(p)		/* plot primitive */
-
-register PRIMITIVE  *p;
+static void
+doprim(		/* plot primitive */
+	register PRIMITIVE  *p
+)
 
 {
 
@@ -255,10 +269,10 @@ register PRIMITIVE  *p;
 
 
 
-
-printstr(p)		/* output a string */
-
-register PRIMITIVE  *p;
+static void
+printstr(		/* output a string */
+	register PRIMITIVE  *p
+)
 
 {
 	static int  hsp[4] = {6, 5, 4, 3};
@@ -299,10 +313,10 @@ register PRIMITIVE  *p;
 
 
 
-
-plotlseg(p)		/* plot a line segment */
-
-register PRIMITIVE  *p;
+static void
+plotlseg(		/* plot a line segment */
+	register PRIMITIVE  *p
+)
 
 {
 	static short  right = FALSE;
@@ -330,7 +344,7 @@ register PRIMITIVE  *p;
 		draw(p->xy[XMX], y2);
 	else if (p->xy[XMX] == curx && y2 == cury)
 		draw(p->xy[XMN], y1);
-	else if (right = !right) {
+	else if ((right = !right)) {
 		move(p->xy[XMN], y1);
 		draw(p->xy[XMX], y2);
 	} else {
@@ -340,9 +354,10 @@ register PRIMITIVE  *p;
 }
 
 
-fillrect(p)
-
-register PRIMITIVE  *p;
+static void
+fillrect(
+	register PRIMITIVE  *p
+)
 
 {
 
@@ -355,7 +370,8 @@ register PRIMITIVE  *p;
 
 }
 
-init()			/* initialize terminal */
+static void
+init(void)			/* initialize terminal */
 {
 		/* Reset AED and tell it the data format */
 	command(RST);
@@ -367,8 +383,10 @@ init()			/* initialize terminal */
 }
 
 
-setcolor(cn)		/* set color */
-int  cn;
+static void
+setcolor(		/* set color */
+	int  cn
+)
 {
 	if (cn != curcol) {
 		command(SEC);
@@ -378,8 +396,11 @@ int  cn;
 }
 
 
-move(x, y)		/* move to coordinate (x,y) */
-int  x, y;
+static void
+move(		/* move to coordinate (x,y) */
+	int x,
+	int y
+)
 {
 	command(MOV);
 	aedcoord(xconv(x), yconv(y));
@@ -388,8 +409,11 @@ int  x, y;
 }
 
 
-draw(x, y)		/* draw vector from CAP to (x,y) */
-int  x, y;
+static void
+draw(		/* draw vector from CAP to (x,y) */
+int  x,
+int  y
+)
 {
 	command(DVA);
 	aedcoord(xconv(x), yconv(y));
@@ -402,8 +426,11 @@ int  x, y;
  * aedcoord - puts out an (x, y) coordinate in AED 8 bit format.
  */
 
-aedcoord(x, y)
-register int  x, y;
+static void
+aedcoord(
+register int  x,
+register int  y
+)
 {
 	putc(((x >> 4) & 0x30) | ((y >> 8) & 0x3), stdout);
 	putc(x & 0xff, stdout);
@@ -411,16 +438,20 @@ register int  x, y;
 }
 
 
-longwait(t)		/* longer wait */
-int  t;
+static void
+longwait(		/* longer wait */
+	int  t
+)
 {
 	fflush(stdout);
 	sleep(t);
 }
 
 
-shortwait(t)		/* shorter wait */
-int  t;
+static void
+shortwait(		/* shorter wait */
+	int  t
+)
 {
 	register long  l = t*1000;
 

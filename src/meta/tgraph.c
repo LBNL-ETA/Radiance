@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tgraph.c,v 1.4 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: tgraph.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Routines for tel-a-graph file plotting
@@ -9,39 +9,30 @@ static const char	RCSid[] = "$Id: tgraph.c,v 1.4 2003/08/01 14:14:24 schorsch Ex
  
 #include  <ctype.h>
 #include  <string.h>
+#include  <math.h>
 
 #include  "tgraph.h"
-
+#include  "plot.h"
 
 #define  isfloat(a)  (isdigit(a) || (a) == '-' || (a) == '.' ||  \
                      (a) == 'E' || (a) == '+' || (a) == 'e')
 
 
-extern double  log10();
 
-
-
-
-
-initialize()
-
+extern void
+initialize(void)
 {
  int  i;
 
  for (i = 0; i < NCUR; i++)
     usecurve[i] = 1;
-
- }
-
+}
 
 
-
-
-
-option(s)		/* record option */
-
-char  *s;
-
+extern void
+option(		/* record option */
+	char  *s
+)
 {
  double  atof();
  char  *sp;
@@ -119,12 +110,11 @@ char  *s;
  }
 
 
-
-
-normalize(fp, fout)			/* get extrema from file */
-
-FILE  *fp, *fout;
-
+extern void
+normalize(			/* get extrema from file */
+	FILE  *fp,
+	FILE *fout
+)
 {
  char  line[255];
  double  x, y;
@@ -170,12 +160,10 @@ FILE  *fp, *fout;
 
 
 
-
-
-makeaxis(flag)		/* make and print x and y axis */
-
-int  flag;
-
+extern void
+makeaxis(		/* make and print x and y axis */
+	int  flag
+)
 {
  double  xstep, ystep, step(), pos;
  int  xorg, yorg;
@@ -324,11 +312,10 @@ int  flag;
 }
 
 
-
-isdata(s)
-
-register char  *s;
-
+extern int
+isdata(
+	register char  *s
+)
 {
  int  commas = 0;
 
@@ -346,28 +333,24 @@ register char  *s;
  }
 
 
-
-
-islabel(s)
-
-char  s[];
-
+extern int
+islabel(
+	char  *s
+)
 {
  int  i;
 
  i = strlen(s) - 2;
 
  return(i > 0 && s[0] == '"' && s[i] == '"');
- }
-
-
+}
 
 
 double
-step(mn, mx)			/* compute step size for axis */
-
-double	*mn, *mx;
-
+step(			/* compute step size for axis */
+	double	*mn,
+	double	*mx
+)
 {
     static int	steps[] = {100, 50, 20, 10, 5, 2, 1};
     int		i;
@@ -394,11 +377,10 @@ double	*mn, *mx;
 
 
 double
-pown(x, n)		/* raise x to an integer power */
-
-double	x;
-int	n;
-
+pown(		/* raise x to an integer power */
+	double	x,
+	int	n
+)
 {
     register int	i;
     double		p = 1.0;
@@ -414,12 +396,10 @@ int	n;
 }
 
 
-
-
-istitle(s)
-
-char  *s;
-
+extern int
+istitle(
+	char  *s
+)
 {
  char  word[32];
 
@@ -431,11 +411,10 @@ char  *s;
 
 
 
-
-isdivlab(s)			/* return TRUE if division label(s) */
-
-register char  *s;
-
+extern int
+isdivlab(			/* return TRUE if division label(s) */
+	register char  *s
+)
 {
 
  return(instr(s, "division") != NULL);
@@ -443,11 +422,10 @@ register char  *s;
 
 
 
-
-isxlabel(s)
-
-register char  *s;
-
+extern int
+isxlabel(
+	register char  *s
+)
 {
  register char  *xindex = instr(s, "x ");
 
@@ -455,12 +433,10 @@ register char  *s;
  }
 
 
-
-
-isylabel(s)
-
-register char  *s;
-
+extern int
+isylabel(
+	register char  *s
+)
 {
  register char  *yindex = instr(s, "y ");
 
@@ -469,12 +445,11 @@ register char  *s;
 
 
 
-char *
-instr(s, t)		/* return pointer to first occurrence of t in s */
-
-char  *s,
-      *t;
-
+extern char *
+instr(		/* return pointer to first occurrence of t in s */
+	char  *s,
+	char  *t
+)
 {
  register char  *pt, *ps;
 
@@ -496,12 +471,10 @@ char  *s,
 
 
 
-
-char *
-snagquo(s)		/* find and return quoted string within s */
-
-register char  *s;
-
+extern char *
+snagquo(		/* find and return quoted string within s */
+	register char  *s
+)
 {
     register char  *rval = NULL;
 
@@ -520,12 +493,12 @@ register char  *s;
 
 
 
-
-getdata(s, xp, yp)			/* get data from line */
-
-char  *s;
-double  *xp, *yp;
-
+extern int
+getdata(			/* get data from line */
+	char  *s,
+	double  *xp,
+	double  *yp
+)
 {
     double  sin(), cos();
     int  oobounds = 0;
@@ -570,13 +543,13 @@ double  *xp, *yp;
 
 
 
-
-symout(a0, x, y, sname)			/* output a symbol */
-
-int  a0;
-int  x, y;
-char  *sname;
-
+extern void
+symout(			/* output a symbol */
+	int  a0,
+	int  x,
+	int  y,
+	char  *sname
+)
 {
 
     pprim(PSEG, a0, x-symrad, y-symrad, x+symrad, y+symrad, sname);
@@ -584,13 +557,15 @@ char  *sname;
 }
 
 
-
-boxstring(a0, xmn, ymn, xmx, ymx, s)	/* output a string within a box */
-
-int  a0;
-int  xmn, ymn, xmx, ymx;
-char  *s;
-
+extern void
+boxstring(	/* output a string within a box */
+	int a0,
+	int xmn,
+	int ymn,
+	int xmx,
+	int ymx,
+	char  *s
+)
 {
     int  start;
     long  size;

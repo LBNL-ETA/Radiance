@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cv.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: cv.c,v 1.3 2003/11/15 02:13:36 schorsch Exp $";
 #endif
 /*
  *    Human-readable file I/O conversion program
@@ -11,14 +11,14 @@ static const char	RCSid[] = "$Id: cv.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $"
 #include  "meta.h"
 
 
-
 char  *progname;
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
+int
+main(
+	int  argc,
+	char  **argv
+)
 
 {
  FILE  *fp;

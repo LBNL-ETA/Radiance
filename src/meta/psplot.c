@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psplot.c,v 1.2 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: psplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  psplot.c - routines for generating PostScript output.
@@ -7,9 +7,11 @@ static const char	RCSid[] = "$Id: psplot.c,v 1.2 2003/07/27 22:12:02 schorsch Ex
  *	9/23/88
  */
 
-#include "meta.h"
-
 #include <ctype.h>
+
+#include "meta.h"
+#include "plot.h"
+#include "psplot.h"
 
 #ifdef SMALLAREA
 #define HMARGIN		(0.2*72)		/* horizontal margin */
@@ -41,6 +43,8 @@ static char	hexdigit[] = "0123456789ABCDEF";
 
 static char	buf[512];
 
+static void endline(void);
+
 
 static char *
 convertname(s)				/* convert to segment name */
@@ -65,8 +69,9 @@ char	*s;
 
 
 static char *
-convertstring(s)		/* convert to acceptable string */
-register char	*s;
+convertstring(		/* convert to acceptable string */
+	register char	*s
+)
 {
 	register char	*cp;
 	
@@ -87,8 +92,10 @@ register char	*s;
 }
 
 
-init(id)			/* initialize */
-char	*id;
+void
+init(			/* initialize */
+	char	*id
+)
 {
 	printf("%%!PS-Adobe-2.0 EPSF-2.0\n");
 	printf("%%%%BoundingBox: %.0f %.0f %.0f %.0f\n",
@@ -219,13 +226,15 @@ char	*id;
 }
 
 
-done()				/* done with graphics */
+void
+done(void)				/* done with graphics */
 {
 	printf("end\nrestore\ngrestore\n");
 }
 
 
-endpage()			/* done with page */
+void
+endpage(void)			/* done with page */
 {
 	checkline();
 
@@ -233,8 +242,10 @@ endpage()			/* done with page */
 }
 
 
-segopen(s)			/* open a segment */
-char	*s;
+void
+segopen(			/* open a segment */
+	char	*s
+)
 {
 	checkline();
 
@@ -242,7 +253,8 @@ char	*s;
 }
 
 
-segclose()			/* close a segment */
+void
+segclose(void)			/* close a segment */
 {
 	checkline();
 
@@ -250,8 +262,10 @@ segclose()			/* close a segment */
 }
 
 
-doseg(p)			/* instance of a segment */
-register PRIMITIVE	*p;
+void
+doseg(			/* instance of a segment */
+	register PRIMITIVE	*p
+)
 {
 	checkline();
 
@@ -263,8 +277,10 @@ register PRIMITIVE	*p;
 }
 
 
-printstr(p)			/* print a string */
-register PRIMITIVE	*p;
+extern void
+printstr(			/* print a string */
+	register PRIMITIVE	*p
+)
 {
 	checkline();
 	printf("(%s) %d %d %d %d mstr\n", convertstring(p->args),
@@ -273,8 +289,10 @@ register PRIMITIVE	*p;
 }
 
 
-plotvstr(p)			/* print a vector string */
-register PRIMITIVE	*p;
+void
+plotvstr(			/* print a vector string */
+	register PRIMITIVE	*p
+)
 {
 	checkline();
 
@@ -285,8 +303,10 @@ register PRIMITIVE	*p;
 }
 
 
-plotlseg(p)			/* plot a line segment */
-register PRIMITIVE	*p;
+void
+plotlseg(			/* plot a line segment */
+	register PRIMITIVE	*p
+)
 {
 	static int	right = FALSE;
 	static int	curx, cury;
@@ -330,15 +350,18 @@ register PRIMITIVE	*p;
 }
 
 
-endline()			/* close current line */
+void
+endline(void)			/* close current line */
 {
 	printf("stroke\n");
 	inaline = 0;
 }
 
 
-fillrect(p)			/* fill a rectangle */
-register PRIMITIVE	*p;
+extern void
+fillrect(			/* fill a rectangle */
+	register PRIMITIVE	*p
+)
 {
 	checkline();
 
@@ -347,10 +370,12 @@ register PRIMITIVE	*p;
 }
 
 
-filltri(p)			/* fill a triangle */
-register PRIMITIVE	*p;
+extern void
+filltri(			/* fill a triangle */
+	register PRIMITIVE	*p
+)
 {
-	static short	corn[4][2] = {XMN,YMX,XMN,YMN,XMX,YMN,XMX,YMX};
+	static short	corn[4][2] = {{XMN,YMX},{XMN,YMN},{XMX,YMN},{XMX,YMX}};
 	int		orient;
 	register int	i;
 	
@@ -366,11 +391,14 @@ register PRIMITIVE	*p;
 }
 
 
-xform(xp, yp, p)		/* transform a point according to p */
-register int  *xp, *yp;
-register PRIMITIVE  *p;
+void
+xform(		/* transform a point according to p */
+	register int  *xp,
+	register int  *yp,
+	register PRIMITIVE  *p
+)
 {
-    int  x, y;
+    int  x = 0, y = 0;
 
     switch (p->arg0 & 060) {
 	case 0:			/* right */
@@ -395,10 +423,10 @@ register PRIMITIVE  *p;
 }
 
 
+extern void
 fillpoly(p)			/* fill a polygon */
 register PRIMITIVE	*p;
 {
-	extern char	*nextscan();
 	register char	*s;
 	int	curx, cury;
 
@@ -407,7 +435,7 @@ register PRIMITIVE	*p;
 	printf("%s %d %d mark\n", p->arg0 & 0100 ? "false" : "true",
 			p->arg0>>2 & 03, p->arg0 & 03);
 	s = p->args;
-	while ((s = nextscan(nextscan(s, "%d", &curx), "%d", &cury)) != NULL) {
+	while ((s = nextscan(nextscan(s, "%d", (char*)&curx), "%d", (char*)&cury)) != NULL) {
 		xform(&curx, &cury, p);
 		printf("%d %d ", curx, cury);
 	}
@@ -415,9 +443,11 @@ register PRIMITIVE	*p;
 }
 
 
-set(attrib, val)		/* set an attribute or context */
-int	attrib;
-char	*val;
+void
+set(		/* set an attribute or context */
+	int	attrib,
+	char	*val
+)
 {
 	checkline();
 
@@ -438,8 +468,10 @@ char	*val;
 }
 
 
-unset(attrib)			/* unset an attribute or context */
-int	attrib;
+void
+unset(			/* unset an attribute or context */
+	int	attrib
+)
 {
 	checkline();
 
@@ -462,8 +494,10 @@ int	attrib;
 }
 
 
-reset(attrib)			/* reset an attribute or context */
-int	attrib;
+void
+reset(			/* reset an attribute or context */
+	int	attrib
+)
 {
 	checkline();
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mfio.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mfio.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Meta-file input and output routines
@@ -8,19 +8,18 @@ static const char	RCSid[] = "$Id: mfio.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
 #include  "meta.h"
 
 
-
-static PRIMITIVE  peof = {PEOF, 0200, -1, -1, -1, -1, NULL};
+static PRIMITIVE  peof = {PEOF, 0200, {-1, -1, -1, -1}, NULL, NULL};
 
 
 
 #define  INTARG(n)  (((unsigned)inbuf[n] << 7) | (unsigned)inbuf[n+1])
 
 
-
-readp(p, fp)		/* read in primitive from file */
-
-PRIMITIVE  *p;
-FILE  *fp;
+int
+readp(		/* read in primitive from file */
+	PRIMITIVE  *p,
+	FILE  *fp
+)
 
 {
  char  inbuf[MAXARGS];
@@ -92,14 +91,12 @@ FILE  *fp;
 #define  LO7(i)  (i & 0177)
 
 
-
-writep(p, fp)			/* write primitive to file */
-
-register PRIMITIVE  *p;
-FILE  *fp;
-
+void
+writep(			/* write primitive to file */
+	register PRIMITIVE  *p,
+	FILE  *fp
+)
 {
- 
  if (fp == NULL) fp = stdout;
 
  if (!iscom(p->com))
@@ -131,14 +128,11 @@ FILE  *fp;
 #undef  LO7
 
 
-
-
-writeof(fp)		/* write end of file command to fp */
-
-FILE  *fp;
-
+void
+writeof(		/* write end of file command to fp */
+	FILE  *fp
+)
 {
-
  writep(&peof, fp);
+}
 
- }

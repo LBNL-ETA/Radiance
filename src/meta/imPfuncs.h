@@ -1,4 +1,4 @@
-/* RCSid: $Id: imPfuncs.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: imPfuncs.h,v 1.3 2003/11/15 02:13:37 schorsch Exp $ */
 /*
  *  imPfuncs - imPress functions
  *
@@ -14,6 +14,8 @@
  */
 #ifndef _RAD_IMPFUNCS_H_
 #define _RAD_IMPFUNCS_H_
+
+#include <varargs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,6 +79,14 @@ extern "C" {
 #define	imPM_ORIENTATION	0x001
 
 extern FILE *imout;
+
+extern void im_w(int code, unsigned int w);
+extern void im_223(int code,unsigned int b2a,unsigned int b2b,unsigned int b3);
+extern void im_77(int code, unsigned int b7a, unsigned int b7b);
+/*extern void imCreateFamilyTable(...); */
+/*extern void imCreatePath(...); */
+extern void imCreatePathV(unsigned int count, unsigned int *vec);
+extern void imInit(void);
 
 #ifdef __cplusplus
 }

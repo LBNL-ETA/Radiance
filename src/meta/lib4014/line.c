@@ -1,11 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: line.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
-#endif
-#ifndef lint
-static char sccsid[] = "@(#)line.c	4.1 (Berkeley) 6/27/83";
+static const char	RCSid[] = "$Id: line.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 
-line(x0,y0,x1,y1){
+#include "local4014.h"
+#include "lib4014.h"
+
+extern void
+line(
+	int x0,
+	int y0,
+	int x1,
+	int y1
+)
+{
 	move(x0,y0);
 	cont(x1,y1);
 }

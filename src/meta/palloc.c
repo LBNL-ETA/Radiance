@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: palloc.c,v 1.3 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: palloc.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Limited dynamic storage allocator for primitives
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: palloc.c,v 1.3 2003/07/21 22:30:18 schorsch Ex
 
 
 #include  "meta.h"
+#include  "rtio.h"
 
 
 extern int  maxalloc;		/* number of prims to allocate */

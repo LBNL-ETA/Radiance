@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.4 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
@@ -39,6 +39,10 @@ static int  lineno = 0;
 static short  condonly = FALSE,
 	      conditioned = FALSE;
 
+static int putthead(struct hdStruct  *hp, char  *ip, FILE  *fp);
+
+
+
 char *
 findtack(s)			/* find place to tack on suffix */
 register char *s;
@@ -49,10 +53,11 @@ register char *s;
 }
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
+int
+main(
+	int  argc,
+	char  **argv
+)
 
 {
  FILE  *fp;
@@ -137,18 +142,16 @@ char  **argv;
 
 
 
-
-
-
-thispage()		/* rewind current file */
+void
+thispage(void)		/* rewind current file */
 {
     if (lineno)
 	error(USER, "cannot restart page in thispage");
 }
 
 
-
-initfile()		/* initialize this file */
+void
+initfile(void)		/* initialize this file */
 {
     static int  filenum = 0;
     /*
@@ -186,8 +189,8 @@ initfile()		/* initialize this file */
 
 
 
-
-nextpage()		/* advance to next page */
+void
+nextpage(void)		/* advance to next page */
 
 {
 
@@ -209,13 +212,13 @@ nextpage()		/* advance to next page */
 
 #define MINRUN	4
 
-
-printblock()		/* output scanline block to file */
+extern void
+printblock(void)		/* output scanline block to file */
 
 {
     int  i, c2;
     register unsigned char  *scanline;
-    register int  j, beg, cnt;
+    register int  j, beg, cnt = 0;
 
     if (lineno == 0)
 	initfile();
@@ -247,19 +250,23 @@ printblock()		/* output scanline block to file */
 }
 
 
-putint2(i, fp)			/* put a 2-byte positive integer */
-register int  i;
-register FILE	*fp;
+void
+putint2(			/* put a 2-byte positive integer */
+	register int  i,
+	register FILE	*fp
+)
 {
 	putc(i&0xff, fp);
 	putc(i>>8&0xff, fp);
 }
 
 
-putthead(hp, ip, fp)		/* write header to output */
-struct hdStruct  *hp;
-char  *ip;
-register FILE  *fp;
+int
+putthead(		/* write header to output */
+	struct hdStruct  *hp,
+	char  *ip,
+	register FILE  *fp
+)
 {
 	if (ip != NULL)
 		putc(strlen(ip), fp);

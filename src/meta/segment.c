@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: segment.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: segment.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *   Routines for segment storage and inclusion for meta-files
@@ -7,7 +7,9 @@ static const char	RCSid[] = "$Id: segment.c,v 1.1 2003/02/22 02:07:26 greg Exp $
  *   12/18/84
  */
 
+#include <string.h>
 
+#include  "rtio.h"
 #include  "meta.h"
 
 
@@ -32,13 +34,15 @@ static int	dectop = 0;		/* top of declaration table */
 static int	curdec = NODEC;		/* current declaration */
 
 
+static int hash(register char	*s);
+static int lookup(register char	*name);
 
 
 
 static int
-hash(s)			/* hash a string */
-
-register char	*s;
+hash(			/* hash a string */
+	register char	*s
+)
 
 {
     register int	hval = 0;
@@ -54,9 +58,9 @@ register char	*s;
 
 
 static int
-lookup(name)		/* find name in declaration table */
-
-register char	*name;
+lookup(		/* find name in declaration table */
+	register char	*name
+)
 
 {
     register int	curd;
@@ -73,8 +77,8 @@ register char	*name;
 
 
 
-
-inseg()			/* return TRUE if currently in a segment */
+int
+inseg(void)			/* return TRUE if currently in a segment */
 
 {
 
@@ -83,10 +87,10 @@ inseg()			/* return TRUE if currently in a segment */
 
 
 
-
-openseg(name)			/* open a new segment */
-
-char	*name;
+void
+openseg(			/* open a new segment */
+	char	*name
+)
 
 {
     register int  olddec;
@@ -108,10 +112,10 @@ char	*name;
 
 
 
-
-segprim(p)		/* store primitive in current segment */
-
-register PRIMITIVE  *p;
+void
+segprim(		/* store primitive in current segment */
+	register PRIMITIVE  *p
+)
 
 {
     register PRIMITIVE  *newp;
@@ -145,8 +149,8 @@ register PRIMITIVE  *p;
 }
 
 
-
-closeseg()		/* close the current segment */
+void
+closeseg(void)		/* close the current segment */
 
 {
     register int  i;
@@ -167,15 +171,15 @@ closeseg()		/* close the current segment */
     hashtabl[i] = curdec;
     				/* return context */
     curdec = dectabl[curdec].context;
-
 }
 
 
 
-
-segment(p, funcp)			/* expand segment p */
-PRIMITIVE	*p;
-int		(*funcp)();
+void
+segment(			/* expand segment p */
+	PRIMITIVE	*p,
+	void	(*funcp)(PRIMITIVE *p)
+)
 
 {
     int		decln;
@@ -242,11 +246,11 @@ int		(*funcp)();
 
 
 int
-xlate(extrema, p, px)		/* return extrema from p through px */
-
-short			extrema;
-PRIMITIVE		*p;
-register PRIMITIVE	*px;
+xlate(		/* return extrema from p through px */
+	short			extrema,
+	PRIMITIVE		*p,
+	register PRIMITIVE	*px
+)
 
 {
     short	oldex;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mgraph.c,v 1.2 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  mgraph.c - routines for plotting graphs from variables.
@@ -10,9 +10,10 @@ static const char	RCSid[] = "$Id: mgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
  */
 
 #include  <stdio.h>
+#include  <string.h>
 
+#include  "meta.h"
 #include  "mgvars.h"
-
 #include  "mgraph.h"
 
 extern char  *progname;			/* argv[0] */
@@ -32,8 +33,29 @@ static double  lastx, lasty;		/* last curve postion */
 static int  nplottable;			/* number of plottable points */
 static int  nplotted;			/* number of plotted points */
 
+static void getbounds(void);
+static void polaraxis(void);
+static void makeaxis(void);
+static void plotcurves(void);
+static void cartaxis(void);
+static void stretchbounds(int  c, double  x, double  y);
+static void boxstring(int  xmin, int ymin, int xmax, int ymax,
+	char  *s, int  d, int width, int color);
+static void drawcircle(int  x, int y, int r, int  typ, int wid, int col);
+static int rconv(double  r);
+static int xconv(double  x);
+static int yconv(double  y);
+static void csymbol(int  c, double  u, double v);
+static int cmline(int  c, int  x, int y);
+static void cmsymbol(int  c, int  x, int y);
+static int inbounds(double  x, double y);
+static void climline(int  c, double  x, double y, double xout, double yout);
+static void nextpoint(register int  c, double  x, double  y);
+static void cline(int  c, double  u1, double v1, double u2, double v2);
 
-mgraph()			/* plot the current graph */
+
+void
+mgraph(void)			/* plot the current graph */
 {
 					/* load the symbol file */
 	if (gparam[SYMFILE].flags & DEFINED)
@@ -50,9 +72,10 @@ mgraph()			/* plot the current graph */
 }
 
 
-getbounds()			/* compute the boundaries */
+void
+getbounds(void)			/* compute the boundaries */
 {
-	int  i, stretchbounds();
+	int  i;
 
 	xbounds.min = gparam[XMIN].flags & DEFINED ?
 			 varvalue(gparam[XMIN].name) - FTINY :
@@ -121,7 +144,8 @@ getbounds()			/* compute the boundaries */
 }
 
 
-makeaxis()				/* draw the coordinate axis */
+void
+makeaxis(void)				/* draw the coordinate axis */
 {
 	char  stmp[64];
 
@@ -157,10 +181,11 @@ makeaxis()				/* draw the coordinate axis */
 }
 
 
-polaraxis()				/* print polar coordinate axis */
+void
+polaraxis(void)				/* print polar coordinate axis */
 {
 	int  lw, tstyle, t0, t1;
-	double  d, d1, ybeg, xstep;
+	double  d, d1, ybeg;
 	char  stmp[64], *fmt, *goodformat();
 						/* get tick style */
 	if (gparam[TSTYLE].flags & DEFINED)
@@ -259,8 +284,8 @@ polaraxis()				/* print polar coordinate axis */
 	}
 }
 
-
-cartaxis()				/* print Cartesian coordinate axis */
+void
+cartaxis(void)				/* print Cartesian coordinate axis */
 {
 	int  lw, t0, t1, tstyle;
 	double  d, xbeg, ybeg;
@@ -391,10 +416,10 @@ cartaxis()				/* print Cartesian coordinate axis */
 	}
 }
 
-
-plotcurves()				/* plot the curves */
+void
+plotcurves(void)				/* plot the curves */
 {
-	int  i, j, k, nextpoint();
+	int  i, j, k;
 
 	for (i = 0; i < MAXCUR; i++) {
 		nplottable = nplotted = 0;
@@ -412,10 +437,12 @@ plotcurves()				/* plot the curves */
 	}
 }
 
-
-nextpoint(c, x, y)			/* plot the next point for c */
-register int  c;
-double  x, y;
+void
+nextpoint(			/* plot the next point for c */
+	register int  c,
+	double  x,
+	double  y
+)
 {
 	if (inbounds(x, y)) {
 
@@ -439,9 +466,12 @@ double  x, y;
 }
 
 
-stretchbounds(c, x, y)			/* stretch our boundaries */
-int  c;
-double  x, y;
+void
+stretchbounds(			/* stretch our boundaries */
+	int  c,
+	double  x,
+	double  y
+)
 {
 	if (gparam[XMIN].flags & DEFINED &&
 			x < xbounds.min)
@@ -472,8 +502,9 @@ double  x, y;
 #define  exp10(x)	exp((x)*2.3025850929940456)
 
 double
-goodstep(interval)		/* determine a good step for the interval */
-double  interval;
+goodstep(		/* determine a good step for the interval */
+	double  interval
+)
 {
 	static int  steps[] = {50, 20, 10, 5, 2, 1};
 	double  fact, exp(), log10(), floor();
@@ -492,8 +523,9 @@ double  interval;
 
 
 int
-xconv(x)			/* convert x to meta coords */
-double  x;
+xconv(			/* convert x to meta coords */
+	double  x
+)
 {
 	if (gparam[XMAP].flags & DEFINED)
 		x = funvalue(gparam[XMAP].name, 1, &x);
@@ -503,8 +535,9 @@ double  x;
 
 
 int
-yconv(y)			/* convert y to meta coords */
-double  y;
+yconv(			/* convert y to meta coords */
+	double  y
+)
 {
 	if (gparam[YMAP].flags & DEFINED)
 		y = funvalue(gparam[YMAP].name, 1, &y);
@@ -513,9 +546,13 @@ double  y;
 }
 
 
-pconv(xp, yp, t, r)		/* convert theta and radius to meta coords */
-int  *xp, *yp;
-double  t, r;
+void
+pconv(		/* convert theta and radius to meta coords */
+	int  *xp,
+	int  *yp,
+	double  t,
+	double  r
+)
 {
 	t *= (2.*PI)/period;
 	r = rconv(r);
@@ -525,8 +562,9 @@ double  t, r;
 
 
 int
-rconv(r)			/* convert radius to meta coords */
-double  r;
+rconv(			/* convert radius to meta coords */
+	double  r
+)
 {
 	if (gparam[YMAP].flags & DEFINED)
 		r = funvalue(gparam[YMAP].name, 1, &r);
@@ -535,10 +573,17 @@ double  r;
 }
 	
 
-boxstring(xmin, ymin, xmax, ymax, s, d, width, color)	/* put string in box */
-int  xmin, ymin, xmax, ymax;
-char  *s;
-int  d, width, color;
+void
+boxstring(	/* put string in box */
+	int  xmin,
+	int ymin,
+	int xmax,
+	int ymax,
+	char  *s,
+	int  d,
+	int width,
+	int color
+)
 {
 	register long  size;
 
@@ -564,8 +609,9 @@ int  d, width, color;
 
 
 char *
-goodformat(d)			/* return a suitable format string for d */
-double  d;
+goodformat(			/* return a suitable format string for d */
+	double  d
+)
 {
 	static char  *f[5] = {"%.0f", "%.1f", "%.2f", "%.3f", "%.4f"};
 	double  floor();
@@ -583,9 +629,15 @@ double  d;
 }
 
 
-drawcircle(x, y, r, typ, wid, col)	/* draw a circle */
-int  x, y, r;
-int  typ, wid, col;
+void
+drawcircle(	/* draw a circle */
+	int  x,
+	int y,
+	int r,
+	int  typ,
+	int wid,
+	int col
+)
 {
 	double  d;
 
@@ -597,9 +649,14 @@ int  typ, wid, col;
 }
 
 
-climline(c, x, y, xout, yout)	/* print line from/to out of bounds */
-int  c;
-double  x, y, xout, yout;
+void
+climline(	/* print line from/to out of bounds */
+	int  c,
+	double  x,
+	double y,
+	double xout,
+	double yout
+)
 {
 	for ( ; ; )
 		if (xout < xbounds.min) {
@@ -621,9 +678,14 @@ double  x, y, xout, yout;
 }
 
 
-cline(c, u1, v1, u2, v2)		/* print a curve line */
-int  c;
-double  u1, v1, u2, v2;
+void
+cline(		/* print a curve line */
+	int  c,
+	double  u1,
+	double v1,
+	double u2,
+	double v2
+)
 {
 	int  x, y;
 	double  ustep, vstep;
@@ -653,9 +715,11 @@ double  u1, v1, u2, v2;
 
 
 int
-cmline(c, x, y)			/* start curve line in meta coords */
-int  c;
-int  x, y;
+cmline(			/* start curve line in meta coords */
+	int  c,
+	int  x,
+	int y
+)
 {
 	int  lw, lt, col;
 	register VARIABLE  *cv;
@@ -684,9 +748,12 @@ int  x, y;
 }
 
 
-csymbol(c, u, v)		/* plot curve symbol */
-int  c;
-double  u, v;
+void
+csymbol(		/* plot curve symbol */
+	int  c,
+	double  u,
+	double v
+)
 {
 	int  x, y;
 	
@@ -698,9 +765,12 @@ double  u, v;
 }
 
 
-cmsymbol(c, x, y)		/* print curve symbol in meta coords */
-int  c;
-int  x, y;
+void
+cmsymbol(		/* print curve symbol in meta coords */
+	int  c,
+	int  x,
+	int y
+)
 {
 	int  col, ss;
 	register VARIABLE  *cv;
@@ -725,8 +795,11 @@ int  x, y;
 }
 
 
-inbounds(x, y)			/* determine if x and y are within gbounds */
-double  x, y;
+int
+inbounds(			/* determine if x and y are within gbounds */
+	double  x,
+	double y
+)
 {
 	if (x < xbounds.min || x > xbounds.max)
 		return(0);

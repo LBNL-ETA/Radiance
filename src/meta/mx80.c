@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx80.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: mx80.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
 #endif
 /*
  *  Program to print meta-files on a dot-matrix printer
@@ -62,11 +62,11 @@ static short  condonly = FALSE,
 	      conditioned = FALSE;
 
 
-main(argc, argv)
-
-int  argc;
-char  **argv;
-
+int
+main(
+	int  argc,
+	char  **argv
+)
 {
  FILE  *fp;
  char  comargs[200], command[300];
@@ -131,51 +131,35 @@ char  **argv;
  }
 
 
-
-
-
-
-
-thispage()		/* rewind and initialize current page */
-
+void
+thispage(void)		/* rewind and initialize current page */
 {
-
     if (lineno)
 	error(USER, "cannot restart page in thispage");
-
 }
 
 
-
-
-nextpage()		/* advance to next page */
-
+void
+nextpage(void)		/* advance to next page */
 {
-
     fputs("\f\r", stdout);
 
     lineno = 0;
-
 }
 
 
-
-
-contpage()		/* continue new plot on current page */
-
+void
+contpage(void)		/* continue new plot on current page */
 {
-
     while (lineno++ < NLINES)
         putc('\n', stdout);
     
     lineno = 0;
-    
 }
 
 
-
-printspan()		/* output span to printer */
-
+void
+printspan(void)		/* output span to printer */
 {
     register int  k;
 
@@ -203,12 +187,10 @@ printspan()		/* output span to printer */
 }
 
 
-
-
-
-printstr(p)		/* output a string to the printer */
-
-PRIMITIVE  *p;
+void
+printstr(		/* output a string to the printer */
+	PRIMITIVE  *p
+)
 
 {
     int  i;
