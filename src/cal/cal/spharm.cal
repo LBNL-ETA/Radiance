@@ -1,4 +1,4 @@
-{ RCSid $Id: spharm.cal,v 1.2 2005/02/09 17:28:36 greg Exp $ }
+{ RCSid $Id: spharm.cal,v 1.3 2005/02/09 17:36:28 greg Exp $ }
 {
 	The first few Spherical Harmonics
 
@@ -72,6 +72,25 @@ SphericalHarmonicYr(l,m,theta,phi) : SHthetaF(l,m,theta)*cos(m*phi);
 SphericalHarmonicYi(l,m,theta,phi) : SHthetaF(l,m,theta)*sin(m*phi);
 
 					{ Ordered, real SH basis functions }
+{ Coeff. order based on Basri & Jacobs paper, "Lambertian Reflectance and
+	Linear Subspaces," IEEE Trans. on Pattern Analysis & Machine Intel.,
+	vol. 25, no. 2, Feb. 2003, pp. 218-33, Eq. (7):
+
+	i	n	m	even/odd
+	=	=	=	========
+	1	0	0	x
+	2	1	0	x
+	3	1	1	e
+	4	1	1	o
+	5	2	0	x
+	6	2	1	e
+	7	2	1	o
+	8	2	2	e
+	9	2	2	o
+	10	3	0	x
+	11	3	1	e
+	...
+}
 SH_B4(l,m,o,theta,phi) : if(m-.5, if(o, SphericalHarmonicYi(l,m,theta,phi),
 					SphericalHarmonicYr(l,m,theta,phi)),
 				SHthetaF(l,0,theta) ); 
@@ -79,7 +98,7 @@ SH_B3(l,r,theta,phi) : SH_B4(l,floor((r+1.00001)/2),odd(r+1),theta,phi);
 SH_B2(l,i,theta,phi) : SH_B3(l,i-l*l-1,theta,phi);
 SphericalHarmonicB(i,theta,phi) : SH_B2(ceil(sqrt(i)-1.00001),i,theta,phi);
 
-					{ Application of SH fitting coeff. f(i) }
+					{ Application of SH coeff. f(i) }
 SH_F2(n,f,theta,phi) : if(n-.5, f(n)*SphericalHarmonicB(n,theta,phi) +
 				SH_F2(n-1,f,theta,phi), 0);
 SphericalHarmonicF(f,theta,phi) : SH_F2(f(0),f,theta,phi);
