@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwright.c,v 2.5 2004/03/26 23:34:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: vwright.c,v 2.6 2005/01/18 00:33:16 greg Exp $";
 #endif
 /*
  * Move a viewpoint the given distance to the right
@@ -65,6 +65,7 @@ main(
 				argv[1], vw.vp[1], argv[1], vw.vp[2]);
 		printf("%sdx:%g;%sdy:%g;%sdz:%g;", argv[1], vw.vdir[0],
 				argv[1], vw.vdir[1], argv[1], vw.vdir[2]);
+		printf("%sd:%g;", argv[1], vw.vdist);
 		printf("%sux:%g;%suy:%g;%suz:%g;", argv[1], vw.vup[0],
 				argv[1], vw.vup[1], argv[1], vw.vup[2]);
 		printf("%sh:%g;%sv:%g;", argv[1], vw.horiz,

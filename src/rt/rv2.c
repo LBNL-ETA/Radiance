@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.43 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.44 2005/01/18 00:33:16 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -68,12 +68,11 @@ getview(				/* get/show view parameters */
 	char  buf[128];
 	char  *fname;
 	int  change = 0;
-	VIEW  nv;
+	VIEW  nv = ourview;
 
 	while (isspace(*s))
 		s++;
 	if (*s == '-') {			/* command line parameters */
-		nv = ourview;
 		if (sscanview(&nv, s))
 			newview(&nv);
 		else
@@ -101,8 +100,7 @@ getview(				/* get/show view parameters */
 	if (buf[0] && buf[0] != ourview.type) {
 		nv.type = buf[0];
 		change++;
-	} else
-		nv.type = ourview.type;
+	}
 	sprintf(buf, "view point (%.6g %.6g %.6g): ",
 			ourview.vp[0], ourview.vp[1], ourview.vp[2]);
 	(*dev->comout)(buf);
@@ -110,8 +108,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanvec(buf, nv.vp))
 		change++;
-	else
-		VCOPY(nv.vp, ourview.vp);
 	sprintf(buf, "view direction (%.6g %.6g %.6g): ",
 			ourview.vdir[0], ourview.vdir[1], ourview.vdir[2]);
 	(*dev->comout)(buf);
@@ -119,8 +115,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanvec(buf, nv.vdir))
 		change++;
-	else
-		VCOPY(nv.vdir, ourview.vdir);
 	sprintf(buf, "view up (%.6g %.6g %.6g): ",
 			ourview.vup[0], ourview.vup[1], ourview.vup[2]);
 	(*dev->comout)(buf);
@@ -128,8 +122,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanvec(buf, nv.vup))
 		change++;
-	else
-		VCOPY(nv.vup, ourview.vup);
 	sprintf(buf, "view horiz and vert size (%.6g %.6g): ",
 			ourview.horiz, ourview.vert);
 	(*dev->comout)(buf);
@@ -137,9 +129,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanf(buf, "%lf %lf", &nv.horiz, &nv.vert) == 2)
 		change++;
-	else {
-		nv.horiz = ourview.horiz; nv.vert = ourview.vert;
-	}
 	sprintf(buf, "fore and aft clipping plane (%.6g %.6g): ",
 			ourview.vfore, ourview.vaft);
 	(*dev->comout)(buf);
@@ -147,9 +136,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanf(buf, "%lf %lf", &nv.vfore, &nv.vaft) == 2)
 		change++;
-	else {
-		nv.vfore = ourview.vfore; nv.vaft = ourview.vaft;
-	}
 	sprintf(buf, "view shift and lift (%.6g %.6g): ",
 			ourview.hoff, ourview.voff);
 	(*dev->comout)(buf);
@@ -157,9 +143,6 @@ getview(				/* get/show view parameters */
 	if (buf[0] == CTRL('C')) return;
 	if (sscanf(buf, "%lf %lf", &nv.hoff, &nv.voff) == 2)
 		change++;
-	else {
-		nv.hoff = ourview.hoff; nv.voff = ourview.voff;
-	}
 	if (change)
 		newview(&nv);
 }
@@ -286,17 +269,11 @@ getaim(				/* aim camera */
 	char  *s
 )
 {
+	VIEW  nv = ourview;
 	double  zfact;
-	VIEW  nv;
 
 	if (getinterest(s, 1, nv.vdir, &zfact) < 0)
 		return;
-	nv.type = ourview.type;
-	VCOPY(nv.vp, ourview.vp);
-	VCOPY(nv.vup, ourview.vup);
-	nv.horiz = ourview.horiz; nv.vert = ourview.vert;
-	nv.vfore = ourview.vfore; nv.vaft = ourview.vaft;
-	nv.hoff = ourview.hoff; nv.voff = ourview.voff;
 	zoomview(&nv, zfact);
 	newview(&nv);
 }
@@ -321,7 +298,7 @@ getrotate(				/* rotate camera */
 	char  *s
 )
 {
-	VIEW  nv;
+	VIEW  nv = ourview;
 	FVECT  v1;
 	double  angle, elev, zfact;
 	
@@ -330,18 +307,12 @@ getrotate(				/* rotate camera */
 		error(COMMAND, "missing angle");
 		return;
 	}
-	nv.type = ourview.type;
-	VCOPY(nv.vp, ourview.vp);
-	VCOPY(nv.vup, ourview.vup);
-	nv.hoff = ourview.hoff; nv.voff = ourview.voff;
-	nv.vfore = ourview.vfore; nv.vaft = ourview.vaft;
 	spinvector(nv.vdir, ourview.vdir, ourview.vup, angle*(PI/180.));
 	if (elev != 0.0) {
 		fcross(v1, nv.vdir, ourview.vup);
 		normalize(v1);
 		spinvector(nv.vdir, nv.vdir, v1, elev*(PI/180.));
 	}
-	nv.horiz = ourview.horiz; nv.vert = ourview.vert;
 	zoomview(&nv, zfact);
 	newview(&nv);
 }

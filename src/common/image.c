@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.28 2004/06/08 19:48:29 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.29 2005/01/18 00:33:16 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -34,7 +34,8 @@ register VIEW  *v;
 	if (v->vaft < -FTINY || (v->vaft > FTINY && v->vaft <= v->vfore))
 		return("illegal fore/aft clipping plane");
 
-	if (normalize(v->vdir) == 0.0)		/* normalize direction */
+	v->vdist *= normalize(v->vdir);		/* normalize direction */
+	if (v->vdist == 0.0)
 		return("zero view direction");
 
 	if (normalize(v->vup) == 0.0)		/* normalize view up */
@@ -428,7 +429,9 @@ FILE  *fp;
 {
 	fprintf(fp, " -vt%c", vp->type);
 	fprintf(fp, " -vp %.6g %.6g %.6g", vp->vp[0], vp->vp[1], vp->vp[2]);
-	fprintf(fp, " -vd %.6g %.6g %.6g", vp->vdir[0], vp->vdir[1], vp->vdir[2]);
+	fprintf(fp, " -vd %.6g %.6g %.6g", vp->vdir[0]*vp->vdist,
+						vp->vdir[1]*vp->vdist,
+						vp->vdir[2]*vp->vdist);
 	fprintf(fp, " -vu %.6g %.6g %.6g", vp->vup[0], vp->vup[1], vp->vup[2]);
 	fprintf(fp, " -vh %.6g -vv %.6g", vp->horiz, vp->vert);
 	fprintf(fp, " -vo %.6g -va %.6g", vp->vfore, vp->vaft);
@@ -452,9 +455,11 @@ register VIEW  *vp;
 				vp->vp[0], vp->vp[1], vp->vp[2]);
 		cp += strlen(cp);
 	}
-	if (!VEQ(vp->vdir,stdview.vdir)) {
+	if (!FEQ(vp->vdist,stdview.vdist) || !VEQ(vp->vdir,stdview.vdir)) {
 		sprintf(cp, " -vd %.6g %.6g %.6g",
-				vp->vdir[0], vp->vdir[1], vp->vdir[2]);
+				vp->vdir[0]*vp->vdist,
+				vp->vdir[1]*vp->vdist,
+				vp->vdir[2]*vp->vdist);
 		cp += strlen(cp);
 	}
 	if (!VEQ(vp->vup,stdview.vup)) {

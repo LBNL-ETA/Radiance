@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.9 2005/01/18 00:33:16 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -48,6 +48,8 @@ extern double  maxdiff;			/* max. sample difference */
 extern double  dstrpix;			/* square pixel distribution */
 
 extern double  mblur;			/* motion blur parameter */
+
+extern double  dblur;			/* depth-of-field blur parameter */
 
 static void onsig(int signo);
 static void sigdie(int  signo, char  *msg);
@@ -151,6 +153,10 @@ main(int  argc, char  *argv[])
 			case 'm':				/* motion */
 				check(3,"f");
 				mblur = atof(argv[++i]);
+				break;
+			case 'd':				/* aperture */
+				check(3,"f");
+				dblur = atof(argv[++i]);
 				break;
 			default:
 				goto badopt;
@@ -447,6 +453,7 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-pa %f\t\t\t# pixel aspect ratio\n", pixaspect);
 	printf("-pj %f\t\t\t# pixel jitter\n", dstrpix);
 	printf("-pm %f\t\t\t# pixel motion\n", mblur);
+	printf("-pd %f\t\t\t# pixel depth-of-field\n", dblur);
 	printf("-ps %-9d\t\t\t# pixel sample\n", psample);
 	printf("-pt %f\t\t\t# pixel threshold\n", maxdiff);
 	printf("-t  %-9d\t\t\t# time between reports\n", ralrm);

@@ -1388,3 +1388,8 @@ to Christoph Reinhart for pointing out the error.
 
 Made internal change to tone-mapping library to use structure pointer
 rather than stack, making code re-entrant and more up to modern standards.
+
+Added -pd option to handle depth-of-field blur in rpict.  This requires
+that the view directon (-vd option) include focal distance information,
+which is now preserved by the various view file routines, and reported
+by the vwright command.

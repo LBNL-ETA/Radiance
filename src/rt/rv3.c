@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.13 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.14 2005/01/18 00:33:16 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -125,6 +125,8 @@ double  *mp;
 	} else if (direc)
 			for (i = 0; i < 3; i++)
 				vec[i] -= ourview.vp[i];
+	if (normalize(vec) == 0.0)
+		return(-1);
 	return(0);
 }
 
@@ -386,11 +388,9 @@ FVECT  vc;
 {
 	double  d;
 	FVECT  v1;
-	VIEW  nv;
+	VIEW  nv = ourview;
 	register int  i;
 
-	VCOPY(nv.vup, ourview.vup);
-	nv.hoff = ourview.hoff; nv.voff = ourview.voff;
 	spinvector(nv.vdir, ourview.vdir, ourview.vup, angle*(PI/180.));
 	if (elev != 0.0) {
 		fcross(v1, ourview.vup, nv.vdir);
@@ -403,11 +403,7 @@ FVECT  vc;
 		d = 0.0;			/* don't move closer */
 		for (i = 0; i < 3; i++)
 			d += (vc[i] - ourview.vp[i])*ourview.vdir[i];
-		nv.vfore = ourview.vfore;
-		nv.vaft = ourview.vaft;
 	} else {
-		nv.horiz = ourview.horiz;
-		nv.vert = ourview.vert;
 		d = sqrt(dist2(ourview.vp, vc)) / mag;
 		if ((nv.vfore = ourview.vfore) > FTINY) {
 			nv.vfore += d - d*mag;
