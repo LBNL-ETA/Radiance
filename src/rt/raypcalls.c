@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.2 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.3 2003/07/03 15:00:19 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -56,7 +56,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.2 2003/02/25 02:47:23 greg Exp
  *  proportion to the number of CPUs you have available on your
  *  system.  If the ray queue is full before the call, ray_pqueue()
  *  will block until a result is ready so it can queue this one.
- *  The global int ray_idle indicates the number of currently idle
+ *  The global int ray_pnidle indicates the number of currently idle
  *  children.  If you want to check for completed rays without blocking,
  *  or get the results from rays that have been queued without
  *  queuing any new ones, the ray_presult() call is for you:
@@ -71,12 +71,12 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.2 2003/02/25 02:47:23 greg Exp
  *  queue is completely empty.  A negative return value
  *  indicates that a rendering process died.  If this
  *  happens, ray_close(0) is automatically called to close
- *  all child processes, and ray_nprocs is set to zero.
+ *  all child processes, and ray_pnprocs is set to zero.
  *
  *  If you just want to fill the ray queue without checking for
- *  results, check ray_idle and call ray_psend():
+ *  results, check ray_pnidle and call ray_psend():
  *
- *	while (ray_idle) {
+ *	while (ray_pnidle) {
  *		( set up ray )
  *		ray_psend(&myRay);
  *	}
@@ -142,8 +142,8 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.2 2003/02/25 02:47:23 greg Exp
 
 extern char	*shm_boundary;		/* boundary of shared memory */
 
-int		ray_nprocs = 0;		/* number of child processes */
-int		ray_idle = 0;		/* number of idle children */
+int		ray_pnprocs = 0;	/* number of child processes */
+int		ray_pnidle = 0;		/* number of idle children */
 
 static struct child_proc {
 	int	pid;				/* child process id */
@@ -189,12 +189,12 @@ ray_pflush()			/* send queued rays to idle children */
 {
 	int	nc, n, nw, i, sfirst;
 
-	if ((ray_idle <= 0 | r_send_next <= 0))
+	if ((ray_pnidle <= 0 | r_send_next <= 0))
 		return(0);		/* nothing we can send */
 	
 	sfirst = 0;			/* divvy up labor */
-	nc = ray_idle;
-	for (i = ray_nprocs; nc && i--; ) {
+	nc = ray_pnidle;
+	for (i = ray_pnprocs; nc && i--; ) {
 		if (r_proc[i].npending > 0)
 			continue;	/* child looks busy */
 		n = (r_send_next - sfirst)/nc--;
@@ -210,7 +210,7 @@ ray_pflush()			/* send queued rays to idle children */
 		while (n--)		/* record ray IDs */
 			r_proc[i].rno[n] = r_queue[sfirst+n].rno;
 		sfirst += r_proc[i].npending;
-		ray_idle--;		/* now she's busy */
+		ray_pnidle--;		/* now she's busy */
 	}
 	if (sfirst != r_send_next)
 		error(CONSISTENCY, "code screwup in ray_pflush");
@@ -283,7 +283,7 @@ int	poll;
 		r_recv_first++;
 		return(1);
 	}
-	n = ray_nprocs - ray_idle;	/* pending before flush? */
+	n = ray_pnprocs - ray_pnidle;	/* pending before flush? */
 
 	if (ray_pflush() < 0)		/* send new rays to process */
 		return(-1);
@@ -291,18 +291,18 @@ int	poll;
 	r_recv_first = r_recv_next = RAYQLEN;
 
 	if (!poll)			/* count newly sent unless polling */
-		n = ray_nprocs - ray_idle;
+		n = ray_pnprocs - ray_pnidle;
 	if (n <= 0)			/* return if nothing to await */
 		return(0);
 getready:				/* any children waiting for us? */
-	for (pn = ray_nprocs; pn--; )
+	for (pn = ray_pnprocs; pn--; )
 		if (FD_ISSET(r_proc[pn].fd_recv, &readset) ||
 				FD_ISSET(r_proc[pn].fd_recv, &errset))
 			break;
 					/* call select if we must */
 	if (pn < 0) {
 		FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
-		for (pn = ray_nprocs; pn--; ) {
+		for (pn = ray_pnprocs; pn--; ) {
 			if (r_proc[pn].npending > 0)
 				FD_SET(r_proc[pn].fd_recv, &readset);
 			FD_SET(r_proc[pn].fd_recv, &errset);
@@ -338,7 +338,7 @@ getready:				/* any children waiting for us? */
 	if (n <= 0)
 		FD_CLR(r_proc[pn].fd_recv, &errset);
 	r_proc[pn].npending = 0;
-	ray_idle++;
+	ray_pnidle++;
 					/* check for rendering errors */
 	if (!ok) {
 		ray_pclose(0);		/* process died -- clean up */
@@ -426,8 +426,8 @@ ray_popen(nadd)			/* open the specified # processes */
 int	nadd;
 {
 					/* check if our table has room */
-	if (ray_nprocs + nadd > MAX_NPROCS)
-		nadd = MAX_NPROCS - ray_nprocs;
+	if (ray_pnprocs + nadd > MAX_NPROCS)
+		nadd = MAX_NPROCS - ray_pnprocs;
 	if (nadd <= 0)
 		return;
 	fflush(stderr);			/* clear pending output */
@@ -436,9 +436,9 @@ int	nadd;
 		int	p0[2], p1[2];
 		if (pipe(p0) < 0 || pipe(p1) < 0)
 			error(SYSTEM, "cannot create pipe");
-		if ((r_proc[ray_nprocs].pid = fork()) == 0) {
+		if ((r_proc[ray_pnprocs].pid = fork()) == 0) {
 			int	pn;	/* close others' descriptors */
-			for (pn = ray_nprocs; pn--; ) {
+			for (pn = ray_pnprocs; pn--; ) {
 				close(r_proc[pn].fd_send);
 				close(r_proc[pn].fd_recv);
 			}
@@ -446,14 +446,14 @@ int	nadd;
 					/* following call never returns */
 			ray_pchild(p1[0], p0[1]);
 		}
-		if (r_proc[ray_nprocs].pid < 0)
+		if (r_proc[ray_pnprocs].pid < 0)
 			error(SYSTEM, "cannot fork child process");
 		close(p1[0]); close(p0[1]);
-		r_proc[ray_nprocs].fd_send = p1[1];
-		r_proc[ray_nprocs].fd_recv = p0[0];
-		r_proc[ray_nprocs].npending = 0;
-		ray_nprocs++;
-		ray_idle++;
+		r_proc[ray_pnprocs].fd_send = p1[1];
+		r_proc[ray_pnprocs].fd_recv = p0[0];
+		r_proc[ray_pnprocs].npending = 0;
+		ray_pnprocs++;
+		ray_pnidle++;
 	}
 }
 
@@ -469,26 +469,26 @@ int	nsub;
 		return;
 	inclose++;
 					/* check argument */
-	if ((nsub <= 0 | nsub > ray_nprocs))
-		nsub = ray_nprocs;
+	if ((nsub <= 0 | nsub > ray_pnprocs))
+		nsub = ray_pnprocs;
 					/* clear our ray queue */
 	while (ray_presult(&res,0) > 0)
 		;
 					/* clean up children */
 	while (nsub--) {
 		int	status;
-		ray_nprocs--;
-		close(r_proc[ray_nprocs].fd_recv);
-		close(r_proc[ray_nprocs].fd_send);
-		while (wait(&status) != r_proc[ray_nprocs].pid)
+		ray_pnprocs--;
+		close(r_proc[ray_pnprocs].fd_recv);
+		close(r_proc[ray_pnprocs].fd_send);
+		while (wait(&status) != r_proc[ray_pnprocs].pid)
 			;
 		if (status) {
 			sprintf(errmsg,
 				"rendering process %d exited with code %d",
-					r_proc[ray_nprocs].pid, status>>8);
+					r_proc[ray_pnprocs].pid, status>>8);
 			error(WARNING, errmsg);
 		}
-		ray_idle--;
+		ray_pnidle--;
 	}
 	inclose--;
 }

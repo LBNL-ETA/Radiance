@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.8 2003/07/02 01:15:20 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.9 2003/07/03 15:00:19 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: devcomm.c,v 2.8 2003/07/02 01:15:20 greg Exp $
  */
 
 #include "copyright.h"
+
+#include  "platform.h"
 
 #include "standard.h"
 

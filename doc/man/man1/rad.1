@@ -7,7 +7,7 @@ rad - render a RADIANCE scene
 [
 .B \-s
 ][
-.B \-n
+.B "-n|-N npr"
 ][
 .B \-t
 ][
@@ -56,6 +56,13 @@ The
 option tells
 .I rad
 not to take any action (ie. not to actually execute any commands).
+The
+.I \-N
+option instructs
+.I rad
+to run as many as
+.I npr
+rendering processes in parallel.
 The
 .I \-t
 option tells

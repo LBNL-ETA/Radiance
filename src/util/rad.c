@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.65 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.66 2003/07/03 15:00:19 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -96,12 +96,14 @@ int	nowarn = 0;		/* no warnings */
 int	explicate = 0;		/* explicate variables */
 int	silent = 0;		/* do work silently */
 int	touchonly = 0;		/* touch files only */
-int	noaction = 0;		/* don't do anything */
+int	nprocs = 1;		/* maximum executing processes */
 int	sayview = 0;		/* print view out */
 char	*rvdevice = NULL;	/* rview output device */
 char	*viewselect = NULL;	/* specific view only */
 
 int	overture = 0;		/* overture calculation needed */
+
+int	children_running = 0;	/* set negative in children */
 
 char	*progname;		/* global argv[0] */
 char	*rifname;		/* global rad input file name */
@@ -125,7 +127,12 @@ char	*argv[];
 			silent++;
 			break;
 		case 'n':
-			noaction++;
+			nprocs = 0;
+			break;
+		case 'N':
+			nprocs = atoi(argv[++i]);
+			if (nprocs < 0)
+				nprocs = 0;
 			break;
 		case 't':
 			touchonly++;
@@ -185,7 +192,7 @@ char	*argv[];
 	quit(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-w][-s][-n][-t][-e][-V][-v view][-o dev] rfile [VAR=value ..]\n",
+"Usage: %s [-w][-s][-n|-N npr][-t][-e][-V][-v view][-o dev] rfile [VAR=value ..]\n",
 			progname);
 	quit(1);
 }
@@ -299,7 +306,7 @@ double	org[3], *sizp;
 	register int	i;
 
 	if (osiz <= FTINY)
-		if (noaction && fdate(oct1name) <
+		if (!nprocs && fdate(oct1name) <
 				(scenedate>illumdate?scenedate:illumdate)) {
 							/* run getbbox */
 			sprintf(buf, "getbbox -w -h %s",
@@ -1132,8 +1139,7 @@ char	*opts, *po;
 		else
 			badvalue(REPORT);
 	}
-					/* do each view */
-	vn = 0;
+	vn = 0;					/* do each view */
 	while ((vw = getview(vn++, vs)) != NULL) {
 		if (sayview)
 			printview(vw);
@@ -1160,6 +1166,9 @@ char	*opts, *po;
 				touch(picfile);
 			continue;
 		}
+		if (next_process())		/* parallel running? */
+			continue;
+		/* XXX Remember to call finish_process() */
 						/* build rpict command */
 		if (rfdt >= oct1date)		/* recover */
 			sprintf(combuf, "rpict%s%s%s%s -ro %s %s",
@@ -1211,7 +1220,9 @@ char	*opts, *po;
 			mvfile(rawfile, combuf);
 		} else
 			rmfile(rawfile);
+		finish_process();		/* leave if child */
 	}
+	wait_process(1);		/* wait for children to finish */
 }
 
 
@@ -1220,7 +1231,7 @@ char	*fn;
 {
 	if (!silent)
 		printf("\ttouch %s\n", fn);
-	if (noaction)
+	if (!nprocs)
 		return(0);
 #ifdef notused
 	if (access(fn, F_OK) == -1)		/* create it */
@@ -1236,7 +1247,7 @@ char	*cs;
 {
 	if (!silent)		/* echo it */
 		printf("\t%s\n", cs);
-	if (noaction)
+	if (!nprocs)
 		return(0);
 	fflush(stdout);		/* flush output and pass to shell */
 	return(system(cs));
@@ -1252,7 +1263,7 @@ char	*fn;
 #else
 		printf("\trm -f %s\n", fn);
 #endif
-	if (noaction)
+	if (!nprocs)
 		return(0);
 	return(unlink(fn));
 }
@@ -1267,11 +1278,87 @@ char	*fold, *fnew;
 #else
 		printf("\tmv %s %s\n", fold, fnew);
 #endif
-	if (noaction)
+	if (!nprocs)
 		return(0);
 	return(rename(fold, fnew));
 }
 
+
+#ifdef RHAS_FORK_EXEC
+int
+next_process()			/* fork the next process (max. nprocs) */
+{
+	int	child_pid;
+
+	if (nprocs <= 1)
+		return(0);		/* it's us or no one */
+	if (children_running < 0) {
+		fprintf(stderr, "%s: internal error 1 in spawn_process()\n",
+				progname);
+		quit(1);
+	}
+	if (children_running >= nprocs)
+		wait_process(0);	/* wait for someone to finish */
+	fflush(stdout);
+	child_pid = fork();		/* split process */
+	if (child_pid == 0) {		/* we're the child */
+		children_running = -1;
+		return(0);
+	}
+	if (child_pid > 0) {		/* we're the parent */
+		++children_running;
+		return(1);
+	}
+	fprintf(stderr, "%s: warning -- fork() failed\n", progname);
+	return(0);
+}
+
+wait_process(all)			/* wait for process(es) to finish */
+int	all;
+{
+	int	ourstatus = 0;
+	int	pid, status;
+
+	if (all)
+		all = children_running;
+	else if (children_running > 0)
+		all = 1;
+	while (all-- > 0) {
+		pid = wait(&status);
+		if (pid < 0)
+			syserr(progname);
+		status = status>>8 & 0xff;
+		--children_running;
+		if (status != 0) {	/* child's problem is our problem */
+			if (ourstatus == 0 & children_running > 0)
+				fprintf(stderr, "%s: waiting for remaining processes\n",
+						progname);
+			ourstatus = status;
+			all = children_running;
+		}
+	}
+	if (ourstatus != 0)
+		quit(ourstatus);	/* bad status from child */
+}
+#else	/* ! RHAS_FORK_EXEC */
+int
+next_process()
+{
+	return(0);			/* cannot start new process */
+}
+wait_process(all)
+int	all;
+{
+	(void)all;			/* no one to wait for */
+}
+#endif	/* ! RHAS_FORK_EXEC */
+
+finish_process()			/* exit a child process */
+{
+	if (children_running >= 0)
+		return;			/* in parent -- noop */
+	exit(0);
+}
 
 #ifdef _WIN32
 setenv(vname, value)		/* set an environment variable */

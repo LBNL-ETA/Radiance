@@ -1167,3 +1167,6 @@ Added -f and -w options to ra_tiff to create IEEE float and 16-bit/primary
 TIFF output, respectively.  These formats are also understood on reverse
 conversion.  (16-bit/primary has been understood for some time, but not
 IEEE float.)
+
+Added -N option to rad to start multiple rendering processes in
+parallel.

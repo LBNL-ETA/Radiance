@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.21 2003/07/02 01:15:20 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.22 2003/07/03 15:00:19 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -12,7 +12,6 @@ static const char	RCSid[] = "$Id: rview.c,v 2.21 2003/07/02 01:15:20 greg Exp $"
 #include  <signal.h>
 #include  <ctype.h>
 
-#include  "platform.h"
 #include  "ray.h"
 #include  "rpaint.h"
 
