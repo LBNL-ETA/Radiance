@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "@(#)makeall 2.81 6/12/99 SGI"
+# RCSid $Id: makeall,v 1.2 2003/02/28 20:06:51 greg Exp $
 # 
 #Added macosX 2001-04-11 by Jean Brange
 #Deleted obsolete systems 2001-04-18 by Greg Ward
