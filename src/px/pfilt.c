@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.23 2003/06/05 19:29:34 schorsch Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.24 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.23 2003/06/05 19:29:34 schorsch Ex
 #include  <signal.h>
 
 #include  "standard.h"
+#include  "platform.h"
 #include  "color.h"
 #include  "view.h"
 #include  "paths.h"
@@ -97,10 +98,14 @@ char  **argv;
 	SET_FILE_BINARY(stdout);
 	if (signal(SIGINT, quit) == SIG_IGN)
 		signal(SIGINT, SIG_IGN);
+#ifdef SIGHUP
 	if (signal(SIGHUP, quit) == SIG_IGN)
 		signal(SIGHUP, SIG_IGN);
+#endif
 	signal(SIGTERM, quit);
+#ifdef SIGPIPE
 	signal(SIGPIPE, quit);
+#endif
 #ifdef	SIGXCPU
 	signal(SIGXCPU, quit);
 	signal(SIGXFSZ, quit);

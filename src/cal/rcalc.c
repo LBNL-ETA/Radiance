@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.4 2003/05/25 05:27:16 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.5 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -7,14 +7,13 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.4 2003/05/25 05:27:16 greg Exp $";
  *     9/11/87
  */
 
-#include  <stdio.h>
-
 #include  <stdlib.h>
-
+#include  <stdio.h>
+#include  <string.h>
 #include  <math.h>
-
 #include  <ctype.h>
 
+#include  "platform.h"
 #include  "calcomp.h"
 
 #ifdef  CPM
@@ -58,8 +57,18 @@ struct field {                  /* record format structure */
 #define  savqstr(s)     strcpy(emalloc(strlen(s)+1),s)
 #define  freqstr(s)     efree(s)
 
-extern char  *strcpy(), *emalloc(), *savestr();
-struct strvar  *getsvar();
+static void scaninp(void), advinp(void), resetinp(void);
+static void putrec(void), putout(void), nbsynch(void);
+static int getrec(void);
+static void execute(char *file);
+static void initinp(FILE *fp);
+static void svpreset(char *eqn);
+static void readfmt(char *spec, int output);
+static int readfield(char **pp);
+static int getfield(struct field *f);
+static void chanset(int n, double v);
+static void bchanset(int n, double v);
+static struct strvar* getsvar(char *svname);
 
 struct field  *inpfmt = NULL;   /* input record format */
 struct field  *outfmt = NULL;   /* output record structure */
@@ -88,9 +97,11 @@ struct {
 } ipb;                          /* circular lookahead buffer */
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+int  argc,
+char  *argv[]
+)
 {
 	int  i;
 
@@ -200,7 +211,8 @@ eputs(" [-b][-l][-n][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o
 }
 
 
-nbsynch()               /* non-blank starting synch character */
+static void
+nbsynch(void)               /* non-blank starting synch character */
 {
 	if (inpfmt == NULL || (inpfmt->type & F_TYP) != T_LIT)
 		return;
@@ -212,8 +224,9 @@ nbsynch()               /* non-blank starting synch character */
 
 
 int
-getinputrec(fp)		/* get next input record */
-FILE  *fp;
+getinputrec(		/* get next input record */
+FILE  *fp
+)
 {
 	if (inpfmt != NULL)
 		return(getrec());
@@ -227,8 +240,10 @@ FILE  *fp;
 }
 
 
-execute(file)           /* process a file */
-char  *file;
+static void
+execute(           /* process a file */
+char  *file
+)
 {
 	int  conditional = vardefined("cond");
 	long  nrecs = 0;
@@ -258,9 +273,9 @@ char  *file;
 }
 
 
-putout()                /* produce an output record */
+static void
+putout(void)                /* produce an output record */
 {
-	extern void  chanset(), bchanset();
 
 	colpos = 0;
 	if (outfmt != NULL)
@@ -277,8 +292,9 @@ putout()                /* produce an output record */
 
 
 double
-chanvalue(n)            /* return value for column n */
-int  n;
+chanvalue(            /* return value for column n */
+int  n
+)
 {
 	int  i;
 	register char  *cp;
@@ -329,9 +345,10 @@ int  n;
 
 
 void
-chanset(n, v)                   /* output column n */
-int  n;
-double  v;
+chanset(                   /* output column n */
+int  n,
+double  v
+)
 {
 	if (colpos == 0)                /* no leading separator */
 		colpos = 1;
@@ -344,9 +361,10 @@ double  v;
 
 
 void
-bchanset(n, v)                   /* output binary channel n */
-int  n;
-double  v;
+bchanset(                   /* output binary channel n */
+int  n,
+double  v
+)
 {
 	static char	zerobuf[sizeof(double)];
 
@@ -363,9 +381,11 @@ double  v;
 }
 
 
-readfmt(spec, output)                   /* read record format */
-char  *spec;
-int  output;
+static void
+readfmt(                   /* read record format */
+char  *spec,
+int  output
+)
 {
 	int  fd;
 	char  *inptr;
@@ -429,9 +449,10 @@ int  output;
 }
 
 
-int
-readfield(pp)                   /* get next field in format */
-register char  **pp;
+static int
+readfield(                   /* get next field in format */
+register char  **pp
+)
 {
 	int  type = F_NUL;
 	int  width = 0;
@@ -496,8 +517,9 @@ register char  **pp;
 
 
 struct strvar *
-getsvar(svname)                         /* get string variable */
-char  *svname;
+getsvar(                         /* get string variable */
+char  *svname
+)
 {
 	register struct strvar  *sv;
 	
@@ -513,8 +535,10 @@ char  *svname;
 }
 
 
-svpreset(eqn)                    /* preset a string variable */
-char  *eqn;
+static void
+svpreset(                    /* preset a string variable */
+char  *eqn
+)
 {
 	register struct strvar  *sv;
 	register char  *val;
@@ -533,7 +557,8 @@ char  *eqn;
 }
 
 
-clearrec()			/* clear input record variables */
+static void
+clearrec(void)			/* clear input record variables */
 {
 	register struct field  *f;
 
@@ -552,7 +577,8 @@ clearrec()			/* clear input record variables */
 }
 
 
-getrec()                                /* get next record from file */
+static int
+getrec(void)                                /* get next record from file */
 {
 	int  eatline;
 	register struct field  *f;
@@ -585,8 +611,10 @@ getrec()                                /* get next record from file */
 }
 
 
-getfield(f)                             /* get next field */
-register struct field  *f;
+static int
+getfield(                             /* get next field */
+register struct field  *f
+)
 {
 	static char  buf[MAXWORD+1];            /* no recursion! */
 	int  delim, inword;
@@ -672,10 +700,12 @@ register struct field  *f;
 			return(-1);			/* doesn't match! */
 		return(0);
 	}
+	return -1; /* pro forma return */
 }
 
 
-putrec()                                /* output a record */
+static void
+putrec(void)                                /* output a record */
 {
 	char  fmt[32];
 	register int  n;
@@ -725,8 +755,9 @@ putrec()                                /* output a record */
 }
 
 
-initinp(fp)                     /* prepare lookahead buffer */
-FILE  *fp;
+static void
+initinp(FILE  *fp)                     /* prepare lookahead buffer */
+
 {
 	ipb.fin = fp;
 	ipb.beg = ipb.end = inpbuf;
@@ -736,7 +767,8 @@ FILE  *fp;
 }
 
 
-scaninp()                       /* scan next character */
+static void
+scaninp(void)                       /* scan next character */
 {
 	if (ipb.chr == EOF)
 		return;
@@ -755,13 +787,15 @@ scaninp()                       /* scan next character */
 }
 
 
-advinp()                        /* move home to current position */
+static void
+advinp(void)                        /* move home to current position */
 {
 	ipb.beg = ipb.pos;
 }
 
 
-resetinp()                      /* rewind position and advance 1 */
+static void
+resetinp(void)                      /* rewind position and advance 1 */
 {
 	if (ipb.beg == NULL)            /* full */
 		ipb.beg = ipb.end;
@@ -774,16 +808,14 @@ resetinp()                      /* rewind position and advance 1 */
 
 
 void
-eputs(msg)
-char  *msg;
+eputs(char  *msg)
 {
 	fputs(msg, stderr);
 }
 
 
 void
-wputs(msg)
-char  *msg;
+wputs(char  *msg)
 {
 	if (!nowarn)
 		eputs(msg);
@@ -791,8 +823,7 @@ char  *msg;
 
 
 void
-quit(code)
-int  code;
+quit(int  code)
 {
 	exit(code);
 }

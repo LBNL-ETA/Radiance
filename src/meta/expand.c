@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: expand.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: expand.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *   Expansion routine for command implementation
@@ -26,13 +26,20 @@ static const char	RCSid[] = "$Id: expand.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
 
 static short  *xlist;			/* pointer to expansion list */
 
+static void exfile(FILE  *fp);
+static void exprim(PRIMITIVE  *p);
+static void sendmstr(register PRIMITIVE  *p);
+static void sendvstr(register PRIMITIVE	*p);
+static void include(int  code, char  *fname);
+static void polyfill(PRIMITIVE  *p);
+static void polyedge(PRIMITIVE  *p, int  x1, int y1, int x2, int y2);
 
 
-expand(infp, exlist)		/* expand requested commands */
-
-FILE  *infp;
-short  *exlist;
-
+void
+expand(		/* expand requested commands */
+FILE  *infp,
+short  *exlist
+)
 {
  static PRIMITIVE  pincl = {PINCL, 02, -1, -1, -1, -1, VINPUT};
  static short  vcloaded = FALSE;
@@ -54,11 +61,10 @@ short  *exlist;
 
 
 
-static
-exfile(fp)			/* expand the given file */
-
-register FILE  *fp;
-
+static void
+exfile(			/* expand the given file */
+register FILE  *fp
+)
 {
     PRIMITIVE  curp;
 
@@ -72,11 +78,10 @@ register FILE  *fp;
 
 
 
-static
-exprim(p)			/* expand primitive */
-
-register PRIMITIVE  *p;
-
+static void
+exprim(			/* expand primitive */
+register PRIMITIVE  *p
+)
 {
     int  xflag = xlist[comndx(p->com)];
 				/* 1==expand, 0==pass, -1==discard */
@@ -127,11 +132,10 @@ register PRIMITIVE  *p;
 
 
 
-static
-sendmstr(p)			/* expand a matrix string */
-
-register PRIMITIVE  *p;
-
+static void
+sendmstr(			/* expand a matrix string */
+register PRIMITIVE  *p
+)
 {
     PRIMITIVE  pout;
     int  cheight, cwidth, cthick, ccol;
@@ -161,11 +165,10 @@ register PRIMITIVE  *p;
 
 
 
-static
-sendvstr(p)			/* expand a vector string */
-
-register PRIMITIVE	*p;
-
+static void
+sendvstr(			/* expand a vector string */
+register PRIMITIVE	*p
+)
 {
     PRIMITIVE  pout;
     int  xadv, yadv;
@@ -233,12 +236,11 @@ register PRIMITIVE	*p;
 
 
 
-static
-include(code, fname)			/* load an include file */
-
-int  code;
-char  *fname;
-
+static void
+include(			/* load an include file */
+int  code,
+char  *fname
+)
 {
     register FILE  *fp;
 
@@ -260,11 +262,10 @@ char  *fname;
 
 
 
-static
-polyfill(p)			/* expand polygon fill command */
-
-PRIMITIVE  *p;
-
+static void
+polyfill(			/* expand polygon fill command */
+PRIMITIVE  *p
+)
 {
     char  *nextscan();
     int  firstx, firsty, lastx, lasty, x, y;
@@ -291,12 +292,11 @@ PRIMITIVE  *p;
 
 
 
-static
-polyedge(p, x1, y1, x2, y2)		/* expand edge of polygon */
-
-PRIMITIVE  *p;
-int  x1, y1, x2, y2;
-
+static void
+polyedge(		/* expand edge of polygon */
+PRIMITIVE  *p,
+int  x1, int y1, int x2, int y2
+)
 {
     int  reverse;
     PRIMITIVE  pin, pout;

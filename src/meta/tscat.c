@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tscat.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: tscat.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *       PROGRAM TO PLOT TEL-A-GRAF POINTS TO METAFILE
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: tscat.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
  */
 
 #include  "tgraph.h"
+#include  "paths.h"
 
 
 #define  XLEGEND  (XBEG+XSIZ+4*TSIZ)	/* x start of legend */
@@ -103,7 +104,8 @@ char  **argv;
        }
  else  {
 
-    sprintf(tfname, "%sts%d", TDIR, getpid());
+    /*sprintf(tfname, "%sts%d", TDIR, getpid());*/
+	temp_filename(tfname, sizeof(tfname), NULL);
     fp = efopen(tfname, "w+");
     normalize(stdin, fp);
     makeaxis(axflag);

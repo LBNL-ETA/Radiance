@@ -125,7 +125,7 @@ Atom  closedownAtom, wmProtocolsAtom;
 
 int  sigrecv;
 
-int  onsig() { sigrecv++; }
+void  onsig(int i) { sigrecv++; }
 
 
 main(argc, argv)

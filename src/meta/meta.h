@@ -1,10 +1,18 @@
-/* RCSid: $Id: meta.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
+/* RCSid: $Id: meta.h,v 1.2 2003/06/08 12:03:10 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
+#ifndef _RAD_META_H_
+#define _RAD_META_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#include "copyright.h"
 
 #include  <stdio.h>
+#include  <stdlib.h>
+#include  <malloc.h>
 
 #include  <ctype.h>
 
@@ -70,12 +78,21 @@
 #define  TTY  "CON:"		/* console name */
 #endif
 
+#ifdef  _WIN32  /* XXX */
+#define MDIR "c\\tmp\\" /* XXX we just need something to compile for now */
+#define TTY "CON:"   /* XXX this probably doesn't work */
+#endif  /* XXX */
+
 #define  MAXFNAME  64		/* maximum file name length */
 
 #define  XYSIZE  (1<<14)	/* metafile coordinate size */
 
+#ifndef max
 #define  max(x, y)  ((x) > (y) ? (x) : (y))
+#endif
+#ifndef min
 #define  min(x, y)  ((x) < (y) ? (x) : (y))
+#endif
 
 #define  abs(x)  ((x) < 0 ? -(x) : (x))
 
@@ -118,14 +135,48 @@ typedef struct plist  PLIST;
  *   External declarations
  */
 
-char  *malloc(), *savestr();
+char  *savestr();
 
-PRIMITIVE  *palloc(), *pop();
+PRIMITIVE *pop();
 
 FILE  *efopen(), *mfopen();
 
 extern char  coms[];
-
 extern char  errmsg[];
-
 extern char  *progname;
+
+	/* expand.c */
+extern void expand(FILE *infp, short *exlist);
+	/* palloc.c */
+extern PRIMITIVE *palloc(void);
+extern void pfree(register PRIMITIVE *p);
+extern void plfree(register PLIST *pl);
+	/* sort.c */
+extern void sort(FILE *infp, int (*pcmp)());
+extern void mergesort(FILE *fi[], int nf, PLIST *pl, int (*pcmp)(), FILE *ofp);
+	/* metacalls.c */
+extern void mdraw(int x, int y);
+extern void msegment(int xmin, int ymin, int xmax, int ymax, char *sname,
+		int d, int thick, int color);
+extern void mvstr(int xmin, int ymin, int xmax, int ymax, char *s,
+		int d, int thick, int color);
+extern void mtext(int x, int y, char *s, int cpi, int color);
+extern void mpoly(int x, int y, int border, int pat, int color);
+extern void mtriangle(int xmin, int ymin, int xmax, int ymax,
+		int d, int pat, int color);
+extern void mrectangle(int xmin, int ymin, int xmax, int ymax,
+		int pat, int color);
+extern void mline(int x, int y, int type, int thick, int color);
+extern void mcloseseg(void);
+extern void mopenseg(char *sname);
+extern void msetpat(int pn, char *pat);
+extern void minclude(char *fname);
+extern void mdone(void);
+extern void mendpage(void);
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_META_H_ */
+

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.1 2003/02/22 02:07:20 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -28,10 +28,13 @@ int  count = 0;				/* number to sum */
 int  tabc = '\t';			/* default separator */
 int  subtotal = 0;			/* produce subtotals? */
 
+static int execute(char *fname);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int
+main(
+int  argc,
+char  *argv[]
+)
 {
 	int  status;
 	int  a;
@@ -92,8 +95,10 @@ char  *argv[];
 }
 
 
-execute(fname)			/* compute result */
-char  *fname;
+static int
+execute(			/* compute result */
+char  *fname
+)
 {
 	double  result[MAXCOL];
 	char  buf[16*MAXCOL];

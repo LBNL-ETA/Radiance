@@ -1,11 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.4 2003/06/07 12:50:20 schorsch Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.5 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
  */
 
 #include  "standard.h"
+#include  "platform.h"
 #include  "octree.h"
 #include  "object.h"
 #include  "mesh.h"

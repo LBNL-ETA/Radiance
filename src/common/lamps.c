@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lamps.c,v 2.8 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: lamps.c,v 2.9 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  * Load lamp data.
@@ -27,8 +27,9 @@ static LAMP	*lamps = NULL;		/* lamp list */
 
 
 float *
-matchlamp(s)				/* see if string matches any lamp */
-char	*s;
+matchlamp(				/* see if string matches any lamp */
+char	*s
+)
 {
 	register LAMP	*lp;
 
@@ -41,8 +42,10 @@ char	*s;
 }
 
 
-loadlamps(file)					/* load lamp type file */
-char	*file;
+int
+loadlamps(					/* load lamp type file */
+char	*file
+)
 {
 	LAMP	*lastp;
 	register LAMP	*lp;
@@ -128,7 +131,8 @@ fmterr:
 }
 
 
-freelamps()			/* free our lamps list */
+void
+freelamps(void)			/* free our lamps list */
 {
 	register LAMP	*lp1, *lp2;
 	

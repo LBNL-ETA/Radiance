@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.6 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.7 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  * Find extrema points in a Radiance picture.
@@ -54,7 +54,7 @@ char  *argv[];
 	COLR  *scan;
 	COLR  cmin, cmax;
 	int  xmin, ymin, xmax, ymax;
-	SET_DEFAULT_BINARY()
+	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	for (i = 1; i < argc; i++)	/* get options */
 		if (!strcmp(argv[i], "-o"))

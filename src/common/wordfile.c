@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wordfile.c,v 2.10 2003/06/07 12:50:21 schorsch Exp $";
+static const char	RCSid[] = "$Id: wordfile.c,v 2.11 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  * Load whitespace separated words from a file into an array.
@@ -17,11 +17,8 @@ static const char	RCSid[] = "$Id: wordfile.c,v 2.10 2003/06/07 12:50:21 schorsch
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef _WIN32
- #include <io.h>
-#endif
-
 #include "standard.h"
+#include "platform.h"
 
 
 #define MAXFLEN		8192		/* file must be smaller than this */

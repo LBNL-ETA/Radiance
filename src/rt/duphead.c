@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: duphead.c,v 2.5 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: duphead.c,v 2.6 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  * Duplicate header on stdout.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: duphead.c,v 2.5 2003/06/05 19:29:34 schorsch E
 #include "copyright.h"
 
 #include  "standard.h"
+#include  "platform.h"
 #include  "paths.h"
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.4 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.5 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -11,7 +11,9 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.4 2003/02/22 02:07:23 greg Exp $"
  *	8/6/86
  */
 
+#include  <stdlib.h>
 #include  <stdio.h>
+#include  <string.h>
 #include  <math.h>
 
 #define  ZNAME		"Z`SYS`"		/* z function name */
@@ -29,6 +31,95 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.4 2003/02/22 02:07:23 greg Exp $"
 double  funvalue(), l_hermite(), l_bezier(), l_bspline(), argument();
 
 void	quit(), eputs(), wputs();
+
+
+computen(nzp, nrp, z0, r0, z1, r1)		/* compute normal */
+double  *nzp, *nrp, z0, r0, z1, r1;
+{
+	double  dr, dz, len;
+
+	dz = r0 - r1;				/* right angle vector */
+	dr = z1 - z0;
+	len = sqrt(dr*dr + dz*dz);
+	*nzp = dz/len;
+	*nrp = dr/len;
+}
+
+
+void
+eputs(msg)
+char  *msg;
+{
+	fputs(msg, stderr);
+}
+
+
+void
+wputs(msg)
+char  *msg;
+{
+	eputs(msg);
+}
+
+
+void
+quit(code)
+int  code;
+{
+	exit(code);
+}
+
+
+printhead(ac, av)		/* print command header */
+register int  ac;
+register char  **av;
+{
+	putchar('#');
+	while (ac--) {
+		putchar(' ');
+		fputs(*av++, stdout);
+	}
+	putchar('\n');
+}
+
+
+double
+l_hermite()			
+{
+	double  t;
+	
+	t = argument(5);
+	return(	argument(1)*((2.0*t-3.0)*t*t+1.0) +
+		argument(2)*(-2.0*t+3.0)*t*t +
+		argument(3)*((t-2.0)*t+1.0)*t +
+		argument(4)*(t-1.0)*t*t );
+}
+
+
+double
+l_bezier()
+{
+	double  t;
+
+	t = argument(5);
+	return(	argument(1) * (1.+t*(-3.+t*(3.-t))) +
+		argument(2) * 3.*t*(1.+t*(-2.+t)) +
+		argument(3) * 3.*t*t*(1.-t) +
+		argument(4) * t*t*t );
+}
+
+
+double
+l_bspline()
+{
+	double  t;
+
+	t = argument(5);
+	return(	argument(1) * (1./6.+t*(-1./2.+t*(1./2.-1./6.*t))) +
+		argument(2) * (2./3.+t*t*(-1.+1./2.*t)) +
+		argument(3) * (1./6.+t*(1./2.+t*(1./2.-1./2.*t))) +
+		argument(4) * (1./6.*t*t*t) );
+}
 
 
 main(argc, argv)
@@ -157,90 +248,3 @@ userror:
 }
 
 
-computen(nzp, nrp, z0, r0, z1, r1)		/* compute normal */
-double  *nzp, *nrp, z0, r0, z1, r1;
-{
-	double  dr, dz, len;
-
-	dz = r0 - r1;				/* right angle vector */
-	dr = z1 - z0;
-	len = sqrt(dr*dr + dz*dz);
-	*nzp = dz/len;
-	*nrp = dr/len;
-}
-
-
-void
-eputs(msg)
-char  *msg;
-{
-	fputs(msg, stderr);
-}
-
-
-void
-wputs(msg)
-char  *msg;
-{
-	eputs(msg);
-}
-
-
-void
-quit(code)
-int  code;
-{
-	exit(code);
-}
-
-
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}
-
-
-double
-l_hermite()			
-{
-	double  t;
-	
-	t = argument(5);
-	return(	argument(1)*((2.0*t-3.0)*t*t+1.0) +
-		argument(2)*(-2.0*t+3.0)*t*t +
-		argument(3)*((t-2.0)*t+1.0)*t +
-		argument(4)*(t-1.0)*t*t );
-}
-
-
-double
-l_bezier()
-{
-	double  t;
-
-	t = argument(5);
-	return(	argument(1) * (1.+t*(-3.+t*(3.-t))) +
-		argument(2) * 3.*t*(1.+t*(-2.+t)) +
-		argument(3) * 3.*t*t*(1.-t) +
-		argument(4) * t*t*t );
-}
-
-
-double
-l_bspline()
-{
-	double  t;
-
-	t = argument(5);
-	return(	argument(1) * (1./6.+t*(-1./2.+t*(1./2.-1./6.*t))) +
-		argument(2) * (2./3.+t*t*(-1.+1./2.*t)) +
-		argument(3) * (1./6.+t*(1./2.+t*(1./2.-1./2.*t))) +
-		argument(4) * (1./6.*t*t*t) );
-}

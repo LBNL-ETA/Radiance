@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: plot.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: plot.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *  Plotting routines for meta-files
@@ -104,14 +104,14 @@ struct setting {
 
 static struct setting  *sets[0200];
 
+static void spop(int attrib);
+static int spat(int  pat, char  *patval);
 
-
-
-set(attrib, value)		/* set attribute to value */
-
-int  attrib;
-char  *value;
-
+void
+set(		/* set attribute to value */
+int  attrib,
+char  *value
+)
 {
     struct setting  *newset;
 
@@ -143,11 +143,10 @@ char  *value;
 
 
 
-
-unset(attrib)			/* return attribute to previous setting */
-
-int  attrib;
-
+void
+unset(			/* return attribute to previous setting */
+int  attrib
+)
 {
     register int  i;
 
@@ -182,12 +181,10 @@ int  attrib;
 
 
 
-
-
-reset(attrib)			/* return attribute to default setting */
-
-int  attrib;
-
+void
+reset(			/* return attribute to default setting */
+int  attrib
+)
 {
     switch (attrib) {
 	case SALL:
@@ -220,12 +217,10 @@ int  attrib;
 
 
 
-
-static
-spop(attrib)			/* pop top off attrib settings list */
-
-int  attrib;
-
+static void
+spop(			/* pop top off attrib settings list */
+int  attrib
+)
 {
 
     if (sets[attrib] != NULL) {
@@ -239,13 +234,11 @@ int  attrib;
 
 
 
-
 static int
-spat(pat, patval)			/* set a pattern */
-
-int  pat;
-char  *patval;
-
+spat(			/* set a pattern */
+int  pat,
+char  *patval
+)
 {
     int  n, i, j, v;
     char  *nextscan();

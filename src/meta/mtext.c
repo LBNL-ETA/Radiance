@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mtext.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: mtext.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *  Program to convert ascii file to metafile
@@ -9,6 +9,8 @@ static const char	RCSid[] = "$Id: mtext.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
  *  cc mtext.c mfio.o syscalls.o misc.o
  */
 
+#include <malloc.h>
+#include <string.h>
 
 #include  "meta.h"
 
@@ -122,7 +124,6 @@ FILE  *fp;
     static char  linbuf[MAXLINE];
     int  nlines;
     char  **section;
-    char  *calloc(), *malloc(), *fgets(), *strcpy();
     int  maxlen;
     int  done;
     int  i, j, k;

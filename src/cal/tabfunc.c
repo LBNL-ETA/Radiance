@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.1 2003/02/22 02:07:20 greg Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -9,14 +9,24 @@ static const char	RCSid[] = "$Id: tabfunc.c,v 1.1 2003/02/22 02:07:20 greg Exp $
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <ctype.h>
+#ifdef _WIN32
+ #include <process.h> /* getpid() */
+#else
+ #include <sys/types.h>
+ #include <unistd.h>
+#endif
+
+#include "standard.h"
+#include "platform.h"
 
 #define  isdelim(c)	(isspace(c) || (c)==',')
 
 #define  MAXTAB		1024		/* maximum number of data rows */
 #define  MAXLINE	4096		/* maximum line width (characters) */
-#define  FLOAT		float		/* real type (precision) */
+/*#define  FLOAT		float	*/	/* real type (precision) */
 #define  OUTFMT		"%.7g"		/* output format conversion string */
 
 int	interpolate = 0;
@@ -29,12 +39,18 @@ FLOAT	(*ordinate)[MAXTAB];		/* dependent values (other columns) */
 int	tabsize = 0;			/* final table size (number of rows) */
 char	locID[16];			/* local identifier (for uniqueness) */
 
-extern char	*fgets(), *fskip(), *absc_exp();
+/*extern char	*fgets(), *fskip(), *absc_exp();*/
 
+static void load_data(FILE *fp);
+static void print_funcs(char *xe);
+static void putlist(register FLOAT *av, int al, register int pos);
+static char * absc_exp(void);
 
-main(argc, argv)
-int	argc;
-char	**argv;
+int
+main(
+int	argc,
+char	**argv
+)
 {
 	progname = argv[0];
 	argv++;
@@ -64,8 +80,10 @@ char	**argv;
 }
 
 
-load_data(fp)			/* load tabular data from fp */
-FILE	*fp;
+static void
+load_data(			/* load tabular data from fp */
+FILE	*fp
+)
 {
 	int	lineno;
 	char	*err;
@@ -110,8 +128,8 @@ fatal:
 }
 
 
-char *
-absc_exp()			/* produce expression for abscissa */
+static char *
+absc_exp(void)			/* produce expression for abscissa */
 {
 	static char	ourexp[64];
 	double	step, eps;
@@ -164,8 +182,10 @@ absc_exp()			/* produce expression for abscissa */
 }
 
 
-print_funcs(xe)			/* print functions */
-char	*xe;
+static void
+print_funcs(			/* print functions */
+char	*xe
+)
 {
 	int	xelen;
 	register int	i;
@@ -190,10 +210,12 @@ char	*xe;
 }
 
 
-putlist(av, al, pos)		/* put out array of values */
-register FLOAT	*av;
-int	al;
-register int	pos;
+static void
+putlist(		/* put out array of values */
+register FLOAT	*av,
+int	al,
+register int	pos
+)
 {
 	char	obuf[32];
 	int	len;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.18 2003/06/05 19:29:34 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.19 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: pvalue.c,v 2.18 2003/06/05 19:29:34 schorsch E
 #include  <time.h>
 
 #include  "standard.h"
+#include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
 

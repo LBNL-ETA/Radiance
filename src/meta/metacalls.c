@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: metacalls.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: metacalls.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *  metacalls.c - functional interface to metafile.
@@ -28,55 +28,69 @@ static char  curargs[MAXARGS] = "";
 static char  *cap;
 
 
-mendpage()			/* end of page */
+static int let_dir( register int  c);
+static void closepoly(void);
+static void polyval( register int  x, register int y);
+static void decival( register int  v);
+
+
+void
+mendpage(void)			/* end of page */
 {
     pflush();
     pglob(PEOP, 0200, NULL);
 }
 
-
-mdone()				/* end of graphics metafile */
+void
+mdone(void)				/* end of graphics metafile */
 {
     pflush();
     pglob(PEOF, 0200, NULL);
 }
 
-
-minclude(fname)			/* include a file */
-char  *fname;
+void
+minclude(			/* include a file */
+char  *fname
+)
 {
     pflush();
     pglob(PINCL, 1, fname);
 }
 
-
-msetpat(pn, pat)		/* set a pattern */
-int  pn;
-char  *pat;
+void
+msetpat(		/* set a pattern */
+int  pn,
+char  *pat
+)
 {
     pflush();
     pglob(PSET, pn+4, pat);
 }
 
 
-mopenseg(sname)			/* open a segment */
-char  *sname;
+void
+mopenseg(			/* open a segment */
+char  *sname
+)
 {
     pflush();
     pglob(POPEN, 0, sname);
 }
 
 
-mcloseseg()			/* close current segment */
+void
+mcloseseg(void)			/* close current segment */
 {
     pflush();
     pglob(PCLOSE, 0200, NULL);
 }
 
 
-mline(x, y, type, thick, color)		/* start a line */
-int  x, y;
-int  type, thick, color;
+void
+mline(		/* start a line */
+int  x, int y,
+int  type, int thick, int color
+)
 {
     pflush();
     cura0 = (type<<4 & 060) | (thick<<2 & 014) | (color & 03);
@@ -85,9 +99,11 @@ int  type, thick, color;
 }
 
 
-mrectangle(xmin, ymin, xmax, ymax, pat, color)	/* fill a rectangle */
-int  xmin, ymin, xmax, ymax;
-int  pat, color;
+void
+mrectangle(	/* fill a rectangle */
+int  xmin, int ymin, int xmax, int ymax,
+int  pat, int color
+)
 {
     pflush();
     cura0 = (pat<<2 & 014) | (color & 03);
@@ -95,9 +111,11 @@ int  pat, color;
 }
 
 
-mtriangle(xmin, ymin, xmax, ymax, d, pat, color)	/* fill a triangle */
-int  xmin, ymin, xmax, ymax;
-int  d, pat, color;
+void
+mtriangle(	/* fill a triangle */
+int  xmin, int ymin, int xmax, int ymax,
+int  d, int pat, int color
+)
 {
     pflush();
     cura0 = (let_dir(d)<<4 & 060) | (pat<<2 & 014) | (color & 03);
@@ -105,9 +123,11 @@ int  d, pat, color;
 }
 
 
-mpoly(x, y, border, pat, color)		/* start a polygon */
-int  x, y;
-int  border, pat, color;
+void
+mpoly(		/* start a polygon */
+int  x, int y,
+int  border, int pat, int color
+)
 {
     pflush();
     cura0 = (border<<6 & 0100) | (pat<<2 & 014) | (color & 03);
@@ -119,11 +139,13 @@ int  border, pat, color;
 }
 
 
-mtext(x, y, s, cpi, color)		/* matrix string */
-int  x, y;
-char  *s;
-int  cpi;
-int  color;
+void
+mtext(		/* matrix string */
+int  x, int y,
+char  *s,
+int  cpi,
+int  color
+)
 {
     pflush();
     cura0 = (color & 03);
@@ -141,10 +163,12 @@ int  color;
 }
 
 
-mvstr(xmin, ymin, xmax, ymax, s, d, thick, color)	/* vector string */
-int  xmin, ymin, xmax, ymax;
-char  *s;
-int  d, thick, color;
+void
+mvstr(	/* vector string */
+int  xmin, int ymin, int xmax, int ymax,
+char  *s,
+int  d, int thick, int color
+)
 {
     pflush();
     cura0 = (let_dir(d)<<4 & 060) | (thick<<2 & 014) | (color & 03);
@@ -152,10 +176,12 @@ int  d, thick, color;
 }
 
 
-msegment(xmin, ymin, xmax, ymax, sname, d, thick, color)	/* segment */
-int  xmin, ymin, xmax, ymax;
-char  *sname;
-int  d, thick, color;
+void
+msegment(	/* segment */
+int  xmin, int ymin, int xmax, int ymax,
+char  *sname,
+int  d, int thick, int color
+)
 {
     pflush();
     cura0 = (let_dir(d)<<4 & 060) | (thick<<2 & 014) | (color & 03);
@@ -163,8 +189,10 @@ int  d, thick, color;
 }
 
 
-mdraw(x, y)				/* draw to next point */
-int  x, y;
+void
+mdraw(				/* draw to next point */
+int  x, int y
+)
 {
     if (inpoly) {
 	polyval(x, y);
@@ -176,9 +204,10 @@ int  x, y;
 }
 
 
-static
-decival(v)				/* add value to polygon */
-register int  v;
+static void
+decival(				/* add value to polygon */
+register int  v
+)
 {
     if (!v)
 	return;
@@ -187,9 +216,11 @@ register int  v;
 }
 
 
-static
-polyval(x, y)				/* add vertex to a polygon */
-register int  x, y;
+static void
+polyval(				/* add vertex to a polygon */
+register int  x,
+register int y
+)
 {
     *cap++ = ' ';
     putdec(x);
@@ -198,8 +229,8 @@ register int  x, y;
 }
 
 
-static
-closepoly()				/* close current polygon */
+static void
+closepoly(void)				/* close current polygon */
 {
     *cap = '\0';
     pprim(PPFILL, cura0, 0, 0, XYSIZE-1, XYSIZE-1, curargs);
@@ -208,8 +239,9 @@ closepoly()				/* close current polygon */
 
 
 static int
-let_dir(c)		/* convert letter to corresponding direction */
-register int  c;
+let_dir(		/* convert letter to corresponding direction */
+register int  c
+)
 {
     switch (c) {
     case 'R':

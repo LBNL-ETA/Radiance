@@ -1,15 +1,16 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.12 2003/03/11 19:29:05 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.13 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
  */
 
-#include  "mkillum.h"
-
 #include  <signal.h>
-
 #include  <ctype.h>
+#include  <stdio.h>
+
+#include  "platform.h"
+#include  "mkillum.h"
 
 				/* default parameters */
 #define  SAMPDENS	48		/* points per projected steradian */
@@ -156,7 +157,9 @@ init()				/* start rtrace and set up buffers */
 	ofun[OBJ_SPHERE].funp = o_sphere;
 	ofun[OBJ_RING].funp = o_ring;
 					/* set up signal handling */
+#ifndef _WIN32 /* XXX what do we use instead? */
 	signal(SIGPIPE, quit);
+#endif
 					/* start rtrace process */
 	errno = 0;
 	maxbytes = open_process(rt.pd, rtargv);

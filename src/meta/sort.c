@@ -1,26 +1,25 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
  */
 
+#include  "paths.h"
+#include  "meta.h"
+
 
 #define  PBSIZE  1000		/* max size of sort block */
 				/* maxalloc must be >= this */
 
-
 #define  NFILES  4		/* number of sort files */
 
 
-
-#include  "meta.h"
-
-
-
-
-
-
+static void treemerge(int height, int nt, int nf, PLIST *pl,
+		int (*pcmp)(), FILE *ofp);
+static void sendsort( PLIST  *pl, int  (*pcmp)());
+static void order(PRIMITIVE  *pa[], int  n, PLIST  *pl);
+static char * tfname( int  lvl, int num);
 
 /*
  *   This sort routine does a combination quicksort and
@@ -28,11 +27,11 @@ static const char	RCSid[] = "$Id: sort.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
  */
 
 
-sort(infp, pcmp)		/* sort primitives according to pcmp */
-
-FILE  *infp;
-int  (*pcmp)();		/* compares pointers to pointers to primitives! */
-
+void
+sort(		/* sort primitives according to pcmp */
+FILE  *infp,
+int  (*pcmp)()		/* compares pointers to pointers to primitives! */
+)
 {
  PRIMITIVE  *prims[PBSIZE];		/* pointers to primitives */
  PLIST  primlist;			/* our primitives list */
@@ -79,14 +78,15 @@ int  (*pcmp)();		/* compares pointers to pointers to primitives! */
  *     0 or 1 global commands.
  */
 
-mergesort(fi, nf, pl, pcmp, ofp)	/* merge sorted files with list */
+void
+mergesort(	/* merge sorted files with list */
 
-FILE  *fi[];		/* array of input files */
-int  nf;		/* number of input files */
-PLIST  *pl;		/* sorted list */
-int  (*pcmp)();		/* comparison function, takes primitive handles */
-FILE  *ofp;		/* output file */
-
+FILE  *fi[],		/* array of input files */
+int  nf,		/* number of input files */
+PLIST  *pl,		/* sorted list */
+int  (*pcmp)(),		/* comparison function, takes primitive handles */
+FILE  *ofp		/* output file */
+)
 {
     PRIMITIVE  *plp;		/* position in list */
     PRIMITIVE  *pp[NFILES];	/* input primitives */
@@ -143,14 +143,14 @@ FILE  *ofp;		/* output file */
 
 
 
-static
-treemerge(height, nt, nf, pl, pcmp, ofp)	/* merge into one file */
+static void
+treemerge(	/* merge into one file */
 
-int  height, nt, nf;
-PLIST  *pl;
-int  (*pcmp)();
-FILE  *ofp;
-
+int  height, int nt, int nf,
+PLIST  *pl,
+int  (*pcmp)(),
+FILE  *ofp
+)
 {
     char  *tfname();
     FILE  *fi[NFILES], *fp;
@@ -191,12 +191,12 @@ FILE  *ofp;
 
 
 
-static
-sendsort(pl, pcmp)		/* send a sorted list */
+static void
+sendsort(		/* send a sorted list */
 
-PLIST  *pl;
-int  (*pcmp)();
-
+PLIST  *pl,
+int  (*pcmp)()
+)
 {
     static int  nf = 0,
     		intree = FALSE;
@@ -247,14 +247,13 @@ int  (*pcmp)();
 
 
 
+static void
+order(	/* order the first n array primitives into list */
 
-static
-order(pa, n, pl)	/* order the first n array primitives into list */
-
-PRIMITIVE  *pa[];
-int  n;
-PLIST  *pl;
-
+PRIMITIVE  *pa[],
+int  n,
+PLIST  *pl
+)
 {
  register int  i;
 
@@ -271,14 +270,18 @@ PLIST  *pl;
 
 
 static char *
-tfname(lvl, num)		/* create temporary file name */
+tfname(		/* create temporary file name */
 
-int  lvl, num;
-
+int  lvl, int num
+)
 {
+	static char  pathbuf[PATH_MAX];
     static char  fnbuf[32];
 
-    sprintf(fnbuf, "%sS%d%c%d", TDIR, getpid(), lvl+'A', num);
+    /*sprintf(fnbuf, "%sS%d%c%d", TDIR, getpid(), lvl+'A', num);*/
+    sprintf(fnbuf, "%c%d_XXXXXX", lvl+'A', num);
+	temp_filename(pathbuf, sizeof(pathbuf), fnbuf);
 
-    return(fnbuf);
+    /*return(fnbuf);*/
+	return pathbuf;
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: trans.c,v 2.3 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: trans.c,v 2.4 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  * Translator utilities
@@ -8,16 +8,21 @@ static const char	RCSid[] = "$Id: trans.c,v 2.3 2003/04/23 00:52:33 greg Exp $";
  */
 
 #include <stdio.h>
-
 #include <stdlib.h>
+#include <string.h>
 
+#include "standard.h"
 #include "trans.h"
 
+static int idcmp(ID *id1, ID *id2);
+static void fputidlist(IDLIST *qp, FILE *fp);
+static int qtype(char *qnm, register QLIST *qlp);
 
-fgetid(idp, dls, fp)		/* read an id up to char in dls from fp */
-ID	*idp;
-char	*dls;
-register FILE	*fp;
+fgetid(		/* read an id up to char in dls from fp */
+ID	*idp,
+char	*dls,
+register FILE	*fp
+)
 {
 	char	dset[256/8];
 	char	buf[MAXSTR];
@@ -61,10 +66,11 @@ register FILE	*fp;
 
 
 int
-findid(idl, idp, insert)		/* find (or insert) id in list */
-register IDLIST	*idl;
-ID	*idp;
-int	insert;
+findid(		/* find (or insert) id in list */
+register IDLIST	*idl,
+ID	*idp,
+int	insert
+)
 {
 	int  upper, lower;
 	register int  cm, i;
@@ -106,12 +112,15 @@ int	insert;
 memerr:
 	eputs("Out of memory in findid\n");
 	quit(1);
+	return -1; /* pro forma return */
 }
 
 
-int
-idcmp(id1, id2)				/* compare two identifiers */
-register ID	*id1, *id2;
+static int
+idcmp(				/* compare two identifiers */
+register ID	*id1,
+register ID *id2
+)
 {
 					/* names are greater than numbers */
 	if (id1->name == NULL)
@@ -127,10 +136,12 @@ register ID	*id1, *id2;
 }
 
 
-write_quals(qlp, idl, fp)	/* write out qualifier lists */
-QLIST	*qlp;
-IDLIST	idl[];
-FILE	*fp;
+void
+write_quals(	/* write out qualifier lists */
+QLIST	*qlp,
+IDLIST	idl[],
+FILE	*fp
+)
 {
 	int	i;
 	
@@ -143,9 +154,11 @@ FILE	*fp;
 }
 
 
-fputidlist(qp, fp)		/* put id list out to fp */
-IDLIST	*qp;
-FILE	*fp;
+static void
+fputidlist(		/* put id list out to fp */
+IDLIST	*qp,
+FILE	*fp
+)
 {
 	int	fi;
 	register int	i;
@@ -171,9 +184,10 @@ FILE	*fp;
 
 
 RULEHD *
-getmapping(file, qlp)		/* read in mapping file */
-char	*file;
-QLIST	*qlp;
+getmapping(		/* read in mapping file */
+char	*file,
+QLIST	*qlp
+)
 {
 	char	*err;
 	register int	c;
@@ -265,13 +279,15 @@ fmterr:
 memerr:
 	eputs("Out of memory in getmapping\n");
 	quit(1);
+	return NULL; /* pro forma return */
 }
 
 
-int
-qtype(qnm, qlp)			/* return number for qualifier name */
-char	*qnm;
-register QLIST	*qlp;
+static int
+qtype(			/* return number for qualifier name */
+char	*qnm,
+register QLIST	*qlp
+)
 {
 	register int	i;
 	
@@ -282,9 +298,11 @@ register QLIST	*qlp;
 }
 
 
-matchid(it, im)			/* see if we match an id */
-register ID	*it;
-register IDMATCH	*im;
+int
+matchid(			/* see if we match an id */
+register ID	*it,
+register IDMATCH	*im
+)
 {
 	if (it->name == NULL) {
 		if (im->nam != NULL)

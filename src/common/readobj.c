@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.13 2003/06/07 12:50:20 schorsch Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.14 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -11,12 +11,10 @@ static const char RCSid[] = "$Id: readobj.c,v 2.13 2003/06/07 12:50:20 schorsch 
 
 #include  <ctype.h>
 #include  <stdio.h>
-#ifdef _WIN32
- #define popen _popen
- #define pclose _pclose
-#endif
+#include  <stdio.h>
 
 #include  "standard.h"
+#include  "platform.h"
 #include  "object.h"
 #include  "otypes.h"
 

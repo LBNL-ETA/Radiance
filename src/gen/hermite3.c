@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: hermite3.c,v 2.2 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: hermite3.c,v 2.3 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  hermite.c - routines for 3D hermite curves.
@@ -9,14 +9,15 @@ static const char	RCSid[] = "$Id: hermite3.c,v 2.2 2003/02/22 02:07:23 greg Exp 
 
 #include  <stdio.h>
 
-
-hermite3(hp, p0, p1, r0, r1, t)		/* compute point on hermite curve */
-double  hp[3];		/* returned hermite point */
-double  p0[3];		/* first endpoint */
-double  p1[3];		/* second endpoint */
-double  r0[3];		/* tangent at p0 */
-double  r1[3];		/* tangent at p1 */
-double  t;		/* position parameter */
+void
+hermite3(		/* compute point on hermite curve */
+double  hp[3],		/* returned hermite point */
+double  p0[3],		/* first endpoint */
+double  p1[3],		/* second endpoint */
+double  r0[3],		/* tangent at p0 */
+double  r1[3],		/* tangent at p1 */
+double  t		/* position parameter */
+)
 {
 	register int  i;
 	double  tmh[4];
@@ -32,13 +33,14 @@ double  t;		/* position parameter */
 }
 
 
-htan3(ht, p0, p1, r0, r1, t)		/* compute tangent on hermite curve */
-double  ht[3];		/* returned hermite tangent */
-double  p0[3];		/* first endpoint */
-double  p1[3];		/* second endpoint */
-double  r0[3];		/* tangent at p0 */
-double  r1[3];		/* tangent at p1 */
-double  t;		/* position parameter */
+htan3(		/* compute tangent on hermite curve */
+double  ht[3],		/* returned hermite tangent */
+double  p0[3],		/* first endpoint */
+double  p1[3],		/* second endpoint */
+double  r0[3],		/* tangent at p0 */
+double  r1[3],		/* tangent at p1 */
+double  t		/* position parameter */
+)
 {
 	register int  i;
 	double  tpmh[4];

@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.2 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.3 2003/06/08 12:03:09 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -12,7 +12,9 @@ extern "C" {
 
 #ifdef _WIN32
 
-#include <stdio.h>  /* fileno() */
+#include <stdio.h>
+#define popen _popen
+#define pclose _pclose
 #include <fcntl.h>  /* _O_BINARY, _O_TEXT */
 #include <io.h>     /* _setmode() */
 #include <stdlib.h> /* _fmode */

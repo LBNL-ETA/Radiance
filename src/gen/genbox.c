@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.5 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -27,6 +27,99 @@ double  bevel = 0.0;	/* bevel amount */
 int  rounde = 0;		/* boolean true for rounde edges */
 
 int  reverse = 0;	/* boolean true for reversed normals */
+
+
+
+static void
+vertex(v)
+register int  v;
+{
+	register int  i;
+
+	for (i = 0; i < 3; i++) {
+		if (v & 010)
+			printf("\t%18.12g", v & 01 ? size[i]-bevel : bevel);
+		else
+			printf("\t%18.12g", v & 01 ? size[i] : 0.0);
+		v >>= 1;
+	}
+	printf("\n");
+}
+
+
+static void
+side(a, b, c, d)		/* generate a rectangular face */
+int  a, b, c, d;
+{
+	printf("\n%s polygon %s.%c%c%c%c\n", cmtype, cname,
+			let[a], let[b], let[c], let[d]);
+	printf("0\n0\n12\n");
+	if (reverse) {
+		vertex(d);
+		vertex(c);
+		vertex(b);
+		vertex(a);
+	} else {
+		vertex(a);
+		vertex(b);
+		vertex(c);
+		vertex(d);
+	}
+}
+
+
+static void
+corner(a, b, c)			/* generate a triangular face */
+int  a, b, c;
+{
+	printf("\n%s polygon %s.%c%c%c\n", cmtype, cname,
+			let[a], let[b], let[c]);
+	printf("0\n0\n9\n");
+	if (reverse) {
+		vertex(c);
+		vertex(b);
+		vertex(a);
+	} else {
+		vertex(a);
+		vertex(b);
+		vertex(c);
+	}
+}
+
+
+static void
+cylinder(v0, v1)		/* generate a cylinder */
+int  v0, v1;
+{
+	printf("\n%s cylinder %s.%c%c\n", cmtype, cname, v0+'0', v1+'0');
+	printf("0\n0\n7\n");
+	vertex(v0);
+	vertex(v1);
+	printf("\t%18.12g\n", bevel);
+}
+
+
+sphere(v0)			/* generate a sphere */
+int  v0;
+{
+	printf("\n%s sphere %s.%c\n", cmtype, cname, v0+'0');
+	printf("0\n0\n4\n");
+	vertex(v0);
+	printf("\t%18.12g\n", bevel);
+}
+
+
+printhead(ac, av)		/* print command header */
+register int  ac;
+register char  **av;
+{
+	putchar('#');
+	while (ac--) {
+		putchar(' ');
+		fputs(*av++, stdout);
+	}
+	putchar('\n');
+}
 
 
 main(argc, argv)
@@ -138,90 +231,3 @@ userr:
 	exit(1);
 }
 
-
-side(a, b, c, d)		/* generate a rectangular face */
-int  a, b, c, d;
-{
-	printf("\n%s polygon %s.%c%c%c%c\n", cmtype, cname,
-			let[a], let[b], let[c], let[d]);
-	printf("0\n0\n12\n");
-	if (reverse) {
-		vertex(d);
-		vertex(c);
-		vertex(b);
-		vertex(a);
-	} else {
-		vertex(a);
-		vertex(b);
-		vertex(c);
-		vertex(d);
-	}
-}
-
-
-corner(a, b, c)			/* generate a triangular face */
-int  a, b, c;
-{
-	printf("\n%s polygon %s.%c%c%c\n", cmtype, cname,
-			let[a], let[b], let[c]);
-	printf("0\n0\n9\n");
-	if (reverse) {
-		vertex(c);
-		vertex(b);
-		vertex(a);
-	} else {
-		vertex(a);
-		vertex(b);
-		vertex(c);
-	}
-}
-
-
-cylinder(v0, v1)		/* generate a cylinder */
-int  v0, v1;
-{
-	printf("\n%s cylinder %s.%c%c\n", cmtype, cname, v0+'0', v1+'0');
-	printf("0\n0\n7\n");
-	vertex(v0);
-	vertex(v1);
-	printf("\t%18.12g\n", bevel);
-}
-
-
-sphere(v0)			/* generate a sphere */
-int  v0;
-{
-	printf("\n%s sphere %s.%c\n", cmtype, cname, v0+'0');
-	printf("0\n0\n4\n");
-	vertex(v0);
-	printf("\t%18.12g\n", bevel);
-}
-
-
-vertex(v)
-register int  v;
-{
-	register int  i;
-
-	for (i = 0; i < 3; i++) {
-		if (v & 010)
-			printf("\t%18.12g", v & 01 ? size[i]-bevel : bevel);
-		else
-			printf("\t%18.12g", v & 01 ? size[i] : 0.0);
-		v >>= 1;
-	}
-	printf("\n");
-}
-
-
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}

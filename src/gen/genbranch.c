@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbranch.c,v 2.5 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: genbranch.c,v 2.6 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  genbranch.c - program to generate 3D Christmas tree branches.
@@ -30,6 +30,90 @@ int  nshoots = 7;			/* number of offshoots */
 int  rdepth = 3;			/* recursion depth */
 
 double  var = 0.3;			/* variability */
+
+
+static void
+stick(mat, beg, end, rad)		/* output a branch or leaf */
+char  *mat;
+double  beg[3], end[3];
+double  rad;
+{
+	static int  nsticks = 0;
+	
+	printf("\n%s cone s%d\n", mat, nsticks);
+	printf("0\n0\n8\n");
+	printf("\t%18.12g\t%18.12g\t%18.12g\n", beg[0], beg[1], beg[2]);
+	printf("\t%18.12g\t%18.12g\t%18.12g\n", end[0], end[1], end[2]);
+	printf("\t%18.12g\t%18.12g\n", rad, bnarrow*rad);
+
+	printf("\n%s sphere e%d\n", mat, nsticks);
+	printf("0\n0\n4");
+	printf("\t%18.12g\t%18.12g\t%18.12g\t%18.12g\n",
+			end[0], end[1], end[2], bnarrow*rad);
+
+	nsticks++;
+}
+
+
+static void
+branch(beg, end, rad, lvl)		/* generate branch recursively */
+double  beg[3], end[3];
+double  rad;
+int  lvl;
+{
+	double  sqrt();
+	double  newbeg[3], newend[3];
+	double  t;
+	int  i, j;
+	
+	if (lvl == 0) {
+		stick(leafmat, beg, end, rad);
+		return;
+	}
+
+	stick(branchmat, beg, end, rad);
+
+	for (i = 1; i <= nshoots; i++) {
+						/* right branch */
+		t = (i+errf())/(nshoots+2);
+		t = (t + sqrt(t))/2.0;
+		for (j = 0; j < 3; j++) {
+			newbeg[j] = newend[j] = (end[j]-beg[j])*t + beg[j];
+			newend[j] += (end[j]-beg[j])*(1+errf())/(nshoots+2);
+		}
+		newend[0] += (end[2]-newbeg[2])*bratio*(1+errf());
+		newend[1] += (end[1]-newbeg[1])*bratio*(1+errf());
+		newend[2] -= (end[0]-newbeg[0])*bratio*(1+errf());
+		branch(newbeg, newend,
+				(1-(1-bnarrow)*t)*(1+2*bratio)/3*rad, lvl-1);
+		
+						/* left branch */
+		t = (i+errf())/(nshoots+2);
+		t = (t + sqrt(t))/2.0;
+		for (j = 0; j < 3; j++) {
+			newbeg[j] = newend[j] = (end[j]-beg[j])*t + beg[j];
+			newend[j] += (end[j]-beg[j])*(1+errf())/(nshoots+2);
+		}
+		newend[0] -= (end[2]-newbeg[2])*bratio*(1+errf());
+		newend[1] += (end[1]-newbeg[1])*bratio*(1+errf());
+		newend[2] += (end[0]-newbeg[0])*bratio*(1+errf());
+		branch(newbeg, newend,
+				(1-(1-bnarrow)*t)*(1+2*bratio)/3*rad, lvl-1);
+	}
+}
+
+
+printhead(ac, av)		/* print command header */
+register int  ac;
+register char  **av;
+{
+	putchar('#');
+	while (ac--) {
+		putchar(' ');
+		fputs(*av++, stdout);
+	}
+	putchar('\n');
+}
 
 
 main(argc, argv)
@@ -108,84 +192,3 @@ unkopt:			fprintf(stderr, "%s: unknown option: %s\n",
 	return(0);
 }
 
-
-branch(beg, end, rad, lvl)		/* generate branch recursively */
-double  beg[3], end[3];
-double  rad;
-int  lvl;
-{
-	double  sqrt();
-	double  newbeg[3], newend[3];
-	double  t;
-	int  i, j;
-	
-	if (lvl == 0) {
-		stick(leafmat, beg, end, rad);
-		return;
-	}
-
-	stick(branchmat, beg, end, rad);
-
-	for (i = 1; i <= nshoots; i++) {
-						/* right branch */
-		t = (i+errf())/(nshoots+2);
-		t = (t + sqrt(t))/2.0;
-		for (j = 0; j < 3; j++) {
-			newbeg[j] = newend[j] = (end[j]-beg[j])*t + beg[j];
-			newend[j] += (end[j]-beg[j])*(1+errf())/(nshoots+2);
-		}
-		newend[0] += (end[2]-newbeg[2])*bratio*(1+errf());
-		newend[1] += (end[1]-newbeg[1])*bratio*(1+errf());
-		newend[2] -= (end[0]-newbeg[0])*bratio*(1+errf());
-		branch(newbeg, newend,
-				(1-(1-bnarrow)*t)*(1+2*bratio)/3*rad, lvl-1);
-		
-						/* left branch */
-		t = (i+errf())/(nshoots+2);
-		t = (t + sqrt(t))/2.0;
-		for (j = 0; j < 3; j++) {
-			newbeg[j] = newend[j] = (end[j]-beg[j])*t + beg[j];
-			newend[j] += (end[j]-beg[j])*(1+errf())/(nshoots+2);
-		}
-		newend[0] -= (end[2]-newbeg[2])*bratio*(1+errf());
-		newend[1] += (end[1]-newbeg[1])*bratio*(1+errf());
-		newend[2] += (end[0]-newbeg[0])*bratio*(1+errf());
-		branch(newbeg, newend,
-				(1-(1-bnarrow)*t)*(1+2*bratio)/3*rad, lvl-1);
-	}
-}
-
-
-stick(mat, beg, end, rad)		/* output a branch or leaf */
-char  *mat;
-double  beg[3], end[3];
-double  rad;
-{
-	static int  nsticks = 0;
-	
-	printf("\n%s cone s%d\n", mat, nsticks);
-	printf("0\n0\n8\n");
-	printf("\t%18.12g\t%18.12g\t%18.12g\n", beg[0], beg[1], beg[2]);
-	printf("\t%18.12g\t%18.12g\t%18.12g\n", end[0], end[1], end[2]);
-	printf("\t%18.12g\t%18.12g\n", rad, bnarrow*rad);
-
-	printf("\n%s sphere e%d\n", mat, nsticks);
-	printf("0\n0\n4");
-	printf("\t%18.12g\t%18.12g\t%18.12g\%18.12g\n",
-			end[0], end[1], end[2], bnarrow*rad);
-
-	nsticks++;
-}
-
-
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}

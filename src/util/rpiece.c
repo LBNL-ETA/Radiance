@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.37 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.38 2003/06/08 12:03:11 schorsch Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -72,7 +72,7 @@ unsigned  timelim = 0;
 int  rvrlim = -1;
 
 int  gotalrm = 0;
-int  onalrm() { gotalrm++; }
+void  onalrm(int i) { gotalrm++; }
 
 
 main(argc, argv)

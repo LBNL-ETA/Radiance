@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gencat.c,v 2.3 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: gencat.c,v 2.4 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*****************************************************************************
   This program is to make series of right triangles forming hyperbolic cosin
@@ -64,6 +64,19 @@ fprintf(stderr, "Interation limit exceeded -- invalid K value\n");
 }
 
 
+static void
+printhead(ac, av)		/* print command header */
+register int  ac;
+register char  **av;
+{
+	putchar('#');
+	while (ac--) {
+		putchar(' ');
+		fputs(*av++, stdout);
+	}
+	putchar('\n');
+}
+
 main (argc, argv)
 int argc;
 char *argv[];
@@ -124,15 +137,3 @@ char *argv[];
    }
 }
 
-
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}

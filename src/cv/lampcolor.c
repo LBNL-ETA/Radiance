@@ -1,20 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lampcolor.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: lampcolor.c,v 2.7 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  * Program to convert lamp color from table and compute radiance.
  */
 
 #include <stdio.h>
-
+#include <string.h>
 #include <math.h>
 
+#include "standard.h"
 #include "color.h"
 
 #define PI	3.14159265358979323846
-
-extern char	*gets(), *strcpy();
-extern float	*matchlamp();
 
 				/* lamp parameters */
 #define LTYPE		0
@@ -23,7 +21,13 @@ extern float	*matchlamp();
 #define LOUTP		3
 #define NPARAMS		4
 
-int	typecheck(), unitcheck(), geomcheck(), outpcheck();
+static int typecheck(char *s);
+static int unitcheck(char *s);
+static int geomcheck(char *s);
+static int outpcheck(char *s);
+static void compute(void);
+static int getpolygon(void), getsphere(void), getcylinder(void), getring(void);
+
 
 float	*lampcolor;		/* the lamp color (RGB) */
 double	unit2meter;		/* conversion from units to meters */
@@ -93,16 +97,20 @@ char	*argv[];
 }
 
 
-typecheck(s)			/* check lamp type */
-char	*s;
+static int
+typecheck(			/* check lamp type */
+char	*s
+)
 {
 	lampcolor = matchlamp(s);
 	return(lampcolor != NULL);
 }
 
 
-unitcheck(s)			/* compute conversion to meters */
-char	*s;
+static int
+unitcheck(			/* compute conversion to meters */
+char	*s
+)
 {
 	int	len = strlen(s);
 
@@ -132,8 +140,10 @@ char	*s;
 }
 
 
-geomcheck(s)			/* check/set lamp geometry */
-char	*s;
+static int
+geomcheck(			/* check/set lamp geometry */
+char	*s
+)
 {
 	int	len = strlen(s);
 
@@ -159,8 +169,10 @@ char	*s;
 }
 
 
-outpcheck(s)			/* check lumen output value */
-register char	*s;
+static int
+outpcheck(			/* check lumen output value */
+register char	*s
+)
 {
 	if ((*s < '0' || *s > '9') && *s != '.')
 		return(0);
@@ -169,7 +181,8 @@ register char	*s;
 }
 
 
-compute()			/* compute lamp radiance */
+static void
+compute(void)			/* compute lamp radiance */
 {
 	double	whiteval;
 
@@ -203,7 +216,8 @@ again:
 }
 
 
-getpolygon()			/* get projected area for a polygon */
+static int
+getpolygon(void)			/* get projected area for a polygon */
 {
 	static double	parea = 1.0;
 
@@ -214,7 +228,8 @@ getpolygon()			/* get projected area for a polygon */
 }
 
 
-getsphere()			/* get projected area for a sphere */
+static int
+getsphere(void)			/* get projected area for a sphere */
 {
 	static double	radius = 1.0;
 
@@ -225,7 +240,8 @@ getsphere()			/* get projected area for a sphere */
 }
 
 
-getcylinder()			/* get projected area for a cylinder */
+static int
+getcylinder(void)			/* get projected area for a cylinder */
 {
 	static double	length = 1.0, radius = 0.1;
 
@@ -238,7 +254,8 @@ getcylinder()			/* get projected area for a cylinder */
 }
 
 
-getring()			/* get projected area for a ring */
+static int
+getring(void)			/* get projected area for a ring */
 {
 	static double	radius = 1.0;
 

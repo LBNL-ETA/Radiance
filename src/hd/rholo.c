@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.54 2003/05/29 16:26:22 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.55 2003/06/08 12:03:10 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -152,6 +152,7 @@ userr:
 }
 
 
+void
 onsig(signo)				/* fatal signal */
 int  signo;
 {

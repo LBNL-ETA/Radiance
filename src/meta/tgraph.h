@@ -1,8 +1,8 @@
-/* RCSid: $Id: tgraph.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
-#include  "meta.h"
+/* RCSid: $Id: tgraph.h,v 1.2 2003/06/08 12:03:10 schorsch Exp $ */
 
 #include  <math.h>
 
+#include  "meta.h"
 
 #define  MINDIVS  4		/* Minimum number of divisions for axis */
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.9 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.10 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -18,6 +18,7 @@ static const char	RCSid[] = "$Id: genblinds.c,v 2.9 2003/02/22 02:07:23 greg Exp
 #include  <stdio.h>
 #include <stdlib.h>
 #include  <math.h>
+#include  <string.h>
 
 #define  PI		3.14159265358979323846
 #define  DELTA		10.  /*  MINIMAL SUSTAINED ANGLE IN DEGREES */
@@ -27,6 +28,60 @@ double  A[3],X[3];
 char  *material, *name;
 double  height;
 int  nslats,  nsurf;
+
+
+
+makeflat(w,d,a)
+double  w, d, a;
+{
+	double  h;
+
+	h = d*sin(a);
+	d *= cos(a);
+	baseflat[0][0] = 0.0;
+	baseflat[0][1] = 0.0;
+	baseflat[0][2] = 0.0;
+	baseflat[1][0] = 0.0;
+	baseflat[1][1] = w;
+	baseflat[1][2] = 0.0;
+	baseflat[2][0] = d;
+	baseflat[2][1] = w;
+	baseflat[2][2] = h;
+	baseflat[3][0] = d;
+	baseflat[3][1] = 0.0;
+	baseflat[3][2] = h;
+
+}
+
+
+printslat(n)			/* print slat # n */
+int  n;
+{
+	register int  i, k;
+
+	for (k=0; k < nsurf; k++)  {
+ 		printf("\n%s polygon %s.%d.%d\n", material, name, n, k);
+		printf("0\n0\n12\n");
+		for (i = 0; i < 4; i++)
+			printf("\t%18.12g\t%18.12g\t%18.12g\n",
+				baseblind[i][0][k],
+				baseblind[i][1][k],
+				baseblind[i][2][k] + height*(n-.5)/nslats);
+	}		
+}
+
+
+printhead(ac, av)		/* print command header */
+register int  ac;
+register char  **av;
+{
+	putchar('#');
+	while (ac--) {
+		putchar(' ');
+		fputs(*av++, stdout);
+	}
+	putchar('\n');
+}
 
 
 main(argc, argv)
@@ -65,7 +120,7 @@ char  *argv[];
 
  	/* HOW MANY ELEMENTARY SURFACES SHOULD BE CALCULATED ? */
 
-	nsurf = (theta / ((PI/180.)*DELTA)) + 1;
+	nsurf = (int)(theta / ((PI/180.)*DELTA)) + 1;
 
 	/* WHAT IS THE DEPTH OF THE ELEMENTARY SURFACES ? */
 
@@ -146,54 +201,4 @@ userr:
 }
 
 
-makeflat(w,d,a)
-double  w, d, a;
-{
-	double  h;
 
-	h = d*sin(a);
-	d *= cos(a);
-	baseflat[0][0] = 0.0;
-	baseflat[0][1] = 0.0;
-	baseflat[0][2] = 0.0;
-	baseflat[1][0] = 0.0;
-	baseflat[1][1] = w;
-	baseflat[1][2] = 0.0;
-	baseflat[2][0] = d;
-	baseflat[2][1] = w;
-	baseflat[2][2] = h;
-	baseflat[3][0] = d;
-	baseflat[3][1] = 0.0;
-	baseflat[3][2] = h;
-
-}
-
-
-printslat(n)			/* print slat # n */
-int  n;
-{
-	register int  i, k;
-
-	for (k=0; k < nsurf; k++)  {
- 		printf("\n%s polygon %s.%d.%d\n", material, name, n, k);
-		printf("0\n0\n12\n");
-		for (i = 0; i < 4; i++)
-			printf("\t%18.12g\t%18.12g\t%18.12g\n",
-				baseblind[i][0][k],
-				baseblind[i][1][k],
-				baseblind[i][2][k] + height*(n-.5)/nslats);
-	}		
-}
-
-
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
-}

@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.25 2003/06/07 12:50:20 schorsch Exp $ */
+/* RCSid $Id: standard.h,v 2.26 2003/06/08 12:03:09 schorsch Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -18,7 +18,6 @@ extern "C" {
 #include  <stdlib.h>
 #include  <string.h>
 
-#include  "platform.h"
 #include  "mat4.h"
 
 
@@ -45,6 +44,7 @@ typedef struct {
 #endif
 #endif
 
+/* XXX include paths.h instead */
 #ifndef	 F_OK			/* mode bits for access(2) call */
 #define	 R_OK		4		/* readable */
 #define	 W_OK		2		/* writable */
@@ -115,7 +115,7 @@ extern double	tcos();			/* table-based cosine approximation */
 #endif
 extern off_t  lseek();
 
-#ifdef MSDOS
+#ifdef _WIN32
 #define NIX 1
 #endif
 #ifdef AMIGA
@@ -204,6 +204,10 @@ extern int4	encodedir(FVECT dv);
 extern void	decodedir(FVECT dv, int4 dc);
 extern double	dir2diff(int4 dc1, int4 dc2);
 extern double	fdir2diff(int4 dc1, FVECT v2);
+					/* defined in lamp.c */
+extern float * matchlamp(char *s);
+extern int loadlamps(char *file);
+extern void freelamps(void);
 					/* miscellaneous */
 extern void	eputs(char *s);
 extern void	wputs(char *s);

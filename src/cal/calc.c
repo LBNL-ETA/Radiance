@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.1 2003/02/22 02:07:20 greg Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -7,10 +7,10 @@ static const char	RCSid[] = "$Id: calc.c,v 1.1 2003/02/22 02:07:20 greg Exp $";
  *     4/1/86
  */
 
+#include  <stdlib.h>
 #include  <stdio.h>
-
+#include  <string.h>
 #include  <setjmp.h>
-
 #include  <ctype.h>
 
 #include  "calcomp.h"
@@ -24,8 +24,6 @@ int	nres = 0;
 #ifndef BSD
 #define  index		strchr
 #endif
-extern char  *index(), *fgets();
-
 
 jmp_buf  env;
 int  recover = 0;

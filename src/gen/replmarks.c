@@ -7,11 +7,12 @@ static const char RCSid[] = "$Id";
  *	Created:	17 Feb 1991	Greg Ward
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
 
+#include "platform.h"
 #include "fvect.h"
 
 #ifdef  M_PI
