@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.13 2003/12/31 02:03:08 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.14 2003/12/31 19:38:27 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -59,8 +59,8 @@ newsource()			/* allocate new source in our array */
 	if (source == NULL)
 		return(-1);
 	source[nsources].sflags = 0;
-	source[nsources].nhits = 0;
-	source[nsources].ntests = 1;	/* initial hit probability = 0 */
+	source[nsources].nhits = 1;
+	source[nsources].ntests = 2;	/* initial hit probability = 50% */
 #if SHADCACHE
 	source[nsources].obscache = NULL;
 #endif

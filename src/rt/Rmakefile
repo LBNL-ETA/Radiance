@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.42 2003/12/31 01:50:02 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.43 2003/12/31 19:38:27 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -67,10 +67,10 @@ RAYOBJS = ambcomp.o ambient.o ambio.o freeobjmem.o initotypes.o \
 RAYSRC = ambcomp.c ambient.c ambio.c freeobjmem.c initotypes.c \
 	preload.c raytrace.c renderopts.c
 
-SURFOBJS = source.o sphere.o srcsupp.o srcsamp.o virtuals.o o_face.o \
-	o_cone.o o_instance.o o_mesh.o
-SURFSRC = sphere.c source.c srcsupp.c virtuals.c o_face.c \
-	srcsamp.c o_cone.c o_instance.c o_mesh.c
+SURFOBJS = source.o sphere.o srcobstr.o srcsupp.o srcsamp.o virtuals.o \
+	o_face.o o_cone.o o_instance.o o_mesh.o
+SURFSRC = sphere.c source.c srcobstr.o srcsupp.c srcsamp.c virtuals.c \
+	o_face.c srcsamp.c o_cone.c o_instance.c o_mesh.c
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
 	m_mirror.o m_direct.o m_mist.o fprism.o m_alias.o
@@ -189,14 +189,14 @@ editline.o tty.o x11.o:	driver.h
 freeobjmem.o o_face.o srcsupp.o:	../common/face.h
 
 ambient.o raytrace.o rpmain.o rtmain.o \
-rtrace.o rvmain.o rv2.o rv3.o source.o:	../common/octree.h
+rtrace.o rvmain.o rv2.o rv3.o:	../common/octree.h
 
 o_instance.o:	../common/instance.h
 
 ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o initotypes.o \
 m_brdf.o m_direct.o m_mirror.o normal.o o_cone.o preload.o \
 raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o srcsupp.o text.o \
-virtuals.o:	../common/otypes.h
+srcobstr.o virtuals.o:	../common/otypes.h
 
 ambient.o ambcomp.o aniso.o normal.o raycalls.o rpict.o rvmain.o \
 rtmain.o rpmain.o persist.o source.o rv3.o \
@@ -206,8 +206,8 @@ ambcomp.o ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o \
 m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o o_mesh.o \
 mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
-source.o sphere.o srcdraw.o srcsamp.o srcsupp.o t_data.o t_func.o text.o \
-rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
+source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
+text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
@@ -215,8 +215,8 @@ rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
 rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
 
 m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
-rpict.o rpmain.o rtmain.o rvmain.o \
-source.o srcdraw.o srcsamp.o srcsupp.o virtuals.o:	source.h
+rpict.o rpmain.o rtmain.o rvmain.o source.o srcdraw.o \
+srcobstr.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
 cone.o data.o devcomm.o initotypes.o fprism.o preload.o \
 duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
@@ -225,7 +225,7 @@ duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
 
 ambio.o:	../common/fvect.h
 
-initotypes.o raytrace.o:	otspecial.h
+initotypes.o srcobstr.o raytrace.o:	otspecial.h
 
 rpmain.o rtmain.o rvmain.o rpict.o \
 srcdraw.o:	../common/view.h ../common/resolu.h
