@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.6 2003/05/29 17:46:35 greg Exp $
+# RCSid $Id: makeall,v 1.7 2003/07/12 08:38:44 schorsch Exp $
 # 
 #Added macosX 2001-04-11 by Jean Brange
 #Deleted obsolete systems 2001-04-18 by Greg Ward
@@ -190,7 +190,7 @@ case 5:			# BSDI BSD/386
 	set compat="malloc.o erf.o strcmp.o"
 	breaksw
 case 6:			# Linux
-	set mach="-Dlinux -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
+	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
 	set opt="-O2 -DSPEED=200"
 	set arch=IBMPC
 	set compat="bmalloc.o erf.o getpagesize.o"
