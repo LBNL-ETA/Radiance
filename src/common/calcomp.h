@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.14 2003/07/17 09:21:29 schorsch Exp $ */
+/* RCSid $Id: calcomp.h,v 2.15 2003/08/04 19:20:26 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -65,7 +65,7 @@ typedef struct vardef  VARDEF;	/* a variable definition */
 #define  E_RCONST	020
 #define  E_REDEFW	040
 
-extern double  (*eoper[])();
+extern double  (*eoper[])(EPNODE *);
 extern unsigned long  eclock;
 extern unsigned int  esupport;
 extern EPNODE	*curfunc;
