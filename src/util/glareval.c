@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.10 2003/07/03 22:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.11 2004/01/02 12:48:36 schorsch Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -52,14 +52,20 @@ static long	nrecl = 0L;	/* number of scanlines reclaimed */
 
 static int	wrongformat = 0;
 
-SCAN	*scanretire();
+static SCAN * claimscan(int	y); 
+static COLR * getpictscan(int	y);
+static double pict_val(FVECT	vd);
+static void rt_compute(float	*pb, int	np);
+static gethfunc getexpos;
+static SCAN * scanretire(void);
+static void initscans(void);
+static void donescans(void);
 
-extern long	ftell();
 
-
-SCAN *
-claimscan(y)			/* claim scanline from buffers */
-int	y;
+static SCAN *
+claimscan(			/* claim scanline from buffers */
+	int	y
+)
 {
 	int	hi = shash(y);
 	SCAN	*slast;
@@ -85,9 +91,10 @@ int	y;
 }
 
 
-COLR *
-getpictscan(y)			/* get picture scanline */
-int	y;
+static COLR *
+getpictscan(			/* get picture scanline */
+	int	y
+)
 {
 	register SCAN	*sl;
 	register int	i;
@@ -137,7 +144,8 @@ seekerr:
 
 
 #ifdef DEBUG
-pict_stats()			/* print out picture read statistics */
+static void
+pict_stats(void)			/* print out picture read statistics */
 {
 	static long	lastcall = 0L;	/* ncall at last report */
 	static long	lastread = 0L;	/* nread at last report */
@@ -154,9 +162,10 @@ pict_stats()			/* print out picture read statistics */
 #endif
 
 
-double
-pict_val(vd)			/* find picture value for view direction */
-FVECT	vd;
+static double
+pict_val(			/* find picture value for view direction */
+	FVECT	vd
+)
 {
 	FVECT	pp;
 	FVECT	ip;
@@ -176,9 +185,11 @@ FVECT	vd;
 }
 
 
-double
-getviewpix(vh, vv)		/* compute single view pixel */
-int	vh, vv;
+extern double
+getviewpix(		/* compute single view pixel */
+	int	vh,
+	int	vv
+)
 {
 	FVECT	dir;
 	float	rt_buf[12];
@@ -204,9 +215,11 @@ int	vh, vv;
 }
 
 
-getviewspan(vv, vb)		/* compute a span of view pixels */
-int	vv;
-float	*vb;
+extern void
+getviewspan(		/* compute a span of view pixels */
+	int	vv,
+	float	*vb
+)
 {
 	float	rt_buf[6*MAXPIX];	/* rtrace send/receive buffer */
 	register int	n;		/* number of pixels in buffer */
@@ -258,9 +271,11 @@ float	*vb;
 }
 
 
-rt_compute(pb, np)		/* process buffer through rtrace */
-float	*pb;
-int	np;
+static void
+rt_compute(		/* process buffer through rtrace */
+	float	*pb,
+	int	np
+)
 {
 #ifdef DEBUG
 	if (verbose && np > 1)
@@ -277,9 +292,11 @@ int	np;
 }
 
 
-int
-getexpos(s)			/* get exposure from header line */
-char	*s;
+static int
+getexpos(			/* get exposure from header line */
+	char	*s,
+	void	*p
+)
 {
 	char	fmt[32];
 
@@ -293,8 +310,10 @@ char	*s;
 }
 
 
-open_pict(fn)			/* open picture file */
-char	*fn;
+extern void
+open_pict(			/* open picture file */
+	char	*fn
+)
 {
 	if ((pictfp = fopen(fn, "r")) == NULL) {
 		fprintf(stderr, "%s: cannot open\n", fn);
@@ -310,7 +329,8 @@ char	*fn;
 }
 
 
-close_pict()			/* done with picture */
+extern void
+close_pict(void)			/* done with picture */
 {
 	if (pictfp == NULL)
 		return;
@@ -320,8 +340,10 @@ close_pict()			/* done with picture */
 }
 
 
-fork_rtrace(av)			/* open pipe and start rtrace */
-char	*av[];
+extern void
+fork_rtrace(			/* open pipe and start rtrace */
+	char	*av[]
+)
 {
 	int	rval;
 
@@ -341,7 +363,8 @@ char	*av[];
 }
 
 
-done_rtrace()			/* wait for rtrace to finish */
+extern void
+done_rtrace(void)			/* wait for rtrace to finish */
 {
 	int	status;
 
@@ -355,8 +378,8 @@ done_rtrace()			/* wait for rtrace to finish */
 }
 
 
-SCAN *
-scanretire()			/* retire old scanlines to free list */
+static SCAN *
+scanretire(void)			/* retire old scanlines to free list */
 {
 	SCAN	*sold[NRETIRE];
 	int	n;
@@ -399,7 +422,8 @@ scanretire()			/* retire old scanlines to free list */
 static char	*scan_buf;
 
 
-initscans()				/* initialize scanline buffers */
+static void
+initscans(void)				/* initialize scanline buffers */
 {
 	int	scansize;
 	register SCAN	*ptr;
@@ -438,7 +462,8 @@ initscans()				/* initialize scanline buffers */
 }
 
 
-donescans()				/* free up scanlines */
+static void
+donescans(void)				/* free up scanlines */
 {
 	bfree(scan_buf, scanbufsiz);
 	bfree((char *)scanpos, pysiz*sizeof(long));
