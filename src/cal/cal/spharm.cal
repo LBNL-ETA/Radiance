@@ -1,4 +1,4 @@
-{ RCSid $Id: spharm.cal,v 1.4 2005/02/10 04:53:20 greg Exp $ }
+{ RCSid $Id: spharm.cal,v 1.5 2005/02/10 17:07:45 greg Exp $ }
 {
 	The first few Spherical Harmonics
 
@@ -90,9 +90,10 @@ SphericalHarmonicYi(l,m,theta,phi) : SHthetaF(l,m,theta)*sin(m*phi);
 	11	3	1	e
 	...
 }
-SH_B4(l,m,o,theta,phi) : if(m-.5, if(o, SphericalHarmonicYi(l,m,theta,phi),
+SH_B4(l,m,o,theta,phi) : if(m-.5, sqrt(2) *
+				if(o, SphericalHarmonicYi(l,m,theta,phi),
 					SphericalHarmonicYr(l,m,theta,phi)),
-				SHthetaF(l,0,theta) ); 
+			SHthetaF(l,0,theta) ); 
 SH_B3(l,r,theta,phi) : SH_B4(l,floor((r+1.00001)/2),odd(r+1),theta,phi);
 SH_B2(l,i,theta,phi) : SH_B3(l,i-l*l-1,theta,phi);
 SphericalHarmonicB(i,theta,phi) : SH_B2(ceil(sqrt(i)-1.00001),i,theta,phi);
