@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.4 2003/10/20 16:01:55 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.5 2003/10/27 10:19:31 schorsch Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -44,6 +44,8 @@ extern void	fputword(char *s, FILE *fp);
 extern FILE	*frlibopen(char *fname);
 					/* defined in getlibpath.c */
 extern char	*getrlibpath(void);
+					/* defined in gethomedir.c */
+extern char *gethomedir(char *uname, char *path, int plen);
 					/* defined in getpath.c */
 extern char	*getpath(char *fname, char *searchpath, int mode);
 					/* defined in portio.c */

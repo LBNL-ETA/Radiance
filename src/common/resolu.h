@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.7 2003/06/30 19:04:29 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.8 2003/10/27 10:19:31 schorsch Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -15,6 +15,10 @@
  */
 #ifndef _RAD_RESOLU_H_
 #define _RAD_RESOLU_H_
+
+#include <time.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

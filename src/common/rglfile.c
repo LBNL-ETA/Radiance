@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.8 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.9 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: rglfile.c,v 3.8 2003/06/26 00:58:09 schorsch E
 
 #include "copyright.h"
 
+#include "rtprocess.h"
 #include "radogl.h"
 
 #ifndef NLIST2ALLOC
@@ -148,7 +149,6 @@ void
 rgl_load(inpspec)		/* convert scene description into OGL calls */
 char	*inpspec;
 {
-	FILE	*popen();
 	char	*fgetline();
 	FILE	*infp;
 	char	buf[1024];

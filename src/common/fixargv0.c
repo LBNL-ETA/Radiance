@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.4 2003/10/21 19:19:28 schorsch Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.5 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
  * Fix argv[0] for DOS environments
@@ -11,7 +11,7 @@ static const char	RCSid[] = "$Id: fixargv0.c,v 2.4 2003/10/21 19:19:28 schorsch 
 
 #include <ctype.h>
 
-char *
+extern char *
 fixargv0(av0)			/* extract command name from full path */
 char  *av0;
 {

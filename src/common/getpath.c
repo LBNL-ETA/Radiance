@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.14 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.15 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -11,10 +11,6 @@ static const char	RCSid[] = "$Id: getpath.c,v 2.14 2003/07/17 09:21:29 schorsch 
 
 #include  <string.h>
 #include  <ctype.h>
-#ifdef	 RHAS_GETPWNAM
-  #include  <pwd.h>
-  #include  <sys/types.h>
-#endif
 
 #include  "paths.h"
 #include  "rtio.h"
@@ -33,52 +29,32 @@ register char  *searchpath,
 int  mode
 )
 {
-#ifdef	 RHAS_GETPWNAM
-	struct passwd  *pwent;
-#endif
 	static char  pname[PATH_MAX];
+	char uname[512];
 	register char  *cp;
+	int i;
 
 	if (fname == NULL) { return(NULL); }
 
 	pname[0] = '\0';		/* check for full specification */
 
-	if (ISABS(fname)) { /* Can't use CASEDIRSEP below on Windows */
+	if (ISABS(fname)) { /* absolute path */
 		strncpy(pname, fname, sizeof(pname)-1);
 	} else {
 		switch (*fname) {
-			/* XXX This doesn't work on Windows */
-			/* CASEDIRSEP: */			/* relative to root */
 			case '.':				/* relative to cwd */
 				strncpy(pname, fname, sizeof(pname)-1);
 				break;
 			case '~':				/* relative to home directory */
 				fname++;
-				if (*fname == '\0' || ISDIRSEP(*fname)) {	/* ours */
-					if ((cp = getenv("HOME")) == NULL)
-#ifdef _WIN32  /* Windows sometimes uses a different var name */
-						if ((cp = getenv("HOMEDIR")) == NULL)
-#endif
-							return(NULL);
-					strncpy(pname, cp, sizeof(pname)-1);
-					strncat(pname, fname, sizeof(pname)-strlen(pname)-1);
-					break;
-				}
-#ifdef RHAS_GETPWNAM
-				/* XXX Should we request our own home directory from the
-				   XXX system as well if the above fails? */
-				/* XXX In any case, we need do the same thing on Windows... */
-				cp = pname;					/* user */
-				do
+				cp = uname;
+				for (i=0;i<sizeof(uname)&&*fname!='\0'&&!ISDIRSEP(*fname);i++)
 					*cp++ = *fname++;
-				while (*fname && !ISDIRSEP(*fname));
 				*cp = '\0';
-				if ((pwent = getpwnam(pname)) == NULL)
-					return(NULL);
-				strncpy(pname, pwent->pw_dir, sizeof(pname)-1);
+				cp = gethomedir(uname, pname, sizeof(pname));
+				if(cp == NULL) return NULL;
 				strncat(pname, fname, sizeof(pname)-strlen(pname)-1);
 				break;
-#endif
 		}
 	}
 	if (pname[0])		/* got it, check access if search requested */
@@ -166,15 +142,13 @@ int main()
 	printf(fmt,  "/",        "PATH", "W_OK", fp);
 	fp = getpath("~", getenv("PATH"), F_OK);
 	printf(fmt,  "~",        "PATH", "F_OK", fp);
-	printf("Undefining HOME and HOMEDIR\n");
+	printf("Undefining HOME and HOMEPATH\n");
 	unsetenv("HOME");
-	unsetenv("HOMEDIR");
+	unsetenv("HOMEPATH");
 	fp = getpath("~", getenv("PATH"), F_OK);
 	printf(fmt,  "~",        "PATH", "F_OK", fp);
-#ifndef RHAS_GETPWNAM
-	fp = getpath("~lp", getenv("PATH"), F_OK);
-	printf(fmt, "~lp",         "PATH", "F_OK", fp);
-#endif
+	fp = getpath("~lp/blah", getenv("PATH"), F_OK);
+	printf(fmt, "~lp/blah",         "PATH", "F_OK", fp);
 }
 #endif
 

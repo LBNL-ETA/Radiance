@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_popen.c,v 1.1 2003/10/21 19:20:37 schorsch Exp $";
+static const char RCSid[] = "$Id: win_popen.c,v 1.2 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
 Replacement for the posix popen() on Windows
@@ -36,7 +36,7 @@ static void resetStdHandles(HANDLE stdoutOrig, HANDLE stdinOrig);
 
 
 int
-pclose(    /* posix pclose replacement */
+win_pclose(    /* posix pclose replacement */
 FILE* p
 )
 {
@@ -47,7 +47,7 @@ FILE* p
 
 
 FILE *
-popen(     /* posix popen replacement */
+win_popen(     /* posix popen replacement */
 char* command,
 char* type
 )

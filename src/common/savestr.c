@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.7 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.8 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -23,7 +23,7 @@ static const char	RCSid[] = "$Id: savestr.c,v 2.7 2003/06/07 12:50:20 schorsch E
 #include <string.h>
 #include <stdlib.h>
 
-#include "standard.h"
+#include "rtmisc.h"
 
 #ifndef  NHASH
 #define  NHASH		509		/* hash table size (prime!) */

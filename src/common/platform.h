@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.10 2003/10/21 19:19:28 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.11 2003/10/27 10:19:31 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -11,8 +11,6 @@
   typedef long off_t;
 
   #include <stdio.h>
-  #define popen _popen
-  #define pclose _pclose
   #define snprintf _snprintf
 
   #include <windows.h>
@@ -39,7 +37,6 @@
   #else
     /* assumedly posix systems */
 	#include <unistd.h>
-    #define RHAS_GETPWNAM
     #define RHAS_STAT
     #define RHAS_FORK_EXEC
   #endif

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: myhostname.c,v 2.6 2003/10/21 02:02:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: myhostname.c,v 2.7 2003/10/27 10:19:31 schorsch Exp $";
 #endif
 /*
  * Query system for host name
@@ -8,14 +8,14 @@ static const char	RCSid[] = "$Id: myhostname.c,v 2.6 2003/10/21 02:02:31 schorsc
 #include "copyright.h"
 
 #ifdef _WIN32
-  #include <winsock.h>
+  #include <winsock2.h>
 #else
   #include <unistd.h>
 #endif
 
 #include "rtmisc.h"
 
-char *
+extern char *
 myhostname()
 {
 	static char	hostname[65];
