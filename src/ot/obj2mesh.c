@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -138,16 +138,13 @@ addface(cu, obj)			/* add a face to a cube */
 register CUBE  *cu;
 OBJECT	obj;
 {
-	CUBE  cukid;
-	OCTREE	ot;
-	OBJECT	oset[MAXSET+1];
-	register int  i, j;
 
 	if (o_face(objptr(obj), cu) == O_MISS)
 		return;
 
 	if (istree(cu->cutree)) {
-						/* do children */
+		CUBE  cukid;			/* do children */
+		int  i, j;
 		cukid.cusize = cu->cusize * 0.5;
 		for (i = 0; i < 8; i++) {
 			cukid.cutree = octkid(cu->cutree, i);
@@ -162,19 +159,32 @@ OBJECT	obj;
 		return;
 	}
 	if (isempty(cu->cutree)) {
-						/* singular set */
+		OBJECT	oset[2];		/* singular set */
 		oset[0] = 1; oset[1] = obj;
 		cu->cutree = fullnode(oset);
 		return;
 	}
 					/* add to full node */
+	add2full(cu, obj);
+}
+
+
+add2full(cu, obj)			/* add object to full node */
+register CUBE  *cu;
+OBJECT	obj;
+{
+	OCTREE	ot;
+	OBJECT	oset[MAXSET+1];
+	CUBE  cukid;
+	register int  i, j;
+
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;
 
 	if (oset[0] < objlim || cukid.cusize < mincusize) {
 						/* add to set */
 		if (oset[0] >= MAXSET) {
-			sprintf(errmsg, "set overflow in addface (%s)",
+			sprintf(errmsg, "set overflow in addobject (%s)",
 					objptr(obj)->oname);
 			error(INTERNAL, errmsg);
 		}

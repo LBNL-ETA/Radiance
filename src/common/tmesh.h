@@ -1,4 +1,4 @@
-/* RCSid $Id: tmesh.h,v 2.2 2003/03/11 17:08:55 greg Exp $ */
+/* RCSid $Id: tmesh.h,v 2.3 2003/03/12 04:59:04 greg Exp $ */
 /*
  * Header file for triangle mesh routines using barycentric coordinates
  */
@@ -11,7 +11,7 @@ typedef struct {
 } BARYCCM;
 
 #ifndef COSTOL
-#define COSTOL		0.99985		/* cosine of tolerance for smoothing */
+#define COSTOL		0.999995	/* cosine of tolerance for smoothing */
 #endif
 
 				/* flat_tri() return values */

@@ -1,8 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.2 2003/03/04 19:02:47 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.3 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
- * Compute 4-byte direction code (assume this fits into int)
+ * Compute a 4-byte direction code (int4 type defined in standard.h).
+ *
+ * Mean accuracy is 0.0022 degrees, with a maximum error of 0.0058 degrees.
  */
 
 #include "standard.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -54,7 +54,7 @@ char	*objfn;
 			switch (argv[0][1]) {
 			case '\0':			/* point */
 				if (badarg(argc-1,argv+1,"fff"))
-					syntax("Bad vertex");
+					syntax("bad vertex");
 				newv(atof(argv[1]), atof(argv[2]),
 						atof(argv[3]));
 				break;
@@ -62,12 +62,12 @@ char	*objfn;
 				if (argv[0][2])
 					goto unknown;
 				if (badarg(argc-1,argv+1,"fff"))
-					syntax("Bad normal");
+					syntax("bad normal");
 				if (!newvn(atof(argv[1]), atof(argv[2]),
 						atof(argv[3])))
-					syntax("Zero normal");
+					syntax("zero normal");
 				break;
-			case 't':			/* texture map */
+			case 't':			/* coordinate */
 				if (argv[0][2])
 					goto unknown;
 				if (badarg(argc-1,argv+1,"ff"))
@@ -84,15 +84,15 @@ char	*objfn;
 			faceno++;
 			switch (argc-1) {
 			case 0: case 1: case 2:
-				syntax("Too few vertices");
+				syntax("too few vertices");
 				break;
 			case 3:
 				if (!puttri(argv[1], argv[2], argv[3]))
-					syntax("Bad triangle");
+					syntax("bad triangle");
 				break;
 			default:
 				if (!putface(argc-1, argv+1))
-					syntax("Bad face");
+					syntax("bad face");
 				break;
 			}
 			break;
@@ -213,16 +213,12 @@ putface(ac, av)				/* put out an N-sided polygon */
 int	ac;
 register char	**av;
 {
-	VNDX		vi;
 	char		*cp;
 	register int	i;
 
 	while (ac > 3) {		/* break into triangles */
 		if (!puttri(av[0], av[1], av[2]))
-			{
-			fprintf(stderr, "f %s %s %s\n", av[0], av[1], av[2]);
 			return(0);
-			}
 		ac--;			/* remove vertex & rotate */
 		cp = av[0];
 		for (i = 0; i < ac-1; i++)
@@ -239,7 +235,7 @@ char	*v1, *v2, *v3;
 	VNDX	v1i, v2i, v3i;
 	FLOAT	*v1c, *v2c, *v3c;
 	FLOAT	*v1n, *v2n, *v3n;
-
+	
 	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
 		return(0);
 
@@ -289,11 +285,8 @@ double	x, y, z;
 		else
 			vlist = (FVECT *)realloc((char *)vlist,
 					(nvs+CHUNKSIZ)*sizeof(FVECT));
-		if (vlist == NULL) {
-			fprintf(stderr,
-			"Out of memory while allocating vertex %d\n", nvs);
-			exit(1);
-		}
+		if (vlist == NULL)
+			error(SYSTEM, "out of memory in newv");
 	}
 					/* assign new vertex */
 	vlist[nvs][0] = x;
@@ -313,11 +306,8 @@ double	x, y, z;
 		else
 			vnlist = (FVECT *)realloc((char *)vnlist,
 					(nvns+CHUNKSIZ)*sizeof(FVECT));
-		if (vnlist == NULL) {
-			fprintf(stderr,
-			"Out of memory while allocating normal %d\n", nvns);
-			exit(1);
-		}
+		if (vnlist == NULL)
+			error(SYSTEM, "out of memory in newvn");
 	}
 					/* assign new normal */
 	vnlist[nvns][0] = x;
@@ -339,12 +329,8 @@ double	x, y;
 		else
 			vtlist = (FLOAT (*)[2])realloc((char *)vtlist,
 					(nvts+CHUNKSIZ)*2*sizeof(FLOAT));
-		if (vtlist == NULL) {
-			fprintf(stderr,
-			"Out of memory while allocating texture vertex %d\n",
-					nvts);
-			exit(1);
-		}
+		if (vtlist == NULL)
+			error(SYSTEM, "out of memory in newvt");
 	}
 					/* assign new vertex */
 	vtlist[nvts][0] = x;
@@ -356,7 +342,7 @@ double	x, y;
 syntax(er)			/* report syntax error and exit */
 char	*er;
 {
-	fprintf(stderr, "%s: Wavefront syntax error near line %d: %s\n",
+	sprintf(errmsg, "%s: Wavefront syntax error near line %d: %s\n",
 			inpfile, lineno, er);
-	exit(1);
+	error(USER, errmsg);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -16,7 +16,7 @@ typedef struct {
 	int		fl;
 	uint4		xyz[3];
 	int4		norm;
-	int4		uv[2];
+	uint4		uv[2];
 } MCVERT;
 
 #define  MPATCHBLKSIZ	128		/* patch allocation block size */
@@ -217,8 +217,8 @@ int		what;
 					/* get (u,v) */
 	if (what & MT_UV && pp->uv != NULL && pp->uv[vid][0]) {
 		for (i = 0; i < 2; i++)
-			vp->uv[i] = mp->uvlim[i][0] +
-				(mp->uvlim[i][1] - mp->uvlim[i][0])*
+			vp->uv[i] = mp->uvlim[0][i] +
+				(mp->uvlim[1][i] - mp->uvlim[0][i])*
 				(pp->uv[vid][i] + .5)*(1./4294967296.);
 		vp->fl |= MT_UV;
 	}
@@ -272,13 +272,13 @@ MESHVERT	*vp;
 		cv.norm = encodedir(vp->n);
 	if (vp->fl & MT_UV)
 		for (i = 0; i < 2; i++) {
-			if (vp->uv[i] <= mp->uvlim[i][0])
+			if (vp->uv[i] <= mp->uvlim[0][i])
 				return(-1);
-			if (vp->uv[i] >= mp->uvlim[i][1])
+			if (vp->uv[i] >= mp->uvlim[1][i])
 				return(-1);
 			cv.uv[i] = (uint4)(4294967296. *
-					(vp->uv[i] - mp->uvlim[i][0]) /
-					(mp->uvlim[i][1] - mp->uvlim[i][0]));
+					(vp->uv[i] - mp->uvlim[0][i]) /
+					(mp->uvlim[1][i] - mp->uvlim[0][i]));
 		}
 	cv.fl = vp->fl;
 	ltp = (LUTAB *)mp->cdata;	/* get lookup table */
@@ -318,7 +318,7 @@ MESHVERT	*vp;
 				bzero((void *)(mp->patch + mp->npatches),
 					MPATCHBLKSIZ*sizeof(MESHPATCH));
 			}
-			if (mp->npatches++ >= 1<<20)
+			if (mp->npatches++ >= 1L<<22)
 				error(INTERNAL, "too many mesh patches");
 		}
 		pp = &mp->patch[mp->npatches-1];
@@ -384,20 +384,19 @@ MESHVERT	tv[3];
 			if (pp->tri == NULL)
 				goto nomem;
 		}
-		if (pp->ntris >= 512)
-			goto toomany;
-		pp->tri[pp->ntris].v1 = vid[0] & 0xff;
-		pp->tri[pp->ntris].v2 = vid[1] & 0xff;
-		pp->tri[pp->ntris].v3 = vid[2] & 0xff;
-
-		return(pn[0] << 10 | pp->ntris++);
+		if (pp->ntris < 512) {
+			pp->tri[pp->ntris].v1 = vid[0] & 0xff;
+			pp->tri[pp->ntris].v2 = vid[1] & 0xff;
+			pp->tri[pp->ntris].v3 = vid[2] & 0xff;
+			return(pn[0] << 10 | pp->ntris++);
+		}
 	}
 	if (pn[0] == pn[1]) {
-		t = vid[2]; vid[2] = vid[0]; vid[0] = t;
-		i = pn[2]; pn[2] = pn[0]; pn[0] = i;
+		t = vid[2]; vid[2] = vid[1]; vid[1] = vid[0]; vid[0] = t;
+		i = pn[2]; pn[2] = pn[1]; pn[1] = pn[0]; pn[0] = i;
 	} else if (pn[0] == pn[2]) {
-		t = vid[0]; vid[0] = vid[1]; vid[1] = t;
-		i = pn[0]; pn[0] = pn[1]; pn[1] = i;
+		t = vid[0]; vid[0] = vid[1]; vid[1] = vid[2]; vid[2] = t;
+		i = pn[0]; pn[0] = pn[1]; pn[1] = pn[2]; pn[2] = i;
 	}
 	if (pn[1] == pn[2]) {			/* single link */
 		pp = &mp->patch[pn[1]];
@@ -407,13 +406,12 @@ MESHVERT	tv[3];
 			if (pp->j1tri == NULL)
 				goto nomem;
 		}
-		if (pp->nj1tris >= 256)
-			goto toomany;
-		pp->j1tri[pp->nj1tris].v1j = pn[0] << 8 | (vid[0] & 0xff);
-		pp->j1tri[pp->nj1tris].v2 = vid[1] & 0xff;
-		pp->j1tri[pp->nj1tris].v3 = vid[2] & 0xff;
-		
-		return(pn[1] << 10 | 0x200 | pp->nj1tris++);
+		if (pp->nj1tris < 256) {
+			pp->j1tri[pp->nj1tris].v1j = vid[0];
+			pp->j1tri[pp->nj1tris].v2 = vid[1] & 0xff;
+			pp->j1tri[pp->nj1tris].v3 = vid[2] & 0xff;
+			return(pn[1] << 10 | 0x200 | pp->nj1tris++);
+		}
 	}
 						/* double link */
 	pp = &mp->patch[pn[2]];
@@ -424,17 +422,13 @@ MESHVERT	tv[3];
 			goto nomem;
 	}
 	if (pp->nj2tris >= 256)
-		goto toomany;
-	pp->j2tri[pp->nj2tris].v1j = pn[0] << 8 | (vid[0] & 0xff);
-	pp->j2tri[pp->nj2tris].v2j = pn[1] << 8 | (vid[1] & 0xff);
+		error(INTERNAL, "too many patch triangles in addmeshtri");
+	pp->j2tri[pp->nj2tris].v1j = vid[0];
+	pp->j2tri[pp->nj2tris].v2j = vid[1];
 	pp->j2tri[pp->nj2tris].v3 = vid[2] & 0xff;
-	
 	return(pn[2] << 10 | 0x300 | pp->nj2tris++);
 nomem:
 	error(SYSTEM, "out of memory in addmeshtri");
-	return(OVOID);
-toomany:
-	error(CONSISTENCY, "too many patch triangles in addmeshtri");
 	return(OVOID);
 }
 

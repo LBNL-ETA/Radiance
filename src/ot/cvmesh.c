@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.2 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -57,8 +57,8 @@ char	*nm;
 	ourmesh->nref = 1;
 	ourmesh->ldflags = 0;
 	ourmesh->mcube.cutree = EMPTY;
-	ourmesh->uvlim[0][0] = ourmesh->uvlim[1][0] = FHUGE;
-	ourmesh->uvlim[0][1] = ourmesh->uvlim[1][1] = -FHUGE;
+	ourmesh->uvlim[0][0] = ourmesh->uvlim[0][1] = FHUGE;
+	ourmesh->uvlim[1][0] = ourmesh->uvlim[1][1] = -FHUGE;
 	meshbounds[0][0] = meshbounds[0][1] = meshbounds[0][2] = FHUGE;
 	meshbounds[1][0] = meshbounds[1][1] = meshbounds[1][2] = -FHUGE;
 	return(ourmesh);
@@ -290,7 +290,7 @@ cvmeshbounds()			/* set mesh boundaries */
 	for (i = 0; i < 3; i++)
 		ourmesh->mcube.cuorg[i] = (meshbounds[1][i]+meshbounds[0][i] -
 						ourmesh->mcube.cusize)*.5;
-	if (ourmesh->uvlim[0][0] >= ourmesh->uvlim[1][0]) {
+	if (ourmesh->uvlim[0][0] > ourmesh->uvlim[1][0]) {
 		ourmesh->uvlim[0][0] = ourmesh->uvlim[0][1] = 0.;
 		ourmesh->uvlim[1][0] = ourmesh->uvlim[1][1] = 0.;
 	} else {

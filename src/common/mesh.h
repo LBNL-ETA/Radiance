@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.1 2003/03/11 17:08:55 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.2 2003/03/12 04:59:04 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -26,11 +26,11 @@
  * never generates 0, so we can use this for unspecified normals.
  *
  * Vertex ID's are encoded using the bottom 8 bits of a 4-byte integer
- * to index a vertex in a patch indicated by the 20 bits above (9-29).
- * For triangle ID's, the top 10 bits (11-31) indicate the patch, and
- * the 10th bit indicates whether the triangle joins patches.
+ * to index a vertex in a patch indicated by the 22 bits above (8-29).
+ * For triangle ID's, the top 22 bits (10-31) indicate the patch, and
+ * the bit 9 (0x200) indicates whether the triangle joins patches.
  * If not, then the bottom 9 bits index into the local PTri array.
- * If it's a joiner, then the 9th bit indicates whether the triangle joins
+ * If it's a joiner, then the 8th bit indicates whether the triangle joins
  * two patches, in which case the bottom 8 bits index the PJoin2 array.
  * Otherwise, the bottom 8 bits index the PJoin1 array.
  *

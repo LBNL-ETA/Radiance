@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.10 2003/03/10 17:13:29 greg Exp $ */
+/* RCSid $Id: object.h,v 2.11 2003/03/12 04:59:04 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  */
@@ -74,7 +74,7 @@ extern OBJECT  nobjects;		/* # of objects */
  *  the objects in ascending order.
  */
 
-#define  MAXSET		127		/* maximum object set size */
+#define  MAXSET		511		/* maximum object set size */
 
 #define setfree(os)	free((void *)(os))
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: oconv.c,v 2.12 2003/02/22 02:07:26 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.13 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -208,20 +208,16 @@ addobject(cu, obj)			/* add an object to a cube */
 register CUBE  *cu;
 OBJECT	obj;
 {
-	CUBE  cukid;
-	OCTREE	ot;
-	OBJECT	oset[MAXSET+1];
-	unsigned char  inflg[(MAXSET+7)/8], volflg[(MAXSET+7)/8];
-	int  in;
-	register int  i, j;
+	int  inc;
 
-	in = (*ofun[objptr(obj)->otype].funp)(objptr(obj), cu);
+	inc = (*ofun[objptr(obj)->otype].funp)(objptr(obj), cu);
 
-	if (in == O_MISS)
+	if (inc == O_MISS)
 		return;				/* no intersection */
 
 	if (istree(cu->cutree)) {
-						/* do children */
+		CUBE  cukid;			/* do children */
+		int  i, j;
 		cukid.cusize = cu->cusize * 0.5;
 		for (i = 0; i < 8; i++) {
 			cukid.cutree = octkid(cu->cutree, i);
@@ -236,16 +232,31 @@ OBJECT	obj;
 		return;
 	}
 	if (isempty(cu->cutree)) {
-						/* singular set */
+		OBJECT  oset[2];		/* singular set */
 		oset[0] = 1; oset[1] = obj;
 		cu->cutree = fullnode(oset);
 		return;
 	}
 					/* add to full node */
+	add2full(cu, obj, inc);
+}
+
+
+add2full(cu, obj, inc)			/* add object to full node */
+register CUBE  *cu;
+OBJECT	obj;
+int  inc;
+{
+	OCTREE	ot;
+	OBJECT	oset[MAXSET+1];
+	CUBE  cukid;
+	unsigned char  inflg[(MAXSET+7)/8], volflg[(MAXSET+7)/8];
+	register int  i, j;
+
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;
 
-	if (in==O_IN || oset[0] < objlim || cukid.cusize < mincusize) {
+	if (inc==O_IN || oset[0] < objlim || cukid.cusize < mincusize) {
 						/* add to set */
 		if (oset[0] >= MAXSET) {
 			sprintf(errmsg, "set overflow in addobject (%s)",

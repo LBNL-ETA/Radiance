@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.8 2003/03/11 22:57:45 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.9 2003/03/12 04:59:04 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -24,6 +24,8 @@ char  ZNAME[] =		"Z`SYS";		/* z function name */
 char  VNAME[] = 	"valid";		/* valid vertex name */
 
 #define  ABS(x)		((x)>=0 ? (x) : -(x))
+
+#define  ZEROVECT(v)	(DOT(v,v) <= FTINY*FTINY)
 
 #define  pvect(p)	printf(vformat, (p)[0], (p)[1], (p)[2])
 
@@ -280,8 +282,8 @@ int  n;
 		if (!rp->valid)
 			continue;
 		fputs("v ", stdout);
-		printf(vformat, rp->p[0], rp->p[1], rp->p[2]);
-		if (smooth)
+		pvect(rp->p);
+		if (smooth && !ZEROVECT(rp->n))
 			printf("\tvn %.9g %.9g %.9g\n",
 					rp->n[0], rp->n[1], rp->n[2]);
 		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
@@ -301,15 +303,15 @@ POINT  *p0, *p1, *p2, *p3;
 					/* compute exact normals */
 	ok1 = (p0->valid && p1->valid && p2->valid);
 	if (ok1) {
-		fvsum(v1, p1->p, p0->p, -1.0);
-		fvsum(v2, p2->p, p0->p, -1.0);
+		VSUB(v1, p1->p, p0->p);
+		VSUB(v2, p2->p, p0->p);
 		fcross(vc1, v1, v2);
 		ok1 = (normalize(vc1) != 0.0);
 	}
 	ok2 = (p1->valid && p2->valid && p3->valid);
 	if (ok2) {
-		fvsum(v1, p2->p, p3->p, -1.0);
-		fvsum(v2, p1->p, p3->p, -1.0);
+		VSUB(v1, p2->p, p3->p);
+		VSUB(v2, p1->p, p3->p);
 		fcross(vc2, v1, v2);
 		ok2 = (normalize(vc2) != 0.0);
 	}
@@ -318,29 +320,33 @@ POINT  *p0, *p1, *p2, *p3;
 	if (objout) {			/* output .OBJ faces */
 		int	p0n=0, p1n=0, p2n=0, p3n=0;
 		if (smooth) {
-			p0n = p0->valid;
-			p1n = p1->valid;
-			p2n = p2->valid;
-			p3n = p3->valid;
+			if (!ZEROVECT(p0->n))
+				p0n = p0->valid;
+			if (!ZEROVECT(p1->n))
+				p1n = p1->valid;
+			if (!ZEROVECT(p2->n))
+				p2n = p2->valid;
+			if (!ZEROVECT(p3->n))
+				p3n = p3->valid;
 		}
 		if (ok1 & ok2 && fdot(vc1,vc2) >= 1.0-FTINY*FTINY) {
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0n, p0->valid,
-					p1->valid, p1n, p1->valid,
-					p3->valid, p3n, p3->valid,
-					p2->valid, p2n, p2->valid);
+					p0->valid, p0->valid, p0n,
+					p1->valid, p1->valid, p1n,
+					p3->valid, p3->valid, p3n,
+					p2->valid, p2->valid, p2n);
 			return;
 		}
 		if (ok1)
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0n, p0->valid,
-					p1->valid, p1n, p1->valid,
-					p2->valid, p2n, p2->valid);
+					p0->valid, p0->valid, p0n,
+					p1->valid, p1->valid, p1n,
+					p2->valid, p2->valid, p2n);
 		if (ok2)
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p2->valid, p2n, p2->valid,
-					p1->valid, p1n, p1->valid,
-					p3->valid, p3n, p3->valid);
+					p2->valid, p2->valid, p2n,
+					p1->valid, p1->valid, p1n,
+					p3->valid, p3->valid, p3n);
 		return;
 	}
 					/* compute normal interpolation */
