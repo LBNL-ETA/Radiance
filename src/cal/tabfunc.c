@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.3 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.4 2003/07/14 20:02:29 schorsch Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -12,15 +12,11 @@ static const char	RCSid[] = "$Id: tabfunc.c,v 1.3 2003/06/26 00:58:09 schorsch E
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#ifdef _WIN32
- #include <process.h> /* getpid() */
-#else
- #include <sys/types.h>
- #include <unistd.h>
-#endif
+#include <sys/types.h>
 
-#include "standard.h"
-#include "platform.h"
+#include "rtprocess.h" /* getpid() */
+#include "rtmath.h"
+#include "rtio.h"
 
 #define  isdelim(c)	(isspace(c) || (c)==',')
 

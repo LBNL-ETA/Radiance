@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.5 2003/07/03 18:03:58 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.6 2003/07/14 20:02:30 schorsch Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -9,11 +9,9 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.5 2003/07/03 18:03:58 greg Exp $"
 
 #include  <sys/types.h>
 #include  <signal.h>
-#ifdef _WIN32
-  #include <process.h> /* getpid */
-#endif
 
 #include  "platform.h"
+#include  "rtprocess.h" /* getpid() */
 #include  "ray.h"
 #include  "source.h"
 #include  "ambient.h"
@@ -425,8 +423,6 @@ char  *msg;
 void
 printdefaults()			/* print default values to stdout */
 {
-	register char  *cp;
-
 	printf("-vt%c\t\t\t\t# view type %s\n", ourview.type,
 			ourview.type==VT_PER ? "perspective" :
 			ourview.type==VT_PAR ? "parallel" :

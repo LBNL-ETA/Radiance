@@ -1,18 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: syscalls.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: syscalls.c,v 1.3 2003/07/14 20:02:29 schorsch Exp $";
 #endif
 /*
  *  System calls for meta-file routines
  */
 
-#ifdef _WIN32
-  #include <process.h> /* getpid() */
-#endif
-
+#include "rtprocess.h" /* getpid() */
+#include "rterror.h"
 #include  "meta.h"
-
-
-
 
 
 FILE *

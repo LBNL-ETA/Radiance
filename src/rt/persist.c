@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.29 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.30 2003/07/14 20:02:30 schorsch Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -12,10 +12,8 @@ static const char	RCSid[] = "$Id: persist.c,v 2.29 2003/06/30 14:59:12 schorsch 
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
-#ifdef _WIN32
- #include <process.h> /* getpid() */
-#endif
 
+#include "rtprocess.h" /* getpid() */
 #include "standard.h"
 #include "random.h"
 
@@ -90,6 +88,7 @@ int	lf;
 }
 
 
+void
 persistfile(pfn)	/* open persist file and lock it */
 char	*pfn;
 {

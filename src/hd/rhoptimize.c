@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.12 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.13 2003/07/14 20:02:29 schorsch Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -9,10 +9,8 @@ static const char	RCSid[] = "$Id: rhoptimize.c,v 3.12 2003/06/30 14:59:12 schors
 
 #include <signal.h>
 #include <string.h>
-#ifdef _WIN32
-  #include <process.h> /* getpid() */
-#endif
 
+#include "rtprocess.h" /* getpid() */
 #include "holo.h"
 
 #ifndef BKBSIZE

@@ -1,16 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.5 2003/06/16 14:54:54 greg Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.6 2003/07/14 20:02:29 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
  */
 
-#include  "paths.h"
+#include  "rtprocess.h" /* getpid() */
+#include  "rterror.h"
 #include  "meta.h"
-
-#ifdef _WIN32
-  #include <process.h> /* getpid() */
-#endif
 
 
 #define  PBSIZE  1000		/* max size of sort block */

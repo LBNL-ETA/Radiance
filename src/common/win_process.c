@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.2 2003/07/03 22:41:44 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.3 2003/07/14 20:02:29 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -16,7 +16,8 @@ static char RCSid[]="$Id: win_process.c,v 3.2 2003/07/03 22:41:44 schorsch Exp $
 #include <io.h>      /* _open_osfhandle */
 #include <fcntl.h>   /* _O_XXX */
 
-#include "standard.h"
+#include "rterror.h"
+#include "rtio.h"
 #include "rtprocess.h"
 
 

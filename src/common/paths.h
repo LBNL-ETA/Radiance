@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.17 2003/07/03 22:41:44 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.18 2003/07/14 20:02:29 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -17,6 +17,7 @@ extern "C" {
 
 #ifdef _WIN32
   #include <io.h>
+  #include <direct.h> /* getcwd(), chdir(), etc. */
 
   #define access _access
   #define PATH_MAX _MAX_PATH
