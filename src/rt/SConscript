@@ -65,7 +65,7 @@ rpict = env.Program(target=radbin('rpict'), source=rpsrc,
 Default(rpict)
 env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rpict)])
 
-if env.has_key('X11LIB'): # lots of special requirements for rview
+if env.has_key('X11LIB'): # lots of special requirements for rvu
 	x11incls = [env['X11INCLUDE']] + env['CPPPATH']
 	x11 = env.Object(source='x11.c', CPPPATH=x11incls)
 	x11twind = env.Object(source='x11twind.c', CPPPATH=x11incls)
@@ -77,11 +77,11 @@ if env.has_key('X11LIB'): # lots of special requirements for rview
 	devsrc  = Split('devtable.c devcomm.c colortab.c editline.c')
 	rvobjs = [x11, x11twind, rv3, rvmain, rlib]
 	rvsrc = Split('rview.c rv2.c') + devsrc + rvobjs
-	rview = env.Program(target=radbin('rview'), source=rvsrc,
+	rvu = env.Program(target=radbin('rvu'), source=rvsrc,
 		LIBPATH=env['LIBPATH'] + [env['X11LIB']],
 		LIBS=fullib + ['X11'] + mlib)
-	Default(rview)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rview)])
+	Default(rvu)
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], rvu)])
 
 LIBFILES = Split('rayinit.cal')
 env.Append(RAD_RLIBINSTALL=[env.Install(env['RAD_RLIBDIR'], LIBFILES)])
