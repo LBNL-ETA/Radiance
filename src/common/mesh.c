@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.9 2003/06/30 14:59:11 schorsch Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.10 2003/07/10 03:30:11 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -70,7 +70,7 @@ register MCVERT	*v1, *v2;
 
 
 MESH *
-getmesh(mname, flags)			/* get mesh data */
+getmesh(mname, flags)			/* get new mesh data reference */
 char	*mname;
 int	flags;
 {
@@ -79,19 +79,13 @@ int	flags;
 
 	flags &= IO_LEGAL;
 	for (ms = mlist; ms != NULL; ms = ms->next)
-		if (!strcmp(mname, ms->name)) {
-			if ((ms->ldflags & flags) == flags) {
-				ms->nref++;
-				return(ms);		/* loaded */
-			}
-			break;			/* load the rest */
-		}
-	if (ms == NULL) {
+		if (!strcmp(mname, ms->name))
+			break;
+	if (ms == NULL) {		/* load first time */
 		ms = (MESH *)calloc(1, sizeof(MESH));
 		if (ms == NULL)
 			error(SYSTEM, "out of memory in getmesh");
 		ms->name = savestr(mname);
-		ms->nref = 1;
 		ms->mcube.cutree = EMPTY;
 		ms->next = mlist;
 		mlist = ms;
@@ -103,6 +97,7 @@ int	flags;
 	flags &= ~ms->ldflags;
 	if (flags)
 		readmesh(ms, pathname, flags);
+	ms->nref++;			/* increase reference count */
 	return(ms);
 }
 
@@ -130,8 +125,12 @@ int	flags;
 		ins->msh = NULL;
 		o->os = (char *)ins;
 	}
-	if (ins->msh == NULL || (ins->msh->ldflags & flags) != flags)
+	if (ins->msh == NULL)
 		ins->msh = getmesh(o->oargs.sarg[0], flags);
+	else if ((flags &= ~ins->msh->ldflags))
+		readmesh(ins->msh,
+			getpath(o->oargs.sarg[0], getrlibpath(), R_OK),
+				flags);
 	return(ins);
 }
 

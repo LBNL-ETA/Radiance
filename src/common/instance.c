@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: instance.c,v 2.8 2003/05/13 17:58:32 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.9 2003/07/10 03:30:11 greg Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -21,7 +21,7 @@ static SCENE  *slist = NULL;		/* list of loaded octrees */
 
 
 SCENE *
-getscene(sname, flags)			/* load octree sname */
+getscene(sname, flags)			/* get new octree reference */
 char  *sname;
 int  flags;
 {
@@ -30,19 +30,14 @@ int  flags;
 
 	flags &= ~IO_ILLEGAL;		/* not allowed */
 	for (sc = slist; sc != NULL; sc = sc->next)
-		if (!strcmp(sname, sc->name)) {
-			if ((sc->ldflags & flags) == flags) {
-				sc->nref++;
-				return(sc);		/* loaded */
-			}
-			break;			/* load the rest */
-		}
+		if (!strcmp(sname, sc->name))
+			break;
 	if (sc == NULL) {
 		sc = (SCENE *)malloc(sizeof(SCENE));
 		if (sc == NULL)
 			error(SYSTEM, "out of memory in getscene");
 		sc->name = savestr(sname);
-		sc->nref = 1;
+		sc->nref = 0;
 		sc->ldflags = 0;
 		sc->scube.cutree = EMPTY;
 		sc->scube.cuorg[0] = sc->scube.cuorg[1] =
@@ -59,10 +54,12 @@ int  flags;
 	flags &= ~sc->ldflags;		/* skip what's already loaded */
 	if (flags & IO_SCENE)
 		sc->firstobj = nobjects;
-	readoct(pathname, flags, &sc->scube, NULL);
+	if (flags)
+		readoct(pathname, flags, &sc->scube, NULL);
 	if (flags & IO_SCENE)
 		sc->nobjs = nobjects - sc->firstobj;
 	sc->ldflags |= flags;
+	sc->nref++;			/* increase reference count */
 	return(sc);
 }
 
@@ -90,8 +87,18 @@ int  flags;
 		ins->obj = NULL;
 		o->os = (char *)ins;
 	}
-	if (ins->obj == NULL || (ins->obj->ldflags & flags) != flags)
+	if (ins->obj == NULL)
 		ins->obj = getscene(o->oargs.sarg[0], flags);
+	else if ((flags &= ~ins->obj->ldflags)) {
+		if (flags & IO_SCENE)
+			ins->obj->firstobj = nobjects;
+		if (flags)
+			readoct(getpath(o->oargs.sarg[0], getrlibpath(), R_OK),
+					flags, &ins->obj->scube, NULL);
+		if (flags & IO_SCENE)
+			ins->obj->nobjs = nobjects - ins->obj->firstobj;
+		ins->obj->ldflags |= flags;
+	}
 	return(ins);
 }
 
