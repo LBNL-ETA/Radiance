@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: bgraph.c,v 1.2 2003/07/16 01:32:53 greg Exp $";
 #endif
 /*
  *  bgraph.c - program to send plots to metafile graphics programs.
@@ -89,13 +89,7 @@ char  *file;
 }
 
 
-eputs(msg)				/* print error message */
-char  *msg;
-{
-	fputs(msg, stderr);
-}
-
-
+void
 quit(code)				/* quit program */
 int  code;
 {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.31 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.32 2003/07/16 01:32:53 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -20,6 +20,8 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.31 2003/06/30 14:59:12 schorsch E
  *  radiance is computed.  The '-i' or '-I' options indicate that
  *  irradiance values are desired.
  */
+
+#include  <time.h>
 
 #include  "platform.h"
 #include  "ray.h"
