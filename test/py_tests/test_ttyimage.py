@@ -17,7 +17,7 @@ class TtyimageTestCase(unittest.TestCase):
 		os.environ['PATH'] = self.oldpath
 
 	def test_ttyimage(self):
-		'''We just to point checks here'''
+		'''We just do a few spot checks here'''
 		picfile = support.datafile('Earth128.pic')
 		cmd = 'ttyimage "%s"' % picfile
 		res0 = os.popen(cmd).read()

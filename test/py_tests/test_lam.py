@@ -18,7 +18,7 @@ class LamTestCase(unittest.TestCase):
 	def test_lam(self):
 		dat_de = support.datafile('lam_de.dat')
 		dat_en = support.datafile('lam_en.dat')
-		cmd = 'lam -t: "%s" "%s"' % (dat_de, dat_en)
+		cmd = 'rlam -t: "%s" "%s"' % (dat_de, dat_en)
 		raw = os.popen(cmd).read()
 		result = map(string.split,string.split(raw,'\n'))
 		expect = [
