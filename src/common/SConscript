@@ -35,7 +35,7 @@ RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
 
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
-RTMEM = Split('ealloc.c') + env.get('RAD_MEMCOMPAT', [])
+RTMEM = Split('ealloc.c bmalloc.c') + env.get('RAD_MEMCOMPAT', [])
 RTNET = Split('myhostname.c')
 
 STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
