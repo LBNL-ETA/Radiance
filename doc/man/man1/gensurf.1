@@ -1,7 +1,7 @@
 .\" RCSid "$Id"
 .TH GENSURF 1 11/15/93 RADIANCE
 .SH NAME
-gensurf - generate a RADIANCE description of a curved surface
+gensurf - generate a RADIANCE or Wavefront description of a curved surface
 .SH SYNOPSIS
 .B "gensurf mat name 'x(s,t)' 'y(s,t)' 'z(s,t)' m n"
 [
@@ -10,6 +10,8 @@ gensurf - generate a RADIANCE description of a curved surface
 .B "\-f file"
 ][
 .B \-s
+][
+.B \-o
 ]
 .br
 .B "gensurf mat name 'x(s,t)' 'y(s,t)' dfile m n"
@@ -19,16 +21,20 @@ gensurf - generate a RADIANCE description of a curved surface
 .B "\-f file"
 ][
 .B \-s
+][
+.B \-o
 ]
 .br
 .B "gensurf mat name dfile dfile dfile m n"
 [
 .B \-s
+][
+.B \-o
 ]
 .SH DESCRIPTION
 .I Gensurf
-produces a RADIANCE scene description of a
-functional surface defined by the parametric equations
+produces either a RADIANCE scene description or a Wavefront .OBJ
+file of a functional surface defined by the parametric equations
 .I x(s,t),
 .I y(s,t),
 and
@@ -57,6 +63,13 @@ options.
 The
 .I \-s
 option adds smoothing (surface normal interpolation) to the surface.
+The
+.I \-o
+option produces a Wavefront .OBJ file rather than a RADIANCE
+scene description.
+This is most useful as input to the
+.I obj2mesh(1)
+program for producing a compiled mesh.
 .PP
 Rough holes may be cut in the mesh by defining a valid(s,t) function.
 Where this function is positive, polygon vertices will be produced.
@@ -100,4 +113,5 @@ Greg Ward
 The smoothing operation requires that functions be defined
 beyond the [0,1] boundaries of s and t.
 .SH "SEE ALSO"
-calc(1), genbox(1), genrev(1), genworm(1), rpict(1), rview(1), xform(1)
+calc(1), genbox(1), genrev(1), genworm(1),
+obj2mesh(1), rpict(1), rview(1), xform(1)

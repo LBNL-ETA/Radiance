@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensurf.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.7 2003/03/11 22:48:20 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -32,6 +32,7 @@ char  tsargs[] = "4 surf_dx surf_dy surf_dz surf.cal\n";
 char  texname[] = "Phong";
 
 int  smooth = 0;		/* apply smoothing? */
+int  objout = 0;		/* output .OBJ format? */
 
 char  *modname, *surfname;
 
@@ -49,9 +50,10 @@ double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
 extern double  funvalue(), argument();
 
 typedef struct {
-	int  valid;	/* point is valid */
+	int  valid;	/* point is valid (vertex number) */
 	FVECT  p;	/* vertex position */
 	FVECT  n;	/* average normal */
+	FLOAT  uv[2];	/* (u,v) position */
 } POINT;
 
 
@@ -79,6 +81,8 @@ char  *argv[];
 			fcompile(argv[++i]);
 		else if (!strcmp(argv[i], "-s"))
 			smooth++;
+		else if (!strcmp(argv[i], "-o"))
+			objout++;
 		else
 			goto userror;
 
@@ -125,6 +129,8 @@ char  *argv[];
 	comprow(0.0, row1, n);
 	comprow(1.0/m, row2, n);
 	compnorms(row0, row1, row2, n);
+	if (objout)
+		putobjrow(row1, n);
 						/* for each row */
 	for (i = 0; i < m; i++) {
 						/* compute next row */
@@ -134,13 +140,15 @@ char  *argv[];
 		row2 = rp;
 		comprow((double)(i+2)/m, row2, n);
 		compnorms(row0, row1, row2, n);
+		if (objout)
+			putobjrow(row1, n);
 
 		for (j = 0; j < n; j++) {
 			int  orient = (j & 1);
 							/* put polygons */
-			if (!(row0[j].valid & row1[j+1].valid))
+			if (!(row0[j].valid && row1[j+1].valid))
 				orient = 1;
-			else if (!(row1[j].valid & row0[j+1].valid))
+			else if (!(row1[j].valid && row0[j+1].valid))
 				orient = 0;
 			if (orient)
 				putsquare(&row0[j], &row1[j],
@@ -260,6 +268,26 @@ char  *nam;
 }
 
 
+putobjrow(rp, n)			/* output vertex row to .OBJ */
+register POINT  *rp;
+int  n;
+{
+	static int	nverts = 0;
+
+	for ( ; n-- >= 0; rp++) {
+		if (!rp->valid)
+			continue;
+		fputs("v ", stdout);
+		printf(vformat, rp->p[0], rp->p[1], rp->p[2]);
+		if (smooth)
+			printf("\tvn %.9g %.9g %.9g\n",
+					rp->n[0], rp->n[1], rp->n[2]);
+		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
+		rp->valid = ++nverts;
+	}
+}
+
+
 putsquare(p0, p1, p2, p3)		/* put out a square */
 POINT  *p0, *p1, *p2, *p3;
 {
@@ -269,14 +297,14 @@ POINT  *p0, *p1, *p2, *p3;
 	FVECT  v1, v2, vc1, vc2;
 	int  ok1, ok2;
 					/* compute exact normals */
-	ok1 = (p0->valid & p1->valid & p2->valid);
+	ok1 = (p0->valid && p1->valid && p2->valid);
 	if (ok1) {
 		fvsum(v1, p1->p, p0->p, -1.0);
 		fvsum(v2, p2->p, p0->p, -1.0);
 		fcross(vc1, v1, v2);
 		ok1 = (normalize(vc1) != 0.0);
 	}
-	ok2 = (p1->valid & p2->valid & p3->valid);
+	ok2 = (p1->valid && p2->valid && p3->valid);
 	if (ok2) {
 		fvsum(v1, p2->p, p3->p, -1.0);
 		fvsum(v2, p1->p, p3->p, -1.0);
@@ -285,6 +313,34 @@ POINT  *p0, *p1, *p2, *p3;
 	}
 	if (!(ok1 | ok2))
 		return;
+	if (objout) {			/* output .OBJ faces */
+		int	p0n=0, p1n=0, p2n=0, p3n=0;
+		if (smooth) {
+			p0n = p0->valid;
+			p1n = p1->valid;
+			p2n = p2->valid;
+			p3n = p3->valid;
+		}
+		if (ok1 & ok2 && fdot(vc1,vc2) >= 1.0-FTINY*FTINY) {
+			printf("f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
+					p0->valid, p0n, p0->valid,
+					p1->valid, p1n, p1->valid,
+					p3->valid, p3n, p3->valid,
+					p2->valid, p2n, p2->valid);
+			return;
+		}
+		if (ok1)
+			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
+					p0->valid, p0n, p0->valid,
+					p1->valid, p1n, p1->valid,
+					p2->valid, p2n, p2->valid);
+		if (ok2)
+			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
+					p2->valid, p2n, p2->valid,
+					p1->valid, p1n, p1->valid,
+					p3->valid, p3n, p3->valid);
+		return;
+	}
 					/* compute normal interpolation */
 	axis = norminterp(norm, p0, p1, p2, p3);
 
@@ -379,11 +435,14 @@ int  siz;
 		if (checkvalid && funvalue(VNAME, 2, st) <= 0.0) {
 			row[i].valid = 0;
 			row[i].p[0] = row[i].p[1] = row[i].p[2] = 0.0;
+			row[i].uv[0] = row[i].uv[1] = 0.0;
 		} else {
 			row[i].valid = 1;
 			row[i].p[0] = funvalue(XNAME, 2, st);
 			row[i].p[1] = funvalue(YNAME, 2, st);
 			row[i].p[2] = funvalue(ZNAME, 2, st);
+			row[i].uv[0] = st[0];
+			row[i].uv[1] = st[1];
 		}
 		i++;
 	}

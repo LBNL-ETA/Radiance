@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.8 2003/03/11 17:08:55 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.9 2003/03/11 22:48:20 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -31,7 +31,7 @@ bbox.o init2otypes.o -lrt $(MLIB)
 
 obj2mesh:	obj2mesh.o cvmesh.o wfconv.o o_face.o writemesh.o
 	$(CC) $(CFLAGS) -o obj2mesh obj2mesh.o cvmesh.o wfconv.o \
-o_face.o writemesh.o -lrt
+o_face.o writemesh.o -lrt $(MLIB)
 
 install:	oconv getbbox obj2mesh
 	cp oconv getbbox obj2mesh $(INSTDIR)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.2 2003/03/11 22:48:20 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -28,7 +28,7 @@ static const char RCSid[] = "$Id: o_mesh.c,v 2.1 2003/03/11 17:08:55 greg Exp $"
 #include  "tmesh.h"
 
 
-#define  EDGE_CACHE_SIZ		109	/* length of mesh edge cache */
+#define  EDGE_CACHE_SIZ		251	/* length of mesh edge cache */
 
 #define  curmi			(edge_cache.mi)
 #define  curmsh			(curmi->msh)
@@ -68,14 +68,14 @@ int4		v1, v2;
 		int4	t = v2; v2 = v1; v1 = t;
 		reversed = 1;
 	}
-	ecp = &edge_cache.cache[(v2<<11 ^ v1) % EDGE_CACHE_SIZ];
+	ecp = &edge_cache.cache[((v2<<11 ^ v1) & 0x7fffffff) % EDGE_CACHE_SIZ];
 	if (ecp->v1i != v1 || ecp->v2i != v2) {
 		MESHVERT	tv1, tv2;	/* compute signed volume */
 		double		vol;
 		if (!getmeshvert(&tv1, edge_cache.mi->msh, v1, MT_V) ||
-				!getmeshvert(&tv2, edge_cache.mi->msh, v2, MT_V))
+			    !getmeshvert(&tv2, edge_cache.mi->msh, v2, MT_V))
 			objerror(edge_cache.o, INTERNAL,
-					"missing mesh vertex in signed_volume");
+				"missing mesh vertex in signed_volume");
 		vol = (tv1.v[0] - r->rorg[0]) *
 				( (tv2.v[1] - r->rorg[1])*r->rdir[2] -
 				  (tv2.v[2] - r->rorg[2])*r->rdir[1] );
@@ -113,7 +113,7 @@ RAY	*r;
 	for (i = oset[0]; i > 0; i--) {
 		if (!getmeshtrivid(tvi, curmsh, oset[i]))
 			objerror(edge_cache.o, INTERNAL,
-					"missing triangle vertices in mesh_hit");
+				"missing triangle vertices in mesh_hit");
 		sv1 = signed_volume(r, tvi[0], tvi[1]);
 		sv2 = signed_volume(r, tvi[1], tvi[2]);
 		sv3 = signed_volume(r, tvi[2], tvi[0]);
@@ -139,7 +139,7 @@ RAY	*r;
 		r->rot = d;
 		VSUM(r->rop, r->rorg, r->rdir, d);
 		VCOPY(r->ron, nrm);
-		/* normalize(r->ron) called in o_mesh() & rod set */
+		/* normalize(r->ron) called & r->rod set in o_mesh() */
 	}
 }
 

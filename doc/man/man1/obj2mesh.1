@@ -1,0 +1,111 @@
+.\" RCSid "$Id"
+.TH OBJ2MESH 1 03/11/03 RADIANCE
+.SH NAME
+obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
+.SH SYNOPSIS
+.B obj2mesh
+[
+.B "\-n objlim"
+][
+.B "\-r maxres"
+][
+.B \-w
+]
+[
+.B "input.obj"
+[
+.B "output.rtm"
+]
+]
+.SH DESCRIPTION
+.I Obj2mesh
+reads a Wavefront .OBJ file from
+.I input.obj
+(or the standard input) and compiles it into a RADIANCE triangle mesh,
+which is sent to
+.I output.rtm
+(or standard output).
+This mesh may be included in a RADIANCE scene description via the
+.I mesh
+primitive, thus:
+.IP "" .2i
+mod mesh id
+.br
+1+ output.rtm [xform args]
+.br
+0
+.br
+0
+.PP
+The syntax and semantics are nearly identical to the RADIANCE
+.I instance
+primitive, except that the mesh modifier may not be "void", since
+materials are not included in a compiled mesh file.
+.PP
+The
+.I \-n
+option specifies the maximum surface set size for
+each voxel.
+Larger numbers result in quicker mesh generation needing
+less memory, but potentially slower rendering.
+Smaller values may produce faster renderings,
+since the default number (15) is on the high side to reduce
+the compiled mesh octree size.
+Values below 6 are not recommended, since the median
+valence (number of adjacent faces) for a mesh vertex is 6,
+and smaller limits will result in pointless octree subdivision.
+.PP
+The
+.I \-r
+option specifies the maximum octree resolution.
+This should be greater than or equal to the ratio of the mesh bounding
+box to the smallest triangle.
+The default is 16384.
+.PP
+The
+.I \-w
+option suppresses warnings.
+.PP
+Although the mesh file format is binary, it is meant to be portable
+between machines.
+The only limitation is that machines with radically different integer
+sizes will not work together.
+.SH DIAGNOSTICS
+There are four basic error types reported by obj2mesh:
+.IP
+warning - a non-fatal input-related error
+.IP
+fatal - an unrecoverable input-related error
+.IP
+system - a system-related error
+.IP
+internal - a fatal error related to program limitations
+.IP
+consistency - a program-caused error
+.PP
+Most errors are self-explanatory.
+However, the following internal errors should be mentioned:
+.IP "Set overflow in addobject (id)"
+This error occurs when too many surfaces are close together in a
+scene.
+Sometimes a dense mesh can be accomodated by increasing
+the maximum resolution (by powers of two) using the
+.I \-r
+option, but usually this error indicates something is wrong.
+Either too many surfaces are lying right on top of each other,
+or the bounding cube is inflated from disparate geometry
+in the input.
+Chances are, the face number "id" is near
+those causing the problem.
+.IP "Hash table overflow in fullnode"
+This error is caused by too many surfaces, and there is
+little hope of compiling this mesh.
+.SH EXAMPLE
+To create a compiled triangle mesh from the scene file mesh.obj:
+.IP "" .2i
+oconv mesh.obj mesh.rtm
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+gensurf(1), getinfo(1), make(1),
+oconv(1), rpict(1), rview(1), rtrace(1), xform(1)
