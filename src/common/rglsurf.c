@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglsurf.c,v 3.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rglsurf.c,v 3.6 2003/03/27 04:16:33 greg Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -111,8 +111,8 @@ newtess()			/* allocate GLU tessellation object */
 {
 	if ((gluto = gluNewTess()) == NULL)
 		error(INTERNAL, "gluNewTess failed");
-	gluTessCallback(gluto, GLU_TESS_BEGIN, (_GLUfuncptr)glBegin);
-	gluTessCallback(gluto, GLU_TESS_VERTEX, (_GLUfuncptr)glVertex3dv);
+	gluTessCallback(gluto, GLU_TESS_BEGIN, glBegin);
+	gluTessCallback(gluto, GLU_TESS_VERTEX, glVertex3dv);
 	gluTessCallback(gluto, GLU_TESS_END, glEnd);
 	gluTessCallback(gluto, GLU_TESS_COMBINE, myCombine);
 	gluTessCallback(gluto, GLU_TESS_ERROR, glu_error);

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.2 2003/02/28 20:06:51 greg Exp $
+# RCSid $Id: makeall,v 1.3 2003/03/27 04:16:33 greg Exp $
 # 
 #Added macosX 2001-04-11 by Jean Brange
 #Deleted obsolete systems 2001-04-18 by Greg Ward
@@ -154,7 +154,7 @@ case 1:			# SPARC Station
 case 2:			# HP workstation
 	set mach=""
 	set opt="-O -DSPEED=80 -Aa -D_HPUX_SOURCE"
-	set compat="malloc.o getpagesize.o strcmp.o"
+	set compat="bmalloc.o getpagesize.o strcmp.o"
 	set arch=hpux
 	breaksw
 case 3:			# Silicon Graphics
@@ -178,7 +178,7 @@ case 3:			# Silicon Graphics
 		set mach="-w"
 		set opt="-O2 -DSPEED=200"
 		set special="ogl"
-		set compat="malloc.o strcmp.o"
+		set compat="bmalloc.o strcmp.o"
 		breaksw
 	endsw
 	breaksw
@@ -328,7 +328,7 @@ endif
 foreach i ( $* )
 	if ( "$i" == clean ) then
 		echo "Removing library archives..."
-		rm -f src/lib/*.a
+		rm -f src/lib/*.[ao]
 	endif
 end
 exit 0
