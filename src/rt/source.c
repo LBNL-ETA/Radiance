@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.32 2003/04/23 00:52:34 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.33 2003/05/14 20:43:46 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -54,7 +54,7 @@ marksources()			/* find and mark source objects */
 					/* initialize dispatch table */
 	initstypes();
 					/* find direct sources */
-	for (i = 0; i < nobjects; i++) {
+	for (i = 0; i < nsceneobjs; i++) {
 	
 		o = objptr(i);
 

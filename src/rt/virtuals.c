@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.9 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.10 2003/05/14 20:43:46 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -35,7 +35,7 @@ markvirtuals()			/* find and mark virtual sources */
 	if (directrelay <= 0)
 		return;
 					/* find virtual source objects */
-	for (i = 0; i < nobjects; i++) {
+	for (i = 0; i < nsceneobjs; i++) {
 		o = objptr(i);
 		if (!issurface(o->otype) || o->omod == OVOID)
 			continue;
