@@ -1211,3 +1211,6 @@ have been getting faster and faster over the years.
 
 Fixed bug discovered by Marcus Jacobs where oconv was dumping core
 when it was given too many modifiers.
+
+Fixed problem with rpict where it was drawing illum sources badly
+even when they weren't all that small in the view.

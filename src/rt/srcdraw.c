@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.8 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.9 2003/10/01 22:07:19 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -263,7 +263,7 @@ sourcepoly(sn, sp)			/* compute image polygon for source */
 int	sn;
 RREAL	sp[MAXVERT][2];
 {
-	static char	cubeord[8][6] = {{1,3,2,6,4,5},{0,4,5,7,3,2},
+	static short	cubeord[8][6] = {{1,3,2,6,4,5},{0,4,5,7,3,2},
 					 {0,1,3,7,6,4},{0,1,5,7,6,2},
 					 {0,2,6,7,5,1},{0,4,6,7,3,1},
 					 {0,2,3,7,5,4},{1,5,4,6,2,3}};
@@ -409,8 +409,12 @@ int	x0, xsiz, y0, ysiz;		/* origin and size of subimage */
 				if (source[sp->sn].sflags & SSPOT &&
 						spotout(&sr, source[sp->sn].sl.s))
 					continue;	/* outside spot */
-				rayorigin(&sr, NULL, SHADOW, 1.0);
-				sr.rsrc = sp->sn;
+				w = poly_area(ppoly, npv) * hres * vres;
+				if (w < .95) {		/* subpixel source */
+					rayorigin(&sr, NULL, SHADOW, 1.0);
+					sr.rsrc = sp->sn;
+				} else
+					rayorigin(&sr, NULL, PRIMARY, 1.0);
 				rayvalue(&sr);		/* compute value */
 				if (bright(sr.rcol) <= FTINY)
 					continue;	/* missed/blocked */
@@ -419,9 +423,8 @@ int	x0, xsiz, y0, ysiz;		/* origin and size of subimage */
 						sr.rt < 0.999*zbf[y-y0][x-x0])
 					zbf[y-y0][x-x0] = sr.rt;
 				else if (!bigdiff(sr.rcol, pic[y-y0][x-x0],
-						0.001))	/* source sample */
+						0.01))	/* source sample */
 					setcolor(pic[y-y0][x-x0], 0., 0., 0.);
-				w = poly_area(ppoly, npv) * hres * vres;
 				scalecolor(sr.rcol, w);
 				scalecolor(pic[y-y0][x-x0], 1.-w);
 				addcolor(pic[y-y0][x-x0], sr.rcol);
