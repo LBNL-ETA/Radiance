@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.42 2004/01/18 17:03:12 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.43 2004/03/01 18:11:20 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -83,7 +83,7 @@ marksources()			/* find and mark source objects */
 		if (!issurface(o->otype) || o->omod == OVOID)
 			continue;
 					/* find material */
-		m = findmaterial(o);
+		m = findmaterial(objptr(o->omod));
 		if (m == NULL || !islight(m->otype))
 			continue;	/* not source modifier */
 	

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.11 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.12 2004/03/01 18:11:20 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -123,7 +123,7 @@ OBJREC  *o;
 	register OBJREC  *m;
 
 	i = o->omod;
-	m = objptr(i);
+	m = findmaterial(objptr(i));
 	if (m->otype != MAT_ILLUM || m->oargs.nsargs < 1 ||
 			!strcmp(m->oargs.sarg[0], VOIDID) ||
 			(i = lastmod(objndx(m), m->oargs.sarg[0])) == OVOID)
