@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.36 2005/02/16 03:26:33 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.37 2005/03/01 23:16:42 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -439,11 +439,8 @@ advance(void)			/* read in data for next scanline */
 				eputs(": read error\n");
 				quit(1);
 			}
-			if (fabs(colval(input[i].coef,RED)-1.0) > 1e-3 ||
-				fabs(colval(input[i].coef,GRN)-1.0) > 1e-3 ||
-				fabs(colval(input[i].coef,BLU)-1.0) > 1e-3)
-				for (j = 0; j < xmax; j++)  /* adjust color */
-					multcolor(st[j], input[i].coef);
+			for (j = 0; j < xmax; j++)	/* adjust color */
+				multcolor(st[j], input[i].coef);
 		}
 }
 
