@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.38 2003/06/06 20:04:06 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.39 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -15,9 +15,11 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.38 2003/06/06 20:04:06 greg Exp
 
 #include "copyright.h"
 
-#include "standard.h"
 #include <ctype.h>
 #include <sys/stat.h>
+
+#include "standard.h"
+#include "paths.h"
 #include "view.h"
 #include "vars.h"
 #include "netproc.h"
@@ -480,7 +482,7 @@ char	*rfargs;
 			pippt = NULL;
 		}
 	if (pippt != NULL)
-		strcpy(pippt, "> /dev/null");	/* nothing to match */
+		strcpy(pippt, "> " NULL_DEVICE);	/* nothing to match */
 	else {
 		sprintf(cp, ")[ \t]*=' > %s/radset.var", vval(DIRECTORY));
 		cp += 11;		/* point to file name */

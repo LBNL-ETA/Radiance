@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gcalc.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: gcalc.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  gcalc.c - routines to do calculations on graph files.
@@ -9,14 +9,10 @@ static const char	RCSid[] = "$Id: gcalc.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
  */
 
 #include  <stdio.h>
+#include  <string.h>
 
 #include  "mgvars.h"
 
-#ifndef BSD
-#define index	strchr
-#endif
-
-extern char  *index();
 
 static double  xsum, xxsum, ysum, yysum, xysum;
 static double  xmin, xmax, ymin, ymax;
@@ -29,7 +25,7 @@ char  *types;
 {
 	int  i, calcpoint();
 
-	if (index(types, 'h') == NULL)
+	if (strchr(types, 'h') == NULL)
 		gcheader(types);
 	
 	xmin = gparam[XMIN].flags & DEFINED ?

@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.4 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.5 2003/06/30 14:59:11 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -10,35 +10,37 @@ extern "C" {
 
 #ifdef _WIN32
 
-#include <stdio.h>
-#define popen _popen
-#define pclose _pclose
-#include <fcntl.h>  /* _O_BINARY, _O_TEXT */
-#include <io.h>     /* _setmode() */
-#include <stdlib.h> /* _fmode */
+  #include <stdio.h>
+  #define popen _popen
+  #define pclose _pclose
+  #include <fcntl.h>  /* _O_BINARY, _O_TEXT */
+  #include <io.h>     /* _setmode() */
+  #include <stdlib.h> /* _fmode */
 
-#define SET_DEFAULT_BINARY() _fmode = _O_BINARY
-#define SET_FILE_BINARY(fp) _setmode(fileno(fp),_O_BINARY)
-#define SET_FD_BINARY(fd) _setmode(fd,_O_BINARY)
+  #define NON_POSIX
+  #define RHAS_ACCESS
 
-
-
-
-
-
+  #define SET_DEFAULT_BINARY() _fmode = _O_BINARY
+  #define SET_FILE_BINARY(fp) _setmode(fileno(fp),_O_BINARY)
+  #define SET_FD_BINARY(fd) _setmode(fd,_O_BINARY)
 
 #else /* _WIN32 */
 
-/* NOPs on unix */
-#define SET_DEFAULT_BINARY()
-#define SET_FILE_BINARY(fp)
-#define SET_FD_BINARY(fd)
+  #ifdef AMIGA
+    #define NON_POSIX
+  #else
+    /* assumedly posix systems */
+    #define RHAS_GETPWNAM
+    #define RHAS_ACCESS
+    #define RHAS_FORK_EXEC
+  #endif
 
+  /* everybody except Windows */
 
-
-
-
-
+  /* NOPs */
+  #define SET_DEFAULT_BINARY()
+  #define SET_FILE_BINARY(fp)
+  #define SET_FD_BINARY(fd)
 
 #endif /* _WIN32 */
 

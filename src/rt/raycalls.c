@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.3 2003/05/15 05:13:35 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.4 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -90,18 +90,14 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.3 2003/05/15 05:13:35 greg Exp 
  *  same as the defaults for rtrace.)
  */
 
+#include <string.h>
+
 #include  "ray.h"
-
 #include  "source.h"
-
 #include  "ambient.h"
-
 #include  "otypes.h"
-
 #include  "random.h"
-
 #include  "data.h"
-
 #include  "font.h"
 
 char	*progname = "unknown_app";	/* caller sets to argv[0] */
@@ -242,7 +238,7 @@ RAYPARAMS	*rp;
 	rp->maxdepth = maxdepth;
 	rp->minweight = minweight;
 	copycolor(rp->ambval, ambval);
-	bzero(rp->ambfile, sizeof(rp->ambfile));
+	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
 	if (ambfile != NULL)
 		strncpy(rp->ambfile, ambfile, sizeof(rp->ambfile)-1);
 	rp->ambvwt = ambvwt;
@@ -252,7 +248,7 @@ RAYPARAMS	*rp;
 	rp->ambssamp = ambssamp;
 	rp->ambounce = ambounce;
 	rp->ambincl = ambincl;
-	bzero(rp->amblval, sizeof(rp->amblval));
+	memset(rp->amblval, '\0', sizeof(rp->amblval));
 	ndx = 0;
 	for (i = 0; i < AMBLLEN && amblist[i] != NULL; i++) {
 		int	len = strlen(amblist[i]);
@@ -360,7 +356,7 @@ RAYPARAMS	*rp;
 	rp->maxdepth = 6;
 	rp->minweight = 4e-3;
 	setcolor(rp->ambval, 0., 0., 0.);
-	bzero(rp->ambfile, sizeof(rp->ambfile));
+	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
 	rp->ambvwt = 0;
 	rp->ambres = 128;
 	rp->ambacc = 0.2;
@@ -368,7 +364,7 @@ RAYPARAMS	*rp;
 	rp->ambssamp = 0;
 	rp->ambounce = 0;
 	rp->ambincl = -1;
-	bzero(rp->amblval, sizeof(rp->amblval));
+	memset(rp->amblval, '\0', sizeof(rp->amblval));
 	for (i = AMBLLEN+1; i--; )
 		rp->amblndx[i] = -1;
 }

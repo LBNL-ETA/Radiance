@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.28 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.29 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -9,14 +9,19 @@ static const char	RCSid[] = "$Id: persist.c,v 2.28 2003/06/26 00:58:10 schorsch 
 
 #include "copyright.h"
 
+#include <string.h>
+#include <signal.h>
+#include <sys/stat.h>
+#ifdef _WIN32
+ #include <process.h> /* getpid() */
+#endif
+
 #include "standard.h"
 #include "random.h"
 
 #ifdef F_SETLKW
 #include "paths.h"
 #include "selcall.h"
-#include <signal.h>
-#include <sys/stat.h>
 
 #ifndef TIMELIM
 #define TIMELIM		(8*3600)	/* time limit for holding pattern */
@@ -209,23 +214,23 @@ io_process()		/* just act as go-between for actual process */
 #endif
 	pfdetach();			/* close & release persist file */
 	buf[nr] = '\0';			/* parse what we got */
-	if ((cp = index(buf, ' ')) == NULL)
+	if ((cp = strchr(buf, ' ')) == NULL)
 		goto formerr;
 	*cp++ = '\0';
 	if ((pid = atoi(cp)) <= 0)
 		goto formerr;
-	if ((cp = index(cp, '\n')) == NULL)
+	if ((cp = strchr(cp, '\n')) == NULL)
 		goto formerr;
 	pfin = ++cp;
-	if ((cp = index(cp, '\n')) == NULL)
+	if ((cp = strchr(cp, '\n')) == NULL)
 		goto formerr;
 	*cp++ = '\0';
 	pfout = cp;
-	if ((cp = index(cp, '\n')) == NULL)
+	if ((cp = strchr(cp, '\n')) == NULL)
 		goto formerr;
 	*cp++ = '\0';
 	pferr = cp;
-	if ((cp = index(cp, '\n')) == NULL)
+	if ((cp = strchr(cp, '\n')) == NULL)
 		goto formerr;
 	*cp++ = '\0';
 	if (cp-buf != nr)

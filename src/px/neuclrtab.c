@@ -1,14 +1,16 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neuclrtab.c,v 2.9 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.10 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
  */
 
+#include "copyright.h"
+
+#include <string.h>
+
 #include "standard.h"
-
 #include "color.h"
-
 #include "random.h"
 
 #ifdef COMPAT_MODE
@@ -182,7 +184,7 @@ int	n;
 			return;
 		}
 		N = n;
-		bzero((char *)cerr, 3*N*sizeof(short));
+		memset((char *)cerr, '\0', 3*N*sizeof(short));
 	}
 	err[0] = err[1] = err[2] = 0;
 	for (x = 0; x < n; x++) {

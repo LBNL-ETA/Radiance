@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.15 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.16 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: glrad.c,v 3.15 2003/06/26 00:58:11 schorsch Ex
 #include <X11/extensions/SGIStereo.h>
 #endif
 #include <ctype.h>
+#include <string.h>
 #include <time.h>
 
 #include "radogl.h"
@@ -830,7 +831,7 @@ VIEW	*vp;
 {
 	FILE	*fp;
 					/* check if already in there */
-	if (!bcmp(&thisview, vwl[currentview].v, sizeof(VIEW))) {
+	if (!memcmp(&thisview, vwl[currentview].v, sizeof(VIEW))) {
 		error(COMMAND, "view already in standard list");
 		return;
 	}

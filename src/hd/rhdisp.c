@@ -1,15 +1,17 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.46 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.47 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Holodeck display process.
  */
 
+#include <string.h>
+#include <ctype.h>
+
 #include "rholo.h"
 #include "rhdisp.h"
 #include "rhdriver.h"
 #include "selcall.h"
-#include <ctype.h>
 
 #ifndef VIEWHISTLEN
 #define VIEWHISTLEN	4	/* number of remembered views */
@@ -216,7 +218,7 @@ char	*gfn, *pfn;
 	hdlist[hd] = (HOLO *)malloc(sizeof(HOLO));
 	if (hdlist[hd] == NULL)
 		error(SYSTEM, "out of memory in add_holo");
-	bcopy((void *)hdg, (void *)hdlist[hd], sizeof(HDGRID));
+	memcpy((void *)hdlist[hd], (void *)hdg, sizeof(HDGRID));
 	hdcompgrid(hdlist[hd]);
 	hdgfn[hd] = savestr(gfn);
 	hdpfn[hd] = pfn && *pfn ? savestr(pfn) : (char *)NULL;

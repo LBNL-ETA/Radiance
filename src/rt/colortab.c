@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colortab.c,v 2.7 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: colortab.c,v 2.8 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * colortab.c - allocate and control dynamic color table.
@@ -17,9 +17,11 @@ static const char	RCSid[] = "$Id: colortab.c,v 2.7 2003/05/13 17:58:33 greg Exp 
 
 #include "copyright.h"
 
-#include "standard.h"
+#include <string.h>
 
+#include "standard.h"
 #include "color.h"
+
 				/* histogram resolution */
 #define NRED		24
 #define NGRN		32
@@ -84,7 +86,7 @@ int	ncolors;
 				/* partition color space */
 	cut(ctree, 0, CLRCUBE, 0, ncolors);
 				/* clear histogram */
-	bzero((void *)histo, sizeof(histo));
+	memset((void *)histo, '\0', sizeof(histo));
 				/* return number of colors used */
 	return(ncolors);
 }
@@ -161,9 +163,9 @@ void
 set_cmap(rmap, gmap, bmap)	/* set custom color correction map */
 BYTE	*rmap, *gmap, *bmap;
 {
-	bcopy((void *)rmap, (void *)clrmap[RED], 256);
-	bcopy((void *)gmap, (void *)clrmap[GRN], 256);
-	bcopy((void *)bmap, (void *)clrmap[BLU], 256);
+	memcpy((void *)clrmap[RED], (void *)rmap, 256);
+	memcpy((void *)clrmap[GRN], (void *)gmap, 256);
+	memcpy((void *)clrmap[BLU], (void *)bmap, 256);
 }
 
 
@@ -193,7 +195,7 @@ int	c0, c1;
 	}
 					/* split box */
 	*tree = split(box);
-	bcopy((void *)box, (void *)kb, sizeof(kb));
+	memcpy((void *)kb, (void *)box, sizeof(kb));
 						/* do left (lesser) branch */
 	kb[prim(*tree)][1] = part(*tree);
 	cut(tree+(1<<level), level+1, kb, c0, (c0+c1)>>1);

@@ -1,8 +1,10 @@
-/* RCSid: $Id: mx3.h,v 2.3 2003/05/13 17:58:33 greg Exp $ */
+/* RCSid: $Id: mx3.h,v 2.4 2003/06/30 14:59:12 schorsch Exp $ */
 #ifndef MX3_HDR
 #define MX3_HDR
 
-#define mx3_copy(a, b) bcopy(a, b, 3*3*sizeof(double))
+#include <string.h>
+
+#define mx3_copy(a, b) memcpy(b, a, 3*3*sizeof(double))
 
 /* FLOAT VERSIONS */
 float  mx3f_adjoint(/* a, b */);
@@ -14,7 +16,7 @@ void  mx3f_scale_mat(/* sx, sy, a */);
 void  mx3f_scale(/* a, sx, sy */);
 void  mx3f_transform(/* p, a, q */);
 float  mx3f_transform_div(/* p, a, q */);
-#define mx3f_copy(a, b) bcopy(a, b, 3*3*sizeof(float))
+#define mx3f_copy(a, b) memcpy(b, a, 3*3*sizeof(float))
 
 /* DOUBLE VERSIONS */
 double  mx3d_adjoint(/* a, b */);
@@ -26,6 +28,6 @@ void  mx3d_scale_mat(/* sx, sy, a */);
 void  mx3d_scale(/* a, sx, sy */);
 void  mx3d_transform(/* p, a, q */);
 double  mx3d_transform_div(/* p, a, q */);
-#define mx3d_copy(a, b) bcopy(a, b, 3*3*sizeof(double))
+#define mx3d_copy(a, b) memcpy(b, a, 3*3*sizeof(double))
 
 #endif

@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.11 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.12 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
  */
+
+#include <string.h>
 
 #include "holo.h"
 #include "view.h"
@@ -35,7 +37,7 @@ static const char	RCSid[] = "$Id: rhpict2.c,v 3.11 2003/06/20 00:25:49 greg Exp 
 #define CLR4(f,i)	FL4OP(f,i,&=~)
 #define TGL4(f,i)	FL4OP(f,i,^=)
 #define FL4NELS(n)	(((n)+0x1f)>>5)
-#define CLR4ALL(f,n)	bzero((char *)(f),FL4NELS(n)*sizeof(int32))
+#define CLR4ALL(f,n)	memset((char *)(f),'\0',FL4NELS(n)*sizeof(int32))
 #endif
 
 static int32	*pixFlags;	/* pixel occupancy flags */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.23 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.24 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -348,7 +348,7 @@ getradfile()			/* run rad and get needed variables */
 			pippt = NULL;
 		}
 	if (pippt != NULL)
-		strcpy(pippt, "> /dev/null");	/* nothing to match */
+		strcpy(pippt, "> " NULL_DEVICE);	/* nothing to match */
 	else
 		sprintf(cp, ")[ \t]*=' > %s", tf2);
 #ifdef DEBUG

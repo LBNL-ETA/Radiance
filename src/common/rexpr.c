@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rexpr.c,v 2.7 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: rexpr.c,v 2.8 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Regular expression parsing routines.
@@ -32,9 +32,6 @@ static const char	RCSid[] = "$Id: rexpr.c,v 2.7 2003/06/07 12:50:20 schorsch Exp
 
 #define same(a,b) (a==b || (iflag && (a^b)==' ' && isalpha(a)))
 
-#ifdef  BSD
-#define  memcpy(to,from,len)	bcopy(from,to,len)
-#endif
 
 static int     advance(), cclass();
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcurve.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: tcurve.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *       PROGRAM TO PLOT TEL-A-GRAF CURVES TO METAFILE
@@ -9,6 +9,10 @@ static const char	RCSid[] = "$Id: tcurve.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
  *
  *      cc -o ../tcurve tcurve.c tgraph.o primout.o mfio.o syscalls.o misc.o -lm
  */
+
+#ifdef _WIN32
+ #include <process.h> /* getpid() */
+#endif
 
 #include  "tgraph.h"
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.5 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.6 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -9,6 +9,9 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.5 2003/06/26 00:58:10 schorsch Ex
 
 #include  <sys/types.h>
 #include  <signal.h>
+#ifdef _WIN32
+ #include <process.h> /* getpid() */
+#endif
 
 #include  "platform.h"
 #include  "ray.h"

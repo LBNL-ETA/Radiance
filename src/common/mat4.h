@@ -1,4 +1,4 @@
-/* RCSid $Id: mat4.h,v 2.10 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: mat4.h,v 2.11 2003/06/30 14:59:11 schorsch Exp $ */
 /*
  * Definitions for 4x4 matrix operations
  */
@@ -14,11 +14,7 @@ extern "C" {
 
 typedef RREAL  MAT4[4][4];
 
-#ifdef  BSD
-#define  copymat4(m4a,m4b)	bcopy((void *)m4b,(void *)m4a,sizeof(MAT4))
-#else
 #define  copymat4(m4a,m4b)	(void)memcpy((void *)m4a,(void *)m4b,sizeof(MAT4))
-#endif
 
 #define  MAT4IDENT		{ {1.,0.,0.,0.}, {0.,1.,0.,0.}, \
 				{0.,0.,1.,0.}, {0.,0.,0.,1.} }

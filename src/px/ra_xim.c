@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xim.c,v 3.1 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xim.c,v 3.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /***********************************************************************
 *   Author: Philip Thompson (phils@athena.mit.edu)
@@ -28,27 +28,23 @@ static const char	RCSid[] = "$Id: ra_xim.c,v 3.1 2003/02/22 02:07:28 greg Exp $"
 ***********************************************************************/
 #if (!defined(lint) && !defined(SABER))
 static char  radiance_rcsid[] =
-    "$Header: /home/cvsd/radiance/ray/src/px/Attic/ra_xim.c,v 3.1 2003/02/22 02:07:28 greg Exp $";
+    "$Header: /home/cvsd/radiance/ray/src/px/Attic/ra_xim.c,v 3.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 
 #include <stdio.h>
 #include <math.h>
 #include <pwd.h>
 #include <sys/types.h>
-#ifdef SYSV
 #include <string.h>
-#else
-#include <strings.h>
 #include <sys/time.h>
-#endif
 
 /* XimHeader.h */
 
 /*
 *  Author: Philip R. Thompson
 *  Address:  phils@athena.mit.edu, 9-526 
-*  $Header: /home/cvsd/radiance/ray/src/px/Attic/ra_xim.c,v 3.1 2003/02/22 02:07:28 greg Exp $
-*  $Date: 2003/02/22 02:07:28 $
+*  $Header: /home/cvsd/radiance/ray/src/px/Attic/ra_xim.c,v 3.2 2003/06/30 14:59:12 schorsch Exp $
+*  $Date: 2003/06/30 14:59:12 $
 *  $Source: /home/cvsd/radiance/ray/src/px/Attic/ra_xim.c,v $
 *  Copyright (c) 1989, 1990 Massachusetts Institute of Technology
 *                1988, Philip R. Thompson (phils@athena.mit.edu)
@@ -239,7 +235,7 @@ double gamcor;
 	byte gmap[256];
 
 	/* get width, height from radiance file */
-    bzero(xim, sizeof(XimImage));
+    memset(xim, '\0', sizeof(XimImage));
     if (!RadianceGetSize(ifp, &width, &height))
 		return 0;
 	xim->width = xim->bytes_line = width;

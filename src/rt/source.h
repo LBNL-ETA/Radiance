@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.9 2003/06/27 06:53:23 greg Exp $ */
+/* RCSid $Id: source.h,v 2.10 2003/06/30 14:59:13 schorsch Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -9,6 +9,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <string.h>
 
 #define  AIMREQT	100		/* required aim success/failure */
 
@@ -68,7 +70,7 @@ typedef struct {
 
 #define initsrcindex(s)	((s)->sn = (s)->sp = -1, (s)->np = 0)
 
-#define clrpart(pt)	bzero((char *)(pt), MAXSPART/2)
+#define clrpart(pt)	memset((char *)(pt), '\0', MAXSPART/2)
 #define setpart(pt,i,v)	((pt)[(i)>>2] |= (v)<<(((i)&3)<<1))
 #define spart(pt,pi)	((pt)[(pi)>>2] >> (((pi)&3)<<1) & 3)
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.34 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.35 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: pinterp.c,v 2.34 2003/06/26 00:58:10 schorsch 
 #include "copyright.h"
 
 #include <ctype.h>
+#include <string.h>
 
 #include "standard.h"
 #include "rtprocess.h" /* Windows: must come before color.h */
@@ -277,7 +278,7 @@ char	*argv[];
 	fputnow(stdout);
 							/* run pictures */
 	do {
-		bzero((char *)ourzbuf, hresolu*vresolu*sizeof(float));
+		memset((char *)ourzbuf, '\0', hresolu*vresolu*sizeof(float));
 		for (i = an; i < argc; i += 2)
 			addpicture(argv[i], argv[i+1]);
 		if (fillo&F_BACK)			/* fill in spaces */
@@ -961,9 +962,9 @@ clipaft()			/* perform aft clipping as indicated */
 						continue;
 				}
 				if (averaging)
-					bzero(sscan(y)[x], sizeof(COLOR));
+					memset(sscan(y)[x], '\0', sizeof(COLOR));
 				else
-					bzero(pscan(y)[x], sizeof(COLR));
+					memset(pscan(y)[x], '\0', sizeof(COLR));
 				zscan(y)[x] = 0.0;
 			}
 	}
@@ -1167,7 +1168,7 @@ clearqueue()				/* process queue */
 		*fbp++ = dir[0]; *fbp++ = dir[1]; *fbp++ = dir[2];
 	}
 					/* mark end and get results */
-	bzero((char *)fbp, 6*sizeof(float));
+	memset((char *)fbp, '\0', 6*sizeof(float));
 	if (process(&PDesc, (char *)fbuf, (char *)fbuf,
 			4*sizeof(float)*(queuesiz+1),
 			6*sizeof(float)*(queuesiz+1)) !=

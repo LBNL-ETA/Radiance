@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ciq.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: ciq.c,v 2.4 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
 CIQ - main program for color image quantization
@@ -9,6 +9,8 @@ or undithered quantization
 Paul Heckbert	16 April 82, cleaned up 8 June 86
 Greg Ward	1 March 88, modified for arbitrary picture sizes
 */
+
+#include <string.h>
 
 #include "standard.h"
 #include "ciq.h"
@@ -41,7 +43,7 @@ colormap cm;		/* quantization colormap */
     if (synth)
 	n = makecm(nw,&na);	/* analyze histogram and synthesize colormap */
     else {
-	bcopy((void *)cm,(void *)color,sizeof color);
+	memcpy((void *)color,(void *)cm,sizeof color);
 	n = nw;
 	na = 0;
 	for (i=0; i<len; i++) if (hist[i]) na++;
@@ -58,7 +60,7 @@ colormap cm;		/* quantization colormap */
 	draw_nodith(ocm);
     }
 
-    bcopy((void *)color,(void *)cm,sizeof color);
+    memcpy((void *)cm,(void *)color,sizeof color);
     /*endclosest();*/
 }
 

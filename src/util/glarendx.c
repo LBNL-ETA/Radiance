@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.7 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.8 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -19,6 +19,8 @@ static const char	RCSid[] = "$Id: glarendx.c,v 2.7 2003/02/22 02:07:30 greg Exp 
  *		19 April 1993   R. Compagnon    EPFL (added dgi, brs_gi, ugr)
  */
  
+#include <string.h>
+
 #include "standard.h"
 #include "view.h"
  
@@ -72,13 +74,12 @@ main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	extern char	*rindex();
 	struct named_func	*funp;
 	char	*progtail;
 	int	i;
 					/* get program name */
 	progname = argv[0];
-	progtail = rindex(progname, '/');	/* final component */
+	progtail = strrchr(progname, '/');	/* final component */
 	if (progtail == NULL)
 		progtail = progname;
 	else

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.11 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.12 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -9,10 +9,10 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.11 2003/02/25 02:47:23 greg Exp $";
 
 #include "copyright.h"
 
+#include <string.h>
+
 #include  "ray.h"
-
 #include  "rpaint.h"
-
 #include  "random.h"
 
 #ifndef WFLUSH
@@ -371,7 +371,7 @@ register VIEW  *vp;
 	if ((err = setview(vp)) != NULL) {
 		sprintf(errmsg, "view not set - %s", err);
 		error(COMMAND, errmsg);
-	} else if (bcmp((char *)vp, (char *)&ourview, sizeof(VIEW))) {
+	} else if (memcmp((char *)vp, (char *)&ourview, sizeof(VIEW))) {
 		copystruct(&oldview, &ourview);
 		copystruct(&ourview, vp);
 		newimage();

@@ -1,11 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.48 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.49 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Routines for managing holodeck files
  *
  *	9/30/97	GWLarson
  */
+
+#include "copyright.h"
+
+#include <string.h>
 
 #include "holo.h"
 
@@ -66,7 +70,7 @@ HDGRID	*hproto;
 	register HOLO	*hp;
 	int	n;
 				/* copy grid to temporary header */
-	bcopy((void *)hproto, (void *)&hdhead, sizeof(HDGRID));
+	memcpy((void *)&hdhead, (void *)hproto, sizeof(HDGRID));
 				/* compute grid vectors and sizes */
 	hdcompgrid(&hdhead);
 				/* allocate header with directory */
@@ -81,13 +85,13 @@ HDGRID	*hproto;
 		free((void *)hp);
 		return(NULL);
 	}
-	bzero((void *)hp->bl, (nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
+	memset((void *)hp->bl, '\0', (nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
 	hp->bl[0] = (BEAM *)(hp->bl+nbeams(hp)+1);	/* set blglob(hp) */
 	hp->fd = -1;
 	hp->dirty = 0;
 	hp->priv = NULL;
 				/* clear beam directory */
-	bzero((void *)hp->bi, (nbeams(hp)+1)*sizeof(BEAMI));
+	memset((void *)hp->bi, '\0', (nbeams(hp)+1)*sizeof(BEAMI));
 	return(hp);		/* all is well */
 }
 
@@ -123,8 +127,8 @@ int	wr;
 	if (fd >= nhdfragls) {
 		hdfragl = (struct fraglist *)hdrealloc((char *)hdfragl,
 				(fd+1)*sizeof(struct fraglist), "hdattach");
-		bzero((void *)(hdfragl+nhdfragls),
-				(fd+1-nhdfragls)*sizeof(struct fraglist));
+		memset((void *)(hdfragl+nhdfragls),
+				'\0', (fd+1-nhdfragls)*sizeof(struct fraglist));
 		nhdfragls = fd+1;
 	}
 	hdfragl[fd].nlinks++;
@@ -429,7 +433,7 @@ int	nr;			/* number of new rays desired */
 		hdfreefrag(hp, i);		/* relinquish old fragment */
 	p = hdbray(hp->bl[i]) + hp->bl[i]->nrm;
 	hp->bl[i]->nrm += nr;			/* update in-core structure */
-	bzero((void *)p, nr*sizeof(RAYVAL));
+	memset((void *)p, '\0', nr*sizeof(RAYVAL));
 	blglob(hp)->tick = hp->bl[i]->tick = hdclock++;	/* update LRU clock */
 	return(p);				/* point to new rays */
 }

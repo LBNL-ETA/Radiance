@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.24 2003/06/08 12:03:10 schorsch Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.25 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -8,7 +8,10 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.24 2003/06/08 12:03:10 schorsch Ex
  *     6/23/93	Added additional buffers for value spreading
  */
 
+#include  "copyright.h"
+
 #include  <signal.h>
+#include  <string.h>
 
 #include  "standard.h"
 #include  "platform.h"
@@ -541,7 +544,7 @@ int  r;
 			greybar[nextrow%obarsize][c] = (*ourbright)(ctmp);
 		}
 					/* and zero output scanline */
-		bzero((char *)scoutbar[nextrow%obarsize], ncols*sizeof(COLOR));
+		memset((char *)scoutbar[nextrow%obarsize], '\0', ncols*sizeof(COLOR));
 		nextrow++;
 	}
 					/* point to top scanline for output */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ximage.c,v 2.11 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: ximage.c,v 2.12 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  ximage.c - driver for X-windows
@@ -15,21 +15,15 @@ static const char	RCSid[] = "$Id: ximage.c,v 2.11 2003/05/13 17:58:33 greg Exp $
 #include  <X/cursors/bcross_mask.cursor>
 
 #include  <sys/types.h>
-
+#include  <string.h>
 #include  <ctype.h>
-
 #include  <time.h>
 
 #include  "color.h"
-
 #include  "resolu.h"
-
 #include  "xraster.h"
-
 #include  "view.h"
-
 #include  "pic.h"
-
 #include  "random.h"
 
 #define  controlshift(e)	(((XButtonEvent *)(e))->detail & (ShiftMask|ControlMask))
@@ -674,7 +668,7 @@ picwriteline(y, l)		/* add 8-bit scanline to image */
 int  y;
 pixel  *l;
 {
-	bcopy((void *)l, (void *)ourras->data.bz+BZPixmapSize(xmax,y), BZPixmapSize(xmax,1));
+	memcpy((void *)ourras->data.bz+BZPixmapSize(xmax,y), (void *)l, BZPixmapSize(xmax,1));
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.27 2003/06/27 22:27:45 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.28 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: xform.c,v 2.27 2003/06/27 22:27:45 greg Exp $"
  */
 
 #include  <ctype.h>
+#include  <unistd.h>
 
 #include  "standard.h"
 #include  "platform.h"
@@ -40,7 +41,7 @@ int  nrept = 1;				/* number of array repetitions */
 
 int stdinused = 0;			/* stdin has been used by -f option? */
 
-char  mainfn[MAXPATH];			/* main file name */
+char  mainfn[PATH_MAX];			/* main file name */
 FILE  *mainfp = NULL;			/* main file pointer */
 
 #define	 progname  (xav[0])
@@ -887,8 +888,8 @@ char  *fname;
 openmain(iname)		/* open input, changing directory for file */
 char  *iname;
 {
-	static char  origdir[MAXPATH];
-	static char  curfn[MAXPATH];
+	static char  origdir[PATH_MAX];
+	static char  curfn[PATH_MAX];
 	static int  diffdir;
 	register char  *fpath;
 
@@ -914,7 +915,7 @@ char  *iname;
 		return;
 	}
 	if (mainfp == NULL) {			/* first call, initialize */
-		getwd(origdir);
+		getcwd(origdir, sizeof(origdir));
 	} else if (!strcmp(iname, curfn)) {	/* just need to rewind? */
 		rewind(mainfp);
 		return;

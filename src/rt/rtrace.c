@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.30 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.31 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -107,7 +107,7 @@ void
 quit(code)			/* quit program */
 int  code;
 {
-#ifndef  NIX
+#ifndef  NON_POSIX /* XXX we don't clean up elsewhere? */
 	headclean();		/* delete header file */
 	pfclean();		/* clean up persist files */
 #endif

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: tgraph.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *   Routines for tel-a-graph file plotting
@@ -7,9 +7,10 @@ static const char	RCSid[] = "$Id: tgraph.c,v 1.1 2003/02/22 02:07:26 greg Exp $"
  *   1/20/85
  */
  
-#include  "tgraph.h"
-
 #include  <ctype.h>
+#include  <string.h>
+
+#include  "tgraph.h"
 
 
 #define  isfloat(a)  (isdigit(a) || (a) == '-' || (a) == '.' ||  \
@@ -535,13 +536,12 @@ char  *s;
 double  *xp, *yp;
 
 {
-    char  *index();
     double  sin(), cos();
     int  oobounds = 0;
     double  a;
     register char  *cp;
     
-    if ((cp = index(s, ',')) != NULL)
+    if ((cp = strchr(s, ',')) != NULL)
 	*cp = ' ';
 
     if (sscanf(s, "%lf %lf", xp, yp) != 2)

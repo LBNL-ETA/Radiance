@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11twind.c,v 2.8 2003/04/11 19:32:00 greg Exp $";
+static const char	RCSid[] = "$Id: x11twind.c,v 2.9 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  *  x11twind.c - routines for X11 text windows.
@@ -14,16 +14,11 @@ static const char	RCSid[] = "$Id: x11twind.c,v 2.8 2003/04/11 19:32:00 greg Exp 
 #include "copyright.h"
 
 #include  <stdio.h>
-
 #include  <stdlib.h>
-
+#include  <string.h>
 #include  <X11/Xlib.h>
 
 #include  "x11twind.h"
-
-#ifndef  BSD
-#define  bzero(d,n)		(void)memset(d,0,n)
-#endif
 
 #define checkcurs(t)		if ((t)->cursor) togglecurs(t)
 
@@ -162,7 +157,7 @@ int  r;
 	XClearArea(t->dpy, t->w, LEFTMAR, (t->nr-1)*Height(t->f),
 			t->nc*Width(t->f), Height(t->f),(Bool) 0);
 
-	bzero(cp, t->nc);
+	memset(cp, '\0', t->nc);
 	restorecurs(t);			/* should we reposition cursor? */
 }
 
@@ -189,7 +184,7 @@ int  r;
 					/* clear new line */
 	XClearArea(t->dpy, t->w, LEFTMAR, r*Height(t->f),
 			t->nc*Width(t->f), Height(t->f), (Bool) 0);
-	bzero(cp, t->nc);
+	memset(cp, '\0', t->nc);
 	restorecurs(t);			/* should we reposition cursor? */
 }
 
@@ -218,7 +213,7 @@ register TEXTWIND  *t;
 
 	XClearWindow(t->dpy, t->w);
 	for (i = 0; i < t->nr; i++)
-		bzero(t->lp[i], t->nc);
+		memset(t->lp[i], '\0', t->nc);
 	t->r = t->c = 0;
 	restorecurs(t);
 }

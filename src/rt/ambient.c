@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.51 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.52 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.51 2003/06/26 00:58:10 schorsch 
  */
 
 #include "copyright.h"
+
+#include <string.h>
 
 #include  "platform.h"
 #include  "ray.h"
@@ -562,7 +564,7 @@ newambtree()				/* allocate 8 ambient tree structs */
 	}
 	atp = atfreelist;
 	atfreelist = atp->kid;
-	bzero((char *)atp, 8*sizeof(AMBTREE));
+	memset((char *)atp, '\0', 8*sizeof(AMBTREE));
 	return(atp);
 }
 

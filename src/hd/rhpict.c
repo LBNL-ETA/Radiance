@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.10 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.11 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
  */
+
+#include <string.h>
 
 #include "rholo.h"
 #include "view.h"
@@ -219,9 +221,9 @@ int	fn;
 				/* write resolution (standard order) */
 	fprtresolu(hres, vres, stdout);
 				/* prepare image buffers */
-	bzero((char *)mypixel, hres*vres*sizeof(COLOR));
-	bzero((char *)myweight, hres*vres*sizeof(float));
-	bzero((char *)mydepth, hres*vres*sizeof(float));
+	memset((char *)mypixel, '\0', hres*vres*sizeof(COLOR));
+	memset((char *)myweight, '\0', hres*vres*sizeof(float));
+	memset((char *)mydepth, '\0', hres*vres*sizeof(float));
 }
 
 

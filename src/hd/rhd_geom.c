@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_geom.c,v 3.11 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.12 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Geometry drawing operations for OpenGL driver.
  */
+
+#include <string.h>
 
 #include "radogl.h"
 #include "rhdriver.h"
@@ -81,8 +83,8 @@ gmEndGeom()			/* make next list current */
 			freestr(gmCurrent[i].gfile);
 		}
 	}
-	bcopy((void *)gmNext, (void *)gmCurrent, sizeof(gmNext));
-	bzero((void *)gmNext, sizeof(gmNext));
+	memcpy((void *)gmCurrent, (void *)gmNext, sizeof(gmNext));
+	memset((void *)gmNext, '\0', sizeof(gmNext));
 }
 
 
@@ -196,7 +198,7 @@ gmEndPortal()			/* close portal list and return GL list */
 		}
 	FORALLPORT(curportlist, n)		/* free old file list */
 		freestr(curportlist[n]);
-	bcopy((void *)newportlist, (void *)curportlist, sizeof(newportlist));
-	bzero((void *)newportlist, sizeof(newportlist));
+	memcpy((void *)curportlist, (void *)newportlist, sizeof(newportlist));
+	memset((void *)newportlist, '\0', sizeof(newportlist));
 	return(gmPortals);			/* return GL list id */
 }

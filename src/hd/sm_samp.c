@@ -1,9 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_samp.c,v 3.8 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: sm_samp.c,v 3.9 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * sm_samp.c
  */
+
+#include <string.h>
+
 #include "standard.h"
 #include "sm_flag.h"
 #include "rhd_sample.h"
@@ -26,7 +29,7 @@ sClear_all_flags(s)
 SAMP *s;
 {
   if(samp_flag)
-    bzero((char *)samp_flag,FLAG_BYTES(S_MAX_BASE_PT(s)));
+    memset((char *)samp_flag, '\0', FLAG_BYTES(S_MAX_BASE_PT(s)));
 }
 
 sInit(s)

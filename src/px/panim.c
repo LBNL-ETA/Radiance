@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: panim.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: panim.c,v 2.3 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  Send pictures to PC animation system.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: panim.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "random.h"
 #include "color.h"
@@ -115,7 +116,7 @@ char	*file;
 	xbeg = (SCANLINE-xres)/2;
 	ybeg = (NUMSCANS-yres)/2;
 						/* clear output */
-	bzero(sc_frame_arr, sizeof(sc_frame_arr));
+	memset(sc_frame_arr, '\0', sizeof(sc_frame_arr));
 						/* get frame */
 	for (y = yres-1; y >= 0; y--) {
 		if (freadcolrs(scanin, xres, fp) < 0) {

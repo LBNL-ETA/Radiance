@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.3 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.4 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Allocate and control dynamic color table.
@@ -15,6 +15,8 @@ static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.3 2003/05/13 17:58:33 greg Exp 
  *	This module is essentially identical to src/rt/colortab.c,
  *	except there is no color mapping, since the tm library is used.
  */
+
+#include <string.h>
 
 #include "standard.h"
 #include "color.h"
@@ -76,7 +78,7 @@ int	ncolors;
 				/* partition color space */
 	cut(ctree, 0, CLRCUBE, 0, ncolors);
 				/* clear histogram */
-	bzero((void *)histo, sizeof(histo));
+	memset((void *)histo, '\0', sizeof(histo));
 				/* return number of colors used */
 	return(ncolors);
 }
@@ -152,7 +154,7 @@ int	c0, c1;
 	}
 					/* split box */
 	*tree = split(box);
-	bcopy((void *)box, (void *)kb, sizeof(kb));
+	memcpy((void *)kb, (void *)box, sizeof(kb));
 						/* do left (lesser) branch */
 	kb[prim(*tree)][1] = part(*tree);
 	cut(tree+(1<<level), level+1, kb, c0, (c0+c1)>>1);

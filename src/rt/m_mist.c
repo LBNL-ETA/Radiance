@@ -7,8 +7,9 @@ static const char RCSid[] = "$Id";
 
 #include "copyright.h"
 
-#include  "ray.h"
+#include <string.h>
 
+#include  "ray.h"
 #include  "source.h"
 
 /*
@@ -71,7 +72,7 @@ register char  *id;
 {
 	register char  *cp;
 						/* check for relay sources */
-	while ((cp = index(id, RELAYDELIM)) != NULL) {
+	while ((cp = strchr(id, RELAYDELIM)) != NULL) {
 		if (!(sp->sflags & SVIRTUAL) || sp->so == NULL)
 			return(0);
 		if (strncmp(id, sp->so->oname, cp-id) || sp->so->oname[cp-id])

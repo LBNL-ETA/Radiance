@@ -1,9 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm.c,v 3.18 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: sm.c,v 3.19 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  sm.c
  */
+
+#include <string.h>
+
 #include "standard.h"
 #include "sm_flag.h"
 #include "sm_list.h"
@@ -285,9 +288,9 @@ int which;
 
   if(which== -1)
     for(i=0; i < T_FLAGS;i++)
-      bzero(SM_NTH_FLAGS(sm,i),FLAG_BYTES(SM_MAX_TRIS(sm)));
+      memset(SM_NTH_FLAGS(sm,i), '\0', FLAG_BYTES(SM_MAX_TRIS(sm)));
   else
-    bzero(SM_NTH_FLAGS(sm,which),FLAG_BYTES(SM_MAX_TRIS(sm)));
+    memset(SM_NTH_FLAGS(sm,which), '\0', FLAG_BYTES(SM_MAX_TRIS(sm)));
 }
 
 /* Given an allocated mesh- initialize */
@@ -401,7 +404,7 @@ smAlloc(max_samples)
   {
     if(!(smMesh = (SM *)malloc(sizeof(SM))))
        error(SYSTEM,"smAlloc():Unable to allocate memory\n");
-    bzero(smMesh,sizeof(SM));
+    memset(smMesh, '\0', sizeof(SM));
   }
   else
   {   /* If existing structure: first deallocate */

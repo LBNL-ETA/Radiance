@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: viewbeams.c,v 3.4 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.5 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Convert view to beam list.
  */
+
+#include <string.h>
 
 #include "rholo.h"
 #include "view.h"
@@ -61,7 +63,7 @@ BEAMLIST	*blp;
 	int	v;
 	register int	h, hd;
 						/* clear section flags */
-	bzero((char *)sectlist, sizeof(sectlist));
+	memset((char *)sectlist, '\0', sizeof(sectlist));
 						/* identify view sections */
 	for (v = 0; v <= MINRES; v++)
 		for (h = 0; h <= MINRES; h++) {

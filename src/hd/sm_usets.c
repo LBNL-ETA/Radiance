@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_usets.c,v 3.4 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: sm_usets.c,v 3.5 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Quadtree-specific set operations with unsorted sets.
  */
+
+#include <string.h>
 
 #include "standard.h"
 #include "sm_flag.h"
@@ -30,7 +32,7 @@ qtclearsetflags()
   if(!qtsetflag)
     return;
 
-    bzero((char *)qtsetflag,FLAG_BYTES(qtallocsets));
+    memset((char *)qtsetflag, '\0', FLAG_BYTES(qtallocsets));
 }
 
 
@@ -55,10 +57,10 @@ OBJECT  *oset;
 		if (qtsetflag == NULL)
 			goto memerr;
 		if(qtallocsets)
-		  bzero((char *)((char *)(qtsetflag)+FLAG_BYTES(qtallocsets)),
+		  memset((char *)((char *)(qtsetflag)+FLAG_BYTES(qtallocsets)), '\0',
 		      FLAG_BYTES(osi+QTSETIBLK)-FLAG_BYTES(qtallocsets));
 		else
-		  bzero((char *)(qtsetflag),FLAG_BYTES(osi +QTSETIBLK));
+		  memset((char *)(qtsetflag), '\0', FLAG_BYTES(osi +QTSETIBLK));
 
 		qtallocsets = osi + QTSETIBLK; 
 	}

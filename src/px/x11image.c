@@ -18,6 +18,7 @@ static const char RCSid[] = "$Id";
 
 #include  "standard.h"
 
+#include  <string.h>
 #include  <signal.h>
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
@@ -1309,7 +1310,7 @@ int  y;
 	static int  trunced = -1;		/* truncated file? */
 skipit:
 	if (trunced >= 0 && y >= trunced) {
-		bzero(scanline, xmax*sizeof(COLR));
+		memset(scanline, '\0', xmax*sizeof(COLR));
 		return(-1);
 	}
 	if (y != cury) {

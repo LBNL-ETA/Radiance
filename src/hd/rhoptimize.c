@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.11 2003/06/13 15:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.12 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -7,9 +7,13 @@ static const char	RCSid[] = "$Id: rhoptimize.c,v 3.11 2003/06/13 15:27:04 greg E
  *	11/4/98		Greg Ward Larson
  */
 
-#include "holo.h"
-
 #include <signal.h>
+#include <string.h>
+#ifdef _WIN32
+  #include <process.h> /* getpid() */
+#endif
+
+#include "holo.h"
 
 #ifndef BKBSIZE
 #define BKBSIZE		256		/* beam clump size (kilobytes) */
@@ -19,7 +23,6 @@ char	*progname;
 char	tempfile[128];
 int	dupchecking = 0;
 
-extern char	*rindex();
 extern long	rhinitcopy();
 
 
@@ -52,7 +55,7 @@ char	*argv[];
 			error(SYSTEM, errmsg);
 		}
 		strcpy(tempfile, inpname);
-		if ((outname = rindex(tempfile, '/')) != NULL)
+		if ((outname = strrchr(tempfile, '/')) != NULL)
 			outname++;
 		else
 			outname = tempfile;
@@ -196,7 +199,7 @@ int	*bq, nb;
 		bp = hdgetbeam(hp, bq[i]);
 		DCHECK(bp==NULL, CONSISTENCY, "empty beam in xferclump");
 		n = dupchecking ? nuniq(hdbray(bp),bp->nrm) : bp->nrm;
-		bcopy((void *)hdbray(bp), (void *)hdnewrays(hout,bq[i],n),
+		memcpy((void *)hdnewrays(hout,bq[i],n),(void *)hdbray(bp), 
 				n*sizeof(RAYVAL));
 		hdfreebeam(hp, bq[i]);
 	}

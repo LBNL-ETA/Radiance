@@ -1,4 +1,4 @@
-/* RCSid: $Id: parser.h,v 1.35 2003/06/26 00:58:09 schorsch Exp $ */
+/* RCSid: $Id: parser.h,v 1.36 2003/06/30 14:59:11 schorsch Exp $ */
 /*
  * Header file for MGF interpreter
  */
@@ -297,11 +297,7 @@ extern void	obj_clear(void);		/* clear object stack */
 
 typedef RREAL  MAT4[4][4];
 
-#ifdef  BSD
-#define  copymat4(m4a,m4b)	bcopy((char *)m4b,(char *)m4a,sizeof(MAT4))
-#else
 #define  copymat4(m4a,m4b)	(void)memcpy((char *)m4a,(char *)m4b,sizeof(MAT4))
-#endif
 
 #define  MAT4IDENT		{ {1.,0.,0.,0.}, {0.,1.,0.,0.}, \
 				{0.,0.,1.,0.}, {0.,0.,0.,1.} }

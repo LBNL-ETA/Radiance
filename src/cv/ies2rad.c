@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.18 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.19 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -549,7 +549,7 @@ char	*dir, *tltspec, *dfltname, *tltid;
 {
 	int	nangles, tlt_type;
 	double	minmax[2];
-	char	buf[MAXPATH], tltname[MAXWORD];
+	char	buf[PATH_MAX], tltname[MAXWORD];
 	FILE	*datin, *datout;
 
 	if (!strcmp(tltspec, TLTNONE)) {
@@ -621,7 +621,7 @@ SRCINFO	*sinf;
 FILE	*in, *out;
 char	*mod, *name;
 {
-	char	buf[MAXPATH], id[MAXWORD];
+	char	buf[PATH_MAX], id[MAXWORD];
 	FILE	*datout;
 	double	mult, bfactor, pfactor, width, length, height, wattage;
 	double	bounds[2][2];

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.3 2003/06/30 14:59:10 schorsch Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -20,10 +20,6 @@ static const char	RCSid[] = "$Id: calc.c,v 1.2 2003/06/08 12:03:09 schorsch Exp 
 
 double  result[MAXRES];
 int	nres = 0;
-
-#ifndef BSD
-#define  index		strchr
-#endif
 
 jmp_buf  env;
 int  recover = 0;
@@ -93,8 +89,8 @@ char  *argv[];
 			eclock++;
 			continue;
 		}
-		if ((cp = index(expr, '=')) != NULL ||
-				(cp = index(expr, ':')) != NULL) {
+		if ((cp = strchr(expr, '=')) != NULL ||
+				(cp = strchr(expr, ':')) != NULL) {
 			if (cp[1])
 				scompile(expr, NULL, 0);
 			else if (*cp == '=') {

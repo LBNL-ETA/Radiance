@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.40 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.41 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -7,9 +7,10 @@ static const char	RCSid[] = "$Id: rv2.c,v 2.40 2003/06/05 19:29:34 schorsch Exp 
  *  External symbols declared in rpaint.h
  */
 
-#include  <ctype.h>
-
 #include "copyright.h"
+
+#include  <ctype.h>
+#include  <string.h>
 
 #include  "platform.h"
 #include  "ray.h"
@@ -463,10 +464,10 @@ void  *p;
 			(*dev->comout)(buf);
 			(*dev->comin)(buf, NULL);
 			if (buf[0] == '\0' ||
-					index("yY+1tTnN-0fF", buf[0]) == NULL)
+					strchr("yY+1tTnN-0fF", buf[0]) == NULL)
 				return(0);
 		}
-		ptr->i = index("yY+1tT", buf[0]) != NULL;
+		ptr->i = strchr("yY+1tT", buf[0]) != NULL;
 		return(1);
 	case 'C':			/* color */
 		if (sscanf(str, "%lf %lf %lf", &d0, &d1, &d2) != 3) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pixar.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ra_pixar.c,v 2.3 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /* ra_pixar.c */
 /*
@@ -18,6 +18,7 @@ static const char	RCSid[] = "$Id: ra_pixar.c,v 2.2 2003/02/22 02:07:27 greg Exp 
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include  <time.h>
 
@@ -113,7 +114,7 @@ char			*outfile;
       perror("malloc");
       exit(1);
    }
-   bzero(pixar_scanline,width*sizeof(RGBAPixelType));
+   memset(pixar_scanline, '\0', width*sizeof(RGBAPixelType));
 
    PicSetForce(1);
    PicSetPsize(width,height);

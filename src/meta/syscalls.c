@@ -1,10 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: syscalls.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: syscalls.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  System calls for meta-file routines
  */
 
+#ifdef _WIN32
+  #include <process.h> /* getpid() */
+#endif
 
 #include  "meta.h"
 
@@ -39,7 +42,7 @@ char  *mode;
 
 {
     char  *mdir, stemp[MAXFNAME];
-#if  UNIX || MAC
+#if  UNIX || MAC || _WIN32
     char  *getenv();
 
     if ((mdir = getenv("MDIR")) == NULL)

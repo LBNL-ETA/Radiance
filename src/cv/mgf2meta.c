@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2meta.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.7 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: mgf2meta.c,v 2.6 2003/02/22 02:07:23 greg Exp 
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "random.h"
 #include "mgflib/parser.h"
@@ -111,11 +112,7 @@ short	hshtab[HTBLSIZ][4];		/* done line segments */
 
 newlayer()				/* start a new layer */
 {
-#ifdef BSD
-	bzero((char *)hshtab, sizeof(hshtab));
-#else
-	(void)memset((char *)hshtab, 0, sizeof(hshtab));
-#endif
+	(void)memset((char *)hshtab, '\0', sizeof(hshtab));
 	if (++layer >= 16) {
 		mendpage();
 		layer = 0;

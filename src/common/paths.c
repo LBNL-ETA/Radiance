@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: paths.c,v 2.2 2003/06/26 00:58:09 schorsch Exp $";
+static const char RCSid[] = "$Id: paths.c,v 2.3 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Find a writeable tempfile directory.
@@ -104,7 +104,7 @@ append_filepath(char *s1, char *s2, size_t len)
 static char *
 prepare_tmpname(char *s, size_t len, char *templ)
 {
-	static char lp[PATH_MAX] = "\0"; /* remember what we found last time */
+	static char lp[PATH_MAX] = "\0";
 	char *ts = NULL;
 
 	if (s == NULL) { /* return our static string */
@@ -143,7 +143,7 @@ temp_filename(char *s, size_t len, char *templ)
 /* WARNING: On Windows, there's a maximum of 27 unique names within
             one process for the same template. */
 int
-temp_file(char *s, size_t len, char *templ)
+temp_fd(char *s, size_t len, char *templ)
 {
 	char *ts = NULL;
 
@@ -152,10 +152,19 @@ temp_file(char *s, size_t len, char *templ)
 #ifdef _WIN32
 	ts = mktemp(ts);
 	if (ts == NULL) return -1;
-	return fopen(ts, "r+b"); /* XXX des "b" need to be an option? */
+	return open(ts, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 #else
 	return mkstemp(ts);
 #endif
+}
+
+/* As above, but returns a file pointer instead of a descriptor */
+FILE *
+temp_fp(char *s, size_t len, char *templ)
+{
+	int fd = temp_file(s, len, templ);
+	if (fd < 0) return NULL;
+	return fdopen(fd, "w+");
 }
 
 

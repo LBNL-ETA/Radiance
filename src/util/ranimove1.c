@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.3 2003/06/05 19:29:35 schorsch Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.4 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -10,6 +10,8 @@ static const char	RCSid[] = "$Id: ranimove1.c,v 3.3 2003/06/05 19:29:35 schorsch
  */
 
 #include "copyright.h"
+
+#include <string.h>
 
 #include "platform.h"
 #include "ranimove.h"
@@ -139,8 +141,8 @@ next_frame()			/* prepare next frame buffer */
 		fp = zprev; zprev = zbuffer; zbuffer = fp;
 		op = oprev; oprev = obuffer; obuffer = op;
 		bp = aprev; aprev = abuffer; abuffer = bp;
-		bzero(abuffer, sizeof(BYTE)*hres*vres);
-		bzero(sbuffer, sizeof(BYTE)*hres*vres);
+		memset(abuffer, '\0', sizeof(BYTE)*hres*vres);
+		memset(sbuffer, '\0', sizeof(BYTE)*hres*vres);
 		frm_stop += rtperfrm;
 	}
 	cerrmap = NULL;
@@ -757,8 +759,8 @@ write_map(cerrmap, "outcmap.pic");
 		int	n2;
 		int	cnt;
 					/* sum in motion streaks */
-		bzero(outbuffer, sizeof(COLOR)*hres*vres);
-		bzero(wbuffer, sizeof(float)*hres*vres);
+		memset(outbuffer, '\0', sizeof(COLOR)*hres*vres);
+		memset(wbuffer, '\0', sizeof(float)*hres*vres);
 		for (y = vres; y--; )
 		    for (x = hres; x--; ) {
 			n = fndx(x, y);

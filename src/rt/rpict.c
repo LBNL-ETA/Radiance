@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id";
 
 #include  <sys/types.h>
 
-#ifndef NIX
+#ifndef NON_POSIX
 #ifdef BSD
 #include  <sys/time.h>
 #include  <sys/resource.h>
@@ -115,7 +115,7 @@ void  report();
 
 double	pixvalue();
 
-#ifdef NIX
+#ifdef RHAS_ACCESS
 #define  file_exists(f)	(access(f,F_OK)==0)
 #else
 #include  <sys/types.h>
@@ -137,7 +137,7 @@ int  code;
 {
 	if (code)			/* report status */
 		report();
-#ifndef NIX
+#ifndef NON_POSIX
 	headclean();			/* delete header file */
 	pfclean();			/* clean up persist files */
 #endif
@@ -145,7 +145,7 @@ int  code;
 }
 
 
-#ifndef NIX
+#ifndef NON_POSIX
 void
 report()		/* report progress */
 {

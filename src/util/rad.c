@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.64 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.65 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -74,10 +74,10 @@ VARIABLE	vv[] = {		/* variable-value pairs */
 };
 
 				/* overture calculation file */
-#ifdef NIX
-char	overfile[] = "overture.unf";
+#ifdef NULL_DEVICE
+char	overfile[] = NULL_DEVICE;
 #else
-char	overfile[] = "/dev/null";
+char	overfile[] = "overture.unf";
 #endif
 
 extern time_t	time();
@@ -106,7 +106,7 @@ int	overture = 0;		/* overture calculation needed */
 char	*progname;		/* global argv[0] */
 char	*rifname;		/* global rad input file name */
 
-char	radname[MAXPATH];	/* root Radiance file name */
+char	radname[PATH_MAX];	/* root Radiance file name */
 
 
 main(argc, argv)
@@ -210,12 +210,12 @@ time_t
 checklast(fnames)			/* check files and find most recent */
 register char	*fnames;
 {
-	char	thisfile[MAXPATH];
+	char	thisfile[PATH_MAX];
 	time_t	thisdate, lastdate = 0;
 
 	if (fnames == NULL)
 		return(0);
-	while ((fnames = nextword(thisfile, MAXPATH, fnames)) != NULL) {
+	while ((fnames = nextword(thisfile, PATH_MAX, fnames)) != NULL) {
 		if (thisfile[0] == '!' ||
 				(thisfile[0] == '\\' && thisfile[1] == '!'))
 			continue;
@@ -233,7 +233,6 @@ newfname(orig, pred)		/* create modified file name */
 char	*orig;
 int	pred;
 {
-	extern char	*rindex();
 	register char	*cp;
 	register int	n;
 	int	suffix;
@@ -399,7 +398,7 @@ setdefaults()			/* set default values for unassigned var's */
 oconv()				/* run oconv and mkillum if necessary */
 {
 	static char	illumtmp[] = "ilXXXXXX";
-	char	combuf[1024], ocopts[64], mkopts[64];
+	char	combuf[PATH_MAX], ocopts[64], mkopts[64];
 
 	oconvopts(ocopts);		/* get options */
 	if (octreedate < scenedate) {	/* check date on original octree */
@@ -1064,7 +1063,7 @@ rview(opts, po)				/* run rview with first view */
 char	*opts, *po;
 {
 	char	*vw;
-	char	combuf[512];
+	char	combuf[PATH_MAX];
 					/* build command */
 	if (touchonly || (vw = getview(0, NULL)) == NULL)
 		return;
@@ -1086,9 +1085,9 @@ char	*opts, *po;
 rpict(opts, po)				/* run rpict and pfilt for each view */
 char	*opts, *po;
 {
-	char	combuf[1024];
-	char	rawfile[MAXPATH], picfile[MAXPATH];
-	char	zopt[MAXPATH+4], rep[MAXPATH+16], res[32];
+	char	combuf[PATH_MAX];
+	char	rawfile[PATH_MAX], picfile[PATH_MAX];
+	char	zopt[PATH_MAX+4], rep[PATH_MAX+16], res[32];
 	char	pfopts[128];
 	char	vs[32], *vw;
 	int	vn, mult;
@@ -1177,7 +1176,7 @@ char	*opts, *po;
 						progname, vs);
 					quit(1);
 				}
-#ifdef NIX
+#ifndef NULL_DEVICE
 				rmfile(overfile);
 #endif
 			}

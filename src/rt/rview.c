@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.19 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.20 2003/06/30 14:59:13 schorsch Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -9,13 +9,13 @@ static const char	RCSid[] = "$Id: rview.c,v 2.19 2003/02/25 02:47:23 greg Exp $"
 
 #include "copyright.h"
 
-#include  "ray.h"
+#include  <signal.h>
+#include  <ctype.h>
 
+#include  "platform.h"
+#include  "ray.h"
 #include  "rpaint.h"
 
-#include  <signal.h>
-
-#include  <ctype.h>
 
 CUBE  thescene;				/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
@@ -121,7 +121,7 @@ char  *dname;
 				error(USER, errmsg);
 			} else
 				return;
-#ifndef NIX						   
+#ifndef RHAS_FORK_EXEC /* XXX otherwise we do nothing? */
 						/* not there, try exec */
 	if ((dev = comm_init(dname, id)) == NULL) {
 		sprintf(errmsg, "cannot start device \"%s\"", dname);

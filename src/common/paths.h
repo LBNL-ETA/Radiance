@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.15 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.16 2003/06/30 14:59:11 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -8,16 +8,12 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _WIN32
-  #include <io.h>
-#else /* _WIN32 */
-  #include <unistd.h>
-  #include <sys/param.h>
-#endif /* _WIN32 */
 
 #ifdef _WIN32
+  #include <io.h>
 
   #define access _access
   #define PATH_MAX _MAX_PATH
@@ -32,7 +28,7 @@ extern "C" {
   #define CASEDIRSEP	case '/': case '\\'
   #define PATHSEP		';'
   #define CURDIR		'.'
-  #define MAXPATH		512 /* XXX obsoleted by posix PATH_MAX */
+  /*#define MAXPATH		512*/ /* obsoleted by posix PATH_MAX */
   #define DEFAULT_TEMPDIRS {"C:/TMP", "C:/TEMP", ".", NULL}
   #define TEMPLATE	"rtXXXXXX"
   #define TEMPLEN		8
@@ -49,9 +45,16 @@ extern "C" {
   #endif
 extern char  *fixargv0();
 
-#else
-  #ifndef PATH_MAX /* doesn't implement posix? */
-    #define PATH_MAX 512 /* quite conservative (I think...) */
+#else /* everything but Windows */
+  #include <unistd.h>
+  #include <sys/param.h>
+
+  #define RMAX_PATH_MAX 4096 /* our own maximum */
+  #ifndef PATH_MAX
+    #define PATH_MAX 512
+  #elif PATH_MAX > RMAX_PATH_MAX /* the OS is exaggerating */
+    #undef PATH_MAX
+    #define PATH_MAX RMAX_PATH_MAX
   #endif
 
   #ifdef AMIGA
@@ -60,7 +63,7 @@ extern char  *fixargv0();
     #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
     #define PATHSEP		';'
 	#define CURDIR		'.'
-    #define MAXPATH		128
+    /*#define MAXPATH		128*/ /* obsoleted by posix PATH_MAX */
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
     #define TEMPLATE	"/tmp/rtXXXXXX"
     #define TEMPLEN		13
@@ -72,11 +75,15 @@ extern char  *fixargv0();
 
   #else
 
+    /* posix */
+
+	/* this is defined as _PATH_DEVNULL in /usr/include/paths.h on Linux */
+	#define NULL_DEVICE	"/dev/null"
     #define DIRSEP		'/'
     #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
     #define PATHSEP		':'
 	#define CURDIR		'.'
-    #define MAXPATH		256
+    /*#define MAXPATH		256*/ /* obsoleted by posix PATH_MAX */
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
     #define TEMPLATE	"/usr/tmp/rtXXXXXX"
     #define TEMPLEN		17
@@ -96,15 +103,6 @@ extern char  *fixargv0();
   #define CASEDIRSEP	case DIRSEP
 #endif
 
-extern char  *mktemp(), *getenv();
-
-#ifdef BSD
-extern char  *getwd();
-#else
-extern char  *getcwd();
-#define  getwd(p)	getcwd(p, sizeof(p))
-#endif
-
 
 /* Find a writeable directory for temporary files */
 /* If s is NULL, we return a static string */
@@ -120,7 +118,10 @@ extern char *temp_filename(char *s, size_t len, char *templ);
 /* Same as above, but also open the file and return the descriptor */
 /* This one is supposed to protect against race conditions on unix */
 /* WARNING: On Windows, there's no protection against race conditions */
-extern int temp_file(char *s, size_t len, char *templ);
+extern int temp_fd(char *s, size_t len, char *templ);
+
+/* Same as above, but return a file pointer instead of a descriptor */
+extern FILE *temp_fp(char *s, size_t len, char *templ);
 
 /* Concatenate two strings, leaving exactly one DIRSEP in between */
 extern char *append_filepath(char *s1, char *s2, size_t len);

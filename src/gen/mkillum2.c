@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.10 2003/06/26 00:58:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.11 2003/06/30 14:59:11 schorsch Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
  */
+
+#include <string.h>
 
 #include  "mkillum.h"
 #include  "face.h"
@@ -297,7 +299,7 @@ register struct rtproc  *rt;
 
 	if (rt->nrays <= 0)
 		return;
-	bzero(rt->buf+6*rt->nrays, 6*sizeof(float));
+	memset(rt->buf+6*rt->nrays, '\0', 6*sizeof(float));
 	errno = 0;
 	if ( process(&(rt->pd), (char *)rt->buf, (char *)rt->buf,
 			3*sizeof(float)*(rt->nrays+1),

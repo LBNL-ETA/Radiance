@@ -11,12 +11,15 @@ static const char RCSid[] = "$Id";
 
 #include "copyright.h"
 
-#include "ranimove.h"
 #include <time.h>
 #ifndef _WIN32
   #include <sys/time.h>
 #endif
 #include <ctype.h>
+#include <string.h>
+
+#include "paths.h"
+#include "ranimove.h"
 
 int		NVARS = NV_INIT; /* total number of variables */
 
@@ -244,7 +247,7 @@ setdefaults()			/* set default values */
 	setrendparams(lorendoptf, vval(LOWQ));
 	ray_save(&lorendparams);
 	curparams = &lorendparams;
-	twolevels = bcmp(&lorendparams, &hirendparams, sizeof(RAYPARAMS));
+	twolevels = memcmp(&lorendparams, &hirendparams, sizeof(RAYPARAMS));
 }
 
 
@@ -385,7 +388,7 @@ char	*rfargs;
 			pippt = NULL;
 		}
 	if (pippt != NULL)
-		strcpy(pippt, "> /dev/null");	/* nothing to match */
+		strcpy(pippt, "> " NULL_DEVICE);	/* nothing to match */
 	else {
 		strcpy(cp, ")[ \t]*=' > ranimove.var");
 		cp += 11;		/* point to file name */

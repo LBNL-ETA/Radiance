@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.15 2003/02/25 00:26:05 greg Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.16 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -8,6 +8,8 @@ static const char RCSid[] = "$Id: pf3.c,v 2.15 2003/02/25 00:26:05 greg Exp $";
  */
 
 #include  "standard.h"
+
+#include  <string.h>
 
 #include  "color.h"
 
@@ -190,8 +192,8 @@ int  ccent, rcent;
 	register int  c, x;
 	register float  *gscan;
 					/* compute ring sums */
-	bzero((char *)ringsum, (orad+1)*sizeof(float));
-	bzero((char *)ringwt, (orad+1)*sizeof(short));
+	memset((char *)ringsum, '\0', (orad+1)*sizeof(float));
+	memset((char *)ringwt, '\0', (orad+1)*sizeof(short));
 	for (r = -orad; r <= orad; r++) {
 		if (rcent+r < 0) continue;
 		if (rcent+r >= nrows) break;

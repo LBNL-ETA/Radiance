@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.13 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.14 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: rholo2l.c,v 3.13 2003/06/26 00:58:10 schorsch 
 
 #include <signal.h>
 #include <sys/time.h>
+#include <string.h>
 
 #include "rholo.h"
 #include "random.h"
@@ -136,7 +137,7 @@ register PACKET	*p;
 				/* write out the packet */
 	packrays(rtbuf, p);
 	if ((n = p->nr) < RPACKSIZ)	/* add flush block? */
-		bzero((char *)(rtbuf+6*n++), 6*sizeof(float));
+		memset((char *)(rtbuf+6*n++), '\0', 6*sizeof(float));
 	if (writebuf(rtpd[pn].w, (char *)rtbuf, 6*sizeof(float)*n) < 0)
 		error(SYSTEM, "write error in queue_packet");
 	p->next = NULL;

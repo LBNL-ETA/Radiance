@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_qtree.c,v 3.16 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: sm_qtree.c,v 3.17 2003/06/30 14:59:12 schorsch Exp $";
 #endif
 /*
 *  sm_qtree.c: adapted from octree.c from radiance code
@@ -9,6 +9,8 @@ static const char	RCSid[] = "$Id: sm_qtree.c,v 3.16 2003/06/20 00:25:49 greg Exp
  *
  *     7/28/85
  */
+
+#include <string.h>
 
 #include "standard.h"
 #include "sm_flag.h"
@@ -68,7 +70,8 @@ qtClearAllFlags()		/* clear all quadtree branch flags */
     return;
   
   /* Clear the node flags*/
-  bzero((char *)quad_flag, (QT_BLOCK(treetop-4)+1)*((QT_BLOCK_SIZE+7)>>3));
+  memset((char *)quad_flag, '\0',
+		  (QT_BLOCK(treetop-4)+1)*((QT_BLOCK_SIZE+7)>>3));
   /* Clear set flags */
   qtclearsetflags();
 }
