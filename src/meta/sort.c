@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.3 2003/06/10 14:26:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.4 2003/06/10 14:51:15 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
@@ -286,7 +286,7 @@ int  lvl, int num
 		temp_directory(pathbuf, sizeof(pathbuf));
 		psiz = strlen(pathbuf);
 	}
-	snprintf(fnbuf, sizeof(pathbuf, psiz),
+	snprintf(fnbuf, sizeof(pathbuf)-psiz,
 			"%s/S%d%c%d", pathbuf, getpid(), lvl+'A', num);
     /*sprintf(fnbuf, "%sS%d%c%d", TDIR, getpid(), lvl+'A', num);*/
 
