@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.6 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.7 2003/06/30 19:04:29 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -19,7 +19,6 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
 			/* flags for scanline ordering */
 #define  XDECR			1
 #define  YDECR			2

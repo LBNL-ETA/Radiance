@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.8 2003/03/10 17:13:29 greg Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.9 2003/06/30 19:04:29 greg Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: colrops.c,v 2.8 2003/03/10 17:13:29 greg Exp $
 
 #include "copyright.h"
 
+#include <stdio.h>
 #include <math.h>
 #include "color.h"
 

@@ -1,8 +1,8 @@
-/* RCSid $Id: view.h,v 2.11 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: view.h,v 2.12 2003/06/30 19:04:29 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
- *  Include after fvect.h
+ *  Include after stdio.h and fvect.h
  *  Includes resolu.h
  */
 #ifndef _RAD_VIEW_H_

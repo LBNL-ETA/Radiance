@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biggerlib.c,v 3.2 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: biggerlib.c,v 3.3 2003/06/30 19:04:29 greg Exp $";
 #endif
 /*
  *  biggerlib.c - functions for an even bigger library.
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: biggerlib.c,v 3.2 2003/06/07 12:50:20 schorsch
  *   10/2/86
  */
 
+#include <stdio.h>
 #include <math.h>
 
 #include "calcomp.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.12 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.13 2003/06/30 19:04:29 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -10,8 +10,9 @@ static const char	RCSid[] = "$Id: spec_rgb.c,v 2.12 2003/02/25 02:47:22 greg Exp
 
 #include "copyright.h"
 
-#include "color.h"
+#include <stdio.h>
 #include <string.h>
+#include "color.h"
 
 #define CEPS	1e-4			/* color epsilon */
 

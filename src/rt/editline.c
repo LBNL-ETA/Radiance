@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: editline.c,v 2.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: editline.c,v 2.6 2003/06/30 19:04:29 greg Exp $";
 #endif
 /*
  *  editline.c - routine for editing raw input for rview.
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: editline.c,v 2.5 2003/02/25 02:47:22 greg Exp 
  */
 
 #include "copyright.h"
+
+#include <stdio.h>
 
 #include "color.h"
 
