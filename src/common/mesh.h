@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.12 2004/01/30 00:08:31 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.13 2004/12/03 18:36:17 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -30,10 +30,10 @@ extern "C" {
  *
  * Vertex ID's are encoded using the bottom 8 bits of a 4-byte integer
  * to index a vertex in a patch indicated by the 22 bits above (8-29).
- * For triangle ID's, the top 22 bits (10-31) indicate the patch, and
- * the bit 9 (0x200) indicates whether the triangle joins patches.
+ * For triangle ID's, the top 22 bits (10-31) indicate the parent patch,
+ * and the 10th bit (0x200) indicates whether the triangle joins patches.
  * If not, then the bottom 9 bits index into the local PTri array.
- * If it's a joiner, then the 8th bit indicates whether the triangle joins
+ * If it's a joiner, then the 9th bit indicates whether the triangle joins
  * two patches, in which case the bottom 8 bits index the PJoin2 array.
  * Otherwise, the bottom 8 bits index the PJoin1 array.
  *
@@ -43,7 +43,8 @@ extern "C" {
  * a lot of effort, but it can reduce mesh storage by a factor of 3
  * or more.  This is important, as the whole point is to model very
  * complicated geometry with this structure, and memory is the main
- * limitation.
+ * limitation.  (This representation is so efficient, that the octree
+ * structure ends up dominating memory for most compiled meshes.)
  */
 
 /* A triangle mesh patch */
@@ -81,7 +82,7 @@ typedef struct mesh {
 	RREAL		uvlim[2][2];	/* local coordinate extrema */
 	OBJECT		mat0;		/* base material index */
 	OBJECT		nmats;		/* number of materials */
-	MESHPATCH	*patch;		/* mesh patch list */
+	MESHPATCH	*patch;		/* allocated mesh patch array */
 	int		npatches;	/* number of mesh patches */
 	OBJREC		*pseudo;	/* mesh pseudo objects */
 	LUTAB		lut;		/* vertex lookup table */
