@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writemesh.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
+static const char RCSid[] = "$Id: writemesh.c,v 2.6 2004/04/29 14:36:49 greg Exp $";
 #endif
 /*
  *  Routines for writing compiled mesh to a file stream
@@ -10,6 +10,9 @@ static const char RCSid[] = "$Id: writemesh.c,v 2.5 2004/03/27 12:41:45 schorsch
 #include  "object.h"
 #include  "mesh.h"
 
+#ifdef putc_unlocked		/* avoid horrendous overhead of flockfile */
+#define putc    putc_unlocked
+#endif
 
 static void putfullnode(OCTREE fn, FILE *fp);
 static void puttree(OCTREE ot, FILE *fp);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writeoct.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
+static const char RCSid[] = "$Id: writeoct.c,v 2.6 2004/04/29 14:36:49 greg Exp $";
 #endif
 /*
  *  writeoct.c - routines for writing octree information to stdout.
@@ -13,6 +13,9 @@ static const char RCSid[] = "$Id: writeoct.c,v 2.5 2004/03/27 12:41:45 schorsch 
 #include  "object.h"
 #include  "oconv.h"
 
+#ifdef putc_unlocked		/* avoid horrendous overhead of flockfile */
+#define putc    putc_unlocked
+#endif
 
 static void oputstr(char *s);
 static void putfullnode(OCTREE fn);
