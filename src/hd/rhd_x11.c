@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.39 2005/01/21 00:52:59 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.40 2005/02/08 01:03:27 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -651,7 +651,7 @@ getframe(				/* get focus frame */
 	midy = (starty + endy) >> 1;
 					/* set focus distance */
 	if ((li = qtFindLeaf(midx, midy)) < 0)
-		return(0);		/* not on window */
+		return;			/* not on window */
 	VCOPY(v1, qtL.wp[li]);
 	odev.v.vdist = sqrt(dist2(odev.v.vp, v1));
 					/* set frame for rendering */
