@@ -13,9 +13,6 @@ def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 warp3d = env.Object(source="warp3d.c")
 clrtab = env.Object(source="clrtab.c")
 neuclrtab = env.Object(source="neuclrtab.c")
-ciq = env.Object(source="ciq.c")
-cut = env.Object(source="cut.c")
-closest = env.Object(source="closest.c")
 
 # standard targets
 PROGS = (
@@ -26,6 +23,8 @@ PROGS = (
 	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtcont','rtmem','rterror']),
 ('pfilt',    Split('pfilt.c pf2.c pf3.c'),
 	['rtlamps','rtpic','rtio','rtpath','rtargs','rtmath']),
+('pcwarp',   ['pcwarp.c', warp3d], 	 
+	['rtpic','rtio','rtcont','rtmem','rterror']),
 ('pvalue',   ['pvalue.c'],    ['rtpic','rtio','rtargs','rtmath']),
 ('pcompos',  ['pcompos.c'],   ['rtpic','rtproc','rtpath','rtio','rterror']),
 ('psign',    ['psign.c'],

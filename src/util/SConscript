@@ -9,14 +9,12 @@ progs = []
 def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
 def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 
-setscan = env.Object(source='setscan.c')
 Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 
 # standard targets
 PROGS = [
-('findglare', Split('findglare.c glareval.c glaresrc.c')+[setscan],
+('findglare', Split('findglare.c glareval.c glaresrc.c setscan.c'),
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem','rterror']),
-#('contour',   Split('contour.c'),  ['rtmath']), # XXX what is this?
 ('glarendx',  Split('glarendx.c'), ['rtpic','rtio','rtargs','rtmath']),
 ('vwright',   Split('vwright.c'),  ['rtpic','rtio','rtargs','rtmath']),
 ('vwrays',    Split('vwrays.c'),   ['rtpic','rtio','rtargs','rtmath']),

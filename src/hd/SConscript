@@ -23,8 +23,6 @@ PROGS = (
 	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
 ('rhinfo', Split('rhinfo.c') + [holofile, holo],
 	['rtio','rtproc', 'rtmath','rterror']),
-#('genrhenv', Split('genrhenv.c') + [holofile, holo],
-# []), # XXX broken
 ('genrhgrid', Split('genrhgrid.c') + [holofile, holo],
  ['rtio','rtmath','rtproc','rterror']),
 )
@@ -74,31 +72,22 @@ if env.has_key('X11INCLUDE'):
 
 	if env.has_key('OGL'):
 		rgllibs = ['rgl','rtscene','rtpath']
-		# XXX There's a BITS(x) macro missing in sm_geom.h
-		#sm_common_s = Split('''sm_samp.c sm_qtree.c sm_stree.c sm_geom.c
-		#		sm_list.c sm_del.c sm_ogl.c sm_usets.c sm.c''')
-		#sm_common = map(lambda s:xenv.Object(source=s), sm_common_s)
 		ogl_common_s = Split('rhd_odraw.c rhd_geom.c')
 		ogl_common = map(lambda s:xenv.Object(source=s), ogl_common_s)
 		rhdobj = xenv.Object(source='rhdobj.c')
 
 		GLHDI = (
+			# glx1h
 			('glx1', ['rhd_qtree2c.c', rhd_qtree],
 			 dlibs + ['GLU','GL','X11'] + mlib,
 			 'rhd_glx1', 'rhd_glx1.c', ['-DNOSTEREO']),
 
-			#('glx',  sm_common,
-			# dlibs + ['GLU','GL','X11'] + mlib,
-			# 'rhd_glx0', 'rhd_glx.c', ['-DNOSTEREO']),
-
-			#('glxo', [rhdobj] + sm_common,
-			# rgllibs+dlibs+['GLU','GL','X11'] + mlib,
-			# 'rhd_glxo', 'rhd_glx.c', ['-DDOBJ', '-DNOSTEREO']),
-
+			# oglh
 			('ogl', ogl_common,
 			 rgllibs+dlibs+['GLU','GL','X11'] + mlib,
 			 'rhd_ogl0', 'rhd_ogl.c', ['-DNOSTEREO']),
 
+			# ogloh
 			('oglo', [rhdobj] + ogl_common,
 			 rgllibs+['rtproc']+dlibs+['GLU','GL','X11'] + mlib,
 			 'rhd_oglo', 'rhd_ogl.c', ['-DDOBJ', '-DNOSTEREO']),
@@ -108,18 +97,12 @@ if env.has_key('X11INCLUDE'):
 		if xenv['RAD_STEREO'] == '-DSTEREO':
 
 			GLSHDI = (
-				#('glxs',  sm_common,
-				# dlibs + ['GLU','GL','X11','Xext'] + mlib,
-				# 'rhd_glxs', 'rhd_glx.c' ['-DSTEREO']),
-
-				#('glxso', [rhdobj] + sm_common,
-				# rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
-				# 'rhd_glxo', 'rhd_glx.c' ['-DDOBJ', '-DSTEREO']),
-
+				# oglsh
 				('ogls', ogl_common,
 				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
 				 'rhd_ogls', 'rhd_ogl.c' ['-DSTEREO']),
 					
+				# oglsoh
 				('oglso', [rhdobj] + ogl_common,
 				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
 				 'rhd_oglso', 'rhd_ogl.c' ['-DDOBJ', '-DSTEREO']),
