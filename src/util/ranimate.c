@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.43 2003/10/27 10:32:06 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.44 2003/12/09 22:46:41 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -718,7 +718,6 @@ int	frame,
 VIEW	*vp
 )
 {
-	extern int	recover();
 	char	combuf[2048];
 	char	fname[128];
 
@@ -788,7 +787,7 @@ char	*vfn
 
 
 static int
-recover(int frame)				/* recover the specified frame */
+recover(int frame)			/* recover the specified frame */
 {
 	static int	*rfrm;		/* list of recovered frames */
 	static int	nrfrms = 0;
@@ -900,7 +899,6 @@ int	frame,
 int	rvr
 )
 {
-	extern int	frecover();
 	static int	iter = 0;
 	double	blurf;
 	int	nblur = getblur(&blurf);
