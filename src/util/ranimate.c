@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.32 2003/04/23 00:52:34 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.33 2003/05/25 20:51:10 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -971,7 +971,7 @@ int	rvr;
 		if (usepfilt)
 			sprintf(combuf+strlen(combuf), " %s", rresopt);
 		else
-			sprintf(combuf+strlen(combuf), "-a %s -e %s",
+			sprintf(combuf+strlen(combuf), " -a %s -e %s",
 					fresopt, ep);
 		sprintf(combuf+strlen(combuf), " %s.unf %s.zbf",
 				fnbefore, fnbefore);
