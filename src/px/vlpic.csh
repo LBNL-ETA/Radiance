@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: vlpic.csh,v 3.1 2003/02/22 02:07:28 greg Exp $
+# RCSid: $Id: vlpic.csh,v 3.2 2005/01/18 03:59:41 greg Exp $
 #
 # Compute falsecolor image of visibility level
 # using the wacky formulas of Werner Adrian.
@@ -17,7 +17,7 @@ while ($#argv > 1)
 		set tim="$argv[1]"
 		breaksw
 	default:
-		echo bad option "'$argv[1]'" >/dev/tty
+		echo bad option "'$argv[1]'"
 		exit 1
 	endsw
 	shift argv

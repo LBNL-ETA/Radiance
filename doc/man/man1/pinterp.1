@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pinterp.1,v 1.3 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: pinterp.1,v 1.4 2005/01/18 03:59:40 greg Exp $"
 .TH PINTERP 1 1/24/96 RADIANCE
 .SH NAME
 pinterp - interpolate/extrapolate view from pictures
@@ -183,8 +183,8 @@ This is similar to running
 multiple times and averaging the output together with a program like
 .I pcomb(1).
 This option is useful for simulating motion blur and depth of field.
-(See also
-.I pdfblur(1).)\0
+(See
+.I pmdblur(1).)\0
 The input views are reported in the information header of the output
 file, along with the averaged view.
 The picture dimensions computed from the first view will be the
@@ -236,5 +236,5 @@ pinterp -vf right.vf -ff -fr "-av .1 .1 .1 scene.oct" left.pic left.z > right.pi
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), pdfblur(1), pfilt(1), pmblur(1), rpict(1), ranimate(1),
-rtrace(1), rvu(1)
+getinfo(1), pdfblur(1), pfilt(1), pmblur(1), pmdblur(1), rpict(1),
+ranimate(1), rtrace(1), rvu(1)

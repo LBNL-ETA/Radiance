@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.47 2004/06/08 19:48:31 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.48 2005/01/18 03:59:41 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -37,33 +37,35 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.47 2004/06/08 19:48:31 greg Exp
 #define ANIMATE		0		/* animation command */
 #define ARCHIVE		1		/* archiving command */
 #define BASENAME	2		/* output image base name */
-#define DIRECTORY	3		/* working (sub)directory */
-#define DISKSPACE	4		/* how much disk space to use */
-#define END		5		/* ending frame number */
-#define EXPOSURE	6		/* how to compute exposure */
-#define HOST		7		/* rendering host machine */
-#define INTERP		8		/* # frames to interpolate */
-#define MBLUR		9		/* motion blur parameters */
-#define NEXTANIM	10		/* next animation file */
-#define OCTREE		11		/* octree file name */
-#define OVERSAMP	12		/* # times to oversample image */
-#define PFILT		13		/* pfilt options */
-#define PINTERP		14		/* pinterp options */
-#define RENDER		15		/* rendering options */
-#define RESOLUTION	16		/* desired final resolution */
-#define RIF		17		/* rad input file */
-#define RSH		18		/* remote shell script or program */
-#define RTRACE		19		/* use rtrace with pinterp? */
-#define START		20		/* starting frame number */
-#define TRANSFER	21		/* frame transfer command */
-#define VIEWFILE	22		/* animation frame views */
+#define DBLUR		3		/* depth of field blur */
+#define DIRECTORY	4		/* working (sub)directory */
+#define DISKSPACE	5		/* how much disk space to use */
+#define END		6		/* ending frame number */
+#define EXPOSURE	7		/* how to compute exposure */
+#define HOST		8		/* rendering host machine */
+#define INTERP		9		/* # frames to interpolate */
+#define MBLUR		10		/* motion blur parameters */
+#define NEXTANIM	11		/* next animation file */
+#define OCTREE		12		/* octree file name */
+#define OVERSAMP	13		/* # times to oversample image */
+#define PFILT		14		/* pfilt options */
+#define PINTERP		15		/* pinterp options */
+#define RENDER		16		/* rendering options */
+#define RESOLUTION	17		/* desired final resolution */
+#define RIF		18		/* rad input file */
+#define RSH		19		/* remote shell script or program */
+#define RTRACE		20		/* use rtrace with pinterp? */
+#define START		21		/* starting frame number */
+#define TRANSFER	22		/* frame transfer command */
+#define VIEWFILE	23		/* animation frame views */
 
-int	NVARS = 23;		/* total number of variables */
+int	NVARS = 24;		/* total number of variables */
 
 VARIABLE	vv[] = {		/* variable-value pairs */
 	{"ANIMATE",	2,	0,	NULL,	onevalue},
 	{"ARCHIVE",	2,	0,	NULL,	onevalue},
 	{"BASENAME",	3,	0,	NULL,	onevalue},
+	{"DBLUR",	2,	0,	NULL,	onevalue},
 	{"DIRECTORY",	3,	0,	NULL,	onevalue},
 	{"DISKSPACE",	3,	0,	NULL,	fltvalue},
 	{"END",		2,	0,	NULL,	intvalue},
@@ -129,7 +131,7 @@ static VIEW * getview(int n);
 
 static char * dirfile(char *df, register char *path);
 static char * getexp(int n);
-static int getblur(double *bf);
+static int getblur(double *mbf, double *dbf);
 static int getastat(void);
 static void getradfile(char *rfargs);
 static void badvalue(int vc);
@@ -567,7 +569,7 @@ animate(void)			/* run animation */
 	}
 					/* figure # frames per batch */
 	d1 = mult*xres*mult*yres*4;		/* space for orig. picture */
-	if ((i=vint(INTERP)) || getblur(NULL) > 1)
+	if ((i=vint(INTERP)) || getblur(NULL, NULL) > 1)
 		d1 += mult*xres*mult*yres*sizeof(float);	/* Z-buffer */
 	d2 = xres*yres*4;			/* space for final picture */
 	frames_batch = (i+1)*(vflt(DISKSPACE)*1048576.-d1)/(d1+i*d2);
@@ -740,8 +742,8 @@ int last,
 char	*vfn
 )
 {
-	double	blurf;
-	int	nblur = getblur(&blurf);
+	double	mblurf, dblurf;
+	int	nblur = getblur(&mblurf, &dblurf);
 	char	combuf[2048];
 	register char	*inspoint;
 	register int	i;
@@ -759,7 +761,9 @@ char	*vfn
 	inspoint = combuf;
 	while (*inspoint) inspoint++;
 	if (nblur) {
-		sprintf(inspoint, " -pm %.3f", blurf/nblur);
+		sprintf(inspoint, " -pm %.3f", mblurf/nblur);
+		while (*inspoint) inspoint++;
+		sprintf(inspoint, " -pd %.3f", dblurf/nblur);
 		while (*inspoint) inspoint++;
 	}
 	if (nblur > 1 || vint(INTERP)) {
@@ -793,8 +797,8 @@ recover(int frame)			/* recover the specified frame */
 {
 	static int	*rfrm;		/* list of recovered frames */
 	static int	nrfrms = 0;
-	double	blurf;
-	int	nblur = getblur(&blurf);
+	double	mblurf, dblurf;
+	int	nblur = getblur(&mblurf, &dblurf);
 	char	combuf[2048];
 	char	fname[128];
 	register char	*cp;
@@ -813,7 +817,9 @@ recover(int frame)			/* recover the specified frame */
 	cp = combuf;
 	while (*cp) cp++;
 	if (nblur) {
-		sprintf(cp, " -pm %.3f", blurf/nblur);
+		sprintf(cp, " -pm %.3f", mblurf/nblur);
+		while (*cp) cp++;
+		sprintf(cp, " -pd %.3f", dblurf/nblur);
 		while (*cp) cp++;
 	}
 	if (nblur > 1 || vint(INTERP)) {
@@ -902,8 +908,8 @@ int	rvr
 )
 {
 	static int	iter = 0;
-	double	blurf;
-	int	nblur = getblur(&blurf);
+	double	mblurf, dblurf;
+	int	nblur = getblur(&mblurf, &dblurf);
 	VIEW	*vp = getview(frame);
 	char	*ep = getexp(frame);
 	char	fnbefore[128], fnafter[128], *fbase;
@@ -962,7 +968,7 @@ int	rvr
 	if (usepinterp) {			/* using pinterp */
 		if (rvr == 2 && recover(frseq[1]))	/* recover after? */
 			return(1);
-		if (nblur > 1) {		/* with pmblur */
+		if (nblur > 1) {		/* with pdmblur */
 			sprintf(fname0, "%s/vw0%c", vval(DIRECTORY),
 					'a'+(iter%26));
 			sprintf(fname1, "%s/vw1%c", vval(DIRECTORY),
@@ -989,8 +995,8 @@ int	rvr
 				putc('\n', fp); fclose(fp);
 			}
 			sprintf(combuf,
-			"(pmblur %.3f %d %s %s; rm -f %s %s) | pinterp -B -a",
-					blurf, nblur,
+			"(pmdblur %.3f %.3f %d %s %s; rm -f %s %s) | pinterp -B -a",
+					mblurf, dblurf, nblur,
 					fname0, fname1, fname0, fname1);
 			iter++;
 		} else				/* no blurring */
@@ -1442,29 +1448,35 @@ register char	*path
 
 
 static int
-getblur(double *bf)		/* get # blur samples (and fraction) */
+getblur(double *mbf, double *dbf)	/* get # blur samples (and fraction) */
 {
-	double	blurf;
-	int	nblur;
+	double	mblurf, dblurf;
+	int	nmblur, ndblur;
 	char	*s;
-
-	if (!vdef(MBLUR)) {
-		if (bf != NULL)
-			*bf = 0.0;
-		return(0);
-	}
-	blurf = atof(vval(MBLUR));
-	if (blurf < 0.0)
-		blurf = 0.0;
-	if (bf != NULL)
-		*bf = blurf;
-	if (blurf <= FTINY)
-		return(0);
-	s = sskip(vval(MBLUR));
-	if (!*s)
-		return(DEF_NBLUR);
-	nblur = atoi(s);
-	if (nblur <= 0)
+					/* get motion blur */
+	if (!vdef(MBLUR) || (mblurf = atof(vval(MBLUR))) < 0.0)
+		mblurf = 0.0;
+	if (mbf != NULL)
+		*mbf = mblurf;
+	if (mblurf <= FTINY)
+		nmblur = 0;
+	else if (!*(s = sskip(vval(MBLUR))))
+		nmblur = DEF_NBLUR;
+	else if ((nmblur = atoi(s)) <= 0)
+		nmblur = 1;
+					/* get depth-of-field blur */
+	if (!vdef(DBLUR) || (dblurf = atof(vval(DBLUR))) < 0.0)
+		dblurf = 0.0;
+	if (dbf != NULL)
+		*dbf = dblurf;
+	if (dblurf <= FTINY)
+		ndblur = 0;
+	else if (!*(s = sskip(vval(DBLUR))))
+		ndblur = DEF_NBLUR;
+	else if ((ndblur = atoi(s)) <= 0)
+		ndblur = 1;
+	if ((nmblur == 1) & (ndblur == 1))
 		return(1);
-	return(nblur);
+					/* return combined samples */
+	return(nmblur + ndblur);
 }

@@ -1393,3 +1393,6 @@ Added -pd option to handle depth-of-field blur in rpict.  This requires
 that the view directon (-vd option) include focal distance information,
 which is now preserved by the various view file routines, and reported
 by the vwright command.
+
+Added DBLUR variable to ranimate and pmdblur script to handle simultaneous
+motion and depth-of-field blurring.

@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.10 2004/07/31 17:56:56 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.11 2005/01/18 03:59:41 greg Exp $
 #
 # Create false color image with legend
 #
@@ -89,7 +89,7 @@ while ($#argv > 0)
 		set ndivs="$argv[1]"
 		breaksw
 	default:
-		echo bad option "'$argv[1]'" >/dev/tty
+		echo bad option "'$argv[1]'"
 		exit 1
 	endsw
 	shift argv

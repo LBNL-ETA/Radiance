@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.41 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.42 2005/01/18 03:59:41 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -414,6 +414,7 @@ nextview(				/* get and set next view */
 		avgview.vdir[i] += ourview.vdir[i];
 		avgview.vup[i] += ourview.vup[i];
 	}
+	avgview.vdist += ourview.vdist;
 	avgview.horiz += ourview.horiz;
 	avgview.vert += ourview.vert;
 	avgview.hoff += ourview.hoff;
@@ -438,6 +439,7 @@ compavgview(void)				/* compute average view */
 		avgview.vdir[i] *= f;
 		avgview.vup[i] *= f;
 	}
+	avgview.vdist *= f;
 	avgview.horiz *= f;
 	avgview.vert *= f;
 	avgview.hoff *= f;
