@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.22 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.23 2004/01/02 11:42:01 schorsch Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -31,11 +31,11 @@ struct phead {
 };
 static int openholo(char *fname, int append);
 static void addray(FVECT ro, FVECT rd, double d, COLR cv);
-static int holheadline(char *s, int *hf);
+static gethfunc holheadline;
 static int bpcmp(const void *b1p, const void *b2p);
 static int addclump(HOLO *hp, int *bq, int nb);
 static void addholo(char *hdf);
-static int picheadline(char *s, struct phead *ph);
+static gethfunc picheadline;
 static void addpicz(char *pcf, char *zbf);
 
 
@@ -95,13 +95,14 @@ userr:
 #define H_OBST	02
 #define H_OBSF	04
 
-int
+static int
 holheadline(		/* check holodeck header line */
 	register char	*s,
-	int	*hf
+	void	*vhf
 )
 {
 	char	fmt[32];
+	int	*hf = vhf;
 
 	if (formatval(fmt, s)) {
 		if (strcmp(fmt, HOLOFMT))
@@ -142,7 +143,7 @@ openholo(		/* open existing holodeck file for i/o */
 		error(SYSTEM, errmsg);
 	}
 					/* check header and magic number */
-	if (getheader(fp, holheadline, (char *)&hflags) < 0 ||
+	if (getheader(fp, holheadline, &hflags) < 0 ||
 			hflags&H_BADF || getw(fp) != HOLOMAGIC) {
 		sprintf(errmsg, "file \"%s\" not in holodeck format", fname);
 		error(USER, errmsg);
@@ -285,13 +286,14 @@ addholo(			/* add a holodeck file */
 
 
 
-int
+static int
 picheadline(		/* process picture header line */
 	char	*s,
-	struct phead	*ph
+	void	*vph
 )
 {
 	char	fmt[32];
+	struct phead *ph = vph;
 
 	if (formatval(fmt, s)) {
 		ph->badfmt = strcmp(fmt, COLRFMT);
@@ -346,7 +348,7 @@ addpicz(		/* add a picture + depth-buffer */
 	phd.vw = stdview;
 	phd.expos = 1.0;
 	phd.badfmt = phd.gotview = phd.altprims = 0;
-	if (getheader(pfp, picheadline, (char *)&phd) < 0 ||
+	if (getheader(pfp, picheadline, &phd) < 0 ||
 			phd.badfmt || !fgetsresolu(&prs, pfp)) {
 		sprintf(errmsg, "bad format for picture file \"%s\"", pcf);
 		error(USER, errmsg);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.6 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.7 2004/01/02 11:42:37 schorsch Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: normtiff.c,v 3.6 2003/07/27 22:12:03 schorsch 
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
+
 #include "tiffio.h"
 #include "color.h"
 #include "tonemap.h"
@@ -44,10 +46,14 @@ extern PICTURE	*openpicture();
 
 #define closepicture(p)		(fclose((p)->fp),free((void *)(p)))
 
+static gethfunc headline;
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	PICTURE	*pin = NULL;
 	TIFF	*tin = NULL;
@@ -126,10 +132,11 @@ userr:
 }
 
 
-int
-headline(s, pp)				/* process line from header */
-char	*s;
-register PICTURE	*pp;
+static int
+headline(				/* process line from header */
+	char	*s,
+	void *pp
+)
 {
 	register char	*cp;
 
@@ -137,9 +144,9 @@ register PICTURE	*pp;
 		if (*cp & 0x80)
 			return(-1);	/* non-ascii in header */
 	if (isaspect(s))
-		pp->pa *= aspectval(s);
+		((PICTURE *)pp)->pa *= aspectval(s);
 	else
-		formatval(pp->fmt, s);
+		formatval(((PICTURE *)pp)->fmt, s);
 	return(0);
 }
 
@@ -170,7 +177,7 @@ char	*fname;
 		return(NULL);		/* serious error -- should exit? */
 	pp->fp = fp; pp->fmt[0] = '\0'; pp->pa = 1.;
 					/* load header */
-	if (getheader(fp, headline, (char *)pp) < 0) {
+	if (getheader(fp, headline, pp) < 0) {
 		closepicture(pp);
 		return(NULL);
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.25 2003/10/22 02:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.26 2004/01/02 11:43:42 schorsch Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -32,6 +32,8 @@ static const char	RCSid[] = "$Id: data.c,v 2.25 2003/10/22 02:06:35 greg Exp $";
 
 
 static DATARRAY	 *dtab[TABSIZ];		/* data array list */
+
+static gethfunc headaspect;
 
 
 DATARRAY *
@@ -138,16 +140,17 @@ scanerr:
 
 
 static int
-headaspect(s, iap)			/* check string for aspect ratio */
-char  *s;
-double  *iap;
+headaspect(			/* check string for aspect ratio */
+	char  *s,
+	void  *iap
+)
 {
 	char	fmt[32];
 
 	if (isaspect(s))
-		*iap *= aspectval(s);
+		*(double*)iap *= aspectval(s);
 	else if (formatval(fmt, s) && !globmatch(PICFMT, fmt))
-		*iap = 0.0;
+		*(double*)iap = 0.0;
 	return(0);
 }
 
@@ -187,7 +190,7 @@ char  *pname;
 	SET_FILE_BINARY(fp);
 						/* get dimensions */
 	inpaspect = 1.0;
-	getheader(fp, headaspect, (char *)&inpaspect);
+	getheader(fp, headaspect, &inpaspect);
 	if (inpaspect <= FTINY || !fgetsresolu(&inpres, fp))
 		goto readerr;
 	pp[0].nd = 2;
