@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.5 2003/11/14 17:31:24 schorsch Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -25,6 +25,7 @@ jmp_buf  env;
 int  recover = 0;
 
 
+int
 main(argc, argv)
 int  argc;
 char  *argv[];
@@ -116,6 +117,7 @@ char  *argv[];
 
 	recover = 0;
 	quit(0);
+	return 0; /* pro forma exit */
 }
 
 

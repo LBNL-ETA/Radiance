@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neat.c,v 1.3 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: neat.c,v 1.4 2003/11/14 17:31:24 schorsch Exp $";
 #endif
 /*
  *  neat.c - program to tidy up columns.
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: neat.c,v 1.3 2003/07/27 22:12:01 schorsch Exp 
 char  *format = "8.8";			/* default format */
 
 
+int
 main(argc, argv)
 int  argc;
 char  *argv[];

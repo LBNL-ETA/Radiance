@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.10 2003/11/06 05:39:33 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.11 2003/11/14 17:31:24 schorsch Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.10 2003/11/06 05:39:33 greg Exp $"
  */
 
 #include  <stdlib.h>
+#include  <fcntl.h>
 #include  <stdio.h>
 #include  <string.h>
 #include  <math.h>
@@ -218,6 +219,7 @@ eputs(" [-b][-l][-n][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o
 			execute(argv[i]);
 	
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 

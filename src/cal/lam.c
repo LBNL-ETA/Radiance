@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.3 2003/10/27 10:26:05 schorsch Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.4 2003/11/14 17:31:24 schorsch Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -24,6 +24,7 @@ int	nfiles;
 
 char	buf[MAXLINE];
 
+int
 main(argc, argv)
 int	argc;
 char	*argv[];

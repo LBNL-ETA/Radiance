@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ev.c,v 1.5 2003/10/14 16:46:20 greg Exp $";
+static const char	RCSid[] = "$Id: ev.c,v 1.6 2003/11/14 17:31:24 schorsch Exp $";
 #endif
 /*
  *  ev.c - program to evaluate expression arguments
@@ -15,6 +15,7 @@ static const char	RCSid[] = "$Id: ev.c,v 1.5 2003/10/14 16:46:20 greg Exp $";
 #include  "rterror.h"
 
 
+int
 main(argc, argv)
 int  argc;
 char  *argv[];
@@ -33,6 +34,7 @@ char  *argv[];
 		printf("%.9g\n", eval(argv[i]));
 
 	quit(errno ? 2 : 0);
+	return (errno ? 2 : 0); /* pro forma return */
 }
 
 
