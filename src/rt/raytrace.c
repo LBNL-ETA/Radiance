@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.42 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.43 2003/09/09 03:28:43 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -175,6 +175,7 @@ int  mod;
 		******/
 					/* hack for irradiance calculation */
 		if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
+				m->otype != MAT_CLIP &&
 				(ofun[m->otype].flags & (T_M|T_X))) {
 			if (irr_ignore(m->otype)) {
 #if  MAXLOOP

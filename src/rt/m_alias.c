@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.2 2003/07/21 22:30:19 schorsch Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.3 2003/09/09 03:28:43 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -40,6 +40,7 @@ RAY	*r;
 	arec = *objptr(aobj);
 					/* irradiance hack */
 	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
+			m->otype != MAT_CLIP &&
 			(ofun[arec.otype].flags & (T_M|T_X))) {
 		if (irr_ignore(arec.otype)) {
 			raytrans(r);
