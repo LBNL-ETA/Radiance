@@ -1,0 +1,12 @@
+{ RCSid $Id: rgb_ycc.cal,v 1.1 2004/11/25 14:44:57 greg Exp $ }
+{
+	Convert between RGB and YCbCr color spaces
+
+	Greg Ward	Sept. 2004
+}
+YCC2R(Y,Cb,Cr) : Y + 1.402*Cr;
+YCC2G(Y,Cb,Cr) : Y - 0.34413*Cb - 0.71438*Cr;
+YCC2B(Y,Cb,Cr) : Y + 1.772*Cb;
+RGB2Y(R,G,B) : 0.299*R + 0.587*G + 0.114*B;
+RGB2Cb(R,G,B) : -0.16874*R + -0.33126*G + 0.5*B;
+RGB2Cr(R,G,B) : 0.5*R + -0.41869*G + -0.08131*B;
