@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.3 2004/03/26 22:58:21 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.4 2004/03/26 23:30:05 schorsch Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -37,7 +37,7 @@ BMPheaderOK(const BMPHeader *hdr)
 {
 	if (!hdr)
 		return 0;
-	if ((hdr->width <= 0 | hdr->height <= 0))
+	if ((hdr->width <= 0) | (hdr->height <= 0))
 		return 0;
 	switch (hdr->bpp) {		/* check compression */
 	case 1:
@@ -47,15 +47,15 @@ BMPheaderOK(const BMPHeader *hdr)
 		break;
 	case 16:
 	case 32:
-		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_BITFIELDS))
+		if ((hdr->compr != BI_UNCOMPR) & (hdr->compr != BI_BITFIELDS))
 			return 0;
 		break;
 	case 4:
-		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_RLE4))
+		if ((hdr->compr != BI_UNCOMPR) & (hdr->compr != BI_RLE4))
 			return 0;
 		break;
 	case 8:
-		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_RLE8))
+		if ((hdr->compr != BI_UNCOMPR) & (hdr->compr != BI_RLE8))
 			return 0;
 		break;
 	default:
@@ -64,7 +64,7 @@ BMPheaderOK(const BMPHeader *hdr)
 	if (hdr->compr == BI_BITFIELDS && (BMPbitField(hdr)[0] &
 				BMPbitField(hdr)[1] & BMPbitField(hdr)[2]))
 		return 0;
-	if ((hdr->nColors < 0 | hdr->impColors < 0))
+	if ((hdr->nColors < 0) | (hdr->impColors < 0))
 		return 0;
 	if (hdr->impColors > hdr->nColors)
 		return 0;
@@ -74,7 +74,7 @@ BMPheaderOK(const BMPHeader *hdr)
 }
 
 					/* compute uncompressed scan size */
-#define getScanSiz(h)   ( (((h)->bpp*(h)->width+7 >>3) + 3) & ~03 )
+#define getScanSiz(h)   ( ((((h)->bpp*(h)->width+7) >>3) + 3) & ~03 )
 
 					/* get next byte from reader */
 #define rdbyte(c,br)    ((br)->fpos += (c=(*(br)->cget)((br)->c_data))!=EOF, c)
@@ -219,8 +219,8 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	if (br->scanline == NULL)
 		goto err;
 	br->yscan = -1;
-	if (seek != NULL && (br->hdr->compr == BI_RLE8 |
-					br->hdr->compr == BI_RLE4)) {
+	if (seek != NULL && ((br->hdr->compr == BI_RLE8) |
+					(br->hdr->compr == BI_RLE4))) {
 		BMPReader       *newbr = (BMPReader *)realloc((void *)br,
 						sizeof(BMPReader) +
 						sizeof(br->scanpos[0]) *
@@ -444,7 +444,7 @@ BMPdecodePixel(int i, const BMPReader *br)
 	case 8:
 		return br->hdr->palette[br->scanline[i]];
 	case 1:
-		return br->hdr->palette[br->scanline[i>>3]>>(7-i&7) & 1];
+		return br->hdr->palette[br->scanline[i>>3]>>((7-i)&7) & 1];
 	case 4:
 		return br->hdr->palette[br->scanline[i>>1]>>(i&1?4:0) & 0xf];
 	case 16:
@@ -626,9 +626,9 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 		return NULL;
 	if (!BMPheaderOK(hdr))
 		return NULL;
-	if ((hdr->bpp == 16 | hdr->compr == BI_RLE4))
+	if ((hdr->bpp == 16) | (hdr->compr == BI_RLE4))
 		return NULL;			/* unsupported */
-	if (seek == NULL && (hdr->compr == BI_RLE8 | hdr->compr == BI_RLE4))
+	if (seek == NULL && ((hdr->compr == BI_RLE8) | (hdr->compr == BI_RLE4)))
 		return NULL;
 						/* compute sizes */
 	hdrSiz = 2 + 6*4 + 2*2 + 6*4;
@@ -691,7 +691,7 @@ findNextRun(const int8 *bp, int len)
 {
 	int     pos, cnt;
 						/* look for run */
-	for (pos = 0; len > 0 & pos < 255; pos++, bp++, len--) {
+	for (pos = 0; (len > 0) & (pos < 255); pos++, bp++, len--) {
 		if (len < 5)			/* no hope left? */
 			continue;
 		cnt = 1;			/* else let's try it */
@@ -749,7 +749,7 @@ BMPwriteScanline(BMPWriter *bw)
 		if (n <= 0)			/* was that it? */
 			break;
 		val = *sp;			/* output run */
-		for (cnt = 1; --n > 0 & *++sp == val; cnt++)
+		for (cnt = 1; (--n > 0) & (*++sp == val); cnt++)
 			;
 		wrbyte(cnt, bw);
 		wrbyte(val, bw);
