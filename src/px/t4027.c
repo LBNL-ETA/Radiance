@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t4027.c,v 2.2 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: t4027.c,v 2.3 2004/01/02 12:46:13 schorsch Exp $";
 #endif
 /*
  *  t4027.c - program to dump pixel file to Tektronix 4027.
@@ -134,11 +134,12 @@ int  col;
 		{ 0, 0x44, 0xb2, 0xff },
 		{ 0, 0x22, 0x2d, 0xff }
 	};
-	static short  isset[64];
+	/* isset is a common bitmap related macro in <sys/param.h> */
+	static short  cisset[64];
 	int  pat;
 	register int  r, g, b;
 	
-	if (isset[col]) {
+	if (cisset[col]) {
 		printf("%cCOL P%d", COM, col);
 		return;
 	}
@@ -184,7 +185,7 @@ int  col;
 		printf(" C0");		/* white */
 		printpat(pat);
 	}
-	isset[col] = 1;
+	cisset[col] = 1;
 	printf("%cCOL P%d", COM, col);
 }
 
