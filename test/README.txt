@@ -14,6 +14,10 @@ we're restricted to test only complete programs, and not actual
 units (since PyUnit was designed to test Python units, not C).
 A C-level testing framework may be added later.
 
+There's no good way to automatically test GUI programs like
+rview. We have to rely on good human testers to check whether
+those work correctly or not.
+
 
 Requirements
 
@@ -72,8 +76,8 @@ How to report failures
 
 If any of the tests fail on your platform, please report your
 results (and as much ancilliary information about your system and
-Radiance version) to the radiance code development mailing list:
-   http://www.radiance-online.org/
+Radiance version as possible) to the radiance code development
+mailing list on http://www.radiance-online.org/
 The developers will then either try to fix the bug, or instruct
 you on how to refine your testing to get more information about
 what went wrong.
@@ -100,10 +104,6 @@ There are two classes of tests to be considered:
   series of rays against a surface under varying angles, in order
   to verify material behaviour under different parameters. Tests
   of this kind may require a custom script.
-
-There's no good way to automatically test GUI programs like
-rview. We have to rely on good human testers to check whether
-those work correctly or not.
 
 Contributed tests can be of two kinds. In the simplest case, you
 can contribute a small(!) set of test data, the command line(s)
