@@ -1277,3 +1277,6 @@ If that isn't enough, then there's probably no hope, anyway.
 
 Added -l option to obj2mesh to search for material files in library
 locations.
+
+Increased polygon vertex limit to 512 in obj2mesh and obj2rad and added
+warning if this limit is exceeded.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.22 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.23 2004/04/23 16:20:56 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -37,9 +37,9 @@ int	nvts;
 
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
-#define CHUNKSIZ	256	/* vertex allocation chunk size */
+#define CHUNKSIZ	1024	/* vertex allocation chunk size */
 
-#define MAXARG		64	/* maximum # arguments in a statement */
+#define MAXARG		512	/* maximum # arguments in a statement */
 
 				/* qualifiers */
 #define Q_MTL		0
@@ -310,8 +310,7 @@ getstmt(				/* read the next statement from fp */
 	FILE	*fp
 )
 {
-	extern char	*fgetline();
-	static char	sbuf[MAXARG*10];
+	static char	sbuf[MAXARG*16];
 	register char	*cp;
 	register int	i;
 
@@ -325,8 +324,14 @@ getstmt(				/* read the next statement from fp */
 					lineno++;
 				*cp++ = '\0';
 			}
-			if (!*cp || i >= MAXARG-1)
+			if (!*cp)
 				break;
+			if (i >= MAXARG-1) {
+				fprintf(stderr,
+			"warning: line %d: too many arguments (limit %d)\n",
+					lineno+1, MAXARG-1);
+				break;
+			}
 			av[i++] = cp;
 			while (*++cp && !isspace(*cp))
 				;
