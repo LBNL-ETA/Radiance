@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11findwind.c,v 2.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: x11findwind.c,v 2.6 2004/07/04 12:08:47 schorsch Exp $";
 #endif
 /*
  * find a window by its name under X
@@ -8,15 +8,18 @@ static const char	RCSid[] = "$Id: x11findwind.c,v 2.5 2003/02/25 02:47:22 greg E
 #include "copyright.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <X11/Xlib.h>
 
 
 Window
-xfindwind(dpy, win, name, depth)
-Display	*dpy;
-Window	win;
-char	*name;
-int	depth;
+xfindwind(
+	Display	*dpy,
+	Window	win,
+	char	*name,
+	int	depth
+)
 {
 	char	*nr;
 	Window	rr, pr, *cl;

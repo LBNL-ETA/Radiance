@@ -9,6 +9,7 @@ def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
 def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
 
 setscan = env.Object(source='setscan.c')
+Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 
 # standard targets
 PROGS = [
@@ -20,7 +21,7 @@ PROGS = [
 ('vwrays',    Split('vwrays.c'),   ['rtpic','rtio','rtargs','rtmath']),
 ('rad',       Split('rad.c'),
 	['rtpic','rtproc','rtpath','rtio','rtmath','rtargs','rtcont','rtmem','rterror']),
-('rpiece',    Split('rpiece.c Version.c'),
+('rpiece',    Split('rpiece.c') + [Version],
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
 ]
 if os.name == 'nt': # XXX should be set in a *.cfg file
@@ -68,8 +69,9 @@ if os.name != 'nt': # XXX pending replacement of fork() and friends
 if env.has_key('X11LIB'):
 	xlibp = env.get('LIBPATH',[]) + [env['X11LIB']]
 	xincl = env.get('CPPPATH',[]) + [env['X11INCLUDE']]
+	x11findwind = env.Object(source='../common/x11findwind.c') # XXX ../
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
-			source=Split('xglaresrc.c x11findwind.c'),
+			source=Split('xglaresrc.c') + [x11findwind],
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rtpic','rtmath','rtargs','rtio','X11']+ mlib)
 	Default(xglaresrc)

@@ -67,7 +67,9 @@ LIBFILES = Split('tmesh.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
 
 if env.has_key('OGL'):
-    RGL = Split('rglfile.c rglmat.c rgldomat.c rglsurf.c rglinst.c rglsrc.c')
-    librgl = env.StaticLibrary(target=radlib('rgl'), source=RGL)
-    Default(librgl)
+	oglincl = env.get('CPPPATH', []) + env.get('OGLINCLUDE', [])
+	RGL = Split('rglfile.c rglmat.c rgldomat.c rglsurf.c rglinst.c rglsrc.c')
+	librgl = env.StaticLibrary(target=radlib('rgl'), source=RGL,
+			CPPPATH=oglincl)
+	Default(librgl)
 

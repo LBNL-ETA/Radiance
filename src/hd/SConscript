@@ -9,7 +9,7 @@ mlib = env['RAD_MLIB']
 viewbeams = env.Object(source='viewbeams.c')
 holo = env.Object(source='holo.c')
 holofile = env.Object(source='holofile.c')
-Version = env.Object(source='Version.c')
+Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 
 
 # standard targets

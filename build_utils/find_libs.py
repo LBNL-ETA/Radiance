@@ -30,7 +30,18 @@ def find_gl(env):
 	conf = SConf(env)
 	if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
 		env['OGL'] = 1
-	env = conf.Finish()
+	elif env.has_key('X11INCLUDE'): # sometimes found there
+		incdir = env['X11INCLUDE']
+		libdir = env['X11LIB']
+		env.Append(CPPPATH=[incdir]) # add temporarily
+		#env.Append(LIBPATH=[libdir])
+		if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
+			env['OGL'] = 1
+			env.Replace(OGLINCLUDE=incdir)
+			env.Replace(OGLLIB=libdir)
+		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
+		#if libdir: env['LIBPATH'].remove(libdir)
+	conf.Finish()
 
 
 

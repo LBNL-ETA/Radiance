@@ -1,4 +1,5 @@
 import os
+from build_utils import vstamp
 
 Import('env') # inherit from parent
 
@@ -11,8 +12,6 @@ def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
 # custom compile flags
 dielectric = env.Object(source='dielectric.c',
 		CCFLAGS=env.get('CCFLAGS',[]) + ['-DDISPERSE'])
-# custom C file generation
-#env.CFile(target='Version.c', source='VERSION', env=build_radversion)
 
 duphead = env.Object(source="duphead.c")
 persist = env.Object(source="persist.c")
@@ -21,7 +20,7 @@ ambio = env.Object(source="ambio.c")
 
 # source and object dependencies
 RAY = Split('''ambcomp.c ambient.c freeobjmem.c initotypes.c preload.c
-		raytrace.c renderopts.c Version.c''') + [ambio]
+		raytrace.c renderopts.c''') + [ambio]
 
 SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
 		o_face.c o_cone.c o_instance.c o_mesh.c''')
@@ -35,7 +34,10 @@ SUP = Split('func.c noise3.c data.c')
 
 # build libraries
 rsrc = RAY + SURF + MAT + MOD + SUP
-rlib = env.Library(target=radlib('rttrace'), source=rsrc)
+env.Command('Version.c', 'VERSION', vstamp.build_version_c)
+env.Depends('Version.c', rsrc)
+Version = env.Object(source='Version.c')
+rlib = env.Library(target=radlib('rttrace'), source=rsrc + [Version])
 
 if os.name == 'nt': # XXX until we get around fork() and friends
 	rcsrc = Split('raycalls.c')

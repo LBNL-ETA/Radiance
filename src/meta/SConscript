@@ -54,10 +54,10 @@ PROGS = (
 	['rtcont','rtmem','rterror']),
 ('bgraph',   [bgraph, mgraph, mgvars],
 	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
-	'rtfunc','rtcont','rtmem','rterror','meta']),
+	'rtfunc','rtcont','rtmem','meta','rterror']),
 ('igraph',   [igraph, gcalc, cgraph, mgraph, mgvars],
 	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
-	'rtfunc','rtcont','rtmem','rterror','meta']),
+	'rtfunc','rtcont','rtmem','meta','rterror']),
 ('dgraph',   [dgraph, cgraph, mgvars],
 	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
 	'rtfunc','rtcont','rtmem','rterror']),
