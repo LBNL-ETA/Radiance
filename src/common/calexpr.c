@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.20 2003/03/05 16:16:52 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.21 2003/06/02 18:13:54 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -43,7 +43,7 @@ static double  eadd(), esubtr(), emult(), edivi(), epow();
 static double  ebotch();
 
 unsigned int  esupport =		/* what to support */
-		E_VARIABLE | E_FUNCTION | E_REDEFW;
+		E_VARIABLE | E_FUNCTION ;
 
 int  nextc;				/* lookahead character */
 
