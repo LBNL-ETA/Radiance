@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.31 2003/07/27 22:12:02 schorsch Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.32 2003/08/29 21:44:17 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -836,7 +836,8 @@ initotypes()			/* initialize ofun[] array */
 	ofun[OBJ_CYLINDER].funp =
 	ofun[OBJ_TUBE].funp = o_cylinder;
 	ofun[OBJ_RING].funp = o_ring;
-	ofun[OBJ_INSTANCE].funp = addxform;
+	ofun[OBJ_INSTANCE].funp =
+	ofun[OBJ_MESH].funp = addxform;
 	ofun[MAT_GLOW].funp = m_glow;
 	ofun[MAT_SPOT].funp = m_spot;
 	ofun[MAT_DIELECTRIC].funp = m_dielectric;

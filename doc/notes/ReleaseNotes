@@ -1182,3 +1182,5 @@ primitives in the modifier chain for emitting types, not only
 the first.  This permits sources to be described with intervening
 modifiers before the light/illum/glow primitive.
 
+Fixed bug in xform where it was neglecting to add transform arguments
+to new mesh primitive.
