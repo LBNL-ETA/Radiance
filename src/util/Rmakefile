@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.38 2004/10/27 23:23:48 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.39 2004/11/05 03:31:39 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -48,19 +48,9 @@ clean:
 ogl:	glrad
 	cp glrad $(INSTDIR)
 
-x10:
-
-aed:
-
 sgi:
 
 sun:
-
-scanner:	scanner.o
-	$(CC) $(CFLAGS) -o scanner scanner.o -lm
-
-makedist:	makedist.o setscan.o
-	$(CC) $(CFLAGS) -o makedist makedist.o setscan.o -lrt -lm
 
 findglare:	findglare.o glareval.o glaresrc.o setscan.o
 	$(CC) $(CFLAGS) -o findglare findglare.o glareval.o glaresrc.o \
@@ -99,20 +89,7 @@ glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrt -lGLU -lGL \
 -lX11 -lXext -lm
 
-contour:	contour.o
-	$(CC) $(CFLAGS) -o contour contour.o -lm
-
-pranim:	pranim.o client/libclient.a
-	$(CC) $(CFLAGS) -o pranim pranim.o \
-client/libclient.a -lrpcsvc
-
-t16anim:	t16anim.o client/libclient.a
-	$(CC) $(CFLAGS) -o t16anim t16anim.o \
-client/libclient.a -lrpcsvc
-
-t16anim.o pranim.o:	client/clnt.h
-
-setscan.o makedist.o:	setscan.h
+setscan.o:	setscan.h
 
 findglare.o glareval.o \
 glaresrc.o:	glare.h ../common/standard.h \
@@ -131,8 +108,6 @@ rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
 ../common/rterror.h ../common/tifftypes.h
 
 xglaresrc.o:	../common/view.h
-
-swaprasheader.o:	../common/rasterfile.h
 
 glareval.o xglaresrc.o:	../common/resolu.h
 

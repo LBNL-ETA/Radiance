@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.7 2003/10/22 02:15:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.8 2004/11/05 03:31:37 greg Exp $
 #
 #  Compiles:
 #
@@ -22,12 +22,6 @@ PROGS = $(DESTDIR)/meta2tga $(DESTDIR)/pexpand $(DESTDIR)/psort \
 	$(DESTDIR)/x11meta $(DESTDIR)/bgraph $(DESTDIR)/igraph \
 	$(DESTDIR)/dgraph $(DESTDIR)/gcomp $(DESTDIR)/plot4
 
-SPECIALPROGS = $(DESTDIR)/mt160l $(DESTDIR)/mt160 $(DESTDIR)/mtext \
-	$(DESTDIR)/plotout $(DESTDIR)/okimate $(DESTDIR)/tbar \
-	$(DESTDIR)/mx80 $(DESTDIR)/t4014 $(DESTDIR)/imagew \
-	$(DESTDIR)/impress $(DESTDIR)/aed5 $(DESTDIR)/tscat \
-	$(DESTDIR)/tcurve #$(DESTDIR)/xmeta 
-
 # global targets
 all: $(PROGS)
 
@@ -43,45 +37,15 @@ clean:
 	set nonomatch; rm -f *.o $(PROGS) $(SPECIALPROGS) core
 
 # individual targets
-$(DESTDIR)/mt160l:	mt160l.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o mt160l mt160l.o mplot.o plot.o \
-$(common) -lrt palloc.o
-
-$(DESTDIR)/okimate:	okimate.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o okimate okimate.o mplot.o plot.o \
-$(common) palloc.o -lrt
-
-$(DESTDIR)/imagew:	imagew.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o imagew imagew.o mplot.o plot.o $(common) \
-palloc.o -lrt $(MLIB)
-
-$(DESTDIR)/mt160:	mt160.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o mt160 mt160.o mplot.o plot.o $(common) \
-palloc.o -lrt
 
 $(DESTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2tga meta2tga.o rplot.o plot.o $(common) \
-palloc.o -lrt $(MLIB)
-
-$(DESTDIR)/mx80:	mx80.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o mx80 mx80.o mplot.o plot.o $(common) \
 palloc.o -lrt $(MLIB)
 
 $(DESTDIR)/t4014:	plotout.c ../lib/lib4014.a
 	$(CC) -DFORTEK $(CFLAGS) -o t4014 plotout.c $(common) \
 -l4014 -lrt $(MLIB)
 	rm -f plotout.o
-
-$(DESTDIR)/impress:	impress.o implot.o imPfuncs.o plot.o
-	$(CC) $(CFLAGS) -o impress impress.o implot.o imPfuncs.o \
-plot.o $(common) -lrt $(MLIB)
-
-$(DESTDIR)/aed5:	aed5.o
-	$(CC) $(CFLAGS) -o aed5 aed5.o $(common) -lrt $(MLIB)
-
-#$(DESTDIR)/xmeta:	xmeta.o xplot.o plot.o palloc.o
-#	$(CC) $(CFLAGS) -o xmeta xmeta.o xplot.o plot.o palloc.o \
-#$(common) -lrt -lX11 $(MLIB)
 
 $(DESTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o x11meta xmeta.o x11plot.o plot.o palloc.o \
@@ -150,12 +114,9 @@ $(DESTDIR)/gcomp:	gcomp.o gcalc.o mgvars.o
 -lrt $(MLIB)
 
 # dependencies
-$(DESTDIR)/meta2tga $(DESTDIR)/okimate $(DESTDIR)/impress \
-$(DESTDIR)/mx80 $(DESTDIR)/t4014 $(DESTDIR)/plotout $(DESTDIR)/x11meta \
-$(DESTDIR)/mt160l $(DESTDIR)/mt160 $(DESTDIR)/pexpand $(DESTDIR)/plot4 \
-$(DESTDIR)/psort $(DESTDIR)/imagew $(DESTDIR)/tcurve $(DESTDIR)/mtext \
-$(DESTDIR)/tscat $(DESTDIR)/plotin $(DESTDIR)/tbar \
-$(DESTDIR)/xmeta ../lib/libmeta.a aed5 psmeta:	$(common)
+$(DESTDIR)/meta2tga $(DESTDIR)/t4014 $(DESTDIR)/plotout $(DESTDIR)/x11meta \
+$(DESTDIR)/pexpand $(DESTDIR)/plot4 $(DESTDIR)/psort $(DESTDIR)/mtext \
+$(DESTDIR)/plotin ../lib/libmeta.a psmeta:	$(common)
 
 cvhfio.o:	cvhfio.c hfio.c
 
@@ -164,17 +125,12 @@ mgvars.o igraph.o mgraph.o cgraph.o gcalc.o:	mgvars.h
 mgraph.o:	mgraph.h
 
 misc.o syscalls.o mfio.o hfio.o cvhfio.o palloc.o segment.o sort.o expand.o \
-plot.o mplot.o primout.o tgraph.o mt160l.o mt160.o mx80.o plotout.o \
-psort.o pexpand.o cv.o tcurve.o tscat.o mtext.o tbar.o plot4.o \
-xmeta.o metacalls.o xplot.o meta2tga.o rplot.o:	meta.h ../common/rterror.h
+plot.o mplot.o primout.o plotout.o \
+psort.o pexpand.o cv.o mtext.o plot4.o \
+xmeta.o metacalls.o meta2tga.o rplot.o:	meta.h ../common/rterror.h
 
-plot.o mplot.o mt160l.o mt160.o mx80.o xmeta.o xplot.o \
-meta2tga.o rplot.o implot.o:	plot.h
+plot.o mplot.o meta2tga.o rplot.o:	plot.h
 
-mplot.o mt160l.o mt160.o mx80.o:	span.h
-
-tgraph.o tcurve.o tscat.o tbar.o:	tgraph.h
-
-impress.o implot.o imPfuncs.o:	imPfuncs.h
+mplot.o:	span.h
 
 rplot.o meta2tga.o:	rast.h

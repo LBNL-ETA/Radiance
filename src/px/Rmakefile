@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.53 2004/10/27 23:23:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.54 2004/11/05 03:31:38 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -6,7 +6,7 @@
 ARCH = sun
 OPT = -O
 MACH = -DBSD
-SPECIAL = aed
+SPECIAL = 
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
@@ -18,21 +18,12 @@ LIBDIR = /usr/local/lib/ray
 PIXAR_INCLUDE=	-I/usr/pixar/include
 PIXAR_LIB=	-L/usr/pixar/host/lib -lpirl -lpicio -lchad -lpixar $(MLIB)
 
-PROGS = pfilt ttyimage oki20c oki20 psign ra_tiff normtiff \
-pvalue pcompos protate ra_pr ra_pr24 ra_avs ra_hexbit ra_bmp \
-ra_t8 ra_bn ra_t16 pcomb pinterp pflip ra_ppm ximage xshowtrace \
+PROGS = pfilt ttyimage psign ra_tiff normtiff \
+pvalue pcompos protate ra_hexbit ra_bmp \
+ra_t8 ra_t16 pcomb pinterp pflip ra_ppm ximage xshowtrace \
 ra_rgbe ra_pict ra_ps pextrem ra_gif ra_xyze macbethcal pcond pcwarp
 
 all:	$(PROGS) $(SPECIAL)
-
-x10:	x10image
-	cp x10image $(INSTDIR)
-
-aed:	aedimage
-	cp aedimage $(INSTDIR)
-
-sgi:	glimage
-	cp glimage $(INSTDIR)
 
 ogl:
 
@@ -53,8 +44,7 @@ pdfblur.csh pmblur.csh xyzimage.csh pgblur.csh
 		pmblur xyzimage phisto pdelta pgblur
 
 clean:
-	set nonomatch; rm -f x10image aedimage glimage \
-$(PROGS) $(SPECIAL) *.o core
+	set nonomatch; rm -f $(PROGS) $(SPECIAL) *.o core
 	-cd tiff; make distclean
 
 pfilt:	pfilt.o pf2.o pf3.o
@@ -70,39 +60,8 @@ pcwarp:	pcwarp.o warp3d.o
 ttyimage:	ttyimage.o
 	$(CC) $(CFLAGS) -o ttyimage ttyimage.o -lrt $(MLIB)
 
-t4027:	t4027.o
-	$(CC) $(CFLAGS) -o t4027 t4027.o -lrt
-
-glimage:	glimage.o
-	$(CC) $(CFLAGS) -o glimage glimage.o -lrt -lgl_s $(MLIB)
-
-aedimage:	aedimage.o ciq.o cut.o closest.o biq.o
-	$(CC) $(CFLAGS) -o aedimage aedimage.o ciq.o cut.o closest.o \
-biq.o -lrt $(MLIB)
-
-oki20c:	oki20c.o
-	$(CC) $(CFLAGS) -o oki20c oki20c.o -lrt $(MLIB)
-
-oki20:	oki20.o
-	$(CC) $(CFLAGS) -o oki20 oki20.o -lrt $(MLIB)
-
-paintjet:	paintjet.o
-	$(CC) $(CFLAGS) -o paintjet paintjet.o -lrt $(MLIB)
-
-mt160r:	mt160r.o
-	$(CC) $(CFLAGS) -o mt160r mt160r.o -lrt $(MLIB)
-
-greyscale:	greyscale.o
-	$(CC) $(CFLAGS) -o greyscale greyscale.o -lrt $(MLIB)
-
-colorscale:	colorscale.o
-	$(CC) $(CFLAGS) -o colorscale colorscale.o -lrt $(MLIB)
-
 pvalue:	pvalue.o
 	$(CC) $(CFLAGS) -o pvalue pvalue.o -lrt $(MLIB)
-
-psum:	psum.o
-	$(CC) $(CFLAGS) -o psum psum.o -lrt
 
 pcompos:	pcompos.o
 	$(CC) $(CFLAGS) -o pcompos pcompos.o -lrt $(MLIB)
@@ -110,21 +69,8 @@ pcompos:	pcompos.o
 psign:	psign.o
 	$(CC) $(CFLAGS) -o psign psign.o -lrt $(MLIB)
 
-d48c:	d48c.o
-	$(CC) $(CFLAGS) -o d48c d48c.o -lrt
-
 ra_gif:	ra_gif.o clrtab.o neuclrtab.o
 	$(CC) $(CFLAGS) -o ra_gif ra_gif.o clrtab.o neuclrtab.o -lrt $(MLIB)
-
-ra_pr:	ra_pr.o ciq.o cut.o closest.o biq.o
-	$(CC) $(CFLAGS) -o ra_pr ra_pr.o ciq.o cut.o closest.o \
-biq.o -lrt $(MLIB)
-
-ra_pr24:	ra_pr24.o
-	$(CC) $(CFLAGS) -o ra_pr24 ra_pr24.o -lrt $(MLIB)
-
-ra_avs:	ra_avs.o
-	$(CC) $(CFLAGS) -o ra_avs ra_avs.o -lrt $(MLIB)
 
 ra_ps:	ra_ps.o
 	$(CC) $(CFLAGS) -o ra_ps ra_ps.o -lrt $(MLIB)
@@ -141,12 +87,6 @@ ra_t8:	ra_t8.o clrtab.o neuclrtab.o
 ra_t16: ra_t16.o
 	$(CC) $(CFLAGS) -o ra_t16 ra_t16.o -lrt $(MLIB)
 
-ra_im: ra_im.o
-	$(CC) $(CFLAGS) -o ra_im ra_im.o
-
-ra_bn: ra_bn.o
-	$(CC) $(CFLAGS) -o ra_bn ra_bn.o -lrt $(MLIB)
-
 ra_rgbe:	ra_rgbe.o
 	$(CC) $(CFLAGS) -o ra_rgbe ra_rgbe.o -lrt $(MLIB)
 
@@ -155,10 +95,6 @@ ra_pict:    ra_pict.o
 
 ra_hexbit:	ra_hexbit.o
 	$(CC) $(CFLAGS) -o ra_hexbit ra_hexbit.o -lrt $(MLIB)
-
-x10image:	ximage.o ciq.o cut.o closest.o xraster.o biq.o
-	$(CC) $(CFLAGS) -o x10image ximage.o xraster.o \
-ciq.o cut.o closest.o biq.o -lX -lrt $(MLIB)
 
 ximage:	x11image.o x11raster.o clrtab.o
 	$(CC) $(CFLAGS) -o ximage x11image.o x11raster.o \
@@ -172,10 +108,6 @@ pextrem:	pextrem.o
 
 pflip:		pflip.o
 	$(CC) $(CFLAGS) -o pflip pflip.o -lrt $(MLIB)
-
-panim:	panim.o client/libclient.a
-	$(CC) $(CFLAGS) -o panim panim.o \
--lrt client/libclient.a -lrpcsvc $(MLIB)
 
 pcomb:	pcomb.o
 	$(CC) $(CFLAGS) -o pcomb pcomb.o -lrt $(MLIB)
@@ -201,13 +133,6 @@ normtiff:	normtiff.o ../lib/libtiff.a
 		"-with-ENVOPTS=$(OPT)" ; \
 	cd libtiff ; make install
 
-ra_pixar:	ra_pixar.o ra_pixar.c
-	$(CC) $(CFLAGS) $(PIXAR_INCLUDE) -o $@ ra_pixar.o -lrt \
-$(PIXAR_LIB)
-
-ra_pixar.o:	ra_pixar.c
-	$(CC) $(CFLAGS) $(PIXAR_INCLUDE) -c ra_pixar.c
-
 xshowtrace:	xshowtrace.o x11findwind.o
 	$(CC) $(CFLAGS) -o xshowtrace xshowtrace.o \
 x11findwind.o -lrt -lX11 $(MLIB)
@@ -230,23 +155,18 @@ nclrtab.o:	neuclrtab.o
 
 pcomb.o:	../common/calcomp.h
 
-panim.o:	client/scan.h ../common/color.h ../common/random.h
+pf2.o ra_ps.o ra_t16.o:	../common/random.h
 
-pf2.o bnoise.o ra_ps.o ra_t16.o:	../common/random.h
+neuclrtab.o clrtab.o pfilt.o pf2.o pf3.o ttyimage.o \
+psign.o protate.o ra_hexbit.o pextrem.o pcompos.o \
+pflip.o ra_t8.o ra_t16.o ra_tiff.o ra_pict.o \
+ra_ps.o pvalue.o pcomb.o pinterp.o:	../common/color.h
 
-neuclrtab.o clrtab.o pfilt.o pf2.o pf3.o ttyimage.o t4027.o mt160r.o \
-psum.o psign.o protate.o ra_hexbit.o \
-pextrem.o ra_pr24.o d48c.o aedimage.o pcompos.o color.o resolu.o colrops.o \
-pflip.o greyscale.o ra_t8.o glimage.o ra_bn.o ra_t16.o ra_tiff.o ra_pict.o \
-ra_ps.o ra_pr.o pvalue.o pcomb.o pinterp.o ximage.o:	../common/color.h
-
-neuclrtab.o pvalue.o protate.o biq.o ciq.o pinterp.o ximage.o psign.o \
+neuclrtab.o pvalue.o protate.o biq.o ciq.o pinterp.o psign.o \
 xshowtrace.o clrtab.o pcomb.o pfilt.o pf3.o image.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h ../common/tifftypes.h
-
-ximage.o xraster.o:	xraster.h
 
 x11image.o x11raster.o:	x11raster.h
 
@@ -256,18 +176,18 @@ ra_t8.o:	../common/targa.h
 
 ra_tiff.o normtiff.o:	../common/tiff.h ../common/tiffio.h
 
-aedimage.o ximage.o ra_t8.o ra_pr.o:	pic.h
+ra_t8.o:	pic.h
 
 ciq.o cut.o closest.o biq.o:	pic.h ciq.h
 
-pcomb.o pfilt.o pinterp.o ximage.o x11image.o x11showtrace.o \
+pcomb.o pfilt.o pinterp.o x11image.o x11showtrace.o \
 image.o:	../common/view.h ../common/resolu.h
 
 ra_pict.o:	pict.h
 
-mt160r.o oki20c.o paintjet.o pcompos.o pfilt.o pflip.o \
-pinterp.o protate.o pvalue.o ra_bn.o ra_pict.o ra_pixar.o ra_hexbit.o \
-ra_ppm.o ra_pr.o ra_pr24.o ra_rgbe.o ra_t16.o ra_t8.o glimage.o \
+pcompos.o pfilt.o pflip.o \
+pinterp.o protate.o pvalue.o ra_pict.o ra_hexbit.o \
+ra_ppm.o ra_rgbe.o ra_t16.o ra_t8.o \
 ra_tiff.o ttyimage.o:	../common/resolu.h
 
 pfilt.o:	../common/paths.h

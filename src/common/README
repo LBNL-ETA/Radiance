@@ -30,7 +30,6 @@ view.h		header file for image generation
 xraster.h	header file for X routines using images
 xtwind.h	header for X text window routines
 badarg.c	check argument list against format string
-bcopy.c		substitutes for library routines
 bmalloc.c	memory allocation without overhead (no free lists)
 caldefn.c	store variable definitions
 calexpr.c	compute data values using expression parser
@@ -53,12 +52,9 @@ fgetval.c	scanf replacement that skips # comments
 fgetword.c	read white space separated words from stream
 fixargv0.c	MS-DOS compatibility routine to fix program name + arg. list
 font.c		library routines for font handling
-frexp.c		free exponent (library routine replacement)
 fropen.c	find and open a Radiance library file
 fvect.c		routines for float vector calculations
-fwrite.c	standard lib replacement
 getlibpath.c	return standard library path from RAYLIB (or default)
-getpagesize.c	return system page size for non-BSD machine
 getpath.c	function to search for file in a list of directories
 header.c	routines for reading and writing information headers
 image.c		routines for image generation / pixel mapping
@@ -67,22 +63,17 @@ invmat4.c	compute inverse of 4x4 matrix
 lamps.c		load lamp data
 linregr.c	basic linear regression calculation
 lookup.c	hash table lookup routines
-malloc.c	fast malloc for memory hogs and VM environments
 mat4.c		routines dealing with 4 X 4 homogeneous matrices
-mktemp.c	make temporary file (system-independent replacement)
 modobject.c	routines for tracking object modifiers
 multisamp.c	binary space partitioning curve for multidimensional sampling
 myhostname.c	system-independent host name call
 objset.c	routines for maintaining object sets
 octree.c	routines dealing with octrees and cubes
 otypes.c	object type lookup and error reporting
-peano.c		generate an N-dimensional Peano space-filling curve
 plocate.c	routine to locate 3D vector w.r.t. box
-popen.c		system-independent replacement for popen(3) call
 portio.c	routines for portable binary input and output
 process.c	routines to communicate with separate process via dual pipes
 quit.c		default quit() routine, calles exit()
-random.c	BSD random number generator
 readfargs.c	allocate, read and free object arguments (RADIANCE parser)
 readobj.c	routines for reading in object descriptions
 readoct.c	routines to read octree information

@@ -17,7 +17,6 @@ glaresrc.c	gather samples and compute glare sources
 glareval.c	compute pixels for glare calculation
 glrad.c		render Radiance scene in OpenGL
 loadvars.c	routines to read variables for rad and ranimate
-makedist.c	program to make a source distribution (obsolete with mkillum)
 netproc.c	routines to control processes on local and remote hosts
 rad.c		executive program to run oconv, rpict and pfilt (and rview)
 ranimate.c	animation control program

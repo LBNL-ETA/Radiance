@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.48 2004/10/27 23:23:48 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.49 2004/11/05 03:31:38 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -6,7 +6,7 @@
 OPT = -O
 MACH = -DBSD
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
-SPECIAL = aed
+SPECIAL = 
 CC = cc
 MLIB = -lm
 LINT = lint
@@ -99,8 +99,6 @@ install:	all rayinit.cal
 	rm -f $(LIBDIR)/rayinit.cal
 	cp rayinit.cal $(LIBDIR)
 
-aed:	$(DEVDIR)/aed
-
 ogl:	
 
 clean:
@@ -124,10 +122,6 @@ $(DESTDIR)/rvu:	$(RVOBJS) $(RLIB)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
-
-$(DEVDIR)/aed:	aed.o colortab.o tty.o devmain.o editline.o
-	$(CC) $(CFLAGS) -s -o $(DEVDIR)/aed aed.o colortab.o \
-devmain.o tty.o editline.o $(LIBS)
 
 $(RLIB):	$(ROBJS) Version.o
 	ar rc $(RLIB) $(ROBJS) Version.o
@@ -161,9 +155,6 @@ dielectric.o:	dielectric.c source.h
 devcomm.o:	devcomm.c
 	$(CC) $(CFLAGS) -DDEVPATH=\"$(DEVDIR)\" -c devcomm.c
 
-aed.o:	aed.c
-	$(CC) $(CFLAGS) -Daed_init=dinit -c aed.c
-
 #
 # Version module:
 #
@@ -176,7 +167,7 @@ Version.c:	VERSION $(RSRC) $(HEADERS)
 # Include dependencies:
 #
 
-aed.o ambio.o colortab.o data.o devcomm.o \
+ambio.o colortab.o data.o devcomm.o \
 devmain.o lookamb.o rview.o x11.o:	../common/color.h
 
 freeobjmem.o o_cone.o srcsupp.o:	../common/cone.h
@@ -184,8 +175,8 @@ freeobjmem.o o_cone.o srcsupp.o:	../common/cone.h
 data.o freeobjmem.o m_brdf.o mx_data.o \
 p_data.o raycalls.o t_data.o:	data.h
 
-aed.o devcomm.o devmain.o devtable.o \
-editline.o tty.o x11.o:	driver.h
+devcomm.o devmain.o devtable.o \
+editline.o x11.o:	driver.h
 
 freeobjmem.o o_face.o srcsupp.o:	../common/face.h
 

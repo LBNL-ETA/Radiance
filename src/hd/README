@@ -17,7 +17,6 @@ holo.c		holodeck initialization and manipulation routines
 holofile.c	holodeck file handling routines
 rhcopy.c	program for copying information into holodeck files
 rhd_ctab.c	color table manager for X11 driver
-rhd_glx.c	GLX driver routines
 rhd_qtree.c	quadtree support for display drivers
 rhd_qtree2c.c	routines to draw quadtree leaves as cones
 rhd_qtree2r.c	routines to draw quadtree leaves as rectangles

@@ -1357,3 +1357,17 @@ Sundstedt for pointing this out.)
 
 Changed default temporary directory from /usr/tmp, which doesn't exist
 on a lot of systems these days, to /tmp.
+
+Eliminated many unused files and programs from the distribution, including
+the following programs that were being built but no longer used:
+	oki20	- printer driver for OkiMate 20 printer (B&W)
+	oki20c	- printer driver for OkiMate 20 color printer
+	pcwarp	- intended as more general substitute for macbetcal,
+			but never quite worked
+	ra_avs	- convert to & from AVS image format
+	ra_bn	- convert to & from Barneyscann format
+	ra_pr	- convert to & from 8-bit Sun rasterfile format
+	ra_pr24	- convert to & from 24-bit Sun rasterfile format
+	thf2rad	- convert GDS "things file" to Radiance scene format
+If anyone is still wanting any of the above programs, let us know and we'll
+reinstate it.

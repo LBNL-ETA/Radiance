@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.24 2004/10/27 23:23:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.25 2004/11/05 03:31:37 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -121,39 +121,6 @@ rhd_qtree.o rhd_qtree2c.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/glx1.hdi rhd_glx1.o rhdisp.o rhdisp2.o \
 viewbeams.o holo.o rhd_qtree.o rhd_qtree2c.o -lrt -lGLU -lGL -lX11 -lm
 
-$(DEVDIR)/glx.hdi:	rhd_glx0.o rhdisp.o rhdisp2.o viewbeams.o \
-sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm.o sm_usets.o holo.o
-	rm -f $(DEVDIR)/glx.hdi
-	$(CC) $(CFLAGS) -o $(DEVDIR)/glx.hdi rhd_glx0.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm.o sm_usets.o -lrt -lGLU -lGL -lX11 -lm
-
-$(DEVDIR)/glxo.hdi:	rhd_glxo.o rhdisp.o rhdisp2.o viewbeams.o \
-sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o holo.o rhdobj.o 
-	rm -f $(DEVDIR)/glxo.hdi
-	$(CC) $(CFLAGS) -o $(DEVDIR)/glxo.hdi rhd_glxo.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o rhdobj.o -lrgl -lrt -lGLU -lGL -lX11 -lm
-
-$(DEVDIR)/glxs.hdi:	rhd_glxs.o rhdisp.o rhdisp2.o viewbeams.o \
-sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o holo.o
-	rm -f $(DEVDIR)/glxs.hdi
-	$(CC) $(CFLAGS) -o $(DEVDIR)/glxs.hdi rhd_glxs.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o -lrt -lGLU -lGL -lX11 -lXext -lm
-
-$(DEVDIR)/glxso.hdi:	rhd_glxso.o rhdisp.o rhdisp2.o viewbeams.o \
-sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o holo.o rhdobj.o
-	rm -f $(DEVDIR)/glxso.hdi
-	$(CC) $(CFLAGS) -o $(DEVDIR)/glxso.hdi rhd_glxso.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm_usets.o sm.o rhdobj.o \
--lrgl -lrt -lGLU -lGL -lX11 -lXext -lm
-
 $(DEVDIR)/ogl.hdi:	rhd_ogl0.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/ogl.hdi rhd_ogl0.o rhdisp.o rhdisp2.o \
@@ -245,12 +212,6 @@ rhd_x11.o rhd_qtree.o rhd_qtree2r.o:	rhd_qtree.h rhdriver.h \
 
 rhd_x11.o:	x11icon.h
 
-rhd_glx0.o rhd_glxo.o rhd_glxs.o rhd_glxso.o:	rhd_sample.h rhdriver.h \
-x11icon.h ../common/tonemap.h ../common/view.h \
-../common/standard.h ../common/rtmisc.h ../common/rtio.h \
-../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h
-
 rhd_glxo.o rhd_glxso.o rhdobj.o:	rhdobj.h
 
 rhdobj.o:	rhdisp.h rhdriver.h ../common/view.h ../common/tonemap.h \
@@ -259,30 +220,6 @@ rhdobj.o:	rhdisp.h rhdriver.h ../common/view.h ../common/tonemap.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h \
 ../common/object.h ../common/otypes.h ../common/lookup.h
-
-sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
-sm_ogl.o sm.o:	sm.h rhd_sample.h \
-../common/standard.h ../common/rtmisc.h ../common/rtio.h \
-../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h
-
-sm.o:		sm_flag.h
-
-sm_samp.o: 	sm_flag.h
-
-sm_usets.o:	sm_flag.h sm_qtree.h ../common/object.h
-
-sm_del.o:	sm_flag.h sm_list.h sm_geom.h
-
-sm_geom.o:	sm_geom.h
-
-sm_list.o:	sm_list.h
-
-sm_ogl.o:	sm_flag.h sm_geom.h ../common/object.h
-
-sm_qtree.o:	sm_flag.h sm_geom.h sm_qtree.h ../common/object.h
-
-sm_stree.o:	sm_flag.h sm_stree.h sm_qtree.h sm_geom.h ../common/object.h
 
 rhd_glx1.o:	rhd_qtree.h rhdriver.h x11icon.h ../common/view.h \
 ../common/color.h ../common/tonemap.h \

@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.25 2004/10/27 23:36:09 greg Exp $
+# RCSid $Id: Rmakefile,v 2.26 2004/11/05 03:31:37 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -20,7 +20,7 @@ LIBDIR = /usr/local/lib/ray
 
 MGF_LIB = ../lib/libmgf.a
 
-PROGS = thf2rad ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
+PROGS = ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv
 
 LIBFILES = source.cal tilt.cal lamp.tab
@@ -35,9 +35,6 @@ install:	$(PROGS) $(LIBFILES)
 clean:
 	set nonomatch; rm -f $(PROGS) *.o core
 	cd mgflib ; make clean
-
-thf2rad:	thf2rad.o
-	$(CC) $(CFLAGS) -o thf2rad thf2rad.o
 
 ies2rad:	ies2rad.o
 	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrt -lm

@@ -8,8 +8,6 @@ ambient.h	common definitions for interreflection routines
 data.h		header file for routines which interpolate data
 driver.h	header file for interactive device drivers
 func.h		header file for modifiers using function files
-newsconstants.h	header for NeWS driver
-nwsdev.h	header file for NeWS driver
 otspecial.h	special type flags for objects used in rendering
 ray.h		header file for routines using rays
 rpaint.h	header file for image painting (rview)
@@ -18,7 +16,6 @@ x11icon.h	icon for rview under X11
 x11twind.h	header for X11 text window routines
 xtwind.h	header for X10 text window routines
 Version.c	program version (made from VERSION and current date)
-aed.c		driver for AED 512 terminal
 ambcomp.c	routines to compute "ambient" values using Monte Carlo
 ambient.c	routines dealing with ambient (inter-reflected) component
 ambio.c		ambient value input and output routines
@@ -44,7 +41,6 @@ m_clip.c	routine for clipped (cut) objects
 m_direct.c	routines for prism material types
 m_mirror.c	routines for mirror material supporting virtual light sources
 malloc.c	memory allocation routines (symbolic link to ../common)
-msmouse.c	MS-DOS mouse-handling routine for rview
 mx_data.c	routine for stored mixtures
 mx_func.c	routine for mixture functions
 noise3.c	noise functions for random textures
@@ -71,18 +67,11 @@ sphere.c	compute ray intersection with spheres
 srcdraw.c	routines for drawing small sources into pictures (for rpict)
 srcsamp.c	source sampling routines
 srcsupp.c	support routines for source objects and materials
-suncom.c	program to read and edit raw tty input
-sundev.c	standalone driver for Sunwindows
 t_data.c	routine for stored textures
 t_func.c	routine for procedural textures
 text.c		functions for text patterns and mixtures
-tty.c		i/o for terminal drivers
-vga.c		MS-DOS VGA driver
 virtuals.c	routines for simulating virtual light sources
-x10.c		driver for X-windows version 10R4
 x11.c		driver for X-windows version 11R3
 x11twind.c	routines for X11 text windows
 xtwind.c	routines for X text windows
-zeroes.c	compute roots for various equations
 rayinit.cal	initialization function file
-suntools.icon	icon for Sun Windows driver
