@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.8 2004/11/05 03:31:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.9 2004/11/05 17:51:16 greg Exp $
 #
 #  Compiles:
 #
@@ -25,16 +25,11 @@ PROGS = $(DESTDIR)/meta2tga $(DESTDIR)/pexpand $(DESTDIR)/psort \
 # global targets
 all: $(PROGS)
 
-special: $(SPECIALPROGS)
-
 install: $(PROGS)
 	cp $(PROGS) $(INSTDIR)
 
-specialinstall: $(SPECIALPROGS) 
-	cp $(SPECIALPROGS) $(INSTDIR)
-
 clean:
-	set nonomatch; rm -f *.o $(PROGS) $(SPECIALPROGS) core
+	set nonomatch; rm -f *.o $(PROGS) core
 
 # individual targets
 
@@ -42,20 +37,12 @@ $(DESTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2tga meta2tga.o rplot.o plot.o $(common) \
 palloc.o -lrt $(MLIB)
 
-$(DESTDIR)/t4014:	plotout.c ../lib/lib4014.a
-	$(CC) -DFORTEK $(CFLAGS) -o t4014 plotout.c $(common) \
--l4014 -lrt $(MLIB)
-	rm -f plotout.o
-
 $(DESTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o x11meta xmeta.o x11plot.o plot.o palloc.o \
 $(common) -lrt -lX11 $(MLIB)
 
 $(DESTDIR)/psmeta:	psmeta.o psplot.o
 	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrt $(MLIB)
-
-$(DESTDIR)/plotout:	plotout.o ../lib/lib4014.a
-	$(CC) $(CFLAGS) -o plotout plotout.o $(common) -lplot -lrt -l4014 $(MLIB)
 
 $(DESTDIR)/plotin:	plotin.o primout.o
 	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrt $(MLIB)
@@ -114,7 +101,7 @@ $(DESTDIR)/gcomp:	gcomp.o gcalc.o mgvars.o
 -lrt $(MLIB)
 
 # dependencies
-$(DESTDIR)/meta2tga $(DESTDIR)/t4014 $(DESTDIR)/plotout $(DESTDIR)/x11meta \
+$(DESTDIR)/meta2tga $(DESTDIR)/x11meta \
 $(DESTDIR)/pexpand $(DESTDIR)/plot4 $(DESTDIR)/psort $(DESTDIR)/mtext \
 $(DESTDIR)/plotin ../lib/libmeta.a psmeta:	$(common)
 
@@ -125,8 +112,7 @@ mgvars.o igraph.o mgraph.o cgraph.o gcalc.o:	mgvars.h
 mgraph.o:	mgraph.h
 
 misc.o syscalls.o mfio.o hfio.o cvhfio.o palloc.o segment.o sort.o expand.o \
-plot.o mplot.o primout.o plotout.o \
-psort.o pexpand.o cv.o mtext.o plot4.o \
+plot.o mplot.o primout.o psort.o pexpand.o cv.o mtext.o plot4.o \
 xmeta.o metacalls.o meta2tga.o rplot.o:	meta.h ../common/rterror.h
 
 plot.o mplot.o meta2tga.o rplot.o:	plot.h
