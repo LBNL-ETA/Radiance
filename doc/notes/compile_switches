@@ -39,3 +39,11 @@ for specific machines and users:
 		Values greater than 20 use over 4 Kbytes per
 		light source, which can add up to a lot of
 		memory in scenes with many sources.
+
+-DAVGREFL=R	Set the average surface reflectance for the purpose
+		of indirect irradiance calculations to R, where
+		R is a real number in the range (0,1.0).  The
+		default value is 0.50 (50%).  This value indirectly
+		controls the maximum number of ambient bounces,
+		which can never be more than the log of the -ad
+		setting times the log of AVGREFL.
