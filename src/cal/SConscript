@@ -1,0 +1,26 @@
+import os
+
+Import('env') # inherit from parent
+
+mlib = env['RAD_MLIB']
+
+# standard targets
+PROGS = (
+# name     sources             libs
+('calc',   Split('calc.c'),    ['rt'] + mlib),
+('ev',     Split('ev.c'),      ['rt'] + mlib),
+('rcalc',  Split('rcalc.c'),   ['rt'] + mlib),
+('total',  Split('total.c'),   mlib),
+('cnt',    Split('cnt.c'),     []),
+('neat',   Split('neat.c'),    []),
+('lam',    Split('lam.c'),     []),
+('tabfunc',Split('tabfunc.c'), ['rt'] + mlib),
+('histo',  Split('histo.c'),   mlib),
+)
+for p in PROGS:
+    prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+			source=p[1], LIBS=p[2])
+    Default(prog)
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+

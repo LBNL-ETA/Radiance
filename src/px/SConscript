@@ -1,0 +1,136 @@
+import os
+
+Import('env') # inherit from parent
+
+# make a modified local copy
+px = env.Copy(LIBS=['rt'] + env['RAD_MLIB'])
+
+# compose paths
+def radbin(name): return os.path.join(px['RAD_BUILDBIN'], name)
+def radlib(name): return os.path.join(px['RAD_BUILDLIB'], name)
+
+# standard targets
+PROGS = (
+('macbethcal', Split('macbethcal.c pmapgen.c mx3.c warp3d.c')),
+('pcond',      Split('pcond.c pcond2.c pcond3.c pcond4.c warp3d.c')),
+('pfilt',      Split('pfilt.c pf2.c pf3.c')),
+('pcwarp',     Split('pcwarp.c warp3d.c')),
+('pvalue',     Split('pvalue.c')),
+('pcompos',    Split('pcompos.c')),
+('psign',      Split('psign.c')),
+('protate',    Split('protate.c')),
+('pextrem',    Split('pextrem.c')),
+('pflip',      Split('pflip.c')),
+('pcomb',      Split('pcomb.c')),
+('pinterp',    Split('pinterp.c')),
+
+('oki20c',     Split('oki20c.c')),
+('oki20',      Split('oki20.c')),
+
+('ra_gif',     Split('ra_gif.c clrtab.c neuclrtab.c')),
+('ra_pr',      Split('ra_pr.c ciq.c cut.c closest.c biq.c')),
+('ra_pr24',    Split('ra_pr24.c')),
+('ra_avs',     Split('ra_avs.c')),
+('ra_ps',      Split('ra_ps.c')),
+('ra_ppm',     Split('ra_ppm.c')),
+('ra_t8',      Split('ra_t8.c clrtab.c neuclrtab.c')),
+('ra_t16',     Split('ra_t16.c')),
+('ra_bn',      Split('ra_bn.c')),
+('ra_rgbe',    Split('ra_rgbe.c')),
+('ra_pict',    Split('ra_pict.c')),
+('ra_hexbit',  Split('ra_hexbit.c')),
+('ra_xyze',    Split('ra_xyze.c')),
+
+('ttyimage',   Split('ttyimage.c')),
+)
+for p in PROGS:
+    prog = px.Program(target=radbin(p[0]), source=p[1])
+    Default(prog)
+    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], prog)])
+
+
+# special targets not normally built
+SPECIAL = (
+#('psum',       Split('psum.c'), ['rt']),  # (errors)
+#('panim',      Split('panim.c'), px['LIBS]+['client','rpcsvc']),
+
+('ra_im',     Split('ra_im.c')),
+
+#('aedimage',   Split('aedimage.c ciq.c cut.c closest.c'), []), # (errors)
+('t4027',      Split('t4027.c'), ['rt']),
+('paintjet',   Split('paintjet.c')),
+('mt160r',     Split('mt160r.c')),
+('greyscale',  Split('greyscale.c')),
+('colorscale', Split('colorscale.c')),
+('d48c',       Split('d48c.c'), ['rt']),   # (warnings)
+)
+specprogs = []
+specinst = []
+for p in SPECIAL:
+	if len(p) > 2:
+		prog = px.Program(target=radbin(p[0]), source=p[1],
+			LIBS=p[2])
+	else: 
+		prog = px.Program(target=radbin(p[0]), source=p[1])
+	specprogs.append(prog)
+	specinst.append(px.Install(px['RAD_BINDIR'], prog))
+px.Alias('px_special', specprogs)
+px.Alias('px_special_install', specinst)
+
+
+# tiff library (unix-specific for the moment)
+if os.name == 'posix':
+	cwd = os.getcwd()
+	libtiff = px.Command(radlib(px['LIBPREFIX'] + 'tiff' + px['LIBSUFFIX']),
+		'tiff/config.local',
+	['cd "%s";'
+	'sh ./configure -quiet -noninteractive -with-CC=$CC -with-ENVOPTS=$CCFLAGS;'
+	'cd libtiff;'
+	'make install;' % os.path.join(cwd, 'tiff')])
+
+	# tiff programs
+	ra_tiff = px.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
+		LIBS=['tiff'] + px['LIBS'])
+	Default(ra_tiff)
+	env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ra_tiff)])
+
+	normtiff = px.Program(target=radbin('normtiff'), source=Split('normtiff.c'),
+		LIBS=['tiff'] + px['LIBS'])
+	Default(normtiff)
+	env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], normtiff)])
+
+
+# pixar format requires extra lib
+if px.has_key('PIXAR_LIB'):
+    ra_pixar = px.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
+		LIBS=['rt', px['PIXAR_LIB']])
+    Default(ra_pixar)
+    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ra_pixar)])
+
+
+# X11 targets
+if px.has_key('X11LIB'):
+    px.Append(CPPPATH=px['X11INCLUDE'])
+    px.Append(LIBS=['X11'])
+    px.Append(LIBPATH=px['X11LIB'])
+
+    ximage = px.Program(target=radbin('ximage'),
+        source=Split('x11image.c x11raster.c clrtab.c'),)
+    Default(ximage)
+    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], ximage)])
+
+    xshowtrace = px.Program(target=radbin('xshowtrace'),
+        source=Split('xshowtrace.c x11findwind.c'),)
+    Default(xshowtrace)
+    env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], xshowtrace)])
+
+# NeWS ?!?
+#    if px.has_key('OGL'):
+#        glimage = px.Program(target=radbin('glimage'),
+#            CPPFLAGS=px.get('CPPFLAGS', []) + [px['RAD_STEREO']],
+#            source=Split('glimage.c'),
+#            LIBS=['gl_s']+px['LIBS'],)
+#        Default(glimage)
+#        env.Append(RAD_BININSTALL=[px.Install(px['RAD_BINDIR'], glimage)])
+
+

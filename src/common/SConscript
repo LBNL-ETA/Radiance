@@ -1,0 +1,45 @@
+import os
+
+Import('env')
+
+# compose paths
+def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
+
+# custom flags
+getlibpath = env.StaticObject(source='getlibpath.c',
+        CPPFLAGS='-DDEFPATH=\\":%s\\"' % env['RAD_RLIBDIR'])
+tmapcolrs = env.StaticObject(source='tmapcolrs.c',
+        CPPFLAGS='-DPCOND=\\"pcond\\"')
+
+# source and object dependencies
+RT = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c otypes.c
+        objset.c octree.c readfargs.c modobject.c addobjnotify.c zeroes.c
+        mesh.c readmesh.c tmesh.c sceneio.c''') + [getlibpath]
+
+PIC = Split('''color.c header.c image.c lamps.c resolu.c rexpr.c spec_rgb.c
+        colrops.c font.c tonemap.c tmapluv.c tmaptiff.c tmap16bit.c'''
+        ) + [tmapcolrs]
+
+STD = Split('''fgetline.c fropen.c linregr.c xf.c mat4.c invmat4.c fvect.c
+        urand.c urind.c calexpr.c caldefn.c calfunc.c calprnt.c biggerlib.c
+        multisamp.c process.c getpath.c error.c savestr.c savqstr.c badarg.c
+        fgetword.c words.c expandarg.c wordfile.c fgetval.c clip.c plocate.c
+        eputs.c wputs.c quit.c lookup.c loadvars.c tcos.c fputword.c
+        chanvalue.c dircode.c paths.c''') + env.get('RAD_PROCESS', [])
+
+SYS = Split('ealloc.c fdate.c portio.c myhostname.c')
+
+ALL = RT + PIC + STD + SYS + env['RAD_COMPAT']
+
+# build libraries
+librt = env.StaticLibrary(target=radlib('rt'), source=ALL)
+Default(librt)
+
+LIBFILES = Split('tmesh.cal')
+env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
+
+if env.has_key('OGL'):
+    RGL = Split('rglfile.c rglmat.c rgldomat.c rglsurf.c rglinst.c rglsrc.c')
+    librgl = env.StaticLibrary(target=radlib('rgl'), source=RGL)
+    Default(librgl)
+

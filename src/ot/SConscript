@@ -1,0 +1,21 @@
+import os
+
+Import('env') # inherit from parent
+
+# math libs
+mlib = env['RAD_MLIB']
+
+# standard targets
+PROGS = (
+('oconv',    Split('''oconv.c writeoct.c bbox.c initotypes.c
+				   sphere.c o_face.c o_cone.c o_instance.c''')),
+('getbbox',  Split('getbbox.c readobj2.c bbox.c init2otypes.c')),
+('obj2mesh', Split('obj2mesh.c cvmesh.c wfconv.c o_face.c writemesh.c')),
+)
+for p in PROGS:
+    prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+			source=p[1], LIBS=['rt'] + mlib)
+    Default(prog)
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+

@@ -1,0 +1,35 @@
+import os
+
+Import('env') # inherit from parent
+
+# math libs
+mlib = env['RAD_MLIB']
+
+# standard targets
+PROGS = (
+# name        sources                  libs
+('genbeads',  Split('genbeads.c hermite3.c'),    mlib),
+('genbox',    Split('genbox.c'),       mlib),
+('genmarble', Split('genmarble.c'),    mlib),
+('gensky',    Split('gensky.c sun.c'), mlib),
+('genblinds', Split('genblinds.c'),    mlib),
+('genprism',  Split('genprism.c'),     mlib),
+('xform',     Split('xform.c'),        ['rt'] + mlib),
+('replmarks', Split('replmarks.c'),    ['rt'] + mlib),
+('mkillum',   Split('mkillum.c mkillum2.c mkillum3.c'), ['rt'] + mlib),
+('genvev',    Split('genrev.c'),       ['rt'] + mlib),
+('gencat',    Split('gencat.c'),       ['rt'] + mlib),
+('genworm',   Split('genworm.c'),      ['rt'] + mlib),
+('gensurf',   Split('gensurf.c'),      ['rt'] + mlib),
+('genclock',  Split('genclock.c'),     mlib),
+('genbranch', Split('genbranch.c'),    mlib),
+)
+for p in PROGS:
+    prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+            source=p[1], LIBS=p[2])
+    Default(prog)
+    env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+#surf.cal clockface.hex
+LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal')
+env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

@@ -1,0 +1,51 @@
+import os
+
+Import ('env')
+
+# math libs
+mlib = env['RAD_MLIB']
+
+# compose paths
+def radbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
+def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
+def mgfsf(src): return map(lambda s:os.path.join('mgflib', s), src)
+
+MGFSRC = Split('''parser.c context.c xf.c object.c lookup.c badarg.c
+		words.c
+		fvect.c''')
+libmgf = env.StaticLibrary(radlib('mgf'), source=mgfsf(MGFSRC))
+MGFPROGS = (
+('mgfilt',  Split('mgfilt.c')),
+('mgf2inv', Split('mgf2inv.c cvrgb.c')),
+('3ds2mgf', Split('3ds2mgf.c rayopt.c vect.c')),
+)
+for p in MGFPROGS:
+	prog = env.Program(target=radbin(p[0]), source=mgfsf(p[1]) + [libmgf],
+			LIBS=mlib)
+	Default(prog)
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+# standard targets
+PROGS = [
+('thf2rad',   Split('thf2rad.c'),           []),
+('ies2rad',   Split('ies2rad.c'),           ['rt'] + mlib),
+('arch2rad',  Split('arch2rad.c trans.c'),  ['rt'] + mlib),
+('nff2rad',   Split('nff2rad.c'),           []),
+('lampcolor', Split('lampcolor.c'),         ['rt']),
+('tmesh2rad', Split('tmesh2rad.c'),         ['rt'] + mlib),
+('obj2rad',   Split('obj2rad.c trans.c'),   ['rt'] + mlib),
+#('mgf2rad',   Split('mgf2rad.c')+[libmgf],  ['rt'] + mlib),
+('rad2mgf',   Split('rad2mgf.c'),           ['rt'] + mlib),
+('mgf2meta',  Split('mgf2meta.c')+[libmgf], ['meta','rt'] + mlib),
+]
+if not os.name == 'nt': # XXX until we sort out the library conflicts
+	PROGS.append(('mgf2rad',   Split('mgf2rad.c')+[libmgf],  ['rt'] + mlib))
+for p in PROGS:
+	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2])
+	Default(prog)
+	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+LIBFILES = Split('source.cal tilt.cal')# lamp.tab')
+env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
+
+

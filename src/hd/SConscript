@@ -1,0 +1,121 @@
+import os
+
+Import('env')
+
+
+# math libs
+mlib = env['RAD_MLIB']
+
+# common objects
+viewbeams = env.Object(source='viewbeams.c')
+holo = env.Object(source='holo.c')
+
+# standard targets
+PROGS = (
+('rholo',    Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c
+				   holofile.c Version.c''') + [holo, viewbeams]),
+('rhpict', Split('rhpict.c rhpict2.c holofile.c Version.c')+[holo, viewbeams]),
+('rhcopy', Split('rhcopy.c clumpbeams.c holofile.c') + [holo]),
+('rhinfo', Split('rhinfo.c holofile.c') + [holo]),
+#('genrhenv', Split('genrhenv.c holofile.c') + [holo]), # XXX broken
+('genrhgrid', Split('genrhgrid.c') + [holo]),
+)
+if os.name != 'nt': # pending some major work...
+	for p in PROGS:
+		prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+				source=p[1], LIBS=['rt'] + mlib)
+		Default(prog)
+		env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
+
+# display drivers
+if env.has_key('X11INCLUDE'):
+	xenv = env.Copy(CPPPATH=[env['X11INCLUDE']] + env['CPPPATH'],
+			LIBPATH=[env['X11LIB']] + env['LIBPATH'],)
+	# common objects
+	rhdisp = xenv.Object(source='rhdisp.c')
+	rhdisp2 = xenv.Object(source='rhdisp2.c')
+	rhd_qtree = env.Object(source='rhd_qtree.c')
+	xcommon = [rhdisp, rhdisp2, holo, viewbeams]
+	# other stuff
+	devdir = os.path.join(xenv['RAD_BUILDBIN'],'dev')
+	idevdir = os.path.join(xenv['RAD_BINDIR'],'dev')
+	ocppflags = xenv.get('CPPFLAGS', [])
+
+	# XXX the .hdi extension will cause problems on Windows
+	xenv['PROGSUFFIX'] = '.hdi'
+
+	def make_hdi(p): # build them
+		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
+		prog = xenv.Program(target=os.path.join(devdir, p[0]),
+				source=[obj] + p[1] + xcommon, LIBS=p[2])
+		Default(prog)
+		inst = xenv.Install(idevdir, prog)
+		# XXX what are the alternative "<driver>h" names good for?
+		insth = xenv.InstallAs(target=os.path.join(idevdir,
+					p[0] + 'h' + xenv['PROGSUFFIX']), source=prog)
+		env.Append(RAD_BININSTALL=[inst, insth])
+
+	# (name, sources,   libs,   obj, objsrc, objflags)
+	XHDI = (('x11',  Split('rhd_ctab.c rhd_qtree2r.c') + [rhd_qtree],
+				['rt','X11'] + mlib,
+				'rhd_x11', 'rhd_x11.c', []),
+		   )
+	for p in XHDI:
+		make_hdi(p)
+
+	if env.has_key('OGL'):
+		# XXX There's a BITS(x) macro missing in sm_geom.h
+		#sm_common_s = Split('''sm_samp.c sm_qtree.c sm_stree.c sm_geom.c
+		#		sm_list.c sm_del.c sm_ogl.c sm_usets.c sm.c''')
+		#sm_common = map(lambda s:xenv.Object(source=s), sm_common_s)
+		ogl_common_s = Split('rhd_odraw.c rhd_geom.c')
+		ogl_common = map(lambda s:xenv.Object(source=s), ogl_common_s)
+		rhdobj = xenv.Object(source='rhdobj.c')
+
+		GLHDI = (
+			('glx1', ['rhd_qtree2c.c', rhd_qtree],
+			 ['rt','GLU','GL','X11'] + mlib,
+			 'rhd_glx1', 'rhd_glx1.c', ['-DNOSTEREO']),
+
+			#('glx',  sm_common,
+			# ['rt','GLU','GL','X11'] + mlib,
+			# 'rhd_glx0', 'rhd_glx.c', ['-DNOSTEREO']),
+
+			#('glxo', [rhdobj] + sm_common,
+			# ['rgl','rt','GLU','GL','X11'] + mlib,
+			# 'rhd_glxo', 'rhd_glx.c', ['-DDOBJ', '-DNOSTEREO']),
+
+			('ogl', ogl_common,
+			 ['rgl','rt','GLU','GL','X11'] + mlib,
+			 'rhd_ogl0', 'rhd_ogl.c', ['-DNOSTEREO']),
+
+			('oglo', [rhdobj] + ogl_common,
+			 ['rgl','rt','GLU','GL','X11'] + mlib,
+			 'rhd_oglo', 'rhd_ogl.c', ['-DDOBJ', '-DNOSTEREO']),
+			)
+		for p in GLHDI:
+			make_hdi(p)
+		if xenv['RAD_STEREO'] == '-DSTEREO':
+
+			GLSHDI = (
+				#('glxs',  sm_common,
+				# ['rt','GLU','GL','X11','Xext'] + mlib,
+				# 'rhd_glxs', 'rhd_glx.c' ['-DSTEREO']),
+
+				#('glxso', [rhdobj] + sm_common,
+				# ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				# 'rhd_glxo', 'rhd_glx.c' ['-DDOBJ', '-DSTEREO']),
+
+				('ogls', ogl_common,
+				 ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				 'rhd_ogls', 'rhd_ogl.c' ['-DSTEREO']),
+					
+				('oglso', [rhdobj] + ogl_common,
+				 ['rgl','rt','GLU','GL','X11','Xext'] + mlib,
+				 'rhd_oglso', 'rhd_ogl.c' ['-DDOBJ', '-DSTEREO']),
+					)
+			for p in GLHDI:
+				make_hdi(p)
+
+
+

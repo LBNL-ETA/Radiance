@@ -1,0 +1,81 @@
+import os
+
+Import('env') # inherit from parent
+
+# create a modified local copy of the build environment
+rt = env.Copy(LIBS=env['RAD_MLIB'] + ['rt'])
+
+# compose paths
+def radbin(name): return os.path.join(rt['RAD_BUILDBIN'], name)
+def radlib(name): return os.path.join(rt['RAD_BUILDLIB'], name)
+
+# custom compile flags
+dielectric = rt.Object(source='dielectric.c',
+		CCFLAGS=rt['CCFLAGS'] + ['-DDISPERSE'])
+# custom C file generation
+#rt.CFile(target='Version.c', source='VERSION', rt=build_radversion)
+
+# source and object dependencies
+RAY = Split('''ambcomp.c ambient.c ambio.c freeobjmem.c
+		initotypes.c preload.c raytrace.c renderopts.c Version.c''')
+
+SURF = Split('''sphere.c source.c srcsupp.c virtuals.c o_face.c
+		srcsamp.c o_cone.c o_instance.c o_mesh.c''')
+
+MAT = Split('''aniso.c normal.c m_clip.c glass.c m_brdf.c m_mirror.c
+		m_direct.c m_mist.c fprism.c m_alias.c''') + [dielectric]
+
+MOD = Split('p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c')
+
+SUP = Split('func.c noise3.c data.c')
+
+# build libraries
+rsrc = RAY + SURF + MAT + MOD + SUP
+rlib = rt.Library(target=radlib('radiance'), source=rsrc)
+
+if os.name == 'nt': # XXX until we get around fork() and friends
+	rcsrc = Split('raycalls.c')
+else: rcsrc = Split('raycalls.c raypcalls.c')
+rclib = rt.Library(target=radlib('raycalls'), source=rcsrc)
+Default(rclib)
+
+# build executables
+lasrc = Split('lookamb.c ambio.c')
+lookamb = rt.Program(target=radbin('lookamb'), source=lasrc)
+Default(lookamb)
+env.Append(RAD_BININSTALL=[rt.Install(rt['RAD_BINDIR'], lookamb)])
+
+if os.name != 'nt': # XXX pending resolution of the free_os() conflict
+	rtmain = rt.Object(source='rtmain.c',
+			CCFLAGS=rt['CCFLAGS'] + ['-DNICE=4'])
+	rtsrc = Split('rtrace.c duphead.c persist.c') + [rtmain, rlib]
+	rtrace = rt.Program(target=radbin('rtrace'), source=rtsrc,)
+	Default(rtrace)
+	env.Append(RAD_BININSTALL=[rt.Install(rt['RAD_BINDIR'], rtrace)])
+
+	rpsrc = Split('rpmain.c rpict.c srcdraw.c duphead.c persist.c') + [rlib]
+	rpict = rt.Program(target=radbin('rpict'), source=rpsrc,)
+	Default(rpict)
+	env.Append(RAD_BININSTALL=[rt.Install(rt['RAD_BINDIR'], rpict)])
+
+if rt.has_key('X11LIB'): # lots of special requirements for rview
+	x11incls = [rt['X11INCLUDE']] + rt['CPPPATH']
+	x11 = rt.Object(source='x11.c', CPPPATH=x11incls)
+	x11twind = rt.Object(source='x11twind.c', CPPPATH=x11incls)
+	rvmain = rt.Object(source='rvmain.c',
+		CCFLAGS=rt['CCFLAGS'] + ['-DNICE=6'])
+	rv3 = rt.Object(source='rv3.c', # XXX we should get rid of SPEED
+		CCFLAGS=rt['CCFLAGS'] + [rt.get('RAD_SPEED', '')])
+
+	devsrc  = Split('devtable.c devcomm.c colortab.c editline.c')
+	rvobjs = [x11, x11twind, rv3, rvmain, rlib]
+	rvsrc = Split('rview.c rv2.c') + devsrc + rvobjs
+	rview = rt.Program(target=radbin('rview'), source=rvsrc,
+		LIBPATH=rt['LIBPATH'] + [rt['X11LIB']],
+		LIBS=rt['LIBS'] + ['X11'])
+	Default(rview)
+	env.Append(RAD_BININSTALL=[rt.Install(rt['RAD_BINDIR'], rview)])
+
+LIBFILES = Split('rayinit.cal')
+env.Append(RAD_RLIBINSTALL=[rt.Install(rt['RAD_RLIBDIR'], LIBFILES)])
+
