@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.8 2004/03/27 12:41:45 schorsch Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.9 2004/04/22 17:33:48 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -206,7 +206,8 @@ add2full(			/* add object to full node */
 	objset(oset, cu->cutree);
 	cukid.cusize = cu->cusize * 0.5;
 
-	if (oset[0] < objlim || cukid.cusize < mincusize) {
+	if (inc==O_IN || oset[0] < objlim || cukid.cusize <
+			(oset[0] < MAXSET ? mincusize : mincusize/256.0)) {
 						/* add to set */
 		if (oset[0] >= MAXSET) {
 			sprintf(errmsg, "set overflow in addobject (%s)",
