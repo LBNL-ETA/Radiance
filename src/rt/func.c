@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.16 2003/03/11 17:08:55 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.17 2003/04/23 01:31:50 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -63,7 +63,7 @@ int  dofwd;
 		scompile("Ix=$16;Iy=$17;Iz=$18;", NULL, 0);
 		scompile("Jx=$19;Jy=$20;Jz=$21;", NULL, 0);
 		scompile("Kx=$22;Ky=$23;Kz=$24;", NULL, 0);
-		scompile("Lu=$25;Lv=$26;", NULL, 0);
+		scompile("Lu=$26;Lv=$27;", NULL, 0);
 		funset("arg", 1, '=', l_arg);
 		funset("erf", 1, ':', l_erf);
 		funset("erfc", 1, ':', l_erfc);
@@ -257,21 +257,21 @@ register int  n;
 	if (--n < 0)
 		goto badchan;
 
-	if (n < 3)			/* ray direction */
+	if (n <= 2)			/* ray direction */
 
 		return( (	fray->rdir[0]*funcxf.xfm[0][n] +
 				fray->rdir[1]*funcxf.xfm[1][n] +
 				fray->rdir[2]*funcxf.xfm[2][n]	)
 			 / funcxf.sca );
 
-	if (n < 6)			/* surface normal */
+	if (n <= 5)			/* surface normal */
 
 		return( (	fray->ron[0]*funcxf.xfm[0][n-3] +
 				fray->ron[1]*funcxf.xfm[1][n-3] +
 				fray->ron[2]*funcxf.xfm[2][n-3]	)
 			 / funcxf.sca );
 
-	if (n < 9)			/* intersection */
+	if (n <= 8)			/* intersection */
 
 		return( fray->rop[0]*funcxf.xfm[0][n-6] +
 				fray->rop[1]*funcxf.xfm[1][n-6] +
@@ -289,23 +289,23 @@ register int  n;
 	if (n == 11)			/* scale */
 		return(funcxf.sca);
 
-	if (n < 15)			/* origin */
+	if (n <= 14)			/* origin */
 		return(funcxf.xfm[3][n-12]);
 
-	if (n < 18)			/* i unit vector */
+	if (n <= 17)			/* i unit vector */
 		return(funcxf.xfm[0][n-15] / funcxf.sca);
 
-	if (n < 21)			/* j unit vector */
-		return(funcxf.xfm[1][n-15] / funcxf.sca);
+	if (n <= 20)			/* j unit vector */
+		return(funcxf.xfm[1][n-18] / funcxf.sca);
 
-	if (n < 24)			/* k unit vector */
+	if (n <= 23)			/* k unit vector */
 		return(funcxf.xfm[2][n-21] / funcxf.sca);
 
-	if (n < 25)			/* single ray (shadow) distance */
+	if (n == 24)			/* single ray (shadow) distance */
 		return((fray->rot+raydist(fray->parent,SHADOW)) * funcxf.sca);
 
-	if (n < 27)			/* local (u,v) coordinates */
-		return(fray->uv[n-26]);
+	if (n <= 26)			/* local (u,v) coordinates */
+		return(fray->uv[n-25]);
 badchan:
 	error(USER, "illegal channel number");
 	return(0.0);
