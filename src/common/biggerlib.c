@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biggerlib.c,v 3.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: biggerlib.c,v 3.5 2003/08/04 22:37:53 greg Exp $";
 #endif
 /*
  *  biggerlib.c - functions for an even bigger library.
@@ -13,8 +13,9 @@ static const char	RCSid[] = "$Id: biggerlib.c,v 3.4 2003/07/17 09:21:29 schorsch
 #include "calcomp.h"
 
 double  argument(int);
-static double  l_j0(), l_j1(), l_jn(), l_y0(), l_y1(), l_yn();
-static double  l_erf(), l_erfc();
+static double  l_j0(char *), l_j1(char *), l_jn(char *);
+static double  l_y0(char *), l_y1(char *), l_yn(char *);
+static double  l_erf(char *), l_erfc(char *);
 
 
 void
@@ -33,49 +34,49 @@ biggerlib()			/* expand the library */
 
 
 static double
-l_j0()
+l_j0(char *nm)
 {
     return(j0(argument(1)));
 }
 
 
 static double
-l_j1()
+l_j1(char *nm)
 {
     return(j1(argument(1)));
 }
 
 
 static double
-l_jn()
+l_jn(char *nm)
 {
     return(jn((int)(argument(1)+.5), argument(2)));
 }
 
 
 static double
-l_y0()
+l_y0(char *nm)
 {
     return(y0(argument(1)));
 }
 
 
 static double
-l_y1()
+l_y1(char *nm)
 {
     return(y1(argument(1)));
 }
 
 
 static double
-l_yn()
+l_yn(char *nm)
 {
     return(yn((int)(argument(1)+.5), argument(2)));
 }
 
 
 static double
-l_erf()
+l_erf(char *nm)
 {
     extern double  erf();
 
@@ -84,7 +85,7 @@ l_erf()
 
 
 static double
-l_erfc()
+l_erfc(char *nm)
 {
     extern double  erfc();
 

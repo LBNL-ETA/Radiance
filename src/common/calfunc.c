@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.12 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.13 2003/08/04 22:37:53 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -40,12 +40,12 @@ static double  libfunc(char *fname, VARDEF *vp);
 #define  MAXLIB		64	/* maximum number of library functions */
 #endif
 
-static double  l_if(), l_select(), l_rand();
-static double  l_floor(), l_ceil();
-static double  l_sqrt();
-static double  l_sin(), l_cos(), l_tan();
-static double  l_asin(), l_acos(), l_atan(), l_atan2();
-static double  l_exp(), l_log(), l_log10();
+static double  l_if(char *), l_select(char *), l_rand(char *);
+static double  l_floor(char *), l_ceil(char *);
+static double  l_sqrt(char *);
+static double  l_sin(char *), l_cos(char *), l_tan(char *);
+static double  l_asin(char *), l_acos(char *), l_atan(char *), l_atan2(char *);
+static double  l_exp(char *), l_log(char *), l_log10(char *);
 
 			/* functions must be listed alphabetically */
 static LIBR  library[MAXLIB] = {
@@ -125,7 +125,7 @@ funset(fname, nargs, assign, fptr)	/* set a library function */
 char  *fname;
 int  nargs;
 int  assign;
-double  (*fptr)();
+double  (*fptr)(char *);
 {
     int  oldlibsize = libsize;
     char *cp;
@@ -372,7 +372,7 @@ VARDEF  *vp;
 
 
 static double
-l_if()			/* if(cond, then, else) conditional expression */
+l_if(char *nm)		/* if(cond, then, else) conditional expression */
 			/* cond evaluates true if greater than zero */
 {
     if (argument(1) > 0.0)
@@ -383,7 +383,7 @@ l_if()			/* if(cond, then, else) conditional expression */
 
 
 static double
-l_select()		/* return argument #(A1+1) */
+l_select(char *nm)	/* return argument #(A1+1) */
 {
 	register int  n;
 
@@ -399,7 +399,7 @@ l_select()		/* return argument #(A1+1) */
 
 
 static double
-l_rand()		/* random function between 0 and 1 */
+l_rand(char *nm)		/* random function between 0 and 1 */
 {
     double  x;
 
@@ -412,91 +412,91 @@ l_rand()		/* random function between 0 and 1 */
 
 
 static double
-l_floor()		/* return largest integer not greater than arg1 */
+l_floor(char *nm)		/* return largest integer not greater than arg1 */
 {
     return(floor(argument(1)));
 }
 
 
 static double
-l_ceil()		/* return smallest integer not less than arg1 */
+l_ceil(char *nm)		/* return smallest integer not less than arg1 */
 {
     return(ceil(argument(1)));
 }
 
 
 static double
-l_sqrt()
+l_sqrt(char *nm)
 {
     return(sqrt(argument(1)));
 }
 
 
 static double
-l_sin()
+l_sin(char *nm)
 {
     return(sin(argument(1)));
 }
 
 
 static double
-l_cos()
+l_cos(char *nm)
 {
     return(cos(argument(1)));
 }
 
 
 static double
-l_tan()
+l_tan(char *nm)
 {
     return(tan(argument(1)));
 }
 
 
 static double
-l_asin()
+l_asin(char *nm)
 {
     return(asin(argument(1)));
 }
 
 
 static double
-l_acos()
+l_acos(char *nm)
 {
     return(acos(argument(1)));
 }
 
 
 static double
-l_atan()
+l_atan(char *nm)
 {
     return(atan(argument(1)));
 }
 
 
 static double
-l_atan2()
+l_atan2(char *nm)
 {
     return(atan2(argument(1), argument(2)));
 }
 
 
 static double
-l_exp()
+l_exp(char *nm)
 {
     return(exp(argument(1)));
 }
 
 
 static double
-l_log()
+l_log(char *nm)
 {
     return(log(argument(1)));
 }
 
 
 static double
-l_log10()
+l_log10(char *nm)
 {
     return(log10(argument(1)));
 }

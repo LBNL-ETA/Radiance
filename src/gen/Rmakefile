@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.8 2003/06/27 06:53:22 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.9 2003/08/04 22:37:53 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -89,3 +89,5 @@ mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/standard.h \
 ../common/mat4.h ../common/fvect.h ../common/otypes.h ../common/object.h
 
 gensky.o:	../common/color.h
+
+genworm.o genrev.o:	../common/calcomp.h

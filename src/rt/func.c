@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.19 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.20 2003/08/04 22:37:53 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -31,7 +31,7 @@ XF  funcxf;			/* current transformation */
 static OBJREC  *fobj = NULL;	/* current function object */
 static RAY  *fray = NULL;	/* current function ray */
 
-static double  l_erf(), l_erfc(), l_arg();
+static double  l_erf(char *), l_erfc(char *), l_arg(char *);
 
 
 MFUNC *
@@ -209,7 +209,7 @@ char  *fname;
 
 
 static double
-l_arg()				/* return nth real argument */
+l_arg(char *nm)			/* return nth real argument */
 {
 	register int  n;
 
@@ -230,7 +230,7 @@ l_arg()				/* return nth real argument */
 
 
 static double
-l_erf()				/* error function */
+l_erf(char *nm)			/* error function */
 {
 	extern double  erf();
 
@@ -239,7 +239,7 @@ l_erf()				/* error function */
 
 
 static double
-l_erfc()			/* cumulative error function */
+l_erfc(char *nm)		/* cumulative error function */
 {
 	extern double  erfc();
 

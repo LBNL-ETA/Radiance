@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.11 2003/06/26 00:58:09 schorsch Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.12 2003/08/04 22:37:53 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -590,7 +590,7 @@ register char  **av;
 
 
 double
-l_hermite()			
+l_hermite(char *nm)
 {
 	double  t;
 	
@@ -603,7 +603,7 @@ l_hermite()
 
 
 double
-l_bezier()
+l_bezier(char *nm)
 {
 	double  t;
 
@@ -616,7 +616,7 @@ l_bezier()
 
 
 double
-l_bspline()
+l_bspline(char *nm)
 {
 	double  t;
 
