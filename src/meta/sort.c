@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.3 2003/06/10 14:26:03 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
@@ -7,6 +7,10 @@ static const char	RCSid[] = "$Id: sort.c,v 1.2 2003/06/08 12:03:10 schorsch Exp 
 
 #include  "paths.h"
 #include  "meta.h"
+
+#ifdef _WIN32
+  #include <process.h> /* getpid() */
+#endif
 
 
 #define  PBSIZE  1000		/* max size of sort block */
@@ -152,7 +156,6 @@ int  (*pcmp)(),
 FILE  *ofp
 )
 {
-    char  *tfname();
     FILE  *fi[NFILES], *fp;
     int  i;
     
@@ -276,12 +279,16 @@ int  lvl, int num
 )
 {
 	static char  pathbuf[PATH_MAX];
-    static char  fnbuf[32];
+    static char  fnbuf[PATH_MAX];
+	static size_t psiz;
 
+	if (pathbuf[0] == '\0') { /* first time */
+		temp_directory(pathbuf, sizeof(pathbuf));
+		psiz = strlen(pathbuf);
+	}
+	snprintf(fnbuf, sizeof(pathbuf, psiz),
+			"%s/S%d%c%d", pathbuf, getpid(), lvl+'A', num);
     /*sprintf(fnbuf, "%sS%d%c%d", TDIR, getpid(), lvl+'A', num);*/
-    sprintf(fnbuf, "%c%d_XXXXXX", lvl+'A', num);
-	temp_filename(pathbuf, sizeof(pathbuf), fnbuf);
 
-    /*return(fnbuf);*/
-	return pathbuf;
+    return(fnbuf);
 }
