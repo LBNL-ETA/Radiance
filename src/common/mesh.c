@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.15 2003/11/14 17:22:06 schorsch Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.16 2004/01/30 00:08:31 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -10,7 +10,6 @@ static const char RCSid[] = "$Id: mesh.c,v 2.15 2003/11/14 17:22:06 schorsch Exp
 #include "rtio.h"
 #include "rtmath.h"
 #include "rterror.h"
-
 #include "octree.h"
 #include "object.h"
 #include "otypes.h"
@@ -21,7 +20,7 @@ typedef struct {
 	int		fl;
 	uint32		xyz[3];
 	int32		norm;
-	uint16		uv[2];
+	uint32		uv[2];
 } MCVERT;
 
 #define  MPATCHBLKSIZ	128		/* patch allocation block size */
@@ -238,7 +237,7 @@ int		what;
 		for (i = 0; i < 2; i++)
 			vp->uv[i] = mp->uvlim[0][i] +
 				(mp->uvlim[1][i] - mp->uvlim[0][i])*
-				(pp->uv[vid][i] + .5)*(1./65536.);
+				(pp->uv[vid][i] + .5)*(1./4294967296.);
 		vp->fl |= MT_UV;
 	}
 	return(vp->fl);
@@ -309,7 +308,7 @@ MESHVERT	*vp;
 				(vp->v[i] - mp->mcube.cuorg[i]) /
 				mp->mcube.cusize);
 	}
-	if (vp->fl & MT_N)
+	if (vp->fl & MT_N)		/* assumes normalized! */
 		cv.norm = encodedir(vp->n);
 	if (vp->fl & MT_UV)
 		for (i = 0; i < 2; i++) {
@@ -317,7 +316,7 @@ MESHVERT	*vp;
 				return(-1);
 			if (vp->uv[i] >= mp->uvlim[1][i])
 				return(-1);
-			cv.uv[i] = (uint32)(65536. *
+			cv.uv[i] = (uint32)(4294967296. *
 					(vp->uv[i] - mp->uvlim[0][i]) /
 					(mp->uvlim[1][i] - mp->uvlim[0][i]));
 		}
@@ -375,8 +374,8 @@ MESHVERT	*vp;
 		}
 		if (cv.fl & MT_UV) {
 			if (pp->uv == NULL) {
-				pp->uv = (uint16 (*)[2])calloc(256,
-						2*sizeof(uint16));
+				pp->uv = (uint32 (*)[2])calloc(256,
+						2*sizeof(uint32));
 				if (pp->uv == NULL)
 					goto nomem;
 			}
@@ -620,7 +619,7 @@ FILE	*fp;
 			(ms->npatches*sizeof(MESHPATCH) +
 			vcnt*3*sizeof(uint32) +
 			nscnt*sizeof(int32) +
-			uvscnt*2*sizeof(uint16) +
+			uvscnt*2*sizeof(uint32) +
 			tcnt*sizeof(struct PTri) +
 			t1cnt*sizeof(struct PJoin1) +
 			t2cnt*sizeof(struct PJoin2))/(1024.*1024.));

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: writemesh.c,v 2.3 2003/09/18 16:53:53 greg Exp $";
+static const char RCSid[] = "$Id: writemesh.c,v 2.4 2004/01/30 00:08:31 greg Exp $";
 #endif
 /*
  *  Routines for writing compiled mesh to a file stream
@@ -74,7 +74,7 @@ FILE			*fp;
 	if (flags & MT_UV)
 		for (i = 0; i < pp->nverts; i++)
 			for (j = 0; j < 2; j++)
-				putint((long)pp->uv[i][j], 2, fp);
+				putint((long)pp->uv[i][j], 4, fp);
 					/* local triangles */
 	putint((long)pp->ntris, 2, fp);
 	for (i = 0; i < pp->ntris; i++) {

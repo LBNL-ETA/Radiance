@@ -1190,9 +1190,9 @@ doubles, respectively.
 
 Changed meta2tga to output correct colors.
 
-****** COMPATIBILITY CHANGE ********
 Changed local coordinate index from 32-bits to 16-bits, which requires
-that Radiance mesh files be recompiled.
+that Radiance mesh files be recompiled.  (Later decided against this
+change, as it caused problems with some models.)
 
 Changed integer tone-mapping routines to better deal with images
 containing large, constant regions.

@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.11 2003/09/18 16:53:53 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.12 2004/01/30 00:08:31 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -50,7 +50,7 @@ extern "C" {
 typedef struct {
 	uint32		(*xyz)[3];	/* up to 256 patch vertices */
 	int32		*norm;		/* vertex normals */
-	uint16		(*uv)[2];	/* vertex local coordinates */
+	uint32		(*uv)[2];	/* vertex local coordinates */
 	struct PTri {
 		BYTE		v1, v2, v3;	/* local vertices */
 	}		*tri;		/* local triangles */
@@ -111,7 +111,7 @@ typedef struct {
 				/* mesh format identifier */
 #define MESHFMT		"Radiance_tmesh"
 				/* magic number for mesh files */
-#define MESHMAGIC	( 2 *MAXOBJSIZ+311)	/* increment first value */
+#define MESHMAGIC	( 1 *MAXOBJSIZ+311)	/* increment first value */
 
 
 extern MESH	*getmesh(char *mname, int flags);
@@ -136,4 +136,3 @@ extern void	writemesh(MESH *mp, FILE *fp);
 }
 #endif
 #endif /* _RAD_MESH_H_ */
-
