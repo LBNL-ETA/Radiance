@@ -1291,3 +1291,11 @@ protate commands.
 Added -p option to rcalc for "passive mode" that transmits
 unrecognized input -- useful for substituting data in the
 middle of a stream.
+
+Fixed a very obscure bug in rpict that caused a dark horizontal
+line in certain cylindrical projections due to improper drawing
+of the sky dome source in rt/srcdraw.c.
+
+Fixed problems with effective ray lenths computed for dielectric
+and BRTDfunc materials.  This was most evident in breakup of holodeck
+views when VDISTANCE=True.
