@@ -1,4 +1,24 @@
-sq(x) : x*x;
+{ RCSid $Id: trans.cal,v 1.2 2003/10/08 17:10:53 greg Exp $ }
+{
+	These formulas give exact results from the infinite
+	series solution for an uncoated pane of glass.
+
+	Inputs:
+		Tn	=	normal transmittance
+		n	=	index of refraction
+
+	Outputs:
+		rn	=	single-layer normal reflectivity
+		tn	=	transmissivity
+		Rn	=	normal reflectance
+}
+Tn = 0.88;			{ normal transmittance }
 n = 1.52;			{ index of refraction }
-rn = sq((1-n)/(1+n));		{ reflectivity at normal incidence }
-tn(Tn) = (sqrt(sq(sq(1-rn))+4*sq(rn*Tn))-sq(1-rn)) / 2/rn/rn/Tn;
+
+sq(x) : x*x;
+
+rn = sq((1-n)/(1+n));
+
+tn = (sqrt(sq(sq(1-rn))+4*sq(rn*Tn))-sq(1-rn)) / (2*sq(rn)*Tn);
+
+Rn = rn + rn*sq((1-rn)*tn)/(1-sq(tn*rn));
