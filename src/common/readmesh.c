@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.7 2003/07/16 01:32:53 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.8 2003/07/30 10:11:06 schorsch Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -92,7 +92,7 @@ gettree()				/* get a pre-ordered octree */
 		default:
 			mesherror(USER, "damaged mesh octree");
 	}
-	return NULL; /* pro forma return */
+	return (OCTREE)NULL; /* pro forma return */
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.6 2003/07/30 10:11:06 schorsch Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -13,9 +13,8 @@ static const char	RCSid[] = "$Id: ealloc.c,v 2.5 2003/07/17 09:21:29 schorsch Ex
 
 #include "rterror.h"
 
-char *
-emalloc(n)			/* return pointer to n uninitialized bytes */
-unsigned int  n;
+char *	/* return pointer to n uninitialized bytes */
+emalloc(unsigned int  n)
 {
 	register char  *cp;
 	
@@ -30,10 +29,8 @@ unsigned int  n;
 }
 
 
-char *
-ecalloc(ne, es)			/* return pointer to initialized memory */
-register unsigned int  ne;
-unsigned int  es;
+char *			/* return pointer to initialized memory */
+ecalloc(register unsigned int ne, unsigned int es)
 {
 	register char  *cp;
 	
@@ -52,10 +49,8 @@ unsigned int  es;
 }
 
 
-char *
-erealloc(cp, n)			/* reallocate cp to size n */
-register char  *cp;
-unsigned int  n;
+char *			/* reallocate cp to size n */
+erealloc(register char  *cp, unsigned int  n)
 {
 	if (n == 0) {
 		if (cp != NULL)
@@ -76,9 +71,8 @@ unsigned int  n;
 }
 
 
-void
-efree(cp)			/* free memory allocated by above */
-char  *cp;
+void			/* free memory allocated by above */
+efree(char  *cp)
 {
 	free((void *)cp);
 }

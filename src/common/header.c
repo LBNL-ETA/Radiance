@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.20 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.21 2003/07/30 10:11:06 schorsch Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -187,7 +187,7 @@ FILE  *fp;
 int
 getheader(fp, f, p)		/* get header from file */
 FILE  *fp;
-int  (*f)();
+int  (*f)(char *, char *);
 char  *p;
 {
 	char  buf[MAXLINE];

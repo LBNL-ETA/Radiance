@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.10 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.11 2003/07/30 10:11:06 schorsch Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -9,9 +9,10 @@ static const char	RCSid[] = "$Id: colrops.c,v 2.10 2003/07/27 22:12:01 schorsch 
 
 #include <stdio.h>
 #include <math.h>
+
+#include "rtmisc.h"
 #include "color.h"
 
-extern char	*bmalloc();
 
 #define MAXGSHIFT	31		/* maximum shift for gamma table */
 
@@ -22,7 +23,7 @@ static BYTE	(*g_bval)[256] = NULL;
 
 int
 setcolrcor(f, a2)		/* set brightness correction */
-double	(*f)();
+double	(*f)(double,double);
 double	a2;
 {
 	double	mult;
@@ -44,7 +45,7 @@ double	a2;
 
 int
 setcolrinv(f, a2)		/* set inverse brightness correction */
-double	(*f)();
+double	(*f)(double,double);
 double	a2;
 {
 	double	mult;

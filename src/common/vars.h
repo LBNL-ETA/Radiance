@@ -1,4 +1,4 @@
-/* RCSid $Id: vars.h,v 2.6 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.7 2003/07/30 10:11:06 schorsch Exp $ */
 /*
  *  Header for programs that load variable files.
  */
@@ -8,12 +8,12 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct variable_s {
 	char	*name;		/* variable name */
 	short	nick;		/* # characters required for nickname */
 	short	nass;		/* # assignments made */
 	char	*value;		/* assigned value(s) */
-	void	(*fixval)();	/* assignment checking function */
+	void	(*fixval)(struct variable_s *);	/* assignment checking function */
 } VARIABLE;		/* a variable-value pair */
 
 /**** The following variables should be declared by calling program ****/
@@ -48,7 +48,7 @@ extern char	*nvalue();
 
 
 extern void	loadvars(char *rfname);
-extern int	setvariable(char *ass, VARIABLE *(*mv)());
+extern int	setvariable(char *ass, VARIABLE *(*mv)(char*));
 extern VARIABLE	*matchvar(char *nam);
 extern char	*nvalue(int vn, int n);
 extern void	checkvalues(void);

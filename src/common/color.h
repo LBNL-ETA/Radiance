@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.25 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: color.h,v 2.26 2003/07/30 10:11:06 schorsch Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -226,8 +226,8 @@ extern void	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
 extern void	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
 extern void	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
 					/* defined in colrops.c */
-extern int	setcolrcor(double (*f)(), double a2);
-extern int	setcolrinv(double (*f)(), double a2);
+extern int	setcolrcor(double (*f)(double, double), double a2);
+extern int	setcolrinv(double (*f)(double, double), double a2);
 extern int	setcolrgam(double g);
 extern int	colrs_gambs(COLR *scan, int len);
 extern int	gambs_colrs(COLR *scan, int len);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wputs.c,v 3.5 2003/06/07 12:50:21 schorsch Exp $";
+static const char	RCSid[] = "$Id: wputs.c,v 3.6 2003/07/30 10:11:06 schorsch Exp $";
 #endif
 /*
  * Default warning output function.
@@ -12,8 +12,7 @@ static const char	RCSid[] = "$Id: wputs.c,v 3.5 2003/06/07 12:50:21 schorsch Exp
 int	nowarn = 0;		/* don't print warnings? */
 
 void
-wputs(s)
-char	*s;
+wputs(char *s)
 {
 	if (!nowarn)
 		eputs(s);
