@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.9 2004/09/23 18:00:54 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.10 2004/10/04 17:44:22 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -160,8 +160,10 @@ main(int argc, char *argv[])
 		if (rgbp == NULL) {
 			hdr = BMPmappedHeader(scanlen(&rs),
 						numscans(&rs), 0, 256);
+			/*
 			if (outfile != NULL)
 				hdr->compr = BI_RLE8;
+			*/
 		} else
 			hdr = BMPtruecolorHeader(scanlen(&rs),
 						numscans(&rs), 0);

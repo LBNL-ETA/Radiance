@@ -1334,3 +1334,7 @@ in ra_bmp.  Also provides for XYZE input conversion to RGB.
 Fixed what I consider a bug in pvalue -o when taking XYZE files on input,
 where it was inappropriately undoing the exposure value so that it always
 reported radiance rather than XYZ values with Y in cd/m^2.
+
+Made it so ra_bmp only produces run-length encoded 8-bit output for
+grayscale images that are tone-mapped.  This minimizes circumstances
+under which output scanline order is reversed.
