@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.49 2004/01/29 22:18:26 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.50 2004/02/17 21:57:45 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -49,9 +49,8 @@ pdfblur.csh pmblur.csh xyzimage.csh pgblur.csh
 	cp phisto.csh $(INSTDIR)/phisto
 	cp pdelta.csh $(INSTDIR)/pdelta
 	cp pgblur.csh $(INSTDIR)/pgblur
-	cp pbilat.csh $(INSTDIR)/pbilat
 	cd $(INSTDIR) ; chmod 755 normpat falsecolor pdfblur \
-		pmblur xyzimage phisto pdelta pgblur pbilat
+		pmblur xyzimage phisto pdelta pgblur
 
 clean:
 	set nonomatch; rm -f x10image aedimage glimage \
