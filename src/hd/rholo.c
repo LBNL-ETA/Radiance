@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.64 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.65 2004/01/02 11:54:50 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -76,7 +76,7 @@ static void initrholo(void);
 static int rholo(void);
 static void setdefaults(HDGRID	*gp);
 static void creatholo(HDGRID	*gp);
-static int headline(char	*s);
+static gethfunc headline;
 static void loadholo(void);
 static void rootname(char	*rn, char	*fn);
 static void badvalue(int	vc);
@@ -488,7 +488,8 @@ creatholo(			/* create a holodeck output file */
 
 static int
 headline(			/* process information header line */
-	char	*s
+	char	*s,
+	void	*p
 )
 {
 	extern char	FMTSTR[];
