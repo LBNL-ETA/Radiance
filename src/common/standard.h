@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.27 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid $Id: standard.h,v 2.28 2003/06/20 16:12:39 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -78,7 +78,7 @@ extern char  errmsg[];			/* global buffer for error messages */
 #define  tsin			sin
 #define  ttan			tan
 #else
-extern double	tcos();			/* table-based cosine approximation */
+					/* table-based cosine approximation */
 #define  tsin(x)		tcos((x)-(PI/2.))
 #define  ttan(x)		(tsin(x)/tcos(x))
 #endif
