@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.8 2003/09/16 06:30:20 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.9 2005/03/23 01:54:55 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -116,7 +116,7 @@ register FVECT  v
 	
 	d = DOT(v, v);
 	
-	if (d <= 0.0)
+	if (d <= FTINY*FTINY)
 		return(0.0);
 	
 	if (d <= 1.0+FTINY && d >= 1.0-FTINY)
