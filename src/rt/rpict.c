@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.73 2005/01/18 00:33:16 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.74 2005/02/07 20:13:55 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -694,14 +694,33 @@ pixvalue(		/* compute pixel value */
 	}
 						/* optional depth-of-field */
 	if (dblur > FTINY && vdist > FTINY) {
-		double  vc, df[2];
-		df[0] = PI/4.*dblur*(.5 - frandom())/sqrt(ourview.hn2);
-		df[1] = PI/4.*dblur*(.5 - frandom())/sqrt(ourview.vn2);
-		for (i = 3; i--; ) {
-			vc = thisray.rorg[i] + vdist*thisray.rdir[i];
-			thisray.rorg[i] += df[0]*ourview.hvec[i] +
-						df[1]*ourview.vvec[i] ;
-			thisray.rdir[i] = vc - thisray.rorg[i];
+		double  vc, dfh, dfv;
+						/* PI/4. square/circle conv. */
+		dfh = PI/4.*dblur*(.5 - frandom());
+		dfv = PI/4.*dblur*(.5 - frandom());
+		if (ourview.type == VT_PER || ourview.type == VT_PAR) {
+			dfh /= sqrt(ourview.hn2);
+			dfv /= sqrt(ourview.vn2);
+			for (i = 3; i--; ) {
+				vc = thisray.rorg[i] + vdist*thisray.rdir[i];
+				thisray.rorg[i] += dfh*ourview.hvec[i] +
+							dfv*ourview.vvec[i] ;
+				thisray.rdir[i] = vc - thisray.rorg[i];
+			}
+		} else {			/* non-standard view case */
+			double	dfd = PI/4.*dblur*(.5 - frandom());
+			if (ourview.type != VT_ANG) {
+				if (ourview.type != VT_CYL)
+					dfh /= sqrt(ourview.hn2);
+				dfv /= sqrt(ourview.vn2);
+			}
+			for (i = 3; i--; ) {
+				vc = thisray.rorg[i] + vdist*thisray.rdir[i];
+				thisray.rorg[i] += dfh*ourview.hvec[i] +
+							dfv*ourview.vvec[i] +
+							dfd*ourview.vdir[i] ;
+				thisray.rdir[i] = vc - thisray.rorg[i];
+			}
 		}
 		if (normalize(thisray.rdir) == 0.0)
 			return(0.0);

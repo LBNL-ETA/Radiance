@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.29 2005/01/18 00:33:16 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.30 2005/02/07 20:13:55 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -349,6 +349,7 @@ register char  *av[];
 		v->vdir[0] = atof(av[1]);
 		v->vdir[1] = atof(av[2]);
 		v->vdir[2] = atof(av[3]);
+		v->vdist = 1.;
 		return(3);
 	case 'u':			/* up */
 		check(3,"fff");
