@@ -1,152 +1,130 @@
-# RCSid: $Id: Rmakefile,v 1.4 2003/08/01 14:14:24 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 1.5 2003/08/20 09:28:07 schorsch Exp $
 #
 #  Compiles:
 #
 
 OPT = -O
-
 MACH =
-
-LIBDIR = /usr/local/lib
-
-INSTDIR = /usr/local/bin
-
-MLIBDIR = $(LIBDIR)/meta
-
-MLIB = -lm
-
-EXEC2 = $(INSTDIR)
-
 CC = cc
-
+MLIB = -lm
 CFLAGS = -DMDIR=\"$(MLIBDIR)/\" $(OPT) $(MACH) -I../common -L../lib
 
-io = mfio.o
+LIBDIR = /usr/local/lib
+MLIBDIR = $(LIBDIR)/meta
+DESTDIR = .
+INSTDIR = /usr/local/bin
 
-common = $(io) syscalls.o misc.o
+# target lists
+common = mfio.o syscalls.o misc.o
 
-install:	general
+PROGS = $(DESTDIR)/meta2tga $(DESTDIR)/pexpand $(DESTDIR)/psort \
+	$(DESTDIR)/cv $(DESTDIR)/psmeta $(DESTDIR)/plotin \
+	$(DESTDIR)/x11meta $(DESTDIR)/bgraph $(DESTDIR)/igraph \
+	$(DESTDIR)/dgraph $(DESTDIR)/gcomp $(DESTDIR)/plot4
+
+SPECIALPROGS = $(DESTDIR)/mt160l $(DESTDIR)/mt160 $(DESTDIR)/mtext \
+	$(DESTDIR)/plotout $(DESTDIR)/okimate $(DESTDIR)/tbar \
+	$(DESTDIR)/mx80 $(DESTDIR)/t4014 $(DESTDIR)/imagew \
+	$(DESTDIR)/impress $(DESTDIR)/aed5 $(DESTDIR)/tscat \
+	$(DESTDIR)/tbar #$(DESTDIR)/xmeta 
+
+LIBMETA = ../lib/libmeta.a 
+
+# global targets
+all: $(PROGS)
+
+special: $(SPECIALPROGS)
+
+install: $(PROGS)
+	cp $(PROGS) $(INSTDIR)
+
+specialinstall: $(SPECIALPROGS) 
+	cp $(SPECIALPROGS) $(INSTDIR)
 
 clean:
-	set nonomatch; rm -f *.o a.out core
+	set nonomatch; rm -f *.o $(PROGS) $(SPECIALPROGS) core
 
-general:	$(INSTDIR)/meta2tga $(INSTDIR)/pexpand $(INSTDIR)/psort \
-$(INSTDIR)/cv $(INSTDIR)/psmeta $(INSTDIR)/plotin \
-$(INSTDIR)/x11meta ../lib/libmeta.a $(INSTDIR)/bgraph $(INSTDIR)/igraph \
-$(INSTDIR)/dgraph $(INSTDIR)/gcomp $(INSTDIR)/plot4
-
-special:	$(EXEC2)/mt160l $(EXEC2)/mt160 $(EXEC2)/mtext \
-$(EXEC2)/plotout $(EXEC2)/okimate $(EXEC2)/tbar \
-$(EXEC2)/mx80 $(EXEC2)/t4014 $(EXEC2)/imagew $(EXEC2)/impress \
-$(EXEC2)/aed5 $(EXEC2)/tscat $(EXEC2)/tbar
-#$(EXEC2)/xmeta 
-
-$(INSTDIR)/meta2tga $(EXEC2)/okimate $(EXEC2)/impress \
-$(EXEC2)/mx80 $(EXEC2)/t4014 $(INSTDIR)/plotout $(INSTDIR)/x11meta \
-$(EXEC2)/mt160l $(EXEC2)/mt160 $(INSTDIR)/pexpand $(INSTDIR)/plot4 \
-$(INSTDIR)/psort $(EXEC2)/imagew $(INSTDIR)/tcurve $(EXEC2)/mtext \
-$(EXEC2)/tscat $(INSTDIR)/plotin $(EXEC2)/tbar $(INSTDIR)/xmeta \
-../lib/libmeta.a $(INSTDIR)/aed5 $(INSTDIR)/psmeta:	$(common)
-
-$(EXEC2)/mt160l:	mt160l.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o $(EXEC2)/mt160l mt160l.o mplot.o plot.o \
+# individual targets
+mt160l:	mt160l.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o mt160l mt160l.o mplot.o plot.o \
 $(common) -lrt palloc.o
 
-$(EXEC2)/okimate:	okimate.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o $(EXEC2)/okimate okimate.o mplot.o plot.o \
+okimate:	okimate.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o okimate okimate.o mplot.o plot.o \
 $(common) palloc.o -lrt
 
-$(INSTDIR)/imagew:	imagew.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) imagew.o mplot.o plot.o $(common) \
+imagew:	imagew.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o imagew imagew.o mplot.o plot.o $(common) \
 palloc.o -lrt $(MLIB)
-	cp a.out $(INSTDIR)/imagew
 
-$(EXEC2)/mt160:	mt160.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) -o $(EXEC2)/mt160 mt160.o mplot.o plot.o $(common) \
+mt160:	mt160.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o mt160 mt160.o mplot.o plot.o $(common) \
 palloc.o -lrt
 
-$(INSTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) meta2tga.o rplot.o plot.o $(common) \
+meta2tga:	meta2tga.o rplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o meta2tga meta2tga.o rplot.o plot.o $(common) \
 palloc.o -lrt $(MLIB)
-	cp a.out $(INSTDIR)/meta2tga
 
-$(INSTDIR)/mx80:	mx80.o mplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) mx80.o mplot.o plot.o $(common) \
+mx80:	mx80.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o mx80 mx80.o mplot.o plot.o $(common) \
 palloc.o -lrt $(MLIB)
-	cp a.out $(INSTDIR)/mx80
 
-$(INSTDIR)/t4014:	plotout.c ../lib/lib4014.a
-	$(CC) -DFORTEK $(CFLAGS) plotout.c $(common) \
+t4014:	plotout.c ../lib/lib4014.a
+	$(CC) -DFORTEK $(CFLAGS) -o t4014 plotout.c $(common) \
 -l4014 -lrt $(MLIB)
-	cp a.out $(INSTDIR)/t4014
 	rm -f plotout.o
 
-$(INSTDIR)/impress:	impress.o implot.o imPfuncs.o plot.o
-	$(CC) $(CFLAGS) impress.o implot.o imPfuncs.o \
+impress:	impress.o implot.o imPfuncs.o plot.o
+	$(CC) $(CFLAGS) -o impress impress.o implot.o imPfuncs.o \
 plot.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/impress
 
-$(INSTDIR)/aed5:	aed5.o
-	$(CC) $(CFLAGS) aed5.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/aed5
+aed5:	aed5.o
+	$(CC) $(CFLAGS) -o aed5 aed5.o $(common) -lrt $(MLIB)
 
-$(INSTDIR)/xmeta:	xmeta.o xplot.o plot.o palloc.o
-	$(CC) $(CFLAGS) xmeta.o xplot.o plot.o palloc.o \
+#xmeta:	xmeta.o xplot.o plot.o palloc.o
+#	$(CC) $(CFLAGS) -o xmeta xmeta.o xplot.o plot.o palloc.o \
+#$(common) -lrt -lX11 $(MLIB)
+
+x11meta:	xmeta.o x11plot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o x11meta xmeta.o x11plot.o plot.o palloc.o \
 $(common) -lrt -lX11 $(MLIB)
-	cp a.out $(INSTDIR)/xmeta
 
-$(INSTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
-	$(CC) $(CFLAGS) xmeta.o x11plot.o plot.o palloc.o \
-$(common) -lrt -lX11 $(MLIB)
-	cp a.out $(INSTDIR)/x11meta
+psmeta:	psmeta.o psplot.o
+	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrt $(MLIB)
 
-$(INSTDIR)/psmeta:	psmeta.o psplot.o
-	$(CC) $(CFLAGS) psmeta.o psplot.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/psmeta
+plotout:	plotout.o ../lib/lib4014.a
+	$(CC) $(CFLAGS) -o plotout plotout.o $(common) -lplot -lrt -l4014 $(MLIB)
 
-$(INSTDIR)/plotout:	plotout.o 
-	$(CC) $(CFLAGS) plotout.o $(common) -lplot -lrt -l4014 $(MLIB)
-	cp a.out $(INSTDIR)/plotout
+plotin:	plotin.o primout.o
+	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrt $(MLIB)
 
-$(INSTDIR)/plotin:	plotin.o primout.o
-	$(CC) $(CFLAGS) plotin.o primout.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/plotin
-
-$(INSTDIR)/pexpand:	pexpand.o expand.o segment.o palloc.o
-	$(CC) $(CFLAGS) pexpand.o expand.o segment.o \
+pexpand:	pexpand.o expand.o segment.o palloc.o
+	$(CC) $(CFLAGS) -o pexpand pexpand.o expand.o segment.o \
 $(common) palloc.o -lrt $(MLIB)
-	cp a.out $(INSTDIR)/pexpand
 
-$(INSTDIR)/psort:	psort.o sort.o palloc.o
-	$(CC) $(CFLAGS) psort.o sort.o $(common) palloc.o -lrt $(MLIB)
-	cp a.out $(INSTDIR)/psort
+psort:	psort.o sort.o palloc.o
+	$(CC) $(CFLAGS) -o psort psort.o sort.o $(common) palloc.o -lrt $(MLIB)
 
-$(INSTDIR)/cv:		cv.o mfio.o cvhfio.o syscalls.o misc.o
-	$(CC) $(CFLAGS) cv.o mfio.o cvhfio.o syscalls.o misc.o \
+cv:		cv.o mfio.o cvhfio.o syscalls.o misc.o
+	$(CC) $(CFLAGS) -o cv cv.o mfio.o cvhfio.o syscalls.o misc.o \
 -lrt $(MLIB)
-	cp a.out $(INSTDIR)/cv
 
-$(INSTDIR)/plot4:	plot4.o primout.o
-	$(CC) $(CFLAGS) plot4.o primout.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/plot4
+plot4:	plot4.o primout.o
+	$(CC) $(CFLAGS) -o plot4 plot4.o primout.o $(common) -lrt $(MLIB)
 
-$(INSTDIR)/tcurve:	tcurve.o tgraph.o primout.o
-	$(CC) $(CFLAGS) tcurve.o tgraph.o primout.o \
+tcurve:	tcurve.o tgraph.o primout.o
+	$(CC) $(CFLAGS) -o tcurve tcurve.o tgraph.o primout.o \
 $(common) $(MLIB)
-	cp a.out $(INSTDIR)/tcurve
 
-$(INSTDIR)/tscat:	tscat.o tgraph.o primout.o
-	$(CC) $(CFLAGS) tscat.o tgraph.o primout.o \
+tscat:	tscat.o tgraph.o primout.o
+	$(CC) $(CFLAGS) -o tscat tscat.o tgraph.o primout.o \
 $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/tscat
 
-$(INSTDIR)/tbar:	tbar.o tgraph.o primout.o
-	$(CC) $(CFLAGS) tbar.o tgraph.o primout.o $(common) -lrt $(MLIB)
-	cp a.out $(INSTDIR)/tbar
+tbar:	tbar.o tgraph.o primout.o
+	$(CC) $(CFLAGS) -o tbar tbar.o tgraph.o primout.o $(common) -lrt $(MLIB)
 
-$(EXEC2)/mtext:	mtext.o primout.o
-	$(CC) $(CFLAGS) mtext.o primout.o $(common) -lrt
-	cp a.out $(EXEC2)/mtext
+mtext:	mtext.o primout.o
+	$(CC) $(CFLAGS) -o mtext mtext.o primout.o $(common) -lrt
 
 ../lib/libmeta.a:	metacalls.o primout.o progname.o
 	ar rc ../lib/libmeta.a metacalls.o primout.o \
@@ -156,26 +134,27 @@ $(common) progname.o
 ../lib/lib4014.a:
 	cd lib4014; make INSTDIR=../../lib "CFLAGS=$(OPT)" install clean
 
-$(INSTDIR)/bgraph:	bgraph.o mgvars.o mgraph.o ../lib/libmeta.a
-	$(CC) $(CFLAGS) bgraph.o mgvars.o mgraph.o \
+bgraph:	bgraph.o mgvars.o mgraph.o ../lib/libmeta.a
+	$(CC) $(CFLAGS) -o bgraph bgraph.o mgvars.o mgraph.o \
 -lmeta -lrt $(MLIB)
-	cp a.out $(INSTDIR)/bgraph
 
-$(INSTDIR)/igraph:	igraph.o mgvars.o mgraph.o ../lib/libmeta.a \
+igraph:	igraph.o mgvars.o mgraph.o ../lib/libmeta.a \
 gcalc.o cgraph.o
-	$(CC) $(CFLAGS) igraph.o mgvars.o mgraph.o \
+	$(CC) $(CFLAGS) -o igraph igraph.o mgvars.o mgraph.o \
 cgraph.o gcalc.o -lmeta -lrt $(MLIB)
-	cp a.out $(INSTDIR)/igraph
 
-$(INSTDIR)/dgraph:	dgraph.o cgraph.o mgvars.o
-	$(CC) $(CFLAGS) dgraph.o cgraph.o mgvars.o \
+dgraph:	dgraph.o cgraph.o mgvars.o
+	$(CC) $(CFLAGS) -o dgraph dgraph.o cgraph.o mgvars.o \
 -lrt $(MLIB)
-	cp a.out $(INSTDIR)/dgraph
 
-$(INSTDIR)/gcomp:	gcomp.o gcalc.o mgvars.o
-	$(CC) $(CFLAGS) gcomp.o gcalc.o mgvars.o \
+gcomp:	gcomp.o gcalc.o mgvars.o
+	$(CC) $(CFLAGS) -o gcomp gcomp.o gcalc.o mgvars.o \
 -lrt $(MLIB)
-	cp a.out $(INSTDIR)/gcomp
+
+# dependencies
+meta2tga okimate impress mx80 t4014 plotout x11meta \
+mt160l mt160 pexpand plot4 psort imagew tcurve mtext \
+tscat plotin tbar xmeta ../lib/libmeta.a aed5 psmeta:	$(common)
 
 cvhfio.o:	cvhfio.c hfio.c
 
