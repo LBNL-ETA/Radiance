@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.2 2003/08/01 14:14:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.3 2003/09/16 06:32:21 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
@@ -161,8 +161,12 @@ thispage()		/* rewind current file */
 initfile()		/* initialize this file */
 {
     static int  filenum = 0;
+    /*
     static unsigned char  cmap[24] = {255,255,255, 255,152,0, 0,188,0, 0,0,255,
 			179,179,0, 255,0,255, 0,200,200, 0,0,0};
+     */
+    static unsigned char  cmap[24] = {0,0,0, 0,0,255, 0,188,0, 255,152,0,
+			0,200,200, 255,0,255, 179,179,0, 255,255,255};
     struct hdStruct  thead;
     register int  i;
 
