@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: histo.c,v 1.3 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: histo.c,v 1.4 2003/12/14 16:33:37 greg Exp $";
 #endif
 /*
  * Compute a histogram from input data
@@ -21,8 +21,11 @@ static const char	RCSid[] = "$Id: histo.c,v 1.3 2003/07/27 22:12:01 schorsch Exp
 char	*progname;
 
 int	cumulative = 0;
+int	percentile = 0;
 
+long	outrange[MAXCOL][2];
 long	histo[MAXCOL][MAXDIV];
+long	ctotal[MAXCOL];
 double	minv, maxv;
 int	ndiv;
 
@@ -34,6 +37,7 @@ readinp(void)			/* gather statistics on input */
 {
 	char	buf[16*MAXCOL];
 	double	d;
+	int	i;
 	register int	c;
 	register char	*cp;
 
@@ -46,29 +50,44 @@ readinp(void)			/* gather statistics on input */
 			d = atof(cp);
 			while (*cp && !isspace(*cp))
 				cp++;
-			if (d >= minv && d < maxv)
+			if (d <= minv)
+				outrange[c][0]++;
+			else if (d >= maxv)
+				outrange[c][1]++;
+			else
 				histo[c][(int)(ndiv*(d-minv)/(maxv-minv))]++;
 		}
 		if (c > ncols)
 			ncols = c;
 	}
+	for (c = 0; c < ncols; c++) {
+		ctotal[c] += outrange[c][0] + outrange[c][1];
+		for (i = 0; i < ndiv; i++)
+			ctotal[c] += histo[c][i];
+	}
 }
 
 
 static void
-printcumul(void)			/* print cumulative histogram results */
+printcumul(			/* print cumulative histogram results */
+int	pctl
+)
 {
-	long		ctot[MAXCOL];
+	long		csum[MAXCOL];
 	register int	i, c;
 
 	for (c = ncols; c--; )
-		ctot[c] = 0L;
+		csum[c] = outrange[c][0];
 
-	for (i = 0; i < ndiv; i++) {
-		printf("%g", minv + (maxv-minv)*(i+1)/ndiv);
+	for (i = 0; i <= ndiv; i++) {
+		printf("%g", minv + (maxv-minv)*i/ndiv);
 		for (c = 0; c < ncols; c++) {
-			ctot[c] += histo[c][i];
-			printf("\t%ld", ctot[c]);
+			if (pctl)
+				printf("\t%f", 100.*csum[c]/ctotal[c]);
+			else
+				printf("\t%ld", csum[c]);
+			if (i < ndiv)
+				csum[c] += histo[c][i];
 		}
 		putchar('\n');
 	}
@@ -76,14 +95,19 @@ printcumul(void)			/* print cumulative histogram results */
 
 
 static void
-printhisto(void)			/* print histogram results */
+printhisto(			/* print histogram results */
+int	pctl
+)
 {
 	register int	i, c;
 
 	for (i = 0; i < ndiv; i++) {
 		printf("%g", minv + (maxv-minv)*(i+.5)/ndiv);
 		for (c = 0; c < ncols; c++)
-			printf("\t%ld", histo[c][i]);
+			if (pctl)
+				printf("\t%f", 100.*histo[c][i]/ctotal[c]);
+			else
+				printf("\t%ld", histo[c][i]);
 		putchar('\n');
 	}
 }
@@ -96,8 +120,13 @@ char	*argv[]
 )
 {
 	progname = argv[0];
-	if (argc > 1 && !strcmp(argv[1], "-c")) {
-		cumulative++;
+	while (argc > 1 && argv[1][0] == '-') {
+		if (argv[1][1] == 'c')
+			cumulative++;
+		else if (argv[1][1] == 'p')
+			percentile++;
+		else
+			break;
 		argc--; argv++;
 	}
 	if (argc < 3)
@@ -122,13 +151,13 @@ char	*argv[]
 	}
 	readinp();
 	if (cumulative)
-		printcumul();
+		printcumul(percentile);
 	else
-		printhisto();
+		printhisto(percentile);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-c] min max n\n", progname);
-	fprintf(stderr, "   Or: %s [-c] imin imax\n", progname);
+	fprintf(stderr, "Usage: %s [-c][-p] min max n\n", progname);
+	fprintf(stderr, "   Or: %s [-c][-p] imin imax\n", progname);
 	exit(1);
 }
 

@@ -1,11 +1,11 @@
-.\" RCSid "$Id: histo.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: histo.1,v 1.3 2003/12/14 16:33:37 greg Exp $"
 .TH HISTO 1 9/6/96 RADIANCE
 .SH NAME
 histo - compute 1-dimensional histogram of N data columns
 .SH SYNOPSIS
-.B "histo [-c] xmin xmax nbins"
+.B "histo [-c][-p] xmin xmax nbins"
 .br
-.B "histo [-c] imin imax"
+.B "histo [-c][-p] imin imax"
 .SH DESCRIPTION
 .I Histo
 bins columnular data on the standard input between the given minimum
@@ -28,12 +28,26 @@ computes the cumulative histogram for each column instead of the
 straight frequencies.
 The upper value of each bin is printed also instead of the centroid.
 This may be useful in computing percentiles, for example.
+Values below the minimum specified are still counted in the cumulative
+total.
+.PP
+The
+.I \-p
+option tells
+.I histo
+to report the percentage of the total number of input lines rather
+than the absolute counts
+In the case of a cumulative total, this yeilds the percentile values
+directly.
+Values above the maximum are counted as well as values below in
+this case.
 .PP
 All input data is interpreted as real values, and columns must be
 white-space separated.
 If any value is less than the minimum or greater than the maximum,
-it will be ignored on the input.
-(I.e., it will not contribute to any frequency count.)
+it will be ignored unless the
+.I \-c
+option is specified.
 .SH EXAMPLE
 To count data values between -1 and 1 in 50 bins:
 .IP "" .2i

@@ -1220,3 +1220,5 @@ Added in(i) function to rcalc for more flexible channel evaluation.
 Replaced all calls to vfork() with regular fork() calls.
 
 Fixed bug in glarendx for dgr calculation with sources behind view.
+
+Added -p option to histo to print percentages/percentiles r.t. counts.
