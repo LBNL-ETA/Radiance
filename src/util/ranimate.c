@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.33 2003/05/25 20:51:10 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.34 2003/05/27 15:30:04 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -721,8 +721,7 @@ char	*vfn;
 				close(open(combuf, O_RDONLY|O_CREAT, 0666));
 			}
 					/* create command */
-	sprintf(combuf, "rpict%s%s -w0", rendopt,
-			viewopt(getview(first>1 ? first-1 : 1)));
+	sprintf(combuf, "rpict%s -w0", rendopt);
 	inspoint = combuf;
 	while (*inspoint) inspoint++;
 	if (nblur) {
