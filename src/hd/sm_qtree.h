@@ -1,11 +1,11 @@
-/* RCSid: $Id: sm_qtree.h,v 3.16 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: sm_qtree.h,v 3.17 2003/08/30 08:17:32 schorsch Exp $ */
 /*
  *  sm_qtree.h - header file for routines using spherical quadtrees.
  *
  *    adapted from octree.h 
  */
-#ifndef _RAD_CONE_H_
-#define _RAD_CONE_H_
+#ifndef _RAD_SM_QTREE_H_
+#define _RAD_SM_QTREE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,5 +162,5 @@ extern QUADTREE qtRoot_trace_ray();
 #ifdef __cplusplus
 }
 #endif
-#endif /* _RAD_CONE_H_ */
+#endif /* _RAD_SM_QTREE_H_ */
 
