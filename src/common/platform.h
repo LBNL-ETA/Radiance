@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.5 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.6 2003/06/30 19:58:37 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -13,13 +13,18 @@ extern "C" {
   #include <stdio.h>
   #define popen _popen
   #define pclose _pclose
+
+  #define NON_POSIX
+
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #define RHAS_STAT
+  #define S_IFREG _S_IFREG
+  #define W_IFDIR _S_IFDIR
+
   #include <fcntl.h>  /* _O_BINARY, _O_TEXT */
   #include <io.h>     /* _setmode() */
   #include <stdlib.h> /* _fmode */
-
-  #define NON_POSIX
-  #define RHAS_ACCESS
-
   #define SET_DEFAULT_BINARY() _fmode = _O_BINARY
   #define SET_FILE_BINARY(fp) _setmode(fileno(fp),_O_BINARY)
   #define SET_FD_BINARY(fd) _setmode(fd,_O_BINARY)
@@ -31,7 +36,7 @@ extern "C" {
   #else
     /* assumedly posix systems */
     #define RHAS_GETPWNAM
-    #define RHAS_ACCESS
+    #define RHAS_STAT
     #define RHAS_FORK_EXEC
   #endif
 

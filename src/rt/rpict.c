@@ -115,9 +115,7 @@ void  report();
 
 double	pixvalue();
 
-#ifdef RHAS_ACCESS
-#define  file_exists(f)	(access(f,F_OK)==0)
-#else
+#ifdef RHAS_STAT
 #include  <sys/types.h>
 #include  <sys/stat.h>
 int
@@ -128,6 +126,8 @@ char  *fname;
 	if (stat(fname, &sbuf) < 0) return(0);
 	return((sbuf.st_mode & S_IFREG) != 0);
 }
+#else
+#define  file_exists(f)	(access(f,F_OK)==0)
 #endif
 
 
