@@ -1,4 +1,4 @@
-		RCSid "$Id"
+		RCSid "$Id: README,v 1.4 2004/10/21 16:09:46 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
 the thirteenth release, Version 3.6, and it includes all source files
@@ -19,7 +19,12 @@ web site at:
 
 	http://radsite.lbl.gov/radiance/
 
-The website above should also have some precompiled Radiance binaries
+The CVS source tree is available, including post-release bug-fixes and
+mailing lists access at:
+
+	http://www.radiance-online.org/
+
+The websites above should also have some precompiled Radiance binaries
 and add-ons for common Unix platforms.
 
 We have attempted to make it easy for you (and for us) to install
@@ -114,12 +119,6 @@ There is a user interface built on top of this using Tcl/Tk, called trad.
 If you do not have Tcl/Tk installed on your system, you must do so prior
 to building this distribution if you ant trad to install.  (Try a google
 search on "Tcl/Tk" or go to "http://www.scriptics.com/software/tcltk/".)
-
-If you have a question, you might start by looking in the Radiance Digest
-archives, accessible from the Radiance web site.  For current issues and
-problems with this release, go to the radiance-online list at:
-
-	http://www.radiance-online.org
 
 ----------------------------------------------------------------------
 The Radiance Software License, Version 1.0
