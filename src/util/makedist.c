@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: makedist.c,v 2.4 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  *  makedist.c - program to make a source distribution.
  *
@@ -19,6 +16,8 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include  <stdio.h>
+
+#include <stdlib.h>
 
 #include  "random.h"
 
@@ -39,10 +38,6 @@ int  rtargc = 2;
 
 #define  passarg(s)	(rtargv[rtargc++] = s)
 
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
-					/* default angles */
 ANGLE  alpha[181] = {10, 25, 40, 55, 70, 85, AEND};
 ANGLE  beta[361] = {0,30,60,90,120,150,180,210,240,270,300,330,AEND};
 

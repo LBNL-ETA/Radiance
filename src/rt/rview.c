@@ -1,13 +1,67 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rview.c,v 2.18 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  rview.c - routines and variables for interactive view generation.
  *
- *     3/24/87
+ *  External symbols declared in rpaint.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
@@ -18,12 +72,22 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  <ctype.h>
 
-VIEW  ourview = STDVIEW;		/* viewing parameters */
-int  hresolu, vresolu;			/* image resolution */
+CUBE  thescene;				/* our scene */
+OBJECT	nsceneobjs;			/* number of objects in our scene */
 
 int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
 int  samplendx = 0;			/* index for this sample */
+
+extern void  ambnotify();
+void  (*addobjnotify[])() = {ambnotify, NULL};
+
+VIEW  ourview = STDVIEW;		/* viewing parameters */
+int  hresolu, vresolu;			/* image resolution */
+
+void  (*trace)() = NULL;		/* trace call */
+
+int  do_irrad = 0;			/* compute irradiance? */
 
 int  psample = 8;			/* pixel sample size */
 double	maxdiff = .15;			/* max. sample difference */
@@ -51,6 +115,7 @@ int  backvis = 1;			/* back face visibility */
 int  maxdepth = 4;			/* maximum recursion depth */
 double	minweight = 1e-2;		/* minimum ray weight */
 
+char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
 double	ambacc = 0.2;			/* ambient accuracy */
@@ -62,7 +127,7 @@ char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
 int  greyscale = 0;			/* map colors to brightness? */
-char  *devname = dev_default;		/* output device name */
+char  *dvcname = dev_default;		/* output device name */
 
 struct driver  *dev = NULL;		/* driver functions */
 
@@ -81,6 +146,7 @@ static char  *reserve_mem = NULL;	/* pre-allocated reserve memory */
 #define	 CTRL(c)	((c)-'@')
 
 
+void
 quit(code)			/* quit program */
 int  code;
 {
@@ -93,6 +159,7 @@ int  code;
 }
 
 
+void
 devopen(dname)				/* open device driver */
 char  *dname;
 {
@@ -119,6 +186,7 @@ char  *dname;
 }
 
 
+void
 devclose()				/* close our device */
 {
 	if (dev != NULL)
@@ -127,6 +195,7 @@ devclose()				/* close our device */
 }
 
 
+void
 printdevices()				/* print list of output devices */
 {
 	register int  i;
@@ -136,11 +205,12 @@ printdevices()				/* print list of output devices */
 }
 
 
+void
 rview()				/* do a view */
 {
 	char  buf[32];
 
-	devopen(devname);		/* open device */
+	devopen(dvcname);		/* open device */
 	newimage();			/* start image (calls fillreserves) */
 
 	for ( ; ; ) {			/* quit in command() */
@@ -168,14 +238,16 @@ rview()				/* do a view */
 }
 
 
+void
 fillreserves()			/* fill memory reserves */
 {
 	if (reserve_mem != NULL)
 		return;
-	reserve_mem = malloc(RESERVE_AMT);
+	reserve_mem = (char *)malloc(RESERVE_AMT);
 }
 
 
+void
 freereserves()			/* free memory reserves */
 {
 	if (reserve_mem == NULL)
@@ -185,6 +257,7 @@ freereserves()			/* free memory reserves */
 }
 
 
+void
 command(prompt)			/* get/execute command */
 char  *prompt;
 {
@@ -313,7 +386,7 @@ dostop:
 		devclose();
 		kill(0, SIGTSTP);
 		/* pc stops here */
-		devopen(devname);
+		devopen(dvcname);
 		redraw();
 		break;
 #endif
@@ -333,6 +406,7 @@ commerr:
 }
 
 
+void
 rsample()			/* sample the image */
 {
 	int  xsiz, ysiz, y;
@@ -355,7 +429,7 @@ rsample()			/* sample the image */
 		return;
 	pl = (PNODE **)malloc(xsiz*sizeof(PNODE *));
 	if (pl == NULL) {
-		free((char *)rl);
+		free((void *)rl);
 		return;
 	}
 	/*
@@ -416,8 +490,8 @@ rsample()			/* sample the image */
 		}
 	}
 escape:
-	free((char *)rl);
-	free((char *)pl);
+	free((void *)rl);
+	free((void *)pl);
 }
 
 

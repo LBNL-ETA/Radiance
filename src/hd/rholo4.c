@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.28 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Holodeck display process communication
  */

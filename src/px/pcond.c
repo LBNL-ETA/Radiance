@@ -1,11 +1,9 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcond.c,v 3.14 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Condition Radiance picture for display/output
+ *  Added white-balance adjustment 10/01 (GW).
  */
 
 #include "pcond.h"
@@ -32,10 +30,11 @@ double	fixfrac = 0.;			/* histogram share due to fixations */
 RESOLU	inpres;				/* input picture resolution */
 
 COLOR	*fovimg;			/* foveal (1 degree) averaged image */
-short	fvxr, fvyr;			/* foveal image resolution */
+int	fvxr, fvyr;			/* foveal image resolution */
+float	*crfimg;			/* contrast reduction factors */
 short	(*fixlst)[2];			/* fixation history list */
 int	nfixations;			/* number of fixation points */
-float	bwhist[HISTRES];		/* luminance histogram */
+double	bwhist[HISTRES];		/* luminance histogram */
 double	histot;				/* total count of histogram */
 double	bwmin, bwmax;			/* histogram limits */
 double	bwavg;				/* mean brightness */
@@ -238,7 +237,7 @@ getahead()			/* load picture header */
 		exit(1);
 	}
 	if (lumf == rgblum)
-		comprgb2xyzmat(inrgb2xyz, inprims);
+		comprgb2xyzWBmat(inrgb2xyz, inprims);
 	else if (mbcalfile != NULL) {
 		fprintf(stderr, "%s: macbethcal only works with RGB pictures\n",
 				progname);
@@ -272,9 +271,14 @@ mapimage()				/* map picture and send to stdout */
 	comphist();			/* generate adaptation histogram */
 	check2do();			/* modify what2do flags */
 	if (what2do&DO_VEIL)
-		compveil();
-	if (!(what2do&DO_LINEAR) && mkbrmap() < 0)	/* make tone map */
-		what2do |= DO_LINEAR;	/* failed! -- use linear scaling */
+		compveil();		/* compute veil image */
+	if (!(what2do&DO_LINEAR))
+		if (mkbrmap() < 0)	/* make tone map */
+			what2do |= DO_LINEAR;	/* failed! -- use linear */
+#if ADJ_VEIL
+		else if (what2do&DO_VEIL)
+			adjveil();	/* else adjust veil image */
+#endif
 	if (what2do&DO_LINEAR) {
 		if (scalef <= FTINY) {
 			if (what2do&DO_HSENS)
@@ -311,7 +315,7 @@ getfovimg()			/* load foveal sampled image */
 	if (fvxr < 2) fvxr = 2;
 	fvyr = sqrt(ourview.vn2)/FOVDIA + 0.5;
 	if (fvyr < 2) fvyr = 2;
-	if (!(inpres.or & YMAJOR)) {		/* picture is rotated? */
+	if (!(inpres.rt & YMAJOR)) {		/* picture is rotated? */
 		y = fvyr;
 		fvyr = fvxr;
 		fvxr = y;

@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcond4.c,v 3.16 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Routines for veiling glare and loss of acuity.
  */
@@ -36,7 +33,7 @@ compraydir()				/* compute ray directions */
 		syserror("malloc");
 
 	for (y = 0; y < fvyr; y++) {
-		switch (inpres.or) {
+		switch (inpres.rt) {
 		case YMAJOR: case YMAJOR|XDECR:
 			v = (y+.5)/fvyr; break;
 		case YMAJOR|YDECR: case YMAJOR|YDECR|XDECR:
@@ -47,7 +44,7 @@ compraydir()				/* compute ray directions */
 			h = 1. - (y+.5)/fvyr; break;
 		}
 		for (x = 0; x < fvxr; x++) {
-			switch (inpres.or) {
+			switch (inpres.rt) {
 			case YMAJOR: case YMAJOR|YDECR:
 				h = (x+.5)/fvxr; break;
 			case YMAJOR|XDECR: case YMAJOR|XDECR|YDECR:
@@ -121,6 +118,132 @@ compveil()				/* compute veiling image */
 	comphist();			/* recompute histogram */
 }
 
+
+#if ADJ_VEIL
+/*
+ * The following veil adjustment was added to compensate for
+ * the fact that contrast reduction gets confused with veil
+ * in the human visual system.  Therefore, we reduce the
+ * veil in portions of the image where our mapping has
+ * already reduced contrast below the target value.
+ * This gets called after the intial veil has been computed
+ * and added to the foveal image, and the mapping has been
+ * determined.
+ */
+adjveil()				/* adjust veil image */
+{
+	float	*crfptr = crfimg;
+	COLOR	*fovptr = fovimg;
+	COLOR	*veilptr = veilimg;
+	double	s2nits = 1./inpexp;
+	double	vl, vl2, fovl, vlsum;
+	double	deltavc[3];
+	int	i, j;
+
+	if (lumf == rgblum)
+		s2nits *= WHTEFFICACY;
+
+	for (i = fvxr*fvyr; i--; crfptr++, fovptr++, veilptr++) {
+		if (crfptr[0] >= 0.95)
+			continue;
+		vl = plum(veilptr[0]);
+		fovl = (plum(fovptr[0]) - vl) * (1./(1.-VADAPT));
+		if (vl <= 0.05*fovl)
+			continue;
+		vlsum = vl;
+		for (j = 2; j < 11; j++) {
+			vlsum += crfptr[0]*vl - (1.0 - crfptr[0])*fovl;
+			vl2 = vlsum / (double)j;
+			if (vl2 < 0.0)
+				vl2 = 0.0;
+			crfptr[0] = crfactor(fovl + vl2);
+		}
+		/* desaturation code causes color fringes at this level */
+		for (j = 3; j--; ) {
+			double	vc = colval(veilptr[0],j);
+			double	fovc = (colval(fovptr[0],j) - vc) *
+						(1./(1.-VADAPT));
+			deltavc[j] = (1.-crfptr[0])*(fovl/s2nits - fovc);
+			if (vc + deltavc[j] < 0.0)
+				break;
+		}
+		if (j < 0)
+			addcolor(veilptr[0], deltavc);
+		else
+			scalecolor(veilptr[0], vl2/vl);
+	}
+	smoothveil();			/* smooth our result */
+}
+
+
+smoothveil()				/* smooth veil image */
+{
+	COLOR 	*nveilimg;
+	COLOR	*ovptr, *nvptr;
+	int	x, y, i;
+
+	nveilimg = (COLOR *)malloc(fvxr*fvyr*sizeof(COLOR));
+	if (nveilimg == NULL)
+		return;
+	for (y = 1; y < fvyr-1; y++) {
+		ovptr = veilimg + y*fvxr + 1;
+		nvptr = nveilimg + y*fvxr + 1;
+		for (x = 1; x < fvxr-1; x++, ovptr++, nvptr++)
+			for (i = 3; i--; )
+				nvptr[0][i] = 0.5 * ovptr[0][i]
+					+ (1./12.) *
+				(ovptr[-1][i] + ovptr[-fvxr][i] +
+					ovptr[1][i] + ovptr[fvxr][i])
+					+ (1./24.) *
+				(ovptr[-fvxr-1][i] + ovptr[-fvxr+1][i] +
+					ovptr[fvxr-1][i] + ovptr[fvxr+1][i]);
+	}
+	ovptr = veilimg + 1;
+	nvptr = nveilimg + 1;
+	for (x = 1; x < fvxr-1; x++, ovptr++, nvptr++)
+		for (i = 3; i--; )
+			nvptr[0][i] = 0.5 * ovptr[0][i]
+				+ (1./9.) *
+			(ovptr[-1][i] + ovptr[1][i] + ovptr[fvxr][i])
+				+ (1./12.) *
+			(ovptr[fvxr-1][i] + ovptr[fvxr+1][i]);
+	ovptr = veilimg + (fvyr-1)*fvxr + 1;
+	nvptr = nveilimg + (fvyr-1)*fvxr + 1;
+	for (x = 1; x < fvxr-1; x++, ovptr++, nvptr++)
+		for (i = 3; i--; )
+			nvptr[0][i] = 0.5 * ovptr[0][i]
+				+ (1./9.) *
+			(ovptr[-1][i] + ovptr[1][i] + ovptr[-fvxr][i])
+				+ (1./12.) *
+			(ovptr[-fvxr-1][i] + ovptr[-fvxr+1][i]);
+	ovptr = veilimg + fvxr;
+	nvptr = nveilimg + fvxr;
+	for (y = 1; y < fvyr-1; y++, ovptr += fvxr, nvptr += fvxr)
+		for (i = 3; i--; )
+			nvptr[0][i] = 0.5 * ovptr[0][i]
+				+ (1./9.) *
+			(ovptr[-fvxr][i] + ovptr[1][i] + ovptr[fvxr][i])
+				+ (1./12.) *
+			(ovptr[-fvxr+1][i] + ovptr[fvxr+1][i]);
+	ovptr = veilimg + fvxr - 1;
+	nvptr = nveilimg + fvxr - 1;
+	for (y = 1; y < fvyr-1; y++, ovptr += fvxr, nvptr += fvxr)
+		for (i = 3; i--; )
+			nvptr[0][i] = 0.5 * ovptr[0][i]
+				+ (1./9.) *
+			(ovptr[-fvxr][i] + ovptr[-1][i] + ovptr[fvxr][i])
+				+ (1./12.) *
+			(ovptr[-fvxr-1][i] + ovptr[fvxr-1][i]);
+	for (i = 3; i--; ) {
+		nveilimg[0][i] = veilimg[0][i];
+		nveilimg[fvxr-1][i] = veilimg[fvxr-1][i];
+		nveilimg[(fvyr-1)*fvxr][i] = veilimg[(fvyr-1)*fvxr][i];
+		nveilimg[fvyr*fvxr-1][i] = veilimg[fvyr*fvxr-1][i];
+	}
+	free((void *)veilimg);
+	veilimg = nveilimg;
+}
+#endif
 
 addveil(sl, y)				/* add veil to scanline */
 COLOR	*sl;
@@ -323,8 +446,10 @@ int	sl;		/* original scanline length */
 	if (sb == NULL)
 		syserror("malloc");
 	do {
-		sb->sampe = se;
 		sb->len = sl>>se;
+		if (sb->len <= 0)
+			continue;
+		sb->sampe = se;
 		sb->nscans = ns;
 		sb->sdata = (COLOR *)malloc(sb->len*ns*sizeof(COLOR));
 		if (sb->sdata == NULL)

@@ -1,11 +1,67 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.9 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  Support routines for source objects and materials
+ *
+ *  External symbols declared in source.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
@@ -26,13 +82,10 @@ int  nsources = 0;			/* the number of sources */
 SRCFUNC  sfun[NUMOTYPE];		/* source dispatch table */
 
 
+void
 initstypes()			/* initialize source dispatch table */
 {
 	extern VSMATERIAL  mirror_vs, direct1_vs, direct2_vs;
-	extern int  fsetsrc(), ssetsrc(), sphsetsrc(), cylsetsrc(), rsetsrc();
-	extern int  nopart(), flatpart(), cylpart();
-	extern double  fgetplaneq(), rgetplaneq();
-	extern double  fgetmaxdisk(), rgetmaxdisk();
 	static SOBJECT  fsobj = {fsetsrc, flatpart, fgetplaneq, fgetmaxdisk};
 	static SOBJECT  ssobj = {ssetsrc, nopart};
 	static SOBJECT  sphsobj = {sphsetsrc, nopart};
@@ -67,6 +120,7 @@ newsource()			/* allocate new source in our array */
 }
 
 
+void
 setflatss(src)				/* set sampling for a flat source */
 register SRCREC  *src;
 {
@@ -86,6 +140,7 @@ register SRCREC  *src;
 }
 
 
+void
 fsetsrc(src, so)			/* set a face as a source */
 register SRCREC  *src;
 OBJREC  *so;
@@ -129,6 +184,7 @@ OBJREC  *so;
 }
 
 
+void
 ssetsrc(src, so)			/* set a source as a source */
 register SRCREC  *src;
 register OBJREC  *so;
@@ -155,6 +211,7 @@ register OBJREC  *so;
 }
 
 
+void
 sphsetsrc(src, so)			/* set a sphere as a source */
 register SRCREC  *src;
 register OBJREC  *so;
@@ -177,6 +234,7 @@ register OBJREC  *so;
 }
 
 
+void
 rsetsrc(src, so)			/* set a ring (disk) as a source */
 register SRCREC  *src;
 OBJREC  *so;
@@ -198,6 +256,7 @@ OBJREC  *so;
 }
 
 
+void
 cylsetsrc(src, so)			/* set a cylinder as a source */
 register SRCREC  *src;
 OBJREC  *so;
@@ -251,6 +310,7 @@ register OBJREC  *m;
 }
 
 
+int
 spotout(r, s)			/* check if we're outside spot region */
 register RAY  *r;
 register SPOT  *s;
@@ -351,6 +411,7 @@ OBJREC  *op;
 }
 
 
+int
 commonspot(sp1, sp2, org)	/* set sp1 to intersection of sp1 and sp2 */
 register SPOT  *sp1, *sp2;
 FVECT  org;
@@ -374,6 +435,7 @@ FVECT  org;
 }
 
 
+int
 commonbeam(sp1, sp2, dir)	/* set sp1 to intersection of sp1 and sp2 */
 register SPOT  *sp1, *sp2;
 FVECT  dir;
@@ -398,6 +460,7 @@ FVECT  dir;
 }
 
 
+int
 checkspot(sp, nrm)		/* check spotlight for behind source */
 register SPOT  *sp;	/* spotlight */
 FVECT  nrm;		/* source surface normal */

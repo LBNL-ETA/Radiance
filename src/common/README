@@ -1,5 +1,5 @@
 		LIBRARY ROUTINES AND HEADER FILES
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.7 6/9/98 LBL"
 
 This directory contains library routines and common header files for
 the RADIANCE programs in the directories on the same level.

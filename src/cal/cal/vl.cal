@@ -1,0 +1,33 @@
+{
+	Calculate VL (visibility level)
+
+	5/26/94
+
+	Taken from Bailey, Clear, Berman paper, JIES Summer 1993
+}
+
+{ User must set:
+
+	L	Adaptation luminance in cd/m^2
+	dL	Difference in luminance between background and foreground
+	S	Target size in minutes of arc
+	
+  Function computes:
+
+	dLt	Visible luminance threshold
+	Sr	Size below which Ricco's law applies
+	VL	Visibility level
+}
+
+sq(x) : x*x;
+
+fit(a1,a2,n) = a1 * (L^(1/n) + a2)^(n/2);
+
+A = fit(.40743,1.6074,2.8723);
+B = fit(.0840155,.43369,1.7188);
+
+Sr = (4 + 2*L)/(1 + L);
+
+dLt = if(Sr-S, sq(A/S), sq((B*(S-Sr)+A)/S));
+
+VL = dL / dLt;

@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: pcond.h,v 3.10 2003/02/22 02:07:27 greg Exp $ */
 /*
  * Header file for picture file conditioning.
  */
@@ -12,8 +9,10 @@
 
 #include "view.h"
 
-#include "resolu.h"
 
+#ifndef ADJ_VEIL
+#define ADJ_VEIL	0		/* adjust veil to preserve contrast? */
+#endif
 
 #define SWNORM		2.26		/* scotopic/photopic ratio for white */
 #define WHTSEFFICACY	(SWNORM*WHTEFFICACY)
@@ -21,7 +20,7 @@
 #define BotMesopic	5.62e-3		/* top of scotopic range */
 #define TopMesopic	5.62		/* bottom of photopic range */
 
-#define FOVDIA		(1.0*PI/180.)	/* foveal diameter (radians) */
+#define FOVDIA		(1.0*PI/180.0)	/* foveal diameter (radians) */
 
 #define	HISTRES		100		/* histogram resolution */
 #define MAXPREHIST	1024		/* maximum precomputed histogram */
@@ -66,15 +65,17 @@ extern double	inpexp;			/* input exposure value */
 #define ldmin		(ldmax/lddyn)
 
 extern COLOR	*fovimg;		/* foveal (1 degree) averaged image */
-extern short	fvxr, fvyr;		/* foveal image resolution */
+extern int	fvxr, fvyr;		/* foveal image resolution */
+extern float	*crfimg;		/* contrast reduction factors */
 
 #define fovscan(y)	(fovimg+(y)*fvxr)
+#define crfscan(y)	(crfimg+(y)*fvxr)
 
 extern double	fixfrac;		/* histogram share due to fixations */
 extern short	(*fixlst)[2];		/* fixation history list */
 extern int	nfixations;		/* number of fixation points */
 
-extern float	bwhist[HISTRES];	/* luminance histogram */
+extern double	bwhist[HISTRES];	/* luminance histogram */
 extern double	histot;			/* total count of histogram */
 extern double	bwmin, bwmax;		/* histogram limits */
 extern double	bwavg;			/* mean brightness */
@@ -97,6 +98,8 @@ extern char	*cwarpfile;		/* color warp mapping file */
 
 extern double	hacuity();		/* human acuity func. (cycles/deg.) */
 extern double	htcontrs();		/* human contrast sens. func. */
+extern double	clampf();		/* histogram clamping function */
+extern double	crfactor();		/* contrast reduction factor */
 
 extern COLOR	*firstscan();		/* first processed scanline */
 extern COLOR	*nextscan();		/* next processed scanline */

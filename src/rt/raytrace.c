@@ -1,35 +1,76 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: raytrace.c,v 2.34 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  raytrace.c - routines for tracing and shading rays.
  *
- *     8/7/85
+ *  External symbols declared in ray.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
-
-#include  "octree.h"
 
 #include  "otypes.h"
 
 #include  "otspecial.h"
 
 #define  MAXCSET	((MAXSET+1)*2-1)	/* maximum check set size */
-
-extern CUBE  thescene;			/* our scene */
-extern int  maxdepth;			/* maximum recursion depth */
-extern double  minweight;		/* minimum ray weight */
-extern int  do_irrad;			/* compute irradiance? */
-extern COLOR  ambval;			/* ambient value */
-
-extern COLOR  cextinction;		/* global extinction coefficient */
-extern COLOR  salbedo;			/* global scattering albedo */
-extern double  seccg;			/* global scattering eccentricity */
-extern double  ssampdist;		/* scatter sampling distance */
 
 unsigned long  raynum = 0;		/* next unique ray number */
 unsigned long  nrays = 0;		/* number of calls to localhit */
@@ -42,7 +83,8 @@ OBJREC  Lamb = {
 
 OBJREC  Aftplane;			/* aft clipping plane object */
 
-static int  raymove(), checkset(), checkhit();
+static int  raymove(), checkhit();
+static void  checkset();
 
 #ifndef  MAXLOOP
 #define  MAXLOOP	0		/* modifier loop detection */
@@ -51,6 +93,7 @@ static int  raymove(), checkset(), checkhit();
 #define  RAYHIT		(-1)		/* return value for intercepted ray */
 
 
+int
 rayorigin(r, ro, rt, rw)		/* start new ray from old one */
 register RAY  *r, *ro;
 int  rt;
@@ -101,6 +144,7 @@ double  rw;
 }
 
 
+void
 rayclear(r)			/* clear a ray for (re)evaluation */
 register RAY  *r;
 {
@@ -108,6 +152,7 @@ register RAY  *r;
 	r->newcset = r->clipset;
 	r->robj = OVOID;
 	r->ro = NULL;
+	r->rox = NULL;
 	r->rt = r->rot = FHUGE;
 	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
 	setcolor(r->pcol, 1.0, 1.0, 1.0);
@@ -115,11 +160,10 @@ register RAY  *r;
 }
 
 
+void
 raytrace(r)			/* trace a ray and compute its value */
 RAY  *r;
 {
-	extern int  (*trace)();
-
 	if (localhit(r, &thescene))
 		raycont(r);		/* hit local surface, evaluate */
 	else if (r->ro == &Aftplane) {
@@ -135,6 +179,7 @@ RAY  *r;
 }
 
 
+void
 raycont(r)			/* check for clipped object and continue */
 register RAY  *r;
 {
@@ -144,6 +189,7 @@ register RAY  *r;
 }
 
 
+void
 raytrans(r)			/* transmit ray as is */
 register RAY  *r;
 {
@@ -158,6 +204,7 @@ register RAY  *r;
 }
 
 
+int
 rayshade(r, mod)		/* shade ray r with material mod */
 register RAY  *r;
 int  mod;
@@ -201,6 +248,7 @@ int  mod;
 }
 
 
+void
 rayparticipate(r)			/* compute ray medium participation */
 register RAY  *r;
 {
@@ -264,6 +312,7 @@ int  mod;
 }
 
 
+int
 raymixture(r, fore, back, coef)		/* mix modifiers */
 register RAY  *r;
 OBJECT  fore, back;
@@ -364,6 +413,7 @@ register RAY  *r;
 }
 
 
+void
 newrayxf(r)			/* get new tranformation matrix for ray */
 RAY  *r;
 {
@@ -383,7 +433,7 @@ RAY  *r;
 		if (rp->rox == &xp->xf) {		/* xp in use */
 			xp = xp->next;			/* move to next */
 			if (xp == xflast) {		/* need new one */
-				xp = (struct xfn *)bmalloc(sizeof(struct xfn));
+				xp = (struct xfn *)malloc(sizeof(struct xfn));
 				if (xp == NULL)
 					error(SYSTEM,
 						"out of memory in newrayxf");
@@ -400,6 +450,7 @@ RAY  *r;
 }
 
 
+void
 flipsurface(r)			/* reverse surface orientation */
 register RAY  *r;
 {
@@ -413,6 +464,7 @@ register RAY  *r;
 }
 
 
+int
 localhit(r, scene)		/* check for hit in the octree */
 register RAY  *r;
 register CUBE  *scene;
@@ -560,7 +612,7 @@ register CUBE  *cu;
 }
 
 
-static
+static int
 checkhit(r, cu, cxs)		/* check for hit in full cube */
 register RAY  *r;
 CUBE  *cu;
@@ -584,7 +636,7 @@ OBJECT  *cxs;
 }
 
 
-static
+static void
 checkset(os, cs)		/* modify checked set and set to check */
 register OBJECT  *os;			/* os' = os - cs */
 register OBJECT  *cs;			/* cs' = cs + os */

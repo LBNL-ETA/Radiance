@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.2 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Allocate and control dynamic color table.
  *
@@ -65,9 +62,9 @@ int	ncolors;
 		return(0);
 				/* free old tables */
 	if (clrtab != NULL)
-		free((char *)clrtab);
+		free((void *)clrtab);
 	if (ctree != NULL)
-		free((char *)ctree);
+		free((void *)ctree);
 				/* get new tables */
 	for (treesize = 1; treesize < ncolors; treesize <<= 1)
 		;

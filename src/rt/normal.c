@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: normal.c,v 2.38 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  normal.c - shading function for normal materials.
  *
@@ -14,22 +11,76 @@ static char SCCSid[] = "$SunId$ SGI";
  *     Later changes described in delta comments.
  */
 
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
 #include  "ray.h"
 
 #include  "otypes.h"
 
 #include  "random.h"
 
-extern double  specthresh;		/* specular sampling threshold */
-extern double  specjitter;		/* specular sampling jitter */
-
-extern int  backvis;			/* back faces visible? */
-
 #ifndef  MAXITER
 #define  MAXITER	10		/* maximum # specular ray attempts */
 #endif
+					/* estimate of Fresnel function */
+#define  FRESNE(ci)	(exp(-6.0*(ci)) - 0.00247875217)
 
-static  gaussamp();
+static void  gaussamp();
 
 /*
  *	This routine implements the isotropic Gaussian
@@ -69,6 +120,7 @@ typedef struct {
 }  NORMDAT;		/* normal material data */
 
 
+static void
 dirnorm(cval, np, ldir, omega)		/* compute source contribution */
 COLOR  cval;			/* returned coefficient */
 register NORMDAT  *np;		/* material data */
@@ -76,6 +128,7 @@ FVECT  ldir;			/* light source direction */
 double  omega;			/* light source size */
 {
 	double  ldot;
+	double  ldiff;
 	double  dtmp, d2;
 	FVECT  vtmp;
 	COLOR  ctmp;
@@ -87,14 +140,19 @@ double  omega;			/* light source size */
 	if (ldot < 0.0 ? np->trans <= FTINY : np->trans >= 1.0-FTINY)
 		return;		/* wrong side */
 
-	if (ldot > FTINY && np->rdiff > FTINY) {
+				/* Fresnel estimate */
+	ldiff = np->rdiff;
+	if (np->specfl & SP_PURE && (np->rspec > FTINY & ldiff > FTINY))
+		ldiff *= 1. - FRESNE(fabs(ldot));
+
+	if (ldot > FTINY && ldiff > FTINY) {
 		/*
 		 *  Compute and add diffuse reflected component to returned
 		 *  color.  The diffuse reflected component will always be
 		 *  modified by the color of the material.
 		 */
 		copycolor(ctmp, np->mcolor);
-		dtmp = ldot * omega * np->rdiff / PI;
+		dtmp = ldot * omega * ldiff / PI;
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -154,11 +212,13 @@ double  omega;			/* light source size */
 }
 
 
+int
 m_normal(m, r)			/* color a ray that hit something normal */
 register OBJREC  *m;
 register RAY  *r;
 {
 	NORMDAT  nd;
+	double  fest;
 	double  transtest, transdist;
 	double	mirtest, mirdist;
 	int	hastexture;
@@ -206,6 +266,12 @@ register RAY  *r;
 	mirtest = transtest = 0;
 	mirdist = transdist = r->rot;
 	nd.rspec = m->oargs.farg[3];
+						/* compute Fresnel approx. */
+	if (nd.specfl & SP_PURE && nd.rspec > FTINY) {
+		fest = FRESNE(r->rod);
+		nd.rspec += fest*(1. - nd.rspec);
+	} else
+		fest = 0.;
 						/* compute transmission */
 	if (m->otype == MAT_TRANS) {
 		nd.trans = m->oargs.farg[5]*(1.0 - nd.rspec);
@@ -254,11 +320,16 @@ register RAY  *r;
 	if (nd.rspec > FTINY) {
 		nd.specfl |= SP_REFL;
 						/* compute specular color */
-		if (m->otype == MAT_METAL)
+		if (m->otype != MAT_METAL) {
+			setcolor(nd.scolor, nd.rspec, nd.rspec, nd.rspec);
+		} else if (fest > FTINY) {
+			d = nd.rspec*(1. - fest);
+			for (i = 0; i < 3; i++)
+				nd.scolor[i] = fest + nd.mcolor[i]*d;
+		} else {
 			copycolor(nd.scolor, nd.mcolor);
-		else
-			setcolor(nd.scolor, 1.0, 1.0, 1.0);
-		scalecolor(nd.scolor, nd.rspec);
+			scalecolor(nd.scolor, nd.rspec);
+		}
 						/* check threshold */
 		if (!(nd.specfl & SP_PURE) && specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
@@ -333,7 +404,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 gaussamp(r, np)			/* sample gaussian specular */
 RAY  *r;
 register NORMDAT  *np;

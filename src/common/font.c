@@ -1,11 +1,65 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: font.c,v 2.12 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  * Polygonal font handling routines
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include "standard.h"
@@ -15,7 +69,7 @@ static char SCCSid[] = "$SunId$ LBL";
 #define galloc(nv)	(GLYPH *)malloc(sizeof(GLYPH)+2*sizeof(GORD)*(nv))
 
 
-extern char  *getlibpath();
+int	retainfonts = 0;		/* retain loaded fonts? */
 
 static FONT	*fontlist = NULL;	/* list of loaded fonts */
 
@@ -33,8 +87,10 @@ char  *fname;
 	register FONT  *f;
 
 	for (f = fontlist; f != NULL; f = f->next)
-		if (!strcmp(f->name, fname))
+		if (!strcmp(f->name, fname)) {
+			f->nref++;
 			return(f);
+		}
 						/* load the font file */
 	if ((pathname = getpath(fname, getlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find font file \"%s\"", fname);
@@ -44,13 +100,14 @@ char  *fname;
 	if (f == NULL)
 		goto memerr;
 	f->name = savestr(fname);
+	f->nref = 1;
 	if ((fp = fopen(pathname, "r")) == NULL) {
 		sprintf(errmsg, "cannot open font file \"%s\"",
 				pathname);
 		error(SYSTEM, errmsg);
 	}
-	wsum = hsum = ngly = 0;
-	while ((ngv = fgetval(fp, 'i', &gn)) != EOF) {	/* get each glyph */
+	wsum = hsum = ngly = 0;			/* get each glyph */
+	while ((ngv = fgetval(fp, 'i', (char *)&gn)) != EOF) {
 		if (ngv == 0)
 			goto nonint;
 		if (gn < 1 || gn > 255) {
@@ -61,7 +118,8 @@ char  *fname;
 			err = "duplicate";
 			goto fonterr;
 		}
-		if (fgetval(fp, 'i', &ngv) <= 0 || ngv < 0 || ngv > 32000) {
+		if (fgetval(fp, 'i', (char *)&ngv) <= 0 ||
+				ngv < 0 || ngv > 32000) {
 			err = "bad # vertices for";
 			goto fonterr;
 		}
@@ -73,7 +131,8 @@ char  *fname;
 		ngv *= 2;
 		gp = gvlist(g);
 		while (ngv--) {
-			if (fgetval(fp, 'i', &gv) <= 0 || gv < 0 || gv > 255) {
+			if (fgetval(fp, 'i', (char *)&gv) <= 0 ||
+					gv < 0 || gv > 255) {
 				err = "bad vertex for";
 				goto fonterr;
 			}
@@ -116,23 +175,26 @@ memerr:
 }
 
 
-freefont(fname)			/* free a font (free all if fname==NULL) */
-char  *fname;
+void
+freefont(fnt)			/* release a font (free all if NULL) */
+FONT *fnt;
 {
 	FONT  head;
 	register FONT  *fl, *f;
 	register int  i;
-
+					/* check reference count */
+	if (fnt != NULL && (fnt->nref-- > 1 | retainfonts))
+		return;
 	head.next = fontlist;
 	fl = &head;
 	while ((f = fl->next) != NULL)
-		if (fname == NULL || !strcmp(fname, f->name)) {
+		if ((fnt == NULL | fnt == f)) {
 			fl->next = f->next;
 			for (i = 0; i < 256; i++)
 				if (f->fg[i] != NULL)
-					free((char *)f->fg[i]);
+					free((void *)f->fg[i]);
 			freestr(f->name);
-			free((char *)f);
+			free((void *)f);
 		} else
 			fl = f;
 	fontlist = head.next;

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: oconv.c,v 2.12 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  oconv.c - main program for object to octree conversion.
  *
@@ -30,7 +27,7 @@ int  nowarn = 0;			/* supress warnings? */
 
 int  objlim = 5;			/* # of objects before split */
 
-int  resolu = 1024;			/* octree resolution limit */
+int  resolu = 8192;			/* octree resolution limit */
 
 CUBE  thescene = {EMPTY, {0.0, 0.0, 0.0}, 0.0};		/* our scene */
 
@@ -39,7 +36,7 @@ int  nfiles = 0;			/* number of object files */
 
 double	mincusize;			/* minimum cube size from resolu */
 
-int  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
+void  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
 
 
 main(argc, argv)		/* convert object files to an octree */
@@ -160,6 +157,7 @@ breakopt:
 }
 
 
+void
 quit(code)				/* exit program */
 int  code;
 {
@@ -167,12 +165,14 @@ int  code;
 }
 
 
+void
 cputs()					/* interactive error */
 {
 	/* referenced, but not used */
 }
 
 
+void
 wputs(s)				/* warning message */
 char  *s;
 {
@@ -181,6 +181,7 @@ char  *s;
 }
 
 
+void
 eputs(s)				/* put string to stderr */
 register char  *s;
 {

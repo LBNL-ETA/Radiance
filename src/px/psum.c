@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: psum.c,v 2.5 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  psum.c - program to sum pictures.
  *
@@ -155,11 +152,12 @@ psum()				/* sum the files */
 			quit(1);
 		}
 	}
-	free((char *)scanin);
-	free((char *)scanout);
+	free((void *)scanin);
+	free((void *)scanout);
 }
 
 
+void
 quit(code)		/* exit gracefully */
 int  code;
 {

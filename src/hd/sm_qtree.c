@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_qtree.c,v 3.14 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
 *  sm_qtree.c: adapted from octree.c from radiance code
 */
@@ -16,27 +13,23 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "standard.h"
 #include "sm_flag.h"
 #include "sm_geom.h"
+#include "object.h"
 #include "sm_qtree.h"
 
-QUADTREE  *quad_block[QT_MAX_BLK];		/* our quadtree */
+QUADTREE  *quad_block[QT_MAX_BLK];	  /* our quadtree */
 static QUADTREE  quad_free_list = EMPTY;  /* freed octree nodes */
-static QUADTREE  treetop = 0;		/* next free node */
-int4 *quad_flag= NULL;
+static QUADTREE  treetop = 0;		  /* next free node */
+int4 *quad_flag= NULL;                    /* quadtree flags */
 
-#ifdef TEST_DRIVER
-extern FVECT Pick_v0[500],Pick_v1[500],Pick_v2[500];
-extern int Pick_cnt,Pick_tri,Pick_samp;
-extern FVECT Pick_point[500];
-extern int Pick_q[500];
-
-#endif
 
 qtremovelast(qt,id)
 QUADTREE qt;
-int id;
+OBJECT id;
 {
+#ifdef DEBUG
   if(qtqueryset(qt)[(*(qtqueryset(qt)))] != id)
     error(CONSISTENCY,"not removed\n");
+#endif
   ((*(qtqueryset(qt)))--);
 }
 QUADTREE
@@ -106,15 +99,172 @@ qtDone()			/* free EVERYTHING */
 	{
 	    if (quad_block[i] == NULL)
 		break;
-	    free((char *)quad_block[i]);
+	    free((void *)quad_block[i]);
 	    quad_block[i] = NULL;
 	}
 	/* Free the flags */
-	if (i) free((char *)quad_flag);
+	if (i) free((void *)quad_flag);
 	quad_flag = NULL;
 	quad_free_list = EMPTY;
 	treetop = 0;
 }
+
+/*
+ * bary_parent(coord,i)  : Set coord to be value of pt at one level up in
+ *                         quadtree, given it was the ith child
+ * BCOORD coord[3];      :barycentric coordinates of point, also will hold
+ *                        result as side effect
+ * int i;                :designates which child coord was
+ */
+bary_parent(coord,i)
+BCOORD coord[3];
+int i;
+{
+  switch(i) {
+  case 0:
+    /* update bary for child */
+    coord[0] = (coord[0] >> 1) + MAXBCOORD4;
+    coord[1] >>= 1;
+    coord[2] >>= 1;
+    break;
+  case 1:
+    coord[0] >>= 1;
+    coord[1]  = (coord[1] >> 1) + MAXBCOORD4;
+    coord[2] >>= 1;
+    break;
+    
+  case 2:
+    coord[0] >>= 1;
+    coord[1] >>= 1;
+    coord[2] = (coord[2] >> 1) + MAXBCOORD4;
+    break;
+    
+  case 3:
+    coord[0] = MAXBCOORD4 - (coord[0] >> 1);
+    coord[1] = MAXBCOORD4 - (coord[1] >> 1);
+    coord[2] = MAXBCOORD4 - (coord[2] >> 1);
+    break;
+#ifdef DEBUG
+  default:
+    eputs("bary_parent():Invalid child\n");
+    break;
+#endif
+  }
+}
+
+/*
+ * bary_from_child(coord,child,next): Given that coord was the (child) child
+ *                      of the quadtree node, calculate what the (next) child
+ *                      is at the same level.
+ * BCOORD coord[3];   :At current level (child)th child of node,will also hold
+ *                     result as side effect
+ * int child,next;    :Which child coord was (child), and which one
+ *                     is now desired(next)
+ */
+bary_from_child(coord,child,next)
+BCOORD coord[3];
+int child,next;
+{
+#ifdef DEBUG
+  if(child <0 || child > 3)
+  {
+    eputs("bary_from_child():Invalid child\n");
+    return;
+  }
+  if(next <0 || next > 3)
+  {
+    eputs("bary_from_child():Invalid next\n");
+    return;
+  }
+#endif
+  if(next == child)
+    return;
+
+  switch(child){
+  case 0:
+      coord[0] = 0;
+      coord[1] = MAXBCOORD2 - coord[1];
+      coord[2] = MAXBCOORD2 - coord[2];
+      break;
+  case 1:
+      coord[0] = MAXBCOORD2 - coord[0];
+      coord[1] = 0;
+      coord[2] = MAXBCOORD2 - coord[2];
+      break;
+  case 2:
+      coord[0] = MAXBCOORD2 - coord[0];
+      coord[1] = MAXBCOORD2 - coord[1];
+      coord[2] = 0;
+    break;
+  case 3:
+    switch(next){
+    case 0:
+      coord[0] = 0;
+      coord[1] = MAXBCOORD2 - coord[1];
+      coord[2] = MAXBCOORD2 - coord[2];
+      break;
+    case 1:
+      coord[0] = MAXBCOORD2 - coord[0];
+      coord[1] = 0;
+      coord[2] = MAXBCOORD2 - coord[2];
+      break;
+    case 2:
+      coord[0] = MAXBCOORD2 - coord[0];
+      coord[1] = MAXBCOORD2 - coord[1];
+      coord[2] = 0;
+      break;
+    }
+    break;
+  }
+}
+
+/*
+ * int
+ * bary_child(coord):  Return which child coord is of node at current level
+ *                     As side effect recalculate coord at next level
+ * BCOORD coord[3];   :At current level coordinates of point, will also set
+ *                     to coords at next level as side effect
+ */
+int
+bary_child(coord)
+BCOORD coord[3];
+{
+  int i;
+
+  if(coord[0] > MAXBCOORD4)
+  { 
+      /* update bary for child */
+      coord[0] = (coord[0]<< 1) - MAXBCOORD2;
+      coord[1] <<= 1;
+      coord[2] <<= 1;
+      return(0);
+  }
+  else
+    if(coord[1] > MAXBCOORD4)
+    {
+      coord[0] <<= 1;
+      coord[1] = (coord[1] << 1) - MAXBCOORD2;
+      coord[2] <<= 1;
+      return(1);
+    }
+    else
+      if(coord[2] > MAXBCOORD4)
+      {
+	coord[0] <<= 1;
+	coord[1] <<= 1;
+	coord[2] = (coord[2] << 1) - MAXBCOORD2;
+	return(2);
+      }
+      else
+	 {
+	   coord[0] = MAXBCOORD2 - (coord[0] << 1);
+	   coord[1] = MAXBCOORD2 - (coord[1] << 1);
+	   coord[2] = MAXBCOORD2 - (coord[2] << 1);
+	   return(3);
+	 }
+}
+
+
 
 QUADTREE
 qtLocate(qt,bcoord)
@@ -253,13 +403,6 @@ qtTrace_ray(qt,b,db0,db1,db2,nextptr,sign,sfactor,func,f)
      
    }
 }    
-
-
-
-
-
-
-
 
 #define TEST_INT(tl,th,d,q0,q1,h,l) \
                   tl=d>q0;th=d<q1; if(tl&&th) goto Lfunc_call; \
@@ -1406,6 +1549,7 @@ int n,*doneptr;
     return(qt);
   }
 }
+
 
 
 

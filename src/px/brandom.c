@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: brandom.c,v 1.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  brandom.c - blue noise function.
  *

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.22 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  Combine picture files according to calcomp functions.
  *
@@ -14,14 +11,12 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include "color.h"
 
-#include "resolu.h"
-
 #include "calcomp.h"
 
 #include "view.h"
 
 #define MAXINP		32		/* maximum number of input files */
-#define WINSIZ		17		/* scanline window size */
+#define WINSIZ		64		/* scanline window size */
 #define MIDSCN		((WINSIZ-1)/2+1)
 
 struct {
@@ -114,6 +109,7 @@ char	*argv[];
 		break;
 	}
 	newheader("RADIANCE", stdout);	/* start header */
+	fputnow(stdout);
 					/* process files */
 	for (nfiles = 0; nfiles < MAXINP; nfiles++) {
 		setcolor(input[nfiles].coef, 1.0, 1.0, 1.0);
@@ -171,6 +167,7 @@ char	*argv[];
 					colval(input[nfiles].expos,GRN);
 			colval(input[nfiles].coef,BLU) /=
 					colval(input[nfiles].expos,BLU);
+			setcolor(input[nfiles].expos, 1.0, 1.0, 1.0);
 		}
 		nfiles++;
 		original = 0;
@@ -227,7 +224,7 @@ usage:
 }
 
 
-tputs(s)			/* put out string preceded by a tab */
+tabputs(s)			/* put out string preceded by a tab */
 char	*s;
 {
 	char	fmt[32];
@@ -241,7 +238,7 @@ char	*s;
 			wrongformat = 0;
 			strcpy(ourfmt, fmt);
 		} else
-			wrongformat = 1;
+			wrongformat = globmatch(PICFMT, fmt) ? 1 : -1;
 		return(0);	/* don't echo */
 	}
 	if (isexpos(s)) {			/* exposure */
@@ -267,11 +264,15 @@ checkfile()			/* ready a file */
 	gotview = 0;
 	fputs(input[nfiles].name, stdout);
 	fputs(":\n", stdout);
-	getheader(input[nfiles].fp, tputs, NULL);
-	if (wrongformat) {
+	getheader(input[nfiles].fp, tabputs, NULL);
+	if (wrongformat < 0) {
 		eputs(input[nfiles].name);
-		eputs(": not in Radiance picture format\n");
+		eputs(": not a Radiance picture\n");
 		quit(1);
+	}
+	if (wrongformat > 0) {
+		wputs(input[nfiles].name);
+		wputs(": warning -- incompatible picture format\n");
 	}
 	if (!gotview || setview(&input[nfiles].vw) != NULL)
 		input[nfiles].vw.type = 0;
@@ -397,7 +398,7 @@ combine()			/* combine pictures */
 		    quit(1);
 	    }
 	}
-	efree(scanout);
+	efree((char *)scanout);
 }
 
 
@@ -531,7 +532,7 @@ register char	*nam;
 		errno = EDOM;
 		return(0.0);
 	}
-	if (ltick[fn] < eclock) {		/* need to compute? */
+	if (ltick[fn] != eclock) {		/* need to compute? */
 		lorg[fn][0] = lorg[fn][1] = lorg[fn][2] = 0.0;
 		ldir[fn][0] = ldir[fn][1] = ldir[fn][2] = 0.0;
 		ldist[fn] = -1.0;
@@ -571,7 +572,7 @@ l_psize()			/* compute pixel size in steradians */
 		return(0.0);
 	}
 	fn = d - .5;
-	if (ltick[fn] < eclock) {		/* need to compute? */
+	if (ltick[fn] != eclock) {		/* need to compute? */
 		psize[fn] = 0.0;
 		if (input[fn].vw.type == 0)
 			errno = EDOM;
@@ -591,7 +592,7 @@ l_psize()			/* compute pixel size in steradians */
 					diry[i] -= dir0[i];
 				}
 				fcross(dir0, dirx, diry);
-				psize[fn] = 0.5 * sqrt(DOT(dir0,dir0));
+				psize[fn] = sqrt(DOT(dir0,dir0));
 			}
 		}
 		ltick[fn] = eclock;
@@ -600,6 +601,7 @@ l_psize()			/* compute pixel size in steradians */
 }
 
 
+void
 wputs(msg)
 char	*msg;
 {
@@ -608,6 +610,7 @@ char	*msg;
 }
 
 
+void
 eputs(msg)
 char	*msg;
 {
@@ -615,6 +618,7 @@ char	*msg;
 }
 
 
+void
 quit(code)		/* exit gracefully */
 int  code;
 {

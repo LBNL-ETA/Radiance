@@ -1,0 +1,7 @@
+Photopic: ${ Lp }     Scotopic: ${ Ls }      S/P: ${Ls/Lp}
+(x,y): (${x_k},${y_k})
+(x10,y10): (${x10_k},${y10_k})
+(u,v): (${u_k},${v_k})
+Correlated Color Temperature: ${cct} Kelvin
+Color Rendering Index: ${cri}
+

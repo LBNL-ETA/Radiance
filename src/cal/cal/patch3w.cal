@@ -1,0 +1,41 @@
+{
+	Uniform Rational Patch
+
+	02Mar90
+
+	Define Px(i,j), Py(i,j), Pz(i,j) and W(i,j), nrows, ncols
+}
+					{ default basis functions }
+br(a,b,c,d,s) = b3(a,b,c,d,s);
+bc(a,b,c,d,t) = b3(a,b,c,d,t);
+b3(a,b,c,d,p) = bezier(a,b,c,d,p);
+					{ default patch interpolation }
+rint = interpolate;
+cint = interpolate;
+interpolate = 1;
+
+x(s,t) = patch(s,t,Px);
+y(s,t) = patch(s,t,Py);
+z(s,t) = patch(s,t,Pz);
+
+patch(s,t,p) = bc(P2(s,c0(t)+1,p), P2(s,c0(t)+2,p),
+		P2(s,c0(t)+3,p), P2(s,c0(t)+4,p), cf(t)) /
+		bc(W2(s,c0(t)+1), W2(s,c0(t)+2),
+		W2(s,c0(t)+3), W2(s,c0(t)+4), cf(t)) ;
+
+P2(s,j,p) = br(W(1+r0(s),j)*p(1+r0(s),j), W(2+r0(s),j)*p(2+r0(s),j),
+		W(3+r0(s),j)*p(3+r0(s),j), W(4+r0(s),j)*p(4+r0(s),j), rf(s)) ;
+
+W2(s,j) = br(W(1+r0(s),j), W(2+r0(s),j), W(3+r0(s),j), W(4+r0(s),j), rf(s)) ;
+
+r0(s) = rmult*floor(clamp(s)*npr);
+rf(s) = s*npr - floor(clamp(s)*npr);
+c0(t) = cmult*floor(clamp(t)*npc);
+cf(t) = t*npc - floor(clamp(t)*npc);
+
+rmult = if(rint, 4, 1);
+cmult = if(cint, 4, 1);
+npr = if(rint, nrows/4, nrows-3);
+npc = if(cint, ncols/4, ncols-3);
+
+clamp(p) = if(p, if(1-p, p, .9999999), .0000001);

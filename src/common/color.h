@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: color.h,v 2.18 2003/02/22 02:07:22 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -12,6 +9,70 @@
  *  for speed.  Stored color values use 4 bytes which contain
  *  three single byte mantissas and a common exponent.
  */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define  RED		0
 #define  GRN		1
@@ -175,20 +236,16 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  fputcolcor(cc,fp)	fprintf(fp,"%s %f %f %f\n",COLCORSTR, \
 					(cc)[RED],(cc)[GRN],(cc)[BLU])
 
-#ifdef  DCL_ATOF
-extern double  atof(), ldexp(), frexp();
-#endif
-
 /*
  * Conversions to and from XYZ space generally don't apply WHTEFFICACY.
  * If you need Y to be luminance (cd/m^2), this must be applied when
  * converting from radiance (watts/sr/m^2).
  */
 
-extern RGBPRIMS  stdprims;		/* standard primary chromaticities */
-extern COLORMAT  rgb2xyzmat;		/* RGB to XYZ conversion matrix */
-extern COLORMAT  xyz2rgbmat;		/* XYZ to RGB conversion matrix */
-extern COLOR  cblack, cwhite;		/* black (0,0,0) and white (1,1,1) */
+extern RGBPRIMS  stdprims;	/* standard primary chromaticities */
+extern COLORMAT  rgb2xyzmat;	/* RGB to XYZ conversion matrix */
+extern COLORMAT  xyz2rgbmat;	/* XYZ to RGB conversion matrix */
+extern COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
 
 #define  CGAMUT_LOWER		01
 #define  CGAMUT_UPPER		02
@@ -200,4 +257,79 @@ extern COLOR  cblack, cwhite;		/* black (0,0,0) and white (1,1,1) */
 #define  cpcolormat(md,ms)	bcopy((char *)ms,(char *)md,sizeof(COLORMAT))
 #else
 #define  cpcolormat(md,ms)	memcpy((char *)md,(char *)ms,sizeof(COLORMAT))
+#endif
+
+#ifdef NOPROTO
+					/* defined in color.c */
+extern char	*tempbuffer();
+extern int	fwritecolrs();
+extern int	freadcolrs();
+extern int	fwritescan();
+extern int	freadscan();
+extern void	setcolr();
+extern void	colr_color();
+extern int	bigdiff();
+					/* defined in spec_rgb.c */
+extern void	spec_rgb();
+extern void	spec_cie();
+extern void	cie_rgb();
+extern int	clipgamut();
+extern void	colortrans();
+extern void	multcolormat();
+extern void	compxyz2rgbmat();
+extern void	comprgb2xyzmat();
+extern void	comprgb2rgbmat();
+extern void	compxyzWBmat();
+extern void	compxyz2rgbWBmat();
+extern void	comprgb2xyzWBmat();
+extern void	comprgb2rgbWBmat();
+					/* defined in colrops.c */
+extern int	setcolrcor();
+extern int	setcolrinv();
+extern int	setcolrgam();
+extern int	colrs_gambs();
+extern int	gambs_colrs();
+extern void	shiftcolrs();
+extern void	normcolrs();
+
+#else
+					/* defined in color.c */
+extern char	*tempbuffer(unsigned int len);
+extern int	fwritecolrs(COLR *scanline, int len, FILE *fp);
+extern int	freadcolrs(COLR *scanline, int len, FILE *fp);
+extern int	fwritescan(COLOR *scanline, int len, FILE *fp);
+extern int	freadscan(COLOR *scanline, int len, FILE *fp);
+extern void	setcolr(COLR clr, double r, double g, double b);
+extern void	colr_color(COLOR col, COLR clr);
+extern int	bigdiff(COLOR c1, COLOR c2, double md);
+					/* defined in spec_rgb.c */
+extern void	spec_rgb(COLOR col, int s, int e);
+extern void	spec_cie(COLOR col, int s, int e);
+extern void	cie_rgb(COLOR rgb, COLOR xyz);
+extern int	clipgamut(COLOR col, double brt, int gamut,
+				COLOR lower, COLOR upper);
+extern void	colortrans(COLOR c2, COLORMAT mat, COLOR c1);
+extern void	multcolormat(COLORMAT m3, COLORMAT m2,
+					COLORMAT m1);
+extern void	compxyz2rgbmat(COLORMAT mat, RGBPRIMS pr);
+extern void	comprgb2xyzmat(COLORMAT mat, RGBPRIMS pr);
+extern void	comprgb2rgbmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
+extern void	compxyzWBmat(COLORMAT mat, float wht1[2],
+				float wht2[2]);
+extern void	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
+extern void	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
+extern void	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
+					/* defined in colrops.c */
+extern int	setcolrcor(double (*f)(), double a2);
+extern int	setcolrinv(double (*f)(), double a2);
+extern int	setcolrgam(double g);
+extern int	colrs_gambs(COLR *scan, int len);
+extern int	gambs_colrs(COLR *scan, int len);
+extern void	shiftcolrs(COLR *scan, int len, int adjust);
+extern void	normcolrs(COLR *scan, int len, int adjust);
+
+#endif
+
+#ifdef __cplusplus
+}
 #endif

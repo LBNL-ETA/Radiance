@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_t16.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ra_t16.c - program to convert between RADIANCE and
  *		Targa 16, 24 and 32-bit images.
@@ -16,6 +13,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+
+#include  <time.h>
 
 #include  <math.h>
 
@@ -174,6 +173,7 @@ char  *err;
 }
 
 
+void
 eputs(s)
 char *s;
 {
@@ -181,6 +181,7 @@ char *s;
 }
 
 
+void
 quit(code)
 int code;
 {
@@ -291,8 +292,8 @@ struct hdStruct  *hp;
 		if (fwritecolrs(scanline, hp->x, stdout) < 0)
 			quiterr("error writing RADIANCE file");
 	}
-	free((char *)scanline);
-	free((char *)tarData);
+	free((void *)scanline);
+	free((void *)tarData);
 }
 
 
@@ -340,8 +341,8 @@ struct hdStruct  *hp;
 						/* write out targa data */
 	writetarga(hp, tarData, stdout);
 
-	free((char *)inl);
-	free((char *)tarData);
+	free((void *)inl);
+	free((void *)tarData);
 }
 
 

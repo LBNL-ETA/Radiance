@@ -1,5 +1,5 @@
+# RCSid: $Id: Rmakefile,v 2.31 2003/02/22 02:07:30 greg Exp $
 #
-# SCCSid "$SunId$ SGI"
 # Radiance makefile for utility programs
 #
 
@@ -7,7 +7,7 @@ MACH = -DBSD
 
 OPT = -O
 
-CFLAGS = $(MACH) $(OPT) -I../common -L../lib
+CFLAGS = -I../common -I../rt -L../lib $(OPT) $(MACH)
 
 CC = cc
 
@@ -17,7 +17,8 @@ INSTDIR = /usr/local/bin
 
 LIBDIR = /usr/local/lib/ray
 
-PROGS = findglare xglaresrc glarendx rpiece rad ranimate vwright getinfo vwrays
+PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
+		vwrays xglaresrc
 
 all:	$(PROGS)
 
@@ -33,14 +34,15 @@ rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh
 	cp rlux.csh $(INSTDIR)/rlux
 	cp raddepend.csh $(INSTDIR)/raddepend
 	cp compamb.csh $(INSTDIR)/compamb
+	cp vinfo.csh $(INSTDIR)/vinfo
 	chmod 755 $(INSTDIR)/objview $(INSTDIR)/objpict \
 		$(INSTDIR)/glare $(INSTDIR)/dayfact $(INSTDIR)/debugcal \
 		$(INSTDIR)/rlux $(INSTDIR)/raddepend $(INSTDIR)/objline \
-		$(INSTDIR)/compamb
+		$(INSTDIR)/compamb $(INSTDIR)/vinfo
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
 clean:
-	set nonomatch; rm -f *.o $(PROGS) core
+	set nonomatch; rm -f *.o $(PROGS) glrad core
 
 ogl:	glrad
 	cp glrad $(INSTDIR)
@@ -75,6 +77,11 @@ rad:	rad.o
 
 ranimate:	ranimate.o netproc.o
 	$(CC) $(CFLAGS) -o ranimate ranimate.o netproc.o -lrt -lm
+
+ranimove:	ranimove.o ranimove1.o ranimove2.o \
+../lib/raypcalls.o ../lib/raycalls.o
+	$(CC) $(CFLAGS) -o ranimove ranimove.o ranimove1.o ranimove2.o \
+../lib/raypcalls.o ../lib/raycalls.o -lradiance -lrt -lm
 
 rpiece:	rpiece.o Version.o
 	$(CC) $(CFLAGS) -o rpiece rpiece.o Version.o -lrt -lm
@@ -128,16 +135,31 @@ xglaresrc.o:	../common/vfork.h
 
 rad.o ranimate.o:	../common/vars.h
 
+ranimove1.o ranimove2.o:	../common/random.h
+
 rad.o:	../common/paths.h
 
 ranimate.o netproc.o:	netproc.h
 
+ranimove1.o:	../common/otypes.h
+
 netproc.o:	../common/paths.h
 
-rad.o ranimate.o:	../common/view.h
+rad.o ranimate.o ranimove.o:	../common/view.h ../common/resolu.h
 
 glrad.o:	../common/radogl.h \
 ../common/standard.h ../common/mat4.h ../common/fvect.h \
 ../common/color.h ../common/object.h ../common/otypes.h ../common/lookup.h
 
 glrad.o:	glradicon.h ../common/view.h ../common/paths.h
+
+ranimove.o ranimove1.o ranimove2.o:	ranimove.h \
+../common/vars.h ../common/view.h \
+../rt/ray.h ../common/standard.h ../common/octree.h \
+../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
+
+Version.c:	../rt/Version.c
+	cp ../rt/Version.c .
+
+x11findwind.c:	../common/x11findwind.c
+	cp ../common/x11findwind.c .

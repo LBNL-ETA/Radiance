@@ -1,0 +1,13 @@
+{
+	Compute difference between luminance of two images.
+	Display towards red where first image is brighter,
+	and towards blue where second image is brighter.
+
+	29 August 1991
+}
+l1=li(1); l2=li(2);
+avg=(l1+l2)/2;
+dif=(l1-l2)/2;
+ro=avg+dif;
+go=avg-dif*dif/2;
+bo=avg-dif;

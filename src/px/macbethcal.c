@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.17 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
  *
@@ -18,6 +15,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #ifdef MSDOS
 #include <fcntl.h>
 #endif
+#include  <time.h>
 #include "color.h"
 #include "resolu.h"
 #include "pmap.h"
@@ -124,8 +122,6 @@ WARP3D	*wcor = NULL;		/* color space warp */
 
 FILE	*debugfp = NULL;	/* debug output picture */
 char	*progname;
-
-extern char	*malloc();
 
 
 main(argc, argv)
@@ -362,7 +358,7 @@ getpicture()				/* load in picture colors */
 		scalecolor(inpRGB[i], d);
 		inpflags |= 1L<<i;
 	}
-	free((char *)scanln);
+	free((void *)scanln);
 }
 
 
@@ -712,7 +708,7 @@ picdebug()			/* put out debugging picture */
 	}
 						/* clean up */
 	fclose(debugfp);
-	free((char *)scan);
+	free((void *)scan);
 }
 
 
@@ -782,7 +778,7 @@ clrdebug()			/* put out debug picture from color input */
 	}
 						/* clean up */
 	fclose(debugfp);
-	free((char *)scan);
+	free((void *)scan);
 }
 
 

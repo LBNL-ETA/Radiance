@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: objpict.csh,v 2.2 2003/02/22 02:07:30 greg Exp $
 #
 # Make a nice multi-view picture of an object
 # Standard input is description made to fit in unit cube in positive quadrant

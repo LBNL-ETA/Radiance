@@ -1,9 +1,6 @@
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: gensurf.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
 #endif
-
-/* Copyright (c) 1989 Regents of the University of California */
-
 /*
  *  gensurf.c - program to generate functional surfaces
  *
@@ -14,13 +11,17 @@ static char SCCSid[] = "$SunId$ LBL";
  *  rule applied to (s,t).
  *
  *	4/3/87
+ *
+ *	4/16/02	Added conditional vertex output
  */
 
 #include  "standard.h"
 
-char  XNAME[] =		"X`SYS`";		/* x function name */
-char  YNAME[] =		"Y`SYS`";		/* y function name */
-char  ZNAME[] =		"Z`SYS`";		/* z function name */
+char  XNAME[] =		"X`SYS";		/* x function name */
+char  YNAME[] =		"Y`SYS";		/* y function name */
+char  ZNAME[] =		"Z`SYS";		/* z function name */
+
+char  VNAME[] = 	"valid";		/* valid vertex name */
 
 #define  ABS(x)		((x)>=0 ? (x) : -(x))
 
@@ -48,6 +49,7 @@ double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
 extern double  funvalue(), argument();
 
 typedef struct {
+	int  valid;	/* point is valid */
 	FVECT  p;	/* vertex position */
 	FVECT  n;	/* average normal */
 } POINT;
@@ -134,8 +136,13 @@ char  *argv[];
 		compnorms(row0, row1, row2, n);
 
 		for (j = 0; j < n; j++) {
+			int  orient = (j & 1);
 							/* put polygons */
-			if ((i+j) & 1)
+			if (!(row0[j].valid & row1[j+1].valid))
+				orient = 1;
+			else if (!(row1[j].valid & row0[j+1].valid))
+				orient = 0;
+			if (orient)
 				putsquare(&row0[j], &row1[j],
 						&row0[j+1], &row1[j+1]);
 			else
@@ -158,7 +165,6 @@ char  *file;
 int  m, n;
 int  pointsize;
 {
-	extern char  *fgetword();
 	FILE  *fp;
 	char  word[64];
 	register int  size;
@@ -263,14 +269,20 @@ POINT  *p0, *p1, *p2, *p3;
 	FVECT  v1, v2, vc1, vc2;
 	int  ok1, ok2;
 					/* compute exact normals */
-	fvsum(v1, p1->p, p0->p, -1.0);
-	fvsum(v2, p2->p, p0->p, -1.0);
-	fcross(vc1, v1, v2);
-	ok1 = normalize(vc1) != 0.0;
-	fvsum(v1, p2->p, p3->p, -1.0);
-	fvsum(v2, p1->p, p3->p, -1.0);
-	fcross(vc2, v1, v2);
-	ok2 = normalize(vc2) != 0.0;
+	ok1 = (p0->valid & p1->valid & p2->valid);
+	if (ok1) {
+		fvsum(v1, p1->p, p0->p, -1.0);
+		fvsum(v2, p2->p, p0->p, -1.0);
+		fcross(vc1, v1, v2);
+		ok1 = (normalize(vc1) != 0.0);
+	}
+	ok2 = (p1->valid & p2->valid & p3->valid);
+	if (ok2) {
+		fvsum(v1, p2->p, p3->p, -1.0);
+		fvsum(v2, p1->p, p3->p, -1.0);
+		fcross(vc2, v1, v2);
+		ok2 = (normalize(vc2) != 0.0);
+	}
 	if (!(ok1 | ok2))
 		return;
 					/* compute normal interpolation */
@@ -348,6 +360,7 @@ int  siz;
 {
 	double  st[2];
 	int  end;
+	int  checkvalid;
 	register int  i;
 	
 	if (smooth) {
@@ -360,11 +373,18 @@ int  siz;
 		end = siz;
 	}
 	st[0] = s;
+	checkvalid = (fundefined(VNAME) == 2);
 	while (i <= end) {
 		st[1] = (double)i/siz;
-		row[i].p[0] = funvalue(XNAME, 2, st);
-		row[i].p[1] = funvalue(YNAME, 2, st);
-		row[i].p[2] = funvalue(ZNAME, 2, st);
+		if (checkvalid && funvalue(VNAME, 2, st) <= 0.0) {
+			row[i].valid = 0;
+			row[i].p[0] = row[i].p[1] = row[i].p[2] = 0.0;
+		} else {
+			row[i].valid = 1;
+			row[i].p[0] = funvalue(XNAME, 2, st);
+			row[i].p[1] = funvalue(YNAME, 2, st);
+			row[i].p[2] = funvalue(ZNAME, 2, st);
+		}
 		i++;
 	}
 }
@@ -378,10 +398,30 @@ int  siz;
 
 	if (!smooth)			/* not needed if no smoothing */
 		return;
-					/* compute middle points */
+					/* compute row 1 normals */
 	while (siz-- >= 0) {
-		fvsum(v1, r2[0].p, r0[0].p, -1.0);
-		fvsum(v2, r1[1].p, r1[-1].p, -1.0);
+		if (!r1[0].valid)
+			continue;
+		if (!r0[0].valid) {
+			if (!r2[0].valid) {
+				r1[0].n[0] = r1[0].n[1] = r1[0].n[2] = 0.0;
+				continue;
+			}
+			fvsum(v1, r2[0].p, r1[0].p, -1.0);
+		} else if (!r2[0].valid)
+			fvsum(v1, r1[0].p, r0[0].p, -1.0);
+		else
+			fvsum(v1, r2[0].p, r0[0].p, -1.0);
+		if (!r1[-1].valid) {
+			if (!r1[1].valid) {
+				r1[0].n[0] = r1[0].n[1] = r1[0].n[2] = 0.0;
+				continue;
+			}
+			fvsum(v2, r1[1].p, r1[0].p, -1.0);
+		} else if (!r1[1].valid)
+			fvsum(v2, r1[0].p, r1[-1].p, -1.0);
+		else
+			fvsum(v2, r1[1].p, r1[-1].p, -1.0);
 		fcross(r1[0].n, v1, v2);
 		normalize(r1[0].n);
 		r0++; r1++; r2++;
@@ -445,6 +485,7 @@ POINT  *p0, *p1, *p2, *p3;
 }
 
 
+void
 eputs(msg)
 char  *msg;
 {
@@ -452,6 +493,7 @@ char  *msg;
 }
 
 
+void
 wputs(msg)
 char  *msg;
 {
@@ -459,6 +501,7 @@ char  *msg;
 }
 
 
+void
 quit(code)
 int  code;
 {

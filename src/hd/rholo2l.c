@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.12 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Routines for local rtrace execution
  */
@@ -318,7 +315,7 @@ end_rtrace()			/* close rtrace process(es) */
 		if (rv > 0)
 			status = rv;
 	}
-	free((char *)rtbuf);
+	free((void *)rtbuf);
 	rtbuf = NULL;
 	maxqlen = 0;
 	return(status);

@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.4 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  readobj2.c - routines for reading in object descriptions.
  */
@@ -18,12 +15,7 @@ static char SCCSid[] = "$SunId$ LBL";
 
 extern char  *fgetword();
 
-OBJREC  *objblock[MAXOBJBLK];		/* our objects */
-OBJECT  nobjects = 0;			/* # of objects */
-int newobject() {return(0);}
-
-
-readobj(input, callback)	/* read in an object file or stream */
+readobj2(input, callback)	/* read in an object file or stream */
 char  *input;
 int  (*callback)();
 {
@@ -53,10 +45,10 @@ int  (*callback)();
 		} else if (c == '!') {			/* command */
 			ungetc(c, infp);
 			fgetline(buf, sizeof(buf), infp);
-			readobj(buf, callback);
+			readobj2(buf, callback);
 		} else {				/* object */
 			ungetc(c, infp);
-			getobject(input, infp, callback);
+			getobject2(input, infp, callback);
 		}
 	}
 	if (input[0] == '!')
@@ -66,7 +58,7 @@ int  (*callback)();
 }
 
 
-getobject(name, fp, f)			/* read the next object */
+getobject2(name, fp, f)			/* read the next object */
 char  *name;
 FILE  *fp;
 int  (*f)();
@@ -100,21 +92,6 @@ int  (*f)();
 					/* call function */
 	(*f)(&thisobj);
 					/* free memory */
-	if (thisobj.os != NULL)
-		switch (thisobj.otype) {
-		case OBJ_CONE:
-		case OBJ_CUP:
-		case OBJ_CYLINDER:
-		case OBJ_TUBE:
-		case OBJ_RING:
-			freecone(&thisobj);
-			break;
-		case OBJ_FACE:
-			freeface(&thisobj);
-			break;
-		case OBJ_INSTANCE:
-			freeinstance(&thisobj);
-			break;
-		}
 	freefargs(&thisobj.oargs);
+	free_os(&thisobj);
 }

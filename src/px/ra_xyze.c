@@ -1,23 +1,21 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
+ *  Added white-balance adjustment 10/01 (GW).
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <math.h>
+#include  <time.h>
 #include  "color.h"
 #include  "resolu.h"
 
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
-
-extern char  *malloc(), *strcpy();
 
 int  rgbinp = -1;			/* input is RGBE? */
 
@@ -159,14 +157,14 @@ convert()				/* convert to XYZE or RGBE picture */
 						/* compute transform */
 	if (rgbout) {
 		if (rgbinp) {			/* RGBE -> RGBE */
-			comprgb2rgbmat(xfm, inprims, outprims);
+			comprgb2rgbWBmat(xfm, inprims, outprims);
 		} else {			/* XYZE -> RGBE */
-			compxyz2rgbmat(xfm, outprims);
+			compxyz2rgbWBmat(xfm, outprims);
 			ourexp *= WHTEFFICACY;
 		}
 	} else {
 		if (rgbinp) {			/* RGBE -> XYZE */
-			comprgb2xyzmat(xfm, inprims);
+			comprgb2xyzWBmat(xfm, inprims);
 			ourexp /= WHTEFFICACY;
 		} else {			/* XYZE -> XYZE */
 			for (y = 0; y < 3; y++)
@@ -217,7 +215,7 @@ convert()				/* convert to XYZE or RGBE picture */
 			quiterr("error writing output picture");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 	if (scanout != NULL)
-		free((char *)scanout);
+		free((void *)scanout);
 }

@@ -1,0 +1,39 @@
+{
+	Calculation of view parameters for walk-throughs.
+	Uses Catmull-Rom spline.
+
+		09Feb90 Greg Ward
+
+	Define:
+		T(i)	- time between keyframe i and i-1
+	Input:
+		t	- time
+	Output:
+		s(f)	- spline value for f at t where f(i) is value at T(i)
+}
+
+
+or(a,b) : if(a, a, b);
+min(a,b) : if(a-b, b, a);
+max(a,b) : if(a-b, a, b);
+
+hermite(p0,p1,r0,r1,t) :	p0 * ((2*t-3)*t*t+1) +
+				p1 * (-2*t+3)*t*t +
+				r0 * (((t-2)*t+1)*t) +
+				r1 * ((t-1)*t*t);
+Ttot : sum(T,T(0));
+
+sum(f,n) : if(n-.5, f(n)+sum(f,n-1), 0);
+
+tfrac =	(t-sum(T,below))/T(above);
+
+upper(s,i) = if(or(i-T(0)+.5,s+T(i)-t), i, upper(s+T(i),i+1));
+
+below = above-1;
+above = max(upper(0,1),2);
+below2 = max(below-1,1);
+above2 = min(above+1,T(0));
+
+s(f) = hermite(f(below), f(above),
+		(f(above)-f(below2))/2, (f(above2)-f(below))/2,
+		tfrac);

@@ -1,25 +1,21 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.20 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Program to convert between RADIANCE and TIFF files.
- *  Added experimental LogLuv encodings 7/97 (GWL).
+ *  Added LogLuv encodings 7/97 (GWL).
+ *  Added white-balance adjustment 10/01 (GW).
  */
 
 #include  <stdio.h>
 #include  <math.h>
+#include  <time.h>
 #include  "tiffio.h"
 #include  "color.h"
 #include  "resolu.h"
 
 #define  GAMCOR		2.2		/* default gamma */
 
-#ifndef malloc
-extern char  *malloc();
-#endif
 				/* conversion flags */
 #define C_CXFM		0x1		/* needs color transformation */
 #define C_GAMUT		0x2		/* needs gamut mapping */
@@ -268,7 +264,7 @@ initfromtif()		/* initialize conversion from TIFF input */
 		SET(C_GAMMA);
 		setcolrgam(cvts.gamcor);
 		if (CHK(C_XYZE)) {
-			comprgb2xyzmat(cvts.cmat,
+			comprgb2xyzWBmat(cvts.cmat,
 					CHK(C_PRIM) ? cvts.prims : stdprims);
 			SET(C_CXFM);
 		}
@@ -425,7 +421,8 @@ initfromrad()			/* initialize input from a Radiance picture */
 		SET(C_RFLT|C_TFLT);
 		CLR(C_GRY);
 		if (!CHK(C_XYZE)) {
-			cpcolormat(cvts.cmat, rgb2xyzmat);
+			comprgb2xyzWBmat(cvts.cmat,
+					CHK(C_PRIM) ? cvts.prims : stdprims);
 			SET(C_CXFM);
 		}
 		if (cvts.comp != COMPRESSION_SGILOG &&
@@ -448,7 +445,7 @@ initfromrad()			/* initialize input from a Radiance picture */
 		CLR(C_GRY);
 		setcolrgam(cvts.gamcor);
 		if (CHK(C_XYZE)) {
-			compxyz2rgbmat(cvts.cmat,
+			compxyz2rgbWBmat(cvts.cmat,
 					CHK(C_PRIM) ? cvts.prims : stdprims);
 			SET(C_CXFM);
 		}

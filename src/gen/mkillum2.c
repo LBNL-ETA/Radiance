@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.9 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines to do the actual calculation for mkillum
  */
@@ -118,7 +115,7 @@ char  *nm;
 			objerror(ob, WARNING, "bad aspect");
 			rt->nrays = 0;
 			freeface(ob);
-			free((char *)distarr);
+			free((void *)distarr);
 			o_default(ob, il, rt, nm);
 			return;
 		    }
@@ -137,7 +134,7 @@ char  *nm;
 		printobj(il->altmat, ob);
 				/* clean up */
 	freeface(ob);
-	free((char *)distarr);
+	free((void *)distarr);
 #undef MAXMISS
 }
 
@@ -207,7 +204,7 @@ char  *nm;
 	} else
 		printobj(il->altmat, ob);
 				/* clean up */
-	free((char *)distarr);
+	free((void *)distarr);
 }
 
 
@@ -276,7 +273,7 @@ char  *nm;
 		printobj(il->altmat, ob);
 				/* clean up */
 	freecone(ob);
-	free((char *)distarr);
+	free((void *)distarr);
 }
 
 

@@ -1,11 +1,65 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rpict.c,v 2.52 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  rpict.c - routines and variables for picture generation.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
@@ -28,8 +82,6 @@ extern time_t	time();
 
 #include  "view.h"
 
-#include  "resolu.h"
-
 #include  "random.h"
 
 #include  "paths.h"
@@ -40,9 +92,15 @@ extern time_t	time();
 #define SIGCONT		SIGIO
 #endif
 
+CUBE  thescene;				/* our scene */
+OBJECT	nsceneobjs;			/* number of objects in our scene */
+
 int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
 int  samplendx;				/* sample index number */
+
+extern void  ambnotify();
+void  (*addobjnotify[])() = {ambnotify, NULL};
 
 VIEW  ourview = STDVIEW;		/* view parameters */
 int  hresolu = 512;			/* horizontal resolution */
@@ -54,6 +112,10 @@ double	maxdiff = .05;			/* max. difference for interpolation */
 double	dstrpix = 0.67;			/* square pixel distribution */
 
 double  mblur = 0.;			/* motion blur parameter */
+
+void  (*trace)() = NULL;		/* trace call */
+
+int  do_irrad = 0;			/* compute irradiance? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
 double	shadthresh = .05;		/* shadow threshold */
@@ -76,6 +138,7 @@ int  backvis = 1;			/* back face visibility */
 int  maxdepth = 6;			/* maximum recursion depth */
 double	minweight = 5e-3;		/* minimum ray weight */
 
+char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
 double	ambacc = 0.2;			/* ambient accuracy */
@@ -86,19 +149,11 @@ int  ambounce = 0;			/* ambient bounces */
 char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
-#ifdef MSDOS
-int  ralrm = 60;			/* seconds between reports */
-#else
 int  ralrm = 0;				/* seconds between reports */
-#endif
 
 double	pctdone = 0.0;			/* percentage done */
-
 time_t  tlastrept = 0L;			/* time at last report */
-
-extern time_t  tstart;			/* starting time */
-
-extern unsigned long  nrays;		/* number of rays traced */
+time_t  tstart;				/* starting time */
 
 #define	 MAXDIV		16		/* maximum sample size */
 
@@ -109,6 +164,8 @@ int  hres, vres;			/* resolution for this frame */
 static VIEW	lastview;		/* the previous view input */
 
 extern char  *mktemp();
+
+void  report();
 
 double	pixvalue();
 
@@ -128,18 +185,22 @@ char  *fname;
 #endif
 
 
+void
 quit(code)			/* quit program */
 int  code;
 {
 	if (code)			/* report status */
 		report();
+#ifndef NIX
 	headclean();			/* delete header file */
 	pfclean();			/* clean up persist files */
+#endif
 	exit(code);
 }
 
 
 #ifndef NIX
+void
 report()		/* report progress */
 {
 	extern char  *myhostname();
@@ -180,6 +241,7 @@ report()		/* report progress */
 #endif
 }
 #else
+void
 report()		/* report progress */
 {
 	tlastrept = time((time_t *)NULL);
@@ -190,6 +252,7 @@ report()		/* report progress */
 #endif
 
 
+void
 rpict(seq, pout, zout, prvr)			/* generate image(s) */
 int  seq;
 char  *pout, *zout, *prvr;
@@ -290,7 +353,7 @@ char  *pout, *zout, *prvr;
 		hres = hresolu; vres = vresolu; pa = pixaspect;
 		if (prvr != NULL)
 			if (viewfile(prvr, &ourview, &rs) <= 0
-					|| rs.or != PIXSTANDARD) {
+					|| rs.rt != PIXSTANDARD) {
 				sprintf(errmsg,
 			"cannot recover view parameters from \"%s\"", prvr);
 				error(WARNING, errmsg);
@@ -358,6 +421,12 @@ char  *zfile, *oldfile;
 	COLOR  *colptr;
 	float  *zptr;
 	register int  i;
+					/* check for empty image */
+	if (hres <= 0 || vres <= 0) {
+		error(WARNING, "empty output picture");
+		fprtresolu(0, 0, stdout);
+		return;
+	}
 					/* allocate scanlines */
 	for (i = 0; i <= psample; i++) {
 		scanbar[i] = (COLOR *)malloc(hres*sizeof(COLOR));
@@ -368,7 +437,7 @@ char  *zfile, *oldfile;
 	ystep = (psample*99+70)/140;
 	if (hstep > 2) {
 		i = hres/hstep + 2;
-		if ((sampdens = malloc(i)) == NULL)
+		if ((sampdens = (char *)malloc(i)) == NULL)
 			goto memerr;
 		while (i--)
 			sampdens[i] = hstep;
@@ -400,7 +469,7 @@ char  *zfile, *oldfile;
 	if (i >= vres)
 		goto alldone;
 	if (zfd != -1 && i > 0 &&
-			lseek(zfd, (long)i*hres*sizeof(float), 0) < 0)
+			lseek(zfd, (off_t)i*hres*sizeof(float), 0) < 0)
 		error(SYSTEM, "z-file seek error in render");
 	pctdone = 100.0*i/vres;
 	if (ralrm > 0)			/* report init stats */
@@ -469,10 +538,10 @@ alldone:
 		if (close(zfd) == -1)
 			goto writerr;
 		for (i = 0; i <= psample; i++)
-			free((char *)zbar[i]);
+			free((void *)zbar[i]);
 	}
 	for (i = 0; i <= psample; i++)
-		free((char *)scanbar[i]);
+		free((void *)scanbar[i]);
 	if (sampdens != NULL)
 		free(sampdens);
 	pctdone = 100.0;
@@ -695,7 +764,7 @@ char  *oldfile;
 	}
 	if (fflush(stdout) == EOF)
 		goto writerr;
-	free((char *)scanline);
+	free((void *)scanline);
 	fclose(fp);
 	unlink(oldfile);
 	return(y);

@@ -1,3 +1,4 @@
+/* RCSid: $Id: newsconstants.h,v 2.2 2003/02/22 02:07:28 greg Exp $ */
 #define textareaheight 150
 #define textbottom 10
 #define thefont /Times-Bold

@@ -1,17 +1,16 @@
+# RCSid: $Id: Rmakefile,v 2.33 2003/02/22 02:07:28 greg Exp $
 #
-# SCCSid "$SunId$ SGI"
 # Compiles for ray tracing programs.
 #
 
 OPT = -O
 MACH = -DBSD
-CFLAGS = $(MACH) $(OPT) -I../common -L../lib
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 SPECIAL = aed
 CC = cc
 MLIB = -lm
 LINT = lint
-LINTFLAGS = -DBSD -DVARIABLE -DFUNCTION \
--DINCHAN -DRCONST -DREDEFW
+LINTFLAGS = -DBSD
 
 #
 # The following are user-definable:
@@ -29,6 +28,7 @@ LIBDIR = /usr/local/lib/ray
 #
 # Library routines:
 #
+RLIB = ../lib/libradiance.a
 LIBS = -lrt $(MLIB)
 
 #
@@ -44,29 +44,32 @@ DLIBS = -lX11
 # Standard object files:
 #
 
-RTOBJS = rtmain.o rtrace.o duphead.o persist.o preload.o $(ROBJS) Version.o
-RTSRC = rmain.c rtrace.c duphead.c persist.c preload.c $(RSRC) Version.c
+RTOBJS = rtmain.o rtrace.o duphead.o persist.o
+RTSRC = rtmain.c rtrace.c duphead.c persist.c
 
-RPOBJS = rpmain.o rpict.o srcdraw.o duphead.o persist.o preload.o $(ROBJS) \
-Version.o
-RPSRC = rmain.c rpict.c srcdraw.c duphead.c persist.c preload.c $(RSRC) \
-Version.c
+RPOBJS = rpmain.o rpict.o srcdraw.o duphead.o persist.o
+RPSRC = rpmain.c rpict.c srcdraw.c duphead.c persist.c
 
-RVOBJS = rvmain.o rview.o rv2.o rv3.o freeobjmem.o $(DOBJS) $(ROBJS) Version.o
-RVSRC = rmain.c rview.c rv2.c rv3.c freeobjmem.c $(DSRC) $(RSRC) Version.c
+RVOBJS = rvmain.o rview.o rv2.o rv3.o $(DOBJS)
+RVSRC = rvmain.c rview.c rv2.c rv3.c $(DSRC)
+
+RLOBJS = raycalls.o raypcalls.o
+RLSRC = raycalls.c raypcalls.c
 
 ROBJS = $(RAYOBJS) $(SURFOBJS) $(MATOBJS) \
 	$(MODOBJS) $(SUPPOBJS)
 RSRC = $(RAYSRC) $(SURFSRC) $(MATSRC) \
 	$(MODSRC) $(SUPPSRC)
 
-RAYOBJS = initotypes.o raytrace.o ambient.o ambcomp.o ambio.o
-RAYSRC = initotypes.c raytrace.c ambient.c ambcomp.c ambio.c
+RAYOBJS = ambcomp.o ambient.o ambio.o freeobjmem.o initotypes.o \
+	preload.o raytrace.o renderopts.o
+RAYSRC = ambcomp.c ambient.c ambio.c freeobjmem.c initotypes.c \
+	preload.c raytrace.c renderopts.c
 
 SURFOBJS = source.o sphere.o srcsupp.o srcsamp.o virtuals.o o_face.o \
 	o_cone.o o_instance.o
 SURFSRC = sphere.c source.c srcsupp.c virtuals.c o_face.c \
-		srcsamp.c o_cone.c o_instance.c
+	srcsamp.c o_cone.c o_instance.c
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
 	m_mirror.o m_direct.o m_mist.o fprism.o
@@ -76,8 +79,8 @@ MATSRC = aniso.c normal.c dielectric.c m_clip.c glass.c m_brdf.c \
 MODOBJS = p_func.o t_func.o p_data.o t_data.o text.o mx_func.o mx_data.o
 MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c
 
-SUPPOBJS = calexpr.o caldefn.o func.o noise3.o malloc.o data.o readfargs.o
-SUPPSRC = calexpr.c caldefn.c func.c noise3.c data.c malloc.c readfargs.c
+SUPPOBJS = func.o noise3.o data.o
+SUPPSRC = func.c noise3.c data.c
 
 HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
@@ -87,20 +90,15 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rview $(DESTDIR)/lookamb
 
-all:	$(PROGS)
+all:	$(PROGS) $(SPECIAL) $(RLOBJS)
 
-install:	$(PROGS) $(SPECIAL) rayinit.cal
+install:	all rayinit.cal
 	$(INSTALL) $(PROGS) $(INSTDIR)
+	cp $(RLOBJS) ../lib
 	rm -f $(LIBDIR)/rayinit.cal
 	cp rayinit.cal $(LIBDIR)
 
-sun:	$(DEVDIR)/sun $(DEVDIR)/sun.com
-
-x10:	$(DEVDIR)/x10
-
 aed:	$(DEVDIR)/aed
-
-sgi:	$(DEVDIR)/news
 
 ogl:	
 
@@ -114,58 +112,38 @@ lint:	$(RVSRC)
 # Links:
 #
 
-$(DESTDIR)/rtrace:	$(RTOBJS)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/rtrace $(RTOBJS) $(LIBS)
+$(DESTDIR)/rtrace:	$(RTOBJS) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rtrace $(RTOBJS) $(RLIB) $(LIBS)
 
-$(DESTDIR)/rpict:	$(RPOBJS)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/rpict $(RPOBJS) $(LIBS)
+$(DESTDIR)/rpict:	$(RPOBJS) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rpict $(RPOBJS) $(RLIB) $(LIBS)
 
-$(DESTDIR)/rview:	$(RVOBJS)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/rview $(RVOBJS) $(DLIBS) $(LIBS)
+$(DESTDIR)/rview:	$(RVOBJS) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rview $(RVOBJS) $(RLIB) $(LIBS) $(DLIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
-
-$(DEVDIR)/sun:	sundev.o devmain.o colortab.o editline.o
-	$(CC) $(CFLAGS) -s -o $(DEVDIR)/sun devmain.o sundev.o colortab.o \
-editline.o -lsuntool -lsunwindow -lpixrect $(LIBS)
-
-$(DEVDIR)/sun.com:	suncom.o editline.o
-	$(CC) $(CFLAGS) -s -o $(DEVDIR)/sun.com suncom.o editline.o
-
-$(DEVDIR)/x10:	x10.o xtwind.o colortab.o devmain.o editline.o
-	$(CC) $(CFLAGS) -s -o $(DEVDIR)/x10 x10.o xtwind.o devmain.o \
-colortab.o editline.o -lX $(LIBS)
 
 $(DEVDIR)/aed:	aed.o colortab.o tty.o devmain.o editline.o
 	$(CC) $(CFLAGS) -s -o $(DEVDIR)/aed aed.o colortab.o \
 devmain.o tty.o editline.o $(LIBS)
 
-$(DEVDIR)/news: nwsdev.o devmain.o editline.o
-	$(CC) $(CFLAGS) -s -o $(DEVDIR)/news nwsdev.o devmain.o editline.o \
--lcps $(LIBS)
+$(RLIB):	$(ROBJS) Version.o
+	ar rc $(RLIB) $(ROBJS) Version.o
+	-ranlib $(RLIB)
 
 #
 # Special compiles:
 #
 
-rtmain.o:	rmain.c
-	$(CC) $(CFLAGS) -DRTRACE -DNICE=4 -c rmain.c
-	mv rmain.o rtmain.o
+rtmain.o:	rtmain.c
+	$(CC) $(CFLAGS) -DNICE=4 -c rtmain.c
 
-rpmain.o:	rmain.c
-	$(CC) $(CFLAGS) -DRPICT -DNICE=6 -c rmain.c
-	mv rmain.o rpmain.o
+rpmain.o:	rpmain.c
+	$(CC) $(CFLAGS) -DNICE=6 -c rpmain.c
 
-rvmain.o:	rmain.c
-	$(CC) $(CFLAGS) -DRVIEW -c rmain.c
-	mv rmain.o rvmain.o
-
-readfargs.o:	readfargs.c ../common/object.h
-	$(CC) $(CFLAGS) -DMEMHOG -c readfargs.c
-
-malloc.o:	malloc.c
-	$(CC) $(CFLAGS) -DMCOMP -c malloc.c
+rvmain.o:	rvmain.c
+	$(CC) $(CFLAGS) -c rvmain.c
 
 #
 # Uncomment the following to model dispersion:
@@ -178,26 +156,8 @@ dielectric.o:	dielectric.c source.h
 devcomm.o:	devcomm.c
 	$(CC) $(CFLAGS) -DDEVPATH=\"$(DEVDIR)\" -c devcomm.c
 
-sundev.o:	sundev.c
-	$(CC) $(CFLAGS) -DTTYPROG=\"$(DEVDIR)/sun.com\" -Dsun_init=dinit -c sundev.c
-
-x10.o:	x10.c
-	$(CC) $(CFLAGS) -Dx_init=dinit -c x10.c
-
 aed.o:	aed.c
 	$(CC) $(CFLAGS) -Daed_init=dinit -c aed.c
-
-calexpr.o:	calexpr.c ../common/calcomp.h
-	$(CC) $(CFLAGS) -DVARIABLE -DFUNCTION -DINCHAN -DRCONST -c calexpr.c
-
-caldefn.o:	caldefn.c ../common/calcomp.h
-	$(CC) $(CFLAGS) -DFUNCTION -DREDEFW -c caldefn.c
-
-nwsdev.o:	nwsdev.c nwsdev.h newsconstants.h
-	$(CC) $(CFLAGS) -Dnws_init=dinit -c nwsdev.c
-
-nwsdev.h:	nwsdev.cps newsconstants.h
-	cps nwsdev.cps
 
 #
 # Version module:
@@ -212,16 +172,17 @@ Version.c:	VERSION $(RSRC) $(HEADERS)
 #
 
 aed.o ambio.o colortab.o data.o devcomm.o \
-devmain.o lookamb.o rview.o sundev.o x10.o x11.o:	../common/color.h
+devmain.o lookamb.o rview.o x11.o:	../common/color.h
 
-o_cone.o srcsupp.o:	../common/cone.h
+freeobjmem.o o_cone.o srcsupp.o:	../common/cone.h
 
-data.o m_brdf.o mx_data.o p_data.o t_data.o:	data.h
+data.o freeobjmem.o m_brdf.o mx_data.o \
+p_data.o raycalls.o t_data.o:	data.h
 
 aed.o devcomm.o devmain.o devtable.o \
-editline.o nwsdev.o sundev.o tty.o x10.o x11.o:	driver.h
+editline.o tty.o x11.o:	driver.h
 
-o_face.o srcsupp.o:	../common/face.h
+freeobjmem.o o_face.o srcsupp.o:	../common/face.h
 
 ambient.o raytrace.o rpmain.o rtmain.o \
 rtrace.o rvmain.o rv2.o rv3.o source.o:	../common/octree.h
@@ -230,43 +191,42 @@ o_instance.o:	../common/instance.h ../common/octree.h
 
 ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o initotypes.o \
 m_brdf.o m_direct.o m_mirror.o normal.o o_cone.o preload.o \
-raytrace.o rtrace.o rv2.o source.o sphere.o srcsupp.o text.o \
+raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o srcsupp.o text.o \
 virtuals.o:	../common/otypes.h
 
-ambient.o ambcomp.o aniso.o normal.o rpict.o rvmain.o rtmain.o rpmain.o \
-persist.o source.o rv3.o srcsamp.o virtuals.o:	../common/random.h
+ambient.o ambcomp.o aniso.o normal.o raycalls.o rpict.o rvmain.o \
+rtmain.o rpmain.o persist.o source.o rv3.o \
+srcsamp.o virtuals.o:	../common/random.h
 
-ambcomp.o ambient.o aniso.o dielectric.o func.o glass.o glazing.o \
-m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o mx_func.o \
-normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o raytrace.o \
-rpict.o rtrace.o rv2.o rv3.o rview.o source.o sphere.o srcdraw.o \
-srcsamp.o srcsupp.o t_data.o t_func.o text.o rpmain.o rtmain.o rvmain.o \
-virtuals.o:	ray.h ../common/standard.h \
+ambcomp.o ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o \
+m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o \
+mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
+raycalls.o raypcalls.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
+source.o sphere.o srcdraw.o srcsamp.o srcsupp.o t_data.o t_func.o text.o \
+rpmain.o rtmain.o rvmain.o virtuals.o:	ray.h \
+../common/standard.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
 
-rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h
+rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
 
-m_direct.o m_mirror.o m_mist.o dielectric.o \
+m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
 source.o srcdraw.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
-cone.o data.o devcomm.o freeobjmem.o initotypes.o fprism.o preload.o \
+cone.o data.o devcomm.o initotypes.o fprism.o preload.o \
 duphead.o octree.o:	../common/standard.h ../common/mat4.h ../common/fvect.h
 
 ambio.o:	../common/fvect.h
 
 initotypes.o raytrace.o:	otspecial.h
 
-sundev.o:	suntools.icon
-
-rpmain.o rtmain.o rvmain.o rpict.o srcdraw.o:	../common/view.h
-
-x10.o xtwind.o:	xtwind.h
+rpmain.o rtmain.o rvmain.o rpict.o \
+srcdraw.o:	../common/view.h ../common/resolu.h
 
 x11.o x11twind.o: x11twind.h
 
 x11.o:	x11icon.h
 
-ambient.o ambcomp.o ambio.o lookamb.o:	ambient.h
+ambient.o ambcomp.o ambio.o lookamb.o raycalls.o:	ambient.h
 
 data.o rpmain.o rtmain.o rvmain.o rpict.o rtrace.o \
 rv2.o:	../common/resolu.h
@@ -277,8 +237,10 @@ p_func.o t_data.o t_func.o:	func.h
 preload.o:	../common/object.h ../common/face.h ../common/cone.h \
 ../common/instance.h ../common/color.h data.h
 
-freeobjmem.o:	../common/object.h
-
 devcomm.o:	../common/vfork.h
 
 rtmain.o rpmain.o rvmain.o persist.o duphead.o rpict.o:	../common/paths.h
+
+freeobjmem.o raycalls.o text.o:	../common/font.h
+
+raypcalls.o:	../common/selcall.h

@@ -1,9 +1,6 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.10 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert a trianglular mesh into a Radiance description.
  *

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.2 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Generate renderable grids from a holodeck file
  */
@@ -64,7 +61,7 @@ int	sect;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the section(s) */
-		lseek(fd, (long)nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		if (sect < 0 | n == sect) {
 			read(fd, (char *)&hdsect, sizeof(HDGRID));

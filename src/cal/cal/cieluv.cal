@@ -1,0 +1,14 @@
+{
+	Compute Luv color space and color differences from XYZ primaries.
+
+	5/4/98	G.W.Larson
+}
+Xw = 1; Yw = 1; Zw = 1;			{ default white }
+sq(x) : x*x;
+up(Xi,Yi,Zi) : 4*Xi/(Xi + 15*Yi + 3*Zi);
+vp(Xi,Yi,Zi) : 9*Yi/(Xi + 15*Yi + 3*Zi);
+Ls(Yi) : if(Yi/Yw - .01, 116*(Yi/Yw)^(1/3) - 16, 903.3*Yi/Yw);
+us(Xi,Yi,Zi) : 13*Ls(Yi)*(up(Xi,Yi,Zi) - up(Xw,Yw,Zw));
+vs(Xi,Yi,Zi) : 13*Ls(Yi)*(vp(Xi,Yi,Zi) - vp(Xw,Yw,Zw));
+dE(X1,Y1,Z1,X2,Y2,Z2) : sqrt(sq(Ls(Y1)-Ls(Y2)) + sq(us(X1,Y1,Z1)-us(X2,Y2,Z2))
+				+ sq(vs(X1,Y1,Z1)-vs(X2,Y2,Z2)));

@@ -1,0 +1,18 @@
+{
+	Compute overlap between two normal distribution functions,
+	defined by mean1, mean2, stdev1 and stdev2.
+
+	2/10/95		Greg Ward
+
+	relies on gauss.cal and norm.cal
+}
+min(a,b) : if(a-b, b, a);
+max(a,b) : if(a-b, a, b);
+
+Z1(u) = Z((u - mean1)/stdev1) / stdev1;
+Z2(u) = Z((u - mean2)/stdev2) / stdev2;
+
+f(u) = min(Z1(u),Z2(u));
+
+xmin = min(mean1-3*stdev1, mean2-3*stdev2);
+xmax = max(mean1+3*stdev1, mean2+3*stdev2);

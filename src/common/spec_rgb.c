@@ -1,22 +1,86 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.11 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  * Convert colors and spectral ranges.
+ * Added von Kries white-balance calculations 10/01 (GW).
+ *
+ * Externals declared in color.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include "color.h"
+#include <string.h>
 
-#define CEPS	1e-7			/* color epsilon */
+#define CEPS	1e-4			/* color epsilon */
+
+#define CEQ(v1,v2)	((v1) <= (v2)+CEPS && (v2) <= (v1)+CEPS)
+
+#define XYEQ(c1,c2)	(CEQ((c1)[CIEX],(c2)[CIEX]) && CEQ((c1)[CIEY],(c2)[CIEY]))
 
 
-RGBPRIMS  stdprims = STDPRIMS;		/* standard primary chromaticities */
+RGBPRIMS  stdprims = STDPRIMS;	/* standard primary chromaticities */
 
 COLOR  cblack = BLKCOLOR;		/* global black color */
 COLOR  cwhite = WHTCOLOR;		/* global white color */
+
+float  xyneu[2] = {1./3., 1./3.};	/* neutral xy chromaticities */
 
 /*
  *	The following table contains the CIE tristimulus integrals
@@ -47,7 +111,7 @@ static BYTE  chroma[3][NINC] = {
 	}
 };
 
-COLORMAT  xyz2rgbmat = {		/* XYZ to RGB */
+COLORMAT  xyz2rgbmat = {		/* XYZ to RGB (no white balance) */
 	{(CIE_y_g - CIE_y_b - CIE_x_b*CIE_y_g + CIE_y_b*CIE_x_g)/CIE_C_rD,
 	 (CIE_x_b - CIE_x_g - CIE_x_b*CIE_y_g + CIE_x_g*CIE_y_b)/CIE_C_rD,
 	 (CIE_x_g*CIE_y_b - CIE_x_b*CIE_y_g)/CIE_C_rD},
@@ -59,7 +123,7 @@ COLORMAT  xyz2rgbmat = {		/* XYZ to RGB */
 	 (CIE_x_r*CIE_y_g - CIE_x_g*CIE_y_r)/CIE_C_bD}
 };
 
-COLORMAT  rgb2xyzmat = {		/* RGB to XYZ */
+COLORMAT  rgb2xyzmat = {		/* RGB to XYZ (no white balance) */
 	{CIE_x_r*CIE_C_rD/CIE_D,CIE_x_g*CIE_C_gD/CIE_D,CIE_x_b*CIE_C_bD/CIE_D},
 	{CIE_y_r*CIE_C_rD/CIE_D,CIE_y_g*CIE_C_gD/CIE_D,CIE_y_b*CIE_C_bD/CIE_D},
 	{(1.-CIE_x_r-CIE_y_r)*CIE_C_rD/CIE_D,
@@ -67,8 +131,20 @@ COLORMAT  rgb2xyzmat = {		/* RGB to XYZ */
 	 (1.-CIE_x_b-CIE_y_b)*CIE_C_bD/CIE_D}
 };
 
+COLORMAT  vkmat = {		/* Sharp primary matrix */
+	{ 1.2694, -0.0988, -0.1706},
+	{-0.8364,  1.8006,  0.0357},
+	{ 0.0297, -0.0315,  1.0018}
+};
+
+COLORMAT  ivkmat = {		/* inverse Sharp primary matrix */
+	{ 0.8156,  0.0472,  0.1372},
+	{ 0.3791,  0.5769,  0.0440},
+	{-0.0123,  0.0167,  0.9955}
+};
 
 
+void
 spec_rgb(col, s, e)		/* compute RGB color from spectral range */
 COLOR  col;
 int  s, e;
@@ -80,6 +156,7 @@ int  s, e;
 }
 
 
+void
 spec_cie(col, s, e)		/* compute a color from a spectral range */
 COLOR  col;		/* returned color */
 int  s, e;		/* starting and ending wavelengths */
@@ -114,8 +191,10 @@ int  s, e;		/* starting and ending wavelengths */
 }
 
 
+void
 cie_rgb(rgb, xyz)		/* convert CIE color to standard RGB */
-COLOR	rgb, xyz;
+COLOR	rgb;
+COLOR  xyz;
 {
 	colortrans(rgb, xyz2rgbmat, xyz);
 	clipgamut(rgb, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
@@ -168,9 +247,11 @@ COLOR  lower, upper;
 }
 
 
+void
 colortrans(c2, mat, c1)		/* convert c1 by mat and put into c2 */
+register COLOR  c2;
 register COLORMAT  mat;
-register COLOR  c1, c2;
+register COLOR  c1;
 {
 	COLOR	cout;
 
@@ -182,8 +263,10 @@ register COLOR  c1, c2;
 }
 
 
+void
 multcolormat(m3, m2, m1)	/* multiply m1 by m2 and put into m3 */
-COLORMAT  m1, m2, m3;		/* m3 can be either m1 or m2 w/o harm */
+COLORMAT  m3;			/* m3 can be either m1 or m2 w/o harm */
+COLORMAT  m2, m1;
 {
 	COLORMAT  mt;
 	register int  i, j;
@@ -197,6 +280,7 @@ COLORMAT  m1, m2, m3;		/* m3 can be either m1 or m2 w/o harm */
 }
 
 
+void
 compxyz2rgbmat(mat, pr)		/* compute conversion from CIE to RGB space */
 COLORMAT  mat;
 register RGBPRIMS  pr;
@@ -247,6 +331,7 @@ register RGBPRIMS  pr;
 }
 
 
+void
 comprgb2xyzmat(mat, pr)		/* compute conversion from RGB to CIE space */
 COLORMAT  mat;
 register RGBPRIMS  pr;
@@ -284,6 +369,7 @@ register RGBPRIMS  pr;
 }
 
 
+void
 comprgb2rgbmat(mat, pr1, pr2)	/* compute conversion from RGB1 to RGB2 */
 COLORMAT  mat;
 RGBPRIMS  pr1, pr2;
@@ -300,4 +386,84 @@ RGBPRIMS  pr1, pr2;
 	compxyz2rgbmat(xyztopr2, pr2);
 				/* combine transforms */
 	multcolormat(mat, pr1toxyz, xyztopr2);
+}
+
+
+void
+compxyzWBmat(mat, wht1, wht2)	/* CIE von Kries transform from wht1 to wht2 */
+COLORMAT  mat;
+float  wht1[2], wht2[2];
+{
+	COLOR	cw1, cw2;
+	if (XYEQ(wht1,wht2)) {
+		mat[0][0] = mat[1][1] = mat[2][2] = 1.0;
+		mat[0][1] = mat[0][2] = mat[1][0] =
+		mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
+		return;
+	}
+	cw1[RED] = wht1[CIEX]/wht1[CIEY];
+	cw1[GRN] = 1.;
+	cw1[BLU] = (1. - wht1[CIEX] - wht1[CIEY])/wht1[CIEY];
+	colortrans(cw1, vkmat, cw1);
+	cw2[RED] = wht2[CIEX]/wht2[CIEY];
+	cw2[GRN] = 1.;
+	cw2[BLU] = (1. - wht2[CIEX] - wht2[CIEY])/wht2[CIEY];
+	colortrans(cw2, vkmat, cw2);
+	mat[0][0] = cw2[RED]/cw1[RED];
+	mat[1][1] = cw2[GRN]/cw1[GRN];
+	mat[2][2] = cw2[BLU]/cw1[BLU];
+	mat[0][1] = mat[0][2] = mat[1][0] =
+	mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
+	multcolormat(mat, vkmat, mat);
+	multcolormat(mat, mat, ivkmat);
+}
+
+
+void
+compxyz2rgbWBmat(mat, pr)	/* von Kries conversion from CIE to RGB space */
+COLORMAT  mat;
+RGBPRIMS  pr;
+{
+	COLORMAT	wbmat;
+
+	compxyz2rgbmat(mat, pr);
+	if (XYEQ(pr[WHT],xyneu))
+		return;
+	compxyzWBmat(wbmat, xyneu, pr[WHT]);
+	multcolormat(mat, wbmat, mat);
+}
+
+void
+comprgb2xyzWBmat(mat, pr)	/* von Kries conversion from RGB to CIE space */
+COLORMAT  mat;
+RGBPRIMS  pr;
+{
+	COLORMAT	wbmat;
+	
+	comprgb2xyzmat(mat, pr);
+	if (XYEQ(pr[WHT],xyneu))
+		return;
+	compxyzWBmat(wbmat, pr[WHT], xyneu);
+	multcolormat(mat, mat, wbmat);
+}
+
+void
+comprgb2rgbWBmat(mat, pr1, pr2)	/* von Kries conversion from RGB1 to RGB2 */
+COLORMAT  mat;
+RGBPRIMS  pr1, pr2;
+{
+	COLORMAT  pr1toxyz, xyztopr2, wbmat;
+
+	if (pr1 == pr2) {
+		mat[0][0] = mat[1][1] = mat[2][2] = 1.0;
+		mat[0][1] = mat[0][2] = mat[1][0] =
+		mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
+		return;
+	}
+	comprgb2xyzmat(pr1toxyz, pr1);
+	compxyzWBmat(wbmat, pr1[WHT], pr2[WHT]);
+	compxyz2rgbmat(xyztopr2, pr2);
+				/* combine transforms */
+	multcolormat(mat, pr1toxyz, wbmat);
+	multcolormat(mat, mat, xyztopr2);
 }

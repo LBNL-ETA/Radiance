@@ -1,13 +1,12 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.18 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert IES luminaire data to Radiance description
  *
  *	07Apr90		Greg Ward
+ *
+ *  Fixed correction factor for flat sources 29Oct2001 GW
  */
 
 #include <stdio.h>
@@ -125,8 +124,7 @@ int	gargc;				/* global argc (minus filenames) */
 char	**gargv;			/* global argv */
 
 extern char	*strcpy(), *strcat(), *stradd(), *tailtrunc(), *filetrunc(),
-		*filename(), *libname(), *fullname(), *malloc(),
-		*getword(), *atos();
+		*filename(), *libname(), *fullnam(), *getword(), *atos();
 extern float	*matchlamp();
 extern time_t	fdate();
 
@@ -327,7 +325,7 @@ int	sep;
 
 
 char *
-fullname(path, fname, suffix)		/* return full path name */
+fullnam(path, fname, suffix)		/* return full path name */
 char	*path, *fname, *suffix;
 {
 	if (prefdir != NULL && abspath(prefdir))
@@ -474,7 +472,7 @@ char	*inpname, *outname;
 	}
 	if (out2stdout)
 		outfp = stdout;
-	else if ((outfp = fopen(fullname(buf,outname,T_RAD), "w")) == NULL) {
+	else if ((outfp = fopen(fullnam(buf,outname,T_RAD), "w")) == NULL) {
 		perror(buf);
 		fclose(inpfp);
 		return(-1);
@@ -540,7 +538,7 @@ char	*inpname, *outname;
 readerr:
 	fclose(inpfp);
 	fclose(outfp);
-	unlink(fullname(buf,outname,T_RAD));
+	unlink(fullnam(buf,outname,T_RAD));
 	return(-1);
 }
 
@@ -572,7 +570,7 @@ char	*dir, *tltspec, *dfltname, *tltid;
 		tailtrunc(strcpy(tltname,filename(tltspec)));
 	}
 	if (datin != NULL) {
-		if ((datout = fopen(fullname(buf,tltname,T_TLT),"w")) == NULL) {
+		if ((datout = fopen(fullnam(buf,tltname,T_TLT),"w")) == NULL) {
 			perror(buf);
 			if (datin != in)
 				fclose(datin);
@@ -584,7 +582,7 @@ char	*dir, *tltspec, *dfltname, *tltid;
 			fclose(datout);
 			if (datin != in)
 				fclose(datin);
-			unlink(fullname(buf,tltname,T_TLT));
+			unlink(fullnam(buf,tltname,T_TLT));
 			return(-1);
 		}
 		fclose(datout);
@@ -629,6 +627,7 @@ char	*mod, *name;
 	double	bounds[2][2];
 	int	nangles[2], pmtype, unitype;
 	double	d1;
+	int	doupper, dolower, dosides; 
 
 	if (!isint(getword(in)) || !isflt(getword(in)) || !scnflt(in,&mult)
 			|| !scnint(in,&nangles[0]) || !scnint(in,&nangles[1])
@@ -653,14 +652,14 @@ char	*mod, *name;
 		fprintf(stderr, "dosource: illegal source dimensions");
 		return(-1);
 	}
-	if ((datout = fopen(fullname(buf,name,T_DST), "w")) == NULL) {
+	if ((datout = fopen(fullnam(buf,name,T_DST), "w")) == NULL) {
 		perror(buf);
 		return(-1);
 	}
 	if (cvdata(in, datout, 2, nangles, 1./WHTEFFICACY, bounds) != 0) {
 		fprintf(stderr, "dosource: bad distribution data\n");
 		fclose(datout);
-		unlink(fullname(buf,name,T_DST));
+		unlink(fullnam(buf,name,T_DST));
 		return(-1);
 	}
 	fclose(datout);
@@ -676,8 +675,12 @@ char	*mod, *name;
 		fprintf(out, "7 ");
 	else
 		fprintf(out, "5 ");
+	dolower = (bounds[0][0] < 90.);
+	doupper = (bounds[0][1] > 90.);
+	dosides = (doupper & dolower && sinf->h > MINDIM);
 	fprintf(out, "%s %s source.cal ",
 			sinf->type==SPHERE ? "corr" :
+			!dosides ? "flatcorr" :
 			sinf->type==DISK ? "cylcorr" : "boxcorr",
 			libname(buf,name,T_DST));
 	if (pmtype == PM_B) {
@@ -686,14 +689,17 @@ char	*mod, *name;
 		else
 			fprintf(out, "srcB_horiz ");
 		fprintf(out, "srcB_vert ");
-	} else {
+	} else /* pmtype == PM_A */ {
 		if (nangles[1] >= 2) {
 			d1 = bounds[1][1] - bounds[1][0];
 			if (d1 <= 90.+FTINY)
 				fprintf(out, "src_phi4 ");
-			else if (d1 <= 180.+FTINY)
-				fprintf(out, "src_phi2 ");
-			else
+			else if (d1 <= 180.+FTINY) {
+				if (FEQ(bounds[1][0],90.))
+					fprintf(out, "src_phi2+90 ");
+				else
+					fprintf(out, "src_phi2 ");
+			} else
 				fprintf(out, "src_phi ");
 			fprintf(out, "src_theta ");
 			if (FEQ(bounds[1][0],90.) && FEQ(bounds[1][1],270.))
@@ -701,28 +707,27 @@ char	*mod, *name;
 		} else
 			fprintf(out, "src_theta ");
 	}
-	if (sinf->type == SPHERE)
+	if (!dosides || sinf->type == SPHERE)
 		fprintf(out, "\n0\n1 %g\n", sinf->mult/sinf->area);
 	else if (sinf->type == DISK)
 		fprintf(out, "\n0\n3 %g %g %g\n", sinf->mult,
-				sinf->l, sinf->h);
+				sinf->w, sinf->h);
 	else
 		fprintf(out, "\n0\n4 %g %g %g %g\n", sinf->mult,
 				sinf->l, sinf->w, sinf->h);
 	if (putsource(sinf, out, id, filename(name),
-			bounds[0][0]<90., bounds[0][1]>90.) != 0)
+			dolower, doupper, dosides) != 0)
 		return(-1);
 	return(0);
 }
 
 
-putsource(shp, fp, mod, name, dolower, doupper)		/* put out source */
+putsource(shp, fp, mod, name, dolower, doupper, dosides) /* put out source */
 SRCINFO	*shp;
 FILE	*fp;
 char	*mod, *name;
 int	dolower, doupper;
 {
-	int	dosides = doupper && dolower && shp->h > MINDIM;
 	char	lname[MAXWORD];
 	
 	strcat(strcpy(lname, name), "_light");
@@ -950,7 +955,7 @@ double	mult, lim[][2];
 				putc('\n', out);
 			}
 		}
-		free((char *)pt[i]);
+		free((void *)pt[i]);
 	}
 	for (i = 0; i < total; i++) {
 		if (i%4 == 0)
@@ -1038,7 +1043,7 @@ FILE	*outfp;			/* close output file upon return */
 	if (instantiate) {		/* instantiate octree */
 		strcpy(cp, "| oconv - > ");
 		cp += 12;
-		fullname(cp,outname,T_OCT);
+		fullnam(cp,outname,T_OCT);
 		if (fdate(inpname) > fdate(outname) &&
 				system(buf)) {		/* create octree */
 			fclose(outfp);
@@ -1062,7 +1067,7 @@ FILE	*outfp;			/* close output file upon return */
 			fclose(outfp);
 			strcpy(cp, ">> ");	/* append works for DOS? */
 			cp += 3;
-			fullname(cp,outname,T_RAD);
+			fullnam(cp,outname,T_RAD);
 		}
 		if (system(buf))
 			return(-1);

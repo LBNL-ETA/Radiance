@@ -1,0 +1,48 @@
+{
+	Tone Mapping Operator due to Ferwerda, Pattanaik, Shirley and Greenberg
+	(Siggraph 1996, pp. 249-258).  Equilibrium adaptation version.
+
+	Greg Ward	August 30, 1996
+
+	We assume that the input picture has already been adjusted with
+	a reasonable exposure value, which gives the adaptation level
+	implicitly.  The visual acuity function should also be applied
+	if desired separately prior to applying this mapping.  We're
+	also assuming that the picture is in standard RGB Radiance format,
+	not CIE XYZ format.
+
+	Don't use the -o option of pcomb, just execute like so:
+
+		% pcomb -f ferwerda.cal exposed.pic > mapped.pic
+}
+
+sL(r,g,b) = .062*r + .608*g + .330*b;	{ approx. scotopic brightness }
+Lwa : WE*.5/le(1);		{ world adaptation luminance }
+lLwa : log10(Lwa);
+Ldmax : 100;			{ maximum display luminance (cd/m^2) }
+Lda : Ldmax/2;			{ display adaptation luminance }
+lLda : log10(Lda);
+
+				{ log10 of cone threshold luminance }
+ltp(lLa) : if(-2.6 - lLa, -.72, if(lLa - 1.9, lLa - 1.255,
+		(.249*lLa + .65)^2.7 - .72));
+
+				{ log10 of rod threshold luminance }
+lts(lLa) : if(-3.94 - lLa, -2.86, if(lLa - -1.44, lLa - .395,
+		(.405*lLa + 1.6)^2.18 - 2.86));
+
+				{ photopic multiplier }
+mp : 10^(ltp(lLda) - ltp(lLwa));
+
+				{ scotopic multiplier }
+ms : 10^(lts(lLda) - lts(lLwa)) *
+		if(-2.5 - lLwa, 1, if(lLwa - .8, 0, (.8 - lLwa)/(.8 - -2.5)));
+
+				{ display calibration factor }
+df : WE/Ldmax/le(1);
+				{ adjusted scotopic luminance }
+msl = ms*df * sL(ri(1),gi(1),bi(1));
+				{ compute output pixel }
+ro = msl + mp*df * ri(1);
+go = msl + mp*df * gi(1);
+bo = msl + mp*df * bi(1);

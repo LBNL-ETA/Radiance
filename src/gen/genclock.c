@@ -1,22 +1,16 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genclock.c,v 2.4 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Generate an analog clock.
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 
 #define PI		3.14159265358979323846
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 #define FACEBITMAP	"clockface.hex"
 

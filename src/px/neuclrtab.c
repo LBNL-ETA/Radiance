@@ -1,9 +1,6 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.9 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
  */
@@ -134,7 +131,7 @@ int	ncolors;
 	cpyclrtab();
 	inxbuild();
 				/* we're done with our samples */
-	free((char *)thesamples);
+	free((void *)thesamples);
 				/* reset dithering function */
 	neu_dith_colrs((BYTE *)NULL, (COLR *)NULL, 0);
 				/* return new color table size */
@@ -174,7 +171,7 @@ int	n;
 
 	if (n != N) {		/* get error propogation array */
 		if (N) {
-			free((char *)cerr);
+			free((void *)cerr);
 			cerr = NULL;
 		}
 		if (n)

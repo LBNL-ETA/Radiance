@@ -1,9 +1,6 @@
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genrev.c,v 2.4 2003/02/22 02:07:23 greg Exp $";
 #endif
-
-/* Copyright (c) 1989 Regents of the University of California */
-
 /*
  *  genrev.c - program to generate functions of rotation about z
  *
@@ -30,6 +27,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #define  DOWN		010
 
 double  funvalue(), l_hermite(), l_bezier(), l_bspline(), argument();
+
+void	quit(), eputs(), wputs();
 
 
 main(argc, argv)
@@ -171,6 +170,7 @@ double  *nzp, *nrp, z0, r0, z1, r1;
 }
 
 
+void
 eputs(msg)
 char  *msg;
 {
@@ -178,6 +178,7 @@ char  *msg;
 }
 
 
+void
 wputs(msg)
 char  *msg;
 {
@@ -185,6 +186,7 @@ char  *msg;
 }
 
 
+void
 quit(code)
 int  code;
 {

@@ -1,26 +1,79 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rv2.c,v 2.38 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  rv2.c - command routines used in tracing a view.
  *
- *     3/24/87
+ *  External symbols declared in rpaint.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
-
-#include  "octree.h"
 
 #include  "otypes.h"
 
 #include  "rpaint.h"
 
-#include  "resolu.h"
-
 #include  <ctype.h>
+
+extern int  psample;			/* pixel sample size */
+extern double  maxdiff;			/* max. sample difference */
 
 #define  CTRL(c)	((c)-'@')
 
@@ -30,17 +83,13 @@ static char SCCSid[] = "$SunId$ LBL";
 #define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
 #endif
 
-extern char  *atos();
-
-extern FILE  *popen();
-
 extern char  rifname[128];		/* rad input file name */
 
-extern char  VersionID[];
 extern char  *progname;
 extern char  *octname;
 
 
+void
 getframe(s)				/* get a new frame */
 char  *s;
 {
@@ -50,6 +99,7 @@ char  *s;
 }
 
 
+void
 getrepaint(s)				/* get area and repaint */
 char  *s;
 {
@@ -61,6 +111,7 @@ char  *s;
 }
 
 
+void
 getview(s)				/* get/show view parameters */
 char  *s;
 {
@@ -165,6 +216,7 @@ char  *s;
 }
 
 
+void
 lastview(s)				/* return to a previous view */
 char  *s;
 {
@@ -198,6 +250,7 @@ char  *s;
 }
 
 
+void
 saveview(s)				/* save view to rad file */
 char  *s;
 {
@@ -234,6 +287,7 @@ char  *s;
 }
 
 
+void
 loadview(s)				/* load view from rad file */
 char  *s;
 {
@@ -275,6 +329,7 @@ char  *s;
 }
 
 
+void
 getaim(s)				/* aim camera */
 char  *s;
 {
@@ -294,6 +349,7 @@ char  *s;
 }
 
 
+void
 getmove(s)				/* move camera */
 char  *s;
 {
@@ -306,6 +362,7 @@ char  *s;
 }
 
 
+void
 getrotate(s)				/* rotate camera */
 char  *s;
 {
@@ -335,6 +392,7 @@ char  *s;
 }
 
 
+void
 getpivot(s)				/* pivot viewpoint */
 register char  *s;
 {
@@ -352,6 +410,7 @@ register char  *s;
 }
 
 
+void
 getexposure(s)				/* get new exposure */
 char  *s;
 {
@@ -417,13 +476,15 @@ char  *s;
 	redraw();
 }
 
+typedef union {int i; double d; COLOR C;}	*MyUptr;
 
-getparam(str, dsc, typ, ptr)		/* get variable from user */
+int
+getparam(str, dsc, typ, p)		/* get variable from user */
 char  *str, *dsc;
 int  typ;
-register union {int i; double d; COLOR C;}  *ptr;
+void  *p;
 {
-	extern char  *index();
+	register MyUptr  ptr = (MyUptr)p;
 	int  i0;
 	double  d0, d1, d2;
 	char  buf[48];
@@ -481,33 +542,10 @@ register union {int i; double d; COLOR C;}  *ptr;
 }
 
 
+void
 setparam(s)				/* get/set program parameter */
 register char  *s;
 {
-	extern int  psample;
-	extern double  maxdiff;
-	extern double  minweight;
-	extern int  maxdepth;
-	extern double  dstrsrc;
-	extern double  shadthresh;
-	extern double  shadcert;
-	extern COLOR  ambval;
-	extern int  ambvwt;
-	extern double  ambacc;
-	extern int  ambres;
-	extern int  ambdiv;
-	extern int  ambssamp;
-	extern int  ambounce;
-	extern COLOR  cextinction;
-	extern COLOR  salbedo;
-	extern double  seccg;
-	extern double  ssampdist;
-	extern int  directvis;
-	extern double  srcsizerat;
-	extern int  do_irrad;
-	extern double  specjitter;
-	extern double  specthresh;
-	extern int  backvis;
 	char  buf[128];
 	
 	if (s[0] == '\0') {
@@ -520,10 +558,12 @@ register char  *s;
 	case 'l':			/* limit */
 		switch (s[1]) {
 		case 'w':			/* weight */
-			getparam(s+2, "limit weight", 'r', &minweight);
+			getparam(s+2, "limit weight", 'r',
+					(void *)&minweight);
 			break;
 		case 'r':			/* reflection */
-			getparam(s+2, "limit reflection", 'i', &maxdepth);
+			getparam(s+2, "limit reflection", 'i',
+					(void *)&maxdepth);
 			break;
 		default:
 			goto badparam;
@@ -532,20 +572,24 @@ register char  *s;
 	case 'd':			/* direct */
 		switch (s[1]) {
 		case 'j':			/* jitter */
-			getparam(s+2, "direct jitter", 'r', &dstrsrc);
+			getparam(s+2, "direct jitter", 'r',
+					(void *)&dstrsrc);
 			break;
 		case 'c':			/* certainty */
-			getparam(s+2, "direct certainty", 'r', &shadcert);
+			getparam(s+2, "direct certainty", 'r',
+					(void *)&shadcert);
 			break;
 		case 't':			/* threshold */
-			getparam(s+2, "direct threshold", 'r', &shadthresh);
+			getparam(s+2, "direct threshold", 'r',
+					(void *)&shadthresh);
 			break;
 		case 'v':			/* visibility */
-			getparam(s+2, "direct visibility",
-					'b', &directvis);
+			getparam(s+2, "direct visibility", 'b',
+					(void *)&directvis);
 			break;
 		case 's':			/* sampling */
-			getparam(s+2, "direct sampling", 'r', &srcsizerat);
+			getparam(s+2, "direct sampling", 'r',
+					(void *)&srcsizerat);
 			break;
 		default:
 			goto badparam;
@@ -554,44 +598,54 @@ register char  *s;
 	case 'b':			/* back faces or black and white */
 		switch (s[1]) {
 		case 'v':			/* back face visibility */
-			getparam(s+2, "back face visibility", 'b', &backvis);
+			getparam(s+2, "back face visibility", 'b',
+					(void *)&backvis);
 			break;
 		case '\0':			/* black and white */
 		case ' ':
 		case 'y': case 'Y': case 't': case 'T': case '1': case '+':
 		case 'n': case 'N': case 'f': case 'F': case '0': case '-':
-			getparam(s+1, "black and white", 'b', &greyscale);
+			getparam(s+1, "black and white", 'b',
+					(void *)&greyscale);
 			break;
 		default:
 			goto badparam;
 		}
 		break;
 	case 'i':			/* irradiance */
-		getparam(s+1, "irradiance", 'b', &do_irrad);
+		getparam(s+1, "irradiance", 'b',
+				(void *)&do_irrad);
 		break;
 	case 'a':			/* ambient */
 		switch (s[1]) {
 		case 'v':			/* value */
-			getparam(s+2, "ambient value", 'C', (COLOR *)ambval);
+			getparam(s+2, "ambient value", 'C',
+					(void *)ambval);
 			break;
 		case 'w':			/* weight */
-			getparam(s+2, "ambient value weight", 'i', &ambvwt);
+			getparam(s+2, "ambient value weight", 'i',
+					(void *)&ambvwt);
 			break;
 		case 'a':			/* accuracy */
-			if (getparam(s+2, "ambient accuracy", 'r', &ambacc))
+			if (getparam(s+2, "ambient accuracy", 'r',
+					(void *)&ambacc))
 				setambacc(ambacc);
 			break;
 		case 'd':			/* divisions */
-			getparam(s+2, "ambient divisions", 'i', &ambdiv);
+			getparam(s+2, "ambient divisions", 'i',
+					(void *)&ambdiv);
 			break;
 		case 's':			/* samples */
-			getparam(s+2, "ambient super-samples", 'i', &ambssamp);
+			getparam(s+2, "ambient super-samples", 'i',
+					(void *)&ambssamp);
 			break;
 		case 'b':			/* bounces */
-			getparam(s+2, "ambient bounces", 'i', &ambounce);
+			getparam(s+2, "ambient bounces", 'i',
+					(void *)&ambounce);
 			break;
 		case 'r':
-			if (getparam(s+2, "ambient resolution", 'i', &ambres))
+			if (getparam(s+2, "ambient resolution", 'i',
+					(void *)&ambres))
 				setambres(ambres);
 			break;
 		default:
@@ -602,18 +656,19 @@ register char  *s;
 		switch (s[1]) {
 		case 'e':			/* extinction coefficient */
 			getparam(s+2, "extinction coefficient", 'C',
-					(COLOR *)cextinction);
+					(void *)cextinction);
 			break;
 		case 'a':			/* scattering albedo */
 			getparam(s+2, "scattering albedo", 'C',
-					(COLOR *)salbedo);
+					(void *)salbedo);
 			break;
 		case 'g':			/* scattering eccentricity */
-			getparam(s+2, "scattering eccentricity", 'r', &seccg);
+			getparam(s+2, "scattering eccentricity", 'r',
+					(void *)&seccg);
 			break;
 		case 's':			/* sampling distance */
 			getparam(s+2, "mist sampling distance", 'r',
-					&ssampdist);
+					(void *)&ssampdist);
 			break;
 		default:
 			goto badparam;
@@ -622,11 +677,13 @@ register char  *s;
 	case 'p':			/* pixel */
 		switch (s[1]) {
 		case 's':			/* sample */
-			if (getparam(s+2, "pixel sample", 'i', &psample))
+			if (getparam(s+2, "pixel sample", 'i',
+					(void *)&psample))
 				pdepth = 0;
 			break;
 		case 't':			/* threshold */
-			if (getparam(s+2, "pixel threshold", 'r', &maxdiff))
+			if (getparam(s+2, "pixel threshold", 'r',
+					(void *)&maxdiff))
 				pdepth = 0;
 			break;
 		default:
@@ -636,10 +693,12 @@ register char  *s;
 	case 's':			/* specular */
 		switch (s[1]) {
 		case 'j':			/* jitter */
-			getparam(s+2, "specular jitter", 'r', &specjitter);
+			getparam(s+2, "specular jitter", 'r',
+					(void *)&specjitter);
 			break;
 		case 't':			/* threshold */
-			getparam(s+2, "specular threshold", 'r', &specthresh);
+			getparam(s+2, "specular threshold", 'r',
+					(void *)&specthresh);
 			break;
 		default:
 			goto badparam;
@@ -657,6 +716,7 @@ badparam:
 }
 
 
+void
 traceray(s)				/* trace a single ray */
 char  *s;
 {
@@ -714,7 +774,7 @@ char  *s;
 			(*dev->comout)(buf);
 		}
 		(*dev->comin)(buf, NULL);
-		sprintf(buf, "value (%.5g %.5g %.5g) (%.1fL)",
+		sprintf(buf, "value (%.5g %.5g %.5g) (%.3gL)",
 				colval(thisray.rcol,RED),
 				colval(thisray.rcol,GRN),
 				colval(thisray.rcol,BLU),
@@ -725,6 +785,7 @@ char  *s;
 }
 
 
+void
 writepict(s)				/* write the picture to a file */
 char  *s;
 {
@@ -763,6 +824,7 @@ char  *s;
 	else
 		putc('\n', fp);
 	fprintf(fp, "SOFTWARE= %s\n", VersionID);
+	fputnow(fp);
 	if (exposure != 1.0)
 		fputexpos(exposure, fp);
 	if (dev->pixaspect != 1.0)
@@ -783,7 +845,7 @@ char  *s;
 		if (fwritecolrs(scanline, hresolu, fp) < 0)
 			break;
 	}
-	free((char *)scanline);
+	free((void *)scanline);
 	if (fclose(fp) < 0)
 		error(COMMAND, "write error");
 }

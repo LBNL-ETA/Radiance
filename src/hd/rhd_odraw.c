@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.13 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines for drawing samples using depth buffer checks.
  */
@@ -61,12 +58,12 @@ int	n;
 
 	if (odNViews > 0) {		/* deallocate view structures */
 		for (i = odNViews; i--; ) {
-			free((char *)odView[i].bmap);
-			free((char *)odView[i].pmap);
+			free((void *)odView[i].bmap);
+			free((void *)odView[i].pmap);
 			if (odView[i].emap != NULL)
-				free((char *)odView[i].emap);
+				free((void *)odView[i].emap);
 		}
-		free((char *)odView);
+		free((void *)odView);
 		odView = NULL;
 		odNViews = 0;
 	}
@@ -381,7 +378,7 @@ GLfloat	*dm;
 		if (vn<0 | vn>=odNViews)
 			return;			/* too late -- they're gone! */
 		if (odView[vn].emap != NULL)
-			free((char *)odView[vn].emap);
+			free((void *)odView[vn].emap);
 		odView[vn].emap = NULL;
 		odView[vn].dmap = NULL;
 		return;

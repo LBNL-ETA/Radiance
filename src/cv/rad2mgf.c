@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.16 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert Radiance scene description to MGF
  */
@@ -21,8 +18,6 @@ int	o_face(), o_cone(), o_sphere(), o_ring(), o_cylinder();
 int	o_instance(), o_illum();
 int	o_plastic(), o_metal(), o_glass(), o_dielectric(),
 	o_mirror(), o_trans(), o_light();
-
-extern int	free();
 
 LUTAB	rmats = LU_SINIT(free,NULL);		/* defined material table */
 

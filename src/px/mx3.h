@@ -1,7 +1,4 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: mx3.h,v 2.2 2003/02/22 02:07:27 greg Exp $ */
 #ifndef MX3_HDR
 #define MX3_HDR
 

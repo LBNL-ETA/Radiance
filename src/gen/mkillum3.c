@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mkillum3.c,v 2.7 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines to print mkillum objects
  */
@@ -137,7 +134,7 @@ FVECT  u, v, w;
 	printf("\t%f\t%f\t%f\n", v[0], v[1], v[2]);
 	printf("\t%f\t%f\t%f\n", w[0], w[1], w[2]);
 	il->dfnum++;
-	free((char *)Ninv);
+	free((void *)Ninv);
 }
 
 
@@ -189,8 +186,8 @@ int  n, m;
 	printf("\n\t%s il_alt il_azi", FNCFNM);
 	printf("\n0\n0\n");
 	il->dfnum++;
-	free((char *)Ninv);
-	free((char *)Sinv);
+	free((void *)Ninv);
+	free((void *)Sinv);
 }
 
 

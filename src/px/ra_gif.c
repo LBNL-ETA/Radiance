@@ -1,15 +1,14 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.7 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Convert from Radiance picture file to Compuserve GIF.
  * Currently, we don't know how to get back.
  */
 
 #include  <stdio.h>
+
+#include  <time.h>
 
 #include  "color.h"
 

@@ -1,0 +1,41 @@
+{
+	Compute fractal clouds over image
+
+	Greg Ward	11/1/95
+
+	Needs also noise2.cal
+
+	Usage:
+		pcomb -f noise2.cal -f clouds.cal planet.pic > cloudy.pic
+
+	Typically, this will be used to add clouds to Earth.pic or
+	bigEarth.pic in the standard library distribution.
+}
+
+{ Modify the following two constants to your liking: }
+
+cover_frac : 0.65;	{ average cloud cover (non-clear fraction) }
+
+cloud_refl : 0.7;	{ average cloud reflectance (always white) }
+
+{ Leave the rest alone. }
+
+PI : 3.14159265358979323846;
+
+clouds(u,v,s) = if(s-.5, noise2(sin(2*PI/xmax*x)+13.5,sin(2*PI/ymax*y)-10.3),
+		noise2(u/s,v/s)*s + clouds(u,v,2*s));
+
+minres : if(xmax-ymax, ymax, xmax);
+
+clamp(x) : if(x, if(x-1, 1, x), 0);
+
+coef = clamp( 1 +
+	(.5/sqrt(cover_frac)) * (clouds(x/minres, y/minres, 10/minres) - 1)
+		) ;
+
+cv = coef * cloud_refl;
+pv = 1 - coef;
+
+ro = cv + pv*ri(1);
+go = cv + pv*gi(1);
+bo = cv + pv*bi(1);

@@ -1,9 +1,6 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: netproc.c,v 2.9 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Parallel network process handling routines
  */
@@ -30,7 +27,6 @@ static int	maxfd;		/* maximum assigned descriptor */
 
 extern char	*remsh;		/* externally defined remote shell program */
 
-extern char	*malloc(), *realloc();
 extern char	*getenv();
 
 
@@ -126,7 +122,7 @@ PSERVER	*ps;
 					/* remove server from list */
 	psp->next = ps->next;
 	pslist = pstart.next;
-	free((char *)ps);		/* free associated memory */
+	free((void *)ps);		/* free associated memory */
 }
 
 
@@ -296,7 +292,7 @@ int	status;
 	close(pp->efd);				/* close error stream */
 	pindex[pp->efd] = NULL;
 	FD_CLR(pp->efd, &errdesc);
-	free((char *)pp->errs);
+	free((void *)pp->errs);
 	pp->com = NULL;				/* clear settings */
 	pp->pid = -1;
 	pp->efd = -1;

@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhd_odraw.h,v 3.7 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  */

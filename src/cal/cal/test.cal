@@ -1,0 +1,9 @@
+inrng(a,b,e)=if(a-b+e,b-a+e,-1);
+sqt(x,g,e)=if(inrng(x,g*g,e),g,sqt(x,g*2*x/(x+g*g),e));
+fac(n)=if(n-.5,n*fac(n-1),1);
+or(a,b)=if(a,1,b);
+and(a,b)=if(a,b,-1);
+not(a)=if(a,-1,1);
+sum(a,s,n)=if(n-.5,f(a)+sum(a+s,s,n-1),0);
+integ(a,b,n)=sum(a+(b-a)/n/2,(b-a)/n,n)*(b-a)/n;
+pi=3.141592653589793;

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mt160r.c,v 2.6 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  mt160r.c - program to dump pixel file to Mannesman-Tally 160.
  *
@@ -14,6 +11,7 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+#include  <time.h>
 
 #include  "color.h"
 #include  "resolu.h"

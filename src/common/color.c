@@ -1,16 +1,72 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: color.c,v 2.9 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  *  color.c - routines for color calculations.
  *
- *     10/10/85
+ *  Externals declared in color.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  <stdio.h>
+
+#include  <stdlib.h>
 
 #include  <math.h>
 
@@ -23,29 +79,29 @@ static char SCCSid[] = "$SunId$ LBL";
 
 char *
 tempbuffer(len)			/* get a temporary buffer */
-unsigned  len;
+unsigned int  len;
 {
-	extern char  *malloc(), *realloc();
 	static char  *tempbuf = NULL;
 	static unsigned  tempbuflen = 0;
 
 	if (len > tempbuflen) {
 		if (tempbuflen > 0)
-			tempbuf = realloc(tempbuf, len);
+			tempbuf = (char *)realloc(tempbuf, len);
 		else
-			tempbuf = malloc(len);
+			tempbuf = (char *)malloc(len);
 		tempbuflen = tempbuf==NULL ? 0 : len;
 	}
 	return(tempbuf);
 }
 
 
+int
 fwritecolrs(scanline, len, fp)		/* write out a colr scanline */
 register COLR  *scanline;
-unsigned  len;
+int  len;
 register FILE  *fp;
 {
-	register int  i, j, beg, cnt;
+	register int  i, j, beg, cnt = 1;
 	int  c2;
 	
 	if (len < MINELEN | len > MAXELEN)	/* OOBs, write out flat */
@@ -92,51 +148,7 @@ register FILE  *fp;
 }
 
 
-freadcolrs(scanline, len, fp)		/* read in an encoded colr scanline */
-register COLR  *scanline;
-int  len;
-register FILE  *fp;
-{
-	register int  i, j;
-	int  code, val;
-					/* determine scanline type */
-	if (len < MINELEN | len > MAXELEN)
-		return(oldreadcolrs(scanline, len, fp));
-	if ((i = getc(fp)) == EOF)
-		return(-1);
-	if (i != 2) {
-		ungetc(i, fp);
-		return(oldreadcolrs(scanline, len, fp));
-	}
-	scanline[0][GRN] = getc(fp);
-	scanline[0][BLU] = getc(fp);
-	if ((i = getc(fp)) == EOF)
-		return(-1);
-	if (scanline[0][GRN] != 2 || scanline[0][BLU] & 128) {
-		scanline[0][RED] = 2;
-		scanline[0][EXP] = i;
-		return(oldreadcolrs(scanline+1, len-1, fp));
-	}
-	if ((scanline[0][BLU]<<8 | i) != len)
-		return(-1);		/* length mismatch! */
-					/* read each component */
-	for (i = 0; i < 4; i++)
-	    for (j = 0; j < len; ) {
-		if ((code = getc(fp)) == EOF)
-		    return(-1);
-		if (code > 128) {	/* run */
-		    code &= 127;
-		    val = getc(fp);
-		    while (code--)
-			scanline[j++][i] = val;
-		} else			/* non-run */
-		    while (code--)
-			scanline[j++][i] = getc(fp);
-	    }
-	return(feof(fp) ? -1 : 0);
-}
-
-
+static int
 oldreadcolrs(scanline, len, fp)		/* read in an old colr scanline */
 register COLR  *scanline;
 int  len;
@@ -173,6 +185,57 @@ register FILE  *fp;
 }
 
 
+int
+freadcolrs(scanline, len, fp)		/* read in an encoded colr scanline */
+register COLR  *scanline;
+int  len;
+register FILE  *fp;
+{
+	register int  i, j;
+	int  code, val;
+					/* determine scanline type */
+	if (len < MINELEN | len > MAXELEN)
+		return(oldreadcolrs(scanline, len, fp));
+	if ((i = getc(fp)) == EOF)
+		return(-1);
+	if (i != 2) {
+		ungetc(i, fp);
+		return(oldreadcolrs(scanline, len, fp));
+	}
+	scanline[0][GRN] = getc(fp);
+	scanline[0][BLU] = getc(fp);
+	if ((i = getc(fp)) == EOF)
+		return(-1);
+	if (scanline[0][GRN] != 2 || scanline[0][BLU] & 128) {
+		scanline[0][RED] = 2;
+		scanline[0][EXP] = i;
+		return(oldreadcolrs(scanline+1, len-1, fp));
+	}
+	if ((scanline[0][BLU]<<8 | i) != len)
+		return(-1);		/* length mismatch! */
+					/* read each component */
+	for (i = 0; i < 4; i++)
+	    for (j = 0; j < len; ) {
+		if ((code = getc(fp)) == EOF)
+		    return(-1);
+		if (code > 128) {	/* run */
+		    code &= 127;
+		    if ((val = getc(fp)) == EOF)
+			return -1;
+		    while (code--)
+			scanline[j++][i] = val;
+		} else			/* non-run */
+		    while (code--) {
+			if ((val = getc(fp)) == EOF)
+			    return -1;
+			scanline[j++][i] = val;
+		    }
+	    }
+	return(0);
+}
+
+
+int
 fwritescan(scanline, len, fp)		/* write out a scanline */
 register COLOR  *scanline;
 int  len;
@@ -198,6 +261,7 @@ FILE  *fp;
 }
 
 
+int
 freadscan(scanline, len, fp)		/* read in a scanline */
 register COLOR  *scanline;
 int  len;
@@ -225,6 +289,7 @@ FILE  *fp;
 }
 
 
+void
 setcolr(clr, r, g, b)		/* assign a short color value */
 register COLR  clr;
 double  r, g, b;
@@ -250,6 +315,7 @@ double  r, g, b;
 }
 
 
+void
 colr_color(col, clr)		/* convert short to float color */
 register COLOR  col;
 register COLR  clr;
@@ -267,6 +333,7 @@ register COLR  clr;
 }
 
 
+int
 bigdiff(c1, c2, md)			/* c1 delta c2 > md? */
 register COLOR  c1, c2;
 double  md;

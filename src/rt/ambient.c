@@ -1,16 +1,70 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ambient.c,v 2.47 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
+ *
+ *  Declarations of external symbols in ambient.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
-
-#include  "octree.h"
 
 #include  "otypes.h"
 
@@ -21,13 +75,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifndef  OCTSCALE
 #define	 OCTSCALE	1.0	/* ceil((valid rad.)/(cube size)) */
 #endif
-
-typedef struct ambtree {
-	AMBVAL	*alist;		/* ambient value list */
-	struct ambtree	*kid;	/* 8 child nodes */
-}  AMBTREE;			/* ambient octree */
-
-extern CUBE  thescene;		/* contains space boundaries */
 
 extern char  *shm_boundary;	/* memory sharing boundary */
 
@@ -63,6 +110,8 @@ static unsigned int  nambshare = 0;	/* number of values from file */
 static unsigned long  ambclock = 0;	/* ambient access clock */
 static unsigned long  lastsort = 0;	/* time of last value sort */
 static long  sortintvl = SORT_INTVL;	/* time until next sort */
+static FILE  *ambinp = NULL;		/* auxiliary file for input */
+static long  lastpos = -1;		/* last flush position */
 
 #define MAXACLOCK	(1L<<30)	/* clock turnover value */
 	/*
@@ -78,15 +127,18 @@ static long  sortintvl = SORT_INTVL;	/* time until next sort */
 
 #define	 AMBFLUSH	(BUFSIZ/AMBVALSIZ)
 
-#define	 newambval()	(AMBVAL *)bmalloc(sizeof(AMBVAL))
+#define	 newambval()	(AMBVAL *)malloc(sizeof(AMBVAL))
+#define  freeav(av)	free((void *)av);
 
-static int  initambfile(), avsave(), avinsert(), sortambvals(), avlmemi();
+static void  initambfile(), avsave(), avinsert(), sortambvals(), unloadatree();
+static int  avlmemi();
 static AMBVAL  *avstore();
 #ifdef  F_SETLKW
-static  aflock();
+static void  aflock();
 #endif
 
 
+void
 setambres(ar)				/* set ambient resolution */
 int  ar;
 {
@@ -108,6 +160,7 @@ int  ar;
 }
 
 
+void
 setambacc(newa)				/* set ambient accuracy */
 double  newa;
 {
@@ -121,26 +174,28 @@ double  newa;
 }
 
 
-setambient(afile)			/* initialize calculation */
-char  *afile;
+void
+setambient()				/* initialize calculation */
 {
 	int	readonly = 0;
 	long  pos, flen;
 	AMBVAL	amb;
+						/* make sure we're fresh */
+	ambdone();
 						/* init ambient limits */
 	setambres(ambres);
 	setambacc(ambacc);
-	if (afile == NULL)
+	if (ambfile == NULL || !ambfile[0])
 		return;
 	if (ambacc <= FTINY) {
 		sprintf(errmsg, "zero ambient accuracy so \"%s\" not opened",
-				afile);
+				ambfile);
 		error(WARNING, errmsg);
 		return;
 	}
 						/* open ambient file */
-	if ((ambfp = fopen(afile, "r+")) == NULL)
-		readonly = (ambfp = fopen(afile, "r")) != NULL;
+	if ((ambfp = fopen(ambfile, "r+")) == NULL)
+		readonly = (ambfp = fopen(ambfile, "r")) != NULL;
 	if (ambfp != NULL) {
 		initambfile(0);			/* file exists */
 		pos = ftell(ambfp);
@@ -158,19 +213,19 @@ char  *afile;
 		}
 						/* align file pointer */
 		pos += (long)nambvals*AMBVALSIZ;
-		flen = lseek(fileno(ambfp), 0L, 2);
+		flen = lseek(fileno(ambfp), (off_t)0L, 2);
 		if (flen != pos) {
 			sprintf(errmsg,
 			"ignoring last %ld values in ambient file (corrupted)",
 					(flen - pos)/AMBVALSIZ);
 			error(WARNING, errmsg);
 			fseek(ambfp, pos, 0);
-			ftruncate(fileno(ambfp), pos);
+			ftruncate(fileno(ambfp), (off_t)pos);
 		}
-	} else if ((ambfp = fopen(afile, "w+")) != NULL) {
+	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
 		initambfile(1);			/* else create new file */
 	} else {
-		sprintf(errmsg, "cannot open ambient file \"%s\"", afile);
+		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
 		error(SYSTEM, errmsg);
 	}
 	nunflshed++;	/* lie */
@@ -178,13 +233,46 @@ char  *afile;
 }
 
 
+void
+ambdone()			/* close ambient file and free memory */
+{
+	if (ambfp != NULL) {		/* close ambient file */
+		ambsync();
+		fclose(ambfp);
+		ambfp = NULL;
+		if (ambinp != NULL) {	
+			fclose(ambinp);
+			ambinp = NULL;
+		}
+		lastpos = -1;
+	}
+					/* free ambient tree */
+	unloadatree(&atrunk, free);
+					/* reset state variables */
+	avsum = 0.;
+	navsum = 0;
+	nambvals = 0;
+	nambshare = 0;
+	ambclock = 0;
+	lastsort = 0;
+	sortintvl = SORT_INTVL;
+}
+
+
+void
 ambnotify(obj)			/* record new modifier */
 OBJECT	obj;
 {
 	static int  hitlimit = 0;
-	register OBJREC	 *o = objptr(obj);
+	register OBJREC	 *o;
 	register char  **amblp;
 
+	if (obj == OVOID) {		/* starting over */
+		ambset[0] = 0;
+		hitlimit = 0;
+		return;
+	}
+	o = objptr(obj);
 	if (hitlimit || !ismodifier(o->otype))
 		return;
 	for (amblp = amblist; *amblp != NULL; amblp++)
@@ -200,6 +288,7 @@ OBJECT	obj;
 }
 
 
+void
 ambient(acol, r, nrm)		/* compute ambient component for ray */
 COLOR  acol;
 register RAY  *r;
@@ -279,6 +368,7 @@ double	s;
 	wsum = 0.0;
 					/* do this node */
 	for (av = at->alist; av != NULL; av = av->next) {
+		double	rn_dot = -2.0;
 		if (tracktime)
 			av->latick = ambclock;
 		/*
@@ -301,9 +391,19 @@ double	s;
 		if (e1 > ambacc*ambacc*1.21)
 			continue;
 		/*
-		 *  Normal direction test.
+		 *  Direction test using closest normal.
 		 */
-		e2 = (1.0 - DOT(av->dir, r->ron)) * r->rweight;
+		d = DOT(av->dir, r->ron);
+		if (rn != r->ron) {
+			rn_dot = DOT(av->dir, rn);
+			if (rn_dot > 1.0-FTINY)
+				rn_dot = 1.0-FTINY;
+			if (rn_dot >= d-FTINY) {
+				d = rn_dot;
+				rn_dot = -2.0;
+			}
+		}
+		e2 = (1.0 - d) * r->rweight;
 		if (e2 < 0.0) e2 = 0.0;
 		if (e1 + e2 > ambacc*ambacc*1.21)
 			continue;
@@ -319,9 +419,18 @@ double	s;
 		/*
 		 *  Jittering final test reduces image artifacts.
 		 */
-		wt = sqrt(e1) + sqrt(e2);
+		e1 = sqrt(e1);
+		e2 = sqrt(e2);
+		wt = e1 + e2;
 		if (wt > ambacc*(.9+.2*urand(9015+samplendx)))
 			continue;
+		/*
+		 *  Recompute directional error using perturbed normal
+		 */
+		if (rn_dot > 0.0) {
+			e2 = sqrt((1.0 - rn_dot)*r->rweight);
+			wt = e1 + e2;
+		}
 		if (wt <= 1e-3)
 			wt = 1e3;
 		else
@@ -384,6 +493,7 @@ int  al;
 }
 
 
+void
 extambient(cr, ap, pv, nv)		/* extrapolate value at pv, nv */
 COLOR  cr;
 register AMBVAL	 *ap;
@@ -409,11 +519,12 @@ FVECT  pv, nv;
 }
 
 
-static
+static void
 initambfile(creat)		/* initialize ambient file */
 int  creat;
 {
-	extern char  *progname, *octname, VersionID[];
+	extern char  *progname, *octname;
+	static char  *mybuf = NULL;
 
 #ifdef	F_SETLKW
 	aflock(creat ? F_WRLCK : F_RDLCK);
@@ -421,17 +532,23 @@ int  creat;
 #ifdef MSDOS
 	setmode(fileno(ambfp), O_BINARY);
 #endif
-	setbuf(ambfp, bmalloc(BUFSIZ+8));
+	if (mybuf == NULL)
+		mybuf = (char *)bmalloc(BUFSIZ+8);
+	setbuf(ambfp, mybuf);
 	if (creat) {			/* new file */
 		newheader("RADIANCE", ambfp);
 		fprintf(ambfp, "%s -av %g %g %g -aw %d -ab %d -aa %g ",
 				progname, colval(ambval,RED),
 				colval(ambval,GRN), colval(ambval,BLU),
 				ambvwt, ambounce, ambacc);
-		fprintf(ambfp, "-ad %d -as %d -ar %d %s\n",
-				ambdiv, ambssamp, ambres,
-				octname==NULL ? "" : octname);
+		fprintf(ambfp, "-ad %d -as %d -ar %d ",
+				ambdiv, ambssamp, ambres);
+		if (octname != NULL)
+			printargs(1, &octname, ambfp);
+		else
+			fputc('\n', ambfp);
 		fprintf(ambfp, "SOFTWARE= %s\n", VersionID);
+		fputnow(ambfp);
 		fputformat(AMBFMT, ambfp);
 		putc('\n', ambfp);
 		putambmagic(ambfp);
@@ -440,7 +557,7 @@ int  creat;
 }
 
 
-static
+static void
 avsave(av)				/* insert and save an ambient value */
 AMBVAL	*av;
 {
@@ -454,7 +571,7 @@ AMBVAL	*av;
 			goto writerr;
 	return;
 writerr:
-	error(SYSTEM, "error writing ambient file");
+	error(SYSTEM, "error writing to ambient file");
 }
 
 
@@ -485,14 +602,13 @@ register AMBVAL  *aval;
 static AMBTREE  *atfreelist = NULL;	/* free ambient tree structures */
 
 
-static
-AMBTREE *
+static AMBTREE *
 newambtree()				/* allocate 8 ambient tree structs */
 {
 	register AMBTREE  *atp, *upperlim;
 
 	if (atfreelist == NULL) {	/* get more nodes */
-		atfreelist = (AMBTREE *)bmalloc(ATALLOCSZ*8*sizeof(AMBTREE));
+		atfreelist = (AMBTREE *)malloc(ATALLOCSZ*8*sizeof(AMBTREE));
 		if (atfreelist == NULL)
 			return(NULL);
 					/* link new free list */
@@ -508,7 +624,7 @@ newambtree()				/* allocate 8 ambient tree structs */
 }
 
 
-static
+static void
 freeambtree(atp)			/* free 8 ambient tree structs */
 AMBTREE  *atp;
 {
@@ -517,7 +633,7 @@ AMBTREE  *atp;
 }
 
 
-static
+static void
 avinsert(av)				/* insert ambient value in our tree */
 register AMBVAL	 *av;
 {
@@ -557,10 +673,10 @@ register AMBVAL	 *av;
 }
 
 
-static
+static void
 unloadatree(at, f)			/* unload an ambient value tree */
 register AMBTREE  *at;
-int	(*f)();
+void	(*f)();
 {
 	register AMBVAL  *av;
 	register int  i;
@@ -586,7 +702,7 @@ static AMBVAL	**avlist2;		/* memory positions for sorting */
 static int	i_avlist;		/* index for lists */
 
 
-static
+static int
 av2list(av)
 register AMBVAL	*av;
 {
@@ -608,13 +724,21 @@ struct avl	*av1, *av2;
 }
 
 
+/* GW NOTE 2002/10/3:
+ * I used to compare AMBVAL pointers, but found that this was the
+ * cause of a serious consistency error with gcc, since the optimizer
+ * uses some dangerous trick in pointer subtraction that
+ * assumes pointers differ by exact struct size increments.
+ */
 static int
 aposcmp(avp1, avp2)			/* compare ambient value positions */
-AMBVAL	**avp1, **avp2;
+const void	*avp1, *avp2;
 {
-	return(*avp1 - *avp2);
+	register long	diff = *(char * const *)avp1 - *(char * const *)avp2;
+	if (diff < 0)
+		return(-1);
+	return(diff > 0);
 }
-
 
 #if 1
 static int
@@ -635,7 +759,7 @@ AMBVAL	*avaddr;
 #endif
 
 
-static
+static void
 sortambvals(always)			/* resort ambient values */
 int	always;
 {
@@ -670,7 +794,7 @@ int	always;
 	}
 	if (avlist1 == NULL) {		/* no time tracking -- rebuild tree? */
 		if (avlist2 != NULL)
-			free((char *)avlist2);
+			free((void *)avlist2);
 		if (always) {		/* rebuild without sorting */
 			copystruct(&oldatrunk, &atrunk);
 			atrunk.alist = NULL;
@@ -714,8 +838,8 @@ int	always;
 			avinsert(avlist2[j]);
 			avlist1[j].p = NULL;
 		}
-		free((char *)avlist1);
-		free((char *)avlist2);
+		free((void *)avlist1);
+		free((void *)avlist2);
 						/* compute new sort interval */
 		sortintvl = ambclock - lastsort;
 		if (sortintvl >= MAX_SORT_INTVL/2)
@@ -734,7 +858,7 @@ int	always;
 
 #ifdef	F_SETLKW
 
-static
+static void
 aflock(typ)			/* lock/unlock ambient file */
 int  typ;
 {
@@ -749,8 +873,6 @@ int  typ;
 int
 ambsync()			/* synchronize ambient file */
 {
-	static FILE  *ambinp = NULL;
-	static long  lastpos = -1;
 	long  flen;
 	AMBVAL	avs;
 	register int  n;
@@ -762,7 +884,7 @@ ambsync()			/* synchronize ambient file */
 				/* gain exclusive access */
 	aflock(F_WRLCK);
 				/* see if file has grown */
-	if ((flen = lseek(fileno(ambfp), 0L, 2)) < 0)
+	if ((flen = lseek(fileno(ambfp), (off_t)0L, 2)) < 0)
 		goto seekerr;
 	if (n = flen - lastpos) {		/* file has grown */
 		if (ambinp == NULL) {		/* use duplicate filedes */
@@ -775,8 +897,8 @@ ambsync()			/* synchronize ambient file */
 		while (n >= AMBVALSIZ) {	/* load contributed values */
 			if (!readambval(&avs, ambinp)) {
 				sprintf(errmsg,
-				"ambient file corrupted near character %ld",
-						flen - n);
+			"ambient file \"%s\" corrupted near character %ld",
+						ambfile, flen - n);
 				error(WARNING, errmsg);
 				break;
 			}
@@ -785,7 +907,7 @@ ambsync()			/* synchronize ambient file */
 		}
 		/*** seek always as safety measure
 		if (n) ***/			/* alignment */
-			if (lseek(fileno(ambfp), flen-n, 0) < 0)
+			if (lseek(fileno(ambfp), (off_t)(flen-n), 0) < 0)
 				goto seekerr;
 	}
 #ifdef  DEBUG
@@ -798,7 +920,7 @@ ambsync()			/* synchronize ambient file */
 #endif
 syncend:
 	n = fflush(ambfp);			/* calls write() at last */
-	if ((lastpos = lseek(fileno(ambfp), 0L, 1)) < 0)
+	if ((lastpos = lseek(fileno(ambfp), (off_t)0L, 1)) < 0)
 		goto seekerr;
 	aflock(F_UNLCK);			/* release file */
 	nunflshed = 0;

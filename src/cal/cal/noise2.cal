@@ -1,0 +1,31 @@
+frac(x)=x-floor(x);
+
+hermite(p0,p1,r0,r1,t) =	p0 * ((2*t-3)*t*t+1) +
+				p1 * (-2*t+3)*t*t +
+				r0 * (((t-2)*t+1)*t) +
+				r1 * ((t-1)*t*t);
+
+rand2a(x,y) = 1-2*rand(.69692*x+.35084*y);
+rand2b(x,y) = 1-2*rand(.05393*x+.96196*y);
+rand2c(x,y) = 1-2*rand(.04234*x+.46180*y);
+
+noise2(x,y) = noise_2(	floor(x),frac(x),ceil(x),
+				floor(y),frac(y),ceil(y) );
+
+noise_2(xl,xd,xu,yl,yd,yu) =
+			hermite(
+				hermite(rand2c(xl,yl),
+					rand2c(xu,yl),
+					rand2a(xl,yl),
+					rand2a(xu,yl),
+					xd),
+				hermite(rand2c(xl,yu),
+					rand2c(xu,yu),
+					rand2a(xl,yu),
+					rand2a(xu,yu),
+					xd),
+				(1-xd)*rand2b(xl,yl)+
+					xd*rand2b(xu,yl),
+				(1-xd)*rand2b(xl,yu)+
+					xd*rand2b(xu,yu),
+				yd);

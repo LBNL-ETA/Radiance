@@ -1,0 +1,334 @@
+#!/bin/csh -f
+# SCCSid "@(#)makeall 2.81 6/12/99 SGI"
+# 
+#Added macosX 2001-04-11 by Jean Brange
+#Deleted obsolete systems 2001-04-18 by Greg Ward
+#
+# Make all the Radiance programs
+#
+if ( $#argv < 1 ) then
+	echo "Usage: makeall install [clean] [make options]"
+	echo "   or: makeall clean"
+	echo "   or: makeall library"
+	exit 1
+endif
+if ( "$1" == library ) then
+	source installib
+	echo ""
+	echo "Set the environment variable RAYPATH=.:$ldir"
+	echo 'For C-shell users, put the following into ~/.cshrc'
+	echo "	setenv RAYPATH .:$ldir"
+	echo 'For Bourne shell users, put the following into $HOME/profile'
+	echo "	RAYPATH=.:$ldir"
+	echo "	export RAYPATH"
+	echo ""
+	exit 0
+endif
+set srcdirs=( common meta cv gen ot rt px hd util cal )
+if ( "$1" == install ) then
+	cat << _EOF_
+
+		`cat src/rt/VERSION` INSTALLATION
+
+This script rebuilds all of the Radiance programs and installs
+them on your system.  You should read the file README before running
+this script.  You can type ^C (followed by return) at any time to abort.
+
+You must first answer the following questions.
+
+_EOF_
+if ( ! $?EDITOR ) then
+	echo -n "What is your preferred editor [vi]? "
+	set ans="$<"
+	if ( "$ans" != "" ) then
+		setenv EDITOR "$ans"
+	else
+		setenv EDITOR vi
+	endif
+endif
+again1:
+echo -n "Where do you want the executables [/usr/local/bin]? "
+set idir=$<
+(echo $idir) >/dev/null
+if ( $status ) goto again1
+set idir=$idir
+if ( "$idir" == "" ) then
+	set idir=/usr/local/bin
+else if ( "$idir" !~ /* ) then
+	echo "Directory must be relative to root, please reenter"
+	goto again1
+endif
+if ( ! -d $idir ) then
+	mkdir $idir
+	if ( $status ) then
+		echo "Cannot create directory, please reenter"
+		goto again1
+	endif
+endif
+if ( ! -d $idir/dev ) then
+	mkdir $idir/dev
+	if ( $status ) then
+		echo "Cannot create subdirectory, please reenter"
+		goto again1
+	endif
+endif
+set rmake=$idir/rmake
+if ( "`ls -tL $rmake $0 |& head -1`" == $rmake ) goto gotrmake
+set newrmake
+goto skiplicense
+cat << _EOF_
+
+                     RADIANCE LICENSE AGREEMENT
+
+Radiance is a registered copyright of The Regents of the University of
+California ("The Regents"). The Regents grant to you a nonexclusive,
+nontransferable license ("License") to use Radiance source code without
+fee.  You may not sell or distribute Radiance to others without the
+prior express written permission of The Regents.  You may compile and
+use this software on any machines to which you have personal access,
+and may share its use with others who have access to the same machines.
+
+NEITHER THE UNITED STATES NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY
+OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY
+LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS
+OF ANY INFORMATION, APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS
+THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.  By downloading, using
+or copying this software, you agree to abide by the intellectual property laws
+and all other applicable laws of the United States, and by the terms of this
+License Agreement. Ownership of the software shall remain solely in The
+Regents.  The Regents shall have the right to terminate this License
+immediately by written notice upon your breach of, or noncompliance with, any
+of its terms.  You shall be liable for any infringement or damages resulting
+from your failure to abide by the terms of this License Agreement.
+
+_EOF_
+echo -n "Do you understand and accept the terms of this agreement [n]? "
+set ans="$<"
+if ( "$ans" !~ [yY]* ) exit
+echo -n "Are you a new Radiance user or with a new address [y]? "
+set ans="$<"
+if ( "$ans" !~ [nN]* ) then
+	csh -f newuser
+else
+	echo `cat src/rt/VERSION` compiled by `whoami` | mail radiance-request@floyd.lbl.gov
+endif
+skiplicense:
+set special=
+set arch=
+set opt=
+set mach=
+set compat=
+set extras=
+cat << _EOF_
+
+Please select your system type from the following list:
+
+	1)	Sun Solaris
+	2)	HP workstation
+	3)	Silicon Graphics
+	4)	AIX (RS/6000)
+	5)	BSDI BSD/386
+	6)	Linux
+        7)      MacOS X
+	8)	FreeBSD
+        9)      Other
+
+_EOF_
+echo -n "Choice? "
+set arch="$<"
+switch ("$arch")
+case 1:			# SPARC Station
+	set arch=sun
+	if ( `uname -r` =~ 4.* ) then
+		set mach="-fsingle -DBSD /usr/lib/libm.il -I/usr/openwin/include -L/usr/openwin/lib -DNOSTEREO"
+		set opt="-O -pipe -DSPEED=12"
+		set special="sun"
+		set compat="bmalloc.o strcmp.o"
+	else
+		set mach="-I/usr/openwin/include -L/usr/openwin/lib -DNOSTEREO"
+		set opt="-O -DSPEED=80"
+		set special="ogl"
+		set compat="bmalloc.o strcmp.o getpagesize.o"
+	endif
+	breaksw
+case 2:			# HP workstation
+	set mach=""
+	set opt="-O -DSPEED=80 -Aa -D_HPUX_SOURCE"
+	set compat="malloc.o getpagesize.o strcmp.o"
+	set arch=hpux
+	breaksw
+case 3:			# Silicon Graphics
+	set arch=sgi
+	switch (`uname -r`)
+	case 3.*:
+		set mach="-noprototypes"
+		set opt="-O -DSPEED=80"
+		set special="sgi"
+		set compat="malloc.o strcmp.o"
+		breaksw
+	case 4.*:
+		set mach=""
+		set opt="-O2 -DSPEED=100"
+		set compat="malloc.o strcmp.o"
+		set extras='"MLIB=-lfastm -lm"'
+		breaksw
+	default:	# 5.x or later
+		ln -s `which wish` $idir/wish4.0
+		set path=($idir $path)
+		set mach="-w"
+		set opt="-O2 -DSPEED=200"
+		set special="ogl"
+		set compat="malloc.o strcmp.o"
+		breaksw
+	endsw
+	breaksw
+case 4:			# AIX
+	set mach="-Dvoid=char -D_NO_PROTO -DINCL_SEL_H"
+	set opt="-O"
+	set compat="bmalloc.o erf.o"
+	breaksw
+case 5:			# BSDI BSD/386
+	set mach="-DBSD -L/usr/X11/lib -I/usr/X11/include"
+	set opt="-O -DSPEED=100"
+	set arch=IBMPC
+	set compat="malloc.o erf.o strcmp.o"
+	breaksw
+case 6:			# Linux
+	set mach="-Dlinux -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
+	set opt="-O2 -DSPEED=200"
+	set arch=IBMPC
+	set compat="bmalloc.o erf.o getpagesize.o"
+	set extras=CC=gcc
+	breaksw
+case 7:                # MacOS X
+        set mach="-DBSD -DNOSTEREO -Dfreebsd -I/usr/X11R6/include -L/usr/X11R6/lib"
+        set opt="-O2 -DSPEED=200"
+        set arch=PowerPC
+        set compat="bmalloc.o"
+        set extras="CC=cc CONFIGURE_ARCH=powerpc"
+	set special="ogl"
+        breaksw
+case 8:			# FreeBSD
+        set mach="-DBSD -DNOSTEREO -Dfreebsd -I/usr/X11R6/include -L/usr/X11R6/lib"
+        set opt="-O -DSPEED=200"
+        set compat="bmalloc.o erf.o"
+        set extras="CC=cc"
+	set arch=IBMPC
+        breaksw
+case 9:			# Other
+	set opt="-O"
+	set compat="bmalloc.o erf.o strcmp.o"
+	echo -n "Are you using the GNU C compiler [n]? "
+	if ( "$<" =~ [yY]* ) then
+		set extras="CC=gcc"
+	endif
+	breaksw
+default:
+	echo "Illegal choice\!"
+	echo "Installation aborted."
+	exit 1
+	breaksw
+endsw
+# We don't seem to have any more cramped machines out there, so...
+set mem="-DBIGMEM"
+if ( $?mem ) then
+	set mach="$mach $mem"
+else
+	echo -n "Does the target machine have more than 24 Mbytes of RAM? "
+	set ans="$<"
+	if ( "$ans" =~ [yY]* ) then
+		echo -n "More than 96 Mbytes? "
+		set ans="$<"
+		if ( "$ans" =~ [yY]* ) then
+			set mach="$mach -DBIGMEM"
+			set sizemod="huge models (100,000+ surfaces)"
+		else
+			set sizemod="very large models (30,000+ surfaces)"
+		endif
+	else
+		set sizemod="large models (10,000+ surfaces)"
+	endif
+endif
+# echo "Do you expect to be rendering $sizemod?"
+# echo -n '(Answering "yes" may adversly affect rendering time and geometric accuracy) '
+# set ans="$<"
+# if ( "$ans" =~ [yY]* ) then
+# 	set opt="$opt -DSMLFLT"
+# endif
+# echo -n "Do you have X10 support [n]? "
+# if ( "$<" =~ [yY]* ) then
+#	set special="$special x10"
+# endif
+source installib
+sed 's/[ 	]*$//' > $rmake << _EOF_
+#!/bin/sh
+exec make "SPECIAL=$special" \
+	"OPT=$opt" \
+	"MACH=$mach" \
+	ARCH=$arch "COMPAT=$compat" \
+	INSTDIR=$idir \
+	LIBDIR=$ldir \
+	$extras "\$@" -f Rmakefile
+_EOF_
+chmod 755 $rmake
+chmod 644 src/*/Rmakefile src/rt/devtable.c
+gotrmake:
+echo "Current rmake command is:"
+cat $rmake
+echo -n "Do you want to change it? "
+set ans="$<"
+if ( "$ans" =~ [yY]* ) then
+	cp $rmake /tmp/rmake$$
+	$EDITOR $rmake
+	if ( `cat $rmake /tmp/rmake$$ | grep OPT= | uniq | wc -l` == 2 ) set newrmake
+	rm -f /tmp/rmake$$
+endif
+if ( ! -d src/lib ) then
+	mkdir src/lib
+endif
+if ( $?newrmake ) then
+	echo 'New rmake command -- running "makeall clean"...'
+	csh -f $0 clean
+endif
+cd src
+echo "Making programs..."
+set errs=0
+foreach i ( $srcdirs )
+	pushd $i
+	echo "In directory $i..."
+	$rmake -k $*
+	@ errs += $status
+	popd
+end
+if ( $errs ) then
+	echo "There were some errors."
+else
+	echo "Done."
+endif
+cd ..
+if (! -d /usr/tmp) then
+	ln -s /tmp /usr/tmp
+	if ($status) then
+		echo ""
+		echo "IMPORTANT: Execute 'sudo ln -s /tmp /usr/tmp'"
+		echo ""
+	endif
+endif
+else
+cd src
+foreach i ( $srcdirs )
+	pushd $i
+	echo "In directory $i..."
+	make -f Rmakefile $*
+	popd
+end
+echo "Done."
+cd ..
+endif
+foreach i ( $* )
+	if ( "$i" == clean ) then
+		echo "Removing library archives..."
+		rm -f src/lib/*.a
+	endif
+end
+exit 0

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ SGI"
+# RCSid: $Id: phisto.csh,v 3.3 2003/02/22 02:07:27 greg Exp $
 #
 # Compute foveal histogram for picture set
 #

@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: dircode.c,v 3.4 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Compute 4-byte direction code (assume this fits into int)
  */

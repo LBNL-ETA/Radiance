@@ -1,0 +1,4 @@
+sq(x) : x*x;
+n = 1.52;			{ index of refraction }
+rn = sq((1-n)/(1+n));		{ reflectivity at normal incidence }
+tn(Tn) = (sqrt(sq(sq(1-rn))+4*sq(rn*Tn))-sq(1-rn)) / 2/rn/rn/Tn;

@@ -1,9 +1,6 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genprism.c,v 2.8 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  genprism.c - generate a prism.
  *		2D vertices in the xy plane are given on the
@@ -14,6 +11,8 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  <stdio.h>
 
+#include <stdlib.h>
+
 #include  <math.h>
 
 #include  <ctype.h>
@@ -21,10 +20,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #define  MAXVERT	1024		/* maximum # vertices */
 
 #define  FTINY		1e-6
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 char  *pmtype;		/* material type */
 char  *pname;		/* name */

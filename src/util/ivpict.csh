@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: ivpict.csh,v 2.2 2003/02/22 02:07:30 greg Exp $
 #
 # Render requested Instant View
 #

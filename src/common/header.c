@@ -1,17 +1,18 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: header.c,v 2.11 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  *  header.c - routines for reading and writing information headers.
  *
- *	8/19/88
+ *  Externals declared in resolu.h
  *
  *  newheader(t,fp)	start new information header identified by string t
  *  isheadid(s)		returns true if s is a header id line
  *  headidval(r,s)	copy header identifier value in s to r
+ *  dateval(t,s)	get capture date value
+ *  isdate(s)		returns true if s is a date line
+ *  fputdate(t,fp)	put out the given capture date and time
+ *  fputnow(fp)		put out the current date and time
  *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
  *  isformat(s)		returns true if s is of the form "FORMAT=*"
  *  formatval(r,s)	copy the format value in s to r
@@ -23,7 +24,66 @@ static char SCCSid[] = "$SunId$ LBL";
  *  To copy header from input to output, use getheader(fin, fputs, fout)
  */
 
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
 #include  <stdio.h>
+#include  <string.h>
+#include  <time.h>
 #include  <ctype.h>
 
 #define	 MAXLINE	512
@@ -38,7 +98,12 @@ char  HDRSTR[] = "#?";		/* information header magic number */
 
 char  FMTSTR[] = "FORMAT=";	/* format identifier */
 
+char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
 
+static int mycheck();
+
+
+void
 newheader(s, fp)		/* identifying line of information header */
 char  *s;
 register FILE  *fp;
@@ -71,25 +136,74 @@ char  *s;
 }
 
 
+int
+dateval(tloc, s)		/* get capture date value */
+time_t	*tloc;
+char	*s;
+{
+	struct tm	tms;
+	register char  *cp = TMSTR;
+
+	while (*cp) if (*cp++ != *s++) return(0);
+	while (isspace(*s)) s++;
+	if (!*s) return(0);
+	if (sscanf(s, "%d:%d:%d %d:%d:%d",
+			&tms.tm_year, &tms.tm_mon, &tms.tm_mday,
+			&tms.tm_hour, &tms.tm_min, &tms.tm_sec) != 6)
+		return(0);
+	if (tloc == NULL)
+		return(1);
+	tms.tm_mon--;
+	tms.tm_year -= 1900;
+	tms.tm_isdst = -1;	/* ask mktime() to figure out DST */
+	*tloc = mktime(&tms);
+	return(1);
+}
+
+
+int
+isdate(s)			/* is the given line a capture date? */
+char *s;
+{
+	return(dateval(NULL, s));
+}
+
+
+void
+fputdate(tv, fp)		/* write out the given time value */
+time_t	tv;
+FILE	*fp;
+{
+	struct tm	*tm = localtime(&tv);
+	if (tm == NULL)
+		return;
+	fprintf(fp, "%s %04d:%02d:%02d %02d:%02d:%02d\n", TMSTR,
+			tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec);
+}
+
+
+void
+fputnow(fp)			/* write out the current time */
+FILE	*fp;
+{
+	time_t	tv;
+	time(&tv);
+	fputdate(tv, fp);
+}
+
+
+void
 printargs(ac, av, fp)		/* print arguments to a file */
 int  ac;
 char  **av;
-register FILE  *fp;
+FILE  *fp;
 {
 	int  quote;
 
 	while (ac-- > 0) {
-		if (index(*av, ' ') != NULL) {		/* quote it */
-			if (index(*av, '\'') != NULL)
-				quote = '"';
-			else
-				quote = '\'';
-			putc(quote, fp);
-			fputs(*av++, fp);
-			putc(quote, fp);
-		} else
-			fputs(*av++, fp);
-		putc(ac ? ' ' : '\n', fp);
+		fputword(*av++, fp);
+		fputc(ac ? ' ' : '\n', fp);
 	}
 }
 
@@ -121,6 +235,7 @@ char  *s;
 }
 
 
+void
 fputformat(s, fp)		/* put out a format value */
 char  *s;
 FILE  *fp;
@@ -165,21 +280,22 @@ struct check {
 };
 
 
-static
+static int
 mycheck(s, cp)			/* check a header line for format info. */
 char  *s;
 register struct check  *cp;
 {
 	if (!formatval(cp->fs, s) && cp->fp != NULL)
 		fputs(s, cp->fp);
+	return(0);
 }
 
 
 int
-globmatch(pat, str)		/* check for glob match of str against pat */
-char	*pat, *str;
+globmatch(p, s)			/* check for match of s against pattern p */
+register char	*p, *s;
 {
-	register char	*p = pat, *s = str;
+	int	setmatch;
 
 	do {
 		switch (*p) {
@@ -195,6 +311,24 @@ char	*pat, *str;
 					return(1);
 			while (*s++);
 			return(0);
+		case '[':			/* character set */
+			setmatch = *s == *++p;
+			if (!*p)
+				return(0);
+			while (*++p != ']') {
+				if (!*p)
+					return(0);
+				if (*p == '-') {
+					setmatch += p[-1] <= *s && *s <= p[1];
+					if (!*++p)
+						break;
+				} else
+					setmatch += *p == *s;
+			}
+			if (!setmatch)
+				return(0);
+			s++;
+			break;
 		case '\\':			/* literal next */
 			p++;
 		/* fall through */

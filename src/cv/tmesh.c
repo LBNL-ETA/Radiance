@@ -1,9 +1,6 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: tmesh.c,v 2.3 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Compute and print barycentric coordinates for triangle meshes
  */
@@ -68,13 +65,13 @@ FLOAT	*v1, *v2, *v3;
 		vab[1] = v1[ax1] - v2[ax1];
 		vcb[1] = v3[ax1] - v2[ax1];
 		d = vcb[0]*vcb[0] + vcb[1]*vcb[1];
-		if (d <= FTINY)
+		if (d <= FTINY*FTINY)
 			return(-1);
 		d = (vcb[0]*vab[0]+vcb[1]*vab[1])/d;
 		va[0] = vab[0] - vcb[0]*d;
 		va[1] = vab[1] - vcb[1]*d;
 		d = va[0]*va[0] + va[1]*va[1];
-		if (d <= FTINY)
+		if (d <= FTINY*FTINY)
 			return(-1);
 		bcm->tm[j][0] = va[0] /= d;
 		bcm->tm[j][1] = va[1] /= d;

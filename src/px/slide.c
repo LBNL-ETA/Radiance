@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: slide.c,v 1.3 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  slide.c - driver for dicomed film recorder using GRAFPAC under VMS.
  *
@@ -63,7 +60,6 @@ main(argc, argv)
 int  argc;
 char  **argv;
 {
-	extern char  *malloc();
 	FILE  *fin;
 	COLOR  scanline[NCOLS];
 	int  mult;

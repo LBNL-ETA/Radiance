@@ -1,14 +1,12 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.25 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include "mgflib/parser.h"
@@ -298,6 +296,7 @@ int	ac;
 char	**av;
 {
 	static int	nfaces;
+	int		myi = invert;
 	char	*mat;
 	register int	i;
 	register C_VERTEX	*cv;
@@ -316,16 +315,24 @@ char	**av;
 			if (is0vect(cva[i-1]->n))
 				break;
 		}
-		if (i == ac) {
+		if (i < ac)
+			i = ISFLAT;
+		else
 			i = flat_tri(cva[0]->p, cva[1]->p, cva[2]->p,
 					cva[0]->n, cva[1]->n, cva[2]->n);
-			if (i < 0)
-				return(MG_OK);	/* degenerate (error?) */
+		if (i == DEGEN)
+			return(MG_OK);		/* degenerate (error?) */
+		if (i == RVBENT) {
+			myi = !myi;
+			i = ISBENT;
+		} else if (i == RVFLAT) {
+			myi = !myi;
+			i = ISFLAT;
 		}
-		if (!i) {			/* smoothed triangles */
-			do_tri(mat, cva[0], cva[1], cva[2]);
+		if (i == ISBENT) {		/* smoothed triangles */
+			do_tri(mat, cva[0], cva[1], cva[2], myi);
 			if (ac == 5)
-				do_tri(mat, cva[2], cva[3], cva[0]);
+				do_tri(mat, cva[2], cva[3], cva[0], myi);
 			return(MG_OK);
 		}
 	}
@@ -333,7 +340,7 @@ char	**av;
 	printf("\n%s polygon %sf%d\n", mat, object(), ++nfaces);
 	printf("0\n0\n%d\n", 3*(ac-1));
 	for (i = 1; i < ac; i++) {	/* get, transform, print each vertex */
-		if ((cv = c_getvert(av[invert ? ac-i : i])) == NULL)
+		if ((cv = c_getvert(av[myi ? ac-i : i])) == NULL)
 			return(MG_EUNDEF);
 		xf_xfmpoint(v, cv->p);
 		putv(v);
@@ -407,9 +414,10 @@ char	**av;
 }
 
 
-do_tri(mat, cv1, cv2, cv3)		/* put out smoothed triangle */
+do_tri(mat, cv1, cv2, cv3, iv)		/* put out smoothed triangle */
 char	*mat;
 C_VERTEX	*cv1, *cv2, *cv3;
+int	iv;
 {
 	static int	ntris;
 	BARYCCM	bvecs;
@@ -419,7 +427,7 @@ C_VERTEX	*cv1, *cv2, *cv3;
 	FVECT	n1, n2, n3;
 	register int	i;
 
-	if (invert) {			/* swap vertex order if inverted */
+	if (iv) {			/* swap vertex order if inverted */
 		cvt = cv1;
 		cv1 = cv3;
 		cv3 = cvt;

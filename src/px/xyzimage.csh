@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: xyzimage.csh,v 2.3 2003/02/22 02:07:28 greg Exp $
 #
 # Display one or more CIE XYZE pictures using ximage
 #

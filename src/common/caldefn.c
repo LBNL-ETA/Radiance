@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.12 2003/02/22 02:07:21 greg Exp $";
 #endif
-
 /*
  *  Store variable definitions.
  *
@@ -22,9 +19,72 @@ static char SCCSid[] = "$SunId$ LBL";
  *  4/23/91  Added ':' assignment for constant expressions
  *
  *  8/7/91  Added optional context path to append to variable names
+ *
+ *  5/17/2001  Fixed clock counter wrapping behavior
+ *
+ *  2/19/03	Eliminated conditional compiles in favor of esupport extern.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  <stdio.h>
+
+#include  <string.h>
 
 #include  <ctype.h>
 
@@ -38,9 +98,9 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #define	 newnode()	(EPNODE *)ecalloc(1, sizeof(EPNODE))
 
-extern char  *ecalloc(), *emalloc(), *savestr(), *strcpy();
-
 static double  dvalue();
+
+#define  MAXCLOCK	(1L<<31)	/* clock wrap value */
 
 unsigned long  eclock = 0;		/* value storage timer */
 
@@ -51,21 +111,16 @@ static char  context[MAXCNTX+1];	/* current context path */
 static VARDEF  *hashtbl[NHASH];		/* definition list */
 static int  htndx;			/* index for */		
 static VARDEF  *htpos;			/* ...dfirst() and */
-#ifdef	OUTCHAN
 static EPNODE  *ochpos;			/* ...dnext */
 static EPNODE  *outchan;
-#endif
 
-#ifdef	FUNCTION
 EPNODE	*curfunc = NULL;
 #define	 dname(ep)	((ep)->v.kid->type == SYM ? \
 			(ep)->v.kid->v.name : \
 			(ep)->v.kid->v.kid->v.name)
-#else
-#define	 dname(ep)	((ep)->v.kid->v.name)
-#endif
 
 
+void
 fcompile(fname)			/* get definitions from a file */
 char  *fname;
 {
@@ -86,6 +141,7 @@ char  *fname;
 }
 
 
+void
 scompile(str, fn, ln)		/* get definitions from a string */
 char  *str;
 char  *fn;
@@ -115,6 +171,7 @@ EPNODE	*ep;
 }
 
 
+void
 varset(vname, assign, val)	/* set a variable's value */
 char  *vname;
 int  assign;
@@ -149,6 +206,7 @@ double	val;
 }
 
 
+void
 dclear(name)			/* delete variable definitions of name */
 char  *name;
 {
@@ -164,6 +222,7 @@ char  *name;
 }
 
 
+void
 dremove(name)			/* delete all definitions of name */
 char  *name;
 {
@@ -174,6 +233,7 @@ char  *name;
 }
 
 
+int
 vardefined(name)	/* return non-zero if variable defined */
 char  *name;
 {
@@ -298,6 +358,7 @@ toolong:
 }
 
 
+int
 incontext(qn)			/* is qualified name in current context? */
 register char  *qn;
 {
@@ -309,7 +370,7 @@ register char  *qn;
 }
 
 
-#ifdef	OUTCHAN
+void
 chanout(cs)			/* set output channels */
 int  (*cs)();
 {
@@ -319,9 +380,9 @@ int  (*cs)();
 	(*cs)(ep->v.kid->v.chan, evalue(ep->v.kid->sibling));
 
 }
-#endif
 
 
+void
 dcleanup(lvl)		/* clear definitions (0->vars,1->output,2->consts) */
 int  lvl;
 {
@@ -336,13 +397,11 @@ int  lvl;
 		    dremove(vp->name);
 		else
 		    dclear(vp->name);
-#ifdef	OUTCHAN
     if (lvl >= 1) {
 	for (ep = outchan; ep != NULL; ep = ep->sibling)
 	    epfree(ep);
 	outchan = NULL;
     }
-#endif
 }
 
 
@@ -386,11 +445,7 @@ char  *name;
 	return(vp);
     }
     vp = (VARDEF *)emalloc(sizeof(VARDEF));
-#ifdef	FUNCTION
     vp->lib = liblookup(name);
-#else
-    vp->lib = NULL;
-#endif
     if (vp->lib == NULL)		/* if name not in library */
 	name = qualname(name, 0);	/* use fully qualified version */
     hv = hash(name);
@@ -403,7 +458,7 @@ char  *name;
 }
 
 
-#ifdef	FUNCTION
+void
 libupdate(fn)			/* update library links */
 char  *fn;
 {
@@ -415,9 +470,9 @@ char  *fn;
 	    if (vp->lib != NULL || fn == NULL || !strcmp(fn, vp->name))
 		vp->lib = liblookup(vp->name);
 }
-#endif
 
 
+void
 varfree(ln)				/* release link to variable */
 register VARDEF	 *ln;
 {
@@ -446,9 +501,7 @@ dfirst()			/* return pointer to first definition */
 {
     htndx = 0;
     htpos = NULL;
-#ifdef	OUTCHAN
     ochpos = outchan;
-#endif
     return(dnext());
 }
 
@@ -470,13 +523,9 @@ dnext()				/* return pointer to next definition */
 		return(ep);
 	}
     }
-#ifdef	OUTCHAN
     if ((ep = ochpos) != NULL)
 	ochpos = ep->sibling;
     return(ep);
-#else
-    return(NULL);
-#endif
 }
 
 
@@ -496,6 +545,7 @@ char  *name;
 }
 
 
+void
 dpush(nm, ep)			/* push on a definition */
 char  *nm;
 register EPNODE	 *ep;
@@ -508,7 +558,7 @@ register EPNODE	 *ep;
 }
 
 
-#ifdef	OUTCHAN
+void
 addchan(sp)			/* add an output channel assignment */
 EPNODE	*sp;
 {
@@ -536,9 +586,9 @@ EPNODE	*sp;
     sp->sibling = NULL;
 
 }
-#endif
 
 
+void
 getstatement()			/* get next statement */
 {
     register EPNODE  *ep;
@@ -549,31 +599,24 @@ getstatement()			/* get next statement */
 	scan();
 	return;
     }
-#ifdef	OUTCHAN
-    if (nextc == '$') {		/* channel assignment */
+    if (esupport&E_OUTCHAN &&
+		nextc == '$') {		/* channel assignment */
 	ep = getchan();
 	addchan(ep);
-    } else
-#endif
-    {				/* ordinary definition */
+    } else {				/* ordinary definition */
 	ep = getdefn();
 	qname = qualname(dname(ep), 0);
-#ifdef	REDEFW
-	if ((vdef = varlookup(qname)) != NULL)
+	if (esupport&E_REDEFW && (vdef = varlookup(qname)) != NULL)
 	    if (vdef->def != NULL && epcmp(ep, vdef->def)) {
 		wputs(qname);
 		if (vdef->def->type == ':')
 		    wputs(": redefined constant expression\n");
 		else
 		    wputs(": redefined\n");
-	    }
-#ifdef	FUNCTION
-	    else if (ep->v.kid->type == FUNC && vdef->lib != NULL) {
+	    } else if (ep->v.kid->type == FUNC && vdef->lib != NULL) {
 		wputs(qname);
 		wputs(": definition hides library function\n");
 	    }
-#endif
-#endif
 	if (ep->type == ':')
 	    dremove(qname);
 	else
@@ -603,8 +646,7 @@ getdefn()			/* A -> SYM = E1 */
     ep1->type = SYM;
     ep1->v.name = savestr(getname());
 
-#ifdef	FUNCTION
-    if (nextc == '(') {
+    if (esupport&E_FUNCTION && nextc == '(') {
 	ep2 = newnode();
 	ep2->type = FUNC;
 	addekid(ep2, ep1);
@@ -623,7 +665,6 @@ getdefn()			/* A -> SYM = E1 */
 	scan();
 	curfunc = ep1;
     }
-#endif
 
     if (nextc != '=' && nextc != ':')
 	syntax("'=' or ':' expected");
@@ -634,11 +675,7 @@ getdefn()			/* A -> SYM = E1 */
     addekid(ep2, ep1);
     addekid(ep2, getE1());
 
-    if (
-#ifdef	FUNCTION
-	    ep1->type == SYM &&
-#endif
-	    ep1->sibling->type != NUM) {
+    if (ep1->type == SYM && ep1->sibling->type != NUM) {
 	ep1 = newnode();
 	ep1->type = TICK;
 	ep1->v.tick = 0;
@@ -647,16 +684,12 @@ getdefn()			/* A -> SYM = E1 */
 	ep1->type = NUM;
 	addekid(ep2, ep1);
     }
-
-#ifdef  FUNCTION
     curfunc = NULL;
-#endif
 
     return(ep2);
 }
 
 
-#ifdef	OUTCHAN
 EPNODE *
 getchan()			/* A -> $N = E1 */
 {
@@ -681,7 +714,6 @@ getchan()			/* A -> $N = E1 */
 
     return(ep2);
 }
-#endif
 
 
 
@@ -706,8 +738,11 @@ EPNODE	*d;
     if (ep1->type == NUM)
 	return(ep1->v.num);			/* return if number */
     ep2 = ep1->sibling;				/* check time */
-    if (ep2->v.tick == 0 || ep2->v.tick < eclock) {
-	ep2->v.tick = d->type == ':' ? ~0L : eclock;
+    if (eclock >= MAXCLOCK)
+	eclock = 1;				/* wrap clock counter */
+    if (ep2->v.tick < MAXCLOCK &&
+		ep2->v.tick == 0 | ep2->v.tick != eclock) {
+	ep2->v.tick = d->type == ':' ? MAXCLOCK : eclock;
 	ep2 = ep2->sibling;
 	ep2->v.num = evalue(ep1);		/* needs new value */
     } else

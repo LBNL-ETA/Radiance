@@ -1,18 +1,70 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: source.c,v 2.29 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  source.c - routines dealing with illumination sources.
  *
- *     8/20/85
+ *  External symbols declared in source.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
-
-#include  "octree.h"
 
 #include  "otypes.h"
 
@@ -47,6 +99,7 @@ static CNTPTR  *cntord;			/* source ordering in direct() */
 static int  maxcntr = 0;		/* size of contribution arrays */
 
 
+void
 marksources()			/* find and mark source objects */
 {
 	int  foundsource = 0;
@@ -125,6 +178,25 @@ memerr:
 }
 
 
+void
+freesources()			/* free all source structures */
+{
+	if (nsources > 0) {
+		free((void *)source);
+		source = NULL;
+		nsources = 0;
+	}
+	if (maxcntr <= 0)
+		return;
+	free((void *)srccnt);
+	srccnt = NULL;
+	free((void *)cntord);
+	cntord = NULL;
+	maxcntr = 0;
+}
+
+
+int
 srcray(sr, r, si)		/* send a ray to a source, return domega */
 register RAY  *sr;		/* returned source ray */
 RAY  *r;			/* ray which hit object */
@@ -162,6 +234,7 @@ SRCINDEX  *si;			/* source sample index */
 }
 
 
+void
 srcvalue(r)			/* punch ray to source and compute value */
 register RAY  *r;
 {
@@ -202,6 +275,7 @@ nomat:
 }
 
 
+int
 sourcehit(r)			/* check to see if ray hit distant source */
 register RAY  *r;
 {
@@ -250,12 +324,13 @@ register CNTPTR  *sc1, *sc2;
 }
 
 
+void
 direct(r, f, p)				/* add direct component */
 RAY  *r;			/* ray that hit surface */
-int  (*f)();			/* direct component coefficient function */
+void  (*f)();			/* direct component coefficient function */
 char  *p;			/* data for f */
 {
-	extern int  (*trace)();
+	extern void  (*trace)();
 	register int  sn;
 	register CONTRIB  *scp;
 	SRCINDEX  si;
@@ -375,6 +450,7 @@ char  *p;			/* data for f */
 }
 
 
+void
 srcscatter(r)			/* compute source scattering into ray */
 register RAY  *r;
 {
@@ -526,6 +602,7 @@ return(o->otype==MAT_ILLUM|o->otype==MAT_GLOW);}
 				distglow(m, r, raydist(r,PRIMARY)))
 
 
+int
 m_light(m, r)			/* ray hit a light source */
 register OBJREC  *m;
 register RAY  *r;

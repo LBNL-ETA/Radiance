@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rad.c,v 2.61 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Executive program for oconv, rpict and pfilt
  */
@@ -13,7 +10,6 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "paths.h"
 #include "vars.h"
 #include <ctype.h>
-#include <sys/types.h>
 
 				/* variables (alphabetical by name) */
 #define AMBFILE		0		/* ambient file name */
@@ -81,7 +77,7 @@ char	overfile[] = "overture.unf";
 char	overfile[] = "/dev/null";
 #endif
 
-extern time_t	fdate(), time();
+extern time_t	time();
 
 time_t	scenedate;		/* date of latest scene or object file */
 time_t	octreedate;		/* date of octree */
@@ -264,6 +260,10 @@ checkfiles()			/* check for existence and modified times */
 			syserr(progname);
 		sprintf(vval(OCTREE), "%s.oct", radname);
 		vdef(OCTREE)++;
+	} else if (vval(OCTREE)[0] == '!') {
+		fprintf(stderr, "%s: illegal '%s' specification\n",
+				progname, vnam(OCTREE));
+		quit(1);
 	}
 	octreedate = fdate(vval(OCTREE));
 	if (vdef(ILLUM)) {		/* illum requires secondary octrees */
@@ -840,7 +840,7 @@ register char	*po;
 	}
 	switch (vscale(QUALITY)) {
 	case MEDIUM:
-		po = addarg(po, "-r 1");
+		po = addarg(po, "-r .6");
 		break;
 	case HIGH:
 		po = addarg(po, "-m .25");
@@ -1309,6 +1309,7 @@ char	*s;
 }
 
 
+void
 quit(ec)			/* exit program */
 int	ec;
 {

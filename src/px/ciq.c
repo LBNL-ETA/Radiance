@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ciq.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
 CIQ - main program for color image quantization
 options for Floyd-Steinberg dithering by minimization of accumulated error
@@ -86,7 +83,7 @@ colormap ocm;
 	for (lp=line, x=0; x<xmax; x++, lp++)
 	    table(map,lp->r,lp->g,lp->b)++;
     }
-    free((char *)line);
+    free((void *)line);
 }
 
 convertmap(in,out)		/* convert to shifted color map */
@@ -120,8 +117,8 @@ colormap ocm;			/* colormap for orig */
 	    oline[x] = table(map,lp->r,lp->g,lp->b);
 	picwriteline(y,oline);
     }
-    free((char *)iline);
-    free((char *)oline);
+    free((void *)iline);
+    free((void *)oline);
 }
 
 draw_dith(ocm)			/* quantize with dithering */
@@ -170,7 +167,7 @@ colormap ocm;			/* colormap for orig */
 	}
 	picwriteline(y,oline);
     }
-    free((char *)iline);
-    free((char *)oline);
-    free((char *)buf);
+    free((void *)iline);
+    free((void *)oline);
+    free((void *)buf);
 }

@@ -1,8 +1,6 @@
-/* SCCSid "$SunId$ Auckuni" */
-
+/* RCSid: $Id: pict.h,v 2.3 2003/02/22 02:07:27 greg Exp $ */
 /*
-    Header files for PICTs, for ra2pict.c
-
+ Header file for ra_pict.h
 */
 
 #define HEADER_SIZE	    512

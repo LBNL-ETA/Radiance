@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.18 2003/02/22 02:07:21 greg Exp $";
 #endif
-
 /*
  *  Compute data values using expression parser
  *
@@ -16,6 +13,65 @@ static char SCCSid[] = "$SunId$ SGI";
  *  1/29/87  Made variables conditional (VARIABLE)
  *
  *  5/19/88  Added constant subexpression elimination (RCONST)
+ *
+ *  2/19/03	Eliminated conditional compiles in favor of esupport extern.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  <stdio.h>
@@ -26,6 +82,8 @@ static char SCCSid[] = "$SunId$ SGI";
 
 #include  <math.h>
 
+#include  <stdlib.h>
+
 #include  "calcomp.h"
 
 #define	 MAXLINE	256		/* maximum line length */
@@ -34,44 +92,24 @@ static char SCCSid[] = "$SunId$ SGI";
 
 #define	 isdecimal(c)	(isdigit(c) || (c) == '.')
 
-extern char  *savestr();
-extern char  *emalloc(), *ecalloc();
-extern EPNODE  *curfunc;
-extern double  efunc(), evariable();
 static double  euminus(), eargument(), enumber();
-#ifdef  INCHAN
 static double  echannel();
-#endif
 static double  eadd(), esubtr(), emult(), edivi(), epow();
 static double  ebotch();
 
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
+unsigned int  esupport =		/* what to support */
+		E_VARIABLE | E_FUNCTION | E_REDEFW;
 
 int  nextc;				/* lookahead character */
 
 double	(*eoper[])() = {		/* expression operations */
 	ebotch,
-#ifdef	VARIABLE
 	evariable,
-#else
-	ebotch,
-#endif
 	enumber,
 	euminus,
-#ifdef	INCHAN
 	echannel,
-#else
-	ebotch,
-#endif
-#ifdef	FUNCTION
 	efunc,
 	eargument,
-#else
-	ebotch,
-	ebotch,
-#endif
 	ebotch,
 	ebotch,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -105,9 +143,7 @@ char  *expr;
     EPNODE  *ep;
 
     initstr(expr, NULL, 0);
-#if  defined(VARIABLE) && defined(FUNCTION)
     curfunc = NULL;
-#endif
     ep = getE1();
     if (nextc != EOF)
 	syntax("unexpected character");
@@ -129,6 +165,7 @@ char  *expr;
 }
 
 
+int
 epcmp(ep1, ep2)			/* compare two expressions for equivalence */
 register EPNODE  *ep1, *ep2;
 {
@@ -176,6 +213,7 @@ register EPNODE  *ep1, *ep2;
 }
 
 
+void
 epfree(epar)			/* free a parse tree */
 register EPNODE	 *epar;
 {
@@ -183,7 +221,6 @@ register EPNODE	 *epar;
 
     switch (epar->type) {
 
-#if  defined(VARIABLE) || defined(FUNCTION)
 	case VAR:
 	    varfree(epar->v.ln);
 	    break;
@@ -191,7 +228,6 @@ register EPNODE	 *epar;
 	case SYM:
 	    freestr(epar->v.name);
 	    break;
-#endif
 
 	case NUM:
 	case CHAN:
@@ -212,14 +248,12 @@ register EPNODE	 *epar;
 }
 
 				/* the following used to be a switch */
-#ifdef	FUNCTION
 static double
 eargument(ep)
 EPNODE	*ep;
 {
     return(argument(ep->v.chan));
 }
-#endif
 
 static double
 enumber(ep)
@@ -237,14 +271,12 @@ EPNODE	*ep;
     return(-evalue(ep1));
 }
 
-#ifdef	INCHAN
 static double
 echannel(ep)
 EPNODE	*ep;
 {
     return(chanvalue(ep->v.chan));
 }
-#endif
 
 static double
 eadd(ep)
@@ -348,6 +380,7 @@ register EPNODE	 *ep;
 }
 
 
+void
 initfile(fp, fn, ln)		/* prepare input file */
 FILE  *fp;
 char  *fn;
@@ -365,6 +398,7 @@ int  ln;
 }
 
 
+void
 initstr(s, fn, ln)		/* prepare input string */
 char  *s;
 char  *fn;
@@ -379,6 +413,7 @@ int  ln;
 }
 
 
+void
 getscanpos(fnp, lnp, spp, fpp)	/* return current scan position */
 char  **fnp;
 int  *lnp;
@@ -450,6 +485,7 @@ long  l;
 }
 
 
+void
 syntax(err)			/* report syntax error and quit */
 char  *err;
 {
@@ -475,6 +511,7 @@ char  *err;
 }
 
 
+void
 addekid(ep, ekid)			/* add a child to ep */
 register EPNODE	 *ep;
 EPNODE	*ekid;
@@ -490,7 +527,6 @@ EPNODE	*ekid;
 }
 
 
-#if  defined(VARIABLE) || defined(FUNCTION)
 char *
 getname()			/* scan an identifier */
 {
@@ -506,7 +542,6 @@ getname()			/* scan an identifier */
 
     return(str);
 }
-#endif
 
 
 int
@@ -579,10 +614,9 @@ getE1()				/* E1 -> E1 ADDOP E2 */
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE2());
-#ifdef	RCONST
-	if (ep1->type == NUM && ep1->sibling->type == NUM)
+	if (esupport&E_RCONST &&
+			ep1->type == NUM && ep1->sibling->type == NUM)
 		ep2 = rconst(ep2);
-#endif
 	ep1 = ep2;
     }
     return(ep1);
@@ -602,10 +636,9 @@ getE2()				/* E2 -> E2 MULOP E3 */
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
-#ifdef	RCONST
-	if (ep1->type == NUM && ep1->sibling->type == NUM)
+	if (esupport&E_RCONST &&
+			ep1->type == NUM && ep1->sibling->type == NUM)
 		ep2 = rconst(ep2);
-#endif
 	ep1 = ep2;
     }
     return(ep1);
@@ -625,10 +658,9 @@ getE3()				/* E3 -> E4 ^ E3 */
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
-#ifdef	RCONST
-	if (ep1->type == NUM && ep1->sibling->type == NUM)
+	if (esupport&E_RCONST &&
+			ep1->type == NUM && ep1->sibling->type == NUM)
 		ep2 = rconst(ep2);
-#endif
 	return(ep2);
     }
     return(ep1);
@@ -684,22 +716,20 @@ getE5()				/* E5 -> (E1) */
 	return(ep1);
     }
 
-#ifdef	INCHAN
-    if (nextc == '$') {
+    if (esupport&E_INCHAN && nextc == '$') {
 	scan();
 	ep1 = newnode();
 	ep1->type = CHAN;
 	ep1->v.chan = getinum();
 	return(ep1);
     }
-#endif
 
-#if  defined(VARIABLE) || defined(FUNCTION)
-    if (isalpha(nextc) || nextc == CNTXMARK) {
-	nam = getname();
-#if  defined(VARIABLE) && defined(FUNCTION)
-	ep1 = NULL;
-	if (curfunc != NULL)
+  if (esupport&(E_VARIABLE|E_FUNCTION) &&
+		(isalpha(nextc) || nextc == CNTXMARK)) {
+      nam = getname();
+      ep1 = NULL;
+      if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
+			&& curfunc != NULL)
 	    for (i = 1, ep2 = curfunc->v.kid->sibling;
 				ep2 != NULL; i++, ep2 = ep2->sibling)
 		if (!strcmp(ep2->v.name, nam)) {
@@ -708,15 +738,12 @@ getE5()				/* E5 -> (E1) */
 		    ep1->v.chan = i;
 		    break;
 		}
-	if (ep1 == NULL)
-#endif
-	{
+	if (ep1 == NULL) {
 	    ep1 = newnode();
 	    ep1->type = VAR;
 	    ep1->v.ln = varinsert(nam);
 	}
-#ifdef	FUNCTION
-	if (nextc == '(') {
+	if (esupport&E_FUNCTION && nextc == '(') {
 	    ep2 = newnode();
 	    ep2->type = FUNC;
 	    addekid(ep2, ep1);
@@ -728,19 +755,12 @@ getE5()				/* E5 -> (E1) */
 	    if (nextc != ')')
 		syntax("')' expected");
 	    scan();
-	}
-#ifndef	 VARIABLE
-	else
+	} else if (!(esupport&E_VARIABLE))
 	    syntax("'(' expected");
-#endif
-#endif
-#ifdef	RCONST
-	if (isconstvar(ep1))
+	if (esupport&E_RCONST && isconstvar(ep1))
 	    ep1 = rconst(ep1);
-#endif
 	return(ep1);
     }
-#endif
 
     if (isdecimal(nextc)) {
 	ep1 = newnode();
@@ -752,7 +772,6 @@ getE5()				/* E5 -> (E1) */
 }
 
 
-#ifdef	RCONST
 EPNODE *
 rconst(epar)			/* reduce a constant expression */
 register EPNODE	 *epar;
@@ -771,14 +790,13 @@ register EPNODE	 *epar;
 }
 
 
+int
 isconstvar(ep)			/* is ep linked to a constant expression? */
 register EPNODE	 *ep;
 {
-#ifdef	VARIABLE
     register EPNODE  *ep1;
-#ifdef	FUNCTION
 
-    if (ep->type == FUNC) {
+    if (esupport&E_FUNCTION && ep->type == FUNC) {
 	if (!isconstfun(ep->v.kid))
 		return(0);
 	for (ep1 = ep->v.kid->sibling; ep1 != NULL; ep1 = ep1->sibling)
@@ -786,24 +804,18 @@ register EPNODE	 *ep;
 		return(0);
 	return(1);
     }
-#endif
     if (ep->type != VAR)
 	return(0);
     ep1 = ep->v.ln->def;
     if (ep1 == NULL || ep1->type != ':')
 	return(0);
-#ifdef	FUNCTION
-    if (ep1->v.kid->type != SYM)
+    if (esupport&E_FUNCTION && ep1->v.kid->type != SYM)
 	return(0);
-#endif
     return(1);
-#else
-    return(ep->type == FUNC);
-#endif
 }
 
 
-#if  defined(FUNCTION) && defined(VARIABLE)
+int
 isconstfun(ep)			/* is ep linked to a constant function? */
 register EPNODE	 *ep;
 {
@@ -812,11 +824,12 @@ register EPNODE	 *ep;
 
     if (ep->type != VAR)
 	return(0);
-    if ((dp = ep->v.ln->def) != NULL && dp->v.kid->type == FUNC)
-	return(dp->type == ':');
+    if ((dp = ep->v.ln->def) != NULL)
+	if (dp->v.kid->type == FUNC)
+	    return(dp->type == ':');
+	else
+	    return(0);		/* don't identify masked library functions */
     if ((lp = ep->v.ln->lib) != NULL)
 	return(lp->atyp == ':');
     return(0);
 }
-#endif
-#endif

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.10 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ra_t8.c - program to convert between RADIANCE and
  *		Targa 8-bit color-mapped images.
@@ -12,6 +9,8 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include  <stdio.h>
+
+#include  <time.h>
 
 #include  "color.h"
 
@@ -194,6 +193,7 @@ char  *err;
 }
 
 
+void
 eputs(s)
 char *s;
 {
@@ -201,6 +201,7 @@ char *s;
 }
 
 
+void
 quit(code)
 int code;
 {
@@ -343,8 +344,8 @@ struct hdStruct	 *hp;
 		if (fwritecolrs(scanline, xmax, stdout) < 0)
 			quiterr("error writing RADIANCE file");
 	}
-	free((char *)scanline);
-	free((char *)tarData);
+	free((void *)scanline);
+	free((void *)tarData);
 }
 
 

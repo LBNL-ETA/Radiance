@@ -1,0 +1,23 @@
+{
+	Generate script of 11x8 sample set of gray patches
+	on 2000x1600 pixel canvas.
+	Input is column and row number (starting from 0)
+}
+col = $1;		{ input position }
+row = $2;
+
+mingray = 0;		{ reassign if desired }
+
+GAMMA : 2.2;
+NCOLS : 11;
+NROWS : 8;
+XRES : 2000;
+YRES : 1600;
+MARGIN : 5;
+xpatch : floor((XRES-MARGIN)/NCOLS) - MARGIN;
+ypatch : floor((YRES-MARGIN)/NROWS) - MARGIN;
+textheight : floor(ypatch/7);
+xpos = MARGIN + col*(xpatch + MARGIN);
+ypos = MARGIN + row*(ypatch + MARGIN);
+patchgray = mingray + row*NCOLS + col;
+patchvalue = ((patchgray+.5)/256)^GAMMA;

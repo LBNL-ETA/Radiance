@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: genrhenv.c,v 3.3 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Create a closed environment from a holodeck section
  */
@@ -77,7 +74,7 @@ int	sect;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the indicated section */
-		lseek(fd, (long)nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		if (n == sect) {
 			hdinit(fd, NULL);
@@ -324,6 +321,7 @@ int	sect;
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {

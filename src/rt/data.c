@@ -1,11 +1,65 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: data.c,v 2.15 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  data.c - routines dealing with interpolated data.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "standard.h"
@@ -32,8 +86,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #define hash(s)		(shash(s)%TABSIZ)
 
 
-extern char  *getlibpath();		/* library search path */
-
 static DATARRAY	 *dtab[TABSIZ];		/* data array list */
 
 
@@ -50,7 +102,6 @@ char  *dname;
 	for (dp = dtab[hash(dname)]; dp != NULL; dp = dp->next)
 		if (!strcmp(dname, dp->name))
 			return(dp);		/* found! */
-
 	/*
 	 *	If we haven't loaded the data already, we will look
 	 *  for it in the directories specified by the library path.
@@ -80,7 +131,7 @@ char  *dname;
 		error(SYSTEM, errmsg);
 	}
 							/* get dimensions */
-	if (fgetval(fp, 'i', &asize) <= 0)
+	if (fgetval(fp, 'i', (char *)&asize) <= 0)
 		goto scanerr;
 	if (asize <= 0 | asize > MAXDDIM) {
 		sprintf(errmsg, "bad number of dimensions for \"%s\"", dname);
@@ -93,11 +144,11 @@ char  *dname;
 	dp->nd = asize;
 	asize = 1;
 	for (i = 0; i < dp->nd; i++) {
-		if (fgetval(fp, DATATY, &dp->dim[i].org) <= 0)
+		if (fgetval(fp, DATATY, (char *)&dp->dim[i].org) <= 0)
 			goto scanerr;
-		if (fgetval(fp, DATATY, &dp->dim[i].siz) <= 0)
+		if (fgetval(fp, DATATY, (char *)&dp->dim[i].siz) <= 0)
 			goto scanerr;
-		if (fgetval(fp, 'i', &dp->dim[i].ne) <= 0)
+		if (fgetval(fp, 'i', (char *)&dp->dim[i].ne) <= 0)
 			goto scanerr;
 		if (dp->dim[i].ne < 2)
 			goto scanerr;
@@ -108,7 +159,8 @@ char  *dname;
 			if (dp->dim[i].p == NULL)
 				goto memerr;
 			for (j = 0; j < dp->dim[i].ne; j++)
-				if (fgetval(fp, DATATY, &dp->dim[i].p[j]) <= 0)
+				if (fgetval(fp, DATATY,
+						(char *)&dp->dim[i].p[j]) <= 0)
 					goto scanerr;
 			for (j = 1; j < dp->dim[i].ne-1; j++)
 				if ((dp->dim[i].p[j-1] < dp->dim[i].p[j]) !=
@@ -124,7 +176,7 @@ char  *dname;
 		goto memerr;
 	
 	for (i = 0; i < asize; i++)
-		if (fgetval(fp, DATATY, &dp->arr.d[i]) <= 0)
+		if (fgetval(fp, DATATY, (char *)&dp->arr.d[i]) <= 0)
 			goto scanerr;
 	fclose(fp);
 	i = hash(dname);
@@ -140,7 +192,7 @@ scanerr:
 }
 
 
-static
+static int
 headaspect(s, iap)			/* check string for aspect ratio */
 char  *s;
 double  *iap;
@@ -149,7 +201,7 @@ double  *iap;
 
 	if (isaspect(s))
 		*iap *= aspectval(s);
-	else if (formatval(fmt, s) && strcmp(fmt, COLRFMT))
+	else if (formatval(fmt, s) && !globmatch(PICFMT, fmt))
 		*iap = 0.0;
 	return(0);
 }
@@ -192,7 +244,7 @@ char  *pname;
 #endif
 						/* get dimensions */
 	inpaspect = 1.0;
-	getheader(fp, headaspect, &inpaspect);
+	getheader(fp, headaspect, (char *)&inpaspect);
 	if (inpaspect <= FTINY || !fgetsresolu(&inpres, fp))
 		goto readerr;
 	pp[0].nd = 2;
@@ -235,7 +287,7 @@ char  *pname;
 			copycolr(pp[0].arr.c[i], scanin[x]);
 		}
 	}
-	free((char *)scanin);
+	free((void *)scanin);
 	fclose(fp);
 	i = hash(pname);
 	pp[0].next = dtab[i];		/* link into picture list */
@@ -254,34 +306,35 @@ readerr:
 }
 
 
-freedata(dname)			/* free memory associated with dname */
-char  *dname;
+void
+freedata(dta)			/* release data array reference */
+DATARRAY  *dta;
 {
 	DATARRAY  head;
 	int  hval, nents;
-	register DATARRAY  *dp, *dpl;
+	register DATARRAY  *dpl, *dp;
 	register int  i;
 
-	if (dname == NULL) {			/* free all if NULL */
+	if (dta == NULL) {			/* free all if NULL */
 		hval = 0; nents = TABSIZ;
 	} else {
-		hval = hash(dname); nents = 1;
+		hval = hash(dta->name); nents = 1;
 	}
 	while (nents--) {
 		head.next = dtab[hval];
 		dpl = &head;
 		while ((dp = dpl->next) != NULL)
-			if (dname == NULL || !strcmp(dname, dp->name)) {
+			if ((dta == NULL | dta == dp)) {
 				dpl->next = dp->next;
 				if (dp->type == DATATY)
-					free((char *)dp->arr.d);
+					free((void *)dp->arr.d);
 				else
-					free((char *)dp->arr.c);
+					free((void *)dp->arr.c);
 				for (i = 0; i < dp->nd; i++)
 					if (dp->dim[i].p != NULL)
-						free((char *)dp->dim[i].p);
+						free((void *)dp->dim[i].p);
 				freestr(dp->name);
-				free((char *)dp);
+				free((void *)dp);
 			} else
 				dpl = dp;
 		dtab[hval++] = head.next;

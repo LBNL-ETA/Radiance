@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_del.c,v 3.13 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  *  sm_del.c
  */
@@ -84,11 +81,12 @@ adjacent to id. Return set of triangles adjacent to id to delete in delptr
 LIST 
 *smVertexStar(sm,id)
 SM *sm;
-int id;
+S_ID id;
 {
     TRI *tri,*t_next;
     LIST *elist,*end;
-    int e,t_id,v_next,t_next_id,b_id,v_id,t_last_id;
+    int e,t_id,t_next_id,b_id,v_id,t_last_id;
+    S_ID v_next; 
 
     elist = end =  NULL;
 
@@ -141,7 +139,8 @@ int id;
 int
 smTriangulate_add_tri(sm,id0,id1,id2,e0,e1,e2ptr)
 SM *sm;
-int id0,id1,id2,e0,e1,*e2ptr;
+S_ID id0,id1,id2;
+int e0,e1,*e2ptr;
 {
   int t_id,e2;
   TRI *t;
@@ -177,7 +176,8 @@ smTriangulate_quad(sm,l)
      SM *sm;
      LIST *l;
 {
-  int e1,e2,e3,e4,e,t_id,id0,id1,id2,id3;
+  int e1,e2,e3,e4,e,t_id;
+  S_ID id0,id1,id2,id3;
   FVECT v0,v1,v2,v3,n;
   double dp;
   TRI *tri;
@@ -248,6 +248,23 @@ smTriangulate_quad(sm,l)
   return(TRUE);
 }
 
+eIn_tri(e,t)
+int e;
+TRI *t;
+{
+
+  if(T_NTH_V(t,0)==E_NTH_VERT(e,0)) 
+    return(T_NTH_V(t,1)==E_NTH_VERT(e,1)||T_NTH_V(t,2)==E_NTH_VERT(e,1));
+  else
+    if(T_NTH_V(t,1)==E_NTH_VERT(e,0))
+      return(T_NTH_V(t,0)==E_NTH_VERT(e,1)||T_NTH_V(t,2)==E_NTH_VERT(e,1));
+    else if(T_NTH_V(t,2)==E_NTH_VERT(e,0))
+      return(T_NTH_V(t,0)==E_NTH_VERT(e,1)||T_NTH_V(t,1)==E_NTH_VERT(e,1));
+
+  return(FALSE);
+}
+
+
 /* Triangulate the polygon defined by plist, and generating vertex p_id.
    Return list of added triangles in list add_ptr. Returns TRUE if 
    successful, FALSE otherwise. This is NOT a general triangulation routine,
@@ -257,12 +274,13 @@ smTriangulate_quad(sm,l)
 int
 smTriangulate(sm,id,plist)
 SM *sm;
-int id;
+S_ID id;
 LIST *plist;
 {
     LIST *l,*prev,*t;
     FVECT v0,v1,v2,n,p;
-    int is_tri,cut,t_id,id0,id1,id2,e2,e1,enew;
+    int is_tri,cut,t_id,e2,e1,enew;
+    S_ID id0,id1,id2;
     double dp1,dp2;
 
     VSUB(p,SM_NTH_WV(sm,id),SM_VIEW_CENTER(sm));
@@ -328,7 +346,7 @@ LIST *plist;
 	    id1 = id2;
 	    continue;
 	}
-      }
+    }
       VCOPY(v0,v1);
       VCOPY(v1,v2);
       id0 = id1;
@@ -346,29 +364,19 @@ LIST *plist;
 	if(!cut)
 	  break;
         cut = FALSE;
-      }
-      prev = l;
     }
-    if(is_tri)
-    {
+      prev = l;
+  }
+  if(is_tri)
+  {
       l = LIST_NEXT(l);
       enew = (int)LIST_DATA(l);
       t_id = smTriangulate_add_tri(sm,id0,id1,id2,e1,e2,&enew);
       free_list(l);
-    }
-    else
-      if(!smTriangulate_quad(sm,l))
+  }
+  else
+     if(!smTriangulate_quad(sm,l))
 	goto Terror;
-#if 0
- {int i;
-    eputs("\n\n");
-    for(i=1;i<=Ecnt;i++)
-      fprintf(stderr,"%d verts %d %d tris  %d %d\n",
-	      i,Edges[i].verts[0],Edges[i].verts[1],
-	      Edges[i].tris[0],Edges[i].tris[1]);
- }
-#endif
-
     /* Set triangle adjacencies based on edge adjacencies */ 
     FOR_ALL_EDGES(enew)
     {
@@ -380,16 +388,7 @@ LIST *plist;
       
       e2 = (T_WHICH_V(SM_NTH_TRI(sm,id1),E_NTH_VERT(enew,1))+2)%3;
       T_NTH_NBR(SM_NTH_TRI(sm,id1),e2) = id0;
-    }
-#if 0
- {int i;
-    eputs("\n\n");
-    for(i=1;i<=Ecnt;i++)
-      fprintf(stderr,"%d verts %d %d tris  %d %d\n",
-	      i,Edges[i].verts[0],Edges[i].verts[1],
-	      Edges[i].tris[0],Edges[i].tris[1]);
- }
-#endif
+  }
 
 #ifdef DEBUG
 #if DEBUG > 1
@@ -473,32 +472,18 @@ LIST *plist;
        !T_IS_VALID(SM_NTH_TRI(sm,T_NTH_NBR(n,1))) ||
        !T_IS_VALID(SM_NTH_TRI(sm,T_NTH_NBR(n,2))))
       error(CONSISTENCY,"Invalid topology\n");
-    }
-    }
+  }
+
+  }
 #endif
-#endif
+#endif    
+
     return(TRUE);
 
 Terror:	  
-#ifdef DEBUG
+
 	  error(CONSISTENCY,"smTriangulate():Unable to triangulate\n");
-#endif
-}
 
-eIn_tri(e,t)
-int e;
-TRI *t;
-{
-
-  if(T_NTH_V(t,0)==E_NTH_VERT(e,0)) 
-    return(T_NTH_V(t,1)==E_NTH_VERT(e,1)||T_NTH_V(t,2)==E_NTH_VERT(e,1));
-  else
-    if(T_NTH_V(t,1)==E_NTH_VERT(e,0))
-      return(T_NTH_V(t,0)==E_NTH_VERT(e,1)||T_NTH_V(t,2)==E_NTH_VERT(e,1));
-    else if(T_NTH_V(t,2)==E_NTH_VERT(e,0))
-      return(T_NTH_V(t,0)==E_NTH_VERT(e,1)||T_NTH_V(t,1)==E_NTH_VERT(e,1));
-
-  return(FALSE);
 }
 
 
@@ -509,7 +494,8 @@ smTris_swap_edge(sm,t_id,t1_id,e,e1,tn_id,tn1_id)
    int e,e1;
    int *tn_id,*tn1_id;
 {
-    int verts[3],enext,eprev,e1next,e1prev;
+    S_ID verts[3];
+    int enext,eprev,e1next,e1prev;
     TRI *n,*ta,*tb,*t,*t1;
     FVECT p1,p2,p3;
     int ta_id,tb_id;
@@ -650,7 +636,8 @@ smFixEdges(sm)
    SM *sm;
 {
     int e,t0_id,t1_id,e_new,e0,e1,e0_next,e1_next;
-    int i,v0_id,v1_id,v2_id,p_id,t0_nid,t1_nid;
+    S_ID v0_id,v1_id,v2_id,p_id;
+    int  i,t0_nid,t1_nid;
     FVECT v0,v1,v2,p,np,v;
     TRI *t0,*t1;
 
@@ -724,10 +711,10 @@ smFixEdges(sm)
 
 smDelete_samp(sm,s_id)
 SM *sm;
-int s_id;
+S_ID s_id;
 {
   QUADTREE qt;
-  OBJECT *os;
+  S_ID *os;
 
   /* Mark as free */
   smUnalloc_samp(sm,s_id);
@@ -747,7 +734,7 @@ int s_id;
 int
 smRemoveVertex(sm,id)
    SM *sm;
-   int id;
+   S_ID id;
 {
     LIST *b_list;
     /* generate list of edges that form the boundary of the

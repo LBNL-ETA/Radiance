@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.4 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Compute rays corresponding to a given picture or view.
  */
@@ -12,8 +9,6 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "standard.h"
 
 #include "view.h"
-
-#include "resolu.h"
 
 extern int	putf(), putd(), puta();
 
@@ -26,6 +21,8 @@ RESOLU	rs = {PIXSTANDARD, 512, 512};
 double	pa = 1.;
 
 int	zfd = -1;
+
+int	fromstdin = 0;
 
 char	*progname;
 
@@ -96,6 +93,9 @@ char	*argv[];
 		case 'p':			/* pixel aspect ratio */
 			pa = atof(argv[++i]);
 			break;
+		case 'i':			/* get pixels from stdin */
+			fromstdin = 1;
+			break;
 		default:
 			goto userr;
 		}
@@ -128,13 +128,66 @@ char	*argv[];
 				vw.vaft > FTINY ? '+' : '-');
 		exit(0);
 	}
-	putrays();
+	if (fromstdin)
+		pix2rays(stdin);
+	else
+		putrays();
 	exit(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [ -f{a|f|d} | -d ] { view opts .. | picture [zbuf] }\n",
+	"Usage: %s [ -i -f{a|f|d} | -d ] { view opts .. | picture [zbuf] }\n",
 			progname);
 	exit(1);
+}
+
+
+pix2rays(FILE *fp)
+{
+	static FVECT	rorg, rdir;
+	float	zval;
+	double	px, py;
+	int	pp[2];
+	double	d;
+	register int	i;
+
+	while (fscanf(fp, "%lf %lf", &px, &py) == 2) {
+		if (px < 0 || px >= rs.xr ||
+				py < 0 || py >= rs.yr) {
+			fprintf(stderr,
+				"%s: (x,y) pair (%.0f,%.0f) out of range\n",
+					progname, px, py);
+			exit(1);
+		}
+		if (zfd >= 0) {
+			loc2pix(pp, &rs, px/rs.xr, py/rs.yr);
+			if (lseek(zfd,
+				(pp[1]*scanlen(&rs)+pp[0])*sizeof(float), 0)
+					< 0 ||
+					read(zfd, &zval, sizeof(float))
+					< sizeof(float)) {
+				fprintf(stderr, "%s: depth buffer read error\n",
+						progname);
+				exit(1);
+			}
+		}
+		d = viewray(rorg, rdir, &vw, px/rs.xr, py/rs.yr);
+		if (d < -FTINY)
+			rorg[0] = rorg[1] = rorg[2] =
+			rdir[0] = rdir[1] = rdir[2] = 0.;
+		else if (zfd >= 0)
+			for (i = 0; i < 3; i++) {
+				rorg[i] += rdir[i]*zval;
+				rdir[i] = -rdir[i];
+			}
+		else if (d > FTINY) {
+			rdir[0] *= d; rdir[1] *= d; rdir[2] *= d;
+		}
+		(*putr)(rorg, rdir);
+	}
+	if (!feof(fp)) {
+		fprintf(stderr, "%s: expected px py on input\n", progname);
+		exit(1);
+	}
 }
 
 
@@ -181,7 +234,7 @@ putrays()
 		}
 	}
 	if (zfd >= 0)
-		free((char *)zbuf);
+		free((void *)zbuf);
 }
 
 

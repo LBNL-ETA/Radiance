@@ -1,0 +1,16 @@
+#ifndef lint
+static const char	RCSid[] = "$Id: box.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+#endif
+#ifndef lint
+static char sccsid[] = "@(#)box.c	4.1 (Berkeley) 6/27/83";
+#endif
+
+box(x0, y0, x1, y1)
+{
+	move(x0, y0);
+	cont(x0, y1);
+	cont(x1, y1);
+	cont(x1, y0);
+	cont(x0, y0);
+	move(x1, y1);
+}

@@ -1,0 +1,200 @@
+# RCSid: $Id: Rmakefile,v 1.1 2003/02/22 02:07:26 greg Exp $
+#
+#  Compiles:
+#
+
+OPT = -O
+
+MACH =
+
+LIBDIR = /usr/local/lib
+
+INSTDIR = /usr/local/bin
+
+MLIBDIR = $(LIBDIR)/meta
+
+MLIB = -lm
+
+EXEC2 = $(INSTDIR)
+
+CC = cc
+
+CFLAGS = -DUNIX -DMDIR=\"$(MLIBDIR)/\" $(OPT) $(MACH) -I../common -L../lib
+
+io = mfio.o
+
+common = $(io) syscalls.o misc.o
+
+install:	general
+
+clean:
+	set nonomatch; rm -f *.o a.out core
+
+general:	$(INSTDIR)/meta2tga $(INSTDIR)/pexpand $(INSTDIR)/psort \
+$(INSTDIR)/cv $(INSTDIR)/psmeta $(INSTDIR)/plotin \
+$(INSTDIR)/x11meta ../lib/libmeta.a $(INSTDIR)/bgraph $(INSTDIR)/igraph \
+$(INSTDIR)/dgraph $(INSTDIR)/gcomp $(INSTDIR)/plot4
+
+special:	$(EXEC2)/mt160l $(EXEC2)/mt160 $(EXEC2)/mtext \
+$(EXEC2)/plotout $(EXEC2)/xmeta $(EXEC2)/okimate $(EXEC2)/tbar \
+$(EXEC2)/mx80 $(EXEC2)/t4014 $(EXEC2)/imagew $(EXEC2)/impress \
+$(EXEC2)/aed5 $(EXEC2)/tscat $(EXEC2)/tbar
+
+$(INSTDIR)/meta2tga $(EXEC2)/okimate $(EXEC2)/impress \
+$(EXEC2)/mx80 $(EXEC2)/t4014 $(INSTDIR)/plotout $(INSTDIR)/x11meta \
+$(EXEC2)/mt160l $(EXEC2)/mt160 $(INSTDIR)/pexpand $(INSTDIR)/plot4 \
+$(INSTDIR)/psort $(EXEC2)/imagew $(INSTDIR)/tcurve $(EXEC2)/mtext \
+$(EXEC2)/tscat $(INSTDIR)/plotin $(EXEC2)/tbar $(INSTDIR)/xmeta \
+../lib/libmeta.a $(INSTDIR)/aed5 $(INSTDIR)/psmeta:	$(common)
+
+$(EXEC2)/mt160l:	mt160l.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o $(EXEC2)/mt160l mt160l.o mplot.o plot.o \
+$(common) -lrt palloc.o
+
+$(EXEC2)/okimate:	okimate.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o $(EXEC2)/okimate okimate.o mplot.o plot.o \
+$(common) palloc.o -lrt
+
+$(INSTDIR)/imagew:	imagew.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) imagew.o mplot.o plot.o $(common) \
+palloc.o -lrt $(MLIB)
+	cp a.out $(INSTDIR)/imagew
+
+$(EXEC2)/mt160:	mt160.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) -o $(EXEC2)/mt160 mt160.o mplot.o plot.o $(common) \
+palloc.o -lrt
+
+$(INSTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) meta2tga.o rplot.o plot.o $(common) \
+palloc.o -lrt $(MLIB)
+	cp a.out $(INSTDIR)/meta2tga
+
+$(INSTDIR)/mx80:	mx80.o mplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) mx80.o mplot.o plot.o $(common) \
+palloc.o -lrt $(MLIB)
+	cp a.out $(INSTDIR)/mx80
+
+$(INSTDIR)/t4014:	plotout.c ../lib/lib4014.a
+	$(CC) -DFORTEK $(CFLAGS) plotout.c $(common) \
+-l4014 -lrt $(MLIB)
+	cp a.out $(INSTDIR)/t4014
+	rm -f plotout.o
+
+$(INSTDIR)/impress:	impress.o implot.o imPfuncs.o plot.o
+	$(CC) $(CFLAGS) impress.o implot.o imPfuncs.o \
+plot.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/impress
+
+$(INSTDIR)/aed5:	aed5.o
+	$(CC) $(CFLAGS) aed5.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/aed5
+
+$(INSTDIR)/xmeta:	xmeta.o xplot.o plot.o palloc.o
+	$(CC) $(CFLAGS) xmeta.o xplot.o plot.o palloc.o \
+$(common) -lrt -lX11 $(MLIB)
+	cp a.out $(INSTDIR)/xmeta
+
+$(INSTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
+	$(CC) $(CFLAGS) xmeta.o x11plot.o plot.o palloc.o \
+$(common) -lrt -lX11 $(MLIB)
+	cp a.out $(INSTDIR)/x11meta
+
+$(INSTDIR)/psmeta:	psmeta.o psplot.o
+	$(CC) $(CFLAGS) psmeta.o psplot.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/psmeta
+
+$(INSTDIR)/plotout:	plotout.c
+	$(CC) $(CFLAGS) plotout.c $(common) -lplot $(MLIB)
+	cp a.out $(INSTDIR)/plotout
+	rm -f plotout.o
+
+$(INSTDIR)/plotin:	plotin.o primout.o
+	$(CC) $(CFLAGS) plotin.o primout.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/plotin
+
+$(INSTDIR)/pexpand:	pexpand.o expand.o segment.o palloc.o
+	$(CC) $(CFLAGS) pexpand.o expand.o segment.o \
+$(common) palloc.o -lrt $(MLIB)
+	cp a.out $(INSTDIR)/pexpand
+
+$(INSTDIR)/psort:	psort.o sort.o palloc.o
+	$(CC) $(CFLAGS) psort.o sort.o $(common) palloc.o -lrt $(MLIB)
+	cp a.out $(INSTDIR)/psort
+
+$(INSTDIR)/cv:		cv.o mfio.o cvhfio.o syscalls.o misc.o
+	$(CC) $(CFLAGS) cv.o mfio.o cvhfio.o syscalls.o misc.o \
+-lrt $(MLIB)
+	cp a.out $(INSTDIR)/cv
+
+$(INSTDIR)/plot4:	plot4.o primout.o
+	$(CC) $(CFLAGS) plot4.o primout.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/plot4
+
+$(INSTDIR)/tcurve:	tcurve.o tgraph.o primout.o
+	$(CC) $(CFLAGS) tcurve.o tgraph.o primout.o \
+$(common) $(MLIB)
+	cp a.out $(INSTDIR)/tcurve
+
+$(INSTDIR)/tscat:	tscat.o tgraph.o primout.o
+	$(CC) $(CFLAGS) tscat.o tgraph.o primout.o \
+$(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/tscat
+
+$(INSTDIR)/tbar:	tbar.o tgraph.o primout.o
+	$(CC) $(CFLAGS) tbar.o tgraph.o primout.o $(common) -lrt $(MLIB)
+	cp a.out $(INSTDIR)/tbar
+
+$(EXEC2)/mtext:	mtext.o primout.o
+	$(CC) $(CFLAGS) mtext.o primout.o $(common) -lrt
+	cp a.out $(EXEC2)/mtext
+
+../lib/libmeta.a:	metacalls.o primout.o progname.o
+	ar rc ../lib/libmeta.a metacalls.o primout.o \
+$(common) progname.o
+	-ranlib ../lib/libmeta.a
+
+../lib/lib4014.a:
+	cd lib4014; make INSTDIR=../../lib "CFLAGS=$(OPT)" install clean
+
+$(INSTDIR)/bgraph:	bgraph.o mgvars.o mgraph.o ../lib/libmeta.a
+	$(CC) $(CFLAGS) bgraph.o mgvars.o mgraph.o \
+-lmeta -lrt $(MLIB)
+	cp a.out $(INSTDIR)/bgraph
+
+$(INSTDIR)/igraph:	igraph.o mgvars.o mgraph.o ../lib/libmeta.a \
+gcalc.o cgraph.o
+	$(CC) $(CFLAGS) igraph.o mgvars.o mgraph.o \
+cgraph.o gcalc.o -lmeta -lrt $(MLIB)
+	cp a.out $(INSTDIR)/igraph
+
+$(INSTDIR)/dgraph:	dgraph.o cgraph.o mgvars.o
+	$(CC) $(CFLAGS) dgraph.o cgraph.o mgvars.o \
+-lrt $(MLIB)
+	cp a.out $(INSTDIR)/dgraph
+
+$(INSTDIR)/gcomp:	gcomp.o gcalc.o mgvars.o
+	$(CC) $(CFLAGS) gcomp.o gcalc.o mgvars.o \
+-lrt $(MLIB)
+	cp a.out $(INSTDIR)/gcomp
+
+cvhfio.o:	cvhfio.c hfio.c
+
+mgvars.o igraph.o mgraph.o cgraph.o gcalc.o:	mgvars.h
+
+mgraph.o:	mgraph.h
+
+misc.o syscalls.o mfio.o hfio.o cvhfio.o palloc.o segment.o sort.o expand.o \
+plot.o mplot.o primout.o tgraph.o mt160l.o mt160.o mx80.o plotout.o \
+psort.o pexpand.o cv.o tcurve.o tscat.o mtext.o tbar.o plot4.o \
+xmeta.o metacalls.o xplot.o meta2tga.o rplot.o:	meta.h
+
+plot.o mplot.o mt160l.o mt160.o mx80.o xmeta.o xplot.o \
+meta2tga.o rplot.o implot.o:	plot.h
+
+mplot.o mt160l.o mt160.o mx80.o:	span.h
+
+tgraph.o tcurve.o tscat.o tbar.o:	tgraph.h
+
+impress.o implot.o imPfuncs.o:	imPfuncs.h
+
+rplot.o meta2tga.o:	rast.h

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rholo.c,v 3.52 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Radiance holodeck generation controller
  */
@@ -217,7 +214,7 @@ initrholo()			/* get our holodeck running */
 		init_global();
 						/* record disk space limit */
 	if (!vdef(DISKSPACE))
-		maxdisk = 0;
+		maxdisk = (1L<<(sizeof(long)*8-2)) - 1024;
 	else
 		maxdisk = 1024.*1024.*vflt(DISKSPACE);
 						/* set up memory cache */
@@ -278,7 +275,7 @@ initrholo()			/* get our holodeck running */
 	sigdie(SIGXFSZ, "File size exceeded");
 #endif
 					/* protect holodeck file */
-	orig_mode = resfmode(hdlist[0]->fd, ncprocs>0 ? 0 : 0444);
+	orig_mode = resfmode(hdlist[0]->fd, ncprocs>0&force>=0 ? 0 : 0444);
 	return;
 memerr:
 	error(SYSTEM, "out of memory in initrholo");
@@ -433,7 +430,7 @@ HDGRID	*gp;
 	putw(HOLOMAGIC, fp);		/* put magic number */
 	fd = dup(fileno(fp));
 	fclose(fp);			/* flush and close stdio stream */
-	lastloc = lseek(fd, 0L, 2);
+	lastloc = lseek(fd, (off_t)0L, 2);
 	for (n = vdef(SECTION); n--; gp++) {	/* initialize each section */
 		nextloc = 0L;
 		write(fd, (char *)&nextloc, sizeof(nextloc));
@@ -441,11 +438,11 @@ HDGRID	*gp;
 		if (!n)
 			break;
 		nextloc = hdfilen(fd);		/* write section pointer */
-		if (lseek(fd, (long)lastloc, 0) < 0)
+		if (lseek(fd, (off_t)lastloc, 0) < 0)
 			error(SYSTEM,
 				"cannot seek on holodeck file in creatholo");
 		write(fd, (char *)&nextloc, sizeof(nextloc));
-		lseek(fd, (long)(lastloc=nextloc), 0);
+		lseek(fd, (off_t)(lastloc=nextloc), 0);
 	}
 }
 
@@ -513,7 +510,7 @@ loadholo()			/* start loading a holodeck from fname */
 	fd = dup(fileno(fp));
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (long)nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL);
 	}
@@ -581,6 +578,7 @@ int	vc;
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {
@@ -600,6 +598,7 @@ register char  *s;
 }
 
 
+void
 quit(ec)			/* exit program gracefully */
 int	ec;
 {

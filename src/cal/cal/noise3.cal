@@ -1,0 +1,59 @@
+frac(x)=x-floor(x);
+
+hermite(p0,p1,r0,r1,t) =	p0 * ((2*t-3)*t*t+1) +
+				p1 * (-2*t+3)*t*t +
+				r0 * (((t-2)*t+1)*t) +
+				r1 * ((t-1)*t*t);
+
+rand3a(x,y,z) = 1-2*rand(.69692*x+.35084*y+.26765*z);
+rand3b(x,y,z) = 1-2*rand(.05393*x+.96196*y+.28617*z);
+rand3c(x,y,z) = 1-2*rand(.04234*x+.46180*y+.54550*z);
+rand3d(x,y,z) = 1-2*rand(.07211*x+.76411*y+.95567*z);
+
+noise3(x,y,z) = noise_3(	floor(x),frac(x),ceil(x),
+				floor(y),frac(y),ceil(y),
+				floor(z),frac(z),ceil(z) );
+
+noise_3(xl,xd,xu,yl,yd,yu,zl,zd,zu) =
+		hermite(
+			hermite(
+				hermite(rand3d(xl,yl,zl),
+					rand3d(xu,yl,zl),
+					rand3a(xl,yl,zl),
+					rand3a(xu,yl,zl),
+					xd),
+				hermite(rand3d(xl,yu,zl),
+					rand3d(xu,yu,zl),
+					rand3a(xl,yu,zl),
+					rand3a(xu,yu,zl),
+					xd),
+				(1-xd)*rand3b(xl,yl,zl)+
+					xd*rand3b(xu,yl,zl),
+				(1-xd)*rand3b(xl,yu,zl)+
+					xd*rand3b(xu,yu,zl),
+				yd),
+			hermite(
+				hermite(rand3d(xl,yl,zu),
+					rand3d(xu,yl,zu),
+					rand3a(xl,yl,zu),
+					rand3a(xu,yl,zu),
+					xd),
+				hermite(rand3d(xl,yu,zu),
+					rand3d(xu,yu,zu),
+					rand3a(xl,yu,zu),
+					rand3a(xu,yu,zu),
+					xd),
+				(1-xd)*rand3b(xl,yl,zu)+
+					xd*rand3b(xu,yl,zu),
+				(1-xd)*rand3b(xl,yu,zu)+
+					xd*rand3b(xu,yu,zu),
+				yd),
+			(1-yd)*((1-xd)*rand3c(xl,yl,zl) +
+					xd*rand3c(xu,yl,zl)) +
+				yd*((1-xd)*rand3c(xl,yu,zl) +
+					xd*rand3c(xu,yu,zl)),
+			(1-yd)*((1-xd)*rand3c(xl,yl,zu) +
+					xd*rand3c(xu,yl,zu)) +
+				yd*((1-xd)*rand3c(xl,yu,zu) +
+					xd*rand3c(xu,yu,zu)),
+			zd);

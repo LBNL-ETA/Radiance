@@ -1,7 +1,4 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: setscan.h,v 2.2 2003/02/22 02:07:30 greg Exp $ */
 /*
  * Defines for programs using setscan()
  */

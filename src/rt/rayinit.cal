@@ -1,5 +1,4 @@
-{ SCCSid "$SunId$ LBL" }
-
+{ RCSid: $Id: rayinit.cal,v 2.13 2003/02/22 02:07:29 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -88,6 +87,7 @@ FTINY : 1e-7;
 and(a,b) : if( a, b, a );
 or(a,b) : if( a, a, b );
 not(a) : if( a, -1, 1 );
+xor(a,b) : if( a, not(b), b );
 abs(x) : if( x, x, -x );
 sgn(x) : if( x, 1, if(-x, -1, 0) );
 sq(x) : x*x;

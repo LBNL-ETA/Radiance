@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: pveil.csh,v 3.2 2003/02/22 02:07:27 greg Exp $
 #
 # Add veiling glare to picture
 #

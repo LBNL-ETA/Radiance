@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm_flag.h,v 3.2 2003/02/22 02:07:25 greg Exp $ */
 /* sm_flag.h */
 
 /* 32 bit FLAGS */

@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm_stree.h,v 3.6 2003/02/22 02:07:25 greg Exp $ */
 /*
  *  sm_stree.h - header file for spherical quadtree code:
  *             

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_samp.c,v 3.7 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * sm_samp.c
  */
@@ -75,6 +72,10 @@ int *nptr,extra_points;
   /* get number of samples that fit in block */
   n = (i - 8 - extra_points*POINTSIZ) / SAMPSIZ;	
 
+  /* Must make sure n + extra_points can fit in a S_ID identifier */
+  if ( n > (S_ID_MAX - extra_points))
+    n = (S_ID_MAX - extra_points);
+
   S_BASE(s) = (char *)malloc(n*SAMPSIZ + extra_points*POINTSIZ);
   if (!S_BASE(s))
     error(SYSTEM,"sAlloc(): Unable to allocate memory");
@@ -106,12 +107,12 @@ int *nptr,extra_points;
    is added: These points are not displayed-they are used to form the
    initial mesh
  */
-int
+S_ID
 sAdd_base_point(s,v)
      SAMP *s;
      FVECT v;
 {
-    int id;
+    S_ID id;
 
     /* Get pointer to next available point */
     id = S_NEXT_BASE_PT(s);
@@ -132,7 +133,7 @@ sAdd_base_point(s,v)
 int
 sCopy_samp(s,n_id,id)
    SAMP *s;
-   int n_id,id;
+   S_ID n_id,id;
 {
 
 #ifdef DEBUG
@@ -165,10 +166,10 @@ sCopy_samp(s,n_id,id)
 void
 sInit_samp(s,id,c,d,p,o_id)
    SAMP *s;
-   int id;
+   S_ID id;
    COLR c;
    FVECT d,p;
-   int o_id;
+   S_ID o_id;
 {
 
   if(o_id != INVALID)
@@ -185,9 +186,7 @@ sInit_samp(s,id,c,d,p,o_id)
     /* calculate the brightness and chrominance,RGB will be set by
        tonemapping
        */
-#ifndef TEST_DRIVER
     tmCvColrs(&S_NTH_BRT(s,id),S_NTH_CHR(s,id),c,1);
-#endif
   }
     /* Set ACTIVE bit upon creation */
   S_SET_FLAG(id);
@@ -197,13 +196,13 @@ sInit_samp(s,id,c,d,p,o_id)
 
 
 /* Allocate a new sample. If an existing sample was replaced: set flag */
-int
+S_ID
 sAlloc_samp(s,replaced)
    SAMP *s;
    int *replaced;
    
 {
-    int id;
+    S_ID id;
 
     /* First check if there are any freed sample available */
     if((id = S_FREE_SAMP(s)) != INVALID)
@@ -251,6 +250,12 @@ sAlloc_samp(s,replaced)
     *replaced = 1;
     return(id);
 }
+
+
+
+
+
+
 
 
 

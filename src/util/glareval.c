@@ -1,15 +1,11 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: glareval.c,v 2.6 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Compute pixels for glare calculation
  */
 
 #include "glare.h"
-#include "resolu.h"
 					/* maximum rtrace buffer size */
 #define MAXPIX		(4096/(6*sizeof(float)))
 
@@ -265,7 +261,7 @@ int	np;
 				progname, np);
 #endif
 	bzero(pb+6*np, 6*sizeof(float));
-	if (process(rt_pd, pb, pb, 3*sizeof(float)*(np+1),
+	if (process(rt_pd, (char *)pb, (char *)pb, 3*sizeof(float)*(np+1),
 			6*sizeof(float)*(np+1)) < 3*sizeof(float)*(np+1)) {
 		fprintf(stderr, "%s: rtrace communication error\n",
 				progname);

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm.c,v 3.16 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  *  sm.c
  */
@@ -12,8 +9,6 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "sm_list.h"
 #include "sm_geom.h"
 #include "sm.h"
-
-
 
 SM *smMesh = NULL;
 double smDist_sum=0;
@@ -243,7 +238,6 @@ tempbuf(len,resize)			/* get a temporary buffer */
 unsigned  len;
 int resize;
 {
-  extern char  *malloc(), *realloc();
   static char  *tempbuf = NULL;
   static unsigned  tempbuflen = 0;
 
@@ -277,7 +271,7 @@ int resize;
 smDir(sm,ps,id)
    SM *sm;
    FVECT ps;
-   int id;
+   S_ID id;
 {
     VSUB(ps,SM_NTH_WV(sm,id),SM_VIEW_CENTER(sm)); 
     normalize(ps);
@@ -347,6 +341,12 @@ memerr:
 }
 
 
+/* 
+ * smAlloc_tri(sm) : Allocate a new mesh triangle
+ * SM *sm;                    : mesh
+ * 
+ *  Returns ptr to next available tri
+ */
 int
 smAlloc_tri(sm)
 SM *sm;
@@ -367,6 +367,7 @@ SM *sm;
   return(INVALID);
 }
 
+
 smFree_mesh(sm)
 SM *sm;
 {
@@ -379,8 +380,13 @@ SM *sm;
       free(SM_NTH_FLAGS(sm,i));
 }
 
-  
-/* Initialize/clear global smL sample list for at least n samples */
+
+/* 
+ * smAlloc(max_samples) : Initialize/clear global sample list for at least
+ *                       max_samples 
+ * int max_samples;    
+ * 
+ */
 smAlloc(max_samples)
    register int max_samples;
 {
@@ -429,7 +435,6 @@ smInit_sm(sm,vp)
 SM *sm;
 FVECT vp;
 {
-
   VCOPY(SM_VIEW_CENTER(sm),vp);
   smClear(sm);
   smCreate_base_mesh(sm,SM_DEFAULT);
@@ -445,13 +450,12 @@ FVECT vp;
  * If n is <= 0, then clear data structures.  Returns number samples
  * actually allocated.
  */
-
 int
 smInit(n)
    register int	n;
 {
   int max_vertices;
-
+  sleep(5);
   /* If n <=0, Just clear the existing structures */
   if(n <= 0)
   {
@@ -505,6 +509,22 @@ smLocator_apply(sm,v0,v1,v2,func,n)
 
 }
 
+/*
+ * QUADTREE
+ * insert_samp(argptr,root,qt,parent,q0,q1,q2,bc,scale,rev,f,n,doneptr)
+ *     Callback function called from quadtree traversal when leaf is reached
+ *   int *argptr;                 :ptr to sample id number
+ *   int root;                    :quadtree root from which traversal started
+ *   QUADTREE qt,parent;          :current quadtree node and its parent
+ *   BCOORD q0[3],q1[3],q2[3],bc[3]; :barycentric coordinates of the current
+ *                                 quadtree node (q0,q1,q2) and sample (bc)
+ *   unsigned int scale,rev;      :scale factor relative to which level at in
+ *                                 tree, rev indicates if traversed of child 3
+ *   FUNC f;                      :function structure so can recurse
+ *   int n,*doneptr;              :n indicates which level at in quadtree, and
+ *                                 doneptr can be set to indicate whether nbr 
+ *                                 sample has been found
+ */
 QUADTREE
 insert_samp(argptr,root,qt,parent,q0,q1,q2,bc,scale,rev,f,n,doneptr)
      int *argptr;
@@ -515,12 +535,8 @@ insert_samp(argptr,root,qt,parent,q0,q1,q2,bc,scale,rev,f,n,doneptr)
      FUNC f; 
      int n,*doneptr;
 {
-  OBJECT *optr,*sptr,s_set[QT_MAXSET+1];
-  int i,s_id;
-  FVECT p;
-  BCOORD bp[3];
-  FUNC sfunc;
-  S_ARGS args;
+  S_ID s_id;
+  S_ID *optr;
 
   s_id = ((S_ARGS *)argptr)->s_id;
   /* If the set is empty - just add */
@@ -557,77 +573,85 @@ insert_samp(argptr,root,qt,parent,q0,q1,q2,bc,scale,rev,f,n,doneptr)
   /* otherwise: expand node- and insert sample, and reinsert existing samples
      in set to children of new node
   */
-  if(QT_SET_CNT(optr) > QT_MAXSET)
-  { 
-    if(!(sptr = (OBJECT *)malloc((QT_SET_CNT(optr)+1)*sizeof(OBJECT))))
-      goto memerr;
-  }
-  else
-    sptr = s_set;
-  qtgetset(sptr,qt);
-
-  /* subdivide node */
-  qtfreeleaf(qt);
-  qtSubdivide(qt);
-
-  /* Now add in all of the rest; */
-  F_FUNC(sfunc) = F_FUNC(f);
-  F_ARGS(sfunc) = (int *) (&args);
-  args.n_id = 0;
-  for(optr = sptr,i=QT_SET_CNT(sptr); i > 0; i--)
   {
-    s_id = QT_SET_NEXT_ELEM(optr);
-    args.s_id = s_id;
-    VSUB(p,SM_NTH_WV(smMesh,s_id),SM_VIEW_CENTER(smMesh));
-    normalize(p);
-    vert_to_qt_frame(i,p,bp);    
-    if(rev)
-      qt= qtInsert_point_rev(root,qt,parent,q0,q1,q2,bp,scale,sfunc,n,doneptr);
-    else
-      qt= qtInsert_point(root,qt,parent,q0,q1,q2,bp,scale,sfunc,n,doneptr);
+      OBJECT *sptr,s_set[QT_MAXSET+1];
+      FUNC sfunc;
+      S_ARGS args;
+      FVECT p;
+      BCOORD bp[3];
+      int i;
+      
+      if(QT_SET_CNT(optr) > QT_MAXSET)
+      { 
+	  if(!(sptr = (OBJECT *)malloc((QT_SET_CNT(optr)+1)*sizeof(OBJECT))))
+	     goto memerr;
+      }
+      else
+	 sptr = s_set;
+
+      qtgetset(sptr,qt);
+      
+      /* subdivide node */
+      qtfreeleaf(qt);
+      qtSubdivide(qt);
+      
+      /* Now add in all of the rest; */
+      F_FUNC(sfunc) = F_FUNC(f);
+      F_ARGS(sfunc) = (int *) (&args);
+      args.n_id = 0;
+      for(optr = sptr,i=QT_SET_CNT(sptr); i > 0; i--)
+      {
+	  s_id = QT_SET_NEXT_ELEM(optr);
+	  args.s_id = s_id;
+	  VSUB(p,SM_NTH_WV(smMesh,s_id),SM_VIEW_CENTER(smMesh));
+	  normalize(p);
+	  vert_to_qt_frame(i,p,bp);    
+	  if(rev)
+	     qt= qtInsert_point_rev(root,qt,parent,q0,q1,q2,bp,
+				    scale,sfunc,n,doneptr);
+	  else
+	     qt= qtInsert_point(root,qt,parent,q0,q1,q2,bp,
+				scale,sfunc,n,doneptr);
+      }
+      /* Add current sample: have all of the information */
+      if(rev)
+	 qt =qtInsert_point_rev(root,qt,parent,q0,q1,q2,bc,scale,f,n,doneptr);
+      else
+	 qt = qtInsert_point(root,qt,parent,q0,q1,q2,bc,scale,f,n,doneptr);
+      
+      /* If we allocated memory: free it */
+
+      if( sptr != s_set)
+	 free(sptr);
+
+      return(qt);
   }
-  /* Add current sample: have all of the information */
-  if(rev)
-    qt =qtInsert_point_rev(root,qt,parent,q0,q1,q2,bc,scale,f,n,doneptr);
-  else
-    qt = qtInsert_point(root,qt,parent,q0,q1,q2,bc,scale,f,n,doneptr);
-  
-  /* If we allocated memory: free it */
-
-  if( sptr != s_set)
-    free(sptr);
-
-  return(qt);
 memerr:
     error(SYSTEM,"expand_node():Unable to allocate memory");
 
 }
 
 
-double
-triangle_normal(n,a,b,c)
-double n[3];
-double a[3],b[3],c[3];
-{
-  double ab[3],ac[3];
-
-  VSUB(ab,b,a);
-  normalize(ab);
-  VSUB(ac,c,a);
-  normalize(ac);
-  VCROSS(n,ab,ac);
-  return(normalize(n));
-}
-double on0,on1,on2;
-/* Add a triangle to the base array with vertices v1-v2-v3 */
+/*
+ * int
+ * smAdd_tri(sm,v0_id,v1_id,v2_id,tptr)
+ *             : Add a triangle to the base array with vertices v0-v1-v2,
+ *               returns ptr to triangle in tptr
+ * SM *sm;                   : mesh
+ * S_ID v0_id,v1_id,v2_id;    : sample ids of triangle vertices
+ * TRI **tptr;               : ptr to set to triangle
+ * 
+ *  Allocates and initializes mesh triangle with vertices specified.
+ */
 int
 smAdd_tri(sm, v0_id,v1_id,v2_id,tptr)
 SM *sm;
-int v0_id,v1_id,v2_id;
+S_ID v0_id,v1_id,v2_id;
 TRI **tptr;
 {
     int t_id;
     TRI *t;
+
 #ifdef DEBUG
     if(v0_id==v1_id || v0_id==v2_id || v1_id==v2_id)
       error(CONSISTENCY,"smAdd_tri: invalid vertex ids\n");
@@ -639,28 +663,32 @@ TRI **tptr;
     {
       double v0[3],v1[3],v2[3],n[3];
       double area,dp;
-
+      double ab[3],ac[3];
       VSUB(v0,SM_NTH_WV(sm,v0_id),SM_VIEW_CENTER(sm));
       VSUB(v1,SM_NTH_WV(sm,v1_id),SM_VIEW_CENTER(sm));
       VSUB(v2,SM_NTH_WV(sm,v2_id),SM_VIEW_CENTER(sm));
       normalize(v0);
       normalize(v1);
       normalize(v2);
-      area = triangle_normal(n,v2,v1,v0);
+
+      VSUB(ab,v1,v2);
+      normalize(ab);
+      VSUB(ac,v0,v2);
+      normalize(ac);
+      VCROSS(n,ab,ac);
+      area = normalize(n);
       if((dp=DOT(v0,n)) < 0.0)
       {
-	fprintf(stderr,"dp = %.10f on0=%.10f on1=%.10f on2=%.10f\n", dp,
-		on0,on1,on2);
 	eputs("backwards tri\n");
       }
     }
 #endif
 #endif
 
-
     t = SM_NTH_TRI(sm,t_id);
-
+#ifdef DEBUG
     T_CLEAR_NBRS(t);
+#endif
     /* set the triangle vertex ids */
     T_NTH_V(t,0) = v0_id;
     T_NTH_V(t,1) = v1_id;
@@ -685,53 +713,12 @@ TRI **tptr;
     SM_SET_NTH_T_ACTIVE(sm,t_id);
     SM_SET_NTH_T_NEW(sm,t_id);
 
-
     *tptr = t;
     /* return initialized triangle */
     return(t_id);
 }
 
 
-/* pt_in_cone: assumed apex at origin, a,b,c are unit vectors defining the
-   triangle which the cone circumscribes. Assumed p is not normalized
- */
-int
-pt_in_cone(p,a,b,c)
-double p[3],a[3],b[3],c[3];
-{
-  double r[3];
-  double pr,ar;
-  double ab[3],ac[3];
-  /* r =  (B-A)X(C-A) */
-  /* in = (p.r) > (a.r) */
-
-#ifdef DEBUG
-#if DEBUG > 1
-{
-  double l;
-  l = triangle_normal(r,a,b,c);
-  /* l = sin@ between ab,ac - if 0 vectors are colinear */
-  if( l <= COLINEAR_EPS)
-  {
-    eputs("pt in cone: null triangle:returning FALSE\n");
-    return(FALSE);
-  }
-}
-#endif
-#endif
-
-  VSUB(ab,b,a);
-  VSUB(ac,c,a);
-  VCROSS(r,ab,ac);
-
-  pr = DOT(p,r);	
-  ar = DOT(a,r);
-  /* Need to check for equality for degeneracy of 4 points on circle */
-  if( pr > ar *( 1.0 + EQUALITY_EPS))
-    return(TRUE); 
-  else
-    return(FALSE);
-}
 
 smRestore_Delaunay(sm,a,b,c,t,t_id,a_id,b_id,c_id)
 SM *sm;
@@ -739,7 +726,8 @@ FVECT a,b,c;
 TRI *t;
 int t_id,a_id,b_id,c_id;
 {
-  int e1,topp_id,p_id;
+  int e1,topp_id;
+  S_ID p_id;
   TRI *topp;
   FVECT p;
 
@@ -883,7 +871,7 @@ int
 smTri_next_ccw_nbr(sm,t,id)
 SM *sm;
 TRI *t;
-int id;
+S_ID id;
 {
   int which;
   int nbr_id;
@@ -912,13 +900,15 @@ int id;
 int
 smInsert_samp_mesh(sm,s_id,tri_id,a,b,c,d,on,which)
    SM *sm;
-   int s_id,tri_id;
+   S_ID s_id;
+   int tri_id;
    FVECT a,b,c,d;
    int on,which;
 {
-    int v_id[3],topp_id,i;
+    S_ID v_id[3],opp_id;
+    int topp_id,i;
     int t0_id,t1_id,t2_id,t3_id;
-    int e0,e1,e2,opp_id,opp0,opp1,opp2;
+    int e0,e1,e2,opp0,opp1,opp2;
     TRI *tri,*nbr,*topp,*t0,*t1,*t2,*t3;
     FVECT e;
 
@@ -1331,7 +1321,7 @@ FVECT a,b;
 {
   FVECT n,v0,v1,v2;
   TRI *tn;
-
+  double on0,on1,on2;
   int tn_id;
 
 #ifdef DEBUG
@@ -1712,15 +1702,16 @@ FVECT a,b;
     if(EQUAL_VEC3(v2,p)){ *o = ON_V; *w = 2; return(t_id);}
 
 
-int
+
 find_neighbor(argptr,qt,f,doneptr)
 int *argptr;
 QUADTREE qt;
 FUNC f;
 int *doneptr;
 {
-  int s_id,i;
-  OBJECT *optr;
+  S_ID s_id;
+  int i;
+  S_ID *optr;
   
   if(QT_IS_EMPTY(qt))
     return;
@@ -1752,9 +1743,9 @@ int *doneptr;
 
 smInsert_samp(sm,s_id,p,nptr)
 SM *sm;
-int s_id;
+S_ID s_id;
 FVECT p;
-int *nptr;
+S_ID *nptr;
 {
   FVECT tpt;
   FUNC f;
@@ -1781,8 +1772,9 @@ int
 smSample_locate_tri(sm,p,s_id,onptr,whichptr,nptr)
 SM *sm;
 FVECT p;
-int s_id;
-int *onptr,*whichptr,*nptr;
+S_ID s_id;
+int *onptr,*whichptr;
+S_ID *nptr;
 {
   int tri_id;
   FVECT tpt;
@@ -1853,7 +1845,7 @@ smTest_samp(sm,tri_id,dir,p,rptr,ns,n0,n1,n2,ds,d0,on,which)
    SM *sm;
    int tri_id;
    FVECT dir,p;
-   int *rptr;
+   S_ID *rptr;
    FVECT ns,n0,n1,n2;
    double ds,d0;
    int on,which;
@@ -1861,7 +1853,8 @@ smTest_samp(sm,tri_id,dir,p,rptr,ns,n0,n1,n2,ds,d0,on,which)
     TRI *tri;
     double d,d2,dnear,dspt,d01,d12,d20,s0,s1,s2;
     double dp,dp1;
-    int vid[3],i,nearid,norm,dcnt,bcnt;
+    S_ID vid[3];
+    int i,norm,dcnt,bcnt;
     FVECT diff[3],spt,npt,n;
     FVECT nearpt;
 
@@ -1880,44 +1873,26 @@ smTest_samp(sm,tri_id,dir,p,rptr,ns,n0,n1,n2,ds,d0,on,which)
 	if(SM_DIR_ID(sm,vid[i]))
 	  dcnt++;
     }
-    if( on == IN_T)
-    {
-      d = DIST_SQ(n0,ns);
-      dnear = d; 
-      nearid = 0;
-      d = DIST_SQ(n1,ns);
-      if(d < dnear)
-      {
-	dnear = d; nearid = 1;
-      }
-      d = DIST_SQ(n2,ns);
-      if(d < dnear)
-      {
-	dnear = d; nearid = 2;
-      }
-    }
     if(on == ON_P)
-      nearid = which;
-    if(on == ON_P || dnear < VERT_EPS*VERT_EPS) 
     {
       FVECT edir;
-      /* Pick the point with dir closest to that of the canonical view
-	 if it is the new sample: mark existing point for deletion
-	 */
-      if(SM_BASE_ID(sm,vid[nearid]))
-	return(FALSE);
+     /* Pick the point with dir closest to that of the canonical view
+         if it is the new sample: mark existing point for deletion
+         */
       if(!dir)
-	return(FALSE);
-      if(SM_DIR_ID(sm,vid[nearid]))
+        return(FALSE);
+      if(SM_BASE_ID(sm,vid[which]))
+        return(FALSE);
+      if(SM_DIR_ID(sm,vid[which]))
       {
-	*rptr = vid[nearid];
-	return(TRUE);
+        *rptr = vid[which];
+        return(TRUE);
       }
-      decodedir(edir,SM_NTH_W_DIR(sm,vid[nearid]));
-      if(nearid == 0)
+  decodedir(edir,SM_NTH_W_DIR(sm,vid[which]));
+      if(which == 0)
 	d = DOT(edir,n0);
       else
-	if(nearid == 1)
+	if(which == 1)
 	  d = DOT(edir,n1);
 	else
 	  d = DOT(edir,n2);
@@ -1928,7 +1903,7 @@ smTest_samp(sm,tri_id,dir,p,rptr,ns,n0,n1,n2,ds,d0,on,which)
       else
       {
 	/* The new sample is better: mark existing one for deletion*/ 
-	*rptr = vid[nearid];
+	*rptr = vid[which];
 	return(TRUE);
       }
     }	
@@ -2026,14 +2001,18 @@ smTest_samp(sm,tri_id,dir,p,rptr,ns,n0,n1,n2,ds,d0,on,which)
 	    
     return(FALSE);
 }
-int
+S_ID
 smReplace_samp(sm,c,dir,p,np,s_id,t_id,o_id,on,which)
      SM *sm;
      COLR c;
      FVECT dir,p,np;
-     int s_id,t_id,o_id,on,which;
+     S_ID s_id;
+     int t_id;
+     S_ID o_id;
+     int on,which;
 {
-  int v_id,tri_id;
+  S_ID v_id;
+  int tri_id;
   TRI *t,*tri;
 
   tri = SM_NTH_TRI(sm,t_id);
@@ -2082,11 +2061,12 @@ smReplace_samp(sm,c,dir,p,np,s_id,t_id,o_id,on,which)
 
 }
 
-int
+S_ID
 smAlloc_samp(sm)
 SM *sm;
 {
-  int s_id,replaced,cnt;
+  S_ID s_id;
+  int replaced,cnt;
   SAMP *s;
   FVECT p;
 
@@ -2114,14 +2094,15 @@ SM *sm;
 	b) coincide with existing edge
 	c) Fall in existing triangle
 */
-int
+S_ID
 smAdd_samp(sm,c,dir,p,o_id)
    SM *sm;
    COLR c;
    FVECT dir,p;
-   int o_id;
+   S_ID o_id;
 {
-  int t_id,s_id,r_id,on,which,n_id,nbr_id;
+  int t_id,on,which,n_id;
+  S_ID s_id,r_id,nbr_id;
   double ds,d0;
   FVECT wpt,ns,n0,n1,n2;
   QUADTREE qt,parent;
@@ -2131,7 +2112,6 @@ smAdd_samp(sm,c,dir,p,o_id)
   nbr_id = INVALID;
   /* Must do this first-as may change mesh */
   s_id = smAlloc_samp(sm);
-
   SM_S_NTH_QT(sm,s_id)= EMPTY;
   /* If sample is a world space point */
   if(p)
@@ -2196,16 +2176,17 @@ smAdd_samp(sm,c,dir,p,o_id)
     /* If sample is being added in the middle of the sample array: tone 
        map individually
        */
-    /* Initialize sample */
-    sInit_samp(SM_SAMP(sm),s_id,c,dir,p,o_id);
     /* If not base or sky point, add distance from center to average*/  
     smDist_sum += 1.0/ds;
+    /* Initialize sample */
+    sInit_samp(SM_SAMP(sm),s_id,c,dir,p,o_id);
     smInsert_samp_mesh(sm,s_id,t_id,ns,n0,n1,n2,on,which);
   }
     /* If sample is a direction vector */
     else
     {
       VADD(wpt,dir,SM_VIEW_CENTER(sm));
+      /* Allocate space for a sample and initialize */
       while(1)
       { 
 	t_id = smSample_locate_tri(sm,dir,s_id,&on,&which,&nbr_id);
@@ -2250,7 +2231,6 @@ smAdd_samp(sm,c,dir,p,o_id)
 	else
 	  break;
       }
-      /* Allocate space for a sample and initialize */
       sInit_samp(SM_SAMP(sm),s_id,c,NULL,wpt,o_id);
       smInsert_samp_mesh(sm,s_id,t_id,dir,n0,n1,n2,on,which);
     }
@@ -2268,48 +2248,36 @@ smAdd_samp(sm,c,dir,p,o_id)
  * New sample representation will be output in next call to smUpdate().
  * If the point is a sky point: then v=NULL
  */
+#define FVECT_TO_SFLOAT(p) \
+        (p[0]=(SFLOAT)p[0],p[1]=(SFLOAT)p[1],p[2]=(SFLOAT)p[2]) 
 int
 smNewSamp(c,dir,p)
 COLR c;
 FVECT dir;
 FVECT p;
 {
-    int s_id;
+    S_ID s_id;
+
     /* First check if this the first sample: if so initialize mesh */
     if(SM_NUM_SAMP(smMesh) == 0)
     {
       smInit_sm(smMesh,odev.v.vp);
       sClear_all_flags(SM_SAMP(smMesh));
     }
+    FVECT_TO_SFLOAT(p);
+    FVECT_TO_SFLOAT(dir);
     /* Add the sample to the mesh */
     s_id = smAdd_samp(smMesh,c,dir,p,INVALID);
 
-#if 0
-    {
-      int i;
-      FILE *fp;
-      if(s_id == 10000)
-	{
-	  fp = fopen("test.xyz","w");
-	  for(i=0; i < s_id; i++)
-	    if(!SM_DIR_ID(smMesh,i))
-	      fprintf(fp,"%f %f %f %d %d %d \n",SM_NTH_WV(smMesh,i)[0],
-		    SM_NTH_WV(smMesh,i)[1],SM_NTH_WV(smMesh,i)[2],
-		    SM_NTH_RGB(smMesh,i)[0],SM_NTH_RGB(smMesh,i)[1],
-		    SM_NTH_RGB(smMesh,i)[2]);
-	  fclose(fp);
-	}
-    }
-#endif     
-    return(s_id);
+    return((int)s_id);
     
  }    
-int
+S_ID
 smAdd_base_vertex(sm,v)
    SM *sm;
    FVECT v;
 {
-  int id;
+  S_ID id;
 
   /* First add coordinate to the sample array */
   id = sAdd_base_point(SM_SAMP(sm),v);
@@ -2333,13 +2301,13 @@ SM *sm;
 int type;
 {
   int i,s_id,tri_id,nbr_id;
-  int p[SM_BASE_POINTS],ids[SM_BASE_TRIS];
-  int v0_id,v1_id,v2_id;
+  S_ID p[SM_BASE_POINTS];
+  int ids[SM_BASE_TRIS];
+  S_ID v0_id,v1_id,v2_id;
   FVECT d,pt,cntr,v0,v1,v2;
   TRI *t;
 
   /* First insert the base vertices into the sample point array */
-
   for(i=0; i < SM_BASE_POINTS; i++)
   {
     VADD(cntr,icosa_verts[i],SM_VIEW_CENTER(sm));
@@ -2366,7 +2334,8 @@ smRebuild(sm,v)
    SM *sm;
    VIEW *v;
 {
-    int i,j,cnt;
+    S_ID s_id;
+    int j,cnt;
     FVECT p,ov,dir;
     double d;
 
@@ -2386,35 +2355,35 @@ smRebuild(sm,v)
     /* Go through all samples and add in if in the new view frustum, and
        the dir is <= 30 degrees from new view
      */
-    for(i=0; i < cnt; i++)
+    for(s_id=0; s_id < cnt; s_id++)
     {
       /* First check if sample visible(conservative approx: if one of tris 
 	 attached to sample is in frustum)	 */
-      if(!S_IS_FLAG(i))
+      if(!S_IS_FLAG(s_id))
 	continue;
       
       /* Next test if direction > 30 degrees from current direction */
-	if(SM_NTH_W_DIR(sm,i)!=-1)
+	if(SM_NTH_W_DIR(sm,s_id)!=-1)
 	{
-	    VSUB(p,SM_NTH_WV(sm,i),v->vp);
-	    decodedir(dir,SM_NTH_W_DIR(sm,i));
+	    VSUB(p,SM_NTH_WV(sm,s_id),v->vp);
+	    decodedir(dir,SM_NTH_W_DIR(sm,s_id));
 	    d = DOT(dir,p);
 	    if (d*d < MAXDIFF2*DOT(p,p))
 	      continue;
-	    VCOPY(p,SM_NTH_WV(sm,i));
-	    smAdd_samp(sm,NULL,dir,p,i);
+	    VCOPY(p,SM_NTH_WV(sm,s_id));
+	    smAdd_samp(sm,NULL,dir,p,s_id);
 	}
 	else
 	{
 	  /* If the direction is > 45 degrees from current view direction:
 	     throw out
            */
-	  VSUB(dir,SM_NTH_WV(sm,i),ov);
+	  VSUB(dir,SM_NTH_WV(sm,s_id),ov);
 	  if(DOT(dir,v->vdir) < MAXDIR)
 	    continue;
 
-	  VADD(SM_NTH_WV(sm,i),dir,SM_VIEW_CENTER(sm));
-	  smAdd_samp(sm,NULL,dir,NULL,i);
+	  VADD(SM_NTH_WV(sm,s_id),dir,SM_VIEW_CENTER(sm));
+	  smAdd_samp(sm,NULL,dir,NULL,s_id);
 	}
 
     }
@@ -2423,65 +2392,12 @@ smRebuild(sm,v)
 #endif
 }
 
-int
-intersect_tri_set(t_set,orig,dir,pt)
-   OBJECT *t_set;
-   FVECT orig,dir,pt;
-{
-    OBJECT *optr;
-    int i,t_id,id,base;
-    int pid0,pid1,pid2;
-    FVECT p0,p1,p2,p;
-    TRI *t;
-    double d,d1;
-    
-    optr = t_set;
-    for(i = QT_SET_CNT(t_set); i > 0; i--)
-    {
-	t_id = QT_SET_NEXT_ELEM(optr);
-	t = SM_NTH_TRI(smMesh,t_id);
-	if(!T_IS_VALID(t) || SM_IS_NTH_T_BASE(smMesh,t_id)|| 
-	       SM_IS_NTH_T_BG(smMesh,t_id))
-	  continue;
-	pid0 = T_NTH_V(t,0);
-	pid1 = T_NTH_V(t,1);
-	pid2 = T_NTH_V(t,2);
-	VCOPY(p0,SM_NTH_WV(smMesh,pid0));
-	VCOPY(p1,SM_NTH_WV(smMesh,pid1));
-	VCOPY(p2,SM_NTH_WV(smMesh,pid2));
-	if(ray_intersect_tri(orig,dir,p0,p1,p2,p))
-        {
-	  d =  DIST_SQ(p,p0);
-	  d1 = DIST_SQ(p,p1);
-	  if(d < d1)
-	   {
-	     d1 = DIST_SQ(p,p2);
-	     id = (d1 < d)?pid2:pid0;
-	   }
-	  else
-	    {
-	      d = DIST_SQ(p,p2);
-	      id = (d < d1)? pid2:pid1;
-	    }
-	  if(pt)
-	    VCOPY(pt,p);
-#ifdef TEST_DRIVER
-	  Pick_tri = t_id;
-	  Pick_samp = id;
-	  VCOPY(Pick_point[0],p);
-#endif
-	  return(id);
-	}
-    }
-    return(-1);
-}
-
 /* OS is constrained to be <= QT_MAXCSET : if the set exceeds this, the
  results of check_set are conservative
 */
 int
 compare_ids(id1,id2)
-OBJECT *id1,*id2;
+S_ID *id1,*id2;
 {
   int d;
 
@@ -2495,167 +2411,6 @@ OBJECT *id1,*id2;
   return(0);
 }
 
-ray_trace_check_set(qt,argptr,fptr)
-   QUADTREE qt;
-   RT_ARGS *argptr;
-   int *fptr;
-{
-    OBJECT tset[QT_MAXSET+1],*tptr;	
-    double dt,t;
-    int found;
-  if(QT_IS_EMPTY(qt)) 
-    return;
-  if(QT_LEAF_IS_FLAG(qt)) 
-  { 
-    QT_FLAG_SET_DONE(*fptr); 
-#if DEBUG 
-       eputs("ray_trace_check_set():Already visited this node:aborting\n"); 
-#endif 
-       return;
-  } 
-  else
-    QT_LEAF_SET_FLAG(qt);
-
-  tptr = qtqueryset(qt); 
-  if(QT_SET_CNT(tptr) > QT_MAXSET) 
-    tptr = (OBJECT *)malloc((QT_SET_CNT(tptr)+1)*sizeof(OBJECT)); 
-  else 
-    tptr = tset; 
-  if(!tptr) 
-    goto memerr; 
-    
-  qtgetset(tptr,qt); 
-  /* Must sort */ 
-  qsort((void *)(&(tptr[1])),tptr[0],sizeof(OBJECT),compare_ids); 
-  /* Check triangles in set against those seen so far(os):only 
-     check new triangles for intersection (t_set')  
-     */ 
-  check_set_large(tptr,argptr->os); 
-
-  if(!QT_SET_CNT(tptr))
-    return;
-  found = intersect_tri_set(tptr,argptr->orig,argptr->dir,NULL);
-  if(tptr != tset) 
-    free(tptr); 
-  if(found != INVALID)
-  { 
-    argptr->t_id = found; 
-    QT_FLAG_SET_DONE(*fptr); 
-  } 
-  return;
-memerr:
-    error(SYSTEM,"ray_trace_check_set():Unable to allocate memory");
-}
-
-
-/*
- * int
- * smFindSamp(FVECT orig, FVECT dir) 
- *
- * Find the closest sample to the given ray.  Returns sample id, -1 on failure.
- * "dir" is assumed to be normalized
- */
-
-int
-smFindSamp(orig,dir)
-FVECT orig,dir;
-{
-  FVECT b,p,o;
-  OBJECT *ts;
-  QUADTREE qt;
-  int s_id,test;
-  double d;
-
- /*  r is the normalized vector from the view center to the current
-  *  ray point ( starting with "orig"). Find the cell that r falls in,
-  *  and test the ray against all triangles stored in the cell. If
-  *  the test fails, trace the projection of the ray across to the
-  *  next cell it intersects: iterate until either an intersection
-  *  is found, or the projection ray is // to the direction. The sample
-  *  corresponding to the triangle vertex closest to the intersection
-  *  point is returned.
-  */
-  
-  /* First test if "orig" coincides with the View_center or if "dir" is
-     parallel to r formed by projecting "orig" on the sphere. In
-     either case, do a single test against the cell containing the
-     intersection of "dir" and the sphere
-   */
-  /* orig will be updated-so preserve original value */
-  if(!smMesh)
-     return;
-
-  if(EQUAL_VEC3(orig,SM_VIEW_CENTER(smMesh)))
-  {
-    qt = smPoint_locate_cell(smMesh,dir);
-    if(QT_IS_EMPTY(qt))
-      goto Lerror;
-    ts = qtqueryset(qt);
-    s_id = intersect_tri_set(ts,orig,dir,p);
-    return(s_id);
-  }
-  d = point_on_sphere(b,orig,SM_VIEW_CENTER(smMesh));
-  if(EQUAL_VEC3(b,dir))
-  {
-    qt = smPoint_locate_cell(smMesh,dir);
-    if(QT_IS_EMPTY(qt))
-      goto Lerror;
-    ts = qtqueryset(qt);
-    s_id = intersect_tri_set(ts,orig,dir,p);
-    return(s_id);
-  }
-  if(OPP_EQUAL_VEC3(b,dir))
-  {
-    qt = smPoint_locate_cell(smMesh,orig);
-    if(QT_IS_EMPTY(qt))
-      goto Lerror;
-    ts = qtqueryset(qt);
-    s_id = intersect_tri_set(ts,orig,dir,p);
-    if(s_id != INVALID)
-     {
-#ifdef DEBUG
-    fprintf(stderr,"Front pick returning %d\n",s_id);
-#endif
-	  return(s_id);
-     }
-    qt = smPoint_locate_cell(smMesh,dir);
-    if(QT_IS_EMPTY(qt))
-      goto Lerror;
-    ts = qtqueryset(qt);
-    s_id = intersect_tri_set(ts,orig,dir,p);
-#ifdef DEBUG
-    fprintf(stderr,"Back pick returning %d\n",s_id);
-#endif
-    return(s_id);
-  }
-  {
-    OBJECT t_set[QT_MAXCSET + 1];
-    RT_ARGS rt;
-    FUNC func;
-
-    /* Test each of the root triangles against point id */
-    QT_CLEAR_SET(t_set);
-    VSUB(o,orig,SM_VIEW_CENTER(smMesh));
-    ST_CLEAR_FLAGS(SM_LOCATOR(smMesh));
-    rt.t_id = -1;
-    rt.os = t_set;
-    VCOPY(rt.orig,orig);
-    VCOPY(rt.dir,dir);
-    F_FUNC(func) = ray_trace_check_set;
-    F_ARGS(func) = (int *)(&rt);
-    stTrace_ray(SM_LOCATOR(smMesh),o,dir,func);
-    s_id = rt.t_id;
-
-  }    
-  return(s_id);
-
-Lerror:
-#ifdef DEBUG
-  eputs("smFindSamp(): point not found");
-#endif  
-  return(INVALID);
-
-}
 
 null_func(argptr,root,qt,n)
      int *argptr;
@@ -2672,8 +2427,8 @@ mark_active_samples(argptr,root,qt,n)
      QUADTREE qt;
      int n;
 {
-  OBJECT *os;
-  register int i,s_id,t_id,tri_id;
+  S_ID *os,s_id;
+  register int i,t_id,tri_id;
   TRI *tri;
 
   if(QT_IS_EMPTY(qt) || QT_LEAF_IS_FLAG(qt))

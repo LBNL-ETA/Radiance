@@ -1,9 +1,6 @@
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genworm.c,v 2.4 2003/02/22 02:07:23 greg Exp $";
 #endif
-
-/* Copyright (c) 1989 Regents of the University of California */
-
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
  *
@@ -29,6 +26,7 @@ static char SCCSid[] = "$SunId$ LBL";
 
 
 double  funvalue(), l_hermite(), l_bezier(), l_bspline(), argument();
+void  quit();
 
 
 main(argc, argv)
@@ -121,6 +119,7 @@ userror:
 }
 
 
+void
 eputs(msg)
 char  *msg;
 {
@@ -128,6 +127,7 @@ char  *msg;
 }
 
 
+void
 wputs(msg)
 char  *msg;
 {
@@ -135,6 +135,7 @@ char  *msg;
 }
 
 
+void
 quit(code)
 int  code;
 {

@@ -1,0 +1,14 @@
+1s/^/char VersionID[]="/
+2s/^/ lastmod /
+3s/^/ by /
+4s/^/ on /
+1,$j
+1s/$/";/
+1i
+/*
+ * This file was created automatically during make.
+ */
+
+.
+w
+q

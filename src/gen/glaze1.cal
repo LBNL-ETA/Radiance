@@ -1,0 +1,51 @@
+{ RCSid: $Id: glaze1.cal,v 2.1 2003/02/22 02:07:23 greg Exp $ }
+{
+	glaze1.cal - single-pane fritted and low-E glazings
+
+		Uses BRTDfunc type to get correct behavior.
+		Oct. 2002 Greg Ward
+
+	Material parameters for fritted glazing are:
+
+		arg(10) - orientation (1 == glass front)
+		arg(11) - fractional coverage
+
+	Parameters for low-E glazing are:
+		arg(10) - orientation (1 == glass front)
+		arg(11) - glass-side reflectance (red)
+		arg(12) - glass-side reflectance (green)
+		arg(13) - glass-side reflectance (blue)
+		arg(14) - coating-side reflectance (red)
+		arg(15) - coating-side reflectance (green)
+		arg(16) - coating-side reflectance (blue)
+		arg(17) - transmittance (red)
+		arg(18) - transmittance (green)
+		arg(19) - transmittance (blue)
+}
+				{ Fresnel approximation }
+fresne = exp(-6*abs(Rdot)) - exp(-6);
+fresne_refl(r) = r + fresne*(1 - r);
+fresne_trans(t) = t*(1 - fresne);
+				{ glass reflectance and transmittance }
+glass_refl = fresne_refl(0.076);
+glass_trans = fresne_trans(0.883);
+
+clear_side = arg(10) * Rdot;	{ ray coming from plain side? }
+
+frac_glass = 1 - arg(11);	{ glass coverage }
+
+				{ frit specular components }
+sr_frit_r = if(clear_side, glass_refl, frac_glass*glass_refl);
+sr_frit_g = if(clear_side, glass_refl, frac_glass*glass_refl);
+sr_frit_b = if(clear_side, glass_refl, frac_glass*glass_refl);
+st_frit_r = frac_glass*glass_trans;
+st_frit_g = frac_glass*glass_trans;
+st_frit_b = frac_glass*glass_trans;
+
+				{ low-E specular components }
+sr_lowE_r = fresne_refl(if(clear_side, arg(11), arg(14)));
+sr_lowE_g = fresne_refl(if(clear_side, arg(12), arg(15)));
+sr_lowE_b = fresne_refl(if(clear_side, arg(13), arg(16)));
+st_lowE_r = fresne_trans(arg(17));
+st_lowE_g = fresne_trans(arg(18));
+st_lowE_b = fresne_trans(arg(19));

@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhd_qtree.h,v 3.13 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */

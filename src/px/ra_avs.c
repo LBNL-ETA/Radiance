@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_avs.c,v 2.9 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  Convert Radiance file to/from AVS file.
  */
@@ -13,10 +10,9 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+#include  <time.h>
 #include  "color.h"
 #include  "resolu.h"
-
-extern char  *malloc();
 
 double	gamcor = 2.2;			/* gamma correction */
 
@@ -146,7 +142,7 @@ avs2ra()		/* convert 24-bit scanlines to Radiance picture */
 			quiterr("error writing Radiance picture");
 	}
 						/* free scanline */
-	free((char *)scanout);
+	free((void *)scanout);
 }
 
 
@@ -176,5 +172,5 @@ ra2avs()		/* convert Radiance scanlines to 24-bit */
 			quiterr("error writing AVS file");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }

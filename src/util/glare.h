@@ -1,7 +1,4 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: glare.h,v 2.3 2003/02/22 02:07:30 greg Exp $ */
 /*
  * Common data structures for glare source finding routines
  */

@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genbox.c,v 2.5 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  genbox.c - generate a parallelepiped.
  *
@@ -12,12 +9,10 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  <stdio.h>
 
+#include <stdlib.h>
+
 #include  <math.h>
 
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 char  let[]="0123456789._ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -29,7 +24,7 @@ double  size[3];	/* ppd size */
 
 double  bevel = 0.0;	/* bevel amount */
 
-int  round = 0;		/* boolean true for round edges */
+int  rounde = 0;		/* boolean true for rounde edges */
 
 int  reverse = 0;	/* boolean true for reversed normals */
 
@@ -54,7 +49,7 @@ char  **argv;
 			goto userr;
 		switch (argv[i][1]) {
 		case 'r':
-			round = 1;
+			rounde = 1;
 			/* fall through */
 		case 'b':
 			bevel = atof(argv[++i]);
@@ -78,7 +73,7 @@ char  **argv;
 		side(065, 061, 063, 067);
 		side(036, 034, 035, 037);
 	}
-	if (bevel > 0.0 && !round) {
+	if (bevel > 0.0 && !rounde) {
 					/* bevel faces */
 		side(031, 051, 050, 030);
 		side(060, 062, 032, 030);
@@ -102,8 +97,8 @@ char  **argv;
 		corner(053, 063, 033);
 		corner(037, 067, 057);
 	}
-	if (bevel > 0.0 && round) {
-					/* round edges */
+	if (bevel > 0.0 && rounde) {
+					/* rounde edges */
 		cylinder(070, 071);
 		cylinder(070, 074);
 		cylinder(070, 072);
@@ -116,7 +111,7 @@ char  **argv;
 		cylinder(076, 072);
 		cylinder(076, 074);
 		cylinder(076, 077);
-					/* round corners */
+					/* rounde corners */
 		sphere(070);
 		sphere(071);
 		sphere(072);
@@ -139,7 +134,7 @@ char  **argv;
 userr:
 	fprintf(stderr, "Usage: %s ", argv[0]);
 	fprintf(stderr, "material name xsize ysize zsize ");
-	fprintf(stderr, "[-i] [-b bevel | -r round]\n");
+	fprintf(stderr, "[-i] [-b bevel | -r rounde]\n");
 	exit(1);
 }
 

@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: do_zone.tcl,v 2.7 2003/02/22 02:07:30 greg Exp $
 #
 # Create ZONE screen
 #

@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: scan.c,v 1.4 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  writescan.c - fortran interface to picture output routines.
  *

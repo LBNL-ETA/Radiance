@@ -1,7 +1,4 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: holo.h,v 3.20 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Header file for holodeck programs
  *

@@ -1,0 +1,57 @@
+# RCSid: $Id: Rmakefile,v 1.1 2003/02/22 02:07:20 greg Exp $
+#
+#  Compiles for calc, rcalc, ev, and utilities
+#
+
+OPT = -O
+
+CC = cc
+
+MACH = -DIEEE
+
+DEFS = -DBIGGERLIB
+
+CFLAGS = $(OPT) $(MACH) $(DEFS) -I../common -L../lib
+
+MLIB = -lm
+
+INSTDIR = /usr/local/bin
+
+PROGS = calc ev rcalc total cnt neat lam tabfunc histo
+
+all:	$(PROGS)
+
+install:	$(PROGS)
+	cp $(PROGS) $(INSTDIR)
+
+clean:
+	set nonomatch; rm -f *.o $(PROGS)
+
+calc:	calc.o
+	$(CC) $(CFLAGS) -o calc calc.o -lrt $(MLIB)
+
+ev:	ev.o
+	$(CC) $(CFLAGS) -o ev ev.o -lrt $(MLIB)
+
+rcalc:	rcalc.o
+	$(CC) $(CFLAGS) -o rcalc rcalc.o -lrt $(MLIB)
+
+total:	total.o
+	$(CC) $(CFLAGS) -o total total.o $(MLIB)
+
+cnt:		cnt.o
+	$(CC) $(CFLAGS) -o cnt cnt.o
+
+neat:	neat.o
+	$(CC) $(CFLAGS) -o neat neat.o
+
+lam:		lam.o
+	$(CC) $(CFLAGS) -o lam lam.o
+
+tabfunc:	tabfunc.o
+	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrt $(MLIB)
+
+histo:	histo.o
+	$(CC) $(CFLAGS) -o histo histo.o $(MLIB)
+
+calc.o ev.o rcalc.o:	../common/calcomp.h

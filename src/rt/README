@@ -1,5 +1,5 @@
 		RENDERING PROGRAMS
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.7 3/15/96 LBL"
 
 This directory contains the RADIANCE renderers "rpict", "rtrace" and "rview".
 

@@ -1,7 +1,4 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: pmap.h,v 2.2 2003/02/22 02:07:27 greg Exp $ */
 /* Pmap return codes */
 #define PMAP_BAD	-1
 #define PMAP_LINEAR	0

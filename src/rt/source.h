@@ -1,11 +1,65 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: source.h,v 2.5 2003/02/22 02:07:29 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
- *     8/20/85
+ *  Include after ray.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #define  AIMREQT	100		/* required aim success/failure */
@@ -91,8 +145,8 @@ typedef struct {
 } VSMATERIAL;		/* virtual source material functions */
 
 typedef struct {
-	int	(*setsrc)();	/* set light source for object */
-	int	(*partit)();	/* partition light source object */
+	void	(*setsrc)();	/* set light source for object */
+	void	(*partit)();	/* partition light source object */
 	double  (*getpleq)();	/* plane equation for surface */
 	double  (*getdisk)();	/* maximum disk for surface */
 } SOBJECT;		/* source object functions */
@@ -107,28 +161,104 @@ extern SRCFUNC  sfun[];			/* source dispatch table */
 extern SRCREC  *source;			/* our source list */
 extern int  nsources;			/* the number of sources */
 
-extern int  srcvalue();			/* compute source value w/o shadows */
-extern double  nextssamp();		/* get next source sample location */
-extern double  scylform();		/* cosine to axis of cylinder */
-
 #define  sflatform(sn,dir)	-DOT(source[sn].snorm, dir)
-
-extern OBJREC  *vsmaterial();		/* virtual source material */
-
-extern double  intercircle();		/* intersect two circles */
-extern double  spotdisk();		/* intersecting disk for spot */
-extern double  beamdisk();		/* intersecting disk for beam */
-
-extern SPOT  *makespot();		/* make spotlight */
-
-extern double  dstrsrc;			/* source distribution amount */
-extern double  shadthresh;		/* relative shadow threshold */
-extern double  shadcert;		/* shadow testing certainty */
-extern double  srcsizerat;		/* max. ratio of source size/dist. */
-extern int  directrelay;		/* maximum number of source relays */
-extern int  vspretest;			/* virtual source pretest density */
-extern int  directvis;			/* sources visible? */
 
 #define  getplaneq(c,o)		(*sfun[(o)->otype].of->getpleq)(c,o)
 #define  getmaxdisk(c,o)	(*sfun[(o)->otype].of->getdisk)(c,o)
 #define  setsource(s,o)		(*sfun[(o)->otype].of->setsrc)(s,o)
+
+#ifdef NOPROTO
+
+extern void	marksources();
+extern void	freesources();
+extern int	srcray();
+extern void	srcvalue();
+extern int	sourcehit();
+extern void	direct();
+extern void	srcscatter();
+extern int	m_light();
+extern double	nextssamp();
+extern int	skipparts();
+extern void	nopart();
+extern void	cylpart();
+extern void	flatpart();
+extern double	scylform();
+extern void	initstypes();
+extern int	newsource();
+extern void	setflatss();
+extern void	fsetsrc();
+extern void	ssetsrc();
+extern void	sphsetsrc();
+extern void	rsetsrc();
+extern void	cylsetsrc();
+extern SPOT	*makespot();
+extern int	spotout();
+extern double	fgetmaxdisk();
+extern double	rgetmaxdisk();
+extern double	fgetplaneq();
+extern double	rgetplaneq();
+extern int	commonspot();
+extern int	commonbeam();
+extern int	checkspot();
+extern double	spotdisk();
+extern double	beamdisk();
+extern double	intercircle();
+extern void	markvirtuals();
+extern void	addvirtuals();
+extern void	vproject();
+extern OBJREC	*vsmaterial();
+extern int	makevsrc();
+extern double	getdisk();
+extern int	vstestvis();
+extern void	virtverb();
+
+#else
+					/* defined in source.c */
+extern void	marksources(void);
+extern void	freesources(void);
+extern int	srcray(RAY *sr, RAY *r, SRCINDEX *si);
+extern void	srcvalue(RAY *r);
+extern int	sourcehit(RAY *r);
+extern void	direct(RAY *r, void (*f)(), char *p);
+extern void	srcscatter(RAY *r);
+extern int	m_light(OBJREC *m, RAY *r);
+					/* defined in srcsamp.c */
+extern double	nextssamp(RAY *r, SRCINDEX *si);
+extern int	skipparts(int ct[3], int sz[3], int pp[2], unsigned char *pt);
+extern void	nopart(SRCINDEX *si, RAY *r);
+extern void	cylpart(SRCINDEX *si, RAY *r);
+extern void	flatpart(SRCINDEX *si, RAY *r);
+extern double	scylform(int sn, FVECT dir);
+					/* defined in srcsupp.c */
+extern void	initstypes(void);
+extern int	newsource(void);
+extern void	setflatss(SRCREC *src);
+extern void	fsetsrc(SRCREC *src, OBJREC *so);
+extern void	ssetsrc(SRCREC *src, OBJREC *so);
+extern void	sphsetsrc(SRCREC *src, OBJREC *so);
+extern void	rsetsrc(SRCREC *src, OBJREC *so);
+extern void	cylsetsrc(SRCREC *src, OBJREC *so);
+extern SPOT	*makespot(OBJREC *m);
+extern int	spotout(RAY *r, SPOT *s);
+extern double	fgetmaxdisk(FVECT ocent, OBJREC *op);
+extern double	rgetmaxdisk(FVECT ocent, OBJREC *op);
+extern double	fgetplaneq(FVECT nvec, OBJREC *op);
+extern double	rgetplaneq(FVECT nvec, OBJREC *op);
+extern int	commonspot(SPOT *sp1, SPOT *sp2, FVECT org);
+extern int	commonbeam(SPOT *sp1, SPOT *sp2, FVECT org);
+extern int	checkspot(SPOT *sp, FVECT nrm);
+extern double	spotdisk(FVECT oc, OBJREC *op, SPOT *sp, FVECT pos);
+extern double	beamdisk(FVECT oc, OBJREC *op, SPOT *sp, FVECT dir);
+extern double	intercircle(FVECT cc, FVECT c1, FVECT c2,
+			double r1s, double r2s);
+					/* defined in virtuals.c */
+extern void	markvirtuals(void);
+extern void	addvirtuals(int sn, int nr);
+extern void	vproject(OBJREC *o, int sn, int n);
+extern OBJREC	*vsmaterial(OBJREC *o);
+extern int	makevsrc(OBJREC *op, int sn, MAT4 pm);
+extern double	getdisk(FVECT oc, OBJREC *op, int sn);
+extern int	vstestvis(int f, OBJREC *o, FVECT oc, double or2, int sn);
+extern void	virtverb(int sn, FILE *fp);
+
+#endif

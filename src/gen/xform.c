@@ -1,9 +1,6 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: xform.c,v 2.23 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  *  xform.c - program to transform object files.
  *		Transformations must preserve aspect ratio.
@@ -48,8 +45,6 @@ short  tinvers[NUMOTYPE];		/* inverse types for surfaces */
 int  nrept = 1;				/* number of array repetitions */
 
 int stdinused = 0;			/* stdin has been used by -f option? */
-
-extern char  *malloc(), *fgets(), *fgetword();
 
 char  mainfn[MAXPATH];			/* main file name */
 FILE  *mainfp = NULL;			/* main file pointer */
@@ -104,7 +99,7 @@ char  *argv[];
 					sprintf(newp, "%s.%s",
 							idprefix, argv[a]);
 					if (mal_prefix++)
-						free((char *)idprefix);
+						free((void *)idprefix);
 					idprefix = newp;
 				}
 				continue;
@@ -165,7 +160,7 @@ char  *argv[];
 		}
 
 	if (mal_prefix)
-		free((char *)idprefix);
+		free((void *)idprefix);
 	return(0);
 }
 
@@ -174,6 +169,7 @@ doargf(ac, av, fi)			/* take argument list from file */
 char  **av;
 int  ac, fi;
 {
+	int  inquote;
 	char  *newav[256], **avp;
 	char  argbuf[1024];
 	char  newid[128];
@@ -188,7 +184,8 @@ int  ac, fi;
 	}
 	if (av[fi+1][0] == '-' && av[fi+1][1] == '\0') {
 		if (stdinused++) {
-			fprintf(stderr, "%s: cannot use stdin more than once\n",
+			fprintf(stderr,
+				"%s: cannot use stdin more than once\n",
 					av[0]);
 			exit(1);
 		}
@@ -196,13 +193,14 @@ int  ac, fi;
 		n = 100;		/* we just don't know! */
 	} else {
 		if ((argfp = fopen(av[fi+1], "r")) == NULL) {
-			fprintf(stderr, "%s: cannot open argument file \"%s\"\n",
+			fprintf(stderr,
+				"%s: cannot open argument file \"%s\"\n",
 					av[0], av[fi+1]);
 			exit(1);
 		}
 		n = 0;			/* count number of lines in file */
-		while (fgets(argbuf,sizeof(argbuf),argfp) != NULL)
-			n += argbuf[0] != '\n' & argbuf[0] != '#';
+		while (fgetline(argbuf,sizeof(argbuf),argfp) != NULL)
+			n += argbuf[0] && argbuf[0] != '#';
 		if (!n) {
 			fprintf(stderr, "%s: empty argument file \"%s\"\n",
 					av[0], av[fi+1]);
@@ -212,8 +210,8 @@ int  ac, fi;
 		rewind(argfp);
 	}
 	err = 0; k = 0;			/* read each arg list and call main */
-	while (fgets(argbuf,sizeof(argbuf),argfp) != NULL) {
-		if (argbuf[0] == '\n' | argbuf[0] == '#')
+	while (fgetline(argbuf,sizeof(argbuf),argfp) != NULL) {
+		if (!argbuf[0] || argbuf[0] == '#')
 			continue;
 		avp = newav+2;
 		avp[0] = av[0];
@@ -223,14 +221,29 @@ int  ac, fi;
 		cp = argbuf;		/* parse new words */
 		if (*cp == '!') cp++;
 		if (!strncmp(cp, "xform ", 6)) cp += 6;
+		inquote = 0;
 		for ( ; ; ) {
+		skipspaces:
 			while (isspace(*cp))	/* nullify spaces */
 				*cp++ = '\0';
+			if ((*cp == '"' | *cp == '\''))
+				inquote = *cp++;
 			if (!*cp)		/* all done? */
 				break;
+			if (cp[0] == '\\' && cp[1])
+				if (*++cp == '\n')
+					goto skipspaces;
 			avp[newac++] = cp;	/* add argument to list */
-			while (*++cp && !isspace(*cp))
-				;
+			if (inquote) {
+				while (*++cp)
+					if (*cp == inquote) {
+						*cp++ = '\0';
+						break;
+					}
+			} else {
+				while (*++cp && !isspace(*cp))
+					;
+			}
 		}
 		for (i = fi+2; i < ac; i++)
 			avp[newac++] = av[i];
@@ -343,8 +356,6 @@ xfcomm(fname, fin)			/* transform a command */
 char  *fname;
 FILE  *fin;
 {
-	extern FILE  *popen();
-	extern char  *fgetline();
 	FILE  *pin;
 	char  buf[512];
 	int  i;
@@ -375,7 +386,6 @@ xfobject(fname, fin)				/* transform an object */
 char  *fname;
 FILE  *fin;
 {
-	extern char  *strcpy();
 	char  typ[16], nam[MAXSTR];
 	int  fn;
 						/* modifier and type */
@@ -417,8 +427,10 @@ FILE  *fin;
 		return(-1);
 					/* string arguments */
 	printf("%d", fa.nsargs);
-	for (i = 0; i < fa.nsargs; i++)
-		printf(" %s", fa.sarg[i]);
+	for (i = 0; i < fa.nsargs; i++) {
+		fputc(' ', stdout);
+		fputword(fa.sarg[i], stdout);
+	}
 	printf("\n");
 #ifdef	IARGS
 					/* integer arguments */
@@ -452,8 +464,10 @@ FILE  *fin;
 	if (xac > xfa && strcmp(xav[xfa], "-i"))
 		resetarr = 2;
 	printf("%d", fa.nsargs + resetarr + xac-xfa);
-	for (i = 0; i < fa.nsargs; i++)
-		printf(" %s", fa.sarg[i]);
+	for (i = 0; i < fa.nsargs; i++) {
+		fputc(' ', stdout);
+		fputword(fa.sarg[i], stdout);
+	}
 	if (resetarr)
 		printf(" -i 1");
 	for (i = xfa; i < xac; i++)	/* add xf arguments */
@@ -642,8 +656,10 @@ FILE  *fin;
 		return(-1);
 					/* string arguments */
 	printf("%d", fa.nsargs);
-	for (i = 0; i < fa.nsargs; i++)
-		printf(" %s", fa.sarg[i]);
+	for (i = 0; i < fa.nsargs; i++) {
+		fputc(' ', stdout);
+		fputword(fa.sarg[i], stdout);
+	}
 	printf("\n0\n%d\n", fa.nfargs);
 					/* anchor point */
 	multp3(v, fa.farg, tot.xfm);
@@ -891,17 +907,15 @@ char  *fname;
 	strcpy(mainfn, fname);
 }
 #else
-openmain(fname)		/* open fname for input, changing to its directory */
-char  *fname;
+openmain(iname)		/* open input, changing directory for file */
+char  *iname;
 {
-	extern FILE  *tmpfile();
-	extern char  *getlibpath(), *getpath();
 	static char  origdir[MAXPATH];
 	static char  curfn[MAXPATH];
 	static int  diffdir;
 	register char  *fpath;
 
-	if (fname == NULL) {			/* standard input */
+	if (iname == NULL) {			/* standard input */
 		if (mainfp == NULL) {
 			register int  c;
 			strcpy(mainfn, "standard input");
@@ -918,28 +932,28 @@ char  *fname;
 			}
 			while ((c = getc(stdin)) != EOF)
 				putc(c, mainfp);
-			fclose(stdin);
 		}
 		rewind(mainfp);			/* rewind copy */
 		return;
 	}
 	if (mainfp == NULL) {			/* first call, initialize */
 		getwd(origdir);
-	} else if (!strcmp(fname, curfn)) {	/* just need to rewind? */
+	} else if (!strcmp(iname, curfn)) {	/* just need to rewind? */
 		rewind(mainfp);
 		return;
 	} else {				/* else close old stream */
 		fclose(mainfp);
-		if (diffdir) {
+		mainfp = NULL;
+		if (diffdir) {			/* return to our directory */
 			chdir(origdir);
 			diffdir = 0;
 		}
 	}
-	strcpy(curfn, fname);			/* remember file name */
-						/* get full path */
-	if ((fpath = getpath(fname, getlibpath(), R_OK)) == NULL) {
+	strcpy(curfn, iname);			/* remember input name */
+						/* get full path for file */
+	if ((fpath = getpath(iname, getlibpath(), R_OK)) == NULL) {
 		fprintf(stderr, "%s: cannot find file \"%s\"\n",
-				progname, fname);
+				progname, iname);
 		exit(1);
 	}
 	if (fpath[0] == '.' && ISDIRSEP(fpath[1]))	/* remove leading ./ */
@@ -967,11 +981,11 @@ char  *fname;
 			diffdir++;
 		}
 						/* get final path component */
-		for (fpath = fname+strlen(fname);
-				fpath > fname && !ISDIRSEP(fpath[-1]); fpath--)
+		for (fpath = iname+strlen(iname);
+				fpath > iname && !ISDIRSEP(fpath[-1]); fpath--)
 			;
 	}
-						/* open the file */
+						/* finally, open the file */
 	if ((mainfp = fopen(fpath, "r")) == NULL) {
 		fprintf(stderr, "%s: cannot open file \"%s\"\n",
 				progname, mainfn);

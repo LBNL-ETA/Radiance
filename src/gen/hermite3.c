@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: hermite3.c,v 2.2 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  hermite.c - routines for 3D hermite curves.
  *

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: gensky.c,v 2.20 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  gensky.c - program to generate sky functions.
  *		Our zenith is along the Z-axis, the X-axis
@@ -15,13 +12,16 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  <stdio.h>
 
+#include  <stdlib.h>
+
+#include  <string.h>
+
 #include  <math.h>
 
 #include  <ctype.h>
 
 #include  "color.h"
 
-extern char  *strcpy(), *strcat(), *malloc();
 extern double  stadj(), sdec(), sazi(), salt(), tz2mer();
 
 #ifndef  PI

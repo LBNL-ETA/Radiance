@@ -1,13 +1,65 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: x11.c,v 2.29 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  x11.c - driver for X-windows version 11
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
  *
- *     Jan 1990
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "standard.h"
@@ -82,20 +134,21 @@ static Colormap ourmap = 0;		/* our color map */
 
 static int  inpcheck;			/* whence to check input */
 
-extern char  *malloc();
+static int	x11_getcur();
 
-static int  x11_close(), x11_clear(), x11_paintr(), x11_errout(),
-		x11_getcur(), x11_comout(), x11_comin(), x11_flush();
+static void  x11_close(), x11_clear(), x11_paintr(), x11_errout(),
+		x11_comout(), x11_comin(), x11_flush();
 
-static int  std_comin(), std_comout();
+static void  std_comin(), std_comout();
 
 static struct driver  x11_driver = {
 	x11_close, x11_clear, x11_paintr, x11_getcur,
 	NULL, NULL, x11_flush, 1.0
 };
 
-static int  getpixels(), xnewcolr(), freepixels(), resizewindow(),
-		getevent(), getkey(), fixwindow(), x11_getc();
+static int  getpixels(), x11_getc();
+static void  xnewcolr(), freepixels(), resizewindow(),
+		getevent(), getkey(), fixwindow();
 static unsigned long  true_pixel();
 
 
@@ -103,7 +156,6 @@ struct driver *
 x11_init(name, id)		/* initialize driver */
 char  *name, *id;
 {
-	extern char  *getenv();
 	char  *gv;
 	int  nplanes;
 	XSetWindowAttributes	ourwinattr;
@@ -210,7 +262,7 @@ char  *name, *id;
 }
 
 
-static
+static void
 x11_close()			/* close our display */
 {
 	erract[COMMAND].pf = NULL;		/* reset error vectors */
@@ -233,7 +285,7 @@ x11_close()			/* close our display */
 }
 
 
-static
+static void
 x11_clear(xres, yres)			/* clear our display */
 int  xres, yres;
 {
@@ -279,7 +331,7 @@ int  xres, yres;
 }
 
 
-static
+static void
 x11_paintr(col, xmin, ymin, xmax, ymax)		/* fill a rectangle */
 COLOR  col;
 int  xmin, ymin, xmax, ymax;
@@ -298,7 +350,7 @@ int  xmin, ymin, xmax, ymax;
 }
 
 
-static
+static void
 x11_flush()			/* flush output */
 {
 	char	buf[256];
@@ -334,7 +386,7 @@ x11_flush()			/* flush output */
 }
 
 
-static
+static void
 x11_comin(inp, prompt)		/* read in a command line */
 char  *inp, *prompt;
 {
@@ -350,7 +402,7 @@ char  *inp, *prompt;
 }
 
 
-static
+static void
 x11_comout(outp)		/* output a string to command line */
 char  *outp;
 {
@@ -362,7 +414,7 @@ char  *outp;
 }
 
 
-static
+static void
 x11_errout(msg)			/* output an error message */
 char  *msg;
 {
@@ -371,12 +423,10 @@ char  *msg;
 }
 
 
-static
+static void
 std_comin(inp, prompt)		/* read in command line from stdin */
 char  *inp, *prompt;
 {
-	extern char	*gets();
-
 	if (prompt != NULL) {
 		if (fromcombuf(inp, &x11_driver))
 			return;
@@ -402,7 +452,7 @@ char  *inp, *prompt;
 }
 
 
-static
+static void
 std_comout(outp)		/* write out string to stdout */
 char	*outp;
 {
@@ -440,7 +490,7 @@ int  *xp, *yp;
 }
 
 
-static
+static void
 xnewcolr(ndx, r, g, b)		/* enter a color into hardware table */
 int  ndx;
 int  r, g, b;
@@ -480,7 +530,7 @@ loop:
 			return(ncolors = 0);
 		if (XAllocColorCells(ourdisplay,ourmap,0,NULL,0,pixval,ncolors))
 			break;
-		free((char *)pixval);
+		free((void *)pixval);
 		pixval = NULL;
 	}
 	if (pixval == NULL) {
@@ -509,13 +559,13 @@ loop:
 }
 
 
-static
+static void
 freepixels()				/* free our pixels */
 {
 	if (ncolors == 0)
 		return;
 	XFreeColors(ourdisplay,ourmap,pixval,ncolors,0L);
-	free((char *)pixval);
+	free((void *)pixval);
 	pixval = NULL;
 	ncolors = 0;
 	if (ourmap != DefaultColormap(ourdisplay,ourscreen))
@@ -551,7 +601,7 @@ x11_getc()			/* get a command character */
 }
 
 
-static
+static void
 getevent()			/* get next event */
 {
 	XNextEvent(ourdisplay, levptr(XEvent));
@@ -584,7 +634,7 @@ getevent()			/* get next event */
 }
 
 
-static
+static void
 getkey(ekey)				/* get input key */
 register XKeyPressedEvent  *ekey;
 {
@@ -597,7 +647,7 @@ register XKeyPressedEvent  *ekey;
 }
 
 
-static
+static void
 fixwindow(eexp)				/* repair damage to window */
 register XExposeEvent  *eexp;
 {
@@ -615,7 +665,7 @@ register XExposeEvent  *eexp;
 }
 
 
-static
+static void
 resizewindow(ersz)			/* resize window */
 register XConfigureEvent  *ersz;
 {

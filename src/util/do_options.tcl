@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: do_options.tcl,v 2.8 2003/02/22 02:07:30 greg Exp $
 #
 # Options screen for trad
 #

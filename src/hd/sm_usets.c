@@ -1,15 +1,13 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_usets.c,v 3.2 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Quadtree-specific set operations with unsorted sets.
  */
 
 #include "standard.h"
 #include "sm_flag.h"
+#include "object.h"
 #include "sm_qtree.h"
 
 
@@ -74,6 +72,64 @@ memerr:
 }
 
 
+deletuelem(os, obj)		/* delete obj from unsorted os, no questions */
+register OBJECT  *os;
+OBJECT  obj;
+{
+	register int  i,j;
+	OBJECT *optr;
+	/* Take 2nd to last and put in position of obj: move last down:
+	   want to preserve last added
+	 */
+	i = (*os)--;
+#ifdef DEBUG
+	if( i <= 0)
+	  error(CONSISTENCY,"deleteuelem():empty set\n");
+#endif
+	if(i < 3)
+	{
+	  if((i == 2) && (*(++os) == obj))
+	    *os = *(os+1);
+	  return;
+	}
+	optr = os + i;
+	os++;
+	while (i-- > 1 && *os != obj)
+	   os++;
+#ifdef DEBUG
+	if( *os != obj)
+	  error(CONSISTENCY,"deleteuelem():id not found\n");
+#endif
+	*os = *(optr-1);
+	*(optr-1) = *optr;
+}
+
+QUADTREE
+qtdeletuelem(qt, id)		/* delete element from unsorted leaf node */
+QUADTREE  qt;
+OBJECT  id;
+{
+	register QUADTREE  lf;
+#ifdef DEBUG
+	if(id < 0)
+		eputs("qtdeletuelem():Invalid triangle id\n");
+	if (!QT_IS_LEAF(qt) || (lf = QT_SET_INDEX(qt)) >= qtnumsets)
+		error(CONSISTENCY, "empty/bad node in qtdelelem");
+#else
+	lf = QT_SET_INDEX(qt);
+#endif
+	if (qtsettab[lf][0] <= 1) {		/* blow leaf away */
+		free((void *)qtsettab[lf]);
+		qtsettab[lf] = (OBJECT *)qtfreesets;
+		qtfreesets = lf;
+		return(EMPTY);
+	}
+	deletuelem(qtsettab[lf], id);
+	if (QTONTHRESH(qtsettab[lf][0]))
+		qtsettab[lf] = (OBJECT *)realloc((char *)qtsettab[lf],
+				QTNODESIZ(qtsettab[lf][0])*sizeof(OBJECT));
+	return(qt);
+}
 
 QUADTREE
 qtdelelem(qt, id)		/* delete element from leaf node */
@@ -98,7 +154,7 @@ OBJECT  id;
 	  return(qt);
 	}
 	if (qtsettab[lf][0] <= 1) {		/* blow leaf away */
-		free((char *)qtsettab[lf]);
+		free((void *)qtsettab[lf]);
 		qtsettab[lf] = (OBJECT *)qtfreesets;
 		qtfreesets = lf;
 		return(EMPTY);
@@ -193,7 +249,7 @@ OBJECT  id;
 
 #ifdef DEBUG
 	if(id < 0)
-		eputs("qtaddelem():Invalid triangle id\n");
+		eputs("qtadduelem():Invalid sample id\n");
 #endif
 	if (QT_IS_EMPTY(qt)) {		/* create new leaf */
 		newset[0] = 1; newset[1] = id;
@@ -256,7 +312,7 @@ QUADTREE  qt;
 	osi = QT_SET_INDEX(qt);
 	if (osi >= qtnumsets)
 		return;
-	free((char *)qtsettab[osi]);
+	free((void *)qtsettab[osi]);
 	qtsettab[osi] = (OBJECT *)qtfreesets;
 	qtfreesets = osi;
 }
@@ -273,12 +329,12 @@ qtfreeleaves()			/* free ALL sets and leaf nodes */
 	}
 	for (i = qtnumsets; i--; )
 		if (qtsettab[i] != NULL)
-			free((char *)qtsettab[i]);
-	free((char *)qtsettab);
+			free((void *)qtsettab[i]);
+	free((void *)qtsettab);
 	qtsettab = NULL;
 	if(qtsetflag)
 	{
-	  free((char *)qtsetflag);
+	  free((void *)qtsetflag);
 	  qtsetflag=0;
 	}
 	qtnumsets = 0;

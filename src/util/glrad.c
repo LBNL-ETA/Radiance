@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: glrad.c,v 3.13 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Program to display Radiance scene using OpenGL.
  */
@@ -14,6 +11,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #include <X11/extensions/SGIStereo.h>
 #endif
 #include <ctype.h>
+#include <time.h>
 #include "radogl.h"
 #include "view.h"
 #include "paths.h"
@@ -180,6 +178,7 @@ userr:
 }
 
 
+void
 quit(code)				/* exit gracefully */
 int	code;
 {
@@ -626,6 +625,16 @@ int	dx, dy, mov, orb;
 }
 
 
+static
+waitabit()				/* pause a moment */
+{
+	struct timespec	ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = 5000000;
+	nanosleep(&ts, NULL);
+}
+
+
 getmove(ebut)				/* get view change */
 XButtonPressedEvent	*ebut;
 {
@@ -642,6 +651,8 @@ XButtonPressedEvent	*ebut;
 
 	while (!XCheckMaskEvent(ourdisplay,
 			ButtonReleaseMask, levptr(XEvent))) {
+					/* pause so as not to move too fast */
+		waitabit();
 
 		if (!XQueryPointer(ourdisplay, gwind, &rootw, &childw,
 				&rootx, &rooty, &wx, &wy, &statemask))
@@ -677,8 +688,8 @@ double	md;
 	if (md <= FTINY) md = FHUGE;
 	fbuf[3] = dir[0]*md; fbuf[4] = dir[1]*md; fbuf[5] = dir[2]*md;
 				/* trace that ray */
-	if (process(rtpd, fbuf, fbuf, 4*sizeof(float), 6*sizeof(float)) !=
-			4*sizeof(float))
+	if (process(rtpd, (char *)fbuf, (char *)fbuf,
+			4*sizeof(float), 6*sizeof(float)) != 4*sizeof(float))
 		error(INTERNAL, "error getting data back from rtrace process");
 	if (fbuf[3] >= .99*FHUGE)
 		return(0);	/* missed local objects */

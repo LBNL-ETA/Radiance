@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: oki20c.c,v 2.11 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  oki20c.c - program to dump pixel file to OkiMate 20 color printer.
  */
@@ -12,6 +9,7 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+#include  <time.h>
 
 #include  "color.h"
 #include  "resolu.h"

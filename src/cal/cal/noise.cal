@@ -1,0 +1,18 @@
+frac(x)=x-floor(x);
+
+hermite(p0,p1,r0,r1,t) =	p0 * ((2*t-3)*t*t+1) +
+				p1 * (-2*t+3)*t*t +
+				r0 * (((t-2)*t+1)*t) +
+				r1 * ((t-1)*t*t);
+
+rand2a(x) = 1-2*rand(.69692*x);
+rand2b(x) = 1-2*rand(.05393*x);
+
+noise(x,y) = noise_1(floor(x),frac(x),ceil(x));
+
+noise_1(xl,xd,xu) = hermite(
+				rand2a(xl),
+				rand2a(xu),
+				rand2b(xl),
+				rand2b(xu),
+				xd);

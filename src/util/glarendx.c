@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.7 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Compute Glare Index given by program name or -t option:
  *

@@ -1,0 +1,31 @@
+{
+	Uses gensurf to compute CRT geometry based on spherical assumption.
+
+	Author:
+		Greg Ward	11/13/95
+
+	Input:
+		w:	screen width (total)
+		h:	screen height (total)
+		d:	displacement from center tangent at max. right or left
+
+	Usage:
+		gensurf mat name 'x(s,t)' 'y(s,t)' 'z(s,t)' N M -s \
+			-e 'w:{width};h:{height};d:{depth}' -f screen.cal
+
+	Output is oriented vertically, with the lower left corner at
+	(x,y,z)=(0,0,0), the lower right at (w,0,0), the upper right
+	at (w,0,h), and the screen bulge in the negative y direction.
+	Surface normals face negative y, also.
+}
+				{ compute sphere radius }
+r : d/2 + w*w/8/d;
+				{ compute x and z }
+x(s,t) = w*s;
+z(s,t) = h*t;
+
+sq(x) : x*x;
+				{ compute maximum depth (y) value }
+dmax : sqrt(r*r - sq(w/2) - sq(h/2));
+				{ compute y }
+y(s,t) = dmax - sqrt(r*r - sq(w*s-w/2) - sq(h*t-h/2));

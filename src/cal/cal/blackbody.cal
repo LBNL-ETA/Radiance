@@ -1,0 +1,19 @@
+{
+	Plank's formula for black body radiation spectrum
+}
+
+{ Required constants }
+
+k : 8.617e-5;		{ Boltzmann constant (eV/K) }
+h : 4.136e-15;		{ Plank constant (eV-sec) }
+e : 1.602e-19;		{ elemetary charge (Coulombs) }
+c : 2.998e8;		{ speed of light (m/sec) }
+
+{
+	The following distribution is in units of Joules/meter^4,
+	i.e., energy per radiating volume per wavelength
+	lmb (lambda) is expected in nm (10^-9 meter)
+	and T must be given in degrees Kelvin
+}
+
+u(lmd,T) : 8*PI*h*e*c*(lmd*1e-9)^-5 / (exp(h*c/(lmd*1e-9*k*T)) - 1);

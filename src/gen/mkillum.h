@@ -1,7 +1,4 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: mkillum.h,v 2.2 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Common definitions for mkillum
  */

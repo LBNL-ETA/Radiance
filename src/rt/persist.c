@@ -1,11 +1,67 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: persist.c,v 2.26 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  * Routines for persistent rtrace and rpict processes.
+ *
+ *  External symbols declared in ray.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include "standard.h"
@@ -21,7 +77,11 @@ static char SCCSid[] = "$SunId$ SGI";
 #define TIMELIM		(8*3600)	/* time limit for holding pattern */
 #endif
 
-extern char	*strcpy(), *index();
+#ifndef freebsd
+#define	mkfifo(fn,md)	mknod(fn, S_IFIFO|(md), 0)
+#endif
+
+extern void	io_process();
 
 extern int	headismine;	/* boolean true if header belongs to me */
 
@@ -35,6 +95,7 @@ static int	persistfd = -1;		/* persist file descriptor */
 static char	inpname[TEMPLEN+1], outpname[TEMPLEN+1], errname[TEMPLEN+1];
 
 
+void
 pfdetach()		/* release persist (and header) resources */
 {
 	if (persistfd >= 0)
@@ -48,6 +109,7 @@ pfdetach()		/* release persist (and header) resources */
 }
 
 
+void
 pfclean()		/* clean up persist files */
 {
 	if (persistfd >= 0)
@@ -63,6 +125,7 @@ pfclean()		/* clean up persist files */
 }
 
 
+void
 pflock(lf)		/* place or release exclusive lock on file */
 int	lf;
 {
@@ -99,14 +162,15 @@ char	*pfn;
 
 static int	got_io;
 
-static int sig_io() { got_io++; }
+static void sig_io() { got_io++; }
 
-static int sig_alrm() { quit(0); }
+static void sig_alrm() { quit(0); }
 
 
+void
 pfhold()		/* holding pattern for idle rendering process */
 {
-	int	(*oldalrm)();
+	void	(*oldalrm)();
 	char	buf[512];
 	register int	n;
 				/* close input and output descriptors */
@@ -115,23 +179,23 @@ pfhold()		/* holding pattern for idle rendering process */
 	if (errfile == NULL)
 		close(fileno(stderr));
 				/* create named pipes for input and output */
-	if (mknod(mktemp(strcpy(inpname,TEMPLATE)), S_IFIFO|0600, 0) < 0)
+	if (mkfifo(mktemp(strcpy(inpname,TEMPLATE)), 0600) < 0)
 		goto createrr;
-	if (mknod(mktemp(strcpy(outpname,TEMPLATE)), S_IFIFO|0600, 0) < 0)
+	if (mkfifo(mktemp(strcpy(outpname,TEMPLATE)), 0600) < 0)
 		goto createrr;
 	if (errfile == NULL &&
-		mknod(mktemp(strcpy(errname,TEMPLATE)), S_IFIFO|0600, 0) < 0)
+		mkfifo(mktemp(strcpy(errname,TEMPLATE)), 0600) < 0)
 		goto createrr;
 	sprintf(buf, "%s %d\n%s\n%s\n%s\n", progname, getpid(),
 			inpname, outpname, errname);
 	n = strlen(buf);
 	if (write(persistfd, buf, n) < n)
 		error(SYSTEM, "error writing persist file");
-	lseek(persistfd, 0L, 0);
+	lseek(persistfd, (off_t)0L, 0);
 				/* wait TIMELIM for someone to signal us */
 	got_io = 0;
 	signal(SIGIO, sig_io);
-	oldalrm = (int (*)())signal(SIGALRM, sig_alrm);
+	oldalrm = (void (*)())signal(SIGALRM, sig_alrm);
 	alarm(TIMELIM);
 	pflock(0);			/* unlock persist file for attach */
 	while (!got_io)
@@ -141,14 +205,24 @@ pfhold()		/* holding pattern for idle rendering process */
 	signal(SIGIO, SIG_DFL);
 	pflock(1);			/* grab persist file back */
 				/* someone wants us; reopen stdin and stdout */
+	/*
 	if (freopen(inpname, "r", stdin) == NULL)
 		goto openerr;
 	if (freopen(outpname, "w", stdout) == NULL)
 		goto openerr;
+	*/
+	close(0);
+	if (open(inpname, O_RDONLY) != 0)
+		error(INTERNAL, "unexpected stdin file number");
+	clearerr(stdin);
+	close(1);
+	if (open(outpname, O_WRONLY) != 1)
+		error(INTERNAL, "unexpected stdout file number");
 	sleep(3);		/* give them a chance to open their pipes */
 	if (errname[0]) {
-		if (freopen(errname, "w", stderr) == NULL)
-			goto openerr;
+		close(2);
+		if (open(errname, O_WRONLY) != 2)
+			error(INTERNAL, "unexpected stderr file number");
 		unlink(errname);
 		errname[0] = '\0';
 	}
@@ -164,6 +238,7 @@ openerr:
 }
 
 
+void
 io_process()		/* just act as go-between for actual process */
 {
 	register char	*cp;
@@ -184,7 +259,7 @@ io_process()		/* just act as go-between for actual process */
 	}
 	if (nr < 0)
 		error(SYSTEM, "error reading persist file");
-	ftruncate(persistfd, 0L);	/* truncate persist file */
+	ftruncate(persistfd, (off_t)0L);	/* truncate persist file */
 	pfdetach();			/* close & release persist file */
 	buf[nr] = '\0';			/* parse what we got */
 	if ((cp = index(buf, ' ')) == NULL)
@@ -323,6 +398,6 @@ writerr:
 
 #else
 
-pfclean() {}
+void pfclean() {}
 
 #endif

@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.6 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  *  Circle sources in a displayed image.
  *
@@ -12,7 +9,6 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include "standard.h"
 #include "view.h"
-#include "resolu.h"
 #include "vfork.h"
 #include <signal.h>
 #include <X11/Xlib.h>
@@ -142,7 +138,7 @@ char	*pname, *wname;
 		fprintf(stderr,
 		"%s: warning -- window seems to be the wrong size!\n",
 				progname);
-		if (pres.or & YMAJOR) {
+		if (pres.rt & YMAJOR) {
 			pres.xr = wa.width;
 			pres.yr = wa.height;
 		} else {

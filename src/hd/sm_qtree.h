@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm_qtree.h,v 3.13 2003/02/22 02:07:25 greg Exp $ */
 /*
  *  sm_qtree.h - header file for routines using spherical quadtrees.
  *
@@ -19,7 +16,7 @@
  *
  *		< -1:	it is an index to a set of objects
  */
-#include "object.h"
+
 typedef struct _FUNC {
     int (*func)();
     int (*func_after)();

@@ -1,20 +1,85 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: ranimate.c,v 2.29 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Radiance animation control program
+ *
+ * The main difference between this program and ranimove is that
+ * we have many optimizations here for camera motion in static
+ * environments, calling rpict and pinterp on multiple processors,
+ * where ranimove puts its emphasis on object motion, and does
+ * not use any external programs for image generation.
+ *
+ * See the ranimate(1) man page for further details.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include "standard.h"
 #include <ctype.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include "view.h"
 #include "vars.h"
 #include "netproc.h"
+				/* default blur samples */
+#ifndef DEF_NBLUR
+#define DEF_NBLUR	5
+#endif
 				/* default remote shell */
 #ifdef _AUX_SOURCE
 #define REMSH		"remsh"
@@ -31,7 +96,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #define EXPOSURE	6		/* how to compute exposure */
 #define HOST		7		/* rendering host machine */
 #define INTERP		8		/* # frames to interpolate */
-#define MBLUR		9		/* samples for motion blur */
+#define MBLUR		9		/* motion blur parameters */
 #define NEXTANIM	10		/* next animation file */
 #define OCTREE		11		/* octree file name */
 #define OVERSAMP	12		/* # times to oversample image */
@@ -116,8 +181,9 @@ PSERVER	*lastpserver;		/* last process server with error */
 
 VIEW	*getview();
 char	*getexp(), *dirfile();
+int	getblur();
 
-extern time_t	fdate(), time();
+extern time_t	time();
 
 
 main(argc, argv)
@@ -512,7 +578,7 @@ animate()			/* run animation */
 						progname, vnam(INTERP));
 			vval(INTERP) = "0";
 		}
-		if (atoi(vval(MBLUR))) {	/* can't handle this yet */
+		if (strcmp(vval(MBLUR),"0")) {	/* can't handle this */
 			if (!nowarn)
 				fprintf(stderr,
 					"%s: resetting %s=0 for animation\n",
@@ -522,7 +588,7 @@ animate()			/* run animation */
 	}
 					/* figure # frames per batch */
 	d1 = mult*xres*mult*yres*4;		/* space for orig. picture */
-	if ((i=vint(INTERP)) || atoi(vval(MBLUR)))
+	if ((i=vint(INTERP)) || getblur(NULL) > 1)
 		d1 += mult*xres*mult*yres*sizeof(float);	/* Z-buffer */
 	d2 = xres*yres*4;			/* space for final picture */
 	frames_batch = (i+1)*(vflt(DISKSPACE)*1048576.-d1)/(d1+i*d2);
@@ -696,8 +762,10 @@ walkwait(first, last, vfn)		/* walk-through frames */
 int	first, last;
 char	*vfn;
 {
+	double	blurf;
+	int	nblur = getblur(&blurf);
 	char	combuf[2048];
-	char	*inspoint;
+	register char	*inspoint;
 	register int	i;
 
 	if (!noaction && vint(INTERP))		/* create dummy frames */
@@ -710,11 +778,19 @@ char	*vfn;
 					/* create command */
 	sprintf(combuf, "rpict%s%s -w0", rendopt,
 			viewopt(getview(first>1 ? first-1 : 1)));
-	if (vint(INTERP) || atoi(vval(MBLUR)))
-		sprintf(combuf+strlen(combuf), " -z %s.zbf", vval(BASENAME));
-	sprintf(combuf+strlen(combuf), " -o %s.unf %s -S %d",
+	inspoint = combuf;
+	while (*inspoint) inspoint++;
+	if (nblur) {
+		sprintf(inspoint, " -pm %.3f", blurf/nblur);
+		while (*inspoint) inspoint++;
+	}
+	if (nblur > 1 || vint(INTERP)) {
+		sprintf(inspoint, " -z %s.zbf", vval(BASENAME));
+		while (*inspoint) inspoint++;
+	}
+	sprintf(inspoint, " -o %s.unf %s -S %d",
 			vval(BASENAME), rresopt, first);
-	inspoint = combuf + strlen(combuf);
+	while (*inspoint) inspoint++;
 	sprintf(inspoint, " %s < %s", vval(OCTREE), vfn);
 					/* run in parallel */
 	i = (last-first+1)/(vint(INTERP)+1);
@@ -740,6 +816,8 @@ int	frame;
 {
 	static int	*rfrm;		/* list of recovered frames */
 	static int	nrfrms = 0;
+	double	blurf;
+	int	nblur = getblur(&blurf);
 	char	combuf[2048];
 	char	fname[128];
 	register char	*cp;
@@ -755,8 +833,13 @@ int	frame;
 				vval(ANIMATE), frame, rendopt);
 	else
 		sprintf(combuf, "rpict%s -w0", rendopt);
-	cp = combuf + strlen(combuf);
-	if (vint(INTERP) || atoi(vval(MBLUR))) {
+	cp = combuf;
+	while (*cp) cp++;
+	if (nblur) {
+		sprintf(cp, " -pm %.3f", blurf/nblur);
+		while (*cp) cp++;
+	}
+	if (nblur > 1 || vint(INTERP)) {
 		sprintf(cp, " -z %s.zbf", fname);
 		while (*cp) cp++;
 	}
@@ -849,12 +932,14 @@ int	rvr;
 {
 	extern int	frecover();
 	static int	iter = 0;
+	double	blurf;
+	int	nblur = getblur(&blurf);
 	char	fnbefore[128], fnafter[128], *fbase;
 	char	combuf[1024], fname0[128], fname1[128];
 	int	usepinterp, usepfilt, nora_rgbe;
 	int	frseq[2];
 						/* check what is needed */
-	usepinterp = atoi(vval(MBLUR));
+	usepinterp = (nblur > 1);
 	usepfilt = pfiltalways | ep==NULL;
 	if (ep != NULL && !strcmp(ep, "1"))
 		ep = "+0";
@@ -899,7 +984,7 @@ int	rvr;
 	if (usepinterp) {			/* using pinterp */
 		if (rvr == 2 && recover(frseq[1]))	/* recover after? */
 			return(1);
-		if (atoi(vval(MBLUR))) {
+		if (nblur > 1) {		/* with pmblur */
 			sprintf(fname0, "%s/vw0%c", vval(DIRECTORY),
 					'a'+(iter%26));
 			sprintf(fname1, "%s/vw1%c", vval(DIRECTORY),
@@ -926,9 +1011,8 @@ int	rvr;
 				putc('\n', fp); fclose(fp);
 			}
 			sprintf(combuf,
-			"(pmblur %s %d %s %s; rm -f %s %s) | pinterp -B",
-			*sskip(vval(MBLUR)) ? sskip2(vval(MBLUR),1) : "1",
-					atoi(vval(MBLUR)),
+			"(pmblur %.3f %d %s %s; rm -f %s %s) | pinterp -B",
+					blurf, nblur,
 					fname0, fname1, fname0, fname1);
 			iter++;
 		} else				/* no blurring */
@@ -1066,7 +1150,7 @@ int	n;
 	if (n == 0) {				/* signal to close file */
 		if (expfp != NULL) {
 			fclose(expfp);
-			free((char *)exppos);
+			free((void *)exppos);
 			expfp = NULL;
 		}
 		return(NULL);
@@ -1372,4 +1456,33 @@ register char	*path;
 		} else
 			df[0] = '\0';
 	return(path+psep+1);
+}
+
+
+int
+getblur(double *bf)		/* get # blur samples (and fraction) */
+{
+	double	blurf;
+	int	nblur;
+	char	*s;
+
+	if (!vdef(MBLUR)) {
+		if (bf != NULL)
+			*bf = 0.0;
+		return(0);
+	}
+	blurf = atof(vval(MBLUR));
+	if (blurf < 0.0)
+		blurf = 0.0;
+	if (bf != NULL)
+		*bf = blurf;
+	if (blurf <= FTINY)
+		return(0);
+	s = sskip(vval(MBLUR));
+	if (!*s)
+		return(DEF_NBLUR);
+	nblur = atoi(s);
+	if (nblur <= 0)
+		return(1);
+	return(nblur);
 }

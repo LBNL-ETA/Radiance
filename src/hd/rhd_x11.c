@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.32 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * X11 driver for holodeck display.
  * Based on rview driver.
@@ -13,6 +10,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
+#include  <time.h>
 #include "rhd_qtree.h"
 #include  "x11icon.h"
 
@@ -377,7 +375,7 @@ loop:
 			return(ncolors = 0);
 		if (XAllocColorCells(ourdisplay,ourmap,0,NULL,0,pixval,ncolors))
 			break;
-		free((char *)pixval);
+		free((void *)pixval);
 		pixval = NULL;
 	}
 	if (pixval == NULL) {
@@ -412,7 +410,7 @@ freepixels()				/* free our pixels */
 	if (ncolors == 0)
 		return;
 	XFreeColors(ourdisplay,ourmap,pixval,ncolors,0L);
-	free((char *)pixval);
+	free((void *)pixval);
 	pixval = NULL;
 	ncolors = 0;
 	if (ourmap != DefaultColormap(ourdisplay,ourscreen))
@@ -611,6 +609,16 @@ XButtonPressedEvent	*ebut;
 
 
 static
+waitabit()				/* pause a moment */
+{
+	struct timespec	ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = 5000000;
+	nanosleep(&ts, NULL);
+}
+
+
+static
 getmove(ebut)				/* get view change */
 XButtonPressedEvent	*ebut;
 {
@@ -626,7 +634,7 @@ XButtonPressedEvent	*ebut;
 
 	while (!XCheckMaskEvent(ourdisplay,
 			ButtonReleaseMask, levptr(XEvent))) {
-
+		waitabit();
 		if (!XQueryPointer(ourdisplay, gwind, &rootw, &childw,
 				&rootx, &rooty, &wx, &wy, &statemask))
 			break;		/* on another screen */

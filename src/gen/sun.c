@@ -1,9 +1,6 @@
-/* Copyright (c) 1989 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: sun.c,v 2.3 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  *           SOLAR CALCULATIONS
  *

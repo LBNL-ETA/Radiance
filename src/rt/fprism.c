@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: fprism.c,v 2.4 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /* Ce programme calcule les directions et les energies des rayons lumineux
    resultant du passage d'un rayon au travers d'un vitrage prismatique
  

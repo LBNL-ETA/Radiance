@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: biq.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  biq.c - simple greyscale quantization.
  *
@@ -61,6 +58,6 @@ colormap ocm;
 	}
 	picwriteline(y, linout);
     }
-    free((char *)linin);
-    free((char *)linout);
+    free((void *)linin);
+    free((void *)linout);
 }

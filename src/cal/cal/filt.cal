@@ -1,0 +1,32 @@
+{
+	Filter Kernal set-up for pcomb.
+
+	5/22/92	Greg Ward
+
+	Usage:
+	pcomb -x xres -y yres -f kern.cal -f filt.cal input.pic > output.pic
+
+	The file "kern.cal" must define the constant function kern(x,y), which
+	describes how the kernal behaves as a function of offset in x and y
+	(measured in fractional pixels in the destination image).
+}
+hmag : xres/xmax;
+vmag : yres/ymax;
+step : (hmag+vmag)/8;
+hsum(xmin,xmax,y) : if(step/2+xmin-xmax, 0,
+		kern(xmin+step/2,y) + hsum(xmin+step,xmax,y));
+sum(xmin,ymin,xmax,ymax) : if(step/2+ymin-ymax, 0,
+		hsum(xmin,xmax,ymin+step/2) + sum(xmin,ymin+step,xmax,ymax));
+k(ox,oy) : sum(ox-hmag/2,oy-vmag/2,ox+hmag/2,oy+vmag/2);
+K00 : k(-1,-1); K01 : k(-1, 0); K02 : k(-1, 1);
+K10 : k( 0,-1); K11 : k( 0, 0); K12 : k( 0, 1);
+K20 : k( 1,-1); K21 : k( 1, 0); K22 : k( 1, 1);
+sumtotal : K00+K01+K02+K10+K11+K12+K20+K21+K22;
+
+f(p) = ( K00*p(1,-1,-1) + K01*p(1,-1, 0) + K02*p(1,-1, 1) +
+	 K10*p(1, 0,-1) + K11*p(1, 0, 0) + K12*p(1, 0, 1) +
+	 K20*p(1, 1,-1) + K21*p(1, 1, 0) + K22*p(1, 1, 1) ) / sumtotal;
+
+ro = f(ri);
+go = f(gi);
+bo = f(bi);

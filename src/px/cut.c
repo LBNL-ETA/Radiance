@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: cut.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
 CUT - Median bisection (k-d tree) algorithm for color image quantization
 

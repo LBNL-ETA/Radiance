@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: holo.c,v 3.17 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines for converting holodeck coordinates, etc.
  *

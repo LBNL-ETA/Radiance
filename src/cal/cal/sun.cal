@@ -1,0 +1,57 @@
+{*
+ *           SOLAR CALCULATIONS
+ *
+ *               7/25/84
+ *		10/10/86
+ *
+ *}
+
+RLAT = 0.66;		{* Site latitude (radians) *}
+
+RLON = 2.13;		{* Site longitude (radians) *}
+
+RSM = 120 * PI/180;	{* Standard meridian (radians) *}
+
+
+stadj(jd)		{* solar time adjustment (hours) *}
+{ jd is days into year }
+=
+      0.170 * sin( 4*PI/373 * (jd - 80) ) -
+      0.129 * sin( 2*PI/355 * (jd - 8 ) ) +
+      12*(RSM-RLON)/PI
+;
+
+
+sdec(jd)		{* solar declination angle (radians) *}
+{ jd is days into year }
+=
+  0.4093 * sin( 2*PI/368 * (jd - 81) )
+;
+
+
+salt(sd, st)		{* solar altitude (radians) *}
+{ sd is solar declination, st is solar time (hours) }
+=
+ asin( sin(RLAT) * sin(sd) - cos(RLAT) * cos(sd) *
+                                     cos(st*PI/12) )
+;
+
+
+sazi(sd, st)		{* the solar azimuth (radians) *}
+{ sd is solar declination, st is solar time (hours) }
+=
+ -atan2( cos(sd) * sin(st*PI/12),
+ 	-cos(RLAT)*sin(sd) -
+	sin(RLAT)*cos(sd)*cos(st*PI/12) )
+;
+
+
+SAZI = sazi(SDEC, STIME) * 180/PI;
+
+SALT = salt(SDEC, STIME) * 180/PI;
+
+SDEC = sdec(JDATE);
+
+STIME = TIME + stadj(JDATE);
+
+JDATE = DAY + select(MONTH,0,31,59,90,120,151,181,212,243,273,304,334);

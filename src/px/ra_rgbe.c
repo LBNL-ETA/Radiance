@@ -1,15 +1,13 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.10 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  program to convert from RADIANCE RLE to flat format
  */
 
 #include  <stdio.h>
 #include  <math.h>
+#include  <time.h>
 #include  "color.h"
 #include  "resolu.h"
 
@@ -17,7 +15,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  <fcntl.h>
 #endif
 
-extern char	*malloc(), *realloc(), *tempbuffer();
 extern int	addhline();
 
 #define dumpheader(fp)	fwrite(headlines, 1, headlen, fp)

@@ -1,5 +1,5 @@
 		MODEL CONVERTER PROGRAMS
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.6 8/25/95 LBL"
 
 This directory contains translator programs between other scene modeling
 languages and Radiance.

@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: glaresrc.c,v 2.4 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Gather samples and compute glare sources.
  */
@@ -81,7 +78,7 @@ analyze()			/* analyze our scene */
 		if (left < h)
 			addsrcspan(newspan(left,h,v,spanbr));
 	}
-	free((char *)spanbr);
+	free((void *)spanbr);
 	close_allsrcs();
 }
 
@@ -241,7 +238,7 @@ struct source	*sp, *ap;
 		sp->brt = (sp->brt*sp->dom + ap->brt*ap->dom)
 				/ (sp->dom + ap->dom);
 	}
-	free((char *)ap);
+	free((void *)ap);
 }
 
 
@@ -384,7 +381,7 @@ register struct source	*sp;
 	}
 	freespans(sp);
 	if (sp->dom <= FTINY) {		/* must be right at edge of image */
-		free((char *)sp);
+		free((void *)sp);
 		return;
 	}
 	sp->brt /= (double)n;
@@ -458,7 +455,7 @@ register struct source	*s;
 		indirect[i].n += d;
 	}
 	freespans(s);
-	free((char *)s);
+	free((void *)s);
 }
 
 
@@ -469,6 +466,6 @@ struct source	*sp;
 
 	while ((ss = sp->first) != NULL) {
 		sp->first = ss->next;
-		free((char *)ss);
+		free((void *)ss);
 	}
 }

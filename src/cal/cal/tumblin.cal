@@ -1,0 +1,30 @@
+{
+	Mapping of Luminance to Brightness for CRT display.
+	Hand this file to pcomb(1) with the -f option.
+	The picture file should have been run previously through
+	the automatic exposure procedure of pfilt(1), and
+	pcomb should not be given -o option.  Like so:
+
+	pfilt input.pic | pcomb -f tumblin.cal - > output.pic
+
+	Formulas adapted from Stevens by Tumblin and Rushmeier.
+
+	29 May 1993
+}
+PI : 3.14159265358979323846;	{ Hmm, looks familiar... }
+LAMBERT : 1e4/PI/WE;		{ Number of watts/sr/m2 in a Lambert }
+DL : .027;			{ Maximum display luminance (Lamberts) }
+AL : .5/le(1)*10^.84/LAMBERT;	{ Adaptation luminance (from exposure) }
+
+sq(x) : x*x;
+aa(v) : .4*log10(v) + 2.92;
+bb(v) : -.4*sq(log10(v)) + -2.584*log10(v) + 2.0208;
+
+power : aa(AL)/aa(DL);
+
+mult = li(1)^(power-1) *
+	( LAMBERT^-power/DL * 10^((bb(AL)-bb(DL))/aa(DL)) / le(1) );
+
+ro = mult*ri(1);
+go = mult*gi(1);
+bo = mult*bi(1);

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: raddepend.csh,v 2.7 2003/02/22 02:07:30 greg Exp $
 #
 # Find scene dependencies in this directory
 #

@@ -1,13 +1,11 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhd_sample.h,v 3.8 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Sample data structures for holodeck display drivers.
  */
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
+#include "object.h"
 
 #ifndef int2
 #define int2	short
@@ -20,11 +18,11 @@
 #define INVALID  -1
 #endif
 
-#ifndef LORES
-#define SFLOAT double
-#else
 #define SFLOAT float
-#endif
+
+typedef OBJECT S_ID;
+
+#define S_ID_MAX  ((1 << ((sizeof(S_ID)<<3)-1))-1)
 
 typedef struct samp {
 	SFLOAT		(*wp)[3];	/* world intersection point array */
@@ -33,14 +31,14 @@ typedef struct samp {
 	BYTE		(*chr)[3];	/* encoded chrominance array */
 	BYTE		(*rgb)[3];	/* tone-mapped color array */
         int             *info;          /* Extra sample info */
-        int             *info1;          /* Extra sample info */
+        int             *info1;         /* Extra sample info */
 	int		max_samp;	/* maximum number of samples */
-	int             max_base_pt;     /* maximum number of aux points */
-	int             next_base_pt;    /* next auxilliary point to add */
-	int		replace_samp;   /* next sample to free  */
+	int             max_base_pt;    /* maximum number of aux points */
+	S_ID            next_base_pt;   /* next auxilliary point to add */
+	S_ID		replace_samp;   /* next sample to free  */
 	int		num_samp;       /* current number of samples */
-	int             tone_map;       /* pointer to next value(s)t tonemap*/
-        int             free_samp;      /* free sample-not available yet */
+	S_ID             tone_map;      /* pointer to next value(s)t tonemap*/
+        S_ID             free_samp;     /* next free sample */
 	char		*base;		/* base of allocated memory */
 } SAMP;
 
@@ -51,7 +49,7 @@ typedef struct samp {
 #define S_CHR(s)                ((s)->chr)
 #define S_RGB(s)                ((s)->rgb)
 #define S_INFO(s)               ((s)->info)
-#define S_INFO1(s)               ((s)->info1)
+#define S_INFO1(s)              ((s)->info1)
 #define S_MAX_SAMP(s)           ((s)->max_samp)
 #define S_MAX_BASE_PT(s)        ((s)->max_base_pt)
 #define S_NEXT_BASE_PT(s)       ((s)->next_base_pt)
@@ -67,7 +65,7 @@ typedef struct samp {
 #define S_NTH_RGB(s,n)          (S_RGB(s)[(n)])
 #define S_NTH_CHR(s,n)          (S_CHR(s)[(n)])
 #define S_NTH_INFO(s,n)         (S_INFO(s)[(n)])
-#define S_NTH_INFO1(s,n)         (S_INFO1(s)[(n)])
+#define S_NTH_INFO1(s,n)        (S_INFO1(s)[(n)])
 #define S_NTH_BRT(s,n)          (S_BRT(s)[(n)])
 
 /* Sample Flag macros */
@@ -99,9 +97,52 @@ extern int4    *samp_flag;     /* Per/sample flags s */
 
 /* These values are set by the driver, and used in the OGL call for glFrustum*/
 extern double dev_zmin,dev_zmax;
-
+extern S_ID sAdd_base_point();
 extern SAMP *sAlloc();
-
+extern S_ID sAlloc_samp();
+/*
+ * int
+ * smInit(n)		: Initialize/clear data structures for n entries
+ * int	n;
+ *
+ * Initialize sampL and other data structures for at least n samples.
+ * If n is 0, then free data structures.  Return number actually allocated.
+ *
+ *
+ * int
+ * smNewSamp(c, p, v)	: register new sample point and return index
+ * COLR	c;		: pixel color (RGBE)
+ * FVECT	p;	: world intersection point
+ * FVECT	v;	: ray direction vector
+ *
+ * Add new sample point to data structures, removing old values as necessary.
+ * New sample representation will be output in next call to smUpdate().
+ *
+ *
+ * int
+ * smFindSamp(orig, dir): intersect ray with 3D rep. and find closest sample
+ * FVECT	orig, dir;
+ *
+ * Find the closest sample to the given ray.  Return -1 on failure.
+ *
+ *
+ * smClean()		: display has been wiped clean
+ *
+ * Called after display has been effectively cleared, meaning that all
+ * geometry must be resent down the pipeline in the next call to smUpdate().
+ *
+ *
+ * smUpdate(vp, qua)	: update OpenGL output geometry for view vp
+ * VIEW	*vp;		: desired view
+ * int	qua;		: quality level (percentage on linear time scale)
+ *
+ * Draw new geometric representation using OpenGL calls.  Assume that the
+ * view has already been set up and the correct frame buffer has been
+ * selected for drawing.  The quality level is on a linear scale, where 100%
+ * is full (final) quality.  It is not necessary to redraw geometry that has
+ * been output since the last call to smClean().  (The last view drawn will
+ * be vp==&odev.v each time.)
+ */
 
 
 

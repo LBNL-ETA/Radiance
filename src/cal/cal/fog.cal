@@ -1,0 +1,24 @@
+{
+	BAD fog simulation effect using a converted z-file, eg:
+
+	pvalue -r -df -b -h `getinfo -d < scene.pic` scene.z | \
+		pcomb -e VIS:20 -f fog.cal scene.pic - > foggy.pic
+
+	The constant VIS must be set to the visibility distance,
+	ie. the distance at which half the contrast is lost.
+
+	Substitute a local brightness model for fog_v to improve
+	the effect.
+}
+
+dist = gi(2);			{ distance given by second file }
+
+fog_v : .5;			{ fog particles are uniform grey }
+
+prob = 1 - 2^-(dist/VIS);	{ probability of intercepting fog particle }
+
+fog(v) = prob*fog_v + (1-prob)*v;
+
+ro = fog(ri(1));
+go = fog(gi(1));
+bo = fog(bi(1));

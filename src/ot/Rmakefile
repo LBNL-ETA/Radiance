@@ -1,5 +1,4 @@
-# SCCSid "$SunId$ LBL"
-
+# RCSid: $Id: Rmakefile,v 2.7 2003/02/22 02:07:26 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -10,7 +9,7 @@
 
 OPT = -O
 MACH = -DBSD
-CFLAGS = -DSTRICT $(OPT) $(MACH) -I../common -L../lib
+CFLAGS = -DSTRICT -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
 
@@ -21,10 +20,10 @@ INSTDIR = /usr/local/bin
 all:	oconv getbbox
 
 oconv:	oconv.o sphere.o writeoct.o o_face.o \
-o_cone.o o_instance.o bbox.o initotypes.o readfargs.o malloc.o
+o_cone.o o_instance.o bbox.o initotypes.o
 	$(CC) $(CFLAGS) -o oconv oconv.o writeoct.o sphere.o o_face.o \
-o_cone.o o_instance.o bbox.o readfargs.o \
-initotypes.o malloc.o -lrt $(MLIB)
+o_cone.o o_instance.o bbox.o \
+initotypes.o -lrt $(MLIB)
 
 getbbox:	getbbox.o readobj2.o bbox.o init2otypes.o
 	$(CC) $(CFLAGS) -o getbbox getbbox.o readobj2.o \
@@ -35,9 +34,6 @@ install:	oconv getbbox
 
 clean:
 	set nonomatch; rm -f oconv getbbox *.o core
-
-readfargs.o:	readfargs.c ../common/object.h
-	$(CC) $(CFLAGS) -DMEMHOG -c readfargs.c
 
 bbox.o initotypes.o o_cone.o o_face.o \
 o_instance.o oconv.o sphere.o \
@@ -58,7 +54,7 @@ bbox.o o_cone.o:	../common/cone.h
 
 bbox.o o_face.o:	../common/face.h
 
-bbox.o o_instance.o:	../common/instance.h ../common/octree.h
+bbox.o getbbox.o o_instance.o:	../common/instance.h ../common/octree.h
 
 o_face.o:	../common/plocate.h
 

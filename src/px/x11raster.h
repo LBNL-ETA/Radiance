@@ -1,7 +1,4 @@
-/* Copyright 1990 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: x11raster.h,v 2.2 2003/02/22 02:07:28 greg Exp $ */
 /*
  * x11raster.h - header file for X routines using images.
  *

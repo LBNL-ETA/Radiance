@@ -1,12 +1,11 @@
-# SCCSid "$SunId$ LBL"
-
+# RCSid: $Id: Rmakefile,v 2.7 2003/02/22 02:07:23 greg Exp $
 #
 # Makefile for object generation programs
 #
 
 OPT = -O
 MACH = -DBSD
-CFLAGS = $(MACH) $(OPT) -I../common -L../lib
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
 
@@ -17,12 +16,15 @@ LIBDIR = /usr/local/lib/ray
 PROGS = genbox gensky xform genblinds genrev genworm \
 		gensurf genprism replmarks mkillum genclock
 
-LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex
+LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
+		glaze1.cal glaze2.cal
 
 all:	$(PROGS)
 
-install:	$(PROGS) $(LIBFILES)
+install:	$(PROGS) $(LIBFILES) glaze.csh
 	cp $(PROGS) $(INSTDIR)
+	cp glaze.csh $(INSTDIR)/glaze
+	chmod 755 $(INSTDIR)/glaze
 	cd $(LIBDIR) ; rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
@@ -58,6 +60,9 @@ mkillum:	mkillum.o mkillum2.o mkillum3.o
 
 genrev:	genrev.o 
 	$(CC) $(CFLAGS) -o genrev genrev.o -lrt $(MLIB)
+
+gencat: gencat.o
+	$(CC) $(CFLAGS) -o gencat gencat.o -lrt $(MLIB)
 
 genworm:	genworm.o
 	$(CC) $(CFLAGS) -o genworm genworm.o -lrt $(MLIB)

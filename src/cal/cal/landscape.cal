@@ -1,0 +1,27 @@
+{
+	A set of randomly located points at known positions to be
+	interpolated by gensurf.
+}
+				{ The following are our known point values }
+point(i,j) = select( i*3+j+1,
+		2, 1, 5,		{ x0, y0, z0 }
+		3.7, 1, 1,
+		4.2, 2.5, 2,
+		3,7, 2.5, 4,
+		2, 2.5, 3,
+		2, 3.5, 2
+	);
+
+Npoints = 6;				{ Number of points in above }
+
+sq(x) : x*x;
+
+Recip(x) : if( x, 1/x, 1e10 );
+
+Sum(f,x,y,n) = if(n-.5, f(x,y,n-1)+Sum(f,x,y,n-1), 0);
+
+weight(x,y,i) = Recip(sq(x-point(i,0)) + sq(y-point(i,1)));
+
+wval(x,y,i) = weight(x,y,i) * point(i,2);
+
+sheight(x,y) = Sum(wval,x,y,Npoints) / Sum(weight,x,y,Npoints);

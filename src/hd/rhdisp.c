@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.43 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Holodeck display process.
  */
@@ -22,7 +19,9 @@ static char SCCSid[] = "$SunId$ SGI";
 #define FSIZDEF		0.125	/* default focus frame size */
 #endif
 
-#ifdef linux
+#if defined(freebsd)
+#define fbufcnt(f)	((f)->_r)
+#elif defined(__GNUC__)
 #define fbufcnt(f)	((f)->_IO_read_end - (f)->_IO_read_ptr)
 #else
 #define fbufcnt(f)	((f)->_cnt)
@@ -61,7 +60,6 @@ main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	extern int	eputs();
 	int	rdy, inp, res = 0, pause = 0;
 
 	progname = argv[0];
@@ -568,6 +566,7 @@ char	*p;
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {
@@ -587,6 +586,7 @@ register char  *s;
 }
 
 
+void
 quit(code)			/* clean up and exit */
 int	code;
 {

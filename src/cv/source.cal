@@ -1,5 +1,4 @@
-{ SCCSid "$SunId$ LBL" }
-
+{ RCSid: $Id: source.cal,v 2.9 2003/02/22 02:07:23 greg Exp $ }
 {
 	Source distribution coordinates (degrees).
 
@@ -47,8 +46,8 @@ src_phi2 = tri( src_phi, 180 );		{ 0-180 }
 src_phi4 = tri( src_phi, 90 );		{ 0-90 }
 
 				{ Type B photometry coordinates }
-srcB_vert = atan( -Dx/Dz ) / DEGREE;
-srcB_horiz = Asin(Dy) / DEGREE;
+srcB_vert = atan2( -Dx, Dz ) / DEGREE;
+srcB_horiz = atan2( Dy, Dz ) / DEGREE;
 				{ w/ symmetry }
 srcB_vert2 = abs( srcB_vert );
 srcB_horiz2 = abs( srcB_horiz );

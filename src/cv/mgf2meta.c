@@ -1,14 +1,12 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "random.h"
 #include "mgflib/parser.h"
@@ -16,10 +14,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #define MSIZE	((1<<14)-1)
 #define	MX(v)	(int)(MSIZE*(v)[(proj_axis+1)%3])
 #define	MY(v)	(int)(MSIZE*(v)[(proj_axis+2)%3])
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 int	r_face();
 int	proj_axis;

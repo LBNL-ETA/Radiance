@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.33 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Interpolate and extrapolate pictures with different view parameters.
  *
@@ -17,8 +14,6 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "view.h"
 
 #include "color.h"
-
-#include "resolu.h"
 
 #define LOG2		0.69314718055994530942
 
@@ -213,7 +208,7 @@ char	*argv[];
 			if (argv[an][2] != 'f')
 				goto badopt;
 			check(3,"s");
-			gotvfile = viewfile(argv[++an], &ourview, 0, 0);
+			gotvfile = viewfile(argv[++an], &ourview, NULL);
 			if (gotvfile < 0)
 				syserror(argv[an]);
 			else if (gotvfile == 0) {
@@ -279,6 +274,7 @@ char	*argv[];
 		syserror(progname);
 							/* new header */
 	newheader("RADIANCE", stdout);
+	fputnow(stdout);
 							/* run pictures */
 	do {
 		bzero((char *)ourzbuf, hresolu*vresolu*sizeof(float));
@@ -473,8 +469,8 @@ char	*pfile, *zspec;
 	if (xlim == NULL)
 		syserror(progname);
 	if (!getperim(xlim, &ylim, zin, zfd)) {	/* overlapping area? */
-		free((char *)zin);
-		free((char *)xlim);
+		free((void *)zin);
+		free((void *)xlim);
 		if (zfd != -1)
 			close(zfd);
 		fclose(pfp);
@@ -493,7 +489,7 @@ char	*pfile, *zspec;
 			exit(1);
 		}
 	if (zfd != -1 && lseek(zfd,
-			(long)ylim.min*scanlen(&tresolu)*sizeof(float), 0) < 0)
+			(off_t)ylim.min*scanlen(&tresolu)*sizeof(float), 0) < 0)
 		syserror(zspec);
 					/* load image */
 	for (y = ylim.min; y <= ylim.max; y++) {
@@ -508,10 +504,10 @@ char	*pfile, *zspec;
 		addscanline(xlim+y, y, scanin, zin, plast);
 	}
 					/* clean up */
-	free((char *)xlim);
-	free((char *)scanin);
-	free((char *)zin);
-	free((char *)plast);
+	free((void *)xlim);
+	free((void *)scanin);
+	free((void *)zin);
+	free((void *)plast);
 	fclose(pfp);
 	if (zfd != -1)
 		close(zfd);
@@ -760,7 +756,7 @@ int	zfd;
 	yl->min = 32000; yl->max = 0;		/* search for points on image */
 	for (y = step - 1; y < numscans(&tresolu); y += step) {
 		if (zfd != -1) {
-			if (lseek(zfd, (long)y*scanlen(&tresolu)*sizeof(float),
+			if (lseek(zfd, (off_t)y*scanlen(&tresolu)*sizeof(float),
 					0) < 0)
 				syserror("lseek");
 			if (read(zfd, (char *)zline,
@@ -921,7 +917,7 @@ int	samp;
 				xback = -2;
 			}
 	}
-	free((char *)yback);
+	free((void *)yback);
 }
 
 
@@ -1173,7 +1169,8 @@ clearqueue()				/* process queue */
 	}
 					/* mark end and get results */
 	bzero((char *)fbp, 6*sizeof(float));
-	if (process(PDesc, fbuf, fbuf, 4*sizeof(float)*(queuesiz+1),
+	if (process(PDesc, (char *)fbuf, (char *)fbuf,
+			4*sizeof(float)*(queuesiz+1),
 			6*sizeof(float)*(queuesiz+1)) !=
 			4*sizeof(float)*(queuesiz+1)) {
 		fprintf(stderr, "%s: error reading from rtrace process\n",

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: writeoct.c,v 2.3 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  writeoct.c - routines for writing octree information to stdout.
  *

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_sets.c,v 3.6 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Quadtree-specific set operations.
  */
@@ -70,7 +67,7 @@ OBJECT  id;
 	lf = QT_SET_INDEX(qt);
 #endif
 	if (qtsettab[lf][0] <= 1) {		/* blow leaf away */
-		free((char *)qtsettab[lf]);
+		free((void *)qtsettab[lf]);
 		qtsettab[lf] = (OBJECT *)qtfreesets;
 		qtfreesets = lf;
 		return(EMPTY);
@@ -142,7 +139,7 @@ QUADTREE  qt;
 	osi = QT_SET_INDEX(qt);
 	if (osi >= qtnumsets)
 		return;
-	free((char *)qtsettab[osi]);
+	free((void *)qtsettab[osi]);
 	qtsettab[osi] = (OBJECT *)qtfreesets;
 	qtfreesets = osi;
 }
@@ -159,8 +156,8 @@ qtfreeleaves()			/* free ALL sets and leaf nodes */
 	}
 	for (i = qtnumsets; i--; )
 		if (qtsettab[i] != NULL)
-			free((char *)qtsettab[i]);
-	free((char *)qtsettab);
+			free((void *)qtsettab[i]);
+	free((void *)qtsettab);
 	qtsettab = NULL;
 	qtnumsets = 0;
 }

@@ -1,9 +1,63 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: standard.h,v 2.16 2003/02/22 02:07:22 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  <stdio.h>
@@ -15,6 +69,10 @@
 #include  <math.h>
 
 #include  <errno.h>
+
+#include  <stdlib.h>
+
+#include  <string.h>
 
 #include  "mat4.h"
 				/* regular transformation */
@@ -50,8 +108,6 @@ typedef struct {
 #define  int4		int		/* four-byte integer */
 #endif
 
-extern int  eputs(), wputs();	/* standard error output functions */
-
 				/* error codes */
 #define	 WARNING	0		/* non-fatal error */
 #define	 USER		1		/* fatal user-caused error */
@@ -63,14 +119,14 @@ extern int  eputs(), wputs();	/* standard error output functions */
 				/* error struct */
 extern struct erract {
 	char	pre[16];		/* prefix message */
-	int	(*pf)();		/* put function (resettable) */
+	void	(*pf)();		/* put function (resettable) */
 	int	ec;			/* exit code (0 means non-fatal) */
 } erract[NERRS];	/* list of error actions */
 
 #define  ERRACT_INIT	{	{"warning - ", wputs, 0}, \
 				{"fatal - ", eputs, 1}, \
 				{"system - ", eputs, 2}, \
-				{"internal - ", eputs, 1}, \
+				{"internal - ", eputs, 3}, \
 				{"consistency - ", eputs, -1}, \
 				{"", NULL, 0}	}
 
@@ -99,28 +155,14 @@ extern double	tcos();			/* table-based cosine approximation */
 #define	 copystruct(d,s)	(*(d) = *(s))
 #endif
 
-#ifdef  BSD
-extern long  lseek();
-#else
+#ifndef BSD
 #define	 bcopy(s,d,n)		(void)memcpy(d,s,n)
 #define	 bzero(d,n)		(void)memset(d,0,n)
 #define	 bcmp(b1,b2,n)		memcmp(b1,b2,n)
 #define	 index			strchr
 #define	 rindex			strrchr
+#endif
 extern off_t  lseek();
-#endif
-extern long  ftell();
-
-extern char  *nextword(), *sskip(), *sskip2();
-extern char  *getpath(), *getenv();
-#ifndef malloc
-extern char  *malloc(), *calloc(), *realloc();
-#endif
-extern char  *bmalloc(), *savestr(), *savqstr();
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 #ifdef MSDOS
 #define NIX 1
@@ -129,3 +171,144 @@ extern double  atof();
 #define NIX 1
 #endif
 
+#ifdef NOPROTO
+
+extern int	badarg();
+extern char	*bmalloc();
+extern void	bfree();
+extern void	error();
+extern int	expandarg();
+extern time_t	fdate();
+extern int	setfdate();
+extern char	*fgetline();
+extern int	fgetval();
+extern char	*fgetword();
+extern void	fputword();
+extern char	*fixargv0();
+extern FILE	*frlibopen();
+extern char	*getlibpath();
+extern char	*getpath();
+extern void	putstr();
+extern void	putint();
+extern void	putflt();
+extern char	*getstr();
+extern long	getint();
+extern double	getflt();
+extern int	open_process();
+extern int	process();
+extern int	close_process();
+extern int	readbuf();
+extern int	writebuf();
+extern int	ecompile();
+extern char	*expsave();
+extern void	expset();
+extern char	*eindex();
+extern char	*savestr();
+extern void	freestr();
+extern int	shash();
+extern char	*savqstr();
+extern void	freeqstr();
+extern double	tcos();
+extern int	wordfile();
+extern int	wordstring();
+extern char	*atos();
+extern char	*nextword();
+extern char	*sskip();
+extern char	*sskip2();
+extern char	*iskip();
+extern char	*fskip();
+extern int	isint();
+extern int	isintd();
+extern int	isflt();
+extern int	isfltd();
+extern int	xf();
+extern int	invxf();
+extern int	fullxf();
+extern int	quadtratic();
+extern void	eputs();
+extern void	wputs();
+extern void	quit();
+
+#else
+					/* defined in badarg.c */
+extern int	badarg(int ac, char **av, char *fl);
+					/* defined in bmalloc.c */
+extern char	*bmalloc(unsigned int n);
+extern void	bfree(char *p, unsigned int n);
+					/* defined in error.c */
+extern void	error(int etype, char *emsg);
+					/* defined in expandarg.c */
+extern int	expandarg(int *acp, char ***avp, int n);
+					/* defined in fdate.c */
+extern time_t	fdate(char *fname);
+extern int	setfdate(char *fname, long ftim);
+					/* defined in fgetline.c */
+extern char	*fgetline(char *s, int n, FILE *fp);
+					/* defined in fgetval.c */
+extern int	fgetval(FILE *fp, int ty, char *vp);
+					/* defined in fgetword.c */
+extern char	*fgetword(char *s, int n, FILE *fp);
+					/* defined in fputword.c */
+extern void	fputword(char *s, FILE *fp);
+					/* defined in fixargv0.c */
+extern char	*fixargv0(char *av0);
+					/* defined in fropen.c */
+extern FILE	*frlibopen(char *fname);
+					/* defined in getlibpath.c */
+extern char	*getlibpath(void);
+					/* defined in getpath.c */
+extern char	*getpath(char *fname, char *searchpath, int mode);
+					/* defined in portio.c */
+extern void	putstr(char *s, FILE *fp);
+extern void	putint(long i, int siz, FILE *fp);
+extern void	putflt(double f, FILE *fp);
+extern char	*getstr(char *s, FILE *fp);
+extern long	getint(int siz, FILE *fp);
+extern double	getflt(FILE *fp);
+					/* defined in process.c */
+extern int	open_process(int pd[3], char *av[]);
+extern int	process(int pd[3], char *recvbuf, char *sendbuf,
+				int nbr, int nbs);
+extern int	close_process(int pd[3]);
+extern int	readbuf(int fd, char *bpos, int siz);
+extern int	writebuf(int fd, char *bpos, int siz);
+					/* defined in rexpr.c */
+extern int	ecompile(char *sp, int iflg, int wflag);
+extern char	*expsave();
+extern void	expset(char *ep);
+extern char	*eindex(char *sp);
+					/* defined in savestr.c */
+extern char	*savestr(char *str);
+extern void	freestr(char *s);
+extern int	shash(char *s);
+					/* defined in savqstr.c */
+extern char	*savqstr(char *s);
+extern void	freeqstr(char *s);
+					/* defined in tcos.c */
+extern double	tcos(double x);
+					/* defined in wordfile.c */
+extern int	wordfile(char **words, char *fname);
+extern int	wordstring(char **avl, char *str);
+					/* defined in words.c */
+extern char	*atos(char *rs, int nb, char *s);
+extern char	*nextword(char *cp, int nb, char *s);
+extern char	*sskip(char *s);
+extern char	*sskip2(char *s, int n);
+extern char	*iskip(char *s);
+extern char	*fskip(char *s);
+extern int	isint(char *s);
+extern int	isintd(char *s, char *ds);
+extern int	isflt(char *s);
+extern int	isfltd(char *s, char *ds);
+					/* defined in xf.c */
+extern int	xf(XF *ret, int ac, char *av[]);
+extern int	invxf(XF *ret, int ac, char *av[]);
+extern int	fullxf(FULLXF *fx, int ac, char *av[]);
+					/* defined in zeroes.c */
+extern int	quadtratic(double *r, double a, double b, double c);
+					/* miscellaneous */
+extern void	eputs(char *s);
+extern void	wputs(char *s);
+extern void	quit(int code);
+
+#endif

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.33 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Holodeck beam tracking for display process
  */
@@ -174,7 +171,7 @@ int	hr, vr;
 		if (blist.bl[i].nr > cbeam[n].nr)
 			cbeam[n].nr = blist.bl[i].nr;
 	}
-	free((char *)blist.bl);		/* free list */
+	free((void *)blist.bl);		/* free list */
 	if (MEYERNG <= FTINY)
 		return(slist);
 					/* compute average eye range */

@@ -1,0 +1,5 @@
+Julian Date:	${JDATE} days
+Solar Time:	${STIME} hours
+Solar Altitude:	${ SALT} degrees
+Solar Azimuth:	${ SAZI} degrees
+

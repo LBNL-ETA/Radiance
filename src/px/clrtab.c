@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.12 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Simple median-cut color quantization based on colortab.c
  */
@@ -122,7 +119,7 @@ int	n;
 
 	if (n != N) {		/* get error propogation array */
 		if (N) {
-			free((char *)cerr);
+			free((void *)cerr);
 			cerr = NULL;
 		}
 		if (n)

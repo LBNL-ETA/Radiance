@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: glare.csh,v 2.4 2003/02/22 02:07:30 greg Exp $
 #
 # Interactive program for calculating glare values
 #

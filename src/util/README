@@ -1,5 +1,5 @@
 		RADIANCE UTILITY PROGRAMS
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.11 6/9/98 LBL"
 
 This directory contains glare calculation programs and other utilites
 that combine functions and do not fit under the usual catagories.

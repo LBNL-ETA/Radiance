@@ -1,5 +1,5 @@
+# RCSid: $Id: Rmakefile,v 2.18 2003/02/22 02:07:23 greg Exp $
 #
-# SCCSid "$SunId$ LBL"
 # Makefile for conversion programs
 #
 
@@ -7,7 +7,7 @@ OPT = -O
 
 MACH = -DBSD
 
-CFLAGS = $(OPT) $(MACH) -I../common -L../lib
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 
 CC = cc
 
@@ -81,11 +81,11 @@ MGF_LIB:
 		CFLAGS="$(OPT) $(MACH) -DNOPROTO" ; \
 	cp libmgf.a ../../lib
 
-mgf2rad.o:	mgflib/parser.h tmesh.h ../common/color.h
-	$(CC) $(CFLAGS) '-DMEM_PTR=char *' -DNOPROTO -c mgf2rad.c
+mgf2rad.o:	mgf2rad.c mgflib/parser.h tmesh.h ../common/color.h
+	$(CC) $(CFLAGS) -DNOPROTO -c mgf2rad.c
 
-mgf2meta.o:	mgflib/parser.h
-	$(CC) $(CFLAGS) '-DMEM_PTR=char *' -DNOPROTO -c mgf2meta.c
+mgf2meta.o:	mgf2meta.c mgflib/parser.h
+	$(CC) $(CFLAGS) -DNOPROTO -c mgf2meta.c
 
 arch2rad.o trans.o:	trans.h
 

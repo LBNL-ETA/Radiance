@@ -1,0 +1,20 @@
+{
+	Bicubic Bezier Patch
+
+	02Mar90
+
+	Define Px(i,j), Py(i,j), Pz(i,j)
+}
+
+x(s,t) = bezier(P2x(s,1), P2x(s,2), P2x(s,3), P2x(s,4), t);
+y(s,t) = bezier(P2y(s,1), P2y(s,2), P2y(s,3), P2y(s,4), t);
+z(s,t) = bezier(P2z(s,1), P2z(s,2), P2z(s,3), P2z(s,4), t);
+
+P2x(s,j) = bezier(Px(1,j), Px(2,j), Px(3,j), Px(4,j), s);
+P2y(s,j) = bezier(Py(1,j), Py(2,j), Py(3,j), Py(4,j), s);
+P2z(s,j) = bezier(Pz(1,j), Pz(2,j), Pz(3,j), Pz(4,j), s);
+
+bezier(p1, p2, p3, p4, t) = 	p1 * (1+t*(-3+t*(3-t))) +
+				p2 * 3*t*(1+t*(-2+t)) +
+				p3 * 3*t*t*(1-t) +
+				p4 * t*t*t ;

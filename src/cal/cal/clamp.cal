@@ -1,0 +1,4 @@
+{
+	Map values from 0 to inf softly from 0 to 1
+}
+clamp(x) = x/2 * (sqrt(x*x+4) - x);

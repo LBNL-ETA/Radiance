@@ -1,0 +1,20 @@
+{
+	Calculation of contrast-based scalefactor
+
+		8/17/93
+
+	Input:   ex = picture exposure
+	   or:	 Lwa = world adaptation luminance
+	Output:  sf = scalefactor for display
+		 adj = corresponding exposure adjustment
+		
+	Optional Inputs: Ldmax = maximum display luminance
+			 Lda = display adaptation luminance
+}
+Lwa = WE*.5/ex;
+Ldmax = 120;
+Lda = Ldmax/2;
+
+sf = ((1.219 + Lda^.4)/(1.219 + Lwa^.4))^2.5 / Ldmax;
+
+adj = WE*sf/ex;

@@ -1,0 +1,19 @@
+{ RCSid: $Id: glaze2.cal,v 2.1 2003/02/22 02:07:23 greg Exp $ }
+{
+	glaze2.cal - double-pane fritted and low-E glazings
+
+		Uses BRTDfunc type to get correct behavior.
+		Oct. 2002 Greg Ward
+
+	We only provide support functions for the nasty expressions
+	spat out for dual-glazings by glaze.csh.
+}
+				{ Fresnel approximation }
+fresne = exp(-6*abs(Rdot)) - exp(-6);
+fr(r) = r + fresne*(1 - r);
+ft(t) = t*(1 - fresne);
+				{ glass reflectance and transmittance }
+rclr = fr(0.076);
+tclr = ft(0.883);
+				{ combined double-pane reflectance }
+cr(rf,t,rb) : rf + t*t*rb;

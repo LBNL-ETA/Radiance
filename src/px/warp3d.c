@@ -1,14 +1,12 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.5 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  * 3D warping routines.
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "fvect.h"
 #include "warp3d.h"
@@ -24,11 +22,6 @@ typedef struct {
 				&& fgetval(p,'f',v+2) > 0)
 
 #define AHUNK	24		/* number of points to allocate at a time */
-
-#ifndef malloc
-extern char	*malloc(), *realloc();
-#endif
-extern void	free();
 
 
 double
@@ -328,9 +321,9 @@ free3dw(wp)			/* free WARP3D data */
 register WARP3D	*wp;
 {
 	done3dgrid(&wp->grid);
-	free((char *)wp->ip);
-	free((char *)wp->ov);
-	free((char *)wp);
+	free((void *)wp->ip);
+	free((void *)wp->ov);
+	free((void *)wp);
 }
 
 

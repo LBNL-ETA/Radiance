@@ -1,5 +1,5 @@
+# RCSid: $Id: Rmakefile,v 2.35 2003/02/22 02:07:21 greg Exp $
 #
-# SCCSid "$SunId$ SGI"
 # Makefile for ray tracing library routines
 #
 
@@ -13,19 +13,19 @@ COMPAT = bmalloc.o erf.o strcmp.o # frexp.o fwrite.o random.o
 
 LIBDIR = /usr/local/lib/ray
 
-RTOBJ = cone.o face.o instance.o readobj.o readoct.o otypes.o objset.o \
-	octree.o readfargs.o modobject.o getlibpath.o addobjnotify.o \
-	zeroes.o
+RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
+	objset.o octree.o readfargs.o modobject.o getlibpath.o \
+	addobjnotify.o zeroes.o
 
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
-	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o
+	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
-	urind.o peano.o calexpr.o caldefn.o calfunc.o calprnt.o \
+	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o \
 	multisamp.o process.o getpath.o error.o savestr.o savqstr.o \
 	badarg.o fgetword.o words.o expandarg.o wordfile.o fgetval.o \
 	clip.o plocate.o eputs.o wputs.o quit.o lookup.o \
-	loadvars.o tcos.o
+	loadvars.o tcos.o fputword.o chanvalue.o
 
 SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
@@ -56,15 +56,6 @@ sgi:
 
 sun:
 
-calexpr.o:	calexpr.c calcomp.h
-	$(CC) $(CFLAGS) -DVARIABLE -DFUNCTION -DRCONST -c calexpr.c
-
-caldefn.o:	caldefn.c calcomp.h
-	$(CC) $(CFLAGS) -DFUNCTION -c caldefn.c
-
-calfunc.o:	calfunc.c calcomp.h
-	$(CC) $(CFLAGS) -DVARIABLE -DBIGLIB -c calfunc.c
-
 getlibpath.o:	getlibpath.c
 	$(CC) $(CFLAGS) -DDEFPATH=\":$(LIBDIR)\" -c getlibpath.c
 
@@ -94,8 +85,9 @@ cone.o modobject.o otypes.o readobj.o readoct.o:	otypes.h
 
 multisamp.o urand.o:	random.h
 
-cone.o face.o image.o instance.o error.o objset.o octree.o modobject.o \
-readfargs.o otypes.o readobj.o readoct.o xf.o:	standard.h mat4.h fvect.h
+cone.o face.o free_os.o image.o instance.o error.o objset.o \
+octree.o modobject.o readfargs.o otypes.o \
+readobj.o readoct.o xf.o:	standard.h mat4.h fvect.h
 
 image.o:	view.h
 
@@ -115,9 +107,13 @@ loadvars.o:	vars.h
 
 tonemap.o tmapcolrs.o tmapluv.o:	tmprivat.h tonemap.h color.h
 
-tmapluv.o:	uvcode.h tiffio.h tiff.h
+tmapluv.o:	uvcode.h tiffio.h tmaptiff.h tiff.h
 
 tonemap.o:	tmerrmsg.h
 
+tmaptiff.o:	tmprivat.h tmaptiff.h color.h tonemap.h
+
 rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o:	radogl.h \
 standard.h mat4.h fvect.h color.h object.h otypes.h lookup.h
+
+free_os.o:	octree.h object.h otypes.h face.h cone.h instance.h

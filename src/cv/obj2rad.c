@@ -1,9 +1,6 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.17 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert a Wavefront .obj file to Radiance format.
  *
@@ -635,15 +632,15 @@ char	*v1, *v2, *v3;
 freeverts()			/* free all vertices */
 {
 	if (nvs) {
-		free((char *)vlist);
+		free((void *)vlist);
 		nvs = 0;
 	}
 	if (nvts) {
-		free((char *)vtlist);
+		free((void *)vtlist);
 		nvts = 0;
 	}
 	if (nvns) {
-		free((char *)vnlist);
+		free((void *)vnlist);
 		nvns = 0;
 	}
 }

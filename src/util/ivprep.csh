@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: ivprep.csh,v 2.2 2003/02/22 02:07:30 greg Exp $
 #
 # Prepare Instant View directory
 #

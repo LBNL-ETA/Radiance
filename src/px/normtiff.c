@@ -1,18 +1,13 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.4 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
  */
 
-#undef NOPROTO
-#define NOPROTO	1
-
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "tiffio.h"
 #include "color.h"
 #include "tonemap.h"
@@ -47,7 +42,7 @@ typedef struct {
 
 extern PICTURE	*openpicture();
 
-#define closepicture(p)		(fclose((p)->fp),free((char *)(p)))
+#define closepicture(p)		(fclose((p)->fp),free((void *)(p)))
 
 
 main(argc, argv)
@@ -175,7 +170,7 @@ char	*fname;
 		return(NULL);		/* serious error -- should exit? */
 	pp->fp = fp; pp->fmt[0] = '\0'; pp->pa = 1.;
 					/* load header */
-	if (getheader(fp, headline, pp) < 0) {
+	if (getheader(fp, headline, (char *)pp) < 0) {
 		closepicture(pp);
 		return(NULL);
 	}
@@ -204,7 +199,7 @@ register PICTURE	*pp;
 		return(-1);
 					/* figure out TIFF orientation */
 	for (orient = 8; --orient; )
-		if (ortab[orient] == pp->rs.or)
+		if (ortab[orient] == pp->rs.rt)
 			break;
 	orient++;
 					/* put out our image */
@@ -212,7 +207,7 @@ register PICTURE	*pp;
 			72., 72./pp->pa, 2, pix) != 0)
 		return(-1);
 					/* free data and we're done */
-	free((char *)pix);
+	free((void *)pix);
 	return(0);
 }
 
@@ -250,7 +245,7 @@ TIFF	*tp;
 			xres, yres, resunit, pix) != 0)
 		return(-1);
 					/* free data and we're done */
-	free((char *)pix);
+	free((void *)pix);
 	return(0);
 }
 

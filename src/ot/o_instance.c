@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: o_instance.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  o_instance.c - routines for creating octrees for other octrees.
  *
@@ -13,6 +10,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  "standard.h"
 
 #include  "object.h"
+
+#include  "octree.h"
 
 #include  "instance.h"
 

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.34 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Routines for tracking beam compuatations
  */
@@ -103,7 +100,7 @@ register HDBEAMI	*hb;
 	p->bi = hb->b;
 	disp_packet(p);			/* display it */
 	if (n >= 1024) {		/* free ridiculous packets */
-		free((char *)p);
+		free((void *)p);
 		p = NULL; n = 0;
 	}
 }
@@ -162,7 +159,7 @@ int	nents;
 	case BS_NEW:			/* new computation set */
 		listpos = 0; lastin = -1;
 		if (complen)		/* free old list */
-			free((char *)complist);
+			free((void *)complist);
 		complist = NULL;
 		if (!(complen = nents))
 			return;
@@ -196,7 +193,7 @@ int	nents;
 						/* merge lists */
 			mergeclists(newlist, clist, n, complist, complen);
 			if (complen)
-				free((char *)complist);
+				free((void *)complist);
 			complist = newlist;
 			complen += n;
 		}
@@ -217,7 +214,7 @@ int	nents;
 		hbarr[i].b = clist[i].bi;
 	}
 	hdloadbeams(hbarr, nents, dispbeam);
-	free((char *)hbarr);
+	free((void *)hbarr);
 	if (hdfragflags&FF_READ) {
 		listpos = 0;
 		lastin = -1;		/* need to re-sort list */
@@ -321,7 +318,7 @@ FILE	*fp;
 		normaspect(viewaspect(&curview), &pa, &xr, &yr);
 		viewbeams(&curview, xr, yr, &blist);
 		bundle_set(BS_MAX, blist.bl, blist.nb);
-		free((char *)blist.bl);
+		free((void *)blist.bl);
 	}
 }
 
@@ -331,7 +328,7 @@ init_global()			/* initialize global ray computation */
 	register int	k;
 					/* free old list and empty queue */
 	if (complen > 0) {
-		free((char *)complist);
+		free((void *)complist);
 		done_packets(flush_queue());
 	}
 					/* reseed random number generator */
@@ -398,13 +395,13 @@ sortcomplist()			/* fix our list order */
 		qsort((char *)list2, listpos, sizeof(PACKHEAD), beamcmp);
 		mergeclists(complist, list2, listpos,
 				complist+listpos, complen-listpos);
-		free((char *)list2);
+		free((void *)list2);
 	}
 					/* drop satisfied requests */
 	for (i = complen; i-- && complist[i].nr <= complist[i].nc; )
 		;
 	if (i < 0) {
-		free((char *)complist);
+		free((void *)complist);
 		complist = NULL;
 		complen = 0;
 	} else if (i < complen-1) {

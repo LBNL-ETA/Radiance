@@ -1,0 +1,97 @@
+{
+	Macbeth color checker chart.
+	Creates four rows of 6 color squares each.
+	Color order, starting from lower left and reading right then up:
+
+	Color		     x       y     Y	(CIE 1931 under Illuminant C)
+	=====		   =====   ===== =====
+	DarkSkin	   .4002   .3504 10.05
+	LightSkin	   .3773   .3446 35.82
+	BlueSky		   .2470   .2514 19.33
+	Foliage		   .3372   .4220 13.29
+	BlueFlower	   .2651   .2400 24.27
+	BluishGreen	   .2608   .3430 43.06
+	Orange		   .5060   .4070 30.05
+	PurplishBlue	   .2110   .1750 12.00
+	ModerateRed	   .4533   .3058 19.77
+	Purple		   .2845   .2020  6.56
+	YellowGreen	   .3800   .4887 44.29
+	OrangeYellow	   .4729   .4375 43.06
+	Blue		   .1866   .1285  6.11
+	Green		   .3046   .4782 23.39
+	Red		   .5385   .3129 12.00
+	Yellow		   .4480   .4703 59.10
+	Magenta		   .3635   .2325 19.77
+	Cyan		   .1958   .2519 19.77
+	White		   .3101   .3163 90.01
+	Neutral.8	   .3101   .3163 59.10
+	Neutral.65	   .3101   .3163 36.20
+	Neutral.5	   .3101   .3163 19.77
+	Neutral.35	   .3101   .3163  9.00
+	Black		   .3101   .3163  3.13
+}
+xres : 512;			{ settable x resolution }
+gap : xres/64;			{ gap between patches }
+biggap : 16+gap;
+pwidth : (xres-gap)/6 - gap;	{ patch width }
+pheight : pwidth;
+yres : pheight*4 + biggap*4 + gap;		{ for square patches }
+gapgrey : 0;			{ value for gap pixels }
+or(a,b) : if( a, a, b );
+and(a,b) : if( a, b, a );
+mod(n,d) : n - floor(n/d)*d;
+
+ingap = if(or(gap-mod(x,pwidth+gap),biggap-mod(y,pheight+biggap)), 1, -1);
+
+ro = if(ingap, gapgrey, redval);
+go = if(ingap, gapgrey, grnval);
+bo = if(ingap, gapgrey, bluval);
+
+{ Patches are numbered starting from 0 at the upper left, English order }
+
+n = floor(x/(pwidth+gap)) + 6*floor((yres-1-y)/(pheight+biggap));
+
+{ The following were computed from the published CIE 1931 XYZ values
+	using the following definitions of the three primaries and white:
+
+	Color		x	y
+	=====		=	=
+	Red		.640	.330
+	Green		.290	.600
+	Blue		.150	.060
+	White		.333	.333
+
+redval=select(n+1,0.1486842,0.4729399,0.1079659,0.08712918,
+0.2051028,0.1392646,0.5821536,0.06337776,0.4590441,0.09402137,
+0.319248,0.6564189,0.02655103,0.06694206,0.3670574,0.7136942,
+0.425348,0,0.7898659,0.5186209,0.3176663,0.1734879,0.07897781,
+0.02746673);
+grnval=select(n+1,0.08463139,0.3204288,0.2051882,0.1576957,
+0.2280522,0.5390015,0.2154359,0.1079601,0.09839423,0.0426486,
+0.5293968,0.3799829,0.04445694,0.3150952,0.02880633,0.5982432,
+0.09023558,0.2530342,0.925279,0.6075324,0.3721264,0.2032304,
+0.09251762,0.03217557);
+bluval=select(n+1,0.06746537,0.2793655,0.4195167,
+0.06372649,0.5480446,0.5015115,0.02782678,0.47622,0.1554321,
+0.1866896,0.05423259,0.0301096,0.3746091,0.07726951,0.05228816,
+0.01403399,0.3776974,0.4719555,1.090738,0.7161716,0.4386702,
+0.2395721,0.1090617,0.03792922);
+}
+
+{ The following were computed from measured spectra, using same primaries: }
+
+redval = select(n+1, 0.168584, 0.633823, 0.118789, 0.071288, 0.271119,
+		0.160804, 0.699359, 0.076245, 0.599413, 0.113352,
+		0.325668, 0.745543, 0.037489, 0.056075, 0.537591,
+		0.834969, 0.568191, 0.008597, 0.91942, 0.602537,
+		0.36137, 0.201045, 0.088912, 0.030925);
+grnval = select(n+1, 0.069446, 0.337209, 0.19066, 0.131171, 0.219394,
+		0.492803, 0.257105, 0.089464, 0.112735, 0.032193,
+		0.50756, 0.415383, 0.03581, 0.301005, 0.025739,
+		0.639189, 0.094541, 0.207922, 0.918992, 0.606277,
+		0.36625, 0.200417, 0.0877122, 0.03085);
+bluval = select(n+1, 0.031966, 0.252572, 0.344106, 0.025464, 0.455498,
+		0.436593, 0.003501, 0.366442, 0.126229, 0.129459, 0.04907,
+		0.005622, 0.293019, 0.071808, 0.037301, 0, 0.303893,
+		0.395988, 0.884604, 0.596902, 0.360222, 0.195084,
+		0.0852725, 0.030359);

@@ -1,7 +1,4 @@
-/* Copyright (c) 1990 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: trans.h,v 2.2 2003/02/22 02:07:23 greg Exp $ */
 /*
  * Translator definitions
  *
@@ -45,6 +42,5 @@ typedef struct rule {
 #define rulsiz(nq)	(sizeof(RULEHD)+(nq)*sizeof(IDMATCH))
 #define idm(rp)		((IDMATCH *)((rp)+1))
 
-char	*malloc(), *calloc(), *realloc();
 char	*savestr();
 RULEHD	*getmapping();

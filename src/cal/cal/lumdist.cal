@@ -1,0 +1,7 @@
+{
+	Conversion from zonal lumens to watts/steradian
+}
+
+lum2watt(t0,t1,l) = l / 683 / (omega(t1)-omega(t0)) ;
+
+omega(d) = 2*PI * (1-cos(d*PI/180)) ;

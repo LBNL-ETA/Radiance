@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.5 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Get general information on holodeck file
  */
@@ -60,7 +57,7 @@ FILE	*fout;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* get the section(s) */
-		lseek(fd, (long)nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		fprintf(fout, "Section %d:\n", n);
 		hdsect = hdinit(fd, NULL);	/* load section directory */

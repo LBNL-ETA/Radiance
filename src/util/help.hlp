@@ -1,4 +1,4 @@
-	$Id: help.hlp,v 2.3 1996/03/18 09:48:23 greg Exp $
+	help.hlp 2.3 3/18/96
 
 This help file is for the gethelp.tcl utility itself, and explains
 the various buttons and windows it uses.

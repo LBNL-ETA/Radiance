@@ -1,0 +1,24 @@
+{
+	root.cal - calculate zeroes of functions using Newton's method.
+
+	2/3/88
+}
+
+FTINY : 1e-12;
+
+root(f, x0) = root2(f, x0, x0-f(x0)/lim(f1(f,x0)), nit);
+
+root2(f, x0, x1, i) = if(i,
+			if(err-abs(x1-x0),
+				x1,
+				root2(f,x1,x1-f(x1)/lim(f1(f,x1)),i-1)),
+			0);
+
+abs(x) = if(x, x, -x);
+lim(x) = if(x, max(x,err), -max(-x,err));
+max(a,b) = if(a-b, a, b);
+
+f1(f,x) = (f(x+FTINY)-f(x-FTINY))/FTINY/2;	{ numerical derivative }
+
+err = 1e-6;
+nit = 100;

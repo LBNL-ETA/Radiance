@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: vwright.c,v 2.4 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Move a viewpoint the given distance to the right
  */

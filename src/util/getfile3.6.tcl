@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: getfile3.6.tcl,v 2.10 2003/02/22 02:07:30 greg Exp $
 #
 # Usage: getfile [-win w] [-grab] [-perm] [-glob pattern] [-view proc] [-send proc]
 #

@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pmapgen.c,v 2.3 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * pmapgen.c: general routines for 2-D perspective mappings.
  * These routines are independent of the poly structure,
@@ -12,7 +9,7 @@ static char SCCSid[] = "$SunId$ LBL";
  * Paul Heckbert	5 Nov 85, 12 Dec 85
  */
 
-static char rcsid[] = "$Header: /home/cvsd/radiance/ray/src/px/pmapgen.c,v 2.2 1996/07/24 09:18:20 greg Exp $";
+static char rcsid[] = "$Header: /home/cvsd/radiance/ray/src/px/pmapgen.c,v 2.3 2003/02/22 02:07:27 greg Exp $";
 #include <stdio.h>
 #include "pmap.h"
 #include "mx3.h"

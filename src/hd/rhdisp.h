@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhdisp.h,v 3.13 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Header for holodeck display drivers.
  */

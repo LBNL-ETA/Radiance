@@ -1,11 +1,65 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.15 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Shading for materials with arbitrary BRDF's
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
@@ -15,8 +69,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  "otypes.h"
 
 #include  "func.h"
-
-extern int  backvis;			/* back faces visible? */
 
 /*
  *	Arguments to this material include the color and specularity.
@@ -80,6 +132,7 @@ typedef struct {
 }  BRDFDAT;		/* BRDF material data */
 
 
+static void
 dirbrdf(cval, np, ldir, omega)		/* compute source contribution */
 COLOR  cval;			/* returned coefficient */
 register BRDFDAT  *np;		/* material data */
@@ -191,10 +244,12 @@ double  omega;			/* light source size */
 }
 
 
-m_brdf(m, r)			/* color a ray which hit a BRDTfunc material */
+int
+m_brdf(m, r)			/* color a ray that hit a BRDTfunc material */
 register OBJREC  *m;
 register RAY  *r;
 {
+	int  hitfront = 1;
 	BRDFDAT  nd;
 	RAY  sr;
 	double  transtest, transdist;
@@ -233,6 +288,7 @@ register RAY  *r;
 			nd.pnorm[i] = -nd.pnorm[i];
 			r->pert[i] = -r->pert[i];
 		}
+		hitfront = 0;
 	}
 	copycolor(nd.mcolor, r->pcol);		/* get pattern color */
 	multcolor(nd.rdiff, nd.mcolor);		/* modify diffuse values */
@@ -290,31 +346,24 @@ register RAY  *r;
 	}
 						/* compute ambient */
 	if (hasrefl) {
-		if (nd.pdot < 0.0) {
+		if (!hitfront)
 			flipsurface(r);
-			vtmp[0] = -nd.pnorm[0];
-			vtmp[1] = -nd.pnorm[1];
-			vtmp[2] = -nd.pnorm[2];
-		} else
-			VCOPY(vtmp, nd.pnorm);
-		ambient(ctmp, r, vtmp);
+		ambient(ctmp, r, nd.pnorm);
 		multcolor(ctmp, nd.rdiff);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
-		if (nd.pdot < 0.0)
+		if (!hitfront)
 			flipsurface(r);
 	}
 	if (hastrans) {				/* from other side */
-		if (nd.pdot > 0.0) {
+		if (hitfront)
 			flipsurface(r);
-			vtmp[0] = -nd.pnorm[0];
-			vtmp[1] = -nd.pnorm[1];
-			vtmp[2] = -nd.pnorm[2];
-		} else
-			VCOPY(vtmp, nd.pnorm);
+		vtmp[0] = -nd.pnorm[0];
+		vtmp[1] = -nd.pnorm[1];
+		vtmp[2] = -nd.pnorm[2];
 		ambient(ctmp, r, vtmp);
 		multcolor(ctmp, nd.tdiff);
 		addcolor(r->rcol, ctmp);
-		if (nd.pdot > 0.0)
+		if (hitfront)
 			flipsurface(r);
 	}
 	if (hasrefl | hastrans || m->oargs.sarg[6][0] != '0')
@@ -328,7 +377,8 @@ register RAY  *r;
 
 
 
-m_brdf2(m, r)			/* color a ray which hit a BRDF material */
+int
+m_brdf2(m, r)			/* color a ray that hit a BRDF material */
 register OBJREC  *m;
 register RAY  *r;
 {
@@ -412,6 +462,7 @@ register RAY  *r;
 }
 
 
+int
 setbrdfunc(np)			/* set up brdf function and variables */
 register BRDFDAT  *np;
 {

@@ -1,9 +1,6 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pfilt.c,v 2.21 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  pfilt.c - program to post-process picture file.
  *
@@ -18,8 +15,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  "color.h"
 
 #include  "view.h"
-
-#include  "resolu.h"
 
 #include  "paths.h"
 
@@ -92,8 +87,7 @@ main(argc, argv)
 int  argc;
 char  **argv;
 {
-	extern long  ftell();
-	extern int  quit(), headline();
+	extern int  headline();
 	FILE  *fin;
 	float  *lampcolor;
 	char  *lamptype = NULL;
@@ -205,7 +199,7 @@ char  **argv;
 			case 'm':
 				thresh = atof(argv[++i]);
 				if (rad <= FTINY)
-					rad = 1.0;
+					rad = 0.6;
 				break;
 			case 'b':
 				rad = thresh = 0.0;
@@ -401,7 +395,7 @@ FILE  *in;
 		}
 		pass1scan(scan, i);
 	}
-	free((char *)scan);
+	free((void *)scan);
 }
 
 
@@ -573,6 +567,7 @@ scan2flush()			/* flush output buffer */
 }
 
 
+void
 quit(code)		/* remove temporary file and exit */
 int  code;
 {

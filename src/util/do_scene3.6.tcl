@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: do_scene3.6.tcl,v 2.10 2003/02/22 02:07:30 greg Exp $
 #
 # Track octree and scene files
 #

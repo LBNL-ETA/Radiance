@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: pacuity.csh,v 3.4 2003/02/22 02:07:27 greg Exp $
 #
 # Adjust picture acuity according to human visual abilities
 #

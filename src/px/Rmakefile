@@ -1,12 +1,13 @@
+# RCSid: $Id: Rmakefile,v 2.45 2003/02/22 02:07:27 greg Exp $
+#
 # Compiles for image processing and display programs
-# SCCSid "$SunId$ SGI"
 #
 
 ARCH = sun
 OPT = -O
 MACH = -DBSD
 SPECIAL = aed
-CFLAGS = $(OPT) $(MACH) -I../common -L../lib
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
 
@@ -17,9 +18,9 @@ LIBDIR = /usr/local/lib/ray
 PIXAR_INCLUDE=	-I/usr/pixar/include
 PIXAR_LIB=	-L/usr/pixar/host/lib -lpirl -lpicio -lchad -lpixar $(MLIB)
 
-PROGS = pfilt ttyimage oki20c oki20 paintjet mt160r psign \
-pvalue pcompos protate ra_pr ra_pr24 ra_avs ra_tiff normtiff ra_hexbit \
-ra_t8 ra_bn ra_t16 pcomb pinterp ximage xshowtrace pflip ra_ppm \
+PROGS = pfilt ttyimage oki20c oki20 psign ra_tiff normtiff \
+pvalue pcompos protate ra_pr ra_pr24 ra_avs ra_hexbit \
+ra_t8 ra_bn ra_t16 pcomb pinterp pflip ra_ppm ximage xshowtrace \
 ra_rgbe ra_pict ra_ps pextrem ra_gif ra_xyze macbethcal pcond pcwarp
 
 all:	$(PROGS) $(SPECIAL)
@@ -46,13 +47,15 @@ pdfblur.csh pmblur.csh xyzimage.csh
 	cp pmblur.csh $(INSTDIR)/pmblur
 	cp xyzimage.csh $(INSTDIR)/xyzimage
 	cp phisto.csh $(INSTDIR)/phisto
+	cp pdelta.csh $(INSTDIR)/pdelta
 	chmod 755 $(INSTDIR)/normpat $(INSTDIR)/falsecolor \
-$(INSTDIR)/pdfblur $(INSTDIR)/pmblur $(INSTDIR)/xyzimage $(INSTDIR)/phisto
+$(INSTDIR)/pdfblur $(INSTDIR)/pmblur $(INSTDIR)/xyzimage \
+$(INSTDIR)/phisto $(INSTDIR)/pdelta
 
 clean:
 	set nonomatch; rm -f x10image aedimage glimage \
-$(PROGS) *.o core
-	cd tiff; make distclean
+$(PROGS) $(SPECIAL) *.o core
+	-cd tiff; make distclean
 
 pfilt:	pfilt.o pf2.o pf3.o
 	$(CC) $(CFLAGS) -o pfilt pfilt.o pf2.o pf3.o -lrt $(MLIB)
@@ -156,7 +159,7 @@ ciq.o cut.o closest.o biq.o -lX -lrt $(MLIB)
 
 ximage:	x11image.o x11raster.o clrtab.o
 	$(CC) $(CFLAGS) -o ximage x11image.o x11raster.o \
-clrtab.o -lX11 -lrt $(MLIB)
+clrtab.o -lrt -lX11 $(MLIB)
 
 protate:		protate.o
 	$(CC) $(CFLAGS) -o protate protate.o -lrt $(MLIB)
@@ -184,10 +187,11 @@ ra_tiff:	ra_tiff.o ../lib/libtiff.a
 	$(CC) $(CFLAGS) -o ra_tiff ra_tiff.o -lrt -ltiff $(MLIB)
 
 ../common/tiff.h ../common/tiffio.h:	../lib/libtiff.a
+	@chmod u+w ../common/tiff.h ../common/tiffio.h
 	@touch ../common/tiff.h ../common/tiffio.h
 
-normtiff:	normtiff.o tmaptiff.o ../lib/libtiff.a
-	$(CC) $(CFLAGS) -o normtiff normtiff.o tmaptiff.o -lrt -ltiff $(MLIB)
+normtiff:	normtiff.o ../lib/libtiff.a
+	$(CC) $(CFLAGS) -o normtiff normtiff.o -lrt -ltiff $(MLIB)
 
 ../lib/libtiff.a:	tiff/config.local
 	cd tiff ; ./configure -quiet -noninteractive -with-CC=$(CC) \
@@ -203,7 +207,7 @@ ra_pixar.o:	ra_pixar.c
 
 xshowtrace:	xshowtrace.o x11findwind.o
 	$(CC) $(CFLAGS) -o xshowtrace xshowtrace.o \
-x11findwind.o -lrt $(MLIB) -lX11
+x11findwind.o -lrt -lX11 $(MLIB)
 
 macbethcal:	macbethcal.o pmapgen.o mx3.o warp3d.o
 	$(CC) $(CFLAGS) -o macbethcal macbethcal.o pmapgen.o mx3.o warp3d.o \
@@ -245,22 +249,23 @@ x11image.o:	../common/tonemap.h ../common/color.h
 
 ra_t8.o:	../common/targa.h
 
-ra_tiff.o normtiff.o tmaptiff.o:	../common/tiff.h ../common/tiffio.h
+ra_tiff.o normtiff.o:	../common/tiff.h ../common/tiffio.h
 
 aedimage.o ximage.o ra_t8.o ra_pr.o:	pic.h
 
 ciq.o cut.o closest.o biq.o:	pic.h ciq.h
 
-pinterp.o ximage.o x11showtrace.o image.o:	../common/view.h
+pcomb.o pfilt.o pinterp.o ximage.o x11image.o x11showtrace.o \
+image.o:	../common/view.h ../common/resolu.h
 
 ra_pict.o:	pict.h
 
-mt160r.o oki20c.o paintjet.o pcomb.o pcompos.o pfilt.o pflip.o \
+mt160r.o oki20c.o paintjet.o pcompos.o pfilt.o pflip.o \
 pinterp.o protate.o pvalue.o ra_bn.o ra_pict.o ra_pixar.o ra_hexbit.o \
 ra_ppm.o ra_pr.o ra_pr24.o ra_rgbe.o ra_t16.o ra_t8.o glimage.o \
-ra_tiff.o ttyimage.o ximage.o x11image.o:	../common/resolu.h
+ra_tiff.o ttyimage.o:	../common/resolu.h
 
-pfilt.o:	../common/paths.h ../common/view.h
+pfilt.o:	../common/paths.h
 
 psign.o:	../common/font.h
 
@@ -270,4 +275,5 @@ pcond.o pcond2.o pcond3.o pcond4.o:	pcond.h ../common/standard.h \
 
 normtiff.o:	../common/color.h ../common/tonemap.h ../common/resolu.h
 
-tmaptiff.o:	../common/tmprivat.h ../common/color.h ../common/tonemap.h
+x11findwind.c:	../common/x11findwind.c
+	cp ../common/x11findwind.c .

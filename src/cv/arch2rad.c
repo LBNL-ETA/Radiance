@@ -1,9 +1,6 @@
-/* Copyright (c) 1990 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: arch2rad.c,v 2.2 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Convert Architrion file to Radiance
  *
@@ -11,6 +8,8 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include <stdio.h>
+
+#include <stdlib.h>
 
 #include "trans.h"
 
@@ -348,7 +347,7 @@ register BLOCK	*bp;
 	if (bp->nopenings > 0) {
 		for (i = 0; i < bp->nopenings; i++)
 			doneid(&bp->opening[i].frame);
-		free((char *)bp->opening);
+		free((void *)bp->opening);
 	}
 	doneid(&bp->refid);
 }
@@ -706,6 +705,7 @@ FILE	*fp;
 }
 
 
+void
 eputs(s)
 char	*s;
 {
@@ -713,6 +713,7 @@ char	*s;
 }
 
 
+void
 quit(code)
 int	code;
 {

@@ -1,16 +1,12 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.8 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Radiance holodeck picture generator
  */
 
 #include "rholo.h"
 #include "view.h"
-#include "resolu.h"
 
 char	*progname;		/* our program name */
 char	*hdkfile;		/* holodeck file name */
@@ -147,7 +143,7 @@ int	fn;
 					/* render image */
 	if (blist.nb > 0) {
 		render_frame(blist.bl, blist.nb);
-		free((char *)blist.bl);
+		free((void *)blist.bl);
 	} else {
 		sprintf(errmsg, "no section visible in frame %d", fn);
 		error(WARNING, errmsg);
@@ -184,7 +180,7 @@ int	nb;
 	}
 	hdloadbeams(bil, nb, pixBeam);
 	pixFinish(randfrac);
-	free((char *)bil);
+	free((void *)bil);
 }
 
 
@@ -286,7 +282,7 @@ initialize()			/* initialize holodeck and buffers */
 	fd = dup(fileno(fp));			/* dup file descriptor */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (long)nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL);
 	}
@@ -299,6 +295,7 @@ initialize()			/* initialize holodeck and buffers */
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {

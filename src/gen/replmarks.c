@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: replmarks.c,v 2.5 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Replace markers in Radiance scene description with objects or instances.
  *
@@ -11,6 +8,7 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 
@@ -26,10 +24,6 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #define  MAXVERT	6	/* maximum number of vertices for markers */
 #define  MAXMARK	32	/* maximum number of markers */
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 typedef struct {
 	short	beg, end;		/* beginning and ending vertex */
@@ -198,11 +192,12 @@ FILE	*fin;
 			goto readerr;
 		printf("%d", n);
 		for (j = 0; j < n; j++) {
-			if (fscanf(fin, "%s", buf) != 1)
+			if (fgetword(buf, sizeof(buf), fin) == NULL)
 				goto readerr;
 			if (j%3 == 0)
 				putchar('\n');
-			printf("\t%s", buf);
+			putchar('\t');
+			fputword(buf, stdout);
 		}
 		putchar('\n');
 	}
@@ -222,6 +217,7 @@ FILE	*fin;
 	int	n;
 	char	buf[256];
 
+	buf[0] = '\0';			/* bug fix thanks to schorsch */
 	if (m->doxform) {
 		sprintf(buf, "xform -e -n %s", mark);
 		if (m->modout != NULL)
@@ -262,7 +258,7 @@ EDGE	*e1, *e2;
 
 int
 buildxf(xf, markscale, fin)		/* build transform for marker */
-char	*xf;
+register char	*xf;
 double	markscale;
 FILE	*fin;
 {
@@ -329,11 +325,11 @@ FILE	*fin;
 	if (markscale > 0.0) {		/* add scale factor */
 		sprintf(xf, " -s %f", xlen*markscale);
 		n += 2;
-		xf += strlen(xf);
+		while (*xf) ++xf;
 	}
 					/* add rotation */
 	n += addrot(xf, xvec, yvec, zvec);
-	xf += strlen(xf);
+	while (*xf) ++xf;
 					/* add translation */
 	n += 4;
 	sprintf(xf, " -t %f %f %f", vlist[elist[1].beg][0],
@@ -343,7 +339,7 @@ FILE	*fin;
 
 
 addrot(xf, xp, yp, zp)		/* compute rotation (x,y,z) => (xp,yp,zp) */
-char	*xf;
+register char	*xf;
 FVECT	xp, yp, zp;
 {
 	int	n;
@@ -353,19 +349,19 @@ FVECT	xp, yp, zp;
 	theta = atan2(yp[2], zp[2]);
 	if (!FEQ(theta,0.0)) {
 		sprintf(xf, " -rx %f", theta*(180./PI));
-		xf += strlen(xf);
+		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = asin(-xp[2]);
 	if (!FEQ(theta,0.0)) {
 		sprintf(xf, " -ry %f", theta*(180./PI));
-		xf += strlen(xf);
+		while (*xf) ++xf;
 		n += 2;
 	}
 	theta = atan2(xp[1], xp[0]);
 	if (!FEQ(theta,0.0)) {
 		sprintf(xf, " -rz %f", theta*(180./PI));
-		/* xf += strlen(xf); */
+		/* while (*xf) ++xf; */
 		n += 2;
 	}
 	return(n);

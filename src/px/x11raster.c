@@ -1,9 +1,6 @@
-/* Copyright 1990 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: x11raster.c,v 2.10 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  * x11raster.c - routines to handle images for X windows.
  *
@@ -16,8 +13,6 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include "color.h"
 #include "x11raster.h"
-
-extern char  *malloc(), *realloc(), *calloc();
 
 
 XRASTER *
@@ -136,7 +131,7 @@ Visual	*vis;
 		i--;
 	}
 	XFreeColors(disp, cmap, pixels, n, 0);
-	free((char *)pixels);
+	free((void *)pixels);
 	return(cmap);
 }
 
@@ -165,7 +160,7 @@ Window	w;
 		if (xr->cmap == DefaultColormap(xr->disp, xr->screen))
 			xr->cmap = newcmap(xr->disp, xr->screen, xr->visual);
 		else {
-			free((char *)xr->pixels);
+			free((void *)xr->pixels);
 			xr->pixels = NULL;
 			return(NULL);
 		}
@@ -257,7 +252,7 @@ register XRASTER	*xr;
 	XFreeColors(xr->disp, xr->cmap, xr->pixels, xr->ncolors, 0);
 	if (xr->cmap != DefaultColormap(xr->disp, xr->screen))
 		XFreeColormap(xr->disp, xr->cmap);
-	free((char *)xr->pixels);
+	free((void *)xr->pixels);
 	xr->pixels = NULL;
 }
 
@@ -278,11 +273,11 @@ register XRASTER	*xr;
 	free_rpixmap(xr);
 	if (xr->ncolors > 0) {
 		unmap_rcolors(xr);
-		free((char *)xr->pmap);
-		free((char *)xr->cdefs);
+		free((void *)xr->pmap);
+		free((void *)xr->cdefs);
 	}
 	XDestroyImage(xr->image);
 	if (xr->gc != 0)
 		XFreeGC(xr->disp, xr->gc);
-	free((char *)xr);
+	free((void *)xr);
 }

@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pf3.c,v 2.14 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  pf3.c - routines for gaussian and box filtering
  *
@@ -14,6 +11,7 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  "color.h"
 
+#define  RSCA		1.13	/* square-radius multiplier: sqrt(4/PI) */
 #define  TEPS		0.2	/* threshold proximity goal */
 #define  REPS		0.1	/* radius proximity goal */
 
@@ -68,21 +66,23 @@ initmask()			/* initialize gaussian lookup table */
 	double  d;
 	register int  x;
 
-	gtabsiz = 150*CHECKRAD;
+	gtabsiz = 111*CHECKRAD*CHECKRAD/(rad*rad);
 	gausstable = (float *)malloc(gtabsiz*sizeof(float));
 	if (gausstable == NULL)
 		goto memerr;
 	d = x_c*y_r*0.25/(rad*rad);
-	gausstable[0] = exp(-d)/sqrt(d);
+	gausstable[0] = exp(-d);
 	for (x = 1; x < gtabsiz; x++)
-		if ((gausstable[x] = exp(-x*0.1)/sqrt(x*0.1)) > gausstable[0])
+		if (x*0.1 <= d)
 			gausstable[x] = gausstable[0];
+		else
+			gausstable[x] = exp(-x*0.1);
 	if (obarsize == 0)
 		return;
 					/* compute integral of filter */
-	gaussN = PI*sqrt(d)*exp(-d);		/* plateau */
-	for (d = sqrt(d)+0.05; d <= 1.25*CHECKRAD; d += 0.1)
-		gaussN += 0.1*2.0*PI*exp(-d*d);
+	gaussN = PI*d*exp(-d);			/* plateau */
+	for (d = sqrt(d)+0.05; d <= RSCA*CHECKRAD; d += 0.1)
+		gaussN += 0.1*2.0*PI*d*exp(-d*d);
 					/* normalize filter */
 	gaussN = x_c*y_r/(rad*rad*gaussN);
 	for (x = 0; x < gtabsiz; x++)
@@ -139,8 +139,10 @@ int  c, r;
 			addcolor(csum, scan[x+offs]);
 		}
 	}
-	if (wsum > 1)
-		scalecolor(csum, 1.0/wsum);
+	if (wsum > 1) {
+		d = 1.0/wsum;
+		scalecolor(csum, d);
+	}
 }
 
 
@@ -174,7 +176,8 @@ int  c, r;
 			addcolor(csum, ctmp);
 		}
 	}
-	scalecolor(csum, 1.0/wsum);
+	weight = 1.0/wsum;
+	scalecolor(csum, weight);
 }
 
 
@@ -232,13 +235,13 @@ double  p0;
 	double  m = 1.0;
 	double  t, num, denom, avg, wsum;
 	double  mlimit[2];
-	int  ilimit = 4/TEPS;
+	int  ilimit = 4.0/TEPS;
 	register int  i;
 				/* iterative search for m */
 	mlimit[0] = 1.0; mlimit[1] = orad/rad/CHECKRAD;
 	do {
 					/* compute grey weighted average */
-		i = 1.25*CHECKRAD*rad*m + .5;
+		i = RSCA*CHECKRAD*rad*m + .5;
 		if (i > orad) i = orad;
 		avg = wsum = 0.0;
 		while (i--) {
@@ -290,7 +293,7 @@ int  px, py;
 int  rcent, ccent;
 double  m;
 {
-	double  dy, dx;
+	double  dy2, dx;
 	COLOR  pval, ctmp;
 	int  ksiz, r, offs;
 	double  pc, pr, norm;
@@ -312,14 +315,15 @@ double  m;
 	for (r = rcent-ksiz; r <= rcent+ksiz; r++) {
 		if (r < 0) continue;
 		if (r >= nrows) break;
-		dy = (pr - (r+.5))/(m*rad);
+		dy2 = (pr - (r+.5))/(m*rad);
+		dy2 *= dy2;
 		for (c = ccent-ksiz; c <= ccent+ksiz; c++) {
 			if (!wrapfilt) {
 				if (c < 0) continue;
 				if (c >= ncols) break;
 			}
 			dx = (pc - (c+.5))/(m*rad);
-			norm += warr[i++] = lookgauss(dx*dx + dy*dy);
+			norm += warr[i++] = lookgauss(dx*dx + dy2);
 		}
 	}
 	norm = 1.0/norm;

@@ -1,20 +1,19 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: scanner.c,v 1.3 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  *  scanner.c - program to simulate bi-directional scanner.
  *
  *     6/10/86
  */
 
-#include  "stdio.h"
+#include  <stdio.h>
 
-#include  "ctype.h"
+#include  <stdlib.h>
 
-#include  "signal.h"
+#include  <ctype.h>
+
+#include  <signal.h>
 
 #include  "random.h"
 
@@ -47,7 +46,6 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	double  atof();
 	char  *strcat(), *mktemp();
 	int  quit();
 	int  i;
@@ -150,6 +148,7 @@ badopt:
 }
 
 
+void
 quit(code)			/* unlink temp files and exit */
 int  code;
 {

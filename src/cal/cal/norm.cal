@@ -1,0 +1,29 @@
+{
+	Normal Distribution Functions
+
+		10/20/87
+
+	Z(u)		- normal probability density function
+
+	Q(u)		- Z(u) integrated from u to infinity
+
+	u(p)		- u for known value p = Q(u)
+}
+
+NORMF : 1/sqrt(2*PI) ;
+
+Z(u) = NORMF * exp(-u*u/2) ;
+
+Q(u) = if( u, Q1(u), 1-Q1(-u) ) ;
+
+Q1(u) = Z(u) * Q2(1/(1+.2316419*u)) ;
+
+Q2(t) = t*(.31938153+t*(-.356563782+t*(1.781477937+
+		t*(-1.821255978+t*1.330274429)))) ;
+
+u(p) = if( .5-p, u1(p), -u1(1-p) ) ;
+
+u1(p) = u2(sqrt(log(1/p/p))) ;
+
+u2(t) = t - (2.515517+t*(.802853+t*.010328))/
+		(1+t*(1.432788+t*(.189269+t*.001308))) ;

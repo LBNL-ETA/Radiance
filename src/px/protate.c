@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: protate.c,v 2.7 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * prot.c - program to rotate picture file 90 degrees clockwise.
  *
@@ -13,6 +10,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include "standard.h"
 
 #include "color.h"
+
+#include <time.h>
 
 #include "resolu.h"
 
@@ -151,7 +150,7 @@ FILE	*fp;
 				exit(1);
 			}
 	}
-	free((char *)inln);
+	free((void *)inln);
 }
 
 
@@ -187,5 +186,5 @@ FILE	*fp;
 				exit(1);
 			}
 	}
-	free((char *)inln);
+	free((void *)inln);
 }

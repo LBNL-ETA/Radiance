@@ -1,0 +1,33 @@
+{
+	Peerless' brightness mapping function
+
+	Mapping of Luminance to Brightness for CRT display.
+	Hand this file to pcomb(1) with the -f option.
+	The picture file should have been run previously through
+	the automatic exposure procedure of pfilt(1), and
+	pcomb should also be given -o option.  Like so:
+
+	pfilt input.pic | pcomb -f peerless.cal -o - > output.pic
+
+}
+La_w : 0.5/le(1) * WE;
+Lmax_v : 120;
+La_v : Lmax_v/2;
+b(La) : .338*La^.034;
+k(La) : -1.5*log10(La) + 6.1;
+B_w(L) : k(La_w) * L^b(La_w);
+L_w(B) : (B/k(La_w))^(1/b(La_w));
+B_v(L) : k(La_v) * L^b(La_v);
+L_v(B) : (B/k(La_v))^(1/b(La_v));
+Bmax_w : B_w(3*La_w);
+Bmax_v : B_v(Lmax_v);
+
+lum_w = li(1)*WE;
+
+lum_v = L_v(Bmax_v/Bmax_w*B_w(lum_w));
+
+mult = WE/Lmax_v*lum_v/lum_w;
+
+ro = mult*ri(1);
+go = mult*gi(1);
+bo = mult*bi(1);

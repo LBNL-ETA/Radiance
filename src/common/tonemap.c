@@ -1,12 +1,69 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.9 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  * Tone mapping functions.
  * See tonemap.h for detailed function descriptions.
+ * Added von Kries white-balance calculations 10/01 (GW).
+ *
+ * Externals declared in tonemap.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include	<stdio.h>
@@ -26,30 +83,12 @@ int	tmLastError;			/* last error incurred by library */
 char	*tmLastFunction;		/* error-generating function name */
 
 
-int
-tmErrorReturn(func, err)		/* error return (with message) */
-char	*func;
-int	err;
-{
-	tmLastFunction = func;
-	tmLastError = err;
-	if (tmTop != NULL && tmTop->flags & TM_F_NOSTDERR)
-		return(err);
-	fputs(func, stderr);
-	fputs(": ", stderr);
-	fputs(tmErrorMessage[err], stderr);
-	fputs("!\n", stderr);
-	return(err);
-}
-
-
 struct tmStruct *
 tmInit(flags, monpri, gamval)		/* initialize new tone mapping */
 int	flags;
 RGBPRIMP	monpri;
 double	gamval;
 {
-	static char	funcName[] = "tmInit";
 	COLORMAT	cmat;
 	register struct tmStruct	*tmnew;
 	register int	i;
@@ -66,7 +105,7 @@ double	gamval;
 		tmnew->clf[GRN] = rgb2xyzmat[1][1];
 		tmnew->clf[BLU] = rgb2xyzmat[1][2];
 	} else {
-		comprgb2xyzmat(cmat, tmnew->monpri=monpri);
+		comprgb2xyzWBmat(cmat, tmnew->monpri=monpri);
 		tmnew->clf[RED] = cmat[1][0];
 		tmnew->clf[GRN] = cmat[1][1];
 		tmnew->clf[BLU] = cmat[1][2];
@@ -86,9 +125,9 @@ double	gamval;
 			tmnew->inpsf = WHTEFFICACY;
 	tmnew->cmat[0][1] = tmnew->cmat[0][2] = tmnew->cmat[1][0] =
 	tmnew->cmat[1][2] = tmnew->cmat[2][0] = tmnew->cmat[2][1] = 0.;
-	tmnew->hbrmin = tmnew->hbrmax = 0;
+	tmnew->hbrmin = 10; tmnew->hbrmax = -10;
 	tmnew->histo = NULL;
-	tmnew->mbrmin = tmnew->mbrmax = 0;
+	tmnew->mbrmin = 10; tmnew->mbrmax = -10;
 	tmnew->lumap = NULL;
 						/* zero private data */
 	for (i = TM_MAXPKG; i--; )
@@ -123,7 +162,7 @@ double	sf;
 			tmTop->clf[CIEX] = tmTop->clf[CIEZ] = 0.;
 			tmTop->clf[CIEY] = 1.;
 		} else {
-			comprgb2xyzmat(tmTop->cmat, tmTop->monpri);
+			comprgb2xyzWBmat(tmTop->cmat, tmTop->monpri);
 			tmTop->clf[RED] = tmTop->cmat[1][0];
 			tmTop->clf[GRN] = tmTop->cmat[1][1];
 			tmTop->clf[BLU] = tmTop->cmat[1][2];
@@ -134,13 +173,13 @@ double	sf;
 		tmTop->cmat[1][2] = tmTop->cmat[2][0] = tmTop->cmat[2][1] = 0.;
 
 	} else if (tmTop->inppri == TM_XYZPRIM)	/* input is XYZ */
-		compxyz2rgbmat(tmTop->cmat, tmTop->monpri);
+		compxyz2rgbWBmat(tmTop->cmat, tmTop->monpri);
 
 	else {					/* input is RGB */
 		if (tmTop->inppri != tmTop->monpri &&
 				PRIMEQ(tmTop->inppri, tmTop->monpri))
 			tmTop->inppri = tmTop->monpri;	/* no xform */
-		comprgb2rgbmat(tmTop->cmat, tmTop->inppri, tmTop->monpri);
+		comprgb2rgbWBmat(tmTop->cmat, tmTop->inppri, tmTop->monpri);
 	}
 	for (i = 0; i < 3; i++)
 		for (j = 0; j < 3; j++)
@@ -248,13 +287,38 @@ int	len;
 
 
 int
+tmCvGrays(ls, scan, len)		/* convert float gray values */
+TMbright	*ls;
+float	*scan;
+int	len;
+{
+	static char	funcName[] = "tmCvGrays";
+	register double	d;
+	register int	i;
+
+	if (tmTop == NULL)
+		returnErr(TM_E_TMINVAL);
+	if (ls == NULL | scan == NULL | len < 0)
+		returnErr(TM_E_ILLEGAL);
+	for (i = len; i--; )
+		if (scan[i] <= TM_NOLUM) {
+			ls[i] = TM_NOBRT;		/* bogus value */
+		} else {
+			d = TM_BRTSCALE*log(scan[i]);	/* encode it */
+			ls[i] = d>0. ? (int)(d+.5) : (int)(d-.5);
+		}
+	returnOK;
+}
+
+
+int
 tmAddHisto(ls, len, wt)			/* add values to histogram */
 register TMbright	*ls;
 int	len;
 int	wt;
 {
 	static char	funcName[] = "tmAddHisto";
-	int	oldorig, oldlen, horig, hlen;
+	int	oldorig=0, oldlen, horig, hlen;
 	register int	i, j;
 
 	if (tmTop == NULL)
@@ -327,6 +391,49 @@ double	La;
 }
 
 
+static int
+tmNewMap()
+{
+	if (tmTop->lumap != NULL && (tmTop->mbrmax - tmTop->mbrmin) !=
+					(tmTop->hbrmax - tmTop->hbrmin)) {
+		free((MEM_PTR)tmTop->lumap);
+		tmTop->lumap = NULL;
+	}
+	tmTop->mbrmin = tmTop->hbrmin;
+	tmTop->mbrmax = tmTop->hbrmax;
+	if (tmTop->mbrmin > tmTop->mbrmax)
+		return 0;
+	if (tmTop->lumap == NULL)
+		tmTop->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
+					(tmTop->mbrmax-tmTop->mbrmin+1));
+	return(tmTop->lumap != NULL);
+}
+
+
+int
+tmFixedMapping(expmult, gamval)
+double	expmult;
+double	gamval;
+{
+	static char	funcName[] = "tmFixedMapping";
+	double		d;
+	register int	i;
+	
+	if (!tmNewMap())
+		returnErr(TM_E_NOMEM);
+	if (expmult <= .0)
+		expmult = 1.;
+	if (gamval < MINGAM)
+		gamval = tmTop->mongam;
+	d = log(expmult/tmTop->inpsf);
+	for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; )
+		tmTop->lumap[i] = 256. * exp(
+			( d + (tmTop->mbrmin+i)*(1./TM_BRTSCALE) )
+			/ gamval );
+	returnOK;
+}
+
+
 int
 tmComputeMapping(gamval, Lddyn, Ldmax)
 double	gamval;
@@ -336,9 +443,10 @@ double	Ldmax;
 	static char	funcName[] = "tmComputeMapping";
 	int	*histo;
 	float	*cumf;
-	int	brt0, histlen, histot, threshold, ceiling, trimmings;
+	int	brt0, histlen, threshold, ceiling, trimmings;
 	double	logLddyn, Ldmin, Ldavg, Lwavg, Tr, Lw, Ld;
-	int4	sum;
+	int4	histot;
+	double	sum;
 	register double	d;
 	register int	i, j;
 
@@ -366,75 +474,68 @@ double	Ldmax;
 	if (threshold < 4)
 		returnErr(TM_E_TMFAIL);
 	Lwavg = tmLuminance( (double)sum / histot );
-	if (!(tmTop->flags & TM_F_LINEAR)) {	/* clamp histogram */
-		histo = (int *)malloc(histlen*sizeof(int));
-		cumf = (float *)malloc((histlen+1)*sizeof(float));
-		if (histo == NULL | cumf == NULL)
-			returnErr(TM_E_NOMEM);
-		for (i = histlen; i--; )	/* make malleable copy */
-			histo[i] = tmTop->histo[i];
-		do {				/* iterate to solution */
-			sum = 0;		/* cumulative probability */
-			for (i = 0; i < histlen; i++) {
-				cumf[i] = (double)sum/histot;
-				sum += histo[i];
-			}
-			cumf[i] = 1.;
-			Tr = histot * (double)(tmTop->hbrmax - tmTop->hbrmin) /
-				((double)histlen*TM_BRTSCALE) / logLddyn;
-			ceiling = Tr + 1.;
-			trimmings = 0;			/* clip to envelope */
-			for (i = histlen; i--; ) {
-				if (tmTop->flags & TM_F_HCONTR) {
-					Lw = tmLuminance(brt0 + i*HISTEP);
-					Ld = Ldmin * exp( logLddyn *
-						.5*(cumf[i]+cumf[i+1]) );
-					ceiling = Tr * (htcontrs(Ld) * Lw) /
-						(htcontrs(Lw) * Ld) + 1.;
-				}
-				if (histo[i] > ceiling) {
-					trimmings += histo[i] - ceiling;
-					histo[i] = ceiling;
-				}
-			}
-		} while ((histot -= trimmings) > threshold &&
-						trimmings > threshold);
-	}
-						/* allocate luminance map */
-	if (tmTop->lumap != NULL)
-		free((MEM_PTR)tmTop->lumap);
-	tmTop->mbrmin = tmTop->hbrmin;
-	tmTop->mbrmax = tmTop->hbrmax;
-	tmTop->lumap = (unsigned short *)malloc(
-		(tmTop->mbrmax-tmTop->mbrmin+1)*sizeof(unsigned short) );
-	if (tmTop->lumap == NULL)
+					/* allocate space for mapping */
+	if (!tmNewMap())
 		returnErr(TM_E_NOMEM);
-	if (tmTop->flags & TM_F_LINEAR || histot <= threshold) {
-						/* linear tone mapping */
-		if (tmTop->flags & TM_F_HCONTR)
-			d = htcontrs(Ldavg) / htcontrs(Lwavg);
-		else
-			d = Ldavg / Lwavg;
-		d = log(d/Ldmax);
-		for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; )
-			tmTop->lumap[i] = 256. * exp(
-				( d + (tmTop->mbrmin+i)/(double)TM_BRTSCALE )
-				/ gamval );
-	} else {
-						/* histogram adjustment */
-		for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; ) {
-			j = d = (double)i/(tmTop->mbrmax-tmTop->mbrmin)*histlen;
-			d -= (double)j;
-			Ld = Ldmin*exp(logLddyn*((1.-d)*cumf[j]+d*cumf[j+1]));
-			d = (Ld - Ldmin)/(Ldmax - Ldmin);
-			tmTop->lumap[i] = 256.*pow(d, 1./gamval);
+					/* use linear tone mapping? */
+	if (tmTop->flags & TM_F_LINEAR)
+		goto linearmap;
+					/* clamp histogram */
+	histo = (int *)malloc(histlen*sizeof(int));
+	cumf = (float *)malloc((histlen+2)*sizeof(float));
+	if (histo == NULL | cumf == NULL)
+		returnErr(TM_E_NOMEM);
+	cumf[histlen+1] = 1.;		/* guard for assignment code */
+	for (i = histlen; i--; )	/* make malleable copy */
+		histo[i] = tmTop->histo[i];
+	do {				/* iterate to solution */
+		sum = 0;		/* cumulative probability */
+		for (i = 0; i < histlen; i++) {
+			cumf[i] = (double)sum/histot;
+			sum += histo[i];
 		}
+		cumf[histlen] = 1.;
+		Tr = histot * (double)(tmTop->hbrmax - tmTop->hbrmin) /
+			((double)histlen*TM_BRTSCALE) / logLddyn;
+		ceiling = Tr + 1.;
+		trimmings = 0;		/* clip to envelope */
+		for (i = histlen; i--; ) {
+			if (tmTop->flags & TM_F_HCONTR) {
+				Lw = tmLuminance(brt0 + i*HISTEP);
+				Ld = Ldmin * exp( logLddyn *
+					.5*(cumf[i]+cumf[i+1]) );
+				ceiling = Tr * (htcontrs(Ld) * Lw) /
+					(htcontrs(Lw) * Ld) + 1.;
+			}
+			if (histo[i] > ceiling) {
+				trimmings += histo[i] - ceiling;
+				histo[i] = ceiling;
+			}
+		}
+					/* check if we're out of data */
+		if ((histot -= trimmings) <= threshold) {
+			free((MEM_PTR)histo);
+			free((MEM_PTR)cumf);
+			goto linearmap;
+		}
+	} while (trimmings > threshold);
+					/* assign tone-mapping */
+	for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; ) {
+		j = d = (double)i/(tmTop->mbrmax-tmTop->mbrmin)*histlen;
+		d -= (double)j;
+		Ld = Ldmin*exp(logLddyn*((1.-d)*cumf[j]+d*cumf[j+1]));
+		d = (Ld - Ldmin)/(Ldmax - Ldmin);
+		tmTop->lumap[i] = 256.*pow(d, 1./gamval);
 	}
-	if (!(tmTop->flags & TM_F_LINEAR)) {
-		free((MEM_PTR)histo);
-		free((MEM_PTR)cumf);
-	}
+	free((MEM_PTR)histo);		/* clean up and return */
+	free((MEM_PTR)cumf);
 	returnOK;
+linearmap:				/* linear tone-mapping */
+	if (tmTop->flags & TM_F_HCONTR)
+		d = htcontrs(Ldavg) / htcontrs(Lwavg);
+	else
+		d = Ldavg / Lwavg;
+	return(tmFixedMapping(tmTop->inpsf*d/Ldmax, gamval));
 }
 
 
@@ -453,11 +554,13 @@ int	len;
 	if (ps == NULL | ls == NULL | len < 0)
 		returnErr(TM_E_ILLEGAL);
 	while (len--) {
-		if ((li = *ls++) < tmTop->mbrmin)
-			li = tmTop->mbrmin;
-		else if (li > tmTop->mbrmax)
-			li = tmTop->mbrmax;
-		li = tmTop->lumap[li - tmTop->mbrmin];
+		if ((li = *ls++) < tmTop->mbrmin) {
+			li = 0;
+		} else {
+			if (li > tmTop->mbrmax)
+				li = tmTop->mbrmax;
+			li = tmTop->lumap[li - tmTop->mbrmin];
+		}
 		if (cs == TM_NOCHROM)
 			*ps++ = li>255 ? 255 : li;
 		else {
@@ -583,4 +686,39 @@ register struct tmStruct	*tms;
 		if (tms->pd[i] != NULL)
 			(*tmPkg[i]->Free)(tms->pd[i]);
 	free((MEM_PTR)tms);		/* free basic structure */
+}
+
+/******************** Shared but Private library routines *********************/
+
+BYTE	tmMesofact[BMESUPPER-BMESLOWER];
+
+void
+tmMkMesofact()				/* build mesopic lookup factor table */
+{
+	register int	i;
+
+	if (tmMesofact[BMESUPPER-BMESLOWER-1])
+		return;
+
+	for (i = BMESLOWER; i < BMESUPPER; i++)
+		tmMesofact[i-BMESLOWER] = 256. *
+				(tmLuminance(i) - LMESLOWER) /
+				(LMESUPPER - LMESLOWER);
+}
+
+
+int
+tmErrorReturn(func, err)		/* error return (with message) */
+char	*func;
+int	err;
+{
+	tmLastFunction = func;
+	tmLastError = err;
+	if (tmTop != NULL && tmTop->flags & TM_F_NOSTDERR)
+		return(err);
+	fputs(func, stderr);
+	fputs(": ", stderr);
+	fputs(tmErrorMessage[err], stderr);
+	fputs("!\n", stderr);
+	return(err);
 }

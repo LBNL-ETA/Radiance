@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.24 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Radiance picture to PostScript file translator -- one way!
  */
@@ -61,7 +58,6 @@ char  *progname;
 
 int  xmax, ymax;			/* input image dimensions */
 
-extern char  *malloc();
 extern double	unit2inch();
 
 
@@ -305,7 +301,7 @@ char  **av;
 					/* EPS comments */
 	puts("%!PS-Adobe-2.0 EPSF-2.0");
 	printf("%%%%Title: "); printargs(ac, av, stdout);
-	printf("%%%%Creator: %s\n", SCCSid);
+	printf("%%%%Creator: %s\n", progname);
 	printf("%%%%Pages: %d\n", ncopies);
 	if (landscape = xmax > pixaspect*ymax)
 		puts("%%Orientation: Landscape");
@@ -474,7 +470,7 @@ ra2ps()				/* convert Radiance scanlines to 6-bit */
 	}
 	putchar('\n');
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }
 
 

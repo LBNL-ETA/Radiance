@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: tradinstall.csh,v 2.7 2003/02/22 02:07:30 greg Exp $
 # Install correct version of trad for wish or wish4.0
 #
 set instdir = $1
@@ -24,10 +24,10 @@ if (! $?wishcom) then
 	echo "Cannot find wish executable in current path -- trad not installed."
 	exit 1
 endif
-if ( $wishcom:t == wish ) then
-	set wishcom="$wishcom -f"
-	set oldwish
-endif
+# if ( $wishcom:t == wish ) then
+#	set wishcom="$wishcom -f"
+#	set oldwish
+# endif
 
 echo "Installing trad using $wishcom"
 

@@ -1,5 +1,5 @@
+# RCSid: $Id: Rmakefile,v 3.21 2003/02/22 02:07:24 greg Exp $
 #
-# SCCSid "$SunId$ SGI"
 # Radiance makefile for holodeck programs
 #
 
@@ -7,7 +7,7 @@ MACH = -DBSD
 
 OPT = -O
 
-CFLAGS = $(MACH) $(OPT) -I../common -L../lib
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 
 CC = cc
 
@@ -30,15 +30,11 @@ install:	all $(DEVS) $(SPECIAL)
 clean:
 	set nonomatch; rm -f *.o $(PROGS) core
 
-ogl:	$(DEVDIR)/glx.hdi $(DEVDIR)/glxh.hdi \
-	$(DEVDIR)/glxo.hdi $(DEVDIR)/glxoh.hdi \
-	$(DEVDIR)/glxs.hdi $(DEVDIR)/glxsh.hdi \
-	$(DEVDIR)/glxso.hdi $(DEVDIR)/glxsoh.hdi \
-	$(DEVDIR)/glx1.hdi $(DEVDIR)/glx1h.hdi \
-	$(DEVDIR)/ogl.hdi $(DEVDIR)/oglh.hdi \
+ogl:	$(DEVDIR)/ogl.hdi $(DEVDIR)/oglh.hdi \
 	$(DEVDIR)/oglo.hdi $(DEVDIR)/ogloh.hdi \
 	$(DEVDIR)/ogls.hdi $(DEVDIR)/oglsh.hdi \
-	$(DEVDIR)/oglso.hdi $(DEVDIR)/oglsoh.hdi
+	$(DEVDIR)/oglso.hdi $(DEVDIR)/oglsoh.hdi \
+	$(DEVDIR)/glx1.hdi $(DEVDIR)/glx1h.hdi
 
 x10:
 
@@ -49,13 +45,13 @@ sgi:
 sun:
 
 rholo:	rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o holo.o holofile.o \
-viewbeams.o malloc.o Version.o
+viewbeams.o Version.o
 	$(CC) $(CFLAGS) -o rholo rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
-holo.o holofile.o viewbeams.o malloc.o Version.o -lrt -lm
+holo.o holofile.o viewbeams.o Version.o -lrt -lm
 
-rhpict:	rhpict.o rhpict2.o holo.o holofile.o viewbeams.o malloc.o Version.o
+rhpict:	rhpict.o rhpict2.o holo.o holofile.o viewbeams.o Version.o
 	$(CC) $(CFLAGS) -o rhpict rhpict.o rhpict2.o holo.o holofile.o \
-viewbeams.o malloc.o Version.o -lrt -lm
+viewbeams.o Version.o -lrt -lm
 
 rhcopy:	rhcopy.o clumpbeams.o holo.o holofile.o
 	$(CC) $(CFLAGS) -o rhcopy rhcopy.o clumpbeams.o \
@@ -123,7 +119,7 @@ $(DEVDIR)/glx1.hdi:	rhd_glx1.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_qtree.o rhd_qtree2c.o dircode.o holo.o
 	rm -f $(DEVDIR)/glx1.hdi
 	$(CC) $(CFLAGS) -o $(DEVDIR)/glx1.hdi rhd_glx1.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o  rhd_qtree.o rhd_qtree2c.o dircode.o -lrt -lGLU -lGL -lX11 -lm
+viewbeams.o holo.o rhd_qtree.o rhd_qtree2c.o dircode.o -lrt -lGLU -lGL -lX11 -lm
 
 $(DEVDIR)/glx.hdi:	rhd_glx0.o rhdisp.o rhdisp2.o viewbeams.o \
 sm_samp.o sm_qtree.o sm_stree.o sm_geom.o sm_list.o sm_del.o \
@@ -213,9 +209,6 @@ rhd_oglso.o:	rhd_ogl.c
 	$(CC) $(CFLAGS) -DDOBJ -DSTEREO -c rhd_ogl.c
 	mv -f rhd_ogl.o rhd_oglso.o
 
-malloc.o:	malloc.c
-	$(CC) $(CFLAGS) -DMCOMP -c malloc.c
-
 rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
 rhdisp.o rhdisp2.o rhpict.o viewbeams.o:	rholo.h
 
@@ -266,7 +259,7 @@ sm.o:		sm_flag.h
 
 sm_samp.o: 	sm_flag.h
 
-sm_usets.o:	sm_flag.h sm_qtree.h  ../common/object.h
+sm_usets.o:	sm_flag.h sm_qtree.h ../common/object.h
 
 sm_del.o:	sm_flag.h sm_list.h sm_geom.h
 
@@ -296,3 +289,6 @@ rhd_oglo.o rhd_oglso.o:	rhdobj.h
 rhd_geom.o:	rhdriver.h ../common/view.h \
 ../common/radogl.h ../common/standard.h ../common/fvect.h \
 ../common/mat4.h ../common/object.h ../common/otypes.h ../common/lookup.h
+
+Version.c:	../rt/Version.c
+	cp ../rt/Version.c .

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ttyimage.c,v 2.3 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ttyimage.c - program to dump pixel file to dumb terminal.
  *
@@ -14,6 +11,7 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+#include  <time.h>
 
 #include  "color.h"
 #include  "resolu.h"

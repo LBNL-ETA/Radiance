@@ -1,5 +1,4 @@
-{ SCCSid "$SunId$ LBL" }
-
+{ RCSid: $Id: tilt.cal,v 2.3 2003/02/22 02:07:23 greg Exp $ }
 {
 	tilt.cal - tilt data for IES luminaires
 }

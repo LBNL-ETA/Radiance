@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: contour.c,v 1.3 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  *  contour.c - program to make contour plots, mappings from 3 to
  *		2 dimenstions.
@@ -11,9 +8,11 @@ static char SCCSid[] = "$SunId$ LBL";
  *     8/22/86
  */
 
-#include  "stdio.h"
+#include  <stdio.h>
 
-#include  "ctype.h"
+#include  <stdlib.h>
+
+#include  <ctype.h>
 
 #define  MAXPTS		2048		/* maximum number of input points */
 
@@ -34,7 +33,6 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	extern double  atof();
 	extern int  xycmp();
 	FILE  *fp;
 	int  i;

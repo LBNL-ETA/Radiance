@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.19 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * OpenGL driver for holodeck display.
  * Based on GLX driver using T-mesh.
@@ -27,6 +24,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #ifdef STEREO
 #include <X11/extensions/SGIStereo.h>
 #endif
+#include <time.h>
 
 #include "rhd_odraw.h"
 #ifdef DOBJ
@@ -557,7 +555,7 @@ xferdepth()			/* load and clear depth buffer */
 	glClear(GL_DEPTH_BUFFER_BIT);		/* clear system depth buffer */
 	odDepthMap(0, depthbuffer);		/* transfer depth data */
 	if (pbuf != NULL)
-		free((char *)pbuf);		/* free our portal buffer */
+		free((void *)pbuf);		/* free our portal buffer */
 }
 
 
@@ -568,11 +566,11 @@ freedepth()				/* free recorded depth buffer */
 		return;
 #ifdef STEREO
 	odDepthMap(1, NULL);
-	free((char *)depthright);
+	free((void *)depthright);
 	depthright = NULL;
 #endif
 	odDepthMap(0, NULL);
-	free((char *)depthbuffer);
+	free((void *)depthbuffer);
 	depthbuffer = NULL;
 }
 
@@ -792,6 +790,16 @@ XButtonPressedEvent	*ebut;
 
 
 static
+waitabit()				/* pause a moment */
+{
+	struct timespec	ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = 5000000;
+	nanosleep(&ts, NULL);
+}
+
+
+static
 getmove(ebut)				/* get view change */
 XButtonPressedEvent	*ebut;
 {
@@ -808,6 +816,8 @@ XButtonPressedEvent	*ebut;
 	setglpersp();			/* start us off in perspective */
 	while (!XCheckMaskEvent(ourdisplay,
 			ButtonReleaseMask, levptr(XEvent))) {
+					/* pause so as not to move too fast */
+		waitabit();
 					/* get cursor position */
 		if (!XQueryPointer(ourdisplay, gwind, &rootw, &childw,
 				&rootx, &rooty, &wx, &wy, &statemask))
@@ -868,7 +878,7 @@ setglpersp()			/* set perspective view in GL */
 	if (odev.v.vaft > FTINY)
 		dev_zmax = odev.v.vaft;
 	if (dev_zmin*500. < dev_zmax)
-		dev_zmax = dev_zmin*500.;
+		dev_zmin = dev_zmax/500.;
 	setzrat();
 	xmax = dev_zmin * tan(PI/180./2. * odev.v.horiz);
 	xmin = -xmax;

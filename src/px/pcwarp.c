@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcwarp.c,v 3.3 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Warp colors in Radiance picture to correct for input/output changes.
  */
@@ -144,5 +141,5 @@ picwarp()			/* warp our picture scanlines */
 	if (ngamut >= (long)xres*yres/100)
 		fprintf(stderr, "%s: warning - %d%% of pixels out of gamut\n",
 				progname, 100*ngamut/((long)xres*yres));
-	free((char *)scan);
+	free((void *)scan);
 }

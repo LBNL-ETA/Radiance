@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: swaprasheader.c,v 2.2 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 #include <stdio.h>
 #include "rasterfile.h"
 

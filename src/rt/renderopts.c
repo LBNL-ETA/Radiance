@@ -1,0 +1,305 @@
+#ifndef lint
+static const char	RCSid[] = "$Id: renderopts.c,v 2.1 2003/02/22 02:07:29 greg Exp $";
+#endif
+/*
+ *  renderopts.c - process common rendering options
+ *
+ *  External symbols declared in ray.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
+#include  "ray.h"
+
+
+int
+getrenderopt(ac, av)		/* get next render option */
+int  ac;
+char  *av[];
+{
+#define	 check(ol,al)		if (av[0][ol] || \
+				badarg(ac-1,av+1,al)) \
+				return(-1)
+#define	 bool(olen,var)		switch (av[0][olen]) { \
+				case '\0': var = !var; break; \
+				case 'y': case 'Y': case 't': case 'T': \
+				case '+': case '1': var = 1; break; \
+				case 'n': case 'N': case 'f': case 'F': \
+				case '-': case '0': var = 0; break; \
+				default: return(-1); }
+	static char  **amblp;		/* pointer to build ambient list */
+	int	rval;
+					/* is it even an option? */
+	if (ac < 1 || av[0] == NULL || av[0][0] != '-')
+		return(-1);
+					/* check if it's one we know */
+	switch (av[0][1]) {
+	case 'b':				/* back face vis. */
+		if (av[0][2] == 'v') {
+			bool(3,backvis);
+			return(0);
+		}
+		break;
+	case 'd':				/* direct */
+		switch (av[0][2]) {
+		case 't':				/* threshold */
+			check(3,"f");
+			shadthresh = atof(av[1]);
+			return(1);
+		case 'c':				/* certainty */
+			check(3,"f");
+			shadcert = atof(av[1]);
+			return(1);
+		case 'j':				/* jitter */
+			check(3,"f");
+			dstrsrc = atof(av[1]);
+			return(1);
+		case 'r':				/* relays */
+			check(3,"i");
+			directrelay = atoi(av[1]);
+			return(1);
+		case 'p':				/* pretest */
+			check(3,"i");
+			vspretest = atoi(av[1]);
+			return(1);
+		case 'v':				/* visibility */
+			bool(3,directvis);
+			return(0);
+		case 's':				/* size */
+			check(3,"f");
+			srcsizerat = atof(av[1]);
+			return(1);
+		}
+		break;
+	case 's':				/* specular */
+		switch (av[0][2]) {
+		case 't':				/* threshold */
+			check(3,"f");
+			specthresh = atof(av[1]);
+			return(1);
+		case 'j':				/* jitter */
+			check(3,"f");
+			specjitter = atof(av[1]);
+			return(1);
+		}
+		break;
+	case 'l':				/* limit */
+		switch (av[0][2]) {
+		case 'r':				/* recursion */
+			check(3,"i");
+			maxdepth = atoi(av[1]);
+			return(1);
+		case 'w':				/* weight */
+			check(3,"f");
+			minweight = atof(av[1]);
+			return(1);
+		}
+		break;
+	case 'i':				/* irradiance */
+		bool(2,do_irrad);
+		return(0);
+	case 'a':				/* ambient */
+		switch (av[0][2]) {
+		case 'v':				/* value */
+			check(3,"fff");
+			setcolor(ambval, atof(av[1]),
+					atof(av[2]),
+					atof(av[3]));
+			return(3);
+		case 'w':				/* weight */
+			check(3,"i");
+			ambvwt = atoi(av[1]);
+			return(1);
+		case 'a':				/* accuracy */
+			check(3,"f");
+			ambacc = atof(av[1]);
+			return(1);
+		case 'r':				/* resolution */
+			check(3,"i");
+			ambres = atoi(av[1]);
+			return(1);
+		case 'd':				/* divisions */
+			check(3,"i");
+			ambdiv = atoi(av[1]);
+			return(1);
+		case 's':				/* super-samp */
+			check(3,"i");
+			ambssamp = atoi(av[1]);
+			return(1);
+		case 'b':				/* bounces */
+			check(3,"i");
+			ambounce = atoi(av[1]);
+			return(1);
+		case 'i':				/* include */
+		case 'I':
+			check(3,"s");
+			if (ambincl != 1) {
+				ambincl = 1;
+				amblp = amblist;
+			}
+			if (av[0][2] == 'I') {	/* file */
+				rval = wordfile(amblp,
+					getpath(av[1],getlibpath(),R_OK));
+				if (rval < 0) {
+					sprintf(errmsg,
+			"cannot open ambient include file \"%s\"", av[0]);
+					error(SYSTEM, errmsg);
+				}
+				amblp += rval;
+			} else {
+				*amblp++ = av[1];
+				*amblp = NULL;
+			}
+			return(1);
+		case 'e':				/* exclude */
+		case 'E':
+			check(3,"s");
+			if (ambincl != 0) {
+				ambincl = 0;
+				amblp = amblist;
+			}
+			if (av[0][2] == 'E') {	/* file */
+				rval = wordfile(amblp,
+					getpath(av[1],getlibpath(),R_OK));
+				if (rval < 0) {
+					sprintf(errmsg,
+			"cannot open ambient exclude file \"%s\"", av[0]);
+					error(SYSTEM, errmsg);
+				}
+				amblp += rval;
+			} else {
+				*amblp++ = av[1];
+				*amblp = NULL;
+			}
+			return(1);
+		case 'f':				/* file */
+			check(3,"s");
+			ambfile= av[1];
+			return(1);
+		}
+		break;
+	case 'm':				/* medium */
+		switch (av[0][2]) {
+		case 'e':				/* extinction */
+			check(3,"fff");
+			setcolor(cextinction, atof(av[1]),
+					atof(av[2]),
+					atof(av[3]));
+			return(3);
+		case 'a':				/* albedo */
+			check(3,"fff");
+			setcolor(salbedo, atof(av[1]),
+					atof(av[2]),
+					atof(av[3]));
+			return(3);
+		case 'g':				/* eccentr. */
+			check(3,"f");
+			seccg = atof(av[1]);
+			return(1);
+		case 's':				/* sampling */
+			check(3,"f");
+			ssampdist = atof(av[1]);
+			return(1);
+		}
+		break;
+	}
+	return(-1);		/* unknown option */
+
+#undef	check
+#undef	bool
+}
+
+
+void
+print_rdefaults()		/* print default render values to stdout */
+{
+	register char  *cp;
+
+	printf(do_irrad ? "-i+\t\t\t\t# irradiance calculation on\n" :
+			"-i-\t\t\t\t# irradiance calculation off\n");
+	printf(backvis ? "-bv+\t\t\t\t# back face visibility on\n" :
+			"-bv-\t\t\t\t# back face visibility off\n");
+	printf("-dt %f\t\t\t# direct threshold\n", shadthresh);
+	printf("-dc %f\t\t\t# direct certainty\n", shadcert);
+	printf("-dj %f\t\t\t# direct jitter\n", dstrsrc);
+	printf("-ds %f\t\t\t# direct sampling\n", srcsizerat);
+	printf("-dr %-9d\t\t\t# direct relays\n", directrelay);
+	printf("-dp %-9d\t\t\t# direct pretest density\n", vspretest);
+	printf(directvis ? "-dv+\t\t\t\t# direct visibility on\n" :
+			"-dv-\t\t\t\t# direct visibility off\n");
+	printf("-sj %f\t\t\t# specular jitter\n", specjitter);
+	printf("-st %f\t\t\t# specular threshold\n", specthresh);
+	printf("-av %f %f %f\t# ambient value\n", colval(ambval,RED),
+			colval(ambval,GRN), colval(ambval, BLU));
+	printf("-aw %-9d\t\t\t# ambient value weight\n", ambvwt);
+	printf("-ab %-9d\t\t\t# ambient bounces\n", ambounce);
+	printf("-aa %f\t\t\t# ambient accuracy\n", ambacc);
+	printf("-ar %-9d\t\t\t# ambient resolution\n", ambres);
+	printf("-ad %-9d\t\t\t# ambient divisions\n", ambdiv);
+	printf("-as %-9d\t\t\t# ambient super-samples\n", ambssamp);
+	printf("-me %.2e %.2e %.2e\t# mist extinction coefficient\n",
+			colval(cextinction,RED),
+			colval(cextinction,GRN),
+			colval(cextinction,BLU));
+	printf("-ma %f %f %f\t# mist scattering albedo\n", colval(salbedo,RED),
+			colval(salbedo,GRN), colval(salbedo,BLU));
+	printf("-mg %f\t\t\t# mist scattering eccentricity\n", seccg);
+	printf("-ms %f\t\t\t# mist sampling distance\n", ssampdist);
+	printf("-lr %-9d\t\t\t# limit reflection\n", maxdepth);
+	printf("-lw %f\t\t\t# limit weight\n", minweight);
+}

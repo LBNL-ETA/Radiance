@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: o_face.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  o_face.c - routines for creating octrees for polygonal faces.
  *

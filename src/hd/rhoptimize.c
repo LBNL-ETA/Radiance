@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.8 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Optimize holodeck for quick access.
  *
@@ -23,7 +20,6 @@ char	tempfile[128];
 int	dupchecking = 0;
 
 extern char	*rindex();
-extern int	quit();
 extern long	rhinitcopy();
 
 
@@ -68,14 +64,14 @@ char	*argv[];
 	lastopos = 0L;			/* copy sections one by one */
 	while (nextipos != 0L) {
 					/* set input position; get next */
-		lseek(hdfd[0], nextipos, 0);
+		lseek(hdfd[0], (off_t)nextipos, 0);
 		read(hdfd[0], (char *)&nextipos, sizeof(nextipos));
 					/* get output position; set last */
-		thisopos = lseek(hdfd[1], 0L, 2);
+		thisopos = lseek(hdfd[1], (off_t)0L, 2);
 		if (lastopos > 0L) {
-			lseek(hdfd[1], lastopos, 0);
+			lseek(hdfd[1], (off_t)lastopos, 0);
 			write(hdfd[1], (char *)&thisopos, sizeof(thisopos));
-			lseek(hdfd[1], 0L, 2);
+			lseek(hdfd[1], (off_t)0L, 2);
 		}
 		lastopos = thisopos;
 		thisopos = 0L;		/* write place holder */
@@ -106,6 +102,10 @@ char	*infn, *outfn;
 	if ((infp = fopen(infn, "r")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for reading", infn);
 		error(SYSTEM, errmsg);
+	}
+	if (access(outfn, F_OK) == 0) {
+		sprintf(errmsg, "output file \"%s\" already exists!", outfn);
+		error(USER, errmsg);
 	}
 	if ((outfp = fopen(outfn, "w+")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for writing", outfn);
@@ -220,6 +220,7 @@ int	ifd, ofd;
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {
@@ -239,6 +240,7 @@ register char  *s;
 }
 
 
+void
 quit(code)			/* exit the program gracefully */
 int	code;
 {

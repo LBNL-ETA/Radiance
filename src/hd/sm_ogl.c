@@ -1,14 +1,28 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_ogl.c,v 3.16 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * sm_ogl.c
  * 
  *  Rendering routines for triangle mesh representation utilizing OpenGL 
-*/
+ *
+ * smClean(tmflag)	: display has been wiped clean
+ *     int tmflag;
+ * Called after display has been effectively cleared, meaning that all
+ * geometry must be resent down the pipeline in the next call to smUpdate().
+ * If tmflag is set, tone-mapping should be performed
+ *
+ * smUpdate(vp, qua)	: update OpenGL output geometry for view vp
+ * VIEW	*vp;		: desired view
+ * int	qua;		: quality level (percentage on linear time scale)
+ *
+ * Draw new geometric representation using OpenGL calls.  Assume that the
+ * view has already been set up and the correct frame buffer has been
+ * selected for drawing.  The quality level is on a linear scale, where 100%
+ * is full (final) quality.  It is not necessary to redraw geometry that has
+ * been output since the last call to smClean().  (The last view drawn will
+ * be vp==&odev.v each time.)
+ */
 #include "standard.h"
 
 #include <GL/gl.h>
@@ -18,20 +32,21 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "sm_geom.h"
 #include "sm.h"
 
-int smClean_notify = TRUE;    /*If true:Do full redraw on next update*/
-static int smCompute_mapping = TRUE;/*If true:re-tonemap on next update */ 
-static int smIncremental = FALSE;    /*If true: there has been incremental 
-				       rendering since last full draw */
-#define MAX_NEW_TRIS 1000
+int smClean_notify = TRUE;           /*If TRUE:Do full redraw on next update*/
+static int smCompute_mapping = TRUE; /*If TRUE:re-tonemap on next update */ 
+static int smIncremental = FALSE;    /*If TRUE: there has been incremental 
+				        rendering since last full draw */
+#define NEW_TRI_CNT 1000             /* Default number of tris to allocate 
+					space to sort for incremental update*/
 #define SM_RENDER_FG 0               /* Render foreground tris only*/
 #define SM_RENDER_BG 1               /* Render background tris only */
 #define SM_RENDER_CULL 8             /* Perform view frustum culling */
 #define BASE 1                       /* Indicates base triangle */
 #define DIR 2                        /* Indicates triangle w/directional pts*/
 /* FOR DISPLAY LIST RENDERING: **********************************************/
-#define  SM_DL_LEVELS 2 /* # of levels down to create display lists */
-#define SM_DL_LISTS   42  /* # of qtree nodes in tree at above level: 
-			   should be 2*(4^(SM_DL_LEVELS+1)-1)/(4-1) */
+#define  SM_DL_LEVELS 2     /* # of levels down to create display lists */
+#define SM_DL_LISTS   42    /* # of qtree nodes in tree at above level: 
+			       should be 2*(4^(SM_DL_LEVELS+1)-1)/(4-1) */
 static GLuint Display_lists[SM_DL_LISTS][2] = {0}; 
 /****************************************************************************/
 
@@ -68,74 +83,73 @@ smClean(tmflag)
    int tmflag;
 {
     smClean_notify = TRUE;
-    if(tmflag)
-       smCompute_mapping = TRUE;
+    smCompute_mapping = tmflag;
 }
 
 int
 qtCache_init(nel)		/* initialize for at least nel elements */
 int	nel;
 {
-	static int  hsiztab[] = {
-		8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 0
-	};
-	register int  i;
+    static int  hsiztab[] = {
+	8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 0
+    };
+    register int  i;
 
-	if (nel <= 0) {			/* call to free table */
-		if (qt_hsiz) {
-			free((char *)qt_htbl);
-			qt_htbl = NULL;
-			qt_hsiz = 0;
-		}
-		return(0);
+    if (nel <= 0) {			/* call to free table */
+	if (qt_hsiz) {
+	    free((void *)qt_htbl);
+	    qt_htbl = NULL;
+	    qt_hsiz = 0;
 	}
-	nel += nel>>1;			/* 66% occupancy */
-	for (i = 0; hsiztab[i]; i++)
-		if (hsiztab[i] > nel)
-			break;
-	if (!(qt_hsiz = hsiztab[i]))
-		qt_hsiz = nel*2 + 1;		/* not always prime */
-	qt_htbl = (QT_LUENT *)calloc(qt_hsiz, sizeof(QT_LUENT));
-	if (qt_htbl == NULL)
-		qt_hsiz = 0;
-	for (i = qt_hsiz; i--; )
-		qt_htbl[i].qt = EMPTY;
-	return(qt_hsiz);
+	return(0);
+    }
+    nel += nel>>1;			/* 66% occupancy */
+    for (i = 0; hsiztab[i]; i++)
+       if (hsiztab[i] > nel)
+	  break;
+    if (!(qt_hsiz = hsiztab[i]))
+       qt_hsiz = nel*2 + 1;		/* not always prime */
+    qt_htbl = (QT_LUENT *)calloc(qt_hsiz, sizeof(QT_LUENT));
+    if (qt_htbl == NULL)
+       qt_hsiz = 0;
+    for (i = qt_hsiz; i--; )
+       qt_htbl[i].qt = EMPTY;
+    return(qt_hsiz);
 }
 
 QT_LUENT *
 qtCache_find(qt)		/* find a quadtree table entry */
 QUADTREE qt;
 {
-	int	i, n;
-	register int	ndx;
-	register QT_LUENT	*le;
+    int	i, n;
+    register int	ndx;
+    register QT_LUENT	*le;
 
-	if (qt_hsiz == 0 && !qtCache_init(1))
-		return(NULL);
+    if (qt_hsiz == 0 && !qtCache_init(1))
+       return(NULL);
 tryagain:				/* hash table lookup */
-	ndx = (unsigned long)qt % qt_hsiz;
-	for (i = 0, n = 1; i < qt_hsiz; i++, n += 2) {
-		le = &qt_htbl[ndx];
-		if (QT_IS_EMPTY(le->qt) || le->qt == qt)
-			return(le);
-		if ((ndx += n) >= qt_hsiz)	/* this happens rarely */
-			ndx = ndx % qt_hsiz;
-	}
-					/* table is full, reallocate */
-	le = qt_htbl;
-	ndx = qt_hsiz;
-	if (!qtCache_init(ndx+1)) {	/* no more memory! */
-		qt_htbl = le;
-		qt_hsiz = ndx;
-		return(NULL);
-	}
+    ndx = (unsigned long)qt % qt_hsiz;
+    for (i = 0, n = 1; i < qt_hsiz; i++, n += 2) {
+	le = &qt_htbl[ndx];
+	if (QT_IS_EMPTY(le->qt) || le->qt == qt)
+	   return(le);
+	if ((ndx += n) >= qt_hsiz)	/* this happens rarely */
+	   ndx = ndx % qt_hsiz;
+    }
+    /* table is full, reallocate */
+    le = qt_htbl;
+    ndx = qt_hsiz;
+    if (!qtCache_init(ndx+1)) {	/* no more memory! */
+	qt_htbl = le;
+	qt_hsiz = ndx;
+	return(NULL);
+    }
 					/* copy old table to new and free */
-	while (ndx--)
-		if (!QT_IS_EMPTY(le[ndx].qt))
-			copystruct(qtCache_find(le[ndx].qt), &le[ndx]);
-	free((char *)le);
-	goto tryagain;			/* should happen only once! */
+    while (ndx--)
+       if (!QT_IS_EMPTY(le[ndx].qt))
+	  copystruct(qtCache_find(le[ndx].qt), &le[ndx]);
+    free((void *)le);
+    goto tryagain;			/* should happen only once! */
 }
 
 stCount_level_leaves(lcnt, qt)	/* count quadtree leaf nodes at each level */
@@ -205,8 +219,9 @@ int lvl;
     }
     else
     {					/* from triangle set */
-      OBJECT *os;
-      int s0, s1, s2,s_id,t_id;
+      S_ID *os;
+      S_ID s0, s1, s2,s_id;
+      int t_id;
       TRI *tri,*t;
 
       os = qtqueryset(qt);
@@ -272,8 +287,6 @@ int lvl;
 }
 
 
-
-
 smRender_approx_stree_level(sm,lvl)
 SM *sm;
 int lvl;
@@ -282,7 +295,6 @@ int lvl;
   int i;
   FVECT t0,t1,t2;
   STREE *st;
-
   
   if (lvl < 0)
     return;
@@ -353,11 +365,9 @@ VIEW *view;
   smRender_approx_stree_level(sm,i);
 }
 
-#ifndef LORES
-#define GLVERTEX3V(v) glVertex3dv(v)
-#else
+
 #define GLVERTEX3V(v) glVertex3fv(v)
-#endif
+
 
 #define render_tri(v0,v1,v2,rgb0,rgb1,rgb2) \
   {glColor3ub(rgb0[0],rgb0[1],rgb0[2]); GLVERTEX3V(v0); \
@@ -519,17 +529,16 @@ BYTE  (*rgb)[3];
 
 }
 /*
- * smRender_new_bg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
+ * smRender_new_bg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
  * SM *sm;                         : mesh
  * FVECT vp;                       : current viewpoint
- * int4  *t_flag,*bg_flag;         : triangle flags: t_flag is generic, 
- *                                   and bg_flag indicates if background tri;
+ * int4  *new_flag,*active,*bg_flag; : triangle flags: idicates if tri is, 
+ *                                   new,active,bg_flag 
  * SFLOAT (*wp)[3];BYTE  (*rgb)[3]; : arrays of sample points and RGB colors
  *
  * Sequentially traverses triangle list and renders all valid tris who 
- * have t_flag set, and bg_flag set.
+ * have new_flag set and active_flag and bg_flag set.
  */
-
 smRender_new_bg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
 SM *sm;
 FVECT vp;
@@ -609,7 +618,7 @@ int b0,b1,b2;
   cnt = 0;
   rgb[0] = rgb[1] = rgb[2] = 0;
   d = 0.0;
-
+  /* If all vertices are base: don't render */
   if(b0&&b1&&b2)
     return;
   /* First calculate color and coordinates 
@@ -696,7 +705,7 @@ BYTE  (*rgb)[3];
 {
   TRI *tri;
   int i,n,b0,b1,b2;
-  int v0_id,v1_id,v2_id;
+  S_ID v0_id,v1_id,v2_id;
   
   glBegin(GL_TRIANGLES);
   for(n=((SM_NUM_TRI(sm)+31)>>5) +1; --n;)
@@ -724,15 +733,15 @@ BYTE  (*rgb)[3];
 }
 
 /*
- * smRender_fg_tris(sm,vp,t_flag,bg_flag,wp,rgb)
+ * smRender_new_fg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
  * SM *sm;                        : mesh
  * FVECT vp;                      : current viewpoint
- * int4  *t_flag,*bg_flag;        : triangle flags: t_flag is generic,bg_flag 
- *                                  indicates if background tri;
+ * int4  *new_flag,*active_flag,*bg_flag; : triangle flags: indicate if
+ *                                tri is new,active,background
  * SFLOAT (*wp)[3];BYTE (*rgb)[3]; : arrays of sample points and RGB colors
  *
  * Sequentially gos through triangle list and renders all valid tris who 
- * have t_flag set, and NOT bg_flag set.
+ * have new_flag and active_flag set, and NOT bg_flag set.
  */
 smRender_new_fg_tris(sm,vp,new_flag,active_flag,bg_flag,wp,rgb)
 SM *sm;
@@ -743,7 +752,7 @@ BYTE  (*rgb)[3];
 {
   TRI *tri;
   int i,n,b0,b1,b2;
-  int v0_id,v1_id,v2_id;
+  S_ID v0_id,v1_id,v2_id;
   
   glBegin(GL_TRIANGLES);
   for(n=((SM_NUM_TRI(sm)+31)>>5) +1; --n;)
@@ -764,13 +773,12 @@ BYTE  (*rgb)[3];
 	   else
 	     render_tri(wp[v0_id],wp[v1_id],wp[v2_id],rgb[v0_id],rgb[v1_id],
 			rgb[v2_id])
-
 	 }
   glEnd();
 
 }
 
-
+/* Test for qsort to depth sort triangles */
 int
 compare_tri_depths(T_DEPTH *td1,T_DEPTH *td2)
 {
@@ -806,8 +814,8 @@ FVECT vp;
   FVECT diff;
   int4 *new_flag,*bg_flag,*active_flag;
   
- td = (T_DEPTH *)tempbuf(MAX_NEW_TRIS*sizeof(T_DEPTH),FALSE);
- size = MAX_NEW_TRIS;
+ td = (T_DEPTH *)tempbuf(NEW_TRI_CNT*sizeof(T_DEPTH),FALSE);
+ size = NEW_TRI_CNT;
 
   tcnt=0;
   new_flag = SM_NTH_FLAGS(sm,T_NEW_FLAG);
@@ -881,7 +889,8 @@ smRender_inc(sm,vp)
 SM *sm;
 FVECT vp;
 {
-  int i,n,v0_id,v1_id,v2_id,b0,b1,b2;
+  S_ID v0_id,v1_id,v2_id;
+  int i,n,b0,b1,b2;
   TRI *tri;
   SFLOAT (*wp)[3];
   BYTE  (*rgb)[3];
@@ -889,12 +898,12 @@ FVECT vp;
   T_DEPTH *td = NULL;
 
 
-  /* For all of the NEW triangles (since last update): assume
-     ACTIVE. Go through and sort on depth value (from vp). Turn
+  /* For all of the NEW and ACTIVE triangles (since last update): 
+     Go through and sort on depth value (from vp). Turn
      Depth Buffer test off and render back-front
-     */
+   */
 
-  /* Must depth sort if view points do not coincide */
+  /* Must depth sort if current view point is not same as canonical */
   if(!EQUAL_VEC3(SM_VIEW_CENTER(sm),vp))
     td =  smOrder_new_tris(sm,vp);
   wp = SM_WP(sm);
@@ -946,7 +955,7 @@ FVECT vp;
  *  SFLOAT (*wp)[3];      : array of sample points
  *  BYTE (*rgb)[3];      : array of RGB values for samples
  *  int i,level_i,level,max_level,leaf_cnt; 
- *                       : variables to keep track of where
+ *          : variables to keep track of where
  *         we are in the quadtree traversal in order to map nodes to 
  *         corresponding array locations, where nodes are stored in breadth-
  *         first order. i is the index of the current node,level_i is the 
@@ -1041,9 +1050,8 @@ int which,cull;
   if(QT_IS_LEAF(qt))
   {
     TRI *t,*tri;
-    OBJECT *optr;
-    int v0_id,v1_id,v2_id,bg0,bg1,bg2;
-    int t_id,s_id;
+    S_ID *optr,s_id,v0_id,v1_id,v2_id;
+    int bg0,bg1,bg2,t_id;
 
     if(cull && !QT_LEAF_IS_FLAG(qt))
       return;
@@ -1125,16 +1133,13 @@ int cull;
   int i;
   STREE *st= SM_LOCATOR(sm);
 
-
   wp = SM_WP(sm);
   rgb =SM_RGB(sm);
 
   smClear_flags(sm,T_NEW_FLAG);
 
-
   if(cull)
     smCull(sm,view,SM_ALL_LEVELS);
-
 
   glPushAttrib(GL_DEPTH_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
@@ -1143,7 +1148,6 @@ int cull;
   glPushMatrix();
   /* move relative to the new view */
   glTranslated(view->vp[0],view->vp[1],view->vp[2]);
-
 
   /* The points are a distance of 1 away from the origin: if necessary 
      scale so that they fit in frustum and are therefore not clipped away
@@ -1460,16 +1464,17 @@ smUpdate(view,qual)
    VIEW *view;
    int qual;
 {
+  
   /* Is there anything to render? */
   if(!smMesh || SM_NUM_TRI(smMesh)<=0)
     return;
-
+  
   /* Is viewer MOVING?*/
   if(qual < MAXQUALITY)
   {
     if(smIncremental)
       smUpdate_tm(smMesh);
-    smIncremental = FALSE;
+
     /* Render mesh using display lists */
     smRender(smMesh,view,qual);
     return;
@@ -1521,6 +1526,7 @@ smUpdate(view,qual)
   }
 
 }
+
 
 
 

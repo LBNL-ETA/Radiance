@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.5 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Find extrema points in a Radiance picture.
  */
@@ -22,8 +19,6 @@ int  wrongformat = 0;
 
 COLOR  expos = WHTCOLOR;
 
-extern char  *malloc();
-
 
 headline(s)			/* check header line */
 char  *s;
@@ -34,7 +29,7 @@ char  *s;
 
 	if (isformat(s)) {			/* format */
 		formatval(fmt, s);
-		wrongformat = strcmp(fmt, COLRFMT);
+		wrongformat = !globmatch(PICFMT, fmt);
 	}
 	if (!orig)
 		return(0);
@@ -111,7 +106,7 @@ char  *argv[];
 			}
 		}
 	}
-	free((char *)scan);
+	free((void *)scan);
 	printf("%d %d\t%e %e %e\n", xmin, ymin,
 			colrval(cmin,RED)/colval(expos,RED),
 			colrval(cmin,GRN)/colval(expos,GRN),

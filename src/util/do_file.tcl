@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: do_file.tcl,v 2.17 2003/02/22 02:07:30 greg Exp $
 #
 # Choose the Rad Input File to work on.
 #

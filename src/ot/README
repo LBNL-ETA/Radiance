@@ -1,5 +1,5 @@
 		OCTREE GENERATOR
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.3 8/25/95 LBL"
 
 This directory contains the octree generation program "oconv" and the
 bounding box sidekick "getbbox".

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_pr24.c,v 2.9 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  program to convert between RADIANCE and 24-bit rasterfiles.
  */
@@ -14,6 +11,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  <fcntl.h>
 #endif
 
+#include  <time.h>
+
 #include  <math.h>
 
 #include  "rasterfile.h"
@@ -21,8 +20,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  "color.h"
 
 #include  "resolu.h"
-
-extern char  *malloc();
 
 double	gamcor = 2.2;			/* gamma correction */
 
@@ -177,7 +174,7 @@ int	pad;
 			quiterr("error writing Radiance picture");
 	}
 						/* free scanline */
-	free((char *)scanout);
+	free((void *)scanout);
 }
 
 
@@ -223,5 +220,5 @@ int	pad;
 			quiterr("error writing rasterfile");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }

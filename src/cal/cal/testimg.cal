@@ -1,0 +1,38 @@
+{
+	Create a calibration image using pcomb.
+	Run through log scales in each primary and grey from 1/100 to 1.
+	Creates eight rows of 10 color squares each.
+	First two rows are greyscale.
+	Next rows run through red, green, blue, magenta, yellow and cyan.
+}
+xres : 512;			{ settable x resolution }
+yres : xres * .8;		{ for square patches }
+gap : xres/128;			{ gap between patches }
+pwidth : (xres-gap)/10 - gap;	{ patch width }
+pheight : (yres-gap)/8 - gap;	{ patch height }
+gapgrey : 1;			{ value for gap pixels }
+minv : 0.01;			{ minimum value }
+scale(x) : minv^(1-x);
+or(a,b) : if( a, a, b );
+and(a,b) : if( a, b, a );
+mod(n,d) : n - floor(n/d)*d;
+
+ingap = if(or(gap-mod(x,pwidth+gap),gap-mod(y,pheight+gap)), 1, -1);
+
+ro = if(ingap, gapgrey, redval);
+go = if(ingap, gapgrey, grnval);
+bo = if(ingap, gapgrey, bluval);
+
+{ Patches are numbered starting from 0 at the lower left, incr. right then up }
+
+n = floor(x/(pwidth+gap)) + 10*floor(y/(pheight+gap));
+
+redval = if(19.5-n, scale(n/19),
+		select(floor((n-10)/10), scale((n-20)/9), 0, 0,
+				scale((n-50)/9), scale((n-60)/9), 0));
+grnval = if(19.5-n, scale(n/19),
+		select(floor((n-10)/10), 0, scale((n-30)/9), 0,
+				0, scale((n-60)/9), scale((n-70)/9)));
+bluval = if(19.5-n, scale(n/19),
+		select(floor((n-10)/10), 0, 0, scale((n-40)/9),
+				scale((n-50)/9), 0, scale((n-70)/9)));

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: x11image.c,v 2.56 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  x11image.c - driver for X-windows
  *
@@ -27,14 +24,11 @@ static char SCCSid[] = "$SunId$ SGI";
 #include  <X11/Xutil.h>
 #include  <X11/Xatom.h>
 
-#undef	NOPROTO
-#define	NOPROTO 1
 #include  "color.h"
 #include  "tonemap.h"
 #include  "view.h"
 #include  "x11raster.h"
 #include  "random.h"
-#include  "resolu.h"
 
 #define  FONTNAME	"8x13"		/* text font we'll use */
 
@@ -109,7 +103,7 @@ unsigned char	*ourdata;		/* our image data */
 
 struct {
 	int  xmin, ymin, xsiz, ysiz;
-}  box = {0, 0, 0, 0};			/* current box */
+}  bbox = {0, 0, 0, 0};			/* current bbox */
 
 char  *geometry = NULL;			/* geometry specification */
 
@@ -637,8 +631,8 @@ int  xpos, ypos;
 	COLOR  cval;
 	register char  *cp;
 
-	box.xmin = xpos; box.xsiz = 1;
-	box.ymin = ypos; box.ysiz = 1;
+	bbox.xmin = xpos; bbox.xsiz = 1;
+	bbox.ymin = ypos; bbox.ysiz = 1;
 	avgbox(cval);
 	scalecolor(cval, 1./exposure);
 	pix2loc(hv, &inpres, xpos-xoff, ypos-yoff);
@@ -703,7 +697,7 @@ XKeyPressedEvent  *ekey;
 			sprintf(buf, "%.3f", intens(cval)/exposure);
 			break;
 		case 'l':				/* luminance */
-			sprintf(buf, "%.0fL", luminance(cval)/exposure);
+			sprintf(buf, "%.1fL", luminance(cval)/exposure);
 			break;
 		case 'c':				/* color */
 			comp = pow(2.0, (double)scale);
@@ -714,7 +708,7 @@ XKeyPressedEvent  *ekey;
 			break;
 		}
 		XDrawImageString(thedisplay, wind, ourgc,
-				box.xmin, box.ymin+box.ysiz, buf, strlen(buf)); 
+				bbox.xmin, bbox.ymin+bbox.ysiz, buf, strlen(buf)); 
 		return(0);
 	case 'i':				/* identify (contour) */
 		if (ourras->pixels == NULL)
@@ -776,9 +770,9 @@ XKeyPressedEvent  *ekey;
 		sprintf(buf, "%+d", scale);
 	remap:
 		XDrawImageString(thedisplay, wind, ourgc,
-				box.xmin, box.ymin+box.ysiz, buf, strlen(buf));
+				bbox.xmin, bbox.ymin+bbox.ysiz, buf, strlen(buf));
 		XFlush(thedisplay);
-		free(ourdata);
+		/* free(ourdata); 	This is done in XDestroyImage()! */
 		free_raster(ourras);
 		getras();
 	/* fall through */
@@ -807,7 +801,7 @@ XKeyPressedEvent  *ekey;
 		redraw(0, 0, width, height);
 		return(0);
 	case ' ':				/* clear */
-		redraw(box.xmin, box.ymin, box.xsiz, box.ysiz);
+		redraw(bbox.xmin, bbox.ymin, bbox.xsiz, bbox.ysiz);
 		return(0);
 	default:
 		XBell(thedisplay, 0);
@@ -841,30 +835,30 @@ XButtonPressedEvent  *ebut;
 }
 
 
-getbox(ebut)				/* get new box */
+getbox(ebut)				/* get new bbox */
 XButtonPressedEvent  *ebut;
 {
 	XEvent	e;
 
 	XMaskEvent(thedisplay, ButtonReleaseMask|ButtonMotionMask, &e);
 	while (e.type == MotionNotify) {
-		revbox(ebut->x, ebut->y, box.xmin = e.xmotion.x, box.ymin = e.xmotion.y);
+		revbox(ebut->x, ebut->y, bbox.xmin = e.xmotion.x, bbox.ymin = e.xmotion.y);
 		XMaskEvent(thedisplay,ButtonReleaseMask|ButtonMotionMask,&e);
-		revbox(ebut->x, ebut->y, box.xmin, box.ymin);
+		revbox(ebut->x, ebut->y, bbox.xmin, bbox.ymin);
 	}
-	box.xmin = e.xbutton.x<0 ? 0 : (e.xbutton.x>=width ? width-1 : e.xbutton.x);
-	box.ymin = e.xbutton.y<0 ? 0 : (e.xbutton.y>=height ? height-1 : e.xbutton.y);
-	if (box.xmin > ebut->x) {
-		box.xsiz = box.xmin - ebut->x + 1;
-		box.xmin = ebut->x;
+	bbox.xmin = e.xbutton.x<0 ? 0 : (e.xbutton.x>=width ? width-1 : e.xbutton.x);
+	bbox.ymin = e.xbutton.y<0 ? 0 : (e.xbutton.y>=height ? height-1 : e.xbutton.y);
+	if (bbox.xmin > ebut->x) {
+		bbox.xsiz = bbox.xmin - ebut->x + 1;
+		bbox.xmin = ebut->x;
 	} else {
-		box.xsiz = ebut->x - box.xmin + 1;
+		bbox.xsiz = ebut->x - bbox.xmin + 1;
 	}
-	if (box.ymin > ebut->y) {
-		box.ysiz = box.ymin - ebut->y + 1;
-		box.ymin = ebut->y;
+	if (bbox.ymin > ebut->y) {
+		bbox.ysiz = bbox.ymin - ebut->y + 1;
+		bbox.ymin = ebut->y;
 	} else {
-		box.ysiz = ebut->y - box.ymin + 1;
+		bbox.ysiz = ebut->y - bbox.ymin + 1;
 	}
 }
 
@@ -888,7 +882,7 @@ XButtonPressedEvent  *ebut;
 }
 
 
-revbox(x0, y0, x1, y1)			/* draw box with reversed lines */
+revbox(x0, y0, x1, y1)			/* draw bbox with reversed lines */
 int  x0, y0, x1, y1;
 {
 	revline(x0, y0, x1, y0);
@@ -907,14 +901,14 @@ COLOR	cavg;
 	COLOR	col;
 
 	while (n--) {
-		colr_color(col, scn++);
+		colr_color(col, *scn++);
 		addcolor(cavg, col);
 	}
 }
 
 
 int
-avgbox(cavg)				/* average color over current box */
+avgbox(cavg)				/* average color over current bbox */
 COLOR	cavg;
 {
 	double	d;
@@ -931,23 +925,23 @@ COLOR	cavg;
 
 
 int
-dobox(f, p)				/* run function over box */
+dobox(f, p)				/* run function over bbox */
 int	(*f)();			/* function to call for each subscan */
 char	*p;			/* pointer to private data */
 {
 	int  left, right, top, bottom;
 	int  y;
 
-	left = box.xmin - xoff;
-	right = left + box.xsiz;
+	left = bbox.xmin - xoff;
+	right = left + bbox.xsiz;
 	if (left < 0)
 		left = 0;
 	if (right > xmax)
 		right = xmax;
 	if (left >= right)
 		return(0);
-	top = box.ymin - yoff;
-	bottom = top + box.ysiz;
+	top = bbox.ymin - yoff;
+	bottom = top + bbox.ysiz;
 	if (top < 0)
 		top = 0;
 	if (bottom > ymax)
@@ -1100,7 +1094,7 @@ getmono()			/* get monochrome data */
 			cerr[x] = err + errp;
 		}
 	}
-	free((char *)cerr);
+	free((void *)cerr);
 }
 
 
@@ -1143,7 +1137,7 @@ COLR  *scan;
 		errp = err;
 		ti = x*xmax/iconwidth;
 		copycolr(clr, scan[ti]);
-		normcolrs(clr, 1, scale);
+		normcolrs(&clr, 1, scale);
 		err += normbright(clr) + cerr[x];
 		if (err > 127)
 			err -= 255;

@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: gethelp3.6.tcl,v 2.12 2003/02/22 02:07:30 greg Exp $
 #
 # Get help from a file, formatted like so:
 #

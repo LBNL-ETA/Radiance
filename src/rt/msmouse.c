@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: msmouse.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 #include <i86.h>
 #include <graph.h>
 #include "driver.h"

@@ -1,13 +1,65 @@
-/* Copyright (c) 1997 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.27 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  rtrace.c - program and variables for individual ray tracing.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
  *
- *     6/11/86
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 /*
@@ -26,11 +78,12 @@ static char SCCSid[] = "$SunId$ SGI";
 
 #include  "ray.h"
 
-#include  "octree.h"
-
 #include  "otypes.h"
 
 #include  "resolu.h"
+
+CUBE  thescene;				/* our scene */
+OBJECT	nsceneobjs;			/* number of objects in our scene */
 
 int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
@@ -43,6 +96,12 @@ int  inform = 'a';			/* input format */
 int  outform = 'a';			/* output format */
 char  *outvals = "v";			/* output specification */
 
+int  do_irrad = 0;			/* compute irradiance? */
+
+void  (*trace)() = NULL;		/* trace call */
+
+extern void  ambnotify(), tranotify();
+void  (*addobjnotify[])() = {ambnotify, tranotify, NULL};
 char  *tralist[128];			/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 #define	 MAXTSET	511		/* maximum number in trace set */
@@ -72,6 +131,7 @@ int  backvis = 1;			/* back face visibility */
 int  maxdepth = 6;			/* maximum recursion depth */
 double  minweight = 4e-3;		/* minimum ray weight */
 
+char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */
 int  ambvwt = 0;			/* initial weight for ambient value */
 double  ambacc = 0.2;			/* ambient accuracy */
@@ -82,24 +142,24 @@ int  ambounce = 0;			/* ambient bounces */
 char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
-extern OBJREC  Lamb;			/* a Lambertian surface */
-extern OBJREC  Aftplane;		/* aft clipping object */
-
 
 static RAY  thisray;			/* for our convenience */
 
-static int  oputo(), oputd(), oputv(), oputl(), oputL(),
+static void  oputo(), oputd(), oputv(), oputl(), oputL(),
 		oputp(), oputn(), oputN(), oputs(), oputw(), oputm();
 
-static int  ourtrace(), tabin();
-static int  (*ray_out[16])(), (*every_out[16])();
+static void  ourtrace(), tabin();
+static void  (*ray_out[16])(), (*every_out[16])();
 static int  castonly = 0;
 
-static int  puta(), putf(), putd();
+static void  puta(), putf(), putd();
 
-static int  (*putreal)();
+static void  (*putreal)();
+
+void	bogusray(), rad(), irrad(), printvals();
 
 
+void
 quit(code)			/* quit program */
 int  code;
 {
@@ -125,6 +185,7 @@ int  f;
 }
 
 
+void
 rtrace(fname)				/* trace rays from file */
 char  *fname;
 {
@@ -202,8 +263,8 @@ char  *fname;
 setoutput(vs)				/* set up output tables */
 register char  *vs;
 {
-	extern int  (*trace)();
-	register int (**table)() = ray_out;
+	extern void  (*trace)();
+	register void (**table)() = ray_out;
 
 	castonly = 1;
 	while (*vs)
@@ -255,6 +316,7 @@ register char  *vs;
 }
 
 
+void
 bogusray()			/* print out empty record */
 {
 	thisray.rorg[0] = thisray.rorg[1] = thisray.rorg[2] =
@@ -264,6 +326,7 @@ bogusray()			/* print out empty record */
 }
 
 
+void
 rad(org, dir, dmax)		/* compute and print ray value(s) */
 FVECT  org, dir;
 double	dmax;
@@ -285,6 +348,7 @@ double	dmax;
 }
 
 
+void
 irrad(org, dir)			/* compute immediate irradiance value */
 FVECT  org, dir;
 {
@@ -307,10 +371,11 @@ FVECT  org, dir;
 }
 
 
+void
 printvals(r)			/* print requested ray values */
 RAY  *r;
 {
-	register int  (**tp)();
+	register void  (**tp)();
 
 	if (ray_out[0] == NULL)
 		return;
@@ -321,12 +386,12 @@ RAY  *r;
 }
 
 
+int
 getvec(vec, fmt, fp)		/* get a vector from fp */
 register FVECT  vec;
 int  fmt;
 FILE  *fp;
 {
-	extern char  *fgetword();
 	static float  vf[3];
 	static double  vd[3];
 	char  buf[32];
@@ -358,6 +423,7 @@ FILE  *fp;
 }
 
 
+void
 tranotify(obj)			/* record new modifier */
 OBJECT	obj;
 {
@@ -365,6 +431,11 @@ OBJECT	obj;
 	register OBJREC	 *o = objptr(obj);
 	register char  **tralp;
 
+	if (obj == OVOID) {		/* starting over */
+		traset[0] = 0;
+		hitlimit = 0;
+		return;
+	}
 	if (hitlimit || !ismodifier(o->otype))
 		return;
 	for (tralp = tralist; *tralp != NULL; tralp++)
@@ -380,11 +451,11 @@ OBJECT	obj;
 }
 
 
-static
+static void
 ourtrace(r)				/* print ray values */
 RAY  *r;
 {
-	register int  (**tp)();
+	register void  (**tp)();
 
 	if (every_out[0] == NULL)
 		return;
@@ -400,7 +471,7 @@ RAY  *r;
 }
 
 
-static
+static void
 tabin(r)				/* tab in appropriate amount */
 RAY  *r;
 {
@@ -411,7 +482,7 @@ RAY  *r;
 }
 
 
-static
+static void
 oputo(r)				/* print origin */
 register RAY  *r;
 {
@@ -421,7 +492,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputd(r)				/* print direction */
 register RAY  *r;
 {
@@ -431,7 +502,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputv(r)				/* print value */
 register RAY  *r;
 {
@@ -450,7 +521,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputl(r)				/* print effective distance */
 register RAY  *r;
 {
@@ -458,7 +529,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputL(r)				/* print single ray length */
 register RAY  *r;
 {
@@ -466,7 +537,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputp(r)				/* print point */
 register RAY  *r;
 {
@@ -482,7 +553,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputN(r)				/* print unperturbed normal */
 register RAY  *r;
 {
@@ -498,7 +569,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputn(r)				/* print perturbed normal */
 RAY  *r;
 {
@@ -517,7 +588,7 @@ RAY  *r;
 }
 
 
-static
+static void
 oputs(r)				/* print name */
 register RAY  *r;
 {
@@ -529,7 +600,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputw(r)				/* print weight */
 register RAY  *r;
 {
@@ -537,7 +608,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 oputm(r)				/* print modifier */
 register RAY  *r;
 {
@@ -552,7 +623,7 @@ register RAY  *r;
 }
 
 
-static
+static void
 puta(v)				/* print ascii value */
 double  v;
 {
@@ -560,7 +631,7 @@ double  v;
 }
 
 
-static
+static void
 putd(v)				/* print binary double */
 double  v;
 {
@@ -568,7 +639,7 @@ double  v;
 }
 
 
-static
+static void
 putf(v)				/* print binary float */
 double  v;
 {

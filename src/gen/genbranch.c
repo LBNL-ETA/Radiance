@@ -1,9 +1,6 @@
-/* Copyright (c) 1989 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genbranch.c,v 2.5 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  genbranch.c - program to generate 3D Christmas tree branches.
  *
@@ -11,6 +8,8 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include  <stdio.h>
+
+#include <stdlib.h>
 
 #include  <math.h>
 
@@ -31,10 +30,6 @@ int  nshoots = 7;			/* number of offshoots */
 int  rdepth = 3;			/* recursion depth */
 
 double  var = 0.3;			/* variability */
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 
 main(argc, argv)

@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mkillum.c,v 2.11 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Make illum sources for optimizing rendering process
  */
@@ -60,16 +57,11 @@ int	doneheader = 0;		/* printed header yet? */
 
 int	warnings = 1;		/* print warnings? */
 
-extern char	*fgetline(), *fgetword(), *sskip(), 
-		*atos(), *iskip(), *fskip(), *strcpy();
-extern FILE	*popen();
-
 
 main(argc, argv)		/* compute illum distributions using rtrace */
 int	argc;
 char	*argv[];
 {
-	extern char	*getenv(), *getpath();
 	char	*rtpath;
 	FILE	*fp;
 	register int	i;
@@ -138,6 +130,7 @@ char	*argv[];
 }
 
 
+void
 quit(status)			/* exit with status */
 int  status;
 {
@@ -185,6 +178,7 @@ init()				/* start rtrace and set up buffers */
 }
 
 
+void
 eputs(s)				/* put string to stderr */
 register char  *s;
 {
@@ -200,6 +194,7 @@ register char  *s;
 }
 
 
+void
 wputs(s)			/* print warning if enabled */
 char  *s;
 {
@@ -259,6 +254,8 @@ char	*nm;
 		case ' ':
 		case '\t':
 		case '\n':
+		case '\r':
+		case '\f':
 			cp++;
 			continue;
 		case 'm':			/* material name */
@@ -326,7 +323,7 @@ char	*nm;
 		case 'd':			/* point sample density */
 			if (*++cp != '=')
 				break;
-			if (!isintd(++cp, " \t\n"))
+			if (!isintd(++cp, " \t\n\r"))
 				break;
 			thisillum.sampdens = atoi(cp);
 			cp = sskip(cp);
@@ -334,7 +331,7 @@ char	*nm;
 		case 's':			/* point super-samples */
 			if (*++cp != '=')
 				break;
-			if (!isintd(++cp, " \t\n"))
+			if (!isintd(++cp, " \t\n\r"))
 				break;
 			thisillum.nsamps = atoi(cp);
 			cp = sskip(cp);
@@ -352,7 +349,7 @@ char	*nm;
 		case 'b':			/* brightness */
 			if (*++cp != '=')
 				break;
-			if (!isfltd(++cp, " \t\n"))
+			if (!isfltd(++cp, " \t\n\r"))
 				break;
 			thisillum.minbrt = atof(cp);
 			if (thisillum.minbrt < 0.)

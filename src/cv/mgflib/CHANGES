@@ -1,0 +1,31 @@
+	LIST OF CHANGES SINCE 1.0 RELEASE
+
+Modified setspectrum() in context.c to allow negative spectral values,
+so that complimentary color systems will work with cmix.
+
+Added test and error condition for input line too long ( > 4096 bytes).
+
+Changed mgfilt so as to expand any included files for version conformance.
+
+Fixed minor bug in parser.c e_include() function where it didn't close the
+input file if the transform had an error.
+
+Added error for closing hierarchical context that was never opened.
+
+Created cvrgb.c module for converting to programmer-defined RGB color space.
+
+Created mgf2inv translator from MGF to Inventor 1.0, 2.0 and VRML 1.0 formats.
+
+Modified 3ds2pov program to produce MGF output also.
+
+========================================================================
+	CHANGES SINCE 1.1 RELEASE
+
+Added fh entity for faces with holes and cleaned up prototype
+declarations using suggestions by Philippe Bekaert.
+
+Fixed header on VRML 1.0 output of mgf2inv.
+
+Added Philippe Bekaert's performance improvements to lu_hash() and lu_find().
+
+Added client data pointers to context structures (vertex, color, material).

@@ -1,4 +1,4 @@
-	$Id: trad.hlp,v 2.18 1998/10/20 11:52:15 gwlarson Exp $
+	trad.hlp 2.18 10/20/98
 
 This help file is associated with the trad interface to the Radiance
 rad(1) program.  Trad consists of trad.wsh and one do_*.tcl file for

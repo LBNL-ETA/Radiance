@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: findglare.c,v 2.9 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Find glare sources in a scene or image.
  *
@@ -56,12 +53,13 @@ char	*argv[];
 					/* process options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
 						/* expand arguments */
-		while (rval = expandarg(&argc, &argv, i))
-			if (rval < 0) {
-				fprintf(stderr, "%s: cannot expand '%s'",
-						argv[0], argv[i]);
-				exit(1);
-			}
+		while ((rval = expandarg(&argc, &argv, i)) > 0)
+			;
+		if (rval < 0) {
+			fprintf(stderr, "%s: cannot expand '%s'",
+					argv[0], argv[i]);
+			exit(1);
+		}
 		rval = getviewopt(&ourview, argc-i, argv+i);
 		if (rval >= 0) {
 			i += rval;

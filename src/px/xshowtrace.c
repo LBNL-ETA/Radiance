@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.7 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Display an image and watch the rays get traced.
  *
@@ -12,7 +9,6 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include "standard.h"
 #include "view.h"
-#include "resolu.h"
 #include <X11/Xlib.h>
 
 #define MAXDEPTH	32		/* ridiculous ray tree depth */
@@ -144,7 +140,7 @@ struct node	*tp;
 
 	for (kid = tp->daughter; kid != NULL; kid = kid->sister)
 		freetree(kid);
-	free((char *)tp);
+	free((void *)tp);
 }
 
 

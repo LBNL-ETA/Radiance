@@ -1,9 +1,6 @@
-/* Copyright (c) 1990 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: thf2rad.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /* Copyright (c) 1988 Regents of the University of California */
 
 /*
@@ -13,6 +10,7 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #define MAXSTR		128		/* maximum string or id length */
@@ -23,10 +21,6 @@ typedef struct {
 } POINT;
 
 double	rad = 0.0;			/* line radius */
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 
 main(argc, argv)

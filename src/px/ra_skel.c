@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_skel.c,v 2.11 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  Skeletal 24-bit image conversion program.  Replace "skel"
  *  in this file with a more appropriate image type identifier.
@@ -23,10 +20,9 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+#include  <time.h>
 #include  "color.h"
 #include  "resolu.h"
-
-extern char  *malloc();
 
 double	gamcor = 2.2;			/* gamma correction */
 
@@ -150,7 +146,7 @@ skel2ra()		/* convert 24-bit scanlines to Radiance picture */
 			quiterr("error writing Radiance picture");
 	}
 						/* free scanline */
-	free((char *)scanout);
+	free((void *)scanout);
 }
 
 
@@ -179,5 +175,5 @@ ra2skel()		/* convert Radiance scanlines to 24-bit */
 			quiterr("error writing skel file");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }

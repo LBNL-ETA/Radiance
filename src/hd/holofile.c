@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: holofile.c,v 3.42 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines for managing holodeck files
  *
@@ -81,7 +78,7 @@ HDGRID	*hproto;
 				/* allocate and clear beam list */
 	hp->bl = (BEAM **)malloc((nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
 	if (hp->bl == NULL) {
-		free((char *)hp);
+		free((void *)hp);
 		return(NULL);
 	}
 	bzero((char *)hp->bl, (nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
@@ -132,7 +129,7 @@ int	wr;
 	}
 	hdfragl[fd].nlinks++;
 	hdfragl[fd].writable = wr;		/* set writable flag */
-	hdfragl[fd].flen = lseek(fd, 0L, 2);	/* get file length */
+	hdfragl[fd].flen = lseek(fd, (off_t)0L, 2);	/* get file length */
 }
 
 
@@ -145,7 +142,7 @@ register int	fd;
 	if (fd < 0 | fd >= nhdfragls || !hdfragl[fd].nlinks)
 		return;
 	if (!--hdfragl[fd].nlinks && hdfragl[fd].nfrags) {
-		free((char *)hdfragl[fd].fi);
+		free((void *)hdfragl[fd].fi);
 		hdfragl[fd].fi = NULL;
 		hdfragl[fd].nfrags = 0;
 	}
@@ -164,7 +161,7 @@ HDGRID	*hproto;		/* holodeck section grid */
 	register int	n;
 					/* prepare for system errors */
 	errno = 0;
-	if ((fpos = lseek(fd, 0L, 1)) < 0)
+	if ((fpos = lseek(fd, (off_t)0L, 1)) < 0)
 		error(SYSTEM, "cannot determine holodeck file position");
 	if (hproto == NULL) {		/* assume we're loading it */
 		HDGRID	hpr;
@@ -189,7 +186,7 @@ HDGRID	*hproto;		/* holodeck section grid */
 		if (fd < nhdfragls && hdfragl[fd].nlinks)
 			writable = hdfragl[fd].writable;
 		else
-			writable = lseek(fd, fpos, 0) == fpos &&
+			writable = lseek(fd, (off_t)fpos, 0) == fpos &&
 				write(fd, (char *)hp, sizeof(HDGRID)) ==
 							sizeof(HDGRID);
 	} else {			/* else assume we're creating it */
@@ -245,7 +242,7 @@ int	i;
 	register int	j;
 
 	if (!hp->dirty++) {			/* write smudge first time */
-		if (lseek(hp->fd, biglob(hp)->fo+(i-1)*sizeof(BEAMI), 0) < 0
+		if (lseek(hp->fd, (off_t)(biglob(hp)->fo+(i-1)*sizeof(BEAMI)), 0) < 0
 				|| write(hp->fd, (char *)&smudge,
 					sizeof(BEAMI)) != sizeof(BEAMI))
 			error(SYSTEM, "seek/write error in hdmarkdirty");
@@ -308,8 +305,8 @@ int	all;
 		return(0);
 	errno = 0;			/* write dirty segments */
 	for (j = 0; j < hp->dirty; j++) {
-		if (lseek(hp->fd, biglob(hp)->fo +
-				(hp->dirseg[j].s-1)*sizeof(BEAMI), 0) < 0)
+		if (lseek(hp->fd, (off_t)(biglob(hp)->fo +
+				(hp->dirseg[j].s-1)*sizeof(BEAMI)), 0) < 0)
 			error(SYSTEM, "cannot seek on holodeck file");
 		n = hp->dirseg[j].n * sizeof(BEAMI);
 		if (write(hp->fd, (char *)(hp->bi+hp->dirseg[j].s), n) != n)
@@ -358,10 +355,10 @@ int	fd;
 	if (fd < 0)
 		return(-1);
 	if (fd >= nhdfragls || !hdfragl[fd].nlinks) {
-		if ((fpos = lseek(fd, 0L, 1)) < 0)
+		if ((fpos = lseek(fd, (off_t)0L, 1)) < 0)
 			return(-1);
-		flen = lseek(fd, 0L, 2);
-		lseek(fd, fpos, 0);
+		flen = lseek(fd, (off_t)0L, 2);
+		lseek(fd, (off_t)fpos, 0);
 		return(flen);
 	}
 	return(hdfragl[fd].flen);
@@ -416,7 +413,7 @@ int	nr;			/* number of new rays desired */
 		blglob(hp)->nrm += n;
 		if ((n = hp->bl[i]->nrm = hp->bi[i].nrd)) {
 			errno = 0;
-			if (lseek(hp->fd, hp->bi[i].fo, 0) < 0)
+			if (lseek(hp->fd, (off_t)hp->bi[i].fo, 0) < 0)
 				error(SYSTEM, "seek error on holodeck file");
 			n *= sizeof(RAYVAL);
 			if (read(hp->fd, (char *)hdbray(hp->bl[i]), n) != n)
@@ -455,7 +452,7 @@ register int	i;
 		hp->bl[i] = (BEAM *)hdrealloc(NULL, hdbsiz(n), "hdgetbeam");
 		blglob(hp)->nrm += hp->bl[i]->nrm = n;
 		errno = 0;
-		if (lseek(hp->fd, hp->bi[i].fo, 0) < 0)
+		if (lseek(hp->fd, (off_t)hp->bi[i].fo, 0) < 0)
 			error(SYSTEM, "seek error on holodeck file");
 		n *= sizeof(RAYVAL);
 		if (read(hp->fd, (char *)hdbray(hp->bl[i]), n) != n)
@@ -686,7 +683,7 @@ register int	i;
 	if (nrays) {			/* get and write new fragment */
 		nfo = hdallocfrag(hp->fd, nrays);
 		errno = 0;
-		if (lseek(hp->fd, nfo, 0) < 0)
+		if (lseek(hp->fd, (off_t)nfo, 0) < 0)
 			error(SYSTEM, "cannot seek on holodeck file");
 		n = hp->bl[i]->nrm * sizeof(RAYVAL);
 		if (write(hp->fd, (char *)hdbray(hp->bl[i]), n) != n) {
@@ -740,7 +737,7 @@ register int	i;
 	if (nchanged)
 		hdsyncbeam(hp, i);		/* write new fragment */
 	blglob(hp)->nrm -= hp->bl[i]->nrm;
-	free((char *)hp->bl[i]);		/* free memory */
+	free((void *)hp->bl[i]);		/* free memory */
 	hp->bl[i] = NULL;
 	return(nchanged);
 }
@@ -777,7 +774,7 @@ register int	i;
 			"hdkillbeam called on read-only holodeck");
 	if (hp->bl[i] != NULL) {	/* free memory */
 		blglob(hp)->nrm -= nchanged = hp->bl[i]->nrm;
-		free((char *)hp->bl[i]);
+		free((void *)hp->bl[i]);
 		hp->bl[i] = NULL;
 	} else
 		nchanged = hp->bi[i].nrd;
@@ -875,7 +872,7 @@ register HOLO	*hp;		/* NULL means clean up all */
 	if (hp == NULL) {		/* NULL means clean up everything */
 		while (hdlist[0] != NULL)
 			hddone(hdlist[0]);
-		free((char *)hdfragl);
+		free((void *)hdfragl);
 		hdfragl = NULL; nhdfragls = 0;
 		return;
 	}
@@ -890,6 +887,6 @@ register HOLO	*hp;		/* NULL means clean up all */
 				i++;
 			break;
 		}
-	free((char *)hp->bl);		/* free beam list */
-	free((char *)hp);		/* free holodeck struct */
+	free((void *)hp->bl);		/* free beam list */
+	free((void *)hp);		/* free holodeck struct */
 }

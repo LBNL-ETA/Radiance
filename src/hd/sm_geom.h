@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm_geom.h,v 3.12 2003/02/22 02:07:25 greg Exp $ */
 /*
  *  sm_geom.h
  */
@@ -9,6 +6,12 @@
 /* Assumes included after standard.h  */
 
 #include <values.h>
+
+#ifdef SMLFLT
+#define EQUALITY_EPS 1e-6
+#else
+#define EQUALITY_EPS 1e-10
+#endif
 
 #define F_TINY 1e-10
 #define FZERO(x) ((x) < F_TINY && (x) > -F_TINY)
@@ -36,7 +39,6 @@ typedef struct _FPEQ {
   
 typedef long BCOORD;
 typedef long BDIR;
-typedef long TINT;
 
 #define BITS_BCOORD     (BITS(long)-2)
 #define SHIFT_MAXBCOORD (BITS_BCOORD-1)   
@@ -49,16 +51,6 @@ typedef long TINT;
 #ifndef INVALID
 #define INVALID -1
 #endif
-
-#define GT_INVALID  0
-#define GT_VERTEX   1
-#define GT_EDGE     2
-#define GT_FACE     4
-#define GT_INTERIOR 8
-#define GT_INTERSECT 16
-#define GT_ADJACENT  32
-#define GT_OUT       64
-
 #define IADDV3(v,a)  ((v)[0] += (a)[0],(v)[1] += (a)[1],(v)[2] += (a)[2])
 #define ISUBV3(v,a)  ((v)[0] -= (a)[0],(v)[1] -= (a)[1],(v)[2] -= (a)[2])
 #define ISCALEV3(v,a)  ((v)[0] *= (a),(v)[1] *= (a),(v)[2] *= (a))
@@ -96,7 +88,8 @@ typedef long TINT;
 #define MIN_VEC3(v) ((v)[0]<(v)[1]?((v)[0]<(v)[2]?(v)[0]:v[2]): \
 		     (v)[1]<(v)[2]?(v)[1]:(v)[2])
 #define MAX3(a,b,c) (((b)>(a))?((b) > (c))?(b):(c):((a)>(c))?(a):(c))   
-#define MIN3(a,b,c) (((b)<(a))?((b) < (c))?(b):(c):((a)<(c))?(a):(c))   		   
+#define MIN3(a,b,c) (((b)<(a))?((b) < (c))?(b):(c):((a)<(c))?(a):(c))
+
 #define MAX(a,b)    (((b)>(a))?(b):(a))   
 #define MIN(a,b)  (((b)<(a))?(b):(a))   
 
@@ -106,41 +99,23 @@ typedef long TINT;
 #define NTH_BIT(n,i)         ((n) & (1<<(i)))
 #define SET_NTH_BIT(n,i)     ((n) |= (1<<(i)))   
 
+#define PT_ON_PLANE(p,peq) (DOT(FP_N(peq),p)+FP_D(peq))
 
-/* int convex_angle(FVECT v0,FVECT v1,FVECT v2) */
-/* void triangle_centroid(FVECT v0,FVECT v1,FVECT v2,FVECT c) */
-/* void triangle_plane_equation(FVECT v0,FVECT v1,FVECT v2,FVECT n,double *nd,
-        char norm) */
-/* int vec3_equal(FVECT v1,v2) */
-/* int point_relative_to_plane(FVECT p,FVECT n, double nd) */
-/* int point_in_circle(FVECT p,FVECT p0,FVECT p1) */
-/* int intersect_line_plane(FVECT r,FVECT p1,FVECT p2,float *plane) */
-/* int point_in_cone(FVECT p,FVECT p1,FVECT p2,FVECT p3,FVECT p4) */   
-/* void point_on_sphere(FVECT ps,FVECT p,FVECT c) */
-/* int test_point_against_spherical_tri(FVECT v0,FVECT v1,FVECT v2,FVECT p,
-       FVECT n,char *nset,char *which,char sides[3]) */
-/* int test_single_point_against_spherical_tri(FVECT v0,FVECT v1,FVECT v2,
-       FVECT p,char *which )*/
-/* int test_vertices_for_tri_inclusion(FVECT tri[3],FVECT pts[3],char *nset,
-       FVECT n[3],FVECT avg,char pt_sides[3][3]); */
-/* void set_sidedness_tests(FVECT tri[3],FVECT pts[3],char test[3],
-        char sides[3][3],char nset,FVECT n[3])
- */
-/* int cs_spherical_edge_edge_test(FVECT n[2][3],int i,int j,FVECT avg[2]) */
-/* int spherical_tri_tri_intersect(FVECT a1,FVECT a2,FVECT a3,
-				 FVECT b1,FVECT b2,FVECT b3) */
-   
-/* void calculate_view_frustum(FVECT vp,hv,vv,double horiz,vert,near,far,
-   FVECT fnear[4],FVECT ffar[4])
- */
-/* double triangle_normal_Newell(FVECT v0,FVECT v1,FVECT v2,FVECT n,char n)*/
+/* FUNCTIONS:
+   int point_in_cone(FVECT p,a,b,c) 
+   void triangle_centroid(FVECT v0,v1,v2,c)
+   double tri_normal(FVECT v0,v1,v2,n,int norm)
+   void tri_plane_equation(FVECT v0,v1,v2,FPEQ *peqptr,int norm)
+   int intersect_ray_plane(FVECT orig,dir,FPEQ peq,double *pd,FVECT r)
+   double point_on_sphere(FVECT ps,p,c)
+   int point_in_stri(FVECT v0,v1,v2,p)
+   int ray_intersect_tri(FVECT orig,dir,v0,v1,v2,pt)
+   void calculate_view_frustum(FVECT vp,hv,vv,double horiz,vert,near,far,
+                               FVECT fnear[4],ffar[4])
+   void bary2d(double x1,y1,x2,y2,x3,y3,px,py,coord)
+*/
 double tri_normal();
-/* double spherical_edge_normal(FVECT v0,FVECT v1,FVECT n,char norm) */
-double spherical_edge_normal();
 double point_on_sphere();
 
-#define point_in_stri_n(n0,n1,n2,p) \
-  ((DOT(n0,p)<=FTINY)&&(DOT(n1,p)<=FTINY)&&(DOT(n2,p)<=FTINY))
 
-#define PT_ON_PLANE(p,peq) (DOT(FP_N(peq),p)+FP_D(peq))
 

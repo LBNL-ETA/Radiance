@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.11 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
  */
@@ -125,7 +122,7 @@ register DOBJECT	*op;
 	}
 	while (op->xfac)
 		freestr(op->xfav[--op->xfac]);
-	free((char *)op);
+	free((void *)op);
 	return(1);
 }
 
@@ -300,7 +297,7 @@ ssph_compute()			/* compute source set from sphere samples */
 						/* avg. reflected brightness */
 	d = AVGREFL / (double)ncells;	
 	scalecolor(csum, d);
-	if (tmCvColors(&dlightsets->larb, TM_NOCHROM, csum, 1) != TM_E_OK)
+	if (tmCvColors(&dlightsets->larb, TM_NOCHROM, &csum, 1) != TM_E_OK)
 		error(CONSISTENCY, "tone mapping problem in ssph_compute");
 					/* greedy light source clustering */
 	while (dlightsets->nl < MAXLIGHTS) {
@@ -407,7 +404,7 @@ int	force;
 			quit(0);
 	if (!ssph_compute()) {		/* compute light sources from sphere */
 		dlightsets = dl->next;
-		free((char *)dl);
+		free((void *)dl);
 		return(0);
 	}
 	op->ol = dl;
@@ -615,7 +612,7 @@ dobj_cleanup()				/* free all resources */
 	savedxf(curobj = NULL);
 	while ((lp = dlightsets) != NULL) {
 		dlightsets = lp->next;
-		free((char *)lp);
+		free((void *)lp);
 	}
 	return(1);
 }
@@ -863,7 +860,7 @@ FVECT   rorg, rdir;
 		VCOPY(darr, rorg); VCOPY(darr+3, rdir);
 	}
 				/* trace it */
-	if (process(op->rtp, darr, darr, sizeof(double),
+	if (process(op->rtp, (char *)darr, (char *)darr, sizeof(double),
 			6*sizeof(double)) != sizeof(double))
 		error(SYSTEM, "rtrace communication error");
 				/* return distance */

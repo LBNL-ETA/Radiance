@@ -1,0 +1,46 @@
+{
+	Rcalc run to compute CRI and other factors from light source SPD
+	convolved with standard curves.
+	Used by scripts illumcal, reflcal.
+
+	Input is summed wavelength convolution used below.
+}
+Lp    = $1;				{ photopic lumens or luminance }
+Ls    = $2;				{ scotopic lumens or luminance }
+x_k   = $3/($3+$4+$5);			{ source x }
+y_k   = $4/($3+$4+$5);			{ source y }
+u_k   = u_XYZ($3,$4,$5);		{ source u }
+v_k   = v_XYZ($3,$4,$5);		{ source v }
+c_k   = c_uv(u_k,v_k);			{ source c }
+d_k   = d_uv(u_k,v_k);			{ source d }
+x10_k = $6/($6+$7+$8);			{ source x10 }
+y10_k = $7/($6+$7+$8);			{ source y10 }
+Yi(i) = select(i, $10, $13, $16, $19, $22, $25, $28, $31) * 100 / $4;
+ui(i) = select(i,
+	u_XYZ($9,$10,$11),		{ u for reference color 1 }
+	u_XYZ($12,$13,$14),		{ u for reference color 2 }
+	u_XYZ($15,$16,$17),		{ u for reference color 3 }
+	u_XYZ($18,$19,$20),		{ u for reference color 4 }
+	u_XYZ($21,$22,$23),		{ u for reference color 5 }
+	u_XYZ($24,$25,$26),		{ u for reference color 6 }
+	u_XYZ($27,$28,$29),		{ u for reference color 7 }
+	u_XYZ($30,$31,$32)		{ u for reference color 8 }
+);
+vi(i) = select(i,
+	v_XYZ($9,$10,$11),		{ v for reference color 1 }
+	v_XYZ($12,$13,$14),		{ v for reference color 2 }
+	v_XYZ($15,$16,$17),		{ v for reference color 3 }
+	v_XYZ($18,$19,$20),		{ v for reference color 4 }
+	v_XYZ($21,$22,$23),		{ v for reference color 5 }
+	v_XYZ($24,$25,$26),		{ v for reference color 6 }
+	v_XYZ($27,$28,$29),		{ v for reference color 7 }
+	v_XYZ($30,$31,$32)		{ v for reference color 8 }
+);
+
+ci(i) = c_uv(ui(i),vi(i));
+di(i) = d_uv(ui(i),vi(i));
+
+u_XYZ(X,Y,Z) = 4*X/(X+15*Y+3*Z);
+v_XYZ(X,Y,Z) = 9*Y/(X+15*Y+3*Z);
+c_uv(u,v) = (4-u-10*v)/v;
+d_uv(u,v) = (1.708*v+.404-1.481*u)/v;

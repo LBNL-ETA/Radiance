@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_pr.c,v 2.6 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ra_pr.c - program to convert between RADIANCE and pixrect picture format.
  *
@@ -14,6 +11,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  <stdio.h>
 
 #include  <math.h>
+
+#include  <time.h>
 
 #include  "rasterfile.h"
 
@@ -169,6 +168,7 @@ char  *err;
 }
 
 
+void
 eputs(s)
 char *s;
 {
@@ -176,6 +176,7 @@ char *s;
 }
 
 
+void
 quit(code)
 int code;
 {
@@ -276,7 +277,7 @@ struct rasterfile  *h;
 		if (fwritecolrs(scanline, xmax, stdout) < 0)
 			quiterr("error writing RADIANCE file");
 	}
-	free((char *)scanline);
+	free((void *)scanline);
 }
 
 

@@ -1,11 +1,9 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.10 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Input and output conditioning routines for pcond.
+ *  Added white-balance adjustment 10/01 (GW).
  */
 
 #include "pcond.h"
@@ -67,7 +65,7 @@ nextscan()				/* read and condition next scanline */
 	if (nread >= numscans(&inpres)) {
 		if (cwarpfile != NULL)
 			free3dw(cwarp);
-		free((char *)scanbuf);
+		free((void *)scanbuf);
 		return(scanbuf = NULL);
 	}
 	if (what2do&DO_ACUITY)
@@ -106,9 +104,9 @@ firstscan()				/* return first processed scanline */
 			syserror(cwarpfile);
 	} else
 		if (lumf == rgblum)
-			comprgb2rgbmat(mbcond.cmat, inprims, outprims);
+			comprgb2rgbWBmat(mbcond.cmat, inprims, outprims);
 		else
-			compxyz2rgbmat(mbcond.cmat, outprims);
+			compxyz2rgbWBmat(mbcond.cmat, outprims);
 	if (what2do&DO_ACUITY)
 		initacuity();
 	scanbuf = (COLOR *)malloc(scanlen(&inpres)*sizeof(COLOR));

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_glx.c,v 3.29 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * OpenGL GLX driver for holodeck display.
  * Based on old GLX driver using cones.
@@ -737,8 +734,8 @@ register VIEW	*vp;
 		dev_zmin = odev.v.vfore;
 	if (odev.v.vaft > FTINY)
 		dev_zmax = odev.v.vaft;
-	if (dev_zmin < dev_zmax/500.)
-		dev_zmin = dev_zmax/500.;
+	if (dev_zmin*500. < dev_zmax)
+		dev_zmax = dev_zmin*500.;
 	xmax = dev_zmin * tan(PI/180./2. * odev.v.horiz);
 	xmin = -xmax;
 	d = odev.v.hoff * (xmax - xmin);

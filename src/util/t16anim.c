@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: t16anim.c,v 1.2 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  *  Send Targa 16-bit files to PC animation system.
  *

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.10 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Rendering routines for rhpict.
  */
@@ -252,7 +249,7 @@ double	ransamp;
 		meet_neighbors(0,random_samp,&ransamp);
 	else
 		meet_neighbors(1,smooth_samp,NULL);
-	free((char *)pixFlags);		/* free pixel flags */
+	free((void *)pixFlags);		/* free pixel flags */
 	pixFlags = NULL;
 }
 
@@ -373,5 +370,5 @@ char	*dp;
 				}
 			}
 	}
-	free((char *)rnl);		/* free row list */
+	free((void *)rnl);		/* free row list */
 }

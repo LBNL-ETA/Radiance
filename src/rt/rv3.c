@@ -1,18 +1,70 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rv3.c,v 2.10 2003/02/22 02:07:29 greg Exp $";
 #endif
-
 /*
  *  rv3.c - miscellaneous routines for rview.
  *
- *     5/11/87
+ *  External symbols declared in rpaint.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
-
-#include  "octree.h"
 
 #include  "rpaint.h"
 
@@ -33,6 +85,7 @@ static char SCCSid[] = "$SunId$ LBL";
 #endif
 
 
+int
 getrect(s, r)				/* get a box */
 char  *s;
 register RECT  *r;
@@ -79,6 +132,7 @@ register RECT  *r;
 }
 
 
+int
 getinterest(s, direc, vec, mp)		/* get area of interest */
 char  *s;
 int  direc;
@@ -143,11 +197,11 @@ register COLOR  col;
 }
 
 
+void
 paint(p, xmin, ymin, xmax, ymax)	/* compute and paint a rectangle */
 register PNODE  *p;
 int  xmin, ymin, xmax, ymax;
 {
-	extern unsigned long  nrays;
 	static unsigned long  lastflush = 0;
 	static RAY  thisray;
 	double  h, v;
@@ -185,6 +239,7 @@ int  xmin, ymin, xmax, ymax;
 }
 
 
+void
 newimage()				/* start a new image */
 {
 						/* free old image */
@@ -205,6 +260,7 @@ newimage()				/* start a new image */
 }
 
 
+void
 redraw()				/* redraw the image */
 {
 	(*dev->clear)(hresolu, vresolu);
@@ -214,6 +270,7 @@ redraw()				/* redraw the image */
 }
 
 
+void
 repaint(xmin, ymin, xmax, ymax)			/* repaint a region */
 int  xmin, ymin, xmax, ymax;
 {
@@ -226,6 +283,7 @@ int  xmin, ymin, xmax, ymax;
 }
 
 
+void
 paintrect(p, xmin, ymin, xmax, ymax, r)		/* paint picture rectangle */
 register PNODE  *p;
 int  xmin, ymin, xmax, ymax;
@@ -296,6 +354,7 @@ int  pd;
 }
 
 
+void
 scalepict(p, sf)			/* scale picture values */
 register PNODE  *p;
 double  sf;
@@ -312,6 +371,7 @@ double  sf;
 }
 
 
+void
 getpictcolrs(yoff, scan, p, xsiz, ysiz)	/* get scanline from picture */
 int  yoff;
 register COLR  *scan;
@@ -342,15 +402,7 @@ int  xsiz, ysiz;
 }
 
 
-pcopy(p1, p2)				/* copy paint node p1 into p2 */
-register PNODE  *p1, *p2;
-{
-	copycolor(p2->v, p1->v);
-	p2->x = p1->x;
-	p2->y = p1->y;
-}
-
-
+void
 freepkids(p)				/* free pnode's children */
 register PNODE  *p;
 {
@@ -360,11 +412,12 @@ register PNODE  *p;
 	freepkids(p->kid+DR);
 	freepkids(p->kid+UL);
 	freepkids(p->kid+UR);
-	free((char *)p->kid);
+	free((void *)p->kid);
 	p->kid = NULL;
 }
 
 
+void
 newview(vp)				/* change viewing parameters */
 register VIEW  *vp;
 {
@@ -381,6 +434,7 @@ register VIEW  *vp;
 }
 
 
+void
 moveview(angle, elev, mag, vc)			/* move viewpoint */
 double  angle, elev, mag;
 FVECT  vc;
@@ -425,6 +479,17 @@ FVECT  vc;
 }
 
 
+void
+pcopy(p1, p2)				/* copy paint node p1 into p2 */
+register PNODE  *p1, *p2;
+{
+	copycolor(p2->v, p1->v);
+	p2->x = p1->x;
+	p2->y = p1->y;
+}
+
+
+void
 zoomview(vp, zf)			/* zoom in or out */
 register VIEW  *vp;
 double  zf;

@@ -1,7 +1,4 @@
-/* Copyright 1988 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: ciq.h,v 2.2 2003/02/22 02:07:27 greg Exp $ */
 #include <stdio.h>
 #include "pic.h"
 

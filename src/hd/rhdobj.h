@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhdobj.h,v 3.6 2003/02/22 02:07:24 greg Exp $ */
 /*
  * Header file for object display routines for rholo drivers.
  */

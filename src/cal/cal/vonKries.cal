@@ -1,0 +1,73 @@
+{
+	von Kries white point transformation
+	
+Input:
+	w0x, w0y	- original white point chromaticity coords.
+	w1x, w1y	- destination white point chromaticities
+Output:
+	C00 to C22	- XYZ conversion matrix
+}
+
+MatDot(A,B,i,j) : A(i,0)*B(0,j) + A(i,1)*B(1,j) + A(i,2)*B(2,j);
+
+i3(i) : if(i-2.5, i-3, i);
+
+MinorDet(M,i,j) : M(i3(i+1),i3(j+1))*M(i3(i+2),i3(j+2)) -
+			M(i3(i+1),i3(j+2))*M(i3(i+2),i3(j+1));
+
+Det(M) : M(0,0)*MinorDet(M,0,0) +
+		M(0,1)*MinorDet(M,0,1) +
+		M(0,2)*MinorDet(M,0,2);
+
+Inv(M,i,j) : MinorDet(M,j,i) / Det(M);
+
+{ Original matrix from p. 480 of "Digital Color Management" }
+{
+vKmat(i,j) : select(i*3+j+1,	.40024,	.70760,	-.08081,
+				-.22630,1.16532,.04570,
+				0,	0,	.91822	);
+}
+{ Primary conversion matrix copied from Susstrunk's paper (CMCCAT2000) }
+{
+vKmat(i,j) : select(i*3+j+1,	.7982,	.3389,	-.1371,
+				-.5918,	1.5512,	.0406,
+				.0008,	.0239,	.9753	);
+}
+{ Sharp conversion matrix (also from Susstrunk paper) }
+vKmat(i,j) : select(i*3+j+1,	1.2694,	-.0988,	-.1706,
+				-.8364,	1.8006,	.0357,
+				.0297,	-.0315,	1.0018	);
+
+ivKmat(i,j) : Inv(vKmat,i,j);
+
+X0 = w0x/w0y;
+Y0 = 1;
+Z0 = (1-w0x-w0y)/w0y;
+
+X1 = w1x/w1y;
+Y1 = 1;
+Z1 = (1-w1x-w1y)/w1y;
+
+rho0 = vKmat(0,0)*X0 + vKmat(0,1)*Y0 + vKmat(0,2)*Z0;
+gam0 = vKmat(1,0)*X0 + vKmat(1,1)*Y0 + vKmat(1,2)*Z0;
+bet0 = vKmat(2,0)*X0 + vKmat(2,1)*Y0 + vKmat(2,2)*Z0;
+
+rho1 = vKmat(0,0)*X1 + vKmat(0,1)*Y1 + vKmat(0,2)*Z1;
+gam1 = vKmat(1,0)*X1 + vKmat(1,1)*Y1 + vKmat(1,2)*Z1;
+bet1 = vKmat(2,0)*X1 + vKmat(2,1)*Y1 + vKmat(2,2)*Z1;
+
+shiftMat(i,j) = select(i*3+j+1,	rho1/rho0, 0,		0,
+				0,	gam1/gam0,	0,
+				0,	0,		bet1/bet0	);
+
+M1(i,j) = MatDot(ivKmat,shiftMat,i,j);
+C(i,j) = MatDot(M1,vKmat,i,j);
+
+{ Defined as constants so one evaluation only }
+C00 : C(0,0); C01 : C(0,1); C02 : C(0,2);
+C10 : C(1,0); C11 : C(1,1); C12 : C(1,2);
+C20 : C(2,0); C21 : C(2,1); C22 : C(2,2);
+
+{ Extra goodies... }
+
+XYZ2VYU(j,i) : select(i*3+j+1, 1.362,0,.033,-1.093,1,-.631,-.205,0,.507);

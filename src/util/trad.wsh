@@ -1,5 +1,5 @@
 #!/usr/local/bin/wish4.0
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: trad.wsh,v 2.15 2003/02/22 02:07:30 greg Exp $
 #
 # TCL/TK-based Rad Input File Editor
 #

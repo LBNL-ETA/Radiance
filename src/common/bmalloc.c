@@ -1,44 +1,98 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: bmalloc.c,v 2.3 2003/02/22 02:07:21 greg Exp $";
 #endif
-
 /*
  * Bmalloc provides basic memory allocation without overhead (no free lists).
  * Use only to take the load off of malloc for all those
  * piddling little requests that you never expect to free.
  * Bmalloc defers to malloc for big requests.
  * Bfree should hand memory to bmalloc, but it usually fails here.
+ *
+ *  External symbols declared in standard.h
  */
 
-#define  NULL		0
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
+#include <stdlib.h>
 
 #ifndef  MBLKSIZ
 #define  MBLKSIZ	16376		/* size of memory allocation block */
 #endif
 #define  WASTEFRAC	12		/* don't waste more than a fraction */
-#ifndef  ALIGN
-#define  ALIGN		int		/* type for alignment */
+#ifndef  ALIGNT
+#define  ALIGNT		double		/* type for alignment */
 #endif
-#define  BYTES_WORD	sizeof(ALIGN)
-
-extern char  *malloc();
+#define  BYTES_WORD	sizeof(ALIGNT)
 
 static char  *bposition = NULL;
-static unsigned  nremain = 0;
+static unsigned int  nremain = 0;
 
 
 char *
 bmalloc(n)		/* allocate a block of n bytes */
-register unsigned  n;
+register unsigned int  n;
 {
 	if (n > nremain && (n > MBLKSIZ || nremain > MBLKSIZ/WASTEFRAC))
 		return(malloc(n));			/* too big */
 
 	n = (n+(BYTES_WORD-1))&~(BYTES_WORD-1);		/* word align */
 
-	if (n > nremain && (bposition = malloc(nremain = MBLKSIZ)) == NULL) {
+	if (n > nremain && (bposition = (char *)malloc(nremain = MBLKSIZ)) == NULL) {
 		nremain = 0;
 		return(NULL);
 	}
@@ -48,13 +102,14 @@ register unsigned  n;
 }
 
 
+void
 bfree(p, n)			/* free random memory */
 register char	*p;
-register unsigned	n;
+register unsigned int	n;
 {
-	register unsigned	bsiz;
+	register unsigned int	bsiz;
 					/* check alignment */
-	bsiz = BYTES_WORD - ((unsigned)p&(BYTES_WORD-1));
+	bsiz = BYTES_WORD - ((unsigned int)p&(BYTES_WORD-1));
 	if (bsiz < BYTES_WORD) {
 		p += bsiz;
 		n -= bsiz;

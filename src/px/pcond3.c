@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.11 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Routines for computing and applying brightness mapping.
  */
@@ -16,9 +13,9 @@ static char SCCSid[] = "$SunId$ LBL";
 #define LN_10		2.30258509299404568402
 #define exp10(x)	exp(LN_10*(x))
 
-float	modhist[HISTRES];		/* modified histogram */
+double	modhist[HISTRES];		/* modified histogram */
 double	mhistot;			/* modified histogram total */
-float	cumf[HISTRES+1];		/* cumulative distribution function */
+double	cumf[HISTRES+1];		/* cumulative distribution function */
 
 
 getfixations(fp)		/* load fixation history list */
@@ -29,7 +26,7 @@ FILE	*fp;
 	int	pos[2];
 	register int	px, py, i;
 				/* initialize our resolution struct */
-	if ((fvres.or=inpres.or)&YMAJOR) {
+	if ((fvres.rt=inpres.rt)&YMAJOR) {
 		fvres.xr = fvxr;
 		fvres.yr = fvyr;
 	} else {
@@ -85,22 +82,27 @@ FILE	*fp;
 gethisto(fp)			/* load precomputed luminance histogram */
 FILE	*fp;
 {
-	float	histo[MAXPREHIST];
+	double	histo[MAXPREHIST];
 	double	histart, histep;
 	double	l, b, lastb, w;
 	int	n;
 	register int	i;
 					/* load data */
 	for (i = 0; i < MAXPREHIST &&
-			fscanf(fp, "%lf %f", &b, &histo[i]) == 2; i++) {
-		if (i > 1 && fabs(b - lastb - histep) > 1e-3) {
+			fscanf(fp, "%lf %lf", &b, &histo[i]) == 2; i++) {
+		if (i > 1 && fabs(b - lastb - histep) > .001) {
 			fprintf(stderr,
 				"%s: uneven step size in histogram data\n",
 					progname);
 			exit(1);
 		}
 		if (i == 1)
-			histep = b - (histart = lastb);
+			if ((histep = b - (histart = lastb)) <= FTINY) {
+				fprintf(stderr,
+					"%s: illegal step in histogram data\n",
+						progname);
+				exit(1);
+			}
 		lastb = b;
 	}
 	if (i < 2 || !feof(fp)) {
@@ -115,10 +117,10 @@ FILE	*fp;
 					/* find extrema */
 	for (i = 0; i < n && histo[i] <= FTINY; i++)
 		;
-	bwmin = histart + i*histep;
+	bwmin = histart + (i-.001)*histep;
 	for (i = n; i-- && histo[i] <= FTINY; )
 		;
-	bwmax = histart + i*histep;
+	bwmax = histart + (i+1.001)*histep;
 	if (bwmax > Bl(LMAX))
 		bwmax = Bl(LMAX);
 	if (bwmin < Bl(LMIN))
@@ -130,8 +132,8 @@ FILE	*fp;
 	for (i = 0; i < HISTRES; i++)
 		bwhist[i] = 0.;
 	for (i = 0, b = histart; i < n; i++, b += histep) {
-		if (b < bwmin) continue;
-		if (b > bwmax) break;
+		if (b < bwmin+FTINY) continue;
+		if (b >= bwmax-FTINY) break;
 		w = histo[i];
 		bwavg += w*b;
 		bwhist[bwhi(b)] += w;
@@ -194,8 +196,8 @@ comphist()			/* create foveal sampling histogram */
 		for (y = 0; y < fvyr; y++)
 			for (x = 0; x < fvxr; x++) {
 				l = plum(fovscan(y)[x]);
-				if (l < lwmin) continue;
-				if (l > lwmax) continue;
+				if (l < lwmin+FTINY) continue;
+				if (l >= lwmax-FTINY) continue;
 				b = Bl(l);
 				w = what2do&DO_CWEIGHT ? centprob(x,y) : 1.;
 				bwavg += w*b;
@@ -210,8 +212,8 @@ comphist()			/* create foveal sampling histogram */
 			w = 1.;
 		for (x = 0; x < nfixations; x++) {
 			l = plum(fovscan(fixlst[x][1])[fixlst[x][0]]);
-			if (l < lwmin) continue;
-			if (l > lwmax) continue;
+			if (l < lwmin+FTINY) continue;
+			if (l >= lwmax-FTINY) continue;
 			b = Bl(l);
 			bwavg += w*b;
 			bwhist[bwhi(b)] += w;
@@ -294,7 +296,7 @@ double	La;
 
 
 double
-clampf(Lw)		/* derivative clamping function */
+clampf(Lw)			/* histogram clamping function */
 double	Lw;
 {
 	double	bLw, ratio;
@@ -304,31 +306,71 @@ double	Lw;
 	return(ratio/(Lb1(bLw)*(Bldmax-Bldmin)*Bl1(Lw)));
 }
 
+double
+crfactor(Lw)			/* contrast reduction factor */
+double	Lw;
+{
+	int	i = HISTRES*(Bl(Lw) - bwmin)/(bwmax - bwmin);
+	double	bLw, ratio, Tdb;
+
+	if (i <= 0)
+		return(1.0);
+	if (i >= HISTRES)
+		return(1.0);
+	bLw = BLw(Lw);
+	ratio = what2do&DO_HSENS ? htcontrs(Lb(bLw))/htcontrs(Lw) : Lb(bLw)/Lw;
+	Tdb = mhistot * (bwmax - bwmin) / HISTRES;
+	return(modhist[i]*Lb1(bLw)*(Bldmax-Bldmin)*Bl1(Lw)/(Tdb*ratio));
+}
+
+
+#if ADJ_VEIL
+mkcrfimage()			/* compute contrast reduction factor image */
+{
+	int	i;
+	float	*crfptr;
+	COLOR	*fovptr;
+
+	if (crfimg == NULL)
+		crfimg = (float *)malloc(fvxr*fvyr*sizeof(float));
+	if (crfimg == NULL)
+		syserror("malloc");
+	crfptr = crfimg;
+	fovptr = fovimg;
+	for (i = fvxr*fvyr; i--; crfptr++, fovptr++)
+		crfptr[0] = crfactor(plum(fovptr[0]));
+}
+#endif
+
 
 int
 mkbrmap()			/* make dynamic range map */
 {
-	double	T, b, s;
+	double	Tdb, b, s;
 	double	ceiling, trimmings;
 	register int	i;
 					/* copy initial histogram */
 	bcopy((char *)bwhist, (char *)modhist, sizeof(modhist));
-	s = (bwmax - bwmin)/HISTRES;
+	s = (bwmax - bwmin)/HISTRES;	/* s is delta b */
 					/* loop until satisfactory */
 	do {
 		mkcumf();			/* sync brightness mapping */
 		if (mhistot <= histot*CVRATIO)
 			return(-1);		/* no compression needed! */
-		T = mhistot * (bwmax - bwmin) / HISTRES;
+		Tdb = mhistot * s;
 		trimmings = 0.;			/* clip to envelope */
 		for (i = 0, b = bwmin + .5*s; i < HISTRES; i++, b += s) {
-			ceiling = T*clampf(Lb(b));
+			ceiling = Tdb*clampf(Lb(b));
 			if (modhist[i] > ceiling) {
 				trimmings += modhist[i] - ceiling;
 				modhist[i] = ceiling;
 			}
 		}
 	} while (trimmings > histot*CVRATIO);
+
+#if ADJ_VEIL
+	mkcrfimage();			/* contrast reduction image */
+#endif
 
 	return(0);			/* we got it */
 }
@@ -370,18 +412,18 @@ COLOR	*scan;
 int	xres;
 {
 	double	mult, Lw, b;
-	register int	i;
+	register int	x;
 
-	for (i = 0; i < xres; i++) {
-		Lw = plum(scan[i]);
+	for (x = 0; x < xres; x++) {
+		Lw = plum(scan[x]);
 		if (Lw < LMIN) {
-			setcolor(scan[i], 0., 0., 0.);
+			setcolor(scan[x], 0., 0., 0.);
 			continue;
 		}
-		b = BLw(Lw);
-		mult = (Lb(b) - ldmin)/(ldmax - ldmin) / (Lw*inpexp);
+		b = BLw(Lw);		/* apply brightness mapping */
+		mult = (Lb(b) - ldmin)/(ldmax - ldmin)/(Lw*inpexp);
 		if (lumf == rgblum) mult *= WHTEFFICACY;
-		scalecolor(scan[i], mult);
+		scalecolor(scan[x], mult);
 	}
 }
 

@@ -1,19 +1,70 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.8 2003/02/22 02:07:21 greg Exp $";
 #endif
-
 /*
  *  calfunc.c - routines for calcomp using functions.
  *
- *	The define BIGLIB pulls in a large number of the
- *  available math routines.
- *
- *      If VARIABLE is not defined, only library functions
+ *      If VARIABLE is not set, only library functions
  *  can be accessed.
  *
- *     4/2/86
+ *  2/19/03	Eliminated conditional compiles in favor of esupport extern.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  <stdio.h>
@@ -40,18 +91,17 @@ static ACTIVATION  *curact = NULL;
 
 static double  libfunc();
 
+#ifndef  MAXLIB
 #define  MAXLIB		64	/* maximum number of library functions */
+#endif
 
 static double  l_if(), l_select(), l_rand();
 static double  l_floor(), l_ceil();
-#ifdef  BIGLIB
 static double  l_sqrt();
 static double  l_sin(), l_cos(), l_tan();
 static double  l_asin(), l_acos(), l_atan(), l_atan2();
 static double  l_exp(), l_log(), l_log10();
-#endif
 
-#ifdef  BIGLIB
 			/* functions must be listed alphabetically */
 static LIBR  library[MAXLIB] = {
     { "acos", 1, ':', l_acos },
@@ -74,30 +124,7 @@ static LIBR  library[MAXLIB] = {
 
 static int  libsize = 16;
 
-#else
-			/* functions must be listed alphabetically */
-static LIBR  library[MAXLIB] = {
-    { "ceil", 1, ':', l_ceil },
-    { "floor", 1, ':', l_floor },
-    { "if", 3, ':', l_if },
-    { "rand", 1, ':', l_rand },
-    { "select", 1, ':', l_select },
-};
-
-static int  libsize = 5;
-
-#endif
-
-extern char  *savestr(), *emalloc();
-
-extern VARDEF  *argf();
-
-#ifdef  VARIABLE
 #define  resolve(ep)	((ep)->type==VAR?(ep)->v.ln:argf((ep)->v.chan))
-#else
-#define  resolve(ep)	((ep)->v.ln)
-#define varlookup(name)	NULL
-#endif
 
 
 int
@@ -148,6 +175,7 @@ double  *a;
 }
 
 
+void
 funset(fname, nargs, assign, fptr)	/* set a library function */
 char  *fname;
 int  nargs;
@@ -155,8 +183,15 @@ int  assign;
 double  (*fptr)();
 {
     int  oldlibsize = libsize;
+    char *cp;
     register LIBR  *lp;
-
+						/* check for context */
+    for (cp = fname; *cp; cp++)
+	;
+    if (cp == fname)
+	return;
+    if (cp[-1] == CNTXMARK)
+	*--cp = '\0';
     if ((lp = liblookup(fname)) == NULL) {	/* insert */
 	if (libsize >= MAXLIB) {
 	    eputs("Too many library functons!\n");
@@ -240,7 +275,6 @@ register int  n;
 }
 
 
-#ifdef  VARIABLE
 VARDEF *
 argf(n)				/* return function def for nth argument */
 int  n;
@@ -285,7 +319,6 @@ int  n;
 {
     return(argf(n)->name);
 }
-#endif
 
 
 double
@@ -337,56 +370,6 @@ char  *fname;
     }
     return(NULL);
 }
-
-
-#ifndef  VARIABLE
-static VARDEF  *varlist = NULL;		/* our list of dummy variables */
-
-
-VARDEF *
-varinsert(vname)		/* dummy variable insert */
-char  *vname;
-{
-    register VARDEF  *vp;
-
-    vp = (VARDEF *)emalloc(sizeof(VARDEF));
-    vp->name = savestr(vname);
-    vp->nlinks = 1;
-    vp->def = NULL;
-    vp->lib = liblookup(vname);
-    vp->next = varlist;
-    varlist = vp;
-    return(vp);
-}
-
-
-varfree(vp)			/* free dummy variable */
-register VARDEF  *vp;
-{
-    register VARDEF  *vp2;
-
-    if (vp == varlist)
-	varlist = vp->next;
-    else {
-	for (vp2 = varlist; vp2->next != vp; vp2 = vp2->next)
-		;
-	vp2->next = vp->next;
-    }
-    freestr(vp->name);
-    efree((char *)vp);
-}
-
-
-libupdate(nm)			/* update library */
-char  *nm;
-{
-    register VARDEF  *vp;
-
-    for (vp = varlist; vp != NULL; vp = vp->next)
-	vp->lib = liblookup(vp->name);
-}
-#endif
-
 
 
 /*
@@ -496,7 +479,6 @@ l_ceil()		/* return smallest integer not less than arg1 */
 }
 
 
-#ifdef  BIGLIB
 static double
 l_sqrt()
 {
@@ -572,4 +554,3 @@ l_log10()
 {
     return(log10(argument(1)));
 }
-#endif

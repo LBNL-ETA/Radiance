@@ -1,13 +1,65 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: func.c,v 2.14 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  func.c - interface to calcomp functions.
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
  *
- *     4/7/86
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include  "ray.h"
@@ -41,10 +93,9 @@ MFUNC *
 getfunc(m, ff, ef, dofwd)	/* get function for this modifier */
 OBJREC  *m;
 int  ff;
-unsigned  ef;
+unsigned int  ef;
 int  dofwd;
 {
-	extern EPNODE  *curfunc;
 	static char  initfile[] = INITFILE;
 	char  sbuf[MAXSTR];
 	register char  **arg;
@@ -56,6 +107,8 @@ int  dofwd;
 		return(f);
 	fobj = NULL; fray = NULL;
 	if (initfile[0]) {		/* initialize on first call */
+		esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
+		esupport &= ~(E_OUTCHAN);
 		setcontext("");
 		scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
 		scompile("Nx=$4;Ny=$5;Nz=$6;", NULL, 0);
@@ -82,7 +135,7 @@ int  dofwd;
 	if (i == 1 && arg[ff][0] == '.')
 		setcontext(f->ctx = "");	/* "." means no file */
 	else {
-		strcpy(sbuf,arg[ff]);	/* file name is context */
+		strcpy(sbuf,arg[ff]);		/* file name is context */
 		if (i > LCALSUF && !strcmp(sbuf+i-LCALSUF, CALSUF))
 			sbuf[i-LCALSUF] = '\0';	/* remove suffix */
 		setcontext(f->ctx = savestr(sbuf));
@@ -135,6 +188,7 @@ memerr:
 }
 
 
+void
 freefunc(m)			/* free memory associated with modifier */
 OBJREC  *m;
 {
@@ -155,14 +209,15 @@ OBJREC  *m;
 		freestr(f->ctx);
 	}
 	if (f->b != &unitxf)
-		free((char *)f->b);
+		free((void *)f->b);
 	if (f->f != NULL && f->f != &unitxf)
-		free((char *)f->f);
-	free((char *)f);
+		free((void *)f->f);
+	free((void *)f);
 	m->os = NULL;
 }
 
 
+int
 setfunc(m, r)			/* set channels for function call */
 OBJREC  *m;
 register RAY  *r;
@@ -171,7 +226,7 @@ register RAY  *r;
 	register MFUNC  *f;
 					/* get function */
 	if ((f = (MFUNC *)m->os) == NULL)
-		error(m, CONSISTENCY, "setfunc called before getfunc");
+		objerror(m, CONSISTENCY, "setfunc called before getfunc");
 					/* set evaluator context */
 	setcontext(f->ctx);
 					/* check to see if matrix set */
@@ -193,10 +248,10 @@ register RAY  *r;
 }
 
 
+void
 loadfunc(fname)			/* load definition file */
 char  *fname;
 {
-	extern char  *getlibpath();	/* library search path */
 	char  *ffname;
 
 	if ((ffname = getpath(fname, getlibpath(), R_OK)) == NULL) {
@@ -210,7 +265,6 @@ char  *fname;
 static double
 l_arg()				/* return nth real argument */
 {
-	extern double  argument();
 	register int  n;
 
 	if (fobj == NULL)

@@ -1,9 +1,6 @@
-/* Copyright (c) 1987 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ximage.c,v 2.9 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  ximage.c - driver for X-windows
  *
@@ -20,6 +17,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  <sys/types.h>
 
 #include  <ctype.h>
+
+#include  <time.h>
 
 #include  "color.h"
 
@@ -85,12 +84,6 @@ char  *geometry = NULL;			/* geometry specification */
 char  *progname;
 
 char  errmsg[128];
-
-extern long  ftell();
-
-extern char  *malloc(), *calloc();
-
-extern double  pow(), log();
 
 
 main(argc, argv)
@@ -253,6 +246,7 @@ char  *err;
 }
 
 
+void
 eputs(s)
 char	*s;
 {
@@ -260,6 +254,7 @@ char	*s;
 }
 
 
+void
 quit(code)
 int  code;
 {
@@ -573,8 +568,8 @@ getmono()			/* get monochrome data */
 			cerr[x] = err + errp;
 		}
 	}
-	free((char *)inl);
-	free((char *)cerr);
+	free((void *)inl);
+	free((void *)cerr);
 }
 
 

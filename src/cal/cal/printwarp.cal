@@ -1,0 +1,16 @@
+{
+	Warp response function for printing to avoid
+	contrast loss at low end.
+
+	9/12/97	GWL
+}
+PrintPivot: .05;	{ print pivot point }
+OrigPivot: .025;	{ original pivot point }
+
+map(v) = if( v - OrigPivot,
+	(v-OrigPivot)*((1-PrintPivot)/(1-OrigPivot)) + PrintPivot,
+	v*(PrintPivot/OrigPivot) );
+
+ro = map(ri(1));
+go = map(gi(1));
+bo = map(bi(1));

@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_list.c,v 3.8 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  *  sm_list.c
  *   Routines for handling linked generic linked lists, stack, and

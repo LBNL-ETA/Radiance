@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: colortab.c,v 2.5 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  * colortab.c - allocate and control dynamic color table.
  *
@@ -14,6 +11,65 @@ static char SCCSid[] = "$SunId$ LBL";
  *	histogram is cleared.  This algorithm
  *	performs only as well as the next drawing's color
  *	distribution is correlated to the last.
+ *
+ *  External symbols declared in drvier.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include "standard.h"
@@ -55,7 +111,8 @@ static unsigned short	histo[NRED][NGRN][NBLU];
 				/* initial color cube boundary */
 static int	CLRCUBE[3][2] = {{0,NRED},{0,NGRN},{0,NBLU}};
 
-static int	split(), cut();
+static int	split();
+static void	cut();
 
 
 int
@@ -68,9 +125,9 @@ int	ncolors;
 		return(0);
 				/* free old tables */
 	if (clrtab != NULL)
-		free((char *)clrtab);
+		free((void *)clrtab);
 	if (ctree != NULL)
-		free((char *)ctree);
+		free((void *)ctree);
 				/* get new tables */
 	for (treesize = 1; treesize < ncolors; treesize <<= 1)
 		;
@@ -91,9 +148,8 @@ int	ncolors;
 int
 get_pixel(col, set_pixel)	/* get pixel for color */
 COLOR	col;
-int	(*set_pixel)();
+void	(*set_pixel)();
 {
-	extern char	errmsg[];
 	int	r, g, b;
 	int	cv[3];
 	register CNODE	*tp;
@@ -143,6 +199,7 @@ int	(*set_pixel)();
 }
 
 
+void
 make_gmap(gam)			/* make gamma correction map */
 double	gam;
 {
@@ -155,6 +212,7 @@ double	gam;
 }
 
 
+void
 set_cmap(rmap, gmap, bmap)	/* set custom color correction map */
 BYTE	*rmap, *gmap, *bmap;
 {
@@ -164,6 +222,7 @@ BYTE	*rmap, *gmap, *bmap;
 }
 
 
+void
 map_color(rgb, col)		/* map a color to a byte triplet */
 BYTE	rgb[3];
 COLOR	col;
@@ -174,7 +233,7 @@ COLOR	col;
 }
 
 
-static
+static void
 cut(tree, level, box, c0, c1)		/* partition color space */
 register CNODE	*tree;
 int	level;

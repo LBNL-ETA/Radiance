@@ -1,0 +1,14 @@
+{
+	Erik Reinhard's simple global tone-operator
+}
+{ Lwht = 1e10;		{ set on command line } }
+{ Lavg = .5;		{ set on command line } }
+{ a : 0.18;		{ set on command line } }
+Lwhite : a/Lavg*Lwht;
+L = a/Lavg*li(1);
+sq(x) : x*x;
+Ld = L*(1+L/sq(Lwhite))/(1+L);
+mult = Ld/li(1);
+ro = ri(1)*mult;
+go = gi(1)*mult;
+bo = bi(1)*mult;

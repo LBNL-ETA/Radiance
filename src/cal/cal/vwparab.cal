@@ -1,0 +1,39 @@
+{
+	Generate rays for a parabolic view projection --
+	i.e., a round image that when projected downwards
+	in parallel onto a parabolic reflector results in
+	a panoramic view from the paraboloid's focal point.
+
+	The forward view direction corresponding to the top
+	of the image is always +Y, and the up direction is
+	always +Z.
+
+	9/8/98 Greg Ward Larson
+
+	Inputs:
+		maxalt		: Maximum altitude (in degrees)
+		x, y		= Image position, (0,0)->(1,0) is LL->LR
+
+	Outputs:
+		dx, dy, dz	= Direction vector for image point (x,y)
+
+	Typical command line:
+		cnt 1024 1024 | rcalc -e maxalt:25 \
+			-e 'x=($2+.5)/1024;y=1-($1+.5)/1024' -f vwparab.cal \
+			-e '$1=25.5;$2=12;$3=5;$4=dx;$5=dy;$6=dz' \
+			| rtrace @electric.opt -fac -x 1024 -y 1024 \
+				electric.oct > pan.pic
+}
+amax : PI/180*maxalt;
+F0 : .5/cos(amax) - .5*tan(amax);	{ dist. btwn. parabola and directrix }
+xr = 2*x - 1;
+yr = 2*y - 1;
+r2 = xr*xr + yr*yr;
+r = sqrt(r2);		{ never actually needed }
+z = r2/(4*F0) + F0;
+zo = r2/(4*F0) - F0;
+sin_alt = zo/z;
+cos_alt = r/z;
+dx = xr/z;		{ same as xr/r*cos_alt }
+dy = yr/z;		{ same as yr/r*cos_alt }
+dz = zo/z;		{ same as sin_alt }

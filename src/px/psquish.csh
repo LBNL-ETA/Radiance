@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: psquish.csh,v 3.2 2003/02/22 02:07:27 greg Exp $
 set Lmin=.0001		# minimum visible world luminance
 set Ldmin=1		# minimum display luminance
 set Ldmax=100		# maximum display luminance

@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm_list.h,v 3.6 2003/02/22 02:07:25 greg Exp $ */
 /*
  *  list.h
  *  Linked list data structure and routines 

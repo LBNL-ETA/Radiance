@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: getbbox.c,v 2.5 2003/02/22 02:07:26 greg Exp $";
 #endif
-
 /*
  *  getbbox.c - compute bounding box for scene files
  *
@@ -20,7 +17,7 @@ char  *progname;			/* argv[0] */
 
 int  nowarn = 0;			/* supress warnings? */
 
-int  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
+void  (*addobjnotify[])() = {NULL};	/* new object notifier functions */
 
 FVECT  bbmin, bbmax;			/* bounding box */
 
@@ -57,13 +54,13 @@ char  **argv;
 	bbmax[0] = bbmax[1] = bbmax[2] = -FHUGE;
 						/* read input */
 	if (i >= argc)
-		readobj(NULL, addobject);
+		readobj2(NULL, addobject);
 	else
 		for ( ; i < argc; i++)
 			if (!strcmp(argv[i], "-"))	/* from stdin */
-				readobj(NULL, addobject);
+				readobj2(NULL, addobject);
 			else				/* from file */
-				readobj(argv[i], addobject);
+				readobj2(argv[i], addobject);
 						/* print bounding box */
 	if (!nohead)
 		printf(
@@ -75,6 +72,7 @@ char  **argv;
 }
 
 
+void
 quit(code)				/* exit program */
 int  code;
 {
@@ -82,12 +80,14 @@ int  code;
 }
 
 
+void
 cputs()					/* interactive error */
 {
 	/* referenced, but not used */
 }
 
 
+void
 wputs(s)				/* warning message */
 char  *s;
 {
@@ -96,6 +96,7 @@ char  *s;
 }
 
 
+void
 eputs(s)				/* put string to stderr */
 register char  *s;
 {

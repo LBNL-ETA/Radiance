@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.2 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * Convert view to beam list.
  */

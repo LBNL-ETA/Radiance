@@ -1,7 +1,4 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: sm.h,v 3.11 2003/02/22 02:07:25 greg Exp $ */
 /*
  *  sm.h
  */
@@ -25,22 +22,16 @@
 #define ON_E 3
 #define IN_T 4
 
-#ifndef LOWRES
-#define VERT_EPS 5e-4 /* min edge length in radians */
-#define COS_VERT_EPS 0.999999875 /* cos min edge length in radians */
-#define EDGE_EPS 2e-7 /* min distance until considered "on-edge"*/
-#define COLINEAR_EPS 1e-10 /* minimum sine of between edges angle :amount off
-			     180degrees
-			     */
-#define EQUALITY_EPS 1e-10
-#else
+#ifdef SMLFLT
 #define VERT_EPS 2e-3 /* min edge length in radians */
 #define COS_VERT_EPS 0.999998 /* cos min edge length in radians */
 #define EDGE_EPS 2e-5 /* min distance until considered "on-edge"*/
-#define COLINEAR_EPS 1e-10 /* minimum sine of between edges angle :amount off
-			     180degrees
-			     */
-#define EQUALITY_EPS 1e-10
+#define COLINEAR_EPS 1e-10 /* min sine of between edges angle :amount off PI */
+#else
+#define VERT_EPS 5e-4 /* min edge length in radians */
+#define COS_VERT_EPS 0.999999875 /* cos min edge length in radians */
+#define EDGE_EPS 2e-7 /* min distance until considered "on-edge"*/
+#define COLINEAR_EPS 1e-10 /* min sine of between edges angle :amount off PI*/
 #endif
 
 #define EV_EPS EDGE_EPS      /* Minimum edge-vertex distance */
@@ -67,7 +58,7 @@ typedef int VERT;  /* One triangle that vertex belongs to- the rest
 		      are derived by traversing neighbors */
 
 typedef struct _EDGE {
-    int verts[2];
+    S_ID verts[2];
     int tris[2];
 } EDGE;
 
@@ -84,7 +75,7 @@ typedef struct _EDGE {
 
 
 typedef struct _TRI {
-  int verts[3];         /* Ids into sample and vertex array for each vertex*/
+  S_ID verts[3];         /* Ids into sample and vertex array for each vertex*/
   int nbrs[3]; /* Ids for neighboring triangles: -1 if invalid */
 }TRI;
 
@@ -217,17 +208,18 @@ SM_NUM_TRI(m); (i)++,(i)= smNext_valid_tri(m,i))
 typedef struct _RT_ARGS_{
   FVECT orig,dir;
   int t_id;
-  OBJECT *os;
+  S_ID *os;
 }RT_ARGS;
 
 typedef struct _S_ARGS_{
-  int s_id,n_id;
+  S_ID s_id;
+  S_ID n_id;
 }S_ARGS;
 
 
 typedef struct _ADD_ARGS {
   int t_id;
-  OBJECT *del_set;
+  S_ID *del_set;
 }ADD_ARGS;
 
 extern SM *smMesh;
@@ -272,23 +264,6 @@ extern FVECT FrustumNear[4],FrustumFar[4];
  *
  * Find the closest sample to the given ray.  Return -1 on failure.
  *
- *
- * smClean()		: display has been wiped clean
- *
- * Called after display has been effectively cleared, meaning that all
- * geometry must be resent down the pipeline in the next call to smUpdate().
- *
- *
- * smUpdate(vp, qua)	: update OpenGL output geometry for view vp
- * VIEW	*vp;		: desired view
- * int	qua;		: quality level (percentage on linear time scale)
- *
- * Draw new geometric representation using OpenGL calls.  Assume that the
- * view has already been set up and the correct frame buffer has been
- * selected for drawing.  The quality level is on a linear scale, where 100%
- * is full (final) quality.  It is not necessary to redraw geometry that has
- * been output since the last call to smClean().  (The last view drawn will
- * be vp==&odev.v each time.)
  */
 #endif
 

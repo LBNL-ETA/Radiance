@@ -1,0 +1,45 @@
+{
+	Rcalc run to convolve light source SPD with standard curves.
+	Used by scripts illumcal, reflcal.
+
+	Input is wavelength (in nanometers) and output (in watts/nm/something).
+	Variable "intvl" must be set to value spacing (in nm).
+	Output is per-wavelength convolution as described below.
+}
+cond = if($1-359,831-$1,-1);	{ 360-830 nm range }
+$1  = $2*intvl*photopic($1);	{ photopic impulse }
+$2  = $2*intvl*scotopic($1);	{ scotopic impulse }
+$3  = $2*tx;			{ source X }
+$4  = $2*ty;			{ source Y }
+$5  = $2*tz;			{ source Z }
+$6  = $2*trix10($1);		{ source X10 }
+$7  = $2*triy10($1);		{ source Y10 }
+$8  = $2*triz10($1);		{ source Z10 }
+$9  = $2*tx*r1v;		{ CIE reference color 1 X }
+$10 = $2*ty*r1v;		{ CIE reference color 1 Y }
+$11 = $2*tz*r1v;		{ CIE reference color 1 Z }
+$12 = $2*tx*r2v;		{ CIE reference color 2 X }
+$13 = $2*ty*r2v;		{ CIE reference color 2 Y }
+$14 = $2*tz*r2v;		{ CIE reference color 2 Z }
+$15 = $2*tx*r3v;		{ CIE reference color 3 X }
+$16 = $2*ty*r3v;		{ CIE reference color 3 Y }
+$17 = $2*tz*r3v;		{ CIE reference color 3 Z }
+$18 = $2*tx*r4v;		{ CIE reference color 4 X }
+$19 = $2*ty*r4v;		{ CIE reference color 4 Y }
+$20 = $2*tz*r4v;		{ CIE reference color 4 Z }
+$21 = $2*tx*r5v;		{ CIE reference color 5 X }
+$22 = $2*ty*r5v;		{ CIE reference color 5 Y }
+$23 = $2*tz*r5v;		{ CIE reference color 5 Z }
+$24 = $2*tx*r6v;		{ CIE reference color 6 X }
+$25 = $2*ty*r6v;		{ CIE reference color 6 Y }
+$26 = $2*tz*r6v;		{ CIE reference color 6 Z }
+$27 = $2*tx*r7v;		{ CIE reference color 7 X }
+$28 = $2*ty*r7v;		{ CIE reference color 7 Y }
+$29 = $2*tz*r7v;		{ CIE reference color 7 Z }
+$30 = $2*tx*r8v;		{ CIE reference color 8 X }
+$31 = $2*ty*r8v;		{ CIE reference color 8 Y }
+$32 = $2*tz*r8v;		{ CIE reference color 8 Z }
+tx=trix($1); ty=triy($1); tz=triz($1);
+r1v=rho1($1); r2v=rho2($1); r3v=rho3($1); r4v=rho4($1);
+r5v=rho5($1); r6v=rho6($1); r7v=rho7($1); r8v=rho8($1);
+abs(x) : if(x,x,-x);

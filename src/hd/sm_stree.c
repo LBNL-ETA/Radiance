@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: sm_stree.c,v 3.13 2003/02/22 02:07:25 greg Exp $";
 #endif
-
 /*
  * sm_stree.c
  *  An stree (spherical quadtree) is defined by an octahedron in 
@@ -16,6 +13,7 @@ static char SCCSid[] = "$SunId$ SGI";
 #include "sm_list.h"
 #include "sm_flag.h"
 #include "sm_geom.h"
+#include "object.h"
 #include "sm_qtree.h"
 #include "sm_stree.h"
 
@@ -450,6 +448,25 @@ int n;
     id1 = id2;
   }
 }
+/* Assumption: know crosses plane:dont need to check for 'on' case */
+intersect_edge_coord_plane(v0,v1,w,r)
+FVECT v0,v1;
+int w;
+FVECT r;
+{
+  FVECT dv;
+  int wnext;
+  double t;
+
+  VSUB(dv,v1,v0);
+  t = -v0[w]/dv[w];
+  r[w] = 0.0;
+  wnext = (w+1)%3;
+  r[wnext] = v0[wnext] + dv[wnext]*t;
+  wnext = (w+2)%3;
+  r[wnext] = v0[wnext] + dv[wnext]*t;
+}
+
 
 stVisit_clip(st,i,verts,vcnt,l,cell,func,n)
      STREE *st;
@@ -619,9 +636,6 @@ stVisit(st,tri,func,n)
 }
 
 
-/* New Insertion code!!! */
-
-
 BCOORD qtRoot[3][3] = { {MAXBCOORD2,0,0},{0,MAXBCOORD2,0},{0,0,MAXBCOORD2}};
 
 
@@ -737,11 +751,6 @@ stInsert_samp(st,p,f)
     i = stLocate_root(p);
     qt = ST_ROOT_QT(st,i);
     
-     /* Will return lowest level triangle containing point: It the
-       point is on an edge or vertex: will return first associated
-       triangle encountered in the child traversal- the others can
-       be derived using triangle adjacency information
-    */
     vert_to_qt_frame(i,p,bcoordi);
     ST_ROOT_QT(st,i) =  qtInsert_point(i,qt,EMPTY,qtRoot[0],qtRoot[1],
 			  qtRoot[2],bcoordi,MAXBCOORD2>>1,f,0,&done);

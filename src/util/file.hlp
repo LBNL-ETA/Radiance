@@ -1,4 +1,4 @@
-	$Id: file.hlp,v 2.1 1994/10/27 15:56:03 greg Exp $
+	file.hlp 2.1 10/27/94
 
 This help file is associated with the getfile.tcl routines, which
 produce a screen for browsing and naming files.

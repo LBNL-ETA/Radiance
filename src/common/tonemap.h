@@ -1,13 +1,70 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: tonemap.h,v 3.11 2003/02/22 02:07:22 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
  * Include after "color.h"
  */
 
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /****    Argument Macros    ****/
 				/* Flags of what to do */
@@ -50,6 +107,7 @@
 #define	TM_BRTSCALE	128		/* brightness scale factor (integer) */
 
 #define TM_NOBRT	(-1<<15)	/* bogus brightness value */
+#define TM_NOLUM	(1e-17)		/* ridiculously small luminance */
 
 #define	TM_MAXPKG	8		/* maximum number of color formats */
 
@@ -94,7 +152,7 @@ struct tmPackage {
 #else
 struct tmPackage {
 	MEM_PTR		(*Init)(struct tmStruct *tms);
-	int		(*NewSpace)(struct tmStruct *tms);
+	void		(*NewSpace)(struct tmStruct *tms);
 	void		(*Free)(MEM_PTR pp);
 };
 #endif
@@ -106,7 +164,7 @@ extern int	tmNumPkgs;	/* number of registered packages */
 /****    Useful Macros    ****/
 
 				/* compute luminance from encoded value */
-#define	tmLuminance(li)	exp((li)/(double)TM_BRTSCALE)
+#define	tmLuminance(li)	exp((li)*(1./TM_BRTSCALE))
 
 				/* does tone mapping need color matrix? */
 #define tmNeedMatrix(t)	((t)->monpri != (t)->inppri)
@@ -124,10 +182,12 @@ extern int	tmNumPkgs;	/* number of registered packages */
 #ifdef	NOPROTO
 
 extern struct tmStruct	*tmInit(), *tmPop(), *tmDup();
+extern int	tmSetSpace(), tmPull(), tmPush();
 extern void	tmClearHisto(), tmDone();
-extern int	tmSetSpace(), tmCvColors(), tmCvColrs();
-extern int	tmAddHisto(), tmComputeMapping(), tmMapPixels();
-extern int	tmLoadPicture(), tmMapPicture(), tmPull(), tmPush();
+extern int	tmAddHisto();
+extern int	tmFixedMapping(), tmComputeMapping(), tmMapPixels();
+extern int	tmCvColors(), tmCvGrays(), tmCvColrs();
+extern int	tmLoadPicture(), tmMapPicture();
 
 #else
 
@@ -161,32 +221,6 @@ tmClearHisto(void);
 */
 
 extern int
-tmCvColors(TMbright *ls, BYTE *cs, COLOR *scan, int len);
-/*
-	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
-
-	ls	-	returned encoded luminance values.
-	cs	-	returned encoded chrominance values (Note 2).
-	scan	-	input scanline.
-	len	-	scanline length.
-
-	returns	-	0 on success, TM_E_* on error.
-*/
-
-extern int
-tmCvColrs(TMbright *ls, BYTE *cs, COLR *scan, int len);
-/*
-	Convert RGBE/XYZE scanline to encoded luminance and chrominance.
-
-	ls	-	returned encoded luminance values.
-	cs	-	returned encoded chrominance values (Note 2).
-	scan	-	input scanline.
-	len	-	scanline length.
-
-	returns	-	0 on success, TM_E_* on error.
-*/
-
-extern int
 tmAddHisto(TMbright *ls, int len, int wt);
 /*
 	Add brightness values to current histogram.
@@ -199,11 +233,26 @@ tmAddHisto(TMbright *ls, int len, int wt);
 */
 
 extern int
+tmFixedMapping(double expmult, double gamval);
+/*
+	Assign a fixed, linear tone-mapping using the given multiplier,
+	which is the ratio of maximum output to uncalibrated input.
+	This mapping will be used in subsequent calls to tmMapPixels()
+	until a new tone mapping is computed.
+	Only the min. and max. values are used from the histogram.
+	
+	expmult	-	the fixed exposure multiplier to use.
+	gamval	-	display gamma response (0. for default).
+	returns -	0 on success, TM_E_* on error.
+*/
+
+extern int
 tmComputeMapping(double gamval, double Lddyn, double Ldmax);
 /*
-	Compute tone mapping function.  This mapping will be used
-	in subsequent calls to tmMapPixels() until a new tone mapping
-	is computed.  I.e., calls to tmAddHisto() have no immediate effect.
+	Compute tone mapping function from the current histogram.
+	This mapping will be used in subsequent calls to tmMapPixels()
+	until a new tone mapping is computed.
+	I.e., calls to tmAddHisto() have no immediate effect.
 
 	gamval	-	display gamma response (0. for default).
 	Lddyn	-	the display's dynamic range (0. for default).
@@ -221,50 +270,6 @@ tmMapPixels(BYTE *ps, TMbright *ls, BYTE *cs, int len);
 	ls	-	encoded luminance values.
 	cs	-	encoded chrominance values (Note 2).
 	len	-	number of pixels.
-
-	returns	-	0 on success, TM_E_* on failure.
-*/
-
-extern int
-tmLoadPicture(TMbright **lpp, BYTE **cpp, int *xp, int *yp,
-		char *fname, FILE *fp);
-/*
-	Load Radiance picture and convert to tone mapping representation.
-	Memory for the luminance and chroma arrays is allocated using
-	malloc(3), and should be freed with free(3) when no longer needed.
-	Calls tmSetSpace() to calibrate input color space.
-
-	lpp	-	returned array of encoded luminances, picture ordering.
-	cpp	-	returned array of encoded chrominances (Note 2).
-	xp, yp	-	returned picture dimensions.
-	fname	-	picture file name.
-	fp	-	pointer to open file (Note 3).
-
-	returns	-	0 on success, TM_E_* on failure.
-*/
-
-extern int
-tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
-		RGBPRIMP monpri, double gamval, double Lddyn, double Ldmax,
-		char *fname, FILE *fp);
-/*
-	Load and apply tone mapping to Radiance picture.
-	Stack is restored to its original state upon return.
-	If fp is TM_GETFILE and (flags&TM_F_UNIMPL)!=0, tmMapPicture()
-	calls pcond to perform the actual conversion, which takes
-	longer but gives access to all the TM_F_* features.
-	Memory for the final pixel array is allocated using malloc(3),
-	and should be freed with free(3) when it is no longer needed.
-
-	psp	-	returned array of tone mapped pixels, picture ordering.
-	xp, yp	-	returned picture dimensions.
-	flags	-	TM_F_* flags indicating what is to be done.
-	monpri	-	display monitor primaries (Note 1).
-	gamval	-	display gamma response.
-	Lddyn	-	the display's dynamic range (0. for default).
-	Ldmax	-	maximum display luminance in cd/m^2 (0. for default).
-	fname	-	picture file name.
-	fp	-	pointer to open file (Note 3).
 
 	returns	-	0 on success, TM_E_* on failure.
 */
@@ -315,6 +320,88 @@ tmDone(struct tmStruct *tms);
 	the current tone mapping.
 
 	tms	-	tone mapping structure to free.
+*/
+
+extern int
+tmCvColors(TMbright *ls, BYTE *cs, COLOR *scan, int len);
+/*
+	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
+
+	ls	-	returned encoded luminance values.
+	cs	-	returned encoded chrominance values (Note 2).
+	scan	-	input scanline.
+	len	-	scanline length.
+
+	returns	-	0 on success, TM_E_* on error.
+*/
+
+extern int
+tmCvGrays(TMbright *ls, float *scan, int len);
+/*
+	Convert gray float scanline to encoded luminance.
+
+	ls	-	returned encoded luminance values.
+	scan	-	input scanline.
+	len	-	scanline length.
+
+	returns	-	0 on success, TM_E_* on error.
+*/
+
+extern int
+tmCvColrs(TMbright *ls, BYTE *cs, COLR *scan, int len);
+/*
+	Convert RGBE/XYZE scanline to encoded luminance and chrominance.
+
+	ls	-	returned encoded luminance values.
+	cs	-	returned encoded chrominance values (Note 2).
+	scan	-	input scanline.
+	len	-	scanline length.
+
+	returns	-	0 on success, TM_E_* on error.
+*/
+
+extern int
+tmLoadPicture(TMbright **lpp, BYTE **cpp, int *xp, int *yp,
+		char *fname, FILE *fp);
+/*
+	Load Radiance picture and convert to tone mapping representation.
+	Memory for the luminance and chroma arrays is allocated using
+	malloc(3), and should be freed with free(3) when no longer needed.
+	Calls tmSetSpace() to calibrate input color space.
+
+	lpp	-	returned array of encoded luminances, picture ordering.
+	cpp	-	returned array of encoded chrominances (Note 2).
+	xp, yp	-	returned picture dimensions.
+	fname	-	picture file name.
+	fp	-	pointer to open file (Note 3).
+
+	returns	-	0 on success, TM_E_* on failure.
+*/
+
+extern int
+tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
+		RGBPRIMP monpri, double gamval, double Lddyn, double Ldmax,
+		char *fname, FILE *fp);
+/*
+	Load and apply tone mapping to Radiance picture.
+	Stack is restored to its original state upon return.
+	If fp is TM_GETFILE and (flags&TM_F_UNIMPL)!=0, tmMapPicture()
+	calls pcond to perform the actual conversion, which takes
+	longer but gives access to all the TM_F_* features.
+	Memory for the final pixel array is allocated using malloc(3),
+	and should be freed with free(3) when it is no longer needed.
+
+	psp	-	returned array of tone mapped pixels, picture ordering.
+	xp, yp	-	returned picture dimensions.
+	flags	-	TM_F_* flags indicating what is to be done.
+	monpri	-	display monitor primaries (Note 1).
+	gamval	-	display gamma response.
+	Lddyn	-	the display's dynamic range (0. for default).
+	Ldmax	-	maximum display luminance in cd/m^2 (0. for default).
+	fname	-	picture file name.
+	fp	-	pointer to open file (Note 3).
+
+	returns	-	0 on success, TM_E_* on failure.
 */
 
 #endif
@@ -390,3 +477,7 @@ tmDone(struct tmStruct *tms);
 	function will open the file, read its contents and close it
 	before returning, whether or not an error was encountered.
 */
+
+#ifdef __cplusplus
+}
+#endif

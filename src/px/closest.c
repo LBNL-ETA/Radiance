@@ -1,9 +1,6 @@
-/* Copyright 1988 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: closest.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
 CLOSEST - nearest-color lookup by locally ordered search
 we use distance in rgb space as color metric

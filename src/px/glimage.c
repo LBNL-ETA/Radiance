@@ -1,9 +1,6 @@
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: glimage.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
-/* Copyright (c) 1986 Regents of the University of California */
-
 /*
  *  glimage.c - program to dump pixel file NeWS window
  *
@@ -13,6 +10,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  <stdio.h>
 
 #include  <gl.h>
+
+#include  <time.h>
 
 #include  "color.h"
 

@@ -1,9 +1,6 @@
-/* Copyright (c) 1986 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.9 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
  *
@@ -19,6 +16,7 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include  <stdio.h>
+#include <stdlib.h>
 #include  <math.h>
 
 #define  PI		3.14159265358979323846
@@ -29,10 +27,6 @@ double  A[3],X[3];
 char  *material, *name;
 double  height;
 int  nslats,  nsurf;
-
-#ifdef  DCL_ATOF
-extern double  atof();
-#endif
 
 
 main(argc, argv)

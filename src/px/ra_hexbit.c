@@ -1,18 +1,14 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * Create a 4x1 hex bitmap from a Radiance picture.
  */
 
 #include  <stdio.h>
+#include  <time.h>
 #include  "color.h"
 #include  "resolu.h"
-
-extern char  *malloc();
 
 char  *progname;
 
@@ -115,5 +111,5 @@ ra2hex()		/* convert Radiance scanlines to 4x1 bit hex */
 			quiterr("error writing hex bit file");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }

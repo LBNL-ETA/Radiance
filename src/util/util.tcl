@@ -1,4 +1,4 @@
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: util.tcl,v 2.4 2003/02/22 02:07:30 greg Exp $
 #
 # General utility routines
 #

@@ -1,21 +1,79 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.10 2003/02/22 02:07:22 greg Exp $";
 #endif
-
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
- * See tonemap.h for detailed function descriptions.
+ *
+ * Externals declared in tonemap.h
+ */
+
+/* ====================================================================
+ * The Radiance Software License, Version 1.0
+ *
+ * Copyright (c) 1990 - 2002 The Regents of the University of California,
+ * through Lawrence Berkeley National Laboratory.   All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *         notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ * 3. The end-user documentation included with the redistribution,
+ *           if any, must include the following acknowledgment:
+ *             "This product includes Radiance software
+ *                 (http://radsite.lbl.gov/)
+ *                 developed by the Lawrence Berkeley National Laboratory
+ *               (http://www.lbl.gov/)."
+ *       Alternately, this acknowledgment may appear in the software itself,
+ *       if and wherever such third-party acknowledgments normally appear.
+ *
+ * 4. The names "Radiance," "Lawrence Berkeley National Laboratory"
+ *       and "The Regents of the University of California" must
+ *       not be used to endorse or promote products derived from this
+ *       software without prior written permission. For written
+ *       permission, please contact radiance@radsite.lbl.gov.
+ *
+ * 5. Products derived from this software may not be called "Radiance",
+ *       nor may "Radiance" appear in their name, without prior written
+ *       permission of Lawrence Berkeley National Laboratory.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.   IN NO EVENT SHALL Lawrence Berkeley National Laboratory OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of Lawrence Berkeley National Laboratory.   For more
+ * information on Lawrence Berkeley National Laboratory, please see
+ * <http://www.lbl.gov/>.
  */
 
 #include	<stdio.h>
+#include	<string.h>
 #include	<math.h>
+#include	<time.h>
 #include	"tmprivat.h"
 #include	"resolu.h"
 
-
-extern char	*tempbuffer();
+#ifndef TM_PIC_CTRANS
+#define TM_PIC_CTRANS	1		/* transform colors? (expensive) */
+#endif
 
 #define GAMTSZ	1024
 
@@ -25,9 +83,13 @@ typedef struct {
 	TMbright	inpsfb;		/* encoded tm->inpsf */
 } COLRDATA;
 
+#ifdef NOPROTO
 static MEM_PTR	colrInit();
 static void	colrNewSpace();
-extern void	free();
+#else
+static MEM_PTR	colrInit(struct tmStruct *);
+static void	colrNewSpace(struct tmStruct *);
+#endif
 static struct tmPackage	colrPkg = {	/* our package functions */
 	colrInit, colrNewSpace, free
 };
@@ -35,7 +97,6 @@ static int	colrReg = -1;		/* our package registration number */
 
 #define	LOGISZ	260
 static TMbright	logi[LOGISZ];
-static BYTE	photofact[BMESUPPER-BMESLOWER];
 
 
 int
@@ -54,7 +115,11 @@ int	len;
 		returnErr(TM_E_TMINVAL);
 	if (ls == NULL | scan == NULL | len < 0)
 		returnErr(TM_E_ILLEGAL);
+#if TM_PIC_CTRANS
 	if (tmNeedMatrix(tmTop)) {		/* need floating point */
+#else
+	if (tmTop->inppri == TM_XYZPRIM) {	/* no way around this */
+#endif
 		register COLOR	*newscan;
 		newscan = (COLOR *)tempbuffer(len*sizeof(COLOR));
 		if (newscan == NULL)
@@ -70,11 +135,8 @@ int	len;
 		for (i = 256; i--; )
 			logi[i] = TM_BRTSCALE*log((i+.5)/256.) - .5;
 		for (i = 256; i < LOGISZ; i++)
-			logi[i] = logi[255];
-		for (i = BMESLOWER; i < BMESUPPER; i++)
-			photofact[i-BMESLOWER] = 256. *
-					(tmLuminance(i) - LMESLOWER) /
-					(LMESUPPER - LMESLOWER);
+			logi[i] = 0;
+		tmMkMesofact();
 	}
 	if ((cd = (COLRDATA *)tmPkgData(tmTop,colrReg)) == NULL)
 		returnErr(TM_E_NOMEM);
@@ -84,11 +146,11 @@ int	len;
 		li =  ( cd->clfb[RED]*cmon[RED] +
 			cd->clfb[GRN]*cmon[GRN] +
 			cd->clfb[BLU]*cmon[BLU] ) >> 8;
-		bi = BRT2SCALE*(cmon[EXP]-COLXS) +
+		bi = BRT2SCALE(cmon[EXP]-COLXS) +
 				logi[li] + cd->inpsfb;
-		if (bi < MINBRT) {
-			bi = MINBRT-1;			/* bogus value */
-			li++;				/* avoid li==0 */
+		if (li <= 0) {
+			bi = TM_NOBRT;			/* bogus value */
+			li = 1;				/* avoid li==0 */
 		}
 		ls[i] = bi;
 		if (cs == TM_NOCHROM)			/* no color? */
@@ -101,7 +163,7 @@ int	len;
 			else {
 				if (tmTop->flags & TM_F_BW)
 					cmon[RED] = cmon[GRN] = cmon[BLU] = li;
-				pf = photofact[bi-BMESLOWER];
+				pf = tmMesofact[bi-BMESLOWER];
 				sli *= 256 - pf;
 				cmon[RED] = ( sli + pf*cmon[RED] ) >> 8;
 				cmon[GRN] = ( sli + pf*cmon[GRN] ) >> 8;
@@ -189,7 +251,7 @@ FILE	*fp;
 	*lpp = NULL;
 	if (cpp != TM_NOCHROMP) *cpp = NULL;
 	info = rhdefault;			/* get our header */
-	getheader(inpf, headline, (MEM_PTR)&info);
+	getheader(inpf, headline, (char *)&info);
 	if (info.format == FMTBAD | info.expos <= 0. ||
 			fgetresolu(xp, yp, inpf) < 0) {
 		err = TM_E_BADFILE; goto done;
@@ -253,7 +315,7 @@ double	gamval, Lddyn, Ldmax;
 char	*fname;
 {
 	char	*funcName = fname;
-	char	cmdbuf[512];
+	char	cmdbuf[1024];
 	FILE	*infp;
 	register COLR	*scan;
 	register BYTE	*rp;

@@ -1,0 +1,17 @@
+{
+	3x3 Matrix operations
+}
+
+MatDot(A,B,i,j) : A(i,0)*B(0,j) + A(i,1)*B(1,j) + A(i,2)*B(2,j);
+
+i3(i) : if(i-2.5, i-3, i);
+
+MinorDet(M,i,j) : M(i3(i+1),i3(j+1))*M(i3(i+2),i3(j+2)) -
+			M(i3(i+1),i3(j+2))*M(i3(i+2),i3(j+1));
+
+Det(M) : M(0,0)*MinorDet(M,0,0) +
+		M(0,1)*MinorDet(M,0,1) +
+		M(0,2)*MinorDet(M,0,2);
+
+Inv(M,i,j) : MinorDet(M,j,i) / Det(M);
+

@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.21 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  pcompos.c - program to composite pictures.
  *
@@ -17,6 +14,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+
+#include  <time.h>
 
 #include  "color.h"
 
@@ -61,9 +60,8 @@ int  nfile;			/* number of files */
 char  ourfmt[LPICFMT+1] = PICFMT;
 int  wrongformat = 0;
 
-FILE  *popen(), *lblopen();
-
-extern char  *malloc();
+FILE  *lblopen();
+void  quit();
 
 
 tabputs(s)			/* print line preceded by a tab */
@@ -151,6 +149,7 @@ char  *argv[];
 		}
 dofiles:
 	newheader("RADIANCE", stdout);
+	fputnow(stdout);
 	for (nfile = 0; an < argc; nfile++) {
 		if (nfile >= MAXFILE)
 			goto toomany;
@@ -228,7 +227,7 @@ getfile:
 		printf("%s:\n", input[nfile].name);
 		getheader(input[nfile].fp, tabputs, NULL);
 		if (wrongformat) {
-			fprintf(stderr, "%s: bad Radiance input file\n",
+			fprintf(stderr, "%s: incompatible input format\n",
 					input[nfile].name);
 			quit(1);
 		}
@@ -416,6 +415,7 @@ err:
 }
 
 
+void
 quit(code)		/* exit gracefully */
 int  code;
 {

@@ -1,7 +1,4 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: warp3d.h,v 3.3 2003/02/22 02:07:28 greg Exp $ */
 /*
  * Header file for 3D warping routines.
  */

@@ -1,0 +1,39 @@
+{
+	Uniform sampling of sphere
+
+	Define:
+		N	- total number of samples
+		i	- sample number
+
+	Output:
+		theta	- polar angle (degrees)
+		phi	- azimuthal angle (degrees)
+		Dx	- X-component of direction vector
+		Dy	- Y-component of direction vector
+		Dz	- Z-component of direction vector
+}
+
+DEGREE : PI/180;
+bound(a,x,b) : if(a-x, a, if(x-b, b, x));
+Acos(x) : acos(bound(-1,x,1));
+Sqrt(x) : if(x, sqrt(x), 0);
+
+nalt = floor(sqrt(2/PI*N) + .5);
+nazi = floor(PI/2*nalt + .5);
+
+cond = nalt*nazi-.9999 - i;
+
+ialt = floor(i/nazi);
+iazi = i - ialt*nazi;
+
+ralt = (ialt + rand(i*.328+.112))/nalt;
+razi = (iazi + rand(i*-.731+.318))/nazi;
+
+rtheta = Acos(Dz);
+rphi = 2*PI*razi;
+Dxy = Sqrt(1 - Dz*Dz);
+theta = rtheta/DEGREE;
+phi = rphi/DEGREE;
+Dx = Dxy*cos(rphi);
+Dy = Dxy*sin(rphi);
+Dz = 1 - 2*ralt;

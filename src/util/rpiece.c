@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.37 2003/02/22 02:07:30 greg Exp $";
 #endif
-
 /*
  * Generate sections of a picture.
  */
@@ -25,7 +22,6 @@ char *argv[];
 #include <signal.h>
 #include "color.h"
 #include "view.h"
-#include "resolu.h"
 
 #ifndef NFS
 #define  NFS			1
@@ -48,9 +44,7 @@ char *argv[];
 #define unguard()	0
 #endif
 
-#ifndef linux
-extern char  *sys_errlist[];
-#endif
+extern char  *strerror();
 
 				/* rpict command */
 char  *rpargv[128] = {"rpict", "-S", "1"};
@@ -90,12 +84,13 @@ char  *argv[];
 	progname = argv[0];
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
-		while (rval = expandarg(&argc, &argv, i))
-			if (rval < 0) {
-				fprintf(stderr, "%s: cannot expand '%s'",
-						argv[0], argv[i]);
-				exit(1);
-			}
+		while ((rval = expandarg(&argc, &argv, i)) > 0)
+			;
+		if (rval < 0) {
+			fprintf(stderr, "%s: cannot expand '%s'",
+					argv[0], argv[i]);
+			exit(1);
+		}
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
 			case 'v':
@@ -200,7 +195,7 @@ int  ltyp;
 	fls.l_type = ltyp;
 	if (fcntl(fd, F_SETLKW, &fls) < 0) {
 		fprintf(stderr, "%s: cannot lock/unlock file: %s\n",
-				progname, sys_errlist[errno]);
+				progname, strerror(errno));
 		exit(1);
 	}
 }
@@ -508,7 +503,7 @@ int  xpos, ypos;
 		filerr("lock");
 #endif
 				/* write new piece to file */
-	if (lseek(outfd, fls.l_start, 0) < 0)
+	if (lseek(outfd, (off_t)fls.l_start, 0) < 0)
 		filerr("seek");
 	if (hmult == 1) {
 		if (writebuf(outfd, (char *)pbuf,
@@ -520,7 +515,7 @@ int  xpos, ypos;
 					hr*sizeof(COLR)) != hr*sizeof(COLR))
 				filerr("write");
 			if (y < vr-1 && lseek(outfd,
-					(long)(hmult-1)*hr*sizeof(COLR),
+					(off_t)(hmult-1)*hr*sizeof(COLR),
 					1) < 0)
 				filerr("seek");
 		}
@@ -551,7 +546,7 @@ filerr(t)			/* report file error and exit */
 char  *t;
 {
 	fprintf(stderr, "%s: %s error on file \"%s\": %s\n",
-			progname, t, outfile, sys_errlist[errno]);
+			progname, t, outfile, strerror(errno));
 	_exit(1);
 }
 

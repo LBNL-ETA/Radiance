@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: normpat.csh,v 2.4 2003/02/22 02:07:27 greg Exp $
 #
 # Normalize a pattern for tiling (-b option blends edges) by removing
 # lowest frequencies from image (-f option) and reducing to

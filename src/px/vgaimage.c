@@ -1,9 +1,6 @@
-/* Copyright (c) 1993 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: vgaimage.c,v 2.10 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  vgaimage.c - driver for VGA board under DOS
  */

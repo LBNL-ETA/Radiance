@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_pict.c,v 2.8 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*		Convert an Radiance image to APPLE pict format.
  *
  *			Orginally Iris to PICT by	Paul Haeberli - 1990
@@ -24,12 +21,11 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include <fcntl.h>
 #endif
+#include  <time.h>
 
 #include "pict.h"
 #include "color.h"
 #include "resolu.h"
-
-extern char	*malloc();
 
 int	outbytes;		    /* This had better be 32 bits! */
 char	*progname;
@@ -224,14 +220,14 @@ int ysize;
     int	    nbytes, rowbytes;
     char    *cbuf, *pbuf;
 
-    cbuf = malloc(4 * xsize);
+    cbuf = (char *)malloc(4 * xsize);
 
     if (cbuf == NULL) {
 	fprintf(stderr, "%s: not enough memory\n", progname);
 	exit(1);
 	}
 
-    pbuf = malloc(4 * xsize);
+    pbuf = (char *)malloc(4 * xsize);
 
     if (pbuf == NULL) {
 	fprintf(stderr, "%s: not enough memory\n", progname);

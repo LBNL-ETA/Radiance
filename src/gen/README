@@ -1,5 +1,5 @@
 		GENERATOR PROGRAMS
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.3 8/25/95 LBL"
 
 This directory contains programs for generating and transforming
 Radiance scene descriptions.

@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# SCCSid "$SunId$ LBL"
+# RCSid: $Id: debugcal.csh,v 2.6 2003/02/22 02:07:30 greg Exp $
 #
 # Script to debug cal files for Radiance
 #

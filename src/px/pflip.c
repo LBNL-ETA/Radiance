@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pflip.c,v 2.5 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  * flip picture file horizontally and/or vertically
  */
@@ -13,6 +10,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #ifdef MSDOS
 #include  <fcntl.h>
 #endif
+
+#include  <time.h>
 
 #include "color.h"
 
@@ -30,8 +29,6 @@ int	correctorder = 0;		/* correcting orientation? */
 FILE	*fin;				/* input file */
 
 char	*progname;
-
-extern char	*malloc();
 
 
 int
@@ -138,7 +135,7 @@ scanfile()				/* scan to the end of file */
 		}
 	}
 	scanpos[0] = ftell(fin);
-	free((char *)scanin);
+	free((void *)scanin);
 }
 
 
@@ -172,7 +169,7 @@ flip()					/* flip the picture */
 			exit(1);
 		}
 	}
-	free((char *)scanin);
+	free((void *)scanin);
 	if (fhoriz)
-		free((char *)scanout);
+		free((void *)scanout);
 }

@@ -1,9 +1,6 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.9 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Geometry drawing operations for OpenGL driver.
  */

@@ -1,0 +1,4 @@
+{
+	Kernel for Gaussian filter
+}
+kern(x,y) : exp(-(x*x+y*y)/.25);

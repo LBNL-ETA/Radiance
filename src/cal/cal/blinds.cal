@@ -1,0 +1,32 @@
+{
+	Compute Venetian Blinds angle to exclude direct sun.
+
+	3/19/93
+
+	Formula by Kostantinos Papamichael,
+	Translated by Greg Ward and Saba Rofchaei
+}
+{
+	Input variables are solar altitude and azimuth in degrees:
+
+		SALT	- solar altitude (degrees)
+		SAZI	- solar azimuth (degrees from South, West is positive)
+}
+
+L = .625;    {slat's width}
+D = .45833;     {distance between slats}  
+ORIENT = 0.0;		{ Window orientation }
+DEGREE : PI/180.0;
+  
+tan_lambda = tan(SALT*DEGREE) / cos((SAZI+ORIENT)*DEGREE);
+lambda = atan(tan_lambda) / DEGREE;
+a = tan_lambda*tan_lambda + 1.0;
+b = -2.0*(D/L);
+c = (D/L)*(D/L) - tan_lambda*tan_lambda;
+
+det = sqrt(b*b - 4.0*a*c);
+
+    {calculating slats' angle corresponding to solar position}     
+POS1 = asin((-b+det)/(2.0*a)) / DEGREE;
+POS2 = asin((-b-det)/(2.0*a)) / DEGREE;
+

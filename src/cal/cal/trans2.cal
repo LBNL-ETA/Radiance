@@ -1,0 +1,17 @@
+{
+	These formulas compute the index of refraction and
+	normal transmission for a pane of glass given the
+	measured normal transmittance and reflectance values,
+	Tn and Rn, respectively.
+
+	These formulas are approximate -- the exact solution
+	involves a quartic equation and seemed more trouble
+	than it was worth.  If you know the index of refraction,
+	you are better off with the formula in trans.cal.
+
+	Oct. 2002	Greg Ward
+}
+				{ formula for normal transmission }
+tn = Tn / (1 - Rn);
+F = Rn / (1 + tn*tn);
+n = (1 + sqrt(F)) / (1 - sqrt(F));

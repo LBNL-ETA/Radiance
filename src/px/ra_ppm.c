@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.9 2003/02/22 02:07:28 greg Exp $";
 #endif
-
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
  */
@@ -18,12 +15,12 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include  <ctype.h>
 
+#include  <time.h>
+
 #include  "color.h"
 
 #include  "resolu.h"
 
-
-extern char  *malloc();
 
 int  agryscan(), bgryscan(), aclrscan(), bclrscan();
 int  agryscan2(), bgryscan2(), aclrscan2(), bclrscan2();
@@ -212,7 +209,7 @@ int  (*getscan)();
 			quiterr("error writing Radiance picture");
 	}
 						/* free scanline */
-	free((char *)scanout);
+	free((void *)scanout);
 }
 
 
@@ -258,7 +255,7 @@ int  binary, grey;
 			quiterr("error writing Pixmap");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }
 
 
@@ -293,7 +290,7 @@ int  (*getscan)();
 			quiterr("error writing Radiance picture");
 	}
 						/* free scanline */
-	free((char *)scanout);
+	free((void *)scanout);
 }
 
 
@@ -357,7 +354,7 @@ int  binary, grey;
 			quiterr("error writing Pixmap");
 	}
 						/* free scanline */
-	free((char *)scanin);
+	free((void *)scanin);
 }
 
 

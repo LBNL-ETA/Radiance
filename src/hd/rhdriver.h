@@ -1,7 +1,4 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
-/* SCCSid "$SunId$ SGI" */
-
+/* RCSid: $Id: rhdriver.h,v 3.21 2003/02/22 02:07:25 greg Exp $ */
 /*
  * Header file for holodeck device driver routines.
  */

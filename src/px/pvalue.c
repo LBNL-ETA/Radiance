@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: pvalue.c,v 2.14 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  pvalue.c - program to print pixel values.
  *
@@ -13,6 +10,8 @@ static char SCCSid[] = "$SunId$ LBL";
 #include  "standard.h"
 
 #include  "color.h"
+
+#include  <time.h>
 
 #include  "resolu.h"
 
@@ -64,6 +63,22 @@ FILE  *fin;
 FILE  *fin2 = NULL, *fin3 = NULL;	/* for other color channels */
 
 int  (*getval)(), (*putval)();
+
+double
+rgb_bright(clr)
+COLOR  clr;
+{
+	return(bright(clr));
+}
+
+double
+xyz_bright(clr)
+COLOR  clr;
+{
+	return(clr[CIEY]);
+}
+
+double  (*mybright)() = &rgb_bright;
 
 
 main(argc, argv)
@@ -170,16 +185,16 @@ char  **argv;
 			case 'X':		/* x resolution */
 				resolution = 0;
 				if (argv[i][0] == '-')
-					picres.or |= XDECR;
+					picres.rt |= XDECR;
 				picres.xr = atoi(argv[++i]);
 				break;
 			case 'y':		/* y resolution */
 			case 'Y':		/* y resolution */
 				resolution = 0;
 				if (argv[i][0] == '-')
-					picres.or |= YDECR;
+					picres.rt |= YDECR;
 				if (picres.xr == 0)
-					picres.or |= YMAJOR;
+					picres.rt |= YMAJOR;
 				picres.yr = atoi(argv[++i]);
 				break;
 			default:
@@ -269,11 +284,11 @@ unkopt:
 		if (resolution && fin2 != NULL) {
 			RESOLU  pres2;
 			if (!fgetsresolu(&pres2, fin2) ||
-					pres2.or != picres.or ||
+					pres2.rt != picres.rt ||
 					pres2.xr != picres.xr ||
 					pres2.yr != picres.yr ||
 					!fgetsresolu(&pres2, fin3) ||
-					pres2.or != picres.or ||
+					pres2.rt != picres.rt ||
 					pres2.xr != picres.xr ||
 					pres2.yr != picres.yr) {
 				fprintf(stderr, "%s: resolution mismatch\n",
@@ -298,7 +313,8 @@ unkopt:
 						/* get header */
 		getheader(fin, checkhead, NULL);
 		if (wrongformat) {
-			fprintf(stderr, "%s: input not a Radiance picture\n",
+			fprintf(stderr,
+				"%s: input not a Radiance RGBE picture\n",
 					progname);
 			quit(1);
 		}
@@ -330,9 +346,18 @@ char  *line;
 	double	d;
 	COLOR	ctmp;
 
-	if (formatval(fmt, line))
-		wrongformat = strcmp(fmt, COLRFMT);
-	else if (original && isexpos(line)) {
+	if (formatval(fmt, line)) {
+		if (!strcmp(fmt, CIEFMT)) {
+			mybright = &xyz_bright;
+			if (original) {
+				scalecolor(exposure, 1./WHTEFFICACY);
+				doexposure++;
+			}
+		} else if (!strcmp(fmt, COLRFMT))
+			mybright = &rgb_bright;
+		else
+			wrongformat++;
+	} else if (original && isexpos(line)) {
 		d = 1.0/exposval(line);
 		scalecolor(exposure, d);
 		doexposure++;
@@ -416,7 +441,7 @@ pixtoval()				/* convert picture to values */
 			}
 		}
 	}
-	free((char *)scanln);
+	free((void *)scanln);
 }
 
 
@@ -460,10 +485,11 @@ valtopix()			/* convert values to a pixel file */
 			quit(1);
 		}
 	}
-	free((char *)scanln);
+	free((void *)scanln);
 }
 
 
+void
 quit(code)
 int  code;
 {
@@ -705,7 +731,7 @@ COLOR  col;
 putbascii(col)			/* put an ascii brightness to stdout */
 COLOR  col;
 {
-	fprintf(stdout, "%15.3e\n", bright(col));
+	fprintf(stdout, "%15.3e\n", (*mybright)(col));
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -716,7 +742,7 @@ COLOR  col;
 {
 	float  vf;
 
-	vf = bright(col);
+	vf = (*mybright)(col);
 	fwrite((char *)&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -728,7 +754,7 @@ COLOR  col;
 {
 	double	vd;
 
-	vd = bright(col);
+	vd = (*mybright)(col);
 	fwrite((char *)&vd, sizeof(double), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -738,7 +764,7 @@ COLOR  col;
 putbint(col)			/* put an int brightness to stdout */
 COLOR  col;
 {
-	fprintf(stdout, "%d\n", (int)(bright(col)*256.));
+	fprintf(stdout, "%d\n", (int)((*mybright)(col)*256.));
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -750,7 +776,7 @@ COLOR  col;
 	register int  i;
 	BYTE  vb;
 
-	i = bright(col)*256.;
+	i = (*mybright)(col)*256.;
 	vb = min(i,255);
 	fwrite((char *)&vb, sizeof(BYTE), 1, stdout);
 

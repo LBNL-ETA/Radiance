@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: lampcolor.c,v 2.6 2003/02/22 02:07:23 greg Exp $";
 #endif
-
 /*
  * Program to convert lamp color from table and compute radiance.
  */

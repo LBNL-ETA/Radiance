@@ -1,5 +1,5 @@
 		PICTURE FILTERS AND TRANSLATORS
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 2.8 10/22/96 LBL"
 
 This directory contains special and general purpose filters for RADIANCE
 picture files and converters to and from other image formats.

@@ -1,9 +1,6 @@
-/* Copyright (c) 1991 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: ra_pixar.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /* ra_pixar.c */
 /*
  * convert from RADIANCE image file to PIXAR image file.  (or vice versa)
@@ -22,6 +19,7 @@ static char SCCSid[] = "$SunId$ LBL";
 
 #include <stdio.h>
 #include <math.h>
+#include  <time.h>
 
 /* PIXAR */
 #include <picio.h>

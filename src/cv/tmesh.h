@@ -1,7 +1,4 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: tmesh.h,v 2.3 2003/02/22 02:07:23 greg Exp $ */
 /*
  * Header file for triangle mesh routines using barycentric coordinates
  */

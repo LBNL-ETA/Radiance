@@ -1,9 +1,6 @@
-/* Copyright (c) 1998 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhd_qtree2c.c,v 3.2 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Quadtree display support routines for cone output.
  */

@@ -1,9 +1,6 @@
-/* Copyright (c) 1992 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: psign.c,v 2.18 2003/02/22 02:07:27 greg Exp $";
 #endif
-
 /*
  *  psign.c - produce picture from text.
  *
@@ -223,7 +220,7 @@ FILE  *fp;
 		if (curl == NULL)
 			goto memerr;
 		len = strlen(buf);
-		curl->s = malloc(len);
+		curl->s = (char *)malloc(len);
 		curl->sp = (short *)malloc(sizeof(short)*len--);
 		if (curl->s == NULL | curl->sp == NULL)
 			goto memerr;
@@ -260,7 +257,7 @@ char  *av[];
 	ourtext = (LINE *)malloc(sizeof(LINE));
 	if (ourtext == NULL)
 		goto memerr;
-	ourtext->s = malloc(MAXLINE);
+	ourtext->s = (char *)malloc(MAXLINE);
 	if (ourtext->s == NULL)
 		goto memerr;
 	for (cp = ourtext->s; ac-- > 0; av++) {
@@ -438,5 +435,5 @@ FILE  *fp;
 			exit(1);
 		}
 	}
-	free((char *)scanout);
+	free((void *)scanout);
 }

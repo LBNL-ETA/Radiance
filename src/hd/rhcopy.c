@@ -1,16 +1,12 @@
-/* Copyright (c) 1999 Silicon Graphics, Inc. */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ SGI";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.15 2003/02/22 02:07:24 greg Exp $";
 #endif
-
 /*
  * Copy data into a holodeck file
  */
 
 #include "holo.h"
 #include "view.h"
-#include "resolu.h"
 
 #ifndef BKBSIZE
 #define BKBSIZE		256		/* beam clump size (kilobytes) */
@@ -124,7 +120,7 @@ int	append;
 		error(SYSTEM, errmsg);
 	}
 					/* check header and magic number */
-	if (getheader(fp, holheadline, &hflags) < 0 ||
+	if (getheader(fp, holheadline, (char *)&hflags) < 0 ||
 			hflags&H_BADF || getw(fp) != HOLOMAGIC) {
 		sprintf(errmsg, "file \"%s\" not in holodeck format", fname);
 		error(USER, errmsg);
@@ -133,7 +129,7 @@ int	append;
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, nextloc, 0);
+		lseek(fd, (off_t)nextloc, 0);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL)->priv = hflags&H_OBST ? &obstr :
 				hflags&H_OBSF ? &unobstr : (char *)NULL;
@@ -322,7 +318,7 @@ char	*pcf, *zbf;
 	copystruct(&phd.vw, &stdview);
 	phd.expos = 1.0;
 	phd.badfmt = phd.gotview = phd.altprims = 0;
-	if (getheader(pfp, picheadline, &phd) < 0 ||
+	if (getheader(pfp, picheadline, (char *)&phd) < 0 ||
 			phd.badfmt || !fgetsresolu(&prs, pfp)) {
 		sprintf(errmsg, "bad format for picture file \"%s\"", pcf);
 		error(USER, errmsg);
@@ -390,13 +386,14 @@ char	*pcf, *zbf;
 				/* write output and free beams */
 	hdflush(NULL);
 				/* clean up */
-	free((char *)cscn);
-	free((char *)zscn);
+	free((void *)cscn);
+	free((void *)zscn);
 	fclose(pfp);
 	close(zfd);
 }
 
 
+void
 eputs(s)			/* put error message to stderr */
 register char  *s;
 {
@@ -416,6 +413,7 @@ register char  *s;
 }
 
 
+void
 quit(code)			/* exit the program gracefully */
 int	code;
 {
