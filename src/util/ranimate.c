@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.44 2003/12/09 22:46:41 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.45 2004/02/15 06:21:01 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -912,12 +912,6 @@ int	rvr
 	if (vp == NULL) {
 		 fprintf(stderr,
 			"%s: unexpected error reading view for frame %d\n",
-		                          progname, frame);
-		quit(1);
-	}
-	if (ep == NULL) {
-		 fprintf(stderr,
-			"%s: unexpected error reading exposure for frame %d\n",
 		                          progname, frame);
 		quit(1);
 	}
