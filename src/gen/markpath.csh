@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: markpath.csh,v 2.1 2003/02/22 02:07:23 greg Exp $
+# RCSid: $Id: markpath.csh,v 2.2 2004/01/01 19:44:07 greg Exp $
 #
 # Put right trianglar markers down a path at the given intervals.
 # Use with replmarks to place regular-sized objects along a path.
@@ -18,11 +18,11 @@ set step=$2
 set mat=mark
 if ($#argv > 2) set mat=$3
 set npts=`wc -l < $pts`
-(head -1 $pts ; cat $pts) | lam - $pts \
+(head -1 $pts ; cat $pts) | rlam - $pts \
 	| rcalc -e '$1=d($1,$2,$3,$4,$5,$6)' -e "cond=$npts+.5-recno" \
 	-e 's(x):x*x;d(x0,y0,z0,x1,y1,z1):sqrt(s(x1-x0)+s(y1-y0)+s(z1-z0))' \
 	| total -1 -r > /tmp/run$$.dat
-lam /tmp/run$$.dat $pts | tabfunc -i xp yp zp > /tmp/path$$.cal
+rlam /tmp/run$$.dat $pts | tabfunc -i xp yp zp > /tmp/path$$.cal
 set tmax=`tail -1 /tmp/run$$.dat`
 set nsteps=`ev "floor($tmax/$step)"`
 echo $mat > /tmp/tri$$.fmt

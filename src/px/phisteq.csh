@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: phisteq.csh,v 3.1 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: phisteq.csh,v 3.2 2004/01/01 19:44:07 greg Exp $
 set Ldmin=1		# minimum display luminance
 set Ldmax=100		# maximum display luminance
 set nsteps=100		# number of steps in perceptual histogram
@@ -57,7 +57,7 @@ set totcount=`sed 's/^.*[ 	]//' $tf1 | total`
 set tst=1
 while ( $totcount > 0 )
 	sed 's/^.*[ 	]//' $tf1 | total -1 -r \
-		| rcalc -e '$1=$1/'$totcount | lam $tf1 - \
+		| rcalc -e '$1=$1/'$totcount | rlam $tf1 - \
 		| tabfunc -i 0 cf > $tf4
 	if ( $tst <= 0 ) break
 	rcalc -f $tf4 -f $tf3 -e "T:$totcount*Stepsiz" \
