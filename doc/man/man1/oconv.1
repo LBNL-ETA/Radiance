@@ -1,4 +1,4 @@
-.\" RCSid "$Id: oconv.1,v 1.5 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: oconv.1,v 1.6 2004/04/12 17:31:27 greg Exp $"
 .TH OCONV 1 8/15/95 RADIANCE
 .SH NAME
 oconv - create an octree from a RADIANCE scene description
@@ -132,15 +132,15 @@ to xform(1) within files to create a hierarchy.
 .IP "Set overflow in addobject (id)"
 This error occurs when too many surfaces are close together in a
 scene.
-Sometimes a dense scene can be accommodated by increasing
-the maximum resolution (by powers of two) using the
-.I \-r
-option, but usually this error indicates something is wrong.
 Either too many surfaces are lying right on top of each other,
 or the bounding cube is inflated from an oversized object
 or an improper
 .I \-b
 specification.
+If hundreds of triangles come together at a common vertex, it may
+not be possible to create an octree from the object.
+This happens most often when inane CAD systems create spheres using
+a polar tesselation.
 Chances are, the surface "id" is near one of those causing the problem.
 .IP "Hash table overflow in fullnode"
 This error is caused by too many surfaces.

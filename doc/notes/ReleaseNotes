@@ -1172,7 +1172,7 @@ Added -N option to rad to start multiple rendering processes in
 parallel.
 
 Fixed bug where mesh instances were not being freed, so subsequent calls
-in programs like ranimate would refer to bogus data.
+in programs like ranimove would refer to bogus data.
 
 Added support in normtiff for floating-point and 16-bit/sample TIFF input
 files.
@@ -1268,3 +1268,9 @@ It's the most horrible image format I've ever seen, and I've seen a lot.
 Increased -aa default value for all renderers (and also -ad and -as in
 rview) at Schorsch's suggestion.  I think this undid my earlier decrease
 of -aa last time, which I guess was ill-considered.
+
+Modified oconv to keep subdividing the octree if there are too many
+objects in a voxel even when the -r resolution limit has been
+reached.  This was not done before due to problems with recursion,
+and still, it will only continue to 256 times the original -r limit.
+If that isn't enough, then there's probably no hope, anyway.
