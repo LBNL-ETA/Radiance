@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: viewbeams.c,v 3.5 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.6 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Convert view to beam list.
@@ -140,7 +140,7 @@ loopexit:
 							/* add samples */
 			add2blist(hd, hdbindex(hdlist[hd],gc), sampquant);
 		}
-	copystruct(blp, &blist);		/* transfer beam list */
+	*blp = blist;		/* transfer beam list */
 	return(sectlist);			/* all done! */
 }
 

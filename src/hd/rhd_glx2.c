@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx2.c,v 3.1 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_glx2.c,v 3.2 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -174,7 +174,7 @@ char  *id;
 			DisplayWidth(ourdisplay, ourscreen);
 	pheight = 2.0 * (double)DisplayHeightMM(ourdisplay, ourscreen) /
 			DisplayHeight(ourdisplay, ourscreen);
-	copystruct(&odev.v, &stdview);
+	odev.v = stdview;
 	odev.v.type = VT_PER;
 					/* map the window */
 	setstereobuf(STEREO_BUFFER_LEFT);
@@ -250,9 +250,9 @@ register VIEW	*nv;
 			XResizeWindow(ourdisplay, gwind, odev.hres, odev.vres);
 			dev_input();	/* get resize event */
 		}
-		copystruct(&odev.v, nv);	/* setview() already called */
+		odev.v = *nv;	/* setview() already called */
 		setglpersp(&odev.v);
-		copystruct(&vwright, nv);
+		vwright = *nv;
 		d = eyesepdist / sqrt(nv->hn2);
 		VSUM(vwright.vp, nv->vp, nv->hvec, d);
 		/* setview(&vwright);	-- Unnecessary */
@@ -438,7 +438,7 @@ int	dx, dy, mov, orb;
 	double	d;
 	register int	li;
 				/* start with old view */
-	copystruct(&nv, &odev.v);
+	nv = odev.v;
 				/* change view direction */
 	if (viewray(v1, odir, &odev.v,
 			(dx+.5)/odev.hres, (dy+.5)/odev.vres) < -FTINY)

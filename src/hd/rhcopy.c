@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.17 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.18 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -314,7 +314,7 @@ char	*pcf, *zbf;
 		error(SYSTEM, pcf);
 	}
 				/* load picture header */
-	copystruct(&phd.vw, &stdview);
+	phd.vw = stdview;
 	phd.expos = 1.0;
 	phd.badfmt = phd.gotview = phd.altprims = 0;
 	if (getheader(pfp, picheadline, (char *)&phd) < 0 ||

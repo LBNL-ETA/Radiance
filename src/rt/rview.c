@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.22 2003/07/03 15:00:19 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.23 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -114,12 +114,13 @@ char  *dname;
 	id = octname!=NULL ? octname : progname;
 						/* check device table */
 	for (i = 0; devtable[i].name; i++)
-		if (!strcmp(dname, devtable[i].name))
+		if (!strcmp(dname, devtable[i].name)) {
 			if ((dev = (*devtable[i].init)(dname, id)) == NULL) {
 				sprintf(errmsg, "cannot initialize %s", dname);
 				error(USER, errmsg);
 			} else
 				return;
+		}
 						/* not there, try exec */
 	if ((dev = comm_init(dname, id)) == NULL) {
 		sprintf(errmsg, "cannot start device \"%s\"", dname);

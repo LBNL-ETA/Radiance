@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.15 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.16 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -243,7 +243,7 @@ getahead()			/* load picture header */
 		exit(1);
 	}
 	if (!gotview || ourview.type == VT_PAR) {
-		copystruct(&ourview, &stdview);
+		ourview = stdview;
 		ourview.type = VT_PER;
 		if (pixaspect*inpres.yr < inpres.xr) {
 			ourview.horiz = 40.0;

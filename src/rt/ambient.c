@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.52 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.53 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -529,7 +529,7 @@ register AMBVAL  *aval;
 
 	if ((av = newambval()) == NULL)
 		error(SYSTEM, "out of memory in avstore");
-	copystruct(av, aval);
+	*av = *aval;
 	av->latick = ambclock;
 	av->next = NULL;
 	nambvals++;
@@ -741,7 +741,7 @@ int	always;
 		if (avlist2 != NULL)
 			free((void *)avlist2);
 		if (always) {		/* rebuild without sorting */
-			copystruct(&oldatrunk, &atrunk);
+			oldatrunk = atrunk;
 			atrunk.alist = NULL;
 			atrunk.kid = NULL;
 			unloadatree(&oldatrunk, avinsert);
@@ -772,14 +772,14 @@ int	always;
 			if (avlist1[i].p == NULL)
 				continue;
 			tap = avlist2[i];
-			copystruct(&tav, tap);
+			tav = *tap;
 			for (j = i; (pnext = avlist1[j].p) != tap;
 					j = avlmemi(pnext)) {
-				copystruct(avlist2[j], pnext);
+				*(avlist2[j]) = *pnext;
 				avinsert(avlist2[j]);
 				avlist1[j].p = NULL;
 			}
-			copystruct(avlist2[j], &tav);
+			*(avlist2[j]) = tav;
 			avinsert(avlist2[j]);
 			avlist1[j].p = NULL;
 		}

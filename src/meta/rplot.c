@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rplot.c,v 1.1 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: rplot.c,v 1.2 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to raster files
@@ -414,12 +414,13 @@ int  xmin, ymin, xmax, ymax;
     for (j = ymin; j <= ymax; j++)
 	for (i = xmin; i <= xmax; i++)
 	    if (pattern[(attrib&074)>>2]
-			[(j>>3)%(PATSIZE>>3)][i%PATSIZE] & 1<<(j&07))
+			[(j>>3)%(PATSIZE>>3)][i%PATSIZE] & 1<<(j&07)) {
 
 		if (attrib & 0100) {
 		    pixtog(i,j,attrib&03);
 		} else {
 		    pixmix(i,j,attrib&03);
 		}
+	    }
 
 }

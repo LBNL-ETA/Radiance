@@ -456,7 +456,7 @@ int	n;
 			fclose(viewfp);
 			viewfp = NULL;
 			viewnum = 0;
-			copystruct(&curview, &stdview);
+			curview = stdview;
 		}
 		return(NULL);
 	}
@@ -472,7 +472,7 @@ int	n;
 			perror(vval(VIEWFILE));
 			quit(1);
 		}
-		copystruct(&curview, &stdview);
+		curview = stdview;
 		viewnum = 0;
 	}
 	if (n < 0) {				/* get next view */
@@ -761,11 +761,12 @@ int	n;
 		om->cprio = om->prio;
 	}
 					/* XXX bxfm relies on call order */
-	if (framestep)
+	if (framestep) {
 		if (invmat4(om->bxfm, om->cxfm))
 			multmat4(om->bxfm, om->bxfm, oxf.xfm);
 		else
 			setident4(om->bxfm);
+	}
 					/* all done */
 	return(xfp);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.13 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.14 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -53,7 +53,7 @@ int	bi;
 		(ip[1][0]-ip[3][0])*(ip[2][1]-ip[3][1]);
 	af *= af >= 0 ? 0.5 : -0.5;
 getback:
-	copystruct(&vrev, vp);		/* compute reverse view */
+	vrev = *vp;		/* compute reverse view */
 	for (i = 0; i < 3; i++) {
 		vrev.vdir[i] = -vp->vdir[i];
 		vrev.vup[i] = -vp->vup[i];
@@ -239,7 +239,7 @@ addcell(gcp, cl)		/* add a cell to a list */
 GCOORD	*gcp;
 register struct cellist	*cl;
 {
-	copystruct(cl->cl+cl->n, gcp);
+	*(cl->cl+cl->n) = *gcp;
 	cl->n++;
 	return(1);
 }

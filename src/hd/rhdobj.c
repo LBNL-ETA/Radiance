@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.14 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.15 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -373,7 +373,7 @@ int	force;
 	if (!force)
 		return(0);
 					/* need to compute new light set */
-	copystruct(&cvw, &stdview);
+	cvw = stdview;
 	cvw.type = VT_PER;
 	VCOPY(cvw.vp, ocent);
 	cvw.vup[0] = 1.; cvw.vup[1] = cvw.vup[2] = 0.;
@@ -774,7 +774,7 @@ char	*oldnm, *nam;
 	opdup = (DOBJECT *)malloc(sizeof(DOBJECT));
 	if (opdup == NULL)
 		error(SYSTEM, "out of memory in dobj_dup");
-	copystruct(opdup, op);
+	*opdup = *op;
 					/* rename */
 	strcpy(opdup->name, nam);
 					/* get our own copy of transform */

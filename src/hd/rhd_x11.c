@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.33 2003/04/14 16:56:19 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.34 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -176,7 +176,7 @@ char  *id;
 			DisplayWidth(ourdisplay, ourscreen);
 	pheight = (double)DisplayHeightMM(ourdisplay, ourscreen) /
 			DisplayHeight(ourdisplay, ourscreen);
-	copystruct(&odev.v, &stdview);
+	odev.v = stdview;
 	odev.v.type = VT_PER;
 					/* map the window and get its size */
 	XMapWindow(ourdisplay, gwind);
@@ -258,7 +258,7 @@ VIEW	*nv;
 			XResizeWindow(ourdisplay, gwind, odev.hres, odev.vres);
 			dev_input();	/* wait for resize event */
 		}
-		copystruct(&odev.v, nv);
+		odev.v = *nv;
 	}
 	qtReplant();
 	return(1);
@@ -546,7 +546,7 @@ int	dx, dy, mov, orb;
 	double	d;
 	register int	li;
 				/* start with old view */
-	copystruct(&nv, &odev.v);
+	nv = odev.v;
 				/* change view direction */
 	if (mov | orb) {
 		if ((li = qtFindLeaf(dx, dy)) < 0)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.40 2003/06/26 00:58:10 schorsch Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.41 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -278,19 +278,20 @@ double  coef;
 					/* compute foreground and background */
 	foremat = backmat = 0;
 					/* foreground */
-	copystruct(&fr, r);
+	fr = *r;
 	if (coef > FTINY)
 		foremat = rayshade(&fr, fore);
 					/* background */
-	copystruct(&br, r);
+	br = *r;
 	if (coef < 1.0-FTINY)
 		backmat = rayshade(&br, back);
 					/* check for transparency */
-	if (backmat ^ foremat)
+	if (backmat ^ foremat) {
 		if (backmat && coef > FTINY)
 			raytrans(&fr);
 		else if (foremat && coef < 1.0-FTINY)
 			raytrans(&br);
+	}
 					/* mix perturbations */
 	for (i = 0; i < 3; i++)
 		r->pert[i] = coef*fr.pert[i] + (1.0-coef)*br.pert[i];

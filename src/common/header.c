@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.18 2003/07/12 15:14:44 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.19 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -311,11 +311,12 @@ FILE  *fout;
 	if (!cdat.fs[0])
 		return(0);
 	for (cp = fmt; *cp; cp++)		/* check for globbing */
-		if (*cp == '?' | *cp == '*')
+		if (*cp == '?' | *cp == '*') {
 			if (globmatch(fmt, cdat.fs)) {
 				strcpy(fmt, cdat.fs);
 				return(1);
 			} else
 				return(-1);
+		}
 	return(strcmp(fmt, cdat.fs) ? -1 : 1);	/* literal match */
 }

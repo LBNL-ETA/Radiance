@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_geom.c,v 3.12 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.13 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Geometry drawing operations for OpenGL driver.
@@ -52,7 +52,7 @@ char	*file;
 					/* check if copy in current list */
 	FORALLGEOM(gmCurrent, j)
 		if (!strcmp(file, gmCurrent[j].gfile)) {
-			copystruct(&gmNext[i], &gmCurrent[j]);
+			gmNext[i] = gmCurrent[j];
 			return;
 		}
 					/* else load new octree */

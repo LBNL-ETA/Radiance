@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.6 2003/06/05 19:29:35 schorsch Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -63,13 +63,14 @@ char  **argv;
 			fclose(fp);
 		}
 	}
-	if (argc == 1)
+	if (argc == 1) {
 		if (dim) {
 			getdim(stdin);
 		} else {
 			getheader(stdin, fputs, stdout);
 			putchar('\n');
 		}
+	}
 	exit(0);
 }
 

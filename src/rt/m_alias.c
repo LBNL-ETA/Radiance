@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.1 2003/03/11 19:29:05 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.2 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -37,7 +37,7 @@ RAY	*r;
 	aobj = lastmod(objndx(m), m->oargs.sarg[0]);
 	if (aobj < 0)
 		objerror(m, USER, "bad reference");
-	copystruct(&arec, objptr(aobj));
+	arec = *objptr(aobj);
 					/* irradiance hack */
 	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
 			(ofun[arec.otype].flags & (T_M|T_X))) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.30 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.31 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -251,11 +251,12 @@ int  xres, yres;
 	}
 	XClearWindow(ourdisplay, gwind);
 						/* reinitialize color table */
-	if (ourvinfo.class == PseudoColor || ourvinfo.class == GrayScale)
+	if (ourvinfo.class == PseudoColor || ourvinfo.class == GrayScale) {
 		if (getpixels() == 0)
 			eputs("cannot allocate colors\n");
 		else
 			new_ctab(ncolors);
+	}
 						/* get new command line */
 	if (comline != NULL)
 		xt_close(comline);
@@ -560,11 +561,12 @@ getevent()			/* get next event */
 		break;
 	case MapNotify:
 		if (ourvinfo.class == PseudoColor ||
-				ourvinfo.class == GrayScale)
+				ourvinfo.class == GrayScale) {
 			if (getpixels() == 0)
 				eputs("cannot allocate colors\n");
 			else
 				new_ctab(ncolors);
+		}
 		mapped = 1;
 		break;
 	case Expose:

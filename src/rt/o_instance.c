@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_instance.c,v 2.6 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  o_instance.c - routines for computing ray intersections with octrees.
@@ -23,7 +23,7 @@ register RAY  *r;
 					/* get the octree */
 	ins = getinstance(o, IO_ALL);
 					/* copy and transform ray */
-	copystruct(&rcont, r);
+	rcont = *r;
 	multp3(rcont.rorg, r->rorg, ins->x.b.xfm);
 	multv3(rcont.rdir, r->rdir, ins->x.b.xfm);
 	for (i = 0; i < 3; i++)

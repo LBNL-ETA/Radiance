@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.3 2003/07/03 15:00:19 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.4 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -229,7 +229,7 @@ RAY	*r;
 	if (sendq_full() && ray_pflush() <= 0)
 		error(INTERNAL, "ray_pflush failed in ray_psend");
 
-	copystruct(&r_queue[r_send_next], r);
+	r_queue[r_send_next] = *r;
 	r_send_next++;
 }
 
@@ -244,22 +244,22 @@ RAY	*r;
 	if (sendq_full()) {
 		RAY	mySend;
 		int	rval;
-		copystruct(&mySend, r);
+		mySend = *r;
 					/* wait for a result */
 		rval = ray_presult(r, 0);
 					/* put new ray in queue */
-		copystruct(&r_queue[r_send_next], &mySend);
+		r_queue[r_send_next] = mySend;
 		r_send_next++;
 		return(rval);		/* done */
 	}
 					/* add ray to send queue */
-	copystruct(&r_queue[r_send_next], r);
+	r_queue[r_send_next] = *r;
 	r_send_next++;
 					/* check for returned ray... */
 	if (r_recv_first >= r_recv_next)
 		return(0);
 					/* ...one is sitting in queue */
-	copystruct(r, &r_queue[r_recv_first]);
+	*r = r_queue[r_recv_first];
 	r_recv_first++;
 	return(1);
 }
@@ -279,7 +279,7 @@ int	poll;
 		return(0);
 					/* check queued results first */
 	if (r_recv_first < r_recv_next) {
-		copystruct(r, &r_queue[r_recv_first]);
+		*r = r_queue[r_recv_first];
 		r_recv_first++;
 		return(1);
 	}
@@ -354,7 +354,7 @@ getready:				/* any children waiting for us? */
 		rp->slights = NULL;
 	}
 					/* return first ray received */
-	copystruct(r, &r_queue[r_recv_first]);
+	*r = r_queue[r_recv_first];
 	r_recv_first++;
 	return(1);
 }

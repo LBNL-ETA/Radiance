@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.23 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.24 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -319,7 +319,7 @@ int	drop;
 		tp->k[q].li = lo;
 	}
 dropit:
-	if (drop)
+	if (drop) {
 		if (li+1 == (qtL.tl ? qtL.tl : qtL.nl))
 			qtL.tl = li;		/* special case */
 		else {
@@ -327,6 +327,7 @@ dropit:
 			qtL.wd[li] = falleaves;
 			falleaves = li;
 		}
+	}
 	return(li == lo);
 }
 

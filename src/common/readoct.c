@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.20 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.21 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -99,7 +99,7 @@ char  *ofn[];
 	else if (load & IO_SCENE && nf == 0)
 		skiptree();
 		
-	if (load & IO_SCENE)		/* get the scene */
+	if (load & IO_SCENE) {		/* get the scene */
 	    if (nf == 0) {
 					/* load binary scene data */
 		readscene(infp, objsize);
@@ -112,6 +112,7 @@ char  *ofn[];
 		if (dosets(nonsurfinset))
 			octerror(USER, "modifier in tree; octree stale?");
 	    }
+	}
 				/* close the input */
 	if (infn[0] == '!')
 		pclose(infp);

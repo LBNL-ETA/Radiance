@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.32 2003/07/16 01:32:53 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.33 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -285,12 +285,13 @@ double	dmax;
 	thisray.rmax = dmax;
 	rayorigin(&thisray, NULL, PRIMARY, 1.0);
 	if (castonly) {
-		if (!localhit(&thisray, &thescene))
+		if (!localhit(&thisray, &thescene)) {
 			if (thisray.ro == &Aftplane) {	/* clipped */
 				thisray.ro = NULL;
 				thisray.rot = FHUGE;
 			} else
 				sourcehit(&thisray);
+		}
 	} else
 		rayvalue(&thisray);
 	printvals(&thisray);

@@ -494,7 +494,7 @@ static char  vistype[][12] = {
 	if (viscmp(&xvi[i],&ourvis) > 0)
 		quiterr("inadequate visuals on this screen");
 					/* OK, we'll use it */
-	copystruct(&ourvis, &xvi[i]);
+	ourvis = xvi[i];
 #ifdef DEBUG
 	fprintf(stderr, "Selected visual type %s, depth %d\n",
 			vistype[ourvis.class], ourvis.depth);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sm_ogl.c,v 3.17 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: sm_ogl.c,v 3.18 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * sm_ogl.c
@@ -147,7 +147,7 @@ tryagain:				/* hash table lookup */
 					/* copy old table to new and free */
     while (ndx--)
        if (!QT_IS_EMPTY(le[ndx].qt))
-	  copystruct(qtCache_find(le[ndx].qt), &le[ndx]);
+	  *qtCache_find(le[ndx].qt) = le[ndx];
     free((void *)le);
     goto tryagain;			/* should happen only once! */
 }

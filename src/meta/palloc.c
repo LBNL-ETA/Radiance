@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: palloc.c,v 1.2 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: palloc.c,v 1.3 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *   Limited dynamic storage allocator for primitives
@@ -25,21 +25,22 @@ PRIMITIVE *
 palloc(void)		/* allocate a primitive */
 
 {
- register PRIMITIVE  *p;
+    register PRIMITIVE  *p;
 
- if (maxalloc > 0 && nalloc >= maxalloc)
-    return(NULL);
+    if (maxalloc > 0 && nalloc >= maxalloc)
+	return(NULL);
 
- if ((p = pop(&freelist)) == NULL)
-    if (morefree())
-       p = pop(&freelist);
-    else {
-       sprintf(errmsg, "out of memory in palloc (nalloc = %d)", nalloc);
-       error(SYSTEM, errmsg);
-       }
+    if ((p = pop(&freelist)) == NULL) {
+	if (morefree())
+	    p = pop(&freelist);
+	else {
+	    sprintf(errmsg, "out of memory in palloc (nalloc = %d)", nalloc);
+	    error(SYSTEM, errmsg);
+	}
+    }
 
- nalloc++;
- return(p);
+    nalloc++;
+    return(p);
 }
 
 

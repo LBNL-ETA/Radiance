@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_gif.c,v 2.8 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.9 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Convert from Radiance picture file to Compuserve GIF.
@@ -158,11 +158,12 @@ int  y;
 	if (bradj)
 		shiftcolrs(scanln, xmax, bradj);
 	colrs_gambs(scanln, xmax);
-	if (pixscan != NULL)
+	if (pixscan != NULL) {
 		if (samplefac)
 			neu_dith_colrs(pixscan, scanln, xmax);
 		else
 			dith_colrs(pixscan, scanln, xmax);
+	}
 }
 
 

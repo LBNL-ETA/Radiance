@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.39 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.40 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -401,7 +401,7 @@ rpiece()			/* render picture piece by piece */
 	VIEW  pview;
 	int  xorg, yorg;
 					/* compute view parameters */
-	copystruct(&pview, &ourview);
+	pview = ourview;
 	switch (ourview.type) {
 	case VT_PER:
 		pview.horiz = 2.*180./PI*atan(

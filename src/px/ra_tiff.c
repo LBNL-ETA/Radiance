@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.24 2003/07/16 01:32:53 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.25 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -161,13 +161,14 @@ doneopts:
 		if (i != argc-2)
 			goto userr;
 						/* consistency checks */
-		if (CHK(C_GRY))
+		if (CHK(C_GRY)) {
 			if (cvts.phot == PHOTOMETRIC_RGB)
 				cvts.phot = PHOTOMETRIC_MINISBLACK;
 			else {
 				cvts.phot = PHOTOMETRIC_LOGL;
 				cvts.comp = COMPRESSION_SGILOG;
 			}
+		}
 		if (CHK(C_TWRD|C_TFLT) == (C_TWRD|C_TFLT))
 			goto userr;
 

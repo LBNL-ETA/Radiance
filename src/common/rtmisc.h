@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmisc.h,v 3.4 2003/07/17 09:21:29 schorsch Exp $ */
+/* RCSid $Id: rtmisc.h,v 3.5 2003/07/21 22:30:17 schorsch Exp $ */
 /*
  *	Miscellaneous Radiance definitions
  */
@@ -6,13 +6,6 @@
 #define _RAD_RTMISC_H_
 
 #include  <stdlib.h>
-					/* memory operations */
-#ifdef	NOSTRUCTASS
-#include  <string.h>
-#define	 copystruct(d,s)	memcpy((void *)(d),(void *)(s),sizeof(*(d)))
-#else
-#define	 copystruct(d,s)	(*(d) = *(s))
-#endif
 
 #ifdef __cplusplus
 extern "C" {

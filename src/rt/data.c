@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.22 2003/07/16 01:32:53 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.23 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -234,8 +234,8 @@ char  *pname;
 	fclose(fp);
 	i = hash(pname);
 	pp[0].next = dtab[i];		/* link into picture list */
-	copystruct(&pp[1], &pp[0]);
-	copystruct(&pp[2], &pp[0]);
+	pp[1] = pp[0];
+	pp[2] = pp[0];
 	pp[0].type = RED;		/* differentiate RGB records */
 	pp[1].type = GRN;
 	pp[2].type = BLU;

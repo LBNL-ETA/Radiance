@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.33 2003/07/01 21:21:40 greg Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.34 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -186,7 +186,7 @@ int	block;
 	case DR_VIEWPOINT:	/* set target eye position */
 		if (msg.nbytes != sizeof(VIEWPOINT))
 			error(INTERNAL, "bad DR_VIEWPOINT from display process");
-		copystruct(&myeye, (VIEWPOINT *)buf);
+		myeye = *((VIEWPOINT *)buf);
 		break;
 	case DR_ATTEN:		/* block for priority request */
 		if (msg.nbytes)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.50 2003/07/07 17:21:50 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.51 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -78,7 +78,7 @@ HDGRID	*hproto;
 	if ((hp = (HOLO *)malloc(n)) == NULL)
 		return(NULL);
 				/* copy header information */
-	copystruct(hp, &hdhead);
+	*hp = hdhead;
 				/* allocate and clear beam list */
 	hp->bl = (BEAM **)malloc((nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
 	if (hp->bl == NULL) {
@@ -261,7 +261,7 @@ int	i;
 			hp->dirseg[j].n = 1;
 			break;
 		}
-		copystruct(hp->dirseg+j, hp->dirseg+(j-1));
+		*(hp->dirseg+j) = *(hp->dirseg+(j-1));
 	}
 	do {				/* check neighbors */
 		mindist = nbeams(hp);		/* find closest */
@@ -283,7 +283,7 @@ int	i;
 					hp->dirseg[minpos].n - hp->dirseg[j].s;
 		hp->dirty--;
 		while (++j < hp->dirty)		/* close the gap */
-			copystruct(hp->dirseg+j, hp->dirseg+(j+1));
+			*(hp->dirseg+j) = *(hp->dirseg+(j+1));
 	} while (mindist <= MINDIRSEL);
 }
 
@@ -555,7 +555,7 @@ int	i;
 				if (++k >= f->nfrags)
 					goto endloop;
 			if (k > j)
-				copystruct(f->fi+j, f->fi+k);
+				*(f->fi+j) = *(f->fi+k);
 		}
 	endloop:
 		f->nfrags = j;
@@ -587,7 +587,7 @@ int	i;
 			f->fi[j].nrd = bi->nrd;
 			break;
 		}
-		copystruct(f->fi+j, f->fi+(j-1));
+		*(f->fi+j) = *(f->fi+(j-1));
 	}
 					/* coalesce adjacent fragments */
 						/* successors never empty */
@@ -817,7 +817,7 @@ register HOLO	*hp;			/* section we're adding from */
 				hb[j].b = i;
 				break;
 			}
-			copystruct(hb+j, hb+(j-1));
+			*(hb+j) = *(hb+(j-1));
 		}
 	}
 	return(nents);			/* return new list length */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.18 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.19 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -241,11 +241,12 @@ char	**argv;
 		printf("}\n");
 		putmapping();			/* put out color mapping */
 	}
-	if (debugfp != NULL)		/* put out debug picture */
+	if (debugfp != NULL) {		/* put out debug picture */
 		if (scanning)
 			picdebug();
 		else
 			clrdebug();
+	}
 	exit(0);
 userr:
 	fprintf(stderr,

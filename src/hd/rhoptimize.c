@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.13 2003/07/14 20:02:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.14 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -158,9 +158,9 @@ int	n;
 					rva[i].r[1][0]==rva[j].r[1][0] &&
 					rva[i].r[1][1]==rva[j].r[1][1] ) {
 				n--;		/* swap duplicate with end */
-				copystruct(&rtmp, rva+n);
-				copystruct(rva+n, rva+i);
-				copystruct(rva+i, &rtmp);
+				rtmp = *(rva+n);
+				*(rva+n) = *(rva+i);
+				*(rva+i) = rtmp;
 				i--;		/* recheck one we swapped */
 			}
 	return(n);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.11 2003/07/12 09:55:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.12 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -116,7 +116,7 @@ loadoctrees()				/* load octrees we've saved up */
 	while (ottab.tsiz) {
 		if (!levelsleft--)
 			error(USER, "too many octree levels -- instance loop?");
-		copystruct(&looptab, &ottab);
+		looptab = ottab;
 		ottab.tsiz = 0;
 		nocts += lu_doall(&looptab, buildoctlist);
 		lu_done(&looptab);

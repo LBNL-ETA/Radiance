@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.12 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.13 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -372,8 +372,8 @@ register VIEW  *vp;
 		sprintf(errmsg, "view not set - %s", err);
 		error(COMMAND, errmsg);
 	} else if (memcmp((char *)vp, (char *)&ourview, sizeof(VIEW))) {
-		copystruct(&oldview, &ourview);
-		copystruct(&ourview, vp);
+		oldview = ourview;
+		ourview = *vp;
 		newimage();
 	}
 }

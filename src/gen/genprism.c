@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genprism.c,v 2.10 2003/07/12 09:41:41 schorsch Exp $";
+static const char	RCSid[] = "$Id: genprism.c,v 2.11 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *  genprism.c - generate a prism.
@@ -279,11 +279,12 @@ int  round;
 			rside(i, i+1);
 		else
 			side(i, i+1);
-	if (!iscomplete)
+	if (!iscomplete) {
 		if (round)
 			rside(nverts-1, 0);
 		else
 			side(nverts-1, 0);
+	}
 }
 
 

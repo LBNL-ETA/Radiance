@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tgraph.c,v 1.2 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: tgraph.c,v 1.3 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *   Routines for tel-a-graph file plotting
@@ -48,7 +48,7 @@ char  *s;
  short  userror = 0;
  int  i;
 
- if (s[0] == '-')
+ if (s[0] == '-') {
 
     switch(s[1])  {
     
@@ -92,7 +92,7 @@ char  *s;
           userror = *sp;
           break;
        }
- else
+ } else {
 
     switch (s[1])  {
 
@@ -111,6 +111,7 @@ char  *s;
              usecurve[*sp-'@'] = 1;
           userror = *sp;
        }
+    }
 
  if (userror)
     error(USER, "options are [-sSYMRAD][-g][-lx][-ly][-p{dr}][-xXMIN][+xXMAX][-yYMIN][+yYMAX][-C..|+C..]");
@@ -181,40 +182,40 @@ int  flag;
  char	*format, stemp[32];
 
 					/* set limits */
- if (polar)
+ if (polar) {
     if (xmax-xmin < ymax-ymin)			/* null aspect for polar */
 	xmax = xmin + ymax-ymin;
     else
 	ymax = ymin + xmax-xmin;
- else {
-    if (xmnset > -FHUGE)
+ } else {
+    if (xmnset > -FHUGE) {
        if (logx) {
 	  if (xmnset > FTINY)
 	     xmin = log10(xmnset);
-	  }
-       else
+	  } else
 	  xmin = xmnset;
-    if (xmxset < FHUGE)
+	}
+    if (xmxset < FHUGE) {
        if (logx) {
 	  if (xmxset > FTINY)
 	     xmax = log10(xmxset);
-	  }
-       else
+	  } else
 	  xmax = xmxset;
-    if (ymnset > -FHUGE)
+	}
+    if (ymnset > -FHUGE) {
        if (logy) {
 	  if (ymnset > FTINY)
 	     ymin = log10(ymnset);
-	  }
-       else
+	  } else
 	  ymin = ymnset;
-    if (ymxset < FHUGE)
+	}
+    if (ymxset < FHUGE) {
        if (logy) {
 	  if (ymxset > FTINY)
 	     ymax = log10(ymxset);
-	  }
-       else
+	  } else
 	  ymax = ymxset;
+	}
     }
 					/* set step */
  if (logx) {
@@ -234,11 +235,12 @@ int  flag;
  xsize = xmax - xmin;
  ysize = ymax - ymin;
 
- if (polar)				/* null aspect again */
+ if (polar) {				/* null aspect again */
      if (xsize < ysize)
 	xmax = xmin + (xsize = ysize);
      else
 	ymax = ymin + (ysize = xsize);
+ }
 
  if (xmin > 0.0)
     xorg = XBEG;
@@ -272,13 +274,14 @@ int  flag;
     format = "1e%-3.0f";
 
  for (pos = xmin; pos < xmax+xstep/2; pos += xstep) {
-    if (flag & XTICS)
+    if (flag & XTICS) {
        if (polar)
 	  plseg(010, XCONV(pos), yorg-TSIZ/2, XCONV(pos), yorg+TSIZ/2);
        else {
 	  plseg(010, XCONV(pos), YBEG, XCONV(pos), YBEG-TSIZ);
 	  plseg(010, XCONV(pos), YBEG+YSIZ-1, XCONV(pos), YBEG+YSIZ-1+TSIZ);
 	  }
+	}
     if (flag & XNUMS) {
        sprintf(stemp, format, pos);
        if (polar)
@@ -311,13 +314,14 @@ int  flag;
     format = "1e%-3.0f";
 
  for (pos = ymin; pos < ymax+ystep/2; pos += ystep) {
-    if (flag & YTICS)
+    if (flag & YTICS) {
        if (polar)
 	  plseg(010, xorg-TSIZ/2, YCONV(pos), xorg+TSIZ/2, YCONV(pos));
        else {
           plseg(010, XBEG, YCONV(pos), XBEG-TSIZ, YCONV(pos));
           plseg(010, XBEG+XSIZ-1, YCONV(pos), XBEG+XSIZ-1+TSIZ, YCONV(pos));
           }
+	}
     if (flag & YNUMS) {
        sprintf(stemp, format, pos);
        if (polar)
@@ -516,13 +520,14 @@ register char  *s;
     register char  *rval = NULL;
 
     for ( ; *s; s++)
-	if (*s == '"')
+	if (*s == '"') {
 	    if (rval == NULL)
 		rval = s+1;
 	    else {
 		*s = '\0';
 		return(rval);
 	    }
+	}
     
     return(NULL);
 }
@@ -552,17 +557,19 @@ double  *xp, *yp;
     if (*yp < ymnset || *yp > ymxset)
 	oobounds++;
 
-    if (logx)
+    if (logx) {
 	if (*xp < FTINY)
 	    oobounds++;
 	else
 	    *xp = log10(*xp);
+	}
 
-    if (logy)
+    if (logy) {
 	if (*yp < FTINY)
 	    oobounds++;
 	else
 	    *yp = log10(*yp); 
+	}
 
     if (polar) {
 	a = *xp;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holo.c,v 3.18 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: holo.c,v 3.19 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Routines for converting holodeck coordinates, etc.
@@ -90,9 +90,9 @@ register int	i;
 	gc[1].i[1] = i / hp->grid[hdwg0[gc[1].w]];
 	gc[1].i[0] = i - gc[1].i[1]*hp->grid[hdwg0[gc[1].w]];
 	if (reverse) {
-		copystruct(g2, gc+1);
-		copystruct(gc+1, gc);
-		copystruct(gc, g2);
+		*g2 = *(gc+1);
+		*(gc+1) = *gc;
+		*gc = *g2;
 	}
 	return(1);			/* we're done */
 }
@@ -108,8 +108,8 @@ register GCOORD	gc[2];
 	register int	i, j;
 					/* check ordering and limits */
 	if (reverse = gc[0].w > gc[1].w) {
-		copystruct(g2, gc+1);
-		copystruct(g2+1, gc);
+		*g2 = *(gc+1);
+		*(g2+1) = *gc;
 		gc = g2;
 	} else if (gc[0].w == gc[1].w)
 		return(0);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.21 2003/06/26 00:58:10 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.22 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -213,16 +213,18 @@ unkopt:
 		else
 			break;
 					/* recognize special formats */
-	if (dataonly && format == 'b')
+	if (dataonly && format == 'b') {
 		if (putprim == ALL)
 			fmtid = "24-bit_rgb";
 		else
 			fmtid = "8-bit_grey";
-	if (dataonly && format == 'w')
+	}
+	if (dataonly && format == 'w') {
 		if (putprim == ALL)
 			fmtid = "48-bit_rgb";
 		else
 			fmtid = "16-bit_grey";
+	}
 					/* assign reverse ordering */
 	rord[ord[0]] = 0;
 	rord[ord[1]] = 1;
@@ -421,7 +423,7 @@ pixtoval()				/* convert picture to values */
 				quit(1);
 			}
 			for (x = 0; x < scanlen(&picres); x++) {
-				if (uniq)
+				if (uniq) {
 					if (	colval(scanln[x],RED) ==
 							colval(lastc,RED) &&
 						colval(scanln[x],GRN) ==
@@ -431,6 +433,7 @@ pixtoval()				/* convert picture to values */
 						continue;
 					else
 						copycolor(lastc, scanln[x]);
+				}
 				if (doexposure)
 					multcolor(scanln[x], exposure);
 				if (dogamma)

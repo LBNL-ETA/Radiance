@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.12 2003/07/07 17:21:51 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.13 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -237,11 +237,12 @@ endpicture()			/* finish and write out pixels */
 				/* compute final pixel values */
 	for (p = hres*vres; p--; ) {
 		if (myweight[p] <= FTINY) {
-			if (lastr >= 0)
+			if (lastr >= 0) {
 				if (p/hres == lastp/hres)
 					copycolor(mypixel[p], mypixel[lastp]);
 				else
 					copycolor(mypixel[p], mypixel[lastrp]);
+			}
 			nunrend++;
 			continue;
 		}

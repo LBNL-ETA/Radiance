@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.2 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.3 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -117,13 +117,14 @@ char  *fname
 	}
 	ltotal = 0;
 	while (!feof(fp)) {
-		if (ltotal == 0)			/* initialize */
+		if (ltotal == 0) {			/* initialize */
 			if (func == MULT)	/* special case */
 				for (n = 0; n < MAXCOL; n++)
 					result[n] = 0.0;
 			else
 				for (n = 0; n < MAXCOL; n++)
 					result[n] = init_val[func];
+		}
 		ncol = 0;
 		for (nlin = 0; (count <= 0 || nlin < count) &&
 				(cp = fgets(buf, sizeof(buf), fp)) != NULL;

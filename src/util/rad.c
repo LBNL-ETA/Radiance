@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.69 2003/07/14 20:02:30 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.70 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -318,7 +318,7 @@ double	org[3], *sizp;
 	FILE	*fp;
 	register int	i;
 
-	if (osiz <= FTINY)
+	if (osiz <= FTINY) {
 		if (!nprocs && fdate(oct1name) <
 				(scenedate>illumdate?scenedate:illumdate)) {
 							/* run getbbox */
@@ -354,6 +354,7 @@ double	org[3], *sizp;
 			}
 			pclose(fp);
 		}
+	}
 	org[0] = oorg[0]; org[1] = oorg[1]; org[2] = oorg[2]; *sizp = osiz;
 }
 
@@ -558,11 +559,12 @@ checkambfile()			/* check date on ambient file */
 		return;
 	if (!(afdate = fdate(vval(AMBFILE))))
 		return;
-	if (oct1date > afdate)
+	if (oct1date > afdate) {
 		if (touchonly)
 			touch(vval(AMBFILE));
 		else
 			rmfile(vval(AMBFILE));
+	}
 }
 
 
@@ -1067,7 +1069,7 @@ again:
 		goto again;
 	}
 #endif
-	copystruct(&vwr, &stdview);
+	vwr = stdview;
 	sscanview(&vwr, cp=vopts);		/* set initial options */
 	while ((cp = strstr(cp, "-vf ")) != NULL &&
 			*atos(buf, sizeof(buf), cp += 4)) {

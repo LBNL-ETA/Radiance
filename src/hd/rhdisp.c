@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.47 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.48 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -225,7 +225,7 @@ char	*gfn, *pfn;
 	if (hd)
 		return;
 					/* set initial viewpoint */
-	copystruct(&nv, &odev.v);
+	nv = odev.v;
 	VSUM(nv.vp, hdlist[0]->orig, hdlist[0]->xv[0], 0.5);
 	VSUM(nv.vp, nv.vp, hdlist[0]->xv[1], 0.5);
 	VSUM(nv.vp, nv.vp, hdlist[0]->xv[2], 0.5);
@@ -306,7 +306,7 @@ again:
 				error(COMMAND, "invalid starting view");
 				return;
 			}
-			copystruct(v, viewhist + ((nhist-1)%VIEWHISTLEN));
+			*v = *(viewhist + ((nhist-1)%VIEWHISTLEN));
 			goto again;	/* poss. overloading dev_section()? */
 		}
 		DCHECK(*slist < 0, WARNING, "no visible sections in new_view");
@@ -319,7 +319,7 @@ again:
 	imm_mode = beam_sync(odev.firstuse) > 0;
 				/* record new view */
 	if (v < viewhist || v >= viewhist+VIEWHISTLEN) {
-		copystruct(viewhist + (nhist%VIEWHISTLEN), v);
+		*(viewhist + (nhist%VIEWHISTLEN)) = *v;
 		nhist++;
 	}
 }
@@ -349,7 +349,7 @@ char	*args;
 	beam_init(0);					/* add basic views */
 	for (i = 0; (dv = dev_auxview(i, res)) != NULL; i++)
 		beam_view(dv, res[0]>>4, res[1]>>4);
-	copystruct(&vwfocus, &odev.v);			/* add focus view */
+	vwfocus = odev.v;			/* add focus view */
 	switch (odev.v.type) {
 	case VT_PER:
 		vwfocus.horiz = 2.*180./PI*atan(
@@ -415,7 +415,7 @@ usr_input()			/* get user input and process it */
 	}
 	switch (i) {
 	case DC_SETVIEW:		/* set the view */
-		copystruct(&vparams, &odev.v);
+		vparams = odev.v;
 		if (!sscanview(&vparams, args))
 			error(COMMAND, "missing view options");
 		else

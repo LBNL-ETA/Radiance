@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.12 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.13 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -209,11 +209,12 @@ tryagain:
 		ot = oseti(i*OSTSIZ + osentry);
 		if (*os > 0)			/* found it */
 			return(ot);
-		if (!isfull(ot))		/* entry overflow */
+		if (!isfull(ot)) {		/* entry overflow */
 			if (++ntries < OSTSIZ)
 				goto tryagain;
 			else
 				error(INTERNAL, "hash table overflow in fullnode");
+		}
 						/* remember position */
 		i = os - ostable[osentry];
 		os = ostable[osentry] = (OBJECT *)realloc(

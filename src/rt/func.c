@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.18 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.19 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -185,9 +185,9 @@ register RAY  *r;
 			funcxf.sca = r->rox->b.sca * f->b->sca;
 			multmat4(funcxf.xfm, r->rox->b.xfm, f->b->xfm);
 		} else
-			copystruct(&funcxf, &r->rox->b);
+			funcxf = r->rox->b;
 	else
-		copystruct(&funcxf, f->b);
+		funcxf = *(f->b);
 	lastrno = r->rno;
 	eclock++;		/* notify expression evaluator */
 	return(1);

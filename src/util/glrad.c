@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.16 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.17 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -138,7 +138,7 @@ char	*argv[];
 					/* run rad and get views */
 	runrad(argc-i, argv+i);
 					/* check view */
-	if (viewsel != NULL)
+	if (viewsel != NULL) {
 		if (viewsel[0] == '-') {
 			char	*ve = viewsel;
 			if (!sscanview(&thisview, viewsel) ||
@@ -153,6 +153,7 @@ char	*argv[];
 						progname, viewsel);
 			quit(1);
 		}
+	}
 					/* open GL */
 	dev_open(radfile = argv[i]);
 					/* load octree or scene files */
@@ -274,7 +275,7 @@ char	**av;
 	do
 		if (isview(buf)) {
 			vwl[nvv].v = (VIEW *)bmalloc(sizeof(VIEW));
-			copystruct(vwl[nvv].v, &stdview);
+			*(vwl[nvv].v) = stdview;
 			sscanview(vwl[nvv].v, buf);
 			if ((cp = setview(vwl[nvv++].v)) != NULL) {
 				fprintf(stderr, "%s: bad view %d - %s\n",
@@ -505,7 +506,7 @@ register VIEW	*nv;
 			no_render--;
 		}
 	}
-	copystruct(&thisview, nv);
+	thisview = *nv;
 	setglpersp(&thisview);
 	render();
 	return(1);
@@ -584,9 +585,8 @@ int	dx, dy, mov, orb;
 	VIEW	nv;
 	FVECT	odir, v1, wp;
 	double	d;
-	register int	li;
 				/* start with old view */
-	copystruct(&nv, &thisview);
+	nv = thisview;
 				/* change view direction */
 	if ((d = viewray(v1, odir, &thisview,
 			(dx+.5)/hres, (dy+.5)/vres)) < -FTINY)
@@ -750,9 +750,9 @@ register XKeyPressedEvent  *ekey;
 	case 'l':			/* retrieve last (premouse) view */
 		if (lastview.type) {
 			VIEW	vtmp;
-			copystruct(&vtmp, &thisview);
+			vtmp = thisview;
 			dev_view(&lastview);
-			copystruct(&lastview, &vtmp);
+			lastview = vtmp;
 		} else
 			XBell(ourdisplay, 0);
 		break;
@@ -852,7 +852,7 @@ VIEW	*vp;
 	if (currentview >= MAXVIEW)
 		error(INTERNAL, "too many views in appendview");
 	vwl[currentview].v = (VIEW *)bmalloc(sizeof(VIEW));
-	copystruct(vwl[currentview].v, &thisview);
+	*(vwl[currentview].v) = thisview;
 	if (nm != NULL)
 		vwl[currentview].nam = savqstr(nm);
 }
@@ -866,7 +866,7 @@ char	*cause;
 	if (cause == lastvc)
 		return;			/* only record one view per cause */
 	lastvc = cause;
-	copystruct(&lastview, &thisview);
+	lastview = thisview;
 }
 
 

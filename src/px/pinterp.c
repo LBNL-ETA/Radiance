@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.35 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.36 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -232,7 +232,7 @@ char	*argv[];
 		fillo &= ~F_BACK;
 	if (doavg < 0)
 		doavg = (argc-an) > 2;
-	if (expcomp != NULL)
+	if (expcomp != NULL) {
 		if (expcomp[0] == '+' | expcomp[0] == '-') {
 			expadj = atof(expcomp) + (expcomp[0]=='+' ? .5 : -.5);
 			if (doavg | doblur)
@@ -247,6 +247,7 @@ char	*argv[];
 			if (!(doavg | doblur))
 				rexpadj = pow(2.0, (double)expadj);
 		}
+	}
 						/* set view */
 	if (nextview(doblur ? stdin : (FILE *)NULL) == EOF) {
 		fprintf(stderr, "%s: no view on standard input!\n",
@@ -374,7 +375,7 @@ FILE	*fp;
 		exit(1);
 	}
 	if (!nvavg) {			/* first view */
-		copystruct(&avgview, &ourview);
+		avgview = ourview;
 		return(nvavg++);
 	}
 					/* add to average view */
@@ -413,7 +414,7 @@ compavgview()				/* compute average view */
 	avgview.vfore *= f;
 	avgview.vaft *= f;
 	if (setview(&avgview) != NULL)		/* in case of emergency... */
-		copystruct(&avgview, &ourview);
+		avgview = ourview;
 	pixaspect = viewaspect(&avgview) * hresolu / vresolu;
 }
 
@@ -434,7 +435,7 @@ char	*pfile, *zspec;
 		syserror(pfile);
 					/* get header with exposure and view */
 	theirexp = 1.0;
-	copystruct(&theirview, &stdview);
+	theirview = stdview;
 	gotview = 0;
 	if (nvavg < 2)
 		printf("%s:\n", pfile);
@@ -803,13 +804,13 @@ int	zfd;
 				xl[y-1].max = xl[y-step].max;
 		}
 		for (x = 2; x < step; x++)
-			copystruct(xl+y-x, xl+y-1);
+			*(xl+y-x) = *(xl+y-1);
 	}
 	if (yl->max >= numscans(&tresolu))
 		yl->max = numscans(&tresolu) - 1;
 	y -= step;
 	for (x = numscans(&tresolu) - 1; x > y; x--)	/* fill bottom rows */
-		copystruct(xl+x, xl+y);
+		*(xl+x) = *(xl+y);
 	return(yl->max >= yl->min);
 }
 

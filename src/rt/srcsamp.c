@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.9 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.10 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Source sampling routines
@@ -114,12 +114,13 @@ unsigned char  *pt;		/* partition array */
 					/* check this partition */
 	p = spart(pt, pp[0]);
 	pp[0]++;
-	if (p == S0)			/* leaf partition */
+	if (p == S0) {			/* leaf partition */
 		if (pp[1]) {
 			pp[1]--;
 			return(0);	/* not there yet */
 		} else
 			return(1);	/* we've arrived */
+	}
 				/* else check lower */
 	sz[p] >>= 1;
 	ct[p] -= sz[p];

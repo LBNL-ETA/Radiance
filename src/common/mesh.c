@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.12 2003/07/17 09:21:29 schorsch Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.13 2003/07/21 22:30:17 schorsch Exp $";
 #endif
 /*
  * Mesh support routines
@@ -410,11 +410,12 @@ OBJECT		mo;
 		pn[i] = vid[i] >> 8;
 	}
 				/* normalize material index */
-	if (mo != OVOID)
+	if (mo != OVOID) {
 		if ((mo -= mp->mat0) >= mp->nmats)
 			mp->nmats = mo+1;
 		else if (mo < 0)
 			error(INTERNAL, "modifier range error in addmeshtri");
+	}
 				/* assign triangle */
 	if (pn[0] == pn[1] && pn[1] == pn[2]) {	/* local case */
 		pp = &mp->patch[pn[0]];

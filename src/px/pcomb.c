@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.25 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.26 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -109,7 +109,7 @@ char	*argv[];
 	for (nfiles = 0; nfiles < MAXINP; nfiles++) {
 		setcolor(input[nfiles].coef, 1.0, 1.0, 1.0);
 		setcolor(input[nfiles].expos, 1.0, 1.0, 1.0);
-		copystruct(&input[nfiles].vw, &stdview);
+		input[nfiles].vw = stdview;
 		input[nfiles].pa = 1.0;
 	}
 	nfiles = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.6 2003/07/14 20:02:30 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -318,11 +318,12 @@ char  *argv[];
 		}
 	}
 runagain:
-	if (persist)
+	if (persist) {
 		if (outfile == NULL)			/* if out to stdout */
 			dupheader();			/* send header */
 		else					/* if out to file */
 			duped1 = dup(fileno(stdout));	/* hang onto pipe */
+	}
 #endif
 					/* batch render picture(s) */
 	rpict(seqstart, outfile, zfile, recover);

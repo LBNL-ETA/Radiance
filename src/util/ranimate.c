@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.39 2003/06/30 14:59:13 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.40 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -1035,7 +1035,7 @@ int	n;
 			fclose(viewfp);
 			viewfp = NULL;
 			viewnum = 0;
-			copystruct(&curview, &stdview);
+			curview = stdview;
 		}
 		return(NULL);
 	}
@@ -1051,7 +1051,7 @@ int	n;
 			perror(vval(VIEWFILE));
 			quit(1);
 		}
-		copystruct(&curview, &stdview);
+		curview = stdview;
 		viewnum = 0;
 	}
 	if (n < 0) {				/* get next view */
@@ -1395,7 +1395,7 @@ register char	*path;
 	for (i = 0, psep = -1; path[i]; i++)
 		if (path[i] == '/')
 			psep = i;
-	if (df != NULL)
+	if (df != NULL) {
 		if (psep == 0) {
 			df[0] = '/';
 			df[1] = '\0';
@@ -1404,6 +1404,7 @@ register char	*path;
 			df[psep] = '\0';
 		} else
 			df[0] = '\0';
+	}
 	return(path+psep+1);
 }
 

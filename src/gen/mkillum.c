@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.15 2003/06/27 22:27:45 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.16 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -137,12 +137,13 @@ int  status;
 	int	rtstat;
 
 	rtstat = close_process(&(rt.pd));
-	if (status == 0)
+	if (status == 0) {
 		if (rtstat < 0)
 			error(WARNING,
 			"unknown return status from rtrace process");
 		else
 			status = rtstat;
+	}
 	exit(status);
 }
 

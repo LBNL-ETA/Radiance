@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.6 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -80,11 +80,12 @@ register RAY  *r;
 					/* check for penetration */
 		for (rp = r; rp->parent != NULL; rp = rp->parent)
 			if (!(rp->rtype & RAYREFL) && rp->parent->ro != NULL
-					&& inset(modset, rp->parent->ro->omod))
+					&& inset(modset, rp->parent->ro->omod)) {
 				if (rp->parent->rod > 0.0)
 					inside++;
 				else
 					inside--;
+			}
 		if (inside > 0) {	/* we just hit the object */
 			flipsurface(r);
 			return(rayshade(r, lastmod(obj, m->oargs.sarg[0])));

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.41 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.42 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -69,7 +69,7 @@ char  *s;
 	while (isspace(*s))
 		s++;
 	if (*s == '-') {			/* command line parameters */
-		copystruct(&nv, &ourview);
+		nv = ourview;
 		if (sscanview(&nv, s))
 			newview(&nv);
 		else
@@ -171,7 +171,7 @@ char  *s;
 	VIEW  nv;
 
 	if (sscanf(s, "%s", buf) == 1) {	/* get parameters from a file */
-		copystruct(&nv, &stdview);
+		nv = stdview;
 		if ((fname = getpath(buf, "", R_OK)) == NULL ||
 				(success = viewfile(fname, &nv, NULL)) == -1) {
 			sprintf(errmsg, "cannot open \"%s\"", buf);
@@ -188,9 +188,9 @@ char  *s;
 		error(COMMAND, "no previous view");
 		return;
 	}
-	copystruct(&nv, &ourview);
-	copystruct(&ourview, &oldview);
-	copystruct(&oldview, &nv);
+	nv = ourview;
+	ourview = oldview;
+	oldview = nv;
 	newimage();
 }
 
@@ -265,7 +265,7 @@ char  *s;
 	buf[0] = '\0';
 	fgets(buf, sizeof(buf), fp);
 	pclose(fp);
-	copystruct(&nv, &stdview);
+	nv = stdview;
 	if (!sscanview(&nv, buf)) {
 		error(COMMAND, "rad error -- no such view?");
 		return;

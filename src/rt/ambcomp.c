@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.10 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.11 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -142,17 +142,17 @@ FVECT  pg, dg;
 		qsort(div, ndivs, sizeof(AMBSAMP), ambcmp);	/* sort divs */
 						/* super-sample */
 		for (i = ns; i > 0; i--) {
-			copystruct(&dnew, div);
+			dnew = *div;
 			if (divsample(&dnew, &hemi, r) < 0)
 				goto oopsy;
 							/* reinsert */
 			dp = div;
 			j = ndivs < i ? ndivs : i;
 			while (--j > 0 && dnew.k < dp[1].k) {
-				copystruct(dp, dp+1);
+				*dp = *(dp+1);
 				dp++;
 			}
-			copystruct(dp, &dnew);
+			*dp = dnew;
 		}
 		if (pg != NULL || dg != NULL)	/* restore order */
 			qsort(div, ndivs, sizeof(AMBSAMP), ambnorm);

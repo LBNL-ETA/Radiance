@@ -253,7 +253,7 @@ char  *pout, *zout, *prvr;
 				cp--;
 			strcpy(cp, RFTEMPLATE);
 			prvr = mktemp(fbuf2);
-			if (rename(fbuf, prvr) < 0)
+			if (rename(fbuf, prvr) < 0) {
 				if (errno == ENOENT) {	/* ghost file */
 					sprintf(errmsg,
 						"new output file \"%s\"",
@@ -266,6 +266,7 @@ char  *pout, *zout, *prvr;
 						fbuf, prvr);
 					error(SYSTEM, errmsg);
 				}
+			}
 		}
 	}
 	npicts = 0;			/* render sequence */
@@ -294,7 +295,7 @@ char  *pout, *zout, *prvr;
 			dupheader();
 		}
 		hres = hresolu; vres = vresolu; pa = pixaspect;
-		if (prvr != NULL)
+		if (prvr != NULL) {
 			if (viewfile(prvr, &ourview, &rs) <= 0
 					|| rs.rt != PIXSTANDARD) {
 				sprintf(errmsg,
@@ -305,6 +306,7 @@ char  *pout, *zout, *prvr;
 				hres = scanlen(&rs);
 				vres = numscans(&rs);
 			}
+		}
 		if ((cp = setview(&ourview)) != NULL)
 			error(USER, cp);
 		normaspect(viewaspect(&ourview), &pa, &hres, &vres);
@@ -344,7 +346,7 @@ FILE  *fp;
 {
 	char  linebuf[256];
 
-	copystruct(&lastview, &ourview);
+	lastview = ourview;
 	while (fgets(linebuf, sizeof(linebuf), fp) != NULL)
 		if (isview(linebuf) && sscanview(&ourview, linebuf) > 0)
 			return(0);

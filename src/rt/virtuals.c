@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.10 2003/05/14 20:43:46 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.11 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -194,7 +194,7 @@ MAT4  pm;
 		else
 			nsflags &= ~SSPOT;
 		if (source[sn].sflags & SSPOT) {
-			copystruct(&theirspot, source[sn].sl.s);
+			theirspot = *(source[sn].sl.s);
 			multv3(theirspot.aim, source[sn].sl.s->aim, pm);
 			normalize(theirspot.aim);
 			if (nsflags & SSPOT) {
@@ -204,7 +204,7 @@ MAT4  pm;
 					return(-1);	/* no overlap */
 			} else {
 				nsflags |= SSPOT;
-				copystruct(&ourspot, &theirspot);
+				ourspot = theirspot;
 				d = 2.*ourspot.siz;
 			}
 			if (ourspot.siz < d-FTINY) {	/* it shrunk */
@@ -244,7 +244,7 @@ MAT4  pm;
 	if (nsflags & SSPOT) {
 		if ((source[i].sl.s = (SPOT *)malloc(sizeof(SPOT))) == NULL)
 			goto memerr;
-		copystruct(source[i].sl.s, &ourspot);
+		*(source[i].sl.s) = ourspot;
 	}
 	if (nsflags & SPROX)
 		source[i].sl.prox = source[sn].sl.prox;

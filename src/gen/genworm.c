@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.4 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.5 2003/07/21 22:30:18 schorsch Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -76,7 +76,7 @@ char  *argv[];
 		p[1] = funvalue(YNAME, 1, &t);
 		p[2] = funvalue(ZNAME, 1, &t);
 		r = funvalue(RNAME, 1, &t);
-		if (i)
+		if (i) {
 			if (lastr <= r+FTINY && lastr >= r-FTINY) {
 				printf("\n%s cylinder %s.c%d\n",
 						argv[1], argv[2], i);
@@ -103,6 +103,7 @@ char  *argv[];
 				f = f <= 0.0 ? 0.0 : sqrt(f);
 				printf("%18.12g %18.12g\n", f*lastr, f*r);
 			}
+		}
 		printf("\n%s sphere %s.s%d\n", argv[1], argv[2], i);
 		printf("0\n0\n4 %18.12g %18.12g %18.12g %18.12g\n",
 				p[0], p[1], p[2], r);

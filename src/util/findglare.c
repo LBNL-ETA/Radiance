@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.9 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.10 2003/07/21 22:30:19 schorsch Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -174,7 +174,7 @@ char	*argv[];
 					progname);
 			exit(1);
 		}
-		copystruct(&ourview, &pictview);
+		ourview = pictview;
 	} else if (picture != NULL && !VEQ(ourview.vp, pictview.vp)) {
 		fprintf(stderr, "%s: picture must have same viewpoint\n",
 				progname);
@@ -269,8 +269,8 @@ init()				/* initialize global variables */
 	if (indirect == NULL)
 		memerr("indirect illuminances");
 	npixinvw = npixmiss = 0L;
-	copystruct(&leftview, &ourview);
-	copystruct(&rightview, &ourview);
+	leftview = ourview;
+	rightview = ourview;
 	spinvector(leftview.vdir, ourview.vdir, ourview.vup, maxtheta);
 	spinvector(rightview.vdir, ourview.vdir, ourview.vup, -maxtheta);
 	setview(&leftview);
