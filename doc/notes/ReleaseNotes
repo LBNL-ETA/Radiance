@@ -1287,3 +1287,7 @@ add this feature to the other ra_* programs as well...  someday.
 
 Fixed long-standing bug in reported pixel ordering out of certain
 protate commands.
+
+Added -p option to rcalc for "passive mode" that transmits
+unrecognized input -- useful for substituting data in the
+middle of a stream.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.12 2004/03/28 20:33:12 schorsch Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.13 2004/06/09 16:00:13 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -78,6 +78,7 @@ struct strvar  *svhead = NULL;  /* string variables */
 
 int  blnkeq = 1;                /* blanks compare equal? */
 int  igneol = 0;                /* ignore end of line? */
+int  passive = 0;		/* passive mode (transmit unmatched input) */
 char  sepchar = '\t';           /* input/output separator */
 int  noinput = 0;               /* no input records? */
 int  nbicols = 0;		/* number of binary input columns */
@@ -123,6 +124,9 @@ char  *argv[]
 			break;
 		case 'l':
 			igneol = !igneol;
+			break;
+		case 'p':
+			passive = !passive;
 			break;
 		case 't':
 			sepchar = argv[i][2];
@@ -201,7 +205,7 @@ char  *argv[]
 		userr:
 			eputs("Usage: ");
 			eputs(argv[0]);
-eputs(" [-b][-l][-n][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
+eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
 			quit(1);
 		}
 
@@ -624,7 +628,7 @@ clearrec(void)			/* clear input record variables */
 
 
 static int
-getrec(void)                                /* get next record from file */
+getrec(void)				/* get next record from file */
 {
 	int  eatline;
 	register struct field  *f;
@@ -633,24 +637,23 @@ getrec(void)                                /* get next record from file */
 		eatline = !igneol && ipb.chr != '\n';
 		if (blnkeq)             /* beware of nbsynch() */
 			while (isblnk(ipb.chr))
-				scaninp();
+				resetinp();
 		clearrec();		/* start with fresh record */
 		for (f = inpfmt; f != NULL; f = f->next)
 			if (getfield(f) == -1)
 				break;
 		if (f == NULL) {
-			advinp();
+			advinp();       /* got one! */
 			return(1);
 		}
-		resetinp();
+		resetinp();		/* eat false start */
 		if (eatline) {          /* eat rest of line */
 			while (ipb.chr != '\n') {
 				if (ipb.chr == EOF)
 					return(0);
-				scaninp();
+				resetinp();
 			}
-			scaninp();
-			advinp();
+			resetinp();
 		}
 	}
 	return(0);
@@ -847,6 +850,8 @@ resetinp(void)                      /* rewind position and advance 1 */
 		ipb.beg = ipb.end;
 	ipb.pos = ipb.beg;
 	ipb.chr = *ipb.pos;
+	if (passive)			/* transmit unmatched character? */
+		fputc(ipb.chr, stdout);
 	if (++ipb.beg >= &inpbuf[INBSIZ])
 		ipb.beg = inpbuf;
 	scaninp();

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.5 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.6 2004/06/09 16:00:12 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -8,6 +8,8 @@ rcalc - record calculator
 .B \-b
 ][
 .B \-l
+][
+.B \-p
 ][
 .B \-n
 ][
@@ -66,6 +68,19 @@ or
 .I \-of
 options do not require a count, as this will be determined by the
 number of output channels in the given expressions.
+.PP
+The
+.I \-p
+option specifies "passive mode," where characters that do not
+match the input format are passed unaltered to the output.
+This option has no effect unless
+.I \-i
+is also specified, and does not make much sense unless
+.I \-o
+is also given.
+With both input and output formats, the passive mode can
+effectively substitute information in the middle of a file
+or stream without affecting the rest of the data.
 .PP
 The variable and function definitions in each
 .I \-f source
