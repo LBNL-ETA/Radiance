@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.7 2004/09/08 06:07:52 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.8 2004/09/08 17:10:16 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -50,7 +50,7 @@ castshadow(int sn, FVECT rorg, FVECT rdir)
 }
 
 
-static void				/* initialize occlusion cache */
+void					/* initialize occlusion cache */
 initobscache(int sn)
 {
 	register SRCREC *srcp = &source[sn];
@@ -60,6 +60,8 @@ initobscache(int sn)
 	int		i, j, k;
 	int		ax, ax1, ax2;
 
+	if (srcp->sflags & (SSKIP|SPROX|SSPOT|SVIRTUAL))
+		return;			/* don't cache these */
 	if (srcp->sflags & SDISTANT)
 		cachelen = 4*SHADCACHE*SHADCACHE;
 	else if (srcp->sflags & SFLAT)
@@ -67,8 +69,6 @@ initobscache(int sn)
 	else /* spherical distribution */
 		cachelen = SHADCACHE*SHADCACHE*6;
 					/* allocate cache */
-	DCHECK(srcp->obscache != NULL,
-			CONSISTENCY, "initobscache() called twice");
 	srcp->obscache = (OBSCACHE *)malloc(sizeof(OBSCACHE) +
 						sizeof(OBJECT)*(cachelen-1));
 	if (srcp->obscache == NULL)

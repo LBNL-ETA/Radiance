@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.45 2004/06/23 12:58:02 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.46 2004/09/08 17:10:16 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -125,7 +125,7 @@ marksources(void)			/* find and mark source objects */
 			}
 		}
 #if  SHADCACHE
-		source[ns].obscache = NULL;
+		initobscache(ns);
 #endif
 		if (!(source[ns].sflags & SSKIP))
 			foundsource++;
