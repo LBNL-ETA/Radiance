@@ -1,9 +1,10 @@
 #!/bin/csh -f
-# RCSid: $Id: glaze.csh,v 2.2 2003/06/30 18:12:24 greg Exp $
+# RCSid: $Id: glaze.csh,v 2.3 2004/08/14 19:36:38 greg Exp $
 #
 # Complex glazing model (goes with glaze1.cal and glaze2.cal)
 #
 # Oct. 2002 Greg Ward
+# Aug. 2004 GW (added -f option to read glazings from file)
 # Funding for this development generously provided by Visarc, Inc.
 # (http://www.vizarc.com)
 #
@@ -27,6 +28,43 @@ set tn_g_arr=(0.890 0.808 0.63 0.21 0.09)
 set tn_b_arr=(0.886 0.744 0.63 0.21 0.09)
 # Boolean whether coatings can have partial coverage:
 set part_arr=(0 0 0 1 1)
+
+while ($#argv > 0)
+	set header="Surface	Tr	Tg	Tb	Rcr	Rcg	Rcb	Rgr	Rgg	Rgb"
+	if ($#argv < 2 || "$argv[1]" != '-f') then
+		echo "Usage: $0 [-f glazing.dat ..]"
+		exit 1
+	endif
+	shift argv
+	set gf="$argv[1]"
+	shift argv
+	if ("`sed -n 1p $gf:q`" != "$header") then
+		echo "Bad header in $gf -- Expected: $header"
+		exit 1
+	endif
+	echo "Adding glazing types from file $gf :"
+	set nl=`wc -l < $gf:q`
+	@ i=2
+	while ($i <= $nl)
+		set ln=(`sed -n ${i}p $gf:q`)
+		if ($#ln != 10) then
+			echo "Expected 10 words in line: $ln"
+			exit 1
+		endif
+		echo $ln[1]
+		set sn_arr=($sn_arr:q $ln[1])
+		set tn_r_arr=($tn_r_arr $ln[2])
+		set tn_g_arr=($tn_g_arr $ln[3])
+		set tn_b_arr=($tn_b_arr $ln[4])
+		set rc_r_arr=($rc_r_arr $ln[5])
+		set rc_g_arr=($rc_g_arr $ln[6])
+		set rc_b_arr=($rc_b_arr $ln[7])
+		set rg_r_arr=($rc_r_arr $ln[8])
+		set rg_g_arr=($rc_g_arr $ln[9])
+		set rg_b_arr=($rc_b_arr $ln[10])
+		@ i++
+	end
+end
 
 #################################################################
 #
