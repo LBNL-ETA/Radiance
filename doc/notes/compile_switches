@@ -13,11 +13,11 @@ for specific machines and users:
 -DSPEED=(MIPS)	Millions of instructions per second for this
 		processor (approximate).  This is used to decide
 		certain unimportant timing issues such as how many
-		rays to trace before checking input in rview and
+		rays to trace before checking input in rvu and
 		whether or not to optimize the color table in ximage
 		on 8-bit displays.
 
--DWFLUSH=(rays)	Override for number of rays before flush in rview.
+-DWFLUSH=(rays)	Override for number of rays before flush in rvu.
 
 -DBSD		Operating system has a strong Berkeley flavor, meaning
 		that bcopy() and bzero() are present but maybe memcpy()
@@ -25,12 +25,17 @@ for specific machines and users:
 		things this flag affects.)  Also affects certain system
 		calls, such as signal handling and resource tracking.
 
--DBIGMEM	The system has lots of RAM available, so size hash
-		tables and the like accordingly.  Also provides for
-		larger overall scene descriptions (33,553,920 primitives
-		rather than 32,256).
+-DSMLMEM	The system has little RAM available, so size hash
+		tables and the like accordingly.  Only allows for
+		small scene descriptions (32,256 primitives).
 
 -DSMLFLT	This setting tells Radiance to use short floats
-		(4-bytes) throughout, which saves lots of memory
+		(32 bits) throughout, which saves lots of memory
 		but can cause calculation inaccuracies in many
 		cases.  Its use has been discontinued for this reason.
+
+-DSHADCACHE=N	The array size to use for caching occluders.
+		Setting this to 0 turns off this optimization.
+		Values greater than 20 use over 4 Kbytes per
+		light source, which can add up to a lot of
+		memory in scenes with many sources.

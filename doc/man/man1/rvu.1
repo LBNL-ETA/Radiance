@@ -1,9 +1,9 @@
-.\" RCSid "$Id: rview.1,v 1.2 2003/12/09 15:59:07 greg Exp $"
-.TH RVIEW 1 2/14/96 RADIANCE
+.\" RCSid "$Id: rvu.1,v 1.1 2004/01/01 19:31:45 greg Exp $"
+.TH RVU 1 1/1/04 RADIANCE
 .SH NAME
-rview - generate RADIANCE images interactively
+rvu - generate RADIANCE images interactively
 .SH SYNOPSIS
-.B rview
+.B rvu
 [
 .B "rpict options"
 ][
@@ -21,11 +21,11 @@ rview - generate RADIANCE images interactively
 ]
 .B octree
 .br
-.B "rview [ options ] \-defaults"
+.B "rvu [ options ] \-defaults"
 .br
-.B "rview \-devices"
+.B "rvu \-devices"
 .SH DESCRIPTION
-.I Rview
+.I Rvu
 generates RADIANCE images using
 .I octree.
 (The octree may be given as the output of a command enclosed in quotes
@@ -52,7 +52,7 @@ The
 and
 .I \-pa
 options are unnecessary, since
-.I rview
+.I rvu
 scales the display image to the specified output device.
 Additionally, the
 .I \-b
@@ -65,28 +65,28 @@ for the options are printed with a brief explanation.
 In the third form, the list of supported output devices
 is displayed.
 .PP
-.I Rview
+.I rvu
 starts rendering the image from the selected viewpoint and
 gradually improves the resolution of the display until
 interrupted by keyboard input.
-.I Rview
+.I rvu
 then issues a prompt (usually ':') and accepts a command
 line from the user.
-.I Rview
+.I rvu
 may also stop its calculation and wait for command input if
 the resolution of the display has reached the resolution of the
 graphics device.
 At this point, it will give the 'done:' prompt and await further
 instructions.
 If
-.I rview
+.I rvu
 runs out of memory due to lack of resources to store its computed
 image, it will give the 'out of memory:' prompt.
 At this prompt, the user can save the image, quit, or even restart
 a new image, although this is not generally recommended
 on virtual memory machines for efficiency reasons.
 .PP
-.I Rview
+.I rvu
 is not meant to be a rendering program, and we strongly recommend that
 .I rpict(1)
 be used instead for that purpose.
@@ -94,8 +94,8 @@ Since
 .I rpict(1)
 does not store its image in memory or update any display of its output,
 it is much faster and less wasteful of its resources than
-.I rview.
-.I Rview
+.I rvu.
+.I rvu
 is intended as a quick interactive program for deciding viewpoints
 and debugging scene descriptions and is not suited for producing
 polished images.
@@ -182,7 +182,7 @@ as a default, and "1" as the default view (ie. the first view
 appearing in
 .I rfile).
 If
-.I rview
+.I rvu
 was started by
 .I rad,
 then the

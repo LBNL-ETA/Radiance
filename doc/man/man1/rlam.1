@@ -1,15 +1,15 @@
-.\" RCSid "$Id: lam.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
-.TH LAM 1 7/8/97 RADIANCE
+.\" RCSid "$Id: rlam.1,v 1.1 2004/01/01 19:31:45 greg Exp $"
+.TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
-lam - laminate lines of multiple files
+rlam - laminate lines (records) from multiple files
 .SH SYNOPSIS
-.B lam
+.B rlam
 [
 .B \-tC
 ]
 input1 input2 ..
 .SH DESCRIPTION
-.I Lam
+.I Rlam
 simply joins lines from multiple inputs, separating them with
 the given tab character (TAB by default).
 An input is either a stream or a command.
@@ -23,12 +23,12 @@ input.
 .SH EXAMPLE
 To join files output1 and output2, separated by a comma:
 .IP "" .2i
-lam -t, output1 output2
+rlam -t, output1 output2
 .PP
 To join a file with line numbers (starting at 0) and its reverse:
 .IP "" .2i
-cnt `wc -l < lam.c` | lam - -t: lam.c -t\| '\!tail -r lam.c'
+cnt `wc -l < lam.c` | rlam - -t: lam.c -t\| '\!tail -r lam.c'
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), neat(1), rcalc(1), tabfunc(1), total(1)
+cnt(1), neaten(1), rcalc(1), tabfunc(1), total(1)

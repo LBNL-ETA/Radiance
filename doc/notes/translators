@@ -121,7 +121,7 @@ commands:
 
 	oconv '\!gensky 6 15 12' /usr/local/lib/ray/lib/arch.mat \
 			'\!arch2rad model.txt' > model.oct
-	rview -av 3 3 3 -vp -20 -20 5 -vd 1 1 0 model.oct
+	rvu -av 3 3 3 -vp -20 -20 5 -vd 1 1 0 model.oct
 
 Note that by giving oconv commands instead of input files, no temporary
 files (other than the octree) are necessary.  In a more complete
@@ -133,7 +133,7 @@ with his own materials file, thus:
 	HyperCard MatPick.stack		# creates model.map from model.qual
 	arch2rad -m model.map model.txt > model.rad
 	oconv source.rad materials.rad model.rad > model.oct
-	rview -vf model.vp model.oct
+	rvu -vf model.vp model.oct
 
 To write a new translator, include the "trans.h" file in ray/src/cv and
 link with trans.o and the standard Radiance library.  You will need to

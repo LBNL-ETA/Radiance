@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.10 2003/10/20 15:10:18 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.11 2004/01/01 19:31:45 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -61,8 +61,8 @@ mkillum:	mkillum.o mkillum2.o mkillum3.o
 genrev:	genrev.o 
 	$(CC) $(CFLAGS) -o genrev genrev.o -lrt $(MLIB)
 
-gencat: gencat.o
-	$(CC) $(CFLAGS) -o gencat gencat.o -lrt $(MLIB)
+gencatenary: gencat.o
+	$(CC) $(CFLAGS) -o gencatenary gencat.o -lrt $(MLIB)
 
 genworm:	genworm.o
 	$(CC) $(CFLAGS) -o genworm genworm.o -lrt $(MLIB)

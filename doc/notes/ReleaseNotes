@@ -1231,3 +1231,10 @@ compile switch, where N is the resolution of the shadow cache, or
 0 to disable it.  Since this is purely a time vs. memory trade-off,
 I decided not to make it a new command-line option.  (We already
 have plenty.)
+
+****** COMPATIBILITY CHANGE ********
+Changed the following command names to avoid conflicts:
+	rview -> rvu (with symbolic link back to rview)
+	calc -> icalc
+	lam -> rlam
+	gencat -> gencatenary

@@ -15,7 +15,7 @@ Most of the Radiance display drivers look at an environment variable
 called "DISPLAY_GAMMA" to determine how to set the gamma correction for the
 current monitor.  Many programs also have a -g option for setting the
 gamma value explicitly, but the environment variable is the only way to
-control gamma correction for rview, for example.
+control gamma correction for rvu, for example.
 
 To determine the approximate gamma for your monitor, display of the
 distributed picture file ray/lib/lib/gamma.pic like so:

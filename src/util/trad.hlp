@@ -487,7 +487,7 @@ an important parameter for rendering accuracy.
 
 There are two basic ways to compute the exposure value.
 The first is by trial and error, where the value is adjusted up and
-down within rview using the "e = value" command.
+down within rvu using the "e = value" command.
 Though it sounds flaky, this is the most reliable way to set the
 exposure (and ambient level) in general lighting situations.
 
@@ -545,7 +545,7 @@ and/or parameters, and press the "Change" button.
 To remove an unwanted view, select it and press the "Delete" button.
 To undo this action, simply press the "Add" button again.
 
-The first view in the list is the default given to rview during
+The first view in the list is the default given to rvu during
 interactive rendering, and is the first view rendered in a batch run.
 To change the default view, select the newly desired view and press
 the "Set Default" button.
@@ -614,7 +614,7 @@ Otherwise, it is usually necessary to specify a set of options to
 define a view.
 
 The simplest view specification is of the form "-vf viewfile", where
-"viewfile" is a file created with the rview "view" command, or a
+"viewfile" is a file created with the rvu "view" command, or a
 Radiance picture.
 This method of naming views, although convenient, is not the best
 since it is difficult to know exactly where such a view is by
@@ -702,7 +702,7 @@ It has no effect on the rad input variables.
 The "Set Default" button may be used to make the selected view the
 default view for rendering.
 This simply moves the view to the top of the list in the rad input file.
-The default view will be the one normally rendered by rview when rad
+The default view will be the one normally rendered by rvu when rad
 is started interactively, and is the first view rendered in a batch
 process.
 
@@ -838,7 +838,7 @@ The "Report" variable may be used to specify a time interval (in
 minutes) between progress reports.
 
 Other windows allow the user to customize the options to oconv(1),
-mkillum(1), rview(1) and rpict(1), and pfilt(1).
+mkillum(1), rvu(1) and rpict(1), and pfilt(1).
 
 .Options.Quality
 
@@ -916,7 +916,7 @@ effort.
 
 The "Optfile" setting assigns a file to hold rendering options,
 which may be a convenience when these options are reused for
-rtrace(1) or rpiece(1), or manual invocations of rview or rpict.
+rtrace(1) or rpiece(1), or manual invocations of rvu or rpict.
 Using an options file also reduces the size of the command line,
 making it a little easier on the eye.
 
@@ -977,7 +977,7 @@ since rad does not have the intelligence to do it for you.
 .Options.Render
 
 The "render opts" window is used to specify additional options to
-the rview(1) and rpict(1) rendering programs.
+the rvu(1) and rpict(1) rendering programs.
 Most of the important parameters are computed by rad, so this
 window is usually used to override specific parameters or to give
 additional information, such as which materials to exclude from the
@@ -1026,7 +1026,7 @@ This screen is where the actual Radiance programs are
 run, usually via rad(1).
 The top row of buttons is used to update the octree following a
 change to one or more input files.
-The "rview" button starts an interactive rendering in the
+The "rvu" button starts an interactive rendering in the
 foreground.
 The next set of buttons provides for the control of a batch
 rendering process, taking place in the background.
@@ -1104,12 +1104,12 @@ by the "Touch" button.
 (This will still cause the ambient file to be removed,
 unfortunately.)
 
-.Action.Rview
+.Action.Rvu
 
-The "rview" button on the Action screen starts an interactive
+The "rvu" button on the Action screen starts an interactive
 rendering for the selected view, indicated by the menu button
 just to the right.
-Other views may be accessed within rview using the "L name"
+Other views may be accessed within rvu using the "L name"
 command, and new views can be added with the "V name"
 command.
 
@@ -1119,7 +1119,7 @@ Instead, give it a new name (or no name, which will show up as
 a number later), then use the Views screen to override the previous
 view definition with the new one.
 (See the "View" topic in the current
-help category, the "Change" topic under "Views" and the rview(1)
+help category, the "Change" topic under "Views" and the rvu(1)
 manual page for more information.)
 
 If the octree is out-of-date, it will be rebuilt before rendering
@@ -1128,14 +1128,14 @@ begins.
 .Action.View
 
 The Action screen contains two menus for selecting views.
-The top menu, next to the "rview" button, sets the view to start
-with in rview, and is selected from the current view list.
+The top menu, next to the "rvu" button, sets the view to start
+with in rvu, and is selected from the current view list.
 The second view menu, next to the "Start" button for batch
 rendering, selects the view or views to render in batch mode.
 If the special entry "ALL" is selected, then every view in the
 current list will be rendered if it hasn't been already.
 
-The view menu next to the "rview" button will be disabled if there
+The view menu next to the "rvu" button will be disabled if there
 is only one view to choose from.
 The view menu next to the "Start" button will be disabled if there
 is a batch job in progress, and thus the view cannot be changed.

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bgraph.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: bgraph.1,v 1.3 2004/01/01 19:31:44 greg Exp $"
 .TH BGRAPH 1 6/24/98 RADIANCE
 .SH NAME
 bgraph - do a set of batch graphs to a metafile
@@ -233,7 +233,7 @@ No comments are allowed in the data section of a file.
 .PP
 An expression is an algebraic formula containing numbers,
 variables, functions, and the standard operators
-{+,-,*,/,^,(,)} (see calc(1)).
+{+,-,*,/,^,(,)} (see icalc(1)).
 Besides the variables described in the last section,
 definitions of intermediate real variables and functions
 are allowed for convenience.
@@ -280,5 +280,5 @@ There is no mechanism provided for undefining a variable.
 An axis mapping function which is not invertible (monotonically
 increasing or decreasing) confuses the program terribly.
 .SH "SEE ALSO"
-calc(1), dgraph(1), gcomp(1), igraph(1), impress(1),
+dgraph(1), gcomp(1), icalc(1), igraph(1), impress(1),
 metafile(5), mx80(1), mt160l(1), t4014(1), x11meta(1)

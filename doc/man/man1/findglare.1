@@ -1,4 +1,4 @@
-.\" RCSid "$Id: findglare.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: findglare.1,v 1.3 2004/01/01 19:31:44 greg Exp $"
 .TH FINDGLARE 1 11/15/93 RADIANCE
 .SH NAME
 findglare - locate glare sources in a RADIANCE scene
@@ -54,7 +54,7 @@ option is used -- see below).
 Note that the picture file must contain correct view specifications,
 as maintained by
 .I rpict(1),
-.I rview(1),
+.I rvu(1),
 .I pfilt(1)
 and
 .I pinterp(1).
@@ -112,7 +112,7 @@ It usually works best to use the 'l' command within
 .I ximage(1)
 to decide what this value should be.
 Alternatively, one can use the 't' command within
-.I rview(1).
+.I rvu(1).
 The idea is to pick a threshold that is well above the average level
 but smaller than the source areas.
 .PP
@@ -157,4 +157,4 @@ Work on this program was initiated and sponsored by the LESO
 group at EPFL in Switzerland.
 .SH "SEE ALSO"
 getinfo(1), glare(1), glarendx(1), pfilt(1), rpict(1), rtrace(1),
-rview(1), xglaresrc(1), ximage(1)
+rvu(1), xglaresrc(1), ximage(1)

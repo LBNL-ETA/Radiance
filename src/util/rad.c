@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.74 2003/10/27 10:32:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.75 2004/01/01 19:31:46 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -107,7 +107,7 @@ int	silent = 0;		/* do work silently */
 int	touchonly = 0;		/* touch files only */
 int	nprocs = 1;		/* maximum executing processes */
 int	sayview = 0;		/* print view out */
-char	*rvdevice = NULL;	/* rview output device */
+char	*rvdevice = NULL;	/* rvu output device */
 char	*viewselect = NULL;	/* specific view only */
 
 int	overture = 0;		/* overture calculation needed */
@@ -200,7 +200,7 @@ char	*argv[];
 	renderopts(ropts, popts);
 	xferopts(ropts);
 	if (rvdevice != NULL)
-		rview(ropts, popts);
+		rvu(ropts, popts);
 	else
 		rpict(ropts, popts);
 	quit(0);
@@ -1083,7 +1083,7 @@ again:
 }
 
 
-rview(opts, po)				/* run rview with first view */
+rvu(opts, po)				/* run rvu with first view */
 char	*opts, *po;
 {
 	char	*vw;
@@ -1093,14 +1093,14 @@ char	*opts, *po;
 		return;
 	if (sayview)
 		myprintview(vw, stdout);
-	sprintf(combuf, "rview %s%s%s -R %s ", vw, po, opts, rifname);
+	sprintf(combuf, "rvu %s%s%s -R %s ", vw, po, opts, rifname);
 	if (rvdevice != NULL)
 		sprintf(combuf+strlen(combuf), "-o %s ", rvdevice);
 	if (vdef(EXPOSURE))
 		sprintf(combuf+strlen(combuf), "-pe %s ", vval(EXPOSURE));
 	strcat(combuf, oct1name);
 	if (runcom(combuf)) {		/* run it */
-		fprintf(stderr, "%s: error running rview\n", progname);
+		fprintf(stderr, "%s: error running rvu\n", progname);
 		quit(1);
 	}
 }

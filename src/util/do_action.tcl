@@ -1,4 +1,4 @@
-# RCSid: $Id: do_action.tcl,v 2.10 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: do_action.tcl,v 2.11 2004/01/01 19:31:46 greg Exp $
 #
 # Action screen for trad
 #
@@ -196,10 +196,10 @@ proc do_action w {		# Action screen
 	# Render interactively
 	label $w.ril -text {Render interactively}
 	place $w.ril -relx .1429 -rely .2439
-	button $w.rirv -text rview -relief raised \
+	button $w.rirv -text rvu -relief raised \
 			-command {run_rad -v $rvview -o x11}
 	place $w.rirv -relwidth .1071 -relheight .0610 -relx .4643 -rely .2439
-	helplink $w.rirv trad action rview
+	helplink $w.rirv trad action rvu
 	label $w.rivl -text View:
 	place $w.rivl -relx .6072 -rely .2439
 	menubutton $w.rivmb -textvariable rvview -anchor w -relief raised

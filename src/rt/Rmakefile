@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.43 2003/12/31 19:38:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.44 2004/01/01 19:31:46 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -33,7 +33,7 @@ RCLIB = ../lib/libraycalls.a
 LIBS = -lrt $(MLIB)
 
 #
-# Device drivers for rview (see also devtable.c):
+# Device drivers for rvu (see also devtable.c):
 #
 DOBJS = devtable.o devcomm.o editline.o x11.o x11twind.o \
 	colortab.o
@@ -89,12 +89,13 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 # What this makefile produces:
 #
 
-PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rview $(DESTDIR)/lookamb
+PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/lookamb
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
 install:	all rayinit.cal
 	$(INSTALL) $(PROGS) $(INSTDIR)
+	cd $(INSTDIR) ; rm -f rview ; ln -s rvu rview
 	rm -f $(LIBDIR)/rayinit.cal
 	cp rayinit.cal $(LIBDIR)
 
@@ -118,8 +119,8 @@ $(DESTDIR)/rtrace:	$(RTOBJS) $(RLIB)
 $(DESTDIR)/rpict:	$(RPOBJS) $(RLIB)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/rpict $(RPOBJS) $(RLIB) $(LIBS)
 
-$(DESTDIR)/rview:	$(RVOBJS) $(RLIB)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/rview $(RVOBJS) $(RLIB) $(LIBS) $(DLIBS)
+$(DESTDIR)/rvu:	$(RVOBJS) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rvu $(RVOBJS) $(RLIB) $(LIBS) $(DLIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
