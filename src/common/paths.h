@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.13 2003/06/08 12:01:52 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.14 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -13,81 +13,89 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
- #include <io.h>
- #define access _access
- #define PATH_MAX _MAX_PATH
+  #include <io.h>
 #else /* _WIN32 */
- #include <unistd.h>
- #include <sys/param.h>
+  #include <unistd.h>
+  #include <sys/param.h>
 #endif /* _WIN32 */
 
 #ifdef _WIN32
 
-#define DIRSEP		'/'
-#define ISDIRSEP(c)	((c)=='/' || (c)=='\\')
-#define ISABS(s)	((s)!=NULL \
-        && (s[0])!='\0' \
-        && (   ISDIRSEP(s[0]) \
-            || (   (s[1])!='\0' \
-                && (isupper(s[0])||islower(s[0])) \
-                && (s[1])==':')))
-#define CASEDIRSEP	case '/': case '\\'
-#define PATHSEP		';'
-#define MAXPATH		128
-#define DEFAULT_TEMPDIRS {"C:/TMP", "C:/TEMP", ".", NULL}
-#define TEMPLATE	"rtXXXXXX"
-#define TEMPLEN		8
-#define ULIBVAR		"RAYPATH"
-#ifndef DEFPATH
-#define DEFPATH		";c:/ray/lib"
-#endif
-/* <io.h> only does half the work for access() */
-#ifndef F_OK
-#define  F_OK 00
-#define  W_OK 02
-#define  R_OK 04
-#endif
+  #define access _access
+  #define PATH_MAX _MAX_PATH
+  #define DIRSEP		'/'
+  #define ISDIRSEP(c)	((c)=='/' || (c)=='\\')
+  #define ISABS(s)	((s)!=NULL \
+		  && (s[0])!='\0' \
+          && (   ISDIRSEP(s[0]) \
+              || (   (s[1])!='\0' \
+                  && (isupper(s[0])||islower(s[0])) \
+                  && (s[1])==':')))
+  #define CASEDIRSEP	case '/': case '\\'
+  #define PATHSEP		';'
+  #define CURDIR		'.'
+  #define MAXPATH		512 /* XXX obsoleted by posix PATH_MAX */
+  #define DEFAULT_TEMPDIRS {"C:/TMP", "C:/TEMP", ".", NULL}
+  #define TEMPLATE	"rtXXXXXX"
+  #define TEMPLEN		8
+  #define ULIBVAR		"RAYPATH"
+  #ifndef DEFPATH
+    #define DEFPATH		";c:/ray/lib"
+  #endif
+  /* <io.h> only does half the work for access() */
+  #ifndef F_OK
+    #define  F_OK 00
+    #define  X_OK 01
+    #define  W_OK 02
+    #define  R_OK 04
+  #endif
 extern char  *fixargv0();
 
 #else
-#ifdef AMIGA
+  #ifndef PATH_MAX /* doesn't implement posix? */
+    #define PATH_MAX 512 /* quite conservative (I think...) */
+  #endif
 
-#define DIRSEP		'/'
-#define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
-#define PATHSEP		';'
-#define MAXPATH		128
-#define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
-#define TEMPLATE	"/tmp/rtXXXXXX"
-#define TEMPLEN		13
-#define ULIBVAR		"RAYPATH"
-#ifndef DEFPATH
-#define DEFPATH		";/ray/lib"
-#endif
-#define	 fixargv0(a0)	(a0)
+  #ifdef AMIGA
 
-#else
+    #define DIRSEP		'/'
+    #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
+    #define PATHSEP		';'
+	#define CURDIR		'.'
+    #define MAXPATH		128
+    #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
+    #define TEMPLATE	"/tmp/rtXXXXXX"
+    #define TEMPLEN		13
+    #define ULIBVAR		"RAYPATH"
+    #ifndef DEFPATH
+      #define DEFPATH		";/ray/lib"
+    #endif
+    #define	 fixargv0(a0)	(a0)
 
-#define DIRSEP		'/'
-#define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
-#define PATHSEP		':'
-#define MAXPATH		256
-#define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
-#define TEMPLATE	"/usr/tmp/rtXXXXXX"
-#define TEMPLEN		17
-#define ULIBVAR		"RAYPATH"
-#ifndef DEFPATH
-#define DEFPATH		":/usr/local/lib/ray"
-#endif
-#define	 fixargv0(a0)	(a0)
+  #else
 
-#endif
+    #define DIRSEP		'/'
+    #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
+    #define PATHSEP		':'
+	#define CURDIR		'.'
+    #define MAXPATH		256
+    #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
+    #define TEMPLATE	"/usr/tmp/rtXXXXXX"
+    #define TEMPLEN		17
+    #define ULIBVAR		"RAYPATH"
+    #ifndef DEFPATH
+      #define DEFPATH		":/usr/local/lib/ray"
+    #endif
+    #define	 fixargv0(a0)	(a0)
+
+  #endif
 #endif
 
 #ifndef ISDIRSEP
-#define ISDIRSEP(c)	((c)==DIRSEP)
+  #define ISDIRSEP(c)	((c)==DIRSEP)
 #endif
 #ifndef CASEDIRSEP
-#define CASEDIRSEP	case DIRSEP
+  #define CASEDIRSEP	case DIRSEP
 #endif
 
 extern char  *mktemp(), *getenv();

@@ -13,7 +13,9 @@ static const char RCSid[] = "$Id";
 
 #include "ranimove.h"
 #include <time.h>
-#include <sys/time.h>
+#ifndef _WIN32
+  #include <sys/time.h>
+#endif
 #include <ctype.h>
 
 int		NVARS = NV_INIT; /* total number of variables */

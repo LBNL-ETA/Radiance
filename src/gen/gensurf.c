@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.10 2003/04/23 00:52:33 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.11 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -45,7 +45,7 @@ char  *modname, *surfname;
 struct {
 	int	flags;			/* data type */
 	short	m, n;			/* number of s and t values */
-	FLOAT	*data;			/* the data itself, s major sort */
+	RREAL	*data;			/* the data itself, s major sort */
 } datarec;			/* our recorded data */
 
 double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
@@ -55,7 +55,7 @@ typedef struct {
 	int  valid;	/* point is valid (vertex number) */
 	FVECT  p;	/* vertex position */
 	FVECT  n;	/* average normal */
-	FLOAT  uv[2];	/* (u,v) position */
+	RREAL  uv[2];	/* (u,v) position */
 } POINT;
 
 
@@ -180,7 +180,7 @@ int  pointsize;
 	FILE  *fp;
 	char  word[64];
 	register int  size;
-	register FLOAT  *dp;
+	register RREAL  *dp;
 
 	datarec.flags = HASBORDER;		/* assume border values */
 	datarec.m = m+1;
@@ -188,7 +188,7 @@ int  pointsize;
 	size = datarec.m*datarec.n*pointsize;
 	if (pointsize == 3)
 		datarec.flags |= TRIPLETS;
-	dp = (FLOAT *)malloc(size*sizeof(FLOAT));
+	dp = (RREAL *)malloc(size*sizeof(RREAL));
 	if ((datarec.data = dp) == NULL) {
 		fputs("Out of memory\n", stderr);
 		exit(1);
@@ -211,8 +211,8 @@ int  pointsize;
 		size--;
 	}
 	if (size == (m+n+1)*pointsize) {	/* no border after all */
-		dp = (FLOAT *)realloc((void *)datarec.data,
-				m*n*pointsize*sizeof(FLOAT));
+		dp = (RREAL *)realloc((void *)datarec.data,
+				m*n*pointsize*sizeof(RREAL));
 		if (dp != NULL)
 			datarec.data = dp;
 		datarec.flags &= ~HASBORDER;
@@ -236,7 +236,7 @@ char  *nam;
 {
 	double  u, v;
 	register int  i, j;
-	register FLOAT  *dp;
+	register RREAL  *dp;
 	double  d00, d01, d10, d11;
 						/* compute coordinates */
 	u = argument(1); v = argument(2);

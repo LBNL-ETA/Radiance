@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.4 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.5 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -193,7 +193,7 @@ pix2rays(FILE *fp)
 
 putrays()
 {
-	static FLOAT	loc[2];
+	static RREAL	loc[2];
 	static FVECT	rorg, rdir;
 	float	*zbuf;
 	int	sc;

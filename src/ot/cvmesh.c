@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.5 2003/05/14 03:08:22 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.6 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -23,11 +23,11 @@ typedef struct {
 	int		fl;		/* flags of what we're storing */
 	OBJECT		obj;		/* mesh triangle ID */
 	FVECT		vn[3];		/* normals */
-	FLOAT		vc[3][2];	/* uv coords. */
+	RREAL		vc[3][2];	/* uv coords. */
 } TRIDATA;
 
 #define tdsize(fl)	((fl)&MT_UV ? sizeof(TRIDATA) : \
-				(fl)&MT_N ? sizeof(TRIDATA)-6*sizeof(FLOAT) : \
+				(fl)&MT_N ? sizeof(TRIDATA)-6*sizeof(RREAL) : \
 				sizeof(int)+sizeof(OBJECT))
 
 #define	 OMARGIN	(10*FTINY)	/* margin around global cube */
@@ -74,11 +74,11 @@ OBJECT	mo;
 int	n;
 FVECT	*vp;
 FVECT	*vn;
-FLOAT	(*vc)[2];
+RREAL	(*vc)[2];
 {
 	int	tcnt = 0;
 	int	flags;
-	FLOAT	*tn[3], *tc[3];
+	RREAL	*tn[3], *tc[3];
 	int	*ord;
 	int	i, j;
 
@@ -133,7 +133,7 @@ FLOAT	(*vc)[2];
 static void
 add2bounds(vp, vc)		/* add point and uv coordinate to bounds */
 FVECT	vp;
-FLOAT	vc[2];
+RREAL	vc[2];
 {
 	register int	j;
 
@@ -159,7 +159,7 @@ cvtri(mo, vp1, vp2, vp3, vn1, vn2, vn3, vc1, vc2, vc3)
 OBJECT	mo;
 FVECT	vp1, vp2, vp3;
 FVECT	vn1, vn2, vn3;
-FLOAT	vc1[2], vc2[2], vc3[2];
+RREAL	vc1[2], vc2[2], vc3[2];
 {
 	static OBJECT	fobj = OVOID;
 	char		buf[32];
@@ -184,7 +184,7 @@ FLOAT	vc1[2], vc2[2], vc3[2];
 		sprintf(buf, "t%d", fobj);
 		fop->oname = savqstr(buf);
 		fop->oargs.nfargs = 9;
-		fop->oargs.farg = (FLOAT *)malloc(9*sizeof(FLOAT));
+		fop->oargs.farg = (RREAL *)malloc(9*sizeof(RREAL));
 		if (fop->oargs.farg == NULL)
 			goto nomem;
 	} else {		/* else reuse failed one */

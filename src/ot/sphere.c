@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sphere.c,v 2.2 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: sphere.c,v 2.3 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  sphere.c - routines for creating octrees for spheres.
@@ -56,7 +56,7 @@ register CUBE  *cu;
 {
 	FVECT  v1;
 	double  d1, d2;
-	register FLOAT  *fa;
+	register RREAL  *fa;
 	register int  i;
 #define  cent		fa
 #define  rad		fa[3]

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.20 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.21 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -160,7 +160,7 @@ char  *pname;
 	COLR  *scanin;
 	int  sl, ns;
 	RESOLU	inpres;
-	FLOAT  loc[2];
+	RREAL  loc[2];
 	int  y;
 	register int  x, i;
 	register DATARRAY  *pp;

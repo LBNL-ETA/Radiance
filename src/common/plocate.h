@@ -1,4 +1,4 @@
-/* RCSid $Id: plocate.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: plocate.h,v 2.6 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  *  plocate.h - header for 3D vector location.
  *
@@ -24,7 +24,7 @@ extern "C" {
 #define  ABOVE		052		/* above bits */
 
 
-extern int	clip(FLOAT *ep1, FLOAT *ep2, FVECT min, FVECT max);
+extern int	clip(RREAL *ep1, RREAL *ep2, FVECT min, FVECT max);
 extern int	plocate(FVECT p, FVECT min, FVECT max);
 
 

@@ -625,7 +625,7 @@ getevent()				/* process the next event */
 traceray(xpos, ypos)			/* print requested pixel data */
 int  xpos, ypos;
 {
-	FLOAT  hv[2];
+	RREAL  hv[2];
 	FVECT  rorg, rdir;
 	COLOR  cval;
 	register char  *cp;
@@ -673,7 +673,7 @@ XKeyPressedEvent  *ekey;
 	XColor  cvx;
 	int  com, n;
 	double  comp;
-	FLOAT  hv[2];
+	RREAL  hv[2];
 
 	n = XLookupString(ekey, buf, sizeof(buf), NULL, NULL); 
 	if (n == 0)

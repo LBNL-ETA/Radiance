@@ -1,13 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.29 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.30 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Holodeck display process communication
  */
 
+#include <sys/uio.h>
+
 #include "rholo.h"
 #include "rhdisp.h"
-#include <sys/uio.h>
+#include "rtprocess.h"
 
 #ifndef HDSUF
 #define HDSUF		".hdi"
@@ -21,7 +23,7 @@ static const char	RCSid[] = "$Id: rholo4.c,v 3.29 2003/05/13 17:58:33 greg Exp $
 #endif
 
 static int	inp_flags;
-static int	dpd[3];
+static SUBPROC	dpd;
 static FILE	*dpout;
 
 
@@ -32,9 +34,9 @@ char	*dname;
 	int	i, n, len;
 
 	if (!strcmp(dname, SLAVENAME)) {
-		dpd[0] = 0;		/* read from stdin */
+		dpd.r = 0;		/* read from stdin */
 		dpout = stdout;		/* write to stdout */
-		dpd[2] = -1;		/* we're the slave process */
+		dpd.running = 0; /* we're the slave procees */
 	} else {
 					/* get full display program name */
 #ifdef DEVPATH
@@ -52,17 +54,17 @@ char	*dname;
 		cmd[0] = buf;
 		cmd[1] = froot; cmd[2] = fd1; cmd[3] = fd0;
 		cmd[4] = NULL;
-		i = open_process(dpd, cmd);
+		i = open_process(&dpd, cmd);
 		if (i <= 0)
 			error(USER, "cannot start display process");
-		if ((dpout = fdopen(dpd[1], "w")) == NULL)
+		if ((dpout = fdopen(dpd.w, "w")) == NULL)
 			error(SYSTEM, "problem opening display pipe");
 					/* close dup'ed stdin and stdout */
 		if (readinp)
 			close(atoi(fd0));
 		close(atoi(fd1));
 	}
-	dpd[1] = -1;		/* causes ignored error in close_process() */
+	dpd.w = -1;		/* causes ignored error in close_process() */
 	inp_flags = 0;
 				/* check if outside */
 	if (vdef(OBSTRUCTIONS) && vbool(OBSTRUCTIONS))
@@ -112,11 +114,11 @@ int	block;
 					/* check read blocking */
 	if (block != (inp_flags == 0)) {
 		inp_flags = block ? 0 : FNONBLK;
-		if (fcntl(dpd[0], F_SETFL, inp_flags) < 0)
+		if (fcntl(dpd.r, F_SETFL, inp_flags) < 0)
 			goto fcntlerr;
 	}
 					/* read message header */
-	n = read(dpd[0], (char *)&msg, sizeof(MSGHEAD));
+	n = read(dpd.r, (char *)&msg, sizeof(MSGHEAD));
 	if (n != sizeof(MSGHEAD)) {
 		if (n >= 0) {
 			dpout = NULL;
@@ -132,9 +134,9 @@ int	block;
 		buf = (char *)malloc(msg.nbytes);
 		if (buf == NULL)
 			error(SYSTEM, "out of memory in disp_check");
-		if (inp_flags != 0 && fcntl(dpd[0], F_SETFL, inp_flags=0) < 0)
+		if (inp_flags != 0 && fcntl(dpd.r, F_SETFL, inp_flags=0) < 0)
 			goto fcntlerr;
-		if (readbuf(dpd[0], buf, msg.nbytes) != msg.nbytes)
+		if (readbuf(dpd.r, buf, msg.nbytes) != msg.nbytes)
 			goto readerr;
 	}
 	switch (msg.type) {		/* take appropriate action */
@@ -250,7 +252,8 @@ disp_close()			/* close our display process */
 	disp_result(DS_SHUTDOWN, 0, NULL);
 	fclose(dpout);
 	dpout = NULL;
-	return(dpd[2]<0 ? 0 : close_process(dpd));
+	return(dpd.running ? close_process(&dpd) : 0);
+
 }
 
 

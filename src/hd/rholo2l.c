@@ -1,16 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.12 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.13 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Routines for local rtrace execution
  */
 
+#include <signal.h>
+#include <sys/time.h>
+
 #include "rholo.h"
 #include "random.h"
 #include "paths.h"
 #include "selcall.h"
-#include <signal.h>
-#include <sys/time.h>
+#include "rtprocess.h"
 
 #ifndef MAXPROC
 #define MAXPROC		64
@@ -20,7 +22,7 @@ int	nprocs = 0;				/* running process count */
 
 static char	pfile[] = TEMPLATE;		/* persist file name */
 
-static int	rtpd[MAXPROC][3];		/* process descriptors */
+static SUBPROC	rtpd[MAXPROC];		/* process descriptors */
 static float	*rtbuf = NULL;			/* allocated i/o buffer */
 static int	maxqlen = 0;			/* maximum packets per queue */
 
@@ -66,7 +68,7 @@ start_rtrace()			/* start rtrace process */
 	}
 	maxqlen = 0;
 	for (nprocs = 0; nprocs < ncprocs; nprocs++) {	/* spawn children */
-		psiz = open_process(rtpd[nprocs], rtargv);
+		psiz = open_process(&rtpd[nprocs], rtargv);
 		if (psiz <= 0)
 			error(SYSTEM, "cannot start rtrace process");
 		n = psiz/(RPACKSIZ*6*sizeof(float));
@@ -135,7 +137,7 @@ register PACKET	*p;
 	packrays(rtbuf, p);
 	if ((n = p->nr) < RPACKSIZ)	/* add flush block? */
 		bzero((char *)(rtbuf+6*n++), 6*sizeof(float));
-	if (writebuf(rtpd[pn][1], (char *)rtbuf, 6*sizeof(float)*n) < 0)
+	if (writebuf(rtpd[pn].w, (char *)rtbuf, 6*sizeof(float)*n) < 0)
 		error(SYSTEM, "write error in queue_packet");
 	p->next = NULL;
 	if (!pqlen[pn]++)	/* add it to the end of the queue */
@@ -164,10 +166,10 @@ int	poll;
 	FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
 	for (pn = nprocs; pn--; ) {
 		if (pqlen[pn])
-			FD_SET(rtpd[pn][0], &readset);
-		FD_SET(rtpd[pn][0], &errset);
-		if (rtpd[pn][0] >= n)
-			n = rtpd[pn][0] + 1;
+			FD_SET(rtpd[pn].r, &readset);
+		FD_SET(rtpd[pn].r, &errset);
+		if (rtpd[pn].r >= n)
+			n = rtpd[pn].r + 1;
 	}
 					/* make the call */
 	n = select(n, &readset, (fd_set *)NULL, &errset,
@@ -181,11 +183,11 @@ int	poll;
 		return(NULL);
 					/* make read call(s) */
 	for (pn = 0; pn < nprocs; pn++) {
-		if (!FD_ISSET(rtpd[pn][0], &readset) &&
-				!FD_ISSET(rtpd[pn][0], &errset))
+		if (!FD_ISSET(rtpd[pn].r, &readset) &&
+				!FD_ISSET(rtpd[pn].r, &errset))
 			continue;
 	reread:
-		n = read(rtpd[pn][0], (char *)rtbuf,
+		n = read(rtpd[pn].r, (char *)rtbuf,
 				4*sizeof(float)*RPACKSIZ*pqlen[pn]);
 		if (n < 0) {
 			if (errno == EINTR | errno == EAGAIN)
@@ -200,7 +202,7 @@ int	poll;
 				nr++;			/* add flush block */
 			n -= 4*sizeof(float)*nr;
 			if (n < 0) {			/* get remainder */
-				n += readbuf(rtpd[pn][0],
+				n += readbuf(rtpd[pn].r,
 						(char *)(bp+4*nr)+n, -n);
 				if (n)
 					goto eoferr;
@@ -267,7 +269,7 @@ flush_queue()			/* empty all rtrace queues */
 				if (rpl->nr < RPACKSIZ)
 					nr++;		/* add flush block */
 			}
-			n = readbuf(rtpd[i][0], (char *)rtbuf,
+			n = readbuf(rtpd[i].r, (char *)rtbuf,
 					4*sizeof(float)*nr);
 			if (n < 0)
 				error(SYSTEM, "read failure in flush_queue");
@@ -311,7 +313,7 @@ end_rtrace()			/* close rtrace process(es) */
 	if (nprocs > 1)
 		killpersist();
 	while (nprocs > 0) {
-		rv = close_process(rtpd[--nprocs]);
+		rv = close_process(&rtpd[--nprocs]);
 		if (rv > 0)
 			status = rv;
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sphere.c,v 2.5 2003/03/12 04:59:05 greg Exp $";
+static const char RCSid[] = "$Id: sphere.c,v 2.6 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  sphere.c - compute ray intersection with spheres.
@@ -20,7 +20,7 @@ register RAY  *r;
 	double  root[2];	/* quadratic roots */
 	int  nroots;
 	double  t;
-	register FLOAT  *ap;
+	register RREAL  *ap;
 	register int  i;
 
 	if (so->oargs.nfargs != 4)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmesh.c,v 2.2 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.3 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
@@ -42,9 +42,9 @@ FVECT	v1, v2, v3, n1, n2, n3;
 int
 comp_baryc(bcm, v1, v2, v3)		/* compute barycentric vectors */
 register BARYCCM	*bcm;
-FLOAT			*v1, *v2, *v3;
+RREAL			*v1, *v2, *v3;
 {
-	FLOAT	*vt;
+	RREAL	*vt;
 	FVECT	va, vab, vcb;
 	double	d;
 	int	ax0, ax1;
@@ -87,7 +87,7 @@ FLOAT			*v1, *v2, *v3;
 
 void
 eval_baryc(wt, p, bcm)		/* evaluate barycentric weights at p */
-FLOAT	wt[3];
+RREAL	wt[3];
 FVECT	p;
 register BARYCCM	*bcm;
 {
@@ -103,7 +103,7 @@ register BARYCCM	*bcm;
 
 int
 get_baryc(wt, p, v1, v2, v3)	/* compute barycentric weights at p */
-FLOAT	wt[3];
+RREAL	wt[3];
 FVECT	p;
 FVECT	v1, v2, v3;
 {
@@ -119,7 +119,7 @@ FVECT	v1, v2, v3;
 #if 0
 int
 get_baryc(wt, p, v1, v2, v3)	/* compute barycentric weights at p */
-FLOAT	wt[3];
+RREAL	wt[3];
 FVECT	p;
 FVECT	v1, v2, v3;
 {
@@ -147,7 +147,7 @@ FVECT	v1, v2, v3;
 void
 put_baryc(bcm, com, n)		/* put barycentric coord. vectors */
 register BARYCCM	*bcm;
-register FLOAT		com[][3];
+register RREAL		com[][3];
 int			n;
 {
 	double	a, b;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.38 2003/06/08 12:03:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.39 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -20,8 +20,10 @@ char *argv[];
 #else
 
 #include <signal.h>
+
 #include "color.h"
 #include "view.h"
+#include "rtprocess.h"
 
 #ifndef NFS
 #define  NFS			1
@@ -49,7 +51,6 @@ extern char  *strerror();
 				/* rpict command */
 char  *rpargv[128] = {"rpict", "-S", "1"};
 int  rpargc = 3;
-int  rpd[3];
 FILE  *torp, *fromrp;
 COLR  *pbuf;
 				/* our view parameters */
@@ -210,6 +211,7 @@ char  **av;
 	char  *err;
 	FILE  *fp;
 	int  hr, vr;
+	SUBPROC  rpd; /* since we don't close_process(), this can be local */
 					/* set up view */
 	if ((err = setview(&ourview)) != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -268,12 +270,12 @@ char  **av;
 		goto filerr;
 	dolock(outfd, F_UNLCK);
 					/* start rpict process */
-	if (open_process(rpd, rpargv) <= 0) {
+	if (open_process(&rpd, rpargv) <= 0) {
 		fprintf(stderr, "%s: cannot start %s\n", progname, rpargv[0]);
 		exit(1);
 	}
-	if ((fromrp = fdopen(rpd[0], "r")) == NULL ||
-			(torp = fdopen(rpd[1], "w")) == NULL) {
+	if ((fromrp = fdopen(rpd.r, "r")) == NULL ||
+			(torp = fdopen(rpd.w, "w")) == NULL) {
 		fprintf(stderr, "%s: cannot open stream to %s\n",
 				progname, rpargv[0]);
 		exit(1);

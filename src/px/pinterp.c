@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.33 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.34 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -7,12 +7,13 @@ static const char	RCSid[] = "$Id: pinterp.c,v 2.33 2003/02/22 02:07:27 greg Exp 
  *	Greg Ward	09Dec89
  */
 
-#include "standard.h"
+#include "copyright.h"
 
 #include <ctype.h>
 
+#include "standard.h"
+#include "rtprocess.h" /* Windows: must come before color.h */
 #include "view.h"
-
 #include "color.h"
 
 #define LOG2		0.69314718055994530942
@@ -84,8 +85,7 @@ double	theirexp;			/* input picture exposure */
 MAT4	theirs2ours;			/* transformation matrix */
 int	hasmatrix = 0;			/* has transformation matrix */
 
-int	PDesc[3] = {-1,-1,-1};		/* rtrace process descriptor */
-#define childpid	(PDesc[2])
+static SUBPROC PDesc = SP_INACTIVE; /* rtrace process descriptor */
 unsigned short	queue[PACKSIZ][2];	/* pending pixels */
 int	packsiz;			/* actual packet size */
 int	queuesiz = 0;			/* number of pixels pending */
@@ -1095,7 +1095,7 @@ char	*prog, *args;
 	int	rval;
 	register char	**wp, *cp;
 
-	if (childpid != -1) {
+	if (PDesc.running) {
 		fprintf(stderr, "%s: too many calculations\n", progname);
 		exit(1);
 	}
@@ -1114,7 +1114,7 @@ char	*prog, *args;
 	}
 	*wp = NULL;
 						/* start process */
-	if ((rval = open_process(PDesc, argv)) < 0)
+	if ((rval = open_process(&PDesc, argv)) < 0)
 		syserror(progname);
 	if (rval == 0) {
 		fprintf(stderr, "%s: command not found\n", argv[0]);
@@ -1129,11 +1129,10 @@ char	*prog, *args;
 
 caldone()                               /* done with calculation */
 {
-	if (childpid == -1)
+	if (!PDesc.running)
 		return;
 	clearqueue();
-	close_process(PDesc);
-	childpid = -1;
+	close_process(&PDesc);
 }
 
 
@@ -1169,7 +1168,7 @@ clearqueue()				/* process queue */
 	}
 					/* mark end and get results */
 	bzero((char *)fbp, 6*sizeof(float));
-	if (process(PDesc, (char *)fbuf, (char *)fbuf,
+	if (process(&PDesc, (char *)fbuf, (char *)fbuf,
 			4*sizeof(float)*(queuesiz+1),
 			6*sizeof(float)*(queuesiz+1)) !=
 			4*sizeof(float)*(queuesiz+1)) {

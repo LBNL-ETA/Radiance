@@ -1,4 +1,4 @@
-/* RCSid $Id: radogl.h,v 3.7 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: radogl.h,v 3.8 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
@@ -58,7 +58,7 @@ extern void	domatvert(MATREC *mp, FVECT v, FVECT n);
 extern int	newglist(void);
 extern void	rgl_checkerr(char *where);
 extern int	rgl_filelist(int ic, char **inp, int *nl);
-extern int	rgl_octlist(char *fname, FVECT cent, FLOAT *radp, int *nl);
+extern int	rgl_octlist(char *fname, FVECT cent, RREAL *radp, int *nl);
 extern void	rgl_load(char *inpspec);
 extern void	rgl_object(char *name, FILE *fp);
 				/* defined in rglinst.c */

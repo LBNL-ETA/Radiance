@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.8 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.9 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Source sampling routines
@@ -229,7 +229,7 @@ flatpart(si, r)				/* partition a flat source */
 register SRCINDEX  *si;
 register RAY  *r;
 {
-	register FLOAT  *vp;
+	register RREAL  *vp;
 	FVECT  v;
 	double  du2, dv2;
 	int  pi;
@@ -313,7 +313,7 @@ scylform(sn, dir)		/* compute cosine for cylinder's projection */
 int  sn;
 register FVECT  dir;		/* assume normalized */
 {
-	register FLOAT  *dv;
+	register RREAL  *dv;
 	double  d;
 
 	dv = source[sn].ss[SU];

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.8 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
@@ -118,7 +118,7 @@ int
 rgl_octlist(fname, cent, radp, nl)	/* load scen into display list */
 char	*fname;
 FVECT	cent;			/* returned octree center (optional) */
-FLOAT	*radp;			/* returned octree size (optional) */
+RREAL	*radp;			/* returned octree size (optional) */
 int	*nl;			/* returned number of lists (optional) */
 {
 	double	r;

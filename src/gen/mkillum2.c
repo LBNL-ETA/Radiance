@@ -1,16 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.9 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.10 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
  */
 
 #include  "mkillum.h"
-
 #include  "face.h"
-
 #include  "cone.h"
-
 #include  "random.h"
 
 
@@ -302,7 +299,7 @@ register struct rtproc  *rt;
 		return;
 	bzero(rt->buf+6*rt->nrays, 6*sizeof(float));
 	errno = 0;
-	if ( process(rt->pd, (char *)rt->buf, (char *)rt->buf,
+	if ( process(&(rt->pd), (char *)rt->buf, (char *)rt->buf,
 			3*sizeof(float)*(rt->nrays+1),
 			6*sizeof(float)*(rt->nrays+1)) <
 			3*sizeof(float)*(rt->nrays+1) )

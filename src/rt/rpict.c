@@ -33,7 +33,9 @@ static const char RCSid[] = "$Id";
 #define	 RFTEMPLATE	"rfXXXXXX"
 
 #ifndef SIGCONT
+#ifdef SIGIO     /* XXX can we live without this? */
 #define SIGCONT		SIGIO
+#endif
 #endif
 
 CUBE  thescene;				/* our scene */
@@ -180,7 +182,7 @@ report()		/* report progress */
 			nrays, pctdone, u/3600., s/3600.,
 			(tlastrept-tstart)/3600., myhostname());
 	eputs(errmsg);
-#ifndef BSD
+#ifdef SIGCONT
 	signal(SIGCONT, report);
 #endif
 }
@@ -413,10 +415,10 @@ char  *zfile, *oldfile;
 	pctdone = 100.0*i/vres;
 	if (ralrm > 0)			/* report init stats */
 		report();
-#ifndef	 BSD
+#ifdef SIGCONT
 	else
-#endif
 	signal(SIGCONT, report);
+#endif
 	ypos = vres-1 - i;			/* initialize sampling */
 	if (directvis)
 		init_drawsources(psample);
@@ -442,7 +444,7 @@ char  *zfile, *oldfile;
 		if (directvis)				/* add bitty sources */
 			drawsources(scanbar, zbar, 0, hres, ypos, ystep);
 							/* write it out */
-#ifndef	 BSD
+#ifdef SIGCONT
 		signal(SIGCONT, SIG_IGN);	/* don't interrupt writes */
 #endif
 		for (i = ystep; i > 0; i--) {
@@ -459,13 +461,15 @@ char  *zfile, *oldfile;
 		pctdone = 100.0*(vres-1-ypos)/vres;
 		if (ralrm > 0 && time((time_t *)NULL) >= tlastrept+ralrm)
 			report();
-#ifndef	 BSD
+#ifdef SIGCONT
 		else
 			signal(SIGCONT, report);
 #endif
 	}
 						/* clean up */
+#ifdef SIGCONT
 	signal(SIGCONT, SIG_IGN);
+#endif
 	if (zfd != -1 && write(zfd, (char *)zbar[0], hres*sizeof(float))
 				< hres*sizeof(float))
 		goto writerr;
@@ -486,7 +490,9 @@ alldone:
 	pctdone = 100.0;
 	if (ralrm > 0)
 		report();
+#ifdef SIGCONT
 	signal(SIGCONT, SIG_DFL);
+#endif
 	return;
 writerr:
 	error(SYSTEM, "write error in render");

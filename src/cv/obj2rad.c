@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.19 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.20 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -29,7 +29,7 @@ FVECT	*vlist;			/* our vertex list */
 int	nvs;			/* number of vertices in our list */
 FVECT	*vnlist;		/* vertex normal list */
 int	nvns;
-FLOAT	(*vtlist)[2];		/* map vertex list */
+RREAL	(*vtlist)[2];		/* map vertex list */
 int	nvts;
 
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
@@ -470,7 +470,7 @@ register int	ac;
 register char	**av;
 {
 	VNDX	vi;
-	FLOAT	*p0, *p1;
+	RREAL	*p0, *p1;
 	FVECT	v1, v2, nsum, newn;
 	double	d;
 	register int	i;
@@ -555,7 +555,7 @@ char	*v1, *v2, *v3;
 	char	*mod;
 	VNDX	v1i, v2i, v3i;
 	BARYCCM	bvecs;
-	FLOAT	bcoor[3][3];
+	RREAL	bcoor[3][3];
 	int	texOK, patOK;
 	int	flatness;
 	register int	i;
@@ -712,10 +712,10 @@ double	x, y;
 {
 	if (!(nvts%CHUNKSIZ)) {		/* allocate next block */
 		if (nvts == 0)
-			vtlist = (FLOAT (*)[2])malloc(CHUNKSIZ*2*sizeof(FLOAT));
+			vtlist = (RREAL (*)[2])malloc(CHUNKSIZ*2*sizeof(RREAL));
 		else
-			vtlist = (FLOAT (*)[2])realloc((void *)vtlist,
-					(nvts+CHUNKSIZ)*2*sizeof(FLOAT));
+			vtlist = (RREAL (*)[2])realloc((void *)vtlist,
+					(nvts+CHUNKSIZ)*2*sizeof(RREAL));
 		if (vtlist == NULL) {
 			fprintf(stderr,
 			"Out of memory while allocating texture vertex %d\n",

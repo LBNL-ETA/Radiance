@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.12 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.13 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: rhdobj.c,v 3.12 2003/05/13 17:58:33 greg Exp $
 #include "rhdisp.h"
 #include "rhdriver.h"
 #include "rhdobj.h"
+#include "rtprocess.h"
 
 extern FILE	*sstdout;		/* user standard output */
 
@@ -50,10 +51,10 @@ typedef struct dobject {
 	struct dobject	*next;		/* next object in list */
 	char	name[64];		/* object name */
 	FVECT	center;			/* orig. object center */
-	FLOAT	radius;			/* orig. object radius */
+	RREAL	radius;			/* orig. object radius */
 	int	listid;			/* GL display list identifier */
 	int	nlists;			/* number of lists allocated */
-	int	rtp[3];			/* associated rtrace process */
+	SUBPROC	rtp;			/* associated rtrace process */
 	DLIGHTS	*ol;			/* object lights */
 	FULLXF	xfb;			/* coordinate transform */
 	short	drawcode;		/* drawing code */
@@ -118,7 +119,7 @@ register DOBJECT	*op;
 	dobjects = ohead.next;
 	if (!foundlink) {
 		glDeleteLists(op->listid, op->nlists);
-		close_process(op->rtp);
+		close_process(&(op->rtp));
 	}
 	while (op->xfac)
 		freestr(op->xfav[--op->xfac]);
@@ -578,7 +579,7 @@ char	*oct, *nam;
 					/* start rtrace */
 	rtargv[RTARGC-1] = fpath;
 	rtargv[RTARGC] = NULL;
-	open_process(op->rtp, rtargv);
+	open_process(&(op->rtp), rtargv);
 					/* insert into main list */
 	op->next = dobjects;
 	curobj = dobjects = op;
@@ -859,7 +860,7 @@ FVECT   rorg, rdir;
 		VCOPY(darr, rorg); VCOPY(darr+3, rdir);
 	}
 				/* trace it */
-	if (process(op->rtp, (char *)darr, (char *)darr, sizeof(double),
+	if (process(&(op->rtp), (char *)darr, (char *)darr, sizeof(double),
 			6*sizeof(double)) != sizeof(double))
 		error(SYSTEM, "rtrace communication error");
 				/* return distance */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 1.2 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 1.3 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -421,7 +421,7 @@ int	iv;
 {
 	static int	ntris;
 	BARYCCM	bvecs;
-	FLOAT	bcoor[3][3];
+	RREAL	bcoor[3][3];
 	C_VERTEX	*cvt;
 	FVECT	v1, v2, v3;
 	FVECT	n1, n2, n3;

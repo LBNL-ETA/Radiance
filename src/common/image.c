@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.17 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.18 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -271,7 +271,7 @@ FVECT  p;
 
 void
 pix2loc(loc, rp, px, py)	/* compute image location from pixel pos. */
-FLOAT  loc[2];
+RREAL  loc[2];
 register RESOLU  *rp;
 int  px, py;
 {

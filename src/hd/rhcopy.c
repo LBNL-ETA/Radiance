@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.16 2003/05/29 16:26:22 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.17 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -298,7 +298,7 @@ char	*pcf, *zbf;
 	int	eshft;
 	double	emult;
 	RESOLU	prs;
-	FLOAT	vl[2];
+	RREAL	vl[2];
 	FVECT	ro, rd;
 	double	aftd;
 	COLOR	ctmp;

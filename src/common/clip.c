@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clip.c,v 2.4 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: clip.c,v 2.5 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  *  clip.c - routine to clip 3D line segments to a box.
@@ -16,13 +16,13 @@ static const char	RCSid[] = "$Id: clip.c,v 2.4 2003/02/25 02:47:21 greg Exp $";
 
 int
 clip(ep1, ep2, min, max)	/* clip a line segment to a box */
-FLOAT  *ep1, *ep2;
+RREAL  *ep1, *ep2;
 FVECT  min, max;
 {
 	int  itlim = MAXITER;
 	int  loc1, loc2;
 	int  accept;
-	FLOAT  *dp;
+	RREAL  *dp;
 	double  d;
 	register int  i, j;
 

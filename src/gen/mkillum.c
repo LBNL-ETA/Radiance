@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.13 2003/06/08 12:03:10 schorsch Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.14 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.13 2003/06/08 12:03:10 schorsch 
 #include  <ctype.h>
 #include  <stdio.h>
 
+#include  "standard.h"
 #include  "platform.h"
 #include  "mkillum.h"
 
@@ -137,7 +138,7 @@ int  status;
 {
 	int	rtstat;
 
-	rtstat = close_process(rt.pd);
+	rtstat = close_process(&(rt.pd));
 	if (status == 0)
 		if (rtstat < 0)
 			error(WARNING,
@@ -157,12 +158,12 @@ init()				/* start rtrace and set up buffers */
 	ofun[OBJ_SPHERE].funp = o_sphere;
 	ofun[OBJ_RING].funp = o_ring;
 					/* set up signal handling */
-#ifndef _WIN32 /* XXX what do we use instead? */
+#ifdef SIGPIPE /* not present on Windows */
 	signal(SIGPIPE, quit);
 #endif
 					/* start rtrace process */
 	errno = 0;
-	maxbytes = open_process(rt.pd, rtargv);
+	maxbytes = open_process(&(rt.pd), rtargv);
 	if (maxbytes == 0) {
 		eputs(rtargv[0]);
 		eputs(": command not found\n");

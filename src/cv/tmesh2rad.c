@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.12 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.13 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -203,7 +203,7 @@ register VERTEX	*v1, *v2, *v3;
 	static int	ntri = 0;
 	int		flatness = ISFLAT;
 	BARYCCM	bvecs;
-	FLOAT	bvm[3][3];
+	RREAL	bvm[3][3];
 	register int	i;
 					/* compute barycentric coordinates */
 	if (v1->flags & v2->flags & v3->flags & (V_HASINDX|V_HASNORM))

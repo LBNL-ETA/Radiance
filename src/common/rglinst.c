@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.9 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.10 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -356,8 +356,8 @@ loadobj()				/* get next object */
 #endif
 					/* get real arguments */
 	if (ob.oargs.nfargs = ogetint(2)) {
-		ob.oargs.farg = (FLOAT *)malloc
-				(ob.oargs.nfargs*sizeof(FLOAT));
+		ob.oargs.farg = (RREAL *)malloc
+				(ob.oargs.nfargs*sizeof(RREAL));
 		if (ob.oargs.farg == NULL)
 			goto memerr;
 		for (i = 0; i < ob.oargs.nfargs; i++)

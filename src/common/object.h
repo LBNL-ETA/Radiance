@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.14 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid $Id: object.h,v 2.15 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -27,7 +27,7 @@ typedef struct {
 	short  nsargs;			/* # of string arguments */
 	short  nfargs;			/* # of real arguments */
 	char  **sarg;			/* string arguments */
-	FLOAT  *farg;			/* real arguments */
+	RREAL  *farg;			/* real arguments */
 #ifdef  IARGS
 	short  niargs;			/* # of integer arguments */
 	long  *iarg;			/* integer arguments */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: paths.c,v 2.1 2003/06/08 12:01:52 schorsch Exp $";
+static const char RCSid[] = "$Id: paths.c,v 2.2 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  * Find a writeable tempfile directory.
@@ -21,7 +21,7 @@ static const char *defaultpaths[] = DEFAULT_TEMPDIRS;
 char *
 temp_directory(char *s, size_t len)
 {
-	static char td[PATH_MAX] = "\0"; /* remember */
+	static char td[PATH_MAX]; /* remember */
 	char * ts = NULL;
 	int i = 0;
 	
@@ -75,14 +75,22 @@ append_filepath(char *s1, char *s2, size_t len)
 	char *s;
 
 	siz = strlen(s1);
-	/* XXX siz > len is an error */
-	while (siz > 1 && ISDIRSEP(s1[siz-1])) {
-		s1[siz-1] = '\0';
-		siz--;
-	}
-	if (siz+1 <= len) {
-		s1[siz] = DIRSEP;
-		siz++;
+	if (siz > 0) {
+		/* XXX siz > len is an error */
+		while (siz > 1 && ISDIRSEP(s1[siz-1])) {
+			s1[siz-1] = '\0';
+			siz--;
+		}
+		if (siz+1 <= len) {
+			s1[siz] = DIRSEP;
+			siz++;
+		}
+	} else if (len >= 2) { /* first path empty */
+		s1[0] = CURDIR;
+		s1[1] = DIRSEP;
+		siz = 2;
+	} else {
+		return NULL;
 	}
 	while (ISDIRSEP(s2[0])) {
 		s2++;
@@ -144,23 +152,24 @@ temp_file(char *s, size_t len, char *templ)
 #ifdef _WIN32
 	ts = mktemp(ts);
 	if (ts == NULL) return -1;
-	return fopen(ts, "r+b");
+	return fopen(ts, "r+b"); /* XXX des "b" need to be an option? */
 #else
 	return mkstemp(ts);
 #endif
 }
 
 
-#ifdef MODULE_TEST
+#ifdef TEST_MODULE
 int main()
 {
 	static char p[PATH_MAX] = "\0";
 	char * pp, *qq = NULL;
 	pp = temp_directory(p, sizeof(p));
-
 	printf("%s\n", pp);
+
 	qq = temp_filename(pp, sizeof(p), "//something/else_XXXXXX");
 	printf("%s\n", qq);
+
 	qq = temp_filename(pp, sizeof(p), NULL);
 	printf("%s\n", qq);
 }

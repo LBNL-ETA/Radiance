@@ -1,15 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.63 2003/06/05 19:29:35 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.64 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
  */
 
 #include "standard.h"
+
+#include <ctype.h>
+
+#include "platform.h"
 #include "view.h"
 #include "paths.h"
 #include "vars.h"
-#include <ctype.h>
 
 				/* variables (alphabetical by name) */
 #define AMBFILE		0		/* ambient file name */

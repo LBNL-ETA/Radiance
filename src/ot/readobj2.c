@@ -1,17 +1,17 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readobj2.c,v 2.5 2003/03/11 19:29:05 greg Exp $";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.6 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  readobj2.c - routines for reading in object descriptions.
  */
 
+#include  <ctype.h>
+
 #include  "standard.h"
-
+#include  "platform.h"
 #include  "object.h"
-
 #include  "otypes.h"
 
-#include  <ctype.h>
 
 extern char  *fgetword();
 

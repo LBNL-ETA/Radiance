@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.9 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: fvect.h,v 2.10 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -11,15 +11,15 @@ extern "C" {
 #include "copyright.h"
 
 #ifdef  SMLFLT
-#define  FLOAT		float
+#define  RREAL		float
 #define  FTINY		(1e-3)
 #else
-#define  FLOAT		double
+#define  RREAL		double
 #define  FTINY		(1e-6)
 #endif
 #define  FHUGE		(1e10)
 
-typedef FLOAT  FVECT[3];
+typedef RREAL  FVECT[3];
 
 #define  VCOPY(v1,v2)	((v1)[0]=(v2)[0],(v1)[1]=(v2)[1],(v1)[2]=(v2)[2])
 #define  DOT(v1,v2)	((v1)[0]*(v2)[0]+(v1)[1]*(v2)[1]+(v1)[2]*(v2)[2])

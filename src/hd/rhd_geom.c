@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_geom.c,v 3.10 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.11 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Geometry drawing operations for OpenGL driver.
@@ -23,7 +23,7 @@ static char	*newportlist[MAXPORT];	/* new portal file list */
 static struct gmEntry {
 	char	*gfile;			/* geometry file name */
 	FVECT	cent;			/* centroid */
-	FLOAT	rad;			/* radius */
+	RREAL	rad;			/* radius */
 	int	listid;			/* display list identifier */
 	int	nlists;			/* number of lists allocated */
 } gmCurrent[MAXGEO], gmNext[MAXGEO];	/* current and next list */

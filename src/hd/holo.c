@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holo.c,v 3.17 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: holo.c,v 3.18 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Routines for converting holodeck coordinates, etc.
@@ -134,7 +134,7 @@ register FVECT	cp[4];	/* returned (may be passed as FVECT cp[2][2]) */
 register HOLO	*hp;
 register GCOORD	*gc;
 {
-	register FLOAT	*v;
+	register RREAL	*v;
 	double	d;
 					/* compute common component */
 	VCOPY(cp[0], hp->orig);
@@ -263,7 +263,7 @@ FVECT	ro, rd;		/* normalization of rd affects distances */
 {
 	FVECT	p[2], vt;
 	double	d, t0, t1, d0, d1;
-	register FLOAT	*v;
+	register RREAL	*v;
 	register int	i;
 					/* first, intersect walls */
 	gc[0].w = gc[1].w = -1;

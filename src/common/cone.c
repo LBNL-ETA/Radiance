@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cone.c,v 2.7 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: cone.c,v 2.8 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  *  cone.c - routines for making cones
@@ -170,7 +170,7 @@ register CONE  *co;
 	register double  d;
 	register int  i;
 
-	co->tm = (FLOAT (*)[4])malloc(sizeof(MAT4));
+	co->tm = (RREAL (*)[4])malloc(sizeof(MAT4));
 	if (co->tm == NULL)
 		error(SYSTEM, "out of memory in conexform");
 

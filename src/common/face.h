@@ -1,4 +1,4 @@
-/* RCSid $Id: face.h,v 2.4 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: face.h,v 2.5 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  *  face.h - header for routines using polygonal faces.
  */
@@ -14,9 +14,9 @@ extern "C" {
 
 typedef struct {	/* a polygonal face */
 	FVECT  norm;		/* the plane's unit normal */
-	FLOAT  offset;		/* plane equation:  DOT(norm, v) == offset */
-	FLOAT  area;		/* area of face */
-	FLOAT  *va;		/* vertex array (o->oargs.farg) */
+	RREAL  offset;		/* plane equation:  DOT(norm, v) == offset */
+	RREAL  area;		/* area of face */
+	RREAL  *va;		/* vertex array (o->oargs.farg) */
 	short  nv;		/* # of vertices */
 	short  ax;		/* axis closest to normal */
 } FACE;

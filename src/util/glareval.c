@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.6 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.7 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
  */
 
+#include "rtprocess.h" /* Windows: must come first because of conflicts */
 #include "glare.h"
+
 					/* maximum rtrace buffer size */
 #define MAXPIX		(4096/(6*sizeof(float)))
 
@@ -13,7 +15,7 @@ static const char	RCSid[] = "$Id: glareval.c,v 2.6 2003/02/22 02:07:30 greg Exp 
 #define HSIZE		317	/* size of scanline hash table */
 #define NRETIRE		16	/* number of scanlines to retire at once */
 
-int	rt_pd[3] = {-1,-1,-1};	/* process id & descriptors for rtrace */
+static SUBPROC	rt_pd = SP_INACTIVE; /* process id & descriptors for rtrace */
 
 FILE	*pictfp = NULL;		/* picture file pointer */
 double	exposure;		/* picture exposure */
@@ -182,7 +184,7 @@ int	vh, vv;
 	npixinvw++;
 	if ((res = pict_val(dir)) >= 0.0)
 		return(res);
-	if (rt_pd[0] == -1) {
+	if (rt_pd.r == -1) {
 		npixmiss++;
 		return(-1.0);
 	}
@@ -221,7 +223,7 @@ float	*vb;
 		npixinvw++;
 		if ((vb[vh+hsize] = pict_val(dir)) >= 0.0)
 			continue;
-		if (rt_pd[0] == -1) {		/* missing information */
+		if (rt_pd.r == -1) {		/* missing information */
 			npixmiss++;
 			continue;
 		}
@@ -261,7 +263,7 @@ int	np;
 				progname, np);
 #endif
 	bzero(pb+6*np, 6*sizeof(float));
-	if (process(rt_pd, (char *)pb, (char *)pb, 3*sizeof(float)*(np+1),
+	if (process(&rt_pd, (char *)pb, (char *)pb, 3*sizeof(float)*(np+1),
 			6*sizeof(float)*(np+1)) < 3*sizeof(float)*(np+1)) {
 		fprintf(stderr, "%s: rtrace communication error\n",
 				progname);
@@ -318,7 +320,7 @@ char	*av[];
 {
 	int	rval;
 
-	rval = open_process(rt_pd, av);
+	rval = open_process(&rt_pd, av);
 	if (rval < 0) {
 		perror(progname);
 		exit(1);
@@ -338,13 +340,13 @@ done_rtrace()			/* wait for rtrace to finish */
 {
 	int	status;
 
-	status = close_process(rt_pd);
+	status = close_process(&rt_pd);
 	if (status > 0) {
 		fprintf(stderr, "%s: bad status (%d) from rtrace\n",
 				progname, status);
 		exit(1);
 	}
-	rt_pd[0] = -1;
+	rt_pd.r = -1;
 }
 
 

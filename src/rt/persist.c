@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.27 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.28 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -204,7 +204,9 @@ io_process()		/* just act as go-between for actual process */
 	}
 	if (nr < 0)
 		error(SYSTEM, "error reading persist file");
+#ifndef _WIN32 /* XXX we need a replacement for that one */
 	ftruncate(persistfd, (off_t)0L);	/* truncate persist file */
+#endif
 	pfdetach();			/* close & release persist file */
 	buf[nr] = '\0';			/* parse what we got */
 	if ((cp = index(buf, ' ')) == NULL)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.50 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.51 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -163,7 +163,9 @@ setambient()				/* initialize calculation */
 					(flen - pos)/AMBVALSIZ);
 			error(WARNING, errmsg);
 			fseek(ambfp, pos, 0);
+#ifndef _WIN32 /* XXX we need a replacement for that one */
 			ftruncate(fileno(ambfp), (off_t)pos);
+#endif
 		}
 	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
 		initambfile(1);			/* else create new file */

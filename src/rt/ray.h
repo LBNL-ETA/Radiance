@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.17 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: ray.h,v 2.18 2003/06/26 00:58:10 schorsch Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -55,7 +55,7 @@ typedef struct ray {
 	FVECT	ron;		/* intersection surface normal */
 	double	rod;		/* -DOT(rdir, ron) */
 	FULLXF	*rox;		/* object transformation */
-	FLOAT	uv[2];		/* local coordinates */
+	RREAL	uv[2];		/* local coordinates */
 	FVECT	pert;		/* surface normal perturbation */
 	COLOR	pcol;		/* pattern color */
 	COLOR	rcol;		/* returned ray value */

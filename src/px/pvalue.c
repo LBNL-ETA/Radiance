@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.20 2003/06/20 00:25:50 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.21 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -389,7 +389,7 @@ pixtoval()				/* convert picture to values */
 	register COLOR	*scanln;
 	int  dogamma;
 	COLOR  lastc;
-	FLOAT  hv[2];
+	RREAL  hv[2];
 	int  startprim, endprim;
 	long  startpos;
 	int  y;

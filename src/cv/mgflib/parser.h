@@ -1,4 +1,4 @@
-/* RCSid: $Id: parser.h,v 1.34 2003/06/07 01:11:17 schorsch Exp $ */
+/* RCSid: $Id: parser.h,v 1.35 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * Header file for MGF interpreter
  */
@@ -170,15 +170,15 @@ extern int e_faceh(int, char **);	/* expand face w/ holes as face */
  */
 
 #ifdef  SMLFLT
-#define  FLOAT		float
+#define  RREAL		float
 #define  FTINY		(1e-3)
 #else
-#define  FLOAT		double
+#define  RREAL		double
 #define  FTINY		(1e-6)
 #endif
 #define  FHUGE		(1e10)
 
-typedef FLOAT  FVECT[3];
+typedef RREAL  FVECT[3];
 
 #define  VCOPY(v1,v2)	((v1)[0]=(v2)[0],(v1)[1]=(v2)[1],(v1)[2]=(v2)[2])
 #define  DOT(v1,v2)	((v1)[0]*(v2)[0]+(v1)[1]*(v2)[1]+(v1)[2]*(v2)[2])
@@ -295,7 +295,7 @@ extern void	obj_clear(void);		/* clear object stack */
  *	Definitions for hierarchical transformation handler
  */
 
-typedef FLOAT  MAT4[4][4];
+typedef RREAL  MAT4[4][4];
 
 #ifdef  BSD
 #define  copymat4(m4a,m4b)	bcopy((char *)m4b,(char *)m4a,sizeof(MAT4))
@@ -313,7 +313,7 @@ extern MAT4  m4ident;
 				/* regular transformation */
 typedef struct {
 	MAT4	xfm;				/* transform matrix */
-	FLOAT	sca;				/* scalefactor */
+	RREAL	sca;				/* scalefactor */
 }  XF;
 
 #define identxf(xp)		(void)(setident4((xp)->xfm),(xp)->sca=1.0)

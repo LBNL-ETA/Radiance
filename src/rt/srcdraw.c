@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.6 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.7 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -27,7 +27,7 @@ typedef struct splist {
 	struct splist	*next;			/* next source in list */
 	int	sn;				/* source number */
 	short	nv;				/* number of vertices */
-	FLOAT	vl[3][2];			/* vertex array (last) */
+	RREAL	vl[3][2];			/* vertex array (last) */
 } SPLIST;				/* source polygon list */
 
 extern VIEW	ourview;		/* our view parameters */
@@ -37,7 +37,7 @@ static SPLIST	*sphead = NULL;		/* our list of source polys */
 
 static int
 inregion(p, cv, crit)			/* check if vertex is in region */
-FLOAT	p[2];
+RREAL	p[2];
 double	cv;
 int	crit;
 {
@@ -57,10 +57,10 @@ int	crit;
 
 static
 clipregion(a, b, cv, crit, r)		/* find intersection with boundary */
-register FLOAT	a[2], b[2];
+register RREAL	a[2], b[2];
 double	cv;
 int	crit;
-FLOAT	r[2];	/* return value */
+RREAL	r[2];	/* return value */
 {
 	switch (crit) {
 	case CLIP_ABOVE:
@@ -79,13 +79,13 @@ FLOAT	r[2];	/* return value */
 
 static int
 hp_clip_poly(vl, nv, cv, crit, vlo)	/* clip polygon to half-plane */
-FLOAT	vl[][2];
+RREAL	vl[][2];
 int	nv;
 double	cv;
 int	crit;
-FLOAT	vlo[][2];	/* return value */
+RREAL	vlo[][2];	/* return value */
 {
-	FLOAT	*s, *p;
+	RREAL	*s, *p;
 	register int	j, nvo;
 
 	s = vl[nv-1];
@@ -106,12 +106,12 @@ FLOAT	vlo[][2];	/* return value */
 
 static int
 box_clip_poly(vl, nv, xl, xr, yb, ya, vlo)	/* clip polygon to box */
-FLOAT	vl[MAXVERT][2];
+RREAL	vl[MAXVERT][2];
 int	nv;
 double	xl, xr, yb, ya;
-FLOAT	vlo[MAXVERT][2];	/* return value */
+RREAL	vlo[MAXVERT][2];	/* return value */
 {
-	FLOAT	vlt[MAXVERT][2];
+	RREAL	vlt[MAXVERT][2];
 	int	nvt, nvo;
 
 	nvt = hp_clip_poly(vl, nv, yb, CLIP_BELOW, vlt);
@@ -125,12 +125,12 @@ FLOAT	vlo[MAXVERT][2];	/* return value */
 
 static double
 minw2(vl, nv, ar2)			/* compute square of minimum width */
-FLOAT	vl[][2];
+RREAL	vl[][2];
 int	nv;
 double	ar2;
 {
 	double	d2, w2, w2min, w2max;
-	register FLOAT	*p0, *p1, *p2;
+	register RREAL	*p0, *p1, *p2;
 	int	i, j;
 				/* find minimum for all widths */
 	w2min = FHUGE;
@@ -158,9 +158,9 @@ double	ar2;
 
 static
 convex_center(vl, nv, cv)		/* compute center of convex polygon */
-register FLOAT	vl[][2];
+register RREAL	vl[][2];
 int	nv;
-FLOAT	cv[2];		/* return value */
+RREAL	cv[2];		/* return value */
 {
 	register int	i;
 					/* simple average (suboptimal) */
@@ -176,11 +176,11 @@ FLOAT	cv[2];		/* return value */
 
 static double
 poly_area(vl, nv)			/* compute area of polygon */
-register FLOAT	vl[][2];
+register RREAL	vl[][2];
 int	nv;
 {
 	double	a;
-	FLOAT	v0[2], v1[2];
+	RREAL	v0[2], v1[2];
 	register int	i;
 
 	a = 0.;
@@ -198,12 +198,12 @@ int	nv;
 
 static int
 convex_hull(vl, nv, vlo)		/* compute polygon's convex hull */
-FLOAT	vl[][2];
+RREAL	vl[][2];
 int	nv;
-FLOAT	vlo[][2];	/* return value */
+RREAL	vlo[][2];	/* return value */
 {
 	int	nvo, nvt;
-	FLOAT	vlt[MAXVERT][2];
+	RREAL	vlt[MAXVERT][2];
 	double	voa, vta;
 	register int	i, j;
 					/* start with original polygon */
@@ -235,7 +235,7 @@ FLOAT	vlo[][2];	/* return value */
 static
 spinsert(sn, vl, nv)			/* insert new source polygon */
 int	sn;
-FLOAT	vl[][2];
+RREAL	vl[][2];
 int	nv;
 {
 	register SPLIST	*spn;
@@ -244,7 +244,7 @@ int	nv;
 	if (nv < 3)
 		return;
 	if (nv > 3)
-		spn = (SPLIST *)malloc(sizeof(SPLIST)+sizeof(FLOAT)*2*(nv-3));
+		spn = (SPLIST *)malloc(sizeof(SPLIST)+sizeof(RREAL)*2*(nv-3));
 	else
 		spn = (SPLIST *)malloc(sizeof(SPLIST));
 	if (spn == NULL)
@@ -261,7 +261,7 @@ int	nv;
 int
 sourcepoly(sn, sp)			/* compute image polygon for source */
 int	sn;
-FLOAT	sp[MAXVERT][2];
+RREAL	sp[MAXVERT][2];
 {
 	static char	cubeord[8][6] = {{1,3,2,6,4,5},{0,4,5,7,3,2},
 					 {0,1,3,7,6,4},{0,1,5,7,6,2},
@@ -269,7 +269,7 @@ FLOAT	sp[MAXVERT][2];
 					 {0,2,3,7,5,4},{1,5,4,6,2,3}};
 	register SRCREC	*s = source + sn;
 	FVECT	ap, ip;
-	FLOAT	pt[6][2];
+	RREAL	pt[6][2];
 	int	dir;
 	register int	i, j;
 
@@ -331,7 +331,7 @@ FLOAT	sp[MAXVERT][2];
 init_drawsources(rad)
 int	rad;				/* source sample size */
 {
-	FLOAT	spoly[MAXVERT][2];
+	RREAL	spoly[MAXVERT][2];
 	int	nsv;
 	register SPLIST	*sp;
 	register int	i;
@@ -363,10 +363,10 @@ COLOR	*pic[];				/* subimage pixel value array */
 float	*zbf[];				/* subimage distance array (opt.) */
 int	x0, xsiz, y0, ysiz;		/* origin and size of subimage */
 {
-	FLOAT	spoly[MAXVERT][2], ppoly[MAXVERT][2];
+	RREAL	spoly[MAXVERT][2], ppoly[MAXVERT][2];
 	int	nsv, npv;
 	int	xmin, xmax, ymin, ymax, x, y;
-	FLOAT	cxy[2];
+	RREAL	cxy[2];
 	double	w;
 	RAY	sr;
 	register SPLIST	*sp;

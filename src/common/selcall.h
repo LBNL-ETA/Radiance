@@ -1,4 +1,4 @@
-/* RCSid $Id: selcall.h,v 3.6 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: selcall.h,v 3.7 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * header file for select call compatibility
  */
@@ -11,13 +11,20 @@ extern "C" {
 #include "copyright.h"
 
 #include <sys/types.h>
-#include <sys/time.h>
+#ifdef _WIN32
+  /*#include <winsock2.h>*/
+#else
+  #include <sys/time.h>
+#endif
 #ifdef INCL_SEL_H
 #include <sys/select.h>
 #endif
 
 #ifndef FD_SETSIZE
-#include <sys/param.h>
+#ifdef _WIN32
+#else
+  #include <sys/param.h>
+#endif
 #define FD_SETSIZE	NOFILE		/* maximum # select file descriptors */
 #endif
 #ifndef FD_SET

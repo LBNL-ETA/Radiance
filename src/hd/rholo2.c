@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.22 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.23 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -27,7 +27,7 @@ register struct gclim	*gcl;
 register HOLO	*hp;
 GCOORD	*gc;
 {
-	register FLOAT	*v;
+	register RREAL	*v;
 	register int	i;
 
 	if (hp != NULL) {

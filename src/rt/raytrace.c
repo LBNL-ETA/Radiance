@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.39 2003/05/09 22:18:03 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.40 2003/06/26 00:58:10 schorsch Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -20,7 +20,7 @@ static const char RCSid[] = "$Id: raytrace.c,v 2.39 2003/05/09 22:18:03 greg Exp
 unsigned long  raynum = 0;		/* next unique ray number */
 unsigned long  nrays = 0;		/* number of calls to localhit */
 
-static FLOAT  Lambfa[5] = {PI, PI, PI, 0.0, 0.0};
+static RREAL  Lambfa[5] = {PI, PI, PI, 0.0, 0.0};
 OBJREC  Lamb = {
 	OVOID, MAT_PLASTIC, "Lambertian",
 	{0, 5, NULL, Lambfa}, NULL,

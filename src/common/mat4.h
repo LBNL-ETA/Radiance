@@ -1,4 +1,4 @@
-/* RCSid $Id: mat4.h,v 2.8 2003/06/07 12:50:20 schorsch Exp $ */
+/* RCSid $Id: mat4.h,v 2.9 2003/06/26 00:58:09 schorsch Exp $ */
 /*
  * Definitions for 4x4 matrix operations
  */
@@ -14,7 +14,7 @@ extern "C" {
 
 #include  "fvect.h"
 
-typedef FLOAT  MAT4[4][4];
+typedef RREAL  MAT4[4][4];
 
 #ifdef  BSD
 #define  copymat4(m4a,m4b)	bcopy((void *)m4b,(void *)m4a,sizeof(MAT4))

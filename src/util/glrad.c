@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.14 2003/05/19 16:32:19 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.15 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -12,10 +12,12 @@ static const char	RCSid[] = "$Id: glrad.c,v 3.14 2003/05/19 16:32:19 greg Exp $"
 #endif
 #include <ctype.h>
 #include <time.h>
+
 #include "radogl.h"
 #include "view.h"
 #include "paths.h"
 #include "glradicon.h"
+#include "rtprocess.h"
 
 #ifndef MAXVIEW
 #define MAXVIEW		63		/* maximum number of standard views */
@@ -72,7 +74,7 @@ char	*scene[MAXSCENE+1];		/* material and scene file list */
 int	nscenef = 0;			/* number of scene files */
 char	*octree;			/* octree name (NULL if unnec.) */
 
-int	rtpd[3];			/* rtrace process descriptors */
+SUBPROC	rtpd;			/* rtrace process descriptors */
 
 int	silent = 0;			/* run rad silently? */
 int	backvis = 1;			/* back faces visible? */
@@ -179,10 +181,11 @@ int	code;
 {
 	if (ourdisplay != NULL)
 		dev_close();
-	if (rtpd[2] > 0) {
-		if (close_process(rtpd) > 0)
+	/* if (rtpd.pid > 0) { */
+	if (rtpd.running) {
+		if (close_process(&rtpd) > 0)
 			wputs("bad exit status from rtrace\n");
-		rtpd[2] = 0;
+		/* rtpd.pid = 0; */
 	}
 	exit(code);
 }
@@ -198,7 +201,7 @@ char	*octname;
 	if (nowarn) av[ac++] = "-w-";
 	av[ac++] = octname;
 	av[ac] = NULL;
-	if (open_process(rtpd, av) <= 0)
+	if (open_process(&rtpd, av) <= 0)
 		error(SYSTEM, "cannot start rtrace process");
 }
 
@@ -675,7 +678,8 @@ double	md;
 {
 	float	fbuf[6];
 				/* check to see if rtrace is running */
-	if (rtpd[2] <= 0)
+	/* if (rtpd.pid <= 0) */
+	if (!rtpd.running)
 		return(0);
 				/* assign origin */
 	fbuf[0] = org[0]; fbuf[1] = org[1]; fbuf[2] = org[2];
@@ -683,7 +687,7 @@ double	md;
 	if (md <= FTINY) md = FHUGE;
 	fbuf[3] = dir[0]*md; fbuf[4] = dir[1]*md; fbuf[5] = dir[2]*md;
 				/* trace that ray */
-	if (process(rtpd, (char *)fbuf, (char *)fbuf,
+	if (process(&rtpd, (char *)fbuf, (char *)fbuf,
 			4*sizeof(float), 6*sizeof(float)) != 4*sizeof(float))
 		error(INTERNAL, "error getting data back from rtrace process");
 	if (fbuf[3] >= .99*FHUGE)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: scanner.c,v 1.3 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: scanner.c,v 1.4 2003/06/26 00:58:11 schorsch Exp $";
 #endif
 /*
  *  scanner.c - program to simulate bi-directional scanner.
@@ -41,20 +41,24 @@ double  targeth = 3.0;			/* target height (inches) */
 int  xres = 16;				/* x sample resolution */
 int  yres = 16;				/* y sample resolution */
 
+static void  quit(int code);
 
 main(argc, argv)
 int  argc;
 char  *argv[];
 {
 	char  *strcat(), *mktemp();
-	int  quit();
 	int  i;
 
+#ifdef SIGHUP
 	signal(SIGHUP, quit);
+#endif
 	signal(SIGINT, quit);
 	signal(SIGTERM, quit);
+#ifdef SIGXCPU
 	signal(SIGXCPU, SIG_IGN);
 	signal(SIGXFSZ, SIG_IGN);
+#endif
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

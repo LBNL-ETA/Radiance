@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.10 2003/03/21 18:48:46 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.11 2003/06/26 00:58:09 schorsch Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -125,7 +125,7 @@ FACE  *f;
 	double  x, y;
 	int  tst;
 	register int  xi, yi;
-	register FLOAT  *p0, *p1;
+	register RREAL  *p0, *p1;
 
 	xi = (f->ax+1)%3;
 	yi = (f->ax+2)%3;
