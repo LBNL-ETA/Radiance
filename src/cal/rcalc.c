@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.5 2003/06/08 12:03:09 schorsch Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.6 2003/07/03 22:41:44 schorsch Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -616,7 +616,7 @@ getfield(                             /* get next field */
 register struct field  *f
 )
 {
-	static char  buf[MAXWORD+1];            /* no recursion! */
+	static char  buf[RMAXWORD+1];            /* no recursion! */
 	int  delim, inword;
 	double  d;
 	char  *np;
@@ -661,7 +661,7 @@ register struct field  *f
 				*cp++ = ipb.chr;
 				scaninp();
 			}
-		} while (inword && cp < &buf[MAXWORD]);
+		} while (inword && cp < &buf[RMAXWORD]);
 		*cp = '\0';
 		if (f->f.sv->val == NULL)
 			f->f.sv->val = savqstr(buf);	/* first setting */
@@ -690,7 +690,7 @@ register struct field  *f
 				*cp++ = ipb.chr;
 				scaninp();
 			}
-		} while (inword && cp < &buf[MAXWORD]);
+		} while (inword && cp < &buf[RMAXWORD]);
 		*cp = '\0';
 		d = np==NULL ? 0. : atof(np);
 		if (!vardefined(f->f.nv))

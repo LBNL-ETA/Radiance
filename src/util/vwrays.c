@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.5 2003/06/26 00:58:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.6 2003/07/03 22:41:45 schorsch Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: vwrays.c,v 3.5 2003/06/26 00:58:11 schorsch Ex
 
 #include "standard.h"
 
+#include "platform.h"
 #include "view.h"
 
 extern int	putf(), putd(), puta();

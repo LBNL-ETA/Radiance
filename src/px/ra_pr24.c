@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pr24.c,v 2.10 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_pr24.c,v 2.11 2003/07/03 22:41:44 schorsch Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and 24-bit rasterfiles.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: ra_pr24.c,v 2.10 2003/06/05 19:29:34 schorsch 
 #include  <stdio.h>
 #include  <time.h>
 #include  <math.h>
+#include  <string.h>
 
 #include  "platform.h"
 #include  "rasterfile.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.22 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.23 2003/07/03 22:41:44 schorsch Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: pcompos.c,v 2.22 2003/06/05 19:29:34 schorsch 
 #include  <stdio.h>
 #include  <math.h>
 #include  <time.h>
+#include  <string.h>
 
 #include "copyright.h"
 

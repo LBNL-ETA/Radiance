@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.22 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.23 2003/07/03 22:41:44 schorsch Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -473,11 +473,11 @@ EPNODE	*ekid;
 char *
 getname()			/* scan an identifier */
 {
-    static char	 str[MAXWORD+1];
+    static char	 str[RMAXWORD+1];
     register int  i, lnext;
 
     lnext = nextc;
-    for (i = 0; i < MAXWORD && isid(lnext); i++, lnext = scan())
+    for (i = 0; i < RMAXWORD && isid(lnext); i++, lnext = scan())
 	str[i] = lnext;
     str[i] = '\0';
     while (isid(lnext))		/* skip rest of name */
@@ -506,34 +506,34 @@ double
 getnum()			/* scan a positive float */
 {
     register int  i, lnext;
-    char  str[MAXWORD+1];
+    char  str[RMAXWORD+1];
 
     i = 0;
     lnext = nextc;
-    while (isdigit(lnext) && i < MAXWORD) {
+    while (isdigit(lnext) && i < RMAXWORD) {
 	str[i++] = lnext;
 	lnext = scan();
     }
-    if (lnext == '.' && i < MAXWORD) {
+    if (lnext == '.' && i < RMAXWORD) {
 	str[i++] = lnext;
 	lnext = scan();
 	if (i == 1 && !isdigit(lnext))
 	    syntax("badly formed number");
-	while (isdigit(lnext) && i < MAXWORD) {
+	while (isdigit(lnext) && i < RMAXWORD) {
 	    str[i++] = lnext;
 	    lnext = scan();
 	}
     }
-    if ((lnext == 'e' | lnext == 'E') && i < MAXWORD) {
+    if ((lnext == 'e' | lnext == 'E') && i < RMAXWORD) {
 	str[i++] = lnext;
 	lnext = scan();
-	if ((lnext == '-' | lnext == '+') && i < MAXWORD) {
+	if ((lnext == '-' | lnext == '+') && i < RMAXWORD) {
 	    str[i++] = lnext;
 	    lnext = scan();
 	}
 	if (!isdigit(lnext))
 	    syntax("missing exponent");
-	while (isdigit(lnext) && i < MAXWORD) {
+	while (isdigit(lnext) && i < RMAXWORD) {
 	    str[i++] = lnext;
 	    lnext = scan();
 	}

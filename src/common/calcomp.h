@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.12 2003/06/30 19:04:29 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.13 2003/07/03 22:41:44 schorsch Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -46,7 +46,7 @@ typedef struct epnode {
 
 typedef struct vardef  VARDEF;	/* a variable definition */
 
-#define	 MAXWORD	127		/* maximum word/id length */
+#define	 RMAXWORD	127		/* maximum word/id length */
 #define	 CNTXMARK	'`'		/* context mark */
 
 #define	 isid(c)	(isalnum(c) || (c) == '_' || \

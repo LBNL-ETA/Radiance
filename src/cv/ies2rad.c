@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.20 2003/06/30 18:18:22 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.21 2003/07/03 22:41:44 schorsch Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -79,7 +79,7 @@ int	filerev = FIRSTREV;
 #define U_METERS	2
 					/* string lengths */
 #define MAXLINE		132
-#define MAXWORD		76
+#define RMAXWORD	76
 					/* file types */
 #define T_RAD		".rad"
 #define T_DST		".dat"
@@ -140,7 +140,7 @@ char	*argv[];
 {
 	char	*outfile = NULL;
 	int	status;
-	char	outname[MAXWORD];
+	char	outname[RMAXWORD];
 	double	d1;
 	int	i;
 	
@@ -457,7 +457,7 @@ ies2rad(inpname, outname)		/* convert IES file */
 char	*inpname, *outname;
 {
 	SRCINFO	srcinfo;
-	char	buf[MAXLINE], tltid[MAXWORD];
+	char	buf[MAXLINE], tltid[RMAXWORD];
 	char	geomfile[128];
 	FILE	*inpfp, *outfp;
 	int	lineno = 0;
@@ -516,7 +516,7 @@ char	*inpname, *outname;
 		fprintf(stderr, "%s: not in IES format\n", inpname);
 		goto readerr;
 	}
-	atos(tltid, MAXWORD, buf+TLTSTRLEN);
+	atos(tltid, RMAXWORD, buf+TLTSTRLEN);
 	if (inpfp == stdin)
 		buf[0] = '\0';
 	else
@@ -550,7 +550,7 @@ char	*dir, *tltspec, *dfltname, *tltid;
 {
 	int	nangles, tlt_type;
 	double	minmax[2];
-	char	buf[PATH_MAX], tltname[MAXWORD];
+	char	buf[PATH_MAX], tltname[RMAXWORD];
 	FILE	*datin, *datout;
 
 	if (!strcmp(tltspec, TLTNONE)) {
@@ -622,7 +622,7 @@ SRCINFO	*sinf;
 FILE	*in, *out;
 char	*mod, *name;
 {
-	char	buf[PATH_MAX], id[MAXWORD];
+	char	buf[PATH_MAX], id[RMAXWORD];
 	FILE	*datout;
 	double	mult, bfactor, pfactor, width, length, height, wattage;
 	double	bounds[2][2];
@@ -729,7 +729,7 @@ FILE	*fp;
 char	*mod, *name;
 int	dolower, doupper;
 {
-	char	lname[MAXWORD];
+	char	lname[RMAXWORD];
 	
 	strcat(strcpy(lname, name), "_light");
 	fprintf(fp, "\n%s %s %s\n", mod,
@@ -974,13 +974,13 @@ char *
 getword(fp)			/* scan a word from fp */
 register FILE	*fp;
 {
-	static char	wrd[MAXWORD];
+	static char	wrd[RMAXWORD];
 	register char	*cp;
 	register int	c;
 
 	while (isspace(c=getc(fp)))
 		;
-	for (cp = wrd; c != EOF && cp < wrd+MAXWORD-1;
+	for (cp = wrd; c != EOF && cp < wrd+RMAXWORD-1;
 			*cp++ = c, c = getc(fp))
 		if (isspace(c) || c == ',') {
 			while (isspace(c))

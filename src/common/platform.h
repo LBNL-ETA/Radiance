@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.6 2003/06/30 19:58:37 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.7 2003/07/03 22:41:44 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -10,9 +10,15 @@ extern "C" {
 
 #ifdef _WIN32
 
+  #include <io.h>     /* _setmode() and stuff from unistd.h */
+  typedef long off_t;
+
   #include <stdio.h>
   #define popen _popen
   #define pclose _pclose
+
+  #include <windows.h>
+  #define sleep(s) Sleep(s*1000)
 
   #define NON_POSIX
 
@@ -23,7 +29,6 @@ extern "C" {
   #define W_IFDIR _S_IFDIR
 
   #include <fcntl.h>  /* _O_BINARY, _O_TEXT */
-  #include <io.h>     /* _setmode() */
   #include <stdlib.h> /* _fmode */
   #define SET_DEFAULT_BINARY() _fmode = _O_BINARY
   #define SET_FILE_BINARY(fp) _setmode(fileno(fp),_O_BINARY)

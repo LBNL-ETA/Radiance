@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.9 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.10 2003/07/03 22:41:45 schorsch Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: glareval.c,v 2.9 2003/06/30 14:59:13 schorsch 
 
 #include "copyright.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "rtprocess.h" /* Windows: must come first because of conflicts */

@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.16 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.17 2003/07/03 22:41:44 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -11,6 +11,9 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
   #include <io.h>
@@ -28,7 +31,6 @@ extern "C" {
   #define CASEDIRSEP	case '/': case '\\'
   #define PATHSEP		';'
   #define CURDIR		'.'
-  /*#define MAXPATH		512*/ /* obsoleted by posix PATH_MAX */
   #define DEFAULT_TEMPDIRS {"C:/TMP", "C:/TEMP", ".", NULL}
   #define TEMPLATE	"rtXXXXXX"
   #define TEMPLEN		8
@@ -42,6 +44,11 @@ extern "C" {
     #define  X_OK 01
     #define  W_OK 02
     #define  R_OK 04
+  #endif
+  /* to make the permissions user specific we'd need to use CreateFile() */
+  #ifndef S_IRUSR
+    #define S_IRUSR _S_IREAD
+    #define S_IWUSR _S_IWRITE
   #endif
 extern char  *fixargv0();
 
@@ -63,7 +70,6 @@ extern char  *fixargv0();
     #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
     #define PATHSEP		';'
 	#define CURDIR		'.'
-    /*#define MAXPATH		128*/ /* obsoleted by posix PATH_MAX */
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
     #define TEMPLATE	"/tmp/rtXXXXXX"
     #define TEMPLEN		13
@@ -83,7 +89,6 @@ extern char  *fixargv0();
     #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
     #define PATHSEP		':'
 	#define CURDIR		'.'
-    /*#define MAXPATH		256*/ /* obsoleted by posix PATH_MAX */
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
     #define TEMPLATE	"/usr/tmp/rtXXXXXX"
     #define TEMPLEN		17

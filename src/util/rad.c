@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.67 2003/07/03 18:03:58 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.68 2003/07/03 22:41:45 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1398,6 +1398,12 @@ wait_process(all)
 int	all;
 {
 	(void)all;			/* no one to wait for */
+}
+int
+kill(pid, sig) /* win|unix_process.c should also wait and kill */
+int pid, sig;
+{
+	return 0;
 }
 #endif	/* ! RHAS_FORK_EXEC */
 
