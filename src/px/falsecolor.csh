@@ -1,8 +1,10 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.8 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.9 2004/03/08 21:39:32 greg Exp $
 #
 # Create false color image with legend
 #
+# Added user-definable legend 2004/01/20 Rob Guglielmetti
+
 set td=/usr/tmp/fc$$
 onintr quit
 set mult=179
@@ -20,6 +22,14 @@ set legwidth=100
 set legheight=200
 while ($#argv > 0)
 	switch ($argv[1])
+	case -lw:
+		shift argv
+		set legwidth="$argv[1]"
+		breaksw
+	case -lh:
+		shift argv
+		set legheight="$argv[1]"
+		breaksw
 	case -m:
 		shift argv
 		set mult="$argv[1]"
@@ -148,6 +158,7 @@ if ("$decades" != "0") then
 else
 	set imap="imap(y)=y"
 endif
+if ( $legwidth > 20 && $legheight > 40 ) then
 pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v' \
 		-e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres' \
 		-x $legwidth -y $legheight > $td/scol.pic
@@ -156,6 +167,12 @@ pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v' \
 		-e "$imap" | sed -e 's/\(\.[0-9][0-9][0-9]\)[0-9]*/\1/' ) \
 	| psign -s -.15 -cf 1 1 1 -cb 0 0 0 \
 		-h `ev "floor($legheight/$ndivs+.5)"` > $td/slab.pic
+else
+	set legwidth=0
+	set legheight=0
+	(echo "" ; echo "-Y 1 +X 1" ; echo "aaa" ) > $td/scol.pic
+	cp $td/scol.pic $td/slab.pic
+endif
 if ( $?doextrem ) then
 	pextrem -o $picture > $td/extrema
 	set minpos=`sed 2d $td/extrema | rcalc -e '$2=$2;$1=$1+'"$legwidth"`

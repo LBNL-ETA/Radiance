@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.3 2004/03/08 21:39:31 greg Exp $"
 .TH FALSECOLOR 1 11/15/93 RADIANCE
 .SH NAME
 falsecolor - make a false color RADIANCE picture
@@ -18,6 +18,10 @@ falsecolor - make a false color RADIANCE picture
 .B "\-l label"
 ][
 .B "\-n ndivs"
+][
+.B "\-lw lwidth"
+][
+.B "\-lh lheight"
 ][
 .B "\-log decades"
 ][
@@ -81,6 +85,13 @@ The
 .I \-n
 option can be used to change the number of contours (and corresponding
 legend entries) from the default value of 8.
+The
+.I \-lw
+and
+.I \-lh
+options may be used to change the legend dimensions from the default width
+and height of 100x200.
+A value of zero in either eliminates the legend in the output.
 .PP
 The
 .I \-e

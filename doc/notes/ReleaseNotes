@@ -1255,3 +1255,6 @@ Added -I option to replmarks for mesh instancing.
 
 Made similar change for virtual sources to allow modifiers and aliases
 on the mirror and prism types to work properly.
+
+Rob Guglielmetti dded -lw and -lh options to falsecolor to control the
+legend dimensions.  Made it so -lw 0 and/or -lh 0 turns legend off.
