@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.7 2003/09/18 16:53:53 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.8 2004/01/29 22:21:34 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: cvmesh.c,v 2.7 2003/09/18 16:53:53 greg Exp $"
 #include "cvmesh.h"
 #include "otypes.h"
 #include "face.h"
+#include "tmesh.h"
 
 /*
  * We need to divide faces into triangles and record auxiliary information
@@ -169,9 +170,30 @@ RREAL	vc1[2], vc2[2], vc3[2];
 	OBJREC		*fop;
 	int		j;
 	
-	flags = MT_V;
-	if (vn1 != NULL && vn2 != NULL && vn3 != NULL)
-		flags |= MT_N;
+	flags = MT_V;		/* check what we have */
+	if (vn1 != NULL && vn2 != NULL && vn3 != NULL) {
+		RREAL	*rp;
+		switch (flat_tri(vp1, vp2, vp3, vn1, vn2, vn3)) {
+		case ISBENT:
+			flags |= MT_N;
+			/* fall through */
+		case ISFLAT:
+			break;
+		case RVBENT:
+			flags |= MT_N;
+			rp = vn1; vn1 = vn3; vn3 = rp;
+			/* fall through */
+		case RVFLAT:
+			rp = vp1; vp1 = vp3; vp3 = rp;
+			rp = vc1; vc1 = vc3; vc3 = rp;
+			break;
+		case DEGEN:
+			error(WARNING, "degenerate triangle");
+			return(0);
+		default:
+			error(INTERNAL, "bad return from flat_tri()");
+		}
+	}
 	if (vc1 != NULL && vc2 != NULL && vc3 != NULL)
 		flags |= MT_UV;
 	if (fobj == OVOID) {	/* create new triangle object */

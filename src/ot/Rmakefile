@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.12 2003/06/27 06:53:22 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.13 2004/01/29 22:21:34 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -74,4 +74,4 @@ initotypes.o init2otypes.o:	../common/otypes.h
 cvmesh.o obj2mesh.o wfconv.o:	cvmesh.h \
 ../common/octree.h ../common/object.h ../common/mesh.h
 
-cvmesh.o:	../common/otypes.h ../common/face.h
+cvmesh.o:	../common/otypes.h ../common/face.h ../common/tmesh.h

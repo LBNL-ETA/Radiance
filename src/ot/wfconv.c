@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.6 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.7 2004/01/29 22:21:34 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -292,9 +292,10 @@ char	*v1, *v2, *v3;
 	RREAL	*v1c, *v2c, *v3c;
 	RREAL	*v1n, *v2n, *v3n;
 	
-	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
+	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3)) {
+		error(WARNING, "bad vertex reference");
 		return(0);
-
+	}
 	if (v1i[1]>=0 && v2i[1]>=0 && v3i[1]>=0) {
 		v1c = vtlist[v1i[1]];
 		v2c = vtlist[v2i[1]];
