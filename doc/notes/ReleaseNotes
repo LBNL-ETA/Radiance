@@ -1176,3 +1176,9 @@ in programs like ranimate would refer to bogus data.
 
 Added support in normtiff for floating-point and 16-bit/sample TIFF input
 files.
+
+Changed marksources() routine (src/rt/source.c) to check all
+primitives in the modifier chain for emitting types, not only
+the first.  This permits sources to be described with intervening
+modifiers before the light/illum/glow primitive.
+
