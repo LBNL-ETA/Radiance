@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.43 2003/07/14 04:56:53 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.44 2003/08/20 09:35:56 schorsch Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -39,9 +39,9 @@ all:	librt.a $(SPECIAL)
 librt.a:	$(RTOBJ) $(PICOBJ) $(STDOBJ) $(SYSOBJ)
 	ar rc librt.a $(RTOBJ) $(PICOBJ) $(STDOBJ) $(SYSOBJ)
 	-ranlib librt.a
+	mv librt.a ../lib/librt.a
 
 install:	all
-	mv librt.a ../lib/librt.a
 	cd $(LIBDIR) ; rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
