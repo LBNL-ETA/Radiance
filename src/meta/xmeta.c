@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xmeta.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: xmeta.c,v 1.3 2003/11/17 02:21:53 greg Exp $";
 #endif
 /*
  *  Program to output meta-files to X window system.
@@ -100,6 +100,7 @@ char  **argv;
 
 
 
+void
 plot(infp)		/* plot meta-file */
 
 FILE  *infp;
@@ -147,7 +148,7 @@ PRIMITIVE  *p;
 
     if ((pnew = palloc()) == NULL)
 	    error(SYSTEM, "out of memory in save");
-    mcopy(pnew, p, sizeof(PRIMITIVE));
+    mcopy((char *)pnew, (char *)p, sizeof(PRIMITIVE));
     add(pnew, &recording);
 }
 

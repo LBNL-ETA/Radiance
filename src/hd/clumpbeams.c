@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clumpbeams.c,v 3.6 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: clumpbeams.c,v 3.7 2003/11/17 02:21:53 greg Exp $";
 #endif
 /*
  * Bundle holodeck beams together into clumps.
@@ -8,7 +8,7 @@ static const char	RCSid[] = "$Id: clumpbeams.c,v 3.6 2003/07/27 22:12:02 schorsc
 #include "holo.h"
 
 #define flgop(p,i,op)		((p)[(i)>>5] op (1L<<((i)&0x1f)))
-#define isset(p,i)		flgop(p,i,&)
+#define issetfl(p,i)		flgop(p,i,&)
 #define setfl(p,i)		flgop(p,i,|=)
 #define clrfl(p,i)		flgop(p,i,&=~)
 
@@ -127,7 +127,7 @@ int	(*cf)();
 					/* add each input beam and neighbors */
 	for (bc = bci = nbeams(hp); bc > 0; bc--,
 			bci += bci>myprime ? -myprime : nbeams(hp)-myprime) {
-		if (isset(bflags, bci))
+		if (issetfl(bflags, bci))
 			continue;
 		bqueue[0] = bci;		/* initialize queue */
 		bqlen = 1;
@@ -138,7 +138,7 @@ int	(*cf)();
 						/* add neighbors until full */
 			for (i = firstneigh(hp,bqueue[bqc]); i > 0;
 					i = nextneigh()) {
-				if (isset(bflags, i))	/* done already? */
+				if (issetfl(bflags, i))	/* done already? */
 					continue;
 				bqueue[bqlen++] = i;	/* add it */
 				bqtotal += bnrays(hp, i);
