@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.21 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.22 2004/09/09 15:40:02 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -204,10 +204,13 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	int  hitfront = 1;
 	BRDFDAT  nd;
 	RAY  sr;
+	double  mirtest=0, mirdist=0;
 	double  transtest, transdist;
 	int  hasrefl, hastrans;
+	int  hastexture;
 	COLOR  ctmp;
 	FVECT  vtmp;
+	double  d;
 	register MFUNC  *mf;
 	register int  i;
 						/* check arguments */
@@ -233,7 +236,13 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			m->oargs.farg[8]);
 						/* get modifiers */
 	raytexture(r, m->omod);
-	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
+	hastexture = DOT(r->pert,r->pert) > FTINY*FTINY;
+	if (hastexture) {			/* perturb normal */
+		nd.pdot = raynormal(nd.pnorm, r);
+	} else {
+		VCOPY(nd.pnorm, r->ron);
+		nd.pdot = r->rod;
+	}
 	if (r->rod < 0.0) {			/* orient perturbed values */
 		nd.pdot = -nd.pdot;
 		for (i = 0; i < 3; i++) {
@@ -252,8 +261,6 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	mf = getfunc(m, 9, 0x3f, 0);
 						/* compute transmitted ray */
 	setbrdfunc(&nd);
-	transtest = 0;
-	transdist = r->rot;
 	errno = 0;
 	setcolor(ctmp, evalue(mf->ep[3]),
 			evalue(mf->ep[4]),
@@ -261,8 +268,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if (errno == EDOM || errno == ERANGE)
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, r, TRANS, bright(ctmp)) == 0) {
-		if (!(r->crtype & SHADOW) &&
-				DOT(r->pert,r->pert) > FTINY*FTINY) {
+		if (!(r->crtype & SHADOW) && hastexture) {
 			for (i = 0; i < 3; i++)	/* perturb direction */
 				sr.rdir[i] = r->rdir[i] - .75*r->pert[i];
 			if (normalize(sr.rdir) == 0.0) {
@@ -271,13 +277,14 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			}
 		} else {
 			VCOPY(sr.rdir, r->rdir);
-			transtest = 2;
 		}
 		rayvalue(&sr);
 		multcolor(sr.rcol, ctmp);
 		addcolor(r->rcol, sr.rcol);
-		transtest *= bright(sr.rcol);
-		transdist = r->rot + sr.rt;
+		if (!hastexture) {
+			transtest = 2.0*bright(sr.rcol);
+			transdist = r->rot + sr.rt;
+		}
 	}
 	if (r->crtype & SHADOW)			/* the rest is shadow */
 		return(1);
@@ -295,6 +302,10 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		rayvalue(&sr);
 		multcolor(sr.rcol, ctmp);
 		addcolor(r->rcol, sr.rcol);
+		if (!hastexture && r->ro != NULL && isflat(r->ro->otype)) {
+			mirtest = 2.0*bright(sr.rcol);
+			mirdist = r->rot + sr.rt;
+		}
 	}
 						/* compute ambient */
 	if (hasrefl) {
@@ -320,9 +331,12 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	}
 	if (hasrefl | hastrans || m->oargs.sarg[6][0] != '0')
 		direct(r, dirbrdf, &nd);	/* add direct component */
-						/* check distance */
-	if (transtest > bright(r->rcol))
+
+	d = bright(r->rcol);			/* set effective distance */
+	if (transtest > d)
 		r->rt = transdist;
+	else if (mirtest > d)
+		r->rt = mirdist;
 
 	return(1);
 }
