@@ -1238,3 +1238,16 @@ Changed the following command names to avoid conflicts:
 	calc -> icalc
 	lam -> rlam
 	gencat -> gencatenary
+
+Improved -f option of normpat, which caused odd color changes before.
+
+Created pgblur script which does fast Gaussian blur of image without changing
+its dimensions.  This is very useful in certain types of image processing
+calculations, such as finding or removing low frequencies.
+
+****** COMPATIBILITY CHANGE ********
+Changed little-used objpict script so that it takes scene files rather than
+rpict options on the command line, and puts everything into the right
+coordinate position automatically rather than requiring the user to do it.
+
+Added -I option to replmarks for mesh instancing.

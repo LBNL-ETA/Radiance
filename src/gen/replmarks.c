@@ -28,6 +28,10 @@ static const char RCSid[] = "$Id";
 #define  MAXVERT	6	/* maximum number of vertices for markers */
 #define  MAXMARK	32	/* maximum number of markers */
 
+#define  USE_XFORM	1	/* use !xform inline command */
+#define  USE_INSTANCE	2	/* use instance primitive */
+#define  USE_MESH	3	/* use mesh primitive */
+
 typedef struct {
 	short	beg, end;		/* beginning and ending vertex */
 	float	len2;			/* length squared */
@@ -38,7 +42,7 @@ struct mrkr {
 	double	mscale;			/* scale by this to get unit */
 	char	*modin;			/* input modifier indicating marker */
 	char	*objname;		/* output object file or octree */
-	int	doxform;		/* true if xform, false if instance */
+	int	usetype;		/* one of USE_* above */
 }  marker[MAXMARK];		/* array of markers */
 int	nmarkers = 0;		/* number of markers */
 
@@ -70,11 +74,15 @@ main(
 		do {
 			switch (argv[i][1]) {
 			case 'i':
-				marker[nmarkers].doxform = 0;
+				marker[nmarkers].usetype = USE_INSTANCE;
+				marker[nmarkers].objname = argv[++i];
+				break;
+			case 'I':
+				marker[nmarkers].usetype = USE_MESH;
 				marker[nmarkers].objname = argv[++i];
 				break;
 			case 'x':
-				marker[nmarkers].doxform = 1;
+				marker[nmarkers].usetype = USE_XFORM;
 				marker[nmarkers].objname = argv[++i];
 				break;
 			case 'e':
@@ -122,7 +130,7 @@ main(
 	return 0;
 userr:
 	fprintf(stderr,
-"Usage: %s [-e][-s size][-m modout] {-x objfile|-i octree} modname .. [file ..]\n",
+"Usage: %s [-e][-s size][-m modout] {-x objfile|-i octree|-I mesh} modname .. [file ..]\n",
 		progname);
 	return 1;
 }
@@ -240,7 +248,7 @@ replace(		/* replace marker */
 	char	buf[256];
 
 	buf[0] = '\0';			/* bug fix thanks to schorsch */
-	if (m->doxform) {
+	if (m->usetype == USE_XFORM) {
 		sprintf(buf, "xform -n %s", mark);
 		if (m->modout != NULL)
 			sprintf(buf+strlen(buf), " -m %s", m->modout);
@@ -255,8 +263,10 @@ replace(		/* replace marker */
 	} else {
 		if ((n = buildxf(buf, m->mscale, fin)) < 0)
 			goto badxf;
-		printf("\n%s instance %s\n",
-				m->modout==NULL?"void":m->modout, mark);
+		printf("\n%s %s %s\n",
+				m->modout==NULL?"void":m->modout,
+				m->usetype==USE_INSTANCE?"instance":"mesh",
+				mark);
 		printf("%d %s%s\n0\n0\n", n+1, m->objname, buf);
 	}
 	return;
