@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.5 2004/09/17 21:43:49 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.6 2004/09/19 08:42:22 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: unix_process.c,v 3.5 2004/09/17 21:43:49 greg 
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #include "rtprocess.h"
 
@@ -54,6 +55,13 @@ char	*av[]
 	close(p1[1]);
 	pd->r = p1[0];
 	pd->w = p0[1];
+	/*
+	 * Close write stream on exec to avoid multiprocessing deadlock.
+	 * No use in read stream without it, so set flag there as well.
+	 * GW: This bug took me two days to figure out!!
+	 */
+	fcntl(pd->r, F_SETFD, FD_CLOEXEC);
+	fcntl(pd->w, F_SETFD, FD_CLOEXEC);
 	pd->running = 1;
 	return(PIPE_BUF);
 }

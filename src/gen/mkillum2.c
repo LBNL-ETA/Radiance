@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.16 2004/09/17 21:43:50 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.17 2004/09/19 08:42:22 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -320,7 +320,7 @@ raysamp(	/* queue a ray sample */
 	if (rt == NULL)		/* need to free up buffer? */
 		rt = raywait(rt0);
 	if (rt == NULL)
-		error(SYSTEM, "raywait() returned NULL");
+		error(SYSTEM, "raywait() returned NULL in raysamp()");
 	fp = rt->buf + 6*rt->nrays;
 	*fp++ = org[0]; *fp++ = org[1]; *fp++ = org[2];
 	*fp++ = dir[0]; *fp++ = dir[1]; *fp = dir[2];
@@ -358,7 +358,8 @@ raywait(			/* retrieve rtrace results */
 {
 	fd_set	readset, errset;
 	int	nr;
-	struct rtproc	*rt, *rtfree;
+	struct rtproc	*rtfree;
+	register struct rtproc	*rt;
 	register int	n;
 				/* prepare select call */
 	FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
@@ -374,13 +375,12 @@ raywait(			/* retrieve rtrace results */
 	}
 	if (!nr)		/* no rays pending */
 		return(NULL);
-	if (nr > 1)		/* call select for multiple processes */
-		n = select(n, &readset, (fd_set *)NULL, &errset,
-					(struct timeval *)NULL);
-	else
+	if (nr > 1) {		/* call select for multiple processes */
+		errno = 0;
+		if (select(n, &readset, NULL, &errset, NULL) < 0)
+			error(SYSTEM, "select call error in raywait()");
+	} else
 		FD_ZERO(&errset);
-	if (n <= 0)
-		return(NULL);
 	rtfree = NULL;		/* read from ready process(es) */
 	for (rt = rt0; rt != NULL; rt = rt->next) {
 		if (!FD_ISSET(rt->pd.r, &readset) &&
@@ -388,18 +388,9 @@ raywait(			/* retrieve rtrace results */
 			continue;
 		for (n = 0; n < rt->bsiz && rt->dest[n] != NULL; n++)
 			;
-		errno = 0;
-		nr = read(rt->pd.r, (char *)rt->buf, 3*sizeof(float)*(n+1));
-		if (nr < 0)
-			error(SYSTEM, "read error in raywait()");
-		if (nr == 0)				/* unexpected EOF */
+		nr = 3*sizeof(float)*(n+1);
+		if (readbuf(rt->pd.r, (char *)rt->buf, nr) < nr)
 			error(USER, "rtrace process died");
-		if (nr < 3*sizeof(float)*(n+1)) {	/* read the rest */
-			nr = readbuf(rt->pd.r, (char *)rt->buf,
-					3*sizeof(float)*(n+1) - nr);
-			if (nr < 0)
-				error(USER, "readbuf error in raywait()");
-		}
 		while (n-- > 0) {
 			rt->dest[n][0] += rt->buf[3*n];
 			rt->dest[n][1] += rt->buf[3*n+1];
