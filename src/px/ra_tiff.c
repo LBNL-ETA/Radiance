@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.21 2003/07/01 19:04:08 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.22 2003/07/01 22:44:02 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.21 2003/07/01 19:04:08 greg Exp 
 
 #include  <stdio.h>
 #include  <math.h>
-#include  <time.h>
+#include  <ctype.h>
 #include  "tiffio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -29,6 +29,8 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.21 2003/07/01 19:04:08 greg Exp 
 
 struct {
 	uint16	flags;		/* conversion flags (defined above) */
+	char	capdate[20];	/* capture date/time */
+	char	owner[256];	/* content owner */
 	uint16	comp;		/* TIFF compression type */
 	uint16	phot;		/* TIFF photometric type */
 	uint16	pconf;		/* TIFF planar configuration */
@@ -55,7 +57,7 @@ struct {
 	} t;			/* TIFF scanline */
 	void	(*tf)();	/* translation procedure */
 }	cvts = {	/* conversion structure */
-	0, COMPRESSION_NONE, PHOTOMETRIC_RGB,
+	0, "", "", COMPRESSION_NONE, PHOTOMETRIC_RGB,
 	PLANARCONFIG_CONTIG, GAMCOR, 0, 1, 1., 1.,
 };
 
@@ -85,6 +87,9 @@ short	ortab[8] = {		/* orientation conversion table */
 };
 
 #define pixorder()	ortab[cvts.orient-1]
+
+extern char	TMSTR[];	/* "CAPDATE=" from header.c */
+char		OWNSTR[] = "OWNER=";
 
 char  *progname;
 
@@ -209,6 +214,7 @@ allocbufs()			/* allocate scanline buffers */
 initfromtif()		/* initialize conversion from TIFF input */
 {
 	uint16	hi;
+	char	*cp;
 	float	*fa, f1, f2;
 
 	CLR(C_GRY|C_GAMMA|C_PRIM|C_RFLT|C_TFLT|C_TWRD|C_CXFM);
@@ -338,6 +344,19 @@ initfromtif()		/* initialize conversion from TIFF input */
 
 	if (!TIFFGetField(cvts.tif, TIFFTAG_STONITS, &cvts.stonits))
 		cvts.stonits = 1.;
+
+	if (!TIFFGetField(cvts.tif, TIFFTAG_DATETIME, &cp))
+		cvts.capdate[0] = '\0';
+	else {
+		strncpy(cvts.capdate, cp, 19);
+		cvts.capdate[19] = '\0';
+	}
+	if (!TIFFGetField(cvts.tif, TIFFTAG_ARTIST, &cp))
+		cvts.owner[0] = '\0';
+	else {
+		strncpy(cvts.owner, cp, sizeof(cvts.owner));
+		cvts.owner[sizeof(cvts.owner)-1] = '\0';
+	}
 					/* add to Radiance header */
 	if (cvts.pixrat < .99 || cvts.pixrat > 1.01)
 		fputaspect(cvts.pixrat, cvts.rfp);
@@ -351,6 +370,10 @@ initfromtif()		/* initialize conversion from TIFF input */
 				cvts.rfp);
 		fputformat(COLRFMT, cvts.rfp);
 	}
+	if (cvts.capdate[0])
+		fprintf(cvts.rfp, "%s %s\n", TMSTR, cvts.capdate);
+	if (cvts.owner[0])
+		fprintf(cvts.rfp, "%s %s\n", OWNSTR, cvts.owner);
 
 	allocbufs();			/* allocate scanline buffers */
 }
@@ -390,8 +413,14 @@ int
 headline(s)			/* process Radiance input header line */
 char	*s;
 {
+	static int	tmstrlen = 0;
+	static int	ownstrlen = 0;
 	char	fmt[32];
 
+	if (!tmstrlen)
+		tmstrlen = strlen(TMSTR);
+	if (!ownstrlen)
+		ownstrlen = strlen(OWNSTR);
 	if (formatval(fmt, s)) {
 		if (!strcmp(fmt, COLRFMT))
 			CLR(C_XYZE);
@@ -414,6 +443,27 @@ char	*s;
 		SET(C_PRIM);
 		return(1);
 	}
+	if (isdate(s)) {
+		if (s[tmstrlen] == ' ')
+			strncpy(cvts.capdate, s+tmstrlen+1, 19);
+		else
+			strncpy(cvts.capdate, s+tmstrlen, 19);
+		cvts.capdate[19] = '\0';
+		return(1);
+	}
+	if (!strncmp(s, OWNSTR, ownstrlen)) {
+		register char	*cp = s + ownstrlen;
+
+		while (isspace(*cp))
+			++cp;
+		strncpy(cvts.owner, cp, sizeof(cvts.owner));
+		cvts.owner[sizeof(cvts.owner)-1] = '\0';
+		for (cp = cvts.owner; *cp; cp++)
+			;
+		while (cp > cvts.owner && isspace(cp[-1]))
+			*--cp = '\0';
+		return(1);
+	}
 	return(0);
 }
 
@@ -423,6 +473,8 @@ initfromrad()			/* initialize input from a Radiance picture */
 	int	i1, i2, po;
 						/* read Radiance header */
 	CLR(C_RFLT|C_XYZE|C_PRIM|C_GAMMA|C_CXFM);
+	cvts.capdate[0] = '\0';
+	cvts.owner[0] = '\0';
 	cvts.stonits = 1.;
 	cvts.pixrat = 1.;
 	cvts.pconf = PLANARCONFIG_CONTIG;
@@ -523,6 +575,10 @@ initfromrad()			/* initialize input from a Radiance picture */
 	TIFFSetField(cvts.tif, TIFFTAG_PLANARCONFIG, cvts.pconf);
 	TIFFSetField(cvts.tif, TIFFTAG_STONITS,
 			cvts.stonits/pow(2.,(double)cvts.bradj));
+	if (cvts.capdate[0])
+		TIFFSetField(cvts.tif, TIFFTAG_DATETIME, cvts.capdate);
+	if (cvts.owner[0])
+		TIFFSetField(cvts.tif, TIFFTAG_ARTIST, cvts.owner);
 	if (cvts.comp == COMPRESSION_NONE)
 		i1 = TIFFScanlineSize(cvts.tif);
 	else
