@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.5 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.6 2004/02/04 18:49:24 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: meta2tga.c,v 1.5 2003/11/15 02:13:37 schorsch 
 #include  "rast.h"
 #include  "targa.h"
 
-#define  MAXALLOC  5000
+#define  MAXALLOC  30000
 #define  DXSIZE  400		/* default x resolution */
 #define  DYSIZE  400		/* default y resolution */
 #define  XCOM  "pexpand +vOCImsp -DP %s | psort +y"
