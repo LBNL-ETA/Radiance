@@ -9,12 +9,12 @@ main( int argc, char *argv[])
 
 	if( argc != 2 ) {
 	  fprintf(stderr,"usage: p MB\n");
-	  exit(1);
+	  return(1);
 	}
 	s= 1024*1024* (mb=atoi(argv[1]));
 	if (!(mem=malloc(s))) {
 	  printf("failed\n");
-	  exit(1);
+	  return(1);
 	}
 	for (;;) {
 	  for (q=0;q<mb;++q) {
