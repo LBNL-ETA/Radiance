@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.19 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.20 2003/04/14 16:56:19 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -794,7 +794,7 @@ waitabit()				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
-	ts.tv_nsec = 5000000;
+	ts.tv_nsec = 50000000;
 	nanosleep(&ts, NULL);
 }
 
