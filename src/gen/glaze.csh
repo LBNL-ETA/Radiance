@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: glaze.csh,v 2.4 2004/08/25 01:40:12 greg Exp $
+# RCSid: $Id: glaze.csh,v 2.5 2004/08/25 19:13:30 greg Exp $
 #
 # Complex glazing model (goes with glaze1.cal and glaze2.cal)
 #
@@ -10,6 +10,11 @@
 #
 
 #################################################################
+#
+# The general assumption is that one surface is uncoated, and
+# reflectances and transmittances are computed from this fact.
+# If the user tries to enter two coated surfaces on the same
+# pane, the script complains and exits.
 #
 # Supported surface types:
 #
@@ -59,9 +64,9 @@ while ($#argv > 0)
 		set rc_r_arr=($rc_r_arr $ln[5])
 		set rc_g_arr=($rc_g_arr $ln[6])
 		set rc_b_arr=($rc_b_arr $ln[7])
-		set rg_r_arr=($rc_r_arr $ln[8])
-		set rg_g_arr=($rc_g_arr $ln[9])
-		set rg_b_arr=($rc_b_arr $ln[10])
+		set rg_r_arr=($rg_r_arr $ln[8])
+		set rg_g_arr=($rg_g_arr $ln[9])
+		set rg_b_arr=($rg_b_arr $ln[10])
 		set part_arr=($part_arr $ln[11])
 		@ i++
 	end
