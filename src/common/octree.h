@@ -1,7 +1,12 @@
-/* RCSid $Id: octree.h,v 2.8 2003/05/15 05:13:35 greg Exp $ */
+/* RCSid $Id: octree.h,v 2.9 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  octree.h - header file for routines using octrees.
  */
+#ifndef _RAD_OCTREE_H_
+#define _RAD_OCTREE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -79,20 +84,6 @@ extern CUBE  thescene;			/* the main scene */
 #define  O_HIT		1		/* intersection */
 #define  O_IN		2		/* cube contained entirely */
 
-#ifdef NOPROTO
-
-extern OCTREE	octalloc();
-extern void	octfree();
-extern void	octdone();
-extern OCTREE	combine();
-extern void	culocate();
-extern void	cucopy();
-extern int	incube();
-extern int	readoct();
-extern void	readscene();
-extern void	writescene();
-
-#else
 
 extern OCTREE	octalloc(void);
 extern void	octfree(OCTREE ot);
@@ -107,4 +98,9 @@ extern int	readoct(char *fname, int load, CUBE *scene, char *ofn[]);
 extern void	readscene(FILE *fp, int objsiz);
 extern void	writescene(int firstobj, int nobjs, FILE *fp);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_OCTREE_H_ */
+

@@ -1,4 +1,4 @@
-/* RCSid $Id: cone.h,v 2.3 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: cone.h,v 2.4 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  cone.h - header file for cones (cones, cylinders, rings, cups, tubes).
  *
@@ -9,6 +9,11 @@
  *
  *     2/12/86
  */
+#ifndef _RAD_CONE_H_
+#define _RAD_CONE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -27,16 +32,14 @@ typedef struct cone {
 #define  CO_P0(co)	((co)->ca+(co)->p0)
 #define  CO_P1(co)	((co)->ca+(co)->p1)
 
-#ifdef NOPROTO
-
-extern CONE  *getcone();
-extern void  freecone();
-extern void  conexform();
-
-#else
 
 extern CONE  *getcone(OBJREC *o, int getxf);
 extern void  freecone(OBJREC *o);
 extern void  conexform(CONE *co);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_CONE_H_ */
+

@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.2 2003/06/05 19:29:34 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiff.h,v 3.3 2003/06/06 16:38:47 schorsch Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -26,6 +26,9 @@
 
 #ifndef _TIFF_
 #define	_TIFF_
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * Tag Image File Format (TIFF)
  *
@@ -441,4 +444,7 @@ typedef	enum {
 #define TIFFTAG_SGILOGENCODE		65561	/* SGILog data encoding control */
 #define     SGILOGENCODE_NODITHER	0	/* do not dither encoded values */
 #define     SGILOGENCODE_RANDITHER	1	/* randomly dither encoded values */ 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _TIFF_ */

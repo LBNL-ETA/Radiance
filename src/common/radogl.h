@@ -1,7 +1,13 @@
-/* RCSid $Id: radogl.h,v 3.6 2003/04/23 02:28:06 greg Exp $ */
+/* RCSid $Id: radogl.h,v 3.7 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
+#ifndef _RAD_RADOGL_H_
+#define _RAD_RADOGL_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -45,49 +51,6 @@ extern LUTAB	mtab;		/* material/modifier lookup table */
 #define issrcmat(m)	((m) != NULL && islight((m)->type) && \
 				(m)->type != MAT_GLOW)
 
-#ifdef NOPROTO
-
-extern void	domatobj();
-extern void	domatvert();
-extern int	newglist();
-extern void	rgl_checkerr();
-extern int	rgl_filelist();
-extern int	rgl_octlist();
-extern void	rgl_load();
-extern void	rgl_object();
-extern int	o_instance();
-extern int	loadoctrees();
-extern double	checkoct();
-extern int	loadoct();
-extern void	rgl_matclear();
-extern MATREC	*getmatp();
-extern int	o_default();
-extern int	o_unsupported();
-extern MATREC	*newmaterial();
-extern void	freemtl();
-extern int	m_normal();
-extern int	m_aniso();
-extern int	m_glass();
-extern int	m_brdf();
-extern int	m_brdf2();
-extern int	m_light();
-extern int	m_mirror();
-extern int	m_prism();
-extern void	lightinit();
-extern void	lightclean();
-extern void	lightdefs();
-extern int	o_source();
-extern int	doflatsrc();
-extern int	dosphsrc();
-extern void	setmaterial();
-extern double	polyarea();
-extern int	o_face();
-extern void	surfclean();
-extern int	o_sphere();
-extern int	o_cone();
-extern int	o_ring();
-
-#else
 				/* defined in rgldomat.c */
 extern void	domatobj(MATREC *mp, FVECT cent);
 extern void	domatvert(MATREC *mp, FVECT v, FVECT n);
@@ -134,4 +97,9 @@ extern int	o_sphere(OBJREC *o);
 extern int	o_cone(OBJREC *o);
 extern int	o_ring(OBJREC *o);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_RADOGL_H_ */
+

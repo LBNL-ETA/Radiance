@@ -1,7 +1,13 @@
-/* RCSid $Id: random.h,v 2.11 2003/06/05 19:29:34 schorsch Exp $ */
+/* RCSid $Id: random.h,v 2.12 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
+#ifndef _RAD_RANDOM_H_
+#define _RAD_RANDOM_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -63,14 +69,6 @@ extern int	urmask;
 
 #endif
 
-#ifdef NOPROTO
-
-extern int	initurand();
-extern int	ilhash();
-extern int	urind();
-extern void	multisamp();
-
-#else
 				/* defined in urand.c */
 extern int	initurand(int size);
 extern int	ilhash(int *d, int n);
@@ -79,4 +77,9 @@ extern int	urind(int s, int i);
 				/* defined in multisamp.c */
 extern void	multisamp(double t[], int n, double r);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_RANDOM_H_ */
+

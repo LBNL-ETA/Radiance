@@ -1,7 +1,12 @@
-/* RCSid $Id: object.h,v 2.12 2003/05/15 05:13:35 greg Exp $ */
+/* RCSid $Id: object.h,v 2.13 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  */
+#ifndef _RAD_OBJECT_H_
+#define _RAD_OBJECT_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -80,37 +85,6 @@ extern OBJECT  nobjects;		/* # of objects */
 
 extern void  (*addobjnotify[])();        /* people to notify of new objects */
 
-#ifdef NOPROTO
-
-extern OBJECT	objndx();
-extern OBJECT	lastmod();
-extern OBJECT	modifier();
-extern OBJECT	object();
-extern void	insertobject();
-extern void	clearobjndx();
-extern void	insertelem();
-extern void	deletelem();
-extern int	inset();
-extern int	setequal();
-extern void	setcopy();
-extern OBJECT *	setsave();
-extern void	setunion();
-extern void	setintersect();
-extern OCTREE	fullnode();
-extern void	objset();
-extern int	dosets();
-extern void	donesets();
-extern int	otype();
-extern void	objerror();
-extern int	readfargs();
-extern void	freefargs();
-extern void	readobj();
-extern void	getobject();
-extern OBJECT	newobject();
-extern void	freeobjects();
-extern int	free_os();
-
-#else
 					/* defined in modobject.c */
 extern OBJECT	objndx(OBJREC *op);
 extern OBJECT	lastmod(OBJECT obj, char *mname);
@@ -146,4 +120,9 @@ extern void	freeobjects(int firstobj, int nobjs);
 					/* defined in free_os.c */
 extern int	free_os(OBJREC *op);
 
-#endif /* NOPROTO */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_OBJECT_H_ */
+

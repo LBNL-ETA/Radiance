@@ -1,10 +1,12 @@
-/* RCSid $Id: standard.h,v 2.23 2003/06/05 19:29:34 schorsch Exp $ */
+/* RCSid $Id: standard.h,v 2.24 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
-
 #ifndef _RAD_STANDARD_H_
 #define _RAD_STANDARD_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -203,4 +205,8 @@ extern void	wputs(char *s);
 extern void	quit(int code);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _RAD_STANDARD_H_ */
+

@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.4 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -13,12 +13,13 @@
  * A typical line for a 1024x600 image might be "-Y 600 +X 1024\n",
  * indicating that the scanlines are in English text order (PIXSTANDARD).
  */
-
-#include "copyright.h"
-
+#ifndef _RAD_RESOLU_H_
+#define _RAD_RESOLU_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "copyright.h"
 
 			/* flags for scanline ordering */
 #define  XDECR			1
@@ -52,29 +53,6 @@ extern char  resolu_buf[RESOLU_BUFLEN];
 #define  fprtresolu(sl,ns,fp)	fprintf(fp,PIXSTDFMT,ns,sl)
 #define  fscnresolu(sl,ns,fp)	(fscanf(fp,PIXSTDFMT,ns,sl)==2)
 
-#ifdef NOPROTO
-					/* defined in resolu.c */
-extern void	fputresolu();
-extern int	fgetresolu();
-extern char	*resolu2str();
-extern int	str2resolu();
-					/* defined in header.c */
-extern void	newheader();
-extern int	isheadid();
-extern int	headidval();
-extern int	dateval();
-extern int	isdate();
-extern void	fputdate();
-extern void	fputnow();
-extern void	printargs();
-extern int	isformat();
-extern int	formatval();
-extern void	fputformat();
-extern int	getheader();
-extern int	globmatch();
-extern int	checkheader();
-
-#else
 					/* defined in resolu.c */
 extern void	fputresolu(int ord, int sl, int ns, FILE *fp);
 extern int	fgetresolu(int *sl, int *ns, FILE *fp);
@@ -96,8 +74,9 @@ extern int	getheader(FILE *fp, int (*f)(), char *p);
 extern int	globmatch(char *pat, char *str);
 extern int	checkheader(FILE *fin, char *fmt, FILE *fout);
 
-#endif
 
 #ifdef __cplusplus
 }
 #endif
+#endif /* _RAD_RESOLU_H_ */
+

@@ -1,7 +1,12 @@
-/* RCSid $Id: selcall.h,v 3.5 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: selcall.h,v 3.6 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * header file for select call compatibility
  */
+#ifndef _RAD_SELCALL_H_
+#define _RAD_SELCALL_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -28,3 +33,9 @@
 #define FD_ZERO(p)	memset((char *)(p), 0, sizeof(*(p)))
 #endif
 #endif
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_SELCALL_H_ */

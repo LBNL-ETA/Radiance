@@ -1,7 +1,13 @@
-/* RCSid $Id: targa.h,v 2.3 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: targa.h,v 2.4 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  tardev.h - header file for reading and writing Targa format files.
  */
+#ifndef _RAD_TARGA_H_
+#define _RAD_TARGA_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+ 
 #include "copyright.h"
 
 			/* header structure adapted from tardev.h */
@@ -33,3 +39,9 @@ struct hdStruct {
 #define  CM_HASMAP	1		/* has color map */
 
 #define  bits_bytes(n)	(((n)+7)>>3)	/* number of bits to number of bytes */
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_TARGA_H_ */

@@ -1,7 +1,13 @@
-/* RCSid $Id: calcomp.h,v 2.8 2003/04/27 06:08:03 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.9 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
+#ifndef _RAD_CALCOMP_H_
+#define _RAD_CALCOMP_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -65,85 +71,6 @@ extern unsigned int  esupport;
 extern EPNODE	*curfunc;
 extern int  nextc;
 
-#ifdef NOPROTO
-
-extern void	fcompile();
-extern void	scompile();
-extern double	varvalue();
-extern double	evariable();
-extern void	varset();
-extern void	dclear();
-extern void	dremove();
-extern int	vardefined();
-extern char	*setcontext();
-extern char	*pushcontext();
-extern char	*popcontext();
-extern char	*qualname();
-extern int	incontext();
-extern void	chanout();
-extern void	dcleanup();
-extern EPNODE	*dlookup();
-extern VARDEF	*varlookup();
-extern VARDEF	*varinsert();
-extern void	varfree();
-extern EPNODE	*dfirst();
-extern EPNODE	*dnext();
-extern EPNODE	*dpop();
-extern void	dpush();
-extern void	addchan();
-extern void	getstatement();
-extern EPNODE	*getdefn();
-extern EPNODE	*getchan();
-extern EPNODE	*eparse();
-extern double	eval();
-extern int	epcmp();
-extern void	epfree();
-extern EPNODE	*ekid();
-extern int	nekids();
-extern void	initfile();
-extern void	initstr();
-extern void	getscanpos();
-extern int	scan();
-extern char	*long2ascii();
-extern void	syntax();
-extern void	addekid();
-extern char	*getname();
-extern int	getinum();
-extern double	getnum();
-extern EPNODE	*getE1();
-extern EPNODE	*getE2();
-extern EPNODE	*getE3();
-extern EPNODE	*getE4();
-extern EPNODE	*getE5();
-extern EPNODE	*rconst();
-extern int	isconstvar();
-extern int	isconstfun();
-extern int	fundefined();
-extern double	funvalue();
-extern void	funset();
-extern int	nargum();
-extern double	argument();
-extern VARDEF	*argf();
-extern char	*argfun();
-extern double	efunc();
-extern LIBR	*liblookup();
-extern void	libupdate();
-extern void	eprint();
-extern void	dprint();
-extern char	*savestr();
-extern void	freestr();
-extern int	shash();
-extern char	*emalloc();
-extern char	*ecalloc();
-extern char	*erealloc();
-extern void	efree();
-extern void	eputs();
-extern void	wputs();
-extern void	quit();
-
-extern double	chanvalue();
-
-#else
 					/* defined in caldefn.c */
 extern void	fcompile(char *fname);
 extern void	scompile(char *str, char *fname, int ln);
@@ -227,4 +154,9 @@ extern void	quit(int code);
 					/* defined by client */
 extern double	chanvalue(int n);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_CALCOMP_H_ */
+

@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.20 2003/05/13 17:58:32 greg Exp $ */
+/* RCSid $Id: color.h,v 2.21 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -9,15 +9,17 @@
  *  for speed.  Stored color values use 4 bytes which contain
  *  three single byte mantissas and a common exponent.
  */
+#ifndef _RAD_COLOR_H_
+#define _RAD_COLOR_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define  RED		0
 #define  GRN		1
@@ -204,40 +206,6 @@ extern COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
 #define  cpcolormat(md,ms)	memcpy((void *)md,(void *)ms,sizeof(COLORMAT))
 #endif
 
-#ifdef NOPROTO
-					/* defined in color.c */
-extern char	*tempbuffer();
-extern int	fwritecolrs();
-extern int	freadcolrs();
-extern int	fwritescan();
-extern int	freadscan();
-extern void	setcolr();
-extern void	colr_color();
-extern int	bigdiff();
-					/* defined in spec_rgb.c */
-extern void	spec_rgb();
-extern void	spec_cie();
-extern void	cie_rgb();
-extern int	clipgamut();
-extern void	colortrans();
-extern void	multcolormat();
-extern void	compxyz2rgbmat();
-extern void	comprgb2xyzmat();
-extern void	comprgb2rgbmat();
-extern void	compxyzWBmat();
-extern void	compxyz2rgbWBmat();
-extern void	comprgb2xyzWBmat();
-extern void	comprgb2rgbWBmat();
-					/* defined in colrops.c */
-extern int	setcolrcor();
-extern int	setcolrinv();
-extern int	setcolrgam();
-extern int	colrs_gambs();
-extern int	gambs_colrs();
-extern void	shiftcolrs();
-extern void	normcolrs();
-
-#else
 					/* defined in color.c */
 extern char	*tempbuffer(unsigned int len);
 extern int	fwritecolrs(COLR *scanline, int len, FILE *fp);
@@ -273,8 +241,9 @@ extern int	gambs_colrs(COLR *scan, int len);
 extern void	shiftcolrs(COLR *scan, int len, int adjust);
 extern void	normcolrs(COLR *scan, int len, int adjust);
 
-#endif
 
 #ifdef __cplusplus
 }
 #endif
+#endif /* _RAD_COLOR_H_ */
+

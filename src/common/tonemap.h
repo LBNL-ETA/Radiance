@@ -1,15 +1,17 @@
-/* RCSid $Id: tonemap.h,v 3.12 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.13 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Header file for tone mapping functions.
  *
  * Include after "color.h"
  */
-
-#include "copyright.h"
-
+#ifndef _RAD_TONEMAP_H_
+#define _RAD_TONEMAP_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#include "copyright.h"
 
 /****    Argument Macros    ****/
 				/* Flags of what to do */
@@ -88,19 +90,11 @@ extern struct tmStruct {
 }	*tmTop;			/* current tone mapping stack */
 
 				/* conversion package functions */
-#ifdef	NOPROTO
-struct tmPackage {
-	MEM_PTR		(*Init)();	/* initialize private data */
-	void		(*NewSpace)();	/* new input color space (optional) */
-	void		(*Free)();	/* free private data */
-};
-#else
 struct tmPackage {
 	MEM_PTR		(*Init)(struct tmStruct *tms);
 	void		(*NewSpace)(struct tmStruct *tms);
 	void		(*Free)(MEM_PTR pp);
 };
-#endif
 				/* our list of conversion packages */
 extern struct tmPackage	*tmPkg[TM_MAXPKG];
 extern int	tmNumPkgs;	/* number of registered packages */
@@ -124,17 +118,6 @@ extern int	tmNumPkgs;	/* number of registered packages */
 
 /****    Library Function Calls    ****/
 
-#ifdef	NOPROTO
-
-extern struct tmStruct	*tmInit(), *tmPop(), *tmDup();
-extern int	tmSetSpace(), tmPull(), tmPush();
-extern void	tmClearHisto(), tmDone();
-extern int	tmAddHisto();
-extern int	tmFixedMapping(), tmComputeMapping(), tmMapPixels();
-extern int	tmCvColors(), tmCvGrays(), tmCvColrs();
-extern int	tmLoadPicture(), tmMapPicture();
-
-#else
 
 extern struct tmStruct *
 tmInit(int flags, RGBPRIMP monpri, double gamval);
@@ -349,7 +332,6 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 	returns	-	0 on success, TM_E_* on failure.
 */
 
-#endif
 
 
 /****    Notes    ****/
@@ -426,3 +408,5 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 #ifdef __cplusplus
 }
 #endif
+#endif /* _RAD_TONEMAP_H_ */
+

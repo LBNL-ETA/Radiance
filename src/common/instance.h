@@ -1,9 +1,14 @@
-/* RCSid $Id: instance.h,v 2.4 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: instance.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  instance.h - header file for routines using octree objects.
  *
  *  Include after object.h and octree.h
  */
+#ifndef _RAD_INSTANCE_H_
+#define _RAD_INSTANCE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -21,18 +26,15 @@ typedef struct {
 	SCENE  *obj;			/* loaded object */
 }  INSTANCE;			/* instance of octree */
 
-#ifdef NOPROTO
-
-extern SCENE  *getscene();
-extern INSTANCE  *getinstance();
-extern void  freescene();
-extern void  freeinstance();
-
-#else
 
 extern SCENE  *getscene(char *sname, int flags);
 extern INSTANCE  *getinstance(OBJREC *o, int flags);
 extern void  freescene(SCENE *sc);
 extern void  freeinstance(OBJREC *o);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_INSTANCE_H_ */
+

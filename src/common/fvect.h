@@ -1,7 +1,12 @@
-/* RCSid $Id: fvect.h,v 2.8 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.9 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
+#ifndef _RAD_FVECT_H_
+#define _RAD_FVECT_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -33,12 +38,6 @@ typedef FLOAT  FVECT[3];
 			(vr)[1]=(v1)[2]*(v2)[0]-(v1)[0]*(v2)[2], \
 			(vr)[2]=(v1)[0]*(v2)[1]-(v1)[1]*(v2)[0])
 
-#ifdef NOPROTO
-
-extern double  fdot(), dist2(), dist2lseg(), dist2line(), normalize();
-extern void  fcross(), fvsum(), spinvector();
-
-#else
 
 extern double	fdot(FVECT v1, FVECT v2);
 extern double	dist2(FVECT v1, FVECT v2);
@@ -49,4 +48,9 @@ extern void	fvsum(FVECT vres, FVECT v0, FVECT v1, double f);
 extern double	normalize(FVECT v);
 extern void	spinvector(FVECT vres, FVECT vorig, FVECT vnorm, double theta);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_FVECT_H_ */
+

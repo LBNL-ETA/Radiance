@@ -1,14 +1,14 @@
-/* RCSid $Id: platform.h,v 3.1 2003/06/05 19:29:34 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.2 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
-
-#include "copyright.h"
-
-
 #ifndef _RAD_PLATFORM_H_
 #define _RAD_PLATFORM_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#include "copyright.h"
 
 #ifdef _WIN32
 
@@ -42,5 +42,9 @@
 
 #endif /* _WIN32 */
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* _RAD_PLATFORM_H_ */
 

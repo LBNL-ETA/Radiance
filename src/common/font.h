@@ -1,7 +1,12 @@
-/* RCSid $Id: font.h,v 2.5 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: font.h,v 2.6 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Header file for font handling routines
  */
+#ifndef _RAD_FONT_H_
+#define _RAD_FONT_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -25,15 +30,6 @@ typedef struct font {
 
 extern int	retainfonts;		/* retain loaded fonts? */
 
-#ifdef NOPROTO
-
-extern FONT  *getfont();
-extern void  freefont();
-extern int  uniftext();
-extern int  squeeztext();
-extern int  proptext();
-
-#else
 
 extern FONT  *getfont(char *fname);
 extern void  freefont(FONT *f);
@@ -41,4 +37,9 @@ extern int  uniftext(short *sp, char *tp, FONT *f);
 extern int  squeeztext(short *sp, char *tp, FONT *f, int cis);
 extern int  proptext(short *sp, char *tp, FONT *f, int cis, int nsi);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_FONT_H_ */
+

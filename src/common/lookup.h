@@ -1,7 +1,13 @@
-/* RCSid $Id: lookup.h,v 2.7 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: lookup.h,v 2.8 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
+#ifndef _RAD_LOOKUP_H_
+#define _RAD_LOOKUP_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "copyright.h"
 
@@ -72,18 +78,7 @@ typedef struct {
  * allocated table itself.
  */
 
-extern int	strcmp();
-
-#ifdef NOPROTO
-
-extern int	lu_init();
-extern LUENT	*lu_find();
-extern void	lu_delete();
-extern int	lu_doall();
-extern void	lu_done();
-extern unsigned long	lu_shash();
-
-#else
+#include <string.h> /* strcmp() */
 
 extern int	lu_init(LUTAB *tbl, int nel);
 extern unsigned long	lu_shash(char *s);
@@ -92,4 +87,9 @@ extern void	lu_delete(LUTAB *tbl, char *key);
 extern int	lu_doall(LUTAB *tbl, int (*f)());
 extern void	lu_done(LUTAB *tbl);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_LOOKUP_H_ */
+

@@ -1,7 +1,12 @@
-/* RCSid $Id: otypes.h,v 2.10 2003/03/11 19:29:04 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.11 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
+#ifndef _RAD_OTYPES_H_
+#define _RAD_OTYPES_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -154,3 +159,9 @@ extern int  o_default();
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
 				{ "prism2",	T_M|T_F|T_LV,	o_default }, \
 			}
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_OTYPES_H_ */

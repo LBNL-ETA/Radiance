@@ -1,7 +1,12 @@
-/* RCSid $Id: vars.h,v 2.4 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: vars.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  Header for programs that load variable files.
  */
+#ifndef _RAD_VARS_H_
+#define _RAD_VARS_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -43,23 +48,6 @@ extern char	*nvalue();
 #define MEDIUM		'M'
 #define LOW		'L'
 
-#ifdef NOPROTO
-
-extern void	loadvars();
-extern int	setvariable();
-extern VARIABLE	*matchvar();
-extern char	*nvalue();
-extern void	checkvalues();
-extern void	onevalue();
-extern void	catvalues();
-extern int	badmatch();
-extern void	boolvalue();
-extern void	qualvalue();
-extern void	intvalue();
-extern void	fltvalue();
-extern void	printvars();
-
-#else
 
 extern void	loadvars(char *rfname);
 extern int	setvariable(char *ass, VARIABLE *(*mv)());
@@ -75,4 +63,9 @@ extern void	intvalue(VARIABLE *vp);
 extern void	fltvalue(VARIABLE *vp);
 extern void	printvars(FILE *fp);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _RAD_VARS_H_ */
+

@@ -1,4 +1,4 @@
-/* RCSid $Id: tmaptiff.h,v 3.2 2003/02/25 02:47:22 greg Exp $ */
+/* RCSid $Id: tmaptiff.h,v 3.3 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  *  tmaptiff.h
  *
@@ -6,22 +6,15 @@
  *  Include after "tiffio.h" and "tonemap.h".
  *
  */
-
-#include "copyright.h"
-
+#ifndef _RAD_TMAPTIFF_H_
+#define _RAD_TMAPTIFF_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef NOPROTO
 
-extern int	tmCvL16();
-extern int	tmCvLuv24();
-extern int	tmCvLuv32();
-extern int	tmLoadTIFF();
-extern int	tmMapTIFF();
+#include "copyright.h"
 
-#else
 
 extern int	tmCvL16(TMbright *ls, uint16 *luvs, int len);
 extern int	tmCvLuv24(TMbright *ls, BYTE *cs, uint32 *luvs, int len);
@@ -33,8 +26,9 @@ extern int	tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags,
 				double Lddyn, double Ldmax,
 				char *fname, TIFF *tp);
 
-#endif
 
 #ifdef __cplusplus
 }
 #endif
+#endif /* _RAD_TMAPTIFF_H_ */
+

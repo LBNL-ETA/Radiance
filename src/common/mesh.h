@@ -1,9 +1,14 @@
-/* RCSid $Id: mesh.h,v 2.4 2003/05/13 17:58:32 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.5 2003/06/06 16:38:47 schorsch Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
  *  Include after standard.h, object.h and octree.h
  */
+#ifndef _RAD_MESH_H_
+#define _RAD_MESH_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "copyright.h"
 
@@ -112,24 +117,6 @@ typedef struct {
 				/* magic number for mesh files */
 #define MESHMAGIC	( 1 *MAXOBJSIZ+311)	/* increment first value */
 
-#ifdef NOPROTO
-
-extern MESH	*getmesh();
-extern MESHINST	*getmeshinst();
-extern int	getmeshtrivid();
-extern int	getmeshvert();
-extern int	getmeshtri();
-extern OBJREC	*getmeshpseudo();
-extern int4	addmeshvert();
-extern OBJECT	addmeshtri();
-extern char	*checkmesh();
-extern void	printmeshstats();
-extern void	freemesh();
-extern void	freemeshinst();
-extern void	readmesh();
-extern void	writemesh();
-
-#else
 
 extern MESH	*getmesh(char *mname, int flags);
 extern MESHINST	*getmeshinst(OBJREC *o, int flags);
@@ -148,4 +135,9 @@ extern void	freemeshinst(OBJREC *o);
 extern void	readmesh(MESH *mp, char *path, int flags);
 extern void	writemesh(MESH *mp, FILE *fp);
 
-#endif /* NOPROTO */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_MESH_H_ */
+
