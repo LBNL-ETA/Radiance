@@ -1,0 +1,84 @@
+{
+	The first few Spherical Harmonics
+
+	Feb 2005	G. Ward
+}
+					{ Factorial (n!) }
+fact(n) : if(n-1.5, n*fact(n-1), 1);
+
+					{ Associated Legendre Polynomials 0-8 }
+LegendreP2(n,m,x,s) : select(n+1,
+	select(m+1, 1),
+	select(m+1, x, s),
+	select(m+1, .5*(3*x*x - 1), 3*x*s, 3*(1-x*x)),
+	select(m+1, .5*x*(5*x*x-3), 1.5*(5*x*x-1)*s, 15*x*(1-x*x), 15*s*s*s),
+	select(m+1,
+		.125*(3 + x*x*(-30 + x*x*35)),
+		2.5*x*(-3 + x*x*7)*s,
+		7.5*(7*x*x-1)*(1-x*x),
+		105*x*s*s*s,
+		105*s*s*s*s),
+	select(m+1,
+		.125*x*(15 + x*x*(-70 + x*x*63)),
+		1.875*s*(1 + x*x*(-14 + x*x*21)),
+		52.5*x*(1-x*x)*(3*x*x-1),
+		52.5*s*s*s*(9*x*x-1),
+		945*x*s*s*s*s,
+		945*s*s*s*s*s),
+	select(m+1,
+		.0625*(-5 + x*x*(105 + x*x*(-315 + x*x*231))),
+		2.625*(5 + x*x*(-30 + x*x*33))*s,
+		13.125*s*s*(1 + x*x*(-18 + x*x*33)),
+		157.5*(11*x*x-3)*x*s*s*s,
+		472.5*s*s*s*s*(11*x*x-1),
+		10395*x*s*s*s*s*s,
+		10395*s*s*s*s*s*s),
+	select(m+1,
+		.0625*x*(-35 + x*x*(315 + x*x*(-693 + x*x*429))),
+		.4375*s*(-5 + x*x*(135 + x*x*(-495 + x*x*429))),
+		7.875*x*s*s*(15 + x*x*(-110 + x*x*143)),
+		39.375*s*s*(1 + x*x*(-18 + x*x*33)),
+		157.5*(11*x*x-3)*x*s*s*s,
+		472.5*s*s*s*s*(11*x*x-1),
+		10395*x*s*s*s*s*s,
+		10395*s*s*s*s*s*s),
+	select(m+1,
+		.0078125*(35 + x*x*(-1260 + x*x*(6930 + x*x*(-12012 + x*x*6435)))),
+		.5625*x*s*(-35 + x*x*(385 + x*x*(-1001 + x*x*715))),
+		19.6875*s*s*(-1 + x*x*(33 + x*x*(-143 + x*x*143))),
+		433.125*x*s*s*s*(3 + x*x*(-26 + x*x*39)),
+		1299.375*s*s*s*s*(1 + x*x*(-26 + x*x*65)),
+		67567.5*x*s*s*s*s*s*(5*x*x-1),
+		67567.5*s*s*s*s*s*s*(15*x*x-1),
+		2027025*x*s*s*s*s*s*s*s,
+		2027025*s*s*s*s*s*s*s*s)
+	);
+					{ Relation for Legendre with -M }
+odd(n) : .5*n - floor(.5*n) - .25;
+LegendreP(n,m,x) : if(m+.5,
+		LegendreP2(n,m,x,sqrt(1-x*x)),
+		if(odd(-m),-1,1)*fact(n+m)/fact(n-m) *
+			LegendreP2(n,-m,x,sqrt(1-x*x))
+		);
+					{ SH normalization factor }
+SHnormF(l,m) : sqrt(0.25/PI*(2*l+1)*fact(l-m)/fact(l+m));
+					{ Spherical Harmonics theta function }
+SHthetaF(l,m,theta) : SHnormF(l,m)*LegendreP(l,m,cos(theta));
+
+					{ Spherical Harmonic real portion }
+SphericalHarmonicYr(l,m,theta,phi) : SHthetaF(l,m,theta)*cos(m*phi);
+					{ Spherical Harmonic imag. portion }
+SphericalHarmonicYi(l,m,theta,phi) : SHthetaF(l,m,theta)*sin(m*phi);
+
+					{ Ordered, real SH basis functions }
+SH_B4(l,m,o,theta,phi) : if(m-.5, if(o, SphericalHarmonicYi(l,m,theta,phi),
+					SphericalHarmonicYr(l,m,theta,phi)),
+				SHthetaF(l,0,theta) ); 
+SH_B3(l,r,theta,phi) : SH_B4(l,floor((r+1.00001)/2),odd(r+1),theta,phi);
+SH_B2(l,i,theta,phi) : SH_B3(l,i-l*l-1,theta,phi);
+SphericalHarmonicB(i,theta,phi) : SH_B2(ceil(sqrt(i)-1.00001),i,theta,phi);
+
+					{ Application of SH fitting coeff. f(i) }
+SH_F2(n,f,theta,phi) : if(n-.5, f(n)*SphericalHarmonicB(n,theta,phi) +
+				SH_F2(n-1,f,theta,phi), 0);
+SphericalHarmonicF(f,theta,phi) : SH_F2(f(0),f,theta,phi);
