@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.9 2003/07/03 15:00:19 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.10 2003/11/10 16:52:25 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -9,15 +9,13 @@ static const char	RCSid[] = "$Id: devcomm.c,v 2.9 2003/07/03 15:00:19 greg Exp $
 
 #include "copyright.h"
 
-#include  "platform.h"
+#include "platform.h"
 
 #include "standard.h"
 
-#include "color.h"
+#include "paths.h"
 
 #include "driver.h"
-
-#include "vfork.h"
 
 #ifndef DEVPATH
 #define DEVPATH		getenv("PATH")	/* device search path */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.12 2003/10/27 10:32:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.13 2003/11/10 16:52:24 greg Exp $";
 #endif
 /*
  * Parallel network process handling routines
@@ -15,7 +15,6 @@ static const char	RCSid[] = "$Id: netproc.c,v 2.12 2003/10/27 10:32:06 schorsch 
 #include "selcall.h"
 #include "netproc.h"
 #include "paths.h"
-#include "vfork.h"
 
 PSERVER	*pslist = NULL;		/* global process server list */
 

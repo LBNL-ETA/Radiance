@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xglaresrc.c,v 2.6 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: xglaresrc.c,v 2.7 2003/11/10 16:52:24 greg Exp $";
 #endif
 /*
  *  Circle sources in a displayed image.
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: xglaresrc.c,v 2.6 2003/02/22 02:07:30 greg Exp
 
 #include "standard.h"
 #include "view.h"
-#include "vfork.h"
+#include "paths.h"
 #include <signal.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
