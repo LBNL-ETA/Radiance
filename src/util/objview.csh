@@ -1,10 +1,10 @@
 #!/bin/csh -f
-# RCSid: $Id: objview.csh,v 2.9 2004/08/20 23:45:59 greg Exp $
+# RCSid: $Id: objview.csh,v 2.10 2005/02/16 05:40:12 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
 #
-set tmpdir=/usr/tmp
+set tmpdir=/tmp
 set octree=$tmpdir/ov$$.oct
 set lights=$tmpdir/lt$$.rad
 set rif=$tmpdir/ov$$.rif

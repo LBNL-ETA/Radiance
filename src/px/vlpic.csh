@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: vlpic.csh,v 3.2 2005/01/18 03:59:41 greg Exp $
+# RCSid: $Id: vlpic.csh,v 3.3 2005/02/16 05:40:11 greg Exp $
 #
 # Compute falsecolor image of visibility level
 # using the wacky formulas of Werner Adrian.
@@ -22,11 +22,11 @@ while ($#argv > 1)
 	endsw
 	shift argv
 end
-set tc=/usr/tmp/vl$$.cal
-set tp1=/usr/tmp/vl$$r1.pic
-set tp2=/usr/tmp/vl$$r2.pic
-set tp4=/usr/tmp/vl$$r4.pic
-set tp8=/usr/tmp/vl$$r8.pic
+set tc=/tmp/vl$$.cal
+set tp1=/tmp/vl$$r1.pic
+set tp2=/tmp/vl$$r2.pic
+set tp4=/tmp/vl$$r4.pic
+set tp8=/tmp/vl$$r8.pic
 set tf=($tc $tp1 $tp2 $tp4 $tp8)
 set inpic=$argv[1]
 onintr quit

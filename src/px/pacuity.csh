@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: pacuity.csh,v 3.4 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: pacuity.csh,v 3.5 2005/02/16 05:40:11 greg Exp $
 #
 # Adjust picture acuity according to human visual abilities
 #
@@ -7,7 +7,7 @@ if ($#argv != 1) then
 	echo "Usage: $0 input.pic > output.pic"
 	exit 1
 endif
-set td=/usr/tmp
+set td=/tmp
 set tfc1=$td/ac$$.cal
 set tf=($td/c{1,2,4,8,16,32}d$$.pic $tfc1)
 set ifile=$1

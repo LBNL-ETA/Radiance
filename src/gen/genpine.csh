@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: genpine.csh,v 2.2 2003/02/22 02:07:23 greg Exp $
+# RCSid: $Id: genpine.csh,v 2.3 2005/02/16 05:40:11 greg Exp $
 #
 # Generate a tree
 # Pine version 2
@@ -54,8 +54,8 @@ _EOF_
 #
 # Next start seedling
 #
-set tree=/usr/tmp/t$$
-set oldtree=/usr/tmp/ot$$
+set tree=/tmp/t$$
+set oldtree=/tmp/ot$$
 set thisrad=.035
 cat << _EOF_ > $tree
 

@@ -1,9 +1,9 @@
 #!/bin/csh -f
-# RCSid: $Id: phisto.csh,v 3.3 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: phisto.csh,v 3.4 2005/02/16 05:40:11 greg Exp $
 #
 # Compute foveal histogram for picture set
 #
-set tf=/usr/tmp/ph$$
+set tf=/tmp/ph$$
 onintr quit
 if ( $#argv == 0 ) then
 	pfilt -1 -x 128 -y 128 -p 1 \

@@ -1,4 +1,4 @@
-# RCSid: $Id: do_action.tcl,v 2.11 2004/01/01 19:31:46 greg Exp $
+# RCSid: $Id: do_action.tcl,v 2.12 2005/02/16 05:40:12 greg Exp $
 #
 # Action screen for trad
 #
@@ -8,7 +8,7 @@ set hostname [exec hostname]
 
 proc make_script {} {		# make run script
 	global scname rpview curmess
-	set rfn /usr/tmp/rf[pid]
+	set rfn /tmp/rf[pid]
 	if {! [save_vars $rfn]} {
 		beep
 		set curmess "Cannot save variables to temporary file!"
@@ -19,7 +19,7 @@ proc make_script {} {		# make run script
 		lappend radcom -v $rpview
 	}
 	if {"$scname" == {}} {
-		set rof /usr/tmp/ro[pid]
+		set rof /tmp/ro[pid]
 	} else {
 		set rof $scname
 	}
@@ -50,7 +50,7 @@ proc make_oct args {		# Make octree file ($args is {-t} or {})
 
 proc run_rad args {		# Run rad command with given arguments
 	global curmess
-	set rfn /usr/tmp/rf[pid]
+	set rfn /tmp/rf[pid]
 	if {! [save_vars $rfn]} {
 		beep
 		set curmess "Cannot save variables to temporary file!"

@@ -1,11 +1,11 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.11 2005/01/18 03:59:41 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.12 2005/02/16 05:40:11 greg Exp $
 #
 # Create false color image with legend
 #
 # Added user-definable legend 2004/01/20 Rob Guglielmetti
 
-set td=/usr/tmp/fc$$
+set td=/tmp/fc$$
 onintr quit
 set mult=179
 set label=Nits

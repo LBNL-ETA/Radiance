@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: pveil.csh,v 3.2 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: pveil.csh,v 3.3 2005/02/16 05:40:11 greg Exp $
 #
 # Add veiling glare to picture
 #
@@ -8,7 +8,7 @@ if ($#argv != 1) then
 	exit 1
 endif
 set ifile=$1
-set td=/usr/tmp
+set td=/tmp
 set gf=$td/av$$.gs
 set cf=$td/av$$.cal
 set tf=($gf $cf)

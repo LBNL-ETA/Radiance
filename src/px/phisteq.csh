@@ -1,10 +1,10 @@
 #!/bin/csh -f
-# RCSid: $Id: phisteq.csh,v 3.2 2004/01/01 19:44:07 greg Exp $
+# RCSid: $Id: phisteq.csh,v 3.3 2005/02/16 05:40:11 greg Exp $
 set Ldmin=1		# minimum display luminance
 set Ldmax=100		# maximum display luminance
 set nsteps=100		# number of steps in perceptual histogram
 set cvratio=0.08	# fraction of pixels to ignore in envelope clipping
-set td=/usr/tmp
+set td=/tmp
 set tf1=$td/hist$$
 set tf1b=$td/hist$$.new
 set tf2=$td/cumt$$

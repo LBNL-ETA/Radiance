@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: compamb.csh,v 3.5 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: compamb.csh,v 3.6 2005/02/16 05:40:11 greg Exp $
 #
 # Compute best ambient value for a scene and append to rad input file
 #
@@ -22,7 +22,7 @@ if ( $#argv != 1 ) then
 	exit 1
 endif
 onintr quit
-set tf=/usr/tmp/ca$$
+set tf=/tmp/ca$$
 set oct=`rad -w -s -e -v 0 $argv[1] QUA=High AMB=$tf.amb OPT=$tf.opt | sed -n 's/^OCTREE= //p'`
 rad -n -s -V $argv[1] \
 	| rpict @$tf.opt -av 0 0 0 -aw 16 -dv- -S 1 -x 16 -y 16 -ps 1 $oct \

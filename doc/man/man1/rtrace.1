@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.4 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.5 2005/02/16 05:40:07 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -592,7 +592,7 @@ cnt 640 480 | rcalc -e 'xr:640;yr:480' -f unusual_view.cal | rtrace
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH FILES
-/usr/tmp/rtXXXXXX		common header information for picture sequence
+/tmp/rtXXXXXX		common header information for picture sequence
 .SH DIAGNOSTICS
 If the program terminates from an input related error, the exit status
 will be 1.

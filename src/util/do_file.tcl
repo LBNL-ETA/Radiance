@@ -1,4 +1,4 @@
-# RCSid: $Id: do_file.tcl,v 2.17 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: do_file.tcl,v 2.18 2005/02/16 05:40:12 greg Exp $
 #
 # Choose the Rad Input File to work on.
 #
@@ -153,12 +153,12 @@ proc load_vars {f {vl all}} {	# load RIF variables
 	if {"$vl" == "all" && ! [chksave]} {return 0}
 	set curmess {Please wait...}
 	update
-	if [catch {exec rad -n -w -e $f >& /usr/tmp/ro[pid]}] {
-		set curmess [exec cat /usr/tmp/ro[pid]]
-		exec rm -f /usr/tmp/ro[pid]
+	if [catch {exec rad -n -w -e $f >& /tmp/ro[pid]}] {
+		set curmess [exec cat /tmp/ro[pid]]
+		exec rm -f /tmp/ro[pid]
 		return 0
 	}
-	set fi [open /usr/tmp/ro[pid] r]
+	set fi [open /tmp/ro[pid] r]
 	if {"$vl" == "all"} {
 		catch {unset radvar}
 		while {[gets $fi curli] != -1} {
@@ -191,7 +191,7 @@ proc load_vars {f {vl all}} {	# load RIF variables
 	}
 	set alldone [eof $fi]
 	close $fi
-	exec rm -f /usr/tmp/ro[pid]
+	exec rm -f /tmp/ro[pid]
 	preen
 	return 1
 }

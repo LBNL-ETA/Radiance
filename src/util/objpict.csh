@@ -1,11 +1,11 @@
 #!/bin/csh -f
-# RCSid: $Id: objpict.csh,v 2.3 2004/01/29 22:45:30 greg Exp $
+# RCSid: $Id: objpict.csh,v 2.4 2005/02/16 05:40:12 greg Exp $
 #
 # Make a nice multi-view picture of an object
 # Command line arguments contain materials and object files
 #
 set objdir=/usr/local/lib/ray/lib
-set tmpdir=/usr/tmp
+set tmpdir=/tmp
 set xres=250
 set yres=250
 set rpict="rpict -av .2 .2 .2 -x $xres -y $yres"

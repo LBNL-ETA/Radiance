@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: xyzimage.csh,v 2.3 2003/02/22 02:07:28 greg Exp $
+# RCSid: $Id: xyzimage.csh,v 2.4 2005/02/16 05:40:11 greg Exp $
 #
 # Display one or more CIE XYZE pictures using ximage
 #
@@ -48,7 +48,7 @@ while ( $i <= $#argv && ! $firstarg )
 	endsw
 	set i=$i1
 end
-set td=/usr/tmp/xyz$$
+set td=/tmp/xyz$$
 set ecode=1
 onintr quit
 mkdir $td

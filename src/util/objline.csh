@@ -1,9 +1,9 @@
 #!/bin/csh -f
-# RCSid: $Id: objline.csh,v 2.3 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: objline.csh,v 2.4 2005/02/16 05:40:12 greg Exp $
 # Create four standard views of scene and present as line drawings
 #
 set oblqxf="-rz 45 -ry 45"
-set d=/usr/tmp/ol$$
+set d=/tmp/ol$$
 onintr quit
 mkdir $d
 if ($#argv) then

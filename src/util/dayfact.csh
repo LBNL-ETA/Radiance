@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: dayfact.csh,v 2.5 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: dayfact.csh,v 2.6 2005/02/16 05:40:12 greg Exp $
 #
 # Interactive script to calculate daylight factors
 #
@@ -74,18 +74,18 @@ if ( $genskyf == $nofile ) then
 	echo "You will not be able to compute daylight factors"
 	echo "or energy savings since there is no gensky file."
 else
-	xform -e $genskyf > /usr/tmp/gsf$$
-	grep '^# gensky ' /usr/tmp/gsf$$
+	xform -e $genskyf > /tmp/gsf$$
+	grep '^# gensky ' /tmp/gsf$$
 	if ( $status ) then
 		echo "The file $genskyf does not contain a gensky command\!"
-		rm -f /usr/tmp/gsf$$
+		rm -f /tmp/gsf$$
 		goto getgenskyf
 	endif
-	set title=$title\ `sed -n 's/^# gensky  *\([0-9][0-9]*  *[0-9][0-9]*  *[0-9][0-9.]*\).*$/\1/p' /usr/tmp/gsf$$`
-	set extamb=`sed -n 's/^# Ground ambient level: //p' /usr/tmp/gsf$$`
-	grep -s '^# gensky .* -c' /usr/tmp/gsf$$
+	set title=$title\ `sed -n 's/^# gensky  *\([0-9][0-9]*  *[0-9][0-9]*  *[0-9][0-9.]*\).*$/\1/p' /tmp/gsf$$`
+	set extamb=`sed -n 's/^# Ground ambient level: //p' /tmp/gsf$$`
+	grep -s '^# gensky .* -c' /tmp/gsf$$
 	set nodaysav=$status
-	rm -f /usr/tmp/gsf$$
+	rm -f /tmp/gsf$$
 	if ( $nodaysav ) then
 		echo "The gensky command was not done for an overcast sky"
 		echo "(-c option), so energy savings cannot be calculated."
@@ -115,17 +115,17 @@ if ( $ilpict == $nofile && $dfpict == $nofile && $dspict == $nofile ) then
 endif
 echo "Title for output picture"
 readvar title
-set sctemp=/usr/tmp/sc$$.csh
+set sctemp=/tmp/sc$$.csh
 cat <<'_EOF_' > $sctemp
 if ( $illumpic != $nofile ) then
 	set iltemp=""
 else
-	set iltemp=/usr/tmp/il$$.pic
+	set iltemp=/tmp/il$$.pic
 	set illumpic=$iltemp
 endif
-set tltemp=/usr/tmp/tl$$.pic
-set dstemp=/usr/tmp/ds$$.pic
-set temp1=/usr/tmp/tfa$$
+set tltemp=/tmp/tl$$.pic
+set dstemp=/tmp/ds$$.pic
+set temp1=/tmp/tfa$$
 set tempfiles=($iltemp $sctemp $tltemp $dstemp $temp1)
 echo "Your dayfact job is finished."
 echo "Please check for error messages below."
