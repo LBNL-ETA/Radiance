@@ -1,4 +1,4 @@
-.\" RCSid "$Id: oconv.1,v 1.6 2004/04/12 17:31:27 greg Exp $"
+.\" RCSid "$Id: oconv.1,v 1.7 2004/04/21 15:01:46 greg Exp $"
 .TH OCONV 1 8/15/95 RADIANCE
 .SH NAME
 oconv - create an octree from a RADIANCE scene description
@@ -140,7 +140,7 @@ specification.
 If hundreds of triangles come together at a common vertex, it may
 not be possible to create an octree from the object.
 This happens most often when inane CAD systems create spheres using
-a polar tesselation.
+a polar tessellation.
 Chances are, the surface "id" is near one of those causing the problem.
 .IP "Hash table overflow in fullnode"
 This error is caused by too many surfaces.
