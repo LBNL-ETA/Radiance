@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.29 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.30 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -73,6 +73,7 @@ int	gotview;
 
 extern char	*emalloc();
 
+static gethfunc tabputs;
 
 main(argc, argv)
 int	argc;
@@ -219,8 +220,11 @@ usage:
 }
 
 
-tabputs(s)			/* put out string preceded by a tab */
-char	*s;
+static int
+tabputs(			/* put out string preceded by a tab */
+	char	*s,
+	void	*p
+)
 {
 	char	fmt[32];
 	double	d;

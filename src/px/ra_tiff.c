@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.26 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.27 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -11,6 +11,8 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.26 2003/07/27 22:12:03 schorsch 
 #include  <math.h>
 #include  <ctype.h>
 #include  <time.h>
+#include  <string.h>
+
 #include  "tiffio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -93,6 +95,8 @@ extern char	TMSTR[];	/* "CAPDATE=" from header.c */
 char		OWNSTR[] = "OWNER=";
 
 char  *progname;
+
+static gethfunc headline;
 
 
 main(argc, argv)
@@ -411,9 +415,11 @@ char  *av[];
 }
 
 
-int
-headline(s)			/* process Radiance input header line */
-char	*s;
+static int
+headline(			/* process Radiance input header line */
+	char	*s,
+	void	*p
+)
 {
 	static int	tmstrlen = 0;
 	static int	ownstrlen = 0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.15 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.16 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -14,8 +14,6 @@ static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.15 2003/11/10 12:28:56 schorsch 
 #include  "rtprocess.h"
 #include  "color.h"
 #include  "resolu.h"
-
-extern int	addhline();
 
 #define dumpheader(fp)	fwrite(headlines, 1, headlen, fp)
 
@@ -33,6 +31,8 @@ char  *headlines;			/* current header info. */
 int  headlen;				/* current header length */
 
 char  *progname;
+
+static gethfunc addhline;
 
 
 main(argc, argv)
@@ -192,9 +192,11 @@ char	*ospec;
 }
 
 
-int
-addhline(s)			/* add a line to our info. header */
-char	*s;
+static int
+addhline(			/* add a line to our info. header */
+	char	*s,
+	void	*p
+)
 {
 	char	fmt[32];
 	int	n;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.26 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.27 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -61,9 +61,14 @@ int  wrongformat = 0;
 FILE  *lblopen();
 void  quit();
 
+static gethfunc tabputs;
 
-tabputs(s)			/* print line preceded by a tab */
-char  *s;
+
+static int
+tabputs(			/* print line preceded by a tab */
+	char	*s,
+	void	*p
+)
 {
 	char  fmt[32];
 

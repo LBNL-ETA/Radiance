@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.8 2003/07/03 22:41:44 schorsch Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.9 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  * Find extrema points in a Radiance picture.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: pextrem.c,v 2.8 2003/07/03 22:41:44 schorsch E
 
 #include  "platform.h"
 #include  "color.h"
+#include  "resolu.h"
 
 
 int  orig = 0;
@@ -19,9 +20,14 @@ int  wrongformat = 0;
 
 COLOR  expos = WHTCOLOR;
 
+static gethfunc headline;
 
-headline(s)			/* check header line */
-char  *s;
+
+static int
+headline(			/* check header line */
+	char  *s,
+	void	*p
+)
 {
 	char	fmt[32];
 	double	d;

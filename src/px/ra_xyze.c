@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.7 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.8 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -29,10 +29,14 @@ int  doflat = -1;			/* produce flat file? */
 
 char  *progname;
 
+static gethfunc headline;
 
-int
-headline(s)				/* process header line */
-char	*s;
+
+static int
+headline(				/* process header line */
+	char	*s,
+	void	*p
+)
 {
 	char	fmt[32];
 

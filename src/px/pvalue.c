@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.24 2003/10/22 02:06:35 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.25 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -61,6 +61,9 @@ FILE  *fin2 = NULL, *fin3 = NULL;	/* for other color channels */
 
 int  (*getval)(), (*putval)();
 
+static gethfunc checkhead;
+
+
 double
 rgb_bright(clr)
 COLOR  clr;
@@ -82,7 +85,6 @@ main(argc, argv)
 int  argc;
 char  **argv;
 {
-	extern int  checkhead();
 	extern long  atol();
 	double  d, expval = 1.0;
 	int  i;
@@ -353,9 +355,11 @@ unkopt:
 }
 
 
-int
-checkhead(line)				/* deal with line from header */
-char  *line;
+static int
+checkhead(				/* deal with line from header */
+	char	*line,
+	void	*p
+)
 {
 	char	fmt[32];
 	double	d;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.19 2003/11/10 11:54:23 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.20 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -43,6 +43,8 @@ double	bwmin, bwmax;			/* histogram limits */
 double	bwavg;				/* mean brightness */
 
 double	scalef = 0.;			/* linear scaling factor */
+
+static gethfunc headline;
 
 
 main(argc, argv)
@@ -198,8 +200,11 @@ char	*s;
 }
 
 
-headline(s)				/* process header line */
-char	*s;
+static int
+headline(				/* process header line */
+	char	*s,
+	void	*p
+)
 {
 	static RGBPRIMS	inprimS;
 	char	fmt[32];

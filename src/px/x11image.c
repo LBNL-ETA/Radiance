@@ -128,12 +128,13 @@ int  sigrecv;
 
 void  onsig(int i) { sigrecv++; }
 
+static gethfunc headline;
+
 
 main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	int  headline();
 	int  i;
 	int  pid;
 	
@@ -246,9 +247,11 @@ userr:
 }
 
 
-int
-headline(s)		/* get relevant info from header */
-char  *s;
+static int
+headline(		/* get relevant info from header */
+	char	*s,
+	void	*p
+)
 {
 	char  fmt[32];
 

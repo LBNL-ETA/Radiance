@@ -1,9 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vgaimage.c,v 2.10 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: vgaimage.c,v 2.11 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  vgaimage.c - driver for VGA board under DOS
  */
+
+#include <stdio.h>
 
 #include  "standard.h"
 #include  <graph.h>
@@ -70,7 +72,7 @@ char  errmsg[128];
 
 extern BYTE  clrtab[256][3];		/* global color map */
 
-extern long  ftell();
+static gethfunc headline;
 
 
 main(argc, argv)
@@ -79,7 +81,6 @@ char  *argv[];
 {
 	extern char  *getenv(), *fixargv0();
 	char  *gv;
-	int  headline();
 	int  i;
 
 	progname = argv[0] = fixargv0(argv[0]);
@@ -144,9 +145,11 @@ userr:
 }
 
 
-int
-headline(s)		/* get relevant info from header */
-char  *s;
+static int
+headline(		/* get relevant info from header */
+	char	*s,
+	void	*p
+)
 {
 	char  fmt[32];
 

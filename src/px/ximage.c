@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ximage.c,v 2.12 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: ximage.c,v 2.13 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  ximage.c - driver for X-windows
@@ -79,6 +79,8 @@ char  *progname;
 
 char  errmsg[128];
 
+static gethfunc headline;
+
 
 main(argc, argv)
 int  argc;
@@ -86,7 +88,6 @@ char  *argv[];
 {
 	extern char  *getenv();
 	char  *gv;
-	int  headline();
 	int  i;
 	
 	progname = argv[0];
@@ -158,9 +159,11 @@ userr:
 }
 
 
-int
-headline(s)		/* get relevant info from header */
-char  *s;
+static int
+headline(		/* get relevant info from header */
+	char	*s,
+	void	*p
+)
 {
 	char  fmt[32];
 

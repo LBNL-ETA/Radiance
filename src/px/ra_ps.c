@@ -1,16 +1,18 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.26 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.27 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include  <math.h>
 #include  <ctype.h>
 
 #include  "platform.h"
 #include  "color.h"
+#include  "resolu.h"
 
 #define UPPER(c)	((c)&~0x20)		/* ASCII trick */
 
@@ -59,10 +61,14 @@ int  xmax, ymax;			/* input image dimensions */
 
 extern double	unit2inch();
 
+static gethfunc headline;
 
-int
-headline(s)		/* check header line */
-char  *s;
+
+static int
+headline(		/* check header line */
+	char	*s,
+	void	*p
+)
 {
 	char  fmt[32];
 
@@ -187,10 +193,10 @@ unit2inch(s)		/* determine unit */
 register char	*s;
 {
 	static struct unit {char n; float f;} u[] = {
-		'i', 1.,
-		'm', 1./25.4,
-		'c', 1./2.54,
-		'\0' };
+		{'i', 1.},
+		{'m', 1./25.4},
+		{'c', 1./2.54},
+		{'\0',0} };
 	register struct unit	*up;
 
 	while (*s && !isalpha(*s))
@@ -225,26 +231,26 @@ parsepaper(ps)		/* determine paper size from name */
 char	*ps;
 {
 	static struct psize {char n[12]; float w,h;} p[] = {
-		"envelope", 4.12, 9.5,
-		"executive", 7.25, 10.5,
-		"letter", 8.5, 11.,
-		"lettersmall", 7.68, 10.16,
-		"legal", 8.5, 14.,
-		"monarch", 3.87, 7.5,
-		"statement", 5.5, 8.5,
-		"tabloid", 11., 17.,
-		"A3", 11.69, 16.54,
-		"A4", 8.27, 11.69,
-		"A4small", 7.47, 10.85,
-		"A5", 6.00, 8.27,
-		"A6", 4.13, 6.00,
-		"B4", 10.12, 14.33,
-		"B5", 7.17, 10.12,
-		"C5", 6.38, 9.01,
-		"C6", 4.49, 6.38,
-		"DL", 4.33, 8.66,
-		"hagaki", 3.94, 5.83,
-		"" };
+		{"envelope", 4.12, 9.5},
+		{"executive", 7.25, 10.5},
+		{"letter", 8.5, 11.},
+		{"lettersmall", 7.68, 10.16},
+		{"legal", 8.5, 14.},
+		{"monarch", 3.87, 7.5},
+		{"statement", 5.5, 8.5},
+		{"tabloid", 11., 17.},
+		{"A3", 11.69, 16.54},
+		{"A4", 8.27, 11.69},
+		{"A4small", 7.47, 10.85},
+		{"A5", 6.00, 8.27},
+		{"A6", 4.13, 6.00},
+		{"B4", 10.12, 14.33},
+		{"B5", 7.17, 10.12},
+		{"C5", 6.38, 9.01},
+		{"C6", 4.49, 6.38},
+		{"DL", 4.33, 8.66},
+		{"hagaki", 3.94, 5.83},
+		{"",0.0,0.0} };
 	register struct psize	*pp;
 	register char	*s = ps;
 	double	d;

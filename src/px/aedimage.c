@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aedimage.c,v 2.5 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: aedimage.c,v 2.6 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  aedimage.c - RADIANCE driver for AED 512 terminal.
@@ -9,15 +9,12 @@ static const char	RCSid[] = "$Id: aedimage.c,v 2.5 2003/02/22 02:07:27 greg Exp 
  */
 
 #include  <stdio.h>
-
 #include  <math.h>
-
 #include  <signal.h>
-
 #include  <sys/ioctl.h>
 
 #include  "pic.h"
-
+#include  "resolu.h"
 #include  "color.h"
 
 
@@ -99,12 +96,14 @@ long  scanpos[NROWS];
 double  exposure = 1.0;
 int  wrong_fmt = 0;
 
+static gethfunc checkhead;
+
 
 main(argc, argv)
 int  argc;
 char  *argv[];
 {
-	int  onintr(), checkhead();
+	int  onintr();
 	char  sbuf[256];
 	register int  i;
 	
@@ -167,9 +166,11 @@ userr:
 }
 
 
-int
-checkhead(line)				/* deal with line from header */
-char  *line;
+static int
+checkhead(				/* deal with line from header */
+	char  *line,
+	void	*p
+)
 {
 	char	fmt[32];
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psum.c,v 2.6 2003/10/27 10:22:27 schorsch Exp $";
+static const char	RCSid[] = "$Id: psum.c,v 2.7 2004/01/02 12:47:01 schorsch Exp $";
 #endif
 /*
  *  psum.c - program to sum pictures.
@@ -26,10 +26,14 @@ FILE  *fptr[MAXFILE];			/* the file pointers */
 COLOR  scale[MAXFILE];			/* scaling factors */
 int  nfile;				/* number of files */
 
+static gethfunc tabputs;
 
-int
-tabputs(s)			/* print line preceded by a tab */
-char  *s;
+
+static int
+tabputs(			/* print line preceded by a tab */
+	char	*s,
+	void	*p
+)
 {
 	putc('\t', stdout);
 	return(fputs(s, stdout));
