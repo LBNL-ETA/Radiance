@@ -78,6 +78,8 @@ for d in Split('meta cv gen ot rt px hd util cal'):
 if string.find(string.join(sys.argv[1:]), 'install') > -1:
 	shareinstall_setup(env)
 
+Default('.')
+
 # virtual targets
 env.Alias('bininstall',  '$RAD_BINDIR')
 env.Alias('rlibinstall', '$RAD_RLIBDIR')
