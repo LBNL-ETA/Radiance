@@ -1138,3 +1138,24 @@ models where many faces come together at a point.
 This required a little reprogramming in for couple
 of recursive routines using sets to avoid overrunning
 the stack limit.
+
+==============================
+Version 3.6
+
+Modified 4-byte RGBE encoding routine to avoid problems
+when one or two primary values is negative and the other(s)
+positive.  This used to generate some strange color values.
+
+Added -oc option to rtrace to output local (u,v) coordinates.
+
+Fixed bugs in local uv and j unit vector variables in src/rt/func.c.
+
+Added warning message to OpenGL rendering routines about new
+mesh primitive, which we cannot currently render.
+
+Added -if, -id, -of, and -od options to rcalc to provide for
+binary float and double i/o.
+
+****************** COMPATIBILITY CHANGE ***********************
+Changed holodeck format to used off_t instead of long for beam
+positions, which allows holodecks to grow to system file size limit.
