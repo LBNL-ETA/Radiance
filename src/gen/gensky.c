@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.22 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.23 2004/09/10 18:19:24 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -95,7 +95,7 @@ void printsky(void);
 void printdefaults(void);
 void userror(char  *msg);
 double normsc(void);
-void cvthour(char  *hs);
+int cvthour(char  *hs);
 void printhead(register int  ac, register char  **av);
 
 
@@ -104,6 +104,7 @@ main(argc, argv)
 int  argc;
 char  *argv[];
 {
+	int  got_meridian = 0;
 	int  i;
 
 	progname = argv[0];
@@ -124,7 +125,7 @@ char  *argv[];
 		day = atoi(argv[2]);
 		if (day < 1 || day > 31)
 			userror("bad day");
-		cvthour(argv[3]);
+		got_meridian = cvthour(argv[3]);
 	}
 	for (i = 4; i < argc; i++)
 		if (argv[i][0] == '-' || argv[i][0] == '+')
@@ -166,6 +167,10 @@ char  *argv[];
 				s_longitude = atof(argv[++i]) * (PI/180);
 				break;
 			case 'm':
+				if (got_meridian) {
+					++i;
+					break;		/* time overrides */
+				}
 				s_meridian = atof(argv[++i]) * (PI/180);
 				break;
 			default:
@@ -370,7 +375,7 @@ normsc(void)			/* compute normalization factor (E0*F2/L0) */
 }
 
 
-void
+int
 cvthour(			/* convert hour string */
 	char  *hs
 )
@@ -388,7 +393,7 @@ cvthour(			/* convert hour string */
 	}
 	while (isdigit(*cp)) cp++;
 	if (!*cp)
-		return;
+		return(0);
 	if (tsolar || !isalpha(*cp)) {
 		fprintf(stderr, "%s: bad time format: %s\n", progname, hs);
 		exit(1);
@@ -400,7 +405,7 @@ cvthour(			/* convert hour string */
 				break;
 		if (!cp[j] && !tzone[i].zname[j]) {
 			s_meridian = tzone[i].zmer * (PI/180);
-			return;
+			return(1);
 		}
 	} while (tzone[i++].zname[0]);
 

@@ -1305,3 +1305,6 @@ Fixed rad so that 'scene' variable may consist only of inline commands.
 Fixed bug introduced in shadow caching routines where sources in the
 middle of spheres were not illuminating properly.  Thanks to Guilio
 Antonutto for spotting this problem.
+
+Modified gensky behavior so if time is given with standard time zone
+designation, any -m option is ignored.
