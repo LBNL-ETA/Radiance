@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.8 2004/08/21 11:54:06 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -16,6 +16,8 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.7 2003/11/16 10:29:38 schorsch Ex
 #include  <string.h>
 #include  <math.h>
 
+#include  "rterror.h"
+#include  "resolu.h"
 #include  "rterror.h"
 #include  "calcomp.h"
 
@@ -43,44 +45,6 @@ double  *nzp, *nrp, z0, r0, z1, r1;
 	len = sqrt(dr*dr + dz*dz);
 	*nzp = dz/len;
 	*nrp = dr/len;
-}
-
-
-void
-eputs(msg)
-char  *msg;
-{
-	fputs(msg, stderr);
-}
-
-
-void
-wputs(msg)
-char  *msg;
-{
-	eputs(msg);
-}
-
-
-void
-quit(code)
-int  code;
-{
-	exit(code);
-}
-
-
-void
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
 }
 
 
@@ -163,7 +127,8 @@ char  *argv[];
 		goto userror;
 	modname = smooth ? "Phong" : argv[1];
 
-	printhead(argc, argv);
+	fputs("# ", stdout);
+	printargs(argc, argv, stdout);
 	eclock = 0;
 
 	lastnz = lastnr = 0.0;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.15 2004/03/26 21:30:12 schorsch Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.16 2004/08/21 11:54:06 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -18,6 +18,8 @@ static const char RCSid[] = "$Id: gensurf.c,v 2.15 2004/03/26 21:30:12 schorsch 
 #include  "standard.h"
 
 #include  "paths.h"
+#include  "resolu.h"
+#include  "rterror.h"
 #include  "calcomp.h"
 
 char  XNAME[] =		"X`SYS";		/* x function name */
@@ -69,7 +71,6 @@ void putsquare(POINT *p0, POINT *p1, POINT *p2, POINT *p3);
 void comprow(double s, POINT *row, int siz);
 void compnorms(POINT *r0, POINT *r1, POINT *r2, int siz);
 int norminterp(FVECT resmat[4], POINT *p0, POINT *p1, POINT *p2, POINT *p3);
-void printhead(int ac, char **av);
 
 
 int
@@ -137,7 +138,8 @@ char  *argv[];
 	}
 	row0++; row1++; row2++;
 						/* print header */
-	printhead(argc, argv);
+	fputs("# ", stdout);
+	printargs(argc, argv, stdout);
 	eclock = 0;
 						/* initialize */
 	comprow(-1.0/m, row0, n);
@@ -583,45 +585,6 @@ norminterp(	/* compute normal interpolation */
 
 #undef u
 #undef v
-}
-
-
-void
-eputs(msg)
-char  *msg;
-{
-	fputs(msg, stderr);
-}
-
-
-void
-wputs(msg)
-char  *msg;
-{
-	eputs(msg);
-}
-
-
-void
-quit(code)
-int  code;
-{
-	exit(code);
-}
-
-
-void
-printhead(		/* print command header */
-	register int  ac,
-	register char  **av
-)
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
 }
 
 

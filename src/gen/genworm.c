@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.7 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.8 2004/08/21 11:54:06 greg Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -17,6 +17,8 @@ static const char	RCSid[] = "$Id: genworm.c,v 2.7 2003/11/16 10:29:38 schorsch E
 #include  <string.h>
 
 #include  "calcomp.h"
+#include  "resolu.h"
+#include  "rterror.h"
 #include  "fvect.h"
 
 #define  XNAME		"X`SYS`"		/* x function name */
@@ -31,9 +33,6 @@ static const char	RCSid[] = "$Id: genworm.c,v 2.7 2003/11/16 10:29:38 schorsch E
 
 /* XXX redundant, move to library */
 double  l_hermite(char *), l_bezier(char *), l_bspline(char *);
-
-
-static void printhead(int  ac, char  **av);
 
 
 int
@@ -74,7 +73,8 @@ char  *argv[];
 	if (nseg <= 0)
 		goto userror;
 
-	printhead(argc, argv);
+	fputs("# ", stdout);
+	printargs(argc, argv, stdout);
 	eclock = 0;
 
 	for (i = 0; i <= nseg; i++) {
@@ -124,45 +124,6 @@ userror:
 "Usage: %s material name x(t) y(t) z(t) r(t) nseg [-e expr] [-f file]\n",
 			argv[0]);
 	return 1;
-}
-
-
-void
-eputs(msg)
-char  *msg;
-{
-	fputs(msg, stderr);
-}
-
-
-void
-wputs(msg)
-char  *msg;
-{
-	eputs(msg);
-}
-
-
-void
-quit(code)
-int  code;
-{
-	exit(code);
-}
-
-
-void
-printhead(		/* print command header */
-	register int  ac,
-	register char  **av
-)
-{
-	putchar('#');
-	while (ac--) {
-		putchar(' ');
-		fputs(*av++, stdout);
-	}
-	putchar('\n');
 }
 
 
