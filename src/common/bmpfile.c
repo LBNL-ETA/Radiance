@@ -1,11 +1,9 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.2 2004/03/26 21:29:19 schorsch Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.3 2004/03/26 22:58:21 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
  */
-
-/* XXX reading and writing of compressed files currently unsupported */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,24 +23,58 @@ BMPerrorMessage(int ec)
 		return "Truncated BMP image";
 	case BIR_UNSUPPORTED:
 		return "Unsupported BMP feature";
+	case BIR_RLERROR:
+		return "BMP runlength encoding error";
 	case BIR_SEEKERR:
 		return "BMP seek error";
 	}
 	return "Unknown BMP error";
 }
 
-/* compute uncompressed scanline size */
-static uint32
-getScanSiz(BMPHeader *hdr)
+/* check than header is sensible */
+static int
+BMPheaderOK(const BMPHeader *hdr)
 {
-	uint32  scanSiz;
-						/* bytes per scanline */
-	scanSiz = (hdr->bpp*hdr->width + 7) >> 3;
-	if (scanSiz & 3)			/* 32-bit word boundary */
-		scanSiz += 4 - (scanSiz & 3);
-
-	return scanSiz;
+	if (!hdr)
+		return 0;
+	if ((hdr->width <= 0 | hdr->height <= 0))
+		return 0;
+	switch (hdr->bpp) {		/* check compression */
+	case 1:
+	case 24:
+		if (hdr->compr != BI_UNCOMPR)
+			return 0;
+		break;
+	case 16:
+	case 32:
+		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_BITFIELDS))
+			return 0;
+		break;
+	case 4:
+		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_RLE4))
+			return 0;
+		break;
+	case 8:
+		if ((hdr->compr != BI_UNCOMPR & hdr->compr != BI_RLE8))
+			return 0;
+		break;
+	default:
+		return 0;
+	}
+	if (hdr->compr == BI_BITFIELDS && (BMPbitField(hdr)[0] &
+				BMPbitField(hdr)[1] & BMPbitField(hdr)[2]))
+		return 0;
+	if ((hdr->nColors < 0 | hdr->impColors < 0))
+		return 0;
+	if (hdr->impColors > hdr->nColors)
+		return 0;
+	if (hdr->nColors > BMPpalLen(hdr))
+		return 0;
+	return 1;
 }
+
+					/* compute uncompressed scan size */
+#define getScanSiz(h)   ( (((h)->bpp*(h)->width+7 >>3) + 3) & ~03 )
 
 					/* get next byte from reader */
 #define rdbyte(c,br)    ((br)->fpos += (c=(*(br)->cget)((br)->c_data))!=EOF, c)
@@ -130,7 +162,7 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	(void)rdint32(br);			/* file size */
 	(void)rdint32(br);			/* reserved word */
 	bmPos = rdint32(br);			/* offset to bitmap */
-	hdrSiz = rdint32(br) + 14;		/* header size */
+	hdrSiz = 2 + 3*4 + rdint32(br);		/* header size */
 	if (hdrSiz < 2 + 6*4 + 2*2 + 6*4)
 		goto err;
 	br->hdr->width = rdint32(br);		/* bitmap width */
@@ -142,13 +174,7 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	if (rduint16(br) != 1)			/* number of planes */
 		goto err;
 	br->hdr->bpp = rduint16(br);		/* bits per pixel */
-	if (br->hdr->bpp != 1 && br->hdr->bpp != 4 &&
-			br->hdr->bpp != 8 && br->hdr->bpp != 24 &&
-			br->hdr->bpp != 32)
-		goto err;
 	br->hdr->compr = rdint32(br);		/* compression mode */
-	if (br->hdr->compr != BI_UNCOMPR && br->hdr->compr != BI_RLE8)
-		goto err;			/* don't support the rest */
 	(void)rdint32(br);			/* bitmap size */
 	br->hdr->hRes = rdint32(br);		/* horizontal resolution */
 	br->hdr->vRes = rdint32(br);		/* vertical resolution */
@@ -156,19 +182,15 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	br->hdr->impColors = rdint32(br);       /* # important colors */
 	if (br->hdr->impColors < 0)
 		goto err;			/* catch premature EOF */
-	palLen = 0;
-	if (br->hdr->bpp <= 8) {
-		palLen = 1 << br->hdr->bpp;
+	if (!BMPheaderOK(br->hdr))
+		goto err;
+	palLen = BMPpalLen(br->hdr);
+	if (br->hdr->bpp <= 8) {		/* normalize color counts */
 		if (br->hdr->nColors <= 0)
 			br->hdr->nColors = palLen;
-		else if (br->hdr->nColors > palLen)
-			goto err;
 		if (br->hdr->impColors <= 0)
 			br->hdr->impColors = br->hdr->nColors;
-		else if (br->hdr->impColors > br->hdr->nColors)
-			goto err;
-	} else if (br->hdr->nColors > 0 || br->hdr->compr != BI_UNCOMPR)
-		goto err;
+	}
 						/* extend header */
 	if (bmPos < hdrSiz + sizeof(RGBquad)*palLen)
 		goto err;
@@ -176,14 +198,17 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	if (palLen > 0 || br->hdr->infoSiz > 0) {
 		br->hdr = (BMPHeader *)realloc((void *)br->hdr,
 					sizeof(BMPHeader) +
-					sizeof(RGBquad)*palLen -
-					sizeof(br->hdr->palette) +
+					sizeof(RGBquad)*palLen +
 					br->hdr->infoSiz);
 		if (br->hdr == NULL)
 			goto err;
 	}
-						/* read color palette */
-	if (rdbytes((char *)br->hdr->palette,
+						/* read colors or fields */
+	if (br->hdr->compr == BI_BITFIELDS) {
+		BMPbitField(br->hdr)[0] = (uint32)rdint32(br);
+		BMPbitField(br->hdr)[1] = (uint32)rdint32(br);
+		BMPbitField(br->hdr)[2] = (uint32)rdint32(br);
+	} else if (rdbytes((char *)br->hdr->palette,
 			sizeof(RGBquad)*palLen, br) != BIR_OK)
 		goto err;
 						/* read add'l information */
@@ -194,7 +219,8 @@ BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 	if (br->scanline == NULL)
 		goto err;
 	br->yscan = -1;
-	if (seek != NULL && br->hdr->compr != BI_UNCOMPR) {
+	if (seek != NULL && (br->hdr->compr == BI_RLE8 |
+					br->hdr->compr == BI_RLE4)) {
 		BMPReader       *newbr = (BMPReader *)realloc((void *)br,
 						sizeof(BMPReader) +
 						sizeof(br->scanpos[0]) *
@@ -239,14 +265,92 @@ BMPisGrayscale(const BMPHeader *hdr)
 int
 BMPreadScanline(BMPReader *br)
 {
+	int     n;
+	int8    *sp;
+
 	if (br->yscan + 1 >= br->hdr->height)
 		return BIR_EOF;
 	br->yscan++;			/* prepare to read */
-	if (br->hdr->compr == BI_UNCOMPR)
-		return rdbytes((char *)br->scanline, getScanSiz(br->hdr), br);
-/* XXX need to perform actual decompression */
-	return BIR_UNSUPPORTED;
-	if (br->seek != NULL)
+	n = getScanSiz(br->hdr);	/* reading uncompressed data? */
+	if (br->hdr->compr == BI_UNCOMPR || br->hdr->compr == BI_BITFIELDS)
+		return rdbytes((char *)br->scanline, n, br);
+	/*
+	 * RLE/RLE8 Decoding
+	 *
+	 * Certain aspects of this scheme are completely insane, so
+	 * we don't support them.  Fortunately, they rarely appear.
+	 * One is the mid-file EOD (0x0001) and another is the insane
+	 * "delta" (0x0002), which is like a "goto" statement for bitmaps.
+	 * Whoever thought this up should be shot, then told why
+	 * it's impossible to support in any reasonable way.
+	 * Also, RLE4 mode allows runs to stop halfway through a byte,
+	 * which is likewise uncodeable, so we don't even try.
+	 * Finally, the scanline break is ambiguous -- we assume here that
+	 * it is required at the end of each scanline, though I haven't
+	 * found anywhere this is written.  Otherwise, we would read to
+	 * the end of the scanline, assuming the next bit of data belongs
+	 * the following scan.  If a break follows the last pixel, as it
+	 * seems to in the files I've tested out of Photoshop, you end up
+	 * painting every other line black.  BTW, I assume any skipped
+	 * pixels are painted with color 0, which is often black.  Nowhere
+	 * is it specified what we should assume for missing pixels.  This
+	 * is undoubtedly the most brain-dead format I've ever encountered.
+	 */
+	sp = br->scanline;
+	while (n > 0) {
+		int     skipOdd, len, val;
+
+		if (rdbyte(len, br) == EOF)
+			return BIR_TRUNCATED;
+		if (len > 0) {		/* got a run */
+			if (br->hdr->compr == BI_RLE4) {
+				if (len & 1)
+					return BIR_UNSUPPORTED;
+				len >>= 1;
+			}
+			if (len > n)
+				return BIR_RLERROR;
+			if (rdbyte(val, br) == EOF)
+				return BIR_TRUNCATED;
+			n -= len;
+			while (len--)
+				*sp++ = val;
+			continue;
+		}
+		switch (rdbyte(len, br)) {
+		case EOF:
+			return BIR_TRUNCATED;
+		case 0:			/* end of line */
+			while (n--)
+				*sp++ = 0;
+			continue;
+		case 1:			/* end of bitmap */
+		case 2:			/* delta */
+			return BIR_UNSUPPORTED;
+		}
+					/* absolute mode */
+		if (br->hdr->compr == BI_RLE4) {
+			if (len & 1)
+				return BIR_UNSUPPORTED;
+			len >>= 1;
+		}
+		skipOdd = len & 1;
+		if (len > n)
+			return BIR_RLERROR;
+		n -= len;
+		while (len--) {
+			if (rdbyte(val, br) == EOF)
+				return BIR_TRUNCATED;
+			*sp++ = val;
+		}
+		if (skipOdd && rdbyte(val, br) == EOF)
+			return BIR_TRUNCATED;
+	}
+					/* verify break at end of line */
+	if (rdbyte(n, br) != 0 || (rdbyte(n, br) != 0 &&
+				(n != 1 || br->yscan != br->hdr->height-1)))
+		return BIR_RLERROR;
+	if (br->seek != NULL)		/* record next scanline position */
 		br->scanpos[br->yscan + 1] = br->fpos;
 	return BIR_OK;
 }
@@ -270,7 +374,8 @@ BMPseekScanline(int y, BMPReader *br)
 	if (y != br->yscan + 1 && br->seek != NULL) {
 		int     yseek;
 		uint32  seekp;
-		if (br->hdr->compr == BI_UNCOMPR) {
+		if (br->hdr->compr == BI_UNCOMPR ||
+					br->hdr->compr == BI_BITFIELDS) {
 			yseek = y;
 			seekp = br->scanpos[0] + y*getScanSiz(br->hdr);
 		} else {
@@ -295,29 +400,64 @@ BMPseekScanline(int y, BMPReader *br)
 
 /* get ith pixel from last scanline */
 RGBquad
-BMPdecodePixel(int i, BMPReader *br)
+BMPdecodePixel(int i, const BMPReader *br)
 {
+	static const uint32     std16mask[3] = {0x7c00, 0x3e0, 0x1f};
 	static const RGBquad    black = {0, 0, 0, 0};
+	const uint32		*mask;
+	const uint8		*pp;
+	uint32			pval, v;
+	RGBquad			cval;
 	
 	if (((br == NULL) | (i < 0)) || i >= br->hdr->width)
 		return black;
 
+	cval.padding = 0;
+
 	switch (br->hdr->bpp) {
-	case 24: {
-		uint8   *bgr = br->scanline + 3*i;
-		RGBquad cval;
-		cval.b = bgr[0]; cval.g = bgr[1]; cval.r = bgr[2];
-		cval.padding = 0;
+	case 24:
+		pp = br->scanline + 3*i;
+		cval.b = *pp++;
+		cval.g = *pp++;
+		cval.r = *pp;
 		return cval;
-		}
 	case 32:
-		return ((RGBquad *)br->scanline)[i];
+		if (br->hdr->compr == BI_UNCOMPR)
+			return ((RGBquad *)br->scanline)[i];
+						/* convert bit fields */
+		pp = br->scanline + 4*i;
+		pval = *pp++;
+		pval |= *pp++ << 8;
+		pval |= *pp++ << 16;
+		pval |= *pp << 24;
+		mask = BMPbitField(br->hdr);
+		v = pval & mask[0];
+		while (v & ~0xff) v >>= 8;
+		cval.r = v;
+		v = pval & mask[1];
+		while (v & ~0xff) v >>= 8;
+		cval.g = v;
+		v = pval & mask[2];
+		while (v & ~0xff) v >>= 8;
+		cval.b = v;
+		return cval;
 	case 8:
 		return br->hdr->palette[br->scanline[i]];
 	case 1:
-		return br->hdr->palette[br->scanline[i>>3]>>(i&7) & 1];
+		return br->hdr->palette[br->scanline[i>>3]>>(7-i&7) & 1];
 	case 4:
-		return br->hdr->palette[br->scanline[i>>1]>>((i&1)<<2) & 0xf];
+		return br->hdr->palette[br->scanline[i>>1]>>(i&1?4:0) & 0xf];
+	case 16:
+		pp = br->scanline + 2*i;
+		pval = *pp++;
+		pval |= *pp++ << 8;
+		mask = std16mask;
+		if (br->hdr->compr == BI_BITFIELDS)
+			mask = BMPbitField(br->hdr);
+		cval.r = ((pval & mask[0]) << 8) / (mask[0] + 1);
+		cval.g = ((pval & mask[1]) << 8) / (mask[1] + 1);
+		cval.b = ((pval & mask[2]) << 8) / (mask[2] + 1);
+		return cval;
 	}
 	return black;				/* should never happen */
 }
@@ -382,7 +522,7 @@ BMPtruecolorHeader(int xr, int yr, int infolen)
 	return hdr;
 }
 
-/* allocate color-mapped header (defaults to minimal grayscale) */
+/* allocate color-mapped header (defaults minimal grayscale) */
 BMPHeader *
 BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 {
@@ -423,7 +563,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 
 					/* put byte to writer */
 #define wrbyte(c,bw)    ( (*(bw)->cput)(c,(bw)->c_data), \
-				++((bw)->fpos) > (bw)->flen ? \
+				++(bw)->fpos > (bw)->flen ? \
 					((bw)->flen = (bw)->fpos) : \
 					(bw)->fpos )
 
@@ -442,7 +582,7 @@ wrint32(int32 i, BMPWriter *bw)
 	wrbyte(i& 0xff, bw);
 	wrbyte(i>>8 & 0xff, bw);
 	wrbyte(i>>16 & 0xff, bw);
-	wrbyte(i>>24  & 0xff, bw);
+	wrbyte(i>>24 & 0xff, bw);
 }
 
 /* write 16-bit unsigned integer in littlendian order */
@@ -482,22 +622,19 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 	BMPWriter       *bw;
 	uint32		hdrSiz, palSiz, scanSiz, bmSiz;
 						/* check arguments */
-	if (cput == NULL || hdr == NULL)
+	if (cput == NULL)
 		return NULL;
-	if (hdr->width <= 0 || hdr->height <= 0)
+	if (!BMPheaderOK(hdr))
 		return NULL;
-	if (hdr->compr != BI_UNCOMPR && hdr->compr != BI_RLE8)
+	if ((hdr->bpp == 16 | hdr->compr == BI_RLE4))
 		return NULL;			/* unsupported */
-	if (hdr->bpp > 8 && hdr->compr != BI_UNCOMPR)
-		return NULL;
-	palSiz = BMPpalLen(hdr);
-	if (hdr->nColors > palSiz)
-		return NULL;
-	if (hdr->compr != BI_UNCOMPR && seek == NULL)
+	if (seek == NULL && (hdr->compr == BI_RLE8 | hdr->compr == BI_RLE4))
 		return NULL;
 						/* compute sizes */
 	hdrSiz = 2 + 6*4 + 2*2 + 6*4;
-	palSiz *= sizeof(RGBquad);
+	if (hdr->compr == BI_BITFIELDS)
+		hdrSiz += sizeof(uint32)*3;
+	palSiz = sizeof(RGBquad)*BMPpalLen(hdr);
 	scanSiz = getScanSiz(hdr);
 	bmSiz = hdr->height*scanSiz;		/* wrong if compressed */
 						/* initialize writer */
@@ -547,15 +684,35 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 #endif
 	return bw;
 }
+
+/* find position of next run of 5 or more identical bytes, or 255 if none */
+static int
+findNextRun(const int8 *bp, int len)
+{
+	int     pos, cnt;
+						/* look for run */
+	for (pos = 0; len > 0 & pos < 255; pos++, bp++, len--) {
+		if (len < 5)			/* no hope left? */
+			continue;
+		cnt = 1;			/* else let's try it */
+		while (bp[cnt] == bp[0])
+			if (++cnt >= 5)		/* long enough */
+				return pos;
+	}
+	return pos;				/* didn't find any */
+}
 				
 /* write the current scanline */
 int
 BMPwriteScanline(BMPWriter *bw)
 {
+	const int8      *sp;
+	int		n;
+
 	if (bw->yscan >= bw->hdr->height)
 		return BIR_EOF;
 						/* writing uncompressed? */
-	if (bw->hdr->compr == BI_UNCOMPR) {
+	if (bw->hdr->compr == BI_UNCOMPR || bw->hdr->compr == BI_BITFIELDS) {
 		uint32  scanSiz = getScanSiz(bw->hdr);
 		uint32  slpos = bw->fbmp + bw->yscan*scanSiz;
 		if (wrseek(slpos, bw) != BIR_OK)
@@ -564,15 +721,48 @@ BMPwriteScanline(BMPWriter *bw)
 		bw->yscan++;
 		return BIR_OK;
 	}
-						/* else write compressed */
-/* XXX need to do actual compression */
-	return BIR_UNSUPPORTED;
-						/* write file length at end */
+	/*
+	 * RLE8 Encoding
+	 *
+	 * See the notes in BMPreadScanline() on this encoding.  Needless
+	 * to say, we avoid the nuttier aspects of this specification.
+	 * We also assume that every scanline ends in a line break
+	 * (0x0000) except for the last, which ends in a bitmap break
+	 * (0x0001).  We don't support RLE4 at all; it's too awkward.
+	 */
+	sp = bw->scanline;
+	n = bw->hdr->width;
+	while (n > 0) {
+		int     cnt, val;
+
+		cnt = findNextRun(sp, n);       /* 0-255 < n */
+		if (cnt >= 3) {			/* output non-run */
+			int     skipOdd = cnt & 1;
+			wrbyte(0, bw);
+			wrbyte(cnt, bw);
+			n -= cnt;
+			while (cnt--)
+				wrbyte(*sp++, bw);
+			if (skipOdd)
+				wrbyte(0, bw);
+		}
+		if (n <= 0)			/* was that it? */
+			break;
+		val = *sp;			/* output run */
+		for (cnt = 1; --n > 0 & *++sp == val; cnt++)
+			;
+		wrbyte(cnt, bw);
+		wrbyte(val, bw);
+	}
+	bw->yscan++;				/* write file length at end */
 	if (bw->yscan == bw->hdr->height) {
+		wrbyte(0, bw); wrbyte(1, bw);   /* end of bitmap marker */
 		if (bw->seek == NULL || (*bw->seek)(2, bw->c_data) != 0)
 			return BIR_SEEKERR;
 		bw->fpos = 2;
-		wrint32(bw->flen, bw);
+		wrint32(bw->flen, bw);		/* corrected file length */
+	} else {
+		wrbyte(0, bw); wrbyte(0, bw);   /* end of line marker */
 	}
 	return BIR_OK;
 }

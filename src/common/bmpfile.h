@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.1 2004/03/26 03:11:50 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.2 2004/03/26 22:58:21 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -39,11 +39,14 @@ typedef struct {
 	int		compr;		/* compression */
 	uint32		infoSiz;	/* info buffer size (bytes) */
 	/* the color table should be filled by writer before open call */
-	RGBquad		palette[2];     /* color palette (extends struct) */
+	RGBquad		palette[3];     /* color palette (extends struct) */
 } BMPHeader;
 
 					/* color palette length */
 #define BMPpalLen(h)    ((h)->bpp <= 8 ? 1<<(h)->bpp : 0)
+				
+					/* access to bit field triple */
+#define BMPbitField(h)  ((uint32 *)(h)->palette)
 
 					/* info buffer access */
 #define BMPinfo(h)      ((char *)((h)->palette + BMPpalLen(h)))
@@ -53,7 +56,8 @@ typedef struct {
 #define BIR_EOF			(-1)		/* reached end of file */
 #define BIR_TRUNCATED		1		/* unexpected EOF */
 #define BIR_UNSUPPORTED		2		/* unsupported encoding */
-#define BIR_SEEKERR		3		/* could not seek */
+#define BIR_RLERROR		3		/* RLE error */
+#define BIR_SEEKERR		4		/* could not seek */
 
 /* A BMP reader structure */
 typedef struct BMPReader {
@@ -101,7 +105,7 @@ int		BMPreadScanline(BMPReader *br);
 int		BMPseekScanline(int y, BMPReader *br);
 
 					/* get ith pixel from last scanline */
-RGBquad		BMPdecodePixel(int i, BMPReader *br);
+RGBquad		BMPdecodePixel(int i, const BMPReader *br);
 
 					/* free BMP reader resources */
 void		BMPfreeReader(BMPReader *br);

@@ -1263,5 +1263,4 @@ Made it so pcompos will read everything from a stream even if it doesn't
 need it, so input commands will not receive a hangup signal.
 
 Wrote ra_bmp program to convert to and from Windows BMP files (finally).
-It's a nasty format in so many ways -- I don't yet support conversion
-from compressed 8-bit or 4-bit modes, but may in the near future.
+It's the most horrible image format I've ever seen, and I've seen a lot.
