@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.13 2005/02/01 16:05:38 greg Exp $
+# RCSid $Id: makeall,v 1.14 2005/02/02 00:05:20 schorsch Exp $
 # 
 # Make all the Radiance programs
 #
@@ -133,12 +133,12 @@ case 3:			# Silicon Graphics
 		set mach="-noprototypes"
 		set opt="-O -DSPEED=80"
 		set special="sgi"
-		set compat="malloc.o strcmp.o"
+		set compat="bmalloc.o strcmp.o"
 		breaksw
 	case 4.*:
 		set mach=""
 		set opt="-O2 -DSPEED=100"
-		set compat="malloc.o strcmp.o"
+		set compat="bmalloc.o strcmp.o"
 		set extras='"MLIB=-lfastm -lm"'
 		breaksw
 	default:	# 5.x or later
@@ -160,7 +160,7 @@ case 5:			# BSDI BSD/386
 	set mach="-DBSD -L/usr/X11/lib -I/usr/X11/include"
 	set opt="-O -DSPEED=100"
 	set arch=IBMPC
-	set compat="malloc.o erf.o strcmp.o"
+	set compat="bmalloc.o erf.o strcmp.o"
 	breaksw
 case 6:			# Linux
 	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
