@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.22 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.23 2003/11/15 13:29:23 schorsch Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -14,6 +14,8 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.22 2003/07/27 22:12:01 schorsch 
 #include <math.h>
 #include <sys/types.h>
 #include <ctype.h>
+
+#include "rtio.h"
 #include "color.h"
 #include "paths.h"
 
@@ -124,19 +126,45 @@ typedef struct {
 int	gargc;				/* global argc (minus filenames) */
 char	**gargv;			/* global argv */
 
-extern char	*stradd(), *tailtrunc(), *filetrunc(),
-		*filename(), *libname(), *fullnam(), *getword(), *atos();
-extern float	*matchlamp();
-extern time_t	fdate();
 
 #define scnint(fp,ip)	cvtint(ip,getword(fp))
 #define scnflt(fp,rp)	cvtflt(rp,getword(fp))
 #define isint		isflt			/* IES allows real as integer */
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+static int ies2rad(char *inpname, char *outname);
+static void initlamps(void);
+static int dosource(SRCINFO *sinf, FILE *in, FILE *out, char *mod, char *name);
+static int dotilt(FILE *in, FILE *out, char *dir, char *tltspec,
+		char *dfltname, char *tltid);
+static int cvgeometry(char *inpname, SRCINFO *sinf, char *outname, FILE *outfp);
+static int cvtint(int *ip, char *wrd);
+static int cvdata(FILE *in, FILE *out, int ndim, int npts[], double mult,
+		double lim[][2]);
+static int cvtflt(double *rp, char *wrd);
+static int makeshape(SRCINFO *shp, double width, double length, double height);
+static int putsource(SRCINFO *shp, FILE *fp, char *mod, char *name,
+		int dolower, int doupper, int dosides);
+static void putrectsrc(SRCINFO *shp, FILE *fp, char *mod, char *name, int up);
+static void putsides(SRCINFO *shp, FILE *fp, char *mod, char *name);
+static void putdisksrc(SRCINFO *shp, FILE *fp, char *mod, char *name, int up);
+static void putspheresrc(SRCINFO *shp, FILE *fp, char *mod, char *name);
+static void putrect(SRCINFO *shp, FILE *fp, char *mod, char *name, char *suffix,
+		int a, int b, int c, int d);
+static void putpoint(SRCINFO *shp, FILE *fp, int p);
+static void putcyl(SRCINFO *shp, FILE *fp, char *mod, char *name);
+static char * tailtrunc(char *name);
+static char * filename(char *path);
+static char * libname(char *path, char *fname, char *suffix);
+static char * getword(FILE *fp);
+static char * fullnam(char *path, char *fname, char *suffix);
+
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*outfile = NULL;
 	int	status;
@@ -267,8 +295,8 @@ needsingle:
 	exit(1);
 }
 
-
-initlamps()				/* set up lamps */
+void
+initlamps(void)				/* set up lamps */
 {
 	float	*lcol;
 	int	status;
@@ -309,9 +337,11 @@ initlamps()				/* set up lamps */
 
 
 char *
-stradd(dst, src, sep)			/* add a string at dst */
-register char	*dst, *src;
-int	sep;
+stradd(			/* add a string at dst */
+	register char	*dst,
+	register char	*src,
+	int	sep
+)
 {
 	if (src && *src) {
 		do
@@ -326,8 +356,11 @@ int	sep;
 
 
 char *
-fullnam(path, fname, suffix)		/* return full path name */
-char	*path, *fname, *suffix;
+fullnam(		/* return full path name */
+	char	*path,
+	char	*fname,
+	char	*suffix
+)
 {
 	if (prefdir != NULL && abspath(prefdir))
 		libname(path, fname, suffix);
@@ -341,8 +374,11 @@ char	*path, *fname, *suffix;
 
 
 char *
-libname(path, fname, suffix)		/* return library relative name */
-char	*path, *fname, *suffix;
+libname(		/* return library relative name */
+	char	*path,
+	char	*fname,
+	char	*suffix
+)
 {
 	if (abspath(fname))
 		strcpy(stradd(path, fname, 0), suffix);
@@ -354,8 +390,9 @@ char	*path, *fname, *suffix;
 
 
 char *
-filename(path)			/* get final component of pathname */
-register char	*path;
+filename(			/* get final component of pathname */
+	register char	*path
+)
 {
 	register char	*cp;
 
@@ -367,8 +404,9 @@ register char	*path;
 
 
 char *
-filetrunc(path)				/* truncate filename at end of path */
-char	*path;
+filetrunc(				/* truncate filename at end of path */
+	char	*path
+)
 {
 	register char	*p1, *p2;
 
@@ -383,8 +421,9 @@ char	*path;
 
 
 char *
-tailtrunc(name)				/* truncate tail of filename */
-char	*name;
+tailtrunc(				/* truncate tail of filename */
+	char	*name
+)
 {
 	register char	*p1, *p2;
 
@@ -400,8 +439,10 @@ char	*name;
 }
 
 
-blanktrunc(s)				/* truncate spaces at end of line */
-char	*s;
+void
+blanktrunc(				/* truncate spaces at end of line */
+	char	*s
+)
 {
 	register char	*cp;
 
@@ -413,8 +454,11 @@ char	*s;
 }
 
 
-k_match(kwd, hdl)			/* header line matches keyword? */
-register char	*kwd, *hdl;
+int
+k_match(			/* header line matches keyword? */
+	register char	*kwd,
+	register char	*hdl
+)
 {
 	if (!*hdl++ == '[')
 		return(0);
@@ -426,8 +470,9 @@ register char	*kwd, *hdl;
 
 
 char *
-keyargs(hdl)				/* return keyword arguments */
-register char	*hdl;
+keyargs(				/* return keyword arguments */
+	register char	*hdl
+)
 {
 	while (*hdl && *hdl++ != ']')
 		;
@@ -437,8 +482,10 @@ register char	*hdl;
 }
 
 
-putheader(out)				/* print header */
-FILE	*out;
+void
+putheader(				/* print header */
+	FILE	*out
+)
 {
 	register int	i;
 	
@@ -453,8 +500,11 @@ FILE	*out;
 }
 
 
-ies2rad(inpname, outname)		/* convert IES file */
-char	*inpname, *outname;
+int
+ies2rad(		/* convert IES file */
+	char	*inpname,
+	char	*outname
+)
 {
 	SRCINFO	srcinfo;
 	char	buf[MAXLINE], tltid[RMAXWORD];
@@ -544,12 +594,18 @@ readerr:
 }
 
 
-dotilt(in, out, dir, tltspec, dfltname, tltid)	/* convert tilt data */
-FILE	*in, *out;
-char	*dir, *tltspec, *dfltname, *tltid;
+int
+dotilt(	/* convert tilt data */
+	FILE	*in,
+	FILE	*out,
+	char	*dir,
+	char	*tltspec,
+	char	*dfltname,
+	char	*tltid
+)
 {
 	int	nangles, tlt_type;
-	double	minmax[2];
+	double	minmax[1][2];
 	char	buf[PATH_MAX], tltname[RMAXWORD];
 	FILE	*datin, *datout;
 
@@ -595,15 +651,15 @@ char	*dir, *tltspec, *dfltname, *tltid;
 		switch (tlt_type) {
 		case TLT_VERT:			/* vertical */
 			fprintf(out, "4 noop %s tilt.cal %s\n", buf,
-				minmax[1]>90.+FTINY ? "tilt_ang" : "tilt_ang2");
+				minmax[0][1]>90.+FTINY ? "tilt_ang" : "tilt_ang2");
 			break;
 		case TLT_H0:			/* horiz. in 0 deg. plane */
 			fprintf(out, "6 noop %s tilt.cal %s -rz 90\n", buf,
-			minmax[1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
+			minmax[0][1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
 			break;
 		case TLT_H90:
 			fprintf(out, "4 noop %s tilt.cal %s\n", buf,
-			minmax[1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
+			minmax[0][1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
 			break;
 		default:
 			fprintf(stderr,
@@ -617,10 +673,14 @@ char	*dir, *tltspec, *dfltname, *tltid;
 }
 
 
-dosource(sinf, in, out, mod, name)	/* create source and distribution */
-SRCINFO	*sinf;
-FILE	*in, *out;
-char	*mod, *name;
+int
+dosource(	/* create source and distribution */
+	SRCINFO	*sinf,
+	FILE	*in,
+	FILE	*out,
+	char	*mod,
+	char	*name
+)
 {
 	char	buf[PATH_MAX], id[RMAXWORD];
 	FILE	*datout;
@@ -723,11 +783,16 @@ char	*mod, *name;
 }
 
 
-putsource(shp, fp, mod, name, dolower, doupper, dosides) /* put out source */
-SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
-int	dolower, doupper;
+int
+putsource( /* put out source */
+	SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name,
+	int	dolower,
+	int	doupper,
+	int dosides
+)
 {
 	char	lname[RMAXWORD];
 	
@@ -761,9 +826,13 @@ int	dolower, doupper;
 }
 
 
-makeshape(shp, width, length, height)		/* make source shape */
-register SRCINFO	*shp;
-double	width, length, height;
+int
+makeshape(		/* make source shape */
+	register SRCINFO	*shp,
+	double	width,
+	double	length,
+	double	height
+)
 {
 	if (illumrad/meters2out >= MINDIM/2.) {
 		shp->isillum = 1;
@@ -810,11 +879,14 @@ double	width, length, height;
 }
 
 
-putrectsrc(shp, fp, mod, name, up)		/* rectangular source */
-SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
-int	up;
+void
+putrectsrc(		/* rectangular source */
+	SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name,
+	int	up
+)
 {
 	if (up)
 		putrect(shp, fp, mod, name, ".u", 4, 5, 7, 6);
@@ -823,10 +895,13 @@ int	up;
 }
 
 
-putsides(shp, fp, mod, name)			/* put out sides of box */
-register SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
+void
+putsides(			/* put out sides of box */
+	register SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name
+)
 {
 	putrect(shp, fp, mod, name, ".1", 0, 1, 5, 4);
 	putrect(shp, fp, mod, name, ".2", 1, 3, 7, 5);
@@ -835,11 +910,18 @@ char	*mod, *name;
 }
 	
 
-putrect(shp, fp, mod, name, suffix, a, b, c, d)	/* put out a rectangle */
-SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name, *suffix;
-int	a, b, c, d;
+void
+putrect(	/* put out a rectangle */
+	SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name,
+	char	*suffix,
+	int	a,
+	int b,
+	int c,
+	int d
+)
 {
 	fprintf(fp, "\n%s polygon %s%s\n0\n0\n12\n", mod, name, suffix);
 	putpoint(shp, fp, a);
@@ -849,10 +931,12 @@ int	a, b, c, d;
 }
 
 
-putpoint(shp, fp, p)				/* put out a point */
-register SRCINFO	*shp;
-FILE	*fp;
-int	p;
+void
+putpoint(				/* put out a point */
+	register SRCINFO	*shp,
+	FILE	*fp,
+	int	p
+)
 {
 	static double	mult[2] = {-.5, .5};
 
@@ -863,11 +947,14 @@ int	p;
 }
 
 
-putdisksrc(shp, fp, mod, name, up)		/* put out a disk source */
-register SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
-int	up;
+void
+putdisksrc(		/* put out a disk source */
+	register SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name,
+	int	up
+)
 {
 	if (up) {
 		fprintf(fp, "\n%s ring %s.u\n", mod, name);
@@ -885,10 +972,13 @@ int	up;
 }
 
 
-putcyl(shp, fp, mod, name)			/* put out a cylinder */
-register SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
+void
+putcyl(			/* put out a cylinder */
+	register SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name
+)
 {
 	fprintf(fp, "\n%s cylinder %s.c\n", mod, name);
 	fprintf(fp, "0\n0\n7\n");
@@ -898,20 +988,28 @@ char	*mod, *name;
 }
 
 
-putspheresrc(shp, fp, mod, name)		/* put out a sphere source */
-SRCINFO	*shp;
-FILE	*fp;
-char	*mod, *name;
+void
+putspheresrc(		/* put out a sphere source */
+	SRCINFO	*shp,
+	FILE	*fp,
+	char	*mod,
+	char	*name
+)
 {
 	fprintf(fp, "\n%s sphere %s.s\n", mod, name);
 	fprintf(fp, "0\n0\n4 0 0 0 %g\n", .5*shp->w*meters2out);
 }
 
 
-cvdata(in, out, ndim, npts, mult, lim)		/* convert data */
-FILE	*in, *out;
-int	ndim, npts[];
-double	mult, lim[][2];
+int
+cvdata(		/* convert data */
+	FILE	*in,
+	FILE	*out,
+	int	ndim,
+	int	npts[],
+	double	mult,
+	double	lim[][2]
+)
 {
 	double	*pt[4];
 	register int	i, j;
@@ -971,8 +1069,9 @@ double	mult, lim[][2];
 
 
 char *
-getword(fp)			/* scan a word from fp */
-register FILE	*fp;
+getword(			/* scan a word from fp */
+	register FILE	*fp
+)
 {
 	static char	wrd[RMAXWORD];
 	register char	*cp;
@@ -995,9 +1094,11 @@ register FILE	*fp;
 }
 
 
-cvtint(ip, wrd)			/* convert a word to an integer */
-int	*ip;
-char	*wrd;
+int
+cvtint(			/* convert a word to an integer */
+	int	*ip,
+	char	*wrd
+)
 {
 	if (wrd == NULL || !isint(wrd))
 		return(0);
@@ -1006,9 +1107,11 @@ char	*wrd;
 }
 
 
-cvtflt(rp, wrd)			/* convert a word to a double */
-double	*rp;
-char	*wrd;
+int
+cvtflt(			/* convert a word to a double */
+	double	*rp,
+	char	*wrd
+)
 {
 	if (wrd == NULL || !isflt(wrd))
 		return(0);
@@ -1017,11 +1120,13 @@ char	*wrd;
 }
 
 
-cvgeometry(inpname, sinf, outname, outfp)
-char	*inpname;
-register SRCINFO	*sinf;
-char	*outname;
-FILE	*outfp;			/* close output file upon return */
+int
+cvgeometry(
+	char	*inpname,
+	register SRCINFO	*sinf,
+	char	*outname,
+	FILE	*outfp			/* close output file upon return */
+)
 {
 	char	buf[256];
 	register char	*cp;
