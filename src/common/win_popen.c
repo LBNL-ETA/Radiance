@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_popen.c,v 1.3 2004/03/28 20:33:12 schorsch Exp $";
+static const char RCSid[] = "$Id: win_popen.c,v 1.4 2004/10/04 10:14:22 schorsch Exp $";
 #endif
 /*
 Replacement for the posix popen() on Windows
@@ -22,6 +22,7 @@ ignoring any | within. Quotes don't nest.
 #include <io.h>     /* _open_osfhandle()  */
 #include <fcntl.h>  /* _O_RDONLY          */
 
+#include "paths.h"
 #include "rtio.h"
 #include "rterror.h"
 
@@ -325,7 +326,7 @@ int maxl
 					curs = NULL;
 				} else if (last == '>') { /* output file */
 					if (*outfn != NULL) {
-						eputs("win_popen(): ambiguous out redirection");
+						eputs("win_popen(): ambiguous output redirection");
 						goto error;
 					}
 					*outfn = curs;
