@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.7 2004/04/30 21:16:58 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.8 2004/07/20 03:08:42 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -292,7 +292,6 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 	int		tmflags;
 	BMPHeader       *hdr;
 	BMPWriter       *wtr;
-	RESOLU		rs;
 	FILE		*fp;
 	int		xr, yr;
 	BYTE		*pa;
@@ -318,13 +317,6 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 		fprintf(stderr, "%s: cannot open\n", fnin);
 		exit(1);
 	}
-					/* get picture orientation */
-	if (fnin != NULL) {
-		if (getheader(fp, NULL, NULL) < 0 || !fgetsresolu(&rs, fp))
-			quiterr("bad Radiance picture format");
-		rewind(fp);
-	} else				/* assume stdin has normal orient */
-		rs.rt = PIXSTANDARD;
 					/* tone-map picture */
 	if (tmMapPicture(&pa, &xr, &yr, tmflags, monpri, gamval,
 			0., 0., fnin, fp) != TM_E_OK)
@@ -364,6 +356,8 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 	if (fflush((FILE *)wtr->c_data) < 0)
 		quiterr("error writing BMP output");
 					/* clean up */
+	if (fnin != NULL)
+		fclose(fp);
 	free((void *)pa);
 	BMPcloseOutput(wtr);
 }
