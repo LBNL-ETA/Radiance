@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.6 2003/10/27 10:19:31 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.7 2003/11/10 16:41:52 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -32,6 +32,10 @@
 #endif
 
 #include "paths.h"
+
+#if !defined(BSD) || defined(sparc)
+#define	vfork	fork
+#endif
 
 #ifdef __cplusplus
 extern "C" {
