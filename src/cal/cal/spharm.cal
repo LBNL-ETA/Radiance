@@ -1,4 +1,4 @@
-{ RCSid $Id: spharm.cal,v 1.3 2005/02/09 17:36:28 greg Exp $ }
+{ RCSid $Id: spharm.cal,v 1.4 2005/02/10 04:53:20 greg Exp $ }
 {
 	The first few Spherical Harmonics
 
@@ -58,8 +58,7 @@ LegendreP2(n,m,x,s) : select(n+1,
 odd(n) : .5*n - floor(.5*n) - .25;
 LegendreP(n,m,x) : if(m+.5,
 		LegendreP2(n,m,x,sqrt(1-x*x)),
-		if(odd(-m),-1,1)*fact(n+m)/fact(n-m) *
-			LegendreP2(n,-m,x,sqrt(1-x*x))
+		fact(n+m)/fact(n-m) * LegendreP2(n,-m,x,sqrt(1-x*x))
 		);
 					{ SH normalization factor }
 SHnormF(l,m) : sqrt(0.25/PI*(2*l+1)*fact(l-m)/fact(l+m));
