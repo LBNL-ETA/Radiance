@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clumpbeams.c,v 3.7 2003/11/17 02:21:53 greg Exp $";
+static const char	RCSid[] = "$Id: clumpbeams.c,v 3.8 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Bundle holodeck beams together into clumps.
@@ -17,11 +17,19 @@ static int	bneighrem;
 
 #define nextneigh()	(bneighrem<=0 ? 0 : bneighlist[--bneighrem])
 
+static void gcshifti(GCOORD *gc, int ia, int di, HOLO *hp);
+static void mkneighgrid(GCOORD	ng[3*3], HOLO	*hp, GCOORD	*gc);
+static int firstneigh(HOLO	*hp, int	b);
 
-gcshifti(gc, ia, di, hp)	/* shift cell row or column */
-register GCOORD	*gc;
-int	ia, di;
-register HOLO	*hp;
+
+
+static void
+gcshifti(	/* shift cell row or column */
+	register GCOORD	*gc,
+	int	ia,
+	int	di,
+	register HOLO	*hp
+)
 {
 	int	nw;
 
@@ -43,10 +51,12 @@ register HOLO	*hp;
 }
 
 
-mkneighgrid(ng, hp, gc)		/* compute neighborhood for grid cell */
-GCOORD	ng[3*3];
-HOLO	*hp;
-GCOORD	*gc;
+static void
+mkneighgrid(		/* compute neighborhood for grid cell */
+	GCOORD	ng[3*3],
+	HOLO	*hp,
+	GCOORD	*gc
+)
 {
 	GCOORD	gci0;
 	register int	i, j;
@@ -63,9 +73,10 @@ GCOORD	*gc;
 
 
 static int
-firstneigh(hp, b)		/* initialize neighbor list and return first */
-HOLO	*hp;
-int	b;
+firstneigh(		/* initialize neighbor list and return first */
+	HOLO	*hp,
+	int	b
+)
 {
 	GCOORD	wg0[9], wg1[9], bgc[2];
 	int	i, j;
@@ -92,10 +103,13 @@ int	b;
 }
 
 
-clumpbeams(hp, maxcnt, maxsiz, cf)	/* clump beams from hinp */
-register HOLO	*hp;
-int	maxcnt, maxsiz;
-int	(*cf)();
+extern void
+clumpbeams(	/* clump beams from hinp */
+	register HOLO	*hp,
+	int	maxcnt,
+	int	maxsiz,
+	int	(*cf)(HOLO *hp, int *bqueue, int bqlen)
+)
 {
 	static short	primes[] = {9431,6803,4177,2659,1609,887,587,251,47,1};
 	uint32	*bflags;

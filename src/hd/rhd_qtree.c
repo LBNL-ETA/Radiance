@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.24 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.25 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -41,9 +41,14 @@ static int32	falleaves;	/* our list of fallen leaves */
 static RTREE	**twigbundle;	/* free twig blocks (NULL term.) */
 static int	nexttwig;	/* next free twig */
 
+static RTREE *newtwig(void);
+static void qtFreeTree(int really);
+static void shaketree(RTREE *tp);
+static int putleaf(int li, int drop);
+
 
 static RTREE *
-newtwig()			/* allocate a twig */
+newtwig(void)			/* allocate a twig */
 {
 	register int	bi;
 
@@ -68,11 +73,14 @@ newtwig()			/* allocate a twig */
 	return(twigbundle[bi] + (nexttwig++ - bi*TBUNDLESIZ));
 memerr:
 	error(SYSTEM, "out of memory in newtwig");
+	return NULL; /* pro forma return */
 }
 
 
-qtFreeTree(really)		/* free allocated twigs */
-int	really;
+static void
+qtFreeTree(		/* free allocated twigs */
+	int	really
+)
 {
 	register int	i;
 
@@ -97,9 +105,10 @@ int	really;
 #define	LEAFSIZ		(3*sizeof(float)+sizeof(int32)+\
 			sizeof(TMbright)+6*sizeof(BYTE))
 
-int
-qtAllocLeaves(n)		/* allocate space for n leaves */
-register int	n;
+extern int
+qtAllocLeaves(		/* allocate space for n leaves */
+	register int	n
+)
 {
 	unsigned	nbytes;
 	register unsigned	i;
@@ -134,7 +143,8 @@ register int	n;
 #undef	LEAFSIZ
 
 
-qtFreeLeaves()			/* free our allocated leaves and twigs */
+extern void
+qtFreeLeaves(void)			/* free our allocated leaves and twigs */
 {
 	qtFreeTree(1);		/* free tree also */
 	if (qtL.nl <= 0)
@@ -145,9 +155,10 @@ qtFreeLeaves()			/* free our allocated leaves and twigs */
 }
 
 
-static
-shaketree(tp)			/* shake dead leaves from tree */
-register RTREE	*tp;
+static void
+shaketree(			/* shake dead leaves from tree */
+	register RTREE	*tp
+)
 {
 	register int	i, li;
 
@@ -164,9 +175,10 @@ register RTREE	*tp;
 }
 
 
-int
-qtCompost(pct)			/* free up some leaves */
-int	pct;
+extern int
+qtCompost(			/* free up some leaves */
+	int	pct
+)
 {
 	register int32	*fl;
 	int	nused, nclear, nmapped;
@@ -198,9 +210,11 @@ int	pct;
 }
 
 
-int
-qtFindLeaf(x, y)		/* find closest leaf to (x,y) */
-int	x, y;
+extern int
+qtFindLeaf(		/* find closest leaf to (x,y) */
+	int	x,
+	int	y
+)
 {
 	register RTREE	*tp = &qtrunk;
 	int	li = -1;
@@ -235,10 +249,11 @@ int	x, y;
 }
 
 
-static
-putleaf(li, drop)		/* put a leaf in our tree */
-register int	li;
-int	drop;
+static int
+putleaf(		/* put a leaf in our tree */
+	register int	li,
+	int	drop
+)
 {
 	register RTREE	*tp = &qtrunk;
 	int	x0=0, y0=0, x1=odev.hres, y1=odev.vres;
@@ -332,9 +347,12 @@ dropit:
 }
 
 
-dev_value(c, d, p)		/* add a pixel value to our quadtree */
-COLR	c;
-FVECT	d, p;
+extern void
+dev_value(		/* add a pixel value to our quadtree */
+	COLR	c,
+	FVECT	d,
+	FVECT	p
+)
 {
 	register int	li;
 	int	mapit;
@@ -369,7 +387,8 @@ FVECT	d, p;
 }
 
 
-qtReplant()			/* replant our tree using new view */
+extern void
+qtReplant(void)			/* replant our tree using new view */
 {
 	register int	i;
 					/* anything to replant? */
@@ -384,8 +403,10 @@ qtReplant()			/* replant our tree using new view */
 }
 
 
-qtMapLeaves(redo)		/* map our leaves to RGB */
-int	redo;
+extern int
+qtMapLeaves(		/* map our leaves to RGB */
+	int	redo
+)
 {
 	int	aorg, alen, borg, blen;
 					/* recompute mapping? */

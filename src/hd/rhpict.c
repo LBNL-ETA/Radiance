@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.16 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.17 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: rhpict.c,v 3.16 2003/10/22 02:06:34 greg Exp $
 #include <string.h>
 
 #include "platform.h"
+#include "rterror.h"
 #include "rholo.h"
 #include "view.h"
 
@@ -31,10 +32,21 @@ int	hres, vres;		/* current horizontal and vertical res. */
 
 extern int	nowarn;		/* turn warnings off? */
 
+static void dopicture(int fn);
+static void render_frame(PACKHEAD *bl, int nb);
+static void startpicture(int fn);
+static int endpicture(void);
+static void initialize(void);
+ /* from rhpict2.c */
+extern void pixFinish(double ransamp);
+extern void pixBeam(BEAM *bp, HDBEAMI *hb);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+int	argc,
+char	*argv[]
+)
 {
 	int	i, rval;
 
@@ -125,11 +137,14 @@ userr:
 "Usage: %s [-w][-r rf][-pa pa][-pe ex][-x hr][-y vr][-S stfn][-o outp][view] input.hdk\n",
 			progname);
 	quit(1);
+	return 1;  /* pro forma return */
 }
 
 
-dopicture(fn)			/* render view from holodeck */
-int	fn;
+static void
+dopicture(			/* render view from holodeck */
+	int	fn
+)
 {
 	char	*err;
 	int	rval;
@@ -166,11 +181,12 @@ int	fn;
 }
 
 
-render_frame(bl, nb)		/* render frame from beam values */
-register PACKHEAD	*bl;
-int	nb;
+static void
+render_frame(		/* render frame from beam values */
+	register PACKHEAD	*bl,
+	int	nb
+)
 {
-	extern void	pixBeam();
 	register HDBEAMI	*bil;
 	register int	i;
 
@@ -187,8 +203,10 @@ int	nb;
 }
 
 
-startpicture(fn)		/* initialize picture for rendering & output */
-int	fn;
+static void
+startpicture(		/* initialize picture for rendering & output */
+	int	fn
+)
 {
 	extern char	VersionID[];
 	double	pa = pixaspect;
@@ -228,8 +246,8 @@ int	fn;
 }
 
 
-int
-endpicture()			/* finish and write out pixels */
+static int
+endpicture(void)			/* finish and write out pixels */
 {
 	int	lastr = -1, nunrend = 0;
 	int32	lastp, lastrp;
@@ -262,7 +280,8 @@ endpicture()			/* finish and write out pixels */
 }
 
 
-initialize()			/* initialize holodeck and buffers */
+static void
+initialize(void)			/* initialize holodeck and buffers */
 {
 	int	fd;
 	FILE	*fp;

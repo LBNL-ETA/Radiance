@@ -1,11 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.9 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.10 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Get general information on holodeck file
  */
 
+#include <stdio.h>
+
 #include "platform.h"
+#include "resolu.h"
 #include "holo.h"
 
 #ifndef NHBINS
@@ -16,13 +19,16 @@ char	*progname;		/* global argv[0] */
 
 long	beamtot, samptot;	/* total beams and samples */
 
+static void gethdinfo(char	*fname, FILE	*fout);
+static void psectstats(HOLO	*hp, FILE	*fp);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
-	int	sect;
-
 	progname = argv[0];
 	if (argc != 2)
 		goto userr;
@@ -34,9 +40,11 @@ userr:
 }
 
 
-gethdinfo(fname, fout)		/* get information on holodeck */
-char	*fname;
-FILE	*fout;
+static void
+gethdinfo(		/* get information on holodeck */
+	char	*fname,
+	FILE	*fout
+)
 {
 	FILE	*fp;
 	HOLO	*hdsect;
@@ -78,9 +86,11 @@ FILE	*fout;
 }
 
 
-psectstats(hp, fp)		/* print statistical information for section */
-register HOLO	*hp;
-FILE	*fp;
+static void
+psectstats(		/* print statistical information for section */
+	register HOLO	*hp,
+	FILE	*fp
+)
 {
 	int	scount[NHBINS];
 	int	minsamp = 10000, maxsamp = 0;

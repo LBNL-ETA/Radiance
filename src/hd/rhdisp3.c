@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.14 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.15 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -304,8 +304,10 @@ memerr:
 }
 
 
-gridlines(f)			/* run through holodeck section grid lines */
-int	(*f)();
+extern void
+gridlines(			/* run through holodeck section grid lines */
+	void	(*f)(FVECT wp[2])
+)
 {
 	register int	hd, w, i;
 	int	g0, g1;

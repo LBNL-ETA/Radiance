@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: viewbeams.c,v 3.6 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.7 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Convert view to beam list.
@@ -26,9 +26,12 @@ static const char	RCSid[] = "$Id: viewbeams.c,v 3.6 2003/07/21 22:30:18 schorsch
 static BEAMLIST	blist;
 
 
-static
-add2blist(hd, bi, nr)			/* add to beam sample list */
-int	hd, bi, nr;
+static void
+add2blist(			/* add to beam sample list */
+	int	hd,
+	int	bi,
+	int	nr
+)
 {
 	register int	i;
 
@@ -48,11 +51,13 @@ int	hd, bi, nr;
 }
 
 
-int16 *
-viewbeams(vp, hr, vr, blp)		/* convert view into sections/beams */
-VIEW	*vp;
-int	hr, vr;
-BEAMLIST	*blp;
+extern int16 *
+viewbeams(		/* convert view into sections/beams */
+	VIEW	*vp,
+	int	hr,
+	int	vr,
+	BEAMLIST	*blp
+)
 {
 	static int16	sectlist[HDMAX+1];
 	int16	sectarr[MINRES+1][MINRES+1];
@@ -145,10 +150,11 @@ loopexit:
 }
 
 
-int
-nextview(vp, fp)			/* get next view from fp */
-VIEW	*vp;
-FILE	*fp;
+extern int
+nextview(			/* get next view from fp */
+	VIEW	*vp,
+	FILE	*fp
+)
 {
 	char	linebuf[256];
 

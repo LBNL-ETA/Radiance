@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.5 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.6 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Quadtree display support routines for rectangle output.
@@ -9,11 +9,19 @@ static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.5 2003/07/27 22:12:02 schors
 #include "rhd_qtree.h"
 
 
-static
-redraw(tp, x0, y0, x1, y1, l)	/* mark portion of a tree for redraw */
-register RTREE	*tp;
-int	x0, y0, x1, y1;
-int	l[2][2];
+static void redraw(RTREE *tp, int x0, int y0, int x1, int y1, int l[2][2]);
+static void update( BYTE ca[3], RTREE *tp, int x0, int y0, int x1, int y1);
+
+
+static void
+redraw(	/* mark portion of a tree for redraw */
+	register RTREE	*tp,
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1,
+	int	l[2][2]
+)
 {
 	int	quads = CH_ANY;
 	int	mx, my;
@@ -39,11 +47,15 @@ int	l[2][2];
 }
 
 
-static
-update(ca, tp, x0, y0, x1, y1)	/* update tree display as needed */
-BYTE	ca[3];		/* returned average color */
-register RTREE	*tp;
-int	x0, y0, x1, y1;
+static void
+update(	/* update tree display as needed */
+	BYTE	ca[3],		/* returned average color */
+	register RTREE	*tp,
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1
+)
 {
 	int	csm[3], nc;
 	register BYTE	*cp;
@@ -105,8 +117,13 @@ int	x0, y0, x1, y1;
 }
 
 
-qtRedraw(x0, y0, x1, y1)	/* redraw part or all of our screen */
-int	x0, y0, x1, y1;
+extern void
+qtRedraw(	/* redraw part or all of our screen */
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1
+)
 {
 	int	lim[2][2];
 
@@ -119,7 +136,8 @@ int	x0, y0, x1, y1;
 }
 
 
-qtUpdate()			/* update our tree display */
+extern void
+qtUpdate(void)			/* update our tree display */
 {
 	BYTE	ca[3];
 

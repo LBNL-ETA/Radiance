@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_geom.c,v 3.13 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.14 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Geometry drawing operations for OpenGL driver.
@@ -7,8 +7,10 @@ static const char	RCSid[] = "$Id: rhd_geom.c,v 3.13 2003/07/21 22:30:18 schorsch
 
 #include <string.h>
 
+#include "rtio.h"
 #include "radogl.h"
 #include "rhdriver.h"
+#include "rhd_odraw.h"
 
 #ifndef MAXGEO
 #define	MAXGEO		8		/* maximum geometry list length */
@@ -34,11 +36,13 @@ static struct gmEntry {
 
 #define FORALLPORT(pl,i)		for (i=0;i<MAXPORT&&pl[i]!=NULL;i++)
 
-extern char	*nextword();
 
 
-gmNewGeom(file)			/* add new geometry to next list */
-char	*file;
+
+extern void
+gmNewGeom(			/* add new geometry to next list */
+	char	*file
+)
 {
 	register int	i, j;
 					/* check if already in next list */
@@ -69,7 +73,8 @@ char	*file;
 }
 
 
-gmEndGeom()			/* make next list current */
+extern void
+gmEndGeom(void)			/* make next list current */
 {
 	register int	i, j;
 
@@ -88,8 +93,8 @@ gmEndGeom()			/* make next list current */
 }
 
 
-int
-gmDrawGeom()			/* draw current list of octrees */
+extern int
+gmDrawGeom(void)			/* draw current list of octrees */
 {
 	register int	n;
 
@@ -99,10 +104,15 @@ gmDrawGeom()			/* draw current list of octrees */
 }
 
 
-gmDrawPortals(r, g, b, a)	/* draw portals with specific RGBA value */
-int	r, g, b, a;
+extern void
+gmDrawPortals(	/* draw portals with specific RGBA value */
+	int	r,
+	int	g,
+	int	b,
+	int	a
+)
 {
-	if (!gmPortals || r<0 & g<0 & b<0 & a<0)
+	if (!gmPortals || (r<0) & (g<0) & (b<0) & (a<0))
 		return;
 	glPushAttrib(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT|
 			GL_POLYGON_BIT|GL_LIGHTING_BIT);
@@ -120,9 +130,12 @@ int	r, g, b, a;
 }
 
 
-gmDepthLimit(dl, vorg, vdir)	/* compute approximate depth limits for view */
-double	dl[2];
-FVECT	vorg, vdir;
+extern void
+gmDepthLimit(	/* compute approximate depth limits for view */
+	double	dl[2],
+	FVECT	vorg,
+	FVECT	vdir
+)
 {
 	FVECT	v;
 	double	dcent;
@@ -142,10 +155,12 @@ FVECT	vorg, vdir;
 }
 
 
-gmNewPortal(pflist)		/* add portal file(s) to our new list */
-char	*pflist;
+extern void
+gmNewPortal(		/* add portal file(s) to our new list */
+	char	*pflist
+)
 {
-	register int	i, j;
+	register int	i;
 	char	newfile[128];
 
 	if (pflist == NULL)
@@ -172,8 +187,8 @@ char	**ss0, **ss1;
 }
 
 
-int
-gmEndPortal()			/* close portal list and return GL list */
+extern int
+gmEndPortal(void)			/* close portal list and return GL list */
 {
 	register int	n;
 

@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdriver.h,v 3.23 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: rhdriver.h,v 3.24 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header file for holodeck device driver routines.
  */
@@ -166,10 +166,24 @@ Set odev.v.type=0 and odev.hres=odev.vres=0 when done.
  ************************************************************************/
 
 
+/*
 extern VIEW	*dev_auxview();
+*/
+extern int16	*beam_view(VIEW *vn, int hr, int vr);
 
-extern int16	*beam_view();
 
+extern void dev_open(char  *id);
+extern void dev_close(void);
+extern void dev_clear(void);
+extern int dev_view(register VIEW *nv);
+//extern void dev_section(char *ofn); /* XXX */
+extern void dev_auxcom(char *cmd, char *args);
+extern VIEW *dev_auxview(int n, int hvres[2]);
+extern int dev_input(void);
+extern void dev_value(COLR c, FVECT d, FVECT p);
+extern int dev_flush(void);
+extern void dev_paintr(BYTE rgb[3], int xmin, int ymin, int xmax, int ymax);
+extern void dev_cone(BYTE rgb[3], FVECT ip, double rad);
 
 #ifdef __cplusplus
 }

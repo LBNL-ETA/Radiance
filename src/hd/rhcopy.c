@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.21 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.22 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Copy data into a holodeck file
  */
 
 #include "platform.h"
+#include "rterror.h"
 #include "holo.h"
 #include "view.h"
 
@@ -21,10 +22,29 @@ char	obstr, unobstr;		/* flag pointer values */
 
 char	*progname;		/* global argv[0] */
 
+struct phead {
+	VIEW	vw;
+	double	expos;
+	short	gotview;
+	short	badfmt;
+	short	altprims;
+};
+static int openholo(char *fname, int append);
+static void addray(FVECT ro, FVECT rd, double d, COLR cv);
+static int holheadline(char *s, int *hf);
+static int bpcmp(const void *b1p, const void *b2p);
+static int addclump(HOLO *hp, int *bq, int nb);
+static void addholo(char *hdf);
+static int picheadline(char *s, struct phead *ph);
+static void addpicz(char *pcf, char *zbf);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 
@@ -76,9 +96,10 @@ userr:
 #define H_OBSF	04
 
 int
-holheadline(s, hf)		/* check holodeck header line */
-register char	*s;
-int	*hf;
+holheadline(		/* check holodeck header line */
+	register char	*s,
+	int	*hf
+)
 {
 	char	fmt[32];
 
@@ -104,9 +125,10 @@ int	*hf;
 }
 
 int
-openholo(fname, append)		/* open existing holodeck file for i/o */
-char	*fname;
-int	append;
+openholo(		/* open existing holodeck file for i/o */
+	char	*fname,
+	int	append
+)
 {
 	FILE	*fp;
 	int	fd;
@@ -142,10 +164,13 @@ int	append;
 #undef H_OBSF
 
 
-addray(ro, rd, d, cv)		/* add a ray to our output holodeck */
-FVECT	ro, rd;
-double	d;
-COLR	cv;
+void
+addray(		/* add a ray to our output holodeck */
+	FVECT	ro,
+	FVECT	rd,
+	double	d,
+	COLR	cv
+)
 {
 	int	sn, bi, n;
 	register HOLO	*hp;
@@ -192,10 +217,12 @@ COLR	cv;
 static BEAMI	*beamdir;
 
 static int
-bpcmp(b1p, b2p)			/* compare beam positions on disk */
-int	*b1p, *b2p;
+bpcmp(			/* compare beam positions on disk */
+	const void	*b1p,
+	const void	*b2p
+)
 {
-	register off_t	pdif = beamdir[*b1p].fo - beamdir[*b2p].fo;
+	register off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
 
 	if (pdif > 0L) return(1);
 	if (pdif < 0L) return(-1);
@@ -203,9 +230,11 @@ int	*b1p, *b2p;
 }
 
 static int
-addclump(hp, bq, nb)		/* transfer the given clump and free */
-HOLO	*hp;
-int	*bq, nb;
+addclump(		/* transfer the given clump and free */
+	HOLO	*hp,
+	int	*bq,
+	int	nb
+)
 {
 	GCOORD	gc[2];
 	FVECT	ro, rd;
@@ -235,8 +264,11 @@ int	*bq, nb;
 	return(0);
 }
 
-addholo(hdf)			/* add a holodeck file */
-char	*hdf;
+
+void
+addholo(			/* add a holodeck file */
+	char	*hdf
+)
 {
 	int	fd;
 					/* open the holodeck for reading */
@@ -252,19 +284,12 @@ char	*hdf;
 }
 
 
-struct phead {
-	VIEW	vw;
-	double	expos;
-	short	gotview;
-	short	badfmt;
-	short	altprims;
-};
-
 
 int
-picheadline(s, ph)		/* process picture header line */
-char	*s;
-struct phead	*ph;
+picheadline(		/* process picture header line */
+	char	*s,
+	struct phead	*ph
+)
 {
 	char	fmt[32];
 
@@ -288,8 +313,11 @@ struct phead	*ph;
 }
 
 
-addpicz(pcf, zbf)		/* add a picture + depth-buffer */
-char	*pcf, *zbf;
+void
+addpicz(		/* add a picture + depth-buffer */
+	char	*pcf,
+	char	*zbf
+)
 {
 	FILE	*pfp;
 	int	zfd;
@@ -394,8 +422,9 @@ char	*pcf, *zbf;
 
 
 void
-eputs(s)			/* put error message to stderr */
-register char  *s;
+eputs(			/* put error message to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -414,8 +443,9 @@ register char  *s;
 
 
 void
-quit(code)			/* exit the program gracefully */
-int	code;
+quit(			/* exit the program gracefully */
+	int	code
+)
 {
 	hdsync(NULL, 1);	/* write out any buffered data */
 	exit(code);

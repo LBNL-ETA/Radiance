@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.23 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: holo.h,v 3.24 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -98,6 +98,7 @@ typedef struct {
 #define hdflush(hp)	(hdfreebeam(hp,0), hdsync(hp,0))
 #define hdclobber(hp)	(hdkillbeam(hp,0), hdsync(hp,0))
 
+/*
 extern HOLO	*hdinit(), *hdalloc();
 extern BEAM	*hdgetbeam();
 extern RAYVAL	*hdnewrays();
@@ -106,6 +107,7 @@ extern off_t	hdfiluse(), hdfilen(), hdallocfrag();
 extern double	hdray(), hdinter();
 extern unsigned	hdcode();
 extern int	hdfilord();
+*/
 
 #define FF_NEVER	0		/* never free fragments */
 #define FF_WRITE	01		/* free fragment on write */
@@ -150,6 +152,35 @@ extern int	hdwg1[6];		/* wall grid 1 index */
  * in future versions, but we thought this would be best for paging speed
  * in our initial implementation.
  */
+
+	/* clumpbeams.c */
+extern void clumpbeams(HOLO *hp, int maxcnt, int maxsiz,
+int (*cf)(HOLO *hp, int *bqueue, int bqlen));
+	/* holo.c */
+extern void hdcompgrid(HOLO *hp);
+extern int hdbcoord(GCOORD gc[2], HOLO *hp, int i);
+extern int hdbindex(HOLO *hp, GCOORD gc[2]);
+extern void hdcell(FVECT cp[4], HOLO *hp, GCOORD *gc);
+extern int hdlseg(int	lseg[2][3], HOLO	*hp, GCOORD	gc[2]);
+extern unsigned int hdcode(HOLO *hp, double d);
+extern void hdgrid( FVECT gp, HOLO *hp, FVECT wp);
+extern void hdworld(FVECT wp, HOLO *hp, FVECT gp);
+extern double hdray(FVECT ro, FVECT rd, HOLO *hp, GCOORD gc[2], BYTE r[2][2]);
+extern double hdinter(GCOORD gc[2], BYTE r[2][2], double *ed, HOLO *hp,
+		FVECT ro, FVECT rd);
+	/* holofile.c */
+extern HOLO * hdinit(int fd, HDGRID *hproto);
+extern void hddone(HOLO *hp);
+extern int hdsync(HOLO *hp, int all);
+extern off_t hdfilen(int fd);
+extern off_t hdfiluse(int fd, int all);
+extern RAYVAL * hdnewrays(HOLO *hp, int i, int nr);
+extern BEAM * hdgetbeam(HOLO *hp, int i);
+extern void hdloadbeams(HDBEAMI *hb, int n, void (*bf)(BEAM *bp, HDBEAMI *hb));
+extern int hdfreebeam(HOLO *hp, int i);
+extern int hdfreefrag(HOLO *hp, int i);
+extern int hdfragOK(int fd, int *listlen, int32 *listsiz);
+extern int hdkillbeam(HOLO *hp, int i);
 
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_qtree.h,v 3.16 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: rhd_qtree.h,v 3.17 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */
@@ -55,8 +55,21 @@ extern int	qtMinNodesiz;	/* minimum node dimension (pixels) */
 
 extern int	rayqleft;	/* number of rays to queue before flush */
 
+/*
 extern int32	encodedir();
 extern double	fdir2diff(), dir2diff();
+*/
+
+	/* rhd_qtree.c */
+extern int qtAllocLeaves(register int n);
+extern void qtFreeLeaves(void);
+extern int qtCompost(int pct);
+extern void qtReplant(void);
+extern int qtFindLeaf(int x, int y);
+extern int qtMapLeaves(int redo);
+	/* rhd_qtree2c.c rhd_qtree2r.c */
+extern void qtRedraw(int x0, int y0, int x1, int y1);
+extern void qtUpdate(void);
 
 #ifdef __cplusplus
 }

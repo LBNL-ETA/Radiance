@@ -1,10 +1,13 @@
-/* RCSid: $Id: rholo.h,v 3.23 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: rholo.h,v 3.24 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header file for rholo program
  */
 #ifndef _RAD_RHOLO_H_
 #define _RAD_RHOLO_H_
 
+#include <stdio.h>
+
+#include "view.h"
 #include "holo.h"
 #include "vars.h"
 
@@ -117,10 +120,32 @@ extern long	npacksdone;	/* number of packets done */
 extern int	rtargc;		/* rtrace command */
 extern char	*rtargv[];
 
-extern PACKET	*do_packets(), *get_packets(), *flush_queue();
-
-extern int16	*viewbeams();
-
+	/* rholo.c */
+extern void done_packets(PACKET	*pl);
+	/* rholo2.c */
+extern void new_rtrace(void);
+extern int done_rtrace(void);
+extern void packrays(float *rod, PACKET *p);
+extern void donerays(PACKET *p, float *rvl);
+extern int getradfile(void);
+extern void report(time_t t);
+	/* rholo2l.c */
+extern int start_rtrace(void);
+extern int end_rtrace(void);
+extern PACKET *do_packets(PACKET *pl);
+extern PACKET *flush_queue(void);
+	/* rholo3.c */
+extern void init_global(void);
+extern int next_packet(PACKET *p, int	n);
+extern void bundle_set(int op, PACKHEAD *clist, int nents);
+	/* rholo4.c */
+extern void disp_open(char *dname);
+extern void disp_packet(register PACKHEAD *p);
+extern int disp_check(int block);
+extern int disp_close(void);
+	/* viewbeams.c */
+extern int nextview(VIEW *vp, FILE *fp);
+extern int16 * viewbeams(VIEW *vp, int hr, int vr, BEAMLIST *blp);
 
 #ifdef __cplusplus
 }

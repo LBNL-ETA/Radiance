@@ -1,9 +1,11 @@
-/* RCSid: $Id: rhdisp.h,v 3.15 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: rhdisp.h,v 3.16 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header for holodeck display drivers.
  */
 #ifndef _RAD_RHDISP_H_
 #define _RAD_RHDISP_H_
+
+#include "color.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,6 +67,21 @@ typedef struct {
  * The standard output will always be available for writing, though it
  * may go to /dev/null.
  */
+
+
+	/* rhdisp.c */
+extern void serv_request(int type, int nbytes, char *p);
+extern int serv_result(void);
+	/* rhdisp2.c */
+extern int beam_sync(int all);
+extern void beam_init(int fresh);
+//extern int16 * beam_view(VIEW *vn, int hr, int vr);
+	/* rhdisp2.c, rhdisp3.c */
+extern void gridlines(void (*f)(FVECT wp[2]));
+	/* rhd_ctab.c */
+extern int new_ctab(int ncolors);
+extern int get_pixel(BYTE rgb[3], void (*set_pixel)(int h, int r, int g, int b));
+
 
 #ifdef __cplusplus
 }

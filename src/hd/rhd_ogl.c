@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.23 2003/09/19 18:33:05 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.24 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -17,16 +17,17 @@ static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.23 2003/09/19 18:33:05 greg Exp 
 #endif
 #endif
 
-#include "standard.h"
 
+#include <time.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
 #ifdef STEREO
 #include <X11/extensions/SGIStereo.h>
 #endif
-#include <time.h>
 
+#include "standard.h"
 #include "rhd_odraw.h"
+#include "rhdisp.h"
 #ifdef DOBJ
 #include "rhdobj.h"
 #endif
@@ -112,14 +113,36 @@ static int	inpresflags;		/* input result flags */
 
 static int	viewflags;		/* what's happening with view */
 
+/*
 static int  resizewindow(), getevent(), getkey(), moveview(), wipeclean(),
 		xferdepth(), freedepth(), setglortho(),
 		setglpersp(), getframe(), getmove(), fixwindow(), mytmflags();
 
 static double	getdistance();
+*/
+static void checkglerr(char *where);
+static void xferdepth(void);
+static void freedepth(void);
+static double getdistance(int dx, int dy, FVECT direc);
+static int mytmflags(void);
+static void getevent(void);
+static void draw3dline(register FVECT wp[2]);
+static void draw_grids(int fore);
+static int moveview(int dx, int dy, int mov, int orb);
+static void getframe(XButtonPressedEvent *ebut);
+static void getmove(XButtonPressedEvent *ebut);
+static void getkey(register XKeyPressedEvent *ekey);
+static void fixwindow(register XExposeEvent *eexp);
+static void resizewindow(register XConfigureEvent *ersz);
+static void waitabit(void);
+static void setglpersp(void);
+static void setglortho(void);
+static void wipeclean(void);
+
 
 #ifdef STEREO
-static int  pushright(), popright();
+static void pushright(void);
+static void popright(void);
 #endif
 
 extern int	gmPortals;	/* GL portal list id */
@@ -127,6 +150,7 @@ extern int	gmPortals;	/* GL portal list id */
 extern time_t	time();
 
 
+extern void
 dev_open(id)			/* initialize GLX driver */
 char  *id;
 {
@@ -258,7 +282,8 @@ char  *id;
 }
 
 
-dev_close()			/* close our display and free resources */
+extern void
+dev_close(void)			/* close our display and free resources */
 {
 #ifdef DOBJ
 	dobj_cleanup();
@@ -280,7 +305,8 @@ dev_close()			/* close our display and free resources */
 }
 
 
-dev_clear()			/* clear our representation */
+extern void
+dev_clear(void)			/* clear our representation */
 {
 	viewflags |= VWCHANGE;		/* pretend our view has changed */
 	wipeclean();			/* clean off display and samples */
@@ -289,12 +315,11 @@ dev_clear()			/* clear our representation */
 }
 
 
-int
-dev_view(nv)			/* assign new driver view */
-register VIEW	*nv;
+extern int
+dev_view(			/* assign new driver view */
+	register VIEW	*nv
+)
 {
-	double	d;
-
 	if (nv->type != VT_PER ||		/* check view legality */
 			nv->horiz > 160. || nv->vert > 160.) {
 		error(COMMAND, "illegal view type/angle");
@@ -344,11 +369,12 @@ register VIEW	*nv;
 }
 
 
-dev_section(gfn, pfn)		/* add octree for geometry rendering */
-char	*gfn, *pfn;
+extern void
+dev_section(		/* add octree for geometry rendering */
+	char	*gfn,
+	char	*pfn
+)
 {
-	char	*cp;
-
 	if (gfn == NULL) {
 		gmEndGeom();
 		gmEndPortal();
@@ -368,8 +394,11 @@ char	*gfn, *pfn;
 }
 
 
-dev_auxcom(cmd, args)		/* process an auxiliary command */
-char	*cmd, *args;
+extern void
+dev_auxcom(		/* process an auxiliary command */
+	char	*cmd,
+	char	*args
+)
 {
 #ifdef DOBJ
 	int	vischange;
@@ -387,10 +416,11 @@ char	*cmd, *args;
 }
 
 
-VIEW *
-dev_auxview(n, hvres)		/* return nth auxiliary view */
-int	n;
-int	hvres[2];
+extern VIEW *
+dev_auxview(		/* return nth auxiliary view */
+	int	n,
+	int	hvres[2]
+)
 {
 	hvres[0] = odev.hres; hvres[1] = odev.vres;
 	if (n == 0)
@@ -403,8 +433,8 @@ int	hvres[2];
 }
 
 
-int
-dev_input()			/* get X11 input */
+extern int
+dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
 
@@ -419,9 +449,12 @@ dev_input()			/* get X11 input */
 }
 
 
-dev_value(c, d, p)		/* add a pixel value to our texture */
-COLR	c;
-FVECT	d, p;
+extern void
+dev_value(		/* add a pixel value to our texture */
+	COLR	c,
+	FVECT	d,
+	FVECT	p
+)
 {
 #ifdef DOBJ
 	if (dobj_lightsamp != NULL) {	/* in light source sampling */
@@ -435,8 +468,8 @@ FVECT	d, p;
 }
 
 
-int
-dev_flush()			/* flush output as appropriate */
+extern int
+dev_flush(void)			/* flush output as appropriate */
 {
 	int	ndrawn;
 
@@ -482,8 +515,10 @@ dev_flush()			/* flush output as appropriate */
 }
 
 
-checkglerr(where)		/* check for GL or GLU error */
-char	*where;
+static void
+checkglerr(		/* check for GL or GLU error */
+	char	*where
+)
 {
 	register GLenum	errcode;
 
@@ -495,8 +530,8 @@ char	*where;
 }
 
 
-static
-xferdepth()			/* load and clear depth buffer */
+static void
+xferdepth(void)			/* load and clear depth buffer */
 {
 	register GLfloat	*dbp;
 	register GLubyte	*pbuf;
@@ -558,8 +593,8 @@ xferdepth()			/* load and clear depth buffer */
 }
 
 
-static
-freedepth()				/* free recorded depth buffer */
+static void
+freedepth(void)				/* free recorded depth buffer */
 {
 	if (depthbuffer == NULL)
 		return;
@@ -575,14 +610,16 @@ freedepth()				/* free recorded depth buffer */
 
 
 static double
-getdistance(dx, dy, direc)	/* distance from fore plane along view ray */
-int	dx, dy;
-FVECT	direc;
+getdistance(	/* distance from fore plane along view ray */
+	int	dx,
+	int	dy,
+	FVECT	direc
+)
 {
 	GLfloat	gldepth;
 	double	dist;
 
-	if (dx<0 | dx>=odev.hres | dy<0 | dy>=odev.vres)
+	if ((dx<0) | (dx>=odev.hres) | (dy<0) | (dy>=odev.vres))
 		return(FHUGE);
 	if (depthbuffer != NULL)
 		dist = depthbuffer[dy*odev.hres + dx];
@@ -600,8 +637,8 @@ FVECT	direc;
 
 
 #ifdef STEREO
-static
-pushright()			/* push on right view & buffer */
+static void
+pushright(void)			/* push on right view & buffer */
 {
 	double	d;
 
@@ -617,8 +654,8 @@ pushright()			/* push on right view & buffer */
 }
 
 
-static
-popright()			/* pop off right view & buffer */
+static void
+popright(void)			/* pop off right view & buffer */
 {
 	if (viewflags & VWPERSP) {
 		glMatrixMode(GL_MODELVIEW);
@@ -630,7 +667,7 @@ popright()			/* pop off right view & buffer */
 
 
 static int
-mytmflags()			/* figure out tone mapping flags */
+mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
 	register char	*cp, *tail;
@@ -654,8 +691,8 @@ mytmflags()			/* figure out tone mapping flags */
 }
 
 
-static
-getevent()			/* get next event */
+static void
+getevent(void)			/* get next event */
 {
 	XNextEvent(ourdisplay, levptr(XEvent));
 	switch (levptr(XEvent)->type) {
@@ -685,18 +722,20 @@ getevent()			/* get next event */
 }
 
 
-static
-draw3dline(wp)			/* draw 3d line in world coordinates */
-register FVECT	wp[2];
+static void
+draw3dline(			/* draw 3d line in world coordinates */
+	register FVECT	wp[2]
+)
 {
 	glVertex3d(wp[0][0], wp[0][1], wp[0][2]);
 	glVertex3d(wp[1][0], wp[1][1], wp[1][2]);
 }
 
 
-static
-draw_grids(fore)		/* draw holodeck section grids */
-int	fore;
+static void
+draw_grids(		/* draw holodeck section grids */
+	int	fore
+)
 {
 	glPushAttrib(GL_LIGHTING_BIT|GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
@@ -712,14 +751,17 @@ int	fore;
 }
 
 
-static
-moveview(dx, dy, mov, orb)	/* move our view */
-int	dx, dy, mov, orb;
+static int
+moveview(	/* move our view */
+	int	dx,
+	int	dy,
+	int	mov,
+	int	orb
+)
 {
 	VIEW	nv;
 	FVECT	odir, v1, wip;
 	double	d, d1;
-	register int	li;
 				/* start with old view */
 	nv = odev.v;
 				/* orient our motion */
@@ -767,9 +809,10 @@ int	dx, dy, mov, orb;
 }
 
 
-static
-getframe(ebut)				/* get focus frame */
-XButtonPressedEvent	*ebut;
+static void
+getframe(				/* get focus frame */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	startx = ebut->x, starty = ebut->y;
 	int	endx, endy;
@@ -777,7 +820,7 @@ XButtonPressedEvent	*ebut;
 	XMaskEvent(ourdisplay, ButtonReleaseMask, levptr(XEvent));
 	endx = levptr(XButtonReleasedEvent)->x;
 	endy = levptr(XButtonReleasedEvent)->y;
-	if (endx == startx | endy == starty) {
+	if ((endx == startx) | (endy == starty)) {
 		XBell(ourdisplay, 0);
 		return;
 	}
@@ -790,8 +833,8 @@ XButtonPressedEvent	*ebut;
 }
 
 
-static
-waitabit()				/* pause a moment */
+static void
+waitabit(void)				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
@@ -800,9 +843,10 @@ waitabit()				/* pause a moment */
 }
 
 
-static
-getmove(ebut)				/* get view change */
-XButtonPressedEvent	*ebut;
+static void
+getmove(				/* get view change */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	movdir = MOVDIR(ebut->button);
 	int	movorb = MOVORB(ebut->state);
@@ -857,8 +901,8 @@ XButtonPressedEvent	*ebut;
 }
 
 
-static
-setglpersp()			/* set perspective view in GL */
+static void
+setglpersp(void)			/* set perspective view in GL */
 {
 	double	d, xmin, xmax, ymin, ymax;
 	GLfloat	vec[4];
@@ -919,8 +963,8 @@ setglpersp()			/* set perspective view in GL */
 }
 
 
-static
-setglortho()			/* set up orthographic view for cone drawing */
+static void
+setglortho(void)			/* set up orthographic view for cone drawing */
 {
 	glDrawBuffer(GL_FRONT);		/* use single-buffer mode */
 					/* set view matrix */
@@ -936,8 +980,8 @@ setglortho()			/* set up orthographic view for cone drawing */
 }
 
 
-static
-wipeclean()			/* prepare for redraw */
+static void
+wipeclean(void)			/* prepare for redraw */
 {
 	glDrawBuffer(GL_BACK);		/* use double-buffer mode */
 	glReadBuffer(GL_BACK);
@@ -959,9 +1003,10 @@ wipeclean()			/* prepare for redraw */
 }
 
 
-static
-getkey(ekey)				/* get input key */
-register XKeyPressedEvent  *ekey;
+static void
+getkey(				/* get input key */
+	register XKeyPressedEvent  *ekey
+)
 {
 	Window	rootw, childw;
 	int	rootx, rooty, wx, wy;
@@ -1042,13 +1087,14 @@ register XKeyPressedEvent  *ekey;
 }
 
 
-static
-fixwindow(eexp)				/* repair damage to window */
-register XExposeEvent  *eexp;
+static void
+fixwindow(				/* repair damage to window */
+	register XExposeEvent  *eexp
+)
 {
 	int	xmin, ymin, xmax, ymax;
 
-	if (odev.hres == 0 | odev.vres == 0) {	/* first exposure */
+	if ((odev.hres == 0) | (odev.vres == 0)) {	/* first exposure */
 		resizewindow((XConfigureEvent *)eexp);
 		return;
 	}
@@ -1087,9 +1133,10 @@ register XExposeEvent  *eexp;
 }
 
 
-static
-resizewindow(ersz)			/* resize window */
-register XConfigureEvent  *ersz;
+static void
+resizewindow(			/* resize window */
+	register XConfigureEvent  *ersz
+)
 {
 	glViewport(0, 0, ersz->width, ersz->height);
 

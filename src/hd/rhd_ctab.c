@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.4 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.5 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Allocate and control dynamic color table.
@@ -19,6 +19,7 @@ static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.4 2003/06/30 14:59:11 schorsch 
 #include <string.h>
 
 #include "standard.h"
+#include "rhdisp.h"
 #include "color.h"
 				/* histogram resolution */
 #define NRED		24
@@ -51,12 +52,15 @@ static unsigned short	histo[NRED][NGRN][NBLU];
 				/* initial color cube boundary */
 static int	CLRCUBE[3][2] = {{0,NRED},{0,NGRN},{0,NBLU}};
 
-static int	split(), cut();
+static void cut(CNODE *tree, int level, int box[3][2], int c0, int c1);
+static int split(int box[3][2]);
 
 
-int
-new_ctab(ncolors)		/* start new color table with max ncolors */
-int	ncolors;
+
+extern int
+new_ctab(		/* start new color table with max ncolors */
+	int	ncolors
+)
 {
 	int	treesize;
 
@@ -84,12 +88,12 @@ int	ncolors;
 }
 
 
-int
-get_pixel(rgb, set_pixel)	/* get pixel for color */
-BYTE	rgb[3];
-int	(*set_pixel)();
+extern int
+get_pixel(	/* get pixel for color */
+	BYTE	rgb[3],
+	void	(*set_pixel)(int h, int r, int g, int b)
+)
 {
-	extern char	errmsg[];
 	int	r, g, b;
 	int	cv[3];
 	register CNODE	*tp;
@@ -129,9 +133,12 @@ int	(*set_pixel)();
 		clrtab[h].ent[GRN] = g; /* reassign pixel */
 		clrtab[h].ent[BLU] = b;
 #ifdef DEBUG
-		sprintf(errmsg, "pixel %d = (%d,%d,%d) (%d refs)\n",
-				h, r, g, b, clrtab[h].n);
-		eputs(errmsg);
+		{
+			extern char	errmsg[];
+			sprintf(errmsg, "pixel %d = (%d,%d,%d) (%d refs)\n",
+					h, r, g, b, clrtab[h].n);
+			eputs(errmsg);
+		}
 #endif
 		(*set_pixel)(h, r, g, b);
 	}
@@ -139,12 +146,14 @@ int	(*set_pixel)();
 }
 
 
-static
-cut(tree, level, box, c0, c1)		/* partition color space */
-register CNODE	*tree;
-int	level;
-register int	box[3][2];
-int	c0, c1;
+static void
+cut(		/* partition color space */
+	register CNODE	*tree,
+	int	level,
+	register int	box[3][2],
+	int	c0,
+	int	c1
+)
 {
 	int	kb[3][2];
 	
@@ -166,8 +175,9 @@ int	c0, c1;
 
 
 static int
-split(box)				/* find median cut for box */
-register int	box[3][2];
+split(				/* find median cut for box */
+	register int	box[3][2]
+)
 {
 #define c0	r
 	register int	r, g, b;

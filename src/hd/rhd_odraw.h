@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_odraw.h,v 3.11 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.12 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  *
@@ -136,6 +136,24 @@ and redraw them on the next call(s) to odUpdate().  If newhist
 is non-zero, then clear the previous sample history.
 
  **********************************************************************/
+
+	/* rhd_geom.c */
+void gmNewGeom( char *file);
+extern void gmEndGeom(void);
+extern int gmDrawGeom(void);
+extern void gmDrawPortals(int r, int g, int b, int a);
+extern void gmDepthLimit( double dl[2], FVECT vorg, FVECT vdir);
+extern void gmNewPortal(char *pflist);
+extern int gmEndPortal(void);
+	/* rhd_odraw.c */
+extern int odInit(int n);
+extern void odSample(COLR c, FVECT d, FVECT p);
+extern void odRemap(int newhist);
+extern void odRedrawAll(void);
+extern void odRedraw(int vn, int hmin, int vmin, int hmax, int vmax);
+extern void odDepthMap(int vn, GLfloat *dm);
+extern void odUpdate(int vn);
+
 
 #ifdef __cplusplus
 }

@@ -1,11 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.7 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.8 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
  */
 
+#include <stdio.h>
+
 #include "platform.h"
+#include "resolu.h"
 #include "holo.h"
 
 char	*progname;		/* global argv[0] */
@@ -13,10 +16,16 @@ char	*progname;		/* global argv[0] */
 char	*mat, *name;		/* material and object id */
 double	rad;			/* grid line radius */
 
+static void gridsect(char *fname, int sect);
+static void putgrid(HOLO *hp);
+static void putline(FVECT wp[2]);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	sect;
 
@@ -38,9 +47,11 @@ userr:
 }
 
 
-gridsect(fname, sect)		/* get specified section(s) and print grids */
-char	*fname;
-int	sect;
+void
+gridsect(		/* get specified section(s) and print grids */
+	char	*fname,
+	int	sect
+)
 {
 	FILE	*fp;
 	HOLO	hdsect;
@@ -72,8 +83,10 @@ int	sect;
 }
 
 
-putgrid(hp)			/* run through holodeck section grid lines */
-register HOLO	*hp;
+void
+putgrid(			/* run through holodeck section grid lines */
+	register HOLO	*hp
+)
 {
 	register int	w, i;
 	int	g0, g1;
@@ -120,8 +133,10 @@ register HOLO	*hp;
 }
 
 
-putline(wp)		/* put out a line */
-register FVECT	wp[2];
+void
+putline(		/* put out a line */
+	register FVECT	wp[2]
+)
 {
 	static int	cnt = 0;
 

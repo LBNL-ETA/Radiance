@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.2 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.3 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -9,9 +9,11 @@ static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.2 2003/07/21 22:30:18 schorsch 
 #include "standard.h"
 
 #include  <GL/glx.h>
+#include  <GL/glu.h>
 
 #include "rhd_qtree.h"
-
+#include "rhdriver.h"
+#include "rhdisp.h"
 #include  "x11icon.h"
 
 #ifndef RAYQLEN
@@ -85,13 +87,24 @@ static int	inpresflags;		/* input result flags */
 
 static int	headlocked = 0;		/* lock vertical motion */
 
-static int  resizewindow(), getevent(), getkey(), moveview(),
-		initcones(), freecones(),
-		getmove(), fixwindow(), mytmflags();
+
+static int mytmflags(void);
+static void initcones(void);
+static void freecones(void);
+static void getevent(void);
+static void draw3dline(FVECT	wp[2]);
+static void draw_grids(void);
+static int moveview(int	dx, int	dy, int	mov, int	orb);
+static void getmove(XButtonPressedEvent	*ebut);
+static void getkey(XKeyPressedEvent  *ekey);
+static void fixwindow(XExposeEvent  *eexp);
+static void resizewindow(XConfigureEvent  *ersz);
 
 
-dev_open(id)			/* initialize X11 driver */
-char  *id;
+extern void
+dev_open(
+	char  *id
+)
 {
 	extern char	*getenv();
 	static RGBPRIMS	myprims = STDPRIMS;
@@ -187,7 +200,8 @@ char  *id;
 }
 
 
-dev_close()			/* close our display and free resources */
+extern void
+dev_close(void)			/* close our display and free resources */
 {
 	glXMakeCurrent(ourdisplay, None, NULL);
 	glXDestroyContext(ourdisplay, gctx);
@@ -204,7 +218,8 @@ dev_close()			/* close our display and free resources */
 }
 
 
-dev_clear()			/* clear our quadtree */
+extern void
+dev_clear(void)			/* clear our quadtree */
 {
 	qtCompost(100);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -212,9 +227,10 @@ dev_clear()			/* clear our quadtree */
 }
 
 
-int
-dev_view(nv)			/* assign new driver view */
-register VIEW	*nv;
+extern int
+dev_view(			/* assign new driver view */
+	register VIEW	*nv
+)
 {
 	if (nv->type == VT_PAR ||		/* check view legality */
 			nv->horiz > 160. || nv->vert > 160.) {
@@ -264,25 +280,31 @@ register VIEW	*nv;
 }
 
 
-dev_section(ofn)		/* add octree for geometry rendering */
-char	*ofn;
+extern void
+dev_section(		/* add octree for geometry rendering */
+	char	*ofn
+)
 {
 	/* unimplemented */
 }
 
 
-dev_auxcom(cmd, args)		/* process an auxiliary command */
-char	*cmd, *args;
+extern void
+dev_auxcom(		/* process an auxiliary command */
+	char	*cmd,
+	char	*args
+)
 {
 	sprintf(errmsg, "%s: unknown command", cmd);
 	error(COMMAND, errmsg);
 }
 
 
-VIEW *
-dev_auxview(n, hvres)		/* return nth auxiliary view */
-int	n;
-int	hvres[2];
+extern VIEW *
+dev_auxview(		/* return nth auxiliary view */
+	int	n,
+	int	hvres[2]
+)
 {
 	if (n)
 		return(NULL);
@@ -291,8 +313,8 @@ int	hvres[2];
 }
 
 
-int
-dev_input()			/* get X11 input */
+extern int
+dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
 
@@ -305,8 +327,8 @@ dev_input()			/* get X11 input */
 }
 
 
-int
-dev_flush()			/* flush output */
+extern int
+dev_flush(void)			/* flush output */
 {
 	qtUpdate();
 	glFlush();
@@ -315,10 +337,12 @@ dev_flush()			/* flush output */
 }
 
 
-dev_cone(rgb, ip, rad)		/* render a cone in view coordinates */
-BYTE	rgb[3];
-FVECT	ip;
-double	rad;
+extern void
+dev_cone(		/* render a cone in view coordinates */
+	BYTE	rgb[3],
+	FVECT	ip,
+	double	rad
+)
 {
 	register int	ci, j;
 	double	apexh, basez;
@@ -355,7 +379,7 @@ double	rad;
 
 
 static int
-mytmflags()			/* figure out tone mapping flags */
+mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
 	register char	*cp, *tail;
@@ -370,11 +394,12 @@ mytmflags()			/* figure out tone mapping flags */
 	if (cp-tail == 5 && !strncmp(tail, "glx1h", 5))
 		return(TM_F_HUMAN|TM_F_NOSTDERR);
 	error(USER, "illegal driver name");
+	return -1; /* pro forma return */
 }
 
 
-static
-initcones()			/* initialize cone vertices */
+static void
+initcones(void)			/* initialize cone vertices */
 {
 	register int	i, j;
 	double	minrad, d;
@@ -400,8 +425,8 @@ initcones()			/* initialize cone vertices */
 }
 
 
-static
-freecones()			/* free cone vertices */
+static void
+freecones(void)			/* free cone vertices */
 {
 	register int	i;
 
@@ -414,8 +439,8 @@ freecones()			/* free cone vertices */
 }
 
 
-static
-getevent()			/* get next event */
+static void
+getevent(void)			/* get next event */
 {
 	XNextEvent(ourdisplay, levptr(XEvent));
 	switch (levptr(XEvent)->type) {
@@ -441,23 +466,22 @@ getevent()			/* get next event */
 }
 
 
-static
-draw3dline(wp)			/* draw 3d line in world coordinates */
-register FVECT	wp[2];
+static void
+draw3dline(			/* draw 3d line in world coordinates */
+	register FVECT	wp[2]
+)
 {
 	glVertex3d(wp[0][0], wp[0][1], wp[0][2]);
 	glVertex3d(wp[1][0], wp[1][1], wp[1][2]);
 }
 
 
-static
-draw_grids()			/* draw holodeck section grids */
+static void
+draw_grids(void)			/* draw holodeck section grids */
 {
 	static BYTE	gridrgba[4] = {0x0, 0xff, 0xff, 0x00};
 	double	xmin, xmax, ymin, ymax, zmin, zmax;
-	double	d, cx, sx, crad;
-	FVECT	vx, vy;
-	register int	i, j;
+	double	d;
 					/* can we even do it? */
 	if (!mapped || odev.v.type != VT_PER)
 		return;
@@ -498,9 +522,13 @@ draw_grids()			/* draw holodeck section grids */
 }
 
 
-static
-moveview(dx, dy, mov, orb)	/* move our view */
-int	dx, dy, mov, orb;
+static int
+moveview(	/* move our view */
+	int	dx,
+	int	dy,
+	int	mov,
+	int	orb
+)
 {
 	VIEW	nv;
 	FVECT	odir, v1;
@@ -546,9 +574,10 @@ int	dx, dy, mov, orb;
 }
 
 
-static
-getmove(ebut)				/* get view change */
-XButtonPressedEvent	*ebut;
+static void
+getmove(				/* get view change */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	movdir = MOVDIR(ebut->button);
 	int	movorb = MOVORB(ebut->state);
@@ -588,9 +617,10 @@ XButtonPressedEvent	*ebut;
 }
 
 
-static
-getkey(ekey)				/* get input key */
-register XKeyPressedEvent  *ekey;
+static void
+getkey(				/* get input key */
+	register XKeyPressedEvent  *ekey
+)
 {
 	int  n;
 	char	buf[8];
@@ -659,9 +689,10 @@ register XKeyPressedEvent  *ekey;
 }
 
 
-static
-fixwindow(eexp)				/* repair damage to window */
-register XExposeEvent  *eexp;
+static void
+fixwindow(				/* repair damage to window */
+	register XExposeEvent  *eexp
+)
 {
 	int	xmin, xmax, ymin, ymax;
 
@@ -684,9 +715,10 @@ register XExposeEvent  *eexp;
 }
 
 
-static
-resizewindow(ersz)			/* resize window */
-register XConfigureEvent  *ersz;
+static void
+resizewindow(			/* resize window */
+	register XConfigureEvent  *ersz
+)
 {
 	glViewport(0, 0, ersz->width, ersz->height);
 

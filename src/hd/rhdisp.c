@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.49 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.50 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: rhdisp.c,v 3.49 2003/07/27 22:12:02 schorsch E
 #include <string.h>
 #include <ctype.h>
 
+#include "rterror.h"
 #include "rholo.h"
 #include "rhdisp.h"
 #include "rhdriver.h"
@@ -57,10 +58,20 @@ static long	nimmrays, naddrays;
 #define RDY_DEV		02
 #define RDY_SIN		04
 
+static int disp_wait(void);
+static void add_holo(HDGRID *hdg, char *gfn, char *pfn);
+static void disp_bundle(PACKHEAD *p);
+static void new_view(register VIEW *v);
+static void set_focus(char *args);
+static int usr_input(void);
+static void printview(void);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	rdy, inp, res = 0, pause = 0;
 
@@ -149,16 +160,16 @@ char	*argv[];
 #endif
 					/* all done */
 	quit(0);
+	return 0; /* pro forma return */
 }
 
 
-int
-disp_wait()			/* wait for more input */
+static int
+disp_wait(void)			/* wait for more input */
 {
 	fd_set	readset, errset;
 	int	flgs;
 	int	n;
-	register int	i;
 				/* see if we can avoid select call */
 	if (hdlist[0] == NULL)
 		return(RDY_SRV);	/* initialize first */
@@ -203,9 +214,12 @@ disp_wait()			/* wait for more input */
 }
 
 
-add_holo(hdg, gfn, pfn)		/* register a new holodeck section */
-HDGRID	*hdg;
-char	*gfn, *pfn;
+static void
+add_holo(		/* register a new holodeck section */
+	HDGRID	*hdg,
+	char	*gfn,
+	char	*pfn
+)
 {
 	VIEW	nv;
 	double	d;
@@ -241,8 +255,10 @@ char	*gfn, *pfn;
 }
 
 
-disp_bundle(p)			/* display a ray bundle */
-register PACKHEAD	*p;
+static void
+disp_bundle(			/* display a ray bundle */
+	register PACKHEAD	*p
+)
 {
 	GCOORD	gc[2];
 	FVECT	ro, rd, wp;
@@ -270,8 +286,10 @@ register PACKHEAD	*p;
 }
 
 
-new_view(v)			/* change view parameters */
-register VIEW	*v;
+static void
+new_view(			/* change view parameters */
+	register VIEW	*v
+)
 {
 	static VIEW	viewhist[VIEWHISTLEN];
 	static unsigned	nhist;
@@ -325,8 +343,10 @@ again:
 }
 
 
-set_focus(args)			/* set focus frame */
-char	*args;
+static void
+set_focus(			/* set focus frame */
+	char	*args
+)
 {
 	double	hcent, vcent, hsiz, vsiz;
 	VIEW	*dv, vwfocus;
@@ -385,8 +405,8 @@ char	*args;
 }
 
 
-int
-usr_input()			/* get user input and process it */
+static int
+usr_input(void)			/* get user input and process it */
 {
 	VIEW	vparams;
 	char	cmd[256];
@@ -457,7 +477,8 @@ usr_input()			/* get user input and process it */
 }
 
 
-printview()			/* print our current view to server stdout */
+static void
+printview(void)			/* print our current view to server stdout */
 {
 	fputs(VIEWSTR, sstdout);
 	fprintview(&odev.v, sstdout);
@@ -466,13 +487,12 @@ printview()			/* print our current view to server stdout */
 }
 
 
-int
-serv_result()			/* get next server result and process it */
+extern int
+serv_result(void)			/* get next server result and process it */
 {
 	static char	*buf = NULL;
 	static int	bufsiz = 0;
 	MSGHEAD	msg;
-	int	n;
 					/* read message header */
 	if (fread((char *)&msg, sizeof(MSGHEAD), 1, stdin) != 1)
 		goto readerr;
@@ -540,12 +560,16 @@ readerr:
 	if (feof(stdin))
 		error(SYSTEM, "server process died");
 	error(SYSTEM, "error reading from server process");
+	return -1;  
 }
 
 
-serv_request(type, nbytes, p)	/* send a request to the server process */
-int	type, nbytes;
-char	*p;
+extern void
+serv_request(	/* send a request to the server process */
+	int	type,
+	int	nbytes,
+	char	*p
+)
 {
 	MSGHEAD	msg;
 	int	m;
@@ -570,8 +594,9 @@ char	*p;
 
 
 void
-eputs(s)			/* put error message to stderr */
-register char  *s;
+eputs(			/* put error message to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -590,8 +615,9 @@ register char  *s;
 
 
 void
-quit(code)			/* clean up and exit */
-int	code;
+quit(			/* clean up and exit */
+	int	code
+)
 {
 	if (code)
 		exit(code);

@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.15 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.16 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
  */
 
 #include <string.h>
+#include <ctype.h>
 
 #include "radogl.h"
 #include "tonemap.h"
@@ -18,7 +19,8 @@ extern FILE	*sstdout;		/* user standard output */
 
 char	rhdcmd[DO_NCMDS][8] = DO_INIT;	/* user command list */
 
-int	(*dobj_lightsamp)() = NULL;	/* pointer to function to get lights */
+/* pointer to function to get lights */
+void	(*dobj_lightsamp)(COLR clr, FVECT direc, FVECT pos) = NULL;
 
 #define	AVGREFL		0.5		/* assumed average reflectance */
 
@@ -84,10 +86,21 @@ static struct {
 
 #define	curname		(curobj==NULL ? (char *)NULL : curobj->name)
 
+static DOBJECT *getdobj(char *nm);
+static int freedobj(DOBJECT *op);
+static int savedxf(DOBJECT *op);
+static void ssph_sample(COLR clr, FVECT direc, FVECT pos);
+static void ssph_direc(FVECT direc, int alt, int azi);
+static int ssph_neigh(int sp[2], int next);
+static int ssph_compute(void);
+static int getdlights(DOBJECT *op, int force);
+static void cmderror(int cn, char *err);
+
 
 static DOBJECT *
-getdobj(nm)			/* get object from list by name */
-char	*nm;
+getdobj(			/* get object from list by name */
+	char	*nm
+)
 {
 	register DOBJECT	*op;
 
@@ -102,9 +115,10 @@ char	*nm;
 }
 
 
-static
-freedobj(op)			/* free resources and memory assoc. with op */
-register DOBJECT	*op;
+static int
+freedobj(			/* free resources and memory assoc. with op */
+	register DOBJECT	*op
+)
 {
 	int	foundlink = 0;
 	DOBJECT	ohead;
@@ -130,9 +144,10 @@ register DOBJECT	*op;
 }
 
 
-static
-savedxf(op)			/* save transform for display object */
-register DOBJECT	*op;
+static int
+savedxf(			/* save transform for display object */
+	register DOBJECT	*op
+)
 {
 					/* free old */
 	while (lastxfac)
@@ -150,10 +165,12 @@ register DOBJECT	*op;
 }
 
 
-static
-ssph_sample(clr, direc, pos)	/* add sample to current source sphere */
-COLR	clr;
-FVECT	direc, pos;
+static void
+ssph_sample(	/* add sample to current source sphere */
+	COLR	clr,
+	FVECT	direc,
+	FVECT	pos
+)
 {
 	COLOR	col;
 	double	d;
@@ -177,10 +194,12 @@ FVECT	direc, pos;
 }
 
 
-static
-ssph_direc(direc, alt, azi)	/* compute sphere sampling direction */
-FVECT	direc;
-int	alt, azi;
+static void
+ssph_direc(	/* compute sphere sampling direction */
+	FVECT	direc,
+	int	alt,
+	int	azi
+)
 {
 	double	phi, d;
 
@@ -193,9 +212,10 @@ int	alt, azi;
 
 
 static int
-ssph_neigh(sp, next)		/* neighbor counter on sphere */
-register int	sp[2];
-int	next;
+ssph_neigh(		/* neighbor counter on sphere */
+	register int	sp[2],
+	int	next
+)
 {
 	static short	nneigh = 0;		/* neighbor count */
 	static short	neighlist[NAZI+6][2];	/* neighbor list (0 is home) */
@@ -208,7 +228,7 @@ int	next;
 		sp[1] = neighlist[nneigh][1];
 		return(1);
 	}
-	if (sp[0] < 0 | sp[0] >= NALT | sp[1] < 0 | sp[1] >= NAZI)
+	if ((sp[0] < 0) | (sp[0] >= NALT) | (sp[1] < 0) | (sp[1] >= NAZI))
 		return(nneigh=0);
 	neighlist[0][0] = sp[0]; neighlist[0][1] = sp[1];
 	nneigh = 1;
@@ -258,8 +278,8 @@ int	next;
 }
 
 
-static
-ssph_compute()			/* compute source set from sphere samples */
+static int
+ssph_compute(void)			/* compute source set from sphere samples */
 {
 	int	ncells, nsamps;
 	COLOR	csum;
@@ -282,7 +302,7 @@ ssph_compute()			/* compute source set from sphere samples */
 				nsamps += ssamp[alt][azi].nsamp;
 				ncells++;
 			}
-	if (dlightsets == NULL | ncells < NALT*NAZI/4) {
+	if ((dlightsets == NULL) | (ncells < NALT*NAZI/4)) {
 		ncells = 0;
 		goto done;
 	}
@@ -345,10 +365,11 @@ done:					/* clear sphere sample array */
 }
 
 
-static
-getdlights(op, force)		/* get lights for display object */
-register DOBJECT	*op;
-int	force;
+static int
+getdlights(		/* get lights for display object */
+	register DOBJECT	*op,
+	int	force
+)
 {
 	double	d2, mind2 = FHUGE*FHUGE;
 	FVECT	ocent;
@@ -414,26 +435,29 @@ int	force;
 	return(1);
 memerr:
 	error(SYSTEM, "out of memory in getdlights");
+	return 0; /* pro forma return */
 }
 
 
-static
-cmderror(cn, err)		/* report command error */
-int	cn;
-char	*err;
+static void
+cmderror(		/* report command error */
+	int	cn,
+	char	*err
+)
 {
 	sprintf(errmsg, "%s: %s", rhdcmd[cn], err);
 	error(COMMAND, errmsg);
 }
 
 
-int
-dobj_command(cmd, args)		/* run object display command */
-char	*cmd;
-register char	*args;
+extern int
+dobj_command(		/* run object display command */
+	char	*cmd,
+	register char	*args
+)
 {
 	int	somechange = 0;
-	int	cn, na, doxfm;
+	int	cn, na;
 	register int	nn;
 	char	*alist[MAXAC+1], *nm;
 					/* find command */
@@ -531,12 +555,17 @@ register char	*args;
 	}
 	return(somechange);
 toomany:
-	return(cmderror(cn, "too many arguments"));
+	/* return(cmderror(cn, "too many arguments")); *//* XXX cmderror is void */
+	cmderror(cn, "too many arguments");
+	return 0; /* XXX not sure if this is the right return value */
 }
 
 
-dobj_load(oct, nam)		/* create/load an octree object */
-char	*oct, *nam;
+extern int
+dobj_load(		/* create/load an octree object */
+	char	*oct,
+	char	*nam
+)
 {
 	char	*fpp, fpath[128];
 	register DOBJECT	*op;
@@ -549,7 +578,7 @@ char	*oct, *nam;
 		error(COMMAND, "missing name");
 		return(0);
 	}
-	if (*nam == '*' | *nam == '-') {
+	if ((*nam == '*') | (*nam == '-')) {
 		error(COMMAND, "illegal name");
 		return(0);
 	}
@@ -590,8 +619,10 @@ char	*oct, *nam;
 }
 
 
-dobj_unload(nam)			/* free the named object */
-char	*nam;
+extern int
+dobj_unload(			/* free the named object */
+	char	*nam
+)
 {
 	register DOBJECT	*op;
 
@@ -605,7 +636,8 @@ char	*nam;
 }
 
 
-dobj_cleanup()				/* free all resources */
+extern int
+dobj_cleanup(void)				/* free all resources */
 {
 	register DLIGHTS	*lp;
 
@@ -620,10 +652,13 @@ dobj_cleanup()				/* free all resources */
 }
 
 
-dobj_xform(nam, rel, ac, av)		/* set/add transform for nam */
-char	*nam;
-int	rel, ac;
-char	**av;
+extern int
+dobj_xform(		/* set/add transform for nam */
+	char	*nam,
+	int	rel,
+	int	ac,
+	char	**av
+)
 {
 	register DOBJECT	*op;
 	FVECT	cent;
@@ -682,9 +717,11 @@ char	**av;
 }
 
 
-dobj_putstats(nam, fp)			/* put out statistics for nam */
-char	*nam;
-FILE	*fp;
+extern int
+dobj_putstats(			/* put out statistics for nam */
+	char	*nam,
+	FILE	*fp
+)
 {
 	FVECT	ocent;
 	register DOBJECT	*op;
@@ -723,7 +760,8 @@ FILE	*fp;
 }
 
 
-dobj_unmove()				/* undo last transform change */
+extern int
+dobj_unmove(void)				/* undo last transform change */
 {
 	int	txfac;
 	char	*txfav[MAXAC+1];
@@ -749,8 +787,11 @@ dobj_unmove()				/* undo last transform change */
 }
 
 
-dobj_dup(oldnm, nam)			/* duplicate object oldnm as nam */
-char	*oldnm, *nam;
+extern int
+dobj_dup(			/* duplicate object oldnm as nam */
+	char	*oldnm,
+	char	*nam
+)
 {
 	register DOBJECT	*op, *opdup;
 					/* check arguments */
@@ -762,7 +803,7 @@ char	*oldnm, *nam;
 		error(COMMAND, "missing name");
 		return(0);
 	}
-	if (*nam == '*' | *nam == '-') {
+	if ((*nam == '*') | (*nam == '-')) {
 		error(COMMAND, "illegal name");
 		return(0);
 	}
@@ -788,9 +829,11 @@ char	*oldnm, *nam;
 }
 
 
-dobj_lighting(nam, cn)		/* set up lighting for display object */
-char	*nam;
-int	cn;
+extern int
+dobj_lighting(		/* set up lighting for display object */
+	char	*nam,
+	int	cn
+)
 {
 	int	i, res[2];
 	VIEW	*dv;
@@ -822,13 +865,16 @@ int	cn;
 			beam_view(dv, res[0], res[1]);
 		beam_sync(1);			/* update server */
 	}
+	return 0; /* XXX not sure if this is the right value */
 }
 
 
-double
-dobj_trace(nm, rorg, rdir)	/* check for ray intersection with object(s) */
-char	nm[];
-FVECT   rorg, rdir;
+extern double
+dobj_trace(	/* check for ray intersection with object(s) */
+	char	nm[],
+	FVECT  rorg,
+	FVECT  rdir
+)
 {
 	register DOBJECT	*op;
 	FVECT	xorg, xdir;
@@ -872,8 +918,8 @@ FVECT   rorg, rdir;
 }
 
 
-int
-dobj_render()			/* render our objects in OpenGL */
+extern int
+dobj_render(void)			/* render our objects in OpenGL */
 {
 	int	nrendered = 0;
 	GLboolean	normalizing;
@@ -958,8 +1004,8 @@ dobj_render()			/* render our objects in OpenGL */
 		}
 					/* set up object transform */
 		if (op->xfac) {
-			if (!normalizing && op->xfb.f.sca < 1.-FTINY |
-						op->xfb.f.sca > 1.+FTINY)
+			if (!normalizing && (op->xfb.f.sca < 1.-FTINY) |
+						(op->xfb.f.sca > 1.+FTINY))
 				glEnable(GL_NORMALIZE);
 			glMatrixMode(GL_MODELVIEW);
 			glPushMatrix();

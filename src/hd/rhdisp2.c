@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp2.c,v 3.36 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.37 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Holodeck beam tracking for display process
@@ -22,9 +22,16 @@ static int	maxcbeam = 0;	/* size of cbeam array */
 
 VIEWPOINT	cureye;		/* current eye position */
 
+static int newcbeam(void);
+static int cbeamcmp(const void *cb1, const void *cb2);
+static int cbeamcmp2(const void *cb1, const void *cb2);
+static int findcbeam(int hd, int bi);
+static int getcbeam(int hd, int bi);
+static void cbeamsort(int adopt);
 
-int
-newcbeam()		/* allocate new entry at end of cbeam array */
+
+static int
+newcbeam(void)		/* allocate new entry at end of cbeam array */
 {
 	int	i;
 
@@ -43,37 +50,43 @@ newcbeam()		/* allocate new entry at end of cbeam array */
 }
 
 
-int
-cbeamcmp(cb1, cb2)	/* compare two cbeam entries for sort: keep orphans */
-register PACKHEAD	*cb1, *cb2;
+static int
+cbeamcmp(	/* compare two cbeam entries for sort: keep orphans */
+	const void	*cb1,
+	const void	*cb2
+)
 {
 	register int	c;
 
-	if ((c = cb1->bi - cb2->bi))	/* sort on beam index first */
+	if ((c = ((PACKHEAD*)cb1)->bi - ((PACKHEAD*)cb2)->bi))	/* sort on beam index first */
 		return(c);
-	return(cb1->hd - cb2->hd);	/* use hd to resolve matches */
+	return(((PACKHEAD*)cb1)->hd - ((PACKHEAD*)cb2)->hd);	/* use hd to resolve matches */
 }
 
 
-int
-cbeamcmp2(cb1, cb2)	/* compare two cbeam entries for sort: no orphans */
-register PACKHEAD	*cb1, *cb2;
+static int
+cbeamcmp2(	/* compare two cbeam entries for sort: no orphans */
+	const void	*cb1,
+	const void	*cb2
+)
 {
 	register int	c;
 
-	if (!cb1->nr)			/* put orphans at the end, unsorted */
-		return(cb2->nr);
-	if (!cb2->nr)
+	if (!((PACKHEAD*)cb1)->nr)			/* put orphans at the end, unsorted */
+		return(((PACKHEAD*)cb2)->nr);
+	if (!((PACKHEAD*)cb2)->nr)
 		return(-1);
-	if ((c = cb1->bi - cb2->bi))	/* sort on beam index first */
+	if ((c = ((PACKHEAD*)cb1)->bi - ((PACKHEAD*)cb2)->bi))	/* sort on beam index first */
 		return(c);
-	return(cb1->hd - cb2->hd);	/* use hd to resolve matches */
+	return(((PACKHEAD*)cb1)->hd - ((PACKHEAD*)cb2)->hd);	/* use hd to resolve matches */
 }
 
 
-int
-findcbeam(hd, bi)	/* find the specified beam in our sorted list */
-int	hd, bi;
+static int
+findcbeam(	/* find the specified beam in our sorted list */
+	int	hd,
+	int	bi
+)
 {
 	PACKHEAD	cb;
 	register PACKHEAD	*p;
@@ -89,10 +102,11 @@ int	hd, bi;
 }
 
 
-int
-getcbeam(hd, bi)	/* get the specified beam, allocating as necessary */
-register int	hd;
-int	bi;
+static int
+getcbeam(	/* get the specified beam, allocating as necessary */
+	register int	hd,
+	int	bi
+)
 {
 	register int	n;
 				/* first, look in sorted list */
@@ -113,8 +127,10 @@ int	bi;
 }
 
 
-cbeamsort(adopt)	/* sort our beam list, possibly turning out orphans */
-int	adopt;
+static void
+cbeamsort(	/* sort our beam list, possibly turning out orphans */
+	int	adopt
+)
 {
 	register int	i;
 
@@ -133,8 +149,10 @@ int	adopt;
 }
 
 
-beam_init(fresh)		/* clear beam list for new view(s) */
-int	fresh;
+extern void
+beam_init(		/* clear beam list for new view(s) */
+	int	fresh
+)
 {
 	register int	i;
 
@@ -147,10 +165,12 @@ int	fresh;
 }
 
 
-int16 *
-beam_view(vn, hr, vr)		/* add beam view (if advisable) */
-VIEW	*vn;
-int	hr, vr;
+extern int16 *
+beam_view(		/* add beam view (if advisable) */
+	VIEW	*vn,
+	int	hr,
+	int	vr
+)
 {
 	int16	*slist;
 	BEAMLIST	blist;
@@ -196,9 +216,10 @@ int	hr, vr;
 }
 
 
-int
-beam_sync(all)			/* update beam list on server */
-int	all;
+extern int
+beam_sync(			/* update beam list on server */
+	int	all
+)
 {
 					/* set new eye position */
 	serv_request(DR_VIEWPOINT, sizeof(VIEWPOINT), (char *)&cureye);
@@ -208,19 +229,21 @@ int	all;
 	if (all) {
 		if (ncbeams > 0)
 			serv_request(DR_NEWSET,
-					ncbeams*sizeof(PACKHEAD), cbeam);
+					ncbeams*sizeof(PACKHEAD), (char *)cbeam);
 	} else {
 		if (ncbeams+xcbeams > 0)
 			serv_request(DR_ADJSET,
-				(ncbeams+xcbeams)*sizeof(PACKHEAD), cbeam);
+				(ncbeams+xcbeams)*sizeof(PACKHEAD), (char *)cbeam);
 	}
 	xcbeams = 0;			/* truncate our list */
 	return(ncbeams);
 }
 
 
-gridlines(f)			/* run through holodeck section grid lines */
-int	(*f)();
+extern void
+gridlines(			/* run through holodeck section grid lines */
+	void	(*f)(FVECT wp[2])
+)
 {
 	register int	hd, w, i;
 	int	g0, g1;

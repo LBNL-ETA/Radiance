@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree2c.c,v 3.2 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree2c.c,v 3.3 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Quadtree display support routines for cone output.
@@ -8,12 +8,21 @@ static const char	RCSid[] = "$Id: rhd_qtree2c.c,v 3.2 2003/02/22 02:07:24 greg E
 #include "standard.h"
 #include "rhd_qtree.h"
 
+static void redraw(RTREE *tp, int x0, int y0, int x1, int y1, int l[2][2]);
+static void cpaint(BYTE rgb[3], float *p, int x0, int y0, int x1, int y1);
+static void update(BYTE ca[3], RTREE *tp, int x0, int y0, int x1, int y1);
 
-static
-redraw(tp, x0, y0, x1, y1, l)	/* mark portion of a tree for redraw */
-register RTREE	*tp;
-int	x0, y0, x1, y1;
-int	l[2][2];
+
+
+static void
+redraw(	/* mark portion of a tree for redraw */
+	register RTREE	*tp,
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1,
+	int	l[2][2]
+)
 {
 	int	quads = CH_ANY;
 	int	mx, my;
@@ -39,11 +48,15 @@ int	l[2][2];
 }
 
 
-static
-cpaint(rgb, p, x0, y0, x1, y1)	/* paint a cone within a rectangle */
-BYTE	rgb[3];
-register float	*p;
-int	x0, y0, x1, y1;
+static void
+cpaint(	/* paint a cone within a rectangle */
+	BYTE	rgb[3],
+	register float	*p,
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1
+)
 {
 	static FVECT	ip, wp;
 	double	rad;
@@ -80,11 +93,15 @@ int	x0, y0, x1, y1;
 }
 
 
-static
-update(ca, tp, x0, y0, x1, y1)	/* update tree display as needed */
-BYTE	ca[3];		/* returned average color */
-register RTREE	*tp;
-int	x0, y0, x1, y1;
+static void
+update(	/* update tree display as needed */
+	BYTE	ca[3],		/* returned average color */
+	register RTREE	*tp,
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1
+)
 {
 	int	csm[3], nc;
 	register BYTE	*cp;
@@ -132,21 +149,27 @@ int	x0, y0, x1, y1;
 }
 
 
-qtRedraw(x0, y0, x1, y1)	/* redraw part or all of our screen */
-int	x0, y0, x1, y1;
+extern void
+qtRedraw(	/* redraw part or all of our screen */
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1
+)
 {
 	int	lim[2][2];
 
 	if (is_stump(&qtrunk))
 		return;
-	if (!qtMapLeaves((lim[0][0]=x0) <= 0 & (lim[1][0]=y0) <= 0 &
-		(lim[0][1]=x1) >= odev.hres-1 & (lim[1][1]=y1) >= odev.vres-1))
+	if (!(qtMapLeaves((lim[0][0]=x0) <= 0) & ((lim[1][0]=y0) <= 0) &
+		((lim[0][1]=x1) >= odev.hres-1) & ((lim[1][1]=y1) >= odev.vres-1)))
 		return;
 	redraw(&qtrunk, 0, 0, odev.hres, odev.vres, lim);
 }
 
 
-qtUpdate()			/* update our tree display */
+extern void
+qtUpdate(void)			/* update our tree display */
 {
 	BYTE	ca[3];
 

@@ -1,15 +1,19 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.63 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.64 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
  */
 
+#include <stdio.h>
+#include <time.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <string.h>
 
 #include "platform.h"
+#include "rterror.h"
+#include "resolu.h"
 #include "rholo.h"
 #include "random.h"
 
@@ -65,12 +69,24 @@ char  *sigerr[NSIG];		/* signal error messages */
 
 extern int	nowarn;		/* turn warnings off? */
 
-extern time_t	time();
+static void onsig(int  signo);
+static void sigdie(int  signo, char  *msg);
+static int resfmode(int	fd, int	mod);
+static void initrholo(void);
+static int rholo(void);
+static void setdefaults(HDGRID	*gp);
+static void creatholo(HDGRID	*gp);
+static int headline(char	*s);
+static void loadholo(void);
+static void rootname(char	*rn, char	*fn);
+static void badvalue(int	vc);
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	i;
 
@@ -152,12 +168,14 @@ userr:
 "Usage: %s [-n nprocs][-o disp][-w][-r|-f] output.hdk [control.hif|+|- [VAR=val ..]]\n",
 			progname);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-void
-onsig(signo)				/* fatal signal */
-int  signo;
+static void
+onsig(				/* fatal signal */
+	int  signo
+)
 {
 	static int  gotsig = 0;
 
@@ -175,9 +193,11 @@ int  signo;
 }
 
 
-sigdie(signo, msg)			/* set fatal signal */
-int  signo;
-char  *msg;
+static void
+sigdie(			/* set fatal signal */
+	int  signo,
+	char  *msg
+)
 {
 	if (signal(signo, onsig) == SIG_IGN)
 		signal(signo, SIG_IGN);
@@ -185,9 +205,11 @@ char  *msg;
 }
 
 
-int
-resfmode(fd, mod)		/* restrict open file access mode */
-int	fd, mod;
+static int
+resfmode(		/* restrict open file access mode */
+	int	fd,
+	int	mod
+)
 {
 	struct stat	stbuf;
 					/* get original mode */
@@ -205,7 +227,8 @@ int	fd, mod;
 }
 
 
-initrholo()			/* get our holodeck running */
+static void
+initrholo(void)			/* get our holodeck running */
 {
 	extern int	global_packet();
 	register int	i;
@@ -294,7 +317,8 @@ memerr:
 }
 
 
-rholo()				/* holodeck main loop */
+static int
+rholo(void)				/* holodeck main loop */
 {
 	static long	nextfragwarn = 100*(1L<<20);
 	static int	idle = 0;
@@ -363,14 +387,15 @@ rholo()				/* holodeck main loop */
 }
 
 
-setdefaults(gp)			/* set default values */
-register HDGRID	*gp;
+static void
+setdefaults(			/* set default values */
+	register HDGRID	*gp
+)
 {
 	extern char	*atos();
 	register int	i;
 	int	n;
 	double	len[3], d;
-	char	buf[64];
 
 	if (!vdef(SECTION)) {
 		sprintf(errmsg, "%s must be defined", vnam(SECTION));
@@ -420,8 +445,10 @@ register HDGRID	*gp;
 }
 
 
-creatholo(gp)			/* create a holodeck output file */
-HDGRID	*gp;
+static void
+creatholo(			/* create a holodeck output file */
+	HDGRID	*gp
+)
 {
 	extern char	VersionID[];
 	int32	lastloc, nextloc;
@@ -459,9 +486,10 @@ HDGRID	*gp;
 }
 
 
-int
-headline(s)			/* process information header line */
-char	*s;
+static int
+headline(			/* process information header line */
+	char	*s
+)
 {
 	extern char	FMTSTR[];
 	register char	*cp;
@@ -485,7 +513,8 @@ char	*s;
 }
 
 
-loadholo()			/* start loading a holodeck from fname */
+static void
+loadholo(void)			/* start loading a holodeck from fname */
 {
 	FILE	*fp;
 	int	fd;
@@ -533,8 +562,10 @@ loadholo()			/* start loading a holodeck from fname */
 }
 
 
-done_packets(pl)		/* handle finished packets */
-PACKET	*pl;
+extern void
+done_packets(		/* handle finished packets */
+	PACKET	*pl
+)
 {
 	static int	n2flush = 0;
 	register PACKET	*p;
@@ -566,8 +597,11 @@ PACKET	*pl;
 }
 
 
-rootname(rn, fn)		/* remove tail from end of fn */
-register char	*rn, *fn;
+static void
+rootname(		/* remove tail from end of fn */
+	register char	*rn,
+	register char	*fn
+)
 {
 	char	*tp, *dp;
 
@@ -582,8 +616,10 @@ register char	*rn, *fn;
 }
 
 
-badvalue(vc)			/* report bad variable value and exit */
-int	vc;
+static void
+badvalue(			/* report bad variable value and exit */
+	int	vc
+)
 {
 	sprintf(errmsg, "bad value for variable '%s'", vnam(vc));
 	error(USER, errmsg);

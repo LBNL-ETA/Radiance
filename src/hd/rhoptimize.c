@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.17 2003/10/22 02:06:34 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.18 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -9,8 +9,11 @@ static const char	RCSid[] = "$Id: rhoptimize.c,v 3.17 2003/10/22 02:06:34 greg E
 
 #include <signal.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "platform.h"
+#include "rterror.h"
+#include "resolu.h"
 #include "rtprocess.h" /* getpid() */
 #include "holo.h"
 
@@ -22,12 +25,18 @@ char	*progname;
 char	tempfile[128];
 int	dupchecking = 0;
 
-extern long	rhinitcopy();
+static long rhinitcopy(int hfd[2], char *infn, char *outfn);
+static int nuniq(RAYVAL *rva, int n);
+static int bpcmp(const void *b1p, const void *b2p);
+static int xferclump(HOLO *hp, int *bq, int nb);
+static void copysect(int ifd, int ofd);
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	*inpname, *outname;
 	int	hdfd[2];
@@ -89,14 +98,16 @@ char	*argv[];
 				outname, inpname);
 		error(SYSTEM, errmsg);
 	}
-	exit(0);
+	return 0;
 }
 
 
-long
-rhinitcopy(hfd, infn, outfn)	/* open files and copy header */
-int	hfd[2];			/* returned file descriptors */
-char	*infn, *outfn;
+static long
+rhinitcopy(	/* open files and copy header */
+	int	hfd[2],			/* returned file descriptors */
+	char	*infn,
+	char	*outfn
+)
 {
 	FILE	*infp, *outfp;
 	long	ifpos;
@@ -143,10 +154,11 @@ char	*infn, *outfn;
 }
 
 
-int
-nuniq(rva, n)			/* sort unique rays to front of beam list */
-register RAYVAL	*rva;
-int	n;
+static int
+nuniq(			/* sort unique rays to front of beam list */
+	register RAYVAL	*rva,
+	int	n
+)
 {
 	register int	i, j;
 	RAYVAL	rtmp;
@@ -171,10 +183,12 @@ int	n;
 static BEAMI	*beamdir;
 
 static int
-bpcmp(b1p, b2p)			/* compare beam positions on disk */
-int	*b1p, *b2p;
+bpcmp(			/* compare beam positions on disk */
+	const void	*b1p,
+	const void	*b2p
+)
 {
-	register off_t	pdif = beamdir[*b1p].fo - beamdir[*b2p].fo;
+	register off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
 
 	if (pdif < 0L) return(-1);
 	return(pdif > 0L);
@@ -183,9 +197,11 @@ int	*b1p, *b2p;
 static HOLO	*hout;
 
 static int
-xferclump(hp, bq, nb)		/* transfer the given clump to hout and free */
-HOLO	*hp;
-int	*bq, nb;
+xferclump(		/* transfer the given clump to hout and free */
+	HOLO	*hp,
+	int	*bq,
+	int	nb
+)
 {
 	register int	i;
 	register BEAM	*bp;
@@ -206,8 +222,11 @@ int	*bq, nb;
 	return(0);
 }
 
-copysect(ifd, ofd)		/* copy holodeck section from ifd to ofd */
-int	ifd, ofd;
+static void
+copysect(		/* copy holodeck section from ifd to ofd */
+	int	ifd,
+	int	ofd
+)
 {
 	HOLO	*hinp;
 					/* load input section directory */

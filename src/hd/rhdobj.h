@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdobj.h,v 3.7 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: rhdobj.h,v 3.8 2004/01/01 11:21:55 schorsch Exp $ */
 /*
  * Header file for object display routines for rholo drivers.
  */
@@ -149,11 +149,24 @@ Returns 1 on success, 0 on failure (with COMMAND error message).
  ******************************************************************/
 
 
-extern double	dobj_trace();
-
 extern char	rhdcmd[DO_NCMDS][8];
 
-extern int	(*dobj_lightsamp)();	/* pointer to function to get lights */
+/* pointer to function to get lights */
+extern void	(*dobj_lightsamp)(COLR clr, FVECT direc, FVECT pos);
+
+
+extern int dobj_cleanup(void);
+extern int dobj_command(char *cmd, register char *args);
+extern int dobj_render(void);
+extern double dobj_trace(char nm[], FVECT  rorg, FVECT  rdir);
+extern int dobj_load(char	*oct, char	*nam);
+extern int dobj_unload(char	*nam);
+extern int dobj_xform(char	*nam, int	rel, int	ac, char	**av);
+extern int dobj_putstats(char	*nam, FILE	*fp);
+extern int dobj_unmove(void);
+extern int dobj_dup(char	*oldnm, char	*nam);
+extern int dobj_lighting(char	*nam, int	cn);
+
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.14 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.15 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -52,11 +52,26 @@ extern float	*myweight;	/* weights (used to compute final pixels) */
 extern float	*mydepth;	/* depth values (visibility culling) */
 extern int	hres, vres;	/* current horizontal and vertical res. */
 
+extern void pixFinish(double ransamp);
+extern void pixBeam(BEAM *bp, HDBEAMI *hb);
 
-void
-pixBeam(bp, hb)			/* render a particular beam */
-BEAM	*bp;
-register HDBEAMI	*hb;
+typedef int (sampfunc)(int h, int v, short nl[NNEIGH][2], int nd[NNEIGH],
+		int n, double *rf);
+static sampfunc kill_occl;
+static sampfunc smooth_samp;
+static sampfunc random_samp;
+static void meet_neighbors(int occ, sampfunc *nf, double *dp);
+static void reset_flags(void);
+static void init_wfunc(void);
+static int findneigh(short nl[NNEIGH][2], int nd[NNEIGH], int h, int v,
+		register short (*rnl)[NNEIGH]);
+
+
+extern void
+pixBeam(			/* render a particular beam */
+	BEAM	*bp,
+	register HDBEAMI	*hb
+)
 {
 	GCOORD	gc[2];
 	register RAYVAL	*rv;
@@ -111,12 +126,15 @@ register HDBEAMI	*hb;
 }
 
 
-int
-kill_occl(h, v, nl, nd, n)		/* check for occlusion errors */
-int	h, v;
-register short	nl[NNEIGH][2];
-int	nd[NNEIGH];
-int	n;
+static int
+kill_occl(		/* check for occlusion errors */
+	int	h,
+	int	v,
+	register short	nl[NNEIGH][2],
+	int	nd[NNEIGH],
+	int	n,
+	double *rf
+)
 {
 	short	forequad[2][2];
 	int	d;
@@ -144,12 +162,15 @@ int	n;
 }
 
 
-int
-smooth_samp(h, v, nl, nd, n)	/* grow sample point smoothly */
-int	h, v;
-register short	nl[NNEIGH][2];
-int	nd[NNEIGH];
-int	n;
+static int
+smooth_samp(	/* grow sample point smoothly */
+	int	h,
+	int	v,
+	register short	nl[NNEIGH][2],
+	int	nd[NNEIGH],
+	int	n,
+	double *rf
+)
 {
 	int	dis[NNEIGH], ndis;
 	COLOR	mykern[MAXRAD2];
@@ -206,13 +227,15 @@ int	n;
 }
 
 
-int
-random_samp(h, v, nl, nd, n, rf)	/* gather samples randomly */
-int	h, v;
-register short	nl[NNEIGH][2];
-int	nd[NNEIGH];
-int	n;
-double	*rf;
+static int
+random_samp(	/* gather samples randomly */
+	int	h,
+	int	v,
+	register short	nl[NNEIGH][2],
+	int	nd[NNEIGH],
+	int	n,
+	double	*rf
+)
 {
 	float	rnt[NNEIGH];
 	double	rvar;
@@ -240,8 +263,10 @@ double	*rf;
 }
 
 
-pixFinish(ransamp)		/* done with beams -- compute pixel values */
-double	ransamp;
+extern void
+pixFinish(		/* done with beams -- compute pixel values */
+	double	ransamp
+)
 {
 	if (pixWeight[0] <= FTINY)
 		init_wfunc();		/* initialize weighting function */
@@ -257,7 +282,8 @@ double	ransamp;
 }
 
 
-reset_flags()			/* allocate/set/reset occupancy flags */
+static void
+reset_flags(void)			/* allocate/set/reset occupancy flags */
 {
 	register int32	p;
 
@@ -272,7 +298,8 @@ reset_flags()			/* allocate/set/reset occupancy flags */
 }
 
 
-init_wfunc()			/* initialize weighting function */
+static void
+init_wfunc(void)			/* initialize weighting function */
 {
 	register int	r2;
 	register double	d;
@@ -287,12 +314,14 @@ init_wfunc()			/* initialize weighting function */
 }
 
 
-int
-findneigh(nl, nd, h, v, rnl)	/* find NNEIGH neighbors for pixel */
-short	nl[NNEIGH][2];
-int	nd[NNEIGH];
-int	h, v;
-register short	(*rnl)[NNEIGH];
+static int
+findneigh(	/* find NNEIGH neighbors for pixel */
+	short	nl[NNEIGH][2],
+	int	nd[NNEIGH],
+	int	h,
+	int	v,
+	register short	(*rnl)[NNEIGH]
+)
 {
 	int	nn = 0;
 	int	d, n, hoff;
@@ -328,10 +357,12 @@ register short	(*rnl)[NNEIGH];
 }
 
 
-meet_neighbors(occ, nf, dp)	/* run through samples and their neighbors */
-int	occ;
-int	(*nf)();
-char	*dp;
+static void
+meet_neighbors(	/* run through samples and their neighbors */
+	int	occ,
+	sampfunc *nf,
+	double	*dp
+)
 {
 	short	ln[NNEIGH][2];
 	int	nd[NNEIGH];

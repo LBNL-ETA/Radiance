@@ -1,16 +1,23 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.36 2003/09/19 18:33:05 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.37 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
  * Based on rview driver.
  */
 
-#include "standard.h"
+#include  <stdlib.h>
+#include  <stdio.h>
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
 #include  <time.h>
+
+#include "platform.h"
+#include "rtmath.h"
+#include "rterror.h"
+#include "plocate.h"
+#include "rhdisp.h"
 #include "rhd_qtree.h"
 #include  "x11icon.h"
 
@@ -68,13 +75,27 @@ static int	inpresflags;		/* input result flags */
 
 static int	headlocked = 0;		/* lock vertical motion */
 
-static int  getpixels(), xnewcolr(), freepixels(), resizewindow(), getframe(),
-		getevent(), getkey(), moveview(), getmove(), fixwindow();
-static unsigned long  true_pixel();
+
+static int mytmflags(void);
+static void xnewcolr(int  ndx, int r, int g, int b);
+static int getpixels(void);
+static void freepixels(void);
+static unsigned long true_pixel(register BYTE rgb[3]);
+static void getevent(void);
+static int ilclip(int dp[2][2], FVECT wp[2]);
+static void draw3dline(FVECT wp[2]);
+static void draw_grids(void);
+static int moveview(int dx, int dy, int mov, int orb);
+static void getframe(XButtonPressedEvent *ebut);
+static void waitabit(void);
+static void getmove(XButtonPressedEvent *ebut);
+static void getkey(register XKeyPressedEvent *ekey);
+static void fixwindow(register XExposeEvent *eexp);
+static void resizewindow(register XConfigureEvent *ersz);
 
 
 static int
-mytmflags()			/* figure out tone mapping flags */
+mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
 	register char	*cp, *tail;
@@ -89,13 +110,15 @@ mytmflags()			/* figure out tone mapping flags */
 	if (cp-tail == 4 && !strncmp(tail, "x11h", 4))
 		return(TM_F_HUMAN|TM_F_NOSTDERR);
 	error(USER, "illegal driver name");
+	return 0; /* pro forma return */
 }
 
 
-dev_open(id)			/* initialize X11 driver */
-char  *id;
+extern void
+dev_open(			/* initialize X11 driver */
+	char  *id
+)
 {
-	extern char  *getenv();
 	static RGBPRIMS	myprims = STDPRIMS;
 	char  *ev;
 	double	gamval = GAMMA;
@@ -191,7 +214,8 @@ char  *id;
 }
 
 
-dev_close()			/* close our display */
+extern void
+dev_close(void)			/* close our display */
 {
 	freepixels();
 	XFreeGC(ourdisplay, ourgc);
@@ -208,8 +232,8 @@ dev_close()			/* close our display */
 }
 
 
-
-dev_clear()			/* clear our quadtree */
+extern void
+dev_clear(void)			/* clear our quadtree */
 {
 	qtCompost(100);
 	if (ncolors > 0)
@@ -218,9 +242,10 @@ dev_clear()			/* clear our quadtree */
 }
 
 
-int
-dev_view(nv)			/* assign new driver view */
-VIEW	*nv;
+extern int
+dev_view(			/* assign new driver view */
+	VIEW	*nv
+)
 {
 	if (nv->type == VT_PAR ||		/* check view legality */
 			nv->horiz > 160. || nv->vert > 160.) {
@@ -265,25 +290,31 @@ VIEW	*nv;
 }
 
 
-dev_section(ofn)		/* add octree for geometry rendering */
-char	*ofn;
+extern void
+dev_section(		/* add octree for geometry rendering */
+	char	*ofn
+)
 {
 	/* unimplemented */
 }
 
 
-dev_auxcom(cmd, args)		/* process an auxiliary command */
-char	*cmd, *args;
+extern void
+dev_auxcom(		/* process an auxiliary command */
+	char	*cmd,
+	char	*args
+)
 {
 	sprintf(errmsg, "%s: unknown command", cmd);
 	error(COMMAND, errmsg);
 }
 
 
-VIEW *
-dev_auxview(n, hvres)		/* return nth auxiliary view */
-int	n;
-int	hvres[2];
+extern VIEW *
+dev_auxview(		/* return nth auxiliary view */
+	int	n,
+	int	hvres[2]
+)
 {
 	if (n)
 		return(NULL);
@@ -292,8 +323,8 @@ int	hvres[2];
 }
 
 
-int
-dev_input()			/* get X11 input */
+extern int
+dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
 
@@ -308,9 +339,14 @@ dev_input()			/* get X11 input */
 }
 
 
-dev_paintr(rgb, xmin, ymin, xmax, ymax)		/* fill a rectangle */
-BYTE	rgb[3];
-int  xmin, ymin, xmax, ymax;
+extern void
+dev_paintr(		/* fill a rectangle */
+	BYTE	rgb[3],
+	int  xmin,
+	int  ymin,
+	int  xmax,
+	int  ymax
+)
 {
 	unsigned long  pixel;
 
@@ -326,8 +362,8 @@ int  xmin, ymin, xmax, ymax;
 }
 
 
-int
-dev_flush()			/* flush output */
+extern int
+dev_flush(void)			/* flush output */
 {
 	qtUpdate();
 	rayqleft = RAYQLEN;
@@ -335,10 +371,13 @@ dev_flush()			/* flush output */
 }
 
 
-static
-xnewcolr(ndx, r, g, b)		/* enter a color into hardware table */
-int  ndx;
-int  r, g, b;
+static void
+xnewcolr(		/* enter a color into hardware table */
+	int  ndx,
+	int r,
+	int g,
+	int b
+)
 {
 	XColor  xcolor;
 
@@ -353,7 +392,7 @@ int  r, g, b;
 
 
 static int
-getpixels()				/* get the color map */
+getpixels(void)				/* get the color map */
 {
 	XColor  thiscolor;
 	register int  i, j;
@@ -404,8 +443,8 @@ loop:
 }
 
 
-static
-freepixels()				/* free our pixels */
+static void
+freepixels(void)				/* free our pixels */
 {
 	if (ncolors == 0)
 		return;
@@ -420,8 +459,9 @@ freepixels()				/* free our pixels */
 
 
 static unsigned long
-true_pixel(rgb)			/* return true pixel value for color */
-register BYTE	rgb[3];
+true_pixel(			/* return true pixel value for color */
+	register BYTE	rgb[3]
+)
 {
 	register unsigned long  rval;
 
@@ -432,8 +472,8 @@ register BYTE	rgb[3];
 }
 
 
-static
-getevent()			/* get next event */
+static void
+getevent(void)			/* get next event */
 {
 	XNextEvent(ourdisplay, levptr(XEvent));
 	switch (levptr(XEvent)->type) {
@@ -469,10 +509,11 @@ getevent()			/* get next event */
 }
 
 
-static
-ilclip(dp, wp)			/* clip world coordinates to device */
-int	dp[2][2];
-FVECT	wp[2];
+static int
+ilclip(			/* clip world coordinates to device */
+	int	dp[2][2],
+	FVECT	wp[2]
+)
 {
 	static FVECT	vmin = {0.,0.,0.}, vmax = {1.-FTINY,1.-FTINY,FHUGE};
 	FVECT	wpc[2], ip[2];
@@ -507,9 +548,10 @@ FVECT	wp[2];
 }
 
 
-static
-draw3dline(wp)			/* draw 3d line in world coordinates */
-FVECT	wp[2];
+static void
+draw3dline(			/* draw 3d line in world coordinates */
+	FVECT	wp[2]
+)
 {
 	int	dp[2][2];
 
@@ -521,8 +563,8 @@ FVECT	wp[2];
 }
 
 
-static
-draw_grids()			/* draw holodeck section grids */
+static void
+draw_grids(void)			/* draw holodeck section grids */
 {
 	static BYTE	gridrgb[3] = {0x0, 0xff, 0xff};
 	unsigned long  pixel;
@@ -537,9 +579,13 @@ draw_grids()			/* draw holodeck section grids */
 }
 
 
-static
-moveview(dx, dy, mov, orb)	/* move our view */
-int	dx, dy, mov, orb;
+static int
+moveview(	/* move our view */
+	int	dx,
+	int	dy,
+	int	mov,
+	int	orb
+)
 {
 	VIEW	nv;
 	FVECT	odir, v1;
@@ -585,9 +631,10 @@ int	dx, dy, mov, orb;
 }
 
 
-static
-getframe(ebut)				/* get focus frame */
-XButtonPressedEvent	*ebut;
+static void
+getframe(				/* get focus frame */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	startx = ebut->x, starty = ebut->y;
 	int	endx, endy;
@@ -608,8 +655,8 @@ XButtonPressedEvent	*ebut;
 }
 
 
-static
-waitabit()				/* pause a moment */
+static void
+waitabit(void)				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
@@ -618,9 +665,10 @@ waitabit()				/* pause a moment */
 }
 
 
-static
-getmove(ebut)				/* get view change */
-XButtonPressedEvent	*ebut;
+static void
+getmove(				/* get view change */
+	XButtonPressedEvent	*ebut
+)
 {
 	int	movdir = MOVDIR(ebut->button);
 	int	movorb = MOVORB(ebut->state);
@@ -659,9 +707,10 @@ XButtonPressedEvent	*ebut;
 }
 
 
-static
-getkey(ekey)				/* get input key */
-register XKeyPressedEvent  *ekey;
+static void
+getkey(				/* get input key */
+	register XKeyPressedEvent  *ekey
+)
 {
 	Window	rootw, childw;
 	int	rootx, rooty, wx, wy;
@@ -740,9 +789,10 @@ register XKeyPressedEvent  *ekey;
 }
 
 
-static
-fixwindow(eexp)				/* repair damage to window */
-register XExposeEvent  *eexp;
+static void
+fixwindow(				/* repair damage to window */
+	register XExposeEvent  *eexp
+)
 {
 	if (odev.hres == 0 || odev.vres == 0) {	/* first exposure */
 		odev.hres = eexp->width;
@@ -753,9 +803,10 @@ register XExposeEvent  *eexp;
 }
 
 
-static
-resizewindow(ersz)			/* resize window */
-register XConfigureEvent  *ersz;
+static void
+resizewindow(			/* resize window */
+	register XConfigureEvent  *ersz
+)
 {
 	if (ersz->width == odev.hres && ersz->height == odev.vres)
 		return;

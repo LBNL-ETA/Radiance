@@ -1,14 +1,16 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.40 2003/07/21 22:30:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.41 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
  */
 
+#include <time.h>
 #include <string.h>
+#include <stdio.h>
 
-#include "rholo.h"
 #include "view.h"
+#include "rholo.h"
 
 #ifndef NFRAG2CHUNK
 #define NFRAG2CHUNK	4096	/* number of fragments to start chunking */
@@ -23,8 +25,6 @@ static const char	RCSid[] = "$Id: rholo3.c,v 3.40 2003/07/21 22:30:18 schorsch E
 
 #define rchunk(n)	(((n)+(RPACKSIZ/2))/RPACKSIZ)
 
-extern time_t	time();
-
 int	chunkycmp = 0;		/* clump beams together on disk */
 
 static PACKHEAD	*complist=NULL;	/* list of beams to compute */
@@ -32,8 +32,16 @@ static int	complen=0;	/* length of complist */
 static int	listpos=0;	/* current list position for next_packet */
 static int	lastin= -1;	/* last ordered position in list */
 
+static void sortcomplist(void);
+static void mergeclists(PACKHEAD *cdest, PACKHEAD *cl1, int n1, PACKHEAD *cl2, int n2);
+static void view_list(FILE	*fp);
+static void ambient_list(void);
+static double beamvolume(HOLO	*hp, int	bi);
+static void dispbeam(BEAM	*b, HDBEAMI	*hb);
 
-int
+
+
+static int
 beamcmp(b0, b1)				/* comparison for compute order */
 register PACKHEAD	*b0, *b1;
 {
@@ -77,10 +85,11 @@ register PACKHEAD	*b0, *b1;
 }
 
 
-void
-dispbeam(b, hb)				/* display a holodeck beam */
-register BEAM	*b;
-register HDBEAMI	*hb;
+static void
+dispbeam(				/* display a holodeck beam */
+	register BEAM	*b,
+	register HDBEAMI	*hb
+)
 {
 	static int	n = 0;
 	static PACKHEAD	*p = NULL;
@@ -108,10 +117,12 @@ register HDBEAMI	*hb;
 }
 
 
-bundle_set(op, clist, nents)	/* bundle set operation */
-int	op;
-PACKHEAD	*clist;
-int	nents;
+extern void
+bundle_set(	/* bundle set operation */
+	int	op,
+	PACKHEAD	*clist,
+	int	nents
+)
 {
 	int	oldnr, n;
 	HDBEAMI	*hbarr;
@@ -227,14 +238,15 @@ memerr:
 }
 
 
-double
-beamvolume(hp, bi)	/* compute approximate volume of a beam */
-HOLO	*hp;
-int	bi;
+static double
+beamvolume(	/* compute approximate volume of a beam */
+	HOLO	*hp,
+	int	bi
+)
 {
 	GCOORD	gc[2];
 	FVECT	cp[4], edgeA, edgeB, cent[2];
-	FVECT	v, crossp[2], diffv;
+	FVECT	crossp[2], diffv;
 	double	vol[2];
 	register int	i;
 					/* get grid coordinates */
@@ -260,7 +272,8 @@ int	bi;
 }
 
 
-ambient_list()			/* compute ambient beam list */
+static void
+ambient_list(void)			/* compute ambient beam list */
 {
 	int32	wtotal, minrt;
 	double	frac;
@@ -301,8 +314,10 @@ ambient_list()			/* compute ambient beam list */
 }
 
 
-view_list(fp)			/* assign beam priority from view list */
-FILE	*fp;
+static void
+view_list(			/* assign beam priority from view list */
+	FILE	*fp
+)
 {
 	double	pa = 1.;
 	VIEW	curview;
@@ -325,9 +340,9 @@ FILE	*fp;
 }
 
 
-init_global()			/* initialize global ray computation */
+extern void
+init_global(void)			/* initialize global ray computation */
 {
-	register int	k;
 					/* free old list and empty queue */
 	if (complen > 0) {
 		free((void *)complist);
@@ -345,10 +360,14 @@ init_global()			/* initialize global ray computation */
 }
 
 
-mergeclists(cdest, cl1, n1, cl2, n2)	/* merge two sorted lists */
-register PACKHEAD	*cdest;
-register PACKHEAD	*cl1, *cl2;
-int	n1, n2;
+static void
+mergeclists(	/* merge two sorted lists */
+	register PACKHEAD	*cdest,
+	register PACKHEAD	*cl1,
+	int	n1,
+	register PACKHEAD	*cl2,
+	int	n2
+)
 {
 	register int	cmp;
 
@@ -368,7 +387,8 @@ int	n1, n2;
 }
 
 
-sortcomplist()			/* fix our list order */
+static void
+sortcomplist(void)			/* fix our list order */
 {
 	PACKHEAD	*list2;
 	int	listlen;
@@ -426,12 +446,12 @@ sortcomplist()			/* fix our list order */
  * list and start again from the beginning.  Since
  * a merge sort is used, the sorting costs are minimal.
  */
-next_packet(p, n)		/* prepare packet for computation */
-register PACKET	*p;
-int	n;
+extern int
+next_packet(		/* prepare packet for computation */
+	register PACKET	*p,
+	int	n
+)
 {
-	register int	i;
-
 	if (listpos > lastin)		/* time to sort the list */
 		sortcomplist();
 	if (complen <= 0)

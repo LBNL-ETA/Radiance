@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.35 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.36 2004/01/01 11:21:55 schorsch Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -26,9 +26,14 @@ static int	inp_flags;
 static SUBPROC	dpd;
 static FILE	*dpout;
 
+static void disp_flush(void);
+static void disp_result(int type, int nbytes, char *p);
 
-disp_open(dname)		/* open the named display driver */
-char	*dname;
+
+extern void
+disp_open(		/* open the named display driver */
+	char	*dname
+)
 {
 	char	buf[sizeof(HDGRID)+512], fd0[8], fd1[8], *cmd[5], *sfn;
 	int	i, n, len;
@@ -93,15 +98,19 @@ char	*dname;
 }
 
 
-disp_packet(p)			/* display a packet */
-register PACKHEAD	*p;
+extern void
+disp_packet(			/* display a packet */
+	register PACKHEAD	*p
+)
 {
 	disp_result(DS_BUNDLE, packsiz(p->nr), (char *)p);
 }
 
 
-disp_check(block)		/* check display process */
-int	block;
+extern int
+disp_check(		/* check display process */
+	int	block
+)
 {
 	MSGHEAD	msg;
 	int	n;
@@ -238,14 +247,13 @@ fcntlerr:
 	error(SYSTEM, "cannot change display blocking mode");
 readerr:
 	error(SYSTEM, "error reading from display process");
+	return -1; /* pro forma return */
 }
 
 
-int
-disp_close()			/* close our display process */
+extern int
+disp_close(void)			/* close our display process */
 {
-	int	rval;
-
 	if (dpout == NULL)
 		return(-1);
 	myeye.rng = 0;
@@ -257,9 +265,12 @@ disp_close()			/* close our display process */
 }
 
 
-disp_result(type, nbytes, p)	/* queue result message to display process */
-int	type, nbytes;
-char	*p;
+static void
+disp_result(	/* queue result message to display process */
+	int	type,
+	int	nbytes,
+	char	*p
+)
 {
 	MSGHEAD	msg;
 					/* consistency checks */
@@ -277,7 +288,8 @@ char	*p;
 }
 
 
-disp_flush()			/* flush output to display */
+static void
+disp_flush(void)			/* flush output to display */
 {
 	if (fflush(dpout) < 0)
 		error(SYSTEM, "error writing to the display process");
