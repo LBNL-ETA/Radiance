@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.13 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.14 2003/12/09 15:51:42 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -16,6 +16,11 @@ static const char	RCSid[] = "$Id: color.c,v 2.13 2003/07/27 22:12:01 schorsch Ex
 #include  <math.h>
 
 #include  "color.h"
+
+#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#define getc    getc_unlocked
+#define putc    putc_unlocked
+#endif
 
 #define  MINELEN	8	/* minimum scanline length for encoding */
 #define  MAXELEN	0x7fff	/* maximum scanline length for encoding */
