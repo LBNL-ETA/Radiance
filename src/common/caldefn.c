@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.15 2003/04/27 06:08:03 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.16 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -66,8 +66,9 @@ EPNODE	*curfunc = NULL;
 
 
 void
-fcompile(fname)			/* get definitions from a file */
-char  *fname;
+fcompile(			/* get definitions from a file */
+	char  *fname
+)
 {
     FILE  *fp;
 
@@ -87,10 +88,11 @@ char  *fname;
 
 
 void
-scompile(str, fn, ln)		/* get definitions from a string */
-char  *str;
-char  *fn;
-int  ln;
+scompile(		/* get definitions from a string */
+	char  *str,
+	char  *fn,
+	int  ln
+)
 {
     initstr(str, fn, ln);
     while (nextc != EOF)
@@ -99,16 +101,18 @@ int  ln;
 
 
 double
-varvalue(vname)			/* return a variable's value */
-char  *vname;
+varvalue(			/* return a variable's value */
+	char  *vname
+)
 {
     return(dvalue(vname, dlookup(vname)));
 }
 
 
 double
-evariable(ep)			/* evaluate a variable */
-EPNODE	*ep;
+evariable(			/* evaluate a variable */
+	EPNODE	*ep
+)
 {
     register VARDEF  *dp = ep->v.ln;
 
@@ -117,10 +121,11 @@ EPNODE	*ep;
 
 
 void
-varset(vname, assign, val)	/* set a variable's value */
-char  *vname;
-int  assign;
-double	val;
+varset(		/* set a variable's value */
+	char  *vname,
+	int  assign,
+	double	val
+)
 {
     char  *qname;
     register EPNODE  *ep1, *ep2;
@@ -152,8 +157,9 @@ double	val;
 
 
 void
-dclear(name)			/* delete variable definitions of name */
-char  *name;
+dclear(			/* delete variable definitions of name */
+	char  *name
+)
 {
     register EPNODE  *ep;
 
@@ -168,8 +174,9 @@ char  *name;
 
 
 void
-dremove(name)			/* delete all definitions of name */
-char  *name;
+dremove(			/* delete all definitions of name */
+	char  *name
+)
 {
     register EPNODE  *ep;
 
@@ -179,8 +186,9 @@ char  *name;
 
 
 int
-vardefined(name)	/* return non-zero if variable defined */
-char  *name;
+vardefined(	/* return non-zero if variable defined */
+	char  *name
+)
 {
     register EPNODE  *dp;
 
@@ -189,8 +197,9 @@ char  *name;
 
 
 char *
-setcontext(ctx)			/* set a new context path */
-register char  *ctx;
+setcontext(			/* set a new context path */
+	register char  *ctx
+)
 {
     register char  *cpp;
 
@@ -221,8 +230,9 @@ register char  *ctx;
 
 
 char *
-pushcontext(ctx)		/* push on another context */
-char  *ctx;
+pushcontext(		/* push on another context */
+	char  *ctx
+)
 {
     char  oldcontext[MAXCNTX+1];
     register int  n;
@@ -240,7 +250,7 @@ char  *ctx;
 
 
 char *
-popcontext()			/* pop off top context */
+popcontext(void)			/* pop off top context */
 {
     register char  *cp1, *cp2;
 
@@ -257,9 +267,10 @@ popcontext()			/* pop off top context */
 
 
 char *
-qualname(nam, lvl)		/* get qualified name */
-register char  *nam;
-int  lvl;
+qualname(		/* get qualified name */
+	register char  *nam,
+	int  lvl
+)
 {
     static char	 nambuf[MAXWORD+1];
     register char  *cp = nambuf, *cpp;
@@ -303,8 +314,9 @@ toolong:
 
 
 int
-incontext(qn)			/* is qualified name in current context? */
-register char  *qn;
+incontext(			/* is qualified name in current context? */
+	register char  *qn
+)
 {
     if (!context[0])			/* global context accepts all */
 	return(1);
@@ -315,8 +327,9 @@ register char  *qn;
 
 
 void
-chanout(cs)			/* set output channels */
-void  (*cs)();
+chanout(			/* set output channels */
+	void  (*cs)(int n, double v)
+)
 {
     register EPNODE  *ep;
 
@@ -327,8 +340,9 @@ void  (*cs)();
 
 
 void
-dcleanup(lvl)		/* clear definitions (0->vars,1->output,2->consts) */
-int  lvl;
+dcleanup(		/* clear definitions (0->vars,1->output,2->consts) */
+	int  lvl
+)
 {
     register int  i;
     register VARDEF  *vp;
@@ -350,8 +364,9 @@ int  lvl;
 
 
 EPNODE *
-dlookup(name)			/* look up a definition */
-char  *name;
+dlookup(			/* look up a definition */
+	char  *name
+)
 {
     register VARDEF  *vp;
     
@@ -362,8 +377,9 @@ char  *name;
 
 
 VARDEF *
-varlookup(name)			/* look up a variable */
-char  *name;
+varlookup(			/* look up a variable */
+	char  *name
+)
 {
     int	 lvl = 0;
     register char  *qname;
@@ -378,8 +394,9 @@ char  *name;
 
 
 VARDEF *
-varinsert(name)			/* get a link to a variable */
-char  *name;
+varinsert(			/* get a link to a variable */
+	char  *name
+)
 {
     register VARDEF  *vp;
     int	 hv;
@@ -403,8 +420,9 @@ char  *name;
 
 
 void
-libupdate(fn)			/* update library links */
-char  *fn;
+libupdate(			/* update library links */
+	char  *fn
+)
 {
     register int  i;
     register VARDEF  *vp;
@@ -417,8 +435,9 @@ char  *fn;
 
 
 void
-varfree(ln)				/* release link to variable */
-register VARDEF	 *ln;
+varfree(				/* release link to variable */
+	register VARDEF	 *ln
+)
 {
     register VARDEF  *vp;
     int	 hv;
@@ -441,7 +460,7 @@ register VARDEF	 *ln;
 
 
 EPNODE *
-dfirst()			/* return pointer to first definition */
+dfirst(void)			/* return pointer to first definition */
 {
     htndx = 0;
     htpos = NULL;
@@ -451,7 +470,7 @@ dfirst()			/* return pointer to first definition */
 
 
 EPNODE *
-dnext()				/* return pointer to next definition */
+dnext(void)				/* return pointer to next definition */
 {
     register EPNODE  *ep;
     register char  *nm;
@@ -474,8 +493,9 @@ dnext()				/* return pointer to next definition */
 
 
 EPNODE *
-dpop(name)			/* pop a definition */
-char  *name;
+dpop(			/* pop a definition */
+	char  *name
+)
 {
     register VARDEF  *vp;
     register EPNODE  *dp;
@@ -490,9 +510,10 @@ char  *name;
 
 
 void
-dpush(nm, ep)			/* push on a definition */
-char  *nm;
-register EPNODE	 *ep;
+dpush(			/* push on a definition */
+	char  *nm,
+	register EPNODE	 *ep
+)
 {
     register VARDEF  *vp;
 
@@ -503,8 +524,9 @@ register EPNODE	 *ep;
 
 
 void
-addchan(sp)			/* add an output channel assignment */
-EPNODE	*sp;
+addchan(			/* add an output channel assignment */
+	EPNODE	*sp
+)
 {
     int	 ch = sp->v.kid->v.chan;
     register EPNODE  *ep, *epl;
@@ -533,7 +555,7 @@ EPNODE	*sp;
 
 
 void
-getstatement()			/* get next statement */
+getstatement(void)			/* get next statement */
 {
     register EPNODE  *ep;
     char  *qname;
@@ -576,10 +598,11 @@ getstatement()			/* get next statement */
 
 
 EPNODE *
-getdefn()			/* A -> SYM = E1 */
-				/*	SYM : E1 */
-				/*	FUNC(SYM,..) = E1 */
-				/*	FUNC(SYM,..) : E1 */
+getdefn(void)
+	/* A -> SYM = E1 */
+	/*	SYM : E1 */
+	/*	FUNC(SYM,..) = E1 */
+	/*	FUNC(SYM,..) : E1 */
 {
     register EPNODE  *ep1, *ep2;
 
@@ -635,7 +658,7 @@ getdefn()			/* A -> SYM = E1 */
 
 
 EPNODE *
-getchan()			/* A -> $N = E1 */
+getchan(void)			/* A -> $N = E1 */
 {
     register EPNODE  *ep1, *ep2;
 
@@ -667,9 +690,10 @@ getchan()			/* A -> $N = E1 */
 
 
 static double
-dvalue(name, d)			/* evaluate a variable */
-char  *name;
-EPNODE	*d;
+dvalue(			/* evaluate a variable */
+char  *name,
+EPNODE	*d
+)
 {
     register EPNODE  *ep1, *ep2;
     

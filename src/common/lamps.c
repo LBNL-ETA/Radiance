@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lamps.c,v 2.7 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: lamps.c,v 2.8 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  * Load lamp data.
@@ -10,6 +10,8 @@ static const char	RCSid[] = "$Id: lamps.c,v 2.7 2003/02/25 02:47:21 greg Exp $";
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  <ctype.h>
+
+#include  "standard.h"
 #include  "color.h"
 
 extern char	*eindex(), *expsave();

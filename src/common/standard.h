@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.24 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: standard.h,v 2.25 2003/06/07 12:50:20 schorsch Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -20,6 +20,11 @@ extern "C" {
 
 #include  "platform.h"
 #include  "mat4.h"
+
+
+#ifndef NULL
+#define NULL 0
+#endif
 
 				/* regular transformation */
 typedef struct {

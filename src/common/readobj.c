@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.12 2003/05/13 17:58:32 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.13 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -9,13 +9,17 @@ static const char RCSid[] = "$Id: readobj.c,v 2.12 2003/05/13 17:58:32 greg Exp 
 
 #include "copyright.h"
 
+#include  <ctype.h>
+#include  <stdio.h>
+#ifdef _WIN32
+ #define popen _popen
+ #define pclose _pclose
+#endif
+
 #include  "standard.h"
-
 #include  "object.h"
-
 #include  "otypes.h"
 
-#include  <ctype.h>
 
 OBJREC  *objblock[MAXOBJBLK];		/* our objects */
 OBJECT  nobjects = 0;			/* # of objects */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.10 2003/03/05 16:16:52 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.11 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -13,9 +13,8 @@ static const char	RCSid[] = "$Id: calfunc.c,v 2.10 2003/03/05 16:16:52 greg Exp 
 #include "copyright.h"
 
 #include  <stdio.h>
-
+#include  <string.h>
 #include  <errno.h>
-
 #include  <math.h>
 
 #include  "calcomp.h"
@@ -255,6 +254,7 @@ badarg:
     eputs(actp->name);
     eputs(": argument not a function\n");
     quit(1);
+	return NULL; /* pro forma return */
 }
 
 
@@ -386,7 +386,7 @@ l_select()		/* return argument #(A1+1) */
 {
 	register int  n;
 
-	n = argument(1) + .5;
+	n = (int)(argument(1) + .5);
 	if (n == 0)
 		return(nargum()-1);
 	if (n < 1 || n > nargum()-1) {

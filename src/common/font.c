@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.14 2003/05/13 17:58:32 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.15 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -117,6 +117,7 @@ fonterr:
 	error(USER, errmsg);
 memerr:
 	error(SYSTEM, "out of memory in fontglyph");
+	return NULL; /* pro forma return */
 }
 
 

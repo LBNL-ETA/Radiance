@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cone.c,v 2.6 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: cone.c,v 2.7 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  cone.c - routines for making cones
@@ -143,6 +143,7 @@ argcerr:
 	objerror(o, USER, "bad # arguments");
 raderr:
 	objerror(o, USER, "illegal radii");
+	return NULL; /* pro forma return */
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.3 2003/03/12 04:59:04 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.4 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (int4 type defined in standard.h).
@@ -29,10 +29,10 @@ FVECT	dv;
 
 	for (i = 0; i < 3; i++)
 		if (dv[i] < 0.) {
-			cd[i] = dv[i] * -DCSCALE;
+			cd[i] = (int)(dv[i] * -DCSCALE);
 			dc |= FXNEG<<i;
 		} else
-			cd[i] = dv[i] * DCSCALE;
+			cd[i] = (int)(dv[i] * DCSCALE);
 	if (cd[0] <= cd[1]) {
 		dc |= F1X | cd[0] << F1SFT;
 		cm = cd[1];

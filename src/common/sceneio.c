@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sceneio.c,v 2.1 2003/03/14 21:27:46 greg Exp $";
+static const char RCSid[] = "$Id: sceneio.c,v 2.2 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  Portable, binary Radiance i/o routines.
@@ -81,6 +81,7 @@ int	objsiz;
 	return(obj);
 memerr:
 	error(SYSTEM, "out of memory in getobj");
+	return 0; /* pro forma return */
 }
 
 

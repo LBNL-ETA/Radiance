@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.3 2003/06/05 19:29:34 schorsch Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.4 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: readmesh.c,v 2.3 2003/06/05 19:29:34 schorsch 
 #include  "octree.h"
 #include  "object.h"
 #include  "mesh.h"
+#include  "resolu.h"
 
 static char	*meshfn;	/* input file name */
 static FILE	*meshfp;	/* mesh file pointer */
@@ -73,21 +74,22 @@ gettree()				/* get a pre-ordered octree */
 	register int  i;
 	
 	switch (getc(meshfp)) {
-	case OT_EMPTY:
-		return(EMPTY);
-	case OT_FULL:
-		return(getfullnode());
-	case OT_TREE:
-		if ((ot = octalloc()) == EMPTY)
-			mesherror(SYSTEM, "out of tree space in readmesh");
-		for (i = 0; i < 8; i++)
-			octkid(ot, i) = gettree();
-		return(ot);
-	case EOF:
-		mesherror(USER, "truncated mesh octree");
-	default:
-		mesherror(USER, "damaged mesh octree");
+		case OT_EMPTY:
+			return(EMPTY);
+		case OT_FULL:
+			return(getfullnode());
+		case OT_TREE:
+			if ((ot = octalloc()) == EMPTY)
+				mesherror(SYSTEM, "out of tree space in readmesh");
+			for (i = 0; i < 8; i++)
+				octkid(ot, i) = gettree();
+			return(ot);
+		case EOF:
+			mesherror(USER, "truncated mesh octree");
+		default:
+			mesherror(USER, "damaged mesh octree");
 	}
+	return NULL; /* pro forma return */
 }
 
 

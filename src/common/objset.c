@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.11 2003/05/15 05:13:35 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.12 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -229,6 +229,7 @@ tryagain:
 	return(ot);
 memerr:
 	error(SYSTEM, "out of memory in fullnode");
+	return NULL; /* pro forma return */
 }
 
 

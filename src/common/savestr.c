@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.6 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.7 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -20,6 +20,11 @@ static const char	RCSid[] = "$Id: savestr.c,v 2.6 2003/02/25 02:47:22 greg Exp $
 
 #include "copyright.h"
 
+#include <string.h>
+#include <stdlib.h>
+
+#include "standard.h"
+
 #ifndef  NHASH
 #define  NHASH		509		/* hash table size (prime!) */
 #endif
@@ -32,10 +37,6 @@ typedef struct s_head {
 static S_HEAD  *stab[NHASH];
 
 #define  hash(s)	(shash(s)%NHASH)
-
-extern char  *savestr(), *strcpy(), *malloc();
-
-#define  NULL		0
 
 #define  string(sp)	((char *)((sp)+1))
 

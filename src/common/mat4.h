@@ -1,4 +1,4 @@
-/* RCSid $Id: mat4.h,v 2.7 2003/06/06 16:38:47 schorsch Exp $ */
+/* RCSid $Id: mat4.h,v 2.8 2003/06/07 12:50:20 schorsch Exp $ */
 /*
  * Definitions for 4x4 matrix operations
  */
@@ -9,6 +9,8 @@ extern "C" {
 #endif
 
 #include "copyright.h"
+
+#include  <string.h>
 
 #include  "fvect.h"
 

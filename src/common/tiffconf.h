@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/Attic/tiffconf.h,v 3.3 2003/06/06 16:38:47 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/Attic/tiffconf.h,v 3.4 2003/06/07 12:50:21 schorsch Exp $ */
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -25,9 +25,6 @@
 
 #ifndef _TIFFCONF_
 #define	_TIFFCONF_
-#ifdef __cplusplus
-extern "C" {
-#endif
 /*
  * Library Configuration Definitions.
  *
@@ -142,8 +139,5 @@ extern "C" {
 #endif
 #ifndef SUBIFD_SUPPORT
 #define	SUBIFD_SUPPORT		1	/* enable SubIFD tag (330) support */
-#endif
-#ifdef __cplusplus
-}
 #endif
 #endif /* _TIFFCONF_ */

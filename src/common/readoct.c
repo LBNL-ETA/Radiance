@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.16 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.17 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -7,19 +7,24 @@ static const char	RCSid[] = "$Id: readoct.c,v 2.16 2003/06/05 19:29:34 schorsch 
 
 #include "copyright.h"
 
+#include  <stdio.h>
+#ifdef _WIN32
+ #define popen _popen
+ #define pclose _pclose
+#endif
+
 #include  "standard.h"
-
 #include  "octree.h"
-
 #include  "object.h"
-
 #include  "otypes.h"
+#include  "resolu.h"
 
 static double  ogetflt();
 static long  ogetint();
 static char  *ogetstr();
 static int  nonsurfinset();
-static int  octerror(), skiptree();
+static void  octerror(int  etyp, char  *msg);
+static void  skiptree(void);
 static OCTREE  getfullnode(), gettree();
 
 static char  *infn;			/* input file specification */
@@ -197,6 +202,7 @@ gettree()			/* get a pre-ordered octree */
 	default:
 		octerror(USER, "damaged octree");
 	}
+	return NULL; /* pro forma return */
 }
 
 
@@ -215,8 +221,8 @@ register OBJECT  *os;
 }
 
 
-static
-skiptree()				/* skip octree on input */
+static void
+skiptree(void)				/* skip octree on input */
 {
 	register int  i;
 	
@@ -240,7 +246,7 @@ skiptree()				/* skip octree on input */
 }
 
 
-static
+static void
 octerror(etyp, msg)			/* octree error */
 int  etyp;
 char  *msg;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.21 2003/06/02 18:13:54 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.22 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -20,13 +20,10 @@ static const char	RCSid[] = "$Id: calexpr.c,v 2.21 2003/06/02 18:13:54 greg Exp 
 #include "copyright.h"
 
 #include  <stdio.h>
-
+#include  <string.h>
 #include  <ctype.h>
-
 #include  <errno.h>
-
 #include  <math.h>
-
 #include  <stdlib.h>
 
 #include  "calcomp.h"
@@ -295,6 +292,7 @@ EPNODE	*ep;
 {
     eputs("Bad expression!\n");
     quit(1);
+	return 0.0; /* pro forma return */
 }
 
 
@@ -648,72 +646,73 @@ getE5()				/* E5 -> (E1) */
 				/*	 FUNC(E1,..) */
 				/*	 ARG */
 {
-    int	 i;
-    char  *nam;
-    register EPNODE  *ep1, *ep2;
+	int	 i;
+	char  *nam;
+	register EPNODE  *ep1, *ep2;
 
-    if (nextc == '(') {
-	scan();
-	ep1 = getE1();
-	if (nextc != ')')
-	    syntax("')' expected");
-	scan();
-	return(ep1);
-    }
-
-    if (esupport&E_INCHAN && nextc == '$') {
-	scan();
-	ep1 = newnode();
-	ep1->type = CHAN;
-	ep1->v.chan = getinum();
-	return(ep1);
-    }
-
-  if (esupport&(E_VARIABLE|E_FUNCTION) &&
-		(isalpha(nextc) || nextc == CNTXMARK)) {
-      nam = getname();
-      ep1 = NULL;
-      if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
-			&& curfunc != NULL)
-	    for (i = 1, ep2 = curfunc->v.kid->sibling;
-				ep2 != NULL; i++, ep2 = ep2->sibling)
-		if (!strcmp(ep2->v.name, nam)) {
-		    ep1 = newnode();
-		    ep1->type = ARG;
-		    ep1->v.chan = i;
-		    break;
-		}
-	if (ep1 == NULL) {
-	    ep1 = newnode();
-	    ep1->type = VAR;
-	    ep1->v.ln = varinsert(nam);
-	}
-	if (esupport&E_FUNCTION && nextc == '(') {
-	    ep2 = newnode();
-	    ep2->type = FUNC;
-	    addekid(ep2, ep1);
-	    ep1 = ep2;
-	    do {
+	if (nextc == '(') {
 		scan();
-		addekid(ep1, getE1());
-	    } while (nextc == ',');
-	    if (nextc != ')')
-		syntax("')' expected");
-	    scan();
-	} else if (!(esupport&E_VARIABLE))
-	    syntax("'(' expected");
-	if (esupport&E_RCONST && isconstvar(ep1))
-	    ep1 = rconst(ep1);
-	return(ep1);
-    }
+		ep1 = getE1();
+		if (nextc != ')')
+			syntax("')' expected");
+		scan();
+		return(ep1);
+	}
 
-    if (isdecimal(nextc)) {
-	ep1 = newnode();
-	ep1->type = NUM;
-	ep1->v.num = getnum();
-	return(ep1);
-    }
-    syntax("unexpected character");
+	if (esupport&E_INCHAN && nextc == '$') {
+		scan();
+		ep1 = newnode();
+		ep1->type = CHAN;
+		ep1->v.chan = getinum();
+		return(ep1);
+	}
+
+	if (esupport&(E_VARIABLE|E_FUNCTION) &&
+			(isalpha(nextc) || nextc == CNTXMARK)) {
+		nam = getname();
+		ep1 = NULL;
+		if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
+				&& curfunc != NULL)
+			for (i = 1, ep2 = curfunc->v.kid->sibling;
+					ep2 != NULL; i++, ep2 = ep2->sibling)
+				if (!strcmp(ep2->v.name, nam)) {
+					ep1 = newnode();
+					ep1->type = ARG;
+					ep1->v.chan = i;
+					break;
+				}
+		if (ep1 == NULL) {
+			ep1 = newnode();
+			ep1->type = VAR;
+			ep1->v.ln = varinsert(nam);
+		}
+		if (esupport&E_FUNCTION && nextc == '(') {
+			ep2 = newnode();
+			ep2->type = FUNC;
+			addekid(ep2, ep1);
+			ep1 = ep2;
+			do {
+				scan();
+				addekid(ep1, getE1());
+			} while (nextc == ',');
+			if (nextc != ')')
+				syntax("')' expected");
+			scan();
+		} else if (!(esupport&E_VARIABLE))
+			syntax("'(' expected");
+		if (esupport&E_RCONST && isconstvar(ep1))
+			ep1 = rconst(ep1);
+		return(ep1);
+	}
+
+	if (isdecimal(nextc)) {
+		ep1 = newnode();
+		ep1->type = NUM;
+		ep1->v.num = getnum();
+		return(ep1);
+	}
+	syntax("unexpected character");
+	return NULL; /* pro forma return */
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.6 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: urand.c,v 2.7 2003/06/07 12:50:21 schorsch Exp $";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -8,6 +8,8 @@ static const char	RCSid[] = "$Id: urand.c,v 2.6 2003/02/25 02:47:22 greg Exp $";
 #include "copyright.h"
 
 #include  <stdlib.h>
+
+#include  "standard.h"
 #include  "random.h"
 
 #undef initurand

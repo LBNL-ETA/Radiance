@@ -1,4 +1,4 @@
-/* $Header: /home/cvsd/radiance/ray/src/common/tiffio.h,v 3.2 2003/06/05 19:29:34 schorsch Exp $ */
+/* $Header: /home/cvsd/radiance/ray/src/common/tiffio.h,v 3.3 2003/06/07 12:50:21 schorsch Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

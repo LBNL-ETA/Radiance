@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetval.c,v 2.4 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: fgetval.c,v 2.5 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  * Read white space separated values from stream
@@ -10,16 +10,12 @@ static const char	RCSid[] = "$Id: fgetval.c,v 2.4 2003/02/25 02:47:21 greg Exp $
 #include "copyright.h"
 
 #include  <stdio.h>
-
 #include  <math.h>
-
 #include  <stdlib.h>
-
 #include  <string.h>
-
 #include  <ctype.h>
 
-
+#include  "standard.h"
 
 int
 fgetval(fp, ty, vp)			/* get specified data word */

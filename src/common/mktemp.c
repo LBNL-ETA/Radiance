@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mktemp.c,v 2.4 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: mktemp.c,v 2.5 2003/06/07 12:50:20 schorsch Exp $";
 #endif
 /*
  * Replacement mktemp(3) function for systems without
@@ -7,7 +7,9 @@ static const char	RCSid[] = "$Id: mktemp.c,v 2.4 2003/02/25 02:47:21 greg Exp $"
 
 #include "copyright.h"
 
+#ifndef NULL
 #define  NULL		0
+#endif
 
 
 char *
