@@ -1371,3 +1371,7 @@ the following programs that were being built but no longer used:
 	thf2rad	- convert GDS "things file" to Radiance scene format
 If anyone is still wanting any of the above programs, let us know and we'll
 reinstate it.
+
+Fixed bug in pcond's acuity simulation for small view angles (less than
+4 degrees horizontally or vertically).  Thanks to James Lee for figuring
+this out.

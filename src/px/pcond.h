@@ -1,4 +1,4 @@
-/* RCSid: $Id: pcond.h,v 3.12 2004/03/28 20:33:14 schorsch Exp $ */
+/* RCSid: $Id: pcond.h,v 3.13 2004/11/08 15:50:59 greg Exp $ */
 /*
  * Header file for picture file conditioning.
  */
@@ -127,8 +127,8 @@ extern void compveil(void);		/* compute veiling image */
 extern void adjveil(void);		/* adjust veil image */
 #endif
 extern void acuscan(COLOR *scln, int y);	/* get acuity-sampled scanline */
-extern void addveil(COLOR *sl, int y);		/* add veil to scanline */
-extern void initacuity(void);	/* initialize variable acuity sampling */
+extern void addveil(COLOR *sl, int y);	/* add veil to scanline */
+extern int initacuity(void);		/* initialize variable acuity sampling */
 extern double hacuity(double La);	/* human acuity func. (cycles/deg.) */
 
 #ifdef __cplusplus

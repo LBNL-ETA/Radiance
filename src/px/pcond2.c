@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.12 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.13 2004/11/08 15:50:59 greg Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -115,8 +115,11 @@ firstscan(void)				/* return first processed scanline */
 			comprgb2rgbWBmat(mbcond.cmat, inprims, outprims);
 		else
 			compxyz2rgbWBmat(mbcond.cmat, outprims);
-	if (what2do&DO_ACUITY)
-		initacuity();
+	if (what2do&DO_ACUITY && !initacuity()) {
+		fprintf(stderr, "%s: warning - cannot initialize acuity pass\n",
+				progname);
+		what2do &= ~DO_ACUITY;
+	}
 	scanbuf = (COLOR *)malloc(scanlen(&inpres)*sizeof(COLOR));
 	if (scanbuf == NULL)
 		syserror("malloc");

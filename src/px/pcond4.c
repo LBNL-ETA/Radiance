@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond4.c,v 3.17 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond4.c,v 3.18 2004/11/08 15:50:59 greg Exp $";
 #endif
 /*
  * Routines for veiling glare and loss of acuity.
@@ -298,7 +298,7 @@ typedef struct {
 
 SCANBAR	*rootbar;		/* root scan bar (lowest resolution) */
 
-float	*inpacuD;		/* input acuity data (cycles/degree) */
+float	*inpacuD = NULL;	/* input acuity data (cycles/degree) */
 
 #define tsampr(x,y)	inpacuD[(y)*fvxr+(x)]
 
@@ -364,6 +364,9 @@ acuscan(		/* get acuity-sampled scanline */
 	double	dx, dy;
 	int	ix, iy;
 	register int	x;
+	
+	if (inpacuD == NULL)
+		return;
 					/* compute foveal y position */
 	iy = dy = (y+.5)/numscans(&inpres)*fvyr - .5;
 	while (iy >= fvyr-1) iy--;
@@ -488,12 +491,15 @@ sballoc(		/* allocate scanbar */
 }
 
 
-extern void
+extern int
 initacuity(void)			/* initialize variable acuity sampling */
 {
 	FVECT	diffx, diffy, cp;
 	double	omega, maxsr;
 	register int	x, y, i;
+	
+	if (fvxr < 3 || fvyr < 3)
+		return(0);		/* too small to work with */
 
 	compraydir();			/* compute ray directions */
 
@@ -530,4 +536,5 @@ initacuity(void)			/* initialize variable acuity sampling */
 	}
 					/* initialize with next power of two */
 	rootbar = sballoc((int)(log(maxsr)/log(2.))+1, 2, scanlen(&inpres));
+	return(1);
 }
