@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.25 2004/11/05 03:31:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.26 2004/11/08 17:41:03 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -64,9 +64,6 @@ holo.o holofile.o -lrt -lm
 rhinfo:	rhinfo.o holo.o holofile.o
 	$(CC) $(CFLAGS) -o rhinfo rhinfo.o holo.o holofile.o -lrt -lm
 
-genrhenv:	genrhenv.o holo.o holofile.o
-	$(CC) $(CFLAGS) -o genrhenv genrhenv.o holo.o holofile.o -lrt -lm
-
 genrhgrid:	genrhgrid.o holo.o
 	$(CC) $(CFLAGS) -o genrhgrid genrhgrid.o holo.o -lrt -lm
 
@@ -82,10 +79,6 @@ rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrt -lX11 -lm
 $(DEVDIR)/glx1h.hdi:	$(DEVDIR)/glx1.hdi
 	rm -f $(DEVDIR)/glx1h.hdi
 	ln $(DEVDIR)/glx1.hdi $(DEVDIR)/glx1h.hdi
-
-$(DEVDIR)/glxh.hdi:	$(DEVDIR)/glx.hdi
-	rm -f $(DEVDIR)/glxh.hdi
-	ln $(DEVDIR)/glx.hdi $(DEVDIR)/glxh.hdi
 
 $(DEVDIR)/glxoh.hdi:	$(DEVDIR)/glxo.hdi
 	rm -f $(DEVDIR)/glxoh.hdi
@@ -144,22 +137,6 @@ rhd_odraw.o rhd_geom.o holo.o rhdobj.o
 viewbeams.o holo.o rhd_odraw.o rhd_geom.o rhdobj.o \
 -lrgl -lrt -lGLU -lGL -lX11 -lXext -lm
 
-rhd_glx0.o:	rhd_glx.c
-	$(CC) $(CFLAGS) -c rhd_glx.c
-	mv -f rhd_glx.o rhd_glx0.o
-
-rhd_glxo.o:	rhd_glx.c
-	$(CC) $(CFLAGS) -DDOBJ -c rhd_glx.c
-	mv -f rhd_glx.o rhd_glxo.o
-
-rhd_glxs.o:	rhd_glx.c
-	$(CC) $(CFLAGS) -DSTEREO -c rhd_glx.c
-	mv -f rhd_glx.o rhd_glxs.o
-
-rhd_glxso.o:	rhd_glx.c
-	$(CC) $(CFLAGS) -DDOBJ -DSTEREO -c rhd_glx.c
-	mv -f rhd_glx.o rhd_glxso.o
-
 rhd_ogl0.o:	rhd_ogl.c
 	$(CC) $(CFLAGS) -c rhd_ogl.c
 	mv -f rhd_ogl.o rhd_ogl0.o
@@ -191,7 +168,7 @@ viewbeams.o:	../common/view.h ../common/random.h
 
 rhpict.o:	../common/view.h ../common/resolu.h
 
-holo.o holofile.o rhdisp.o rhdisp2.o viewbeams.o genrhenv.o genrhgrid.o \
+holo.o holofile.o rhdisp.o rhdisp2.o viewbeams.o genrhgrid.o \
 rhcopy.o rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
 rhinfo.o clumpbeams.o rhoptimize.o rhpict.o rhpict2.o:	holo.h \
 ../common/vars.h ../common/color.h \
