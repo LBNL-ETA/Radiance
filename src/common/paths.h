@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.19 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.20 2003/10/21 19:19:28 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -18,6 +18,7 @@
 
   #define access _access
   #define PATH_MAX _MAX_PATH
+  #define NULL_DEVICE	"NUL"
   #define DIRSEP		'/'
   #define ISDIRSEP(c)	((c)=='/' || (c)=='\\')
   #define ISABS(s)	((s)!=NULL \
@@ -71,6 +72,7 @@
 
   #ifdef AMIGA
 
+	#define NULL_DEVICE	"NIL:"
     #define DIRSEP		'/'
     #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
     #define PATHSEP		';'

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.41 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.42 2003/10/21 19:19:29 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -28,11 +28,7 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.41 2003/07/27 22:12:03 schorsch
 #define DEF_NBLUR	5
 #endif
 				/* default remote shell */
-#ifdef _AUX_SOURCE
-#define REMSH		"remsh"
-#else
 #define REMSH		"rsh"
-#endif
 				/* input variables (alphabetical by name) */
 #define ANIMATE		0		/* animation command */
 #define ARCHIVE		1		/* archiving command */

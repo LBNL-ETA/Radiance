@@ -1,10 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sort.c,v 1.6 2003/07/14 20:02:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: sort.c,v 1.7 2003/10/21 19:19:28 schorsch Exp $";
 #endif
 /*
  *   Sorting routines for meta-files
  */
 
+#include  "platform.h"  /* [_]snprintf() */
 #include  "rtprocess.h" /* getpid() */
 #include  "rterror.h"
 #include  "meta.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2meta.c,v 2.7 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.8 2003/10/21 19:19:28 schorsch Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
@@ -16,7 +16,7 @@ static const char	RCSid[] = "$Id: mgf2meta.c,v 2.7 2003/06/30 14:59:11 schorsch 
 #define	MX(v)	(int)(MSIZE*(v)[(proj_axis+1)%3])
 #define	MY(v)	(int)(MSIZE*(v)[(proj_axis+2)%3])
 
-int	r_face();
+int	r_face(int ac, char **av);
 int	proj_axis;
 double	limit[3][2];
 int	layer;

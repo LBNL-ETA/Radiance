@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.6 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.7 2003/10/21 19:19:29 schorsch Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -186,7 +186,9 @@ sample_wt(xo, yo)		/* compute interpolant sample weight */
 int	xo, yo;
 {
 	static double	etab[400];
-	int	rad2 = xo*xo + yo*yo;
+	/* we can't use the name rad2 here, for some reason Visual C
+	   thinks that is a constant (compiler bug?) */
+	int	rad_2 = xo*xo + yo*yo;
 	int	i;
 
 	if (etab[0] <= FTINY)		/* initialize exponent table */
@@ -194,7 +196,7 @@ int	xo, yo;
 			etab[i] = exp(-0.1*i);
 
 					/* look up Gaussian */
-	i = (int)((10.*3./(double)SAMPDIST2)*rad2 + .5);
+	i = (int)((10.*3./(double)SAMPDIST2)*rad_2 + .5);
 	if (i >= 400)
 		return(0.0);
 	return(etab[i]);

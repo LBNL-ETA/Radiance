@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.9 2003/07/17 09:21:29 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.10 2003/10/21 19:19:28 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -13,6 +13,7 @@
   #include <stdio.h>
   #define popen _popen
   #define pclose _pclose
+  #define snprintf _snprintf
 
   #include <windows.h>
   #define sleep(s) Sleep(s*1000)

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.4 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.5 2003/10/21 19:19:28 schorsch Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -13,6 +13,7 @@
   #include <windows.h> /* DWORD etc. */
   typedef DWORD pid_t;
   #include <process.h> /* getpid() and others */
+  #define nice(inc) win_nice(inc)
 #else
   #include <sys/param.h>
 #endif
@@ -30,10 +31,6 @@ extern "C" {
    being the same type, so we have to describe processes with a struct,
    instead of the original int[3]. To keep things simple, we typedef
    the posix pid_t on those systems that don't have it already.
-
-   Some older Windows systems use negative PIDs. Open_process() and
-   close_process() will convert those to positive values during
-   runtime, so that client modules can still use -1 as invalid PID.
 */
 
 
@@ -63,6 +60,11 @@ extern int close_process(SUBPROC *pd);
 extern int process(SUBPROC *pd, char *recvbuf, char *sendbuf, int nbr, int nbs);
 extern int readbuf(int fd, char *bpos, int siz);
 extern int writebuf(int fd, char *bpos, int siz);
+
+#ifdef _WIN32
+/* any non-negative increment will send the process to IDLE_PRIORITY_CLASS. */
+extern int win_nice(int inc);
+#endif
 
 
 #ifdef __cplusplus

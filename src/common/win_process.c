@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.3 2003/07/14 20:02:29 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.4 2003/10/21 19:19:28 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -21,9 +21,16 @@ static char RCSid[]="$Id: win_process.c,v 3.3 2003/07/14 20:02:29 schorsch Exp $
 #include "rtprocess.h"
 
 
-/* Looks like some Windows versions use negative PIDs.
-   Let's just hope they either make them *all* negative, or none.  */
-static int system_uses_negative_pids = 0;
+int
+win_nice(int inc) /* simple nice(2) replacement for Windows */
+{
+	/* We don't have much granularity available: IDLE_PRIORITY_CLASS
+	   will run whenever no other higher priority process is running */
+	if (inc > 0) {
+		return (int)!SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
+	}
+	return 0;
+}
 
 
 /*

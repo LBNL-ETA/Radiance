@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.7 2003/07/14 20:02:30 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.8 2003/10/21 19:19:28 schorsch Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -49,9 +49,9 @@ extern int  lim_dist;			/* limit distance? */
 extern char  *tralist[];		/* list of modifers to trace (or no) */
 extern int  traincl;			/* include == 1, exclude == 0 */
 
-void	onsig();
-void	sigdie();
-void	printdefaults();
+void	onsig(int);
+void	sigdie(int, char*);
+void	printdefaults(void);
 
 
 int
@@ -417,7 +417,7 @@ char  *msg;
 
 
 void
-printdefaults()			/* print default values to stdout */
+printdefaults(void)			/* print default values to stdout */
 {
 	register char  *cp;
 

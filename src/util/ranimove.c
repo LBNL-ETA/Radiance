@@ -12,7 +12,9 @@ static const char RCSid[] = "$Id";
 #include "copyright.h"
 
 #include <time.h>
-#ifndef _WIN32
+#ifdef _WIN32
+  #include <winsock.h> /* struct timeval. XXX find a replacement? */
+#else
   #include <sys/time.h>
 #endif
 #include <ctype.h>

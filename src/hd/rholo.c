@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.61 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.62 2003/10/21 19:19:28 schorsch Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -270,12 +270,20 @@ initrholo()			/* get our holodeck running */
 	}
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
-	sigdie(SIGHUP, "Hangup");
 	sigdie(SIGTERM, "Terminate");
+#ifdef SIGHUP
+	sigdie(SIGHUP, "Hangup");
+#endif
+#ifdef SIGPIPE
 	sigdie(SIGPIPE, "Broken pipe");
+#endif
+#ifdef SIGALRM
 	sigdie(SIGALRM, "Alarm clock");
+#endif
 #ifdef	SIGXCPU
 	sigdie(SIGXCPU, "CPU limit exceeded");
+#endif
+#ifdef	SIGXFSZ
 	sigdie(SIGXFSZ, "File size exceeded");
 #endif
 					/* protect holodeck file */
