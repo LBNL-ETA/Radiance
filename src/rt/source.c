@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.33 2003/05/14 20:43:46 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.34 2003/06/24 15:37:01 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -355,7 +355,11 @@ char  *p;			/* data for f */
 		rayorigin(&sr, r, SHADOW, 1.0);
 		VCOPY(sr.rdir, scp->dir);
 		sr.rsrc = scp->sno;
-		source[scp->sno].ntests++;	/* keep statistics */
+						/* keep statistics */
+		if (source[scp->sno].ntests++ > 0xfffffff0) {
+			source[scp->sno].ntests >>= 1;
+			source[scp->sno].nhits >>= 1;
+		}
 		if (localhit(&sr, &thescene) &&
 				( sr.ro != source[scp->sno].so ||
 				source[scp->sno].sflags & SFOLLOW )) {

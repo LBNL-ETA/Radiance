@@ -1159,3 +1159,6 @@ binary float and double i/o.
 ****************** COMPATIBILITY CHANGE ***********************
 Changed holodeck format to used off_t instead of long for beam
 positions, which allows holodecks to grow to system file size limit.
+
+Fixed wrapping long in source hit test code, which would cause
+odd horizontal lines in some very long renderings.

@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.7 2003/06/07 00:54:58 schorsch Exp $ */
+/* RCSid $Id: source.h,v 2.8 2003/06/24 15:37:01 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -47,7 +47,8 @@ typedef struct {
 			int  sn;		/* next source to aim for */
 		}  sv;			/* virtual source */
 	} sa;			/* source aiming information */
-	long  ntests, nhits;	/* shadow tests and hits */
+	unsigned long
+		ntests, nhits;	/* shadow tests and hits */
 	OBJREC  *so;		/* source destination object */
 }  SRCREC;		/* light source */
 
