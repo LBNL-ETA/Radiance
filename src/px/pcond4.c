@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond4.c,v 3.18 2004/11/08 15:50:59 greg Exp $";
+static const char	RCSid[] = "$Id: pcond4.c,v 3.19 2004/11/14 16:57:18 greg Exp $";
 #endif
 /*
  * Routines for veiling glare and loss of acuity.
@@ -491,16 +491,13 @@ sballoc(		/* allocate scanbar */
 }
 
 
-extern int
+extern void
 initacuity(void)			/* initialize variable acuity sampling */
 {
 	FVECT	diffx, diffy, cp;
 	double	omega, maxsr;
 	register int	x, y, i;
 	
-	if (fvxr < 3 || fvyr < 3)
-		return(0);		/* too small to work with */
-
 	compraydir();			/* compute ray directions */
 
 	inpacuD = (float *)malloc(fvxr*fvyr*sizeof(float));
@@ -536,5 +533,4 @@ initacuity(void)			/* initialize variable acuity sampling */
 	}
 					/* initialize with next power of two */
 	rootbar = sballoc((int)(log(maxsr)/log(2.))+1, 2, scanlen(&inpres));
-	return(1);
 }
