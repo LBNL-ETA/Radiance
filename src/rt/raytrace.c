@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.43 2003/09/09 03:28:43 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.44 2003/12/31 01:50:02 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -30,10 +30,6 @@ OBJREC  Aftplane;			/* aft clipping plane object */
 
 static int  raymove(), checkhit();
 static void  checkset();
-
-#ifndef  MAXLOOP
-#define  MAXLOOP	0		/* modifier loop detection */
-#endif
 
 #define  RAYHIT		(-1)		/* return value for intercepted ray */
 
@@ -158,12 +154,6 @@ int  mod;
 {
 	int  gotmat;
 	register OBJREC  *m;
-#if  MAXLOOP
-	static int  depth = 0;
-					/* check for infinite loop */
-	if (depth++ >= MAXLOOP)
-		objerror(r->ro, USER, "possible modifier loop");
-#endif
 	r->rt = r->rot;			/* set effective ray length */
 	for (gotmat = 0; !gotmat && mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
@@ -178,9 +168,6 @@ int  mod;
 				m->otype != MAT_CLIP &&
 				(ofun[m->otype].flags & (T_M|T_X))) {
 			if (irr_ignore(m->otype)) {
-#if  MAXLOOP
-				depth--;
-#endif
 				raytrans(r);
 				return(1);
 			}
@@ -190,9 +177,6 @@ int  mod;
 					/* materials call raytexture */
 		gotmat = (*ofun[m->otype].funp)(m, r);
 	}
-#if  MAXLOOP
-	depth--;
-#endif
 	return(gotmat);
 }
 
@@ -235,12 +219,6 @@ RAY  *r;
 OBJECT  mod;
 {
 	register OBJREC  *m;
-#if  MAXLOOP
-	static int  depth = 0;
-					/* check for infinite loop */
-	if (depth++ >= MAXLOOP)
-		objerror(r->ro, USER, "modifier loop");
-#endif
 					/* execute textures and patterns */
 	for ( ; mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
@@ -256,9 +234,6 @@ OBJECT  mod;
 			objerror(r->ro, USER, errmsg);
 		}
 	}
-#if  MAXLOOP
-	depth--;			/* end here */
-#endif
 }
 
 

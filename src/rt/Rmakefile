@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.41 2003/11/11 16:24:06 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.42 2003/12/31 01:50:02 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -215,6 +215,7 @@ rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
 rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
 
 m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
+rpict.o rpmain.o rtmain.o rvmain.o \
 source.o srcdraw.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
 cone.o data.o devcomm.o initotypes.o fprism.o preload.o \

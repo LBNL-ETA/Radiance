@@ -1222,3 +1222,12 @@ Replaced all calls to vfork() with regular fork() calls.
 Fixed bug in glarendx for dgr calculation with sources behind view.
 
 Added -p option to histo to print percentages/percentiles r.t. counts.
+
+Added a source occluder cache to accelerate shadow testing.  This
+can save up to 50% of the calculation time in scenes with many
+light sources, especially ones containing large occluders.  This
+optimization may be tuned or switched off with the -DSHADCACHE=N
+compile switch, where N is the resolution of the shadow cache, or
+0 to disable it.  Since this is purely a time vs. memory trade-off,
+I decided not to make it a new command-line option.  (We already
+have plenty.)

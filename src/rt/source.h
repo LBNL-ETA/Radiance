@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.11 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: source.h,v 2.12 2003/12/31 01:50:02 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -13,7 +13,12 @@
 extern "C" {
 #endif
 
+#ifndef  AIMREQT
 #define  AIMREQT	100		/* required aim success/failure */
+#endif
+#ifndef  SHADCACHE
+#define  SHADCACHE	20		/* shadow cache resolution */
+#endif
 
 #define  SDISTANT	01		/* source distant flag */
 #define  SSKIP		02		/* source skip flag */
@@ -31,11 +36,26 @@ typedef struct {
 } SPOT;			/* spotlight */
 
 typedef struct {
+	union {
+		struct {
+			FVECT   u, v;		/* unit vectors */
+		}  f;			/* flat source indexing */
+		struct {
+			FVECT   o;		/* origin position */
+			RREAL   e1, e2;		/* 1/extent */
+			int     ax;		/* major direction */
+		}  d;			/* distant source indexing */
+	}  p;			/* indexing parameters */
+	OBJECT  obs[1];		/* cache obstructors (extends struct) */
+}  OBSCACHE;		/* obstructor cache */
+
+typedef struct {
 	int  sflags;		/* source flags */
 	FVECT  sloc;		/* direction or position of source */
 	FVECT  ss[3];		/* source dimension vectors, U, V, and W */
 	float  srad;		/* maximum source radius */
 	float  ss2;		/* solid angle or projected area */
+	OBJREC  *so;		/* source destination object */
 	struct {
 		float  prox;		/* proximity */
 		SPOT  *s;		/* spot */
@@ -49,7 +69,9 @@ typedef struct {
 	} sa;			/* source aiming information */
 	unsigned long
 		ntests, nhits;	/* shadow tests and hits */
-	OBJREC  *so;		/* source destination object */
+#ifdef  SHADCACHE
+	OBSCACHE  *obscache;    /* obstructor cache */
+#endif
 }  SRCREC;		/* light source */
 
 #define MAXSPART	64		/* maximum partitions per source */
@@ -120,6 +142,7 @@ extern int  nsources;			/* the number of sources */
 #define  setsource(s,o)		(*sfun[(o)->otype].of->setsrc)(s,o)
 
 					/* defined in source.c */
+extern OBJREC   *findmaterial(OBJREC *o);
 extern void	marksources(void);
 extern void	freesources(void);
 extern int	srcray(RAY *sr, RAY *r, SRCINDEX *si);
@@ -128,6 +151,9 @@ extern int	sourcehit(RAY *r);
 extern void	direct(RAY *r, void (*f)(), char *p);
 extern void	srcscatter(RAY *r);
 extern int	m_light(OBJREC *m, RAY *r);
+extern void     srcblocker(RAY *r);
+extern int      srcblocked(RAY *r);
+extern void     freeobscache(SRCREC *s);
 					/* defined in srcsamp.c */
 extern double	nextssamp(RAY *r, SRCINDEX *si);
 extern int	skipparts(int ct[3], int sz[3], int pp[2], unsigned char *pt);

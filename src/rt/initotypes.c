@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.10 2003/03/11 19:29:05 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.11 2003/12/31 01:50:02 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -56,13 +56,19 @@ initotypes()			/* initialize ofun array */
 	ofun[MAT_ILLUM].funp =
 	ofun[MAT_GLOW].funp =
 	ofun[MAT_SPOT].funp = m_light;
+	ofun[MAT_LIGHT].flags |= T_OPAQUE;
+	ofun[MAT_SPOT].flags |= T_OPAQUE;
 	ofun[MAT_PLASTIC].funp =
 	ofun[MAT_METAL].funp =
 	ofun[MAT_TRANS].funp = m_normal;
+	ofun[MAT_PLASTIC].flags |= T_OPAQUE;
+	ofun[MAT_METAL].flags |= T_OPAQUE;
 	ofun[MAT_TRANS].flags |= T_IRR_IGN;
 	ofun[MAT_PLASTIC2].funp =
 	ofun[MAT_METAL2].funp =
 	ofun[MAT_TRANS2].funp = m_aniso;
+	ofun[MAT_PLASTIC2].flags |= T_OPAQUE;
+	ofun[MAT_METAL2].flags |= T_OPAQUE;
 	ofun[MAT_TRANS2].flags |= T_IRR_IGN;
 	ofun[MAT_DIELECTRIC].funp =
 	ofun[MAT_INTERFACE].funp = m_dielectric;
@@ -83,6 +89,10 @@ initotypes()			/* initialize ofun array */
 	ofun[MAT_MDATA].funp = 
 	ofun[MAT_TFUNC].funp =
 	ofun[MAT_TDATA].funp = m_brdf2;
+	ofun[MAT_PFUNC].flags |= T_OPAQUE;
+	ofun[MAT_MFUNC].flags |= T_OPAQUE;
+	ofun[MAT_PDATA].flags |= T_OPAQUE;
+	ofun[MAT_MDATA].flags |= T_OPAQUE;
 	ofun[TEX_FUNC].funp = t_func;
 	ofun[TEX_DATA].funp = t_data;
 	ofun[PAT_CFUNC].funp = p_cfunc;

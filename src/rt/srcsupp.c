@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.11 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.12 2003/12/31 01:50:02 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -19,7 +19,7 @@ static const char	RCSid[] = "$Id: srcsupp.c,v 2.11 2003/04/23 00:52:34 greg Exp 
 
 #include  "face.h"
 
-#define SRCINC		4		/* realloc increment for array */
+#define SRCINC		8		/* realloc increment for array */
 
 SRCREC  *source = NULL;			/* our list of sources */
 int  nsources = 0;			/* the number of sources */
@@ -61,6 +61,9 @@ newsource()			/* allocate new source in our array */
 	source[nsources].sflags = 0;
 	source[nsources].nhits = 1;
 	source[nsources].ntests = 2;	/* initial hit probability = 1/2 */
+#if SHADCACHE
+	source[nsources].obscache = NULL;
+#endif
 	return(nsources++);
 }
 

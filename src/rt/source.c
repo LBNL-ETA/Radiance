@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.37 2003/09/12 22:35:54 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.38 2003/12/31 01:50:02 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -12,6 +12,8 @@ static const char RCSid[] = "$Id: source.c,v 2.37 2003/09/12 22:35:54 greg Exp $
 #include  "ray.h"
 
 #include  "otypes.h"
+
+#include  "otspecial.h"
 
 #include  "source.h"
 
@@ -44,6 +46,30 @@ static CNTPTR  *cntord;			/* source ordering in direct() */
 static int  maxcntr = 0;		/* size of contribution arrays */
 
 
+OBJREC *			/* find an object's actual material */
+findmaterial(register OBJREC *o)
+{
+	while (!ismaterial(o->otype)) {
+		if (ismixture(o->otype))
+			return(NULL);   /* reject mixed materials */
+		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
+			OBJECT  aobj;
+			OBJREC  *ao;
+			aobj = lastmod(objndx(o), o->oargs.sarg[0]);
+			if (aobj < 0)
+				objerror(o, USER, "bad reference");
+			ao = objptr(aobj);
+			if (ismaterial(ao->otype))
+				return(ao);
+		}
+		if (o->omod == OVOID)
+			return(NULL);
+		o = objptr(o->omod);
+	}
+	return(o);
+}
+
+
 void
 marksources()			/* find and mark source objects */
 {
@@ -61,13 +87,7 @@ marksources()			/* find and mark source objects */
 		if (!issurface(o->otype) || o->omod == OVOID)
 			continue;
 					/* find material */
-		m = objptr(o->omod);
-		while (!ismaterial(m->otype))
-			if (ismixture(m->otype) || m->omod == OVOID) {
-				m = NULL;
-				break;
-			} else
-				m = objptr(m->omod);
+		m = findmaterial(o);
 		if (m == NULL || !islight(m->otype))
 			continue;	/* not source modifier */
 	
@@ -108,6 +128,9 @@ marksources()			/* find and mark source objects */
 				source[ns].sflags |= SSKIP;
 			}
 		}
+#if  SHADCACHE
+		source[ns].obscache = NULL;
+#endif
 		if (!(source[ns].sflags & SSKIP))
 			foundsource++;
 	}
@@ -132,6 +155,10 @@ void
 freesources()			/* free all source structures */
 {
 	if (nsources > 0) {
+#if SHADCACHE
+		while (nsources--)
+			freeobscache(&source[nsources]);
+#endif
 		free((void *)source);
 		source = NULL;
 		nsources = 0;
@@ -147,10 +174,11 @@ freesources()			/* free all source structures */
 
 
 int
-srcray(sr, r, si)		/* send a ray to a source, return domega */
-register RAY  *sr;		/* returned source ray */
-RAY  *r;			/* ray which hit object */
-SRCINDEX  *si;			/* source sample index */
+srcray(				/* send a ray to a source, return domega */
+register RAY  *sr,		/* returned source ray */
+RAY  *r,			/* ray which hit object */
+SRCINDEX  *si			/* source sample index */
+)
 {
     double  d;				/* distance to source */
     register SRCREC  *srcp;
@@ -185,8 +213,9 @@ SRCINDEX  *si;			/* source sample index */
 
 
 void
-srcvalue(r)			/* punch ray to source and compute value */
-register RAY  *r;
+srcvalue(			/* punch ray to source and compute value */
+register RAY  *r
+)
 {
 	register SRCREC  *sp;
 
@@ -226,8 +255,9 @@ nomat:
 
 
 int
-sourcehit(r)			/* check to see if ray hit distant source */
-register RAY  *r;
+sourcehit(			/* check to see if ray hit distant source */
+register RAY  *r
+)
 {
 	int  first, last;
 	register int  i;
@@ -264,10 +294,202 @@ register RAY  *r;
 }
 
 
-static int
-cntcmp(sc1, sc2)			/* contribution compare (descending) */
-register CNTPTR  *sc1, *sc2;
+#if  SHADCACHE			/* preemptive shadow checking */
+#define ABS(x)  ((x)>0 ? (x) : -(x))
+
+static void				/* find closest blockers to source */
+initobscache(SRCREC *srcp)
 {
+	int     i;
+	int     cachelen;
+
+	if (srcp->sflags & SDISTANT)
+		cachelen = 4*SHADCACHE*SHADCACHE;
+	else if (srcp->sflags & SFLAT)
+		cachelen = SHADCACHE*SHADCACHE*3 + (SHADCACHE&1)*SHADCACHE*4;
+	else /* spherical distribution */
+		cachelen = SHADCACHE*SHADCACHE*6;
+					/* allocate cache */
+	DCHECK(srcp->obscache != NULL,
+			CONSISTENCY, "initobscache() called twice");
+	srcp->obscache = (OBSCACHE *)malloc(sizeof(OBSCACHE) +
+						sizeof(OBJECT)*(cachelen-1));
+	if (srcp->obscache == NULL)
+		error(SYSTEM, "out of memory in initobscache()");
+					/* set parameters */
+	if (srcp->sflags & SDISTANT) {
+		int     ax, ax1, ax2;
+		RREAL   amax = 0;
+		for (ax1 = 3; ax1--; )
+			if (ABS(srcp->sloc[ax1]) > amax) {
+				amax = ABS(srcp->sloc[ax1]);
+				ax = ax1;
+			}
+		srcp->obscache->p.d.ax = ax;
+		ax1 = (ax+1)%3;
+		ax2 = (ax+2)%3;
+		VCOPY(srcp->obscache->p.d.o, thescene.cuorg);
+		if (srcp->sloc[ax] > 0)
+			srcp->obscache->p.d.o[ax] += thescene.cusize;
+		if (srcp->sloc[ax1] < 0)
+			srcp->obscache->p.d.o[ax1] += thescene.cusize *
+					srcp->sloc[ax1] / ABS(srcp->sloc[ax]);
+		if (srcp->sloc[ax2] < 0)
+			srcp->obscache->p.d.o[ax2] += thescene.cusize *
+					srcp->sloc[ax2] / ABS(srcp->sloc[ax]);
+		srcp->obscache->p.d.e1 = (1.-FTINY) / (thescene.cusize*(1. +
+				fabs(srcp->sloc[ax1]/srcp->sloc[ax])));
+		srcp->obscache->p.d.e2 = (1.-FTINY) / (thescene.cusize*(1. +
+				fabs(srcp->sloc[ax2]/srcp->sloc[ax])));
+	} else if (srcp->sflags & SFLAT) {
+		VCOPY(srcp->obscache->p.f.u, srcp->ss[SU]);
+		normalize(srcp->obscache->p.f.u);
+		fcross(srcp->obscache->p.f.v,
+				srcp->snorm, srcp->obscache->p.f.u);
+	}
+					/* XXX Should cast rays from source */
+	for (i = cachelen; i--; )
+		srcp->obscache->obs[i] = OVOID;
+}
+
+
+static OBJECT *			/* return occluder cache entry */
+srcobstructp(register RAY *r)
+{
+	static OBJECT   noobs;
+	SRCREC		*srcp;
+	int		ondx;
+
+	DCHECK(r->rsrc < 0, CONSISTENCY,
+			"srcobstructp() called with unaimed ray");
+	noobs = OVOID;
+	srcp = &source[r->rsrc];
+	if (srcp->obscache == NULL)     /* initialize cache */
+		initobscache(srcp);
+					/* compute cache index */
+	if (srcp->sflags & SDISTANT) {
+		int     ax, ax1, ax2;
+		double  t;
+		ax = srcp->obscache->p.d.ax;
+		if ((ax1 = ax+1) >= 3) ax1 -= 3;
+		if ((ax2 = ax+2) >= 3) ax2 -= 3;
+		t = (srcp->obscache->p.d.o[ax] - r->rorg[ax]) / srcp->sloc[ax];
+		if (t <= FTINY)
+			return &noobs;  /* could happen if ray is outside */
+		ondx = 2*SHADCACHE*(int)(2*SHADCACHE*srcp->obscache->p.d.e1 *
+				(r->rorg[ax1] + t*srcp->sloc[ax1] -
+					srcp->obscache->p.d.o[ax1]));
+		ondx += (int)(2*SHADCACHE*srcp->obscache->p.d.e2 *
+				(r->rorg[ax2] + t*srcp->sloc[ax2] -
+					srcp->obscache->p.d.o[ax2]));
+	} else if (srcp->sflags & SFLAT) {
+		FVECT   sd;
+		RREAL   sd0m, sd1m;
+		sd[0] = -DOT(r->rdir, srcp->obscache->p.f.u);
+		sd[1] = -DOT(r->rdir, srcp->obscache->p.f.v);
+		sd[2] = -DOT(r->rdir, srcp->snorm);
+		if (sd[2] < 0)
+			return &noobs;  /* shouldn't happen */
+		sd0m = ABS(sd[0]);
+		sd1m = ABS(sd[1]);
+		if (sd[2] >= sd0m && sd[2] >= sd1m) {
+			ondx = SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
+					(1. + sd[0]/sd[2]));
+			ondx += (int)(SHADCACHE*(.5-FTINY) *
+					(1. + sd[1]/sd[2]));
+		} else if (sd0m >= sd1m) {
+			ondx = SHADCACHE*SHADCACHE;
+			if (sd[0] < 0)
+				ondx += ((SHADCACHE+1)>>1)*SHADCACHE;
+			ondx += SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
+					sd[2]/sd0m);
+			ondx += (int)(SHADCACHE*(.5-FTINY) *
+					(1. + sd[1]/sd0m));
+		} else /* sd1m > sd0m */ {
+			ondx = SHADCACHE*SHADCACHE +
+					((SHADCACHE+1)>>1)*SHADCACHE*2;
+			if (sd[1] < 0)
+				ondx += ((SHADCACHE+1)>>1)*SHADCACHE;
+			ondx += SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
+					sd[2]/sd1m);
+			ondx += (int)(SHADCACHE*(.5-FTINY) *
+					(1. + sd[0]/sd1m));
+		}
+	} else /* spherical distribution */ {
+		int     ax, ax1, ax2;
+		RREAL   amax = 0;
+		for (ax1 = 3; ax1--; )
+			if (ABS(r->rdir[ax1]) > amax) {
+				amax = ABS(r->rdir[ax1]);
+				ax = ax1;
+			}
+		if ((ax1 = ax+1) >= 3) ax1 -= 3;
+		if ((ax2 = ax+2) >= 3) ax2 -= 3;
+		ondx = 2*SHADCACHE*SHADCACHE * ax;
+		if (r->rdir[ax] < 0)
+			ondx += SHADCACHE*SHADCACHE;
+		ondx += SHADCACHE*(int)(SHADCACHE*(.5-FTINY) *
+					(1. + r->rdir[ax1]/amax));
+		ondx += (int)(SHADCACHE*(.5-FTINY) *
+				(1. + r->rdir[ax2]/amax));
+	}
+					/* return cache pointer */
+	return(&srcp->obscache->obs[ondx]);
+}
+
+
+void				/* free obstruction cache */
+freeobscache(SRCREC *srcp)
+{
+	if (srcp->obscache == NULL)
+		return;
+	free((void *)srcp->obscache);
+	srcp->obscache = NULL;
+}
+
+	
+void				/* record a source blocker */
+srcblocker(register RAY *r)
+{
+	OBJREC  *m;
+
+	if (r->robj == OVOID || objptr(r->robj) != r->ro ||
+			isvolume(r->ro->otype))
+		return;			/* don't record complex blockers */
+	m = findmaterial(r->ro);
+	if (m == NULL)
+		return;			/* no material?! */
+	if (!(ofun[m->otype].flags & T_OPAQUE))
+		return;			/* material not a reliable blocker */
+
+	*srcobstructp(r) = r->robj;     /* else record obstructor */
+}
+
+
+int				/* check ray against cached blocker */
+srcblocked(RAY *r)
+{
+	OBJECT  obs = *srcobstructp(r);
+	OBJREC  *op;
+
+	if (obs == OVOID)
+		return(0);
+	op = objptr(obs);		/* check for intersection */
+	return ((*ofun[op->otype].funp)(op, r));
+}
+
+#endif
+
+
+static int
+cntcmp(				/* contribution compare (descending) */
+const void *p1,
+const void *p2
+)
+{
+	register const CNTPTR  *sc1 = (const CNTPTR *)p1;
+	register const CNTPTR  *sc2 = (const CNTPTR *)p2;
+
 	if (sc1->brt > sc2->brt)
 		return(-1);
 	if (sc1->brt < sc2->brt)
@@ -277,10 +499,11 @@ register CNTPTR  *sc1, *sc2;
 
 
 void
-direct(r, f, p)				/* add direct component */
-RAY  *r;			/* ray that hit surface */
-void  (*f)();			/* direct component coefficient function */
-char  *p;			/* data for f */
+direct(					/* add direct component */
+RAY  *r,			/* ray that hit surface */
+void  (*f)(),			/* direct component coefficient function */
+char  *p			/* data for f */
+)
 {
 	extern void  (*trace)();
 	register int  sn;
@@ -313,6 +536,13 @@ char  *p;			/* data for f */
 		cntord[sn].brt = bright(scp->coef);
 		if (cntord[sn].brt <= 0.0)
 			continue;
+#if SHADCACHE
+						/* check shadow cache */
+		if (si.np == 1 && srcblocked(&sr)) {
+			cntord[sn].brt = 0.0;
+			continue;
+		}
+#endif
 		VCOPY(scp->dir, sr.rdir);
 						/* compute potential */
 		sr.revf = srcvalue;
@@ -373,8 +603,15 @@ char  *p;			/* data for f */
 			rayparticipate(&sr);
 			if (trace != NULL)
 				(*trace)(&sr);	/* trace execution */
-			if (bright(sr.rcol) <= FTINY)
+			if (bright(sr.rcol) <= FTINY) {
+#if SHADCACHE
+				if ((scp <= srccnt || scp[-1].sno != scp->sno)
+						&& (scp >= srccnt+ncnts ||
+						    scp[1].sno != scp->sno))
+					srcblocker(&sr);
+#endif
 				continue;	/* missed! */
+			}
 			copycolor(scp->val, sr.rcol);
 			multcolor(scp->val, scp->coef);
 		}
@@ -407,8 +644,9 @@ char  *p;			/* data for f */
 
 
 void
-srcscatter(r)			/* compute source scattering into ray */
-register RAY  *r;
+srcscatter(			/* compute source scattering into ray */
+register RAY  *r
+)
 {
 	int  oldsampndx;
 	int  nsamps;
@@ -565,9 +803,10 @@ weaksrcmat(int obj)		/* identify material */
 
 
 int
-m_light(m, r)			/* ray hit a light source */
-register OBJREC  *m;
-register RAY  *r;
+m_light(				/* ray hit a light source */
+register OBJREC  *m,
+register RAY  *r
+)
 {
 						/* check for over-counting */
 	if (badcomponent(m, r))
