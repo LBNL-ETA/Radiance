@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.28 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.29 2005/03/22 04:51:56 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -275,7 +275,7 @@ initfromtif(void)		/* initialize conversion from TIFF input */
 			cpcolormat(cvts.cmat, xyz2rgbmat);
 			SET(C_CXFM|C_GAMUT);
 		} else if (cvts.comp == COMPRESSION_SGILOG)
-			SET(C_GAMUT);
+			SET(C_GAMUT);		/* may be outside XYZ gamut */
 		if (cvts.pconf != PLANARCONFIG_CONTIG)
 			quiterr("cannot handle separate Luv planes");
 		TIFFSetField(cvts.tif, TIFFTAG_SGILOGDATAFMT,
@@ -569,6 +569,7 @@ initfromrad(void)			/* initialize input from a Radiance picture */
 					SAMPLEFORMAT_IEEEFP);
 			cvts.tf = Color2RfGfBf;
 			SET(C_RFLT);
+			CLR(C_GAMUT);
 		} else
 			cvts.tf = Colr2RGB;
 		break;
@@ -709,9 +710,6 @@ RRGGBB2Color(			/* read/convert/write RGB16->COLOR scanline */
 		if (CHK(C_CXFM))
 			colortrans(cvts.r.colors[x], cvts.cmat,
 					cvts.r.colors[x]);
-		if (CHK(C_GAMUT))
-			clipgamut(cvts.r.colors[x], cvts.t.fp[3*x + 1],
-					CGAMUT_LOWER, cblack, cwhite);
 	}
 	if (cvts.bradj) {
 		d = pow(2.,(double)cvts.bradj);
@@ -970,7 +968,14 @@ Color2RRGGBB(			/* read/convert/write COLOR->RGB16 scanline */
 	if (freadscan(cvts.r.colors, cvts.xmax, cvts.rfp) < 0)
 		quiterr("error reading Radiance picture");
 
-	for (x = cvts.xmax; x--; )
+	for (x = cvts.xmax; x--; ) {
+	    if (CHK(C_CXFM)) {
+			colortrans(cvts.r.colors[x], cvts.cmat,
+					cvts.r.colors[x]);
+		if (CHK(C_GAMUT))
+			clipgamut(cvts.r.colors[x], cvts.t.fp[3*x + 1],
+					CGAMUT_LOWER, cblack, cwhite);
+	    }
 	    for (i = 3; i--; ) {
 		register float	f = m*colval(cvts.r.colors[x],i);
 		if (f <= 0)
@@ -983,6 +988,7 @@ Color2RRGGBB(			/* read/convert/write COLOR->RGB16 scanline */
 		else
 			cvts.t.wp[3*x + i] = (int)((float)(1L<<16)*f);
 	    }
+	}
 
 	if (TIFFWriteScanline(cvts.tif, cvts.t.p, y, 0) < 0)
 		quiterr("error writing TIFF output");

@@ -1409,3 +1409,6 @@ light-probe background for use in image-based lighting.  Previously,
 the user needed to specify the background glow as the alternate
 material for a distant illum source to behave properly.  (This still
 works.)
+
+Fixed some minor problems and inconsistencies with 16-bit/channel
+TIFF i/o in ra_tiff.
