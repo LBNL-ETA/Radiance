@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.4 2003/11/14 17:31:24 schorsch Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.5 2004/12/07 22:25:55 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: lam.c,v 1.4 2003/11/14 17:31:24 schorsch Exp $
 #include "platform.h"
 #include "rtprocess.h"
 
-#define MAXFILE		16		/* maximum number of files */
+#define MAXFILE		32		/* maximum number of files */
 
 #define MAXLINE		512		/* maximum input line */
 
