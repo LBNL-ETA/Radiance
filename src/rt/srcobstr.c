@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.6 2004/09/08 01:48:50 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.7 2004/09/08 06:07:52 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -19,7 +19,7 @@ static const char RCSid[] = "$Id: srcobstr.c,v 2.6 2004/09/08 01:48:50 greg Exp 
 #if  SHADCACHE			/* preemptive shadow checking */
 
 
-static void				/* cast source ray to first blocker */
+static int				/* cast source ray to first blocker */
 castshadow(int sn, FVECT rorg, FVECT rdir)
 {
 	RAY     rt;
@@ -28,19 +28,25 @@ castshadow(int sn, FVECT rorg, FVECT rdir)
 	VCOPY(rt.rdir, rdir);
 	rt.rmax = 0;
 	rayorigin(&rt, NULL, PRIMARY, 1.0);
-	if (!localhit(&rt, &thescene))
-		return;
-					/* pretend we were aimed at source */
-	rt.crtype |= rt.rtype = SHADOW;
-	rt.rdir[0] = -rt.rdir[0];
-	rt.rdir[1] = -rt.rdir[1];
-	rt.rdir[2] = -rt.rdir[2];
-	rt.rod = -rt.rod;
-	VSUB(rt.rorg, rt.rop, rt.rdir);
-	rt.rot = 1.;
-	rt.rsrc = sn;
+					/* check for intersection */
+	while (localhit(&rt, &thescene)) {
+		RAY	rt1 = rt;	/* pretend we were aimed at source */
+		rt1.crtype |= rt1.rtype = SHADOW;
+		rt1.rdir[0] = -rt.rdir[0];
+		rt1.rdir[1] = -rt.rdir[1];
+		rt1.rdir[2] = -rt.rdir[2];
+		rt1.rod = -rt.rod;
+		VSUB(rt1.rorg, rt.rop, rt.rdir);
+		rt1.rot = 1.;
+		rt1.rsrc = sn;
 					/* record blocker */
-	srcblocker(&rt);
+		if (srcblocker(&rt1))
+			return(1);
+					/* move past failed blocker */
+		VSUM(rt.rorg, rt.rop, rt.rdir, FTINY);
+		rayclear(&rt);		/* & try again... */
+	}
+	return(0);			/* found no blockers */
 }
 
 
@@ -276,20 +282,21 @@ freeobscache(SRCREC *srcp)
 }
 
 	
-void				/* record a source blocker */
+int				/* record a source blocker */
 srcblocker(register RAY *r)
 {
 	OBJREC  *m;
 
 	if (r->robj == OVOID || objptr(r->robj) != r->ro ||
 			isvolume(r->ro->otype))
-		return;			/* don't record complex blockers */
+		return(0);		/* don't record complex blockers */
 	m = findmaterial(r->ro);
 	if (m == NULL)
-		return;			/* no material?! */
+		return(0);		/* no material?! */
 	if (!isopaque(m->otype))
-		return;			/* material not a reliable blocker */
+		return(0);		/* material not a reliable blocker */
 	*srcobstructp(r) = r->robj;     /* else record obstructor */
+	return(1);
 }
 
 
