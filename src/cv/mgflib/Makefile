@@ -1,5 +1,4 @@
 #
-# SCCSid "$SunId$ LBL"
 # Makefile for MGF parser library
 #
 # Use -DNOPROTO flag to get back K&R compatibility.

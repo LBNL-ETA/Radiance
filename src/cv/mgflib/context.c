@@ -1,9 +1,6 @@
-/* Copyright (c) 1997 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: context.c,v 1.27 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Context handlers
  */

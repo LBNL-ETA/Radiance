@@ -1,14 +1,12 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mgfilt.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Filter MGF stream, removing entities that won't be understood
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "parser.h"
 
 				/* Number of entities for major versions */

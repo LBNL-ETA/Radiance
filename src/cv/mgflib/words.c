@@ -1,13 +1,11 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: words.c,v 1.3 2003/02/28 20:11:30 greg Exp $";
 #endif
-
 /*
  * Routines for recognizing and moving about words in strings.
  */
 
+#include  <string.h>
 #include  <ctype.h>
 
 #ifdef  BSD
@@ -15,8 +13,6 @@ static char SCCSid[] = "$SunId$ LBL";
 #endif
 
 #define  NULL		0
-
-extern char  *strchr();
 
 
 char *

@@ -1,16 +1,13 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: parser.c,v 1.27 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Parse an MGF file, converting or discarding unsupported entities
  */
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
+#include <math.h>
 #include <ctype.h>
 #include <string.h>
 #include "parser.h"
@@ -238,7 +235,8 @@ char	*fn;
 		return(MG_OK);
 	}
 					/* get name relative to this context */
-	if (mg_file != NULL && (cp = strrchr(mg_file->fname, '/')) != NULL) {
+	if (fn[0] != '/' && mg_file != NULL &&
+			(cp = strrchr(mg_file->fname, '/')) != NULL) {
 		strcpy(ctx->fname, mg_file->fname);
 		strcpy(ctx->fname+(cp-mg_file->fname+1), fn);
 	} else

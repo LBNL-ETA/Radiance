@@ -1,7 +1,4 @@
-/* Copyright (c) 1996 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: rayopt.h,v 1.2 2003/02/28 20:11:30 greg Exp $ */
 /*-------------------------------------------------------------------------
 
 		 Triangle Bounder/Smoother for POV-Ray

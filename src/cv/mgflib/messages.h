@@ -1,7 +1,4 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: messages.h,v 1.5 2003/02/28 20:11:29 greg Exp $ */
 /*
  * Various messages, English version
  */

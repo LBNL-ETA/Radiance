@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: xf.c,v 1.14 2003/02/28 20:11:30 greg Exp $";
 #endif
-
 /*
  * Routines for 4x4 homogeneous, rigid-body transformations
  */
@@ -22,7 +19,7 @@ MAT4  m4ident = MAT4IDENT;
 
 static MAT4  m4tmp;		/* for efficiency */
 
-XF_SPEC	*xf_context;		/* current context */
+XF_SPEC	*xf_context = NULL;	/* current context */
 char	**xf_argend;		/* end of transform argument list */
 static char	**xf_argbeg;	/* beginning of transform argument list */
 

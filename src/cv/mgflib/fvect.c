@@ -1,14 +1,12 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: fvect.c,v 1.4 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Routines for 3-d vectors
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "parser.h"
 

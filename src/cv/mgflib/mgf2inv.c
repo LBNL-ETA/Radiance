@@ -1,9 +1,6 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 1.8 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Convert MGF to Inventor file.
  *
@@ -11,6 +8,8 @@ static char SCCSid[] = "$SunId$ LBL";
  */
 
 #include <stdio.h>
+
+#include <stdlib.h>
 
 #include <math.h>
 

@@ -1,14 +1,11 @@
-/* Copyright (c) 1995 Regents of the University of California */
-
-/* SCCSid "$SunId$ LBL" */
-
+/* RCSid: $Id: parser.h,v 1.33 2003/02/28 20:11:29 greg Exp $ */
 /*
  * Header file for MGF interpreter
  */
 
 #ifndef MG_VMAJOR
 
-/* must include stdio.h before us */
+/* must include stdio.h and stdlib.h before us */
 
 #define MG_VMAJOR	2		/* major version number */
 #define MG_VMINOR	0		/* minor version number */
@@ -469,17 +466,8 @@ extern int	xf(XF *, int, char **);		/* interpret transform spec. */
 #endif
 #endif
 
-#ifdef DCL_ATOF
-extern double	atof();
-#endif
-
 #ifndef MEM_PTR
 #define MEM_PTR		void *
 #endif
-
-extern MEM_PTR	malloc();
-extern MEM_PTR	calloc();
-extern MEM_PTR	realloc();
-extern void	free();
 
 #endif /*MG_VMAJOR*/

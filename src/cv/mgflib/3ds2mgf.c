@@ -1,3 +1,6 @@
+#ifndef lint
+static const char	RCSid[] = "$Id: 3ds2mgf.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
+#endif
 /*
       3DS2POV.C  Copyright (c) 1996 Steve Anger and Jeff Bowermaster
 			MGF output added by Greg Ward
@@ -9,10 +12,6 @@
 
       Compiled with MSDOS GNU C++ 2.4.1 or generic ANSI-C compiler
 */
-
-#ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

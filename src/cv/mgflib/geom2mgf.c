@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: geom2mgf.c,v 1.1 2003/02/22 02:07:23 greg Exp $";
+static const char	RCSid[] = "$Id: geom2mgf.c,v 1.2 2003/02/28 20:11:29 greg Exp $";
 #endif
 /* Convert Pete Shirley's simple format to MGF */
 

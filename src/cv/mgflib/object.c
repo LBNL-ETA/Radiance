@@ -1,14 +1,12 @@
-/* Copyright (c) 1994 Regents of the University of California */
-
 #ifndef lint
-static char SCCSid[] = "$SunId$ LBL";
+static const char	RCSid[] = "$Id: object.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
 #endif
-
 /*
  * Header file for tracking hierarchical object names
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "parser.h"
 

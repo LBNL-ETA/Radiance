@@ -1,5 +1,5 @@
 		MGF Parser Library Version 2.0
-		SCCSid "$SunId$ LBL"
+		SCCSid "@(#)README 1.4 3/18/97 LBL"
 
 Welcome to the second major release of the MGF language and parser library.
 If you have not read it already, you should take a look at the documentation
