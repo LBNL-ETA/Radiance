@@ -1,7 +1,7 @@
 		RCSid "$Id"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
-the thirteenth release, Version 3.5, and it includes all source files
+the thirteenth release, Version 3.6, and it includes all source files
 for local compilation with a standard C compiler.  To find out what's
 new in this release, check the text file "doc/notes/ReleaseNotes".
 
@@ -73,12 +73,15 @@ A PDF version of this manual may be found in
 
 For complete documentation on the system as of release 3.1, refer to
 "Rendering with Radiance" by Larson and Shakespeare, which used to be
-available from Morgan Kauffman Publishing.  Unfortunately, the book has
-gone out of print, and the authors are currently looking at alternative
-means of distribution.  The first chapter of this book, which includes
-a basic tutorial and serves as a good introduction for new users, may be
-found in "doc/pdf/RwR01.pdf".  Keep tuned to the radiance website
-for updates on the full book's availability.
+available from Morgan Kauffman Publishing.  Recently, the authors have
+taken over printing of the book, which is now available from booksurge.com.
+You may find it linked to the Radiance website page:
+
+	http://radsite.lbl.gov/radiance/book/
+
+The first chapter of this book, which includes a basic tutorial and
+serves as a good introduction for new users, may be found in
+"doc/pdf/RwR01.pdf".
 
 Important additions since version 3.1 include the holodeck programs (rholo,
 etc., built in src/hd), glrad, ranimove, and the new "mesh" primitive,
