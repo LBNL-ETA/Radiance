@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.25 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.26 2003/11/10 12:28:56 schorsch Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -393,7 +393,7 @@ lblopen(s, xp, yp)		/* open pipe to label generator */
 char  *s;
 int  *xp, *yp;
 {
-	char  com[128];
+	char  com[PATH_MAX];
 	FILE  *fp;
 
 	sprintf(com, "psign -s -.15 -a 2 -x %d -y %d '%.90s'", *xp, *yp, s);

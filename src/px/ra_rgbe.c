@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.14 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.15 2003/11/10 12:28:56 schorsch Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -93,7 +93,7 @@ userr:
 transfer(ospec)			/* transfer a Radiance picture */
 char	*ospec;
 {
-	char	oname[128];
+	char	oname[PATH_MAX];
 	FILE	*fp;
 	int	order;
 	int	xmax, ymax;

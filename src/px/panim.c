@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: panim.c,v 2.4 2003/10/27 10:24:51 schorsch Exp $";
+static const char	RCSid[] = "$Id: panim.c,v 2.5 2003/11/10 12:28:56 schorsch Exp $";
 #endif
 /*
  *  Send pictures to PC animation system.
@@ -74,7 +74,7 @@ char	*argv[];
 sendframe(file)			/* convert and send a frame */
 char	*file;
 {
-	char	command[128];
+	char	command[PATH_MAX];
 	COLR	scanin[SCANLINE];
 	int	xres, yres;
 	int	xbeg, ybeg;
@@ -90,7 +90,7 @@ char	*file;
 		file = "<stdin>";
 	} else {
 		if (pcom != NULL) {
-			sprintf(command, "( %s ) < %s", pcom, file);
+			sprintf(command, "( %s ) < \"%s\"", pcom, file);
 			fp = popen(command, "r");
 		} else
 			fp = fopen(file, "r");
