@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pfilt.c,v 2.21 2003/02/22 02:07:27 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.22 2003/02/25 00:26:05 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -22,7 +22,7 @@ extern float  *matchlamp();
 
 #define	 FEQ(a,b)	((a) >= .98*(b) && (a) <= 1.02*(b))
 
-double	 CHECKRAD = 1.5;	/* radius to check for filtering */
+double	 CHECKRAD = 2.0;	/* radius to check for filtering */
 
 #define  THRESHRAD	5.0	/* maximum sample spread in output */
 
