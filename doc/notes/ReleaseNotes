@@ -1378,3 +1378,6 @@ this out.
 
 Added script to convert to/from ICT's Poskanzer Float Map, which I don't
 care to support officially due to its machine-dependent byte order.
+
+Fixed bug that caused incorrect reporting of non-surface in set when
+mixing meshes and instances.  (Thanks to Jack de Valpine for discovery.)

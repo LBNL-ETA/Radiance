@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.14 2003/10/20 15:10:18 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.15 2004/12/15 22:02:04 greg Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -255,26 +255,6 @@ OCTREE  ot;
 	return;
 noderr:
 	error(CONSISTENCY, "bad node in objset");
-}
-
-
-int
-dosets(f)				/* loop through all sets */
-int	(*f)();
-{
-	int  res = 0;
-	int  n;
-	register OBJECT  *os;
-
-	for (n = 0; n < OSTSIZ; n++) {
-		if ((os = ostable[n]) == NULL)
-			continue;
-		while (*os > 0) {
-			res += (*f)(os);
-			os += *os + 1;
-		}
-	}
-	return(res);
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.26 2004/09/14 02:53:50 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.27 2004/12/15 22:02:04 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -26,7 +26,7 @@ static const char	RCSid[] = "$Id: readoct.c,v 2.26 2004/09/14 02:53:50 greg Exp 
 static double  ogetflt(void);
 static long  ogetint(int);
 static char  *ogetstr(char *);
-static int  nonsurfinset(OBJECT *);
+static int  nonsurfintree(OCTREE ot);
 static void  octerror(int  etyp, char  *msg);
 static void  skiptree(void);
 static OCTREE  getfullnode(void), gettree(void);
@@ -39,11 +39,12 @@ static OBJECT  fnobjects;		/* number of objects in this file */
 
 
 int
-readoct(inpspec, load, scene, ofn)	/* read in octree file or stream */
-char  *inpspec;
-int  load;
-CUBE  *scene;
-char  *ofn[];
+readoct(				/* read in octree file or stream */
+	char  *inpspec,
+	int  load,
+	CUBE  *scene,
+	char  *ofn[]
+)
 {
 	char  sbuf[512];
 	int  nf;
@@ -115,7 +116,7 @@ char  *ofn[];
 		if (nobjects != objorig+fnobjects)
 			octerror(USER, "bad object count; octree stale?");
 				/* check for non-surfaces */
-		if (dosets(nonsurfinset))
+		if (nonsurfintree(scene->cutree))
 			octerror(USER, "modifier in tree; octree stale?");
 	    }
 	}
@@ -129,8 +130,7 @@ char  *ofn[];
 
 
 static char *
-ogetstr(s)			/* get null-terminated string */
-char  *s;
+ogetstr(char *s)		/* get null-terminated string */
 {
 	extern char  *getstr();
 
@@ -159,8 +159,7 @@ getfullnode()			/* get a set, return fullnode */
 
 
 static long
-ogetint(siz)			/* get a siz-byte integer */
-int  siz;
+ogetint(int siz)		/* get a siz-byte integer */
 {
 	extern long  getint();
 	register long  r;
@@ -212,15 +211,22 @@ gettree()			/* get a pre-ordered octree */
 
 
 static int
-nonsurfinset(os)			/* check set for modifier */
-register OBJECT  *os;
+nonsurfintree(OCTREE ot)		/* check tree for modifiers */
 {
-	register OBJECT  s;
+	OBJECT  set[MAXSET+1];
 	register int  i;
 
-	for (i = *os; i-- > 0; )
-		if ((s = *++os) >= objorig && s < objorig+fnobjects &&
-				ismodifier(objptr(s)->otype))
+	if (isempty(ot))
+		return(0);
+	if (istree(ot)) {
+		for (i = 0; i < 8; i++)
+			if (nonsurfintree(octkid(ot, i)))
+				return(1);
+		return(0);
+	}
+	objset(set, ot);
+	for (i = set[0]; i-- > 0; )
+		if (ismodifier(objptr(set[i])->otype))
 			return(1);
 	return(0);
 }
@@ -252,9 +258,7 @@ skiptree(void)				/* skip octree on input */
 
 
 static void
-octerror(etyp, msg)			/* octree error */
-int  etyp;
-char  *msg;
+octerror(int etyp, char *msg)		/* octree error */
 {
 	char  msgbuf[128];
 
