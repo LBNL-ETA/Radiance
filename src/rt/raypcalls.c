@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.7 2004/09/17 14:27:33 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -51,8 +51,8 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch
  *  Note the differences between this and the simpler ray_trace()
  *  call.  In particular, the call may or may not return a value
  *  in the passed ray structure.  Also, you need to call rayorigin()
- *  yourself, which is normally for you by ray_trace().  The
- *  great thing is that ray_pqueue() will trace rays faster in
+ *  yourself, which is normally called for you by ray_trace().  The
+ *  benefit is that ray_pqueue() will trace rays faster in
  *  proportion to the number of CPUs you have available on your
  *  system.  If the ray queue is full before the call, ray_pqueue()
  *  will block until a result is ready so it can queue this one.
@@ -81,8 +81,9 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch
  *		ray_psend(&myRay);
  *	}
  *
- *  The ray_presult() and/or ray_pqueue() functions may then be
- *  called to read back the results.
+ *  Note that it is a fatal error to call ra_psend() when
+ *  ray_pnidle is zero.  The ray_presult() and/or ray_pqueue()
+ *  functions may be called subsequently to read back the results.
  *
  *  When you are done, you may call ray_pdone(1) to close
  *  all child processes and clean up memory used by Radiance.
@@ -99,19 +100,21 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch
  *  If you just want to reap children so that you can alter the
  *  rendering parameters without reloading the scene, use the
  *  ray_pclose(0) and ray_popen(nproc) calls to close
- *  then restart the child processes.
+ *  then restart the child processes after the changes are made.
  *
  *  Note:  These routines are written to coordinate with the
  *  definitions in raycalls.c, and in fact depend on them.
  *  If you want to trace a ray and get a result synchronously,
- *  use the ray_trace() call to compute it in the parent process.
+ *  use the ray_trace() call to compute it in the parent process
+ *  This will not interfere with any subprocess calculations,
+ *  but beware that a fatal error may end with a call to quit().
  *
  *  Note:  One of the advantages of using separate processes
  *  is that it gives the calling program some immunity from
  *  fatal rendering errors.  As discussed in raycalls.c,
  *  Radiance tends to throw up its hands and exit at the
  *  first sign of trouble, calling quit() to return control
- *  to the system.  Although you can avoid exit() with
+ *  to the top level.  Although you can avoid exit() with
  *  your own longjmp() in quit(), the cleanup afterwards
  *  is always suspect.  Through the use of subprocesses,
  *  we avoid this pitfall by closing the processes and
@@ -120,8 +123,9 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch
  *  of these calls, you can assume that the processes have
  *  been cleaned up with a call to ray_close(), though you
  *  will have to call ray_pdone() yourself if you want to
- *  free memory.  Obviously, you cannot continue rendering,
- *  but otherwise your process should not be compromised.
+ *  free memory.  Obviously, you cannot continue rendering
+ *  without risking further errors, but otherwise your
+ *  process should not be compromised.
  */
 
 #include <stdio.h>
