@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pvalue.1,v 1.4 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: pvalue.1,v 1.5 2004/10/01 07:45:30 greg Exp $"
 .TH PVALUE 1 1/15/99 RADIANCE
 .SH NAME
 pvalue - convert RADIANCE picture to/from alternate formats
@@ -48,9 +48,12 @@ turns this option off, which is the default.
 .TP
 .BR \-o
 Print original values, before exposure compensation.
+If the input file is in XYZE format, the Y (green) channel
+will correspond to units of candelas/meter^2.
+Otherwise, the RGB values should be in spectral watts/steradian/meter^2.
 Specifying
 .I \+o
-uses final values, which is the default.
+uses final exposed values, which is the default.
 .TP
 .BR \-h
 Do not print header.

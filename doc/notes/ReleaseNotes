@@ -1330,3 +1330,7 @@ the details of his discovery.
 
 Enabled the -p option for primary conversion without tone-mapping
 in ra_bmp.  Also provides for XYZE input conversion to RGB.
+
+Fixed what I consider a bug in pvalue -o when taking XYZE files on input,
+where it was inappropriately undoing the exposure value so that it always
+reported radiance rather than XYZ values with Y in cd/m^2.
