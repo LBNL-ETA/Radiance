@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: scan.c,v 1.4 2003/02/22 02:07:28 greg Exp $";
+static const char	RCSid[] = "$Id: scan.c,v 1.5 2004/01/02 12:45:36 schorsch Exp $";
 #endif
 /*
  *  writescan.c - fortran interface to picture output routines.
@@ -8,18 +8,20 @@ static const char	RCSid[] = "$Id: scan.c,v 1.4 2003/02/22 02:07:28 greg Exp $";
  */
 
 #include <stdio.h>
+#include <string.h>
 
 
 static FILE	*outfp;			/* output file pointer */
 static char	outfile[128];		/* output file name */
 
 
-initscan_(fname, width, height)		/* initialize output file */
-char	*fname;
-int	*width, *height;
+void
+initscan_(		/* initialize output file */
+	char	*fname,
+	int	*width,
+	int	*height
+)
 {
-	extern char	*strcpy();
-
 	if (fname == NULL || fname[0] == '\0') {
 		outfp = stdout;
 		strcpy(outfile, "<stdout>");
@@ -35,9 +37,11 @@ int	*width, *height;
 }
 
 
-writescan_(scan, width)			/* output scanline */
-float	*scan;
-int	*width;
+void
+writescan_(			/* output scanline */
+	float	*scan,
+	int	*width
+)
 {
 	if (fwritescan(scan, *width, outfp) < 0) {
 		perror(outfile);
@@ -46,7 +50,8 @@ int	*width;
 }
 
 
-donescan_()				/* clean up */
+void
+donescan_(void)				/* clean up */
 {
 	if (fclose(outfp) < 0) {
 		perror(outfile);
