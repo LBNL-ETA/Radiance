@@ -1,13 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.22 2003/07/21 22:30:19 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.23 2003/09/13 15:24:13 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
  *
  *     4/23/86
  */
-
-#include  <time.h>
 
 #include  "standard.h"
 #include  "platform.h"
@@ -39,7 +37,7 @@ int  header = 1;		/* do header? */
 
 long  skipbytes = 0;		/* skip bytes in input? */
 
-int  swapbytes = 0;		/* swap bytes in 16-bit words? */
+int  swapbytes = 0;		/* swap bytes? */
 
 int  interleave = 1;		/* file is interleaved? */
 
@@ -173,11 +171,15 @@ char  **argv;
 					format = 'w';
 					fmtid = "16-bit";
 					break;
+				case 'F':		/* swapped floats */
+					swapbytes = 1;
 				case 'f':		/* float */
 					dataonly = 1;
 					format = 'f';
 					fmtid = "float";
 					break;
+				case 'D':		/* swapped doubles */
+					swapbytes = 1;
 				case 'd':		/* double */
 					dataonly = 1;
 					format = 'd';
@@ -521,6 +523,35 @@ int  n;
 	}
 }
 
+
+swap32(wp, n)		/* swap n 32-bit words */
+register uint32  *wp;
+int  n;
+{
+	while (n-- > 0) {
+		*wp = *wp << 24 | ((*wp >> 24) & 0xff) |
+			(*wp & 0xff00) << 8 | (*wp & 0xff0000) >> 8;
+		wp++;
+	}
+}
+
+
+swap64(wp, n)		/* swap n 64-bit words */
+register char  *wp;
+int  n;
+{
+	register int	t;
+
+	while (n-- > 0) {
+		t = wp[0]; wp[0] = wp[7]; wp[7] = t;
+		t = wp[1]; wp[1] = wp[6]; wp[6] = t;
+		t = wp[2]; wp[2] = wp[5]; wp[5] = t;
+		t = wp[3]; wp[3] = wp[4]; wp[4] = t;
+		wp += 8;
+	}
+}
+
+
 getcascii(col)		/* get an ascii color value from stream(s) */
 COLOR  col;
 {
@@ -554,6 +585,8 @@ COLOR  col;
 			fread((char *)(vd+2), sizeof(double), 1, fin3) != 1)
 			return(-1);
 	}
+	if (swapbytes)
+		swap64((char *)vd, 3);
 	setcolor(col, vd[rord[RED]], vd[rord[GRN]], vd[rord[BLU]]);
 	return(0);
 }
@@ -573,6 +606,8 @@ COLOR  col;
 			fread((char *)(vf+2), sizeof(float), 1, fin3) != 1)
 			return(-1);
 	}
+	if (swapbytes)
+		swap32((uint32 *)vf, 3);
 	setcolor(col, vf[rord[RED]], vf[rord[GRN]], vf[rord[BLU]]);
 	return(0);
 }
@@ -659,6 +694,8 @@ COLOR  col;
 
 	if (fread((char *)&vd, sizeof(double), 1, fin) != 1)
 		return(-1);
+	if (swapbytes)
+		swap64((char *)&vd, 1);
 	setcolor(col, vd, vd, vd);
 	return(0);
 }
@@ -671,6 +708,8 @@ COLOR  col;
 
 	if (fread((char *)&vf, sizeof(float), 1, fin) != 1)
 		return(-1);
+	if (swapbytes)
+		swap32((uint32 *)&vf, 1);
 	setcolor(col, vf, vf, vf);
 	return(0);
 }
@@ -740,6 +779,8 @@ COLOR  col;
 	vf[0] = colval(col,ord[0]);
 	vf[1] = colval(col,ord[1]);
 	vf[2] = colval(col,ord[2]);
+	if (swapbytes)
+		swap32((uint32 *)vf, 3);
 	fwrite((char *)vf, sizeof(float), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -754,6 +795,8 @@ COLOR  col;
 	vd[0] = colval(col,ord[0]);
 	vd[1] = colval(col,ord[1]);
 	vd[2] = colval(col,ord[2]);
+	if (swapbytes)
+		swap64((char *)vd, 3);
 	fwrite((char *)vd, sizeof(double), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -825,6 +868,8 @@ COLOR  col;
 	float  vf;
 
 	vf = (*mybright)(col);
+	if (swapbytes)
+		swap32((uint32 *)&vf, 1);
 	fwrite((char *)&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -837,6 +882,8 @@ COLOR  col;
 	double	vd;
 
 	vd = (*mybright)(col);
+	if (swapbytes)
+		swap64((char *)&vd, 1);
 	fwrite((char *)&vd, sizeof(double), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -897,6 +944,8 @@ COLOR  col;
 	float  vf;
 
 	vf = colval(col,putprim);
+	if (swapbytes)
+		swap32((uint32 *)&vf, 1);
 	fwrite((char *)&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -909,6 +958,8 @@ COLOR  col;
 	double	vd;
 
 	vd = colval(col,putprim);
+	if (swapbytes)
+		swap64((char *)&vd, 1);
 	fwrite((char *)&vd, sizeof(double), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
