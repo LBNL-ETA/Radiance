@@ -1,4 +1,4 @@
-/* RCSid $Id: standard.h,v 2.18 2003/03/04 05:49:21 greg Exp $ */
+/* RCSid $Id: standard.h,v 2.19 2003/03/10 17:13:29 greg Exp $ */
 /*
  *	Miscellaneous definitions required by many routines.
  */
@@ -223,7 +223,7 @@ extern int	readbuf(int fd, char *bpos, int siz);
 extern int	writebuf(int fd, char *bpos, int siz);
 					/* defined in rexpr.c */
 extern int	ecompile(char *sp, int iflg, int wflag);
-extern char	*expsave();
+extern char	*expsave(void);
 extern void	expset(char *ep);
 extern char	*eindex(char *sp);
 					/* defined in savestr.c */

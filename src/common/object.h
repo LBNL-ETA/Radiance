@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.9 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: object.h,v 2.10 2003/03/10 17:13:29 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  */
@@ -82,10 +82,10 @@ extern void  (*addobjnotify[])();        /* people to notify of new objects */
 
 #ifdef NOPROTO
 
-extern int	objndx();
-extern int	lastmod();
-extern int	modifier();
-extern int	object();
+extern OBJECT	objndx();
+extern OBJECT	lastmod();
+extern OBJECT	modifier();
+extern OBJECT	object();
 extern void	insertobject();
 extern void	clearobjndx();
 extern void	insertelem();
@@ -106,16 +106,16 @@ extern int	readfargs();
 extern void	freefargs();
 extern void	readobj();
 extern void	getobject();
-extern int	newobject();
+extern OBJECT	newobject();
 extern void	freeobjects();
 extern int	free_os();
 
 #else
 					/* defined in modobject.c */
-extern int	objndx(OBJREC *op);
-extern int	lastmod(OBJECT obj, char *mname);
-extern int	modifier(char *name);
-extern int	object(char *oname);
+extern OBJECT	objndx(OBJREC *op);
+extern OBJECT	lastmod(OBJECT obj, char *mname);
+extern OBJECT	modifier(char *name);
+extern OBJECT	object(char *oname);
 extern void	insertobject(OBJECT obj);
 extern void	clearobjndx(void);
 					/* defined in objset.c */
@@ -141,9 +141,9 @@ extern void	freefargs(FUNARGS *fa);
 					/* defined in readobj.c */
 extern void	readobj(char *inpspec);
 extern void	getobject(char *name, FILE *fp);
-extern int	newobject();
+extern OBJECT	newobject();
 extern void	freeobjects(int firstobj, int nobjs);
 					/* defined in free_os.c */
 extern int	free_os(OBJREC *op);
 
-#endif
+#endif /* NOPROTO */

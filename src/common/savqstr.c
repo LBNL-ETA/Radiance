@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savqstr.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.5 2003/03/10 17:13:29 greg Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -40,7 +40,8 @@ void
 freeqstr(s)			/* free a private string */
 char  *s;
 {
-	free((void *)s);
+	if (s != NULL)
+		free((void *)s);
 }
 
 #else

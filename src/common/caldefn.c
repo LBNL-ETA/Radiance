@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.13 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.14 2003/03/10 17:13:29 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -224,7 +224,6 @@ char *
 pushcontext(ctx)		/* push on another context */
 char  *ctx;
 {
-    extern char  *strncpy(), *strcpy();
     char  oldcontext[MAXCNTX+1];
     register int  n;
 

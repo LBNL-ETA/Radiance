@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: modobject.c,v 2.8 2003/02/25 02:47:21 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.9 2003/03/10 17:13:29 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -24,7 +24,7 @@ static struct ohtab {
 static int  otndx();
 
 
-int
+OBJECT
 objndx(op)			/* get object number from pointer */
 register OBJREC  *op;
 {
@@ -39,7 +39,7 @@ register OBJREC  *op;
 }
 
 
-int
+OBJECT
 lastmod(obj, mname)		/* find modifier definition before obj */
 OBJECT  obj;
 char  *mname;
@@ -59,7 +59,7 @@ char  *mname;
 }
 
 
-int
+OBJECT
 modifier(mname)			/* get a modifier number from its name */
 char  *mname;
 {
@@ -71,7 +71,7 @@ char  *mname;
 
 
 #ifdef  GETOBJ
-int
+OBJECT
 object(oname)			/* get an object number from its name */
 char  *oname;
 {

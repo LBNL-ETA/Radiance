@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.7 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.8 2003/03/10 17:13:29 greg Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -9,8 +9,6 @@ static const char	RCSid[] = "$Id: colrops.c,v 2.7 2003/02/25 02:47:21 greg Exp $
 
 #include <math.h>
 #include "color.h"
-
-#define NULL		0
 
 extern char	*bmalloc();
 
