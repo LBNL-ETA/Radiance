@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.55 2003/06/08 12:03:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.56 2003/06/13 15:27:04 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -431,7 +431,7 @@ HDGRID	*gp;
 	putw(HOLOMAGIC, fp);		/* put magic number */
 	fd = dup(fileno(fp));
 	fclose(fp);			/* flush and close stdio stream */
-	lastloc = lseek(fd, (off_t)0L, 2);
+	lastloc = lseek(fd, (off_t)0, 2);
 	for (n = vdef(SECTION); n--; gp++) {	/* initialize each section */
 		nextloc = 0L;
 		write(fd, (char *)&nextloc, sizeof(nextloc));

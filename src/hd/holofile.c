@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.46 2003/05/29 16:26:21 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.47 2003/06/13 15:27:04 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -129,7 +129,7 @@ int	wr;
 	}
 	hdfragl[fd].nlinks++;
 	hdfragl[fd].writable = wr;		/* set writable flag */
-	hdfragl[fd].flen = lseek(fd, (off_t)0L, 2);	/* get file length */
+	hdfragl[fd].flen = lseek(fd, (off_t)0, 2);	/* get file length */
 }
 
 
@@ -161,7 +161,7 @@ HDGRID	*hproto;		/* holodeck section grid */
 	register int	n;
 					/* prepare for system errors */
 	errno = 0;
-	if ((fpos = lseek(fd, (off_t)0L, 1)) < 0)
+	if ((fpos = lseek(fd, (off_t)0, 1)) < 0)
 		error(SYSTEM, "cannot determine holodeck file position");
 	if (hproto == NULL) {		/* assume we're loading it */
 		HDGRID	hpr;
@@ -355,9 +355,9 @@ int	fd;
 	if (fd < 0)
 		return(-1);
 	if (fd >= nhdfragls || !hdfragl[fd].nlinks) {
-		if ((fpos = lseek(fd, (off_t)0L, 1)) < 0)
+		if ((fpos = lseek(fd, (off_t)0, 1)) < 0)
 			return(-1);
-		flen = lseek(fd, (off_t)0L, 2);
+		flen = lseek(fd, (off_t)0, 2);
 		lseek(fd, fpos, 0);
 		return(flen);
 	}
@@ -469,15 +469,15 @@ int
 hdfilord(hb1, hb2)	/* order beams for quick loading */
 register HDBEAMI	*hb1, *hb2;
 {
-	register long	c;
+	register off_t	c;
 				/* residents go first */
 	if (hb2->h->bl[hb2->b] != NULL)
 		return(hb1->h->bl[hb1->b] == NULL);
 	if (hb1->h->bl[hb1->b] != NULL)
 		return(-1);
 				/* otherwise sort by file descriptor */
-	if ((c = hb1->h->fd - hb2->h->fd))
-		return(c);
+	if (hb1->h->fd != hb2->h->fd)
+		return(hb1->h->fd - hb2->h->fd);
 				/* then by position in file */
 	c = hb1->h->bi[hb1->b].fo - hb2->h->bi[hb2->b].fo;
 	return(c > 0 ? 1 : c < 0 ? -1 : 0);
@@ -602,7 +602,7 @@ int	i;
 		}
 	biglob(hp)->nrd -= bi->nrd;		/* tell fragment it's free */
 	bi->nrd = 0;
-	bi->fo = 0L;
+	bi->fo = 0;
 	hdmarkdirty(hp, i);			/* assume we'll reallocate */
 	return(1);
 }
@@ -693,7 +693,7 @@ register int	i;
 		}
 		hp->bi[i].fo = nfo;
 	} else
-		hp->bi[i].fo = 0L;
+		hp->bi[i].fo = 0;
 	biglob(hp)->nrd += nrays - hp->bi[i].nrd;
 	hp->bi[i].nrd = nrays;
 	if (!fragfreed)
@@ -781,7 +781,7 @@ register int	i;
 	if (hp->bi[i].nrd && !(hdfragflags&FF_KILL && hdfreefrag(hp,i))) {
 		biglob(hp)->nrd -= hp->bi[i].nrd;	/* free failed */
 		hp->bi[i].nrd = 0;
-		hp->bi[i].fo = 0L;
+		hp->bi[i].fo = 0;
 		hdmarkdirty(hp, i);
 	}
 	return(nchanged);
