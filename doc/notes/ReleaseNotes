@@ -1044,7 +1044,7 @@ to create a rendering library called "libradiance.a" and
 to install it in the src/lib/ directory along with the new
 raycalls.o module, which should facilitate the building
 of new applications outside the src/rt/ directory.  The
-raypcalls.o module, also included in -lradiance, manages
+raypcalls.o module, also installed in src/lib, manages
 parallel rendering on multiprocessors with shared memories.
 
 Wrote new ranimove animation rendering program, which is an
