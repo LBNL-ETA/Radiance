@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: font.c,v 2.13 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: font.c,v 2.14 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Polygonal font handling routines
@@ -37,7 +37,7 @@ char  *fname;
 			return(f);
 		}
 						/* load the font file */
-	if ((pathname = getpath(fname, getlibpath(), R_OK)) == NULL) {
+	if ((pathname = getpath(fname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find font file \"%s\"", fname);
 		error(USER, errmsg);
 	}

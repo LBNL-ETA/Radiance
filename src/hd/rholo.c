@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.52 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.53 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -531,8 +531,8 @@ PACKET	*pl;
 	while (pl != NULL) {
 		p = pl; pl = p->next; p->next = NULL;
 		if (p->nr > 0) {		/* add to holodeck */
-			bcopy((char *)p->ra,
-				(char *)hdnewrays(hdlist[p->hd],p->bi,p->nr),
+			bcopy((void *)p->ra,
+				(void *)hdnewrays(hdlist[p->hd],p->bi,p->nr),
 				p->nr*sizeof(RAYVAL));
 			if (outdev != NULL)	/* display it */
 				disp_packet((PACKHEAD *)p);

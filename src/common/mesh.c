@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.6 2003/04/23 00:52:33 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.7 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -94,7 +94,7 @@ int	flags;
 		ms->next = mlist;
 		mlist = ms;
 	}
-	if ((pathname = getpath(mname, getlibpath(), R_OK)) == NULL) {
+	if ((pathname = getpath(mname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find mesh file \"%s\"", mname);
 		error(USER, errmsg);
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biq.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: biq.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  *  biq.c - simple greyscale quantization.
@@ -29,7 +29,7 @@ colormap cm;		/* quantization colormap */
 
     draw_grey(ocm);
 
-    bcopy((char *)color,(char *)cm,sizeof color);
+    bcopy((void *)color,(void *)cm,sizeof color);
 }
 
 /*----------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.24 2003/03/11 19:29:05 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.25 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -930,7 +930,7 @@ char  *iname;
 	}
 	strcpy(curfn, iname);			/* remember input name */
 						/* get full path for file */
-	if ((fpath = getpath(iname, getlibpath(), R_OK)) == NULL) {
+	if ((fpath = getpath(iname, getrlibpath(), R_OK)) == NULL) {
 		fprintf(stderr, "%s: cannot find file \"%s\"\n",
 				progname, iname);
 		exit(1);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ciq.c,v 2.2 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: ciq.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
 CIQ - main program for color image quantization
@@ -41,7 +41,7 @@ colormap cm;		/* quantization colormap */
     if (synth)
 	n = makecm(nw,&na);	/* analyze histogram and synthesize colormap */
     else {
-	bcopy((char *)cm,(char *)color,sizeof color);
+	bcopy((void *)cm,(void *)color,sizeof color);
 	n = nw;
 	na = 0;
 	for (i=0; i<len; i++) if (hist[i]) na++;
@@ -58,7 +58,7 @@ colormap cm;		/* quantization colormap */
 	draw_nodith(ocm);
     }
 
-    bcopy((char *)color,(char *)cm,sizeof color);
+    bcopy((void *)color,(void *)cm,sizeof color);
     /*endclosest();*/
 }
 

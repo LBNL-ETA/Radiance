@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.28 2003/02/22 02:07:25 greg Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.29 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -74,7 +74,7 @@ char	*dname;
 	}
 				/* write out hologram grids & octrees */
 	for (i = 0; hdlist[i] != NULL; i++) {
-		bcopy((char *)hdlist[i], buf, sizeof(HDGRID));
+		bcopy((void *)hdlist[i], buf, sizeof(HDGRID));
 		len = sizeof(HDGRID);
 		n = vdef(GEOMETRY);
 		sfn = i<n ? nvalue(GEOMETRY,i) :

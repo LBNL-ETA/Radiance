@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.17 2003/04/23 01:31:50 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.18 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -200,7 +200,7 @@ char  *fname;
 {
 	char  *ffname;
 
-	if ((ffname = getpath(fname, getlibpath(), R_OK)) == NULL) {
+	if ((ffname = getpath(fname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find function file \"%s\"", fname);
 		error(USER, errmsg);
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.43 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.44 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -66,7 +66,7 @@ HDGRID	*hproto;
 	register HOLO	*hp;
 	int	n;
 				/* copy grid to temporary header */
-	bcopy((char *)hproto, (char *)&hdhead, sizeof(HDGRID));
+	bcopy((void *)hproto, (void *)&hdhead, sizeof(HDGRID));
 				/* compute grid vectors and sizes */
 	hdcompgrid(&hdhead);
 				/* allocate header with directory */
@@ -81,13 +81,13 @@ HDGRID	*hproto;
 		free((void *)hp);
 		return(NULL);
 	}
-	bzero((char *)hp->bl, (nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
+	bzero((void *)hp->bl, (nbeams(hp)+1)*sizeof(BEAM *)+sizeof(BEAM));
 	hp->bl[0] = (BEAM *)(hp->bl+nbeams(hp)+1);	/* set blglob(hp) */
 	hp->fd = -1;
 	hp->dirty = 0;
 	hp->priv = NULL;
 				/* clear beam directory */
-	bzero((char *)hp->bi, (nbeams(hp)+1)*sizeof(BEAMI));
+	bzero((void *)hp->bi, (nbeams(hp)+1)*sizeof(BEAMI));
 	return(hp);		/* all is well */
 }
 
@@ -123,7 +123,7 @@ int	wr;
 	if (fd >= nhdfragls) {
 		hdfragl = (struct fraglist *)hdrealloc((char *)hdfragl,
 				(fd+1)*sizeof(struct fraglist), "hdattach");
-		bzero((char *)(hdfragl+nhdfragls),
+		bzero((void *)(hdfragl+nhdfragls),
 				(fd+1-nhdfragls)*sizeof(struct fraglist));
 		nhdfragls = fd+1;
 	}
@@ -429,7 +429,7 @@ int	nr;			/* number of new rays desired */
 		hdfreefrag(hp, i);		/* relinquish old fragment */
 	p = hdbray(hp->bl[i]) + hp->bl[i]->nrm;
 	hp->bl[i]->nrm += nr;			/* update in-core structure */
-	bzero((char *)p, nr*sizeof(RAYVAL));
+	bzero((void *)p, nr*sizeof(RAYVAL));
 	blglob(hp)->tick = hp->bl[i]->tick = hdclock++;	/* update LRU clock */
 	return(p);				/* point to new rays */
 }
@@ -499,7 +499,7 @@ int	(*bf)();		/* callback function (optional) */
 		if (hb[i].h==NULL || hb[i].b<1 | hb[i].b>nbeams(hb[i].h))
 			error(CONSISTENCY, "bad beam in hdloadbeams");
 					/* sort list for optimal access */
-	qsort((char *)hb, n, sizeof(HDBEAMI), hdfilord);
+	qsort((void *)hb, n, sizeof(HDBEAMI), hdfilord);
 	bytesloaded = 0;		/* run through loaded beams */
 	for ( ; n && (bp = hb->h->bl[hb->b]) != NULL; n--, hb++) {
 		bp->tick = hdclock;	/* preempt swap */

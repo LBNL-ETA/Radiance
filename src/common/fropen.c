@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fropen.c,v 2.9 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: fropen.c,v 2.10 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Find and open a Radiance library file.
@@ -18,7 +18,7 @@ FILE *
 frlibopen(fname)		/* find file and open for reading */
 register char  *fname;
 {
-	extern char  *strcpy(), *getlibpath();
+	extern char  *strcpy(), *getrlibpath();
 	FILE  *fp;
 	char  pname[MAXPATH];
 	register char  *sp, *cp;
@@ -29,7 +29,7 @@ register char  *fname;
 	if (ISDIRSEP(fname[0]) || fname[0] == '.')	/* absolute path */
 		return(fopen(fname, "r"));
 						/* check search path */
-	sp = getlibpath();
+	sp = getrlibpath();
 	do {
 		cp = pname;
 		while (*sp && (*cp = *sp++) != PATHSEP)

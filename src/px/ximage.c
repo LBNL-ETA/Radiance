@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ximage.c,v 2.10 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: ximage.c,v 2.11 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  *  ximage.c - driver for X-windows
@@ -674,7 +674,7 @@ picwriteline(y, l)		/* add 8-bit scanline to image */
 int  y;
 pixel  *l;
 {
-	bcopy((char *)l, (char *)ourras->data.bz+BZPixmapSize(xmax,y), BZPixmapSize(xmax,1));
+	bcopy((void *)l, (void *)ourras->data.bz+BZPixmapSize(xmax,y), BZPixmapSize(xmax,1));
 }
 
 

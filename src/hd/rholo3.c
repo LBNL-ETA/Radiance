@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.35 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.36 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
@@ -92,7 +92,7 @@ register HDBEAMI	*hb;
 		CHECK(p==NULL, SYSTEM, "out of memory in dispbeam");
 	}
 					/* assign packet fields */
-	bcopy((char *)hdbray(b), (char *)packra(p), b->nrm*sizeof(RAYVAL));
+	bcopy((void *)hdbray(b), (void *)packra(p), b->nrm*sizeof(RAYVAL));
 	p->nr = p->nc = b->nrm;
 	for (p->hd = 0; hdlist[p->hd] != hb->h; p->hd++)
 		if (hdlist[p->hd] == NULL)
@@ -118,9 +118,9 @@ int	nents;
 					/* search for common members */
 	for (csm = clist+nents; csm-- > clist; )
 		csm->nc = -1;
-	qsort((char *)clist, nents, sizeof(PACKHEAD), beamidcmp);
+	qsort((void *)clist, nents, sizeof(PACKHEAD), beamidcmp);
 	for (i = 0; i < complen; i++) {
-		csm = (PACKHEAD *)bsearch((char *)(complist+i), (char *)clist,
+		csm = (PACKHEAD *)bsearch((void *)(complist+i), (void *)clist,
 				nents, sizeof(PACKHEAD), beamidcmp);
 		if (csm == NULL)
 			continue;
@@ -166,7 +166,7 @@ int	nents;
 		complist = (PACKHEAD *)malloc(nents*sizeof(PACKHEAD));
 		if (complist == NULL)
 			goto memerr;
-		bcopy((char *)clist, (char *)complist, nents*sizeof(PACKHEAD));
+		bcopy((void *)clist, (void *)complist, nents*sizeof(PACKHEAD));
 		break;
 	case BS_ADD:			/* add to computation set */
 	case BS_MAX:			/* maximum of quantities */
@@ -174,7 +174,7 @@ int	nents;
 		if (nents <= 0)
 			return;
 		sortcomplist();		/* sort updated list & new entries */
-		qsort((char *)clist, nents, sizeof(PACKHEAD), beamcmp);
+		qsort((void *)clist, nents, sizeof(PACKHEAD), beamcmp);
 					/* what can't we satisfy? */
 		for (i = nents, csm = clist; i-- && csm->nr > csm->nc; csm++)
 			;
@@ -387,12 +387,12 @@ sortcomplist()			/* fix our list order */
 #endif
 		}
 	if (lastin < 0 || listpos*4 >= complen*3)
-		qsort((char *)complist, complen, sizeof(PACKHEAD), beamcmp);
+		qsort((void *)complist, complen, sizeof(PACKHEAD), beamcmp);
 	else if (listpos) {	/* else sort and merge sublist */
 		list2 = (PACKHEAD *)malloc(listpos*sizeof(PACKHEAD));
 		CHECK(list2==NULL, SYSTEM, "out of memory in sortcomplist");
-		bcopy((char *)complist,(char *)list2,listpos*sizeof(PACKHEAD));
-		qsort((char *)list2, listpos, sizeof(PACKHEAD), beamcmp);
+		bcopy((void *)complist,(void *)list2,listpos*sizeof(PACKHEAD));
+		qsort((void *)list2, listpos, sizeof(PACKHEAD), beamcmp);
 		mergeclists(complist, list2, listpos,
 				complist+listpos, complen-listpos);
 		free((void *)list2);

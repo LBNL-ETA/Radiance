@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.44 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.45 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -216,7 +216,7 @@ char	*gfn, *pfn;
 	hdlist[hd] = (HOLO *)malloc(sizeof(HOLO));
 	if (hdlist[hd] == NULL)
 		error(SYSTEM, "out of memory in add_holo");
-	bcopy((char *)hdg, (char *)hdlist[hd], sizeof(HDGRID));
+	bcopy((void *)hdg, (void *)hdlist[hd], sizeof(HDGRID));
 	hdcompgrid(hdlist[hd]);
 	hdgfn[hd] = savestr(gfn);
 	hdpfn[hd] = pfn && *pfn ? savestr(pfn) : (char *)NULL;

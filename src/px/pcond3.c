@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.12 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.13 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -350,7 +350,7 @@ mkbrmap()			/* make dynamic range map */
 	double	ceiling, trimmings;
 	register int	i;
 					/* copy initial histogram */
-	bcopy((char *)bwhist, (char *)modhist, sizeof(modhist));
+	bcopy((void *)bwhist, (void *)modhist, sizeof(modhist));
 	s = (bwmax - bwmin)/HISTRES;	/* s is delta b */
 					/* loop until satisfactory */
 	do {

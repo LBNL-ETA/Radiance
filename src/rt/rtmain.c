@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.2 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -176,7 +176,7 @@ char  *argv[];
 				}
 				if (argv[i][2] == 'I') {	/* file */
 					rval = wordfile(tralp,
-					getpath(argv[++i],getlibpath(),R_OK));
+					getpath(argv[++i],getrlibpath(),R_OK));
 					if (rval < 0) {
 						sprintf(errmsg,
 				"cannot open trace include file \"%s\"",
@@ -198,7 +198,7 @@ char  *argv[];
 				}
 				if (argv[i][2] == 'E') {	/* file */
 					rval = wordfile(tralp,
-					getpath(argv[++i],getlibpath(),R_OK));
+					getpath(argv[++i],getrlibpath(),R_OK));
 					if (rval < 0) {
 						sprintf(errmsg,
 				"cannot open trace exclude file \"%s\"",

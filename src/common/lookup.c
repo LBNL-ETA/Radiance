@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.7 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.8 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Table lookup routines
@@ -12,7 +12,7 @@ static const char	RCSid[] = "$Id: lookup.c,v 2.7 2003/02/25 02:47:21 greg Exp $"
 #include "lookup.h"
 
 #ifdef	NOSTRUCTASS
-#define	 copystruct(d,s)	bcopy((char *)(s),(char *)(d),sizeof(*(d)))
+#define	 copystruct(d,s)	bcopy((void *)(s),(void *)(d),sizeof(*(d)))
 #else
 #define	 copystruct(d,s)	(*(d) = *(s))
 #endif

@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.19 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: color.h,v 2.20 2003/05/13 17:58:32 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -199,9 +199,9 @@ extern COLOR  cblack, cwhite;	/* black (0,0,0) and white (1,1,1) */
 #define  rgb_cie(xyz,rgb)	colortrans(xyz,rgb2xyzmat,rgb)
 
 #ifdef BSD
-#define  cpcolormat(md,ms)	bcopy((char *)ms,(char *)md,sizeof(COLORMAT))
+#define  cpcolormat(md,ms)	bcopy((void *)ms,(void *)md,sizeof(COLORMAT))
 #else
-#define  cpcolormat(md,ms)	memcpy((char *)md,(char *)ms,sizeof(COLORMAT))
+#define  cpcolormat(md,ms)	memcpy((void *)md,(void *)ms,sizeof(COLORMAT))
 #endif
 
 #ifdef NOPROTO

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.7 2003/04/23 02:28:06 greg Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.8 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -123,7 +123,6 @@ static OCTINST *
 getoct(name)				/* get/assign octree list id */
 char	*name;
 {
-	extern char	*getpath(), *getlibpath();
 	char	*path;
 	register LUENT	*lp;
 	register OCTINST	*op;
@@ -137,7 +136,7 @@ char	*name;
 		strcpy(lp->key, name);
 	}
 	if ((op = (OCTINST *)lp->data) == NULL) {
-		path = getpath(name, getlibpath(), R_OK);
+		path = getpath(name, getrlibpath(), R_OK);
 		if (path == NULL) {
 			sprintf(errmsg, "cannot find octree \"%s\"", name);
 			error(USER, errmsg);

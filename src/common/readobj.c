@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.11 2003/03/11 19:29:04 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.12 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -179,7 +179,7 @@ OBJECT  firstobj, nobjs;
 		free_os(o);		/* free client memory */
 		freeqstr(o->oname);
 		freefargs(&o->oargs);
-		bzero(o, sizeof(OBJREC));
+		bzero((void *)o, sizeof(OBJREC));
 	}
 	clearobjndx();
 					/* free objects off end */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.13 2003/04/23 00:52:34 greg Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.14 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -45,7 +45,7 @@ static unsigned	dist();
 new_histo(n)		/* clear our histogram */
 int	n;
 {
-	bzero((char *)histo, sizeof(histo));
+	bzero((void *)histo, sizeof(histo));
 	return(0);
 }
 
@@ -130,7 +130,7 @@ int	n;
 			return;
 		}
 		N = n;
-		bzero((char *)cerr, 3*N*sizeof(short));
+		bzero((void *)cerr, 3*N*sizeof(short));
 	}
 	err[0] = err[1] = err[2] = 0;
 	for (x = 0; x < n; x++) {
@@ -169,7 +169,7 @@ int	c0, c1;
 	}
 					/* split box */
 	branch = split(box);
-	bcopy((char *)box, (char *)kb, sizeof(kb));
+	bcopy((void *)box, (void *)kb, sizeof(kb));
 						/* do left (lesser) branch */
 	kb[prim(branch)][1] = part(branch);
 	cut(kb, c0, (c0+c1)>>1);

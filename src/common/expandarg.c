@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: expandarg.c,v 2.5 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: expandarg.c,v 2.6 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Get additional command arguments from file or environment.
@@ -46,11 +46,11 @@ int	n;
 	if (newav == NULL)
 		return(-1);
 					/* copy preceeding arguments */
-	bcopy((char *)*avp, (char *)newav, n*sizeof(char *));
+	bcopy((void *)*avp, (void *)newav, n*sizeof(char *));
 					/* copy expanded argument */
-	bcopy((char *)ave, (char *)(newav+n), ace*sizeof(char *));
+	bcopy((void *)ave, (void *)(newav+n), ace*sizeof(char *));
 					/* copy trailing arguments + NULL */
-	bcopy((char *)(*avp+n+1), (char *)(newav+n+ace), (*acp-n)*sizeof(char *));
+	bcopy((void *)(*avp+n+1), (void *)(newav+n+ace), (*acp-n)*sizeof(char *));
 					/* free old list */
 	bfree((char *)*avp, (*acp+1)*sizeof(char *));
 					/* assign new list */

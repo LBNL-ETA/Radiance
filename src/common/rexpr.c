@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rexpr.c,v 2.5 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rexpr.c,v 2.6 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Regular expression parsing routines.

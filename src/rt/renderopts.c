@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.2 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -139,7 +139,7 @@ char  *av[];
 			}
 			if (av[0][2] == 'I') {	/* file */
 				rval = wordfile(amblp,
-					getpath(av[1],getlibpath(),R_OK));
+					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,
 			"cannot open ambient include file \"%s\"", av[0]);
@@ -160,7 +160,7 @@ char  *av[];
 			}
 			if (av[0][2] == 'E') {	/* file */
 				rval = wordfile(amblp,
-					getpath(av[1],getlibpath(),R_OK));
+					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,
 			"cannot open ambient exclude file \"%s\"", av[0]);

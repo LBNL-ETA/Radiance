@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: malloc.c,v 2.14 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: malloc.c,v 2.15 2003/05/13 17:58:32 greg Exp $";
 #endif
 /*
  * Fast malloc for memory hogs and VM environments.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.11 2003/02/22 02:07:24 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.12 2003/05/13 17:58:33 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -337,7 +337,7 @@ ssph_compute()			/* compute source set from sphere samples */
 	d = 1.0/ncells;
 	scalecolor(dlightsets->lamb, d);
 done:					/* clear sphere sample array */
-	bzero((char *)ssamp, sizeof(ssamp));
+	bzero((void *)ssamp, sizeof(ssamp));
 	return(ncells);
 }
 
@@ -535,7 +535,6 @@ toomany:
 dobj_load(oct, nam)		/* create/load an octree object */
 char	*oct, *nam;
 {
-	extern char	*getlibpath(), *getpath();
 	char	*fpp, fpath[128];
 	register DOBJECT	*op;
 					/* check arguments */
@@ -556,7 +555,7 @@ char	*oct, *nam;
 		return(0);
 	}
 					/* get octree path */
-	if ((fpp = getpath(oct, getlibpath(), R_OK)) == NULL) {
+	if ((fpp = getpath(oct, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find octree \"%s\"", oct);
 		error(COMMAND, errmsg);
 		return(0);
@@ -731,13 +730,13 @@ dobj_unmove()				/* undo last transform change */
 		return(0);
 	}
 					/* hold last transform */
-	bcopy((char *)lastxfav, (char *)txfav,
+	bcopy((void *)lastxfav, (void *)txfav,
 			(txfac=lastxfac)*sizeof(char *));
 					/* save this transform */
-	bcopy((char *)curobj->xfav, (char *)lastxfav,
+	bcopy((void *)curobj->xfav, (void *)lastxfav,
 			(lastxfac=curobj->xfac)*sizeof(char *));
 					/* copy back last transform */
-	bcopy((char *)txfav, (char *)curobj->xfav,
+	bcopy((void *)txfav, (void *)curobj->xfav,
 			(curobj->xfac=txfac)*sizeof(char *));
 					/* set matrices */
 	fullxf(&curobj->xfb, curobj->xfac, curobj->xfav);

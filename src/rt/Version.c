@@ -1,5 +1,5 @@
 /*
- * This is the official release file for Radiance version 3.5
+ * This file was created automatically during make.
  */
 
-char VersionID[]="RADIANCE 3.5 official LBNL release March 14 2003";
+char VersionID[]="RADIANCE 3.6a lastmod Tue May 13 10:55:16 PDT 2003 by gward on anyhere.local.";
