@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.5 2003/05/15 05:13:35 greg Exp $
+# RCSid $Id: makeall,v 1.6 2003/05/29 17:46:35 greg Exp $
 # 
 #Added macosX 2001-04-11 by Jean Brange
 #Deleted obsolete systems 2001-04-18 by Greg Ward
@@ -179,9 +179,9 @@ case 3:			# Silicon Graphics
 	endsw
 	breaksw
 case 4:			# AIX
-	set mach="-Dvoid=char -DNOPROTO -DINCL_SEL_H"
 	set opt="-O"
-	set compat="bmalloc.o erf.o"
+	set compat="bmalloc.o erf.o strcmp.o"
+	set arch=PowerPC
 	breaksw
 case 5:			# BSDI BSD/386
 	set mach="-DBSD -L/usr/X11/lib -I/usr/X11/include"
@@ -218,6 +218,7 @@ case 9:			# Other
 	if ( "$<" =~ [yY]* ) then
 		set extras="CC=gcc"
 	endif
+	set arch=other
 	breaksw
 default:
 	echo "Illegal choice\!"
