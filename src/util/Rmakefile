@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.33 2003/06/05 19:29:35 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.34 2003/06/06 18:38:19 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -78,10 +78,9 @@ rad:	rad.o
 ranimate:	ranimate.o netproc.o
 	$(CC) $(CFLAGS) -o ranimate ranimate.o netproc.o -lrt -lm
 
-ranimove:	ranimove.o ranimove1.o ranimove2.o \
-../lib/raypcalls.o ../lib/raycalls.o
+ranimove:	ranimove.o ranimove1.o ranimove2.o
 	$(CC) $(CFLAGS) -o ranimove ranimove.o ranimove1.o ranimove2.o \
-../lib/raypcalls.o ../lib/raycalls.o -lradiance -lrt -lm
+-lraycalls -lradiance -lrt -lm
 
 rpiece:	rpiece.o Version.o
 	$(CC) $(CFLAGS) -o rpiece rpiece.o Version.o -lrt -lm

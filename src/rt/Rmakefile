@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.35 2003/03/11 19:29:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.36 2003/06/06 18:38:19 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -29,6 +29,7 @@ LIBDIR = /usr/local/lib/ray
 # Library routines:
 #
 RLIB = ../lib/libradiance.a
+RCLIB = libraycalls.a
 LIBS = -lrt $(MLIB)
 
 #
@@ -90,11 +91,11 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rview $(DESTDIR)/lookamb
 
-all:	$(PROGS) $(SPECIAL) $(RLOBJS)
+all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
 install:	all rayinit.cal
 	$(INSTALL) $(PROGS) $(INSTDIR)
-	cp $(RLOBJS) ../lib
+	mv $(RCLIB) ../lib
 	rm -f $(LIBDIR)/rayinit.cal
 	cp rayinit.cal $(LIBDIR)
 
@@ -131,6 +132,10 @@ devmain.o tty.o editline.o $(LIBS)
 $(RLIB):	$(ROBJS) Version.o
 	ar rc $(RLIB) $(ROBJS) Version.o
 	-ranlib $(RLIB)
+
+$(RCLIB):	$(RLOBJS)
+	ar rc $(RCLIB) $(RLOBJS)
+	-ranlib $(RCLIB)
 
 #
 # Special compiles:
