@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rayopt.c,v 1.2 2003/02/28 20:11:30 greg Exp $";
+static const char	RCSid[] = "$Id: rayopt.c,v 1.3 2003/11/15 15:53:31 schorsch Exp $";
 #endif
 /*-------------------------------------------------------------------------
 
@@ -1217,7 +1217,7 @@ void write_box (Vector v1, Vector v2, Triangle *tri)
 	    break;
 
 	case MGF:
-	    if (object_name[0]) fprintf (f, "o %s\n");
+	    if (object_name[0]) fprintf (f, "o %s\n", object_name);
 	    write_mgf_texture (f, tri);
 	    fprintf (f, "v v1 =\n\tp %.4f %.4f %.4f\n", v1[X], v1[Y], v1[Z]);
 	    fprintf (f, "v v2 =\n\tp %.4f %.4f %.4f\n", v1[X], v2[Y], v1[Z]);
