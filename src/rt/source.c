@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.38 2003/12/31 01:50:02 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.39 2003/12/31 02:03:08 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -382,6 +382,8 @@ srcobstructp(register RAY *r)
 		ondx += (int)(2*SHADCACHE*srcp->obscache->p.d.e2 *
 				(r->rorg[ax2] + t*srcp->sloc[ax2] -
 					srcp->obscache->p.d.o[ax2]));
+		if (ondx < 0 | ondx >= 4*SHADCACHE*SHADCACHE)
+			return &nobs;   /* could happen if ray is outside */
 	} else if (srcp->sflags & SFLAT) {
 		FVECT   sd;
 		RREAL   sd0m, sd1m;
