@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.3 2003/04/27 06:08:03 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.4 2003/05/25 05:27:16 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -269,7 +269,7 @@ putout()                /* produce an output record */
 		chanout(bchanset);
 	else
 		chanout(chanset);
-	if (colpos && !bchanset)
+	if (colpos && !bocols)
 		putchar('\n');
 	if (unbuff)
 		fflush(stdout);
