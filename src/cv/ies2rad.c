@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.19 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.20 2003/06/30 18:18:22 greg Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.19 2003/06/30 14:59:11 schorsch 
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <sys/types.h>
 #include <ctype.h>
@@ -123,7 +124,7 @@ typedef struct {
 int	gargc;				/* global argc (minus filenames) */
 char	**gargv;			/* global argv */
 
-extern char	*strcpy(), *strcat(), *stradd(), *tailtrunc(), *filetrunc(),
+extern char	*stradd(), *tailtrunc(), *filetrunc(),
 		*filename(), *libname(), *fullnam(), *getword(), *atos();
 extern float	*matchlamp();
 extern time_t	fdate();
