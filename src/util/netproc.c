@@ -1,11 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.11 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.12 2003/10/27 10:32:06 schorsch Exp $";
 #endif
 /*
  * Parallel network process handling routines
  */
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -17,7 +19,7 @@ static const char	RCSid[] = "$Id: netproc.c,v 2.11 2003/06/30 14:59:13 schorsch 
 
 PSERVER	*pslist = NULL;		/* global process server list */
 
-static PROC	*pindex[FD_SETSIZE];	/* process index table */
+static NETPROC	*pindex[FD_SETSIZE];	/* process index table */
 
 static char	ourhost[64];	/* this host name */
 static char	ourdir[PATH_MAX];	/* our working directory */
@@ -29,8 +31,6 @@ static int	maxfd;		/* maximum assigned descriptor */
 
 extern char	*remsh;		/* externally defined remote shell program */
 
-extern char	*getenv();
-
 
 PSERVER *
 addpserver(host, dir, usr, np)		/* add a new process server */
@@ -41,7 +41,7 @@ int	np;
 					/* allocate the struct */
 	if (np < 1)
 		return(NULL);
-	ps = (PSERVER *)malloc(sizeof(PSERVER)+(np-1)*sizeof(PROC));
+	ps = (PSERVER *)malloc(sizeof(PSERVER)+(np-1)*sizeof(NETPROC));
 	if (ps == NULL)
 		return(NULL);
 	if (!ourhost[0]) {		/* initialize */
@@ -232,7 +232,7 @@ int	fd;
 {
 	char	errbuf[BUFSIZ];
 	int	nr;
-	register PROC	*pp;
+	register NETPROC	*pp;
 				/* look up associated process */
 	if ((pp = pindex[fd]) == NULL)
 		abort();		/* serious consistency error */
@@ -286,7 +286,7 @@ PSERVER	*ps;
 int	pn;
 int	status;
 {
-	register PROC	*pp;
+	register NETPROC	*pp;
 
 	pp = ps->proc + pn;
 	if (pp->cf != NULL)			/* client cleanup */

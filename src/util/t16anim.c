@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t16anim.c,v 1.2 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: t16anim.c,v 1.3 2003/10/27 10:32:06 schorsch Exp $";
 #endif
 /*
  *  Send Targa 16-bit files to PC animation system.
@@ -9,14 +9,13 @@ static const char	RCSid[] = "$Id: t16anim.c,v 1.2 2003/02/22 02:07:30 greg Exp $
 
 #include <stdio.h>
 
+#include "rtprocess.h"
 #include "client/clnt.h"
-
 #include  "targa.h"
 
 #define  goodpic(h)	(((h)->dataType==IM_RGB || (h)->dataType==IM_CRGB) \
 				&& (h)->dataBits==16)
 
-FILE	*popen();
 
 char	*pcom = NULL;			/* uncompress command */
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.42 2003/10/21 19:19:29 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.43 2003/10/27 10:32:06 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -15,11 +15,16 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.42 2003/10/21 19:19:29 schorsch
 
 #include "copyright.h"
 
+#include <stdio.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <time.h>
 
-#include "standard.h"
+/*#include "standard.h"*/
+#include "platform.h"
 #include "paths.h"
+#include "rtio.h"
+#include "rterror.h"
 #include "view.h"
 #include "vars.h"
 #include "netproc.h"
@@ -117,16 +122,39 @@ struct pslot {
 int	npslots;		/* number of process slots */
 
 #define phostname(ps)	((ps)->hostname[0] ? (ps)->hostname : astat.host)
-
-struct pslot	*findpslot();
-
 PSERVER	*lastpserver;		/* last process server with error */
 
-VIEW	*getview();
-char	*getexp(), *dirfile();
-int	getblur();
+static struct pslot * findpslot(int pid);
+static void checkdir(void);
+static VIEW * getview(int n);
 
-extern time_t	time();
+static char * dirfile(char *df, register char *path);
+static char * getexp(int n);
+static int getblur(double *bf);
+static int getastat(void);
+static void getradfile(char *rfargs);
+static void badvalue(int vc);
+static int rmfile(char *fn);
+static int runcom(char *cs);
+static int pruncom(char *com, char *ppins, int maxcopies);
+static void bwait(int ncoms);
+static int bruncom(char *com, int fout, int (*rf)());
+static int serverdown(void);
+static int donecom(PSERVER *ps, int pn, int status);
+static int countviews(void);
+static int dofilt(int frame, int rvr);
+static void archive(void);
+static int frecover(int frame);
+static int recover(int frame);
+static void sethosts(void);
+static void walkwait(int first, int last, char *vfn);
+static void animrend(int frame, VIEW *vp);
+static void transferframes(void);
+static void filterframes(void);
+static void renderframes(int nframes);
+static void animate(void);
+static void setdefaults(void);
+static void putastat(void);
 
 
 main(argc, argv)
@@ -200,7 +228,8 @@ userr:
 }
 
 
-getastat()			/* check/set animation status */
+static int
+getastat(void)			/* check/set animation status */
 {
 	char	sfname[256];
 	FILE	*fp;
@@ -264,7 +293,8 @@ fmterr:
 }
 
 
-putastat()			/* put out current status */
+static void
+putastat(void)			/* put out current status */
 {
 	char	buf[256];
 	FILE	*fp;
@@ -286,7 +316,8 @@ putastat()			/* put out current status */
 }
 
 
-checkdir()			/* make sure we have our directory */
+static void
+checkdir(void)			/* make sure we have our directory */
 {
 	struct stat	stb;
 
@@ -308,7 +339,8 @@ checkdir()			/* make sure we have our directory */
 }
 
 
-setdefaults()			/* set default values */
+static void
+setdefaults(void)			/* set default values */
 {
 	extern char	*atos();
 	int	decades;
@@ -396,7 +428,8 @@ setdefaults()			/* set default values */
 }
 
 
-sethosts()			/* set up process servers */
+static void
+sethosts(void)			/* set up process servers */
 {
 	extern char	*iskip();
 	char	buf[256], *dir, *uname;
@@ -451,9 +484,8 @@ sethosts()			/* set up process servers */
 	}
 }
 
-
-getradfile(rfargs)		/* run rad and get needed variables */
-char	*rfargs;
+static void
+getradfile(char *rfargs)		/* run rad and get needed variables */
 {
 	static short	mvar[] = {OCTREE,PFILT,RESOLUTION,EXPOSURE,-1};
 	char	combuf[256];
@@ -491,7 +523,8 @@ char	*rfargs;
 }
 
 
-animate()			/* run animation */
+static void
+animate(void)			/* run animation */
 {
 	int	xres, yres;
 	float	pa, mult;
@@ -562,8 +595,8 @@ animate()			/* run animation */
 }
 
 
-renderframes(nframes)		/* render next nframes frames */
-int	nframes;
+static void
+renderframes(int nframes)		/* render next nframes frames */
 {
 	static char	vendbuf[16];
 	VIEW	*vp;
@@ -619,7 +652,8 @@ int	nframes;
 }
 
 
-filterframes()				/* catch up with filtering */
+static void
+filterframes(void)				/* catch up with filtering */
 {
 	VIEW	*vp;
 	register int	i;
@@ -637,7 +671,8 @@ filterframes()				/* catch up with filtering */
 }
 
 
-transferframes()			/* catch up with picture transfers */
+static void
+transferframes(void)			/* catch up with picture transfers */
 {
 	char	combuf[10240], *fbase;
 	register char	*cp;
@@ -677,9 +712,11 @@ transferframes()			/* catch up with picture transfers */
 }
 
 
-animrend(frame, vp)			/* start animation frame */
-int	frame;
-VIEW	*vp;
+static void
+animrend(			/* start animation frame */
+int	frame,
+VIEW	*vp
+)
 {
 	extern int	recover();
 	char	combuf[2048];
@@ -695,9 +732,12 @@ VIEW	*vp;
 }
 
 
-walkwait(first, last, vfn)		/* walk-through frames */
-int	first, last;
-char	*vfn;
+static void
+walkwait(		/* walk-through frames */
+int	first,
+int last,
+char	*vfn
+)
 {
 	double	blurf;
 	int	nblur = getblur(&blurf);
@@ -747,9 +787,8 @@ char	*vfn;
 }
 
 
-int
-recover(frame)				/* recover the specified frame */
-int	frame;
+static int
+recover(int frame)				/* recover the specified frame */
 {
 	static int	*rfrm;		/* list of recovered frames */
 	static int	nrfrms = 0;
@@ -802,9 +841,8 @@ int	frame;
 }
 
 
-int
-frecover(frame)				/* recover filtered frame */
-int	frame;
+static int
+frecover(int frame)				/* recover filtered frame */
 {
 	if (dofilt(frame, 2) && dofilt(frame, 1))
 		return(1);
@@ -812,7 +850,8 @@ int	frame;
 }
 
 
-archive()			/* archive and remove renderings */
+static void
+archive(void)			/* archive and remove renderings */
 {
 #define RMCOML	(sizeof(rmcom)-1)
 	static char	rmcom[] = "rm -f";
@@ -855,10 +894,11 @@ archive()			/* archive and remove renderings */
 }
 
 
-int
-dofilt(frame, rvr)				/* filter frame */
-int	frame;
-int	rvr;
+static int
+dofilt(				/* filter frame */
+int	frame,
+int	rvr
+)
 {
 	extern int	frecover();
 	static int	iter = 0;
@@ -1017,9 +1057,8 @@ int	rvr;
 }
 
 
-VIEW *
-getview(n)			/* get view number n */
-int	n;
+static VIEW *
+getview(int n)			/* get view number n */
 {
 	static FILE	*viewfp = NULL;		/* view file pointer */
 	static int	viewnum = 0;		/* current view number */
@@ -1067,8 +1106,8 @@ int	n;
 }
 
 
-int
-countviews()			/* count views in view file */
+static int
+countviews(void)			/* count views in view file */
 {
 	int	n;
 
@@ -1080,9 +1119,8 @@ countviews()			/* count views in view file */
 }
 
 
-char *
-getexp(n)			/* get exposure for nth frame */
-int	n;
+static char *
+getexp(int n)			/* get exposure for nth frame */
 {
 	extern char	*fskip();
 	static char	expval[32];
@@ -1151,9 +1189,8 @@ int	n;
 }
 
 
-struct pslot *
-findpslot(pid)			/* find or allocate a process slot */
-int	pid;
+static struct pslot *
+findpslot(int pid)			/* find or allocate a process slot */
 {
 	register struct pslot	*psempty = NULL;
 	register int	i;
@@ -1168,13 +1205,14 @@ int	pid;
 }
 
 
-int
-donecom(ps, pn, status)		/* clean up after finished process */
-PSERVER	*ps;
-int	pn;
-int	status;
+static int
+donecom(		/* clean up after finished process */
+PSERVER	*ps,
+int	pn,
+int	status
+)
 {
-	register PROC	*pp;
+	register NETPROC	*pp;
 	register struct pslot	*psl;
 
 	pp = ps->proc + pn;
@@ -1209,8 +1247,8 @@ int	status;
 }
 
 
-int
-serverdown()			/* check status of last process server */
+static int
+serverdown(void)			/* check status of last process server */
 {
 	if (lastpserver == NULL || !lastpserver->hostname[0])
 		return(0);
@@ -1226,11 +1264,12 @@ serverdown()			/* check status of last process server */
 }
 
 
-int
-bruncom(com, fout, rf)		/* run a command in the background */
-char	*com;
-int	fout;
-int	(*rf)();
+static int
+bruncom(		/* run a command in the background */
+char	*com,
+int	fout,
+int	(*rf)()
+)
 {
 	int	pid;
 	register struct pslot	*psl;
@@ -1259,8 +1298,8 @@ int	(*rf)();
 }
 
 
-bwait(ncoms)				/* wait for batch job(s) to finish */
-int	ncoms;
+static void
+bwait(int ncoms)				/* wait for batch job(s) to finish */
 {
 	int	status;
 
@@ -1274,10 +1313,12 @@ int	ncoms;
 }
 
 
-int
-pruncom(com, ppins, maxcopies)	/* run a command in parallel over network */
-char	*com, *ppins;
-int	maxcopies;
+static int
+pruncom(	/* run a command in parallel over network */
+char	*com,
+char	*ppins,
+int	maxcopies
+)
 {
 	int	retstatus = 0;
 	int	hostcopies;
@@ -1344,8 +1385,8 @@ int	maxcopies;
 }
 
 
-runcom(cs)			/* run a command locally and wait for it */
-char	*cs;
+static int
+runcom(char *cs)			/* run a command locally and wait for it */
 {
 	if (!silent)		/* echo it */
 		printf("\t%s\n", cs);
@@ -1356,8 +1397,8 @@ char	*cs;
 }
 
 
-rmfile(fn)			/* remove a file */
-char	*fn;
+static int
+rmfile(char *fn)			/* remove a file */
 {
 	if (!silent)
 #ifdef _WIN32
@@ -1371,8 +1412,8 @@ char	*fn;
 }
 
 
-badvalue(vc)			/* report bad variable value and exit */
-int	vc;
+static void
+badvalue(int vc)			/* report bad variable value and exit */
 {
 	fprintf(stderr, "%s: bad value for variable '%s'\n",
 			progname, vnam(vc));
@@ -1380,10 +1421,11 @@ int	vc;
 }
 
 
-char *
-dirfile(df, path)		/* separate path into directory and file */
-char	*df;
-register char	*path;
+static char *
+dirfile(		/* separate path into directory and file */
+char	*df,
+register char	*path
+)
 {
 	register int	i;
 	int	psep;
@@ -1405,7 +1447,7 @@ register char	*path;
 }
 
 
-int
+static int
 getblur(double *bf)		/* get # blur samples (and fraction) */
 {
 	double	blurf;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.73 2003/10/18 04:46:24 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.74 2003/10/27 10:32:06 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: rad.c,v 2.73 2003/10/18 04:46:24 greg Exp $";
 #include <time.h>
 
 #include "platform.h"
+#include "rtprocess.h"
 #include "view.h"
 #include "paths.h"
 #include "vars.h"
@@ -311,7 +312,6 @@ checkfiles()			/* check for existence and modified times */
 getoctcube(org, sizp)		/* get octree bounding cube */
 double	org[3], *sizp;
 {
-	extern FILE	*popen();
 	static double	oorg[3], osiz = 0.;
 	double	min[3], max[3];
 	char	buf[1024];
