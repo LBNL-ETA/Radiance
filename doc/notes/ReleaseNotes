@@ -1299,3 +1299,5 @@ of the sky dome source in rt/srcdraw.c.
 Fixed problems with effective ray lenths computed for dielectric
 and BRTDfunc materials.  This was most evident in breakup of holodeck
 views when VDISTANCE=True.
+
+Fixed rad so that 'scene' variable may consist only of inline commands.
