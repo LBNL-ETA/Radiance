@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.21 2003/10/27 10:26:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.22 2003/11/15 16:29:11 schorsch Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -18,10 +18,6 @@ static const char	RCSid[] = "$Id: rad2mgf.c,v 2.21 2003/10/27 10:26:45 schorsch 
 
 #define C_1SIDEDTHICK	0.005
 
-int	o_face(), o_cone(), o_sphere(), o_ring(), o_cylinder();
-int	o_instance(), o_illum();
-int	o_plastic(), o_metal(), o_glass(), o_dielectric(),
-	o_mirror(), o_trans(), o_light();
 
 LUTAB	rmats = LU_SINIT(free,NULL);		/* defined material table */
 
@@ -54,10 +50,38 @@ struct vert {
 
 LUTAB	vertab = LU_SINIT(free,NULL);	/* our vertex lookup table */
 
+static void rad2mgf(char *inp);
+static void cvtprim(char *inp, char *mod, char *typ, char *id, FUNARGS *fa);
+static void newmat(char *id, char *alias);
+static void setmat(char *id);
+static void setobj(char *id);
+static void init(void);
+static void uninit(void);
+static void clrverts(void);
+static void add2dispatch(char *name, int (*func)());
+static char *getvertid(char *vname, FVECT vp);
+static int o_unsupported(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_face(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_cone(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_sphere(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_cylinder(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_ring(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_instance(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_illum(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_plastic(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_metal(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_glass(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_dielectric(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_mirror(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_trans(char *mod, char *typ, char *id, FUNARGS *fa);
+static int o_light(char *mod, char *typ, char *id, FUNARGS *fa);
 
-main(argc, argv)
-int	argc;
-char	**argv;
+
+int
+main(
+	int	argc,
+	char	**argv
+)
 {
 	int	i;
 
@@ -98,8 +122,10 @@ unkopt:
 }
 
 
-rad2mgf(inp)		/* convert a Radiance file to MGF */
-char	*inp;
+void
+rad2mgf(		/* convert a Radiance file to MGF */
+	char	*inp
+)
 {
 #define mod	buf
 #define typ	(buf+128)
@@ -177,16 +203,21 @@ char	*inp;
 }
 
 
-cvtprim(inp, mod, typ, id, fa)	/* process Radiance primitive */
-char	*inp, *mod, *typ, *id;
-FUNARGS	*fa;
+void
+cvtprim(	/* process Radiance primitive */
+	char	*inp,
+	char	*mod,
+	char	*typ,
+	char	*id,
+	FUNARGS	*fa
+)
 {
 	int	(*df)();
 
 	df = (int (*)())lu_find(&rdispatch, typ)->data;
 	if (df != NULL) {				/* convert */
 		if ((*df)(mod, typ, id, fa) < 0) {
-			fprintf(stderr, "%s: bad %s \"%s\"\n", typ, id);
+			fprintf(stderr, "%s: bad %s \"%s\"\n", "rat2mgf", typ, id);
 			exit(1);
 		}
 	} else {					/* unsupported */
@@ -197,9 +228,11 @@ FUNARGS	*fa;
 }
 
 
-newmat(id, alias)		/* add a modifier to the alias list */
-char	*id;
-char	*alias;
+void
+newmat(		/* add a modifier to the alias list */
+	char	*id,
+	char	*alias
+)
 {
 	register LUENT	*lp, *lpa;
 
@@ -233,8 +266,10 @@ memerr:
 }
 
 
-setmat(id)			/* set material to this one */
-char	*id;
+void
+setmat(			/* set material to this one */
+	char	*id
+)
 {
 	if (!strcmp(id, curmat))	/* already set? */
 		return;
@@ -245,8 +280,10 @@ char	*id;
 }
 
 
-setobj(id)			/* set object name to this one */
-char	*id;
+void
+setobj(			/* set object name to this one */
+	char	*id
+)
 {
 	register char	*cp, *cp2;
 	char	*end = NULL;
@@ -276,7 +313,8 @@ char	*id;
 }
 
 
-init()			/* initialize dispatch table and output */
+void
+init(void)			/* initialize dispatch table and output */
 {
 	lu_init(&vertab, NVERTS);
 	lu_init(&rdispatch, 22);
@@ -310,7 +348,8 @@ init()			/* initialize dispatch table and output */
 }
 
 
-uninit()			/* mark end of MGF file */
+void
+uninit(void)			/* mark end of MGF file */
 {
 	puts("o");
 	if (hasmult)
@@ -322,7 +361,8 @@ uninit()			/* mark end of MGF file */
 }
 
 
-clrverts()			/* clear vertex table */
+void
+clrverts(void)			/* clear vertex table */
 {
 	register int	i;
 
@@ -333,9 +373,11 @@ clrverts()			/* clear vertex table */
 }
 
 
-add2dispatch(name, func)	/* add function to dispatch table */
-char	*name;
-int	(*func)();
+void
+add2dispatch(	/* add function to dispatch table */
+	char	*name,
+	int	(*func)()
+)
 {
 	register LUENT	*lp;
 
@@ -351,9 +393,10 @@ int	(*func)();
 
 
 char *
-getvertid(vname, vp)		/* get/set vertex ID for this point */
-char	*vname;
-FVECT	vp;
+getvertid(		/* get/set vertex ID for this point */
+	char	*vname,
+	FVECT	vp
+)
 {
 	static char	vkey[VKLEN];
 	register LUENT	*lp;
@@ -395,9 +438,12 @@ memerr:
 
 
 int
-o_unsupported(mod, typ, id, fa)		/* mark unsupported primitive */
-char	*mod, *typ, *id;
-FUNARGS	*fa;
+o_unsupported(		/* mark unsupported primitive */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	FUNARGS	*fa
+)
 {
 	register int	i;
 
@@ -422,9 +468,12 @@ FUNARGS	*fa;
 
 
 int
-o_face(mod, typ, id, fa)		/* print out a polygon */
-char	*mod, *typ, *id;
-FUNARGS	*fa;
+o_face(		/* print out a polygon */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	FUNARGS	*fa
+)
 {
 	char	entbuf[2048], *linestart;
 	register char	*cp;
@@ -453,9 +502,12 @@ FUNARGS	*fa;
 
 
 int
-o_cone(mod, typ, id, fa)	/* print out a cone */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_cone(	/* print out a cone */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	char	v1[6], v2[6];
 
@@ -476,9 +528,12 @@ register FUNARGS	*fa;
 
 
 int
-o_sphere(mod, typ, id, fa)	/* print out a sphere */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_sphere(	/* print out a sphere */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	char	cent[6];
 
@@ -493,9 +548,12 @@ register FUNARGS	*fa;
 
 
 int
-o_cylinder(mod, typ, id, fa)	/* print out a cylinder */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_cylinder(	/* print out a cylinder */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	char	v1[6], v2[6];
 
@@ -512,9 +570,12 @@ register FUNARGS	*fa;
 
 
 int
-o_ring(mod, typ, id, fa)	/* print out a ring */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_ring(	/* print out a ring */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	if (fa->nfargs != 8)
 		return(-1);
@@ -535,9 +596,12 @@ register FUNARGS	*fa;
 
 
 int
-o_instance(mod, typ, id, fa)	/* convert an instance (or mesh) */
-char	*mod, *typ, *id;
-FUNARGS	*fa;
+o_instance(	/* convert an instance (or mesh) */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	FUNARGS	*fa
+)
 {
 	register int	i;
 	register char	*cp;
@@ -576,9 +640,12 @@ FUNARGS	*fa;
 
 
 int
-o_illum(mod, typ, id, fa)	/* convert an illum material */
-char	*mod, *typ, *id;
-FUNARGS	*fa;
+o_illum(	/* convert an illum material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	FUNARGS	*fa
+)
 {
 	if (fa->nsargs == 1 && strcmp(fa->sarg[0], VOIDID)) {
 		newmat(id, fa->sarg[0]);	/* just create alias */
@@ -592,9 +659,12 @@ FUNARGS	*fa;
 
 
 int
-o_plastic(mod, typ, id, fa)	/* convert a plastic material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_plastic(	/* convert a plastic material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb;
 	double	d;
@@ -620,9 +690,12 @@ register FUNARGS	*fa;
 
 
 int
-o_metal(mod, typ, id, fa)	/* convert a metal material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_metal(	/* convert a metal material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb;
 	double	d;
@@ -646,9 +719,12 @@ register FUNARGS	*fa;
 
 
 int
-o_glass(mod, typ, id, fa)	/* convert a glass material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_glass(	/* convert a glass material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb, trgb;
 	double	nrfr = 1.52, F, d;
@@ -685,9 +761,12 @@ register FUNARGS	*fa;
 
 
 int
-o_dielectric(mod, typ, id, fa)	/* convert a dielectric material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_dielectric(	/* convert a dielectric material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, trgb;
 	double	F, d;
@@ -715,9 +794,12 @@ register FUNARGS	*fa;
 
 
 int
-o_mirror(mod, typ, id, fa)	/* convert a mirror material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_mirror(	/* convert a mirror material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb;
 	double	d;
@@ -741,9 +823,12 @@ register FUNARGS	*fa;
 
 
 int
-o_trans(mod, typ, id, fa)	/* convert a trans material */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_trans(	/* convert a trans material */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb;
 	double	rough, trans, tspec, d;
@@ -780,9 +865,12 @@ register FUNARGS	*fa;
 
 
 int
-o_light(mod, typ, id, fa)		/* convert a light type */
-char	*mod, *typ, *id;
-register FUNARGS	*fa;
+o_light(		/* convert a light type */
+	char	*mod,
+	char	*typ,
+	char	*id,
+	register FUNARGS	*fa
+)
 {
 	COLOR	cxyz, rrgb;
 	double	d;
