@@ -1,8 +1,8 @@
-/* RCSid $Id: resolu.h,v 2.9 2004/01/02 11:35:17 schorsch Exp $ */
+/* RCSid $Id: resolu.h,v 2.10 2005/02/01 01:28:16 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
- * Include after <stdio.h>, <string.h>, and <time.h>
+ * Include after <stdio.h>
  *
  * True image orientation is defined by an xy coordinate system
  * whose origin is at the lower left corner of the image, with
