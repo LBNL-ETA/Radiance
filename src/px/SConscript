@@ -26,8 +26,6 @@ PROGS = (
 	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtcont','rtmem','rterror']),
 ('pfilt',    Split('pfilt.c pf2.c pf3.c'),
 	['rtlamps','rtpic','rtio','rtpath','rtargs','rtmath']),
-('pcwarp',   ['pcwarp.c', warp3d],
-	['rtpic','rtio','rtcont','rtmem','rterror']),
 ('pvalue',   ['pvalue.c'],    ['rtpic','rtio','rtargs','rtmath']),
 ('pcompos',  ['pcompos.c'],   ['rtpic','rtproc','rtpath','rtio','rterror']),
 ('psign',    ['psign.c'],
@@ -40,20 +38,12 @@ PROGS = (
 ('pinterp',  ['pinterp.c'],
 	['rtproc','rtpic','rtio','rtpath','rtargs','rtmath','rtmem','rterror']),
 
-('oki20c',   ['oki20c.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
-('oki20',    ['oki20.c'], ['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
-
 ('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
-('ra_pr',    Split('ra_pr.c biq.c')+ [ciq, cut, closest],
-	['rtpic','rtio','rtmem']),
-('ra_pr24',  ['ra_pr24.c'],   ['rtpic','rtio','rtmem']),
-('ra_avs',   ['ra_avs.c'],    ['rtpic','rtio','rtmem']),
 ('ra_ps',    ['ra_ps.c'],     ['rtpic','rtio','rtargs','rtmem']),
 ('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
 ('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtproc','rtio','rtmem']),
 ('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
 ('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
-('ra_bn',    ['ra_bn.c'],     ['rtpic','rtio','rtmem']),
 ('ra_rgbe', ['ra_rgbe.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
 ('ra_pict',  ['ra_pict.c'],   ['rtpic','rtio','rtmem']),
 ('ra_hexbit',['ra_hexbit.c'], ['rtpic','rtio','rtmem']),
@@ -65,32 +55,6 @@ for p in PROGS:
     prog = env.Program(target=radbin(p[0]), source=p[1],
         LIBS=p[2]+mlib)
     progs.append(prog)
-
-
-# special targets not normally built
-SPECIAL = (
-# name          files             libs
-('psum',       ['psum.c'],       ['rtpic','rtio']),
-#('panim',      ['panim.c'],      ['client','rpcsvc']),# missing externals
-
-('ra_im',      ['ra_im.c'],      ['rtproc','rtpath','rtio','rterror']),
-
-#('aedimage',   Split('aedimage.c')+[ciq, cut, closest],[]),# missing externals
-('t4027',      ['t4027.c'],      ['rtpic']),
-('paintjet',   ['paintjet.c'],   ['rtpic','rtio','rtmem']),
-('mt160r',     ['mt160r.c'],     ['rtpic','rtio','rtmem']),
-('greyscale',  ['greyscale.c'],  ['rtpic']),
-('colorscale', ['colorscale.c'], ['rtpic']),
-('d48c',       ['d48c.c'],       ['rtpic']),
-)
-specprogs = []
-specinst = []
-for p in SPECIAL:
-	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
-	specprogs.append(prog)
-	specinst.append(env.Install('$RAD_BINDIR', prog))
-env.Alias('px_special', specprogs)
-env.Alias('px_special_install', specinst)
 
 
 # tiff library (unix-specific for the moment)
@@ -114,13 +78,6 @@ if os.name == 'posix':
 	progs.append(normtiff)
 
 
-# pixar format requires extra lib
-if env.has_key('PIXAR_LIB'):
-    ra_pixar = env.Program(radbin('ra_pixar'), source=['ra_pixar.c'],
-        LIBS=['rtpic', '$PIXAR_LIB'])
-    progs.append(ra_pixar)
-
-
 # X11 targets
 if env.has_key('X11LIB'):
     xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
@@ -138,14 +95,6 @@ if env.has_key('X11LIB'):
         source=Split('xshowtrace.c') + [x11findwind],
         CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
     progs.append(xshowtrace)
-
-# NeWS ?!?
-#    if env.has_key('OGL'):
-#        glimage = env.Program(target=radbin('glimage'),
-#            CPPFLAGS=env.get('CPPFLAGS', []) + [env['RAD_STEREO']],
-#            source=Split('glimage.c'),
-#            LIBS=['gl_s']+env['LIBS'],)
-#        progs.append(glimage)
 
 
 if os.name == 'posix': # XXX ignoring trad.wsh

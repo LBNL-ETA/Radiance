@@ -29,7 +29,6 @@ trans = env.Object(source="trans.c")
 
 # standard targets
 PROGS = [
-('thf2rad',   ['thf2rad.c'],       []),
 ('ies2rad',   ['ies2rad.c'],       ['rtlamps','rtcolor','rtio','rtpath']+ mlib),
 ('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
 ('nff2rad',   ['nff2rad.c'],       []),

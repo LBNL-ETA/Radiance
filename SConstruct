@@ -26,7 +26,6 @@ def allplats_setup(env):
     from build_utils import find_libs
     find_libs.find_x11(env)
     find_libs.find_gl(env) # OpenGL
-    #find_libs.find_pixar(env) # PIXAR_LIB for src/px/ra_pixar.c
 
 def post_common_setup(env):
     env.Append(CPPPATH = [os.path.join('#src', 'common')])
@@ -87,13 +86,4 @@ env.Alias('maninstall',  '$RAD_MANDIR')
 env.Alias('build',   ['#bin'])
 env.Alias('test',    ['#src/test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
-
-# Further virtual targets are defined locally:
-# meta_special: mt1601 okimate imagew mt160 mx80 impress aed5
-#               tcurve tscat tbar mtext libt4014.a plotout t4014
-# px_special:   ra_im, t4027, paintjet, mt160t, greyscale, colorscale, d48c
-# util_special: scanner, makedist (not for Windows yet)
-env.Alias('special', ['meta_special', 'px_special', 'util_special'])
-env.Alias('special_install', ['meta_special_install',
-		'px_special_install', 'util_special_install'])
 

@@ -45,7 +45,8 @@ else: rcsrc = Split('raycalls.c raypcalls.c')
 rclib = env.Library(target=radlib('raycalls'), source=rcsrc)
 Default(rclib)
 
-fullib=['rttrace','rtscene','rtpic','rtfunc','rtproc','rtio','rtmath','rtargs','rtpath','rtcont','rtmem','rterror']
+fullib=['rttrace', 'rtscene', 'rtpic', 'rtfunc', 'rtproc', 'rtio', 'rtmath',
+	'rtargs', 'rtpath', 'rtcont', 'rtmem', 'rterror']
 # build executables
 lasrc = ['lookamb.c', ambio]
 lookamb = env.Program(target=radbin('lookamb'), source=lasrc,

@@ -51,17 +51,6 @@ getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
 		LIBS=['rtio'])
 progs.append(getinfo)
 
-# special targets not normally built
-if os.name != 'nt': # XXX pending replacement of fork() and friends
-	scanner = env.Program(target=radbin('scanner'), source='scanner.c',
-			LIBS=mlib)
-	scanner_i = env.Install('$RAD_BINDIR', scanner)
-	makedist = env.Program(target=radbin('makedist'),
-			source=Split('makedist.c')+[setscan],
-			LIBS=['rtmath']+mlib)
-	makedist_i = env.Install('$RAD_BINDIR', makedist)
-	env.Alias('util_special', [scanner, makedist])
-	env.Alias('util_special_install', [scanner_i, makedist_i])
 
 # X11 targets
 if env.has_key('X11LIB'):

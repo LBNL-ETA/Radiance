@@ -20,17 +20,12 @@ misc = env.Object(source='misc.c')
 primout = env.Object(source='primout.c')
 plot = env.Object(source='plot.c')
 palloc = env.Object(source='palloc.c')
-mplot = env.Object(source='mplot.c')
 plotin = env.Object(source='plotin.c')
-tgraph = env.Object(source='tgraph.c')
 mgvars = env.Object(source='mgvars.c')
 mgraph = env.Object(source='mgraph.c')
 cgraph = env.Object(source='cgraph.c')
 gcalc = env.Object(source='gcalc.c')
 # multiple output from same source
-plotout = env.Object(source='plotout.c')
-t4014 = env.Object(target="t4014", source='plotout.c',
-		CPPFLAGS=env.get('CPPFLAGS',[]) + ['-DFORTEK'])
 
 common = [mfio, misc, syscalls]
 
@@ -75,50 +70,6 @@ for p in PROGS:
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 
-lib4014srcs = Split('''arc.c box.c circle.c close.c dot.c erase.c label.c
-	line.c linemod.c move.c open.c point.c space.c subr.c''')
-lib4014 = env.Library(os.path.join(env['RAD_BUILDLIB'], '4014'),
-		source=map(lambda s:os.path.join('lib4014', s), lib4014srcs))
-
-plotsrc = [mplot, palloc, plot]
-
-SPECIAL = (
-('mt160l',   Split('mt160l.c') + plotsrc + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('mt160',    Split('mt160.c') + plotsrc + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('mtext',    Split('mtext.c') +[primout]+ common,
-	['rtcont','rtmem','rterror']),
-('okimate',  Split('okimate.c') + plotsrc + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('mx80',     Split('mx80.c') + plotsrc + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('imagew',   Split('imagew.c') + plotsrc + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('impress',  Split('impress.c implot.c imPfuncs.c') +[plot]+ common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('aed5',     Split('aed5.c') + common,
-	['rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('tcurve',   Split('tcurve.c') +[tgraph, primout]+ common,
-	['rtcont','rtmem','rterror']),
-('tscat',    Split('tscat.c') +[tgraph, primout]+ common,
-	['rtpath','rtcont','rtmem','rterror']),
-('tbar',     Split('tbar.c') +[tgraph, primout]+ common,
-	['rtcont','rtmem','rterror']),
-('plotout',  [plotout] + common,
-	['4014', 'rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-('t4014',    [t4014] + common,
-	['4014', 'rtproc','rtpath','rtio','rtcont','rtmem','rterror']),
-)
-sbin = []
-sinst = []
-for p in SPECIAL:
-	prog = env.Program(target=radbin(p[0]), source=p[1],
-			LIBS=p[2]+env['RAD_MLIB'])
-	sbin.append(prog)
-	sinst.append(env.Install(env['RAD_BINDIR'], prog))
-env.Alias('meta_special', sbin)
-env.Alias('meta_special_install', sinst)
 
 # X11 targets
 if env.has_key('X11LIB'):
