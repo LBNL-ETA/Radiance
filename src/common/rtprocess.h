@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.9 2003/11/14 17:22:06 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.10 2004/01/28 12:42:22 schorsch Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -12,7 +12,7 @@
 #ifdef _WIN32
   #include <windows.h> /* DWORD etc. */
   #include <stdio.h>
-  typedef DWORD pid_t;
+  typedef DWORD RT_PID;
   #include <process.h> /* getpid() and others */
   #define nice(inc) win_nice(inc)
 
@@ -30,6 +30,8 @@
 #else
   #include <stdio.h>
   #include <sys/param.h>
+  #include <sys/types.h>
+  typedef pid_t RT_PID;
 #endif
 
 #include "paths.h"
@@ -43,8 +45,8 @@ extern "C" {
 
    This means that we shouldn't rely on PIDs and file descriptors
    being the same type, so we have to describe processes with a struct,
-   instead of the original int[3]. To keep things simple, we typedef
-   the posix pid_t on those systems that don't have it already.
+   instead of the original int[3]. For that purpose, we typedef a
+   platform independent RT_PID.
 */
 
 
@@ -64,7 +66,7 @@ typedef struct {
 	int r; /* read handle */
 	int w; /* write handle */
 	int running; /* doing something */
-	pid_t pid; /* process ID */
+	RT_PID pid; /* process ID */
 } SUBPROC;
 
 #define SP_INACTIVE {-1,-1,0,0} /* for static initializations */
