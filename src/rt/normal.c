@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.43 2003/06/17 21:32:46 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.44 2003/06/17 21:49:57 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -23,7 +23,7 @@ static const char RCSid[] = "$Id: normal.c,v 2.43 2003/06/17 21:32:46 greg Exp $
 #define  MAXITER	10		/* maximum # specular ray attempts */
 #endif
 					/* estimate of Fresnel function */
-#define  FRESNE(ci)	(exp(-6.5*(ci)) - 0.00150343919)
+#define  FRESNE(ci)	(exp(-5.85*(ci)) - 0.00287989916)
 
 static void  gaussamp();
 
