@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.66 2003/07/03 15:00:19 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.67 2003/07/03 18:03:58 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -110,6 +110,8 @@ char	*rifname;		/* global rad input file name */
 
 char	radname[PATH_MAX];	/* root Radiance file name */
 
+#define	inchild()	(children_running < 0)
+
 
 main(argc, argv)
 int	argc;
@@ -158,6 +160,9 @@ char	*argv[];
 	if (i >= argc)
 		goto userr;
 	rifname = argv[i];
+				/* check command-line options */
+	if (nprocs > 1 & viewselect != NULL)
+		nprocs = 1;
 				/* assign Radiance root file name */
 	rootname(radname, rifname);
 				/* load variable values */
@@ -1037,8 +1042,10 @@ char	*vn;		/* returned view name */
 }
 
 
-printview(vopts)			/* print out selected view */
+int
+myprintview(vopts, fp)			/* print out selected view */
 register char	*vopts;
+FILE	*fp;
 {
 	VIEW	vwr;
 	char	buf[128];
@@ -1059,9 +1066,9 @@ again:
 		viewfile(buf, &vwr, NULL);	/* load -vf file */
 		sscanview(&vwr, cp);		/* reset tail */
 	}
-	fputs(VIEWSTR, stdout);
-	fprintview(&vwr, stdout);		/* print full spec. */
-	fputc('\n', stdout);
+	fputs(VIEWSTR, fp);
+	fprintview(&vwr, fp);			/* print full spec. */
+	fputc('\n', fp);
 	return(0);
 }
 
@@ -1075,7 +1082,7 @@ char	*opts, *po;
 	if (touchonly || (vw = getview(0, NULL)) == NULL)
 		return;
 	if (sayview)
-		printview(vw);
+		myprintview(vw, stdout);
 	sprintf(combuf, "rview %s%s%s -R %s ", vw, po, opts, rifname);
 	if (rvdevice != NULL)
 		sprintf(combuf+strlen(combuf), "-o %s ", rvdevice);
@@ -1095,9 +1102,11 @@ char	*opts, *po;
 	char	combuf[PATH_MAX];
 	char	rawfile[PATH_MAX], picfile[PATH_MAX];
 	char	zopt[PATH_MAX+4], rep[PATH_MAX+16], res[32];
+	char	rppopt[128], *pfile = NULL;
 	char	pfopts[128];
 	char	vs[32], *vw;
 	int	vn, mult;
+	FILE	*fp;
 	time_t	rfdt, pfdt;
 					/* get pfilt options */
 	pfiltopts(pfopts);
@@ -1139,10 +1148,17 @@ char	*opts, *po;
 		else
 			badvalue(REPORT);
 	}
+					/* set up parallel rendering */
+	if (nprocs > 1 & !vdef(ZFILE)) {
+		strcpy(rppopt, "-S 1 -PP pfXXXXXX");
+		pfile = rppopt+9;
+		if (mktemp(pfile) == NULL)
+			pfile = NULL;
+	}
 	vn = 0;					/* do each view */
 	while ((vw = getview(vn++, vs)) != NULL) {
 		if (sayview)
-			printview(vw);
+			myprintview(vw, stdout);
 		if (!vs[0])
 			sprintf(vs, "%d", vn);
 		sprintf(picfile, "%s_%s.pic", vval(PICTURE), vs);
@@ -1166,14 +1182,19 @@ char	*opts, *po;
 				touch(picfile);
 			continue;
 		}
-		if (next_process())		/* parallel running? */
+		if (next_process()) {		/* parallel running? */
+			if (pfile != NULL)
+				sleep(20);
 			continue;
+		}
 		/* XXX Remember to call finish_process() */
 						/* build rpict command */
-		if (rfdt >= oct1date)		/* recover */
+		if (rfdt >= oct1date) {		/* recover */
 			sprintf(combuf, "rpict%s%s%s%s -ro %s %s",
 				rep, po, opts, zopt, rawfile, oct1name);
-		else {
+			if (runcom(combuf))	/* run rpict */
+				goto rperror;
+		} else {
 			if (overture) {		/* run overture calculation */
 				sprintf(combuf,
 				"rpict%s %s%s -x 64 -y 64 -ps 1 %s > %s",
@@ -1190,13 +1211,26 @@ char	*opts, *po;
 #endif
 			}
 			sprintf(combuf, "rpict%s %s %s%s%s%s %s > %s",
-					rep, vw, res, po, opts, zopt,
-					oct1name, rawfile);
-		}
-		if (runcom(combuf)) {		/* run rpict */
-			fprintf(stderr, "%s: error rendering view %s\n",
-					progname, vs);
-			quit(1);
+					rep, vw, res, po, opts,
+					zopt, oct1name, rawfile);
+			if (pfile != NULL && inchild()) {
+						/* rpict persistent mode */
+				if (!silent)
+					printf("\t%s\n", combuf);
+				sprintf(combuf, "rpict%s %s %s%s%s %s > %s",
+						rep, rppopt, res, po, opts,
+						oct1name, rawfile);
+				fflush(stdout);
+				fp = popen(combuf, "w");
+				if (fp == NULL)
+					goto rperror;
+				myprintview(vw, fp);
+				if (pclose(fp))
+					goto rperror;
+			} else {		/* rpict normal mode */
+				if (runcom(combuf))
+					goto rperror;
+			}
 		}
 		if (!vdef(RAWFILE) || strcmp(vval(RAWFILE),vval(PICTURE))) {
 						/* build pfilt command */
@@ -1206,7 +1240,7 @@ char	*opts, *po;
 			else
 				sprintf(combuf, "pfilt%s %s > %s", pfopts,
 						rawfile, picfile);
-			if (runcom(combuf)) {		/* run pfilt */
+			if (runcom(combuf)) {	/* run pfilt */
 				fprintf(stderr,
 				"%s: error filtering view %s\n\t%s removed\n",
 						progname, vs, picfile);
@@ -1223,6 +1257,20 @@ char	*opts, *po;
 		finish_process();		/* leave if child */
 	}
 	wait_process(1);		/* wait for children to finish */
+	if (pfile != NULL) {		/* clean up rpict persistent mode */
+		int	pid;
+		fp = fopen(pfile, "r");
+		if (fp != NULL) {
+			if (fscanf(fp, "%*s %d", &pid) != 1 ||
+					kill(pid, 1) == -1)
+				unlink(pfile);
+			fclose(fp);
+		}
+	}
+	return;
+rperror:
+	fprintf(stderr, "%s: error rendering view %s\n", progname, vs);
+	quit(1);
 }
 
 
@@ -1292,7 +1340,7 @@ next_process()			/* fork the next process (max. nprocs) */
 
 	if (nprocs <= 1)
 		return(0);		/* it's us or no one */
-	if (children_running < 0) {
+	if (inchild()) {
 		fprintf(stderr, "%s: internal error 1 in spawn_process()\n",
 				progname);
 		quit(1);
@@ -1355,7 +1403,7 @@ int	all;
 
 finish_process()			/* exit a child process */
 {
-	if (children_running >= 0)
+	if (!inchild())
 		return;			/* in parent -- noop */
 	exit(0);
 }

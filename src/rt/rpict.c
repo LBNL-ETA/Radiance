@@ -322,6 +322,7 @@ char  *pout, *zout, *prvr;
 		putchar('\n');
 		if (pa < .99 || pa > 1.01)
 			fputaspect(pa, stdout);
+		fputnow();
 		fputformat(COLRFMT, stdout);
 		putchar('\n');
 		if (zout != NULL)

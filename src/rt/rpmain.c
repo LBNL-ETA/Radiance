@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.4 2003/06/26 00:58:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.5 2003/07/03 18:03:58 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -292,7 +292,6 @@ char  *argv[];
 	if (loadflags & IO_INFO) {	/* print header */
 		printargs(i, argv, stdout);
 		printf("SOFTWARE= %s\n", VersionID);
-		fputnow(stdout);
 	}
 
 	marksources();			/* find and mark sources */
