@@ -1,11 +1,13 @@
-.\" RCSid "$Id: obj2mesh.1,v 1.7 2004/02/01 22:31:19 greg Exp $"
+.\" RCSid "$Id: obj2mesh.1,v 1.8 2004/04/23 00:56:27 greg Exp $"
 .TH OBJ2MESH 1 03/11/03 RADIANCE
 .SH NAME
 obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
 .SH SYNOPSIS
 .B obj2mesh
 [
-.B "\-a matinput"
+.B "\-a matfile"
+][
+.B "\-l matlib"
 ][
 .B "\-n objlim"
 ][
@@ -30,6 +32,10 @@ which is sent to
 Any RADIANCE material descriptions included via one or more
 .I \-a
 options will be compiled and stored in the mesh as well.
+If the
+.I \-l
+option is used to specify a material file, the RADIANCE library
+locations are searched.
 This mesh may be included in a RADIANCE scene description via the
 .I mesh
 primitive, thus:
@@ -200,6 +206,8 @@ tiled_mat mesh tiled_mesh
 0
 0
 .fi
+.SH ENVIRONMENT
+RAYPATH		the directories to search for material files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.10 2004/04/22 17:35:54 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.11 2004/04/23 00:56:27 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -39,7 +39,10 @@ main(		/* compile a .OBJ file into a mesh */
 )
 {
 	int  nmatf = 0;
-	char  *matinp[32];
+	char  pathnames[12800];
+	char  *pns = pathnames;
+	char  *matinp[128];
+	char  *cp;
 	int  i, j;
 
 	progname = argv[0];
@@ -55,6 +58,18 @@ main(		/* compile a .OBJ file into a mesh */
 			break;
 		case 'a':				/* material file */
 			matinp[nmatf++] = argv[++i];
+			break;
+		case 'l':				/* library material */
+			cp = getpath(argv[++i], getrlibpath(), R_OK);
+			if (cp == NULL) {
+				sprintf(errmsg,
+					"cannot find library material: '%s'",
+						argv[i]);
+				error(USER, errmsg);
+			}
+			matinp[nmatf++] = strcpy(pns, cp);
+			while (*pns++)
+				;
 			break;
 		case 'w':				/* supress warnings */
 			nowarn = 1;

@@ -1274,3 +1274,6 @@ objects in a voxel even when the -r resolution limit has been
 reached.  This was not done before due to problems with recursion,
 and still, it will only continue to 256 times the original -r limit.
 If that isn't enough, then there's probably no hope, anyway.
+
+Added -l option to obj2mesh to search for material files in library
+locations.
