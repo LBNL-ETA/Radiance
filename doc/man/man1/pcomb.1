@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.5 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.6 2005/03/01 22:55:21 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -68,7 +68,7 @@ For example,
 would return the red component of the pixel from picture 3
 that is left 2 and up 1 from the current position.
 Although x offsets may be as large as width of the picture,
-y offsets are limited to a small window (+/- 8 pixels) due to efficiency
+y offsets are limited to a small window (+/- 32 pixels) due to efficiency
 considerations.
 However, it is not usually necessary to worry about this problem --
 if the requested offset is not available, the next best pixel is
