@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.16 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.17 2004/03/30 20:40:04 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -555,9 +555,8 @@ dobj_command(		/* run object display command */
 	}
 	return(somechange);
 toomany:
-	/* return(cmderror(cn, "too many arguments")); *//* XXX cmderror is void */
 	cmderror(cn, "too many arguments");
-	return 0; /* XXX not sure if this is the right return value */
+	return(-1);
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.14 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.15 2004/03/30 20:40:04 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -148,8 +148,8 @@ o_face(		/* make an illum face */
 				/* clean up */
 	freeface(ob);
 	free((void *)distarr);
+	return(0);
 #undef MAXMISS
-	/* XXX we need to return something here. what is it? */
 }
 
 

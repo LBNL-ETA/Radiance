@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.5 2004/03/30 20:40:04 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.4 2004/03/30 16:13:01 schorsc
 #include "copyright.h"
 
 #include  "ray.h"
+#include  "paths.h"
 
 
 extern int

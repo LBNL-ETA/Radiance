@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.44 2004/01/01 19:31:46 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.45 2004/03/30 20:40:04 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -246,7 +246,8 @@ p_func.o t_data.o t_func.o:	func.h ../common/calcomp.h
 preload.o:	../common/object.h ../common/face.h ../common/cone.h \
 ../common/instance.h ../common/mesh.h ../common/color.h data.h
 
-rtmain.o rpmain.o rvmain.o persist.o duphead.o rpict.o:	../common/paths.h
+rtmain.o rpmain.o rvmain.o persist.o duphead.o \
+renderopts.o rpict.o:	../common/paths.h
 
 freeobjmem.o raycalls.o text.o:	../common/font.h
 
