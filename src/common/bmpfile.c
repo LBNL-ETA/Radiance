@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.4 2004/03/26 23:30:05 schorsch Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.5 2004/03/27 05:43:37 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -522,7 +522,7 @@ BMPtruecolorHeader(int xr, int yr, int infolen)
 	return hdr;
 }
 
-/* allocate color-mapped header (defaults minimal grayscale) */
+/* allocate color-mapped header (defaults to minimal grayscale) */
 BMPHeader *
 BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 {
@@ -549,7 +549,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 	hdr->height = yr;
 	hdr->yIsDown = 0;			/* default to upwards order */
 	hdr->bpp = n;
-	hdr->compr = BI_UNCOMPR;
+	hdr->compr = BI_UNCOMPR;		/* compression needs seek */
 	hdr->hRes = hdr->vRes = 2835;		/* default to 72 ppi */
 	hdr->nColors = ncolors;
 	hdr->impColors = 0;			/* says all colors important */
@@ -628,8 +628,10 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 		return NULL;
 	if ((hdr->bpp == 16) | (hdr->compr == BI_RLE4))
 		return NULL;			/* unsupported */
+/* no seek means we may have the wrong file length, but most app's don't care
 	if (seek == NULL && ((hdr->compr == BI_RLE8) | (hdr->compr == BI_RLE4)))
 		return NULL;
+*/
 						/* compute sizes */
 	hdrSiz = 2 + 6*4 + 2*2 + 6*4;
 	if (hdr->compr == BI_BITFIELDS)
@@ -696,8 +698,8 @@ findNextRun(const int8 *bp, int len)
 			continue;
 		cnt = 1;			/* else let's try it */
 		while (bp[cnt] == bp[0])
-			if (++cnt >= 5)		/* long enough */
-				return pos;
+			if (++cnt >= 5)
+				return pos;     /* long enough */
 	}
 	return pos;				/* didn't find any */
 }
@@ -749,18 +751,19 @@ BMPwriteScanline(BMPWriter *bw)
 		if (n <= 0)			/* was that it? */
 			break;
 		val = *sp;			/* output run */
-		for (cnt = 1; (--n > 0) & (*++sp == val); cnt++)
-			;
+		for (cnt = 1; cnt < 255; cnt++)
+			if (!--n | *++sp != val)
+				break;
 		wrbyte(cnt, bw);
 		wrbyte(val, bw);
 	}
-	bw->yscan++;				/* write file length at end */
+	bw->yscan++;				/* write line break or EOD */
 	if (bw->yscan == bw->hdr->height) {
 		wrbyte(0, bw); wrbyte(1, bw);   /* end of bitmap marker */
 		if (bw->seek == NULL || (*bw->seek)(2, bw->c_data) != 0)
-			return BIR_SEEKERR;
+			return BIR_OK;		/* no one may care */
 		bw->fpos = 2;
-		wrint32(bw->flen, bw);		/* corrected file length */
+		wrint32(bw->flen-bw->fbmp, bw); /* output correct bitmap length */
 	} else {
 		wrbyte(0, bw); wrbyte(0, bw);   /* end of line marker */
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.1 2004/03/26 03:11:50 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.2 2004/03/27 05:43:37 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -100,13 +100,14 @@ main(int argc, char *argv[])
 		rs.xr = rdr->hdr->width;
 		rs.yr = rdr->hdr->height;
 		rs.rt = YMAJOR;
+					/* write scans downward if we can */
 		if (rdr->hdr->yIsDown || inpfile != NULL)
 			rs.rt |= YDECR;
 		fputsresolu(&rs, stdout);
 					/* convert file */
 		bmp2rad(rdr, stdout, !rdr->hdr->yIsDown && inpfile!=NULL);
 					/* flush output */
-		BMPcloseInput(rdr);     /* COMMENT OUT LATER */
+		BMPcloseInput(rdr);
 		if (fflush(stdout) < 0)
 			quiterr("error writing Radiance output");
 	} else {
@@ -123,26 +124,32 @@ main(int argc, char *argv[])
 				!fgetsresolu(&rs, stdin))
 			quiterr("bad Radiance picture format");
 					/* initialize BMP header */
-		if (gryflag)
+		if (gryflag) {
 			hdr = BMPmappedHeader(numscans(&rs),
 						scanlen(&rs), 0, 256);
-		else
+			if (outfile != NULL)
+				hdr->compr = BI_RLE8;
+		} else
 			hdr = BMPtruecolorHeader(numscans(&rs),
 						scanlen(&rs), 0);
 		if (hdr == NULL)
 			quiterr("cannot initialize BMP header");
-		hdr->yIsDown = (rs.rt & YDECR) && outfile == NULL;
+					/* set up output direction */
+		hdr->yIsDown = (rs.rt & YDECR) &&
+				(outfile == NULL | hdr->compr == BI_RLE8);
 					/* open BMP output */
 		if (outfile != NULL)
 			wtr = BMPopenOutputFile(outfile, hdr);
 		else
 			wtr = BMPopenOutputStream(stdout, hdr);
+		if (wtr == NULL)
+			quiterr("cannot allocate writer structure");
 					/* convert file */
 		rad2bmp(stdin, wtr, !hdr->yIsDown && (rs.rt&YDECR), gryflag);
 					/* flush output */
 		if (fflush((FILE *)wtr->c_data) < 0)
 			quiterr("error writing BMP output");
-		BMPcloseOutput(wtr);    /* COMMENT OUT LATER */
+		BMPcloseOutput(wtr);
 	}
 	exit(0);			/* success */
 userr:
@@ -150,7 +157,7 @@ userr:
 		"Usage: %s [-r][-g gamma][-e +/-stops] [input [output]]\n",
 			progname);
 	exit(1);
-	return(1);      /* to keep compiler happy */
+	return(1);      /* gratis return */
 }
 
 /* print message and exit */

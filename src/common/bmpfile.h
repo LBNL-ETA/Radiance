@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.2 2004/03/26 22:58:21 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.3 2004/03/27 05:43:37 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -26,19 +26,19 @@ typedef struct {
 
 /* Allocated BMP header data */
 typedef struct {
-	/* the following fields may be altered before open call */
+	/* the following fields may be altered before the open call */
 	int		yIsDown;	/* scanlines proceed downward? */
 	int32		hRes;		/* horizontal resolution pixels/meter */
 	int32		vRes;		/* vertical resolution pixels/meter */
 	int		nColors;	/* total color palette size */
 	int		impColors;      /* number of colors actually used */
-	/* the following fields should not be altered after allocation */
+	int		compr;		/* compression */
 	int32		width;		/* bitmap width (pixels) */
 	int32		height;		/* bitmap height (pixels) */
+	/* the following fields must not be altered after allocation */
 	int		bpp;		/* bits per sample (1,4,8,16,24,32) */
-	int		compr;		/* compression */
 	uint32		infoSiz;	/* info buffer size (bytes) */
-	/* the color table should be filled by writer before open call */
+	/* but the color table should be filled by writer before open call */
 	RGBquad		palette[3];     /* color palette (extends struct) */
 } BMPHeader;
 
@@ -78,8 +78,9 @@ typedef struct BMPReader {
 typedef struct {
 	/* the scanline data is filled in by caller before each write */
 	uint8		*scanline;      /* caller-prepared scanline data */
+	/* modify yscan only if seek is defined & data is uncompressed */
 	int		yscan;		/* scanline for next write */
-	/* the following fields should not be altered by the caller */
+	/* the following fields should not be altered directly */
 	BMPHeader       *hdr;		/* allocated header */
 	uint32		fbmp;		/* beginning of bitmap data */
 	uint32		fpos;		/* current file position */
