@@ -96,10 +96,11 @@ if os.name == 'posix':
 	cwd = os.getcwd()
 	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
 		'tiff/config.local',
-	['cd "%s";'
-	'sh ./configure -quiet -noninteractive -with-CC=$CC -with-ENVOPTS=$CCFLAGS;'
-	'cd libtiff;'
-	'make install;' % os.path.join(cwd, 'tiff')])
+	[('cd "%s"; '
+	'sh ./configure -quiet -noninteractive '
+		'-with-CC="$CC" -with-ENVOPTS="$CCFLAGS"; '
+	'cd libtiff; '
+	'make install;') % os.path.join(cwd, 'tiff')])
 
 	# tiff programs
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
