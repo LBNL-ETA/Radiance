@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.15 2005/01/21 00:52:59 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.16 2005/02/18 17:47:53 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -416,7 +416,7 @@ FVECT  vc;
 			nv.vaft += d - d*mag;
 			if (nv.vaft <= nv.vfore) nv.vaft = 0.0;
 		}
-		nv.vdist += d - d*mag;
+		nv.vdist /= mag;
 	}
 	for (i = 0; i < 3; i++)
 		nv.vp[i] = vc[i] - d*nv.vdir[i];
