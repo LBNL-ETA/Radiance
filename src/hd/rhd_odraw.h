@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_odraw.h,v 3.12 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.13 2005/01/07 20:33:02 greg Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  *
@@ -33,6 +33,8 @@ extern struct ODview {
 } *odView;		/* our view list */
 
 extern int	odNViews;	/* number of views in our list */
+
+extern TMstruct	*tmGlobal;	/* global tone-mapping structure */
 
 extern struct ODsamp {
 	union ODfunion {

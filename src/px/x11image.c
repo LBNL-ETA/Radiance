@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.68 2004/09/28 17:54:18 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.69 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -97,6 +97,9 @@ int  cury = 0;				/* current scan location */
 double  exposure = 1.0;			/* exposure compensation used */
 
 int  wrongformat = 0;			/* input in another format? */
+
+TMstruct	*tmGlobal;		/* base tone-mapping */
+TMstruct	*tmCurrent;		/* curren tone-mapping */
 
 GC	ourgc;				/* standard graphics context */
 GC	revgc;				/* graphics context with GXinvert */
@@ -970,7 +973,7 @@ avgbox(				/* average color over current bbox */
 	register int	rval;
 
 	setcolor(cavg, 0., 0., 0.);
-	rval = dobox(colavg, (char *)cavg);
+	rval = dobox(colavg, (void *)cavg);
 	if (rval > 0) {
 		d = 1./rval;
 		scalecolor(cavg, d);
@@ -1018,12 +1021,14 @@ static void
 addfix(			/* add fixation points to histogram */
 	COLR	*scn,
 	int	n,
-	void	*p  /*NOTUSED*/
+	void	*p
 )
 {
-	if (tmCvColrs(lscan, TM_NOCHROM, scn, n))
+	TMstruct *	tms = (TMstruct *)p;
+	
+	if (tmCvColrs(tms, lscan, TM_NOCHROM, scn, n))
 		goto tmerr;
-	if (tmAddHisto(lscan, n, FIXWEIGHT))
+	if (tmAddHisto(tms, lscan, n, FIXWEIGHT))
 		goto tmerr;
 	return;
 tmerr:
@@ -1047,9 +1052,9 @@ make_tonemap(void)			/* initialize tone mapping */
 	}
 	flags = tmflags;		/* histogram adjustment */
 	if (greyscale) flags |= TM_F_BW;
-	if (tmTop != NULL) {		/* reuse old histogram if one */
-		tmDone(tmTop);
-		tmTop->flags = flags;
+	if (tmGlobal != NULL) {		/* reuse old histogram if one */
+		tmDone(tmCurrent); tmCurrent = NULL;
+		tmGlobal->flags = flags;
 	} else {			/* else initialize */
 		if ((lscan = (TMbright *)malloc(xmax*sizeof(TMbright))) == NULL)
 			goto memerr;
@@ -1061,23 +1066,25 @@ make_tonemap(void)			/* initialize tone mapping */
 				== NULL)
 			goto memerr;
 						/* initialize tm library */
-		if (tmInit(flags, stdprims, gamcor) == NULL)
+		tmGlobal = tmInit(flags, stdprims, gamcor);
+		if (tmGlobal == NULL)
 			goto memerr;
-		if (tmSetSpace(stdprims, WHTEFFICACY/exposure))
+		if (tmSetSpace(tmGlobal, stdprims, WHTEFFICACY/exposure))
 			goto tmerr;
 						/* compute picture histogram */
 		for (y = 0; y < ymax; y++) {
 			getscan(y);
-			if (tmCvColrs(lscan, TM_NOCHROM, scanline, xmax))
+			if (tmCvColrs(tmGlobal, lscan, TM_NOCHROM,
+					scanline, xmax))
 				goto tmerr;
-			if (tmAddHisto(lscan, xmax, 1))
+			if (tmAddHisto(tmGlobal, lscan, xmax, 1))
 				goto tmerr;
 		}
 	}
-	tmDup();			/* add fixations to duplicate map */
-	dobox(addfix, NULL);
+	tmCurrent = tmDup(tmGlobal);	/* add fixations to duplicate map */
+	dobox(addfix, (void *)tmCurrent);
 					/* (re)compute tone mapping */
-	if (tmComputeMapping(gamcor, 0., 0.))
+	if (tmComputeMapping(tmCurrent, gamcor, 0., 0.))
 		goto tmerr;
 	return;
 memerr:
@@ -1103,9 +1110,9 @@ tmap_colrs(		/* apply tone mapping to scanline */
 	}
 	if (len > xmax)
 		quiterr("code error 1 in tmap_colrs");
-	if (tmCvColrs(lscan, cscan, scn, len))
+	if (tmCvColrs(tmCurrent, lscan, cscan, scn, len))
 		goto tmerr;
-	if (tmMapPixels(pscan, lscan, cscan, len))
+	if (tmMapPixels(tmCurrent, pscan, lscan, cscan, len))
 		goto tmerr;
 	ps = pscan;
 	if (greyscale)

@@ -1385,3 +1385,6 @@ mixing meshes and instances.  (Thanks to Jack de Valpine for discovery.)
 Fixed innacuracy in calculation of diffuse transmission in the presence
 of pure specular (Fresnel reflection) using "trans" material.  Thanks
 to Christoph Reinhart for pointing out the error.
+
+Made internal change to tone-mapping library to use structure pointer
+rather than stack, making code re-entrant and more up to modern standards.

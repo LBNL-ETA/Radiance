@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.4 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.5 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -78,10 +78,11 @@ getTIFFtype(TIFF *tif)
 
 /* load and convert TIFF */
 int
-tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
+tmLoadTIFF(TMstruct *tms, TMbright **lpp, BYTE **cpp,
+		int *xp, int *yp, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmLoadTIFF" : fname;
-	RGBPRIMP	inppri = tmTop->monpri;
+	RGBPRIMP	inppri = tms->monpri;
 	RGBPRIMS	myprims;
 	float	*fa;
 	TIFF	*tif;
@@ -92,7 +93,7 @@ tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 	double	stonits;
 	int	y;
 					/* check arguments */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((lpp == NULL) | (xp == NULL) | (yp == NULL) |
 			((fname == NULL) & (tp == NULL)))
@@ -132,28 +133,28 @@ tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 	case TC_LOGLUV24:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_RAW);
 		sl.l = (uint32 *)malloc(width*sizeof(uint32));
-		tmSetSpace(TM_XYZPRIM, stonits);
+		tmSetSpace(tms, TM_XYZPRIM, stonits);
 		break;
 	case TC_LOGL16:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_16BIT);
 		sl.w = (uint16 *)malloc(width*sizeof(uint16));
-		tmSetSpace(tmTop->monpri, stonits);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	case TC_RGBFLOAT:
 		sl.f = (float *)malloc(width*3*sizeof(float));
-		tmSetSpace(inppri, stonits);
+		tmSetSpace(tms, inppri, stonits);
 		break;
 	case TC_GRYFLOAT:
 		sl.f = (float *)malloc(width*sizeof(float));
-		tmSetSpace(tmTop->monpri, stonits);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	case TC_RGBSHORT:
 		sl.w = (uint16 *)malloc(width*3*sizeof(uint16));
-		tmSetSpace(inppri, stonits);
+		tmSetSpace(tms, inppri, stonits);
 		break;
 	case TC_GRYSHORT:
 		sl.w = (uint16 *)malloc(width*sizeof(uint16));
-		tmSetSpace(tmTop->monpri, stonits);
+		tmSetSpace(tms, tms->monpri, stonits);
 		break;
 	default:
 		err = TM_E_CODERR1;
@@ -186,33 +187,34 @@ tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 		}
 		switch (tcase) {
 		case TC_LOGLUV32:
-			err = tmCvLuv32(*lpp + y*width,
+			err = tmCvLuv32(tms, *lpp + y*width,
 				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
 					sl.l, width);
 			break;
 		case TC_LOGLUV24:
-			err = tmCvLuv24(*lpp + y*width,
+			err = tmCvLuv24(tms, *lpp + y*width,
 				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
 					sl.l, width);
 			break;
 		case TC_LOGL16:
-			err = tmCvL16(*lpp + y*width, sl.w, width);
+			err = tmCvL16(tms, *lpp + y*width, sl.w, width);
 			break;
 		case TC_RGBFLOAT:
-			err = tmCvColors(*lpp + y*width,
+			err = tmCvColors(tms, *lpp + y*width,
 				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
 					(COLOR *)sl.f, width);
 			break;
 		case TC_GRYFLOAT:
-			err = tmCvGrays(*lpp + y*width, sl.f, width);
+			err = tmCvGrays(tms, *lpp + y*width, sl.f, width);
 			break;
 		case TC_RGBSHORT:
-			err = tmCvRGB48(*lpp + y*width,
+			err = tmCvRGB48(tms, *lpp + y*width,
 				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
 					(uint16 (*)[3])sl.w, width, DEFGAM);
 			break;
 		case TC_GRYSHORT:
-			err = tmCvGray16(*lpp + y*width, sl.w, width, DEFGAM);
+			err = tmCvGray16(tms, *lpp + y*width,
+					sl.w, width, DEFGAM);
 			break;
 		default:
 			err = TM_E_CODERR1;
@@ -253,6 +255,7 @@ tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	double gamval, double Lddyn, double Ldmax, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmMapTIFF" : fname;
+	TMstruct	*tms;
 	TMbright	*lp;
 	BYTE	*cp;
 	int	err;
@@ -265,38 +268,38 @@ tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	if (Ldmax < MINLDMAX) Ldmax = DEFLDMAX;
 	if (flags & TM_F_BW) monpri = stdprims;
 					/* initialize tone mapping */
-	if (tmInit(flags, monpri, gamval) == NULL)
+	if ((tms = tmInit(flags, monpri, gamval)) == NULL)
 		returnErr(TM_E_NOMEM);
 					/* load and convert TIFF */
 	cp = TM_NOCHROM;
-	err = tmLoadTIFF(&lp, flags&TM_F_BW ? TM_NOCHROMP : &cp,
+	err = tmLoadTIFF(tms, &lp, flags&TM_F_BW ? TM_NOCHROMP : &cp,
 			xp, yp, fname, tp);
 	if (err != TM_E_OK) {
-		tmDone(NULL);
+		tmDone(tms);
 		return(err);
 	}
 	if (cp == TM_NOCHROM) {
 		*psp = (BYTE *)malloc(*xp * *yp * sizeof(BYTE));
 		if (*psp == NULL) {
 			free((MEM_PTR)lp);
-			tmDone(NULL);
+			tmDone(tms);
 			returnErr(TM_E_NOMEM);
 		}
 	} else
 		*psp = cp;
 					/* compute color mapping */
-	err = tmAddHisto(lp, *xp * *yp, 1);
+	err = tmAddHisto(tms, lp, *xp * *yp, 1);
 	if (err != TM_E_OK)
 		goto done;
-	err = tmComputeMapping(gamval, Lddyn, Ldmax);
+	err = tmComputeMapping(tms, gamval, Lddyn, Ldmax);
 	if (err != TM_E_OK)
 		goto done;
 					/* map pixels */
-	err = tmMapPixels(*psp, lp, cp, *xp * *yp);
+	err = tmMapPixels(tms, *psp, lp, cp, *xp * *yp);
 
 done:					/* clean up */
 	free((MEM_PTR)lp);
-	tmDone(NULL);
+	tmDone(tms);
 	if (err != TM_E_OK) {		/* free memory on error */
 		free((MEM_PTR)*psp);
 		*psp = NULL;

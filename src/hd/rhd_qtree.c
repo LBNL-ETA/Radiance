@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.25 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.26 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -376,10 +376,10 @@ dev_value(		/* add a pixel value to our quadtree */
 	else
 		VCOPY(qtL.wp[li], p);
 	qtL.wd[li] = encodedir(d);
-	tmCvColrs(&qtL.brt[li], qtL.chr[li], (COLR *)c, 1);
+	tmCvColrs(tmGlobal, &qtL.brt[li], qtL.chr[li], (COLR *)c, 1);
 	if (putleaf(li, 1)) {
 		if (mapit)
-			tmMapPixels((BYTE *)(qtL.rgb+li), qtL.brt+li,
+			tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+li), qtL.brt+li,
 					(BYTE *)(qtL.chr+li), 1);
 		if (--rayqleft == 0)
 			dev_flush();		/* flush output */
@@ -427,18 +427,18 @@ qtMapLeaves(		/* map our leaves to RGB */
 	}
 					/* (re)compute tone mapping? */
 	if (qtL.tml == qtL.bl) {
-		tmClearHisto();
-		tmAddHisto(qtL.brt+aorg, alen, 1);
+		tmClearHisto(tmGlobal);
+		tmAddHisto(tmGlobal, qtL.brt+aorg, alen, 1);
 		if (blen > 0)
-			tmAddHisto(qtL.brt+borg, blen, 1);
-		if (tmComputeMapping(0., 0., 0.) != TM_E_OK)
+			tmAddHisto(tmGlobal, qtL.brt+borg, blen, 1);
+		if (tmComputeMapping(tmGlobal, 0., 0., 0.) != TM_E_OK)
 			return(0);
 	}
-	if (tmMapPixels((BYTE *)(qtL.rgb+aorg), qtL.brt+aorg,
+	if (tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+aorg), qtL.brt+aorg,
 			(BYTE *)(qtL.chr+aorg), alen) != TM_E_OK)
 		return(0);
 	if (blen > 0)
-		tmMapPixels((BYTE *)(qtL.rgb+borg), qtL.brt+borg,
+		tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+borg), qtL.brt+borg,
 				(BYTE *)(qtL.chr+borg), blen);
 	qtL.tml = qtL.tl;
 	return(1);

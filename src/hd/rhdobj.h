@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdobj.h,v 3.8 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid: $Id: rhdobj.h,v 3.9 2005/01/07 20:33:02 greg Exp $ */
 /*
  * Header file for object display routines for rholo drivers.
  */
@@ -148,6 +148,7 @@ Returns 1 on success, 0 on failure (with COMMAND error message).
 
  ******************************************************************/
 
+extern TMstruct	*tmGlobal;
 
 extern char	rhdcmd[DO_NCMDS][8];
 

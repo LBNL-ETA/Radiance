@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.15 2004/07/22 17:48:52 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.16 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -18,8 +18,6 @@ static const char	RCSid[] = "$Id: tonemap.c,v 3.15 2004/07/22 17:48:52 greg Exp 
 
 #define	exp10(x)	exp(M_LN10*(x))
 
-struct tmStruct	*tmTop = NULL;		/* current tone mapping stack */
-
 					/* our list of conversion packages */
 struct tmPackage	*tmPkg[TM_MAXPKG];
 int	tmNumPkgs = 0;			/* number of registered packages */
@@ -28,17 +26,18 @@ int	tmLastError;			/* last error incurred by library */
 char	*tmLastFunction;		/* error-generating function name */
 
 
-struct tmStruct *
-tmInit(flags, monpri, gamval)		/* initialize new tone mapping */
-int	flags;
-RGBPRIMP	monpri;
-double	gamval;
+TMstruct *
+tmInit(					/* initialize new tone mapping */
+int	flags,
+RGBPRIMP	monpri,
+double	gamval
+)
 {
 	COLORMAT	cmat;
-	register struct tmStruct	*tmnew;
-	register int	i;
+	TMstruct	*tmnew;
+	int	i;
 						/* allocate structure */
-	tmnew = (struct tmStruct *)malloc(sizeof(struct tmStruct));
+	tmnew = (TMstruct *)malloc(sizeof(TMstruct));
 	if (tmnew == NULL)
 		return(NULL);
 
@@ -79,118 +78,123 @@ double	gamval;
 						/* zero private data */
 	for (i = TM_MAXPKG; i--; )
 		tmnew->pd[i] = NULL;
-						/* make tmnew current */
-	tmnew->tmprev = tmTop;
-	return(tmTop = tmnew);
+						/* return new TMstruct */
+	return(tmnew);
 }
 
 
 int
-tmSetSpace(pri, sf)		/* set input color space for conversions */
-RGBPRIMP	pri;
-double	sf;
+tmSetSpace(			/* set input color space for conversions */
+TMstruct	*tms,
+RGBPRIMP	pri,
+double	sf
+)
 {
 	static char	funcName[] = "tmSetSpace";
-	register int	i, j;
+	int	i, j;
 						/* error check */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if (sf <= 1e-12)
 		returnErr(TM_E_ILLEGAL);
 						/* check if no change */
-	if (pri == tmTop->inppri && FEQ(sf, tmTop->inpsf))
+	if (pri == tms->inppri && FEQ(sf, tms->inpsf))
 		returnOK;
-	tmTop->inppri = pri;			/* let's set it */
-	tmTop->inpsf = sf;
+	tms->inppri = pri;			/* let's set it */
+	tms->inpsf = sf;
 
-	if (tmTop->flags & TM_F_BW) {		/* color doesn't matter */
-		tmTop->monpri = tmTop->inppri;		/* eliminate xform */
-		if (tmTop->inppri == TM_XYZPRIM) {
-			tmTop->clf[CIEX] = tmTop->clf[CIEZ] = 0.;
-			tmTop->clf[CIEY] = 1.;
+	if (tms->flags & TM_F_BW) {		/* color doesn't matter */
+		tms->monpri = tms->inppri;		/* eliminate xform */
+		if (tms->inppri == TM_XYZPRIM) {
+			tms->clf[CIEX] = tms->clf[CIEZ] = 0.;
+			tms->clf[CIEY] = 1.;
 		} else {
-			comprgb2xyzWBmat(tmTop->cmat, tmTop->monpri);
-			tmTop->clf[RED] = tmTop->cmat[1][0];
-			tmTop->clf[GRN] = tmTop->cmat[1][1];
-			tmTop->clf[BLU] = tmTop->cmat[1][2];
+			comprgb2xyzWBmat(tms->cmat, tms->monpri);
+			tms->clf[RED] = tms->cmat[1][0];
+			tms->clf[GRN] = tms->cmat[1][1];
+			tms->clf[BLU] = tms->cmat[1][2];
 		}
-		tmTop->cmat[0][0] = tmTop->cmat[1][1] = tmTop->cmat[2][2] =
-				tmTop->inpsf;
-		tmTop->cmat[0][1] = tmTop->cmat[0][2] = tmTop->cmat[1][0] =
-		tmTop->cmat[1][2] = tmTop->cmat[2][0] = tmTop->cmat[2][1] = 0.;
+		tms->cmat[0][0] = tms->cmat[1][1] = tms->cmat[2][2] =
+				tms->inpsf;
+		tms->cmat[0][1] = tms->cmat[0][2] = tms->cmat[1][0] =
+		tms->cmat[1][2] = tms->cmat[2][0] = tms->cmat[2][1] = 0.;
 
-	} else if (tmTop->inppri == TM_XYZPRIM)	/* input is XYZ */
-		compxyz2rgbWBmat(tmTop->cmat, tmTop->monpri);
+	} else if (tms->inppri == TM_XYZPRIM)	/* input is XYZ */
+		compxyz2rgbWBmat(tms->cmat, tms->monpri);
 
 	else {					/* input is RGB */
-		if (tmTop->inppri != tmTop->monpri &&
-				PRIMEQ(tmTop->inppri, tmTop->monpri))
-			tmTop->inppri = tmTop->monpri;	/* no xform */
-		comprgb2rgbWBmat(tmTop->cmat, tmTop->inppri, tmTop->monpri);
+		if (tms->inppri != tms->monpri &&
+				PRIMEQ(tms->inppri, tms->monpri))
+			tms->inppri = tms->monpri;	/* no xform */
+		comprgb2rgbWBmat(tms->cmat, tms->inppri, tms->monpri);
 	}
 	for (i = 0; i < 3; i++)
 		for (j = 0; j < 3; j++)
-			tmTop->cmat[i][j] *= tmTop->inpsf;
+			tms->cmat[i][j] *= tms->inpsf;
 						/* set color divisors */
 	for (i = 0; i < 3; i++)
-		if (tmTop->clf[i] > .001)
-			tmTop->cdiv[i] =
-				256.*pow(tmTop->clf[i], 1./tmTop->mongam);
+		if (tms->clf[i] > .001)
+			tms->cdiv[i] =
+				256.*pow(tms->clf[i], 1./tms->mongam);
 		else
-			tmTop->cdiv[i] = 1;
+			tms->cdiv[i] = 1;
 						/* notify packages */
 	for (i = tmNumPkgs; i--; )
-		if (tmTop->pd[i] != NULL && tmPkg[i]->NewSpace != NULL)
-			(*tmPkg[i]->NewSpace)(tmTop);
+		if (tms->pd[i] != NULL && tmPkg[i]->NewSpace != NULL)
+			(*tmPkg[i]->NewSpace)(tms);
 	returnOK;
 }
 
 
 void
-tmClearHisto()			/* clear current histogram */
+tmClearHisto(			/* clear current histogram */
+TMstruct	*tms
+)
 {
-	if (tmTop == NULL || tmTop->histo == NULL)
+	if (tms == NULL || tms->histo == NULL)
 		return;
-	free((MEM_PTR)tmTop->histo);
-	tmTop->histo = NULL;
+	free((MEM_PTR)tms->histo);
+	tms->histo = NULL;
 }
 
 
 int
-tmCvColors(ls, cs, scan, len)		/* convert float colors */
-TMbright	*ls;
-BYTE	*cs;
-COLOR	*scan;
-int	len;
+tmCvColors(				/* convert float colors */
+TMstruct	*tms,
+TMbright	*ls,
+BYTE	*cs,
+COLOR	*scan,
+int	len
+)
 {
 	static char	funcName[] = "tmCvColors";
 	static COLOR	csmall = {.5*MINLUM, .5*MINLUM, .5*MINLUM};
 	COLOR	cmon;
 	double	lum, slum;
-	register double	d;
-	register int	i;
+	double	d;
+	int	i;
 
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	for (i = len; i--; ) {
-		if (tmNeedMatrix(tmTop)) {		/* get monitor RGB */
-			colortrans(cmon, tmTop->cmat, scan[i]);
+		if (tmNeedMatrix(tms)) {		/* get monitor RGB */
+			colortrans(cmon, tms->cmat, scan[i]);
 		} else {
-			cmon[RED] = tmTop->inpsf*scan[i][RED];
-			cmon[GRN] = tmTop->inpsf*scan[i][GRN];
-			cmon[BLU] = tmTop->inpsf*scan[i][BLU];
+			cmon[RED] = tms->inpsf*scan[i][RED];
+			cmon[GRN] = tms->inpsf*scan[i][GRN];
+			cmon[BLU] = tms->inpsf*scan[i][BLU];
 		}
 							/* world luminance */
-		lum =	tmTop->clf[RED]*cmon[RED] +
-			tmTop->clf[GRN]*cmon[GRN] +
-			tmTop->clf[BLU]*cmon[BLU] ;
+		lum =	tms->clf[RED]*cmon[RED] +
+			tms->clf[GRN]*cmon[GRN] +
+			tms->clf[BLU]*cmon[BLU] ;
 							/* check range */
 		if (clipgamut(cmon, lum, CGAMUT_LOWER, csmall, cwhite))
-			lum =	tmTop->clf[RED]*cmon[RED] +
-				tmTop->clf[GRN]*cmon[GRN] +
-				tmTop->clf[BLU]*cmon[BLU] ;
+			lum =	tms->clf[RED]*cmon[RED] +
+				tms->clf[GRN]*cmon[GRN] +
+				tms->clf[BLU]*cmon[BLU] ;
 		if (lum < MINLUM) {
 			ls[i] = MINBRT-1;		/* bogus value */
 			lum = MINLUM;
@@ -200,13 +204,13 @@ int	len;
 		}
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
-		if (tmTop->flags & TM_F_MESOPIC && lum < LMESUPPER) {
+		if (tms->flags & TM_F_MESOPIC && lum < LMESUPPER) {
 			slum = scotlum(cmon);		/* mesopic adj. */
 			if (lum < LMESLOWER)
 				cmon[RED] = cmon[GRN] = cmon[BLU] = slum;
 			else {
 				d = (lum - LMESLOWER)/(LMESUPPER - LMESLOWER);
-				if (tmTop->flags & TM_F_BW)
+				if (tms->flags & TM_F_BW)
 					cmon[RED] = cmon[GRN] =
 							cmon[BLU] = d*lum;
 				else
@@ -216,34 +220,36 @@ int	len;
 				cmon[GRN] += d;
 				cmon[BLU] += d;
 			}
-		} else if (tmTop->flags & TM_F_BW) {
+		} else if (tms->flags & TM_F_BW) {
 			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
 		}
-		d = tmTop->clf[RED]*cmon[RED]/lum;
+		d = tms->clf[RED]*cmon[RED]/lum;
 		cs[3*i  ] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tmTop->mongam));
-		d = tmTop->clf[GRN]*cmon[GRN]/lum;
+				(int)(256.*pow(d, 1./tms->mongam));
+		d = tms->clf[GRN]*cmon[GRN]/lum;
 		cs[3*i+1] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tmTop->mongam));
-		d = tmTop->clf[BLU]*cmon[BLU]/lum;
+				(int)(256.*pow(d, 1./tms->mongam));
+		d = tms->clf[BLU]*cmon[BLU]/lum;
 		cs[3*i+2] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tmTop->mongam));
+				(int)(256.*pow(d, 1./tms->mongam));
 	}
 	returnOK;
 }
 
 
 int
-tmCvGrays(ls, scan, len)		/* convert float gray values */
-TMbright	*ls;
-float	*scan;
-int	len;
+tmCvGrays(				/* convert float gray values */
+TMstruct	*tms,
+TMbright	*ls,
+float	*scan,
+int	len
+)
 {
 	static char	funcName[] = "tmCvGrays";
-	register double	d;
-	register int	i;
+	double	d;
+	int	i;
 
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
@@ -259,66 +265,69 @@ int	len;
 
 
 int
-tmAddHisto(ls, len, wt)			/* add values to histogram */
-register TMbright	*ls;
-int	len;
-int	wt;
+tmAddHisto(				/* add values to histogram */
+TMstruct	*tms,
+TMbright	*ls,
+int	len,
+int	wt
+)
 {
 	static char	funcName[] = "tmAddHisto";
 	int	oldorig=0, oldlen, horig, hlen;
-	register int	i, j;
+	int	i, j;
 
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if (len < 0)
 		returnErr(TM_E_ILLEGAL);
 	if (len == 0)
 		returnOK;
 						/* first, grow limits */
-	if (tmTop->histo == NULL) {
+	if (tms->histo == NULL) {
 		for (i = len; i-- && ls[i] < MINBRT; )
 			;
 		if (i < 0)
 			returnOK;
-		tmTop->hbrmin = tmTop->hbrmax = ls[i];
+		tms->hbrmin = tms->hbrmax = ls[i];
 		oldlen = 0;
 	} else {
-		oldorig = (tmTop->hbrmin-MINBRT)/HISTEP;
-		oldlen = (tmTop->hbrmax-MINBRT)/HISTEP + 1 - oldorig;
+		oldorig = (tms->hbrmin-MINBRT)/HISTEP;
+		oldlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - oldorig;
 	}
 	for (i = len; i--; ) {
 		if ((j = ls[i]) < MINBRT)
 			continue;
-		if (j < tmTop->hbrmin)
-			tmTop->hbrmin = j;
-		else if (j > tmTop->hbrmax)
-			tmTop->hbrmax = j;
+		if (j < tms->hbrmin)
+			tms->hbrmin = j;
+		else if (j > tms->hbrmax)
+			tms->hbrmax = j;
 	}
-	horig = (tmTop->hbrmin-MINBRT)/HISTEP;
-	hlen = (tmTop->hbrmax-MINBRT)/HISTEP + 1 - horig;
+	horig = (tms->hbrmin-MINBRT)/HISTEP;
+	hlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - horig;
 	if (hlen > oldlen) {			/* (re)allocate histogram */
-		register int	*newhist = (int *)calloc(hlen, sizeof(int));
+		int	*newhist = (int *)calloc(hlen, sizeof(int));
 		if (newhist == NULL)
 			returnErr(TM_E_NOMEM);
 		if (oldlen) {			/* copy and free old */
 			for (i = oldlen, j = i+oldorig-horig; i; )
-				newhist[--j] = tmTop->histo[--i];
-			free((MEM_PTR)tmTop->histo);
+				newhist[--j] = tms->histo[--i];
+			free((MEM_PTR)tms->histo);
 		}
-		tmTop->histo = newhist;
+		tms->histo = newhist;
 	}
 	if (wt == 0)
 		returnOK;
 	for (i = len; i--; )			/* add in new counts */
 		if (ls[i] >= MINBRT)
-			tmTop->histo[ (ls[i]-MINBRT)/HISTEP - horig ] += wt;
+			tms->histo[ (ls[i]-MINBRT)/HISTEP - horig ] += wt;
 	returnOK;
 }
 
 
 static double
-htcontrs(La)		/* human threshold contrast sensitivity, dL(La) */
-double	La;
+htcontrs(		/* human threshold contrast sensitivity, dL(La) */
+double	La
+)
 {
 	double	l10La, l10dL;
 				/* formula taken from Ferwerda et al. [SG96] */
@@ -339,53 +348,59 @@ double	La;
 
 
 static int
-tmNewMap()
+tmNewMap(			/* allocate new tone-mapping array */
+TMstruct	*tms
+)
 {
-	if (tmTop->lumap != NULL && (tmTop->mbrmax - tmTop->mbrmin) !=
-					(tmTop->hbrmax - tmTop->hbrmin)) {
-		free((MEM_PTR)tmTop->lumap);
-		tmTop->lumap = NULL;
+	if (tms->lumap != NULL && (tms->mbrmax - tms->mbrmin) !=
+					(tms->hbrmax - tms->hbrmin)) {
+		free((MEM_PTR)tms->lumap);
+		tms->lumap = NULL;
 	}
-	tmTop->mbrmin = tmTop->hbrmin;
-	tmTop->mbrmax = tmTop->hbrmax;
-	if (tmTop->mbrmin > tmTop->mbrmax)
+	tms->mbrmin = tms->hbrmin;
+	tms->mbrmax = tms->hbrmax;
+	if (tms->mbrmin > tms->mbrmax)
 		return 0;
-	if (tmTop->lumap == NULL)
-		tmTop->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
-					(tmTop->mbrmax-tmTop->mbrmin+1));
-	return(tmTop->lumap != NULL);
+	if (tms->lumap == NULL)
+		tms->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
+					(tms->mbrmax-tms->mbrmin+1));
+	return(tms->lumap != NULL);
 }
 
 
 int
-tmFixedMapping(expmult, gamval)
-double	expmult;
-double	gamval;
+tmFixedMapping(			/* compute fixed, linear tone-mapping */
+TMstruct	*tms,
+double	expmult,
+double	gamval
+)
 {
 	static char	funcName[] = "tmFixedMapping";
 	double		d;
-	register int	i;
+	int	i;
 	
-	if (!tmNewMap())
+	if (!tmNewMap(tms))
 		returnErr(TM_E_NOMEM);
 	if (expmult <= .0)
 		expmult = 1.;
 	if (gamval < MINGAM)
-		gamval = tmTop->mongam;
-	d = log(expmult/tmTop->inpsf);
-	for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; )
-		tmTop->lumap[i] = 256. * exp(
-			( d + (tmTop->mbrmin+i)*(1./TM_BRTSCALE) )
+		gamval = tms->mongam;
+	d = log(expmult/tms->inpsf);
+	for (i = tms->mbrmax-tms->mbrmin+1; i--; )
+		tms->lumap[i] = 256. * exp(
+			( d + (tms->mbrmin+i)*(1./TM_BRTSCALE) )
 			/ gamval );
 	returnOK;
 }
 
 
 int
-tmComputeMapping(gamval, Lddyn, Ldmax)
-double	gamval;
-double	Lddyn;
-double	Ldmax;
+tmComputeMapping(			/* compute histogram tone-mapping */
+TMstruct	*tms,
+double	gamval,
+double	Lddyn,
+double	Ldmax
+)
 {
 	static char	funcName[] = "tmComputeMapping";
 	int	*histo;
@@ -394,38 +409,38 @@ double	Ldmax;
 	double	logLddyn, Ldmin, Ldavg, Lwavg, Tr, Lw, Ld;
 	int32	histot;
 	double	sum;
-	register double	d;
-	register int	i, j;
+	double	d;
+	int	i, j;
 
-	if (tmTop == NULL || tmTop->histo == NULL)
+	if (tms == NULL || tms->histo == NULL)
 		returnErr(TM_E_TMINVAL);
 					/* check arguments */
 	if (Lddyn < MINLDDYN) Lddyn = DEFLDDYN;
 	if (Ldmax < MINLDMAX) Ldmax = DEFLDMAX;
-	if (gamval < MINGAM) gamval = tmTop->mongam;
+	if (gamval < MINGAM) gamval = tms->mongam;
 					/* compute handy values */
 	Ldmin = Ldmax/Lddyn;
 	logLddyn = log(Lddyn);
 	Ldavg = sqrt(Ldmax*Ldmin);
-	i = (tmTop->hbrmin-MINBRT)/HISTEP;
+	i = (tms->hbrmin-MINBRT)/HISTEP;
 	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
-	histlen = (tmTop->hbrmax-MINBRT)/HISTEP + 1 - i;
+	histlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - i;
 					/* histogram total and mean */
 	histot = 0; sum = 0;
 	j = brt0 + histlen*HISTEP;
 	for (i = histlen; i--; ) {
-		histot += tmTop->histo[i];
-		sum += (j -= HISTEP) * tmTop->histo[i];
+		histot += tms->histo[i];
+		sum += (j -= HISTEP) * tms->histo[i];
 	}
 	threshold = histot*0.005 + .5;
 	if (threshold < 4)
 		returnErr(TM_E_TMFAIL);
 	Lwavg = tmLuminance( (double)sum / histot );
 					/* allocate space for mapping */
-	if (!tmNewMap())
+	if (!tmNewMap(tms))
 		returnErr(TM_E_NOMEM);
 					/* use linear tone mapping? */
-	if (tmTop->flags & TM_F_LINEAR)
+	if (tms->flags & TM_F_LINEAR)
 		goto linearmap;
 					/* clamp histogram */
 	histo = (int *)malloc(histlen*sizeof(int));
@@ -434,7 +449,7 @@ double	Ldmax;
 		returnErr(TM_E_NOMEM);
 	cumf[histlen+1] = 1.;		/* guard for assignment code */
 	for (i = histlen; i--; )	/* make malleable copy */
-		histo[i] = tmTop->histo[i];
+		histo[i] = tms->histo[i];
 	do {				/* iterate to solution */
 		sum = 0;		/* cumulative probability */
 		for (i = 0; i < histlen; i++) {
@@ -442,12 +457,12 @@ double	Ldmax;
 			sum += histo[i];
 		}
 		cumf[histlen] = 1.;
-		Tr = histot * (double)(tmTop->hbrmax - tmTop->hbrmin) /
+		Tr = histot * (double)(tms->hbrmax - tms->hbrmin) /
 			((double)histlen*TM_BRTSCALE) / logLddyn;
 		ceiling = Tr + 1.;
 		trimmings = 0;		/* clip to envelope */
 		for (i = histlen; i--; ) {
-			if (tmTop->flags & TM_F_HCONTR) {
+			if (tms->flags & TM_F_HCONTR) {
 				Lw = tmLuminance(brt0 + i*HISTEP);
 				Ld = Ldmin * exp( logLddyn *
 					.5*(cumf[i]+cumf[i+1]) );
@@ -467,55 +482,57 @@ double	Ldmax;
 		}
 	} while (trimmings > threshold);
 					/* assign tone-mapping */
-	for (i = tmTop->mbrmax-tmTop->mbrmin+1; i--; ) {
-		j = d = (double)i/(tmTop->mbrmax-tmTop->mbrmin)*histlen;
+	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
+		j = d = (double)i/(tms->mbrmax-tms->mbrmin)*histlen;
 		d -= (double)j;
 		Ld = Ldmin*exp(logLddyn*((1.-d)*cumf[j]+d*cumf[j+1]));
 		d = (Ld - Ldmin)/(Ldmax - Ldmin);
-		tmTop->lumap[i] = 256.*pow(d, 1./gamval);
+		tms->lumap[i] = 256.*pow(d, 1./gamval);
 	}
 	free((MEM_PTR)histo);		/* clean up and return */
 	free((MEM_PTR)cumf);
 	returnOK;
 linearmap:				/* linear tone-mapping */
-	if (tmTop->flags & TM_F_HCONTR)
+	if (tms->flags & TM_F_HCONTR)
 		d = htcontrs(Ldavg) / htcontrs(Lwavg);
 	else
 		d = Ldavg / Lwavg;
-	return(tmFixedMapping(tmTop->inpsf*d/Ldmax, gamval));
+	return(tmFixedMapping(tms, tms->inpsf*d/Ldmax, gamval));
 }
 
 
 int
-tmMapPixels(ps, ls, cs, len)
-register BYTE	*ps;
-TMbright	*ls;
-register BYTE	*cs;
-int	len;
+tmMapPixels(			/* apply tone-mapping to pixel(s) */
+TMstruct	*tms,
+BYTE	*ps,
+TMbright	*ls,
+BYTE	*cs,
+int	len
+)
 {
 	static char	funcName[] = "tmMapPixels";
-	register int32	li, pv;
+	int32	li, pv;
 
-	if (tmTop == NULL || tmTop->lumap == NULL)
+	if (tms == NULL || tms->lumap == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ps == NULL) | (ls == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	while (len--) {
-		if ((li = *ls++) < tmTop->mbrmin) {
+		if ((li = *ls++) < tms->mbrmin) {
 			li = 0;
 		} else {
-			if (li > tmTop->mbrmax)
-				li = tmTop->mbrmax;
-			li = tmTop->lumap[li - tmTop->mbrmin];
+			if (li > tms->mbrmax)
+				li = tms->mbrmax;
+			li = tms->lumap[li - tms->mbrmin];
 		}
 		if (cs == TM_NOCHROM)
 			*ps++ = li>255 ? 255 : li;
 		else {
-			pv = *cs++ * li / tmTop->cdiv[RED];
+			pv = *cs++ * li / tms->cdiv[RED];
 			*ps++ = pv>255 ? 255 : pv;
-			pv = *cs++ * li / tmTop->cdiv[GRN];
+			pv = *cs++ * li / tms->cdiv[GRN];
 			*ps++ = pv>255 ? 255 : pv;
-			pv = *cs++ * li / tmTop->cdiv[BLU];
+			pv = *cs++ * li / tms->cdiv[BLU];
 			*ps++ = pv>255 ? 255 : pv;
 		}
 	}
@@ -523,60 +540,30 @@ int	len;
 }
 
 
-struct tmStruct *
-tmPop()				/* pop top tone mapping off stack */
-{
-	register struct tmStruct	*tms;
-
-	if ((tms = tmTop) != NULL)
-		tmTop = tms->tmprev;
-	return(tms);
-}
 
 
-int
-tmPull(tms)			/* pull a tone mapping from stack */
-register struct tmStruct	*tms;
-{
-	register struct tmStruct	*tms2;
-					/* special cases first */
-	if ((tms == NULL) | (tmTop == NULL))
-		return(0);
-	if (tms == tmTop) {
-		tmTop = tms->tmprev;
-		tms->tmprev = NULL;
-		return(1);
-	}
-	for (tms2 = tmTop; tms2->tmprev != NULL; tms2 = tms2->tmprev)
-		if (tms == tms2->tmprev) {	/* remove it */
-			tms2->tmprev = tms->tmprev;
-			tms->tmprev = NULL;
-			return(1);
-		}
-	return(0);			/* not found on stack */
-}
-
-
-struct tmStruct *
-tmDup()				/* duplicate top tone mapping */
+TMstruct *
+tmDup(				/* duplicate top tone mapping */
+TMstruct	*tms
+)
 {
 	int	len;
-	register int	i;
-	register struct tmStruct	*tmnew;
+	int	i;
+	TMstruct	*tmnew;
 
-	if (tmTop == NULL)		/* anything to duplicate? */
+	if (tms == NULL)		/* anything to duplicate? */
 		return(NULL);
-	tmnew = (struct tmStruct *)malloc(sizeof(struct tmStruct));
+	tmnew = (TMstruct *)malloc(sizeof(TMstruct));
 	if (tmnew == NULL)
 		return(NULL);
-	*tmnew = *tmTop;		/* copy everything */
+	*tmnew = *tms;		/* copy everything */
 	if (tmnew->histo != NULL) {	/* duplicate histogram */
 		len = (tmnew->hbrmax-MINBRT)/HISTEP + 1 -
 				(tmnew->hbrmin-MINBRT)/HISTEP;
 		tmnew->histo = (int *)malloc(len*sizeof(int));
 		if (tmnew->histo != NULL)
 			for (i = len; i--; )
-				tmnew->histo[i] = tmTop->histo[i];
+				tmnew->histo[i] = tms->histo[i];
 	}
 	if (tmnew->lumap != NULL) {	/* duplicate luminance mapping */
 		len = tmnew->mbrmax-tmnew->mbrmin+1;
@@ -584,45 +571,24 @@ tmDup()				/* duplicate top tone mapping */
 						len*sizeof(unsigned short) );
 		if (tmnew->lumap != NULL)
 			for (i = len; i--; )
-				tmnew->lumap[i] = tmTop->lumap[i];
+				tmnew->lumap[i] = tms->lumap[i];
 	}
 					/* clear package data */
 	for (i = tmNumPkgs; i--; )
 		tmnew->pd[i] = NULL;
-	tmnew->tmprev = tmTop;		/* make copy current */
-	return(tmTop = tmnew);
-}
-
-
-int
-tmPush(tms)			/* push tone mapping on top of stack */
-register struct tmStruct	*tms;
-{
-	static char	funcName[] = "tmPush";
-					/* check validity */
-	if (tms == NULL)
-		returnErr(TM_E_ILLEGAL);
-	if (tms == tmTop)		/* check necessity */
-		returnOK;
-					/* pull if already in stack */
-	(void)tmPull(tms);
-					/* push it on top */
-	tms->tmprev = tmTop;
-	tmTop = tms;
-	returnOK;
+					/* return copy */
+	return(tmnew);
 }
 
 
 void
 tmDone(tms)			/* done with tone mapping -- destroy it */
-register struct tmStruct	*tms;
+TMstruct	*tms;
 {
-	register int	i;
-					/* NULL arg. is equiv. to tmTop */
-	if (tms == NULL && (tms = tmTop) == NULL)
+	int	i;
+					/* NULL arg. is equiv. to tms */
+	if (tms == NULL)
 		return;
-					/* take out of stack if present */
-	(void)tmPull(tms);
 					/* free tables */
 	if (tms->histo != NULL)
 		free((MEM_PTR)tms->histo);
@@ -642,7 +608,7 @@ BYTE	tmMesofact[BMESUPPER-BMESLOWER];
 void
 tmMkMesofact()				/* build mesopic lookup factor table */
 {
-	register int	i;
+	int	i;
 
 	if (tmMesofact[BMESUPPER-BMESLOWER-1])
 		return;
@@ -655,13 +621,15 @@ tmMkMesofact()				/* build mesopic lookup factor table */
 
 
 int
-tmErrorReturn(func, err)		/* error return (with message) */
-char	*func;
-int	err;
+tmErrorReturn(				/* error return (with message) */
+char	*func,
+TMstruct	*tms,
+int	err
+)
 {
 	tmLastFunction = func;
 	tmLastError = err;
-	if (tmTop != NULL && tmTop->flags & TM_F_NOSTDERR)
+	if (tms != NULL && tms->flags & TM_F_NOSTDERR)
 		return(err);
 	fputs(func, stderr);
 	fputs(": ", stderr);

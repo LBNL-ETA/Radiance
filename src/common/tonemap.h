@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.16 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: tonemap.h,v 3.17 2005/01/07 20:33:02 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -72,7 +72,7 @@ extern char	*tmLastFunction;	/* error-generating function name */
 typedef short	TMbright;		/* encoded luminance type */
 
 				/* basic tone mapping data structure */
-extern struct tmStruct {
+typedef struct tmStruct {
 	int		flags;		/* flags of what to do */
 	RGBPRIMP	monpri;		/* monitor RGB primaries */
 	double		mongam;		/* monitor gamma value (approx.) */
@@ -85,14 +85,13 @@ extern struct tmStruct {
 	int		*histo;		/* input histogram */
 	TMbright	mbrmin, mbrmax;	/* mapped brightness limits */
 	unsigned short	*lumap;		/* computed luminance map */
-	struct tmStruct	*tmprev;	/* previous tone mapping */
 	MEM_PTR		pd[TM_MAXPKG];	/* pointers to private data */
-}	*tmTop;			/* current tone mapping stack */
+} TMstruct;
 
 				/* conversion package functions */
 struct tmPackage {
-	MEM_PTR		(*Init)(struct tmStruct *tms);
-	void		(*NewSpace)(struct tmStruct *tms);
+	MEM_PTR		(*Init)(TMstruct *tms);
+	void		(*NewSpace)(TMstruct *tms);
 	void		(*Free)(MEM_PTR pp);
 };
 				/* our list of conversion packages */
@@ -119,23 +118,24 @@ extern int	tmNumPkgs;	/* number of registered packages */
 /****    Library Function Calls    ****/
 
 
-extern struct tmStruct *
+extern TMstruct *
 tmInit(int flags, RGBPRIMP monpri, double gamval);
 /*
-	Initialize new tone mapping and push it onto stack.
+	Allocate and initialize new tone mapping.
 
 	flags	-	TM_F_* flags indicating what is to be done.
 	monpri	-	display monitor primaries (Note 1).
 	gamval	-	display gamma response (can be approximate).
 
-	returns	-	new tmTop, or NULL if insufficient memory.
+	returns	-	new tone-mapping pointer, or NULL if no memory.
 */
 
 extern int
-tmSetSpace(RGBPRIMP pri, double sf);
+tmSetSpace(TMstruct *tms, RGBPRIMP pri, double sf);
 /*
 	Set color primaries and scale factor for incoming scanlines.
 
+	tms	-	tone mapping structure pointer.
 	pri	-	RGB color input primaries (Note 1).
 	sf	-	scale factor to get to luminance in cd/m^2.
 
@@ -143,16 +143,19 @@ tmSetSpace(RGBPRIMP pri, double sf);
 */
 
 extern void
-tmClearHisto(void);
+tmClearHisto(TMstruct *tms);
 /*
 	Clear histogram for current tone mapping.
+
+	tms	-	tone mapping structure pointer.
 */
 
 extern int
-tmAddHisto(TMbright *ls, int len, int wt);
+tmAddHisto(TMstruct *tms, TMbright *ls, int len, int wt);
 /*
 	Add brightness values to current histogram.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	encoded luminance values.
 	len	-	number of luminance values.
 	wt	-	integer weight to use for each value (usually 1 or -1).
@@ -161,7 +164,7 @@ tmAddHisto(TMbright *ls, int len, int wt);
 */
 
 extern int
-tmFixedMapping(double expmult, double gamval);
+tmFixedMapping(TMstruct *tms, double expmult, double gamval);
 /*
 	Assign a fixed, linear tone-mapping using the given multiplier,
 	which is the ratio of maximum output to uncalibrated input.
@@ -169,19 +172,21 @@ tmFixedMapping(double expmult, double gamval);
 	until a new tone mapping is computed.
 	Only the min. and max. values are used from the histogram.
 	
+	tms	-	tone mapping structure pointer.
 	expmult	-	the fixed exposure multiplier to use.
 	gamval	-	display gamma response (0. for default).
 	returns -	0 on success, TM_E_* on error.
 */
 
 extern int
-tmComputeMapping(double gamval, double Lddyn, double Ldmax);
+tmComputeMapping(TMstruct *tms, double gamval, double Lddyn, double Ldmax);
 /*
 	Compute tone mapping function from the current histogram.
 	This mapping will be used in subsequent calls to tmMapPixels()
 	until a new tone mapping is computed.
 	I.e., calls to tmAddHisto() have no immediate effect.
 
+	tms	-	tone mapping structure pointer.
 	gamval	-	display gamma response (0. for default).
 	Lddyn	-	the display's dynamic range (0. for default).
 	Ldmax	-	maximum display luminance in cd/m^2 (0. for default).
@@ -190,10 +195,11 @@ tmComputeMapping(double gamval, double Lddyn, double Ldmax);
 */
 
 extern int
-tmMapPixels(BYTE *ps, TMbright *ls, BYTE *cs, int len);
+tmMapPixels(TMstruct *tms, BYTE *ps, TMbright *ls, BYTE *cs, int len);
 /*
 	Apply tone mapping function to pixel values.
 
+	tms	-	tone mapping structure pointer.
 	ps	-	returned pixel values (Note 2).
 	ls	-	encoded luminance values.
 	cs	-	encoded chrominance values (Note 2).
@@ -202,59 +208,29 @@ tmMapPixels(BYTE *ps, TMbright *ls, BYTE *cs, int len);
 	returns	-	0 on success, TM_E_* on failure.
 */
 
-extern struct tmStruct *
-tmPop(void);
+extern TMstruct *
+tmDup(TMstruct *orig);
 /*
-	Pops current tone mapping from stack.
+	Duplicate the given tone mapping into a new struct.
 
-	returns	-	pointer to tone mapping structure, or NULL if none.
-*/
-
-extern int
-tmPull(struct tmStruct *tms);
-/*
-	Pull tone mapping from anywhere in stack.
-
-	tms	-	tone mapping structure to find.
-
-	returns	-	1 if found in stack, 0 otherwise.
-*/
-
-extern int
-tmPush(struct tmStruct *tms);
-/*
-	Make tone mapping active by (pulling it and) pushing it to the top.
-
-	tms	-	initialized tone mapping structure.
-
-	returns	-	0 on success, TM_E_* if tms is invalid.
-*/
-
-extern struct tmStruct *
-tmDup(void);
-/*
-	Duplicate the current tone mapping into a new structure on the stack.
-
-	returns	-	pointer to new top, or NULL on error.
+	orig	-	tone mapping structure to duplicate.
+	returns	-	pointer to new struct, or NULL on error.
 */
 
 extern void
-tmDone(struct tmStruct *tms);
+tmDone(TMstruct *tms);
 /*
 	Free data associated with the given tone mapping structure.
-	Calls tmPull() first to remove it from the stack if present.
-	The calls tmDone(tmPop()), tmDone(tmTop) and tmDone(NULL)
-	all have the same effect, which is to remove and free
-	the current tone mapping.
 
 	tms	-	tone mapping structure to free.
 */
 
 extern int
-tmCvColors(TMbright *ls, BYTE *cs, COLOR *scan, int len);
+tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
 /*
 	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
 	cs	-	returned encoded chrominance values (Note 2).
 	scan	-	input scanline.
@@ -264,10 +240,11 @@ tmCvColors(TMbright *ls, BYTE *cs, COLOR *scan, int len);
 */
 
 extern int
-tmCvGrays(TMbright *ls, float *scan, int len);
+tmCvGrays(TMstruct *tms, TMbright *ls, float *scan, int len);
 /*
 	Convert gray float scanline to encoded luminance.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
 	scan	-	input scanline.
 	len	-	scanline length.
@@ -276,10 +253,11 @@ tmCvGrays(TMbright *ls, float *scan, int len);
 */
 
 extern int
-tmCvColrs(TMbright *ls, BYTE *cs, COLR *scan, int len);
+tmCvColrs(TMstruct *tms, TMbright *ls, BYTE *cs, COLR *scan, int len);
 /*
 	Convert RGBE/XYZE scanline to encoded luminance and chrominance.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
 	cs	-	returned encoded chrominance values (Note 2).
 	scan	-	input scanline.
@@ -289,7 +267,7 @@ tmCvColrs(TMbright *ls, BYTE *cs, COLR *scan, int len);
 */
 
 extern int
-tmLoadPicture(TMbright **lpp, BYTE **cpp, int *xp, int *yp,
+tmLoadPicture(TMstruct *tms, TMbright **lpp, BYTE **cpp, int *xp, int *yp,
 		char *fname, FILE *fp);
 /*
 	Load Radiance picture and convert to tone mapping representation.
@@ -297,6 +275,7 @@ tmLoadPicture(TMbright **lpp, BYTE **cpp, int *xp, int *yp,
 	malloc(3), and should be freed with free(3) when no longer needed.
 	Calls tmSetSpace() to calibrate input color space.
 
+	tms	-	tone mapping structure pointer.
 	lpp	-	returned array of encoded luminances, picture ordering.
 	cpp	-	returned array of encoded chrominances (Note 2).
 	xp, yp	-	returned picture dimensions.
@@ -312,7 +291,6 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 		char *fname, FILE *fp);
 /*
 	Load and apply tone mapping to Radiance picture.
-	Stack is restored to its original state upon return.
 	If fp is TM_GETFILE and (flags&TM_F_UNIMPL)!=0, tmMapPicture()
 	calls pcond to perform the actual conversion, which takes
 	longer but gives access to all the TM_F_* features.
@@ -333,10 +311,12 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 */
 
 extern int
-tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv);
+tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs, uint16 (*scan)[3],
+		int len, double gv);
 /*
 	Convert 48-bit RGB scanline to encoded luminance and chrominance.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
 	cs	-	returned encoded chrominance values (Note 2).
 	scan	-	input scanline.
@@ -347,10 +327,11 @@ tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv);
 */
 
 extern int
-tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv);
+tmCvGray16(TMstruct *tms, TMbright *ls, uint16 *scan, int len, double gv);
 /*
 	Convert 16-bit gray scanline to encoded luminance.
 
+	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
 	scan	-	input scanline.
 	len	-	scanline length.

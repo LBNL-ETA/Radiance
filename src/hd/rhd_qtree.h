@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_qtree.h,v 3.17 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid $Id: rhd_qtree.h,v 3.18 2005/01/07 20:33:02 greg Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */
@@ -54,6 +54,8 @@ extern double	qtDepthEps;	/* epsilon to compare depths (z fraction) */
 extern int	qtMinNodesiz;	/* minimum node dimension (pixels) */
 
 extern int	rayqleft;	/* number of rays to queue before flush */
+
+extern TMstruct	*tmGlobal;	/* global tone-mapping structure */
 
 /*
 extern int32	encodedir();

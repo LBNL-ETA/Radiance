@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.16 2004/10/23 18:55:52 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.17 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -30,8 +30,8 @@ typedef struct {
 	TMbright	inpsfb;		/* encoded tm->inpsf */
 } COLRDATA;
 
-static MEM_PTR	colrInit(struct tmStruct *);
-static void	colrNewSpace(struct tmStruct *);
+static MEM_PTR	colrInit(TMstruct *);
+static void	colrNewSpace(TMstruct *);
 static gethfunc headline;
 
 static struct tmPackage	colrPkg = {	/* our package functions */
@@ -44,25 +44,27 @@ static TMbright	logi[LOGISZ];
 
 
 int
-tmCvColrs(ls, cs, scan, len)		/* convert RGBE/XYZE colors */
-TMbright	*ls;
-BYTE	*cs;
-COLR	*scan;
-int	len;
+tmCvColrs(				/* convert RGBE/XYZE colors */
+TMstruct	*tms,
+TMbright	*ls,
+BYTE	*cs,
+COLR	*scan,
+int	len
+)
 {
 	static char	funcName[] = "tmCvColrs";
 	COLR	cmon;
 	register COLRDATA	*cd;
 	register int	i, bi, li;
 
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 #if TM_PIC_CTRANS
-	if (tmNeedMatrix(tmTop)) {		/* need floating point */
+	if (tmNeedMatrix(tms)) {		/* need floating point */
 #else
-	if (tmTop->inppri == TM_XYZPRIM) {	/* no way around this */
+	if (tms->inppri == TM_XYZPRIM) {	/* no way around this */
 #endif
 		register COLOR	*newscan;
 		newscan = (COLOR *)tempbuffer(len*sizeof(COLOR));
@@ -70,7 +72,7 @@ int	len;
 			returnErr(TM_E_NOMEM);
 		for (i = len; i--; )
 			colr_color(newscan[i], scan[i]);
-		return(tmCvColors(ls, cs, newscan, len));
+		return(tmCvColors(tms, ls, cs, newscan, len));
 	}
 	if (colrReg < 0) {			/* build tables if necessary */
 		colrReg = tmRegPkg(&colrPkg);
@@ -82,7 +84,7 @@ int	len;
 			logi[i] = 0;
 		tmMkMesofact();
 	}
-	if ((cd = (COLRDATA *)tmPkgData(tmTop,colrReg)) == NULL)
+	if ((cd = (COLRDATA *)tmPkgData(tms,colrReg)) == NULL)
 		returnErr(TM_E_NOMEM);
 	for (i = len; i--; ) {
 		copycolr(cmon, scan[i]);
@@ -100,12 +102,12 @@ int	len;
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
 							/* mesopic adj. */
-		if (tmTop->flags & TM_F_MESOPIC && bi < BMESUPPER) {
+		if (tms->flags & TM_F_MESOPIC && bi < BMESUPPER) {
 			register int	pf, sli = normscot(cmon);
 			if (bi < BMESLOWER)
 				cmon[RED] = cmon[GRN] = cmon[BLU] = sli;
 			else {
-				if (tmTop->flags & TM_F_BW)
+				if (tms->flags & TM_F_BW)
 					cmon[RED] = cmon[GRN] = cmon[BLU] = li;
 				pf = tmMesofact[bi-BMESLOWER];
 				sli *= 256 - pf;
@@ -113,7 +115,7 @@ int	len;
 				cmon[GRN] = ( sli + pf*cmon[GRN] ) >> 8;
 				cmon[BLU] = ( sli + pf*cmon[BLU] ) >> 8;
 			}
-		} else if (tmTop->flags & TM_F_BW) {
+		} else if (tms->flags & TM_F_BW) {
 			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
 		}
 		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
@@ -172,12 +174,15 @@ headline(			/* grok a header line */
 
 
 int
-tmLoadPicture(lpp, cpp, xp, yp, fname, fp)	/* convert Radiance picture */
-TMbright	**lpp;
-BYTE	**cpp;
-int	*xp, *yp;
-char	*fname;
-FILE	*fp;
+tmLoadPicture(				/* convert Radiance picture */
+TMstruct	*tms,
+TMbright	**lpp,
+BYTE	**cpp,
+int	*xp,
+int	*yp,
+char	*fname,
+FILE	*fp
+)
 {
 	char	*funcName = fname==NULL ? "tmLoadPicture" : fname;
 	FILE	*inpf;
@@ -186,7 +191,7 @@ FILE	*fp;
 	COLR	*scanin = NULL;
 	int	i;
 						/* check arguments */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((lpp == NULL) | (xp == NULL) | (yp == NULL) |
 			((fname == NULL) & (fp == TM_GETFILE)))
@@ -209,7 +214,7 @@ FILE	*fp;
 	else if (info.format == FMTCIE)
 		info.primp = TM_XYZPRIM;
 						/* prepare library */
-	if ((err = tmSetSpace(info.primp, 1./info.expos)) != TM_E_OK)
+	if ((err = tmSetSpace(tms, info.primp, 1./info.expos)) != TM_E_OK)
 		goto done;
 	err = TM_E_NOMEM;			/* allocate arrays */
 	*lpp = (TMbright *)malloc(sizeof(TMbright) * *xp * *yp);
@@ -228,7 +233,7 @@ FILE	*fp;
 		if (freadcolrs(scanin, *xp, inpf) < 0) {
 			err = TM_E_BADFILE; break;
 		}
-		err = tmCvColrs(*lpp + (i * *xp),
+		err = tmCvColrs(tms, *lpp + (i * *xp),
 			cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp + (i * 3 * *xp),
 				scanin, *xp);
 		if (err != TM_E_OK)
@@ -261,6 +266,7 @@ double	gamval, Lddyn, Ldmax;
 char	*fname;
 {
 	char	*funcName = fname;
+	TMstruct	*tms = NULL;
 	char	cmdbuf[1024];
 	FILE	*infp;
 	register COLR	*scan;
@@ -348,6 +354,7 @@ char	*fname;
 FILE	*fp;
 {
 	char	*funcName = fname==NULL ? "tmMapPicture" : fname;
+	TMstruct	*tms;
 	BYTE	*cp;
 	TMbright	*lp;
 	int	err;
@@ -367,13 +374,13 @@ FILE	*fp;
 				monpri, gamval, Lddyn, Ldmax, fname) );
 #endif
 						/* initialize tone mapping */
-	if (tmInit(flags, monpri, gamval) == NULL)
+	if ((tms = tmInit(flags, monpri, gamval)) == NULL)
 		returnErr(TM_E_NOMEM);
 						/* load & convert picture */
-	err = tmLoadPicture(&lp, (flags&TM_F_BW) ? TM_NOCHROMP : &cp,
+	err = tmLoadPicture(tms, &lp, (flags&TM_F_BW) ? TM_NOCHROMP : &cp,
 			xp, yp, fname, fp);
 	if (err != TM_E_OK) {
-		tmDone(NULL);
+		tmDone(tms);
 		return(err);
 	}
 						/* allocate space for result */
@@ -381,25 +388,25 @@ FILE	*fp;
 		*psp = (BYTE *)malloc(sizeof(BYTE) * *xp * *yp);
 		if (*psp == NULL) {
 			free((MEM_PTR)lp);
-			tmDone(NULL);
+			tmDone(tms);
 			returnErr(TM_E_NOMEM);
 		}
 		cp = TM_NOCHROM;
 	} else
 		*psp = cp;
 						/* compute color mapping */
-	err = tmAddHisto(lp, *xp * *yp, 1);
+	err = tmAddHisto(tms, lp, *xp * *yp, 1);
 	if (err != TM_E_OK)
 		goto done;
-	err = tmComputeMapping(gamval, Lddyn, Ldmax);
+	err = tmComputeMapping(tms, gamval, Lddyn, Ldmax);
 	if (err != TM_E_OK)
 		goto done;
 						/* map colors */
-	err = tmMapPixels(*psp, lp, cp, *xp * *yp);
+	err = tmMapPixels(tms, *psp, lp, cp, *xp * *yp);
 
 done:						/* clean up */
 	free((MEM_PTR)lp);
-	tmDone(NULL);
+	tmDone(tms);
 	if (err != TM_E_OK) {			/* free memory on error */
 		free((MEM_PTR)*psp);
 		*psp = NULL;
@@ -411,7 +418,7 @@ done:						/* clean up */
 
 static void
 colrNewSpace(tms)		/* color space changed for tone mapping */
-register struct tmStruct	*tms;
+register TMstruct	*tms;
 {
 	register COLRDATA	*cd;
 	double	d;
@@ -428,7 +435,7 @@ register struct tmStruct	*tms;
 
 static MEM_PTR
 colrInit(tms)			/* initialize private data for tone mapping */
-register struct tmStruct	*tms;
+register TMstruct	*tms;
 {
 	register COLRDATA	*cd;
 	register int	i;

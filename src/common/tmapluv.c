@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.9 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.10 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -30,10 +30,10 @@ static void	luv32NewSpace();
 static MEM_PTR	luv24Init();
 static void	luv24NewSpace();
 #else
-static MEM_PTR	luv32Init(struct tmStruct *);
-static void	luv32NewSpace(struct tmStruct *);
-static MEM_PTR	luv24Init(struct tmStruct *);
-static void	luv24NewSpace(struct tmStruct *);
+static MEM_PTR	luv32Init(TMstruct *);
+static void	luv32NewSpace(TMstruct *);
+static MEM_PTR	luv24Init(TMstruct *);
+static void	luv24NewSpace(TMstruct *);
 #endif
 
 typedef struct {
@@ -65,30 +65,30 @@ static int	uv14neu = -1;		/* neutral index for 14-bit (u',v') */
 
 
 static void
-uv2rgb(rgb, tm, uvp)			/* compute RGB from uv coordinate */
+uv2rgb(rgb, tms, uvp)			/* compute RGB from uv coordinate */
 BYTE	rgb[3];
-register struct tmStruct	*tm;
+register TMstruct	*tms;
 double	uvp[2];
-{	/* Should check that tm->inppri==TM_XYZPRIM beforehand... */
+{	/* Should check that tms->inppri==TM_XYZPRIM beforehand... */
 	double	d, x, y;
 	COLOR	XYZ, RGB;
 					/* convert to XYZ */
 	d = 1./(6.*uvp[0] - 16.*uvp[1] + 12.);
 	x = 9.*uvp[0] * d;
 	y = 4.*uvp[1] * d;
-	XYZ[CIEY] = 1./tm->inpsf;
+	XYZ[CIEY] = 1./tms->inpsf;
 	XYZ[CIEX] = x/y * XYZ[CIEY];
 	XYZ[CIEZ] = (1.-x-y)/y * XYZ[CIEY];
 					/* convert to RGB and clip */
-	colortrans(RGB, tm->cmat, XYZ);
+	colortrans(RGB, tms->cmat, XYZ);
 	clipgamut(RGB, 1., CGAMUT_LOWER, cblack, cwhite);
 					/* perform final scaling & gamma */
-	d = tm->clf[RED] * RGB[RED];
-	rgb[RED] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tm->mongam));
-	d = tm->clf[GRN] * RGB[GRN];
-	rgb[GRN] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tm->mongam));
-	d = tm->clf[BLU] * RGB[BLU];
-	rgb[BLU] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tm->mongam));
+	d = tms->clf[RED] * RGB[RED];
+	rgb[RED] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tms->mongam));
+	d = tms->clf[GRN] * RGB[GRN];
+	rgb[GRN] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tms->mongam));
+	d = tms->clf[BLU] * RGB[BLU];
+	rgb[BLU] = d>=.999 ? 255 : (int)(256.*pow(d, 1./tms->mongam));
 }
 
 
@@ -123,18 +123,20 @@ double	uvp[2];			/* world (u',v') -> returned desaturated */
 
 
 int
-tmCvLuv32(ls, cs, luvs, len)		/* convert raw 32-bit LogLuv values */
-TMbright	*ls;
-BYTE	*cs;
-uint32	*luvs;
-int	len;
+tmCvLuv32(				/* convert raw 32-bit LogLuv values */
+TMstruct	*tms,
+TMbright	*ls,
+BYTE	*cs,
+uint32	*luvs,
+int	len
+)
 {
 	static char	funcName[] = "tmCvLuv32";
 	double	uvp[2];
 	register LUV32DATA	*ld;
 	register int	i, j;
 					/* check arguments */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (luvs == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
@@ -145,7 +147,7 @@ int	len;
 		tmMkMesofact();
 	}
 					/* get package data */
-	if ((ld = (LUV32DATA *)tmPkgData(tmTop,luv32Reg)) == NULL)
+	if ((ld = (LUV32DATA *)tmPkgData(tms,luv32Reg)) == NULL)
 		returnErr(TM_E_NOMEM);
 					/* convert each pixel */
 	for (i = len; i--; ) {
@@ -157,21 +159,21 @@ int	len;
 		if (cs == TM_NOCHROM)		/* no color? */
 			continue;
 						/* get chrominance */
-		if (tmTop->flags & TM_F_MESOPIC && ls[i] < BMESUPPER) {
+		if (tms->flags & TM_F_MESOPIC && ls[i] < BMESUPPER) {
 			uvp[0] = 1./UVSCALE*((luvs[i]>>8 & 0xff) + .5);
 			uvp[1] = 1./UVSCALE*((luvs[i] & 0xff) + .5);
 			ls[i] = compmeshift(ls[i], uvp);
-			j = tmTop->flags&TM_F_BW || ls[i]<BMESLOWER
+			j = tms->flags&TM_F_BW || ls[i]<BMESLOWER
 					? UVNEU
 					: (int)(uvp[0]*UVSCALE)<<8
 						| (int)(uvp[1]*UVSCALE);
 		} else {
-			j = tmTop->flags&TM_F_BW ? UVNEU : luvs[i]&0xffff;
+			j = tms->flags&TM_F_BW ? UVNEU : luvs[i]&0xffff;
 		}
 		if (!isuvset(ld, j)) {
 			uvp[0] = 1./UVSCALE*((j>>8) + .5);
 			uvp[1] = 1./UVSCALE*((j & 0xff) + .5);
-			uv2rgb(ld->rgbval[j], tmTop, uvp);
+			uv2rgb(ld->rgbval[j], tms, uvp);
 			setuv(ld, j);
 		}
 		cs[3*i  ] = ld->rgbval[j][RED];
@@ -183,18 +185,20 @@ int	len;
 
 
 int
-tmCvLuv24(ls, cs, luvs, len)		/* convert raw 24-bit LogLuv values */
-TMbright	*ls;
-BYTE	*cs;
-uint32	*luvs;
-int	len;
+tmCvLuv24(			/* convert raw 24-bit LogLuv values */
+TMstruct	*tms,
+TMbright	*ls,
+BYTE	*cs,
+uint32	*luvs,
+int	len
+)
 {
 	char	funcName[] = "tmCvLuv24";
 	double	uvp[2];
 	register LUV24DATA	*ld;
 	register int	i, j;
 					/* check arguments */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (luvs == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
@@ -205,7 +209,7 @@ int	len;
 		tmMkMesofact();
 	}
 					/* get package data */
-	if ((ld = (LUV24DATA *)tmPkgData(tmTop,luv24Reg)) == NULL)
+	if ((ld = (LUV24DATA *)tmPkgData(tms,luv24Reg)) == NULL)
 		returnErr(TM_E_NOMEM);
 					/* convert each pixel */
 	for (i = len; i--; ) {
@@ -214,25 +218,25 @@ int	len;
 		if (cs == TM_NOCHROM)		/* no color? */
 			continue;
 						/* get chrominance */
-		if (tmTop->flags & TM_F_MESOPIC && ls[i] < BMESUPPER) {
+		if (tms->flags & TM_F_MESOPIC && ls[i] < BMESUPPER) {
 			if (uv_decode(&uvp[0], &uvp[1], luvs[i]&0x3fff) < 0) {
 				uvp[0] = U_NEU;		/* should barf? */
 				uvp[1] = V_NEU;
 			}
 			ls[i] = compmeshift(ls[i], uvp);
-			if (tmTop->flags&TM_F_BW || ls[i]<BMESLOWER
+			if (tms->flags&TM_F_BW || ls[i]<BMESLOWER
 					|| (j = uv_encode(uvp[0], uvp[1],
 						SGILOGENCODE_NODITHER)) < 0)
 				j = uv14neu;
 		} else {
-			j = tmTop->flags&TM_F_BW ? uv14neu :
+			j = tms->flags&TM_F_BW ? uv14neu :
 					(int)(luvs[i]&0x3fff);
 		}
 		if (!isuvset(ld, j)) {
 			if (uv_decode(&uvp[0], &uvp[1], j) < 0) {
 				uvp[0] = U_NEU; uvp[1] = V_NEU;
 			}
-			uv2rgb(ld->rgbval[j], tmTop, uvp);
+			uv2rgb(ld->rgbval[j], tms, uvp);
 			setuv(ld, j);
 		}
 		cs[3*i  ] = ld->rgbval[j][RED];
@@ -244,28 +248,30 @@ int	len;
 
 
 int
-tmCvL16(ls, l16s, len)			/* convert 16-bit LogL values */
-TMbright	*ls;
-uint16	*l16s;
-int	len;
+tmCvL16(				/* convert 16-bit LogL values */
+TMstruct	*tms,
+TMbright	*ls,
+uint16	*l16s,
+int	len
+)
 {
 	static char	funcName[] = "tmCvL16";
 	static double	lastsf;
 	static int	offset;
 	register int	i;
 					/* check arguments */
-	if (tmTop == NULL)
+	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (l16s == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 					/* check scaling offset */
-	if (!FEQ(tmTop->inpsf, lastsf)) {
+	if (!FEQ(tms->inpsf, lastsf)) {
 		offset = BRT2SCALE(64);
-		if (tmTop->inpsf > 1.0001)
-			offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)+.5);
-		else if (tmTop->inpsf < 0.9999)
-			offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)-.5);
-		lastsf = tmTop->inpsf;
+		if (tms->inpsf > 1.0001)
+			offset -= (int)(TM_BRTSCALE*log(tms->inpsf)+.5);
+		else if (tms->inpsf < 0.9999)
+			offset -= (int)(TM_BRTSCALE*log(tms->inpsf)-.5);
+		lastsf = tms->inpsf;
 	}
 					/* convert each pixel */
 	for (i = len; i--; ) {
@@ -279,72 +285,72 @@ int	len;
 
 
 static void
-luv32NewSpace(tm)		/* initialize 32-bit LogLuv color space */
-struct tmStruct	*tm;
+luv32NewSpace(tms)		/* initialize 32-bit LogLuv color space */
+TMstruct	*tms;
 {
 	register LUV32DATA	*ld;
 
-	if (tm->inppri != TM_XYZPRIM) {		/* panic time! */
+	if (tms->inppri != TM_XYZPRIM) {		/* panic time! */
 		fputs("Improper input color space in luv32NewSpace!\n", stderr);
 		exit(1);
 	}
-	ld = (LUV32DATA *)tm->pd[luv32Reg];
+	ld = (LUV32DATA *)tms->pd[luv32Reg];
 	ld->offset = BRT2SCALE(64);
-	if (tm->inpsf > 1.0001)
-		ld->offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)+.5);
-	else if (tm->inpsf < 0.9999)
-		ld->offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)-.5);
+	if (tms->inpsf > 1.0001)
+		ld->offset -= (int)(TM_BRTSCALE*log(tms->inpsf)+.5);
+	else if (tms->inpsf < 0.9999)
+		ld->offset -= (int)(TM_BRTSCALE*log(tms->inpsf)-.5);
 	clruvall(ld);
 }
 
 
 static MEM_PTR
-luv32Init(tm)			/* allocate data for 32-bit LogLuv decoder */
-struct tmStruct	*tm;
+luv32Init(tms)			/* allocate data for 32-bit LogLuv decoder */
+TMstruct	*tms;
 {
 	register LUV32DATA	*ld;
 
 	ld = (LUV32DATA *)malloc(sizeof(LUV32DATA));
 	if (ld == NULL)
 		return(NULL);
-	tm->pd[luv32Reg] = (MEM_PTR)ld;
-	luv32NewSpace(tm);
+	tms->pd[luv32Reg] = (MEM_PTR)ld;
+	luv32NewSpace(tms);
 	return((MEM_PTR)ld);
 }
 
 
 static void
-luv24NewSpace(tm)		/* initialize 24-bit LogLuv color space */
-struct tmStruct	*tm;
+luv24NewSpace(tms)		/* initialize 24-bit LogLuv color space */
+TMstruct *tms;
 {
 	register LUV24DATA	*ld;
 
-	if (tm->inppri != TM_XYZPRIM) {		/* panic time! */
+	if (tms->inppri != TM_XYZPRIM) {		/* panic time! */
 		fputs("Improper input color space in luv24NewSpace!\n", stderr);
 		exit(1);
 	}
-	ld = (LUV24DATA *)tm->pd[luv24Reg];
+	ld = (LUV24DATA *)tms->pd[luv24Reg];
 	ld->offset = BRT2SCALE(12);
-	if (tm->inpsf > 1.0001)
-		ld->offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)+.5);
-	else if (tm->inpsf < 0.9999)
-		ld->offset -= (int)(TM_BRTSCALE*log(tmTop->inpsf)-.5);
+	if (tms->inpsf > 1.0001)
+		ld->offset -= (int)(TM_BRTSCALE*log(tms->inpsf)+.5);
+	else if (tms->inpsf < 0.9999)
+		ld->offset -= (int)(TM_BRTSCALE*log(tms->inpsf)-.5);
 	clruvall(ld);
 }
 
 
 static MEM_PTR
-luv24Init(tm)			/* allocate data for 24-bit LogLuv decoder */
-struct tmStruct	*tm;
+luv24Init(tms)			/* allocate data for 24-bit LogLuv decoder */
+TMstruct	*tms;
 {
 	register LUV24DATA	*ld;
 
 	ld = (LUV24DATA *)malloc(sizeof(LUV24DATA));
 	if (ld == NULL)
 		return(NULL);
-	tm->pd[luv24Reg] = (MEM_PTR)ld;
+	tms->pd[luv24Reg] = (MEM_PTR)ld;
 	if (uv14neu < 0)		/* initialize neutral color index */
 		uv14neu = uv_encode(U_NEU, V_NEU, SGILOGENCODE_NODITHER);
-	luv24NewSpace(tm);
+	luv24NewSpace(tms);
 	return((MEM_PTR)ld);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.4 2004/03/28 20:33:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.5 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -60,6 +60,8 @@ static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.4 2004/03/28 20:33:13 schorsch 
 #define  levptr(etype)	((etype *)&currentevent)
 
 struct driver	odev;			/* global device driver structure */
+
+TMstruct	*tmGlobal;		/* global tone-mapping structure */
 
 char odev_args[64];			/* command arguments */
 
@@ -142,7 +144,8 @@ dev_open(
 				&myprims[BLU][CIEX],&myprims[BLU][CIEY],
 				&myprims[WHT][CIEX],&myprims[WHT][CIEY]) >= 6)
 		dpri = myprims;
-	if (tmInit(mytmflags(), dpri, gamval) == NULL)
+	tmGlobal = tmInit(mytmflags(), dpri, gamval);
+	if (tmGlobal == NULL)
 		error(SYSTEM, "not enough memory in dev_open");
 					/* open window */
 	ourwinattr.background_pixel = ourblack;
@@ -211,7 +214,7 @@ dev_close(void)			/* close our display and free resources */
 	XCloseDisplay(ourdisplay);
 	ourdisplay = NULL;
 	qtFreeLeaves();
-	tmDone(NULL);
+	tmDone(tmGlobal);
 	freecones();
 	odev.v.type = 0;
 	odev.hres = odev.vres = 0;

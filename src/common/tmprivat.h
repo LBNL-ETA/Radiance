@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.13 2003/07/17 09:21:29 schorsch Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.14 2005/01/07 20:33:02 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -59,14 +59,14 @@ extern "C" {
 MEM_PTR		malloc();
 MEM_PTR		calloc();
 #endif
-extern int	tmErrorReturn(char*, int);
+extern int	tmErrorReturn(char *, TMstruct *, int);
 
 						/* lookup for mesopic scaling */
 extern BYTE	tmMesofact[BMESUPPER-BMESLOWER];
 
 extern void	tmMkMesofact(void);			/* build tmMesofact */
 
-#define	returnErr(code)	return(tmErrorReturn(funcName,code))
+#define	returnErr(code)	return(tmErrorReturn(funcName,tms,code))
 #define returnOK	return(TM_E_OK)
 
 #define	FEQ(a,b)	((a) < (b)+1e-5 && (b) < (a)+1e-5)
@@ -75,7 +75,6 @@ extern void	tmMkMesofact(void);			/* build tmMesofact */
 			&&FEQ((p1)[1][0],(p2)[1][0])&&FEQ((p1)[1][1],(p2)[1][1])\
 			&&FEQ((p1)[2][0],(p2)[2][0])&&FEQ((p1)[2][1],(p2)[2][1])\
 			&&FEQ((p1)[3][0],(p2)[3][0])&&FEQ((p1)[3][1],(p2)[3][1]))
-
 
 #ifdef __cplusplus
 }

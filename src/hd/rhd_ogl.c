@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.25 2004/02/12 18:55:50 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.26 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -81,6 +81,8 @@ static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.25 2004/02/12 18:55:50 greg Exp 
 #define  levptr(etype)	((etype *)&currentevent)
 
 struct driver	odev;			/* global device driver structure */
+
+TMstruct	*tmGlobal;		/* global tone-mapping structure */
 
 char odev_args[64];			/* command arguments */
 
@@ -209,7 +211,8 @@ char  *id;
 				&myprims[BLU][CIEX],&myprims[BLU][CIEY],
 				&myprims[WHT][CIEX],&myprims[WHT][CIEY]) >= 6)
 		dpri = myprims;
-	if (tmInit(mytmflags(), dpri, gamval) == NULL)
+	tmGlobal = tmInit(mytmflags(), dpri, gamval);
+	if (tmGlobal == NULL)
 		error(SYSTEM, "not enough memory in dev_open");
 					/* open window */
 	ourwinattr.background_pixel = ourblack;
@@ -299,7 +302,7 @@ dev_close(void)			/* close our display and free resources */
 	gwind = 0;
 	XCloseDisplay(ourdisplay);
 	ourdisplay = NULL;
-	tmDone(NULL);
+	tmDone(tmGlobal);
 	odev.v.type = 0;
 	odev.hres = odev.vres = 0;
 	odev.ifd = -1;

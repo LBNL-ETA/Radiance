@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.17 2004/03/30 20:40:04 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.18 2005/01/07 20:33:02 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -320,7 +320,8 @@ ssph_compute(void)			/* compute source set from sphere samples */
 						/* avg. reflected brightness */
 	d = AVGREFL / (double)ncells;	
 	scalecolor(csum, d);
-	if (tmCvColors(&dlightsets->larb, TM_NOCHROM, &csum, 1) != TM_E_OK)
+	if (tmCvColors(tmGlobal, &dlightsets->larb,
+			TM_NOCHROM, &csum, 1) != TM_E_OK)
 		error(CONSISTENCY, "tone mapping problem in ssph_compute");
 					/* greedy light source clustering */
 	while (dlightsets->nl < MAXLIGHTS) {
@@ -956,8 +957,8 @@ dobj_render(void)			/* render our objects in OpenGL */
 			BYTE	pval;
 			double	expval, d;
 						/* use computed sources */
-			if (tmMapPixels(&pval, &op->ol->larb, TM_NOCHROM, 1)
-					!= TM_E_OK)
+			if (tmMapPixels(tmGlobal, &pval, &op->ol->larb,
+					TM_NOCHROM, 1) != TM_E_OK)
 				error(CONSISTENCY, "dobj_render w/o tone map");
 			expval = pval * (WHTEFFICACY/256.) /
 					tmLuminance(op->ol->larb);
