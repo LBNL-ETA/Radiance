@@ -1,4 +1,4 @@
-/* RCSid $Id: func.h,v 2.6 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: func.h,v 2.7 2004/03/30 16:13:01 schorsch Exp $ */
 /*
  * Header file for modifiers using function files.
  *
@@ -7,6 +7,8 @@
 #ifndef _RAD_FUNC_H_
 #define _RAD_FUNC_H_
 
+#include  "ray.h"
+#include  "object.h"
 #include  "calcomp.h"
 
 #ifdef __cplusplus
@@ -25,10 +27,17 @@ extern XF  unitxf;		/* identity transform */
 extern XF  funcxf;		/* current transform */
 
 
-extern MFUNC	*getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
+extern MFUNC *getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
 extern void	freefunc(OBJREC *m);
 extern int	setfunc(OBJREC *m, RAY *r);
 extern void	loadfunc(char *fname);
+
+	/* defined in noise3.c */
+extern void setnoisefuncs(void);
+
+	/* defined in fprism.c */
+extern void setprismfuncs(void);
+
 
 
 #ifdef __cplusplus

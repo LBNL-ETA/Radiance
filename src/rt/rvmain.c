@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.3 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.3 2003/06/05 19:29:34 schorsch Ex
 #include  "ray.h"
 #include  "source.h"
 #include  "ambient.h"
+#include  "rpaint.h"
 #include  "random.h"
 #include  "paths.h"
 #include  "view.h"
@@ -41,15 +42,13 @@ extern int  vresolu;			/* vertical resolution */
 extern int  psample;			/* pixel sample size */
 extern double  maxdiff;			/* max. sample difference */
 
-void	onsig();
-void	sigdie();
-void	printdefaults();
+static void onsig(int  signo);
+static void sigdie(int  signo, char  *msg);
+static void printdefaults(void);
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(int  argc, char  *argv[])
 {
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
@@ -220,6 +219,7 @@ char  *argv[];
 badopt:
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
 	error(USER, errmsg);
+	return 1; /* pro forma return */
 
 #undef	check
 #undef	bool
@@ -227,8 +227,9 @@ badopt:
 
 
 void
-wputs(s)				/* warning output function */
-char	*s;
+wputs(				/* warning output function */
+	char	*s
+)
 {
 	int  lasterrno = errno;
 	eputs(s);
@@ -237,8 +238,9 @@ char	*s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -256,9 +258,10 @@ register char  *s;
 }
 
 
-void
-onsig(signo)				/* fatal signal */
-int  signo;
+static void
+onsig(				/* fatal signal */
+	int  signo
+)
 {
 	static int  gotsig = 0;
 
@@ -274,10 +277,11 @@ int  signo;
 }
 
 
-void
-sigdie(signo, msg)			/* set fatal signal */
-int  signo;
-char  *msg;
+static void
+sigdie(			/* set fatal signal */
+	int  signo,
+	char  *msg
+)
 {
 	if (signal(signo, onsig) == SIG_IGN)
 		signal(signo, SIG_IGN);
@@ -285,11 +289,9 @@ char  *msg;
 }
 
 
-void
-printdefaults()			/* print default values to stdout */
+static void
+printdefaults(void)			/* print default values to stdout */
 {
-	register char  *cp;
-
 	printf(greyscale ? "-b+\t\t\t\t# greyscale on\n" :
 			"-b-\t\t\t\t# greyscale off\n");
 	printf("-vt%c\t\t\t\t# view type %s\n", ourview.type,

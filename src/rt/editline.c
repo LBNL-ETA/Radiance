@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: editline.c,v 2.7 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: editline.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  editline.c - routine for editing raw input for rview.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: editline.c,v 2.7 2003/07/27 22:12:03 schorsch 
 #include "copyright.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "color.h"
 
@@ -22,11 +23,12 @@ static const char	RCSid[] = "$Id: editline.c,v 2.7 2003/07/27 22:12:03 schorsch 
 #define iskill(c)	((c) == 'U'-'@' || (c) == 'X'-'@')
 
 
-void
-editline(buf, c_get, s_put)	/* edit input line */
-char  *buf;
-int  (*c_get)();
-void  (*s_put)();
+extern void
+editline(	/* edit input line */
+	char  *buf,
+	dr_getchf_t *c_get,
+	dr_comoutf_t *s_put
+)
 {
 	static char  erases[] = "\b \b";
 	static char  obuf[4];

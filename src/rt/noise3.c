@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: noise3.c,v 2.8 2003/08/04 22:37:53 greg Exp $";
+static const char	RCSid[] = "$Id: noise3.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  noise3.c - noise functions for random textures.
@@ -10,9 +10,10 @@ static const char	RCSid[] = "$Id: noise3.c,v 2.8 2003/08/04 22:37:53 greg Exp $"
 
 #include "copyright.h"
 
-#include  "calcomp.h"
-
 #include  <math.h>
+
+#include  "calcomp.h"
+#include  "func.h"
 
 #define  A		0
 #define  B		1
@@ -38,8 +39,8 @@ static char  noise_name[4][8] = {"noise3x", "noise3y", "noise3z", "noise3"};
 static char  fnoise_name[] = "fnoise3";
 static char  hermite_name[] = "hermite";
 
-double  *noise3(), fnoise3(), frand();
-static  interpolate();
+//double  *noise3(), fnoise3(), frand();
+//static  interpolate();
 
 static long  xlim[3][2];
 static double  xarg[3];
@@ -48,10 +49,18 @@ static double  xarg[3];
 
 #define  frand3(x,y,z)	frand(17*(x)+23*(y)+29*(z))
 
+static double l_noise3(char  *nam);
+static double l_hermite(char *nm);
+static double * noise3(double  xnew[3]);
+static void interpolate(double  f[4], int  i, int  n);
+static double frand(long  s);
+static double fnoise3(double  p[3]);
+
 
 static double
-l_noise3(nam)			/* compute a noise function */
-register char  *nam;
+l_noise3(			/* compute a noise function */
+	register char  *nam
+)
 {
 	register int  i;
 	double  x[3];
@@ -69,10 +78,11 @@ register char  *nam;
 	eputs(nam);
 	eputs(": called l_noise3!\n");
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-double
+static double
 l_hermite(char *nm)		/* library call for hermite interpolation */
 {
 	double  t;
@@ -83,7 +93,8 @@ l_hermite(char *nm)		/* library call for hermite interpolation */
 }
 
 
-setnoisefuncs()			/* add noise functions to library */
+extern void
+setnoisefuncs(void)			/* add noise functions to library */
 {
 	register int  i;
 
@@ -95,9 +106,10 @@ setnoisefuncs()			/* add noise functions to library */
 }
 
 
-double *
-noise3(xnew)			/* compute the noise function */
-register double  xnew[3];
+static double *
+noise3(			/* compute the noise function */
+	register double  xnew[3]
+)
 {
 	static double  x[3] = {-100000.0, -100000.0, -100000.0};
 	static double  f[4];
@@ -116,10 +128,12 @@ register double  xnew[3];
 }
 
 
-static
-interpolate(f, i, n)
-double  f[4];
-register int  i, n;
+static void
+interpolate(
+	double  f[4],
+	register int  i,
+	register int  n
+)
 {
 	double  f0[4], f1[4], hp1, hp2;
 
@@ -142,18 +156,20 @@ register int  i, n;
 }
 
 
-double
-frand(s)			/* get random number from seed */
-register long  s;
+static double
+frand(			/* get random number from seed */
+	register long  s
+)
 {
 	s = s<<13 ^ s;
 	return(1.0-((s*(s*s*15731+789221)+1376312589)&0x7fffffff)/1073741824.0);
 }
 
 
-double
-fnoise3(p)			/* compute fractal noise function */
-double  p[3];
+static double
+fnoise3(			/* compute fractal noise function */
+	double  p[3]
+)
 {
 	long  t[3], v[3], beg[3];
 	double  fval[8], fc;

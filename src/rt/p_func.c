@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -8,8 +8,8 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "func.h"
+#include  "rtotypes.h"
 
 /*
  *	A procedural pattern can either be a brightness or a
@@ -34,9 +34,11 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $"
  */
 
 
-p_bfunc(m, r)			/* compute brightness pattern */
-OBJREC  *m;
-RAY  *r;
+extern int
+p_bfunc(			/* compute brightness pattern */
+	OBJREC  *m,
+	RAY  *r
+)
 {
 	double  bval;
 	register MFUNC  *mf;
@@ -56,9 +58,11 @@ RAY  *r;
 }
 
 
-p_cfunc(m, r)			/* compute color pattern */
-OBJREC  *m;
-RAY  *r;
+extern int
+p_cfunc(			/* compute color pattern */
+	OBJREC  *m,
+	RAY  *r
+)
 {
 	COLOR  cval;
 	register MFUNC  *mf;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.36 2004/03/28 16:31:14 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.37 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -25,6 +25,8 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.36 2004/03/28 16:31:14 greg Exp $
 
 #include  "platform.h"
 #include  "ray.h"
+#include  "ambient.h"
+#include  "source.h"
 #include  "otypes.h"
 #include  "resolu.h"
 
@@ -46,8 +48,6 @@ int  do_irrad = 0;			/* compute irradiance? */
 
 void  (*trace)() = NULL;		/* trace call */
 
-extern void  ambnotify(), tranotify();
-void  (*addobjnotify[])() = {ambnotify, tranotify, NULL};
 char  *tralist[128];			/* list of modifers to trace (or no) */
 int  traincl = -1;			/* include == 1, exclude == 0 */
 #define	 MAXTSET	511		/* maximum number in trace set */
@@ -88,26 +88,37 @@ int  ambounce = 0;			/* ambient bounces */
 char  *amblist[128];			/* ambient include/exclude list */
 int  ambincl = -1;			/* include == 1, exclude == 0 */
 
+static int  castonly = 0;
 
 static RAY  thisray;			/* for our convenience */
 
-static void  oputo(), oputd(), oputv(), oputl(), oputL(), oputc(),
-		oputp(), oputn(), oputN(), oputs(), oputw(), oputm();
+typedef void putf_t(double v);
+static putf_t puta, putd, putf;
 
-static void  ourtrace(), tabin();
-static void  (*ray_out[16])(), (*every_out[16])();
-static int  castonly = 0;
+typedef void oputf_t(RAY *r);
+static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc,
+		oputp, oputn, oputN, oputs, oputw, oputm;
 
-static void  puta(), putf(), putd();
+static void setoutput(char *vs);
+static void tranotify(OBJECT obj);
+static void bogusray(void);
+static void rad(FVECT  org, FVECT  dir, double	dmax);
+static void irrad(FVECT  org, FVECT  dir);
+static void printvals(RAY  *r);
+static int getvec(FVECT  vec, int  fmt, FILE  *fp);
+static void tabin(RAY  *r);
+static void ourtrace(RAY  *r);
 
-static void  (*putreal)();
+static oputf_t *ray_out[16], *every_out[16];
+static putf_t *putreal;
 
-void	bogusray(), rad(), irrad(), printvals();
+void  (*addobjnotify[])() = {ambnotify, tranotify, NULL};
 
 
 void
-quit(code)			/* quit program */
-int  code;
+quit(			/* quit program */
+	int  code
+)
 {
 #ifndef  NON_POSIX /* XXX we don't clean up elsewhere? */
 	headclean();		/* delete header file */
@@ -117,9 +128,10 @@ int  code;
 }
 
 
-char *
-formstr(f)				/* return format identifier */
-int  f;
+extern char *
+formstr(				/* return format identifier */
+	int  f
+)
 {
 	switch (f) {
 	case 'a': return("ascii");
@@ -131,9 +143,10 @@ int  f;
 }
 
 
-void
-rtrace(fname)				/* trace rays from file */
-char  *fname;
+extern void
+rtrace(				/* trace rays from file */
+	char  *fname
+)
 {
 	long  vcount = hresolu>1 ? hresolu*vresolu : vresolu;
 	long  nextflush = hresolu;
@@ -206,11 +219,12 @@ char  *fname;
 }
 
 
-setoutput(vs)				/* set up output tables */
-register char  *vs;
+static void
+setoutput(				/* set up output tables */
+	register char  *vs
+)
 {
-	extern void  (*trace)();
-	register void (**table)() = ray_out;
+	register oputf_t **table = ray_out;
 
 	castonly = 1;
 	while (*vs)
@@ -265,8 +279,8 @@ register char  *vs;
 }
 
 
-void
-bogusray()			/* print out empty record */
+static void
+bogusray(void)			/* print out empty record */
 {
 	thisray.rorg[0] = thisray.rorg[1] = thisray.rorg[2] =
 	thisray.rdir[0] = thisray.rdir[1] = thisray.rdir[2] = 0.0;
@@ -275,10 +289,12 @@ bogusray()			/* print out empty record */
 }
 
 
-void
-rad(org, dir, dmax)		/* compute and print ray value(s) */
-FVECT  org, dir;
-double	dmax;
+static void
+rad(		/* compute and print ray value(s) */
+	FVECT  org,
+	FVECT  dir,
+	double	dmax
+)
 {
 	VCOPY(thisray.rorg, org);
 	VCOPY(thisray.rdir, dir);
@@ -298,9 +314,11 @@ double	dmax;
 }
 
 
-void
-irrad(org, dir)			/* compute immediate irradiance value */
-FVECT  org, dir;
+static void
+irrad(			/* compute immediate irradiance value */
+	FVECT  org,
+	FVECT  dir
+)
 {
 	register int  i;
 
@@ -321,11 +339,12 @@ FVECT  org, dir;
 }
 
 
-void
-printvals(r)			/* print requested ray values */
-RAY  *r;
+static void
+printvals(			/* print requested ray values */
+	RAY  *r
+)
 {
-	register void  (**tp)();
+	register oputf_t **tp;
 
 	if (ray_out[0] == NULL)
 		return;
@@ -336,11 +355,12 @@ RAY  *r;
 }
 
 
-int
-getvec(vec, fmt, fp)		/* get a vector from fp */
-register FVECT  vec;
-int  fmt;
-FILE  *fp;
+static int
+getvec(		/* get a vector from fp */
+	register FVECT  vec,
+	int  fmt,
+	FILE  *fp
+)
 {
 	static float  vf[3];
 	static double  vd[3];
@@ -373,9 +393,10 @@ FILE  *fp;
 }
 
 
-void
-tranotify(obj)			/* record new modifier */
-OBJECT	obj;
+static void
+tranotify(			/* record new modifier */
+	OBJECT	obj
+)
 {
 	static int  hitlimit = 0;
 	register OBJREC	 *o = objptr(obj);
@@ -402,10 +423,11 @@ OBJECT	obj;
 
 
 static void
-ourtrace(r)				/* print ray values */
-RAY  *r;
+ourtrace(				/* print ray values */
+	RAY  *r
+)
 {
-	register void  (**tp)();
+	register oputf_t **tp;
 
 	if (every_out[0] == NULL)
 		return;
@@ -422,8 +444,9 @@ RAY  *r;
 
 
 static void
-tabin(r)				/* tab in appropriate amount */
-RAY  *r;
+tabin(				/* tab in appropriate amount */
+	RAY  *r
+)
 {
 	register RAY  *rp;
 
@@ -433,8 +456,9 @@ RAY  *r;
 
 
 static void
-oputo(r)				/* print origin */
-RAY  *r;
+oputo(				/* print origin */
+	RAY  *r
+)
 {
 	(*putreal)(r->rorg[0]);
 	(*putreal)(r->rorg[1]);
@@ -443,8 +467,9 @@ RAY  *r;
 
 
 static void
-oputd(r)				/* print direction */
-RAY  *r;
+oputd(				/* print direction */
+	RAY  *r
+)
 {
 	(*putreal)(r->rdir[0]);
 	(*putreal)(r->rdir[1]);
@@ -453,8 +478,9 @@ RAY  *r;
 
 
 static void
-oputv(r)				/* print value */
-RAY  *r;
+oputv(				/* print value */
+	RAY  *r
+)
 {
 	COLR  cout;
 	
@@ -472,24 +498,27 @@ RAY  *r;
 
 
 static void
-oputl(r)				/* print effective distance */
-RAY  *r;
+oputl(				/* print effective distance */
+	RAY  *r
+)
 {
 	(*putreal)(r->rt);
 }
 
 
 static void
-oputL(r)				/* print single ray length */
-RAY  *r;
+oputL(				/* print single ray length */
+	RAY  *r
+)
 {
 	(*putreal)(r->rot);
 }
 
 
 static void
-oputc(r)				/* print local coordinates */
-RAY  *r;
+oputc(				/* print local coordinates */
+	RAY  *r
+)
 {
 	(*putreal)(r->uv[0]);
 	(*putreal)(r->uv[1]);
@@ -497,8 +526,9 @@ RAY  *r;
 
 
 static void
-oputp(r)				/* print point */
-RAY  *r;
+oputp(				/* print point */
+	RAY  *r
+)
 {
 	if (r->rot < FHUGE) {
 		(*putreal)(r->rop[0]);
@@ -513,8 +543,9 @@ RAY  *r;
 
 
 static void
-oputN(r)				/* print unperturbed normal */
-RAY  *r;
+oputN(				/* print unperturbed normal */
+	RAY  *r
+)
 {
 	if (r->rot < FHUGE) {
 		(*putreal)(r->ron[0]);
@@ -529,8 +560,9 @@ RAY  *r;
 
 
 static void
-oputn(r)				/* print perturbed normal */
-RAY  *r;
+oputn(				/* print perturbed normal */
+	RAY  *r
+)
 {
 	FVECT  pnorm;
 
@@ -548,8 +580,9 @@ RAY  *r;
 
 
 static void
-oputs(r)				/* print name */
-RAY  *r;
+oputs(				/* print name */
+	RAY  *r
+)
 {
 	if (r->ro != NULL)
 		fputs(r->ro->oname, stdout);
@@ -560,16 +593,18 @@ RAY  *r;
 
 
 static void
-oputw(r)				/* print weight */
-RAY  *r;
+oputw(				/* print weight */
+	RAY  *r
+)
 {
 	(*putreal)(r->rweight);
 }
 
 
 static void
-oputm(r)				/* print modifier */
-RAY  *r;
+oputm(				/* print modifier */
+	RAY  *r
+)
 {
 	if (r->ro != NULL)
 		if (r->ro->omod != OVOID)
@@ -583,8 +618,9 @@ RAY  *r;
 
 
 static void
-puta(v)				/* print ascii value */
-double  v;
+puta(				/* print ascii value */
+	double  v
+)
 {
 	printf("%e\t", v);
 }

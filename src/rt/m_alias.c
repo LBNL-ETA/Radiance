@@ -1,13 +1,15 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.4 2004/01/20 22:16:53 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.5 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Handler for modifier alias
  */
 
 #include "copyright.h"
+
 #include "ray.h"
 #include "otypes.h"
+#include "rtotypes.h"
 #include "otspecial.h"
 
 /*
@@ -21,10 +23,11 @@ static const char RCSid[] = "$Id: m_alias.c,v 2.4 2004/01/20 22:16:53 greg Exp $
  *  chain at all.
  */
 
-int
-m_alias(m, r)			/* transfer shading to alias target */
-OBJREC	*m;
-RAY	*r;
+extern int
+m_alias(			/* transfer shading to alias target */
+	OBJREC	*m,
+	RAY	*r
+)
 {
 	OBJECT	aobj;
 	OBJREC	*aop;

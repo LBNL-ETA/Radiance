@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.8 2003/10/21 19:19:28 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.8 2003/10/21 19:19:28 schorsch Ex
 
 #include  "platform.h"
 #include  "rtprocess.h" /* getpid() */
+#include  "resolu.h"
 #include  "ray.h"
 #include  "source.h"
 #include  "ambient.h"
@@ -26,13 +27,9 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.8 2003/10/21 19:19:28 schorsch Ex
 #endif
 
 char  *progname;			/* argv[0] */
-
 char  *octname;				/* octree name */
-
 char  *sigerr[NSIG];			/* signal error messages */
-
 char  *shm_boundary = NULL;		/* boundary of shared memory */
-
 char  *errfile = NULL;			/* error output file */
 
 extern char  *formstr();		/* string from format */
@@ -49,15 +46,13 @@ extern int  lim_dist;			/* limit distance? */
 extern char  *tralist[];		/* list of modifers to trace (or no) */
 extern int  traincl;			/* include == 1, exclude == 0 */
 
-void	onsig(int);
-void	sigdie(int, char*);
-void	printdefaults(void);
+static void onsig(int  signo);
+static void sigdie(int  signo, char  *msg);
+static void printdefaults(void);
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(int  argc, char  *argv[])
 {
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
@@ -349,6 +344,7 @@ runagain:
 badopt:
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
 	error(USER, errmsg);
+	return 1; /* pro forma return */
 
 #undef	check
 #undef	bool
@@ -356,8 +352,9 @@ badopt:
 
 
 void
-wputs(s)				/* warning output function */
-char	*s;
+wputs(				/* warning output function */
+	char	*s
+)
 {
 	int  lasterrno = errno;
 	eputs(s);
@@ -366,8 +363,9 @@ char	*s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -385,9 +383,10 @@ register char  *s;
 }
 
 
-void
-onsig(signo)				/* fatal signal */
-int  signo;
+static void
+onsig(				/* fatal signal */
+	int  signo
+)
 {
 	static int  gotsig = 0;
 
@@ -405,10 +404,11 @@ int  signo;
 }
 
 
-void
-sigdie(signo, msg)			/* set fatal signal */
-int  signo;
-char  *msg;
+static void
+sigdie(			/* set fatal signal */
+	int  signo,
+	char  *msg
+)
 {
 	if (signal(signo, onsig) == SIG_IGN)
 		signal(signo, SIG_IGN);
@@ -416,7 +416,7 @@ char  *msg;
 }
 
 
-void
+static void
 printdefaults(void)			/* print default values to stdout */
 {
 	register char  *cp;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.42 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.43 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: rv2.c,v 2.42 2003/07/21 22:30:19 schorsch Exp 
 
 #include  "platform.h"
 #include  "ray.h"
+#include  "ambient.h"
 #include  "otypes.h"
 #include  "rpaint.h"
 
@@ -34,9 +35,10 @@ extern char  *progname;
 extern char  *octname;
 
 
-void
-getframe(s)				/* get a new frame */
-char  *s;
+extern void
+getframe(				/* get a new frame */
+	char  *s
+)
 {
 	if (getrect(s, &pframe) < 0)
 		return;
@@ -44,9 +46,10 @@ char  *s;
 }
 
 
-void
-getrepaint(s)				/* get area and repaint */
-char  *s;
+extern void
+getrepaint(				/* get area and repaint */
+	char  *s
+)
 {
 	RECT  box;
 
@@ -56,9 +59,10 @@ char  *s;
 }
 
 
-void
-getview(s)				/* get/show view parameters */
-char  *s;
+extern void
+getview(				/* get/show view parameters */
+	char  *s
+)
 {
 	FILE  *fp;
 	char  buf[128];
@@ -161,9 +165,10 @@ char  *s;
 }
 
 
-void
-lastview(s)				/* return to a previous view */
-char  *s;
+extern void
+lastview(				/* return to a previous view */
+	char  *s
+)
 {
 	char  buf[128];
 	char  *fname;
@@ -195,9 +200,10 @@ char  *s;
 }
 
 
-void
-saveview(s)				/* save view to rad file */
-char  *s;
+extern void
+saveview(				/* save view to rad file */
+	char  *s
+)
 {
 	char  view[64];
 	char  *fname;
@@ -232,9 +238,10 @@ char  *s;
 }
 
 
-void
-loadview(s)				/* load view from rad file */
-char  *s;
+extern void
+loadview(				/* load view from rad file */
+	char  *s
+)
 {
 	char  buf[512];
 	char  *fname;
@@ -274,9 +281,10 @@ char  *s;
 }
 
 
-void
-getaim(s)				/* aim camera */
-char  *s;
+extern void
+getaim(				/* aim camera */
+	char  *s
+)
 {
 	double  zfact;
 	VIEW  nv;
@@ -294,9 +302,10 @@ char  *s;
 }
 
 
-void
-getmove(s)				/* move camera */
-char  *s;
+extern void
+getmove(				/* move camera */
+	char  *s
+)
 {
 	FVECT  vc;
 	double  mag;
@@ -307,9 +316,10 @@ char  *s;
 }
 
 
-void
-getrotate(s)				/* rotate camera */
-char  *s;
+extern void
+getrotate(				/* rotate camera */
+	char  *s
+)
 {
 	VIEW  nv;
 	FVECT  v1;
@@ -337,9 +347,10 @@ char  *s;
 }
 
 
-void
-getpivot(s)				/* pivot viewpoint */
-register char  *s;
+extern void
+getpivot(				/* pivot viewpoint */
+	register char  *s
+)
 {
 	FVECT  vc;
 	double  angle, elev, mag;
@@ -355,9 +366,10 @@ register char  *s;
 }
 
 
-void
-getexposure(s)				/* get new exposure */
-char  *s;
+extern void
+getexposure(				/* get new exposure */
+	char  *s
+)
 {
 	char  buf[128];
 	register char  *cp;
@@ -423,11 +435,13 @@ char  *s;
 
 typedef union {int i; double d; COLOR C;}	*MyUptr;
 
-int
-getparam(str, dsc, typ, p)		/* get variable from user */
-char  *str, *dsc;
-int  typ;
-void  *p;
+extern int
+getparam(		/* get variable from user */
+	char  *str,
+	char  *dsc,
+	int  typ,
+	void  *p
+)
 {
 	register MyUptr  ptr = (MyUptr)p;
 	int  i0;
@@ -484,12 +498,14 @@ void  *p;
 		setcolor(ptr->C, d0, d1, d2);
 		return(1);
 	}
+	return 0; /* nothing matched */
 }
 
 
-void
-setparam(s)				/* get/set program parameter */
-register char  *s;
+extern void
+setparam(				/* get/set program parameter */
+	register char  *s
+)
 {
 	char  buf[128];
 	
@@ -661,7 +677,7 @@ badparam:
 }
 
 
-void
+extern void
 traceray(s)				/* trace a single ray */
 char  *s;
 {
@@ -730,7 +746,7 @@ char  *s;
 }
 
 
-void
+extern void
 writepict(s)				/* write the picture to a file */
 char  *s;
 {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.9 2003/07/21 22:30:19 schorsch Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.10 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -26,6 +26,7 @@ static const char RCSid[] = "$Id: o_mesh.c,v 2.9 2003/07/21 22:30:19 schorsch Ex
 #include  "ray.h"
 #include  "mesh.h"
 #include  "tmesh.h"
+#include  "rtotypes.h"
 
 
 #define  EDGE_CACHE_SIZ		251	/* length of mesh edge cache */
@@ -144,10 +145,11 @@ RAY	*r;
 }
 
 
-int
-o_mesh(o, r)			/* compute ray intersection with a mesh */
-OBJREC		*o;
-register RAY	*r;
+extern int
+o_mesh(			/* compute ray intersection with a mesh */
+	OBJREC		*o,
+	register RAY	*r
+)
 {
 	RAY		rcont;
 	int		flags;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sphere.c,v 2.4 2004/03/27 12:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: sphere.c,v 2.5 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  sphere.c - routines for creating octrees for spheres.
@@ -50,7 +50,6 @@ static const char	RCSid[] = "$Id: sphere.c,v 2.4 2004/03/27 12:41:45 schorsch Ex
  */
 
 
-/* XXX o_sphere() is extern, but not declared in any header file */
 int
 o_sphere(			/* determine if sphere intersects cube */
 	OBJREC  *o,

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.5 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.6 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -124,8 +124,13 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.5 2003/07/27 22:12:03 schorsch
  *  but otherwise your process should not be compromised.
  */
 
-#include  "ray.h"
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h> /* XXX platform */
 
+#include  "rtprocess.h"
+#include  "ray.h"
+#include  "ambient.h"
 #include  "selcall.h"
 
 #ifndef RAYQLEN
@@ -160,11 +165,15 @@ static int	r_recv_next;		/* next receive ray placement */
 
 #define sendq_full()	(r_send_next >= RAYQLEN)
 
+static int ray_pflush(void);
+static void ray_pchild(int	fd_in, int	fd_out);
 
-void
-ray_pinit(otnm, nproc)		/* initialize ray-tracing processes */
-char	*otnm;
-int	nproc;
+
+extern void
+ray_pinit(		/* initialize ray-tracing processes */
+	char	*otnm,
+	int	nproc
+)
 {
 	if (nobjects > 0)		/* close old calculation */
 		ray_pdone(0);
@@ -185,7 +194,7 @@ int	nproc;
 
 
 static int
-ray_pflush()			/* send queued rays to idle children */
+ray_pflush(void)			/* send queued rays to idle children */
 {
 	int	nc, n, nw, i, sfirst;
 
@@ -219,9 +228,10 @@ ray_pflush()			/* send queued rays to idle children */
 }
 
 
-void
-ray_psend(r)			/* add a ray to our send queue */
-RAY	*r;
+extern void
+ray_psend(			/* add a ray to our send queue */
+	RAY	*r
+)
 {
 	if (r == NULL)
 		return;
@@ -234,9 +244,10 @@ RAY	*r;
 }
 
 
-int
-ray_pqueue(r)			/* queue a ray for computation */
-RAY	*r;
+extern int
+ray_pqueue(			/* queue a ray for computation */
+	RAY	*r
+)
 {
 	if (r == NULL)
 		return(0);
@@ -265,10 +276,11 @@ RAY	*r;
 }
 
 
-int
-ray_presult(r, poll)		/* check for a completed ray */
-RAY	*r;
-int	poll;
+extern int
+ray_presult(		/* check for a completed ray */
+	RAY	*r,
+	int	poll
+)
 {
 	static struct timeval	tpoll;	/* zero timeval struct */
 	static fd_set	readset, errset;
@@ -360,9 +372,10 @@ getready:				/* any children waiting for us? */
 }
 
 
-void
-ray_pdone(freall)		/* reap children and free data */
-int	freall;
+extern void
+ray_pdone(		/* reap children and free data */
+	int	freall
+)
 {
 	ray_pclose(0);			/* close child processes */
 
@@ -375,9 +388,10 @@ int	freall;
 
 
 static void
-ray_pchild(fd_in, fd_out)	/* process rays (never returns) */
-int	fd_in;
-int	fd_out;
+ray_pchild(	/* process rays (never returns) */
+	int	fd_in,
+	int	fd_out
+)
 {
 	int	n;
 	register int	i;
@@ -421,9 +435,10 @@ int	fd_out;
 }
 
 
-void
-ray_popen(nadd)			/* open the specified # processes */
-int	nadd;
+extern void
+ray_popen(			/* open the specified # processes */
+	int	nadd
+)
 {
 					/* check if our table has room */
 	if (ray_pnprocs + nadd > MAX_NPROCS)
@@ -458,9 +473,10 @@ int	nadd;
 }
 
 
-void
-ray_pclose(nsub)		/* close one or more child processes */
-int	nsub;
+extern void
+ray_pclose(		/* close one or more child processes */
+	int	nsub
+)
 {
 	static int	inclose = 0;
 	RAY	res;

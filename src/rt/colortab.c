@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colortab.c,v 2.8 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: colortab.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * colortab.c - allocate and control dynamic color table.
@@ -21,6 +21,7 @@ static const char	RCSid[] = "$Id: colortab.c,v 2.8 2003/06/30 14:59:12 schorsch 
 
 #include "standard.h"
 #include "color.h"
+#include "driver.h"
 
 				/* histogram resolution */
 #define NRED		24
@@ -92,10 +93,11 @@ int	ncolors;
 }
 
 
-int
-get_pixel(col, set_pixel)	/* get pixel for color */
-COLOR	col;
-void	(*set_pixel)();
+extern int
+get_pixel(	/* get pixel for color */
+	COLOR	col,
+	dr_newcolrf_t *newcolr
+)
 {
 	int	r, g, b;
 	int	cv[3];
@@ -140,7 +142,7 @@ void	(*set_pixel)();
 				h, r, g, b, clrtab[h].n);
 		eputs(errmsg);
 #endif
-		(*set_pixel)(h, r, g, b);
+		(*newcolr)(h, r, g, b);
 	}
 	return(h);				/* return pixel value */
 }

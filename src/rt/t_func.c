@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $";
+static const char	RCSid[] = "$Id: t_func.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  t_func.c - routine for procedural textures.
@@ -8,8 +8,8 @@ static const char	RCSid[] = "$Id: t_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "func.h"
+#include  "rtotypes.h"
 
 /*
  *	A procedural texture perturbs the surface normal
@@ -28,9 +28,11 @@ static const char	RCSid[] = "$Id: t_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $"
  */
 
 
-t_func(m, r)			/* compute texture for ray */
-register OBJREC  *m;
-register RAY  *r;
+extern int
+t_func(			/* compute texture for ray */
+	register OBJREC  *m,
+	register RAY  *r
+)
 {
 	FVECT  disp;
 	double  d;

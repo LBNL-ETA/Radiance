@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.40 2003/08/28 03:22:16 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.41 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -8,13 +8,11 @@ static const char RCSid[] = "$Id: aniso.c,v 2.40 2003/08/28 03:22:16 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "ambient.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
+#include  "source.h"
 #include  "func.h"
-
 #include  "random.h"
 
 #ifndef  MAXITER
@@ -62,17 +60,20 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  ANISODAT;		/* anisotropic material data */
 
-static void	getacoords();
-static void	agaussamp();
+static srcdirf_t diraniso;
+static void getacoords(RAY  *r, ANISODAT  *np);
+static void agaussamp(RAY  *r, ANISODAT  *np);
 
 
 static void
-diraniso(cval, np, ldir, omega)		/* compute source contribution */
-COLOR  cval;			/* returned coefficient */
-register ANISODAT  *np;		/* material data */
-FVECT  ldir;			/* light source direction */
-double  omega;			/* light source size */
+diraniso(		/* compute source contribution */
+	COLOR  cval,			/* returned coefficient */
+	void  *nnp,		/* material data */
+	FVECT  ldir,			/* light source direction */
+	double  omega			/* light source size */
+)
 {
+	register ANISODAT *np = nnp;
 	double  ldot;
 	double  dtmp, dtmp1, dtmp2;
 	FVECT  h;
@@ -180,10 +181,11 @@ double  omega;			/* light source size */
 }
 
 
-int
-m_aniso(m, r)			/* shade ray that hit something anisotropic */
-register OBJREC  *m;
-register RAY  *r;
+extern int
+m_aniso(			/* shade ray that hit something anisotropic */
+	register OBJREC  *m,
+	register RAY  *r
+)
 {
 	ANISODAT  nd;
 	COLOR  ctmp;
@@ -308,9 +310,10 @@ register RAY  *r;
 
 
 static void
-getacoords(r, np)		/* set up coordinate system */
-RAY  *r;
-register ANISODAT  *np;
+getacoords(		/* set up coordinate system */
+	RAY  *r,
+	register ANISODAT  *np
+)
 {
 	register MFUNC  *mf;
 	register int  i;
@@ -338,9 +341,10 @@ register ANISODAT  *np;
 
 
 static void
-agaussamp(r, np)		/* sample anisotropic gaussian specular */
-RAY  *r;
-register ANISODAT  *np;
+agaussamp(		/* sample anisotropic gaussian specular */
+	RAY  *r,
+	register ANISODAT  *np
+)
 {
 	RAY  sr;
 	FVECT  h;

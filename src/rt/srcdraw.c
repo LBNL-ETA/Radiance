@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.10 2003/10/24 05:29:43 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.11 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -10,9 +10,7 @@ static const char	RCSid[] = "$Id: srcdraw.c,v 2.10 2003/10/24 05:29:43 greg Exp 
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "view.h"
-
 #include  "source.h"
 
 
@@ -34,12 +32,26 @@ extern VIEW	ourview;		/* our view parameters */
 extern int	hres, vres;		/* our image resolution */
 static SPLIST	*sphead = NULL;		/* our list of source polys */
 
+static int inregion(RREAL p[2], double cv, int crit);
+static void clipregion(RREAL a[2], RREAL b[2], double cv, int crit, RREAL r[2]);
+static int hp_clip_poly(RREAL vl[][2], int nv, double cv, int crit,
+		RREAL vlo[][2]);
+static int box_clip_poly(RREAL vl[MAXVERT][2], int nv,
+		double xl, double xr, double yb, double ya, RREAL vlo[MAXVERT][2]);
+static double minw2(RREAL vl[][2], int nv, double ar2);
+static void convex_center(RREAL vl[][2], int nv, RREAL cv[2]);
+static double poly_area(RREAL vl[][2], int nv);
+static int convex_hull(RREAL vl[][2], int nv, RREAL vlo[][2]);
+static void spinsert(int sn, RREAL vl[][2], int nv);
+static int sourcepoly(int sn, RREAL sp[MAXVERT][2]);
+
 
 static int
-inregion(p, cv, crit)			/* check if vertex is in region */
-RREAL	p[2];
-double	cv;
-int	crit;
+inregion(			/* check if vertex is in region */
+	RREAL	p[2],
+	double	cv,
+	int	crit
+)
 {
 	switch (crit) {
 	case CLIP_ABOVE:
@@ -55,12 +67,14 @@ int	crit;
 }
 
 
-static
-clipregion(a, b, cv, crit, r)		/* find intersection with boundary */
-register RREAL	a[2], b[2];
-double	cv;
-int	crit;
-RREAL	r[2];	/* return value */
+static void
+clipregion(		/* find intersection with boundary */
+	register RREAL	a[2],
+	register RREAL	b[2],
+	double	cv,
+	int	crit,
+	RREAL	r[2]	/* return value */
+)
 {
 	switch (crit) {
 	case CLIP_ABOVE:
@@ -78,12 +92,13 @@ RREAL	r[2];	/* return value */
 
 
 static int
-hp_clip_poly(vl, nv, cv, crit, vlo)	/* clip polygon to half-plane */
-RREAL	vl[][2];
-int	nv;
-double	cv;
-int	crit;
-RREAL	vlo[][2];	/* return value */
+hp_clip_poly(	/* clip polygon to half-plane */
+	RREAL	vl[][2],
+	int	nv,
+	double	cv,
+	int	crit,
+	RREAL	vlo[][2]	/* return value */
+)
 {
 	RREAL	*s, *p;
 	register int	j, nvo;
@@ -105,11 +120,15 @@ RREAL	vlo[][2];	/* return value */
 
 
 static int
-box_clip_poly(vl, nv, xl, xr, yb, ya, vlo)	/* clip polygon to box */
-RREAL	vl[MAXVERT][2];
-int	nv;
-double	xl, xr, yb, ya;
-RREAL	vlo[MAXVERT][2];	/* return value */
+box_clip_poly(	/* clip polygon to box */
+	RREAL	vl[MAXVERT][2],
+	int	nv,
+	double	xl,
+	double	xr,
+	double	yb,
+	double	ya,
+	RREAL	vlo[MAXVERT][2]	/* return value */
+)
 {
 	RREAL	vlt[MAXVERT][2];
 	int	nvt, nvo;
@@ -124,10 +143,11 @@ RREAL	vlo[MAXVERT][2];	/* return value */
 
 
 static double
-minw2(vl, nv, ar2)			/* compute square of minimum width */
-RREAL	vl[][2];
-int	nv;
-double	ar2;
+minw2(			/* compute square of minimum width */
+	RREAL	vl[][2],
+	int	nv,
+	double	ar2
+)
 {
 	double	d2, w2, w2min, w2max;
 	register RREAL	*p0, *p1, *p2;
@@ -156,11 +176,12 @@ double	ar2;
 }
 
 
-static
-convex_center(vl, nv, cv)		/* compute center of convex polygon */
-register RREAL	vl[][2];
-int	nv;
-RREAL	cv[2];		/* return value */
+static void
+convex_center(		/* compute center of convex polygon */
+	register RREAL	vl[][2],
+	int	nv,
+	RREAL	cv[2]		/* return value */
+)
 {
 	register int	i;
 					/* simple average (suboptimal) */
@@ -175,9 +196,10 @@ RREAL	cv[2];		/* return value */
 
 
 static double
-poly_area(vl, nv)			/* compute area of polygon */
-register RREAL	vl[][2];
-int	nv;
+poly_area(			/* compute area of polygon */
+	register RREAL	vl[][2],
+	int	nv
+)
 {
 	double	a;
 	RREAL	v0[2], v1[2];
@@ -197,10 +219,11 @@ int	nv;
 
 
 static int
-convex_hull(vl, nv, vlo)		/* compute polygon's convex hull */
-RREAL	vl[][2];
-int	nv;
-RREAL	vlo[][2];	/* return value */
+convex_hull(		/* compute polygon's convex hull */
+	RREAL	vl[][2],
+	int	nv,
+	RREAL	vlo[][2]	/* return value */
+)
 {
 	int	nvo, nvt;
 	RREAL	vlt[MAXVERT][2];
@@ -232,11 +255,12 @@ RREAL	vlo[][2];	/* return value */
 }
 
 
-static
-spinsert(sn, vl, nv)			/* insert new source polygon */
-int	sn;
-RREAL	vl[][2];
-int	nv;
+static void
+spinsert(			/* insert new source polygon */
+	int	sn,
+	RREAL	vl[][2],
+	int	nv
+)
 {
 	register SPLIST	*spn;
 	register int	i;
@@ -258,10 +282,11 @@ int	nv;
 }
 
 
-int
-sourcepoly(sn, sp)			/* compute image polygon for source */
-int	sn;
-RREAL	sp[MAXVERT][2];
+static int
+sourcepoly(			/* compute image polygon for source */
+	int	sn,
+	RREAL	sp[MAXVERT][2]
+)
 {
 	static short	cubeord[8][6] = {{1,3,2,6,4,5},{0,4,5,7,3,2},
 					 {0,1,3,7,6,4},{0,1,5,7,6,2},
@@ -328,8 +353,10 @@ RREAL	sp[MAXVERT][2];
 
 
 			/* initialize by finding sources smaller than rad */
-init_drawsources(rad)
-int	rad;				/* source sample size */
+extern void
+init_drawsources(
+	int	rad				/* source sample size */
+)
 {
 	RREAL	spoly[MAXVERT][2];
 	int	nsv;
@@ -357,11 +384,15 @@ int	rad;				/* source sample size */
 	}
 }
 
-void			/* add sources smaller than rad to computed subimage */
-drawsources(pic, zbf, x0, xsiz, y0, ysiz)
-COLOR	*pic[];				/* subimage pixel value array */
-float	*zbf[];				/* subimage distance array (opt.) */
-int	x0, xsiz, y0, ysiz;		/* origin and size of subimage */
+extern void			/* add sources smaller than rad to computed subimage */
+drawsources(
+	COLOR	*pic[],				/* subimage pixel value array */
+	float	*zbf[],				/* subimage distance array (opt.) */
+	int	x0,				/* origin and size of subimage */
+	int	xsiz,
+	int	y0,
+	int	ysiz
+)
 {
 	RREAL	spoly[MAXVERT][2], ppoly[MAXVERT][2];
 	int	nsv, npv;

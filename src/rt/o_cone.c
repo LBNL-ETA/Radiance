@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.4 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: o_cone.c,v 2.5 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -8,15 +8,16 @@ static const char RCSid[] = "$Id: o_cone.c,v 2.4 2003/03/11 17:08:55 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "cone.h"
 
 
-o_cone(o, r)			/* intersect ray with cone */
-OBJREC  *o;
-register RAY  *r;
+extern int
+o_cone(			/* intersect ray with cone */
+	OBJREC  *o,
+	register RAY  *r
+)
 {
 	FVECT  rox, rdx;
 	double  a, b, c;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devtable.c,v 2.6 2003/06/30 19:04:29 greg Exp $";
+static const char	RCSid[] = "$Id: devtable.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  devtable.c - device table for rview.
@@ -10,12 +10,11 @@ static const char	RCSid[] = "$Id: devtable.c,v 2.6 2003/06/30 19:04:29 greg Exp 
 #include  <stdio.h>
 
 #include  "color.h"
-
 #include  "driver.h"
 
 char  dev_default[] = "x11";
 
-extern struct driver  *x11_init();
+extern dr_initf_t x11_init; /* XXX this should be in a seperate header file */
 
 struct device  devtable[] = {			/* supported devices */
 	{"slave", "Slave driver", slave_init},

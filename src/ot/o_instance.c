@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_instance.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.6 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  o_instance.c - routines for creating octrees for other octrees
@@ -110,7 +110,6 @@ o_cube(			/* determine if cubes intersect */
 }
 
 
-/* XXX o_instance() is extern, but not declared in any header file */
 int
 o_instance(			/* determine if instance intersects */
 	OBJREC  *o,
@@ -125,7 +124,6 @@ o_instance(			/* determine if instance intersects */
 }
 
 
-/* XXX o_mesh() is extern, but not declared in any header file */
 int
 o_mesh(				/* determine if mesh intersects */
 	OBJREC  *o,

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.8 2003/10/04 14:39:53 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -115,7 +115,6 @@ int	samplendx = 0;			/* index for this sample */
 
 void	(*trace)() = NULL;		/* trace call */
 
-extern void	ambnotify();
 void	(*addobjnotify[8])() = {ambnotify, NULL};
 
 int	do_irrad = 0;			/* compute irradiance? */
@@ -153,9 +152,10 @@ char	*amblist[AMBLLEN+1];		/* ambient include/exclude list */
 int	ambincl = -1;			/* include == 1, exclude == 0 */
 
 
-void
-ray_init(otnm)			/* initialize ray-tracing calculation */
-char	*otnm;
+extern void
+ray_init(			/* initialize ray-tracing calculation */
+	char	*otnm
+)
 {
 	if (nobjects > 0)		/* free old scene data */
 		ray_done(0);
@@ -174,9 +174,10 @@ char	*otnm;
 					/* ready to go... */
 }
 
-void
-ray_trace(r)			/* trace a primary ray */
-RAY	*r;
+extern void
+ray_trace(			/* trace a primary ray */
+	RAY	*r
+)
 {
 	rayorigin(r, NULL, PRIMARY, 1.0);
 	samplendx++;
@@ -184,9 +185,10 @@ RAY	*r;
 }
 
 
-void
-ray_done(freall)		/* free ray-tracing data */
-int	freall;
+extern void
+ray_done(		/* free ray-tracing data */
+	int	freall
+)
 {
 	retainfonts = 1;
 	ambdone();
@@ -204,16 +206,17 @@ int	freall;
 		initurand(0);
 	}
 	if (nobjects > 0) {
-		sprintf(errmsg, "%d objects left after call to ray_done()",
+		sprintf(errmsg, "%ld objects left after call to ray_done()",
 				nobjects);
 		error(WARNING, errmsg);
 	}
 }
 
 
-void
-ray_save(rp)			/* save current parameter settings */
-RAYPARAMS	*rp;
+extern void
+ray_save(			/* save current parameter settings */
+	RAYPARAMS	*rp
+)
 {
 	int	i, ndx;
 
@@ -261,9 +264,10 @@ RAYPARAMS	*rp;
 }
 
 
-void
-ray_restore(rp)			/* restore parameter settings */
-RAYPARAMS	*rp;
+extern void
+ray_restore(			/* restore parameter settings */
+	RAYPARAMS	*rp
+)
 {
 	register int	i;
 
@@ -328,9 +332,10 @@ RAYPARAMS	*rp;
 }
 
 
-void
-ray_defaults(rp)		/* get default parameter values */
-RAYPARAMS	*rp;
+extern void
+ray_defaults(		/* get default parameter values */
+	RAYPARAMS	*rp
+)
 {
 	int	i;
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.9 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.10 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: lookamb.c,v 2.9 2003/06/05 19:29:34 schorsch E
 #include  "platform.h"
 #include  "ray.h"
 #include  "ambient.h"
+#include  "resolu.h"
 
 
 int  dataonly = 0;
@@ -19,9 +20,11 @@ int  reverse = 0;
 AMBVAL  av;
 
 
-main(argc, argv)		/* load ambient values from a file */
-int  argc;
-char  *argv[];
+int
+main(		/* load ambient values from a file */
+	int  argc,
+	char  *argv[]
+)
 {
 	FILE  *fp;
 	int  i;
@@ -85,9 +88,10 @@ formaterr:
 }
 
 
-void
-lookamb(fp)			/* get ambient values from a file */
-FILE  *fp;
+extern void
+lookamb(			/* get ambient values from a file */
+	FILE  *fp
+)
 {
 	while (readambval(&av, fp)) {
 		if (dataonly) {
@@ -121,9 +125,10 @@ FILE  *fp;
 }
 
 
-void
-writamb(fp)			/* write binary ambient values */
-FILE  *fp;
+extern void
+writamb(			/* write binary ambient values */
+	FILE  *fp
+)
 {
 	for ( ; ; ) {
 		if (!dataonly)

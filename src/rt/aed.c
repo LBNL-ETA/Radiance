@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aed.c,v 2.5 2003/08/20 10:00:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: aed.c,v 2.6 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  aed.c - driver for AED 512 terminal.
@@ -53,17 +53,18 @@ static const char	RCSid[] = "$Id: aed.c,v 2.5 2003/08/20 10:00:09 schorsch Exp $
 #define  COMHT		16		/* height of command line */
 #define  COMCW		63		/* maximum chars on command line */
 
-static void  aed_close(void);
 static void aed_errout(char*);
 static void longwait(int t);
 static void aedgetcap(int  *xp, int *yp);
 static void aedsetcap(int  x, int y);
-static void anewcolr(int  index, int  r,int g,int b);
-static void aed_paintr(COLOR  col, int  xmin, int ymin, int xmax, int ymax);
+static dr_newcolrf_t anewcolr;
 static void aedcoord(int  x, int y);
-static void aed_comout(char  *out);
-static int aed_getcur(int  *xp, int *yp);
-static aed_clear(int  x, int y);
+
+static dr_closef_t aed_close;
+static dr_clearf_t aed_clear;
+static dr_paintrf_t aed_paintr;
+static dr_getcurf_t aed_getcur;
+static dr_comoutf_t comout;
 
 static struct driver  aed_driver = {
 	aed_close, aed_clear, aed_paintr, aed_getcur,

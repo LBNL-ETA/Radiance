@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.14 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.15 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -8,8 +8,8 @@ static const char RCSid[] = "$Id: glass.c,v 2.14 2003/07/27 22:12:03 schorsch Ex
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
+#include  "rtotypes.h"
 
 /*
  *  This definition of glass provides for a quick calculation
@@ -41,9 +41,11 @@ static const char RCSid[] = "$Id: glass.c,v 2.14 2003/07/27 22:12:03 schorsch Ex
 #define  RINDEX		1.52		/* refractive index of glass */
 
 
-m_glass(m, r)		/* color a ray which hit a thin glass surface */
-OBJREC  *m;
-register RAY  *r;
+extern int
+m_glass(		/* color a ray which hit a thin glass surface */
+	OBJREC  *m,
+	register RAY  *r
+)
 {
 	COLOR  mcolor;
 	double  pdot;

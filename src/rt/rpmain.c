@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -27,13 +27,9 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.7 2003/07/21 22:30:19 schorsch Ex
 #endif
 
 char  *progname;			/* argv[0] */
-
 char  *octname;				/* octree name */
-
 char  *sigerr[NSIG];			/* signal error messages */
-
 char  *shm_boundary = NULL;		/* boundary of shared memory */
-
 char  *errfile = NULL;			/* error output file */
 
 extern time_t  time();
@@ -53,15 +49,13 @@ extern double  dstrpix;			/* square pixel distribution */
 
 extern double  mblur;			/* motion blur parameter */
 
-void	onsig();
-void	sigdie();
-void	printdefaults();
+static void onsig(int signo);
+static void sigdie(int  signo, char  *msg);
+static void printdefaults(void);
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(int  argc, char  *argv[])
 {
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
@@ -354,6 +348,7 @@ runagain:
 badopt:
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
 	error(USER, errmsg);
+	return 1; /* pro forma return */
 
 #undef	check
 #undef	bool
@@ -361,8 +356,9 @@ badopt:
 
 
 void
-wputs(s)				/* warning output function */
-char	*s;
+wputs(				/* warning output function */
+	char	*s
+)
 {
 	int  lasterrno = errno;
 	eputs(s);
@@ -371,8 +367,9 @@ char	*s;
 
 
 void
-eputs(s)				/* put string to stderr */
-register char  *s;
+eputs(				/* put string to stderr */
+	register char  *s
+)
 {
 	static int  midline = 0;
 
@@ -390,9 +387,10 @@ register char  *s;
 }
 
 
-void
-onsig(signo)				/* fatal signal */
-int  signo;
+static void
+onsig(				/* fatal signal */
+	int  signo
+)
 {
 	static int  gotsig = 0;
 
@@ -410,10 +408,11 @@ int  signo;
 }
 
 
-void
-sigdie(signo, msg)			/* set fatal signal */
-int  signo;
-char  *msg;
+static void
+sigdie(			/* set fatal signal */
+	int  signo,
+	char  *msg
+)
 {
 	if (signal(signo, onsig) == SIG_IGN)
 		signal(signo, SIG_IGN);
@@ -421,8 +420,8 @@ char  *msg;
 }
 
 
-void
-printdefaults()			/* print default values to stdout */
+static void
+printdefaults(void)			/* print default values to stdout */
 {
 	printf("-vt%c\t\t\t\t# view type %s\n", ourview.type,
 			ourview.type==VT_PER ? "perspective" :

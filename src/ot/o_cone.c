@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_cone.c,v 2.3 2004/03/27 12:41:45 schorsch Exp $";
+static const char	RCSid[] = "$Id: o_cone.c,v 2.4 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  o_cone.c - routines for intersecting cubes with cones.
@@ -33,9 +33,8 @@ static double findcseg(FVECT ep0, FVECT ep1, CONE *co, FVECT p);
 
 
 
-/* XXX o_cone() is extern, but not declared in any header file */
-int
-o_cone(			/* determine if cone intersects cube */
+extern int
+o_cone(		/* determine if cone intersects cube */
 	OBJREC  *o,
 	register CUBE  *cu
 )

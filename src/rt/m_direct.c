@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.11 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.12 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -9,11 +9,9 @@ static const char	RCSid[] = "$Id: m_direct.c,v 2.11 2003/07/27 22:12:03 schorsch
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "source.h"
-
 #include  "func.h"
 
 /*
@@ -30,8 +28,8 @@ static const char	RCSid[] = "$Id: m_direct.c,v 2.11 2003/07/27 22:12:03 schorsch
  *	n A1 A2 .. An
  */
 
-
-static int  dir_proj();
+static int redirect(OBJREC  *m, RAY  *r, int  n);
+static int dir_proj(MAT4  pm, OBJREC  *o, SRCREC  *s, int  n);
 
 VSMATERIAL  direct1_vs = {dir_proj, 1};
 VSMATERIAL  direct2_vs = {dir_proj, 2};
@@ -41,10 +39,11 @@ VSMATERIAL  direct2_vs = {dir_proj, 2};
 				getfunc(m, 8, 0xff, 1) )
 
 
-int
-m_direct(m, r)			/* shade redirected ray */
-register OBJREC  *m;
-register RAY  *r;
+extern int
+m_direct(			/* shade redirected ray */
+	register OBJREC  *m,
+	register RAY  *r
+)
 {
 					/* check if source ray */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
@@ -61,11 +60,12 @@ register RAY  *r;
 }
 
 
-int
-redirect(m, r, n)		/* compute n'th ray redirection */
-OBJREC  *m;
-RAY  *r;
-int  n;
+static int
+redirect(		/* compute n'th ray redirection */
+	OBJREC  *m,
+	RAY  *r,
+	int  n
+)
 {
 	MFUNC  *mf;
 	register EPNODE  **va;
@@ -132,11 +132,12 @@ computerr:
 
 
 static int
-dir_proj(pm, o, s, n)		/* compute a director's projection */
-MAT4  pm;
-OBJREC  *o;
-SRCREC  *s;
-int  n;
+dir_proj(		/* compute a director's projection */
+	MAT4  pm,
+	OBJREC  *o,
+	SRCREC  *s,
+	int  n
+)
 {
 	RAY  tr;
 	OBJREC  *m;

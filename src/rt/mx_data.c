@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_data.c,v 2.8 2003/03/05 16:16:53 greg Exp $";
+static const char	RCSid[] = "$Id: mx_data.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  mx_data.c - routine for stored mixtures.
@@ -8,10 +8,9 @@ static const char	RCSid[] = "$Id: mx_data.c,v 2.8 2003/03/05 16:16:53 greg Exp $
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "data.h"
-
 #include  "func.h"
+#include  "rtotypes.h"
 
 /*
  *  A stored mixture is specified:
@@ -42,9 +41,11 @@ static const char	RCSid[] = "$Id: mx_data.c,v 2.8 2003/03/05 16:16:53 greg Exp $
  */
 
 
-mx_data(m, r)			/* interpolate mixture data */
-register OBJREC  *m;
-RAY  *r;
+extern int
+mx_data(			/* interpolate mixture data */
+	register OBJREC  *m,
+	RAY  *r
+)
 {
 	OBJECT	obj;
 	double  coef;
@@ -92,9 +93,11 @@ computerr:
 }
 
 
-mx_pdata(m, r)			/* interpolate mixture picture */
-register OBJREC  *m;
-RAY  *r;
+extern int
+mx_pdata(			/* interpolate mixture picture */
+	register OBJREC  *m,
+	RAY  *r
+)
 {
 	OBJECT	obj;
 	double	col[3], coef;

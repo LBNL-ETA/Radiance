@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_func.c,v 2.7 2003/03/05 16:16:53 greg Exp $";
+static const char	RCSid[] = "$Id: mx_func.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  mx_func.c - routine for mixture functions.
@@ -8,8 +8,8 @@ static const char	RCSid[] = "$Id: mx_func.c,v 2.7 2003/03/05 16:16:53 greg Exp $
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "func.h"
+#include  "rtotypes.h"
 
 /*
  *	A mixture function is specified:
@@ -26,9 +26,11 @@ static const char	RCSid[] = "$Id: mx_func.c,v 2.7 2003/03/05 16:16:53 greg Exp $
  */
 
 
-mx_func(m, r)			/* compute mixture function */
-register OBJREC  *m;
-RAY  *r;
+extern int
+mx_func(			/* compute mixture function */
+	register OBJREC  *m,
+	RAY  *r
+)
 {
 	OBJECT	obj;
 	register int  i;

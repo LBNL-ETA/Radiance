@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.31 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.32 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -22,6 +22,7 @@ static const char	RCSid[] = "$Id: x11.c,v 2.31 2003/07/21 22:30:19 schorsch Exp 
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
 
+#include  "platform.h"
 #include  "color.h"
 #include  "driver.h"
 #include  "x11twind.h"
@@ -79,27 +80,43 @@ static Colormap ourmap = 0;		/* our color map */
 
 static int  inpcheck;			/* whence to check input */
 
-static int	x11_getcur();
+static void x11_errout(char  *msg);
 
-static void  x11_close(), x11_clear(), x11_paintr(), x11_errout(),
-		x11_comout(), x11_comin(), x11_flush();
+static dr_closef_t x11_close;
+static dr_clearf_t x11_clear;
+static dr_paintrf_t x11_paintr;
+static dr_getcurf_t x11_getcur;
+static dr_comoutf_t x11_comout;
+static dr_cominf_t x11_comin;
+static dr_flushf_t x11_flush;
 
-static void  std_comin(), std_comout();
+static dr_cominf_t std_comin;
+static dr_comoutf_t std_comout;
 
 static struct driver  x11_driver = {
 	x11_close, x11_clear, x11_paintr, x11_getcur,
 	NULL, NULL, x11_flush, 1.0
 };
 
-static int  getpixels(), x11_getc();
-static void  xnewcolr(), freepixels(), resizewindow(),
-		getevent(), getkey(), fixwindow();
-static unsigned long  true_pixel();
+static dr_getchf_t x11_getc;
+
+static void freepixels(void);
+static int getpixels(void);
+static dr_newcolrf_t xnewcolr;
+static unsigned long true_pixel(COLOR  col);
+static void getevent(void);
+static void getkey(XKeyPressedEvent  *ekey);
+static void fixwindow(XExposeEvent  *eexp);
+static void resizewindow(XConfigureEvent  *ersz);
+
+extern dr_initf_t x11_init; /* XXX this should be in a seperate header file */
 
 
-struct driver *
-x11_init(name, id)		/* initialize driver */
-char  *name, *id;
+extern struct driver *
+x11_init(		/* initialize driver */
+	char  *name,
+	char  *id
+)
 {
 	char  *gv;
 	int  nplanes;
@@ -208,7 +225,7 @@ char  *name, *id;
 
 
 static void
-x11_close()			/* close our display */
+x11_close(void)			/* close our display */
 {
 	erract[COMMAND].pf = NULL;		/* reset error vectors */
 	if (erract[WARNING].pf != NULL)
@@ -231,8 +248,10 @@ x11_close()			/* close our display */
 
 
 static void
-x11_clear(xres, yres)			/* clear our display */
-int  xres, yres;
+x11_clear(			/* clear our display */
+	int  xres,
+	int  yres
+)
 {
 						/* check limits */
 	if (xres < MINWIDTH)
@@ -278,9 +297,13 @@ int  xres, yres;
 
 
 static void
-x11_paintr(col, xmin, ymin, xmax, ymax)		/* fill a rectangle */
-COLOR  col;
-int  xmin, ymin, xmax, ymax;
+x11_paintr(		/* fill a rectangle */
+	COLOR  col,
+	int  xmin,
+	int  ymin,
+	int  xmax,
+	int  ymax
+)
 {
 	unsigned long  pixel;
 
@@ -297,7 +320,7 @@ int  xmin, ymin, xmax, ymax;
 
 
 static void
-x11_flush()			/* flush output */
+x11_flush(void)			/* flush output */
 {
 	char	buf[256];
 	int	n;
@@ -333,8 +356,10 @@ x11_flush()			/* flush output */
 
 
 static void
-x11_comin(inp, prompt)		/* read in a command line */
-char  *inp, *prompt;
+x11_comin(		/* read in a command line */
+	char  *inp,
+	char  *prompt
+)
 {
 	if (prompt != NULL) {
 		x11_flush();		/* make sure we get everything */
@@ -349,8 +374,9 @@ char  *inp, *prompt;
 
 
 static void
-x11_comout(outp)		/* output a string to command line */
-char  *outp;
+x11_comout(		/* output a string to command line */
+	char  *outp
+)
 {
 	if (comline == NULL || outp == NULL || !outp[0])
 		return;
@@ -361,8 +387,9 @@ char  *outp;
 
 
 static void
-x11_errout(msg)			/* output an error message */
-char  *msg;
+x11_errout(			/* output an error message */
+	char  *msg
+)
 {
 	eputs(msg);		/* send to stderr also! */
 	x11_comout(msg);
@@ -370,8 +397,10 @@ char  *msg;
 
 
 static void
-std_comin(inp, prompt)		/* read in command line from stdin */
-char  *inp, *prompt;
+std_comin(		/* read in command line from stdin */
+	char  *inp,
+	char  *prompt
+)
 {
 	if (prompt != NULL) {
 		if (fromcombuf(inp, &x11_driver))
@@ -399,8 +428,9 @@ char  *inp, *prompt;
 
 
 static void
-std_comout(outp)		/* write out string to stdout */
-char	*outp;
+std_comout(		/* write out string to stdout */
+	char	*outp
+)
 {
 	fputs(outp, stdout);
 	fflush(stdout);
@@ -408,8 +438,10 @@ char	*outp;
 
 
 static int
-x11_getcur(xp, yp)		/* get cursor position */
-int  *xp, *yp;
+x11_getcur(		/* get cursor position */
+	int  *xp,
+	int  *yp
+)
 {
 	while (XGrabPointer(ourdisplay, gwind, True, ButtonPressMask,
 			GrabModeAsync, GrabModeAsync, None, pickcursor,
@@ -437,9 +469,12 @@ int  *xp, *yp;
 
 
 static void
-xnewcolr(ndx, r, g, b)		/* enter a color into hardware table */
-int  ndx;
-int  r, g, b;
+xnewcolr(		/* enter a color into hardware table */
+	int  ndx,
+	int  r,
+	int  g,
+	int  b
+)
 {
 	XColor  xcolor;
 
@@ -454,7 +489,7 @@ int  r, g, b;
 
 
 static int
-getpixels()				/* get the color map */
+getpixels(void)				/* get the color map */
 {
 	XColor  thiscolor;
 	register int  i, j;
@@ -506,7 +541,7 @@ loop:
 
 
 static void
-freepixels()				/* free our pixels */
+freepixels(void)				/* free our pixels */
 {
 	if (ncolors == 0)
 		return;
@@ -521,8 +556,9 @@ freepixels()				/* free our pixels */
 
 
 static unsigned long
-true_pixel(col)			/* return true pixel value for color */
-COLOR  col;
+true_pixel(			/* return true pixel value for color */
+	COLOR  col
+)
 {
 	unsigned long  rval;
 	BYTE  rgb[3];
@@ -536,7 +572,7 @@ COLOR  col;
 
 
 static int
-x11_getc()			/* get a command character */
+x11_getc(void)			/* get a command character */
 {
 	while (c_last <= c_first) {
 		c_first = c_last = 0;		/* reset */
@@ -548,7 +584,7 @@ x11_getc()			/* get a command character */
 
 
 static void
-getevent()			/* get next event */
+getevent(void)			/* get next event */
 {
 	XNextEvent(ourdisplay, levptr(XEvent));
 	switch (levptr(XEvent)->type) {
@@ -582,8 +618,9 @@ getevent()			/* get next event */
 
 
 static void
-getkey(ekey)				/* get input key */
-register XKeyPressedEvent  *ekey;
+getkey(				/* get input key */
+	register XKeyPressedEvent  *ekey
+)
 {
 	register int  n;
 
@@ -595,8 +632,9 @@ register XKeyPressedEvent  *ekey;
 
 
 static void
-fixwindow(eexp)				/* repair damage to window */
-register XExposeEvent  *eexp;
+fixwindow(				/* repair damage to window */
+	register XExposeEvent  *eexp
+)
 {
 	char  buf[80];
 
@@ -613,8 +651,9 @@ register XExposeEvent  *eexp;
 
 
 static void
-resizewindow(ersz)			/* resize window */
-register XConfigureEvent  *ersz;
+resizewindow(			/* resize window */
+	register XConfigureEvent  *ersz
+)
 {
 	if (ersz->width == gwidth && ersz->height-comheight == gheight)
 		return;

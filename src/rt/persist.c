@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.33 2003/10/22 02:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.34 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -17,6 +17,7 @@ static const char	RCSid[] = "$Id: persist.c,v 2.33 2003/10/22 02:06:35 greg Exp 
 #include "rtprocess.h" /* getpid() */
 #include "standard.h"
 #include "random.h"
+#include "ray.h"
 
 #ifdef F_SETLKW
 #include "paths.h"
@@ -26,22 +27,20 @@ static const char	RCSid[] = "$Id: persist.c,v 2.33 2003/10/22 02:06:35 greg Exp 
 #define TIMELIM		(8*3600)	/* time limit for holding pattern */
 #endif
 
-extern void	io_process();
-
 extern int	headismine;	/* boolean true if header belongs to me */
-
 extern char	*progname;	/* global program name */
-
 extern char	*errfile;	/* global error file name */
-
 static char	*persistfname = NULL;	/* persist file name */
 static int	persistfd = -1;		/* persist file descriptor */
-
 static char	inpname[TEMPLEN+1], outpname[TEMPLEN+1], errname[TEMPLEN+1];
 
+typedef void (sighandler_t)(int);
+static sighandler_t sig_io;
+static sighandler_t sig_alrm;
 
-void
-pfdetach()		/* release persist (and header) resources */
+
+extern void
+pfdetach(void)		/* release persist (and header) resources */
 {
 	if (persistfd >= 0)
 		close(persistfd);
@@ -54,8 +53,8 @@ pfdetach()		/* release persist (and header) resources */
 }
 
 
-void
-pfclean()		/* clean up persist files */
+extern void
+pfclean(void)		/* clean up persist files */
 {
 	if (persistfd >= 0)
 		close(persistfd);
@@ -70,9 +69,10 @@ pfclean()		/* clean up persist files */
 }
 
 
-void
-pflock(lf)		/* place or release exclusive lock on file */
-int	lf;
+extern void
+pflock(		/* place or release exclusive lock on file */
+	int	lf
+)
 {
 	struct flock	fls;
 
@@ -85,9 +85,10 @@ int	lf;
 }
 
 
-void
-persistfile(pfn)	/* open persist file and lock it */
-char	*pfn;
+extern void
+persistfile(	/* open persist file and lock it */
+	char	*pfn
+)
 {
 	persistfd = open(pfn, O_WRONLY|O_CREAT|O_EXCL, 0644);
 	if (persistfd >= 0) {
@@ -108,15 +109,15 @@ char	*pfn;
 
 static int	got_io;
 
-static void sig_io() { got_io++; }
+static void sig_io(int i) { got_io++; }
 
-static void sig_alrm() { quit(0); }
+static void sig_alrm(int i) { quit(0); }
 
 
-void
-pfhold()		/* holding pattern for idle rendering process */
+extern void
+pfhold(void)		/* holding pattern for idle rendering process */
 {
-	void	(*oldalrm)();
+	sighandler_t	*oldalrm;
 	char	buf[512];
 	register int	n;
 				/* close input and output descriptors */
@@ -141,7 +142,7 @@ pfhold()		/* holding pattern for idle rendering process */
 				/* wait TIMELIM for someone to signal us */
 	got_io = 0;
 	signal(SIGIO, sig_io);
-	oldalrm = (void (*)())signal(SIGALRM, sig_alrm);
+	oldalrm = signal(SIGALRM, sig_alrm);
 	alarm(TIMELIM);
 	pflock(0);			/* unlock persist file for attach */
 	while (!got_io)
@@ -184,8 +185,8 @@ openerr:
 }
 
 
-void
-io_process()		/* just act as go-between for actual process */
+extern void
+io_process(void)		/* just act as go-between for actual process */
 {
 	register char	*cp;
 	register int	nr, n;
@@ -334,7 +335,7 @@ io_process()		/* just act as go-between for actual process */
 				} while ((nr -= n) > 0);
 		}
 	}
-	wait(0);		/* wait for feeder process */
+	wait(0);		/* wait for feeder process */ /* XXX platform */
 	_exit(status);
 formerr:
 	error(USER, "format error in persist file");
@@ -346,6 +347,6 @@ writerr:
 
 #else
 
-void pfclean() {}
+extern void pfclean(void) {}
 
 #endif

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.43 2004/03/01 18:11:20 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.44 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -8,11 +8,9 @@ static const char RCSid[] = "$Id: source.c,v 2.43 2004/03/01 18:11:20 greg Exp $
  */
 
 #include  "ray.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "source.h"
-
 #include  "random.h"
 
 extern double  ssampdist;		/* scatter sampling distance */
@@ -41,8 +39,10 @@ static CONTRIB  *srccnt;		/* source contributions in direct() */
 static CNTPTR  *cntord;			/* source ordering in direct() */
 static int  maxcntr = 0;		/* size of contribution arrays */
 
+static int cntcmp(const void *p1, const void *p2);
 
-OBJREC *			/* find an object's actual material */
+
+extern OBJREC *			/* find an object's actual material */
 findmaterial(register OBJREC *o)
 {
 	while (!ismaterial(o->otype)) {
@@ -66,8 +66,8 @@ findmaterial(register OBJREC *o)
 }
 
 
-void
-marksources()			/* find and mark source objects */
+extern void
+marksources(void)			/* find and mark source objects */
 {
 	int  foundsource = 0;
 	int  i;
@@ -147,8 +147,8 @@ memerr:
 }
 
 
-void
-freesources()			/* free all source structures */
+extern void
+freesources(void)			/* free all source structures */
 {
 	if (nsources > 0) {
 #if SHADCACHE
@@ -169,11 +169,11 @@ freesources()			/* free all source structures */
 }
 
 
-int
+extern int
 srcray(				/* send a ray to a source, return domega */
-register RAY  *sr,		/* returned source ray */
-RAY  *r,			/* ray which hit object */
-SRCINDEX  *si			/* source sample index */
+	register RAY  *sr,		/* returned source ray */
+	RAY  *r,			/* ray which hit object */
+	SRCINDEX  *si			/* source sample index */
 )
 {
     double  d;				/* distance to source */
@@ -208,9 +208,9 @@ SRCINDEX  *si			/* source sample index */
 }
 
 
-void
+extern void
 srcvalue(			/* punch ray to source and compute value */
-register RAY  *r
+	register RAY  *r
 )
 {
 	register SRCREC  *sp;
@@ -250,9 +250,9 @@ nomat:
 }
 
 
-int
+extern int
 sourcehit(			/* check to see if ray hit distant source */
-register RAY  *r
+	register RAY  *r
 )
 {
 	int  first, last;
@@ -292,8 +292,8 @@ register RAY  *r
 
 static int
 cntcmp(				/* contribution compare (descending) */
-const void *p1,
-const void *p2
+	const void *p1,
+	const void *p2
 )
 {
 	register const CNTPTR  *sc1 = (const CNTPTR *)p1;
@@ -307,14 +307,13 @@ const void *p2
 }
 
 
-void
+extern void
 direct(					/* add direct component */
-RAY  *r,			/* ray that hit surface */
-void  (*f)(),			/* direct component coefficient function */
-char  *p			/* data for f */
+	RAY  *r,			/* ray that hit surface */
+	srcdirf_t *f,			/* direct component coefficient function */
+	void  *p			/* data for f */
 )
 {
-	extern void  (*trace)();
 	register int  sn;
 	register CONTRIB  *scp;
 	SRCINDEX  si;
@@ -452,9 +451,9 @@ char  *p			/* data for f */
 }
 
 
-void
+extern void
 srcscatter(			/* compute source scattering into ray */
-register RAY  *r
+	register RAY  *r
 )
 {
 	int  oldsampndx;
@@ -610,10 +609,10 @@ weaksrcmat(OBJECT obj)		/* identify material */
 				distglow(m, r, raydist(r,PRIMARY)))
 
 
-int
+extern int
 m_light(				/* ray hit a light source */
-register OBJREC  *m,
-register RAY  *r
+	register OBJREC  *m,
+	register RAY  *r
 )
 {
 						/* check for over-counting */

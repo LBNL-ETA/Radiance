@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.21 2004/02/12 18:55:50 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.22 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -7,12 +7,11 @@ static const char	RCSid[] = "$Id: func.c,v 2.21 2004/02/12 18:55:50 greg Exp $";
 
 #include "copyright.h"
 
+#include <math.h>
+
 #include  "ray.h"
-
 #include  "paths.h"
-
 #include  "otypes.h"
-
 #include  "func.h"
 
 
@@ -36,12 +35,13 @@ static RAY  *fray = NULL;	/* current function ray */
 static double  l_erf(char *), l_erfc(char *), l_arg(char *);
 
 
-MFUNC *
-getfunc(m, ff, ef, dofwd)	/* get function for this modifier */
-OBJREC  *m;
-int  ff;
-unsigned int  ef;
-int  dofwd;
+extern MFUNC *
+getfunc(	/* get function for this modifier */
+	OBJREC  *m,
+	int  ff,
+	unsigned int  ef,
+	int  dofwd
+)
 {
 	static char  initfile[] = INITFILE;
 	char  sbuf[MAXSTR];
@@ -133,12 +133,14 @@ toofew:
 	objerror(m, USER, "too few string arguments");
 memerr:
 	error(SYSTEM, "out of memory in getfunc");
+	return NULL; /* pro forma return */
 }
 
 
-void
-freefunc(m)			/* free memory associated with modifier */
-OBJREC  *m;
+extern void
+freefunc(			/* free memory associated with modifier */
+	OBJREC  *m
+)
 {
 	register MFUNC  *f;
 	register int  i;
@@ -165,10 +167,11 @@ OBJREC  *m;
 }
 
 
-int
-setfunc(m, r)			/* set channels for function call */
-OBJREC  *m;
-register RAY  *r;
+extern int
+setfunc(			/* set channels for function call */
+	OBJREC  *m,
+	register RAY  *r
+)
 {
 	static unsigned long  lastrno = ~0;
 	register MFUNC  *f;
@@ -196,9 +199,10 @@ register RAY  *r;
 }
 
 
-void
-loadfunc(fname)			/* load definition file */
-char  *fname;
+extern void
+loadfunc(			/* load definition file */
+	char  *fname
+)
 {
 	char  *ffname;
 
@@ -234,8 +238,6 @@ l_arg(char *nm)			/* return nth real argument */
 static double
 l_erf(char *nm)			/* error function */
 {
-	extern double  erf();
-
 	return(erf(argument(1)));
 }
 
@@ -243,15 +245,14 @@ l_erf(char *nm)			/* error function */
 static double
 l_erfc(char *nm)		/* cumulative error function */
 {
-	extern double  erfc();
-
 	return(erfc(argument(1)));
 }
 
 
-double
-chanvalue(n)			/* return channel n to calcomp */
-register int  n;
+extern double
+chanvalue(			/* return channel n to calcomp */
+	register int  n
+)
 {
 	if (fray == NULL)
 		syntax("ray parameter used in constant expression");

@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id";
 
 #include  "ray.h"
 #include  "source.h"
+#include  "rtotypes.h"
 
 /*
  *  A mist volume is used to specify a region in the scene where a certain
@@ -50,11 +51,16 @@ static const char RCSid[] = "$Id";
 
 #define RELAYDELIM	'>'		/* relay delimiter character */
 
+static int inslist(int  *sl, int  n);
+static int srcmatch(SRCREC  *sp, char  *id);
+static void add2slist(RAY  *r, int  *sl);
+
 
 static int
-inslist(sl, n)		/* return index of source n if it's in list sl */
-register int  *sl;
-register int  n;
+inslist(		/* return index of source n if it's in list sl */
+	register int  *sl,
+	register int  n
+)
 {
 	register int  i;
 
@@ -66,9 +72,10 @@ register int  n;
 
 
 static int
-srcmatch(sp, id)	/* check for an id match on a light source */
-register SRCREC  *sp;
-register char  *id;
+srcmatch(	/* check for an id match on a light source */
+	register SRCREC  *sp,
+	register char  *id
+)
 {
 	register char  *cp;
 						/* check for relay sources */
@@ -87,9 +94,10 @@ register char  *id;
 
 
 static void
-add2slist(r, sl)	/* add source list to ray's */
-register RAY  *r;
-register int  *sl;
+add2slist(	/* add source list to ray's */
+	register RAY  *r,
+	register int  *sl
+)
 {
 	static int  slspare[MAXSLIST+1];	/* in case of emergence */
 	register int  i;
@@ -108,10 +116,11 @@ register int  *sl;
 }
 
 
-int
-m_mist(m, r)		/* process a ray entering or leaving some mist */
-OBJREC  *m;
-register RAY  *r;
+extern int
+m_mist(		/* process a ray entering or leaving some mist */
+	OBJREC  *m,
+	register RAY  *r
+)
 {
 	RAY  p;
 	int  *myslist = NULL;
@@ -213,4 +222,5 @@ register RAY  *r;
 	return(1);
 memerr:
 	error(SYSTEM, "out of memory in m_mist");
+	return 0; /* pro forma return */
 }

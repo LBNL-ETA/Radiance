@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.17 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.18 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -8,14 +8,17 @@ static const char	RCSid[] = "$Id: dielectric.c,v 2.17 2003/07/27 22:12:03 schors
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
+#include  "rtotypes.h"
 
 #ifdef  DISPERSE
 #include  "source.h"
-static  disperse();
-static int  lambda();
+static int disperse(OBJREC *m,RAY *r,FVECT vt,double tr,COLOR cet,COLOR abt);
+static int lambda(OBJREC  *m, FVECT  v2, FVECT  dv, FVECT  lr);
 #endif
+
+static double mylog(double  x);
+
 
 /*
  *     Explicit calculations for Fresnel's equation are performed,
@@ -49,8 +52,9 @@ static int  lambda();
 
 
 static double
-mylog(x)		/* special log for extinction coefficients */
-double  x;
+mylog(		/* special log for extinction coefficients */
+	double  x
+)
 {
 	if (x < 1e-40)
 		return(-100.);
@@ -60,9 +64,11 @@ double  x;
 }
 
 
-m_dielectric(m, r)	/* color a ray which hit a dielectric interface */
-OBJREC  *m;
-register RAY  *r;
+extern int
+m_dielectric(	/* color a ray which hit a dielectric interface */
+	OBJREC  *m,
+	register RAY  *r
+)
 {
 	double  cos1, cos2, nratio;
 	COLOR  ctrans;
@@ -212,13 +218,15 @@ register RAY  *r;
 
 #ifdef  DISPERSE
 
-static
-disperse(m, r, vt, tr, cet, abt)  /* check light sources for dispersion */
-OBJREC  *m;
-RAY  *r;
-FVECT  vt;
-double  tr;
-COLOR  cet, abt;
+static int
+disperse(  /* check light sources for dispersion */
+	OBJREC  *m,
+	RAY  *r,
+	FVECT  vt,
+	double  tr,
+	COLOR  cet,
+	COLOR  abt
+)
 {
 	RAY  sray, *entray;
 	FVECT  v1, v2, n1, n2;
@@ -349,9 +357,12 @@ COLOR  cet, abt;
 
 
 static int
-lambda(m, v2, dv, lr)			/* compute lambda for material */
-register OBJREC  *m;
-FVECT  v2, dv, lr;
+lambda(			/* compute lambda for material */
+	register OBJREC  *m,
+	FVECT  v2,
+	FVECT  dv,
+	FVECT  lr
+)
 {
 	FVECT  lrXdv, v2Xlr;
 	double  dtmp, denom;

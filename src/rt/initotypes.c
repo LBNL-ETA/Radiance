@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.11 2003/12/31 01:50:02 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.12 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -8,38 +8,16 @@ static const char RCSid[] = "$Id: initotypes.c,v 2.11 2003/12/31 01:50:02 greg E
 #include  "copyright.h"
 
 #include  "standard.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "otspecial.h"
 
-extern int  o_sphere();
-extern int  o_face();
-extern int  o_cone();
-extern int  o_instance();
-extern int  o_mesh();
-extern int  m_light();
-extern int  m_normal();
-extern int  m_aniso();
-extern int  m_dielectric();
-extern int  m_mist();
-extern int  m_glass();
-extern int  m_clip();
-extern int  m_mirror();
-extern int  m_direct();
-extern int  m_brdf();
-extern int  m_brdf2();
-extern int  m_alias();
-extern int  t_func(), t_data();
-extern int  p_cfunc(), p_bfunc();
-extern int  p_pdata(), p_cdata(), p_bdata();
-extern int  mx_func(), mx_data(), mx_pdata();
-extern int  do_text();
 
 FUN  ofun[NUMOTYPE] = INIT_OTYPE;
 
 
-initotypes()			/* initialize ofun array */
+extern void
+initotypes(void)			/* initialize ofun array */
 {
 	ofun[OBJ_SPHERE].funp =
 	ofun[OBJ_BUBBLE].funp = o_sphere;
@@ -109,9 +87,10 @@ initotypes()			/* initialize ofun array */
 }
 
 
-o_default()			/* default action is error */
+extern int
+o_default(OBJREC *o, RAY *r)			/* default action is error */
 {
 	error(INTERNAL, "unexpected object call");
-				/* call to pull in freeobjmem.o */
+				/* call to pull in freeobjmem.o */ /* XXX ? */
 	free_objs(0, 0);
 }

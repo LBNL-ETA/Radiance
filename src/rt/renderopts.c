@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.3 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -12,10 +12,11 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.3 2003/05/13 17:58:33 greg Ex
 #include  "ray.h"
 
 
-int
-getrenderopt(ac, av)		/* get next render option */
-int  ac;
-char  *av[];
+extern int
+getrenderopt(		/* get next render option */
+	int  ac,
+	char  *av[]
+)
 {
 #define	 check(ol,al)		if (av[0][ol] || \
 				badarg(ac-1,av+1,al)) \
@@ -210,11 +211,9 @@ char  *av[];
 }
 
 
-void
-print_rdefaults()		/* print default render values to stdout */
+extern void
+print_rdefaults(void)		/* print default render values to stdout */
 {
-	register char  *cp;
-
 	printf(do_irrad ? "-i+\t\t\t\t# irradiance calculation on\n" :
 			"-i-\t\t\t\t# irradiance calculation off\n");
 	printf(backvis ? "-bv+\t\t\t\t# back face visibility on\n" :

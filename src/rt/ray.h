@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.21 2003/08/28 03:22:16 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.22 2004/03/30 16:13:01 schorsch Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -160,6 +160,8 @@ typedef struct {		/* rendering parameter holder */
 extern void	headclean(void);
 extern void	openheader(void);
 extern void	dupheader(void);
+					/* defined in persist.c */
+extern void persistfile(char *pfn);
 extern void	pfdetach(void);
 extern void	pfclean(void);
 extern void	pflock(int lf);
@@ -208,8 +210,12 @@ extern void	print_rdefaults(void);
 					/* defined in srcdraw.c */
 extern void	drawsources(COLOR *pic[], float *zbf[],
 			int x0, int xsiz, int y0, int ysiz);
+extern void init_drawsources(int rad);
+					/* defined in rt/initotypes.c */
+extern void initotypes(void);
 					/* module main procedures */
 extern void	rtrace(char *fname);
+extern char * formstr(int  f);
 extern void	rview(void);
 extern void	rpict(int seq, char *pout, char *zout, char *prvr);
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.44 2003/12/31 01:50:02 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.45 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -10,9 +10,8 @@ static const char RCSid[] = "$Id: raytrace.c,v 2.44 2003/12/31 01:50:02 greg Exp
 #include "copyright.h"
 
 #include  "ray.h"
-
+#include  "source.h"
 #include  "otypes.h"
-
 #include  "otspecial.h"
 
 #define  MAXCSET	((MAXSET+1)*2-1)	/* maximum check set size */
@@ -28,17 +27,20 @@ OBJREC  Lamb = {
 
 OBJREC  Aftplane;			/* aft clipping plane object */
 
-static int  raymove(), checkhit();
-static void  checkset();
-
 #define  RAYHIT		(-1)		/* return value for intercepted ray */
 
+static int raymove(FVECT  pos, OBJECT  *cxs, int  dirf, RAY  *r, CUBE  *cu);
+static int checkhit(RAY  *r, CUBE  *cu, OBJECT  *cxs);
+static void checkset(OBJECT  *os, OBJECT  *cs);
 
-int
-rayorigin(r, ro, rt, rw)		/* start new ray from old one */
-register RAY  *r, *ro;
-int  rt;
-double  rw;
+
+extern int
+rayorigin(		/* start new ray from old one */
+	register RAY  *r,
+	register RAY  *ro,
+	int  rt,
+	double  rw
+)
 {
 	double	re;
 
@@ -85,9 +87,10 @@ double  rw;
 }
 
 
-void
-rayclear(r)			/* clear a ray for (re)evaluation */
-register RAY  *r;
+extern void
+rayclear(			/* clear a ray for (re)evaluation */
+	register RAY  *r
+)
 {
 	r->rno = raynum++;
 	r->newcset = r->clipset;
@@ -103,9 +106,10 @@ register RAY  *r;
 }
 
 
-void
-raytrace(r)			/* trace a ray and compute its value */
-RAY  *r;
+extern void
+raytrace(			/* trace a ray and compute its value */
+	RAY  *r
+)
 {
 	if (localhit(r, &thescene))
 		raycont(r);		/* hit local surface, evaluate */
@@ -122,9 +126,10 @@ RAY  *r;
 }
 
 
-void
-raycont(r)			/* check for clipped object and continue */
-register RAY  *r;
+extern void
+raycont(			/* check for clipped object and continue */
+	register RAY  *r
+)
 {
 	if ((r->clipset != NULL && inset(r->clipset, r->ro->omod)) ||
 			!rayshade(r, r->ro->omod))
@@ -132,9 +137,10 @@ register RAY  *r;
 }
 
 
-void
-raytrans(r)			/* transmit ray as is */
-register RAY  *r;
+extern void
+raytrans(			/* transmit ray as is */
+	register RAY  *r
+)
 {
 	RAY  tr;
 
@@ -147,10 +153,11 @@ register RAY  *r;
 }
 
 
-int
-rayshade(r, mod)		/* shade ray r with material mod */
-register RAY  *r;
-int  mod;
+extern int
+rayshade(		/* shade ray r with material mod */
+	register RAY  *r,
+	int  mod
+)
 {
 	int  gotmat;
 	register OBJREC  *m;
@@ -181,9 +188,10 @@ int  mod;
 }
 
 
-void
-rayparticipate(r)			/* compute ray medium participation */
-register RAY  *r;
+extern void
+rayparticipate(			/* compute ray medium participation */
+	register RAY  *r
+)
 {
 	COLOR	ce, ca;
 	double	re, ge, be;
@@ -213,10 +221,11 @@ register RAY  *r;
 }
 
 
-void
-raytexture(r, mod)			/* get material modifiers */
-RAY  *r;
-OBJECT  mod;
+extern void
+raytexture(			/* get material modifiers */
+	RAY  *r,
+	OBJECT  mod
+)
 {
 	register OBJREC  *m;
 					/* execute textures and patterns */
@@ -237,11 +246,13 @@ OBJECT  mod;
 }
 
 
-int
-raymixture(r, fore, back, coef)		/* mix modifiers */
-register RAY  *r;
-OBJECT  fore, back;
-double  coef;
+extern int
+raymixture(		/* mix modifiers */
+	register RAY  *r,
+	OBJECT  fore,
+	OBJECT  back,
+	double  coef
+)
 {
 	RAY  fr, br;
 	int  foremat, backmat;
@@ -289,10 +300,11 @@ double  coef;
 }
 
 
-double
-raydist(r, flags)		/* compute (cumulative) ray distance */
-register RAY  *r;
-register int  flags;
+extern double
+raydist(		/* compute (cumulative) ray distance */
+	register RAY  *r,
+	register int  flags
+)
 {
 	double  sum = 0.0;
 
@@ -304,10 +316,11 @@ register int  flags;
 }
 
 
-double
-raynormal(norm, r)		/* compute perturbed normal for ray */
-FVECT  norm;
-register RAY  *r;
+extern double
+raynormal(		/* compute perturbed normal for ray */
+	FVECT  norm,
+	register RAY  *r
+)
 {
 	double  newdot;
 	register int  i;
@@ -339,9 +352,10 @@ register RAY  *r;
 }
 
 
-void
-newrayxf(r)			/* get new tranformation matrix for ray */
-RAY  *r;
+extern void
+newrayxf(			/* get new tranformation matrix for ray */
+	RAY  *r
+)
 {
 	static struct xfn {
 		struct xfn  *next;
@@ -376,9 +390,10 @@ RAY  *r;
 }
 
 
-void
-flipsurface(r)			/* reverse surface orientation */
-register RAY  *r;
+extern void
+flipsurface(			/* reverse surface orientation */
+	register RAY  *r
+)
 {
 	r->rod = -r->rod;
 	r->ron[0] = -r->ron[0];
@@ -390,10 +405,11 @@ register RAY  *r;
 }
 
 
-void
-rayhit(oset, r)			/* standard ray hit test */
-OBJECT  *oset;
-RAY  *r;
+extern void
+rayhit(			/* standard ray hit test */
+	OBJECT  *oset,
+	RAY  *r
+)
 {
 	OBJREC  *o;
 	int	i;
@@ -406,10 +422,11 @@ RAY  *r;
 }
 
 
-int
-localhit(r, scene)		/* check for hit in the octree */
-register RAY  *r;
-register CUBE  *scene;
+extern int
+localhit(		/* check for hit in the octree */
+	register RAY  *r,
+	register CUBE  *scene
+)
 {
 	OBJECT  cxset[MAXCSET+1];	/* set of checked objects */
 	FVECT  curpos;			/* current cube position */
@@ -469,12 +486,13 @@ register CUBE  *scene;
 
 
 static int
-raymove(pos, cxs, dirf, r, cu)		/* check for hit as we move */
-FVECT  pos;			/* current position, modified herein */
-OBJECT  *cxs;			/* checked objects, modified by checkhit */
-int  dirf;			/* direction indicators to speed tests */
-register RAY  *r;
-register CUBE  *cu;
+raymove(		/* check for hit as we move */
+	FVECT  pos,			/* current position, modified herein */
+	OBJECT  *cxs,			/* checked objects, modified by checkhit */
+	int  dirf,			/* direction indicators to speed tests */
+	register RAY  *r,
+	register CUBE  *cu
+)
 {
 	int  ax;
 	double  dt, t;
@@ -555,10 +573,11 @@ register CUBE  *cu;
 
 
 static int
-checkhit(r, cu, cxs)		/* check for hit in full cube */
-register RAY  *r;
-CUBE  *cu;
-OBJECT  *cxs;
+checkhit(		/* check for hit in full cube */
+	register RAY  *r,
+	CUBE  *cu,
+	OBJECT  *cxs
+)
 {
 	OBJECT  oset[MAXSET+1];
 
@@ -575,9 +594,10 @@ OBJECT  *cxs;
 
 
 static void
-checkset(os, cs)		/* modify checked set and set to check */
-register OBJECT  *os;			/* os' = os - cs */
-register OBJECT  *cs;			/* cs' = cs + os */
+checkset(		/* modify checked set and set to check */
+	register OBJECT  *os,			/* os' = os - cs */
+	register OBJECT  *cs			/* cs' = cs + os */
+)
 {
 	OBJECT  cset[MAXCSET+MAXSET+1];
 	register int  i, j;

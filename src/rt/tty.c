@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tty.c,v 2.3 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: tty.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  tty.c - i/o for terminal drivers.
@@ -20,17 +20,21 @@ static const char	RCSid[] = "$Id: tty.c,v 2.3 2003/02/25 02:47:23 greg Exp $";
  */
 
 struct sgttyb  ttymode;			/* original tty modes */
-
 int  ttyfd;				/* tty file descriptor */
-
 struct driver  *ttydev;			/* tty device */
 
+static dr_cominf_t ttyin;
+static dr_getchf_t;
+static void ttydone(void);
+static void newinp(void);
 
-ttyset(dev, fd)				/* set up raw tty device */
-struct driver  *dev;
-int  fd;
+
+extern void /* XXX declare */
+ttyset(				/* set up raw tty device */
+	struct driver  *dev,
+	int  fd
+)
 {
-	int  ttyin(), newinp();
 	struct sgttyb  flags;
 
 	if (!isatty(fd))
@@ -52,7 +56,8 @@ int  fd;
 }
 
 
-ttydone()				/* restore tty modes */
+static void
+ttydone(void)				/* restore tty modes */
 {
 	fcntl(ttyfd, F_SETFL, 0);
 	signal(SIGIO, SIG_DFL);
@@ -63,8 +68,8 @@ ttydone()				/* restore tty modes */
 }
 
 
-int
-getch()					/* get a character in raw mode */
+static int
+getch(void)					/* get a character in raw mode */
 {
 	register int  c;
 
@@ -77,11 +82,12 @@ getch()					/* get a character in raw mode */
 }
 
 
-static
-ttyin(buf, prompt)			/* read a line in raw mode */
-char  *buf, *prompt;
+static void
+ttyin(			/* read a line in raw mode */
+	char  *buf,
+	char  *prompt
+)
 {
-	int  getch();
 
 	if (prompt != NULL)
 		(*ttydev->comout)(prompt);
@@ -89,8 +95,8 @@ char  *buf, *prompt;
 }
 
 
-static
-newinp()				/* new input */
+static void
+newinp(void)				/* new input */
 {
 	ttydev->inpready++;
 }

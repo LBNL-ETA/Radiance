@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.11 2003/11/11 16:24:06 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.12 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -9,34 +9,42 @@ static const char	RCSid[] = "$Id: devcomm.c,v 2.11 2003/11/11 16:24:06 greg Exp 
 
 #include "copyright.h"
 
+#include <sys/types.h>
+#include <sys/wait.h> /* XXX platform specific */
+
 #include "platform.h"
-
 #include "standard.h"
-
 #include "driver.h"
 
 #ifndef DEVPATH
 #define DEVPATH		getenv("PATH")	/* device search path */
 #endif
 
-static int	comm_getcur();
-static void	comm_close(), comm_clear(), comm_paintr(),
-		comm_comin(), comm_comout(), comm_flush();
+FILE	*devin, *devout;
+int	devchild;
+
+static struct driver * final_connect(void);
+static void mygets(char	*s, FILE	*fp);
+static void myputs(char	*s, FILE	*fp);
+static void reply_error(char	*routine);
+static void getstate(void);
+
+static dr_closef_t comm_close;
+static dr_clearf_t comm_clear;
+static dr_paintrf_t comm_paintr;
+static dr_getcurf_t comm_getcur;
+static dr_comoutf_t comm_comout;
+static dr_cominf_t comm_comin;
+static dr_flushf_t comm_flush;
 
 struct driver	comm_driver = {
 	comm_close, comm_clear, comm_paintr, comm_getcur,
 	comm_comout, comm_comin, comm_flush
 };
 
-static void	mygets(), myputs(), reply_error(), getstate();
-
-FILE	*devin, *devout;
-
-int	devchild;
-
 
 static struct driver *
-final_connect()				/* verify and initialize connection */
+final_connect(void)				/* verify and initialize connection */
 {
 	putw(COM_SENDM, devout);
 	fflush(devout);
@@ -52,9 +60,11 @@ final_connect()				/* verify and initialize connection */
 }
 
 
-struct driver *
-slave_init(dname, id)			/* run rview in slave mode */
-char	*dname, *id;
+extern struct driver *
+slave_init(			/* run rview in slave mode */
+	char	*dname,
+	char	*id
+)
 {
 	devchild = -1;				/* we're the slave here */
 	devout = stdout;			/* use standard input */
@@ -63,9 +73,11 @@ char	*dname, *id;
 }
 
 
-struct driver *
-comm_init(dname, id)			/* set up and execute driver */
-char	*dname, *id;
+extern struct driver *
+comm_init(			/* set up and execute driver */
+	char	*dname,
+	char	*id
+)
 {
 	char	*dvcname;
 	int	p1[2], p2[2];
@@ -113,7 +125,7 @@ syserr:
 
 
 static void
-comm_close()			/* done with driver */
+comm_close(void)			/* done with driver */
 {
 	int	pid;
 
@@ -130,8 +142,10 @@ comm_close()			/* done with driver */
 
 
 static void
-comm_clear(xres, yres)				/* clear screen */
-int	xres, yres;
+comm_clear(				/* clear screen */
+	int	xres,
+	int	yres
+)
 {
 	putc(COM_CLEAR, devout);
 	putw(xres, devout);
@@ -141,9 +155,13 @@ int	xres, yres;
 
 
 static void
-comm_paintr(col, xmin, ymin, xmax, ymax)	/* paint a rectangle */
-COLOR	col;
-int	xmin, ymin, xmax, ymax;
+comm_paintr(	/* paint a rectangle */
+	COLOR	col,
+	int	xmin,
+	int	ymin,
+	int	xmax,
+	int	ymax
+)
 {
 	putc(COM_PAINTR, devout);
 	fwrite((char *)col, sizeof(COLOR), 1, devout);
@@ -155,7 +173,7 @@ int	xmin, ymin, xmax, ymax;
 
 
 static void
-comm_flush()				/* flush output to driver */
+comm_flush(void)				/* flush output to driver */
 {
 	putc(COM_FLUSH, devout);
 	fflush(devout);
@@ -166,8 +184,10 @@ comm_flush()				/* flush output to driver */
 
 
 static int
-comm_getcur(xp, yp)			/* get and return cursor position */
-int	*xp, *yp;
+comm_getcur(			/* get and return cursor position */
+	int	*xp,
+	int	*yp
+)
 {
 	int	c;
 
@@ -183,8 +203,9 @@ int	*xp, *yp;
 
 
 static void
-comm_comout(str)			/* print string to command line */
-char	*str;
+comm_comout(			/* print string to command line */
+	char	*str
+)
 {
 	putc(COM_COMOUT, devout);
 	myputs(str, devout);
@@ -194,9 +215,10 @@ char	*str;
 
 
 static void
-comm_comin(buf, prompt)			/* read string from command line */
-char	*buf;
-char	*prompt;
+comm_comin(			/* read string from command line */
+	char	*buf,
+	char	*prompt
+)
 {
 	putc(COM_COMIN, devout);
 	if (prompt == NULL)
@@ -214,9 +236,10 @@ char	*prompt;
 
 
 static void
-mygets(s, fp)				/* get string from file (with nul) */
-register char	*s;
-register FILE	*fp;
+mygets(				/* get string from file (with nul) */
+	register char	*s,
+	register FILE	*fp
+)
 {
 	register int	c;
 
@@ -228,9 +251,10 @@ register FILE	*fp;
 
 
 static void
-myputs(s, fp)				/* put string to file (with nul) */
-register char	*s;
-register FILE	*fp;
+myputs(				/* put string to file (with nul) */
+	register char	*s,
+	register FILE	*fp
+)
 {
 	do
 		putc(*s, fp);
@@ -239,8 +263,9 @@ register FILE	*fp;
 
 
 static void
-reply_error(routine)			/* what should we do here? */
-char	*routine;
+reply_error(			/* what should we do here? */
+	char	*routine
+)
 {
 	eputs(routine);
 	eputs(": driver reply error\n");
@@ -249,7 +274,7 @@ char	*routine;
 
 
 static void
-getstate()				/* get driver state variables */
+getstate(void)				/* get driver state variables */
 {
 	fread((char *)&comm_driver.pixaspect,
 			sizeof(comm_driver.pixaspect), 1, devin);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fprism.c,v 2.6 2003/08/04 22:37:53 greg Exp $";
+static const char	RCSid[] = "$Id: fprism.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /* Ce programme calcule les directions et les energies des rayons lumineux
    resultant du passage d'un rayon au travers d'un vitrage prismatique
@@ -8,14 +8,18 @@ static const char	RCSid[] = "$Id: fprism.c,v 2.6 2003/08/04 22:37:53 greg Exp $"
 
 #include "standard.h"
 
+#include "calcomp.h"
+#include "func.h"
+
 #ifdef NOSTRUCTASSIGN
 static double err = "No structure assignment!";	/* generate compiler error */
 #endif
 
 
 static double
-Sqrt(x)
-double x;
+Sqrt(
+	double x
+)
 {
 	if (x < 0.)
 		return(0.);
@@ -79,7 +83,6 @@ static int tot_ref;			/* flag pour les surfaces
 static double fact_ref[4]={1.0,1.0,1.0,1.0};	/* facteurs de reflexion     */ 
 static double tolerance;		/* degre de tol. pour les amalgames */
 static double tolsource;		/* degre de tol. pour les sources  */
-static double Nx;
 static int bidon;
 #define BADVAL	(-10)
 static long prismclock = -1;
@@ -89,45 +92,63 @@ static int sens;			/* indique le sens de prop. du ray.*/
 static int nbrayons;			/* indice des rayons sortants      */
 static TRAYON *ray;			/* tableau des rayons sortants     */
 static TRAYON *raytemp;			/* variable temporaire    	   */
-static TRAYON rtemp;			/* variable temporaire  	   */
 
-extern double argument();
-extern double varvalue();
-extern double funvalue();
-extern long eclock;
+
+static void prepare_matrices(void);
+static void tfm(MAT4 mat, FVECT v_old, FVECT v_new);
+static double prob_alpha_beta(TRAYON r);
+static double prob_beta_alpha(TRAYON r);
+static double prob_gamma_alpha(TRAYON r);
+static void v_par(FVECT v, FVECT v_out);
+static void v_per(FVECT v, FVECT v_out);
+static TRAYON transalphabeta(TRAYON r_initial);
+static TRAYON transbetaalpha(TRAYON r_initial);
+static TRAYON transalphagamma(TRAYON r_initial);
+static TRAYON transgammaalpha(TRAYON r_initial);
+static int compare(TRAYON r1, TRAYON r2, double marge);
+static void sortie(TRAYON r);
+static void trigo(TRAYON r);
+static TRAYON reflexion(TRAYON r_incident);
+static TRAYON transmission(TRAYON r_incident);
+static void trace_rayon(TRAYON r_incident);
+static void inverser(TRAYON *r1, TRAYON *r2);
+static void setprism(void);
+static double l_get_val(char *nm);
 
 
 /* Definition des routines */
 
 #define term(a,b) a/Sqrt(a*a+b*b)
-static
-prepare_matrices()
+static void
+prepare_matrices(void)
 {
- /* preparation des matrices de changement de bases */
+	/* preparation des matrices de changement de bases */
 
- matb[0][0] = matbt[0][0] = matb[1][1] = matbt[1][1] = term(prism.a,prism.d);
- matb[1][0] = matbt[0][1] = term(-prism.d,prism.a);
- matb[0][1] = matbt[1][0] = term(prism.d,prism.a);
- matc[0][0] = matct[0][0] = matc[1][1] = matct[1][1] = term(prism.b,prism.d);
- matc[1][0] = matct[0][1] = term(prism.d,prism.b);
- matc[0][1] = matct[1][0] = term(-prism.d,prism.b);
- return;
+	matb[0][0] = matbt[0][0] = matb[1][1] = matbt[1][1] = term(prism.a,prism.d);
+	matb[1][0] = matbt[0][1] = term(-prism.d,prism.a);
+	matb[0][1] = matbt[1][0] = term(prism.d,prism.a);
+	matc[0][0] = matct[0][0] = matc[1][1] = matct[1][1] = term(prism.b,prism.d);
+	matc[1][0] = matct[0][1] = term(prism.d,prism.b);
+	matc[0][1] = matct[1][0] = term(-prism.d,prism.b);
+	return;
 }
 #undef term
 
 
-static
-tfm(mat,v_old,v_new)
-MAT4 mat;
-FVECT v_old,v_new;
+static void
+tfm(
+	MAT4 mat,
+	FVECT v_old,
+	FVECT v_new
+)
 {
- /* passage d'un repere old au repere new par la matrice mat */
- FVECT v_temp;
+	/* passage d'un repere old au repere new par la matrice mat */
+	FVECT v_temp;
 
- multv3(v_temp,v_old,mat);
- normalize(v_temp);
- VCOPY(v_new,v_temp);
- return;
+	multv3(v_temp,v_old,mat);
+	normalize(v_temp);
+	VCOPY(v_new,v_temp);
+	return;
 }
 
 #define A prism.a
@@ -137,58 +158,62 @@ FVECT v_old,v_new;
 
 
 static double
-prob_alpha_beta(r)
-TRAYON r;
+prob_alpha_beta(
+	TRAYON r
+)
 {
- /* calcul de la probabilite de passage de alpha a beta */
- double prob,test;
+	/* calcul de la probabilite de passage de alpha a beta */
+	double prob,test;
 
- if ( X(r) != 0. )
+	if ( X(r) != 0. )
 	{
-	 test = Y(r)/X(r);
-	 if ( test > B/D ) prob = 1.;
-	 else if ( test >= -A/D ) prob = (A+test*D)/(A+B);
-	 else prob = 0.;
+		test = Y(r)/X(r);
+		if ( test > B/D ) prob = 1.;
+		else if ( test >= -A/D ) prob = (A+test*D)/(A+B);
+		else prob = 0.;
 	} 
- else prob = 0.;
- return prob;
+	else prob = 0.;
+	return prob;
 }
 
 
 static double
-prob_beta_alpha(r)
-TRAYON r;
+prob_beta_alpha(
+	TRAYON r
+)
 {
- /* calcul de la probabilite de passage de beta a aplha */
- double prob,test;
+	/* calcul de la probabilite de passage de beta a aplha */
+	double prob,test;
 
- if ( X(r) != 0. )
+	if ( X(r) != 0. )
 	{
-	 test = Y(r)/X(r);
-	 if ( test > B/D ) prob = (A+B)/(A+test*D);
-	 else if ( test >= -A/D ) prob = 1.;
-	 else prob = 0.;
+		test = Y(r)/X(r);
+		if ( test > B/D ) prob = (A+B)/(A+test*D);
+		else if ( test >= -A/D ) prob = 1.;
+		else prob = 0.;
 	}
- else prob = 0.;
- return prob;
+	else prob = 0.;
+	return prob;
 }
 
 
-double prob_gamma_alpha(r)
-TRAYON r;
+static double
+prob_gamma_alpha(
+	TRAYON r
+)
 {
- /* calcul de la probabilite de passage de gamma a alpha */
- double prob,test;
+	/* calcul de la probabilite de passage de gamma a alpha */
+	double prob,test;
 
- if ( X(r) != 0. )
+	if ( X(r) != 0. )
 	{
-	 test = Y(r)/X(r);
-	 if ( test > B/D ) prob = 0.;
-	 else if ( test >= -A/D ) prob = 1.;
-	 else prob = (A+B)/(B-test*D);
+		test = Y(r)/X(r);
+		if ( test > B/D ) prob = 0.;
+		else if ( test >= -A/D ) prob = 1.;
+		else prob = (A+B)/(B-test*D);
 	} 
- else prob = 0.;
- return prob;
+	else prob = 0.;
+	return prob;
 }
 
 #undef A
@@ -197,244 +222,256 @@ TRAYON r;
 #undef D
 
 
-static
-v_par(v,v_out)
-FVECT v,v_out;
+static void
+v_par(
+	FVECT v,
+	FVECT v_out
+)
 /* calcule le vecteur par au plan d'incidence lie a v */
 {
- FVECT v_temp;
- double det;
+	FVECT v_temp;
+	double det;
 
- det = Sqrt( (YY(v)*YY(v)+ZZ(v)*ZZ(v))*(YY(v)*YY(v)+ZZ(v)*ZZ(v))+
-         (XX(v)*XX(v)*YY(v)*YY(v))+(XX(v)*XX(v)*ZZ(v)*ZZ(v)) );
- XX(v_temp) = (YY(v)*YY(v)+ZZ(v)*ZZ(v))/det;
- YY(v_temp) = -( XX(v)*YY(v) )/det;
- ZZ(v_temp) = -( XX(v)*ZZ(v) )/det;
- VCOPY(v_out,v_temp); 
- return;
+	det = Sqrt( (YY(v)*YY(v)+ZZ(v)*ZZ(v))*(YY(v)*YY(v)+ZZ(v)*ZZ(v))+
+			(XX(v)*XX(v)*YY(v)*YY(v))+(XX(v)*XX(v)*ZZ(v)*ZZ(v)) );
+	XX(v_temp) = (YY(v)*YY(v)+ZZ(v)*ZZ(v))/det;
+	YY(v_temp) = -( XX(v)*YY(v) )/det;
+	ZZ(v_temp) = -( XX(v)*ZZ(v) )/det;
+	VCOPY(v_out,v_temp); 
+	return;
 }
 
 
-static
-v_per(v,v_out)
-FVECT v,v_out;
+static void
+v_per(
+	FVECT v,
+	FVECT v_out
+)
 /* calcule le vecteur perp au plan d'incidence lie a v */
 {
- FVECT v_temp;
- double det;
+	FVECT v_temp;
+	double det;
 
- det = Sqrt( (ZZ(v)*ZZ(v)+YY(v)*YY(v)) );
- XX(v_temp) = 0.;
- YY(v_temp) = -ZZ(v)/det;
- ZZ(v_temp) = YY(v)/det;
- VCOPY(v_out,v_temp);
- return;
+	det = Sqrt( (ZZ(v)*ZZ(v)+YY(v)*YY(v)) );
+	XX(v_temp) = 0.;
+	YY(v_temp) = -ZZ(v)/det;
+	ZZ(v_temp) = YY(v)/det;
+	VCOPY(v_out,v_temp);
+	return;
 }
 
 
 static TRAYON
-transalphabeta(r_initial)
+transalphabeta(
+	TRAYON r_initial
+)
 /* transforme le rayon r_initial de la base associee a alpha dans
    la base associee a beta */ 
-TRAYON r_initial;
 {
- TRAYON r_final;
- FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
+	TRAYON r_final;
+	FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
 
- r_final = r_initial;
- alpha_beta(r_initial.v,r_final.v);
- if ((Y(r_initial) != 0. || Z(r_initial) != 0.)&&(Y(r_final) !=0. || Z(r_final)!= 0.))
-   {
-    v_par(r_initial.v,vpar_temp1);
-    alpha_beta(vpar_temp1,vpar_temp1);
-    v_per(r_initial.v,vper_temp1);
-    alpha_beta(vper_temp1,vper_temp1);
-    v_par(r_final.v,vpar_temp2);
-    v_per(r_final.v,vper_temp2); 
-    r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper1*fdot(vper_temp1,vpar_temp2));
-    r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper1*fdot(vper_temp1,vper_temp2));
-    r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper2*fdot(vper_temp1,vpar_temp2));
-    r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper2*fdot(vper_temp1,vper_temp2));
-   }
- return r_final;
+	r_final = r_initial;
+	alpha_beta(r_initial.v,r_final.v);
+	if ((Y(r_initial) != 0. || Z(r_initial) != 0.)&&(Y(r_final) !=0. || Z(r_final)!= 0.))
+	{
+		v_par(r_initial.v,vpar_temp1);
+		alpha_beta(vpar_temp1,vpar_temp1);
+		v_per(r_initial.v,vper_temp1);
+		alpha_beta(vper_temp1,vper_temp1);
+		v_par(r_final.v,vpar_temp2);
+		v_per(r_final.v,vper_temp2); 
+		r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vpar_temp2));
+		r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vper_temp2));
+		r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vpar_temp2));
+		r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vper_temp2));
+	}
+	return r_final;
 }
 
 
 static TRAYON
-transbetaalpha(r_initial)
-/* transforme le rayon r_initial de la base associee a beta dans
-   la base associee a alpha */ 
-TRAYON r_initial;
+transbetaalpha(
+	TRAYON r_initial
+)
 {
- TRAYON r_final;
- FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
+	/* transforme le rayon r_initial de la base associee a beta dans
+	   la base associee a alpha */ 
+	TRAYON r_final;
+	FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
 
- r_final = r_initial;
- beta_alpha(r_initial.v,r_final.v);
- if ((Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final) != 0. || Z(r_final)!= 0.))
-   {
-    v_par(r_initial.v,vpar_temp1);
-    beta_alpha(vpar_temp1,vpar_temp1);
-    v_per(r_initial.v,vper_temp1);
-    beta_alpha(vper_temp1,vper_temp1);
-    v_par(r_final.v,vpar_temp2);
-    v_per(r_final.v,vper_temp2);
-    r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper1*fdot(vper_temp1,vpar_temp2));
-    r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper1*fdot(vper_temp1,vper_temp2));
-    r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper2*fdot(vper_temp1,vpar_temp2));
-    r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper2*fdot(vper_temp1,vper_temp2));
+	r_final = r_initial;
+	beta_alpha(r_initial.v,r_final.v);
+	if ((Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final) != 0. || Z(r_final)!= 0.))
+	{
+		v_par(r_initial.v,vpar_temp1);
+		beta_alpha(vpar_temp1,vpar_temp1);
+		v_per(r_initial.v,vper_temp1);
+		beta_alpha(vper_temp1,vper_temp1);
+		v_par(r_final.v,vpar_temp2);
+		v_per(r_final.v,vper_temp2);
+		r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vpar_temp2));
+		r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vper_temp2));
+		r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vpar_temp2));
+		r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vper_temp2));
 
-   }
- return r_final;
+	}
+	return r_final;
 }
 
  
 static TRAYON
-transalphagamma(r_initial)
+transalphagamma(
+	TRAYON r_initial
+)
 /* transforme le rayon r_initial de la base associee a alpha dans
    la base associee a gamma */ 
-TRAYON r_initial;
 {
- TRAYON r_final;
- FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
+	TRAYON r_final;
+	FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
 
- r_final = r_initial;
- alpha_gamma(r_initial.v,r_final.v);
- if (( Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final)!= 0. || Z(r_final) !=0.))
-   {
-    v_par(r_initial.v,vpar_temp1);
-    alpha_gamma(vpar_temp1,vpar_temp1);
-    v_per(r_initial.v,vper_temp1);
-    alpha_gamma(vper_temp1,vper_temp1);
-    v_par(r_final.v,vpar_temp2);
-    v_per(r_final.v,vper_temp2); 
-    r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper1*fdot(vper_temp1,vpar_temp2));
-    r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper1*fdot(vper_temp1,vper_temp2));
-    r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper2*fdot(vper_temp1,vpar_temp2));
-    r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper2*fdot(vper_temp1,vper_temp2));
+	r_final = r_initial;
+	alpha_gamma(r_initial.v,r_final.v);
+	if (( Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final)!= 0. || Z(r_final) !=0.))
+	{
+		v_par(r_initial.v,vpar_temp1);
+		alpha_gamma(vpar_temp1,vpar_temp1);
+		v_per(r_initial.v,vper_temp1);
+		alpha_gamma(vper_temp1,vper_temp1);
+		v_par(r_final.v,vpar_temp2);
+		v_per(r_final.v,vper_temp2); 
+		r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vpar_temp2));
+		r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vper_temp2));
+		r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vpar_temp2));
+		r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vper_temp2));
 
-   }
- return r_final;
+	}
+	return r_final;
 }
 
  
 static TRAYON
-transgammaalpha(r_initial)
+transgammaalpha(
+	TRAYON r_initial
+)
 /* transforme le rayon r_initial de la base associee a gamma dans
    la base associee a alpha */ 
-TRAYON r_initial;
 {
- TRAYON r_final;
- FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
+	TRAYON r_final;
+	FVECT vpar_temp1,vpar_temp2,vper_temp1,vper_temp2;
 
- r_final = r_initial;
- gamma_alpha(r_initial.v,r_final.v);
- if (( Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final) !=0. || Z(r_final) != 0.))
-   {
-    v_par(r_initial.v,vpar_temp1);
-    gamma_alpha(vpar_temp1,vpar_temp1);
-    v_per(r_initial.v,vper_temp1);
-    gamma_alpha(vper_temp1,vper_temp1);
-    v_par(r_final.v,vpar_temp2);
-    v_per(r_final.v,vper_temp2); 
-    r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper1*fdot(vper_temp1,vpar_temp2));
-    r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper1*fdot(vper_temp1,vper_temp2));
-    r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
-         	        (r_initial.pper2*fdot(vper_temp1,vpar_temp2));
-    r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
-		        (r_initial.pper2*fdot(vper_temp1,vper_temp2));
-   }
- return r_final;
+	r_final = r_initial;
+	gamma_alpha(r_initial.v,r_final.v);
+	if (( Y(r_initial) != 0. || Z(r_initial) != 0. )&&(Y(r_final) !=0. || Z(r_final) != 0.))
+	{
+		v_par(r_initial.v,vpar_temp1);
+		gamma_alpha(vpar_temp1,vpar_temp1);
+		v_per(r_initial.v,vper_temp1);
+		gamma_alpha(vper_temp1,vper_temp1);
+		v_par(r_final.v,vpar_temp2);
+		v_per(r_final.v,vper_temp2); 
+		r_final.ppar1 = (r_initial.ppar1*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vpar_temp2));
+		r_final.pper1 = (r_initial.ppar1*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper1*fdot(vper_temp1,vper_temp2));
+		r_final.ppar2 = (r_initial.ppar2*fdot(vpar_temp1,vpar_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vpar_temp2));
+		r_final.pper2 = (r_initial.ppar2*fdot(vpar_temp1,vper_temp2))+
+			(r_initial.pper2*fdot(vper_temp1,vper_temp2));
+	}
+	return r_final;
 }
  
 
 
 static int
-compare(r1,r2,marge)
-TRAYON r1, r2;
-double marge;
-
+compare(
+	TRAYON r1,
+	TRAYON r2,
+	double marge
+)
 {
- double arctg1, arctg2;
+	double arctg1, arctg2;
 
- arctg1 = atan2(Y(r1),X(r1));
- arctg2 = atan2(Y(r2),X(r2));
- if ((arctg1 - marge <= arctg2) && (arctg1 + marge >= arctg2)) return 1;
- else return 0;
+	arctg1 = atan2(Y(r1),X(r1));
+	arctg2 = atan2(Y(r2),X(r2));
+	if ((arctg1 - marge <= arctg2) && (arctg1 + marge >= arctg2)) return 1;
+	else return 0;
 }
 
 
 
 
-static
-sortie(r)
-TRAYON r;
+static void
+sortie(
+	TRAYON r
+)
 {
- int i = 0;
- int egalite = 0;
+	int i = 0;
+	int egalite = 0;
 
 
-if(r.e > seuil)
-{
- while (i < nbrayons && egalite == 0)
-  {
-   raytemp = &ray[i];
-   egalite = compare(r,*raytemp,tolerance);
-   if (egalite) raytemp->e = raytemp->e + r.e;
-   else i = i + 1;
-  }
- if (egalite == 0)
-  {
-   if (nbrayons == 0) ray = (TRAYON *)calloc(1,sizeof(TRAYON));
-   else ray = (TRAYON *)realloc((void *)ray, (nbrayons+1)*(sizeof(TRAYON)));         
-   if (ray == NULL)
-     error(SYSTEM, "out of memory in sortie\n");
-   raytemp = &ray[nbrayons];
-   raytemp->v[0] = X(r);
-   raytemp->v[1] = Y(r);
-   raytemp->v[2] = Z(r);
-   raytemp->e = r.e;
-   nbrayons++;
-  }
- }
-return;
+	if(r.e > seuil)
+	{
+		while (i < nbrayons && egalite == 0)
+		{
+			raytemp = &ray[i];
+			egalite = compare(r,*raytemp,tolerance);
+			if (egalite) raytemp->e = raytemp->e + r.e;
+			else i = i + 1;
+		}
+		if (egalite == 0)
+		{
+			if (nbrayons == 0) ray = (TRAYON *)calloc(1,sizeof(TRAYON));
+			else ray = (TRAYON *)realloc((void *)ray, (nbrayons+1)*(sizeof(TRAYON)));         
+			if (ray == NULL)
+				error(SYSTEM, "out of memory in sortie\n");
+			raytemp = &ray[nbrayons];
+			raytemp->v[0] = X(r);
+			raytemp->v[1] = Y(r);
+			raytemp->v[2] = Z(r);
+			raytemp->e = r.e;
+			nbrayons++;
+		}
+	}
+	return;
 }
 
 
-static
-trigo(r)
-TRAYON r;
+static void
+trigo(
+	TRAYON r
+)
 /* calcule les grandeurs trigonometriques relatives au rayon incident
    et le rapport entre les indices du milieu refracteur et incident   */
 {
- double det;
- 
- det = Sqrt(X(r)*X(r)+Y(r)*Y(r)+Z(r)*Z(r));
- sinus = Sqrt(Y(r)*Y(r)+Z(r)*Z(r))/det;
- cosinus = Sqrt(X(r)*X(r))/det;
- if (r.n == 1.) rapport = prism.np * prism.np;
- else rapport = 1./(prism.np * prism.np);
- return;
+	double det;
+
+	det = Sqrt(X(r)*X(r)+Y(r)*Y(r)+Z(r)*Z(r));
+	sinus = Sqrt(Y(r)*Y(r)+Z(r)*Z(r))/det;
+	cosinus = Sqrt(X(r)*X(r))/det;
+	if (r.n == 1.) rapport = prism.np * prism.np;
+	else rapport = 1./(prism.np * prism.np);
+	return;
 }
 
 
 static TRAYON
-reflexion(r_incident)
-TRAYON r_incident;
+reflexion(
+	TRAYON r_incident
+)
 {
  /* calcul du rayon reflechi par une face */
  TRAYON r_reflechi;
@@ -475,8 +512,9 @@ TRAYON r_incident;
 
 
 static TRAYON
-transmission(r_incident)
-TRAYON r_incident;
+transmission(
+	TRAYON r_incident
+)
 {
  /* calcul du rayon refracte par une face */
  TRAYON r_transmis;
@@ -524,9 +562,10 @@ TRAYON r_incident;
 				 if ( r_suite.e > seuil ) trace_rayon(r_suite)
 
 
-static
-trace_rayon(r_incident)
-TRAYON r_incident;
+static void
+trace_rayon(
+	TRAYON r_incident
+)
 {
  /* trace le rayon donne */
  TRAYON r_reflechi,r_transmis,r_suite;
@@ -616,25 +655,26 @@ TRAYON r_incident;
 
 #undef ensuite
 
-static
-inverser(r1,r2)
-TRAYON *r1,*r2;
-
+static void
+inverser(
+	TRAYON *r1,
+	TRAYON *r2
+)
 {
- TRAYON temp;
- temp = *r1;
- *r1 = *r2;
- *r2 = temp;
+	TRAYON temp;
+	temp = *r1;
+	*r1 = *r2;
+	*r2 = temp;
 }
 
 
 
-static
-setprism()
+static void
+setprism(void)
 {
  double d;
  TRAYON r_initial,rsource;
- int i,j,k; 
+ int i,j; 
 
  prismclock = eclock;
 r_initial.ppar1 = r_initial.pper2 = 1.;
@@ -728,8 +768,9 @@ if ( X(r_initial) != 0.)
 
 
 static double
-l_get_val(char *nm)
-
+l_get_val(
+	char *nm
+)
 {
  int val, dir, i, trouve, curseur;
  int nb;
@@ -781,7 +822,8 @@ l_get_val(char *nm)
 }
 
 
-setprismfuncs()
+extern void
+setprismfuncs(void)  /* declared in func.h */
 {
  funset("fprism_val", 3, '=', l_get_val);
 }

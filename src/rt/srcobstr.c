@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.3 2004/01/09 05:37:12 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -197,7 +197,7 @@ srcobstructp(register RAY *r)
 		ondx += (int)(2*SHADCACHE*srcp->obscache->p.d.e2 *
 				(r->rorg[ax2] + t*srcp->sloc[ax2] -
 					srcp->obscache->p.d.o[ax2]));
-		if (ondx < 0 | ondx >= 4*SHADCACHE*SHADCACHE)
+		if ((ondx < 0) | (ondx >= 4*SHADCACHE*SHADCACHE))
 			return(&noobs); /* could happen if ray is outside */
 	} else if (srcp->sflags & SFLAT) {
 		FVECT   sd;

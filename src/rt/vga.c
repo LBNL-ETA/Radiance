@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vga.c,v 2.9 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: vga.c,v 2.10 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  vga.c - driver for VGA graphics adaptor under MS-DOS
@@ -7,19 +7,24 @@ static const char	RCSid[] = "$Id: vga.c,v 2.9 2003/02/25 02:47:23 greg Exp $";
 
 #include "copyright.h"
 
-#include  "standard.h"
-
 #include  <graph.h>
 
+#include  "standard.h"
 #include  "driver.h"
-
 #include  "color.h"
 
 #define	 GAMMA		2.2		/* exponent for color correction */
 
 
-int  vga_close(), vga_clear(), vga_paintr(), vga_comout(), vga_errout(),
-		vga_comin();
+static struct driver * vga_init(char *name, char *id);
+static void vga_errout(char *msg);
+static dr_newcolrf_t vgacolr;
+
+static dr_closef_t vga_close;
+static dr_clearf_t vga_clear;
+static dr_paintrf_t vga_paintr;
+static dr_comoutf_t vga_comout;
+static dr_cominf_t vga_comin;
 
 static struct driver  vga_driver = {
 	vga_close, vga_clear, vga_paintr, NULL,
@@ -27,15 +32,15 @@ static struct driver  vga_driver = {
 };
 
 static char  fatalerr[128];
-
 static struct videoconfig  config;
 
-extern char  *getenv();
 
 
-struct driver *
-vga_init(name, id)			/* open VGA */
-char  *name, *id;
+static struct driver *
+vga_init(			/* open VGA */
+	char  *name,
+	char  *id
+)
 {
 	static short  mode_pref[] = {_MRES256COLOR, -1};
 	static short  smode_pref[] = {_XRES256COLOR, _SVRES256COLOR,
@@ -86,8 +91,8 @@ char  *name, *id;
 }
 
 
-static
-vga_close()					/* close VGA */
+static void
+vga_close(void)					/* close VGA */
 {
 	ms_gcdone(&vga_driver);
 	_setvideomode(_DEFAULTMODE);
@@ -103,22 +108,26 @@ vga_close()					/* close VGA */
 }
 
 
-static
-vga_clear(x, y)					/* clear VGA */
-int  x, y;
+static void
+vga_clear(					/* clear VGA */
+	int  x,
+	int  y
+)
 {
 	_clearscreen(_GCLEARSCREEN);
 	new_ctab(config.numcolors-2);		/* init color table */
 }
 
 
-static
-vga_paintr(col, xmin, ymin, xmax, ymax)		/* paint a rectangle */
-COLOR  col;
-int  xmin, ymin, xmax, ymax;
+static void
+vga_paintr(		/* paint a rectangle */
+	COLOR  col,
+	int  xmin,
+	int  ymin,
+	int  xmax,
+	int  ymax
+)
 {
-	extern int  vgacolr();
-
 	_setcolor(get_pixel(col, vgacolr)+2);
 	_rectangle(_GFILLINTERIOR, xmin, vga_driver.ysiz-ymax,
 			xmax-1, vga_driver.ysiz-1-ymin);
@@ -126,9 +135,10 @@ int  xmin, ymin, xmax, ymax;
 }
 
 
-static
-vga_comout(s)				/* put s to text output */
-register char  *s;
+static void
+vga_comout(				/* put s to text output */
+	register char  *s
+)
 {
 	struct rccoord	tpos;
 	char  buf[128];
@@ -158,9 +168,10 @@ register char  *s;
 }
 
 
-static
-vga_errout(msg)
-register char  *msg;
+static void
+vga_errout(
+	register char  *msg
+)
 {
 	static char  *fep = fatalerr;
 
@@ -173,10 +184,11 @@ register char  *msg;
 }
 
 
-static
-vga_comin(buf, prompt)			/* get input line from console */
-char  *buf;
-char  *prompt;
+static void
+vga_comin(			/* get input line from console */
+	char  *buf,
+	char  *prompt
+)
 {
 	extern int  getch();
 
@@ -187,10 +199,13 @@ char  *prompt;
 }
 
 
-static
-vgacolr(index, r, g, b)		       /* enter a color into our table */
-int  index;
-int  r, g, b;
+static void
+vgacolr(		       /* enter a color into our table */
+	int  index,
+	int  r,
+	int  g,
+	int  b
+)
 {
 	register long  cl;
 

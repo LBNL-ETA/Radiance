@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.9 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.10 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -8,9 +8,8 @@ static const char	RCSid[] = "$Id: m_mirror.c,v 2.9 2003/02/25 02:47:22 greg Exp 
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "source.h"
 
 /*
@@ -24,16 +23,17 @@ static const char	RCSid[] = "$Id: m_mirror.c,v 2.9 2003/02/25 02:47:22 greg Exp 
  * part of the direct calculation.
  */
 
-
-static int  mir_proj(), mirrorproj();
+static int mir_proj(MAT4  pm, OBJREC  *o, SRCREC  *s, int  n);
+static void mirrorproj(MAT4  m, FVECT  nv, double  offs);
 
 VSMATERIAL  mirror_vs = {mir_proj, 1};
 
 
-int
-m_mirror(m, r)			/* shade mirrored ray */
-register OBJREC  *m;
-register RAY  *r;
+extern int
+m_mirror(			/* shade mirrored ray */
+	register OBJREC  *m,
+	register RAY  *r
+)
 {
 	COLOR  mcolor;
 	RAY  nr;
@@ -99,11 +99,12 @@ register RAY  *r;
 
 
 static int
-mir_proj(pm, o, s, n)		/* compute a mirror's projection */
-MAT4  pm;
-register OBJREC  *o;
-SRCREC  *s;
-int  n;
+mir_proj(		/* compute a mirror's projection */
+	MAT4  pm,
+	register OBJREC  *o,
+	SRCREC  *s,
+	int  n
+)
 {
 	FVECT  nv, sc;
 	double  od;
@@ -127,11 +128,12 @@ int  n;
 }
 
 
-static int
-mirrorproj(m, nv, offs)		/* get mirror projection for surface */
-register MAT4  m;
-FVECT  nv;
-double  offs;
+static void
+mirrorproj(		/* get mirror projection for surface */
+	register MAT4  m,
+	FVECT  nv,
+	double  offs
+)
 {
 	register int  i, j;
 					/* assign matrix */

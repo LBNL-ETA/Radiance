@@ -7,10 +7,6 @@ static const char RCSid[] = "$Id";
 
 #include "copyright.h"
 
-#include  "platform.h"
-#include  "ray.h"
-#include  "paths.h"
-
 #include  <sys/types.h>
 
 #ifndef NON_POSIX
@@ -26,6 +22,10 @@ static const char RCSid[] = "$Id";
 #include  <time.h>
 #include  <signal.h>
 
+#include  "platform.h"
+#include  "ray.h"
+#include  "paths.h"
+#include  "ambient.h"
 #include  "view.h"
 #include  "random.h"
 #include  "paths.h"
@@ -47,7 +47,7 @@ int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
 int  samplendx;				/* sample index number */
 
-extern void  ambnotify();
+//extern void  ambnotify();
 void  (*addobjnotify[])() = {ambnotify, NULL};
 
 VIEW  ourview = STDVIEW;		/* view parameters */
@@ -111,11 +111,24 @@ int  hres, vres;			/* resolution for this frame */
 
 static VIEW	lastview;		/* the previous view input */
 
-extern char  *mktemp();  /* XXX should be in stdlib.h or unistd.h */
+//extern char  *mktemp();  /* XXX should be in stdlib.h or unistd.h */
 
-void  report();
+//double	pixvalue();
 
-double	pixvalue();
+static void report(int);
+static int nextview(FILE *fp);
+static void render(char *zfile, char *oldfile);
+static void fillscanline(COLOR *scanline, float *zline, char *sd, int xres,
+		int y, int xstep);
+static void fillscanbar(COLOR *scanbar[], float *zbar[], int xres,
+		int y, int ysize);
+static int fillsample(COLOR *colline, float *zline, int x, int y,
+		int xlen, int ylen, int b);
+static double pixvalue(COLOR  col, int  x, int  y);
+static int salvage(char  *oldfile);
+static int pixnumber(int  x, int  y, int  xres, int  yres);
+
+
 
 #ifdef RHAS_STAT
 #include  <sys/types.h>
@@ -138,7 +151,7 @@ quit(code)			/* quit program */
 int  code;
 {
 	if (code)			/* report status */
-		report();
+		report(0);
 #ifndef NON_POSIX
 	headclean();			/* delete header file */
 	pfclean();			/* clean up persist files */
@@ -148,8 +161,8 @@ int  code;
 
 
 #ifndef NON_POSIX
-void
-report()		/* report progress */
+static void
+report(int dummy)		/* report progress */
 {
 	double  u, s;
 #ifdef BSD
@@ -188,8 +201,8 @@ report()		/* report progress */
 #endif
 }
 #else
-void
-report()		/* report progress */
+static void
+report(int)		/* report progress */
 {
 	tlastrept = time((time_t *)NULL);
 	sprintf(errmsg, "%lu rays, %4.2f%% after %5.4f hours\n",
@@ -199,10 +212,13 @@ report()		/* report progress */
 #endif
 
 
-void
-rpict(seq, pout, zout, prvr)			/* generate image(s) */
-int  seq;
-char  *pout, *zout, *prvr;
+extern void
+rpict(			/* generate image(s) */
+	int  seq,
+	char  *pout,
+	char  *zout,
+	char  *prvr
+)
 /*
  * If seq is greater than zero, then we will render a sequence of
  * images based on view parameter strings read from the standard input.
@@ -341,8 +357,10 @@ char  *pout, *zout, *prvr;
 }
 
 
-nextview(fp)				/* get next view from fp */
-FILE  *fp;
+static int
+nextview(				/* get next view from fp */
+	FILE  *fp
+)
 {
 	char  linebuf[256];
 
@@ -354,8 +372,11 @@ FILE  *fp;
 }	
 
 
-render(zfile, oldfile)				/* render the scene */
-char  *zfile, *oldfile;
+static void
+render(				/* render the scene */
+	char  *zfile,
+	char  *oldfile
+)
 {
 	COLOR  *scanbar[MAXDIV+1];	/* scanline arrays of pixel values */
 	float  *zbar[MAXDIV+1];		/* z values */
@@ -417,7 +438,7 @@ char  *zfile, *oldfile;
 		error(SYSTEM, "z-file seek error in render");
 	pctdone = 100.0*i/vres;
 	if (ralrm > 0)			/* report init stats */
-		report();
+		report(0);
 #ifdef SIGCONT
 	else
 	signal(SIGCONT, report);
@@ -463,7 +484,7 @@ char  *zfile, *oldfile;
 							/* record progress */
 		pctdone = 100.0*(vres-1-ypos)/vres;
 		if (ralrm > 0 && time((time_t *)NULL) >= tlastrept+ralrm)
-			report();
+			report(0);
 #ifdef SIGCONT
 		else
 			signal(SIGCONT, report);
@@ -492,7 +513,7 @@ alldone:
 		free(sampdens);
 	pctdone = 100.0;
 	if (ralrm > 0)
-		report();
+		report(0);
 #ifdef SIGCONT
 	signal(SIGCONT, SIG_DFL);
 #endif
@@ -504,11 +525,15 @@ memerr:
 }
 
 
-fillscanline(scanline, zline, sd, xres, y, xstep)	/* fill scan at y */
-register COLOR	*scanline;
-register float	*zline;
-register char  *sd;
-int  xres, y, xstep;
+static void
+fillscanline(	/* fill scan at y */
+	register COLOR	*scanline,
+	register float	*zline,
+	register char  *sd,
+	int  xres,
+	int  y,
+	int  xstep
+)
 {
 	static int  nc = 0;		/* number of calls */
 	int  bl = xstep, b = xstep;
@@ -539,10 +564,14 @@ int  xres, y, xstep;
 }
 
 
-fillscanbar(scanbar, zbar, xres, y, ysize)	/* fill interior */
-register COLOR	*scanbar[];
-register float	*zbar[];
-int  xres, y, ysize;
+static void
+fillscanbar(	/* fill interior */
+	register COLOR	*scanbar[],
+	register float	*zbar[],
+	int  xres,
+	int  y,
+	int  ysize
+)
 {
 	COLOR  vline[MAXDIV+1];
 	float  zline[MAXDIV+1];
@@ -568,13 +597,16 @@ int  xres, y, ysize;
 }
 
 
-int
-fillsample(colline, zline, x, y, xlen, ylen, b) /* fill interior points */
-register COLOR	*colline;
-register float	*zline;
-int  x, y;
-int  xlen, ylen;
-int  b;
+static int
+fillsample( /* fill interior points */
+	register COLOR	*colline,
+	register float	*zline,
+	int  x,
+	int  y,
+	int  xlen,
+	int  ylen,
+	int  b
+)
 {
 	double	ratio;
 	double	z;
@@ -621,14 +653,16 @@ int  b;
 }
 
 
-double
-pixvalue(col, x, y)		/* compute pixel value */
-COLOR  col;			/* returned color */
-int  x, y;			/* pixel position */
+static double
+pixvalue(		/* compute pixel value */
+	COLOR  col,			/* returned color */
+	int  x,			/* pixel position */
+	int  y
+)
 {
 	RAY  thisray;
 	FVECT	lorg, ldir;
-	double	hpos, vpos, lmax, d;
+	double	hpos, vpos, lmax;
 						/* compute view ray */
 	hpos = (x+pixjitter())/hres;
 	vpos = (y+pixjitter())/vres;
@@ -665,9 +699,10 @@ int  x, y;			/* pixel position */
 }
 
 
-int
-salvage(oldfile)		/* salvage scanlines from killed program */
-char  *oldfile;
+static int
+salvage(		/* salvage scanlines from killed program */
+	char  *oldfile
+)
 {
 	COLR  *scanline;
 	FILE  *fp;
@@ -721,13 +756,17 @@ gotzip:
 writerr:
 	sprintf(errmsg, "write error during recovery of \"%s\"", oldfile);
 	error(SYSTEM, errmsg);
+	return -1; /* pro forma return */
 }
 
 
-int
-pixnumber(x, y, xres, yres)		/* compute pixel index (brushed) */
-register int  x, y;
-int  xres, yres;
+static int
+pixnumber(		/* compute pixel index (brushed) */
+	register int  x,
+	register int  y,
+	int  xres,
+	int  yres
+)
 {
 	x -= y;
 	while (x < 0)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.55 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.56 2004/03/30 16:13:00 schorsch Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.55 2003/10/20 16:01:55 greg Exp 
 #include  "platform.h"
 #include  "ray.h"
 #include  "otypes.h"
+#include  "resolu.h"
 #include  "ambient.h"
 #include  "random.h"
 
@@ -75,17 +76,30 @@ static long  lastpos = -1;		/* last flush position */
 #define	 newambval()	(AMBVAL *)malloc(sizeof(AMBVAL))
 #define  freeav(av)	free((void *)av);
 
-static void  initambfile(), avsave(), avinsert(), sortambvals(), unloadatree();
-static int  avlmemi();
-static AMBVAL  *avstore();
+static void initambfile(int creat);
+static void avsave(AMBVAL *av);
+static AMBVAL *avstore(AMBVAL  *aval);
+static AMBTREE *newambtree(void);
+static void freeambtree(AMBTREE  *atp);
+
+typedef void unloadtf_t(void *);
+static unloadtf_t avinsert;
+static unloadtf_t av2list;
+static void unloadatree(AMBTREE  *at, unloadtf_t *f);
+
+static int aposcmp(const void *avp1, const void *avp2);
+static int avlmemi(AMBVAL *avaddr);
+static void sortambvals(int always);
+
 #ifdef  F_SETLKW
-static void  aflock();
+static void aflock(int  typ);
 #endif
 
 
-void
-setambres(ar)				/* set ambient resolution */
-int  ar;
+extern void
+setambres(				/* set ambient resolution */
+	int  ar
+)
 {
 	ambres = ar < 0 ? 0 : ar;		/* may be done already */
 						/* set min & max radii */
@@ -105,9 +119,10 @@ int  ar;
 }
 
 
-void
-setambacc(newa)				/* set ambient accuracy */
-double  newa;
+extern void
+setambacc(				/* set ambient accuracy */
+	double  newa
+)
 {
 	double  ambdiff;
 
@@ -119,8 +134,8 @@ double  newa;
 }
 
 
-void
-setambient()				/* initialize calculation */
+extern void
+setambient(void)				/* initialize calculation */
 {
 	int	readonly = 0;
 	long  pos, flen;
@@ -180,8 +195,8 @@ setambient()				/* initialize calculation */
 }
 
 
-void
-ambdone()			/* close ambient file and free memory */
+extern void
+ambdone(void)			/* close ambient file and free memory */
 {
 	if (ambfp != NULL) {		/* close ambient file */
 		ambsync();
@@ -206,9 +221,10 @@ ambdone()			/* close ambient file and free memory */
 }
 
 
-void
-ambnotify(obj)			/* record new modifier */
-OBJECT	obj;
+extern void
+ambnotify(			/* record new modifier */
+	OBJECT	obj
+)
 {
 	static int  hitlimit = 0;
 	register OBJREC	 *o;
@@ -235,11 +251,12 @@ OBJECT	obj;
 }
 
 
-void
-ambient(acol, r, nrm)		/* compute ambient component for ray */
-COLOR  acol;
-register RAY  *r;
-FVECT  nrm;
+extern void
+ambient(		/* compute ambient component for ray */
+	COLOR  acol,
+	register RAY  *r,
+	FVECT  nrm
+)
 {
 	static int  rdepth = 0;			/* ambient recursion */
 	double	d, l;
@@ -295,15 +312,16 @@ dumbamb:					/* return global value */
 }
 
 
-double
-sumambient(acol, r, rn, al, at, c0, s)	/* get interpolated ambient value */
-COLOR  acol;
-register RAY  *r;
-FVECT  rn;
-int  al;
-AMBTREE	 *at;
-FVECT  c0;
-double	s;
+extern double
+sumambient(	/* get interpolated ambient value */
+	COLOR  acol,
+	register RAY  *r,
+	FVECT  rn,
+	int  al,
+	AMBTREE	 *at,
+	FVECT  c0,
+	double	s
+)
 {
 	double	d, e1, e2, wt, wsum;
 	COLOR  ct;
@@ -408,12 +426,13 @@ double	s;
 }
 
 
-double
-makeambient(acol, r, rn, al)	/* make a new ambient value */
-COLOR  acol;
-register RAY  *r;
-FVECT  rn;
-int  al;
+extern double
+makeambient(	/* make a new ambient value */
+	COLOR  acol,
+	register RAY  *r,
+	FVECT  rn,
+	int  al
+)
 {
 	AMBVAL	amb;
 	FVECT	gp, gd;
@@ -440,11 +459,13 @@ int  al;
 }
 
 
-void
-extambient(cr, ap, pv, nv)		/* extrapolate value at pv, nv */
-COLOR  cr;
-register AMBVAL	 *ap;
-FVECT  pv, nv;
+extern void
+extambient(		/* extrapolate value at pv, nv */
+	COLOR  cr,
+	register AMBVAL	 *ap,
+	FVECT  pv,
+	FVECT  nv
+)
 {
 	FVECT  v1;
 	register int  i;
@@ -467,8 +488,9 @@ FVECT  pv, nv;
 
 
 static void
-initambfile(creat)		/* initialize ambient file */
-int  creat;
+initambfile(		/* initialize ambient file */
+	int  creat
+)
 {
 	extern char  *progname, *octname;
 	static char  *mybuf = NULL;
@@ -503,8 +525,9 @@ int  creat;
 
 
 static void
-avsave(av)				/* insert and save an ambient value */
-AMBVAL	*av;
+avsave(				/* insert and save an ambient value */
+	AMBVAL	*av
+)
 {
 	avinsert(avstore(av));
 	if (ambfp == NULL)
@@ -521,8 +544,9 @@ writerr:
 
 
 static AMBVAL *
-avstore(aval)				/* allocate memory and store aval */
-register AMBVAL  *aval;
+avstore(				/* allocate memory and store aval */
+	register AMBVAL  *aval
+)
 {
 	register AMBVAL  *av;
 	double	d;
@@ -548,7 +572,7 @@ static AMBTREE  *atfreelist = NULL;	/* free ambient tree structures */
 
 
 static AMBTREE *
-newambtree()				/* allocate 8 ambient tree structs */
+newambtree(void)				/* allocate 8 ambient tree structs */
 {
 	register AMBTREE  *atp, *upperlim;
 
@@ -570,8 +594,9 @@ newambtree()				/* allocate 8 ambient tree structs */
 
 
 static void
-freeambtree(atp)			/* free 8 ambient tree structs */
-AMBTREE  *atp;
+freeambtree(			/* free 8 ambient tree structs */
+	AMBTREE  *atp
+)
 {
 	atp->kid = atfreelist;
 	atfreelist = atp;
@@ -579,8 +604,9 @@ AMBTREE  *atp;
 
 
 static void
-avinsert(av)				/* insert ambient value in our tree */
-register AMBVAL	 *av;
+avinsert(				/* insert ambient value in our tree */
+	void *av
+)
 {
 	register AMBTREE  *at;
 	register AMBVAL  *ap;
@@ -590,19 +616,19 @@ register AMBVAL	 *av;
 	int  branch;
 	register int  i;
 
-	if (av->rad <= FTINY)
+	if (((AMBVAL*)av)->rad <= FTINY)
 		error(CONSISTENCY, "zero ambient radius in avinsert");
 	at = &atrunk;
 	VCOPY(ck0, thescene.cuorg);
 	s = thescene.cusize;
-	while (s*(OCTSCALE/2) > av->rad*ambacc) {
+	while (s*(OCTSCALE/2) > ((AMBVAL*)av)->rad*ambacc) {
 		if (at->kid == NULL)
 			if ((at->kid = newambtree()) == NULL)
 				error(SYSTEM, "out of memory in avinsert");
 		s *= 0.5;
 		branch = 0;
 		for (i = 0; i < 3; i++)
-			if (av->pos[i] > ck0[i] + s) {
+			if (((AMBVAL*)av)->pos[i] > ck0[i] + s) {
 				ck0[i] += s;
 				branch |= 1 << i;
 			}
@@ -610,18 +636,19 @@ register AMBVAL	 *av;
 	}
 	avh.next = at->alist;		/* order by increasing level */
 	for (ap = &avh; ap->next != NULL; ap = ap->next)
-		if (ap->next->lvl >= av->lvl)
+		if (ap->next->lvl >= ((AMBVAL*)av)->lvl)
 			break;
-	av->next = ap->next;
-	ap->next = av;
+	((AMBVAL*)av)->next = ap->next;
+	ap->next = (AMBVAL*)av;
 	at->alist = avh.next;
 }
 
 
 static void
-unloadatree(at, f)			/* unload an ambient value tree */
-register AMBTREE  *at;
-void	(*f)();
+unloadatree(			/* unload an ambient value tree */
+	register AMBTREE  *at,
+	unloadtf_t *f
+)
 {
 	register AMBVAL  *av;
 	register int  i;
@@ -646,25 +673,29 @@ static struct avl {
 static AMBVAL	**avlist2;		/* memory positions for sorting */
 static int	i_avlist;		/* index for lists */
 
+static int alatcmp(const void *av1, const void *av2);
 
-static int
-av2list(av)
-register AMBVAL	*av;
+static void
+av2list(
+	void *av
+)
 {
 #ifdef DEBUG
 	if (i_avlist >= nambvals)
 		error(CONSISTENCY, "too many ambient values in av2list1");
 #endif
-	avlist1[i_avlist].p = avlist2[i_avlist] = av;
-	avlist1[i_avlist++].t = av->latick;
+	avlist1[i_avlist].p = avlist2[i_avlist] = (AMBVAL*)av;
+	avlist1[i_avlist++].t = ((AMBVAL*)av)->latick;
 }
 
 
 static int
-alatcmp(av1, av2)			/* compare ambient values for MRA */
-struct avl	*av1, *av2;
+alatcmp(			/* compare ambient values for MRA */
+	const void *av1,
+	const void *av2
+)
 {
-	register long  lc = av2->t - av1->t;
+	register long  lc = ((struct avl *)av2)->t - ((struct avl *)av1)->t;
 	return(lc<0 ? -1 : lc>0 ? 1 : 0);
 }
 
@@ -676,8 +707,10 @@ struct avl	*av1, *av2;
  * assumes pointers differ by exact struct size increments.
  */
 static int
-aposcmp(avp1, avp2)			/* compare ambient value positions */
-const void	*avp1, *avp2;
+aposcmp(			/* compare ambient value positions */
+	const void	*avp1,
+	const void	*avp2
+)
 {
 	register long	diff = *(char * const *)avp1 - *(char * const *)avp2;
 	if (diff < 0)
@@ -687,8 +720,9 @@ const void	*avp1, *avp2;
 
 #if 1
 static int
-avlmemi(avaddr)				/* find list position from address */
-AMBVAL	*avaddr;
+avlmemi(				/* find list position from address */
+	AMBVAL	*avaddr
+)
 {
 	register AMBVAL  **avlpp;
 
@@ -705,8 +739,9 @@ AMBVAL	*avaddr;
 
 
 static void
-sortambvals(always)			/* resort ambient values */
-int	always;
+sortambvals(			/* resort ambient values */
+	int	always
+)
 {
 	AMBTREE  oldatrunk;
 	AMBVAL	tav, *tap, *pnext;
@@ -804,8 +839,9 @@ int	always;
 #ifdef	F_SETLKW
 
 static void
-aflock(typ)			/* lock/unlock ambient file */
-int  typ;
+aflock(			/* lock/unlock ambient file */
+	int  typ
+)
 {
 	static struct flock  fls;	/* static so initialized to zeroes */
 
@@ -815,8 +851,8 @@ int  typ;
 }
 
 
-int
-ambsync()			/* synchronize ambient file */
+extern int
+ambsync(void)			/* synchronize ambient file */
 {
 	long  flen;
 	AMBVAL	avs;
@@ -872,12 +908,13 @@ syncend:
 	return(n);
 seekerr:
 	error(SYSTEM, "seek failed in ambsync");
+	return -1; /* pro forma return */
 }
 
 #else
 
-int
-ambsync()			/* flush ambient file */
+extern int
+ambsync(void)			/* flush ambient file */
 {
 	if (nunflshed == 0)
 		return(0);

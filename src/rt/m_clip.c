@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.7 2003/07/21 22:30:19 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: m_clip.c,v 2.7 2003/07/21 22:30:19 schorsch Ex
 #include "copyright.h"
 
 #include  "ray.h"
+#include  "rtotypes.h"
 
 /*
  *  Clipping objects permit holes and sections to be taken out
@@ -18,10 +19,11 @@ static const char	RCSid[] = "$Id: m_clip.c,v 2.7 2003/07/21 22:30:19 schorsch Ex
  */
 
 
-int
-m_clip(m, r)			/* clip objects from ray */
-register OBJREC  *m;
-register RAY  *r;
+extern int
+m_clip(			/* clip objects from ray */
+	register OBJREC  *m,
+	register RAY  *r
+)
 {
 	OBJECT  cset[MAXSET+1], *modset;
 	OBJECT  obj, mod;

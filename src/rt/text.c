@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.24 2004/02/12 18:55:50 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.25 2004/03/30 16:13:01 schorsch Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -8,11 +8,9 @@ static const char	RCSid[] = "$Id: text.c,v 2.24 2004/02/12 18:55:50 greg Exp $";
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "paths.h"
-
 #include  "otypes.h"
-
+#include  "rtotypes.h"
 #include  "font.h"
 
 /*
@@ -78,14 +76,17 @@ typedef struct {
 	TLINE  tl;			/* line list */
 }  TEXT;
 
-TEXT  *gettext();
+static TLINE * tlalloc(char *s);
+static TEXT * gettext(OBJREC *tm);
+static int intext(FVECT p, OBJREC *m);
+static int inglyph(double x, double y, GLYPH *gl);
 
-TLINE  *tlalloc();
 
-
-do_text(m, r)
-register OBJREC  *m;
-RAY  *r;
+extern int
+do_text(
+	register OBJREC  *m,
+	RAY  *r
+)
 {
 	FVECT  v;
 	int  foreground;
@@ -132,9 +133,10 @@ RAY  *r;
 }
 
 
-TLINE *
-tlalloc(s)			/* allocate and assign text line */
-char  *s;
+static TLINE *
+tlalloc(			/* allocate and assign text line */
+	char  *s
+)
 {
 	register int  siz;
 	register TLINE  *tl;
@@ -149,9 +151,10 @@ char  *s;
 }
 
 
-TEXT *
-gettext(tm)			/* get text structure for material */
-register OBJREC  *tm;
+static TEXT *
+gettext(			/* get text structure for material */
+	register OBJREC  *tm
+)
 {
 #define  R	(tm->oargs.farg+3)
 #define  D	(tm->oargs.farg+6)
@@ -242,8 +245,10 @@ register OBJREC  *tm;
 }
 
 
-freetext(m)			/* free text structures associated with m */
-OBJREC  *m;
+extern void
+freetext(			/* free text structures associated with m */
+	OBJREC  *m
+)
 {
 	register TEXT  *tp;
 	register TLINE  *tlp;
@@ -262,9 +267,11 @@ OBJREC  *m;
 }
 
 
-intext(p, m)			/* check to see if p is in text glyph */
-FVECT  p;
-OBJREC  *m;
+static int
+intext(			/* check to see if p is in text glyph */
+	FVECT  p,
+	OBJREC  *m
+)
 {
 	register TEXT  *tp;
 	register TLINE  *tlp;
@@ -302,9 +309,12 @@ OBJREC  *m;
 }
 
 
-inglyph(x, y, gl)		/* (x,y) within font glyph gl? */
-double  x, y;		/* real coordinates in range [0,255) */
-register GLYPH  *gl;
+static int
+inglyph(		/* (x,y) within font glyph gl? */
+	double  x,		/* real coordinates in range [0,255) */
+	double  y,
+	register GLYPH  *gl
+)
 {
 	int  n, ncross;
 	int  xlb, ylb;
