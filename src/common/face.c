@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: face.c,v 2.7 2003/02/25 02:47:21 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.8 2003/03/12 17:26:58 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -119,6 +119,7 @@ FACE  *f;
 {
 	int  ncross, n;
 	double  x, y;
+	int  tst;
 	register int  xi, yi;
 	register FLOAT  *p0, *p1;
 
@@ -132,13 +133,15 @@ FACE  *f;
 	ncross = 0;
 					/* positive x axis cross test */
 	while (n--) {
-		if ((p0[yi] > y) ^ (p1[yi] > y))
-			if (p0[xi] > x && p1[xi] > x)
+		if ((p0[yi] > y) ^ (p1[yi] > y)) {
+			tst = (p0[xi] > x) + (p1[xi] > x);
+			if (tst == 2)
 				ncross++;
-			else if (p0[xi] > x || p1[xi] > x)
+			else if (tst)
 				ncross += (p1[yi] > p0[yi]) ^
 						((p0[yi]-y)*(p1[xi]-x) >
 						(p0[xi]-x)*(p1[yi]-y));
+		}
 		p0 = p1;
 		p1 += 3;
 	}

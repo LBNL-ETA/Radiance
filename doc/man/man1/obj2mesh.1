@@ -37,7 +37,7 @@ mod mesh id
 .br
 0
 .PP
-The syntax and semantics are nearly identical to the RADIANCE
+The syntax and semantics are identical to the RADIANCE
 .I instance
 primitive, except that the mesh modifier may not be "void", since
 materials are not included in a compiled mesh file.
@@ -51,9 +51,9 @@ less memory, but potentially slower rendering.
 Smaller values may produce faster renderings,
 since the default number (15) is on the high side to reduce
 the compiled mesh octree size.
-Values below 6 are not recommended, since the median
-valence (number of adjacent faces) for a mesh vertex is 6,
-and smaller limits will result in pointless octree subdivision.
+Values below 6 are not recommended, since this is the median
+valence for a mesh vertex (the number of adjacent faces),
+and smaller values will result in pointless octree subdivision.
 .PP
 The
 .I \-r
@@ -70,6 +70,59 @@ Although the mesh file format is binary, it is meant to be portable
 between machines.
 The only limitation is that machines with radically different integer
 sizes will not work together.
+.SH DETAILS
+The following Wavefront statements are understood and compiled by
+.I obj2mesh.
+.TP 10n
+.BI v " x y z"
+A vertex location, given by its Cartesian coordinates.
+The final mesh position may of course be modified by
+the transform arguments given to the
+.I mesh
+primitive in the Radiance scene description.
+.TP
+.BI vn " dx dy dz"
+A vertex normal vector, given by its three
+direction components, which will be normalized by
+.I obj2mesh.
+Normals will be interpolated over the mesh
+during rendering to produce a smooth surface.
+If no vertex normals are present, the mess will appear tesselated.
+A zero length normal (i.e., 0 0 0) will generate a syntax error.
+.TP
+.BI vt " u v"
+A local vertex texture coordinate.
+These coordinates will be interpolated and passed
+to the "Lu" and "Lv" variables during rendering.
+Local coordinates can extend over any desired range of values.
+.TP
+.BI f " v1/t1/n1 v2/t2/n2 v3/t3/n3" " .."
+A polygonal face.
+Polygon vertices are specified as three indices separated
+by slashes ('/').
+The first index is the vertex location, the
+second index is the local (u,v) texture coordinate, and the
+third index is the vertex surface normal.
+Positive indices count from the beginning of the input,
+where the first vertex position (
+.I v
+statement) is numbered 1, and likewise
+for the first texture coordinate and the first surface normal.
+Negative indices count backward from the current position in
+the input, where -1 is the last vertex encountered, -2
+is the one before that, etc.
+An index of 0 may be used for the vertex texture or normal to
+indicate none, or these may be left off entirely.
+All faces will be broken into triangles in the final mesh.
+.I Obj2mesh
+currently makes an unsafe assumption that faces are convex,
+which may result in odd results if they are not.
+.PP
+All other statement types will be ignored on the input.
+Statements understood by
+.I obj2rad(1)
+will be ignored silently; other statements will generate
+a warning message after translation to indicate how much was missed.
 .SH DIAGNOSTICS
 There are four basic error types reported by obj2mesh:
 .IP
@@ -88,7 +141,7 @@ However, the following internal errors should be mentioned:
 .IP "Set overflow in addobject (id)"
 This error occurs when too many surfaces are close together in a
 scene.
-Sometimes a dense mesh can be accomodated by increasing
+Sometimes a dense mesh can be accommodated by increasing
 the maximum resolution (by powers of two) using the
 .I \-r
 option, but usually this error indicates something is wrong.
@@ -107,5 +160,5 @@ oconv mesh.obj mesh.rtm
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-gensurf(1), getinfo(1), make(1),
+gensurf(1), getinfo(1), make(1), obj2rad(1),
 oconv(1), rpict(1), rview(1), rtrace(1), xform(1)

@@ -64,7 +64,7 @@ each voxel.
 Larger numbers result in quicker octree generation,
 but potentially slower rendering.
 Smaller values may or may not produce faster renderings,
-since the default number (5) is close to optimal for most scenes.
+since the default number (6) is close to optimal for most scenes.
 .PP
 The
 .I \-r
@@ -72,7 +72,7 @@ option specifies the maximum octree resolution.
 This should be greater than or equal to the ratio of the largest
 and smallest dimensions in the scene (ie. surface size or distance between 
 surfaces).
-The default is 8192.
+The default is 16384.
 .PP
 The
 .I \-f
@@ -132,7 +132,7 @@ to xform(1) within files to create a hierarchy.
 .IP "Set overflow in addobject (id)"
 This error occurs when too many surfaces are close together in a
 scene.
-Sometimes a dense scene can be accomodated by increasing
+Sometimes a dense scene can be accommodated by increasing
 the maximum resolution (by powers of two) using the
 .I \-r
 option, but usually this error indicates something is wrong.

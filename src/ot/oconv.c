@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.13 2003/03/12 04:59:04 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.14 2003/03/12 17:26:58 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -25,9 +25,9 @@ char  *progname;			/* argv[0] */
 
 int  nowarn = 0;			/* supress warnings? */
 
-int  objlim = 5;			/* # of objects before split */
+int  objlim = 6;			/* # of objects before split */
 
-int  resolu = 8192;			/* octree resolution limit */
+int  resolu = 16384;			/* octree resolution limit */
 
 CUBE  thescene = {EMPTY, {0.0, 0.0, 0.0}, 0.0};		/* our scene */
 

@@ -70,6 +70,8 @@ scene description.
 This is most useful as input to the
 .I obj2mesh(1)
 program for producing a compiled mesh.
+A single "usemtl" statement will appear at the beginning
+of the .OBJ output, echoing the modifier given on the command line.
 .PP
 Rough holes may be cut in the mesh by defining a valid(s,t) function.
 Where this function is positive, polygon vertices will be produced.
@@ -114,4 +116,4 @@ The smoothing operation requires that functions be defined
 beyond the [0,1] boundaries of s and t.
 .SH "SEE ALSO"
 calc(1), genbox(1), genrev(1), genworm(1),
-obj2mesh(1), rpict(1), rview(1), xform(1)
+obj2mesh(1), obj2rad(1), rpict(1), rview(1), xform(1)
