@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.34 2003/10/27 10:27:25 schorsch Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.35 2003/11/16 09:23:46 schorsch Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -12,9 +12,10 @@ static const char RCSid[] = "$Id: xform.c,v 2.34 2003/10/27 10:27:25 schorsch Ex
 #include  <ctype.h>
 
 #include  "platform.h"
-#include  "rtmath.h"
-#include  "rtprocess.h" /* win_popen() */
 #include  "paths.h"
+#include  "rtprocess.h" /* win_popen() */
+#include  "rtio.h"
+#include  "rtmath.h"
 #include  "object.h"
 #include  "otypes.h"
 
@@ -46,13 +47,24 @@ FILE  *mainfp = NULL;			/* main file pointer */
 
 #define	 progname  (xav[0])
 
+static int doargf(int ac, char **av, int fi);
+static int doarray(int ac, char **av, int ai);
+static void xform(char *name, FILE *fin);
+static void xfcomm(char *fname, FILE *fin);
+static void xfobject(char *fname, FILE *fin);
+static int addxform(FILE *fin);
+static int alias(FILE *fin);
+static void initotypes(void);
+static void openmain(char *iname);
 
-main(argc, argv)		/* get transform options and transform file */
-int  argc;
-char  *argv[];
+
+int
+main(		/* get transform options and transform file */
+	int  argc,
+	char  *argv[]
+)
 {
 	int  mal_prefix = 0;
-	char  *fname;
 	int  a;
 					/* check for argument list file */
 	for (a = 1; a < argc; a++)
@@ -160,9 +172,12 @@ char  *argv[];
 }
 
 
-doargf(ac, av, fi)			/* take argument list from file */
-char  **av;
-int  ac, fi;
+int
+doargf(			/* take argument list from file */
+	int ac,
+	char  **av,
+	int fi
+)
 {
 	int  inquote;
 	char  *newav[256], **avp;
@@ -269,9 +284,12 @@ int  ac, fi;
 }
 
 
-doarray(ac, av, ai)			/* make array */
-char  **av;
-int  ac, ai;
+int
+doarray(			/* make array */
+	int  ac,
+	char  **av,
+	int  ai
+)
 {
 	char  *newav[256], **avp;
 	char  newid[128], repts[32];
@@ -314,9 +332,11 @@ int  ac, ai;
 }
 
 
-xform(name, fin)			/* transform stream by tot.xfm */
-char  *name;
-register FILE  *fin;
+void
+xform(			/* transform stream by tot.xfm */
+	char  *name,
+	register FILE  *fin
+)
 {
 	int  nobjs = 0;
 	register int  c;
@@ -347,9 +367,11 @@ register FILE  *fin;
 }
 
 
-xfcomm(fname, fin)			/* transform a command */
-char  *fname;
-FILE  *fin;
+void
+xfcomm(			/* transform a command */
+	char  *fname,
+	FILE  *fin
+)
 {
 	FILE  *pin;
 	char  buf[512];
@@ -377,9 +399,11 @@ FILE  *fin;
 }
 
 
-xfobject(fname, fin)				/* transform an object */
-char  *fname;
-FILE  *fin;
+void
+xfobject(				/* transform an object */
+	char  *fname,
+	FILE  *fin
+)
 {
 	char  typ[16], nam[MAXSTR];
 	int  fn;
@@ -412,8 +436,10 @@ FILE  *fin;
 }
 
 
-o_default(fin)			/* pass on arguments unchanged */
-FILE  *fin;
+int
+o_default(			/* pass on arguments unchanged */
+	FILE  *fin
+)
 {
 	register int  i;
 	FUNARGS	 fa;
@@ -446,8 +472,10 @@ FILE  *fin;
 }
 
 
-addxform(fin)			/* add xf arguments to strings */
-FILE  *fin;
+int
+addxform(			/* add xf arguments to strings */
+	FILE  *fin
+)
 {
 	register int  i;
 	int  resetarr = 0;
@@ -487,8 +515,10 @@ FILE  *fin;
 }
 
 
-alias(fin)			/* transfer alias */
-FILE  *fin;
+int
+alias(			/* transfer alias */
+	FILE  *fin
+)
 {
 	char  aliasnm[MAXSTR];
 
@@ -499,8 +529,10 @@ FILE  *fin;
 }
 
 
-m_glow(fin)			/* transform arguments for proximity light */
-FILE  *fin;
+int
+m_glow(			/* transform arguments for proximity light */
+	FILE  *fin
+)
 {
 	FUNARGS	 fa;
 
@@ -517,8 +549,10 @@ FILE  *fin;
 }
 
 
-m_spot(fin)			/* transform arguments for spotlight */
-FILE  *fin;
+int
+m_spot(			/* transform arguments for spotlight */
+	FILE  *fin
+)
 {
 	FVECT  v;
 	FUNARGS	 fa;
@@ -537,8 +571,10 @@ FILE  *fin;
 }
 
 
-m_mist(fin)		/* transform arguments for mist */
-FILE  *fin;
+int
+m_mist(		/* transform arguments for mist */
+	FILE  *fin
+)
 {
 	FUNARGS	 fa;
 	int	i;
@@ -579,8 +615,10 @@ FILE  *fin;
 }
 
 
-m_dielectric(fin)		/* transform arguments for dielectric */
-FILE  *fin;
+int
+m_dielectric(		/* transform arguments for dielectric */
+	FILE  *fin
+)
 {
 	FUNARGS	 fa;
 
@@ -599,8 +637,10 @@ FILE  *fin;
 }
 
 
-m_interface(fin)		/* transform arguments for interface */
-FILE  *fin;
+int
+m_interface(		/* transform arguments for interface */
+	FILE  *fin
+)
 {
 	FUNARGS	 fa;
 
@@ -624,8 +664,10 @@ FILE  *fin;
 }
 
 
-text(fin)			/* transform text arguments */
-FILE  *fin;
+int
+text(			/* transform text arguments */
+	FILE  *fin
+)
 {
 	int  i;
 	FVECT  v;
@@ -663,8 +705,10 @@ FILE  *fin;
 }
 
 
-o_source(fin)			/* transform source arguments */
-FILE  *fin;
+int
+o_source(			/* transform source arguments */
+	FILE  *fin
+)
 {
 	FVECT  dv;
 	FUNARGS	 fa;
@@ -684,8 +728,10 @@ FILE  *fin;
 }
 
 
-o_sphere(fin)			/* transform sphere arguments */
-FILE  *fin;
+int
+o_sphere(			/* transform sphere arguments */
+	FILE  *fin
+)
 {
 	FVECT  cent;
 	double	rad;
@@ -708,8 +754,10 @@ FILE  *fin;
 }
 
 
-o_face(fin)			/* transform face arguments */
-FILE  *fin;
+int
+o_face(			/* transform face arguments */
+	FILE  *fin
+)
 {
 	FVECT  p;
 	register int  i;
@@ -734,8 +782,10 @@ FILE  *fin;
 }
 
 
-o_cone(fin)			/* transform cone and cup arguments */
-FILE  *fin;
+int
+o_cone(			/* transform cone and cup arguments */
+	FILE  *fin
+)
 {
 	FVECT  p0, p1;
 	double	r0, r1;
@@ -761,8 +811,10 @@ FILE  *fin;
 }
 
 
-o_cylinder(fin)			/* transform cylinder and tube arguments */
-FILE  *fin;
+int
+o_cylinder(			/* transform cylinder and tube arguments */
+	FILE  *fin
+)
 {
 	FVECT  p0, p1;
 	double	rad;
@@ -786,8 +838,10 @@ FILE  *fin;
 }
 
 
-o_ring(fin)			/* transform ring arguments */
-FILE  *fin;
+int
+o_ring(			/* transform ring arguments */
+	FILE  *fin
+)
 {
 	FVECT  p0, pd;
 	double	r0, r1;
@@ -817,7 +871,8 @@ FILE  *fin;
 }
 
 
-initotypes()			/* initialize ofun[] array */
+void
+initotypes(void)			/* initialize ofun[] array */
 {
 	register int  i;
 
@@ -863,8 +918,10 @@ initotypes()			/* initialize ofun[] array */
 
 
 #ifdef  OLDXFORM
-openmain(fname)
-char  *fname;
+void
+openmain(
+	char  *fname
+)
 {
 	if (fname == NULL) {
 		strcpy(mainfn, "standard input");
@@ -886,8 +943,10 @@ char  *fname;
 	strcpy(mainfn, fname);
 }
 #else
-openmain(iname)		/* open input, changing directory for file */
-char  *iname;
+void
+openmain(		/* open input, changing directory for file */
+	char  *iname
+)
 {
 	static char  origdir[PATH_MAX];
 	static char  curfn[PATH_MAX];
