@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.53 2005/01/20 04:08:00 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.54 2005/02/02 00:09:14 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -9,7 +9,7 @@ CFLAGS = $(MACH) $(OPT)
 CC = cc
 SPECIAL =
 
-COMPAT = bmalloc.o erf.o strcmp.o
+COMPAT = erf.o strcmp.o
 
 LIBDIR = /usr/local/lib/ray
 
@@ -25,7 +25,7 @@ STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
 	unix_process.o process.o gethomedir.o getpath.o error.o savestr.o \
 	savqstr.o badarg.o fgetword.o words.o expandarg.o wordfile.o fgetval.o \
-	clip.o plocate.o eputs.o wputs.o quit.o lookup.o \
+	clip.o plocate.o eputs.o wputs.o quit.o lookup.o bmalloc.o \
 	loadvars.o tcos.o fputword.o chanvalue.o dircode.o paths.o
 
 SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
