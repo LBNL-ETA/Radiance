@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.3 2003/06/27 06:53:23 greg Exp $ */
+/* RCSid $Id: ranimove.h,v 3.4 2003/06/27 11:32:12 schorsch Exp $ */
 /*
  *  ranimove.h
  *
@@ -16,6 +16,12 @@
  *
  * See the ranimove(1) man page for further details.
  */
+#ifndef _RAD_RANIMOVE_H_
+#define _RAD_RANIMOVE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "ray.h"
 #include "view.h"
@@ -174,3 +180,10 @@ extern double	hlsmax;		/* maximum high-level saliency */
 void	write_map(), sample_pos(), comp_frame_error(), conspicuity();
 int	getclosest(), getambcolor(), refine_first();
 double	sample_wt(), estimaterr(), comperr(); 
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RANIMOVE_H_ */
+

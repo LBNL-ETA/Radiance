@@ -1,7 +1,13 @@
-/* RCSid: $Id: glare.h,v 2.3 2003/02/22 02:07:30 greg Exp $ */
+/* RCSid: $Id: glare.h,v 2.4 2003/06/27 11:32:12 schorsch Exp $ */
 /*
  * Common data structures for glare source finding routines
  */
+#ifndef _RAD_GLARE_H_
+#define _RAD_GLARE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "standard.h"
 #include "view.h"
@@ -67,8 +73,16 @@ extern struct source {
 	struct source	*next;	/* next source in list */
 } *donelist;			/* finished sources */
 
-extern double	getviewpix();
-extern double	pixsize();
+extern double	getviewpix(int vh, int vv);
+extern double	pixsize(int x, int y);
 
 extern long	npixinvw;	/* number of samples in view */
 extern long	npixmiss;	/* number of samples missing */
+
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_GLARE_H_ */
+

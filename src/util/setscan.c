@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: setscan.c,v 2.2 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: setscan.c,v 2.3 2003/06/27 11:32:12 schorsch Exp $";
 #endif
 /*
  * Convert angle ranges of the form a-b:s,c to discrete values
@@ -9,10 +9,11 @@ static const char	RCSid[] = "$Id: setscan.c,v 2.2 2003/02/22 02:07:30 greg Exp $
 
 #include "setscan.h"
 
-
-setscan(ang, arg)			/* set up scan according to arg */
-register ANGLE  *ang;
-register char  *arg;
+int
+setscan(			/* set up scan according to arg */
+register ANGLE  *ang,
+register char  *arg
+)
 {
 	int  state = ',';
 	int  start, finish, step;
