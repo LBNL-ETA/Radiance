@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: igraph.c,v 1.2 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: igraph.c,v 1.3 2003/11/14 00:14:40 schorsch Exp $";
 #endif
 /*
  *  igraph.c - interactive graphing program.
@@ -10,12 +10,11 @@ static const char	RCSid[] = "$Id: igraph.c,v 1.2 2003/10/27 10:28:59 schorsch Ex
  */
 
 #include  <stdio.h>
-
 #include  <ctype.h>
-
 #include  <setjmp.h>
 
 #include  "rtprocess.h"
+#include  "rterror.h"
 #include  "mgvars.h"
 
 typedef struct {
@@ -68,9 +67,15 @@ static jmp_buf  env;		/* setjmp buffer */
 
 static char  curfile[64] = "temp.plt";	/* current file name */
 
-char  *getfile(), *gets(), *strcpy();
+static void mainmenu(void);
+static void uwait(void);
+static void gcompute(void);
+static void setvars(int  nvar, VARIABLE  vars[]);
+static void plotout(void);
+static void settype(void);
+static char  *getfile(void);
 
-
+int
 main(argc, argv)
 int  argc;
 char  *argv[];
@@ -93,14 +98,14 @@ char  *argv[];
 	quit(0);
 }
 
-
+extern void
 eputs(msg)				/* print error message */
 char  *msg;
 {
 	fputs(msg, stderr);
 }
 
-
+extern void
 quit(code)				/* recover or quit */
 int  code;
 {
@@ -110,7 +115,8 @@ int  code;
 }
 
 
-mainmenu()			/* the main menu loop */
+static void
+mainmenu(void)			/* the main menu loop */
 {
 	char  sbuf[128];
 
@@ -128,7 +134,7 @@ mainmenu()			/* the main menu loop */
 		printf("\t10	Quit\n");
 
 		printf("\nChoice: ");
-		clearerr(stdin); gets(sbuf);
+		clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 		if (feof(stdin))
 			return;
 		switch (atoi(sbuf)) {
@@ -159,7 +165,7 @@ mainmenu()			/* the main menu loop */
 			break;
 		case 6:				/* set curve variable */
 			printf("\nCurve (A-%c): ", MAXCUR-1+'A');
-			clearerr(stdin); gets(sbuf);
+			clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 			if (islower(sbuf[0]))
 				sbuf[0] -= 'a';
 			else if (isupper(sbuf[0]))
@@ -174,7 +180,7 @@ mainmenu()			/* the main menu loop */
 			break;
 		case 8:				/* escape command */
 			printf("\nCommand: ");
-			clearerr(stdin); gets(sbuf);
+			clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 			if (sbuf[0]) {
 				system(sbuf);
 				uwait();
@@ -190,13 +196,13 @@ mainmenu()			/* the main menu loop */
 }
 
 
-char *
-getfile()			/* get file name from user */
+static char *
+getfile(void)			/* get file name from user */
 {
 	char  sbuf[128];
 
 	printf("\nFile (%s): ", curfile);
-	clearerr(stdin); gets(sbuf);
+	clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 	if (sbuf[0] == '-')
 		return(NULL);
 	if (sbuf[0])
@@ -204,8 +210,8 @@ getfile()			/* get file name from user */
 	return(curfile);
 }
 
-
-settype()			/* set plot type */
+static void
+settype(void)			/* set plot type */
 {
 	char  sbuf[128];
 	int  i;
@@ -216,7 +222,7 @@ settype()			/* set plot type */
 		printf("\t%d	%s\n", i+1, typ[i].descrip);
 	
 	printf("\nChoice (0): ");
-	clearerr(stdin); gets(sbuf);
+	clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 	i = atoi(sbuf) - 1;
 	if (i < 0 || i >= NTYP)
 		return;
@@ -225,7 +231,8 @@ settype()			/* set plot type */
 }
 
 
-plotout()			/* output our graph */
+static void
+plotout(void)			/* output our graph */
 {
 	extern FILE  *pout;
 	char  sbuf[128];
@@ -240,7 +247,7 @@ plotout()			/* output our graph */
 	printf("\t%d	Other\n", NDEV+2);
 	
 	printf("\nChoice (0): ");
-	clearerr(stdin); gets(sbuf);
+	clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 	i = atoi(sbuf) - 1;
 	if (i < 0 || i > NDEV+1)
 		return;
@@ -256,7 +263,7 @@ plotout()			/* output our graph */
 		return;
 	} else if (i == NDEV+1) {
 		printf("\nDriver command: ");
-		clearerr(stdin); gets(sbuf);
+		clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 		if (!sbuf[0])
 			return;
 		command = sbuf;
@@ -277,9 +284,10 @@ plotout()			/* output our graph */
 }
 
 
-setvars(nvar, vars)		/* set variables */
-int  nvar;
-VARIABLE  vars[];
+static void
+setvars(		/* set variables */
+int  nvar,
+VARIABLE  vars[])
 {
 	char  sbuf[128];
 	int  i, j;
@@ -292,7 +300,7 @@ VARIABLE  vars[];
 					vars[i].name : vars[i].descrip);
 
 		printf("\nChoice (0): ");
-		clearerr(stdin); gets(sbuf);
+		clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 		i = atoi(sbuf) - 1;
 		if (i < 0 || i >= nvar)
 			return;
@@ -309,7 +317,7 @@ VARIABLE  vars[];
 		else
 			sprintf(sbuf, "%s=", vars[i].name);
 		j = strlen(sbuf);
-		clearerr(stdin); gets(sbuf+j);
+		clearerr(stdin); fgets(sbuf+j, sizeof(sbuf)-j, stdin);
 		if (sbuf[j]) {
 			if (vars[i].type == DATA && sbuf[j] == '-')
 				sbuf[j] = '\0';
@@ -325,7 +333,8 @@ VARIABLE  vars[];
 }
 
 
-gcompute()			/* do a computation */
+static void
+gcompute(void)			/* do a computation */
 {
 	char  sbuf[64];
 	int  i;
@@ -336,7 +345,7 @@ gcompute()			/* do a computation */
 		printf("\t%d	%s\n", i+1, cal[i].descrip);
 	
 	printf("\nChoice (0): ");
-	clearerr(stdin); gets(sbuf);
+	clearerr(stdin); fgets(sbuf, sizeof(sbuf), stdin);
 	i = atoi(sbuf) - 1;
 	if (i < 0 || i >= NCAL)
 		return;
@@ -351,7 +360,8 @@ gcompute()			/* do a computation */
 }
 
 
-uwait()				/* wait for user after command, error */
+static void
+uwait(void)				/* wait for user after command, error */
 {
 	printf("Hit return to continue: ");
 	while (getchar() != '\n')

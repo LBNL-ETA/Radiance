@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgvars.c,v 1.3 2003/10/27 10:28:59 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgvars.c,v 1.4 2003/11/14 00:14:40 schorsch Exp $";
 #endif
 /*
  *  mgvars.c - routines dealing with graph variables.
@@ -12,26 +12,26 @@ static const char	RCSid[] = "$Id: mgvars.c,v 1.3 2003/10/27 10:28:59 schorsch Ex
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  <math.h>
+#include  <string.h>
 #include  <ctype.h>
 
 #include  "rtprocess.h"
-#include  "rtmisc.h"
+#include  "rterror.h"
 #include  "rtio.h"
+#include  "calcomp.h"
 #include  "mgvars.h"
 
 #define  MAXLINE	512
 
-#define  isid(c)  (isalnum(c) || (c) == '_' || (c) == '.')
-
 #define  isnum(c) (isdigit(c)||(c)=='-'||(c)=='+'||(c)=='.'||(c)=='e'||(c)=='E')
 
-char  *findfile();
+static void mgprint(register VARIABLE *vp, FILE *fp);
+static void setivar(char *vname, char *fname, char *definition);
+static char *findfile(char *fname, register char **pathlist);
+static void loaddata(char *fname, FILE *fp, register DARRAY *dp);
+static void undefine(register VARIABLE *vp);
 
-extern char  *progname, *libpath[];
-
-#ifdef  DCL_ATOF
-double  atof();
-#endif
+extern char *progname, *libpath[];
 
 IVAR  *ivhead = NULL;			/* intermediate variables */
 
@@ -142,7 +142,8 @@ VARIABLE  cparam[MAXCUR][NCVARS] = {	/* curve variables */
 };
 
 
-mgclearall()			/* clear all variable settings */
+void
+mgclearall(void)			/* clear all variable settings */
 {
 	int  j;
 	register IVAR  *iv;
@@ -167,8 +168,10 @@ mgclearall()			/* clear all variable settings */
 }
 
 
-mgload(file)			/* load a file */
-char  *file;
+void
+mgload(			/* load a file */
+char  *file
+)
 {
 	FILE  *fp;
 	char  sbuf[MAXLINE], *fgets();
@@ -235,8 +238,10 @@ char  *file;
 }
 
 
-mgsave(file)				/* save our variables */
-char  *file;
+void
+mgsave(				/* save our variables */
+char  *file
+)
 {
 	FILE  *fp;
 	int  j;
@@ -266,10 +271,12 @@ char  *file;
 }
 
 
-setmgvar(fname, fp, string)		/* set a variable */
-char  *fname;
-FILE  *fp;
-char  *string;
+void
+setmgvar(		/* set a variable */
+char  *fname,
+FILE  *fp,
+char  *string
+)
 {
 	char  name[128];
 	FILE  *fp2;
@@ -359,10 +366,12 @@ char  *string;
 }
 
 
-setivar(vname, fname, definition)	/* set an intermediate variable */
-char  *vname;
-char  *fname;
-char  *definition;
+static void
+setivar(	/* set an intermediate variable */
+char  *vname,
+char  *fname,
+char  *definition
+)
 {
 	IVAR  ivbeg;
 	register IVAR  *iv;
@@ -387,9 +396,11 @@ char  *definition;
 }
 
 
-mgtoa(s, vp)			/* get a variable's value in ascii form */
-register char  *s;
-VARIABLE  *vp;
+void
+mgtoa(			/* get a variable's value in ascii form */
+register char  *s,
+VARIABLE  *vp
+)
 {
 	register  char  *sv;
 
@@ -417,9 +428,11 @@ VARIABLE  *vp;
 }
 
 
-mgprint(vp, fp)			/* print a variable definition */
-register VARIABLE  *vp;
-FILE  *fp;
+static void
+mgprint(			/* print a variable definition */
+register VARIABLE  *vp,
+FILE  *fp
+)
 {
 	register int  i;
 	
@@ -455,8 +468,10 @@ FILE  *fp;
 }
 
 
-undefine(vp)			/* undefine a variable */
-register VARIABLE  *vp;
+static void
+undefine(			/* undefine a variable */
+register VARIABLE  *vp
+)
 {
 	if (vp == NULL || !(vp->flags & DEFINED))
 		return;
@@ -498,10 +513,12 @@ char  *vname;
 }
 
 
-loaddata(fname, fp, dp)			/* load data from a stream */
-char  *fname;
-FILE  *fp;
-register DARRAY  *dp;
+static void
+loaddata(			/* load data from a stream */
+char  *fname,
+FILE  *fp,
+register DARRAY  *dp
+)
 {
 	char  sbuf[MAXLINE], *fgets();
 	register char  *cp;
@@ -533,13 +550,13 @@ register DARRAY  *dp;
 }
 
 
-char *
-findfile(fname, pathlist)	/* find the file fname, return full path */
-char  *fname;
-register char  **pathlist;
+static char *
+findfile(	/* find the file fname, return full path */
+char  *fname,
+register char  **pathlist
+)
 {
 	static char  ffname[128];
-	char  *strcpy(), *strcat();
 	register int  fd;
 
 	if (fname[0] == '/')
@@ -559,15 +576,16 @@ register char  **pathlist;
 
 
 int
-mgcurve(c, f)			/* get a curve's (unmapped) values */
-int  c;
-int  (*f)();
+mgcurve(			/* get a curve's (unmapped) values */
+int  c,
+int  (*f)()
+)
 {
 	int  nargs;
 	double  x[2], step;
 	register VARIABLE  *cv;
 	register float  *p;
-	register int  npts;
+	register int npts = 0;
 
 	if (c < 0 || c >= MAXCUR)
 		return(-1);

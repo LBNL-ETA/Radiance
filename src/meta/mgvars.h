@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgvars.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: mgvars.h,v 1.3 2003/11/14 00:14:40 schorsch Exp $ */
 /*
  *  mgvars.h - header file for graphing routines using variables.
  *
@@ -10,6 +10,8 @@
 #define _RAD_MGVARS_H_
 
 #include <errno.h>
+
+#include "calcomp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,9 +110,14 @@ extern VARIABLE  cparam[MAXCUR][NCVARS];	/* the curve variables */
 
 extern VARIABLE  *vlookup();
 
-extern double  varvalue(), funvalue();
-
 #define  mgclear(vname)		undefine(vlookup(vname))
+
+extern void mgclearall(void);
+extern void mgload(char *file);
+extern void mgsave(char *file);
+extern void setmgvar(char *fname, FILE *fp, char *string);
+extern int mgcurve(int c, int (*f)());
+extern void mgtoa(register char *s, VARIABLE *vp);
 
 
 #ifdef __cplusplus
