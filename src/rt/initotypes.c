@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.9 2003/03/11 17:08:55 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.10 2003/03/11 19:29:05 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -29,6 +29,7 @@ extern int  m_mirror();
 extern int  m_direct();
 extern int  m_brdf();
 extern int  m_brdf2();
+extern int  m_alias();
 extern int  t_func(), t_data();
 extern int  p_cfunc(), p_bfunc();
 extern int  p_pdata(), p_cdata(), p_bdata();
@@ -50,6 +51,7 @@ initotypes()			/* initialize ofun array */
 	ofun[OBJ_RING].funp = o_cone;
 	ofun[OBJ_INSTANCE].funp = o_instance;
 	ofun[OBJ_MESH].funp = o_mesh;
+	ofun[MOD_ALIAS].funp = m_alias;
 	ofun[MAT_LIGHT].funp =
 	ofun[MAT_ILLUM].funp =
 	ofun[MAT_GLOW].funp =

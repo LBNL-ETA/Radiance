@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.9 2003/02/25 02:47:21 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.10 2003/03/11 19:29:04 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -21,46 +21,48 @@ typedef struct {
 #define  OBJ_CUP	7		/* inverted cone */
 #define  OBJ_BUBBLE	8		/* inverted sphere */
 #define  OBJ_TUBE	9		/* inverted cylinder */
-#define  MAT_PLASTIC	10		/* plastic surface */
-#define  MAT_METAL	11		/* metal surface */
-#define  MAT_GLASS	12		/* thin glass surface */
-#define  MAT_TRANS	13		/* translucent material */
-#define  MAT_DIELECTRIC	14		/* dielectric material */
-#define  MAT_PLASTIC2	15		/* anisotropic plastic */
-#define  MAT_METAL2	16		/* anisotropic metal */
-#define  MAT_TRANS2	17		/* anisotropic translucent material */
-#define  MAT_INTERFACE	18		/* dielectric interface */
-#define  MAT_PFUNC	19		/* plastic brdf function */
-#define  MAT_MFUNC	20		/* metal brdf function */
-#define  PAT_BFUNC	21		/* brightness function */
-#define  PAT_BDATA	22		/* brightness data */
-#define  PAT_BTEXT	23		/* monochromatic text */
-#define  PAT_CPICT	24		/* color picture */
-#define  MAT_GLOW	25		/* proximity light source */
-#define  OBJ_SOURCE	26		/* distant source */
-#define  MAT_LIGHT	27		/* primary light source */
-#define  MAT_ILLUM	28		/* secondary light source */
-#define  MAT_SPOT	29		/* spot light source */
-#define  MAT_MIST	30		/* mist medium */
-#define  MAT_MIRROR	31		/* mirror (secondary source) */
-#define  MAT_TFUNC	32		/* trans brdf function */
-#define  MAT_BRTDF	33		/* brtd function */
-#define  MAT_PDATA	34		/* plastic brdf data */
-#define  MAT_MDATA	35		/* metal brdf data */
-#define  MAT_TDATA	36		/* trans brdf data */
-#define  PAT_CFUNC	37		/* color function */
-#define  MAT_CLIP	38		/* clipping surface */
-#define  PAT_CDATA	39		/* color data */
-#define  PAT_CTEXT	40		/* colored text */
-#define  TEX_DATA	41		/* surface texture data */
-#define  MIX_FUNC	42		/* mixing function */
-#define  MIX_DATA	43		/* mixing data */
-#define  MIX_TEXT	44		/* mixing text */
-#define  MIX_PICT	45		/* mixing picture */
-#define  MAT_DIRECT1	46		/* unidirecting material */
-#define  MAT_DIRECT2	47		/* bidirecting material */
+#define  OBJ_MESH	10		/* mesh instance */
+#define  MOD_ALIAS	11		/* modifier alias */
+#define  MAT_PLASTIC	12		/* plastic surface */
+#define  MAT_METAL	13		/* metal surface */
+#define  MAT_GLASS	14		/* thin glass surface */
+#define  MAT_TRANS	15		/* translucent material */
+#define  MAT_DIELECTRIC	16		/* dielectric material */
+#define  MAT_PLASTIC2	17		/* anisotropic plastic */
+#define  MAT_METAL2	18		/* anisotropic metal */
+#define  MAT_TRANS2	19		/* anisotropic translucent material */
+#define  MAT_INTERFACE	20		/* dielectric interface */
+#define  MAT_PFUNC	21		/* plastic brdf function */
+#define  MAT_MFUNC	22		/* metal brdf function */
+#define  PAT_BFUNC	23		/* brightness function */
+#define  PAT_BDATA	24		/* brightness data */
+#define  PAT_BTEXT	25		/* monochromatic text */
+#define  PAT_CPICT	26		/* color picture */
+#define  MAT_GLOW	27		/* proximity light source */
+#define  OBJ_SOURCE	28		/* distant source */
+#define  MAT_LIGHT	29		/* primary light source */
+#define  MAT_ILLUM	30		/* secondary light source */
+#define  MAT_SPOT	31		/* spot light source */
+#define  MAT_MIST	32		/* mist medium */
+#define  MAT_MIRROR	33		/* mirror (secondary source) */
+#define  MAT_TFUNC	34		/* trans brdf function */
+#define  MAT_BRTDF	35		/* brtd function */
+#define  MAT_PDATA	36		/* plastic brdf data */
+#define  MAT_MDATA	37		/* metal brdf data */
+#define  MAT_TDATA	38		/* trans brdf data */
+#define  PAT_CFUNC	39		/* color function */
+#define  MAT_CLIP	40		/* clipping surface */
+#define  PAT_CDATA	41		/* color data */
+#define  PAT_CTEXT	42		/* colored text */
+#define  TEX_DATA	43		/* surface texture data */
+#define  MIX_FUNC	44		/* mixing function */
+#define  MIX_DATA	45		/* mixing data */
+#define  MIX_TEXT	46		/* mixing text */
+#define  MIX_PICT	47		/* mixing picture */
+#define  MAT_DIRECT1	48		/* unidirecting material */
+#define  MAT_DIRECT2	49		/* bidirecting material */
 				/* number of object types */
-#define  NUMOTYPE	48
+#define  NUMOTYPE	50
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -85,6 +87,9 @@ extern FUN  ofun[];			/* our type list */
 #define  isvolume(t)	(ofun[t].flags & T_V)
 #define  ismodifier(t)	(!(ofun[t].flags & (T_S|T_V)))
 #define  ismaterial(t)	(ofun[t].flags & T_M)
+#define  ispattern(t)	(ofun[t].flags & T_P)
+#define  istexture(t)	(ofun[t].flags & T_T)
+#define  ismixture(t)	(ofun[t].flags & T_X)
 #define  islight(t)	(ofun[t].flags & T_L)
 #define  isvlight(t)	(ofun[t].flags & T_LV)
 #define  hasdata(t)	(ofun[t].flags & (T_D|T_I))
@@ -93,6 +98,10 @@ extern FUN  ofun[];			/* our type list */
 #define  isflat(t)	((t)==OBJ_FACE || (t)==OBJ_RING)
 
 extern int  o_default();
+
+#define  ALIASKEY	"alias"			/* alias keyword */
+#define  ALIASMOD	"inherit"		/* inherit target modifier */
+
 					/* type list initialization */
 #define  INIT_OTYPE	{	{ "polygon",	T_S,		o_default }, \
 				{ "cone",	T_S,		o_default }, \
@@ -104,6 +113,8 @@ extern int  o_default();
 				{ "cup",	T_S,		o_default }, \
 				{ "bubble",	T_S,		o_default }, \
 				{ "tube",	T_S,		o_default }, \
+				{ "mesh",	T_V,		o_default }, \
+				{ ALIASKEY,	0,		o_default }, \
 				{ "plastic",	T_M,		o_default }, \
 				{ "metal",	T_M,		o_default }, \
 				{ "glass",	T_M,		o_default }, \
@@ -143,5 +154,3 @@ extern int  o_default();
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
 				{ "prism2",	T_M|T_F|T_LV,	o_default }, \
 			}
-
-#define  ALIASID	"alias"		/* alias type identifier */

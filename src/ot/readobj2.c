@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readobj2.c,v 2.4 2003/02/22 02:07:26 greg Exp $";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.5 2003/03/11 19:29:05 greg Exp $";
 #endif
 /*
  *  readobj2.c - routines for reading in object descriptions.
@@ -70,9 +70,7 @@ int  (*f)();
 	thisobj.omod = OVOID;
 					/* get type */
 	fgetword(sbuf, MAXSTR, fp);
-	if (!strcmp(sbuf, ALIASID))
-		thisobj.otype = -1;
-	else if ((thisobj.otype = otype(sbuf)) < 0) {
+	if ((thisobj.otype = otype(sbuf)) < 0) {
 		sprintf(errmsg, "(%s): unknown type \"%s\"", name, sbuf);
 		error(USER, errmsg);
 	}
@@ -80,7 +78,7 @@ int  (*f)();
 	fgetword(sbuf, MAXSTR, fp);
 	thisobj.oname = sbuf;
 					/* get arguments */
-	if (thisobj.otype == -1) {
+	if (thisobj.otype == MOD_ALIAS) {
 		fscanf(fp, "%*s");
 		return;
 	}

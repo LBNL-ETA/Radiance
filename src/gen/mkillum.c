@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum.c,v 2.11 2003/02/22 02:07:24 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.12 2003/03/11 19:29:05 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -444,10 +444,10 @@ char  *nm;
 	if (fgetword(str, MAXSTR, fp) == NULL)
 		goto readerr;
 					/* is it an alias? */
-	if (!strcmp(str, ALIASID)) {
+	if (!strcmp(str, ALIASKEY)) {
 		if (fgetword(str, MAXSTR, fp) == NULL)
 			goto readerr;
-		printf("\n%s %s %s", thisillum.altmat, ALIASID, str);
+		printf("\n%s %s %s", thisillum.altmat, ALIASKEY, str);
 		if (fgetword(str, MAXSTR, fp) == NULL)
 			goto readerr;
 		printf("\t%s\n", str);

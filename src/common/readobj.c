@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.10 2003/03/10 17:13:29 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.11 2003/03/11 19:29:04 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -73,6 +73,7 @@ getobject(name, fp)			/* read the next object */
 char  *name;
 FILE  *fp;
 {
+#define	OALIAS	-2
 	OBJECT  obj;
 	char  sbuf[MAXSTR];
 	int  rval;
@@ -86,6 +87,8 @@ FILE  *fp;
 	fgetword(sbuf, MAXSTR, fp);
 	if (!strcmp(sbuf, VOIDID))
 		objp->omod = OVOID;
+	else if (!strcmp(sbuf, ALIASMOD))
+		objp->omod = OALIAS;
 	else if ((objp->omod = modifier(sbuf)) == OVOID) {
 		sprintf(errmsg, "(%s): undefined modifier \"%s\"", name, sbuf);
 		error(USER, errmsg);
@@ -93,9 +96,7 @@ FILE  *fp;
 					/* get type */
 	strcpy(sbuf, "EOF");
 	fgetword(sbuf, MAXSTR, fp);
-	if (!strcmp(sbuf, ALIASID))
-		objp->otype = -1;
-	else if ((objp->otype = otype(sbuf)) < 0) {
+	if ((objp->otype = otype(sbuf)) < 0) {
 		sprintf(errmsg, "(%s): unknown type \"%s\"", name, sbuf);
 		error(USER, errmsg);
 	}
@@ -104,18 +105,25 @@ FILE  *fp;
 	fgetword(sbuf, MAXSTR, fp);
 	objp->oname = savqstr(sbuf);
 					/* get arguments */
-	if (objp->otype == -1) {
+	if (objp->otype == MOD_ALIAS) {
 		register OBJECT  alias;
 		strcpy(sbuf, "EOF");
 		fgetword(sbuf, MAXSTR, fp);
 		if ((alias = modifier(sbuf)) == OVOID) {
-			sprintf(errmsg,
-			"(%s): bad reference \"%s\" for %s \"%s\"",
-					name, sbuf, ALIASID, objp->oname);
-			error(USER, errmsg);
+			sprintf(errmsg, "(%s): bad reference \"%s\"",
+					name, sbuf);
+			objerror(objp, USER, errmsg);
 		}
-		objp->otype = objptr(alias)->otype;
-		copystruct(&objp->oargs, &objptr(alias)->oargs);
+		if (objp->omod == OALIAS || 
+				objp->omod == objptr(alias)->omod) {
+			objp->omod = alias;
+		} else {
+			objp->oargs.sarg = (char **)malloc(sizeof(char *));
+			if (objp->oargs.sarg == NULL)
+				error(SYSTEM, "out of memory in getobject");
+			objp->oargs.nsargs = 1;
+			objp->oargs.sarg[0] = savestr(sbuf);
+		}
 	} else if ((rval = readfargs(&objp->oargs, fp)) == 0) {
 		sprintf(errmsg, "(%s): bad arguments", name);
 		objerror(objp, USER, errmsg);
@@ -123,10 +131,16 @@ FILE  *fp;
 		sprintf(errmsg, "(%s): error reading scene", name);
 		error(SYSTEM, errmsg);
 	}
+	if (objp->omod == OALIAS) {
+		sprintf(errmsg, "(%s): inappropriate use of '%s' modifier",
+				name, ALIASMOD);
+		objerror(objp, USER, errmsg);
+	}
 					/* initialize */
 	objp->os = NULL;
 
 	insertobject(obj);		/* add to global structure */
+#undef OALIAS
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xform.c,v 2.23 2003/02/22 02:07:24 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.24 2003/03/11 19:29:05 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -34,11 +34,7 @@ char  *newmod;				/* new modifier for surfaces */
 
 char  *idprefix;			/* prefix for object identifiers */
 
-#define	 ALIAS		NUMOTYPE	/* put alias at end of array */
-
-#define	 NUMTYPES	(NUMOTYPE+1)	/* total number of object types */
-
-FUN  ofun[NUMTYPES] = INIT_OTYPE;	/* default types and actions */
+FUN  ofun[NUMOTYPE] = INIT_OTYPE;	/* default types and actions */
 
 short  tinvers[NUMOTYPE];		/* inverse types for surfaces */
 
@@ -492,20 +488,6 @@ FILE  *fin;
 }
 
 
-int
-otype(ofname)			/* get object function number from its name */
-register char  *ofname;
-{
-	register int  i;
-
-	for (i = 0; i < NUMTYPES; i++)
-		if (!strcmp(ofun[i].funame, ofname))
-			return(i);
-
-	return(-1);		/* not found */
-}
-
-
 alias(fin)			/* transfer alias */
 FILE  *fin;
 {
@@ -842,11 +824,8 @@ initotypes()			/* initialize ofun[] array */
 
 	if (ofun[OBJ_SOURCE].funp == o_source)
 		return;			/* done already */
-					/* alias is additional */
-	ofun[ALIAS].funame = ALIASID;
-	ofun[ALIAS].flags = 0;
 					/* functions get new transform */
-	for (i = 0; i < NUMTYPES; i++)
+	for (i = 0; i < NUMOTYPE; i++)
 		if (hasfunc(i))
 			ofun[i].funp = addxform;
 					/* special cases */
@@ -868,7 +847,7 @@ initotypes()			/* initialize ofun[] array */
 	ofun[PAT_CTEXT].funp =
 	ofun[PAT_BTEXT].funp =
 	ofun[MIX_TEXT].funp = text;
-	ofun[ALIAS].funp = alias;
+	ofun[MOD_ALIAS].funp = alias;
 					/* surface inverses */
 	tinvers[OBJ_FACE] = OBJ_FACE;
 	tinvers[OBJ_SOURCE] = OBJ_SOURCE;

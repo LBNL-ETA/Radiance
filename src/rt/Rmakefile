@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.34 2003/03/11 17:08:55 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.35 2003/03/11 19:29:05 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -72,9 +72,9 @@ SURFSRC = sphere.c source.c srcsupp.c virtuals.c o_face.c \
 	srcsamp.c o_cone.c o_instance.c o_mesh.c
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
-	m_mirror.o m_direct.o m_mist.o fprism.o
+	m_mirror.o m_direct.o m_mist.o fprism.o m_alias.o
 MATSRC = aniso.c normal.c dielectric.c m_clip.c glass.c m_brdf.c \
-	m_mirror.c m_direct.c m_mist.c fprism.c
+	m_mirror.c m_direct.c m_mist.c fprism.c m_alias.c
 
 MODOBJS = p_func.o t_func.o p_data.o t_data.o text.o mx_func.o mx_data.o
 MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c
@@ -203,7 +203,7 @@ m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o o_mesh.o \
 mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcsamp.o srcsupp.o t_data.o t_func.o text.o \
-rpmain.o rtmain.o rvmain.o virtuals.o:	ray.h \
+rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
 ../common/standard.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
 
