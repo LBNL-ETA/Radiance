@@ -1,0 +1,56 @@
+		SCCSid "@(#)noX11.help 2.5 11/4/92 LBL"
+This Radiance distribution assumes that you have X11 support
+(ie.  a /usr/include/X11 directory and /usr/lib/libX11.a library).
+If you have X11 installed but in a non-standard location, you only
+need to edit the rmake script to add the needed -I and -L options.
+If this is not the case, you will have to make a couple of changes
+to the files in the src/rt directory to make "rview" compile properly.  
+If you are a thorough person, you can also make changes to the Rmakefile's
+in the src/util and src/px directory to avoid some other spurious but
+unimportant errors.  If you do not, you will have to copy the executable
+files from those directories manually since rmake will not do so.
+
+The following diffs should be applied to Rmakefile and devtable.c in the
+src/rt subdirectory:
+
+============= rt/Rmakefile =============
+35c35
+< DOBJS = devtable.o devcomm.o editline.o x11.o x11twind.o \
+---
+> DOBJS = devtable.o devcomm.o editline.o \
+37c37
+< DSRC = devtable.c devcomm.c editline.c x11.c x11twind.c \
+---
+> DSRC = devtable.c devcomm.c editline.c \
+39c39
+< DLIBS = -lX11
+---
+> DLIBS = 
+
+============= rt/devtable.c =============
+15c15
+< char  dev_default[] = "x11";
+---
+> char  dev_default[] = "sun";		/* or "news" for SGI */
+17,18d16
+< extern struct driver  *x11_init();
+< 
+23c21
+< 	{"x11", "X11 color or greyscale display", x11_init},
+---
+> 	{"x11", "X11 color or greyscale display", comm_init},
+
+These changes may be applied to the Rmakefile's in the src/util and
+src/px subdirectories for cleaner compilation:
+
+=============== px/Rmakefile =============
+19c19
+< ra_t8 ra_bn ra_t16 pcomb pinterp ximage xshowtrace pflip
+---
+> ra_t8 ra_bn ra_t16 pcomb pinterp pflip
+
+=============== util/Rmakefile ============
+13c13
+< PROGS = rpiece findglare xglaresrc glarendx
+---
+> PROGS = rpiece findglare glarendx

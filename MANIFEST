@@ -1,0 +1,30 @@
+MANIFEST			This file
+README				Instructions
+noX11.help			Help file for installation without X11
+makeall				Script for installing software
+installib			Script for installing library files
+newuser				Script for getting user information
+doc/man				UNIX man pages
+doc/materials.1			Description of material reflectance models
+doc/notes			Miscellaneous notes
+doc/ps				PostScript versions of manuals
+doc/pdf				Adobe PDF versions of manuals
+doc/ray.1			Reference manual (groff -ms format)
+doc/ray.html			Reference manual (HTML format)
+lib				Library files
+obj/alpha			3D alphanumeric characters
+obj/cabin			Cabin in the woods (from user's manual)
+obj/misc			Simple examples
+obj/office			An office model
+obj/texture			Example of textures and patterns
+obj/virtual			Virtual light source example scene
+src/cal				General calculation programs
+src/common			Common source directory
+src/cv				Converters from other input formats
+src/gen				Object generator programs
+src/hd				Holodeck rendering programs
+src/meta			2-dimensional graphics programs
+src/ot				Octree converter
+src/px				Picture display and processing programs
+src/rt				Ray tracing programs
+src/util			Utility programs
