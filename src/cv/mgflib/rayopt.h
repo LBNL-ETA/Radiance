@@ -1,4 +1,4 @@
-/* RCSid: $Id: rayopt.h,v 1.2 2003/02/28 20:11:30 greg Exp $ */
+/* RCSid: $Id: rayopt.h,v 1.3 2003/06/07 01:11:17 schorsch Exp $ */
 /*-------------------------------------------------------------------------
 
 		 Triangle Bounder/Smoother for POV-Ray
@@ -14,8 +14,12 @@
 
 --------------------------------------------------------------------------*/
 
-#ifndef __RAYOPT_H
-#define __RAYOPT_H
+#ifndef _MGF_RAYOPT_H
+#define _MGF_RAYOPT_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "vect.h"
 
@@ -53,4 +57,9 @@ void abortmsg (char *msg, int exit_code);
 void add_ext (char *fname, char *ext, int force);
 void cleanup_name (char *name);
 
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _MGF_RAYOPT_H */
+

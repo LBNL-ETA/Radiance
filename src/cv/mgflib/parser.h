@@ -1,7 +1,13 @@
-/* RCSid: $Id: parser.h,v 1.33 2003/02/28 20:11:29 greg Exp $ */
+/* RCSid: $Id: parser.h,v 1.34 2003/06/07 01:11:17 schorsch Exp $ */
 /*
  * Header file for MGF interpreter
  */
+#ifndef _MGF_PARSER_H_
+#define _MGF_PARSER_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifndef MG_VMAJOR
 
@@ -57,15 +63,9 @@
 extern char	mg_ename[MG_NENTITIES][MG_MAXELEN];
 
 			/* Handler routines for each entity and unknown ones */
-#ifdef NOPROTO
-extern int	(*mg_ehand[MG_NENTITIES])();
-extern int	(*mg_uhand)();
-extern int	mg_defuhand();
-#else
 extern int	(*mg_ehand[MG_NENTITIES])(int argc, char **argv);
 extern int	(*mg_uhand)(int argc, char **argv);
 extern int	mg_defuhand(int, char **);
-#endif
 
 extern unsigned	mg_nunknown;		/* count of unknown entities */
 
@@ -127,18 +127,6 @@ typedef struct {
 
 extern MG_FCTXT	*mg_file;		/* current file context */
 
-#ifdef NOPROTO
-extern void	mg_init();		/* fill in mg_ehand array */
-extern int	mg_load();		/* parse a file */
-extern int	mg_open();		/* open new input file */
-extern int	mg_read();		/* read next line */
-extern int	mg_parse();		/* parse current line */
-extern void	mg_fgetpos();		/* get position on input file */
-extern int	mg_fgoto();		/* go to position on input file */
-extern void	mg_close();		/* close input file */
-extern void	mg_clear();		/* clear parser */
-extern int	mg_handle();		/* handle an entity */
-#else
 extern void	mg_init(void);		/* fill in mg_ehand array */
 extern int	mg_load(char *);	/* parse a file */
 extern int	mg_open(MG_FCTXT *, char *);	/* open new input file */
@@ -149,7 +137,6 @@ extern int	mg_fgoto(MG_FPOS *);	/* go to position on input file */
 extern void	mg_close(void);		/* close input file */
 extern void	mg_clear(void);		/* clear parser */
 extern int	mg_handle(int, int, char **);	/* handle an entity */
-#endif
 
 #ifndef MG_NQCD
 #define MG_NQCD		5		/* default number of divisions */
@@ -161,24 +148,6 @@ extern int	mg_nqcdivs;		/* divisions per quarter circle */
  * The following library routines are included for your convenience:
  */
 
-#ifdef NOPROTO
-extern int mg_entity();			/* get entity number from its name */
-extern int isint();			/* non-zero if integer format */
-extern int isintd();			/* same with delimiter set */
-extern int isflt();			/* non-zero if floating point format */
-extern int isfltd();			/* same with delimiter set */
-extern int isname();			/* non-zero if legal identifier name */
-extern int badarg();			/* check argument format */
-extern int e_include();			/* expand include entity */
-extern int e_pipe();			/* expand piped command */
-extern int e_sph();			/* expand sphere as other entities */
-extern int e_torus();			/* expand torus as other entities */
-extern int e_cyl();			/* expand cylinder as other entities */
-extern int e_ring();			/* expand ring as other entities */
-extern int e_cone();			/* expand cone as other entities */
-extern int e_prism();			/* expand prism as other entities */
-extern int e_faceh();			/* expand face w/ holes as face */
-#else
 extern int mg_entity(char *);		/* get entity number from its name */
 extern int isint(char *);		/* non-zero if integer format */
 extern int isintd(char *, char *);	/* same with delimiter set */
@@ -195,7 +164,6 @@ extern int e_ring(int, char **);	/* expand ring as other entities */
 extern int e_cone(int, char **);	/* expand cone as other entities */
 extern int e_prism(int, char **);	/* expand prism as other entities */
 extern int e_faceh(int, char **);	/* expand face w/ holes as face */
-#endif
 
 /************************************************************************
  *	Definitions for 3-d vector manipulation functions
@@ -222,12 +190,8 @@ typedef FLOAT  FVECT[3];
 
 #define round0(x)	if (x <= FTINY && x >= -FTINY) x = 0
 
-#ifdef NOPROTO
-extern double	normalize();		/* normalize a vector */
-#else
 extern double	normalize(FVECT);	/* normalize a vector */
 extern void	fcross(FVECT,FVECT,FVECT);/* cross product of two vectors */
-#endif
 
 /************************************************************************
  *	Definitions for context handling routines
@@ -307,17 +271,6 @@ extern char		*c_cmname;	/* current material name */
 extern C_VERTEX		*c_cvertex;	/* the current vertex */
 extern char		*c_cvname;	/* current vertex name */
 
-#ifdef NOPROTO
-extern int	c_hcolor();			/* handle color entity */
-extern int	c_hmaterial();			/* handle material entity */
-extern int	c_hvertex();			/* handle vertex entity */
-extern void	c_clearall();			/* clear context tables */
-extern C_MATERIAL	*c_getmaterial();	/* get a named material */
-extern C_VERTEX	*c_getvert();			/* get a named vertex */
-extern C_COLOR	*c_getcolor();			/* get a named color */
-extern void	c_ccvt();			/* fix color representation */
-extern int	c_isgrey();			/* check if color is grey */
-#else
 extern int	c_hcolor(int, char **);		/* handle color entity */
 extern int	c_hmaterial(int, char **);	/* handle material entity */
 extern int	c_hvertex(int, char **);	/* handle vertex entity */
@@ -327,7 +280,6 @@ extern C_VERTEX	*c_getvert(char *);		/* get a named vertex */
 extern C_COLOR	*c_getcolor(char *);		/* get a named color */
 extern void	c_ccvt(C_COLOR *, int);		/* fix color representation */
 extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
-#endif
 
 /*************************************************************************
  *	Definitions for hierarchical object name handler
@@ -336,13 +288,8 @@ extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
 extern int	obj_nnames;		/* depth of name hierarchy */
 extern char	**obj_name;		/* names in hierarchy */
 
-#ifdef NOPROTO
-extern int	obj_handler();			/* handle an object entity */
-extern void	obj_clear();			/* clear object stack */
-#else
 extern int	obj_handler(int, char **);	/* handle an object entity */
 extern void	obj_clear(void);		/* clear object stack */
-#endif
 
 /**************************************************************************
  *	Definitions for hierarchical transformation handler
@@ -412,27 +359,6 @@ extern char	**xf_argend;			/* last transform argument */
  * puts the result into the first.
  */
 
-#ifdef NOPROTO
-
-extern int	xf_handler();		/* handle xf entity */
-extern void	xf_xfmpoint();		/* transform point */
-extern void	xf_xfmvect();		/* transform vector */
-extern void	xf_rotvect();		/* rotate vector */
-extern double	xf_scale();		/* scale a value */
-extern void	xf_clear();		/* clear xf stack */
-
-/* The following are support routines you probably won't call directly */
-
-XF_SPEC		*new_xf();		/* allocate new transform */
-void		free_xf();		/* free a transform */
-int		xf_aname();		/* name this instance */
-long		comp_xfid();		/* compute unique ID */
-extern void	multmat4();		/* m4a = m4b X m4c */
-extern void	multv3();		/* v3a = v3b X m4 (vectors) */
-extern void	multp3();		/* p3a = p3b X m4 (points) */
-extern int	xf();			/* interpret transform spec. */
-
-#else
 
 extern int	xf_handler(int, char **);	/* handle xf entity */
 extern void	xf_xfmpoint(FVECT, FVECT);	/* transform point */
@@ -452,7 +378,6 @@ extern void	multv3(FVECT, FVECT, MAT4);	/* v3a = v3b X m4 (vectors) */
 extern void	multp3(FVECT, FVECT, MAT4);	/* p3a = p3b X m4 (points) */
 extern int	xf(XF *, int, char **);		/* interpret transform spec. */
 
-#endif
 
 /************************************************************************
  *	Miscellaneous definitions
@@ -471,3 +396,10 @@ extern int	xf(XF *, int, char **);		/* interpret transform spec. */
 #endif
 
 #endif /*MG_VMAJOR*/
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _MGF_PARSER_H_ */
+

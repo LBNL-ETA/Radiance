@@ -1,7 +1,13 @@
-/* RCSid: $Id: lookup.h,v 1.10 2003/02/28 20:11:29 greg Exp $ */
+/* RCSid: $Id: lookup.h,v 1.11 2003/06/07 01:11:17 schorsch Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
+#ifndef _MGF_LOOKUP_H_
+#define _MGF_LOOKUP_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 typedef struct {
 	char	*key;		/* key name */
@@ -9,17 +15,6 @@ typedef struct {
 	char	*data;		/* pointer to client data */
 } LUENT;
 
-#ifdef NOPROTO
-typedef struct {
-	unsigned long	(*hashf)();	/* key hash function */
-	int	(*keycmp)();	/* key comparison function */
-	void	(*freek)();	/* free a key */
-	void	(*freed)();	/* free the data */
-	int	tsiz;		/* current table size */
-	LUENT	*tabl;		/* table, if allocated */
-	int	ndel;		/* number of deleted entries */
-} LUTAB;
-#else
 typedef struct {
 	unsigned long	(*hashf)(char *);	/* key hash function */
 	int	(*keycmp)(const char *, const char *);	/* key comparison function */
@@ -29,7 +24,6 @@ typedef struct {
 	LUENT	*tabl;		/* table, if allocated */
 	int	ndel;		/* number of deleted entries */
 } LUTAB;
-#endif
 
 #define LU_SINIT(fk,fd)		{lu_shash,strcmp,(void (*)())(fk),\
 				(void (*)())(fd),0,NULL,0}
@@ -75,16 +69,15 @@ typedef struct {
  * allocated table itself.
  */
 
-#ifdef NOPROTO
-extern int	lu_init();
-extern LUENT	*lu_find();
-extern void	lu_delete();
-extern void	lu_done();
-extern unsigned long	lu_shash();
-#else
 extern int	lu_init(LUTAB *, int);
 extern LUENT	*lu_find(LUTAB *, char *);
 extern void	lu_delete(LUTAB *, char *);
 extern void	lu_done(LUTAB *);
 extern unsigned long	lu_shash(char *);
+
+
+#ifdef __cplusplus
+}
 #endif
+#endif /* _MGF_LOOKUP_H_ */
+
