@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: panim.c,v 2.5 2003/11/10 12:28:56 schorsch Exp $";
+static const char	RCSid[] = "$Id: panim.c,v 2.6 2004/01/02 10:25:13 schorsch Exp $";
 #endif
 /*
  *  Send pictures to PC animation system.
@@ -100,7 +100,7 @@ char	*file;
 		exit(1);
 	}
 						/* get dimensions */
-	getheader(fp, NULL);
+	getheader(fp, NULL, NULL);
 	if (checkheader(fp, COLRFMT, NULL) < 0) {
 		fputs(file, stderr);
 		fputs(": not a Radiance picture\n", stderr);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pixar.c,v 2.3 2003/06/30 14:59:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_pixar.c,v 2.4 2004/01/02 10:25:13 schorsch Exp $";
 #endif
 /* ra_pixar.c */
 /*
@@ -161,7 +161,7 @@ int		*h;
       perror("open");
       exit(1);
    }
-   getheader(radiance_fp,NULL);
+   getheader(radiance_fp,NULL,NULL);
    if (fgetresolu(w, h, radiance_fp) < 0)
    {
       fprintf(stderr,"bad RADIANCE format\n");
