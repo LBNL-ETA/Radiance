@@ -1258,3 +1258,6 @@ on the mirror and prism types to work properly.
 
 Rob Guglielmetti dded -lw and -lh options to falsecolor to control the
 legend dimensions.  Made it so -lw 0 and/or -lh 0 turns legend off.
+
+Made it so pcompos will read everything from a stream even if it doesn't
+need it, so input commands will not receive a hangup signal.
