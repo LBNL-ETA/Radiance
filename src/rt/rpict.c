@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id";
 
 #include "copyright.h"
 
+#include  "platform.h"
 #include  "ray.h"
 
 #include  <sys/types.h>
@@ -24,7 +25,6 @@ static const char RCSid[] = "$Id";
 #include  <time.h>
 #include  <signal.h>
 
-#include  "platform.h"
 #include  "view.h"
 #include  "random.h"
 #include  "paths.h"
@@ -322,7 +322,7 @@ char  *pout, *zout, *prvr;
 		putchar('\n');
 		if (pa < .99 || pa > 1.01)
 			fputaspect(pa, stdout);
-		fputnow();
+		fputnow(stdout);
 		fputformat(COLRFMT, stdout);
 		putchar('\n');
 		if (zout != NULL)
