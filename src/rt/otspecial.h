@@ -1,4 +1,4 @@
-/* RCSid $Id: otspecial.h,v 2.6 2003/12/31 01:50:02 greg Exp $ */
+/* RCSid $Id: otspecial.h,v 2.7 2004/06/22 13:40:54 greg Exp $ */
 /*
  * Special type flags for objects used in rendering.
  * Depends on definitions in otypes.h
@@ -16,6 +16,8 @@ extern "C" {
 #define  T_OPAQUE       T_SP2
 
 #define  irr_ignore(t)	(ofun[t].flags & T_IRR_IGN)
+
+#define  isopaque(t)    (ofun[t].flags & T_OPAQUE)
 
 
 #ifdef __cplusplus
