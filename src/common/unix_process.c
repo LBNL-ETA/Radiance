@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.6 2004/09/19 08:42:22 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.7 2005/01/20 04:08:00 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -13,8 +13,10 @@ static const char	RCSid[] = "$Id: unix_process.c,v 3.6 2004/09/19 08:42:22 greg 
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include "rtprocess.h"
+#include "rtio.h"
 
 
 int
@@ -23,7 +25,6 @@ SUBPROC *pd,
 char	*av[]
 )
 {
-	extern char	*getpath(), *getenv();
 	char	*compath;
 	int	p0[2], p1[2];
 

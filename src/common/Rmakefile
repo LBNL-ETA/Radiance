@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.52 2004/11/05 03:31:36 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.53 2005/01/20 04:08:00 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -129,7 +129,7 @@ free_os.o:	octree.h object.h otypes.h face.h cone.h instance.h
 
 tmesh.o:	tmesh.h fvect.h
 
-fgetword.o fputword.o fgetval.o fgetline.o fdate.o \
+fgetword.o fputword.o fgetval.o fgetline.o fdate.o unix_process.o \
 expandarg.o badarg.o xf.o:	rtio.h
 
 expandarg.o:	rtmisc.h
