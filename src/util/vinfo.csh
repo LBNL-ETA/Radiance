@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: vinfo.csh,v 3.1 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: vinfo.csh,v 3.2 2004/11/19 23:00:49 greg Exp $
 #
 # Edit information header in Radiance file
 #
@@ -25,6 +25,9 @@ set i=1
 while ( $i <= $#plist )
 	set f=$plist[$i]:q
 	set info=$ilist[$i]:q
+	if ("`tail -1 $info:q`" != "") then
+		echo "" >> $info:q
+	endif
 	getinfo < $f:q | cmp -s - $info:q
 	if ($status != 0) then
 		getinfo - < $f:q >> $info:q
