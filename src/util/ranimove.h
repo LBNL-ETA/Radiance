@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.4 2003/06/27 11:32:12 schorsch Exp $ */
+/* RCSid $Id: ranimove.h,v 3.5 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  ranimove.h
  *
@@ -18,14 +18,15 @@
  */
 #ifndef _RAD_RANIMOVE_H_
 #define _RAD_RANIMOVE_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 #include "ray.h"
 #include "view.h"
 #include "vars.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 				/* input variables (alphabetical by name) */
 #define BASENAME	0		/* output image base name */
 #define END		1		/* number of animation frames */

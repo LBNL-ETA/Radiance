@@ -1,8 +1,14 @@
-/* RCSid: $Id: sm_list.h,v 3.6 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm_list.h,v 3.7 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  list.h
  *  Linked list data structure and routines 
  */
+#ifndef _RAD_SM_LIST_H_
+#define _RAD_SM_LIST_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef TRUE
 #define TRUE 1
@@ -39,5 +45,9 @@ int remove_from_list();
 LIST *add_data();
 
 
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_SM_LIST_H_ */
 
 

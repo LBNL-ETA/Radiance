@@ -1,11 +1,17 @@
-/* RCSid $Id: rhd_qtree.h,v 3.15 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid $Id: rhd_qtree.h,v 3.16 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */
+#ifndef _RAD_RHD_QTREE_H_
+#define _RAD_RHD_QTREE_H_
 
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define	DL		0		/* down left */
 #define	DR		1		/* down right */
@@ -51,3 +57,9 @@ extern int	rayqleft;	/* number of rays to queue before flush */
 
 extern int32	encodedir();
 extern double	fdir2diff(), dir2diff();
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RHD_QTREE_H_ */
+

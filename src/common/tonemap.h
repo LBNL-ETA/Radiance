@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.15 2003/07/14 04:56:54 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.16 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -6,11 +6,12 @@
  */
 #ifndef _RAD_TONEMAP_H_
 #define _RAD_TONEMAP_H_
+
+#include	"tifftypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include	"tifftypes.h"
 
 /****    Argument Macros    ****/
 				/* Flags of what to do */

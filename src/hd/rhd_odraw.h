@@ -1,13 +1,19 @@
-/* RCSid $Id: rhd_odraw.h,v 3.10 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.11 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  *
  * Include after "standard.h"
  */
+#ifndef _RAD_RHD_ODRAW_H_
+#define _RAD_RHD_ODRAW_H_
 
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern struct ODview {
 	int	sfirst, snext;	/* first sample and first in next view */
@@ -130,3 +136,9 @@ and redraw them on the next call(s) to odUpdate().  If newhist
 is non-zero, then clear the previous sample history.
 
  **********************************************************************/
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RHD_ODRAW_H_ */
+

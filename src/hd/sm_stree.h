@@ -1,8 +1,15 @@
-/* RCSid: $Id: sm_stree.h,v 3.6 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm_stree.h,v 3.7 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  sm_stree.h - header file for spherical quadtree code:
  *             
  */
+#ifndef _RAD_SM_STREE_H_
+#define _RAD_SM_STREE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define STR_INDEX(s)  (stRoot_indices[(s)])
 #define STR_NTH_INDEX(s,n)  (stRoot_indices[(s)][(n)])
@@ -81,7 +88,9 @@ extern FVECT stDefault_base[6];
 extern STREE *stAlloc();
 extern QUADTREE stPoint_locate();
 
-
-
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_SM_STREE_H_ */
 
 

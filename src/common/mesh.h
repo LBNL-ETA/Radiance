@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.8 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.9 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -6,11 +6,12 @@
  */
 #ifndef _RAD_MESH_H_
 #define _RAD_MESH_H_
+
+#include "lookup.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "lookup.h"
 
 #ifndef BYTE
 #define BYTE	unsigned char

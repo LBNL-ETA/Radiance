@@ -1,18 +1,19 @@
-/* RCSid $Id: rtio.h,v 3.2 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: rtio.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  *	Radiance i/o and string routines
  */
 
 #ifndef _RAD_RTIO_H_
 #define _RAD_RTIO_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include  <stdio.h>
 #include  <sys/types.h>
 #include  <fcntl.h>
 #include  <string.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* XXX include paths.h instead */
 #ifndef	 F_OK			/* mode bits for access(2) call */

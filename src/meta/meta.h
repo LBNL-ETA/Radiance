@@ -1,12 +1,9 @@
-/* RCSid: $Id: meta.h,v 1.5 2003/07/14 16:05:45 greg Exp $ */
+/* RCSid: $Id: meta.h,v 1.6 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
 #ifndef _RAD_META_H_
 #define _RAD_META_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "copyright.h"
 
@@ -16,6 +13,9 @@ extern "C" {
 
 #include  "rterror.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define  TRUE  1
 #define  FALSE  0

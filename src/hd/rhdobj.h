@@ -1,7 +1,13 @@
-/* RCSid: $Id: rhdobj.h,v 3.6 2003/02/22 02:07:24 greg Exp $ */
+/* RCSid: $Id: rhdobj.h,v 3.7 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header file for object display routines for rholo drivers.
  */
+#ifndef _RAD_RHDOBJ_H_
+#define _RAD_RHDOBJ_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 				/* additional user commands */
 #define DO_LOAD		0		/* load octree object */
@@ -148,3 +154,9 @@ extern double	dobj_trace();
 extern char	rhdcmd[DO_NCMDS][8];
 
 extern int	(*dobj_lightsamp)();	/* pointer to function to get lights */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RHDOBJ_H_ */
+

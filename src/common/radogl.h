@@ -1,12 +1,9 @@
-/* RCSid $Id: radogl.h,v 3.9 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: radogl.h,v 3.10 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
 #ifndef _RAD_RADOGL_H_
 #define _RAD_RADOGL_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "standard.h"
 #include <GL/glu.h>
@@ -14,6 +11,10 @@ extern "C" {
 #include "object.h"
 #include "otypes.h"
 #include "lookup.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAXLIGHTS	8	/* number of OGL light sources */
 

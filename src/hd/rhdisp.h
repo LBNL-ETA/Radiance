@@ -1,7 +1,13 @@
-/* RCSid: $Id: rhdisp.h,v 3.14 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid: $Id: rhdisp.h,v 3.15 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header for holodeck display drivers.
  */
+#ifndef _RAD_RHDISP_H_
+#define _RAD_RHDISP_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 				/* display requests */
 #define DR_NOOP		0		/* to release from vain DR_ATTEN */
@@ -59,3 +65,9 @@ typedef struct {
  * The standard output will always be available for writing, though it
  * may go to /dev/null.
  */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RHDISP_H_ */
+

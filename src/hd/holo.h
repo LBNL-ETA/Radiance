@@ -1,12 +1,18 @@
-/* RCSid: $Id: holo.h,v 3.22 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.23 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header file for holodeck programs
  *
  *	9/29/97	GWLarson
  */
+#ifndef _RAD_HOLO_H_
+#define _RAD_HOLO_H_
 
 #include "standard.h"
 #include "color.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HDMAX
 #define HDMAX		128	/* maximum active holodeck sections */
@@ -144,3 +150,10 @@ extern int	hdwg1[6];		/* wall grid 1 index */
  * in future versions, but we thought this would be best for paging speed
  * in our initial implementation.
  */
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_HOLO_H_ */
+

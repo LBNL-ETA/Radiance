@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.10 2003/06/30 14:59:13 schorsch Exp $ */
+/* RCSid $Id: source.h,v 2.11 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -6,11 +6,12 @@
  */
 #ifndef _RAD_SOURCE_H_
 #define _RAD_SOURCE_H_
+
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <string.h>
 
 #define  AIMREQT	100		/* required aim success/failure */
 

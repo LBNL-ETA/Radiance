@@ -1,19 +1,19 @@
-/* RCSid $Id: rtmath.h,v 3.2 2003/07/12 09:56:24 schorsch Exp $ */
+/* RCSid $Id: rtmath.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
 
 #ifndef _RAD_RTMATH_H_
 #define _RAD_RTMATH_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include  <math.h>
 
 #include  "tifftypes.h"
-
 #include  "mat4.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 				/* regular transformation */
 typedef struct {

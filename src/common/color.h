@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.24 2003/06/30 19:04:29 greg Exp $ */
+/* RCSid $Id: color.h,v 2.25 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -11,11 +11,12 @@
  */
 #ifndef _RAD_COLOR_H_
 #define _RAD_COLOR_H_
+
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdlib.h>
 
 #define  RED		0
 #define  GRN		1

@@ -1,4 +1,4 @@
-/* RCSid $Id: func.h,v 2.5 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: func.h,v 2.6 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header file for modifiers using function files.
  *
@@ -6,11 +6,12 @@
  */
 #ifndef _RAD_FUNC_H_
 #define _RAD_FUNC_H_
+
+#include  "calcomp.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include  "calcomp.h"
 
 #define  MAXEXPR	9	/* maximum expressions in modifier */
 

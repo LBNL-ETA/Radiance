@@ -1,15 +1,17 @@
-/* RCSid $Id: rterror.h,v 3.1 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: rterror.h,v 3.2 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header for Radiance error-handling routines
  */
 
 #ifndef _RAD_RTERROR_H_
 #define _RAD_RTERROR_H_
+
+#include <errno.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <errno.h>
 				/* error codes */
 #define	 WARNING	0		/* non-fatal error */
 #define	 USER		1		/* fatal user-caused error */

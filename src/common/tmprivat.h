@@ -1,18 +1,19 @@
-/* RCSid $Id: tmprivat.h,v 3.11 2003/07/14 04:56:54 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.12 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
 #ifndef _RAD_TMPRIVAT_H_
 #define _RAD_TMPRIVAT_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifndef	MEM_PTR
 #define	MEM_PTR		void *
 #endif
 #include	"color.h"
 #include	"tonemap.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 				/* required constants */
 #ifndef M_LN2

@@ -1,4 +1,4 @@
-/* RCSid $Id: cvmesh.h,v 2.4 2003/06/26 00:58:10 schorsch Exp $ */
+/* RCSid $Id: cvmesh.h,v 2.5 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  Header for Radiance triangle mesh conversion
  *
@@ -6,13 +6,14 @@
  */
 #ifndef _RAD_CVMESH_H_
 #define _RAD_CVMESH_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "octree.h"
 #include "object.h"
 #include "mesh.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern MESH	*ourmesh;		/* global mesh pointer */
 

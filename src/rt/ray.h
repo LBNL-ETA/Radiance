@@ -1,20 +1,18 @@
-/* RCSid $Id: ray.h,v 2.19 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.20 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
 #ifndef _RAD_RAY_H_
 #define _RAD_RAY_H_
+
+#include  "standard.h"
+#include  "octree.h"
+#include  "object.h"
+#include  "color.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include  "standard.h"
-
-#include  "octree.h"
-
-#include  "object.h"
-
-#include  "color.h"
 
 #define  MAXDIM		32	/* maximum number of dimensions */
 

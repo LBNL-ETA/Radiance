@@ -1,11 +1,17 @@
-/* RCSid: $Id: sm_geom.h,v 3.12 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm_geom.h,v 3.13 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  sm_geom.h
  */
 
 /* Assumes included after standard.h  */
+#ifndef _RAD_SM_GEOM_H_
+#define _RAD_SM_GEOM_H_
 
 #include <values.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef SMLFLT
 #define EQUALITY_EPS 1e-6
@@ -118,4 +124,8 @@ double tri_normal();
 double point_on_sphere();
 
 
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_SM_GEOM_H_ */
 

@@ -1,4 +1,4 @@
-/* RCSid: $Id: imPfuncs.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
+/* RCSid: $Id: imPfuncs.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  imPfuncs - imPress functions
  *
@@ -12,6 +12,12 @@
 /*
  *  These functions are part of the imPress functional interface routines.
  */
+#ifndef _RAD_IMPFUNCS_H_
+#define _RAD_IMPFUNCS_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define im_putbyte(c)	putc((c) & 0377, imout)
 #define im_putword(w)	(im_putbyte((w) >> 8), im_putbyte(w))
@@ -71,3 +77,9 @@
 #define	imPM_ORIENTATION	0x001
 
 extern FILE *imout;
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_IMPFUNCS_H_ */
+

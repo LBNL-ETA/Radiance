@@ -1,9 +1,12 @@
-/* RCSid $Id: lookup.h,v 2.9 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: lookup.h,v 2.10 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Header file for general associative table lookup routines
  */
 #ifndef _RAD_LOOKUP_H_
 #define _RAD_LOOKUP_H_
+
+#include <string.h> /* strcmp() */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -74,8 +77,6 @@ typedef struct {
  * in the LU_TAB structure.  The final action of lu_done is to free the
  * allocated table itself.
  */
-
-#include <string.h> /* strcmp() */
 
 extern int	lu_init(LUTAB *tbl, int nel);
 extern unsigned long	lu_shash(char *s);

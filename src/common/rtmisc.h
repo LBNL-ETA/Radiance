@@ -1,12 +1,9 @@
-/* RCSid $Id: rtmisc.h,v 3.2 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: rtmisc.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  *	Miscellaneous Radiance definitions
  */
 #ifndef _RAD_RTMISC_H_
 #define _RAD_RTMISC_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include  <stdlib.h>
 					/* memory operations */
@@ -15,6 +12,10 @@ extern "C" {
 #define	 copystruct(d,s)	memcpy((void *)(d),(void *)(s),sizeof(*(d)))
 #else
 #define	 copystruct(d,s)	(*(d) = *(s))
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 					/* defined in bmalloc.c */

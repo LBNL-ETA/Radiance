@@ -1,5 +1,12 @@
-/* RCSid: $Id: imPcodes.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
+/* RCSid: $Id: imPcodes.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
 /* New imPress codes */
+
+#ifndef _RAD_IMPCODES_H_
+#define _RAD_IMPCODES_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define	imP_SP			128
 #define	imP_SP1			129
@@ -60,4 +67,9 @@
 
 #define imP_NO_OP		254
 #define	imP_EOF			255
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_IMPCODES_H_ */
 

@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgraph.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
+/* RCSid: $Id: mgraph.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  mgraph.h - header file for graphing routines.
  *
@@ -6,6 +6,12 @@
  *
  *     Greg Ward Larson
  */
+#ifndef _RAD_MGRAPH_H_
+#define _RAD_MGRAPH_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define  PI		3.14159265358979323846
 #define  FHUGE		1e20
@@ -102,3 +108,9 @@
 typedef struct {
 	double  min, max, step;
 }  BOUNDS;
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_MGRAPH_H_ */
+

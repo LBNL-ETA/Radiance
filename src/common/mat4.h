@@ -1,16 +1,17 @@
-/* RCSid $Id: mat4.h,v 2.11 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: mat4.h,v 2.12 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * Definitions for 4x4 matrix operations
  */
 #ifndef _RAD_MAT4_H_
 #define _RAD_MAT4_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include  <string.h>
 
 #include  "fvect.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef RREAL  MAT4[4][4];
 

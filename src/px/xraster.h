@@ -1,7 +1,13 @@
-/* RCSid $Id: xraster.h,v 3.3 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: xraster.h,v 3.4 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * xraster.h - header file for X routines using images.
  */
+#ifndef _RAD_XRASTER_H_
+#define _RAD_XRASTER_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
 	int	width, height;			/* image size */
@@ -19,3 +25,9 @@ typedef struct {
 extern int	*map_rcolors();
 
 extern Pixmap	make_rpixmap();
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_XRASTER_H_ */
+

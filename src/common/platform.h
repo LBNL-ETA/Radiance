@@ -1,12 +1,9 @@
-/* RCSid $Id: platform.h,v 3.7 2003/07/03 22:41:44 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.8 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
 #ifndef _RAD_PLATFORM_H_
 #define _RAD_PLATFORM_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifdef _WIN32
 
@@ -54,6 +51,11 @@ extern "C" {
 
 #endif /* _WIN32 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* nothing to protect yet */
 
 #ifdef __cplusplus
 }

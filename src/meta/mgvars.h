@@ -1,4 +1,4 @@
-/* RCSid: $Id: mgvars.h,v 1.1 2003/02/22 02:07:26 greg Exp $ */
+/* RCSid: $Id: mgvars.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  mgvars.h - header file for graphing routines using variables.
  *
@@ -6,6 +6,14 @@
  *
  *     Greg Ward Larson
  */
+#ifndef _RAD_MGVARS_H_
+#define _RAD_MGVARS_H_
+
+#include <errno.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  *  Data arrays are used to store point data.
@@ -102,6 +110,11 @@ extern VARIABLE  *vlookup();
 
 extern double  varvalue(), funvalue();
 
-extern int  errno;
-
 #define  mgclear(vname)		undefine(vlookup(vname))
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_MGVARS_H_ */
+

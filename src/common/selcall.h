@@ -1,12 +1,9 @@
-/* RCSid $Id: selcall.h,v 3.9 2003/06/30 14:59:11 schorsch Exp $ */
+/* RCSid $Id: selcall.h,v 3.10 2003/07/14 22:23:59 schorsch Exp $ */
 /*
  * header file for select call compatibility
  */
 #ifndef _RAD_SELCALL_H_
 #define _RAD_SELCALL_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <string.h>
 #include <sys/types.h>
@@ -36,6 +33,11 @@ extern "C" {
 #define FD_ZERO(p)	memset((char *)(p), 0, sizeof(*(p)))
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* nothing yet */
 
 #ifdef __cplusplus
 }

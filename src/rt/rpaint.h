@@ -1,16 +1,16 @@
-/* RCSid $Id: rpaint.h,v 2.5 2003/06/27 06:53:23 greg Exp $ */
+/* RCSid $Id: rpaint.h,v 2.6 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
 #ifndef _RAD_RPAINT_H_
 #define _RAD_RPAINT_H_
+
+#include  "driver.h"
+#include  "view.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include  "driver.h"
-
-#include  "view.h"
 
 typedef short  COORD;		/* an image coordinate */
 

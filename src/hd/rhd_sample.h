@@ -1,13 +1,20 @@
-/* RCSid: $Id: rhd_sample.h,v 3.9 2003/06/20 00:25:49 greg Exp $ */
+/* RCSid: $Id: rhd_sample.h,v 3.10 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Sample data structures for holodeck display drivers.
  *
  * Include after "standard.h"
  */
+#ifndef _RAD_RHD_SAMPLE_H_
+#define _RAD_RHD_SAMPLE_H_
+
 #include "color.h"
 #include "tonemap.h"
 #include "rhdriver.h"
 #include "object.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef INVALID
 #define INVALID  -1
@@ -140,7 +147,10 @@ extern S_ID sAlloc_samp();
  */
 
 
-
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_RHD_SAMPLE_H_ */
 
 
 

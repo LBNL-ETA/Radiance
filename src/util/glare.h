@@ -1,18 +1,18 @@
-/* RCSid: $Id: glare.h,v 2.4 2003/06/27 11:32:12 schorsch Exp $ */
+/* RCSid: $Id: glare.h,v 2.5 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Common data structures for glare source finding routines
  */
 #ifndef _RAD_GLARE_H_
 #define _RAD_GLARE_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 #include "standard.h"
 #include "view.h"
 #include "color.h"
 #include "setscan.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define GLAREBR		7.0		/* glare source is this * avg. lum. */
 

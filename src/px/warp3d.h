@@ -1,9 +1,15 @@
-/* RCSid: $Id: warp3d.h,v 3.3 2003/02/22 02:07:28 greg Exp $ */
+/* RCSid: $Id: warp3d.h,v 3.4 2003/07/14 22:24:00 schorsch Exp $ */
 /*
  * Header file for 3D warping routines.
  */
+#ifndef _RAD_WARP3D_H_
+#define _RAD_WARP3D_H_
 
 #include "lookup.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 				/* interpolation flags */
 #define W3EXACT		01		/* no interpolation (slow) */
@@ -40,3 +46,9 @@ typedef struct {
 extern WARP3D	*new3dw(), *load3dw();
 
 #define  W3VCPY(v1,v2)	((v1)[0]=(v2)[0],(v1)[1]=(v2)[1],(v1)[2]=(v2)[2])
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* _RAD_WARP3D_H_ */
+
