@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.78 2004/09/17 21:43:50 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.79 2004/10/04 04:42:33 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1315,8 +1315,10 @@ rpict(				/* run rpict and pfilt for each view */
 					zopt, oct1name, rawfile);
 			if (pfile != NULL && inchild()) {
 						/* rpict persistent mode */
-				if (!silent)
+				if (!silent) {
 					printf("\t%s\n", combuf);
+					fflush(stdout);
+				}
 				sprintf(combuf, "rpict%s %s %s%s%s %s > %s",
 						rep, rppopt, res, po, opts,
 						oct1name, rawfile);
