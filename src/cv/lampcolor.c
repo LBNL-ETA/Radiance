@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lampcolor.c,v 2.9 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: lampcolor.c,v 2.10 2004/03/18 05:22:00 greg Exp $";
 #endif
 /*
  * Program to convert lamp color from table and compute radiance.
@@ -79,7 +79,7 @@ main(
 		while (i < NPARAMS) {
 			printf("Enter %s [%s]: ", param[i].name,
 					param[i].value);
-			if (fgets(buf, sizeof(buf), stdin) == NULL)
+			if (fgetline(buf, sizeof(buf), stdin) == NULL)
 				exit(0);
 			if (buf[0] == '?') {
 				puts(param[i].help);
