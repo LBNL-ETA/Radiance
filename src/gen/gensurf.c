@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.13 2003/11/16 10:29:38 schorsch Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.14 2004/03/23 15:18:09 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -15,9 +15,7 @@ static const char RCSid[] = "$Id: gensurf.c,v 2.13 2003/11/16 10:29:38 schorsch 
  *	4/16/02	Added conditional vertex output
  */
 
-#include  "rtmath.h"
-#include  "rterror.h"
-#include  "rtio.h"
+#include  "standard.h"
 #include  "calcomp.h"
 
 char  XNAME[] =		"X`SYS";		/* x function name */
