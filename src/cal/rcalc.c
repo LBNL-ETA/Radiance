@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.13 2004/06/09 16:00:13 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.14 2004/10/11 10:02:15 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -454,7 +454,7 @@ int  output
 			eputs(": cannot open\n");
 			quit(1);
 		}
-		res = read(fd, inpbuf+1, INBSIZ-1);
+		res = read(fd, inpbuf+2, INBSIZ-2);
 		if (res <= 0 || res >= INBSIZ-1) {
 			eputs(spec);
 			if (res < 0)
@@ -466,7 +466,7 @@ int  output
 			quit(1);
 		}
 		close(fd);
-		(inptr=inpbuf+1)[res] = '\0';
+		(inptr=inpbuf+2)[res] = '\0';
 	}
 	f = &fmt;                               /* get fields */
 	while ((res = readfield(&inptr)) != F_NUL) {
@@ -632,7 +632,7 @@ getrec(void)				/* get next record from file */
 {
 	int  eatline;
 	register struct field  *f;
-	
+
 	while (ipb.chr != EOF) {
 		eatline = !igneol && ipb.chr != '\n';
 		if (blnkeq)             /* beware of nbsynch() */
