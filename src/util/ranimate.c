@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.37 2003/06/05 19:29:35 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.38 2003/06/06 20:04:06 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -629,15 +629,9 @@ filterframes()				/* catch up with filtering */
 	if (astat.tnext < astat.fnext)	/* other work to do first */
 		return;
 					/* filter each view */
-	for (i = astat.fnext; i < astat.rnext; i++) {
-		if ((vp = getview(i)) == NULL) {	/* get view i */
-			fprintf(stderr,
-			"%s: unexpected error reading view for frame %d\n",
-					progname, i);
-			quit(1);
-		}
-		dofilt(i, vp, getexp(i), 0);		/* filter frame */
-	}
+	for (i = astat.fnext; i < astat.rnext; i++)
+		dofilt(i, 0);
+
 	bwait(0);			/* wait for filter processes */
 	archive();			/* archive originals */
 	astat.fnext = i;		/* update status */
@@ -814,12 +808,7 @@ int
 frecover(frame)				/* recover filtered frame */
 int	frame;
 {
-	VIEW	*vp;
-	char	*ex;
-
-	vp = getview(frame);
-	ex = getexp(frame);
-	if (dofilt(frame, vp, ex, 2) && dofilt(frame, vp, ex, 1))
+	if (dofilt(frame, 2) && dofilt(frame, 1))
 		return(1);
 	return(0);
 }
@@ -869,21 +858,33 @@ archive()			/* archive and remove renderings */
 
 
 int
-dofilt(frame, vp, ep, rvr)			/* filter frame */
+dofilt(frame, rvr)				/* filter frame */
 int	frame;
-VIEW	*vp;
-char	*ep;
 int	rvr;
 {
 	extern int	frecover();
 	static int	iter = 0;
 	double	blurf;
 	int	nblur = getblur(&blurf);
+	VIEW	*vp = getview(frame);
+	char	*ep = getexp(frame);
 	char	fnbefore[128], fnafter[128], *fbase;
 	char	combuf[1024], fname0[128], fname1[128];
 	int	usepinterp, usepfilt, nora_rgbe;
 	int	frseq[2];
 						/* check what is needed */
+	if (vp == NULL) {
+		 fprintf(stderr,
+			"%s: unexpected error reading view for frame %d\n",
+		                          progname, frame);
+		quit(1);
+	}
+	if (ep == NULL) {
+		 fprintf(stderr,
+			"%s: unexpected error reading exposure for frame %d\n",
+		                          progname, frame);
+		quit(1);
+	}
 	usepinterp = (nblur > 1);
 	usepfilt = pfiltalways | ep==NULL;
 	if (ep != NULL && !strcmp(ep, "1"))
