@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: objview.csh,v 2.8 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: objview.csh,v 2.9 2004/08/20 23:45:59 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
@@ -91,7 +91,7 @@ EXPOSURE= .5
 UP= $up
 view= $vw
 OCTREE= $octree
-oconv= -f -r 16384
+oconv= -f
 render= $rendopts
 _EOF_
 
