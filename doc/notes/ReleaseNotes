@@ -1317,3 +1317,13 @@ would deadlock upon termination.  The reason it never showed up
 before is because I always closed processes in the reverse order
 of opening them in other programs.  I went through and found similar
 (potential) bugs in the rview device subprocess code and util/netproc.c.
+
+Corrected the normalization of the Gaussian reflectance model.  This will
+cause an increase in specularity for low-lying light sources.
+Thanks to Don Walters of Boeing and Arne Duer of the Univ. of Innsbruck
+for pointing out this error.  The square root used for the two cosines
+in the denominator of the normalization factor should not be present.
+This was a serious mistake I made in the original model, which went
+undiscovered (at least to my knowledge) for over a decade.  I think
+Bruce Walter of Cornell may have known about it, but I never heard
+the details of his discovery.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.41 2004/03/30 16:13:00 schorsch Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.42 2004/09/20 17:32:04 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -94,7 +94,7 @@ diraniso(		/* compute source contribution */
 		 *  modified by the color of the material.
 		 */
 		copycolor(ctmp, np->mcolor);
-		dtmp = ldot * omega * np->rdiff / PI;
+		dtmp = ldot * omega * np->rdiff * (1.0/PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -105,7 +105,7 @@ diraniso(		/* compute source contribution */
 		 */
 						/* add source width if flat */
 		if (np->specfl & SP_FLAT)
-			au2 = av2 = omega/(4.0*PI);
+			au2 = av2 = omega * (0.25/PI);
 		else
 			au2 = av2 = 0.0;
 		au2 += np->u_alpha*np->u_alpha;
@@ -122,8 +122,7 @@ diraniso(		/* compute source contribution */
 						/* gaussian */
 		dtmp = DOT(np->pnorm, h);
 		dtmp = (dtmp1 + dtmp2) / (dtmp*dtmp);
-		dtmp = exp(-dtmp) * (0.25/PI)
-				* sqrt(ldot/(np->pdot*au2*av2));
+		dtmp = exp(-dtmp) / (4.0*PI * np->pdot * sqrt(au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->scolor);
@@ -137,7 +136,7 @@ diraniso(		/* compute source contribution */
 		 *  Compute diffuse transmission.
 		 */
 		copycolor(ctmp, np->mcolor);
-		dtmp = -ldot * omega * np->tdiff / PI;
+		dtmp = -ldot * omega * np->tdiff * (1.0/PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -147,7 +146,7 @@ diraniso(		/* compute source contribution */
 		 *  is always modified by material color.
 		 */
 						/* roughness + source */
-		au2 = av2 = omega / PI;
+		au2 = av2 = omega * (1.0/PI);
 		au2 += np->u_alpha*np->u_alpha;
 		av2 += np->v_alpha*np->v_alpha;
 						/* "half vector" */
@@ -168,8 +167,7 @@ diraniso(		/* compute source contribution */
 		} else
 			dtmp = 0.0;
 						/* gaussian */
-		dtmp = exp(-dtmp) * (1.0/PI)
-				* sqrt(-ldot/(np->pdot*au2*av2));
+		dtmp = exp(-dtmp) / (PI * np->pdot * sqrt(au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->mcolor);

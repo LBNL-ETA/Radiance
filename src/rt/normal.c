@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.47 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.48 2004/09/20 17:32:04 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -102,7 +102,7 @@ dirnorm(		/* compute source contribution */
 		 *  modified by the color of the material.
 		 */
 		copycolor(ctmp, np->mcolor);
-		dtmp = ldot * omega * ldiff / PI;
+		dtmp = ldot * omega * ldiff * (1.0/PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -115,7 +115,7 @@ dirnorm(		/* compute source contribution */
 		dtmp = np->alpha2;
 						/* + source if flat */
 		if (np->specfl & SP_FLAT)
-			dtmp += omega/(4.0*PI);
+			dtmp += omega * (0.25/PI);
 						/* half vector */
 		vtmp[0] = ldir[0] - np->rp->rdir[0];
 		vtmp[1] = ldir[1] - np->rp->rdir[1];
@@ -124,11 +124,11 @@ dirnorm(		/* compute source contribution */
 		d2 *= d2;
 		d2 = (DOT(vtmp,vtmp) - d2) / d2;
 						/* gaussian */
-		dtmp = exp(-d2/dtmp)/(4.*PI*dtmp);
+		dtmp = exp(-d2/dtmp)/(4.*PI * np->pdot * dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->scolor);
-			dtmp *= omega * sqrt(ldot/np->pdot);
+			dtmp *= omega;
 			scalecolor(ctmp, dtmp);
 			addcolor(cval, ctmp);
 		}
@@ -138,7 +138,7 @@ dirnorm(		/* compute source contribution */
 		 *  Compute diffuse transmission.
 		 */
 		copycolor(ctmp, np->mcolor);
-		dtmp = -ldot * omega * np->tdiff / PI;
+		dtmp = -ldot * omega * np->tdiff * (1.0/PI);
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
@@ -148,13 +148,14 @@ dirnorm(		/* compute source contribution */
 		 *  is always modified by material color.
 		 */
 						/* roughness + source */
-		dtmp = np->alpha2 + omega/PI;
+		dtmp = np->alpha2 + omega*(1.0/PI);
 						/* gaussian */
-		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
+		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp) /
+					(PI*np->pdot*dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->mcolor);
-			dtmp *= np->tspec * omega * sqrt(-ldot/np->pdot);
+			dtmp *= np->tspec * omega;
 			scalecolor(ctmp, dtmp);
 			addcolor(cval, ctmp);
 		}
