@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.33 2004/06/08 19:48:30 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.34 2004/08/31 18:52:27 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -334,8 +334,6 @@ double	(*ourbright)() = rgb_bright;
 static void
 init(void)					/* perform final setup */
 {
-	double	l_colin(char *), l_expos(char *), l_pixaspect(char *),
-			l_ray(char *), l_psize(char *);
 	register int	i;
 						/* define constants */
 	varset("PI", ':', PI);
