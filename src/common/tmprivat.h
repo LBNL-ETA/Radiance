@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.10 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.11 2003/07/14 04:56:54 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -13,7 +13,6 @@ extern "C" {
 #endif
 #include	"color.h"
 #include	"tonemap.h"
-#include	"tifftypes.h"
 
 				/* required constants */
 #ifndef M_LN2

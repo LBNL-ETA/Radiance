@@ -1,6 +1,6 @@
 .TH NORMTIFF 1 2/25/99 RADIANCE
 .SH NAME
-normtiff - tone-map and convert RADIANCE picture or SGILOG TIFF to RGB TIFF
+normtiff - tone-map and convert RADIANCE picture or HDR TIFF to standard TIFF
 .SH SYNOPSIS
 .B normtiff
 [
@@ -10,7 +10,7 @@ normtiff - tone-map and convert RADIANCE picture or SGILOG TIFF to RGB TIFF
 .B output.tif
 .SH DESCRIPTION
 .I Normtiff
-prepares a Radiance picture or SGILOG (high dynamic range) TIFF
+prepares a Radiance picture or high dynamic-range TIFF
 for output to a display or hard copy device.
 If the dynamic range of the scene exceeds that of the display (as is
 usually the case),
@@ -33,7 +33,7 @@ as a TIFF if it fails header inspection.
 (See the
 .I getinfo(1)
 program.)\0
-If the input is neither a RADIANCE picture nor an SGILOG-encoded TIFF,
+If the input is neither a RADIANCE picture nor a high dynamic-range TIFF,
 the program reports an error and exits.
 .PP
 The following command line options are understood.
@@ -43,7 +43,7 @@ several of the switches are identical.
 .TP 10n
 .BR -b
 Toggle 8-bit black and white (grayscale) TIFF output.
-If the input is a 16-bit SGILOG luminance-only TIFF, this switch is
+If the input is a grayscale TIFF, this switch is
 automatically selected.
 Otherwise, the output defaults to 24-bit RGB.
 .TP
@@ -104,7 +104,7 @@ To convert a RADIANCE picture to an 8-bit grayscale TIFF:
 .IP "" .2i
 normtiff -b scene.pic sceneb.tif
 .PP
-To condition an SGILOG TIFF for a particular film recorder with
+To condition a high dynamic-range TIFF for a particular film recorder with
 known color primaries, dynamic range and gamma response:
 .IP "" .2i
 pcond -d 50 -g 2.5 -p .580 .340 .281 .570 .153 .079 .333 .333 orig.tif filmrgb.tif

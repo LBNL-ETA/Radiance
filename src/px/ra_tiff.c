@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.22 2003/07/01 22:44:02 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.23 2003/07/14 04:56:54 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -541,6 +541,8 @@ initfromrad()			/* initialize input from a Radiance picture */
 			cvts.tf = Color2RRGGBB;
 			SET(C_RFLT);
 		} else if (CHK(C_TFLT)) {
+			TIFFSetField(cvts.tif, TIFFTAG_SAMPLEFORMAT,
+					SAMPLEFORMAT_IEEEFP);
 			cvts.tf = Color2RfGfBf;
 			SET(C_RFLT);
 		} else
@@ -553,6 +555,8 @@ initfromrad()			/* initialize input from a Radiance picture */
 			cvts.tf = Color2GGry;
 			SET(C_RFLT);
 		} else if (CHK(C_TFLT)) {
+			TIFFSetField(cvts.tif, TIFFTAG_SAMPLEFORMAT,
+					SAMPLEFORMAT_IEEEFP);
 			cvts.tf = Color2Gryf;
 			SET(C_RFLT);
 		} else

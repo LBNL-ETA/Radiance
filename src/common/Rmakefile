@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.42 2003/06/27 06:53:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.43 2003/07/14 04:56:53 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -18,7 +18,8 @@ RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
 	addobjnotify.o zeroes.o mesh.o readmesh.o tmesh.o sceneio.o
 
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
-	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o
+	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
+	tmap16bit.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
@@ -114,13 +115,14 @@ loadvars.o:	vars.h
 
 mesh.o readmesh.o:	mesh.h lookup.h
 
-tonemap.o tmapcolrs.o tmapluv.o:	tmprivat.h tonemap.h color.h
+tonemap.o tmapcolrs.o tmapluv.o tmap16bit.o:	tmprivat.h tonemap.h \
+tifftypes.h color.h
 
 tmapluv.o:	uvcode.h tiffio.h tmaptiff.h tiff.h
 
 tonemap.o:	tmerrmsg.h
 
-tmaptiff.o:	tmprivat.h tmaptiff.h color.h tonemap.h
+tmaptiff.o:	tmprivat.h tmaptiff.h color.h tonemap.h tifftypes.h
 
 rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o:	radogl.h \
 standard.h mat4.h fvect.h color.h object.h otypes.h lookup.h

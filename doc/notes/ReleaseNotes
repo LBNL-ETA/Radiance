@@ -1173,3 +1173,6 @@ parallel.
 
 Fixed bug where mesh instances were not being freed, so subsequent calls
 in programs like ranimate would refer to bogus data.
+
+Added support in normtiff for floating-point and 16-bit/sample TIFF input
+files.

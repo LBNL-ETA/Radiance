@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.14 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.15 2003/07/14 04:56:54 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -9,6 +9,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include	"tifftypes.h"
 
 /****    Argument Macros    ****/
 				/* Flags of what to do */
@@ -329,7 +331,32 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 	returns	-	0 on success, TM_E_* on failure.
 */
 
+extern int
+tmCvRGB48(TMbright *ls, BYTE *cs, uint16 (*scan)[3], int len, double gv);
+/*
+	Convert 48-bit RGB scanline to encoded luminance and chrominance.
 
+	ls	-	returned encoded luminance values.
+	cs	-	returned encoded chrominance values (Note 2).
+	scan	-	input scanline.
+	len	-	scanline length.
+	gv	-	input gamma value.
+
+	returns	-	0 on success, TM_E_* on error.
+*/
+
+extern int
+tmCvGray16(TMbright *ls, uint16 *scan, int len, double gv);
+/*
+	Convert 16-bit gray scanline to encoded luminance.
+
+	ls	-	returned encoded luminance values.
+	scan	-	input scanline.
+	len	-	scanline length.
+	gv	-	input gamma value.
+
+	returns	-	0 on success, TM_E_* on error.
+*/
 
 /****    Notes    ****/
 /*

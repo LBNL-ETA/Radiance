@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.2 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.3 2003/07/14 04:56:54 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -14,21 +14,81 @@ static const char	RCSid[] = "$Id: tmaptiff.c,v 3.2 2003/02/25 02:47:22 greg Exp 
 #include "tmprivat.h"
 #include "tmaptiff.h"
 
+					/* input cases we handle */
+#define TC_LOGLUV32	1
+#define TC_LOGLUV24	2
+#define TC_LOGL16	3
+#define TC_GRYFLOAT	4
+#define TC_RGBFLOAT	5
+#define TC_GRYSHORT	6
+#define TC_RGBSHORT	7
 
+/* figure out what kind of TIFF we have and if we can tone-map it */
+static int
+getTIFFtype(TIFF *tif)
+{
+	uint16	comp, phot, pconf;
+	uint16	samp_fmt, bits_samp;
+	
+	TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &pconf);
+	if (pconf != PLANARCONFIG_CONTIG)
+		return(0);
+	TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &phot);
+	TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &comp);
+	TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLEFORMAT, &samp_fmt);
+	TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_samp);
+	switch (phot) {
+	case PHOTOMETRIC_LOGLUV:
+		if (comp == COMPRESSION_SGILOG)
+			return(TC_LOGLUV32);
+		if (comp == COMPRESSION_SGILOG24)
+			return(TC_LOGLUV24);
+		return(0);
+	case PHOTOMETRIC_LOGL:
+		if (comp == COMPRESSION_SGILOG)
+			return(TC_LOGL16);
+		return(0);
+	case PHOTOMETRIC_MINISBLACK:
+		if (samp_fmt == SAMPLEFORMAT_UINT) {
+			if (bits_samp == 16)
+				return(TC_GRYSHORT);
+			return(0);
+		}
+		if (samp_fmt == SAMPLEFORMAT_IEEEFP) {
+			if (bits_samp == 8*sizeof(float))
+				return(TC_GRYFLOAT);
+			return(0);
+		}
+		return(0);
+	case PHOTOMETRIC_RGB:
+		if (samp_fmt == SAMPLEFORMAT_UINT) {
+			if (bits_samp == 16)
+				return(TC_RGBSHORT);
+			return(0);
+		}
+		if (samp_fmt == SAMPLEFORMAT_IEEEFP) {
+			if (bits_samp == 8*sizeof(float))
+				return(TC_RGBFLOAT);
+			return(0);
+		}
+		return(0);
+	}
+	return(0);
+}
+
+/* load and convert TIFF */
 int
-tmLoadTIFF(lpp, cpp, xp, yp, fname, tp)	/* load and convert TIFF */
-TMbright	**lpp;
-BYTE	**cpp;
-int	*xp, *yp;
-char	*fname;
-TIFF	*tp;
+tmLoadTIFF(TMbright **lpp, BYTE **cpp, int *xp, int *yp, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmLoadTIFF" : fname;
+	RGBPRIMP	inppri = tmTop->monpri;
+	RGBPRIMS	myprims;
+	float	*fa;
 	TIFF	*tif;
 	int	err;
-	union {uint16 *w; uint32 *l; MEM_PTR p;} sl;
-	uint16	comp, phot, pconf;
+	union {uint16 *w; uint32 *l; float *f; MEM_PTR p;} sl;
 	uint32	width, height;
+	int	tcase;
 	double	stonits;
 	int	y;
 					/* check arguments */
@@ -43,59 +103,121 @@ TIFF	*tp;
 	err = TM_E_BADFILE;
 	if ((tif = tp) == NULL && (tif = TIFFOpen(fname, "r")) == NULL)
 		returnErr(TM_E_BADFILE);
-	TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &phot);
-	TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &comp);
+	tcase = getTIFFtype(tif);
+	if (!tcase)
+		goto done;
 	if (!TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width) ||
 			!TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height))
 		goto done;
 	*xp = width; *yp = height;
-	TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &pconf);
-	if (pconf != PLANARCONFIG_CONTIG)
-		goto done;
+	if (TIFFGetField(tif, TIFFTAG_PRIMARYCHROMATICITIES, &fa)) {
+		myprims[RED][CIEX] = fa[0];
+		myprims[RED][CIEY] = fa[1];
+		myprims[GRN][CIEX] = fa[2];
+		myprims[GRN][CIEY] = fa[3];
+		myprims[BLU][CIEX] = fa[4];
+		myprims[BLU][CIEY] = fa[5];
+		myprims[WHT][CIEX] = 1./3.;
+		myprims[WHT][CIEY] = 1./3.;
+		if (TIFFGetField(tif, TIFFTAG_WHITEPOINT, &fa)) {
+			myprims[WHT][CIEX] = fa[0];
+			myprims[WHT][CIEY] = fa[1];
+		}
+		inppri = myprims;
+	}
 	if (!TIFFGetField(tif, TIFFTAG_STONITS, &stonits))
 		stonits = 1.;
-	if (phot == PHOTOMETRIC_LOGLUV) {
-		if (comp != COMPRESSION_SGILOG && comp != COMPRESSION_SGILOG24)
-			goto done;
+	switch (tcase) {		/* set up conversion */
+	case TC_LOGLUV32:
+	case TC_LOGLUV24:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_RAW);
 		sl.l = (uint32 *)malloc(width*sizeof(uint32));
-		if (cpp != TM_NOCHROMP) {
-			*cpp = (BYTE *)malloc(width*height*3*sizeof(BYTE));
-			if (*cpp == NULL) {
-				err = TM_E_NOMEM;
-				goto done;
-			}
-		}
-	} else if (phot == PHOTOMETRIC_LOGL) {
-		if (comp != COMPRESSION_SGILOG)
-			goto done;
+		tmSetSpace(TM_XYZPRIM, stonits);
+		break;
+	case TC_LOGL16:
 		TIFFSetField(tif, TIFFTAG_SGILOGDATAFMT, SGILOGDATAFMT_16BIT);
 		sl.w = (uint16 *)malloc(width*sizeof(uint16));
-	} else
+		tmSetSpace(tmTop->monpri, stonits);
+		break;
+	case TC_RGBFLOAT:
+		sl.f = (float *)malloc(width*3*sizeof(float));
+		tmSetSpace(inppri, stonits);
+		break;
+	case TC_GRYFLOAT:
+		sl.f = (float *)malloc(width*sizeof(float));
+		tmSetSpace(tmTop->monpri, stonits);
+		break;
+	case TC_RGBSHORT:
+		sl.w = (uint16 *)malloc(width*3*sizeof(uint16));
+		tmSetSpace(inppri, stonits);
+		break;
+	case TC_GRYSHORT:
+		sl.w = (uint16 *)malloc(width*sizeof(uint16));
+		tmSetSpace(tmTop->monpri, stonits);
+		break;
+	default:
+		err = TM_E_CODERR1;
 		goto done;
+	}
 	*lpp = (TMbright *)malloc(width*height*sizeof(TMbright));
 	if (sl.p == NULL | *lpp == NULL) {
 		err = TM_E_NOMEM;
 		goto done;
 	}
-					/* set input color space */
-	tmSetSpace(TM_XYZPRIM, stonits);
+	switch (tcase) {		/* allocate color if needed */
+	case TC_LOGLUV32:
+	case TC_LOGLUV24:
+	case TC_RGBFLOAT:
+	case TC_RGBSHORT:
+		if (cpp == TM_NOCHROMP)
+			break;
+		*cpp = (BYTE *)malloc(width*height*3*sizeof(BYTE));
+		if (*cpp == NULL) {
+			err = TM_E_NOMEM;
+			goto done;
+		}
+		break;
+	}
 					/* read and convert each scanline */
 	for (y = 0; y < height; y++) {
 		if (TIFFReadScanline(tif, sl.p, y, 0) < 0) {
 			err = TM_E_BADFILE;
 			break;
 		}
-		if (phot == PHOTOMETRIC_LOGL)
-			err = tmCvL16(*lpp + y*width, sl.w, width);
-		else if (comp == COMPRESSION_SGILOG24)
-			err = tmCvLuv24(*lpp + y*width,
-				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
-					sl.l, width);
-		else
+		switch (tcase) {
+		case TC_LOGLUV32:
 			err = tmCvLuv32(*lpp + y*width,
 				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
 					sl.l, width);
+			break;
+		case TC_LOGLUV24:
+			err = tmCvLuv24(*lpp + y*width,
+				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
+					sl.l, width);
+			break;
+		case TC_LOGL16:
+			err = tmCvL16(*lpp + y*width, sl.w, width);
+			break;
+		case TC_RGBFLOAT:
+			err = tmCvColors(*lpp + y*width,
+				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
+					(COLOR *)sl.f, width);
+			break;
+		case TC_GRYFLOAT:
+			err = tmCvGrays(*lpp + y*width, sl.f, width);
+			break;
+		case TC_RGBSHORT:
+			err = tmCvRGB48(*lpp + y*width,
+				cpp==TM_NOCHROMP ? TM_NOCHROM : *cpp+y*3*width,
+					(uint16 (*)[3])sl.w, width, DEFGAM);
+			break;
+		case TC_GRYSHORT:
+			err = tmCvGray16(*lpp + y*width, sl.w, width, DEFGAM);
+			break;
+		default:
+			err = TM_E_CODERR1;
+			break;
+		}
 		if (err != TM_E_OK)
 			break;
 	}
@@ -127,14 +249,8 @@ done:					/* clean up */
  * As in tmMapPicture(), grey values are also returned if flags&TM_F_BW.
  */
 int
-tmMapTIFF(psp, xp, yp, flags, monpri, gamval, Lddyn, Ldmax, fname, tp)
-BYTE	**psp;
-int	*xp, *yp;
-int	flags;
-RGBPRIMP	monpri;
-double	gamval, Lddyn, Ldmax;
-char	*fname;
-TIFF	*tp;
+tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
+	double gamval, double Lddyn, double Ldmax, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmMapTIFF" : fname;
 	TMbright	*lp;
