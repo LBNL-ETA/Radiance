@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.6 2003/06/08 12:03:10 schorsch Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.7 2003/07/14 05:00:45 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -58,6 +58,9 @@ char  *argv[];
 			error(USER, errmsg);
 			break;
 		}
+
+	if (i < argc-2)
+		error(USER, "too many file arguments");
 					/* initialize mesh */
 	cvinit(i==argc-2 ? argv[i+1] : "<stdout>");
 					/* load material input */
