@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.23 2004/03/28 20:33:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.24 2004/12/15 06:30:36 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -471,6 +471,13 @@ compute(void)			/* compute color mapping */
 					/* compute piecewise luminance curve */
 	for (i = 0; i < NMBNEU; i++) {
 		copycolor(bramp[i][0], inpRGB[mbneu[i]]);
+		for (n = i ? 3 : 0; n--; )
+			if (colval(bramp[i][0],n) <=
+					colval(bramp[i-1][0],n)+1e-7) {
+				fprintf(stderr,
+		"%s: non-increasing neutral patch\n", progname);
+				exit(1);
+			}
 		copycolor(bramp[i][1], mbRGB[mbneu[i]]);
 	}
 					/* compute color space gamut */
