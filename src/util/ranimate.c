@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.35 2003/05/29 14:53:36 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.36 2003/06/01 15:21:57 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -1300,6 +1300,7 @@ int	maxcopies;
 			strcpy(com1=buf, com);	/* build -PP command */
 			sprintf(com1+(ppins-com), " -PP %s/%s.persist",
 					vval(DIRECTORY), phostname(ps));
+			unlink(com1+(ppins-com)+5);
 			strcat(com1, ppins);
 		} else
 			com1 = com;
