@@ -13,7 +13,7 @@ Param   Description             Min     Fast    Accur   Max     Notes
 -pj     anti-aliasing jitter    0       .6      .9      1       A
 -pm	pixel motion		0	0	1	1	B
 -dj     source jitter           0       0       .7      1       B
--ds     source substructuring   0       .5      .15     .02
+-ds     source substructuring   0       .5      .15     .05
 -dt     direct thresholding     1       .5      .05     0	C
 -dc     direct certainty        0       .25     .5      1
 -dr	direct relays		0	1	3	6
