@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pvalue.c,v 2.15 2003/02/25 16:22:05 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.16 2003/02/25 16:47:23 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -43,6 +43,8 @@ char  *fmtid = "ascii";		/* format identifier for header */
 int  header = 1;		/* do header? */
 
 long  skipbytes = 0;		/* skip bytes in input? */
+
+int  swapbytes = 0;		/* swap bytes in 16-bit words? */
 
 int  interleave = 1;		/* file is interleaved? */
 
@@ -169,6 +171,8 @@ char  **argv;
 					format = 'b';
 					fmtid = "byte";
 					break;
+				case 'W':		/* 16-bit swapped */
+					swapbytes = 1;
 				case 'w':		/* 16-bit */
 					dataonly = 1;
 					format = 'w';
@@ -509,6 +513,16 @@ int  code;
 }
 
 
+swap16(wp, n)		/* swap n 16-bit words */
+register uint16  *wp;
+int  n;
+{
+	while (n-- > 0) {
+		*wp = *wp << 8 | ((*wp >> 8) & 0xff);
+		wp++;
+	}
+}
+
 getcascii(col)		/* get an ascii color value from stream(s) */
 COLOR  col;
 {
@@ -620,6 +634,8 @@ COLOR  col;
 			fread((char *)(vw+2), sizeof(uint16), 1, fin3) != 1)
 			return(-1);
 	}
+	if (swapbytes)
+		swap16(vw, 3);
 	setcolor(col, (vw[rord[RED]]+.5)/65536.,
 			(vw[rord[GRN]]+.5)/65536., (vw[rord[BLU]]+.5)/65536.);
 	return(0);
@@ -698,6 +714,8 @@ COLOR  col;
 
 	if (fread((char *)&vw, sizeof(uint16), 1, fin) != 1)
 		return(-1);
+	if (swapbytes)
+		swap16(&vw, 1);
 	d = (vw+.5)/65536.;
 	setcolor(col, d, d, d);
 	return(0);
@@ -786,6 +804,8 @@ COLOR  col;
 	vw[1] = min(i,65535);
 	i = colval(col,ord[2])*65536.;
 	vw[2] = min(i,65535);
+	if (swapbytes)
+		swap16(vw, 3);
 	fwrite((char *)vw, sizeof(uint16), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -856,6 +876,8 @@ COLOR  col;
 
 	i = (*mybright)(col)*65536.;
 	vw = min(i,65535);
+	if (swapbytes)
+		swap16(&vw, 1);
 	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -926,6 +948,8 @@ COLOR  col;
 
 	i = colval(col,putprim)*65536.;
 	vw = min(i,65535);
+	if (swapbytes)
+		swap16(&vw, 1);
 	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
