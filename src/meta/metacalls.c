@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: metacalls.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: metacalls.c,v 1.4 2004/03/16 15:55:27 greg Exp $";
 #endif
 /*
  *  metacalls.c - functional interface to metafile.
@@ -25,7 +25,7 @@ static int  curx = 0;
 static int  cury = 0;
 static int  cura0 = 0;
 static int  inpoly = FALSE;
-static char  curargs[MAXARGS] = "";
+static char  curargs[6*MAXARGS] = "";
 static char  *cap;
 
 
