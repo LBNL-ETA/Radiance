@@ -1,0 +1,24 @@
+# ies2rad -l /lumen/lumen/ray/lib -p source/ies -di -t default
+# Dimensions in inches
+#<GE 6014 HEADLAMP
+#<HIGHBEAM
+# 50 watt luminaire, lamp*ballast factor = 1
+
+void brightdata highbeam_dist
+5 flatcorr source/ies/highbeam.dat source.cal srcB_horiz srcB_vert 
+0
+1 1
+
+highbeam_dist light highbeam_light
+0
+0
+3 31.9974 31.9974 31.9974
+
+highbeam_light polygon highbeam.d
+0
+0
+12
+	-3.48	-3.48	-0.00984252
+	-3.48	3.48	-0.00984252
+	3.48	3.48	-0.00984252
+	3.48	-3.48	-0.00984252

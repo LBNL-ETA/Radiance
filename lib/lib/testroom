@@ -1,0 +1,85 @@
+#
+# Test room for new objects
+#
+
+void plastic wall_mat
+0
+0
+5 .681 .543 .686 0 .2
+
+void light bright
+0
+0
+3 3000 3000 3000
+
+bright sphere lamp0
+0
+0
+4 4 4 -4 .1
+
+bright sphere lamp1
+0
+0
+4 4 0 4 .1
+
+bright sphere lamp2
+0
+0
+4 0 4 4 .1
+
+# xform -t -5 -5 -5
+# genbox wall_mat box 10 10 10
+
+wall_mat polygon box.1540
+0
+0
+12
+                  5                 -5                 -5
+                  5                 -5                  5
+                 -5                 -5                  5
+                 -5                 -5                 -5
+
+wall_mat polygon box.4620
+0
+0
+12
+                 -5                 -5                  5
+                 -5                  5                  5
+                 -5                  5                 -5
+                 -5                 -5                 -5
+
+wall_mat polygon box.2310
+0
+0
+12
+                 -5                  5                 -5
+                  5                  5                 -5
+                  5                 -5                 -5
+                 -5                 -5                 -5
+
+wall_mat polygon box.3267
+0
+0
+12
+                  5                  5                 -5
+                 -5                  5                 -5
+                 -5                  5                  5
+                  5                  5                  5
+
+wall_mat polygon box.5137
+0
+0
+12
+                  5                 -5                  5
+                  5                 -5                 -5
+                  5                  5                 -5
+                  5                  5                  5
+
+wall_mat polygon box.6457
+0
+0
+12
+                 -5                  5                  5
+                 -5                 -5                  5
+                  5                 -5                  5
+                  5                  5                  5

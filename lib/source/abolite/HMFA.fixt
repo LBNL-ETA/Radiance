@@ -1,0 +1,112 @@
+#
+#  Fixture for HMFA lamp
+#
+#	Origin at center of lowest part, facing -z
+#	Dimensions in inches
+#
+
+void metal brushed_aluminum
+0
+0
+5 .79 .79 .79 .5 .1
+
+brushed_aluminum ring base_tip
+0
+0
+8
+	0	0	14.125
+	0	0	1
+	0	1
+
+brushed_aluminum cone base_top
+0
+0
+8
+	0	0	14.125
+	0	0	13
+	1	2
+
+brushed_aluminum cone base_outer
+0
+0
+8
+	0	0	13
+	0	0	9.3
+	2	2.156
+
+# genrev brushed_aluminum reflector hermite(0,9,18.428,1.071,t) hermite(7.1875,2.156,-3.05,-3.72,t) 5 -s
+
+brushed_aluminum texfunc phong
+4 rev_dx rev_dy rev_dz rev.cal
+0
+4
+	    0.121296430803	                 0
+	     -1.1558385753	     8.30758975999
+
+phong cone reflector.1
+0
+0
+8
+	0	0	                 0
+	0	0	          3.260512
+	            7.1875	          6.392864
+
+brushed_aluminum texfunc phong
+4 rev_dx rev_dy rev_dz rev.cal
+0
+4
+	    0.130987194614	   -0.190300937579
+	    0.134387550246	    0.112440892601
+
+phong cone reflector.2
+0
+0
+8
+	0	0	          3.260512
+	0	0	          5.718816
+	          6.392864	          5.334332
+
+brushed_aluminum texfunc phong
+4 rev_dx rev_dy rev_dz rev.cal
+0
+4
+	     0.18820050683	   -0.680795601478
+	    0.193437927135	   -0.113391182603
+
+phong cone reflector.3
+0
+0
+8
+	0	0	          5.718816
+	0	0	          7.446864
+	          5.334332	          4.169968
+
+brushed_aluminum texfunc phong
+4 rev_dx rev_dy rev_dz rev.cal
+0
+4
+	    0.301549888138	    -1.68681027941
+	    0.320902225371	   -0.508843308647
+
+phong cone reflector.4
+0
+0
+8
+	0	0	          7.446864
+	0	0	          8.516608
+	          4.169968	          3.057836
+
+brushed_aluminum texfunc phong
+4 rev_dx rev_dy rev_dz rev.cal
+0
+4
+	    -1.49093898455	     13.4184508609
+	    0.768697172806	    -1.65731110457
+
+phong cone reflector.5
+0
+0
+8
+	0	0	          8.516608
+	0	0	                 9
+	          3.057836	             2.156

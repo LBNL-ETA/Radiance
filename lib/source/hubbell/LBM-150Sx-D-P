@@ -1,0 +1,25 @@
+#
+#  Lowbay model with 150 watt HPS and no lens
+#
+#	Origin at center of ceiling flush mount
+#	Dimensions in inches
+#
+
+void brightdata LBM-150Sx-D-P.dist
+4 flatcorr source/hubbell/LBM-150Sx-D-P.dat source.cal src_theta
+0
+0
+# scale by 1/area (in meters)
+
+LBM-150Sx-D-P.dist light LBM-150Sx-D-P.output
+0
+0
+3 13.2 13.2 13.2
+
+LBM-150Sx-D-P.output ring LBM-150Sx-D-P.source
+0
+0
+8
+	0	0	0
+	0	0	-1
+	0	6.125
