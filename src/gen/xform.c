@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.37 2004/07/02 16:45:32 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.38 2004/08/21 02:59:47 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -374,7 +374,7 @@ xfcomm(			/* transform a command */
 )
 {
 	FILE  *pin;
-	char  buf[512];
+	char  buf[2048];
 	int  i;
 
 	fgetline(buf, sizeof(buf), fin);
