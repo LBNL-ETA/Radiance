@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.41 2004/01/09 05:37:11 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.42 2004/01/18 17:03:12 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -544,12 +544,11 @@ register RAY  *r
  */
 
 static int
-weaksrcmat(int obj)		/* identify material */
+weaksrcmat(OBJECT obj)		/* identify material */
 {
-	register OBJREC *o = objptr(obj);
+	OBJREC *o = findmaterial(objptr(obj));
 	
-	while (!ismaterial(o->otype))	/* find material */
-		o = objptr(o->omod);
+	if (o == NULL) return 0;
 	return((o->otype==MAT_ILLUM)|(o->otype==MAT_GLOW));
 }
 
