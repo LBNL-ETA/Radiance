@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.5 2003/08/20 09:28:07 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 1.6 2003/08/30 08:18:43 schorsch Exp $
 #
 #  Compiles:
 #
@@ -26,7 +26,7 @@ SPECIALPROGS = $(DESTDIR)/mt160l $(DESTDIR)/mt160 $(DESTDIR)/mtext \
 	$(DESTDIR)/plotout $(DESTDIR)/okimate $(DESTDIR)/tbar \
 	$(DESTDIR)/mx80 $(DESTDIR)/t4014 $(DESTDIR)/imagew \
 	$(DESTDIR)/impress $(DESTDIR)/aed5 $(DESTDIR)/tscat \
-	$(DESTDIR)/tbar #$(DESTDIR)/xmeta 
+	$(DESTDIR)/tcurve #$(DESTDIR)/xmeta 
 
 LIBMETA = ../lib/libmeta.a 
 
