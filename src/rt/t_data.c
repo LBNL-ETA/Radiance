@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_data.c,v 2.6 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: t_data.c,v 2.7 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  *  t_data.c - routine for stored textures
@@ -52,7 +52,7 @@ RAY  *r;
 	errno = 0;
 	for (i = 0; i < nv; i++)
 		pt[i] = evalue(mf->ep[i]);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	dval[0] = datavalue(dp, pt);
 	for (i = 1; i < 3; i++) {
@@ -64,7 +64,7 @@ RAY  *r;
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		disp[i] = funvalue(m->oargs.sarg[i], 3, dval);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	if (mf->f != &unitxf)
 		multv3(disp, disp, mf->f->xfm);

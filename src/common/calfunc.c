@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.9 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.10 2003/03/05 16:16:52 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -350,7 +350,7 @@ VARDEF  *vp;
 	else if (isinf(d))
 	    errno = ERANGE;
 #endif
-    if (errno) {
+    if (errno == EDOM || errno == ERANGE) {
 	wputs(fname);
 	if (errno == EDOM)
 		wputs(": domain error\n");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_data.c,v 2.6 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: p_data.c,v 2.7 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  *  p_data.c - routine for stored patterns.
@@ -66,13 +66,13 @@ RAY  *r;
 	errno = 0;
 	for (i = dp->nd; i-- > 0; ) {
 		pt[i] = evalue(mf->ep[i]);
-		if (errno)
+		if (errno == EDOM || errno == ERANGE)
 			goto computerr;
 	}
 	bval = datavalue(dp, pt);
 	errno = 0;
 	bval = funvalue(m->oargs.sarg[0], 1, &bval);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	scalecolor(r->pcol, bval);
 	return(0);
@@ -103,7 +103,7 @@ RAY  *r;
 	errno = 0;
 	for (i = 0; i < nv; i++) {
 		pt[i] = evalue(mf->ep[i]);
-		if (errno)
+		if (errno == EDOM || errno == ERANGE)
 			goto computerr;
 	}
 	col[0] = datavalue(dp, pt);
@@ -119,7 +119,7 @@ RAY  *r;
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 1, col+i);
 		else
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 3, col);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	multcolor(r->pcol, cval);
 	return(0);
@@ -147,7 +147,7 @@ RAY  *r;
 	errno = 0;
 	pt[1] = evalue(mf->ep[0]);	/* y major ordering */
 	pt[0] = evalue(mf->ep[1]);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	dp = getpict(m->oargs.sarg[3]);
 	for (i = 0; i < 3; i++)
@@ -158,7 +158,7 @@ RAY  *r;
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 1, col+i);
 		else
 			colval(cval,i) = funvalue(m->oargs.sarg[i], 3, col);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	multcolor(r->pcol, cval);
 	return(0);

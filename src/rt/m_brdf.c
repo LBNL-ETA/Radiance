@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.17 2003/03/03 00:10:51 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.18 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -160,7 +160,7 @@ double  omega;			/* light source size */
 		dtmp = funvalue(sa[0], 5, vldx);
 		setcolor(ctmp, dtmp, dtmp, dtmp);
 	}
-	if (errno) {
+	if (errno == EDOM || errno == ERANGE) {
 		objerror(np->mp, WARNING, "compute error");
 		return;
 	}
@@ -251,7 +251,7 @@ register RAY  *r;
 	setcolor(ctmp, evalue(mf->ep[3]),
 			evalue(mf->ep[4]),
 			evalue(mf->ep[5]));
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, r, TRANS, bright(ctmp)) == 0) {
 		if (!(r->crtype & SHADOW) &&
@@ -280,7 +280,7 @@ register RAY  *r;
 	setcolor(ctmp, evalue(mf->ep[0]),
 			evalue(mf->ep[1]),
 			evalue(mf->ep[2]));
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, r, REFLECTED, bright(ctmp)) == 0) {
 		for (i = 0; i < 3; i++)

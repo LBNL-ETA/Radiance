@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_func.c,v 2.6 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: mx_func.c,v 2.7 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  *  mx_func.c - routine for mixture functions.
@@ -51,7 +51,7 @@ RAY  *r;
 	setfunc(m, r);
 	errno = 0;
 	coef = evalue(mf->ep[0]);
-	if (errno) {
+	if (errno == EDOM || errno == ERANGE) {
 		objerror(m, WARNING, "compute error");
 		return(0);
 	}

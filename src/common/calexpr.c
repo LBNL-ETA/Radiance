@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.19 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.20 2003/03/05 16:16:52 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -281,7 +281,7 @@ EPNODE	*ep;
     if (!finite(d))
 	errno = EDOM;
 #endif
-    if (errno) {
+    if (errno == EDOM || errno == ERANGE) {
 	wputs("Illegal power\n");
 	return(0.0);
     }
@@ -727,7 +727,7 @@ register EPNODE	 *epar;
     ep->type = NUM;
     errno = 0;
     ep->v.num = evalue(epar);
-    if (errno)
+    if (errno == EDOM || errno == ERANGE)
 	syntax("bad constant expression");
     epfree(epar);
  

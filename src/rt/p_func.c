@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.5 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.6 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -47,7 +47,7 @@ RAY  *r;
 	setfunc(m, r);
 	errno = 0;
 	bval = evalue(mf->ep[0]);
-	if (errno) {
+	if (errno == EDOM || errno == ERANGE) {
 		objerror(m, WARNING, "compute error");
 		return(0);
 	}
@@ -71,7 +71,7 @@ RAY  *r;
 	setcolor(cval, evalue(mf->ep[0]),
 			evalue(mf->ep[1]),
 			evalue(mf->ep[2]));
-	if (errno) {
+	if (errno == EDOM || errno == ERANGE) {
 		objerror(m, WARNING, "compute error");
 		return(0);
 	}

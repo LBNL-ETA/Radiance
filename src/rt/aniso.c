@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: aniso.c,v 2.36 2003/03/03 00:10:51 greg Exp $";
+static const char	RCSid[] = "$Id: aniso.c,v 2.37 2003/03/05 16:16:52 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -318,7 +318,7 @@ register ANISODAT  *np;
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
-	if (errno) {
+	if (errno == EDOM || errno == ERANGE) {
 		objerror(np->mp, WARNING, "compute error");
 		np->specfl |= SP_BADU;
 		return;

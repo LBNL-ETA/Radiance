@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.9 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.10 2003/03/05 16:16:53 greg Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -100,14 +100,14 @@ int  n;
 	errno = 0;
 	va = mf->ep + 4*n;
 	coef = evalue(va[0]);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	if (coef <= FTINY || rayorigin(&nr, r, TRANS, coef) < 0)
 		return(0);
 	va++;				/* compute direction */
 	for (j = 0; j < 3; j++) {
 		nr.rdir[j] = evalue(va[j]);
-		if (errno)
+		if (errno == EDOM || errno == ERANGE)
 			goto computerr;
 	}
 	if (mf->f != &unitxf)
@@ -178,14 +178,14 @@ int  n;
 	errno = 0;
 	va = mf->ep + 4*n;
 	coef = evalue(va[0]);
-	if (errno)
+	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
 	if (coef <= FTINY)
 		return(0);		/* insignificant */
 	va++;
 	for (i = 0; i < 3; i++) {
 		newdir[i] = evalue(va[i]);
-		if (errno)
+		if (errno == EDOM || errno == ERANGE)
 			goto computerr;
 	}
 	if (mf->f != &unitxf)
