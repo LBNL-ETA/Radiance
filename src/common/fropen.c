@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fropen.c,v 2.12 2003/06/30 18:18:22 greg Exp $";
+static const char	RCSid[] = "$Id: fropen.c,v 2.13 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Find and open a Radiance library file.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: fropen.c,v 2.12 2003/06/30 18:18:22 greg Exp $
 
 #include <stdio.h>
 
+#include "rtio.h"
 #include "paths.h"
 
 

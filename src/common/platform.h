@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.8 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.9 2003/07/17 09:21:29 schorsch Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -37,6 +37,7 @@
     #define NON_POSIX
   #else
     /* assumedly posix systems */
+	#include <unistd.h>
     #define RHAS_GETPWNAM
     #define RHAS_STAT
     #define RHAS_FORK_EXEC

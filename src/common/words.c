@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id";
 #include  <ctype.h>
 #include  <string.h>
 
+#include  "rtio.h"
 
 char *
 atos(rs, nb, s)			/* get word from string, returning rs */

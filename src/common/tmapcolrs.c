@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.12 2003/06/20 00:25:49 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.13 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -250,7 +250,7 @@ done:						/* clean up */
 
 
 #ifdef PCOND
-int					/* run pcond to map picture */
+static int					/* run pcond to map picture */
 dopcond(psp, xp, yp, flags, monpri, gamval, Lddyn, Ldmax, fname)
 BYTE	**psp;
 int	*xp, *yp;

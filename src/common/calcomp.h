@@ -1,9 +1,12 @@
-/* RCSid $Id: calcomp.h,v 2.13 2003/07/03 22:41:44 schorsch Exp $ */
+/* RCSid $Id: calcomp.h,v 2.14 2003/07/17 09:21:29 schorsch Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
 #ifndef _RAD_CALCOMP_H_
 #define _RAD_CALCOMP_H_
+
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -68,6 +71,9 @@ extern unsigned int  esupport;
 extern EPNODE	*curfunc;
 extern int  nextc;
 
+					/* defined in biggerlib.c */
+extern void biggerlib(void);
+
 					/* defined in caldefn.c */
 extern void	fcompile(char *fname);
 extern void	scompile(char *str, char *fname, int ln);
@@ -93,9 +99,9 @@ extern EPNODE	*dnext(void);
 extern EPNODE	*dpop(char *name);
 extern void	dpush(char *nm, EPNODE *ep);
 extern void	addchan(EPNODE *sp);
-extern void	getstatement();
-extern EPNODE	*getdefn();
-extern EPNODE	*getchan();
+extern void	getstatement(void);
+extern EPNODE	*getdefn(void);
+extern EPNODE	*getchan(void);
 					/* defined in calexpr.c */
 extern EPNODE	*eparse(char *expr);
 extern double	eval(char *expr);
@@ -144,10 +150,6 @@ extern char	*emalloc(unsigned int n);
 extern char	*ecalloc(unsigned int ne, unsigned int es);
 extern char	*erealloc(char *cp, unsigned int n);
 extern void	efree(char *cp);
-					/* miscellaneous */
-extern void	eputs(char *s);
-extern void	wputs(char *s);
-extern void	quit(int code);
 					/* defined by client */
 extern double	chanvalue(int n);
 

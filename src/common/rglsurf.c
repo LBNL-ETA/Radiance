@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rglsurf.c,v 3.9 2003/05/25 15:41:31 greg Exp $";
+static const char RCSid[] = "$Id: rglsurf.c,v 3.10 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Convert Radiance -> OpenGL surfaces.
@@ -106,7 +106,7 @@ GLdouble	**dataOut;
 }
 
 
-static
+static void
 newtess()			/* allocate GLU tessellation object */
 {
 	if ((gluto = gluNewTess()) == NULL)
@@ -120,7 +120,7 @@ newtess()			/* allocate GLU tessellation object */
 }
 
 
-static
+static void
 newquadric()			/* allocate GLU quadric structure */
 {
 	if ((gluqo = gluNewQuadric()) == NULL)

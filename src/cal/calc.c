@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.3 2003/06/30 14:59:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.4 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -13,8 +13,8 @@ static const char	RCSid[] = "$Id: calc.c,v 1.3 2003/06/30 14:59:10 schorsch Exp 
 #include  <setjmp.h>
 #include  <ctype.h>
 
+#include  "rterror.h"
 #include  "calcomp.h"
-
 
 #define  MAXRES		100
 

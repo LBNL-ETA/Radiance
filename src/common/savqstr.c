@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: savqstr.c,v 2.6 2003/05/15 05:13:35 greg Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.7 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -11,8 +11,8 @@ static const char RCSid[] = "$Id: savqstr.c,v 2.6 2003/05/15 05:13:35 greg Exp $
 
 #include <stdlib.h>
 
-extern void	eputs();
-extern void	quit();
+#include "rterror.h"
+
 
 #if 1
 

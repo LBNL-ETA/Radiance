@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rexpr.c,v 2.8 2003/06/30 14:59:11 schorsch Exp $";
+static const char	RCSid[] = "$Id: rexpr.c,v 2.9 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Regular expression parsing routines.
@@ -13,6 +13,8 @@ static const char	RCSid[] = "$Id: rexpr.c,v 2.8 2003/06/30 14:59:11 schorsch Exp
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+
+#include "rtio.h"
 
 /*
  * rexpr.c - regular expression parser (ala grep)
@@ -33,7 +35,8 @@ static const char	RCSid[] = "$Id: rexpr.c,v 2.8 2003/06/30 14:59:11 schorsch Exp
 #define same(a,b) (a==b || (iflag && (a^b)==' ' && isalpha(a)))
 
 
-static int     advance(), cclass();
+static int     advance(char *, char *);
+static int     cclass(char *, int c, int af);
 
 static char    expbuf[ESIZE];
 static int     iflag;
@@ -46,9 +49,9 @@ ecompile(sp, iflg, wflag)               /* compile the expression */
 register char  *sp;
 int iflg, wflag;
 {
-        register c;
+        register int c;
         register char *ep;
-        char *lastep;
+        char *lastep = NULL;
         int cclcnt;
         
         iflag = iflg;
@@ -164,7 +167,7 @@ register char *sp;
                 return(NULL);
         /* fast check for first character */
         if (expbuf[0]==CCHR) {
-		register c = expbuf[1];
+		register int c = expbuf[1];
 		while (*++sp)
 			if (same(*sp, c) && advance(sp, expbuf))
 				return(sp);
@@ -268,10 +271,10 @@ register char *ep;
 static int
 cclass(set, c, af)
 register char *set;
-register c;
+register int c;
 int af;
 {
-        register n;
+        register int n;
 
         if (c == 0)
                 return(0);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.13 2003/07/03 20:59:00 schorsch Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.14 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -17,7 +17,7 @@ static const char	RCSid[] = "$Id: getpath.c,v 2.13 2003/07/03 20:59:00 schorsch 
 #endif
 
 #include  "paths.h"
-
+#include  "rtio.h"
 
 
 #ifdef _WIN32

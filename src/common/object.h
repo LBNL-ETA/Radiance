@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.16 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: object.h,v 2.17 2003/07/17 09:21:29 schorsch Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -115,7 +115,7 @@ extern void	freefargs(FUNARGS *fa);
 					/* defined in readobj.c */
 extern void	readobj(char *inpspec);
 extern void	getobject(char *name, FILE *fp);
-extern OBJECT	newobject();
+extern OBJECT	newobject(void);
 extern void	freeobjects(int firstobj, int nobjs);
 					/* defined in free_os.c */
 extern int	free_os(OBJREC *op);

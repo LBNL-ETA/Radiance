@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fputword.c,v 3.6 2003/07/12 15:14:44 greg Exp $";
+static const char	RCSid[] = "$Id: fputword.c,v 3.7 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Read white space separated words from stream
@@ -9,10 +9,10 @@ static const char	RCSid[] = "$Id: fputword.c,v 3.6 2003/07/12 15:14:44 greg Exp 
 
 #include "copyright.h"
 
-#include "rtio.h"
-
 #include <ctype.h>
+#include <stdio.h>
 
+#include "rtio.h"
 
 void
 fputword(s, fp)			/* put (quoted) word to file stream */

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmisc.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: rtmisc.h,v 3.4 2003/07/17 09:21:29 schorsch Exp $ */
 /*
  *	Miscellaneous Radiance definitions
  */
@@ -21,6 +21,8 @@ extern "C" {
 					/* defined in bmalloc.c */
 extern char	*bmalloc(unsigned int n);
 extern void	bfree(char *p, unsigned int n);
+					/*  defined in myhostname.c */
+extern char	*myhostname(void);
 
 #ifdef __cplusplus
 }

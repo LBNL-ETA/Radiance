@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: zeroes.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: zeroes.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  zeroes.c - compute roots for various equations.
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: zeroes.c,v 2.4 2003/02/25 02:47:22 greg Exp $"
 #include  <math.h>
 
 #include  "fvect.h"
-
+#include  "rtmath.h"
 
 int
 quadratic(r, a, b, c)		/* find real roots of quadratic equation */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: free_os.c,v 3.3 2003/07/10 03:47:00 greg Exp $";
+static const char	RCSid[] = "$Id: free_os.c,v 3.4 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Free memory associated with object(s)
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: free_os.c,v 3.3 2003/07/10 03:47:00 greg Exp $
 #include "face.h"
 #include "cone.h"
 #include "instance.h"
+#include "mesh.h"
 
 
 int

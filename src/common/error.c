@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: error.c,v 2.8 2003/06/27 06:53:21 greg Exp $";
+static const char	RCSid[] = "$Id: error.c,v 2.9 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  error.c - standard error reporting function
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: error.c,v 2.8 2003/06/27 06:53:21 greg Exp $";
 #include "copyright.h"
 
 #include  <stdio.h>
+#include  <stdlib.h>
 
 #include  "rterror.h"
 

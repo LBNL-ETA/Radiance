@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.11 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.12 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -17,6 +17,7 @@ static const char	RCSid[] = "$Id: calfunc.c,v 2.11 2003/06/07 12:50:20 schorsch 
 #include  <errno.h>
 #include  <math.h>
 
+#include  "rterror.h"
 #include  "calcomp.h"
 
 				/* bits in argument flag (better be right!) */
@@ -33,7 +34,7 @@ typedef struct activation {
 
 static ACTIVATION  *curact = NULL;
 
-static double  libfunc();
+static double  libfunc(char *fname, VARDEF *vp);
 
 #ifndef  MAXLIB
 #define  MAXLIB		64	/* maximum number of library functions */

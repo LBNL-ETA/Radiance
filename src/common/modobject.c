@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.9 2003/03/10 17:13:29 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.10 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -21,7 +21,7 @@ static struct ohtab {
 	OBJECT  *htab;			/* table, if allocated */
 }  modtab = {100, NULL}, objtab = {1000, NULL};	/* modifiers and objects */
 
-static int  otndx();
+static int  otndx(char *, struct ohtab *);
 
 
 OBJECT

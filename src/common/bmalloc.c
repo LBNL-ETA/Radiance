@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: bmalloc.c,v 2.4 2003/02/25 02:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: bmalloc.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Bmalloc provides basic memory allocation without overhead (no free lists).
@@ -14,6 +14,8 @@ static const char	RCSid[] = "$Id: bmalloc.c,v 2.4 2003/02/25 02:47:21 greg Exp $
 #include "copyright.h"
 
 #include <stdlib.h>
+
+#include "rtmisc.h"
 
 #ifndef  MBLKSIZ
 #define  MBLKSIZ	16376		/* size of memory allocation block */

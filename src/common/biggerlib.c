@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: biggerlib.c,v 3.3 2003/06/30 19:04:29 greg Exp $";
+static const char	RCSid[] = "$Id: biggerlib.c,v 3.4 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  biggerlib.c - functions for an even bigger library.
@@ -12,11 +12,12 @@ static const char	RCSid[] = "$Id: biggerlib.c,v 3.3 2003/06/30 19:04:29 greg Exp
 
 #include "calcomp.h"
 
-double  argument();
+double  argument(int);
 static double  l_j0(), l_j1(), l_jn(), l_y0(), l_y1(), l_yn();
 static double  l_erf(), l_erfc();
 
 
+void
 biggerlib()			/* expand the library */
 {
 				/* the Bessel functions */

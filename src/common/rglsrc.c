@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglsrc.c,v 3.4 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: rglsrc.c,v 3.5 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Routines for handling OpenGL light sources
@@ -36,7 +36,7 @@ static struct {
 
 static int	nlights;		/* number of defined lights */
 
-static void	l_flatsrc(), l_sphsrc(), l_source();
+static void	l_flatsrc(int), l_sphsrc(int), l_source(int);
 
 
 void

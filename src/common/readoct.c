@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.19 2003/07/16 01:32:53 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.20 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -17,13 +17,13 @@ static const char	RCSid[] = "$Id: readoct.c,v 2.19 2003/07/16 01:32:53 greg Exp 
 #include  "otypes.h"
 #include  "resolu.h"
 
-static double  ogetflt();
-static long  ogetint();
-static char  *ogetstr();
-static int  nonsurfinset();
+static double  ogetflt(void);
+static long  ogetint(int);
+static char  *ogetstr(char *);
+static int  nonsurfinset(OBJECT *);
 static void  octerror(int  etyp, char  *msg);
 static void  skiptree(void);
-static OCTREE  getfullnode(), gettree();
+static OCTREE  getfullnode(void), gettree(void);
 
 static char  *infn;			/* input file specification */
 static FILE  *infp;			/* input file stream */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.11 2003/07/10 03:47:00 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.12 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Mesh support routines
@@ -611,7 +611,7 @@ FILE	*fp;
 		t2cnt += pp->nj2tris;
 	}
 	fprintf(fp, "Mesh statistics:\n");
-	fprintf(fp, "\t%d materials\n", ms->nmats);
+	fprintf(fp, "\t%ld materials\n", ms->nmats);
 	fprintf(fp, "\t%d patches (%.2f MBytes)\n", ms->npatches,
 			(ms->npatches*sizeof(MESHPATCH) +
 			vcnt*3*sizeof(uint32) +

@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: chanvalue.c,v 3.2 2003/06/07 12:50:20 schorsch Exp $";
+static const char	RCSid[] = "$Id: chanvalue.c,v 3.3 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Dummy definition of chanvalue() for calcomp routines.
  */
 
-#include "standard.h"
+#include "rterror.h"
+#include "calcomp.h"
 
 double
 chanvalue(int n)

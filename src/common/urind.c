@@ -1,11 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urind.c,v 2.3 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: urind.c,v 2.4 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  * Compute pseudo-asyncronous entry point for urand(3)
  */
 
 #include "copyright.h"
+#include "random.h"
 
 #define NBITS		32		/* number of bits in an integer */
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ealloc.c,v 2.4 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: ealloc.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
 #endif
 /*
  *  ealloc.c - memory routines which call quit on error.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: ealloc.c,v 2.4 2003/04/23 00:52:33 greg Exp $"
 #include  <stdio.h>
 #include  <stdlib.h>
 
+#include "rterror.h"
 
 char *
 emalloc(n)			/* return pointer to n uninitialized bytes */
