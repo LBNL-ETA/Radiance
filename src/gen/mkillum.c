@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.22 2004/10/23 18:55:52 schorsch Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.23 2004/10/28 00:50:47 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -61,6 +61,7 @@ int	doneheader = 0;		/* printed header yet? */
 
 int	warnings = 1;		/* print warnings? */
 
+int done_rprocs(struct rtproc *rtp);
 void init(int np);
 void filter(register FILE	*infp, char	*name);
 void xoptions(char	*s, char	*nm);
@@ -170,25 +171,35 @@ killpersist(void)			/* kill persistent rtrace process */
 	fclose(fp);
 }
 
+int
+done_rprocs(struct rtproc *rtp)
+{
+	int	st0, st1 = 0;
+
+	if (rtp->next != NULL) {	/* close last opened first! */
+		st1 = done_rprocs(rtp->next);
+		free((void *)rtp->next);
+		rtp->next = NULL;
+	}
+	st0 = close_process(&rtp->pd);
+	if (st0 < 0)
+		error(WARNING, "unknown return status from rtrace process");
+	else if (st0 > 0)
+		return(st0);
+	return(st1);
+}
+
 void
 quit(int status)			/* exit with status */
 {
-	struct rtproc	*rtp;
 	int	rtstat;
 
 	if (rt0.next != NULL)		/* terminate persistent rtrace */
 		killpersist();
 					/* clean up rtrace process(es) */
-	for (rtp = &rt0; rtp != NULL; rtp = rtp->next) {
-		rtstat = close_process(&rtp->pd);
-		if (status == 0) {
-			if (rtstat < 0)
-				error(WARNING,
-				"unknown return status from rtrace process");
-			else
-				status = rtstat;
-		}
-	}
+	rtstat = done_rprocs(&rt0);
+	if (status == 0)
+		status = rtstat;
 	exit(status);
 }
 
