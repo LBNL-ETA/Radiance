@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 1.9 2003/07/27 22:12:02 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 1.10 2003/08/05 20:40:16 greg Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -352,7 +352,8 @@ put_material()			/* put out current material */
 	indent(0);
 	printf("%s}\n", tabs);
 	if (outtype != O_INV1)
-		printf("%sShapeHints { shapeType %s }\n", tabs,
+		printf("%sShapeHints { shapeType %s faceType UNKNOWN_FACE_TYPE }\n",
+			tabs,
 			c_cmaterial->sided ? "SOLID" : "UNKNOWN_SHAPE_TYPE");
 	indent(0);
 	printf("%s}\n", tabs);
