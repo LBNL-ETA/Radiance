@@ -22,7 +22,7 @@ static const char RCSid[] = "$Id";
 #include  <signal.h>
 #include  <unistd.h>
 #include  <sys/types.h>
-#include  <wait.h>
+#include  <sys/wait.h>
 #include  <X11/Xlib.h>
 #include  <X11/cursorfont.h>
 #include  <X11/Xutil.h>
