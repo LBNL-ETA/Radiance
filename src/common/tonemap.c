@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.14 2003/09/18 20:18:19 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.15 2004/07/22 17:48:52 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -43,6 +43,8 @@ double	gamval;
 		return(NULL);
 
 	tmnew->flags = flags & ~TM_F_UNIMPL;
+	if (tmnew->flags & TM_F_BW)
+		tmnew->flags &= ~TM_F_MESOPIC;
 						/* set monitor transform */
 	if (monpri == NULL || monpri == stdprims || tmnew->flags & TM_F_BW) {
 		tmnew->monpri = stdprims;
@@ -173,9 +175,9 @@ int	len;
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
 	for (i = len; i--; ) {
-		if (tmNeedMatrix(tmTop))		/* get monitor RGB */
+		if (tmNeedMatrix(tmTop)) {		/* get monitor RGB */
 			colortrans(cmon, tmTop->cmat, scan[i]);
-		else {
+		} else {
 			cmon[RED] = tmTop->inpsf*scan[i][RED];
 			cmon[GRN] = tmTop->inpsf*scan[i][GRN];
 			cmon[BLU] = tmTop->inpsf*scan[i][BLU];
