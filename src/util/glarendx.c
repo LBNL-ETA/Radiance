@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.8 2003/06/30 14:59:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.9 2003/11/19 16:21:28 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -310,7 +310,7 @@ struct glare_dir	*gd;
 {
 	register struct glare_src	*gs;
 	FVECT	mydir,testdir[7],vhor;
-	double	r,omega,p[7],sum;
+	double	r,posn,omega,p[7],sum;
 	int	i,n;
  
 	spinvector(mydir, midview.vdir, midview.vup, gd->ang);
@@ -332,8 +332,11 @@ struct glare_dir	*gd;
 		fvsum(testdir[4],testdir[4],midview.vup,-0.866*r);
 		for (i = 0; i < 7; i++) {
 			normalize(testdir[i]);
-			p[i] = pow(posindex(testdir[i],mydir,midview.vup),-2.0);
-			if (p[i] <= FTINY) p[i] = 0.0;
+			posn = posindex(testdir[i],mydir,midview.vup);
+			if (posn <= FTINY)
+				p[i] = 0.0;
+			else
+				p[i] = 1./(posn*posn);
 		}
 		r = 1-gs->dom/2./PI;
 		omega = gs->dom*p[0];
