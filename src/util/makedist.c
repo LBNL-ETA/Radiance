@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: makedist.c,v 2.4 2003/02/22 02:07:30 greg Exp $";
+static const char	RCSid[] = "$Id: makedist.c,v 2.5 2004/03/26 21:36:19 schorsch Exp $";
 #endif
 /*
  *  makedist.c - program to make a source distribution.
@@ -15,21 +15,20 @@ static const char	RCSid[] = "$Id: makedist.c,v 2.4 2003/02/22 02:07:30 greg Exp 
  *		Default axes are (x1,x2,x3) = (x,y,z).
  */
 
-#include  <stdio.h>
-
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
+#include  "rtmath.h"
 #include  "random.h"
-
 #include  "setscan.h"
 
 #ifndef BSD
 #define vfork		fork
 #endif
-
-#define  FTINY		1e-7
-
-#define  PI		3.14159265358979324
 
 #define  atorad(a)	((PI/180.0) * (a))
 
@@ -56,10 +55,21 @@ int  header = 1;			/* print header? */
 
 char  *progname;			/* program name */
 
+static void printargs(int ac, char **av, FILE *fp);
+static void fixaxes(void);
+static int doscan(void);
+static FILE * scanstart(void);
+static int scanend(FILE *fp);
+static void sendsamples(FILE *fp);
+static void writesample(FILE *fp, ANGLE a, ANGLE b);
+static double readsample(FILE *fp);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  i;
 
@@ -208,13 +218,14 @@ badopt:
 
 	fixaxes();
 
-	if (header)
-		if (userformat > 0)
+	if (header) {
+		if (userformat > 0) {
 			printf("Alpha\tBeta\tRadiance\n");
-		else {
+		} else {
 			printargs(argc, argv, stdout);
 			putchar('\n');
 		}
+	}
 
 	if (doscan() == -1)
 		exit(1);
@@ -223,10 +234,12 @@ badopt:
 }
 
 
-printargs(ac, av, fp)		/* print arguments to a file */
-int  ac;
-char  **av;
-FILE  *fp;
+static void
+printargs(		/* print arguments to a file */
+	int  ac,
+	char  **av,
+	FILE  *fp
+)
 {
 	while (ac-- > 0) {
 		fputs(*av++, fp);
@@ -236,9 +249,9 @@ FILE  *fp;
 }
 
 
-fixaxes()				/* make sure axes are OK */
+static void
+fixaxes(void)				/* make sure axes are OK */
 {
-	extern double  normalize(), fdot();
 	double  d;
 	register int  i;
 
@@ -258,7 +271,8 @@ axerr:
 }
 
 
-doscan()				/* do scan for target */
+static int
+doscan(void)				/* do scan for target */
 {
 	FILE  *fopen(), *scanstart();
 	double  readsample();
@@ -276,8 +290,8 @@ doscan()				/* do scan for target */
 }
 
 
-FILE *
-scanstart()			/* open scanner pipeline */
+static FILE *
+scanstart(void)			/* open scanner pipeline */
 {
 	int  status;
 	char  *fgets();
@@ -332,8 +346,10 @@ err:
 }
 
 
-scanend(fp)		/* done with scanner input */
-FILE  *fp;
+static int
+scanend(		/* done with scanner input */
+	FILE  *fp
+)
 {
 	int  status;
 
@@ -346,8 +362,10 @@ FILE  *fp;
 }
 
 
-sendsamples(fp)			/* send our samples to fp */
-FILE  *fp;
+static void
+sendsamples(			/* send our samples to fp */
+	FILE  *fp
+)
 {
 	ANGLE  *a, *b;
 
@@ -357,9 +375,12 @@ FILE  *fp;
 }
 
 
-writesample(fp, a, b)		/* write out sample ray grid */
-FILE  *fp;
-ANGLE  a, b;
+static void
+writesample(		/* write out sample ray grid */
+	FILE	*fp,
+	ANGLE	a,
+	ANGLE	b
+)
 {
 	double  sin(), cos();
 	float  sp[6];
@@ -395,9 +416,10 @@ ANGLE  a, b;
 }
 
 
-double
-readsample(fp)			/* read in sample ray grid */
-FILE  *fp;
+static double
+readsample(			/* read in sample ray grid */
+	FILE  *fp
+)
 {
 	float  col[3];
 	double  sum;

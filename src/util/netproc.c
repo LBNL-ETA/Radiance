@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.14 2003/11/11 16:24:06 greg Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.15 2004/03/26 21:36:19 schorsch Exp $";
 #endif
 /*
  * Parallel network process handling routines
@@ -11,7 +11,9 @@ static const char	RCSid[] = "$Id: netproc.c,v 2.14 2003/11/11 16:24:06 greg Exp 
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
+#include "rtmisc.h"
 #include "selcall.h"
 #include "netproc.h"
 #include "paths.h"
@@ -30,11 +32,18 @@ static int	maxfd;		/* maximum assigned descriptor */
 
 extern char	*remsh;		/* externally defined remote shell program */
 
+static int readerrs(int	fd);
+static void wait4end(void);
+static int finishjob(PSERVER	*ps, int	pn, int	status);
 
-PSERVER *
-addpserver(host, dir, usr, np)		/* add a new process server */
-char	*host, *dir, *usr;
-int	np;
+
+extern PSERVER *
+addpserver(		/* add a new process server */
+	char	*host,
+	char	*dir,
+	char	*usr,
+	int	np
+)
 {
 	register PSERVER	*ps;
 					/* allocate the struct */
@@ -103,8 +112,10 @@ int	np;
 }
 
 
-delpserver(ps)				/* delete a process server */
-PSERVER	*ps;
+extern void
+delpserver(				/* delete a process server */
+	PSERVER	*ps
+)
 {
 	PSERVER	pstart;
 	register PSERVER	*psp;
@@ -127,9 +138,10 @@ PSERVER	*ps;
 }
 
 
-PSERVER *
-findjob(pnp)			/* find out where process is running */
-register int	*pnp;	/* modified */
+extern PSERVER *
+findjob(			/* find out where process is running */
+	register int	*pnp	/* modified */
+)
 {
 	register PSERVER	*ps;
 	register int	i;
@@ -144,11 +156,12 @@ register int	*pnp;	/* modified */
 }
 
 
-int
-startjob(ps, command, compf)	/* start a job on a process server */
-register PSERVER	*ps;
-char	*command;
-int	(*compf)();
+extern int
+startjob(	/* start a job on a process server */
+	register PSERVER	*ps,
+	char	*command,
+	pscompfunc *compf
+)
 {
 	char	udirt[PATH_MAX];
 	char	*av[16];
@@ -226,8 +239,9 @@ int	(*compf)();
 
 
 static int
-readerrs(fd)			/* read error output from fd */
-int	fd;
+readerrs(			/* read error output from fd */
+	int	fd
+)
 {
 	char	errbuf[BUFSIZ];
 	int	nr;
@@ -257,8 +271,8 @@ int	fd;
 }
 
 
-static
-wait4end()			/* read error streams until someone is done */
+static void
+wait4end(void)			/* read error streams until someone is done */
 {
 	fd_set	readfds, excepfds;
 	register int	i;
@@ -280,10 +294,11 @@ wait4end()			/* read error streams until someone is done */
 
 
 static int
-finishjob(ps, pn, status)	/* clean up finished process */
-PSERVER	*ps;
-int	pn;
-int	status;
+finishjob(	/* clean up finished process */
+	PSERVER	*ps,
+	int	pn,
+	int	status
+)
 {
 	register NETPROC	*pp;
 
@@ -304,10 +319,11 @@ int	status;
 }
 
 
-int
-wait4job(ps, pid)		/* wait for process to finish */
-PSERVER	*ps;
-int	pid;
+extern int
+wait4job(		/* wait for process to finish */
+	PSERVER	*ps,
+	int	pid
+)
 {
 	int	status, psn, psn2;
 	PSERVER	*ps2;

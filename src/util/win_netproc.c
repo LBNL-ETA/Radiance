@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_netproc.c,v 2.1 2003/10/27 10:32:06 schorsch Exp $";
+static const char RCSid[] = "$Id: win_netproc.c,v 2.2 2004/03/26 21:36:20 schorsch Exp $";
 #endif
 
 /*
@@ -20,12 +20,6 @@ static const char RCSid[] = "$Id: win_netproc.c,v 2.1 2003/10/27 10:32:06 schors
 #include "netproc.h"
 #include "paths.h"
 
-PSERVER* addpserver(char*, char*, char*, int);
-void delpserver();
-int startjob(PSERVER*, char*, int(*)());
-int wait4job(PSERVER*, int);
-
-//static fd_set errdesc;
 static int maxfd;
 static char	ourdir[PATH_MAX];
 static char	ourhost[64];
@@ -117,7 +111,12 @@ kill(pid_t pid, int sig)
 	return 0;
 }
 
-int startjob(PSERVER* pPS, char* command, int (*compf)()) {
+int startjob(
+	PSERVER* pPS,
+	char* command,
+	pscompfunc *compf
+)
+{
 	return 0;
 }
 

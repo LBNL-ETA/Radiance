@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.45 2004/02/15 06:21:01 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.46 2004/03/26 21:36:20 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -19,12 +19,13 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.45 2004/02/15 06:21:01 greg Exp
 #include <ctype.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <signal.h>
 
-/*#include "standard.h"*/
 #include "platform.h"
 #include "paths.h"
 #include "rtio.h"
 #include "rterror.h"
+#include "rtmisc.h"
 #include "view.h"
 #include "vars.h"
 #include "netproc.h"
@@ -140,7 +141,7 @@ static int pruncom(char *com, char *ppins, int maxcopies);
 static void bwait(int ncoms);
 static int bruncom(char *com, int fout, int (*rf)());
 static int serverdown(void);
-static int donecom(PSERVER *ps, int pn, int status);
+static pscompfunc donecom;
 static int countviews(void);
 static int dofilt(int frame, int rvr);
 static void archive(void);
@@ -157,9 +158,11 @@ static void setdefaults(void);
 static void putastat(void);
 
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	explicate = 0;
 	int	i;
@@ -222,9 +225,11 @@ char	*argv[];
 		quit(1);
 	}
 	quit(0);
+	return 0; /* pro forma return */
 userr:
 	fprintf(stderr, "Usage: %s [-s][-n][-w][-e] anim_file\n", progname);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
@@ -491,7 +496,7 @@ getradfile(char *rfargs)		/* run rad and get needed variables */
 	char	combuf[256];
 	register int	i;
 	register char	*cp;
-	char	*pippt;
+	char	*pippt = NULL;
 					/* create rad command */
 	sprintf(rendopt, " @%s/render.opt", vval(DIRECTORY));
 	sprintf(combuf,
@@ -655,7 +660,6 @@ renderframes(int nframes)		/* render next nframes frames */
 static void
 filterframes(void)				/* catch up with filtering */
 {
-	VIEW	*vp;
 	register int	i;
 
 	if (astat.tnext < astat.fnext)	/* other work to do first */
@@ -1199,9 +1203,9 @@ findpslot(int pid)			/* find or allocate a process slot */
 
 static int
 donecom(		/* clean up after finished process */
-PSERVER	*ps,
-int	pn,
-int	status
+	PSERVER	*ps,
+	int	pn,
+	int	status
 )
 {
 	register NETPROC	*pp;

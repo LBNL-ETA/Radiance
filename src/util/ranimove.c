@@ -62,11 +62,21 @@ int		haveprio = 0;	/* high-level saliency specified */
 int		gargc;		/* global argc for printargs */
 char		**gargv;	/* global argv for printargs */
 
+static void setdefaults(void);
+static void setmove(struct ObjMove	*om, char	*ms);
+static void setrendparams(char		*optf, char		*qval);
+static void getradfile(char	*rfargs);
+static void animate(void);
+static int countviews(void); /* XXX duplicated function */
+static char * getobjname(struct ObjMove	*om);
+static char * getxf(struct ObjMove	*om, int	n);
+
 
 int
-main(argc, argv)
-int	argc;
-char	*argv[];
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	int	explicate = 0;
 	char	*cfname;
@@ -153,6 +163,7 @@ userr:
 "Usage: %s [-n nprocs][-f beg,end][-t sec][-d jnd][-s][-w][-e] anim_file\n",
 			progname);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
@@ -176,8 +187,8 @@ register char  *s;
 }
 
 
-void
-setdefaults()			/* set default values */
+static void
+setdefaults(void)			/* set default values */
 {
 	int	nviews;
 	int	decades;
@@ -253,10 +264,11 @@ setdefaults()			/* set default values */
 }
 
 
-void
-setmove(om, ms)			/* assign a move object from spec. */
-struct ObjMove	*om;
-char	*ms;
+static void
+setmove(			/* assign a move object from spec. */
+	struct ObjMove	*om,
+	char	*ms
+)
 {
 	char	parname[128];
 	char	*cp;
@@ -313,10 +325,11 @@ badspec:
 }
 
 
-void
-setrendparams(optf, qval)	/* set global rendering parameters */
-char		*optf;
-char		*qval;
+static void
+setrendparams(	/* set global rendering parameters */
+	char		*optf,
+	char		*qval
+)
 {
 	char	*argv[1024];
 	char	**av = argv;
@@ -360,15 +373,16 @@ char		*qval;
 }
 
 
-void
-getradfile(rfargs)		/* run rad and get needed variables */
-char	*rfargs;
+static void
+getradfile(		/* run rad and get needed variables */
+	char	*rfargs
+)
 {
 	static short	mvar[] = {OCONV,OCTREEF,RESOLUTION,EXPOSURE,-1};
 	char	combuf[256];
 	register int	i;
 	register char	*cp;
-	char	*pippt;
+	char	*pippt = NULL;
 					/* create rad command */
 	strcpy(lorendoptf, "ranim0.opt");
 	sprintf(combuf,
@@ -411,8 +425,8 @@ char	*rfargs;
 }
 
 
-void
-animate()			/* run through animation */
+static void
+animate(void)			/* run through animation */
 {
 	int	rpass;
 
@@ -443,9 +457,10 @@ animate()			/* run through animation */
 }
 
 
-VIEW *
-getview(n)			/* get view number n */
-int	n;
+extern VIEW *
+getview(			/* get view number n */
+	int	n
+)
 {
 	static FILE	*viewfp = NULL;		/* view file pointer */
 	static int	viewnum = 0;		/* current view number */
@@ -493,8 +508,8 @@ int	n;
 }
 
 
-int
-countviews()			/* count views in view file */
+static int
+countviews(void)			/* count views in view file */
 {
 	int	n;
 
@@ -506,9 +521,10 @@ countviews()			/* count views in view file */
 }
 
 
-char *
-getexp(n)			/* get exposure for nth frame */
-int	n;
+extern char *
+getexp(			/* get exposure for nth frame */
+	int	n
+)
 {
 	extern char	*fskip();
 	static char	expval[32];
@@ -560,12 +576,14 @@ formerr:
 	sprintf(errmsg, "%s: exposure format error on line %d",
 			vval(EXPOSURE), curfrm);
 	error(USER, errmsg);
+	return NULL; /* pro forma return */
 }
 
 
-double
-expspec_val(s)			/* get exposure value from spec. */
-char	*s;
+extern double
+expspec_val(			/* get exposure value from spec. */
+	char	*s
+)
 {
 	double	expval;
 
@@ -579,9 +597,10 @@ char	*s;
 }
 
 
-char *
-getoctspec(n)			/* get octree for the given frame */
-int	n;
+extern char *
+getoctspec(			/* get octree for the given frame */
+	int	n
+)
 {
 	static char	combuf[1024];
 	int		cfm = 0;
@@ -633,9 +652,10 @@ int	n;
 }
 
 
-char *
-getobjname(om)			/* get fully qualified object name */
-register struct ObjMove	*om;
+static char *
+getobjname(			/* get fully qualified object name */
+	register struct ObjMove	*om
+)
 {
 	static char	objName[512];
 	register char	*cp = objName;
@@ -651,10 +671,11 @@ register struct ObjMove	*om;
 }
 
 
-char *
-getxf(om, n)			/* get total transform for object */
-register struct ObjMove	*om;
-int	n;
+static char *
+getxf(			/* get total transform for object */
+	register struct ObjMove	*om,
+	int	n
+)
 {
 	static char	xfsbuf[4096];
 	char		*xfp;
@@ -773,9 +794,10 @@ int	n;
 }
 
 
-int
-getmove(obj)				/* find matching move object */
-OBJECT	obj;
+extern int
+getmove(				/* find matching move object */
+	OBJECT	obj
+)
 {
 	static int	lasti;
 	static OBJECT	lasto = OVOID;
@@ -806,9 +828,10 @@ OBJECT	obj;
 }
 
 
-double
-obj_prio(obj)			/* return priority for object */
-OBJECT	obj;
+extern double
+obj_prio(			/* return priority for object */
+	OBJECT	obj
+)
 {
 	int	moi;
 	
@@ -818,8 +841,8 @@ OBJECT	obj;
 }
 
 
-double
-getTime()			/* get current time (CPU or real) */
+extern double
+getTime(void)			/* get current time (CPU or real) */
 {
 	struct timeval	time_now;
 					/* return CPU time if one process */

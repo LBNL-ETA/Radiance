@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.75 2004/01/01 19:31:46 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.76 2004/03/26 21:36:19 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -22,6 +22,8 @@ static const char	RCSid[] = "$Id: rad.c,v 2.75 2004/01/01 19:31:46 greg Exp $";
 #else
   #define DELCMD "rm -f"
   #define RENAMECMD "mv"
+  #include <sys/types.h>
+  #include <sys/wait.h>
 #endif
 
 				/* variables (alphabetical by name) */
@@ -121,10 +123,46 @@ char	radname[PATH_MAX];	/* root Radiance file name */
 
 #define	inchild()	(children_running < 0)
 
+static void rootname(char	*rn, char	*fn);
+static time_t checklast(char	*fnames);
+static char * newfname(char	*orig, int	pred);
+static void checkfiles(void);
+static void getoctcube(double	org[3], double	*sizp);
+static void setdefaults(void);
+static void oconv(void);
+static char * addarg(char	*op, char	*arg);
+static void oconvopts(char	*oo);
+static void mkillumopts(char	*mo);
+static void checkambfile(void);
+static double ambval(void);
+static void renderopts(char	*op, char	*po);
+static void lowqopts(char	*op, char	*po);
+static void medqopts(char	*op, char	*po);
+static void hiqopts(char	*op, char	*po);
+static void xferopts(char	*ro);
+static void pfiltopts(char	*po);
+static int matchword(char	*s1, char	*s2);
+static char * specview(char	*vs);
+static char * getview(int	n, char	*vn);
+static int myprintview(char	*vopts, FILE	*fp);
+static void rvu(char	*opts, char	*po);
+static void rpict(char	*opts, char	*po);
+static int touch(char	*fn);
+static int runcom(char	*cs);
+static int rmfile(char	*fn);
+static int mvfile(char	*fold, char	*fnew);
+static int next_process(void);
+static void wait_process(int	all);
+static void finish_process(void);
+static void badvalue(int	vc);
+static void syserr(char	*s);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+
+int
+main(
+	int	argc,
+	char	*argv[]
+)
 {
 	char	ropts[512];
 	char	popts[64];
@@ -209,11 +247,15 @@ userr:
 "Usage: %s [-w][-s][-n|-N npr][-t][-e][-V][-v view][-o dev] rfile [VAR=value ..]\n",
 			progname);
 	quit(1);
+	return 1; /* pro forma return */
 }
 
 
-rootname(rn, fn)		/* remove tail from end of fn */
-register char	*rn, *fn;
+static void
+rootname(		/* remove tail from end of fn */
+	register char	*rn,
+	register char	*fn
+)
 {
 	char	*tp, *dp;
 
@@ -227,9 +269,10 @@ register char	*rn, *fn;
 }
 
 
-time_t
-checklast(fnames)			/* check files and find most recent */
-register char	*fnames;
+static time_t
+checklast(			/* check files and find most recent */
+	register char	*fnames
+)
 {
 	char	thisfile[PATH_MAX];
 	time_t	thisdate, lastdate = 0;
@@ -249,10 +292,11 @@ register char	*fnames;
 }
 
 
-char *
-newfname(orig, pred)		/* create modified file name */
-char	*orig;
-int	pred;
+static char *
+newfname(		/* create modified file name */
+	char	*orig,
+	int	pred
+)
 {
 	register char	*cp;
 	register int	n;
@@ -274,7 +318,8 @@ int	pred;
 }
 
 
-checkfiles()			/* check for existence and modified times */
+static void
+checkfiles(void)			/* check for existence and modified times */
 {
 	time_t	objdate;
 
@@ -309,8 +354,11 @@ checkfiles()			/* check for existence and modified times */
 }	
 
 
-getoctcube(org, sizp)		/* get octree bounding cube */
-double	org[3], *sizp;
+static void
+getoctcube(		/* get octree bounding cube */
+	double	org[3],
+	double	*sizp
+)
 {
 	static double	oorg[3], osiz = 0.;
 	double	min[3], max[3];
@@ -359,7 +407,8 @@ double	org[3], *sizp;
 }
 
 
-setdefaults()			/* set default values for unassigned var's */
+static void
+setdefaults(void)			/* set default values for unassigned var's */
 {
 	double	org[3], lim[3], size;
 	char	buf[128];
@@ -416,7 +465,8 @@ setdefaults()			/* set default values for unassigned var's */
 }
 
 
-oconv()				/* run oconv and mkillum if necessary */
+static void
+oconv(void)				/* run oconv and mkillum if necessary */
 {
 	static char	illumtmp[] = "ilXXXXXX";
 	char	combuf[PATH_MAX], ocopts[64], mkopts[64];
@@ -518,9 +568,11 @@ oconv()				/* run oconv and mkillum if necessary */
 }
 
 
-char *
-addarg(op, arg)				/* add argument and advance pointer */
-register char	*op, *arg;
+static char *
+addarg(				/* add argument and advance pointer */
+register char	*op,
+register char	*arg
+)
 {
 	*op = ' ';
 	while ( (*++op = *arg++) )
@@ -529,8 +581,10 @@ register char	*op, *arg;
 }
 
 
-oconvopts(oo)				/* get oconv options */
-register char	*oo;
+static void
+oconvopts(				/* get oconv options */
+	register char	*oo
+)
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
 
@@ -540,8 +594,10 @@ register char	*oo;
 }
 
 
-mkillumopts(mo)				/* get mkillum options */
-register char	*mo;
+static void
+mkillumopts(				/* get mkillum options */
+	register char	*mo
+)
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
 
@@ -551,7 +607,8 @@ register char	*mo;
 }
 
 
-checkambfile()			/* check date on ambient file */
+static void
+checkambfile(void)			/* check date on ambient file */
 {
 	time_t	afdate;
 
@@ -568,8 +625,8 @@ checkambfile()			/* check date on ambient file */
 }
 
 
-double
-ambval()				/* compute ambient value */
+static double
+ambval(void)				/* compute ambient value */
 {
 	if (vdef(EXPOSURE)) {
 		if (vval(EXPOSURE)[0] == '+' || vval(EXPOSURE)[0] == '-')
@@ -581,11 +638,15 @@ ambval()				/* compute ambient value */
 	if (vlet(ZONE) == 'I')
 		return(.01);
 	badvalue(ZONE);
+	return 0; /* pro forma return */
 }
 
 
-renderopts(op, po)			/* set rendering options */
-char	*op, *po;
+static void
+renderopts(			/* set rendering options */
+	char	*op,
+	char	*po
+)
 {
 	switch(vscale(QUALITY)) {
 	case LOW:
@@ -601,9 +662,11 @@ char	*op, *po;
 }
 
 
-lowqopts(op, po)			/* low quality rendering options */
-register char	*op;
-char	*po;
+static void
+lowqopts(			/* low quality rendering options */
+	register char	*op,
+	char	*po
+)
 {
 	double	d, org[3], siz[3];
 
@@ -669,9 +732,11 @@ char	*po;
 }
 
 
-medqopts(op, po)			/* medium quality rendering options */
-register char	*op;
-char	*po;
+static void
+medqopts(			/* medium quality rendering options */
+	register char	*op,
+	char	*po
+)
 {
 	double	d, org[3], siz[3], asz;
 
@@ -747,9 +812,11 @@ char	*po;
 }
 
 
-hiqopts(op, po)				/* high quality rendering options */
-register char	*op;
-char	*po;
+static void
+hiqopts(				/* high quality rendering options */
+	register char	*op,
+	char	*po
+)
 {
 	double	d, org[3], siz[3], asz;
 
@@ -823,8 +890,10 @@ char	*po;
 }
 
 
-xferopts(ro)				/* transfer options if indicated */
-char	*ro;
+static void
+xferopts(				/* transfer options if indicated */
+	char	*ro
+)
 {
 	int	fd, n;
 	register char	*cp;
@@ -854,8 +923,10 @@ char	*ro;
 }
 
 
-pfiltopts(po)				/* get pfilt options */
-register char	*po;
+static void
+pfiltopts(				/* get pfilt options */
+	register char	*po
+)
 {
 	*po = '\0';
 	if (vdef(EXPOSURE)) {
@@ -875,8 +946,11 @@ register char	*po;
 }
 
 
-matchword(s1, s2)			/* match white-delimited words */
-register char	*s1, *s2;
+static int
+matchword(			/* match white-delimited words */
+	register char	*s1,
+	register char	*s2
+)
 {
 	while (isspace(*s1)) s1++;
 	while (isspace(*s2)) s2++;
@@ -887,9 +961,10 @@ register char	*s1, *s2;
 }
 
 
-char *
-specview(vs)				/* get proper view spec from vs */
-register char	*vs;
+static char *
+specview(				/* get proper view spec from vs */
+	register char	*vs
+)
 {
 	static char	vup[7][12] = {"-vu 0 0 -1","-vu 0 -1 0","-vu -1 0 0",
 			"-vu 0 0 1", "-vu 1 0 0","-vu 0 1 0","-vu 0 0 1"};
@@ -1011,10 +1086,11 @@ register char	*vs;
 }
 
 
-char *
-getview(n, vn)				/* get view n, or NULL if none */
-int	n;
-char	*vn;		/* returned view name */
+static char *
+getview(				/* get view n, or NULL if none */
+	int	n,
+	char	*vn		/* returned view name */
+)
 {
 	register char	*mv;
 
@@ -1052,15 +1128,15 @@ char	*vn;		/* returned view name */
 }
 
 
-int
-myprintview(vopts, fp)			/* print out selected view */
-register char	*vopts;
-FILE	*fp;
+static int
+myprintview(			/* print out selected view */
+	register char	*vopts,
+	FILE	*fp
+)
 {
 	VIEW	vwr;
 	char	buf[128];
 	register char	*cp;
-again:
 	if (vopts == NULL)
 		return(-1);
 #ifdef _WIN32
@@ -1083,8 +1159,11 @@ again:
 }
 
 
-rvu(opts, po)				/* run rvu with first view */
-char	*opts, *po;
+static void
+rvu(				/* run rvu with first view */
+	char	*opts,
+	char	*po
+)
 {
 	char	*vw;
 	char	combuf[PATH_MAX];
@@ -1106,8 +1185,11 @@ char	*opts, *po;
 }
 
 
-rpict(opts, po)				/* run rpict and pfilt for each view */
-char	*opts, *po;
+static void
+rpict(				/* run rpict and pfilt for each view */
+	char	*opts,
+	char	*po
+)
 {
 	char	combuf[PATH_MAX];
 	char	rawfile[PATH_MAX], picfile[PATH_MAX];
@@ -1284,8 +1366,10 @@ rperror:
 }
 
 
-touch(fn)			/* update a file */
-char	*fn;
+static int
+touch(			/* update a file */
+	char	*fn
+)
 {
 	if (!silent)
 		printf("\ttouch %s\n", fn);
@@ -1300,8 +1384,10 @@ char	*fn;
 }
 
 
-runcom(cs)			/* run command */
-char	*cs;
+static int
+runcom(			/* run command */
+	char	*cs
+)
 {
 	if (!silent)		/* echo it */
 		printf("\t%s\n", cs);
@@ -1312,8 +1398,10 @@ char	*cs;
 }
 
 
-rmfile(fn)			/* remove a file */
-char	*fn;
+static int
+rmfile(			/* remove a file */
+	char	*fn
+)
 {
 	if (!silent)
 		printf("\t%s %s\n", DELCMD, fn);
@@ -1323,8 +1411,11 @@ char	*fn;
 }
 
 
-mvfile(fold, fnew)		/* move a file */
-char	*fold, *fnew;
+static int
+mvfile(		/* move a file */
+	char	*fold,
+	char	*fnew
+)
 {
 	if (!silent)
 		printf("\t%s %s %s\n", RENAMECMD, fold, fnew);
@@ -1335,8 +1426,8 @@ char	*fold, *fnew;
 
 
 #ifdef RHAS_FORK_EXEC
-int
-next_process()			/* fork the next process (max. nprocs) */
+static int
+next_process(void)			/* fork the next process (max. nprocs) */
 {
 	int	child_pid;
 
@@ -1363,8 +1454,10 @@ next_process()			/* fork the next process (max. nprocs) */
 	return(0);
 }
 
-wait_process(all)			/* wait for process(es) to finish */
-int	all;
+static void
+wait_process(			/* wait for process(es) to finish */
+	int	all
+)
 {
 	int	ourstatus = 0;
 	int	pid, status;
@@ -1391,11 +1484,12 @@ int	all;
 		quit(ourstatus);	/* bad status from child */
 }
 #else	/* ! RHAS_FORK_EXEC */
-int
-next_process()
+static int
+next_process(void)
 {
 	return(0);			/* cannot start new process */
 }
+static void
 wait_process(all)
 int	all;
 {
@@ -1409,7 +1503,8 @@ int pid, sig;
 }
 #endif	/* ! RHAS_FORK_EXEC */
 
-finish_process()			/* exit a child process */
+static void
+finish_process(void)			/* exit a child process */
 {
 	if (!inchild())
 		return;			/* in parent -- noop */
@@ -1436,8 +1531,10 @@ char	*vname, *value;
 #endif
 
 
-badvalue(vc)			/* report bad variable value and exit */
-int	vc;
+static void
+badvalue(			/* report bad variable value and exit */
+	int	vc
+)
 {
 	fprintf(stderr, "%s: bad value for variable '%s'\n",
 			progname, vnam(vc));
@@ -1445,8 +1542,10 @@ int	vc;
 }
 
 
-syserr(s)			/* report a system error and exit */
-char	*s;
+static void
+syserr(			/* report a system error and exit */
+	char	*s
+)
 {
 	perror(s);
 	quit(1);

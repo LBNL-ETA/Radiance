@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.5 2003/07/27 22:12:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.6 2004/03/26 21:36:20 schorsch Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -21,9 +21,13 @@ static const char	RCSid[] = "$Id: ranimove2.c,v 3.5 2003/07/27 22:12:04 schorsch
 
 int	cerrzero;		/* is cerrmap all zeroes? */
 
+static int ppri_cmp(const void *pp1, const void *pp2);
+static int ray_refine(int	n);
+static long refine_rays(long	nrays);
 
-int
-refine_first()			/* initial refinement pass */
+
+extern int
+refine_first(void)			/* initial refinement pass */
 {
 	int	*esamp = (int *)zprev;	/* OK to reuse */
 	int	hl_erri = errori(HL_ERR);
@@ -117,9 +121,15 @@ struct ConspSum {
 static double	pixel_deg;	/* base pixel frequency */
 static int	fhsiz, fvsiz;	/* foveal subimage size */
 
+static void clr_consp(struct ConspSum *cs);
+static void sum_consp(struct ConspSum *cdest, struct ConspSum *cs);
+static void est_consp(int x0, int y0, int x1, int y1, struct ConspSum *cs);
+static void subconspicuity(int x0, int y0, int x1, int y1, struct ConspSum *cs);
+
 static void
-clr_consp(cs)			/* initialize a conspicuity sum */
-register struct ConspSum	*cs;
+clr_consp(			/* initialize a conspicuity sum */
+	register struct ConspSum	*cs
+)
 {
 	if (cs == NULL)
 		return;
@@ -132,8 +142,10 @@ register struct ConspSum	*cs;
 }
 
 static void
-sum_consp(cdest, cs)		/* sum in conspicuity result */
-register struct ConspSum	*cdest, *cs;
+sum_consp(		/* sum in conspicuity result */
+	register struct ConspSum	*cdest,
+	register struct ConspSum	*cs
+)
 {
 	if ((cdest == NULL) | (cs == NULL))
 		return;
@@ -148,9 +160,13 @@ register struct ConspSum	*cdest, *cs;
 }
 
 static void
-est_consp(x0,y0,x1,y1, cs)	/* estimate error conspicuity & update */
-int	x0, y0, x1, y1;
-register struct ConspSum	*cs;
+est_consp(	/* estimate error conspicuity & update */
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1,
+	register struct ConspSum	*cs
+)
 {
 	double	rad2, mtn2, cpd, vm, vr, csf, eest;
 						/* do we care? */
@@ -228,9 +244,13 @@ register struct ConspSum	*cs;
 }
 
 static void
-subconspicuity(x0,y0,x1,y1, cs)	/* compute subportion of conspicuity */
-int	x0, y0, x1, y1;
-struct ConspSum	*cs;
+subconspicuity(	/* compute subportion of conspicuity */
+	int	x0,
+	int	y0,
+	int	x1,
+	int	y1,
+	struct ConspSum	*cs
+)
 {
 	struct ConspSum	mysum;
 	int	i;
@@ -289,8 +309,8 @@ struct ConspSum	*cs;
 	sum_consp(cs, &mysum);
 }
 
-void
-conspicuity()			/* compute conspicuous error map */
+extern void
+conspicuity(void)			/* compute conspicuous error map */
 {
 	int	fhres, fvres;
 	int	fx, fy;
@@ -330,8 +350,10 @@ static struct AmbSum {
 
 
 static int
-ppri_cmp(pp1, pp2)		/* pixel priority comparison */
-const void *pp1, *pp2;
+ppri_cmp(		/* pixel priority comparison */
+	const void *pp1,
+	const void *pp2
+)
 {
 	double	se1 = cerrmap[*(const int *)pp1];
 	double	se2 = cerrmap[*(const int *)pp2];
@@ -351,12 +373,11 @@ const void *pp1, *pp2;
 
 
 static int
-ray_refine(n)			/* refine the given pixel by tracing a ray */
-register int	n;
+ray_refine(			/* refine the given pixel by tracing a ray */
+	register int	n
+)
 {
 	RAY	ir;
-	int	neigh[NSAMPOK];
-	int	nc;
 	COLOR	ctmp;
 	int	i;
 
@@ -419,8 +440,9 @@ register int	n;
 
 
 static long
-refine_rays(nrays)		/* compute refinement rays */
-long	nrays;
+refine_rays(		/* compute refinement rays */
+	long	nrays
+)
 {
 	int	*pord;
 	int	ntodo;
@@ -463,9 +485,10 @@ long	nrays;
 }
 
 
-int
-refine_frame(pass)		/* refine current frame */
-int	pass;
+extern int
+refine_frame(		/* refine current frame */
+	int	pass
+)
 {
 	static double	rtime_used = 0;
 	static long	ray_cnt = 0;
@@ -554,7 +577,7 @@ if (pass == 1) {
 					/* compute refinement rays */
 	if (!silent) {
 		printf("\tRefinement pass %d...",
-				pass+1, rays_todo);
+				pass+1); /*, rays_todo); */
 		fflush(stdout);
 	}
 	if (asump != NULL)		/* flag low-quality samples */
@@ -564,7 +587,7 @@ if (pass == 1) {
 					/* trace those rays */
 	nr = refine_rays(rays_todo);
 	if (!silent)
-		printf("traced %d HQ rays\n", nr);
+		printf("traced %ld HQ rays\n", nr);
 	if (nr <= 0)
 		return(0);
 					/* update timing stats */

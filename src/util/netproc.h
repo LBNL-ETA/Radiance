@@ -1,4 +1,4 @@
-/* RCSid $Id: netproc.h,v 2.7 2003/10/27 10:32:06 schorsch Exp $ */
+/* RCSid $Id: netproc.h,v 2.8 2004/03/26 21:36:19 schorsch Exp $ */
 /*
  * Header file for network processing routines
  */
@@ -32,9 +32,12 @@ typedef struct pserver {
 extern PSERVER	*pslist;	/* global process server list */
 
 extern PSERVER	*addpserver(char *host, char *dir, char *usr, int np);
+extern void delpserver(PSERVER	*ps);
 extern PSERVER  *findjob(int *pnp);
+typedef int pscompfunc(PSERVER *ps, int pn, int status);
+extern int startjob(PSERVER	*ps, char	*command, pscompfunc *compf);
+extern int wait4job(PSERVER	*ps, int	pid);
 
-extern char	*myhostname(void);
 
 #define LHOSTNAME	"localhost"	/* accepted name for local host */
 

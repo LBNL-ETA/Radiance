@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.7 2003/10/21 19:19:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.8 2004/03/26 21:36:20 schorsch Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: ranimove1.c,v 3.7 2003/10/21 19:19:29 schorsch
 #include "platform.h"
 #include "ranimove.h"
 #include "otypes.h"
+#include "source.h"
 #include "random.h"
 
 double		acctab[256];	/* accuracy value table */
@@ -46,10 +47,18 @@ double		frm_stop;	/* when to stop rendering this frame */
 double		hlsmax;		/* maximum high-level saliency this frame */
 
 
-void
-write_map(mp, fn)		/* write out float map (debugging) */
-float	*mp;
-char	*fn;
+static void next_frame(void);
+static int sample_here(int	x, int	y);
+static int offset_cmp(const void	*p1, const void	*p2);
+static void setmotion(int	n, FVECT	wpos);
+static void init_frame_sample(void);
+
+
+extern void
+write_map(		/* write out float map (debugging) */
+	float	*mp,
+	char	*fn
+)
 {
 	FILE	*fp = fopen(fn, "w");
 	COLOR	scanbuf[2048];
@@ -73,7 +82,7 @@ char	*fn;
 
 
 static void
-next_frame()			/* prepare next frame buffer */
+next_frame(void)			/* prepare next frame buffer */
 {
 	VIEW	*fv;
 	char	*err;
@@ -155,8 +164,10 @@ next_frame()			/* prepare next frame buffer */
 
 
 static int
-sample_here(x, y)		/* 4x4 quincunx sample at this pixel? */
-register int	x, y;
+sample_here(		/* 4x4 quincunx sample at this pixel? */
+	register int	x,
+	register int	y
+)
 {
 	if (y & 0x1)		/* every other row has samples */
 		return(0);
@@ -166,11 +177,13 @@ register int	x, y;
 }
 
 
-void
-sample_pos(hv, x, y, sn)	/* compute jittered sample position */
-double	hv[2];
-int	x, y;
-int	sn;
+extern void
+sample_pos(	/* compute jittered sample position */
+	double	hv[2],
+	int	x,
+	int	y,
+	int	sn
+)
 {
 	int	hl[2];
 
@@ -181,9 +194,11 @@ int	sn;
 }
 
 
-double
-sample_wt(xo, yo)		/* compute interpolant sample weight */
-int	xo, yo;
+extern double
+sample_wt(		/* compute interpolant sample weight */
+	int	xo,
+	int yo
+)
 {
 	static double	etab[400];
 	/* we can't use the name rad2 here, for some reason Visual C
@@ -204,18 +219,22 @@ int	xo, yo;
 
 
 static int
-offset_cmp(p1, p2)		/* compare offset distances */
-const void	*p1, *p2;
+offset_cmp(		/* compare offset distances */
+	const void	*p1,
+	const void	*p2
+)
 {
 	return(*(const int *)p1 - *(const int *)p2);
 }
 
 
-int
-getclosest(iarr, nc, x, y)	/* get nc closest neighbors on same object */
-int	*iarr;
-int	nc;
-int	x, y;
+extern int
+getclosest(	/* get nc closest neighbors on same object */
+	int	*iarr,
+	int	nc,
+	int	x,
+	int	y
+)
 {
 #define	NSCHECK		((2*SAMPDIST+1)*(2*SAMPDIST+1))
 	static int	hro, vro;
@@ -285,13 +304,12 @@ int	x, y;
 
 
 static void
-setmotion(n, wpos)		/* compute motion vector for this pixel */
-register int	n;
-FVECT	wpos;
+setmotion(		/* compute motion vector for this pixel */
+		register int	n,
+		FVECT	wpos
+)
 {
 	FVECT	ovp;
-	MAT4	xfm;
-	double	d;
 	int	moi;
 	int	xp, yp;
 					/* ID object and update maximum HLS */
@@ -322,7 +340,7 @@ FVECT	wpos;
 
 
 static void
-init_frame_sample()		/* sample our initial frame */
+init_frame_sample(void)		/* sample our initial frame */
 {
 	RAY	ir;
 	int	x, y;
@@ -424,10 +442,11 @@ init_frame_sample()		/* sample our initial frame */
 }
 
 
-int
-getambcolor(clr, obj)		/* get ambient color for object if we can */
-COLOR	clr;
-int	obj;
+extern int
+getambcolor(		/* get ambient color for object if we can */
+		COLOR	clr,
+		int	obj
+)
 {
 	register OBJREC	*op;
 
@@ -494,10 +513,13 @@ int	obj;
 }
 
 
-double
-estimaterr(cs, cs2, ns, ns0)	/* estimate relative error from samples */
-COLOR	cs, cs2;
-int	ns;
+extern double
+estimaterr(		/* estimate relative error from samples */
+		COLOR	cs,
+		COLOR	cs2,
+		int	ns,
+		int ns0
+)
 {
 	double	d, d2, brt;
 
@@ -517,11 +539,12 @@ int	ns;
 }
 
 
-double
-comperr(neigh, nc, ns0)		/* estimate relative error in neighborhood */
-int	*neigh;
-int	nc;
-int	ns0;
+extern double
+comperr(		/* estimate relative error in neighborhood */
+		int	*neigh,
+		int	nc,
+		int	ns0
+)
 {
 	COLOR	csum, csum2;
 	COLOR	ctmp;
@@ -552,15 +575,15 @@ int	ns0;
 }
 
 
-void
-comp_frame_error()		/* initialize frame error values */
+extern void
+comp_frame_error(void)		/* initialize frame error values */
 {
 	BYTE	*edone = NULL;
 	COLOR	objamb;
 	double	eest;
 	int	neigh[NSAMPOK];
 	int	nc;
-	int	x, y, i, j;
+	int	x, y, i;
 	register int	n;
 
 	if (!silent) {
@@ -631,8 +654,8 @@ comp_frame_error()		/* initialize frame error values */
 }
 
 
-void
-init_frame()			/* render base (low quality) frame */
+extern void
+init_frame(void)			/* render base (low quality) frame */
 {
 	int	restart;
 
@@ -694,8 +717,8 @@ return;
 }
 
 
-void
-filter_frame()			/* interpolation, motion-blur, and exposure */
+extern void
+filter_frame(void)			/* interpolation, motion-blur, and exposure */
 {
 	double	expval = expspec_val(getexp(fcur));
 	int	x, y;
@@ -706,66 +729,67 @@ filter_frame()			/* interpolation, motion-blur, and exposure */
 	register int	n;
 
 #if 0
-/* XXX TEMPORARY!! */
-conspicuity();
-write_map(cerrmap, "outcmap.pic");
-{
-	float	*ebuf = (float *)malloc(sizeof(float)*hres*vres);
-	for (n = hres*vres; n--; )
-		ebuf[n] = acctab[abuffer[n]];
-	write_map(ebuf, "outerr.pic");
-	free((void *)ebuf);
-}
+	/* XXX TEMPORARY!! */
+	conspicuity();
+	write_map(cerrmap, "outcmap.pic");
+	{
+		float	*ebuf = (float *)malloc(sizeof(float)*hres*vres);
+		for (n = hres*vres; n--; )
+			ebuf[n] = acctab[abuffer[n]];
+		write_map(ebuf, "outerr.pic");
+		free((void *)ebuf);
+	}
 #endif
 
 	if (!silent) {
 		printf("\tFiltering frame\n");
 		fflush(stdout);
 	}
-					/* normalize samples */
-	for (y = vres; y--; )
-	    for (x = hres; x--; ) {
-		n = fndx(x, y);
-		if (sbuffer[n] <= 1)
-			continue;
-		w = 1.0/(double)sbuffer[n];
-		scalecolor(cbuffer[n], w);
-	    }
-					/* interpolate samples */
-	for (y = vres; y--; )
-	    for (x = hres; x--; ) {
-		n = fndx(x, y);
-		if (sbuffer[n])
-			continue;
-		nc = getclosest(neigh, NPINTERP, x, y);
-		setcolor(cbuffer[n], 0., 0., 0.);
-		wsum = 0.;
-		while (nc-- > 0) {
-			copycolor(cval, cbuffer[neigh[nc]]);
-			w = sample_wt((neigh[nc]%hres) - x,
-					(neigh[nc]/hres) - y);
-			scalecolor(cval, w);
-			addcolor(cbuffer[n], cval);
-			wsum += w;
-		}
-		if (wsum > FTINY) {
-			w = 1.0/wsum;
+	/* normalize samples */
+	for (y = vres; y--; ) {
+		for (x = hres; x--; ) {
+			n = fndx(x, y);
+			if (sbuffer[n] <= 1)
+				continue;
+			w = 1.0/(double)sbuffer[n];
 			scalecolor(cbuffer[n], w);
 		}
-	    }
-					/* motion blur if requested */
+	}
+	/* interpolate samples */
+	for (y = vres; y--; ) {
+		for (x = hres; x--; ) {
+			n = fndx(x, y);
+			if (sbuffer[n])
+				continue;
+			nc = getclosest(neigh, NPINTERP, x, y);
+			setcolor(cbuffer[n], 0., 0., 0.);
+			wsum = 0.;
+			while (nc-- > 0) {
+				copycolor(cval, cbuffer[neigh[nc]]);
+				w = sample_wt((neigh[nc]%hres) - x,
+						(neigh[nc]/hres) - y);
+				scalecolor(cval, w);
+				addcolor(cbuffer[n], cval);
+				wsum += w;
+			}
+			if (wsum > FTINY) {
+				w = 1.0/wsum;
+				scalecolor(cbuffer[n], w);
+			}
+		}
+	}
+	/* motion blur if requested */
 	if (mblur > .02) {
-		int	len;
-		int	xs, ys, xl, yl;
-		int	rise, run;
-		long	rise2, run2;
-		int	n2;
-		int	cnt;
-					/* sum in motion streaks */
-		memset(outbuffer, '\0', sizeof(COLOR)*hres*vres);
-		memset(wbuffer, '\0', sizeof(float)*hres*vres);
-		for (y = vres; y--; )
-		    for (x = hres; x--; ) {
+	    int	xs, ys, xl, yl;
+	    int	rise, run;
+	    long	rise2, run2;
+	    int	n2;
+	    int	cnt;
+	    /* sum in motion streaks */
+	    memset(outbuffer, '\0', sizeof(COLOR)*hres*vres);
+	    memset(wbuffer, '\0', sizeof(float)*hres*vres);
+	    for (y = vres; y--; ) {
+		for (x = hres; x--; ) {
 			n = fndx(x, y);
 			if (xmbuffer[n] == MO_UNK) {
 				run = rise = 0;
@@ -786,86 +810,91 @@ write_map(cerrmap, "outcmap.pic");
 			else ys = 1;
 			rise2 = run2 = 0L;
 			if (rise > run) {
-				cnt = rise + 1;
-				w = 1./cnt;
-				copycolor(cval, cbuffer[n]);
-				scalecolor(cval, w);
-				while (cnt)
-					if (rise2 >= run2) {
-						if ((xl >= 0) & (xl < hres) &
-							(yl >= 0) & (yl < vres)) {
-							n2 = fndx(xl, yl);
-							addcolor(outbuffer[n2],
-									cval);
-							wbuffer[n2] += w;
-						}
-						yl += ys;
-						run2 += run;
-						cnt--;
-					} else {
-						xl += xs;
-						rise2 += rise;
-					}
+			    cnt = rise + 1;
+			    w = 1./cnt;
+			    copycolor(cval, cbuffer[n]);
+			    scalecolor(cval, w);
+			    while (cnt) {
+				if (rise2 >= run2) {
+				    if ((xl >= 0) & (xl < hres) &
+						    (yl >= 0) & (yl < vres)) {
+					    n2 = fndx(xl, yl);
+					    addcolor(outbuffer[n2], cval);
+					    wbuffer[n2] += w;
+				    }
+				    yl += ys;
+				    run2 += run;
+				    cnt--;
+				} else {
+					xl += xs;
+					rise2 += rise;
+				}
+			    }
 			} else {
 				cnt = run + 1;
 				w = 1./cnt;
 				copycolor(cval, cbuffer[n]);
 				scalecolor(cval, w);
-				while (cnt)
-					if (run2 >= rise2) {
-						if ((xl >= 0) & (xl < hres) &
-							(yl >= 0) & (yl < vres)) {
-							n2 = fndx(xl, yl);
-							addcolor(outbuffer[n2],
-									cval);
-							wbuffer[n2] += w;
-						}
-						xl += xs;
-						rise2 += rise;
-						cnt--;
-					} else {
-						yl += ys;
-						run2 += run;
+				while (cnt) {
+				    if (run2 >= rise2) {
+					if ((xl >= 0) & (xl < hres) &
+						    (yl >= 0) & (yl < vres)) {
+						n2 = fndx(xl, yl);
+						addcolor(outbuffer[n2],
+								cval);
+						wbuffer[n2] += w;
 					}
+					xl += xs;
+					rise2 += rise;
+					cnt--;
+				    } else {
+					    yl += ys;
+					    run2 += run;
+				    }
+				}
 			}
-		    }
-					/* compute final results */
-		for (y = vres; y--; )
-		    for (x = hres; x--; ) {
-			n = fndx(x, y);
-			if (wbuffer[n] <= FTINY)
-				continue;
-			w = 1./wbuffer[n];
-			scalecolor(outbuffer[n], w);
-		    }
-	} else
-		for (n = hres*vres; n--; )
+		}
+		/* compute final results */
+		for (y = vres; y--; ) {
+			for (x = hres; x--; ) {
+				n = fndx(x, y);
+				if (wbuffer[n] <= FTINY)
+					continue;
+				w = 1./wbuffer[n];
+				scalecolor(outbuffer[n], w);
+			}
+		}
+	    }
+	} else {
+		for (n = hres*vres; n--; ) {
 			copycolor(outbuffer[n], cbuffer[n]);
-/*
-for (n = hres*vres; n--; )
-	if (!sbuffer[n])
-		setcolor(outbuffer[n], 0., 0., 0.);
-*/
-				/* adjust exposure */
+		}
+	}
+	/*
+	   for (n = hres*vres; n--; )
+	   if (!sbuffer[n])
+	   setcolor(outbuffer[n], 0., 0., 0.);
+	 */
+	/* adjust exposure */
 	if ((expval < 0.99) | (expval > 1.01))
 		for (n = hres*vres; n--; )
 			scalecolor(outbuffer[n], expval);
-return;
-{
-	float	*sbuf = (float *)malloc(sizeof(float)*hres*vres);
-	char	fnm[256];
-	sprintf(fnm, vval(BASENAME), fcur);
-	strcat(fnm, "_outsamp.pic");
-	for (n = hres*vres; n--; )
-		sbuf[n] = (float)sbuffer[n];
-	write_map(sbuf, fnm);
-	free((void *)sbuf);
-}
+	return;
+	{
+		float	*sbuf = (float *)malloc(sizeof(float)*hres*vres);
+		char	fnm[256];
+		sprintf(fnm, vval(BASENAME), fcur);
+		strcat(fnm, "_outsamp.pic");
+		for (n = hres*vres; n--; )
+			sbuf[n] = (float)sbuffer[n];
+		write_map(sbuf, fnm);
+		free((void *)sbuf);
+	}
 }
 
 
-void
-send_frame()			/* send frame to destination */
+extern void
+send_frame(void)			/* send frame to destination */
 {
 	char	pfname[1024];
 	double	d;
@@ -917,8 +946,8 @@ writerr:
 }
 
 
-void
-free_frame()			/* free frame allocation */
+extern void
+free_frame(void)			/* free frame allocation */
 {
 	if (cbuffer == NULL)
 		return;

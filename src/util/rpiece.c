@@ -1,30 +1,36 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.42 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.43 2004/03/26 21:36:20 schorsch Exp $";
 #endif
 /*
  * Generate sections of a picture.
  */
  
+
+#include <stdio.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "platform.h"
-#include "standard.h"
+#include "rtio.h"
+#include "rtmisc.h"
+#include "color.h"
+#include "view.h"
+#include "rtprocess.h"
 
 #ifndef F_SETLKW
 
-main(argc, argv)
-int argc;
-char *argv[];
+int
+main(
+	int argc,
+	char *argv[]
+)
 {
 	fprintf(stderr, "%s: no NFS lock manager on this machine\n", argv[0]);
 	exit(1);
 }
 
 #else
-
-#include <signal.h>
-
-#include "color.h"
-#include "view.h"
-#include "rtprocess.h"
 
 #ifndef NFS
 #define  NFS			1
@@ -43,8 +49,8 @@ char *argv[];
 #define unguard()	sigrelse(SIGALRM)
 #endif
 #ifndef guard_io
-#define guard_io()	0
-#define unguard()	0
+#define guard_io()	
+#define unguard()	
 #endif
 
 extern char  *strerror();
@@ -76,10 +82,21 @@ int  rvrlim = -1;
 int  gotalrm = 0;
 void  onalrm(int i) { gotalrm++; }
 
+static void dolock(int  fd, int  ltyp);
+static void init(int  ac, char  **av);
+static int nextpiece(int	*xp, int	*yp);
+static int rvrpiece(int	*xp, int	*yp);
+static int cleanup(int  rstat);
+static void rpiece(void);
+static int putpiece(int	xpos, int	ypos);
+static void filerr(char  *t);
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+
+int
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	register int  i, rval;
 	
@@ -188,9 +205,11 @@ char  *argv[];
 }
 
 
-dolock(fd, ltyp)		/* lock or unlock a file */
-int  fd;
-int  ltyp;
+static void
+dolock(		/* lock or unlock a file */
+	int  fd,
+	int  ltyp
+)
 {
 	static struct flock  fls;	/* static so initialized to zeroes */
 
@@ -203,9 +222,11 @@ int  ltyp;
 }
 
 
-init(ac, av)			/* set up output file and start rpict */
-int  ac;
-char  **av;
+static void
+init(			/* set up output file and start rpict */
+	int  ac,
+	char  **av
+)
 {
 	static char  hrbuf[16], vrbuf[16];
 	extern char  VersionID[];
@@ -295,9 +316,11 @@ filerr:
 }
 
 
-int
-nextpiece(xp, yp)		/* get next piece assignment */
-int  *xp, *yp;
+static int
+nextpiece(		/* get next piece assignment */
+	int	*xp,
+	int	*yp
+)
 {
 	if (gotalrm)			/* someone wants us to quit */
 		return(0);
@@ -337,9 +360,11 @@ int  *xp, *yp;
 }
 
 
-int
-rvrpiece(xp, yp)		/* check for recoverable pieces */
-register int  *xp, *yp;
+static int
+rvrpiece(		/* check for recoverable pieces */
+	register int	*xp,
+	register int	*yp
+)
 {
 	static char  *pdone = NULL;	/* which pieces are done */
 	static long  readpos = -1;	/* how far we've read */
@@ -381,9 +406,10 @@ register int  *xp, *yp;
 }
 
 
-int
-cleanup(rstat)			/* close rpict process and clean up */
-int  rstat;
+static int
+cleanup(			/* close rpict process and clean up */
+	int  rstat
+)
 {
 	int  status;
 
@@ -397,7 +423,8 @@ int  rstat;
 }
 
 
-rpiece()			/* render picture piece by piece */
+static void
+rpiece(void)			/* render picture piece by piece */
 {
 	VIEW  pview;
 	int  xorg, yorg;
@@ -444,9 +471,11 @@ rpiece()			/* render picture piece by piece */
 }
 
 
-int
-putpiece(xpos, ypos)		/* get next piece from rpict */
-int  xpos, ypos;
+static int
+putpiece(		/* get next piece from rpict */
+int	xpos,
+int	ypos
+)
 {
 	struct flock  fls;
 	int  pid, status;
@@ -545,8 +574,10 @@ int  xpos, ypos;
 }
 
 
-filerr(t)			/* report file error and exit */
-char  *t;
+static void
+filerr(			/* report file error and exit */
+	char  *t
+)
 {
 	fprintf(stderr, "%s: %s error on file \"%s\": %s\n",
 			progname, t, outfile, strerror(errno));

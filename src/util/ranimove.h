@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.5 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: ranimove.h,v 3.6 2004/03/26 21:36:20 schorsch Exp $ */
 /*
  *  ranimove.h
  *
@@ -109,16 +109,6 @@ extern int		haveprio;	/* high-level saliency specified */
 extern int		gargc;		/* global argc for printargs */
 extern char		**gargv;	/* global argv for printargs */
 
-VIEW	*getview();
-int	countviews();
-int	getmove();
-char	*getexp(), *getoctspec(), *getobjname(), *getxf();
-double	expspec_val(), obj_prio();
-void	setdefaults(), setmove(), animate(), getradfile(), setrendparams();
-void	init_frame(), filter_frame(), send_frame(), free_frame();
-int	refine_frame();
-double	getTime();
-
 /*************************************************************************
  * Frame rendering stuff (defined in ranimove1.c and ranimove2.c)
  */
@@ -178,10 +168,42 @@ extern double	hlsmax;		/* maximum high-level saliency */
 
 #define ATIDIFF		7	/* error difference for time extrapolation */
 
-void	write_map(), sample_pos(), comp_frame_error(), conspicuity();
-int	getclosest(), getambcolor(), refine_first();
-double	sample_wt(), estimaterr(), comperr(); 
+	/* ranimove1.c */
+extern void	init_frame(void);
+extern void filter_frame(void);
+extern void send_frame(void);
+extern void free_frame(void);
+extern void write_map(float	*mp, char	*fn);
+extern void sample_pos(double	hv[2], int	x, int	y, int	sn);
+extern void comp_frame_error(void);
+extern int	getclosest(int	*iarr, int	nc, int	x, int	y);
+extern int getambcolor(COLOR	clr, int	obj);
+extern double	sample_wt(int	xo, int yo);
+extern double estimaterr(COLOR	cs, COLOR	cs2, int	ns, int ns0);
+extern double comperr(int	*neigh, int	nc, int	ns0); 
 
+	/* ranimove2.c */
+extern int refine_first();
+extern void conspicuity(void);
+extern int refine_frame(int pass);
+
+	/* ranimove.c */
+extern double getTime(void);
+extern double obj_prio(OBJECT	obj);
+extern int getmove(OBJECT	obj);
+extern char * getoctspec(int n);
+extern double expspec_val(char *s);
+extern char *getexp(int n); /* XXX partly duplicated function */
+extern VIEW *getview(int n); /* XXX duplicated function */
+double	getTime();
+/*
+int	countviews();
+void	setdefaults(),
+void setmove(),
+setrendparams();
+getradfile(),
+animate(),
+*/
 
 #ifdef __cplusplus
 }
