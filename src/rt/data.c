@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.17 2003/05/13 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.18 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -17,10 +17,10 @@ static const char	RCSid[] = "$Id: data.c,v 2.17 2003/05/13 17:58:33 greg Exp $";
 
 				/* picture memory usage before warning */
 #ifndef PSIZWARN
-#ifdef BIGMEM
-#define PSIZWARN	5000000
-#else
+#ifdef SMLMEM
 #define PSIZWARN	1500000
+#else
+#define PSIZWARN	5000000
 #endif
 #endif
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.11 2003/03/12 04:59:04 greg Exp $ */
+/* RCSid $Id: object.h,v 2.12 2003/05/15 05:13:35 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  */
@@ -36,10 +36,10 @@ typedef struct {
  */
 
 #ifndef  OBJECT
-#ifdef  BIGMEM
-#define  OBJECT		int4		/* index to object array */
-#else
+#ifdef  SMLMEM
 #define  OBJECT		int2		/* index to object array */
+#else
+#define  OBJECT		int4		/* index to object array */
 #endif
 #endif
 
@@ -52,10 +52,10 @@ typedef struct {
 }  OBJREC;
 
 #ifndef  MAXOBJBLK
-#ifdef  BIGMEM
-#define  MAXOBJBLK	65535		/* maximum number of object blocks */
-#else
+#ifdef  SMLMEM
 #define  MAXOBJBLK	63		/* maximum number of object blocks */
+#else
+#define  MAXOBJBLK	65535		/* maximum number of object blocks */
 #endif
 #endif
 

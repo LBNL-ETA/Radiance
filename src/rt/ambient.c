@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.48 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.49 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -35,10 +35,10 @@ static FILE  *ambfp = NULL;	/* ambient file pointer */
 static int  nunflshed = 0;	/* number of unflushed ambient values */
 
 #ifndef SORT_THRESH
-#ifdef BIGMEM
-#define SORT_THRESH	((9L<<20)/sizeof(AMBVAL))
-#else
+#ifdef SMLMEM
 #define SORT_THRESH	((3L<<20)/sizeof(AMBVAL))
+#else
+#define SORT_THRESH	((9L<<20)/sizeof(AMBVAL))
 #endif
 #endif
 #ifndef SORT_INTVL

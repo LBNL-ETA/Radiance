@@ -1,4 +1,4 @@
-/* RCSid $Id: octree.h,v 2.7 2003/03/14 21:27:46 greg Exp $ */
+/* RCSid $Id: octree.h,v 2.8 2003/05/15 05:13:35 greg Exp $ */
 /*
  *  octree.h - header file for routines using octrees.
  */
@@ -33,10 +33,10 @@
 #define  octti(ot)	(((ot)&03777)<<3)/* octree index in block */
 
 #ifndef  MAXOBLK
-#ifdef  BIGMEM
-#define  MAXOBLK	32767		/* maximum octree block */
-#else
+#ifdef  SMLMEM
 #define  MAXOBLK	4095		/* maximum octree block */
+#else
+#define  MAXOBLK	32767		/* maximum octree block */
 #endif
 #endif
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: protate.c,v 2.7 2003/02/22 02:07:27 greg Exp $";
+static const char	RCSid[] = "$Id: protate.c,v 2.8 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  * prot.c - program to rotate picture file 90 degrees clockwise.
@@ -21,10 +21,10 @@ int	xres, yres;			/* input resolution */
 int	correctorder = 0;		/* order correction? */
 int	ccw = 0;			/* rotate CCW? */
 
-#ifdef BIGMEM
-char	buf[1<<22];			/* output buffer */
-#else
+#ifdef SMLMEM
 char	buf[1<<20];			/* output buffer */
+#else
+char	buf[1<<22];			/* output buffer */
 #endif
 
 int	nrows;				/* number of rows output at once */

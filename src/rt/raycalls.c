@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.2 2003/02/25 02:47:23 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.3 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -78,7 +78,7 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.2 2003/02/25 02:47:23 greg Exp 
  *  restarted at any point by calling ray_init() on a new
  *  octree.
  *
- *  The call ray_save(rp) allocates and returns a buffer
+ *  The call ray_save(rp) fills a parameter structure
  *  with the current global parameter settings, which may be
  *  restored at any time with a call to ray_restore(rp).
  *  This buffer contains no linked information, and thus
@@ -179,9 +179,9 @@ char	*otnm;
 					/* ready to go... */
 }
 
-
 void
-ray_trace(RAY *r)		/* trace a primary ray */
+ray_trace(r)			/* trace a primary ray */
+RAY	*r;
 {
 	rayorigin(r, NULL, PRIMARY, 1.0);
 	samplendx++;

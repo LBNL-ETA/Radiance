@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.4 2003/04/29 15:27:49 greg Exp $
+# RCSid $Id: makeall,v 1.5 2003/05/15 05:13:35 greg Exp $
 # 
 #Added macosX 2001-04-11 by Jean Brange
 #Deleted obsolete systems 2001-04-18 by Greg Ward
@@ -179,7 +179,7 @@ case 3:			# Silicon Graphics
 	endsw
 	breaksw
 case 4:			# AIX
-	set mach="-Dvoid=char -D_NO_PROTO -DINCL_SEL_H"
+	set mach="-Dvoid=char -DNOPROTO -DINCL_SEL_H"
 	set opt="-O"
 	set compat="bmalloc.o erf.o"
 	breaksw
@@ -225,36 +225,6 @@ default:
 	exit 1
 	breaksw
 endsw
-# We don't seem to have any more cramped machines out there, so...
-set mem="-DBIGMEM"
-if ( $?mem ) then
-	set mach="$mach $mem"
-else
-	echo -n "Does the target machine have more than 24 Mbytes of RAM? "
-	set ans="$<"
-	if ( "$ans" =~ [yY]* ) then
-		echo -n "More than 96 Mbytes? "
-		set ans="$<"
-		if ( "$ans" =~ [yY]* ) then
-			set mach="$mach -DBIGMEM"
-			set sizemod="huge models (100,000+ surfaces)"
-		else
-			set sizemod="very large models (30,000+ surfaces)"
-		endif
-	else
-		set sizemod="large models (10,000+ surfaces)"
-	endif
-endif
-# echo "Do you expect to be rendering $sizemod?"
-# echo -n '(Answering "yes" may adversly affect rendering time and geometric accuracy) '
-# set ans="$<"
-# if ( "$ans" =~ [yY]* ) then
-# 	set opt="$opt -DSMLFLT"
-# endif
-# echo -n "Do you have X10 support [n]? "
-# if ( "$<" =~ [yY]* ) then
-#	set special="$special x10"
-# endif
 source installib
 sed 's/[ 	]*$//' > $rmake << _EOF_
 #!/bin/sh

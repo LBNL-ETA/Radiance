@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: savqstr.c,v 2.5 2003/03/10 17:13:29 greg Exp $";
+static const char RCSid[] = "$Id: savqstr.c,v 2.6 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  *  Save unshared strings.
@@ -51,19 +51,19 @@ char  *s;
  *  large blocks to optimize paging in VM environments.
  */
 
-#ifdef  BIGMEM
-#ifndef  MINBLOCK
-#define  MINBLOCK	(1<<12)		/* minimum allocation block size */
-#endif
-#ifndef  MAXBLOCK
-#define  MAXBLOCK	(1<<16)		/* maximum allocation block size */
-#endif
-#else
+#ifdef  SMLMEM
 #ifndef  MINBLOCK
 #define  MINBLOCK	(1<<10)		/* minimum allocation block size */
 #endif
 #ifndef  MAXBLOCK
 #define  MAXBLOCK	(1<<14)		/* maximum allocation block size */
+#endif
+#else
+#ifndef  MINBLOCK
+#define  MINBLOCK	(1<<12)		/* minimum allocation block size */
+#endif
+#ifndef  MAXBLOCK
+#define  MAXBLOCK	(1<<16)		/* maximum allocation block size */
 #endif
 #endif
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.10 2003/04/23 00:52:33 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.11 2003/05/15 05:13:35 greg Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -16,10 +16,10 @@ static const char	RCSid[] = "$Id: objset.c,v 2.10 2003/04/23 00:52:33 greg Exp $
 #include  "object.h"
 
 #ifndef  OSTSIZ
-#ifdef  BIGMEM
-#define  OSTSIZ		262139		/* object table size (a prime!) */
-#else
+#ifdef  SMLMEM
 #define  OSTSIZ		32749		/* object table size (a prime!) */
+#else
+#define  OSTSIZ		262139		/* object table size (a prime!) */
 #endif
 #endif
 

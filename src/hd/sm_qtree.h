@@ -1,4 +1,4 @@
-/* RCSid: $Id: sm_qtree.h,v 3.13 2003/02/22 02:07:25 greg Exp $ */
+/* RCSid: $Id: sm_qtree.h,v 3.14 2003/05/15 05:13:35 greg Exp $ */
 /*
  *  sm_qtree.h - header file for routines using spherical quadtrees.
  *
@@ -42,10 +42,10 @@ typedef struct _FUNC {
 
 
 #ifndef  QT_MAX_BLK
-#ifdef  BIGMEM
-#define  QT_MAX_BLK	16383		/* maximum quadtree block */
-#else
+#ifdef  SMLMEM
 #define  QT_MAX_BLK	2047		/* maximum quadtree block */
+#else
+#define  QT_MAX_BLK	16383		/* maximum quadtree block */
 #endif
 #endif
 
