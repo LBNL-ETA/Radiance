@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.51 2004/03/26 03:11:50 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.52 2004/05/24 21:03:34 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -235,7 +235,7 @@ panim.o:	client/scan.h ../common/color.h ../common/random.h
 pf2.o bnoise.o ra_ps.o ra_t16.o:	../common/random.h
 
 neuclrtab.o clrtab.o pfilt.o pf2.o pf3.o ttyimage.o t4027.o mt160r.o \
-psum.o psign.o protate.o ra_hexbit.o ra_bmp.o \
+psum.o psign.o protate.o ra_hexbit.o \
 pextrem.o ra_pr24.o d48c.o aedimage.o pcompos.o color.o resolu.o colrops.o \
 pflip.o greyscale.o ra_t8.o glimage.o ra_bn.o ra_t16.o ra_tiff.o ra_pict.o \
 ra_ps.o ra_pr.o pvalue.o pcomb.o pinterp.o ximage.o:	../common/color.h
@@ -265,7 +265,7 @@ image.o:	../common/view.h ../common/resolu.h
 
 ra_pict.o:	pict.h
 
-mt160r.o oki20c.o paintjet.o pcompos.o pfilt.o pflip.o ra_bmp.o \
+mt160r.o oki20c.o paintjet.o pcompos.o pfilt.o pflip.o \
 pinterp.o protate.o pvalue.o ra_bn.o ra_pict.o ra_pixar.o ra_hexbit.o \
 ra_ppm.o ra_pr.o ra_pr24.o ra_rgbe.o ra_t16.o ra_t8.o glimage.o \
 ra_tiff.o ttyimage.o:	../common/resolu.h
@@ -282,7 +282,8 @@ pcond.o pcond2.o pcond3.o pcond4.o:	pcond.h ../common/standard.h \
 
 normtiff.o:	../common/color.h ../common/tonemap.h ../common/resolu.h
 
-ra_bmp.o:	../common/bmpfile.h
+ra_bmp.o:	../common/bmpfile.h ../common/color.h \
+../common/tonemap.h ../common/resolu.h
 
 x11findwind.c:	../common/x11findwind.c
 	cp ../common/x11findwind.c .
