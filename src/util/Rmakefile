@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.36 2003/11/10 16:52:24 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.37 2004/05/19 14:44:06 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -35,10 +35,11 @@ rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh
 	cp raddepend.csh $(INSTDIR)/raddepend
 	cp compamb.csh $(INSTDIR)/compamb
 	cp vinfo.csh $(INSTDIR)/vinfo
+	cp genambpos.csh $(INSTDIR)/genambpos
 	chmod 755 $(INSTDIR)/objview $(INSTDIR)/objpict \
 		$(INSTDIR)/glare $(INSTDIR)/dayfact $(INSTDIR)/debugcal \
 		$(INSTDIR)/rlux $(INSTDIR)/raddepend $(INSTDIR)/objline \
-		$(INSTDIR)/compamb $(INSTDIR)/vinfo
+		$(INSTDIR)/compamb $(INSTDIR)/vinfo $(INSTDIR)/genambpos
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
 clean:
