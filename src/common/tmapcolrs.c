@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.19 2005/01/07 22:05:30 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.20 2005/02/23 00:08:08 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -197,7 +197,7 @@ FILE	*fp
 			((fname == NULL) & (fp == TM_GETFILE)))
 		returnErr(TM_E_ILLEGAL);
 	*xp = *yp = 0;				/* error precaution */
-	if ((inpf = fp) == TM_GETFILE && (inpf = fopen(fname, "r")) == NULL)
+	if ((inpf = fp) == TM_GETFILE && (inpf = fopen(fname, "rb")) == NULL)
 		returnErr(TM_E_BADFILE);
 	*lpp = NULL;
 	if (cpp != TM_NOCHROMP) *cpp = NULL;
