@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.54 2005/02/02 00:09:14 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.55 2005/02/25 06:39:44 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -116,7 +116,7 @@ mesh.o readmesh.o:	mesh.h lookup.h
 tonemap.o tmapcolrs.o tmapluv.o tmap16bit.o:	tmprivat.h tonemap.h \
 tifftypes.h color.h
 
-tmapluv.o:	uvcode.h tiffio.h tmaptiff.h tiff.h
+tmapluv.o:	tiffio.h tmaptiff.h tiff.h
 
 tonemap.o:	tmerrmsg.h
 
