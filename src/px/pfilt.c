@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.26 2003/07/27 22:12:03 schorsch Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.27 2003/10/22 02:06:35 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -13,8 +13,8 @@ static const char RCSid[] = "$Id: pfilt.c,v 2.26 2003/07/27 22:12:03 schorsch Ex
 #include  <signal.h>
 #include  <string.h>
 
-#include  "standard.h"
 #include  "platform.h"
+#include  "standard.h"
 #include  "color.h"
 #include  "view.h"
 #include  "paths.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.62 2003/10/21 19:19:28 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.63 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -9,8 +9,8 @@ static const char	RCSid[] = "$Id: rholo.c,v 3.62 2003/10/21 19:19:28 schorsch Ex
 #include <sys/stat.h>
 #include <string.h>
 
-#include "rholo.h"
 #include "platform.h"
+#include "rholo.h"
 #include "random.h"
 
 #ifndef FRAGWARN

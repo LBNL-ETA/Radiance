@@ -1,12 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.20 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.21 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
  */
 
-#include "holo.h"
 #include "platform.h"
+#include "holo.h"
 #include "view.h"
 
 #ifndef BKBSIZE

@@ -1,12 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.8 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.9 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
  */
 
-#include "holo.h"
 #include "platform.h"
+#include "holo.h"
 
 #ifndef NHBINS
 #define NHBINS		12	/* number of histogram bins to use for stats */

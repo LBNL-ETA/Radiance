@@ -1,12 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhenv.c,v 3.6 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: genrhenv.c,v 3.7 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Create a closed environment from a holodeck section
  */
 
-#include "holo.h"
 #include "platform.h"
+#include "holo.h"
 
 #define	ourhp		(hdlist[0])
 

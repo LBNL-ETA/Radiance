@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.53 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.54 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -11,9 +11,9 @@ static const char	RCSid[] = "$Id: holofile.c,v 3.53 2003/10/20 16:01:55 greg Exp
 
 #include <string.h>
 
-#include "holo.h"
-
 #include "platform.h"
+
+#include "holo.h"
 
 #ifndef CACHESIZE
 #ifdef SMLMEM

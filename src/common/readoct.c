@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.22 2003/08/29 16:46:51 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.23 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -10,8 +10,8 @@ static const char	RCSid[] = "$Id: readoct.c,v 2.22 2003/08/29 16:46:51 greg Exp 
 #include  <stdio.h>
 #include  <time.h>
 
-#include  "standard.h"
 #include  "platform.h"
+#include  "standard.h"
 #include  "octree.h"
 #include  "object.h"
 #include  "otypes.h"

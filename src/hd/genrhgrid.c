@@ -1,12 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.6 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.7 2003/10/22 02:06:34 greg Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
  */
 
-#include "holo.h"
 #include "platform.h"
+#include "holo.h"
 
 char	*progname;		/* global argv[0] */
 

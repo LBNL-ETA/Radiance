@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.38 2003/10/20 16:01:55 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.39 2003/10/22 02:06:35 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -12,8 +12,8 @@ static const char	RCSid[] = "$Id: pinterp.c,v 2.38 2003/10/20 16:01:55 greg Exp 
 #include <ctype.h>
 #include <string.h>
 
-#include "standard.h"
 #include "platform.h"
+#include "standard.h"
 #include "rtprocess.h" /* Windows: must come before color.h */
 #include "view.h"
 #include "color.h"
