@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.14 2004/03/23 15:18:09 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.15 2004/03/26 21:30:12 schorsch Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -16,6 +16,8 @@ static const char RCSid[] = "$Id: gensurf.c,v 2.14 2004/03/23 15:18:09 greg Exp 
  */
 
 #include  "standard.h"
+
+#include  "paths.h"
 #include  "calcomp.h"
 
 char  XNAME[] =		"X`SYS";		/* x function name */
