@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.10 2003/06/27 06:53:22 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.11 2005/02/23 18:18:21 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -49,7 +49,9 @@ typedef struct {
 extern double  maxarad;		/* maximum ambient radius */
 extern double  minarad;		/* minimum ambient radius */
 
+#ifndef AVGREFL
 #define  AVGREFL	0.5	/* assumed average reflectance */
+#endif
 
 #define  AMBVALSIZ	75	/* number of bytes in portable AMBVAL struct */
 #define  AMBMAGIC	557	/* magic number for ambient value files */
