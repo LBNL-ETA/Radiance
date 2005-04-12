@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mksource.1,v 1.1 2005/04/12 03:30:43 greg Exp $"
+.\" RCSid "$Id: mksource.1,v 1.2 2005/04/12 20:03:12 greg Exp $"
 .TH MKSOURCE 1 04/11/05 RADIANCE
 .SH NAME
 mksource - compute distant sources for RADIANCE image-based lighting
@@ -20,7 +20,8 @@ produces a RADIANCE scene description of distant illum
 sources corresponding to bright, concentrated regions in
 the given ambient environment. 
 Any local geometry is ignored in the input octree, which
-should be derived from a captured light probe.
+should be derived from a captured light probe and modeled
+as a distant hemispherical or spherical glow source.
 The output sources may then be combined with this environment
 to produce a more efficient scene for rendering, faster and
 less prone to sampling artifacts.
