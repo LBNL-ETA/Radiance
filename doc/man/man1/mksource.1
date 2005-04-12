@@ -1,0 +1,61 @@
+.\" RCSid "$Id: mksource.1,v 1.1 2005/04/12 03:30:43 greg Exp $"
+.TH MKSOURCE 1 04/11/05 RADIANCE
+.SH NAME
+mksource - compute distant sources for RADIANCE image-based lighting
+.SH SYNOPSIS
+.B mksource
+[
+.B "\-d nsamps"
+][
+.B "\-t thresh"
+][
+.B "\-a maxang"
+]
+[
+.B octree
+]
+.SH DESCRIPTION
+.I Mksource
+produces a RADIANCE scene description of distant illum
+sources corresponding to bright, concentrated regions in
+the given ambient environment. 
+Any local geometry is ignored in the input octree, which
+should be derived from a captured light probe.
+The output sources may then be combined with this environment
+to produce a more efficient scene for rendering, faster and
+less prone to sampling artifacts.
+.PP
+The
+.I \-d
+option may be used to specify the number of ray samples, which
+defaults to 262,000.
+Calculation time is roughly proportional to accuracy, and the
+default is fine enough to find sources the size of the sun
+(half a degree) or larger.
+.PP
+The
+.I \-t
+option may be used to manually set the radiance threshold for
+sources, in watts/sr/meter^2.
+The default uses the top 1 percentile of the environment, which
+is usally a good value.
+.PP
+The
+.I \-a
+option may be used to specify a maximum source diameter,
+which defaults to 15 degrees.
+.I Mkillum
+silently enforces a maximum of 180 degrees for this option.
+.PP
+If no input octree is specified, the standard input is read.
+.SH EXAMPLE
+To add sources with a maximum size of 20 degrees
+to the enviornment described in environ.oct:
+.IP "" .2i
+mksource -a 20 environ.oct > srcs.rad
+.br
+oconv -i environ.oct srcs.rad > env+srcs.oct
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+mkillum(1), rpict(1), rvu(1)

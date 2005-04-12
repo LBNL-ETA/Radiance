@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.13 2004/10/27 23:23:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.14 2005/04/12 03:30:43 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -14,7 +14,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = genbox gensky xform genblinds genrev genworm \
-		gensurf genprism replmarks mkillum genclock
+		gensurf genprism replmarks mkillum mksource genclock
 
 LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
 		glaze1.cal glaze2.cal
@@ -58,6 +58,10 @@ replmarks:	replmarks.o
 mkillum:	mkillum.o mkillum2.o mkillum3.o
 	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o -lrt $(MLIB)
 
+mksource:	mksource.o
+	$(CC) $(CFLAGS) -o mksource mksource.o \
+-lraycalls -lradiance -lrt $(MLIB)
+
 genrev:	genrev.o 
 	$(CC) $(CFLAGS) -o genrev genrev.o -lrt $(MLIB)
 
@@ -75,6 +79,14 @@ genclock:	genclock.o
 
 genbranch:	genbranch.o
 	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
+
+mksource.o:	mksource.c \
+../common/random.h ../rt/ray.h ../common/octree.h \
+../common/object.h ../common/color.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h ../common/tifftypes.h
+	$(CC) -c $(CFLAGS) -I../rt mksource.c
 
 genworm.o replmarks.o:	../common/fvect.h
 

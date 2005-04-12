@@ -1412,3 +1412,6 @@ works.)
 
 Fixed some minor problems and inconsistencies with 16-bit/channel
 TIFF i/o in ra_tiff.
+
+Created mksource program to generate distant sources for improved
+image-based lighting with light probes.
