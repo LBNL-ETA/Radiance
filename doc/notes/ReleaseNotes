@@ -1415,3 +1415,7 @@ TIFF i/o in ra_tiff.
 
 Created mksource program to generate distant sources for improved
 image-based lighting with light probes.
+
+Changed ambient calculation so that -ad will not limit recursion
+depth, and a minimum of 27 samples will be sent out for each stored
+ambient value, or 3 samples if -aa is 0 (caching off).

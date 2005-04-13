@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.12 2003/07/27 22:12:03 schorsch Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.13 2005/04/13 23:00:59 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -230,11 +230,10 @@ double  wt;
 {
 	register int  i;
 					/* set number of divisions */
-	if (wt < (.25*PI)/ambdiv+FTINY) {
-		hp->nt = hp->np = 0;
-		return;			/* zero samples */
-	}
 	hp->nt = sqrt(ambdiv * wt / PI) + 0.5;
+	i = ambacc > FTINY ? 3 : 1;	/* minimum number of samples */
+	if (hp->nt < i)
+		hp->nt = i;
 	hp->np = PI * hp->nt + 0.5;
 					/* make axes */
 	VCOPY(hp->uz, r->ron);
