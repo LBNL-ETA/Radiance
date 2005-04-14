@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.46 2005/04/14 04:42:33 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.47 2005/04/14 17:34:49 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -726,10 +726,24 @@ char  *s;
 	if (thisray.ro == NULL)
 		(*dev->comout)("ray hit nothing");
 	else {
-		OBJREC	*mat = findmaterial(thisray.ro);
-		sprintf(buf, "ray hit %s%s %s \"%s\"",
-				thisray.rod < 0.0 ? "back of " : "",
-				mat==NULL ? VOIDID : mat->oname,
+		OBJREC	*mat = NULL;
+		OBJREC	*mod = NULL;;
+		char	matspec[256];
+		matspec[0] = '\0';
+		if (thisray.ro->omod != OVOID) {
+			mod = objptr(thisray.ro->omod);
+			mat = findmaterial(mod);
+		}
+		if (thisray.rod < 0.0)
+			strcpy(matspec, "back of ");
+		if (mod != NULL) {
+			strcat(matspec, mod->oname);
+			if (mat != mod)
+				sprintf(matspec+strlen(matspec), " (%s)",
+					mat!=NULL ? mat->oname : VOIDID);
+		} else
+			strcat(matspec, VOIDID);
+		sprintf(buf, "ray hit %s %s \"%s\"", matspec,
 				ofun[thisray.ro->otype].funame,
 				thisray.ro->oname);
 		if ((ino = objptr(thisray.robj)) != thisray.ro)
