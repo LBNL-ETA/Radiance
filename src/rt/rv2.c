@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.47 2005/04/14 17:34:49 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.48 2005/04/14 17:38:06 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -738,9 +738,9 @@ char  *s;
 			strcpy(matspec, "back of ");
 		if (mod != NULL) {
 			strcat(matspec, mod->oname);
-			if (mat != mod)
-				sprintf(matspec+strlen(matspec), " (%s)",
-					mat!=NULL ? mat->oname : VOIDID);
+			if (mat != mod && mat != NULL)
+				sprintf(matspec+strlen(matspec),
+					" (%s)", mat->oname);
 		} else
 			strcat(matspec, VOIDID);
 		sprintf(buf, "ray hit %s %s \"%s\"", matspec,
