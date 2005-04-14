@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mksource.1,v 1.2 2005/04/12 20:03:12 greg Exp $"
+.\" RCSid "$Id: mksource.1,v 1.3 2005/04/14 19:37:02 greg Exp $"
 .TH MKSOURCE 1 04/11/05 RADIANCE
 .SH NAME
 mksource - compute distant sources for RADIANCE image-based lighting
@@ -30,8 +30,8 @@ The
 .I \-d
 option may be used to specify the number of ray samples, which
 defaults to 262,000.
-Calculation time is roughly proportional to accuracy, and the
-default is fine enough to find sources the size of the sun
+Calculation time is roughly proportional to this setting, and the
+default is fine enough to resolve sources the size of the sun
 (half a degree) or larger.
 .PP
 The
