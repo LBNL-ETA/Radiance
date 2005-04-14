@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.47 2005/03/10 22:37:00 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.48 2005/04/14 17:43:43 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -46,8 +46,6 @@ extern OBJREC *			/* find an object's actual material */
 findmaterial(register OBJREC *o)
 {
 	while (!ismaterial(o->otype)) {
-		if (ismixture(o->otype))
-			return(NULL);   /* reject mixed materials */
 		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
 			OBJECT  aobj;
 			OBJREC  *ao;
@@ -62,7 +60,7 @@ findmaterial(register OBJREC *o)
 			return(NULL);
 		o = objptr(o->omod);
 	}
-	return(o);
+	return(o);		/* mixtures will return NULL */
 }
 
 
