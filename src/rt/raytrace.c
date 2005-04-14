@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.46 2005/03/10 22:37:00 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.47 2005/04/14 18:04:12 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -162,10 +162,10 @@ rayshade(		/* shade ray r with material mod */
 	int  mod
 )
 {
-	int  gotmat;
 	register OBJREC  *m;
+
 	r->rt = r->rot;			/* set effective ray length */
-	for (gotmat = 0; !gotmat && mod != OVOID; mod = m->omod) {
+	for ( ; mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
 		/****** unnecessary test since modifier() is always called
 		if (!ismodifier(m->otype)) {
@@ -184,10 +184,10 @@ rayshade(		/* shade ray r with material mod */
 			if (!islight(m->otype))
 				m = &Lamb;
 		}
-					/* materials call raytexture */
-		gotmat = (*ofun[m->otype].funp)(m, r);
+		if ((*ofun[m->otype].funp)(m, r))
+			return(1);	/* materials call raytexture() */
 	}
-	return(gotmat);
+	return(0);			/* no material! */
 }
 
 

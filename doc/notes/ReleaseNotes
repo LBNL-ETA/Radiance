@@ -1419,3 +1419,6 @@ image-based lighting with light probes.
 Changed ambient calculation so that -ad will not limit recursion
 depth, and a minimum of 27 samples will be sent out for each stored
 ambient value, or 3 samples if -aa is 0 (caching off).
+
+Added -oM option to rtrace to report material (rather than modifier)
+for cases where actual material is aliased or further up modifier chain.

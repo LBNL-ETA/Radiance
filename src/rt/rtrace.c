@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.38 2004/11/05 17:36:56 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.39 2005/04/14 18:04:12 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -97,7 +97,7 @@ static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
 static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc,
-		oputp, oputn, oputN, oputs, oputw, oputm;
+		oputp, oputn, oputN, oputs, oputw, oputm, oputM;
 
 static void setoutput(char *vs);
 static void tranotify(OBJECT obj);
@@ -273,6 +273,9 @@ setoutput(				/* set up output tables */
 			break;
 		case 'm':				/* modifier */
 			*table++ = oputm;
+			break;
+		case 'M':				/* material */
+			*table++ = oputM;
 			break;
 		}
 	*table = NULL;
@@ -612,6 +615,24 @@ oputm(				/* print modifier */
 		else
 			fputs(VOIDID, stdout);
 	else
+		putchar('*');
+	putchar('\t');
+}
+
+
+static void
+oputM(				/* print material */
+	RAY  *r
+)
+{
+	OBJREC	*mat;
+
+	if (r->ro != NULL) {
+		if ((mat = findmaterial(r->ro)) != NULL)
+			fputs(mat->oname, stdout);
+		else
+			fputs(VOIDID, stdout);
+	} else
 		putchar('*');
 	putchar('\t');
 }

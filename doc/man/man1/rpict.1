@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.6 2005/02/16 05:40:06 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.7 2005/04/14 18:04:12 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -472,23 +472,23 @@ header of the ambient file.
 .I Getinfo(1)
 may be used to print out this information.
 .TP
-.BI -ae \ mat
+.BI -ae \ mod
 Append
-.I mat
+.I mod
 to the ambient exclude list,
 so that it will not be considered during the indirect calculation.
 This is a hack for speeding the indirect computation by
 ignoring certain objects.
 Any object having
-.I mat
+.I mod
 as its modifier will get the default ambient
 level rather than a calculated value.
-Any number of excluded materials may be given, but each
+Any number of excluded modifiers may be given, but each
 must appear in a separate option.
 .TP
-.BI -ai \ mat
+.BI -ai \ mod
 Add
-.I mat
+.I mod
 to the ambient include list,
 so that it will be considered during the indirect calculation.
 The program can use either an include list or an exclude
@@ -497,16 +497,16 @@ list, but not both.
 .BI -aE \ file
 Same as
 .I \-ae,
-except read materials to be excluded from
+except read modifiers to be excluded from
 .I file.
 The RAYPATH environment variable determines which directories are
 searched for this file.
-The material names are separated by white space in the file.
+The modifier names are separated by white space in the file.
 .TP
 .BI -aI \ file
 Same as
 .I \-ai,
-except read materials to be included from
+except read modifiers to be included from
 .I file.
 .TP
 .BI -me " rext gext bext"
