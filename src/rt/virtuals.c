@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.14 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.15 2005/04/15 04:44:52 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -373,13 +373,11 @@ vstestvis(		/* pretest source visibility */
 			if (!srcray(&sr, NULL, &si) || sr.rsrc != sn)
 				continue;	/* can't get there from here */
 		}
-		sr.revf = srcvalue;
-		rayvalue(&sr);			/* check sample validity */
+		srcvalue(&sr);			/* check sample validity */
 		if (bright(sr.rcol) <= FTINY)
 			continue;
 		nok++;			/* got sample; check obstructions */
 		rayclear(&sr);
-		sr.revf = raytrace;
 		rayvalue(&sr);
 		if (bright(sr.rcol) > FTINY)
 			nhit++;

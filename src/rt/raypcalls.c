@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.9 2004/09/20 16:26:58 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.10 2005/04/15 04:44:51 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -422,7 +422,6 @@ ray_pchild(	/* process rays (never returns) */
 			r_queue[i].parent = NULL;
 			r_queue[i].clipset = NULL;
 			r_queue[i].slights = NULL;
-			r_queue[i].revf = raytrace;
 			samplendx++;
 			rayclear(&r_queue[i]);
 			rayvalue(&r_queue[i]);

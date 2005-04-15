@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.23 2004/11/05 17:36:55 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.24 2005/04/15 04:44:51 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -41,7 +41,6 @@ typedef struct ray {
 	int	rsrc;		/* source we're aiming for */
 	OBJECT	*clipset;	/* set of objects currently clipped */
 	OBJECT	*newcset;	/* next clipset, used for transmission */
-	void	(*revf)(struct ray *);	/* evaluation function for this ray */
 	void	(*hitf)(OBJECT *, struct ray *);	/* custom hit test */
 	OBJECT	robj;		/* intersected object number */
  	OBJREC	*ro;		/* intersected object (one with material) */
@@ -53,15 +52,13 @@ typedef struct ray {
 	RREAL	uv[2];		/* local coordinates */
 	FVECT	pert;		/* surface normal perturbation */
 	COLOR	pcol;		/* pattern color */
-	COLOR	rcol;		/* returned ray value */
+	COLOR	rcol;		/* returned radiance value */
 	double	rt;		/* returned effective ray length */
 	COLOR	cext;		/* medium extinction coefficient */
 	COLOR	albedo;		/* medium scattering albedo */
 	float	gecc;		/* scattering eccentricity coefficient */
 	int	*slights;	/* list of lights to test for scattering */
 }  RAY;
-
-#define  rayvalue(r)	(*(r)->revf)(r)
 
 extern char  VersionID[];	/* Radiance version ID string */
 
@@ -193,7 +190,7 @@ extern void	ray_pclose(int nsub);
 					/* defined in raytrace.c */
 extern int	rayorigin(RAY *r, RAY *ro, int rt, double rw);
 extern void	rayclear(RAY *r);
-extern void	raytrace(RAY *r);
+extern void	rayvalue(RAY *r);
 extern void	rayhit(OBJECT *oset, RAY *r);
 extern void	raycont(RAY *r);
 extern void	raytrans(RAY *r);
