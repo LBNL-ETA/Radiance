@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.42 2004/09/20 17:32:04 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.43 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -276,12 +276,12 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		agaussamp(r, &nd);
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
-		ambient(ctmp, r, nd.pnorm);
+		copycolor(ctmp, nd.mcolor);	/* modified by material color */
 		if (nd.specfl & SP_RBLT)
 			scalecolor(ctmp, 1.0-nd.trans);
 		else
 			scalecolor(ctmp, nd.rdiff);
-		multcolor(ctmp, nd.mcolor);	/* modified by material color */
+		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
@@ -291,12 +291,12 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
-		ambient(ctmp, r, bnorm);
+		copycolor(ctmp, nd.mcolor);	/* modified by color */
 		if (nd.specfl & SP_TBLT)
 			scalecolor(ctmp, nd.trans);
 		else
 			scalecolor(ctmp, nd.tdiff);
-		multcolor(ctmp, nd.mcolor);	/* modified by color */
+		multambient(ctmp, r, bnorm);
 		addcolor(r->rcol, ctmp);
 		flipsurface(r);
 	}
@@ -352,7 +352,7 @@ agaussamp(		/* sample anisotropic gaussian specular */
 	register int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, r, SPECULAR, np->rspec) == 0) {
+			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {
 		dimlist[ndims++] = (int)np->mp;
 		for (niter = 0; niter < MAXITER; niter++) {
 			if (niter)
@@ -381,7 +381,7 @@ agaussamp(		/* sample anisotropic gaussian specular */
 				sr.rdir[i] = r->rdir[i] + d*h[i];
 			if (DOT(sr.rdir, r->ron) > FTINY) {
 				rayvalue(&sr);
-				multcolor(sr.rcol, np->scolor);
+				multcolor(sr.rcol, sr.rcoef);
 				addcolor(r->rcol, sr.rcol);
 				break;
 			}
@@ -389,8 +389,10 @@ agaussamp(		/* sample anisotropic gaussian specular */
 		ndims--;
 	}
 					/* compute transmission */
+	copycolor(sr.rcoef, np->mcolor);		/* modify by material color */
+	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, r, SPECULAR, np->tspec) == 0) {
+			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
 		dimlist[ndims++] = (int)np->mp;
 		for (niter = 0; niter < MAXITER; niter++) {
 			if (niter)
@@ -417,8 +419,7 @@ agaussamp(		/* sample anisotropic gaussian specular */
 			if (DOT(sr.rdir, r->ron) < -FTINY) {
 				normalize(sr.rdir);	/* OK, normalize */
 				rayvalue(&sr);
-				scalecolor(sr.rcol, np->tspec);
-				multcolor(sr.rcol, np->mcolor);	/* modify */
+				multcolor(sr.rcol, sr.rcoef);
 				addcolor(r->rcol, sr.rcol);
 				break;
 			}

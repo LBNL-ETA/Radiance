@@ -1422,3 +1422,20 @@ ambient value, or 3 samples if -aa is 0 (caching off).
 
 Added -oM option to rtrace to report material (rather than modifier)
 for cases where actual material is aliased or further up modifier chain.
+
+Rearranged the way ray contributions are computed so that it might be
+possible to use rtrace to derive daylight coefficients and optical
+transfer functions.  The new -oTW option of rtrace produces color
+contribution weights for each ray, which combined with the -ti (or -tI)
+option permits the contribution of selected surfaces or sources to
+be determined.  Using the -oTW option, one should also specify
+options "-dt 0 -aa 0 -as 0" for optimal results.  In particular,
+one cannot expect reasonable tallies with -ab >= 1 and irradiance
+caching on (-aa > 0).
+
+The same code modifications included a change to the indirect computation
+with caching switched off (-aa 0).  Whereas before, the number of secondary
+rays after the first bounce were half of the previous generation, they are
+now determined by the surface reflectance, making for a better and faster
+calculation.  It should now be possible to compute many bounces with -aa 0,
+which used to be prohibitively expensive.

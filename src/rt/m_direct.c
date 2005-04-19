@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.12 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.13 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -100,9 +100,10 @@ redirect(		/* compute n'th ray redirection */
 	errno = 0;
 	va = mf->ep + 4*n;
 	coef = evalue(va[0]);
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		goto computerr;
-	if (coef <= FTINY || rayorigin(&nr, r, TRANS, coef) < 0)
+	setcolor(nr.rcoef, coef, coef, coef);
+	if (rayorigin(&nr, TRANS, r, nr.rcoef) < 0)
 		return(0);
 	va++;				/* compute direction */
 	for (j = 0; j < 3; j++) {
@@ -120,7 +121,7 @@ redirect(		/* compute n'th ray redirection */
 	if (r->rsrc >= 0)
 		nr.rsrc = source[r->rsrc].sa.sv.sn;
 	rayvalue(&nr);
-	scalecolor(nr.rcol, coef);
+	multcolor(nr.rcol, nr.rcoef);
 	addcolor(r->rcol, nr.rcol);
 	if (r->ro != NULL && isflat(r->ro->otype))
 		r->rt = r->rot + nr.rt;
@@ -166,7 +167,7 @@ dir_proj(		/* compute a director's projection */
 	if (olddot <= FTINY && olddot >= -FTINY)
 		return(0);		/* old dir parallels plane */
 	tr.rmax = 0.0;
-	rayorigin(&tr, NULL, PRIMARY, 1.0);
+	rayorigin(&tr, PRIMARY, NULL, NULL);
 	if (!(*ofun[o->otype].funp)(o, &tr))
 		return(0);		/* no intersection! */
 				/* compute redirection */

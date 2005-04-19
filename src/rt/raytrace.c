@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.48 2005/04/15 04:44:51 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.49 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -36,14 +36,22 @@ static void checkset(OBJECT  *os, OBJECT  *cs);
 
 extern int
 rayorigin(		/* start new ray from old one */
-	register RAY  *r,
-	register RAY  *ro,
+	RAY  *r,
 	int  rt,
-	double  rw
+	const RAY  *ro,
+	const COLOR rc
 )
 {
-	double	re;
-
+	double	rw, re;
+						/* assign coefficient/weight */
+	if (rc == NULL) {
+		rw = 1.0;
+		setcolor(r->rcoef, 1., 1., 1.);
+	} else {
+		rw = intens(rc);
+		if (rc != r->rcoef)
+			copycolor(r->rcoef, rc);
+	}
 	if ((r->parent = ro) == NULL) {		/* primary ray */
 		r->rlvl = 0;
 		r->rweight = rw;
@@ -54,10 +62,11 @@ rayorigin(		/* start new ray from old one */
 		copycolor(r->albedo, salbedo);
 		r->gecc = seccg;
 		r->slights = NULL;
-	} else if (ro->rot >= FHUGE) {		/* illegal continuation */
-		memset(r, 0, sizeof(RAY));
-		return(-1);
 	} else {				/* spawned ray */
+		if (ro->rot >= FHUGE) {
+			memset(r, 0, sizeof(RAY));
+			return(-1);		/* illegal continuation */
+		}
 		r->rlvl = ro->rlvl;
 		if (rt & RAYREFL) {
 			r->rlvl++;
@@ -76,12 +85,13 @@ rayorigin(		/* start new ray from old one */
 		r->crtype = ro->crtype | (r->rtype = rt);
 		VCOPY(r->rorg, ro->rop);
 		r->rweight = ro->rweight * rw;
-						/* estimate absorption */
+						/* estimate extinction */
 		re = colval(ro->cext,RED) < colval(ro->cext,GRN) ?
 				colval(ro->cext,RED) : colval(ro->cext,GRN);
 		if (colval(ro->cext,BLU) < re) re = colval(ro->cext,BLU);
-		if (re > 0.)
-			r->rweight *= exp(-re*ro->rot);
+		re *= ro->rot;
+		if (re > .1)
+			r->rweight *= exp(-re);
 	}
 	rayclear(r);
 	return(r->rlvl <= maxdepth && r->rweight >= minweight ? 0 : -1);
@@ -120,10 +130,10 @@ rayvalue(			/* trace a ray and compute its value */
 	} else if (sourcehit(r))
 		rayshade(r, r->ro->omod);	/* distant source */
 
-	rayparticipate(r);		/* for participating medium */
-
 	if (trace != NULL)
 		(*trace)(r);		/* trace execution */
+
+	rayparticipate(r);		/* for participating medium */
 }
 
 
@@ -145,7 +155,7 @@ raytrans(			/* transmit ray as is */
 {
 	RAY  tr;
 
-	if (rayorigin(&tr, r, TRANS, 1.0) == 0) {
+	if (rayorigin(&tr, TRANS, r, NULL) == 0) {
 		VCOPY(tr.rdir, r->rdir);
 		rayvalue(&tr);
 		copycolor(r->rcol, tr.rcol);
@@ -207,10 +217,10 @@ rayparticipate(			/* compute ray medium participation */
 		ge *= 1. - colval(r->albedo,GRN);
 		be *= 1. - colval(r->albedo,BLU);
 	}
-	setcolor(ce,	re<=0. ? 1. : re>92. ? 0. : exp(-re),
-			ge<=0. ? 1. : ge>92. ? 0. : exp(-ge),
-			be<=0. ? 1. : be>92. ? 0. : exp(-be));
-	multcolor(r->rcol, ce);			/* path absorption */
+	setcolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+			ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
+			be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
+	multcolor(r->rcol, ce);			/* path extinction */
 	if (r->crtype & SHADOW || intens(r->albedo) <= FTINY)
 		return;				/* no scattering */
 	setcolor(ca,
@@ -303,7 +313,7 @@ raymixture(		/* mix modifiers */
 
 extern double
 raydist(		/* compute (cumulative) ray distance */
-	register RAY  *r,
+	register const RAY  *r,
 	register int  flags
 )
 {
@@ -314,6 +324,34 @@ raydist(		/* compute (cumulative) ray distance */
 		r = r->parent;
 	}
 	return(sum);
+}
+
+
+extern void
+raycontrib(		/* compute (cumulative) ray contribution */
+	COLOR  rc,
+	const RAY  *r,
+	int  flags
+)
+{
+	COLOR	eext, ext1;
+	
+	setcolor(eext, 0., 0., 0.);
+	setcolor(rc, 1., 1., 1.);
+
+	while (r != NULL && r->crtype&flags) {
+		multcolor(rc, r->rcoef);
+		copycolor(ext1, r->cext);
+		scalecolor(ext1, r->rot);
+		addcolor(eext, ext1);
+		r = r->parent;
+	}
+	if (intens(eext) > FTINY) {
+		setcolor(ext1,	exp(-colval(eext,RED)),
+				exp(-colval(eext,GRN)),
+				exp(-colval(eext,BLU)));
+		multcolor(rc, ext1);
+	}
 }
 
 
@@ -363,7 +401,7 @@ newrayxf(			/* get new tranformation matrix for ray */
 		FULLXF  xf;
 	}  xfseed = { &xfseed }, *xflast = &xfseed;
 	register struct xfn  *xp;
-	register RAY  *rp;
+	register const RAY  *rp;
 
 	/*
 	 * Search for transform in circular list that

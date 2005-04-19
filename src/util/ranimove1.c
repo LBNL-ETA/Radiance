@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.9 2004/05/13 15:45:43 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.10 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -367,7 +367,7 @@ init_frame_sample(void)		/* sample our initial frame */
 			continue;
 		}
 		if (!sample_here(x, y)) {	/* just cast */
-			rayorigin(&ir, NULL, PRIMARY, 1.0);
+			rayorigin(&ir, PRIMARY, NULL, NULL);
 			if (!localhit(&ir, &thescene)) {
 				if (ir.ro != &Aftplane)
 					sourcehit(&ir);
@@ -385,7 +385,7 @@ init_frame_sample(void)		/* sample our initial frame */
 		}
 		if (nprocs > 1) {		/* get sample */
 			int	rval;
-			rayorigin(&ir, NULL, PRIMARY, 1.0);
+			rayorigin(&ir, PRIMARY, NULL, NULL);
 			ir.rno = n;
 			rval = ray_pqueue(&ir);
 			if (!rval)

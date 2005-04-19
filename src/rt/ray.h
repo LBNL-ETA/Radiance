@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.24 2005/04/15 04:44:51 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.25 2005/04/19 01:15:06 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -31,10 +31,11 @@ extern "C" {
 typedef struct ray {
 	unsigned long  rno;	/* unique ray number */
 	int	rlvl;		/* number of reflections for this ray */
-	float	rweight;	/* cumulative weight of this ray */
+	float	rweight;	/* cumulative weight (for termination) */
+	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
 	short	rtype;		/* ray type */
 	short	crtype;		/* cumulative ray type */
-	struct ray  *parent;	/* ray this originated from */
+	const struct ray  *parent;	/* ray this originated from */
 	FVECT	rorg;		/* origin of ray */
 	FVECT	rdir;		/* normalized direction of ray */
 	double	rmax;		/* maximum distance (aft clipping plane) */
@@ -188,7 +189,7 @@ extern void	ray_pdone(int freall);
 extern void	ray_popen(int nadd);
 extern void	ray_pclose(int nsub);
 					/* defined in raytrace.c */
-extern int	rayorigin(RAY *r, RAY *ro, int rt, double rw);
+extern int	rayorigin(RAY *r, int rt, const RAY *ro, const COLOR rc);
 extern void	rayclear(RAY *r);
 extern void	rayvalue(RAY *r);
 extern void	rayhit(OBJECT *oset, RAY *r);
@@ -198,7 +199,8 @@ extern int	rayshade(RAY *r, int mod);
 extern void	rayparticipate(RAY *r);
 extern void	raytexture(RAY *r, OBJECT mod);
 extern int	raymixture(RAY *r, OBJECT fore, OBJECT back, double coef);
-extern double	raydist(RAY *r, int flags);
+extern void	raycontrib(COLOR rc, const RAY *r, int flags);
+extern double	raydist(const RAY *r, int flags);
 extern double	raynormal(FVECT norm, RAY *r);
 extern void	newrayxf(RAY *r);
 extern void	flipsurface(RAY *r);

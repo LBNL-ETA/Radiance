@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.9 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -78,7 +78,7 @@ m_clip(			/* clip objects from ray */
 	r->newcset = cset;
 	if (strcmp(m->oargs.sarg[0], VOIDID)) {
 		int  inside = 0;
-		register RAY  *rp;
+		register const RAY  *rp;
 					/* check for penetration */
 		for (rp = r; rp->parent != NULL; rp = rp->parent)
 			if (!(rp->rtype & RAYREFL) && rp->parent->ro != NULL

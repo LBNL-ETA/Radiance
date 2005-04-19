@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.10 2005/04/15 04:44:51 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.11 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -43,7 +43,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.10 2005/04/15 04:44:51 greg Ex
  *	myRay.rorg = ( ray origin point )
  *	myRay.rdir = ( normalized ray direction )
  *	myRay.rmax = ( maximum length, or zero for no limit )
- *	rayorigin(&myRay, NULL, PRIMARY, 1.0);
+ *	rayorigin(&myRay, PRIMARY, NULL, NULL);
  *	myRay.rno = ( my personal ray identifier )
  *	if (ray_pqueue(&myRay) == 1)
  *		{ do something with results }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.19 2004/09/09 06:46:07 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.20 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -164,7 +164,9 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 
 		trans *= nratio*nratio;		/* solid angle ratio */
 
-		if (rayorigin(&p, r, REFRACTED, trans) == 0) {
+		setcolor(p.rcoef, trans, trans, trans);
+
+		if (rayorigin(&p, REFRACTED, r, p.rcoef) == 0) {
 
 						/* compute refracted ray */
 			d1 = nratio*cos1 - cos2;
@@ -192,7 +194,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 				copycolor(p.cext, ctrans);
 				copycolor(p.albedo, talb);
 				rayvalue(&p);
-				scalecolor(p.rcol, trans);
+				multcolor(p.rcol, p.rcoef);
 				addcolor(r->rcol, p.rcol);
 						/* virtual distance */
 				if (flatsurface ||
@@ -204,9 +206,10 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 			}
 		}
 	}
-		
+	setcolor(p.rcoef, refl, refl, refl);
+
 	if (!(r->crtype & SHADOW) &&
-			rayorigin(&p, r, REFLECTED, refl) == 0) {
+			rayorigin(&p, REFLECTED, r, p.rcoef) == 0) {
 
 					/* compute reflected ray */
 		for (i = 0; i < 3; i++)
@@ -218,7 +221,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 
 		rayvalue(&p);			/* reflected ray value */
 
-		scalecolor(p.rcol, refl);	/* color contribution */
+		multcolor(p.rcol, p.rcoef);	/* color contribution */
 		addcolor(r->rcol, p.rcol);
 						/* virtual distance */
 		if (flatsurface) {
@@ -249,7 +252,8 @@ disperse(  /* check light sources for dispersion */
 	COLOR  abt
 )
 {
-	RAY  sray, *entray;
+	RAY  sray;
+	const RAY  *entray;
 	FVECT  v1, v2, n1, n2;
 	FVECT  dv, v2Xdv;
 	double  v2Xdvv2Xdv;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.15 2005/04/15 04:44:52 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.16 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -361,7 +361,7 @@ vstestvis(		/* pretest source visibility */
 				sr.rdir[i] = -onorm[i];
 			}
 			sr.rmax = 0.0;
-			rayorigin(&sr, NULL, PRIMARY, 1.0);
+			rayorigin(&sr, PRIMARY, NULL, NULL);
 		} while (!(*ofun[o->otype].funp)(o, &sr));
 					/* check against source */
 		VCOPY(sr.rorg, sr.rop);	/* starting from intersection */

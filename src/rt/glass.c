@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.15 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.16 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -99,8 +99,9 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		colval(trans,i) = .5*(1.0-r1e)*(1.0-r1e)*d/(1.0-r1e*r1e*d*d);
 		colval(trans,i) += .5*(1.0-r1m)*(1.0-r1m)*d/(1.0-r1m*r1m*d*d);
 	}
+	multcolor(trans, r->pcol);		/* modify by pattern */
 						/* transmitted ray */
-	if (rayorigin(&p, r, TRANS, bright(trans)) == 0) {
+	if (rayorigin(&p, TRANS, r, trans) == 0) {
 		if (!(r->crtype & SHADOW) && hastexture) {
 			for (i = 0; i < 3; i++)		/* perturb direction */
 				p.rdir[i] = r->rdir[i] +
@@ -114,8 +115,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 			transtest = 2;
 		}
 		rayvalue(&p);
-		multcolor(p.rcol, r->pcol);	/* modify */
-		multcolor(p.rcol, trans);
+		multcolor(p.rcol, p.rcoef);
 		addcolor(r->rcol, p.rcol);
 		transtest *= bright(p.rcol);
 		transdist = r->rot + p.rt;
@@ -133,11 +133,11 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		colval(refl,i) += .5*r1m*(1.0+(1.0-2.0*r1m)*d)/(1.0-r1m*r1m*d);
 	}
 						/* reflected ray */
-	if (rayorigin(&p, r, REFLECTED, bright(refl)) == 0) {
+	if (rayorigin(&p, REFLECTED, r, refl) == 0) {
 		for (i = 0; i < 3; i++)
 			p.rdir[i] = r->rdir[i] + 2.0*pdot*pnorm[i];
 		rayvalue(&p);
-		multcolor(p.rcol, refl);
+		multcolor(p.rcol, p.rcoef);
 		addcolor(r->rcol, p.rcol);
 		if (!hastexture && r->ro != NULL && isflat(r->ro->otype)) {
 			mirtest = 2.0*bright(p.rcol);

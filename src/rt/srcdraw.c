@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.15 2004/10/26 19:04:32 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.16 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -448,7 +448,7 @@ drawsources(
 				if (source[sp->sn].sflags & SSPOT &&
 						spotout(&sr, source[sp->sn].sl.s))
 					continue;	/* outside spot */
-				rayorigin(&sr, NULL, SHADOW, 1.0);
+				rayorigin(&sr, SHADOW, NULL, NULL);
 				sr.rsrc = sp->sn;
 				rayvalue(&sr);		/* compute value */
 				if (bright(sr.rcol) <= FTINY)

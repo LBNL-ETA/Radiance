@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.11 2005/02/23 18:18:21 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.12 2005/04/19 01:15:06 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -42,6 +42,7 @@ typedef struct {
 }  AMBSAMP;		/* ambient sample division */
 
 typedef struct {
+	COLOR  acoef;		/* coefficient for rayorigin() */
 	FVECT  ux, uy, uz;	/* x, y and z axis directions */
 	short  nt, np;		/* number of theta and phi directions */
 }  AMBHEMI;		/* ambient sample hemisphere */
@@ -57,25 +58,26 @@ extern double  minarad;		/* minimum ambient radius */
 #define  AMBMAGIC	557	/* magic number for ambient value files */
 #define  AMBFMT		"Radiance_ambval"	/* format id string */
 
-					/* defined in ambcomp.c */
-extern int	divsample(AMBSAMP *dp, AMBHEMI *h, RAY *r);
-extern double	doambient(COLOR acol, RAY *r, double wt, FVECT pg, FVECT dg);
-extern void	inithemi(AMBHEMI *hp, RAY *r, double wt);
-extern void	comperrs(AMBSAMP *da, AMBHEMI *hp);
-extern void	posgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
-extern void	dirgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
 					/* defined in ambient.c */
 extern void	setambres(int ar);
 extern void	setambacc(double newa);
 extern void	setambient(void);
+extern void	multambient(COLOR aval, RAY *r, FVECT nrm);
 extern void	ambdone(void);
 extern void	ambnotify(OBJECT obj);
-extern void	ambient(COLOR acol, RAY *r, FVECT nrm);
 extern double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
-extern double	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
+extern double	makeambient(COLOR acol, RAY *r, COLOR ac, FVECT rn, int al);
 extern void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
 extern int	ambsync(void);
+					/* defined in ambcomp.c */
+extern double	doambient(COLOR acol, RAY *r, COLOR ac, double wt,
+					FVECT pg, FVECT dg);
+extern int	inithemi(AMBHEMI *hp, RAY *r, COLOR ac, double wt);
+extern int	divsample(AMBSAMP *dp, AMBHEMI *h, RAY *r);
+extern void	comperrs(AMBSAMP *da, AMBHEMI *hp);
+extern void	posgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
+extern void	dirgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
 					/* defined in ambio.c */
 extern void	putambmagic(FILE *fp);
 extern int	hasambmagic(FILE *fp);

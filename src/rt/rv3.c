@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.16 2005/02/18 17:47:53 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.17 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -108,7 +108,7 @@ double  *mp;
 			return(-1);
 		}
 		if (!direc || ourview.type == VT_PAR) {
-			rayorigin(&thisray, NULL, PRIMARY, 1.0);
+			rayorigin(&thisray, PRIMARY, NULL, NULL);
 			if (!localhit(&thisray, &thescene)) {
 				error(COMMAND, "not a local object");
 				return(-1);
@@ -170,7 +170,7 @@ int  xmin, ymin, xmax, ymax;
 			h/hresolu, v/vresolu)) < -FTINY) {
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
 	} else {
-		rayorigin(&thisray, NULL, PRIMARY, 1.0);
+		rayorigin(&thisray, PRIMARY, NULL, NULL);
 		samplendx++;
 		rayvalue(&thisray);
 	}

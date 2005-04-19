@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_mist.c,v 2.16 2004/09/28 17:54:19 greg Exp $";
+static const char RCSid[] = "$Id: m_mist.c,v 2.17 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  * Mist volumetric material.
@@ -165,7 +165,7 @@ m_mist(		/* process a ray entering or leaving some mist */
 	} else
 		setcolor(mext, 0., 0., 0.);
 						/* start transmitted ray */
-	if (rayorigin(&p, r, TRANS, 1.) < 0)
+	if (rayorigin(&p, TRANS, r, NULL) < 0)
 		return(1);
 	VCOPY(p.rdir, r->rdir);
 	p.slights = newslist;

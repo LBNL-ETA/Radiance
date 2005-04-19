@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.6 2005/04/14 18:04:12 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.7 2005/04/19 01:15:06 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -89,6 +89,8 @@ v	value (radiance)
 .IP
 w	weight
 .IP
+W	contribution
+.IP
 l	effective length of ray
 .IP
 L	first intersection distance
@@ -111,6 +113,8 @@ If the letter 't' appears in
 .I spec,
 then the fields following will be printed for every ray traced,
 not just the final result.
+If the capital letter 'T' is given instead of 't', then all rays will
+be reported, including shadow testing rays to light sources.
 Spawned rays are indented one tab for each level.
 .IP
 Note that there is no space between this option and its argument.
@@ -125,8 +129,8 @@ Any ray striking an object having
 .I mod
 as its modifier will not be reported to the standard output with
 the rest of the rays being traced.
-This option has no effect unless the 't' option has been given as
-part of the output specifier.
+This option has no effect unless either the 't' or 'T'
+option has been given as part of the output specifier.
 Any number of excluded modifiers may be given, but each
 must appear in a separate option.
 .TP

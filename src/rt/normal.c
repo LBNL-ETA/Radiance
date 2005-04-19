@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.49 2005/01/05 19:34:11 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.50 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -258,11 +258,12 @@ m_normal(			/* color a ray that hit something normal */
 						/* transmitted ray */
 	if ((nd.specfl&(SP_TRAN|SP_PURE|SP_TBLT)) == (SP_TRAN|SP_PURE)) {
 		RAY  lr;
-		if (rayorigin(&lr, r, TRANS, nd.tspec) == 0) {
+		copycolor(lr.rcoef, nd.mcolor);	/* modified by color */
+		scalecolor(lr.rcoef, nd.tspec);
+		if (rayorigin(&lr, TRANS, r, lr.rcoef) == 0) {
 			VCOPY(lr.rdir, nd.prdir);
 			rayvalue(&lr);
-			scalecolor(lr.rcol, nd.tspec);
-			multcolor(lr.rcol, nd.mcolor);	/* modified by color */
+			multcolor(lr.rcol, lr.rcoef);
 			addcolor(r->rcol, lr.rcol);
 			transtest *= bright(lr.rcol);
 			transdist = r->rot + lr.rt;
@@ -302,10 +303,10 @@ m_normal(			/* color a ray that hit something normal */
 						/* reflected ray */
 	if ((nd.specfl&(SP_REFL|SP_PURE|SP_RBLT)) == (SP_REFL|SP_PURE)) {
 		RAY  lr;
-		if (rayorigin(&lr, r, REFLECTED, nd.rspec) == 0) {
+		if (rayorigin(&lr, REFLECTED, r, nd.scolor) == 0) {
 			VCOPY(lr.rdir, nd.vrefl);
 			rayvalue(&lr);
-			multcolor(lr.rcol, nd.scolor);
+			multcolor(lr.rcol, lr.rcoef);
 			addcolor(r->rcol, lr.rcol);
 			if (!hastexture && nd.specfl & SP_FLAT) {
 				mirtest = 2.*bright(lr.rcol);
@@ -323,29 +324,29 @@ m_normal(			/* color a ray that hit something normal */
 		gaussamp(r, &nd);		/* checks *BLT flags */
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
-		ambient(ctmp, r, hastexture?nd.pnorm:r->ron);
+		copycolor(ctmp, nd.mcolor);	/* modified by material color */
 		if (nd.specfl & SP_RBLT)
 			scalecolor(ctmp, 1.0-nd.trans);
 		else
 			scalecolor(ctmp, nd.rdiff);
-		multcolor(ctmp, nd.mcolor);	/* modified by material color */
+		multambient(ctmp, r, hastexture ? nd.pnorm : r->ron);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}
 	if (nd.tdiff > FTINY) {		/* ambient from other side */
+		copycolor(ctmp, nd.mcolor);	/* modified by color */
+		if (nd.specfl & SP_TBLT)
+			scalecolor(ctmp, nd.trans);
+		else
+			scalecolor(ctmp, nd.tdiff);
 		flipsurface(r);
 		if (hastexture) {
 			FVECT  bnorm;
 			bnorm[0] = -nd.pnorm[0];
 			bnorm[1] = -nd.pnorm[1];
 			bnorm[2] = -nd.pnorm[2];
-			ambient(ctmp, r, bnorm);
+			multambient(ctmp, r, bnorm);
 		} else
-			ambient(ctmp, r, r->ron);
-		if (nd.specfl & SP_TBLT)
-			scalecolor(ctmp, nd.trans);
-		else
-			scalecolor(ctmp, nd.tdiff);
-		multcolor(ctmp, nd.mcolor);	/* modified by color */
+			multambient(ctmp, r, r->ron);
 		addcolor(r->rcol, ctmp);
 		flipsurface(r);
 	}
@@ -389,7 +390,7 @@ gaussamp(			/* sample gaussian specular */
 	fcross(v, np->pnorm, u);
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, r, SPECULAR, np->rspec) == 0) {
+			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {
 		dimlist[ndims++] = (int)np->mp;
 		for (niter = 0; niter < MAXITER; niter++) {
 			if (niter)
@@ -412,7 +413,7 @@ gaussamp(			/* sample gaussian specular */
 				sr.rdir[i] = r->rdir[i] + d*h[i];
 			if (DOT(sr.rdir, r->ron) > FTINY) {
 				rayvalue(&sr);
-				multcolor(sr.rcol, np->scolor);
+				multcolor(sr.rcol, sr.rcoef);
 				addcolor(r->rcol, sr.rcol);
 				break;
 			}
@@ -420,8 +421,10 @@ gaussamp(			/* sample gaussian specular */
 		ndims--;
 	}
 					/* compute transmission */
+	copycolor(sr.rcoef, np->mcolor);	/* modified by color */
+	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, r, SPECULAR, np->tspec) == 0) {
+			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
 		dimlist[ndims++] = (int)np->mp;
 		for (niter = 0; niter < MAXITER; niter++) {
 			if (niter)
@@ -442,8 +445,7 @@ gaussamp(			/* sample gaussian specular */
 			if (DOT(sr.rdir, r->ron) < -FTINY) {
 				normalize(sr.rdir);	/* OK, normalize */
 				rayvalue(&sr);
-				scalecolor(sr.rcol, np->tspec);
-				multcolor(sr.rcol, np->mcolor);	/* modified */
+				multcolor(sr.rcol, sr.rcoef);
 				addcolor(r->rcol, sr.rcol);
 				break;
 			}

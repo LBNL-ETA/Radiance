@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.39 2005/04/14 18:04:12 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.40 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -96,8 +96,8 @@ typedef void putf_t(double v);
 static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
-static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc,
-		oputp, oputn, oputN, oputs, oputw, oputm, oputM;
+static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc, oputp,
+		oputn, oputN, oputs, oputw, oputW, oputm, oputM;
 
 static void setoutput(char *vs);
 static void tranotify(OBJECT obj);
@@ -220,6 +220,16 @@ rtrace(				/* trace rays from file */
 
 
 static void
+trace_sources(void)			/* trace rays to light sources, also */
+{
+	int	sn;
+	
+	for (sn = 0; sn < nsources; sn++)
+		source[sn].sflags |= SFOLLOW;
+}
+
+
+static void
 setoutput(				/* set up output tables */
 	register char  *vs
 )
@@ -229,6 +239,9 @@ setoutput(				/* set up output tables */
 	castonly = 1;
 	while (*vs)
 		switch (*vs++) {
+		case 'T':				/* trace sources */
+			trace_sources();
+			/* fall through */
 		case 't':				/* trace */
 			*table = NULL;
 			table = every_out;
@@ -271,6 +284,12 @@ setoutput(				/* set up output tables */
 		case 'w':				/* weight */
 			*table++ = oputw;
 			break;
+		case 'W':				/* coefficient */
+			*table++ = oputW;
+			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
+				error(WARNING,
+					"-otW accuracy requires -aa 0 -as 0");
+			break;
 		case 'm':				/* modifier */
 			*table++ = oputm;
 			break;
@@ -287,7 +306,8 @@ bogusray(void)			/* print out empty record */
 {
 	thisray.rorg[0] = thisray.rorg[1] = thisray.rorg[2] =
 	thisray.rdir[0] = thisray.rdir[1] = thisray.rdir[2] = 0.0;
-	rayorigin(&thisray, NULL, PRIMARY, 1.0);
+	thisray.rmax = 0.0;
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	printvals(&thisray);
 }
 
@@ -302,7 +322,7 @@ rad(		/* compute and print ray value(s) */
 	VCOPY(thisray.rorg, org);
 	VCOPY(thisray.rdir, dir);
 	thisray.rmax = dmax;
-	rayorigin(&thisray, NULL, PRIMARY, 1.0);
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	if (castonly) {
 		if (!localhit(&thisray, &thescene)) {
 			if (thisray.ro == &Aftplane) {	/* clipped */
@@ -329,7 +349,8 @@ irrad(			/* compute immediate irradiance value */
 		thisray.rorg[i] = org[i] + dir[i];
 		thisray.rdir[i] = -dir[i];
 	}
-	rayorigin(&thisray, NULL, PRIMARY, 1.0);
+	thisray.rmax = 0.0;
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
 					/* pretend we hit surface */
 	thisray.rot = 1.0-1e-4;
 	thisray.rod = 1.0;
@@ -451,7 +472,7 @@ tabin(				/* tab in appropriate amount */
 	RAY  *r
 )
 {
-	register RAY  *rp;
+	const RAY  *rp;
 
 	for (rp = r->parent; rp != NULL; rp = rp->parent)
 		putchar('\t');
@@ -601,6 +622,28 @@ oputw(				/* print weight */
 )
 {
 	(*putreal)(r->rweight);
+}
+
+
+static void
+oputW(				/* print contribution */
+	RAY  *r
+)
+{
+	COLOR	contr;
+	COLR	cout;
+
+	raycontrib(contr, r, PRIMARY);
+	if (outform == 'c') {
+		setcolr(cout,	colval(contr,RED),
+				colval(contr,GRN),
+				colval(contr,BLU));
+		fwrite((char *)cout, sizeof(cout), 1, stdout);
+		return;
+	}
+	(*putreal)(colval(contr,RED));
+	(*putreal)(colval(contr,GRN));
+	(*putreal)(colval(contr,BLU));
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.13 2005/04/13 23:00:59 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.14 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -16,35 +16,51 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.13 2005/04/13 23:00:59 greg Exp 
 #include  "random.h"
 
 
-static int
-ambcmp(d1, d2)				/* decreasing order */
-AMBSAMP  *d1, *d2;
+int
+inithemi(			/* initialize sampling hemisphere */
+	register AMBHEMI  *hp,
+	RAY  *r,
+	COLOR ac, 
+	double  wt
+)
 {
-	if (d1->k < d2->k)
-		return(1);
-	if (d1->k > d2->k)
-		return(-1);
-	return(0);
-}
-
-
-static int
-ambnorm(d1, d2)				/* standard order */
-AMBSAMP  *d1, *d2;
-{
-	register int  c;
-
-	if ( (c = d1->t - d2->t) )
-		return(c);
-	return(d1->p - d2->p);
+	int	ns;
+	double	d;
+	register int  i;
+					/* set number of divisions */
+	hp->nt = sqrt(ambdiv * wt / PI) + 0.5;
+	i = ambacc > FTINY ? 3 : 1;	/* minimum number of samples */
+	if (hp->nt < i)
+		hp->nt = i;
+	hp->np = PI * hp->nt + 0.5;
+					/* set number of super-samples */
+	ns = ambssamp * wt + 0.5;
+					/* assign coefficient */
+	d = 1.0/(hp->nt*hp->np + ns);	/* XXX weight not uniform if ns > 0 */
+	copycolor(hp->acoef, ac);
+	scalecolor(hp->acoef, d);
+					/* make axes */
+	VCOPY(hp->uz, r->ron);
+	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
+	for (i = 0; i < 3; i++)
+		if (hp->uz[i] < 0.6 && hp->uz[i] > -0.6)
+			break;
+	if (i >= 3)
+		error(CONSISTENCY, "bad ray direction in inithemi");
+	hp->uy[i] = 1.0;
+	fcross(hp->ux, hp->uy, hp->uz);
+	normalize(hp->ux);
+	fcross(hp->uy, hp->uz, hp->ux);
+	return(ns);
 }
 
 
 int
-divsample(dp, h, r)			/* sample a division */
-register AMBSAMP  *dp;
-AMBHEMI  *h;
-RAY  *r;
+divsample(				/* sample a division */
+	register AMBSAMP  *dp,
+	AMBHEMI  *h,
+	RAY  *r
+)
 {
 	RAY  ar;
 	int  hlist[3];
@@ -53,9 +69,14 @@ RAY  *r;
 	double  b2;
 	double  phi;
 	register int  i;
-
-	if (rayorigin(&ar, r, AMBIENT, AVGREFL) < 0)
+					/* assign coefficient */
+	if (ambacc <= FTINY)		/* no storage, so report accurately */
+		copycolor(ar.rcoef, h->acoef);
+	else				/* else lie for sake of cache */
+		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
+	if (rayorigin(&ar, AMBIENT, r, ar.rcoef) < 0)
 		return(-1);
+	copycolor(ar.rcoef, h->acoef);	/* correct coefficient rtrace output */
 	hlist[0] = r->rno;
 	hlist[1] = dp->t;
 	hlist[2] = dp->p;
@@ -87,12 +108,48 @@ RAY  *r;
 }
 
 
+static int
+ambcmp(					/* decreasing order */
+	const void *p1,
+	const void *p2
+)
+{
+	const AMBSAMP	*d1 = (const AMBSAMP *)p1;
+	const AMBSAMP	*d2 = (const AMBSAMP *)p2;
+
+	if (d1->k < d2->k)
+		return(1);
+	if (d1->k > d2->k)
+		return(-1);
+	return(0);
+}
+
+
+static int
+ambnorm(				/* standard order */
+	const void *p1,
+	const void *p2
+)
+{
+	const AMBSAMP	*d1 = (const AMBSAMP *)p1;
+	const AMBSAMP	*d2 = (const AMBSAMP *)p2;
+	register int	c;
+
+	if ( (c = d1->t - d2->t) )
+		return(c);
+	return(d1->p - d2->p);
+}
+
+
 double
-doambient(acol, r, wt, pg, dg)		/* compute ambient component */
-COLOR  acol;
-RAY  *r;
-double  wt;
-FVECT  pg, dg;
+doambient(				/* compute ambient component */
+	COLOR  acol,
+	RAY  *r,
+	COLOR  ac,
+	double  wt,
+	FVECT  pg,
+	FVECT  dg
+)
 {
 	double  b, d;
 	AMBHEMI  hemi;
@@ -105,12 +162,11 @@ FVECT  pg, dg;
 					/* initialize color */
 	setcolor(acol, 0.0, 0.0, 0.0);
 					/* initialize hemisphere */
-	inithemi(&hemi, r, wt);
+	ns = inithemi(&hemi, r, ac, wt);
 	ndivs = hemi.nt * hemi.np;
 	if (ndivs == 0)
 		return(0.0);
-					/* set number of super-samples */
-	ns = ambssamp * wt + 0.5;
+					/* allocate super-samples */
 	if (ns > 0 || pg != NULL || dg != NULL) {
 		div = (AMBSAMP *)malloc(ndivs*sizeof(AMBSAMP));
 		if (div == NULL)
@@ -223,37 +279,10 @@ oopsy:
 
 
 void
-inithemi(hp, r, wt)		/* initialize sampling hemisphere */
-register AMBHEMI  *hp;
-RAY  *r;
-double  wt;
-{
-	register int  i;
-					/* set number of divisions */
-	hp->nt = sqrt(ambdiv * wt / PI) + 0.5;
-	i = ambacc > FTINY ? 3 : 1;	/* minimum number of samples */
-	if (hp->nt < i)
-		hp->nt = i;
-	hp->np = PI * hp->nt + 0.5;
-					/* make axes */
-	VCOPY(hp->uz, r->ron);
-	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
-	for (i = 0; i < 3; i++)
-		if (hp->uz[i] < 0.6 && hp->uz[i] > -0.6)
-			break;
-	if (i >= 3)
-		error(CONSISTENCY, "bad ray direction in inithemi");
-	hp->uy[i] = 1.0;
-	fcross(hp->ux, hp->uy, hp->uz);
-	normalize(hp->ux);
-	fcross(hp->uy, hp->uz, hp->ux);
-}
-
-
-void
-comperrs(da, hp)		/* compute initial error estimates */
-AMBSAMP  *da;		/* assumes standard ordering */
-register AMBHEMI  *hp;
+comperrs(			/* compute initial error estimates */
+	AMBSAMP  *da,	/* assumes standard ordering */
+	register AMBHEMI  *hp
+)
 {
 	double  b, b2;
 	int  i, j;
@@ -302,10 +331,11 @@ register AMBHEMI  *hp;
 
 
 void
-posgradient(gv, da, hp)				/* compute position gradient */
-FVECT  gv;
-AMBSAMP  *da;			/* assumes standard ordering */
-register AMBHEMI  *hp;
+posgradient(					/* compute position gradient */
+	FVECT  gv,
+	AMBSAMP  *da,			/* assumes standard ordering */
+	register AMBHEMI  *hp
+)
 {
 	register int  i, j;
 	double  nextsine, lastsine, b, d;
@@ -359,10 +389,11 @@ register AMBHEMI  *hp;
 
 
 void
-dirgradient(gv, da, hp)				/* compute direction gradient */
-FVECT  gv;
-AMBSAMP  *da;			/* assumes standard ordering */
-register AMBHEMI  *hp;
+dirgradient(					/* compute direction gradient */
+	FVECT  gv,
+	AMBSAMP  *da,			/* assumes standard ordering */
+	register AMBHEMI  *hp
+)
 {
 	register int  i, j;
 	double  mag;

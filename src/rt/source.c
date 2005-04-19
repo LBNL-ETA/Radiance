@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.49 2005/04/15 04:44:51 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.50 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -177,7 +177,7 @@ srcray(				/* send a ray to a source, return domega */
     double  d;				/* distance to source */
     register SRCREC  *srcp;
 
-    rayorigin(sr, r, SHADOW, 1.0);		/* ignore limits */
+    rayorigin(sr, SHADOW, r, NULL);		/* ignore limits */
 
     while ((d = nextssamp(sr, si)) != 0.0) {
 	sr->rsrc = si->sn;			/* remember source */
@@ -393,10 +393,11 @@ direct(					/* add direct component */
 		}
 #endif
 		VCOPY(scp->dir, sr.rdir);
+		copycolor(sr.rcoef, scp->coef);
 						/* compute potential */
 		srcvalue(&sr);
+		multcolor(sr.rcol, sr.rcoef);
 		copycolor(scp->val, sr.rcol);
-		multcolor(scp->val, scp->coef);
 		cntord[sn].brt = bright(scp->val);
 	}
 						/* sort contributions */
@@ -435,7 +436,7 @@ direct(					/* add direct component */
 			break;
 		scp = srccnt + cntord[sn].sndx;
 						/* test for hit */
-		rayorigin(&sr, r, SHADOW, 1.0);
+		rayorigin(&sr, SHADOW, r, NULL);
 		VCOPY(sr.rdir, scp->dir);
 		sr.rsrc = scp->sno;
 						/* keep statistics */
@@ -448,9 +449,9 @@ direct(					/* add direct component */
 				source[scp->sno].sflags & SFOLLOW )) {
 						/* follow entire path */
 			raycont(&sr);
-			rayparticipate(&sr);
 			if (trace != NULL)
 				(*trace)(&sr);	/* trace execution */
+			rayparticipate(&sr);
 			if (bright(sr.rcol) <= FTINY) {
 #if SHADCACHE
 				if ((scp <= srccnt || scp[-1].sno != scp->sno)
@@ -664,10 +665,14 @@ m_light(				/* ray hit a light source */
 )
 {
 						/* check for over-counting */
-	if (badcomponent(m, r))
+	if (badcomponent(m, r)) {
+		setcolor(r->rcoef, 0.0, 0.0, 0.0);
 		return(1);
-	if (wrongsource(m, r))
+	}
+	if (wrongsource(m, r)) {
+		setcolor(r->rcoef, 0.0, 0.0, 0.0);
 		return(1);
+	}
 						/* check for passed illum */
 	if (passillum(m, r)) {
 		if (m->oargs.nsargs && strcmp(m->oargs.sarg[0], VOIDID))
@@ -675,12 +680,14 @@ m_light(				/* ray hit a light source */
 		raytrans(r);
 		return(1);
 	}
+						/* check for invisibility */
+	if (srcignore(m, r)) {
+		setcolor(r->rcoef, 0.0, 0.0, 0.0);
+		return(1);
+	}
 					/* otherwise treat as source */
 						/* check for behind */
 	if (r->rod < 0.0)
-		return(1);
-						/* check for invisibility */
-	if (srcignore(m, r))
 		return(1);
 						/* check for outside spot */
 	if (m->otype==MAT_SPOT && spotout(r, makespot(m)))

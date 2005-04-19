@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.57 2004/11/05 17:36:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.58 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -254,13 +254,14 @@ ambnotify(			/* record new modifier */
 
 
 extern void
-ambient(		/* compute ambient component for ray */
-	COLOR  acol,
+multambient(		/* compute ambient component & multiply by coef. */
+	COLOR  aval,
 	register RAY  *r,
 	FVECT  nrm
 )
 {
 	static int  rdepth = 0;			/* ambient recursion */
+	COLOR	acol;
 	double	d, l;
 
 	if (ambdiv <= 0)			/* no ambient calculation */
@@ -275,10 +276,12 @@ ambient(		/* compute ambient component for ray */
 
 	if (ambacc <= FTINY) {			/* no ambient storage */
 		rdepth++;
-		d = doambient(acol, r, r->rweight, NULL, NULL);
+		d = doambient(acol, r, aval, intens(aval)*r->rweight,
+							NULL, NULL);
 		rdepth--;
 		if (d <= FTINY)
 			goto dumbamb;
+		multcolor(aval, acol);
 		return;
 	}
 
@@ -290,26 +293,31 @@ ambient(		/* compute ambient component for ray */
 			&atrunk, thescene.cuorg, thescene.cusize);
 	if (d > FTINY) {
 		scalecolor(acol, 1.0/d);
+		multcolor(aval, acol);
 		return;
 	}
 	rdepth++;				/* need to cache new value */
-	d = makeambient(acol, r, nrm, rdepth-1);
+	d = makeambient(acol, r, aval, nrm, rdepth-1);
 	rdepth--;
-	if (d > FTINY)
+	if (d > FTINY) {
+		multcolor(aval, acol);		/* got new value */
 		return;
+	}
 dumbamb:					/* return global value */
-	copycolor(acol, ambval);
-	if ((ambvwt <= 0) | (navsum == 0))
+	if ((ambvwt <= 0) | (navsum == 0)) {
+		multcolor(aval, ambval);
 		return;
+	}
 	l = bright(ambval);			/* average in computations */
 	if (l > FTINY) {
 		d = (log(l)*(double)ambvwt + avsum) /
 				(double)(ambvwt + navsum);
 		d = exp(d) / l;
-		scalecolor(acol, d);		/* apply color of ambval */
+		scalecolor(aval, d);
+		multcolor(aval, ambval);	/* apply color of ambval */
 	} else {
 		d = exp( avsum / (double)navsum );
-		setcolor(acol, d, d, d);	/* neutral color */
+		scalecolor(aval, d);		/* neutral color */
 	}
 }
 
@@ -431,19 +439,22 @@ sumambient(	/* get interpolated ambient value */
 extern double
 makeambient(	/* make a new ambient value */
 	COLOR  acol,
-	register RAY  *r,
+	RAY  *r,
+	COLOR  ac,
 	FVECT  rn,
 	int  al
 )
 {
 	AMBVAL	amb;
+	double	coef;
 	FVECT	gp, gd;
 						/* compute weight */
 	amb.weight = pow(AVGREFL, (double)al);
-	if (r->rweight < 0.1*amb.weight)	/* heuristic */
-		amb.weight = r->rweight;
+	coef = intens(ac)*r->rweight;
+	if (coef < 0.1*amb.weight)		/* heuristic */
+		amb.weight = coef;
 						/* compute ambient */
-	amb.rad = doambient(acol, r, amb.weight, gp, gd);
+	amb.rad = doambient(acol, r, ac, amb.weight, gp, gd);
 	if (amb.rad <= FTINY)
 		return(0.0);
 						/* store it */

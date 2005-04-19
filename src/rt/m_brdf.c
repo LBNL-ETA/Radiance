@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.22 2004/09/09 15:40:02 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.23 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -267,7 +267,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			evalue(mf->ep[5]));
 	if (errno == EDOM || errno == ERANGE)
 		objerror(m, WARNING, "compute error");
-	else if (rayorigin(&sr, r, TRANS, bright(ctmp)) == 0) {
+	else if (rayorigin(&sr, TRANS, r, ctmp) == 0) {
 		if (!(r->crtype & SHADOW) && hastexture) {
 			for (i = 0; i < 3; i++)	/* perturb direction */
 				sr.rdir[i] = r->rdir[i] - .75*r->pert[i];
@@ -279,7 +279,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			VCOPY(sr.rdir, r->rdir);
 		}
 		rayvalue(&sr);
-		multcolor(sr.rcol, ctmp);
+		multcolor(sr.rcol, sr.rcoef);
 		addcolor(r->rcol, sr.rcol);
 		if (!hastexture) {
 			transtest = 2.0*bright(sr.rcol);
@@ -296,11 +296,11 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			evalue(mf->ep[2]));
 	if (errno == EDOM || errno == ERANGE)
 		objerror(m, WARNING, "compute error");
-	else if (rayorigin(&sr, r, REFLECTED, bright(ctmp)) == 0) {
+	else if (rayorigin(&sr, REFLECTED, r, ctmp) == 0) {
 		for (i = 0; i < 3; i++)
 			sr.rdir[i] = r->rdir[i] + 2.0*nd.pdot*nd.pnorm[i];
 		rayvalue(&sr);
-		multcolor(sr.rcol, ctmp);
+		multcolor(sr.rcol, sr.rcoef);
 		addcolor(r->rcol, sr.rcol);
 		if (!hastexture && r->ro != NULL && isflat(r->ro->otype)) {
 			mirtest = 2.0*bright(sr.rcol);
@@ -311,8 +311,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if (hasrefl) {
 		if (!hitfront)
 			flipsurface(r);
-		ambient(ctmp, r, nd.pnorm);
-		multcolor(ctmp, nd.rdiff);
+		copycolor(ctmp, nd.rdiff);
+		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 		if (!hitfront)
 			flipsurface(r);
@@ -323,8 +323,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
-		ambient(ctmp, r, vtmp);
-		multcolor(ctmp, nd.tdiff);
+		copycolor(ctmp, nd.tdiff);
+		multambient(ctmp, r, vtmp);
 		addcolor(r->rcol, ctmp);
 		if (hitfront)
 			flipsurface(r);
@@ -407,9 +407,9 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 	}
 						/* compute ambient */
 	if (nd.trans < 1.0-FTINY) {
-		ambient(ctmp, r, nd.pnorm);
+		copycolor(ctmp, nd.mcolor);	/* modified by material color */
 		scalecolor(ctmp, 1.0-nd.trans);
-		multcolor(ctmp, nd.mcolor);	/* modified by material color */
+		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}
 	if (nd.trans > FTINY) {		/* from other side */
@@ -417,9 +417,9 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
 		vtmp[2] = -nd.pnorm[2];
-		ambient(ctmp, r, vtmp);
+		copycolor(ctmp, nd.mcolor);
 		scalecolor(ctmp, nd.trans);
-		multcolor(ctmp, nd.mcolor);
+		multambient(ctmp, r, vtmp);
 		addcolor(r->rcol, ctmp);
 		flipsurface(r);
 	}

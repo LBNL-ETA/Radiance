@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.7 2004/06/16 09:50:33 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.8 2005/04/19 01:15:07 greg Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -396,7 +396,7 @@ ray_refine(			/* refine the given pixel by tracing a ray */
 			return(-1);
 		if (nprocs > 1) {
 			int	rval;
-			rayorigin(&ir, NULL, PRIMARY, 1.0);
+			rayorigin(&ir, PRIMARY, NULL, NULL);
 			ir.rno = n;
 			rval = ray_pqueue(&ir);
 			if (!rval)

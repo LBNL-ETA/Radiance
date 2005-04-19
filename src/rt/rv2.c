@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.48 2005/04/14 17:38:06 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.49 2005/04/19 01:15:06 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -305,7 +305,7 @@ getfocus(				/* set focus distance */
 			error(COMMAND, "not on image");
 			return;
 		}
-		rayorigin(&thisray, NULL, PRIMARY, 1.0);
+		rayorigin(&thisray, PRIMARY, NULL, NULL);
 		if (!localhit(&thisray, &thescene)) {
 			error(COMMAND, "not a local object");
 			return;
@@ -719,7 +719,7 @@ char  *s;
 		return;
 	}
 
-	rayorigin(&thisray, NULL, PRIMARY, 1.0);
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	
 	rayvalue(&thisray);
 
