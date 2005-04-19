@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xshowtrace.c,v 2.10 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.11 2005/04/19 18:44:22 greg Exp $";
 #endif
 /*
  *  Display an image and watch the rays get traced.
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: xshowtrace.c,v 2.10 2004/03/28 20:33:14 schors
 #define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
 #endif
 
-char	rtcom[] = "rtrace -h- -otp -fa -x 1";
+char	rtcom[64] = "rtrace -h- -otp -fa -x 1";
 char	xicom[] = "ximage -c 256";
 
 VIEW	ourview = STDVIEW;		/* view for picture */
@@ -66,6 +66,8 @@ main(		/* takes both the octree and the image */
 	for (i = 1; i < argc-2; i++)
 		if (!strcmp(argv[i], "-s"))
 			slow++;
+		else if (!strcmp(argv[i], "-T"))
+			strcat(rtcom, " -oTp");
 		else
 			break;
 	if (i > argc-2) {

@@ -1439,3 +1439,5 @@ rays after the first bounce were half of the previous generation, they are
 now determined by the surface reflectance, making for a better and faster
 calculation.  It should now be possible to compute many bounces with -aa 0,
 which used to be prohibitively expensive.
+
+Added -T option to xshowtrace to trace rays to light sources.
