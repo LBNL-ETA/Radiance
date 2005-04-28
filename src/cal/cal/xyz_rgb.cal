@@ -1,3 +1,4 @@
+{ RCSid $Id: xyz_rgb.cal,v 1.2 2005/04/28 17:20:34 greg Exp $ }
 {
 	Convert between XYZ and RGB coordinates.
 
@@ -7,40 +8,42 @@
 	those in ray/src/common/color.h.
 }
 
+CIE_pri(i) = select(i, 0.640,0.330, 0.290,0.600, 0.150,0.060, 1/3,1/3);
+
 {*** The whole calculation is based on the CIE (x,y) chromaticities below ***}
 
-CIE_x_r :	0.640 ;		{ nominal CRT primaries }
-CIE_y_r :	0.330 ;
-CIE_x_g :	0.290 ;
-CIE_y_g :	0.600 ;
-CIE_x_b :	0.150 ;
-CIE_y_b :	0.060 ;
-CIE_x_w :	1/3 ;		{ use true white }
-CIE_y_w :	1/3 ;
+CIE_x_r =	CIE_spec(1);
+CIE_y_r =	CIE_spec(2);
+CIE_x_g =	CIE_spec(3);
+CIE_y_g =	CIE_spec(4);
+CIE_x_b =	CIE_spec(5);
+CIE_y_b =	CIE_spec(6);
+CIE_x_w =	CIE_spec(7);
+CIE_y_w =	CIE_spec(8);
 
 WHTEFFICACY :	179. ;		{ luminous efficacy of uniform white light }
 
 { Derived constants }
 
-CIE_D :		CIE_x_r*(CIE_y_g - CIE_y_b) +
+CIE_D =		CIE_x_r*(CIE_y_g - CIE_y_b) +
 				CIE_x_g*(CIE_y_b - CIE_y_r) +
 				CIE_x_b*(CIE_y_r - CIE_y_g) ;
 
-CIE_C_rD :	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_g - CIE_y_b) -
+CIE_C_rD =	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_g - CIE_y_b) -
 				  CIE_y_w*(CIE_x_g - CIE_x_b) +
 				  CIE_x_g*CIE_y_b - CIE_x_b*CIE_y_g	) ;
 
-CIE_C_gD :	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_b - CIE_y_r) -
+CIE_C_gD =	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_b - CIE_y_r) -
 				  CIE_y_w*(CIE_x_b - CIE_x_r) -
 				  CIE_x_r*CIE_y_b + CIE_x_b*CIE_y_r	) ;
 
-CIE_C_bD :	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_r - CIE_y_g) -
+CIE_C_bD =	(1./CIE_y_w) *  ( CIE_x_w*(CIE_y_r - CIE_y_g) -
 				  CIE_y_w*(CIE_x_r - CIE_x_g) +
 				  CIE_x_r*CIE_y_g - CIE_x_g*CIE_y_r	) ;
 
 { Convert CIE XYZ coordinates to RGB }
 
-XYZ2RGB(i,j) : select(i*3+j+1,
+XYZ2RGB(i,j) = select(i*3+j+1,
 	(CIE_y_g - CIE_y_b - CIE_x_b*CIE_y_g + CIE_y_b*CIE_x_g)/CIE_C_rD,
 	(CIE_x_b - CIE_x_g - CIE_x_b*CIE_y_g + CIE_x_g*CIE_y_b)/CIE_C_rD,
 	(CIE_x_g*CIE_y_b - CIE_x_b*CIE_y_g)/CIE_C_rD,
@@ -54,13 +57,13 @@ XYZ2RGB(i,j) : select(i*3+j+1,
 
 noneg(x) : if(x, x, 0);
 
-R(X,Y,Z) :	noneg(XYZ2RGB(0,0)*X + XYZ2RGB(0,1)*Y + XYZ2RGB(0,2)*Z);
-G(X,Y,Z) :	noneg(XYZ2RGB(1,0)*X + XYZ2RGB(1,1)*Y + XYZ2RGB(1,2)*Z);
-B(X,Y,Z) :	noneg(XYZ2RGB(2,0)*X + XYZ2RGB(2,1)*Y + XYZ2RGB(2,2)*Z);
+R(X,Y,Z) =	noneg(XYZ2RGB(0,0)*X + XYZ2RGB(0,1)*Y + XYZ2RGB(0,2)*Z);
+G(X,Y,Z) =	noneg(XYZ2RGB(1,0)*X + XYZ2RGB(1,1)*Y + XYZ2RGB(1,2)*Z);
+B(X,Y,Z) =	noneg(XYZ2RGB(2,0)*X + XYZ2RGB(2,1)*Y + XYZ2RGB(2,2)*Z);
 
 { Convert RGB to CIE XYZ coordinates }
 
-RGB2XYZ(i,j) : select(i*3+j+1,
+RGB2XYZ(i,j) = select(i*3+j+1,
 	CIE_x_r*CIE_C_rD/CIE_D,CIE_x_g*CIE_C_gD/CIE_D,CIE_x_b*CIE_C_bD/CIE_D,
 	CIE_y_r*CIE_C_rD/CIE_D,CIE_y_g*CIE_C_gD/CIE_D,CIE_y_b*CIE_C_bD/CIE_D,
 	(1.-CIE_x_r-CIE_y_r)*CIE_C_rD/CIE_D,
@@ -68,9 +71,9 @@ RGB2XYZ(i,j) : select(i*3+j+1,
 	(1.-CIE_x_b-CIE_y_b)*CIE_C_bD/CIE_D
 );
 
-X(R,G,B) :	RGB2XYZ(0,0)*R + RGB2XYZ(0,1)*G + RGB2XYZ(0,2)*B;
-Y(R,G,B) :	RGB2XYZ(1,0)*R + RGB2XYZ(1,1)*G + RGB2XYZ(1,2)*B;
-Z(R,G,B) :	RGB2XYZ(2,0)*R + RGB2XYZ(2,1)*G + RGB2XYZ(2,2)*B;
+X(R,G,B) =	RGB2XYZ(0,0)*R + RGB2XYZ(0,1)*G + RGB2XYZ(0,2)*B;
+Y(R,G,B) =	RGB2XYZ(1,0)*R + RGB2XYZ(1,1)*G + RGB2XYZ(1,2)*B;
+Z(R,G,B) =	RGB2XYZ(2,0)*R + RGB2XYZ(2,1)*G + RGB2XYZ(2,2)*B;
 
 { Convert spectral radiance in watts/sr/m^2 to luminance in cd/m^2 }
 

@@ -1,3 +1,4 @@
+{ RCSid $Id: xyz_srgb.cal,v 1.2 2005/04/28 17:20:34 greg Exp $ }
 {
         Convert between XYZ and RGB coordinates.
 
