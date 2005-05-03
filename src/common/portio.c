@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.12 2005/02/18 16:34:27 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.13 2005/05/03 05:10:13 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -50,9 +50,18 @@ putflt(f, fp)			/* put out floating point number */
 double	f;
 FILE  *fp;
 {
+	long  m;
 	int  e;
 
-	putint((long)(frexp(f,&e)*0x7fffffff), 4, fp);
+	m = frexp(f, &e) * 0x7fffffff;
+	if (e > 127) {			/* overflow */
+		m = m > 0 ? (long)0x7fffffff : -(long)0x7fffffff;
+		e = 127;
+	} else if (e < -128) {		/* underflow */
+		m = 0;
+		e = 0;
+	}
+	putint(m, 4, fp);
 	putint((long)e, 1, fp);
 }
 
