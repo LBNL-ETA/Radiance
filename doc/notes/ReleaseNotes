@@ -1441,3 +1441,5 @@ calculation.  It should now be possible to compute many bounces with -aa 0,
 which used to be prohibitively expensive.
 
 Added -T option to xshowtrace to trace rays to light sources.
+
+Added meta2bmp program to produce BMP files from metafile graphics.
