@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.15 2005/02/02 00:09:13 greg Exp $
+# RCSid $Id: makeall,v 1.16 2005/05/07 18:57:43 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -22,7 +22,7 @@ if ( "$1" == library ) then
 	echo ""
 	exit 0
 endif
-set srcdirs=( common meta cv gen ot rt px hd util cal )
+set srcdirs=( common rt meta cv gen ot px hd util cal )
 if ( "$1" == install ) then
 	cat << _EOF_
 
