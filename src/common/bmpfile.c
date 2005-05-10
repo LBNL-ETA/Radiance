@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.14 2005/04/08 17:49:55 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.15 2005/05/10 01:08:43 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -300,7 +300,7 @@ BMPreadScanline(BMPReader *br)
 	 * is it specified what we should assume for missing pixels.  This
 	 * is undoubtedly the most brain-dead format I've ever encountered.
 	 */
-	sp = br->scanline;
+	sp = (int8 *)br->scanline;
 	n = br->hdr->width;
 	if (br->hdr->compr == BI_RLE4)
 		n = (n + 1) >> 1;
@@ -736,7 +736,7 @@ BMPwriteScanline(BMPWriter *bw)
 	 * (0x0000) except for the last, which ends in a bitmap break
 	 * (0x0001).  We don't support RLE4 at all; it's too awkward.
 	 */
-	sp = bw->scanline;
+	sp = (const int8 *)bw->scanline;
 	n = bw->hdr->width;
 	while (n > 0) {
 		int     cnt, val;
