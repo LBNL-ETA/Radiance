@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.18 2004/04/29 22:32:11 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.19 2005/05/17 17:51:51 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -70,6 +70,7 @@ extern unsigned long  eclock;
 extern unsigned int  esupport;
 extern EPNODE	*curfunc;
 extern int  nextc;
+extern int  eofc;
 
 					/* defined in biggerlib.c */
 extern void biggerlib(void);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.29 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.30 2005/05/17 17:51:51 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -47,6 +47,7 @@ static double  ebotch(EPNODE *);
 unsigned int  esupport =		/* what to support */
 		E_VARIABLE | E_FUNCTION ;
 
+int  eofc = 0;				/* optional end-of-file character */
 int  nextc;				/* lookahead character */
 
 double	(*eoper[])(EPNODE *) = {	/* expression operations */
@@ -413,6 +414,10 @@ scan(void)		/* scan next character, return literal next */
 	    nextc = linbuf[linepos++];
 	if (!lnext)
 		lnext = nextc;
+	if (nextc == eofc) {
+		nextc = EOF;
+		break;
+	}
 	if (nextc == '{') {
 	    scan();
 	    while (nextc != '}')
