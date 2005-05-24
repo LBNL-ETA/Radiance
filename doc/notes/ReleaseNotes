@@ -1443,3 +1443,6 @@ which used to be prohibitively expensive.
 Added -T option to xshowtrace to trace rays to light sources.
 
 Added meta2bmp program to produce BMP files from metafile graphics.
+
+Added cct_x(t) and cct_y(t) to src/cal/cal/blackbody.cal to interpolate
+CIE chromaticities for particular black-body temperatures.
