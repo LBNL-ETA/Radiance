@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.40 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.41 2005/05/25 04:44:26 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -97,7 +97,7 @@ static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
 static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc, oputp,
-		oputn, oputN, oputs, oputw, oputW, oputm, oputM;
+		oputn, oputN, oputs, oputw, oputW, oputm, oputM, oputdash;
 
 static void setoutput(char *vs);
 static void tranotify(OBJECT obj);
@@ -288,13 +288,16 @@ setoutput(				/* set up output tables */
 			*table++ = oputW;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
-					"-otW accuracy requires -aa 0 -as 0");
+					"-otW accuracy depends on -aa 0 -as 0");
 			break;
 		case 'm':				/* modifier */
 			*table++ = oputm;
 			break;
 		case 'M':				/* material */
 			*table++ = oputM;
+			break;
+		case '-':				/* dash */
+			*table++ = oputdash;
 			break;
 		}
 	*table = NULL;
@@ -463,7 +466,8 @@ ourtrace(				/* print ray values */
 	tabin(r);
 	for (tp = every_out; *tp != NULL; tp++)
 		(**tp)(r);
-	putchar('\n');
+	if (outform == 'a')
+		putchar('\n');
 }
 
 
@@ -506,9 +510,8 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	COLR  cout;
-	
 	if (outform == 'c') {
+		COLR  cout;
 		setcolr(cout,	colval(r->rcol,RED),
 				colval(r->rcol,GRN),
 				colval(r->rcol,BLU));
@@ -631,16 +634,8 @@ oputW(				/* print contribution */
 )
 {
 	COLOR	contr;
-	COLR	cout;
 
 	raycontrib(contr, r, PRIMARY);
-	if (outform == 'c') {
-		setcolr(cout,	colval(contr,RED),
-				colval(contr,GRN),
-				colval(contr,BLU));
-		fwrite((char *)cout, sizeof(cout), 1, stdout);
-		return;
-	}
 	(*putreal)(colval(contr,RED));
 	(*putreal)(colval(contr,GRN));
 	(*putreal)(colval(contr,BLU));
@@ -677,6 +672,16 @@ oputM(				/* print material */
 			fputs(VOIDID, stdout);
 	} else
 		putchar('*');
+	putchar('\t');
+}
+
+
+static void
+oputdash(			/* output dash (spacer) */
+	RAY  *r
+)
+{
+	putchar('-');
 	putchar('\t');
 }
 

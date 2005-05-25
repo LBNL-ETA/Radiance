@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.29 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.30 2005/05/25 04:44:26 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -20,7 +20,7 @@ static const char	RCSid[] = "$Id: pcompos.c,v 2.29 2004/03/28 20:33:14 schorsch 
 #include  "color.h"
 #include  "resolu.h"
 
-#define	 MAXFILE	64
+#define	 MAXFILE	512
 
 #define  HASMIN		1
 #define  HASMAX		2

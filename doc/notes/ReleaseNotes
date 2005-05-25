@@ -1446,3 +1446,9 @@ Added meta2bmp program to produce BMP files from metafile graphics.
 
 Added cct_x(t) and cct_y(t) to src/cal/cal/blackbody.cal to interpolate
 CIE chromaticities for particular black-body temperatures.
+
+Increased maximum number of input pictures in pcomb and pcompos to 512.
+
+Created rtcontrib program for computing ray contribution coefficients.
+This tool may be used to do standard optical ray tracing or daylight
+coefficient calculations for annual simulations, among other uses.

@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.19 2005/05/17 17:51:51 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.20 2005/05/25 04:44:25 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -80,7 +80,7 @@ extern void	fcompile(char *fname);
 extern void	scompile(char *str, char *fname, int ln);
 extern double	varvalue(char *vname);
 extern double	evariable(EPNODE *ep);
-extern void	varset(char *fname, int assign, double val);
+extern void	varset(char *vname, int assign, double val);
 extern void	dclear(char *name);
 extern void	dremove(char *name);
 extern int	vardefined(char *name);

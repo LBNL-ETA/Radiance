@@ -1,3 +1,4 @@
+{ RCSid $Id: cielab.cal,v 1.2 2005/05/25 04:44:25 greg Exp $ }
 {
 	Compute Lab color space and color differences from XYZ primaries.
 

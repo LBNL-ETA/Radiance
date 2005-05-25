@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.39 2004/11/05 03:31:39 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.40 2005/05/25 04:44:26 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -18,7 +18,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
-		vwrays xglaresrc
+		vwrays xglaresrc rtcontrib
 
 all:	$(PROGS)
 
@@ -76,6 +76,9 @@ ranimove:	ranimove.o ranimove1.o ranimove2.o
 rpiece:	rpiece.o Version.o
 	$(CC) $(CFLAGS) -o rpiece rpiece.o Version.o -lrt -lm
 
+rtcontrib:	rtcontrib.o Version.o
+	$(CC) $(CFLAGS) -o rtcontrib rtcontrib.o Version.o -lrt -lm
+
 vwright:	vwright.o
 	$(CC) $(CFLAGS) -o vwright vwright.o -lrt -lm
 
@@ -101,6 +104,10 @@ glaresrc.o:	glare.h ../common/standard.h \
 glaresrc.o:	../common/linregr.h
 
 rpiece.o:	../common/color.h ../common/view.h ../common/resolu.h
+
+rtcontrib.o:	../common/rtio.h ../common/platform.h ../common/rtprocess.h \
+../common/color.h ../common/resolu.h ../common/lookup.h ../common/calcomp.h \
+../common/rterror.h ../common/selcall.h
 
 rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \

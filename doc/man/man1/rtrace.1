@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.7 2005/04/19 01:15:06 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.8 2005/05/25 04:44:24 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -109,6 +109,8 @@ m	modifier name
 .IP
 M	material name
 .IP
+-	dash (end of trace marker)
+.IP
 If the letter 't' appears in
 .I spec,
 then the fields following will be printed for every ray traced,
@@ -116,6 +118,13 @@ not just the final result.
 If the capital letter 'T' is given instead of 't', then all rays will
 be reported, including shadow testing rays to light sources.
 Spawned rays are indented one tab for each level.
+The dash marker ('-') is a handy way of differentiating the final ray
+value from traced values preceeding it, and should appear immediately
+after the
+.I \-o
+and before the rest of the specification.
+E.g.,
+.I \-o-vTmW
 .IP
 Note that there is no space between this option and its argument.
 .TP
@@ -138,7 +147,7 @@ must appear in a separate option.
 Add
 .I mod
 to the trace include list,
-so that it will be considered during the indirect calculation.
+so that it will be reported by the trace option.
 The program can use either an include list or an exclude
 list, but not both.
 .TP

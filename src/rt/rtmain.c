@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.10 2005/05/25 04:44:26 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -46,6 +46,8 @@ extern int  lim_dist;			/* limit distance? */
 extern char  *tralist[];		/* list of modifers to trace (or no) */
 extern int  traincl;			/* include == 1, exclude == 0 */
 
+static int  loadflags = ~IO_FILES;	/* what to load from octree */
+
 static void onsig(int  signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
@@ -64,7 +66,6 @@ main(int  argc, char  *argv[])
 				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
-	int  loadflags = ~IO_FILES;
 	int  persist = 0;
 	char  **tralp;
 	int  duped1;
@@ -423,16 +424,18 @@ printdefaults(void)			/* print default values to stdout */
 
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
-	printf("-x  %-9d\t\t\t# x resolution\n", hresolu);
+	printf("-x  %-9d\t\t\t# x resolution (flush interval)\n", hresolu);
 	printf("-y  %-9d\t\t\t# y resolution\n", vresolu);
 	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
+	printf("-h%c\t\t\t\t# %s header\n", loadflags & IO_INFO ? '+' : '-',
+			loadflags & IO_INFO ? "output" : "no");
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inform, outform, formstr(inform), formstr(outform));
-	printf("-o%s\t\t\t\t# output", outvals);
+	printf("-o%-9s\t\t\t# output", outvals);
 	for (cp = outvals; *cp; cp++)
 		switch (*cp) {
-		case 't': printf(" trace"); break;
+		case 't': case 'T': printf(" trace"); break;
 		case 'o': printf(" origin"); break;
 		case 'd': printf(" direction"); break;
 		case 'v': printf(" value"); break;
@@ -444,6 +447,9 @@ printdefaults(void)			/* print default values to stdout */
 		case 's': printf(" surface"); break;
 		case 'w': printf(" weight"); break;
 		case 'm': printf(" modifier"); break;
+		case 'M': printf(" material"); break;
+		case 'W': printf(" contribution"); break;
+		case '-': printf(" stroke"); break;
 		}
 	putchar('\n');
 	printf(erract[WARNING].pf != NULL ?
