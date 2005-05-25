@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.58 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.59 2005/05/25 18:06:22 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -289,7 +289,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 		sortambvals(0);
 						/* get ambient value */
 	setcolor(acol, 0.0, 0.0, 0.0);
-	d = sumambient(acol, r, nrm, rdepth,
+	d = sumambient(acol, r, intens(aval)*r->rweight, nrm, rdepth,
 			&atrunk, thescene.cuorg, thescene.cusize);
 	if (d > FTINY) {
 		scalecolor(acol, 1.0/d);
@@ -326,6 +326,7 @@ extern double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
 	register RAY  *r,
+	double  rw,
 	FVECT  rn,
 	int  al,
 	AMBTREE	 *at,
@@ -351,7 +352,7 @@ sumambient(	/* get interpolated ambient value */
 		 */
 		if (av->lvl > al)	/* list sorted, so this works */
 			break;
-		if (av->weight < r->rweight-FTINY)
+		if (av->weight < 0.9*rw)
 			continue;
 		/*
 		 *  Ambient radius test.
@@ -430,7 +431,8 @@ sumambient(	/* get interpolated ambient value */
 				break;
 		}
 		if (j == 3)
-			wsum += sumambient(acol, r, rn, al, at->kid+i, ck0, s);
+			wsum += sumambient(acol, r, rw, rn, al,
+						at->kid+i, ck0, s);
 	}
 	return(wsum);
 }

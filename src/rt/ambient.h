@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.12 2005/04/19 01:15:06 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.13 2005/05/25 18:06:22 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -65,7 +65,7 @@ extern void	setambient(void);
 extern void	multambient(COLOR aval, RAY *r, FVECT nrm);
 extern void	ambdone(void);
 extern void	ambnotify(OBJECT obj);
-extern double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
+extern double	sumambient(COLOR acol, RAY *r, double rw, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
 extern double	makeambient(COLOR acol, RAY *r, COLOR ac, FVECT rn, int al);
 extern void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
