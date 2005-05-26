@@ -1,5 +1,5 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.2 2005/05/26 18:53:04 greg Exp $"
-.TH RPIECE 1 5/25/05 RADIANCE
+.\" RCSid "$Id: rtcontrib.1,v 1.3 2005/05/26 19:19:19 greg Exp $"
+.TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contributions in a RADIANCE scene
 .SH SYNOPSIS
@@ -35,13 +35,16 @@ settings.
 These modifiers are usually materials associated with
 light sources or sky domes, and must directly modify some geometric
 primitives to be considered in the output.
-The computed contributions can then be used in linear combination to
+The output of
+.I rtcontrib
+has many potential uses.
+Source contributions can be used as components in linear combination to
 reproduce any desired variation, e.g., simulating lighting controls or
 changing sky conditions via daylight coefficients.
 More generally,
 .I rtcontrib
-may be used to compute input-output relationships in optical
-systems, such as light pipes and shading devices.
+can be used to compute arbitrary input-output relationships in optical
+systems, such as luminaires, light pipes, and shading devices.
 .PP
 .I Rtcontrib
 calls
@@ -58,8 +61,8 @@ option may be used to further define
 a "bin number" within each object if finer resolution is needed, and
 this will be applied to a "%d" format in the output file
 specification if present.
-(The actual bin number is computed at run time based on ray direction
-and surface intersection, as described below.)\0
+The actual bin number is computed at run time based on ray direction
+and surface intersection, as described below.
 The most recent
 .I \-b
 and
@@ -80,14 +83,19 @@ the variables Px, Py, and Pz, and the normalized ray direction
 will be assigned to Dx, Dy, and Dz.
 These parameters may be combined with definitions given in
 .I \-e
-options and files read in
+arguments and files read using the
 .I \-f
-options, to compute the bin, which will be
+option.
+The computed bin value will be
 rounded to the nearest whole number.
 This mechanism allows the user to define precise regions or directions
 they wish to accumulate, such as the Tregenza sky discretization,
 which would be otherwise impossible to specify
 as a set of RADIANCE primitives.
+The rules and predefined functions available for these expressions are
+described in the
+.I rcalc(1)
+man page.
 .PP
 If no
 .I \-o
