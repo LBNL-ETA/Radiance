@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.1 2005/05/26 06:55:22 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.2 2005/05/26 18:53:04 greg Exp $"
 .TH RPIECE 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contributions in a RADIANCE scene
@@ -15,6 +15,7 @@ rtcontrib - compute contributions in a RADIANCE scene
 ][
 .B "\-b binv"
 ]
+.B "\-m mod .."
 [
 .B $EVAR
 ]
@@ -24,7 +25,6 @@ rtcontrib - compute contributions in a RADIANCE scene
 [
 rtrace options
 ]
-.B "\-m mod .."
 .B octree
 .SH DESCRIPTION
 .I Rtcontrib
@@ -32,28 +32,31 @@ computes ray contributions (i.e., color coefficients)
 for objects whose modifiers are named in one or more
 .I \-m
 settings.
-These modifiers are usually materials associated with specific
-light sources, though they could correspond to intermediate objects as well.
-The resulting contributions may then be used in linear combination to
+These modifiers are usually materials associated with
+light sources or sky domes, and must directly modify some geometric
+primitives to be considered in the output.
+The computed contributions can then be used in linear combination to
 reproduce any desired variation, e.g., simulating lighting controls or
 changing sky conditions via daylight coefficients.
 More generally,
 .I rtcontrib
-can compute general input-output relationships in optical
+may be used to compute input-output relationships in optical
 systems, such as light pipes and shading devices.
 .PP
-.I Rtrace(1)
-is called to calculate the contributions for each input ray,
+.I Rtcontrib
+calls
+.I rtrace(1)
+to calculate the contributions for each input ray,
 and the output tallies are sent to one or more files according to the
 .I \-o
 specification.
-If the output file specification contains a "%s" format, this will be
+If an output specification contains a "%s" format, this will be
 replaced by the modifier name.
 The
 .I \-b
 option may be used to further define
-a "bin number" within each object if finer resolution is desired, and
-will be applied to a "%d" format in the output file
+a "bin number" within each object if finer resolution is needed, and
+this will be applied to a "%d" format in the output file
 specification if present.
 (The actual bin number is computed at run time based on ray direction
 and surface intersection, as described below.)\0
@@ -61,40 +64,38 @@ The most recent
 .I \-b
 and
 .I \-o
-options (to the left) of each
+options to the left of each
 .I \-m
-setting affect only that modifier, and the ordering
-of other options is unimportant.
+setting affect only that modifier.
+(The ordering of other options is unimportant.)\0
 .PP
-Input and output format defaults to plain text, where each ray's
-origin and direction (6 real values) must appear together per
-line of input, and one line of output is produced per output file
-file per ray.
-Alternative input and output formats may be specified using the
-.I \-f[io]
-option, which is explained in the
-.I rtrace
-man page along with the associated
-.I \-x
-and
-.I \-y
-resolution settings.
-In particular, the 'c' output setting
-together with positive dimensions for
-.I \-x
-and
-.I \-y
-will produce an uncompressed RADIANCE picture,
-suitable for manipulation with
-.I pcomb(1)
-and related tools.
+If a
+.I \-b
+expression is defined for a particular modifier,
+the bin number will be evaluated at run time for each
+ray contribution from
+.I rtrace.
+Specifically, each ray's world intersection point will be assigned to
+the variables Px, Py, and Pz, and the normalized ray direction
+will be assigned to Dx, Dy, and Dz.
+These parameters may be combined with definitions given in
+.I \-e
+options and files read in
+.I \-f
+options, to compute the bin, which will be
+rounded to the nearest whole number.
+This mechanism allows the user to define precise regions or directions
+they wish to accumulate, such as the Tregenza sky discretization,
+which would be otherwise impossible to specify
+as a set of RADIANCE primitives.
 .PP
 If no
 .I \-o
 specification is given, results are written on the standard output in order
 of modifier (as given on the command line) then bin number.
-The same format is used for a simple file name specification
-without any embedded "%s" or "%d" formats.
+Concatenated data is also sent to a lone output file (i.e., an initial
+.I \-o
+specification without formatting strings).
 If a "%s" format appears but no "%d" in the
 .I \-o
 specification, then each modifier will have its own output file, with
@@ -108,33 +109,38 @@ with a newline at the end of each ray record.
 For binary output formats, there is no such delimiter to mark
 the end of each record.
 .PP
-If a
-.I \-b
-expression is defined for a particular modifier,
-the bin number will be evaluated at run time for each
-ray contribution from
-.I rtrace.
-Specifically, each ray's world intersection point will be assigned to
-the variables Px, Py, and Pz, and the normalized ray direction
-will be assigned to Dx, Dy, and Dz.
-These ray parameters may be combined with any definitions given in
-.I \-e
-options, or any files read in from
-.I \-f
-options, to compute the bin, which will be
-rounded to the closest whole number.
-This mechanism allows the user to define precise regions (or directions)
-they wish to accumulate, such as the Tregenza sky grid, which would be
-otherwise impossible to specify as a set of RADIANCE primitives.
+Input and output format defaults to plain text, where each ray's
+origin and direction (6 real values) are given on input,
+and one line is produced per output file per ray.
+Alternative data representations may be specified by the
+.I \-f[io]
+option, which is described in the
+.I rtrace
+man page along with the associated
+.I \-x
+and
+.I \-y
+resolution settings.
+In particular, the color ('c') output data representation
+together with positive dimensions for
+.I \-x
+and
+.I \-y
+will produce an uncompressed RADIANCE picture,
+suitable for manipulation with
+.I pcomb(1)
+and related tools.
 .PP
 If the
 .I \-n
 option is specified with a value greater than 1, multiple
-.I rtrace(1)
+.I rtrace
 processes will be used to accelerate computation on a shared
 memory machine.
 Note that there is no benefit to using more processes
-than there are local CPUs available to do the work.
+than there are local CPUs available to do the work, and the
+.I rtcontrib
+process itself may use a considerable amount of CPU time.
 .PP
 Options may be given on the command line and/or read from the
 environment and/or read from a file.
@@ -142,78 +148,28 @@ A command argument beginning with a dollar sign ('$') is immediately
 replaced by the contents of the given environment variable.
 A command argument beginning with an at sign ('@') is immediately
 replaced by the contents of the given file.
-.SH EXAMPLE
-First
-.I rpiece
-process is started on the machine "goober":
+.SH EXAMPLES
+To compute the proportional contributions from sources modified
+by "light1" vs. "light2" on a set of illuminance values:
 .IP "" .2i
-goober% echo 1 8 > syncfile
-.br
-goober% echo -F syncfile -x 1024 -y 1024 -vf view -o picture octree > args
-.br
-goober% rpiece @args &
+rtcontrib -I+ @render.opt -o c_%s.dat -m light1 -m light2 scene.oct < test.dat
 .PP
-Second
-.I rpiece
-processes is started on the machine "sucker":
+To generate a pair of images corresponding to these two lights'
+contributions:
 .IP "" .2i
-sucker% rpiece @args &
-.SH NOTES
-Due to NFS file buffering, the network lock manager is employed to
-guarantee consistency in the output file even though non-overlapping
-writes are used.
-This would tend to slow the process down if
-.I rpiece
-were to wait for this I/O to complete before starting on the next
-piece, so
-.I rpiece
-forks separate processes to hang around waiting for I/O completion.
-The number of processes thus designated is set by the MAXFORK macro
-in the program (compiled in the src/util directory).
-If the fork call is slow on a system, it may actually be better to
-set MAXFORK to zero.
-In other cases, the network lock manager may be so slow that this
-value should be increased to get the best utilization.
+vwrays -ff -x 1024 -y 1024 -vf best.vf |
+rtcontrib -ffc `vwrays -d -x 1024 -y 1024 -vf best.vf`
+@render.opt -o c_%s.pic -m light1 -m light2 scene.oct
 .PP
-The output picture is not run-length encoded, and can be quite
-large.
-The approximate size (in kilobytes) can be computed by the simple
-formula:
+These images may then be recombined using the desired outputs
+of light1 and light2:
 .IP "" .2i
-filesize = xres*yres/256
+pcomb -c 100 90 75 c_light1.pic -c 50 55 57 c_light2.pic > combined.pic
 .PP
-Make sure that there is enough space on the filesystem to hold the
-entire picture before beginning.
-Once the picture is finished, the
-.I ra_rgbe(1)
-program with the -r option may be used to convert to a run-length
-encoded picture for more efficient storage, although
-.I pfilt(1)
-or any of the other Radiance picture filters will do the same
-thing.
-.PP
-The ALRM signal may be used to gracefully terminate an
-.I rpiece
-process after it finishes the current piece.
-This permits other currently running or subsequently started
-.I rpiece
-process(es) to continue rendering the picture without loss.
-The
-.I \-T
-option will send the ALRM signal to
-.I rpiece
-after the specified number of (decimal) hours.
-This is the best way to force a time limit on the computation,
-since information will not be lost, though the process may continue
-for some time afterwards to finish its current piece.
-.SH BUGS
-This program may not work on some systems whose NFS lock manager is
-unreliable.
-In particular, some System V derivative UNIX systems often have
-problems with the network lock manager.
-If the output is scrambled or rpict aborts with some ambient file
-related problem, you should just remove the ambient file and go
-back to normal rendering.
+To compute an array of illuminance contributions according to a Tregenza sky:
+.IP "" .2i
+rtcontrib -b tbin -o sky.dat -m skyglow -b 0 -o ground.dat -m groundglow
+@render.opt -f tregenza.cal scene.oct < test.dat
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
