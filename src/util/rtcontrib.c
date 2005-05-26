@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.2 2005/05/26 06:55:22 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.3 2005/05/26 15:14:42 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -68,7 +68,7 @@ struct rtproc {
 
 					/* rtrace command and defaults */
 char		*rtargv[256] = { "rtrace", "-dt", "0", "-dj", ".5", "-dr", "3",
-				"-ab", "1", "-ad", "512", };
+				"-ab", "1", "-ad", "128", };
 int  rtargc = 11;
 					/* overriding rtrace options */
 char		*myrtopts[] = { "-o~~TmWdp", "-h-",
@@ -113,7 +113,8 @@ void init(int np);
 void tracecontribs(FILE *fp);
 struct rtproc *wait_rproc(void);
 struct rtproc *get_rproc(void);
-void process_rays(struct rtproc *rtp);
+void queue_raytree(struct rtproc *rtp);
+void process_queue(void);
 
 void putcontrib(const DCOLOR cnt, FILE *fout);
 void add_contrib(const char *modn);
@@ -188,10 +189,14 @@ main(int argc, char *argv[])
 				case '\0':
 					header = !header;
 					continue;
-				case '+': case '1': case 'T': case 't':
+				case '+': case '1':
+				case 'T': case 't':
+				case 'Y': case 'y':
 					header = 1;
 					continue;
-				case '-': case '0': case 'F': case 'f':
+				case '-': case '0':
+				case 'F': case 'f':
+				case 'N': case 'n':
 					header = 0;
 					continue;
 				}
@@ -345,7 +350,14 @@ init(int np)
 	scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
 	scompile("Px=$4;Py=$5;Pz=$6;", NULL, 0);
 					/* set up signal handling */
-#ifdef SIGPIPE /* not present on Windows */
+	signal(SIGINT, quit);
+#ifdef SIGHUP
+	signal(SIGHUP, quit);
+#endif
+#ifdef SIGTERM
+	signal(SIGTERM, quit);
+#endif
+#ifdef SIGPIPE
 	signal(SIGPIPE, quit);
 #endif
 	rtp = &rt0;			/* start rtrace process(es) */
@@ -679,16 +691,42 @@ done_contrib(void)
 	}
 }
 
-/* process (or save) ray tree produced by rtrace process */
+/* queue completed ray tree produced by rtrace process */
 void
-process_rays(struct rtproc *rtp)
+queue_raytree(struct rtproc *rtp)
 {
-	struct rtproc	*rtu;
-					/* check if time to process it */
-	if (rtp->raynum == lastdone+1) {
+	struct rtproc	*rtu, *rtl = NULL;
+					/* insert following ray order */
+	for (rtu = rt_unproc; rtu != NULL; rtu = (rtl=rtu)->next)
+		if (rtp->raynum < rtu->raynum)
+			break;
+	rtu = (struct rtproc *)malloc(sizeof(struct rtproc));
+	if (rtu == NULL)
+		error(SYSTEM, "out of memory in queue_raytree");
+	*rtu = *rtp;
+	if (rtl == NULL) {
+		rtu->next = rt_unproc;
+		rt_unproc = rtu;
+	} else {
+		rtu->next = rtl->next;
+		rtl->next = rtu;
+	}
+	rtp->raynum = 0;		/* clear path for next ray tree */
+	rtp->bsiz = 0;
+	rtp->buf = NULL;
+	rtp->nbr = 0;
+}
+
+/* process completed ray trees from our queue */
+void
+process_queue(void)
+{
+	char	modname[128];
+					/* ray-ordered queue */
+	while (rt_unproc != NULL && rt_unproc->raynum == lastdone+1) {
+		struct rtproc	*rtp = rt_unproc;
 		int		n = rtp->nbr;
 		const char	*cp = rtp->buf;
-		char		modname[128];
 		while (n > 0) {		/* process rays */
 			register char	*mnp = modname;
 					/* skip leading tabs */
@@ -712,34 +750,10 @@ process_rays(struct rtproc *rtp)
 		}
 		done_contrib();		/* sum up contributions & output */
 		lastdone = rtp->raynum;
-		free(rtp->buf);
-					/* catch up with unprocessed list */
-		while (rt_unproc != NULL && rt_unproc->raynum == lastdone+1) {
-			process_rays(rt_unproc);
-			rt_unproc = (rtu=rt_unproc)->next;
-			free(rtu);
-		}
-	} else {			/* else insert in unprocessed list */
-		struct rtproc	*rtl = NULL;
-		for (rtu = rt_unproc; rtu != NULL; rtu = (rtl=rtu)->next)
-			if (rtp->raynum < rtu->raynum)
-				break;
-		rtu = (struct rtproc *)malloc(sizeof(struct rtproc));
-		if (rtu == NULL)
-			error(SYSTEM, "out of memory in process_rays");
-		*rtu = *rtp;
-		if (rtl == NULL) {
-			rtu->next = rt_unproc;
-			rt_unproc = rtu;
-		} else {
-			rtu->next = rtl->next;
-			rtl->next = rtu;
-		}
+		free(rtp->buf);		/* free up buffer space */
+		rt_unproc = rtp->next;
+		free(rtp);		/* done with this ray tree */
 	}
-	rtp->raynum = 0;		/* clear path for next ray tree */
-	rtp->bsiz = 0;
-	rtp->buf = NULL;
-	rtp->nbr = 0;
 }
 
 /* wait for rtrace process to finish with ray tree */
@@ -796,7 +810,7 @@ wait_rproc(void)
 			if (rt->nbr >= 4 && !memcmp(rt->buf+rt->nbr-4,
 							"~\t~\t", 4)) {
 				rt->nbr -= 4;	/* elide terminator */
-				process_rays(rt);
+				queue_raytree(rt);
 				rtfree = rt;	/* ready for next ray */
 			}
 		}
@@ -827,17 +841,18 @@ tracecontribs(FILE *fin)
 	while ((iblen = getinp(inpbuf, fin)) > 0) {
 		if (lastray+1 < lastray) {	/* counter rollover? */
 			while (wait_rproc() != NULL)
-				;
+				process_queue();
 			lastdone = lastray = 0;
 		}
 		rtp = get_rproc();		/* get avail. rtrace process */
-		rtp->raynum = ++lastray;	/* assign this ray to it */
+		rtp->raynum = ++lastray;	/* assign ray to it */
 		writebuf(rtp->pd.w, inpbuf, iblen);
 		if (!--raysleft)
-			break;			/* explicit EOF */
+			break;
+		process_queue();		/* catch up with results */
 	}
 	while (wait_rproc() != NULL)		/* process outstanding rays */
-		;
+		process_queue();
 	if (raysleft > 0)
 		error(USER, "unexpected EOF on input");
 }
