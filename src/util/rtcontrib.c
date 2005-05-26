@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.4 2005/05/26 17:53:28 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.5 2005/05/26 21:35:35 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -63,7 +63,7 @@ struct rtproc {
 	int		bsiz;		/* ray tree buffer length */
 	char		*buf;		/* ray tree buffer */
 	int		nbr;		/* number of bytes from rtrace */
-};				/* rtrace process */
+};				/* rtrace process buffer */
 
 					/* rtrace command and defaults */
 char		*rtargv[256] = { "rtrace", "-dt", "0", "-dj", ".5", "-dr", "3",
@@ -79,7 +79,6 @@ struct rtproc	rt0;			/* head of rtrace process list */
 struct rtproc	*rt_unproc = NULL;	/* unprocessed ray trees */
 
 char	persistfn[] = "pfXXXXXX";	/* persist file name */
-char	fmt[8];				/* rtrace i/o format */
 
 int		gargc;			/* global argc */
 char		**gargv;		/* global argv */
@@ -107,9 +106,9 @@ int		nmods = 0;		/* number of modifiers */
 
 MODCONT *addmodifier(char *modn, char *outf, char *binv);
 
-int done_rprocs(struct rtproc *rtp);
 void init(int np);
-void tracecontribs(FILE *fp);
+int done_rprocs(struct rtproc *rtp);
+void trace_contribs(FILE *fp);
 struct rtproc *wait_rproc(void);
 struct rtproc *get_rproc(void);
 void queue_raytree(struct rtproc *rtp);
@@ -159,6 +158,7 @@ main(int argc, char *argv[])
 	int	nprocs = 1;
 	char	*curout = NULL;
 	char	*binval = NULL;
+	char	fmt[8];
 	int	i, j;
 				/* global program name */
 	gargv = argv;
@@ -269,7 +269,8 @@ main(int argc, char *argv[])
 		execv(rtpath, rtargv);
 		perror(rtpath);	/* execv() should not return */
 		exit(1);
-	} else if (nprocs > 1) {	/* add persist file if parallel */
+	}
+	if (nprocs > 1) {	/* add persist file if parallel */
 		rtargv[rtargc++] = "-PP";
 		rtargv[rtargc++] = mktemp(persistfn);
 	} 
@@ -283,7 +284,7 @@ main(int argc, char *argv[])
 	rtargv[rtargc] = NULL;
 				/* start rtrace & compute contributions */
 	init(nprocs);
-	tracecontribs(stdin);
+	trace_contribs(stdin);
 	quit(0);
 }
 
@@ -335,7 +336,7 @@ quit(int status)
 	exit(status);			/* flushes all output streams */
 }
 
-/* start rtrace and initialize buffers */
+/* start rtrace processes and initialize */
 void
 init(int np)
 {
@@ -842,7 +843,7 @@ get_rproc(void)
 
 /* trace ray contributions (main loop) */
 void
-tracecontribs(FILE *fin)
+trace_contribs(FILE *fin)
 {
 	char		inpbuf[128];
 	int		iblen;
