@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.24 2005/05/25 04:44:25 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.25 2005/05/26 14:46:21 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -213,7 +213,14 @@ init(int np)				/* start rtrace and set up buffers */
 	ofun[OBJ_SPHERE].funp = o_sphere;
 	ofun[OBJ_RING].funp = o_ring;
 					/* set up signal handling */
-#ifdef SIGPIPE /* not present on Windows */
+	signal(SIGINT, quit);
+#ifdef SIGHUP
+	signal(SIGHUP, quit);
+#endif
+#ifdef SIGTERM
+	signal(SIGTERM, quit);
+#endif
+#ifdef SIGPIPE
 	signal(SIGPIPE, quit);
 #endif
 	rtp = &rt0;			/* start rtrace process(es) */
