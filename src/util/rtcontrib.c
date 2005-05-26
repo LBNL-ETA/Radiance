@@ -1,13 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.3 2005/05/26 15:14:42 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.4 2005/05/26 17:53:28 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
  */
 
+#include  "standard.h"
 #include  <ctype.h>
-#include  "rtio.h"
-#include  "rterror.h"
 #include  "platform.h"
 #include  "rtprocess.h"
 #include  "selcall.h"
@@ -562,10 +561,21 @@ badspec:
 int
 getinp(char *buf, FILE *fp)
 {
+	char	*cp;
+	int	i;
+
 	switch (inpfmt) {
 	case 'a':
-		if (fgets(buf, 128, fp) == NULL)
-			return 0;
+		cp = buf;		/* make sure we get 6 floats */
+		for (i = 0; i < 6; i++) {
+			if (fgetword(cp, buf+127-cp, fp) == NULL)
+				return 0;
+			if ((cp = fskip(cp)) == NULL || *cp)
+				return 0;
+			*cp++ = ' ';
+		}
+		getc(fp);		/* get/put eol */
+		*cp-- = '\0'; *cp = '\n';
 		return strlen(buf);
 	case 'f':
 		if (fread(buf, sizeof(float), 6, fp) < 6)
