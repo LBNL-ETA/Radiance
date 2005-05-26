@@ -1452,3 +1452,7 @@ Increased maximum number of input pictures in pcomb and pcompos to 512.
 Created rtcontrib program for computing ray contribution coefficients.
 This tool may be used to do standard optical ray tracing or daylight
 coefficient calculations for annual simulations, among other uses.
+
+Added tilde ('~') output option as part of the -o* specification of
+rtrace.  This permits ray trees to be parsed more easily in binary
+output mode, as needed by rtcontrib.

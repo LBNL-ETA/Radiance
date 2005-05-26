@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.50 2005/04/19 01:15:07 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.51 2005/05/26 06:55:22 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -395,7 +395,8 @@ direct(					/* add direct component */
 		VCOPY(scp->dir, sr.rdir);
 		copycolor(sr.rcoef, scp->coef);
 						/* compute potential */
-		srcvalue(&sr);
+		sr.revf = srcvalue;
+		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
 		copycolor(scp->val, sr.rcol);
 		cntord[sn].brt = bright(scp->val);
@@ -436,7 +437,7 @@ direct(					/* add direct component */
 			break;
 		scp = srccnt + cntord[sn].sndx;
 						/* test for hit */
-		rayorigin(&sr, SHADOW, r, NULL);
+		rayorigin(&sr, SHADOW, r, scp->coef);
 		VCOPY(sr.rdir, scp->dir);
 		sr.rsrc = scp->sno;
 						/* keep statistics */
@@ -461,8 +462,14 @@ direct(					/* add direct component */
 #endif
 				continue;	/* missed! */
 			}
+			multcolor(sr.rcol, sr.rcoef);
 			copycolor(scp->val, sr.rcol);
-			multcolor(scp->val, scp->coef);
+		} else if (trace != NULL &&
+			(source[scp->sno].sflags & (SDISTANT|SVIRTUAL|SFOLLOW))
+						== (SDISTANT|SFOLLOW) &&
+				sourcehit(&sr) && rayshade(&sr, sr.ro->omod)) {
+			(*trace)(&sr);		/* trace execution */
+			/* skip call to rayparticipate() & scp->val update */
 		}
 						/* add contribution if hit */
 		addcolor(r->rcol, scp->val);
@@ -484,9 +491,8 @@ direct(					/* add direct component */
 		scp = srccnt + cntord[sn].sndx;
 		prob = hwt * (double)source[scp->sno].nhits /
 				(double)source[scp->sno].ntests;
-		if (prob > 1.0)
-			prob = 1.0;
-		scalecolor(scp->val, prob);
+		if (prob < 1.0)
+			scalecolor(scp->val, prob);
 		addcolor(r->rcol, scp->val);
 	}
 }

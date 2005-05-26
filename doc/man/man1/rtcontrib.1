@@ -1,0 +1,221 @@
+.\" RCSid "$Id: rtcontrib.1,v 1.1 2005/05/26 06:55:22 greg Exp $"
+.TH RPIECE 1 5/25/05 RADIANCE
+.SH NAME
+rtcontrib - compute contributions in a RADIANCE scene
+.SH SYNOPSIS
+.B rtcontrib
+[
+.B "\-n nprocs"
+][
+.B "\-e expr"
+][
+.B "\-f source"
+][
+.B "\-o fspec"
+][
+.B "\-b binv"
+]
+[
+.B $EVAR
+]
+[
+.B @file
+]
+[
+rtrace options
+]
+.B "\-m mod .."
+.B octree
+.SH DESCRIPTION
+.I Rtcontrib
+computes ray contributions (i.e., color coefficients)
+for objects whose modifiers are named in one or more
+.I \-m
+settings.
+These modifiers are usually materials associated with specific
+light sources, though they could correspond to intermediate objects as well.
+The resulting contributions may then be used in linear combination to
+reproduce any desired variation, e.g., simulating lighting controls or
+changing sky conditions via daylight coefficients.
+More generally,
+.I rtcontrib
+can compute general input-output relationships in optical
+systems, such as light pipes and shading devices.
+.PP
+.I Rtrace(1)
+is called to calculate the contributions for each input ray,
+and the output tallies are sent to one or more files according to the
+.I \-o
+specification.
+If the output file specification contains a "%s" format, this will be
+replaced by the modifier name.
+The
+.I \-b
+option may be used to further define
+a "bin number" within each object if finer resolution is desired, and
+will be applied to a "%d" format in the output file
+specification if present.
+(The actual bin number is computed at run time based on ray direction
+and surface intersection, as described below.)\0
+The most recent
+.I \-b
+and
+.I \-o
+options (to the left) of each
+.I \-m
+setting affect only that modifier, and the ordering
+of other options is unimportant.
+.PP
+Input and output format defaults to plain text, where each ray's
+origin and direction (6 real values) must appear together per
+line of input, and one line of output is produced per output file
+file per ray.
+Alternative input and output formats may be specified using the
+.I \-f[io]
+option, which is explained in the
+.I rtrace
+man page along with the associated
+.I \-x
+and
+.I \-y
+resolution settings.
+In particular, the 'c' output setting
+together with positive dimensions for
+.I \-x
+and
+.I \-y
+will produce an uncompressed RADIANCE picture,
+suitable for manipulation with
+.I pcomb(1)
+and related tools.
+.PP
+If no
+.I \-o
+specification is given, results are written on the standard output in order
+of modifier (as given on the command line) then bin number.
+The same format is used for a simple file name specification
+without any embedded "%s" or "%d" formats.
+If a "%s" format appears but no "%d" in the
+.I \-o
+specification, then each modifier will have its own output file, with
+multiple values per record in the case of a non-zero
+.I \-b
+definition.
+If a "%d" format appears but no "%s", then each bin will get its own
+output file, with modifiers output in order in each record.
+For text output, each RGB coefficient triple is separated by a tab,
+with a newline at the end of each ray record.
+For binary output formats, there is no such delimiter to mark
+the end of each record.
+.PP
+If a
+.I \-b
+expression is defined for a particular modifier,
+the bin number will be evaluated at run time for each
+ray contribution from
+.I rtrace.
+Specifically, each ray's world intersection point will be assigned to
+the variables Px, Py, and Pz, and the normalized ray direction
+will be assigned to Dx, Dy, and Dz.
+These ray parameters may be combined with any definitions given in
+.I \-e
+options, or any files read in from
+.I \-f
+options, to compute the bin, which will be
+rounded to the closest whole number.
+This mechanism allows the user to define precise regions (or directions)
+they wish to accumulate, such as the Tregenza sky grid, which would be
+otherwise impossible to specify as a set of RADIANCE primitives.
+.PP
+If the
+.I \-n
+option is specified with a value greater than 1, multiple
+.I rtrace(1)
+processes will be used to accelerate computation on a shared
+memory machine.
+Note that there is no benefit to using more processes
+than there are local CPUs available to do the work.
+.PP
+Options may be given on the command line and/or read from the
+environment and/or read from a file.
+A command argument beginning with a dollar sign ('$') is immediately
+replaced by the contents of the given environment variable.
+A command argument beginning with an at sign ('@') is immediately
+replaced by the contents of the given file.
+.SH EXAMPLE
+First
+.I rpiece
+process is started on the machine "goober":
+.IP "" .2i
+goober% echo 1 8 > syncfile
+.br
+goober% echo -F syncfile -x 1024 -y 1024 -vf view -o picture octree > args
+.br
+goober% rpiece @args &
+.PP
+Second
+.I rpiece
+processes is started on the machine "sucker":
+.IP "" .2i
+sucker% rpiece @args &
+.SH NOTES
+Due to NFS file buffering, the network lock manager is employed to
+guarantee consistency in the output file even though non-overlapping
+writes are used.
+This would tend to slow the process down if
+.I rpiece
+were to wait for this I/O to complete before starting on the next
+piece, so
+.I rpiece
+forks separate processes to hang around waiting for I/O completion.
+The number of processes thus designated is set by the MAXFORK macro
+in the program (compiled in the src/util directory).
+If the fork call is slow on a system, it may actually be better to
+set MAXFORK to zero.
+In other cases, the network lock manager may be so slow that this
+value should be increased to get the best utilization.
+.PP
+The output picture is not run-length encoded, and can be quite
+large.
+The approximate size (in kilobytes) can be computed by the simple
+formula:
+.IP "" .2i
+filesize = xres*yres/256
+.PP
+Make sure that there is enough space on the filesystem to hold the
+entire picture before beginning.
+Once the picture is finished, the
+.I ra_rgbe(1)
+program with the -r option may be used to convert to a run-length
+encoded picture for more efficient storage, although
+.I pfilt(1)
+or any of the other Radiance picture filters will do the same
+thing.
+.PP
+The ALRM signal may be used to gracefully terminate an
+.I rpiece
+process after it finishes the current piece.
+This permits other currently running or subsequently started
+.I rpiece
+process(es) to continue rendering the picture without loss.
+The
+.I \-T
+option will send the ALRM signal to
+.I rpiece
+after the specified number of (decimal) hours.
+This is the best way to force a time limit on the computation,
+since information will not be lost, though the process may continue
+for some time afterwards to finish its current piece.
+.SH BUGS
+This program may not work on some systems whose NFS lock manager is
+unreliable.
+In particular, some System V derivative UNIX systems often have
+problems with the network lock manager.
+If the output is scrambled or rpict aborts with some ambient file
+related problem, you should just remove the ambient file and go
+back to normal rendering.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), getinfo(1), pcomb(1), pfilt(1), ra_rgbe(1),
+rcalc(1), rpict(1), rtrace(1), vwrays(1), ximage(1)

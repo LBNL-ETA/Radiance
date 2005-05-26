@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.8 2005/05/25 04:44:24 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.9 2005/05/26 06:55:22 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -109,7 +109,7 @@ m	modifier name
 .IP
 M	material name
 .IP
--	dash (end of trace marker)
+~	tilde (end of trace marker)
 .IP
 If the letter 't' appears in
 .I spec,
@@ -118,13 +118,13 @@ not just the final result.
 If the capital letter 'T' is given instead of 't', then all rays will
 be reported, including shadow testing rays to light sources.
 Spawned rays are indented one tab for each level.
-The dash marker ('-') is a handy way of differentiating the final ray
-value from traced values preceeding it, and should appear immediately
-after the
-.I \-o
-and before the rest of the specification.
+The tilde marker ('~') is a handy way of differentiating the final ray
+value from daughter values in a traced ray tree, and usually appears
+right before the 't' or 'T' output flags.
 E.g.,
-.I \-o-vTmW
+.I \-ov~TmW
+will emit a tilde followed by a tab at the end of each trace,
+which can be easily distinguished even in binary output.
 .IP
 Note that there is no space between this option and its argument.
 .TP
@@ -622,4 +622,4 @@ option.
 Greg Ward
 .SH "SEE ALSO"
 getinfo(1), lookamb(1), oconv(1), pfilt(1), pinterp(1),
-pvalue(1), rpict(1), rvu(1), vwrays(1), ximage(1)
+pvalue(1), rpict(1), rtcontrib(1), rvu(1), vwrays(1), ximage(1)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.1 2005/05/25 04:45:22 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.2 2005/05/26 06:55:22 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -16,17 +16,11 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.1 2005/05/25 04:45:22 greg Exp
 #include  "lookup.h"
 #include  "calcomp.h"
 
-#ifdef getc_unlocked            /* avoid horrendous overhead of flockfile */
-#undef getc
-#undef putc
-#define getc    getc_unlocked
-#define putc    putc_unlocked
-#define ferror	ferror_unlocked
-#endif
-
 #define	MAXMODLIST	1024		/* maximum modifiers we'll track */
 
 int	treebufsiz = BUFSIZ;		/* current tree buffer size */
+
+typedef double	DCOLOR[3];		/* double-precision color */
 
 /*
  * The modcont structure is used to accumulate ray contributions
@@ -43,7 +37,7 @@ typedef struct {
 	const char	*modname;	/* modifier name */
 	EPNODE		*binv;		/* bin value expression */
 	int		nbins;		/* number of accumulation bins */
-	COLOR		cbin[1];	/* contribution bins (extends struct) */
+	DCOLOR		cbin[1];	/* contribution bins (extends struct) */
 } MODCONT;			/* modifier contribution */
 
 static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
@@ -66,19 +60,20 @@ FILE *getofile(const char *ospec, const char *mname, int bn);
 struct rtproc {
 	struct rtproc	*next;		/* next in list of processes */
 	SUBPROC		pd;		/* rtrace pipe descriptors */
-	unsigned long	raynum;		/* ray number for this buffer */
-	int		bsiz;		/* rtrace buffer length */
-	char		*buf;		/* rtrace i/o buffer */
-	char		*bpos;		/* current buffer position */
+	unsigned long	raynum;		/* ray number for this tree */
+	int		bsiz;		/* ray tree buffer length */
+	char		*buf;		/* ray tree buffer */
+	int		nbr;		/* number of bytes from rtrace */
 };				/* rtrace process */
 
 					/* rtrace command and defaults */
-char		*rtargv[256] = { "rtrace", "-dj", ".5", "-dr", "3",
+char		*rtargv[256] = { "rtrace", "-dt", "0", "-dj", ".5", "-dr", "3",
 				"-ab", "1", "-ad", "512", };
-int  rtargc = 9;
+int  rtargc = 11;
 					/* overriding rtrace options */
-char		*myrtopts[] = { "-o-TmWdp", "-h-",
-				"-x", "1", "-y", "0", NULL };
+char		*myrtopts[] = { "-o~~TmWdp", "-h-",
+				"-x", "1", "-y", "0", 
+				"-as", "0", "-aa", "0", NULL };
 
 struct rtproc	rt0;			/* head of rtrace process list */
 
@@ -106,6 +101,8 @@ long		waitflush;		/* how long until next flush */
 unsigned long	lastray = 0;		/* last ray number sent */
 unsigned long	lastdone = 0;		/* last ray processed */
 
+int		using_stdout = 0;	/* are we using stdout? */
+
 const char	*modname[MAXMODLIST];	/* ordered modifier name list */
 int		nmods = 0;		/* number of modifiers */
 
@@ -118,7 +115,8 @@ struct rtproc *wait_rproc(void);
 struct rtproc *get_rproc(void);
 void process_rays(struct rtproc *rtp);
 
-void add_contrib(const char *modn, float rayval[7]);
+void putcontrib(const DCOLOR cnt, FILE *fout);
+void add_contrib(const char *modn);
 void done_contrib(void);
 
 /* set input/output format */
@@ -161,91 +159,90 @@ main(int argc, char *argv[])
 	int	nprocs = 1;
 	char	*curout = NULL;
 	char	*binval = NULL;
-	int	i;
-				/* set global argument list */
-	gargc = argc;
+	int	i, j;
+				/* global program name */
 	gargv = argv;
-				/* set up calcomp functions */
+				/* set up calcomp mode */
 	esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
 	esupport &= ~(E_OUTCHAN);
 				/* get our options */
-	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
-		switch (argv[i][1]) {
-		case 'n':			/* number of processes */
-			if (argv[i][2] || i >= argc-1) break;
-			nprocs = atoi(argv[++i]);
-			if (nprocs <= 0)
-				error(USER, "illegal number of processes");
-			continue;
-		case 'h':			/* output header? */
-			switch (argv[i][2]) {
-			case '\0':
-				header = !header;
-				continue;
-			case '+': case '1': case 'T': case 't':
-				header = 1;
-				continue;
-			case '-': case '0': case 'F': case 'f':
-				header = 0;
-				continue;
-			}
-			break;
-		case 'f':			/* file or i/o format */
-			if (!argv[i][2]) {
-				if (i >= argc-1) break;
-				fcompile(argv[++i]);
-				continue;
-			}
-			setformat(argv[i]+2);
-			continue;
-		case 'e':			/* expression */
-			if (argv[i][2] || i >= argc-1) break;
-			scompile(argv[++i], NULL, 0);
-			continue;
-		case 'o':			/* output file spec. */
-			if (argv[i][2] || i >= argc-1) break;
-			curout = argv[++i];
-			continue;
-		case 'x':			/* horiz. output resolution */
-			if (argv[i][2] || i >= argc-1) break;
-			xres = atoi(argv[++i]);
-			continue;
-		case 'y':			/* vert. output resolution */
-			if (argv[i][2] || i >= argc-1) break;
-			yres = atoi(argv[++i]);
-			continue;
-		case 'l':			/* limit distance? */
-			if (argv[i][2] != 'd') break;
-			rtargv[rtargc++] = argv[i];
-			continue;
-		case 'b':			/* bin expression */
-			if (argv[i][2] || i >= argc-1) break;
-			binval = argv[++i];
-			continue;
-		case 'm':			/* modifier name */
-			if (argv[i][2] || i >= argc-1) break;
-			rtargv[rtargc++] = "-ti";
-			rtargv[rtargc++] = argv[++i];
-			addmodifier(argv[i], curout, binval);
-			continue;
+	for (i = 1; i < argc-1; i++) {
+						/* expand arguments */
+		while ((j = expandarg(&argc, &argv, i)) > 0)
+			;
+		if (j < 0) {
+			fprintf(stderr, "%s: cannot expand '%s'",
+					argv[0], argv[i]);
+			exit(1);
 		}
-		break;		/* break into rtrace options */
+		if (argv[i][0] == '-')
+			switch (argv[i][1]) {
+			case 'n':		/* number of processes */
+				if (argv[i][2] || i >= argc-1) break;
+				nprocs = atoi(argv[++i]);
+				if (nprocs <= 0)
+					error(USER, "illegal number of processes");
+				continue;
+			case 'h':		/* output header? */
+				switch (argv[i][2]) {
+				case '\0':
+					header = !header;
+					continue;
+				case '+': case '1': case 'T': case 't':
+					header = 1;
+					continue;
+				case '-': case '0': case 'F': case 'f':
+					header = 0;
+					continue;
+				}
+				break;
+			case 'f':		/* file or i/o format */
+				if (!argv[i][2]) {
+					if (i >= argc-1) break;
+					fcompile(argv[++i]);
+					continue;
+				}
+				setformat(argv[i]+2);
+				continue;
+			case 'e':		/* expression */
+				if (argv[i][2] || i >= argc-1) break;
+				scompile(argv[++i], NULL, 0);
+				continue;
+			case 'o':		/* output file spec. */
+				if (argv[i][2] || i >= argc-1) break;
+				curout = argv[++i];
+				continue;
+			case 'x':		/* horiz. output resolution */
+				if (argv[i][2] || i >= argc-1) break;
+				xres = atoi(argv[++i]);
+				continue;
+			case 'y':		/* vert. output resolution */
+				if (argv[i][2] || i >= argc-1) break;
+				yres = atoi(argv[++i]);
+				continue;
+			case 'b':		/* bin expression */
+				if (argv[i][2] || i >= argc-1) break;
+				binval = argv[++i];
+				continue;
+			case 'm':		/* modifier name */
+				if (argv[i][2] || i >= argc-1) break;
+				rtargv[rtargc++] = "-ti";
+				rtargv[rtargc++] = argv[++i];
+				addmodifier(argv[i], curout, binval);
+				continue;
+			}
+		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
 	}
-	for ( ; i < argc; i++)	/* transfer rtrace-specific options */
-		rtargv[rtargc++] = argv[i];
-	if (!strcmp(rtargv[--rtargc], "-defaults"))
-		nprocs = 0;
-	if (nprocs > 1) {	/* add persist file if parallel invocation */
-		rtargv[rtargc++] = "-PP";
-		rtargv[rtargc++] = mktemp(persistfn);
-	}
+				/* set global argument list */
+	gargc = argc; gargv = argv;
 				/* add "mandatory" rtrace settings */
-	for (i = 0; myrtopts[i] != NULL; i++)
-		rtargv[rtargc++] = myrtopts[i];
-	if (!nprocs) {		/* just asking for defaults? */
+	for (j = 0; myrtopts[j] != NULL; j++)
+		rtargv[rtargc++] = myrtopts[j];
+				/* just asking for defaults? */
+	if (!strcmp(argv[i], "-defaults")) {
 		char	sxres[16], syres[16];
 		char	*rtpath;
-		printf("-n  1\t\t\t\t# number of processes\n", nprocs);
+		printf("-n  %-2d\t\t\t\t# number of processes\n", nprocs);
 		fflush(stdout);			/* report OUR options */
 		rtargv[rtargc++] = header ? "-h+" : "-h-";
 		sprintf(fmt, "-f%c%c", inpfmt, outfmt);
@@ -256,7 +253,7 @@ main(int argc, char *argv[])
 		rtargv[rtargc++] = "-y";
 		sprintf(syres, "%d", yres);
 		rtargv[rtargc++] = syres;
-		rtargv[rtargc++] = "-oW";
+		rtargv[rtargc++] = "-oTW";
 		rtargv[rtargc++] = "-defaults";
 		rtargv[rtargc] = NULL;
 		rtpath = getpath(rtargv[0], getenv("PATH"), X_OK);
@@ -268,18 +265,19 @@ main(int argc, char *argv[])
 		execv(rtpath, rtargv);
 		perror(rtpath);	/* execv() should not return */
 		exit(1);
-	}
-	if (!nmods)
-		error(USER, "No modifiers specified");
-	if (argc < 2 || argv[argc-1][0] == '-')
-		error(USER, "missing octree argument");
+	} else if (nprocs > 1) {	/* add persist file if parallel */
+		rtargv[rtargc++] = "-PP";
+		rtargv[rtargc++] = mktemp(persistfn);
+	} 
 				/* add format string */
 	sprintf(fmt, "-f%cf", inpfmt);
 	rtargv[rtargc++] = fmt;
 				/* octree argument is last */
-	rtargv[rtargc++] = octree = argv[argc-1];
+	if (i <= 0 || i != argc-1 || argv[i][0] == '-')
+		error(USER, "missing octree argument");
+	rtargv[rtargc++] = octree = argv[i];
 	rtargv[rtargc] = NULL;
-				/* start rtrace & sum contributions */
+				/* start rtrace & compute contributions */
 	init(nprocs);
 	tracecontribs(stdin);
 	quit(0);
@@ -340,6 +338,9 @@ init(int np)
 	struct rtproc	*rtp;
 	int	i;
 	int	maxbytes;
+					/* make sure we have something to do */
+	if (!nmods)
+		error(USER, "No modifiers specified");
 					/* assign ray variables */
 	scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
 	scompile("Px=$4;Py=$5;Pz=$6;", NULL, 0);
@@ -360,9 +361,10 @@ init(int np)
 			error(SYSTEM, "cannot start rtrace process");
 		if (maxbytes > treebufsiz)
 			treebufsiz = maxbytes;
+		rtp->raynum = 0;
 		rtp->bsiz = 0;
 		rtp->buf = NULL;
-		rtp->raynum = 0;
+		rtp->nbr = 0;
 		if (i == np)		/* last process? */
 			break;
 		if (i == 1)
@@ -437,7 +439,7 @@ printheader(FILE *fout)
 	
 	if (fin == NULL)
 		quit(1);
-	getheader(fin, (gethfunc *)fputs, fout);	/* copy octree header */
+	checkheader(fin, "ignore", fout);	/* copy octree header */
 	fclose(fin);
 	printargs(gargc-1, gargv, fout);	/* add our command */
 	fprintf(fout, "SOFTWARE= %s\n", VersionID);
@@ -468,7 +470,6 @@ printheader(FILE *fout)
 FILE *
 getofile(const char *ospec, const char *mname, int bn)
 {
-	static int	using_stdout = 0;
 	const char	*mnp = NULL;
 	const char	*bnp = NULL;
 	const char	*cp;
@@ -519,13 +520,24 @@ getofile(const char *ospec, const char *mname, int bn)
 	if (lep->key == NULL)			/* new entry */
 		lep->key = strcpy((char *)malloc(strlen(ofname)+1), ofname);
 	if (lep->data == NULL) {		/* open output file */
-		lep->data = (char *)fopen(ofname, "w");
-		if (lep->data == NULL) {
+		FILE		*fp = fopen(ofname, "w");
+		int		i;
+		if (fp == NULL) {
 			sprintf(errmsg, "cannot open '%s' for writing", ofname);
 			error(SYSTEM, errmsg);
 		}
 		if (header)
-			printheader((FILE *)lep->data);
+			printheader(fp);
+						/* play catch-up */
+		for (i = 0; i < lastdone; i++) {
+			static const DCOLOR	nocontrib = BLKCOLOR;
+			putcontrib(nocontrib, fp);
+			if (outfmt == 'a')
+				putc('\n', fp);
+		}
+		if (xres > 0)
+			fflush(fp);
+		lep->data = (char *)fp;
 	}
 	return (FILE *)lep->data;		/* return open file pointer */
 badspec:
@@ -556,7 +568,7 @@ getinp(char *buf, FILE *fp)
 	return 0;	/* pro forma return */
 }
 
-static const float	*rparams = NULL;	/* ray parameter pointer */
+static float	rparams[9];		/* traced ray parameters */
 
 /* return channel (ray) value */
 double
@@ -564,14 +576,12 @@ chanvalue(int n)
 {
 	if (--n < 0 || n >= 6)
 		error(USER, "illegal channel number ($N)");
-	if (rparams == NULL)
-		error(USER, "illegal use of $N in constant expression");
-	return rparams[n];
+	return rparams[n+3];
 }
 
-/* add ray contribution to the appropriate modifier bin */
+/* add current ray contribution to the appropriate modifier bin */
 void
-add_contrib(const char *modn, float rayval[9])
+add_contrib(const char *modn)
 {
 	LUENT	*le = lu_find(&modconttab, modn);
 	MODCONT	*mp = (MODCONT *)le->data;
@@ -581,22 +591,20 @@ add_contrib(const char *modn, float rayval[9])
 		sprintf(errmsg, "unexpected modifier '%s' from rtrace", modn);
 		error(USER, errmsg);
 	}
-	rparams = rayval + 3;		/* for chanvalue */
-	eclock++;
+	eclock++;			/* get bin number */
 	bn = (int)(evalue(mp->binv) + .5);
 	if (bn <= 0)
 		bn = 0;
 	else if (bn > mp->nbins) {	/* new bin */
 		mp = (MODCONT *)realloc(mp, sizeof(MODCONT) +
-						bn*sizeof(COLOR));
+						bn*sizeof(DCOLOR));
 		if (mp == NULL)
 			error(SYSTEM, "out of memory in add_contrib");
-		memset(mp->cbin+mp->nbins, 0, sizeof(COLOR)*(bn+1-mp->nbins));
+		memset(mp->cbin+mp->nbins, 0, sizeof(DCOLOR)*(bn+1-mp->nbins));
 		mp->nbins = bn+1;
 		le->data = (char *)mp;
 	}
-	addcolor(mp->cbin[bn], rayval);
-	rparams = NULL;
+	addcolor(mp->cbin[bn], rparams);
 }
 
 /* output newline to ASCII file and/or flush as requested */
@@ -616,52 +624,59 @@ puteol(const LUENT *e, void *p)
 	return 0;
 }
 
+/* put out ray contribution to file */
+void
+putcontrib(const DCOLOR cnt, FILE *fout)
+{
+	float	fv[3];
+	COLR	cv;
+
+	switch (outfmt) {
+	case 'a':
+		fprintf(fout, "%.6e\t%.6e\t%.6e\t", cnt[0], cnt[1], cnt[2]);
+		break;
+	case 'f':
+		fv[0] = cnt[0];
+		fv[1] = cnt[1];
+		fv[2] = cnt[2];
+		fwrite(fv, sizeof(float), 3, fout);
+		break;
+	case 'd':
+		fwrite(cnt, sizeof(double), 3, fout);
+		break;
+	case 'c':
+		setcolr(cv, cnt[0], cnt[1], cnt[2]);
+		fwrite(cv, sizeof(cv), 1, fout);
+		break;
+	default:
+		error(INTERNAL, "botched output format");
+	}
+}
+
 /* output ray tallies and clear for next primary */
 void
 done_contrib(void)
 {
 	int	i, j;
 	MODCONT	*mp;
-	FILE	*fout;
-	double	dv[3];
-	COLR	cv;
 						/* output modifiers in order */
 	for (i = 0; i < nmods; i++) {
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
-		for (j = 0; j < mp->nbins; j++) {
-			fout = getofile(mp->outspec, mp->modname, j);
-			switch (outfmt) {
-			case 'a':
-				fprintf(fout, "%.6e\t%.6e\t%.6e\t",
-						mp->cbin[j][RED],
-						mp->cbin[j][GRN],
-						mp->cbin[j][BLU]);
-				break;
-			case 'f':
-				fwrite(mp->cbin[j], sizeof(float), 3, fout);
-				break;
-			case 'd':
-				dv[0] = mp->cbin[j][0];
-				dv[1] = mp->cbin[j][1];
-				dv[2] = mp->cbin[j][2];
-				fwrite(dv, sizeof(double), 3, fout);
-				break;
-			case 'c':
-				setcolr(cv, mp->cbin[j][RED],
-					mp->cbin[j][GRN], mp->cbin[j][BLU]);
-				fwrite(cv, sizeof(COLR), 1, fout);
-				break;
-			default:
-				error(INTERNAL, "botched output format");
-			}
-		}
+		for (j = 0; j < mp->nbins; j++)
+			putcontrib(mp->cbin[j],
+					getofile(mp->outspec, mp->modname, j));
 						/* clear for next ray tree */
-		memset(mp->cbin, 0, sizeof(COLOR)*mp->nbins);
+		memset(mp->cbin, 0, sizeof(DCOLOR)*mp->nbins);
 	}
 	--waitflush;				/* terminate records */
 	lu_doall(&ofiletab, puteol, NULL);
-	if (!waitflush)
+	if (using_stdout & (outfmt == 'a'))
+		putc('\n', stdout);
+	if (!waitflush) {
 		waitflush = xres;
+		if (using_stdout)
+			fflush(stdout);
+	}
 }
 
 /* process (or save) ray tree produced by rtrace process */
@@ -671,28 +686,29 @@ process_rays(struct rtproc *rtp)
 	struct rtproc	*rtu;
 					/* check if time to process it */
 	if (rtp->raynum == lastdone+1) {
-		int		n = rtp->bpos - rtp->buf;
+		int		n = rtp->nbr;
 		const char	*cp = rtp->buf;
+		char		modname[128];
 		while (n > 0) {		/* process rays */
-			char	matname[128];
-			char	*mnp = matname;
+			register char	*mnp = modname;
 					/* skip leading tabs */
 			while (n > 0 && *cp == '\t') {
 				cp++; n--;
 			}
-					/* get material name */
+			if (!n || !(isalpha(*cp) | (*cp == '_')))
+				error(USER, "bad modifier name from rtrace");
+					/* get modifier name */
 			while (n > 0 && *cp != '\t') {
 				*mnp++ = *cp++; n--;
 			}
-			if (!n)
-				error(USER, "botched modifer name from rtrace");
 			*mnp = '\0';
-			cp++; n--;	/* skip terminating tab */
+			cp++; n--;	/* eat following tab */
 			if (n < (int)(sizeof(float)*9))
 				error(USER, "incomplete ray value from rtrace");
 					/* add ray contribution */
-			add_contrib(matname, (float *)cp);
+			memcpy(rparams, cp, sizeof(float)*9);
 			cp += sizeof(float)*9; n -= sizeof(float)*9;
+			add_contrib(modname);
 		}
 		done_contrib();		/* sum up contributions & output */
 		lastdone = rtp->raynum;
@@ -723,6 +739,7 @@ process_rays(struct rtproc *rtp)
 	rtp->raynum = 0;		/* clear path for next ray tree */
 	rtp->bsiz = 0;
 	rtp->buf = NULL;
+	rtp->nbr = 0;
 }
 
 /* wait for rtrace process to finish with ray tree */
@@ -763,7 +780,7 @@ wait_rproc(void)
 			if (rt->buf == NULL) {
 				rt->bsiz = treebufsiz;
 				rt->buf = (char *)malloc(treebufsiz);
-			} else if (rt->bpos + BUFSIZ > rt->buf + rt->bsiz) {
+			} else if (rt->nbr + BUFSIZ > rt->bsiz) {
 				if (rt->bsiz + BUFSIZ <= treebufsiz)
 					rt->bsiz = treebufsiz;
 				else
@@ -772,13 +789,13 @@ wait_rproc(void)
 			}
 			if (rt->buf == NULL)
 				error(SYSTEM, "out of memory in wait_rproc");
-			nr = read(rt->pd.r, rt->bpos,
-					rt->buf + rt->bsiz - rt->bpos);
-			if (!nr)
+			nr = read(rt->pd.r, rt->buf+rt->nbr, rt->bsiz-rt->nbr);
+			if (nr <= 0)
 				error(USER, "rtrace process died");
-			rt->bpos += nr;		/* advance buffer & check */
-			if (rt->bpos[-1] == '\t' && rt->bpos[-2] == '-') {
-				rt->bpos -= 2;	/* elide terminator */
+			rt->nbr += nr;		/* advance & check */
+			if (rt->nbr >= 4 && !memcmp(rt->buf+rt->nbr-4,
+							"~\t~\t", 4)) {
+				rt->nbr -= 4;	/* elide terminator */
 				process_rays(rt);
 				rtfree = rt;	/* ready for next ray */
 			}
@@ -821,4 +838,6 @@ tracecontribs(FILE *fin)
 	}
 	while (wait_rproc() != NULL)		/* process outstanding rays */
 		;
+	if (raysleft > 0)
+		error(USER, "unexpected EOF on input");
 }
