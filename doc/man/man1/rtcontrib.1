@@ -1,7 +1,7 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.4 2005/05/26 21:03:22 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.5 2005/05/27 19:15:28 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
-rtcontrib - compute contributions in a RADIANCE scene
+rtcontrib - compute contribution coefficients in a RADIANCE scene
 .SH SYNOPSIS
 .B rtcontrib
 [
@@ -51,8 +51,9 @@ systems, such as luminaires, light pipes, and shading devices.
 .I Rtcontrib
 calls
 .I rtrace(1)
-to calculate the contributions for each input ray,
-and the output tallies are sent to one or more files according to the
+with the -oTW option to calculate the daughter ray
+contributions for each input ray, and the output tallies
+are sent to one or more files according to the given
 .I \-o
 specification.
 If an output specification contains a "%s" format, this will be
