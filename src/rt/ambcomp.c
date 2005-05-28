@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.14 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.15 2005/05/28 22:27:54 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -16,7 +16,7 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.14 2005/04/19 01:15:06 greg Exp 
 #include  "random.h"
 
 
-int
+void
 inithemi(			/* initialize sampling hemisphere */
 	register AMBHEMI  *hp,
 	RAY  *r,
@@ -24,21 +24,21 @@ inithemi(			/* initialize sampling hemisphere */
 	double  wt
 )
 {
-	int	ns;
-	double	d;
 	register int  i;
 					/* set number of divisions */
-	hp->nt = sqrt(ambdiv * wt / PI) + 0.5;
+	hp->nt = sqrt(ambdiv * wt * (1./PI/AVGREFL)) + 0.5;
 	i = ambacc > FTINY ? 3 : 1;	/* minimum number of samples */
 	if (hp->nt < i)
 		hp->nt = i;
 	hp->np = PI * hp->nt + 0.5;
 					/* set number of super-samples */
-	ns = ambssamp * wt + 0.5;
-					/* assign coefficient */
-	d = 1.0/(hp->nt*hp->np + ns);	/* XXX weight not uniform if ns > 0 */
+	hp->ns = ambssamp * wt + 0.5;
+					/* assign coefficients */
 	copycolor(hp->acoef, ac);
-	scalecolor(hp->acoef, d);
+	if (wt >= r->rweight)
+		hp->drc = 1.;
+	else
+		hp->drc = wt / r->rweight;
 					/* make axes */
 	VCOPY(hp->uz, r->ron);
 	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
@@ -51,7 +51,6 @@ inithemi(			/* initialize sampling hemisphere */
 	fcross(hp->ux, hp->uy, hp->uz);
 	normalize(hp->ux);
 	fcross(hp->uy, hp->uz, hp->ux);
-	return(ns);
 }
 
 
@@ -69,14 +68,13 @@ divsample(				/* sample a division */
 	double  b2;
 	double  phi;
 	register int  i;
-					/* assign coefficient */
-	if (ambacc <= FTINY)		/* no storage, so report accurately */
-		copycolor(ar.rcoef, h->acoef);
-	else				/* else lie for sake of cache */
-		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
+					/* ambient coefficient for weight */
+	setcolor(ar.rcoef, h->drc, h->drc, h->drc);
 	if (rayorigin(&ar, AMBIENT, r, ar.rcoef) < 0)
 		return(-1);
-	copycolor(ar.rcoef, h->acoef);	/* correct coefficient rtrace output */
+	copycolor(ar.rcoef, h->acoef);	/* correct coefficient for trace */
+	b2 = 1.0/(h->nt*h->np + h->ns);	/* XXX not uniform if ns > 0 */
+	scalecolor(ar.rcoef, b2);
 	hlist[0] = r->rno;
 	hlist[1] = dp->t;
 	hlist[2] = dp->p;
@@ -157,17 +155,17 @@ doambient(				/* compute ambient component */
 	AMBSAMP  dnew;
 	register AMBSAMP  *dp;
 	double  arad;
-	int  ndivs, ns;
+	int  ndivs;
 	register int  i, j;
 					/* initialize color */
 	setcolor(acol, 0.0, 0.0, 0.0);
 					/* initialize hemisphere */
-	ns = inithemi(&hemi, r, ac, wt);
+	inithemi(&hemi, r, ac, wt);
 	ndivs = hemi.nt * hemi.np;
 	if (ndivs == 0)
 		return(0.0);
 					/* allocate super-samples */
-	if (ns > 0 || pg != NULL || dg != NULL) {
+	if (hemi.ns > 0 || pg != NULL || dg != NULL) {
 		div = (AMBSAMP *)malloc(ndivs*sizeof(AMBSAMP));
 		if (div == NULL)
 			error(SYSTEM, "out of memory in doambient");
@@ -191,13 +189,13 @@ doambient(				/* compute ambient component */
 			else
 				addcolor(acol, dp->v);
 		}
-	if (ns > 0 && arad > FTINY && ndivs/arad < minarad)
-		ns = 0;			/* close enough */
-	else if (ns > 0) {		/* else perform super-sampling */
+	if (hemi.ns > 0 && arad > FTINY && ndivs/arad < minarad)
+		hemi.ns = 0;		/* close enough */
+	else if (hemi.ns > 0) {		/* else perform super-sampling */
 		comperrs(div, &hemi);			/* compute errors */
 		qsort(div, ndivs, sizeof(AMBSAMP), ambcmp);	/* sort divs */
 						/* super-sample */
-		for (i = ns; i > 0; i--) {
+		for (i = hemi.ns; i > 0; i--) {
 			dnew = *div;
 			if (divsample(&dnew, &hemi, r) < 0)
 				goto oopsy;
@@ -254,7 +252,7 @@ doambient(				/* compute ambient component */
 	if (arad <= FTINY)
 		arad = maxarad;
 	else
-		arad = (ndivs+ns)/arad;
+		arad = (ndivs+hemi.ns)/arad;
 	if (pg != NULL) {		/* reduce radius if gradient large */
 		d = DOT(pg,pg);
 		if (d*arad*arad > 1.0)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.59 2005/05/25 18:06:22 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.60 2005/05/28 22:27:54 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -326,7 +326,7 @@ extern double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
 	register RAY  *r,
-	double  rw,
+	double  aw,
 	FVECT  rn,
 	int  al,
 	AMBTREE	 *at,
@@ -352,7 +352,7 @@ sumambient(	/* get interpolated ambient value */
 		 */
 		if (av->lvl > al)	/* list sorted, so this works */
 			break;
-		if (av->weight < 0.9*rw)
+		if (av->weight < 0.85*aw)
 			continue;
 		/*
 		 *  Ambient radius test.
@@ -431,7 +431,7 @@ sumambient(	/* get interpolated ambient value */
 				break;
 		}
 		if (j == 3)
-			wsum += sumambient(acol, r, rw, rn, al,
+			wsum += sumambient(acol, r, aw, rn, al,
 						at->kid+i, ck0, s);
 	}
 	return(wsum);
@@ -439,7 +439,7 @@ sumambient(	/* get interpolated ambient value */
 
 
 extern double
-makeambient(	/* make a new ambient value */
+makeambient(		/* make a new ambient value */
 	COLOR  acol,
 	RAY  *r,
 	COLOR  ac,
@@ -448,13 +448,16 @@ makeambient(	/* make a new ambient value */
 )
 {
 	AMBVAL	amb;
-	double	coef;
+	double	awt;
 	FVECT	gp, gd;
-						/* compute weight */
-	amb.weight = pow(AVGREFL, (double)al);
-	coef = intens(ac)*r->rweight;
-	if (coef < 0.1*amb.weight)		/* heuristic */
-		amb.weight = coef;
+	int	i;
+
+	amb.weight = AVGREFL;			/* compute weight */
+	for (i = al; i-- >= 0; )
+		amb.weight *= AVGREFL;
+	awt = intens(ac)*r->rweight;
+	if (awt < 0.07*amb.weight)		/* heuristic override */
+		amb.weight = 1.2*awt;
 						/* compute ambient */
 	amb.rad = doambient(acol, r, ac, amb.weight, gp, gd);
 	if (amb.rad <= FTINY)
