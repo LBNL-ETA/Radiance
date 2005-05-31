@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.6 2005/05/28 22:27:54 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.7 2005/05/31 03:48:59 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.6 2005/05/28 22:27:54 greg Exp
 
 #include  "standard.h"
 #include  <ctype.h>
+#include  <signal.h>
 #include  "platform.h"
 #include  "rtprocess.h"
 #include  "selcall.h"
