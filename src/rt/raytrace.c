@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.50 2005/05/26 06:55:22 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.51 2005/05/31 18:01:09 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id: raytrace.c,v 2.50 2005/05/26 06:55:22 greg Exp
 #include  "source.h"
 #include  "otypes.h"
 #include  "otspecial.h"
+#include  "random.h"
 
 #define  MAXCSET	((MAXSET+1)*2-1)	/* maximum check set size */
 
@@ -96,6 +97,20 @@ rayorigin(		/* start new ray from old one */
 			r->rweight *= exp(-re);
 	}
 	rayclear(r);
+	if (maxdepth <= 0 && rc != NULL) {	/* Russian roulette */
+		if (minweight <= 0.0)
+			error(USER, "zero ray weight in Russian roulette");
+		if (maxdepth < 0 && r->rlvl > -maxdepth)
+			return(-1);		/* upper reflection limit */
+		if (r->rweight >= minweight)
+			return(0);
+		if (frandom() < r->rweight/minweight)
+			return(-1);
+		rw = minweight/r->rweight;	/* promote survivor */
+		scalecolor(r->rcoef, rw);
+		r->rweight = minweight;
+		return(0);
+	}
 	return(r->rlvl <= maxdepth && r->rweight >= minweight ? 0 : -1);
 }
 

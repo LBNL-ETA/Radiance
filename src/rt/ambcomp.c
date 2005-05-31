@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.15 2005/05/28 22:27:54 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.16 2005/05/31 18:01:09 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -19,26 +19,28 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.15 2005/05/28 22:27:54 greg Exp 
 void
 inithemi(			/* initialize sampling hemisphere */
 	register AMBHEMI  *hp,
+	COLOR ac,
 	RAY  *r,
-	COLOR ac, 
 	double  wt
 )
 {
+	double	d;
 	register int  i;
 					/* set number of divisions */
-	hp->nt = sqrt(ambdiv * wt * (1./PI/AVGREFL)) + 0.5;
+	if (ambacc <= FTINY &&
+			wt > (d = 0.8*bright(ac)*r->rweight/(ambdiv*minweight)))
+		wt = d;			/* avoid ray termination */
+	hp->nt = sqrt(ambdiv * wt / PI) + 0.5;
 	i = ambacc > FTINY ? 3 : 1;	/* minimum number of samples */
 	if (hp->nt < i)
 		hp->nt = i;
 	hp->np = PI * hp->nt + 0.5;
 					/* set number of super-samples */
 	hp->ns = ambssamp * wt + 0.5;
-					/* assign coefficients */
+					/* assign coefficient */
 	copycolor(hp->acoef, ac);
-	if (wt >= r->rweight)
-		hp->drc = 1.;
-	else
-		hp->drc = wt / r->rweight;
+	d = 1.0/(hp->nt*hp->np);
+	scalecolor(hp->acoef, d);
 					/* make axes */
 	VCOPY(hp->uz, r->ron);
 	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
@@ -69,12 +71,14 @@ divsample(				/* sample a division */
 	double  phi;
 	register int  i;
 					/* ambient coefficient for weight */
-	setcolor(ar.rcoef, h->drc, h->drc, h->drc);
+	if (ambacc > FTINY)
+		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
+	else
+		copycolor(ar.rcoef, h->acoef);
 	if (rayorigin(&ar, AMBIENT, r, ar.rcoef) < 0)
 		return(-1);
-	copycolor(ar.rcoef, h->acoef);	/* correct coefficient for trace */
-	b2 = 1.0/(h->nt*h->np + h->ns);	/* XXX not uniform if ns > 0 */
-	scalecolor(ar.rcoef, b2);
+	if (ambacc > FTINY)
+		copycolor(ar.rcoef, h->acoef);
 	hlist[0] = r->rno;
 	hlist[1] = dp->t;
 	hlist[2] = dp->p;
@@ -91,6 +95,7 @@ divsample(				/* sample a division */
 	dimlist[ndims++] = dp->t*h->np + dp->p + 90171;
 	rayvalue(&ar);
 	ndims--;
+	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	addcolor(dp->v, ar.rcol);
 					/* use rt to improve gradient calc */
 	if (ar.rt > FTINY && ar.rt < FHUGE)
@@ -143,7 +148,6 @@ double
 doambient(				/* compute ambient component */
 	COLOR  acol,
 	RAY  *r,
-	COLOR  ac,
 	double  wt,
 	FVECT  pg,
 	FVECT  dg
@@ -157,11 +161,11 @@ doambient(				/* compute ambient component */
 	double  arad;
 	int  ndivs;
 	register int  i, j;
-					/* initialize color */
-	setcolor(acol, 0.0, 0.0, 0.0);
 					/* initialize hemisphere */
-	inithemi(&hemi, r, ac, wt);
+	inithemi(&hemi, acol, r, wt);
 	ndivs = hemi.nt * hemi.np;
+					/* initialize sum */
+	setcolor(acol, 0.0, 0.0, 0.0);
 	if (ndivs == 0)
 		return(0.0);
 					/* allocate super-samples */
@@ -181,8 +185,10 @@ doambient(				/* compute ambient component */
 			setcolor(dp->v, 0.0, 0.0, 0.0);
 			dp->r = 0.0;
 			dp->n = 0;
-			if (divsample(dp, &hemi, r) < 0)
-				goto oopsy;
+			if (divsample(dp, &hemi, r) < 0) {
+				if (div != NULL) dp++;
+				continue;
+			}
 			arad += dp->r;
 			if (div != NULL)
 				dp++;
@@ -197,10 +203,11 @@ doambient(				/* compute ambient component */
 						/* super-sample */
 		for (i = hemi.ns; i > 0; i--) {
 			dnew = *div;
-			if (divsample(&dnew, &hemi, r) < 0)
-				goto oopsy;
-							/* reinsert */
-			dp = div;
+			if (divsample(&dnew, &hemi, r) < 0) {
+				dp++;
+				continue;
+			}
+			dp = div;		/* reinsert */
 			j = ndivs < i ? ndivs : i;
 			while (--j > 0 && dnew.k < dp[1].k) {
 				*dp = *(dp+1);
@@ -226,7 +233,7 @@ doambient(				/* compute ambient component */
 		}
 		b = bright(acol);
 		if (b > FTINY) {
-			b = ndivs/b;
+			b = 1.0/b;	/* normalize gradient(s) */
 			if (pg != NULL) {
 				posgradient(pg, div, &hemi);
 				for (i = 0; i < 3; i++)
@@ -247,8 +254,6 @@ doambient(				/* compute ambient component */
 		}
 		free((void *)div);
 	}
-	b = 1.0/ndivs;
-	scalecolor(acol, b);
 	if (arad <= FTINY)
 		arad = maxarad;
 	else
@@ -269,10 +274,6 @@ doambient(				/* compute ambient component */
 	if ((arad /= sqrt(wt)) > maxarad)
 		arad = maxarad;
 	return(arad);
-oopsy:
-	if (div != NULL)
-		free((void *)div);
-	return(0.0);
 }
 
 
@@ -382,7 +383,7 @@ posgradient(					/* compute position gradient */
 		yd += mag0*sinp + mag1*cosp;
 	}
 	for (i = 0; i < 3; i++)
-		gv[i] = (xd*hp->ux[i] + yd*hp->uy[i])/PI;
+		gv[i] = (xd*hp->ux[i] + yd*hp->uy[i])*(hp->nt*hp->np)/PI;
 }
 
 
@@ -417,5 +418,5 @@ dirgradient(					/* compute direction gradient */
 		yd += mag * tsin(phi);
 	}
 	for (i = 0; i < 3; i++)
-		gv[i] = (xd*hp->ux[i] + yd*hp->uy[i])/(hp->nt*hp->np);
+		gv[i] = xd*hp->ux[i] + yd*hp->uy[i];
 }

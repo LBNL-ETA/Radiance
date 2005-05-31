@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.60 2005/05/28 22:27:54 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.61 2005/05/31 18:01:09 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -275,29 +275,30 @@ multambient(		/* compute ambient component & multiply by coef. */
 		goto dumbamb;
 
 	if (ambacc <= FTINY) {			/* no ambient storage */
+		copycolor(acol, aval);
 		rdepth++;
-		d = doambient(acol, r, aval, intens(aval)*r->rweight,
-							NULL, NULL);
+		d = doambient(acol, r, r->rweight, NULL, NULL);
 		rdepth--;
 		if (d <= FTINY)
 			goto dumbamb;
-		multcolor(aval, acol);
+		copycolor(aval, acol);
 		return;
 	}
 
 	if (tracktime)				/* sort to minimize thrashing */
 		sortambvals(0);
-						/* get ambient value */
+						/* interpolate ambient value */
 	setcolor(acol, 0.0, 0.0, 0.0);
-	d = sumambient(acol, r, intens(aval)*r->rweight, nrm, rdepth,
+	d = sumambient(acol, r, nrm, rdepth,
 			&atrunk, thescene.cuorg, thescene.cusize);
 	if (d > FTINY) {
-		scalecolor(acol, 1.0/d);
+		d = 1.0/d;
+		scalecolor(acol, d);
 		multcolor(aval, acol);
 		return;
 	}
 	rdepth++;				/* need to cache new value */
-	d = makeambient(acol, r, aval, nrm, rdepth-1);
+	d = makeambient(acol, r, nrm, rdepth-1);
 	rdepth--;
 	if (d > FTINY) {
 		multcolor(aval, acol);		/* got new value */
@@ -326,7 +327,6 @@ extern double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
 	register RAY  *r,
-	double  aw,
 	FVECT  rn,
 	int  al,
 	AMBTREE	 *at,
@@ -352,7 +352,7 @@ sumambient(	/* get interpolated ambient value */
 		 */
 		if (av->lvl > al)	/* list sorted, so this works */
 			break;
-		if (av->weight < 0.85*aw)
+		if (av->weight < 0.9*r->rweight)
 			continue;
 		/*
 		 *  Ambient radius test.
@@ -431,7 +431,7 @@ sumambient(	/* get interpolated ambient value */
 				break;
 		}
 		if (j == 3)
-			wsum += sumambient(acol, r, aw, rn, al,
+			wsum += sumambient(acol, r, rn, al,
 						at->kid+i, ck0, s);
 	}
 	return(wsum);
@@ -439,30 +439,31 @@ sumambient(	/* get interpolated ambient value */
 
 
 extern double
-makeambient(		/* make a new ambient value */
+makeambient(		/* make a new ambient value for storage */
 	COLOR  acol,
 	RAY  *r,
-	COLOR  ac,
 	FVECT  rn,
 	int  al
 )
 {
 	AMBVAL	amb;
-	double	awt;
 	FVECT	gp, gd;
 	int	i;
 
-	amb.weight = AVGREFL;			/* compute weight */
-	for (i = al; i-- >= 0; )
+	amb.weight = 1.0;			/* compute weight */
+	for (i = al; i-- > 0; )
 		amb.weight *= AVGREFL;
-	awt = intens(ac)*r->rweight;
-	if (awt < 0.07*amb.weight)		/* heuristic override */
-		amb.weight = 1.2*awt;
+	if (r->rweight < 0.1*amb.weight)	/* heuristic override */
+		amb.weight = r->rweight;
+	setcolor(acol, AVGREFL, AVGREFL, AVGREFL);
 						/* compute ambient */
-	amb.rad = doambient(acol, r, ac, amb.weight, gp, gd);
-	if (amb.rad <= FTINY)
+	amb.rad = doambient(acol, r, amb.weight, gp, gd);
+	if (amb.rad <= FTINY) {
+		setcolor(acol, 0.0, 0.0, 0.0);
 		return(0.0);
-						/* store it */
+	}
+	scalecolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
+						/* store value */
 	VCOPY(amb.pos, r->rop);
 	VCOPY(amb.dir, r->ron);
 	amb.lvl = al;

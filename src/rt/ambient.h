@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.14 2005/05/28 22:27:54 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.15 2005/05/31 18:01:09 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -35,15 +35,14 @@ typedef struct ambtree {
 
 typedef struct {
 	short  t, p;		/* theta, phi indices */
-	COLOR  v;		/* value sum */
+	COLOR  v;		/* division sum (partial) */
 	float  r;		/* 1/distance sum */
 	float  k;		/* variance for this division */
 	int  n;			/* number of subsamples */
 }  AMBSAMP;		/* ambient sample division */
 
 typedef struct {
-	COLOR  acoef;		/* ambient contribution coefficient */
-	float  drc;		/* daughter ray coefficient */
+	COLOR  acoef;		/* division contribution coefficient */
 	FVECT  ux, uy, uz;	/* x, y and z axis directions */
 	short  nt, np;		/* number of theta and phi directions */
 	int    ns;		/* number of super-samples */
@@ -67,15 +66,15 @@ extern void	setambient(void);
 extern void	multambient(COLOR aval, RAY *r, FVECT nrm);
 extern void	ambdone(void);
 extern void	ambnotify(OBJECT obj);
-extern double	sumambient(COLOR acol, RAY *r, double rw, FVECT rn, int al,
+extern double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
-extern double	makeambient(COLOR acol, RAY *r, COLOR ac, FVECT rn, int al);
+extern double	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
 extern void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
 extern int	ambsync(void);
 					/* defined in ambcomp.c */
-extern double	doambient(COLOR acol, RAY *r, COLOR ac, double wt,
+extern double	doambient(COLOR acol, RAY *r, double wt,
 					FVECT pg, FVECT dg);
-extern void	inithemi(AMBHEMI *hp, RAY *r, COLOR ac, double wt);
+extern void	inithemi(AMBHEMI *hp, COLOR ac, RAY *r, double wt);
 extern int	divsample(AMBSAMP *dp, AMBHEMI *h, RAY *r);
 extern void	comperrs(AMBSAMP *da, AMBHEMI *hp);
 extern void	posgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);

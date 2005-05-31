@@ -1456,3 +1456,6 @@ coefficient calculations for annual simulations, among other uses.
 Added tilde ('~') output option as part of the -o* specification of
 rtrace.  This permits ray trees to be parsed more easily in binary
 output mode, as needed by rtcontrib.
+
+Implemented Russian roulette ray termination with -lr set to 0.  Made
+this the default in rtcontrib.

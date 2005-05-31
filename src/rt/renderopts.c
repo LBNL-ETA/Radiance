@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.7 2004/08/20 20:03:00 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.8 2005/05/31 18:01:09 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -245,6 +245,7 @@ print_rdefaults(void)		/* print default render values to stdout */
 			colval(salbedo,GRN), colval(salbedo,BLU));
 	printf("-mg %f\t\t\t# mist scattering eccentricity\n", seccg);
 	printf("-ms %f\t\t\t# mist sampling distance\n", ssampdist);
-	printf("-lr %-9d\t\t\t# limit reflection\n", maxdepth);
+	printf("-lr %-9d\t\t\t# limit reflection%s\n", maxdepth,
+			maxdepth<=0 ? " (Russian roulette)" : "");
 	printf("-lw %f\t\t\t# limit weight\n", minweight);
 }

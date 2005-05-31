@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.7 2005/05/31 03:48:59 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.8 2005/05/31 18:01:09 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -68,8 +68,8 @@ struct rtproc {
 
 					/* rtrace command and defaults */
 char		*rtargv[256] = { "rtrace", "-dj", ".5", "-dr", "3",
-				"-ab", "1", "-ad", "128", };
-int  rtargc = 9;
+				"-ab", "1", "-ad", "128", "-lr", "-10", };
+int  rtargc = 11;
 					/* overriding rtrace options */
 char		*myrtopts[] = { "-o~~TmWdp", "-h-", "-x", "1", "-y", "0",
 				"-dt", "0", "-as", "0", "-aa", "0", NULL };

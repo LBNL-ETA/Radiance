@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.7 2005/04/14 18:04:12 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.8 2005/05/31 18:01:08 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -558,13 +558,29 @@ option (above) may be used to override this.
 .BI -lr \ N
 Limit reflections to a maximum of
 .I N.
+If
+.I N
+is zero, then Russian roulette is used for ray
+termination, and the
+.I -lw
+setting (below) must be positive.
+If N is a negative integer, then this sets the upper limit
+of reflections past which Russian roulette will not be used.
+In scenes with dielectrics and total internal reflection,
+a setting of 0 (no limit) may cause a stack overflow.
 .TP
 .BI -lw \ frac
 Limit the weight of each ray to a minimum of
 .I frac.
-During ray-tracing, a record is kept of the final contribution
-a ray would have to the image.
-If it is less then the specified minimum, the ray is not traced.
+During ray-tracing, a record is kept of the estimated contribution
+(weight) a ray would have in the image.
+If this weight is less than the specified minimum and the
+.I -lr
+setting (above) is positive, the ray is not traced.
+Otherwise, Russian roulette is used to
+continue rays with a probability equal to the ray weight
+divided by the given
+.I frac.
 .TP
 .BI -S \ seqstart
 Instead of generating a single picture based only on the view
