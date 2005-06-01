@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.8 2005/05/31 18:01:09 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.9 2005/06/01 16:11:01 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -202,8 +202,17 @@ main(int argc, char *argv[])
 				break;
 			case 'f':		/* file or i/o format */
 				if (!argv[i][2]) {
+					char	*fpath;
 					if (i >= argc-1) break;
-					fcompile(argv[++i]);
+					fpath = getpath(argv[++i],
+							getrlibpath(), R_OK);
+					if (fpath == NULL) {
+						sprintf(errmsg,
+							"cannot find file '%s'",
+								argv[i]);
+						error(USER, errmsg);
+					}
+					fcompile(fpath);
 					continue;
 				}
 				setformat(argv[i]+2);

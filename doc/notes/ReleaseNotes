@@ -1457,5 +1457,7 @@ Added tilde ('~') output option as part of the -o* specification of
 rtrace.  This permits ray trees to be parsed more easily in binary
 output mode, as needed by rtcontrib.
 
-Implemented Russian roulette ray termination with -lr set to 0.  Made
-this the default in rtcontrib.
+Implemented Russian roulette ray termination with -lr <= 0.
+Made -lr -10 the default in rtcontrib.
+
+Made rtcontrib -f option search RAYPATH directories.
