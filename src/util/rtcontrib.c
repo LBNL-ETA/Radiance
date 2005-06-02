@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.10 2005/06/02 04:47:27 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.11 2005/06/02 18:51:46 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -164,9 +164,10 @@ main(int argc, char *argv[])
 	int	i, j;
 				/* global program name */
 	gargv = argv;
-				/* set up calcomp mode */
+				/* initialize calcomp routines */
 	esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
 	esupport &= ~(E_OUTCHAN);
+	varset("PI", ':', PI);
 				/* get our options */
 	for (i = 1; i < argc-1; i++) {
 						/* expand arguments */
