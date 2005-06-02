@@ -1461,3 +1461,7 @@ Implemented Russian roulette ray termination with -lr <= 0.
 Made -lr -10 the default in rtcontrib.
 
 Made rtcontrib -f option search RAYPATH directories.
+
+Made it so -o option of rtcontrib can pipe -o output to a command.
+
+Added -if and -of options to total for binary i/o (following rcalc mold).

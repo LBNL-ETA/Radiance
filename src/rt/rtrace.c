@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.42 2005/05/26 06:55:22 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.43 2005/06/02 04:47:27 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -160,10 +160,8 @@ rtrace(				/* trace rays from file */
 		sprintf(errmsg, "cannot open input file \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}
-#ifdef _WIN32
 	if (inform != 'a')
 		SET_FILE_BINARY(fp);
-#endif
 					/* set up output */
 	setoutput(outvals);
 	switch (outform) {

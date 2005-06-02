@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.9 2005/06/01 16:11:01 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.10 2005/06/02 04:47:27 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -123,9 +123,11 @@ static void
 setformat(const char *fmt)
 {
 	switch (fmt[0]) {
-	case 'a':
 	case 'f':
 	case 'd':
+		SET_FILE_BINARY(stdin);
+		/* fall through */
+	case 'a':
 		inpfmt = fmt[0];
 		break;
 	default:
@@ -498,8 +500,12 @@ getofile(const char *ospec, const char *mname, int bn)
 	LUENT		*lep;
 	
 	if (ospec == NULL) {			/* use stdout? */
-		if (!using_stdout && header)
-			printheader(stdout);
+		if (!using_stdout) {
+			if (outfmt != 'a')
+				SET_FILE_BINARY(stdout);
+			if (header)
+				printheader(stdout);
+		}
 		using_stdout = 1;
 		return stdout;
 	}
@@ -541,12 +547,18 @@ getofile(const char *ospec, const char *mname, int bn)
 	if (lep->key == NULL)			/* new entry */
 		lep->key = strcpy((char *)malloc(strlen(ofname)+1), ofname);
 	if (lep->data == NULL) {		/* open output file */
-		FILE		*fp = fopen(ofname, "w");
+		FILE		*fp;
 		int		i;
+		if (ofname[0] == '!')		/* output to command */
+			fp = popen(ofname+1, "w");
+		else
+			fp = fopen(ofname, "w");
 		if (fp == NULL) {
 			sprintf(errmsg, "cannot open '%s' for writing", ofname);
 			error(SYSTEM, errmsg);
 		}
+		if (outfmt != 'a')
+			SET_FILE_BINARY(fp);
 		if (header)
 			printheader(fp);
 						/* play catch-up */

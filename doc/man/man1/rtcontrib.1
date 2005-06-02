@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.6 2005/06/01 16:11:01 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.7 2005/06/02 04:47:26 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -11,7 +11,7 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 ][
 .B "\-f source"
 ][
-.B "\-o fspec"
+.B "\-o ospec"
 ][
 .B "\-b binv"
 ]
@@ -53,9 +53,13 @@ calls
 .I rtrace(1)
 with the -oTW option to calculate the daughter ray
 contributions for each input ray, and the output tallies
-are sent to one or more files according to the given
+are sent to one or more destinations according to the given
 .I \-o
 specification.
+If a destination begins with an exclamation mark ('!'), then
+a pipe is opened to a command and data is sent to its standard input.
+Otherwise, the destination is treated as a file.
+(An existing file of the same name is clobbered.)\0
 If an output specification contains a "%s" format, this will be
 replaced by the modifier name.
 The
@@ -112,7 +116,7 @@ If no
 .I \-o
 specification is given, results are written on the standard output in order
 of modifier (as given on the command line) then bin number.
-Concatenated data is also sent to a lone output file (i.e., an initial
+Concatenated data is also sent to a single destination (i.e., an initial
 .I \-o
 specification without formatting strings).
 If a "%s" format appears but no "%d" in the
