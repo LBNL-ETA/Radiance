@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.11 2005/06/02 18:51:46 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.12 2005/06/03 14:29:42 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -706,9 +706,17 @@ done_contrib(void)
 	MODCONT	*mp;
 						/* output modifiers in order */
 	for (i = 0; i < nmods; i++) {
+		FILE	*fp;
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
-		for (j = 0; j < mp->nbins; j++)
-			putcontrib(mp->cbin[j],
+		fp = getofile(mp->outspec, mp->modname, 0);
+		putcontrib(mp->cbin[0], fp);
+		if (mp->nbins > 3 &&		/* minor optimization */
+				fp == getofile(mp->outspec, mp->modname, 1))
+			for (j = 1; j < mp->nbins; j++)
+				putcontrib(mp->cbin[j], fp);
+		else
+			for (j = 1; j < mp->nbins; j++)
+				putcontrib(mp->cbin[j],
 					getofile(mp->outspec, mp->modname, j));
 						/* clear for next ray tree */
 		memset(mp->cbin, 0, sizeof(DCOLOR)*mp->nbins);
