@@ -1,0 +1,41 @@
+{ RCSid $Id: tregenza.cal,v 1.1 2005/06/03 04:12:32 greg Exp $ }
+{
+	Compute bin numbers corresponding to Tregenza sky discretization
+
+	The Tregenza sky uses 145 patches, with patch 1 pointing due
+	North at the horizon, and continuing around to the East to
+	patch 30, which comprises the first altitude row (alt = 6 degrees).
+	Each successive row increases altitude by 12 degrees, with the
+	final altitude at the zenith (90 degrees).  Azimuth is evenly
+	divided among 30, 30, 24, 24, 18, 12, 6, and 1 divisions per row.
+
+	In addition to the bin numbers 1-145 corresponding to this
+	standard, bin 0 is used for the ground plane (altitude < 0).
+
+	Input is normalized ray direction (Dx,Dy,Dz).  The Y-axis is
+	assumed to point North, and the X-axis East, matching the
+	convention set by gensky(1).
+
+	Greg Ward	May 2005
+}
+DEGREE : PI/180;
+Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x)));
+posangle(a) : if(-a, a + 2*PI, a);
+Atan2(y,x) : posangle(atan2(y,x));
+
+alt = Asin(Dz)/DEGREE;
+azi = Atan2(Dx,Dy)/DEGREE;
+
+tazi(inc) = if(azi-(360-.5*inc), 0, floor((azi+.5*inc)/inc));
+
+tbin = if(-alt, 0,
+	select(floor(alt/12) + 1,
+		1 + tazi(12),
+		31 + tazi(12),
+		61 + tazi(15),
+		85 + tazi(15),
+		109 + tazi(20),
+		127 + tazi(30),
+		139 + tazi(60),
+		145
+	) );
