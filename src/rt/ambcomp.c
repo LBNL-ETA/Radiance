@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.16 2005/05/31 18:01:09 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.17 2005/06/04 06:10:12 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -77,8 +77,10 @@ divsample(				/* sample a division */
 		copycolor(ar.rcoef, h->acoef);
 	if (rayorigin(&ar, AMBIENT, r, ar.rcoef) < 0)
 		return(-1);
-	if (ambacc > FTINY)
-		copycolor(ar.rcoef, h->acoef);
+	if (ambacc > FTINY) {
+		multcolor(ar.rcoef, h->acoef);
+		scalecolor(ar.rcoef, 1./AVGREFL);
+	}
 	hlist[0] = r->rno;
 	hlist[1] = dp->t;
 	hlist[2] = dp->p;
@@ -164,7 +166,11 @@ doambient(				/* compute ambient component */
 					/* initialize hemisphere */
 	inithemi(&hemi, acol, r, wt);
 	ndivs = hemi.nt * hemi.np;
-					/* initialize sum */
+					/* initialize */
+	if (pg != NULL)
+		pg[0] = pg[1] = pg[2] = 0.0;
+	if (dg != NULL)
+		dg[0] = dg[1] = dg[2] = 0.0;
 	setcolor(acol, 0.0, 0.0, 0.0);
 	if (ndivs == 0)
 		return(0.0);
@@ -187,6 +193,8 @@ doambient(				/* compute ambient component */
 			dp->n = 0;
 			if (divsample(dp, &hemi, r) < 0) {
 				if (div != NULL) dp++;
+				hemi.ns = 0;	/* incomplete sampling */
+				pg = dg = NULL;
 				continue;
 			}
 			arad += dp->r;
@@ -233,7 +241,7 @@ doambient(				/* compute ambient component */
 		}
 		b = bright(acol);
 		if (b > FTINY) {
-			b = 1.0/b;	/* normalize gradient(s) */
+			b = 1.0/b;	/* compute & normalize gradient(s) */
 			if (pg != NULL) {
 				posgradient(pg, div, &hemi);
 				for (i = 0; i < 3; i++)
@@ -244,13 +252,6 @@ doambient(				/* compute ambient component */
 				for (i = 0; i < 3; i++)
 					dg[i] *= b;
 			}
-		} else {
-			if (pg != NULL)
-				for (i = 0; i < 3; i++)
-					pg[i] = 0.0;
-			if (dg != NULL)
-				for (i = 0; i < 3; i++)
-					dg[i] = 0.0;
 		}
 		free((void *)div);
 	}
