@@ -1465,3 +1465,6 @@ Made rtcontrib -f option search RAYPATH directories.
 Made it so -o option of rtcontrib can pipe -o output to a command.
 
 Added -if and -of options to total for binary i/o (following rcalc mold).
+
+Switched default options in rtrace to use Russian roulette.  (Rpict and rvu
+still use biased ray termination.)

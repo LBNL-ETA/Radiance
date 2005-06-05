@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.43 2005/06/02 04:47:27 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.44 2005/06/05 19:52:01 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -74,7 +74,7 @@ double  specjitter = 1.;		/* specular sampling jitter */
 
 int  backvis = 1;			/* back face visibility */
 
-int  maxdepth = 8;			/* maximum recursion depth */
+int  maxdepth = -10;			/* maximum recursion depth */
 double  minweight = 2e-3;		/* minimum ray weight */
 
 char  *ambfile = NULL;			/* ambient file name */
