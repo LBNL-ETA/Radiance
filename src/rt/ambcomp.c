@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.17 2005/06/04 06:10:12 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.18 2005/06/06 19:14:28 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -192,7 +192,8 @@ doambient(				/* compute ambient component */
 			dp->r = 0.0;
 			dp->n = 0;
 			if (divsample(dp, &hemi, r) < 0) {
-				if (div != NULL) dp++;
+				if (div == NULL) continue;
+				dp++;
 				hemi.ns = 0;	/* incomplete sampling */
 				pg = dg = NULL;
 				continue;
