@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.30 2005/03/22 15:26:05 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.31 2005/06/07 16:54:23 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -656,6 +656,9 @@ Luv2Color(			/* read/convert/write Luv->COLOR scanline */
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_RFLT|C_TFLT))
 		quiterr("internal error 1 in Luv2Color");
 
+	if (cvts.pconf != PLANARCONFIG_CONTIG)
+		quiterr("cannot handle separate 32-bit color planes");
+
 	if (TIFFReadScanline(cvts.tif, cvts.t.p, y, 0) < 0)
 		quiterr("error reading TIFF input");
 					/* also works for float RGB */
@@ -693,6 +696,9 @@ RRGGBB2Color(			/* read/convert/write RGB16->COLOR scanline */
 
 	if (CHK(C_RFLT|C_TWRD|C_TFLT|C_GRY) != (C_TWRD|C_RFLT))
 		quiterr("internal error 1 in RRGGBB2Color");
+
+	if (cvts.pconf != PLANARCONFIG_CONTIG)
+		quiterr("cannot handle separate 16-bit color planes");
 
 	if (TIFFReadScanline(cvts.tif, cvts.t.p, y, 0) < 0)
 		quiterr("error reading TIFF input");
