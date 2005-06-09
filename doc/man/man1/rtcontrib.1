@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.7 2005/06/02 04:47:26 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.8 2005/06/09 17:27:27 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -6,6 +6,8 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 .B rtcontrib
 [
 .B "\-n nprocs"
+][
+.B \-r
 ][
 .B "\-e expr"
 ][
@@ -59,7 +61,9 @@ specification.
 If a destination begins with an exclamation mark ('!'), then
 a pipe is opened to a command and data is sent to its standard input.
 Otherwise, the destination is treated as a file.
-(An existing file of the same name is clobbered.)\0
+An existing file of the same name is clobbered, unless the
+.I \-r
+option is specified, in which case data recovery is attempted.
 If an output specification contains a "%s" format, this will be
 replaced by the modifier name.
 The
