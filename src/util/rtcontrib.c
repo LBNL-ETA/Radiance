@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.14 2005/06/09 17:27:28 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.15 2005/06/09 18:27:44 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1058,6 +1058,10 @@ recover_output(FILE *fin)
 			mp->nbins = j;
 			ment->data = (char *)mp;
 		}
+	}
+	if (lastout < 0) {
+		error(WARNING, "no existing output to recover");
+		return;
 	}
 						/* seek on all files */
 	nvals = lastout * outvsiz;
