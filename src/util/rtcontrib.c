@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.15 2005/06/09 18:27:44 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.16 2005/06/09 18:33:06 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1045,7 +1045,7 @@ recover_output(FILE *fin)
 				break;		/* no bin separation */
 		}
 		if (!lastout) {			/* empty output */
-			error(WARNING, "no data to recover");
+			error(WARNING, "no previous data to recover");
 			lu_done(&ofiletab);	/* reclose all outputs */
 			return;
 		}
@@ -1060,7 +1060,7 @@ recover_output(FILE *fin)
 		}
 	}
 	if (lastout < 0) {
-		error(WARNING, "no existing output to recover");
+		error(WARNING, "no output files to recover");
 		return;
 	}
 						/* seek on all files */
