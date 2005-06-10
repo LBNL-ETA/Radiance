@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.9 2005/06/10 16:42:10 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.10 2005/06/10 20:53:55 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -45,6 +45,10 @@ primitives to be considered in the output.
 A modifier list may also be read from a file using the
 .I \-M
 option.
+The RAYPATH environment variable determines directories to search for
+this file.
+(No search takes place if a file name begins with a '.', '/' or '~'
+character.)\0
 .PP
 The output of
 .I rtcontrib
@@ -120,8 +124,6 @@ Unlike
 will search the RADIANCE library directories for each file given in a
 .I \-f
 option.
-(No search takes place if a file name begins with a '.', '/' or '~'
-character.)\0
 .PP
 If no
 .I \-o
@@ -205,7 +207,7 @@ To compute an array of illuminance contributions according to a Tregenza sky:
 rtcontrib -b tbin -o sky.dat -m skyglow -b 0 -o ground.dat -m groundglow
 @render.opt -f tregenza.cal scene.oct < test.dat
 .SH ENVIRONMENT
-RAYPATH		path to search for -f files
+RAYPATH		path to search for -f and -M files
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

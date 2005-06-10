@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.19 2005/06/10 20:44:00 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.20 2005/06/10 20:53:55 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -468,8 +468,11 @@ addmodfile(char *fname, char *outf, char *binv)
 {
 	char	*mname[MAXMODLIST];
 	int	i;
-					/* load the file & store strings */
-	wordfile(mname, fname);
+					/* find the file & store strings */
+	if (wordfile(mname, getpath(fname, getrlibpath(), R_OK)) < 0) {
+		sprintf(errmsg, "cannot find modifier file '%s'", fname);
+		error(SYSTEM, errmsg);
+	}
 	for (i = 0; mname[i]; i++)	/* add each one */
 		addmodifier(mname[i], outf, binv);
 }
