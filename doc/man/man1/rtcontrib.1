@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.8 2005/06/09 17:27:27 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.9 2005/06/10 16:42:10 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -17,7 +17,10 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 ][
 .B "\-b binv"
 ]
-.B "\-m mod .."
+{
+.B "\-m mod | \-M file"
+}
+..
 [
 .B $EVAR
 ]
@@ -39,6 +42,10 @@ settings.
 These modifiers are usually materials associated with
 light sources or sky domes, and must directly modify some geometric
 primitives to be considered in the output.
+A modifier list may also be read from a file using the
+.I \-M
+option.
+.PP
 The output of
 .I rtcontrib
 has many potential uses.

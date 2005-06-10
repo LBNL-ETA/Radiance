@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.16 2005/06/09 18:33:06 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.17 2005/06/10 16:42:11 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -110,6 +110,7 @@ const char	*modname[MAXMODLIST];	/* ordered modifier name list */
 int		nmods = 0;		/* number of modifiers */
 
 MODCONT *addmodifier(char *modn, char *outf, char *binv);
+void addmodfile(char *fname, char *outf, char *binv);
 
 void init(int np);
 int done_rprocs(struct rtproc *rtp);
@@ -256,6 +257,10 @@ main(int argc, char *argv[])
 				rtargv[rtargc++] = "-ti";
 				rtargv[rtargc++] = argv[++i];
 				addmodifier(argv[i], curout, binval);
+				continue;
+			case 'M':		/* modifier file */
+				if (argv[i][2] || i >= argc-1) break;
+				addmodfile(argv[++i], curout, binval);
 				continue;
 			}
 		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
@@ -450,6 +455,18 @@ addmodifier(char *modn, char *outf, char *binv)
 	mp->nbins = 1;
 	setcolor(mp->cbin[0], 0., 0., 0.);
 	return mp;
+}
+
+/* add modifiers from a file list */
+void
+addmodfile(char *fname, char *outf, char *binv)
+{
+	char	*mname[MAXMODLIST];
+	int	i;
+					/* load the file & store strings */
+	wordfile(mname, fname);
+	for (i = 0; mname[i]; i++)	/* add each one */
+		addmodifier(mname[i], outf, binv);
 }
 
 /* put string to stderr */
