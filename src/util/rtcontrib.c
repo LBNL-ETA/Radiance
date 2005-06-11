@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.20 2005/06/10 20:53:55 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.21 2005/06/11 15:01:03 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -196,7 +196,7 @@ main(int argc, char *argv[])
 				recover++;
 				continue;
 			case 'n':		/* number of processes */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				nprocs = atoi(argv[++i]);
 				if (nprocs <= 0)
 					error(USER, "illegal number of processes");
@@ -221,7 +221,7 @@ main(int argc, char *argv[])
 			case 'f':		/* file or i/o format */
 				if (!argv[i][2]) {
 					char	*fpath;
-					if (i >= argc-1) break;
+					if (i >= argc-2) break;
 					fpath = getpath(argv[++i],
 							getrlibpath(), R_OK);
 					if (fpath == NULL) {
@@ -236,33 +236,33 @@ main(int argc, char *argv[])
 				setformat(argv[i]+2);
 				continue;
 			case 'e':		/* expression */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				scompile(argv[++i], NULL, 0);
 				continue;
 			case 'o':		/* output file spec. */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				curout = argv[++i];
 				continue;
 			case 'x':		/* horiz. output resolution */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				xres = atoi(argv[++i]);
 				continue;
 			case 'y':		/* vert. output resolution */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				yres = atoi(argv[++i]);
 				continue;
 			case 'b':		/* bin expression */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				binval = argv[++i];
 				continue;
 			case 'm':		/* modifier name */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				rtargv[rtargc++] = "-ti";
 				rtargv[rtargc++] = argv[++i];
 				addmodifier(argv[i], curout, binval);
 				continue;
 			case 'M':		/* modifier file */
-				if (argv[i][2] || i >= argc-1) break;
+				if (argv[i][2] || i >= argc-2) break;
 				rtargv[rtargc++] = "-tI";
 				rtargv[rtargc++] = argv[++i];
 				addmodfile(argv[i], curout, binval);
