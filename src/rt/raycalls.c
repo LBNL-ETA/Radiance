@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.11 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.12 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -179,7 +179,7 @@ ray_trace(			/* trace a primary ray */
 )
 {
 	rayorigin(r, PRIMARY, NULL, NULL);
-	samplendx++;
+	samplendx = rand_samp ? random() : samplendx+1;
 	rayvalue(r);		/* assumes origin and direction are set */
 }
 

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.8 2005/05/31 18:01:08 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.9 2005/06/13 20:07:55 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -554,6 +554,12 @@ Light sources still appear with their original radiance values,
 though the
 .I \-dv
 option (above) may be used to override this.
+.TP
+.BR \-R
+Boolean switch to control random sampling.
+When "off", a low-discrepancy sequence is used, which reduces
+variance but can result in a brushed appearance in specular highlights.
+When "on", pure Monte Carlo sampling is used in all calculations.
 .TP
 .BI -lr \ N
 Limit reflections to a maximum of

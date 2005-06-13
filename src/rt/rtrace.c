@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.46 2005/06/10 20:44:00 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.47 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -45,6 +45,8 @@ int  outform = 'a';			/* output format */
 char  *outvals = "v";			/* output specification */
 
 int  do_irrad = 0;			/* compute irradiance? */
+
+int  rand_samp = 0;			/* pure Monte Carlo sampling? */
 
 void  (*trace)() = NULL;		/* trace call */
 
@@ -195,7 +197,7 @@ rtrace(				/* trace rays from file */
 				nextflush = hresolu;
 			}
 		} else {
-			samplendx++;
+			samplendx = rand_samp ? random() : samplendx+1;
 							/* compute and print */
 			if (imm_irrad)
 				irrad(orig, direc);

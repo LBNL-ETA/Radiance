@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.75 2005/04/19 01:15:06 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.76 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -66,6 +66,8 @@ double  dblur = 0.;			/* depth-of-field blur parameter */
 void  (*trace)() = NULL;		/* trace call */
 
 int  do_irrad = 0;			/* compute irradiance? */
+
+int  rand_samp = 0;			/* pure Monte Carlo sampling? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
 double	shadthresh = .05;		/* shadow threshold */
@@ -676,7 +678,10 @@ pixvalue(		/* compute pixel value */
 	}
 	vdist = ourview.vdist;
 
-	samplendx = pixnumber(x,y,hres,vres);	/* set pixel index */
+	if (rand_samp)				/* set pixel index */
+		samplendx = random();
+	else
+		samplendx = pixnumber(x,y,hres,vres);
 
 						/* optional motion blur */
 	if (lastview.type && mblur > FTINY && (lmax = viewray(lorg, ldir,

@@ -1,11 +1,6 @@
 Here is a list of compile switches, used to customize Radiance code
 for specific machines and users:
 
--DMC		If set, switches from default low-discrepency sequence
-		sampling to true (pseudorandom) Monte Carlo.  Use if
-		the "brushed" appearance of specular highlights and
-		penumbras bothers you.
-
 -DALIGN=(type)	Alignment type, machine-dependent.  Most RISC
 		architectures align on 8-word boundaries (double).
 		The default alignment type is int.

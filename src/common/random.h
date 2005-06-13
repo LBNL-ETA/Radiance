@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.14 2003/06/29 16:51:48 greg Exp $ */
+/* RCSid $Id: random.h,v 2.15 2005/06/13 20:07:56 greg Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -7,18 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef  NORANDOM
-
-#undef  random
-#define  random()	1073741820
-#undef  srandom
-#define  srandom(s)	(s)
-#define  frandom()	0.5
-#define  urand(i)	0.5
-#define  initurand(n)	(n)
-
-#else	/* ! NORANDOM */
 
 #ifdef	_WIN32
 
@@ -50,23 +38,12 @@ extern double  drand48();
 #endif
 #endif
 
-#ifdef  MC
-
-#define  urand(i)	frandom()
-#define  initurand(n)	(n)
-
-#else	/* ! MC */
-
 extern unsigned short	*urperm;
 extern int	urmask;
 
 #define	 urand(i)	((urperm[(i)&urmask]+frandom())/(urmask+1))
 
 extern int	initurand(int size);
-
-#endif	/* ! MC */
-
-#endif	/* ! NORANDOM */
 
 				/* defined in urand.c */
 extern int	ilhash(int *d, int n);

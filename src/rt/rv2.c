@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.49 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.50 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -522,11 +522,15 @@ setparam(				/* get/set program parameter */
 	
 	if (s[0] == '\0') {
 		(*dev->comout)(
-		"aa ab ad ar as av aw b dc dv dj ds dt i lr lw me ma mg ms ps pt sj st bv: ");
+		"aa ab ad ar as av aw b dc dv dj ds dt i lr lw me ma mg ms ps pt R sj st bv: ");
 		(*dev->comin)(buf, NULL);
 		s = buf;
 	}
 	switch (s[0]) {
+	case 'R':			/* random sampling */
+		getparam(s+1, "random sampling", 'b',
+				(void *)&rand_samp);
+		break;
 	case 'l':			/* limit */
 		switch (s[1]) {
 		case 'w':			/* weight */

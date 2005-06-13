@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.27 2005/01/21 00:52:59 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.28 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -32,6 +32,8 @@ int  hresolu, vresolu;			/* image resolution */
 void  (*trace)() = NULL;		/* trace call */
 
 int  do_irrad = 0;			/* compute irradiance? */
+
+int  rand_samp = 0;			/* pure Monte Carlo sampling? */
 
 int  psample = 8;			/* pixel sample size */
 double	maxdiff = .15;			/* max. sample difference */

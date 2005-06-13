@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.26 2005/05/26 06:55:22 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.27 2005/06/13 20:07:56 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -85,6 +85,8 @@ extern int	ray_savesiz;	/* size of parameter save buffer */
 
 extern int	do_irrad;	/* compute irradiance? */
 
+extern int	rand_samp;	/* pure Monte Carlo sampling? */
+
 extern double	dstrsrc;	/* square source distribution */
 extern double	shadthresh;	/* shadow threshold */
 extern double	shadcert;	/* shadow testing certainty */
@@ -127,6 +129,7 @@ extern int	ray_pnidle;	/* number of idle processes */
 
 typedef struct {		/* rendering parameter holder */
 	int	do_irrad;
+	int	rand_samp;
 	double	dstrsrc;
 	double	shadthresh;
 	double	shadcert;

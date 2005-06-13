@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.17 2005/04/19 01:15:07 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.18 2005/06/13 20:07:56 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -171,7 +171,7 @@ int  xmin, ymin, xmax, ymax;
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
 	} else {
 		rayorigin(&thisray, PRIMARY, NULL, NULL);
-		samplendx++;
+		samplendx = rand_samp ? random() : samplendx+1;
 		rayvalue(&thisray);
 	}
 
