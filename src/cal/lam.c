@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.5 2004/12/07 22:25:55 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.6 2005/06/13 22:40:47 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -19,7 +19,7 @@ static const char	RCSid[] = "$Id: lam.c,v 1.5 2004/12/07 22:25:55 greg Exp $";
 #define MAXLINE		512		/* maximum input line */
 
 FILE	*input[MAXFILE];
-int	tabc[MAXFILE];
+char	*tabc[MAXFILE];
 int	nfiles;
 
 char	buf[MAXLINE];
@@ -30,16 +30,16 @@ int	argc;
 char	*argv[];
 {
 	register int	i;
-	int	curtab;
+	char	*curtab;
 	int	running;
 
-	curtab = '\t';
+	curtab = "\t";
 	nfiles = 0;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
 			case 't':
-				curtab = argv[i][2];
+				curtab = argv[i]+2;
 				break;
 			case '\0':
 				tabc[nfiles] = curtab;
@@ -77,7 +77,7 @@ char	*argv[];
 		for (i = 0; i < nfiles; i++) {
 			if (fgets(buf, MAXLINE, input[i]) != NULL) {
 				if (i)
-					putchar(tabc[i]);
+					fputs(tabc[i], stdout);
 				buf[strlen(buf)-1] = '\0';
 				fputs(buf, stdout);
 				running++;
