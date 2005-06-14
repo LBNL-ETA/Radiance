@@ -1481,3 +1481,5 @@ infinite loop.
 
 Fixed truly ancient bug in bounding box computation for cones, which
 could (and did) cause missing segments.
+
+Added -z option to normtiff to output LZW-compressed files.

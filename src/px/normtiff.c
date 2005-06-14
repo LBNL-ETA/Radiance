@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.8 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.9 2005/06/14 22:23:31 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -43,17 +43,17 @@ typedef struct {
 	RESOLU	rs;		/* picture resolution */
 } PICTURE;
 
-//extern PICTURE	*openpicture();
+uint16	comp = COMPRESSION_NONE;	/* TIFF compression mode */
 
 #define closepicture(p)		(fclose((p)->fp),free((void *)(p)))
 
 static gethfunc headline;
 
-static int headline(char	*s, void *pp);
-static PICTURE * openpicture(char	*fname);
-static int tmap_picture(char	*fname, PICTURE	*pp);
-static int tmap_tiff(char	*fname, TIFF	*tp);
-static int putimage(uint16	or, uint32	xs, uint32	ys, float	xr, float	yr,
+static int headline(char *s, void *pp);
+static PICTURE *openpicture(char *fname);
+static int tmap_picture(char *fname, PICTURE *pp);
+static int tmap_tiff(char *fname, TIFF *tp);
+static int putimage(uint16 or, uint32 xs, uint32 ys, float xr, float yr,
 	uint16 ru, BYTE	*pd);
 
 
@@ -96,6 +96,9 @@ main(
 			if (argc-i < 2) goto userr;
 			lddyn = atof(argv[++i]);
 			break;
+		case 'z':			/* LZW compression */
+			comp = COMPRESSION_LZW;
+			break;
 		case 'p':			/* set display primaries */
 			if (argc-i < 9) goto userr;
 			myprims[RED][CIEX] = atof(argv[++i]);
@@ -134,7 +137,7 @@ main(
 	exit(rval==0 ? 0 : 1);
 userr:
 	fprintf(stderr,
-"Usage: %s [-h][-s][-c][-l][-b][-g gv][-d ld][-u lm][-p xr yr xg yg xb yb xw yw] input.{tif|pic} output.tif\n",
+"Usage: %s [-h][-s][-c][-l][-b][-g gv][-d ld][-u lm][-z][-p xr yr xg yg xb yb xw yw] input.{tif|pic} output.tif\n",
 			argv[0]);
 	exit(1);
 }
@@ -269,7 +272,7 @@ putimage(	/* write out our image */
 	uint32	ys,
 	float	xr,
 	float	yr,
-	uint16 ru,
+	uint16	ru,
 	BYTE	*pd
 )
 {
@@ -294,6 +297,7 @@ putimage(	/* write out our image */
 	TIFFSetField(tifout, TIFFTAG_IMAGEWIDTH, xs);
 	TIFFSetField(tifout, TIFFTAG_IMAGELENGTH, ys);
 	TIFFSetField(tifout, TIFFTAG_RESOLUTIONUNIT, ru);
+	TIFFSetField(tifout, TIFFTAG_COMPRESSION, comp);
 	TIFFSetField(tifout, TIFFTAG_XRESOLUTION, xr);
 	TIFFSetField(tifout, TIFFTAG_YRESOLUTION, yr);
 	TIFFSetField(tifout, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
