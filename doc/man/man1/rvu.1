@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.3 2005/06/13 20:07:55 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.4 2005/06/14 03:34:14 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -274,6 +274,7 @@ ambient divisions (ad),
 ambient radius (ar),
 ambient samples (as),
 black&white (b),
+back face visibility (bv),
 direct jitter (dj),
 direct sampling (ds),
 direct threshold (dt),
@@ -287,10 +288,9 @@ medium eccentricity (mg),
 medium sampling (ms),
 pixel sample (ps),
 pixel threshold (pt),
-back face visibility (bv),
-random sampling (R),
-specular jitter (sj), and
-specular threshold (st).
+specular jitter (sj),
+specular threshold (st), and
+uncorrelated sampling (u).
 Once a variable has been changed, the "new" command can be used
 to recompute the image with the new parameters.
 If a program variable is not available here, it may show up under

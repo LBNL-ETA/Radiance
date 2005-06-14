@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.12 2005/06/13 20:07:55 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.13 2005/06/14 03:34:14 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -178,8 +178,8 @@ option (below) may be used to override this.
 This option is especially useful in
 conjunction with ximage(1) for computing illuminance at scene points.
 .TP
-.BR \-R
-Boolean switch to control random sampling.
+.BR \-u
+Boolean switch to control uncorrelated random sampling.
 When "off", a low-discrepancy sequence is used, which reduces
 variance but can result in a brushed appearance in specular highlights.
 When "on", pure Monte Carlo sampling is used in all calculations.
