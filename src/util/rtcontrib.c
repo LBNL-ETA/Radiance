@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.21 2005/06/11 15:01:03 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.22 2005/06/14 02:50:23 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -623,10 +623,8 @@ getofile(const char *ospec, const char *mname, int bn)
 		if (header) {
 			char	info[512];
 			char	*cp = info;
-			if (ofl & OF_MODIFIER) {
-				sprintf(cp, "MODIFIER=%s\n", mname);
-				while (*cp) ++cp;
-			}
+			sprintf(cp, "MODIFIER=%s\n", mname);
+			while (*cp) ++cp;
 			if (ofl & OF_BIN) {
 				sprintf(cp, "BIN=%d\n", bn);
 				while (*cp) ++cp;
