@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.11 2005/06/14 03:53:58 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.12 2005/06/14 04:04:51 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -221,7 +221,7 @@ print_rdefaults(void)		/* print default render values to stdout */
 	printf(do_irrad ? "-i+\t\t\t\t# irradiance calculation on\n" :
 			"-i-\t\t\t\t# irradiance calculation off\n");
 	printf(rand_samp ? "-u+\t\t\t\t# uncorrelated Monte Carlo sampling\n" :
-			"-u-\t\t\t\t# low-discrepancy sampling\n");
+			"-u-\t\t\t\t# correlated quasi-Monte Carlo sampling\n");
 	printf(backvis ? "-bv+\t\t\t\t# back face visibility on\n" :
 			"-bv-\t\t\t\t# back face visibility off\n");
 	printf("-dt %f\t\t\t# direct threshold\n", shadthresh);

@@ -1471,8 +1471,8 @@ still use biased ray termination.)
 
 Added rtcontrib -r option to recover partial output.
 
-Added -R rendering option for pure Monte Carlo sampling.
-(Got rid of -DMC compile option, whicht his makes superfluous.)
+Added -u rendering option for pure Monte Carlo sampling.
+(Got rid of -DMC compile option, which this makes superfluous.)
 
 Changed -t option of rlam to accept strings as well as single characters.
 
