@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.12 2005/06/13 20:07:56 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.13 2005/06/14 02:46:30 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -117,6 +117,8 @@ void	(*trace)() = NULL;		/* trace call */
 void	(*addobjnotify[8])() = {ambnotify, NULL};
 
 int	do_irrad = 0;			/* compute irradiance? */
+
+int	rand_samp = 0;			/* pure Monte Carlo sampling? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
 double	shadthresh = .03;		/* shadow threshold */
