@@ -1478,3 +1478,6 @@ Changed -t option of rlam to accept strings as well as single characters.
 
 Fixed bug in rcalc with -l option where it would sometimes go into an
 infinite loop.
+
+Fixed truly ancient bug in bounding box computation for cones, which
+could (and did) cause missing segments.

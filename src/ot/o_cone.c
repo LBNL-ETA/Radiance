@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_cone.c,v 2.4 2004/03/30 16:13:00 schorsch Exp $";
+static const char	RCSid[] = "$Id: o_cone.c,v 2.5 2005/06/14 17:10:06 greg Exp $";
 #endif
 /*
  *  o_cone.c - routines for intersecting cubes with cones.
@@ -29,7 +29,7 @@ static const char	RCSid[] = "$Id: o_cone.c,v 2.4 2004/03/30 16:13:00 schorsch Ex
 
 extern double  mincusize;		/* minimum cube size */
 
-static double findcseg(FVECT ep0, FVECT ep1, CONE *co, FVECT p);
+static int findcseg(FVECT ep0, FVECT ep1, CONE *co, FVECT p);
 
 
 
@@ -57,7 +57,7 @@ o_cone(		/* determine if cone intersects cube */
 		p[i] = cu->cuorg[i] + r;
 	r *= ROOT3;			/* bounding radius for cube */
 
-	if (findcseg(ep0, ep1, co, p) > 0.0) {
+	if (findcseg(ep0, ep1, co, p)) {
 					/* check min. distance to cone */
 		if (dist2lseg(p, ep0, ep1) > (r+FTINY)*(r+FTINY))
 			return(O_MISS);
@@ -92,7 +92,7 @@ o_cone(		/* determine if cone intersects cube */
 }
 
 
-static double
+static int
 findcseg(	/* find line segment from cone closest to p */
 	FVECT  ep0,
 	FVECT  ep1,
@@ -104,16 +104,16 @@ findcseg(	/* find line segment from cone closest to p */
 	FVECT  v;
 	register int  i;
 					/* find direction from axis to point */
-	for (i = 0; i < 3; i++)
-		v[i] = p[i] - CO_P0(co)[i];
+	VSUB(v, p, CO_P0(co));
 	d = DOT(v, co->ad);
 	for (i = 0; i < 3; i++)
-		v[i] = v[i] - d*co->ad[i];
-	d = normalize(v);
-	if (d > 0.0)			/* find endpoints of segment */
-		for (i = 0; i < 3; i++) {
-			ep0[i] = CO_R0(co)*v[i] + CO_P0(co)[i];
-			ep1[i] = CO_R1(co)*v[i] + CO_P1(co)[i];
-		}
-	return(d);			/* return distance from axis */
+		v[i] -= d*co->ad[i];
+	if (normalize(v) == 0.0)
+		return(0);
+					/* find endpoints of segment */
+	for (i = 0; i < 3; i++) {
+		ep0[i] = CO_R0(co)*v[i] + CO_P0(co)[i];
+		ep1[i] = CO_R1(co)*v[i] + CO_P1(co)[i];
+	}
+	return(1);			/* return distance from axis */
 }

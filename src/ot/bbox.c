@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bbox.c,v 2.5 2004/03/27 12:41:45 schorsch Exp $";
+static const char RCSid[] = "$Id: bbox.c,v 2.6 2005/06/14 17:10:06 greg Exp $";
 #endif
 /*
  *  bbox.c - routines for bounding box computation.
@@ -120,20 +120,16 @@ circle2bbox(	/* expand bbox to fit circle */
 	FVECT  bbmax
 )
 {
-	FVECT  v1, v2;
-	register int  i, j;
+	double	d, r;
+	register int  i;
 
 	for (i = 0; i < 3; i++) {
-		v1[0] = v1[1] = v1[2] = 0;
-		v1[i] = 1.0;
-		fcross(v2, norm, v1);
-		if (normalize(v2) == 0.0)
-			continue;
-		for (j = 0; j < 3; j++)
-			v1[j] = cent[j] + rad*v2[j];
-		point2bbox(v1, bbmin, bbmax);
-		for (j = 0; j < 3; j++)
-			v1[j] = cent[j] - rad*v2[j];
-		point2bbox(v1, bbmin, bbmax);
+		r = sqrt(1. - norm[i]*norm[i]);
+		d = cent[i] + r*rad;
+		if (d > bbmax[i])
+			bbmax[i] = d;
+		d = cent[i] - r*rad;
+		if (d < bbmin[i])
+			bbmin[i] = d;
 	}
 }
