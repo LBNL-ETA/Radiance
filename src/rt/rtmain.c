@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.11 2005/06/02 04:47:27 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.12 2005/06/15 15:36:52 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -7,7 +7,6 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.11 2005/06/02 04:47:27 greg Exp $
 
 #include "copyright.h"
 
-#include  <sys/types.h>
 #include  <signal.h>
 
 #include  "platform.h"
@@ -229,6 +228,7 @@ main(int  argc, char  *argv[])
 	initotypes();
 					/* initialize urand */
 	initurand(2048);
+	srandom(rand_samp ? (long)time(0) : 0L);
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP

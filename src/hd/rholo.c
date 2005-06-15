@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.68 2004/09/09 01:41:21 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.69 2005/06/15 15:36:51 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -90,7 +90,6 @@ main(
 {
 	int	i;
 
-	initurand(16384);			/* initialize urand */
 	progname = argv[0];			/* get arguments */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

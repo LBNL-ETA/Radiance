@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.4 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.5 2005/06/15 15:36:52 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -8,6 +8,7 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.4 2004/03/30 16:13:01 schorsch Ex
 #include "copyright.h"
 
 #include  <signal.h>
+#include  <time.h>
 
 #include  "platform.h"
 #include  "ray.h"
@@ -169,6 +170,7 @@ main(int  argc, char  *argv[])
 	initotypes();
 					/* initialize urand */
 	initurand(2048);
+	srandom(rand_samp ? (long)time(0) : 0L);
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 	sigdie(SIGHUP, "Hangup");
