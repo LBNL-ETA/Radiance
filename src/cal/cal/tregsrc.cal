@@ -1,0 +1,48 @@
+{ RCSid $Id: tregsrc.cal,v 1.1 2005/06/15 17:46:08 greg Exp $ }
+{
+	Tregenza patch positions & solid angles
+
+	Greg Ward	June 2005
+
+	The Tregenza sky uses 145 patches, with patch 1 pointing due
+	North at the horizon, and continuing around to the East to
+	patch 30, which comprises the first altitude row (alt = 6 degrees).
+	Each successive row increases altitude by 12 degrees, with the
+	final altitude at the zenith (90 degrees).  Azimuth is evenly
+	divided among 30, 30, 24, 24, 18, 12, 6, and 1 divisions per row.
+
+	Input is Tbin from 1-145
+	Output is Dx Dy Dz theta (degree full angle of source)
+}
+DEGREE : PI/180;
+
+Trow = if(30.5-Tbin, 1,
+	if(60.5-Tbin, 2,
+	if(84.5-Tbin, 3,
+	if(108.5-Tbin, 4,
+	if(126.5-Tbin, 5,
+	if(138.5-Tbin, 6,
+	if(144.5-Tbin, 7, 8) ) ) ) ) ) );
+
+cols_row = select(Trow, 30, 30, 24, 24, 18, 12, 6, 1);
+
+Tcol = Tbin - select(Trow, 0, 30, 60, 84, 108, 126, 138, 144);
+
+Tazi_width = 2*PI / cols_row;
+
+TAH : 12*DEGREE;
+
+Tazi = (Tcol - 1)*Tazi_width;
+Talt = (Trow - .5)*TAH;
+
+Tomega = if(144.5-Tbin, 
+	Tazi_width*(sin(TAH*Trow) - sin(TAH*(Trow-1))),
+	0.0344199465 );
+
+cos_talt = cos(Talt);
+
+Dx = sin(Tazi)*cos_talt;
+Dy = cos(Tazi)*cos_talt;
+Dz = sin(Talt);
+
+theta = 2/DEGREE * acos(1 - Tomega/(2*PI));

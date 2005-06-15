@@ -1,0 +1,19 @@
+# gensky $(ARGS)
+# Local solar time: ${LST}
+# Solar altitude and azimuth: ${SALT} ${SAZI}
+# Ground ambient level: ${GAMB}
+
+void light solar
+0
+0
+3 ${sred} ${sgrn} ${sblu}
+
+solar source sun
+0
+0
+4 ${sdx} ${sdy} ${sdz} ${sdia}
+
+void brightfunc skyfunc
+2 skybr skybright.cal
+0
+7 ${typ} ${zbr} ${gbr} ${nf} ${sdx} ${sdy} ${sdz}
