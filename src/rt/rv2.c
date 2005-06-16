@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.51 2005/06/14 03:34:14 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.52 2005/06/16 01:55:44 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -731,7 +731,7 @@ char  *s;
 		(*dev->comout)("ray hit nothing");
 	else {
 		OBJREC	*mat = NULL;
-		OBJREC	*mod = NULL;;
+		OBJREC	*mod = NULL;
 		char	matspec[256];
 		matspec[0] = '\0';
 		if (thisray.ro->omod != OVOID) {
