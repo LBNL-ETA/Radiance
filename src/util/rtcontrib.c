@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.22 2005/06/14 02:50:23 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.23 2005/06/16 19:37:26 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1030,8 +1030,13 @@ recover_output(FILE *fin)
 				error(USER, "cannot recover from command");
 						/* open output */
 			fp = fopen(oname, "rb+");
-			if (fp == NULL)
-				break;		/* must be end of modifier */
+			if (fp == NULL) {
+				if (j)
+					break;	/* assume end of modifier */
+				sprintf(errmsg, "missing recover file '%s'",
+						oname);
+				error(USER, errmsg);
+			}
 			nvals = lseek(fileno(fp), 0, SEEK_END);
 			if (nvals <= 0) {
 				lastout = 0;	/* empty output, quit here */
