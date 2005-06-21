@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.16 2005/04/19 01:15:06 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.17 2005/06/21 15:06:50 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -52,7 +52,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	FVECT  pnorm;
 	double  rindex, cos2;
 	COLOR  trans, refl;
-	int  hastexture;
+	int  hastexture, hastrans;
 	double  d, r1e, r1m;
 	double  transtest, transdist;
 	double  mirtest, mirdist;
@@ -65,9 +65,14 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		rindex = m->oargs.farg[3];	/* use their value */
 	else
 		objerror(m, USER, "bad arguments");
-
+						/* check transmission */
 	setcolor(mcolor, m->oargs.farg[0], m->oargs.farg[1], m->oargs.farg[2]);
-
+	if ((hastrans = (intens(mcolor) > 1e-15))) {
+		for (i = 0; i < 3; i++)
+			if (colval(mcolor,i) < 1e-15)
+				colval(mcolor,i) = 1e-15;
+	} else if (r->crtype & SHADOW)
+		return(1);
 						/* get modifiers */
 	raytexture(r, m->omod);
 	if (r->rod < 0.0)			/* reorient if necessary */
@@ -84,43 +89,47 @@ m_glass(		/* color a ray which hit a thin glass surface */
 						/* angular transmission */
 	cos2 = sqrt( (1.0-1.0/(rindex*rindex)) +
 		     pdot*pdot/(rindex*rindex) );
-	setcolor(mcolor, pow(colval(mcolor,RED), 1.0/cos2),
-			 pow(colval(mcolor,GRN), 1.0/cos2),
-			 pow(colval(mcolor,BLU), 1.0/cos2));
+	if (hastrans)
+		setcolor(mcolor, pow(colval(mcolor,RED), 1.0/cos2),
+				 pow(colval(mcolor,GRN), 1.0/cos2),
+				 pow(colval(mcolor,BLU), 1.0/cos2));
 
 						/* compute reflection */
 	r1e = (pdot - rindex*cos2) / (pdot + rindex*cos2);
 	r1e *= r1e;
 	r1m = (1.0/pdot - rindex/cos2) / (1.0/pdot + rindex/cos2);
 	r1m *= r1m;
-						/* compute transmittance */
-	for (i = 0; i < 3; i++) {
-		d = colval(mcolor, i);
-		colval(trans,i) = .5*(1.0-r1e)*(1.0-r1e)*d/(1.0-r1e*r1e*d*d);
-		colval(trans,i) += .5*(1.0-r1m)*(1.0-r1m)*d/(1.0-r1m*r1m*d*d);
-	}
-	multcolor(trans, r->pcol);		/* modify by pattern */
-						/* transmitted ray */
-	if (rayorigin(&p, TRANS, r, trans) == 0) {
-		if (!(r->crtype & SHADOW) && hastexture) {
-			for (i = 0; i < 3; i++)		/* perturb direction */
-				p.rdir[i] = r->rdir[i] +
-						2.*(1.-rindex)*r->pert[i];
-			if (normalize(p.rdir) == 0.0) {
-				objerror(m, WARNING, "bad perturbation");
-				VCOPY(p.rdir, r->rdir);
-			}
-		} else {
-			VCOPY(p.rdir, r->rdir);
-			transtest = 2;
+						/* compute transmission */
+	if (hastrans) {
+		for (i = 0; i < 3; i++) {
+			d = colval(mcolor, i);
+			colval(trans,i) = .5*(1.0-r1e)*(1.0-r1e)*d /
+							(1.0-r1e*r1e*d*d);
+			colval(trans,i) += .5*(1.0-r1m)*(1.0-r1m)*d /
+							(1.0-r1m*r1m*d*d);
 		}
-		rayvalue(&p);
-		multcolor(p.rcol, p.rcoef);
-		addcolor(r->rcol, p.rcol);
-		transtest *= bright(p.rcol);
-		transdist = r->rot + p.rt;
+		multcolor(trans, r->pcol);	/* modify by pattern */
+						/* transmitted ray */
+		if (rayorigin(&p, TRANS, r, trans) == 0) {
+			if (!(r->crtype & SHADOW) && hastexture) {
+				for (i = 0; i < 3; i++)	/* perturb direction */
+					p.rdir[i] = r->rdir[i] +
+						2.*(1.-rindex)*r->pert[i];
+				if (normalize(p.rdir) == 0.0) {
+					objerror(m, WARNING, "bad perturbation");
+					VCOPY(p.rdir, r->rdir);
+				}
+			} else {
+				VCOPY(p.rdir, r->rdir);
+				transtest = 2;
+			}
+			rayvalue(&p);
+			multcolor(p.rcol, p.rcoef);
+			addcolor(r->rcol, p.rcol);
+			transtest *= bright(p.rcol);
+			transdist = r->rot + p.rt;
+		}
 	}
-
 	if (r->crtype & SHADOW) {		/* skip reflected ray */
 		r->rt = transdist;
 		return(1);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.51 2005/05/31 18:01:09 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.52 2005/06/21 15:06:50 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -97,6 +97,8 @@ rayorigin(		/* start new ray from old one */
 			r->rweight *= exp(-re);
 	}
 	rayclear(r);
+	if (r->crtype & SHADOW)			/* shadow commitment */
+		return(0);
 	if (maxdepth <= 0 && rc != NULL) {	/* Russian roulette */
 		if (minweight <= 0.0)
 			error(USER, "zero ray weight in Russian roulette");
@@ -346,29 +348,27 @@ raydist(		/* compute (cumulative) ray distance */
 
 extern void
 raycontrib(		/* compute (cumulative) ray contribution */
-	COLOR  rc,
+	double  rc[3],
 	const RAY  *r,
 	int  flags
 )
 {
-	COLOR	eext, ext1;
-	
-	setcolor(eext, 0., 0., 0.);
-	setcolor(rc, 1., 1., 1.);
+	double	eext[3];
+	int	i;
+
+	eext[0] = eext[1] = eext[2] = 0.;
+	rc[0] = rc[1] = rc[2] = 1.;
 
 	while (r != NULL && r->crtype&flags) {
-		multcolor(rc, r->rcoef);
-		copycolor(ext1, r->cext);
-		scalecolor(ext1, r->rot);
-		addcolor(eext, ext1);
+		for (i = 3; i--; ) {
+			rc[i] *= colval(r->rcoef,i);
+			eext[i] += r->rot * colval(r->cext,i);
+		}
 		r = r->parent;
 	}
-	if (intens(eext) > FTINY) {
-		setcolor(ext1,	exp(-colval(eext,RED)),
-				exp(-colval(eext,GRN)),
-				exp(-colval(eext,BLU)));
-		multcolor(rc, ext1);
-	}
+	for (i = 3; i--; )
+		rc[i] *= (eext[i] <= FTINY) ? 1. :
+				(eext[i] > 300.) ? 0. : exp(-eext[i]);
 }
 
 
