@@ -1,4 +1,4 @@
-.\" RCSid "$Id: total.1,v 1.4 2005/06/02 04:47:26 greg Exp $"
+.\" RCSid "$Id: total.1,v 1.5 2005/06/21 02:34:22 greg Exp $"
 .TH TOTAL 1 2/3/95 RADIANCE
 .SH NAME
 total - sum up columns
@@ -109,7 +109,11 @@ The
 option can be used to specify the input and output tab character.
 The default tab character is TAB.
 .PP
+At least one set of totals is produced for each input file.
 If no files are given, the standard input is read.
+If a file contains any blank lines, then the total is reported
+at that point as if it constituted the end of file, and the tallies
+are reset.
 .SH EXAMPLE
 To compute the RMS value of colon-separated columns in a file:
 .IP "" .2i
