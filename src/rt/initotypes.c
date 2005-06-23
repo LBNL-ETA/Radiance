@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.14 2004/10/25 17:07:35 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.15 2005/06/23 11:51:47 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -7,7 +7,7 @@ static const char RCSid[] = "$Id: initotypes.c,v 2.14 2004/10/25 17:07:35 greg E
 
 #include  "copyright.h"
 
-#include  "standard.h"
+#include  "ray.h"
 #include  "otypes.h"
 #include  "rtotypes.h"
 #include  "otspecial.h"

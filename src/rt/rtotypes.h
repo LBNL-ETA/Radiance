@@ -1,6 +1,7 @@
-
-#include "ray.h"
-#include "otypes.h"
+/* RCSid $Id: rtotypes.h,v 1.2 2005/06/23 11:51:47 greg Exp $ */
+/*
+ * External functions implementing Radiance object types
+ */
 
 typedef int otype_tracef(OBJREC *o, RAY *r);
 
@@ -16,7 +17,6 @@ extern otype_tracef p_cfunc, p_bfunc, p_pdata, p_cdata, p_bdata;
 extern otype_tracef mx_func, mx_data, mx_pdata;
 
 extern otype_tracef do_text;
-
 
 	/* text.c */
 extern void freetext(OBJREC *m);

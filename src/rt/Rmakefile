@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.51 2005/05/31 18:01:09 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.52 2005/06/23 11:51:47 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -247,3 +247,9 @@ raypcalls.o:	../common/selcall.h
 o_mesh.o:	../common/mesh.h
 
 noise3.o:	../common/calcomp.h
+
+aniso.o dielectric.o freeobjmem.o glass.o initotypes.o \
+m_alias.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o \
+mx_data.o mx_func.o normal.o o_cone.o o_face.o o_instance.o \
+o_mesh.o p_data.o p_func.o source.o sphere.o t_data.o t_func.o \
+text.o:		rtotypes.h
