@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.57 2005/01/18 03:59:41 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.58 2005/07/08 16:04:57 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -130,10 +130,15 @@ ra_tiff:	ra_tiff.o ../lib/libtiff.a
 normtiff:	normtiff.o ../lib/libtiff.a
 	$(CC) $(CFLAGS) -o normtiff normtiff.o -lrt -ltiff $(MLIB)
 
-../lib/libtiff.a:	tiff/config.local
-	cd tiff ; sh configure -quiet -noninteractive -with-CC=$(CC) \
+../lib/libtiff.a:
+	cd tiff ; configure -quiet -with-CC=$(CC) \
+		"--libdir=`pwd`/../../lib" "--includedir=`pwd`/../../common" \
+		--enable-static --disable-shared --disable-cxx \
+		--enable-logluv --disable-jpeg \
+		--disable-zlib --disable-pixarlog \
 		"-with-ENVOPTS=$(OPT)" ; \
-	cd libtiff ; make install
+	cd port ; make all ; \
+	cd ../libtiff ; make install
 
 xshowtrace:	xshowtrace.o x11findwind.o
 	$(CC) $(CFLAGS) -o xshowtrace xshowtrace.o \
