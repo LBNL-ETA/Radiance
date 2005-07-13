@@ -1,4 +1,4 @@
-.\" RCSid "$Id: total.1,v 1.5 2005/06/21 02:34:22 greg Exp $"
+.\" RCSid "$Id: total.1,v 1.6 2005/07/13 15:21:28 greg Exp $"
 .TH TOTAL 1 2/3/95 RADIANCE
 .SH NAME
 total - sum up columns
@@ -87,9 +87,16 @@ number of input channels.
 .PP
 A count can be given as the number of lines to read before
 computing a result.
-By default,
+Normally,
 .I total
-reads each file to its end before producing its result, but the
+reads each file to its end before producing its result, 
+but this behavior may be overridden by inserting blank lines in
+the input.
+For each blank input line, total produces a result as if the
+end-of-file had been reached.
+If two blank lines immediately follow each other, total closes
+the file and proceeds to the next one (after reporting the result).
+The
 .I \-N
 option (where N is a decimal integer) tells
 .I total
@@ -98,7 +105,7 @@ every N input lines.
 In addition, the
 .I \-r
 option can be specified to override reinitialization and thus
-give a running total every N lines.
+give a running total every N lines (or every blank line).
 If the end of file is reached, the current total is printed
 and the calculation is reset before the next file (with or without the
 .I \-r
@@ -109,11 +116,7 @@ The
 option can be used to specify the input and output tab character.
 The default tab character is TAB.
 .PP
-At least one set of totals is produced for each input file.
 If no files are given, the standard input is read.
-If a file contains any blank lines, then the total is reported
-at that point as if it constituted the end of file, and the tallies
-are reset.
 .SH EXAMPLE
 To compute the RMS value of colon-separated columns in a file:
 .IP "" .2i
