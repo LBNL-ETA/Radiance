@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.10 2005/06/10 20:53:55 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.11 2005/07/23 19:53:36 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -204,7 +204,7 @@ pcomb -c 100 90 75 c_light1.pic -c 50 55 57 c_light2.pic > combined.pic
 .PP
 To compute an array of illuminance contributions according to a Tregenza sky:
 .IP "" .2i
-rtcontrib -b tbin -o sky.dat -m skyglow -b 0 -o ground.dat -m groundglow
+rtcontrib -I+ -b tbin -o sky.dat -m skyglow -b 0 -o ground.dat -m groundglow
 @render.opt -f tregenza.cal scene.oct < test.dat
 .SH ENVIRONMENT
 RAYPATH		path to search for -f and -M files
