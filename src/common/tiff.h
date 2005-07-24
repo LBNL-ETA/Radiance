@@ -1,4 +1,5 @@
-/* RCSid $Id: tiff.h,v 3.12 2005/07/13 15:25:46 greg Exp $ */
+/* $Id: tiff.h,v 3.13 2005/07/24 19:53:07 greg Exp $ */
+
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.

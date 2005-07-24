@@ -1,7 +1,7 @@
-		RCSid "$Id: README,v 1.4 2004/10/21 16:09:46 greg Exp $"
+		RCSid "$Id: README,v 1.5 2005/07/24 19:53:07 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
-the thirteenth release, Version 3.6, and it includes all source files
+the fourteenth release, Version 3.7, and it includes all source files
 for local compilation with a standard C compiler.  To find out what's
 new in this release, check the text file "doc/notes/ReleaseNotes".
 
@@ -89,8 +89,8 @@ serves as a good introduction for new users, may be found in
 "doc/pdf/RwR01.pdf".
 
 Important additions since version 3.1 include the holodeck programs (rholo,
-etc., built in src/hd), glrad, ranimove, and the new "mesh" primitive,
-suported by obj2mesh.
+etc., built in src/hd), glrad, ranimove, the new "mesh" primitive,
+and rtcontrib.  Again, check doc/notes/ReleaseNotes for details.
 
 Individual manual pages may be found in the subdirectory "doc/man".
 You may want to copy these to the system manual directory, or add this
@@ -175,4 +175,3 @@ This software consists of voluntary contributions made by many
 individuals on behalf of Lawrence Berkeley National Laboratory.   For more
 information on Lawrence Berkeley National Laboratory, please see
 <http://www.lbl.gov/>.
-

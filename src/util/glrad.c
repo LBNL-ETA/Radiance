@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.19 2004/03/26 23:34:23 schorsch Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.20 2005/07/24 19:53:08 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -449,8 +449,8 @@ dev_open(			/* initialize GLX driver */
 					/* set window manager hints */
 	ourxwmhints.flags = InputHint|IconPixmapHint;
 	ourxwmhints.input = True;
-	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay,
-		gwind, glradicon_bits, glradicon_width, glradicon_height);
+	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay, gwind,
+		(char *)glradicon_bits, glradicon_width, glradicon_height);
 	XSetWMHints(ourdisplay, gwind, &ourxwmhints);
 					/* set GLX context */
 	glXMakeCurrent(ourdisplay, gwind, gctx);

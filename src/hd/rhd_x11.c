@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.40 2005/02/08 01:03:27 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.41 2005/07/24 19:53:08 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -190,8 +190,8 @@ dev_open(			/* initialize X11 driver */
 					/* set window manager hints */
 	ourxwmhints.flags = InputHint|IconPixmapHint;
 	ourxwmhints.input = True;
-	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay,
-			gwind, x11icon_bits, x11icon_width, x11icon_height);
+	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay, gwind,
+			(char *)x11icon_bits, x11icon_width, x11icon_height);
 	XSetWMHints(ourdisplay, gwind, &ourxwmhints);
 	oursizhints.min_width = MINWIDTH;
 	oursizhints.min_height = MINHEIGHT;

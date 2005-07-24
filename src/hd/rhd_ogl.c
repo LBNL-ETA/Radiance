@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.27 2005/01/21 00:52:59 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.28 2005/07/24 19:53:08 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -235,8 +235,8 @@ char  *id;
 					/* set window manager hints */
 	ourxwmhints.flags = InputHint|IconPixmapHint;
 	ourxwmhints.input = True;
-	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay,
-			gwind, x11icon_bits, x11icon_width, x11icon_height);
+	ourxwmhints.icon_pixmap = XCreateBitmapFromData(ourdisplay, gwind,
+			(char *)x11icon_bits, x11icon_width, x11icon_height);
 	XSetWMHints(ourdisplay, gwind, &ourxwmhints);
 	oursizhints.min_width = MINWIDTH;
 #ifdef STEREO
