@@ -1,10 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.10 2005/04/19 01:15:07 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.11 2005/07/24 21:11:53 greg Exp $";
 #endif
 /*
  *  ranimove1.c
  *
- *  Basic frame rendering routines for ranimate(1).
+ *  Basic frame rendering routines for ranimove(1).
  *
  *  Created by Gregory Ward on Wed Jan 08 2003.
  */

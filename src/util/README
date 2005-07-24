@@ -6,6 +6,7 @@ that combine functions and do not fit under the usual catagories.
 
 glare.h		common data structures for glare source finding routines
 netproc.h	header file for network process routines
+ranimove.h	header file for ranimove modules
 setscan.h	defines for programs using setscan()
 vars.h		header file for loadvars.c routines (used by rad and ranimate)
 Version.c	symbolic link to ../rt/Version.c (current Radiance version)
@@ -20,7 +21,11 @@ loadvars.c	routines to read variables for rad and ranimate
 netproc.c	routines to control processes on local and remote hosts
 rad.c		executive program to run oconv, rpict and pfilt (and rview)
 ranimate.c	animation control program
+ranimove.c	main for ranimove program and control file handling
+ranimove1.c	basic frame rendering routines for ranimove
+ranimove2.c	frame refinement routines for ranimove
 rpiece.c	program to control parallel generation of a picture
+rtcontrib.c	rtcontrib program main & support routines
 setscan.c	convert angle ranges of the form a-b:s,c to discrete values
 vwright.c	short program to read in and modify views
 x11findwind.c	find an X11 window from its name
