@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.16 2005/05/07 18:57:43 greg Exp $
+# RCSid $Id: makeall,v 1.17 2005/07/26 01:20:36 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -276,7 +276,7 @@ cd ..
 foreach i ( $* )
 	if ( "$i" == clean ) then
 		echo "Removing library archives..."
-		rm -f src/lib/*.[ao]
+		rm -f src/lib/*.{a,o,la}
 	endif
 end
 echo "Done."
