@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.58 2005/07/08 16:04:57 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.59 2005/07/26 03:48:47 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -131,7 +131,7 @@ normtiff:	normtiff.o ../lib/libtiff.a
 	$(CC) $(CFLAGS) -o normtiff normtiff.o -lrt -ltiff $(MLIB)
 
 ../lib/libtiff.a:
-	cd tiff ; configure -quiet -with-CC=$(CC) \
+	cd tiff ; ./configure -quiet -with-CC=$(CC) \
 		"--libdir=`pwd`/../../lib" "--includedir=`pwd`/../../common" \
 		--enable-static --disable-shared --disable-cxx \
 		--enable-logluv --disable-jpeg \
