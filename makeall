@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.17 2005/07/26 01:20:36 greg Exp $
+# RCSid $Id: makeall,v 1.18 2005/07/26 15:33:13 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -180,7 +180,7 @@ case 8:			# FreeBSD
 	set mach="-DBSD -DNOSTEREO -Dfreebsd -I/usr/X11R6/include -L/usr/X11R6/lib"
 	set opt="-O -DSPEED=200"
 	set compat="erf.o"
-	set extras="CC=cc"
+	set extras='CC=cc MLIB="-lcompat -lm"'
 	set arch=IBMPC
 	breaksw
 case 9:			# Cygwin
