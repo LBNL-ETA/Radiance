@@ -1494,3 +1494,5 @@ Version 3.8
 Fixed Russian roulette ray termination, which was doing the opposite of
 what it should have been doing, resulting in overestimated values below
 minimum ray sampling weight (serious).
+
+Changed mksource to use 98th percentile (rather than 99th) for threshold
