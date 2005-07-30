@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xshowtrace.c,v 2.11 2005/04/19 18:44:22 greg Exp $";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.12 2005/07/30 22:02:29 greg Exp $";
 #endif
 /*
  *  Display an image and watch the rays get traced.
@@ -71,7 +71,7 @@ main(		/* takes both the octree and the image */
 		else
 			break;
 	if (i > argc-2) {
-		fprintf(stderr, "Usage: %s [-s] [rtrace args] octree picture\n",
+		fprintf(stderr, "Usage: %s [-s][-T] [rtrace args] octree picture\n",
 				progname);
 		exit(1);
 	}
