@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.54 2005/07/08 05:52:29 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.55 2005/07/30 16:41:46 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -111,7 +111,7 @@ rayorigin(		/* start new ray from old one */
 			return(-1);		/* upper reflection limit */
 		if (r->rweight >= minweight)
 			return(0);
-		if (frandom() < r->rweight/minweight)
+		if (frandom() > r->rweight/minweight)
 			return(-1);
 		rw = minweight/r->rweight;	/* promote survivor */
 		scalecolor(r->rcoef, rw);

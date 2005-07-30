@@ -1491,3 +1491,6 @@ behavior so I documented it rather than changing it.
 =====================
 Version 3.8
 
+Fixed Russian roulette ray termination, which was doing the opposite of
+what it should have been doing, resulting in overestimated values below
+minimum ray sampling weight (serious).
