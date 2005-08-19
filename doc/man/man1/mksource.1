@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mksource.1,v 1.3 2005/04/14 19:37:02 greg Exp $"
+.\" RCSid "$Id: mksource.1,v 1.4 2005/08/19 02:31:07 greg Exp $"
 .TH MKSOURCE 1 04/11/05 RADIANCE
 .SH NAME
 mksource - compute distant sources for RADIANCE image-based lighting
@@ -38,7 +38,7 @@ The
 .I \-t
 option may be used to manually set the radiance threshold for
 sources, in watts/sr/meter^2.
-The default uses the top 1 percentile of the environment, which
+The default uses the top 2 percentile of the environment, which
 is usally a good value.
 .PP
 The
