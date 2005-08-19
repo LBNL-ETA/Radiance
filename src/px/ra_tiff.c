@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.31 2005/06/07 16:54:23 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.32 2005/08/19 02:31:32 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -362,7 +362,7 @@ initfromtif(void)		/* initialize conversion from TIFF input */
 		quiterr("unknown input image resolution");
 
 	if (!TIFFGetField(cvts.tif, TIFFTAG_STONITS, &cvts.stonits))
-		cvts.stonits = 1.;
+		cvts.stonits = -1.;
 
 	if (!TIFFGetField(cvts.tif, TIFFTAG_DATETIME, &cp))
 		cvts.capdate[0] = '\0';
@@ -380,13 +380,15 @@ initfromtif(void)		/* initialize conversion from TIFF input */
 	if (cvts.pixrat < .99 || cvts.pixrat > 1.01)
 		fputaspect(cvts.pixrat, cvts.rfp);
 	if (CHK(C_XYZE)) {
-		fputexpos(pow(2.,(double)cvts.bradj)/cvts.stonits, cvts.rfp);
+		if (cvts.stonits > .0)
+			fputexpos(pow(2.,(double)cvts.bradj)/cvts.stonits, cvts.rfp);
 		fputformat(CIEFMT, cvts.rfp);
 	} else {
 		if (CHK(C_PRIM))
 			fputprims(cvts.prims, cvts.rfp);
-		fputexpos(WHTEFFICACY*pow(2.,(double)cvts.bradj)/cvts.stonits,
-				cvts.rfp);
+		if (cvts.stonits > .0)
+			fputexpos(WHTEFFICACY*pow(2.,(double)cvts.bradj)/cvts.stonits,
+					cvts.rfp);
 		fputformat(COLRFMT, cvts.rfp);
 	}
 	if (cvts.capdate[0])

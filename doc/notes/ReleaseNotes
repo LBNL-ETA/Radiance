@@ -1498,3 +1498,6 @@ minimum ray sampling weight (serious).
 Changed mksource to use 98th percentile (rather than 99th) for threshold.
 
 (Above changes included in 3.7.1 patch release.)
+
+Eliminated writing of EXPOSURE= line in ra_tiff -r when source TIFF
+does not have STONITS set.
