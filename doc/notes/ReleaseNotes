@@ -1501,3 +1501,9 @@ Changed mksource to use 98th percentile (rather than 99th) for threshold.
 
 Eliminated writing of EXPOSURE= line in ra_tiff -r when source TIFF
 does not have STONITS set.
+
+Fixed bug in ambient calculation that caused black values for multiple
+bounces in some scenes.  Thanks to Mark Stock for creating and sharing
+the sophisticated test scene that demonstrated this problem.
+
+(Above changes included in 3.7.2 patch release 22 Aug 2005.)

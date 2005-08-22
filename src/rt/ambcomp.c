@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.18 2005/06/06 19:14:28 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.19 2005/08/22 16:07:26 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -161,22 +161,22 @@ doambient(				/* compute ambient component */
 	AMBSAMP  dnew;
 	register AMBSAMP  *dp;
 	double  arad;
-	int  ndivs;
+	int  divcnt;
 	register int  i, j;
 					/* initialize hemisphere */
 	inithemi(&hemi, acol, r, wt);
-	ndivs = hemi.nt * hemi.np;
+	divcnt = hemi.nt * hemi.np;
 					/* initialize */
 	if (pg != NULL)
 		pg[0] = pg[1] = pg[2] = 0.0;
 	if (dg != NULL)
 		dg[0] = dg[1] = dg[2] = 0.0;
 	setcolor(acol, 0.0, 0.0, 0.0);
-	if (ndivs == 0)
+	if (divcnt == 0)
 		return(0.0);
 					/* allocate super-samples */
 	if (hemi.ns > 0 || pg != NULL || dg != NULL) {
-		div = (AMBSAMP *)malloc(ndivs*sizeof(AMBSAMP));
+		div = (AMBSAMP *)malloc(divcnt*sizeof(AMBSAMP));
 		if (div == NULL)
 			error(SYSTEM, "out of memory in doambient");
 	} else
@@ -185,6 +185,7 @@ doambient(				/* compute ambient component */
 	arad = 0.0;
 	if ((dp = div) == NULL)
 		dp = &dnew;
+	divcnt = 0;
 	for (i = 0; i < hemi.nt; i++)
 		for (j = 0; j < hemi.np; j++) {
 			dp->t = i; dp->p = j;
@@ -192,23 +193,27 @@ doambient(				/* compute ambient component */
 			dp->r = 0.0;
 			dp->n = 0;
 			if (divsample(dp, &hemi, r) < 0) {
-				if (div == NULL) continue;
-				dp++;
-				hemi.ns = 0;	/* incomplete sampling */
-				pg = dg = NULL;
+				if (div != NULL)
+					dp++;
 				continue;
 			}
 			arad += dp->r;
+			divcnt++;
 			if (div != NULL)
 				dp++;
 			else
 				addcolor(acol, dp->v);
 		}
-	if (hemi.ns > 0 && arad > FTINY && ndivs/arad < minarad)
+	if (!divcnt)
+		return(0.0);		/* no samples taken */
+	if (divcnt < hemi.nt*hemi.np) {
+		pg = dg = NULL;		/* incomplete sampling */
+		hemi.ns = 0;
+	} else if (arad > FTINY && divcnt/arad < minarad) {
 		hemi.ns = 0;		/* close enough */
-	else if (hemi.ns > 0) {		/* else perform super-sampling */
+	} else if (hemi.ns > 0) {	/* else perform super-sampling? */
 		comperrs(div, &hemi);			/* compute errors */
-		qsort(div, ndivs, sizeof(AMBSAMP), ambcmp);	/* sort divs */
+		qsort(div, divcnt, sizeof(AMBSAMP), ambcmp);	/* sort divs */
 						/* super-sample */
 		for (i = hemi.ns; i > 0; i--) {
 			dnew = *div;
@@ -217,7 +222,7 @@ doambient(				/* compute ambient component */
 				continue;
 			}
 			dp = div;		/* reinsert */
-			j = ndivs < i ? ndivs : i;
+			j = divcnt < i ? divcnt : i;
 			while (--j > 0 && dnew.k < dp[1].k) {
 				*dp = *(dp+1);
 				dp++;
@@ -225,12 +230,12 @@ doambient(				/* compute ambient component */
 			*dp = dnew;
 		}
 		if (pg != NULL || dg != NULL)	/* restore order */
-			qsort(div, ndivs, sizeof(AMBSAMP), ambnorm);
+			qsort(div, divcnt, sizeof(AMBSAMP), ambnorm);
 	}
 					/* compute returned values */
 	if (div != NULL) {
-		arad = 0.0;
-		for (i = ndivs, dp = div; i-- > 0; dp++) {
+		arad = 0.0;		/* note: divcnt may be < nt*np */
+		for (i = hemi.nt*hemi.np, dp = div; i-- > 0; dp++) {
 			arad += dp->r;
 			if (dp->n > 1) {
 				b = 1.0/dp->n;
@@ -259,7 +264,7 @@ doambient(				/* compute ambient component */
 	if (arad <= FTINY)
 		arad = maxarad;
 	else
-		arad = (ndivs+hemi.ns)/arad;
+		arad = (divcnt+hemi.ns)/arad;
 	if (pg != NULL) {		/* reduce radius if gradient large */
 		d = DOT(pg,pg);
 		if (d*arad*arad > 1.0)
