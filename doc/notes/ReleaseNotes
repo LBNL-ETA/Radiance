@@ -1506,4 +1506,6 @@ Fixed bug in ambient calculation that caused black values for multiple
 bounces in some scenes.  Thanks to Mark Stock for creating and sharing
 the sophisticated test scene that demonstrated this problem.
 
+Fixed bug in antimatter using Russian Roulette sampling.
+
 (Above changes included in 3.7.2 patch release 22 Aug 2005.)
