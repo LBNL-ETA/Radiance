@@ -1,4 +1,5 @@
 #!/bin/csh -f
+# RCSid $Id: fieldcomb.csh,v 2.2 2005/09/02 04:24:37 greg Exp $
 #
 # Combine alternate lines in full frames for field rendering
 #
@@ -33,8 +34,9 @@ endif
 set curfi=1
 while ($curfi < $#fields)
 	@ nextfi = $curfi + 1
-	pcomb -e 'ro=ri(fld);go=gi(fld);bo=bi(fld)' \
-		-e 'odd=.5*y-floor(.5*y)-.25' -e 'fld=if(odd,1,2)' \
+	pcomb -e 'ro=ri(fld); go=gi(fld); bo=bi(fld)' \
+		-e 'yd=yres-1-y; odd=.5*yd-floor(.5*yd)-.25' \
+		-e 'fld=if(odd,1,2)' \
 		$fields[$curfi]:q $fields[$nextfi]:q \
 		> "${basenm}C$curfr.$ext"
 	if ($?remove_orig) rm $fields[$curfi]:q $fields[$nextfi]:q
