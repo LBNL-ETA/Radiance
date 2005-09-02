@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.60 2005/07/26 15:33:13 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.61 2005/09/02 04:15:42 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -27,7 +27,7 @@ ogl:
 sun:
 
 install:	$(PROGS) $(SPECIAL) normpat.csh falsecolor.csh \
-pdfblur.csh pmblur.csh pmdblur.csh xyzimage.csh pgblur.csh
+pdfblur.csh pmblur.csh pmdblur.csh xyzimage.csh pgblur.csh ra_pfm.csh
 	cp $(PROGS) $(INSTDIR)
 	cp normpat.csh $(INSTDIR)/normpat
 	cp falsecolor.csh $(INSTDIR)/falsecolor

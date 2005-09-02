@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.41 2005/05/26 17:53:28 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.42 2005/09/02 04:15:42 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -23,7 +23,8 @@ PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 all:	$(PROGS)
 
 install:	all $(SPECIAL) objview.csh objpict.csh glare.csh dayfact.csh \
-rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh
+rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh vinfo.csh \
+genambpos.csh fieldcomb.csh
 	cp $(PROGS) $(INSTDIR)
 	cp objview.csh $(INSTDIR)/objview
 	cp objline.csh $(INSTDIR)/objline
@@ -36,10 +37,12 @@ rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh
 	cp compamb.csh $(INSTDIR)/compamb
 	cp vinfo.csh $(INSTDIR)/vinfo
 	cp genambpos.csh $(INSTDIR)/genambpos
+	cp fieldcomb.csh $(INSTDIR)/fieldcomb
 	chmod 755 $(INSTDIR)/objview $(INSTDIR)/objpict \
 		$(INSTDIR)/glare $(INSTDIR)/dayfact $(INSTDIR)/debugcal \
 		$(INSTDIR)/rlux $(INSTDIR)/raddepend $(INSTDIR)/objline \
-		$(INSTDIR)/compamb $(INSTDIR)/vinfo $(INSTDIR)/genambpos
+		$(INSTDIR)/compamb $(INSTDIR)/vinfo $(INSTDIR)/genambpos \
+		$(INSTDIR)/fieldcomb
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
 clean:
