@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: fieldcomb.csh,v 2.4 2005/09/03 20:44:08 greg Exp $
+# RCSid $Id: fieldcomb.csh,v 2.5 2005/09/05 16:13:08 greg Exp $
 #
 # Combine alternate lines in full frames for field rendering
 #
@@ -23,6 +23,10 @@ while ($#argv > 1)
 	case -e*:
 		set odd_first=0
 		breaksw
+	case -f*:
+		shift argv
+		set outfile="$argv[1]"
+		breaksw
 	default:
 		if ("$argv[1]" !~ -*) break
 		echo "Unknown option: $argv[1]"
@@ -30,8 +34,8 @@ while ($#argv > 1)
 	endsw
 	shift argv
 end
-if ($#argv < 2) then
-	echo "Usage: $0 [-e|-o][-r] field1.pic field2.pic .."
+if ($#argv < 2 || ($?outfile && $#argv > 2)) then
+	echo "Usage: $0 [-e|-o][-r] [-f combined.pic] field1.pic field2.pic .."
 	exit 1
 endif
 set f1=$argv[1]:q
@@ -56,11 +60,13 @@ while ($curfi < $#fields)
 	else
 		set fid=$curfr
 	endif
+       	set outf="${basenm}C$fid.$ext"
+	if ($?outfile) set outf=$outfile:q
 	pcomb -e 'ro=ri(fld); go=gi(fld); bo=bi(fld)' \
 		-e 'yd=yres-1-y; odd=.5*yd-floor(.5*yd)-.25' \
 		-e "fld=if(odd,2-$odd_first,1+$odd_first)" \
 		$fields[$curfi]:q $fields[$nextfi]:q \
-		> "${basenm}C$fid.$ext"
+		> $outf:q
 	if ($?remove_orig) rm $fields[$curfi]:q $fields[$nextfi]:q
 	@ curfr++
 	@ curfi = $nextfi + 1
