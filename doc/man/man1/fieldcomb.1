@@ -1,0 +1,63 @@
+.\" RCSid "$Id: fieldcomb.1,v 1.1 2005/09/06 17:59:42 greg Exp $"
+.TH FIELDCOMB 1 9/6/2005 RADIANCE
+.SH NAME
+fieldcomb - combine two or more field frames for video animation
+.SH SYNOPSIS
+.B fieldcomb
+[
+.B "-e|-o"
+][
+.B \-r
+]
+[
+.B "-f combined.pic"
+]
+.B "field0.pic field1.pic .."
+.SH DESCRIPTION
+.I Fieldcomb
+combines two or more field frames into half as many final video frames
+for field-based animations.
+Normally, the even scanlines in the output are given over to the first,
+third, fifth, etc. pictures given on the input, and the odd scanlines are
+given over to the second, fourth, sixth, etc. pictures on the input.
+This behavior corresponds to the
+.I \-e
+option, which is set by default.
+To reverse this ordering, the
+.I \-o
+option must be specified.
+.PP
+Normally,
+.I fieldcomb
+will name output frames by dividing the numbers on the input field
+file names by 2, inserting a 'C' right before the number.
+For example, the command:
+.IP "" .2i
+fieldcomb anim12.pic anim13.pic anim14.pic anim15.pic
+.PP
+will produce two output pictures:
+.IP "" .2i
+animC6.pic & animC7.pic
+.PP
+If an odd number of input files is given on the command line, the last file
+is held over and used as the first file in the next invocation of
+.I fieldcomb
+in the same directory.
+In this way, the program works well with the "TRANSFER" facility of
+.I ranimate(1),
+which does not guarantee an even number of frames will be passed every time.
+.PP
+If only two input files are given, the
+.I \-f
+option may be used to specify a different output name of the user's choosing.
+.PP
+If the
+.I \-r
+option is specified, then the input files will be removed once they have
+been combined.
+.SH AUTHOR
+Greg Ward
+.SH ACKNOWLEDGEMENT
+Work on this program was sponsored by Iebele Abel.
+.SH "SEE ALSO"
+getinfo(1), pcomb(1), pfilt(1), phisto(1), ranimate(1), rpict(1)

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimate.1,v 1.5 2005/02/07 17:08:16 greg Exp $"
+.\" RCSid "$Id: ranimate.1,v 1.6 2005/09/06 17:59:42 greg Exp $"
 .TH RANIMATE 1 6/24/98 RADIANCE
 .SH NAME
 ranimate - compute a RADIANCE animation
@@ -271,6 +271,10 @@ before it is executed.
 Normally, the transfer command does something such as convert the
 frames to another format and/or copy them to tape or some other
 destination device before removing them.
+The
+.I fieldcomb(1)
+script may be used to conveniently combine fields into frames for
+field-based animations.
 If this variable is not given, the final frames are left where they
 are.
 (See
@@ -605,5 +609,5 @@ is called if INTERPOLATE > 0 and/or MBLUR is assigned.)\0
 Since most modern machines use IEEE floating point, this is not
 usually a problem, but it is something to keep in mind.
 .SH "SEE ALSO"
-pfilt(1), pinterp(1), pmblur(1), rad(1),
+fieldcomb(1), pfilt(1), pinterp(1), pmblur(1), rad(1),
 ranimove(1), rpict(1), ssh(1), rtrace(1)
