@@ -1,4 +1,4 @@
-.\" RCSid "$Id: fieldcomb.1,v 1.1 2005/09/06 17:59:42 greg Exp $"
+.\" RCSid "$Id: fieldcomb.1,v 1.2 2005/09/07 15:57:45 greg Exp $"
 .TH FIELDCOMB 1 9/6/2005 RADIANCE
 .SH NAME
 fieldcomb - combine two or more field frames for video animation
@@ -30,14 +30,15 @@ option must be specified.
 Normally,
 .I fieldcomb
 will name output frames by dividing the numbers on the input field
-file names by 2, inserting a 'C' right before the number.
+file names by 2, inserting a 'C' right before the number, adding
+leading zeroes to make it always four digits.
 For example, the command:
 .IP "" .2i
 fieldcomb anim12.pic anim13.pic anim14.pic anim15.pic
 .PP
 will produce two output pictures:
 .IP "" .2i
-animC6.pic & animC7.pic
+animC0006.pic & animC0007.pic
 .PP
 If an odd number of input files is given on the command line, the last file
 is held over and used as the first file in the next invocation of
