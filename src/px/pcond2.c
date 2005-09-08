@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.16 2005/09/08 21:16:44 greg Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.17 2005/09/08 22:29:47 greg Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -149,11 +149,11 @@ greypoint(			/* compute gamut mapping grey target */
 				/* improves saturated color rendering */
 	copycolor(gryc, col);
 	for (i = 3; i--; )
-		if (gryc[i] > cwhite[i])
-			gryc[i] = cwhite[i];
-		else if (gryc[i] < cblack[i])
-			gryc[i] = cblack[i];
-	return((*lumf)(gryc,0));
+		if (gryc[i] > 1)
+			gryc[i] = 1;
+		else if (gryc[i] < 0)
+			gryc[i] = 0;
+	return(bright(gryc));
 }
 
 
@@ -164,12 +164,9 @@ matscan(			/* apply color matrix to scaline */
 	COLORMAT	mat
 )
 {
-	double	gryv;
-
 	while (len--) {
-		gryv = greypoint(sl[0]);
 		colortrans(sl[0], mat, sl[0]);
-		clipgamut(sl[0], gryv, CGAMUT, cblack, cwhite);
+		clipgamut(sl[0], greypoint(sl[0]), CGAMUT, cblack, cwhite);
 		sl++;
 	}
 }
@@ -186,9 +183,8 @@ mbscan(			/* apply macbethcal adj. to scaline */
 	register int	i, j;
 
 	while (len--) {
-		d = greypoint(sl[0]);
 		colortrans(sl[0], mb->cmat, sl[0]);
-		clipgamut(sl[0], d, CGAMUT, mb->cmin, mb->cmax);
+		clipgamut(sl[0], greypoint(sl[0]), CGAMUT, mb->cmin, mb->cmax);
 		for (i = 0; i < 3; i++) {
 			d = colval(sl[0],i);
 			for (j = 0; j < 4 && mb->xa[i][j+1] <= d; j++)
@@ -210,10 +206,8 @@ cwscan(			/* apply color space warp to scaline */
 )
 {
 	int	rval;
-	double	gryv;
 
 	while (len--) {
-		gryv = greypoint(sl[0]);
 		rval = warp3d(sl[0], sl[0], wp);
 		if (rval & W3ERROR)
 			syserror("warp3d");
@@ -222,7 +216,7 @@ cwscan(			/* apply color space warp to scaline */
 					progname, cwarpfile);
 			exit(1);
 		}
-		clipgamut(sl[0], gryv, CGAMUT, cblack, cwhite);
+		clipgamut(sl[0], greypoint(sl[0]), CGAMUT, cblack, cwhite);
 		sl++;
 	}
 }
