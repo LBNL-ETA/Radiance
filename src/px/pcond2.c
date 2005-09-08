@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.15 2005/09/08 19:08:52 greg Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.16 2005/09/08 21:16:44 greg Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -153,7 +153,7 @@ greypoint(			/* compute gamut mapping grey target */
 			gryc[i] = cwhite[i];
 		else if (gryc[i] < cblack[i])
 			gryc[i] = cblack[i];
-	return(bright(gryc));
+	return((*lumf)(gryc,0));
 }
 
 
