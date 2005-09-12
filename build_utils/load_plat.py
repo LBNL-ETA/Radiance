@@ -51,11 +51,14 @@ def read_plat(env, args, fn):
 
 
 def load_plat(env, args, platform=None):
+	for k,v in env.items(): print k,v
 	if os.name == 'posix':
 		POSIX_setup(env)
 	if platform == None: # override
 		p = sys.platform
 	else: p = platform
+	if p == 'win32' and 'gcc' in env['TOOLS']:
+		p = 'mingw'
 	pl = []
 	print 'Detected platform "%s" (%s).' % (sys.platform, os.name)
 	for i in [len(p), -1, -2]:
