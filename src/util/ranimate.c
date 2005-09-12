@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.49 2005/02/07 17:08:17 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.50 2005/09/12 14:40:14 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -22,6 +22,7 @@ static const char RCSid[] = "$Id: ranimate.c,v 2.49 2005/02/07 17:08:17 greg Exp
 #include <signal.h>
 
 #include "platform.h"
+#include "rtprocess.h"
 #include "paths.h"
 #include "standard.h"
 #include "view.h"
@@ -94,7 +95,7 @@ VARIABLE	vv[] = {		/* variable-value pairs */
 
 struct {
 	char	host[64];		/* control host name */
-	int	pid;			/* control process id */
+	RT_PID	pid;			/* control process id */
 	char	cfname[128];		/* control file name */
 	int	rnext;			/* next frame to render */
 	int	fnext;			/* next frame to filter */
@@ -118,7 +119,7 @@ char	arcargs[10240];		/* files to archive */
 char	*arcfirst, *arcnext;	/* pointers to first and next argument */
 
 struct pslot {
-	int	pid;			/* process ID (0 if empty) */
+	RT_PID	pid;			/* process ID (0 if empty) */
 	int	fout;			/* output frame number */
 	int	(*rcvf)();		/* recover function */
 }	*pslot;			/* process slots */
@@ -127,7 +128,7 @@ int	npslots;		/* number of process slots */
 #define phostname(ps)	((ps)->hostname[0] ? (ps)->hostname : astat.host)
 PSERVER	*lastpserver;		/* last process server with error */
 
-static struct pslot * findpslot(int pid);
+static struct pslot * findpslot(RT_PID pid);
 static void checkdir(void);
 static VIEW * getview(int n);
 
@@ -141,7 +142,7 @@ static int rmfile(char *fn);
 static int runcom(char *cs);
 static int pruncom(char *com, char *ppins, int maxcopies);
 static void bwait(int ncoms);
-static int bruncom(char *com, int fout, int (*rf)());
+static RT_PID bruncom(char *com, int fout, int (*rf)());
 static int serverdown(void);
 static pscompfunc donecom;
 static int countviews(void);
@@ -1192,7 +1193,7 @@ getexp(int n)			/* get exposure for nth frame */
 
 
 static struct pslot *
-findpslot(int pid)			/* find or allocate a process slot */
+findpslot(RT_PID pid)			/* find or allocate a process slot */
 {
 	register struct pslot	*psempty = NULL;
 	register int	i;
@@ -1266,14 +1267,14 @@ serverdown(void)			/* check status of last process server */
 }
 
 
-static int
+static RT_PID
 bruncom(		/* run a command in the background */
 char	*com,
 int	fout,
 int	(*rf)()
 )
 {
-	int	pid;
+	RT_PID	pid;
 	register struct pslot	*psl;
 
 	if (noaction) {
@@ -1286,7 +1287,7 @@ int	(*rf)()
 		bwait(1);
 	if (!silent) {				/* echo command */
 		PSERVER	*ps;
-		int	psn = pid;
+		RT_PID	psn = pid;
 		ps = findjob(&psn);
 		printf("\t%s\n", com);
 		printf("\tProcess started on %s\n", phostname(ps));

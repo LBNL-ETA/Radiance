@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.80 2004/10/23 18:55:53 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.81 2005/09/12 14:40:13 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1365,7 +1365,7 @@ rpict(				/* run rpict and pfilt for each view */
 	}
 	wait_process(1);		/* wait for children to finish */
 	if (pfile != NULL) {		/* clean up rpict persistent mode */
-		int	pid;
+		RT_PID	pid;
 		fp = fopen(pfile, "r");
 		if (fp != NULL) {
 			if (fscanf(fp, "%*s %d", &pid) != 1 ||
@@ -1444,7 +1444,7 @@ mvfile(		/* move a file */
 static int
 next_process(void)			/* fork the next process (max. nprocs) */
 {
-	int	child_pid;
+	RT_PID	child_pid;
 
 	if (nprocs <= 1)
 		return(0);		/* it's us or no one */
@@ -1475,7 +1475,7 @@ wait_process(			/* wait for process(es) to finish */
 )
 {
 	int	ourstatus = 0;
-	int	pid, status;
+	RT_PID	pid, status;
 
 	if (all)
 		all = children_running;
@@ -1512,7 +1512,7 @@ int	all;
 }
 int
 kill(pid, sig) /* win|unix_process.c should also wait and kill */
-int pid, sig;
+RT_PID pid, sig;
 {
 	return 0;
 }
