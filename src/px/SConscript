@@ -59,13 +59,34 @@ for p in PROGS:
 # tiff library (unix-specific for the moment)
 if os.name == 'posix':
 	cwd = os.getcwd()
+	upperdir = os.path.split(cwd)[0]
+
 	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
-		'tiff/config.local',
-	[('cd "%s"; '
-	'sh ./configure -quiet -noninteractive '
-		'-with-CC="$CC" -with-ENVOPTS="$CCFLAGS"; '
-	'cd libtiff; '
-	'make install;') % os.path.join(cwd, 'tiff')])
+		None,
+	[('cd "%(tiffdir)s"; '
+		'env CC="$CC" '
+		'./configure -C '#-with-CC="$CC" '
+		'"libdir=%(upperdir)s/lib" "includedir=%(upperdir)s/common" '
+		'--enable-static --disable-shared --disable-cxx '
+		'--enable-logluv --disable-jpeg '
+        '--disable-zlib --disable-pixarlog; '
+		#'"-with-ENVOPTS=$CCFLAGS"; '
+		'cd %(portdir)s; make all;'
+		'cd %(libtiffdir)s; make install;') % {
+	'upperdir':upperdir,
+	'tiffdir':os.path.join(cwd, 'tiff'),
+	'portdir':os.path.join(cwd, 'tiff', 'port'),
+	'libtiffdir':os.path.join(cwd, 'tiff', 'libtiff')
+	}
+	])
+
+#	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
+#		'tiff/config.local',
+#	[('cd "%s"; '
+#	'sh ./configure -quiet -noninteractive '
+#		'-with-CC="$CC" -with-ENVOPTS="$CCFLAGS"; '
+#	'cd libtiff; '
+#	'make install;') % os.path.join(cwd, 'tiff')])
 
 	# tiff programs
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
