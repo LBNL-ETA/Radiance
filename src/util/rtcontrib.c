@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.24 2005/06/17 16:07:18 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.25 2005/09/13 22:58:22 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -173,6 +173,13 @@ main(int argc, char *argv[])
 	char	*binval = NULL;
 	char	fmt[8];
 	int	i, j;
+				/* need at least one argument */
+	if (argc < 2) {
+		fprintf(stderr,
+"Usage: %s [-n nprocs][-r][-e expr][-f source][-o ospec][-b binv] {-m mod | -M file} [rtrace options] octree\n",
+			argv[0]);
+		exit(1);
+	}
 				/* global program name */
 	gargv = argv;
 				/* initialize calcomp routines */
