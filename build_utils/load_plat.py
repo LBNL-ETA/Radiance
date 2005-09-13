@@ -51,7 +51,6 @@ def read_plat(env, args, fn):
 
 
 def load_plat(env, args, platform=None):
-	for k,v in env.items(): print k,v
 	if os.name == 'posix':
 		POSIX_setup(env)
 	if platform == None: # override
