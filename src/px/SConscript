@@ -66,13 +66,13 @@ if os.name == 'posix':
 	[('cd "%(tiffdir)s"; '
 		'env CC="$CC" '
 		'./configure -C '#-with-CC="$CC" '
-		'"libdir=%(upperdir)s/lib" "includedir=%(upperdir)s/common" '
+		'"libdir=%(upperdir)s/lib" '
 		'--enable-static --disable-shared --disable-cxx '
 		'--enable-logluv --disable-jpeg '
         '--disable-zlib --disable-pixarlog; '
-		#'"-with-ENVOPTS=$CCFLAGS"; '
 		'cd %(portdir)s; make all;'
-		'cd %(libtiffdir)s; make install;') % {
+		'cd %(libtiffdir)s; make install-exec;' # don't install headers
+	 ) % {
 	'upperdir':upperdir,
 	'tiffdir':os.path.join(cwd, 'tiff'),
 	'portdir':os.path.join(cwd, 'tiff', 'port'),
