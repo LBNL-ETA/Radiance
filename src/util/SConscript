@@ -31,7 +31,8 @@ else:
 	netlib = []
 
 PROGS.append(('ranimate',  ['ranimate.c', netproc],
-	['rtpic','rtargs','rtio','rtcont','rtmem','rtpath','rtmath','rtnet','rterror'] + netlib))
+	['rtpic','rtargs','rtio','rtcont','rtmem','rtpath','rtmath',
+	'rtnet','$RAD_SOCKETLIB','rterror'] + netlib))
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	progs.append(prog)

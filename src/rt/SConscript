@@ -65,7 +65,7 @@ env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rtrace)])
 
 rpsrc = Split('rpmain.c rpict.c srcdraw.c') + [duphead, persist]
 rpict = env.Program(target=radbin('rpict'), source=rpsrc,
-	LIBS=fullib+['rtnet']+mlib)
+	LIBS=fullib+['rtnet','$RAD_SOCKETLIB']+mlib)
 Default(rpict)
 env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rpict)])
 

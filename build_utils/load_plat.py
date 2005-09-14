@@ -26,7 +26,7 @@ def read_plat(env, args, fn):
 		['code',
 			['RAD_SPEED'],
 			['RAD_COMPAT', 'RAD_MEMCOMPAT', 'RAD_MATHCOMPAT', 'RAD_ARGSCOMPAT',
-			'RAD_MLIB', 'RAD_PROCESS']],
+			'RAD_MLIB', 'RAD_SOCKETLIB', 'RAD_PROCESS']],
 	]
 	if args.get('RAD_DEBUG',0):
 		vars.insert(0, ['debug'] + buildvars)
