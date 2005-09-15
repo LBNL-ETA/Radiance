@@ -1512,3 +1512,6 @@ Fixed bug in antimatter using Russian Roulette sampling.
 
 Created fieldcomb script to combine alternate fields in a rendering
 sequence.  (Development generously sponsored by Iebele Abel.)
+
+Added missing preload of mesh objects for more efficient memory use
+during parallel rendering -- this was a serious oversight.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.9 2005/09/15 18:06:23 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: preload.c,v 2.8 2004/03/30 16:13:01 schorsch E
 #include "face.h"
 #include "cone.h"
 #include "instance.h"
+#include "mesh.h"
 #include "color.h"
 #include "data.h"
 #include "func.h"
@@ -45,6 +46,9 @@ load_os(			/* load associated data for object */
 		return(1);
 	case OBJ_INSTANCE:	/* octree instance */
 		getinstance(op, IO_ALL);
+		return(1);
+	case OBJ_MESH:		/* mesh instance */
+		getmeshinst(op, IO_ALL);
 		return(1);
 	case PAT_CPICT:		/* color picture */
 		if (op->oargs.nsargs < 4)
