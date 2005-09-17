@@ -116,15 +116,15 @@ if env.has_key('X11LIB'):
         CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
     progs.append(xshowtrace)
 
-
 if os.name == 'posix': # XXX ignoring trad.wsh
-	for s in Split('''normpat falsecolor pdfblur
-			pmblur xyzimage phisto pdelta pgblur ra_pfm'''):
+	for s in Split('''normpat falsecolor pdfblur pmblur pmdblur
+			xyzimage phisto pdelta pgblur ra_pfm ran2tiff'''):
 		Default(env.InstallCsh(radbin(s), s + '.csh'))
 # XXX probably needs fixing
 #else:
 #	for s in Split('''falsecolor'''):
 #		Default(env.InstallCsh(radbin(s), s + '.csh'))
+# ignored by Rmakefile: pacuity phisteq psquish pveil vlpic
 
 Default('#src/px')
 env.Install('$RAD_BINDIR', progs)
