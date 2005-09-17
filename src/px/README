@@ -47,6 +47,9 @@ xshowtrace.c	display a picture under X11 and watch the rays get traced
 falsecolor.csh 	C-shell script to produce false color pictures
 normpat.csh	C-shell script to normalize pictures for tiling patterns
 pdfblur.csh	compute views for depth of field blurring
+pgblur.csh	Gaussian blur function
 pmblur.csh	compute views for motion blurring
+pmdblur.csh	compute views for combined motion and depth-of-field blurring
+ran2tiff.csh	expose and convert animation frames using pcond and ra_tiff
 xyzimage.csh	display images correctly for a particular monitor's primaries
 tiff/		TIFF image library

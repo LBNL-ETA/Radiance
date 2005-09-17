@@ -1515,3 +1515,7 @@ sequence.  (Development generously sponsored by Iebele Abel.)
 
 Added missing preload of mesh objects for more efficient memory use
 during parallel rendering -- this was a serious oversight.
+
+Created ran2tiff program to automate exposure setting of animation
+sequences using a moving histogram in combination with pcond, and
+converting frames to TIFF.

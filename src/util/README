@@ -32,6 +32,7 @@ x11findwind.c	find an X11 window from its name
 xglaresrc.c	circle glare sources in a displayed image
 dayfact.csh	compute and plot daylight factors on user-specified workplane
 debugcal.csh	C-shell script for debugging .cal files
+fieldcomb.csh	script to combine field animations (use with ranimate)
 glare.csh	interactive script to run findglare, glarendx, xglaresrc
 objpict.csh	script to compute 4-view picture of an object
 objview.csh	script to run rview on an object

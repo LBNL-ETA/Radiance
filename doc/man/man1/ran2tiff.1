@@ -1,0 +1,75 @@
+.\" RCSid "$Id: ran2tiff.1,v 1.1 2005/09/17 05:14:14 greg Exp $"
+.TH RAN2TIFF 1 9/16/2005 RADIANCE
+.SH NAME
+ran2tiff - expose and convert a RADIANCE animation to TIFF frames
+.SH SYNOPSIS
+.B ran2tiff
+[
+.B "-W prev_frame_wt"
+][
+.B "-H histo"
+][
+.B "-D dir"
+]
+[
+.B "pcond opts"
+]
+[
+.B "ra_tiff opts"
+]
+.B "frame1.pic frame2.pic .."
+.SH DESCRIPTION
+.I Ran2tiff
+takes an animated sequence of Radiance pictures and converts them by calling
+.I pcond(1)
+and
+.I ra_tiff(1)
+in such a way that exposure changes gradually
+from one frame to the next.
+It accomplishes this by computing a histogram for each image and
+blending it with a weighted histogram from the previous frame,
+where the weight is set by the
+.I \-W
+option, or 0.9 by default.
+A value of 0.5 would mean that the previous frame carries 1/2 the weight
+of the current one, and the frame before that 1/4, 1/8 before that,
+and so on.
+.PP
+The
+.I \-H
+option specifies a histogram file to be used to ensure continuous
+exposure between the current sequence and one before it.
+If the file does not exist, it will be created at the end of
+the conversion.
+If it does exist, its contents will be used as the histogram
+at the end of the previous sequence.
+.PP
+The
+.I \-D
+option may be used to specify an output directory for the resulting
+TIFF frames.
+Otherwise, the current directory will be used.
+The output file names will correspond to the input names, but
+with a ".tif" suffix.
+.PP
+Ran2tiff also accepts the standard options for
+.I pcond
+and
+.I ra_tiff,
+though output to LogLuv TIFF formats is not supported.
+(There would be no point in adjusting the exposure if the output were HDR.)\0
+.SH EXAMPLE
+To convert a sequence of frames using a rapid human exposure response
+and LZW compression on the output:
+.IP "" .2i
+ran2tiff -W 0.7 -h -z frame*.pic
+.PP
+Similar to
+.I fieldcomb(1),
+this program works well with the "TRANSFER" facility of
+.I ranimate(1).
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+fieldcomb(1), getinfo(1), pcond(1), pfilt(1), phisto(1),
+ra_tiff(1), ranimate(1), rpict(1)
