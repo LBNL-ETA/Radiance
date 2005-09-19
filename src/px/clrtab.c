@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.17 2004/03/28 20:33:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.18 2005/09/19 02:23:58 greg Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -35,11 +35,7 @@ static int	CLRCUBE[3][2] = {{0,NRED},{0,NGRN},{0,NBLU}};
 #define MAXERR		20
 				/* define CLOSEST to get closest colors */
 #ifndef CLOSEST
-#ifdef SPEED
-#if  SPEED > 8
 #define CLOSEST		1	/* this step takes a little longer */
-#endif
-#endif
 #endif
 
 

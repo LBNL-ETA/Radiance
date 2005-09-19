@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neuclrtab.c,v 2.11 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.12 2005/09/19 02:23:58 greg Exp $";
 #endif
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
@@ -28,11 +28,7 @@ extern BYTE	clrtab[256][3];
 static int	clrtabsiz;
 
 #ifndef DEFSMPFAC
-#ifdef SPEED
-#define DEFSMPFAC	(240/SPEED+3)
-#else
-#define DEFSMPFAC	30
-#endif
+#define DEFSMPFAC	3
 #endif
 
 int	samplefac = DEFSMPFAC;	/* sampling factor */

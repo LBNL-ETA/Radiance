@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.18 2005/06/13 20:07:56 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.19 2005/09/19 02:23:58 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -16,11 +16,7 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.18 2005/06/13 20:07:56 greg Exp $";
 #include  "random.h"
 
 #ifndef WFLUSH
-#ifdef SPEED
-#define WFLUSH		(5*SPEED)
-#else
-#define WFLUSH		100		/* flush after this many rays */
-#endif
+#define WFLUSH		2048		/* flush after this many rays */
 #endif
 
 #ifdef  SMLFLT
