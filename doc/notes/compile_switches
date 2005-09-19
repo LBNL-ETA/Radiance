@@ -5,20 +5,11 @@ for specific machines and users:
 		architectures align on 8-word boundaries (double).
 		The default alignment type is int.
 
--DSPEED=(MIPS)	Millions of instructions per second for this
-		processor (approximate).  This is used to decide
-		certain unimportant timing issues such as how many
-		rays to trace before checking input in rvu and
-		whether or not to optimize the color table in ximage
-		on 8-bit displays.
-
 -DWFLUSH=(rays)	Override for number of rays before flush in rvu.
 
--DBSD		Operating system has a strong Berkeley flavor, meaning
-		that bcopy() and bzero() are present but maybe memcpy()
-		and memset() are not.  (See common/standard.h for other
-		things this flag affects.)  Also affects certain system
-		calls, such as signal handling and resource tracking.
+-DBSD	Operating system has a strong Berkeley flavor, which
+		affects certain system calls, such as signal handling and
+		resource tracking.
 
 -DSMLMEM	The system has little RAM available, so size hash
 		tables and the like accordingly.  Only allows for
