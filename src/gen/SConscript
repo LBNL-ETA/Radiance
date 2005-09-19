@@ -26,14 +26,23 @@ PROGS = (
 	['rtproc','rtpath','rtmath','rtio','rterror']),
 ('mkillum',     Split('mkillum.c mkillum2.c mkillum3.c'),
     ['rtproc','rtscene','rtpath','rtmath','rtio','rtcont','rterror']),
+#('mksource',    ['mksource.c'],
+#	['rtio','rtmath','rterror']),
 ('xform',       ['xform.c',],
     ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror']),
 )
 progs = []
 for p in PROGS:
-    prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+    prog = env.Program(target=os.path.join('$RAD_BUILDBIN', p[0]),
             source=p[1], LIBS=p[2] + mlib)
     progs.append(prog)
+
+prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mksource'),
+		source=['mksource.c'],
+		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
+		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtio',
+		'rtmath','rtcont','rtmem','rtargs','rtpath','rterror'] + mlib)
+progs.append(prog)
 
 if os.name == 'posix':
 	Default(env.InstallCsh(os.path.join('$RAD_BUILDBIN', 'glaze'), 'glaze.csh'))
