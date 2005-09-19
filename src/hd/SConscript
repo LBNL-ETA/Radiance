@@ -9,6 +9,7 @@ mlib = env['RAD_MLIB']
 viewbeams = env.Object(source='viewbeams.c')
 holo = env.Object(source='holo.c')
 holofile = env.Object(source='holofile.c')
+clumpbeams = env.Object(source='clumpbeams.c')
 Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 
 
@@ -19,9 +20,11 @@ PROGS = (
 	['rtpic','rtio','rtproc','rtpath','rtargs','rtmath','rtmem','rterror']),
 ('rhpict', Split('rhpict.c rhpict2.c')+[Version, holofile, holo, viewbeams],
 	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
-('rhcopy', Split('rhcopy.c clumpbeams.c') + [holofile, holo],
+('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo],
 	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
 ('rhinfo', Split('rhinfo.c') + [holofile, holo],
+	['rtio','rtproc', 'rtmath','rterror']),
+('rhoptimize', Split('rhoptimize.c') + [clumpbeams, holofile, holo],
 	['rtio','rtproc', 'rtmath','rterror']),
 ('genrhgrid', Split('genrhgrid.c') + [holofile, holo],
  ['rtio','rtmath','rtproc','rterror']),
