@@ -1,13 +1,13 @@
 Here is a list of compile switches, used to customize Radiance code
 for specific machines and users:
 
--DALIGN=(type)	Alignment type, machine-dependent.  Most RISC
+-DALIGNT=(type)	Alignment type, machine-dependent.  Most RISC
 		architectures align on 8-word boundaries (double).
 		The default alignment type is int.
 
 -DWFLUSH=(rays)	Override for number of rays before flush in rvu.
 
--DBSD	Operating system has a strong Berkeley flavor, which
+-DBSD		Operating system has a strong Berkeley flavor, which
 		affects certain system calls, such as signal handling and
 		resource tracking.
 
@@ -29,7 +29,4 @@ for specific machines and users:
 -DAVGREFL=R	Set the average surface reflectance for the purpose
 		of indirect irradiance calculations to R, where
 		R is a real number in the range (0,1.0).  The
-		default value is 0.50 (50%).  This value indirectly
-		controls the maximum number of ambient bounces,
-		which can never be more than the log of the -ad
-		setting times the log of AVGREFL.
+		default value is 0.50 (50%).
