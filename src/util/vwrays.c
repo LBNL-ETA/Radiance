@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.11 2005/01/20 23:52:02 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.12 2005/09/19 04:26:09 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id: vwrays.c,v 3.11 2005/01/20 23:52:02 greg Exp $
 
 #include "platform.h"
 #include "standard.h"
+#include "random.h"
 #include "view.h"
 
 typedef void putfunc(FVECT ro, FVECT rd);
@@ -23,6 +24,8 @@ VIEW	vw = STDVIEW;
 RESOLU	rs = {PIXSTANDARD, 512, 512};
 
 double	pa = 1.;
+
+double  pj = 0.;
 
 int	zfd = -1;
 
@@ -96,8 +99,13 @@ main(
 				exit(1);
 			}
 			break;
-		case 'p':			/* pixel aspect ratio */
-			pa = atof(argv[++i]);
+		case 'p':			/* pixel aspect or jitter */
+			if (argv[i][2] == 'a')
+				pa = atof(argv[++i]);
+			else if (argv[i][2] == 'j')
+				pj= atof(argv[++i]);
+			else
+				goto userr;
 			break;
 		case 'i':			/* get pixels from stdin */
 			fromstdin = 1;
@@ -148,6 +156,18 @@ userr:
 
 
 static void
+jitterloc(
+	RREAL	loc[2]
+)
+{
+	if (pj > FTINY) {
+		loc[0] += pj*(.5 - frandom())/rs.xr;
+		loc[1] += pj*(.5 - frandom())/rs.yr;
+	}
+}
+
+
+static void
 pix2rays(
 	FILE *fp
 )
@@ -155,6 +175,7 @@ pix2rays(
 	static FVECT	rorg, rdir;
 	float	zval;
 	double	px, py;
+	RREAL	loc[2];
 	int	pp[2];
 	double	d;
 	register int	i;
@@ -168,8 +189,9 @@ pix2rays(
 					progname, px, py);
 			exit(1);
 		}
+		loc[0] = px/rs.xr; loc[1] = py/rs.yr;
 		if (zfd >= 0) {
-			loc2pix(pp, &rs, px/rs.xr, py/rs.yr);
+			loc2pix(pp, &rs, loc[0], loc[1]);
 			if (lseek(zfd,
 				(pp[1]*scanlen(&rs)+pp[0])*sizeof(float),
 						SEEK_SET) < 0 ||
@@ -180,7 +202,8 @@ pix2rays(
 				exit(1);
 			}
 		}
-		d = viewray(rorg, rdir, &vw, px/rs.xr, py/rs.yr);
+		jitterloc(loc);
+		d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
 		if (d < -FTINY)
 			rorg[0] = rorg[1] = rorg[2] =
 			rdir[0] = rdir[1] = rdir[2] = 0.;
@@ -204,8 +227,8 @@ pix2rays(
 static void
 putrays(void)
 {
-	static RREAL	loc[2];
-	static FVECT	rorg, rdir;
+	RREAL	loc[2];
+	FVECT	rorg, rdir;
 	float	*zbuf = NULL;
 	int	sc;
 	double	d;
@@ -229,6 +252,7 @@ putrays(void)
 		}
 		for (si = 0; si < scanlen(&rs); si++) {
 			pix2loc(loc, &rs, si, sc);
+			jitterloc(loc);
 			d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
 			if (d < -FTINY)
 				rorg[0] = rorg[1] = rorg[2] =

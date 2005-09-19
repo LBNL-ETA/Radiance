@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwrays.1,v 1.3 2005/05/26 06:55:22 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.4 2005/09/19 04:26:08 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
@@ -22,12 +22,12 @@ If a given pixel has no corresponding ray (because it is outside the
 legal view boundaries), then six zero values are sent instead.
 .PP
 The
-.I -i
+.I \-i
 option may be used to specify desired pixel positions on the standard
 input rather than generating all the pixels for a given view.
 .PP
 The
-.I -f
+.I \-f
 option may be used to set the record format to something other than the
 default ASCII.
 Using raw float or double records for example can reduce the time
@@ -41,30 +41,34 @@ manual page, including input from a view file with the
 .I \-vf
 option.
 Additionally, the target X and Y dimensions may be specified with
-.I -x
+.I \-x
 and
-.I -y
+.I \-y
 options, and the pixel aspect ratio may be given with
-.I -p.
+.I \-pa.
 The default dimensions are 512x512, with a pixel aspect ratio of 1.0.
 Just as in
 .I rpict,
 the X or the Y dimension will be reduced if necessary
 to best match the specified pixel
 aspect ratio, unless this ratio is set to zero.
+The
+.I \-pj
+option may be used to jitter samples.
+The default value of 0 turns off ray jittering.
 .PP
 If the
-.I -d
+.I \-d
 option is given, then
 .I vwrays
 just prints the computed image dimensions, which are based on the view
 aspect and the pixel aspect ratio just described.
 The
-.I -ld
+.I \-ld
 switch will also be printed, with
-.I -ld+
+.I \-ld+
 if the view file has an aft clipping plane, and
-.I -ld-
+.I \-ld-
 otherwise.
 This is useful for passing options to the
 .I rtrace
@@ -78,7 +82,7 @@ equal the maximum distance for each pixel, which will be interpreted
 correctly by
 .I rtrace
 with the
-.I -ld+
+.I \-ld+
 option.
 Note that this option should not be given unless there is an aft
 clipping plane, since the ray direction vectors will be normalized

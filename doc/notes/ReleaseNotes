@@ -1521,3 +1521,5 @@ sequences using a moving histogram in combination with pcond, and
 converting frames to TIFF.
 
 Eliminated SPEED macro from makeall and source tree.
+
+Added -pj option to vwrays to allow jittering of sample locations.
