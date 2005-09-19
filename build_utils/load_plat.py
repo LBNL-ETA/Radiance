@@ -8,11 +8,6 @@ import ConfigParser
 _platdir = 'platform'
 
 
-def POSIX_setup(env):
-    # common stuff for all posix systems
-    env['RAD_PROCESS'] = string.split('unix_process.c')
-
-
 def read_plat(env, args, fn):
 	cfig = ConfigParser.ConfigParser(env.Dictionary())
 	cfig.read(fn)
@@ -24,21 +19,27 @@ def read_plat(env, args, fn):
 			['RAD_BASEDIR', 'RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR'],
 			[]],
 		['code',
-			['RAD_SPEED'],
-			['RAD_COMPAT', 'RAD_MEMCOMPAT', 'RAD_MATHCOMPAT', 'RAD_ARGSCOMPAT',
-			'RAD_MLIB', 'RAD_SOCKETLIB', 'RAD_PROCESS']],
+			[], # replace
+			[   # append
+			'RAD_COMPAT',    # currently obsolete
+			'RAD_MATHCOMPAT', # erf.c floating point error function
+			'RAD_ARGSCOMPAT', # fixargv0.c for Windows
+			'RAD_NETCOMPAT',  # [win_]netproc.c for ranimate
+			'RAD_MLIB',       # usually 'm', or any fastlib available
+			'RAD_SOCKETLIB',  # ws_2_32 on Windows (VC links it automatically)
+			'RAD_PROCESS']],  # our process abstraction and win_popen()
 	]
 	if args.get('RAD_DEBUG',0):
 		vars.insert(0, ['debug'] + buildvars)
 	else: vars.insert(0, ['build'] + buildvars)
 	for section in vars:
 		if cfig.has_section(section[0]):
-			for p in section[1]:
+			for p in section[1]: # single items to replace
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
 				env[p] = v
 				#print '%s: %s' % (p, env[p])
-			for p in section[2]:
+			for p in section[2]: # multiple items to append
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
 				apply(env.Append,[],{p:string.split(v)})
@@ -51,12 +52,11 @@ def read_plat(env, args, fn):
 
 
 def load_plat(env, args, platform=None):
-	if os.name == 'posix':
-		POSIX_setup(env)
 	if platform == None: # override
 		p = sys.platform
 	else: p = platform
 	if p == 'win32' and 'gcc' in env['TOOLS']:
+		# we don't really want to know this here...
 		p = 'mingw'
 	pl = []
 	print 'Detected platform "%s" (%s).' % (sys.platform, os.name)

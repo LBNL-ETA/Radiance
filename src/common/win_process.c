@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.5 2004/10/23 18:55:52 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.6 2005/09/19 11:30:10 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -281,7 +281,7 @@ open_process(SUBPROC *proc, char *av[])
 
 	proc->running = 0;
 	cmdpath = getpath(av[0], getenv("PATH"), X_OK);
-	cmdstr = quoted_cmdline(cmdpath, av);
+	cmdstr = quoted_cmdline(cmdpath, av+1);
 	if (cmdstr == NULL) { return 0; }
 	return start_process(proc, cmdstr);
 }
@@ -325,7 +325,7 @@ close_process(SUBPROC *proc) {
 		/* something went wrong: enforce infanticide */
 		/* other than that, it looks like we want to ignore errors here */
 		if (proc->running) {
-			int win_kill(pid, 0);
+			win_kill(pid, 0);
 		}
 	}
 	proc->running = 0;

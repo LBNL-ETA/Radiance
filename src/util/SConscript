@@ -22,17 +22,14 @@ PROGS = [
 	['rtpic','rtproc','rtpath','rtio','rtmath','rtargs','rtcont','rtmem','rterror']),
 ('rpiece',    Split('rpiece.c') + [Version],
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
+('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'],
+	['rtpic','rtargs','rtio','rtproc','rtcont','rtmem','rtpath','rtmath',
+	'rtnet','rterror','$RAD_SOCKETLIB']),
+('rtcontrib', ['rtcontrib.c', Version],
+	['rtpic','rtargs','rtfunc','rtio','rtproc','rtcont','rtmem','rtpath',
+	'rtmath','rtnet','rterror','$RAD_SOCKETLIB'])
 ]
-if os.name == 'nt': # XXX should be set in a *.cfg file
-	netproc = 'win_netproc.c'
-	netlib = ['ws2_32']
-else:
-	netproc = 'netproc.c'
-	netlib = []
 
-PROGS.append(('ranimate',  ['ranimate.c', netproc],
-	['rtpic','rtargs','rtio','rtcont','rtmem','rtpath','rtmath',
-	'rtnet','$RAD_SOCKETLIB','rterror'] + netlib))
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	progs.append(prog)

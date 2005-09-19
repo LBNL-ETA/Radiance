@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.25 2005/09/13 22:58:22 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.26 2005/09/19 11:30:11 schorsch Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -330,12 +330,15 @@ main(int argc, char *argv[])
 	quit(0);
 }
 
+#ifndef SIGALRM
+#define SIGALRM SIGTERM
+#endif
 /* kill persistent rtrace process */
 static void
 killpersist(void)
 {
 	FILE	*fp = fopen(persistfn, "r");
-	int	pid;
+	RT_PID	pid;
 
 	if (fp == NULL)
 		return;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.25 2005/05/26 14:46:21 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.26 2005/09/19 11:30:10 schorsch Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -157,6 +157,10 @@ main(		/* compute illum distributions using rtrace */
 	quit(0);
 }
 
+
+#ifndef SIGALRM
+#define SIGALRM SIGTERM
+#endif
 static void
 killpersist(void)			/* kill persistent rtrace process */
 {
@@ -169,6 +173,7 @@ killpersist(void)			/* kill persistent rtrace process */
 		unlink(persistfn);
 	fclose(fp);
 }
+
 
 int
 done_rprocs(struct rtproc *rtp)

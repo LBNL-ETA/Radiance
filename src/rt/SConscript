@@ -75,8 +75,8 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 	x11twind = env.Object(source='x11twind.c', CPPPATH=x11incls)
 	rvmain = env.Object(source='rvmain.c',
 		CCFLAGS=env['CCFLAGS'] + ['-DNICE=6'])
-	rv3 = env.Object(source='rv3.c', # XXX we should get rid of SPEED
-		CCFLAGS=env['CCFLAGS'] + ['$RAD_SPEED']
+	rv3 = env.Object(source='rv3.c',
+		CCFLAGS=env['CCFLAGS']
 		)
 
 	devsrc  = Split('devtable.c devcomm.c colortab.c editline.c')

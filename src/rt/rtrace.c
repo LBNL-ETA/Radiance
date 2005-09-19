@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.48 2005/06/21 15:06:50 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.49 2005/09/19 11:30:10 schorsch Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -29,6 +29,7 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.48 2005/06/21 15:06:50 greg Exp $
 #include  "source.h"
 #include  "otypes.h"
 #include  "resolu.h"
+#include  "random.h"
 
 CUBE  thescene;				/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
