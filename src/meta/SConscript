@@ -19,6 +19,7 @@ mfio = env.Object(source='mfio.c')
 misc = env.Object(source='misc.c')
 primout = env.Object(source='primout.c')
 plot = env.Object(source='plot.c')
+rplot = env.Object(source='rplot.c')
 palloc = env.Object(source='palloc.c')
 plotin = env.Object(source='plotin.c')
 mgvars = env.Object(source='mgvars.c')
@@ -34,7 +35,10 @@ libmeta = env.StaticLibrary(radlib('meta'),
 
 # standard targets
 PROGS = (
-('meta2tga', Split('meta2tga.c rplot.c') +[palloc, plot] + common,
+('meta2bmp', Split('meta2bmp.c') +[rplot, palloc, plot] + common,
+	['rtproc','rtpath','rtpic','rtio', # proc/path/rtio for win_popen()
+	'rtcont','rtmem','rterror']),
+('meta2tga', Split('meta2tga.c') +[rplot, palloc, plot] + common,
 	['rtproc','rtpath','rtio', # proc/path/rtio for win_popen()
 	'rtcont','rtmem','rterror']),
 ('pexpand',  Split('pexpand.c expand.c segment.c') +[palloc]+ common,

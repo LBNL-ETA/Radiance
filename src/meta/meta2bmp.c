@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: meta2bmp.c,v 1.1 2005/05/04 23:43:19 greg Exp $";
+static const char RCSid[] = "$Id: meta2bmp.c,v 1.2 2005/09/19 12:48:09 schorsch Exp $";
 #endif
 /*
  *  Program to convert meta-files to BMP 8-bit color-mapped format
@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id: meta2bmp.c,v 1.1 2005/05/04 23:43:19 greg Exp 
 #include  "plot.h"
 #include  "rast.h"
 #include  "bmpfile.h"
+#include  "targa.h"
 
 #define  MAXALLOC  30000
 #define  DXSIZE  400		/* default x resolution */
@@ -39,7 +40,6 @@ static int  lineno = 0;
 static short  condonly = FALSE,
 	      conditioned = FALSE;
 
-static int putthead(struct hdStruct  *hp, char  *ip, FILE  *fp);
 
 
 
@@ -156,8 +156,8 @@ initfile(void)		/* initialize this file */
     static unsigned char  cmap[24] = {255,255,255, 255,152,0, 0,188,0, 0,0,255,
 			179,179,0, 255,0,255, 0,200,200, 0,0,0};
      */
-    static const unsigned char  cmap[8][3] = {0,0,0, 0,0,255, 0,188,0, 255,152,0,
-			0,200,200, 255,0,255, 179,179,0, 255,255,255};
+    static const unsigned char  cmap[8][3] = {{0,0,0}, {0,0,255}, {0,188,0},
+		{255,152,0}, {0,200,200}, {255,0,255}, {179,179,0}, {255,255,255}};
     static int  filenum = 0;
     BMPHeader  *hp;
     register int  i;
@@ -211,9 +211,8 @@ extern void
 printblock(void)		/* output scanline block to file */
 
 {
-    int  i, c2;
+    int  i;
     register unsigned char  *scanline;
-    register int  j, beg, cnt = 0;
 
     if (lineno == 0)
 	initfile();
