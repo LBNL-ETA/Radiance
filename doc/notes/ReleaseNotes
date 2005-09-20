@@ -1523,3 +1523,6 @@ converting frames to TIFF.
 Eliminated SPEED macro from makeall and source tree.
 
 Added -pj option to vwrays to allow jittering of sample locations.
+
+Fixed bug in rtcontrib where it occasionally missed writing the
+final bin file.  (Pretty serious, actually.)

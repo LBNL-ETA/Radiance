@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.26 2005/09/19 11:30:11 schorsch Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.27 2005/09/20 17:05:11 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -716,7 +716,7 @@ add_contrib(const char *modn)
 	bn = (int)(evalue(mp->binv) + .5);
 	if (bn <= 0)
 		bn = 0;
-	else if (bn > mp->nbins) {	/* new bin */
+	else if (bn >= mp->nbins) {	/* new bin */
 		mp = (MODCONT *)realloc(mp, sizeof(MODCONT) +
 						bn*sizeof(DCOLOR));
 		if (mp == NULL)
