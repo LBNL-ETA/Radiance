@@ -1526,3 +1526,6 @@ Added -pj option to vwrays to allow jittering of sample locations.
 
 Fixed bug in rtcontrib where it occasionally missed writing the
 final bin file.  (Pretty serious, actually.)
+
+Added -Dfseeko=fseek to MACH= line for linux, as fseeko(3) seems to be
+broken in current versions of Linux.  (Need to remove this later.)

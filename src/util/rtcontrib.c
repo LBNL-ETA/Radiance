@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.27 2005/09/20 17:05:11 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.28 2005/09/21 17:17:24 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -915,7 +915,7 @@ wait_rproc(void)
 				if (rt->bsiz + BUFSIZ <= treebufsiz)
 					rt->bsiz = treebufsiz;
 				else
-					rt->bsiz = treebufsiz += BUFSIZ;
+					treebufsiz = rt->bsiz += BUFSIZ;
 				rt->buf = (char *)realloc(rt->buf, rt->bsiz);
 			}
 			if (rt->buf == NULL)
@@ -1109,7 +1109,7 @@ recover_output(FILE *fin)
 						/* seek on all files */
 	nvals = lastout * outvsiz;
 	lu_doall(&ofiletab, myseeko, &nvals);
-						/* discard input */
+						/* skip repeated input */
 	for (nvals = 0; nvals < lastout; nvals++)
 		if (getinp(oname, fin) <= 0)
 			error(USER, "unexpected EOF on input");
