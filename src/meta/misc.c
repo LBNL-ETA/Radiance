@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: misc.c,v 1.4 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: misc.c,v 1.5 2005/09/23 19:22:37 greg Exp $";
 #endif
 /*
  *   Miscellaneous functions for meta-files
@@ -12,7 +12,7 @@ static const char	RCSid[] = "$Id: misc.c,v 1.4 2003/11/15 02:13:37 schorsch Exp 
 
 char  coms[] = COML;
 
-char  errmsg[128];
+/* char  errmsg[128];	redundant to error.c in ../commmon */
 
 
 

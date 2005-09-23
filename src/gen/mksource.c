@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.3 2005/09/19 12:32:12 schorsch Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.4 2005/09/23 19:22:37 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -29,7 +29,7 @@ typedef struct lostlight {
 	COLOR		intens;		/* output times solid angle */
 } LOSTLIGHT;
 
-char	*progname;
+extern char	*progname;
 
 FVECT	scene_cent;		/* center of octree cube */
 RREAL	scene_rad;		/* radius to get outside cube from center */
