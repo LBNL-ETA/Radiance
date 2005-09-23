@@ -1,4 +1,4 @@
-/* RCSid $Id: cone.h,v 2.7 2003/11/14 17:22:06 schorsch Exp $ */
+/* RCSid $Id: cone.h,v 2.8 2005/09/23 19:04:52 greg Exp $ */
 /*
  *  cone.h - header file for cones (cones, cylinders, rings, cups, tubes).
  *
@@ -16,13 +16,13 @@ extern "C" {
 #endif
 
 typedef struct cone {
-	RREAL  *ca;		/* cone arguments (o->oargs.farg) */
-	char  p0, p1;		/* indices for endpoints */
-	char  r0, r1;		/* indices for radii */
 	FVECT  ad;		/* axis direction vector */
 	RREAL  al;		/* axis length */
 	RREAL  sl;		/* side length */
+	RREAL  *ca;		/* cone arguments (o->oargs.farg) */
 	RREAL  (*tm)[4];	/* pointer to transformation matrix */
+	char  p0, p1;		/* indices for endpoints */
+	char  r0, r1;		/* indices for radii */
 }  CONE;
 
 #define  CO_R0(co)	((co)->ca[(int)((co)->r0)])

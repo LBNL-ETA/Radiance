@@ -1,4 +1,4 @@
-/* $Id: tiff.h,v 3.13 2005/07/24 19:53:07 greg Exp $ */
+/* $Id: tiff.h,v 3.14 2005/09/23 19:04:52 greg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

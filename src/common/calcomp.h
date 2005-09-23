@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.20 2005/05/25 04:44:25 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.21 2005/09/23 19:04:52 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -29,8 +29,6 @@ typedef struct {
 }  LIBR;		/* a library function */
 
 typedef struct epnode {
-    int	 type;			/* node type */
-    struct epnode  *sibling;	/* next child this level */
     union {
 	struct epnode  *kid;	/* first child */
 	double	num;		/* number */
@@ -45,6 +43,8 @@ typedef struct epnode {
 	    struct vardef  *next;	/* next in hash list */
 	}  *ln;			/* link */
     } v;		/* value */
+    struct epnode  *sibling;	/* next child this level */
+    int	 type;			/* node type */
 }  EPNODE;	/* an expression node */
 
 typedef struct vardef  VARDEF;	/* a variable definition */

@@ -1,4 +1,4 @@
-/* RCSid $Id: octree.h,v 2.10 2003/06/27 06:53:21 greg Exp $ */
+/* RCSid $Id: octree.h,v 2.11 2005/09/23 19:04:52 greg Exp $ */
 /*
  *  octree.h - header file for routines using octrees.
  */
@@ -53,9 +53,9 @@ extern OCTREE  *octblock[MAXOBLK];	/* octree blocks */
  */
 
 typedef struct {
-	OCTREE  cutree;			/* the octree for this cube */
 	FVECT  cuorg;			/* the cube origin */
 	double  cusize;			/* the cube size */
+	OCTREE  cutree;			/* the octree for this cube */
 }  CUBE;
 
 extern CUBE  thescene;			/* the main scene */

@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.28 2005/06/21 15:06:50 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.29 2005/09/23 19:04:53 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -28,38 +28,41 @@ extern "C" {
 				/* reflected ray types */
 #define  RAYREFL	(SHADOW|REFLECTED|AMBIENT|SPECULAR)
 
+/* Arrange so double's come first for optimal alignment */
+/* Pointers and long's come second for 64-bit mode */
+/* Int's next (unknown length), then floats, followed by short's & char's */
 typedef struct ray {
-	unsigned long  rno;	/* unique ray number */
-	int	rlvl;		/* number of reflections for this ray */
-	float	rweight;	/* cumulative weight (for termination) */
-	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
-	short	rtype;		/* ray type */
-	short	crtype;		/* cumulative ray type */
-	const struct ray  *parent;	/* ray this originated from */
 	FVECT	rorg;		/* origin of ray */
 	FVECT	rdir;		/* normalized direction of ray */
-	double	rmax;		/* maximum distance (aft clipping plane) */
-	int	rsrc;		/* source we're aiming for */
+	RREAL	rmax;		/* maximum distance (aft clipping plane) */
+	RREAL	rot;		/* distance to object */
+	FVECT	rop;		/* intersection point */
+	FVECT	ron;		/* intersection surface normal */
+	RREAL	rod;		/* -DOT(rdir, ron) */
+	RREAL	uv[2];		/* local coordinates */
+	FVECT	pert;		/* surface normal perturbation */
+	RREAL	rt;		/* returned effective ray length */
+	const struct ray  *parent;	/* ray this originated from */
 	OBJECT	*clipset;	/* set of objects currently clipped */
 	OBJECT	*newcset;	/* next clipset, used for transmission */
 	void	(*revf)(struct ray *);	/* ray evaluation function */
 	void	(*hitf)(OBJECT *, struct ray *);	/* custom hit test */
-	OBJECT	robj;		/* intersected object number */
  	OBJREC	*ro;		/* intersected object (one with material) */
-	double	rot;		/* distance to object */
-	FVECT	rop;		/* intersection point */
-	FVECT	ron;		/* intersection surface normal */
-	double	rod;		/* -DOT(rdir, ron) */
 	FULLXF	*rox;		/* object transformation */
-	RREAL	uv[2];		/* local coordinates */
-	FVECT	pert;		/* surface normal perturbation */
+	int	*slights;	/* list of lights to test for scattering */
+	unsigned long  rno;	/* unique ray number */
+	int	rlvl;		/* number of reflections for this ray */
+	int	rsrc;		/* source we're aiming for */
+	float	rweight;	/* cumulative weight (for termination) */
+	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
 	COLOR	pcol;		/* pattern color */
 	COLOR	rcol;		/* returned radiance value */
-	double	rt;		/* returned effective ray length */
 	COLOR	cext;		/* medium extinction coefficient */
 	COLOR	albedo;		/* medium scattering albedo */
 	float	gecc;		/* scattering eccentricity coefficient */
-	int	*slights;	/* list of lights to test for scattering */
+	OBJECT	robj;		/* intersected object number */
+	short	rtype;		/* ray type */
+	short	crtype;		/* cumulative ray type */
 }  RAY;
 
 #define  rayvalue(r)	(*(r)->revf)(r)

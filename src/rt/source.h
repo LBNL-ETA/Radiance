@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.15 2004/09/08 17:10:16 greg Exp $ */
+/* RCSid $Id: source.h,v 2.16 2005/09/23 19:04:53 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -50,7 +50,6 @@ typedef struct {
 }  OBSCACHE;		/* obstructor cache */
 
 typedef struct {
-	int  sflags;		/* source flags */
 	FVECT  sloc;		/* direction or position of source */
 	FVECT  ss[3];		/* source dimension vectors, U, V, and W */
 	float  srad;		/* maximum source radius */
@@ -72,6 +71,7 @@ typedef struct {
 #ifdef  SHADCACHE
 	OBSCACHE  *obscache;    /* obstructor cache */
 #endif
+	int  sflags;		/* source flags */
 }  SRCREC;		/* light source */
 
 #define MAXSPART	64		/* maximum partitions per source */
@@ -84,10 +84,10 @@ typedef struct {
 #define snorm		ss[SW]		/* normal vector for flat source */
 
 typedef struct {
+	double  dom;				/* solid angle of partition */
 	int  sn;				/* source number */
 	short  np;				/* number of partitions */
 	short  sp;				/* this partition number */
-	double  dom;				/* solid angle of partition */
 	unsigned char  spt[MAXSPART/2];		/* source partitioning */
 }  SRCINDEX;		/* source index structure */
 
