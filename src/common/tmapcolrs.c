@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.20 2005/02/23 00:08:08 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.21 2005/09/24 20:15:54 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -16,17 +16,16 @@ static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.20 2005/02/23 00:08:08 greg Ex
 
 #include	"tmprivat.h"
 #include	"resolu.h"
+#ifdef PCOND
 #include	"rtprocess.h"
-
-#ifndef TM_PIC_CTRANS
-#define TM_PIC_CTRANS	1		/* transform colors? (expensive) */
 #endif
 
 #define GAMTSZ	1024
 
 typedef struct {
 	BYTE		gamb[GAMTSZ];	/* gamma lookup table */
-	COLR		clfb;		/* encoded tm->clf */
+	int		clfb[3];	/* encoded tm->clf */
+	int32		cmatb[3][3];	/* encoded color transform */
 	TMbright	inpsfb;		/* encoded tm->inpsf */
 } COLRDATA;
 
@@ -53,27 +52,15 @@ int	len
 )
 {
 	static const char	funcName[] = "tmCvColrs";
-	COLR	cmon;
+	int	cmon[4];
 	register COLRDATA	*cd;
-	register int	i, bi, li;
+	register int	i, j, li, bi;
+	int32	vl;
 
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
-#if TM_PIC_CTRANS
-	if (tmNeedMatrix(tms)) {		/* need floating point */
-#else
-	if (tms->inppri == TM_XYZPRIM) {	/* no way around this */
-#endif
-		register COLOR	*newscan;
-		newscan = (COLOR *)tempbuffer(len*sizeof(COLOR));
-		if (newscan == NULL)
-			returnErr(TM_E_NOMEM);
-		for (i = len; i--; )
-			colr_color(newscan[i], scan[i]);
-		return(tmCvColors(tms, ls, cs, newscan, len));
-	}
 	if (colrReg < 0) {			/* build tables if necessary */
 		colrReg = tmRegPkg(&colrPkg);
 		if (colrReg < 0)
@@ -87,36 +74,54 @@ int	len
 	if ((cd = (COLRDATA *)tmPkgData(tms,colrReg)) == NULL)
 		returnErr(TM_E_NOMEM);
 	for (i = len; i--; ) {
-		copycolr(cmon, scan[i]);
+		if (tmNeedMatrix(tms)) {		/* apply color xform */
+			for (j = 3; j--; ) {
+				vl =	cd->cmatb[j][RED]*(int32)scan[i][RED] +
+					cd->cmatb[j][GRN]*(int32)scan[i][GRN] +
+					cd->cmatb[j][BLU]*(int32)scan[i][BLU] ;
+				if (vl < 0) cmon[j] = vl/0x10000;
+				else cmon[j] = vl>>16;
+			}
+			cmon[EXP] = scan[i][EXP];
+		} else
+			copycolr(cmon, scan[i]);
 							/* world luminance */
-		li =  ( cd->clfb[RED]*cmon[RED] +
+		li =	cd->clfb[RED]*cmon[RED] +
 			cd->clfb[GRN]*cmon[GRN] +
-			cd->clfb[BLU]*cmon[BLU] ) >> 8;
-		bi = BRT2SCALE(cmon[EXP]-COLXS) +
-				logi[li] + cd->inpsfb;
+			cd->clfb[BLU]*cmon[BLU] ;
+		if (li >= 0xff00) li = 255;
+		else li >>= 8;
 		if (li <= 0) {
 			bi = TM_NOBRT;			/* bogus value */
 			li = 1;				/* avoid li==0 */
+		} else {
+			bi = BRT2SCALE(cmon[EXP]-COLXS) +
+				logi[li] + cd->inpsfb;
 		}
 		ls[i] = bi;
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
 							/* mesopic adj. */
 		if (tms->flags & TM_F_MESOPIC && bi < BMESUPPER) {
-			register int	pf, sli = normscot(cmon);
-			if (bi < BMESLOWER)
+			int	pf, sli = normscot(cmon);
+			if (bi < BMESLOWER) {
 				cmon[RED] = cmon[GRN] = cmon[BLU] = sli;
-			else {
+			} else {
 				if (tms->flags & TM_F_BW)
 					cmon[RED] = cmon[GRN] = cmon[BLU] = li;
 				pf = tmMesofact[bi-BMESLOWER];
 				sli *= 256 - pf;
-				cmon[RED] = ( sli + pf*cmon[RED] ) >> 8;
-				cmon[GRN] = ( sli + pf*cmon[GRN] ) >> 8;
-				cmon[BLU] = ( sli + pf*cmon[BLU] ) >> 8;
+				for (j = 3; j--; ) {
+					cmon[j] = sli + pf*cmon[j];
+					if (cmon[j] <= 0) cmon[j] = 0;
+					else cmon[j] >>= 8;
+				}
 			}
 		} else if (tms->flags & TM_F_BW) {
 			cmon[RED] = cmon[GRN] = cmon[BLU] = li;
+		} else {
+			for (j = 3; j--; )
+				if (cmon[j] < 0) cmon[j] = 0;
 		}
 		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
 		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
@@ -422,14 +427,18 @@ register TMstruct	*tms;
 {
 	register COLRDATA	*cd;
 	double	d;
+	int	i, j;
 
 	cd = (COLRDATA *)tms->pd[colrReg];
-	cd->clfb[RED] = 256.*tms->clf[RED] + .5;
-	cd->clfb[GRN] = 256.*tms->clf[GRN] + .5;
-	cd->clfb[BLU] = 256.*tms->clf[BLU] + .5;
-	cd->clfb[EXP] = COLXS;
+	for (i = 3; i--; )
+		cd->clfb[i] = 0x100*tms->clf[i] + .5;
 	d = TM_BRTSCALE*log(tms->inpsf);
 	cd->inpsfb = d<0. ? d-.5 : d+.5;
+	for (i = 3; i--; )
+		for (j = 3; j--; ) {
+			d = tms->cmat[i][j] / tms->inpsf;
+			cd->cmatb[i][j] = 0x10000*d + (d<0. ? -.5 : .5);
+		}
 }
 
 
