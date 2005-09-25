@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.6 2005/06/13 22:40:47 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.7 2005/09/25 20:36:02 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -10,15 +10,17 @@ static const char	RCSid[] = "$Id: lam.c,v 1.6 2005/06/13 22:40:47 greg Exp $";
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "platform.h"
 #include "rtprocess.h"
 
-#define MAXFILE		32		/* maximum number of files */
+#define MAXFILE		512		/* maximum number of files */
 
-#define MAXLINE		512		/* maximum input line */
+#define MAXLINE		4096		/* maximum input line */
 
 FILE	*input[MAXFILE];
+int	bytsiz[MAXFILE];
 char	*tabc[MAXFILE];
 int	nfiles;
 
@@ -31,9 +33,11 @@ char	*argv[];
 {
 	register int	i;
 	char	*curtab;
-	int	running;
+	int	curbytes;
+	int	running, puteol;
 
 	curtab = "\t";
+	curbytes = 0;
 	nfiles = 0;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -41,10 +45,37 @@ char	*argv[];
 			case 't':
 				curtab = argv[i]+2;
 				break;
+			case 'i':
+				switch (argv[i][2]) {
+				case 'f':
+					curbytes = sizeof(float);
+					break;
+				case 'd':
+					curbytes = sizeof(double);
+					break;
+				case 'w':
+					curbytes = sizeof(int);
+					break;
+				case 'a':
+					curbytes = argv[i][3] ? 1 : 0;
+					break;
+				default:
+					goto badopt;
+				}
+				if (isdigit(argv[i][3]))
+					curbytes *= atoi(argv[i]+3);
+				if (curbytes < 0 || curbytes > MAXLINE) {
+					fputs(argv[0], stderr);
+					fputs(": illegal input size\n", stderr);
+					exit(1);
+				}
+				break;
 			case '\0':
 				tabc[nfiles] = curtab;
+				bytsiz[nfiles] = curbytes;
 				input[nfiles++] = stdin;
 				break;
+			badopt:;
 			default:
 				fputs(argv[0], stderr);
 				fputs(": bad option\n", stderr);
@@ -52,6 +83,7 @@ char	*argv[];
 			}
 		} else if (argv[i][0] == '!') {
 			tabc[nfiles] = curtab;
+			bytsiz[nfiles] = curbytes;
 			if ((input[nfiles++] = popen(argv[i]+1, "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
@@ -59,6 +91,7 @@ char	*argv[];
 			}
 		} else {
 			tabc[nfiles] = curtab;
+			bytsiz[nfiles] = curbytes;
 			if ((input[nfiles++] = fopen(argv[i], "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot open file\n", stderr);
@@ -71,19 +104,32 @@ char	*argv[];
 			exit(1);
 		}
 	}
-
+	puteol = 0;				/* check for tab character */
+	for (i = nfiles; i--; )
+		if (isprint(tabc[i][0]) || tabc[i][0] == '\t') {
+			puteol++;
+			break;
+		}
 	do {
 		running = 0;
 		for (i = 0; i < nfiles; i++) {
-			if (fgets(buf, MAXLINE, input[i]) != NULL) {
+			if (bytsiz[i]) {		/* binary file */
+				if (fread(buf, bytsiz[i], 1, input[i]) == 1) {
+					if (i)
+						fputs(tabc[i], stdout);
+					fwrite(buf, bytsiz[i], 1, stdout);
+					running++;
+				}
+			} else if (fgets(buf, MAXLINE, input[i]) != NULL) {
 				if (i)
 					fputs(tabc[i], stdout);
 				buf[strlen(buf)-1] = '\0';
 				fputs(buf, stdout);
+				puteol++;
 				running++;
 			}
 		}
-		if (running)
+		if (running && puteol)
 			putchar('\n');
 	} while (running);
 

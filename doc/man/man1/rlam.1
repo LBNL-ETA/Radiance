@@ -1,29 +1,62 @@
-.\" RCSid "$Id: rlam.1,v 1.2 2005/06/13 22:40:46 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.3 2005/09/25 20:36:01 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
-rlam - laminate lines (records) from multiple files
+rlam - laminate records from multiple files
 .SH SYNOPSIS
 .B rlam
 [
 .B \-tS
+][
+.B \-iaN
+|
+.B \-ifN
+|
+.B \-idN
+|
+.B \-iwN
 ]
 input1 input2 ..
 .SH DESCRIPTION
 .I Rlam
-simply joins lines from multiple inputs, separating them with
+simply joins records (or lines) from multiple inputs, separating them with
 the given separator string (TAB by default).
 Different separators may be given for different files by specifying
 additional
 .I \-t
 options in between each file name.
+If none of the input files uses an ASCII separator, then no end-of-line
+character will be printed, either.
+.PP
 An input is either a stream or a command.
 Commands are given in quotes, and begin with an exclamantion point ('!').
 If the inputs do not have the same number of lines, then
 shorter files will stop contributing to the output as they
 run out.
 .PP
+The
+.I \-ia
+option may be used to specify ASCII input (the default), or the
+.I \-if
+option may be used to indicated binary IEEE 32-bit floats on input.
+Similarly, the
+.I \-id
+and
+.I \-iw
+options may be used to indicate binary 64-bit doubles or integer words,
+respectively.
+If an number is immediately follows any of these options, then it
+indicates that multiple such values are expected for each record.
+For example,
+.I \-if3
+indicates three floats per input record for the next named input.
+In the case of the
+.I \-ia
+option, no number indicates one line per input record, and numbers
+greater than zero indicate that many characters exactly per record.
+For binary input formts, no number implies one value per record.
+.PP
 A hyphen ('-') by itself can be used to indicate the standard
-input.
+input, and may appear multiple times.
 .SH EXAMPLE
 To join files output1 and output2, separated by a comma:
 .IP "" .2i
@@ -32,7 +65,11 @@ rlam -t, output1 output2
 To join a file with line numbers (starting at 0) and its reverse:
 .IP "" .2i
 cnt `wc -l < lam.c` | rlam - -t: lam.c -t\| '!tail -r lam.c'
+.PP
+To join four data files, each having three doubles per record:
+.IP "" .2i
+rlam -id3 -t file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), neaten(1), rcalc(1), tabfunc(1), total(1)
+cnt(1), histo(1), neaten(1), rcalc(1), tabfunc(1), total(1)
