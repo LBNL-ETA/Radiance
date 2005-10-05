@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.23 2003/11/15 13:29:23 schorsch Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.24 2005/10/05 05:17:41 greg Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -736,8 +736,8 @@ dosource(	/* create source and distribution */
 		fprintf(out, "7 ");
 	else
 		fprintf(out, "5 ");
-	dolower = (bounds[0][0] < 90.);
-	doupper = (bounds[0][1] > 90.);
+	dolower = (bounds[0][0] < 90.-FTINY);
+	doupper = (bounds[0][1] > 90.+FTINY);
 	dosides = (doupper & dolower && sinf->h > MINDIM);
 	fprintf(out, "%s %s source.cal ",
 			sinf->type==SPHERE ? "corr" :
