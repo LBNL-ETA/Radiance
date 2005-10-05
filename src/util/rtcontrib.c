@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.28 2005/09/21 17:17:24 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.29 2005/10/05 05:20:21 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -112,6 +112,8 @@ int		using_stdout = 0;	/* are we using stdout? */
 const char	*modname[MAXMODLIST];	/* ordered modifier name list */
 int		nmods = 0;		/* number of modifiers */
 
+#define queue_length()		(lastray - lastdone)
+
 MODCONT *addmodifier(char *modn, char *outf, char *binv);
 void addmodfile(char *fname, char *outf, char *binv);
 
@@ -127,6 +129,18 @@ void process_queue(void);
 void put_contrib(const DCOLOR cnt, FILE *fout);
 void add_contrib(const char *modn);
 void done_contrib(void);
+
+/* return number of open rtrace processes */
+static int
+nrtprocs(void)
+{
+	int	nrtp = 0;
+	struct rtproc	*rtp;
+
+	for (rtp = &rt0; rtp != NULL; rtp = rtp->next)
+		nrtp += rtp->pd.running;
+	return(nrtp);
+}
 
 /* set input/output format */
 static void
@@ -956,7 +970,8 @@ trace_contribs(FILE *fin)
 	struct rtproc	*rtp;
 						/* loop over input */
 	while ((iblen = getinp(inpbuf, fin)) > 0) {
-		if (lastray+1 < lastray) {	/* counter rollover? */
+		if (lastray+1 < lastray ||	/* need reset? */
+				queue_length() > 5*nrtprocs()) {
 			while (wait_rproc() != NULL)
 				process_queue();
 			lastdone = lastray = 0;
