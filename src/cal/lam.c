@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.7 2005/09/25 20:36:02 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.8 2005/10/05 05:20:50 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -69,6 +69,8 @@ char	*argv[];
 					fputs(": illegal input size\n", stderr);
 					exit(1);
 				}
+				if (curbytes)
+					curtab = "";
 				break;
 			case '\0':
 				tabc[nfiles] = curtab;

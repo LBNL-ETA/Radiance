@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.3 2005/09/25 20:36:01 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.4 2005/10/05 05:20:50 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -19,11 +19,12 @@ input1 input2 ..
 .SH DESCRIPTION
 .I Rlam
 simply joins records (or lines) from multiple inputs, separating them with
-the given separator string (TAB by default).
+the given string (TAB by default).
 Different separators may be given for different files by specifying
 additional
 .I \-t
 options in between each file name.
+Note that there is no space between this option and its argument.
 If none of the input files uses an ASCII separator, then no end-of-line
 character will be printed, either.
 .PP
@@ -54,6 +55,8 @@ In the case of the
 option, no number indicates one line per input record, and numbers
 greater than zero indicate that many characters exactly per record.
 For binary input formts, no number implies one value per record.
+For anything other than EOL-separated input, the default tab separator
+is reset to the empty string.
 .PP
 A hyphen ('-') by itself can be used to indicate the standard
 input, and may appear multiple times.
@@ -68,7 +71,7 @@ cnt `wc -l < lam.c` | rlam - -t: lam.c -t\| '!tail -r lam.c'
 .PP
 To join four data files, each having three doubles per record:
 .IP "" .2i
-rlam -id3 -t file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
+rlam -id3 file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
