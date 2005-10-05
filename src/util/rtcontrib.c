@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.29 2005/10/05 05:20:21 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.30 2005/10/05 19:44:17 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -57,6 +57,7 @@ LUTAB	ofiletab = LU_SINIT(free,closefile);	/* output file table */
 FILE *getofile(const char *ospec, const char *mname, int bn);
 int ofname(char *oname, const char *ospec, const char *mname, int bn);
 void printheader(FILE *fout, const char *info);
+void printresolu(FILE *fout);
 
 /*
  * The rcont structure is used to manage i/o with a particular
@@ -598,6 +599,12 @@ printheader(FILE *fout, const char *info)
 		break;
 	}
 	fputc('\n', fout);
+}
+
+/* write resolution string to given output stream */
+void
+printresolu(FILE *fout)
+{
 	if (xres > 0) {
 		if (yres > 0)			/* resolution string */
 			fprtresolu(xres, yres, fout);
@@ -619,6 +626,7 @@ getofile(const char *ospec, const char *mname, int bn)
 				SET_FILE_BINARY(stdout);
 			if (header)
 				printheader(stdout, NULL);
+			printresolu(stdout);
 		}
 		using_stdout = 1;
 		return stdout;
@@ -647,8 +655,10 @@ getofile(const char *ospec, const char *mname, int bn)
 		if (header) {
 			char	info[512];
 			char	*cp = info;
-			sprintf(cp, "MODIFIER=%s\n", mname);
-			while (*cp) ++cp;
+			if (ofl & OF_MODIFIER) {
+				sprintf(cp, "MODIFIER=%s\n", mname);
+				while (*cp) ++cp;
+			}
 			if (ofl & OF_BIN) {
 				sprintf(cp, "BIN=%d\n", bn);
 				while (*cp) ++cp;
@@ -656,6 +666,7 @@ getofile(const char *ospec, const char *mname, int bn)
 			*cp = '\0';
 			printheader(fp, info);
 		}
+		printresolu(fp);
 						/* play catch-up */
 		for (i = 0; i < lastdone; i++) {
 			static const DCOLOR	nocontrib = BLKCOLOR;
