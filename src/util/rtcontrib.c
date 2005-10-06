@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.31 2005/10/06 05:49:44 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.32 2005/10/06 16:28:59 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -75,7 +75,7 @@ LUTAB	ofiletab = LU_SINIT(free,closestream);	/* output file table */
 #define OF_MODIFIER	01
 #define OF_BIN		02
 
-STREAMOUT *getostream(const char *ospec, const char *mname, int bn, int bincnt);
+STREAMOUT *getostream(const char *ospec, const char *mname, int bn, int noopen);
 int ofname(char *oname, const char *ospec, const char *mname, int bn);
 void printheader(FILE *fout, const char *info);
 void printresolu(FILE *fout);
@@ -505,6 +505,7 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 {
 	LUENT	*lep = lu_find(&modconttab, modn);
 	MODCONT	*mp;
+	int	i;
 	
 	if (lep->data != NULL) {
 		sprintf(errmsg, "duplicate modifier '%s'", modn);
@@ -517,7 +518,6 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 	mp = (MODCONT *)malloc(sizeof(MODCONT));
 	if (mp == NULL)
 		error(SYSTEM, "out of memory in addmodifier");
-	lep->data = (char *)mp;
 	mp->outspec = outf;		/* XXX assumes static string */
 	mp->modname = modn;		/* XXX assumes static string */
 	if (binv != NULL)
@@ -530,8 +530,10 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 		bincnt = 1;
 	else if (bincnt > 1)
 		mp = growmodifier(mp, bincnt);
-	if (bincnt > 0)			/* allocate output stream */
-		getostream(mp->outspec, mp->modname, 0, bincnt);
+	lep->data = (char *)mp;
+					/* allocate output streams */
+	for (i = outf==NULL || outf[0]=='!' ? 0 : bincnt; i--; )
+		getostream(mp->outspec, mp->modname, i, 1);
 	return mp;
 }
 
@@ -660,9 +662,9 @@ printresolu(FILE *fout)
 	}
 }
 
-/* Get output stream pointer (open and write header if new and bincnt==0) */
+/* Get output stream pointer (open and write header if new and noopen==0) */
 STREAMOUT *
-getostream(const char *ospec, const char *mname, int bn, int bincnt)
+getostream(const char *ospec, const char *mname, int bn, int noopen)
 {
 	static STREAMOUT	stdos;
 	int			ofl;
@@ -671,7 +673,7 @@ getostream(const char *ospec, const char *mname, int bn, int bincnt)
 	STREAMOUT		*sop;
 	
 	if (ospec == NULL) {			/* use stdout? */
-		if (!bincnt && !using_stdout) {
+		if (!noopen && !using_stdout) {
 			stdos.reclen = 0;
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
@@ -681,7 +683,7 @@ getostream(const char *ospec, const char *mname, int bn, int bincnt)
 			using_stdout = 1;
 		}
 		stdos.ofp = stdout;
-		stdos.reclen += bincnt;
+		stdos.reclen += noopen;
 		return &stdos;
 	}
 	ofl = ofname(oname, ospec, mname, bn);	/* get output name */
@@ -694,16 +696,14 @@ getostream(const char *ospec, const char *mname, int bn, int bincnt)
 		lep->key = strcpy((char *)malloc(strlen(oname)+1), oname);
 	sop = (STREAMOUT *)lep->data;
 	if (sop == NULL) {			/* allocate stream */
-		if (ofl & OF_BIN && bincnt > 1)	/* don't overcount bins */
-			bincnt = 1;
 		sop = (STREAMOUT *)malloc(sizeof(STREAMOUT));
 		if (sop == NULL)
 			error(SYSTEM, "out of memory in getostream");
 		sop->reclen = oname[0] == '!' ? CNT_PIPE : 0;
-		sop->ofp = NULL;		/* open iff bincnt==0 */
+		sop->ofp = NULL;		/* open iff noopen==0 */
 		lep->data = (char *)sop;
 	}
-	if (!bincnt && sop->ofp == NULL) {	/* open output stream */
+	if (!noopen && sop->ofp == NULL) {	/* open output stream */
 		int		i;
 		if (oname[0] == '!')		/* output to command */
 			sop->ofp = popen(oname+1, "w");
@@ -718,7 +718,7 @@ getostream(const char *ospec, const char *mname, int bn, int bincnt)
 		if (header) {
 			char	info[512];
 			char	*cp = info;
-			if (ofl & OF_MODIFIER) {
+			if (ofl & OF_MODIFIER || sop->reclen == 1) {
 				sprintf(cp, "MODIFIER=%s\n", mname);
 				while (*cp) ++cp;
 			}
@@ -740,8 +740,8 @@ getostream(const char *ospec, const char *mname, int bn, int bincnt)
 		if (xres > 0)
 			fflush(sop->ofp);
 	}
-	if (sop->reclen != CNT_PIPE)		/* add bincnt to count */
-		sop->reclen += bincnt;
+	if (sop->reclen != CNT_PIPE)		/* add to length if noopen */
+		sop->reclen += noopen;
 	return sop;				/* return open stream */
 }
 
@@ -1148,12 +1148,12 @@ recover_output(FILE *fin)
 				fclose(sout.ofp);
 				break;
 			}
-			if (!sout.reclen) {	/* unspecified record length */
+			if (sout.reclen == CNT_UNKNOWN) {
 				if (!(ofl & OF_BIN)) {
 					sprintf(errmsg,
-						"guessing 1 value per record in '%s'",
+						"need -bn to recover file '%s'",
 							oname);
-					error(WARNING, errmsg);
+					error(USER, errmsg);
 				}
 				recsiz = outvsiz;
 			} else
