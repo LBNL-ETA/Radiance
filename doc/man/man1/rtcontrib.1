@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.11 2005/07/23 19:53:36 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.12 2005/10/06 05:49:44 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -16,6 +16,8 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 .B "\-o ospec"
 ][
 .B "\-b binv"
+][
+.B "\-bn nbins"
 ]
 {
 .B "\-m mod | \-M file"
@@ -85,8 +87,13 @@ this will be applied to a "%d" format in the output file
 specification if present.
 The actual bin number is computed at run time based on ray direction
 and surface intersection, as described below.
+If the number of bins is known in advance, it should be specified with the
+.I \-bn
+option, especially for output files containing multiple bins.
+Set this to 0 if the number of bins is unknown (the default).
 The most recent
-.I \-b
+.I \-b,
+.I \-bn
 and
 .I \-o
 options to the left of each

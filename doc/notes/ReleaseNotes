@@ -1533,3 +1533,6 @@ broken in current versions of Linux.  (Need to remove this later.)
 Rearranged struct's for better efficiency on 64-bit architectures.
 
 Added -i option to rlam so it works with binary input formats.
+
+Added rtcontrib -bn option to specify number of bins and fixed bug
+in recovery of files containing multiple values per record.

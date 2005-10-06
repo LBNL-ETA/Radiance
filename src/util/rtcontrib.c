@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.30 2005/10/05 19:44:17 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.31 2005/10/06 05:49:44 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -25,9 +25,9 @@ int	treebufsiz = BUFSIZ;		/* current tree buffer size */
 typedef double	DCOLOR[3];		/* double-precision color */
 
 /*
- * The modcont structure is used to accumulate ray contributions
+ * The MODCONT structure is used to accumulate ray contributions
  * for a particular modifier, which may be subdivided into bins
- * if binv is non-NULL.  If outspec contains a %s in it, this will
+ * if binv is non-zero.  If outspec contains a %s in it, this will
  * be replaced with the modifier name.  If outspec contains a %d in it,
  * this will be used to create one output file per bin, otherwise all bins
  * will be written to the same file, in order.  If the global outfmt
@@ -46,15 +46,36 @@ static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
 
 LUTAB	modconttab = LU_SINIT(NULL,mcfree);	/* modifier lookup table */
 
-/* close output stream */
-static void closefile(void *p) { fclose((FILE *)p); }
+#define	CNT_UNKNOWN	0		/* unknown record length */
+#define CNT_PIPE	(-1)		/* output to a pipe */
+/*
+ * The STREAMOUT structure holds an open FILE pointer and a count of
+ * the number of RGB triplets per record, or CNT_UNKNOWN (0) if
+ * unknown or CNT_PIPE (-1) if writing to a command.
+ */
+typedef struct {
+	FILE		*ofp;		/* output file pointer */
+	int		reclen;		/* triplets/record */
+} STREAMOUT;
 
-LUTAB	ofiletab = LU_SINIT(free,closefile);	/* output file table */
+/* close output stream and free record */
+static void
+closestream(void *p)
+{
+	STREAMOUT	*sop = (STREAMOUT *)p;
+	if (sop->reclen == CNT_PIPE)
+		pclose(sop->ofp);
+	else
+		fclose(sop->ofp);
+	free(p);
+}
+
+LUTAB	ofiletab = LU_SINIT(free,closestream);	/* output file table */
 
 #define OF_MODIFIER	01
 #define OF_BIN		02
 
-FILE *getofile(const char *ospec, const char *mname, int bn);
+STREAMOUT *getostream(const char *ospec, const char *mname, int bn, int bincnt);
 int ofname(char *oname, const char *ospec, const char *mname, int bn);
 void printheader(FILE *fout, const char *info);
 void printresolu(FILE *fout);
@@ -115,8 +136,9 @@ int		nmods = 0;		/* number of modifiers */
 
 #define queue_length()		(lastray - lastdone)
 
-MODCONT *addmodifier(char *modn, char *outf, char *binv);
-void addmodfile(char *fname, char *outf, char *binv);
+MODCONT *growmodifier(MODCONT *mp, int nb);
+MODCONT *addmodifier(char *modn, char *outf, char *binv, int bincnt);
+void addmodfile(char *fname, char *outf, char *binv, int bincnt);
 
 void init(int np);
 int done_rprocs(struct rtproc *rtp);
@@ -186,6 +208,7 @@ main(int argc, char *argv[])
 	int	recover = 0;
 	char	*curout = NULL;
 	char	*binval = NULL;
+	int	bincnt = 0;
 	char	fmt[8];
 	int	i, j;
 				/* need at least one argument */
@@ -273,21 +296,26 @@ main(int argc, char *argv[])
 				if (argv[i][2] || i >= argc-2) break;
 				yres = atoi(argv[++i]);
 				continue;
-			case 'b':		/* bin expression */
-				if (argv[i][2] || i >= argc-2) break;
+			case 'b':		/* bin expression/count */
+				if (i >= argc-2) break;
+				if (argv[i][2] == 'n') {
+					bincnt = atoi(argv[++i]);
+					continue;
+				}
+				if (argv[i][2]) break;
 				binval = argv[++i];
 				continue;
 			case 'm':		/* modifier name */
 				if (argv[i][2] || i >= argc-2) break;
 				rtargv[rtargc++] = "-ti";
 				rtargv[rtargc++] = argv[++i];
-				addmodifier(argv[i], curout, binval);
+				addmodifier(argv[i], curout, binval, bincnt);
 				continue;
 			case 'M':		/* modifier file */
 				if (argv[i][2] || i >= argc-2) break;
 				rtargv[rtargc++] = "-tI";
 				rtargv[rtargc++] = argv[++i];
-				addmodfile(argv[i], curout, binval);
+				addmodfile(argv[i], curout, binval, bincnt);
 				continue;
 			}
 		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
@@ -457,9 +485,23 @@ init(int np)
 	waitflush = xres;
 }
 
+/* grow modifier to accommodate more bins */
+MODCONT *
+growmodifier(MODCONT *mp, int nb)
+{
+	if (nb <= mp->nbins)
+		return mp;
+	mp = (MODCONT *)realloc(mp, sizeof(MODCONT) + sizeof(DCOLOR)*(nb-1));
+	if (mp == NULL)
+		error(SYSTEM, "out of memory in growmodifier");
+	memset(mp->cbin+mp->nbins, 0, sizeof(DCOLOR)*(nb-mp->nbins));
+	mp->nbins = nb;
+	return mp;
+}
+
 /* add modifier to our list to track */
 MODCONT *
-addmodifier(char *modn, char *outf, char *binv)
+addmodifier(char *modn, char *outf, char *binv, int bincnt)
 {
 	LUENT	*lep = lu_find(&modconttab, modn);
 	MODCONT	*mp;
@@ -484,12 +526,18 @@ addmodifier(char *modn, char *outf, char *binv)
 		mp->binv = eparse("0");
 	mp->nbins = 1;
 	setcolor(mp->cbin[0], 0., 0., 0.);
+	if (mp->binv->type == NUM)	/* assume one bin if constant */
+		bincnt = 1;
+	else if (bincnt > 1)
+		mp = growmodifier(mp, bincnt);
+	if (bincnt > 0)			/* allocate output stream */
+		getostream(mp->outspec, mp->modname, 0, bincnt);
 	return mp;
 }
 
 /* add modifiers from a file list */
 void
-addmodfile(char *fname, char *outf, char *binv)
+addmodfile(char *fname, char *outf, char *binv, int bincnt)
 {
 	char	*mname[MAXMODLIST];
 	int	i;
@@ -499,7 +547,7 @@ addmodfile(char *fname, char *outf, char *binv)
 		error(SYSTEM, errmsg);
 	}
 	for (i = 0; mname[i]; i++)	/* add each one */
-		addmodifier(mname[i], outf, binv);
+		addmodifier(mname[i], outf, binv, bincnt);
 }
 
 /* put string to stderr */
@@ -612,24 +660,29 @@ printresolu(FILE *fout)
 	}
 }
 
-/* Get output file pointer (open and write header if new) */
-FILE *
-getofile(const char *ospec, const char *mname, int bn)
+/* Get output stream pointer (open and write header if new and bincnt==0) */
+STREAMOUT *
+getostream(const char *ospec, const char *mname, int bn, int bincnt)
 {
-	int		ofl;
-	char		oname[1024];
-	LUENT		*lep;
+	static STREAMOUT	stdos;
+	int			ofl;
+	char			oname[1024];
+	LUENT			*lep;
+	STREAMOUT		*sop;
 	
 	if (ospec == NULL) {			/* use stdout? */
-		if (!using_stdout) {
+		if (!bincnt && !using_stdout) {
+			stdos.reclen = 0;
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
 			if (header)
 				printheader(stdout, NULL);
 			printresolu(stdout);
+			using_stdout = 1;
 		}
-		using_stdout = 1;
-		return stdout;
+		stdos.ofp = stdout;
+		stdos.reclen += bincnt;
+		return &stdos;
 	}
 	ofl = ofname(oname, ospec, mname, bn);	/* get output name */
 	if (ofl < 0) {
@@ -639,19 +692,29 @@ getofile(const char *ospec, const char *mname, int bn)
 	lep = lu_find(&ofiletab, oname);	/* look it up */
 	if (lep->key == NULL)			/* new entry */
 		lep->key = strcpy((char *)malloc(strlen(oname)+1), oname);
-	if (lep->data == NULL) {		/* open output file */
-		FILE		*fp;
+	sop = (STREAMOUT *)lep->data;
+	if (sop == NULL) {			/* allocate stream */
+		if (ofl & OF_BIN && bincnt > 1)	/* don't overcount bins */
+			bincnt = 1;
+		sop = (STREAMOUT *)malloc(sizeof(STREAMOUT));
+		if (sop == NULL)
+			error(SYSTEM, "out of memory in getostream");
+		sop->reclen = oname[0] == '!' ? CNT_PIPE : 0;
+		sop->ofp = NULL;		/* open iff bincnt==0 */
+		lep->data = (char *)sop;
+	}
+	if (!bincnt && sop->ofp == NULL) {	/* open output stream */
 		int		i;
 		if (oname[0] == '!')		/* output to command */
-			fp = popen(oname+1, "w");
+			sop->ofp = popen(oname+1, "w");
 		else
-			fp = fopen(oname, "w");
-		if (fp == NULL) {
+			sop->ofp = fopen(oname, "w");
+		if (sop->ofp == NULL) {
 			sprintf(errmsg, "cannot open '%s' for writing", oname);
 			error(SYSTEM, errmsg);
 		}
 		if (outfmt != 'a')
-			SET_FILE_BINARY(fp);
+			SET_FILE_BINARY(sop->ofp);
 		if (header) {
 			char	info[512];
 			char	*cp = info;
@@ -664,21 +727,22 @@ getofile(const char *ospec, const char *mname, int bn)
 				while (*cp) ++cp;
 			}
 			*cp = '\0';
-			printheader(fp, info);
+			printheader(sop->ofp, info);
 		}
-		printresolu(fp);
+		printresolu(sop->ofp);
 						/* play catch-up */
 		for (i = 0; i < lastdone; i++) {
 			static const DCOLOR	nocontrib = BLKCOLOR;
-			put_contrib(nocontrib, fp);
+			put_contrib(nocontrib, sop->ofp);
 			if (outfmt == 'a')
-				putc('\n', fp);
+				putc('\n', sop->ofp);
 		}
 		if (xres > 0)
-			fflush(fp);
-		lep->data = (char *)fp;
+			fflush(sop->ofp);
 	}
-	return (FILE *)lep->data;		/* return open file pointer */
+	if (sop->reclen != CNT_PIPE)		/* add bincnt to count */
+		sop->reclen += bincnt;
+	return sop;				/* return open stream */
 }
 
 /* read input ray into buffer */
@@ -741,15 +805,8 @@ add_contrib(const char *modn)
 	bn = (int)(evalue(mp->binv) + .5);
 	if (bn <= 0)
 		bn = 0;
-	else if (bn >= mp->nbins) {	/* new bin */
-		mp = (MODCONT *)realloc(mp, sizeof(MODCONT) +
-						bn*sizeof(DCOLOR));
-		if (mp == NULL)
-			error(SYSTEM, "out of memory in add_contrib");
-		memset(mp->cbin+mp->nbins, 0, sizeof(DCOLOR)*(bn+1-mp->nbins));
-		mp->nbins = bn+1;
-		le->data = (char *)mp;
-	}
+	else if (bn >= mp->nbins)	/* new bin */
+		le->data = (char *)(mp = growmodifier(mp, bn+1));
 	addcolor(mp->cbin[bn], rparams);
 }
 
@@ -757,13 +814,13 @@ add_contrib(const char *modn)
 static int
 puteol(const LUENT *e, void *p)
 {
-	FILE	*fp = (FILE *)e->data;
+	STREAMOUT	*sop = (STREAMOUT *)e->data;
 
 	if (outfmt == 'a')
-		putc('\n', fp);
+		putc('\n', sop->ofp);
 	if (!waitflush)
-		fflush(fp);
-	if (ferror(fp)) {
+		fflush(sop->ofp);
+	if (ferror(sop->ofp)) {
 		sprintf(errmsg, "write error on file '%s'", e->key);
 		error(SYSTEM, errmsg);
 	}
@@ -803,22 +860,22 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 void
 done_contrib(void)
 {
-	int	i, j;
-	MODCONT	*mp;
-	FILE	*fp;
+	int		i, j;
+	MODCONT		*mp;
+	STREAMOUT	*sop;
 						/* output modifiers in order */
 	for (i = 0; i < nmods; i++) {
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
-		fp = getofile(mp->outspec, mp->modname, 0);
-		put_contrib(mp->cbin[0], fp);
+		sop = getostream(mp->outspec, mp->modname, 0,0);
+		put_contrib(mp->cbin[0], sop->ofp);
 		if (mp->nbins > 3 &&		/* minor optimization */
-				fp == getofile(mp->outspec, mp->modname, 1))
+				sop == getostream(mp->outspec, mp->modname, 1,0))
 			for (j = 1; j < mp->nbins; j++)
-				put_contrib(mp->cbin[j], fp);
+				put_contrib(mp->cbin[j], sop->ofp);
 		else
 			for (j = 1; j < mp->nbins; j++)
 				put_contrib(mp->cbin[j],
-					getofile(mp->outspec, mp->modname, j));
+				    getostream(mp->outspec,mp->modname,j,0)->ofp);
 						/* clear for next ray tree */
 		memset(mp->cbin, 0, sizeof(DCOLOR)*mp->nbins);
 	}
@@ -1005,7 +1062,12 @@ trace_contribs(FILE *fin)
 static int
 myseeko(const LUENT *e, void *p)
 {
-	if (fseeko((FILE *)e->data, *(off_t *)p, SEEK_CUR) < 0) {
+	STREAMOUT	*sop = (STREAMOUT *)e->data;
+	off_t		nbytes = *(off_t *)p;
+	
+	if (sop->reclen > 1)
+		nbytes = nbytes * sop->reclen;
+	if (fseeko(sop->ofp, nbytes, SEEK_CUR) < 0) {
 		sprintf(errmsg, "seek error on file '%s'", e->key);
 		error(SYSTEM, errmsg);
 	}
@@ -1015,16 +1077,17 @@ myseeko(const LUENT *e, void *p)
 void
 recover_output(FILE *fin)
 {
-	off_t	lastout = -1;
-	int	outvsiz;
-	char	*outvfmt;
-	int	i, j;
-	MODCONT	*mp;
-	int	ofl;
-	char	oname[1024];
-	LUENT	*ment, *oent;
-	FILE	*fp;
-	off_t	nvals;
+	off_t		lastout = -1;
+	int		outvsiz, recsiz;
+	char		*outvfmt;
+	int		i, j;
+	MODCONT		*mp;
+	int		ofl;
+	char		oname[1024];
+	LUENT		*ment, *oent;
+	STREAMOUT	sout;
+	off_t		nvals;
+	int		xr, yr;
 
 	switch (outfmt) {
 	case 'a':
@@ -1052,59 +1115,73 @@ recover_output(FILE *fin)
 		mp = (MODCONT *)ment->data;
 		if (mp->outspec == NULL)
 			error(USER, "cannot recover from stdout");
+		if (mp->outspec[0] == '!')
+			error(USER, "cannot recover from command");
 		for (j = 0; ; j++) {		/* check each bin's file */
 			ofl = ofname(oname, mp->outspec, mp->modname, j);
 			if (ofl < 0)
 				error(USER, "bad output file specification");
 			oent = lu_find(&ofiletab, oname);
-			if (oent->data != NULL) { /* saw this one already */
+			if (oent->data != NULL) {
+				sout = *(STREAMOUT *)oent->data;
+			} else {
+				sout.reclen = 0;
+				sout.ofp = NULL;
+			}
+			if (sout.ofp != NULL) {	/* already open? */
 				if (ofl & OF_BIN)
 					continue;
 				break;
 			}
-			if (oname[0] == '!')
-				error(USER, "cannot recover from command");
 						/* open output */
-			fp = fopen(oname, "rb+");
-			if (fp == NULL) {
+			sout.ofp = fopen(oname, "rb+");
+			if (sout.ofp == NULL) {
 				if (j)
 					break;	/* assume end of modifier */
 				sprintf(errmsg, "missing recover file '%s'",
 						oname);
 				error(USER, errmsg);
 			}
-			nvals = lseek(fileno(fp), 0, SEEK_END);
+			nvals = lseek(fileno(sout.ofp), 0, SEEK_END);
 			if (nvals <= 0) {
 				lastout = 0;	/* empty output, quit here */
-				fclose(fp);
+				fclose(sout.ofp);
 				break;
 			}
-			lseek(fileno(fp), 0, SEEK_SET);
-			if (header) {
-				int	xr, yr;
-				if (checkheader(fp, outvfmt, NULL) != 1) {
+			if (!sout.reclen) {	/* unspecified record length */
+				if (!(ofl & OF_BIN)) {
 					sprintf(errmsg,
-						"format mismatch for '%s'",
+						"guessing 1 value per record in '%s'",
 							oname);
-					error(USER, errmsg);
+					error(WARNING, errmsg);
 				}
-				if (xres > 0 && yres > 0 &&
-						(!fscnresolu(&xr, &yr, fp) ||
-							xr != xres ||
-							yr != yres)) {
-					sprintf(errmsg,
-						"resolution mismatch for '%s'",
-							oname);
-					error(USER, errmsg);
-				}
+				recsiz = outvsiz;
+			} else
+				recsiz = outvsiz * sout.reclen;
+
+			lseek(fileno(sout.ofp), 0, SEEK_SET);
+			if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {
+				sprintf(errmsg, "format mismatch for '%s'",
+						oname);
+				error(USER, errmsg);
 			}
-			nvals = (nvals - (off_t)ftell(fp)) / outvsiz;
-			if (lastout < 0 || nvals < lastout)
+			if ((xres > 0) & (yres > 0) &&
+					(!fscnresolu(&xr, &yr, sout.ofp) ||
+						xr != xres ||
+						yr != yres)) {
+				sprintf(errmsg, "resolution mismatch for '%s'",
+						oname);
+				error(USER, errmsg);
+			}
+			nvals = (nvals - (off_t)ftell(sout.ofp)) / recsiz;
+			if ((lastout < 0) | (nvals < lastout))
 				lastout = nvals;
-			if (oent->key == NULL) /* new entry */
+			if (oent->key == NULL)	/* new entry */
 				oent->key = strcpy((char *)
 						malloc(strlen(oname)+1), oname);
-			oent->data = (char *)fp;
+			if (oent->data == NULL)
+				oent->data = (char *)malloc(sizeof(STREAMOUT));
+			*(STREAMOUT *)oent->data = sout;
 			if (!(ofl & OF_BIN))
 				break;		/* no bin separation */
 		}
@@ -1113,15 +1190,8 @@ recover_output(FILE *fin)
 			lu_done(&ofiletab);	/* reclose all outputs */
 			return;
 		}
-		if (j > mp->nbins) {		/* preallocate modifier bins */
-			mp = (MODCONT *)realloc(mp, sizeof(MODCONT) +
-							(j-1)*sizeof(DCOLOR));
-			if (mp == NULL)
-				error(SYSTEM, "out of memory in recover_output");
-			memset(mp->cbin, 0, sizeof(DCOLOR)*mp->nbins);
-			mp->nbins = j;
-			ment->data = (char *)mp;
-		}
+		if (j > mp->nbins)		/* reallocate modifier bins */
+			ment->data = (char *)(mp = growmodifier(mp, j));
 	}
 	if (lastout < 0) {
 		error(WARNING, "no output files to recover");
