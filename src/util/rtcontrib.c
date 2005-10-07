@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.32 2005/10/06 16:28:59 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.33 2005/10/07 03:45:15 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -63,10 +63,13 @@ static void
 closestream(void *p)
 {
 	STREAMOUT	*sop = (STREAMOUT *)p;
+	int		status;
 	if (sop->reclen == CNT_PIPE)
-		pclose(sop->ofp);
+		status = pclose(sop->ofp);
 	else
-		fclose(sop->ofp);
+		status = fclose(sop->ofp);
+	if (status)
+		error(SYSTEM, "error closing output stream");
 	free(p);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.49 2005/09/19 11:30:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.50 2005/10/07 03:45:14 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -215,7 +215,8 @@ rtrace(				/* trace rays from file */
 		if (vcount && !--vcount)		/* check for end */
 			break;
 	}
-	fflush(stdout);
+	if (fflush(stdout) < 0)
+		error(SYSTEM, "write error");
 	if (vcount)
 		error(USER, "unexpected EOF on input");
 	if (fname != NULL)
