@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.4 2005/06/02 04:47:27 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.5 2005/10/08 04:18:16 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -294,7 +294,7 @@ char  *fname
 					result[n] = pow(result[n], 1.0/power);
 			}
 			if (func == MULT)
-				result[n] = exp(tally[n]);
+				result[n] = exp(result[n]);
 		}
 		putrecord(result, ncol, stdout);
 		if (!subtotal)
