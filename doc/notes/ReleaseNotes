@@ -1539,3 +1539,6 @@ in recovery of files containing multiple values per record.
 
 Added rtcontrib -fo option to write over existing files, which it now
 refuses to do without this option.
+
+Made rtcontrib flush output when handed a zero-length ray vector,
+to match behavior of rtrace.
