@@ -1536,3 +1536,6 @@ Added -i option to rlam so it works with binary input formats.
 
 Added rtcontrib -bn option to specify number of bins and fixed bug
 in recovery of files containing multiple values per record.
+
+Added rtcontrib -fo option to write over existing files, which it now
+refuses to do without this option.

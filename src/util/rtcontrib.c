@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.34 2005/10/11 04:27:41 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.35 2005/10/11 16:54:26 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -123,6 +123,7 @@ int		inpfmt = 'a';		/* input format */
 int		outfmt = 'a';		/* output format */
 
 int		header = 1;		/* output header? */
+int		force_open = 0;		/* truncate existing output? */
 int		xres = 0;		/* horiz. output resolution */
 int		yres = 0;		/* vert. output resolution */
 
@@ -266,7 +267,7 @@ main(int argc, char *argv[])
 					continue;
 				}
 				break;
-			case 'f':		/* file or i/o format */
+			case 'f':		/* file or force or format */
 				if (!argv[i][2]) {
 					char	*fpath;
 					if (i >= argc-2) break;
@@ -279,6 +280,10 @@ main(int argc, char *argv[])
 						error(USER, errmsg);
 					}
 					fcompile(fpath);
+					continue;
+				}
+				if (argv[i][2] == 'o') {
+					force_open++;
 					continue;
 				}
 				setformat(argv[i]+2);
@@ -710,7 +715,9 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		long		i;
 		if (oname[0] == '!')		/* output to command */
 			sop->ofp = popen(oname+1, "w");
-		else
+		else if (!force_open && access(oname, F_OK) == 0)
+			errno = EEXIST;		/* file exists */
+		else				/* else open it */
 			sop->ofp = fopen(oname, "w");
 		if (sop->ofp == NULL) {
 			sprintf(errmsg, "cannot open '%s' for writing", oname);
