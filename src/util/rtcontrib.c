@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.33 2005/10/07 03:45:15 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.34 2005/10/11 04:27:41 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -702,12 +702,12 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		sop = (STREAMOUT *)malloc(sizeof(STREAMOUT));
 		if (sop == NULL)
 			error(SYSTEM, "out of memory in getostream");
-		sop->reclen = oname[0] == '!' ? CNT_PIPE : 0;
+		sop->reclen = oname[0] == '!' ? CNT_PIPE : CNT_UNKNOWN;
 		sop->ofp = NULL;		/* open iff noopen==0 */
 		lep->data = (char *)sop;
 	}
 	if (!noopen && sop->ofp == NULL) {	/* open output stream */
-		int		i;
+		long		i;
 		if (oname[0] == '!')		/* output to command */
 			sop->ofp = popen(oname+1, "w");
 		else
@@ -734,7 +734,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		}
 		printresolu(sop->ofp);
 						/* play catch-up */
-		for (i = 0; i < lastdone; i++) {
+		for (i = sop->reclen > 1 ? sop->reclen*lastdone : lastdone;
+								i--; ) {
 			static const DCOLOR	nocontrib = BLKCOLOR;
 			put_contrib(nocontrib, sop->ofp);
 			if (outfmt == 'a')
@@ -1042,10 +1043,11 @@ trace_contribs(FILE *fin)
 						/* loop over input */
 	while ((iblen = getinp(inpbuf, fin)) > 0) {
 		if (lastray+1 < lastray ||	/* need reset? */
-				queue_length() > 5*nrtprocs()) {
+				queue_length() > 10*nrtprocs()) {
 			while (wait_rproc() != NULL)
 				process_queue();
-			lastdone = lastray = 0;
+			if (lastray+1 < lastray)
+				lastdone = lastray = 0;
 		}
 		rtp = get_rproc();		/* get avail. rtrace process */
 		rtp->raynum = ++lastray;	/* assign ray to it */
@@ -1128,7 +1130,7 @@ recover_output(FILE *fin)
 			if (oent->data != NULL) {
 				sout = *(STREAMOUT *)oent->data;
 			} else {
-				sout.reclen = 0;
+				sout.reclen = CNT_UNKNOWN;
 				sout.ofp = NULL;
 			}
 			if (sout.ofp != NULL) {	/* already open? */
