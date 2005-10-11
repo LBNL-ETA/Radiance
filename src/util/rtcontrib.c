@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.35 2005/10/11 16:54:26 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.36 2005/10/11 19:02:51 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -760,6 +760,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 int
 getinp(char *buf, FILE *fp)
 {
+	double	dv[3];
+	float	fv[3];
 	char	*cp;
 	int	i;
 
@@ -768,25 +770,35 @@ getinp(char *buf, FILE *fp)
 		cp = buf;		/* make sure we get 6 floats */
 		for (i = 0; i < 6; i++) {
 			if (fgetword(cp, buf+127-cp, fp) == NULL)
-				return 0;
+				return -1;
+			if (i >= 3)
+				dv[i-3] = atof(cp);
 			if ((cp = fskip(cp)) == NULL || *cp)
-				return 0;
+				return -1;
 			*cp++ = ' ';
 		}
 		getc(fp);		/* get/put eol */
 		*cp-- = '\0'; *cp = '\n';
+		if (DOT(dv,dv) <= FTINY*FTINY)
+			return 0;	/* dummy ray */
 		return strlen(buf);
 	case 'f':
 		if (fread(buf, sizeof(float), 6, fp) < 6)
-			return 0;
+			return -1;
+		memcpy(fv, buf+3*sizeof(float), 3*sizeof(float));
+		if (DOT(fv,fv) <= FTINY*FTINY)
+			return 0;	/* dummy ray */
 		return sizeof(float)*6;
 	case 'd':
 		if (fread(buf, sizeof(double), 6, fp) < 6)
-			return 0;
+			return -1;
+		memcpy(dv, buf+3*sizeof(double), 3*sizeof(double));
+		if (DOT(dv,dv) <= FTINY*FTINY)
+			return 0;	/* dummy ray */
 		return sizeof(double)*6;
 	}
 	error(INTERNAL, "botched input format");
-	return 0;	/* pro forma return */
+	return -1;	/* pro forma return */
 }
 
 static float	rparams[9];		/* traced ray parameters */
@@ -960,7 +972,8 @@ process_queue(void)
 		}
 		done_contrib();		/* sum up contributions & output */
 		lastdone = rtp->raynum;
-		free(rtp->buf);		/* free up buffer space */
+		if (rtp->buf != NULL)	/* free up buffer space */
+			free(rtp->buf);
 		rt_unproc = rtp->next;
 		free(rtp);		/* done with this ray tree */
 	}
@@ -1048,17 +1061,24 @@ trace_contribs(FILE *fin)
 	int		iblen;
 	struct rtproc	*rtp;
 						/* loop over input */
-	while ((iblen = getinp(inpbuf, fin)) > 0) {
-		if (lastray+1 < lastray ||	/* need reset? */
-				queue_length() > 10*nrtprocs()) {
+	while ((iblen = getinp(inpbuf, fin)) >= 0) {
+		if (!iblen ||			/* need reset? */
+				queue_length() > 10*nrtprocs() ||
+				lastray+1 < lastray) {
 			while (wait_rproc() != NULL)
 				process_queue();
 			if (lastray+1 < lastray)
 				lastdone = lastray = 0;
 		}
 		rtp = get_rproc();		/* get avail. rtrace process */
-		rtp->raynum = ++lastray;	/* assign ray to it */
-		writebuf(rtp->pd.w, inpbuf, iblen);
+		rtp->raynum = ++lastray;	/* assign ray */
+		if (iblen) {			/* trace ray if valid */
+			writebuf(rtp->pd.w, inpbuf, iblen);
+		} else {			/* else bypass dummy ray */
+			queue_raytree(rtp);	/* empty tree */
+			if ((yres <= 0) & (waitflush > 0))
+				waitflush = 1;	/* flush after this */
+		}
 		if (raysleft && !--raysleft)
 			break;
 		process_queue();		/* catch up with results */
@@ -1219,7 +1239,7 @@ recover_output(FILE *fin)
 	lu_doall(&ofiletab, myseeko, &nvals);
 						/* skip repeated input */
 	for (nvals = 0; nvals < lastout; nvals++)
-		if (getinp(oname, fin) <= 0)
+		if (getinp(oname, fin) < 0)
 			error(USER, "unexpected EOF on input");
 	lastray = lastdone = (unsigned long)lastout;
 	if (raysleft)
