@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.37 2005/10/11 23:41:45 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.38 2005/10/11 23:55:37 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1076,12 +1076,12 @@ trace_contribs(FILE *fin)
 			writebuf(rtp->pd.w, inpbuf, iblen);
 		} else {			/* else bypass dummy ray */
 			queue_raytree(rtp);	/* empty tree */
-			if ((yres <= 0) | (waitflush > 0))
+			if ((yres <= 0) | (waitflush > 1))
 				waitflush = 1;	/* flush after this */
 		}
-		if (raysleft && !--raysleft)
-			break;
 		process_queue();		/* catch up with results */
+		if (raysleft && !--raysleft)
+			break;			/* preemptive EOI */
 	}
 	while (wait_rproc() != NULL)		/* process outstanding rays */
 		process_queue();
