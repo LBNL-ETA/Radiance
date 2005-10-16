@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.14 2003/12/31 19:38:27 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.15 2005/10/16 16:04:10 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -109,7 +109,7 @@ OBJREC  *so;
 		src->sloc[j] /= (double)f->nv;
 	}
 	if (!inface(src->sloc, f))
-		objerror(so, USER, "cannot hit center");
+		objerror(so, USER, "cannot hit center for source");
 	src->sflags |= SFLAT;
 	VCOPY(src->snorm, f->norm);
 	src->ss2 = f->area;
@@ -195,7 +195,7 @@ OBJREC  *so;
 	co = getcone(so, 0);
 	VCOPY(src->sloc, CO_P0(co));
 	if (CO_R0(co) > 0.0)
-		objerror(so, USER, "cannot hit center");
+		objerror(so, USER, "cannot hit center for source");
 	src->sflags |= SFLAT;
 	VCOPY(src->snorm, co->ad);
 	src->srad = CO_R1(co);
