@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.38 2005/10/11 23:55:37 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.39 2005/10/21 01:12:59 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -325,6 +325,9 @@ main(int argc, char *argv[])
 				rtargv[rtargc++] = argv[++i];
 				addmodfile(argv[i], curout, binval, bincnt);
 				continue;
+			case 'P':		/* persist file */
+				error(USER, "persist file is automatic");
+				break;
 			}
 		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
 	}
