@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.21 2005/09/24 20:15:54 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.22 2005/10/24 04:25:01 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -91,12 +91,12 @@ int	len
 			cd->clfb[BLU]*cmon[BLU] ;
 		if (li >= 0xff00) li = 255;
 		else li >>= 8;
-		if (li <= 0) {
-			bi = TM_NOBRT;			/* bogus value */
-			li = 1;				/* avoid li==0 */
-		} else {
-			bi = BRT2SCALE(cmon[EXP]-COLXS) +
-				logi[li] + cd->inpsfb;
+		bi = BRT2SCALE(cmon[EXP]-COLXS) + cd->inpsfb;
+		if (li > 0)
+			bi += logi[li];
+		else {
+			bi += logi[0];
+			li = 1;				/* avoid /0 */
 		}
 		ls[i] = bi;
 		if (cs == TM_NOCHROM)			/* no color? */
