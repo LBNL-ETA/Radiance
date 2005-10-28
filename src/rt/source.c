@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.52 2005/05/31 18:01:09 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.53 2005/10/28 16:16:33 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -382,7 +382,7 @@ direct(					/* add direct component */
 		scp->sno = sr.rsrc;
 						/* compute coefficient */
 		(*f)(scp->coef, p, sr.rdir, si.dom);
-		cntord[sn].brt = bright(scp->coef);
+		cntord[sn].brt = intens(scp->coef);
 		if (cntord[sn].brt <= 0.0)
 			continue;
 #if SHADCACHE
@@ -399,7 +399,7 @@ direct(					/* add direct component */
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
 		copycolor(scp->val, sr.rcol);
-		cntord[sn].brt = bright(scp->val);
+		cntord[sn].brt = intens(sr.rcol);
 	}
 						/* sort contributions */
 	qsort(cntord, sn, sizeof(CNTPTR), cntcmp);
