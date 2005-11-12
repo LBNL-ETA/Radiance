@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.5 2003/07/27 22:12:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.6 2005/11/12 06:14:51 greg Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -151,7 +151,9 @@ absc_exp(void)			/* produce expression for abscissa */
 				strcpy(ourexp, "x");
 			else
 				sprintf(ourexp, "x-%g", abscissa[0]-1);
-		} else
+		} else if (fabs(abscissa[0]) < eps)
+			sprintf(ourexp, "x/%g+1", step);
+		else
 			sprintf(ourexp, "(x-%g)/%g+1", abscissa[0], step);
 	} else {
 		printf("X`%s(i):select(i,", locID);

@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.12 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.13 2005/11/12 06:14:51 greg Exp $
 #
 # Create false color image with legend
 #
@@ -11,9 +11,12 @@ set mult=179
 set label=Nits
 set scale=1000
 set decades=0
-set redv='1.6*v-.6'
-set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
-set bluv='1-8/3*v'
+# set redv='1.6*v-.6'
+# set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
+# set bluv='1-8/3*v'
+set redv='def_red(v)'
+set grnv='def_grn(v)'
+set bluv='def_blu(v)'
 set ndivs=8
 set picture='-'
 set cpict=
@@ -109,18 +112,39 @@ clip(x) : if(x-1,1,if(x,x,0));
 frac(x) : x - floor(x);
 boundary(a,b) : neq(floor(ndivs*a+.5),floor(ndivs*b+.5));
 
+interp_arr2(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
+interp_arr(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
+def_redp(i):select(i,0.18848,0.05468174,
+0.00103547,0,7.449763e-06,0.0004390987,0.001367254,0.003076,
+0.01376382,0.06085327,0.1712073,0.2889212,0.3404111,0.3803934,
+0.4135148,0.4461151,0.4966744,0.6343959,0.7709373,0.9048474,1,
+1,0.9863);
+def_red(x):interp_arr(x/0.0454545+1,def_redp);
+def_grnp(i):select(i,0.0009766,0,0.0008966244,
+0.0264977,0.1256843,0.2865799,0.4251992,0.4775091,0.4406337,
+0.3546771,0.2374256,0.1424751,0.09136063,0.0474073,0.0181899,
+0.004181549,9.587855e-05,0,0.008718861,0.1025931,0.3106831,
+0.6447838,0.9707);
+def_grn(x):interp_arr(x/0.0454545+1,def_grnp);
+def_blup(i):select(i,0.2666,0.3638662,0.4770437,
+0.5131397,0.5363797,0.5193677,0.4091852,0.1732726,0.05331749,
+0.0457587,0.06656252,0.06819438,0.04973373,0.02796644,
+0.01131437,0.00280772,0.0002246617,0.0003480934,0.001044561,
+0.001006845,0.002297005,0.01128842,0.02539);
+def_blu(x):interp_arr(x/0.0454545+1,def_blup);
+
 isconta = if(btwn(0,v,1),or(boundary(vleft,vright),boundary(vabove,vbelow)),-1);
 iscontb = if(btwn(0,v,1),btwn(.4,frac(ndivs*v),.6),-1); 
-
-ro = if(in,clip($redv),ra);
-go = if(in,clip($grnv),ga);
-bo = if(in,clip($bluv),ba);
 
 ra = 0;
 ga = 0;
 ba = 0;
 
 in = 1;
+
+ro = if(in,clip($redv),ra);
+go = if(in,clip($grnv),ga);
+bo = if(in,clip($bluv),ba);
 _EOF_
 cat > $td/pc1.cal <<_EOF_
 norm : mult/scale/le(1);
@@ -182,11 +206,16 @@ if ( $?doextrem ) then
 	psign -s -.15 -a 2 -h 16 $minval > $td/minv.pic
 	psign -s -.15 -a 2 -h 16 $maxval > $td/maxv.pic
 	pcomb $pc0args $pc1args $picture $cpict \
-		| pcompos $td/scol.pic 0 0 -t .2 $td/slab.pic 0 $loff \
+		| pcompos $td/scol.pic 0 0 \
+			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.pic" \
+			`ev 2 $loff-1` -t .5 $td/slab.pic 0 $loff \
 		  - $legwidth 0 $td/minv.pic $minpos $td/maxv.pic $maxpos
 else
 	pcomb $pc0args $pc1args $picture $cpict \
-		| pcompos $td/scol.pic 0 0 -t .2 $td/slab.pic 0 $loff - $legwidth 0
+		| pcompos $td/scol.pic 0 0 \
+			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.pic" \
+			`ev 2 $loff-1` -t .5 $td/slab.pic 0 $loff \
+			- $legwidth 0
 endif
 quit:
 rm -rf $td

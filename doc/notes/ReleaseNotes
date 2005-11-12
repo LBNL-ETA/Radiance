@@ -1542,3 +1542,5 @@ refuses to do without this option.
 
 Made rtcontrib flush output when handed a zero-length ray vector,
 to match behavior of rtrace.
+
+Improved color scale for falsecolor output.
