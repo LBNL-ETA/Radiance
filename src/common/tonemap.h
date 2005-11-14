@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.19 2005/01/07 22:05:30 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.20 2005/11/14 22:18:18 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 /****    Argument Macros    ****/
-				/* Flags of what to do */
+				/* flags of what to do */
 #define	TM_F_HCONTR	01		/* human contrast sensitivity */
 #define	TM_F_MESOPIC	02		/* mesopic color sensitivity */
 #define	TM_F_LINEAR	04		/* linear brightness mapping */
@@ -70,7 +70,7 @@ extern char	*tmErrorMessage[];	/* error messages */
 typedef short	TMbright;		/* encoded luminance type */
 
 				/* basic tone mapping data structure */
-typedef struct tmStruct {
+typedef struct {
 	int		flags;		/* flags of what to do */
 	RGBPRIMP	monpri;		/* monitor RGB primaries */
 	double		mongam;		/* monitor gamma value (approx.) */

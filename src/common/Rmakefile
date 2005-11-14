@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.55 2005/02/25 06:39:44 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.56 2005/11/14 22:18:18 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -19,7 +19,7 @@ RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
 
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
-	tmap16bit.o bmpfile.o
+	tmap16bit.o bmpfile.o falsecolor.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
@@ -117,6 +117,8 @@ tonemap.o tmapcolrs.o tmapluv.o tmap16bit.o:	tmprivat.h tonemap.h \
 tifftypes.h color.h
 
 tmapluv.o:	tiffio.h tmaptiff.h tiff.h
+
+falsecolor.o:	falsecolor.h tmprivat.h tonemap.h color.h tifftypes.h
 
 tonemap.o:	tmerrmsg.h
 
