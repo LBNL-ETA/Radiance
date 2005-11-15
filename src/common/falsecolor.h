@@ -1,4 +1,4 @@
-/* RCSid $Id: falsecolor.h,v 3.1 2005/11/14 22:18:18 greg Exp $ */
+/* RCSid $Id: falsecolor.h,v 3.2 2005/11/15 06:52:38 greg Exp $ */
 /*
  * Header file for false color tone-mapping.
  *
@@ -88,6 +88,26 @@ fcMapPixels(FCstruct *fcs, BYTE *ps, TMbright *ls, int len);
 	
 	returns	-	0 on success, TM_E_* on failure.
  */
+
+extern int
+fcIsLogMap(FCstruct *fcs);
+/*
+	Determine if false color mapping is logarithmic.
+
+	fcs     -       false color structure pointer.
+
+	returns	-	1 if map follows logarithmic mapping, -1 on error.
+*/
+
+extern FCstruct *
+fcDup(FCstruct *fcs);
+/*
+	Duplicate a false color structure.
+
+	fcs     -       false color structure pointer.
+
+	returns	-	duplicate structure, or NULL if no memory.
+*/
 
 extern void
 fcDone(FCstruct *fcs);

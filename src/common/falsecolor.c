@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.1 2005/11/14 22:18:18 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.2 2005/11/15 06:52:38 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id: falsecolor.c,v 3.1 2005/11/14 22:18:18 greg Ex
 
 #include	<stdio.h>
 #include	<math.h>
+#include	<string.h>
 #include	"tmprivat.h"
 #include	"falsecolor.h"
 
@@ -34,23 +35,21 @@ fcInit(BYTE fcscale[256][3])
 int
 fcFixedLinear(FCstruct *fcs, double Lwmax)
 {
-	double	v;
+	double	mult;
 	int	i;
 
 	if ((fcs == NULL) | (Lwmax <= MINLUM))
 		return(TM_E_ILLEGAL);
 	if (fcs->lumap != NULL)
 		free((void *)fcs->lumap);
-	v = TM_BRTSCALE * log(Lwmax);
-	fcs->mbrmax = (int)(v<0. ? v-.5 : v+.5);
-	v = TM_BRTSCALE * log(Lwmax/256.);
-	fcs->mbrmin = (int)(v<0. ? v-.5 : v+.5);
+	fcs->mbrmin = tmCvLuminance(Lwmax/256.);
+	fcs->mbrmax = tmCvLuminance(Lwmax);
 	fcs->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
 	if (fcs->lumap == NULL)
 		return(TM_E_NOMEM);
-	v = 255.999/tmLuminance(fcs->mbrmax);
+	mult = 255.999/tmLuminance(fcs->mbrmax);
 	for (i = fcs->mbrmin; i <= fcs->mbrmax; i++)
-		fcs->lumap[i] = (int)(v * tmLuminance(i));
+		fcs->lumap[i] = (int)(mult * tmLuminance(i));
 	returnOK;
 }
 
@@ -58,17 +57,14 @@ fcFixedLinear(FCstruct *fcs, double Lwmax)
 int
 fcFixedLog(FCstruct *fcs, double Lwmin, double Lwmax)
 {
-	double	v;
 	int	i;
 
 	if ((fcs == NULL) | (Lwmin <= MINLUM) | (Lwmax <= Lwmin))
 		return(TM_E_ILLEGAL);
 	if (fcs->lumap != NULL)
 		free((void *)fcs->lumap);
-	v = TM_BRTSCALE * log(Lwmin);
-	fcs->mbrmin = (int)(v<0. ? v-.5 : v+.5);
-	v = TM_BRTSCALE * log(Lwmax);
-	fcs->mbrmax = (int)(v<0. ? v-.5 : v+.5);
+	fcs->mbrmin = tmCvLuminance(Lwmin);
+	fcs->mbrmax = tmCvLuminance(Lwmax);
 	fcs->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
 	if (fcs->lumap == NULL)
 		return(TM_E_NOMEM);
@@ -129,7 +125,7 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, int pctile)
 	if (i < 0)
 		return(TM_E_TMFAIL);
 	wbrmax = tms->hbrmin + i;
-	return(fcFixedLog(fcs, tmLuminannce(wbrmin), tmLuminance(wbrmax)));
+	return(fcFixedLog(fcs, tmLuminance(wbrmin), tmLuminance(wbrmax)));
 }
  
 /* Apply false color mapping to pixel values */
@@ -154,6 +150,41 @@ fcMapPixels(FCstruct *fcs, BYTE *ps, TMbright *ls, int len)
 		*ps++ = fcs->scale[li][BLU];
 	}
 	returnOK;
+}
+
+/* Determine if false color mapping is logarithmic */
+int
+fcIsLogMap(FCstruct *fcs)
+{
+	int	midval;
+
+	if (fcs == NULL || fcs->lumap == NULL)
+		return(-1);
+	midval = fcs->lumap[(fcs->mbrmax - fcs->mbrmin)/2];
+	return((127 <= midval) & (midval <= 129));
+}
+
+/* Duplicate a false color structure */
+FCstruct *
+fcDup(FCstruct *fcs)
+{
+	FCstruct	*fcnew;
+
+	if (fcs == NULL)
+		return(NULL);
+	fcnew = fcInit(fcs->scale);
+	if (fcnew == NULL)
+		return(NULL);
+	if (fcs->lumap != NULL) {
+		fcnew->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax -
+							fcs->mbrmin + 1));
+		if (fcnew->lumap == NULL)
+			return(fcnew);
+		fcnew->mbrmin = fcs->mbrmin; fcnew->mbrmax = fcs->mbrmax;
+		memcpy((void *)fcnew->lumap, (void *)fcs->lumap,
+				sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
+	}
+	return(fcnew);
 }
 
 /* Free data associated with the given false color mapping structure */
