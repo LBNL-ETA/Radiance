@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.18 2005/01/07 22:05:30 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.19 2005/11/15 06:53:00 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -236,6 +236,22 @@ int	len
 				(int)(256.*pow(d, 1./tms->mongam));
 	}
 	returnOK;
+}
+
+
+TMbright
+tmCvLuminance(				/* convert a single luminance */
+double	lum
+)
+{
+	double	d;
+
+	if (lum <= TM_NOLUM)
+		return(TM_NOBRT);
+	d = TM_BRTSCALE*log(lum);
+	if (d > 0.)
+		return((TMbright)(d+.5));
+	return((TMbright)(d-.5));
 }
 
 

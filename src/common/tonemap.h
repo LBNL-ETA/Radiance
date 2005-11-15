@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.20 2005/11/14 22:18:18 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.21 2005/11/15 06:53:00 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -118,6 +118,11 @@ extern int	tmNumPkgs;	/* number of registered packages */
 
 /****    Library Function Calls    ****/
 
+extern TMbright
+tmCvLuminance(double lum);
+/*
+	Convert a single luminance value to an encoded brightness value.
+ */
 
 extern TMstruct *
 tmInit(int flags, RGBPRIMP monpri, double gamval);
