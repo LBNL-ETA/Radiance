@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.3 2005/11/15 20:04:50 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.4 2005/11/16 08:30:15 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -65,6 +65,10 @@ fcFixedLog(FCstruct *fcs, double Lwmin, double Lwmax)
 		free((void *)fcs->lumap);
 	fcs->mbrmin = tmCvLuminance(Lwmin);
 	fcs->mbrmax = tmCvLuminance(Lwmax);
+	if (fcs->mbrmin >= fcs->mbrmax) {
+		fcs->lumap = NULL;
+		return(TM_E_ILLEGAL);
+	}
 	fcs->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
 	if (fcs->lumap == NULL)
 		return(TM_E_NOMEM);
@@ -77,53 +81,59 @@ fcFixedLog(FCstruct *fcs, double Lwmin, double Lwmax)
 int
 fcLinearMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 {
-	int		i;
+	int		i, histlen;
 	int32		histot, cnt;
-	TMbright	wbrmin, wbrmax;
+	int		brt0;
 
 	if ((fcs == NULL) | (tms == NULL) || (tms->histo == NULL) |
 			(0 > pctile) | (pctile >= 50))
 		return(TM_E_ILLEGAL);
+	i = (tms->hbrmin-MINBRT)/HISTEP;
+	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
+	histlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - i;
 	histot = 0;
-	for (i = tms->hbrmax - tms->hbrmin; i >= 0; )
-		histot += tms->histo[i--];
+	for (i = histlen; i--; )
+		histot += tms->histo[i];
 	cnt = histot * pctile / 100;
-	for (i = tms->hbrmax - tms->hbrmin; i >= 0; i--)
+	for (i = histlen; i--; )
 		if ((cnt -= tms->histo[i]) < 0)
 			break;
-	if (i < 0)
+	if (i <= 0)
 		return(TM_E_TMFAIL);
-	return(fcFixedLinear(fcs, tmLuminance(tms->hbrmin + i)));
+	return(fcFixedLinear(fcs, tmLuminance(brt0 + i*HISTEP)));
 }
 
 /* Compute logarithmic false color map */
 int
 fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 {
-	int		i;
+	int		i, histlen;
 	int32		histot, cnt;
-	TMbright	wbrmin, wbrmax;
+	int		brt0, wbrmin, wbrmax;
 
 	if ((fcs == NULL) | (tms == NULL) || (tms->histo == NULL) |
 			(0 > pctile) | (pctile >= 50))
 		return(TM_E_ILLEGAL);
+	i = (tms->hbrmin-MINBRT)/HISTEP;
+	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
+	histlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - i;
 	histot = 0;
-	for (i = tms->hbrmax - tms->hbrmin; i >= 0; )
-		histot += tms->histo[i--];
+	for (i = histlen; i--; )
+		histot += tms->histo[i];
 	cnt = histot * pctile / 100;
-	for (i = 0; i <= tms->hbrmax - tms->hbrmin; i++)
+	for (i = 0; i < histlen; i++)
 		if ((cnt -= tms->histo[i]) < 0)
 			break;
-	if (i >= tms->hbrmax - tms->hbrmin)
+	if (i >= histlen)
 		return(TM_E_TMFAIL);
-	wbrmin = tms->hbrmin + i;
+	wbrmin = brt0 + i*HISTEP;
 	cnt = histot * pctile / 100;
-	for (i = tms->hbrmax - tms->hbrmin; i >= 0; i--)
+	for (i = histlen; i--; )
 		if ((cnt -= tms->histo[i]) < 0)
 			break;
-	if (i < 0)
+	wbrmax = brt0 + i*HISTEP;
+	if (wbrmax <= wbrmin)
 		return(TM_E_TMFAIL);
-	wbrmax = tms->hbrmin + i;
 	return(fcFixedLog(fcs, tmLuminance(wbrmin), tmLuminance(wbrmax)));
 }
  
