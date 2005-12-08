@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.81 2005/09/12 14:40:13 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.82 2005/12/08 17:06:11 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1320,14 +1320,12 @@ rpict(				/* run rpict and pfilt for each view */
 					zopt, oct1name, rawfile);
 			if (pfile != NULL && inchild()) {
 						/* rpict persistent mode */
-				if (!silent) {
+				if (!silent)
 					printf("\t%s\n", combuf);
-					fflush(stdout);
-				}
+				fflush(stdout);
 				sprintf(combuf, "rpict%s %s %s%s%s %s > %s",
 						rep, rppopt, res, po, opts,
 						oct1name, rawfile);
-				fflush(stdout);
 				fp = popen(combuf, "w");
 				if (fp == NULL)
 					goto rperror;
@@ -1408,7 +1406,7 @@ runcom(			/* run command */
 		printf("\t%s\n", cs);
 	if (!nprocs)
 		return(0);
-	fflush(stdout);		/* flush output and pass to shell */
+	fflush(NULL);		/* flush output and pass to shell */
 	return(system(cs));
 }
 
@@ -1455,7 +1453,7 @@ next_process(void)			/* fork the next process (max. nprocs) */
 	}
 	if (children_running >= nprocs)
 		wait_process(0);	/* wait for someone to finish */
-	fflush(stdout);
+	fflush(NULL);			/* flush output */
 	child_pid = fork();		/* split process */
 	if (child_pid == 0) {		/* we're the child */
 		children_running = -1;
