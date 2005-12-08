@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.50 2005/04/19 01:15:06 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.51 2005/12/08 17:56:38 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -25,6 +25,7 @@ static const char RCSid[] = "$Id: normal.c,v 2.50 2005/04/19 01:15:06 greg Exp $
 #endif
 					/* estimate of Fresnel function */
 #define  FRESNE(ci)	(exp(-5.85*(ci)) - 0.00287989916)
+#define  FRESTHRESH	0.017999	/* minimum specularity for approx. */
 
 
 /*
@@ -93,7 +94,7 @@ dirnorm(		/* compute source contribution */
 				/* Fresnel estimate */
 	lrdiff = np->rdiff;
 	ltdiff = np->tdiff;
-	if (np->specfl & SP_PURE && np->rspec > FTINY &&
+	if (np->specfl & SP_PURE && np->rspec >= FRESTHRESH &&
 			(lrdiff > FTINY) | (ltdiff > FTINY)) {
 		dtmp = 1. - FRESNE(fabs(ldot));
 		lrdiff *= dtmp;
@@ -225,7 +226,7 @@ m_normal(			/* color a ray that hit something normal */
 	mirdist = transdist = r->rot;
 	nd.rspec = m->oargs.farg[3];
 						/* compute Fresnel approx. */
-	if (nd.specfl & SP_PURE && nd.rspec > FTINY) {
+	if (nd.specfl & SP_PURE && nd.rspec >= FRESTHRESH) {
 		fest = FRESNE(r->rod);
 		nd.rspec += fest*(1. - nd.rspec);
 	} else

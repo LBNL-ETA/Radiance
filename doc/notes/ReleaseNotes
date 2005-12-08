@@ -1544,3 +1544,7 @@ Made rtcontrib flush output when handed a zero-length ray vector,
 to match behavior of rtrace.
 
 Improved color scale for falsecolor output.
+
+Added threshold test for Fresnel approximation to prevent its use
+on smooth surfaces with unrealistically low specularities (less than 1.8%).
+Water has a specular reflectance of 2.1% at room temperture.
