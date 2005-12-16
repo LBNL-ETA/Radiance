@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.52 2005/06/23 11:51:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.53 2005/12/16 04:03:42 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -130,19 +130,6 @@ $(RLIB):	$(ROBJS) Version.o
 $(RCLIB):	$(RLOBJS)
 	ar rc $(RCLIB) $(RLOBJS)
 	-ranlib $(RCLIB)
-
-#
-# Special compiles:
-#
-
-rtmain.o:	rtmain.c
-	$(CC) $(CFLAGS) -DNICE=4 -c rtmain.c
-
-rpmain.o:	rpmain.c
-	$(CC) $(CFLAGS) -DNICE=6 -c rpmain.c
-
-rvmain.o:	rvmain.c
-	$(CC) $(CFLAGS) -c rvmain.c
 
 #
 # Uncomment the following to model dispersion:
