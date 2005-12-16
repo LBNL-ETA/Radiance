@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.70 2005/12/15 16:47:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.71 2005/12/16 21:43:07 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -319,7 +319,7 @@ memerr:
 static int
 rholo(void)				/* holodeck main loop */
 {
-	static long	nextfragwarn = 100L<<20;
+	static off_t	nextfragwarn = 100L<<20;
 	static int	idle = 0;
 	PACKET	*pl = NULL, *plend;
 	off_t	fsiz;
