@@ -1548,3 +1548,6 @@ Improved color scale for falsecolor output.
 Added threshold test for Fresnel approximation to prevent its use
 on smooth surfaces with unrealistically low specularities (less than 1.8%).
 Water has a specular reflectance of 2.1% at room temperture.
+
+Removed NICE macro settings in rpict and rtrace, which was slowing down
+the processes under Mac OS X (10.4) by about 60% due to processor napping.
