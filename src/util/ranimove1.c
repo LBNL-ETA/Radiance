@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.11 2005/07/24 21:11:53 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.12 2005/12/20 03:49:51 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -762,6 +762,16 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 			continue;
 		nc = getclosest(neigh, NPINTERP, x, y);
 		setcolor(cbuffer[n], 0., 0., 0.);
+		if (nc <= 0) {		/* no acceptable neighbors */
+			if (y < vres-1)
+				nc = fndx(x, y+1);
+			else if (x < hres-1)
+				nc = fndx(x+1, y);
+			else
+				continue;
+			copycolor(cbuffer[n], cbuffer[nc]);
+			continue;
+		}
 		wsum = 0.;
 		while (nc-- > 0) {
 			copycolor(cval, cbuffer[neigh[nc]]);
@@ -771,10 +781,8 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 			addcolor(cbuffer[n], cval);
 			wsum += w;
 		}
-		if (wsum > FTINY) {
-			w = 1.0/wsum;
-			scalecolor(cbuffer[n], w);
-		}
+		w = 1.0/wsum;
+		scalecolor(cbuffer[n], w);
 	    }
 					/* motion blur if requested */
 	if (mblur > .02) {
