@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.12 2005/12/17 22:17:51 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.13 2005/12/20 20:36:44 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -23,14 +23,16 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.12 2005/12/17 22:17:51 greg Ex
  *  The first step is opening one or more rendering processes
  *  with a call to ray_pinit(oct, nproc).  Before calling fork(),
  *  ray_pinit() loads the octree and data structures into the
- *  caller's memory.  This permits all sorts of queries that
- *  wouldn't be possible otherwise, without causing any real
+ *  caller's memory, and ray_popen() synchronizes the ambient
+ *  file, if any.  Shared memory permits all sorts of queries
+ *  that wouldn't be possible otherwise, without causing any real
  *  memory overhead, since all the static data are shared
  *  between processes.  Rays are then traced using a simple
  *  queuing mechanism, explained below.
  *
- *  The ray queue holds as many rays as there are rendering
- *  processes.  Rays are queued and returned by a single
+ *  The ray queue holds at least RAYQLEN rays, up to
+ *  as many rays as there are rendering processes.
+ *  Rays are queued and returned by a single
  *  ray_pqueue() call.  A ray_pqueue() return
  *  value of 0 indicates that no rays are ready
  *  and the queue is not yet full.  A return value of 1
@@ -105,7 +107,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.12 2005/12/17 22:17:51 greg Ex
  *  Note:  These routines are written to coordinate with the
  *  definitions in raycalls.c, and in fact depend on them.
  *  If you want to trace a ray and get a result synchronously,
- *  use the ray_trace() call to compute it in the parent process
+ *  use the ray_trace() call to compute it in the parent process.
  *  This will not interfere with any subprocess calculations,
  *  but beware that a fatal error may end with a call to quit().
  *
@@ -138,7 +140,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.12 2005/12/17 22:17:51 greg Ex
 #include  "selcall.h"
 
 #ifndef RAYQLEN
-#define RAYQLEN		16		/* # rays to send at once */
+#define RAYQLEN		12		/* # rays to send at once */
 #endif
 
 #ifndef MAX_RPROCS
@@ -170,7 +172,7 @@ static int	r_recv_next;		/* next receive ray placement */
 #define sendq_full()	(r_send_next >= RAYQLEN)
 
 static int ray_pflush(void);
-static void ray_pchild(int	fd_in, int	fd_out);
+static void ray_pchild(int fd_in, int fd_out);
 
 
 extern void
@@ -267,7 +269,7 @@ ray_pqueue(			/* queue a ray for computation */
 		r_send_next++;
 		return(rval);		/* done */
 	}
-					/* add ray to send queue */
+					/* else add ray to send queue */
 	r_queue[r_send_next] = *r;
 	r_send_next++;
 					/* check for returned ray... */
@@ -370,8 +372,7 @@ getready:				/* any children waiting for us? */
 		rp->slights = NULL;
 	}
 					/* return first ray received */
-	*r = r_queue[r_recv_first];
-	r_recv_first++;
+	*r = r_queue[r_recv_first++];
 	return(1);
 }
 
@@ -447,8 +448,8 @@ ray_popen(			/* open the specified # processes */
 		nadd = MAX_NPROCS - ray_pnprocs;
 	if (nadd <= 0)
 		return;
-	fflush(stderr);			/* clear pending output */
-	fflush(stdout);
+	ambsync();			/* load any new ambient values */
+	fflush(NULL);			/* clear pending output */
 	while (nadd--) {		/* fork each new process */
 		int	p0[2], p1[2];
 		if (pipe(p0) < 0 || pipe(p1) < 0)
