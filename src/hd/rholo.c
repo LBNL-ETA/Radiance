@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.71 2005/12/16 21:43:07 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.72 2005/12/21 07:26:29 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -534,9 +534,10 @@ loadholo(void)			/* start loading a holodeck from fname */
 			error(SYSTEM, errmsg);
 		}
 		if (ncprocs > 0) {
-			sprintf(errmsg,
-			"\"%s\" opened read-only; new rays will be discarded",
-					hdkfile);
+			sprintf(errmsg, "\"%s\" is read-only", hdkfile);
+			if (outdev == NULL)
+				error(USER, errmsg);
+			strcat(errmsg, "; new rays will be discarded");
 			error(WARNING, errmsg);
 			force = -1;
 		}
