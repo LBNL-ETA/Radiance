@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.13 2005/12/20 20:36:44 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.14 2005/12/21 17:36:06 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -30,8 +30,9 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.13 2005/12/20 20:36:44 greg Ex
  *  between processes.  Rays are then traced using a simple
  *  queuing mechanism, explained below.
  *
- *  The ray queue holds at least RAYQLEN rays, up to
- *  as many rays as there are rendering processes.
+ *  The ray queue buffers RAYQLEN rays before sending to
+ *  children, each of which may internally buffer RAYQLEN rays.
+ *
  *  Rays are queued and returned by a single
  *  ray_pqueue() call.  A ray_pqueue() return
  *  value of 0 indicates that no rays are ready
@@ -245,8 +246,7 @@ ray_psend(			/* add a ray to our send queue */
 	if (sendq_full() && ray_pflush() <= 0)
 		error(INTERNAL, "ray_pflush failed in ray_psend");
 
-	r_queue[r_send_next] = *r;
-	r_send_next++;
+	r_queue[r_send_next++] = *r;
 }
 
 
@@ -265,19 +265,16 @@ ray_pqueue(			/* queue a ray for computation */
 					/* wait for a result */
 		rval = ray_presult(r, 0);
 					/* put new ray in queue */
-		r_queue[r_send_next] = mySend;
-		r_send_next++;
+		r_queue[r_send_next++] = mySend;
 		return(rval);		/* done */
 	}
 					/* else add ray to send queue */
-	r_queue[r_send_next] = *r;
-	r_send_next++;
+	r_queue[r_send_next++] = *r;
 					/* check for returned ray... */
 	if (r_recv_first >= r_recv_next)
 		return(0);
 					/* ...one is sitting in queue */
-	*r = r_queue[r_recv_first];
-	r_recv_first++;
+	*r = r_queue[r_recv_first++];
 	return(1);
 }
 
@@ -297,8 +294,7 @@ ray_presult(		/* check for a completed ray */
 		return(0);
 					/* check queued results first */
 	if (r_recv_first < r_recv_next) {
-		*r = r_queue[r_recv_first];
-		r_recv_first++;
+		*r = r_queue[r_recv_first++];
 		return(1);
 	}
 	n = ray_pnprocs - ray_pnidle;	/* pending before flush? */
