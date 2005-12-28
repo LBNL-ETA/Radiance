@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.24 2005/12/28 18:35:42 greg Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.25 2005/12/28 18:39:07 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -129,6 +129,7 @@ rad2mgf(		/* convert a Radiance file to MGF */
 	char	*inp
 )
 {
+	char  buf[512];
 	char  mod[128], typ[32], id[128], alias[128];
 	FUNARGS	fa;
 	register FILE	*fp;
