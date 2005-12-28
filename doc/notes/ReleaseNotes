@@ -1551,3 +1551,5 @@ Water has a specular reflectance of 2.1% at room temperture.
 
 Removed NICE macro settings in rpict and rtrace, which was slowing down
 the processes under Mac OS X (10.4) by about 60% due to processor napping.
+
+Made xform, replmarks and rad2mgf handle quoted modifiers and names properly.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.23 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.24 2005/12/28 18:35:42 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -51,31 +51,32 @@ struct vert {
 
 LUTAB	vertab = LU_SINIT(free,NULL);	/* our vertex lookup table */
 
-static void rad2mgf(char *inp);
-static void cvtprim(char *inp, char *mod, char *typ, char *id, FUNARGS *fa);
-static void newmat(char *id, char *alias);
-static void setmat(char *id);
-static void setobj(char *id);
-static void init(void);
-static void uninit(void);
-static void clrverts(void);
-static void add2dispatch(char *name, int (*func)());
-static char *getvertid(char *vname, FVECT vp);
-static int o_unsupported(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_face(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_cone(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_sphere(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_cylinder(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_ring(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_instance(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_illum(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_plastic(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_metal(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_glass(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_dielectric(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_mirror(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_trans(char *mod, char *typ, char *id, FUNARGS *fa);
-static int o_light(char *mod, char *typ, char *id, FUNARGS *fa);
+void rad2mgf(char *inp);
+void cvtprim(char *inp, char *mod, char *typ, char *id, FUNARGS *fa);
+void newmat(char *id, char *alias);
+void setmat(char *id);
+void setobj(char *id);
+void init(void);
+void uninit(void);
+void clrverts(void);
+void unspace(char *s);
+void add2dispatch(char *name, int (*func)());
+char *getvertid(char *vname, FVECT vp);
+int o_unsupported(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_face(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_cone(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_sphere(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_cylinder(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_ring(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_instance(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_illum(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_plastic(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_metal(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_glass(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_dielectric(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_mirror(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_trans(char *mod, char *typ, char *id, FUNARGS *fa);
+int o_light(char *mod, char *typ, char *id, FUNARGS *fa);
 
 
 int
@@ -128,11 +129,7 @@ rad2mgf(		/* convert a Radiance file to MGF */
 	char	*inp
 )
 {
-#define mod	buf
-#define typ	(buf+128)
-#define id	(buf+256)
-#define alias	(buf+384)
-	char	buf[512];
+	char  mod[128], typ[32], id[128], alias[128];
 	FUNARGS	fa;
 	register FILE	*fp;
 	register int	c;
@@ -171,14 +168,19 @@ rad2mgf(		/* convert a Radiance file to MGF */
 			break;
 		default:		/* Radiance primitive */
 			ungetc(c, fp);
-			if (fscanf(fp, "%s %s %s", mod, typ, id) != 3) {
+			if (fgetword(mod, sizeof(mod), fp) == NULL ||
+					fgetword(typ, sizeof(typ), fp) == NULL ||
+					fgetword(id, sizeof(id), fp) == NULL) {
 				fputs(inp, stderr);
 				fputs(": unexpected EOF\n", stderr);
 				exit(1);
 			}
+			unspace(mod);
+			unspace(id);
 			if (!strcmp(typ, "alias")) {
 				strcpy(alias, "EOF");
-				fscanf(fp, "%s", alias);
+				fgetword(alias, sizeof(alias), fp);
+				unspace(alias);
 				newmat(id, alias);
 			} else {
 				if (!readfargs(&fa, fp)) {
@@ -197,10 +199,19 @@ rad2mgf(		/* convert a Radiance file to MGF */
 		pclose(fp);
 	else
 		fclose(fp);
-#undef mod
-#undef typ
-#undef id
-#undef alias
+}
+
+
+void
+unspace(	/* replace spaces with underscores in s */
+	char *s
+)
+{
+	while (*s) {
+		if (isspace(*s))
+			*s = '_';
+		++s;
+	}
 }
 
 
@@ -218,7 +229,7 @@ cvtprim(	/* process Radiance primitive */
 	df = (int (*)())lu_find(&rdispatch, typ)->data;
 	if (df != NULL) {				/* convert */
 		if ((*df)(mod, typ, id, fa) < 0) {
-			fprintf(stderr, "%s: bad %s \"%s\"\n", "rat2mgf", typ, id);
+			fprintf(stderr, "%s: bad %s \"%s\"\n", "rad2mgf", typ, id);
 			exit(1);
 		}
 	} else {					/* unsupported */

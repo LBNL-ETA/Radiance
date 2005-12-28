@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.13 2005/03/17 06:38:45 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.14 2005/12/28 18:35:42 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -202,7 +202,9 @@ cvobject(		/* convert an object */
 	int	i, n;
 	register int	j;
 
-	if (fscanf(fin, "%s %s %s", buf, typ, nam) != 3)
+	if (fgetword(buf, sizeof(buf), fin) == NULL ||
+			fgetword(typ, sizeof(typ), fin) == NULL ||
+			fgetword(nam, sizeof(nam), fin) == NULL)
 		goto readerr;
 	if (!strcmp(typ, "polygon"))
 		for (j = 0; j < nmarkers; j++)
@@ -210,11 +212,13 @@ cvobject(		/* convert an object */
 				replace(fname, &marker[j], nam, fin);
 				return;
 			}
-	printf("\n%s %s %s\n", buf, typ, nam);
+	putchar('\n'); fputword(buf, stdout);
+	printf(" %s ", typ);
+	fputword(nam, stdout); putchar('\n');
 	if (!strcmp(typ, "alias")) {		/* alias special case */
-		if (fscanf(fin, "%s", buf) != 1)
+		if (fgetword(buf, sizeof(buf), fin) == NULL)
 			goto readerr;
-		printf("\t%s\n", buf);
+		putchar('\t'); fputword(buf, stdout); putchar('\n');
 		return;
 	}
 	for (i = 0; i < 3; i++) {		/* pass along arguments */
