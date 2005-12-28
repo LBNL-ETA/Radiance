@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.11 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.12 2005/12/28 19:42:13 greg Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -102,7 +102,7 @@ main(
 	char  *argv[]
 )
 {
-    double  width, delem, depth, rcurv = 0.0, angle;
+    double  width, delem, depth, rcurv = 0.0, mydelta, angle;
     double  beta, gamma, theta, chi = 0;
     int     i, j, k, l;
 
@@ -126,19 +126,21 @@ main(
 
     /* CURVED BLIND CALCULATION */
 
-    if (rcurv != 0) {
+    if (rcurv != 0.) {
 
 	/* BLINDS SUSTAINED ANGLE */
 
-	theta = 2*asin(depth/(2*fabs(rcurv)));
+	theta = 2.*asin(depth/(2.*fabs(rcurv)));
 
 	/* HOW MANY ELEMENTARY SURFACES SHOULD BE CALCULATED ? */
 
-	nsurf = (int)(theta / ((PI/180.)*DELTA)) + 1;
+	nsurf = (int)(theta / ((PI/180.)*DELTA) + 0.99999);
+	
+	mydelta = (180./PI) * theta / nsurf;
 
 	/* WHAT IS THE DEPTH OF THE ELEMENTARY SURFACES ? */
 
-	delem = 2*fabs(rcurv)*sin((PI/180.)*(DELTA/2.));
+	delem = 2.*fabs(rcurv)*sin((PI/180.)*(mydelta/2.));
 
 	beta = (PI-theta)/2.;
 	gamma = beta -((PI/180.)*angle);
@@ -147,7 +149,7 @@ main(
 
 	if (rcurv < 0) {
 	    A[0]=fabs(rcurv)*cos(gamma);
-	    A[0] *= -1;
+	    A[0] *= -1.;
 	    A[1]=0.;
 	    A[2]=fabs(rcurv)*sin(gamma);
 	}
@@ -155,27 +157,27 @@ main(
 	    A[0]=fabs(rcurv)*cos(gamma+theta);
 	    A[1]=0.;
 	    A[2]=fabs(rcurv)*sin(gamma+theta);
-	    A[2] *= -1;
+	    A[2] *= -1.;
 	}
 
 	for (k=0; k < nsurf; k++) {
 	    if (rcurv < 0) {
-		chi=(PI/180.)*((180.-DELTA)/2.) - (gamma+(k*(PI/180.)*DELTA));
+		chi=(PI/180.)*((180.-mydelta)/2.) - (gamma+(k*(PI/180.)*mydelta));
 	    }
 	    if (rcurv > 0) {
-		chi=(PI-(gamma+theta)+(k*(PI/180.)*DELTA))-(PI/180.)*   
-		    ((180.-DELTA)/2.);
+		chi=(PI-(gamma+theta)+(k*(PI/180.)*mydelta))-(PI/180.)*   
+		    ((180.-mydelta)/2.);
 	    }
 	    makeflat(width, delem, chi);
 	    if (rcurv < 0.) {
-		X[0]=(-fabs(rcurv))*cos(gamma+(k*(PI/180.)*DELTA))-A[0];
+		X[0]=(-fabs(rcurv))*cos(gamma+(k*(PI/180.)*mydelta))-A[0];
 		X[1]=0.;
-		X[2]=fabs(rcurv)*sin(gamma+(k*(PI/180.)*DELTA))-A[2];
+		X[2]=fabs(rcurv)*sin(gamma+(k*(PI/180.)*mydelta))-A[2];
 	    }
 	    if (rcurv > 0.) {
-		X[0]=fabs(rcurv)*cos(gamma+theta-(k*(PI/180.)*DELTA))-A[0];
+		X[0]=fabs(rcurv)*cos(gamma+theta-(k*(PI/180.)*mydelta))-A[0];
 		X[1]=0.;
-		X[2]=(-fabs(rcurv))*sin(gamma+theta-(k*(PI/180.)*DELTA))-A[2];
+		X[2]=(-fabs(rcurv))*sin(gamma+theta-(k*(PI/180.)*mydelta))-A[2];
 	    }
 
 	    for (i=0; i < 4; i++)  {
@@ -188,7 +190,7 @@ main(
 
     /* FLAT BLINDS CALCULATION */
 
-    if (rcurv == 0.) {
+    else {
 
 	nsurf=1;
 	makeflat(width,depth,angle*(PI/180.));

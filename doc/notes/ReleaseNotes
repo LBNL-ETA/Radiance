@@ -1553,3 +1553,7 @@ Removed NICE macro settings in rpict and rtrace, which was slowing down
 the processes under Mac OS X (10.4) by about 60% due to processor napping.
 
 Made xform, replmarks and rad2mgf handle quoted modifiers and names properly.
+
+Fixed problem in genblinds, where it was generating slats that were too
+wide with the +/-r option.  (Thanks to Helena Buelow-Huebe for discovering
+this bug.)
