@@ -1557,3 +1557,6 @@ Made xform, replmarks and rad2mgf handle quoted modifiers and names properly.
 Fixed problem in genblinds, where it was generating slats that were too
 wide with the +/-r option.  (Thanks to Helena Buelow-Huebe for discovering
 this bug.)
+
+Fixed bug in ra_ppm for 16-bit/sample i/o, where it was getting the byte
+order wrong (apparently).

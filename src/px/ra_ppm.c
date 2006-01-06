@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.12 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.13 2006/01/06 06:40:53 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -220,7 +220,7 @@ ppm2ra(		/* convert 1-byte Pixmap to Radiance picture */
 
 
 static void
-ra2ppm(	/* convert Radiance picture to Pixmap */
+ra2ppm(	/* convert Radiance picture to 1-byte/sample Pixmap */
 	int  binary,
 	int  grey
 )
@@ -585,8 +585,8 @@ getby2(			/* return 2-byte quantity from fp */
 {
 	register int	lowerb, upperb;
 
-	lowerb = getc(fp);
 	upperb = getc(fp);
+	lowerb = getc(fp);
 	if (upperb == EOF)
 		return(EOF);
 	return(upperb<<8 | lowerb);
@@ -599,8 +599,8 @@ putby2(			/* put 2-byte quantity to fp */
 	register FILE	*fp
 )
 {
-	putc(w & 0xff, fp);
 	putc(w>>8 & 0xff, fp);
+	putc(w & 0xff, fp);
 	if (ferror(fp)) {
 		fprintf(stderr, "%s: write error on PPM output\n", progname);
 		exit(1);
