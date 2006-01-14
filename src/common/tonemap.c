@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.19 2005/11/15 06:53:00 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.20 2006/01/14 20:25:51 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -171,6 +171,8 @@ int	len
 {
 	static const char funcName[] = "tmCvColors";
 	static COLOR	csmall = {.5*MINLUM, .5*MINLUM, .5*MINLUM};
+	static BYTE	gamtab[1024];
+	static double	curgam = .0;
 	COLOR	cmon;
 	double	lum, slum;
 	double	d;
@@ -180,6 +182,11 @@ int	len
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
+	if (cs != TM_NOCHROM && fabs(curgam - tms->mongam) < .02) {
+		curgam = tms->mongam;			/* (re)build table */
+		for (i = 1024; i--; )
+			gamtab[i] = (int)(256.*pow((i+.5)/1024., 1./curgam));
+	}
 	for (i = len; i--; ) {
 		if (tmNeedMatrix(tms)) {		/* get monitor RGB */
 			colortrans(cmon, tms->cmat, scan[i]);
@@ -226,14 +233,11 @@ int	len
 			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
 		}
 		d = tms->clf[RED]*cmon[RED]/lum;
-		cs[3*i  ] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tms->mongam));
+		cs[3*i  ] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
 		d = tms->clf[GRN]*cmon[GRN]/lum;
-		cs[3*i+1] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tms->mongam));
+		cs[3*i+1] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
 		d = tms->clf[BLU]*cmon[BLU]/lum;
-		cs[3*i+2] = d>=.999 ? 255 :
-				(int)(256.*pow(d, 1./tms->mongam));
+		cs[3*i+2] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
 	}
 	returnOK;
 }
