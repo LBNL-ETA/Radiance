@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.20 2006/01/14 20:25:51 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.21 2006/01/18 00:24:38 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -182,7 +182,7 @@ int	len
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
-	if (cs != TM_NOCHROM && fabs(curgam - tms->mongam) < .02) {
+	if (cs != TM_NOCHROM && fabs(tms->mongam - curgam) > .02) {
 		curgam = tms->mongam;			/* (re)build table */
 		for (i = 1024; i--; )
 			gamtab[i] = (int)(256.*pow((i+.5)/1024., 1./curgam));
