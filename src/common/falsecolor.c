@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.5 2005/11/18 22:50:20 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.6 2006/01/26 03:13:36 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -112,7 +112,7 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 	int		brt0, wbrmin, wbrmax;
 
 	if ((fcs == NULL) | (tms == NULL) || (tms->histo == NULL) |
-			(0 > pctile) | (pctile >= 50))
+			(.0 > pctile) | (pctile >= 50.))
 		return(TM_E_ILLEGAL);
 	i = (tms->hbrmin-MINBRT)/HISTEP;
 	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
@@ -120,14 +120,14 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 	histot = 0;
 	for (i = histlen; i--; )
 		histot += tms->histo[i];
-	cnt = histot * pctile / 100;
+	cnt = histot * pctile * .01;
 	for (i = 0; i < histlen; i++)
 		if ((cnt -= tms->histo[i]) < 0)
 			break;
 	if (i >= histlen)
 		return(TM_E_TMFAIL);
 	wbrmin = brt0 + i*HISTEP;
-	cnt = histot * pctile / 100;
+	cnt = histot * pctile * .01;
 	for (i = histlen; i--; )
 		if ((cnt -= tms->histo[i]) < 0)
 			break;
@@ -165,12 +165,16 @@ fcMapPixels(FCstruct *fcs, BYTE *ps, TMbright *ls, int len)
 int
 fcIsLogMap(FCstruct *fcs)
 {
-	int	midval;
+	int	miderr;
 
 	if (fcs == NULL || fcs->lumap == NULL)
 		return(-1);
-	midval = fcs->lumap[(fcs->mbrmax - fcs->mbrmin)/2];
-	return((127 <= midval) & (midval <= 129));
+	
+	miderr = fcs->lumap[(fcs->mbrmax - fcs->mbrmin)/2] -
+			128L * (fcs->mbrmax - fcs->mbrmin) /
+				(fcs->mbrmax - fcs->mbrmin + 1);
+
+	return((-1 <= miderr) & (miderr <= 1));
 }
 
 /* Duplicate a false color structure */
