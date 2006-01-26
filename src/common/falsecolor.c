@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.6 2006/01/26 03:13:36 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.7 2006/01/26 03:33:16 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -170,9 +170,9 @@ fcIsLogMap(FCstruct *fcs)
 	if (fcs == NULL || fcs->lumap == NULL)
 		return(-1);
 	
-	miderr = fcs->lumap[(fcs->mbrmax - fcs->mbrmin)/2] -
-			128L * (fcs->mbrmax - fcs->mbrmin) /
-				(fcs->mbrmax - fcs->mbrmin + 1);
+	miderr = (fcs->mbrmax - fcs->mbrmin)/2;
+	miderr = fcs->lumap[miderr] -
+			256L * miderr / (fcs->mbrmax - fcs->mbrmin + 1);
 
 	return((-1 <= miderr) & (miderr <= 1));
 }
