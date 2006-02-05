@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.14 2005/10/11 16:54:26 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.15 2006/02/05 22:22:20 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -6,6 +6,8 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 .B rtcontrib
 [
 .B "\-n nprocs"
+][
+.B \-V
 ][
 .B \-fo
 |
@@ -39,7 +41,7 @@ rtrace options
 .B "rtcontrib [ options ] \-defaults"
 .SH DESCRIPTION
 .I Rtcontrib
-computes ray contributions (i.e., color coefficients)
+computes ray coefficients
 for objects whose modifiers are named in one or more
 .I \-m
 settings.
@@ -53,6 +55,34 @@ The RAYPATH environment variable determines directories to search for
 this file.
 (No search takes place if a file name begins with a '.', '/' or '~'
 character.)\0
+.PP
+By setting the boolean
+.I \-V
+option, you may instruct
+.I rtcontrib
+to report the contribution from each material rather than the ray
+coefficient.
+This is particularly useful for light sources with directional output
+distributions, whose value would otherwise be lost in the shuffle.
+With the default
+.I -V-
+setting, the output of rtcontrib is a coefficient that must be multiplied
+by the radiance of each material to arrive at a final contribution.
+This is more convenient for computing daylight coefficeints, or cases
+where the actual radiance is not desired.
+Use the
+.I -V+
+setting when you wish to simply sum together contributions
+(with possible adjustment factors) to obtain a final radiance value.
+Combined with the
+.I \-i
+or
+.I \-I
+option, irradiance contributions are reported by
+.I \-V+
+rather than radiance, and 
+.I \-V-
+coefficients contain an additonal factor of PI.
 .PP
 The output of
 .I rtcontrib
@@ -68,7 +98,7 @@ systems, such as luminaires, light pipes, and shading devices.
 .I Rtcontrib
 calls
 .I rtrace(1)
-with the -oTW option to calculate the daughter ray
+with the -oTW (or -oTV) option to calculate the daughter ray
 contributions for each input ray, and the output tallies
 are sent to one or more destinations according to the given
 .I \-o

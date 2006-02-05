@@ -1560,3 +1560,6 @@ this bug.)
 
 Fixed bug in ra_ppm for 16-bit/sample i/o, where it was getting the byte
 order wrong (apparently).
+
+Added -V option to rtcontrib to report actual contributions, rather than
+just ray coefficients.

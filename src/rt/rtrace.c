@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.50 2005/10/07 03:45:14 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.51 2006/02/05 22:22:20 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -101,7 +101,7 @@ typedef void putf_t(double v);
 static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
-static oputf_t  oputo, oputd, oputv, oputl, oputL, oputc, oputp,
+static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 		oputn, oputN, oputs, oputw, oputW, oputm, oputM, oputtilde;
 
 static void setoutput(char *vs);
@@ -264,6 +264,12 @@ setoutput(				/* set up output tables */
 		case 'v':				/* value */
 			*table++ = oputv;
 			castonly = 0;
+			break;
+		case 'V':				/* contribution */
+			*table++ = oputV;
+			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
+				error(WARNING,
+					"-otV accuracy depends on -aa 0 -as 0");
 			break;
 		case 'l':				/* effective distance */
 			*table++ = oputl;
@@ -532,6 +538,21 @@ oputv(				/* print value */
 
 
 static void
+oputV(				/* print value contribution */
+	RAY *r
+)
+{
+	double	contr[3];
+
+	raycontrib(contr, r, PRIMARY);
+	multcolor(contr, r->rcol);
+	(*putreal)(contr[RED]);
+	(*putreal)(contr[GRN]);
+	(*putreal)(contr[BLU]);
+}
+
+
+static void
 oputl(				/* print effective distance */
 	RAY  *r
 )
@@ -636,7 +657,7 @@ oputw(				/* print weight */
 
 
 static void
-oputW(				/* print contribution */
+oputW(				/* print coefficient */
 	RAY  *r
 )
 {

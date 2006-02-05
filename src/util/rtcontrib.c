@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.39 2005/10/21 01:12:59 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.40 2006/02/05 22:22:21 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -102,10 +102,14 @@ struct rtproc {
 char		*rtargv[256+2*MAXMODLIST] = { "rtrace",
 				"-dj", ".5", "-dr", "3",
 				"-ab", "1", "-ad", "128", };
+
 int  rtargc = 9;
 					/* overriding rtrace options */
-char		*myrtopts[] = { "-o~~TmWdp", "-h-", "-x", "1", "-y", "0",
+char		*myrtopts[] = { "-h-", "-x", "1", "-y", "0",
 				"-dt", "0", "-as", "0", "-aa", "0", NULL };
+
+#define	RTCOEFF		"-o~~TmWdp"	/* compute coefficients only */
+#define RTCONTRIB	"-o~~TmVdp"	/* compute ray contributions */
 
 struct rtproc	rt0;			/* head of rtrace process list */
 
@@ -208,6 +212,7 @@ fmterr:
 int
 main(int argc, char *argv[])
 {
+	int	contrib = 0;
 	int	nprocs = 1;
 	int	recover = 0;
 	char	*curout = NULL;
@@ -218,7 +223,7 @@ main(int argc, char *argv[])
 				/* need at least one argument */
 	if (argc < 2) {
 		fprintf(stderr,
-"Usage: %s [-n nprocs][-r][-e expr][-f source][-o ospec][-b binv] {-m mod | -M file} [rtrace options] octree\n",
+"Usage: %s [-n nprocs][-V][-r][-e expr][-f source][-o ospec][-b binv] {-m mod | -M file} [rtrace options] octree\n",
 			argv[0]);
 		exit(1);
 	}
@@ -240,15 +245,32 @@ main(int argc, char *argv[])
 		}
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
-			case 'r':		/* recover output */
-				if (argv[i][2]) break;
-				recover++;
-				continue;
 			case 'n':		/* number of processes */
 				if (argv[i][2] || i >= argc-2) break;
 				nprocs = atoi(argv[++i]);
 				if (nprocs <= 0)
 					error(USER, "illegal number of processes");
+				continue;
+			case 'V':		/* output contributions */
+				switch (argv[i][2]) {
+				case '\0':
+					contrib = !contrib;
+					continue;
+				case '+': case '1':
+				case 'T': case 't':
+				case 'Y': case 'y':
+					contrib = 1;
+					continue;
+				case '-': case '0':
+				case 'F': case 'f':
+				case 'N': case 'n':
+					contrib = 0;
+					continue;
+				}
+				break;
+			case 'r':		/* recover output */
+				if (argv[i][2]) break;
+				recover++;
 				continue;
 			case 'h':		/* output header? */
 				switch (argv[i][2]) {
@@ -336,11 +358,14 @@ main(int argc, char *argv[])
 				/* add "mandatory" rtrace settings */
 	for (j = 0; myrtopts[j] != NULL; j++)
 		rtargv[rtargc++] = myrtopts[j];
+	rtargv[rtargc++] = contrib ? RTCONTRIB : RTCOEFF;
 				/* just asking for defaults? */
 	if (!strcmp(argv[i], "-defaults")) {
 		char	sxres[16], syres[16];
 		char	*rtpath;
 		printf("-n  %-2d\t\t\t\t# number of processes\n", nprocs);
+		printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
+				contrib ? "contributions" : "coefficients");
 		fflush(stdout);			/* report OUR options */
 		rtargv[rtargc++] = header ? "-h+" : "-h-";
 		sprintf(fmt, "-f%c%c", inpfmt, outfmt);
@@ -351,7 +376,6 @@ main(int argc, char *argv[])
 		rtargv[rtargc++] = "-y";
 		sprintf(syres, "%d", yres);
 		rtargv[rtargc++] = syres;
-		rtargv[rtargc++] = "-oTW";
 		rtargv[rtargc++] = "-defaults";
 		rtargv[rtargc] = NULL;
 		rtpath = getpath(rtargv[0], getenv("PATH"), X_OK);
@@ -961,7 +985,9 @@ process_queue(void)
 			if (!n || !(isalpha(*cp) | (*cp == '_')))
 				error(USER, "bad modifier name from rtrace");
 					/* get modifier name */
-			while (n > 0 && *cp != '\t') {
+			while (n > 1 && *cp != '\t') {
+				if (mnp - modname >= sizeof(modname)-2)
+					error(INTERNAL, "modifier name too long");
 				*mnp++ = *cp++; n--;
 			}
 			*mnp = '\0';
