@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.15 2004/12/15 22:02:04 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.16 2006/02/22 17:05:36 greg Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -70,7 +70,7 @@ OBJECT  obj;
 	int  upper, lower;
 	register int  cm, i;
 
-	if ((i = os[0]) <= 6) {		/* linear search algorithm */
+	if ((i = os[0]) <= 12) {	/* linear search algorithm */
 		cm = obj;
 		while (i-- > 0)
 			if (*++os == cm)
