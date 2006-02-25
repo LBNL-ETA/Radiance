@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.10 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.11 2006/02/25 19:49:16 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -58,7 +58,7 @@ OBJREC	*o;
 
 
 static int
-signed_volume(r, v1, v2)	/* get signed volume for ray and edge */
+volume_sign(r, v1, v2)	/* get signed volume for ray and edge */
 register RAY	*r;
 int32		v1, v2;
 {
@@ -70,14 +70,14 @@ int32		v1, v2;
 		reversed = 1;
 	}
 	ecp = &edge_cache.cache[((v2<<11 ^ v1) & 0x7fffffff) % EDGE_CACHE_SIZ];
-	if (ecp->v1i != v1 || ecp->v2i != v2) {
+	if ((ecp->v1i != v1) | (ecp->v2i != v2)) {
 		MESHVERT	tv1, tv2;	/* compute signed volume */
 		FVECT		v2d;
 		double		vol;
-		if (!getmeshvert(&tv1, edge_cache.mi->msh, v1, MT_V) ||
+		if (!getmeshvert(&tv1, edge_cache.mi->msh, v1, MT_V) |
 			    !getmeshvert(&tv2, edge_cache.mi->msh, v2, MT_V))
 			objerror(edge_cache.o, INTERNAL,
-				"missing mesh vertex in signed_volume");
+				"missing mesh vertex in volume_sign");
 		VSUB(v2d, tv2.v, r->rorg);
 		vol = (tv1.v[0] - r->rorg[0]) *
 				(v2d[1]*r->rdir[2] - v2d[2]*r->rdir[1]);
@@ -85,12 +85,8 @@ int32		v1, v2;
 				(v2d[2]*r->rdir[0] - v2d[0]*r->rdir[2]);
 		vol += (tv1.v[2] - r->rorg[2]) *
 				(v2d[0]*r->rdir[1] - v2d[1]*r->rdir[0]);
-		if (vol > .0)
-			ecp->signum = 1;
-		else if (vol < .0)
-			ecp->signum = -1;
-		else
-			ecp->signum = 0;
+						/* don't generate 0 */
+		ecp->signum = vol > .0 ? 1 : -1;
 		ecp->v1i = v1;
 		ecp->v2i = v2;
 	}
@@ -115,12 +111,12 @@ RAY	*r;
 		if (!getmeshtrivid(tvi, &tmod, curmsh, oset[i]))
 			objerror(edge_cache.o, INTERNAL,
 				"missing triangle vertices in mesh_hit");
-		sv1 = signed_volume(r, tvi[0], tvi[1]);
-		sv2 = signed_volume(r, tvi[1], tvi[2]);
-		sv3 = signed_volume(r, tvi[2], tvi[0]);
-		if (sv1 != sv2 || sv2 != sv3)	/* compare volume signs */
-			if (sv1 && sv2 && sv3)
-				continue;
+		sv1 = volume_sign(r, tvi[0], tvi[1]);
+		sv2 = volume_sign(r, tvi[1], tvi[2]);
+		sv3 = volume_sign(r, tvi[2], tvi[0]);
+						/* compare volume signs */
+		if ((sv1 != sv2) | (sv2 != sv3))
+			continue;
 						/* compute intersection */
 		getmeshvert(&tv[0], curmsh, tvi[0], MT_V);
 		getmeshvert(&tv[1], curmsh, tvi[1], MT_V);
