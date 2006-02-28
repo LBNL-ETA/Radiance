@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.50 2005/09/12 14:40:14 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.51 2006/02/28 03:44:54 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -218,17 +218,19 @@ main(
 	animate();
 						/* all done */
 	if (vdef(NEXTANIM)) {
+		char	*fullp;
 		argv[i] = vval(NEXTANIM);	/* just change input file */
 		if (!silent)
 			printargs(argc, argv, stdout);
-		if ((argv[0] = getpath(progname,getenv("PATH"),X_OK)) == NULL)
-			fprintf(stderr, "%s: command not found\n", progname);
+		fflush(stdout);
+		if ((fullp = getpath(argv[0],getenv("PATH"),X_OK)) == NULL)
+			fprintf(stderr, "%s: command not found\n", argv[0]);
 		else
-			execv(progname, argv);
+			execv(fullp, argv);
 		quit(1);
 	}
 	quit(0);
-	return 0; /* pro forma return */
+	return(0); /* pro forma return */
 userr:
 	fprintf(stderr, "Usage: %s [-s][-n][-w][-e] anim_file\n", progname);
 	quit(1);
