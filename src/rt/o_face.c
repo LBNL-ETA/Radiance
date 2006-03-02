@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_face.c,v 2.5 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: o_face.c,v 2.6 2006/03/02 16:51:55 greg Exp $";
 #endif
 /*
  *  o_face.c - compute ray intersection with faces.
@@ -22,7 +22,6 @@ o_face(		/* compute intersection with polygonal face */
 	double  t;		/* distance to intersection */
 	FVECT  pisect;		/* intersection point */
 	register FACE  *f;	/* face record */
-	register int  i;
 
 	f = getface(o);
 		
@@ -45,8 +44,7 @@ o_face(		/* compute intersection with polygonal face */
 	if (t <= FTINY || t >= r->rot)		/* not good enough */
 		return(0);
 						/* compute intersection */
-	for (i = 0; i < 3; i++)
-		pisect[i] = r->rorg[i] + r->rdir[i]*t;
+	VSUM(pisect, r->rorg, r->rdir, t);
 
 	if (!inface(pisect, f))			/* ray intersects face? */
 		return(0);
