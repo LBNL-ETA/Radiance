@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmesh.c,v 2.4 2003/11/14 17:22:06 schorsch Exp $";
+static const char RCSid[] = "$Id: tmesh.c,v 2.5 2006/03/02 17:16:56 greg Exp $";
 #endif
 /*
  * Compute and print barycentric coordinates for triangle meshes
@@ -55,8 +55,8 @@ RREAL			*v1, *v2, *v3;
 	VCROSS(va, vab, vcb);
 	bcm->ax = ABS(va[0]) > ABS(va[1]) ? 0 : 1;
 	bcm->ax = ABS(va[bcm->ax]) > ABS(va[2]) ? bcm->ax : 2;
-	ax0 = (bcm->ax + 1) % 3;
-	ax1 = (bcm->ax + 2) % 3;
+	if ((ax0 = bcm->ax + 1) >= 3) ax0 -= 3;
+	if ((ax1 = ax0 + 1) >= 3) ax1 -= 3;
 	for (i = 0; i < 2; i++) {
 		vab[0] = v1[ax0] - v2[ax0];
 		vcb[0] = v3[ax0] - v2[ax0];
@@ -92,9 +92,12 @@ FVECT	p;
 register BARYCCM	*bcm;
 {
 	double	u, v;
+	int	i;
 	
-	u = p[(bcm->ax + 1) % 3];
-	v = p[(bcm->ax + 2) % 3];
+	if ((i = bcm->ax + 1) >= 3) i -= 3;
+	u = p[i];
+	if (++i >= 3) i -= 3;
+	v = p[i];
 	wt[0] = u*bcm->tm[0][0] + v*bcm->tm[0][1] + bcm->tm[0][2];
 	wt[1] = u*bcm->tm[1][0] + v*bcm->tm[1][1] + bcm->tm[1][2];
 	wt[2] = 1. - wt[1] - wt[0];

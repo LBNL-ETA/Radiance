@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: noise3.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: noise3.c,v 2.10 2006/03/02 17:16:56 greg Exp $";
 #endif
 /*
  *  noise3.c - noise functions for random textures.
@@ -221,12 +221,12 @@ fnoise3(			/* compute fractal noise function */
 			v[i] = beg[i] + s;
 		}
 		for (i = 0; i < 3; i++) {	/* do edges */
-			j = (i+1)%3;
+			if ((j = i+1) == 3) j = 0;
 			if (branch & 1<<j)
 				v[j] += s;
 			else
 				v[j] -= s;
-			j = (i+2)%3;
+			if (++j == 3) j = 0;
 			if (branch & 1<<j)
 				v[j] += s;
 			else
@@ -235,9 +235,9 @@ fnoise3(			/* compute fractal noise function */
 			fc += fval[branch | 1<<i];
 			fc = 0.5*fc + s*EPSILON*frand3(v[0],v[1],v[2]);
 			fval[branch^1<<i] = fc;
-			j = (i+1)%3;
+			if ((j = i+1) == 3) j = 0;
 			v[j] = beg[j] + s;
-			j = (i+2)%3;
+			if (++j == 3) j = 0;
 			v[j] = beg[j] + s;
 		}
 		for (i = 0; i < 3; i++)		/* new cube */
