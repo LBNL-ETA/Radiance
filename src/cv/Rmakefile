@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.26 2004/11/05 03:31:37 greg Exp $
+# RCSid $Id: Rmakefile,v 2.27 2006/03/10 19:40:12 schorsch Exp $
 #
 # Makefile for conversion programs
 #
@@ -37,31 +37,31 @@ clean:
 	cd mgflib ; make clean
 
 ies2rad:	ies2rad.o
-	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrt -lm
+	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad -lm
 
 arch2rad:	arch2rad.o trans.o
-	$(CC) $(CFLAGS) -o arch2rad arch2rad.o trans.o -lrt
+	$(CC) $(CFLAGS) -o arch2rad arch2rad.o trans.o -lrtrad
 
 nff2rad:	nff2rad.o
 	$(CC) $(CFLAGS) -o nff2rad nff2rad.o
 
 lampcolor:	lampcolor.o
-	$(CC) $(CFLAGS) -o lampcolor lampcolor.o -lrt
+	$(CC) $(CFLAGS) -o lampcolor lampcolor.o -lrtrad
 
 tmesh2rad:	tmesh2rad.o
-	$(CC) $(CFLAGS) -o tmesh2rad tmesh2rad.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o tmesh2rad tmesh2rad.o -lrtrad $(MLIB)
 
 obj2rad:	obj2rad.o trans.o
-	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o -lrtrad $(MLIB)
 
 mgf2rad:	$(MGF_LIB) mgf2rad.o
-	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o -lmgf -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o -lmgf -lrtrad $(MLIB)
 
 rad2mgf:	rad2mgf.o
-	$(CC) $(CFLAGS) -o rad2mgf rad2mgf.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o rad2mgf rad2mgf.o -lrtrad $(MLIB)
 
 mgf2meta:	$(MGF_LIB) mgf2meta.o
-	$(CC) $(CFLAGS) -o mgf2meta mgf2meta.o -lmgf -lmeta -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o mgf2meta mgf2meta.o -lmgf -lmeta -lrtrad $(MLIB)
 
 mgfilt:
 	cd mgflib ; rm -f mgfilt ; \

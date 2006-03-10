@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_skel.c,v 2.12 2003/06/05 19:29:34 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_skel.c,v 2.13 2006/03/10 19:40:13 schorsch Exp $";
 #endif
 /*
  *  Skeletal 24-bit image conversion program.  Replace "skel"
@@ -7,12 +7,12 @@ static const char	RCSid[] = "$Id: ra_skel.c,v 2.12 2003/06/05 19:29:34 schorsch 
  *
  *  The Rmakefile entry should look something like this:
  *	ra_skel:	ra_skel.o
- *		cc $(CFLAGS) -o ra_skel ra_skel.o -lrt -lm
+ *		cc $(CFLAGS) -o ra_skel ra_skel.o -lrtrad -lm
  *	ra_skel.o:	../common/color.h ../common/resolu.h
  *
  *  If you like to do things the hard way, you can link directly
  *  to the object files "color.o colrops.o resolu.o header.o" in
- *  the common subdirectory instead of using the -lrt library.
+ *  the common subdirectory instead of using the -lrtrad library.
  */
 
 #include  <stdio.h>

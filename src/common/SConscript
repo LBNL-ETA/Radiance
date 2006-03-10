@@ -60,8 +60,8 @@ rtlamps = env.StaticLibrary(target=radlib('rtlamps'), source=RTLAMPS)
 rtpic = env.StaticLibrary(target=radlib('rtpic'), source=RTPIC)
 rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
 
-#librt = env.StaticLibrary(target=radlib('rt'), source=ALL)
-#Default(librt)
+#librtrad = env.StaticLibrary(target=radlib('rtrad'), source=ALL)
+#Default(librtrad)
 
 LIBFILES = Split('tmesh.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

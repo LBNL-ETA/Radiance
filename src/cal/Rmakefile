@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.3 2005/06/02 04:47:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.4 2006/03/10 19:40:11 schorsch Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -28,13 +28,13 @@ clean:
 	set nonomatch; rm -f *.o $(PROGS)
 
 icalc:	calc.o
-	$(CC) $(CFLAGS) -o icalc calc.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o icalc calc.o -lrtrad $(MLIB)
 
 ev:	ev.o
-	$(CC) $(CFLAGS) -o ev ev.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o ev ev.o -lrtrad $(MLIB)
 
 rcalc:	rcalc.o
-	$(CC) $(CFLAGS) -o rcalc rcalc.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o rcalc rcalc.o -lrtrad $(MLIB)
 
 total:	total.o
 	$(CC) $(CFLAGS) -o total total.o $(MLIB)
@@ -49,7 +49,7 @@ rlam:		lam.o
 	$(CC) $(CFLAGS) -o rlam lam.o
 
 tabfunc:	tabfunc.o
-	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrtrad $(MLIB)
 
 histo:	histo.o
 	$(CC) $(CFLAGS) -o histo histo.o $(MLIB)

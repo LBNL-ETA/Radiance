@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.10 2005/05/04 23:43:19 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.11 2006/03/10 19:40:13 schorsch Exp $
 #
 #  Compiles:
 #
@@ -36,35 +36,35 @@ clean:
 
 $(DESTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2tga meta2tga.o rplot.o plot.o $(common) \
-palloc.o -lrt $(MLIB)
+palloc.o -lrtrad $(MLIB)
 
 $(DESTDIR)/meta2bmp:	meta2bmp.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2bmp meta2bmp.o rplot.o plot.o $(common) \
-palloc.o -lrt $(MLIB)
+palloc.o -lrtrad $(MLIB)
 
 $(DESTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o x11meta xmeta.o x11plot.o plot.o palloc.o \
-$(common) -lrt -lX11 $(MLIB)
+$(common) -lrtrad -lX11 $(MLIB)
 
 $(DESTDIR)/psmeta:	psmeta.o psplot.o
-	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/plotin:	plotin.o primout.o
-	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/pexpand:	pexpand.o expand.o segment.o palloc.o
 	$(CC) $(CFLAGS) -o pexpand pexpand.o expand.o segment.o \
-$(common) palloc.o -lrt $(MLIB)
+$(common) palloc.o -lrtrad $(MLIB)
 
 $(DESTDIR)/psort:	psort.o sort.o palloc.o
-	$(CC) $(CFLAGS) -o psort psort.o sort.o $(common) palloc.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o psort psort.o sort.o $(common) palloc.o -lrtrad $(MLIB)
 
 $(DESTDIR)/cv:		cv.o mfio.o cvhfio.o syscalls.o misc.o
 	$(CC) $(CFLAGS) -o cv cv.o mfio.o cvhfio.o syscalls.o misc.o \
--lrt $(MLIB)
+-lrtrad $(MLIB)
 
 $(DESTDIR)/plot4:	plot4.o primout.o
-	$(CC) $(CFLAGS) -o plot4 plot4.o primout.o $(common) -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o plot4 plot4.o primout.o $(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/tcurve:	tcurve.o tgraph.o primout.o
 	$(CC) $(CFLAGS) -o tcurve tcurve.o tgraph.o primout.o \
@@ -72,13 +72,13 @@ $(common) $(MLIB)
 
 $(DESTDIR)/tscat:	tscat.o tgraph.o primout.o
 	$(CC) $(CFLAGS) -o tscat tscat.o tgraph.o primout.o \
-$(common) -lrt $(MLIB)
+$(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/tbar:	tbar.o tgraph.o primout.o
-	$(CC) $(CFLAGS) -o tbar tbar.o tgraph.o primout.o $(common) -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o tbar tbar.o tgraph.o primout.o $(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/mtext:	mtext.o primout.o
-	$(CC) $(CFLAGS) -o mtext mtext.o primout.o $(common) -lrt
+	$(CC) $(CFLAGS) -o mtext mtext.o primout.o $(common) -lrtrad
 
 ../lib/libmeta.a:	metacalls.o primout.o progname.o
 	ar rc ../lib/libmeta.a metacalls.o primout.o \
@@ -90,20 +90,20 @@ $(common) progname.o
 
 $(DESTDIR)/bgraph:	bgraph.o mgvars.o mgraph.o ../lib/libmeta.a
 	$(CC) $(CFLAGS) -o bgraph bgraph.o mgvars.o mgraph.o \
--lmeta -lrt $(MLIB)
+-lmeta -lrtrad $(MLIB)
 
 $(DESTDIR)/igraph:	igraph.o mgvars.o mgraph.o ../lib/libmeta.a \
 gcalc.o cgraph.o
 	$(CC) $(CFLAGS) -o igraph igraph.o mgvars.o mgraph.o \
-cgraph.o gcalc.o -lmeta -lrt $(MLIB)
+cgraph.o gcalc.o -lmeta -lrtrad $(MLIB)
 
 $(DESTDIR)/dgraph:	dgraph.o cgraph.o mgvars.o
 	$(CC) $(CFLAGS) -o dgraph dgraph.o cgraph.o mgvars.o \
--lrt $(MLIB)
+-lrtrad $(MLIB)
 
 $(DESTDIR)/gcomp:	gcomp.o gcalc.o mgvars.o
 	$(CC) $(CFLAGS) -o gcomp gcomp.o gcalc.o mgvars.o \
--lrt $(MLIB)
+-lrtrad $(MLIB)
 
 # dependencies
 $(DESTDIR)/meta2tga $(DESTDIR)/meta2bmp $(DESTDIR)/x11meta \

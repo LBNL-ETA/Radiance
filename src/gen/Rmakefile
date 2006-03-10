@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.14 2005/04/12 03:30:43 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.15 2006/03/10 19:40:12 schorsch Exp $
 #
 # Makefile for object generation programs
 #
@@ -50,29 +50,29 @@ genprism:	genprism.o
 	$(CC) $(CFLAGS) -o genprism genprism.o $(MLIB)
 
 xform:	xform.o
-	$(CC) $(CFLAGS) -o xform xform.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o xform xform.o -lrtrad $(MLIB)
 
 replmarks:	replmarks.o
-	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrtrad $(MLIB)
 
 mkillum:	mkillum.o mkillum2.o mkillum3.o
-	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o -lrtrad $(MLIB)
 
 mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \
--lraycalls -lradiance -lrt $(MLIB)
+-lraycalls -lradiance -lrtrad $(MLIB)
 
 genrev:	genrev.o 
-	$(CC) $(CFLAGS) -o genrev genrev.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o genrev genrev.o -lrtrad $(MLIB)
 
 gencatenary: gencat.o
-	$(CC) $(CFLAGS) -o gencatenary gencat.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o gencatenary gencat.o -lrtrad $(MLIB)
 
 genworm:	genworm.o
-	$(CC) $(CFLAGS) -o genworm genworm.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o genworm genworm.o -lrtrad $(MLIB)
 
 gensurf:	gensurf.o
-	$(CC) $(CFLAGS) -o gensurf gensurf.o -lrt $(MLIB)
+	$(CC) $(CFLAGS) -o gensurf gensurf.o -lrtrad $(MLIB)
 
 genclock:	genclock.o
 	$(CC) $(CFLAGS) -o genclock genclock.o $(MLIB)

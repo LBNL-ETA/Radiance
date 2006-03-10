@@ -65,11 +65,10 @@ if os.name == 'posix':
 		None,
 	[('cd "%(tiffdir)s"; '
 		'env CC="$CC" '
-		'./configure -C '#-with-CC="$CC" '
+		'./configure -C '
 		'"libdir=%(upperdir)s/lib" '
 		'--enable-static --disable-shared --disable-cxx '
-		'--enable-logluv --disable-jpeg '
-        '--disable-zlib --disable-pixarlog; '
+		'--enable-logluv --disable-jpeg --disable-zlib --disable-pixarlog; '
 		'cd %(portdir)s; make all;'
 		'cd %(libtiffdir)s; make install-exec;' # don't install headers
 	 ) % {
@@ -80,20 +79,12 @@ if os.name == 'posix':
 	}
 	])
 
-#	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
-#		'tiff/config.local',
-#	[('cd "%s"; '
-#	'sh ./configure -quiet -noninteractive '
-#		'-with-CC="$CC" -with-ENVOPTS="$CCFLAGS"; '
-#	'cd libtiff; '
-#	'make install;') % os.path.join(cwd, 'tiff')])
-
 	# tiff programs
-	ra_tiff = env.Program(target=radbin('ra_tiff'), source=Split('ra_tiff.c'),
+	ra_tiff = env.Program(target=radbin('ra_tiff'), source=['ra_tiff.c'],
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	progs.append(ra_tiff)
 
-	normtiff = env.Program(target=radbin('normtiff'), source=Split('normtiff.c'),
+	normtiff = env.Program(target=radbin('normtiff'),source=['normtiff.c'],
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	progs.append(normtiff)
 
