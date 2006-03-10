@@ -1,4 +1,4 @@
-/* $Id: tiffio.h,v 3.14 2005/09/23 19:22:37 greg Exp $ */
+/* RCSid $Id: tiffio.h,v 3.15 2006/03/10 16:43:39 greg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -410,7 +410,7 @@ extern	const unsigned char* TIFFGetBitRevTable(int);
 #ifdef LOGLUV_PUBLIC
 #define U_NEU		0.210526316
 #define V_NEU		0.473684211
-#define UVSCALE		410.
+#define UVSCALE		409.6
 extern	double LogL16toY(int);
 extern	double LogL10toY(int);
 extern	void XYZtoRGB24(float*, uint8*);
