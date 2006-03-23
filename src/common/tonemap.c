@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.21 2006/01/18 00:24:38 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.22 2006/03/23 22:01:43 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -195,6 +195,11 @@ int	len
 			cmon[GRN] = tms->inpsf*scan[i][GRN];
 			cmon[BLU] = tms->inpsf*scan[i][BLU];
 		}
+#ifdef isnan
+		if (isnan(cmon[RED]) || isinf(cmon[RED])) cmon[RED] = .0f;
+		if (isnan(cmon[GRN]) || isinf(cmon[GRN])) cmon[GRN] = .0f;
+		if (isnan(cmon[BLU]) || isinf(cmon[BLU])) cmon[BLU] = .0f;
+#endif
 							/* world luminance */
 		lum =	tms->clf[RED]*cmon[RED] +
 			tms->clf[GRN]*cmon[GRN] +

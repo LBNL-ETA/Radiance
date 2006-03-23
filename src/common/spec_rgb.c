@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.13 2003/06/30 19:04:29 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.14 2006/03/23 22:01:43 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -178,11 +178,11 @@ COLOR  lower, upper;
 	vv = 1.;			/* check each limit */
 	for (i = 0; i < 3; i++)
 		if (gamut & CGAMUT_LOWER && col[i] < lower[i]) {
-			v = (lower[i]+CEPS - cgry[i])/(col[i] - cgry[i]);
+			v = (lower[i] - cgry[i])/(col[i] - cgry[i]);
 			if (v < vv) vv = v;
 			rflags |= CGAMUT_LOWER;
 		} else if (gamut & CGAMUT_UPPER && col[i] > upper[i]) {
-			v = (upper[i]-CEPS - cgry[i])/(col[i] - cgry[i]);
+			v = (upper[i] - cgry[i])/(col[i] - cgry[i]);
 			if (v < vv) vv = v;
 			rflags |= CGAMUT_UPPER;
 		}
