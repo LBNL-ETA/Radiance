@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.11 2005/06/21 00:26:44 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.12 2006/04/05 06:22:57 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -226,8 +226,13 @@ main(int  argc, char  *argv[])
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
-	srandom(rand_samp ? (long)time(0) : 0L);
-	initurand(2048);
+	if (rand_samp) {
+		srandom((long)time(0));
+		initurand(0);
+	} else {
+		srandom(0L);
+		initurand(2048);
+	}
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP

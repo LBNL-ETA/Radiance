@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.15 2005/06/21 00:26:44 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.16 2006/04/05 06:22:56 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -165,8 +165,13 @@ ray_init(			/* initialize ray-tracing calculation */
 	if (ofun[OBJ_SPHERE].funp == o_default)
 		initotypes();
 					/* initialize urand */
-	srandom(rand_samp ? (long)time(0) : 0L);
-	initurand(2048);
+	if (rand_samp) {
+		srandom((long)time(0));
+		initurand(0);
+	} else {
+		srandom(0L);
+		initurand(2048);
+	}
 					/* read scene octree */
 	readoct(octname = otnm, ~(IO_FILES|IO_INFO), &thescene, NULL);
 	nsceneobjs = nobjects;
@@ -183,7 +188,7 @@ ray_trace(			/* trace a primary ray */
 )
 {
 	rayorigin(r, PRIMARY, NULL, NULL);
-	samplendx = rand_samp ? random() : samplendx+1;
+	samplendx++;
 	rayvalue(r);		/* assumes origin and direction are set */
 }
 

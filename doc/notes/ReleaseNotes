@@ -1569,3 +1569,4 @@ Fixed bug in ranimate that caused it to fail in continuation of renderings.
 Renamed librt.a to librtrad.a, to avoid conflict on Solaris. Almost
 everything now gets linked to -lrtrad instead of -lrt.
 
+Fixed problem with large sample sets, so -u+ option now is truly random.

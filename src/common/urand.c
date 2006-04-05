@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: urand.c,v 2.9 2004/05/16 14:49:42 greg Exp $";
+static const char	RCSid[] = "$Id: urand.c,v 2.10 2006/04/05 06:22:56 greg Exp $";
 #endif
 /*
  * Anticorrelated random function due to Christophe Schlick
@@ -16,8 +16,10 @@ static const char	RCSid[] = "$Id: urand.c,v 2.9 2004/05/16 14:49:42 greg Exp $";
 
 #define  MAXORDER	(8*sizeof(unsigned short))
 
-unsigned short  *urperm = NULL;	/* urand() permutation */
-int  urmask;		/* bits used in permutation */
+static unsigned short  empty_tab = 0;
+
+unsigned short  *urperm = &empty_tab;	/* urand() permutation */
+int  urmask = 0;			/* bits used in permutation */
 
 int
 initurand(size)		/* initialize urand() for size entries */
@@ -26,10 +28,11 @@ int  size;
 	int  order, n;
 	register int  i, offset;
 
-	if (urperm != NULL)
+	if ((urperm != NULL) & (urperm != &empty_tab))
 		free((void *)urperm);
 	if (--size <= 0) {
-		urperm = NULL;
+		empty_tab = 0;
+		urperm = &empty_tab;
 		urmask = 0;
 		return(0);
 	}
@@ -61,11 +64,11 @@ ilhash(d, n)			/* hash a set of integer values */
 register int  *d;
 register int  n;
 {
-	static int  tab[8] = {13623,353,1637,5831,2314,3887,5832,8737};
+	static int  tab[8] = {103699,96289,73771,65203,81119,87037,92051,98899};
 	register int  hval;
 
 	hval = 0;
 	while (n-- > 0)
-		hval += *d++ * tab[n&7];
-	return(hval);
+		hval ^= *d++ * tab[n&7];
+	return(hval & 0x7fffffff);
 }

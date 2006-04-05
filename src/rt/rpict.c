@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.76 2005/06/13 20:07:56 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.77 2006/04/05 06:22:56 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -677,12 +677,8 @@ pixvalue(		/* compute pixel value */
 		return(0.0);
 	}
 	vdist = ourview.vdist;
-
-	if (rand_samp)				/* set pixel index */
-		samplendx = random();
-	else
-		samplendx = pixnumber(x,y,hres,vres);
-
+						/* set pixel index */
+	samplendx = pixnumber(x,y,hres,vres);
 						/* optional motion blur */
 	if (lastview.type && mblur > FTINY && (lmax = viewray(lorg, ldir,
 					&lastview, hpos, vpos)) >= -FTINY) {
