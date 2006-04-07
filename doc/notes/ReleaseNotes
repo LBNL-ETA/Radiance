@@ -1570,5 +1570,7 @@ Renamed librt.a to librtrad.a, to avoid conflict on Solaris. Almost
 everything now gets linked to -lrtrad instead of -lrt.
 
 Fixed problem with large sample sets, so -u+ option now is truly random.
+Thanks to Rick Mistrick and Younju Yoon for identifying this problem,
+which was related to a poorly designed hash function.
 
 Changed -u+ to be the default setting in rtrace (only).
