@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.51 2006/02/28 03:44:54 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.52 2006/04/18 04:30:35 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -946,6 +946,13 @@ int	rvr
 		usepfilt |= nora_rgbe;
 	} else if (frseq[0] == frame) {		/* no interpolation needed */
 		if (!rvr && frame > 1+vint(INTERP)) {	/* archive previous */
+			if (arcnext - arcargs +
+					strlen(fbase) >= sizeof(arcargs)-8) {
+				fprintf(stderr,
+"%s: too many filenames in archive command -- reduce %s variable\n",
+						progname, vnam(DISKSPACE));
+				quit(1);
+			}
 			*arcnext++ = ' ';
 			sprintf(arcnext, fbase, frame-vint(INTERP)-1);
 			while (*arcnext) arcnext++;
