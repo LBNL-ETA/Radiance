@@ -1574,3 +1574,5 @@ Thanks to Rick Mistrick and Younju Yoon for identifying this problem,
 which was related to a poorly designed hash function.
 
 Changed -u+ to be the default setting in rtrace (only).
+
+Fixed binary i/o for rlam and vwrays under Windows.

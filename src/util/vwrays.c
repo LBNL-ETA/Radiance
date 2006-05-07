@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.12 2005/09/19 04:26:09 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.13 2006/05/07 15:44:28 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -56,9 +56,11 @@ main(
 				break;
 			case 'f':			/* float */
 				putr = putf;
+				SET_FILE_BINARY(stdout);
 				break;
 			case 'd':			/* double */
 				putr = putd;
+				SET_FILE_BINARY(stdout);
 				break;
 			default:
 				goto userr;
