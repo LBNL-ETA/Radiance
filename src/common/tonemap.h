@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.21 2005/11/15 06:53:00 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.22 2006/05/10 15:21:58 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -124,6 +124,18 @@ tmCvLuminance(double lum);
 	Convert a single luminance value to an encoded brightness value.
  */
 
+extern int
+tmCvLums(TMbright *ls, float *scan, int len);
+/*
+	Convert luminance values to encoded brightness values using lookup.
+
+	ls	-	returned encoded luminance values.
+	scan	-	input scanline.
+	len	-	scanline length.
+
+	returns	-	0 on success, TM_E_* on error.
+ */
+
 extern TMstruct *
 tmInit(int flags, RGBPRIMP monpri, double gamval);
 /*
@@ -235,13 +247,12 @@ tmDone(TMstruct *tms);
 */
 
 extern int
-tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
+tmCvGrays(TMstruct *tms, TMbright *ls, float *scan, int len);
 /*
-	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
+	Convert gray float scanline to encoded luminance.
 
 	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
-	cs	-	returned encoded chrominance values (Note 2).
 	scan	-	input scanline.
 	len	-	scanline length.
 
@@ -249,12 +260,13 @@ tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
 */
 
 extern int
-tmCvGrays(TMstruct *tms, TMbright *ls, float *scan, int len);
+tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
 /*
-	Convert gray float scanline to encoded luminance.
+	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
 
 	tms	-	tone mapping structure pointer.
 	ls	-	returned encoded luminance values.
+	cs	-	returned encoded chrominance values (Note 2).
 	scan	-	input scanline.
 	len	-	scanline length.
 

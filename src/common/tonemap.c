@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.22 2006/03/23 22:01:43 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.23 2006/05/10 15:21:58 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -21,6 +21,11 @@ static const char	RCSid[] = "$Id: tonemap.c,v 3.22 2006/03/23 22:01:43 greg Exp 
 					/* our list of conversion packages */
 struct tmPackage	*tmPkg[TM_MAXPKG];
 int	tmNumPkgs = 0;			/* number of registered packages */
+
+					/* luminance->brightness lookup */
+static TMbright		*tmFloat2BrtLUT;
+
+#define tmCvLumLUfp(pf)	tmFloat2BrtLUT[*(int32 *)(pf) >> 15]
 
 
 TMstruct *
@@ -149,7 +154,7 @@ MEM_PTR	dat
 
 
 void
-tmClearHisto(			/* clear current histogram */
+tmClearHisto(				/* clear current histogram */
 TMstruct	*tms
 )
 {
@@ -157,6 +162,91 @@ TMstruct	*tms
 		return;
 	free((MEM_PTR)tms->histo);
 	tms->histo = NULL;
+}
+
+
+TMbright
+tmCvLuminance(				/* convert a single luminance */
+double	lum
+)
+{
+	double	d;
+
+#ifdef isfinite
+	if (!isfinite(lum) || lum <= TM_NOLUM)
+#else
+	if (lum <= TM_NOLUM)
+#endif
+		return(TM_NOBRT);
+	d = TM_BRTSCALE*log(lum);
+	if (d > 0.)
+		return((TMbright)(d+.5));
+	return((TMbright)(d-.5));
+}
+
+
+int
+tmCvLums(				/* convert luminances using lookup */
+TMbright	*ls,
+float		*scan,
+int		len
+)
+{
+	if (tmFloat2BrtLUT == NULL) {	/* initialize lookup table */
+		int32	i;
+		tmFloat2BrtLUT = (TMbright *)malloc(sizeof(TMbright)*0x10000);
+		if (tmFloat2BrtLUT == NULL)
+			return(TM_E_NOMEM);
+		for (i = 0; i < 0x10000; i++) {
+			int32	l = (i<<1 | 1) << 14;
+#ifndef isfinite
+			if ((l & 0x7f800000) == 0x7f800000)
+				tmFloat2BrtLUT[i] = TM_NOBRT;
+			else
+#endif
+			tmFloat2BrtLUT[i] = tmCvLuminance(*(float *)&l);
+		}
+	}
+	if (len <= 0)
+		return(TM_E_OK);
+	if ((ls == NULL) | (scan == NULL))
+		return(TM_E_ILLEGAL);
+	while (len--) {
+		if (*scan <= TM_NOLUM) {
+			*ls++ = TM_NOBRT;
+			++scan;
+			continue;
+		}
+		*ls++ = tmCvLumLUfp(scan++);
+	}
+	return(TM_E_OK);
+}
+
+
+int
+tmCvGrays(				/* convert float gray values */
+TMstruct	*tms,
+TMbright	*ls,
+float		*scan,
+int		len
+)
+{
+	static const char funcName[] = "tmCvGrays";
+	double	d;
+	int	i;
+
+	if (tms == NULL)
+		returnErr(TM_E_TMINVAL);
+	if ((ls == NULL) | (scan == NULL) | (len < 0))
+		returnErr(TM_E_ILLEGAL);
+	for (i = len; i--; ) {
+		float	lum = tms->inpsf * scan[i];
+		if (lum <= TM_NOLUM)
+			ls[i] = TM_NOBRT;
+		else
+			ls[i] = tmCvLumLUfp(&lum);
+	}
+	returnOK;
 }
 
 
@@ -174,14 +264,14 @@ int	len
 	static BYTE	gamtab[1024];
 	static double	curgam = .0;
 	COLOR	cmon;
-	double	lum, slum;
-	double	d;
+	float	lum, slum, d;
 	int	i;
 
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
+	tmCvLums(NULL, NULL, 0);			/* initialize */
 	if (cs != TM_NOCHROM && fabs(tms->mongam - curgam) > .02) {
 		curgam = tms->mongam;			/* (re)build table */
 		for (i = 1024; i--; )
@@ -195,27 +285,23 @@ int	len
 			cmon[GRN] = tms->inpsf*scan[i][GRN];
 			cmon[BLU] = tms->inpsf*scan[i][BLU];
 		}
-#ifdef isnan
-		if (isnan(cmon[RED]) || isinf(cmon[RED])) cmon[RED] = .0f;
-		if (isnan(cmon[GRN]) || isinf(cmon[GRN])) cmon[GRN] = .0f;
-		if (isnan(cmon[BLU]) || isinf(cmon[BLU])) cmon[BLU] = .0f;
+#ifdef isfinite
+		if (!isfinite(cmon[RED]) || cmon[RED] < .0f) cmon[RED] = .0f;
+		if (!isfinite(cmon[GRN]) || cmon[GRN] < .0f) cmon[GRN] = .0f;
+		if (!isfinite(cmon[BLU]) || cmon[BLU] < .0f) cmon[BLU] = .0f;
+#else
+		if (cmon[RED] < .0f) cmon[RED] = .0f;
+		if (cmon[GRN] < .0f) cmon[GRN] = .0f;
+		if (cmon[BLU] < .0f) cmon[BLU] = .0f;
 #endif
 							/* world luminance */
 		lum =	tms->clf[RED]*cmon[RED] +
 			tms->clf[GRN]*cmon[GRN] +
 			tms->clf[BLU]*cmon[BLU] ;
-							/* check range */
-		if (clipgamut(cmon, lum, CGAMUT_LOWER, csmall, cwhite))
-			lum =	tms->clf[RED]*cmon[RED] +
-				tms->clf[GRN]*cmon[GRN] +
-				tms->clf[BLU]*cmon[BLU] ;
-		if (lum < MINLUM) {
-			ls[i] = MINBRT-1;		/* bogus value */
-			lum = MINLUM;
-		} else {
-			d = TM_BRTSCALE*log(lum);	/* encode it */
-			ls[i] = d>0. ? (int)(d+.5) : (int)(d-.5);
-		}
+		if (lum <= TM_NOLUM)			/* convert brightness */
+			ls[i] = TM_NOBRT;
+		else
+			ls[i] = tmCvLumLUfp(&lum);
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
 		if (tms->flags & TM_F_MESOPIC && lum < LMESUPPER) {
@@ -229,7 +315,7 @@ int	len
 							cmon[BLU] = d*lum;
 				else
 					scalecolor(cmon, d);
-				d = (1.-d)*slum;
+				d = (1.f-d)*slum;
 				cmon[RED] += d;
 				cmon[GRN] += d;
 				cmon[BLU] += d;
@@ -238,55 +324,12 @@ int	len
 			cmon[RED] = cmon[GRN] = cmon[BLU] = lum;
 		}
 		d = tms->clf[RED]*cmon[RED]/lum;
-		cs[3*i  ] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
+		cs[3*i  ] = d>=.999f ? 255 : gamtab[(int)(1024.f*d)];
 		d = tms->clf[GRN]*cmon[GRN]/lum;
-		cs[3*i+1] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
+		cs[3*i+1] = d>=.999f ? 255 : gamtab[(int)(1024.f*d)];
 		d = tms->clf[BLU]*cmon[BLU]/lum;
-		cs[3*i+2] = d>=.999 ? 255 : gamtab[(int)(1024.*d)];
+		cs[3*i+2] = d>=.999f ? 255 : gamtab[(int)(1024.f*d)];
 	}
-	returnOK;
-}
-
-
-TMbright
-tmCvLuminance(				/* convert a single luminance */
-double	lum
-)
-{
-	double	d;
-
-	if (lum <= TM_NOLUM)
-		return(TM_NOBRT);
-	d = TM_BRTSCALE*log(lum);
-	if (d > 0.)
-		return((TMbright)(d+.5));
-	return((TMbright)(d-.5));
-}
-
-
-int
-tmCvGrays(				/* convert float gray values */
-TMstruct	*tms,
-TMbright	*ls,
-float	*scan,
-int	len
-)
-{
-	static const char funcName[] = "tmCvGrays";
-	double	d;
-	int	i;
-
-	if (tms == NULL)
-		returnErr(TM_E_TMINVAL);
-	if ((ls == NULL) | (scan == NULL) | (len < 0))
-		returnErr(TM_E_ILLEGAL);
-	for (i = len; i--; )
-		if (scan[i] <= TM_NOLUM) {
-			ls[i] = TM_NOBRT;		/* bogus value */
-		} else {
-			d = TM_BRTSCALE*log(scan[i]);	/* encode it */
-			ls[i] = d>0. ? (int)(d+.5) : (int)(d-.5);
-		}
 	returnOK;
 }
 
