@@ -1576,3 +1576,8 @@ which was related to a poorly designed hash function.
 Changed -u+ to be the default setting in rtrace (only).
 
 Fixed binary i/o for rlam and vwrays under Windows.
+
+Added tmCvLums() to tone-mapping routines using a 16-bit lookup table
+on IEEE floats, which is also used to improve speed of COLOR conversions,
+especially on machines with slow log() calls.  The first call to
+tmCvLums(), tmCvGrays(), or tmCvColors() initializes the table.

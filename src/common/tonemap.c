@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.23 2006/05/10 15:21:58 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.24 2006/05/10 15:34:17 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -23,7 +23,7 @@ struct tmPackage	*tmPkg[TM_MAXPKG];
 int	tmNumPkgs = 0;			/* number of registered packages */
 
 					/* luminance->brightness lookup */
-static TMbright		*tmFloat2BrtLUT;
+static TMbright		*tmFloat2BrtLUT = NULL;
 
 #define tmCvLumLUfp(pf)	tmFloat2BrtLUT[*(int32 *)(pf) >> 15]
 
@@ -239,6 +239,8 @@ int		len
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
+	if (tmFloat2BrtLUT == NULL)			/* initialize */
+		tmCvLums(NULL, NULL, 0);
 	for (i = len; i--; ) {
 		float	lum = tms->inpsf * scan[i];
 		if (lum <= TM_NOLUM)
@@ -271,7 +273,8 @@ int	len
 		returnErr(TM_E_TMINVAL);
 	if ((ls == NULL) | (scan == NULL) | (len < 0))
 		returnErr(TM_E_ILLEGAL);
-	tmCvLums(NULL, NULL, 0);			/* initialize */
+	if (tmFloat2BrtLUT == NULL)			/* initialize */
+		tmCvLums(NULL, NULL, 0);
 	if (cs != TM_NOCHROM && fabs(tms->mongam - curgam) > .02) {
 		curgam = tms->mongam;			/* (re)build table */
 		for (i = 1024; i--; )
