@@ -564,7 +564,7 @@ A material defines the way light interacts with a  surface.  The basic types are
 	</a>
 
 <dd>
-	Mirror is used for planar surfaces that produce  secondary source reflections.  
+	Mirror is used for planar surfaces that produce  virtual source reflections.  
 	This material should be used sparingly, as it may cause the light source calculation to  blow up  if  it is applied to many small surfaces.  
 	This material is only supported for flat surfaces  such  as  <a HREF="#Polygon">polygons</a>  and <a HREF="#Ring">rings</a>.  
 	The arguments are simply the RGB reflectance values, which should be between 0 and 1.  
@@ -587,12 +587,12 @@ This is only appropriate if the surface hides other (more detailed) geometry wit
 	</a>
 
 <dd>
-	The prism1 material is for  general  light  redirection from prismatic glazings, generating secondary light sources.
+	The prism1 material is for  general  light  redirection from prismatic glazings, generating virtual light sources.
 	It can only be used  to  modify  a  planar  surface  
 	(i.e.,  a <a HREF="#Polygon">polygon</a>  or <a HREF="#Ring">disk</a>) 
 	and should not result in either light concentration or scattering.  
 	The new direction of the ray  can be  on either side of the material, 
-	and the definitions must have the correct bidirectional properties to  work  properly with  secondary light sources.  
+	and the definitions must have the correct bidirectional properties to  work  properly with virtual light sources.  
 	The arguments give the coefficient for the redirected light and its direction.
 
 <pre>

@@ -1,8 +1,8 @@
-.\" RCSid "$Id: ray.1,v 1.8 2005/07/24 21:05:45 greg Exp $"
+.\" RCSid "$Id"
 .\" Print using the -ms macro package
 .DA 1/20/99
 .LP
-.tl """Copyright \(co 2005 Regents, University of California
+.tl """Copyright \(co 2003 Regents, University of California
 .sp 2
 .TL
 The
@@ -10,7 +10,7 @@ The
 .br
 Synthetic Imaging System
 .AU
-Building Technologies Program
+Building Technologies Department
 .br
 Lawrence Berkeley Laboratory
 .br
@@ -402,7 +402,7 @@ mod spotlight id
 .LP
 .UL Mirror
 .PP
-Mirror is used for planar surfaces that produce secondary
+Mirror is used for planar surfaces that produce virtual
 source reflections.
 This material should be used sparingly, as it may cause the light
 source calculation to blow up if it is applied to many small surfaces.
@@ -426,12 +426,12 @@ mod mirror id
 .UL Prism1
 .PP
 The prism1 material is for general light redirection from prismatic
-glazings, generating secondary light sources.
+glazings, generating virtual light sources.
 It can only be used to modify a planar surface (i.e., a polygon or disk)
 and should not result in either light concentration or scattering.
 The new direction of the ray can be on either side of the material,
 and the definitions must have the correct bidirectional properties
-to work properly with secondary light sources.
+to work properly with virtual light sources.
 The arguments give the coefficient for the redirected light
 and its direction.
 .DS
@@ -1370,7 +1370,7 @@ programs and directs the use of a scene description.
 .I Rview
 is ray-tracing program for viewing a scene interactively.
 When the user specifies a new perspective,
-.I rvu
+.I rview
 quickly displays a rough
 image on the terminal, then progressively
 increases the resolution as the user looks on.
