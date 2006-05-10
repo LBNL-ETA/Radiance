@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.14 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.15 2006/05/10 15:21:20 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -344,7 +344,7 @@ VARDEF  *vp;
     lasterrno = errno;
     errno = 0;
     d = (*lp->f)(lp->fname);
-#ifdef  IEEE
+#ifdef  isnan
     if (errno == 0)
 	if (isnan(d))
 	    errno = EDOM;
