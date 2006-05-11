@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.24 2006/05/10 15:34:17 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.25 2006/05/11 00:58:48 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -262,7 +262,6 @@ int	len
 )
 {
 	static const char funcName[] = "tmCvColors";
-	static COLOR	csmall = {.5*MINLUM, .5*MINLUM, .5*MINLUM};
 	static BYTE	gamtab[1024];
 	static double	curgam = .0;
 	COLOR	cmon;
@@ -301,17 +300,18 @@ int	len
 		lum =	tms->clf[RED]*cmon[RED] +
 			tms->clf[GRN]*cmon[GRN] +
 			tms->clf[BLU]*cmon[BLU] ;
-		if (lum <= TM_NOLUM)			/* convert brightness */
+		if (lum <= TM_NOLUM) {			/* convert brightness */
+			lum = cmon[RED] = cmon[GRN] = cmon[BLU] = TM_NOLUM;
 			ls[i] = TM_NOBRT;
-		else
+		} else
 			ls[i] = tmCvLumLUfp(&lum);
 		if (cs == TM_NOCHROM)			/* no color? */
 			continue;
 		if (tms->flags & TM_F_MESOPIC && lum < LMESUPPER) {
 			slum = scotlum(cmon);		/* mesopic adj. */
-			if (lum < LMESLOWER)
+			if (lum < LMESLOWER) {
 				cmon[RED] = cmon[GRN] = cmon[BLU] = slum;
-			else {
+			} else {
 				d = (lum - LMESLOWER)/(LMESUPPER - LMESLOWER);
 				if (tms->flags & TM_F_BW)
 					cmon[RED] = cmon[GRN] =
