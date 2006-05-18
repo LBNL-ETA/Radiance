@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.23 2005/11/15 06:53:00 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.24 2006/05/18 01:58:18 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -89,8 +89,8 @@ int	len
 		li =	cd->clfb[RED]*cmon[RED] +
 			cd->clfb[GRN]*cmon[GRN] +
 			cd->clfb[BLU]*cmon[BLU] ;
-		if (li >= 0xff00) li = 255;
-		else li >>= 8;
+		if (li >= 0xfff00) li = 255;
+		else li >>= 12;
 		bi = BRT2SCALE(cmon[EXP]-COLXS) + cd->inpsfb;
 		if (li > 0)
 			bi += logi[li];
@@ -123,11 +123,11 @@ int	len
 			for (j = 3; j--; )
 				if (cmon[j] < 0) cmon[j] = 0;
 		}
-		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 12;
 		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 12;
 		cs[3*i+1] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 8;
+		bi = ( (int32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 12;
 		cs[3*i+2] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
 	}
 	returnOK;
@@ -431,7 +431,8 @@ register TMstruct	*tms;
 
 	cd = (COLRDATA *)tms->pd[colrReg];
 	for (i = 3; i--; )
-		cd->clfb[i] = 0x100*tms->clf[i] + .5;
+		cd->clfb[i] = 0x1000*tms->clf[i] + .5;
+fprintf(stderr, "(%d %d %d)\n", cd->clfb[0], cd->clfb[1], cd->clfb[2]);
 	cd->inpsfb = tmCvLuminance(tms->inpsf);
 	for (i = 3; i--; )
 		for (j = 3; j--; ) {

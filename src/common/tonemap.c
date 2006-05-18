@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.25 2006/05/11 00:58:48 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.26 2006/05/18 01:58:18 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -53,7 +53,7 @@ double	gamval
 		tmnew->clf[GRN] = rgb2xyzmat[1][1];
 		tmnew->clf[BLU] = rgb2xyzmat[1][2];
 	} else {
-		comprgb2xyzWBmat(cmat, tmnew->monpri=monpri);
+		comprgb2xyzmat(cmat, tmnew->monpri=monpri);
 		tmnew->clf[RED] = cmat[1][0];
 		tmnew->clf[GRN] = cmat[1][1];
 		tmnew->clf[BLU] = cmat[1][2];
@@ -116,7 +116,7 @@ MEM_PTR	dat
 			tms->clf[CIEX] = tms->clf[CIEZ] = 0.;
 			tms->clf[CIEY] = 1.;
 		} else {
-			comprgb2xyzWBmat(tms->cmat, tms->monpri);
+			comprgb2xyzmat(tms->cmat, tms->monpri);
 			tms->clf[RED] = tms->cmat[1][0];
 			tms->clf[GRN] = tms->cmat[1][1];
 			tms->clf[BLU] = tms->cmat[1][2];
