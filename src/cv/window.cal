@@ -1,0 +1,66 @@
+{ RCSid $Id: window.cal,v 2.1 2006/05/19 03:50:13 greg Exp $ }
+{
+	The following calculation uses the BRTDfunc type to reproduce the
+	calculation used by LBL's Optics 5 program for the transmittance
+	and reflectance of coated glazings.  This calculation is based
+	on fits for the angular dependence for clear and bronze-coated
+	glazing, and is not terribly accurate.  The variables ??_clear
+	below should be replaced by ??_bronze in the case of the bronze
+	glazing model.  Used with optics2rad script.
+
+	5/18/2006	Greg Ward
+
+	Arguments used for this material should look like:
+
+	mod BRTDfunc my_glazing
+	10	rR_clear	rG_clear	rB_clear
+		RTAU*tR_clear	GTAU*tG_clear	BTAU*tB_clear
+		0	0	0
+		window.cal
+	0
+	15	0	0	0
+		0	0	0
+		0	0	0
+		FRRHO	FGRHO	FBRHO
+		BRRHO	BGRHO	BBRHO
+
+	where:
+		FRRHO	FGRHO	FBRHO	is front normal spectral reflectance
+		BRRHO	BGRHO	BBRHO	is back normal spectral reflectance
+		RTAU	GTAU	BTAU	is normal spectral transmittance
+}
+				{ get normal reflectance }
+rbase = if(Rdot,10,13);			{ different front and back }
+Rred = arg(rbase)*CrP;
+Rgrn = arg(rbase+1)*CgP;
+Rblu = arg(rbase+2)*CbP;
+				{ transmittance coefficients }
+Tclear = clip(-.0015 + RdotP*(3.355 + RdotP*(-3.840 +
+			RdotP*(1.460 + RdotP*.0288))));
+
+Tbronze = clip(-.002 + RdotP*(2.813 + RdotP*(-2.341 +
+			RdotP*(-.05725 + RdotP*.599))));
+
+				{ reflectance coefficients }
+Rclear = clip(.999 + RdotP*(-.563 + RdotP*(2.043 +
+			RdotP*(-2.532 + RdotP*1.054))) - Tclear);
+
+Rbronze = clip(.997 + RdotP*(-1.868 + RdotP*(6.513 +
+			RdotP*(-7.862 + RdotP*3.225))) - Tbronze);
+
+				{ returned spectral transmittance }
+tR_clear = CrP*Tclear;
+tG_clear = CgP*Tclear;
+tB_clear = CbP*Tclear;
+
+tR_bronze = CrP*Tbronze;
+tG_bronze = CgP*Tbronze;
+tB_bronze = CbP*Tbronze;
+				{ returned spectral reflectance }
+rR_clear = Rred*(1 - Rclear) + Rclear;
+rG_clear = Rgrn*(1 - Rclear) + Rclear;
+rB_clear = Rblu*(1 - Rclear) + Rclear;
+
+rR_bronze = Rred*(1 - Rbronze) + Rbronze;
+rG_bronze = Rgrn*(1 - Rbronze) + Rbronze;
+rB_bronze = Rblu*(1 - Rbronze) + Rbronze;

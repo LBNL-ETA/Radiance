@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.27 2006/03/10 19:40:12 schorsch Exp $
+# RCSid $Id: Rmakefile,v 2.28 2006/05/19 03:50:13 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -23,12 +23,14 @@ MGF_LIB = ../lib/libmgf.a
 PROGS = ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv
 
-LIBFILES = source.cal tilt.cal lamp.tab
+LIBFILES = source.cal tilt.cal lamp.tab window.cal
 
 all:	$(PROGS)
 
-install:	$(PROGS) $(LIBFILES)
+install:	$(PROGS) $(LIBFILES) optics2rad.csh
 	cp $(PROGS) $(INSTDIR)
+	cp optics2rad.csh $(INSTDIR)/optics2rad
+	chmod 755 $(INSTDIR)/optics2rad
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp $(LIBFILES) $(LIBDIR)
 
