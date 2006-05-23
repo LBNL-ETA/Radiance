@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.28 2005/07/24 19:53:08 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.29 2006/05/23 13:01:07 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -324,6 +324,9 @@ dev_view(			/* assign new driver view */
 	register VIEW	*nv
 )
 {
+#ifdef STEREO
+	double	d;
+#endif
 	if (nv->type != VT_PER ||		/* check view legality */
 			nv->horiz > 160. || nv->vert > 160.) {
 		error(COMMAND, "illegal view type/angle");
