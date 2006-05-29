@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glaresrc.c,v 2.5 2004/01/02 12:51:54 schorsch Exp $";
+static const char	RCSid[] = "$Id: glaresrc.c,v 2.6 2006/05/29 16:47:54 greg Exp $";
 #endif
 /*
  * Gather samples and compute glare sources.
@@ -13,6 +13,8 @@ static const char	RCSid[] = "$Id: glaresrc.c,v 2.5 2004/01/02 12:51:54 schorsch 
 
 struct source	*curlist = NULL;	/* current source list */
 struct source	*donelist = NULL;	/* finished sources */
+
+void	pict_stats(void);
 
 static struct srcspan * newspan(int	l, int	r, int	v, float	*sb);
 static struct srcspan * newspan(int	l, int	r, int	v, float	*sb);

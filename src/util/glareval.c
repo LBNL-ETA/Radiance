@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.11 2004/01/02 12:48:36 schorsch Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.12 2006/05/29 16:47:54 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -144,7 +144,7 @@ seekerr:
 
 
 #ifdef DEBUG
-static void
+void
 pict_stats(void)			/* print out picture read statistics */
 {
 	static long	lastcall = 0L;	/* ncall at last report */
