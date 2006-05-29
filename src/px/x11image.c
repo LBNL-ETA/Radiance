@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.71 2005/07/24 19:53:08 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.72 2006/05/29 17:31:25 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -447,25 +447,25 @@ viscmp(		/* compare visual to see which is better, descending */
 	register int  *rp;
 
 	if (v1->class == v2->class) {
-		if (v1->class == TrueColor || v1->class == DirectColor) {
-					/* prefer 24-bit to 32-bit */
-			if (v1->depth == 24 && v2->depth == 32)
+		if ((v1->class == TrueColor) | (v1->class == DirectColor)) {
+					/* prefer 24-bit */
+			if ((v1->depth == 24) & (v2->depth > 24))
 				return(-1);
-			if (v1->depth == 32 && v2->depth == 24)
+			if ((v1->depth > 24) & (v2->depth == 24))
 				return(1);
 					/* go for maximum depth otherwise */
 			return(v2->depth - v1->depth);
 		}
 					/* don't be too greedy */
-		if (maxcolors <= 1<<v1->depth && maxcolors <= 1<<v2->depth)
+		if ((maxcolors <= 1<<v1->depth) & (maxcolors <= 1<<v2->depth))
 			return(v1->depth - v2->depth);
 		return(v2->depth - v1->depth);
 	}
 					/* prefer Pseudo when < 15-bit */
-	if ((v1->class == TrueColor || v1->class == DirectColor) &&
+	if ((v1->class == TrueColor) | (v1->class == DirectColor) &&
 			v1->depth < 15)
 		bad1 = 1;
-	if ((v2->class == TrueColor || v2->class == DirectColor) &&
+	if ((v2->class == TrueColor) | (v2->class == DirectColor) &&
 			v2->depth < 15)
 		bad2 = -1;
 	if (bad1 | bad2)

@@ -1585,3 +1585,7 @@ tmCvLums(), tmCvGrays(), or tmCvColors() initializes the table.
 Created optics2rad.csh script to convert from Optics 5 material output
 to something correct for Radiance.  Built on old glazing.cal function,
 which is actually incorrect so removed from the distribution.
+
+Fixed nuisance bug in ximage under some SGI machines that caused it to
+choose an inappropriate visual and display incorrect colors.  (Thanks
+to Oskar Itzinger for debugging the problem.)
