@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.24 2006/05/18 01:58:18 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.25 2006/05/31 19:27:42 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -432,7 +432,6 @@ register TMstruct	*tms;
 	cd = (COLRDATA *)tms->pd[colrReg];
 	for (i = 3; i--; )
 		cd->clfb[i] = 0x1000*tms->clf[i] + .5;
-fprintf(stderr, "(%d %d %d)\n", cd->clfb[0], cd->clfb[1], cd->clfb[2]);
 	cd->inpsfb = tmCvLuminance(tms->inpsf);
 	for (i = 3; i--; )
 		for (j = 3; j--; ) {
