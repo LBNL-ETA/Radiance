@@ -1589,3 +1589,5 @@ which is actually incorrect so removed from the distribution.
 Fixed nuisance bug in ximage under some SGI machines that caused it to
 choose an inappropriate visual and display incorrect colors.  (Thanks
 to Oskar Itzinger for debugging the problem.)
+
+Fixed long-standing inaccuracy of pcompos -t and +t thresholding options.

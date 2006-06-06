@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.30 2005/05/25 04:44:26 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.31 2006/06/06 19:13:00 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -52,7 +52,7 @@ struct {
 	int  xres, yres;		/* picture size */
 	int  xloc, yloc;		/* anchor point */
 	int  flags;			/* HASMIN, HASMAX */
-	COLR  thmin, thmax;		/* thresholds */
+	double  thmin, thmax;		/* thresholds */
 } input[MAXFILE];		/* our input files */
 
 int  nfile;			/* number of files */
@@ -63,7 +63,7 @@ int  wrongformat = 0;
 
 static gethfunc tabputs;
 static void compos(void);
-static int cmpcolr(COLR  c1, COLR  c2);
+static int cmpcolr(COLR  c1, double lv2);
 static FILE * lblopen(char  *s, int  *xp, int  *yp);
 
 
@@ -169,16 +169,10 @@ dofiles:
 				checkthresh = 1;
 				if (argv[an][0] == '-') {
 					input[nfile].flags |= HASMIN;
-					setcolr(input[nfile].thmin,
-							atof(argv[an+1]),
-							atof(argv[an+1]),
-							atof(argv[an+1]));
+					input[nfile].thmin = atof(argv[an+1]);
 				} else if (argv[an][0] == '+') {
 					input[nfile].flags |= HASMAX;
-					setcolr(input[nfile].thmax,
-							atof(argv[an+1]),
-							atof(argv[an+1]),
-							atof(argv[an+1]));
+					input[nfile].thmax = atof(argv[an+1]);
 				} else
 					goto userr;
 				an++;
@@ -393,17 +387,17 @@ memerr:
 
 
 static int
-cmpcolr(			/* compare two colr's (improvisation) */
+cmpcolr(			/* compare COLR to luminance */
 	register COLR  c1,
-	register COLR  c2
+	double lv2
 )
 {
-	register int  i, j;
-
-	j = 4;				/* check exponents first! */
-	while (j--)
-		if ( (i = c1[j] - c2[j]) )
-			return(i);
+	double	lv1 = .0;
+	
+	if (c1[EXP])
+		lv1 = ldexp((double)normbright(c1), (int)c1[EXP]-(COLXS+8));
+	if (lv1 < lv2) return(-1);
+	if (lv1 > lv2) return(1);
 	return(0);
 }
 
