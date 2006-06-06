@@ -1,7 +1,6 @@
 
 import os
 import sys
-import string
 import ConfigParser
 
 
@@ -42,7 +41,7 @@ def read_plat(env, args, fn):
 			for p in section[2]: # multiple items to append
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
-				apply(env.Append,[],{p:string.split(v)})
+				apply(env.Append,[],{p:`v`.split()})
 				#print '%s: %s' % (p, env[p])
 	# XXX Check that basedir exists.
 	for k in ['RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR']:
