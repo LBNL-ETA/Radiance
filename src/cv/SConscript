@@ -56,4 +56,4 @@ env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
 
 if os.name == 'posix':
 	for s in Split('''optics2rad'''):
-		Default(env.InstallCsh(radbin(s), s + '.csh'))
+		Default(env.InstallCsh(rbin(s), s + '.csh'))

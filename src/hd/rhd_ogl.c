@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.29 2006/05/23 13:01:07 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.30 2006/06/07 17:52:04 schorsch Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -768,7 +768,10 @@ moveview(	/* move our view */
 {
 	VIEW	nv;
 	FVECT	odir, v1, wip;
-	double	d, d1;
+	double	d;
+#ifdef DOBJ
+	double d1;
+#endif
 				/* start with old view */
 	nv = odev.v;
 				/* orient our motion */
@@ -824,7 +827,10 @@ getframe(				/* get focus frame */
 	int	startx = ebut->x, starty = ebut->y;
 	int	endx, endy, midx, midy;
 	FVECT	odir, v1;
-	double	d, d1;
+	double	d;
+#ifdef DOBJ
+	double d1;
+#endif
 						/* get mouse drag */
 	XMaskEvent(ourdisplay, ButtonReleaseMask, levptr(XEvent));
 	endx = levptr(XButtonReleasedEvent)->x;

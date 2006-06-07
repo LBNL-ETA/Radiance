@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.53 2005/08/22 07:02:21 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.54 2006/06/07 17:52:04 schorsch Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -290,7 +290,6 @@ getfocus(				/* set focus distance */
 )
 {
 	char  buf[64];
-	FVECT  vc;
 	double	dist;
 
 	if (sscanf(s, "%lf", &dist) < 1) {

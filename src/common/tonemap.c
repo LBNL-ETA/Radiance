@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.26 2006/05/18 01:58:18 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.27 2006/06/07 17:52:03 schorsch Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -232,7 +232,6 @@ int		len
 )
 {
 	static const char funcName[] = "tmCvGrays";
-	double	d;
 	int	i;
 
 	if (tms == NULL)

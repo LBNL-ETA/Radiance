@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.42 2006/04/05 14:33:34 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.43 2006/06/07 17:52:04 schorsch Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1132,6 +1132,7 @@ myseeko(const LUENT *e, void *p)
 		sprintf(errmsg, "seek error on file '%s'", e->key);
 		error(SYSTEM, errmsg);
 	}
+	return 0;
 }
 
 /* recover output if possible */

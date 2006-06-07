@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: resolu.c,v 2.5 2005/02/01 01:28:16 greg Exp $";
+static const char	RCSid[] = "$Id: resolu.c,v 2.6 2006/06/07 17:52:03 schorsch Exp $";
 #endif
 /*
  * Read and write image resolutions.
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: resolu.c,v 2.5 2005/02/01 01:28:16 greg Exp $"
 
 #include "copyright.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "resolu.h"
