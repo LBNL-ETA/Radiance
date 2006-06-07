@@ -41,8 +41,7 @@ def read_plat(env, args, fn):
 			for p in section[2]: # multiple items to append
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
-				apply(env.Append,[],{p:`v`.split()})
-				#print '%s: %s' % (p, env[p])
+				apply(env.Append,[],{p:env.Split(v)})
 	# XXX Check that basedir exists.
 	for k in ['RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR']:
 		if (env.has_key('RAD_BASEDIR') and env.has_key(k)
