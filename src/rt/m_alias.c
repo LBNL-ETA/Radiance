@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.5 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.6 2006/07/12 05:47:05 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -39,10 +39,18 @@ m_alias(			/* transfer shading to alias target */
 					/* else replace alias */
 	if (m->oargs.nsargs != 1)
 		objerror(m, INTERNAL, "bad # string arguments");
-	aobj = lastmod(objndx(m), m->oargs.sarg[0]);
-	if (aobj < 0)
-		objerror(m, USER, "bad reference");
-	aop = objptr(aobj);
+	aop = m;
+	aobj = objndx(aop);
+	do {				/* follow alias trail */
+		if (aop->oargs.nsargs == 1)
+			aobj = lastmod(aobj, aop->oargs.sarg[0]);
+		else
+			aobj = aop->omod;
+		if (aobj < 0)
+			objerror(aop, USER, "bad reference");
+		aop = objptr(aobj);
+	} while (aop->otype == MOD_ALIAS);
+					/* copy struct */
 	arec = *aop;
 					/* irradiance hack */
 	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
