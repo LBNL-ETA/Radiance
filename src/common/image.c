@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.31 2005/02/18 17:42:14 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.32 2006/07/12 01:37:40 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: image.c,v 2.31 2005/02/18 17:42:14 greg Exp $"
 
 #include "copyright.h"
 
+#include  <ctype.h>
 #include  "rtio.h"
 #include  "rtmath.h"
 #include  "paths.h"
@@ -400,18 +401,17 @@ register char  *s;
 	int  na;
 	int  nvopts = 0;
 
-	while (*s == ' ')
-		s++;
-	if (*s != '-')
-		s = sskip2(s,1);
+	while (isspace(*s))
+		if (!*s++)
+			return(0);
 	while (*s) {
 		ac = 0;
 		do {
 			if (ac || *s == '-')
 				av[ac++] = s;
-			while (*s && *s != ' ')
+			while (*s && !isspace(*s))
 				s++;
-			while (*s == ' ')
+			while (isspace(*s))
 				s++;
 		} while (*s && ac < 4);
 		if ((na = getviewopt(vp, ac, av)) >= 0) {
