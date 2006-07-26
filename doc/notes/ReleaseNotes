@@ -1595,3 +1595,8 @@ Fixed long-standing inaccuracy of pcompos -t and +t thresholding options.
 Fixed bug in handling of views with tabs rather than spaces.
 
 Fixed bug related to alias of alias.
+
+****** COMPATIBILITY CHANGE ********
+Changed default sky turbidity in gensky from the original default of
+2.75 to the CIE 110-1994 standard value of 2.45.  Thanks to Marilyne
+Anderson of MIT for pointing out this discrepancy.
