@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.8 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.9 2006/08/08 18:04:41 greg Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
@@ -76,7 +76,7 @@ main(
 		exit(1);
 	}
 	if ((fin = fopen(argv[i], "r")) == NULL) {
-		fprintf(stderr, "%s: cannot open\n", argv[1]);
+		fprintf(stderr, "%s: cannot open\n", argv[i]);
 		exit(1);
 	}
 	if (i < argc-1 && freopen(argv[i+1], "w", stdout) == NULL) {
