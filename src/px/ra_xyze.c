@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.9 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.10 2006/08/22 21:38:22 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -21,6 +21,7 @@ RGBPRIMS  inprims = STDPRIMS;		/* input primaries */
 RGBPRIMS  outprims = STDPRIMS;		/* output primaries */
 double	expcomp = 1.0;			/* exposure compensation */
 int  doflat = -1;			/* produce flat file? */
+double  origexp = -1.0;			/* original exposure */
 char  *progname;
 
 static gethfunc headline;
@@ -44,6 +45,10 @@ headline(				/* process header line */
 			rgbinp = 0;
 		else
 			rgbinp = -2;
+		return(0);		/* don't echo */
+	}
+	if (origexp > 0.0 && isexpos(s)) {
+		origexp *= exposval(s);
 		return(0);		/* don't echo */
 	}
 	if (isprims(s)) {		/* get input primaries */
@@ -88,6 +93,9 @@ main(int  argc, char  *argv[])
 				outprims[WHT][CIEX] = atof(argv[++i]);
 				outprims[WHT][CIEY] = atof(argv[++i]);
 				break;
+			case 'o':		/* original exposure */
+				origexp = 1.0;
+				break;
 			case 'e':		/* exposure compensation */
 				expcomp = atof(argv[++i]);
 				if (argv[i][0] == '+' || argv[i][0] == '-')
@@ -122,7 +130,7 @@ main(int  argc, char  *argv[])
 	convert();				/* convert picture */
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-r][-e exp][-c|-u]", progname);
+	fprintf(stderr, "Usage: %s [-r][-o][-e exp][-c|-u]", progname);
 	fprintf(stderr, "[-p rx ry gx gy bx by wx wy] [input [output]]\n");
 	exit(1);
 }
@@ -149,21 +157,31 @@ convert(void)				/* convert to XYZE or RGBE picture */
 	COLORMAT	xfm;
 	register COLOR	*scanin;
 	register COLR	*scanout;
-	double	ourexp = expcomp;
+	double	exp2do = expcomp;
+	double	exp2report = expcomp;
 	int	y;
 	register int	x;
+						/* recover original? */
+	if (origexp > 0.0)
+		exp2do /= origexp;
 						/* compute transform */
 	if (rgbout) {
 		if (rgbinp) {			/* RGBE -> RGBE */
 			comprgb2rgbWBmat(xfm, inprims, outprims);
 		} else {			/* XYZE -> RGBE */
 			compxyz2rgbWBmat(xfm, outprims);
-			ourexp *= WHTEFFICACY;
+			if (origexp > 0.0)
+				exp2do /= WHTEFFICACY;
+			else
+				exp2report *= WHTEFFICACY;
 		}
 	} else {
 		if (rgbinp) {			/* RGBE -> XYZE */
 			comprgb2xyzWBmat(xfm, inprims);
-			ourexp /= WHTEFFICACY;
+			if (origexp > 0.0)
+				exp2do *= WHTEFFICACY;
+			else
+				exp2report /= WHTEFFICACY;
 		} else {			/* XYZE -> XYZE */
 			for (y = 0; y < 3; y++)
 				for (x = 0; x < 3; x++)
@@ -172,13 +190,13 @@ convert(void)				/* convert to XYZE or RGBE picture */
 	}
 	for (y = 0; y < 3; y++)
 		for (x = 0; x < 3; x++)
-			xfm[y][x] *= expcomp;
+			xfm[y][x] *= exp2do;
 						/* get input resolution */
 	if ((order = fgetresolu(&xmax, &ymax, stdin)) < 0)
 		quiterr("bad picture format");
 						/* complete output header */
-	if (ourexp < 0.99 || ourexp > 1.01)
-		fputexpos(ourexp, stdout);
+	if ((exp2report < 0.99) | (exp2report > 1.01))
+		fputexpos(exp2report, stdout);
 	if (rgbout) {
 		fputprims(outprims, stdout);
 		fputformat(COLRFMT, stdout);

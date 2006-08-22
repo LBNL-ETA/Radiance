@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ra_xyze.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: ra_xyze.1,v 1.3 2006/08/22 21:38:21 greg Exp $"
 .TH RA_XYZE 1 5/30/96 RADIANCE
 .SH NAME
 ra_xyze - convert between RADIANCE RGBE and XYZE formats
@@ -8,6 +8,8 @@ ra_xyze - convert between RADIANCE RGBE and XYZE formats
 .B \-r
 ][
 .B "\-e exposure"
+][
+.B \-o
 ][
 .B \-c
 |
@@ -29,6 +31,11 @@ The
 .I \-e
 option specifies an exposure compensation, which may be given as
 a decimal multiplier or in f-stops (powers of two).
+The
+.I \-o
+option may be used to specify original units, to which the exposure
+compensation is applied.
+Otherwise, the multiplier is in addition to any previous exposure adjustment.
 By default,
 .I ra_xyze
 produces a flat XYZE RADIANCE picture file from any type of RADIANCE
@@ -44,7 +51,9 @@ The
 .I \-r
 option causes
 .I ra_xyze
-to produce a run-length encoded RGBE file instead.
+to produce a run-length encoded RGBE file instead, unless
+.I \-u
+is given, also, when it will produce a flat RGBE file.
 The
 .I \-p
 option may be used to override the standard RADIANCE RGB primary

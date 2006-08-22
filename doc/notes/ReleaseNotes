@@ -1600,3 +1600,5 @@ Fixed bug related to alias of alias.
 Changed default sky turbidity in gensky from the original default of
 2.75 to the CIE 110-1994 standard value of 2.45.  Thanks to Marilyne
 Anderson of MIT for pointing out this discrepancy.
+
+Added -o option to ra_xyze to produce original pixel values.
