@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.14 2006/03/23 22:01:43 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.15 2006/09/05 21:54:32 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -91,9 +91,11 @@ COLORMAT  ivkmat = {		/* inverse Sharp primary matrix */
 
 
 void
-spec_rgb(col, s, e)		/* compute RGB color from spectral range */
-COLOR  col;
-int  s, e;
+spec_rgb(			/* compute RGB color from spectral range */
+COLOR  col,
+int  s,
+int  e
+)
 {
 	COLOR  ciecolor;
 
@@ -103,9 +105,11 @@ int  s, e;
 
 
 void
-spec_cie(col, s, e)		/* compute a color from a spectral range */
-COLOR  col;		/* returned color */
-int  s, e;		/* starting and ending wavelengths */
+spec_cie(			/* compute a color from a spectral range */
+COLOR  col,		/* returned color */
+int  s,			/* starting and ending wavelengths */
+int  e
+)
 {
 	register int  i, d, r;
 	
@@ -138,9 +142,10 @@ int  s, e;		/* starting and ending wavelengths */
 
 
 void
-cie_rgb(rgb, xyz)		/* convert CIE color to standard RGB */
-COLOR	rgb;
-COLOR  xyz;
+cie_rgb(			/* convert CIE color to standard RGB */
+COLOR	rgb,
+COLOR  xyz
+)
 {
 	colortrans(rgb, xyz2rgbmat, xyz);
 	clipgamut(rgb, xyz[CIEY], CGAMUT_LOWER, cblack, cwhite);
@@ -148,11 +153,13 @@ COLOR  xyz;
 
 
 int
-clipgamut(col, brt, gamut, lower, upper)	/* clip to gamut cube */
-COLOR  col;
-double  brt;
-int  gamut;
-COLOR  lower, upper;
+clipgamut(			/* clip to gamut cube */
+COLOR  col,
+double  brt,
+int  gamut,
+COLOR  lower,
+COLOR  upper
+)
 {
 	int  rflags = 0;
 	double  brtmin, brtmax, v, vv;
@@ -194,10 +201,11 @@ COLOR  lower, upper;
 
 
 void
-colortrans(c2, mat, c1)		/* convert c1 by mat and put into c2 */
-register COLOR  c2;
-register COLORMAT  mat;
-register COLOR  c1;
+colortrans(			/* convert c1 by mat and put into c2 */
+register COLOR  c2,
+register COLORMAT  mat,
+register COLOR  c1
+)
 {
 	COLOR	cout;
 
@@ -210,9 +218,11 @@ register COLOR  c1;
 
 
 void
-multcolormat(m3, m2, m1)	/* multiply m1 by m2 and put into m3 */
-COLORMAT  m3;			/* m3 can be either m1 or m2 w/o harm */
-COLORMAT  m2, m1;
+multcolormat(			/* multiply m1 by m2 and put into m3 */
+COLORMAT  m3,			/* m3 can be either m1 or m2 w/o harm */
+COLORMAT  m2,
+COLORMAT  m1
+)
 {
 	COLORMAT  mt;
 	register int  i, j;
@@ -226,10 +236,29 @@ COLORMAT  m2, m1;
 }
 
 
-void
-compxyz2rgbmat(mat, pr)		/* compute conversion from CIE to RGB space */
-COLORMAT  mat;
-register RGBPRIMS  pr;
+int
+colorprimsOK(			/* are color primaries reasonable? */
+RGBPRIMS  pr
+)
+{
+	int	i;
+	
+	for (i = 0; i < 4; i++) {
+		if ((pr[i][CIEX] <= CEPS) | (pr[i][CIEY] <= CEPS))
+			return(0);
+		if ((pr[i][CIEX] >= 1.-CEPS) | (pr[i][CIEY] >= 1.-CEPS))
+			return(0);
+	}
+	return(1);
+}
+
+
+
+int
+compxyz2rgbmat(			/* compute conversion from CIE to RGB space */
+COLORMAT  mat,
+register RGBPRIMS  pr
+)
 {
 	double  C_rD, C_gD, C_bD;
 
@@ -237,19 +266,26 @@ register RGBPRIMS  pr;
 		cpcolormat(mat, xyz2rgbmat);
 		return;
 	}
+	if (CEQ(pr[WHT][CIEX],0.) | CEQ(pr[WHT][CIEY],0.))
+		return(0);
 	C_rD = (1./pr[WHT][CIEY]) *
 			( pr[WHT][CIEX]*(pr[GRN][CIEY] - pr[BLU][CIEY]) -
 			  pr[WHT][CIEY]*(pr[GRN][CIEX] - pr[BLU][CIEX]) +
 		  pr[GRN][CIEX]*pr[BLU][CIEY] - pr[BLU][CIEX]*pr[GRN][CIEY] ) ;
+	if (CEQ(C_rD,0.))
+		return(0);
 	C_gD = (1./pr[WHT][CIEY]) *
 			( pr[WHT][CIEX]*(pr[BLU][CIEY] - pr[RED][CIEY]) -
 			  pr[WHT][CIEY]*(pr[BLU][CIEX] - pr[RED][CIEX]) -
 		  pr[RED][CIEX]*pr[BLU][CIEY] + pr[BLU][CIEX]*pr[RED][CIEY] ) ;
+	if (CEQ(C_gD,0.))
+		return(0);
 	C_bD = (1./pr[WHT][CIEY]) *
 			( pr[WHT][CIEX]*(pr[RED][CIEY] - pr[GRN][CIEY]) -
 			  pr[WHT][CIEY]*(pr[RED][CIEX] - pr[GRN][CIEX]) +
 		  pr[RED][CIEX]*pr[GRN][CIEY] - pr[GRN][CIEX]*pr[RED][CIEY] ) ;
-
+	if (CEQ(C_bD,0.))
+		return(0);
 	mat[0][0] = (pr[GRN][CIEY] - pr[BLU][CIEY] -
 			pr[BLU][CIEX]*pr[GRN][CIEY] +
 			pr[BLU][CIEY]*pr[GRN][CIEX])/C_rD ;
@@ -274,13 +310,15 @@ register RGBPRIMS  pr;
 			pr[RED][CIEX]*pr[GRN][CIEY])/C_bD ;
 	mat[2][2] = (pr[RED][CIEX]*pr[GRN][CIEY] -
 			pr[GRN][CIEX]*pr[RED][CIEY])/C_bD ;
+	return(1);
 }
 
 
-void
-comprgb2xyzmat(mat, pr)		/* compute conversion from RGB to CIE space */
-COLORMAT  mat;
-register RGBPRIMS  pr;
+int
+comprgb2xyzmat(			/* compute conversion from RGB to CIE space */
+COLORMAT  mat,
+register RGBPRIMS  pr
+)
 {
 	double  C_rD, C_gD, C_bD, D;
 
@@ -288,6 +326,8 @@ register RGBPRIMS  pr;
 		cpcolormat(mat, rgb2xyzmat);
 		return;
 	}
+	if (CEQ(pr[WHT][CIEX],0.) | CEQ(pr[WHT][CIEY],0.))
+		return(0);
 	C_rD = (1./pr[WHT][CIEY]) *
 			( pr[WHT][CIEX]*(pr[GRN][CIEY] - pr[BLU][CIEY]) -
 			  pr[WHT][CIEY]*(pr[GRN][CIEX] - pr[BLU][CIEX]) +
@@ -303,6 +343,8 @@ register RGBPRIMS  pr;
 	D = pr[RED][CIEX]*(pr[GRN][CIEY] - pr[BLU][CIEY]) +
 			pr[GRN][CIEX]*(pr[BLU][CIEY] - pr[RED][CIEY]) +
 			pr[BLU][CIEX]*(pr[RED][CIEY] - pr[GRN][CIEY]) ;
+	if (CEQ(D,0.))
+		return(0);
 	mat[0][0] = pr[RED][CIEX]*C_rD/D;
 	mat[0][1] = pr[GRN][CIEX]*C_gD/D;
 	mat[0][2] = pr[BLU][CIEX]*C_bD/D;
@@ -312,13 +354,16 @@ register RGBPRIMS  pr;
 	mat[2][0] = (1.-pr[RED][CIEX]-pr[RED][CIEY])*C_rD/D;
 	mat[2][1] = (1.-pr[GRN][CIEX]-pr[GRN][CIEY])*C_gD/D;
 	mat[2][2] = (1.-pr[BLU][CIEX]-pr[BLU][CIEY])*C_bD/D;
+	return(1);
 }
 
 
-void
-comprgb2rgbmat(mat, pr1, pr2)	/* compute conversion from RGB1 to RGB2 */
-COLORMAT  mat;
-RGBPRIMS  pr1, pr2;
+int
+comprgb2rgbmat(			/* compute conversion from RGB1 to RGB2 */
+COLORMAT  mat,
+RGBPRIMS  pr1,
+RGBPRIMS  pr2
+)
 {
 	COLORMAT  pr1toxyz, xyztopr2;
 
@@ -328,33 +373,44 @@ RGBPRIMS  pr1, pr2;
 		mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
 		return;
 	}
-	comprgb2xyzmat(pr1toxyz, pr1);
-	compxyz2rgbmat(xyztopr2, pr2);
+	if (!comprgb2xyzmat(pr1toxyz, pr1))
+		return(0);
+	if (!compxyz2rgbmat(xyztopr2, pr2))
+		return(0);
 				/* combine transforms */
 	multcolormat(mat, pr1toxyz, xyztopr2);
+	return(1);
 }
 
 
-void
-compxyzWBmat(mat, wht1, wht2)	/* CIE von Kries transform from wht1 to wht2 */
-COLORMAT  mat;
-float  wht1[2], wht2[2];
+int
+compxyzWBmat(			/* CIE von Kries transform from wht1 to wht2 */
+COLORMAT  mat,
+float  wht1[2],
+float  wht2[2]
+)
 {
 	COLOR	cw1, cw2;
 	if (XYEQ(wht1,wht2)) {
 		mat[0][0] = mat[1][1] = mat[2][2] = 1.0;
 		mat[0][1] = mat[0][2] = mat[1][0] =
 		mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
-		return;
+		return(1);
 	}
+	if (CEQ(wht1[CIEX],0.) | CEQ(wht1[CIEY],0.))
+		return(0);
 	cw1[RED] = wht1[CIEX]/wht1[CIEY];
 	cw1[GRN] = 1.;
 	cw1[BLU] = (1. - wht1[CIEX] - wht1[CIEY])/wht1[CIEY];
 	colortrans(cw1, vkmat, cw1);
+	if (CEQ(wht2[CIEX],0.) | CEQ(wht2[CIEY],0.))
+		return(0);
 	cw2[RED] = wht2[CIEX]/wht2[CIEY];
 	cw2[GRN] = 1.;
 	cw2[BLU] = (1. - wht2[CIEX] - wht2[CIEY])/wht2[CIEY];
 	colortrans(cw2, vkmat, cw2);
+	if (CEQ(cw1[RED],0.) | CEQ(cw1[GRN],0.) | CEQ(cw1[BLU],0.))
+		return(0);
 	mat[0][0] = cw2[RED]/cw1[RED];
 	mat[1][1] = cw2[GRN]/cw1[GRN];
 	mat[2][2] = cw2[BLU]/cw1[BLU];
@@ -362,41 +418,52 @@ float  wht1[2], wht2[2];
 	mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
 	multcolormat(mat, vkmat, mat);
 	multcolormat(mat, mat, ivkmat);
+	return(1);
 }
 
 
-void
-compxyz2rgbWBmat(mat, pr)	/* von Kries conversion from CIE to RGB space */
-COLORMAT  mat;
-RGBPRIMS  pr;
+int
+compxyz2rgbWBmat(		/* von Kries conversion from CIE to RGB space */
+COLORMAT  mat,
+RGBPRIMS  pr
+)
 {
 	COLORMAT	wbmat;
 
-	compxyz2rgbmat(mat, pr);
+	if (!compxyz2rgbmat(mat, pr))
+		return(0);
 	if (XYEQ(pr[WHT],xyneu))
-		return;
-	compxyzWBmat(wbmat, xyneu, pr[WHT]);
+		return(1);
+	if (!compxyzWBmat(wbmat, xyneu, pr[WHT]))
+		return(0);
 	multcolormat(mat, wbmat, mat);
+	return(1);
 }
 
-void
-comprgb2xyzWBmat(mat, pr)	/* von Kries conversion from RGB to CIE space */
-COLORMAT  mat;
-RGBPRIMS  pr;
+int
+comprgb2xyzWBmat(		/* von Kries conversion from RGB to CIE space */
+COLORMAT  mat,
+RGBPRIMS  pr
+)
 {
 	COLORMAT	wbmat;
 	
-	comprgb2xyzmat(mat, pr);
+	if (!comprgb2xyzmat(mat, pr))
+		return(0);
 	if (XYEQ(pr[WHT],xyneu))
-		return;
-	compxyzWBmat(wbmat, pr[WHT], xyneu);
+		return(1);
+	if (!compxyzWBmat(wbmat, pr[WHT], xyneu))
+		return(0);
 	multcolormat(mat, mat, wbmat);
+	return(1);
 }
 
-void
-comprgb2rgbWBmat(mat, pr1, pr2)	/* von Kries conversion from RGB1 to RGB2 */
-COLORMAT  mat;
-RGBPRIMS  pr1, pr2;
+int
+comprgb2rgbWBmat(		/* von Kries conversion from RGB1 to RGB2 */
+COLORMAT  mat,
+RGBPRIMS  pr1,
+RGBPRIMS  pr2
+)
 {
 	COLORMAT  pr1toxyz, xyztopr2, wbmat;
 
@@ -404,12 +471,16 @@ RGBPRIMS  pr1, pr2;
 		mat[0][0] = mat[1][1] = mat[2][2] = 1.0;
 		mat[0][1] = mat[0][2] = mat[1][0] =
 		mat[1][2] = mat[2][0] = mat[2][1] = 0.0;
-		return;
+		return(1);
 	}
-	comprgb2xyzmat(pr1toxyz, pr1);
-	compxyzWBmat(wbmat, pr1[WHT], pr2[WHT]);
-	compxyz2rgbmat(xyztopr2, pr2);
+	if (!comprgb2xyzmat(pr1toxyz, pr1))
+		return(0);
+	if (!compxyzWBmat(wbmat, pr1[WHT], pr2[WHT]))
+		return(0);
+	if (!compxyz2rgbmat(xyztopr2, pr2))
+		return(0);
 				/* combine transforms */
 	multcolormat(mat, pr1toxyz, wbmat);
 	multcolormat(mat, mat, xyztopr2);
+	return(1);
 }

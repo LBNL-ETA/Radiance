@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.28 2004/03/28 20:33:12 schorsch Exp $ */
+/* RCSid $Id: color.h,v 2.29 2006/09/05 21:54:32 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -218,14 +218,15 @@ extern int	clipgamut(COLOR col, double brt, int gamut,
 extern void	colortrans(COLOR c2, COLORMAT mat, COLOR c1);
 extern void	multcolormat(COLORMAT m3, COLORMAT m2,
 					COLORMAT m1);
-extern void	compxyz2rgbmat(COLORMAT mat, RGBPRIMS pr);
-extern void	comprgb2xyzmat(COLORMAT mat, RGBPRIMS pr);
-extern void	comprgb2rgbmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
-extern void	compxyzWBmat(COLORMAT mat, float wht1[2],
+extern int	colorprimsOK(RGBPRIMS pr);
+extern int	compxyz2rgbmat(COLORMAT mat, RGBPRIMS pr);
+extern int	comprgb2xyzmat(COLORMAT mat, RGBPRIMS pr);
+extern int	comprgb2rgbmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
+extern int	compxyzWBmat(COLORMAT mat, float wht1[2],
 				float wht2[2]);
-extern void	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
-extern void	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
-extern void	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
+extern int	compxyz2rgbWBmat(COLORMAT mat, RGBPRIMS pr);
+extern int	comprgb2xyzWBmat(COLORMAT mat, RGBPRIMS pr);
+extern int	comprgb2rgbWBmat(COLORMAT mat, RGBPRIMS pr1, RGBPRIMS pr2);
 					/* defined in colrops.c */
 extern int	setcolrcor(double (*f)(double, double), double a2);
 extern int	setcolrinv(double (*f)(double, double), double a2);
