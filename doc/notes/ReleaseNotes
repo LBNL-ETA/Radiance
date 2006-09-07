@@ -1602,3 +1602,6 @@ Changed default sky turbidity in gensky from the original default of
 Anderson of MIT for pointing out this discrepancy.
 
 Added -o option to ra_xyze to produce original pixel values.
+
+Fixed bug in tracing of virtual sources, where intervening glazing was
+not being accounted for properly.

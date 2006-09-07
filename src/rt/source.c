@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.54 2006/07/12 05:47:05 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.55 2006/09/07 05:20:54 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -457,7 +457,6 @@ direct(					/* add direct component */
 			raycont(&sr);
 			if (trace != NULL)
 				(*trace)(&sr);	/* trace execution */
-			rayparticipate(&sr);
 			if (bright(sr.rcol) <= FTINY) {
 #if SHADCACHE
 				if ((scp <= srccnt || scp[-1].sno != scp->sno)
@@ -467,6 +466,7 @@ direct(					/* add direct component */
 #endif
 				continue;	/* missed! */
 			}
+			rayparticipate(&sr);
 			multcolor(sr.rcol, sr.rcoef);
 			copycolor(scp->val, sr.rcol);
 		} else if (trace != NULL &&
