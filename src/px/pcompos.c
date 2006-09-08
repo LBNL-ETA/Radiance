@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.31 2006/06/06 19:13:00 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.32 2006/09/08 21:38:25 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -57,11 +57,12 @@ struct {
 
 int  nfile;			/* number of files */
 
+int  echoheader = 1;
 char  ourfmt[LPICFMT+1] = PICFMT;
 int  wrongformat = 0;
 
 
-static gethfunc tabputs;
+static gethfunc headline;
 static void compos(void);
 static int cmpcolr(COLR  c1, double lv2);
 static FILE * lblopen(char  *s, int  *xp, int  *yp);
@@ -69,7 +70,7 @@ static FILE * lblopen(char  *s, int  *xp, int  *yp);
 
 
 static int
-tabputs(			/* print line preceded by a tab */
+headline(			/* print line preceded by a tab */
 	char	*s,
 	void	*p
 )
@@ -84,7 +85,7 @@ tabputs(			/* print line preceded by a tab */
 			strcpy(ourfmt, fmt);
 		} else
 			wrongformat = 1;
-	} else {
+	} else if (echoheader) {
 		putc('\t', stdout);
 		fputs(s, stdout);
 	}
@@ -111,6 +112,9 @@ main(
 
 	for (an = 1; an < argc && argv[an][0] == '-'; an++)
 		switch (argv[an][1]) {
+		case 'h':
+			echoheader = !echoheader;
+			break;
 		case 'x':
 			xsiz = atoi(argv[++an]);
 			break;
@@ -224,8 +228,9 @@ getfile:
 		}
 		an++;
 						/* get header */
-		printf("%s:\n", input[nfile].name);
-		getheader(input[nfile].fp, tabputs, NULL);
+		if (echoheader)
+			printf("%s:\n", input[nfile].name);
+		getheader(input[nfile].fp, headline, NULL);
 		if (wrongformat) {
 			fprintf(stderr, "%s: incompatible input format\n",
 					input[nfile].name);
@@ -304,7 +309,7 @@ getfile:
 	quit(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-x xr][-y yr][-b r g b][-a n][-s p][-o x0 y0][-la][-lh h] ",
+	"Usage: %s [-h][-x xr][-y yr][-b r g b][-a n][-s p][-o x0 y0][-la][-lh h] ",
 			progname);
 	fprintf(stderr, "[-t min1][+t max1][-l lab][=SS] pic1 x1 y1 ..\n");
 	quit(1);

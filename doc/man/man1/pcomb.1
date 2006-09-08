@@ -1,10 +1,12 @@
-.\" RCSid "$Id: pcomb.1,v 1.6 2005/03/01 22:55:21 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.7 2006/09/08 21:38:25 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
 .SH SYNOPSIS
 .B pcomb
 [
+.B -h
+][
 .B -w
 ][
 .B "\-x xres"
@@ -139,6 +141,13 @@ will return a negative value, and
 .I S(n)
 will return zero.
 .PP
+The
+.I \-h
+option may be used to reduce the information header size, which
+can grow disproportionately after multiple runs of
+.I pcomb
+and/or
+.I pcompos(1).
 The
 .I \-w
 option can be used to suppress warning messages about invalid

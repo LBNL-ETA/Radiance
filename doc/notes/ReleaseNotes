@@ -1605,3 +1605,5 @@ Added -o option to ra_xyze to produce original pixel values.
 
 Fixed bug in tracing of virtual sources, where intervening glazing was
 not being accounted for properly.
+
+Added -h option to pcompos and pcomb to eliminate verbose headers.

@@ -1,10 +1,12 @@
-.\" RCSid "$Id: pcompos.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: pcompos.1,v 1.3 2006/09/08 21:38:25 greg Exp $"
 .TH PCOMPOS 1 12/18/97 RADIANCE
 .SH NAME
 pcompos - composite RADIANCE pictures.
 .SH SYNOPSIS
 .B pcompos
 [
+.B \-h
+][
 .B "\-x xres"
 ][
 .B "\-y yres"
@@ -74,6 +76,13 @@ The
 option specifies a background color to appear wherever input
 files do not cover.
 The default value is black (0 0 0).
+The
+.I \-h
+option may be used to reduce the information header size, which
+can grow disproportionately after multiple runs of
+.I pcompos
+and/or
+.I pcomb(1).
 .PP
 If input files overlap, later pictures will overwrite earlier ones.
 By default, input files are copied unconditionally within the output
@@ -156,4 +165,4 @@ processes.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), pfilt(1), psign(1), rpict(1)
+getinfo(1), pcomb(1), pfilt(1), psign(1), rpict(1)

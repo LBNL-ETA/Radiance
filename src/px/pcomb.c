@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.38 2005/05/25 04:44:25 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.39 2006/09/08 21:38:25 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -68,11 +68,12 @@ int	xpos, ypos;			/* output position */
 
 char	*progname;			/* global argv[0] */
 
+int	echoheader = 1;
 int	wrongformat = 0;
 int	gotview;
 
 
-static gethfunc tabputs;
+static gethfunc headline;
 static void checkfile(void);
 static double rgb_bright(COLOR  clr);
 static double xyz_bright(COLOR  clr);
@@ -109,6 +110,9 @@ main(
 				continue;
 			case 'w':
 				nowarn = !nowarn;
+				continue;
+			case 'h':
+				echoheader = !echoheader;
 				continue;
 			case 'f':
 			case 'e':
@@ -228,14 +232,14 @@ usage:
 	eputs("Usage: ");
 	eputs(argv[0]);
 	eputs(
-" [-w][-x xr][-y yr][-e expr][-f file] [ [-o][-s f][-c r g b] pic ..]\n");
+" [-w][-h][-x xr][-y yr][-e expr][-f file] [ [-o][-s f][-c r g b] pic ..]\n");
 	quit(1);
 	return 1; /* pro forma return */
 }
 
 
 static int
-tabputs(			/* put out string preceded by a tab */
+headline(			/* check header line & echo if requested */
 	char	*s,
 	void	*p
 )
@@ -264,9 +268,12 @@ tabputs(			/* put out string preceded by a tab */
 		input[nfiles].pa *= aspectval(s);
 	else if (isview(s) && sscanview(&input[nfiles].vw, s) > 0)
 		gotview++;
-						/* echo line */
-	putchar('\t');
-	return(fputs(s, stdout));
+
+	if (echoheader) {			/* echo line */
+		putchar('\t');
+		return(fputs(s, stdout));
+	}
+	return(0);
 }
 
 
@@ -276,9 +283,11 @@ checkfile(void)			/* ready a file */
 	register int	i;
 					/* process header */
 	gotview = 0;
-	fputs(input[nfiles].name, stdout);
-	fputs(":\n", stdout);
-	getheader(input[nfiles].fp, tabputs, NULL);
+	if (echoheader) {
+		fputs(input[nfiles].name, stdout);
+		fputs(":\n", stdout);
+	}
+	getheader(input[nfiles].fp, headline, NULL);
 	if (wrongformat < 0) {
 		eputs(input[nfiles].name);
 		eputs(": not a Radiance picture\n");
