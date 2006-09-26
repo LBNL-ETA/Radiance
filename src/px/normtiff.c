@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.9 2005/06/14 22:23:31 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.10 2006/09/26 12:26:02 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -211,6 +211,7 @@ tmap_picture(			/* tone map Radiance picture */
 )
 {
 	uint16	orient;
+	double	paspect = (pp->rs.rt & YMAJOR) ? pp->pa : 1./pp->pa;
 	int	xsiz, ysiz;
 	BYTE	*pix;
 					/* read and tone map picture */
@@ -224,7 +225,7 @@ tmap_picture(			/* tone map Radiance picture */
 	orient++;
 					/* put out our image */
 	if (putimage(orient, (uint32)xsiz, (uint32)ysiz,
-			72., 72./pp->pa, 2, pix) != 0)
+			72., 72./paspect, 2, pix) != 0)
 		return(-1);
 					/* free data and we're done */
 	free((void *)pix);
