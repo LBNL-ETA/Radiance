@@ -2,5 +2,5 @@ frac(x,e) : x - floor(x+e);
 sq(x) : x * x;
 
 denom(x,e) : if( e-frac(x,e), 1, if( e-frac(1/x,e), floor(1/x+e),
-		denom(frac(1/frac(1/x,e),e),e/sq(x)/sq(frac(1/x,e))) +
+		denom(frac(1/frac(1/x,e),e),e/sq(x*frac(1/x,e))) +
 		floor(1/x+e)*denom(frac(1/x,e),e/sq(x)) ) );
