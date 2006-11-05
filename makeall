@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.21 2005/09/21 17:17:23 greg Exp $
+# RCSid $Id: makeall,v 1.22 2006/11/05 01:51:16 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -163,7 +163,7 @@ case 5:			# BSDI BSD/386
 	set compat="erf.o strcmp.o"
 	breaksw
 case 6:			# Linux
-	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -Dfseeko=fseek -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
+	set mach="-Dlinux -D_FILE_OFFSET_BITS=64 -L/usr/X11R6/lib -I/usr/include/X11 -DNOSTEREO"
 	set opt="-O2"
 	set arch=IBMPC
 	set compat="erf.o"
