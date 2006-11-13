@@ -1607,3 +1607,9 @@ Fixed bug in tracing of virtual sources, where intervening glazing was
 not being accounted for properly.
 
 Added -h option to pcompos and pcomb to eliminate verbose headers.
+
+=====================
+Version 3.9
+
+Added -spec option to falsecolor to restore original spectral color scale.
+Also added "-s auto" option to automatically set the maximum value.

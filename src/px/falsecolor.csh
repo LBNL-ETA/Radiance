@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.15 2005/11/18 22:50:21 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.16 2006/11/13 02:41:46 greg Exp $
 #
 # Create false color image with legend
 #
@@ -11,9 +11,6 @@ set mult=179
 set label=Nits
 set scale=1000
 set decades=0
-# set redv='1.6*v-.6'
-# set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
-# set bluv='1-8/3*v'
 set redv='def_red(v)'
 set grnv='def_grn(v)'
 set bluv='def_blu(v)'
@@ -40,6 +37,7 @@ while ($#argv > 0)
 	case -s:
 		shift argv
 		set scale="$argv[1]"
+		if ("$scale" =~ [aA]*) set needfile
 		breaksw
 	case -l:
 		shift argv
@@ -60,6 +58,12 @@ while ($#argv > 0)
 	case -b:
 		shift argv
 		set bluv="$argv[1]"
+		breaksw
+	case -spec:
+		shift argv
+		set redv='1.6*v-.6'
+		set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
+		set bluv='1-8/3*v'
 		breaksw
 	case -i:
 		shift argv
@@ -98,6 +102,14 @@ while ($#argv > 0)
 	shift argv
 end
 mkdir $td
+if ($?needfile && "$picture" == '-') then
+	cat > $td/picture
+	set picture=$td/picture
+endif
+if ("$scale" =~ [aA]*) then
+	set LogLmax=`phisto $picture | tail -2 | sed -n '1s/	[0-9]*$//p'`
+	set scale=`ev "$mult/179*10^$LogLmax"`
+endif
 cat > $td/pc0.cal <<_EOF_
 PI : 3.14159265358979323846 ;
 scale : $scale ;
@@ -171,10 +183,6 @@ if ("$cpict" == "") then
 	set pc1args=($pc1args -e 'ra=0;ga=0;ba=0')
 else if ("$cpict" == "$picture") then
 	set cpict=
-endif
-if ($?needfile && "$picture" == '-') then
-	cat > $td/picture
-	set picture=$td/picture
 endif
 if ("$decades" != "0") then
 	set pc1args=($pc1args -e "map(x)=if(x-10^-$decades,log10(x)/$decades+1,0)")

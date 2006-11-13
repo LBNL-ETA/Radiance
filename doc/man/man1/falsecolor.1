@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.3 2004/03/08 21:39:31 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.4 2006/11/13 02:41:45 greg Exp $"
 .TH FALSECOLOR 1 11/15/93 RADIANCE
 .SH NAME
 falsecolor - make a false color RADIANCE picture
@@ -27,6 +27,8 @@ falsecolor - make a false color RADIANCE picture
 ][
 .B "\-m mult"
 ][
+.B "\-spec"
+][
 .B "\-r redv"
 ][
 .B "\-g grnv"
@@ -43,6 +45,9 @@ dark areas are blue and brighter areas move through the spectrum to red.
 A different scale can be given with the
 .I \-s
 option.
+If the argument given to
+.I \-s
+begins with an "a" for "auto," then the maximum is used for scaling the result.
 The default multiplier is 179, which converts from radiance or irradiance
 to luminance or illuminance, respectively.
 A different multiplier can be given with
@@ -98,6 +103,10 @@ The
 option causes extrema points to be printed on the brightest and
 darkest pixels of the input picture.
 .PP
+The
+.I "\-spec"
+option reinstates the old, spectral color scale used in the original
+.I falsecolor.
 The remaining options,
 .I "\-r, \-g,"
 and
