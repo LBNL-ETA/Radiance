@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.16 2006/11/13 02:41:46 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.17 2006/11/15 08:17:13 greg Exp $
 #
 # Create false color image with legend
 #
@@ -60,7 +60,6 @@ while ($#argv > 0)
 		set bluv="$argv[1]"
 		breaksw
 	case -spec:
-		shift argv
 		set redv='1.6*v-.6'
 		set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
 		set bluv='1-8/3*v'
