@@ -1,9 +1,0 @@
-{
-	Cubic Bezier Interpolating Function
-
-	02Mar90
-}
-bezier(p1, p2, p3, p4, t) = 	p1 * (1+t*(-3+t*(3-t))) +
-				p2 * 3*t*(1+t*(-2+t)) +
-				p3 * 3*t*t*(1-t) +
-				p4 * t*t*t ;
