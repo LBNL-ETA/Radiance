@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: ra_pfm.csh,v 2.4 2005/01/14 06:40:54 greg Exp $
+# RCSid $Id: ra_pfm.csh,v 2.5 2006/11/17 19:14:54 greg Exp $
 #
 # Convert to/from Poskanzer Float Map image format using pvalue
 #
@@ -82,6 +82,6 @@ else
 endif
 exit $status
 userr:
-echo "Usage: $0 input.pfm [output.hdr]"
-echo "   or: $0 -r input.hdr [output.pfm]"
+echo "Usage: $0 input.hdr [output.pfm]"
+echo "   or: $0 -r input.pfm [output.hdr]"
 exit 1
