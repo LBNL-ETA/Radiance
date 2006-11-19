@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.32 2006/07/12 01:37:40 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.33 2006/11/19 01:14:31 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -449,6 +449,7 @@ register VIEW  *vp;
 	static char  vwstr[128];
 	register char  *cp = vwstr;
 
+	*cp = '\0';
 	if (vp->type != stdview.type) {
 		sprintf(cp, " -vt%c", vp->type);
 		cp += strlen(cp);
