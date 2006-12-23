@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.28 2004/10/01 07:46:26 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.29 2006/12/23 17:27:46 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -66,9 +66,6 @@ static putfunc_t putpascii, putpint, putpdouble, putpfloat, putpbyte, putpword;
 static void set_io(void);
 static void pixtoval(void);
 static void valtopix(void);
-static void swap16(uint16  *wp, int  n);
-static void swap32(uint32  *wp, int  n);
-static void swap64(char  *wp, int  n);
 
 
 static double
@@ -524,51 +521,6 @@ int  code;
 }
 
 
-static void
-swap16(		/* swap n 16-bit words */
-	register uint16  *wp,
-	int  n
-)
-{
-	while (n-- > 0) {
-		*wp = *wp << 8 | ((*wp >> 8) & 0xff);
-		wp++;
-	}
-}
-
-
-static void
-swap32(		/* swap n 32-bit words */
-	register uint32  *wp,
-	int  n
-)
-{
-	while (n-- > 0) {
-		*wp = *wp << 24 | ((*wp >> 24) & 0xff) |
-			(*wp & 0xff00) << 8 | (*wp & 0xff0000) >> 8;
-		wp++;
-	}
-}
-
-
-static void
-swap64(		/* swap n 64-bit words */
-	register char  *wp,
-	int  n
-)
-{
-	register int	t;
-
-	while (n-- > 0) {
-		t = wp[0]; wp[0] = wp[7]; wp[7] = t;
-		t = wp[1]; wp[1] = wp[6]; wp[6] = t;
-		t = wp[2]; wp[2] = wp[5]; wp[5] = t;
-		t = wp[3]; wp[3] = wp[4]; wp[4] = t;
-		wp += 8;
-	}
-}
-
-
 static int
 getcascii(		/* get an ascii color value from stream(s) */
 	COLOR  col
@@ -630,7 +582,7 @@ getcfloat(		/* get a float color value from stream(s) */
 			return(-1);
 	}
 	if (swapbytes)
-		swap32((uint32 *)vf, 3);
+		swap32((char *)vf, 3);
 	setcolor(col, vf[rord[RED]], vf[rord[GRN]], vf[rord[BLU]]);
 	return(0);
 }
@@ -697,7 +649,7 @@ getcword(		/* get a 16-bit color value from stream(s) */
 			return(-1);
 	}
 	if (swapbytes)
-		swap16(vw, 3);
+		swap16((char *)vw, 3);
 	setcolor(col, (vw[rord[RED]]+.5)/65536.,
 			(vw[rord[GRN]]+.5)/65536., (vw[rord[BLU]]+.5)/65536.);
 	return(0);
@@ -744,7 +696,7 @@ getbfloat(		/* get a float brightness value from fin */
 	if (fread((char *)&vf, sizeof(float), 1, fin) != 1)
 		return(-1);
 	if (swapbytes)
-		swap32((uint32 *)&vf, 1);
+		swap32((char *)&vf, 1);
 	setcolor(col, vf, vf, vf);
 	return(0);
 }
@@ -793,7 +745,7 @@ getbword(		/* get a 16-bit brightness value from fin */
 	if (fread((char *)&vw, sizeof(uint16), 1, fin) != 1)
 		return(-1);
 	if (swapbytes)
-		swap16(&vw, 1);
+		swap16((char *)&vw, 1);
 	d = (vw+.5)/65536.;
 	setcolor(col, d, d, d);
 	return(0);
@@ -825,7 +777,7 @@ putcfloat(			/* put a float color to stdout */
 	vf[1] = colval(col,ord[1]);
 	vf[2] = colval(col,ord[2]);
 	if (swapbytes)
-		swap32((uint32 *)vf, 3);
+		swap32((char *)vf, 3);
 	fwrite((char *)vf, sizeof(float), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -899,7 +851,7 @@ putcword(			/* put a 16-bit color to stdout */
 	i = colval(col,ord[2])*65536.;
 	vw[2] = min(i,65535);
 	if (swapbytes)
-		swap16(vw, 3);
+		swap16((char *)vw, 3);
 	fwrite((char *)vw, sizeof(uint16), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -926,7 +878,7 @@ putbfloat(			/* put a float brightness to stdout */
 
 	vf = (*mybright)(col);
 	if (swapbytes)
-		swap32((uint32 *)&vf, 1);
+		swap32((char *)&vf, 1);
 	fwrite((char *)&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -987,7 +939,7 @@ putbword(			/* put a 16-bit brightness to stdout */
 	i = (*mybright)(col)*65536.;
 	vw = min(i,65535);
 	if (swapbytes)
-		swap16(&vw, 1);
+		swap16((char *)&vw, 1);
 	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -1014,7 +966,7 @@ putpfloat(			/* put a float primary to stdout */
 
 	vf = colval(col,putprim);
 	if (swapbytes)
-		swap32((uint32 *)&vf, 1);
+		swap32((char *)&vf, 1);
 	fwrite((char *)&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
@@ -1075,7 +1027,7 @@ putpword(			/* put a 16-bit primary to stdout */
 	i = colval(col,putprim)*65536.;
 	vw = min(i,65535);
 	if (swapbytes)
-		swap16(&vw, 1);
+		swap16((char *)&vw, 1);
 	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);

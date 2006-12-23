@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.8 2004/03/28 20:33:12 schorsch Exp $ */
+/* RCSid $Id: rtio.h,v 3.9 2006/12/23 17:27:45 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -37,6 +37,10 @@ extern char	*getrlibpath(void);
 extern char *gethomedir(char *uname, char *path, int plen);
 					/* defined in getpath.c */
 extern char	*getpath(char *fname, char *searchpath, int mode);
+					/* defined in byteswap.c */
+extern void	swap16(char *wp, int n);
+extern void	swap32(char *wp, int n);
+extern void	swap64(char *wp, int n);
 					/* defined in portio.c */
 extern void	putstr(char *s, FILE *fp);
 extern void	putint(long i, int siz, FILE *fp);

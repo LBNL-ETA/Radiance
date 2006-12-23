@@ -1,15 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.13 2005/05/03 05:10:13 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.14 2006/12/23 17:27:45 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
  *
- * External symbols declared in standard.h
+ * External symbols declared in rtio.h
  */
 
 #include "copyright.h"
-
-#include <stdio.h>
 
 #include "rtio.h"
 

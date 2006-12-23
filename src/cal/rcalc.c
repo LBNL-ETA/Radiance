@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.19 2005/06/14 01:25:02 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.20 2006/12/23 17:27:45 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -81,8 +81,9 @@ int  igneol = 0;                /* ignore end of line? */
 int  passive = 0;		/* passive mode (transmit unmatched input) */
 char  sepchar = '\t';           /* input/output separator */
 int  noinput = 0;               /* no input records? */
+int  itype = 'a';		/* input type (a/f/F/d/D) */
 int  nbicols = 0;		/* number of binary input columns */
-int  bocols = 0;		/* produce binary output columns */
+int  otype = 'a';		/* output format (a/f/F/d/D) */
 char  inpbuf[INBSIZ];           /* input buffer */
 double  colval[MAXCOL];         /* input column values */
 unsigned long  colflg = 0;      /* column retrieved flags */
@@ -146,13 +147,17 @@ char  *argv[]
 		case 'i':
 			switch (argv[i][2]) {
 			case '\0':
+				itype = 'a';
 				nbicols = 0;
 				readfmt(argv[++i], 0);
 				break;
 			case 'a':
+				itype = 'a';
 				nbicols = 0;
 				break;
 			case 'd':
+			case 'D':
+				itype = argv[i][2];
 				if (isdigit(argv[i][3]))
 					nbicols = atoi(argv[i]+3);
 				else
@@ -164,11 +169,13 @@ char  *argv[]
 				}
 				break;
 			case 'f':
+			case 'F':
+				itype = argv[i][2];
 				if (isdigit(argv[i][3]))
-					nbicols = -atoi(argv[i]+3);
+					nbicols = atoi(argv[i]+3);
 				else
-					nbicols = -1;
-				if (-nbicols*sizeof(float) > INBSIZ) {
+					nbicols = 1;
+				if (nbicols*sizeof(float) > INBSIZ) {
 					eputs(argv[0]);
 					eputs(": too many input columns\n");
 					quit(1);
@@ -181,19 +188,17 @@ char  *argv[]
 		case 'o':
 			switch (argv[i][2]) {
 			case '\0':
-				bocols = 0;
+				otype = 'a';
 				readfmt(argv[++i], 1);
 				break;
 			case 'a':
-				bocols = 0;
+				otype = 'a';
 				break;
 			case 'd':
-				bocols = 1;
-				SET_FILE_BINARY(stdout);
-				break;
+			case 'D':
 			case 'f':
-				bocols = -1;
-				SET_FILE_BINARY(stdout);
+			case 'F':
+				otype = argv[i][2];
 				break;
 			default:
 				goto userr;
@@ -212,7 +217,7 @@ char  *argv[]
 eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt][-o outfmt] [file]\n");
 			quit(1);
 		}
-	if (bocols)
+	if (otype != 'a')
 		SET_FILE_BINARY(stdout);
 	if (noinput) {          /* produce a single output record */
 		if (i < argc) {
@@ -224,7 +229,7 @@ eputs(" [-b][-l][-n][-p][-w][-u][-tS][-s svar=sval][-e expr][-f source][-i infmt
 		putout();
 		quit(0);
 	}
-	if (nbicols)
+	if (itype != 'a')
 		SET_FILE_BINARY(stdin);
 
 	if (blnkeq)             /* for efficiency */
@@ -260,12 +265,20 @@ FILE  *fp
 {
 	if (inpfmt != NULL)
 		return(getrec());
-	if (nbicols > 0)
-		return(fread(inpbuf, sizeof(double),
-					nbicols, fp) == nbicols);
-	if (nbicols < 0)
-		return(fread(inpbuf, sizeof(float),
-					-nbicols, fp) == -nbicols);
+	if (tolower(itype) == 'd') {
+		if (fread(inpbuf, sizeof(double), nbicols, fp) != nbicols)
+			return(0);
+		if (itype == 'D')
+			swap64(inpbuf, nbicols);
+		return(1);
+	}
+	if (tolower(itype) == 'f') {
+		if (fread(inpbuf, sizeof(float), nbicols, fp) != nbicols)
+			return(0);
+		if (itype == 'F')
+			swap32(inpbuf, nbicols);
+		return(1);
+	}
 	return(fgets(inpbuf, INBSIZ, fp) != NULL);
 }
 
@@ -310,11 +323,11 @@ putout(void)                /* produce an output record */
 	colpos = 0;
 	if (outfmt != NULL)
 		putrec();
-	else if (bocols)
-		chanout(bchanset);
-	else
+	else if (otype == 'a')
 		chanout(chanset);
-	if (colpos && !bocols)
+	else
+		chanout(bchanset);
+	if (colpos && otype == 'a')
 		putchar('\n');
 	if (unbuff)
 		fflush(stdout);
@@ -333,10 +346,8 @@ l_in(char *funame)	/* function call for $channel */
 			/* determine number of channels */
 	if (noinput || inpfmt != NULL)
 		return(0);
-	if (nbicols > 0)
+	if (nbicols)
 		return(nbicols);
-	if (nbicols < 0)
-		return(-nbicols);
 	cp = inpbuf;	/* need to count */
 	for (n = 0; *cp; )
 		if (blnkeq && isspace(sepchar)) {
@@ -369,15 +380,13 @@ int  n
 		eputs("illegal channel number\n");
 		quit(1);
 	}
-	if (nbicols > 0) {
+	if (nbicols) {
 		if (n > nbicols)
 			return(0.0);
-		cp = inpbuf + (n-1)*sizeof(double);
-		return(*(double *)cp);
-	}
-	if (nbicols < 0) {
-		if (n > -nbicols)
-			return(0.0);
+		if (tolower(itype) == 'd') {
+			cp = inpbuf + (n-1)*sizeof(double);
+			return(*(double *)cp);
+		}
 		cp = inpbuf + (n-1)*sizeof(float);
 		return(*(float *)cp);
 	}
@@ -429,16 +438,25 @@ double  v
 )
 {
 	static char	zerobuf[sizeof(double)];
+	float	fval = v;
 
 	while (++colpos < n)
 		fwrite(zerobuf,
-			bocols>0 ? sizeof(double) : sizeof(float),
+			tolower(otype)=='d' ? sizeof(double) : sizeof(float),
 			1, stdout);
-	if (bocols > 0)
+	switch (otype) {
+	case 'D':
+		swap64((char *)&v, 1);
+		/* fall through */
+	case 'd':
 		fwrite(&v, sizeof(double), 1, stdout);
-	else {
-		float	fval = v;
+		break;
+	case 'F':
+		swap32((char *)&fval, 1);
+		/* fall through */
+	case 'f':
 		fwrite(&fval, sizeof(float), 1, stdout);
+		break;
 	}
 }
 

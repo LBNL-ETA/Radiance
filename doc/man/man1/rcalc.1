@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.6 2004/06/09 16:00:12 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.7 2006/12/23 17:27:45 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -56,6 +56,11 @@ A special form of the
 option may be followed immediately by a 'd' or an 'f' and an optional
 count, which defaults to 1, indicating the number of double or float
 binary values to read per record on the input file.
+If the input is byte-swapped, the
+.I \-iD
+or
+.I \-iF
+options may be substituted.
 If binary input is specified, no format string or file is needed.
 .PP
 A
@@ -68,6 +73,11 @@ or
 .I \-of
 options do not require a count, as this will be determined by the
 number of output channels in the given expressions.
+If byte-swapped output is desired, the
+.I \-oD
+or
+.I \-oF
+options may be substituted.
 .PP
 The
 .I \-p

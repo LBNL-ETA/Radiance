@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.58 2006/03/10 19:40:12 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.59 2006/12/23 17:27:45 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -26,7 +26,7 @@ STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	unix_process.o process.o gethomedir.o getpath.o error.o savestr.o \
 	savqstr.o badarg.o fgetword.o words.o expandarg.o wordfile.o fgetval.o \
 	clip.o plocate.o eputs.o wputs.o quit.o lookup.o bmalloc.o \
-	loadvars.o tcos.o fputword.o chanvalue.o dircode.o paths.o
+	loadvars.o tcos.o fputword.o chanvalue.o dircode.o paths.o byteswap.o
 
 SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
@@ -134,7 +134,7 @@ free_os.o:	octree.h object.h otypes.h face.h cone.h instance.h
 tmesh.o:	tmesh.h fvect.h
 
 fgetword.o fputword.o fgetval.o fgetline.o fdate.o unix_process.o \
-expandarg.o badarg.o xf.o:	rtio.h
+byteswap.o expandarg.o badarg.o xf.o:	rtio.h
 
 expandarg.o:	rtmisc.h
 
