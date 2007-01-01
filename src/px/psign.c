@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.25 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.26 2007/01/01 03:03:32 greg Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -64,7 +64,7 @@ int  nlines, maxline;			/* text dimensions */
 int  maxwidth;				/* maximum line width (dvi) */
 
 static void makemap(void);
-static void gettext(FILE  *fp);
+static void get_text(FILE  *fp);
 static void arg_text(int  ac, char  *av[]);
 static void maptext(void);
 static void mapglyph(GLYPH  *gl, int  tx0, int  ty0);
@@ -141,7 +141,7 @@ unkopt:
 	ourfont = getfont(fontfile);
 					/* get text */
 	if (an == argc)
-		gettext(stdin);
+		get_text(stdin);
 	else
 		arg_text(argc-an, argv+an);
 
@@ -226,7 +226,7 @@ makemap(void)			/* create the bit map */
 
 
 static void
-gettext(			/* get text from a file */
+get_text(			/* get text from a file */
 	FILE  *fp
 )
 {
@@ -266,7 +266,7 @@ gettext(			/* get text from a file */
 	}
 	return;
 memerr:
-	error(SYSTEM, "Out of memory in gettext");
+	error(SYSTEM, "Out of memory in get_text");
 }
 
 
