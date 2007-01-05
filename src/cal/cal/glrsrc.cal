@@ -1,5 +1,0 @@
-SDx(x):select(x,-0.08,0.1);
-SDy(x):select(x,0.996795,0.994987);
-SDz(x):select(x,0,0);
-I(x):select(x,9.039907,7.036084);
-N:I(0);
