@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.15 2005/10/16 16:04:10 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.16 2007/02/26 21:16:02 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -101,6 +101,8 @@ OBJREC  *so;
 	src->so = so;
 						/* get the face */
 	f = getface(so);
+	if (f->area == 0.0)
+		objerror(so, USER, "zero source area");
 						/* find the center */
 	for (j = 0; j < 3; j++) {
 		src->sloc[j] = 0.0;
@@ -109,7 +111,7 @@ OBJREC  *so;
 		src->sloc[j] /= (double)f->nv;
 	}
 	if (!inface(src->sloc, f))
-		objerror(so, USER, "cannot hit center for source");
+		objerror(so, USER, "cannot hit source center");
 	src->sflags |= SFLAT;
 	VCOPY(src->snorm, f->norm);
 	src->ss2 = f->area;
@@ -171,7 +173,7 @@ register OBJREC  *so;
 	if (so->oargs.nfargs != 4)
 		objerror(so, USER, "bad # arguments");
 	if (so->oargs.farg[3] <= FTINY)
-		objerror(so, USER, "illegal radius");
+		objerror(so, USER, "illegal source radius");
 	VCOPY(src->sloc, so->oargs.farg);
 	src->srad = so->oargs.farg[3];
 	src->ss2 = PI * src->srad * src->srad;
@@ -193,9 +195,11 @@ OBJREC  *so;
 	src->so = so;
 						/* get the ring */
 	co = getcone(so, 0);
+	if (CO_R1(co) <= FTINY)
+		objerror(so, USER, "illegal source radius");
 	VCOPY(src->sloc, CO_P0(co));
 	if (CO_R0(co) > 0.0)
-		objerror(so, USER, "cannot hit center for source");
+		objerror(so, USER, "cannot hit source center");
 	src->sflags |= SFLAT;
 	VCOPY(src->snorm, co->ad);
 	src->srad = CO_R1(co);
@@ -216,6 +220,8 @@ OBJREC  *so;
 	src->so = so;
 						/* get the cylinder */
 	co = getcone(so, 0);
+	if (CO_R0(co) <= FTINY)
+		objerror(so, USER, "illegal source radius");
 	if (CO_R0(co) > .2*co->al)		/* heuristic constraint */
 		objerror(so, WARNING, "source aspect too small");
 	src->sflags |= SCYL;
@@ -249,6 +255,8 @@ register OBJREC  *m;
 		return(ns);
 	if ((ns = (SPOT *)malloc(sizeof(SPOT))) == NULL)
 		return(NULL);
+	if (m->oargs.farg[3] <= FTINY)
+		objerror(m, USER, "zero angle");
 	ns->siz = 2.0*PI * (1.0 - cos(PI/180.0/2.0 * m->oargs.farg[3]));
 	VCOPY(ns->aim, m->oargs.farg+4);
 	if ((ns->flen = normalize(ns->aim)) == 0.0)

@@ -1615,3 +1615,5 @@ Added -spec option to falsecolor to restore original spectral color scale.
 Also added "-s auto" option to automatically set the maximum value.
 
 Added byte-swapping input and output to rcalc.
+
+Additional error-checking for source surfaces.
