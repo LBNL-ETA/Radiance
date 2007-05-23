@@ -1617,3 +1617,10 @@ Also added "-s auto" option to automatically set the maximum value.
 Added byte-swapping input and output to rcalc.
 
 Additional error-checking for source surfaces.
+
+Re-fixed bug in octree code that caused it to allocate 8 times as
+much memory as it actually used(!) -- this was pointed out way back
+in 1999 by Erik Reinhard and Erik Jansen, but the fix they gave me
+got lost in the slightly borken release process at the time.  This
+should make a big difference in memory usage, especially for the
+new mesh primitive.
