@@ -1624,3 +1624,5 @@ in 1999 by Erik Reinhard and Erik Jansen, but the fix they gave me
 got lost in the slightly borken release process at the time.  This
 should make a big difference in memory usage, especially for the
 new mesh primitive.
+
+Corrected ray weights for material mixtures.

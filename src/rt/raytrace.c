@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.58 2006/06/07 17:52:04 schorsch Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.59 2007/07/02 20:16:00 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -304,12 +304,14 @@ raymixture(		/* mix modifiers */
 					/* foreground */
 	fr = *r;
 	if (coef > FTINY) {
+		fr.rweight *= coef;
 		scalecolor(fr.rcoef, coef);
 		foremat = rayshade(&fr, fore);
 	}
 					/* background */
 	br = *r;
 	if (coef < 1.0-FTINY) {
+		br.rweight *= 1.0-coef;
 		scalecolor(br.rcoef, 1.0-coef);
 		backmat = rayshade(&br, back);
 	}
