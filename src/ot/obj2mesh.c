@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.11 2004/04/23 00:56:27 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.12 2007/07/12 14:58:53 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
@@ -22,7 +22,7 @@ char  *progname;			/* argv[0] */
 
 int  nowarn = 0;			/* supress warnings? */
 
-int  objlim = 15;			/* # of objects before split */
+int  objlim = 9;			/* # of objects before split */
 
 int  resolu = 16384;			/* octree resolution limit */
 

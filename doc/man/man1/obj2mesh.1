@@ -1,4 +1,4 @@
-.\" RCSid "$Id: obj2mesh.1,v 1.8 2004/04/23 00:56:27 greg Exp $"
+.\" RCSid "$Id: obj2mesh.1,v 1.9 2007/07/12 14:58:52 greg Exp $"
 .TH OBJ2MESH 1 03/11/03 RADIANCE
 .SH NAME
 obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
@@ -61,14 +61,12 @@ The
 .I \-n
 option specifies the maximum surface set size for
 each voxel.
-Larger numbers result in quicker mesh generation needing
-less memory, but potentially slower rendering.
-Smaller values may produce faster renderings,
-since the default number (15) is on the high side to reduce
-the compiled mesh octree size.
+Larger numbers result in quicker mesh generation,
+but potentially slower rendering.
 Values below 6 are not recommended, since this is the median
 valence for a mesh vertex (the number of adjacent faces),
 and smaller values will result in pointless octree subdivision.
+The default setting is 9.
 .PP
 The
 .I \-r

@@ -1623,6 +1623,9 @@ much memory as it actually used(!) -- this was pointed out way back
 in 1999 by Erik Reinhard and Erik Jansen, but the fix they gave me
 got lost in the slightly borken release process at the time.  This
 should make a big difference in memory usage, especially for the
-new mesh primitive.
+new mesh primitive.  (I measured 30% less memory usage.)
 
 Corrected ray weights for material mixtures.
+
+Reduced the default -n setting for obj2mesh to take better advantage
+of the smaller octree structure size.
