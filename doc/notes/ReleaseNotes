@@ -1629,3 +1629,7 @@ Corrected ray weights for material mixtures.
 
 Reduced the default -n setting for obj2mesh to take better advantage
 of the smaller octree structure size.
+
+Fixed bug in shadow cache where it was adding surfaces with antimatter
+holes cut in them to the obstructor list.  Thanks to John Mardaljevic
+for discovering and reporting the problem.

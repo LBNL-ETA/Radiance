@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.12 2005/04/19 01:15:07 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.13 2007/07/25 04:12:36 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -17,6 +17,9 @@ static const char RCSid[] = "$Id: srcobstr.c,v 2.12 2005/04/19 01:15:07 greg Exp
 
 
 #if  SHADCACHE			/* preemptive shadow checking */
+
+
+OBJECT *	antimodlist = NULL;	/* set of clipped materials */
 
 
 static int				/* cast source ray to first blocker */
@@ -292,6 +295,8 @@ srcblocker(register RAY *r)
 		return(0);		/* don't record complex blockers */
 	if (r->rsrc < 0 || source[r->rsrc].so == r->ro)
 		return(0);		/* just a mistake, that's all */
+	if (antimodlist != NULL && inset(antimodlist, r->ro->omod))
+		return(0);		/* could be clipped */
 	m = findmaterial(r->ro);
 	if (m == NULL)
 		return(0);		/* no material?! */
@@ -320,6 +325,39 @@ srcblocked(RAY *r)
 		return(1);
 	rayclear(r);
 	return(0);			/* source in front */
+}
+
+
+void				/* record potentially clipped materials */
+markclip(OBJREC *m)
+{
+	OBJECT  *set2add, *oldset;
+
+	m_clip(m, NULL);		/* initialize modifier list */
+	if ((set2add = (OBJECT *)m->os) == NULL || !set2add[0])
+		return;
+
+	if (antimodlist == NULL) {	/* start of list */
+		antimodlist = setsave(set2add);
+		return;
+	}
+					/* else add to previous list */
+	oldset = antimodlist;
+	antimodlist = (OBJECT *)malloc((oldset[0]+set2add[0]+1)*sizeof(OBJECT));
+	if (antimodlist == NULL)
+		error(SYSTEM, "out of memory in markclip");
+	setunion(antimodlist, oldset, set2add);
+	free((void *)oldset);
+}
+
+
+#else	/* SHADCACHE */
+
+
+void				/* no-op also avoids linker warning */
+markclip(OBJREC *m)
+{
+	(void)m;
 }
 
 

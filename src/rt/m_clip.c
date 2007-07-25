@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.9 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.10 2007/07/25 04:12:36 greg Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -55,6 +55,8 @@ m_clip(			/* clip objects from ray */
 		}
 		m->os = (char *)modset;
 	}
+	if (r == NULL)
+		return(0);			/* just initializing */
 	if (r->clipset != NULL)
 		setcopy(cset, r->clipset);
 	else
