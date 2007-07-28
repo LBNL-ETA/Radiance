@@ -1,5 +1,5 @@
 		MGF PACKAGE DESCRIPTION
-		RCSid "$Id: readme.txt,v 1.8 2003/02/28 20:19:26 greg Exp $"
+		RCSid "$Id: readme.txt,v 1.9 2007/07/28 07:12:21 greg Exp $"
 
 This package includes a description and parser for a new scene
 description standard, called for the lack of a better name, MGF
@@ -252,16 +252,11 @@ and he'll be happy to provide you with the missing pieces.
 
 Copyright
 =========
-At this point, the legal issues related to this parser have not been
-worked out.  The intent is to offer it free of charge to all those who
-wish to use it (with no guarantees, of course).  However, we may decide
-that copyright protections are necessary to prevent unauthorized versions
-of the parser, which do not properly support the MGF standard, from
-getting spread around.  Since this is a pre-release, we trust that you
-will not share it with anyone without getting our permission first.
+This library is offered free of charge to all those who
+wish to use it for any purpose.  We take no resposibility
+for its use, misuse, correctess, or suitability.
 
 Questions
 =========
-Questions should be directed to Greg Ward <GJWard@lbl.gov>, who will be
-happy to offer any reasonable assistance in using this standard.  (Greg's
-telephone is 1-510-486-4757, fax 1-510-486-4089.)
+Questions should be directed to Greg Ward <gward@lmi.net>>, who will be
+happy to offer any reasonable assistance in using this standard.
