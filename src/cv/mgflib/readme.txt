@@ -1,5 +1,5 @@
 		MGF PACKAGE DESCRIPTION
-		RCSid "$Id: readme.txt,v 1.9 2007/07/28 07:12:21 greg Exp $"
+		RCSid "$Id: readme.txt,v 1.10 2007/08/06 14:50:28 greg Exp $"
 
 This package includes a description and parser for a new scene
 description standard, called for the lack of a better name, MGF
@@ -252,9 +252,10 @@ and he'll be happy to provide you with the missing pieces.
 
 Copyright
 =========
-This library is offered free of charge to all those who
-wish to use it for any purpose.  We take no resposibility
-for its use, misuse, correctess, or suitability.
+This library was put in public domain and is offered free
+of charge to all those who wish to use it for any purpose. 
+We take no responsibility for its use, misuse, correctess,
+or suitability.
 
 Questions
 =========
