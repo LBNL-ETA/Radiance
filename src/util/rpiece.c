@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.46 2007/08/22 17:49:54 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.47 2007/08/22 18:46:36 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -249,7 +249,7 @@ init(			/* set up output file and start rpict */
 	hres /= hmult;
 	vres /= vmult;
 	if (hres <= 0 || vres <= 0) {
-		fprintf(stderr, "%s: illegal resolution/subdivision\n");
+		fprintf(stderr, "%s: illegal resolution/subdivision\n", progname);
 		exit(1);
 	}
 	normaspect(viewaspect(&ourview)*hmult/vmult, &pixaspect, &hres, &vres);
