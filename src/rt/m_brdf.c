@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.23 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.24 2007/08/22 21:21:51 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -129,7 +129,7 @@ dirbrdf(		/* compute source contribution */
 		addcolor(cval, ctmp);
 	}
 	if (ldot > 0.0 ? np->rspec <= FTINY : np->tspec <= FTINY)
-		return;		/* no specular component */
+		return;		/* diffuse only */
 					/* set up function */
 	setbrdfunc(np);
 	sa = np->mp->oargs.sarg;
@@ -145,7 +145,9 @@ dirbrdf(		/* compute source contribution */
 			colval(ctmp,RED) = 0.0;
 		else
 			colval(ctmp,RED) = funvalue(sa[6], 4, lddx);
-		if (!strcmp(sa[7],sa[6]))
+		if (sa[7][0] == '0')
+			colval(ctmp,GRN) = 0.0;
+		else if (!strcmp(sa[7],sa[6]))
 			colval(ctmp,GRN) = colval(ctmp,RED);
 		else
 			colval(ctmp,GRN) = funvalue(sa[7], 4, lddx);
