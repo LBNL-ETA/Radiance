@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.4 2005/09/23 19:22:37 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.5 2007/08/24 04:41:36 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -17,15 +17,15 @@ static const char RCSid[] = "$Id: mksource.c,v 2.4 2005/09/23 19:22:37 greg Exp 
 /* Data structure for geodesic samples */
 
 typedef struct tritree {
-	FVECT		gdv[3];		/* spherical triangle vertex direc. */
-	FVECT		sd;		/* sample direction if leaf */
+	int32		gdv[3];		/* spherical triangle vertex direc. */
+	int32		sd;		/* sample direction if leaf */
 	struct tritree	*kid;		/* 4 children if branch node */
 	COLR		val;		/* sampled color value */
 } TRITREE;
 
 typedef struct lostlight {
 	struct lostlight	*next;	/* next in list */
-	FVECT		sd;		/* lost source direction */
+	int32		sd;		/* lost source direction */
 	COLOR		intens;		/* output times solid angle */
 } LOSTLIGHT;
 
@@ -56,10 +56,14 @@ vol_sign(const FVECT v1, const FVECT v2, const FVECT v3)
 
 /* Is the given direction contained within the specified spherical triangle? */
 int
-intriv(FVECT tri[3], const FVECT sdir)
+intriv(const int32 trid[3], const FVECT sdir)
 {
 	int	sv[3];
+	FVECT	tri[3];
 
+	decodedir(tri[0], trid[0]);
+	decodedir(tri[1], trid[1]);
+	decodedir(tri[2], trid[2]);
 	sv[0] = vol_sign(sdir, tri[0], tri[1]);
 	sv[1] = vol_sign(sdir, tri[1], tri[2]);
 	sv[2] = vol_sign(sdir, tri[2], tri[0]);
@@ -91,6 +95,7 @@ leafsample(TRITREE *leaf)
 {
 	RAY	myray;
 	RREAL	wt[3];
+	FVECT	sdir;
 	int	i, j;
 						/* random point on triangle */
 	i = random() % 3;
@@ -98,13 +103,17 @@ leafsample(TRITREE *leaf)
 	j = random() & 1;
 	wt[(i+2-j)%3] = 1. - wt[i] - 
 			(wt[(i+1+j)%3] = (1.-wt[i])*frandom());
-	leaf->sd[0] = leaf->sd[1] = leaf->sd[2] = .0;
-	for (i = 0; i < 3; i++)
-		VSUM(leaf->sd, leaf->sd, leaf->gdv[i], wt[i]);
-	normalize(leaf->sd);			/* record sample direction */
+	sdir[0] = sdir[1] = sdir[2] = .0;
+	for (i = 0; i < 3; i++) {
+		FVECT	vt;
+		decodedir(vt, leaf->gdv[i]);
+		VSUM(sdir, sdir, vt, wt[i]);
+	}
+	normalize(sdir);			/* record sample direction */
+	leaf->sd = encodedir(sdir);
 						/* evaluate at inf. */
-	VSUM(myray.rorg, scene_cent, leaf->sd, scene_rad);
-	VCOPY(myray.rdir, leaf->sd);
+	VSUM(myray.rorg, scene_cent, sdir, scene_rad);
+	VCOPY(myray.rdir, sdir);
 	myray.rmax = 0.;
 	ray_trace(&myray);
 	setcolr(leaf->val, colval(myray.rcol,RED),
@@ -114,35 +123,39 @@ leafsample(TRITREE *leaf)
 
 /* Initialize a branch node contained in the given spherical triangle */
 void
-subdivide(TRITREE *branch, FVECT dv[3])
+subdivide(TRITREE *branch, const int32 dv[3])
 {
-	FVECT	sdv[3];
+	FVECT	dvv[3], sdv[3];
+	int32	sd[3];
 	int	i;
 	
-	for (i = 0; i < 3; i++)		/* copy spherical triangle */
-		VCOPY(branch->gdv[i], dv[i]);
+	for (i = 0; i < 3; i++) {	/* copy spherical triangle */
+		branch->gdv[i] = dv[i];
+		decodedir(dvv[i], dv[i]);
+	}
 	for (i = 0; i < 3; i++) {	/* create new vertices */
 		int	j = (i+1)%3;
-		VADD(sdv[i], dv[i], dv[j]);
+		VADD(sdv[i], dvv[i], dvv[j]);
 		normalize(sdv[i]);
+		sd[i] = encodedir(sdv[i]);
 	}
 					/* allocate leaves */
 	branch->kid = (TRITREE *)calloc(4, sizeof(TRITREE));
 	if (branch->kid == NULL)
 		error(SYSTEM, "out of memory in subdivide()");
 					/* assign subtriangle directions */
-	VCOPY(branch->kid[0].gdv[0], dv[0]);
-	VCOPY(branch->kid[0].gdv[1], sdv[0]);
-	VCOPY(branch->kid[0].gdv[2], sdv[2]);
-	VCOPY(branch->kid[1].gdv[0], sdv[0]);
-	VCOPY(branch->kid[1].gdv[1], dv[1]);
-	VCOPY(branch->kid[1].gdv[2], sdv[1]);
-	VCOPY(branch->kid[2].gdv[0], sdv[1]);
-	VCOPY(branch->kid[2].gdv[1], dv[2]);
-	VCOPY(branch->kid[2].gdv[2], sdv[2]);
-	VCOPY(branch->kid[3].gdv[0], sdv[0]);
-	VCOPY(branch->kid[3].gdv[1], sdv[1]);
-	VCOPY(branch->kid[3].gdv[2], sdv[2]);
+	branch->kid[0].gdv[0] = dv[0];
+	branch->kid[0].gdv[1] = sd[0];
+	branch->kid[0].gdv[2] = sd[2];
+	branch->kid[1].gdv[0] = sd[0];
+	branch->kid[1].gdv[1] = dv[1];
+	branch->kid[1].gdv[2] = sd[1];
+	branch->kid[2].gdv[0] = sd[1];
+	branch->kid[2].gdv[1] = dv[2];
+	branch->kid[2].gdv[2] = sd[2];
+	branch->kid[3].gdv[0] = sd[0];
+	branch->kid[3].gdv[1] = sd[1];
+	branch->kid[3].gdv[2] = sd[2];
 }
 
 /* Recursively subdivide the given node to the specified quadtree depth */
@@ -155,10 +168,12 @@ branchsample(TRITREE *node, int depth)
 		return;
 	if (isleaf(node)) {			/* subdivide leaf node */
 		TRITREE	branch, *moved_leaf;
+		FVECT	sdir;
 		subdivide(&branch, node->gdv);
-		moved_leaf = findleaf(&branch, node->sd);
+		decodedir(sdir, node->sd);
+		moved_leaf = findleaf(&branch, sdir);
 		if (moved_leaf != NULL) {	/* bequeath old sample */
-			VCOPY(moved_leaf->sd, node->sd);
+			moved_leaf->sd = node->sd;
 			copycolr(moved_leaf->val, node->val);
 		}
 		for (i = 0; i < 4; i++)		/* compute new samples */
@@ -193,15 +208,13 @@ geosample(int nsamps)
 	trunk[1][1] = sqrt(1. - trunk[1][2]*trunk[1][2]);
 	spinvector(trunk[2], trunk[1], trunk[0], 2.*PI/3.);
 	spinvector(trunk[3], trunk[1], trunk[0], 4.*PI/3.);
-	VCOPY(tree->gdv[0], trunk[0]);
-	VCOPY(tree->gdv[1], trunk[0]);
-	VCOPY(tree->gdv[2], trunk[0]);
+	tree->gdv[0] = tree->gdv[1] = tree->gdv[2] = encodedir(trunk[0]);
 	tree->kid = (TRITREE *)calloc(NTRUNKBR, sizeof(TRITREE));
 	if (tree->kid == NULL) goto memerr;
 					/* grow our tree from trunk */
 	for (i = 0; i < NTRUNKBR; i++) {
 		for (j = 0; j < 3; j++)		/* XXX works for tetra only */
-			VCOPY(tree->kid[i].gdv[j], trunk[(i+j)%NTRUNKVERT]);
+			tree->kid[i].gdv[j] = encodedir(trunk[(i+j)%NTRUNKVERT]);
 		leafsample(&tree->kid[i]);
 		branchsample(&tree->kid[i], depth);
 	}
@@ -269,68 +282,73 @@ findemax(TRITREE *node, int *expp)
 
 /* Compute solid angle of spherical triangle (approx.) */
 double
-tri_omegav(FVECT v[3])
+tri_omegav(const int32 vd[3])
 {
-	FVECT	e1, e2, vcross;
-	
+	FVECT	v[3], e1, e2, vcross;
+
+	decodedir(v[0], vd[0]);
+	decodedir(v[1], vd[1]);
+	decodedir(v[2], vd[2]);
 	VSUB(e1, v[1], v[0]);
 	VSUB(e2, v[2], v[1]);
 	fcross(vcross, e1, e2);
 	return(.5*VLEN(vcross));
 }
 
-/* Sum intensity times direction for non-zero leaves */
+/* Sum intensity times direction for above-threshold perimiter within radius */
 void
 vector_sum(FVECT vsum, TRITREE *node,
-		const FVECT cent, double mincos, int ethresh)
+		FVECT cent, double maxr2, int ethresh)
 {
 	if (isleaf(node)) {
 		double	intens;
+		FVECT	sdir;
 		if (node->val[EXP] < ethresh)
-			return;
-		if (DOT(node->sd,cent) < mincos)
-			return;
+			return;				/* below threshold */
+		if (fdir2diff(node->sd,cent) > maxr2)
+			return;				/* too far away */
 		intens = colrval(node->val,GRN) * tri_omegav(node->gdv);
-		VSUM(vsum, vsum, node->sd, intens);
+		decodedir(sdir, node->sd);
+		VSUM(vsum, vsum, sdir, intens);
 		return;
 	}
-	if (DOT(node->gdv[0],node->gdv[1]) < mincos &&
-			DOT(node->gdv[0],cent) > mincos &&
-			DOT(node->gdv[1],cent) > mincos &&
-			DOT(node->gdv[2],cent) > mincos)
-		return;
-	vector_sum(vsum, &node->kid[0], cent, mincos, ethresh);
-	vector_sum(vsum, &node->kid[1], cent, mincos, ethresh);
-	vector_sum(vsum, &node->kid[2], cent, mincos, ethresh);
-	vector_sum(vsum, &node->kid[3], cent, mincos, ethresh);
+	if (dir2diff(node->gdv[0],node->gdv[1]) > maxr2 &&
+			fdir2diff(node->gdv[0],cent) < maxr2 &&
+			fdir2diff(node->gdv[1],cent) < maxr2 &&
+			fdir2diff(node->gdv[2],cent) < maxr2)
+		return;					/* containing node */
+	vector_sum(vsum, &node->kid[0], cent, maxr2, ethresh);
+	vector_sum(vsum, &node->kid[1], cent, maxr2, ethresh);
+	vector_sum(vsum, &node->kid[2], cent, maxr2, ethresh);
+	vector_sum(vsum, &node->kid[3], cent, maxr2, ethresh);
 }
 
 /* Claim source contributions within the given solid angle */
 void
-claimlight(COLOR intens, TRITREE *node, const FVECT cent, double mincos)
+claimlight(COLOR intens, TRITREE *node, FVECT cent, double maxr2)
 {
 	int	remaining;
 	int	i;
 	if (isleaf(node)) {		/* claim contribution */
 		COLOR	contrib;
 		if (node->val[EXP] <= 0)
-			return;
-		if (DOT(node->sd,cent) < mincos)
-			return;
+			return;		/* already claimed */
+		if (fdir2diff(node->sd,cent) > maxr2)
+			return;		/* too far away */
 		colr_color(contrib, node->val);
 		scalecolor(contrib, tri_omegav(node->gdv));
 		addcolor(intens, contrib);
 		copycolr(node->val, blkclr);
 		return;
 	}
-	if (DOT(node->gdv[0],node->gdv[1]) < mincos &&
-			DOT(node->gdv[0],cent) > mincos &&
-			DOT(node->gdv[1],cent) > mincos &&
-			DOT(node->gdv[2],cent) > mincos)
-		return;
+	if (dir2diff(node->gdv[0],node->gdv[1]) > maxr2 &&
+			fdir2diff(node->gdv[0],cent) < maxr2 &&
+			fdir2diff(node->gdv[1],cent) < maxr2 &&
+			fdir2diff(node->gdv[2],cent) < maxr2)
+		return;			/* previously claimed node */
 	remaining = 0;			/* recurse on children */
 	for (i = 0; i < 4; i++) {
-		claimlight(intens, &node->kid[i], cent, mincos);
+		claimlight(intens, &node->kid[i], cent, maxr2);
 		if (!isleaf(&node->kid[i]) || node->kid[i].val[EXP] != 0)
 			++remaining;
 	}
@@ -339,34 +357,34 @@ claimlight(COLOR intens, TRITREE *node, const FVECT cent, double mincos)
 					/* consolidate empties */
 	free((void *)node->kid); node->kid = NULL;
 	copycolr(node->val, blkclr);
-	VCOPY(node->sd, node->gdv[0]);	/* doesn't really matter */
+	node->sd = node->gdv[0];	/* doesn't really matter */
 }
 
 /* Add lost light contribution to the given list */
 void
-add2lost(LOSTLIGHT **llp, COLOR intens, const FVECT cent)
+add2lost(LOSTLIGHT **llp, COLOR intens, FVECT cent)
 {
 	LOSTLIGHT	*newll = (LOSTLIGHT *)malloc(sizeof(LOSTLIGHT));
 
 	if (newll == NULL)
 		return;
 	copycolor(newll->intens, intens);
-	VCOPY(newll->sd, cent);
+	newll->sd = encodedir(cent);
 	newll->next = *llp;
 	*llp = newll;
 }
 
 /* Check lost light list for contributions */
 void
-getlost(LOSTLIGHT **llp, COLOR intens, const FVECT cent, double omega)
+getlost(LOSTLIGHT **llp, COLOR intens, FVECT cent, double omega)
 {
-	const double	mincos = 1. - omega/(2.*PI);
+	const double	maxr2 = omega/PI;
 	LOSTLIGHT	lhead, *lastp, *thisp;
 
 	lhead.next = *llp;
 	lastp = &lhead;
 	while ((thisp = lastp->next) != NULL)
-		if (DOT(thisp->sd,cent) >= mincos) {
+		if (fdir2diff(thisp->sd,cent) <= maxr2) {
 			LOSTLIGHT	*mynext = thisp->next;
 			addcolor(intens, thisp->intens);
 			free((void *)thisp);
@@ -419,7 +437,7 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 		if (startleaf == NULL)
 			break;
 					/* claim it */
-		VCOPY(curcent, startleaf->sd);
+		decodedir(curcent, startleaf->sd);
 		curomega = tri_omegav(startleaf->gdv);
 		currad = sqrt(curomega/PI);
 		growstep = 3.*currad;
@@ -435,7 +453,7 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 			vsum[0] = vsum[1] = vsum[2] = .0;
 			for (i = 0; i < NTRUNKBR; i++)
 				vector_sum(vsum, &samptree->kid[i],
-						curcent, cos(currad+growstep),
+					curcent, 2.-2.*cos(currad+growstep),
 						thisethresh);
 			if (normalize(vsum) == .0)
 				break;
@@ -451,7 +469,7 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 			curomega = 2.*PI*(1. - cos(currad));
 			for (i = 0; i < NTRUNKBR; i++)
 				claimlight(curintens, &samptree->kid[i],
-						curcent, cos(currad));
+						curcent, 2.-2.*cos(currad));
 		} while (curomega < maxomega &&
 				bright(curintens)/curomega > thisthresh);
 		if (bright(curintens) < minintens) {
