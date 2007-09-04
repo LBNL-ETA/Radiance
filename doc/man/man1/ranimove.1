@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimove.1,v 1.4 2005/09/17 05:14:14 greg Exp $"
+.\" RCSid "$Id: ranimove.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH RANIMOVE 1 1/30/03 RADIANCE
 .SH NAME
 ranimove - render a RADIANCE animation with motion
@@ -253,7 +253,7 @@ how to adjust the exposure for each frame.
 As in
 .I pfilt,
 the exposure setting may be given either as a multiplier or as a
-number of f-stop adjustments (eg. +2 or -1.5).
+number of f\-stop adjustments (eg. +2 or \-1.5).
 Alternatively, a file name may be given, which
 .I ranimate
 will interpret as having one exposure value per line per frame,
@@ -351,7 +351,7 @@ If we only want to see what default values
 would use without actually executing anything, we can invoke it
 thus:
 .IP "" .2i
-ranimove -n 0 -e sample.rnm
+ranimove \-n 0 \-e sample.rnm
 .PP
 This will print the variables we have given as well as default
 values

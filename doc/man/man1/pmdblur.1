@@ -1,5 +1,6 @@
-.\" RCSid "$Id: pmdblur.1,v 1.2 2005/01/18 20:19:56 greg Exp $"
-.TH PMDBLUR 1 1/17/05 NAME
+.\" RCSid "$Id: pmdblur.1,v 1.3 2007/09/04 17:36:40 greg Exp $"
+.TH PMDBLUR 1 1/17/05 RADIANCE
+.SH NAME
 pmdblur - generate views for combined camera motion and depth blurring
 .SH SYNOPSIS
 .B pmdblur
@@ -124,7 +125,7 @@ to simulate motion blur between two frames of a walk-through
 animation, where the camera shutter is open for 1/4 of the
 interframe distance with an aperture of 0.1 world units:
 .IP "" .2i
-pmdblur .25 .1 8 fr1023.pic fr1024.pic | pinterp -B -vf fr1023.pic -x 640 -y 480
+pmdblur .25 .1 8 fr1023.pic fr1024.pic | pinterp \-B \-vf fr1023.pic \-x 640 \-y 480
 fr1023.pic fr1023.zbf fr1024.pic fr1024.zbf > fr1023b.pic
 .SH AUTHOR
 Greg Ward

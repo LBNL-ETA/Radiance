@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.7 2006/09/08 21:38:25 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.8 2007/09/04 17:36:40 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -198,23 +198,23 @@ by preceeding it with an exclamation point ('!').
 .SH EXAMPLES
 To produce a picture showing the difference between pic1 and pic2:
 .IP "" .2i
-pcomb -e 'ro=ri(1)-ri(2);go=gi(1)-gi(2);bo=bi(1)-bi(2)' pic1 pic2 > diff
+pcomb \-e 'ro=ri(1)\-ri(2);go=gi(1)\-gi(2);bo=bi(1)\-bi(2)' pic1 pic2 > diff
 .PP
 Or, more efficiently:
 .IP "" .2i
-pcomb pic1 -s -1 pic2 > diff
+pcomb pic1 \-s \-1 pic2 > diff
 .PP
 To precompute the gamma correction for a picture:
 .IP "" .2i
-pcomb -e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' pic > pic.gam
+pcomb \-e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' pic > pic.gam
 .PP
 To perform some special filtering:
 .IP "" .2i
-pcomb -f myfilt.cal -x xmax/2 -y ymax/2 input.pic > filtered.pic
+pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.pic > filtered.pic
 .PP
 To make a picture of a dot:
 .IP "" .2i
-pcomb -x 100 -y 100 -e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2-25^2,0,1)' > dot
+pcomb \-x 100 \-y 100 \-e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2\-25^2,0,1)' > dot
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

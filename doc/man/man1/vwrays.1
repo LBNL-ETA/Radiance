@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwrays.1,v 1.4 2005/09/19 04:26:08 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
@@ -109,15 +109,15 @@ vwrays scene_v2.pic scene_v2.zbf > scene_v2.pts
 .PP
 To determine what the dimensions of a given view would be:
 .IP "" .2i
-vwrays -d -vf myview.vf -x 2048 -y 2048
+vwrays \-d \-vf myview.vf \-x 2048 \-y 2048
 .PP
 To generate a RADIANCE picture using
 .I rtrace
 instead of
 .I rpict:
 .IP "" .2i
-vwrays -ff -vf view1.vf -x 1024 -y 1024 |
-rtrace `vwrays -d -vf view1.vf -x 1024 -y 1024` -ffc scene.oct > view1.pic
+vwrays \-ff \-vf view1.vf \-x 1024 \-y 1024 |
+rtrace `vwrays \-d \-vf view1.vf \-x 1024 \-y 1024` \-ffc scene.oct > view1.pic
 .SH AUTHOR
 Greg Ward Larson
 .SH ACKNOWLEDGMENT

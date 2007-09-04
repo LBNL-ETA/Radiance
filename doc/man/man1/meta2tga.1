@@ -1,4 +1,4 @@
-.\" RCSid "$Id: meta2tga.1,v 1.4 2005/10/27 00:20:08 greg Exp $"
+.\" RCSid "$Id: meta2tga.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH META2TGA 1 6/24/98 RADIANCE
 .SH NAME
 meta2tga - convert metafile to Targa image format
@@ -57,7 +57,7 @@ If no input files are specified, the standard input is read.
 .SH EXAMPLE
 To convert the plots examp1.plt and examp2.plt to 1024x1024 Targa files:
 .IP "" .2i
-bgraph examp1.plt examp2.plt | meta2tga -o examp -x 1024 -y 1024
+bgraph examp1.plt examp2.plt | meta2tga \-o examp \-x 1024 \-y 1024
 .SH FILES
 see pexpand(1) and psort(1)
 .SH AUTHOR

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: obj2mesh.1,v 1.9 2007/07/12 14:58:52 greg Exp $"
+.\" RCSid "$Id: obj2mesh.1,v 1.10 2007/09/04 17:36:40 greg Exp $"
 .TH OBJ2MESH 1 03/11/03 RADIANCE
 .SH NAME
 obj2mesh - create a compiled RADIANCE mesh file from Wavefront .OBJ input
@@ -136,7 +136,7 @@ where the first vertex position (
 statement) is numbered 1, and likewise
 for the first texture coordinate and the first surface normal.
 Negative indices count backward from the current position in
-the input, where -1 is the last vertex encountered, -2
+the input, where \-1 is the last vertex encountered, \-2
 is the one before that, etc.
 An index of 0 may be used for the vertex texture or normal to
 indicate none, or these may be left off entirely.
@@ -184,7 +184,7 @@ little hope of compiling this mesh.
 To create a compiled triangle mesh from the scene file mesh.obj
 using materials from the file mesh.mat:
 .IP "" .2i
-obj2mesh -a mesh.mat mesh.obj mesh.rtm
+obj2mesh \-a mesh.mat mesh.obj mesh.rtm
 .PP
 To use local coordinates to place a square tiled image on a mesh object:
 .sp

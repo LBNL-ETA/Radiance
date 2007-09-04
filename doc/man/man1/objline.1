@@ -1,4 +1,4 @@
-.\" RCSid "$Id: objline.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: objline.1,v 1.3 2007/09/04 17:36:40 greg Exp $"
 .TH OBJLINE 1 10/27/95 RADIANCE
 .SH NAME
 objline - create metafile line drawings of RADIANCE object(s)
@@ -31,7 +31,7 @@ is read.
 To create a line drawing of the RADIANCE file "myfile.rad" and
 display under X11:
 .IP "" .2i
-objline myfile.rad | x11meta -r &
+objline myfile.rad | x11meta \-r &
 .PP
 To create a line drawing of three objects in different colors
 and send to the printer:
@@ -41,7 +41,7 @@ objline obj1.rad obj2.rad obj3.rad | psmeta | lpr
 To create a line drawing of a room and convert into a 1024x1024 RADIANCE
 picture:
 .IP "" .2i
-objline room.rad | meta2tga -x 1024 -y 1024 | ra_t8 -r > drawing.pic
+objline room.rad | meta2tga \-x 1024 \-y 1024 | ra_t8 \-r > drawing.pic
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

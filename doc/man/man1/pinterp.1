@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pinterp.1,v 1.4 2005/01/18 03:59:40 greg Exp $"
+.\" RCSid "$Id: pinterp.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH PINTERP 1 1/24/96 RADIANCE
 .SH NAME
 pinterp - interpolate/extrapolate view from pictures
@@ -227,12 +227,12 @@ option is in effect (or there is only a single input picture).
 To interpolate two frames of a walk-through animation, anti-alias to
 512x400 and increase the exposure by 2.5 f-stops:
 .IP "" .2i
-pinterp -vf 27.vf -a -x 512 -y 400 -e +2.5 30.pic 30.z 20.pic 20.z > 27.pic
+pinterp \-vf 27.vf \-a \-x 512 \-y 400 \-e +2.5 30.pic 30.z 20.pic 20.z > 27.pic
 .PP
 To extrapolate a second eyepoint for a stereo pair and recalculate
 background regions:
 .IP "" .2i
-pinterp -vf right.vf -ff -fr "-av .1 .1 .1 scene.oct" left.pic left.z > right.pic
+pinterp \-vf right.vf \-ff \-fr "\-av .1 .1 .1 scene.oct" left.pic left.z > right.pic
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

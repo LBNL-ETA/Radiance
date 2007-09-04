@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ximage.1,v 1.4 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: ximage.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH XIMAGE 1 10/27/98 RADIANCE
 .SH NAME
 ximage - RADIANCE picture display for X window system
@@ -140,7 +140,7 @@ Display the x and y location of the cursor.
 .BR i
 Identify identical pixels by assigning a random color at the cursor position.
 This is useful for displaying contours, especially when combined
-with the -b option.
+with the \-b option.
 .TP
 .BR t
 Print information about the pixel under the cursor
@@ -161,7 +161,7 @@ l	luminance value
 .IP
 p	pixel position
 .IP
-The default output is "-ood", which prints
+The default output is "\-ood", which prints
 the ray origin and direction.
 This can be used as input to rtrace(1) to get additional information
 about the image (ie. pipe the output of ximage into rtrace).

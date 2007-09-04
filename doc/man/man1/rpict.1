@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.10 2005/06/14 03:34:14 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.11 2007/09/04 17:36:41 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -152,7 +152,7 @@ This is option is useful for generating skewed perspectives or
 rendering an image a piece at a time.
 A value of 1 means that the rendered image starts just to the right of
 the normal view.
-A value of -1 would be to the left.
+A value of \-1 would be to the left.
 Larger or fractional values are permitted as well.
 .TP
 .BI -vl \ val
@@ -263,7 +263,7 @@ A warning about aiming failure will issued if
 .I frac
 is too large.
 It is usually wise to turn off image sampling when using
-direct jitter by setting -ps to 1.
+direct jitter by setting \-ps to 1.
 .TP
 .BI -ds \ frac
 Set the direct sampling ratio to
@@ -774,7 +774,7 @@ Set the time between progress reports to
 A progress report writes the number of rays traced, the percentage
 completed, and the CPU usage to the standard error.
 Reports are given either automatically after the specified interval,
-or when the process receives a continue (-CONT) signal (see
+or when the process receives a continue (\-CONT) signal (see
 .I kill(1)).
 A value of zero turns automatic reporting off.
 .TP
@@ -788,9 +788,9 @@ Boolean switch for warning messages.
 The default is to print warnings, so the first appearance of
 this option turns them off.
 .SH EXAMPLE
-rpict -vp 10 5 3 -vd 1 -.5 0 scene.oct > scene.pic
+rpict \-vp 10 5 3 \-vd 1 \-.5 0 scene.oct > scene.pic
 .PP
-rpict -S 1 -o frame%02d.pic scene.oct < keyframes.vf
+rpict \-S 1 \-o frame%02d.pic scene.oct < keyframes.vf
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH FILES

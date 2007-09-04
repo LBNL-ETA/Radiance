@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mksource.1,v 1.4 2005/08/19 02:31:07 greg Exp $"
+.\" RCSid "$Id: mksource.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH MKSOURCE 1 04/11/05 RADIANCE
 .SH NAME
 mksource - compute distant sources for RADIANCE image-based lighting
@@ -53,9 +53,9 @@ If no input octree is specified, the standard input is read.
 To add sources with a maximum size of 20 degrees
 to the enviornment described in environ.oct:
 .IP "" .2i
-mksource -a 20 environ.oct > srcs.rad
+mksource \-a 20 environ.oct > srcs.rad
 .br
-oconv -i environ.oct srcs.rad > env+srcs.oct
+oconv \-i environ.oct srcs.rad > env+srcs.oct
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

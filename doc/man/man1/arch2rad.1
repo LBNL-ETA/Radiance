@@ -1,4 +1,4 @@
-.\" RCSid "$Id: arch2rad.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: arch2rad.1,v 1.3 2007/09/04 17:36:40 greg Exp $"
 .TH ARCH2RAD 1 11/15/93 RADIANCE
 .SH NAME
 arch2rad - convert Architrion text file to RADIANCE description
@@ -152,12 +152,12 @@ reference id name "window overhangs" in layer number 3.
 .SH EXAMPLE
 To create a qualifier list for building.txt:
 .IP "" .2i
-arch2rad -n building.txt > building.qual
+arch2rad \-n building.txt > building.qual
 .PP
 To translate building.txt into a RADIANCE file using the mapping
 building.map:
 .IP "" .2i
-arch2rad -m building.map building.txt > building.rad
+arch2rad \-m building.map building.txt > building.rad
 .PP
 To create an octree directly from an Architrion file using the default
 mapping and materials:

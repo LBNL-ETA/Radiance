@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimate.1,v 1.8 2006/04/18 04:50:43 greg Exp $"
+.\" RCSid "$Id: ranimate.1,v 1.9 2007/09/04 17:36:41 greg Exp $"
 .TH RANIMATE 1 6/24/98 RADIANCE
 .SH NAME
 ranimate - compute a RADIANCE animation
@@ -157,7 +157,7 @@ how to adjust the exposure for each frame.
 As in
 .I pfilt,
 the exposure setting may be given either as a multiplier or as a
-number of f-stop adjustments (eg. +2 or -1.5).
+number of f\-stop adjustments (eg. +2 or \-1.5).
 Alternatively, a file name may be given, which
 .I ranimate
 will interpret as having one exposure value per line per frame,
@@ -489,7 +489,7 @@ If we only want to see what default values
 would use without actually executing anything, we can invoke it
 thus:
 .IP "" .2i
-ranimate -n -e sample.ran
+ranimate \-n \-e sample.ran
 .PP
 This will print the variables we have given as well as default
 values
@@ -520,7 +520,7 @@ INTERP= 3				# render every fourth frame
 RES= 1024				# shoot for 1024x resolution
 MBLUR= .25				# apply camera motion blur
 EXP= anim1.exp				# adjust exposure according to file
-pfilt= -r .9				# use Gaussian filtering
+pfilt= \-r .9				# use Gaussian filtering
 ARCHIVE= tar cf /dev/nrtape		# save original renderings to tape
 .fi
 .PP

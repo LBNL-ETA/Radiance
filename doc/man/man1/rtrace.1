@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.14 2006/02/05 22:22:20 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.15 2007/09/04 17:36:41 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -612,22 +612,22 @@ system call will share memory on a copy-on-write basis.
 .SH EXAMPLES
 To compute radiance values for the rays listed in samples.inp:
 .IP "" .2i
-rtrace -ov scene.oct < samples.inp > radiance.out
+rtrace \-ov scene.oct < samples.inp > radiance.out
 .PP
 To compute illuminance values at locations selected with the 't'
 command of
 .I ximage(1):
 .IP "" .2i
-ximage scene.pic | rtrace -h -x 1 -i scene.oct | rcalc -e '$1=47.4*$1+120*$2+11.6*$3'
+ximage scene.pic | rtrace \-h \-x 1 \-i scene.oct | rcalc \-e '$1=47.4*$1+120*$2+11.6*$3'
 .PP
 To record the object identifier corresponding to each pixel in an image:
 .IP "" .2i
-vwrays -fd scene.pic | rtrace -fda `vwrays -d scene.pic` -os scene.oct
+vwrays \-fd scene.pic | rtrace \-fda `vwrays \-d scene.pic` \-os scene.oct
 .PP
 To compute an image with an unusual view mapping:
 .IP "" .2i
-cnt 640 480 | rcalc -e 'xr:640;yr:480' -f unusual_view.cal | rtrace
--x 640 -y 480 -fac scene.oct > unusual.pic
+cnt 640 480 | rcalc \-e 'xr:640;yr:480' \-f unusual_view.cal | rtrace
+\-x 640 \-y 480 \-fac scene.oct > unusual.pic
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH FILES

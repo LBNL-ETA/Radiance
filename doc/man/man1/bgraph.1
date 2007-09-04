@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bgraph.1,v 1.4 2005/10/27 00:20:08 greg Exp $"
+.\" RCSid "$Id: bgraph.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH BGRAPH 1 6/24/98 RADIANCE
 .SH NAME
 bgraph - do a set of batch graphs to a metafile
@@ -264,9 +264,9 @@ Or, to graph selected points:
 The commands to plot these files might be:
 .nf
 
-	bgraph -line sine1.plt | psmeta | lpr
+	bgraph \-line sine1.plt | psmeta | lpr
 
-	bgraph -curve +ymin -1 +ymax 1 sine2.plt | x11meta
+	bgraph \-curve +ymin \-1 +ymax 1 sine2.plt | x11meta
 
 .fi
 .SH FILES

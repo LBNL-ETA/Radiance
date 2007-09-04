@@ -1,4 +1,4 @@
-.\" RCSid "$Id: gensky.1,v 1.5 2004/09/10 18:19:24 greg Exp $"
+.\" RCSid "$Id: gensky.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
 .TH GENSKY 1 4/24/98 RADIANCE
 .SH NAME
 gensky - generate a RADIANCE description of the sky
@@ -37,14 +37,14 @@ YST   PST   MST   CST   EST   GMT
  9     8     7     6     5     0
 
 CET   EET   AST   GST   IST   JST  NZST
--1    -2    -3    -4    -5.5  -9   -12
+\-1    \-2    \-3    \-4    \-5.5  \-9   \-12
 
 Daylight savings time:
 YDT   PDT   MDT   CDT   EDT   BST
- 8     7     6     5     4     -1
+ 8     7     6     5     4     \-1
 
 CEST  EEST  ADT   GDT   IDT   JDT  NZDT
- -2    -3   -4    -5   -6.5   -10  -13
+ \-2    \-3   \-4    \-5   \-6.5   \-10  \-13
 .fi
 .PP
 If the time is preceded by a plus sign ('+'), then it is interpreted
@@ -216,12 +216,12 @@ If a time zone or solar time is given directly, then this option has no effect.
 To produce a sunny sky for July 4th at 2:30pm Eastern daylight time at a
 site latitude of 42 degrees, 89 degrees west longitude:
 .IP "" .2i
-gensky 7 4 14:30EDT +s -a 42 -o 89
+gensky 7 4 14:30EDT +s \-a 42 \-o 89
 .PP
 To produce a sunny sky distribution for a specific sun position but
 without the sun description:
 .IP "" .2i
-gensky -ang 23 -40 -s
+gensky \-ang 23 \-40 \-s
 .SH FILES
 /usr/local/lib/ray/skybright.cal
 .SH AUTHOR

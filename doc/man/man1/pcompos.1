@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcompos.1,v 1.3 2006/09/08 21:38:25 greg Exp $"
+.\" RCSid "$Id: pcompos.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
 .TH PCOMPOS 1 12/18/97 RADIANCE
 .SH NAME
 pcompos - composite RADIANCE pictures.
@@ -154,7 +154,7 @@ psign Copyright 1987 | pcompos pic.inp 0 0 +t .5 - 384 64 > pic.out
 .PP
 To make a catalog of images separated by white 10-pixel borders:
 .IP "" .2i
-pcompos -la -a 4 -s 10 -b 1 1 1 dog*.pic > alldogs.pic
+pcompos \-la \-a 4 \-s 10 \-b 1 1 1 dog*.pic > alldogs.pic
 .SH NOTES
 Since there is a limit to the number of open files and processes,
 large collections of images must be created in stages.

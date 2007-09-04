@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.5 2005/02/22 16:10:43 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -197,7 +197,7 @@ The default is
 The following command generates illum's corresponding to geometry
 in the files "it1.rad" and "it2.rad":
 .IP "" .3i
-mkillum -ab 2 -ad 1024 -av .1 .1 .1 basic.oct "<" it1.rad it2.rad > illums.rad
+mkillum \-ab 2 \-ad 1024 \-av .1 .1 .1 basic.oct "<" it1.rad it2.rad > illums.rad
 .PP
 The output file "illums.rad" would then be combined with the original
 scene geometry to create a more easily rendered composite.

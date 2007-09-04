@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.15 2006/02/05 22:22:20 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.16 2007/09/04 17:36:41 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -98,7 +98,7 @@ systems, such as luminaires, light pipes, and shading devices.
 .I Rtcontrib
 calls
 .I rtrace(1)
-with the -oTW (or -oTV) option to calculate the daughter ray
+with the \-oTW (or \-oTV) option to calculate the daughter ray
 contributions for each input ray, and the output tallies
 are sent to one or more destinations according to the given
 .I \-o
@@ -233,26 +233,26 @@ replaced by the contents of the given file.
 To compute the proportional contributions from sources modified
 by "light1" vs. "light2" on a set of illuminance values:
 .IP "" .2i
-rtcontrib -I+ @render.opt -o c_%s.dat -m light1 -m light2 scene.oct < test.dat
+rtcontrib \-I+ @render.opt \-o c_%s.dat \-m light1 \-m light2 scene.oct < test.dat
 .PP
 To generate a pair of images corresponding to these two lights'
 contributions:
 .IP "" .2i
-vwrays -ff -x 1024 -y 1024 -vf best.vf |
-rtcontrib -ffc `vwrays -d -x 1024 -y 1024 -vf best.vf`
-@render.opt -o c_%s.pic -m light1 -m light2 scene.oct
+vwrays \-ff \-x 1024 \-y 1024 \-vf best.vf |
+rtcontrib \-ffc `vwrays \-d \-x 1024 \-y 1024 \-vf best.vf`
+@render.opt \-o c_%s.pic \-m light1 \-m light2 scene.oct
 .PP
 These images may then be recombined using the desired outputs
 of light1 and light2:
 .IP "" .2i
-pcomb -c 100 90 75 c_light1.pic -c 50 55 57 c_light2.pic > combined.pic
+pcomb \-c 100 90 75 c_light1.pic \-c 50 55 57 c_light2.pic > combined.pic
 .PP
 To compute an array of illuminance contributions according to a Tregenza sky:
 .IP "" .2i
-rtcontrib -I+ -b tbin -o sky.dat -m skyglow -b 0 -o ground.dat -m groundglow
-@render.opt -f tregenza.cal scene.oct < test.dat
+rtcontrib \-I+ \-b tbin \-o sky.dat \-m skyglow \-b 0 \-o ground.dat \-m groundglow
+@render.opt \-f tregenza.cal scene.oct < test.dat
 .SH ENVIRONMENT
-RAYPATH		path to search for -f and -M files
+RAYPATH		path to search for \-f and \-M files
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

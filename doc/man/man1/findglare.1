@@ -1,4 +1,4 @@
-.\" RCSid "$Id: findglare.1,v 1.3 2004/01/01 19:31:44 greg Exp $"
+.\" RCSid "$Id: findglare.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
 .TH FINDGLARE 1 11/15/93 RADIANCE
 .SH NAME
 findglare - locate glare sources in a RADIANCE scene
@@ -140,16 +140,16 @@ reports its progress during the calculation.
 .SH EXAMPLE
 To calculate the glare sources in the image "scene.pic":
 .IP "" .2i
-findglare -p scene.pic > scene.glr
+findglare \-p scene.pic > scene.glr
 .PP
 To compute the Guth visual comfort probability from this result:
 .IP "" .2i
-glarendx -t guth_vcp scene.glr
+glarendx \-t guth_vcp scene.glr
 .PP
 To compute the glare for a set of angles around the view "good.vp"
 from the octree "scene.oct" using an ambient level of .1:
 .IP "" .2i
-findglare -vf good.vp -ga 10-60:10 -av .1 .1 .1 scene.oct > scene.glr
+findglare \-vf good.vp \-ga 10-60:10 \-av .1 .1 .1 scene.oct > scene.glr
 .SH AUTHOR
 Greg Ward
 .SH ACKNOWLEDGEMENT

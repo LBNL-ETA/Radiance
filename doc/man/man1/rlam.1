@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.4 2005/10/05 05:20:50 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -63,15 +63,15 @@ input, and may appear multiple times.
 .SH EXAMPLE
 To join files output1 and output2, separated by a comma:
 .IP "" .2i
-rlam -t, output1 output2
+rlam \-t, output1 output2
 .PP
 To join a file with line numbers (starting at 0) and its reverse:
 .IP "" .2i
-cnt `wc -l < lam.c` | rlam - -t: lam.c -t\| '!tail -r lam.c'
+cnt `wc \-l < lam.c` | rlam \- \-t: lam.c \-t\| '!tail \-r lam.c'
 .PP
 To join four data files, each having three doubles per record:
 .IP "" .2i
-rlam -id3 file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
+rlam \-id3 file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

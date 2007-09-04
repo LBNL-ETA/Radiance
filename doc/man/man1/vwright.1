@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwright.1,v 1.4 2005/01/18 00:33:15 greg Exp $"
+.\" RCSid "$Id: vwright.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH VWRIGHT 1 8/29/96 RADIANCE
 .SH NAME
 vwright - normalize a RADIANCE view, shift it to the right
@@ -69,13 +69,13 @@ To move the
 view named "left" 2.5 inches to the right
 and render from there:
 .IP "" .2i
-rad -v "right `rad -n -s -V -v left examp.rif | vwright 2.5`" examp.rif &
+rad \-v "right `rad \-n \-s \-V \-v left examp.rif | vwright 2.5`" examp.rif &
 .PP
 To pass a view to
 .I rcalc
 for conversion to some other view:
 .IP "" .2i
-rcalc -n -e `vwright orig < orig.vf` -f viewmod.cal -o view.fmt > new.vf
+rcalc \-n \-e `vwright orig < orig.vf` \-f viewmod.cal \-o view.fmt > new.vf
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

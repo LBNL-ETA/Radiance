@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.4 2006/11/13 02:41:45 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH FALSECOLOR 1 11/15/93 RADIANCE
 .SH NAME
 falsecolor - make a false color RADIANCE picture
@@ -130,16 +130,16 @@ be redirected.
 To create a false color image directly from
 .I rpict(1):
 .IP "" .2i
-rpict -vf default.vp scene.oct | falsecolor > scene.pic
+rpict \-vf default.vp scene.oct | falsecolor > scene.pic
 .PP
 To create a logarithmic contour plot of illuminance values on a
 Radiance image:
 .IP "" .2i
-rpict -i -vf default.vp scene.oct > irrad.pic
+rpict \-i \-vf default.vp scene.oct > irrad.pic
 .br
-rpict -vf default.vp scene.oct > rad.pic
+rpict \-vf default.vp scene.oct > rad.pic
 .br
-falsecolor -i irrad.pic -p rad.pic -cl -log 2 -l Lux > lux.pic
+falsecolor \-i irrad.pic \-p rad.pic \-cl \-log 2 \-l Lux > lux.pic
 .SH AUTHOR
 Greg Ward
 .SH ACKNOWLEDGEMENT

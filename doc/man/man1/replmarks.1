@@ -1,4 +1,4 @@
-.\" RCSid "$Id: replmarks.1,v 1.4 2004/04/21 15:01:46 greg Exp $"
+.\" RCSid "$Id: replmarks.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
 .TH REPLMARKS 1 3/24/94 RADIANCE
 .SH NAME
 replmarks - replace triangular markers in a RADIANCE scene description
@@ -110,12 +110,12 @@ is given, the standard input is read.
 To replace all polygons with the modifier ``knobs'' in the file input
 with a transformed ``knob.rad'' and write the result to output:
 .IP "" .2i
-replmarks -x knob.rad knobs input > output
+replmarks \-x knob.rad knobs input > output
 .PP
 To use instances of ``tree.oct'' with scaling set to three times the
 tree marker length:
 .IP "" .2i
-replmarks -s 3 -i tree.oct tree input > output
+replmarks \-s 3 \-i tree.oct tree input > output
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

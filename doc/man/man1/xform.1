@@ -1,4 +1,4 @@
-.\" RCSid "$Id: xform.1,v 1.3 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: xform.1,v 1.4 2007/09/04 17:36:41 greg Exp $"
 .TH XFORM 1 6/4/99 RADIANCE
 .SH NAME
 xform - transform a RADIANCE scene description
@@ -167,7 +167,7 @@ each preceded by an array count.
 To rotate ``book'' 30 degrees about the x axis then
 move 20 in y, prepending the name book1:
 .IP "" .2i
-xform -n book1 -rx 30 -t 0 20 0 book > book1
+xform \-n book1 \-rx 30 \-t 0 20 0 book > book1
 .PP
 To expand all commands and see what information is actually used by RADIANCE:
 .IP "" .2i
@@ -176,7 +176,7 @@ xform scene | more
 To create a two-dimensional array of 20 lights, after an initial rotation
 and followed by a global translation (no command expansion):
 .IP "" .2i
-xform -c -rz 90 -a 5 -t 2 0 0 -a 4 -t 0 1.5 0 -i 1 -t 0 0 10 light
+xform \-c \-rz 90 \-a 5 \-t 2 0 0 \-a 4 \-t 0 1.5 0 \-i 1 \-t 0 0 10 light
 .SH ENVIRONMENT
 RAYPATH		path to search for scene files
 .SH AUTHOR

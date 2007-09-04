@@ -1,4 +1,4 @@
-.\" RCSid "$Id: compamb.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: compamb.1,v 1.3 2007/09/04 17:36:40 greg Exp $"
 .TH COMPAMB 1 1/23/98 RADIANCE
 .SH NAME
 compamb - compute good ambient value for a rad input file
@@ -14,7 +14,7 @@ compamb - compute good ambient value for a rad input file
 .I Compamb
 computes a good ambient value for the specified
 .I rad(1)
-variable file and appends it to the file as a "render= -av" option.
+variable file and appends it to the file as a "render= \-av" option.
 If the
 .I \-c
 option is specified, then
@@ -41,7 +41,7 @@ to render low resolution frames for each view in the
 .I rad
 file, setting "QUALITY=High" to compute interreflections.
 The resulting ambient file is thrown away, since it would disagree
-with the new -av setting used for the final renderings.
+with the new \-av setting used for the final renderings.
 This method is preferable to setting the
 .I \-aw
 option of

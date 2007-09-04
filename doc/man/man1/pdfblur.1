@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pdfblur.1,v 1.5 2005/01/18 20:19:56 greg Exp $"
+.\" RCSid "$Id: pdfblur.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
 .TH PDFBLUR 1 1/24/96 RADIANCE
 .SH NAME
 pdfblur - generate views for depth-of-field blurring
@@ -115,20 +115,20 @@ To use
 to simulate an aperture of 0.5 inches on a lens focused at a
 distance of 57 inches:
 .IP "" .2i
-rpict -vf myview -x 640 -y 480 -z orig.zbf scene.oct > orig.pic
+rpict \-vf myview \-x 640 \-y 480 \-z orig.zbf scene.oct > orig.pic
 .br
-pdfblur 0.5 57 8 orig.pic | pinterp -B -vf orig.pic -x 640 -y 480
+pdfblur 0.5 57 8 orig.pic | pinterp \-B \-vf orig.pic \-x 640 \-y 480
 orig.pic orig.zbf > blurry.pic
 .PP
 To use
 .I rpict
 exclusively to do the same:
 .IP "" .2i
-pdfblur .5 57 5 myview | rpict -S 1 -vf myview -x 640 -y 480
--o view%d.pic scene.oct
+pdfblur .5 57 5 myview | rpict \-S 1 \-vf myview \-x 640 \-y 480
+\-o view%d.pic scene.oct
 .br
-pcomb -s .2 view1.pic -s .2 view2.pic -s .2 view3.pic -s .2
-view4.pic -s .2 view5.pic > blurry.pic
+pcomb \-s .2 view1.pic \-s .2 view2.pic \-s .2 view3.pic \-s .2
+view4.pic \-s .2 view5.pic > blurry.pic
 .SH AUTHOR
 Greg Ward
 .SH BUGS

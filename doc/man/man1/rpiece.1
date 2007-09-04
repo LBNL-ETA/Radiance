@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpiece.1,v 1.2 2003/12/09 15:59:07 greg Exp $"
+.\" RCSid "$Id: rpiece.1,v 1.3 2007/09/04 17:36:41 greg Exp $"
 .TH RPIECE 1 10/1/98 RADIANCE
 .SH NAME
 rpiece - render pieces of a RADIANCE picture
@@ -156,7 +156,7 @@ process is started on the machine "goober":
 .IP "" .2i
 goober% echo 1 8 > syncfile
 .br
-goober% echo -F syncfile -x 1024 -y 1024 -vf view -o picture octree > args
+goober% echo \-F syncfile \-x 1024 \-y 1024 \-vf view \-o picture octree > args
 .br
 goober% rpiece @args &
 .PP
@@ -193,7 +193,7 @@ Make sure that there is enough space on the filesystem to hold the
 entire picture before beginning.
 Once the picture is finished, the
 .I ra_rgbe(1)
-program with the -r option may be used to convert to a run-length
+program with the \-r option may be used to convert to a run\-length
 encoded picture for more efficient storage, although
 .I pfilt(1)
 or any of the other Radiance picture filters will do the same

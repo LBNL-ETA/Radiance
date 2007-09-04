@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad.1,v 1.4 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: rad.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
 .TH RAD 1 2/1/99 RADIANCE
 .SH NAME
 rad - render a RADIANCE scene
@@ -207,7 +207,7 @@ As in
 and
 .I pfilt,
 the exposure setting may be given either as a multiplier or as a
-number of f-stop adjustments (eg. +2 or -1.5).
+number of f\-stop adjustments (eg. +2 or \-1.5).
 There is no default value for this variable.
 If it is not given, an average level will be computed by
 .I pfilt
@@ -318,7 +318,7 @@ generated.
 .TP
 .BR UP
 The vertical axis for this scene.
-A negative axis may be specified with a minus sign (eg. "-Y").
+A negative axis may be specified with a minus sign (eg. "\-Y").
 There is no default value for this variable, although the standard
 views assume Z is up if no other axis is specified.
 .TP
@@ -526,7 +526,7 @@ If we only want to see what default values
 .I rad
 would use without actually executing anything, we can invoke it thus:
 .IP "" .2i
-rad -n -e sample.rif
+rad \-n \-e sample.rif
 .PP
 This will print the variables we have given as well as default
 values
@@ -543,17 +543,17 @@ result as it is needed to determine some of the opiton settings.)\0
 Different option combinations have specific uses, ie:
 .IP "" .2i
 .br
-rad -v 0 sample.rif OPT=samp.opt	# build octree, put options in "sample.opt"
+rad \-v 0 sample.rif OPT=samp.opt	# build octree, put options in "sample.opt"
 .br
-rad -n -e -s sample.rif > full.rif	# make a complete rad file
+rad \-n \-e \-s sample.rif > full.rif	# make a complete rad file
 .br
-rad -n sample.rif > script.sh	# make a script of commands
+rad \-n sample.rif > script.sh	# make a script of commands
 .br
-rad -V -v Zl -n -s sample.rif > plan.vf	# make a plan view file
+rad \-V \-v Zl \-n \-s sample.rif > plan.vf	# make a plan view file
 .br
-rad -t sample.rif		# update files after minor change to input
+rad \-t sample.rif		# update files after minor change to input
 .br
-rad -s sample.rif &		# execute silently in the background
+rad \-s sample.rif &		# execute silently in the background
 .PP
 If we decide that the default values
 .I rad
@@ -565,7 +565,7 @@ QUAL= MED		# default was low
 DET= low		# default was medium - our space is almost empty
 PEN= True		# we want to see soft shadows from our window
 VAR= hi		# daylight can result in fairly harsh lighting
-view= XYa -vv 120	# let's try a fisheye view
+view= XYa \-vv 120	# let's try a fisheye view
 PICT= tutor		# our picture name will be "tutor_XYa.pic"
 .fi
 .PP
@@ -576,7 +576,7 @@ Now we can invoke
 to take a look at our scene interactively with
 .I rvu:
 .IP "" .2i
-rad -o x11 sample.rif
+rad \-o x11 sample.rif
 .PP
 .I Rad
 will run
@@ -591,8 +591,8 @@ we wrote out the view files "view1.vp" and "view2.vp".
 We could add these to "sample.rif" like so:
 .IP "" .2i
 .nf
-view= vw1 -vf view1.vp		# Our first view
-view= vw2 -vf view2.vp		# Our second view
+view= vw1 \-vf view1.vp		# Our first view
+view= vw2 \-vf view2.vp		# Our second view
 RESOLUTION= 1024		# Let's go for a higher resolution result
 .fi
 .PP
@@ -600,7 +600,7 @@ To start
 .I rvu
 again using vw2 instead of the default, we use:
 .IP "" .2i
-rad -o x11 -v vw2 sample.rif
+rad \-o x11 \-v vw2 sample.rif
 .PP
 Once we are happy with the variable settings in our file, we can run
 .I rad

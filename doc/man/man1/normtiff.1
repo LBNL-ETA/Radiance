@@ -105,16 +105,16 @@ The default value is 2.2, which is appropriate for most CRT monitors.
 .SH EXAMPLES
 To convert a RADIANCE picture to an 8-bit grayscale TIFF:
 .IP "" .2i
-normtiff -b scene.pic sceneb.tif
+normtiff \-b scene.pic sceneb.tif
 .PP
 To condition a high dynamic-range TIFF for a particular film recorder with
 known color primaries, dynamic range and gamma response:
 .IP "" .2i
-pcond -d 50 -g 2.5 -p .580 .340 .281 .570 .153 .079 .333 .333 orig.tif filmrgb.tif
+pcond \-d 50 \-g 2.5 \-p .580 .340 .281 .570 .153 .079 .333 .333 orig.tif filmrgb.tif
 .PP
 To simulate human visual response on a monitor with known maximum luminance:
 .IP "" .2i
-normtiff -h -u 80 scene.pic sceneh.tif
+normtiff \-h \-u 80 scene.pic sceneh.tif
 .SH REFERENCE
 Greg Ward Larson, Holly Rushmeier, Christine Piatko,
 ``A Visibility Matching Tone Reproduction Operator for High Dynamic Range
