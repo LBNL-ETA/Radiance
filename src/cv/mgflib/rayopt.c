@@ -1,18 +1,15 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rayopt.c,v 1.3 2003/11/15 15:53:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: rayopt.c,v 1.4 2007/09/05 01:36:37 greg Exp $";
 #endif
 /*-------------------------------------------------------------------------
 
 		 Triangle Bounder/Smoother for POV-Ray
-		    Copyright (c) 1993 Steve Anger
+		    by Steve Anger 1993
 
     A number of C routines that can be used to generate POV-Ray ray tracer
  files from triangle data.  Supports generation of smooth triangles and an
  optimal set of bounding shapes for much faster traces.  Output files are
- compatible with POV-Ray v1.0.  This program may be freely modified and
- distributed.
-					   Compuserve: 70714,3113
-					    YCCMR BBS: (708)358-5611
+ compatible with POV-Ray v1.0.
 
 --------------------------------------------------------------------------*/
 

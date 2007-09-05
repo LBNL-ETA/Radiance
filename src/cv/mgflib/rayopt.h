@@ -1,16 +1,12 @@
-/* RCSid: $Id: rayopt.h,v 1.3 2003/06/07 01:11:17 schorsch Exp $ */
+/* RCSid: $Id: rayopt.h,v 1.4 2007/09/05 01:36:37 greg Exp $ */
 /*-------------------------------------------------------------------------
 
 		 Triangle Bounder/Smoother for POV-Ray
-		    Copyright (c) 1993 Steve Anger
+		    by Steve Anger 1993
 
     A number of C routines that can be used to generate POV-Ray ray tracer
  files from triangle data.  Supports generation of smooth triangles and an
- optimal set of bounding shapes for much faster traces. This program may be
- freely modified and distributed.
-
-                                           CompuServe: 70714,3113
-                                            YCCMR BBS: (708)358-5611
+ optimal set of bounding shapes for much faster traces.
 
 --------------------------------------------------------------------------*/
 
