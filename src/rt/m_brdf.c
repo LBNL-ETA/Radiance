@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.24 2007/08/22 21:21:51 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.25 2007/09/07 15:25:01 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -168,7 +168,7 @@ dirbrdf(		/* compute source contribution */
 		dtmp = funvalue(sa[0], 5, vldx);
 		setcolor(ctmp, dtmp, dtmp, dtmp);
 	}
-	if (errno == EDOM || errno == ERANGE) {
+	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(np->mp, WARNING, "compute error");
 		return;
 	}
@@ -267,7 +267,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	setcolor(ctmp, evalue(mf->ep[3]),
 			evalue(mf->ep[4]),
 			evalue(mf->ep[5]));
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, TRANS, r, ctmp) == 0) {
 		if (!(r->crtype & SHADOW) && hastexture) {
@@ -296,7 +296,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	setcolor(ctmp, evalue(mf->ep[0]),
 			evalue(mf->ep[1]),
 			evalue(mf->ep[2]));
-	if (errno == EDOM || errno == ERANGE)
+	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, REFLECTED, r, ctmp) == 0) {
 		for (i = 0; i < 3; i++)
