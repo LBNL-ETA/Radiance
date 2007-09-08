@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neuclrtab.c,v 2.12 2005/09/19 02:23:58 greg Exp $";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.13 2007/09/08 19:17:52 greg Exp $";
 #endif
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
@@ -233,43 +233,26 @@ neu_dith_colrs(	/* convert scanline to dithered index values */
 #define lengthcount	(nsamples*3)
 #define samplefac	1
 
-/*----------------------------------------------------------------------*/
-/*									*/
-/* 				NeuQuant				*/
-/*				--------				*/
-/*									*/
-/* 		Copyright: Anthony Dekker, November 1994		*/
-/*									*/
-/* This program performs colour quantization of graphics images (SUN	*/
-/* raster files).  It uses a Kohonen Neural Network.  It produces	*/
-/* better results than existing methods and runs faster, using minimal	*/
-/* space (8kB plus the image itself).  The algorithm is described in	*/
-/* the paper "Kohonen Neural Networks for Optimal Colour Quantization"	*/
-/* to appear in the journal "Network: Computation in Neural Systems".	*/
-/* It is a significant improvement of an earlier algorithm.		*/
-/*									*/
-/* This program is distributed free for academic use or for evaluation	*/
-/* by commercial organizations.						*/
-/*									*/
-/* 	Usage:	NeuQuant -n inputfile > outputfile			*/
-/* 									*/
-/* where n is a sampling factor for neural learning.			*/
-/*									*/
-/* Program performance compared with other methods is as follows:	*/
-/*									*/
-/* 	Algorithm		|  Av. CPU Time	|  Quantization Error	*/
-/* 	-------------------------------------------------------------	*/
-/* 	NeuQuant -3		|  314 		|  5.55			*/
-/* 	NeuQuant -10		|  119 		|  5.97			*/
-/* 	NeuQuant -30		|  65 		|  6.53			*/
-/* 	Oct-Trees 		|  141 		|  8.96			*/
-/* 	Median Cut (XV -best) 	|  420 		|  9.28			*/
-/* 	Median Cut (XV -slow) 	|  72 		|  12.15		*/
-/*									*/
-/* Author's address:	Dept of ISCS, National University of Singapore	*/
-/*			Kent Ridge, Singapore 0511			*/
-/* Email:	tdekker@iscs.nus.sg					*/
-/*----------------------------------------------------------------------*/
+/* NeuQuant Neural-Net Quantization Algorithm Interface
+ * ----------------------------------------------------
+ *
+ * Copyright (c) 1994 Anthony Dekker
+ *
+ * NEUQUANT Neural-Net quantization algorithm by Anthony Dekker, 1994.
+ * See "Kohonen neural networks for optimal colour quantization"
+ * in "Network: Computation in Neural Systems" Vol. 5 (1994) pp 351-367.
+ * for a discussion of the algorithm.
+ * See also  http://members.ozemail.com.au/~dekker/NEUQUANT.HTML
+ *
+ * Any party obtaining a copy of these files from the author, directly or
+ * indirectly, is granted, free of charge, a full and unrestricted irrevocable,
+ * world-wide, paid up, royalty-free, nonexclusive right and license to deal
+ * in this software and documentation files (the "Software"), including without
+ * limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons who receive
+ * copies from any such party to do so, with the only requirement being
+ * that this copyright notice remain intact.
+ */
 
 #define bool    	int
 #define false   	0
