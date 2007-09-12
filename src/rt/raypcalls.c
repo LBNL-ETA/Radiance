@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.14 2005/12/21 17:36:06 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.15 2007/09/12 03:57:00 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -396,6 +396,8 @@ ray_pchild(	/* process rays (never returns) */
 {
 	int	n;
 	register int	i;
+					/* flag child process for quit() */
+	ray_pnprocs = -1;
 					/* read each ray request set */
 	while ((n = read(fd_in, (char *)r_queue, sizeof(r_queue))) > 0) {
 		int	n2;
@@ -519,5 +521,7 @@ void
 quit(ec)			/* make sure exit is called */
 int	ec;
 {
+	if (ray_pnprocs > 0)	/* close children if any */
+		ray_pclose(0);		
 	exit(ec);
 }
