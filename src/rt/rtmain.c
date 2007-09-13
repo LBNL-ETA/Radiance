@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.14 2006/04/05 06:22:57 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.15 2007/09/13 20:02:11 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -309,10 +309,11 @@ main(int  argc, char  *argv[])
 			while ((rval=fork()) == 0) {	/* keep on forkin' */
 				pflock(1);
 				pfhold();
+				ambsync();		/* load new values */
 			}
 			if (rval < 0)
 				error(SYSTEM, "cannot fork child for persist function");
-			pfdetach();		/* parent exits */
+			pfdetach();		/* parent will run then exit */
 		}
 	}
 runagain:

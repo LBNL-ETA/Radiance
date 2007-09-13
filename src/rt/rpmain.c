@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.12 2006/04/05 06:22:57 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.13 2007/09/13 20:02:11 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -317,10 +317,11 @@ main(int  argc, char  *argv[])
 				pflock(1);
 				pfhold();
 				tstart = time((time_t *)NULL);
+				ambsync();		/* load new values */
 			}
 			if (rval < 0)
 				error(SYSTEM, "cannot fork child for persist function");
-			pfdetach();		/* parent exits */
+			pfdetach();		/* parent will run then exit */
 		}
 	}
 runagain:
