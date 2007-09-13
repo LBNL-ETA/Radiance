@@ -1,13 +1,12 @@
-/* RCSid: $Id: mkillum.h,v 2.7 2004/09/17 21:43:50 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.8 2007/09/13 06:31:21 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
 #ifndef _RAD_MKILLUM_H_
 #define _RAD_MKILLUM_H_
 
-#include  "standard.h"
-#include  "object.h"
-#include  "rtprocess.h"
+#include  "ray.h"
+#include  "otypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,15 +29,6 @@ struct illum_args {
 	float	col[3];			/* computed average color */
 };				/* illum options */
 
-struct rtproc {
-	struct rtproc	*next;		/* next in list of processes */
-	SUBPROC pd;			/* rtrace pipe descriptors */
-	float	*buf;			/* rtrace i/o buffer */
-	int	bsiz;			/* maximum rays for rtrace buffer */
-	float	**dest;			/* destination for each ray result */
-	int	nrays;			/* current length of rtrace buffer */
-};				/* rtrace process */
-
 extern void printobj(char  *mod, register OBJREC  *obj);
 extern int average(register struct illum_args  *il, float  *da, int  n);
 extern void flatout(struct illum_args  *il, float  *da, int  n, int  m,
@@ -46,24 +36,12 @@ extern void flatout(struct illum_args  *il, float  *da, int  n, int  m,
 extern void illumout(register struct illum_args  *il, OBJREC  *ob);
 extern void roundout(struct illum_args  *il, float  *da, int  n, int  m);
 
-/* The header file otypes.h has to follow definition of our struct's */
-#define FUN_ARGLIST	OBJREC *, struct illum_args *, struct rtproc *, char *
-#ifdef __cplusplus
-}
-#include  "otypes.h"
-extern "C" {
-#else
-#include  "otypes.h"
-#endif
+extern int my_default(OBJREC *, struct illum_args *, char *);
+extern int my_face(OBJREC *, struct illum_args *, char *);
+extern int my_sphere(OBJREC *, struct illum_args *, char *);
+extern int my_ring(OBJREC *, struct illum_args *, char *);
 
-extern int o_default(FUN_ARGLIST);
-extern int o_face(FUN_ARGLIST);
-extern int o_sphere(FUN_ARGLIST);
-extern int o_ring(FUN_ARGLIST);
-extern void raysamp(float res[3], FVECT org, FVECT dir, struct rtproc *rt0);
-extern void rayflush(struct rtproc *rt, int doall);
-extern struct rtproc *raywait(struct rtproc *rt0);
-
+extern char	*progname;
 
 #ifdef __cplusplus
 }

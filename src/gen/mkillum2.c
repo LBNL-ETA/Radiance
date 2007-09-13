@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.17 2004/09/19 08:42:22 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.18 2007/09/13 06:31:21 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -11,7 +11,6 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.17 2004/09/19 08:42:22 greg Exp
 #include  "face.h"
 #include  "cone.h"
 #include  "random.h"
-#include  "selcall.h"
 
 
 static void mkaxes(FVECT u, FVECT v, FVECT n);
@@ -19,22 +18,86 @@ static void rounddir(FVECT dv, double alt, double azi);
 static void flatdir(FVECT dv, double alt, double azi);
 
 
+static COLORV *	distarr = NULL;		/* distribution array */
+static int	distsiz = 0;
+
+
 static void
-rayclean(			/* finish all pending rays */
-	struct rtproc *rt0
+newdist(			/* allocate & clear distribution array */
+	int siz
 )
 {
-	rayflush(rt0, 1);
-	while (raywait(rt0) != NULL)
+	if (siz == 0) {
+		if (distsiz > 0)
+			free((void *)distarr);
+		distarr = NULL;
+		distsiz = 0;
+		return;
+	}
+	if (distsiz < siz) {
+		free((void *)distarr);
+		distarr = (COLORV *)malloc(sizeof(COLORV)*3*siz);
+		if (distarr == NULL)
+			error(SYSTEM, "Out of memory in distalloc");
+		distsiz = siz;
+	}
+	memset(distarr, '\0', sizeof(COLORV)*3*siz);
+}
+
+
+static int
+process_ray(RAY *r, int rv)
+{
+	COLORV	*colp;
+
+	if (rv == 0)
+		return(0);
+	if (rv < 0)
+		error(USER, "Ray tracing process died");
+	if (r->rno >= distsiz)
+		error(INTERNAL, "Bad returned index in process_ray");
+	colp = &distarr[r->rno * 3];
+	addcolor(colp, r->rcol);
+	return(1);
+}
+
+
+static void
+raysamp(	/* queue a ray sample */
+	int  ndx,
+	FVECT  org,
+	FVECT  dir
+)
+{
+	RAY	myRay;
+	int	rv;
+
+	if ((ndx < 0) | (ndx >= distsiz))
+		error(INTERNAL, "Bad index in raysamp");
+	VCOPY(myRay.rorg, org);
+	VCOPY(myRay.rdir, dir);
+	myRay.rmax = .0;
+	rayorigin(&myRay, PRIMARY, NULL, NULL);
+	myRay.rno = ndx;
+					/* queue ray, check result */
+	process_ray(&myRay, ray_pqueue(&myRay));
+}
+
+
+static void
+rayclean()			/* finish all pending rays */
+{
+	RAY	myRay;
+
+	while (process_ray(&myRay, ray_presult(&myRay, 0)))
 		;
 }
 
 
 int /* XXX type conflict with otypes.h */
-o_default(	/* default illum action */
+my_default(	/* default illum action */
 	OBJREC  *ob,
 	struct illum_args  *il,
-	struct rtproc  *rt0,
 	char  *nm
 )
 {
@@ -47,17 +110,15 @@ o_default(	/* default illum action */
 
 
 int
-o_face(		/* make an illum face */
+my_face(		/* make an illum face */
 	OBJREC  *ob,
 	struct illum_args  *il,
-	struct rtproc  *rt0,
 	char  *nm
 )
 {
 #define MAXMISS		(5*n*il->nsamps)
 	int  dim[3];
 	int  n, nalt, nazi, h;
-	float  *distarr;
 	double  sp[2], r1, r2;
 	FVECT  dn, org, dir;
 	FVECT  u, v;
@@ -69,7 +130,7 @@ o_face(		/* make an illum face */
 	fa = getface(ob);
 	if (fa->area == 0.0) {
 		freeface(ob);
-		return(o_default(ob, il, rt0, nm));
+		return(o_default(ob, il, nm));
 	}
 				/* set up sampling */
 	if (il->sampdens <= 0)
@@ -80,9 +141,7 @@ o_face(		/* make an illum face */
 		nazi = PI*nalt + .5;
 	}
 	n = nalt*nazi;
-	distarr = (float *)calloc(n, 3*sizeof(float));
-	if (distarr == NULL)
-		error(SYSTEM, "out of memory in o_face");
+	newdist(n);
 				/* take first edge longer than sqrt(area) */
 	for (j = fa->nv-1, i = 0; i < fa->nv; j = i++) {
 		u[0] = VERTEX(fa,i)[0] - VERTEX(fa,j)[0];
@@ -133,17 +192,17 @@ o_face(		/* make an illum face */
 		    } while (!inface(org, fa) && nmisses++ < MAXMISS);
 		    if (nmisses > MAXMISS) {
 			objerror(ob, WARNING, "bad aspect");
-			rayclean(rt0);
+			rayclean();
 			freeface(ob);
 			free((void *)distarr);
-			return(o_default(ob, il, rt0, nm));
+			return(o_default(ob, il, nm));
 		    }
 		    for (j = 0; j < 3; j++)
 			org[j] += .001*fa->norm[j];
 					/* send sample */
-		    raysamp(distarr+3*(dim[1]*nazi+dim[2]), org, dir, rt0);
+		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
-	rayclean(rt0);
+	rayclean();
 				/* write out the face and its distribution */
 	if (average(il, distarr, nalt*nazi)) {
 		if (il->sampdens > 0)
@@ -153,23 +212,20 @@ o_face(		/* make an illum face */
 		printobj(il->altmat, ob);
 				/* clean up */
 	freeface(ob);
-	free((void *)distarr);
 	return(0);
 #undef MAXMISS
 }
 
 
 int
-o_sphere(	/* make an illum sphere */
+my_sphere(	/* make an illum sphere */
 	register OBJREC  *ob,
 	struct illum_args  *il,
-	struct rtproc  *rt0,
 	char  *nm
 )
 {
 	int  dim[3];
 	int  n, nalt, nazi;
-	float  *distarr;
 	double  sp[4], r1, r2, r3;
 	FVECT  org, dir;
 	FVECT  u, v;
@@ -186,9 +242,7 @@ o_sphere(	/* make an illum sphere */
 		nazi = PI/2.*nalt + .5;
 	}
 	n = nalt*nazi;
-	distarr = (float *)calloc(n, 3*sizeof(float));
-	if (distarr == NULL)
-		error(SYSTEM, "out of memory in o_sphere");
+	newdist(n);
 	dim[0] = random();
 				/* sample sphere */
 	for (dim[1] = 0; dim[1] < nalt; dim[1]++)
@@ -213,9 +267,9 @@ o_sphere(	/* make an illum sphere */
 			dir[j] = -dir[j];
 		    }
 					/* send sample */
-		    raysamp(distarr+3*(dim[1]*nazi+dim[2]), org, dir, rt0);
+		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
-	rayclean(rt0);
+	rayclean();
 				/* write out the sphere and its distribution */
 	if (average(il, distarr, nalt*nazi)) {
 		if (il->sampdens > 0)
@@ -226,22 +280,19 @@ o_sphere(	/* make an illum sphere */
 	} else
 		printobj(il->altmat, ob);
 				/* clean up */
-	free((void *)distarr);
 	return(1);
 }
 
 
 int
-o_ring(		/* make an illum ring */
+my_ring(		/* make an illum ring */
 	OBJREC  *ob,
 	struct illum_args  *il,
-	struct rtproc  *rt0,
 	char  *nm
 )
 {
 	int  dim[3];
 	int  n, nalt, nazi;
-	float  *distarr;
 	double  sp[4], r1, r2, r3;
 	FVECT  dn, org, dir;
 	FVECT  u, v;
@@ -258,9 +309,7 @@ o_ring(		/* make an illum ring */
 		nazi = PI*nalt + .5;
 	}
 	n = nalt*nazi;
-	distarr = (float *)calloc(n, 3*sizeof(float));
-	if (distarr == NULL)
-		error(SYSTEM, "out of memory in o_ring");
+	newdist(n);
 	mkaxes(u, v, co->ad);
 	dim[0] = random();
 				/* sample disk */
@@ -286,9 +335,9 @@ o_ring(		/* make an illum ring */
 					.001*co->ad[j];
 
 					/* send sample */
-		    raysamp(distarr+3*(dim[1]*nazi+dim[2]), org, dir, rt0);
+		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
-	rayclean(rt0);
+	rayclean();
 				/* write out the ring and its distribution */
 	if (average(il, distarr, nalt*nazi)) {
 		if (il->sampdens > 0)
@@ -298,108 +347,7 @@ o_ring(		/* make an illum ring */
 		printobj(il->altmat, ob);
 				/* clean up */
 	freecone(ob);
-	free((void *)distarr);
 	return(1);
-}
-
-
-void
-raysamp(	/* queue a ray sample */
-	float  res[3],
-	FVECT  org,
-	FVECT  dir,
-	struct rtproc *rt0
-)
-{
-	register struct rtproc  *rt;
-	register float  *fp;
-
-	for (rt = rt0; rt != NULL; rt = rt->next)
-		if (rt->nrays < rt->bsiz && rt->dest[rt->nrays] == NULL)
-			break;
-	if (rt == NULL)		/* need to free up buffer? */
-		rt = raywait(rt0);
-	if (rt == NULL)
-		error(SYSTEM, "raywait() returned NULL in raysamp()");
-	fp = rt->buf + 6*rt->nrays;
-	*fp++ = org[0]; *fp++ = org[1]; *fp++ = org[2];
-	*fp++ = dir[0]; *fp++ = dir[1]; *fp = dir[2];
-	rt->dest[rt->nrays++] = res;
-	if (rt->nrays == rt->bsiz)
-		rayflush(rt, 0);
-}
-
-
-void
-rayflush(			/* flush queued rays to rtrace */
-	register struct rtproc  *rt,
-	int  doall
-)
-{
-	int	nw;
-
-	do {
-		if (rt->nrays <= 0)
-			continue;
-		memset(rt->buf+6*rt->nrays, 0, 6*sizeof(float));
-		nw = 6*sizeof(float)*(rt->nrays+1);
-		errno = 0;
-		if (writebuf(rt->pd.w, (char *)rt->buf, nw) < nw)
-			error(SYSTEM, "error writing to rtrace process");
-		rt->nrays = 0;		/* flag buffer as flushed */
-	} while (doall && (rt = rt->next) != NULL);
-}
-
-
-struct rtproc *
-raywait(			/* retrieve rtrace results */
-	struct rtproc *rt0
-)
-{
-	fd_set	readset, errset;
-	int	nr;
-	struct rtproc	*rtfree;
-	register struct rtproc	*rt;
-	register int	n;
-				/* prepare select call */
-	FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
-	nr = 0;
-	for (rt = rt0; rt != NULL; rt = rt->next) {
-		if (rt->nrays == 0 && rt->dest[0] != NULL) {
-			FD_SET(rt->pd.r, &readset);
-			++nr;
-		}
-		FD_SET(rt->pd.r, &errset);
-		if (rt->pd.r >= n)
-			n = rt->pd.r + 1;
-	}
-	if (!nr)		/* no rays pending */
-		return(NULL);
-	if (nr > 1) {		/* call select for multiple processes */
-		errno = 0;
-		if (select(n, &readset, NULL, &errset, NULL) < 0)
-			error(SYSTEM, "select call error in raywait()");
-	} else
-		FD_ZERO(&errset);
-	rtfree = NULL;		/* read from ready process(es) */
-	for (rt = rt0; rt != NULL; rt = rt->next) {
-		if (!FD_ISSET(rt->pd.r, &readset) &&
-				!FD_ISSET(rt->pd.r, &errset))
-			continue;
-		for (n = 0; n < rt->bsiz && rt->dest[n] != NULL; n++)
-			;
-		nr = 3*sizeof(float)*(n+1);
-		if (readbuf(rt->pd.r, (char *)rt->buf, nr) < nr)
-			error(USER, "rtrace process died");
-		while (n-- > 0) {
-			rt->dest[n][0] += rt->buf[3*n];
-			rt->dest[n][1] += rt->buf[3*n+1];
-			rt->dest[n][2] += rt->buf[3*n+2];
-			rt->dest[n] = NULL;
-		}
-		rtfree = rt;
-	}
-	return(rtfree);
 }
 
 

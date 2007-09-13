@@ -1,11 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum3.c,v 2.10 2004/09/28 17:54:18 greg Exp $";
+static const char RCSid[] = "$Id: mkillum3.c,v 2.11 2007/09/13 06:31:21 greg Exp $";
 #endif
 /*
  * Routines to print mkillum objects
  */
 
 #include  "mkillum.h"
+#include  "paths.h"
 
 #define  brt(col)	(.263*(col)[0]+.655*(col)[1]+.082*(col)[2])
 

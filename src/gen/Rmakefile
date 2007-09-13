@@ -1,11 +1,11 @@
-# RCSid: $Id: Rmakefile,v 2.15 2006/03/10 19:40:12 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.16 2007/09/13 06:31:21 greg Exp $
 #
 # Makefile for object generation programs
 #
 
 OPT = -O
 MACH = -DBSD
-CFLAGS = -I../common -L../lib $(OPT) $(MACH)
+CFLAGS = -I../common -I../rt -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
 
@@ -56,7 +56,8 @@ replmarks:	replmarks.o
 	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrtrad $(MLIB)
 
 mkillum:	mkillum.o mkillum2.o mkillum3.o
-	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o \
+-lraycalls -lradiance -lrtrad $(MLIB)
 
 mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \
@@ -80,13 +81,11 @@ genclock:	genclock.o
 genbranch:	genbranch.o
 	$(CC) $(CFLAGS) -o genbranch genbranch.o $(MLIB)
 
-mksource.o:	mksource.c \
-../common/random.h ../rt/ray.h ../common/octree.h \
+mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h ../common/tifftypes.h
-	$(CC) -c $(CFLAGS) -I../rt mksource.c
 
 genworm.o replmarks.o:	../common/fvect.h
 
@@ -99,8 +98,12 @@ genworm.o genrev.o gensurf.o:	../common/resolu.h ../common/rterror.h
 
 xform.o:	../common/otypes.h ../common/object.h
 
-mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/standard.h \
-../common/mat4.h ../common/fvect.h ../common/otypes.h ../common/object.h
+mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/otypes.h \
+../rt/ray.h ../common/octree.h \
+../common/object.h ../common/color.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h ../common/tifftypes.h
 
 gensky.o:	../common/color.h
 

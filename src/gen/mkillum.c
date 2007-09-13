@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.27 2006/06/07 17:52:04 schorsch Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.28 2007/09/13 06:31:21 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -23,16 +23,6 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.27 2006/06/07 17:52:04 schorsch 
 #define  S_COMPL	2		/* select all but element */
 #define  S_ALL		3		/* select all */
 
-				/* rtrace command and defaults */
-char  *rtargv[64] = { "rtrace", "-dj", ".25", "-dr", "3", "-dv-",
-		"-ab", "2", "-ad", "1024", "-as", "512", "-aa", ".1", };
-int  rtargc = 14;
-				/* overriding rtrace options */
-char  *myrtopts[] = { "-I-", "-i-", "-ld-", "-ov", "-h-",
-			"-fff", "-y", "0", NULL };
-
-struct rtproc	rt0;		/* head of rtrace process list */
-
 struct illum_args  thisillum = {	/* our illum and default values */
 		0,
 		DFLMAT,
@@ -47,21 +37,15 @@ struct illum_args  thisillum = {	/* our illum and default values */
 char	matcheck[MAXSTR];	/* current material to include or exclude */
 int	matselect = S_ALL;	/* selection criterion */
 
-FUN	ofun[NUMOTYPE] = INIT_OTYPE;	/* object types */
-
-char	persistfn[] = "pfXXXXXX";	/* persist file name */
-
 int	gargc;			/* global argc */
 char	**gargv;		/* global argv */
-#define  progname	gargv[0]
 
 int	doneheader = 0;		/* printed header yet? */
 #define  checkhead()	if (!doneheader++) printhead(gargc,gargv)
 
 int	warnings = 1;		/* print warnings? */
 
-int done_rprocs(struct rtproc *rtp);
-void init(int np);
+void init(char *octnm, int np);
 void filter(register FILE	*infp, char	*name);
 void xoptions(char	*s, char	*nm);
 void printopts(void);
@@ -76,73 +60,59 @@ main(		/* compute illum distributions using rtrace */
 )
 {
 	int	nprocs = 1;
-	char	*rtpath;
 	FILE	*fp;
+	int	rval;
 	register int	i;
 				/* set global arguments */
 	gargv = argv;
-				/* check for -n option */
-	if (!strcmp(argv[1], "-n")) {
-		nprocs = atoi(argv[2]);
-		if (nprocs <= 0)
-			error(USER, "illegal number of processes");
-		i = 3;
-	} else
-		i = 1;
-				/* set up rtrace command */
-	for ( ; i < argc; i++) {
-		if (argv[i][0] == '<' && argv[i][1] == '\0')
-			break;
-		rtargv[rtargc++] = argv[i];
-		if (argv[i][0] == '-' && argv[i][1] == 'w')
-			switch (argv[i][2]) {
-			case '\0':
-				warnings = !warnings;
-				break;
-			case '+':
-			case 'T': case 't':
-			case 'Y': case 'y':
-			case '1':
-				warnings = 1;
-				break;
-			case '-':
-			case 'F': case 'f':
-			case 'N': case 'n':
-			case '0':
-				warnings = 0;
-				break;
-			}
-	}
-	gargc = i;
-	if (!strcmp(rtargv[--rtargc], "-defaults"))
-		nprocs = 0;
-	if (nprocs > 1) {	/* add persist file if parallel invocation */
-		rtargv[rtargc++] = "-PP";
-		rtargv[rtargc++] = mktemp(persistfn);
-	}
-				/* add "mandatory" rtrace options */
-	for (i = 0; myrtopts[i] != NULL; i++)
-		rtargv[rtargc++] = myrtopts[i];
-				/* finally, put back final argument */
-	rtargv[rtargc++] = argv[gargc-1];
-	rtargv[rtargc] = NULL;
-	if (!nprocs) {		/* just asking for defaults? */
-		printopts(); fflush(stdout);
-		rtpath = getpath(rtargv[0], getenv("PATH"), X_OK);
-		if (rtpath == NULL) {
-			eputs(rtargv[0]);
-			eputs(": command not found\n");
-			exit(1);
+	progname = gargv[0];
+				/* set up rendering defaults */
+	dstrsrc = 0.25;
+	directrelay = 3;
+	directvis = 0;
+	ambounce = 2;
+				/* get options from command line */
+	for (i = 1; i < argc-1; i++) {
+		while ((rval = expandarg(&argc, &argv, i)) > 0)
+			;
+		if (rval < 0) {
+			sprintf(errmsg, "cannot expand '%s'", argv[i]);
+			error(SYSTEM, errmsg);
 		}
-		execv(rtpath, rtargv);
-		perror(rtpath);	/* execv() should not return */
-		exit(1);
+		if (argv[i][0] != '-')
+			break;
+		if (!strcmp(argv[i], "-w")) {
+			warnings = 0;
+			continue;
+		}
+		if (!strcmp(argv[i], "-n")) {
+			nprocs = atoi(argv[++i]);
+			if (nprocs <= 0)
+				error(USER, "illegal number of processes");
+			continue;
+		}
+		if (!strcmp(argv[i], "-defaults")) {
+			printopts();
+			print_rdefaults();
+			quit(0);
+		}
+		rval = getrenderopt(argc-i, argv+i);
+		if (rval < 0) {
+			sprintf(errmsg, "bad render option at '%s'", argv[i]);
+			error(USER, errmsg);
+		}
+		i += rval;
 	}
-	if (gargc < 2 || argv[gargc-1][0] == '-')
+	gargc = ++i;
+				/* add "mandatory" render options */
+	do_irrad = 0;
+	if (gargc > argc || argv[gargc-1][0] == '-')
 		error(USER, "missing octree argument");
 				/* else initialize and run our calculation */
-	init(nprocs);
-	if (gargc+1 < argc)
+	init(argv[gargc-1], nprocs);
+	if (gargc < argc) {
+		if (gargc == argc-1 || argv[gargc][0] != '<' || argv[gargc][1])
+			error(USER, "Use '< file1 file2 ..' for multiple inputs");
 		for (i = gargc+1; i < argc; i++) {
 			if ((fp = fopen(argv[i], "r")) == NULL) {
 				sprintf(errmsg,
@@ -152,72 +122,16 @@ main(		/* compute illum distributions using rtrace */
 			filter(fp, argv[i]);
 			fclose(fp);
 		}
-	else
+	} else
 		filter(stdin, "standard input");
 	quit(0);
 	return 0; /* pro forma return */
 }
 
 
-#ifndef SIGALRM
-#define SIGALRM SIGTERM
-#endif
-static void
-killpersist(void)			/* kill persistent rtrace process */
-{
-	FILE	*fp = fopen(persistfn, "r");
-	int	pid;
-
-	if (fp == NULL)
-		return;
-	if (fscanf(fp, "%*s %d", &pid) != 1 || kill(pid, SIGALRM) < 0)
-		unlink(persistfn);
-	fclose(fp);
-}
-
-
-int
-done_rprocs(struct rtproc *rtp)
-{
-	int	st0, st1 = 0;
-
-	if (rtp->next != NULL) {	/* close last opened first! */
-		st1 = done_rprocs(rtp->next);
-		free((void *)rtp->next);
-		rtp->next = NULL;
-	}
-	st0 = close_process(&rtp->pd);
-	if (st0 < 0)
-		error(WARNING, "unknown return status from rtrace process");
-	else if (st0 > 0)
-		return(st0);
-	return(st1);
-}
-
 void
-quit(int status)			/* exit with status */
+init(char *octnm, int np)		/* start rendering process(es) */
 {
-	int	rtstat;
-
-	if (rt0.next != NULL)		/* terminate persistent rtrace */
-		killpersist();
-					/* clean up rtrace process(es) */
-	rtstat = done_rprocs(&rt0);
-	if (status == 0)
-		status = rtstat;
-	exit(status);
-}
-
-void
-init(int np)				/* start rtrace and set up buffers */
-{
-	struct rtproc	*rtp;
-	int	i;
-	int	maxbytes;
-					/* set up object functions */
-	ofun[OBJ_FACE].funp = o_face;
-	ofun[OBJ_SPHERE].funp = o_sphere;
-	ofun[OBJ_RING].funp = o_ring;
 					/* set up signal handling */
 	signal(SIGINT, quit);
 #ifdef SIGHUP
@@ -229,35 +143,8 @@ init(int np)				/* start rtrace and set up buffers */
 #ifdef SIGPIPE
 	signal(SIGPIPE, quit);
 #endif
-	rtp = &rt0;			/* start rtrace process(es) */
-	for (i = 0; i++ < np; ) {
-		errno = 0;
-		maxbytes = open_process(&rtp->pd, rtargv);
-		if (maxbytes == 0) {
-			eputs(rtargv[0]);
-			eputs(": command not found\n");
-			exit(1);
-		}
-		if (maxbytes < 0)
-			error(SYSTEM, "cannot start rtrace process");
-		rtp->bsiz = maxbytes/(6*sizeof(float));
-		rtp->buf = (float *)malloc(6*sizeof(float)*rtp->bsiz--);
-		rtp->dest = (float **)calloc(rtp->bsiz, sizeof(float *));
-		if (rtp->buf == NULL || rtp->dest == NULL)
-			error(SYSTEM, "out of memory in init");
-		rtp->nrays = 0;
-		if (i == np)		/* last process? */
-			break;
-		if (np > 1)
-			sleep(2);	/* wait for persist file */
-		rtp->next = (struct rtproc *)malloc(sizeof(struct rtproc));
-		if (rtp->next == NULL)
-			error(SYSTEM, "out of memory in init");
-		rtp = rtp->next;
-	}
-	rtp->next = NULL;
-					/* set up urand */
-	initurand(16384);
+					/* start rendering process(es) */
+	ray_pinit(octnm, np);
 }
 
 
@@ -576,13 +463,26 @@ xobject(				/* translate an object from fp */
 	checkhead();
 						/* process object */
 	if (doit)
-		(*ofun[thisobj.otype].funp)(&thisobj, &thisillum, &rt0, nm);
+		switch (thisobj.otype) {
+		case OBJ_FACE:
+			my_face(&thisobj, &thisillum, nm);
+			break;
+		case OBJ_SPHERE:
+			my_sphere(&thisobj, &thisillum, nm);
+			break;
+		case OBJ_RING:
+			my_ring(&thisobj, &thisillum, nm);
+			break;
+		default:
+			my_default(&thisobj, &thisillum, nm);
+			break;
+		}
 	else
 		printobj(thisillum.altmat, &thisobj);
 						/* free arguments */
 	freefargs(&thisobj.oargs);
 	return;
 readerr:
-	sprintf(errmsg, "(%s): error reading scene", nm);
+	sprintf(errmsg, "(%s): error reading input", nm);
 	error(USER, errmsg);
 }
