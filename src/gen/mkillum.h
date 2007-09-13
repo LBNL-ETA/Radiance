@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.8 2007/09/13 06:31:21 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.9 2007/09/13 17:52:35 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -26,15 +26,15 @@ struct illum_args {
 	int	sampdens;		/* point sample density */
 	int	nsamps;			/* # of samples in each direction */
 	float	minbrt;			/* minimum average brightness */
-	float	col[3];			/* computed average color */
+	COLOR	col;			/* computed average color */
 };				/* illum options */
 
-extern void printobj(char  *mod, register OBJREC  *obj);
-extern int average(register struct illum_args  *il, float  *da, int  n);
-extern void flatout(struct illum_args  *il, float  *da, int  n, int  m,
-	FVECT  u, FVECT  v, FVECT  w);
-extern void illumout(register struct illum_args  *il, OBJREC  *ob);
-extern void roundout(struct illum_args  *il, float  *da, int  n, int  m);
+extern void printobj(char *mod, register OBJREC *obj);
+extern int average(register struct illum_args *il, COLORV *da, int n);
+extern void flatout(struct illum_args *il, COLORV *da, int n, int m,
+	FVECT u, FVECT v, FVECT w);
+extern void illumout(register struct illum_args *il, OBJREC *ob);
+extern void roundout(struct illum_args *il, COLORV *da, int n, int m);
 
 extern int my_default(OBJREC *, struct illum_args *, char *);
 extern int my_face(OBJREC *, struct illum_args *, char *);

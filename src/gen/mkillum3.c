@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum3.c,v 2.11 2007/09/13 06:31:21 greg Exp $";
+static const char RCSid[] = "$Id: mkillum3.c,v 2.12 2007/09/13 17:52:35 greg Exp $";
 #endif
 /*
  * Routines to print mkillum objects
@@ -15,12 +15,12 @@ char	DATSUF[] = ".dat";		/* data file suffix */
 char	DSTSUF[] = ".dist";		/* distribution suffix */
 char	FNCFNM[] = "illum.cal";		/* function file name */
 
-void compinv(float *rinv, float *rp, int m);
-void colorout(int p, float *da, int n, int m, double mult, FILE *fp);
+void compinv(COLORV *rinv, COLORV *rp, int m);
+void colorout(int p, COLORV *da, int n, int m, double mult, FILE *fp);
 void fputnum(double d, FILE *fp);
-void brightout(float *da, int n, int m, double mult, FILE *fp);
+void brightout(COLORV *da, int n, int m, double mult, FILE *fp);
 void fputeol(FILE *fp);
-void compavg(float col[3], float *da, int n);
+void compavg(COLOR col, COLORV *da, int n);
 char * dfname(struct illum_args *il, int c);
 FILE * dfopen(struct illum_args *il, int c);
 
@@ -102,7 +102,7 @@ dfopen(			/* open data file */
 extern void
 flatout(		/* write hemispherical distribution */
 	struct illum_args  *il,
-	float  *da,
+	COLORV  *da,
 	int  n,
 	int  m,
 	FVECT  u,
@@ -110,11 +110,11 @@ flatout(		/* write hemispherical distribution */
 	FVECT  w
 )
 {
-	float  *Ninv;
+	COLORV  *Ninv;
 	FILE  *dfp;
 	int  i;
 
-	if ((Ninv = (float *)malloc(3*m*sizeof(float))) == NULL)
+	if ((Ninv = (COLORV *)malloc(3*m*sizeof(COLORV))) == NULL)
 		error(SYSTEM, "out of memory in flatout");
 	compinv(Ninv, da, m);
 	if (il->flags & IL_COLDST) {
@@ -159,17 +159,17 @@ flatout(		/* write hemispherical distribution */
 extern void
 roundout(			/* write spherical distribution */
 	struct illum_args  *il,
-	float  *da,
+	COLORV  *da,
 	int  n,
 	int  m
 )
 {
-	float  *Ninv, *Sinv;
+	COLORV  *Ninv, *Sinv;
 	FILE  *dfp;
 	int  i;
 
-	if ((Ninv = (float *)malloc(3*m*sizeof(float))) == NULL ||
-			(Sinv = (float *)malloc(3*m*sizeof(float))) == NULL)
+	if ((Ninv = (COLORV *)malloc(3*m*sizeof(COLORV))) == NULL ||
+			(Sinv = (COLORV *)malloc(3*m*sizeof(COLORV))) == NULL)
 		error(SYSTEM, "out of memory in roundout");
 	compinv(Ninv, da, m);
 	compinv(Sinv, da+3*m*(n-1), m);
@@ -245,33 +245,31 @@ illumout(		/* print illum object */
 
 void
 compavg(		/* compute average for set of data values */
-	float  col[3],
-	register float  *da,
+	COLOR  col,
+	register COLORV  *da,
 	int  n
 )
 {
 	register int  i;
 
-	col[0] = col[1] = col[2] = 0.;
+	setcolor(col, 0.0, 0.0, 0.0);
 	i = n;
 	while (i-- > 0) {
-		col[0] += *da++;
-		col[1] += *da++;
-		col[2] += *da++;
+		addcolor(col, da);
+		da += 3;
 	}
-	for (i = 0; i < 3; i++)
-		col[i] /= (double)n;
+	scalecolor(col, 1./(double)n);
 }
 
 
 void
 compinv(		/* compute other side of row average */
-	register float  *rinv,
-	register float  *rp,
+	register COLORV  *rinv,
+	register COLORV  *rp,
 	int  m
 )
 {
-	float  avg[3];
+	COLOR  avg;
 
 	compavg(avg, rp, m);		/* row average */
 	while (m-- > 0) {
@@ -285,7 +283,7 @@ compinv(		/* compute other side of row average */
 extern int
 average(		/* evaluate average value for distribution */
 	register struct illum_args  *il,
-	float  *da,
+	COLORV  *da,
 	int  n
 )
 {
@@ -327,7 +325,7 @@ fputeol(			/* write end of line to fp */
 void
 colorout(	/* put out color distribution data */
 	int  p,
-	register float  *da,
+	register COLORV  *da,
 	int  n,
 	int  m,
 	double  mult,
@@ -348,7 +346,7 @@ colorout(	/* put out color distribution data */
 
 void
 brightout(	/* put out brightness distribution data */
-	register float  *da,
+	register COLORV  *da,
 	int  n,
 	int  m,
 	double  mult,
