@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.28 2007/09/13 06:31:21 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.29 2007/09/14 21:29:08 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -72,7 +72,7 @@ main(		/* compute illum distributions using rtrace */
 	directvis = 0;
 	ambounce = 2;
 				/* get options from command line */
-	for (i = 1; i < argc-1; i++) {
+	for (i = 1; i < argc; i++) {
 		while ((rval = expandarg(&argc, &argv, i)) > 0)
 			;
 		if (rval < 0) {
