@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.63 2007/09/13 20:13:16 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.64 2007/09/14 00:50:31 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -902,9 +902,10 @@ ambsync(void)			/* synchronize ambient file */
 			avinsert(avstore(&avs));
 			n -= AMBVALSIZ;
 		}
+		lastpos = flen - n;
 		/*** seek always as safety measure
 		if (n) ***/			/* alignment */
-			if (lseek(fileno(ambfp), (off_t)(flen-n), SEEK_SET) < 0)
+			if (lseek(fileno(ambfp), (off_t)lastpos, SEEK_SET) < 0)
 				goto seekerr;
 	}
 #ifdef  DEBUG
@@ -917,8 +918,11 @@ ambsync(void)			/* synchronize ambient file */
 #endif
 syncend:
 	n = fflush(ambfp);			/* calls write() at last */
-	if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
-		goto seekerr;
+	if (n == EOF) {
+		if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
+			goto seekerr;
+	} else
+		lastpos += (long)nunflshed*AMBVALSIZ;
 	aflock(F_UNLCK);			/* release file */
 	nunflshed = 0;
 	return(n);
