@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.65 2007/09/15 02:47:30 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.66 2007/09/15 05:16:10 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -140,7 +140,7 @@ extern void
 setambient(void)				/* initialize calculation */
 {
 	int	readonly = 0;
-	long  pos, flen;
+	long	flen;
 	AMBVAL	amb;
 						/* make sure we're fresh */
 	ambdone();
@@ -160,7 +160,7 @@ setambient(void)				/* initialize calculation */
 		readonly = (ambfp = fopen(ambfile, "r")) != NULL;
 	if (ambfp != NULL) {
 		initambfile(0);			/* file exists */
-		pos = ftell(ambfp);
+		lastpos = ftell(ambfp);
 		while (readambval(&amb, ambfp))
 			avinsert(avstore(&amb));
 		nambshare = nambvals;		/* share loaded values */
@@ -174,20 +174,21 @@ setambient(void)				/* initialize calculation */
 			return;			/* avoid ambsync() */
 		}
 						/* align file pointer */
-		pos += (long)nambvals*AMBVALSIZ;
+		lastpos += (long)nambvals*AMBVALSIZ;
 		flen = lseek(fileno(ambfp), (off_t)0, SEEK_END);
-		if (flen != pos) {
+		if (flen != lastpos) {
 			sprintf(errmsg,
 			"ignoring last %ld values in ambient file (corrupted)",
-					(flen - pos)/AMBVALSIZ);
+					(flen - lastpos)/AMBVALSIZ);
 			error(WARNING, errmsg);
-			fseek(ambfp, pos, 0);
+			fseek(ambfp, lastpos, SEEK_SET);
 #ifndef _WIN32 /* XXX we need a replacement for that one */
-			ftruncate(fileno(ambfp), (off_t)pos);
+			ftruncate(fileno(ambfp), (off_t)lastpos);
 #endif
 		}
 	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
 		initambfile(1);			/* else create new file */
+		lastpos = ftell(ambfp);
 	} else {
 		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
 		error(SYSTEM, errmsg);
@@ -863,6 +864,8 @@ aflock(			/* lock/unlock ambient file */
 {
 	static struct flock  fls;	/* static so initialized to zeroes */
 
+	if (typ == fls.l_type)		/* already called? */
+		return;
 	fls.l_type = typ;
 	if (fcntl(fileno(ambfp), F_SETLKW, &fls) < 0)
 		error(SYSTEM, "cannot (un)lock ambient file");
@@ -878,8 +881,6 @@ ambsync(void)			/* synchronize ambient file */
 
 	if (ambfp == NULL)	/* no ambient file? */
 		return(0);
-	if (lastpos < 0)	/* initializing (locked in initambfile) */
-		goto syncend;
 				/* gain appropriate access */
 	aflock(nunflshed ? F_WRLCK : F_RDLCK);
 				/* see if file has grown */
@@ -891,7 +892,7 @@ ambsync(void)			/* synchronize ambient file */
 			if (ambinp == NULL)
 				error(SYSTEM, "fdopen failed in ambsync");
 		}
-		if (fseek(ambinp, lastpos, 0) < 0)
+		if (fseek(ambinp, lastpos, SEEK_SET) < 0)
 			goto seekerr;
 		while (n >= AMBVALSIZ) {	/* load contributed values */
 			if (!readambval(&avs, ambinp)) {
@@ -918,13 +919,12 @@ ambsync(void)			/* synchronize ambient file */
 		error(CONSISTENCY, errmsg);
 	}
 #endif
-syncend:
 	n = fflush(ambfp);			/* calls write() at last */
-	if ((n == EOF) | (lastpos < 0)) {
-		if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
-			goto seekerr;
-	} else
+	if (n != EOF)
 		lastpos += (long)nunflshed*AMBVALSIZ;
+	else if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
+		goto seekerr;
+		
 	aflock(F_UNLCK);			/* release file */
 	nunflshed = 0;
 	return(n);
