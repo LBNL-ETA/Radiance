@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.29 2007/09/14 21:29:08 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.30 2007/09/18 19:51:07 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -25,12 +25,14 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.29 2007/09/14 21:29:08 greg Exp 
 
 struct illum_args  thisillum = {	/* our illum and default values */
 		0,
+		UDzpos,
 		DFLMAT,
 		DFLDAT,
 		0,
 		VOIDID,
 		SAMPDENS,
 		NSAMPS,
+		NULL,
 		0.,
 	};
 
@@ -112,7 +114,7 @@ main(		/* compute illum distributions using rtrace */
 	init(argv[gargc-1], nprocs);
 	if (gargc < argc) {
 		if (gargc == argc-1 || argv[gargc][0] != '<' || argv[gargc][1])
-			error(USER, "Use '< file1 file2 ..' for multiple inputs");
+			error(USER, "use '< file1 file2 ..' for multiple inputs");
 		for (i = gargc+1; i < argc; i++) {
 			if ((fp = fopen(argv[i], "r")) == NULL) {
 				sprintf(errmsg,
@@ -216,6 +218,7 @@ xoptions(			/* process options in string s */
 {
 	extern FILE	*freopen();
 	char	buf[64];
+	int	negax;
 	int	nerrs = 0;
 	register char	*cp;
 
@@ -295,15 +298,26 @@ xoptions(			/* process options in string s */
 			}
 			cp = sskip(cp);
 			continue;
-		case 'd':			/* point sample density */
+		case 'd':			/* sample density / BSDF data */
 			if (*++cp != '=')
 				break;
-			if (!isintd(++cp, " \t\n\r"))
-				break;
-			thisillum.sampdens = atoi(cp);
+			if (thisillum.sd != NULL) {
+				free_BSDF(thisillum.sd);
+				thisillum.sd = NULL;
+			}
+			if (!*++cp || isspace(*cp))
+				continue;
+			if (isintd(++cp, " \t\n\r")) {
+				thisillum.sampdens = atoi(cp);
+			} else {
+				atos(buf, sizeof(buf), cp);
+				thisillum.sd = load_BSDF(buf);
+				if (thisillum.sd == NULL)
+					break;
+			}
 			cp = sskip(cp);
 			continue;
-		case 's':			/* point super-samples */
+		case 's':			/* surface super-samples */
 			if (*++cp != '=')
 				break;
 			if (!isintd(++cp, " \t\n\r"))
@@ -344,6 +358,40 @@ xoptions(			/* process options in string s */
 				error(SYSTEM, errmsg);
 			}
 			doneheader = 0;
+			continue;
+		case 'u':			/* up direction */
+			if (*++cp != '=')
+				break;
+			if (!*++cp || isspace(*cp)) {
+				thisillum.udir = UDunknown;
+				continue;
+			}
+			negax = 0;
+			if (*cp == '+')
+				cp++;
+			else if (*cp == '-') {
+				negax++;
+				cp++;
+			}
+			switch (*cp++) {
+			case 'x':
+			case 'X':
+				thisillum.udir = negax ? UDxneg : UDxpos;
+				break;
+			case 'y':
+			case 'Y':
+				thisillum.udir = negax ? UDyneg : UDypos;
+				break;
+			case 'z':
+			case 'Z':
+				thisillum.udir = negax ? UDxneg : UDxpos;
+				break;
+			default:
+				thisillum.udir = UDunknown;
+				break;
+			}
+			if (thisillum.udir == UDunknown || !isspace(*cp))
+				break;
 			continue;
 		case '!':			/* processed file! */
 			sprintf(errmsg, "(%s): already processed!", nm);
@@ -390,6 +438,28 @@ printopts(void)			/* print out option default values */
 	printf("d=%d\t\t\t\t# density of points\n", thisillum.sampdens);
 	printf("s=%d\t\t\t\t# samples per point\n", thisillum.nsamps);
 	printf("b=%f\t\t\t# minimum average brightness\n", thisillum.minbrt);
+	switch (thisillum.udir) {
+	case UDzneg:
+		fputs("u=-Z\t\t\t\t# up is negative Z\n", stdout);
+		break;
+	case UDyneg:
+		fputs("u=-Y\t\t\t\t# up is negative Y\n", stdout);
+		break;
+	case UDxneg:
+		fputs("u=-X\t\t\t\t# up is negative X\n", stdout);
+		break;
+	case UDxpos:
+		fputs("u=+X\t\t\t\t# up is positive X\n", stdout);
+		break;
+	case UDypos:
+		fputs("u=+Y\t\t\t\t# up is positive Y\n", stdout);
+		break;
+	case UDzpos:
+		fputs("u=+Z\t\t\t\t# up is positive Z\n", stdout);
+		break;
+	case UDunknown:
+		break;
+	}
 }
 
 

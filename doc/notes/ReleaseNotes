@@ -1633,3 +1633,6 @@ of the smaller octree structure size.
 Fixed bug in shadow cache where it was adding surfaces with antimatter
 holes cut in them to the obstructor list.  Thanks to John Mardaljevic
 for discovering and reporting the problem.
+
+Adding ability in mkillum to incorporate BSDF data in calculation.
+Internal interface (raypcalls) now used in place of rtrace process(es).

@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.9 2007/09/13 17:52:35 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.10 2007/09/18 19:51:07 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -17,23 +17,61 @@ extern "C" {
 #define  IL_COLAVG	0x4		/* use average color */
 #define  IL_DATCLB	0x8		/* OK to clobber data file */
 
+				/* up directions */
+typedef enum {
+	UDzneg=-3,
+	UDyneg=-2,
+	UDxneg=-1,
+	UDunknown=0,
+	UDxpos=1,
+	UDypos=2,
+	UDzpos=3
+} UpDir;
+
+struct BSDF_data {
+	double	om_scale;		/* maximum solid angle (sr/256) */
+	int	ninc;			/* number of incoming directions */
+	int32	*inc_dir;		/* incoming direction codes */
+	BYTE	*inc_rad;		/* incoming radians to neighbor */
+	int	nout;			/* number of outgoing directions */
+	int32	*out_dir;		/* outgoing direction codes */
+	BYTE	*out_rad;		/* outgoing radians to neighbor */
+	float	*bsdf;			/* scattering distribution data */
+};				/* bidirectional scattering distrib. func. */
+
 struct illum_args {
 	int	flags;			/* flags from list above */
+	UpDir	udir;			/* up direction */
 	char	matname[MAXSTR];	/* illum material name */
 	char	datafile[MAXSTR];	/* distribution data file name */
 	int	dfnum;			/* data file number */
 	char	altmat[MAXSTR];		/* alternate material name */
 	int	sampdens;		/* point sample density */
 	int	nsamps;			/* # of samples in each direction */
+	struct BSDF_data
+		*sd;			/* scattering data (if set) */
 	float	minbrt;			/* minimum average brightness */
 	COLOR	col;			/* computed average color */
 };				/* illum options */
 
-extern void printobj(char *mod, register OBJREC *obj);
-extern int average(register struct illum_args *il, COLORV *da, int n);
+#define getBSDF_incvec(v,b,i)	decodedir(v, (b)->inc_dir[i])
+#define getBSDF_outvec(v,b,o)	decodedir(v, (b)->out_dir[o])
+#define getBSDF_incrad(b,i)	((b)->om_scale*((b)->inc_rad[i] + .5));
+#define getBSDF_outrad(b,o)	((b)->om_scale*((b)->out_rad[o] + .5));
+#define BSDF_data(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
+
+extern struct BSDF_data *load_BSDF(char *fname);
+extern void free_BSDF(struct BSDF_data *b);
+extern void r_BSDF_incvec(FVECT v, struct BSDF_data *b, int i,
+				double rv, MAT4 xm);
+extern void r_BSDF_outvec(FVECT v, struct BSDF_data *b, int o,
+				double rv, MAT4 xm);
+
+extern void printobj(char *mod, OBJREC *obj);
+extern int average(struct illum_args *il, COLORV *da, int n);
 extern void flatout(struct illum_args *il, COLORV *da, int n, int m,
 	FVECT u, FVECT v, FVECT w);
-extern void illumout(register struct illum_args *il, OBJREC *ob);
+extern void illumout(struct illum_args *il, OBJREC *ob);
 extern void roundout(struct illum_args *il, COLORV *da, int n, int m);
 
 extern int my_default(OBJREC *, struct illum_args *, char *);

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.16 2007/09/13 06:31:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.17 2007/09/18 19:51:07 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -55,9 +55,9 @@ xform:	xform.o
 replmarks:	replmarks.o
 	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrtrad $(MLIB)
 
-mkillum:	mkillum.o mkillum2.o mkillum3.o
+mkillum:	mkillum.o mkillum2.o mkillum3.o mkillum4.o
 	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o \
--lraycalls -lradiance -lrtrad $(MLIB)
+mkillum4.o -lraycalls -lradiance -lrtrad $(MLIB)
 
 mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.19 2007/09/18 03:35:09 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.20 2007/09/18 19:51:07 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -38,7 +38,7 @@ newdist(			/* allocate & clear distribution array */
 		free((void *)distarr);
 		distarr = (COLORV *)malloc(sizeof(COLORV)*3*siz);
 		if (distarr == NULL)
-			error(SYSTEM, "Out of memory in newdist");
+			error(SYSTEM, "out of memory in newdist");
 		distsiz = siz;
 	}
 	memset(distarr, '\0', sizeof(COLORV)*3*siz);
@@ -53,9 +53,9 @@ process_ray(RAY *r, int rv)
 	if (rv == 0)
 		return(0);
 	if (rv < 0)
-		error(USER, "Ray tracing process died");
+		error(USER, "ray tracing process died");
 	if (r->rno >= distsiz)
-		error(INTERNAL, "Bad returned index in process_ray");
+		error(INTERNAL, "bad returned index in process_ray");
 	colp = &distarr[r->rno * 3];
 	addcolor(colp, r->rcol);
 	return(1);
@@ -73,7 +73,7 @@ raysamp(	/* queue a ray sample */
 	int	rv;
 
 	if ((ndx < 0) | (ndx >= distsiz))
-		error(INTERNAL, "Bad index in raysamp");
+		error(INTERNAL, "bad index in raysamp");
 	VCOPY(myRay.rorg, org);
 	VCOPY(myRay.rdir, dir);
 	myRay.rmax = .0;
@@ -142,7 +142,7 @@ my_face(		/* make an illum face */
 	}
 	n = nalt*nazi;
 	newdist(n);
-				/* take first edge longer than sqrt(area) */
+				/* take first edge >= sqrt(area) */
 	for (j = fa->nv-1, i = 0; i < fa->nv; j = i++) {
 		u[0] = VERTEX(fa,i)[0] - VERTEX(fa,j)[0];
 		u[1] = VERTEX(fa,i)[1] - VERTEX(fa,j)[1];
@@ -198,7 +198,7 @@ my_face(		/* make an illum face */
 			return(my_default(ob, il, nm));
 		    }
 		    for (j = 0; j < 3; j++)
-			org[j] += .001*fa->norm[j];
+			org[j] += .0001*fa->norm[j];
 					/* send sample */
 		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
@@ -332,8 +332,7 @@ my_ring(		/* make an illum ring */
 		    r2 = r3*sin(r2);
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j] +
-					.001*co->ad[j];
-
+						.0001*co->ad[j];
 					/* send sample */
 		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
