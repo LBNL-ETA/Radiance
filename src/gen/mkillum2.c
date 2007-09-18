@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.18 2007/09/13 06:31:21 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.19 2007/09/18 03:35:09 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -38,7 +38,7 @@ newdist(			/* allocate & clear distribution array */
 		free((void *)distarr);
 		distarr = (COLORV *)malloc(sizeof(COLORV)*3*siz);
 		if (distarr == NULL)
-			error(SYSTEM, "Out of memory in distalloc");
+			error(SYSTEM, "Out of memory in newdist");
 		distsiz = siz;
 	}
 	memset(distarr, '\0', sizeof(COLORV)*3*siz);
@@ -94,7 +94,7 @@ rayclean()			/* finish all pending rays */
 }
 
 
-int /* XXX type conflict with otypes.h */
+int
 my_default(	/* default illum action */
 	OBJREC  *ob,
 	struct illum_args  *il,
@@ -130,7 +130,7 @@ my_face(		/* make an illum face */
 	fa = getface(ob);
 	if (fa->area == 0.0) {
 		freeface(ob);
-		return(o_default(ob, il, nm));
+		return(my_default(ob, il, nm));
 	}
 				/* set up sampling */
 	if (il->sampdens <= 0)
@@ -195,7 +195,7 @@ my_face(		/* make an illum face */
 			rayclean();
 			freeface(ob);
 			free((void *)distarr);
-			return(o_default(ob, il, nm));
+			return(my_default(ob, il, nm));
 		    }
 		    for (j = 0; j < 3; j++)
 			org[j] += .001*fa->norm[j];
