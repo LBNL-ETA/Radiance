@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.17 2007/09/18 19:51:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.18 2007/09/21 05:53:21 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -55,9 +55,9 @@ xform:	xform.o
 replmarks:	replmarks.o
 	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrtrad $(MLIB)
 
-mkillum:	mkillum.o mkillum2.o mkillum3.o mkillum4.o
+mkillum:	mkillum.o mkillum2.o mkillum3.o mkillum4.o ezxml.o
 	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o \
-mkillum4.o -lraycalls -lradiance -lrtrad $(MLIB)
+mkillum4.o ezxml.o -lraycalls -lradiance -lrtrad $(MLIB)
 
 mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \
@@ -98,12 +98,14 @@ genworm.o genrev.o gensurf.o:	../common/resolu.h ../common/rterror.h
 
 xform.o:	../common/otypes.h ../common/object.h
 
-mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/otypes.h \
-../rt/ray.h ../common/octree.h \
+mkillum.o mkillum2.o mkillum3.o mkillum4.o:	mkillum.h \
+../common/otypes.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h ../common/tifftypes.h
+
+ezxml.o mkillum4.o:	ezxml.h
 
 gensky.o:	../common/color.h
 

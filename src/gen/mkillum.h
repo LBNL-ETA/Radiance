@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.10 2007/09/18 19:51:07 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.11 2007/09/21 05:53:21 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -42,6 +42,7 @@ struct BSDF_data {
 struct illum_args {
 	int	flags;			/* flags from list above */
 	UpDir	udir;			/* up direction */
+	double	thick;			/* object thickness */
 	char	matname[MAXSTR];	/* illum material name */
 	char	datafile[MAXSTR];	/* distribution data file name */
 	int	dfnum;			/* data file number */
@@ -66,6 +67,9 @@ extern void r_BSDF_incvec(FVECT v, struct BSDF_data *b, int i,
 				double rv, MAT4 xm);
 extern void r_BSDF_outvec(FVECT v, struct BSDF_data *b, int o,
 				double rv, MAT4 xm);
+extern int getBSDF_xfm(MAT4 xm, FVECT nrm, UpDir ud);
+extern void redistribute(struct BSDF_data *b, int nalt, int nazi,
+				FVECT u, FVECT v, FVECT w, MAT4 xm);
 
 extern void printobj(char *mod, OBJREC *obj);
 extern int average(struct illum_args *il, COLORV *da, int n);
@@ -74,10 +78,18 @@ extern void flatout(struct illum_args *il, COLORV *da, int n, int m,
 extern void illumout(struct illum_args *il, OBJREC *ob);
 extern void roundout(struct illum_args *il, COLORV *da, int n, int m);
 
+extern void newdist(int siz);
+extern int process_ray(RAY *r, int rv);
+extern void raysamp(int ndx, FVECT org, FVECT dir);
+extern void rayclean(void);
+
 extern int my_default(OBJREC *, struct illum_args *, char *);
 extern int my_face(OBJREC *, struct illum_args *, char *);
 extern int my_sphere(OBJREC *, struct illum_args *, char *);
 extern int my_ring(OBJREC *, struct illum_args *, char *);
+
+extern COLORV *	distarr;		/* distribution array */
+extern int	distsiz;
 
 extern char	*progname;
 
