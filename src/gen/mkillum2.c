@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.21 2007/09/21 05:53:21 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.22 2007/09/30 19:05:26 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -184,13 +184,6 @@ my_face(		/* make an illum face */
 		return(my_default(ob, il, nm));
 	}
 				/* set up sampling */
-	if (il->sampdens <= 0) {
-		nalt = nazi = 1;	/* diffuse assumption */
-	} else {
-		n = PI * il->sampdens;
-		nalt = sqrt(n/PI) + .5;
-		nazi = PI*nalt + .5;
-	}
 	if (il->sd != NULL) {
 		if (!getBSDF_xfm(xfm, fa->norm, il->udir)) {
 			objerror(ob, WARNING, "illegal up direction");
@@ -198,8 +191,16 @@ my_face(		/* make an illum face */
 			return(my_default(ob, il, nm));
 		}
 		n = il->sd->ninc;
-	} else
+	} else {
+		if (il->sampdens <= 0) {
+			nalt = nazi = 1;	/* diffuse assumption */
+		} else {
+			n = PI * il->sampdens;
+			nalt = sqrt(n/PI) + .5;
+			nazi = PI*nalt + .5;
+		}
 		n = nazi*nalt;
+	}
 	newdist(n);
 				/* take first edge >= sqrt(area) */
 	for (j = fa->nv-1, i = 0; i < fa->nv; j = i++) {
@@ -270,8 +271,11 @@ my_face(		/* make an illum face */
 		    raysamp(dim[1], org, dir);
 		}
 	rayclean();
-	if (il->sd != NULL)	/* run distribution through BSDF */
+	if (il->sd != NULL) {	/* run distribution through BSDF */
+		nalt = sqrt(il->sd->nout/PI) + .5;
+		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, fa->norm, xfm);
+	}
 				/* write out the face and its distribution */
 	if (average(il, distarr, n)) {
 		if (il->sampdens > 0)
@@ -374,13 +378,6 @@ my_ring(		/* make an illum ring */
 				/* get/check arguments */
 	co = getcone(ob, 0);
 				/* set up sampling */
-	if (il->sampdens <= 0)
-		nalt = nazi = 1;
-	else {
-		n = PI * il->sampdens;
-		nalt = sqrt(n/PI) + .5;
-		nazi = PI*nalt + .5;
-	}
 	if (il->sd != NULL) {
 		if (!getBSDF_xfm(xfm, co->ad, il->udir)) {
 			objerror(ob, WARNING, "illegal up direction");
@@ -388,8 +385,16 @@ my_ring(		/* make an illum ring */
 			return(my_default(ob, il, nm));
 		}
 		n = il->sd->ninc;
-	} else
+	} else {
+		if (il->sampdens <= 0) {
+			nalt = nazi = 1;	/* diffuse assumption */
+		} else {
+			n = PI * il->sampdens;
+			nalt = sqrt(n/PI) + .5;
+			nazi = PI*nalt + .5;
+		}
 		n = nazi*nalt;
+	}
 	newdist(n);
 	mkaxes(u, v, co->ad);
 	dim[0] = random();
@@ -428,8 +433,11 @@ my_ring(		/* make an illum ring */
 		    raysamp(dim[1], org, dir);
 		}
 	rayclean();
-	if (il->sd != NULL)	/* run distribution through BSDF */
+	if (il->sd != NULL) {	/* run distribution through BSDF */
+		nalt = sqrt(il->sd->nout/PI) + .5;
+		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, co->ad, xfm);
+	}
 				/* write out the ring and its distribution */
 	if (average(il, distarr, n)) {
 		if (il->sampdens > 0)
