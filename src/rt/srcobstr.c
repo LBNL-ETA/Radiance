@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.13 2007/07/25 04:12:36 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.14 2007/10/08 18:07:57 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -10,6 +10,8 @@ static const char RCSid[] = "$Id: srcobstr.c,v 2.13 2007/07/25 04:12:36 greg Exp
 #include  "otypes.h"
 
 #include  "otspecial.h"
+
+#include  "rtotypes.h"
 
 #include  "source.h"
 

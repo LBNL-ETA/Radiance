@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.54 2006/03/10 19:40:13 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.55 2007/10/08 18:07:57 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -239,4 +239,4 @@ aniso.o dielectric.o freeobjmem.o glass.o initotypes.o \
 m_alias.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o \
 mx_data.o mx_func.o normal.o o_cone.o o_face.o o_instance.o \
 o_mesh.o p_data.o p_func.o source.o sphere.o t_data.o t_func.o \
-text.o:		rtotypes.h
+srcobstr.o text.o:		rtotypes.h

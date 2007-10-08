@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.15 2005/06/23 11:51:47 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.16 2007/10/08 18:07:57 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -91,6 +91,7 @@ extern int
 o_default(OBJREC *o, RAY *r)			/* default action is error */
 {
 	objerror(o, CONSISTENCY, "unexpected object call");
-				/* call to pull in freeobjmem.o */ /* XXX ? */
+				/* unused call to load freeobjmem.o */
 	free_objs(0, 0);
+	return(0);
 }

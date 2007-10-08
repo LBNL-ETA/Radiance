@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.6 2005/01/07 21:41:06 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.7 2007/10/08 18:07:55 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -216,6 +216,7 @@ tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs,
 		if (nshft < 0) {
 			bi = TM_NOBRT;			/* bogus value */
 			lum = 1.;
+			setcolor(cmon, 1., 1., 1.);
 		} else {
 			int	j = GAMTABBITS-16+nshft;
 			int	nshft2;

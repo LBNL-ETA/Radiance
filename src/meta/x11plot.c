@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11plot.c,v 1.2 2003/11/17 02:21:53 greg Exp $";
+static const char	RCSid[] = "$Id: x11plot.c,v 1.3 2007/10/08 18:07:57 greg Exp $";
 #endif
 /*
  *   X window plotting functions
@@ -82,6 +82,17 @@ int	pixel[4];
 int	dxsize, dysize;		/* window size */
 int	debug = False;		/* use XSynchronize if true */
 
+static void
+adjustsize()
+{
+	if (dxsize > dysize)
+		dxsize = dysize;
+	else
+		dysize = dxsize;
+}
+
+
+void
 init(name, geom)		/* initialize window */
 char  *name;
 char  *geom;
@@ -89,7 +100,6 @@ char  *geom;
     char  defgeom[32];
     XColor  cdef,dum;
     XEvent  evnt;
-    int  dummy;
 
     curfont = curfill = curcol = -1;
     curlinetype = 0;
@@ -102,10 +112,7 @@ char  *geom;
 	(void) XSynchronize(dpy, True);
 
     dxsize = DisplayWidth(dpy,0) - 2*BORWIDTH-4;
-    dysize = DisplayHeight(dpy,0) - 2*BORWIDTH-26;
-
-    /* temporary */
-    dxsize = dxsize = 800;
+    dysize = DisplayHeight(dpy,0) - 2*BORWIDTH-100;
     adjustsize();
 
     sprintf(defgeom, "=%dx%d+2+25", dxsize, dysize);
@@ -164,13 +171,6 @@ char  *geom;
 	}
 }
 
-adjustsize()
-	{
-	if (dxsize > dysize)
-		dxsize = dysize;
-	else
-		dysize = dxsize;
-	}
 
 void
 endpage()		/* end of this graph */
@@ -297,21 +297,30 @@ register PRIMITIVE  *p;
 }
 
 
+void
+pXFlush()
+{
+	XFlush(dpy);
+}
+
+
 #ifdef  nyet
 
 static void
 fill(xmin,ymin,xmax,ymax,pm)
 int xmin,ymin,xmax,ymax;
 Pixmap pm;
-	{
+{
 	if (pm != 0 && curpat != pm)
 		{
 		XSetTile(dpy, gc, pm);
 		curpat = pm;
 		}
 	XFillRectangle(dpy, wind, gc, xmin, ymin, xmax-xmin+1, ymax-ymin+1);
-	}
+}
 
+
+void
 fillrect(p)			/* fill a rectangle */
 
 register PRIMITIVE  *p;
@@ -331,6 +340,7 @@ register PRIMITIVE  *p;
 
 
 
+void
 filltri(p)			/* fill a triangle */
 
 register PRIMITIVE  *p;
@@ -378,7 +388,7 @@ register PRIMITIVE  *p;
 }
 
 
-
+vpod
 xform(xp, yp, p)		/* transform a point according to p */
 
 register int  *xp, *yp;
@@ -412,7 +422,7 @@ register PRIMITIVE  *p;
 }
 
 
-
+void
 fillpoly(p)			/* fill a polygon */
 
 register PRIMITIVE  *p;
