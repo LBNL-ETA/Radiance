@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.16 2004/08/21 11:54:06 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.17 2007/10/09 04:44:54 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -182,7 +182,7 @@ char  *argv[];
 
 userror:
 	fprintf(stderr, "Usage: %s material name ", argv[0]);
-	fprintf(stderr, "x(s,t) y(s,t) z(s,t) m n [-s][-e expr][-f file]\n");
+	fprintf(stderr, "x(s,t) y(s,t) z(s,t) m n [-s][-o][-e expr][-f file]\n");
 	return 1;
 }
 
