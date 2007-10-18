@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.17 2007/10/09 04:44:54 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.18 2007/10/18 03:59:54 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -34,7 +34,7 @@ char  VNAME[] = 	"valid";		/* valid vertex name */
 
 #define  pvect(p)	printf(vformat, (p)[0], (p)[1], (p)[2])
 
-char  vformat[] = "%15.9g %15.9g %15.9g\n";
+char  vformat[] = "%18.12g %18.12g %18.12g\n";
 char  tsargs[] = "4 surf_dx surf_dy surf_dz surf.cal\n";
 char  texname[] = "Phong";
 
