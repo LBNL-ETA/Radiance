@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.28 2006/05/19 03:50:13 greg Exp $
+# RCSid $Id: Rmakefile,v 2.29 2007/11/04 17:01:34 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 MGF_LIB = ../lib/libmgf.a
 
 PROGS = ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
-mgf2rad rad2mgf mgf2meta mgfilt mgf2inv
+mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal
 
@@ -76,6 +76,12 @@ mgf2inv:
 	make mgf2inv CC=$(CC) \
 		CFLAGS="$(OPT) $(MACH)" ; \
 	mv mgf2inv ..
+
+3ds2mgf:
+	cd mgflib ; rm -f 3ds2mgf ; \
+	make 3ds2mgf CC=$(CC) \
+		CFLAGS="$(OPT) $(MACH)" ; \
+	mv 3ds2mgf ..
 
 $(MGF_LIB):
 	cd mgflib ; rm -f libmgf.a ; \
