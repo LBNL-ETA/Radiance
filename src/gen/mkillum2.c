@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.22 2007/09/30 19:05:26 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.23 2007/11/05 23:40:26 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -232,7 +232,7 @@ my_face(		/* make an illum face */
 	nmisses = 0;
 	for (dim[1] = 0; dim[1] < n; dim[1]++)
 		for (i = 0; i < il->nsamps; i++) {
-					/* random direction */
+					/* randomize direction */
 		    h = ilhash(dim, 2) + i;
 		    if (il->sd != NULL) {
 			r_BSDF_incvec(dir, il->sd, dim[1], urand(h), xfm);
@@ -246,7 +246,7 @@ my_face(		/* make an illum face */
 			    dir[j] = -dn[0]*u[j] - dn[1]*v[j] -
 						dn[2]*fa->norm[j];
 		    }
-					/* random location */
+					/* randomize location */
 		    do {
 			multisamp(sp, 2, urand(h+4862+nmisses));
 			r1 = ur[0] + (ur[1]-ur[0]) * sp[0];
@@ -403,7 +403,7 @@ my_ring(		/* make an illum ring */
 		for (i = 0; i < il->nsamps; i++) {
 					/* next sample point */
 		    h = ilhash(dim,2) + i;
-					/* random direction */
+					/* randomize direction */
 		    if (il->sd != NULL) {
 			r_BSDF_incvec(dir, il->sd, dim[1], urand(h), xfm);
 		    } else {
@@ -415,7 +415,7 @@ my_ring(		/* make an illum ring */
 			for (j = 0; j < 3; j++)
 			dir[j] = -dn[0]*u[j] - dn[1]*v[j] - dn[2]*co->ad[j];
 		    }
-					/* random location */
+					/* randomize location */
 		    multisamp(sp, 2, urand(h+8371));
 		    r3 = sqrt(CO_R0(co)*CO_R0(co) +
 			    sp[0]*(CO_R1(co)*CO_R1(co) - CO_R0(co)*CO_R0(co)));

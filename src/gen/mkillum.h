@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.11 2007/09/21 05:53:21 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.12 2007/11/05 23:40:26 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -28,6 +28,7 @@ typedef enum {
 	UDzpos=3
 } UpDir;
 
+/* XXX need to add per-band data */
 struct BSDF_data {
 	double	om_scale;		/* maximum solid angle (sr/256) */
 	int	ninc;			/* number of incoming directions */

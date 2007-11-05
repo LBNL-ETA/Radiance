@@ -1636,3 +1636,5 @@ for discovering and reporting the problem.
 
 Adding ability in mkillum to incorporate BSDF data in calculation.
 Internal interface (raypcalls) now used in place of rtrace process(es).
+
+Fixed pixel alignment in pcomb for size reduction and enlargement.
