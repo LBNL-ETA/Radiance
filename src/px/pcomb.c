@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.41 2007/11/05 23:40:26 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.42 2007/11/07 05:40:06 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -398,7 +398,7 @@ combine(void)			/* combine pictures */
 	    advance();
 	    varset(vypos, '=', (double)ypos);
 	    for (xpos = 0; xpos < xres; xpos++) {
-		xscan = (xpos+.5)*xmax/xres - .4999;
+		xscan = (xpos+.5)*xmax/xres;
 		varset(vxpos, '=', (double)xpos);
 		eclock++;
 		if (brtdef != NULL) {
@@ -437,7 +437,7 @@ advance(void)			/* read in data for next scanline */
 	register COLOR	*st;
 	register int	i, j;
 
-	for (ytarget = (ypos+.5)*ymax/yres - .4999; yscan > ytarget; yscan--)
+	for (ytarget = (ypos+.5)*ymax/yres; yscan > ytarget; yscan--)
 		for (i = 0; i < nfiles; i++) {
 			st = input[i].scan[WINSIZ-1];
 			for (j = WINSIZ-1; j > 0; j--)	/* rotate window */
@@ -458,14 +458,20 @@ advance(void)			/* read in data for next scanline */
 
 static double
 l_expos(			/* return picture exposure */
-	register char	*nam
+	char	*nam
 )
 {
-	register int	fn, n;
+	int	fn, n;
+	double	d;
 
-	fn = argument(1) - .5;
-	if (fn < 0 || fn >= nfiles)
-		return(1.0);
+	d = argument(1);
+	if (d <= -0.5 || d >= nfiles+0.5) {
+		errno = EDOM;
+		return(0.0);
+	}
+	if (d < 0.5)
+		return((double)nfiles);
+	fn = d - 0.5;
 	if (nam == vbrtexp)
 		return((*ourbright)(input[fn].expos));
 	n = 3;
@@ -481,11 +487,17 @@ l_expos(			/* return picture exposure */
 static double
 l_pixaspect(char *nm)		/* return pixel aspect ratio */
 {
-	register int	fn;
+	int	fn;
+	double	d;
 
-	fn = argument(1) - .5;
-	if (fn < 0 || fn >= nfiles)
-		return(1.0);
+	d = argument(1);
+	if (d <= -0.5 || d >= nfiles+0.5) {
+		errno = EDOM;
+		return(0.0);
+	}
+	if (d < 0.5)
+		return((double)nfiles);
+	fn = d - 0.5;
 	return(input[fn].pa);
 }
 
@@ -499,11 +511,14 @@ l_colin(			/* return color value for picture */
 	register int	n, xoff, yoff;
 	double	d;
 
-	fn = argument(1) - .5;
-	if (fn < 0 || fn >= nfiles) {
+	d = argument(1);
+	if (d <= -0.5 || d >= nfiles+0.5) {
 		errno = EDOM;
 		return(0.0);
 	}
+	if (d < 0.5)
+		return((double)nfiles);
+	fn = d - 0.5;
 	xoff = yoff = 0;
 	n = nargum();
 	if (n >= 2) {
@@ -555,14 +570,18 @@ l_ray(		/* return ray origin or direction */
 	static FVECT	lorg[MAXINP], ldir[MAXINP];
 	static double	ldist[MAXINP];
 	RREAL	loc[2];
+	double	d;
 	int	fn;
 	register int	i;
 
-	fn = argument(1) - .5;
-	if (fn < 0 || fn >= nfiles) {
+	d = argument(1);
+	if (d <= -0.5 || d >= nfiles+0.5) {
 		errno = EDOM;
 		return(0.0);
 	}
+	if (d < 0.5)
+		return((double)nfiles);
+	fn = d - 0.5;
 	if (ltick[fn] != eclock) {		/* need to compute? */
 		lorg[fn][0] = lorg[fn][1] = lorg[fn][2] = 0.0;
 		ldir[fn][0] = ldir[fn][1] = ldir[fn][2] = 0.0;
@@ -599,11 +618,13 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 	register int	i;
 
 	d = argument(1);
-	if (d < .5 || d >= nfiles+.5) {
+	if (d <= -0.5 || d >= nfiles+0.5) {
 		errno = EDOM;
 		return(0.0);
 	}
-	fn = d - .5;
+	if (d < 0.5)
+		return((double)nfiles);
+	fn = d - 0.5;
 	if (ltick[fn] != eclock) {		/* need to compute? */
 		psize[fn] = 0.0;
 		if (input[fn].vw.type == 0)
