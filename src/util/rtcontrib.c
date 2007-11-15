@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.43 2006/06/07 17:52:04 schorsch Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.44 2007/11/15 18:32:34 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -115,7 +115,12 @@ struct rtproc	rt0;			/* head of rtrace process list */
 
 struct rtproc	*rt_unproc = NULL;	/* unprocessed ray trees */
 
-char	persistfn[] = "pfXXXXXX";	/* persist file name */
+#define PERSIST_NONE	0		/* no persist file */
+#define PERSIST_SINGLE	1		/* user set -P persist */
+#define PERSIST_PARALL	2		/* user set -PP persist */
+#define PERSIST_OURS	3		/* -PP persist belongs to us */
+int	persist_state = PERSIST_NONE;	/* persist file state */
+char	persistfn[] = "pfXXXXXX";	/* our persist file name, if set */
 
 int		gargc;			/* global argc */
 char		**gargv;		/* global argv */
@@ -348,8 +353,12 @@ main(int argc, char *argv[])
 				addmodfile(argv[i], curout, binval, bincnt);
 				continue;
 			case 'P':		/* persist file */
-				error(USER, "persist file is automatic");
-				break;
+				if (i >= argc-2) break;
+				persist_state = (argv[i][2] == 'P') ?
+						PERSIST_PARALL : PERSIST_SINGLE;
+				rtargv[rtargc++] = argv[i];
+				rtargv[rtargc++] = argv[++i];
+				continue;
 			}
 		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
 	}
@@ -389,8 +398,13 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	if (nprocs > 1) {	/* add persist file if parallel */
-		rtargv[rtargc++] = "-PP";
-		rtargv[rtargc++] = mktemp(persistfn);
+		if (persist_state == PERSIST_SINGLE)
+			error(USER, "use -PP option for multiple processes");
+		if (persist_state == PERSIST_NONE) {
+			rtargv[rtargc++] = "-PP";
+			rtargv[rtargc++] = mktemp(persistfn);
+			persist_state = PERSIST_OURS;
+		}
 	} 
 				/* add format string */
 	sprintf(fmt, "-f%cf", inpfmt);
@@ -450,7 +464,7 @@ quit(int status)
 {
 	int	rtstat;
 
-	if (rt0.next != NULL)		/* terminate persistent rtrace */
+	if (persist_state == PERSIST_OURS)  /* terminate persistent rtrace */
 		killpersist();
 					/* clean up rtrace process(es) */
 	rtstat = done_rprocs(&rt0);
