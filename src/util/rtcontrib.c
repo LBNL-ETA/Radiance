@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.47 2007/11/17 15:57:28 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.48 2007/11/17 16:27:14 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1293,16 +1293,12 @@ reload_output(void)
 					error(USER, errmsg);
 				}
 			}
-			if (oent->key == NULL)	/* new file entry */
-				oent->key = strcpy((char *)
-						malloc(strlen(oname)+1), oname);
-			if (oent->data == NULL)
-				oent->data = (char *)malloc(sizeof(STREAMOUT));
-			*(STREAMOUT *)oent->data = sout;
 							/* read in RGB value */
 			if (!get_contrib(rgbv, sout.ofp)) {
-				if (!j)
+				if (!j) {
+					fclose(sout.ofp);
 					break;		/* ignore empty file */
+				}
 				if (j < mp->nbins) {
 					sprintf(errmsg, "missing data in '%s'",
 							oname);
@@ -1313,6 +1309,12 @@ reload_output(void)
 			if (j >= mp->nbins)		/* grow modifier size */
 				ment->data = (char *)(mp = growmodifier(mp, j+1));
 			copycolor(mp->cbin[j], rgbv);
+			if (oent->key == NULL)		/* new file entry */
+				oent->key = strcpy((char *)
+						malloc(strlen(oname)+1), oname);
+			if (oent->data == NULL)
+				oent->data = (char *)malloc(sizeof(STREAMOUT));
+			*(STREAMOUT *)oent->data = sout;
 		}
 	}
 	lu_doall(&ofiletab, myclose, NULL);	/* close all files */
@@ -1388,7 +1390,6 @@ recover_output(FILE *fin)
 			} else {
 				sout.reclen = 0;
 				sout.outpipe = 0;
-				sout.xr = xres; sout.yr = yres;
 				sout.ofp = NULL;
 			}
 			if (sout.ofp != NULL) {	/* already open? */
@@ -1429,10 +1430,11 @@ recover_output(FILE *fin)
 						oname);
 				error(USER, errmsg);
 			}
-			if ((xres > 0) & (yres > 0) &&
+			sout.xr = xres; sout.yr = yres;
+			if ((sout.xr > 0) & (sout.yr > 0) &&
 					(!fscnresolu(&xr, &yr, sout.ofp) ||
-						(xr != xres) |
-						(yr != yres))) {
+						(xr != sout.xr) |
+						(yr != sout.yr))) {
 				sprintf(errmsg, "resolution mismatch for '%s'",
 						oname);
 				error(USER, errmsg);
