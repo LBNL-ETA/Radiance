@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.45 2007/11/17 01:13:51 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.46 2007/11/17 06:21:28 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -133,6 +133,7 @@ int		outfmt = 'a';		/* output format */
 int		header = 1;		/* output header? */
 int		accumulate = 0;		/* accumulate ray values? */
 int		force_open = 0;		/* truncate existing output? */
+int		recover = 0;		/* recover previous output? */
 int		xres = 0;		/* horiz. output resolution */
 int		yres = 0;		/* vert. output resolution */
 
@@ -220,7 +221,6 @@ main(int argc, char *argv[])
 {
 	int	contrib = 0;
 	int	nprocs = 1;
-	int	recover = 0;
 	char	*curout = NULL;
 	char	*binval = NULL;
 	int	bincnt = 0;
@@ -293,7 +293,7 @@ main(int argc, char *argv[])
 				break;
 			case 'r':		/* recover output */
 				if (argv[i][2]) break;
-				recover++;
+				recover = 1;
 				continue;
 			case 'h':		/* output header? */
 				switch (argv[i][2]) {
@@ -328,7 +328,7 @@ main(int argc, char *argv[])
 					continue;
 				}
 				if (argv[i][2] == 'o') {
-					force_open++;
+					force_open = 1;
 					continue;
 				}
 				setformat(argv[i]+2);
@@ -437,14 +437,11 @@ main(int argc, char *argv[])
 		error(USER, "missing octree argument");
 	rtargv[rtargc++] = octree = argv[i];
 	rtargv[rtargc] = NULL;
-				/* start rtrace */
+				/* start rtrace & recover if requested */
 	init(nprocs);
-	if (recover)		/* perform recovery if requested */
-		if ((force_open = accumulate))
-			reload_output();
-		else
-			recover_output(stdin);
-	trace_contribs(stdin);	/* compute contributions */
+				/* compute contributions */
+	trace_contribs(stdin);
+				/* clean up */
 	quit(0);
 }
 
@@ -558,6 +555,13 @@ init(int np)
 	} else
 		raysleft = 0;
 	waitflush = xres;
+	if (!recover)
+		return;
+					/* recover previous values */
+	if (accumulate)
+		reload_output();
+	else
+		recover_output(stdin);
 }
 
 /* grow modifier to accommodate more bins */
@@ -779,7 +783,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		sop->ofp = NULL;		/* open iff noopen==0 */
 		sop->xr = xres; sop->yr = yres;
 		lep->data = (char *)sop;
-		if (!force_open && access(oname, F_OK) == 0) {
+		if (!sop->outpipe & !force_open & !recover &&
+				access(oname, F_OK) == 0) {
 			errno = EEXIST;		/* file exists */
 			goto openerr;
 		}
@@ -935,9 +940,7 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 		fprintf(fout, "%.6e\t%.6e\t%.6e\t", cnt[0], cnt[1], cnt[2]);
 		break;
 	case 'f':
-		fv[0] = cnt[0];
-		fv[1] = cnt[1];
-		fv[2] = cnt[2];
+		copycolor(fv, cnt);
 		fwrite(fv, sizeof(float), 3, fout);
 		break;
 	case 'd':
@@ -1168,20 +1171,45 @@ trace_contribs(FILE *fin)
 	lu_done(&ofiletab);			/* close output files */
 }
 
-/* seek on the given output file */
+/* get ray contribution from previous file */
 static int
-myseeko(const LUENT *e, void *p)
+get_contrib(DCOLOR cnt, FILE *finp)
+{
+	COLOR	fv;
+	COLR	cv;
+
+	switch (outfmt) {
+	case 'a':
+		return(fscanf(finp,"%lf %lf %lf",&cnt[0],&cnt[1],&cnt[2]) == 3);
+	case 'f':
+		if (fread(fv, sizeof(fv[0]), 3, finp) != 3)
+			return(0);
+		copycolor(cnt, fv);
+		return(1);
+	case 'd':
+		return(fread(cnt, sizeof(cnt[0]), 3, finp) == 3);
+	case 'c':
+		if (fread(cv, sizeof(cv), 1, finp) != 1)
+			return(0);
+		colr_color(fv, cv);
+		copycolor(cnt, fv);
+		return(1);
+	default:
+		error(INTERNAL, "botched output format");
+	}
+	return(0);	/* pro forma return */
+}
+
+/* close output file opened for input */
+static int
+myclose(const LUENT *e, void *p)
 {
 	STREAMOUT	*sop = (STREAMOUT *)e->data;
-	off_t		nbytes = *(off_t *)p;
 	
-	if (sop->reclen > 1)
-		nbytes = nbytes * sop->reclen;
-	if (fseeko(sop->ofp, nbytes, SEEK_CUR) < 0) {
-		sprintf(errmsg, "seek error on file '%s'", e->key);
-		error(SYSTEM, errmsg);
-	}
-	return 0;
+	if (sop->ofp == NULL)
+		return;
+	fclose(sop->ofp);
+	sop->ofp = NULL;
 }
 
 /* load previously accumulated values */
@@ -1195,9 +1223,9 @@ reload_output(void)
 	char		*fmode = "rb";
 	char		*outvfmt;
 	LUENT		*ment, *oent;
+	int		xr, yr;
 	STREAMOUT	sout;
-
-	error(INTERNAL, "-r option not yet implemented with -c");
+	DCOLOR		rgbv;
 
 	switch (outfmt) {
 	case 'a':
@@ -1217,7 +1245,7 @@ reload_output(void)
 		error(INTERNAL, "botched output format");
 		return;
 	}
-						/* check modifier outputs */
+						/* reload modifier values */
 	for (i = 0; i < nmods; i++) {
 		ment = lu_find(&modconttab,modname[i]);
 		mp = (MODCONT *)ment->data;
@@ -1225,7 +1253,7 @@ reload_output(void)
 			error(USER, "cannot reload from stdout");
 		if (mp->outspec[0] == '!')
 			error(USER, "cannot reload from command");
-		for (j = 0; ; j++) {		/* check each bin's file */
+		for (j = 0; ; j++) {		/* load each modifier bin */
 			ofl = ofname(oname, mp->outspec, mp->modname, j);
 			if (ofl < 0)
 				error(USER, "bad output file specification");
@@ -1234,36 +1262,73 @@ reload_output(void)
 				sout = *(STREAMOUT *)oent->data;
 			} else {
 				sout.reclen = 0;
+				sout.outpipe = 0;
+				sout.xr = xres; sout.yr = yres;
 				sout.ofp = NULL;
 			}
-			if (sout.ofp != NULL) {	/* already open? */
-				if (ofl & OF_BIN)
-					continue;
-				break;
+			if (sout.ofp == NULL) {	/* open output as input */
+				sout.ofp = fopen(oname, fmode);
+				if (sout.ofp == NULL) {
+					if (j)
+						break;	/* assume end of modifier */
+					sprintf(errmsg, "missing reload file '%s'",
+							oname);
+					error(WARNING, errmsg);
+					break;
+				}
+				if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {
+					sprintf(errmsg, "format mismatch for '%s'",
+							oname);
+					error(USER, errmsg);
+				}
+				if ((sout.xr > 0) & (sout.yr > 0) &&
+						(!fscnresolu(&xr, &yr, sout.ofp) ||
+							xr != sout.xr ||
+							yr != sout.yr)) {
+					sprintf(errmsg, "resolution mismatch for '%s'",
+							oname);
+					error(USER, errmsg);
+				}
 			}
-						/* open output */
-			sout.ofp = fopen(oname, fmode);
-			if (sout.ofp == NULL) {
-				if (j)
-					break;	/* assume end of modifier */
-				sprintf(errmsg, "missing reload file '%s'",
-						oname);
-				error(WARNING, errmsg);
-				break;
-			}
-			if (oent->key == NULL)	/* new entry */
+			if (oent->key == NULL)	/* new file entry */
 				oent->key = strcpy((char *)
 						malloc(strlen(oname)+1), oname);
 			if (oent->data == NULL)
 				oent->data = (char *)malloc(sizeof(STREAMOUT));
 			*(STREAMOUT *)oent->data = sout;
-			if (!(ofl & OF_BIN))
-				break;		/* no bin separation */
+							/* read in RGB value */
+			if (!get_contrib(rgbv, sout.ofp)) {
+				if (!j)
+					break;		/* ignore empty file */
+				if (j && j < mp->nbins) {
+					sprintf(errmsg, "missing data in '%s'",
+							oname);
+					error(USER, errmsg);
+				}
+				break;
+			}
+			if (j >= mp->nbins)		/* grow modifier size */
+				ment->data = (char *)(mp = growmodifier(mp, j+1));
+			copycolor(mp->cbin[j], rgbv);
 		}
-		if (j > mp->nbins)		/* reallocate modifier bins */
-			ment->data = (char *)(mp = growmodifier(mp, j));
 	}
-	lu_done(&ofiletab);			/* close all files */
+	lu_doall(&ofiletab, myclose, NULL);	/* close all files */
+}
+
+/* seek on the given output file */
+static int
+myseeko(const LUENT *e, void *p)
+{
+	STREAMOUT	*sop = (STREAMOUT *)e->data;
+	off_t		nbytes = *(off_t *)p;
+	
+	if (sop->reclen > 1)
+		nbytes = nbytes * sop->reclen;
+	if (fseeko(sop->ofp, nbytes, SEEK_CUR) < 0) {
+		sprintf(errmsg, "seek error on file '%s'", e->key);
+		error(SYSTEM, errmsg);
+	}
+	return 0;
 }
 
 /* recover output if possible */
@@ -1319,6 +1384,8 @@ recover_output(FILE *fin)
 				sout = *(STREAMOUT *)oent->data;
 			} else {
 				sout.reclen = 0;
+				sout.outpipe = 0;
+				sout.xr = xres; sout.yr = yres;
 				sout.ofp = NULL;
 			}
 			if (sout.ofp != NULL) {	/* already open? */
