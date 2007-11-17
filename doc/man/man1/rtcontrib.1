@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.16 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.17 2007/11/17 01:13:50 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -8,6 +8,8 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 .B "\-n nprocs"
 ][
 .B \-V
+][
+.B \-c
 ][
 .B \-fo
 |
@@ -95,6 +97,21 @@ More generally,
 can be used to compute arbitrary input-output relationships in optical
 systems, such as luminaires, light pipes, and shading devices.
 .PP
+Setting the
+.I \-c
+option instructs
+.I rtcontrib
+to accumulate values rather than reporting one record per ray.
+With this option, only a single record will be produced at the very
+end, corresponding to the sum of all rays given on the input.
+This is equivalent to passing all the output records through a program like
+.I total(1)
+to sum RGB values together, but is much more efficient.
+Using this option, it is possible to reverse sampling, sending rays from
+a parallel source such as the sun to a diffuse surface, for example.
+Care must be taken to perform normalization based on the
+radiation density and the number of rays sampled.
+.PP
 .I Rtcontrib
 calls
 .I rtrace(1)
@@ -112,6 +129,13 @@ option is given.
 If instead the
 .I \-r
 option is specified, data recovery is attempted on existing files.
+(If 
+.I \-c
+is used together with the
+.I \-r
+option, existing files are read in and new ray evaluations are added
+to the previous results, providing a convenient means for
+progressive simulation.)\0
 If an output specification contains a "%s" format, this will be
 replaced by the modifier name.
 The
@@ -137,7 +161,14 @@ and
 options to the left of each
 .I \-m
 setting affect only that modifier.
-(The ordering of other options is unimportant.)\0
+The ordering of other options is unimportant, except for
+.I \-x
+and
+.I \-y
+if the
+.I \-c
+is present, when they control the resolution string
+produced in the corresponding output.
 .PP
 If a
 .I \-b
@@ -257,4 +288,4 @@ RAYPATH		path to search for \-f and \-M files
 Greg Ward
 .SH "SEE ALSO"
 cnt(1), getinfo(1), pcomb(1), pfilt(1), ra_rgbe(1),
-rcalc(1), rpict(1), rtrace(1), vwrays(1), ximage(1)
+rcalc(1), rpict(1), rtrace(1), total(1), vwrays(1), ximage(1)
