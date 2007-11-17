@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.46 2007/11/17 06:21:28 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.47 2007/11/17 15:57:28 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -813,6 +813,9 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			*cp = '\0';
 			printheader(sop->ofp, info);
 		}
+		if (!accumulate) {		/* global res. for -c- */
+			sop->xr = xres; sop->yr = yres;
+		}
 		printresolu(sop->ofp, sop->xr, sop->yr);
 						/* play catch-up */
 		for (i = accumulate ? 0 : lastdone; i--; ) {
@@ -1283,8 +1286,8 @@ reload_output(void)
 				}
 				if ((sout.xr > 0) & (sout.yr > 0) &&
 						(!fscnresolu(&xr, &yr, sout.ofp) ||
-							xr != sout.xr ||
-							yr != sout.yr)) {
+							(xr != sout.xr) |
+							(yr != sout.yr))) {
 					sprintf(errmsg, "resolution mismatch for '%s'",
 							oname);
 					error(USER, errmsg);
@@ -1300,7 +1303,7 @@ reload_output(void)
 			if (!get_contrib(rgbv, sout.ofp)) {
 				if (!j)
 					break;		/* ignore empty file */
-				if (j && j < mp->nbins) {
+				if (j < mp->nbins) {
 					sprintf(errmsg, "missing data in '%s'",
 							oname);
 					error(USER, errmsg);
@@ -1428,8 +1431,8 @@ recover_output(FILE *fin)
 			}
 			if ((xres > 0) & (yres > 0) &&
 					(!fscnresolu(&xr, &yr, sout.ofp) ||
-						xr != xres ||
-						yr != yres)) {
+						(xr != xres) |
+						(yr != yres))) {
 				sprintf(errmsg, "resolution mismatch for '%s'",
 						oname);
 				error(USER, errmsg);
