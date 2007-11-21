@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.32 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.33 2007/11/21 16:42:03 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -9,11 +9,6 @@ static const char	RCSid[] = "$Id: x11.c,v 2.32 2004/03/30 16:13:01 schorsch Exp 
 
 #include  "standard.h"
 #include  <sys/ioctl.h>
-#ifdef sparc
-#include  <sys/conf.h>
-#include  <sys/file.h>
-#include  <sys/filio.h>
-#endif
 #if  !defined(FNDELAY) && defined(O_NONBLOCK)
 #define  FNDELAY  O_NONBLOCK
 #endif
