@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.2 2007/09/21 05:53:21 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.3 2007/11/21 18:51:05 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.2 2007/09/21 05:53:21 greg Exp 
 
 #include "mkillum.h"
 #include "paths.h"
+#include "random.h"
 #include "ezxml.h"
 
 

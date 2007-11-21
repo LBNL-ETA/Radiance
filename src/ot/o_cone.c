@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_cone.c,v 2.5 2005/06/14 17:10:06 greg Exp $";
+static const char	RCSid[] = "$Id: o_cone.c,v 2.6 2007/11/21 18:51:04 greg Exp $";
 #endif
 /*
  *  o_cone.c - routines for intersecting cubes with cones.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: o_cone.c,v 2.5 2005/06/14 17:10:06 greg Exp $"
 #include  "octree.h"
 #include  "object.h"
 #include  "cone.h"
+#include  "plocate.h"
 
 #define  ROOT3		1.732050808
 

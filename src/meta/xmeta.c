@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xmeta.c,v 1.4 2007/10/08 18:07:57 greg Exp $";
+static const char	RCSid[] = "$Id: xmeta.c,v 1.5 2007/11/21 18:51:05 greg Exp $";
 #endif
 /*
  *  Program to output meta-files to X window system.
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: xmeta.c,v 1.4 2007/10/08 18:07:57 greg Exp $";
 #include  "meta.h"
 #include  "plot.h"
 
+extern void	init(char *name, char *geom);
 
 #define  overlap(p,xmn,ymn,xmx,ymx)  (ov((p)->xy[XMN],(p)->xy[XMX],xmn,xmx) \
 				     &&ov((p)->xy[YMN],(p)->xy[YMX],ymn,ymx))

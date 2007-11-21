@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11plot.c,v 1.3 2007/10/08 18:07:57 greg Exp $";
+static const char	RCSid[] = "$Id: x11plot.c,v 1.4 2007/11/21 18:51:05 greg Exp $";
 #endif
 /*
  *   X window plotting functions
@@ -12,12 +12,15 @@ static const char	RCSid[] = "$Id: x11plot.c,v 1.3 2007/10/08 18:07:57 greg Exp $
 
 #include  "plot.h"
 
+#include "string.h"
+
 #undef  TRUE
 
 #undef  FALSE
 
 #include  <X11/Xlib.h>
 
+extern void	replay(int xmin, int ymin, int xmax, int ymax);
 
 #define  BORWIDTH  5
 
