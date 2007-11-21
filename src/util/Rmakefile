@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.44 2006/03/10 19:40:14 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 2.45 2007/11/21 17:52:05 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -46,7 +46,7 @@ genambpos.csh fieldcomb.csh
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
 clean:
-	set nonomatch; rm -f *.o $(PROGS) glrad core
+	set nonomatch; rm -f *.o $(PROGS) glrad core Version.c x11findwind.c
 
 ogl:	glrad
 	cp glrad $(INSTDIR)

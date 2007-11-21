@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.29 2007/11/04 17:01:34 greg Exp $
+# RCSid $Id: Rmakefile,v 2.30 2007/11/21 17:52:04 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -67,13 +67,13 @@ mgf2meta:	$(MGF_LIB) mgf2meta.o
 
 mgfilt:
 	cd mgflib ; rm -f mgfilt ; \
-	make mgfilt CC=$(CC) \
+	make mgfilt CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
 	mv mgfilt ..
 
 mgf2inv:
 	cd mgflib ; rm -f mgf2inv ; \
-	make mgf2inv CC=$(CC) \
+	make mgf2inv CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
 	mv mgf2inv ..
 
@@ -85,7 +85,7 @@ mgf2inv:
 
 $(MGF_LIB):
 	cd mgflib ; rm -f libmgf.a ; \
-	make libmgf.a CC=$(CC) \
+	make libmgf.a CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
 	mv libmgf.a ../../lib
 
