@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.28 2007/11/21 17:52:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.29 2007/11/24 00:37:27 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -8,6 +8,8 @@ MACH = -DBSD
 OPT = -O
 
 CFLAGS = -I../common -L../lib $(OPT) $(MACH) -DDEVPATH=\"$(DEVDIR)\"
+
+MLIB = -lm
 
 CC = cc
 
@@ -47,25 +49,25 @@ sun:
 rholo:	rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o holo.o holofile.o \
 viewbeams.o Version.o
 	$(CC) $(CFLAGS) -o rholo rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
-holo.o holofile.o viewbeams.o Version.o -lrtrad -lm
+holo.o holofile.o viewbeams.o Version.o -lrtrad $(MLIB)
 
 rhpict:	rhpict.o rhpict2.o holo.o holofile.o viewbeams.o Version.o
 	$(CC) $(CFLAGS) -o rhpict rhpict.o rhpict2.o holo.o holofile.o \
-viewbeams.o Version.o -lrtrad -lm
+viewbeams.o Version.o -lrtrad $(MLIB)
 
 rhcopy:	rhcopy.o clumpbeams.o holo.o holofile.o
 	$(CC) $(CFLAGS) -o rhcopy rhcopy.o clumpbeams.o \
-holo.o holofile.o -lrtrad -lm
+holo.o holofile.o -lrtrad $(MLIB)
 
 rhoptimize:	rhoptimize.o clumpbeams.o holo.o holofile.o
 	$(CC) $(CFLAGS) -o rhoptimize rhoptimize.o clumpbeams.o \
-holo.o holofile.o -lrtrad -lm
+holo.o holofile.o -lrtrad $(MLIB)
 
 rhinfo:	rhinfo.o holo.o holofile.o
-	$(CC) $(CFLAGS) -o rhinfo rhinfo.o holo.o holofile.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o rhinfo rhinfo.o holo.o holofile.o -lrtrad $(MLIB)
 
 genrhgrid:	genrhgrid.o holo.o
-	$(CC) $(CFLAGS) -o genrhgrid genrhgrid.o holo.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o genrhgrid genrhgrid.o holo.o -lrtrad $(MLIB)
 
 $(DEVDIR)/x11h.hdi:	$(DEVDIR)/x11.hdi
 	rm -f $(DEVDIR)/x11h.hdi
@@ -74,7 +76,7 @@ $(DEVDIR)/x11h.hdi:	$(DEVDIR)/x11.hdi
 $(DEVDIR)/x11.hdi:	rhdisp.o rhdisp2.o viewbeams.o rhd_x11.o rhd_qtree.o \
 rhd_qtree2r.o rhd_ctab.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/x11.hdi rhdisp.o rhdisp2.o viewbeams.o \
-rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrtrad -lX11 -lm
+rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrtrad -lX11
 
 $(DEVDIR)/glx1h.hdi:	$(DEVDIR)/glx1.hdi
 	rm -f $(DEVDIR)/glx1h.hdi
@@ -117,25 +119,25 @@ viewbeams.o holo.o rhd_qtree.o rhd_qtree2c.o -lrtrad -lGLU -lGL -lX11 -lm
 $(DEVDIR)/ogl.hdi:	rhd_ogl0.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/ogl.hdi rhd_ogl0.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o rhd_odraw.o rhd_geom.o -lrgl -lrtrad -lGLU -lGL -lX11 -lm
+viewbeams.o holo.o rhd_odraw.o rhd_geom.o -lrgl -lrtrad -lGLU -lGL -lX11
 
 $(DEVDIR)/oglo.hdi:	rhd_oglo.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o rhdobj.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/oglo.hdi rhd_oglo.o rhdisp.o \
 rhdisp2.o viewbeams.o holo.o rhd_odraw.o rhd_geom.o rhdobj.o \
--lrgl -lrtrad -lGLU -lGL -lX11 -lm
+-lrgl -lrtrad -lGLU -lGL -lX11
 
 $(DEVDIR)/ogls.hdi:	rhd_ogls.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/ogls.hdi rhd_ogls.o rhdisp.o rhdisp2.o \
 viewbeams.o holo.o rhd_odraw.o rhd_geom.o \
--lrgl -lrtrad -lGLU -lGL -lX11 -lXext -lm
+-lrgl -lrtrad -lGLU -lGL -lX11 -lXext
 
 $(DEVDIR)/oglso.hdi:	rhd_oglso.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o rhdobj.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/oglso.hdi rhd_oglso.o rhdisp.o rhdisp2.o \
 viewbeams.o holo.o rhd_odraw.o rhd_geom.o rhdobj.o \
--lrgl -lrtrad -lGLU -lGL -lX11 -lXext -lm
+-lrgl -lrtrad -lGLU -lGL -lX11 -lXext
 
 rhd_ogl0.o:	rhd_ogl.c
 	$(CC) $(CFLAGS) -c rhd_ogl.c

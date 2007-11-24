@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.30 2007/11/21 17:52:04 greg Exp $
+# RCSid $Id: Rmakefile,v 2.31 2007/11/24 00:37:27 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -39,7 +39,7 @@ clean:
 	cd mgflib ; make clean
 
 ies2rad:	ies2rad.o
-	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad
 
 arch2rad:	arch2rad.o trans.o
 	$(CC) $(CFLAGS) -o arch2rad arch2rad.o trans.o -lrtrad
@@ -79,7 +79,7 @@ mgf2inv:
 
 3ds2mgf:
 	cd mgflib ; rm -f 3ds2mgf ; \
-	make 3ds2mgf CC=$(CC) \
+	make 3ds2mgf CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
 	mv 3ds2mgf ..
 

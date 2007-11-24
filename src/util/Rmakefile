@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.45 2007/11/21 17:52:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.46 2007/11/24 00:37:28 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -8,6 +8,8 @@ MACH = -DBSD
 OPT = -O
 
 CFLAGS = -I../common -I../rt -L../lib $(OPT) $(MACH)
+
+MLIB = -lm
 
 CC = cc
 
@@ -57,43 +59,43 @@ sun:
 
 findglare:	findglare.o glareval.o glaresrc.o setscan.o
 	$(CC) $(CFLAGS) -o findglare findglare.o glareval.o glaresrc.o \
-setscan.o -lrtrad -lm
+setscan.o -lrtrad $(MLIB)
 
 glarendx:	glarendx.o
-	$(CC) $(CFLAGS) -o glarendx glarendx.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o glarendx glarendx.o -lrtrad $(MLIB)
 
 xglaresrc:	xglaresrc.o x11findwind.o
 	$(CC) $(CFLAGS) -o xglaresrc xglaresrc.o \
-x11findwind.o -lrtrad -lX11 -lm
+x11findwind.o -lrtrad -lX11 -$(MLIB)
 
 rad:	rad.o
-	$(CC) $(CFLAGS) -o rad rad.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o rad rad.o -lrtrad $(MLIB)
 
 ranimate:	ranimate.o netproc.o
-	$(CC) $(CFLAGS) -o ranimate ranimate.o netproc.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o ranimate ranimate.o netproc.o -lrtrad $(MLIB)
 
 ranimove:	ranimove.o ranimove1.o ranimove2.o
 	$(CC) $(CFLAGS) -o ranimove ranimove.o ranimove1.o ranimove2.o \
--lraycalls -lradiance -lrtrad -lm
+-lraycalls -lradiance -lrtrad $(MLIB)
 
 rpiece:	rpiece.o Version.o
-	$(CC) $(CFLAGS) -o rpiece rpiece.o Version.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o rpiece rpiece.o Version.o -lrtrad $(MLIB)
 
 rtcontrib:	rtcontrib.o Version.o
-	$(CC) $(CFLAGS) -o rtcontrib rtcontrib.o Version.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o rtcontrib rtcontrib.o Version.o -lrtrad $(MLIB)
 
 vwright:	vwright.o
-	$(CC) $(CFLAGS) -o vwright vwright.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o vwright vwright.o -lrtrad $(MLIB)
 
 vwrays:		vwrays.o
-	$(CC) $(CFLAGS) -o vwrays vwrays.o -lrtrad -lm
+	$(CC) $(CFLAGS) -o vwrays vwrays.o -lrtrad $(MLIB)
 
 getinfo:	getinfo.o
 	$(CC) $(CFLAGS) -o getinfo getinfo.o -lrtrad
 
 glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrtrad -lGLU -lGL \
--lX11 -lXext -lm
+-lX11 -lXext
 
 setscan.o:	setscan.h
 

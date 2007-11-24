@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.18 2007/09/21 05:53:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.19 2007/11/24 00:37:27 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -47,7 +47,7 @@ genblinds:	genblinds.o
 	$(CC) $(CFLAGS) -o genblinds genblinds.o $(MLIB)
 
 genprism:	genprism.o
-	$(CC) $(CFLAGS) -o genprism genprism.o $(MLIB)
+	$(CC) $(CFLAGS) -o genprism genprism.o
 
 xform:	xform.o
 	$(CC) $(CFLAGS) -o xform xform.o -lrtrad $(MLIB)

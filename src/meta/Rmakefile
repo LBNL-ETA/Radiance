@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.11 2006/03/10 19:40:13 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 1.12 2007/11/24 00:37:27 greg Exp $
 #
 #  Compiles:
 #
@@ -36,35 +36,35 @@ clean:
 
 $(DESTDIR)/meta2tga:	meta2tga.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2tga meta2tga.o rplot.o plot.o $(common) \
-palloc.o -lrtrad $(MLIB)
+palloc.o -lrtrad
 
 $(DESTDIR)/meta2bmp:	meta2bmp.o rplot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o meta2bmp meta2bmp.o rplot.o plot.o $(common) \
-palloc.o -lrtrad $(MLIB)
+palloc.o -lrtrad
 
 $(DESTDIR)/x11meta:	xmeta.o x11plot.o plot.o palloc.o
 	$(CC) $(CFLAGS) -o x11meta xmeta.o x11plot.o plot.o palloc.o \
-$(common) -lrtrad -lX11 $(MLIB)
+$(common) -lrtrad -lX11
 
 $(DESTDIR)/psmeta:	psmeta.o psplot.o
-	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrtrad
 
 $(DESTDIR)/plotin:	plotin.o primout.o
-	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrtrad
 
 $(DESTDIR)/pexpand:	pexpand.o expand.o segment.o palloc.o
 	$(CC) $(CFLAGS) -o pexpand pexpand.o expand.o segment.o \
-$(common) palloc.o -lrtrad $(MLIB)
+$(common) palloc.o -lrtrad
 
 $(DESTDIR)/psort:	psort.o sort.o palloc.o
-	$(CC) $(CFLAGS) -o psort psort.o sort.o $(common) palloc.o -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o psort psort.o sort.o $(common) palloc.o -lrtrad
 
 $(DESTDIR)/cv:		cv.o mfio.o cvhfio.o syscalls.o misc.o
 	$(CC) $(CFLAGS) -o cv cv.o mfio.o cvhfio.o syscalls.o misc.o \
--lrtrad $(MLIB)
+-lrtrad
 
 $(DESTDIR)/plot4:	plot4.o primout.o
-	$(CC) $(CFLAGS) -o plot4 plot4.o primout.o $(common) -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o plot4 plot4.o primout.o $(common) -lrtrad
 
 $(DESTDIR)/tcurve:	tcurve.o tgraph.o primout.o
 	$(CC) $(CFLAGS) -o tcurve tcurve.o tgraph.o primout.o \

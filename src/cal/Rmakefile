@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.4 2006/03/10 19:40:11 schorsch Exp $
+# RCSid: $Id: Rmakefile,v 1.5 2007/11/24 00:37:26 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -49,7 +49,7 @@ rlam:		lam.o
 	$(CC) $(CFLAGS) -o rlam lam.o
 
 tabfunc:	tabfunc.o
-	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrtrad $(MLIB)
+	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrtrad
 
 histo:	histo.o
 	$(CC) $(CFLAGS) -o histo histo.o $(MLIB)
