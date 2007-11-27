@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.29 2007/05/23 21:38:50 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.30 2007/11/27 02:42:54 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -504,18 +504,16 @@ double	Ldmax
 	j = brt0 + histlen*HISTEP;
 	for (i = histlen; i--; ) {
 		histot += tms->histo[i];
-		sum += (j -= HISTEP) * tms->histo[i];
+		sum += (double)(j -= HISTEP) * tms->histo[i];
 	}
 	threshold = histot*0.005 + .5;
 	if (!histot)
 		returnErr(TM_E_TMFAIL);
 	Lwavg = tmLuminance( (double)sum / histot );
 					/* use linear tone mapping? */
-	if (tms->flags & TM_F_LINEAR || threshold < 4)
+	if (tms->flags & TM_F_LINEAR || threshold < 4 ||
+			tms->hbrmax - tms->hbrmin < TM_BRTSCALE*logLddyn)
 		goto linearmap;
-					/* allocate space for mapping */
-	if (!tmNewMap(tms))
-		returnErr(TM_E_NOMEM);
 					/* clamp histogram */
 	histo = (int *)malloc(histlen*sizeof(int));
 	cumf = (float *)malloc((histlen+2)*sizeof(float));
@@ -555,6 +553,9 @@ double	Ldmax
 			goto linearmap;
 		}
 	} while (trimmings > threshold);
+					/* allocate space for mapping */
+	if (!tmNewMap(tms))
+		returnErr(TM_E_NOMEM);
 					/* assign tone-mapping */
 	for (i = tms->mbrmax-tms->mbrmin+1; i--; ) {
 		j = d = (double)i/(tms->mbrmax-tms->mbrmin)*histlen;
