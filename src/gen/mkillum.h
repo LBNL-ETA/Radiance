@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.12 2007/11/05 23:40:26 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.13 2007/12/05 20:07:34 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -27,16 +27,24 @@ typedef enum {
 	UDypos=2,
 	UDzpos=3
 } UpDir;
+				/* BSDF coordinate calculation routines */
+				/* vectors always point away from surface */
+typedef int	b_vecf(FVECT, int, char *);
+typedef int	b_ndxf(FVECT, char *);
+typedef double	b_radf(int, char *);
 
-/* XXX need to add per-band data */
+/* Bidirectional Scattering Distribution Function */
 struct BSDF_data {
-	double	om_scale;		/* maximum solid angle (sr/256) */
 	int	ninc;			/* number of incoming directions */
-	int32	*inc_dir;		/* incoming direction codes */
-	BYTE	*inc_rad;		/* incoming radians to neighbor */
 	int	nout;			/* number of outgoing directions */
-	int32	*out_dir;		/* outgoing direction codes */
-	BYTE	*out_rad;		/* outgoing radians to neighbor */
+	char	ib_priv[32];		/* input basis private data */
+	b_vecf	*ib_vec;		/* get input vector from index */
+	b_ndxf	*ib_ndx;		/* get input index from vector */
+	b_radf	*ib_rad;		/* get input radius for index */
+	char	ob_priv[32];		/* output basis private data */
+	b_vecf	*ob_vec;		/* get output vector from index */
+	b_ndxf	*ob_ndx;		/* get output index from vector */
+	b_radf	*ob_rad;		/* get output radius for index */
 	float	*bsdf;			/* scattering distribution data */
 };				/* bidirectional scattering distrib. func. */
 
@@ -56,11 +64,13 @@ struct illum_args {
 	COLOR	col;			/* computed average color */
 };				/* illum options */
 
-#define getBSDF_incvec(v,b,i)	decodedir(v, (b)->inc_dir[i])
-#define getBSDF_outvec(v,b,o)	decodedir(v, (b)->out_dir[o])
-#define getBSDF_incrad(b,i)	((b)->om_scale*((b)->inc_rad[i] + .5));
-#define getBSDF_outrad(b,o)	((b)->om_scale*((b)->out_rad[o] + .5));
-#define BSDF_data(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
+#define getBSDF_incvec(v,b,i)	(*(b)->ib_vec)(v,i,(b)->ib_priv)
+#define getBSDF_incndx(b,v)	(*(b)->ib_ndx)(v,(b)->ib_priv)
+#define getBSDF_incrad(b,i)	(*(b)->ib_rad)(i,(b)->ib_priv)
+#define getBSDF_outvec(v,b,o)	(*(b)->ob_vec)(v,o,(b)->ob_priv)
+#define getBSDF_outndx(b,v)	(*(b)->ob_ndx)(v,(b)->ob_priv)
+#define getBSDF_outrad(b,o)	(*(b)->ob_rad)(o,(b)->ob_priv)
+#define BSDF_visible(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
 
 extern struct BSDF_data *load_BSDF(char *fname);
 extern void free_BSDF(struct BSDF_data *b);
@@ -83,6 +93,8 @@ extern void newdist(int siz);
 extern int process_ray(RAY *r, int rv);
 extern void raysamp(int ndx, FVECT org, FVECT dir);
 extern void rayclean(void);
+
+extern void flatdir(FVECT  dv, double  alt, double  azi);
 
 extern int my_default(OBJREC *, struct illum_args *, char *);
 extern int my_face(OBJREC *, struct illum_args *, char *);

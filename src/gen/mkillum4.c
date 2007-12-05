@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.4 2007/12/05 05:02:58 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.5 2007/12/05 20:07:34 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -32,7 +32,7 @@ load_BSDF(		/* load BSDF data from file */
 		error(WARNING, errmsg);
 		return(NULL);
 	}
-	dp = (struct BSDF_data *)malloc(sizeof(struct BSDF_data));
+	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
 	if (dp == NULL)
 		goto memerr;
 	for (wld = ezxml_child(fl, "WavelengthData");
@@ -61,10 +61,6 @@ free_BSDF(		/* free BSDF data structure */
 {
 	if (b == NULL)
 		return;
-	free(b->inc_dir);
-	free(b->inc_rad);
-	free(b->out_dir);
-	free(b->out_rad);
 	free(b->bsdf);
 	free(b);
 }
@@ -212,21 +208,21 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	MAT4 xm
 )
 {
-	MAT4	mymat;
-	COLORV	*outarr;
+	MAT4	mymat, inmat;
+	COLORV	*idist;
 	COLORV	*cp, *csum;
-	uint16	*distcnt;
 	FVECT	dv;
-	double	wt0, wt1;
-	int	i, j, o;
-	int	cnt;
-	COLOR	col;
-					/* allocate temporary memory */
-	outarr = (COLORV *)calloc(b->nout, sizeof(COLOR));
-	distcnt = (uint16 *)calloc(nalt*nazi, sizeof(uint16));
-	if ((outarr == NULL) | (distcnt == NULL))
+	double	wt;
+	int	i, j, k, h;
+	COLOR	col, cinc;
+					/* copy incoming distribution */
+	if (b->ninc != distsiz)
+		error(INTERNAL, "error 1 in redistribute");
+	idist = (COLORV *)malloc(sizeof(COLOR)*distsiz);
+	if (idist == NULL)
 		error(SYSTEM, "out of memory in redistribute");
-					/* compose matrix */
+	memcpy(idist, distarr, sizeof(COLOR)*distsiz);
+					/* compose direction transform */
 	for (i = 3; i--; ) {
 		mymat[i][0] = u[i];
 		mymat[i][1] = v[i];
@@ -238,78 +234,35 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	if (xm != NULL)
 		multmat4(mymat, xm, mymat);
 	for (i = 3; i--; ) {		/* make sure it's normalized */
-		wt0 = 1./sqrt(	mymat[0][i]*mymat[0][i] +
+		wt = 1./sqrt(	mymat[0][i]*mymat[0][i] +
 				mymat[1][i]*mymat[1][i] +
 				mymat[2][i]*mymat[2][i]	);
 		for (j = 3; j--; )
-			mymat[j][i] *= wt0;
+			mymat[j][i] *= wt;
 	}
-					/* pass through BSDF */
-	for (i = b->ninc; i--; ) {
-		getBSDF_incvec(dv, b, i);
-		multv3(dv, dv, mymat);
-		wt0 = getBSDF_incrad(b, i);
-		wt0 *= PI*wt0 * dv[2];		/* solid_angle*cosine(theta) */
-		for (o = b->nout; o--; ) {
-			cp = &distarr[3*i];
-			csum = &outarr[3*o];
-			wt1 = wt0 * BSDF_data(b,i,o);
-			copycolor(col, cp);
-			scalecolor(col, wt1);
-			addcolor(csum, col);
-		}
-	}
+	if (!invmat4(inmat, mymat))	/* need inverse as well */
+		error(INTERNAL, "cannot invert BSDF transform");
 	newdist(nalt*nazi);		/* resample distribution */
-	for (o = b->nout; o--; ) {
-		getBSDF_outvec(dv, b, o);
+	for (i = b->ninc; i--; ) {
+		getBSDF_incvec(dv, b, i);	/* compute incident irrad. */
 		multv3(dv, dv, mymat);
-		j = (.5 + atan2(dv[1],dv[0])*(.5/PI))*nazi + .5;
-		if (j >= nazi) j = 0;
-		i = (0.9999 - dv[2]*dv[2])*nalt;
-		csum = &distarr[3*(i*nazi + j)];
-		cp = &outarr[3*o];
-		addcolor(csum, cp);
-		++distcnt[i*nazi + j];
-	}
-	free(outarr);
-					/* fill in missing bits */
-	for (i = nalt; i--; )
-	    for (j = nazi; j--; ) {
-		int	ii, jj, alt, azi;
-		if (distcnt[i*nazi + j])
-			continue;
-		csum = &distarr[3*(i*nazi + j)];
-		setcolor(csum, 0., 0., 0.);
-		cnt = 0;
-		for (o = 0; !cnt; o++)
-		    for (ii = -o; ii <= o; ii++) {
-			alt = i + ii;
-			if (alt < 0) continue;
-			if (alt >= nalt) break;
-			for (jj = -o; jj <= o; jj++) {
-			    if (ii*ii + jj*jj != o*o)
-				continue;
-			    azi = j + jj;
-			    if (azi >= nazi) azi -= nazi;
-			    else if (azi < 0) azi += nazi;
-			    if (!distcnt[alt*nazi + azi])
-				continue;
-			    cp = &distarr[3*(alt*nazi + azi)];
-			    addcolor(csum, cp);
-			    cnt += distcnt[alt*nazi + azi];
-			}
+		if (dv[2] < 0.0) dv[2] = -dv[2];
+		wt = getBSDF_incrad(b, i);
+		wt *= wt*PI * dv[2];		/* solid_angle*cosine(theta) */
+		cp = &idist[3*i];
+		copycolor(cinc, cp);
+		scalecolor(cinc, wt);
+		for (k = nalt; k--; )		/* loop over distribution */
+		    for (j = nazi; j--; ) {
+			flatdir(dv, (k + .5)/nalt, (double)j/nazi);
+			multv3(dv, dv, inmat);
+						/* evaluate BSDF @ outgoing */
+			wt = BSDF_visible(b, i, getBSDF_outndx(b, dv));
+			copycolor(col, cinc);
+			scalecolor(col, wt);
+			csum = &distarr[3*(k*nazi + j)];
+			addcolor(csum, col);	/* sum into distribution */
 		    }
-		wt0 = 1./cnt;
-		scalecolor(csum, wt0);
-	    }
-					/* finish averages */
-	for (i = nalt; i--; )
-	    for (j = nazi; j--; ) {
-		if ((cnt = distcnt[i*nazi + j]) <= 1)
-			continue;
-		csum = &distarr[3*(i*nazi + j)];
-		wt0 = 1./cnt;
-		scalecolor(csum, wt0);
-	    }
-	free(distcnt);
+	}
+	free(idist);			/* free temp space */
 }
