@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.3 2007/11/21 18:51:05 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.4 2007/12/05 05:02:58 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -214,19 +214,17 @@ redistribute(		/* pass distarr ray sums through BSDF */
 {
 	MAT4	mymat;
 	COLORV	*outarr;
-	float	*inpcoef;
 	COLORV	*cp, *csum;
 	uint16	*distcnt;
 	FVECT	dv;
-	double	oom, wt;
+	double	wt0, wt1;
 	int	i, j, o;
 	int	cnt;
 	COLOR	col;
 					/* allocate temporary memory */
-	outarr = (COLORV *)malloc(b->nout * sizeof(COLOR));
+	outarr = (COLORV *)calloc(b->nout, sizeof(COLOR));
 	distcnt = (uint16 *)calloc(nalt*nazi, sizeof(uint16));
-	inpcoef = (float *)malloc(b->ninc * sizeof(float));
-	if ((outarr == NULL) | (distcnt == NULL) | (inpcoef == NULL))
+	if ((outarr == NULL) | (distcnt == NULL))
 		error(SYSTEM, "out of memory in redistribute");
 					/* compose matrix */
 	for (i = 3; i--; ) {
@@ -240,35 +238,27 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	if (xm != NULL)
 		multmat4(mymat, xm, mymat);
 	for (i = 3; i--; ) {		/* make sure it's normalized */
-		wt = 1./sqrt(	mymat[0][i]*mymat[0][i] +
+		wt0 = 1./sqrt(	mymat[0][i]*mymat[0][i] +
 				mymat[1][i]*mymat[1][i] +
 				mymat[2][i]*mymat[2][i]	);
 		for (j = 3; j--; )
-			mymat[j][i] *= wt;
+			mymat[j][i] *= wt0;
 	}
 					/* pass through BSDF */
-	for (i = b->ninc; i--; ) {		/* get input coefficients */
+	for (i = b->ninc; i--; ) {
 		getBSDF_incvec(dv, b, i);
 		multv3(dv, dv, mymat);
-		wt = getBSDF_incrad(b, i);
-		inpcoef[i] = PI*wt*wt * dv[2];	/* solid_angle*cosine(theta) */
-	}
-	for (o = b->nout; o--; ) {
-		csum = &outarr[3*o];
-		setcolor(csum, 0., 0., 0.);
-		oom = getBSDF_outrad(b, o);
-		oom *= oom * PI;
-		for (i = b->ninc; i--; ) {
-			wt = BSDF_data(b,i,o) * inpcoef[i] / oom;
+		wt0 = getBSDF_incrad(b, i);
+		wt0 *= PI*wt0 * dv[2];		/* solid_angle*cosine(theta) */
+		for (o = b->nout; o--; ) {
 			cp = &distarr[3*i];
+			csum = &outarr[3*o];
+			wt1 = wt0 * BSDF_data(b,i,o);
 			copycolor(col, cp);
-			scalecolor(col, wt);
+			scalecolor(col, wt1);
 			addcolor(csum, col);
 		}
-		wt = 1./b->ninc;
-		scalecolor(csum, wt);
 	}
-	free(inpcoef);
 	newdist(nalt*nazi);		/* resample distribution */
 	for (o = b->nout; o--; ) {
 		getBSDF_outvec(dv, b, o);
@@ -309,8 +299,8 @@ redistribute(		/* pass distarr ray sums through BSDF */
 			    cnt += distcnt[alt*nazi + azi];
 			}
 		    }
-		wt = 1./cnt;
-		scalecolor(csum, wt);
+		wt0 = 1./cnt;
+		scalecolor(csum, wt0);
 	    }
 					/* finish averages */
 	for (i = nalt; i--; )
@@ -318,8 +308,8 @@ redistribute(		/* pass distarr ray sums through BSDF */
 		if ((cnt = distcnt[i*nazi + j]) <= 1)
 			continue;
 		csum = &distarr[3*(i*nazi + j)];
-		wt = 1./cnt;
-		scalecolor(csum, wt);
+		wt0 = 1./cnt;
+		scalecolor(csum, wt0);
 	    }
 	free(distcnt);
 }
