@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.24 2007/12/05 20:07:34 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.25 2007/12/06 19:40:43 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -10,7 +10,7 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.24 2007/12/05 20:07:34 greg Exp
 #include  "mkillum.h"
 #include  "face.h"
 #include  "cone.h"
-#include  "random.h"
+#include  "source.h"
 
 
 COLORV *	distarr = NULL;		/* distribution array */
@@ -42,7 +42,10 @@ newdist(			/* allocate & clear distribution array */
 
 
 int
-process_ray(RAY *r, int rv)
+process_ray(			/* process a ray result or report error */
+	RAY *r,
+	int rv
+)
 {
 	COLORV	*colp;
 
@@ -52,6 +55,7 @@ process_ray(RAY *r, int rv)
 		error(USER, "ray tracing process died");
 	if (r->rno >= distsiz)
 		error(INTERNAL, "bad returned index in process_ray");
+	multcolor(r->rcol, r->rcoef);	/* in case it's a source ray */
 	colp = &distarr[r->rno * 3];
 	addcolor(colp, r->rcol);
 	return(1);
@@ -59,7 +63,7 @@ process_ray(RAY *r, int rv)
 
 
 void
-raysamp(	/* queue a ray sample */
+raysamp(			/* queue a ray sample */
 	int  ndx,
 	FVECT  org,
 	FVECT  dir
@@ -77,6 +81,82 @@ raysamp(	/* queue a ray sample */
 	myRay.rno = ndx;
 					/* queue ray, check result */
 	process_ray(&myRay, ray_pqueue(&myRay));
+}
+
+
+void
+srcsamps(			/* sample sources from this surface position */
+	struct illum_args *il,
+	FVECT org,
+	FVECT nrm,
+	MAT4 ixfm
+)
+{
+	int  nalt, nazi;
+	SRCINDEX  si;
+	RAY  sr;
+	FVECT	v;
+	double  d;
+	int  i, j;
+						/* get sampling density */
+	if (il->sampdens <= 0) {
+		nalt = nazi = 1;
+	} else {
+		i = PI * il->sampdens;
+		nalt = sqrt(i/PI) + .5;
+		nazi = PI*nalt + .5;
+	}
+	initsrcindex(&si);			/* loop over (sub)sources */
+	for ( ; ; ) {
+		VCOPY(sr.rorg, org);		/* pick side to shoot from */
+		if (il->sd != NULL) {
+			int  sn = si.sn;
+			if (si.sp+1 >= si.np) ++sn;
+			if (sn >= nsources) break;
+			if (source[sn].sflags & SDISTANT)
+				d = DOT(source[sn].sloc, nrm);
+			else {
+				VSUB(v, source[sn].sloc, org);
+				d = DOT(v, nrm);
+			}
+		} else
+			d = 1.0;		/* only transmission */
+		if (d < 0.0)
+			d = -1.0001*il->thick - 5.*FTINY;
+		else
+			d = 5.*FTINY;
+		for (i = 3; i--; )
+			sr.rorg[i] += d*nrm[i];
+		if (!srcray(&sr, NULL, &si))
+			break;			/* end of sources */
+						/* index direction */
+		if (ixfm != NULL)
+			multv3(v, sr.rdir, ixfm);
+		else
+			VCOPY(v, sr.rdir);
+		if (il->sd != NULL) {
+			i = getBSDF_incndx(il->sd, v);
+			if (i < 0)
+				continue;	/* must not be important */
+			sr.rno = i;
+			d = getBSDF_incrad(il->sd, i);
+			d = 1.0/(PI*d*d);
+		} else {
+			if (v[2] >= -FTINY)
+				continue;	/* only sample transmission */
+			d = 1.0 - v[2]*v[2];
+			i = d*nalt;
+			d = atan2(-v[1], -v[0])/(2.*PI);
+			if (d < 0.0) d += 1.0;
+			j = d*nazi + 0.5;
+			if (j >= nazi) j = 0;
+			sr.rno = i*nazi + j;
+			d = nalt*nazi/PI;
+		}
+		d *= si.dom;			/* solid angle correction */
+		scalecolor(sr.rcoef, d);
+		process_ray(&sr, ray_pqueue(&sr));
+	}
 }
 
 
@@ -166,17 +246,17 @@ my_face(		/* make an illum face */
 	char  *nm
 )
 {
-#define MAXMISS		(5*n*il->nsamps)
 	int  dim[2];
-	int  n, nalt, nazi, h, alti;
+	int  n, nalt, nazi, alti;
 	double  sp[2], r1, r2;
+	int  h;
 	FVECT  dn, org, dir;
 	FVECT  u, v;
 	double  ur[2], vr[2];
 	MAT4  xfm;
-	int  nmisses;
+	int  nallow;
 	FACE  *fa;
-	register int  i, j;
+	int  i, j;
 				/* get/check arguments */
 	fa = getface(ob);
 	if (fa->area == 0.0) {
@@ -229,7 +309,7 @@ my_face(		/* make an illum face */
 	}
 	dim[0] = random();
 				/* sample polygon */
-	nmisses = 0;
+	nallow = 5*n*il->nsamps;
 	for (dim[1] = 0; dim[1] < n; dim[1]++)
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize direction */
@@ -248,28 +328,66 @@ my_face(		/* make an illum face */
 		    }
 					/* randomize location */
 		    do {
-			multisamp(sp, 2, urand(h+4862+nmisses));
+			multisamp(sp, 2, urand(h+4862+nallow));
 			r1 = ur[0] + (ur[1]-ur[0]) * sp[0];
 			r2 = vr[0] + (vr[1]-vr[0]) * sp[1];
 			for (j = 0; j < 3; j++)
 			    org[j] = r1*u[j] + r2*v[j]
 					+ fa->offset*fa->norm[j];
-		    } while (!inface(org, fa) && nmisses++ < MAXMISS);
-		    if (nmisses > MAXMISS) {
+		    } while (!inface(org, fa) && nallow-- > 0);
+		    if (nallow < 0) {
 			objerror(ob, WARNING, "bad aspect");
 			rayclean();
 			freeface(ob);
 			return(my_default(ob, il, nm));
 		    }
 		    if (il->sd != NULL && DOT(dir, fa->norm) < -FTINY)
-			r1 = -1.0001*il->thick - .0001;
+			r1 = -1.0001*il->thick - 5.*FTINY;
 		    else
-			r1 = .0001;
+			r1 = 5.*FTINY;
 		    for (j = 0; j < 3; j++)
 			org[j] += r1*fa->norm[j];
 					/* send sample */
 		    raysamp(dim[1], org, dir);
 		}
+				/* add in direct component? */
+	if (!directvis && il->flags & IL_LIGHT) {
+		MAT4	ixfm;
+		if (il->sd == NULL) {
+			for (i = 3; i--; ) {
+				ixfm[i][0] = u[i];
+				ixfm[i][1] = v[i];
+				ixfm[i][2] = fa->norm[i];
+				ixfm[i][3] = 0.;
+			}
+			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
+			ixfm[3][3] = 1.;
+		} else if (!invmat4(ixfm, xfm))
+			objerror(ob, INTERNAL, "cannot invert BSDF transform");
+		dim[0] = random();
+		nallow = 10*il->nsamps;
+		for (i = 0; i < il->nsamps; i++) {
+					/* randomize location */
+		    h = dim[0] + samplendx++;
+		    do {
+			multisamp(sp, 2, urand(h+nallow));
+			r1 = ur[0] + (ur[1]-ur[0]) * sp[0];
+			r2 = vr[0] + (vr[1]-vr[0]) * sp[1];
+			for (j = 0; j < 3; j++)
+			    org[j] = r1*u[j] + r2*v[j]
+					+ fa->offset*fa->norm[j];
+		    } while (!inface(org, fa) && nallow-- > 0);
+		    if (nallow < 0) {
+			objerror(ob, WARNING, "bad aspect");
+			rayclean();
+			freeface(ob);
+			return(my_default(ob, il, nm));
+		    }
+					/* sample source rays */
+		    srcsamps(il, org, fa->norm, ixfm);
+		}
+	}
+				/* wait for all rays to finish */
 	rayclean();
 	if (il->sd != NULL) {	/* run distribution through BSDF */
 		nalt = sqrt(il->sd->nout/PI) + .5;
@@ -286,7 +404,6 @@ my_face(		/* make an illum face */
 				/* clean up */
 	freeface(ob);
 	return(0);
-#undef MAXMISS
 }
 
 
@@ -344,6 +461,7 @@ my_sphere(	/* make an illum sphere */
 					/* send sample */
 		    raysamp(dim[1]*nazi+dim[2], org, dir);
 		}
+				/* wait for all rays to finish */
 	rayclean();
 				/* write out the sphere and its distribution */
 	if (average(il, distarr, n)) {
@@ -374,7 +492,7 @@ my_ring(		/* make an illum ring */
 	FVECT  u, v;
 	MAT4  xfm;
 	CONE  *co;
-	register int  i, j;
+	int  i, j;
 				/* get/check arguments */
 	co = getcone(ob, 0);
 				/* set up sampling */
@@ -423,15 +541,46 @@ my_ring(		/* make an illum ring */
 		    r1 = r3*cos(r2);
 		    r2 = r3*sin(r2);
 		    if (il->sd != NULL && DOT(dir, co->ad) < -FTINY)
-			r3 = -1.0001*il->thick - .0001;
+			r3 = -1.0001*il->thick - 5.*FTINY;
 		    else
-			r3 = .0001;
+			r3 = 5.*FTINY;
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j] +
 						r3*co->ad[j];
 					/* send sample */
 		    raysamp(dim[1], org, dir);
 		}
+				/* add in direct component? */
+	if (!directvis && il->flags & IL_LIGHT) {
+		MAT4	ixfm;
+		if (il->sd == NULL) {
+			for (i = 3; i--; ) {
+				ixfm[i][0] = u[i];
+				ixfm[i][1] = v[i];
+				ixfm[i][2] = co->ad[i];
+				ixfm[i][3] = 0.;
+			}
+			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
+			ixfm[3][3] = 1.;
+		} else if (!invmat4(ixfm, xfm))
+			objerror(ob, INTERNAL, "cannot invert BSDF transform");
+		dim[0] = random();
+		for (i = 0; i < il->nsamps; i++) {
+					/* randomize location */
+		    h = dim[0] + samplendx++;
+		    multisamp(sp, 2, urand(h));
+		    r3 = sqrt(CO_R0(co)*CO_R0(co) +
+			    sp[0]*(CO_R1(co)*CO_R1(co) - CO_R0(co)*CO_R0(co)));
+		    r2 = 2.*PI*sp[1];
+		    r1 = r3*cos(r2);
+		    r2 = r3*sin(r2);
+		    for (j = 0; j < 3; j++)
+			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j];
+					/* sample source rays */
+		    srcsamps(il, org, co->ad, ixfm);
+		}
+	}
+				/* wait for all rays to finish */
 	rayclean();
 	if (il->sd != NULL) {	/* run distribution through BSDF */
 		nalt = sqrt(il->sd->nout/PI) + .5;
