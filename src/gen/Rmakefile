@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.19 2007/11/24 00:37:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.20 2007/12/08 01:43:09 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -103,7 +103,11 @@ mkillum.o mkillum2.o mkillum3.o mkillum4.o:	mkillum.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h ../common/tifftypes.h ../common/random.h
+
+mkillum2.o:	../rt/source.h ../common/face.h ../common/cone.h
+
+mkillum3.o mkillum4.o:	../common/paths.h
 
 ezxml.o mkillum4.o:	ezxml.h
 

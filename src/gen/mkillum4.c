@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.5 2007/12/05 20:07:34 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.6 2007/12/08 01:43:09 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -7,8 +7,198 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.5 2007/12/05 20:07:34 greg Exp 
 
 #include "mkillum.h"
 #include "paths.h"
-#include "random.h"
 #include "ezxml.h"
+
+#define MAXLATS		46		/* maximum number of latitudes */
+
+/* BSDF angle specification (terminate with nphi = -1) */
+typedef struct {
+	char	name[32];		/* basis name */
+	int	nangles;		/* total number of directions */
+	struct {
+		float	tmin;			/* starting theta */
+		short	nphis;			/* number of phis (0 term) */
+	}	lat[MAXLATS+1];		/* latitudes */
+} ANGLE_BASIS;
+
+#define	NABASES		3		/* number of predefined bases */
+
+ANGLE_BASIS	abase_list[NABASES] = {
+	{
+		"LBNL/Klems Full", 145,
+		{ {-5., 1},
+		{5., 8},
+		{15., 16},
+		{25., 20},
+		{35., 24},
+		{45., 24},
+		{55., 24},
+		{65., 16},
+		{75., 12},
+		{90., 0} }
+	}, {
+		"LBNL/Klems Half", 73,
+		{ {-6.5, 1},
+		{6.5, 8},
+		{19.5, 12},
+		{32.5, 16},
+		{46.5, 20},
+		{61.5, 12},
+		{76.5, 4},
+		{90., 0} }
+	}, {
+		"LBNL/Klems Quarter", 41,
+		{ {-9., 1},
+		{9., 8},
+		{27., 12},
+		{46., 12},
+		{66., 8},
+		{90., 0} }
+	}
+};
+
+
+static int
+ab_getvec(		/* get vector for this angle basis index */
+	FVECT v,
+	int ndx,
+	void *p
+)
+{
+	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
+	int	li;
+	double	alt, azi, d;
+	
+	if ((ndx < 0) | (ndx >= ab->nangles))
+		return(0);
+	for (li = 0; ndx >= ab->lat[li].nphis; li++)
+		ndx -= ab->lat[li].nphis;
+	alt = PI/180.*0.5*(ab->lat[li].tmin + ab->lat[li+1].tmin);
+	azi = 2.*PI*ndx/ab->lat[li].nphis;
+	d = sin(alt);
+	v[0] = cos(azi)*d;
+	v[1] = sin(azi)*d;
+	v[2] = cos(alt);
+	return(1);
+}
+
+
+static int
+ab_getndx(		/* get index corresponding to the given vector */
+	FVECT v,
+	void *p
+)
+{
+	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
+	int	li, ndx;
+	double	alt, azi, d;
+
+	if ((v[2] < 0.0) | (v[2] > 1.0))
+		return(-1);
+	alt = 180.0/PI*acos(v[2]);
+	azi = 180.0/PI*atan2(v[1], v[0]);
+	if (azi < 0.0) azi += 360.0;
+	for (li = 1; ab->lat[li].tmin <= alt; li++)
+		if (!ab->lat[li].nphis)
+			return(-1);
+	--li;
+	ndx = (int)((1./360.)*azi*ab->lat[li].nphis + 0.5);
+	if (ndx >= ab->lat[li].nphis) ndx = 0;
+	while (li--)
+		ndx += ab->lat[li].nphis;
+	return(ndx);
+}
+
+
+static double
+ab_getohm(		/* get solid angle for this angle basis index */
+	int ndx,
+	void *p
+)
+{
+	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
+	int	li;
+	double	tdia, pdia;
+	
+	if ((ndx < 0) | (ndx >= ab->nangles))
+		return(0);
+	for (li = 0; ndx >= ab->lat[li].nphis; li++)
+		ndx -= ab->lat[li].nphis;
+	tdia = PI/180.*(ab->lat[li+1].tmin - ab->lat[li].tmin);
+	pdia = 2.*PI/ab->lat[li].nphis;
+	return(tdia*pdia);
+}
+
+
+static int
+ab_getvecR(		/* get reverse vector for this angle basis index */
+	FVECT v,
+	int ndx,
+	void *p
+)
+{
+	if (!ab_getvec(v, ndx, p))
+		return(0);
+
+	v[0] = -v[0];
+	v[1] = -v[1];
+
+	return(1);
+}
+
+
+static int
+ab_getndxR(		/* get index corresponding to the reverse vector */
+	FVECT v,
+	void *p
+)
+{
+	FVECT  v2;
+	
+	v2[0] = -v[0];
+	v2[1] = -v[1];
+	v2[2] = v[2];
+
+	return ab_getndx(v2, p);
+}
+
+static void
+load_bsdf_data(		/* load BSDF distribution for this wavelength */
+	struct BSDF_data *dp,
+	ezxml_t wdb
+)
+{
+	const char  *cbasis = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
+	const char  *rbasis = ezxml_txt(ezxml_child(wdb,"RowAngleBasis"));
+	int  i;
+	
+	for (i = NABASES; i--; )
+		if (!strcmp(cbasis, abase_list[i].name)) {
+			dp->ninc = abase_list[i].nangles;
+			dp->ib_priv = (void *)&abase_list[i];
+			dp->ib_vec = ab_getvec;
+			dp->ib_ndx = ab_getndx;
+			dp->ib_ohm = ab_getohm;
+			break;
+		}
+	if (i < 0) {
+		sprintf(errmsg, "unsupported incident basis '%s'", cbasis);
+		error(INTERNAL, errmsg);
+	}
+	for (i = NABASES; i--; )
+		if (!strcmp(rbasis, abase_list[i].name)) {
+			dp->nout = abase_list[i].nangles;
+			dp->ob_priv = (void *)&abase_list[i];
+			dp->ob_vec = ab_getvecR;
+			dp->ob_ndx = ab_getndxR;
+			dp->ob_ohm = ab_getohm;
+			break;
+		}
+	if (i < 0) {
+		sprintf(errmsg, "unsupported exitant basis '%s'", cbasis);
+		error(INTERNAL, errmsg);
+	}
+}
 
 
 struct BSDF_data *
@@ -32,25 +222,33 @@ load_BSDF(		/* load BSDF data from file */
 		error(WARNING, errmsg);
 		return(NULL);
 	}
+	if (ezxml_error(fl)[0]) {
+		sprintf(errmsg, "BSDF \"%s\": %s", path, ezxml_error(fl));
+		error(WARNING, errmsg);
+		ezxml_free(fl);
+		return(NULL);
+	}
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
-	if (dp == NULL)
-		goto memerr;
 	for (wld = ezxml_child(fl, "WavelengthData");
 				fl != NULL; fl = fl->next) {
-		if (strcmp(ezxml_child(wld, "Wavelength")->txt, "Visible"))
+		if (strcmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
 			continue;
 		wdb = ezxml_child(wld, "WavelengthDataBlock");
 		if (wdb == NULL) continue;
-		if (strcmp(ezxml_child(wdb, "WavelengthDataDirection")->txt,
+		if (strcmp(ezxml_txt(ezxml_child(wdb,"WavelengthDataDirection")),
 					"Transmission Front"))
 			continue;
+		load_bsdf_data(dp, wdb);	/* load front BTDF */
+		break;				/* ignore the rest */
 	}
-	/* etc... */
-	ezxml_free(fl);
+	ezxml_free(fl);				/* done with XML file */
+	if (dp->bsdf == NULL) {
+		sprintf(errmsg, "bad/missing BTDF data in \"%s\"", path);
+		error(WARNING, errmsg);
+		free_BSDF(dp);
+		dp = NULL;
+	}
 	return(dp);
-memerr:
-	error(SYSTEM, "out of memory in load_BSDF");
-	return NULL;	/* pro forma return */
 }
 
 
@@ -61,12 +259,13 @@ free_BSDF(		/* free BSDF data structure */
 {
 	if (b == NULL)
 		return;
-	free(b->bsdf);
+	if (b->bsdf != NULL)
+		free(b->bsdf);
 	free(b);
 }
 
 
-void
+int
 r_BSDF_incvec(		/* compute random input vector at given location */
 	FVECT v,
 	struct BSDF_data *b,
@@ -79,18 +278,20 @@ r_BSDF_incvec(		/* compute random input vector at given location */
 	double	rad;
 	int	j;
 	
-	getBSDF_incvec(v, b, i);
-	rad = getBSDF_incrad(b, i);
+	if (!getBSDF_incvec(v, b, i))
+		return(0);
+	rad = sqrt(getBSDF_incohm(b, i) / PI);
 	multisamp(pert, 3, rv);
 	for (j = 0; j < 3; j++)
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
 		multv3(v, v, xm);
 	normalize(v);
+	return(1);
 }
 
 
-void
+int
 r_BSDF_outvec(		/* compute random output vector at given location */
 	FVECT v,
 	struct BSDF_data *b,
@@ -103,14 +304,16 @@ r_BSDF_outvec(		/* compute random output vector at given location */
 	double	rad;
 	int	j;
 	
-	getBSDF_outvec(v, b, o);
-	rad = getBSDF_outrad(b, o);
+	if (!getBSDF_outvec(v, b, o))
+		return(0);
+	rad = sqrt(getBSDF_outohm(b, o) / PI);
 	multisamp(pert, 3, rv);
 	for (j = 0; j < 3; j++)
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
 		multv3(v, v, xm);
 	normalize(v);
+	return(1);
 }
 
 
@@ -153,7 +356,7 @@ addrot(			/* compute rotation (x,y,z) => (xp,yp,zp) */
 
 
 int
-getBSDF_xfm(		/* compute transform for the given surface */
+getBSDF_xfm(		/* compute BSDF orient. -> world orient. transform */
 	MAT4 xm,
 	FVECT nrm,
 	UpDir ud
@@ -208,12 +411,13 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	MAT4 xm
 )
 {
+	int	nout = 0;
 	MAT4	mymat, inmat;
 	COLORV	*idist;
 	COLORV	*cp, *csum;
 	FVECT	dv;
 	double	wt;
-	int	i, j, k, h;
+	int	i, j, k, o;
 	COLOR	col, cinc;
 					/* copy incoming distribution */
 	if (b->ninc != distsiz)
@@ -247,8 +451,8 @@ redistribute(		/* pass distarr ray sums through BSDF */
 		getBSDF_incvec(dv, b, i);	/* compute incident irrad. */
 		multv3(dv, dv, mymat);
 		if (dv[2] < 0.0) dv[2] = -dv[2];
-		wt = getBSDF_incrad(b, i);
-		wt *= wt*PI * dv[2];		/* solid_angle*cosine(theta) */
+		wt = getBSDF_incohm(b, i);
+		wt *= dv[2];			/* solid_angle*cosine(theta) */
 		cp = &idist[3*i];
 		copycolor(cinc, cp);
 		scalecolor(cinc, wt);
@@ -257,7 +461,12 @@ redistribute(		/* pass distarr ray sums through BSDF */
 			flatdir(dv, (k + .5)/nalt, (double)j/nazi);
 			multv3(dv, dv, inmat);
 						/* evaluate BSDF @ outgoing */
-			wt = BSDF_visible(b, i, getBSDF_outndx(b, dv));
+			o = getBSDF_outndx(b, dv);
+			if (o < 0) {
+				nout++;
+				continue;
+			}
+			wt = BSDF_visible(b, i, o);
 			copycolor(col, cinc);
 			scalecolor(col, wt);
 			csum = &distarr[3*(k*nazi + j)];
@@ -265,4 +474,9 @@ redistribute(		/* pass distarr ray sums through BSDF */
 		    }
 	}
 	free(idist);			/* free temp space */
+	if (nout) {
+		sprintf(errmsg, "missing %.1f%% of BSDF directions",
+				100.*nout/(b->ninc*nalt*nazi));
+		error(WARNING, errmsg);
+	}
 }

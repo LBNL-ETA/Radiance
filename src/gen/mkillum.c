@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.31 2007/09/21 05:53:21 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.32 2007/12/08 01:43:09 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -8,9 +8,7 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.31 2007/09/21 05:53:21 greg Exp 
 #include  <signal.h>
 #include  <ctype.h>
 
-#include  "platform.h"
 #include  "mkillum.h"
-#include  "random.h"
 
 				/* default parameters */
 #define  SAMPDENS	48		/* points per projected steradian */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.25 2007/12/06 19:40:43 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.26 2007/12/08 01:43:09 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -139,8 +139,7 @@ srcsamps(			/* sample sources from this surface position */
 			if (i < 0)
 				continue;	/* must not be important */
 			sr.rno = i;
-			d = getBSDF_incrad(il->sd, i);
-			d = 1.0/(PI*d*d);
+			d = 1.0/getBSDF_incohm(il->sd, i);
 		} else {
 			if (v[2] >= -FTINY)
 				continue;	/* only sample transmission */
