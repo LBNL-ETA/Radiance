@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.14 2007/12/08 01:43:09 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.15 2007/12/12 05:09:58 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -71,7 +71,7 @@ struct illum_args {
 #define getBSDF_outvec(v,b,o)	(*(b)->ob_vec)(v,o,(b)->ob_priv)
 #define getBSDF_outndx(b,v)	(*(b)->ob_ndx)(v,(b)->ob_priv)
 #define getBSDF_outohm(b,o)	(*(b)->ob_ohm)(o,(b)->ob_priv)
-#define BSDF_visible(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
+#define BSDF_value(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
 
 extern struct BSDF_data *load_BSDF(char *fname);
 extern void free_BSDF(struct BSDF_data *b);

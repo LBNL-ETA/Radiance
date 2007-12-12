@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.26 2007/12/08 01:43:09 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.27 2007/12/12 05:09:58 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -150,7 +150,7 @@ srcsamps(			/* sample sources from this surface position */
 			j = d*nazi + 0.5;
 			if (j >= nazi) j = 0;
 			sr.rno = i*nazi + j;
-			d = nalt*nazi/PI;
+			d = nalt*nazi/PI * -v[2];
 		}
 		d *= si.dom;			/* solid angle correction */
 		scalecolor(sr.rcoef, d);
@@ -392,6 +392,7 @@ my_face(		/* make an illum face */
 		nalt = sqrt(il->sd->nout/PI) + .5;
 		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, fa->norm, xfm);
+		il->sampdens = nalt*nazi/PI + .5;
 	}
 				/* write out the face and its distribution */
 	if (average(il, distarr, n)) {
@@ -585,6 +586,7 @@ my_ring(		/* make an illum ring */
 		nalt = sqrt(il->sd->nout/PI) + .5;
 		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, co->ad, xfm);
+		il->sampdens = nalt*nazi/PI + .5;
 	}
 				/* write out the ring and its distribution */
 	if (average(il, distarr, n)) {

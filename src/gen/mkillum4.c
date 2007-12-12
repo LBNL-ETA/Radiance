@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.6 2007/12/08 01:43:09 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.7 2007/12/12 05:09:58 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.6 2007/12/08 01:43:09 greg Exp 
 
 /* BSDF angle specification (terminate with nphi = -1) */
 typedef struct {
-	char	name[32];		/* basis name */
+	char	name[64];		/* basis name */
 	int	nangles;		/* total number of directions */
 	struct {
 		float	tmin;			/* starting theta */
@@ -21,9 +21,9 @@ typedef struct {
 	}	lat[MAXLATS+1];		/* latitudes */
 } ANGLE_BASIS;
 
-#define	NABASES		3		/* number of predefined bases */
+#define	MAXABASES	3		/* limit on defined bases */
 
-ANGLE_BASIS	abase_list[NABASES] = {
+ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
 		"LBNL/Klems Full", 145,
 		{ {-5., 1},
@@ -56,6 +56,8 @@ ANGLE_BASIS	abase_list[NABASES] = {
 		{90., 0} }
 	}
 };
+
+static int	nabases = 3;	/* current number of defined bases */
 
 
 static int
@@ -93,7 +95,7 @@ ab_getndx(		/* get index corresponding to the given vector */
 	int	li, ndx;
 	double	alt, azi, d;
 
-	if ((v[2] < 0.0) | (v[2] > 1.0))
+	if ((v[2] < -1.0) | (v[2] > 1.0))
 		return(-1);
 	alt = 180.0/PI*acos(v[2]);
 	azi = 180.0/PI*atan2(v[1], v[0]);
@@ -124,7 +126,14 @@ ab_getohm(		/* get solid angle for this angle basis index */
 		return(0);
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
+	if (ab->lat[li].nphis == 1) {		/* special case */
+		if (ab->lat[li].tmin > FTINY)
+			error(USER, "unsupported BSDF coordinate system");
+		tdia = PI/180. * ab->lat[li+1].tmin;
+		return(PI*tdia*tdia);
+	}
 	tdia = PI/180.*(ab->lat[li+1].tmin - ab->lat[li].tmin);
+	tdia *= sin(PI/180.*(ab->lat[li].tmin + ab->lat[li+1].tmin));
 	pdia = 2.*PI/ab->lat[li].nphis;
 	return(tdia*pdia);
 }
@@ -162,17 +171,24 @@ ab_getndxR(		/* get index corresponding to the reverse vector */
 	return ab_getndx(v2, p);
 }
 
+
 static void
 load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	struct BSDF_data *dp,
 	ezxml_t wdb
 )
 {
-	const char  *cbasis = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
-	const char  *rbasis = ezxml_txt(ezxml_child(wdb,"RowAngleBasis"));
+	char  *cbasis = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
+	char  *rbasis = ezxml_txt(ezxml_child(wdb,"RowAngleBasis"));
+	char  *sdata;
 	int  i;
 	
-	for (i = NABASES; i--; )
+	if ((cbasis == NULL) | (rbasis == NULL)) {
+		error(WARNING, "missing column/row basis for BSDF");
+		return;
+	}
+	/* XXX need to add routines for loading in foreign bases */
+	for (i = nabases; i--; )
 		if (!strcmp(cbasis, abase_list[i].name)) {
 			dp->ninc = abase_list[i].nangles;
 			dp->ib_priv = (void *)&abase_list[i];
@@ -182,10 +198,11 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 			break;
 		}
 	if (i < 0) {
-		sprintf(errmsg, "unsupported incident basis '%s'", cbasis);
-		error(INTERNAL, errmsg);
+		sprintf(errmsg, "unsupported ColumnAngleBasis '%s'", cbasis);
+		error(WARNING, errmsg);
+		return;
 	}
-	for (i = NABASES; i--; )
+	for (i = nabases; i--; )
 		if (!strcmp(rbasis, abase_list[i].name)) {
 			dp->nout = abase_list[i].nangles;
 			dp->ob_priv = (void *)&abase_list[i];
@@ -195,8 +212,38 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 			break;
 		}
 	if (i < 0) {
-		sprintf(errmsg, "unsupported exitant basis '%s'", cbasis);
-		error(INTERNAL, errmsg);
+		sprintf(errmsg, "unsupported RowAngleBasis '%s'", cbasis);
+		error(WARNING, errmsg);
+		return;
+	}
+				/* read BSDF data */
+	sdata  = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
+	if (sdata == NULL) {
+		error(WARNING, "missing BSDF ScatteringData");
+		return;
+	}
+	dp->bsdf = (float *)malloc(sizeof(float)*dp->ninc*dp->nout);
+	if (dp->bsdf == NULL)
+		error(SYSTEM, "out of memory in load_bsdf_data");
+	for (i = 0; i < dp->ninc*dp->nout; i++) {
+		char  *sdnext = fskip(sdata);
+		if (sdnext == NULL) {
+			error(WARNING, "bad/missing BSDF ScatteringData");
+			free(dp->bsdf); dp->bsdf = NULL;
+			return;
+		}
+		while (*sdnext && isspace(*sdnext))
+			sdnext++;
+		if (*sdnext == ',') sdnext++;
+		dp->bsdf[i] = atof(sdata);
+		sdata = sdnext;
+	}
+	while (isspace(*sdata))
+		sdata++;
+	if (*sdata) {
+		sprintf(errmsg, "%d extra characters after BSDF ScatteringData",
+				strlen(sdata));
+		error(WARNING, errmsg);
 	}
 }
 
@@ -286,8 +333,7 @@ r_BSDF_incvec(		/* compute random input vector at given location */
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
 		multv3(v, v, xm);
-	normalize(v);
-	return(1);
+	return(normalize(v) != 0.0);
 }
 
 
@@ -312,8 +358,7 @@ r_BSDF_outvec(		/* compute random output vector at given location */
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
 		multv3(v, v, xm);
-	normalize(v);
-	return(1);
+	return(normalize(v) != 0.0);
 }
 
 
@@ -466,7 +511,7 @@ redistribute(		/* pass distarr ray sums through BSDF */
 				nout++;
 				continue;
 			}
-			wt = BSDF_visible(b, i, o);
+			wt = BSDF_value(b, i, o);
 			copycolor(col, cinc);
 			scalecolor(col, wt);
 			csum = &distarr[3*(k*nazi + j)];
