@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.2 2007/12/12 05:09:58 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.3 2007/12/13 07:03:37 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -638,7 +638,8 @@ ezxml_t ezxml_parse_fd(int fd)
 
 #ifndef EZXML_NOMMAP
     l = (st.st_size + sysconf(_SC_PAGESIZE) - 1) & ~(sysconf(_SC_PAGESIZE) -1);
-    if ((m = mmap(NULL, l, PROT_READ, MAP_PRIVATE, fd, 0)) !=  MAP_FAILED) {
+    if ((m = mmap(NULL, l, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0))
+    		!=  MAP_FAILED) {
         madvise(m, l, MADV_SEQUENTIAL); // optimize for sequential access
         root = (ezxml_root_t)ezxml_parse_str(m, st.st_size);
         madvise(m, root->len = l, MADV_NORMAL); // put it back to normal

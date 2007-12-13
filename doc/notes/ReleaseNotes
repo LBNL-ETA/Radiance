@@ -1643,3 +1643,6 @@ Allow rtcontrib user to set -P and -PP options for persistent rendering.
 The only caveat is that -n setting > 1 requires -PP rather than -P.
 
 Added -c option to rtcontrib to facilitate cumulative calculations.
+
+Added ability to incorporate LBNL Window 6 bidirectional scattering
+distribution function (BSDF) data in mkillum.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.7 2007/12/12 05:09:58 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.8 2007/12/13 07:03:37 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -277,7 +277,7 @@ load_BSDF(		/* load BSDF data from file */
 	}
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
 	for (wld = ezxml_child(fl, "WavelengthData");
-				fl != NULL; fl = fl->next) {
+				wld != NULL; wld = wld->next) {
 		if (strcmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
 			continue;
 		wdb = ezxml_child(wld, "WavelengthDataBlock");
@@ -432,7 +432,6 @@ getBSDF_xfm(		/* compute BSDF orient. -> world orient. transform */
 		updir[2] = 1.;
 		break;
 	case UDunknown:
-		error(WARNING, "unspecified up direction");
 		return(0);
 	}
 	fcross(xdest, updir, nrm);
