@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.24 2005/10/05 05:17:41 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.25 2008/01/24 23:15:46 greg Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -76,6 +76,7 @@ int	filerev = FIRSTREV;
 					/* photometric types */
 #define PM_C		1
 #define PM_B		2
+#define PM_A		3
 					/* unit types */
 #define U_FEET		1
 #define U_METERS	2
@@ -699,6 +700,11 @@ dosource(	/* create source and distribution */
 		fprintf(stderr, "dosource: bad lamp specification\n");
 		return(-1);
 	}
+	if (pmtype != PM_C && pmtype != PM_B) {
+		fprintf(stderr, "dosource: unsupported photometric type (%d)\n",
+				pmtype);
+		return(-1);
+	}
 	sinf->mult = multiplier*mult*bfactor*pfactor;
 	if (nangles[0] < 2 || nangles[1] < 1) {
 		fprintf(stderr, "dosource: too few measured angles\n");
@@ -750,7 +756,7 @@ dosource(	/* create source and distribution */
 		else
 			fprintf(out, "srcB_horiz ");
 		fprintf(out, "srcB_vert ");
-	} else /* pmtype == PM_A */ {
+	} else /* pmtype == PM_C */ {
 		if (nangles[1] >= 2) {
 			d1 = bounds[1][1] - bounds[1][0];
 			if (d1 <= 90.+FTINY)

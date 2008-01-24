@@ -1646,3 +1646,9 @@ Added -c option to rtcontrib to facilitate cumulative calculations.
 
 Added ability to incorporate LBNL Window 6 bidirectional scattering
 distribution function (BSDF) data in mkillum.
+
+****** COMPATIBILITY CHANGE ********
+Fixed long-standing bug in source.cal, which caused it to produce
+reversed anisotropic photometric distributions due to the
+misorientation of the y-axis.  Thanks to Zack Rogers for discovering
+and helping debug this problem.

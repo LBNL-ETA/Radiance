@@ -1,10 +1,10 @@
-{ RCSid: $Id: source.cal,v 2.9 2003/02/22 02:07:23 greg Exp $ }
+{ RCSid: $Id: source.cal,v 2.10 2008/01/24 23:15:46 greg Exp $ }
 {
 	Source distribution coordinates (degrees).
 
 	Theta is measured from the negative z-axis.
 	Phi is measured from the positive x-axis (0 degrees)
-		towards the negative y-axis (90 degrees).
+		towards the positive y-axis (90 degrees).
 
 	srcB_vert and srcB_horiz are angles
 	used in type B photometry.
@@ -39,7 +39,7 @@ lboxcorr(v) = A1 * v / lboxprojection;	{ local box correction }
 cylcorr(v) = A1 * v / cylprojection;	{ cylinder correction }
 
 src_theta = Acos(Dz) / DEGREE;			{ 0-180 }
-src_phi = mod( Atan2(Dy, -Dx) / DEGREE, 360 );	{ 0-360 }
+src_phi = mod( Atan2(-Dy, -Dx) / DEGREE, 360 );	{ 0-360 }
 				{ bilateral symmetry }
 src_phi2 = tri( src_phi, 180 );		{ 0-180 }
 				{ quadrilateral symmetry }
