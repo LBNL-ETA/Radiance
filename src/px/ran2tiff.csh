@@ -20,6 +20,10 @@ while ("$argv[1]" =~ -*)
 		breaksw
 	case -D:
 		shift argv
+		if (! -d $argv[1]:q ) then
+			echo "Directory $argv[1] does not exist"
+			exit 1
+		endif
 		set outdir=$argv[1]:q/
 		breaksw
 	case -h*:
@@ -104,5 +108,7 @@ foreach inp ($argv:q)
 		| ra_tiff $tfopts - $outp:q
 	mv $vald/{,old}histo.dat
 end
-if ($?histof) cp -f $vald/oldhisto.dat $histof
+if ($?histof) then
+	cp -f $vald/oldhisto.dat $histof
+endif
 rm -rf $vald
