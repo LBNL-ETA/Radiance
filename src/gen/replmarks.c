@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.14 2005/12/28 18:35:42 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.15 2008/01/25 02:11:13 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -391,6 +391,14 @@ addrot(		/* compute rotation (x,y,z) => (xp,yp,zp) */
 	int	n;
 	double	theta;
 
+	if (yp[2]*yp[2] + zp[2]*zp[2] < 2.*FTINY*FTINY) {
+		/* Special case for X' along Z-axis */
+		theta = -atan2(yp[0], yp[1]);
+		sprintf(xf, " -ry %f -rz %f",
+				xp[2] < 0.0 ? 90.0 : -90.0,
+				theta*(180./PI));
+		return(4);
+	}
 	n = 0;
 	theta = atan2(yp[2], zp[2]);
 	if (!FEQ(theta,0.0)) {

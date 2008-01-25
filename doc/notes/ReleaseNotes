@@ -1652,3 +1652,7 @@ Fixed long-standing bug in source.cal, which caused it to produce
 reversed anisotropic photometric distributions due to the
 misorientation of the y-axis.  Thanks to Zack Rogers for discovering
 and helping debug this problem.
+
+Fixed long-standing bug in replmarks, where triangles with X-side
+aligned with Z-axis would cause incorrect rotations.  Thanks to
+Zack Rogers for finding this error.
