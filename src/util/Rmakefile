@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.46 2007/11/24 00:37:28 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.47 2008/02/07 23:02:14 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -66,7 +66,7 @@ glarendx:	glarendx.o
 
 xglaresrc:	xglaresrc.o x11findwind.o
 	$(CC) $(CFLAGS) -o xglaresrc xglaresrc.o \
-x11findwind.o -lrtrad -lX11 -$(MLIB)
+x11findwind.o -lrtrad -lX11 $(MLIB)
 
 rad:	rad.o
 	$(CC) $(CFLAGS) -o rad rad.o -lrtrad $(MLIB)

@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.29 2007/11/24 00:37:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.30 2008/02/07 23:02:14 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -76,7 +76,7 @@ $(DEVDIR)/x11h.hdi:	$(DEVDIR)/x11.hdi
 $(DEVDIR)/x11.hdi:	rhdisp.o rhdisp2.o viewbeams.o rhd_x11.o rhd_qtree.o \
 rhd_qtree2r.o rhd_ctab.o holo.o
 	$(CC) $(CFLAGS) -o $(DEVDIR)/x11.hdi rhdisp.o rhdisp2.o viewbeams.o \
-rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrtrad -lX11
+rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrtrad -lX11 $(MLIB)
 
 $(DEVDIR)/glx1h.hdi:	$(DEVDIR)/glx1.hdi
 	rm -f $(DEVDIR)/glx1h.hdi
@@ -114,7 +114,7 @@ $(DEVDIR)/glx1.hdi:	rhd_glx1.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_qtree.o rhd_qtree2c.o holo.o
 	rm -f $(DEVDIR)/glx1.hdi
 	$(CC) $(CFLAGS) -o $(DEVDIR)/glx1.hdi rhd_glx1.o rhdisp.o rhdisp2.o \
-viewbeams.o holo.o rhd_qtree.o rhd_qtree2c.o -lrtrad -lGLU -lGL -lX11 -lm
+viewbeams.o holo.o rhd_qtree.o rhd_qtree2c.o -lrtrad -lGLU -lGL -lX11 $(MLIB)
 
 $(DEVDIR)/ogl.hdi:	rhd_ogl0.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_odraw.o rhd_geom.o holo.o

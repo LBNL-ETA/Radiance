@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.12 2007/11/24 00:37:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.13 2008/02/07 23:02:14 greg Exp $
 #
 #  Compiles:
 #
@@ -50,7 +50,7 @@ $(DESTDIR)/psmeta:	psmeta.o psplot.o
 	$(CC) $(CFLAGS) -o psmeta psmeta.o psplot.o $(common) -lrtrad
 
 $(DESTDIR)/plotin:	plotin.o primout.o
-	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrtrad
+	$(CC) $(CFLAGS) -o plotin plotin.o primout.o $(common) -lrtrad $(MLIB)
 
 $(DESTDIR)/pexpand:	pexpand.o expand.o segment.o palloc.o
 	$(CC) $(CFLAGS) -o pexpand pexpand.o expand.o segment.o \
