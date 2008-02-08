@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.17 2007/09/18 19:10:02 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.18 2008/02/08 18:27:31 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -131,13 +131,11 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.17 2007/09/18 19:10:02 greg Ex
  *  process should not be compromised.
  */
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h> /* XXX platform */
-
 #include  "rtprocess.h"
 #include  "ray.h"
 #include  "ambient.h"
+#include  <sys/types.h>
+#include  <sys/wait.h>
 #include  "selcall.h"
 
 #ifndef RAYQLEN
