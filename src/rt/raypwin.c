@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raypwin.c,v 2.1 2008/02/08 18:27:31 greg Exp $";
+static const char RCSid[] = "$Id: raypwin.c,v 2.2 2008/02/09 00:17:51 greg Exp $";
 #endif
 /*
  *  raypwin.c - interface for parallel rendering using Radiance (Windows ver)
@@ -13,10 +13,14 @@ static const char RCSid[] = "$Id: raypwin.c,v 2.1 2008/02/08 18:27:31 greg Exp $
  * See raypcalls.c for an explanation of these routines.
  */
 
-/***** XXX CURRENTLY, THIS IS JUST A COLLECTION OF FATAL STUBS XXX *****/
+/***** XXX CURRENTLY, THIS IS JUST A COLLECTION OF IMPOTENT STUBS XXX *****/
 
 #include  "ray.h"
 
+int		ray_pnprocs = 0;	/* number of child processes */
+int		ray_pnidle = 0;		/* number of idle children */
+
+static RAY	queued_ray;
 
 extern void
 ray_pinit(		/* initialize ray-tracing processes */
@@ -24,7 +28,11 @@ ray_pinit(		/* initialize ray-tracing processes */
 	int	nproc
 )
 {
-	error(CONSISTENCY, "parallel ray processing unimplemented");
+	if (nproc > 1)
+		error(WARNING, "Only single process supported");
+	ray_pdone(0);
+	ray_init(otnm);
+	ray_popen(nproc);
 }
 
 
@@ -33,7 +41,12 @@ ray_psend(			/* add a ray to our send queue */
 	RAY	*r
 )
 {
-	error(CONSISTENCY, "parallel ray processing unimplemented");
+	if (r == NULL)
+		return;
+	if (ray_pnidle <= 0)
+		error(INTERNAL, "illegal call to ray_psend");
+	queued_ray = *r;
+	ray_pnidle = 0;
 }
 
 
@@ -42,7 +55,10 @@ ray_pqueue(			/* queue a ray for computation */
 	RAY	*r
 )
 {
-	return(0);
+	if (r == NULL)
+		return(0);
+	ray_value(r);
+	return(1);
 }
 
 
@@ -52,7 +68,15 @@ ray_presult(		/* check for a completed ray */
 	int	poll
 )
 {
-	return(-1);
+	if (r == NULL)
+		return(0);
+	if (!poll & (ray_pnidle <= 0)) {
+		ray_value(&queued_ray);
+		*r = queued_ray;
+		ray_pnidle = 1;
+		return(1);
+	}
+	return(0);
 }
 
 
@@ -61,6 +85,8 @@ ray_pdone(		/* reap children and free data */
 	int	freall
 )
 {
+	ray_done(freall);
+	ray_pnprocs = ray_pnidle = 0;
 }
 
 
@@ -69,7 +95,12 @@ ray_popen(			/* open the specified # processes */
 	int	nadd
 )
 {
-	error(CONSISTENCY, "parallel ray processing unimplemented");
+	if (ray_pnprocs + nadd > 1) {
+		error(WARNING, "Only single process supported");
+		nadd = 1 - ray_pnprocs;
+	}
+	ray_pnprocs += nadd;
+	ray_pnidle += nadd;
 }
 
 
@@ -78,6 +109,11 @@ ray_pclose(		/* close one or more child processes */
 	int	nsub
 )
 {
+	if (nsub > ray_pnprocs)
+		nsub = ray_pnprocs;
+	ray_pnprocs -= nsub;
+	if ((ray_pnidle -= nsub) < 0)
+		ray_pnidle = 0;
 }
 
 
