@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.31 2007/11/24 00:37:27 greg Exp $
+# RCSid $Id: Rmakefile,v 2.32 2008/02/11 15:17:54 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -39,7 +39,7 @@ clean:
 	cd mgflib ; make clean
 
 ies2rad:	ies2rad.o
-	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad
+	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad $(MLIB)
 
 arch2rad:	arch2rad.o trans.o
 	$(CC) $(CFLAGS) -o arch2rad arch2rad.o trans.o -lrtrad
