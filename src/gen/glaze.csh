@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: glaze.csh,v 2.5 2004/08/25 19:13:30 greg Exp $
+# RCSid: $Id: glaze.csh,v 2.6 2008/02/11 19:13:05 greg Exp $
 #
 # Complex glazing model (goes with glaze1.cal and glaze2.cal)
 #
@@ -34,6 +34,7 @@ set tn_b_arr=(0.886 0.744 0.63 0.21 0.09)
 # Boolean whether coatings can have partial coverage:
 set part_arr=(0 0 0 1 1)
 
+set gfiles=()
 while ($#argv > 0)
 	set header="Surface	Tr	Tg	Tb	Rcr	Rcg	Rcb	Rgr	Rgg	Rgb	Part"
 	if ($#argv < 2 || "$argv[1]" != '-f') then
@@ -43,6 +44,7 @@ while ($#argv > 0)
 	shift argv
 	set gf="$argv[1]"
 	shift argv
+	set gfiles=($gfiles:q $gf:q)
 	if ("`sed -n 1p $gf:q`" != "$header") then
 		echo "Bad header in $gf -- Expected: $header"
 		exit 1
@@ -71,6 +73,7 @@ while ($#argv > 0)
 		@ i++
 	end
 end
+if (! $#gfiles) unset gfiles
 
 #################################################################
 #
@@ -154,7 +157,11 @@ endif
 echo ""
 echo "############################################"
 echo "# Glazing produced by Radiance glaze script"
-echo "# `date`"
+echo '# $Revision: 2.6 $ $Date: 2008/02/11 19:13:05 $'
+if ($?gfiles) then
+	echo "# Loaded: $gfiles:q"
+	echo "# `date`"
+endif
 echo "# Material surface normal points to interior"
 echo "# Number of panes in system: $np"
 
