@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raypwin.c,v 2.3 2008/02/11 21:17:25 greg Exp $";
+static const char RCSid[] = "$Id: raypwin.c,v 2.4 2008/02/13 01:06:10 greg Exp $";
 #endif
 /*
  *  raypwin.c - interface for parallel rendering using Radiance (Windows ver)
@@ -55,7 +55,8 @@ ray_pqueue(			/* queue a ray for computation */
 {
 	if (r == NULL)
 		return(0);
-	ray_value(r);
+	samplendx++;
+	rayvalue(r);
 	return(1);
 }
 
@@ -69,7 +70,8 @@ ray_presult(		/* check for a completed ray */
 	if (r == NULL)
 		return(0);
 	if (ray_pnidle <= 0) {
-		ray_value(&queued_ray);
+		samplendx++;
+		rayvalue(r);
 		*r = queued_ray;
 		ray_pnidle = 1;
 		return(1);
