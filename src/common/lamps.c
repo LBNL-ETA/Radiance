@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lamps.c,v 2.9 2003/06/08 12:03:09 schorsch Exp $";
+static const char	RCSid[] = "$Id: lamps.c,v 2.10 2008/02/18 23:35:51 greg Exp $";
 #endif
 /*
  * Load lamp data.
@@ -15,7 +15,6 @@ static const char	RCSid[] = "$Id: lamps.c,v 2.9 2003/06/08 12:03:09 schorsch Exp
 #include  "color.h"
 
 extern char	*eindex(), *expsave();
-extern FILE	*frlibopen();
 
 typedef struct lamp {
 	char	*pattern;			/* search pattern */
