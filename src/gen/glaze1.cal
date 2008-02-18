@@ -1,4 +1,4 @@
-{ RCSid: $Id: glaze1.cal,v 2.2 2003/06/30 18:12:24 greg Exp $ }
+{ RCSid: $Id: glaze1.cal,v 2.3 2008/02/18 23:44:39 greg Exp $ }
 {
 	glaze1.cal - single-pane fritted and low-E glazings
 
@@ -43,9 +43,9 @@ st_frit_g = frac_glass*glass_trans;
 st_frit_b = frac_glass*glass_trans;
 
 				{ low-E specular components }
-sr_lowE_r = fresne_refl(if(clear_side, arg(11), arg(14)));
-sr_lowE_g = fresne_refl(if(clear_side, arg(12), arg(15)));
-sr_lowE_b = fresne_refl(if(clear_side, arg(13), arg(16)));
-st_lowE_r = fresne_trans(arg(17));
-st_lowE_g = fresne_trans(arg(18));
-st_lowE_b = fresne_trans(arg(19));
+sr_clear_r = fresne_refl(if(clear_side, arg(11), arg(14)));
+sr_clear_g = fresne_refl(if(clear_side, arg(12), arg(15)));
+sr_clear_b = fresne_refl(if(clear_side, arg(13), arg(16)));
+st_clear_r = fresne_trans(arg(17));
+st_clear_g = fresne_trans(arg(18));
+st_clear_b = fresne_trans(arg(19));
