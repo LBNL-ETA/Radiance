@@ -1621,7 +1621,7 @@ Additional error-checking for source surfaces.
 Re-fixed bug in octree code that caused it to allocate 8 times as
 much memory as it actually used(!) -- this was pointed out way back
 in 1999 by Erik Reinhard and Erik Jansen, but the fix they gave me
-got lost in the slightly borken release process at the time.  This
+got lost in the slightly broken release process at the time.  This
 should make a big difference in memory usage, especially for the
 new mesh primitive.  (I measured 30% less memory usage.)
 
@@ -1656,3 +1656,7 @@ and helping debug this problem.
 Fixed long-standing bug in replmarks, where triangles with X-side
 aligned with Z-axis would cause incorrect rotations.  Thanks to
 Zack Rogers for finding this error.
+
+Added rsensor program to compute sensor signal for daylighting controls.
+Funding for this component was provided by the Architectural Energy
+Corporation in Boulder, CO, and directed by Zack Rogers.

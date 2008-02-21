@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.47 2008/02/07 23:02:14 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.48 2008/02/21 01:22:06 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -20,7 +20,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
-		vwrays xglaresrc rtcontrib
+		vwrays xglaresrc rtcontrib rsensor
 
 all:	$(PROGS)
 
@@ -76,6 +76,10 @@ ranimate:	ranimate.o netproc.o
 
 ranimove:	ranimove.o ranimove1.o ranimove2.o
 	$(CC) $(CFLAGS) -o ranimove ranimove.o ranimove1.o ranimove2.o \
+-lraycalls -lradiance -lrtrad $(MLIB)
+
+rsensor:	rsensor.o
+	$(CC) $(CFLAGS) -o rsensor rsensor.o \
 -lraycalls -lradiance -lrtrad $(MLIB)
 
 rpiece:	rpiece.o Version.o
@@ -152,6 +156,14 @@ ranimove.o ranimove1.o ranimove2.o:	ranimove.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h ../common/tifftypes.h
+
+rsensor.o:	../rt/ray.h ../common/octree.h \
+../common/object.h ../common/color.h \
+../common/standard.h ../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h ../common/tifftypes.h
+
+rsensor.o:	../common/view.h ../common/resolu.h ../rt/source.h
 
 Version.c:	../rt/Version.c
 	cp ../rt/Version.c .

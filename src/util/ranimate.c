@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.52 2006/04/18 04:30:35 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.53 2008/02/21 01:22:06 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -1134,7 +1134,6 @@ countviews(void)			/* count views in view file */
 static char *
 getexp(int n)			/* get exposure for nth frame */
 {
-	extern char	*fskip();
 	static char	expval[32];
 	static FILE	*expfp = NULL;
 	static long	*exppos;
