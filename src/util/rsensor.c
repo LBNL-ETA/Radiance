@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.1 2008/02/21 01:22:06 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.2 2008/02/21 20:18:25 greg Exp $";
 #endif
 
 /*
@@ -26,7 +26,7 @@ VIEW		ourview = STDVIEW;
 
 unsigned long	nsamps = 10000;	/* desired number of initial samples */
 unsigned long	nssamps = 9000;	/* number of super-samples */
-int		ndsamps = 16;	/* number of direct samples */
+int		ndsamps = 32;	/* number of direct samples */
 int		nprocs = 1;     /* number of rendering processes */
 
 float		*sensor = NULL;	/* current sensor data */
@@ -37,6 +37,10 @@ float		*pvals = NULL;	/* phi values (2-D table in radians) */
 int		ntheta = 0;	/* polar angle divisions */
 int		nphi = 0;	/* azimuthal angle divisions */
 double		gscale = 1.;	/* global scaling value */
+
+#define	s_theta(t)	sensor[(t+1)*(sntp[1]+1)]
+#define s_phi(p)	sensor[(p)+1]
+#define s_val(t,p)	sensor[(p)+1+(t+1)*(sntp[1]+1)]
 
 static void	comp_sensor(char *sfile);
 
@@ -68,9 +72,12 @@ main(
 
 	progname = argv[0];
 				/* set up rendering defaults */
-	dstrsrc = 0.25;
+	rand_samp = 1;
+	dstrsrc = 0.5;
+	srcsizerat = 0.1;
 	directrelay = 3;
 	ambounce = 1;
+	maxdepth = -10;
 				/* just asking defaults? */
 	if (argc == 2 && !strcmp(argv[1], "-defaults")) {
 		print_defaults();
@@ -282,6 +289,8 @@ init_ptable(
 	if (pvals != NULL)
 		free((void *)pvals);
 	if (sfile == NULL || !*sfile) {
+		sensor = NULL;
+		sntp[0] = sntp[1] = 0;
 		pvals = NULL;
 		ntheta = nphi = 0;
 		return;
@@ -299,23 +308,21 @@ init_ptable(
 		error(INTERNAL, errmsg);
 	}
 					/* compute boundary angles */
-	maxtheta = 1.5f*sensor[sntp[0]*(sntp[1]+1)] -
-			0.5f*sensor[sntp[0]*sntp[1]];
+	maxtheta = 1.5f*s_theta(sntp[0]-1) - 0.5f*s_theta(sntp[0]-2);
 	thdiv[0] = .0;
 	for (t = 1; t < sntp[0]; t++)
-		thdiv[t] = DEGREE/2.*(sensor[t*(sntp[1]+1)] +
-					sensor[(t+1)*(sntp[1]+1)]);
+		thdiv[t] = DEGREE/2.*(s_theta(t-1) + s_theta(t));
 	thdiv[sntp[0]] = maxtheta*DEGREE;
 	phdiv[0] = .0;
 	for (p = 1; p < sntp[1]; p++)
-		phdiv[p] = DEGREE/2.*(sensor[p] + sensor[p+1]);
+		phdiv[p] = DEGREE/2.*(s_phi(p-1) + s_phi(p));
 	phdiv[sntp[1]] = 2.*PI;
 					/* size our table */
 	tsize = 1. - cos(maxtheta*DEGREE);
-	psize = PI*tsize/maxtheta;
+	psize = PI*tsize/(maxtheta*DEGREE);
 	if (sntp[0]*sntp[1] < samptot)	/* don't overdo resolution */
 		samptot = sntp[0]*sntp[1];
-	ntheta = (int)(sqrt(samptot*tsize/psize) + 0.5);
+	ntheta = (int)(sqrt((double)samptot*tsize/psize) + 0.5);
 	if (ntheta > MAXNT)
 		ntheta = MAXNT;
 	nphi = samptot/ntheta;
@@ -324,7 +331,7 @@ init_ptable(
 		error(SYSTEM, "out of memory in init_ptable()");
 	gscale = .0;			/* compute our inverse table */
 	for (i = 0; i < sntp[0]; i++) {
-		rowp = sensor + (i+1)*(sntp[1]+1) + 1;
+		rowp = &s_val(i,0);
 		rowsum[i] = 0.;
 		for (j = 0; j < sntp[1]; j++)
 			rowsum[i] += *rowp++;
@@ -332,8 +339,7 @@ init_ptable(
 		rowomega[i] *= 2.*PI / (double)sntp[1];
 		gscale += rowsum[i] * rowomega[i];
 	}
-	tvals[0] = .0f;
-	for (i = 1; i < ntheta; i++) {
+	for (i = 0; i < ntheta; i++) {
 		prob = (double)i / (double)ntheta;
 		for (t = 0; t < sntp[0]; t++)
 			if ((prob -= rowsum[t]*rowomega[t]/gscale) <= .0)
@@ -343,26 +349,40 @@ init_ptable(
 		frac = 1. + prob/(rowsum[t]*rowomega[t]/gscale);
 		tvals[i] = 1. - ( (1.-frac)*cos(thdiv[t]) +
 						frac*cos(thdiv[t+1]) );
+				/* offset b/c sensor values are centered */
+		if (t <= 0 || frac > 0.5)
+			frac -= 0.5;
+		else if (t >= sntp[0]-1 || frac < 0.5) {
+			frac += 0.5;
+			--t;
+		}
 		pvals[i*(nphi+1)] = .0f;
 		for (j = 1; j < nphi; j++) {
 			prob = (double)j / (double)nphi;
-			rowp = sensor + t*(sntp[1]+1) + 1;
-			rowp1 = rowp + sntp[1]+1;
+			rowp = &s_val(t,0);
+			rowp1 = &s_val(t+1,0);
 			for (p = 0; p < sntp[1]; p++) {
-				if ((prob -= (1.-frac)*rowp[p]/rowsum[t-1] +
-						frac*rowp1[p]/rowsum[t]) <= .0)
+				if ((prob -= (1.-frac)*rowp[p]/rowsum[t] +
+					    frac*rowp1[p]/rowsum[t+1]) <= .0)
 					break;
 				if (p >= sntp[1])
 					error(INTERNAL,
 					    "code error 2 in init_ptable()");
-				frac1 = 1. + prob/((1.-frac)*rowp[p]/rowsum[t-1]
-						+ frac*rowp1[p]/rowsum[t]);
+				frac1 = 1. + prob/((1.-frac)*rowp[p]/rowsum[t]
+						+ frac*rowp1[p]/rowsum[t+1]);
+				if (p <= 0 || frac1 > 0.5)
+					frac1 -= 0.5;
+				else if (p >= sntp[1]-1 || frac1 < 0.5) {
+					frac1 += 0.5;
+					--p;
+				}
 				pvals[i*(nphi+1) + j] = (1.-frac1)*phdiv[p] +
 							frac1*phdiv[p+1];
 			}
 		}
 		pvals[i*(nphi+1) + nphi] = (float)(2.*PI);
 	}
+	tvals[0] = .0f;
 	tvals[ntheta] = (float)tsize;
 }
 
@@ -418,15 +438,15 @@ sens_val(
 	t = (int)(theta/maxtheta * sntp[0]);
 	p = (int)(phi*(1./360.) * sntp[1]);
 			/* hack for non-uniform sensor grid */
-	while (t+1 < sntp[0] && theta >= sensor[(t+2)*(sntp[1]+1)])
+	while (t+1 < sntp[0] && theta >= s_theta(t+1))
 		++t;
-	while (t-1 >= 0 && theta < sensor[t*(sntp[1]+1)])
+	while (t-1 >= 0 && theta <= s_theta(t-1))
 		--t;
-	while (p+1 < sntp[1] && phi >= sensor[p+2])
+	while (p+1 < sntp[1] && phi >= s_phi(p+1))
 		++p;
-	while (p-1 >= 0 && phi < sensor[p])
+	while (p-1 >= 0 && phi <= s_phi(p-1))
 		--p;
-	return(sensor[t*(sntp[1]+1) + p + 1]);
+	return(s_val(t,p));
 }
 
 /* Compute sensor output */
@@ -458,9 +478,8 @@ comp_sensor(
 	VCOPY(rr.rorg, ourview.vp);
 	rr.rmax = .0;
 	for (i = 0; i < nt; i++)
-		for (j =0; j < np; j++) {
-			get_direc(rr.rdir, (i+frandom())/nt,
-					(j + frandom())/np);
+		for (j = 0; j < np; j++) {
+			get_direc(rr.rdir, (i+frandom())/nt, (j+frandom())/np);
 			rayorigin(&rr, PRIMARY, NULL, NULL);
 			if (ray_pqueue(&rr) == 1)
 				addcolor(vsum, rr.rcol);
