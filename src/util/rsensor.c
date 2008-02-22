@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.3 2008/02/22 18:04:02 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.4 2008/02/22 21:52:10 greg Exp $";
 #endif
 
 /*
@@ -374,12 +374,6 @@ init_ptable(
 					    "code error 2 in init_ptable()");
 				frac1 = 1. + prob/((1.-frac)*rowp[p]/rowsum[t]
 						+ frac*rowp1[p]/rowsum[t+1]);
-				if (p <= 0 || frac1 > 0.5)
-					frac1 -= 0.5;
-				else if (p >= sntp[1]-1 || frac1 < 0.5) {
-					frac1 += 0.5;
-					--p;
-				}
 				pvals[i*(nphi+1) + j] = (1.-frac1)*phdiv[p] +
 							frac1*phdiv[p+1];
 			}
