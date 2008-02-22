@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.2 2008/02/21 20:18:25 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.3 2008/02/22 18:04:02 greg Exp $";
 #endif
 
 /*
@@ -45,8 +45,16 @@ double		gscale = 1.;	/* global scaling value */
 static void	comp_sensor(char *sfile);
 
 static void
-print_defaults()
+over_options()			/* overriding options */
 {
+	directvis = (ndsamps <= 0);
+	do_irrad = 0;
+}
+
+static void
+print_defaults()		/* print out default parameters */
+{
+	over_options();
 	printf("-n %-9d\t\t\t# number of processes\n", nprocs);
 	printf("-rd %-9ld\t\t\t# ray directions\n", nsamps);
 	/* printf("-rs %-9ld\t\t\t# ray super-samples\n", nssamps); */
@@ -68,6 +76,7 @@ main(
 )
 {
 	int	doheader = 1;
+	int	optwarn = 0;
 	int	i, rval;
 
 	progname = argv[0];
@@ -78,27 +87,19 @@ main(
 	directrelay = 3;
 	ambounce = 1;
 	maxdepth = -10;
-				/* just asking defaults? */
-	if (argc == 2 && !strcmp(argv[1], "-defaults")) {
-		print_defaults();
-		return(0);
-	}
-				/* check octree */
-	if (argc < 2 || argv[argc-1][0] == '-')
-		error(USER, "missing octree argument");
 				/* get options from command line */
-	for (i = 1; i < argc-1; i++) {
+	for (i = 1; i < argc; i++) {
 		while ((rval = expandarg(&argc, &argv, i)) > 0)
 			;
 		if (rval < 0) {
 			sprintf(errmsg, "cannot expand '%s'", argv[i]);
 			error(SYSTEM, errmsg);
 		}
-		if (argv[i][0] != '-') {	/* process a sensor file */
+		if (argv[i][0] != '-') {
+			if (i >= argc-1)
+				break;		/* final octree argument */
 			if (!ray_pnprocs) {
-						/* overriding options */
-				directvis = (ndsamps <= 0);
-				do_irrad = 0;
+				over_options();
 				if (doheader) {	/* print header */
 					printargs(argc, argv, stdout);
 					fputformat("ascii", stdout);
@@ -107,7 +108,7 @@ main(
 						/* start process(es) */
 				ray_pinit(argv[argc-1], nprocs);
 			}
-			comp_sensor(argv[i]);
+			comp_sensor(argv[i]);	/* process a sensor file */
 			continue;
 		}
 		if (argv[i][1] == 'r') {	/* sampling options */
@@ -150,12 +151,13 @@ main(
 			sprintf(errmsg, "bad view option at '%s'", argv[i]);
 			error(USER, errmsg);
 		}
-		if (!strcmp(argv[i], "-w")) {	/* turn off warnings */
-			nowarn = 1;
+		if (!strcmp(argv[i], "-w")) {	/* toggle warnings */
+			nowarn = !nowarn;
 			continue;
 		}
 		if (ray_pnprocs) {
-			error(WARNING,
+			if (!optwarn++)
+				error(WARNING,
 			"rendering options should appear before first sensor");
 		} else if (!strcmp(argv[i], "-defaults")) {
 			print_defaults();
@@ -178,6 +180,8 @@ main(
 		}
 		i += rval;
 	}
+	if (!ray_pnprocs)
+		error(USER, i<argc ? "missing sensor file" : "missing octree");
 	quit(0);
 }
 
