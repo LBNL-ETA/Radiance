@@ -1,0 +1,49 @@
+{ RCSid $Id: vwplanis.cal,v 1.1 2008/02/24 23:04:44 greg Exp $ }
+{
+	Generate rays for a planisphere (a.k.a. stereographic)
+	view projection.  This is a type of fisheye projection
+	used in daylighting analysis.  We limit ourselves here
+	to square image aspects.
+
+	2/24/2008 Greg Ward (for Axel Jacobs)
+
+	Inputs:
+		maxang		: Maximum angle (in degrees < 360)
+		x, y		= Image position, (0,0)->(1,0) is LL->LR
+
+	Outputs:
+		dx, dy, dz	= Direction vector for image point (x,y)
+
+	Typical command line:
+		cnt 1024 1024 | rcalc -od -e maxang:180 \
+			-e 'x=($2+.5)/1024;y=1-($1+.5)/1024' -f vwplanis.cal \
+			-e '$1=25.5;$2=12;$3=5;$4=dx;$5=dy;$6=dz' \
+			| rtrace @electric.opt -fdc -x 1024 -y 1024 \
+				electric.oct > planisphere.pic
+
+	The above directions assume +Z is the view direction, and +Y is the
+	up direction.  This isn't very convenient, so an alternate method
+	is provided for other views, delivered via `vwright s < viewfile`
+	like so:
+
+		cnt 1024 1024 | rcalc -od -e `vwright s < viewfile` \
+			-e 'maxang:sh' -e 'x=($2+.5)/1024;y=1-($1+.5)/1024' \
+			-f vwplanis.cal \
+			-e '$1=spx;$2=spy;$3=spz;$4=Dx;$5=Dy;$6=Dz' \
+			| rtrace @electric.opt -fdc -x 1024 -y 1024 \
+				electric.oct > planisphere.pic
+}
+amax : PI/180/2*maxang;
+K : 2*sin(amax)/(1+cos(amax));
+sq(x) : x*x;
+r2 = sq(x-.5) + sq(y-.5);
+dz = (1 - sq(K)*r2)/(1 + sq(K)*r2);
+rnorm = sqrt((1 - sq(dz))/r2);
+dx = rnorm*(x-.5);
+dy = rnorm*(y-.5);
+			{ Below is where we need `vwright s` paramters }
+hnorm : 1/sqrt(sq(shx)+sq(shy)+sq(shz));
+vnorm : 1/sqrt(sq(svx)+sq(svy)+sq(svz));
+Dx = shx*hnorm*dx + svx*vnorm*dy + sdx*dz;
+Dy = shy*hnorm*dx + svy*vnorm*dy + sdy*dz;
+Dz = shz*hnorm*dx + svz*vnorm*dy + sdz*dz;

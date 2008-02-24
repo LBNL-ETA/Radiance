@@ -1,3 +1,4 @@
+{ RCSid $Id: vwparab.cal,v 1.2 2008/02/24 23:04:44 greg Exp $ }
 {
 	Generate rays for a parabolic view projection --
 	i.e., a round image that when projected downwards
@@ -18,10 +19,10 @@
 		dx, dy, dz	= Direction vector for image point (x,y)
 
 	Typical command line:
-		cnt 1024 1024 | rcalc -e maxalt:25 \
+		cnt 1024 1024 | rcalc -od -e maxalt:25 \
 			-e 'x=($2+.5)/1024;y=1-($1+.5)/1024' -f vwparab.cal \
 			-e '$1=25.5;$2=12;$3=5;$4=dx;$5=dy;$6=dz' \
-			| rtrace @electric.opt -fac -x 1024 -y 1024 \
+			| rtrace @electric.opt -fdc -x 1024 -y 1024 \
 				electric.oct > pan.pic
 }
 amax : PI/180*maxalt;
