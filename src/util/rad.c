@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.83 2008/03/11 02:21:47 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.84 2008/03/11 12:42:07 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1012,10 +1012,19 @@ specview(				/* get proper view spec from vs */
 	} else if (*vs == 'z') {
 		zpos = -1; vs++;
 	}
-	viewtype = 'v';
-	if ((*vs == 'v') | (*vs == 'l') | (*vs == 'a') |
-			(*vs == 'h') | (*vs == 'c') | (*vs == 's'))
+	switch (*vs) {
+	case VT_PER:
+	case VT_PAR:
+	case VT_ANG:
+	case VT_HEM:
+	case VT_PLS:
+	case VT_CYL:
 		viewtype = *vs++;
+		break;
+	default:
+		viewtype = VT_PER;
+		break;
+	}
 	cp = viewopts;
 	if ((!*vs || isspace(*vs)) && (xpos|ypos|zpos)) {	/* got one! */
 		*cp++ = '-'; *cp++ = 'v'; *cp++ = 't'; *cp++ = viewtype;
@@ -1057,19 +1066,20 @@ specview(				/* get proper view spec from vs */
 		}
 		cp = addarg(cp, vup[upax+3]);
 		switch (viewtype) {
-		case 'v':
+		case VT_PER:
 			cp = addarg(cp, "-vh 45 -vv 45");
 			break;
-		case 'l':
+		case VT_PAR:
 			d = sqrt(dim[0]*dim[0]+dim[1]*dim[1]+dim[2]*dim[2]);
 			sprintf(cp, " -vh %.2g -vv %.2g", d, d);
 			cp += strlen(cp);
 			break;
-		case 'a':
-		case 'h':
+		case VT_ANG:
+		case VT_HEM:
+		case VT_PLS:
 			cp = addarg(cp, "-vh 180 -vv 180");
 			break;
-		case 'c':
+		case VT_CYL:
 			cp = addarg(cp, "-vh 180 -vv 90");
 			break;
 		}
