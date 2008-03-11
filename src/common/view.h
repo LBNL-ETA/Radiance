@@ -1,4 +1,4 @@
-/* RCSid $Id: view.h,v 2.17 2005/01/18 00:33:16 greg Exp $ */
+/* RCSid $Id: view.h,v 2.18 2008/03/11 02:21:46 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
@@ -19,6 +19,7 @@ extern "C" {
 #define  VT_PAR		'l'		/* parallel */
 #define  VT_ANG		'a'		/* angular fisheye */
 #define  VT_HEM		'h'		/* hemispherical fisheye */
+#define  VT_PLS		's'		/* planispheric fisheye */
 #define  VT_CYL		'c'		/* cylindrical panorama */
 
 typedef struct {

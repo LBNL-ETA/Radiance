@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.20 2006/04/05 06:22:57 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.21 2008/03/11 02:21:47 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -447,6 +447,18 @@ double  zf;
 		vp->vert /= zf;
 		if (vp->vert > 360.)
 			vp->vert = 360.;
+		return;
+	case VT_PLS:				/* planisphere fisheye */
+		vp->horiz = sin((PI/180./2.)*vp->horiz) /
+				(1.0 + cos((PI/180./2.)*vp->horiz)) / zf;
+		vp->horiz *= vp->horiz;
+		vp->horiz = (2.*180./PI)*acos((1. - vp->horiz) /
+						(1. + vp->horiz));
+		vp->vert = sin((PI/180./2.)*vp->vert) /
+				(1.0 + cos((PI/180./2.)*vp->vert)) / zf;
+		vp->vert *= vp->vert;
+		vp->vert = (2.*180./PI)*acos((1. - vp->vert) /
+						(1. + vp->vert));
 		return;
 	case VT_CYL:				/* cylindrical panorama */
 		vp->horiz /= zf;

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: rad.1,v 1.6 2008/03/11 02:21:45 greg Exp $"
 .TH RAD 1 2/1/99 RADIANCE
 .SH NAME
 rad - render a RADIANCE scene
@@ -295,7 +295,7 @@ command line option.
 Also, there are several standard view identifiers defined by
 .I rad.
 These standard views are specified by strings of the form
-"[Xx]?[Yy]?[Zz]?[vlcah]?".
+"[Xx]?[Yy]?[Zz]?[vlcahs]?".
 (That is, an optional upper or lower case X followed by an optional
 upper or lower case Y followed by an optional upper or lower case Z
 followed by an optional lower case V, L, C, A or H.)\0
@@ -303,7 +303,8 @@ The letters indicate the desired view position, where upper case X
 means maximum X, lower case means minimum and so on.
 The final letter is the view type, where 'v' is perspective (the
 default), 'l' is parallel, 'c' is a cylindrical panorama,
-'a' is angular fisheye, and 'h' is hemispherical fisheye.
+'a' is angular fisheye, 'h' is hemispherical fisheye, and 's'
+is a planisphere (stereographic) fisheye.
 A perspective view from maximum X, minimum Y would be "Xy" or "Xyv".
 A parallel view from maximum Z would be "Zl".
 If "ZONE" is an interior zone, the standard views will

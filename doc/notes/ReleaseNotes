@@ -1660,3 +1660,6 @@ Zack Rogers for finding this error.
 Added rsensor program to compute sensor signal for daylighting controls.
 Funding for this component was provided by the Architectural Energy
 Corporation in Boulder, CO, and directed by Zack Rogers.
+
+Added "planisphere" (stereographic) fisheye view type for traditional
+daylighting analysis.  Feature requested & explained by Axel Jacobs.

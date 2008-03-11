@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.11 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.12 2008/03/11 02:21:45 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -70,13 +70,21 @@ A cylindrical panorma may be selected by setting
 to the letter 'c'.
 This view is like a standard perspective vertically, but projected
 on a cylinder horizontally (like a soupcan's-eye view).
-Two fisheye views are provided as well; 'h' yields a hemispherical fisheye
-view and 'a' results in angular fisheye distortion.
+Three fisheye views are provided as well; 'h' yields a hemispherical fisheye
+view, 'a' results in angular fisheye distortion, and 's'
+results in a planisphere (stereographic) projection.
 A hemispherical fisheye is a projection of the hemisphere onto a circle.
 The maximum view angle for this type is 180 degrees.
 An angular fisheye view is defined such that distance from the center of
 the image is proportional to the angle from the central view direction.
 An angular fisheye can display a full 360 degrees.
+A planisphere fisheye view maintains angular relationships between lines,
+and is commonly used for sun path analysis.
+This is more commonly known as a
+"stereographic projection," but we avoid the term here so as not to
+confuse it with a stereoscopic pair.
+A planisphere fisheye can display up to (but not including) 360 degrees,
+although distortion becomes extreme as this limit is approached.
 Note that there is no space between the view type
 option and its single letter argument.
 .TP

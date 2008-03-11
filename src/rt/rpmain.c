@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.13 2007/09/13 20:02:11 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.14 2008/03/11 02:21:47 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -442,6 +442,7 @@ printdefaults(void)			/* print default values to stdout */
 			ourview.type==VT_HEM ? "hemispherical" :
 			ourview.type==VT_ANG ? "angular" :
 			ourview.type==VT_CYL ? "cylindrical" :
+			ourview.type==VT_PLS ? "planisphere" :
 			"unknown");
 	printf("-vp %f %f %f\t# view point\n",
 			ourview.vp[0], ourview.vp[1], ourview.vp[2]);

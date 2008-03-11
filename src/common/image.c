@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.33 2006/11/19 01:14:31 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.34 2008/03/11 02:21:46 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -93,10 +93,20 @@ register VIEW  *v;
 		v->hn2 = 2.0 * sin(v->horiz*(PI/180.0/2.0));
 		v->vn2 = 2.0 * sin(v->vert*(PI/180.0/2.0));
 		break;
+	case VT_PLS:				/* planispheric fisheye */
+		if (v->horiz >= 360.0-FTINY)
+			return(ill_horiz);
+		if (v->vert >= 360.0-FTINY)
+			return(ill_vert);
+		v->hn2 = 2.*sin(v->horiz*(PI/180.0/2.0)) /
+				(1.0 + cos(v->horiz*(PI/180.0/2.0)));
+		v->vn2 = 2.*sin(v->vert*(PI/180.0/2.0)) /
+				(1.0 + cos(v->vert*(PI/180.0/2.0)));
+		break;
 	default:
 		return("unknown view type");
 	}
-	if (v->type != VT_ANG) {
+	if (v->type != VT_ANG && v->type != VT_PLS) {
 		if (v->type != VT_CYL) {
 			v->hvec[0] *= v->hn2;
 			v->hvec[1] *= v->hn2;
@@ -183,14 +193,29 @@ double  x, y;
 		d = normalize(direc);
 		return(v->vaft > FTINY ? (v->vaft - v->vfore)*d : 0.0);
 	case VT_ANG:			/* angular fisheye */
-		x *= v->horiz/180.0;
-		y *= v->vert/180.0;
+		x *= (1.0/180.0)*v->horiz;
+		y *= (1.0/180.0)*v->vert;
 		d = x*x + y*y;
 		if (d > 1.0)
 			return(-1.0);
 		d = sqrt(d);
 		z = cos(PI*d);
-		d = d <= FTINY ? PI : sqrt(1 - z*z)/d;
+		d = d <= FTINY ? PI : sqrt(1.0 - z*z)/d;
+		x *= d;
+		y *= d;
+		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
+		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
+		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
+		orig[0] = v->vp[0] + v->vfore*direc[0];
+		orig[1] = v->vp[1] + v->vfore*direc[1];
+		orig[2] = v->vp[2] + v->vfore*direc[2];
+		return(v->vaft > FTINY ? v->vaft - v->vfore : 0.0);
+	case VT_PLS:			/* planispheric fisheye */
+		x *= sqrt(v->hn2);
+		y *= sqrt(v->vn2);
+		d = x*x + y*y;
+		z = (1. - d)/(1. + d);
+		d = d <= FTINY*FTINY ? PI : sqrt((1.0 - z*z)/d);
 		x *= d;
 		y *= d;
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
@@ -214,9 +239,7 @@ FVECT  p;
 	double  d, d2;
 	FVECT  disp;
 
-	disp[0] = p[0] - v->vp[0];
-	disp[1] = p[1] - v->vp[1];
-	disp[2] = p[2] - v->vp[2];
+	VSUB(disp, p, v->vp);
 
 	switch (v->type) {
 	case VT_PAR:			/* parallel view */
@@ -265,9 +288,22 @@ FVECT  p;
 			ip[0] += 180.0/v->horiz;
 			return;
 		}
-		d = acos(d)/PI / sqrt(1.0 - d*d);
-		ip[0] += DOT(disp,v->hvec)*d*180.0/v->horiz;
-		ip[1] += DOT(disp,v->vvec)*d*180.0/v->vert;
+		d = (180.0/PI)*acos(d) / sqrt(1.0 - d*d);
+		ip[0] += DOT(disp,v->hvec)*d/v->horiz;
+		ip[1] += DOT(disp,v->vvec)*d/v->vert;
+		return;
+	case VT_PLS:			/* planispheric fisheye */
+		ip[0] = 0.5 - v->hoff;
+		ip[1] = 0.5 - v->voff;
+		ip[2] = normalize(disp) - v->vfore;
+		d = DOT(disp,v->vdir);
+		if (d >= 1.0-FTINY)
+			return;
+		if (d <= -(1.0-FTINY))
+			return;		/* really an error */
+		d = sqrt(1.0 - d*d) / (1.0 + d);
+		ip[0] += DOT(disp,v->hvec)*d/sqrt(v->hn2);
+		ip[1] += DOT(disp,v->vvec)*d/sqrt(v->vn2);
 		return;
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;

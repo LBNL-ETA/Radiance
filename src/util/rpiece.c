@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.47 2007/08/22 18:46:36 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.48 2008/03/11 02:21:47 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -437,10 +437,10 @@ rpiece(void)			/* render picture piece by piece */
 	pview = ourview;
 	switch (ourview.type) {
 	case VT_PER:
-		pview.horiz = 2.*180./PI*atan(
-				tan(PI/180./2.*ourview.horiz)/hmult );
-		pview.vert = 2.*180./PI*atan(
-				tan(PI/180./2.*ourview.vert)/vmult );
+		pview.horiz = (2.*180./PI)*atan(
+				tan((PI/180./2.)*ourview.horiz)/hmult );
+		pview.vert = (2.*180./PI)*atan(
+				tan((PI/180./2.)*ourview.vert)/vmult );
 		break;
 	case VT_PAR:
 	case VT_ANG:
@@ -449,14 +449,26 @@ rpiece(void)			/* render picture piece by piece */
 		break;
 	case VT_CYL:
 		pview.horiz = ourview.horiz / hmult;
-		pview.vert = 2.*180./PI*atan(
-				tan(PI/180./2.*ourview.vert)/vmult );
+		pview.vert = (2.*180./PI)*atan(
+				tan((PI/180./2.)*ourview.vert)/vmult );
 		break;
 	case VT_HEM:
-		pview.horiz = 2.*180./PI*asin(
-				sin(PI/180./2.*ourview.horiz)/hmult );
-		pview.vert = 2.*180./PI*asin(
-				sin(PI/180./2.*ourview.vert)/vmult );
+		pview.horiz = (2.*180./PI)*asin(
+				sin((PI/180./2.)*ourview.horiz)/hmult );
+		pview.vert = (2.*180./PI)*asin(
+				sin((PI/180./2.)*ourview.vert)/vmult );
+		break;
+	case VT_PLS:
+		pview.horiz = sin((PI/180./2.)*ourview.horiz) /
+				(1.0 + cos((PI/180./2.)*ourview.horiz)) / hmult;
+		pview.horiz *= pview.horiz;
+		pview.horiz = (2.*180./PI)*acos((1. - pview.horiz) /
+						(1. + pview.horiz));
+		pview.vert = sin((PI/180./2.)*ourview.vert) /
+				(1.0 + cos((PI/180./2.)*ourview.vert)) / vmult;
+		pview.vert *= pview.vert;
+		pview.vert = (2.*180./PI)*acos((1. - pview.vert) /
+						(1. + pview.vert));
 		break;
 	default:
 		fprintf(stderr, "%s: unknown view type '-vt%c'\n",

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.82 2005/12/08 17:06:11 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.83 2008/03/11 02:21:47 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1013,7 +1013,8 @@ specview(				/* get proper view spec from vs */
 		zpos = -1; vs++;
 	}
 	viewtype = 'v';
-	if((*vs == 'v') | (*vs == 'l') | (*vs == 'a') | (*vs == 'h') | (*vs == 'c'))
+	if ((*vs == 'v') | (*vs == 'l') | (*vs == 'a') |
+			(*vs == 'h') | (*vs == 'c') | (*vs == 's'))
 		viewtype = *vs++;
 	cp = viewopts;
 	if ((!*vs || isspace(*vs)) && (xpos|ypos|zpos)) {	/* got one! */

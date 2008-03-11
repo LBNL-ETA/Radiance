@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.7 2006/04/05 06:22:57 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.8 2008/03/11 02:21:47 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -307,6 +307,7 @@ printdefaults(void)			/* print default values to stdout */
 			ourview.type==VT_HEM ? "hemispherical" :
 			ourview.type==VT_ANG ? "angular" :
 			ourview.type==VT_CYL ? "cylindrical" :
+			ourview.type==VT_PLS ? "planisphere" :
 			"unknown");
 	printf("-vp %f %f %f\t# view point\n",
 			ourview.vp[0], ourview.vp[1], ourview.vp[2]);
