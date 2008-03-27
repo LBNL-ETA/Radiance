@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.9 2008/01/25 02:11:13 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.10 2008/03/27 01:40:30 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -254,7 +254,7 @@ load_BSDF(		/* load BSDF data from file */
 )
 {
 	char			*path;
-	ezxml_t			fl, wld, wdb;
+	ezxml_t			fl, wtl, wld, wdb;
 	struct BSDF_data	*dp;
 	
 	path = getpath(fname, getrlibpath(), R_OK);
@@ -270,13 +270,22 @@ load_BSDF(		/* load BSDF data from file */
 		return(NULL);
 	}
 	if (ezxml_error(fl)[0]) {
-		sprintf(errmsg, "BSDF \"%s\": %s", path, ezxml_error(fl));
+		sprintf(errmsg, "BSDF \"%s\" %s", path, ezxml_error(fl));
 		error(WARNING, errmsg);
 		ezxml_free(fl);
 		return(NULL);
 	}
+	if (strcmp(ezxml_name(fl), "WindowElement")) {
+		sprintf(errmsg,
+			"BSDF \"%s\": top level node not 'WindowElement'",
+				path);
+		error(WARNING, errmsg);
+		ezxml_free(fl);
+		return(NULL);
+	}
+	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
-	for (wld = ezxml_child(fl, "WavelengthData");
+	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
 		if (strcmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
 			continue;
