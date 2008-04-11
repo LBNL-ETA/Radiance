@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.10 2008/03/27 01:40:30 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.11 2008/04/11 20:07:12 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.10 2008/03/27 01:40:30 greg Exp
 
 #define MAXLATS		46		/* maximum number of latitudes */
 
-/* BSDF angle specification (terminate with nphi = -1) */
+/* BSDF angle specification */
 typedef struct {
 	char	name[64];		/* basis name */
 	int	nangles;		/* total number of directions */
@@ -77,10 +77,10 @@ ab_getvec(		/* get vector for this angle basis index */
 		ndx -= ab->lat[li].nphis;
 	alt = PI/180.*0.5*(ab->lat[li].tmin + ab->lat[li+1].tmin);
 	azi = 2.*PI*ndx/ab->lat[li].nphis;
-	d = sin(alt);
+	v[2] = d = cos(alt);
+	d = sqrt(1. - d*d);	/* sin(alt) */
 	v[0] = cos(azi)*d;
 	v[1] = sin(azi)*d;
-	v[2] = cos(alt);
 	return(1);
 }
 
@@ -151,6 +151,7 @@ ab_getvecR(		/* get reverse vector for this angle basis index */
 
 	v[0] = -v[0];
 	v[1] = -v[1];
+	v[2] = -v[2];
 
 	return(1);
 }
@@ -166,7 +167,7 @@ ab_getndxR(		/* get index corresponding to the reverse vector */
 	
 	v2[0] = -v[0];
 	v2[1] = -v[1];
-	v2[2] = v[2];
+	v2[2] = -v[2];
 
 	return ab_getndx(v2, p);
 }
@@ -192,8 +193,8 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 		if (!strcmp(cbasis, abase_list[i].name)) {
 			dp->ninc = abase_list[i].nangles;
 			dp->ib_priv = (void *)&abase_list[i];
-			dp->ib_vec = ab_getvec;
-			dp->ib_ndx = ab_getndx;
+			dp->ib_vec = ab_getvecR;
+			dp->ib_ndx = ab_getndxR;
 			dp->ib_ohm = ab_getohm;
 			break;
 		}
@@ -206,8 +207,8 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 		if (!strcmp(rbasis, abase_list[i].name)) {
 			dp->nout = abase_list[i].nangles;
 			dp->ob_priv = (void *)&abase_list[i];
-			dp->ob_vec = ab_getvecR;
-			dp->ob_ndx = ab_getndxR;
+			dp->ob_vec = ab_getvec;
+			dp->ob_ndx = ab_getndx;
 			dp->ob_ohm = ab_getohm;
 			break;
 		}
