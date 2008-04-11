@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.4 2008/02/22 21:52:10 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.5 2008/04/11 22:06:04 greg Exp $";
 #endif
 
 /*
@@ -22,7 +22,9 @@ extern char	*progname;	/* global argv[0] */
 extern int	nowarn;         /* don't report warnings? */
 
 				/* current sensor's perspective */
-VIEW		ourview = STDVIEW;
+VIEW		ourview =  {VT_ANG,{0.,0.,0.},{0.,0.,1.},{1.,0.,0.},
+                                1.,180.,180.,0.,0.,0.,0.,
+                                {0.,0.,0.},{0.,0.,0.},0.,0.};
 
 unsigned long	nsamps = 10000;	/* desired number of initial samples */
 unsigned long	nssamps = 9000;	/* number of super-samples */
@@ -473,11 +475,13 @@ comp_sensor(
 	setcolor(vsum, .0f, .0f, .0f);
 	nt = (int)(sqrt((double)nsamps*ntheta/nphi) + .5);
 	np = nsamps/nt;
-	VCOPY(rr.rorg, ourview.vp);
-	rr.rmax = .0;
 	for (i = 0; i < nt; i++)
 		for (j = 0; j < np; j++) {
+			VCOPY(rr.rorg, ourview.vp);
 			get_direc(rr.rdir, (i+frandom())/nt, (j+frandom())/np);
+			if (ourview.vfore > FTINY)
+				VSUM(rr.rorg, rr.rorg, rr.rdir, ourview.vfore);
+			rr.rmax = .0;
 			rayorigin(&rr, PRIMARY, NULL, NULL);
 			if (ray_pqueue(&rr) == 1)
 				addcolor(vsum, rr.rcol);
