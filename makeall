@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.22 2006/11/05 01:51:16 greg Exp $
+# RCSid $Id: makeall,v 1.23 2008/04/17 14:58:57 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -171,6 +171,8 @@ case 6:			# Linux
 	breaksw
 case 7:			# MacOS X
 	set mach="-DBSD -DNOSTEREO -Dfreebsd -I/usr/X11R6/include -L/usr/X11R6/lib"
+	# Ugly fix for Leopard OpenGL link bug:
+	if (`uname -r` =~ 9.*) set mach="$mach -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
 	set opt="-O2"
 	set arch=PowerPC
 	set extras="CC=cc CONFIGURE_ARCH=powerpc"
