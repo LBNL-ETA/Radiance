@@ -1663,3 +1663,7 @@ Corporation in Boulder, CO, and directed by Zack Rogers.
 
 Added "planisphere" (stereographic) fisheye view type for traditional
 daylighting analysis.  Feature requested & explained by Axel Jacobs.
+
+Modified -c option to rtcontrib so it can take a number of input
+rays to average over, rather than only produce a single accumulated
+record (which can now be done with -c 0).

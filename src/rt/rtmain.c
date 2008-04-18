@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.15 2007/09/13 20:02:11 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.16 2008/04/18 18:06:29 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -426,8 +426,8 @@ printdefaults(void)			/* print default values to stdout */
 
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
-	printf("-x  %-9d\t\t\t# x resolution (flush interval)\n", hresolu);
-	printf("-y  %-9d\t\t\t# y resolution\n", vresolu);
+	printf("-x %-9d\t\t\t# x resolution (flush interval)\n", hresolu);
+	printf("-y %-9d\t\t\t# y resolution\n", vresolu);
 	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
 			"-ld-\t\t\t\t# limit distance off\n");
 	printf("-h%c\t\t\t\t# %s header\n", loadflags & IO_INFO ? '+' : '-',

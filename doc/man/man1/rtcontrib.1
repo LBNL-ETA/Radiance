@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.17 2007/11/17 01:13:50 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.18 2008/04/18 18:06:29 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -9,7 +9,7 @@ rtcontrib - compute contribution coefficients in a RADIANCE scene
 ][
 .B \-V
 ][
-.B \-c
+.B "\-c count"
 ][
 .B \-fo
 |
@@ -58,6 +58,17 @@ this file.
 (No search takes place if a file name begins with a '.', '/' or '~'
 character.)\0
 .PP
+If the
+.I \-n
+option is specified with a value greater than 1, multiple
+.I rtrace
+processes will be used to accelerate computation on a shared
+memory machine.
+Note that there is no benefit to using more processes
+than there are local CPUs available to do the work, and the
+.I rtcontrib
+process itself may use a considerable amount of CPU time.
+.PP
 By setting the boolean
 .I \-V
 option, you may instruct
@@ -86,6 +97,26 @@ rather than radiance, and
 .I \-V-
 coefficients contain an additonal factor of PI.
 .PP
+The
+.I \-c
+option tells
+.I rtcontrib
+how many rays to accumulate for each record.
+The default value is 1, meaning a full record will be produced for
+each input ray.
+For values greater than 1, contributions will be averaged together
+over the given number of input rays.
+If set to zero, only a single record will be produced at the very
+end, corresponding to the sum of all rays given on the input
+(rather than the average).
+This is equivalent to passing all the output records through a program like
+.I total(1)
+to sum RGB values together, but is much more efficient.
+Using this option, it is possible to reverse sampling, sending rays from
+a parallel source such as the sun to a diffuse surface, for example.
+Note that output flushing via zero-direction rays is disabled
+for accumulated evaluations.
+.PP
 The output of
 .I rtcontrib
 has many potential uses.
@@ -96,21 +127,6 @@ More generally,
 .I rtcontrib
 can be used to compute arbitrary input-output relationships in optical
 systems, such as luminaires, light pipes, and shading devices.
-.PP
-Setting the
-.I \-c
-option instructs
-.I rtcontrib
-to accumulate values rather than reporting one record per ray.
-With this option, only a single record will be produced at the very
-end, corresponding to the sum of all rays given on the input.
-This is equivalent to passing all the output records through a program like
-.I total(1)
-to sum RGB values together, but is much more efficient.
-Using this option, it is possible to reverse sampling, sending rays from
-a parallel source such as the sun to a diffuse surface, for example.
-Care must be taken to perform normalization based on the
-radiation density and the number of rays sampled.
 .PP
 .I Rtcontrib
 calls
@@ -130,7 +146,7 @@ If instead the
 .I \-r
 option is specified, data recovery is attempted on existing files.
 (If 
-.I \-c
+.I "\-c 0"
 is used together with the
 .I \-r
 option, existing files are read in and new ray evaluations are added
@@ -242,17 +258,6 @@ will produce an uncompressed RADIANCE picture,
 suitable for manipulation with
 .I pcomb(1)
 and related tools.
-.PP
-If the
-.I \-n
-option is specified with a value greater than 1, multiple
-.I rtrace
-processes will be used to accelerate computation on a shared
-memory machine.
-Note that there is no benefit to using more processes
-than there are local CPUs available to do the work, and the
-.I rtcontrib
-process itself may use a considerable amount of CPU time.
 .PP
 Options may be given on the command line and/or read from the
 environment and/or read from a file.

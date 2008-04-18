@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.48 2007/11/17 16:27:14 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.49 2008/04/18 18:06:29 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -131,12 +131,13 @@ int		inpfmt = 'a';		/* input format */
 int		outfmt = 'a';		/* output format */
 
 int		header = 1;		/* output header? */
-int		accumulate = 0;		/* accumulate ray values? */
 int		force_open = 0;		/* truncate existing output? */
 int		recover = 0;		/* recover previous output? */
+int		accumulate = 1;		/* input rays per output record */
 int		xres = 0;		/* horiz. output resolution */
 int		yres = 0;		/* vert. output resolution */
 
+int		account;		/* current accumulation count */
 unsigned long	raysleft;		/* number of rays left to trace */
 long		waitflush;		/* how long until next flush */
 
@@ -166,7 +167,7 @@ void process_queue(void);
 
 void put_contrib(const DCOLOR cnt, FILE *fout);
 void add_contrib(const char *modn);
-void done_contrib(void);
+void done_contrib(int navg);
 
 /* return number of open rtrace processes */
 static int
@@ -274,23 +275,10 @@ main(int argc, char *argv[])
 					continue;
 				}
 				break;
-			case 'c':		/* accumulate ray values */
-				switch (argv[i][2]) {
-				case '\0':
-					accumulate = !accumulate;
-					continue;
-				case '+': case '1':
-				case 'T': case 't':
-				case 'Y': case 'y':
-					accumulate = 1;
-					continue;
-				case '-': case '0':
-				case 'F': case 'f':
-				case 'N': case 'n':
-					accumulate = 0;
-					continue;
-				}
-				break;
+			case 'c':		/* input rays per output */
+				if (argv[i][2] || i >= argc-2) break;
+				accumulate = atoi(argv[++i]);
+				continue;
 			case 'r':		/* recover output */
 				if (argv[i][2]) break;
 				recover = 1;
@@ -380,7 +368,7 @@ main(int argc, char *argv[])
 			}
 		rtargv[rtargc++] = argv[i];	/* assume rtrace option */
 	}
-	if (accumulate)		/* no output flushing for single record */
+	if (accumulate <= 0)	/* no output flushing for single record */
 		xres = yres = 0;
 				/* set global argument list */
 	gargc = argc; gargv = argv;
@@ -392,12 +380,11 @@ main(int argc, char *argv[])
 	if (!strcmp(argv[i], "-defaults")) {
 		char	sxres[16], syres[16];
 		char	*rtpath;
-		printf("-n  %-2d\t\t\t\t# number of processes\n", nprocs);
+		printf("-n %-2d\t\t\t\t# number of processes\n", nprocs);
+		printf("-c %-5d\t\t\t# accumulated rays per record\n",
+				accumulate);
 		printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
 				contrib ? "contributions" : "coefficients");
-		printf("-c%c\t\t\t\t# %s\n", accumulate ? '+' : '-',
-				accumulate ? "accumulate ray values" :
-					"one output record per ray");
 		fflush(stdout);			/* report OUR options */
 		rtargv[rtargc++] = header ? "-h+" : "-h-";
 		sprintf(fmt, "-f%c%c", inpfmt, outfmt);
@@ -554,11 +541,13 @@ init(int np)
 			raysleft = yres;
 	} else
 		raysleft = 0;
+	if ((account = accumulate) > 0)
+		raysleft *= accumulate;
 	waitflush = xres;
 	if (!recover)
 		return;
 					/* recover previous values */
-	if (accumulate)
+	if (accumulate <= 0)
 		reload_output();
 	else
 		recover_output(stdin);
@@ -813,12 +802,12 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			*cp = '\0';
 			printheader(sop->ofp, info);
 		}
-		if (!accumulate) {		/* global res. for -c- */
+		if (accumulate > 0) {		/* global resolution */
 			sop->xr = xres; sop->yr = yres;
 		}
 		printresolu(sop->ofp, sop->xr, sop->yr);
 						/* play catch-up */
-		for (i = accumulate ? 0 : lastdone; i--; ) {
+		for (i = accumulate > 0 ? lastdone/accumulate : 0; i--; ) {
 			int	j = sop->reclen;
 			if (j <= 0) j = 1;
 			while (j--)
@@ -960,14 +949,21 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 
 /* output ray tallies and clear for next accumulation */
 void
-done_contrib(void)
+done_contrib(int navg)
 {
+	double		sf = 1.;
 	int		i, j;
 	MODCONT		*mp;
 	STREAMOUT	*sop;
+						/* set average scaling */
+	if (navg > 1)
+		sf = 1. / (double)navg;
 						/* output modifiers in order */
 	for (i = 0; i < nmods; i++) {
 		mp = (MODCONT *)lu_find(&modconttab,modname[i])->data;
+		if (navg > 1)			/* average scaling */
+			for (j = mp->nbins; j--; )
+				scalecolor(mp->cbin[j], sf);
 		sop = getostream(mp->outspec, mp->modname, 0,0);
 		put_contrib(mp->cbin[0], sop->ofp);
 		if (mp->nbins > 3 &&		/* minor optimization */
@@ -1051,8 +1047,9 @@ process_queue(void)
 			cp += sizeof(float)*9; n -= sizeof(float)*9;
 			add_contrib(modname);
 		}
-		if (!accumulate)
-			done_contrib();	/* sum up contributions & output */
+					/* time to produce record? */
+		if (account > 0 && !--account)
+			done_contrib(account = accumulate);
 		lastdone = rtp->raynum;
 		if (rtp->buf != NULL)	/* free up buffer space */
 			free(rtp->buf);
@@ -1139,11 +1136,18 @@ get_rproc(void)
 void
 trace_contribs(FILE *fin)
 {
+	static int	ignore_warning_given = 0;
 	char		inpbuf[128];
 	int		iblen;
 	struct rtproc	*rtp;
 						/* loop over input */
 	while ((iblen = getinp(inpbuf, fin)) >= 0) {
+		if (!iblen && accumulate != 1) {
+			if (!ignore_warning_given++)
+				error(WARNING,
+				"dummy ray(s) ignored during accumulation\n");
+			continue;
+		}
 		if (!iblen ||			/* need reset? */
 				queue_length() > 10*nrtprocs() ||
 				lastray+1 < lastray) {
@@ -1167,8 +1171,12 @@ trace_contribs(FILE *fin)
 	}
 	while (wait_rproc() != NULL)		/* process outstanding rays */
 		process_queue();
-	if (accumulate)
-		done_contrib();			/* output tallies */
+	if (accumulate <= 0)
+		done_contrib(0);		/* output tallies */
+	else if (account < accumulate) {
+		error(WARNING, "partial accumulation in final record");
+		done_contrib(accumulate - account);
+	}
 	if (raysleft)
 		error(USER, "unexpected EOF on input");
 	lu_done(&ofiletab);			/* close output files */
@@ -1463,7 +1471,7 @@ recover_output(FILE *fin)
 		error(WARNING, "no output files to recover");
 		return;
 	}
-	if (raysleft && lastout >= raysleft) {
+	if (raysleft && lastout >= raysleft/accumulate) {
 		error(WARNING, "output appears to be complete");
 		/* XXX should read & discard input? */
 		quit(0);
@@ -1475,7 +1483,7 @@ recover_output(FILE *fin)
 	for (nvals = 0; nvals < lastout; nvals++)
 		if (getinp(oname, fin) < 0)
 			error(USER, "unexpected EOF on input");
-	lastray = lastdone = (unsigned long)lastout;
+	lastray = lastdone = (unsigned long)lastout * accumulate;
 	if (raysleft)
 		raysleft -= lastray;
 }
