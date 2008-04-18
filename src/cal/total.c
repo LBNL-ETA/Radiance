@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.5 2005/10/08 04:18:16 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.6 2008/04/18 16:32:27 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: total.c,v 1.5 2005/10/08 04:18:16 greg Exp $";
 #include  <math.h>
 #include  "platform.h"
 
-#define  MAXCOL		256		/* maximum number of columns */
+#define  MAXCOL		2048		/* maximum number of columns */
 
 #define  ADD		0		/* add numbers */
 #define  MULT		1		/* multiply numbers */

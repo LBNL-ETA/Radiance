@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: histo.c,v 1.4 2003/12/14 16:33:37 greg Exp $";
+static const char	RCSid[] = "$Id: histo.c,v 1.5 2008/04/18 16:32:27 greg Exp $";
 #endif
 /*
  * Compute a histogram from input data
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: histo.c,v 1.4 2003/12/14 16:33:37 greg Exp $";
 #include <math.h>
 #include <ctype.h>
 
-#define MAXCOL		64		/* maximum number of input columns */
+#define MAXCOL		2048		/* maximum number of input columns */
 #define MAXDIV		1024
 
 #define isint(x)	(floor((x)+1e-6) != floor((x)-1e-6))
