@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.7 2007/12/13 07:03:36 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.8 2008/04/18 00:39:24 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -221,8 +221,8 @@ BSDF data specified with the
 variable.
 The BSDF will be reoriented relative to the surface as necessary to keep
 the up vector in the vertical plane that contains this axis and the
-surface normal.
-The default value is +Z.
+surface normal, corresponding to an azimuth of 90 degrees.
+The default up vector is +Z.
 .TP
 .BI t =real
 Set the surface thickness to
