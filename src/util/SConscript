@@ -15,11 +15,11 @@ Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 PROGS = [
 ('findglare', Split('findglare.c glareval.c glaresrc.c setscan.c'),
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem','rterror']),
-('glarendx',  Split('glarendx.c'), ['rtpic','rtio','rtargs','rtmath']),
-('vwright',   Split('vwright.c'),  ['rtpic','rtio','rtargs','rtmath']),
-('vwrays',    Split('vwrays.c'),   ['rtpic','rtio','rtargs','rtmath']),
+('glarendx',  Split('glarendx.c'), ['rtpic','rtargs','rtio','rtmath']),
+('vwright',   Split('vwright.c'),  ['rtpic','rtargs','rtio','rtmath']),
+('vwrays',    Split('vwrays.c'),   ['rtpic','rtargs','rtio','rtmath']),
 ('rad',       Split('rad.c'),
-	['rtpic','rtproc','rtpath','rtio','rtmath','rtargs','rtcont','rtmem','rterror']),
+	['rtpic','rtproc','rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']),
 ('rpiece',    Split('rpiece.c') + [Version],
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
 ('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'],
@@ -34,14 +34,22 @@ for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	progs.append(prog)
 
-if os.name != 'nt': # XXX pending Windows version of raypcalls.c
+#if os.name != 'nt': # XXX pending Windows version of raypcalls.c
+if True: # experimental raypwin.c
 	# targets with different includes/libs
 	rs = Split('ranimove.c ranimove1.c ranimove2.c')
 	ranimove = env.Program(target=radbin('ranimove'), source=rs,
 			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
-			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtio',
-			'rtmath','rtcont','rtmem','rtargs','rtproc','rtpath','rterror'] + mlib)
+			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
+			'rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
+			+ mlib)
 	progs.append(ranimove)
+	rsensor = env.Program(target=radbin('rsensor'), source='rsensor.c',
+			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
+ 			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
+			'rtcont','rtmem','rtargs','rtio','rtpath','rterror','rtproc',
+			'rtlamps'] + mlib)
+	progs.append(rsensor)
 
 getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
 		LIBS=['rtio'])
@@ -65,7 +73,7 @@ if env.has_key('X11LIB'):
 		glrad = env.Program(target=radbin('glrad'), source=Split('glrad.c'),
 			CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
 			LIBPATH=xlibp, CPPPATH=xincl,
-			LIBS=['rgl','rtpic','rtscene','rtio','rtproc','rtpath','rtargs',
+			LIBS=['rgl','rtpic','rtscene','rtproc','rtpath','rtargs','rtio',
 			'rtmath','rtcont','rtmem','rterror',
 			'GL', 'GLU','X11'],)
 		progs.append(glrad)

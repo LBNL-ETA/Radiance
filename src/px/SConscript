@@ -18,27 +18,27 @@ neuclrtab = env.Object(source="neuclrtab.c")
 PROGS = (
 # name          files            libs
 ('macbethcal', Split('macbethcal.c pmapgen.c mx3.c')+[warp3d],
-	['rtpic','rtproc','rtpath','rtio','rtargs','rtcont','rtmem','rterror']),
+	['rtpic','rtproc','rtpath','rtargs','rtio','rtcont','rtmem','rterror']),
 ('pcond',    Split('pcond.c pcond2.c pcond3.c pcond4.c')+[warp3d],
-	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtcont','rtmem','rterror']),
+	['rtpic','rtproc','rtpath','rtargs','rtio','rtmath','rtcont','rtmem','rterror']),
 ('pfilt',    Split('pfilt.c pf2.c pf3.c'),
-	['rtlamps','rtpic','rtio','rtpath','rtargs','rtmath']),
+	['rtlamps','rtpic','rtpath','rtargs','rtio','rtmath']),
 ('pcwarp',   ['pcwarp.c', warp3d], 	 
 	['rtpic','rtio','rtcont','rtmem','rterror']),
-('pvalue',   ['pvalue.c'],    ['rtpic','rtio','rtargs','rtmath']),
+('pvalue',   ['pvalue.c'],    ['rtpic','rtargs','rtio','rtmath']),
 ('pcompos',  ['pcompos.c'],   ['rtpic','rtproc','rtpath','rtio','rterror']),
 ('psign',    ['psign.c'],
-	['rtpic','rtscene','rtio','rtpath','rtargs','rtcont','rtmem','rterror']),
+	['rtpic','rtscene','rtpath','rtargs','rtio','rtcont','rtmem','rterror']),
 ('protate',  ['protate.c'],   ['rtpic','rtio']),
 ('pextrem',  ['pextrem.c'],   ['rtpic','rtio']),
 ('pflip',    ['pflip.c'],     ['rtpic','rtio']),
 ('pcomb',    ['pcomb.c'],
-	['rtpic','rtproc','rtpath','rtio','rtfunc','rtargs','rtmath','rtcont','rtmem']),
+	['rtpic','rtproc','rtpath','rtfunc','rtargs','rtio','rtmath','rtcont','rtmem']),
 ('pinterp',  ['pinterp.c'],
-	['rtproc','rtpic','rtio','rtpath','rtargs','rtmath','rtmem','rterror']),
+	['rtproc','rtpic','rtpath','rtargs','rtio','rtmath','rtmem','rterror']),
 
 ('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
-('ra_ps',    ['ra_ps.c'],     ['rtpic','rtio','rtargs','rtmem']),
+('ra_ps',    ['ra_ps.c'],     ['rtpic','rtargs','rtio','rtmem']),
 ('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
 ('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtproc','rtio','rtmem']),
 ('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
@@ -93,7 +93,7 @@ if os.name == 'posix':
 if env.has_key('X11LIB'):
     xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
     xlibp = env.get('LIBPATH', []) + ['$X11LIB']
-    xlibs = ['X11','rtpic','rtio','rtmath','rtargs','rtmem']
+    xlibs = ['X11','rtpic','rtargs','rtio','rtmath','rtmem']
     x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
         CPPPATH=xincl)
 

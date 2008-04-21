@@ -23,7 +23,7 @@ RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c')+ RTCOLOR + RTTMAP
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
 RTCONT = Split('''lookup.c savestr.c savqstr.c''')
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
-		zeroes.c dircode.c clip.c multisamp.c plocate.c'''
+		zeroes.c dircode.c clip.c multisamp.c plocate.c byteswap.c'''
 		) + env.get('RAD_MATHCOMPAT', [])
 RTFUNC = Split('''biggerlib.c caldefn.c calexpr.c calfunc.c calprnt.c
 		chanvalue.c''')

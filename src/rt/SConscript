@@ -39,14 +39,15 @@ env.Depends('Version.c', rsrc)
 Version = env.Object(source=['Version.c'])
 rlib = env.Library(target=radlib('rttrace'), source=rsrc + [Version])
 
-if os.name == 'nt': # XXX until we get around fork() and friends
-	rcsrc = Split('raycalls.c')
-else: rcsrc = Split('raycalls.c raypcalls.c')
+#if os.name == 'nt': # XXX until we get around fork() and friends
+#	rcsrc = Split('raycalls.c')
+#else: rcsrc = Split('raycalls.c raypcalls.c')
+rcsrc = Split('raycalls.c $RAD_PCALLS')
 rclib = env.Library(target=radlib('raycalls'), source=rcsrc)
 Default(rclib)
 
-fullib=['rttrace', 'rtscene', 'rtpic', 'rtfunc', 'rtproc', 'rtio', 'rtmath',
-	'rtargs', 'rtpath', 'rtcont', 'rtmem', 'rterror']
+fullib=['rttrace', 'rtscene', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
+	'rtargs', 'rtpath', 'rtio', 'rtcont', 'rtmem', 'rterror']
 # build executables
 lasrc = ['lookamb.c', ambio]
 lookamb = env.Program(target=radbin('lookamb'), source=lasrc,

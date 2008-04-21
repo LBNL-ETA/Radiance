@@ -26,7 +26,9 @@ def read_plat(env, args, fn):
 			'RAD_NETCOMPAT',  # [win_]netproc.c for ranimate
 			'RAD_MLIB',       # usually 'm', or any fastlib available
 			'RAD_SOCKETLIB',  # ws_2_32 on Windows (VC links it automatically)
-			'RAD_PROCESS']],  # our process abstraction and win_popen()
+			'RAD_PROCESS',    # our process abstraction and win_popen()
+			'RAD_PCALLS',     # more custom process abstraction
+			]],
 	]
 	if args.get('RAD_DEBUG',0):
 		vars.insert(0, ['debug'] + buildvars)

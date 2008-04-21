@@ -14,7 +14,7 @@ PROGS = (
 )
 for p in PROGS:
     prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
-			source=p[1], LIBS=['rtproc','rtscene','rtio','rtpath','rtmath',
+			source=p[1], LIBS=['rtproc','rtscene','rtpath','rtio','rtmath',
 			'rtargs','rtcont','rtmem','rterror']+mlib)
     Default(prog)
     env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])

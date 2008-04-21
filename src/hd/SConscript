@@ -17,11 +17,11 @@ Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
 PROGS = (
 ('rholo', Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c''')
 	 + [Version, holofile, holo, viewbeams],
-	['rtpic','rtio','rtproc','rtpath','rtargs','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtmem','rterror']),
 ('rhpict', Split('rhpict.c rhpict2.c')+[Version, holofile, holo, viewbeams],
-	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
 ('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo],
-	['rtpic','rtio','rtproc','rtargs','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
 ('rhinfo', Split('rhinfo.c') + [holofile, holo],
 	['rtio','rtproc', 'rtmath','rterror']),
 ('rhoptimize', Split('rhoptimize.c') + [clumpbeams, holofile, holo],
@@ -53,7 +53,7 @@ if env.has_key('X11INCLUDE'):
 	# XXX the .hdi extension will cause problems on Windows
 	xenv['PROGSUFFIX'] = '.hdi'
 
-	dlibs = ['rtpic','rtio','rtmath','rtcont','rtmem','rtargs','rterror']
+	dlibs = ['rtpic','rtmath','rtcont','rtmem','rtargs','rtio','rterror']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
 		prog = xenv.Program(target=os.path.join(devdir, p[0]),

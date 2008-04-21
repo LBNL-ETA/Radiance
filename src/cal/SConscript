@@ -9,7 +9,7 @@ PROGS = (
 # name     sources             libs
 ('icalc',  Split('calc.c'),    ['rtfunc','rtmem','rtcont'] + mlib),
 ('ev',     Split('ev.c'),      ['rtfunc','rtmem','rtcont'] + mlib),
-('rcalc',  Split('rcalc.c'),   ['rtfunc','rtmem','rtcont'] + mlib),
+('rcalc',  Split('rcalc.c'),   ['rtfunc','rtmem','rtcont','rtmath'] + mlib),
 ('total',  Split('total.c'),   mlib),
 ('cnt',    Split('cnt.c'),     []),
 ('neaten', Split('neat.c'),    []),

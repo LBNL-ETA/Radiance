@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.84 2008/03/11 12:42:07 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.85 2008/04/21 07:31:30 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1483,8 +1483,8 @@ wait_process(			/* wait for process(es) to finish */
 	int	all
 )
 {
-	int	ourstatus = 0;
-	RT_PID	pid, status;
+	int	ourstatus = 0, status;
+	RT_PID	pid;
 
 	if (all)
 		all = children_running;
@@ -1521,7 +1521,8 @@ int	all;
 }
 int
 kill(pid, sig) /* win|unix_process.c should also wait and kill */
-RT_PID pid, sig;
+RT_PID pid;
+int sig;
 {
 	return 0;
 }
