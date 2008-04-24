@@ -108,7 +108,7 @@ if env.has_key('X11LIB'):
     progs.append(xshowtrace)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
-	for s in Split('''normpat falsecolor pdfblur pmblur pmdblur
+	for s in Split('''normpat falsecolor pdfblur pmblur pmdblur pbilat
 			xyzimage phisto pdelta pgblur ra_pfm ran2tiff'''):
 		Default(env.InstallCsh(radbin(s), s + '.csh'))
 # XXX probably needs fixing

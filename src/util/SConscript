@@ -9,7 +9,7 @@ progs = []
 def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
 def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 
-Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
+Version = env.Object(source='#src/rt/Version.c')
 
 # standard targets
 PROGS = [
@@ -60,8 +60,7 @@ progs.append(getinfo)
 if env.has_key('X11LIB'):
 	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
 	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
-	x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
-			CPPPATH=xincl)
+	x11findwind = env.Object(source='#src/common/x11findwind.c', CPPPATH=xincl)
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
 			source=Split('xglaresrc.c') + [x11findwind],
 			LIBPATH=xlibp, CPPPATH=xincl,

@@ -12,7 +12,9 @@ def read_plat(env, args, fn):
 	cfig.read(fn)
 	buildvars = [['CC'], # replace
 			['CPPPATH', 'CPPDEFINES', 'CPPFLAGS', 'CCFLAGS',
-			'LIBPATH', 'LINKFLAGS']] # append
+			'LIBPATH', 'LINKFLAGS',
+			'EZXML_CPPDEFINES', # build flags specific to ezxml.c
+			]] # append
 	vars = [
 		['install',
 			['RAD_BASEDIR', 'RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR'],
@@ -20,7 +22,7 @@ def read_plat(env, args, fn):
 		['code',
 			[], # replace
 			[   # append
-			'RAD_COMPAT',    # currently obsolete
+			'RAD_COMPAT',     # theoretically obsolete (src/common/strcmp.c)
 			'RAD_MATHCOMPAT', # erf.c floating point error function
 			'RAD_ARGSCOMPAT', # fixargv0.c for Windows
 			'RAD_NETCOMPAT',  # [win_]netproc.c for ranimate
