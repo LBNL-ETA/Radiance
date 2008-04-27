@@ -16,7 +16,7 @@ neuclrtab = env.Object(source="neuclrtab.c")
 
 # standard targets
 PROGS = (
-# name          files            libs
+# name       files            libs
 ('macbethcal', Split('macbethcal.c pmapgen.c mx3.c')+[warp3d],
 	['rtpic','rtproc','rtpath','rtargs','rtio','rtcont','rtmem','rterror']),
 ('pcond',    Split('pcond.c pcond2.c pcond3.c pcond4.c')+[warp3d],
@@ -40,7 +40,8 @@ PROGS = (
 ('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
 ('ra_ps',    ['ra_ps.c'],     ['rtpic','rtargs','rtio','rtmem']),
 ('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
-('ra_bmp',   ['ra_bmp.c'],    ['rtpic','rtproc','rtio','rtmem']),
+('ra_bmp',   ['ra_bmp.c'],
+	['rtpic','rtproc','rterror','rtpath','rtio','rtmem']),
 ('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
 ('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
 ('ra_rgbe', ['ra_rgbe.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),

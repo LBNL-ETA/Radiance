@@ -49,7 +49,7 @@ prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mkillum'),
 prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mksource'),
 		source=['mksource.c'],
 		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
-		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc',
+		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtproc',
 		'rtmath','rtcont','rtmem','rtargs','rtio','rtpath','rterror'] + mlib)
 progs.append(prog)
 
