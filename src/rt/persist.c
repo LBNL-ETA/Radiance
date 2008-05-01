@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.40 2008/04/27 17:22:49 schorsch Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.41 2008/05/01 15:50:28 greg Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -157,12 +157,6 @@ pfhold(void)		/* holding pattern for idle rendering process */
 	signal(SIGIO, SIG_DFL);
 	pflock(1);			/* grab persist file back */
 				/* someone wants us; reopen stdin and stdout */
-	/*
-	if (freopen(inpname, "r", stdin) == NULL)
-		goto openerr;
-	if (freopen(outpname, "w", stdout) == NULL)
-		goto openerr;
-	*/
 	close(0);
 	if (open(inpname, O_RDONLY) != 0)
 		error(INTERNAL, "unexpected stdin file number");
@@ -185,8 +179,6 @@ pfhold(void)		/* holding pattern for idle rendering process */
 	return;
 createrr:
 	error(SYSTEM, "cannot create named pipes in pfhold");
-openerr:
-	error(SYSTEM, "cannot open named pipes in pfhold");
 }
 
 

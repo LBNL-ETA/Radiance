@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.13 2004/09/20 16:26:58 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.14 2008/05/01 15:50:28 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -97,7 +97,7 @@ comm_init(			/* set up and execute driver */
 		close(p2[0]);
 		sprintf(pin, "%d", p1[0]);
 		sprintf(pout, "%d", p2[1]);
-		execl(dvcname, dname, pin, pout, id, 0);
+		execl(dvcname, dname, pin, pout, id, NULL);
 		perror(dvcname);
 		_exit(127);
 	}
