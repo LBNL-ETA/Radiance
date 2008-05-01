@@ -1,4 +1,4 @@
-/* RCSid: $Id: glare.h,v 2.6 2004/01/02 12:51:54 schorsch Exp $ */
+/* RCSid: $Id: glare.h,v 2.7 2008/05/01 16:42:06 greg Exp $ */
 /*
  * Common data structures for glare source finding routines
  */
@@ -77,7 +77,7 @@ extern struct source {
 extern long	npixinvw;	/* number of samples in view */
 extern long	npixmiss;	/* number of samples missing */
 
-	/* defined in findglare.c */;
+	/* defined in findglare.c */
 extern void memerr(char	*s);
 extern int compdir(FVECT vd, int x, int y);
 extern double pixsize(int x, int y);

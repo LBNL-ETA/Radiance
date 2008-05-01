@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.22 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.23 2008/05/01 16:42:05 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -647,7 +647,7 @@ getdefn(void)
 
     if (ep1->type == SYM && ep1->sibling->type != NUM) {
 	ep1 = newnode();
-	ep1->type = TICK;
+	ep1->type = CLKT;
 	ep1->v.tick = 0;
 	addekid(ep2, ep1);
 	ep1 = newnode();

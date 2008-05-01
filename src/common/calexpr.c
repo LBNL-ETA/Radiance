@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.31 2006/05/10 15:21:20 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.32 2008/05/01 16:42:05 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -145,7 +145,7 @@ epcmp(			/* compare two expressions for equivalence */
 	case ':':
 		return(epcmp(ep1->v.kid->sibling, ep2->v.kid->sibling));
 
-	case TICK:
+	case CLKT:
 	case SYM:			/* should never get this one */
 		return(0);
 
@@ -185,7 +185,7 @@ epfree(			/* free a parse tree */
 	case NUM:
 	case CHAN:
 	case ARG:
-	case TICK:
+	case CLKT:
 	    break;
 
 	default:

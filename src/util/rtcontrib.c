@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.49 2008/04/18 18:06:29 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.50 2008/05/01 16:42:06 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1218,9 +1218,10 @@ myclose(const LUENT *e, void *p)
 	STREAMOUT	*sop = (STREAMOUT *)e->data;
 	
 	if (sop->ofp == NULL)
-		return;
+		return(0);
 	fclose(sop->ofp);
 	sop->ofp = NULL;
+	return(0);
 }
 
 /* load previously accumulated values */

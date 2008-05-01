@@ -1,4 +1,4 @@
-/* RCSid $Id: tiffio.h,v 3.15 2006/03/10 16:43:39 greg Exp $ */
+/* $Id: tiffio.h,v 3.16 2008/05/01 16:42:06 greg Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

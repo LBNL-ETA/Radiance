@@ -1,4 +1,4 @@
-/* RCSid $Id: calcomp.h,v 2.21 2005/09/23 19:04:52 greg Exp $ */
+/* RCSid $Id: calcomp.h,v 2.22 2008/05/01 16:42:05 greg Exp $ */
 /*
  *  calcomp.h - header file for expression parser.
  */
@@ -17,7 +17,7 @@ extern "C" {
 #define	 CHAN		4
 #define	 FUNC		5
 #define	 ARG		6
-#define	 TICK		7
+#define	 CLKT		7
 #define	 SYM		8
 				/* also: '+', '-', '*', '/', '^', '=', ':' */
 

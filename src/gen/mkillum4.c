@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.11 2008/04/11 20:07:12 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.12 2008/05/01 16:42:06 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.11 2008/04/11 20:07:12 greg Exp
 #include "mkillum.h"
 #include "paths.h"
 #include "ezxml.h"
+#include <ctype.h>
 
 #define MAXLATS		46		/* maximum number of latitudes */
 
