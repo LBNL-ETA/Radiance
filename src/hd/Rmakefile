@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.32 2008/05/07 15:53:03 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.33 2008/05/12 16:46:46 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -73,7 +73,7 @@ genrhgrid:	genrhgrid.o holo.o
 
 $(DEVDIR)/x11h.hdi:	$(DEVDIR)/x11.hdi
 	rm -f $(DEVDIR)/x11h.hdi
-	$(LN) x11.hdi $(DEVDIR)/x11h.hdi
+	$(LN) $(DEVDIR)/x11.hdi $(DEVDIR)/x11h.hdi
 
 $(DEVDIR)/x11.hdi:	rhdisp.o rhdisp2.o viewbeams.o rhd_x11.o rhd_qtree.o \
 rhd_qtree2r.o rhd_ctab.o holo.o
@@ -82,35 +82,35 @@ rhd_x11.o rhd_qtree.o rhd_qtree2r.o rhd_ctab.o holo.o -lrtrad -lX11 $(MLIB)
 
 $(DEVDIR)/glx1h.hdi:	$(DEVDIR)/glx1.hdi
 	rm -f $(DEVDIR)/glx1h.hdi
-	$(LN) glx1.hdi $(DEVDIR)/glx1h.hdi
+	$(LN) $(DEVDIR)/glx1.hdi $(DEVDIR)/glx1h.hdi
 
 $(DEVDIR)/glxoh.hdi:	$(DEVDIR)/glxo.hdi
 	rm -f $(DEVDIR)/glxoh.hdi
-	$(LN) glxo.hdi $(DEVDIR)/glxoh.hdi
+	$(LN) $(DEVDIR)/glxo.hdi $(DEVDIR)/glxoh.hdi
 
 $(DEVDIR)/glxsh.hdi:	$(DEVDIR)/glxs.hdi
 	rm -f $(DEVDIR)/glxsh.hdi
-	$(LN) glxs.hdi $(DEVDIR)/glxsh.hdi
+	$(LN) $(DEVDIR)/glxs.hdi $(DEVDIR)/glxsh.hdi
 
 $(DEVDIR)/glxsoh.hdi:	$(DEVDIR)/glxso.hdi
 	rm -f $(DEVDIR)/glxsoh.hdi
-	$(LN) glxso.hdi $(DEVDIR)/glxsoh.hdi
+	$(LN) $(DEVDIR)/glxso.hdi $(DEVDIR)/glxsoh.hdi
 
 $(DEVDIR)/oglh.hdi:	$(DEVDIR)/ogl.hdi
 	rm -f $(DEVDIR)/oglh.hdi
-	$(LN) ogl.hdi $(DEVDIR)/oglh.hdi
+	$(LN) $(DEVDIR)/ogl.hdi $(DEVDIR)/oglh.hdi
 
 $(DEVDIR)/ogloh.hdi:	$(DEVDIR)/oglo.hdi
 	rm -f $(DEVDIR)/ogloh.hdi
-	$(LN) oglo.hdi $(DEVDIR)/ogloh.hdi
+	$(LN) $(DEVDIR)/oglo.hdi $(DEVDIR)/ogloh.hdi
 
 $(DEVDIR)/oglsh.hdi:	$(DEVDIR)/ogls.hdi
 	rm -f $(DEVDIR)/oglsh.hdi
-	$(LN) ogls.hdi $(DEVDIR)/oglsh.hdi
+	$(LN) $(DEVDIR)/ogls.hdi $(DEVDIR)/oglsh.hdi
 
 $(DEVDIR)/oglsoh.hdi:	$(DEVDIR)/oglso.hdi
 	rm -f $(DEVDIR)/oglsoh.hdi
-	$(LN) oglso.hdi $(DEVDIR)/oglsoh.hdi
+	$(LN) $(DEVDIR)/oglso.hdi $(DEVDIR)/oglsoh.hdi
 
 $(DEVDIR)/glx1.hdi:	rhd_glx1.o rhdisp.o rhdisp2.o viewbeams.o \
 rhd_qtree.o rhd_qtree2c.o holo.o
