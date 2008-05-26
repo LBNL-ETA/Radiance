@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.13 2006/01/06 06:40:53 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.14 2008/05/26 17:58:33 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -587,7 +587,7 @@ getby2(			/* return 2-byte quantity from fp */
 
 	upperb = getc(fp);
 	lowerb = getc(fp);
-	if (upperb == EOF)
+	if (lowerb == EOF)
 		return(EOF);
 	return(upperb<<8 | lowerb);
 }
