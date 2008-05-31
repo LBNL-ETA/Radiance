@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.12 2005/11/15 06:53:00 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.13 2008/05/31 18:28:34 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -14,8 +14,8 @@ static const char	RCSid[] = "$Id: tmapluv.c,v 3.12 2005/11/15 06:53:00 greg Exp 
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "tiffio.h"
 #include "tmprivat.h"
+#include "tiffio.h"
 #include "tmaptiff.h"
 
 #define uvflgop(p,uv,op)	((p)->rgbflg[(uv)>>5] op (1L<<((uv)&0x1f)))
