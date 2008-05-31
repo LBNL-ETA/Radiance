@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.59 2006/12/23 17:27:45 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.60 2008/05/31 19:38:36 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -97,7 +97,7 @@ multisamp.o urand.o:	random.h
 cone.o face.o free_os.o image.o instance.o objset.o \
 octree.o modobject.o readfargs.o otypes.o mesh.o \
 readmesh.o readobj.o readoct.o sceneio.o:	standard.h \
-rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h tifftypes.h
+rtmisc.h rtio.h rtmath.h rterror.h fvect.h mat4.h tiff.h
 
 image.o:	view.h
 
@@ -116,15 +116,15 @@ loadvars.o:	vars.h
 mesh.o readmesh.o:	mesh.h lookup.h
 
 tonemap.o tmapcolrs.o tmapluv.o tmap16bit.o:	tmprivat.h tonemap.h \
-tifftypes.h color.h
+tiff.h color.h
 
 tmapluv.o:	tiffio.h tmaptiff.h tiff.h
 
-falsecolor.o:	falsecolor.h tmprivat.h tonemap.h color.h tifftypes.h
+falsecolor.o:	falsecolor.h tmprivat.h tonemap.h color.h tiff.h
 
 tonemap.o:	tmerrmsg.h
 
-tmaptiff.o:	tmprivat.h tmaptiff.h color.h tonemap.h tifftypes.h
+tmaptiff.o:	tmprivat.h tmaptiff.h color.h tonemap.h tiff.h
 
 rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o:	radogl.h \
 standard.h mat4.h fvect.h color.h object.h otypes.h lookup.h
@@ -138,8 +138,8 @@ byteswap.o expandarg.o badarg.o xf.o:	rtio.h
 
 expandarg.o:	rtmisc.h
 
-dircode.o xf.o:	rtmath.h mat4.h fvect.h tifftypes.h
+dircode.o xf.o:	rtmath.h mat4.h fvect.h tiff.h
 
 error.o:	rterror.h
 
-bmpfile.o:	bmpfile.h tifftypes.h
+bmpfile.o:	bmpfile.h tiff.h

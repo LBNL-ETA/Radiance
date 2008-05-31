@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.5 2007/04/12 22:13:28 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.6 2008/05/31 19:38:36 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -6,7 +6,7 @@
 #ifndef _RAD_BMPFILE_H_
 #define _RAD_BMPFILE_H_
 
-#include "tifftypes.h"
+#include "tiff.h"			/* needed for int32, etc. */
 
 #ifdef __cplusplus
 extern "C" {

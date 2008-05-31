@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.3 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: rtmath.h,v 3.4 2008/05/31 19:38:36 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -8,7 +8,7 @@
 
 #include  <math.h>
 
-#include  "tifftypes.h"
+#include  "tiff.h"		/* needed for int32, etc. */
 #include  "mat4.h"
 
 #ifdef __cplusplus
