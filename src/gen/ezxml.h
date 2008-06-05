@@ -1,4 +1,4 @@
-/* RCSid $Id: ezxml.h,v 2.1 2007/09/21 05:53:21 greg Exp $ */
+/* RCSid $Id: ezxml.h,v 2.2 2008/06/05 21:34:34 greg Exp $ */
 /* ezxml.h
  *
  * Copyright 2004-2006 Aaron Voisine <aaron@voisine.org>
@@ -33,6 +33,11 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/* disable MMAP on CYGWIN, seems to cause problems... */
+#ifdef CYGWIN
+#define EZXML_NOMMAP
 #endif
 
 #define EZXML_BUFSIZE 1024 // size of internal memory buffers
