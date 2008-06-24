@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.33 2008/05/12 16:46:46 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.34 2008/06/24 02:01:20 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -178,7 +178,7 @@ rhinfo.o clumpbeams.o rhoptimize.o rhpict.o rhpict2.o:	holo.h \
 ../common/vars.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h
 
 rhcopy.o:	../common/resolu.h ../common/view.h
 

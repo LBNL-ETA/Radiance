@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.55 2007/10/08 18:07:57 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.56 2008/06/24 02:01:21 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -188,7 +188,7 @@ raycalls.o raypcalls.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
 text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
-../common/rterror.h ../common/octree.h ../common/tifftypes.h \
+../common/rterror.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
 
 rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
@@ -199,7 +199,7 @@ srcobstr.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
 cone.o data.o devcomm.o initotypes.o fprism.o preload.o \
 duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
-../common/rtio.h ../common/rtmath.h ../common/tifftypes.h \
+../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/mat4.h ../common/fvect.h
 
 ambio.o:	../common/fvect.h

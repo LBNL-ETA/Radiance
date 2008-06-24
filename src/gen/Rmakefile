@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.21 2008/02/07 23:02:13 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.22 2008/06/24 02:01:20 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -85,14 +85,14 @@ mksource.o:	../common/random.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h
 
 genworm.o replmarks.o:	../common/fvect.h
 
 gensurf.o xform.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/rterror.h \
-../common/mat4.h ../common/fvect.h ../common/tifftypes.h
+../common/mat4.h ../common/fvect.h
 
 genworm.o genrev.o gensurf.o:	../common/resolu.h ../common/rterror.h
 
@@ -103,7 +103,7 @@ mkillum.o mkillum2.o mkillum3.o mkillum4.o:	mkillum.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h ../common/random.h
+../common/rterror.h ../common/random.h
 
 mkillum2.o:	../rt/source.h ../common/face.h ../common/cone.h
 

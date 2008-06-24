@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.49 2008/05/01 16:42:06 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.50 2008/06/24 02:01:21 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -107,8 +107,7 @@ findglare.o glareval.o \
 glaresrc.o:	glare.h ../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h \
-../common/view.h ../common/color.h setscan.h
+../common/rterror.h ../common/view.h ../common/color.h setscan.h
 
 glaresrc.o:	../common/linregr.h
 
@@ -121,7 +120,7 @@ rtcontrib.o:	../common/platform.h ../common/rtprocess.h \
 rad.o ranimate.o rpiece.o rtcontrib.o xglaresrc.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h
 
 xglaresrc.o:	../common/view.h
 
@@ -143,8 +142,7 @@ rad.o ranimate.o ranimove.o:	../common/view.h ../common/resolu.h
 
 glrad.o:	../common/radogl.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
-../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h ../common/rterror.h \
 ../common/color.h ../common/object.h ../common/otypes.h ../common/lookup.h
 
 glrad.o:	glradicon.h ../common/view.h ../common/paths.h
@@ -155,13 +153,13 @@ ranimove.o ranimove1.o ranimove2.o:	ranimove.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h
 
 rsensor.o:	../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/tifftypes.h
+../common/rterror.h
 
 rsensor.o:	../common/view.h ../common/resolu.h ../rt/source.h
 

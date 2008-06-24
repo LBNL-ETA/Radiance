@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.23 2004/04/23 16:20:56 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.24 2008/06/24 02:01:19 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -34,6 +34,8 @@ FVECT	*vnlist;		/* vertex normal list */
 int	nvns;
 RREAL	(*vtlist)[2];		/* map vertex list */
 int	nvts;
+
+int	ndegen = 0;		/* count of degenerate faces */
 
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
@@ -140,6 +142,8 @@ main(		/* read in .obj file and convert */
 		printargs(argc, argv, stdout);
 		convert(stdin);
 	}
+	if (ndegen)
+		printf("# %d degenerate faces\n", ndegen);
 	exit(0);
 userr:
 	fprintf(stderr, "Usage: %s [-o obj][-m mapping][-n][-f] [file.obj]\n",
@@ -574,7 +578,7 @@ putface(				/* put out an N-sided polygon */
 		return(1);
 	}
 	if ((cp = getmtl()) == NULL)
-		return(-1);
+		return(0);
 	printf("\n%s polygon %s.%d\n", cp, getonm(), faceno);
 	printf("0\n0\n%d\n", 3*ac);
 	for (i = 0; i < ac; i++) {
@@ -602,7 +606,7 @@ puttri(			/* put out a triangle */
 	register int	i;
 
 	if ((mod = getmtl()) == NULL)
-		return(-1);
+		return(0);
 
 	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
 		return(0);
@@ -615,6 +619,7 @@ puttri(			/* put out a triangle */
 
 	switch (flatness) {
 	case DEGEN:			/* zero area */
+		ndegen++;
 		return(-1);
 	case RVFLAT:			/* reversed normals, but flat */
 	case ISFLAT:			/* smoothing unnecessary */
@@ -635,7 +640,7 @@ puttri(			/* put out a triangle */
 	if (texOK | patOK)
 		if (comp_baryc(&bvecs, vlist[v1i[0]], vlist[v2i[0]],
 				vlist[v3i[0]]) < 0)
-			return(-1);
+			texOK = patOK = 0;
 					/* put out texture (if any) */
 	if (texOK) {
 		printf("\n%s texfunc %s\n", mod, TEXNAME);
