@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.15 2005/01/07 21:41:06 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.16 2008/07/03 03:30:21 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -36,6 +36,8 @@ extern "C" {
 
 #define MINBRT		(-16*TM_BRTSCALE)	/* minimum usable brightness */
 #define MINLUM		(1.125352e-7)		/* tmLuminance(MINBRT) */
+
+#define HISTI(li)	(((li)-MINBRT)/HISTEP)
 
 #define LMESLOWER	(5.62e-3)		/* lower mesopic limit */
 #define	LMESUPPER	(5.62)			/* upper mesopic limit */

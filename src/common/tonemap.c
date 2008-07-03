@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.30 2007/11/27 02:42:54 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.31 2008/07/03 03:30:21 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -363,8 +363,8 @@ int	wt
 		tms->hbrmin = tms->hbrmax = ls[i];
 		oldlen = 0;
 	} else {
-		oldorig = (tms->hbrmin-MINBRT)/HISTEP;
-		oldlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - oldorig;
+		oldorig = HISTI(tms->hbrmin);
+		oldlen = HISTI(tms->hbrmax) + 1 - oldorig;
 	}
 	for (i = len; i--; ) {
 		if ((j = ls[i]) < MINBRT)
@@ -374,8 +374,8 @@ int	wt
 		else if (j > tms->hbrmax)
 			tms->hbrmax = j;
 	}
-	horig = (tms->hbrmin-MINBRT)/HISTEP;
-	hlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - horig;
+	horig = HISTI(tms->hbrmin);
+	hlen = HISTI(tms->hbrmax) + 1 - horig;
 	if (hlen > oldlen) {			/* (re)allocate histogram */
 		int	*newhist = (int *)calloc(hlen, sizeof(int));
 		if (newhist == NULL)
@@ -391,7 +391,7 @@ int	wt
 		returnOK;
 	for (i = len; i--; )			/* add in new counts */
 		if (ls[i] >= MINBRT)
-			tms->histo[ (ls[i]-MINBRT)/HISTEP - horig ] += wt;
+			tms->histo[ HISTI(ls[i]) - horig ] += wt;
 	returnOK;
 }
 
@@ -496,9 +496,9 @@ double	Ldmax
 	Ldmin = Ldmax/Lddyn;
 	logLddyn = log(Lddyn);
 	Ldavg = sqrt(Ldmax*Ldmin);
-	i = (tms->hbrmin-MINBRT)/HISTEP;
+	i = HISTI(tms->hbrmin);
 	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
-	histlen = (tms->hbrmax-MINBRT)/HISTEP + 1 - i;
+	histlen = HISTI(tms->hbrmax) + 1 - i;
 					/* histogram total and mean */
 	histot = 0; sum = 0;
 	j = brt0 + histlen*HISTEP;
@@ -633,8 +633,7 @@ TMstruct	*tms
 		return(NULL);
 	*tmnew = *tms;		/* copy everything */
 	if (tmnew->histo != NULL) {	/* duplicate histogram */
-		len = (tmnew->hbrmax-MINBRT)/HISTEP + 1 -
-				(tmnew->hbrmin-MINBRT)/HISTEP;
+		len = HISTI(tmnew->hbrmax) + 1 - HISTI(tmnew->hbrmin);
 		tmnew->histo = (int *)malloc(len*sizeof(int));
 		if (tmnew->histo != NULL)
 			for (i = len; i--; )
