@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.8 2008/07/03 03:30:21 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.9 2008/07/03 03:35:10 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -89,7 +89,7 @@ fcLinearMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 			(0 > pctile) | (pctile >= 50))
 		return(TM_E_ILLEGAL);
 	i = HISTI(tms->hbrmin);
-	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
+	brt0 = HISTV(i);
 	histlen = HISTI(tms->hbrmax) + 1 - i;
 	histot = 0;
 	for (i = histlen; i--; )
@@ -115,7 +115,7 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile)
 			(.0 > pctile) | (pctile >= 50.))
 		return(TM_E_ILLEGAL);
 	i = HISTI(tms->hbrmin);
-	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
+	brt0 = HISTV(i);
 	histlen = HISTI(tms->hbrmax) + 1 - i;
 	histot = 0;
 	for (i = histlen; i--; )

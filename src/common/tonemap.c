@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.31 2008/07/03 03:30:21 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.32 2008/07/03 03:35:10 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -497,7 +497,7 @@ double	Ldmax
 	logLddyn = log(Lddyn);
 	Ldavg = sqrt(Ldmax*Ldmin);
 	i = HISTI(tms->hbrmin);
-	brt0 = MINBRT + HISTEP/2 + i*HISTEP;
+	brt0 = HISTV(i);
 	histlen = HISTI(tms->hbrmax) + 1 - i;
 					/* histogram total and mean */
 	histot = 0; sum = 0;

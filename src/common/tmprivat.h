@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.16 2008/07/03 03:30:21 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.17 2008/07/03 03:35:10 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -38,6 +38,7 @@ extern "C" {
 #define MINLUM		(1.125352e-7)		/* tmLuminance(MINBRT) */
 
 #define HISTI(li)	(((li)-MINBRT)/HISTEP)
+#define HISTV(i)	(MINBRT + HISTEP/2 + (i)*HISTEP)
 
 #define LMESLOWER	(5.62e-3)		/* lower mesopic limit */
 #define	LMESUPPER	(5.62)			/* upper mesopic limit */
