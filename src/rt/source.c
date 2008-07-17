@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.56 2007/07/25 04:12:36 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.57 2008/07/17 18:26:01 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -409,7 +409,7 @@ direct(					/* add direct component */
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
 		copycolor(scp->val, sr.rcol);
-		cntord[sn].brt = intens(sr.rcol);
+		cntord[sn].brt = bright(sr.rcol);
 	}
 						/* sort contributions */
 	qsort(cntord, sn, sizeof(CNTPTR), cntcmp);
