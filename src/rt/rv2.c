@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.54 2006/06/07 17:52:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.55 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -36,7 +36,7 @@ extern char  *progname;
 extern char  *octname;
 
 
-extern void
+void
 getframe(				/* get a new frame */
 	char  *s
 )
@@ -47,7 +47,7 @@ getframe(				/* get a new frame */
 }
 
 
-extern void
+void
 getrepaint(				/* get area and repaint */
 	char  *s
 )
@@ -56,11 +56,11 @@ getrepaint(				/* get area and repaint */
 
 	if (getrect(s, &box) < 0)
 		return;
-	paintrect(&ptrunk, 0, 0, hresolu, vresolu, &box);
+	paintrect(&ptrunk, &box);
 }
 
 
-extern void
+void
 getview(				/* get/show view parameters */
 	char  *s
 )
@@ -153,7 +153,7 @@ getview(				/* get/show view parameters */
 }
 
 
-extern void
+void
 lastview(				/* return to a previous view */
 	char  *s
 )
@@ -184,11 +184,11 @@ lastview(				/* return to a previous view */
 	nv = ourview;
 	ourview = oldview;
 	oldview = nv;
-	newimage();
+	newimage(NULL);
 }
 
 
-extern void
+void
 saveview(				/* save view to rad file */
 	char  *s
 )
@@ -226,7 +226,7 @@ saveview(				/* save view to rad file */
 }
 
 
-extern void
+void
 loadview(				/* load view from rad file */
 	char  *s
 )
@@ -269,7 +269,7 @@ loadview(				/* load view from rad file */
 }
 
 
-extern void
+void
 getaim(				/* aim camera */
 	char  *s
 )
@@ -284,7 +284,7 @@ getaim(				/* aim camera */
 }
 
 
-extern void
+void
 getfocus(				/* set focus distance */
 	char *s
 )
@@ -321,7 +321,7 @@ getfocus(				/* set focus distance */
 }
 
 
-extern void
+void
 getmove(				/* move camera */
 	char  *s
 )
@@ -335,7 +335,7 @@ getmove(				/* move camera */
 }
 
 
-extern void
+void
 getrotate(				/* rotate camera */
 	char  *s
 )
@@ -360,9 +360,9 @@ getrotate(				/* rotate camera */
 }
 
 
-extern void
+void
 getpivot(				/* pivot viewpoint */
-	register char  *s
+	char  *s
 )
 {
 	FVECT  vc;
@@ -379,16 +379,15 @@ getpivot(				/* pivot viewpoint */
 }
 
 
-extern void
+void
 getexposure(				/* get new exposure */
 	char  *s
 )
 {
 	char  buf[128];
-	register char  *cp;
-	RECT  r;
+	char  *cp;
 	int  x, y;
-	register PNODE  *p = &ptrunk;
+	PNODE  *p = &ptrunk;
 	int  adapt = 0;
 	double  e = 1.0;
 
@@ -405,9 +404,7 @@ getexposure(				/* get new exposure */
 		(*dev->comout)("Pick point for exposure\n");
 		if ((*dev->getcur)(&x, &y) == ABORT)
 			return;
-		r.l = r.d = 0;
-		r.r = hresolu; r.u = vresolu;
-		p = findrect(x, y, &ptrunk, &r, -1);
+		p = findrect(x, y, &ptrunk, -1);
 	} else {
 		if (*cp == '=') {	/* absolute setting */
 			p = NULL;
@@ -448,7 +445,7 @@ getexposure(				/* get new exposure */
 
 typedef union {int i; double d; COLOR C;}	*MyUptr;
 
-extern int
+int
 getparam(		/* get variable from user */
 	char  *str,
 	char  *dsc,
@@ -456,7 +453,7 @@ getparam(		/* get variable from user */
 	void  *p
 )
 {
-	register MyUptr  ptr = (MyUptr)p;
+	MyUptr  ptr = (MyUptr)p;
 	int  i0;
 	double  d0, d1, d2;
 	char  buf[48];
@@ -472,7 +469,7 @@ getparam(		/* get variable from user */
 				return(0);
 		}
 		ptr->i = i0;
-		return(1);
+		break;
 	case 'r':			/* real */
 		if (sscanf(str, "%lf", &d0) != 1) {
 			(*dev->comout)(dsc);
@@ -483,7 +480,7 @@ getparam(		/* get variable from user */
 				return(0);
 		}
 		ptr->d = d0;
-		return(1);
+		break;
 	case 'b':			/* boolean */
 		if (sscanf(str, "%1s", buf) != 1) {
 			(*dev->comout)(dsc);
@@ -495,7 +492,7 @@ getparam(		/* get variable from user */
 				return(0);
 		}
 		ptr->i = strchr("yY+1tT", buf[0]) != NULL;
-		return(1);
+		break;
 	case 'C':			/* color */
 		if (sscanf(str, "%lf %lf %lf", &d0, &d1, &d2) != 3) {
 			(*dev->comout)(dsc);
@@ -509,15 +506,18 @@ getparam(		/* get variable from user */
 				return(0);
 		}
 		setcolor(ptr->C, d0, d1, d2);
-		return(1);
+		break;
+	default:
+		return(0);		/* shouldn't happen */
 	}
-	return 0; /* nothing matched */
+	newparam++;
+	return(1);
 }
 
 
-extern void
+void
 setparam(				/* get/set program parameter */
-	register char  *s
+	char  *s
 )
 {
 	char  buf[128];
@@ -694,9 +694,10 @@ badparam:
 }
 
 
-extern void
-traceray(s)				/* trace a single ray */
-char  *s;
+void
+traceray(				/* trace a single ray */
+	char  *s
+)
 {
 	char  buf[128];
 	int  x, y;
@@ -777,9 +778,10 @@ char  *s;
 }
 
 
-extern void
-writepict(s)				/* write the picture to a file */
-char  *s;
+void
+writepict(				/* write the picture to a file */
+	char  *s
+)
 {
 	static char  buf[128];
 	char  *fname;

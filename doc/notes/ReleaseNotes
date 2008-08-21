@@ -1667,3 +1667,5 @@ record (which can now be done with -c 0).
 
 =====================
 Version 4.0
+
+Added -n option to rvu to provide parallel rendering.

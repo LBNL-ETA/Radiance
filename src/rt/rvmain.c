@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.8 2008/03/11 02:21:47 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.9 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -19,29 +19,36 @@ static const char	RCSid[] = "$Id: rvmain.c,v 2.8 2008/03/11 02:21:47 greg Exp $"
 #include  "paths.h"
 #include  "view.h"
 
-char  *progname;			/* argv[0] */
+extern char  *progname;			/* global argv[0] */
 
-char  *octname;				/* octree name */
+VIEW  ourview = STDVIEW;		/* viewing parameters */
+int  hresolu, vresolu;			/* image resolution */
 
-char  *sigerr[NSIG];			/* signal error messages */
+int  psample = 8;			/* pixel sample size */
+double	maxdiff = .15;			/* max. sample difference */
 
-char  *shm_boundary = NULL;		/* boundary of shared memory */
+int  greyscale = 0;			/* map colors to brightness? */
+char  *dvcname = dev_default;		/* output device name */
+
+double	exposure = 1.0;			/* exposure for scene */
+
+int  newparam = 1;			/* parameter setting changed */
+ 
+struct driver  *dev = NULL;		/* driver functions */
+
+char  rifname[128];			/* rad input file name */
+
+VIEW  oldview;				/* previous view parameters */
+
+PNODE  ptrunk;				/* the base of our image */
+RECT  pframe;				/* current frame boundaries */
+int  pdepth;				/* image depth in current frame */
 
 char  *errfile = NULL;			/* error output file */
 
-extern int  greyscale;			/* map colors to brightness? */
-extern char  *dvcname;			/* output device name */
-extern double  exposure;		/* exposure compensation */
+int  nproc = 1;				/* number of processes */
 
-extern VIEW  ourview;			/* viewing parameters */
-
-extern char  rifname[];			/* rad input file name */
-
-extern int  hresolu;			/* horizontal resolution */
-extern int  vresolu;			/* vertical resolution */
-
-extern int  psample;			/* pixel sample size */
-extern double  maxdiff;			/* max. sample difference */
+char  *sigerr[NSIG];			/* signal error messages */
 
 static void onsig(int  signo);
 static void sigdie(int  signo, char  *msg);
@@ -49,7 +56,7 @@ static void printdefaults(void);
 
 
 int
-main(int  argc, char  *argv[])
+main(int argc, char *argv[])
 {
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
@@ -61,11 +68,26 @@ main(int  argc, char  *argv[])
 				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
+	char  *octnm = NULL;
 	char  *err;
 	int  rval;
 	int  i;
 					/* global program name */
 	progname = argv[0] = fixargv0(argv[0]);
+					/* set our defaults */
+	shadthresh = .1;
+	shadcert = .25;
+	directrelay = 0;
+	vspretest = 128;
+	srcsizerat = 0.;
+	specthresh = .3;
+	specjitter = 1.;
+	maxdepth = 6;
+	minweight = 1e-2;
+	ambacc = 0.3;
+	ambres = 32;
+	ambdiv = 256;
+	ambssamp = 64;
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -101,6 +123,12 @@ main(int  argc, char  *argv[])
 			continue;
 		}
 		switch (argv[i][1]) {
+		case 'n':				/* # processes */
+			check(2,"i");
+			nproc = atoi(argv[++i]);
+			if (nproc <= 0)
+				error(USER, "bad number of processes");
+			break;
 		case 'v':				/* view file */
 			if (argv[i][2] != 'f')
 				goto badopt;
@@ -166,26 +194,12 @@ main(int  argc, char  *argv[])
 	err = setview(&ourview);	/* set viewing parameters */
 	if (err != NULL)
 		error(USER, err);
-					/* initialize object types */
-	initotypes();
-					/* initialize urand */
-	if (rand_samp) {
-		srandom((long)time(0));
-		initurand(0);
-	} else {
-		srandom(0L);
-		initurand(2048);
-	}
-					/* set up signal handling */
+						/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 	sigdie(SIGHUP, "Hangup");
 	sigdie(SIGTERM, "Terminate");
 	sigdie(SIGPIPE, "Broken pipe");
 	sigdie(SIGALRM, "Alarm clock");
-#ifdef	SIGXCPU
-	sigdie(SIGXCPU, "CPU limit exceeded");
-	sigdie(SIGXFSZ, "File size exceeded");
-#endif
 					/* open error file */
 	if (errfile != NULL) {
 		if (freopen(errfile, "a", stderr) == NULL)
@@ -201,25 +215,21 @@ main(int  argc, char  *argv[])
 #endif
 					/* get octree */
 	if (i == argc)
-		octname = NULL;
+		octnm = NULL;
 	else if (i == argc-1)
-		octname = argv[i];
+		octnm = argv[i];
 	else
 		goto badopt;
-	if (octname == NULL)
+	if (octnm == NULL)
 		error(USER, "missing octree argument");
-					/* set up output */
+					/* set up output & start process(es) */
 	SET_FILE_BINARY(stdout);
-	readoct(octname, ~(IO_FILES|IO_INFO), &thescene, NULL);
-	nsceneobjs = nobjects;
-
-	marksources();			/* find and mark sources */
-
-	setambient();			/* initialize ambient calculation */
+	
+	ray_pinit(octnm, 0);
 
 	rview();			/* run interactive viewer */
 
-	ambsync();			/* flush ambient file */
+	devclose();			/* close output device */
 
 	quit(0);
 
@@ -246,7 +256,7 @@ wputs(				/* warning output function */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;
@@ -280,6 +290,7 @@ onsig(				/* fatal signal */
 	eputs("signal - ");
 	eputs(sigerr[signo]);
 	eputs("\n");
+	devclose();
 	quit(3);
 }
 
@@ -299,6 +310,7 @@ sigdie(			/* set fatal signal */
 static void
 printdefaults(void)			/* print default values to stdout */
 {
+	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
 	printf(greyscale ? "-b+\t\t\t\t# greyscale on\n" :
 			"-b-\t\t\t\t# greyscale off\n");
 	printf("-vt%c\t\t\t\t# view type %s\n", ourview.type,

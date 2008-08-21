@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.21 2008/03/11 02:21:47 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.22 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -16,7 +16,7 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.21 2008/03/11 02:21:47 greg Exp $";
 #include  "random.h"
 
 #ifndef WFLUSH
-#define WFLUSH		2048		/* flush after this many rays */
+#define WFLUSH		64		/* flush after this many rays */
 #endif
 
 #ifdef  SMLFLT
@@ -27,9 +27,10 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.21 2008/03/11 02:21:47 greg Exp $";
 
 
 int
-getrect(s, r)				/* get a box */
-char  *s;
-register RECT  *r;
+getrect(				/* get a box */
+	char  *s,
+	RECT  *r
+)
 {
 	int  x0, y0, x1, y1;
 
@@ -74,15 +75,16 @@ register RECT  *r;
 
 
 int
-getinterest(s, direc, vec, mp)		/* get area of interest */
-char  *s;
-int  direc;
-FVECT  vec;
-double  *mp;
+getinterest(		/* get area of interest */
+	char  *s,
+	int  direc,
+	FVECT  vec,
+	double  *mp
+)
 {
 	int  x, y;
 	RAY  thisray;
-	register int  i;
+	int  i;
 
 	if (sscanf(s, "%lf", mp) != 1)
 		*mp = 1.0;
@@ -131,8 +133,9 @@ double  *mp;
 
 
 float *		/* keep consistent with COLOR typedef */
-greyof(col)				/* convert color to greyscale */
-register COLOR  col;
+greyof(				/* convert color to greyscale */
+	COLOR  col
+)
 {
 	static COLOR  gcol;
 	double  b;
@@ -143,71 +146,116 @@ register COLOR  col;
 }
 
 
-void
-paint(p, xmin, ymin, xmax, ymax)	/* compute and paint a rectangle */
-register PNODE  *p;
-int  xmin, ymin, xmax, ymax;
+int
+paint(			/* compute and paint a rectangle */
+	PNODE  *p
+)
 {
+	extern int  ray_pnprocs;
 	static unsigned long  lastflush = 0;
 	static RAY  thisray;
 	double  h, v;
 
-	if (xmax - xmin <= 0 || ymax - ymin <= 0) {	/* empty */
-		p->x = xmin;
-		p->y = ymin;
+	if (p->xmax - p->xmin <= 0 || p->ymax - p->ymin <= 0) {	/* empty */
+		p->x = p->xmin;
+		p->y = p->ymin;
 		setcolor(p->v, 0.0, 0.0, 0.0);
-		return;
+		return(0);
 	}
 						/* jitter ray direction */
-	h = xmin + (xmax-xmin)*frandom();
-	v = ymin + (ymax-ymin)*frandom();
+	p->x = h = p->xmin + (p->xmax-p->xmin)*frandom();
+	p->y = v = p->ymin + (p->ymax-p->ymin)*frandom();
 	
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir, &ourview,
 			h/hresolu, v/vresolu)) < -FTINY) {
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
 	} else {
+		int  rval;
 		rayorigin(&thisray, PRIMARY, NULL, NULL);
-		samplendx++;
-		rayvalue(&thisray);
+		thisray.rno = (unsigned long)p;
+		rval = ray_pqueue(&thisray);
+		if (!rval)
+			return(0);
+		if (rval < 0)
+			return(-1);
+		p = (PNODE *)thisray.rno;
 	}
 
-	p->x = h;
-	p->y = v;
 	copycolor(p->v, thisray.rcol);
 	scalecolor(p->v, exposure);
 
-	(*dev->paintr)(greyscale?greyof(p->v):p->v, xmin, ymin, xmax, ymax);
+	(*dev->paintr)(greyscale?greyof(p->v):p->v, p->xmin, p->ymin, p->xmax, p->ymax);
 
-	if (dev->flush != NULL && nrays - lastflush >= WFLUSH) {
-		lastflush = nrays;
+	if (dev->flush != NULL && raynum - lastflush >= WFLUSH*ray_pnprocs) {
+		lastflush = raynum;
 		(*dev->flush)();
 	}
+	return(1);
+}
+
+
+int
+waitrays(void)				/* finish up pending rays */
+{
+	int	nwaited = 0;
+	int	rval;
+	RAY	raydone;
+	
+	while ((rval = ray_presult(&raydone, 0)) > 0) {
+		PNODE  *p = (PNODE *)raydone.rno;
+		copycolor(p->v, raydone.rcol);
+		scalecolor(p->v, exposure);
+		(*dev->paintr)(greyscale?greyof(p->v):p->v,
+				p->xmin, p->ymin, p->xmax, p->ymax);
+		nwaited++;
+	}
+	if (rval < 0)
+		return(-1);
+	return(nwaited);
 }
 
 
 void
-newimage()				/* start a new image */
+newimage(					/* start a new image */
+	char *s
+)
 {
+	int	newnp;
+						/* change in nproc? */
+	if (s != NULL && sscanf(s, "%d", &newnp) == 1 && newnp > 0) {
+		if (!newparam) {
+			if (newnp < nproc)
+				ray_pclose(nproc - newnp);
+			else
+				ray_popen(newnp - nproc);
+		}
+		nproc = newnp;
+	}
 						/* free old image */
 	freepkids(&ptrunk);
-						/* save reserve memory */
-	fillreserves();
 						/* compute resolution */
 	hresolu = dev->xsiz;
 	vresolu = dev->ysiz;
 	normaspect(viewaspect(&ourview), &dev->pixaspect, &hresolu, &vresolu);
-	pframe.l = pframe.d = 0;
-	pframe.r = hresolu; pframe.u = vresolu;
+	ptrunk.xmin = ptrunk.ymin = pframe.l = pframe.d = 0;
+	ptrunk.xmax = pframe.r = hresolu;
+	ptrunk.ymax = pframe.u = vresolu;
 	pdepth = 0;
 						/* clear device */
 	(*dev->clear)(hresolu, vresolu);
+
+	if (newparam) {				/* (re)start rendering procs */
+		ray_pclose(0);
+		ray_popen(nproc);
+		newparam = 0;
+	}
 						/* get first value */
-	paint(&ptrunk, 0, 0, hresolu, vresolu);
+	paint(&ptrunk);
 }
 
 
 void
-redraw()				/* redraw the image */
+redraw(void)				/* redraw the image */
 {
 	(*dev->clear)(hresolu, vresolu);
 	(*dev->comout)("redrawing...\n");
@@ -217,81 +265,80 @@ redraw()				/* redraw the image */
 
 
 void
-repaint(xmin, ymin, xmax, ymax)			/* repaint a region */
-int  xmin, ymin, xmax, ymax;
+repaint(				/* repaint a region */
+	int  xmin,
+	int  ymin,
+	int  xmax,
+	int  ymax
+)
 {
 	RECT  reg;
 
 	reg.l = xmin; reg.r = xmax;
 	reg.d = ymin; reg.u = ymax;
 
-	paintrect(&ptrunk, 0, 0, hresolu, vresolu, &reg);
+	paintrect(&ptrunk, &reg);
 }
 
 
 void
-paintrect(p, xmin, ymin, xmax, ymax, r)		/* paint picture rectangle */
-register PNODE  *p;
-int  xmin, ymin, xmax, ymax;
-register RECT  *r;
+paintrect(				/* paint picture rectangle */
+	PNODE  *p,
+	RECT  *r
+)
 {
 	int  mx, my;
 
-	if (xmax - xmin <= 0 || ymax - ymin <= 0)
+	if (p->xmax - p->xmin <= 0 || p->ymax - p->ymin <= 0)
 		return;
 
 	if (p->kid == NULL) {
 		(*dev->paintr)(greyscale?greyof(p->v):p->v,
-				xmin, ymin, xmax, ymax);	/* do this */
+			p->xmin, p->ymin, p->xmax, p->ymax);	/* do this */
 		return;
 	}
-	mx = (xmin + xmax) >> 1;				/* do kids */
-	my = (ymin + ymax) >> 1;
+	mx = (p->xmin + p->xmax) >> 1;				/* do kids */
+	my = (p->ymin + p->ymax) >> 1;
 	if (mx > r->l) {
 		if (my > r->d)
-			paintrect(p->kid+DL, xmin, ymin, mx, my, r);
+			paintrect(p->kid+DL, r);
 		if (my < r->u)
-			paintrect(p->kid+UL, xmin, my, mx, ymax, r);
+			paintrect(p->kid+UL, r);
 	}
 	if (mx < r->r) {
 		if (my > r->d)
-			paintrect(p->kid+DR, mx, ymin, xmax, my, r);
+			paintrect(p->kid+DR, r);
 		if (my < r->u)
-			paintrect(p->kid+UR, mx, my, xmax, ymax, r);
+			paintrect(p->kid+UR, r);
 	}
 }
 
 
 PNODE *
-findrect(x, y, p, r, pd)		/* find a rectangle */
-int  x, y;
-register PNODE  *p;
-register RECT  *r;
-int  pd;
+findrect(				/* find a rectangle */
+	int  x,
+	int  y,
+	PNODE  *p,
+	int  pd
+)
 {
 	int  mx, my;
 
 	while (p->kid != NULL && pd--) {
 
-		mx = (r->l + r->r) >> 1;
-		my = (r->d + r->u) >> 1;
+		mx = (p->xmin + p->xmax) >> 1;
+		my = (p->ymin + p->ymax) >> 1;
 
 		if (x < mx) {
-			r->r = mx;
 			if (y < my) {
-				r->u = my;
 				p = p->kid+DL;
 			} else {
-				r->d = my;
 				p = p->kid+UL;
 			}
 		} else {
-			r->l = mx;
 			if (y < my) {
-				r->u = my;
 				p = p->kid+DR;
 			} else {
-				r->d = my;
 				p = p->kid+UR;
 			}
 		}
@@ -301,9 +348,10 @@ int  pd;
 
 
 void
-scalepict(p, sf)			/* scale picture values */
-register PNODE  *p;
-double  sf;
+scalepict(				/* scale picture values */
+	PNODE  *p,
+	double  sf
+)
 {
 	scalecolor(p->v, sf);		/* do this node */
 
@@ -318,13 +366,15 @@ double  sf;
 
 
 void
-getpictcolrs(yoff, scan, p, xsiz, ysiz)	/* get scanline from picture */
-int  yoff;
-register COLR  *scan;
-register PNODE  *p;
-int  xsiz, ysiz;
+getpictcolrs(				/* get scanline from picture */
+	int  yoff,
+	COLR  *scan,
+	PNODE  *p,
+	int  xsiz,
+	int  ysiz
+)
 {
-	register int  mx;
+	int  mx;
 	int  my;
 
 	if (p->kid == NULL) {			/* do this node */
@@ -349,8 +399,9 @@ int  xsiz, ysiz;
 
 
 void
-freepkids(p)				/* free pnode's children */
-register PNODE  *p;
+freepkids(				/* free pnode's children */
+	PNODE  *p
+)
 {
 	if (p->kid == NULL)
 		return;
@@ -364,8 +415,9 @@ register PNODE  *p;
 
 
 void
-newview(vp)				/* change viewing parameters */
-register VIEW  *vp;
+newview(					/* change viewing parameters */
+	VIEW  *vp
+)
 {
 	char  *err;
 
@@ -375,20 +427,23 @@ register VIEW  *vp;
 	} else if (memcmp((char *)vp, (char *)&ourview, sizeof(VIEW))) {
 		oldview = ourview;
 		ourview = *vp;
-		newimage();
+		newimage(NULL);
 	}
 }
 
 
 void
-moveview(angle, elev, mag, vc)			/* move viewpoint */
-double  angle, elev, mag;
-FVECT  vc;
+moveview(					/* move viewpoint */
+	double  angle,
+	double  elev,
+	double  mag,
+	FVECT  vc
+)
 {
 	double  d;
 	FVECT  v1;
 	VIEW  nv = ourview;
-	register int  i;
+	int  i;
 
 	spinvector(nv.vdir, ourview.vdir, ourview.vup, angle*(PI/180.));
 	if (elev != 0.0) {
@@ -421,8 +476,10 @@ FVECT  vc;
 
 
 void
-pcopy(p1, p2)				/* copy paint node p1 into p2 */
-register PNODE  *p1, *p2;
+pcopy(					/* copy paint node p1 into p2 */
+	PNODE  *p1,
+	PNODE  *p2
+)
 {
 	copycolor(p2->v, p1->v);
 	p2->x = p1->x;
@@ -431,9 +488,10 @@ register PNODE  *p1, *p2;
 
 
 void
-zoomview(vp, zf)			/* zoom in or out */
-register VIEW  *vp;
-double  zf;
+zoomview(				/* zoom in or out */
+	VIEW  *vp,
+	double  zf
+)
 {
 	switch (vp->type) {
 	case VT_PAR:				/* parallel view */

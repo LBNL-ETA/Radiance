@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.56 2008/06/24 02:01:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.57 2008/08/21 07:05:58 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -117,8 +117,9 @@ $(DESTDIR)/rtrace:	$(RTOBJS) $(RLIB)
 $(DESTDIR)/rpict:	$(RPOBJS) $(RLIB)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/rpict $(RPOBJS) $(RLIB) $(LIBS)
 
-$(DESTDIR)/rvu:	$(RVOBJS) $(RLIB)
-	$(CC) $(CFLAGS) -o $(DESTDIR)/rvu $(RVOBJS) $(RLIB) $(LIBS) $(DLIBS)
+$(DESTDIR)/rvu:	$(RVOBJS) $(RCLIB) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rvu $(RVOBJS) $(RCLIB) \
+$(RLIB) $(LIBS) $(DLIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)

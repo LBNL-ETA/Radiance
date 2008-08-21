@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.33 2007/11/21 16:42:03 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.34 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -206,8 +206,10 @@ x11_init(		/* initialize driver */
 		x11_driver.comin = x11_comin;
 		x11_driver.comout = x11_comout;
 		erract[COMMAND].pf = x11_comout;
+		/*			doesn't work with raypcalls.c
 		if (erract[WARNING].pf != NULL)
 			erract[WARNING].pf = x11_errout;
+		*/
 		inpcheck = IC_X11;
 	} else {
 		x11_driver.comin = std_comin;

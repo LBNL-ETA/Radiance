@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.14 2008/05/01 15:50:28 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.15 2008/08/21 07:05:58 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -54,8 +54,10 @@ final_connect(void)				/* verify and initialize connection */
 	getstate();
 						/* set error vectors */
 	erract[COMMAND].pf = comm_comout;
+	/*					doesn't work with raypcalls.c
 	if (erract[WARNING].pf != NULL)
 		erract[WARNING].pf = comm_comout;
+	*/
 	return(&comm_driver);
 }
 

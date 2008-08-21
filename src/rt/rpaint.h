@@ -1,4 +1,4 @@
-/* RCSid $Id: rpaint.h,v 2.7 2005/01/21 00:52:59 greg Exp $ */
+/* RCSid $Id: rpaint.h,v 2.8 2008/08/21 07:05:59 greg Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
@@ -17,6 +17,7 @@ typedef short  COORD;		/* an image coordinate */
 typedef struct pnode {
 	struct pnode  *kid;		/* children */
 	COORD  x, y;			/* position */
+	COORD  xmin, ymin, xmax, ymax;	/* rectangle */
 	COLOR  v;			/* value */
 }  PNODE;			/* a paint node */
 
@@ -38,6 +39,15 @@ extern VIEW  ourview;		/* current view parameters */
 extern VIEW  oldview;		/* previous view parameters */
 extern int  hresolu, vresolu;	/* image resolution */
 
+extern int  newparam;		/* parameter setting changed */
+
+extern char  *dvcname;		/* output device name */
+
+extern char  rifname[];		/* rad input file name */
+
+extern int  psample;		/* pixel sample size */
+extern double  maxdiff;		/* max. sample difference */
+
 extern int  greyscale;		/* map colors to brightness? */
 
 extern int  pdepth;		/* image depth in current frame */
@@ -47,16 +57,15 @@ extern double  exposure;	/* exposure for scene */
 
 extern struct driver  *dev;	/* driver functions */
 
+extern int  nproc;		/* number of processes */
+
 				/* defined in rview.c */
 extern void	devopen(char *dname);
 extern void	devclose(void);
 extern void	printdevices(void);
-extern void	fillreserves(void);
-extern void	freereserves(void);
 extern void	command(char *prompt);
 extern void	rsample(void);
-extern int	refine(PNODE *p, int xmin, int ymin,
-				int xmax, int ymax, int pd);
+extern int	refine(PNODE *p, int pd);
 				/* defined in rv2.c */
 extern void	getframe(char *s);
 extern void	getrepaint(char *s);
@@ -78,13 +87,13 @@ extern void	writepict(char *s);
 extern int	getrect(char *s, RECT *r);
 extern int	getinterest(char *s, int direc, FVECT vec, double *mp);
 extern float	*greyof(COLOR col);
-extern void	paint(PNODE *p, int xmin, int ymin, int xmax, int ymax);
-extern void	newimage(void);
+extern int	paint(PNODE *p);
+extern int	waitrays(void);
+extern void	newimage(char *s);
 extern void	redraw(void);
 extern void	repaint(int xmin, int ymin, int xmax, int ymax);
-extern void	paintrect(PNODE *p, int xmin, int ymin,
-				int xmax, int ymax, RECT *r);
-extern PNODE	*findrect(int x, int y, PNODE *p, RECT *r, int pd);
+extern void	paintrect(PNODE *p, RECT *r);
+extern PNODE	*findrect(int x, int y, PNODE *p, int pd);
 extern void	scalepict(PNODE *p, double sf);
 extern void	getpictcolrs(int yoff, COLR *scan, PNODE *p,
 			int xsiz, int ysiz);

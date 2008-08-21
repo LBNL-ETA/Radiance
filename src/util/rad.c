@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.85 2008/04/21 07:31:30 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.86 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1197,6 +1197,8 @@ rvu(				/* run rvu with first view */
 	if (sayview)
 		myprintview(vw, stdout);
 	sprintf(combuf, "rvu %s%s%s -R %s ", vw, po, opts, rifname);
+	if (nprocs > 1)
+		sprintf(combuf+strlen(combuf), "-n %d ", nprocs);
 	if (rvdevice != NULL)
 		sprintf(combuf+strlen(combuf), "-o %s ", rvdevice);
 	if (vdef(EXPOSURE))

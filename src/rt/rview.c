@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.28 2005/06/13 20:07:56 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.29 2008/08/21 07:05:59 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -15,103 +15,17 @@ static const char	RCSid[] = "$Id: rview.c,v 2.28 2005/06/13 20:07:56 greg Exp $"
 #include  "ray.h"
 #include  "rpaint.h"
 
-
-CUBE  thescene;				/* our scene */
-OBJECT	nsceneobjs;			/* number of objects in our scene */
-
-int  dimlist[MAXDIM];			/* sampling dimensions */
-int  ndims = 0;				/* number of sampling dimensions */
-int  samplendx = 0;			/* index for this sample */
-
-extern void  ambnotify();
-void  (*addobjnotify[])() = {ambnotify, NULL};
-
-VIEW  ourview = STDVIEW;		/* viewing parameters */
-int  hresolu, vresolu;			/* image resolution */
-
-void  (*trace)() = NULL;		/* trace call */
-
-int  do_irrad = 0;			/* compute irradiance? */
-
-int  rand_samp = 0;			/* pure Monte Carlo sampling? */
-
-int  psample = 8;			/* pixel sample size */
-double	maxdiff = .15;			/* max. sample difference */
-
-double	exposure = 1.0;			/* exposure for scene */
-
-double	dstrsrc = 0.0;			/* square source distribution */
-double	shadthresh = .1;		/* shadow threshold */
-double	shadcert = .25;			/* shadow certainty */
-int  directrelay = 0;			/* number of source relays */
-int  vspretest = 128;			/* virtual source pretest density */
-int  directvis = 1;			/* sources visible? */
-double	srcsizerat = 0.;		/* maximum ratio source size/dist. */
-
-COLOR  cextinction = BLKCOLOR;		/* global extinction coefficient */
-COLOR  salbedo = BLKCOLOR;		/* global scattering albedo */
-double  seccg = 0.;			/* global scattering eccentricity */
-double  ssampdist = 0.;			/* scatter sampling distance */
-
-double	specthresh = .3;		/* specular sampling threshold */
-double	specjitter = 1.;		/* specular sampling jitter */
-
-int  backvis = 1;			/* back face visibility */
-
-int  maxdepth = 6;			/* maximum recursion depth */
-double	minweight = 1e-2;		/* minimum ray weight */
-
-char  *ambfile = NULL;			/* ambient file name */
-COLOR  ambval = BLKCOLOR;		/* ambient value */
-int  ambvwt = 0;			/* initial weight for ambient value */
-double	ambacc = 0.3;			/* ambient accuracy */
-int  ambres = 32;			/* ambient resolution */
-int  ambdiv = 256;			/* ambient divisions */
-int  ambssamp = 64;			/* ambient super-samples */
-int  ambounce = 0;			/* ambient bounces */
-char  *amblist[AMBLLEN];		/* ambient include/exclude list */
-int  ambincl = -1;			/* include == 1, exclude == 0 */
-
-int  greyscale = 0;			/* map colors to brightness? */
-char  *dvcname = dev_default;		/* output device name */
-
-struct driver  *dev = NULL;		/* driver functions */
-
-char  rifname[128];			/* rad input file name */
-
-VIEW  oldview;				/* previous view parameters */
-
-PNODE  ptrunk;				/* the base of our image */
-RECT  pframe;				/* current frame boundaries */
-int  pdepth;				/* image depth in current frame */
-
-static char  *reserve_mem = NULL;	/* pre-allocated reserve memory */
-
-#define RESERVE_AMT	32768		/* amount of memory to reserve */
-
 #define	 CTRL(c)	((c)-'@')
 
 
 void
-quit(code)			/* quit program */
-int  code;
-{
-#ifdef MSTATS
-	if (code == 2 && errno == ENOMEM)
-		printmemstats(stderr);
-#endif
-	devclose();
-	exit(code);
-}
-
-
-void
-devopen(dname)				/* open device driver */
-char  *dname;
+devopen(				/* open device driver */
+	char  *dname
+)
 {
 	extern char  *progname, *octname;
 	char  *id;
-	register int  i;
+	int  i;
 
 	id = octname!=NULL ? octname : progname;
 						/* check device table */
@@ -132,7 +46,7 @@ char  *dname;
 
 
 void
-devclose()				/* close our device */
+devclose(void)				/* close our device */
 {
 	if (dev != NULL)
 		(*dev->close)();
@@ -141,9 +55,9 @@ devclose()				/* close our device */
 
 
 void
-printdevices()				/* print list of output devices */
+printdevices(void)			/* print list of output devices */
 {
-	register int  i;
+	int  i;
 
 	for (i = 0; devtable[i].name; i++)
 		printf("%-16s # %s\n", devtable[i].name, devtable[i].descrip);
@@ -151,18 +65,16 @@ printdevices()				/* print list of output devices */
 
 
 void
-rview()				/* do a view */
+rview(void)				/* do a view */
 {
 	char  buf[32];
 
 	devopen(dvcname);		/* open device */
-	newimage();			/* start image (calls fillreserves) */
+	newimage(NULL);			/* start image */
 
 	for ( ; ; ) {			/* quit in command() */
 		while (hresolu <= 1<<pdepth && vresolu <= 1<<pdepth)
 			command("done: ");
-		while (reserve_mem == NULL)
-			command("out of memory: ");
 		errno = 0;
 		if (hresolu <= psample<<pdepth && vresolu <= psample<<pdepth) {
 			sprintf(buf, "%d sampling...\n", 1<<pdepth);
@@ -171,11 +83,11 @@ rview()				/* do a view */
 		} else {
 			sprintf(buf, "%d refining...\n", 1<<pdepth);
 			(*dev->comout)(buf);
-			refine(&ptrunk, 0, 0, hresolu, vresolu, pdepth+1);
+			refine(&ptrunk, pdepth+1);
 		}
-		if (errno == ENOMEM)		/* ran out of memory */
-			freereserves();
-		else if (dev->inpready)		/* noticed some input */
+		if (waitrays() < 0)
+			quit(1);
+		if (dev->inpready)		/* noticed some input */
 			command(": ");
 		else				/* finished this depth */
 			pdepth++;
@@ -184,27 +96,9 @@ rview()				/* do a view */
 
 
 void
-fillreserves()			/* fill memory reserves */
-{
-	if (reserve_mem != NULL)
-		return;
-	reserve_mem = (char *)malloc(RESERVE_AMT);
-}
-
-
-void
-freereserves()			/* free memory reserves */
-{
-	if (reserve_mem == NULL)
-		return;
-	free(reserve_mem);
-	reserve_mem = NULL;
-}
-
-
-void
-command(prompt)			/* get/execute command */
-char  *prompt;
+command(			/* get/execute command */
+	char  *prompt
+)
 {
 #define	 badcom(s)	strncmp(s, inpbuf, args-inpbuf-1)
 	char  inpbuf[256];
@@ -268,7 +162,7 @@ again:
 	case 'n':				/* new picture */
 		if (badcom("new"))
 			goto commerr;
-		newimage();
+		newimage(args);
 		break;
 	case 't':				/* trace a ray */
 		if (badcom("trace"))
@@ -356,14 +250,12 @@ commerr:
 
 
 void
-rsample()			/* sample the image */
+rsample(void)			/* sample the image */
 {
 	int  xsiz, ysiz, y;
-	RECT  r;
 	PNODE  *p;
-	register RECT  *rl;
-	register PNODE	**pl;
-	register int  x;
+	PNODE	**pl;
+	int  x;
 	/*
 	 *     We initialize the bottom row in the image at our current
 	 * resolution.	During sampling, we check super-pixels to the
@@ -373,25 +265,16 @@ rsample()			/* sample the image */
 	 */
 	xsiz = (((long)(pframe.r-pframe.l)<<pdepth)+hresolu-1) / hresolu;
 	ysiz = (((long)(pframe.u-pframe.d)<<pdepth)+vresolu-1) / vresolu;
-	rl = (RECT *)malloc(xsiz*sizeof(RECT));
-	if (rl == NULL)
-		return;
 	pl = (PNODE **)malloc(xsiz*sizeof(PNODE *));
-	if (pl == NULL) {
-		free((void *)rl);
+	if (pl == NULL)
 		return;
-	}
 	/*
 	 * Initialize the bottom row.
 	 */
-	rl[0].l = rl[0].d = 0;
-	rl[0].r = hresolu; rl[0].u = vresolu;
-	pl[0] = findrect(pframe.l, pframe.d, &ptrunk, rl, pdepth);
+	pl[0] = findrect(pframe.l, pframe.d, &ptrunk, pdepth);
 	for (x = 1; x < xsiz; x++) {
-		rl[x].l = rl[x].d = 0;
-		rl[x].r = hresolu; rl[x].u = vresolu;
 		pl[x] = findrect(pframe.l+((x*hresolu)>>pdepth),
-				pframe.d, &ptrunk, rl+x, pdepth);
+				pframe.d, &ptrunk, pdepth);
 	}
 						/* sample the image */
 	for (y = 0; /* y < ysiz */ ; y++) {
@@ -403,10 +286,8 @@ rsample()			/* sample the image */
 			 */
 			if (pl[x] != pl[x+1] && bigdiff(pl[x]->v,
 					pl[x+1]->v, maxdiff)) {
-				refine(pl[x], rl[x].l, rl[x].d,
-						rl[x].r, rl[x].u, 1);
-				refine(pl[x+1], rl[x+1].l, rl[x+1].d,
-						rl[x+1].r, rl[x+1].u, 1);
+				refine(pl[x], 1);
+				refine(pl[x+1], 1);
 			}
 		}
 		if (y >= ysiz-1)
@@ -417,38 +298,32 @@ rsample()			/* sample the image */
 			/*
 			 * Find super-pixel at this position in next row.
 			 */
-			r.l = r.d = 0;
-			r.r = hresolu; r.u = vresolu;
 			p = findrect(pframe.l+((x*hresolu)>>pdepth),
 				pframe.d+(((y+1)*vresolu)>>pdepth),
-					&ptrunk, &r, pdepth);
+					&ptrunk, pdepth);
 			/*
 			 * Test super-pixel in next row.
 			 */
 			if (pl[x] != p && bigdiff(pl[x]->v, p->v, maxdiff)) {
-				refine(pl[x], rl[x].l, rl[x].d,
-						rl[x].r, rl[x].u, 1);
-				refine(p, r.l, r.d, r.r, r.u, 1);
+				refine(pl[x], 1);
+				refine(p, 1);
 			}
 			/*
 			 * Copy into super-pixel array.
 			 */
-			rl[x].l = r.l; rl[x].d = r.d;
-			rl[x].r = r.r; rl[x].u = r.u;
 			pl[x] = p;
 		}
 	}
 escape:
-	free((void *)rl);
 	free((void *)pl);
 }
 
 
 int
-refine(p, xmin, ymin, xmax, ymax, pd)		/* refine a node */
-register PNODE	*p;
-int  xmin, ymin, xmax, ymax;
-int  pd;
+refine(				/* refine a node */
+	PNODE	*p,
+	int  pd
+)
 {
 	int  growth;
 	int  mx, my;
@@ -460,49 +335,66 @@ int  pd;
 	if (pd <= 0)				/* depth limit */
 		return(0);
 
-	mx = (xmin + xmax) >> 1;
-	my = (ymin + ymax) >> 1;
+	mx = (p->xmin + p->xmax) >> 1;
+	my = (p->ymin + p->ymax) >> 1;
 	growth = 0;
 
 	if (p->kid == NULL) {			/* subdivide */
 
 		if ((p->kid = newptree()) == NULL)
 			return(0);
+
+		p->kid[UR].xmin = mx;
+		p->kid[UR].ymin = my;
+		p->kid[UR].xmax = p->xmax;
+		p->kid[UR].ymax = p->ymax;
+		p->kid[UL].xmin = p->xmin;
+		p->kid[UL].ymin = my;
+		p->kid[UL].xmax = mx;
+		p->kid[UL].ymax = p->ymax;
+		p->kid[DR].xmin = mx;
+		p->kid[DR].ymin = p->ymin;
+		p->kid[DR].xmax = p->xmax;
+		p->kid[DR].ymax = my;
+		p->kid[DL].xmin = p->xmin;
+		p->kid[DL].ymin = p->ymin;
+		p->kid[DL].xmax = mx;
+		p->kid[DL].ymax = my;
 		/*
 		 *  The following paint order can leave a black pixel
 		 *  if redraw() is called in (*dev->paintr)().
 		 */
 		if (p->x >= mx && p->y >= my)
 			pcopy(p, p->kid+UR);
-		else
-			paint(p->kid+UR, mx, my, xmax, ymax);
+		else if (paint(p->kid+UR) < 0)
+			quit(1);
 		if (p->x < mx && p->y >= my)
 			pcopy(p, p->kid+UL);
-		else
-			paint(p->kid+UL, xmin, my, mx, ymax);
+		else if (paint(p->kid+UL) < 0)
+			quit(1);
 		if (p->x >= mx && p->y < my)
 			pcopy(p, p->kid+DR);
-		else
-			paint(p->kid+DR, mx, ymin, xmax, my);
+		else if (paint(p->kid+DR) < 0)
+			quit(1);
 		if (p->x < mx && p->y < my)
 			pcopy(p, p->kid+DL);
-		else
-			paint(p->kid+DL, xmin, ymin, mx, my);
+		else if (paint(p->kid+DL) < 0)
+			quit(1);
 
 		growth++;
 	}
 						/* do children */
 	if (mx > pframe.l) {
 		if (my > pframe.d)
-			growth += refine(p->kid+DL, xmin, ymin, mx, my, pd-1);
+			growth += refine(p->kid+DL, pd-1);
 		if (my < pframe.u)
-			growth += refine(p->kid+UL, xmin, my, mx, ymax, pd-1);
+			growth += refine(p->kid+UL, pd-1);
 	}
 	if (mx < pframe.r) {
 		if (my > pframe.d)
-			growth += refine(p->kid+DR, mx, ymin, xmax, my, pd-1);
+			growth += refine(p->kid+DR, pd-1);
 		if (my < pframe.u)
-			growth += refine(p->kid+UR, mx, my, xmax, ymax, pd-1);
+			growth += refine(p->kid+UR, pd-1);
 	}
 						/* recompute sum */
 	if (growth) {

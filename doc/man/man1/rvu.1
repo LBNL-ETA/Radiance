@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.4 2005/06/14 03:34:14 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.5 2008/08/21 07:05:58 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -6,6 +6,8 @@ rvu - generate RADIANCE images interactively
 .B rvu
 [
 .B "rpict options"
+][
+.B "\-n nproc"
 ][
 .B "\-o dev"
 ][
@@ -59,6 +61,11 @@ Additionally, the
 option improves the display on greyscale monitors, and
 .I \-pe
 may be used to set an initial exposure value.
+.PP
+The
+.I \-n
+option may be used to specify multiple processes,
+to accelerate rendering.
 .PP
 In the second form, the default values
 for the options are printed with a brief explanation.
@@ -219,8 +226,8 @@ A negative magnification factor decreases the object size.
 The default factor is one.
 Care must be taken to avoid moving behind or inside other objects.
 .TP
-.BR new
-Restart the image.
+.BI new " [ nproc ]"
+Restart the image, using the specified number of rendering processes.
 Usually used after the "set" command.
 .TP
 .BI pivot " angle [ elev [ mag [ x y z ] ] ]"
