@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.22 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.23 2008/08/21 16:13:00 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -25,6 +25,7 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.22 2008/08/21 07:05:59 greg Exp $";
 #define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
 #endif
 
+static int  niflush;			/* flushes since newimage() */
 
 int
 getrect(				/* get a box */
@@ -184,11 +185,14 @@ paint(			/* compute and paint a rectangle */
 	copycolor(p->v, thisray.rcol);
 	scalecolor(p->v, exposure);
 
-	(*dev->paintr)(greyscale?greyof(p->v):p->v, p->xmin, p->ymin, p->xmax, p->ymax);
+	(*dev->paintr)(greyscale?greyof(p->v):p->v,
+			p->xmin, p->ymin, p->xmax, p->ymax);
 
-	if (dev->flush != NULL && raynum - lastflush >= WFLUSH*ray_pnprocs) {
+	if (dev->flush != NULL && raynum - lastflush >= ray_pnprocs *
+			(ambounce > 0 && niflush < WFLUSH ? niflush : WFLUSH)) {
 		lastflush = raynum;
 		(*dev->flush)();
+		niflush++;
 	}
 	return(1);
 }
@@ -249,7 +253,7 @@ newimage(					/* start a new image */
 		ray_popen(nproc);
 		newparam = 0;
 	}
-						/* get first value */
+	niflush = 0;				/* get first value */
 	paint(&ptrunk);
 }
 

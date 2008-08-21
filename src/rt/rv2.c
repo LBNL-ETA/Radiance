@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.55 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.56 2008/08/21 16:13:00 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -726,9 +726,7 @@ traceray(				/* trace a single ray */
 		return;
 	}
 
-	rayorigin(&thisray, PRIMARY, NULL, NULL);
-	
-	rayvalue(&thisray);
+	ray_trace(&thisray);
 
 	if (thisray.ro == NULL)
 		(*dev->comout)("ray hit nothing");
