@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.29 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.30 2008/08/22 17:39:26 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -85,8 +85,6 @@ rview(void)				/* do a view */
 			(*dev->comout)(buf);
 			refine(&ptrunk, pdepth+1);
 		}
-		if (waitrays() < 0)
-			quit(1);
 		if (dev->inpready)		/* noticed some input */
 			command(": ");
 		else				/* finished this depth */
@@ -109,6 +107,9 @@ again:
 		;
 	if (*args) *args++ = '\0';
 	else *++args = '\0';
+
+	if (waitrays() < 0)			/* clear ray queue */
+		quit(1);
 	
 	switch (inpbuf[0]) {
 	case 'f':				/* new frame (|focus|free) */
