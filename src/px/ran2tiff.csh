@@ -65,8 +65,7 @@ if ($#argv < 2) then
 	exit 1
 endif
 # Get shrunken image luminances
-set vald=/tmp/val$$
-mkdir $vald
+set vald=`mktemp -d /tmp/val.XXXXXX`
 foreach inp ($argv:q)
 	set datf="$inp:t"
 	set datf="$vald/$datf:r.dat"

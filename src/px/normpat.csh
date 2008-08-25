@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: normpat.csh,v 2.6 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: normpat.csh,v 2.7 2008/08/25 04:50:32 greg Exp $
 #
 # Normalize a pattern for tiling (-b option blends edges) by removing
 # lowest frequencies from image (-f option) and reducing to
@@ -35,8 +35,7 @@ while ($#argv > 0)
 end
 dofiles:
 onintr quit
-set td=/tmp/np$$
-mkdir $td
+set td=`mktemp -d /tmp/np.XXXXXX`
 goto skipthis
 cat > $td/coef.fmt << '_EOF_'
    rm:${  $25   };    gm:${  $26   };    bm:${  $27   };

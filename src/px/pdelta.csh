@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: pdelta.csh,v 3.1 2003/02/22 02:07:27 greg Exp $
+# RCSid: $Id: pdelta.csh,v 3.2 2008/08/25 04:52:57 greg Exp $
 #
 # Compute 1976 CIE Lab deltaE* between two Radiance pictures
 #
@@ -22,10 +22,11 @@ endif
 if ( "`getinfo < $f2:q | grep '^FORMAT=32-bit_rle_xyze'`" == "" ) then
 	set inp2='x2=X(ri(2),gi(2),bi(2));y2=Y(ri(2),gi(2),bi(2));z2=Z(ri(2),gi(2),bi(2))'
 endif
-pfilt -1 -x 128 -y 128 -p 1 $f1:q | pvalue -o -h -H -d > /tmp/tf$$.dat
-set wht=(`total -u /tmp/tf$$.dat`)
-set avg=`rcalc -e '$1=$2' /tmp/tf$$.dat | total -m`
-rm /tmp/tf$$.dat
+set tempf=`mktemp /tmp/tf.XXXXXX`
+pfilt -1 -x 128 -y 128 -p 1 $f1:q | pvalue -o -h -H -d > $tempf
+set wht=(`total -u $tempf`)
+set avg=`rcalc -e '$1=$2' $tempf | total -m`
+rm $tempf
 pcomb -e $cielab:q -e $rgb2xyz:q \
 	-e "Yw:179*3*$avg; Xw:$wht[1]*Yw/$wht[2]; Zw:$wht[3]*Yw/$wht[2]" \
 	-e $inp1:q -e $inp2:q -e 'lo=dE(x1,y1,z1,x2,y2,z2)' \

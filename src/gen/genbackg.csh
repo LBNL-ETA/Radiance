@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: genbackg.csh,v 2.1 2003/02/22 02:07:23 greg Exp $
+# RCSid: $Id: genbackg.csh,v 2.2 2008/08/25 04:50:32 greg Exp $
 #
 # Generate height field to surround a mesh with an irregular border
 #
@@ -66,7 +66,8 @@ if (! $?step ) then
 	set step=`ev "sqrt(($c11[1]-$c00[1])*($c11[1]-$c00[1])+($c11[2]-$c00[2])*($c11[2]-$c00[2]))/70"`
 endif
 set res=(`ev "ceil(sqrt(($c01[1]-$c00[1])*($c01[1]-$c00[1])+($c01[2]-$c00[2])*($c01[2]-$c00[2]))/$step)" "ceil(sqrt(($c10[1]-$c00[1])*($c10[1]-$c00[1])+($c10[2]-$c00[2])*($c10[2]-$c00[2]))/$step)"`)
-cat > /tmp/edge$$.rad << _EOF_
+set edgef=`mktemp /tmp/edgerad.XXXXXX`
+cat > $edgef << _EOF_
 void sphere c00
 0 0 4
 $c00 .001
@@ -92,7 +93,8 @@ void cylinder ey1
 0 0 7
 $c10 $c11 .001
 _EOF_
-cat > /tmp/mesh$$.cal << _EOF_
+set meshcal=`mkdir /tmp/meshcal.XXXXXX`
+cat > $meshcal << _EOF_
 lerp(x,y0,y1):(1-x)*y0+x*y1;
 and(a,b):if(a,b,-1);
 or(a,b):if(a,1,b);
@@ -120,14 +122,16 @@ inmesh=and(not(onedge),eq(sumfun2(wt,-1,1,-1,1),sumfun2(maxwt,-1,1,-1,1)));
 lo=if(inmesh,1e10,if(wts-EPS,sum/wts,($lim[5]+$lim[6])/2));
 _EOF_
 # Generate height image
-xform -m void $mesh | oconv - /tmp/edge$$.rad > /tmp/mesh$$.oct
+set meshoct=`/tmp/meshoct.XXXXXXX`
+xform -m void $mesh | oconv - $edgef > $meshoct
+set meshpic=`mktemp /tmp/meshpic.XXXXXX`
 cnt $res[2] $res[1] \
 	| rcalc -e 'sp=$2/'"($res[1]-1)" -e 'tp=1-$1/'"($res[2]-1)" \
-	-f /tmp/mesh$$.cal -e "xp=xpos(sp,tp);yp=ypos(sp,tp)" \
+	-f $meshcal -e "xp=xpos(sp,tp);yp=ypos(sp,tp)" \
 	-e '$1=xp;$2=yp;$3=z0;$4=0;$5=0;$6=1' \
-	| rtrace -w -faf -oL -x $res[1] -y $res[2] /tmp/mesh$$.oct \
-	| pvalue -r -b -df > /tmp/mesh$$.pic
-rm /tmp/edge$$.rad /tmp/mesh$$.oct
+	| rtrace -w -faf -oL -x $res[1] -y $res[2] $meshoct \
+	| pvalue -r -b -df > $meshpic
+rm $edgef $meshoct
 # Output mesh surround
 cat << _EOF_
 # $0 $argv[*]
@@ -137,14 +141,14 @@ cat << _EOF_
 #	$c11
 #	$c10
 _EOF_
-pflip -v /tmp/mesh$$.pic \
-	| pcomb -f /tmp/mesh$$.cal - \
+pflip -v $meshpic \
+	| pcomb -f $meshcal - \
 	| pvalue -h -H -pG -d \
 	| gensurf $mat $nam 'xpos(s,t)' 'ypos(s,t)' - \
 		`ev $res[1]-1 $res[2]-1` \
 		-e 'valid(xf,yf)=1e9-Z`SYS(xf,yf)' \
-		-f /tmp/mesh$$.cal $smooth
-rm /tmp/mesh$$.cal /tmp/mesh$$.pic
+		-f $meshcal $smooth
+rm $meshcal $meshpic
 # All done -- exit
 exit 0
 # Usage error message

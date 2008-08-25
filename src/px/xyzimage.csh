@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: xyzimage.csh,v 2.4 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: xyzimage.csh,v 2.5 2008/08/25 04:50:32 greg Exp $
 #
 # Display one or more CIE XYZE pictures using ximage
 #
@@ -48,10 +48,9 @@ while ( $i <= $#argv && ! $firstarg )
 	endsw
 	set i=$i1
 end
-set td=/tmp/xyz$$
 set ecode=1
 onintr quit
-mkdir $td
+set td=`mktemp -d /tmp/xyz.XXXXXX`
 if ( ! $firstarg ) then
 	ra_xyze -r -u $popt > $td/stdin
 	if ( $status ) goto quit

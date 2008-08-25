@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: dayfact.csh,v 2.7 2005/10/06 05:49:44 greg Exp $
+# RCSid: $Id: dayfact.csh,v 2.8 2008/08/25 04:50:32 greg Exp $
 #
 # Interactive script to calculate daylight factors
 #
@@ -16,6 +16,7 @@ set wporig=(0 0 0)
 set wpsize=(1 1)
 set rtargs=(-ab 1 -ad 256 -as 128 -aa .15 -av .3 .3 .3)
 set maxres=128
+set td=`mktemp -d /tmp/df.XXXXXX`
 
 alias readvar 'echo -n Enter \!:1 "[$\!:1]: ";set ans="$<";if("$ans" != "")set \!:1="$ans"'
 
@@ -74,18 +75,18 @@ if ( $genskyf == $nofile ) then
 	echo "You will not be able to compute daylight factors"
 	echo "or energy savings since there is no gensky file."
 else
-	xform -e $genskyf > /tmp/gsf$$
-	grep '^# gensky ' /tmp/gsf$$
+	xform -e $genskyf > $td/gsf
+	grep '^# gensky ' $td/gsf
 	if ( $status ) then
 		echo "The file $genskyf does not contain a gensky command\!"
-		rm -f /tmp/gsf$$
+		rm -f $td/gsf
 		goto getgenskyf
 	endif
-	set title=$title\ `sed -n 's/^# gensky  *\([0-9][0-9]*  *[0-9][0-9]*  *[0-9][0-9.]*\).*$/\1/p' /tmp/gsf$$`
-	set extamb=`sed -n 's/^# Ground ambient level: //p' /tmp/gsf$$`
-	grep -s '^# gensky .* -c' /tmp/gsf$$
+	set title=$title\ `sed -n 's/^# gensky  *\([0-9][0-9]*  *[0-9][0-9]*  *[0-9][0-9.]*\).*$/\1/p' $td/gsf`
+	set extamb=`sed -n 's/^# Ground ambient level: //p' $td/gsf`
+	grep -s '^# gensky .* -c' $td/gsf
 	set nodaysav=$status
-	rm -f /tmp/gsf$$
+	rm -f $td/gsf
 	if ( $nodaysav ) then
 		echo "The gensky command was not done for an overcast sky"
 		echo "(-c option), so energy savings cannot be calculated."
@@ -115,18 +116,17 @@ if ( $ilpict == $nofile && $dfpict == $nofile && $dspict == $nofile ) then
 endif
 echo "Title for output picture"
 readvar title
-set sctemp=/tmp/sc$$.csh
+set sctemp=$td/sc.csh
 cat <<'_EOF_' > $sctemp
 if ( $illumpic != $nofile ) then
 	set iltemp=""
 else
-	set iltemp=/tmp/il$$.pic
+	set iltemp=$td/il.pic
 	set illumpic=$iltemp
 endif
-set tltemp=/tmp/tl$$.pic
-set dstemp=/tmp/ds$$.pic
-set temp1=/tmp/tfa$$
-set tempfiles=($iltemp $sctemp $tltemp $dstemp $temp1)
+set tltemp=$td/tl.pic
+set dstemp=$td/ds.pic
+set temp1=$td/tfa
 echo "Your dayfact job is finished."
 echo "Please check for error messages below."
 echo ""
@@ -160,7 +160,7 @@ if ( $dspict != $nofile ) then
 		$fcopts -m 100 -p $illumpic \\
 		| pcompos -a 1 - $tltemp > $dspict' >> $sctemp
 endif
-echo 'rm -f $tempfiles' >> $sctemp
+echo 'rm -r $td' >> $sctemp
 (source $sctemp) |& mail `whoami` &
 echo "Your job is started in the background."
 echo "You will be notified by mail when it is done."

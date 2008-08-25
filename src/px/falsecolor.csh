@@ -1,12 +1,12 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.17 2006/11/15 08:17:13 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.18 2008/08/25 04:50:32 greg Exp $
 #
 # Create false color image with legend
 #
 # Added user-definable legend 2004/01/20 Rob Guglielmetti
 
-set td=/tmp/fc$$
 onintr quit
+set td=`mktemp -d /tmp/fc.XXXXXX`
 set mult=179
 set label=Nits
 set scale=1000
@@ -100,7 +100,6 @@ while ($#argv > 0)
 	endsw
 	shift argv
 end
-mkdir $td
 if ($?needfile && "$picture" == '-') then
 	cat > $td/picture
 	set picture=$td/picture
