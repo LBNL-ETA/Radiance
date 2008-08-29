@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.56 2008/08/21 16:13:00 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.57 2008/08/29 00:30:51 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -444,6 +444,7 @@ getexposure(				/* get new exposure */
 }
 
 typedef union {int i; double d; COLOR C;}	*MyUptr;
+#define  FEQ(x,y)     (fabs((x)-(y)) <= FTINY)
 
 int
 getparam(		/* get variable from user */
@@ -468,6 +469,8 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%d", &i0) != 1)
 				return(0);
 		}
+		if (ptr->i == i0)
+			return(0);
 		ptr->i = i0;
 		break;
 	case 'r':			/* real */
@@ -479,6 +482,8 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf", &d0) != 1)
 				return(0);
 		}
+		if (FEQ(ptr->d, d0))
+			return(0);
 		ptr->d = d0;
 		break;
 	case 'b':			/* boolean */
@@ -487,11 +492,15 @@ getparam(		/* get variable from user */
 			sprintf(buf, "? (%c): ", ptr->i ? 'y' : 'n');
 			(*dev->comout)(buf);
 			(*dev->comin)(buf, NULL);
-			if (buf[0] == '\0' ||
-					strchr("yY+1tTnN-0fF", buf[0]) == NULL)
+			if (buf[0] == '\0')
 				return(0);
 		}
-		ptr->i = strchr("yY+1tT", buf[0]) != NULL;
+		if (strchr("yY+1tTnN-0fF", buf[0]) == NULL)
+			return(0);
+		i0 = strchr("yY+1tT", buf[0]) != NULL;
+		if (ptr->i == i0)
+			return(0);
+		ptr->i = i0;
 		break;
 	case 'C':			/* color */
 		if (sscanf(str, "%lf %lf %lf", &d0, &d1, &d2) != 3) {
@@ -505,6 +514,10 @@ getparam(		/* get variable from user */
 			if (sscanf(buf, "%lf %lf %lf", &d0, &d1, &d2) != 3)
 				return(0);
 		}
+		if (FEQ(colval(ptr->C,RED), d0) &&
+				FEQ(colval(ptr->C,GRN), d1) &&
+				FEQ(colval(ptr->C,BLU), d2))
+			return(0);
 		setcolor(ptr->C, d0, d1, d2);
 		break;
 	default:
