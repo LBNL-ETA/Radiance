@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.30 2008/08/22 17:39:26 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.31 2008/09/05 19:45:42 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -396,13 +396,6 @@ refine(				/* refine a node */
 			growth += refine(p->kid+DR, pd-1);
 		if (my < pframe.u)
 			growth += refine(p->kid+UR, pd-1);
-	}
-						/* recompute sum */
-	if (growth) {
-		setcolor(p->v, 0.0, 0.0, 0.0);
-		for (i = 0; i < 4; i++)
-			addcolor(p->v, p->kid[i].v);
-		scalecolor(p->v, 0.25);
 	}
 	return(growth);
 }

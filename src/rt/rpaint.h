@@ -1,4 +1,4 @@
-/* RCSid $Id: rpaint.h,v 2.8 2008/08/21 07:05:59 greg Exp $ */
+/* RCSid $Id: rpaint.h,v 2.9 2008/09/05 19:45:41 greg Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
@@ -94,6 +94,7 @@ extern void	redraw(void);
 extern void	repaint(int xmin, int ymin, int xmax, int ymax);
 extern void	paintrect(PNODE *p, RECT *r);
 extern PNODE	*findrect(int x, int y, PNODE *p, int pd);
+extern void	compavg(PNODE *p);
 extern void	scalepict(PNODE *p, double sf);
 extern void	getpictcolrs(int yoff, COLR *scan, PNODE *p,
 			int xsiz, int ysiz);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.26 2008/08/29 05:46:03 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.27 2008/09/05 19:45:41 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -373,6 +373,26 @@ findrect(				/* find a rectangle */
 		}
 	}
 	return(p);
+}
+
+
+void
+compavg(				/* recompute averages */
+	PNODE	*p
+)
+{
+	if (p->kid == NULL)
+		return;
+	compavg(p->kid+DL);
+	compavg(p->kid+DR);
+	compavg(p->kid+UL);
+	compavg(p->kid+UR);
+	setcolor(p->v, .0, .0, .0);
+	addcolor(p->v, p->kid[DL].v);
+	addcolor(p->v, p->kid[DR].v);
+	addcolor(p->v, p->kid[UL].v);
+	addcolor(p->v, p->kid[UR].v);
+	scalecolor(p->v, 0.25);
 }
 
 

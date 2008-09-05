@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.57 2008/08/29 00:30:51 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.58 2008/09/05 19:45:41 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -427,6 +427,7 @@ getexposure(				/* get new exposure */
 			e *= atof(cp);
 	}
 	if (p != NULL) {		/* relative setting */
+		compavg(p);
 		if (bright(p->v) < 1e-15) {
 			error(COMMAND, "cannot normalize to zero");
 			return;
