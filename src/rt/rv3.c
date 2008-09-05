@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.27 2008/09/05 19:45:41 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.28 2008/09/05 21:34:09 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -381,18 +381,22 @@ compavg(				/* recompute averages */
 	PNODE	*p
 )
 {
+	int	i, navg;
+	
 	if (p->kid == NULL)
 		return;
-	compavg(p->kid+DL);
-	compavg(p->kid+DR);
-	compavg(p->kid+UL);
-	compavg(p->kid+UR);
+
 	setcolor(p->v, .0, .0, .0);
-	addcolor(p->v, p->kid[DL].v);
-	addcolor(p->v, p->kid[DR].v);
-	addcolor(p->v, p->kid[UL].v);
-	addcolor(p->v, p->kid[UR].v);
-	scalecolor(p->v, 0.25);
+	navg = 0;
+	for (i = 0; i < 4; i++) {
+		if (p->kid[i].xmin >= p->kid[i].xmax) continue;
+		if (p->kid[i].ymin >= p->kid[i].ymax) continue;
+		compavg(p->kid+i);
+		addcolor(p->v, p->kid[i].v);
+		navg++;
+	}
+	if (navg > 1)
+		scalecolor(p->v, 1./navg);
 }
 
 
