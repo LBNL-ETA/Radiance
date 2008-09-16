@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.28 2008/09/05 21:34:09 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.29 2008/09/16 18:35:56 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -16,8 +16,12 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.28 2008/09/05 21:34:09 greg Exp $";
 #include  "random.h"
 
 #ifndef WFLUSH
-#define WFLUSH		64		/* flush after this many rays */
+#define WFLUSH		64		/* flush after this many primary rays */
 #endif
+#ifndef WFLUSH1
+#define WFLUSH1		512		/* or this many total rays */
+#endif
+
 
 #ifdef  SMLFLT
 #define  sscanvec(s,v)	(sscanf(s,"%f %f %f",v,v+1,v+2)==3)
@@ -172,13 +176,10 @@ paint(			/* compute and paint a rectangle */
 	PNODE  *p
 )
 {
-	extern int  ray_pnprocs;
-	static unsigned long  lastflush = 0;
 	static RAY  thisray;
-	int	flushintvl;
 	double  h, v;
 
-	if (p->xmax - p->xmin <= 0 || p->ymax - p->ymin <= 0) {	/* empty */
+	if ((p->xmax <= p->xmin) | (p->ymax <= p->ymin)) {	/* empty */
 		p->x = p->xmin;
 		p->y = p->ymin;
 		setcolor(p->v, 0.0, 0.0, 0.0);
@@ -191,8 +192,10 @@ paint(			/* compute and paint a rectangle */
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir, &ourview,
 			h/hresolu, v/vresolu)) < -FTINY) {
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
-	} else {
-		int  rval;
+	} else if (nproc == 1) {		/* immediate mode */
+		ray_trace(&thisray);
+	} else {				/* queuing mode */
+		int	rval;
 		rayorigin(&thisray, PRIMARY, NULL, NULL);
 		thisray.rno = (unsigned long)p;
 		rval = ray_pqueue(&thisray);
@@ -208,17 +211,25 @@ paint(			/* compute and paint a rectangle */
 
 	recolor(p);				/* paint it */
 
-	if (ambounce <= 0)			/* shall we check for input? */
-		flushintvl = ray_pnprocs*WFLUSH;
-	else if (niflush < WFLUSH)
-		flushintvl = ray_pnprocs*niflush/(ambounce+1);
-	else
-		flushintvl = ray_pnprocs*WFLUSH/(ambounce+1);
+	if (dev->flush != NULL) {		/* shall we check for input? */
+		static unsigned long	lastflush = 0;
+		unsigned long		counter = raynum;
+		int			flushintvl;
+		if (nproc == 1) {
+			counter = nrays;
+			flushintvl = WFLUSH1;
+		} else if (ambounce == 0)
+			flushintvl = nproc*WFLUSH;
+		else if (niflush < WFLUSH)
+			flushintvl = nproc*niflush/(ambounce+1);
+		else
+			flushintvl = nproc*WFLUSH/(ambounce+1);
 
-	if (dev->flush != NULL && raynum - lastflush >= flushintvl) {
-		lastflush = raynum;
-		(*dev->flush)();
-		niflush++;
+		if (counter - lastflush >= flushintvl) {
+			lastflush = counter;
+			(*dev->flush)();
+			niflush++;
+		}
 	}
 	return(1);
 }
@@ -230,7 +241,9 @@ waitrays(void)					/* finish up pending rays */
 	int	nwaited = 0;
 	int	rval;
 	RAY	raydone;
-	
+
+	if (nproc == 1)				/* immediate mode? */
+		return(0);
 	while ((rval = ray_presult(&raydone, 0)) > 0) {
 		PNODE  *p = (PNODE *)raydone.rno;
 		copycolor(p->v, raydone.rcol);
@@ -249,11 +262,16 @@ newimage(					/* start a new image */
 	char *s
 )
 {
-	int	newnp;
+	extern int	ray_pnprocs;
+	int		newnp;
 						/* change in nproc? */
 	if (s != NULL && sscanf(s, "%d", &newnp) == 1 && newnp > 0) {
 		if (!newparam) {
-			if (newnp < nproc)
+			if (nproc == 1)
+				nproc = 0;	/* actually running */
+			if (newnp == 1)
+				ray_pclose(0);
+			else if (newnp < nproc)
 				ray_pclose(nproc - newnp);
 			else
 				ray_popen(newnp - nproc);
@@ -274,8 +292,10 @@ newimage(					/* start a new image */
 	(*dev->clear)(hresolu, vresolu);
 
 	if (newparam) {				/* (re)start rendering procs */
-		ray_pclose(0);
-		ray_popen(nproc);
+		if (ray_pnprocs > 0)
+			ray_pclose(0);
+		if (nproc > 1)
+			ray_popen(nproc);
 		newparam = 0;
 	}
 	niflush = 0;				/* get first value */
