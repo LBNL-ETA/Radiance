@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.29 2008/09/16 18:35:56 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.30 2008/09/16 21:14:11 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -242,7 +242,7 @@ waitrays(void)					/* finish up pending rays */
 	int	rval;
 	RAY	raydone;
 
-	if (nproc == 1)				/* immediate mode? */
+	if (nproc <= 1)				/* immediate mode? */
 		return(0);
 	while ((rval = ray_presult(&raydone, 0)) > 0) {
 		PNODE  *p = (PNODE *)raydone.rno;
@@ -265,16 +265,15 @@ newimage(					/* start a new image */
 	extern int	ray_pnprocs;
 	int		newnp;
 						/* change in nproc? */
-	if (s != NULL && sscanf(s, "%d", &newnp) == 1 && newnp > 0) {
+	if (s != NULL && sscanf(s, "%d", &newnp) == 1 &&
+			(newnp > 0) & (newnp != nproc)) {
 		if (!newparam) {
-			if (nproc == 1)
-				nproc = 0;	/* actually running */
 			if (newnp == 1)
 				ray_pclose(0);
-			else if (newnp < nproc)
-				ray_pclose(nproc - newnp);
+			else if (newnp < ray_pnprocs)
+				ray_pclose(ray_pnprocs - newnp);
 			else
-				ray_popen(newnp - nproc);
+				ray_popen(newnp - ray_pnprocs);
 		}
 		nproc = newnp;
 	}
