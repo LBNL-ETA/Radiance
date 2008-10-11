@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.8 2004/08/21 11:54:06 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.9 2008/10/11 04:29:39 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -164,13 +164,13 @@ char  *argv[];
 			printf("0\n4\n");
 			if (orient&(UP|DOWN)) {
 				t = (nextnz - lastnz)/(z - lastz);
-				printf("\t%15.9g\t%15.9g\n",
+				printf("\t%18.12g\t%18.12g\n",
 						t, lastnz - t*lastz);
 			} else
 				printf("\t0\t%d\n", orient&IN ? 1 : -1);
 			if (orient&(OUT|IN))  {
 				t = (nextnr - lastnr)/(r - lastr);
-				printf("\t%15.9g\t%15.9g\n",
+				printf("\t%18.12g\t%18.12g\n",
 						t, lastnr - t*lastr);
 			} else
 				printf("\t0\t%d\n", orient&UP ? 1 : -1);
@@ -180,23 +180,23 @@ char  *argv[];
 					orient&DOWN ? "tube" : "cylinder",
 					argv[2], i);
 			printf("0\n0\n7\n");
-			printf("\t0\t0\t%15.9g\n", lastz);
-			printf("\t0\t0\t%15.9g\n", z);
-			printf("\t%15.9g\n", r);
+			printf("\t0\t0\t%18.12g\n", lastz);
+			printf("\t0\t0\t%18.12g\n", z);
+			printf("\t%18.12g\n", r);
 		} else if (!(orient&(UP|DOWN))) {
 			printf("\n%s ring %s.%d\n", modname, argv[2], i);
 			printf("0\n0\n8\n");
-			printf("\t0\t0\t%15.9g\n", z);
-			printf("\t0\t0\t%15.9g\n", orient&IN ? 1.0 : -1.0);
-			printf("\t%15.9g\t%15.9g\n", lastr, r);
+			printf("\t0\t0\t%18.12g\n", z);
+			printf("\t0\t0\t%18.12g\n", orient&IN ? 1.0 : -1.0);
+			printf("\t%18.12g\t%18.12g\n", lastr, r);
 		} else {
 			printf("\n%s %s %s.%d\n", modname,
 					orient&DOWN ? "cup" : "cone",
 					argv[2], i);
 			printf("0\n0\n8\n");
-			printf("\t0\t0\t%15.9g\n", lastz);
-			printf("\t0\t0\t%15.9g\n", z);
-			printf("\t%15.9g\t%15.9g\n", lastr, r);
+			printf("\t0\t0\t%18.12g\n", lastz);
+			printf("\t0\t0\t%18.12g\n", z);
+			printf("\t%18.12g\t%18.12g\n", lastr, r);
 		}
 	endfor:
 		lastz = z; lastr = r;
