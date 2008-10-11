@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.9 2008/10/11 04:29:39 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.10 2008/10/11 04:39:34 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -18,7 +18,6 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.9 2008/10/11 04:29:39 greg Exp $"
 
 #include  "rterror.h"
 #include  "resolu.h"
-#include  "rterror.h"
 #include  "calcomp.h"
 
 #define  ZNAME		"Z`SYS`"		/* z function name */
