@@ -1,10 +1,10 @@
 #!/bin/csh -f
-# RCSid: $Id: pdelta.csh,v 3.2 2008/08/25 04:52:57 greg Exp $
+# RCSid: $Id: pdelta.csh,v 3.3 2008/11/10 19:08:19 greg Exp $
 #
 # Compute 1976 CIE Lab deltaE* between two Radiance pictures
 #
 if ($#argv != 2) then
-	echo "Usage: $0 picture1 picture2 > output.pic"
+	echo "Usage: $0 picture1 picture2 > output.hdr"
 	exit 1
 endif
 set cielab='sq(x):x*x;Ls(Yi):if(Yi/Yw-.01,116*(Yi/Yw)^(1/3)-16,903.3*Yi/Yw);as(Xi,Yi,Zi):500*((Xi/Xw)^(1/3)-(Yi/Yw)^(1/3));bs(Xi,Yi,Zi):200*((Yi/Yw)^(1/3)-(Zi/Zw)^(1/3));dE(X1,Y1,Z1,X2,Y2,Z2):sqrt(sq(Ls(Y1)-Ls(Y2))+sq(as(X1,Y1,Z1)-as(X2,Y2,Z2))+sq(bs(X1,Y1,Z1)-bs(X2,Y2,Z2)));'

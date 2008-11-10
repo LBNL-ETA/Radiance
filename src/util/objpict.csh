@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: objpict.csh,v 2.4 2005/02/16 05:40:12 greg Exp $
+# RCSid: $Id: objpict.csh,v 2.5 2008/11/10 19:08:19 greg Exp $
 #
 # Make a nice multi-view picture of an object
 # Command line arguments contain materials and object files
@@ -11,10 +11,10 @@ set yres=250
 set rpict="rpict -av .2 .2 .2 -x $xres -y $yres"
 set inprad=$tmpdir/op$$.rad
 set octree=$tmpdir/op$$.oct
-set pict1=$tmpdir/op$$a.pic
-set pict2=$tmpdir/op$$b.pic
-set pict3=$tmpdir/op$$c.pic
-set pict4=$tmpdir/op$$d.pic
+set pict1=$tmpdir/op$$a.hdr
+set pict2=$tmpdir/op$$b.hdr
+set pict3=$tmpdir/op$$c.hdr
+set pict4=$tmpdir/op$$d.hdr
 set tmpfiles="$inprad $octree $pict1 $pict2 $pict3 $pict4"
 onintr quit
 if ( $#argv ) then

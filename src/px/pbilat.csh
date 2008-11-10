@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: pbilat.csh,v 1.2 2008/08/25 04:50:32 greg Exp $
+# RCSid $Id: pbilat.csh,v 1.3 2008/11/10 19:08:19 greg Exp $
 #
 # Bilateral Filter (fixed parameters for now)
 #
@@ -24,15 +24,15 @@ while ( $i <= $nseg )
 	pcomb -e $gfunc:q -e "vmin:$vmin" \
 			-e 'max(a,b):if(a-b,a,b);l1=max(li(1),vmin)' \
 			-e "lo=gfunc(log10(l1)-log10($intens))" \
-			-o $inp > $tdir/gimg.pic
+			-o $inp > $tdir/gimg.hdr
 	pcomb -e 'sf=gi(2);ro=sf*ri(1);go=sf*gi(1);bo=sf*bi(1)' \
-			-o $inp $tdir/gimg.pic > $tdir/g_p.pic
-	pgblur -r $rad $tdir/g_p.pic \
+			-o $inp $tdir/gimg.hdr > $tdir/g_p.hdr
+	pgblur -r $rad $tdir/g_p.hdr \
 		| pcomb -e 'sf=if(gi(2)-1e-6,1/gi(2),1e6)' \
 			-e 'ro=sf*ri(1);go=sf*gi(1);bo=sf*bi(1)' \
-			- "\!pgblur -r $rad $tdir/gimg.pic" \
-		> $tdir/gimg$i.pic
-	set imglist=($imglist $tdir/gimg$i.pic)
+			- "\!pgblur -r $rad $tdir/gimg.hdr" \
+		> $tdir/gimg$i.hdr
+	set imglist=($imglist $tdir/gimg$i.hdr)
 	@ i++
 end
 cat > $tdir/interp.cal << _EOF_
@@ -53,4 +53,4 @@ done:
 rm -rf $tdir
 exit 0
 userr:
-echo Usage: $0 input.pic
+echo Usage: $0 input.hdr

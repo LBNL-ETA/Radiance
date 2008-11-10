@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.10 2006/09/26 12:26:02 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.11 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -137,7 +137,7 @@ main(
 	exit(rval==0 ? 0 : 1);
 userr:
 	fprintf(stderr,
-"Usage: %s [-h][-s][-c][-l][-b][-g gv][-d ld][-u lm][-z][-p xr yr xg yg xb yb xw yw] input.{tif|pic} output.tif\n",
+"Usage: %s [-h][-s][-c][-l][-b][-g gv][-d ld][-u lm][-z][-p xr yr xg yg xb yb xw yw] input.{tif|hdr} output.tif\n",
 			argv[0]);
 	exit(1);
 }

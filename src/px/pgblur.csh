@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: pgblur.csh,v 1.1 2004/01/29 22:19:13 greg Exp $
+# RCSid $Id: pgblur.csh,v 1.2 2008/11/10 19:08:19 greg Exp $
 #
 # Apply Gaussian blur without resizing image
 # More efficient than straight pfilt for large blurs
@@ -25,5 +25,5 @@ pfilt -1 -x /$reduc -y /$reduc $inp:q \
 	| pfilt -1 -r $filt -x $pr[1] -y $pr[2]
 exit 0
 userr:
-echo Usage: "$0 -r radius input.pic"
+echo Usage: "$0 -r radius input.hdr"
 exit 1

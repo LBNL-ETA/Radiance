@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.8 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.9 2008/11/10 19:08:17 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -206,11 +206,11 @@ pcomb pic1 \-s \-1 pic2 > diff
 .PP
 To precompute the gamma correction for a picture:
 .IP "" .2i
-pcomb \-e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' pic > pic.gam
+pcomb \-e 'ro=ri(1)^.4;go=gi(1)^.4;bo=bi(1)^.4' inp.hdr > gam.hdr
 .PP
 To perform some special filtering:
 .IP "" .2i
-pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.pic > filtered.pic
+pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.hdr > filtered.hdr
 .PP
 To make a picture of a dot:
 .IP "" .2i

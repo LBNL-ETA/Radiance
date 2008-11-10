@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.86 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.87 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1279,7 +1279,7 @@ rpict(				/* run rpict and pfilt for each view */
 			myprintview(vw, stdout);
 		if (!vs[0])
 			sprintf(vs, "%d", vn);
-		sprintf(picfile, "%s_%s.pic", vval(PICTURE), vs);
+		sprintf(picfile, "%s_%s.hdr", vval(PICTURE), vs);
 		if (vdef(ZFILE))
 			sprintf(zopt, " -z %s_%s.zbf", vval(ZFILE), vs);
 		else
@@ -1368,7 +1368,7 @@ rpict(				/* run rpict and pfilt for each view */
 		}
 						/* remove/rename raw file */
 		if (vdef(RAWFILE)) {
-			sprintf(combuf, "%s_%s.pic", vval(RAWFILE), vs);
+			sprintf(combuf, "%s_%s.hdr", vval(RAWFILE), vs);
 			mvfile(rawfile, combuf);
 		} else
 			rmfile(rawfile);

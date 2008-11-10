@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwright.1,v 1.6 2008/03/11 02:21:46 greg Exp $"
+.\" RCSid "$Id: vwright.1,v 1.7 2008/11/10 19:08:17 greg Exp $"
 .TH VWRIGHT 1 8/29/96 RADIANCE
 .SH NAME
 vwright - normalize a RADIANCE view, shift it to the right
@@ -62,7 +62,7 @@ To start
 .I rpict(1)
 on a view .06 meters left of the view in the file "right.vf":
 .IP "" .2i
-rpict `vwright -.06 < right.vf` scene.oct > right.pic &
+rpict `vwright -.06 < right.vf` scene.oct > right.hdr &
 .PP
 To move the
 .I rad(1)

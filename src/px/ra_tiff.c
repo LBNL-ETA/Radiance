@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.32 2005/08/19 02:31:32 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.33 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -191,10 +191,10 @@ doneopts:
 	exit(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-z|-L|-l|-f|-w][-b][-e +/-stops][-g gamma] {in.pic|-} out.tif\n",
+	"Usage: %s [-z|-L|-l|-f|-w][-b][-e +/-stops][-g gamma] {in.hdr|-} out.tif\n",
 			progname);
 	fprintf(stderr,
-	"   Or: %s -r [-x][-e +/-stops][-g gamma] in.tif [out.pic|-]\n",
+	"   Or: %s -r [-x][-e +/-stops][-g gamma] in.tif [out.hdr|-]\n",
 			progname);
 	exit(1);
 }

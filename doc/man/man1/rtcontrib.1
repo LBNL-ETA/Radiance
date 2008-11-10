@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.19 2008/10/06 23:00:53 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.20 2008/11/10 19:08:17 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -276,12 +276,12 @@ contributions:
 .IP "" .2i
 vwrays \-ff \-x 1024 \-y 1024 \-vf best.vf |
 rtcontrib \-ffc `vwrays \-d \-x 1024 \-y 1024 \-vf best.vf`
-@render.opt \-o c_%s.pic \-m light1 \-m light2 scene.oct
+@render.opt \-o c_%s.hdr \-m light1 \-m light2 scene.oct
 .PP
 These images may then be recombined using the desired outputs
 of light1 and light2:
 .IP "" .2i
-pcomb \-c 100 90 75 c_light1.pic \-c 50 55 57 c_light2.pic > combined.pic
+pcomb \-c 100 90 75 c_light1.hdr \-c 50 55 57 c_light2.hdr > combined.hdr
 .PP
 To compute an array of illuminance contributions according to a Tregenza sky:
 .IP "" .2i

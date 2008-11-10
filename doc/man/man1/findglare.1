@@ -1,4 +1,4 @@
-.\" RCSid "$Id: findglare.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: findglare.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
 .TH FINDGLARE 1 11/15/93 RADIANCE
 .SH NAME
 findglare - locate glare sources in a RADIANCE scene
@@ -138,9 +138,9 @@ flag switches on verbose mode, where
 .I findglare
 reports its progress during the calculation.
 .SH EXAMPLE
-To calculate the glare sources in the image "scene.pic":
+To calculate the glare sources in the image "scene.hdr":
 .IP "" .2i
-findglare \-p scene.pic > scene.glr
+findglare \-p scene.hdr > scene.glr
 .PP
 To compute the Guth visual comfort probability from this result:
 .IP "" .2i

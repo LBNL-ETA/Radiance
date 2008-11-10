@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mgf2meta.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: mgf2meta.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
 .TH MGF2META 1 11/20/95 RADIANCE
 .SH NAME
 mgf2meta - convert Materials and Geometry Format file to Metafile graphics
@@ -59,7 +59,7 @@ To convert a RADIANCE scene to a line drawing in RADIANCE picture
 format:
 .IP "" .2i
 rad2mgf scene.rad | mgf2meta x `getbbox \-h scene.rad` | meta2tga |
-ra_t8 \-r > scene.pic
+ra_t8 \-r > scene.hdr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

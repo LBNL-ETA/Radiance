@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: 3ds2mgf.c,v 1.9 2007/09/05 02:41:19 greg Exp $";
+static const char	RCSid[] = "$Id: 3ds2mgf.c,v 1.10 2008/11/10 19:08:18 greg Exp $";
 #endif
 /*
       3DS2POV.C  by Steve Anger and Jeff Bowermaster
@@ -2950,11 +2950,24 @@ dword read_dword()
 
 float read_float()
 {
+    union { dword i; char c[8]; } u;
     dword data;
 
     data = read_dword();
 
-    return *(float *)&data;
+    if (sizeof(dword) == sizeof(float))
+	return *(float *)&data;
+
+    u.i = 1;
+    if (u.c[0] == 0)
+	return *(float *)&data;	/* assume big-endian */
+
+    if (sizeof(dword) != 2*sizeof(float)) {
+    	fputs("Unsupported word length\n", stderr);
+	exit(1);
+    }
+    u.i = data;
+    return *(float *)&u.c[4];
 }
 
 

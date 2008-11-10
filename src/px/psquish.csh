@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: psquish.csh,v 3.4 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: psquish.csh,v 3.5 2008/11/10 19:08:19 greg Exp $
 set Lmin=.0001		# minimum visible world luminance
 set Ldmin=1		# minimum display luminance
 set Ldmax=100		# maximum display luminance
@@ -18,12 +18,12 @@ if ( "$argv[1]" == "-a" ) then
 	shift argv
 endif
 if ( $#argv != 1 ) then
-	echo "Usage: $0 [-a] input.pic > output.pic"
+	echo "Usage: $0 [-a] input.hdr > output.hdr"
 	exit 1
 endif
 set ifile=$1
 set ibase=$ifile:t
-if ( "$ibase" =~ *.pic ) set ibase=$ibase:r
+if ( "$ibase" =~ *.hdr ) set ibase=$ibase:r
 set ibase=$ibase:t
 onintr quit
 pextrem -o $ifile > $tf0

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.15 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.16 2008/11/10 19:08:18 greg Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -93,7 +93,7 @@ main(		/* read in T-mesh files and convert */
 			break;
 		default:
 			fprintf(stderr,
-			"Usage: %s [-o obj][-m mat][-p pic] [file ..]\n",
+			"Usage: %s [-o obj][-m mat][-p hdr] [file ..]\n",
 					argv[0]);
 			exit(1);
 		}

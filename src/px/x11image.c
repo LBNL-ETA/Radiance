@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.72 2006/05/29 17:31:25 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.73 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -271,7 +271,7 @@ main(int  argc, char  *argv[])
 		getevent();		/* main loop */
 userr:
 	fprintf(stderr,
-"Usage: %s [-di disp][[-ge] spec][-b][-m][-d][-f][-c nclrs][-e spec][-g gamcor][-s][-ospec][-t intvl] pic ..\n",
+"Usage: %s [-di disp][[-ge] spec][-b][-m][-d][-f][-c nclrs][-e spec][-g gamcor][-s][-ospec][-t intvl] hdr ..\n",
 			progname);
 	exit(1);
 }

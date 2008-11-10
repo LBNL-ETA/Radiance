@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.8 2008/04/18 00:39:24 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.9 2008/11/10 19:08:17 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -32,17 +32,16 @@ and the secondary source types in RADIANCE.
 If the
 .I \-n
 option is specified with a value greater than 1, multiple
-.I rtrace(1)
-processes will be used to accelerate computation on a shared
+ray tracing processes will be used to accelerate computation on a shared
 memory machine.
 Note that there is no benefit to using more processes
 than there are local CPUs available to do the work.
 .PP
 Remaining arguments to
 .I mkillum
-are passed directly to
+are interpreted as rendering options for
 .I rtrace(1),
-which is used to compute the light distributions for the input surfaces.
+to compute the light distributions for the input surfaces.
 These surfaces can be any combination of polygons, spheres and rings.
 Other surfaces may be included, but
 .I mkillum
@@ -57,8 +56,7 @@ the file names.
 (Note that this character must be escaped from most shells.)
 This is necessary so
 .I mkillum
-can tell where the arguments to
-.I rtrace(1)
+can tell where the rendering arguments
 end and its own input files begin.
 .SH VARIABLES
 .I Mkillum

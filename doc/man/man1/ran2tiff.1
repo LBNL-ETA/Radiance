@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ran2tiff.1,v 1.2 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: ran2tiff.1,v 1.3 2008/11/10 19:08:17 greg Exp $"
 .TH RAN2TIFF 1 9/16/2005 RADIANCE
 .SH NAME
 ran2tiff - expose and convert a RADIANCE animation to TIFF frames
@@ -17,7 +17,7 @@ ran2tiff - expose and convert a RADIANCE animation to TIFF frames
 [
 .B "ra_tiff opts"
 ]
-.B "frame1.pic frame2.pic .."
+.B "frame1.hdr frame2.hdr .."
 .SH DESCRIPTION
 .I Ran2tiff
 takes an animated sequence of Radiance pictures and converts them by calling
@@ -62,7 +62,7 @@ though output to LogLuv TIFF formats is not supported.
 To convert a sequence of frames using a rapid human exposure response
 and LZW compression on the output:
 .IP "" .2i
-ran2tiff \-W 0.7 \-h \-z frame*.pic
+ran2tiff \-W 0.7 \-h \-z frame*.hdr
 .PP
 Similar to
 .I fieldcomb(1),

@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.18 2008/08/25 04:50:32 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.19 2008/11/10 19:08:19 greg Exp $
 #
 # Create false color image with legend
 #
@@ -191,17 +191,17 @@ endif
 if ( $legwidth > 20 && $legheight > 40 ) then
 pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v' \
 		-e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres' \
-		-x $legwidth -y $legheight > $td/scol.pic
+		-x $legwidth -y $legheight > $td/scol.hdr
 ( echo "$label"; cnt $ndivs \
 		| rcalc -e '$1='"($scale)*imap(($ndivs-.5-"'$1'")/$ndivs)" \
 		-e "$imap" | sed -e 's/\(\.[0-9][0-9][0-9]\)[0-9]*/\1/' ) \
 	| psign -s -.15 -cf 1 1 1 -cb 0 0 0 \
-		-h `ev "floor($legheight/$ndivs+.5)"` > $td/slab.pic
+		-h `ev "floor($legheight/$ndivs+.5)"` > $td/slab.hdr
 else
 	set legwidth=0
 	set legheight=0
-	(echo "" ; echo "-Y 1 +X 1" ; echo "aaa" ) > $td/scol.pic
-	cp $td/scol.pic $td/slab.pic
+	(echo "" ; echo "-Y 1 +X 1" ; echo "aaa" ) > $td/scol.hdr
+	cp $td/scol.hdr $td/slab.hdr
 endif
 if ( $?doextrem ) then
 	pextrem -o $picture > $td/extrema
@@ -209,18 +209,18 @@ if ( $?doextrem ) then
 	set minval=`rcalc -e '$1=($3*.27+$4*.67+$5*.06)*'"$mult" $td/extrema | sed -e 2d -e 's/\(\.[0-9][0-9][0-9]\)[0-9]*/\1/'`
 	set maxpos=`sed 1d $td/extrema | rcalc -e '$2=$2;$1=$1+'"$legwidth"`
 	set maxval=`rcalc -e '$1=($3*.27+$4*.67+$5*.06)*'"$mult" $td/extrema | sed -e 1d -e 's/\(\.[0-9][0-9][0-9]\)[0-9]*/\1/'`
-	psign -s -.15 -a 2 -h 16 $minval > $td/minv.pic
-	psign -s -.15 -a 2 -h 16 $maxval > $td/maxv.pic
+	psign -s -.15 -a 2 -h 16 $minval > $td/minv.hdr
+	psign -s -.15 -a 2 -h 16 $maxval > $td/maxv.hdr
 	pcomb $pc0args $pc1args $picture $cpict \
-		| pcompos $td/scol.pic 0 0 \
-			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.pic" \
-			`ev 2 $loff-1` -t .5 $td/slab.pic 0 $loff \
-		  - $legwidth 0 $td/minv.pic $minpos $td/maxv.pic $maxpos
+		| pcompos $td/scol.hdr 0 0 \
+			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.hdr" \
+			`ev 2 $loff-1` -t .5 $td/slab.hdr 0 $loff \
+		  - $legwidth 0 $td/minv.hdr $minpos $td/maxv.hdr $maxpos
 else
 	pcomb $pc0args $pc1args $picture $cpict \
-		| pcompos $td/scol.pic 0 0 \
-			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.pic" \
-			`ev 2 $loff-1` -t .5 $td/slab.pic 0 $loff \
+		| pcompos $td/scol.hdr 0 0 \
+			+t .1 "\!pcomb -e 'lo=1-gi(1)' $td/slab.hdr" \
+			`ev 2 $loff-1` -t .5 $td/slab.hdr 0 $loff \
 			- $legwidth 0
 endif
 quit:

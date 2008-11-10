@@ -14,7 +14,7 @@ ra_tiff - convert RADIANCE picture to/from a TIFF color or greyscale image
 .B "-g gamma"
 ]
 {
-.B "in.pic|-"
+.B "in.hdr|-"
 }
 .B out.tif
 .br
@@ -28,7 +28,7 @@ ra_tiff - convert RADIANCE picture to/from a TIFF color or greyscale image
 ]
 .B in.tif
 [
-.B "out.pic|-"
+.B "out.hdr|-"
 ]
 .SH DESCRIPTION
 .I Ra_tiff
@@ -88,14 +88,14 @@ than the default RGBE.
 .SH EXAMPLES
 To convert a Radiance picture to SGILOG-compressed TIFF format:
 .IP "" .2i
-ra_tiff \-L scene1.pic scene1.tif
+ra_tiff \-L scene1.hdr scene1.tif
 .PP
 To later convert this image back into Radiance and display using
 human visibility tone-mapping:
 .IP "" .2i
-ra_tiff \-r scene1.tif scene1.pic
+ra_tiff \-r scene1.tif scene1.hdr
 .br
-ximage \-e human scene1.pic
+ximage \-e human scene1.hdr
 .SH AUTHOR
 Greg Ward Larson
 .br

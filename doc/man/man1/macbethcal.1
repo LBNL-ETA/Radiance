@@ -1,15 +1,15 @@
-.\" RCSid "$Id: macbethcal.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: macbethcal.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
 .TH MACBETHCAL 1 1/16/97 RADIANCE
 .SH NAME
 macbethcal - compute color compensation based on measured Macbeth chart
 .SH SYNOPSIS
 .B macbethcal
 [
-.B "\-d debug.pic"
+.B "\-d debug.hdr"
 ][
 .B "\-p xul yul xur yur xll yll xlr ylr"
 ]
-.B scannedin.pic
+.B scannedin.hdr
 [
 .B calibout.cal
 ]
@@ -17,7 +17,7 @@ macbethcal - compute color compensation based on measured Macbeth chart
 .B macbethcal
 .B \-c
 [
-.B "\-d debug.pic"
+.B "\-d debug.hdr"
 ]
 [
 .B measured.xyY
@@ -82,7 +82,7 @@ row of the chart.
 Computing a mapping from measured colors is usually more convenient
 when calibrating a particular output device.
 This is accomplished by printing the picture
-.I macbeth_spec.pic
+.I macbeth_spec.hdr
 (which may be found in the standard RADIANCE library directory in
 the lib subdirectory) and measuring the output with a chroma meter
 or spectrophotometer.
@@ -201,30 +201,30 @@ The chart sells for under $50 US at the time of this writing.
 To compute a calibration for a FunkyThing scanner and check the
 results:
 .IP "" .2i
-ra_tiff \-r mbscan.tif mbscan.pic
+ra_tiff \-r mbscan.tif mbscan.hdr
 .br
-macbethcal \-d debug.pic mbscan.pic FunkyThing.cal
+macbethcal \-d debug.hdr mbscan.hdr FunkyThing.cal
 .br
-ximage debug.pic
+ximage debug.hdr
 .PP
 To apply this computed calibration to another scanned image:
 .IP "" .2i
-ra_tiff \-r another.tif | pcomb \-f FunkyThing.cal \- > another_calib.pic
+ra_tiff \-r another.tif | pcomb \-f FunkyThing.cal \- > another_calib.hdr
 .PP
 To compute a calibration file for the BigWhiz film recorder, after
-taking measurements of a slide made from macbeth_spec.pic:
+taking measurements of a slide made from macbeth_spec.hdr:
 .IP "" .2i
 macbethcal \-c macbeth_spec.xyY BigWhiz.cal
 .PP
 To prepare a picture prior to output on the same film recorder:
 .IP "" .2i
-pcomb \-f BigWhiz.cal standard.pic > toprint.pic
+pcomb \-f BigWhiz.cal standard.hdr > toprint.hdr
 .PP
 To use
 .I pcond(1)
 to also adjust the image for human response:
 .IP "" .2i
-pcond \-f BigWhiz.cal \-h standard.pic > toprint.pic
+pcond \-f BigWhiz.cal \-h standard.hdr > toprint.hdr
 .SH AUTHOR
 Greg Ward
 .br

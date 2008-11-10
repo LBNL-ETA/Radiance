@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.12 2008/03/11 02:21:45 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.13 2008/11/10 19:08:17 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -796,9 +796,9 @@ Boolean switch for warning messages.
 The default is to print warnings, so the first appearance of
 this option turns them off.
 .SH EXAMPLE
-rpict \-vp 10 5 3 \-vd 1 \-.5 0 scene.oct > scene.pic
+rpict \-vp 10 5 3 \-vd 1 \-.5 0 scene.oct > scene.hdr
 .PP
-rpict \-S 1 \-o frame%02d.pic scene.oct < keyframes.vf
+rpict \-S 1 \-o frame%02d.hdr scene.oct < keyframes.vf
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH FILES

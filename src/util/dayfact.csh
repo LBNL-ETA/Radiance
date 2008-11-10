@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: dayfact.csh,v 2.8 2008/08/25 04:50:32 greg Exp $
+# RCSid: $Id: dayfact.csh,v 2.9 2008/11/10 19:08:19 greg Exp $
 #
 # Interactive script to calculate daylight factors
 #
@@ -121,11 +121,11 @@ cat <<'_EOF_' > $sctemp
 if ( $illumpic != $nofile ) then
 	set iltemp=""
 else
-	set iltemp=$td/il.pic
+	set iltemp=$td/il.hdr
 	set illumpic=$iltemp
 endif
-set tltemp=$td/tl.pic
-set dstemp=$td/ds.pic
+set tltemp=$td/tl.hdr
+set dstemp=$td/ds.hdr
 set temp1=$td/tfa
 echo "Your dayfact job is finished."
 echo "Please check for error messages below."

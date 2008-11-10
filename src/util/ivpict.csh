@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: ivpict.csh,v 2.2 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: ivpict.csh,v 2.3 2008/11/10 19:08:19 greg Exp $
 #
 # Render requested Instant View
 #
@@ -9,4 +9,4 @@ if ( $#argv < 1 ) then
 endif
 set dir=$argv[1]
 set opt="$argv[2-]"
-exec pinterp $opt $dir/pvw_{x,X,y,Y,z,Z}l.{pic,z}
+exec pinterp $opt $dir/pvw_{x,X,y,Y,z,Z}l.{hdr,z}

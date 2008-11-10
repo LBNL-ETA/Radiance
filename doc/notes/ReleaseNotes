@@ -1669,3 +1669,11 @@ record (which can now be done with -c 0).
 Version 4.0
 
 Added -n option to rvu to provide parallel rendering.
+
+****** COMPATIBILITY CHANGE ********
+Changed ".pic" extension to ".hdr" in all sources and documentation
+to improve interoperability with other software, since this has become
+the de facto extension for Radiance RGBE and XYZE pictures.  Since file
+extensions were never more than a convention in Radiance, this does not
+affect operation, but may require the update of scripts, etc. written
+by others that assume the ".pic" suffix for Radiance output.

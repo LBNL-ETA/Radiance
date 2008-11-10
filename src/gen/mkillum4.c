@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.12 2008/05/01 16:42:06 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.13 2008/11/10 19:08:18 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -24,7 +24,7 @@ typedef struct {
 
 #define	MAXABASES	3		/* limit on defined bases */
 
-ANGLE_BASIS	abase_list[MAXABASES] = {
+static ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
 		"LBNL/Klems Full", 145,
 		{ {-5., 1},

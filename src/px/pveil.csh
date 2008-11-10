@@ -1,10 +1,10 @@
 #!/bin/csh -f
-# RCSid: $Id: pveil.csh,v 3.3 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: pveil.csh,v 3.4 2008/11/10 19:08:19 greg Exp $
 #
 # Add veiling glare to picture
 #
 if ($#argv != 1) then
-	echo "Usage: $0 input.pic > output.pic"
+	echo "Usage: $0 input.hdr > output.hdr"
 	exit 1
 endif
 set ifile=$1

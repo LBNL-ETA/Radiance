@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pvalue.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: pvalue.1,v 1.7 2008/11/10 19:08:17 greg Exp $"
 .TH PVALUE 1 1/15/99 RADIANCE
 .SH NAME
 pvalue - convert RADIANCE picture to/from alternate formats
@@ -225,9 +225,9 @@ pvalue \-o \-u picture | more
 To convert from a 512x400 8-bit greyscale image in bottom to top,
 left to right scanline ordering:
 .IP "" .2i
-pvalue \-r \-db \-b \-h +y 400 +x 512 input.im > flipped.pic
+pvalue \-r \-db \-b \-h +y 400 +x 512 input.im > flipped.hdr
 .br
-pflip \-v flipped.pic > final.pic
+pflip \-v flipped.hdr > final.hdr
 .SH AUTHOR
 Greg Ward
 .SH BUGS

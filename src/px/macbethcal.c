@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.24 2004/12/15 06:30:36 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.25 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -240,9 +240,9 @@ main(
 
 		printf("# Color correspondence produced by:\n#\t\t");
 		printargs(argc, argv, stdout);
-		printf("#\tUsage: pcwarp %s uncorrected.pic > corrected.pic\n",
+		printf("#\tUsage: pcwarp %s uncorrected.hdr > corrected.hdr\n",
 				i+1 < argc ? argv[i+1] : "{this_file}");
-		printf("#\t   Or: pcond [options] -m %s orig.pic > output.pic\n",
+		printf("#\t   Or: pcond [options] -m %s orig.hdr > output.hdr\n",
 				i+1 < argc ? argv[i+1] : "{this_file}");
 		for (j = 0; j < 24; j++)
 			printf("%f %f %f    %f %f %f\n",
@@ -255,10 +255,10 @@ main(
 						/* print header */
 		printf("{\n\tColor correction file computed by:\n\t\t");
 		printargs(argc, argv, stdout);
-		printf("\n\tUsage: pcomb -f %s uncorrected.pic > corrected.pic\n",
+		printf("\n\tUsage: pcomb -f %s uncorrected.hdr > corrected.hdr\n",
 				i+1 < argc ? argv[i+1] : "{this_file}");
 		if (!scanning)
-			printf("\t   Or: pcond [options] -f %s orig.pic > output.pic\n",
+			printf("\t   Or: pcond [options] -f %s orig.hdr > output.hdr\n",
 					i+1 < argc ? argv[i+1] : "{this_file}");
 		printf("}\n");
 		putmapping();			/* put out color mapping */
@@ -272,9 +272,9 @@ main(
 	exit(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-d dbg.pic][-P | -p xul yul xur yur xll yll xlr ylr][-i irrad][-m] input.pic [output.{cal|cwp}]\n",
+"Usage: %s [-d dbg.hdr][-P | -p xul yul xur yur xll yll xlr ylr][-i irrad][-m] input.hdr [output.{cal|cwp}]\n",
 			progname);
-	fprintf(stderr, "   or: %s [-d dbg.pic][-i irrad][-m] -c [xyY.dat [output.{cal|cwp}]]\n",
+	fprintf(stderr, "   or: %s [-d dbg.hdr][-i irrad][-m] -c [xyY.dat [output.{cal|cwp}]]\n",
 			progname);
 	exit(1);
 	return 1; /* pro forma return */

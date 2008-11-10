@@ -1,4 +1,4 @@
-# RCSid: $Id: do_results.tcl,v 2.7 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: do_results.tcl,v 2.8 2008/11/10 19:08:19 greg Exp $
 #
 # Results screen for trad
 #
@@ -69,7 +69,7 @@ proc list_views {} {		# List finished and unfinished pictures
 	foreach vw $radvar(view) {
 		if [file isfile ${rawfroot}_[lindex $vw 0].unf] {
 			lappend ufpics [lindex $vw 0]
-		} elseif {[file isfile $radvar(PICTURE)_[lindex $vw 0].pic]} {
+		} elseif {[file isfile $radvar(PICTURE)_[lindex $vw 0].hdr]} {
 			lappend fpics [lindex $vw 0]
 		}
 	}
@@ -102,9 +102,9 @@ proc get_selpics {{getall 0}} {		# return selected pictures
 	global fvwbox ufvwbox radvar rawfroot
 	set sl {}
 	foreach i [$fvwbox curselection] {
-		testappend sl $radvar(PICTURE)_[$fvwbox get $i].pic
+		testappend sl $radvar(PICTURE)_[$fvwbox get $i].hdr
 		if {$getall && $rawfroot != $radvar(PICTURE)} {
-			testappend sl ${rawfroot}_[$fvwbox get $i].pic
+			testappend sl ${rawfroot}_[$fvwbox get $i].hdr
 		}
 		if {$getall && $radvar(ZFILE) != {}} {
 			testappend sl $radvar(ZFILE)_[$fvwbox get $i].zbf
@@ -151,7 +151,7 @@ proc cnvpic {} {		# Convert selected pictures
 	set curmess "No finished pictures selected."
 	foreach i [$fvwbox curselection] {
 		set vw [$fvwbox get $i]
-		set p $radvar(PICTURE)_$vw.pic
+		set p $radvar(PICTURE)_$vw.hdr
 		set df [format $convdest $vw]
 		set curmess "Converting $p to $df..."
 		update
@@ -166,7 +166,7 @@ proc prtpic {} {		# Print selected pictures
 	global curmess prntcom radvar fvwbox
 	set curmess "No finished pictures selected."
 	foreach i [$fvwbox curselection] {
-		set p $radvar(PICTURE)_[$fvwbox get $i].pic
+		set p $radvar(PICTURE)_[$fvwbox get $i].hdr
 		set curmess "Printing $p..."
 		update
 		set pc [format $prntcom $p]

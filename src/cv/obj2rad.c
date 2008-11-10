@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.24 2008/06/24 02:01:19 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.25 2008/11/10 19:08:18 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -274,7 +274,7 @@ convert(			/* convert a T-mesh */
 				if (!strcmp(argv[1], "off"))
 					mapname[0] = '\0';
 				else
-					sprintf(mapname, "%s.pic", argv[1]);
+					sprintf(mapname, "%s.hdr", argv[1]);
 			} else
 				goto unknown;
 			break;

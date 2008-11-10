@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.23 2004/01/02 11:42:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.24 2008/11/10 19:08:19 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -85,7 +85,7 @@ main(
 userr:
 	fprintf(stderr, "Usage: %s output.hdk [-u][-d] -h inp1.hdk ..\n",
 			progname);
-	fprintf(stderr, "   Or: %s output.hdk [-u][-d] -p inp1.pic inp1.zbf ..\n",
+	fprintf(stderr, "   Or: %s output.hdk [-u][-d] -p inp1.hdr inp1.zbf ..\n",
 			progname);
 	exit(1);
 }

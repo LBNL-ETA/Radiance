@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: fieldcomb.csh,v 2.6 2005/09/06 15:34:46 greg Exp $
+# RCSid $Id: fieldcomb.csh,v 2.7 2008/11/10 19:08:19 greg Exp $
 #
 # Combine alternate lines in full frames for field rendering
 #
@@ -10,7 +10,7 @@
 #
 # Written by Greg Ward for Iebele Abel in August 2005
 #
-set spare_name=spare_fieldcomb_frame.pic
+set spare_name=spare_fieldcomb_frame.hdr
 set odd_first=0
 while ($#argv > 1)
 	switch ($argv[1])
@@ -35,7 +35,7 @@ while ($#argv > 1)
 	shift argv
 end
 if ($#argv < 2) then
-	echo "Usage: $0 [-e|-o][-r] [-f combined.pic] field1.pic field2.pic .."
+	echo "Usage: $0 [-e|-o][-r] [-f combined.hdr] field1.hdr field2.hdr .."
 	exit 1
 endif
 if ($?outfile && $#argv > 2) then

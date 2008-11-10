@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad.1,v 1.6 2008/03/11 02:21:45 greg Exp $"
+.\" RCSid "$Id: rad.1,v 1.7 2008/11/10 19:08:17 greg Exp $"
 .TH RAD 1 2/1/99 RADIANCE
 .SH NAME
 rad - render a RADIANCE scene
@@ -371,7 +371,7 @@ The default value is 0.
 .BR PICTURE
 This is the root name of the output picture file(s).
 This name will have appended the view identifier (or a number if no
-id was used) and a ".pic" suffix.
+id was used) and a ".hdr" suffix.
 If a picture corresponding to a specific view exists and is not out
 of date with respect to the given octree, it will not be
 re-rendered.
@@ -567,7 +567,7 @@ DET= low		# default was medium - our space is almost empty
 PEN= True		# we want to see soft shadows from our window
 VAR= hi		# daylight can result in fairly harsh lighting
 view= XYa \-vv 120	# let's try a fisheye view
-PICT= tutor		# our picture name will be "tutor_XYa.pic"
+PICT= tutor		# our picture name will be "tutor_XYa.hdr"
 .fi
 .PP
 Note the use of abbreviations, and the modification of a standard
