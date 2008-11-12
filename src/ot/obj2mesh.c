@@ -1,11 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: obj2mesh.c,v 2.12 2007/07/12 14:58:53 greg Exp $";
+static const char RCSid[] = "$Id: obj2mesh.c,v 2.13 2008/11/12 03:54:31 greg Exp $";
 #endif
 /*
  *  Main program to compile a Wavefront .OBJ file into a Radiance mesh
  */
 
 #include "copyright.h"
+#include "paths.h"
 #include "platform.h"
 #include "standard.h"
 #include "resolu.h"

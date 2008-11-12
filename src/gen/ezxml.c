@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.3 2007/12/13 07:03:37 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.4 2008/11/12 03:54:31 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -30,9 +30,9 @@ static const char RCSid[] = "$Id: ezxml.c,v 2.3 2007/12/13 07:03:37 greg Exp $";
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <sys/types.h>
 #ifndef EZXML_NOMMAP
+#include <unistd.h>
 #include <sys/mman.h>
 #endif // EZXML_NOMMAP
 #include <sys/stat.h>
