@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: objview.csh,v 2.10 2005/02/16 05:40:12 greg Exp $
+# RCSid: $Id: objview.csh,v 2.11 2008/11/21 01:30:17 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
@@ -32,7 +32,12 @@ while ($#argv > 0)
 		breaksw
 	case -v:
 		shift argv
-		set vw=$argv[1]
+		set vw="$argv[1]"
+		breaksw
+	case -N:
+		shift argv
+		set opts=($opts -N $argv[1])
+		set radopt
 		breaksw
 	case -o:
 		shift argv

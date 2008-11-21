@@ -1677,3 +1677,5 @@ the de facto extension for Radiance RGBE and XYZE pictures.  Since file
 extensions were never more than a convention in Radiance, this does not
 affect operation, but may require the update of scripts, etc. written
 by others that assume the ".pic" suffix for Radiance output.
+
+Added -N option to objview to support multiprocessing.
