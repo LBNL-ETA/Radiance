@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: objline.csh,v 2.5 2008/08/25 04:50:32 greg Exp $
+# RCSid: $Id: objline.csh,v 2.6 2008/11/30 19:56:02 greg Exp $
 # Create four standard views of scene and present as line drawings
 #
 set oblqxf="-rz 45 -ry 45"
@@ -9,16 +9,18 @@ if ($#argv) then
 	set origf=""
 	set oblqf=""
 	foreach f ($argv)
-		xform -e $f > $d/$f.orig
-		rad2mgf $d/$f.orig > $d/$f:r.orig.mgf
-		set origf=($origf $f:r.orig.mgf)
-		echo i $f:r.orig.mgf $oblqxf > $d/$f:r.oblq.mgf
-		set oblqf=($oblqf $f:r.oblq.mgf)
+		set fn="$f:t"
+		set fn="$fn:r"
+		xform $f:q > $d/$fn:q.orig
+		rad2mgf $d/$fn:q.orig > $d/$fn:q.orig.mgf
+		set origf=($origf:q $fn:q.orig.mgf)
+		echo i $fn:q.orig.mgf $oblqxf > $d/$fn:q.oblq.mgf
+		set oblqf=($oblqf:q $fn:q.oblq.mgf)
 	end
 else
 	set origf=stdin.orig.mgf
 	set oblqf=stdin.oblq.mgf
-	xform -e > $d/stdin.orig
+	xform > $d/stdin.orig
 	rad2mgf $d/stdin.orig > $d/stdin.orig.mgf
 	echo i stdin.orig.mgf $oblqxf > $d/stdin.oblq.mgf
 endif
