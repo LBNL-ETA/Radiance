@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad2mgf.1,v 1.3 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rad2mgf.1,v 1.4 2008/11/30 17:53:07 greg Exp $"
 .TH RAD2MGF 1 5/15/95 RADIANCE
 .SH NAME
 rad2mgf - convert RADIANCE scene description to Materials and Geometry Format
@@ -44,11 +44,12 @@ and all light source materials are converted to simple diffuse emitters
 These primitives are reproduced as comments in the output and
 must be replaced manually if necessary.
 .PP
-The RADIANCE "instance" type is treated specially.
+The RADIANCE "instance" and "mesh" types aretreated specially.
 .I Rad2mgf
-converts each instance to an MGF include statement, using the corresponding
-transformation and a file name derived from the octree name.
-(The original octree suffix is replaced by ".mgf".)\0
+converts each instance or mesh to an MGF include statement,
+using the corresponding
+transformation and a file name derived from the octree or mesh name.
+(The original octree/mesh suffix is replaced by ".mgf".)\0
 For this to work, the user must separately create the referenced
 MGF files from the original RADIANCE descriptions.
 The description file names can usually be determined using the
