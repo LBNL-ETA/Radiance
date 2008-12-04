@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.72 2005/12/21 07:26:29 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.73 2008/12/04 23:34:00 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: rholo.c,v 3.72 2005/12/21 07:26:29 greg Exp $"
 #define FRAGWARN	20		/* fragmentation for warning (%) */
 #endif
 #ifndef MAXQTIME
-#define MAXQTIME	5		/* target maximum seconds in queue */
+#define MAXQTIME	3		/* target maximum seconds in queue */
 #endif
 					/* manual cache flushing frequency */
 #ifndef RTFLUSH

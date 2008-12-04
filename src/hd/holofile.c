@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.57 2004/09/09 01:41:21 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.58 2008/12/04 23:34:00 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -18,9 +18,9 @@ static const char	RCSid[] = "$Id: holofile.c,v 3.57 2004/09/09 01:41:21 greg Exp
 
 #ifndef CACHESIZE
 #ifdef SMLMEM
-#define CACHESIZE	5
+#define CACHESIZE	10
 #else
-#define CACHESIZE	17	/* default cache size (Mbytes, 0==inf) */
+#define CACHESIZE	100	/* default cache size (Mbytes, 0==inf) */
 #endif
 #endif
 #ifndef FREEBEAMS
@@ -30,7 +30,7 @@ static const char	RCSid[] = "$Id: holofile.c,v 3.57 2004/09/09 01:41:21 greg Exp
 #define PCTFREE		15	/* maximum fraction to free (%) */
 #endif
 #ifndef MAXFRAGB
-#define MAXFRAGB	16	/* fragment blocks/file to track (0==inf) */
+#define MAXFRAGB	64	/* fragment blocks/file to track (0==inf) */
 #endif
 #ifndef FF_DEFAULT
 				/* when to free a beam fragment */
