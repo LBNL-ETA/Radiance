@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.87 2008/11/10 19:08:19 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.88 2008/12/05 00:51:59 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -208,7 +208,7 @@ main(
 		goto userr;
 	rifname = argv[i];
 				/* check command-line options */
-	if ((nprocs > 1) & (viewselect != NULL))
+	if ((nprocs > 1) & (viewselect != NULL) & (rvdevice == NULL))
 		nprocs = 1;
 				/* assign Radiance root file name */
 	rootname(radname, rifname);
