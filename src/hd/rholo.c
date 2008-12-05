@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.73 2008/12/04 23:34:00 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.74 2008/12/05 00:22:33 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -164,7 +164,7 @@ main(
 	quit(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-n nprocs][-o disp][-w][-r|-f] output.hdk [control.hif|+|- [VAR=val ..]]\n",
+"Usage: %s [-n nprocs][-o disp][-i][-w][-r|-f] output.hdk [control.hif|+|- [VAR=val ..]]\n",
 			progname);
 	quit(1);
 	return 1; /* pro forma return */
