@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.88 2008/12/05 00:51:59 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.89 2008/12/06 01:08:53 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -787,7 +787,7 @@ medqopts(			/* medium quality rendering options */
 	}
 	po = addarg(po, "-pt .08");
 	if (vbool(PENUMBRAS))
-		op = addarg(op, "-ds .2 -dj .5");
+		op = addarg(op, "-ds .2 -dj .9");
 	else
 		op = addarg(op, "-ds .3");
 	op = addarg(op, "-dt .1 -dc .5 -dr 1 -sj .7 -st .1");

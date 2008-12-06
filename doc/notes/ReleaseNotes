@@ -1679,3 +1679,6 @@ affect operation, but may require the update of scripts, etc. written
 by others that assume the ".pic" suffix for Radiance output.
 
 Added -N option to objview to support multiprocessing.
+
+Improved sampling of circular sources (source, sphere, ring types) with
+quite a bit of help from David Geisler-Moroder.

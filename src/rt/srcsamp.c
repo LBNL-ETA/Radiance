@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.11 2003/09/13 17:31:35 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.12 2008/12/06 01:08:53 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -57,7 +57,7 @@ nextsample:
 		d = urand(ilhash(dimlist,ndims+2)+samplendx);
 		if (source[si->sn].sflags & SFLAT) {
 			multisamp(vpos, 2, d);
-			vpos[2] = 0.5;
+			vpos[SW] = 0.5;
 		} else
 			multisamp(vpos, 3, d);
 		for (i = 0; i < 3; i++)
@@ -68,6 +68,30 @@ nextsample:
 
 	for (i = 0; i < 3; i++)
 		vpos[i] += (double)cent[i]/MAXSPART;
+					/* avoid circular aiming failures */
+	if (source[si->sn].sflags & SCIR) {
+		FVECT	trim;
+		double	d;
+		if (source[si->sn].sflags & (SFLAT|SDISTANT)) {
+			d = 1.12837917;		/* correct setflatss() */
+			trim[SU] = d*sqrt(1.0 - 0.5*vpos[SV]*vpos[SV]);
+			trim[SV] = d*sqrt(1.0 - 0.5*vpos[SU]*vpos[SU]);
+			trim[SW] = 0.0;
+		} else {
+			trim[SW] = trim[SU] = vpos[SU]*vpos[SU];
+			d = vpos[SV]*vpos[SV];
+			if (d > trim[SW]) trim[SW] = d;
+			trim[SU] += d;
+			d = vpos[SW]*vpos[SW];
+			if (d > trim[SW]) trim[SW] = d;
+			trim[SU] += d;
+			d = 1.0/0.7236;		/* correct sphsetsrc() */
+			trim[SW] = trim[SV] = trim[SU] =
+					d*sqrt(trim[SW]/trim[SU]);
+		}
+		for (i = 0; i < 3; i++)
+			vpos[i] *= trim[i];
+	}
 					/* compute direction */
 	for (i = 0; i < 3; i++)
 		r->rdir[i] = source[si->sn].sloc[i] +

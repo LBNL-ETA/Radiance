@@ -12,7 +12,7 @@ Param   Description             Min     Fast    Accur   Max     Notes
 -pt     sampling threshold      1       .15     .05     0
 -pj     anti-aliasing jitter    0       .6      .9      1       A
 -pm	pixel motion		0	0	1	1	B
--dj     source jitter           0       0       .7      1       B
+-dj     source jitter           0       0       .9      1       B
 -ds     source substructuring   0       .5      .15     .05
 -dt     direct thresholding     1       .5      .05     0	C
 -dc     direct certainty        0       .25     .5      1
@@ -45,7 +45,7 @@ Param   Artifact				Solution
 -pt     some soft edges are very jagged		decrease value by 50%
 -pj     diagonal edges are like staircases	increase value to 0.9
 -pj     edges look too erratic			decrease value to 0.4
--dj     shadows are unnaturally sharp		increase value to 0.7
+-dj     shadows are unnaturally sharp		increase value to 0.9
 -ds     large sources cast unnatural shadows	decrease value by 50%
 -dt     some shadows disappear			decrease value by 50%
 -dc     inaccurate values with many sources	increase value to .75
