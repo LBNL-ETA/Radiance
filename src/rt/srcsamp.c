@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.14 2008/12/10 07:07:07 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.15 2008/12/10 17:33:23 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -84,9 +84,12 @@ nextsample:
 			d = vpos[SW]*vpos[SW];
 			if (d > trim[SW]) trim[SW] = d;
 			trim[SU] += d;
-			d = 1.0/0.7236;		/* correct sphsetsrc() */
-			trim[SW] = trim[SV] = trim[SU] =
-					d*sqrt(trim[SW]/trim[SU]);
+			if (trim[SU] > FTINY*FTINY) {
+				d = 1.0/0.7236;	/* correct sphsetsrc() */
+				trim[SW] = trim[SV] = trim[SU] =
+						d*sqrt(trim[SW]/trim[SU]);
+			} else
+				trim[SW] = trim[SV] = trim[SU] = 0.0;
 		}
 		for (i = 0; i < 3; i++)
 			vpos[i] *= trim[i];
