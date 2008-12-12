@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.34 2008/03/11 02:21:46 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.35 2008/12/12 22:05:38 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -26,8 +26,9 @@ static gethfunc gethview;
 
 
 char *
-setview(v)		/* set hvec and vvec, return message on error */
-register VIEW  *v;
+setview(		/* set hvec and vvec, return message on error */
+VIEW  *v
+)
 {
 	static char  ill_horiz[] = "illegal horizontal view size";
 	static char  ill_vert[] = "illegal vertical view size";
@@ -124,10 +125,12 @@ register VIEW  *v;
 
 
 void
-normaspect(va, ap, xp, yp)		/* fix pixel aspect or resolution */
-double  va;			/* view aspect ratio */
-double  *ap;			/* pixel aspect in (or out if 0) */
-int  *xp, *yp;			/* x and y resolution in (or out if *ap!=0) */
+normaspect(				/* fix pixel aspect or resolution */
+double  va,			/* view aspect ratio */
+double  *ap,			/* pixel aspect in (or out if 0) */
+int  *xp,
+int  *yp			/* x and y resolution in (or out if *ap!=0) */
+)
 {
 	if (*ap <= FTINY)
 		*ap = va * *xp / *yp;		/* compute pixel aspect */
@@ -139,10 +142,13 @@ int  *xp, *yp;			/* x and y resolution in (or out if *ap!=0) */
 
 
 double
-viewray(orig, direc, v, x, y)		/* compute ray origin and direction */
-FVECT  orig, direc;
-register VIEW  *v;
-double  x, y;
+viewray(				/* compute ray origin and direction */
+FVECT  orig,
+FVECT  direc,
+VIEW  *v,
+double  x,
+double  y
+)
 {
 	double	d, z;
 	
@@ -231,10 +237,11 @@ double  x, y;
 
 
 void
-viewloc(ip, v, p)		/* find image location for point */
-FVECT  ip;
-register VIEW  *v;
-FVECT  p;
+viewloc(			/* find image location for point */
+FVECT  ip,
+VIEW  *v,
+FVECT  p
+)
 {
 	double  d, d2;
 	FVECT  disp;
@@ -312,10 +319,12 @@ FVECT  p;
 
 
 void
-pix2loc(loc, rp, px, py)	/* compute image location from pixel pos. */
-RREAL  loc[2];
-register RESOLU  *rp;
-int  px, py;
+pix2loc(		/* compute image location from pixel pos. */
+RREAL  loc[2],
+RESOLU  *rp,
+int  px,
+int  py
+)
 {
 	register int  x, y;
 
@@ -336,10 +345,12 @@ int  px, py;
 
 
 void
-loc2pix(pp, rp, lx, ly)		/* compute pixel pos. from image location */
-int  pp[2];
-register RESOLU  *rp;
-double  lx, ly;
+loc2pix(			/* compute pixel pos. from image location */
+int  pp[2],
+RESOLU  *rp,
+double  lx,
+double  ly
+)
 {
 	register int  x, y;
 
@@ -360,10 +371,11 @@ double  lx, ly;
 
 
 int
-getviewopt(v, ac, av)			/* process view argument */
-register VIEW  *v;
-int  ac;
-register char  *av[];
+getviewopt(				/* process view argument */
+VIEW  *v,
+int  ac,
+char  *av[]
+)
 {
 #define check(c,l)	if ((av[0][c]&&av[0][c]!=' ') || \
 			badarg(ac-1,av+1,l)) return(-1)
@@ -428,9 +440,10 @@ register char  *av[];
 
 
 int
-sscanview(vp, s)			/* get view parameters from string */
-VIEW  *vp;
-register char  *s;
+sscanview(				/* get view parameters from string */
+VIEW  *vp,
+char  *s
+)
 {
 	int  ac;
 	char  *av[4];
@@ -462,9 +475,10 @@ register char  *s;
 
 
 void
-fprintview(vp, fp)			/* write out view parameters */
-register VIEW  *vp;
-FILE  *fp;
+fprintview(				/* write out view parameters */
+VIEW  *vp,
+FILE  *fp
+)
 {
 	fprintf(fp, " -vt%c", vp->type);
 	fprintf(fp, " -vp %.6g %.6g %.6g", vp->vp[0], vp->vp[1], vp->vp[2]);
@@ -479,8 +493,9 @@ FILE  *fp;
 
 
 char *
-viewopt(vp)				/* translate to minimal view string */
-register VIEW  *vp;
+viewopt(				/* translate to minimal view string */
+VIEW  *vp
+)
 {
 	static char  vwstr[128];
 	register char  *cp = vwstr;
@@ -536,8 +551,9 @@ register VIEW  *vp;
 
 
 int
-isview(s)				/* is this a view string? */
-char  *s;
+isview(					/* is this a view string? */
+char  *s
+)
 {
 	static char  *altname[]={NULL,VIEWSTR,"rpict","rview","rvu","rpiece","pinterp",NULL};
 	extern char  *progname;
@@ -583,10 +599,11 @@ gethview(				/* get view from header */
 
 
 int
-viewfile(fname, vp, rp)			/* get view from file */
-char  *fname;
-VIEW  *vp;
-RESOLU  *rp;
+viewfile(				/* get view from file */
+char  *fname,
+VIEW  *vp,
+RESOLU  *rp
+)
 {
 	struct myview	mvs;
 	FILE  *fp;
