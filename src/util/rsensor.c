@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.5 2008/04/11 22:06:04 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.6 2008/12/13 00:44:05 greg Exp $";
 #endif
 
 /*
@@ -84,7 +84,7 @@ main(
 	progname = argv[0];
 				/* set up rendering defaults */
 	rand_samp = 1;
-	dstrsrc = 0.5;
+	dstrsrc = 0.65;
 	srcsizerat = 0.1;
 	directrelay = 3;
 	ambounce = 1;
@@ -103,6 +103,7 @@ main(
 			if (!ray_pnprocs) {
 				over_options();
 				if (doheader) {	/* print header */
+					newheader("RADIANCE", stdout);
 					printargs(argc, argv, stdout);
 					fputformat("ascii", stdout);
 					putchar('\n');
@@ -461,6 +462,7 @@ comp_sensor(
 	int	nt, np;
 	COLOR	vsum;
 	RAY	rr;
+	double	sf;
 	int	i, j;
 						/* set view */
 	ourview.type = VT_ANG;
@@ -471,10 +473,11 @@ comp_sensor(
 		error(USER, err);
 						/* assign probability table */
 	init_ptable(sfile);
-						/* do Monte Carlo sampling */
+						/* stratified MC sampling */
 	setcolor(vsum, .0f, .0f, .0f);
 	nt = (int)(sqrt((double)nsamps*ntheta/nphi) + .5);
 	np = nsamps/nt;
+	sf = gscale/nsamps;
 	for (i = 0; i < nt; i++)
 		for (j = 0; j < np; j++) {
 			VCOPY(rr.rorg, ourview.vp);
@@ -483,30 +486,41 @@ comp_sensor(
 				VSUM(rr.rorg, rr.rorg, rr.rdir, ourview.vfore);
 			rr.rmax = .0;
 			rayorigin(&rr, PRIMARY, NULL, NULL);
+			scalecolor(rr.rcoef, sf);
 			if (ray_pqueue(&rr) == 1)
 				addcolor(vsum, rr.rcol);
 		}
-						/* finish MC calculation */
-	while (ray_presult(&rr, 0) > 0)
-		addcolor(vsum, rr.rcol);
-	scalecolor(vsum, gscale/(nt*np));
-						/* compute direct component */
+						/* remaining rays pure MC */
+	for (i = nsamps - nt*np; i-- > 0; ) {
+		VCOPY(rr.rorg, ourview.vp);
+		get_direc(rr.rdir, frandom(), frandom());
+		if (ourview.vfore > FTINY)
+			VSUM(rr.rorg, rr.rorg, rr.rdir, ourview.vfore);
+		rr.rmax = .0;
+		rayorigin(&rr, PRIMARY, NULL, NULL);
+		scalecolor(rr.rcoef, sf);
+		if (ray_pqueue(&rr) == 1)
+			addcolor(vsum, rr.rcol);
+	}
+						/* scale partial result */
+	scalecolor(vsum, sf);
+						/* add direct component */
 	for (i = ndirs; i-- > 0; ) {
 		SRCINDEX	si;
 		initsrcindex(&si);
 		while (srcray(&rr, NULL, &si)) {
-			double	d = sens_val(rr.rdir);
-			if (d <= FTINY)
+			sf = sens_val(rr.rdir);
+			if (sf <= FTINY)
 				continue;
-			d *= si.dom/ndirs;
-			scalecolor(rr.rcoef, d);
+			sf *= si.dom/ndirs;
+			scalecolor(rr.rcoef, sf);
 			if (ray_pqueue(&rr) == 1) {
 				multcolor(rr.rcol, rr.rcoef);
 				addcolor(vsum, rr.rcol);
 			}
 		}
 	}
-						/* finish direct calculation */
+						/* finish our calculation */
 	while (ray_presult(&rr, 0) > 0) {
 		multcolor(rr.rcol, rr.rcoef);
 		addcolor(vsum, rr.rcol);
