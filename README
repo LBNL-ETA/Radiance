@@ -1,7 +1,7 @@
-		RCSid "$Id: README,v 1.5 2005/07/24 19:53:07 greg Exp $"
+		RCSid "$Id: README,v 1.6 2008/12/17 04:30:02 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
-the fourteenth release, Version 3.7, and it includes all source files
+the seventeenth release, Version 4.0, and it includes all source files
 for local compilation with a standard C compiler.  To find out what's
 new in this release, check the text file "doc/notes/ReleaseNotes".
 
@@ -15,7 +15,7 @@ licenses, and contains fewer restrictions on commercialization.
 Please read this entire file before sending e-mail asking
 how to install this software or what to do with it.  Some
 frequently asked questions are answered here and also on our
-web site at:
+website at:
 
 	http://radsite.lbl.gov/radiance/
 
