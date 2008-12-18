@@ -1682,3 +1682,8 @@ Added -N option to objview to support multiprocessing.
 
 Improved sampling of circular sources (source, sphere, ring types) with
 quite a bit of help from David Geisler-Moroder.
+
+Added "rpict" and "rvu" variables to rad, and made these as well as
+the "oconv", "mkillum" and "pfilt" variables accept an alternate
+command path in each case.  Change suggested by Lars Grobe based
+on similar Radzilla (radz) facility by Carsten Bauer.

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad.1,v 1.7 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: rad.1,v 1.8 2008/12/18 23:26:57 greg Exp $"
 .TH RAD 1 2/1/99 RADIANCE
 .SH NAME
 rad - render a RADIANCE scene
@@ -472,6 +472,8 @@ There is no default value for this variable.
 .BR oconv
 This variable may be used to specify special options to
 .I oconv.
+If the first word of the first instance of this variable is not an option,
+it will be used in place of the default command path, "oconv".
 See the
 .I oconv(1)
 manual page for a list of valid options.
@@ -479,6 +481,8 @@ manual page for a list of valid options.
 .BR mkillum
 This variable may be used to specify additional options to
 .I mkillum.
+If the first word of the first instance of this variable is not an option,
+it will be used in place of the default command path, "mkillum".
 See the
 .I rtrace(1)
 manual page for a list of valid options.
@@ -492,9 +496,29 @@ These options will appear after the options set automatically by
 .I rad,
 and thus will override the default values.
 .TP
+.BR rpict
+This variable may be used to specify overriding options specific to
+.I rpict.
+If the first word of the first instance of this variable is not an option,
+it will be used in place of the default command path, "rpict".
+See the
+.I rpict(1)
+man page for a list of valid options.
+.TP
+.BR rvu
+This variable may be used to specify overriding options specific to
+.I rvu.
+If the first word of the first instance of this variable is not an option,
+it will be used in place of the default command path, "rvu".
+See the
+.I rvu(1)
+man page for a list of valid options.
+.TP
 .BR pfilt
 This variable may be used to specify additional options to
 .I pfilt.
+If the first word of the first instance of this variable is not an option,
+it will be used in place of the default command path, "pfilt".
 See the
 .I pfilt(1)
 manual page for details.

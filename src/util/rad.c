@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.90 2008/12/12 15:49:48 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.91 2008/12/18 23:26:57 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -47,14 +47,16 @@ static const char	RCSid[] = "$Id: rad.c,v 2.90 2008/12/12 15:49:48 greg Exp $";
 #define RENDER		17		/* rendering options */
 #define REPORT		18		/* report frequency and errfile */
 #define RESOLUTION	19		/* maximum picture resolution */
-#define SCENE		20		/* scene files */
-#define UP		21		/* view up (X, Y or Z) */
-#define VARIABILITY	22		/* level of light variability */
-#define VIEWS		23		/* view(s) for picture(s) */
-#define ZFILE		24		/* distance file root name */
-#define ZONE		25		/* simulation zone */
+#define RPICT		20		/* rpict parameters */
+#define RVU		21		/* rvu parameters */
+#define SCENE		22		/* scene files */
+#define UP		23		/* view up (X, Y or Z) */
+#define VARIABILITY	24		/* level of light variability */
+#define VIEWS		25		/* view(s) for picture(s) */
+#define ZFILE		26		/* distance file root name */
+#define ZONE		27		/* simulation zone */
 				/* total number of variables */
-int NVARS = 26;
+int NVARS = 28;
 
 VARIABLE	vv[] = {		/* variable-value pairs */
 	{"AMBFILE",	3,	0,	NULL,	onevalue},
@@ -77,6 +79,8 @@ VARIABLE	vv[] = {		/* variable-value pairs */
 	{"render",	3,	0,	NULL,	catvalues},
 	{"REPORT",	3,	0,	NULL,	onevalue},
 	{"RESOLUTION",	3,	0,	NULL,	onevalue},
+	{"rpict",	3,	0,	NULL,	catvalues},
+	{"rvu",		3,	0,	NULL,	catvalues},
 	{"scene",	3,	0,	NULL,	catvalues},
 	{"UP",		2,	0,	NULL,	onevalue},
 	{"VARIABILITY",	3,	0,	NULL,	qualvalue},
@@ -111,6 +115,13 @@ int	nprocs = 1;		/* maximum executing processes */
 int	sayview = 0;		/* print view out */
 char	*rvdevice = NULL;	/* rvu output device */
 char	*viewselect = NULL;	/* specific view only */
+
+				/* command paths */
+char	c_oconv[256] = "oconv";
+char	c_mkillum[256] = "mkillum";
+char	c_rvu[256] = "rvu";
+char	c_rpict[256] = "rpict";
+char	c_pfilt[256] = "pfilt";
 
 int	overture = 0;		/* overture calculation needed */
 
@@ -480,11 +491,11 @@ oconv(void)				/* run oconv and mkillum if necessary */
 			touch(vval(OCTREE));
 		else {				/* build command */
 			if (vdef(MATERIAL))
-				sprintf(combuf, "oconv%s %s %s > %s", ocopts,
-						vval(MATERIAL), vval(SCENE),
-						vval(OCTREE));
+				sprintf(combuf, "%s%s %s %s > %s", c_oconv,
+						ocopts, vval(MATERIAL),
+						vval(SCENE), vval(OCTREE));
 			else
-				sprintf(combuf, "oconv%s %s > %s", ocopts,
+				sprintf(combuf, "%s%s %s > %s", c_oconv, ocopts,
 						vval(SCENE), vval(OCTREE));
 			
 			if (runcom(combuf)) {		/* run it */
@@ -510,14 +521,16 @@ oconv(void)				/* run oconv and mkillum if necessary */
 			touch(oct0name);
 		else {				/* build command */
 			if (octreedate)
-				sprintf(combuf, "oconv%s -i %s %s > %s", ocopts,
-					vval(OCTREE), vval(ILLUM), oct0name);
-			else if (vdef(MATERIAL))
-				sprintf(combuf, "oconv%s %s %s > %s", ocopts,
-					vval(MATERIAL), vval(ILLUM), oct0name);
-			else
-				sprintf(combuf, "oconv%s %s > %s", ocopts,
+				sprintf(combuf, "%s%s -i %s %s > %s", c_oconv,
+					ocopts, vval(OCTREE),
 					vval(ILLUM), oct0name);
+			else if (vdef(MATERIAL))
+				sprintf(combuf, "%s%s %s %s > %s", c_oconv,
+					ocopts, vval(MATERIAL),
+					vval(ILLUM), oct0name);
+			else
+				sprintf(combuf, "%s%s %s > %s", c_oconv,
+					ocopts, vval(ILLUM), oct0name);
 			if (runcom(combuf)) {		/* run it */
 				fprintf(stderr,
 				"%s: error generating octree\n\t%s removed\n",
@@ -537,23 +550,23 @@ oconv(void)				/* run oconv and mkillum if necessary */
 	else {
 		mkillumopts(mkopts);		/* build mkillum command */
 		mktemp(illumtmp);
-		sprintf(combuf, "mkillum%s %s \"<\" %s > %s", mkopts,
+		sprintf(combuf, "%s%s %s \"<\" %s > %s", c_mkillum, mkopts,
 				oct0name, vval(ILLUM), illumtmp);
 		if (runcom(combuf)) {			/* run it */
-			fprintf(stderr, "%s: error running mkillum\n",
-					progname);
+			fprintf(stderr, "%s: error running %s\n",
+					progname, c_mkillum);
 			unlink(illumtmp);
 			quit(1);
 		}
 						/* make octree1 (frozen) */
 		if (octreedate)
-			sprintf(combuf, "oconv%s -f -i %s %s > %s", ocopts,
-				vval(OCTREE), illumtmp, oct1name);
+			sprintf(combuf, "%s%s -f -i %s %s > %s", c_oconv,
+				ocopts, vval(OCTREE), illumtmp, oct1name);
 		else if (vdef(MATERIAL))
-			sprintf(combuf, "oconv%s -f %s %s > %s", ocopts,
-				vval(MATERIAL), illumtmp, oct1name);
+			sprintf(combuf, "%s%s -f %s %s > %s", c_oconv,
+				ocopts, vval(MATERIAL), illumtmp, oct1name);
 		else
-			sprintf(combuf, "oconv%s -f %s > %s", ocopts,
+			sprintf(combuf, "%s%s -f %s > %s", c_oconv, ocopts,
 				illumtmp, oct1name);
 		if (runcom(combuf)) {		/* run it */
 			fprintf(stderr,
@@ -572,11 +585,13 @@ oconv(void)				/* run oconv and mkillum if necessary */
 
 
 static char *
-addarg(				/* add argument and advance pointer */
+addarg(				/* append argument and advance pointer */
 register char	*op,
 register char	*arg
 )
 {
+	while (*op)
+		op++;
 	*op = ' ';
 	while ( (*++op = *arg++) )
 		;
@@ -593,7 +608,11 @@ oconvopts(				/* get oconv options */
 
 	*oo = '\0';
 	if (vdef(OCONV))
-		addarg(oo, vval(OCONV));
+		if (vval(OCONV)[0] != '-') {
+			atos(c_oconv, sizeof(c_oconv), vval(OCONV));
+			oo = addarg(oo, sskip2(vval(OCONV), 1));
+		} else
+			oo = addarg(oo, vval(OCONV));
 }
 
 
@@ -604,14 +623,16 @@ mkillumopts(				/* get mkillum options */
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
 
-	if (nprocs > 1) {
+	if (nprocs > 1)
 		sprintf(mo, " -n %d", nprocs);
-		while (*mo)
-			mo++;
-	} else
+	else
 		*mo = '\0';
 	if (vdef(MKILLUM))
-		addarg(mo, vval(MKILLUM));
+		if (vval(MKILLUM)[0] != '-') {
+			atos(c_mkillum, sizeof(c_mkillum), vval(MKILLUM));
+			mo = addarg(mo, sskip2(vval(MKILLUM), 1));
+		} else
+			mo = addarg(mo, vval(MKILLUM));
 }
 
 
@@ -666,6 +687,23 @@ renderopts(			/* set rendering options */
 	case HIGH:
 		hiqopts(op, po);
 		break;
+	}
+	if (vdef(RENDER))
+		op = addarg(op, vval(RENDER));
+	if (rvdevice != NULL) {
+		if (vdef(RVU))
+			if (vval(RVU)[0] != '-') {
+				atos(c_rvu, sizeof(c_rvu), vval(RVU));
+				po = addarg(po, sskip2(vval(RVU), 1));
+			} else
+				po = addarg(po, vval(RVU));
+	} else {
+		if (vdef(RPICT))
+			if (vval(RPICT)[0] != '-') {
+				atos(c_rpict, sizeof(c_rpict), vval(RPICT));
+				po = addarg(po, sskip2(vval(RPICT), 1));
+			} else
+				po = addarg(po, vval(RPICT));
 	}
 }
 
@@ -735,8 +773,6 @@ lowqopts(			/* low quality rendering options */
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
 	op = addarg(op, "-lr 6 -lw .01");
-	if (vdef(RENDER))
-		op = addarg(op, vval(RENDER));
 }
 
 
@@ -815,8 +851,6 @@ medqopts(			/* medium quality rendering options */
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
 	op = addarg(op, "-lr 8 -lw .002");
-	if (vdef(RENDER))
-		op = addarg(op, vval(RENDER));
 }
 
 
@@ -893,8 +927,6 @@ hiqopts(				/* high quality rendering options */
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
 	op = addarg(op, "-lr 12 -lw .0005");
-	if (vdef(RENDER))
-		op = addarg(op, vval(RENDER));
 }
 
 
@@ -950,7 +982,11 @@ pfiltopts(				/* get pfilt options */
 		break;
 	}
 	if (vdef(PFILT))
-		po = addarg(po, vval(PFILT));
+		if (vval(PFILT)[0] != '-') {
+			atos(c_pfilt, sizeof(c_pfilt), vval(PFILT));
+			po = addarg(po, sskip2(vval(PFILT), 1));
+		} else
+			po = addarg(po, vval(PFILT));
 }
 
 
@@ -1196,7 +1232,7 @@ rvu(				/* run rvu with first view */
 		return;
 	if (sayview)
 		myprintview(vw, stdout);
-	sprintf(combuf, "rvu %s%s%s -R %s ", vw, po, opts, rifname);
+	sprintf(combuf, "%s %s%s%s -R %s ", c_rvu, vw, opts, po, rifname);
 	if (nprocs > 1)
 		sprintf(combuf+strlen(combuf), "-n %d ", nprocs);
 	if (rvdevice != NULL)
@@ -1205,7 +1241,7 @@ rvu(				/* run rvu with first view */
 		sprintf(combuf+strlen(combuf), "-pe %s ", vval(EXPOSURE));
 	strcat(combuf, oct1name);
 	if (runcom(combuf)) {		/* run it */
-		fprintf(stderr, "%s: error running rvu\n", progname);
+		fprintf(stderr, "%s: error running %s\n", progname, c_rvu);
 		quit(1);
 	}
 }
@@ -1308,15 +1344,15 @@ rpict(				/* run rpict and pfilt for each view */
 		/* XXX Remember to call finish_process() */
 						/* build rpict command */
 		if (rfdt >= oct1date) {		/* recover */
-			sprintf(combuf, "rpict%s%s%s%s -ro %s %s",
-				rep, po, opts, zopt, rawfile, oct1name);
+			sprintf(combuf, "%s%s%s%s%s -ro %s %s", c_rpict,
+				rep, opts, po, zopt, rawfile, oct1name);
 			if (runcom(combuf))	/* run rpict */
 				goto rperror;
 		} else {
 			if (overture) {		/* run overture calculation */
 				sprintf(combuf,
-				"rpict%s %s%s -x 64 -y 64 -ps 1 %s > %s",
-						rep, vw, opts,
+				"%s%s %s%s -x 64 -y 64 -ps 1 %s > %s",
+						c_rpict, rep, vw, opts,
 						oct1name, overfile);
 				if (runcom(combuf)) {
 					fprintf(stderr,
@@ -1328,17 +1364,17 @@ rpict(				/* run rpict and pfilt for each view */
 				rmfile(overfile);
 #endif
 			}
-			sprintf(combuf, "rpict%s %s %s%s%s%s %s > %s",
-					rep, vw, res, po, opts,
+			sprintf(combuf, "%s%s %s %s%s%s%s %s > %s",
+					c_rpict, rep, vw, res, opts, po,
 					zopt, oct1name, rawfile);
 			if (pfile != NULL && inchild()) {
 						/* rpict persistent mode */
 				if (!silent)
 					printf("\t%s\n", combuf);
 				fflush(stdout);
-				sprintf(combuf, "rpict%s %s %s%s%s %s > %s",
-						rep, rppopt, res, po, opts,
-						oct1name, rawfile);
+				sprintf(combuf, "%s%s %s %s%s%s %s > %s",
+						c_rpict, rep, rppopt, res, opts,
+						po, oct1name, rawfile);
 				fp = popen(combuf, "w");
 				if (fp == NULL)
 					goto rperror;
@@ -1353,11 +1389,12 @@ rpict(				/* run rpict and pfilt for each view */
 		if (!vdef(RAWFILE) || strcmp(vval(RAWFILE),vval(PICTURE))) {
 						/* build pfilt command */
 			if (mult > 1)
-				sprintf(combuf, "pfilt%s -x /%d -y /%d %s > %s",
-					pfopts, mult, mult, rawfile, picfile);
+				sprintf(combuf, "%s%s -x /%d -y /%d %s > %s",
+					c_pfilt, pfopts, mult, mult,
+					rawfile, picfile);
 			else
-				sprintf(combuf, "pfilt%s %s > %s", pfopts,
-						rawfile, picfile);
+				sprintf(combuf, "%s%s %s > %s", c_pfilt,
+					pfopts, rawfile, picfile);
 			if (runcom(combuf)) {	/* run pfilt */
 				fprintf(stderr,
 				"%s: error filtering view %s\n\t%s removed\n",
