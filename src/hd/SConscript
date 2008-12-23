@@ -38,7 +38,7 @@ if os.name != 'nt': # pending some major work...
 
 # display drivers
 if env.has_key('X11INCLUDE'):
-	xenv = env.Copy(CPPPATH=[env['X11INCLUDE']] + env['CPPPATH'],
+	xenv = env.Clone(CPPPATH=[env['X11INCLUDE']] + env['CPPPATH'],
 			LIBPATH=[env['X11LIB']] + env['LIBPATH'],)
 	# common objects
 	rhdisp = xenv.Object(source='rhdisp.c')
@@ -53,7 +53,7 @@ if env.has_key('X11INCLUDE'):
 	# XXX the .hdi extension will cause problems on Windows
 	xenv['PROGSUFFIX'] = '.hdi'
 
-	dlibs = ['rtpic','rtmath','rtcont','rtmem','rtargs','rtio','rterror']
+	dlibs = ['rtpic','rtmath','rtcont','rtmem','rtargs','rtio','rterror','rtdummy']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
 		prog = xenv.Program(target=os.path.join(devdir, p[0]),

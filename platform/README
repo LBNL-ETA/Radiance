@@ -1,0 +1,120 @@
+Platform configuration files for SCons based build procedure.
+
+
+<platform>.cfg 
+--------------
+
+The <platform>.cfg files in this directory are use to determine
+the right settings, libraries, source files etc. on the platform
+where you are building Radiance. The build system will select the
+right file automatically.
+
+If your platform isn't supported yet, then you can create a new
+file with an appropriat name (SCons will tell you what it
+expects). Usually, you will start by copying the file of the most
+similar suupported platform.
+
+On unix based platforms without a specific config file, the file
+"posix.cfg" will be used (which may or may not work well enough).
+
+
+<platform>_custom.cfg
+---------------------
+
+If you want to experiment with changes to the shipped file, then
+you can create a copy named <platform>_custom.cfg, and make your
+changes there. If such a file exists, then it will be used in
+place of the original.
+
+
+Contents and format
+-------------------
+
+Any text starting with a hash character (#) until the end of the
+line is ignored as a comment.
+
+A config file consists of several sections, each of which is
+introduced by a keyword in brackets.
+Within each section, a configuration directive starts with a
+keyword and a colon, followed by the specific instructions.
+
+
+Sections
+--------
+
+[install] # directories where to install the software
+[build]   # compile and link instruction for production builds
+[debug]   # compile and link instruction for debug builds
+[code]    # code compatibility configuration
+
+
+Install section
+---------------
+
+  # The root directory of the Radiance installation
+RAD_BASEDIR: /home/gm/src/rad/r6b
+
+  # The following are relative to RAD_BASEDIR!
+  # The directory for executables 
+RAD_BINDIR:  bin
+  # The directory for support files (.cal, .pic, .fnt, etc.)
+RAD_RLIBDIR: share/lib
+  # The directory for the manual files
+RAD_MANDIR:  share/man
+
+
+Debug and Build sections
+------------------------
+
+  # The same keywords can be used in both, but usually their
+  # assigned values will vary.
+
+  # The compiler to use (example: Gnu gcc)
+CC: gcc
+
+  # The directories for C header files (not normally needed).
+CPPPATH: 
+
+  # Symbols to define for the preprocessor (example for Cygwin)
+CPPDEFINES: freebsd HDSUF=.exe
+
+  # Flags for the C preprocessor (example 
+CPPFLAGS:  -O2 -Wall -Wno-uninitialized
+
+  # Flags for the C compiler (example for debug build)
+CCFLAGS: -pg
+
+  # The directories for required libraris (not normally needed)
+LIBPATH: 
+
+  # Flags for the linker (example for debug build on Windows)
+LINKFLAGS: /debug
+
+  # Flags specific to  ezxml.c (example for cygwin/mingw)
+EZXML_CPPDEFINES: EZXML_NOMMAP
+
+  # Where to find an installed libtiff and its include files
+  # (Not needed when on a standard search path)
+  # If no libtiff is found here or on the standard paths, then
+  # Radiance will build its own.
+TIFFLIB:
+TIFFINCLUDE:
+
+
+The Code section
+----------------
+
+  # There should be no need to edit this section in existing
+  # config files. If you create a new file for a yet untested 
+  # platform, you may need to ask on the dev-list what might
+  # work best.
+
+RAD_COMPAT:     # theoretically obsolete (src/common/strcmp.c)
+RAD_MATHCOMPAT: # erf.c floating point error function
+RAD_ARGSCOMPAT: # fixargv0.c for Windows
+RAD_NETCOMPAT:  # [win_]netproc.c for ranimate
+RAD_MLIB:       # usually 'm', or any fastlib available
+RAD_SOCKETLIB:  # ws_2_32 on Windows (VC links it automatically)
+RAD_PROCESS:    # our process abstraction and win_popen()
+RAD_PCALLS:     # more custom process abstraction
+

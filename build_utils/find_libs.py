@@ -8,8 +8,8 @@ def find_x11(env):
 		if os.path.isdir (d):
 			incdir = os.path.join(d, 'include')
 			libdir = os.path.join(d, 'lib')
-			env.Append(CPPPATH=[incdir]) # add temporarily
-			env.Append(LIBPATH=[libdir]) 
+			env.Prepend(CPPPATH=[incdir]) # add temporarily
+			env.Prepend(LIBPATH=[libdir]) 
 			conf = SConf(env)
 			if conf.CheckLibWithHeader('X11', 'X11/X.h', 'C', autoadd=0):
 				env.Replace(X11INCLUDE=incdir)
@@ -31,13 +31,9 @@ def find_gl(env):
 	dl = [(None,None)] # standard search path
 	if env.has_key('X11INCLUDE'): # sometimes found there (Darwin)
 		dl.append((env['X11INCLUDE'], env['X11LIB']))
-	#if os.name == 'nt':
-	#	dl.append((some win specific dirs))
-	#if some other weirdness:
-	#	...
 	for incdir, libdir in dl:
-		if incdir: env.Append(CPPPATH=[incdir]) # add temporarily
-		if libdir: env.Append(LIBPATH=[libdir])
+		if incdir: env.Prepend(CPPPATH=[incdir]) # add temporarily
+		if libdir: env.Prepend(LIBPATH=[libdir])
 		conf = SConf(env)
 		if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
 			env['OGL'] = 1
@@ -46,6 +42,30 @@ def find_gl(env):
 		if env.has_key('OGL'):
 			if incdir: env.Replace(OGLINCLUDE=[incdir])
 			#if libdir: env.Replace(OGLLIB=[libdir])
+			conf.Finish()
+			break
+		conf.Finish()
+
+
+def find_libtiff(env):
+	# Check for libtiff, set flag and include/lib directories
+	dl = [ (None,None), ] # standard search path
+	cfgi = env.get('TIFFINCLUDE')
+	cfgl = env.get('TIFFLIB')
+	if cfgi or cfgl:
+		dl.insert(0,(cfgi, cfgl))
+	for incdir, libdir in dl:
+		if incdir: env.Prepend(CPPPATH=[incdir]) # add temporarily
+		if libdir: env.Prepend(LIBPATH=[libdir])
+		conf = SConf(env)
+		if conf.CheckLib('tiff', 'TIFFInitSGILog',
+				header='void TIFFInitSGILog(void);', autoadd=0):
+			env['TIFFLIB_INSTALLED'] = 1
+		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
+		if libdir: env['LIBPATH'].remove(libdir)
+		if env.has_key('TIFFLIB_INSTALLED'):
+			if incdir: env.Replace(RAD_TIFFINCLUDE=[incdir])
+			if libdir: env.Replace(RAD_TIFFLIB=[libdir])
 			conf.Finish()
 			break
 		conf.Finish()

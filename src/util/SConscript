@@ -60,9 +60,8 @@ progs.append(getinfo)
 if env.has_key('X11LIB'):
 	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
 	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
-	x11findwind = env.Object(source='#src/common/x11findwind.c', CPPPATH=xincl)
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
-			source=Split('xglaresrc.c') + [x11findwind],
+			source=Split('xglaresrc.c') + [env.x11findwind], # XXX remote magic
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rtpic','rtmath','rtargs','rtio','X11']+ mlib)
 	progs.append(xglaresrc)
@@ -73,7 +72,7 @@ if env.has_key('X11LIB'):
 			CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rgl','rtpic','rtscene','rtproc','rtpath','rtargs','rtio',
-			'rtmath','rtcont','rtmem','rterror',
+			'rtmath','rtcont','rtmem','rterror','rtdummy',
 			'GL', 'GLU','X11'],)
 		progs.append(glrad)
 

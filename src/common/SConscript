@@ -13,8 +13,8 @@ tmapcolrs = env.StaticObject(source='tmapcolrs.c',
 
 # source and object dependencies
 RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
-		otypes.c objset.c octree.c readfargs.c modobject.c addobjnotify.c
-		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''')
+		otypes.c objset.c octree.c readfargs.c modobject.c
+		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''') #addobjnotify.c
 
 RTCOLOR = Split('''spec_rgb.c''')
 RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
@@ -37,6 +37,7 @@ RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
 RTMEM = Split('ealloc.c bmalloc.c')
 RTNET = Split('myhostname.c')
+RTDUMMY = Split('addobjnotify.c')
 
 STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
 		RTFUNC + RTPROC + RTLAMPS)
@@ -59,6 +60,11 @@ rtcolor = env.StaticLibrary(target=radlib('rtcolor'), source=RTCOLOR)
 rtlamps = env.StaticLibrary(target=radlib('rtlamps'), source=RTLAMPS)
 rtpic = env.StaticLibrary(target=radlib('rtpic'), source=RTPIC)
 rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
+# librtdummy is needed, because addobjnotify has different sizes depending
+#   on the program, and in some cases isn't actually needed at all.
+#   It should really be a pointer, and its content allocated
+#   dynamically during program initialization.
+rtdummy = env.StaticLibrary(target=radlib('rtdummy'), source=RTDUMMY)
 
 #librtrad = env.StaticLibrary(target=radlib('rtrad'), source=ALL)
 #Default(librtrad)

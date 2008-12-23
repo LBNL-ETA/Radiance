@@ -85,7 +85,11 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 	rvsrc = Split('rview.c rv2.c') + devsrc + rvobjs
 	rvu = env.Program(target=radbin('rvu'), source=rvsrc,
 		LIBPATH=env['LIBPATH'] + [env['X11LIB']],
-		LIBS=fullib + ['X11'] + mlib)
+		LIBS = (['rtscene', rclib, 'rttrace', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
+			'rtargs', 'rtpath', 'rtio', 'rtcont', 'rtmem', 'rterror',
+			'X11'] + mlib)
+		#LIBS=fullib + ['X11', rclib] + mlib
+		)
 	Default(rvu)
 	env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rvu)])
 

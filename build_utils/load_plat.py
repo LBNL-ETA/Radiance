@@ -10,7 +10,10 @@ _platdir = 'platform'
 def read_plat(env, args, fn):
 	cfig = ConfigParser.ConfigParser(env.Dictionary())
 	cfig.read(fn)
-	buildvars = [['CC'], # replace
+	buildvars = [['CC',
+			'TIFFINCLUDE', # where to find preinstalled tifflib headers
+			'TIFFLIB',     # where to find a preinstalled tifflib library
+			], # replace
 			['CPPPATH', 'CPPDEFINES', 'CPPFLAGS', 'CCFLAGS',
 			'LIBPATH', 'LINKFLAGS',
 			'EZXML_CPPDEFINES', # build flags specific to ezxml.c
@@ -20,7 +23,8 @@ def read_plat(env, args, fn):
 			['RAD_BASEDIR', 'RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR'],
 			[]],
 		['code',
-			[], # replace
+			[   # replace
+			],
 			[   # append
 			'RAD_COMPAT',     # theoretically obsolete (src/common/strcmp.c)
 			'RAD_MATHCOMPAT', # erf.c floating point error function

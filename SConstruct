@@ -4,7 +4,6 @@ import sys
 import string
 
 OPTFILE = 'rayopts.py'
-SourceSignatures('timestamp')
 def set_opts(env):
     # XXX add some caching
     opts = Options(OPTFILE, ARGUMENTS)
@@ -26,6 +25,7 @@ def allplats_setup(env):
     from build_utils import find_libs
     find_libs.find_x11(env)
     find_libs.find_gl(env) # OpenGL
+    find_libs.find_libtiff(env)
 
 def post_common_setup(env):
     env.Append(CPPPATH = [os.path.join('#src', 'common')])
@@ -43,6 +43,7 @@ def shareinstall_setup(env):
 
 # Set up build environment
 env = Environment()
+env.Decider('timestamp-match')
 
 if os.name == 'posix':
 	from build_utils import install

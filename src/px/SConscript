@@ -57,13 +57,13 @@ for p in PROGS:
     progs.append(prog)
 
 
-# tiff library (unix-specific for the moment)
-if os.name == 'posix':
+# tiff library (building it is unix-specific for the moment)
+#  If we haven't found one supporting LogLuv installed, build our own.
+libtiff_fn = radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX'])
+if os.name == 'posix' and not env.get('TIFFLIB_INSTALLED'):
 	cwd = os.getcwd()
 	upperdir = os.path.split(cwd)[0]
-
-	libtiff = env.Command(radlib(env['LIBPREFIX'] + 'tiff' + env['LIBSUFFIX']),
-		None,
+	libtiff = env.Command(libtiff_fn, None,
 	[('cd "%(tiffdir)s"; '
 		'env CC="$CC" '
 		'./configure -C '
@@ -80,33 +80,48 @@ if os.name == 'posix':
 	}
 	])
 
+	env['TIFFLIB_INSTALLED'] = 1
+
+if os.name == 'posix': # cleanup action for a previously built tifflib
+	Clean(libtiff_fn, [libtiff_fn, radlib(env['LIBPREFIX'] + 'tiff.la')])
+
+if env.get('TIFFLIB_INSTALLED'):
 	# tiff programs
+	tiffi = env.get('RAD_TIFFINCLUDE')
+	if tiffi: tiffincl = [tiffi] + env.get('CPPPATH', [])
+	else: tiffincl = env.get('CPPPATH', [])
+	tiffl = env.get('RAD_TIFFLIB')
+	if tiffl: tifflib = [tiffl] + env.get('LIBPATH', [])
+	else: tifflib = env.get('LIBPATH', [])
+
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=['ra_tiff.c'],
+		CPPPATH = tiffincl, LIBPATH=tifflib,
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	progs.append(ra_tiff)
 
 	normtiff = env.Program(target=radbin('normtiff'),source=['normtiff.c'],
+		CPPPATH = tiffincl, LIBPATH=tifflib,
 		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
 	progs.append(normtiff)
 
 
 # X11 targets
 if env.has_key('X11LIB'):
-    xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
-    xlibp = env.get('LIBPATH', []) + ['$X11LIB']
-    xlibs = ['X11','rtpic','rtargs','rtio','rtmath','rtmem']
-    x11findwind = env.Object(source='../common/x11findwind.c', # XXX ../not/nice
-        CPPPATH=xincl)
+	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
+	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
+	xlibs = ['X11','rtpic','rtargs','rtio','rtmath','rtmem']
+	env.x11findwind = env.Object(source='../common/x11findwind.c', # XXX remote magic
+		CPPPATH=xincl)
 
-    ximage = env.Program(target=radbin('ximage'),
-        source=Split('x11image.c x11raster.c')+[clrtab],
-        CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
-    progs.append(ximage)
+	ximage = env.Program(target=radbin('ximage'),
+		source=Split('x11image.c x11raster.c')+[clrtab],
+		CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
+	progs.append(ximage)
 
-    xshowtrace = env.Program(target=radbin('xshowtrace'),
-        source=Split('xshowtrace.c') + [x11findwind],
-        CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
-    progs.append(xshowtrace)
+	xshowtrace = env.Program(target=radbin('xshowtrace'),
+		source=Split('xshowtrace.c') + [env.x11findwind], # XXX remote magic
+		CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
+	progs.append(xshowtrace)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
 	for s in Split('''normpat falsecolor pdfblur pmblur pmdblur pbilat
