@@ -36,15 +36,26 @@ subdirectory where this file resides):
   support files:  ../lib/*
   data files:     ./test data/*
 
-This is the location where the experimental SCons build system
-will place everything, so it might be easiest to compile Radiance
-using SCons for testing.
+This is the location where the SCons build system places
+everything, which means we're testing the software after building
+but before installing. 
 The space character in the name of the test data directory is
 deliberate, because it is a design requirement that all our
 executables can handle path names with spaces.
 
 
 How to run tests
+
+The simplest way to run tests is to use the SCons build system.
+The file ray/INSTALL.scons explains the requirements and details.
+Once you have SCons working, go to the ray directory and type
+
+ $> scons test
+
+which will automatically execute all available tests in the
+correct environment.
+
+You can also run the tests manually:
 
 On unix systems, just type "run_all.py" in this directory to
 test everything. If that file doesn't have execute rights, you

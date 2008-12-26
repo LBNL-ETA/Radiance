@@ -1,0 +1,28 @@
+# -*- coding: latin-1 -*-
+import os
+import sys
+import run_all
+
+Import('env')
+
+def run_tests(target=None,source=None,env=None):
+	try:
+		oldenv = env['ENV']
+		ray = os.getcwd()
+		up, cur = os.path.split(ray)
+		bin = os.path.join(up, 'bin')
+		lib = os.path.join(up, 'lib')
+		test = os.path.join(ray, 'test')
+		if not test in sys.path:
+			sys.path.append(test)
+		oldpath = oldenv.get('PATH')
+		print oldpath
+		newpath = os.pathsep.join((bin, oldpath))
+		newenv = {'PATH' : newpath, 'RAYPATH':lib }
+		env['ENV'] = newenv
+		run_all.main()
+	finally:
+		env['ENV'] = oldenv
+
+
+env.Command(None,'run_all.py',action=Action(run_tests))

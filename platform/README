@@ -1,21 +1,38 @@
-Platform configuration files for SCons based build procedure.
-
+Platform configuration files for the SCons based build system
+-------------------------------------------------------------
 
 <platform>.cfg 
 --------------
 
-The <platform>.cfg files in this directory are use to determine
+The <platform>.cfg files in this directory are used to determine
 the right settings, libraries, source files etc. on the platform
 where you are building Radiance. The build system will select the
-right file automatically.
+appropriate file automatically.
 
 If your platform isn't supported yet, then you can create a new
-file with an appropriat name (SCons will tell you what it
+file with an appropriat name (SCons should tell you what it
 expects). Usually, you will start by copying the file of the most
-similar suupported platform.
+similar suupported platform, and then make the necessary changes.
 
 On unix based platforms without a specific config file, the file
 "posix.cfg" will be used (which may or may not work well enough).
+
+As of this writing, the following platforms are included
+(although not all of them have been tested very recently):
+
+* linux.cfg   Linux
+* freebsd.cfg FreeBSD unix
+* darwin.cfg  Macintosh OS-X
+* sunos.cfg   Sun Microsysems Solaris Unix
+* irix.cfg    sgi IRIX Unix release 5.x or later
+* irix4.cfg   sgi IRIX Unix release 4.x (obsolete)
+* irix3.cfg   sgi IRIX Unix release 3.x (obsolete)
+* hpux.cfg    Hewlett Packard HP-Unix
+* aix.cfg     IBM AIX Unix
+* posix.cfg   default for unknown Unix systems
+* win32.cfg   MS Windows (Visual C compilers)
+* cygwin.cfg  Cygwin on MS Windows  http://www.cygwin.com/
+* mingw.cfg   MingW on MS Windows  http://www.mingw.org/
 
 
 <platform>_custom.cfg
@@ -36,15 +53,15 @@ line is ignored as a comment.
 A config file consists of several sections, each of which is
 introduced by a keyword in brackets.
 Within each section, a configuration directive starts with a
-keyword and a colon, followed by the specific instructions.
+keyword and a colon, followed by the data assigned to that keyword.
 
 
 Sections
 --------
 
 [install] # directories where to install the software
-[build]   # compile and link instruction for production builds
-[debug]   # compile and link instruction for debug builds
+[build]   # compile and link instructions for production builds
+[debug]   # compile and link instructions for debug builds
 [code]    # code compatibility configuration
 
 
@@ -52,27 +69,29 @@ Install section
 ---------------
 
   # The root directory of the Radiance installation
-RAD_BASEDIR: /home/gm/src/rad/r6b
+RAD_BASEDIR: /opt/radiance3.6
 
   # The following are relative to RAD_BASEDIR!
   # The directory for executables 
 RAD_BINDIR:  bin
+
   # The directory for support files (.cal, .pic, .fnt, etc.)
 RAD_RLIBDIR: share/lib
-  # The directory for the manual files
+
+  # The directory for the man pages
 RAD_MANDIR:  share/man
 
 
 Debug and Build sections
 ------------------------
 
-  # The same keywords can be used in both, but usually their
-  # assigned values will vary.
+  # The same keywords can (and usually will) be used in both, but
+  # their assigned values will often differ.
 
   # The compiler to use (example: Gnu gcc)
 CC: gcc
 
-  # The directories for C header files (not normally needed).
+  # The directories for system header files (not normally needed).
 CPPPATH: 
 
   # Symbols to define for the preprocessor (example for Cygwin)
@@ -81,10 +100,10 @@ CPPDEFINES: freebsd HDSUF=.exe
   # Flags for the C preprocessor (example 
 CPPFLAGS:  -O2 -Wall -Wno-uninitialized
 
-  # Flags for the C compiler (example for debug build)
+  # Flags for the C compiler (example for debug build with gcc)
 CCFLAGS: -pg
 
-  # The directories for required libraris (not normally needed)
+  # The directories for system libraries (not normally needed)
 LIBPATH: 
 
   # Flags for the linker (example for debug build on Windows)
@@ -106,8 +125,8 @@ The Code section
 
   # There should be no need to edit this section in existing
   # config files. If you create a new file for a yet untested 
-  # platform, you may need to ask on the dev-list what might
-  # work best.
+  # platform, you may need to ask on the dev-list what will
+  # work here.
 
 RAD_COMPAT:     # theoretically obsolete (src/common/strcmp.c)
 RAD_MATHCOMPAT: # erf.c floating point error function
@@ -117,4 +136,6 @@ RAD_MLIB:       # usually 'm', or any fastlib available
 RAD_SOCKETLIB:  # ws_2_32 on Windows (VC links it automatically)
 RAD_PROCESS:    # our process abstraction and win_popen()
 RAD_PCALLS:     # more custom process abstraction
+
+
 

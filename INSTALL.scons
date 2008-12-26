@@ -1,0 +1,155 @@
+Building and Installing Radiance with SCons
+-------------------------------------------
+
+This file describes how to build and install Radiance using the SCons
+based build system (an alternative to the traditional makeall script
+expleined in the README file).
+
+
+Requirements
+------------
+
+Please make sure that you have dowloaded and unpacked BOTH the Radiance
+source package AND the archive with the auxiliary files. Crucial parts
+of the system will be missing if you only have one of them.
+
+SCons is a platform-independent software configuration and build system
+written in Python. If SCons and Python are not already installed on your
+system, then you need to download and install them first.
+
+  Python:  http://www.python.org/
+  SCons:   http://www.scons.org/
+
+For many systems, precompiled packages are availabls, such as Installer
+files for Windows. Most Linux distributions already come with Python
+installed and ready to use.
+
+SCons *may* use a libtiff already installed on your system. However, if
+it doesn't find one, it will build its own from sources included with
+Radiance.
+
+
+Building
+--------
+
+For building Radiance, go to the "ray" directory (where this file
+resides) in a console window and type:
+
+ $> scons build
+
+or just
+
+ $> scons
+
+The Scons program will find the necessary information, display a
+copyright message for you to acknowledge, and proceed to build the
+software.
+
+
+Configuring
+-----------
+
+In the subdirectory "ray/platform/" there are a number of configuration
+files for various build environments. In this context, a "platform" is a
+specific combination of operating system and build tools (eg. compiler).
+On unix based systems, the compiler usually doesn't make much of a
+difference, but on Windows, there are seperate build environments for
+toolkits like Cygwin or MingW.
+
+The file "ray/platform/README" explains the settings that can be
+configured in those files, and how to create a new one, if you use a
+platform that isn't supported yet.
+
+
+Options
+-------
+
+You can add the following command line options when invoking Scons.
+The directories given here will override those specified in the
+configuration file.
+
+RAD_BINDIR=<directory>
+	Install executables here
+	(Default read from config file)
+
+RAD_MANDIR=<directory>
+	Install man pages here
+	(Default read from config file)
+
+RAD_RLIBDIR=<directory>
+	Install support files here
+	(Default read from config file)
+
+RAD_DEBUG=1|0
+	1: Build a debug version
+	0: Build a production version (default)
+
+SKIP=1|0
+	1: Skip display of License terms
+	0: Don't skip (default)
+
+SCons will remember the values given with those options. You don't need
+to supply them again each time when you run repeated builds and
+installs, but only when something changes.
+
+Invoking SCons with the -H flag will display informtion about many other
+options, but you won't normally need any of those.
+
+
+Testing
+-------
+
+Radiance comes with a (still very incomplete) test suite, which can be
+run by invoking
+
+ $> scons test
+
+This executes a series of tests, each indicating success or failure.
+Testing will use the Radiance binaries in the "ray/bin/" directory, and the
+support files in "ray/lib/", where they are located after building but
+before installing. However, it will not trigger a (re-)build if any of
+those files are out of date or missing (instead, it will complain about
+failed tests because of missing executables etc.). You need to manually
+invoke building and testing after each other to ensure that everything
+is where it should be.
+
+Users (that means you!) are invited to contribute more test cases.
+The goal is that eventually (almost) all Radiance functionality can be
+tested for compliance with the specification and/or expected results.
+
+See the file "ray/test/README.txt" for details about the testing framework
+and instructions on how to contribute test cases.
+
+
+Installation
+------------
+
+The software will be installed into the directories given either in the
+configuration file through command options, by invoking
+
+ $> scons install
+
+To do this you need write permission in the target directories.
+Any files that are not present or not up to date will be (re-)built
+before being installed.
+
+You can install parts of the software by specifying one of three special
+targets:
+
+ $> scons bininstall   # only executable files
+ $> scons rlibinstall  # only support files
+ $> scons maninstall   # only manual pages
+
+
+Cleanup
+-------
+
+To save disk space on your system, or in preparation of a fresh build
+with different settings, you can clean up the source tree by invoking
+
+ %> scons -c
+
+This will delete all the generated object files, libraries, and
+executables in and below the "ray/src/" subdirectory.
+
+
