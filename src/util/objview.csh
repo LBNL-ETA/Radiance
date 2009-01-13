@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: objview.csh,v 2.11 2008/11/21 01:30:17 greg Exp $
+# RCSid: $Id: objview.csh,v 2.12 2009/01/13 22:19:25 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
@@ -8,7 +8,8 @@ set tmpdir=/tmp
 set octree=$tmpdir/ov$$.oct
 set lights=$tmpdir/lt$$.rad
 set rif=$tmpdir/ov$$.rif
-set tmpfiles="$octree $lights $rif"
+set ambf=$tmpdir/af$$.amb
+set tmpfiles="$octree $lights $rif $ambf"
 set raddev="x11"
 set up="Z"
 set vw="XYZ"
@@ -97,6 +98,7 @@ UP= $up
 view= $vw
 OCTREE= $octree
 oconv= -f
+AMBF= $ambf
 render= $rendopts
 _EOF_
 
