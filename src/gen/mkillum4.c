@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.13 2008/11/10 19:08:18 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.14 2009/01/18 17:41:38 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -485,12 +485,12 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	int	i, j, k, o;
 	COLOR	col, cinc;
 					/* copy incoming distribution */
-	if (b->ninc != distsiz)
+	if (b->ninc > distsiz)
 		error(INTERNAL, "error 1 in redistribute");
-	idist = (COLORV *)malloc(sizeof(COLOR)*distsiz);
+	idist = (COLORV *)malloc(sizeof(COLOR)*b->ninc);
 	if (idist == NULL)
 		error(SYSTEM, "out of memory in redistribute");
-	memcpy(idist, distarr, sizeof(COLOR)*distsiz);
+	memcpy(idist, distarr, sizeof(COLOR)*b->ninc);
 					/* compose direction transform */
 	for (i = 3; i--; ) {
 		mymat[i][0] = u[i];
