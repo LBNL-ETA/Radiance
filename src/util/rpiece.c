@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.49 2008/04/24 10:28:25 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.50 2009/02/07 05:40:47 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -108,7 +108,7 @@ main(
 		while ((rval = expandarg(&argc, &argv, i)) > 0)
 			;
 		if (rval < 0) {
-			fprintf(stderr, "%s: cannot expand '%s'",
+			fprintf(stderr, "%s: cannot expand '%s'\n",
 					argv[0], argv[i]);
 			exit(1);
 		}

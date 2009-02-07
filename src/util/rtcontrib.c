@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.51 2008/12/06 01:08:53 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.52 2009/02/07 05:40:47 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -246,7 +246,7 @@ main(int argc, char *argv[])
 		while ((j = expandarg(&argc, &argv, i)) > 0)
 			;
 		if (j < 0) {
-			fprintf(stderr, "%s: cannot expand '%s'",
+			fprintf(stderr, "%s: cannot expand '%s'\n",
 					argv[0], argv[i]);
 			exit(1);
 		}

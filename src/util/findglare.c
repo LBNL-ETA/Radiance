@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.12 2004/03/26 23:34:23 schorsch Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.13 2009/02/07 05:40:47 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -65,7 +65,7 @@ main(
 		while ((rval = expandarg(&argc, &argv, i)) > 0)
 			;
 		if (rval < 0) {
-			fprintf(stderr, "%s: cannot expand '%s'",
+			fprintf(stderr, "%s: cannot expand '%s'\n",
 					argv[0], argv[i]);
 			exit(1);
 		}
