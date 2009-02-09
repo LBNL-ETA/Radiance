@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.91 2008/12/18 23:26:57 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.92 2009/02/09 16:41:29 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1123,7 +1123,7 @@ specview(				/* get proper view spec from vs */
 		while (!isspace(*vs))		/* else skip id */
 			if (!*vs++)
 				return(NULL);
-		if (upax) {			/* specify up vector */
+		if (upax) {			/* prepend up vector */
 			strcpy(cp, vup[upax+3]);
 			cp += strlen(cp);
 		}
@@ -1152,6 +1152,11 @@ getview(				/* get view n, or NULL if none */
 	if (viewselect != NULL) {		/* command-line selected */
 		if (n)				/* only do one */
 			return(NULL);
+					
+		if (isint(viewselect)) {	/* view number? */
+			n = atoi(viewselect)-1;
+			goto numview;
+		}
 		if (viewselect[0] == '-') {	/* already specified */
 			if (vn != NULL) *vn = '\0';
 			return(viewselect);
@@ -1162,23 +1167,24 @@ getview(				/* get view n, or NULL if none */
 				;
 			*vn = '\0';
 		}
-						/* view number? */
-		if (isint(viewselect))
-			return(specview(nvalue(VIEWS, atoi(viewselect)-1)));
 						/* check list */
 		while ((mv = nvalue(VIEWS, n++)) != NULL)
 			if (matchword(viewselect, mv))
 				return(specview(mv));
+
 		return(specview(viewselect));	/* standard view? */
 	}
+numview:
 	mv = nvalue(VIEWS, n);		/* use view n */
-	if ((vn != NULL) & (mv != NULL)) {
-		register char	*mv2 = mv;
-		if (*mv2 != '-')
+	if ((vn != NULL) & (mv != NULL))
+		if (*mv != '-') {
+			register char	*mv2 = mv;
 			while (*mv2 && !isspace(*mv2))
 				*vn++ = *mv2++;
-		*vn = '\0';
-	}
+			*vn = '\0';
+		} else
+			sprintf(vn, "%d", n+1);
+
 	return(specview(mv));
 }
 

@@ -1687,3 +1687,5 @@ Added "rpict" and "rvu" variables to rad, and made these as well as
 the "oconv", "mkillum" and "pfilt" variables accept an alternate
 command path in each case.  Change suggested by Lars Grobe based
 on similar Radzilla (radz) facility by Carsten Bauer.
+
+Fixed rad -v N specification to use actual view name if one.
