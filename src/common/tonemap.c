@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.32 2008/07/03 03:35:10 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.33 2009/02/09 20:23:51 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -419,27 +419,6 @@ double	La
 }
 
 
-static int
-tmNewMap(			/* allocate new tone-mapping array */
-TMstruct	*tms
-)
-{
-	if (tms->lumap != NULL && (tms->mbrmax - tms->mbrmin) !=
-					(tms->hbrmax - tms->hbrmin)) {
-		free((MEM_PTR)tms->lumap);
-		tms->lumap = NULL;
-	}
-	tms->mbrmin = tms->hbrmin;
-	tms->mbrmax = tms->hbrmax;
-	if (tms->mbrmin > tms->mbrmax)
-		return 0;
-	if (tms->lumap == NULL)
-		tms->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
-					(tms->mbrmax-tms->mbrmin+1));
-	return(tms->lumap != NULL);
-}
-
-
 int
 tmFixedMapping(			/* compute fixed, linear tone-mapping */
 TMstruct	*tms,
@@ -615,8 +594,6 @@ int	len
 }
 
 
-
-
 TMstruct *
 tmDup(				/* duplicate top tone mapping */
 TMstruct	*tms
@@ -691,6 +668,27 @@ tmMkMesofact()				/* build mesopic lookup factor table */
 		tmMesofact[i-BMESLOWER] = 256. *
 				(tmLuminance(i) - LMESLOWER) /
 				(LMESUPPER - LMESLOWER);
+}
+
+
+int
+tmNewMap(			/* allocate new tone-mapping array */
+TMstruct	*tms
+)
+{
+	if (tms->lumap != NULL && (tms->mbrmax - tms->mbrmin) !=
+					(tms->hbrmax - tms->hbrmin)) {
+		free((MEM_PTR)tms->lumap);
+		tms->lumap = NULL;
+	}
+	tms->mbrmin = tms->hbrmin;
+	tms->mbrmax = tms->hbrmax;
+	if (tms->mbrmin > tms->mbrmax)
+		return 0;
+	if (tms->lumap == NULL)
+		tms->lumap = (unsigned short *)malloc(sizeof(unsigned short)*
+					(tms->mbrmax-tms->mbrmin+1));
+	return(tms->lumap != NULL);
 }
 
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.17 2008/07/03 03:35:10 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.18 2009/02/09 20:23:51 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -57,6 +57,8 @@ extern "C" {
 #define normscot(c)	( (	(int32)(SCO_rf*256.+.5)*(c)[RED] + \
 				(int32)(SCO_gf*256.+.5)*(c)[GRN] + \
 				(int32)(SCO_bf*256.+.5)*(c)[BLU]	) >> 8 )
+
+extern int	tmNewMap(TMstruct *tms);	/* allocate new tone-mapping */
 
 #ifndef	malloc
 MEM_PTR		malloc();
