@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.13 2008/05/31 18:28:34 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.14 2009/02/09 20:48:08 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: tmapluv.c,v 3.13 2008/05/31 18:28:34 greg Exp 
 #define LOGLUV_PUBLIC		1
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "tmprivat.h"

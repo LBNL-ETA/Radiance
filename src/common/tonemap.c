@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.33 2009/02/09 20:23:51 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.34 2009/02/09 20:48:08 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: tonemap.c,v 3.33 2009/02/09 20:23:51 greg Exp 
 #include "copyright.h"
 
 #include	<stdio.h>
+#include	<stdlib.h>
 #include	<math.h>
 #include	"tmprivat.h"
 #include	"tmerrmsg.h"
