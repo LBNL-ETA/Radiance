@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pinterp.1,v 1.6 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: pinterp.1,v 1.7 2009/02/21 00:06:05 greg Exp $"
 .TH PINTERP 1 1/24/96 RADIANCE
 .SH NAME
 pinterp - interpolate/extrapolate view from pictures
@@ -233,6 +233,10 @@ To extrapolate a second eyepoint for a stereo pair and recalculate
 background regions:
 .IP "" .2i
 pinterp \-vf right.vf \-ff \-fr "\-av .1 .1 .1 scene.oct" left.hdr left.z > right.hdr
+.PP
+To convert an angular fisheye to a hemispherical fisheye:
+.IP "" .2i
+pinterp \-vf fish.hdr \-vth -ff fish.hdr 1 > hemi.hdr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
