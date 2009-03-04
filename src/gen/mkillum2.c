@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.28 2007/12/13 07:03:37 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.29 2009/03/04 00:12:25 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -15,7 +15,7 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.28 2007/12/13 07:03:37 greg Exp
 
 COLORV *	distarr = NULL;		/* distribution array */
 int		distsiz = 0;
-
+COLORV *	direct_discount = NULL;	/* amount to take off direct */
 
 void
 newdist(			/* allocate & clear distribution array */
@@ -41,6 +41,27 @@ newdist(			/* allocate & clear distribution array */
 }
 
 
+static void
+new_discount()			/* allocate space for direct contrib. record */
+{
+	if (distsiz <= 0)
+		return;
+	direct_discount = (COLORV *)calloc(distsiz, sizeof(COLOR));
+	if (direct_discount == NULL)
+		error(SYSTEM, "out of memory in new_discount");
+}
+
+
+static void
+done_discount()			/* clear off direct contrib. record */
+{
+	if (direct_discount == NULL)
+		return;
+	free((void *)direct_discount);
+	direct_discount = NULL;
+}
+
+
 int
 process_ray(			/* process a ray result or report error */
 	RAY *r,
@@ -58,6 +79,11 @@ process_ray(			/* process a ray result or report error */
 	multcolor(r->rcol, r->rcoef);	/* in case it's a source ray */
 	colp = &distarr[r->rno * 3];
 	addcolor(colp, r->rcol);
+	if (r->rsrc >= 0 &&		/* remember source contrib. */
+			direct_discount != NULL) {
+		colp = &direct_discount[r->rno * 3];
+		addcolor(colp, r->rcol);
+	}
 	return(1);
 }
 
@@ -143,14 +169,9 @@ srcsamps(			/* sample sources from this surface position */
 		} else {
 			if (v[2] >= -FTINY)
 				continue;	/* only sample transmission */
-			d = 1.0 - v[2]*v[2];
-			i = d*nalt;
-			d = atan2(-v[1], -v[0])/(2.*PI);
-			if (d < 0.0) d += 1.0;
-			j = d*nazi + 0.5;
-			if (j >= nazi) j = 0;
-			sr.rno = i*nazi + j;
-			d = nalt*nazi/PI * -v[2];
+			v[0] = -v[0]; v[1] = -v[1]; v[2] = -v[2];
+			sr.rno = flatindex(v, nalt, nazi);
+			d = nalt*nazi*(1./PI) * v[2];
 		}
 		d *= si.dom;			/* solid angle correction */
 		scalecolor(sr.rcoef, d);
@@ -220,6 +241,25 @@ flatdir(		/* compute uniform hemispherical direction */
 	dv[0] = d1*cos(d2);
 	dv[1] = d1*sin(d2);
 	dv[2] = sqrt(1. - alt);
+}
+
+int
+flatindex(		/* compute index for hemispherical direction */
+	FVECT	dv,
+	int	nalt,
+	int	nazi
+)
+{
+	double	d;
+	int	i, j;
+	
+	d = 1.0 - dv[2]*dv[2];
+	i = d*nalt;
+	d = atan2(dv[1], dv[0]) * (0.5/PI);
+	if (d < 0.0) d += 1.0;
+	j = d*nazi + 0.5;
+	if (j >= nazi) j = 0;
+	return(i*nazi + j);
 }
 
 
@@ -350,7 +390,7 @@ my_face(		/* make an illum face */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (!directvis && il->flags & IL_LIGHT) {
+	if (!directvis && (il->flags & IL_LIGHT || il->sd != NULL)) {
 		MAT4	ixfm;
 		if (il->sd == NULL) {
 			for (i = 3; i--; ) {
@@ -361,8 +401,13 @@ my_face(		/* make an illum face */
 			}
 			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
 			ixfm[3][3] = 1.;
-		} else if (!invmat4(ixfm, xfm))
-			objerror(ob, INTERNAL, "cannot invert BSDF transform");
+		} else {
+			if (!invmat4(ixfm, xfm))
+				objerror(ob, INTERNAL,
+					"cannot invert BSDF transform");
+			if (!(il->flags & IL_LIGHT))
+				new_discount();
+		}
 		dim[0] = random();
 		nallow = 10*il->nsamps;
 		for (i = 0; i < il->nsamps; i++) {
@@ -392,6 +437,7 @@ my_face(		/* make an illum face */
 		nalt = sqrt(il->sd->nout/PI) + .5;
 		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, fa->norm, xfm);
+		done_discount();
 		if (!il->sampdens)
 			il->sampdens = nalt*nazi/PI + .999;
 	}
@@ -552,7 +598,7 @@ my_ring(		/* make an illum ring */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (!directvis && il->flags & IL_LIGHT) {
+	if (!directvis && (il->flags & IL_LIGHT || il->sd != NULL)) {
 		MAT4	ixfm;
 		if (il->sd == NULL) {
 			for (i = 3; i--; ) {
@@ -563,8 +609,13 @@ my_ring(		/* make an illum ring */
 			}
 			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
 			ixfm[3][3] = 1.;
-		} else if (!invmat4(ixfm, xfm))
-			objerror(ob, INTERNAL, "cannot invert BSDF transform");
+		} else {
+			if (!invmat4(ixfm, xfm))
+				objerror(ob, INTERNAL,
+					"cannot invert BSDF transform");
+			if (!(il->flags & IL_LIGHT))
+				new_discount();
+		}
 		dim[0] = random();
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize location */
@@ -587,6 +638,7 @@ my_ring(		/* make an illum ring */
 		nalt = sqrt(il->sd->nout/PI) + .5;
 		nazi = PI*nalt + .5;
 		redistribute(il->sd, nalt, nazi, u, v, co->ad, xfm);
+		done_discount();
 		if (!il->sampdens)
 			il->sampdens = nalt*nazi/PI + .999;
 	}

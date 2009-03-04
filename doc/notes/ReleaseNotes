@@ -1689,3 +1689,6 @@ command path in each case.  Change suggested by Lars Grobe based
 on similar Radzilla (radz) facility by Carsten Bauer.
 
 Fixed rad -v N specification to use actual view name if one.
+
+Fixed error in mkillum calculation where it neglected indirect
+source contributions from BTDF illum's.

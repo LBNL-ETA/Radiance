@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.15 2007/12/12 05:09:58 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.16 2009/03/04 00:12:25 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -96,6 +96,7 @@ extern void raysamp(int ndx, FVECT org, FVECT dir);
 extern void rayclean(void);
 
 extern void flatdir(FVECT  dv, double  alt, double  azi);
+extern int flatindex(FVECT dv, int nalt, int nazi);
 
 extern int my_default(OBJREC *, struct illum_args *, char *);
 extern int my_face(OBJREC *, struct illum_args *, char *);
@@ -104,6 +105,7 @@ extern int my_ring(OBJREC *, struct illum_args *, char *);
 
 extern COLORV *	distarr;		/* distribution array */
 extern int	distsiz;
+extern COLORV *	direct_discount;	/* amount to take off direct */
 
 extern char	*progname;
 

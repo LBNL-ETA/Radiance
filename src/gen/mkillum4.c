@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.14 2009/01/18 17:41:38 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.15 2009/03/04 00:12:25 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -479,7 +479,7 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	int	nout = 0;
 	MAT4	mymat, inmat;
 	COLORV	*idist;
-	COLORV	*cp, *csum;
+	COLORV	*cp;
 	FVECT	dv;
 	double	wt;
 	int	i, j, k, o;
@@ -513,14 +513,25 @@ redistribute(		/* pass distarr ray sums through BSDF */
 		error(INTERNAL, "cannot invert BSDF transform");
 	newdist(nalt*nazi);		/* resample distribution */
 	for (i = b->ninc; i--; ) {
+		int	direct_out = -1;
+		COLOR	cdir;
 		getBSDF_incvec(dv, b, i);	/* compute incident irrad. */
 		multv3(dv, dv, mymat);
-		if (dv[2] < 0.0) dv[2] = -dv[2];
+		if (dv[2] < 0.0) {
+			dv[0] = -dv[0]; dv[1] = -dv[1]; dv[2] = -dv[2];
+			direct_out += (direct_discount != NULL);
+		}
 		wt = getBSDF_incohm(b, i);
 		wt *= dv[2];			/* solid_angle*cosine(theta) */
 		cp = &idist[3*i];
 		copycolor(cinc, cp);
 		scalecolor(cinc, wt);
+		if (!direct_out) {		/* discount direct contr. */
+			cp = &direct_discount[3*i];
+			copycolor(cdir, cp);
+			scalecolor(cdir, -wt);
+			direct_out = flatindex(dv, nalt, nazi);
+		}
 		for (k = nalt; k--; )		/* loop over distribution */
 		    for (j = nazi; j--; ) {
 			flatdir(dv, (k + .5)/nalt, (double)j/nazi);
@@ -533,9 +544,12 @@ redistribute(		/* pass distarr ray sums through BSDF */
 			}
 			wt = BSDF_value(b, i, o);
 			copycolor(col, cinc);
+			o = k*nazi + j;
+			if (o == direct_out)
+				addcolor(col, cdir);	/* minus direct */
 			scalecolor(col, wt);
-			csum = &distarr[3*(k*nazi + j)];
-			addcolor(csum, col);	/* sum into distribution */
+			cp = &distarr[3*o];
+			addcolor(cp, col);	/* sum into distribution */
 		    }
 	}
 	free(idist);			/* free temp space */
