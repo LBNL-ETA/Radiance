@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.16 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.17 2009/03/11 02:27:26 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -626,7 +626,7 @@ vwrays \-fd scene.hdr | rtrace \-fda `vwrays \-d scene.hdr` \-os scene.oct
 .PP
 To compute an image with an unusual view mapping:
 .IP "" .2i
-cnt 640 480 | rcalc \-e 'xr:640;yr:480' \-f unusual_view.cal | rtrace
+cnt 480 640 | rcalc \-e 'xr:640;yr:480' \-f unusual_view.cal | rtrace
 \-x 640 \-y 480 \-fac scene.oct > unusual.hdr
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
