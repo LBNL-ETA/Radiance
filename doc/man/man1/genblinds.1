@@ -1,4 +1,4 @@
-.\" RCSid "$Id: genblinds.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: genblinds.1,v 1.6 2009/04/24 05:20:22 greg Exp $"
 .TH GENBLINDS 1 10/10/94 RADIANCE
 .SH NAME
 genblinds - generate a RADIANCE description of venetian blinds
@@ -51,9 +51,9 @@ Each slat will be broken into as many polygons as is necessary to
 keep the delta changes in angle less than 10 degrees.
 (Note that this may result in a rather large number of polygons.)\0
 .SH EXAMPLE
-To produce a curved set of blinds with 15 slats:
+To produce a curved set of blinds with 25 slats at 15 degrees:
 .IP "" .2i
-genblinds white blind 1 46 88 118 15 \-r 1 > blinds.rad
+genblinds white blind 1 46 88 25 15 \-r 1 > blinds.rad
 .SH AUTHOR
 Jean-Louis Scartezzini and Greg Ward
 .SH "SEE ALSO"
