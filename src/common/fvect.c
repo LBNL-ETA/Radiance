@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.10 2008/06/24 02:16:14 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.11 2009/05/07 21:38:35 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -13,8 +13,8 @@ static const char	RCSid[] = "$Id: fvect.c,v 2.10 2008/06/24 02:16:14 greg Exp $"
 
 double
 fdot(				/* return the dot product of two vectors */
-register FVECT v1,
-register FVECT v2
+FVECT v1,
+FVECT v2
 )
 {
 	return(DOT(v1,v2));
@@ -23,8 +23,8 @@ register FVECT v2
 
 double
 dist2(				/* return square of distance between points */
-register FVECT p1,
-register FVECT p2
+FVECT p1,
+FVECT p2
 )
 {
 	FVECT  delta;
@@ -44,7 +44,7 @@ FVECT ep1,
 FVECT ep2		/* points on the line */
 )
 {
-	register double  d, d1, d2;
+	double  d, d1, d2;
 
 	d = dist2(ep1, ep2);
 	d1 = dist2(ep1, p);
@@ -61,7 +61,7 @@ FVECT ep1,
 FVECT ep2		/* the end points */
 )
 {
-	register double  d, d1, d2;
+	double  d, d1, d2;
 
 	d = dist2(ep1, ep2);
 	d1 = dist2(ep1, p);
@@ -82,9 +82,9 @@ FVECT ep2		/* the end points */
 
 void
 fcross(				/* vres = v1 X v2 */
-register FVECT vres,
-register FVECT v1,
-register FVECT v2
+FVECT vres,
+FVECT v1,
+FVECT v2
 )
 {
 	vres[0] = v1[1]*v2[2] - v1[2]*v2[1];
@@ -95,10 +95,10 @@ register FVECT v2
 
 void
 fvsum(				/* vres = v0 + f*v1 */
-register FVECT vres,
-register FVECT v0,
-register FVECT v1,
-register double f
+FVECT vres,
+FVECT v0,
+FVECT v1,
+double f
 )
 {
 	vres[0] = v0[0] + f*v1[0];
@@ -109,10 +109,10 @@ register double f
 
 double
 normalize(			/* normalize a vector, return old magnitude */
-register FVECT  v
+FVECT  v
 )
 {
-	register double  len, d;
+	double  len, d;
 	
 	d = DOT(v, v);
 	
@@ -158,36 +158,6 @@ FVECT rdir1		/* second direction (normalized) */
 }
 
 
-#if 0
-int
-closestapproach(			/* closest approach of two rays */
-RREAL t[2],		/* returned distances along each ray */
-FVECT rorg0,		/* first origin */
-FVECT rdir0,		/* first direction (unnormalized) */
-FVECT rorg1,		/* second origin */
-FVECT rdir1		/* second direction (unnormalized) */
-)
-{
-	double	dotprod = DOT(rdir0, rdir1);
-	double	d0n2 = DOT(rdir0, rdir0);
-	double  d1n2 = DOT(rdir1, rdir1);
-	double	denom = d0n2*d1n2 - dotprod*dotprod;
-	double	o1o2_d1;
-	FVECT	o0o1;
-
-	if (denom <= FTINY) {		/* check if lines are parallel */
-		t[0] = t[1] = 0.0;
-		return(0);
-	}
-	VSUB(o0o1, rorg0, rorg1);
-	o1o2_d1 = DOT(o0o1, rdir1);
-	t[0] = (o1o2_d1*dotprod - DOT(o0o1,rdir0)*d1n2) / denom;
-	t[1] = (o1o2_d1 + t[0]*dotprod) / d1n2;
-	return(1);
-}
-#endif
-
-
 void
 spinvector(				/* rotate vector around normal */
 FVECT vres,		/* returned vector */
@@ -198,7 +168,7 @@ double theta		/* left-hand radians */
 {
 	double  sint, cost, normprod;
 	FVECT  vperp;
-	register int  i;
+	int  i;
 	
 	if (theta == 0.0) {
 		if (vres != vorig)
