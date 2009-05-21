@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.24 2009/03/12 18:37:24 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.25 2009/05/21 18:08:43 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -7,14 +7,12 @@ static const char	RCSid[] = "$Id: header.c,v 2.24 2009/03/12 18:37:24 greg Exp $
  *  Externals declared in resolu.h
  *
  *  newheader(t,fp)	start new information header identified by string t
- *  isheadid(s)		returns true if s is a header id line
  *  headidval(r,s)	copy header identifier value in s to r
- *  dateval(t,s)	get capture date value
- *  isdate(s)		returns true if s is a date line
- *  fputdate(t,fp)	put out the given capture date and time
+ *  dateval(t,s)	get capture date value as UTC
+ *  gmtval(t,s)		get GMT as UTC
+ *  fputdate(t,fp)	put out the given UTC
  *  fputnow(fp)		put out the current date and time
  *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
- *  isformat(s)		returns true if s is of the form "FORMAT=*"
  *  formatval(r,s)	copy the format value in s to r
  *  fputformat(s,fp)	write "FORMAT=%s" to fp
  *  getheader(fp,f,p)	read header from fp, calling f(s,p) on each line
@@ -33,11 +31,12 @@ static const char	RCSid[] = "$Id: header.c,v 2.24 2009/03/12 18:37:24 greg Exp $
 
 #define	 MAXLINE	2048
 
-char  HDRSTR[] = "#?";		/* information header magic number */
+const char  HDRSTR[] = "#?";		/* information header magic number */
 
-char  FMTSTR[] = "FORMAT=";	/* format identifier */
+const char  FMTSTR[] = "FORMAT=";	/* format identifier */
 
-char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
+const char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
+const char  GMTSTR[] = "GMT=";		/* GMT identifier */
 
 static gethfunc mycheck;
 
@@ -45,7 +44,7 @@ static gethfunc mycheck;
 extern void
 newheader(		/* identifying line of information header */
 	char  *s,
-	register FILE  *fp
+	FILE  *fp
 )
 {
 	fputs(HDRSTR, fp);
@@ -56,11 +55,11 @@ newheader(		/* identifying line of information header */
 
 extern int
 headidval(			/* get header id (return true if is id) */
-	register char  *r,
-	register char	*s
+	char  *r,
+	char	*s
 )
 {
-	register char  *cp = HDRSTR;
+	const char  *cp = HDRSTR;
 
 	while (*cp) if (*cp++ != *s++) return(0);
 	if (r == NULL) return(1);
@@ -71,22 +70,13 @@ headidval(			/* get header id (return true if is id) */
 
 
 extern int
-isheadid(			/* check to see if line is header id */
-	char  *s
-)
-{
-	return(headidval(NULL, s));
-}
-
-
-extern int
-dateval(		/* get capture date value */
+dateval(		/* convert capture date line to UTC */
 	time_t	*tloc,
 	char	*s
 )
 {
 	struct tm	tms;
-	register char  *cp = TMSTR;
+	const char	*cp = TMSTR;
 
 	while (*cp) if (*cp++ != *s++) return(0);
 	while (isspace(*s)) s++;
@@ -106,26 +96,48 @@ dateval(		/* get capture date value */
 
 
 extern int
-isdate(			/* is the given line a capture date? */
-	char *s
+gmtval(			/* convert GMT date line to UTC */
+	time_t	*tloc,
+	char	*s
 )
 {
-	return(dateval(NULL, s));
+	struct tm	tms;
+	const char	*cp = GMTSTR;
+
+	while (*cp) if (*cp++ != *s++) return(0);
+	while (isspace(*s)) s++;
+	if (!*s) return(0);
+	if (sscanf(s, "%d:%d:%d %d:%d:%d",
+			&tms.tm_year, &tms.tm_mon, &tms.tm_mday,
+			&tms.tm_hour, &tms.tm_min, &tms.tm_sec) != 6)
+		return(0);
+	if (tloc == NULL)
+		return(1);
+	tms.tm_mon--;
+	tms.tm_year -= 1900;
+	*tloc = timegm(&tms);
+	return(1);
 }
 
 
 extern void
-fputdate(		/* write out the given time value */
+fputdate(		/* write out the given time value (local & GMT) */
 	time_t	tv,
 	FILE	*fp
 )
 {
-	struct tm	*tm = localtime(&tv);
-	if (tm == NULL)
-		return;
-	fprintf(fp, "%s %04d:%02d:%02d %02d:%02d:%02d\n", TMSTR,
-			tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
-			tm->tm_hour, tm->tm_min, tm->tm_sec);
+	struct tm	*tms;
+
+	tms = localtime(&tv);
+	if (tms != NULL)
+		fprintf(fp, "%s %04d:%02d:%02d %02d:%02d:%02d\n", TMSTR,
+				tms->tm_year+1900, tms->tm_mon+1, tms->tm_mday,
+				tms->tm_hour, tms->tm_min, tms->tm_sec);
+	tms = gmtime(&tv);
+	if (tms != NULL)
+		fprintf(fp, "%s %04d:%02d:%02d %02d:%02d:%02d\n", GMTSTR,
+				tms->tm_year+1900, tms->tm_mon+1, tms->tm_mday,
+				tms->tm_hour, tms->tm_min, tms->tm_sec);
 }
 
 
@@ -156,11 +168,11 @@ printargs(		/* print arguments to a file */
 
 extern int
 formatval(			/* get format value (return true if format) */
-	register char  *r,
-	register char  *s
+	char  *r,
+	char  *s
 )
 {
-	register char  *cp = FMTSTR;
+	const char  *cp = FMTSTR;
 
 	while (*cp) if (*cp++ != *s++) return(0);
 	while (isspace(*s)) s++;
@@ -171,15 +183,6 @@ formatval(			/* get format value (return true if format) */
 	while(*s && !isspace(*s));
 	*r = '\0';
 	return(1);
-}
-
-
-extern int
-isformat(			/* is line a format line? */
-	char  *s
-)
-{
-	return(formatval(NULL, s));
 }
 
 
@@ -246,8 +249,8 @@ mycheck(			/* check a header line for format info. */
 
 extern int
 globmatch(			/* check for match of s against pattern p */
-	register char	*p,
-	register char	*s
+	char	*p,
+	char	*s
 )
 {
 	int	setmatch;
@@ -320,7 +323,7 @@ checkheader(
 )
 {
 	struct check	cdat;
-	register char	*cp;
+	char	*cp;
 
 	cdat.fp = fout;
 	cdat.fs[0] = '\0';

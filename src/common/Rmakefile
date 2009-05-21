@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.60 2008/05/31 19:38:36 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.61 2009/05/21 18:08:43 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -143,3 +143,6 @@ dircode.o xf.o:	rtmath.h mat4.h fvect.h tiff.h
 error.o:	rterror.h
 
 bmpfile.o:	bmpfile.h tiff.h
+
+header.o readmesh.o readoct.o resolu.o rglinst.o tmapcolrs.o:	resolu.h
+
