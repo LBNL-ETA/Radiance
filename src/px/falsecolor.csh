@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: falsecolor.csh,v 2.19 2008/11/10 19:08:19 greg Exp $
+# RCSid: $Id: falsecolor.csh,v 2.20 2009/05/27 15:38:29 greg Exp $
 #
 # Create false color image with legend
 #
@@ -60,9 +60,9 @@ while ($#argv > 0)
 		set bluv="$argv[1]"
 		breaksw
 	case -spec:
-		set redv='1.6*v-.6'
-		set grnv='if(v-.375,1.6-1.6*v,8/3*v)'
-		set bluv='1-8/3*v'
+		set redv='old_red(v)'
+		set grnv='old_grn(v)'
+		set bluv='old_blu(v)'
 		breaksw
 	case -i:
 		shift argv
@@ -121,6 +121,10 @@ btwn(a,x,b) : if(a-x,-1,b-x);
 clip(x) : if(x-1,1,if(x,x,0));
 frac(x) : x - floor(x);
 boundary(a,b) : neq(floor(ndivs*a+.5),floor(ndivs*b+.5));
+
+old_red(x) = 1.6*x - .6;
+old_grn(x) = if(x-.375, 1.6-1.6*x, 8/3*x);
+old_blu(x) = 1 - 8/3*x;
 
 interp_arr2(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
 interp_arr(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
