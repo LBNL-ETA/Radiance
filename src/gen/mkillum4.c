@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.15 2009/03/04 00:12:25 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.16 2009/05/28 18:38:52 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -247,6 +247,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 				strlen(sdata));
 		error(WARNING, errmsg);
 	}
+	/* XXX should check that BSDF*dOMEGA doesn't sum to more than PI? */
 }
 
 

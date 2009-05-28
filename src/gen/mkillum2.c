@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.29 2009/03/04 00:12:25 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.30 2009/05/28 18:38:52 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -153,6 +153,7 @@ srcsamps(			/* sample sources from this surface position */
 			d = 5.*FTINY;
 		for (i = 3; i--; )
 			sr.rorg[i] += d*nrm[i];
+		samplendx++;			/* increment sample counter */
 		if (!srcray(&sr, NULL, &si))
 			break;			/* end of sources */
 						/* index direction */
