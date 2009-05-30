@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.16 2009/05/28 18:38:52 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.17 2009/05/30 22:19:08 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -121,22 +121,20 @@ ab_getohm(		/* get solid angle for this angle basis index */
 {
 	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
 	int	li;
-	double	tdia, pdia;
+	double	theta, theta1;
 	
 	if ((ndx < 0) | (ndx >= ab->nangles))
 		return(0);
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
+	theta1 = PI/180. * ab->lat[li+1].tmin;
 	if (ab->lat[li].nphis == 1) {		/* special case */
 		if (ab->lat[li].tmin > FTINY)
 			error(USER, "unsupported BSDF coordinate system");
-		tdia = PI/180. * ab->lat[li+1].tmin;
-		return(PI*tdia*tdia);
+		return(2.*PI*(1. - cos(theta1)));
 	}
-	tdia = PI/180.*(ab->lat[li+1].tmin - ab->lat[li].tmin);
-	tdia *= sin(PI/180.*(ab->lat[li].tmin + ab->lat[li+1].tmin));
-	pdia = 2.*PI/ab->lat[li].nphis;
-	return(tdia*pdia);
+	theta = PI/180. * ab->lat[li].tmin;
+	return(2.*PI*(cos(theta) - cos(theta1))/(double)ab->lat[li].nphis);
 }
 
 
@@ -247,9 +245,71 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 				strlen(sdata));
 		error(WARNING, errmsg);
 	}
-	/* XXX should check that BSDF*dOMEGA doesn't sum to more than PI? */
 }
 
+
+static int
+check_bsdf_data(	/* check that BSDF data is sane */
+	struct BSDF_data *dp
+)
+{
+	double *	omega_arr;
+	double		dom, hemi_total;
+	int		nneg;
+	int		i, o;
+
+	if (dp == NULL || dp->bsdf == NULL)
+		return(0);
+	omega_arr = (double *)calloc(dp->nout, sizeof(double));
+	if (omega_arr == NULL)
+		error(SYSTEM, "out of memory in check_bsdf_data");
+	hemi_total = .0;
+	for (o = dp->nout; o--; ) {
+		FVECT	v;
+		dom = getBSDF_outohm(dp,o);
+		if (dom <= .0) {
+			error(WARNING, "zero/negative solid angle");
+			continue;
+		}
+		if (!getBSDF_outvec(v,dp,o) || v[2] < -FTINY) {
+			error(WARNING, "illegal outgoing BSDF direction");
+			free(omega_arr);
+			return(0);
+		}
+		hemi_total += omega_arr[o] = dom*v[2];
+	}
+	if ((hemi_total > 1.02*PI) | (hemi_total < 0.98*PI)) {
+		sprintf(errmsg, "outgoing BSDF hemisphere off by %.1f%%",
+				100.*(hemi_total/PI - 1.));
+		error(WARNING, errmsg);
+	}
+	dom = PI / hemi_total;		/* normalize solid angles */
+	for (o = dp->nout; o--; )
+		omega_arr[o] *= dom;
+	nneg = 0;
+	for (i = dp->ninc; i--; ) {
+		hemi_total = .0;
+		for (o = dp->nout; o--; ) {
+			double	f = BSDF_value(dp,i,o);
+			if (f > .0)
+				hemi_total += f*omega_arr[o];
+			else if (f < -FTINY)
+				++nneg;
+		}
+		if (hemi_total > 1.02) {
+			sprintf(errmsg, "BSDF direction passes %.1f%% of light",
+					100.*hemi_total);
+			error(WARNING, errmsg);
+		}
+	}
+	free(omega_arr);
+	if (nneg > 0) {
+		sprintf(errmsg, "%d negative BSDF values", nneg);
+		error(WARNING, errmsg);
+		return(0);
+	}
+	return(1);
+}
 
 struct BSDF_data *
 load_BSDF(		/* load BSDF data from file */
@@ -301,7 +361,7 @@ load_BSDF(		/* load BSDF data from file */
 		break;				/* ignore the rest */
 	}
 	ezxml_free(fl);				/* done with XML file */
-	if (dp->bsdf == NULL) {
+	if (!check_bsdf_data(dp)) {
 		sprintf(errmsg, "bad/missing BTDF data in \"%s\"", path);
 		error(WARNING, errmsg);
 		free_BSDF(dp);
