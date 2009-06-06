@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sun.c,v 2.4 2003/11/16 10:29:38 schorsch Exp $";
+static const char	RCSid[] = "$Id: sun.c,v 2.5 2009/06/06 20:18:32 greg Exp $";
 #endif
 /*
  *           SOLAR CALCULATIONS
@@ -10,7 +10,11 @@ static const char	RCSid[] = "$Id: sun.c,v 2.4 2003/11/16 10:29:38 schorsch Exp $
 
 #include  <math.h>
 
-#define  PI  3.141592654
+#ifdef M_PI
+#define  PI	M_PI
+#else
+#define  PI	3.141592653589793
+#endif
 
 double  s_latitude = 0.66;	/* site latitude (radians) */
 double  s_longitude = 2.13;	/* site longitude (radians) */

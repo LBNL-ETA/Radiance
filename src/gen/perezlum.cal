@@ -1,0 +1,34 @@
+{ RCSid $Id: perezlum.cal,v 1.1 2009/06/06 20:20:04 greg Exp $ }
+
+{
+     All-weather Angular Sky Luminance Distribution .
+
+     Additional arguments required for calculation of skybright:
+
+	A1			- diffus normalization
+	A2			- ground brightness
+	A3,A4,A5,A6,A7		- coefficients for the Perez model
+	A8,A9,A10		- sun direction
+}
+
+
+
+
+skybright = wmean((Dz+1.01)^10, intersky, (Dz+1.01)^-10, A2 );
+
+wmean(a, x, b, y) = (a*x+b*y)/(a+b);
+
+intersky = if( (Dz-0.01),  
+		A1 * (1 + A3*Exp(A4/Dz) ) * ( 1 + A5*Exp(A6*gamma) + A7*cos(gamma)*cos(gamma) ),
+		A1 * (1 + A3*Exp(A4/0.01) ) * ( 1 + A5*Exp(A6*gamma) + A7*cos(gamma)*cos(gamma) ) );
+
+		 	 
+
+
+cosgamma = Dx*A8 + Dy*A9 + Dz*A10;
+
+gamma = Acos(cosgamma);		{ angle from sun to this point in sky }
+
+zt = Acos(A10);			{ angle from zenith to sun }
+
+eta = Acos(Dz);			{ angle from zenith to this point in sky }

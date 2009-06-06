@@ -1695,3 +1695,5 @@ source contributions from BTDF illum's.
 
 Added GMT and LATLONG header lines for Greenwich Mean Time and
 degrees North Latitude / East Longitude.
+
+Added gendaylit to distribution (finally).
