@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum4.c,v 2.17 2009/05/30 22:19:08 greg Exp $";
+static const char RCSid[] = "$Id: mkillum4.c,v 2.18 2009/06/06 05:03:47 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data within mkillum
@@ -10,6 +10,9 @@ static const char RCSid[] = "$Id: mkillum4.c,v 2.17 2009/05/30 22:19:08 greg Exp
 #include "ezxml.h"
 #include <ctype.h>
 
+#ifndef NBSDFSAMPS
+#define NBSDFSAMPS	32		/* BSDF resampling count */
+#endif
 #define MAXLATS		46		/* maximum number of latitudes */
 
 /* BSDF angle specification */
@@ -543,7 +546,7 @@ redistribute(		/* pass distarr ray sums through BSDF */
 	COLORV	*cp;
 	FVECT	dv;
 	double	wt;
-	int	i, j, k, o;
+	int	i, j, k, c, o;
 	COLOR	col, cinc;
 					/* copy incoming distribution */
 	if (b->ninc > distsiz)
@@ -594,8 +597,13 @@ redistribute(		/* pass distarr ray sums through BSDF */
 			direct_out = flatindex(dv, nalt, nazi);
 		}
 		for (k = nalt; k--; )		/* loop over distribution */
-		    for (j = nazi; j--; ) {
-			flatdir(dv, (k + .5)/nalt, (double)j/nazi);
+		  for (j = nazi; j--; ) {
+		    int	rstart = random();
+		    for (c = NBSDFSAMPS; c--; ) {
+			double  sp[2];
+			multisamp(sp, 2, urand(rstart+c));
+			flatdir(dv, (k + sp[0])/nalt,
+					(j + .5 - sp[1])/nazi);
 			multv3(dv, dv, inmat);
 						/* evaluate BSDF @ outgoing */
 			o = getBSDF_outndx(b, dv);
@@ -603,7 +611,7 @@ redistribute(		/* pass distarr ray sums through BSDF */
 				nout++;
 				continue;
 			}
-			wt = BSDF_value(b, i, o);
+			wt = BSDF_value(b, i, o) * (1./NBSDFSAMPS);
 			copycolor(col, cinc);
 			o = k*nazi + j;
 			if (o == direct_out)
@@ -612,11 +620,12 @@ redistribute(		/* pass distarr ray sums through BSDF */
 			cp = &distarr[3*o];
 			addcolor(cp, col);	/* sum into distribution */
 		    }
+		  }
 	}
 	free(idist);			/* free temp space */
 	if (nout) {
 		sprintf(errmsg, "missing %.1f%% of BSDF directions",
-				100.*nout/(b->ninc*nalt*nazi));
+				100.*nout/(b->ninc*nalt*nazi*NBSDFSAMPS));
 		error(WARNING, errmsg);
 	}
 }
