@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.15 2008/12/10 17:33:23 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.16 2009/06/06 02:11:44 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -25,6 +25,7 @@ register RAY  *r;		/* origin is read, direction is set */
 register SRCINDEX  *si;		/* source index (modified to current) */
 {
 	int  cent[3], size[3], parr[2];
+	SRCREC  *srcp;
 	FVECT  vpos;
 	double  d;
 	register int  i;
@@ -51,11 +52,12 @@ nextsample:
 	if (!skipparts(cent, size, parr, si->spt))
 		error(CONSISTENCY, "bad source partition in nextssamp");
 					/* compute sample */
+	srcp = source + si->sn;
 	if (dstrsrc > FTINY) {			/* jitter sample */
 		dimlist[ndims] = si->sn + 8831;
 		dimlist[ndims+1] = si->sp + 3109;
 		d = urand(ilhash(dimlist,ndims+2)+samplendx);
-		if (source[si->sn].sflags & SFLAT) {
+		if (srcp->sflags & SFLAT) {
 			multisamp(vpos, 2, d);
 			vpos[SW] = 0.5;
 		} else
@@ -69,9 +71,9 @@ nextsample:
 	for (i = 0; i < 3; i++)
 		vpos[i] += (double)cent[i]/MAXSPART;
 					/* avoid circular aiming failures */
-	if ((source[si->sn].sflags & SCIR) && (si->np > 1 || dstrsrc > 0.7)) {
+	if ((srcp->sflags & SCIR) && (si->np > 1 || dstrsrc > 0.7)) {
 		FVECT	trim;
-		if (source[si->sn].sflags & (SFLAT|SDISTANT)) {
+		if (srcp->sflags & (SFLAT|SDISTANT)) {
 			d = 1.12837917;		/* correct setflatss() */
 			trim[SU] = d*sqrt(1.0 - 0.5*vpos[SV]*vpos[SV]);
 			trim[SV] = d*sqrt(1.0 - 0.5*vpos[SU]*vpos[SU]);
@@ -96,12 +98,12 @@ nextsample:
 	}
 					/* compute direction */
 	for (i = 0; i < 3; i++)
-		r->rdir[i] = source[si->sn].sloc[i] +
-				vpos[SU]*source[si->sn].ss[SU][i] +
-				vpos[SV]*source[si->sn].ss[SV][i] +
-				vpos[SW]*source[si->sn].ss[SW][i];
+		r->rdir[i] = srcp->sloc[i] +
+				vpos[SU]*srcp->ss[SU][i] +
+				vpos[SV]*srcp->ss[SV][i] +
+				vpos[SW]*srcp->ss[SW][i];
 
-	if (!(source[si->sn].sflags & SDISTANT))
+	if (!(srcp->sflags & SDISTANT))
 		for (i = 0; i < 3; i++)
 			r->rdir[i] -= r->rorg[i];
 					/* compute distance */
@@ -109,23 +111,23 @@ nextsample:
 		goto nextsample;		/* at source! */
 
 					/* compute sample size */
-	if (source[si->sn].sflags & SFLAT) {
+	if (srcp->sflags & SFLAT) {
 		si->dom = sflatform(si->sn, r->rdir);
 		si->dom *= size[SU]*size[SV]/(MAXSPART*(double)MAXSPART);
-	} else if (source[si->sn].sflags & SCYL) {
+	} else if (srcp->sflags & SCYL) {
 		si->dom = scylform(si->sn, r->rdir);
 		si->dom *= size[SU]/(double)MAXSPART;
 	} else {
 		si->dom = size[SU]*size[SV]*(double)size[SW] /
 				(MAXSPART*MAXSPART*(double)MAXSPART) ;
 	}
-	if (source[si->sn].sflags & SDISTANT) {
-		si->dom *= source[si->sn].ss2;
+	if (srcp->sflags & SDISTANT) {
+		si->dom *= srcp->ss2;
 		return(FHUGE);
 	}
 	if (si->dom <= 1e-4)
 		goto nextsample;		/* behind source? */
-	si->dom *= source[si->sn].ss2/(d*d);
+	si->dom *= srcp->ss2/(d*d);
 	return(d);		/* sample OK, return distance */
 }
 

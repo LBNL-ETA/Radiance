@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.11 2005/04/19 01:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.12 2009/06/06 02:11:43 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -106,21 +106,28 @@ mir_proj(		/* compute a mirror's projection */
 	int  n
 )
 {
+	double	corr = 1.;
 	FVECT  nv, sc;
-	double  od;
-	register int  i, j;
+	double  od, offs;
+	int  i;
 				/* get surface normal and offset */
-	od = getplaneq(nv, o);
-				/* check for extreme point for behind */
+	offs = od = getplaneq(nv, o);
+	if (s->sflags & SDISTANT)
+		offs = 0.;
+				/* check for extreme point behind */
+	if (s->sflags & SCIR) {
+		if (s->sflags & (SFLAT|SDISTANT))
+			corr = 1.12837917;	/* correct setflatss() */
+		else
+			corr = 1.0/0.7236;	/* correct sphsetsrc() */
+	}
 	VCOPY(sc, s->sloc);
 	for (i = s->sflags & SFLAT ? SV : SW; i >= 0; i--)
-		if (DOT(nv, s->ss[i]) > 0.)
-			for (j = 0; j < 3; j++)
-				sc[j] += s->ss[i][j];
+		if (DOT(nv, s->ss[i]) > offs)
+			VSUM(sc, sc, s->ss[i], corr);
 		else
-			for (j = 0; j < 3; j++)
-				sc[j] -= s->ss[i][j];
-	if (DOT(sc, nv) <= (s->sflags & SDISTANT ? FTINY : od+FTINY))
+			VSUM(sc, sc, s->ss[i], -corr);
+	if (DOT(sc, nv) <= offs+FTINY)
 		return(0);
 				/* everything OK -- compute projection */
 	mirrorproj(pm, nv, od);
