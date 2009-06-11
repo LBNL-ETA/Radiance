@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.52 2009/02/07 05:40:47 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.53 2009/06/11 18:32:24 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -1148,7 +1148,7 @@ trace_contribs(FILE *fin)
 				"dummy ray(s) ignored during accumulation\n");
 			continue;
 		}
-		if (!iblen ||			/* need reset? */
+		if (!iblen ||			/* need flush/reset? */
 				queue_length() > 10*nrtprocs() ||
 				lastray+1 < lastray) {
 			while (wait_rproc() != NULL)
@@ -1161,9 +1161,9 @@ trace_contribs(FILE *fin)
 		if (iblen) {			/* trace ray if valid */
 			writebuf(rtp->pd.w, inpbuf, iblen);
 		} else {			/* else bypass dummy ray */
-			queue_raytree(rtp);	/* empty tree */
-			if ((yres <= 0) | (waitflush > 1))
-				waitflush = 1;	/* flush after this */
+			queue_raytree(rtp);	/* queue empty ray/record */
+			if ((yres <= 0) | (xres <= 0))
+				waitflush = 1;	/* flush right after */
 		}
 		process_queue();		/* catch up with results */
 		if (raysleft && !--raysleft)
