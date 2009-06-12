@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.30 2009/05/28 18:38:52 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.31 2009/06/12 17:37:37 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -12,10 +12,14 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.30 2009/05/28 18:38:52 greg Exp
 #include  "cone.h"
 #include  "source.h"
 
+#ifndef NBSDFSAMPS
+#define NBSDFSAMPS	32		/* BSDF resampling count */
+#endif
 
 COLORV *	distarr = NULL;		/* distribution array */
 int		distsiz = 0;
 COLORV *	direct_discount = NULL;	/* amount to take off direct */
+
 
 void
 newdist(			/* allocate & clear distribution array */
@@ -653,4 +657,106 @@ my_ring(		/* make an illum ring */
 				/* clean up */
 	freecone(ob);
 	return(1);
+}
+
+
+void
+redistribute(		/* pass distarr ray sums through BSDF */
+	struct BSDF_data *b,
+	int nalt,
+	int nazi,
+	FVECT u,
+	FVECT v,
+	FVECT w,
+	MAT4 xm
+)
+{
+	int	nout = 0;
+	MAT4	mymat, inmat;
+	COLORV	*idist;
+	COLORV	*cp;
+	FVECT	dv;
+	double	wt;
+	int	i, j, k, c, o;
+	COLOR	col, cinc;
+					/* copy incoming distribution */
+	if (b->ninc > distsiz)
+		error(INTERNAL, "error 1 in redistribute");
+	idist = (COLORV *)malloc(sizeof(COLOR)*b->ninc);
+	if (idist == NULL)
+		error(SYSTEM, "out of memory in redistribute");
+	memcpy(idist, distarr, sizeof(COLOR)*b->ninc);
+					/* compose direction transform */
+	for (i = 3; i--; ) {
+		mymat[i][0] = u[i];
+		mymat[i][1] = v[i];
+		mymat[i][2] = w[i];
+		mymat[i][3] = 0.;
+	}
+	mymat[3][0] = mymat[3][1] = mymat[3][2] = 0.;
+	mymat[3][3] = 1.;
+	if (xm != NULL)
+		multmat4(mymat, xm, mymat);
+	for (i = 3; i--; ) {		/* make sure it's normalized */
+		wt = 1./sqrt(	mymat[0][i]*mymat[0][i] +
+				mymat[1][i]*mymat[1][i] +
+				mymat[2][i]*mymat[2][i]	);
+		for (j = 3; j--; )
+			mymat[j][i] *= wt;
+	}
+	if (!invmat4(inmat, mymat))	/* need inverse as well */
+		error(INTERNAL, "cannot invert BSDF transform");
+	newdist(nalt*nazi);		/* resample distribution */
+	for (i = b->ninc; i--; ) {
+		int	direct_out = -1;
+		COLOR	cdir;
+		getBSDF_incvec(dv, b, i);	/* compute incident irrad. */
+		multv3(dv, dv, mymat);
+		if (dv[2] < 0.0) {
+			dv[0] = -dv[0]; dv[1] = -dv[1]; dv[2] = -dv[2];
+			direct_out += (direct_discount != NULL);
+		}
+		wt = getBSDF_incohm(b, i);
+		wt *= dv[2];			/* solid_angle*cosine(theta) */
+		cp = &idist[3*i];
+		copycolor(cinc, cp);
+		scalecolor(cinc, wt);
+		if (!direct_out) {		/* discount direct contr. */
+			cp = &direct_discount[3*i];
+			copycolor(cdir, cp);
+			scalecolor(cdir, -wt);
+			direct_out = flatindex(dv, nalt, nazi);
+		}
+		for (k = nalt; k--; )		/* loop over distribution */
+		  for (j = nazi; j--; ) {
+		    int	rstart = random();
+		    for (c = NBSDFSAMPS; c--; ) {
+			double  sp[2];
+			multisamp(sp, 2, urand(rstart+c));
+			flatdir(dv, (k + sp[0])/nalt,
+					(j + .5 - sp[1])/nazi);
+			multv3(dv, dv, inmat);
+						/* evaluate BSDF @ outgoing */
+			o = getBSDF_outndx(b, dv);
+			if (o < 0) {
+				nout++;
+				continue;
+			}
+			wt = BSDF_value(b, i, o) * (1./NBSDFSAMPS);
+			copycolor(col, cinc);
+			o = k*nazi + j;
+			if (o == direct_out)
+				addcolor(col, cdir);	/* minus direct */
+			scalecolor(col, wt);
+			cp = &distarr[3*o];
+			addcolor(cp, col);	/* sum into distribution */
+		    }
+		  }
+	}
+	free(idist);			/* free temp space */
+	if (nout) {
+		sprintf(errmsg, "missing %.1f%% of BSDF directions",
+				100.*nout/(b->ninc*nalt*nazi*NBSDFSAMPS));
+		error(WARNING, errmsg);
+	}
 }
