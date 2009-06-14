@@ -1,4 +1,4 @@
-{ RCSid $Id: tregenza.cal,v 1.1 2005/06/03 04:12:32 greg Exp $ }
+{ RCSid $Id: tregenza.cal,v 1.2 2009/06/14 20:07:59 greg Exp $ }
 {
 	Compute bin numbers corresponding to Tregenza sky discretization
 
@@ -39,3 +39,5 @@ tbin = if(-alt, 0,
 		139 + tazi(60),
 		145
 	) );
+
+Ntbins : 146;		{ total number of bins }

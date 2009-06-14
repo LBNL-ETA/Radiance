@@ -1,0 +1,45 @@
+{ RCSid $Id: klems_int.cal,v 1.1 2009/06/14 20:07:59 greg Exp $ }
+{
+	Compute interior bin for (full) Klems BSDF basis
+
+	Modified from Tregenza.cal, which is similar but different
+
+	6/14/2009	G. Ward
+}
+DEGREE : PI/180;
+Acos(x) : 1/DEGREE * if(x-1, 0, if(-1-x, 0, acos(x)));
+posangle(a) : if(-a, a + 2*PI, a);
+Atan2(y,x) : 1/DEGREE * posangle(atan2(y,x));
+
+kpola(r) : select(r, 5, 15, 25, 35, 45, 55, 65, 75, 90);
+knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12);
+kaccum(r) : if(r-.5, knaz(r) + kaccum(r-1), 0);
+kfindrow(r, pol) : if(r-kpola(0)+.5, r,
+		if(pol-kpola(r), kfindrow(r+1, pol), r) );
+
+kazn(azi,inc) : if(azi-(360-.5*inc), 0, floor((azi+.5*inc)/inc));
+
+kbin2(pol,azi) = select(kfindrow(1, pol),
+		kazn(azi,360/knaz(1)),
+		kaccum(1) + kazn(azi,360/knaz(2)),
+		kaccum(2) + kazn(azi,360/knaz(3)),
+		kaccum(3) + kazn(azi,360/knaz(4)),
+		kaccum(4) + kazn(azi,360/knaz(5)),
+		kaccum(5) + kazn(azi,360/knaz(6)),
+		kaccum(6) + kazn(azi,360/knaz(7)),
+		kaccum(7) + kazn(azi,360/knaz(8)),
+		kaccum(8) + kazn(azi,360/knaz(9))
+	);
+
+kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(Dx*Nx+Dy*Ny+Dz*Nz),
+	Atan2(Dx*Ux+Dy*Uy+Dz*Uz,
+		Dx*(Ny*Uz-Nz*Uy) + Dy*(Nz*Ux-Nx*Uz) + Dz*(Nx*Uy-Ny*Ux)));
+				
+kbinN = kbin(0,1,0, 0,0,1);	{ North bins }
+kbinE = kbin(1,0,0, 0,0,1);	{ East bins }
+kbinS = kbin(0,-1,0, 0,0,1);	{ South bins }
+kbinW = kbin(-1,0,0, 0,0,1);	{ West bins }
+
+kbinU = kbin(0,0,1, 0,1,0);	{ "Up" bins for skylights }
+
+Nkbins : kaccum(knaz(0));	{ total number of bins }

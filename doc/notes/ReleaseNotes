@@ -1700,5 +1700,8 @@ Added gendaylit to distribution (finally).
 
 Added ability in vwright(1) to get view from command line arguments.
 
-Created genklemsamp(1) utility to generate samples suitable for BSDF-based annual calculations.
-This is the first Perl script to be added to Radiance.  Hopefully, others will follow.
+Created genklemsamp(1) utility to generate samples suitable for
+BSDF-based annual calculations.  This is the first Perl script to
+be added to Radiance.  Hopefully, others will follow.
+
+Added klems_int.cal file to compute Klems bins for windows.
