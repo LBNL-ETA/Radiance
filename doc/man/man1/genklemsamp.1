@@ -1,4 +1,4 @@
-.\" RCSid $Id: genklemsamp.1,v 1.1 2009/06/14 00:33:15 greg Exp $
+.\" RCSid $Id: genklemsamp.1,v 1.2 2009/06/14 00:40:04 greg Exp $
 .TH GENKLEMSAMP 1 6/13/09 RADIANCE
 .SH NAME
 genklemsamp - generate ray samples over surfaces using Klems BSDF basis
@@ -28,6 +28,11 @@ The view options are needed to specify (at minimum) the view direction,
 which corresponds to the orientation of the surfaces, and the view up
 vector, which corresponds to the azimuth=90-degree position on the Klems
 sampling hemisphere.
+The view fore clipping distance is also quite useful, as it provides
+a means to pass through some thickness in a fenestration system before
+samples are sent out.
+Other view options such as the view type and aft
+clipping distance are overridden or ignored.
 .PP
 If no Radiance scene files are provided, then the specified parallel
 view defines the width, height, center, and orientation of the window
