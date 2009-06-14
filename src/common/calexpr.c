@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.32 2008/05/01 16:42:05 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.33 2009/06/14 18:21:58 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -660,8 +660,9 @@ getE4(void)				/* E4 -> ADDOP E5 */
 		return(ep2);
 	}
 	if (ep2->type == UMINUS) {	/* don't generate -(-E5) */
+	    ep1 = ep2->v.kid;
 	    efree((char *)ep2);
-	    return(ep2->v.kid);
+	    return(ep1);
 	}
 	ep1 = newnode();
 	ep1->type = UMINUS;

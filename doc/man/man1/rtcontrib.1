@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.21 2009/06/14 00:33:15 greg Exp $"
+.\" RCSid "$Id: rtcontrib.1,v 1.22 2009/06/14 18:21:58 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rtcontrib - compute contribution coefficients in a RADIANCE scene
@@ -166,6 +166,12 @@ If the number of bins is known in advance, it should be specified with the
 .I \-bn
 option, and this is critical for output files containing multiple values
 per record.
+A variable or constant name may be given for this parameter if
+it has been defined via a previous
+.I \-f
+or
+.I \-e
+option.
 Since bin numbers start from 0, the bin count is always equal to
 the last bin plus 1.
 Set the this value to 0 if the bin count is unknown (the default).
@@ -176,7 +182,7 @@ and
 .I \-o
 options to the left of each
 .I \-m
-setting affect only that modifier.
+setting are the ones used for that modifier.
 The ordering of other options is unimportant, except for
 .I \-x
 and

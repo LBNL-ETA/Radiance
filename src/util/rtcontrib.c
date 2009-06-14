@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.53 2009/06/11 18:32:24 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.54 2009/06/14 18:21:58 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -340,7 +340,7 @@ main(int argc, char *argv[])
 			case 'b':		/* bin expression/count */
 				if (i >= argc-2) break;
 				if (argv[i][2] == 'n') {
-					bincnt = atoi(argv[++i]);
+					bincnt = (int)(eval(argv[++i]) + .5);
 					continue;
 				}
 				if (argv[i][2]) break;
@@ -580,7 +580,7 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 		error(USER, errmsg);
 	}
 	if (nmods >= MAXMODLIST)
-		error(USER, "too many modifiers");
+		error(INTERNAL, "too many modifiers");
 	modname[nmods++] = modn;	/* XXX assumes static string */
 	lep->key = modn;		/* XXX assumes static string */
 	mp = (MODCONT *)malloc(sizeof(MODCONT));
@@ -588,15 +588,20 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 		error(SYSTEM, "out of memory in addmodifier");
 	mp->outspec = outf;		/* XXX assumes static string */
 	mp->modname = modn;		/* XXX assumes static string */
-	if (binv != NULL)
-		mp->binv = eparse(binv);
-	else
-		mp->binv = eparse("0");
-	mp->nbins = 1;
+	if (binv == NULL)
+		binv = "0";		/* use single bin if unspecified */
+	mp->binv = eparse(binv);
+	if (mp->binv->type == NUM) {	/* check value if constant */
+		bincnt = (int)(evalue(mp->binv) + 1.5);
+		if (bincnt != 1) {
+			sprintf(errmsg, "illegal non-zero constant for bin (%s)",
+					binv);
+			error(USER, errmsg);
+		}
+	}
+	mp->nbins = 1;			/* initialize results holder */
 	setcolor(mp->cbin[0], 0., 0., 0.);
-	if (mp->binv->type == NUM)	/* assume one bin if constant */
-		bincnt = 1;
-	else if (bincnt > 1)
+	if (bincnt > 1)
 		mp = growmodifier(mp, bincnt);
 	lep->data = (char *)mp;
 					/* allocate output streams */
