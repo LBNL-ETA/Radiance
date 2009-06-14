@@ -1697,3 +1697,8 @@ Added GMT and LATLONG header lines for Greenwich Mean Time and
 degrees North Latitude / East Longitude.
 
 Added gendaylit to distribution (finally).
+
+Added ability in vwright(1) to get view from command line arguments.
+
+Created genklemsamp(1) utility to generate samples suitable for BSDF-based annual calculations.
+This is the first Perl script to be added to Radiance.  Hopefully, others will follow.

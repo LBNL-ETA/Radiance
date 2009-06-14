@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.20 2006/12/23 17:27:45 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.21 2009/06/14 00:33:16 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -305,11 +305,12 @@ char  *file
 	
 	while (getinputrec(fp)) {
 		varset("recno", '=', (double)++nrecs);
+		varset("outno", '=', (double)(nout+1));
 		colflg = 0;
 		eclock++;
 		if (!conditional || varvalue("cond") > 0.0) {
-			varset("outno", '=', (double)++nout);
 			putout();
+			++nout;
 		}
 	}
 	fclose(fp);

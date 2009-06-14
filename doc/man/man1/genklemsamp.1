@@ -1,0 +1,74 @@
+.\" RCSid $Id: genklemsamp.1,v 1.1 2009/06/14 00:33:15 greg Exp $
+.TH GENKLEMSAMP 1 6/13/09 RADIANCE
+.SH NAME
+genklemsamp - generate ray samples over surfaces using Klems BSDF basis
+.SH SYNOPSIS
+.B genklemsamp
+[
+.B "\-c N"
+][
+.B "\-f{a|f|d}"
+]
+[
+.B "view opts"
+]
+[
+.B "geom.rad .."
+]
+.SH DESCRIPTION
+.I Genklemsamp
+generates ray origins and directions to sample planar surfaces
+needed to determine incident radiances or daylight coefficients.
+This command is typically used in conjunction with
+.I rtcontrib(1)
+to analyze exterior daylight coefficients
+for an annual simulation.
+.PP
+The view options are needed to specify (at minimum) the view direction,
+which corresponds to the orientation of the surfaces, and the view up
+vector, which corresponds to the azimuth=90-degree position on the Klems
+sampling hemisphere.
+.PP
+If no Radiance scene files are provided, then the specified parallel
+view defines the width, height, center, and orientation of the window
+or facade of interest.
+If one or more scene files are given, they
+are presumed to contain planar surfaces over which
+.I genklemsamp
+will originate samples.
+The sampled surface normals must correspond to the specified
+view direction, and unaligned surfaces are silently ignored.
+.PP
+The
+.I \-c
+option specifies the number of rays to sample per Klems direction.
+These samples will be distributed evenly over the surface(s).
+The default setting is 1000.
+.PP
+The
+.I \-ff
+option specifies that output rays should be generated as 32-bit IEEE binary
+float values.
+This may be more efficient if passed directly to
+.I rtcontrib
+or
+.I rtrace(1)
+with the same option.
+Likewise, the
+.I \-fd
+option specifies 64-bit IEEE binary double values.
+The default setting of
+.I \-fa
+produces ASCII floating point values.
+.SH EXAMPLE
+To generate 500 samples per direction over a set of south-facing windows and
+pass to
+.I rtcontrib
+to compute daylight coefficients in a matrix:
+.IP "" .2i
+genklemsamp -c 500 -vd 0 -1 0 -vu 0 0 1 south_windows.rad
+| rtcontrib -c 500 -f tregenza.cal -b tbin -bn 146 exterior.oct > Dsouth.dat
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+mkillum(1), rtcontrib(1), rtrace(1), vwrays(1)
