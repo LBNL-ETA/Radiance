@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.1 2009/06/06 20:18:32 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.2 2009/06/15 22:27:21 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -21,6 +21,7 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.1 2009/06/06 20:18:32 greg Exp
 #include  <string.h>
 #include  <math.h>
 #include  <stdlib.h>
+#include  <ctype.h>
 
 #include  "rtio.h"
 #include  "fvect.h"
@@ -71,6 +72,7 @@ void	theta_phi_to_dzeta_gamma(double theta,double phi,double *dzeta,double *gamm
 double 	integ_lv(float *lv,float *theta);
 float 	*theta_ordered(char *filename);
 float 	*phi_ordered(char *filename);
+void	skip_comments(FILE *fp);
 
 
 
@@ -608,11 +610,21 @@ register char  **av;
 
 
 
-
-
-
-
-
+void
+skip_comments(FILE *fp)		/* skip comments in file */
+{
+	int	c;
+	
+	while ((c = getc(fp)) != EOF)
+		if (c == '#') {
+			while ((c = getc(fp)) != EOF)
+				if (c == '\n')
+					break;
+		} else if (!isspace(c)) {
+			ungetc(c, fp);
+			break;
+		}
+}
 
 
 
@@ -998,8 +1010,8 @@ int lect_coeff_perez(char *filename,float **coeff_perez)
 	{
 		/*printf("file %s  open\n", filename);*/
 	}
-
-	rewind(fcoeff_perez); /* on se place en debut de fichier */
+	
+	skip_comments(fcoeff_perez);
 
 	for (i=0;i<8;i++)
 		for (j=0;j<20;j++)
@@ -1183,8 +1195,8 @@ float *theta_ordered(char *filename)
 		fprintf(stderr,"Cannot open file %s in function theta_ordered\n",filename);
 		exit(1);
 	}
-
-	rewind(file_in);
+	
+	skip_comments(file_in);
 
 	if ( (ptr = malloc(145*sizeof(float))) == NULL )
 	{
@@ -1229,8 +1241,8 @@ float *phi_ordered(char *filename)
 		fprintf(stderr,"Cannot open file %s in function phi_ordered\n",filename);
 		exit(1);
 	}
-
-	rewind(file_in);
+	
+	skip_comments(file_in);
 
 	if ( (ptr = malloc(145*sizeof(float))) == NULL )
 	{
