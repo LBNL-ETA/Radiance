@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_int.cal,v 1.1 2009/06/14 20:07:59 greg Exp $ }
+{ RCSid $Id: klems_int.cal,v 1.2 2009/06/15 19:31:24 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis
 
@@ -31,9 +31,9 @@ kbin2(pol,azi) = select(kfindrow(1, pol),
 		kaccum(8) + kazn(azi,360/knaz(9))
 	);
 
-kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(Dx*Nx+Dy*Ny+Dz*Nz),
-	Atan2(Dx*Ux+Dy*Uy+Dz*Uz,
-		Dx*(Ny*Uz-Nz*Uy) + Dy*(Nz*Ux-Nx*Uz) + Dz*(Nx*Uy-Ny*Ux)));
+kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
+	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
+		-Dx*(Ny*Uz-Nz*Uy) - Dy*(Nz*Ux-Nx*Uz) - Dz*(Nx*Uy-Ny*Ux)));
 				
 kbinN = kbin(0,1,0, 0,0,1);	{ North bins }
 kbinE = kbin(1,0,0, 0,0,1);	{ East bins }
