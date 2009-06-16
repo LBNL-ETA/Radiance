@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: gentregvec.pl,v 2.1 2009/06/16 04:54:08 greg Exp $
+# RCSid $Id: gentregvec.pl,v 2.2 2009/06/16 17:18:38 greg Exp $
 #
 # Generate Tregenza vector for a given sky description
 #
@@ -21,16 +21,14 @@ my @skydesc;
 my $lightline;
 my @sunval;
 my $sunline;
+my $srcmod;	# putting this inside loop breaks code(?!)
 while (<>) {
-	my $srcmatch = '^WONTMATCHANYTHING$';
-	my $srcmod;
 	push @skydesc, $_;
 	if (/^\w+\s+light\s+/) {
 		s/\s+$//; s/^.*\s//;
 		$srcmod = $_;
 		$lightline = $#skydesc;
-		$srcmatch = "^$srcmod\\s+source\\s";
-	} elsif (/^solar\s+source\s/) {
+	} elsif (defined($srcmod) && /^($srcmod)\s+source\s/) {
 		@sunval = split(/\s+/, $skydesc[$lightline + 3]);
 		shift @sunval;
 		$sunline = $#skydesc;
@@ -43,7 +41,7 @@ if (defined $sunline) {
 	@sundir = split(/\s+/, $skydesc[$sunline + 3]);
 	shift @sundir;
 	undef @sundir if ($sundir[2] <= 0);
-	@skydesc[$sunline .. $sunline + 4] = ('', '', '', '', '');
+	splice(@skydesc, $sunline, 5);
 }
 # Get Tregenza sample file
 my $found;
@@ -73,10 +71,10 @@ if ($#tregval != 145) {
 	exit 1;
 }
 unlink $octree;
-# Find closest patches to sun and divvy up direct solar contribution
+# Find closest 3 patches to sun and divvy up direct solar contribution
 my @bestdir;
 if (@sundir) {
-	my $somega = ($sundir[3]/360)^2 * 3.141592654^3;
+	my $somega = ($sundir[3]/360)**2 * 3.141592654**3;
 	my @tindex = (30, 60, 84, 108, 126, 138, 144, 145);
 	my @tomega = (0.0435449227, 0.0416418006, 0.0473984151,
 			0.0406730411, 0.0428934136, 0.0445221864,
@@ -101,4 +99,5 @@ if (@sundir) {
 		$tregval[$ndx[$i]] = "@scolor\n";
 	}
 }
+# Output our final vector
 print @tregval;

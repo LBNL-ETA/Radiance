@@ -1,10 +1,11 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.2 2009/06/16 04:54:08 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.3 2009/06/16 17:18:38 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
 #	G. Ward
 #
+use strict;
 if ($#ARGV < 0) {
 	print STDERR, "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
 	exit 1;
