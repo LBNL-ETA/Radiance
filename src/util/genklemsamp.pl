@@ -1,10 +1,12 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.1 2009/06/14 00:33:16 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.2 2009/06/16 04:54:08 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
+#	G. Ward
+#
 if ($#ARGV < 0) {
-	print "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
+	print STDERR, "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
 	exit 1;
 }
 my $td = `mktemp -d /tmp/genklemsamp.XXXXXX`;
@@ -25,10 +27,10 @@ while ($#ARGV >= 0) {
 		push @vopts, "@ARGV[0..1]";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-v./) {
-		print "Unsupported view option: $ARGV[0]\n";
+		print STDERR, "Unsupported view option: $ARGV[0]\n";
 		exit 1;
 	} elsif ("$ARGV[0]" =~ /^-./) {
-		print "Unknown option: $ARGV[0]\n";
+		print STDERR, "Unknown option: $ARGV[0]\n";
 		exit 1;
 	} else {
 		last;
@@ -97,7 +99,7 @@ if ($#ARGV >= 0) {
 		$ntot = -s "$td/origins.flt";
 		$ntot /= 3*4;
 		if ($ntot == 0) {
-			print "View direction does not correspond to any surfaces\n";
+			print STDERR, "View direction does not correspond to any surfaces\n";
 			exit 1;
 		}
 		$sca *= 1.05 * sqrt($nsamp/$ntot);
