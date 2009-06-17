@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.61 2009/05/21 18:08:43 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.62 2009/06/17 20:41:47 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -21,6 +21,8 @@ PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
 	tmap16bit.o bmpfile.o falsecolor.o
 
+UTLOBJ = ezxml.o bsdf.o
+
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
 	unix_process.o process.o gethomedir.o getpath.o error.o savestr.o \
@@ -34,9 +36,9 @@ OGLOBJ = rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o
 
 LIBFILES = tmesh.cal
 
-librtrad.a:	$(RTOBJ) $(PICOBJ) $(STDOBJ) $(SYSOBJ)
+librtrad.a:	$(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	rm -f librtrad.a
-	ar rc librtrad.a $(RTOBJ) $(PICOBJ) $(STDOBJ) $(SYSOBJ)
+	ar rc librtrad.a $(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	-ranlib librtrad.a
 
 install:	all
@@ -146,3 +148,8 @@ bmpfile.o:	bmpfile.h tiff.h
 
 header.o readmesh.o readoct.o resolu.o rglinst.o tmapcolrs.o:	resolu.h
 
+ezxml.o bsdf.o:	ezxml.h
+
+bsdf.o:	../common/paths.h
+
+bsdf.o:	bsdf.h standard.h rtmisc.h rtio.h rtmath.h mat4.h fvect.h rterror.h

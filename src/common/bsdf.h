@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.1 2009/06/12 17:37:37 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.1 2009/06/17 20:41:47 greg Exp $ */
 /*
  * Header for BSDF i/o and access routines
  */

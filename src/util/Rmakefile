@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.52 2009/06/16 04:54:08 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.53 2009/06/17 20:41:47 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -20,7 +20,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
-		vwrays xglaresrc rtcontrib rsensor
+		vwrays xglaresrc rtcontrib rsensor dctimestep
 
 all:	$(PROGS)
 
@@ -102,6 +102,9 @@ glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrtrad -lGLU -lGL \
 -lX11 -lXext $(MLIB)
 
+dctimestep:	dctimestep.o
+	$(CC) $(CFLAGS) -o dctimestep dctimestep.o -lrtrad
+
 setscan.o:	setscan.h
 
 findglare.o glareval.o \
@@ -113,6 +116,12 @@ glaresrc.o:	glare.h ../common/standard.h \
 glaresrc.o:	../common/linregr.h
 
 rpiece.o:	../common/color.h ../common/view.h ../common/resolu.h
+
+dctimestep.o:	../common/standard.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h ../common/platform.h \
+../common/color.h ../common/bsdf.h ../common/resolu.h
 
 rtcontrib.o:	../common/platform.h ../common/rtprocess.h \
 ../common/color.h ../common/resolu.h ../common/lookup.h \

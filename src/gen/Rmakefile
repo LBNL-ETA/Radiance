@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.25 2009/06/15 22:27:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.26 2009/06/17 20:41:47 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -58,9 +58,9 @@ xform:	xform.o
 replmarks:	replmarks.o
 	$(CC) $(CFLAGS) -o replmarks replmarks.o -lrtrad $(MLIB)
 
-mkillum:	mkillum.o mkillum2.o mkillum3.o bsdf.o ezxml.o
+mkillum:	mkillum.o mkillum2.o mkillum3.o
 	$(CC) $(CFLAGS) -o mkillum mkillum.o mkillum2.o mkillum3.o \
-bsdf.o ezxml.o -lraycalls -lradiance -lrtrad $(MLIB)
+-lraycalls -lradiance -lrtrad $(MLIB)
 
 mksource:	mksource.o
 	$(CC) $(CFLAGS) -o mksource mksource.o \
@@ -101,7 +101,7 @@ genworm.o genrev.o gensurf.o:	../common/resolu.h ../common/rterror.h
 
 xform.o:	../common/otypes.h ../common/object.h
 
-mkillum.o mkillum2.o mkillum3.o:	mkillum.h bsdf.h \
+mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/bsdf.h \
 ../common/otypes.h ../rt/ray.h ../common/octree.h \
 ../common/object.h ../common/color.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h \
@@ -110,14 +110,7 @@ mkillum.o mkillum2.o mkillum3.o:	mkillum.h bsdf.h \
 
 mkillum2.o:	../rt/source.h ../common/face.h ../common/cone.h
 
-bsdf.o:	bsdf.h \
-../common/standard.h ../common/rtmisc.h ../common/rtio.h \
-../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h
-
-mkillum3.o bsdf.o:	../common/paths.h
-
-ezxml.o bsdf.o:	ezxml.h
+mkillum3.o:	../common/paths.h
 
 gensky.o:	../common/color.h
 
