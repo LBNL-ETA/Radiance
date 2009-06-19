@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.1 2009/06/17 20:41:47 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.2 2009/06/19 06:49:25 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -71,16 +71,16 @@ ab_getvec(		/* get vector for this angle basis index */
 {
 	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
 	int	li;
-	double	alt, azi, d;
+	double	pol, azi, d;
 	
 	if ((ndx < 0) | (ndx >= ab->nangles))
 		return(0);
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
-	alt = PI/180.*0.5*(ab->lat[li].tmin + ab->lat[li+1].tmin);
+	pol = PI/180.*0.5*(ab->lat[li].tmin + ab->lat[li+1].tmin);
 	azi = 2.*PI*ndx/ab->lat[li].nphis;
-	v[2] = d = cos(alt);
-	d = sqrt(1. - d*d);	/* sin(alt) */
+	v[2] = d = cos(pol);
+	d = sqrt(1. - d*d);	/* sin(pol) */
 	v[0] = cos(azi)*d;
 	v[1] = sin(azi)*d;
 	return(1);
@@ -95,14 +95,14 @@ ab_getndx(		/* get index corresponding to the given vector */
 {
 	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
 	int	li, ndx;
-	double	alt, azi, d;
+	double	pol, azi, d;
 
 	if ((v[2] < -1.0) | (v[2] > 1.0))
 		return(-1);
-	alt = 180.0/PI*acos(v[2]);
+	pol = 180.0/PI*acos(v[2]);
 	azi = 180.0/PI*atan2(v[1], v[0]);
 	if (azi < 0.0) azi += 360.0;
-	for (li = 1; ab->lat[li].tmin <= alt; li++)
+	for (li = 1; ab->lat[li].tmin <= pol; li++)
 		if (!ab->lat[li].nphis)
 			return(-1);
 	--li;
@@ -254,61 +254,101 @@ check_bsdf_data(	/* check that BSDF data is sane */
 	struct BSDF_data *dp
 )
 {
-	double *	omega_arr;
-	double		dom, hemi_total;
+	double		*omega_iarr, *omega_oarr;
+	double		dom, contrib, hemi_total;
 	int		nneg;
+	FVECT		v;
 	int		i, o;
 
 	if (dp == NULL || dp->bsdf == NULL)
 		return(0);
-	omega_arr = (double *)calloc(dp->nout, sizeof(double));
-	if (omega_arr == NULL)
+	omega_iarr = (double *)calloc(dp->ninc, sizeof(double));
+	omega_oarr = (double *)calloc(dp->nout, sizeof(double));
+	if ((omega_iarr == NULL) | (omega_oarr == NULL))
 		error(SYSTEM, "out of memory in check_bsdf_data");
+					/* incoming projected solid angles */
+	hemi_total = .0;
+	for (i = dp->ninc; i--; ) {
+		dom = getBSDF_incohm(dp,i);
+		if (dom <= .0) {
+			error(WARNING, "zero/negative incoming solid angle");
+			continue;
+		}
+		if (!getBSDF_incvec(v,dp,i) || v[2] > FTINY) {
+			error(WARNING, "illegal incoming BSDF direction");
+			free(omega_iarr); free(omega_oarr);
+			return(0);
+		}
+		hemi_total += omega_iarr[i] = dom * -v[2];
+	}
+	if ((hemi_total > 1.02*PI) | (hemi_total < 0.98*PI)) {
+		sprintf(errmsg, "incoming BSDF hemisphere off by %.1f%%",
+				100.*(hemi_total/PI - 1.));
+		error(WARNING, errmsg);
+	}
+	dom = PI / hemi_total;		/* fix normalization */
+	for (i = dp->ninc; i--; )
+		omega_iarr[i] *= dom;
+					/* outgoing projected solid angles */
 	hemi_total = .0;
 	for (o = dp->nout; o--; ) {
-		FVECT	v;
 		dom = getBSDF_outohm(dp,o);
 		if (dom <= .0) {
-			error(WARNING, "zero/negative solid angle");
+			error(WARNING, "zero/negative outgoing solid angle");
 			continue;
 		}
 		if (!getBSDF_outvec(v,dp,o) || v[2] < -FTINY) {
 			error(WARNING, "illegal outgoing BSDF direction");
-			free(omega_arr);
+			free(omega_iarr); free(omega_oarr);
 			return(0);
 		}
-		hemi_total += omega_arr[o] = dom*v[2];
+		hemi_total += omega_oarr[o] = dom * v[2];
 	}
 	if ((hemi_total > 1.02*PI) | (hemi_total < 0.98*PI)) {
 		sprintf(errmsg, "outgoing BSDF hemisphere off by %.1f%%",
 				100.*(hemi_total/PI - 1.));
 		error(WARNING, errmsg);
 	}
-	dom = PI / hemi_total;		/* normalize solid angles */
+	dom = PI / hemi_total;		/* fix normalization */
 	for (o = dp->nout; o--; )
-		omega_arr[o] *= dom;
-	nneg = 0;
-	for (i = dp->ninc; i--; ) {
+		omega_oarr[o] *= dom;
+	nneg = 0;			/* check outgoing totals */
+	for (i = 0; i < dp->ninc; i++) {
 		hemi_total = .0;
 		for (o = dp->nout; o--; ) {
 			double	f = BSDF_value(dp,i,o);
-			if (f > .0)
-				hemi_total += f*omega_arr[o];
-			else if (f < -FTINY)
-				++nneg;
+			if (f >= .0)
+				hemi_total += f*omega_oarr[o];
+			else {
+				nneg += (f < -FTINY);
+				BSDF_value(dp,i,o) = .0f;
+			}
 		}
 		if (hemi_total > 1.02) {
-			sprintf(errmsg, "BSDF direction passes %.1f%% of light",
-					100.*hemi_total);
+			sprintf(errmsg,
+			"incoming BSDF direction %d passes %.1f%% of light",
+					i, 100.*hemi_total);
 			error(WARNING, errmsg);
 		}
 	}
-	free(omega_arr);
-	if (nneg > 0) {
-		sprintf(errmsg, "%d negative BSDF values", nneg);
+	if (nneg) {
+		sprintf(errmsg, "%d negative BSDF values (ignored)", nneg);
 		error(WARNING, errmsg);
-		return(0);
 	}
+					/* reverse roles and check again */
+	for (o = 0; o < dp->nout; o++) {
+		hemi_total = .0;
+		for (i = dp->ninc; i--; )
+			hemi_total += BSDF_value(dp,i,o) * omega_iarr[i];
+
+		if (hemi_total > 1.02) {
+			sprintf(errmsg,
+			"outgoing BSDF direction %d collects %.1f%% of light",
+					o, 100.*hemi_total);
+			error(WARNING, errmsg);
+		}
+	}
+	free(omega_iarr); free(omega_oarr);
 	return(1);
 }
 
