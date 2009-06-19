@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.3 2009/06/19 14:21:42 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.4 2009/06/19 14:24:06 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -318,9 +318,10 @@ cm_bsdf(const struct BSDF_data *bsdf)
 				
 			mp[0] = mp[1] = mp[2] = f * dom * -v[2];
 		}
-	if (nbadohm | nneg) {
+	if (nneg || nbadohm) {
 		sprintf(errmsg,
-		    "BTDF has %d negatives and %d bad incoming solid angles");
+		    "BTDF has %d negatives and %d bad incoming solid angles",
+				nneg, nbadohm);
 		error(WARNING, errmsg);
 	}
 	return(cm);
