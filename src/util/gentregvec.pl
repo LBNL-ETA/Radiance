@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: gentregvec.pl,v 2.2 2009/06/16 17:18:38 greg Exp $
+# RCSid $Id: gentregvec.pl,v 2.3 2009/06/19 06:49:42 greg Exp $
 #
 # Generate Tregenza vector for a given sky description
 #
@@ -93,7 +93,7 @@ if (@sundir) {
 	for my $i (0..2) {
 		my $ti = 0;
 		while ($ndx[$i] > $tindex[$ti]) { $ti++ }
-		my $wt = $wtot/($ang[$i]+.02) * $somega / $tomega[$ti];
+		my $wt = 1/($ang[$i]+.02)/$wtot * $somega / $tomega[$ti];
 		my @scolor = split(/\s+/, $tregval[$ndx[$i]]);
 		for my $j (0..2) { $scolor[$j] += $wt * $sunval[$j]; }
 		$tregval[$ndx[$i]] = "@scolor\n";

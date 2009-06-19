@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.3 2009/06/16 17:18:38 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.4 2009/06/19 06:49:42 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
@@ -7,7 +7,7 @@
 #
 use strict;
 if ($#ARGV < 0) {
-	print STDERR, "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
+	print STDERR "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
 	exit 1;
 }
 my $td = `mktemp -d /tmp/genklemsamp.XXXXXX`;
@@ -28,10 +28,10 @@ while ($#ARGV >= 0) {
 		push @vopts, "@ARGV[0..1]";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-v./) {
-		print STDERR, "Unsupported view option: $ARGV[0]\n";
+		print STDERR "Unsupported view option: $ARGV[0]\n";
 		exit 1;
 	} elsif ("$ARGV[0]" =~ /^-./) {
-		print STDERR, "Unknown option: $ARGV[0]\n";
+		print STDERR "Unknown option: $ARGV[0]\n";
 		exit 1;
 	} else {
 		last;
@@ -86,9 +86,9 @@ if ($#ARGV >= 0) {
 	$vwset = `vwright @vopts V`;
 	my $xres;
 	my $yres;
-	my $ntot;
+	my $ntot = 0;
 	# This generally passes through the loop twice to get density right
-	do {
+	while ($ntot < $nsamp) {
 		$xres = int($width*$sca) + 1;
 		$yres = int($height*$sca) + 1;
 		system "vwrays -ff -x $xres -y $yres -pa 0 -pj .7 @vopts " .
@@ -100,13 +100,17 @@ if ($#ARGV >= 0) {
 		$ntot = -s "$td/origins.flt";
 		$ntot /= 3*4;
 		if ($ntot == 0) {
-			print STDERR, "View direction does not correspond to any surfaces\n";
+			if ($sca < sqrt(199/($width*$height))) {
+				$sca = sqrt(200/($width*$height));
+				redo;
+			}
+			print STDERR "View direction does not correspond to any surfaces\n";
 			exit 1;
 		}
 		$sca *= 1.05 * sqrt($nsamp/$ntot);
-	} while ($ntot < $nsamp);
+	}
 	# All set to produce our samples
-	for ($k = 1; $k <= $ndiv; $k++) {
+	for (my $k = 1; $k <= $ndiv; $k++) {
 		my $rn = rand(10);
 		my $r1 = rand; my $r2 = rand;
 		# Chance of using = (number_still_needed)/(number_left_avail)
@@ -124,7 +128,7 @@ if ($#ARGV >= 0) {
 	my $xres = int($width*$sca) + 1;
 	my $yres = int($height*$sca) + 1;
 	my $ntot = $xres * $yres;
-	for ($k = 1; $k <= $ndiv; $k++) {
+	for (my $k = 1; $k <= $ndiv; $k++) {
 		my $rn = rand(10);
 		my $r1 = rand; my $r2 = rand;
 		my $r3 = rand; my $r4 = rand;

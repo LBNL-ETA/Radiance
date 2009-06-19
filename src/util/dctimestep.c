@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.1 2009/06/17 20:41:47 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.2 2009/06/19 06:49:42 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: dctimestep.c,v 2.1 2009/06/17 20:41:47 greg Ex
 
 char	*progname;			/* global argv[0] */
 
-/* Data types for matrix loading */
+/* Data types for file loading */
 enum {DTfromHeader, DTascii, DTfloat, DTdouble, DTrgbe, DTxyze};
 
 /* A color coefficient matrix -- vectors have ncols==1 */
@@ -125,7 +125,6 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		break;
 	default:
 		error(USER, "unexpected data type in cm_load()");
-		return(NULL);
 	}
 	if (nrows <= 0) {			/* don't know length? */
 		int	guessrows = 147;	/* usually big enough */
@@ -135,15 +134,21 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 				long	endpos = ftell(fp);
 				long	elemsiz = 3*(dtype==DTfloat ?
 					    sizeof(float) : sizeof(double));
-				guessrows = (endpos - startpos)/elemsiz;
+
+				if ((endpos - startpos) % (ncols*elemsiz)) {
+					sprintf(errmsg,
+					"improper length for binary file '%s'",
+							fname);
+					error(USER, errmsg);
+				}
+				guessrows = (endpos - startpos)/(ncols*elemsiz);
 				if (fseek(fp, startpos, SEEK_SET) < 0) {
 					sprintf(errmsg,
 						"fseek() error on file '%s'",
 							fname);
 					error(SYSTEM, errmsg);
 				}
-				if ((endpos - startpos) % elemsiz == 0)
-					nrows = guessrows;	/* confident */
+				nrows = guessrows;	/* we're confident */
 			}
 		}
 		cm = cm_alloc(guessrows, ncols);
@@ -210,7 +215,6 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 				copycolor(cvp, dc);
 				cvp += 3;
 			}
-
 		} else /* dtype == DTfloat */ {
 			float	fc[3];			/* load from float */
 			COLORV	*cvp = cm->cmem;
@@ -338,6 +342,11 @@ sum_images(const char *fspec, const CMATRIX *cv)
 				error(SYSTEM, "out of memory in sum_images()");
 			pmat = cm_alloc(myYR, myXR);
 			memset(pmat->cmem, 0, sizeof(COLOR)*myXR*myYR);
+							/* finish header */
+			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, stdout);
+			fputc('\n', stdout);
+			fprtresolu(myXR, myYR, stdout);
+			fflush(stdout);
 		} else if ((dt != myDT) | (xr != myXR) | (yr != myYR)) {
 			sprintf(errmsg, "picture '%s' format/size mismatch",
 					fname);
@@ -360,10 +369,6 @@ sum_images(const char *fspec, const CMATRIX *cv)
 		fclose(fp);				/* done this picture */
 	}
 	free(scanline);
-							/* finish header */
-	fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, stdout);
-	fputc('\n', stdout);
-	fprtresolu(myXR, myYR, stdout);
 							/* write scanlines */
 	for (y = 0; y < myYR; y++)
 		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, stdout) < 0)
@@ -390,7 +395,7 @@ hasDecimalSpec(const char *s)
 int
 main(int argc, char *argv[])
 {
-	CMATRIX			*tvec, *Dmat, *Tmat, *vtmp, *cvec;
+	CMATRIX			*tvec, *Dmat, *Tmat, *ivec, *cvec;
 	struct BSDF_data	*btdf;
 
 	progname = argv[0];
@@ -411,12 +416,12 @@ main(int argc, char *argv[])
 		error(USER, errmsg);
 	}
 						/* multiply vector through */
-	vtmp = cm_multiply(Dmat, tvec);
+	ivec = cm_multiply(Dmat, tvec);
 	cm_free(Dmat); cm_free(tvec);
 	Tmat = cm_bsdf(btdf);			/* convert BTDF to matrix */
 	free_BSDF(btdf);
-	cvec = cm_multiply(Tmat, vtmp);		/* cvec = component vector */
-	cm_free(Tmat); cm_free(vtmp);
+	cvec = cm_multiply(Tmat, ivec);		/* cvec = component vector */
+	cm_free(Tmat); cm_free(ivec);
 	if (hasDecimalSpec(argv[1])) {		/* generating image */
 		SET_FILE_BINARY(stdout);
 		newheader("RADIANCE", stdout);
