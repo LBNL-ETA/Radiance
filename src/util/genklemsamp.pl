@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.4 2009/06/19 06:49:42 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.5 2009/06/19 18:42:06 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
@@ -63,7 +63,7 @@ Kpol = DEGREE * (x1*Kpola(Krow) + (1-x1)*Kpola(Krow-1));
 sin_kpol = sin(Kpol);
 K0 = cos(Kazi)*sin_kpol;
 K1 = sin(Kazi)*sin_kpol;
-K2 = cos(Kpol);
+K2 = sqrt(1 - sin_kpol*sin_kpol);
 ';
 my $ndiv = 145;
 # Do we have any Radiance input files?
@@ -118,9 +118,9 @@ if ($#ARGV >= 0) {
 			"-e 'cond=($nsamp-outno+1)/($ntot-recno+1)-rand($rn+recno)' " .
 			"-e 'Kbin=$k;x1=rand($r1+recno);x2=rand($r2+recno)' " .
 			q{-e '$1=$1+Vo*Vdx; $2=$2+Vo*Vdy; $3=$3+Vo*Vdz' } .
-			q{-e '$4=K0*Vhx+K1*Vvx+K2*Vdx' } .
-			q{-e '$5=K0*Vhy+K1*Vvy+K2*Vdy' } .
-			q{-e '$6=K0*Vhz+K1*Vvz+K2*Vdz' } .
+			q{-e '$4=K0*Vhx-K1*Vvx+K2*Vdx' } .
+			q{-e '$5=K0*Vhy-K1*Vvy+K2*Vdy' } .
+			q{-e '$6=K0*Vhz-K1*Vvz+K2*Vdz' } .
 			"-if3 $td/origins.flt";
 	}
 } else {
@@ -142,9 +142,9 @@ if ($#ARGV >= 0) {
 			q{-e '$1=Vpx+Vo*Vdx+hpos*Vhx+vpos*Vvx' } .
 			q{-e '$2=Vpy+Vo*Vdy+hpos*Vhy+vpos*Vvy' } .
 			q{-e '$3=Vpz+Vo*Vdz+hpos*Vhz+vpos*Vvz' } .
-			q{-e '$4=K0*Vhx+K1*Vvx+K2*Vdx' } .
-			q{-e '$5=K0*Vhy+K1*Vvy+K2*Vdy' } .
-			q{-e '$6=K0*Vhz+K1*Vvz+K2*Vdz' } ;
+			q{-e '$4=K0*Vhx-K1*Vvx+K2*Vdx' } .
+			q{-e '$5=K0*Vhy-K1*Vvy+K2*Vdy' } .
+			q{-e '$6=K0*Vhz-K1*Vvz+K2*Vdz' } ;
 	}
 }
 system "rm -rf $td";
