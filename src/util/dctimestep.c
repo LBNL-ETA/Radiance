@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.2 2009/06/19 06:49:42 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.3 2009/06/19 14:21:42 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -295,11 +295,34 @@ cm_bsdf(const struct BSDF_data *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
 	COLORV	*mp = cm->cmem;
+	int	nbadohm = 0;
+	int	nneg = 0;
 	int	r, c;
 	
 	for (r = 0; r < cm->nrows; r++)
-		for (c = 0; c < cm->ncols; c++, mp += 3)
-			mp[0] = mp[1] = mp[2] = BSDF_value(bsdf,c,r);
+		for (c = 0; c < cm->ncols; c++, mp += 3) {
+			float	f = BSDF_value(bsdf,c,r);
+			float	dom = getBSDF_incohm(bsdf,c);
+			FVECT	v;
+			
+			if (f <= .0) {
+				nneg += (f < -FTINY);
+				continue;
+			}
+			if (dom <= .0) {
+				nbadohm++;
+				continue;
+			}
+			if (!getBSDF_incvec(v,bsdf,c) || v[2] > FTINY)
+				error(USER, "illegal incoming BTDF direction");
+				
+			mp[0] = mp[1] = mp[2] = f * dom * -v[2];
+		}
+	if (nbadohm | nneg) {
+		sprintf(errmsg,
+		    "BTDF has %d negatives and %d bad incoming solid angles");
+		error(WARNING, errmsg);
+	}
 	return(cm);
 }
 
