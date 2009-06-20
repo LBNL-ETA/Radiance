@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.4 2009/06/19 14:24:06 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.5 2009/06/20 04:27:18 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -429,16 +429,14 @@ main(int argc, char *argv[])
 				progname);
 		return(1);
 	}
+						/* load Tregenza vector */
 	tvec = cm_load(argv[4], 0, 1, DTascii);	/* argv[4]==NULL iff argc==4 */
-	Dmat = cm_load(argv[3], 0, tvec->nrows, DTfromHeader);
+						/* load BTDF */
 	btdf = load_BSDF(argv[2]);
 	if (btdf == NULL)
 		return(1);
-	if (btdf->ninc != Dmat->nrows) {
-		sprintf(errmsg, "Incoming BTDF dir (%d) mismatch to D (%d)",
-				btdf->ninc, Dmat->nrows);
-		error(USER, errmsg);
-	}
+						/* load Daylight matrix */
+	Dmat = cm_load(argv[3], btdf->ninc, tvec->nrows, DTfromHeader);
 						/* multiply vector through */
 	ivec = cm_multiply(Dmat, tvec);
 	cm_free(Dmat); cm_free(tvec);
