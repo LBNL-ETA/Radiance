@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.2 2009/06/15 22:27:21 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.3 2009/06/20 21:34:34 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -472,8 +472,10 @@ computesky()			/* compute sky parameters */
 /* Compute the ground radiance */
 zenithbr=calc_rel_lum_perez(0.0,radians(sunzenith),radians(sunzenith),skyclearness,skybrightness,coeff_perez);
 zenithbr*=diffnormalization;
+/*
 fprintf(stderr, "gendaylit : the actual zenith radiance(W/m^2/sr) or luminance(cd/m^2) is : %.0lf\n", zenithbr);
-	
+*/
+
 if (skyclearness==1)
 	normfactor = 0.777778;
 		
