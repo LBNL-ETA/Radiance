@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.5 2009/06/20 04:27:18 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.6 2009/06/20 04:37:43 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -160,12 +160,12 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		int	maxrow = (nrows > 0 ? nrows : 32000);
 		int	r, c;
 		for (r = 0; r < maxrow; r++) {
-		    if (r >= cm->nrows)		/* need more space? */
+		    if (r >= cm->nrows)			/* need more space? */
 			cm = cm_resize(cm, 2*cm->nrows);
 		    for (c = 0; c < ncols; c++) {
 		        COLORV	*cv = cm_lval(cm,r,c);
 			if (fscanf(fp, COLSPEC, cv, cv+1, cv+2) != 3)
-				if ((nrows <= 0) & (r > 0) & (c == 0)) {
+				if ((nrows <= 0) & (r > 0) & !c) {
 					cm = cm_resize(cm, maxrow=r);
 					break;
 				} else
@@ -193,7 +193,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 					if (nread == cm->nrows*cm->ncols)
 							/* need more space? */
 						cm = cm_resize(cm, 2*cm->nrows);
-					else if (nread % cm->ncols == 0)
+					else if (nread && !(nread % cm->ncols))
 							/* seem to be  done */
 						cm = cm_resize(cm, nread/cm->ncols);
 					else		/* ended mid-row */
