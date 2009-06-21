@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.6 2009/06/20 04:37:43 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.7 2009/06/21 21:42:12 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -299,25 +299,28 @@ cm_bsdf(const struct BSDF_data *bsdf)
 	int	nneg = 0;
 	int	r, c;
 	
-	for (r = 0; r < cm->nrows; r++)
-		for (c = 0; c < cm->ncols; c++, mp += 3) {
+	for (c = 0; c < cm->ncols; c++, mp += 3) {
+		float	dom = getBSDF_incohm(bsdf,c);
+		FVECT	v;
+		
+		if (dom <= .0) {
+			nbadohm++;
+			continue;
+		}
+		if (!getBSDF_incvec(v,bsdf,c) || v[2] > FTINY)
+			error(USER, "illegal incoming BTDF direction");
+		dom *= -v[2];
+
+		for (r = 0; r < cm->nrows; r++) {
 			float	f = BSDF_value(bsdf,c,r);
-			float	dom = getBSDF_incohm(bsdf,c);
-			FVECT	v;
-			
+
 			if (f <= .0) {
 				nneg += (f < -FTINY);
 				continue;
 			}
-			if (dom <= .0) {
-				nbadohm++;
-				continue;
-			}
-			if (!getBSDF_incvec(v,bsdf,c) || v[2] > FTINY)
-				error(USER, "illegal incoming BTDF direction");
-				
-			mp[0] = mp[1] = mp[2] = f * dom * -v[2];
+			mp[0] = mp[1] = mp[2] = f * dom;
 		}
+	}
 	if (nneg || nbadohm) {
 		sprintf(errmsg,
 		    "BTDF has %d negatives and %d bad incoming solid angles",
