@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.8 2009/06/21 21:49:13 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.9 2009/06/21 21:53:10 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -294,7 +294,6 @@ static CMATRIX *
 cm_bsdf(const struct BSDF_data *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
-	COLORV	*mp = cm->cmem;
 	int	nbadohm = 0;
 	int	nneg = 0;
 	int	r, c;
@@ -313,12 +312,12 @@ cm_bsdf(const struct BSDF_data *bsdf)
 
 		for (r = 0; r < cm->nrows; r++) {
 			float	f = BSDF_value(bsdf,c,r);
+			COLORV	*mp = cm_lval(cm,r,c);
 
 			if (f <= .0) {
 				nneg += (f < -FTINY);
 				f = .0f;
 			}
-			mp = cm_lval(cm,r,c);
 			mp[0] = mp[1] = mp[2] = f * dom;
 		}
 	}
