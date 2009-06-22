@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.16 2008/04/18 18:06:29 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.17 2009/06/22 20:52:56 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -336,7 +336,6 @@ runagain:
 		}
 	}
 	if (persist == PCHILD) {	/* wait for a signal then go again */
-		close(duped1);			/* release output handle */
 		pfhold();
 		raynum = nrays = 0;		/* reinitialize */
 		goto runagain;
