@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.13 2006/05/07 15:44:28 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.14 2009/06/22 00:12:04 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -184,13 +184,6 @@ pix2rays(
 
 	while (fscanf(fp, "%lf %lf", &px, &py) == 2) {
 		px += .5; py += .5;
-		if (px < 0 || px >= rs.xr ||
-				py < 0 || py >= rs.yr) {
-			fprintf(stderr,
-				"%s: (x,y) pair (%.0f,%.0f) out of range\n",
-					progname, px, py);
-			exit(1);
-		}
 		loc[0] = px/rs.xr; loc[1] = py/rs.yr;
 		if (zfd >= 0) {
 			loc2pix(pp, &rs, loc[0], loc[1]);
