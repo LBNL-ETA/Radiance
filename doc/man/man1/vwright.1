@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwright.1,v 1.8 2009/06/14 00:33:15 greg Exp $"
+.\" RCSid "$Id: vwright.1,v 1.9 2009/06/22 00:03:47 greg Exp $"
 .TH VWRIGHT 1 8/29/96 RADIANCE
 .SH NAME
 vwright - normalize a RADIANCE view, shift it to the right
@@ -8,9 +8,11 @@ vwright - normalize a RADIANCE view, shift it to the right
 .B distance
 .br
 .B vwright
+.B "[ view options ]"
 .B name
 .SH DESCRIPTION
-.I Vwright
+In the first form,
+.I vwright
 shifts a RADIANCE view
 the specified distance to the right, putting out a complete set of
 view parameters in a single line on the standard output.
