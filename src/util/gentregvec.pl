@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: gentregvec.pl,v 2.3 2009/06/19 06:49:42 greg Exp $
+# RCSid $Id: gentregvec.pl,v 2.4 2009/06/24 19:19:38 greg Exp $
 #
 # Generate Tregenza vector for a given sky description
 #
@@ -21,20 +21,23 @@ my @skydesc;
 my $lightline;
 my @sunval;
 my $sunline;
+my $skyOK = 0;
 my $srcmod;	# putting this inside loop breaks code(?!)
 while (<>) {
 	push @skydesc, $_;
 	if (/^\w+\s+light\s+/) {
-		s/\s+$//; s/^.*\s//;
+		s/\s*$//; s/^.*\s//;
 		$srcmod = $_;
 		$lightline = $#skydesc;
 	} elsif (defined($srcmod) && /^($srcmod)\s+source\s/) {
 		@sunval = split(/\s+/, $skydesc[$lightline + 3]);
 		shift @sunval;
 		$sunline = $#skydesc;
+	} elsif (/\sskyfunc\s*$/) {
+		$skyOK = 1;
 	}
 }
-die "Empty input!\n" if (! @skydesc);
+die "Bad sky description!\n" if (! $skyOK);
 # Strip out the solar source if present
 my @sundir;
 if (defined $sunline) {
