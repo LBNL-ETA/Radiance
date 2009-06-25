@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.53 2009/06/17 20:41:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.54 2009/06/25 21:32:35 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -103,7 +103,7 @@ glrad:	glrad.o
 -lX11 -lXext $(MLIB)
 
 dctimestep:	dctimestep.o
-	$(CC) $(CFLAGS) -o dctimestep dctimestep.o -lrtrad
+	$(CC) $(CFLAGS) -o dctimestep dctimestep.o -lrtrad $(MLIB)
 
 setscan.o:	setscan.h
 
