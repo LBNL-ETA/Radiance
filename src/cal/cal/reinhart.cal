@@ -1,0 +1,34 @@
+{ RCSid $Id: reinhart.cal,v 1.1 2009/07/01 00:39:34 greg Exp $ }
+{
+	Compute Reinhart high-density sky patches
+	Actual density controlled by MF constant
+
+	Modified from Tregenza.cal
+
+	June 2009	G. Ward
+}
+DEGREE : PI/180;
+Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x)));
+posangle(a) : if(-a, a + 2*PI, a);
+Atan2(y,x) : posangle(atan2(y,x));
+
+alt = Asin(Dz)/DEGREE;
+azi = Atan2(Dx,Dy)/DEGREE;
+
+MF : 2^2;			{ Multiplication factor }
+alpha : 90/(MF*7 + .5);		{ Separation between rows in degrees }
+				{ Number of patches per row }
+tnaz(r) : select(r, 30, 30, 24, 24, 18, 12, 6);
+rnaz(r) : if(r-(7*MF-.5), 1, MF*tnaz(floor((r+.5)/MF) + 1));
+
+raccum(r) : if(r-.5, rnaz(r-1) + raccum(r-1), 0);
+
+r_row = floor(alt/alpha);
+
+r_inc = 360/rnaz(r_row);
+
+r_azn = if(azi-(360-.5*r_inc), 0, floor((azi+.5*r_inc)/r_inc));
+
+rbin = if (-alt, 0, raccum(r_row) + r_azn + 1);
+
+Nrbins : raccum(7*MF+1) + 1;	{ total number of bins }

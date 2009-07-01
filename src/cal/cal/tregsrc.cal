@@ -1,4 +1,4 @@
-{ RCSid $Id: tregsrc.cal,v 1.1 2005/06/15 17:46:08 greg Exp $ }
+{ RCSid $Id: tregsrc.cal,v 1.2 2009/07/01 00:39:34 greg Exp $ }
 {
 	Tregenza patch positions & solid angles
 
@@ -11,10 +11,12 @@
 	final altitude at the zenith (90 degrees).  Azimuth is evenly
 	divided among 30, 30, 24, 24, 18, 12, 6, and 1 divisions per row.
 
-	Input is Tbin from 1-145
+	Input is Tbin from 1-145 and optional random variables x1 & x2
 	Output is Dx Dy Dz theta (degree full angle of source)
 }
 DEGREE : PI/180;
+
+x1 = .5; x2 = .5;		{ default random variable settings for midpoint }
 
 Trow = if(30.5-Tbin, 1,
 	if(60.5-Tbin, 2,
@@ -32,8 +34,8 @@ Tazi_width = 2*PI / cols_row;
 
 TAH : 12*DEGREE;
 
-Tazi = (Tcol - 1)*Tazi_width;
-Talt = (Trow - .5)*TAH;
+Tazi = (Tcol - .5 - x2)*Tazi_width;
+Talt = (Trow - x1)*TAH;
 
 Tomega = if(144.5-Tbin, 
 	Tazi_width*(sin(TAH*Trow) - sin(TAH*(Trow-1))),

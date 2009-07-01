@@ -1,0 +1,50 @@
+{ RCSid $Id: rskysrc.cal,v 1.1 2009/07/01 00:39:34 greg Exp $ }
+{
+	Reinhart sky patch positions & solid angles
+
+	Greg Ward	June 2009
+
+	Based on tregsrc.cal
+	MF controls patch density
+
+	Input is Rbin from 1-(144*MF+1) and optional x1 x2 random variables
+	Output is Dx Dy Dz theta (degree full angle of source)
+}
+DEGREE : PI/180;
+
+x1 = .5; x2 = .5;		{ default random variable settings for midpoint }
+
+MF : 2^2;			{ Multiplication factor }
+alpha : 90/(MF*7 + .5);		{ Separation between rows in degrees }
+				{ Number of patches per row }
+tnaz(r) : select(r, 30, 30, 24, 24, 18, 12, 6);
+rnaz(r) : if(r-(7*MF-.5), 1, MF*tnaz(floor((r+.5)/MF) + 1));
+
+raccum(r) : if(r-.5, rnaz(r-1) + raccum(r-1), 0);
+
+RowMax : 7*MF + 1;
+Rmax : raccum(RowMax);
+
+Rfindrow(r, rem) : if(rem-rnaz(r)-.5, Rfindrow(r+1, rem-rnaz(r)), r);
+Rrow = if(Rbin-(Rmax +.5), RowMax, Rfindrow(0, Rbin));
+Rcol = Rbin - raccum(Rrow) - 1;
+
+
+Razi_width = 2*PI / rnaz(Rrow);
+
+RAH : alpha*DEGREE;
+
+Razi = (Rcol + x2 - .5)*Razi_width;
+Ralt = (Rrow + x1)*RAH;
+
+Romega = if(Rmax-.5-Rbin, 
+	Razi_width*(sin(RAH*(Rrow+1)) - sin(RAH*Rrow)),
+	2*PI*(1 - cos(RAH/2)) );
+
+cos_ralt = cos(Ralt);
+
+Dx = sin(Razi)*cos_ralt;
+Dy = cos(Razi)*cos_ralt;
+Dz = sin(Ralt);
+
+theta = 2/DEGREE * acos(1 - Romega/(2*PI));
