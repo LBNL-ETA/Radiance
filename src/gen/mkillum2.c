@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.31 2009/06/12 17:37:37 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.32 2009/07/02 04:26:41 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.31 2009/06/12 17:37:37 greg Exp
 #include  "source.h"
 
 #ifndef NBSDFSAMPS
-#define NBSDFSAMPS	32		/* BSDF resampling count */
+#define NBSDFSAMPS	256		/* BSDF resampling count */
 #endif
 
 COLORV *	distarr = NULL;		/* distribution array */
