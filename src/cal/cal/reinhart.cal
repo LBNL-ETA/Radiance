@@ -1,4 +1,4 @@
-{ RCSid $Id: reinhart.cal,v 1.1 2009/07/01 00:39:34 greg Exp $ }
+{ RCSid $Id: reinhart.cal,v 1.2 2009/07/02 21:37:52 greg Exp $ }
 {
 	Compute Reinhart high-density sky patches
 	Actual density controlled by MF constant
@@ -27,7 +27,7 @@ r_row = floor(alt/alpha);
 
 r_inc = 360/rnaz(r_row);
 
-r_azn = if(azi-(360-.5*r_inc), 0, floor((azi+.5*r_inc)/r_inc));
+r_azn = if(360-.5*r_inc - azi, floor((azi+.5*r_inc)/r_inc), 0);
 
 rbin = if (-alt, 0, raccum(r_row) + r_azn + 1);
 
