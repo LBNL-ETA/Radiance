@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.9 2009/06/21 21:53:10 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.10 2009/07/02 02:13:08 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -38,7 +38,7 @@ cm_alloc(int nrows, int ncols)
 	CMATRIX	*cm;
 
 	if ((nrows <= 0) | (ncols <= 0))
-		return(NULL);
+		error(USER, "attempt to create empty matrix");
 	cm = (CMATRIX *)malloc(sizeof(CMATRIX) +
 				3*sizeof(COLORV)*(nrows*ncols - 1));
 	if (cm == NULL)
