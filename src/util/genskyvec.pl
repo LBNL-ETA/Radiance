@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.1 2009/07/02 02:13:08 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.2 2009/07/13 23:45:08 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -56,12 +56,12 @@ raccum(r) : if(r-.5, rnaz(r-1) + raccum(r-1), 0);
 RowMax : 7*MF + 1;
 Rmax : raccum(RowMax);
 Rfindrow(r, rem) : if(rem-rnaz(r)-.5, Rfindrow(r+1, rem-rnaz(r)), r);
-Rrow = if(Rbin-(Rmax +.5), RowMax, Rfindrow(0, Rbin));
+Rrow = if(Rbin-(Rmax-.5), RowMax-1, Rfindrow(0, Rbin));
 Rcol = Rbin - raccum(Rrow) - 1;
 Razi_width = 2*PI / rnaz(Rrow);
 RAH : alpha*DEGREE;
 Razi = if(Rbin-.5, (Rcol + x2 - .5)*Razi_width, 2*PI*x2);
-Ralt = if(Rbin-.5, (Rrow + x1)*RAH, asin(2*x1-1));
+Ralt = if(Rbin-.5, (Rrow + x1)*RAH, asin(-x1));
 Romega = if(.5-Rbin, 2*PI, if(Rmax-.5-Rbin, 
 	Razi_width*(sin(RAH*(Rrow+1)) - sin(RAH*Rrow)),
 	2*PI*(1 - cos(RAH/2)) ) );
@@ -89,7 +89,8 @@ unlink $octree;
 my @bestdir;
 if (@sundir) {
 	my $somega = ($sundir[3]/360)**2 * 3.141592654**3;
-	my $cmd = "cnt $nbins | rcalc -e '$rhcal' -e Rbin=recno " .
+	my $cmd = "cnt " . ($nbins-1) .
+		" | rcalc -e '$rhcal' -e Rbin=recno " .
 		"-e 'dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]' " .
 		"-e 'cond=dot-.866' " .
 		q{-e '$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno' };
