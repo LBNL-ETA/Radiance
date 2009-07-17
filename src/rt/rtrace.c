@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.55 2007/11/17 06:21:58 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.56 2009/07/17 06:21:29 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -240,10 +240,10 @@ trace_sources(void)			/* trace rays to light sources, also */
 
 static void
 setoutput(				/* set up output tables */
-	register char  *vs
+	char  *vs
 )
 {
-	register oputf_t **table = ray_out;
+	oputf_t **table = ray_out;
 
 	castonly = 1;
 	while (*vs)
@@ -363,20 +363,17 @@ irrad(			/* compute immediate irradiance value */
 	FVECT  dir
 )
 {
-	register int  i;
-
-	for (i = 0; i < 3; i++) {
-		thisray.rorg[i] = org[i] + dir[i];
-		thisray.rdir[i] = -dir[i];
-	}
+	VSUM(thisray.rorg, org, dir, 1.1e-4);
+	thisray.rdir[0] = -dir[0];
+	thisray.rdir[1] = -dir[1];
+	thisray.rdir[2] = -dir[2];
 	thisray.rmax = 0.0;
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 					/* pretend we hit surface */
-	thisray.rot = 1.0-1e-4;
+	thisray.rot = 1e-5;
 	thisray.rod = 1.0;
 	VCOPY(thisray.ron, dir);
-	for (i = 0; i < 3; i++)		/* fudge factor */
-		thisray.rop[i] = org[i] + 1e-4*dir[i];
+	VSUM(thisray.rop, org, dir, 1e-4);
 					/* compute and print */
 	(*ofun[Lamb.otype].funp)(&Lamb, &thisray);
 	printvals(&thisray);
@@ -388,7 +385,7 @@ printvals(			/* print requested ray values */
 	RAY  *r
 )
 {
-	register oputf_t **tp;
+	oputf_t **tp;
 
 	if (ray_out[0] == NULL)
 		return;
@@ -401,7 +398,7 @@ printvals(			/* print requested ray values */
 
 static int
 getvec(		/* get a vector from fp */
-	register FVECT  vec,
+	FVECT  vec,
 	int  fmt,
 	FILE  *fp
 )
@@ -409,7 +406,7 @@ getvec(		/* get a vector from fp */
 	static float  vf[3];
 	static double  vd[3];
 	char  buf[32];
-	register int  i;
+	int  i;
 
 	switch (fmt) {
 	case 'a':					/* ascii */
@@ -443,8 +440,8 @@ tranotify(			/* record new modifier */
 )
 {
 	static int  hitlimit = 0;
-	register OBJREC	 *o = objptr(obj);
-	register char  **tralp;
+	OBJREC	 *o = objptr(obj);
+	char  **tralp;
 
 	if (obj == OVOID) {		/* starting over */
 		traset[0] = 0;
@@ -471,7 +468,7 @@ ourtrace(				/* print ray values */
 	RAY  *r
 )
 {
-	register oputf_t **tp;
+	oputf_t **tp;
 
 	if (every_out[0] == NULL)
 		return;
