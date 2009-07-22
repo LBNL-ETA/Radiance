@@ -1,20 +1,17 @@
 #!/bin/csh -f
-# RCSid: $Id: objpict.csh,v 2.6 2009/07/22 17:35:06 greg Exp $
+# RCSid: $Id: objpict.csh,v 2.7 2009/07/22 17:48:07 greg Exp $
 #
 # Make a nice multi-view picture of an object
 # Command line arguments contain materials and object files
 #
 set tmpdir=/tmp/objv$$
-set xres=250
-set yres=250
+mkdir $tmpdir
+set xres=1024
+set yres=1024
 set rpict="rpict -av .2 .2 .2 -x $xres -y $yres"
-set inprad=$tmpdir/op.rad
+set inprad=op$$.rad
 set testroom=$tmpdir/testroom.rad
 set octree=$tmpdir/op.oct
-set pict1=$tmpdir/opa.hdr
-set pict2=$tmpdir/opb.hdr
-set pict3=$tmpdir/opc.hdr
-set pict4=$tmpdir/opd.hdr
 onintr quit
 if ( $#argv ) then
 	cat $* > $inprad
@@ -68,12 +65,12 @@ set vw4="-vp 3 3 3 -vd -1 -1 -1 -vh 20 -vv 20"
 xform -t `ev "-($dims[1]+$dims[2])/2" "-($dims[3]+$dims[4])/2" "-($dims[5]+$dims[6])/2"` \
 		-s `ev 1/$siz` -t .5 .5 .5 $inprad \
 	| oconv $testroom - > $octree
-$rpict $vw1 $octree > $pict1
-$rpict $vw2 $octree > $pict2
-$rpict $vw3 $octree > $pict3
-$rpict $vw4 $octree > $pict4
-pcompos $pict3 0 $yres $pict4 $xres $yres $pict1 0 0 $pict2 $xres 0
+pcompos "\!$rpict $vw3 $octree" 0 $yres \
+	"\!$rpict $vw4 $octree" $xres $yres \
+	"\!$rpict $vw1 $octree" 0 0 \
+	"\!$rpict $vw2 $octree" $xres 0 \
+	| pfilt -1 -r .6 -x /2 -y /2
 
 quit:
-rm -r $tmpdir
+rm -r $tmpdir $inprad
 exit 0
