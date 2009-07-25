@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.39 2005/12/28 18:35:42 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.40 2009/07/25 16:45:06 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -182,7 +182,7 @@ doargf(			/* take argument list from file */
 	int  inquote;
 	char  *newav[256], **avp;
 	char  argbuf[2048];
-	char  newid[128];
+	char  *newid, newidbuf[128];
 	char  *oldid;
 	register char	*cp;
 	FILE	*argfp;
@@ -262,13 +262,19 @@ doargf(			/* take argument list from file */
 		for (i = 2; i < newac; i++)
 			if (!strcmp(avp[i-1], "-n")) {
 				oldid = avp[i];
+				newid = newidbuf;
+				if (strlen(oldid)+32 > sizeof(newidbuf)) {
+					newid = (char *)malloc(strlen(oldid)+32);
+					if (newid == NULL)
+						exit(2);
+				}
 				avp[i] = newid;
 				break;
 			}
 		if (oldid == NULL) {
 			newav[0] = av[0];
 			newav[1] = "-n";
-			newav[2] = newid;
+			newav[2] = newid = newidbuf;
 			avp = newav;
 			newac += 2;
 		}
@@ -277,6 +283,8 @@ doargf(			/* take argument list from file */
 		else
 			sprintf(newid, "%s.%d", oldid, k);
 		err |= main(newac, avp);
+		if (newid != NULL && newid != newidbuf)
+			free((void *)newid);
 		k++;
 	}
 	fclose(argfp);
