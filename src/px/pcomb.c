@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.43 2008/11/10 19:08:19 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.44 2009/08/10 04:26:38 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: pcomb.c,v 2.43 2008/11/10 19:08:19 greg Exp $"
 #include "calcomp.h"
 #include "view.h"
 
-#define MAXINP		512		/* maximum number of input files */
+#define MAXINP		1024		/* maximum number of input files */
 #define WINSIZ		64		/* scanline window size */
 #define MIDSCN		((WINSIZ-1)/2+1)
 
