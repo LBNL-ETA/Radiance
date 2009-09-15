@@ -1,4 +1,4 @@
-{ RCSid $Id: tregenza.cal,v 1.3 2009/07/02 21:44:33 greg Exp $ }
+{ RCSid $Id: tregenza.cal,v 1.4 2009/09/15 00:17:36 greg Exp $ }
 {
 	Compute bin numbers corresponding to Tregenza sky discretization
 
@@ -26,7 +26,7 @@ Atan2(y,x) : posangle(atan2(y,x));
 alt = Asin(Dz)/DEGREE;
 azi = Atan2(Dx,Dy)/DEGREE;
 
-tazi(inc) = if(360-.5*inc - azi, floor((azi+.5*inc)/inc), 0);
+tazi(inc) = if(359.9999-.5*inc - azi, floor((azi+.5*inc)/inc), 0);
 
 tbin = if(-alt, 0,
 	select(floor(alt/12) + 1,
