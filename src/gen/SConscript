@@ -37,11 +37,8 @@ for p in PROGS:
             source=p[1], LIBS=p[2] + mlib)
     progs.append(prog)
 
-ezxml = env.Object('ezxml.c',
-		CPPDEFINES=env.get('CPPDEFINES',[]) + env.get('EZXML_CPPDEFINES',[]))
-
 prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mkillum'),
-		source=Split('mkillum.c mkillum2.c mkillum3.c mkillum4.c') + ezxml,
+		source=Split('mkillum.c mkillum2.c mkillum3.c'),
 		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
 		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtproc',
 		'rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']

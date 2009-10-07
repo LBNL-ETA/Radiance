@@ -21,7 +21,7 @@ RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
 RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c')+ RTCOLOR + RTTMAP
 
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
-RTCONT = Split('''lookup.c savestr.c savqstr.c''')
+RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ezxml.c''')
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 		zeroes.c dircode.c clip.c multisamp.c plocate.c byteswap.c'''
 		) + env.get('RAD_MATHCOMPAT', [])
