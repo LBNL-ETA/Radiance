@@ -23,6 +23,7 @@ def set_opts(env):
 
 def allplats_setup(env):
 	from build_utils import find_libs
+	find_libs.find_radlib(env)
 	find_libs.find_x11(env)
 	find_libs.find_gl(env) # OpenGL
 	find_libs.find_libtiff(env)

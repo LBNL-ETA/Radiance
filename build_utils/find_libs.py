@@ -2,6 +2,15 @@ import os
 
 from SCons.SConf import SConf # aka Configure
 
+def find_radlib(env):
+	v = env.FindFile('Verdana.fnt', './lib')
+	if not v:
+		print '''
+	Radiance auxiliary support files not found.
+	-> Download from radiance-online.org and extract.
+	'''
+		env.Exit()
+
 def find_x11(env):
 	# Search for libX11, remember the X11 library and include dirs
 	for d in ('/usr/X11R6', '/usr/X11', '/usr/openwin'):
