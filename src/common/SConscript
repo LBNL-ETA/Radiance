@@ -10,6 +10,8 @@ getlibpath = env.StaticObject(source='getlibpath.c',
         CPPFLAGS='-DDEFPATH=\\":%s\\"' % env['RAD_RLIBDIR'])
 tmapcolrs = env.StaticObject(source='tmapcolrs.c',
         CPPFLAGS='-DPCOND=\\"pcond\\"')
+ezxml = env.Object('ezxml.c',
+		CPPDEFINES=env.get('CPPDEFINES',[]) + env.get('EZXML_CPPDEFINES',[]))
 
 # source and object dependencies
 RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
@@ -21,7 +23,7 @@ RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
 RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c')+ RTCOLOR + RTTMAP
 
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
-RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ezxml.c''')
+RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ezxml''')
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 		zeroes.c dircode.c clip.c multisamp.c plocate.c byteswap.c'''
 		) + env.get('RAD_MATHCOMPAT', [])
