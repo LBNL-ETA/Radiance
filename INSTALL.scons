@@ -3,7 +3,7 @@ Building and Installing Radiance with SCons
 
 This file describes how to build and install Radiance using the SCons
 based build system (an alternative to the traditional makeall script
-expleined in the README file).
+explained in the README file).
 
 
 Requirements
@@ -20,7 +20,7 @@ system, then you need to download and install them first.
   Python:  http://www.python.org/
   SCons:   http://www.scons.org/
 
-For many systems, precompiled packages are availabls, such as Installer
+For many systems, precompiled packages are available, such as Installer
 files for Windows. Most Linux distributions already come with Python
 installed and ready to use.
 
@@ -125,7 +125,7 @@ Installation
 ------------
 
 The software will be installed into the directories given either in the
-configuration file through command options, by invoking
+configuration file or through command options, by invoking
 
  $> scons install
 
@@ -147,7 +147,7 @@ Cleanup
 To save disk space on your system, or in preparation of a fresh build
 with different settings, you can clean up the source tree by invoking
 
- %> scons -c
+ $> scons -c
 
 This will delete all the generated object files, libraries, and
 executables in and below the "ray/src/" subdirectory.
