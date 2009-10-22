@@ -10,8 +10,9 @@ Requirements
 ------------
 
 Please make sure that you have dowloaded and unpacked BOTH the Radiance
-source package AND the archive with the auxiliary files. Crucial parts
-of the system will be missing if you only have one of them.
+source package AND the archive with the auxiliary support files.
+Crucial parts of the system will be missing if you only have one of
+them, and SCons will be unable to build the software.
 
 SCons is a platform-independent software configuration and build system
 written in Python. If SCons and Python are not already installed on your
