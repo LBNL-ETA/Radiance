@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.5 2009/06/19 18:42:06 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.6 2009/11/05 06:30:57 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
@@ -84,6 +84,7 @@ if ($#ARGV >= 0) {
 			$bcube[2]+$bcube[3]/2-$width/2*$vd[2]);
 	push @vopts, ("-vh", $width, "-vh", $height);
 	$vwset = `vwright @vopts V`;
+	$sca = sqrt($nsamp/($width*$height));
 	my $xres;
 	my $yres;
 	my $ntot = 0;
@@ -100,7 +101,7 @@ if ($#ARGV >= 0) {
 		$ntot = -s "$td/origins.flt";
 		$ntot /= 3*4;
 		if ($ntot == 0) {
-			if ($sca < sqrt(199/($width*$height))) {
+			if ($nsamp < 200) {
 				$sca = sqrt(200/($width*$height));
 				redo;
 			}
