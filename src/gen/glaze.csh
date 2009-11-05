@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: glaze.csh,v 2.7 2008/02/11 19:18:25 greg Exp $
+# RCSid: $Id: glaze.csh,v 2.8 2009/11/05 19:00:50 greg Exp $
 #
 # Complex glazing model (goes with glaze1.cal and glaze2.cal)
 #
@@ -8,6 +8,11 @@
 # Funding for this development generously provided by Visarc, Inc.
 # (http://www.visarc.com)
 #
+# Nov. 2009 Jack de Valpine - Visarc, Inc.
+#     -f option now clears the internal demo database and accepts
+#        a clear glass definition as the first entry
+#        in the database file
+#         
 
 #################################################################
 #
@@ -16,23 +21,23 @@
 # If the user tries to enter two coated surfaces on the same
 # pane, the script complains and exits.
 #
-# Supported surface types:
+# Supported surface types (clear glass prepended below):
 #
-set sn_arr=("clear glass" "VE1-2M low-E coating" "PVB laminated" "V-175 white frit" "V-933 warm gray frit")
+set sn_arr=("VE1-2M low-E coating" "PVB laminated" "V-175 white frit" "V-933 warm gray frit")
 # Glass-side hemispherical reflectances for each surface type:
-set rg_r_arr=(0.074 0.065 .11 0.33 0.15)
-set rg_g_arr=(0.077 0.058 .11 0.33 0.15)
-set rg_b_arr=(0.079 0.067 .11 0.33 0.15)
+set rg_r_arr=(0.065 .11 0.33 0.15)
+set rg_g_arr=(0.058 .11 0.33 0.15)
+set rg_b_arr=(0.067 .11 0.33 0.15)
 # Coating-side hemispherical reflectance for each surface type:
-set rc_r_arr=(0.074 0.042 .11 0.59 0.21)
-set rc_g_arr=(0.077 0.049 .11 0.59 0.21)
-set rc_b_arr=(0.079 0.043 .11 0.59 0.21)
+set rc_r_arr=(0.042 .11 0.59 0.21)
+set rc_g_arr=(0.049 .11 0.59 0.21)
+set rc_b_arr=(0.043 .11 0.59 0.21)
 # Hemispherical (normal) transmittance for each surface type:
-set tn_r_arr=(0.862 0.756 0.63 0.21 0.09)
-set tn_g_arr=(0.890 0.808 0.63 0.21 0.09)
-set tn_b_arr=(0.886 0.744 0.63 0.21 0.09)
+set tn_r_arr=(0.756 0.63 0.21 0.09)
+set tn_g_arr=(0.808 0.63 0.21 0.09)
+set tn_b_arr=(0.744 0.63 0.21 0.09)
 # Boolean whether coatings can have partial coverage:
-set part_arr=(0 0 0 1 1)
+set part_arr=(0 0 1 1)
 
 set gfiles=()
 while ($#argv > 0)
@@ -42,6 +47,12 @@ while ($#argv > 0)
 		exit 1
 	endif
 	shift argv
+	# Clear internal default database
+	set sn_arr=()
+	set rg_r_arr=() ; set rg_g_arr=() ; set rg_b_arr=()
+	set rc_r_arr=() ; set rc_g_arr=() ; set rc_b_arr=()
+	set tn_r_arr=() ; set tn_g_arr=() ; set tn_b_arr=()
+	set part_arr=()
 	set gf="$argv[1]"
 	shift argv
 	set gfiles=($gfiles:q $gf:q)
@@ -73,7 +84,29 @@ while ($#argv > 0)
 		@ i++
 	end
 end
-if (! $#gfiles) unset gfiles
+if (! $#gfiles) then
+	unset gfiles
+	echo "###"
+	echo "### NOTE: Using internal demo database!"
+	echo "###"
+	echo
+endif
+#
+# Make sure we have a clear glazing definition
+#
+if (`rcalc -n -e 'ad(a,b)=if(a-b,a-b,b-a);$1=if('"ad($rg_r_arr[1],$rc_r_arr[1])+ad($rg_g_arr[1],$rc_g_arr[1])+ad($rg_b_arr[1],$rc_b_arr[1])-.005,1,0)"`) then
+	set sn_arr=("clear glass" $sn_arr:q)
+	set rg_r_arr=(0.074 $rg_r_arr)
+	set rg_g_arr=(0.077 $rg_g_arr)
+	set rg_b_arr=(0.079 $rg_b_arr)
+	set rc_r_arr=(0.074 $rc_r_arr)
+	set rc_g_arr=(0.077 $rc_g_arr)
+	set rc_b_arr=(0.079 $rc_b_arr)
+	set tn_r_arr=(0.862 $tn_r_arr)
+	set tn_g_arr=(0.890 $tn_g_arr)
+	set tn_b_arr=(0.886 $tn_b_arr)
+	set part_arr=(0 $part_arr)
+endif
 
 #################################################################
 #
@@ -157,10 +190,10 @@ endif
 echo ""
 echo "############################################"
 echo "# Glazing produced by Radiance glaze script"
-echo '# $Revision: 2.7 $'
+echo '# $Revision: 2.8 $'
 if ($?gfiles) then
 	echo "# Loaded: $gfiles:q"
-	echo "# `date`"
+	echo -n "# " ; date
 endif
 echo "# Material surface normal points to interior"
 echo "# Number of panes in system: $np"
