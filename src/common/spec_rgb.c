@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.18 2009/11/20 17:50:50 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.19 2009/11/20 17:51:47 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -244,7 +244,7 @@ RGBPRIMS  pr
 	int	i;
 	
 	for (i = 0; i < 4; i++) {
-		if ((pr[i][CIEX] <= -.5 | (pr[i][CIEY] <= -.5))
+		if ((pr[i][CIEX] <= -.5) | (pr[i][CIEY] <= -.5))
 			return(0);
 		if ((pr[i][CIEX] >= 1.5) | (pr[i][CIEY] >= 1.5))
 			return(0);
