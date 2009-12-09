@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.2 2009/07/13 23:45:08 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.3 2009/12/09 21:30:48 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -7,10 +7,14 @@
 #
 use strict;
 my @skycolor = (0.960, 1.004, 1.118);
+my $mf = 4;
 while ($#ARGV >= 0) {
 	if ("$ARGV[0]" eq "-c") {
 		@skycolor = @ARGV[1..3];
 		shift @ARGV; shift @ARGV; shift @ARGV;
+	} elsif ("$ARGV[0]" eq "-m") {
+		$mf = $ARGV[1];
+		shift @ARGV;
 	}
 	shift @ARGV;
 }
@@ -48,7 +52,6 @@ if (defined $sunline) {
 my $rhcal = '
 DEGREE : PI/180;
 x1 = .5; x2 = .5;
-MF : 2^2;
 alpha : 90/(MF*7 + .5);
 tnaz(r) : select(r, 30, 30, 24, 24, 18, 12, 6);
 rnaz(r) : if(r-(7*MF-.5), 1, MF*tnaz(floor((r+.5)/MF) + 1));
@@ -70,7 +73,8 @@ Dx = sin(Razi)*cos_ralt;
 Dy = cos(Razi)*cos_ralt;
 Dz = sin(Ralt);
 ';
-my $nbins = 2306;	# This needs to be consistent with MF setting above
+my $nbins = `rcalc -n -e MF:$mf -e \'$rhcal\' -e \'\$1=Rmax+1\'`;
+chomp $nbins;
 # Create octree for rtrace
 my $octree = "/tmp/gtv$$.oct";
 open OCONV, "| oconv - > $octree";
@@ -79,7 +83,7 @@ print OCONV "skyfunc glow skyglow 0 0 4 @skycolor 0\n";
 print OCONV "skyglow source sky 0 0 4 0 0 1 360\n";
 close OCONV;
 # Run rtrace and average output for every 16 samples
-my $tregcommand = "cnt $nbins 16 | rcalc -of -e '$rhcal' " .
+my $tregcommand = "cnt $nbins 16 | rcalc -of -e MF:$mf -e '$rhcal' " .
 	q{-e 'Rbin=$1;x1=rand(recno*.37-5.3);x2=rand(recno*-1.47+.86)' } .
 	q{-e '$1=0;$2=0;$3=0;$4=Dx;$5=Dy;$6=Dz' } .
 	"| rtrace -h -ff -ab 0 -w $octree | total -if3 -16 -m";
@@ -90,7 +94,7 @@ my @bestdir;
 if (@sundir) {
 	my $somega = ($sundir[3]/360)**2 * 3.141592654**3;
 	my $cmd = "cnt " . ($nbins-1) .
-		" | rcalc -e '$rhcal' -e Rbin=recno " .
+		" | rcalc -e MF:$mf -e '$rhcal' -e Rbin=recno " .
 		"-e 'dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]' " .
 		"-e 'cond=dot-.866' " .
 		q{-e '$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno' };
