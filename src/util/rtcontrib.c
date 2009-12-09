@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.54 2009/06/14 18:21:58 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.55 2009/12/09 21:43:35 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -664,6 +664,10 @@ ofname(char *oname, const char *ospec, const char *mname, int bn)
 				mnp = cp;
 				break;
 			case 'd':
+			case 'i':
+			case 'o':
+			case 'x':
+			case 'X':
 				if (bnp != NULL)
 					return -1;
 				bnp = cp;
