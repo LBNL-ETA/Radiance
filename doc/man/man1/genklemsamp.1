@@ -1,4 +1,4 @@
-.\" RCSid $Id: genklemsamp.1,v 1.2 2009/06/14 00:40:04 greg Exp $
+.\" RCSid $Id: genklemsamp.1,v 1.3 2009/12/10 00:17:19 greg Exp $
 .TH GENKLEMSAMP 1 6/13/09 RADIANCE
 .SH NAME
 genklemsamp - generate ray samples over surfaces using Klems BSDF basis
@@ -72,8 +72,8 @@ pass to
 to compute daylight coefficients in a matrix:
 .IP "" .2i
 genklemsamp -c 500 -vd 0 -1 0 -vu 0 0 1 south_windows.rad
-| rtcontrib -c 500 -f tregenza.cal -b tbin -bn 146 exterior.oct > Dsouth.dat
+| rtcontrib -c 500 -e MF:1 -f reinhart.cal -b rbin -bn Nrbins exterior.oct > Dsouth.dat
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-mkillum(1), rtcontrib(1), rtrace(1), vwrays(1)
+dctimestep(1), genskyvec(1), mkillum(1), rtcontrib(1), rtrace(1), vwrays(1)

@@ -1,0 +1,53 @@
+.\" RCSid $Id: genskyvec.1,v 1.1 2009/12/10 00:17:19 greg Exp $
+.TH GENSKYVEC 1 12/09/09 RADIANCE
+.SH NAME
+genskyvec - compute patch radiance averages for a specific sky
+.SH SYNOPSIS
+.B genskyvec
+[
+.B "\-m N"
+][
+.B "\-c r g b"
+]
+.SH DESCRIPTION
+.I Genskyvec
+samples the
+.I Radinace
+sky description given on the standard input to generate a list of
+average patch radiances.
+If there is a sun in the description,
+.I genskyvec
+will include its contribution in the three nearest sky patches,
+distributing energy according to centroid proximity.
+.PP
+By default,
+.I genskyvec
+divides the sky into 2305 patches, plus one patch for the ground.
+This corresponds to Reinhart's extension of the Tregenza sky,
+where the original 145 patches are subdivided into 16 subpatches,
+except at the zenith.
+A different subdivision may be specified via the
+.I \-m
+option.
+The value given will be used to subdivide each dimension, so the
+default of 4 yields almost 16 times as many patches
+as the original Tregenza sky, which can be specified with
+.I "\-m 1."
+A higher resolution sky is generally better for daylight
+coefficient analysis where solar position is important.
+.PP
+The
+.I \-c
+option may be used to specify a color for the sky.
+The gray value should equal 1 for proper energy balance
+The default sky color is
+.I "\-c 0.960 1.004 1.118".
+.SH EXAMPLE
+To generate 578 patches corresponding to a 2x2 subdivision of the
+Tregenza sky on a sunny equinox noon:
+.IP "" .2i
+gensky 9 21 12 | genskyvec -m 2 > sky09_21_12.dat
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+dctimestep(1), gensky(1), gentregvec(1), rtcontrib(1), rtrace(1)
