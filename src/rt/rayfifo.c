@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rayfifo.c,v 2.1 2009/12/12 05:20:10 greg Exp $";
+static const char RCSid[] = "$Id: rayfifo.c,v 2.2 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  rayfifo.c - parallelize ray queue that respects order
@@ -27,6 +27,9 @@ static const char RCSid[] = "$Id: rayfifo.c,v 2.1 2009/12/12 05:20:10 greg Exp $
  *  pending ray calculations and frees the FIFO buffer.  If any of
  *  the automatic calls to the ray_fifo_out callback return a
  *  negative value, processing stops and -1 is returned.
+ *
+ *  Note:  The ray passed to ray_fifo_in() may be overwritten
+ *  arbitrarily, since it is passed to ray_pqueue().
  */
 
 #include  "ray.h"
@@ -79,9 +82,10 @@ ray_fifo_push(		/* send finished ray to output (or queue it) */
 	if ((r->rno < r_fifo_start) | (r->rno >= r_fifo_end))
 		error(INTERNAL, "unexpected ray number in ray_fifo_push");
 
+	if (r->rno - r_fifo_start >= r_fifo_len)
+		ray_fifo_growbuf();		/* need more space */
+
 	if (r->rno > r_fifo_start) {		/* insert into output queue */
-		if (r->rno - r_fifo_start >= r_fifo_len)
-			ray_fifo_growbuf();
 		*r_fifo(r->rno) = *r;
 		return(0);
 	}
@@ -118,10 +122,14 @@ ray_fifo_in(		/* add ray to FIFO */
 
 	if (!rv)				/* no result this time? */
 		return(rval);
-						/* else send/queue result */
-	if ((rv = ray_fifo_push(r)) < 0)
-		return(-1);
-	rval += rv;
+	
+	do {					/* else send/queue result */
+		if ((rv = ray_fifo_push(r)) < 0)
+			return(-1);
+		rval += rv;
+
+	} while (ray_presult(r, -1) > 0);	/* empty in-core queue */
+
 	return(rval);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.9 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.10 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 					/* set up output & start process(es) */
 	SET_FILE_BINARY(stdout);
 	
-	ray_pinit(octnm, 0);
+	ray_init(octnm);
 
 	rview();			/* run interactive viewer */
 

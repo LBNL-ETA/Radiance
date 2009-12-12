@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.17 2009/03/11 02:27:26 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.18 2009/12/12 19:00:59 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -229,6 +229,26 @@ format.
 (See the
 .I \-f
 option, above.)
+.TP
+.BI -n \ nproc
+Execute in parallel on
+.I nproc
+local processes.
+This option is incompatible with
+.I \-P
+and
+.I \-PP,
+and is not currently supported with the
+.I \-I
+option.
+Multiple processes also do not work properly with ray tree output
+using any of the
+.I \-o*t*
+options.
+There is no benefit from specifying more processes than there are
+cores available on the system or the
+.I \-x
+setting, which forces a wait at each flush.
 .TP
 .BI -dj \ frac
 Set the direct jittering to

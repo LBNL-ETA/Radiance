@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.22 2009/12/12 05:20:10 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.23 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -71,6 +71,8 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.22 2009/12/12 05:20:10 greg Ex
  *
  *  If the second argument is 1, the call won't block when
  *  results aren't ready, but will immediately return 0.
+ *  (A special value of -1 returns 0 unless a ray is
+ *  ready in the queue and no system calls are needed.)
  *  If the second argument is 0, the call will block
  *  until a value is available, returning 0 only if the
  *  queue is completely empty.  A negative return value
@@ -97,6 +99,8 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.22 2009/12/12 05:20:10 greg Ex
  *  and fonts that are likely to be used in subsequent renderings.
  *  Whether you need to clean up memory or not, you should
  *  at least call ray_pclose(0) to await the child processes.
+ *  The caller should define a quit() function that calls
+ *  ray_pclose(0) if ray_pnprocs > 0.
  *
  *  Warning:  You cannot affect any of the rendering processes
  *  by changing global parameter values onece ray_pinit() has
@@ -166,9 +170,9 @@ static struct child_proc {
 } r_proc[MAX_NPROCS];			/* our child processes */
 
 static RAY	r_queue[2*RAYQLEN];	/* ray i/o buffer */
-static int	r_send_next;		/* next send ray placement */
-static int	r_recv_first;		/* position of first unreported ray */
-static int	r_recv_next;		/* next received ray placement */
+static int	r_send_next = 0;	/* next send ray placement */
+static int	r_recv_first = RAYQLEN;	/* position of first unreported ray */
+static int	r_recv_next = RAYQLEN;	/* next received ray placement */
 
 #define sendq_full()	(r_send_next >= RAYQLEN)
 
@@ -186,9 +190,6 @@ ray_pinit(		/* initialize ray-tracing processes */
 		ray_pdone(0);
 
 	ray_init(otnm);			/* load the shared scene */
-
-	r_send_next = 0;		/* set up queue */
-	r_recv_first = r_recv_next = RAYQLEN;
 
 	ray_popen(nproc);		/* fork children */
 }
@@ -291,6 +292,9 @@ ray_presult(		/* check for a completed ray */
 		*r = r_queue[r_recv_first++];
 		return(1);
 	}
+	if (poll < 0)			/* immediate polling mode? */
+		return(0);
+
 	n = ray_pnprocs - ray_pnidle;	/* pending before flush? */
 
 	if (ray_pflush() < 0)		/* send new rays to process */
@@ -381,6 +385,7 @@ ray_pdone(		/* reap children and free data */
 		free((void *)shm_boundary);
 		shm_boundary = NULL;
 	}
+
 	ray_done(freall);		/* free rendering data */
 }
 
@@ -501,6 +506,8 @@ ray_pclose(		/* close one or more child processes */
 					/* clear our ray queue */
 	while (ray_presult(&res,0) > 0)
 		;
+	r_send_next = 0;		/* hard reset in case of error */
+	r_recv_first = r_recv_next = RAYQLEN;
 					/* clean up children */
 	while (nsub--) {
 		int	status;
@@ -518,14 +525,4 @@ ray_pclose(		/* close one or more child processes */
 		ray_pnidle--;
 	}
 	inclose--;
-}
-
-
-void
-quit(ec)			/* make sure exit is called */
-int	ec;
-{
-	if (ray_pnprocs > 0)	/* close children if any */
-		ray_pclose(0);		
-	exit(ec);
 }

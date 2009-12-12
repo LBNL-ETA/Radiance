@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.31 2008/09/05 19:45:42 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.32 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -16,6 +16,21 @@ static const char	RCSid[] = "$Id: rview.c,v 2.31 2008/09/05 19:45:42 greg Exp $"
 #include  "rpaint.h"
 
 #define	 CTRL(c)	((c)-'@')
+
+
+void
+quit(code)			/* quit program */
+int  code;
+{
+#ifdef MSTATS
+	if (code == 2 && errno == ENOMEM)
+		printmemstats(stderr);
+#endif
+	if (ray_pnprocs > 0)	/* close children if any */
+		ray_pclose(0);		
+	devclose();
+	exit(code);
+}
 
 
 void

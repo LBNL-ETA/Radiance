@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.6 2008/12/13 00:44:05 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.7 2009/12/12 19:01:00 greg Exp $";
 #endif
 
 /*
@@ -70,6 +70,17 @@ print_defaults()		/* print out default parameters */
 	printf("-vo %f\t\t\t# view fore clipping distance\n", ourview.vfore);
 	print_rdefaults();
 }
+
+
+void
+quit(ec)			/* make sure exit is called */
+int	ec;
+{
+	if (ray_pnprocs > 0)	/* close children if any */
+		ray_pclose(0);		
+	exit(ec);
+}
+
 
 int
 main(

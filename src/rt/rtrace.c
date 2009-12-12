@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.56 2009/07/17 06:21:29 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.57 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -31,73 +31,25 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.56 2009/07/17 06:21:29 greg Exp $
 #include  "resolu.h"
 #include  "random.h"
 
-CUBE  thescene;				/* our scene */
-OBJECT	nsceneobjs;			/* number of objects in our scene */
+extern int  inform;			/* input format */
+extern int  outform;			/* output format */
+extern char  *outvals;			/* output values */
 
-int  dimlist[MAXDIM];			/* sampling dimensions */
-int  ndims = 0;				/* number of sampling dimensions */
-int  samplendx = 0;			/* index for this sample */
+extern int  imm_irrad;			/* compute immediate irradiance? */
+extern int  lim_dist;			/* limit distance? */
 
-int  imm_irrad = 0;			/* compute immediate irradiance? */
-int  lim_dist = 0;			/* limit distance? */
+extern char  *tralist[];		/* list of modifers to trace (or no) */
+extern int  traincl;			/* include == 1, exclude == 0 */
 
-int  inform = 'a';			/* input format */
-int  outform = 'a';			/* output format */
-char  *outvals = "v";			/* output specification */
+extern int  hresolu;			/* horizontal resolution */
+extern int  vresolu;			/* vertical resolution */
 
-int  do_irrad = 0;			/* compute irradiance? */
+static int  castonly = 0;
 
-int  rand_samp = 1;			/* pure Monte Carlo sampling? */
-
-void  (*trace)() = NULL;		/* trace call */
-
-#ifndef	MAXMODLIST
-#define	MAXMODLIST	1024		/* maximum modifiers we'll track */
-#endif
-
-char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
-int  traincl = -1;			/* include == 1, exclude == 0 */
 #ifndef  MAXTSET
 #define	 MAXTSET	8191		/* maximum number in trace set */
 #endif
 OBJECT	traset[MAXTSET+1]={0};		/* trace include/exclude set */
-
-int  hresolu = 0;			/* horizontal (scan) size */
-int  vresolu = 0;			/* vertical resolution */
-
-double  dstrsrc = 0.0;			/* square source distribution */
-double  shadthresh = .03;		/* shadow threshold */
-double  shadcert = .75;			/* shadow certainty */
-int  directrelay = 2;			/* number of source relays */
-int  vspretest = 512;			/* virtual source pretest density */
-int  directvis = 1;			/* sources visible? */
-double  srcsizerat = .2;		/* maximum ratio source size/dist. */
-
-COLOR  cextinction = BLKCOLOR;		/* global extinction coefficient */
-COLOR  salbedo = BLKCOLOR;		/* global scattering albedo */
-double  seccg = 0.;			/* global scattering eccentricity */
-double  ssampdist = 0.;			/* scatter sampling distance */
-
-double  specthresh = .15;		/* specular sampling threshold */
-double  specjitter = 1.;		/* specular sampling jitter */
-
-int  backvis = 1;			/* back face visibility */
-
-int  maxdepth = -10;			/* maximum recursion depth */
-double  minweight = 2e-3;		/* minimum ray weight */
-
-char  *ambfile = NULL;			/* ambient file name */
-COLOR  ambval = BLKCOLOR;		/* ambient value */
-int  ambvwt = 0;			/* initial weight for ambient value */
-double  ambacc = 0.15;			/* ambient accuracy */
-int  ambres = 256;			/* ambient resolution */
-int  ambdiv = 1024;			/* ambient divisions */
-int  ambssamp = 512;			/* ambient super-samples */
-int  ambounce = 0;			/* ambient bounces */
-char  *amblist[AMBLLEN];		/* ambient include/exclude list */
-int  ambincl = -1;			/* include == 1, exclude == 0 */
-
-static int  castonly = 0;
 
 static RAY  thisray;			/* for our convenience */
 
@@ -109,19 +61,17 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 		oputn, oputN, oputs, oputw, oputW, oputm, oputM, oputtilde;
 
 static void setoutput(char *vs);
-static void tranotify(OBJECT obj);
+extern void tranotify(OBJECT obj);
 static void bogusray(void);
-static void rad(FVECT  org, FVECT  dir, double	dmax);
-static void irrad(FVECT  org, FVECT  dir);
-static void printvals(RAY  *r);
-static int getvec(FVECT  vec, int  fmt, FILE  *fp);
-static void tabin(RAY  *r);
-static void ourtrace(RAY  *r);
+static void rad(FVECT org, FVECT dir, double dmax);
+static void irrad(FVECT org, FVECT dir);
+static int printvals(RAY *r);
+static int getvec(FVECT vec, int fmt, FILE *fp);
+static void tabin(RAY *r);
+static void ourtrace(RAY *r);
 
 static oputf_t *ray_out[16], *every_out[16];
 static putf_t *putreal;
-
-void  (*addobjnotify[])() = {ambnotify, tranotify, NULL};
 
 
 void
@@ -129,7 +79,9 @@ quit(			/* quit program */
 	int  code
 )
 {
-#ifndef  NON_POSIX /* XXX we don't clean up elsewhere? */
+	if (ray_pnprocs > 0)	/* close children if any */
+		ray_pclose(0);		
+#ifndef  NON_POSIX
 	headclean();		/* delete header file */
 	pfclean();		/* clean up persist files */
 #endif
@@ -137,7 +89,7 @@ quit(			/* quit program */
 }
 
 
-extern char *
+char *
 formstr(				/* return format identifier */
 	int  f
 )
@@ -185,6 +137,7 @@ rtrace(				/* trace rays from file */
 	default:
 		error(CONSISTENCY, "botched output format");
 	}
+	ray_fifo_out = printvals;
 	if (hresolu > 0) {
 		if (vresolu > 0)
 			fprtresolu(hresolu, vresolu, stdout);
@@ -196,20 +149,22 @@ rtrace(				/* trace rays from file */
 
 		d = normalize(direc);
 		if (d == 0.0) {				/* zero ==> flush */
+			if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
+				error(USER, "lost children");
 			bogusray();
 			if (--nextflush <= 0 || !vcount) {
 				fflush(stdout);
 				nextflush = hresolu;
 			}
-		} else {
-			samplendx++;
-							/* compute and print */
+		} else {				/* compute and print */
 			if (imm_irrad)
 				irrad(orig, direc);
 			else
 				rad(orig, direc, lim_dist ? d : 0.0);
 							/* flush if time */
 			if (!--nextflush) {
+				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
+					error(USER, "lost children");
 				fflush(stdout);
 				nextflush = hresolu;
 			}
@@ -219,6 +174,8 @@ rtrace(				/* trace rays from file */
 		if (vcount && !--vcount)		/* check for end */
 			break;
 	}
+	if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
+		error(USER, "unable to complete processing");
 	if (fflush(stdout) < 0)
 		error(SYSTEM, "write error");
 	if (vcount)
@@ -342,6 +299,11 @@ rad(		/* compute and print ray value(s) */
 	VCOPY(thisray.rorg, org);
 	VCOPY(thisray.rdir, dir);
 	thisray.rmax = dmax;
+	if (ray_pnprocs > 1) {
+		if (ray_fifo_in(&thisray) < 0)
+			error(USER, "lost children");
+		return;
+	}
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	if (castonly) {
 		if (!localhit(&thisray, &thescene)) {
@@ -352,7 +314,7 @@ rad(		/* compute and print ray value(s) */
 				sourcehit(&thisray);
 		}
 	} else
-		rayvalue(&thisray);
+		ray_trace(&thisray);
 	printvals(&thisray);
 }
 
@@ -380,7 +342,7 @@ irrad(			/* compute immediate irradiance value */
 }
 
 
-static void
+static int
 printvals(			/* print requested ray values */
 	RAY  *r
 )
@@ -388,11 +350,12 @@ printvals(			/* print requested ray values */
 	oputf_t **tp;
 
 	if (ray_out[0] == NULL)
-		return;
+		return(0);
 	for (tp = ray_out; *tp != NULL; tp++)
 		(**tp)(r);
 	if (outform == 'a')
 		putchar('\n');
+	return(1);
 }
 
 
@@ -434,7 +397,7 @@ getvec(		/* get a vector from fp */
 }
 
 
-static void
+void
 tranotify(			/* record new modifier */
 	OBJECT	obj
 )

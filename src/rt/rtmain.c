@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.17 2009/06/22 20:52:56 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.18 2009/12/12 19:01:00 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -18,6 +18,10 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.17 2009/06/22 20:52:56 greg Exp $
 #include  "random.h"
 #include  "paths.h"
 
+extern char	*progname;		/* global argv[0] */
+
+extern char	*shm_boundary;		/* boundary of shared memory */
+
 					/* persistent processes define */
 #ifdef  F_SETLKW
 #define  PERSIST	1		/* normal persist */
@@ -25,25 +29,31 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.17 2009/06/22 20:52:56 greg Exp $
 #define  PCHILD		3		/* child of normal persist */
 #endif
 
-char  *progname;			/* argv[0] */
-char  *octname;				/* octree name */
 char  *sigerr[NSIG];			/* signal error messages */
-char  *shm_boundary = NULL;		/* boundary of shared memory */
 char  *errfile = NULL;			/* error output file */
 
+int  nproc = 1;				/* number of processes */
+
 extern char  *formstr();		/* string from format */
-extern int  inform;			/* input format */
-extern int  outform;			/* output format */
-extern char  *outvals;			/* output values */
+int  inform = 'a';			/* input format */
+int  outform = 'a';			/* output format */
+char  *outvals = "v";			/* output specification */
 
-extern int  hresolu;			/* horizontal resolution */
-extern int  vresolu;			/* vertical resolution */
+int  hresolu = 0;			/* horizontal (scan) size */
+int  vresolu = 0;			/* vertical resolution */
 
-extern int  imm_irrad;			/* compute immediate irradiance? */
-extern int  lim_dist;			/* limit distance? */
+int  imm_irrad = 0;			/* compute immediate irradiance? */
+int  lim_dist = 0;			/* limit distance? */
 
-extern char  *tralist[];		/* list of modifers to trace (or no) */
-extern int  traincl;			/* include == 1, exclude == 0 */
+#ifndef	MAXMODLIST
+#define	MAXMODLIST	1024		/* maximum modifiers we'll track */
+#endif
+
+extern void  (*addobjnotify[])();	/* object notification calls */
+extern void  tranotify(OBJECT obj);
+
+char  *tralist[MAXMODLIST];		/* list of modifers to trace (or no) */
+int  traincl = -1;			/* include == 1, exclude == 0 */
 
 static int  loadflags = ~IO_FILES;	/* what to load from octree */
 
@@ -66,12 +76,20 @@ main(int  argc, char  *argv[])
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	int  persist = 0;
+	char  *octnm = NULL;
 	char  **tralp;
 	int  duped1;
 	int  rval;
 	int  i;
 					/* global program name */
 	progname = argv[0] = fixargv0(argv[0]);
+					/* add trace notify function */
+	for (i = 0; addobjnotify[i] != NULL; i++)
+		;
+	addobjnotify[i] = tranotify;
+					/* set our defaults */
+	maxdepth = -10;
+	minweight = 2e-3;
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -98,6 +116,12 @@ main(int  argc, char  *argv[])
 			continue;
 		}
 		switch (argv[i][1]) {
+		case 'n':				/* number of cores */
+			check(2,"i");
+			nproc = atoi(argv[++i]);
+			if (nproc <= 0)
+				error(USER, "bad number of processes");
+			break;
 		case 'x':				/* x resolution */
 			check(2,"i");
 			hresolu = atoi(argv[++i]);
@@ -224,6 +248,16 @@ main(int  argc, char  *argv[])
 			goto badopt;
 		}
 	}
+	if (nproc > 1) {
+		if (persist)
+			error(USER, "multiprocessing incompatible with persist file");
+		if (imm_irrad)
+			error(USER, "multiprocessing incompatible with immediate irradiance");
+		if (hresolu > 0 && hresolu < nproc)
+			error(WARNING, "number of cores should not exceed horizontal resolution");
+		if (trace != NULL)
+			error(WARNING, "multiprocessing does not work properly with trace mode");
+	}
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
@@ -265,12 +299,12 @@ main(int  argc, char  *argv[])
 #endif
 					/* get octree */
 	if (i == argc)
-		octname = NULL;
+		octnm = NULL;
 	else if (i == argc-1)
-		octname = argv[i];
+		octnm = argv[i];
 	else
 		goto badopt;
-	if (octname == NULL)
+	if (octnm == NULL)
 		error(USER, "missing octree argument");
 					/* set up output */
 #ifdef  PERSIST
@@ -281,7 +315,7 @@ main(int  argc, char  *argv[])
 #endif
 	if (outform != 'a')
 		SET_FILE_BINARY(stdout);
-	readoct(octname, loadflags, &thescene, NULL);
+	readoct(octnm, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;
 
 	if (loadflags & IO_INFO) {	/* print header */
@@ -320,6 +354,8 @@ runagain:
 	if (persist)
 		dupheader();			/* send header to stdout */
 #endif
+	if (nproc > 1)			/* start multiprocessing */
+		ray_popen(nproc);
 					/* trace rays */
 	rtrace(NULL);
 					/* flush ambient file */
@@ -425,6 +461,7 @@ printdefaults(void)			/* print default values to stdout */
 
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
+	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
 	printf("-x %-9d\t\t\t# x resolution (flush interval)\n", hresolu);
 	printf("-y %-9d\t\t\t# y resolution\n", vresolu);
 	printf(lim_dist ? "-ld+\t\t\t\t# limit distance on\n" :
