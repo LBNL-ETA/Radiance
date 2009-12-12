@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.29 2005/09/23 19:04:53 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.30 2009/12/12 00:03:42 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -12,6 +12,10 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef RNUMBER
+#define RNUMBER		unsigned long	/* ray counter (>= sizeof pointer) */
 #endif
 
 #define  MAXDIM		32	/* maximum number of dimensions */
@@ -50,7 +54,7 @@ typedef struct ray {
  	OBJREC	*ro;		/* intersected object (one with material) */
 	FULLXF	*rox;		/* object transformation */
 	int	*slights;	/* list of lights to test for scattering */
-	unsigned long  rno;	/* unique ray number */
+	RNUMBER	rno;		/* unique ray number */
 	int	rlvl;		/* number of reflections for this ray */
 	int	rsrc;		/* source we're aiming for */
 	float	rweight;	/* cumulative weight (for termination) */

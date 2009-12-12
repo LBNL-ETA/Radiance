@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.21 2009/12/12 00:03:42 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -13,11 +13,11 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
  *  These calls are designed similarly to the ones in raycalls.c,
  *  but allow for multiple rendering processes on the same host
  *  machine.  There is no sense in specifying more child processes
- *  than you have processors, but one child may help by allowing
+ *  than you have processor cores, but one child may help by allowing
  *  asynchronous ray computation in an interactive program, and
  *  will protect the caller from fatal rendering errors.
  *
- *  You should first read and undrstand the header in raycalls.c,
+ *  You should first read and understand the header in raycalls.c,
  *  as some things are explained there that are not repated here.
  *
  *  The first step is opening one or more rendering processes
@@ -25,13 +25,15 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
  *  ray_pinit() loads the octree and data structures into the
  *  caller's memory, and ray_popen() synchronizes the ambient
  *  file, if any.  Shared memory permits all sorts of queries
- *  that wouldn't be possible otherwise, without causing any real
+ *  that wouldn't be possible otherwise without causing any real
  *  memory overhead, since all the static data are shared
- *  between processes.  Rays are then traced using a simple
+ *  between processes.  Rays are traced using a simple
  *  queuing mechanism, explained below.
  *
  *  The ray queue buffers RAYQLEN rays before sending to
- *  children, each of which may internally buffer RAYQLEN rays.
+ *  children, each of which may internally buffer RAYQLEN rays
+ *  during evaluation.  Rays are not returned in the order
+ *  they are sent when multiple processes are open.
  *
  *  Rays are queued and returned by a single
  *  ray_pqueue() call.  A ray_pqueue() return
@@ -73,7 +75,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
  *  until a value is available, returning 0 only if the
  *  queue is completely empty.  A negative return value
  *  indicates that a rendering process died.  If this
- *  happens, ray_close(0) is automatically called to close
+ *  happens, ray_pclose(0) is automatically called to close
  *  all child processes, and ray_pnprocs is set to zero.
  *
  *  If you just want to fill the ray queue without checking for
@@ -93,8 +95,8 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
  *  Any queued ray calculations will be awaited and discarded.
  *  As with ray_done(), ray_pdone(0) hangs onto data files
  *  and fonts that are likely to be used in subsequent renderings.
- *  Whether you want to bother cleaning up memory or not, you
- *  should at least call ray_pclose(0) to clean the child processes.
+ *  Whether you need to clean up memory or not, you should
+ *  at least call ray_pclose(0) to await the child processes.
  *
  *  Warning:  You cannot affect any of the rendering processes
  *  by changing global parameter values onece ray_pinit() has
@@ -124,7 +126,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
  *  returning a negative value from ray_pqueue() or
  *  ray_presult().  If you get a negative value from either
  *  of these calls, you can assume that the processes have
- *  been cleaned up with a call to ray_close(), though you
+ *  been cleaned up with a call to ray_pclose(), though you
  *  will have to call ray_pdone() yourself if you want to
  *  free memory.  Obviously, you cannot continue rendering
  *  without risking further errors, but otherwise your
@@ -152,6 +154,7 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.20 2008/12/02 23:28:34 greg Ex
 
 extern char	*shm_boundary;		/* boundary of shared memory */
 
+int		ray_pfifo = 0;		/* maintain ray call order? */
 int		ray_pnprocs = 0;	/* number of child processes */
 int		ray_pnidle = 0;		/* number of idle children */
 
@@ -160,7 +163,7 @@ static struct child_proc {
 	int	fd_send;			/* write to child here */
 	int	fd_recv;			/* read from child here */
 	int	npending;			/* # rays in process */
-	unsigned long  rno[RAYQLEN];		/* working on these rays */
+	RNUMBER	rno[RAYQLEN];			/* working on these rays */
 } r_proc[MAX_NPROCS];			/* our child processes */
 
 static RAY	r_queue[2*RAYQLEN];	/* ray i/o buffer */
@@ -415,6 +418,7 @@ ray_pchild(	/* process rays (never returns) */
 			r_queue[i].parent = NULL;
 			r_queue[i].clipset = NULL;
 			r_queue[i].slights = NULL;
+			r_queue[i].rlvl = 0;
 			samplendx++;
 			rayclear(&r_queue[i]);
 			rayvalue(&r_queue[i]);

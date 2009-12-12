@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.31 2008/12/03 06:57:48 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.32 2009/12/12 00:03:42 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -29,7 +29,7 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.31 2008/12/03 06:57:48 greg Exp $";
 #define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
 #endif
 
-static unsigned long  niflush;		/* flushes since newimage() */
+static RNUMBER  niflush;		/* flushes since newimage() */
 
 int
 getrect(				/* get a box */
@@ -197,7 +197,7 @@ paint(			/* compute and paint a rectangle */
 	} else {				/* queuing mode */
 		int	rval;
 		rayorigin(&thisray, PRIMARY, NULL, NULL);
-		thisray.rno = (unsigned long)p;
+		thisray.rno = (RNUMBER)p;
 		rval = ray_pqueue(&thisray);
 		if (!rval)
 			return(0);
@@ -212,9 +212,9 @@ paint(			/* compute and paint a rectangle */
 	recolor(p);				/* paint it */
 
 	if (dev->flush != NULL) {		/* shall we check for input? */
-		static unsigned long	lastflush = 0;
-		unsigned long		counter = raynum;
-		int			flushintvl;
+		static RNUMBER	lastflush = 0;
+		RNUMBER		counter = raynum;
+		int		flushintvl;
 		if (nproc == 1) {
 			counter = nrays;
 			flushintvl = WFLUSH1;

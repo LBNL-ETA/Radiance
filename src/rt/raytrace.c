@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.59 2007/07/02 20:16:00 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.60 2009/12/12 00:03:42 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -17,8 +17,8 @@ static const char RCSid[] = "$Id: raytrace.c,v 2.59 2007/07/02 20:16:00 greg Exp
 
 #define  MAXCSET	((MAXSET+1)*2-1)	/* maximum check set size */
 
-unsigned long  raynum = 0;		/* next unique ray number */
-unsigned long  nrays = 0;		/* number of calls to localhit */
+RNUMBER  raynum = 0;		/* next unique ray number */
+RNUMBER  nrays = 0;		/* number of calls to localhit */
 
 static RREAL  Lambfa[5] = {PI, PI, PI, 0.0, 0.0};
 OBJREC  Lamb = {

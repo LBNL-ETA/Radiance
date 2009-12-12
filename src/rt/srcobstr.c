@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.14 2007/10/08 18:07:57 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.15 2009/12/12 00:03:42 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -180,7 +180,7 @@ initobscache(int sn)
 static OBJECT *			/* return occluder cache entry */
 srcobstructp(register RAY *r)
 {
-	static unsigned long	lastrno = ~0;
+	static RNUMBER	lastrno = ~0;
 	static OBJECT   noobs;
 	static OBJECT	*lastobjp;
 	SRCREC		*srcp;

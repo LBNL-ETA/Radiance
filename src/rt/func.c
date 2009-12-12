@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.22 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.23 2009/12/12 00:03:42 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -173,7 +173,7 @@ setfunc(			/* set channels for function call */
 	register RAY  *r
 )
 {
-	static unsigned long  lastrno = ~0;
+	static RNUMBER  lastrno = ~0;
 	register MFUNC  *f;
 					/* get function */
 	if ((f = (MFUNC *)m->os) == NULL)
