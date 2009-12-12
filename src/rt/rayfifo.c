@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rayfifo.c,v 2.2 2009/12/12 19:01:00 greg Exp $";
+static const char RCSid[] = "$Id: rayfifo.c,v 2.3 2009/12/12 23:08:13 greg Exp $";
 #endif
 /*
  *  rayfifo.c - parallelize ray queue that respects order
@@ -41,6 +41,7 @@ static RAY	*r_fifo_buf = NULL;		/* circular FIFO out buffer */
 static int	r_fifo_len = 0;			/* allocated FIFO length */
 static RNUMBER	r_fifo_start = 1;		/* first awaited ray */
 static RNUMBER	r_fifo_end = 1;			/* one past FIFO last */
+static RNUMBER	r_fifo_next = 1;		/* next ray assignment */
 
 #define r_fifo(rn)	(&r_fifo_buf[(rn)&(r_fifo_len-1)])
 
@@ -79,23 +80,28 @@ ray_fifo_push(		/* send finished ray to output (or queue it) */
 
 	if (ray_fifo_out == NULL)
 		error(INTERNAL, "ray_fifo_out is NULL");
-	if ((r->rno < r_fifo_start) | (r->rno >= r_fifo_end))
-		error(INTERNAL, "unexpected ray number in ray_fifo_push");
-
-	if (r->rno - r_fifo_start >= r_fifo_len)
-		ray_fifo_growbuf();		/* need more space */
+	if ((r->rno < r_fifo_start) | (r->rno >= r_fifo_next))
+		error(INTERNAL, "unexpected ray number in ray_fifo_push()");
 
 	if (r->rno > r_fifo_start) {		/* insert into output queue */
+		if (r->rno - r_fifo_start >= r_fifo_len)
+			ray_fifo_growbuf();	/* need more space */
 		*r_fifo(r->rno) = *r;
+		if (r->rno >= r_fifo_end)
+			r_fifo_end = r->rno + 1;
 		return(0);
 	}
 			/* r->rno == r_fifo_start, so transfer ray(s) */
 	do {
-		if ((rv = (*ray_fifo_out)(r)) < 0)
+		rv = (*ray_fifo_out)(r);
+		r->rno = 0;			/* flag this entry complete */
+		if (rv < 0)
 			return(-1);
 		nsent += rv;
 		if (++r_fifo_start < r_fifo_end)
 			r = r_fifo(r_fifo_start);
+		else if (r_fifo_start > r_fifo_end)
+			r_fifo_end = r_fifo_start;
 	} while (r->rno == r_fifo_start);
 
 	return(nsent);
@@ -107,30 +113,34 @@ ray_fifo_in(		/* add ray to FIFO */
 	RAY	*r
 )
 {
-	int	rv, rval = 0;
+	static int	incall = 0;		/* prevent recursion */
+	int		rv, rval = 0;
 
-	if (r_fifo_start >= 1L<<30) {		/* reset our counter */
+	if (incall++)
+		error(INTERNAL, "recursive call to ray_fifo_in()");
+
+	if (r_fifo_start >= 1L<<30) {		/* reset our counters */
 		if ((rv = ray_fifo_flush()) < 0)
-			return(-1);
+			{--incall; return(-1);}
 		rval += rv;
 	}
 						/* queue ray */
 	rayorigin(r, PRIMARY, NULL, NULL);
-	r->rno = r_fifo_end++;
+	r->rno = r_fifo_next++;
 	if ((rv = ray_pqueue(r)) < 0)
-		return(-1);
+		{--incall; return(-1);}
 
 	if (!rv)				/* no result this time? */
-		return(rval);
+		{--incall; return(rval);}
 	
 	do {					/* else send/queue result */
 		if ((rv = ray_fifo_push(r)) < 0)
-			return(-1);
+			{--incall; return(-1);}
 		rval += rv;
 
 	} while (ray_presult(r, -1) > 0);	/* empty in-core queue */
 
-	return(rval);
+	--incall; return(rval);
 }
 
 
@@ -144,16 +154,17 @@ ray_fifo_flush(void)	/* flush everything and release buffer */
 			(rv = ray_fifo_push(&myRay)) >= 0)
 		rval += rv;
 
-	if (rv < 0)				/* check for error */
+	if (rv < 0)				/* check for exception */
 		return(-1);
 
 	if (r_fifo_start != r_fifo_end)
-		error(INTERNAL, "could not empty queue in ray_fifo_flush");
+		error(INTERNAL, "could not empty queue in ray_fifo_flush()");
 
-	free(r_fifo_buf);
-	r_fifo_buf = NULL;
-	r_fifo_len = 0;
-	r_fifo_end = r_fifo_start = 1;
+	if (r_fifo_buf != NULL) {
+		free(r_fifo_buf);
+		r_fifo_buf = NULL; r_fifo_len = 0;
+	}
+	r_fifo_next = r_fifo_end = r_fifo_start = 1;
 
 	return(rval);
 }

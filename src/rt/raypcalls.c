@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.23 2009/12/12 19:01:00 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.24 2009/12/12 23:08:13 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -224,7 +224,7 @@ ray_pflush(void)			/* send queued rays to idle children */
 		ray_pnidle--;		/* now she's busy */
 	}
 	if (sfirst != r_send_next)
-		error(CONSISTENCY, "code screwup in ray_pflush");
+		error(CONSISTENCY, "code screwup in ray_pflush()");
 	r_send_next = 0;
 	return(sfirst);			/* return total # sent */
 }
@@ -239,7 +239,7 @@ ray_psend(			/* add a ray to our send queue */
 		return;
 					/* flush output if necessary */
 	if (sendq_full() && ray_pflush() <= 0)
-		error(INTERNAL, "ray_pflush failed in ray_psend");
+		error(INTERNAL, "ray_pflush failed in ray_psend()");
 
 	r_queue[r_send_next++] = *r;
 }
@@ -329,7 +329,7 @@ getready:				/* any children waiting for us? */
 				poll ? &tpoll : (struct timeval *)NULL)) < 0)
 			if (errno != EINTR) {
 				error(WARNING,
-					"select call failed in ray_presult");
+					"select call failed in ray_presult()");
 				ray_pclose(0);
 				return(-1);
 			}
@@ -408,7 +408,7 @@ ray_pchild(	/* process rays (never returns) */
 					/* get smuggled set length */
 		n2 = sizeof(RAY)*r_queue[0].crtype - n;
 		if (n2 < 0)
-			error(INTERNAL, "buffer over-read in ray_pchild");
+			error(INTERNAL, "buffer over-read in ray_pchild()");
 		if (n2 > 0) {		/* read the rest of the set */
 			i = readbuf(fd_in, (char *)r_queue + n, n2);
 			if (i != n2)
@@ -430,10 +430,10 @@ ray_pchild(	/* process rays (never returns) */
 					/* write back our results */
 		i = writebuf(fd_out, (char *)r_queue, sizeof(RAY)*n);
 		if (i != sizeof(RAY)*n)
-			error(SYSTEM, "write error in ray_pchild");
+			error(SYSTEM, "write error in ray_pchild()");
 	}
 	if (n)
-		error(SYSTEM, "read error in ray_pchild");
+		error(SYSTEM, "read error in ray_pchild()");
 	ambsync();
 	quit(0);			/* normal exit */
 }
@@ -468,6 +468,7 @@ ray_popen(			/* open the specified # processes */
 				close(r_proc[pn].fd_recv);
 			}
 			close(p0[0]); close(p1[1]);
+			close(0);	/* don't share stdin */
 					/* following call never returns */
 			ray_pchild(p1[0], p0[1]);
 		}
@@ -512,10 +513,10 @@ ray_pclose(		/* close one or more child processes */
 	while (nsub--) {
 		int	status;
 		ray_pnprocs--;
-		close(r_proc[ray_pnprocs].fd_recv);
 		close(r_proc[ray_pnprocs].fd_send);
 		if (waitpid(r_proc[ray_pnprocs].pid, &status, 0) < 0)
 			status = 127<<8;
+		close(r_proc[ray_pnprocs].fd_recv);
 		if (status) {
 			sprintf(errmsg,
 				"rendering process %d exited with code %d",

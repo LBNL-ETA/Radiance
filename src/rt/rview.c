@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.32 2009/12/12 19:01:00 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.33 2009/12/12 23:08:13 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -27,8 +27,9 @@ int  code;
 		printmemstats(stderr);
 #endif
 	if (ray_pnprocs > 0)	/* close children if any */
-		ray_pclose(0);		
-	devclose();
+		ray_pclose(0);
+	else if (!ray_pnprocs)	/* in parent */
+		devclose();
 	exit(code);
 }
 

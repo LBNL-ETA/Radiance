@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.57 2009/12/12 19:01:00 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.58 2009/12/12 23:08:13 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -82,8 +82,10 @@ quit(			/* quit program */
 	if (ray_pnprocs > 0)	/* close children if any */
 		ray_pclose(0);		
 #ifndef  NON_POSIX
-	headclean();		/* delete header file */
-	pfclean();		/* clean up persist files */
+	else if (!ray_pnprocs) {
+		headclean();	/* delete header file */
+		pfclean();	/* clean up persist files */
+	}
 #endif
 	exit(code);
 }
@@ -137,7 +139,8 @@ rtrace(				/* trace rays from file */
 	default:
 		error(CONSISTENCY, "botched output format");
 	}
-	ray_fifo_out = printvals;
+	if (ray_pnprocs > 1)
+		ray_fifo_out = printvals;
 	if (hresolu > 0) {
 		if (vresolu > 0)
 			fprtresolu(hresolu, vresolu, stdout);
@@ -299,7 +302,7 @@ rad(		/* compute and print ray value(s) */
 	VCOPY(thisray.rorg, org);
 	VCOPY(thisray.rdir, dir);
 	thisray.rmax = dmax;
-	if (ray_pnprocs > 1) {
+	if (!castonly && ray_pnprocs > 1) {
 		if (ray_fifo_in(&thisray) < 0)
 			error(USER, "lost children");
 		return;
@@ -383,12 +386,12 @@ getvec(		/* get a vector from fp */
 	case 'f':					/* binary float */
 		if (fread((char *)vf, sizeof(float), 3, fp) != 3)
 			return(-1);
-		vec[0] = vf[0]; vec[1] = vf[1]; vec[2] = vf[2];
+		VCOPY(vec, vf);
 		break;
 	case 'd':					/* binary double */
 		if (fread((char *)vd, sizeof(double), 3, fp) != 3)
 			return(-1);
-		vec[0] = vd[0]; vec[1] = vd[1]; vec[2] = vd[2];
+		VCOPY(vec, vd);
 		break;
 	default:
 		error(CONSISTENCY, "botched input format");
