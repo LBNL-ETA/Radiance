@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.16 2006/04/05 06:22:56 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.17 2009/12/12 05:20:10 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -154,7 +154,7 @@ char	*amblist[AMBLLEN+1];		/* ambient include/exclude list */
 int	ambincl = -1;			/* include == 1, exclude == 0 */
 
 
-extern void
+void
 ray_init(			/* initialize ray-tracing calculation */
 	char	*otnm
 )
@@ -182,7 +182,7 @@ ray_init(			/* initialize ray-tracing calculation */
 					/* ready to go... */
 }
 
-extern void
+void
 ray_trace(			/* trace a primary ray */
 	RAY	*r
 )
@@ -193,7 +193,7 @@ ray_trace(			/* trace a primary ray */
 }
 
 
-extern void
+void
 ray_done(		/* free ray-tracing data */
 	int	freall
 )
@@ -221,7 +221,7 @@ ray_done(		/* free ray-tracing data */
 }
 
 
-extern void
+void
 ray_save(			/* save current parameter settings */
 	RAYPARAMS	*rp
 )
@@ -272,7 +272,7 @@ ray_save(			/* save current parameter settings */
 }
 
 
-extern void
+void
 ray_restore(			/* restore parameter settings */
 	RAYPARAMS	*rp
 )
@@ -340,7 +340,7 @@ ray_restore(			/* restore parameter settings */
 }
 
 
-extern void
+void
 ray_defaults(		/* get default parameter values */
 	RAYPARAMS	*rp
 )

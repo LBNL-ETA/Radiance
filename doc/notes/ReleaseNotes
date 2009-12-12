@@ -1712,3 +1712,6 @@ evaluate average radiance over the standard Tregenza sky patches.
 Created dctimestep program to compute a set of sensor values or
 a combined image for a particular time using the daylight
 coefficient method.
+
+Created src/rt/rayfifo.c for first-in/first-out handling of
+multiprocessing by raypcalls.c.

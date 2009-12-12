@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.21 2009/12/12 00:03:42 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.22 2009/12/12 05:20:10 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -154,7 +154,6 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.21 2009/12/12 00:03:42 greg Ex
 
 extern char	*shm_boundary;		/* boundary of shared memory */
 
-int		ray_pfifo = 0;		/* maintain ray call order? */
 int		ray_pnprocs = 0;	/* number of child processes */
 int		ray_pnidle = 0;		/* number of idle children */
 
@@ -169,7 +168,7 @@ static struct child_proc {
 static RAY	r_queue[2*RAYQLEN];	/* ray i/o buffer */
 static int	r_send_next;		/* next send ray placement */
 static int	r_recv_first;		/* position of first unreported ray */
-static int	r_recv_next;		/* next receive ray placement */
+static int	r_recv_next;		/* next received ray placement */
 
 #define sendq_full()	(r_send_next >= RAYQLEN)
 
@@ -177,7 +176,7 @@ static int ray_pflush(void);
 static void ray_pchild(int fd_in, int fd_out);
 
 
-extern void
+void
 ray_pinit(		/* initialize ray-tracing processes */
 	char	*otnm,
 	int	nproc
@@ -230,7 +229,7 @@ ray_pflush(void)			/* send queued rays to idle children */
 }
 
 
-extern void
+void
 ray_psend(			/* add a ray to our send queue */
 	RAY	*r
 )
@@ -245,7 +244,7 @@ ray_psend(			/* add a ray to our send queue */
 }
 
 
-extern int
+int
 ray_pqueue(			/* queue a ray for computation */
 	RAY	*r
 )
@@ -274,7 +273,7 @@ ray_pqueue(			/* queue a ray for computation */
 }
 
 
-extern int
+int
 ray_presult(		/* check for a completed ray */
 	RAY	*r,
 	int	poll
@@ -311,7 +310,7 @@ getready:				/* any children waiting for us? */
 		if (FD_ISSET(r_proc[pn].fd_recv, &readset) ||
 				FD_ISSET(r_proc[pn].fd_recv, &errset))
 			break;
-					/* call select if we must */
+					/* call select() if we must */
 	if (pn < 0) {
 		FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
 		for (pn = ray_pnprocs; pn--; ) {
@@ -371,7 +370,7 @@ getready:				/* any children waiting for us? */
 }
 
 
-extern void
+void
 ray_pdone(		/* reap children and free data */
 	int	freall
 )
@@ -435,7 +434,7 @@ ray_pchild(	/* process rays (never returns) */
 }
 
 
-extern void
+void
 ray_popen(			/* open the specified # processes */
 	int	nadd
 )
@@ -485,7 +484,7 @@ ray_popen(			/* open the specified # processes */
 }
 
 
-extern void
+void
 ray_pclose(		/* close one or more child processes */
 	int	nsub
 )
