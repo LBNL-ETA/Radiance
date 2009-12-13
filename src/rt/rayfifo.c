@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rayfifo.c,v 2.3 2009/12/12 23:08:13 greg Exp $";
+static const char RCSid[] = "$Id: rayfifo.c,v 2.4 2009/12/13 19:13:04 greg Exp $";
 #endif
 /*
  *  rayfifo.c - parallelize ray queue that respects order
@@ -20,9 +20,10 @@ static const char RCSid[] = "$Id: rayfifo.c,v 2.3 2009/12/12 23:08:13 greg Exp $
  *  is desired, a negative value may be returned.
  *
  *  The ray_fifo_in() call takes a ray that has been initialized in
- *  the same manner as for the ray_trace() call, i.e., the origin,
- *  direction, and maximum length have been assigned. The ray number
- *  will be set according to the number of rays traced since the
+ *  the same manner as for the ray_pqueue() call, i.e., rayorigin()
+ *  has been called and the origin, direction and maximum distance
+ *  have all been assigned.  However, the ray number will be reset
+ *  by ray_fifo_in() according to the number of rays traced since the
  *  last call to ray_fifo_flush().  This final call completes all
  *  pending ray calculations and frees the FIFO buffer.  If any of
  *  the automatic calls to the ray_fifo_out callback return a
@@ -54,7 +55,7 @@ ray_fifo_growbuf(void)	/* double buffer size (or set to minimum if NULL) */
 	int	i;
 
 	if (r_fifo_buf == NULL)
-		r_fifo_len = 1<<4;
+		r_fifo_len = 1<<5;
 	else
 		r_fifo_len <<= 1;
 						/* allocate new */
@@ -84,7 +85,7 @@ ray_fifo_push(		/* send finished ray to output (or queue it) */
 		error(INTERNAL, "unexpected ray number in ray_fifo_push()");
 
 	if (r->rno > r_fifo_start) {		/* insert into output queue */
-		if (r->rno - r_fifo_start >= r_fifo_len)
+		while (r->rno - r_fifo_start >= r_fifo_len)
 			ray_fifo_growbuf();	/* need more space */
 		*r_fifo(r->rno) = *r;
 		if (r->rno >= r_fifo_end)
@@ -125,7 +126,6 @@ ray_fifo_in(		/* add ray to FIFO */
 		rval += rv;
 	}
 						/* queue ray */
-	rayorigin(r, PRIMARY, NULL, NULL);
 	r->rno = r_fifo_next++;
 	if ((rv = ray_pqueue(r)) < 0)
 		{--incall; return(-1);}

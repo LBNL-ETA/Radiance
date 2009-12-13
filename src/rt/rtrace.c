@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.58 2009/12/12 23:08:13 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.59 2009/12/13 19:13:04 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -63,8 +63,9 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 static void setoutput(char *vs);
 extern void tranotify(OBJECT obj);
 static void bogusray(void);
-static void rad(FVECT org, FVECT dir, double dmax);
-static void irrad(FVECT org, FVECT dir);
+static void raycast(RAY *r);
+static void rayirrad(RAY *r);
+static void rtcompute(FVECT org, FVECT dir, double dmax);
 static int printvals(RAY *r);
 static int getvec(FVECT vec, int fmt, FILE *fp);
 static void tabin(RAY *r);
@@ -108,7 +109,8 @@ formstr(				/* return format identifier */
 
 extern void
 rtrace(				/* trace rays from file */
-	char  *fname
+	char  *fname,
+	int  nproc
 )
 {
 	unsigned long  vcount = (hresolu > 1) ? (unsigned long)hresolu*vresolu
@@ -128,6 +130,10 @@ rtrace(				/* trace rays from file */
 		SET_FILE_BINARY(fp);
 					/* set up output */
 	setoutput(outvals);
+	if (imm_irrad)
+		castonly = 0;
+	else if (castonly)
+		nproc = 1;		/* don't bother multiprocessing */
 	switch (outform) {
 	case 'a': putreal = puta; break;
 	case 'f': putreal = putf; break;
@@ -139,8 +145,10 @@ rtrace(				/* trace rays from file */
 	default:
 		error(CONSISTENCY, "botched output format");
 	}
-	if (ray_pnprocs > 1)
+	if (nproc > 1) {		/* start multiprocessing */
+		ray_popen(nproc);
 		ray_fifo_out = printvals;
+	}
 	if (hresolu > 0) {
 		if (vresolu > 0)
 			fprtresolu(hresolu, vresolu, stdout);
@@ -152,7 +160,7 @@ rtrace(				/* trace rays from file */
 
 		d = normalize(direc);
 		if (d == 0.0) {				/* zero ==> flush */
-			if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
+			if (nproc > 1 && ray_fifo_flush() < 0)
 				error(USER, "lost children");
 			bogusray();
 			if (--nextflush <= 0 || !vcount) {
@@ -160,13 +168,10 @@ rtrace(				/* trace rays from file */
 				nextflush = hresolu;
 			}
 		} else {				/* compute and print */
-			if (imm_irrad)
-				irrad(orig, direc);
-			else
-				rad(orig, direc, lim_dist ? d : 0.0);
+			rtcompute(orig, direc, lim_dist ? d : 0.0);
 							/* flush if time */
 			if (!--nextflush) {
-				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
+				if (nproc > 1 && ray_fifo_flush() < 0)
 					error(USER, "lost children");
 				fflush(stdout);
 				nextflush = hresolu;
@@ -177,8 +182,11 @@ rtrace(				/* trace rays from file */
 		if (vcount && !--vcount)		/* check for end */
 			break;
 	}
-	if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
-		error(USER, "unable to complete processing");
+	if (nproc > 1) {				/* clean up children */
+		if (ray_fifo_flush() < 0)
+			error(USER, "unable to complete processing");
+		ray_pclose(0);
+	}
 	if (fflush(stdout) < 0)
 		error(SYSTEM, "write error");
 	if (vcount)
@@ -293,54 +301,68 @@ bogusray(void)			/* print out empty record */
 
 
 static void
-rad(		/* compute and print ray value(s) */
+raycast(			/* compute first ray intersection only */
+	RAY *r
+)
+{
+	if (!localhit(r, &thescene)) {
+		if (r->ro == &Aftplane) {	/* clipped */
+			r->ro = NULL;
+			r->rot = FHUGE;
+		} else
+			sourcehit(r);
+	}
+}
+
+
+static void
+rayirrad(			/* compute irradiance rather than radiance */
+	RAY *r
+)
+{
+	r->rot = 1e-5;			/* pretend we hit surface */
+	VSUM(r->rop, r->rorg, r->rdir, r->rot);
+	r->ron[0] = -r->rdir[0];
+	r->ron[1] = -r->rdir[1];
+	r->ron[2] = -r->rdir[2];
+	r->rod = 1.0;
+					/* compute result */
+	(*ofun[Lamb.otype].funp)(&Lamb, r);
+}
+
+
+static void
+rtcompute(			/* compute and print ray value(s) */
 	FVECT  org,
 	FVECT  dir,
 	double	dmax
 )
 {
-	VCOPY(thisray.rorg, org);
-	VCOPY(thisray.rdir, dir);
-	thisray.rmax = dmax;
-	if (!castonly && ray_pnprocs > 1) {
+	if (imm_irrad) {		/* set up ray */
+		VSUM(thisray.rorg, org, dir, 1.1e-4);
+		thisray.rdir[0] = -dir[0];
+		thisray.rdir[1] = -dir[1];
+		thisray.rdir[2] = -dir[2];
+		thisray.rmax = 0.0;
+	} else {
+		VCOPY(thisray.rorg, org);
+		VCOPY(thisray.rdir, dir);
+		thisray.rmax = dmax;
+	}
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
+					/* special case evaluators */
+	if (castonly)
+		thisray.revf = raycast;
+	else if (imm_irrad)
+		thisray.revf = rayirrad;
+
+	if (ray_pnprocs > 1) {		/* multiprocessing FIFO? */
 		if (ray_fifo_in(&thisray) < 0)
 			error(USER, "lost children");
 		return;
 	}
-	rayorigin(&thisray, PRIMARY, NULL, NULL);
-	if (castonly) {
-		if (!localhit(&thisray, &thescene)) {
-			if (thisray.ro == &Aftplane) {	/* clipped */
-				thisray.ro = NULL;
-				thisray.rot = FHUGE;
-			} else
-				sourcehit(&thisray);
-		}
-	} else
-		ray_trace(&thisray);
-	printvals(&thisray);
-}
-
-
-static void
-irrad(			/* compute immediate irradiance value */
-	FVECT  org,
-	FVECT  dir
-)
-{
-	VSUM(thisray.rorg, org, dir, 1.1e-4);
-	thisray.rdir[0] = -dir[0];
-	thisray.rdir[1] = -dir[1];
-	thisray.rdir[2] = -dir[2];
-	thisray.rmax = 0.0;
-	rayorigin(&thisray, PRIMARY, NULL, NULL);
-					/* pretend we hit surface */
-	thisray.rot = 1e-5;
-	thisray.rod = 1.0;
-	VCOPY(thisray.ron, dir);
-	VSUM(thisray.rop, org, dir, 1e-4);
-					/* compute and print */
-	(*ofun[Lamb.otype].funp)(&Lamb, &thisray);
+	samplendx++;			/* else do it ourselves */
+	rayvalue(&thisray);
 	printvals(&thisray);
 }
 

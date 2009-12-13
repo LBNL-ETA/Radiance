@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.18 2009/12/12 19:01:00 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.19 2009/12/13 19:13:04 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -251,8 +251,6 @@ main(int  argc, char  *argv[])
 	if (nproc > 1) {
 		if (persist)
 			error(USER, "multiprocessing incompatible with persist file");
-		if (imm_irrad)
-			error(USER, "multiprocessing incompatible with immediate irradiance");
 		if (hresolu > 0 && hresolu < nproc)
 			error(WARNING, "number of cores should not exceed horizontal resolution");
 		if (trace != NULL)
@@ -354,10 +352,8 @@ runagain:
 	if (persist)
 		dupheader();			/* send header to stdout */
 #endif
-	if (nproc > 1)			/* start multiprocessing */
-		ray_popen(nproc);
 					/* trace rays */
-	rtrace(NULL);
+	rtrace(NULL, nproc);
 					/* flush ambient file */
 	ambsync();
 #ifdef  PERSIST

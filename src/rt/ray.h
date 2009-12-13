@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.31 2009/12/12 05:20:10 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.32 2009/12/13 19:13:04 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -232,8 +232,8 @@ extern void init_drawsources(int rad);
 					/* defined in rt/initotypes.c */
 extern void initotypes(void);
 					/* module main procedures */
-extern void	rtrace(char *fname);
-extern char * formstr(int  f);
+extern void	rtrace(char *fname, int nproc);
+extern char	*formstr(int  f);
 extern void	rview(void);
 extern void	rpict(int seq, char *pout, char *zout, char *prvr);
 

@@ -1717,4 +1717,4 @@ Created src/rt/rayfifo.c for first-in/first-out handling of
 multiprocessing by raypcalls.c.
 
 Added -n option to rtrace for executing on multiple cores
-using new rayfifo calls.  Does not currently work with -I.
+using new rayfifo calls.

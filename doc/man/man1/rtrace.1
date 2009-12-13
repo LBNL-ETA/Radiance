@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.18 2009/12/12 19:00:59 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.19 2009/12/13 19:13:03 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -234,13 +234,11 @@ option, above.)
 Execute in parallel on
 .I nproc
 local processes.
-This option is incompatible with
+This option is incompatible with the
 .I \-P
 and
 .I \-PP,
-and is not currently supported with the
-.I \-I
-option.
+options.
 Multiple processes also do not work properly with ray tree output
 using any of the
 .I \-o*t*
