@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.61 2009/12/14 04:49:16 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.62 2009/12/14 07:31:37 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -320,15 +320,18 @@ rayirrad(			/* compute irradiance rather than radiance */
 	RAY *r
 )
 {
+	void	(*old_revf)(RAY *) = r->revf;
+
 	r->rot = 1e-5;			/* pretend we hit surface */
 	VSUM(r->rop, r->rorg, r->rdir, r->rot);
 	r->ron[0] = -r->rdir[0];
 	r->ron[1] = -r->rdir[1];
 	r->ron[2] = -r->rdir[2];
 	r->rod = 1.0;
-	r->revf = raytrace;
 					/* compute result */
+	r->revf = raytrace;
 	(*ofun[Lamb.otype].funp)(&Lamb, r);
+	r->revf = old_revf;
 }
 
 
