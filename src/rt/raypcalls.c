@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.24 2009/12/12 23:08:13 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.25 2009/12/15 18:21:53 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -88,9 +88,11 @@ static const char	RCSid[] = "$Id: raypcalls.c,v 2.24 2009/12/12 23:08:13 greg Ex
  *		ray_psend(&myRay);
  *	}
  *
- *  Note that it is a fatal error to call ra_psend() when
- *  ray_pnidle is zero.  The ray_presult() and/or ray_pqueue()
- *  functions may be called subsequently to read back the results.
+ *  Note that it is a mistake to call ra_psend() when
+ *  ray_pnidle is zero, and nothing will be sent in
+ *  this case.  Otherwise, the ray_presult() and/or ray_pqueue()
+ *  functions may be called subsequently to read back the results
+ *  of rays queued by ray_psend().
  *
  *  When you are done, you may call ray_pdone(1) to close
  *  all child processes and clean up memory used by Radiance.
@@ -230,18 +232,21 @@ ray_pflush(void)			/* send queued rays to idle children */
 }
 
 
-void
+int
 ray_psend(			/* add a ray to our send queue */
 	RAY	*r
 )
 {
-	if (r == NULL)
-		return;
+	int	rv;
+
+	if ((r == NULL) | (ray_pnidle <= 0))
+		return(0);
 					/* flush output if necessary */
-	if (sendq_full() && ray_pflush() <= 0)
-		error(INTERNAL, "ray_pflush failed in ray_psend()");
+	if (sendq_full() && (rv = ray_pflush()) <= 0)
+		return(rv);
 
 	r_queue[r_send_next++] = *r;
+	return(1);
 }
 
 
@@ -260,7 +265,7 @@ ray_pqueue(			/* queue a ray for computation */
 			return(-1);
 					/* put new ray in queue */
 		r_queue[r_send_next++] = mySend;
-				/* XXX r_send_next may now be > RAYQLEN */
+
 		return(1);
 	}
 					/* else add ray to send queue */

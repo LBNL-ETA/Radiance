@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.32 2009/12/13 19:13:04 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.33 2009/12/15 18:21:53 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -195,7 +195,7 @@ extern void	ray_restore(RAYPARAMS *rp);
 extern void	ray_defaults(RAYPARAMS *rp);
 					/* defined in raypcalls.c */
 extern void	ray_pinit(char *otnm, int nproc);
-extern void	ray_psend(RAY *r);
+extern int	ray_psend(RAY *r);
 extern int	ray_pqueue(RAY *r);
 extern int	ray_presult(RAY *r, int poll);
 extern void	ray_pdone(int freall);
