@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raypwin.c,v 2.5 2008/04/17 18:48:09 greg Exp $";
+static const char RCSid[] = "$Id: raypwin.c,v 2.6 2009/12/15 19:13:45 greg Exp $";
 #endif
 /*
  *  raypwin.c - interface for parallel rendering using Radiance (Windows ver)
@@ -22,7 +22,7 @@ int		ray_pnidle = 0;		/* number of idle children */
 
 static RAY	queued_ray;
 
-extern void
+void
 ray_pinit(		/* initialize ray-tracing processes */
 	char	*otnm,
 	int	nproc
@@ -34,21 +34,22 @@ ray_pinit(		/* initialize ray-tracing processes */
 }
 
 
-extern void
+int
 ray_psend(			/* add a ray to our send queue */
 	RAY	*r
 )
 {
 	if (r == NULL)
-		return;
+		return(0);
 	if (ray_pnidle <= 0)
-		error(INTERNAL, "illegal call to ray_psend");
+		return(0);
 	queued_ray = *r;
 	ray_pnidle = 0;
+	return(1);
 }
 
 
-extern int
+int
 ray_pqueue(			/* queue a ray for computation */
 	RAY	*r
 )
@@ -66,7 +67,7 @@ ray_pqueue(			/* queue a ray for computation */
 }
 
 
-extern int
+int
 ray_presult(		/* check for a completed ray */
 	RAY	*r,
 	int	poll
@@ -85,7 +86,7 @@ ray_presult(		/* check for a completed ray */
 }
 
 
-extern void
+void
 ray_pdone(		/* reap children and free data */
 	int	freall
 )
@@ -95,13 +96,13 @@ ray_pdone(		/* reap children and free data */
 }
 
 
-extern void
+void
 ray_popen(			/* open the specified # processes */
 	int	nadd
 )
 {
 	if (ray_pnprocs + nadd > 1) {
-		error(WARNING, "Only single process supported");
+		error(WARNING, "only single process supported");
 		nadd = 1 - ray_pnprocs;
 	}
 	ray_pnprocs += nadd;
@@ -109,7 +110,7 @@ ray_popen(			/* open the specified # processes */
 }
 
 
-extern void
+void
 ray_pclose(		/* close one or more child processes */
 	int	nsub
 )
