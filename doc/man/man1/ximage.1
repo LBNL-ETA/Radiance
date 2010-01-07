@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ximage.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: ximage.1,v 1.6 2010/01/07 17:52:38 greg Exp $"
 .TH XIMAGE 1 10/27/98 RADIANCE
 .SH NAME
 ximage - RADIANCE picture display for X window system
@@ -125,6 +125,7 @@ Redraw the entire image.
 .TP
 .BR <return>
 Display the radiance averaged over the area of interest.
+The maximum of the three (RGB) channels is reported.
 .TP
 .BR l
 Display the luminance value in the area of interest.
@@ -132,7 +133,8 @@ This assumes that the image was correctly computed in terms of
 luminance.
 .TP
 .BR c
-Display the color in the area of interest.
+Display the color in the area of interest, as adjusted by the current
+exposure setting.
 .TP
 .BR p
 Display the x and y location of the cursor.
