@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.3 2009/12/09 21:30:48 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.4 2010/01/23 22:30:29 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -109,7 +109,7 @@ if (@sundir) {
 		my $wt = 1./($ang[$i]+.02)/$wtot * $somega / $dom[$i];
 		my @scolor = split(/\s+/, $tregval[$ndx[$i]]);
 		for my $j (0..2) { $scolor[$j] += $wt * $sunval[$j]; }
-		$tregval[$ndx[$i]] = "@scolor\n";
+		$tregval[$ndx[$i]] = "$scolor[0]\t$scolor[1]\t$scolor[2]\n";
 	}
 }
 # Output our final vector
