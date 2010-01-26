@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.13 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.14 2010/01/26 04:42:16 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -571,7 +571,8 @@ When "on", pure Monte Carlo sampling is used in all calculations.
 .TP
 .BI -lr \ N
 Limit reflections to a maximum of
-.I N.
+.I N,
+if N is a positive integer.
 If
 .I N
 is zero, then Russian roulette is used for ray
@@ -579,7 +580,7 @@ termination, and the
 .I -lw
 setting (below) must be positive.
 If N is a negative integer, then this sets the upper limit
-of reflections past which Russian roulette will not be used.
+of reflections past which Russian roulette will be used.
 In scenes with dielectrics and total internal reflection,
 a setting of 0 (no limit) may cause a stack overflow.
 .TP
