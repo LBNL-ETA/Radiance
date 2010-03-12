@@ -1140,7 +1140,7 @@ of recursive routines using sets to avoid overrunning
 the stack limit.
 
 ==============================
-Version 3.6
+Version 3.6 (Released 10/21/04)
 
 Modified 4-byte RGBE encoding routine to avoid problems
 when one or two primary values is negative and the other(s)
@@ -1343,7 +1343,7 @@ Fixed bug in rcalc where it sometimes wasn't parsing the input format
 correctly.
 
 =====================
-Version 3.7
+Version 3.7 (Released 7/25/05)
 
 Fixed bug in source occluder cache which caused consistency error
 for distant sources and mist materials.  (Thanks to Mark Stock for
@@ -1489,7 +1489,7 @@ line on the input.  This was not intentional, but I decided I like this
 behavior so I documented it rather than changing it.
 
 =====================
-Version 3.8
+Version 3.8 (Released 10/17/06)
 
 Fixed Russian roulette ray termination, which was doing the opposite of
 what it should have been doing, resulting in overestimated values below
@@ -1609,7 +1609,7 @@ not being accounted for properly.
 Added -h option to pcompos and pcomb to eliminate verbose headers.
 
 =====================
-Version 3.9
+Version 3.9 (Released 3/30/08)
 
 Added -spec option to falsecolor to restore original spectral color scale.
 Also added "-s auto" option to automatically set the maximum value.
@@ -1666,7 +1666,7 @@ rays to average over, rather than only produce a single accumulated
 record (which can now be done with -c 0).
 
 =====================
-Version 4.0
+Version 4.0 (Released 3/12/10)
 
 Added -n option to rvu to provide parallel rendering.
 
