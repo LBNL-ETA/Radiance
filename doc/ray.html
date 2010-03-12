@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>
-The RADIANCE 3.8 Synthetic Imaging System
+The RADIANCE 4.0 Synthetic Imaging System
 </title>
 </head>
 <body>
@@ -9,7 +9,7 @@ The RADIANCE 3.8 Synthetic Imaging System
 <p>
 
 <h1>
-The RADIANCE 3.8 Synthetic Imaging System
+The RADIANCE 4.0 Synthetic Imaging System
 </h1>
 
 <p>
@@ -1365,8 +1365,6 @@ A mixfunc mixes  two  modifiers  procedurally.   It  is specified as follows:
 	which serves as a form of opacity control when used with a material.)
 	Vname is the coefficient defined in funcfile that determines  the  influence  of  foreground.   
 	The background coefficient is always (1-vname).  
-	Since the references are not resolved until run-time,  the  last  definitions  of  the modifier id's will be used.  
-	This can result in modifier loops, which are detected by the renderer.
 
 <p>
 
@@ -1528,10 +1526,8 @@ If no file is needed by a given primitive because all
 the  required  variables  are global,  
 a  period  (`.')  can be given in place of the file name.  
 It is also possible to give an expression instead
-of a  straight  variable  name  in  a scene file, 
-although such expressions should be kept
-simple if possible.
-Also, functions (requiring parameters) must be given
+of a  straight  variable  name  in  a scene file.
+Functions (requiring parameters) must be given
 as names and not as expressions.
 
 <p>
@@ -1749,7 +1745,7 @@ or converted a standard image format using one of the following
 <pre>
 The Radiance Software License, Version 1.0
 
-Copyright (c) 1990 - 2006 The Regents of the University of California,
+Copyright (c) 1990 - 2010 The Regents of the University of California,
 through Lawrence Berkeley National Laboratory.   All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -1823,23 +1819,23 @@ Ecole  Polytechnique  Federale de Lausanne (EPFL University) in Lausanne, Switze
 <p>
 <ul>
     <li>Cater, Kirsten, Alan Chalmers, Greg Ward,
-    	&quot;<a href="papers/egsr2003.pdf">Detail to Attention:
+    	&quot;<a href="http://www.anyhere.com/gward/papers/egsr2003.pdf">Detail to Attention:
 	Exploiting Visual Tasks for Selective Rendering</a>,&quot;
 	<em>Eurographics Symposium
 	on Rendering 2003</em>, June 2003.
     <li>Ward, Greg, Elena Eydelberg-Vileshin,
-    	``<a HREF="http://viz.cs.berkeley.edu/~gwlarson/papers/egwr02/index.html">Picture Perfect RGB
+    	``<a HREF="http://www.anyhere.com/gward/papers/egwr02/index.html">Picture Perfect RGB
 	Rendering Using Spectral Prefiltering and Sharp Color Primaries</a>,''
 	Thirteenth Eurographics Workshop on Rendering (2002),
 	P. Debevec and S. Gibson (Editors), June 2002.
     <li>Ward, Gregory,
-    	``<a HREF="http://viz.cs.berkeley.edu/~gwlarson/papers/cic01.pdf">High Dynamic Range Imaging</a>,''
+    	``<a HREF="http://www.anyhere.com/gward/papers/cic01.pdf">High Dynamic Range Imaging</a>,''
 	Proceedings of the Ninth Color Imaging Conference, November 2001.
     <li>Ward, Gregory and Maryann Simmons,
-    	``<a HREF="http://viz.cs.berkeley.edu/~gwlarson/papers/tog99.pdf">
+    	``<a HREF="http://www.anyhere.com/gward/papers/tog99.pdf">
     	The Holodeck Ray Cache: An Interactive Rendering System for Global Illumination in Nondiffuse
         Environments</a>,'' ACM Transactions on Graphics, 18(4):361-98, October 1999.
-    <li>Larson, G.W., ``<a HREF="http://viz.cs.berkeley.edu/~gwlarson/papers/ewp98.pdf">The Holodeck: A Parallel
+    <li>Larson, G.W., ``<a HREF="http://www.anyhere.com/gward/papers/ewp98.pdf">The Holodeck: A Parallel
 	Ray-caching Rendering System</a>,'' Proceedings of the Second
 	Eurographics Workshop on Parallel Graphics and Visualisation,
 	September 1998.
