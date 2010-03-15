@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: netproc.c,v 2.16 2004/09/20 16:26:58 greg Exp $";
+static const char	RCSid[] = "$Id: netproc.c,v 2.17 2010/03/15 21:31:50 greg Exp $";
 #endif
 /*
  * Parallel network process handling routines
@@ -198,11 +198,13 @@ startjob(	/* start a job on a process server */
 			if (ps->username[0]) {		/* different user */
 				av[++i] = "-l";
 				av[++i] = ps->username;
-				av[++i] = "cd";
-				udirt[0] = '~';
-				strcpy(udirt+1, ouruser);
-				av[++i] = udirt;
-				av[++i] = ";";
+				if (ps->directory[0] != '/') {
+					av[++i] = "cd";
+					udirt[0] = '~';
+					strcpy(udirt+1, ouruser);
+					av[++i] = udirt;
+					av[++i] = ";";
+				}
 			}
 			if (ps->directory[0]) {		/* change directory */
 				av[++i] = "cd";
