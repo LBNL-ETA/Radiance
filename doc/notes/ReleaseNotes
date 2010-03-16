@@ -1706,7 +1706,7 @@ be added to Radiance.  Hopefully, others will follow.
 
 Added klems_int.cal file to compute Klems bins for windows.
 
-Created gentregvec utility to sample a particular sky and
+Created genskyvec  utility to sample a particular sky and
 evaluate average radiance over the standard Tregenza sky patches.
 
 Created dctimestep program to compute a set of sensor values or
@@ -1718,3 +1718,10 @@ multiprocessing by raypcalls.c.
 
 Added -n option to rtrace for executing on multiple cores
 using new rayfifo calls.
+
+=====================
+Version 4.1
+
+Changed ranimate behavior so remote login under a different user
+doesn't necessarily require the presence of the originating user's
+home directory.
