@@ -1,4 +1,4 @@
-{ RCSid $Id: xyz_rgb.cal,v 1.3 2005/04/28 17:21:47 greg Exp $ }
+{ RCSid $Id: xyz_rgb.cal,v 1.4 2010/03/21 18:26:52 greg Exp $ }
 {
 	Convert between XYZ and RGB coordinates.
 
@@ -8,7 +8,13 @@
 	those in ray/src/common/color.h.
 }
 
-CIE_pri(i) = select(i, 0.640,0.330, 0.290,0.600, 0.150,0.060, 1/3,1/3);
+CIE_Radiance(i) = select(i, 0.640,0.330, 0.290,0.600, 0.150,0.060, 1/3,1/3);
+CIE_Sharp(i) = select(i, 0.6898,0.3206, 0.0736,0.9003, 0.1166,0.0374, 1/3,1/3);
+CIE_Adobe(i) = select(i, 0.640,0.330, 0.210,0.710, 0.150,0.060, 0.3127,0.3290);
+CIE_RIMM(i) = select(i, 0.7347,0.2653, 0.1596,0.8404, 0.0366,0.0001, 0.3457,0.3585);
+CIE_709(i) = select(i, 0.640,0.330, 0.300,0.600, 0.150,0.060, 0.3127,0.3290);
+
+CIE_pri(i) = CIE_Radiance(i);
 
 {*** The whole calculation is based on the CIE (x,y) chromaticities below ***}
 
