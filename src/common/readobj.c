@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.19 2004/07/02 16:45:32 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.20 2010/03/30 12:42:33 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -88,6 +88,11 @@ FILE  *fp;
 					/* get modifier */
 	strcpy(sbuf, "EOF");
 	fgetword(sbuf, MAXSTR, fp);
+	if (strchr(sbuf, '\t')) {
+		sprintf(errmsg, "(%s): illegal tab in modifier \"%s\"",
+					name, sbuf);
+		error(USER, errmsg);
+	}
 	if (!strcmp(sbuf, VOIDID))
 		objp->omod = OVOID;
 	else if (!strcmp(sbuf, ALIASMOD))
@@ -106,6 +111,11 @@ FILE  *fp;
 					/* get identifier */
 	sbuf[0] = '\0';
 	fgetword(sbuf, MAXSTR, fp);
+	if (strchr(sbuf, '\t')) {
+		sprintf(errmsg, "(%s): illegal tab in identifier \"%s\"",
+					name, sbuf);
+		error(USER, errmsg);
+	}
 	objp->oname = savqstr(sbuf);
 					/* get arguments */
 	if (objp->otype == MOD_ALIAS) {
