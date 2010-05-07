@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.43 2005/04/19 01:15:06 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.44 2010/05/07 17:45:57 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -167,7 +167,7 @@ diraniso(		/* compute source contribution */
 		} else
 			dtmp = 0.0;
 						/* gaussian */
-		dtmp = exp(-dtmp) / (PI * np->pdot * sqrt(au2*av2));
+		dtmp = exp(-dtmp) * (1.0/PI) * sqrt(-ldot/(np->pdot*au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->mcolor);
