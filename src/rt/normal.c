@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.51 2005/12/08 17:56:38 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.52 2010/05/07 15:44:52 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -156,12 +156,11 @@ dirnorm(		/* compute source contribution */
 						/* roughness + source */
 		dtmp = np->alpha2 + omega*(1.0/PI);
 						/* gaussian */
-		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp) /
-					(PI*np->pdot*dtmp);
+		 dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->mcolor);
-			dtmp *= np->tspec * omega;
+			dtmp *= np->tspec * omega * sqrt(-ldot/np->pdot);
 			scalecolor(ctmp, dtmp);
 			addcolor(cval, ctmp);
 		}
