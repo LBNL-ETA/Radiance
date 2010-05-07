@@ -1725,3 +1725,7 @@ Version 4.1
 Changed ranimate behavior so remote login under a different user
 doesn't necessarily require the presence of the originating user's
 home directory.
+
+Changed standard transmission function normalization back to what
+it was in version 3.5, following recommendation of David Geisler-Moroder,
+who pointed out that the revised BTDF increased too much at grazing.
