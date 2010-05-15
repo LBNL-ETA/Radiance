@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.81 2009/05/11 21:46:31 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.82 2010/05/15 15:31:30 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -701,8 +701,8 @@ pixvalue(		/* compute pixel value */
 	if (dblur > FTINY && vdist > FTINY) {
 		double  vc, dfh, dfv;
 						/* square/circle conv. */
-		dfh = vc = frandom();
-		dfv = frandom();
+		dfh = vc = 1. - 2.*frandom();
+		dfv = 1. - 2.*frandom();
 		dfh *= .5*dblur*sqrt(1. - .5*dfv*dfv);
 		dfv *= .5*dblur*sqrt(1. - .5*vc*vc);
 		if (ourview.type == VT_PER || ourview.type == VT_PAR) {
