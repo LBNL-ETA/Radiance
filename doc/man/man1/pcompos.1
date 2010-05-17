@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcompos.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: pcompos.1,v 1.6 2010/05/17 18:02:24 greg Exp $"
 .TH PCOMPOS 1 12/18/97 RADIANCE
 .SH NAME
 pcompos - composite RADIANCE pictures.
@@ -160,7 +160,7 @@ Since there is a limit to the number of open files and processes,
 large collections of images must be created in stages.
 Even if the system limit on open files is large,
 .I pcompos
-places an artificial limit of 64 on the number of open files and/or
+places an artificial limit of 1024 on the number of open files and/or
 processes.
 .SH AUTHOR
 Greg Ward
