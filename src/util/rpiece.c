@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.50 2009/02/07 05:40:47 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.51 2010/05/17 17:03:53 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -136,6 +136,12 @@ main(
 				}
 				break;
 			case 'p':		/* pixel aspect ratio? */
+				if (argv[i][2] == 'm') {
+					fprintf(stderr, "%s: -pm unsupported\n",
+						argv[0]);
+					++i;
+					continue;
+				}
 				if (argv[i][2] != 'a' || argv[i][3])
 					break;
 				pixaspect = atof(argv[++i]);
@@ -144,7 +150,7 @@ main(
 				if (argv[i][2])
 					break;
 				timelim = atof(argv[++i])*3600. + .5;
-				break;
+				continue;
 			case 'x':		/* overall x resolution */
 				if (argv[i][2])
 					break;
