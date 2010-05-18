@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.93 2010/05/18 00:01:02 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.94 2010/05/18 04:24:17 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1316,18 +1316,19 @@ rpict(				/* run rpict and pfilt for each view */
 					getview(0, vs) != NULL) {
 		if (!strcmp(c_rpict, DEF_RPICT_PATH) &&
 				getview(1, NULL) == NULL) {
-			sprintf(sfile, "rpiece_%s.txt", vs);
+			sprintf(sfile, "rpsync_%s.txt", vs);
 			strcpy(rppopt, "-PP pfXXXXXX");
 		} else {
 			strcpy(rppopt, "-S 1 -PP pfXXXXXX");
 		}
 		pfile = rppopt + strlen(rppopt) - 8;
-		if (mktemp(pfile) == NULL)
+		if (mktemp(pfile) == NULL) {
 			if (do_rpiece) {
 				fprintf(stderr, "%s: cannot create\n", pfile);
 				quit(1);
-			} else
-				pfile = NULL;
+			}
+			pfile = NULL;
+		}
 	}
 	vn = 0;					/* do each view */
 	while ((vw = getview(vn++, vs)) != NULL) {
@@ -1356,7 +1357,7 @@ rpict(				/* run rpict and pfilt for each view */
 		}
 						/* parallel running? */
 		if (do_rpiece) {
-			if (rfdt < oct1date || fdate(sfile) < oct1date) {
+			if (rfdt < oct1date || !fdate(sfile)) {
 				rfdt = 0;		/* start fresh */
 				if ((fp = fopen(sfile, "w")) == NULL) {
 					fprintf(stderr, "%s: cannot create\n",
@@ -1467,7 +1468,7 @@ rpict(				/* run rpict and pfilt for each view */
 			finish_process();	/* exit if child */
 	}
 	wait_process(1);		/* wait for children to finish */
-	if (pfile != NULL) {		/* clean up rpict persistent mode */
+	if (pfile != NULL) {		/* clean up persistent rpict */
 		RT_PID	pid;
 		fp = fopen(pfile, "r");
 		if (fp != NULL) {
@@ -1494,11 +1495,6 @@ touch(			/* update a file */
 		printf("\ttouch %s\n", fn);
 	if (!nprocs)
 		return(0);
-#ifdef notused
-	if (access(fn, F_OK) == -1)		/* create it */
-		if (close(open(fn, O_WRONLY|O_CREAT, 0666)) == -1)
-			return(-1);
-#endif
 	return(setfdate(fn, time((time_t *)NULL)));
 }
 
