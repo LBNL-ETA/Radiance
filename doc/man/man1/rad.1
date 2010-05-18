@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rad.1,v 1.8 2008/12/18 23:26:57 greg Exp $"
+.\" RCSid "$Id: rad.1,v 1.9 2010/05/18 00:32:23 greg Exp $"
 .TH RAD 1 2/1/99 RADIANCE
 .SH NAME
 rad - render a RADIANCE scene
@@ -579,6 +579,10 @@ rad \-V \-v Zl \-n \-s sample.rif > plan.vf	# make a plan view file
 rad \-t sample.rif		# update files after minor change to input
 .br
 rad \-s sample.rif &		# execute silently in the background
+.br
+rad \-N 2 sample.rif	# render views using two parallel rpict calls
+.br
+rad \-N 4 -v 1 sample.rif	# render first view with four rpiece calls
 .PP
 If we decide that the default values
 .I rad
@@ -640,6 +644,17 @@ $(PICTURE)_$(view).unf	Unfinished output of
 .SH AUTHOR
 Greg Ward
 .SH BUGS
+You cannot run more than one
+.I rad
+process at a time on the same input file,
+as the second process will attempt to recover the output files
+of the first process, damaging the results.
+The exceptions to this are running interactively via the
+.I \-o
+option, or rendering different views using the
+.I \-v
+option.
+.PP
 Incremental building of octrees is not supported as it would add
 considerable complexity to
 .I rad.
@@ -678,4 +693,5 @@ problematic on systems that don't distinguish case in filenames.
 .SH "SEE ALSO"
 glrad(1), make(1), mkillum(1), objview(1), oconv(1),
 pfilt(1), raddepend(1), ranimate(1),
-rholo(1), rpict(1), rtrace(1), rvu(1), touch(1), vgaimage(1), ximage(1)
+rholo(1), rpict(1), rpiece(1), rtrace(1), rvu(1),
+touch(1), vgaimage(1), ximage(1)
