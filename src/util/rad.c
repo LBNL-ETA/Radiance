@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.92 2009/02/09 16:41:29 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.93 2010/05/18 00:01:02 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -116,11 +116,14 @@ int	sayview = 0;		/* print view out */
 char	*rvdevice = NULL;	/* rvu output device */
 char	*viewselect = NULL;	/* specific view only */
 
+#define DEF_RPICT_PATH	"rpict"		/* default rpict path */
+
 				/* command paths */
 char	c_oconv[256] = "oconv";
 char	c_mkillum[256] = "mkillum";
 char	c_rvu[256] = "rvu";
-char	c_rpict[256] = "rpict";
+char	c_rpict[256] = DEF_RPICT_PATH;
+char	c_rpiece[] = "rpiece";
 char	c_pfilt[256] = "pfilt";
 
 int	overture = 0;		/* overture calculation needed */
@@ -218,9 +221,6 @@ main(
 	if (i >= argc)
 		goto userr;
 	rifname = argv[i];
-				/* check command-line options */
-	if ((nprocs > 1) & (viewselect != NULL) & (rvdevice == NULL))
-		nprocs = 1;
 				/* assign Radiance root file name */
 	rootname(radname, rifname);
 				/* load variable values */
@@ -1158,7 +1158,8 @@ getview(				/* get view n, or NULL if none */
 			goto numview;
 		}
 		if (viewselect[0] == '-') {	/* already specified */
-			if (vn != NULL) *vn = '\0';
+			if (vn != NULL)
+				strcpy(vn, "0");
 			return(viewselect);
 		}
 		if (vn != NULL) {
@@ -1259,10 +1260,11 @@ rpict(				/* run rpict and pfilt for each view */
 	char	*po
 )
 {
-	char	combuf[PATH_MAX];
+#define do_rpiece	(sfile[0]!='\0')
+	char	combuf[4*PATH_MAX+512];
 	char	rawfile[PATH_MAX], picfile[PATH_MAX];
 	char	zopt[PATH_MAX+4], rep[PATH_MAX+16], res[32];
-	char	rppopt[128], *pfile = NULL;
+	char	rppopt[128], sfile[64], *pfile = NULL;
 	char	pfopts[128];
 	char	vs[32], *vw;
 	int	vn, mult;
@@ -1309,18 +1311,28 @@ rpict(				/* run rpict and pfilt for each view */
 			badvalue(REPORT);
 	}
 					/* set up parallel rendering */
-	if ((nprocs > 1) & (!vdef(ZFILE))) {
-		strcpy(rppopt, "-S 1 -PP pfXXXXXX");
-		pfile = rppopt+9;
+	sfile[0] = '\0';
+	if ((nprocs > 1) & !touchonly & !vdef(ZFILE) &&
+					getview(0, vs) != NULL) {
+		if (!strcmp(c_rpict, DEF_RPICT_PATH) &&
+				getview(1, NULL) == NULL) {
+			sprintf(sfile, "rpiece_%s.txt", vs);
+			strcpy(rppopt, "-PP pfXXXXXX");
+		} else {
+			strcpy(rppopt, "-S 1 -PP pfXXXXXX");
+		}
+		pfile = rppopt + strlen(rppopt) - 8;
 		if (mktemp(pfile) == NULL)
-			pfile = NULL;
+			if (do_rpiece) {
+				fprintf(stderr, "%s: cannot create\n", pfile);
+				quit(1);
+			} else
+				pfile = NULL;
 	}
 	vn = 0;					/* do each view */
 	while ((vw = getview(vn++, vs)) != NULL) {
 		if (sayview)
 			myprintview(vw, stdout);
-		if (!vs[0])
-			sprintf(vs, "%d", vn);
 		sprintf(picfile, "%s_%s.hdr", vval(PICTURE), vs);
 		if (vdef(ZFILE))
 			sprintf(zopt, " -z %s_%s.zbf", vval(ZFILE), vs);
@@ -1342,17 +1354,40 @@ rpict(				/* run rpict and pfilt for each view */
 				touch(picfile);
 			continue;
 		}
-		if (next_process()) {		/* parallel running? */
+						/* parallel running? */
+		if (do_rpiece) {
+			if (rfdt < oct1date || fdate(sfile) < oct1date) {
+				rfdt = 0;		/* start fresh */
+				if ((fp = fopen(sfile, "w")) == NULL) {
+					fprintf(stderr, "%s: cannot create\n",
+							sfile);
+					quit(1);
+				}
+				fprintf(fp, "%d %d\n", 8+nprocs/3, 8+nprocs/3);
+				fclose(fp);
+			}
+		} else if (next_process()) {
 			if (pfile != NULL)
-				sleep(20);
+				sleep(10);
 			continue;
-		}
+		} else if (!inchild())
+			pfile = NULL;
 		/* XXX Remember to call finish_process() */
 						/* build rpict command */
-		if (rfdt >= oct1date) {		/* recover */
-			sprintf(combuf, "%s%s%s%s%s -ro %s %s", c_rpict,
-				rep, opts, po, zopt, rawfile, oct1name);
-			if (runcom(combuf))	/* run rpict */
+		if (rfdt >= oct1date) {		/* already in progress */
+			if (do_rpiece) {
+				sprintf(combuf, "%s -R %s %s%s %s %s%s%s -o %s %s",
+						c_rpiece, sfile, rppopt, rep, vw,
+						res, opts, po, rawfile, oct1name);
+				while (children_running < nprocs-1 &&
+							next_process()) {
+					sleep(10);
+					combuf[strlen(c_rpiece)+2] = 'F';
+				}
+			} else
+				sprintf(combuf, "%s%s%s%s%s -ro %s %s", c_rpict,
+					rep, opts, po, zopt, rawfile, oct1name);
+			if (runcom(combuf))	/* run rpict/rpiece */
 				goto rperror;
 		} else {
 			if (overture) {		/* run overture calculation */
@@ -1370,27 +1405,38 @@ rpict(				/* run rpict and pfilt for each view */
 				rmfile(overfile);
 #endif
 			}
-			sprintf(combuf, "%s%s %s %s%s%s%s %s > %s",
-					c_rpict, rep, vw, res, opts, po,
-					zopt, oct1name, rawfile);
-			if (pfile != NULL && inchild()) {
-						/* rpict persistent mode */
+			if (do_rpiece) {
+				sprintf(combuf, "%s -F %s %s%s %s %s%s%s -o %s %s",
+						c_rpiece, sfile, rppopt, rep, vw,
+						res, opts, po, rawfile, oct1name);
+				while (children_running < nprocs-1 &&
+							next_process())
+					sleep(10);
+			} else {
+				sprintf(combuf, "%s%s %s %s%s%s%s %s > %s",
+						c_rpict, rep, vw, res, opts, po,
+						zopt, oct1name, rawfile);
+			}
+			if ((pfile != NULL) & !do_rpiece) {
 				if (!silent)
 					printf("\t%s\n", combuf);
 				fflush(stdout);
 				sprintf(combuf, "%s%s %s %s%s%s %s > %s",
-						c_rpict, rep, rppopt, res, opts,
-						po, oct1name, rawfile);
+						c_rpict, rep, rppopt, res,
+						opts, po, oct1name, rawfile);
 				fp = popen(combuf, "w");
 				if (fp == NULL)
 					goto rperror;
 				myprintview(vw, fp);
 				if (pclose(fp))
 					goto rperror;
-			} else {		/* rpict normal mode */
-				if (runcom(combuf))
-					goto rperror;
-			}
+			} else if (runcom(combuf))
+				goto rperror;
+		}
+		if (do_rpiece) {		/* need to finish raw, first */
+			finish_process();
+			wait_process(1);
+			/* XXX should check sync file to see if really done? */
 		}
 		if (!vdef(RAWFILE) || strcmp(vval(RAWFILE),vval(PICTURE))) {
 						/* build pfilt command */
@@ -1415,7 +1461,10 @@ rpict(				/* run rpict and pfilt for each view */
 			mvfile(rawfile, combuf);
 		} else
 			rmfile(rawfile);
-		finish_process();		/* exit if child */
+		if (do_rpiece)			/* done with sync file */
+			rmfile(sfile);
+		else
+			finish_process();	/* exit if child */
 	}
 	wait_process(1);		/* wait for children to finish */
 	if (pfile != NULL) {		/* clean up rpict persistent mode */
@@ -1432,6 +1481,7 @@ rpict(				/* run rpict and pfilt for each view */
 rperror:
 	fprintf(stderr, "%s: error rendering view %s\n", progname, vs);
 	quit(1);
+#undef do_rpiece
 }
 
 

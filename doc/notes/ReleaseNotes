@@ -1729,3 +1729,5 @@ home directory.
 Changed standard transmission function normalization back to what
 it was in version 3.5, following recommendation of David Geisler-Moroder,
 who pointed out that the revised BTDF increased too much at grazing.
+
+Changed rad behavior with -N >1 on single view to call rpiece.
