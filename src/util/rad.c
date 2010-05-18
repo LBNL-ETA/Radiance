@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.95 2010/05/18 18:54:35 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.96 2010/05/18 18:57:27 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1361,7 +1361,7 @@ rpict(				/* run rpict and pfilt for each view */
 				int	xdiv = 8+nprocs/3, ydiv = 8+nprocs/3;
 				rfdt = 0;		/* start fresh */
 				if (!silent)
-					printf("echo %d %d > %s\n",
+					printf("\techo %d %d > %s\n",
 							xdiv, ydiv, sfile);
 				if ((fp = fopen(sfile, "w")) == NULL) {
 					fprintf(stderr, "%s: cannot create\n",
