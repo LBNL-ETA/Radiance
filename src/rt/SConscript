@@ -16,6 +16,9 @@ dielectric = env.Object(source='dielectric.c',
 duphead = env.Object(source="duphead.c")
 persist = env.Object(source="persist.c")
 ambio = env.Object(source="ambio.c")
+rayfifo = env.Object(source="rayfifo.c")
+raypwin = env.Object(source="raypwin.c")
+raycalls = env.Object(source="raycalls.c')
 
 
 # source and object dependencies
@@ -57,7 +60,7 @@ env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', lookamb)])
 
 rtmain = env.Object(source=['rtmain.c'],
 		CCFLAGS=env.get('CCFLAGS',[]) + ['-DNICE=4'])
-rtsrc = ['rtrace.c', duphead, persist, rtmain]
+rtsrc = ['rtrace.c', duphead, persist, rtmain, rayfifo, raypwin, raycalls]
 rtrace = env.Program(target=radbin('rtrace'), source=rtsrc,
 	LIBS=fullib + mlib
 	)

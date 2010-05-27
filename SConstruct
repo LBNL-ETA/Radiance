@@ -20,6 +20,8 @@ def set_opts(env):
 	env['RAD_BUILDBIN']  = '#bin'
 	env['RAD_BUILDRLIB'] = '#lib'
 	env['RAD_BUILDMAN']  = '#doc/man'
+	# compatibility modules
+	env['RAD_COMPAT'] = 'timegm.o'
 
 def allplats_setup(env):
 	from build_utils import find_libs
@@ -43,7 +45,7 @@ def shareinstall_setup(env):
 		install.install_manfiles(env)
 
 # Set up build environment
-env = Environment()
+env = Environment(tools=['mingw'])
 env.Decider('timestamp-match')
 
 if os.name == 'posix':

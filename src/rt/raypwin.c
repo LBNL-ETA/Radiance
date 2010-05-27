@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raypwin.c,v 2.6 2009/12/15 19:13:45 greg Exp $";
+static const char RCSid[] = "$Id: raypwin.c,v 2.7 2010/05/27 19:32:13 greg Exp $";
 #endif
 /*
  *  raypwin.c - interface for parallel rendering using Radiance (Windows ver)
@@ -120,12 +120,4 @@ ray_pclose(		/* close one or more child processes */
 	ray_pnprocs -= nsub;
 	if ((ray_pnidle -= nsub) < 0)
 		ray_pnidle = 0;
-}
-
-
-void
-quit(ec)			/* make sure exit is called */
-int	ec;
-{
-	exit(ec);
 }

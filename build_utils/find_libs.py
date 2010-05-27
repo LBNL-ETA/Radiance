@@ -3,7 +3,7 @@ import os
 from SCons.SConf import SConf # aka Configure
 
 def find_radlib(env):
-	v = env.FindFile('Verdana.fnt', './lib')
+	v = env.FindFile('helvet.fnt', './lib')
 	if not v:
 		print '''
 	Radiance auxiliary support files not found.
