@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.96 2010/05/18 18:57:27 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.97 2010/05/28 17:29:14 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1400,11 +1400,19 @@ rpict(				/* run rpict and pfilt for each view */
 				"%s%s %s%s -x 64 -y 64 -ps 1 %s > %s",
 						c_rpict, rep, vw, opts,
 						oct1name, overfile);
+				if (do_rpiece)
+					while (children_running < nprocs-1 &&
+							next_process())
+						sleep(5);
 				if (runcom(combuf)) {
 					fprintf(stderr,
 					"%s: error in overture for view %s\n",
 						progname, vs);
 					quit(1);
+				}
+				if (do_rpiece) {
+					finish_process();
+					wait_process(1);
 				}
 #ifndef NULL_DEVICE
 				rmfile(overfile);
