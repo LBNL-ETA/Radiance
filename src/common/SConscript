@@ -30,7 +30,7 @@ RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 RTFUNC = Split('''biggerlib.c caldefn.c calexpr.c calfunc.c calprnt.c
 		chanvalue.c''')
 RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
-		portio.c wordfile.c words.c header.c''')
+		portio.c wordfile.c words.c header.c timegm.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
 RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
 RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
@@ -44,7 +44,7 @@ RTDUMMY = Split('addobjnotify.c')
 STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
 		RTFUNC + RTPROC + RTLAMPS)
 
-ALL = RTSCENE + RTPIC + STD + RTNET + env.get('RAD_COMPAT',[])
+ALL = RTSCENE + RTPIC + STD + RTNET
 
 # build libraries
 rtscene = env.StaticLibrary(target=radlib('rtscene'), source=RTSCENE)

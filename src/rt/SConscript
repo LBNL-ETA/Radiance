@@ -18,7 +18,7 @@ persist = env.Object(source="persist.c")
 ambio = env.Object(source="ambio.c")
 rayfifo = env.Object(source="rayfifo.c")
 raypwin = env.Object(source="raypwin.c")
-raycalls = env.Object(source="raycalls.c')
+raycalls = env.Object(source="raycalls.c")
 
 
 # source and object dependencies

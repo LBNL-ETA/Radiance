@@ -9,8 +9,10 @@
 #include <time.h>
 #include <stdlib.h>
 
+extern time_t		timegm(struct tm *tm);
+
 #ifdef _WIN32
-char *
+static char *
 setGMT()
 {
 	static time_t	prevTZ;
@@ -18,13 +20,13 @@ setGMT()
 	_timezone = 0;
 	return (char *)&prevTZ;
 }
-void
+static void
 resetTZ(char *cp)
 {
 	_timezone = *(time_t *)cp;
 }
 #else
-char *
+static char *
 setGMT()
 {
 	char  *tz = getenv("TZ");
@@ -32,7 +34,7 @@ setGMT()
 	tzset();
 	return tz;
 }
-void
+static void
 resetTZ(char *tz)
 {
 	if (tz)
