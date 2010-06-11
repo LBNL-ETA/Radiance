@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.55 2009/12/09 21:43:35 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.56 2010/06/11 20:26:09 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -378,14 +378,16 @@ main(int argc, char *argv[])
 	rtargv[rtargc++] = contrib ? RTCONTRIB : RTCOEFF;
 				/* just asking for defaults? */
 	if (!strcmp(argv[i], "-defaults")) {
-		char	sxres[16], syres[16];
+		char	nps[8], sxres[16], syres[16];
 		char	*rtpath;
-		printf("-n %-2d\t\t\t\t# number of processes\n", nprocs);
 		printf("-c %-5d\t\t\t# accumulated rays per record\n",
 				accumulate);
 		printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
 				contrib ? "contributions" : "coefficients");
 		fflush(stdout);			/* report OUR options */
+		rtargv[rtargc++] = "-n";
+		sprintf(nps, "%d", nprocs);
+		rtargv[rtargc++] = nps;
 		rtargv[rtargc++] = header ? "-h+" : "-h-";
 		sprintf(fmt, "-f%c%c", inpfmt, outfmt);
 		rtargv[rtargc++] = fmt;
