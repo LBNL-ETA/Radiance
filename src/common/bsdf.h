@@ -1,7 +1,10 @@
-/* RCSid $Id: bsdf.h,v 2.1 2009/06/17 20:41:47 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.2 2010/06/14 22:02:22 greg Exp $ */
 /*
  * Header for BSDF i/o and access routines
  */
+
+#ifndef _RAD_BSDF_H_
+#define _RAD_BSDF_H_
 				/* up directions */
 typedef enum {
 	UDzneg=-3,
@@ -48,3 +51,5 @@ extern int r_BSDF_incvec(FVECT v, struct BSDF_data *b, int i,
 extern int r_BSDF_outvec(FVECT v, struct BSDF_data *b, int o,
 				double rv, MAT4 xm);
 extern int getBSDF_xfm(MAT4 xm, FVECT nrm, UpDir ud);
+
+#endif  /* ! _RAD_BSDF_H_ */
