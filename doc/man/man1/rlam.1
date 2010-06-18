@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.5 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.6 2010/06/18 01:12:57 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -13,7 +13,11 @@ rlam - laminate records from multiple files
 |
 .B \-idN
 |
+.B \-iiN
+|
 .B \-iwN
+|
+.B \-ibN
 ]
 input1 input2 ..
 .SH DESCRIPTION
@@ -42,10 +46,15 @@ option may be used to indicated binary IEEE 32-bit floats on input.
 Similarly, the
 .I \-id
 and
-.I \-iw
+.I \-ii
 options may be used to indicate binary 64-bit doubles or integer words,
 respectively.
-If an number is immediately follows any of these options, then it
+The
+.I \-iw
+option specifies 2-byte short words, and the
+.I \-ib
+option specifies bytes.
+If a number is immediately follows any of these options, then it
 indicates that multiple such values are expected for each record.
 For example,
 .I \-if3
