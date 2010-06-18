@@ -1,0 +1,39 @@
+{ RCSid $Id: klems_ang.cal,v 1.1 2010/06/18 00:56:15 greg Exp $ }
+{
+	Compute central Klems direction vector from kbin (1-145)
+
+	6/17/2010	G. Ward
+}
+
+DEGREE : PI/180;
+
+Kfull_theta(i) : select(i, 5, 15, 25, 35, 45, 55, 67, 75, 90);
+Kfull_nphis(i) : select(i, 1, 8, 16, 20, 24, 24, 24, 16, 12);
+Khalf_theta(i) : select(i, 6.5, 19.5, 32.5, 46.5, 61.5, 76.5, 90);
+Khalf_nphis(i) : select(i, 1, 8, 12, 16, 20, 12, 4);
+Kqrtr_theta(i) : select(i, 9, 27, 46, 66, 90);
+Kqrtr_nphis(i) : select(i, 1, 8, 12, 12, 8);
+
+{ Change these assignments for a different basis }
+rtheta(i) = Kfull_theta(i);
+nphis(i) = Kfull_nphis(i);
+
+theta_bin(t, cnt) : if(nphis(t) - cnt - .5, t,
+				theta_bin(t+1, cnt-nphis(t)));
+nphis_above(t) : if(t - 1.5, nphis(t-1)+nphis_above(t-1), 0);
+
+tbin = theta_bin(1, kbin-1);
+						{ angles are in degrees}
+theta = if(tbin - 1.5, .5*(rtheta(tbin)+rtheta(tbin-1)), 0);
+phi = 360*(kbin-1 - nphis_above(tbin))/nphis(tbin);
+
+						{ solid angle in steradians }
+omega = if(tbin - 1.5,
+		2*PI*(cos(rtheta(tbin-1)*DEGREE)-cos(rtheta(tbin)*DEGREE))/nphis(tbin),
+		2*PI*(1 - cos(rtheta(1)*DEGREE)));
+
+sintheta = sin(theta*DEGREE);
+						{ actual direction vector }
+Dx = sintheta*cos(phi*DEGREE);
+Dy = sintheta*sin(phi*DEGREE);
+Dz = sqrt(1 - sintheta*sintheta);
