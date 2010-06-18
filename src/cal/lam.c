@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.10 2010/06/18 01:12:57 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.11 2010/06/18 21:22:49 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -31,10 +31,11 @@ main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	register int	i;
+	int	unbuff = 0;
+	int	i;
 	char	*curtab;
 	int	curbytes;
-	int	running, puteol;
+	int	puteol;
 
 	curtab = "\t";
 	curbytes = 0;
@@ -44,6 +45,9 @@ char	*argv[];
 			switch (argv[i][1]) {
 			case 't':
 				curtab = argv[i]+2;
+				break;
+			case 'u':
+				unbuff = !unbuff;
 				break;
 			case 'i':
 				switch (argv[i][2]) {
@@ -118,34 +122,35 @@ char	*argv[];
 			exit(1);
 		}
 	}
-	puteol = 0;				/* check for tab character */
+	puteol = 0;				/* check for ASCII output */
 	for (i = nfiles; i--; )
-		if (isprint(tabc[i][0]) || tabc[i][0] == '\t') {
+		if (!bytsiz[i] || isprint(tabc[i][0]) || tabc[i][0] == '\t') {
 			puteol++;
 			break;
 		}
-	do {
-		running = 0;
+	for ( ; ; ) {				/* main loop */
 		for (i = 0; i < nfiles; i++) {
 			if (bytsiz[i]) {		/* binary file */
-				if (fread(buf, bytsiz[i], 1, input[i]) == 1) {
-					if (i)
-						fputs(tabc[i], stdout);
-					fwrite(buf, bytsiz[i], 1, stdout);
-					running++;
-				}
-			} else if (fgets(buf, MAXLINE, input[i]) != NULL) {
+				if (fread(buf, bytsiz[i], 1, input[i]) < 1)
+					break;
+				if (i)
+					fputs(tabc[i], stdout);
+				fwrite(buf, bytsiz[i], 1, stdout);
+			} else {
+				if (fgets(buf, MAXLINE, input[i]) == NULL)
+					break;
 				if (i)
 					fputs(tabc[i], stdout);
 				buf[strlen(buf)-1] = '\0';
 				fputs(buf, stdout);
-				puteol++;
-				running++;
 			}
 		}
-		if (running && puteol)
+		if (i < nfiles)
+			break;
+		if (puteol)
 			putchar('\n');
-	} while (running);
-
-	exit(0);
+		if (unbuff)
+			fflush(stdout);
+	}
+	return(0);
 }

@@ -1734,3 +1734,5 @@ Changed rad behavior with -N >1 on single view to call rpiece.
 
 Updated SCons build system for MINGW compilation, thanks to Christian
 Kohler.
+
+Added -u option to rlam for unbuffered output.
