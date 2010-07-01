@@ -1,17 +1,35 @@
-.\" RCSid $Id: dctimestep.1,v 1.1 2009/12/10 00:17:19 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.2 2010/07/01 21:54:55 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step via matrix multiplication
 .SH SYNOPSIS
 .B dctimestep
+.B DCspec
+[
+.B skyvec
+]
+.br
+.B dctimestep
 .B Vspec
 .B Tbsdf.xml
 .B Dmat.dat
 [
-.B tregvec
+.B skyvec
 ]
 .SH DESCRIPTION
 .I Dctimestep
+has two invocation forms.
+In the first form,
+.I dctimestep
+is given a daylight coefficient specification and an optional sky
+vector, which may be read from the standard input if unspecified.
+The daylight coefficients are multiplied against this vector and the results
+are written to the standard output.
+This may be a list of color values or a combined Radiance image,
+as explained below.
+.PP
+In the second form,
+.I dctimestep
 takes four input files, forming a matrix expression.
 The first argument is the View matrix file that specifies how window output
 directions are related to some set of measured values, such as an array of
@@ -42,9 +60,7 @@ is either an ASCII color vector with as many RGB triplets
 as there are rows in the View matrix, or a combined
 .I Radiance
 picture.
-Which output is produced depends on the
-.I Vspec
-argument.
+Which output is produced depends on the first argument.
 A regular file name will be loaded and interpreted as a matrix to
 generate a color results vector.
 A file specification containing a '%d' format string will be
@@ -53,6 +69,14 @@ interpreted as a list of
 component pictures, which will be summed according to the computed
 vector.
 .SH EXAMPLES
+To compute workplane illuminances at 3:30pm on Feb 10th:
+.IP "" .2i
+gensky 2 10 15:30 | genskyvec | dctimestep workplaneDC.dmx > Ill_02-10-1530.dat
+.PP
+To compute an image at 10am on the equinox from a set of component images:
+.IP "" .2i
+gensky 3 21 10 | genskyvec | dctimestep viewc%03d.hdr > view_03-21-10.hdr
+.PP
 To compute a set of illuminance contributions for Window 1 on
 the Winter solstice at 2pm:
 .IP "" .2i

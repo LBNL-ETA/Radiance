@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.11 2009/12/09 20:33:48 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.12 2010/07/01 21:54:56 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -108,6 +108,8 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 	CMATRIX	*cm;
 	FILE	*fp = stdin;
 
+	if (ncols <= 0)
+		error(USER, "Non-positive number of columns");
 	if (fname == NULL)
 		fname = "<stdin>";
 	else if ((fp = fopen(fname, "r")) == NULL) {
@@ -332,7 +334,7 @@ cm_bsdf(const struct BSDF_data *bsdf)
 
 /* Sum together a set of images and write result to stdout */
 static int
-sum_images(const char *fspec, const CMATRIX *cv)
+sum_images(const char *fspec, const CMATRIX *cv, FILE *fp)
 {
 	int	myDT = DTfromHeader;
 	CMATRIX	*pmat;
@@ -370,10 +372,10 @@ sum_images(const char *fspec, const CMATRIX *cv)
 			pmat = cm_alloc(myYR, myXR);
 			memset(pmat->cmem, 0, sizeof(COLOR)*myXR*myYR);
 							/* finish header */
-			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, stdout);
-			fputc('\n', stdout);
-			fprtresolu(myXR, myYR, stdout);
-			fflush(stdout);
+			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, fp);
+			fputc('\n', fp);
+			fprtresolu(myXR, myYR, fp);
+			fflush(fp);
 		} else if ((dt != myDT) | (xr != myXR) | (yr != myYR)) {
 			sprintf(errmsg, "picture '%s' format/size mismatch",
 					fname);
@@ -398,10 +400,10 @@ sum_images(const char *fspec, const CMATRIX *cv)
 	free(scanline);
 							/* write scanlines */
 	for (y = 0; y < myYR; y++)
-		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, stdout) < 0)
+		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, fp) < 0)
 			return(0);
 	cm_free(pmat);					/* all done */
-	return(fflush(stdout) == 0);
+	return(fflush(fp) == 0);
 }
 
 /* check to see if a string contains a %d or %o specification */
@@ -422,37 +424,45 @@ hasNumberFormat(const char *s)
 int
 main(int argc, char *argv[])
 {
-	CMATRIX			*tvec, *Dmat, *Tmat, *ivec, *cvec;
-	struct BSDF_data	*btdf;
+	CMATRIX			*cvec;
 
 	progname = argv[0];
 
-	if ((argc < 4) | (argc > 5)) {
-		fprintf(stderr, "Usage: %s Vspec Tbsdf.xml Dmat.dat [tregvec]\n",
-				progname);
+	if ((argc < 2) | (argc > 5)) {
+		fprintf(stderr, "Usage: %s DCspec [tregvec]\n", progname);
+		fprintf(stderr, "   or: %s Vspec Tbsdf.xml Dmat.dat [tregvec]\n",
+					progname);
 		return(1);
 	}
-						/* load Tregenza vector */
-	tvec = cm_load(argv[4], 0, 1, DTascii);	/* argv[4]==NULL iff argc==4 */
-						/* load BTDF */
-	btdf = load_BSDF(argv[2]);
-	if (btdf == NULL)
-		return(1);
+
+	if (argc > 3) {				/* need to compute DC matrix? */
+		CMATRIX	*svec, *Dmat, *Tmat, *ivec;
+		struct BSDF_data	*btdf;
+						/* get sky vector */
+		svec = cm_load(argv[4], 0, 1, DTascii);
+						/* load BSDF */
+		btdf = load_BSDF(argv[2]);
+		if (btdf == NULL)
+			return(1);
 						/* load Daylight matrix */
-	Dmat = cm_load(argv[3], btdf->ninc, tvec->nrows, DTfromHeader);
+		Dmat = cm_load(argv[3], btdf->ninc, svec->nrows, DTfromHeader);
 						/* multiply vector through */
-	ivec = cm_multiply(Dmat, tvec);
-	cm_free(Dmat); cm_free(tvec);
-	Tmat = cm_bsdf(btdf);			/* convert BTDF to matrix */
-	free_BSDF(btdf);
-	cvec = cm_multiply(Tmat, ivec);		/* cvec = component vector */
-	cm_free(Tmat); cm_free(ivec);
+		ivec = cm_multiply(Dmat, svec);
+		cm_free(Dmat); cm_free(svec);
+		Tmat = cm_bsdf(btdf);		/* convert BTDF to matrix */
+		free_BSDF(btdf);
+		cvec = cm_multiply(Tmat, ivec);	/* cvec = component vector */
+		cm_free(Tmat); cm_free(ivec);
+	} else {				/* else just use sky vector */
+		cvec = cm_load(argv[2], 0, 1, DTascii);
+	}
+
 	if (hasNumberFormat(argv[1])) {		/* generating image */
 		SET_FILE_BINARY(stdout);
 		newheader("RADIANCE", stdout);
 		printargs(argc, argv, stdout);
 		fputnow(stdout);
-		if (!sum_images(argv[1], cvec))
+		if (!sum_images(argv[1], cvec, stdout))
 			return(1);
 	} else {				/* generating vector */
 		CMATRIX	*Vmat = cm_load(argv[1], 0, cvec->nrows, DTfromHeader);

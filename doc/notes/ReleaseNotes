@@ -1736,3 +1736,6 @@ Updated SCons build system for MINGW compilation, thanks to Christian
 Kohler.
 
 Added -u option to rlam for unbuffered output.
+
+Modified dctimestep to accept sky vector and daylight coefficient matrix
+or list of images to sum together, as suggested by Andy McNeil.
