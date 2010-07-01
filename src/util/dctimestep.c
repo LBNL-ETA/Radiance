@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.12 2010/07/01 21:54:56 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.13 2010/07/01 22:44:25 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -334,7 +334,7 @@ cm_bsdf(const struct BSDF_data *bsdf)
 
 /* Sum together a set of images and write result to stdout */
 static int
-sum_images(const char *fspec, const CMATRIX *cv, FILE *fp)
+sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 {
 	int	myDT = DTfromHeader;
 	CMATRIX	*pmat;
@@ -372,10 +372,10 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fp)
 			pmat = cm_alloc(myYR, myXR);
 			memset(pmat->cmem, 0, sizeof(COLOR)*myXR*myYR);
 							/* finish header */
-			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, fp);
-			fputc('\n', fp);
-			fprtresolu(myXR, myYR, fp);
-			fflush(fp);
+			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, fout);
+			fputc('\n', fout);
+			fprtresolu(myXR, myYR, fout);
+			fflush(fout);
 		} else if ((dt != myDT) | (xr != myXR) | (yr != myYR)) {
 			sprintf(errmsg, "picture '%s' format/size mismatch",
 					fname);
@@ -400,10 +400,10 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fp)
 	free(scanline);
 							/* write scanlines */
 	for (y = 0; y < myYR; y++)
-		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, fp) < 0)
+		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, fout) < 0)
 			return(0);
 	cm_free(pmat);					/* all done */
-	return(fflush(fp) == 0);
+	return(fflush(fout) == 0);
 }
 
 /* check to see if a string contains a %d or %o specification */
@@ -435,7 +435,7 @@ main(int argc, char *argv[])
 		return(1);
 	}
 
-	if (argc > 3) {				/* need to compute DC matrix? */
+	if (argc > 3) {				/* VTDs expression */
 		CMATRIX	*svec, *Dmat, *Tmat, *ivec;
 		struct BSDF_data	*btdf;
 						/* get sky vector */
