@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.3 2010/07/03 02:50:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.4 2010/07/03 05:28:05 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -23,7 +23,7 @@ typedef struct {
 	}	lat[MAXLATS+1];		/* latitudes */
 } ANGLE_BASIS;
 
-#define	MAXABASES	5		/* limit on defined bases */
+#define	MAXABASES	7		/* limit on defined bases */
 
 static ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
@@ -200,7 +200,7 @@ ab_getndxR(		/* get index corresponding to the reverse vector */
 
 
 static void
-load_angle_basis(	/* load BSDF angle basis */
+load_angle_basis(	/* load custom BSDF angle basis */
 	ezxml_t wab
 )
 {
@@ -208,11 +208,11 @@ load_angle_basis(	/* load BSDF angle basis */
 	ezxml_t	wbb;
 	int	i;
 	
-	if (abname == NULL || !*abname)
+	if (!abname || !*abname)
 		return;
 	for (i = nabases; i--; )
 		if (!strcmp(abname, abase_list[i].name))
-			return;		/* XXX assume it's the same */
+			return;		/* assume it's the same */
 	if (nabases >= MAXABASES)
 		error(INTERNAL, "too many angle bases");
 	strcpy(abase_list[nabases].name, abname);
@@ -250,11 +250,10 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	char  *sdata;
 	int  i;
 	
-	if ((cbasis == NULL || !*cbasis) | (rbasis == NULL || !*rbasis)) {
+	if ((!cbasis || !*cbasis) | (!rbasis || !*rbasis)) {
 		error(WARNING, "missing column/row basis for BSDF");
 		return;
 	}
-	/* XXX need to add routines for loading in foreign bases */
 	for (i = nabases; i--; )
 		if (!strcmp(cbasis, abase_list[i].name)) {
 			dp->ninc = abase_list[i].nangles;
@@ -265,7 +264,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 			break;
 		}
 	if (i < 0) {
-		sprintf(errmsg, "unsupported ColumnAngleBasis '%s'", cbasis);
+		sprintf(errmsg, "undefined ColumnAngleBasis '%s'", cbasis);
 		error(WARNING, errmsg);
 		return;
 	}
@@ -279,13 +278,13 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 			break;
 		}
 	if (i < 0) {
-		sprintf(errmsg, "unsupported RowAngleBasis '%s'", cbasis);
+		sprintf(errmsg, "undefined RowAngleBasis '%s'", cbasis);
 		error(WARNING, errmsg);
 		return;
 	}
 				/* read BSDF data */
 	sdata  = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
-	if (sdata == NULL || !*sdata) {
+	if (!sdata || !*sdata) {
 		error(WARNING, "missing BSDF ScatteringData");
 		return;
 	}
