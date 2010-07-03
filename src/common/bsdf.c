@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.2 2009/06/19 06:49:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.3 2010/07/03 02:50:22 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -23,7 +23,7 @@ typedef struct {
 	}	lat[MAXLATS+1];		/* latitudes */
 } ANGLE_BASIS;
 
-#define	MAXABASES	3		/* limit on defined bases */
+#define	MAXABASES	5		/* limit on defined bases */
 
 static ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
@@ -60,6 +60,32 @@ static ANGLE_BASIS	abase_list[MAXABASES] = {
 };
 
 static int	nabases = 3;	/* current number of defined bases */
+
+#define  FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
+
+// returns the name of the given tag
+#ifdef ezxml_name
+#undef ezxml_name
+static char *
+ezxml_name(ezxml_t xml)
+{
+	if (xml == NULL)
+		return(NULL);
+	return(xml->name);
+}
+#endif
+
+// returns the given tag's character content or empty string if none
+#ifdef ezxml_txt
+#undef ezxml_txt
+static char *
+ezxml_txt(ezxml_t xml)
+{
+	if (xml == NULL)
+		return("");
+	return(xml->txt);
+}
+#endif
 
 
 static int
@@ -174,6 +200,46 @@ ab_getndxR(		/* get index corresponding to the reverse vector */
 
 
 static void
+load_angle_basis(	/* load BSDF angle basis */
+	ezxml_t wab
+)
+{
+	char	*abname = ezxml_txt(ezxml_child(wab, "AngleBasisName"));
+	ezxml_t	wbb;
+	int	i;
+	
+	if (abname == NULL || !*abname)
+		return;
+	for (i = nabases; i--; )
+		if (!strcmp(abname, abase_list[i].name))
+			return;		/* XXX assume it's the same */
+	if (nabases >= MAXABASES)
+		error(INTERNAL, "too many angle bases");
+	strcpy(abase_list[nabases].name, abname);
+	abase_list[nabases].nangles = 0;
+	for (i = 0, wbb = ezxml_child(wab, "AngleBasisBlock");
+			wbb != NULL; i++, wbb = wbb->next) {
+		if (i >= MAXLATS)
+			error(INTERNAL, "too many latitudes in custom basis");
+		abase_list[nabases].lat[i+1].tmin = atof(ezxml_txt(
+				ezxml_child(ezxml_child(wbb,
+					"ThetaBounds"), "UpperTheta")));
+		if (!i)
+			abase_list[nabases].lat[i].tmin =
+					-abase_list[nabases].lat[i+1].tmin;
+		else if (!FEQ(atof(ezxml_txt(ezxml_child(ezxml_child(wbb,
+					"ThetaBounds"), "LowerTheta"))),
+				abase_list[nabases].lat[i].tmin))
+			error(WARNING, "theta values disagree in custom basis");
+		abase_list[nabases].nangles +=
+			abase_list[nabases].lat[i].nphis =
+				atoi(ezxml_txt(ezxml_child(wbb, "nPhis")));
+	}
+	abase_list[nabases++].lat[i].nphis = 0;
+}
+
+
+static void
 load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	struct BSDF_data *dp,
 	ezxml_t wdb
@@ -184,7 +250,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	char  *sdata;
 	int  i;
 	
-	if ((cbasis == NULL) | (rbasis == NULL)) {
+	if ((cbasis == NULL || !*cbasis) | (rbasis == NULL || !*rbasis)) {
 		error(WARNING, "missing column/row basis for BSDF");
 		return;
 	}
@@ -219,7 +285,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	}
 				/* read BSDF data */
 	sdata  = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
-	if (sdata == NULL) {
+	if (sdata == NULL || !*sdata) {
 		error(WARNING, "missing BSDF ScatteringData");
 		return;
 	}
@@ -388,6 +454,8 @@ load_BSDF(		/* load BSDF data from file */
 		return(NULL);
 	}
 	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
+	load_angle_basis(ezxml_child(ezxml_child(wtl,
+				"DataDefinition"), "AngleBasis"));
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
@@ -474,8 +542,6 @@ r_BSDF_outvec(		/* compute random output vector at given location */
 	return(normalize(v) != 0.0);
 }
 
-
-#define  FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
 
 static int
 addrot(			/* compute rotation (x,y,z) => (xp,yp,zp) */
