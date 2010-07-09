@@ -27,7 +27,9 @@ PROGS = [
 	'rtnet','rterror','$RAD_SOCKETLIB']),
 ('rtcontrib', ['rtcontrib.c', Version],
 	['rtpic','rtargs','rtfunc','rtio','rtproc','rtcont','rtmem','rtpath',
-	'rtmath','rtnet','rterror','$RAD_SOCKETLIB'])
+	'rtmath','rtnet','rterror','$RAD_SOCKETLIB']),
+('dctimestep', ['dctimestep.c'],
+	['rtio','rtmath'])
 ]
 
 for p in PROGS:

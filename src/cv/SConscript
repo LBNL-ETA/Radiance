@@ -51,7 +51,7 @@ prog = env.Program(target=rbin('mgf2meta'), source=['mgf2meta.c'],
 		CPPPATH=env.get('CPPPATH', []) + [os.path.join('#src','meta')],
 		LIBS=['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib)
 
-LIBFILES = Split('source.cal tilt.cal lamp.tab window.cal')
+LIBFILES = Split('source.cal tilt.cal window.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
 
 if os.name == 'posix':

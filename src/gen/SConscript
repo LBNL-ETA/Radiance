@@ -57,7 +57,7 @@ Default('#src/gen')
 env.Install('$RAD_BINDIR', progs)
 
 #surf.cal clockface.hex
-LIBFILES = Split('illum.cal rev.cal skybright.cal surf.cal glaze1.cal glaze2.cal clockface.hex')
+LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal')
 env.Append(RAD_RLIBINSTALL=env.Install('$RAD_RLIBDIR', LIBFILES))
 
 
