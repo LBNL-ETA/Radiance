@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.33 2009/06/14 18:21:58 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.34 2010/07/25 05:50:27 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -581,7 +581,7 @@ getnum(void)			/* scan a positive float */
 
 
 EPNODE *
-getE1(void)				/* E1 -> E1 ADDOP E2 */
+getE1(void)			/* E1 -> E1 ADDOP E2 */
 				/*	 E2 */
 {
     register EPNODE  *ep1, *ep2;
@@ -603,7 +603,7 @@ getE1(void)				/* E1 -> E1 ADDOP E2 */
 
 
 EPNODE *
-getE2(void)				/* E2 -> E2 MULOP E3 */
+getE2(void)			/* E2 -> E2 MULOP E3 */
 				/*	 E3 */
 {
     register EPNODE  *ep1, *ep2;
@@ -615,9 +615,23 @@ getE2(void)				/* E2 -> E2 MULOP E3 */
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
-	if (esupport&E_RCONST &&
-			ep1->type == NUM && ep1->sibling->type == NUM)
-		ep2 = rconst(ep2);
+	if (esupport&E_RCONST) {
+		EPNODE	*ep3 = ep1->sibling;
+		if (ep1->type == NUM && ep3->type == NUM) {
+			ep2 = rconst(ep2);
+		} else if (ep3->type == NUM && ep3->v.num == 0) {
+			if (ep2->type == '/')
+				syntax("divide by zero constant");
+			ep1->sibling = NULL;	/* (E2 * 0) */
+			epfree(ep2);
+			ep2 = ep3;
+		} else if (ep1->type == NUM && ep1->v.num == 0) {
+			epfree(ep3);		/* (0 * E3) or (0 / E3) */
+			ep1->sibling = NULL;
+			efree((char *)ep2);
+			ep2 = ep1;
+		}
+	}
 	ep1 = ep2;
     }
     return(ep1);
@@ -625,29 +639,42 @@ getE2(void)				/* E2 -> E2 MULOP E3 */
 
 
 EPNODE *
-getE3(void)				/* E3 -> E4 ^ E3 */
+getE3(void)			/* E3 -> E4 ^ E3 */
 				/*	 E4 */
 {
-    register EPNODE  *ep1, *ep2;
+	register EPNODE  *ep1, *ep2;
 
-    ep1 = getE4();
-    if (nextc == '^') {
+	ep1 = getE4();
+	if (nextc != '^')
+		return(ep1);
 	ep2 = newnode();
 	ep2->type = nextc;
 	scan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
-	if (esupport&E_RCONST &&
-			ep1->type == NUM && ep1->sibling->type == NUM)
-		ep2 = rconst(ep2);
+	if (esupport&E_RCONST) {
+		EPNODE	*ep3 = ep1->sibling;
+		if (ep1->type == NUM && ep3->type == NUM) {
+			ep2 = rconst(ep2);
+		} else if (ep1->type == NUM && ep1->v.num == 0) {
+			epfree(ep3);		/* (0 ^ E3) */
+			ep1->sibling = NULL;
+			efree((char *)ep2);
+			ep2 = ep1;
+		} else if ((ep3->type == NUM && ep3->v.num == 0) ||
+				(ep1->type == NUM && ep1->v.num == 1)) {
+			epfree(ep2);		/* (E4 ^ 0) or (1 ^ E3) */
+			ep2 = newnode();
+			ep2->type = NUM;
+			ep2->v.num = 1;
+		}
+	}
 	return(ep2);
-    }
-    return(ep1);
 }
 
 
 EPNODE *
-getE4(void)				/* E4 -> ADDOP E5 */
+getE4(void)			/* E4 -> ADDOP E5 */
 				/*	 E5 */
 {
     register EPNODE  *ep1, *ep2;
