@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.19 2009/02/09 20:48:08 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.20 2010/07/27 16:13:40 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -42,13 +42,8 @@ extern "C" {
 
 #define LMESLOWER	(5.62e-3)		/* lower mesopic limit */
 #define	LMESUPPER	(5.62)			/* upper mesopic limit */
-#if	(TM_BRTSCALE==128)
-#define BMESLOWER	(-663)			/* encoded LMESLOWER */
-#define BMESUPPER	(221)			/* encoded LMESUPPER */
-#else
 #define BMESLOWER	((int)(-5.18*TM_BRTSCALE-.5))
 #define BMESUPPER	((int)(1.73*TM_BRTSCALE+.5))
-#endif
 						/* approximate scotopic lum. */
 #define	SCO_rf		0.062
 #define SCO_gf		0.608

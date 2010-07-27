@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.23 2008/05/31 19:38:36 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.24 2010/07/27 16:13:40 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -51,7 +51,7 @@ extern "C" {
 
 /****    Conversion Constants and Table Sizes    ****/
 
-#define	TM_BRTSCALE	128		/* brightness scale factor (integer) */
+#define	TM_BRTSCALE	512		/* brightness scale factor (integer) */
 
 #define TM_NOBRT	(-1<<15)	/* bogus brightness value */
 #define TM_NOLUM	(1e-17)		/* ridiculously small luminance */
