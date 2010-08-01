@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.4 2010/07/03 05:28:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.5 2010/08/01 22:26:37 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -308,7 +308,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 		sdata++;
 	if (*sdata) {
 		sprintf(errmsg, "%d extra characters after BSDF ScatteringData",
-				strlen(sdata));
+				(int)strlen(sdata));
 		error(WARNING, errmsg);
 	}
 }
