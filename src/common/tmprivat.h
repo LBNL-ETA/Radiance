@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.21 2010/07/27 16:19:57 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.22 2010/08/18 15:25:03 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -32,7 +32,7 @@ extern "C" {
 
 #define BRT2SCALE(l2)	(int)(M_LN2*TM_BRTSCALE*(l2) + ((l2)>0 ? .5 : -.5))
 
-#define HISTEP		32		/* steps in BRTSCALE for each bin */
+#define HISTEP		16		/* steps in BRTSCALE for each bin */
 
 #define MINBRT		(-16*TM_BRTSCALE)	/* minimum usable brightness */
 #define MINLUM		(1.125352e-7)		/* tmLuminance(MINBRT) */
