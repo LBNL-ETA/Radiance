@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.57 2008/07/17 18:26:01 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.58 2010/08/23 15:56:17 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -306,11 +306,13 @@ sourcehit(			/* check to see if ray hit distant source */
 		 * If it's a glow or transparent illum, just remember it.
 		 */
 		if (source[i].sflags & SSKIP) {
-			glowsrc = i;
+			if (glowsrc < 0)
+				glowsrc = i;
 			continue;
 		}
 		if (transillum(source[i].so->omod)) {
-			transrc = i;
+			if (transrc < 0)
+				transrc = i;
 			continue;
 		}
 		r->ro = source[i].so;	/* otherwise, use first hit */
