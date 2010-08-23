@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.59 2009/12/12 19:00:59 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.60 2010/08/23 15:57:46 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -125,6 +125,7 @@ $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
 
 $(RLIB):	$(ROBJS) Version.o
+	rm -f $(RLIB)
 	ar rc $(RLIB) $(ROBJS) Version.o
 	-ranlib $(RLIB)
 
