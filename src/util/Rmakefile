@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.55 2009/07/02 02:13:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.56 2010/09/02 02:29:24 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -26,7 +26,7 @@ all:	$(PROGS)
 
 install:	all $(SPECIAL) objview.csh objpict.csh glare.csh dayfact.csh \
 rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh vinfo.csh \
-genambpos.csh fieldcomb.csh genklemsamp.pl genskyvec.pl tregsamp.dat
+genambpos.csh fieldcomb.csh genklemsamp.pl genskyvec.pl genBSDF.pl tregsamp.dat
 	cp $(PROGS) $(INSTDIR)
 	cp objview.csh $(INSTDIR)/objview
 	cp objline.csh $(INSTDIR)/objline
@@ -42,9 +42,11 @@ genambpos.csh fieldcomb.csh genklemsamp.pl genskyvec.pl tregsamp.dat
 	cp fieldcomb.csh $(INSTDIR)/fieldcomb
 	cp genklemsamp.pl $(INSTDIR)/genklemsamp
 	cp genskyvec.pl $(INSTDIR)/genskyvec
+	cp genBSDF.pl $(INSTDIR)/genBSDF
 	cd $(INSTDIR) ; chmod 755 objview objpict \
 		glare dayfact debugcal rlux raddepend objline \
-		compamb vinfo genambpos fieldcomb genklemsamp genskyvec
+		compamb vinfo genambpos fieldcomb genklemsamp \
+		genskyvec genBSDF
 	cp tregsamp.dat $(LIBDIR)
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
