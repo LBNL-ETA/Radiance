@@ -1739,3 +1739,7 @@ Added -u option to rlam for unbuffered output.
 
 Modified dctimestep to accept sky vector and daylight coefficient matrix
 or list of images to sum together, as suggested by Andy McNeil.
+
+Created genBSDF script to generate BSDF in Windows XML format.
+
+Modified mkillum to accept detailed geometry from BSDF XML files.

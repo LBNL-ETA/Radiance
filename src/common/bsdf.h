@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.2 2010/06/14 22:02:22 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.3 2010/09/03 23:53:50 greg Exp $ */
 /*
  * Header for BSDF i/o and access routines
  */
@@ -25,6 +25,8 @@ typedef double	b_radf(int, void *);
 struct BSDF_data {
 	int	ninc;			/* number of incoming directions */
 	int	nout;			/* number of outgoing directions */
+	float	dim[3];			/* width, height, thickness (meters) */
+	char	*mgf;			/* geometric description (if any) */
 	void	*ib_priv;		/* input basis private data */
 	b_vecf	*ib_vec;		/* get input vector from index */
 	b_ndxf	*ib_ndx;		/* get input index from vector */
@@ -50,6 +52,6 @@ extern int r_BSDF_incvec(FVECT v, struct BSDF_data *b, int i,
 				double rv, MAT4 xm);
 extern int r_BSDF_outvec(FVECT v, struct BSDF_data *b, int o,
 				double rv, MAT4 xm);
-extern int getBSDF_xfm(MAT4 xm, FVECT nrm, UpDir ud);
+extern int getBSDF_xfm(MAT4 xm, FVECT nrm, UpDir ud, char *xfbuf);
 
 #endif  /* ! _RAD_BSDF_H_ */

@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.17 2009/06/12 17:37:37 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.18 2010/09/03 23:53:50 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -52,6 +52,9 @@ extern void rayclean(void);
 
 extern void flatdir(FVECT  dv, double  alt, double  azi);
 extern int flatindex(FVECT dv, int nalt, int nazi);
+
+extern int printgeom(struct BSDF_data *sd, char *xfrot,
+			FVECT ctr, double s1, double s2);
 
 extern int my_default(OBJREC *, struct illum_args *, char *);
 extern int my_face(OBJREC *, struct illum_args *, char *);

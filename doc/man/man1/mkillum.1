@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.9 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.10 2010/09/03 23:53:49 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -179,13 +179,12 @@ The RADIANCE library path will be searched if the file does not begin
 with a '.' or '~' character.
 This file must contain an LBNL Window 6 XML specification of a valid
 BSDF for the given surface, and all rays will be interpreted through
-this function.
+this function, which may be produced by the Radiance
+.I genBSDF(1)
+program.
 The orientation of the BSDF may be controlled with the
 .I u
 setting, described below.
-The thickness of the surface may be controlled with the
-.I t
-setting.
 If this variable has no setting or an integer is specified,
 .I mkillum
 returns to the default behavior of computing the output distribution
@@ -227,9 +226,14 @@ Set the surface thickness to
 .I real
 in world coordinates.
 This value is used for determining where to start rays that need to begin
-on the opposite side of the surface, specifically to compute the incoming
-distribution for a BSDF computation.
-The default value is 0.
+on the opposite side of a fenestration system, specifically
+to compute the incoming distribution for a BSDF computation.
+If the thickness is set to 0 and a BSDF contains detailed geometry,
+it will be translated and output as part of the new description, provided the
+.I l-
+option is also in effect.
+(This currently works only for rectangular polygons.)\0
+The default thickness is 0.
 .SH EXAMPLES
 The following command generates illum's corresponding to geometry
 in the files "it1.rad" and "it2.rad":
@@ -246,4 +250,4 @@ Greg Ward
 Work on this program was initiated and sponsored by the LESO
 group at EPFL in Switzerland.
 .SH "SEE ALSO"
-oconv(1), rad(1), rpict(1), rtrace(1), rvu(1)
+genBSDF(1), oconv(1), rad(1), rpict(1), rtrace(1), rvu(1)

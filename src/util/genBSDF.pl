@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.1 2010/09/02 02:29:24 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.2 2010/09/03 23:53:50 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -82,12 +82,15 @@ Kmax : Kaccum(Knaz(0));
 Kfindrow(r, rem) : if(rem-Knaz(r)+.5, Kfindrow(r+1, rem-Knaz(r)), r);
 Krow = if(Kbin-(Kmax-.5), 0, Kfindrow(1, Kbin));
 Kcol = Kbin - Kaccum(Krow-1);
-Kazi = 360*DEGREE * (Kcol + .5 - x2) / Knaz(Krow);
+Kazi = 360*DEGREE * (Kcol + (.5 - x2)) / Knaz(Krow);
 Kpol = DEGREE * (x1*Kpola(Krow) + (1-x1)*Kpola(Krow-1));
 sin_kpol = sin(Kpol);
 Dx = -cos(Kazi)*sin_kpol;
 Dy = sin(Kazi)*sin_kpol;
 Dz = sqrt(1 - sin_kpol*sin_kpol);
+Komega = 2*PI*if(Kbin-.5,
+	(cos(Kpola(Krow-1)*DEGREE) - cos(Kpola(Krow)*DEGREE))/Knaz(Krow),
+	1 - cos(Kpola(1)*DEGREE));
 ';
 # Compute Klems bin from exiting ray direction
 my $kcal = '
@@ -240,8 +243,9 @@ system "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
 	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
 	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
-	"-m $modnm -w -ab 4 -lw 1e-5 $octree " .
-	q{| rcalc -if3 -e '$1=0.265*$1+0.670*$2+0.065*$3'};
+	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
+	"| rcalc -e 'x1:.5;x2:.5;$tcal' -e 'Kbin=floor((recno-1)/$ndiv)' " .
+	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/(Komega*Dz)'};
 # Output XML epilogue
 print
 '		</ScatteringData>

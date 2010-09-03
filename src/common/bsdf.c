@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.5 2010/08/01 22:26:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.6 2010/09/03 23:53:50 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -239,6 +239,62 @@ load_angle_basis(	/* load custom BSDF angle basis */
 }
 
 
+static double
+to_meters(		/* return factor to convert given unit to meters */
+	const char *unit
+)
+{
+	if (unit == NULL) return(1.);		/* safe assumption? */
+	if (!strcasecmp(unit, "Meter")) return(1.);
+	if (!strcasecmp(unit, "Foot")) return(.3048);
+	if (!strcasecmp(unit, "Inch")) return(.0254);
+	if (!strcasecmp(unit, "Centimeter")) return(.01);
+	sprintf(errmsg, "unknown dimensional unit '%s'", unit);
+	error(USER, errmsg);
+}
+
+
+static void
+load_geometry(		/* load geometric dimensions and description (if any) */
+	struct BSDF_data *dp,
+	ezxml_t wdb
+)
+{
+	ezxml_t		geom;
+	double		cfact;
+	const char	*fmt, *mgfstr;
+
+	dp->dim[0] = dp->dim[1] = dp->dim[2] = 0;
+	dp->mgf = NULL;
+	if ((geom = ezxml_child(wdb, "Width")) != NULL)
+		dp->dim[0] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((geom = ezxml_child(wdb, "Height")) != NULL)
+		dp->dim[1] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((geom = ezxml_child(wdb, "Thickness")) != NULL)
+		dp->dim[2] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
+			(mgfstr = ezxml_txt(geom)) == NULL)
+		return;
+	if ((fmt = ezxml_attr(geom, "format")) != NULL &&
+			strcasecmp(fmt, "MGF")) {
+		sprintf(errmsg, "unrecognized geometry format '%s'", fmt);
+		error(WARNING, errmsg);
+		return;
+	}
+	cfact = to_meters(ezxml_attr(geom, "unit"));
+	dp->mgf = (char *)malloc(strlen(mgfstr)+32);
+	if (dp->mgf == NULL)
+		error(SYSTEM, "out of memory in load_geometry");
+	if (cfact < 0.99 || cfact > 1.01)
+		sprintf(dp->mgf, "xf -s %.5f\n%s\nxf\n", cfact, mgfstr);
+	else
+		strcpy(dp->mgf, mgfstr);
+}
+
+
 static void
 load_bsdf_data(		/* load BSDF distribution for this wavelength */
 	struct BSDF_data *dp,
@@ -417,6 +473,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 	return(1);
 }
 
+
 struct BSDF_data *
 load_BSDF(		/* load BSDF data from file */
 	char *fname
@@ -456,6 +513,7 @@ load_BSDF(		/* load BSDF data from file */
 	load_angle_basis(ezxml_child(ezxml_child(wtl,
 				"DataDefinition"), "AngleBasis"));
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
+	load_geometry(dp, ezxml_child(wtl, "Material"));
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
 		if (strcmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
@@ -486,6 +544,8 @@ free_BSDF(		/* free BSDF data structure */
 {
 	if (b == NULL)
 		return;
+	if (b->mgf != NULL)
+		free(b->mgf);
 	if (b->bsdf != NULL)
 		free(b->bsdf);
 	free(b);
@@ -592,12 +652,14 @@ int
 getBSDF_xfm(		/* compute BSDF orient. -> world orient. transform */
 	MAT4 xm,
 	FVECT nrm,
-	UpDir ud
+	UpDir ud,
+	char *xfbuf
 )
 {
 	char	*xfargs[7];
 	XF	myxf;
 	FVECT	updir, xdest, ydest;
+	int	i;
 
 	updir[0] = updir[1] = updir[2] = 0.;
 	switch (ud) {
@@ -628,5 +690,13 @@ getBSDF_xfm(		/* compute BSDF orient. -> world orient. transform */
 	fcross(ydest, nrm, xdest);
 	xf(&myxf, addrot(xfargs, xdest, ydest, nrm), xfargs);
 	copymat4(xm, myxf.xfm);
+	if (xfbuf == NULL)
+		return(1);
+				/* return xf arguments as well */
+	for (i = 0; xfargs[i] != NULL; i++) {
+		*xfbuf++ = ' ';
+		strcpy(xfbuf, xfargs[i]);
+		while (*xfbuf) ++xfbuf;
+	}
 	return(1);
 }

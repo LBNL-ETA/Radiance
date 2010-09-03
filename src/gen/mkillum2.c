@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.34 2009/09/09 15:32:20 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.35 2010/09/03 23:53:50 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.34 2009/09/09 15:32:20 greg Exp
 #include  "face.h"
 #include  "cone.h"
 #include  "source.h"
+#include  "paths.h"
 
 #ifndef NBSDFSAMPS
 #define NBSDFSAMPS	256		/* BSDF resampling count */
@@ -248,6 +249,7 @@ flatdir(		/* compute uniform hemispherical direction */
 	dv[2] = sqrt(1. - alt);
 }
 
+
 int
 flatindex(		/* compute index for hemispherical direction */
 	FVECT	dv,
@@ -265,6 +267,51 @@ flatindex(		/* compute index for hemispherical direction */
 	j = d*nazi + 0.5;
 	if (j >= nazi) j = 0;
 	return(i*nazi + j);
+}
+
+
+int
+printgeom(		/* print out detailed geometry for BSDF */
+	struct BSDF_data *sd,
+	char *xfrot,
+	FVECT ctr,
+	double s1,
+	double s2
+)
+{
+        static char	mgftemp[] = TEMPLATE;
+	char		cmdbuf[64];
+	FILE		*fp;
+	double		sca;
+
+	if (sd == NULL || sd->mgf == NULL)
+		return(0);
+	if (sd->dim[0] <= FTINY || sd->dim[1] <= FTINY)
+		return(0);
+	if ((s1 > s2) ^ (sd->dim[0] > sd->dim[1])) {
+		sca = s1; s1 = s2; s2 = sca;
+	}
+	s1 /= sd->dim[0];
+	s2 /= sd->dim[1];
+	sca = s1 > s2 ? s1 : s2;
+	strcpy(mgftemp, TEMPLATE);
+	if ((fp = fopen(mktemp(mgftemp), "w")) == NULL)
+		error(SYSTEM, "cannot create temporary file for MGF");
+					/* prepend our transform */
+	fprintf(fp, "xf%s -s %.5f -t %.5g %.5g %.5g\n",
+			xfrot, sca, ctr[0], ctr[1], ctr[2]);
+					/* output given MGF description */
+	fputs(sd->mgf, fp);
+	fputs("\nxf\n", fp);
+	if (fclose(fp) == EOF)
+		error(SYSTEM, "error writing MGF temporary file");
+					/* execute mgf2rad to convert MGF */
+	strcpy(cmdbuf, "mgf2rad ");
+	strcpy(cmdbuf+8, mgftemp);
+	fflush(stdout);
+	system(cmdbuf);
+	unlink(mgftemp);		/* clean up */
+	return(1);
 }
 
 
@@ -298,6 +345,7 @@ my_face(		/* make an illum face */
 	FVECT  u, v;
 	double  ur[2], vr[2];
 	MAT4  xfm;
+	char  xfrot[64];
 	int  nallow;
 	FACE  *fa;
 	int  i, j;
@@ -309,7 +357,7 @@ my_face(		/* make an illum face */
 	}
 				/* set up sampling */
 	if (il->sd != NULL) {
-		if (!getBSDF_xfm(xfm, fa->norm, il->udir)) {
+		if (!getBSDF_xfm(xfm, fa->norm, il->udir, xfrot)) {
 			objerror(ob, WARNING, "illegal up direction");
 			freeface(ob);
 			return(my_default(ob, il, nm));
@@ -350,6 +398,15 @@ my_face(		/* make an illum face */
 		r2 = DOT(VERTEX(fa,i),v);
 		if (r2 < vr[0]) vr[0] = r2;
 		if (r2 > vr[1]) vr[1] = r2;
+	}
+				/* output detailed geometry? */
+	if (!(il->flags & IL_LIGHT) && il->sd != NULL && il->sd->mgf != NULL &&
+			il->thick <= FTINY) {
+		for (j = 3; j--; )
+			org[j] = .5*(ur[0]+ur[1])*u[j] +
+					.5*(vr[0]+vr[1])*v[j] +
+					fa->offset*fa->norm[j];
+		printgeom(il->sd, xfrot, org, ur[1]-ur[0], vr[1]-vr[0]);
 	}
 	dim[0] = random();
 				/* sample polygon */
@@ -549,7 +606,7 @@ my_ring(		/* make an illum ring */
 	co = getcone(ob, 0);
 				/* set up sampling */
 	if (il->sd != NULL) {
-		if (!getBSDF_xfm(xfm, co->ad, il->udir)) {
+		if (!getBSDF_xfm(xfm, co->ad, il->udir, NULL)) {
 			objerror(ob, WARNING, "illegal up direction");
 			freecone(ob);
 			return(my_default(ob, il, nm));

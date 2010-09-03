@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.26 2009/06/17 20:41:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.27 2010/09/03 23:53:50 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -110,7 +110,7 @@ mkillum.o mkillum2.o mkillum3.o:	mkillum.h ../common/bsdf.h \
 
 mkillum2.o:	../rt/source.h ../common/face.h ../common/cone.h
 
-mkillum3.o:	../common/paths.h
+mkillum2.o mkillum3.o:	../common/paths.h
 
 gensky.o:	../common/color.h
 
