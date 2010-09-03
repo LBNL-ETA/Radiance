@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.30 2004/03/29 00:34:23 schorsch Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.31 2010/09/03 21:18:15 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -87,8 +87,6 @@ char  *progname;
 static gethfunc headline;
 static brightfunc_t rgb_bright;
 static brightfunc_t xyz_bright;
-//static double rgb_bright(COLOR  clr);
-//static double xyz_bright(COLOR  clr);
 static void copyfile(FILE  *in, FILE  *out);
 static void pass1(FILE  *in);
 static void pass2(FILE  *in);

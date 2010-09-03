@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.8 2004/05/25 22:04:14 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.9 2010/09/03 21:18:15 greg Exp $";
 #endif
 /*
  * 3D warping routines.
@@ -33,7 +33,6 @@ static int get3dgpt(W3VEC ov, GNDX ndx, WARP3D *wp);
 static int get3dgin(W3VEC ov, GNDX ndx, W3VEC rem, WARP3D *wp);
 static void l3interp(W3VEC vo, W3VEC *cl, W3VEC dv, int n);
 static int warp3dex(W3VEC ov, W3VEC pi, WARP3D *wp);
-//static unsigned long gridhash(const void *gp);
 static lut_hashf_t gridhash;
 static int new3dgrid(WARP3D *wp);
 static void done3dgrid(struct grid3d *gp);
@@ -366,11 +365,9 @@ free3dw(			/* free WARP3D data */
 
 static unsigned long
 gridhash(			/* hash a grid point index */
-	//GNDX	gp
 	const void	*gp
 )
 {
-	//return(((unsigned long)gp[0]<<GNBITS | gp[1])<<GNBITS | gp[2]);
 	return(((unsigned long)((const unsigned char*)gp)[0]<<GNBITS | ((const unsigned char*)gp)[1])<<GNBITS | ((const unsigned char*)gp)[2]);
 }
 
