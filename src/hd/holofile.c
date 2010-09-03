@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.58 2008/12/04 23:34:00 greg Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.59 2010/09/03 23:52:42 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -246,7 +246,8 @@ hdinit(	/* initialize a holodeck section in a file */
 		}
 	if (rtrunc) {
 		sprintf(errmsg, "truncated section, %ld rays lost (%.1f%%)",
-				rtrunc, 100.*rtrunc/(rtrunc+biglob(hp)->nrd));
+				(long)rtrunc,
+				100.*rtrunc/(rtrunc+biglob(hp)->nrd));
 		error(WARNING, errmsg);
 	}
 					/* add to holodeck list */
