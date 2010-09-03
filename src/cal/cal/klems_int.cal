@@ -1,6 +1,6 @@
-{ RCSid $Id: klems_int.cal,v 1.2 2009/06/15 19:31:24 greg Exp $ }
+{ RCSid $Id: klems_int.cal,v 1.3 2010/09/03 23:53:11 greg Exp $ }
 {
-	Compute interior bin for (full) Klems BSDF basis
+	Compute interior bin for (full) Klems BSDF basis (0-144)
 
 	Modified from Tregenza.cal, which is similar but different
 
@@ -17,7 +17,7 @@ kaccum(r) : if(r-.5, knaz(r) + kaccum(r-1), 0);
 kfindrow(r, pol) : if(r-kpola(0)+.5, r,
 		if(pol-kpola(r), kfindrow(r+1, pol), r) );
 
-kazn(azi,inc) : if(azi-(360-.5*inc), 0, floor((azi+.5*inc)/inc));
+kazn(azi,inc) : if((360-.5*inc)-azi, floor((azi+.5*inc)/inc), 0);
 
 kbin2(pol,azi) = select(kfindrow(1, pol),
 		kazn(azi,360/knaz(1)),
