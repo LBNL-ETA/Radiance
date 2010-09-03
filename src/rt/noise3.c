@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: noise3.c,v 2.10 2006/03/02 17:16:56 greg Exp $";
+static const char	RCSid[] = "$Id: noise3.c,v 2.11 2010/09/03 21:16:50 greg Exp $";
 #endif
 /*
  *  noise3.c - noise functions for random textures.
@@ -38,9 +38,6 @@ static const char	RCSid[] = "$Id: noise3.c,v 2.10 2006/03/02 17:16:56 greg Exp $
 static char  noise_name[4][8] = {"noise3x", "noise3y", "noise3z", "noise3"};
 static char  fnoise_name[] = "fnoise3";
 static char  hermite_name[] = "hermite";
-
-//double  *noise3(), fnoise3(), frand();
-//static  interpolate();
 
 static long  xlim[3][2];
 static double  xarg[3];

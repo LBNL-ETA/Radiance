@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.82 2010/05/15 15:31:30 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.83 2010/09/03 21:16:50 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -51,7 +51,6 @@ int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
 int  samplendx;				/* sample index number */
 
-//extern void  ambnotify();
 void  (*addobjnotify[])() = {ambnotify, NULL};
 
 VIEW  ourview = STDVIEW;		/* view parameters */
@@ -118,10 +117,6 @@ time_t  tstart;				/* starting time */
 int  hres, vres;			/* resolution for this frame */
 
 static VIEW	lastview;		/* the previous view input */
-
-//extern char  *mktemp();  /* XXX should be in stdlib.h or unistd.h */
-
-//double	pixvalue();
 
 static void report(int);
 static int nextview(FILE *fp);
