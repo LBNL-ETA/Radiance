@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.34 2010/07/25 05:50:27 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.35 2010/09/04 19:04:35 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -619,12 +619,17 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 		EPNODE	*ep3 = ep1->sibling;
 		if (ep1->type == NUM && ep3->type == NUM) {
 			ep2 = rconst(ep2);
-		} else if (ep3->type == NUM && ep3->v.num == 0) {
-			if (ep2->type == '/')
-				syntax("divide by zero constant");
-			ep1->sibling = NULL;	/* (E2 * 0) */
-			epfree(ep2);
-			ep2 = ep3;
+		} else if (ep3->type == NUM) {
+			if (ep2->type == '/') {
+				if (ep3->v.num == 0)
+					syntax("divide by zero constant");
+				ep2->type = '*';	/* for speed */
+				ep3->v.num = 1./ep3->v.num;
+			} else if (ep3->v.num == 0) {
+				ep1->sibling = NULL;	/* (E2 * 0) */
+				epfree(ep2);
+				ep2 = ep3;
+			}
 		} else if (ep1->type == NUM && ep1->v.num == 0) {
 			epfree(ep3);		/* (0 * E3) or (0 / E3) */
 			ep1->sibling = NULL;
