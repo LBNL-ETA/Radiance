@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.1 2010/09/04 15:17:43 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.2 2010/09/04 15:19:28 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -66,9 +66,9 @@ processes to run in
 .SH EXAMPLE
 To create a BSDF description including geometry from a set of venetian blinds:
 .IP "" .2i
-genblinds blind_white blind1 .07 3 1.5 30 40 > blind1.rad
+genblinds blind_white blind1 .07 3 1.5 30 40 | xform -rz -90 -rx 90 > blind1.rad
 .br
-genBSDF blind_white.mat blind1.rad > blind1.xml
+genBSDF blind_white.mat glazing.rad blind1.rad > blind1.xml
 .SH NOTES
 Currently,
 .I genBSDF
