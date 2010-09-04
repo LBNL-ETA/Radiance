@@ -1,3 +1,4 @@
+{ RCSid $Id: root.cal,v 1.2 2010/09/04 19:26:09 greg Exp $ }
 {
 	root.cal - calculate zeroes of functions using Newton's method.
 
@@ -18,7 +19,7 @@ abs(x) = if(x, x, -x);
 lim(x) = if(x, max(x,err), -max(-x,err));
 max(a,b) = if(a-b, a, b);
 
-f1(f,x) = (f(x+FTINY)-f(x-FTINY))/FTINY/2;	{ numerical derivative }
+f1(f,x) = (f(x+FTINY)-f(x-FTINY))/(2*FTINY);	{ numerical derivative }
 
 err = 1e-6;
 nit = 100;
