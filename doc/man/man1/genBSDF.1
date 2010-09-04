@@ -1,0 +1,81 @@
+.\" RCSid $Id: genBSDF.1,v 1.1 2010/09/04 15:17:43 greg Exp $
+.TH GENBSDF 1 9/3/2010 RADIANCE
+.SH NAME
+genBSDF - generate BSDF description from Radiance or MGF input
+.SH SYNOPSIS
+.B genBSDF
+[
+.B "\-c Nsamp"
+][
+.B "\-n Nproc"
+][
+.B "{+|-}mgf"
+][
+.B "{+|-}geom
+][
+.B "\-dim Xmin Xmax Ymin Ymax Zmin Zmax"
+]
+[
+.B "geom .."
+]
+.SH DESCRIPTION
+.I GenBSDF
+computes a bidirectional transmittance distribution function from
+a Radiance or MGF scene description given on the input.
+The program assumes the input is in Radiance format unless the
+.I \+mgf
+option is specified.
+The output conforms to the LBNL Window 6 XML standard for BSDF data,
+and will include an MGF representation of the input geometry if the
+.I \+geom
+option is given.
+(This is currently the default, and may be switche off using
+.I \-geom.)\0
+.PP
+The geometry must fit a rectangular profile, whose width is along the X-axis,
+height is in the Y-axis, and depth is in the Z-axis.
+The positive Z-axis points into the room, and the input geometry should
+not extend into the room.
+(I.e., it should not contain any positive Z values, since the putative 
+emitting surface is assumed to lie at Z=0.)\0
+The entire window system should be modeled, including sills and
+edge geometry anticipated in the final installation, otherwise
+accuracy will be impaired.
+Similarly, materials in the description should be carefully measured.
+.PP
+Normally, the input geometry will be positioned according to its actual
+bounding box, but this may be overridden with the
+.I \-dim
+option.
+Use this in cases where the fenestration system is designed to fit a
+smaller (or larger) opening or is offset somehow.
+.PP
+The variance in the results may be reduced by increasing the number of
+samples per incident direction using the
+.I \-c
+option.
+This value defaults to 1000 samples distributed over the incoming plane
+for each of the 145 Klems hemisphere directions.
+.PP
+In some cases, the processing time may be reduced by the
+.I \-n
+option, which specifies the number of simultaneous
+.I rtrace(1)
+processes to run in
+.I rtcontrib(1).
+.SH EXAMPLE
+To create a BSDF description including geometry from a set of venetian blinds:
+.IP "" .2i
+genblinds blind_white blind1 .07 3 1.5 30 40 > blind1.rad
+.br
+genBSDF blind_white.mat blind1.rad > blind1.xml
+.SH NOTES
+Currently,
+.I genBSDF
+computes only the forward visible transmitted component,
+though the XML specification provides for front and back
+transmission and reflection as well.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+dctimestep(1), genklemsamp(1), genskyvec(1), mkillum(1), rtcontrib(1), rtrace(1)
