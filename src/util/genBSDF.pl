@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.2 2010/09/03 23:53:50 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.3 2010/09/09 06:02:16 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -7,7 +7,7 @@
 #
 use strict;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-dim xmin xmax ymin ymax zmin zmax][{+|-}mgf][{+|-}geom] [input ..]";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-dim xmin xmax ymin ymax zmin zmax][{+|-}mgf][{+|-}geom] [input ..]\n";
 	exit 1;
 }
 my $td = `mktemp -d /tmp/genBSDF.XXXXXX`;
@@ -121,6 +121,19 @@ my $ndiv = 145;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + .5);
 my $ny = int($nsamp/$nx + .5);
 $nsamp = $nx * $ny;
+# Compute scattering data using rtcontrib
+my $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
+	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
+	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
+	"-e 'zp:$dim[4]-1e-5' " .
+	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
+	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
+	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
+	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
+	"| rcalc -e 'x1:.5;x2:.5;$tcal' -e 'Kbin=floor((recno-1)/$ndiv)' " .
+	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/(Komega*Dz)'};
+my @darr = `$cmd`;
+die "Failure running: $cmd\n" if ( $? );
 # Output XML prologue
 print
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -235,17 +248,13 @@ print '			</Material>
 			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Compute actual scattering data using rtcontrib
-system "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
-	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
-	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
-	"-e 'zp:$dim[4]-1e-5' " .
-	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
-	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
-	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
-	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
-	"| rcalc -e 'x1:.5;x2:.5;$tcal' -e 'Kbin=floor((recno-1)/$ndiv)' " .
-	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/(Komega*Dz)'};
+# Output computed data (transposed order)
+for (my $od = 0; $od < $ndiv; $od++) {
+	for (my $id = 0; $id < $ndiv; $id++) {
+		print $darr[$ndiv*$id + $od];
+	}
+	print "\n";
+}
 # Output XML epilogue
 print
 '		</ScatteringData>
