@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.97 2010/05/28 17:29:14 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.98 2010/09/12 18:42:40 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -165,7 +165,7 @@ static int touch(char	*fn);
 static int runcom(char	*cs);
 static int rmfile(char	*fn);
 static int mvfile(char	*fold, char	*fnew);
-static int next_process(void);
+static int next_process(int	reserve);
 static void wait_process(int	all);
 static void finish_process(void);
 static void badvalue(int	vc);
@@ -1371,7 +1371,7 @@ rpict(				/* run rpict and pfilt for each view */
 				fprintf(fp, "%d %d\n", xdiv, ydiv);
 				fclose(fp);
 			}
-		} else if (next_process()) {
+		} else if (next_process(0)) {
 			if (pfile != NULL)
 				sleep(10);
 			continue;
@@ -1384,8 +1384,7 @@ rpict(				/* run rpict and pfilt for each view */
 				sprintf(combuf, "%s -R %s %s%s %s %s%s%s -o %s %s",
 						c_rpiece, sfile, rppopt, rep, vw,
 						res, opts, po, rawfile, oct1name);
-				while (children_running < nprocs-1 &&
-							next_process()) {
+				while (next_process(1)) {
 					sleep(10);
 					combuf[strlen(c_rpiece)+2] = 'F';
 				}
@@ -1401,8 +1400,7 @@ rpict(				/* run rpict and pfilt for each view */
 						c_rpict, rep, vw, opts,
 						oct1name, overfile);
 				if (do_rpiece)
-					while (children_running < nprocs-1 &&
-							next_process())
+					while (next_process(1))
 						sleep(5);
 				if (runcom(combuf)) {
 					fprintf(stderr,
@@ -1422,8 +1420,7 @@ rpict(				/* run rpict and pfilt for each view */
 				sprintf(combuf, "%s -F %s %s%s %s %s%s%s -o %s %s",
 						c_rpiece, sfile, rppopt, rep, vw,
 						res, opts, po, rawfile, oct1name);
-				while (children_running < nprocs-1 &&
-							next_process())
+				while (next_process(1))
 					sleep(10);
 			} else {
 				sprintf(combuf, "%s%s %s %s%s%s%s %s > %s",
@@ -1554,7 +1551,7 @@ mvfile(		/* move a file */
 
 #ifdef RHAS_FORK_EXEC
 static int
-next_process(void)			/* fork the next process (max. nprocs) */
+next_process(int reserve)		/* fork the next process */
 {
 	RT_PID	child_pid;
 
@@ -1565,6 +1562,8 @@ next_process(void)			/* fork the next process (max. nprocs) */
 				progname);
 		quit(1);
 	}
+	if (reserve > 0 && children_running >= nprocs-reserve)
+		return(0);		/* caller holding back process(es) */
 	if (children_running >= nprocs)
 		wait_process(0);	/* wait for someone to finish */
 	fflush(NULL);			/* flush output */
@@ -1612,7 +1611,7 @@ wait_process(			/* wait for process(es) to finish */
 }
 #else	/* ! RHAS_FORK_EXEC */
 static int
-next_process(void)
+next_process(int reserve)
 {
 	return(0);			/* cannot start new process */
 }
