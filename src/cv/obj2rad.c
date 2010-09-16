@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.25 2008/11/10 19:08:18 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.26 2010/09/16 03:28:21 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -36,6 +36,7 @@ RREAL	(*vtlist)[2];		/* map vertex list */
 int	nvts;
 
 int	ndegen = 0;		/* count of degenerate faces */
+int	n0norm = 0;		/* count of zero normals */
 
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
 
@@ -144,6 +145,8 @@ main(		/* read in .obj file and convert */
 	}
 	if (ndegen)
 		printf("# %d degenerate faces\n", ndegen);
+	if (n0norm)
+		printf("# %d invalid (zero) normals\n", n0norm);
 	exit(0);
 userr:
 	fprintf(stderr, "Usage: %s [-o obj][-m mapping][-n][-f] [file.obj]\n",
@@ -498,6 +501,9 @@ cvtndx(				/* convert vertex string to index */
 			return(0);
 	} else
 		vi[2] = -1;
+					/* zero normal is not normal */
+	if (vi[2] >= 0 && DOT(vnlist[vi[2]],vnlist[vi[2]]) <= FTINY)
+		vi[2] = -1;
 	return(1);
 }
 
@@ -753,8 +759,7 @@ newvn(			/* create a new vertex normal */
 	vnlist[nvns][0] = x;
 	vnlist[nvns][1] = y;
 	vnlist[nvns][2] = z;
-	if (normalize(vnlist[nvns]) == 0.0)
-		return(0);
+	n0norm += (normalize(vnlist[nvns]) == 0.0);
 	return(++nvns);
 }
 
