@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.33 2009/12/15 18:21:53 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.34 2010/09/26 15:51:15 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -237,6 +237,11 @@ extern char	*formstr(int  f);
 extern void	rview(void);
 extern void	rpict(int seq, char *pout, char *zout, char *prvr);
 
+#ifdef __FAST_MATH__
+#define	checknorm(vn)	normalize(vn)
+#else
+#define checknorm(vn)	1.0
+#endif
 
 #ifdef __cplusplus
 }

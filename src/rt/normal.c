@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.52 2010/05/07 15:44:52 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.53 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -156,7 +156,7 @@ dirnorm(		/* compute source contribution */
 						/* roughness + source */
 		dtmp = np->alpha2 + omega*(1.0/PI);
 						/* gaussian */
-		 dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
+		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->mcolor);
@@ -299,6 +299,7 @@ m_normal(			/* color a ray that hit something normal */
 		if (hastexture && DOT(nd.vrefl, r->ron) <= FTINY)
 			for (i = 0; i < 3; i++)		/* safety measure */
 				nd.vrefl[i] = r->rdir[i] + 2.*r->rod*r->ron[i];
+		checknorm(nd.vrefl);
 	}
 						/* reflected ray */
 	if ((nd.specfl&(SP_REFL|SP_PURE|SP_RBLT)) == (SP_REFL|SP_PURE)) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.44 2010/05/07 17:45:57 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.45 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -214,7 +214,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 	nd.specfl = 0;
 	nd.u_alpha = m->oargs.farg[4];
 	nd.v_alpha = m->oargs.farg[5];
-	if (nd.u_alpha < FTINY || nd.v_alpha <= FTINY)
+	if (nd.u_alpha <= FTINY || nd.v_alpha <= FTINY)
 		objerror(m, USER, "roughness too small");
 
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
@@ -380,6 +380,7 @@ agaussamp(		/* sample anisotropic gaussian specular */
 			for (i = 0; i < 3; i++)
 				sr.rdir[i] = r->rdir[i] + d*h[i];
 			if (DOT(sr.rdir, r->ron) > FTINY) {
+				checknorm(sr.rdir);
 				rayvalue(&sr);
 				multcolor(sr.rcol, sr.rcoef);
 				addcolor(r->rcol, sr.rcol);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.17 2009/12/12 05:20:10 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.18 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -215,7 +215,7 @@ ray_done(		/* free ray-tracing data */
 	}
 	if (nobjects > 0) {
 		sprintf(errmsg, "%ld objects left after call to ray_done()",
-				nobjects);
+				(long)nobjects);
 		error(WARNING, errmsg);
 	}
 }

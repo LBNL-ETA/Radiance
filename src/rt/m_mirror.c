@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.12 2009/06/06 02:11:43 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.13 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -89,6 +89,7 @@ m_mirror(			/* shade mirrored ray */
 			for (i = 0; i < 3; i++)
 				nr.rdir[i] = r->rdir[i] + 2.*r->rod*r->ron[i];
 	}
+	checknorm(nr.rdir);
 	rayvalue(&nr);
 	multcolor(nr.rcol, nr.rcoef);
 	addcolor(r->rcol, nr.rcol);

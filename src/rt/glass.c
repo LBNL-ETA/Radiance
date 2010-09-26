@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.17 2005/06/21 15:06:50 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.18 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -145,6 +145,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	if (rayorigin(&p, REFLECTED, r, refl) == 0) {
 		for (i = 0; i < 3; i++)
 			p.rdir[i] = r->rdir[i] + 2.0*pdot*pnorm[i];
+		checknorm(p.rdir);
 		rayvalue(&p);
 		multcolor(p.rcol, p.rcoef);
 		addcolor(r->rcol, p.rcol);

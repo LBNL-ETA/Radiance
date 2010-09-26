@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.60 2009/12/12 00:03:42 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.61 2010/09/26 15:51:15 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -512,8 +512,10 @@ localhit(		/* check for hit in the octree */
 		else if (r->rdir[i] < -1e-7)
 			sflags |= 0x10 << i;
 	}
-	if (sflags == 0)
-		error(CONSISTENCY, "zero ray direction in localhit");
+	if (!sflags) {
+		error(WARNING, "zero ray direction in localhit");
+		return(0);
+	}
 					/* start off assuming nothing hit */
 	if (r->rmax > FTINY) {		/* except aft plane if one */
 		r->ro = &Aftplane;

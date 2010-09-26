@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.60 2010/08/23 15:57:46 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.61 2010/09/26 15:51:15 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -130,6 +130,7 @@ $(RLIB):	$(ROBJS) Version.o
 	-ranlib $(RLIB)
 
 $(RCLIB):	$(RLOBJS)
+	rm -f $(RCLIB)
 	ar rc $(RCLIB) $(RLOBJS)
 	-ranlib $(RCLIB)
 
