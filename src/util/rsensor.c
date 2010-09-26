@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.7 2009/12/12 19:01:00 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.8 2010/09/26 15:41:46 greg Exp $";
 #endif
 
 /*
@@ -120,7 +120,8 @@ main(
 					putchar('\n');
 				}
 						/* start process(es) */
-				ray_pinit(argv[argc-1], nprocs);
+				if (strcmp(argv[argc-1], "."))
+					ray_pinit(argv[argc-1], nprocs);
 			}
 			comp_sensor(argv[i]);	/* process a sensor file */
 			continue;
@@ -194,7 +195,7 @@ main(
 		}
 		i += rval;
 	}
-	if (!ray_pnprocs)
+	if (sensor == NULL)
 		error(USER, i<argc ? "missing sensor file" : "missing octree");
 	quit(0);
 }
@@ -461,6 +462,18 @@ sens_val(
 	return(s_val(t,p));
 }
 
+/* Print origin and direction */
+static void
+print_ray(
+	FVECT rorg,
+	FVECT rdir
+)
+{
+	printf("%.6g %.6g %.6g %.8f %.8f %.8f\n",
+			rorg[0], rorg[1], rorg[2],
+			rdir[0], rdir[1], rdir[2]);
+}
+
 /* Compute sensor output */
 static void
 comp_sensor(
@@ -495,6 +508,10 @@ comp_sensor(
 			get_direc(rr.rdir, (i+frandom())/nt, (j+frandom())/np);
 			if (ourview.vfore > FTINY)
 				VSUM(rr.rorg, rr.rorg, rr.rdir, ourview.vfore);
+			if (!ray_pnprocs) {
+				print_ray(rr.rorg, rr.rdir);
+				continue;
+			}
 			rr.rmax = .0;
 			rayorigin(&rr, PRIMARY, NULL, NULL);
 			scalecolor(rr.rcoef, sf);
@@ -507,12 +524,18 @@ comp_sensor(
 		get_direc(rr.rdir, frandom(), frandom());
 		if (ourview.vfore > FTINY)
 			VSUM(rr.rorg, rr.rorg, rr.rdir, ourview.vfore);
+		if (!ray_pnprocs) {
+			print_ray(rr.rorg, rr.rdir);
+			continue;
+		}
 		rr.rmax = .0;
 		rayorigin(&rr, PRIMARY, NULL, NULL);
 		scalecolor(rr.rcoef, sf);
 		if (ray_pqueue(&rr) == 1)
 			addcolor(vsum, rr.rcol);
 	}
+	if (!ray_pnprocs)			/* just printing rays */
+		return;
 						/* scale partial result */
 	scalecolor(vsum, sf);
 						/* add direct component */

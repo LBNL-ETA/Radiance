@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsensor.1,v 1.3 2008/12/13 00:44:05 greg Exp $"
+.\" RCSid "$Id: rsensor.1,v 1.4 2010/09/26 15:41:46 greg Exp $"
 .TH RSENSOR 1 4/11/2008 RADIANCE
 .SH NAME
 rsensor - compute sensor signal from a RADIANCE scene
@@ -29,6 +29,20 @@ rsensor - compute sensor signal from a RADIANCE scene
 }
 .B octree
 .br
+.B rsensor
+[
+.B -h
+]
+{
+[
+.B -rd nrays
+][
+.B sensor_view
+]
+.B sensor_file ..
+}
+.B "."
+.br
 .B "rsensor [ options ] \-defaults"
 .SH DESCRIPTION
 .I Rsensor
@@ -38,7 +52,12 @@ sensors into the RADIANCE scene given by
 sending the computed sensor value to the standard output.
 (The octree may be given as the output of a command enclosed in quotes
 and preceded by a `!'.)\0
-In the second form, the default values
+In the second form, a single period ('.') is given in place of an
+octree, and the origin and directions of the specified
+number of rays will be printed on the standard output.
+If these rays are later traced and added together, the results
+will sum to a signal proportional to the given sensor distribution.
+In the third form, the default values
 for the options (modified by those options present)
 are printed with a brief explanation.
 .PP
@@ -106,6 +125,11 @@ standard input.
 To compute values for the same sensor with two different positions:
 .IP "" .2i
 rsensor -ab 2 -vf posA.vf mysens.dat -vf posB.vf mysens.dat scene.oct
+.PP
+To generate a set of rays corresponding to a given sensor and compute
+the resulting signal with rtrace:
+.IP "" .2i
+rsensor -h -vf posC.vf mysens.dat . | rtrace -h scene.oct | total -m
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
