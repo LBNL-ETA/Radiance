@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.20 2010/01/26 04:42:16 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.21 2010/09/26 15:49:39 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -199,7 +199,12 @@ Set the x resolution to
 .I res.
 The output will be flushed after every
 .I res
-input rays.
+input rays if
+.I \-y
+is set to zero.
+A value of one means that every ray will be flushed, whatever
+the setting of
+.I \-y.
 A value of zero means that no output flushing will take place.
 .TP
 .BI -y \ res
