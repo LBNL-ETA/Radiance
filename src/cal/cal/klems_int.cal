@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_int.cal,v 1.3 2010/09/03 23:53:11 greg Exp $ }
+{ RCSid $Id: klems_int.cal,v 1.4 2010/09/26 15:50:39 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis (0-144)
 
@@ -35,10 +35,10 @@ kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
 	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
 		-Dx*(Ny*Uz-Nz*Uy) - Dy*(Nz*Ux-Nx*Uz) - Dz*(Nx*Uy-Ny*Ux)));
 				
-kbinN = kbin(0,1,0, 0,0,1);	{ North bins }
-kbinE = kbin(1,0,0, 0,0,1);	{ East bins }
-kbinS = kbin(0,-1,0, 0,0,1);	{ South bins }
-kbinW = kbin(-1,0,0, 0,0,1);	{ West bins }
+kbinN = kbin(0,-1,0, 0,0,1);	{ North bins }
+kbinE = kbin(-1,0,0, 0,0,1);	{ East bins }
+kbinS = kbin(0,1,0, 0,0,1);	{ South bins }
+kbinW = kbin(1,0,0, 0,0,1);	{ West bins }
 
 kbinU = kbin(0,0,1, 0,1,0);	{ "Up" bins for skylights }
 
