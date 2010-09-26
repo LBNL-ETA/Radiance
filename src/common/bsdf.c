@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.7 2010/09/07 23:10:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.8 2010/09/26 15:43:26 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -249,6 +249,7 @@ to_meters(		/* return factor to convert given unit to meters */
 	if (!strcasecmp(unit, "Foot")) return(.3048);
 	if (!strcasecmp(unit, "Inch")) return(.0254);
 	if (!strcasecmp(unit, "Centimeter")) return(.01);
+	if (!strcasecmp(unit, "Millimeter")) return(.001);
 	sprintf(errmsg, "unknown dimensional unit '%s'", unit);
 	error(USER, errmsg);
 }
@@ -445,7 +446,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 				BSDF_value(dp,i,o) = .0f;
 			}
 		}
-		if (hemi_total > 1.02) {
+		if (hemi_total > 1.01) {
 			sprintf(errmsg,
 			"incoming BSDF direction %d passes %.1f%% of light",
 					i, 100.*hemi_total);
@@ -462,7 +463,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 		for (i = dp->ninc; i--; )
 			hemi_total += BSDF_value(dp,i,o) * omega_iarr[i];
 
-		if (hemi_total > 1.02) {
+		if (hemi_total > 1.01) {
 			sprintf(errmsg,
 			"outgoing BSDF direction %d collects %.1f%% of light",
 					o, 100.*hemi_total);
@@ -471,8 +472,8 @@ check_bsdf_data(	/* check that BSDF data is sane */
 		full_total += hemi_total*omega_oarr[o];
 	}
 	full_total /= PI;
-	if (full_total > 1.02) {
-		sprintf(errmsg, "BSDF transfers %.1f%% of light",
+	if (full_total > 1.00001) {
+		sprintf(errmsg, "BSDF transfers %.4f%% of light",
 				100.*full_total);
 		error(WARNING, errmsg);
 	}
