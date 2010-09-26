@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.20 2005/07/24 19:53:08 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.21 2010/09/26 15:47:33 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -673,7 +673,7 @@ waitabit(void)				/* pause a moment */
 {
 	struct timespec	ts;
 	ts.tv_sec = 0;
-	ts.tv_nsec = 5000000;
+	ts.tv_nsec = 50000000;
 	nanosleep(&ts, NULL);
 }
 
