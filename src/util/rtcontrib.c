@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.56 2010/06/11 20:26:09 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.57 2010/09/26 15:44:00 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.56 2010/06/11 20:26:09 greg Ex
 #include  "color.h"
 #include  "resolu.h"
 #include  "lookup.h"
+#include  "random.h"
 #include  "calcomp.h"
 
 #ifndef	MAXMODLIST
@@ -545,7 +546,7 @@ init(int np)
 		raysleft = 0;
 	if ((account = accumulate) > 0)
 		raysleft *= accumulate;
-	waitflush = xres;
+	waitflush = (yres > 0) & (xres > 1) ? 0 : xres;
 	if (!recover)
 		return;
 					/* recover previous values */
@@ -736,8 +737,6 @@ printresolu(FILE *fout, int xr, int yr)
 {
 	if ((xr > 0) & (yr > 0))	/* resolution string */
 		fprtresolu(xr, yr, fout);
-	if (xres > 0)			/* global flush flag */
-		fflush(fout);
 }
 
 /* Get output stream pointer (open and write header if new and noopen==0) */
@@ -758,6 +757,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			if (header)
 				printheader(stdout, NULL);
 			printresolu(stdout, xres, yres);
+			if (waitflush > 0)
+				fflush(stdout);
 			stdos.xr = xres; stdos.yr = yres;
 			using_stdout = 1;
 		}
@@ -826,7 +827,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			if (outfmt == 'a')
 				putc('\n', sop->ofp);
 		}
-		if (xres > 0)
+		if (waitflush > 0)
 			fflush(sop->ofp);
 	}
 	sop->reclen += noopen;			/* add to length if noopen */
@@ -956,6 +957,8 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 	default:
 		error(INTERNAL, "botched output format");
 	}
+	if (waitflush < 0 && frandom() < 0.001)
+		fflush(fout);			/* staggers writes */
 }
 
 /* output ray tallies and clear for next accumulation */
@@ -993,7 +996,7 @@ done_contrib(int navg)
 	if (using_stdout & (outfmt == 'a'))
 		putc('\n', stdout);
 	if (!waitflush) {
-		waitflush = xres;
+		waitflush = (yres > 0) & (xres > 1) ? 0 : xres;
 		if (using_stdout)
 			fflush(stdout);
 	}
