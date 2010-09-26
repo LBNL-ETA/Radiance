@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.11 2009/05/07 21:38:35 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.12 2010/09/26 15:42:48 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -119,12 +119,14 @@ FVECT  v
 	if (d == 0.0)
 		return(0.0);
 	
-	if (d <= 1.0+FTINY && d >= 1.0-FTINY)
+	if (d <= 1.0+FTINY && d >= 1.0-FTINY) {
 		len = 0.5 + 0.5*d;	/* first order approximation */
-	else
+		d = 2.0 - len;
+	} else {
 		len = sqrt(d);
-
-	v[0] *= d = 1.0/len;
+		d = 1.0/len;
+	}
+	v[0] *= d;
 	v[1] *= d;
 	v[2] *= d;
 
