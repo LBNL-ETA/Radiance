@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.18 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.19 2010/09/26 15:39:10 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -40,7 +40,7 @@ main(
 {
 	char	*inpname, *outname;
 	int	hdfd[2];
-	long	nextipos, lastopos, thisopos;
+	int32	nextipos, lastopos, thisopos;
 
 	progname = argv[0];
 	argv++; argc--;			/* duplicate checking flag? */
