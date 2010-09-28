@@ -1761,3 +1761,6 @@ rendering images using rtrace with the -n option.
 
 Added ability for rsensor to output ray origins and directions
 rather than actually loading octree and computing sensor value.
+
+Fixed old bug in obj2rad where it would stop processing and
+report a syntax error if the "void" type is used in the map file.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.26 2010/09/16 03:28:21 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.27 2010/09/28 21:28:23 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .obj file to Radiance format.
@@ -584,7 +584,7 @@ putface(				/* put out an N-sided polygon */
 		return(1);
 	}
 	if ((cp = getmtl()) == NULL)
-		return(0);
+		return(-1);
 	printf("\n%s polygon %s.%d\n", cp, getonm(), faceno);
 	printf("0\n0\n%d\n", 3*ac);
 	for (i = 0; i < ac; i++) {
@@ -612,7 +612,7 @@ puttri(			/* put out a triangle */
 	register int	i;
 
 	if ((mod = getmtl()) == NULL)
-		return(0);
+		return(-1);
 
 	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
 		return(0);
