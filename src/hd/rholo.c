@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.74 2008/12/05 00:22:33 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.75 2010/09/30 15:43:30 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -453,7 +453,7 @@ creatholo(			/* create a holodeck output file */
 )
 {
 	extern char	VersionID[];
-	int32	lastloc, nextloc;
+	off_t	lastloc, nextloc;
 	int	n;
 	int	fd;
 	FILE	*fp;
@@ -479,11 +479,11 @@ creatholo(			/* create a holodeck output file */
 		if (!n)
 			break;
 		nextloc = hdfilen(fd);		/* write section pointer */
-		if (lseek(fd, (off_t)lastloc, SEEK_SET) < 0)
+		if (lseek(fd, lastloc, SEEK_SET) < 0)
 			error(SYSTEM,
 				"cannot seek on holodeck file in creatholo");
 		write(fd, (char *)&nextloc, sizeof(nextloc));
-		lseek(fd, (off_t)(lastloc=nextloc), SEEK_SET);
+		lseek(fd, (lastloc=nextloc), SEEK_SET);
 	}
 }
 
@@ -522,7 +522,7 @@ loadholo(void)			/* start loading a holodeck from fname */
 	FILE	*fp;
 	int	fd;
 	int	n;
-	int32	nextloc;
+	off_t	nextloc;
 	
 	if ((ncprocs > 0) & (force >= 0))
 		fp = fopen(hdkfile, "r+");
@@ -554,7 +554,7 @@ loadholo(void)			/* start loading a holodeck from fname */
 	fd = dup(fileno(fp));
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (off_t)nextloc, SEEK_SET);
+		lseek(fd, nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL);
 	}

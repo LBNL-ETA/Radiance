@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.26 2010/09/03 23:52:42 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.27 2010/09/30 15:43:30 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -132,15 +132,15 @@ extern int	hdwg1[6];		/* wall grid 1 index */
 
 #define HOLOFMT		"Holodeck"	/* file format identifier */
 #define HOLOVERS	0		/* file format version number */
-#define HOLOMAGIC	(323+sizeof(BEAMI)+16*HOLOVERS)	/* file magic number */
+#define HOLOMAGIC	(324+sizeof(BEAMI)+16*HOLOVERS)	/* file magic number */
 
 /*
  * A holodeck file consists of an information header terminated by a
  * blank line, with "FORMAT=Holodeck" somewhere in it.
  * The first integer after the information header is the
  * above magic number, which includes the file format version number.
- * The first longword after the magic number is a pointer to the pointer
- * just before the SECOND holodeck section, or 0 if there is only one.
+ * The first longword (off_t) after the magic number is a pointer to the
+ * pointer just before the SECOND holodeck section, or 0 if there is only one.
  * This longword is immediately followed by the first holodeck
  * section header and directory.
  * Similarly, every holodeck section in the file is preceeded by

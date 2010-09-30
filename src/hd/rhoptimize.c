@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.19 2010/09/26 15:39:10 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.20 2010/09/30 15:43:30 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -40,7 +40,7 @@ main(
 {
 	char	*inpname, *outname;
 	int	hdfd[2];
-	int32	nextipos, lastopos, thisopos;
+	off_t	nextipos, lastopos, thisopos;
 
 	progname = argv[0];
 	argv++; argc--;			/* duplicate checking flag? */
@@ -72,20 +72,20 @@ main(
 	}
 					/* copy holodeck file header */
 	nextipos = rhinitcopy(hdfd, inpname, outname);
-	lastopos = 0L;			/* copy sections one by one */
+	lastopos = 0;			/* copy sections one by one */
 	while (nextipos != 0L) {
 					/* set input position; get next */
-		lseek(hdfd[0], (off_t)nextipos, SEEK_SET);
+		lseek(hdfd[0], nextipos, SEEK_SET);
 		read(hdfd[0], (char *)&nextipos, sizeof(nextipos));
 					/* get output position; set last */
 		thisopos = lseek(hdfd[1], (off_t)0, SEEK_END);
-		if (lastopos > 0L) {
-			lseek(hdfd[1], (off_t)lastopos, SEEK_SET);
+		if (lastopos > 0) {
+			lseek(hdfd[1], lastopos, SEEK_SET);
 			write(hdfd[1], (char *)&thisopos, sizeof(thisopos));
 			lseek(hdfd[1], (off_t)0, SEEK_END);
 		}
 		lastopos = thisopos;
-		thisopos = 0L;		/* write place holder */
+		thisopos = 0;		/* write place holder */
 		write(hdfd[1], (char *)&thisopos, sizeof(thisopos));
 					/* copy holodeck section */
 		copysect(hdfd[0], hdfd[1]);

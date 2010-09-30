@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.25 2010/09/26 15:39:10 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.26 2010/09/30 15:43:30 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -134,7 +134,7 @@ openholo(		/* open existing holodeck file for i/o */
 	FILE	*fp;
 	int	fd;
 	int	hflags = 0;
-	int32	nextloc;
+	off_t	nextloc;
 	int	n;
 					/* open holodeck file */
 	if ((fp = fopen(fname, append ? "r+" : "r")) == NULL) {
@@ -152,7 +152,7 @@ openholo(		/* open existing holodeck file for i/o */
 	nextloc = ftell(fp);			/* get stdio position */
 	fclose(fp);				/* done with stdio */
 	for (n = 0; nextloc > 0L; n++) {	/* initialize each section */
-		lseek(fd, (off_t)nextloc, SEEK_SET);
+		lseek(fd, nextloc, SEEK_SET);
 		read(fd, (char *)&nextloc, sizeof(nextloc));
 		hdinit(fd, NULL)->priv = hflags&H_OBST ? &obstr :
 				hflags&H_OBSF ? &unobstr : (char *)NULL;
