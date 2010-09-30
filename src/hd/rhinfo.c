@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.11 2004/09/09 01:06:19 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.12 2010/09/30 14:45:10 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -50,6 +50,7 @@ gethdinfo(		/* get information on holodeck */
 	HOLO	*hdsect;
 	int	fd;
 	int32	nextloc;
+	off_t	fsiz;
 	int	n;
 					/* open holodeck file */
 	if ((fp = fopen(fname, "r")) == NULL) {
@@ -71,13 +72,13 @@ gethdinfo(		/* get information on holodeck */
 		hdsect = hdinit(fd, NULL);	/* load section directory */
 		psectstats(hdsect, fout);	/* print section statistics */
 	}
-	nextloc = hdfilen(fd);			/* print global statistics */
+	fsiz = hdfilen(fd);			/* print global statistics */
 	fputs("=====================================================\n", fout);
 	fprintf(fout, "Total samples/beams: %ld/%ld (%.2f samples/beam)\n",
 			samptot, beamtot, (double)samptot/beamtot);
 	fprintf(fout, "%.1f Mbyte file, %.1f%% fragmentation\n",
-			nextloc/(1024.*1024.),
-			100.*(nextloc-hdfiluse(fd))/nextloc);
+			fsiz/(1024.*1024.),
+			100.*(fsiz-hdfiluse(fd))/fsiz);
 						/* don't bother with cleanup */
 #if 0
 	hddone(NULL);				/* free sections */
