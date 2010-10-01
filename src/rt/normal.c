@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.53 2010/09/26 15:51:15 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.54 2010/10/01 18:11:18 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -80,7 +80,7 @@ dirnorm(		/* compute source contribution */
 	register NORMDAT *np = nnp;
 	double  ldot;
 	double  lrdiff, ltdiff;
-	double  dtmp, d2;
+	double  dtmp, d2, d3, d4;
 	FVECT  vtmp;
 	COLOR  ctmp;
 
@@ -115,7 +115,7 @@ dirnorm(		/* compute source contribution */
 	if (ldot > FTINY && (np->specfl&(SP_REFL|SP_PURE)) == SP_REFL) {
 		/*
 		 *  Compute specular reflection coefficient using
-		 *  gaussian distribution model.
+		 *  Gaussian distribution model.
 		 */
 						/* roughness */
 		dtmp = np->alpha2;
@@ -128,13 +128,14 @@ dirnorm(		/* compute source contribution */
 		vtmp[2] = ldir[2] - np->rp->rdir[2];
 		d2 = DOT(vtmp, np->pnorm);
 		d2 *= d2;
-		d2 = (DOT(vtmp,vtmp) - d2) / d2;
-						/* gaussian */
-		dtmp = exp(-d2/dtmp)/(4.*PI * np->pdot * dtmp);
+		d3 = DOT(vtmp,vtmp);
+		d4 = (d3 - d2) / d2;
+						/* new W-G-M-D model */
+		dtmp = exp(-d4/dtmp) * d3 / (PI * d2*d2 * dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->scolor);
-			dtmp *= omega;
+			dtmp *= ldot * omega;
 			scalecolor(ctmp, dtmp);
 			addcolor(cval, ctmp);
 		}
@@ -155,7 +156,7 @@ dirnorm(		/* compute source contribution */
 		 */
 						/* roughness + source */
 		dtmp = np->alpha2 + omega*(1.0/PI);
-						/* gaussian */
+						/* Gaussian */
 		dtmp = exp((2.*DOT(np->prdir,ldir)-2.)/dtmp)/(PI*dtmp);
 						/* worth using? */
 		if (dtmp > FTINY) {
@@ -365,7 +366,7 @@ m_normal(			/* color a ray that hit something normal */
 
 
 static void
-gaussamp(			/* sample gaussian specular */
+gaussamp(			/* sample Gaussian specular */
 	RAY  *r,
 	register NORMDAT  *np
 )

@@ -1764,3 +1764,6 @@ rather than actually loading octree and computing sensor value.
 
 Fixed old bug in obj2rad where it would stop processing and
 report a syntax error if the "void" type is used in the map file.
+
+Updated reflection model according to EGSR 2010 paper by David
+Geisler-Moroder and Arne Duer.

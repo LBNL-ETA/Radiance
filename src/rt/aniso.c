@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.45 2010/09/26 15:51:15 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.46 2010/10/01 18:11:18 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -101,7 +101,7 @@ diraniso(		/* compute source contribution */
 	if (ldot > FTINY && (np->specfl&(SP_REFL|SP_BADU)) == SP_REFL) {
 		/*
 		 *  Compute specular reflection coefficient using
-		 *  anisotropic gaussian distribution model.
+		 *  anisotropic Gaussian distribution model.
 		 */
 						/* add source width if flat */
 		if (np->specfl & SP_FLAT)
@@ -119,14 +119,16 @@ diraniso(		/* compute source contribution */
 		dtmp1 *= dtmp1 / au2;
 		dtmp2 = DOT(np->v, h);
 		dtmp2 *= dtmp2 / av2;
-						/* gaussian */
+						/* new W-G-M-D model */
 		dtmp = DOT(np->pnorm, h);
-		dtmp = (dtmp1 + dtmp2) / (dtmp*dtmp);
-		dtmp = exp(-dtmp) / (4.0*PI * np->pdot * sqrt(au2*av2));
+		dtmp *= dtmp;
+		dtmp1 = (dtmp1 + dtmp2) / dtmp;
+		dtmp = exp(-dtmp1) * DOT(h,h) /
+				(PI * dtmp*dtmp * sqrt(au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
 			copycolor(ctmp, np->scolor);
-			dtmp *= omega;
+			dtmp *= ldot * omega;
 			scalecolor(ctmp, dtmp);
 			addcolor(cval, ctmp);
 		}
@@ -166,7 +168,7 @@ diraniso(		/* compute source contribution */
 			}
 		} else
 			dtmp = 0.0;
-						/* gaussian */
+						/* Gaussian */
 		dtmp = exp(-dtmp) * (1.0/PI) * sqrt(-ldot/(np->pdot*au2*av2));
 						/* worth using? */
 		if (dtmp > FTINY) {
@@ -339,7 +341,7 @@ getacoords(		/* set up coordinate system */
 
 
 static void
-agaussamp(		/* sample anisotropic gaussian specular */
+agaussamp(		/* sample anisotropic Gaussian specular */
 	RAY  *r,
 	register ANISODAT  *np
 )
