@@ -1767,3 +1767,6 @@ report a syntax error if the "void" type is used in the map file.
 
 Updated reflection model according to EGSR 2010 paper by David
 Geisler-Moroder and Arne Duer.
+
+Replaced C-shell version of falsecolor with Perl script written
+by Axel Jacobs.

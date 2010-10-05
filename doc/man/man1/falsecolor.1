@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.6 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.7 2010/10/05 00:59:38 greg Exp $"
 .TH FALSECOLOR 1 11/15/93 RADIANCE
 .SH NAME
 falsecolor - make a false color RADIANCE picture
@@ -27,7 +27,7 @@ falsecolor - make a false color RADIANCE picture
 ][
 .B "\-m mult"
 ][
-.B "\-spec"
+.B "\-pal palette"
 ][
 .B "\-r redv"
 ][
@@ -104,9 +104,17 @@ option causes extrema points to be printed on the brightest and
 darkest pixels of the input picture.
 .PP
 The
-.I "\-spec"
-option reinstates the old, spectral color scale used in the original
+.I "\-pal"
+option provides different color palettes for
 .I falsecolor.
+The current choices are
+.I spec
+for the old spectral mapping,
+.I hot
+for a temperature scale, and
+.I pm3d
+for a variation of the default mapping,
+.I def.
 The remaining options,
 .I "\-r, \-g,"
 and
@@ -142,6 +150,8 @@ rpict \-vf default.vp scene.oct > rad.hdr
 falsecolor \-i irrad.hdr \-p rad.hdr \-cl \-log 2 \-l Lux > lux.hdr
 .SH AUTHOR
 Greg Ward
+.br
+Axel Jacobs (Perl translation and -pal options)
 .SH ACKNOWLEDGEMENT
 Work on this program was initiated and sponsored by the LESO
 group at EPFL in Switzerland.
