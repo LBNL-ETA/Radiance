@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pfilt.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: pfilt.1,v 1.5 2010/10/06 03:45:29 greg Exp $"
 .TH PFILT 1 11/8/96 RADIANCE
 .SH NAME
 pfilt - filter a RADIANCE picture
@@ -105,7 +105,7 @@ of any given output pixel.
 This option may be used to mitigate the problems associated with
 inadequate image sampling, at the expense of a slightly blurred
 image.
-The fraction given should not exceed the output picture dimensions
+The fraction given should not be less than the output picture dimensions
 over the input picture dimensions (x_o*y_o/x_i/y_i), or blurring
 will occur over the entire image.
 This option implies the
