@@ -1770,3 +1770,9 @@ Geisler-Moroder and Arne Duer.
 
 Replaced C-shell version of falsecolor with Perl script written
 by Axel Jacobs.
+
+****** COMPATIBILITY CHANGE ********
+Changed -sj (specular jitter) option to something called specular
+sampling (-ss), which if set less than 1 has the same behavior as
+the old -sj, but when set greater than 1, spawns multiple ray
+samples from semi-specular surfaces.

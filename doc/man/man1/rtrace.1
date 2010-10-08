@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.21 2010/09/26 15:49:39 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.22 2010/10/08 22:08:26 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -335,13 +335,13 @@ may also be desirable in conjunction with the
 .I \-i
 option.
 .TP
-.BI -sj \ frac
-Set the specular sampling jitter to
-.I frac.
-This is the degree to which the highlights are sampled
-for rough specular materials.
-A value of one means that all highlights will be fully sampled
-using distributed ray tracing.
+.BI -ss \ samp
+Set the specular sampling to
+.I samp.
+For values less than 1, this is the degree to which the highlights
+are sampled for rough specular materials.
+A value greater than one causes multiple ray samples to be sent
+to reduce noise at a commmesurate cost.
 A value of zero means that no jittering will take place, and all
 reflections will appear sharp even when they should be diffuse.
 .TP

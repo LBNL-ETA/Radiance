@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.46 2010/10/01 18:11:18 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.47 2010/10/08 22:08:26 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -236,11 +236,9 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		if (specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
 						/* compute refl. direction */
-		for (i = 0; i < 3; i++)
-			nd.vrefl[i] = r->rdir[i] + 2.0*nd.pdot*nd.pnorm[i];
+		VSUM(nd.vrefl, r->rdir, nd.pnorm, 2.0*nd.pdot);
 		if (DOT(nd.vrefl, r->ron) <= FTINY)	/* penetration? */
-			for (i = 0; i < 3; i++)		/* safety measure */
-				nd.vrefl[i] = r->rdir[i] + 2.*r->rod*r->ron[i];
+			VSUM(nd.vrefl, r->rdir, r->ron, 2.0*r->rod);
 	}
 						/* compute transmission */
 	if (m->otype == MAT_TRANS2) {
@@ -350,14 +348,27 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	FVECT  h;
 	double  rv[2];
 	double  d, sinp, cosp;
-	int  niter;
+	COLOR	scol;
+	int  niter, ns2go;
 	register int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
 			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {
+		copycolor(scol, np->scolor);
+		ns2go = 1;
+		if (specjitter > 1.5) {	/* multiple samples? */
+			ns2go = specjitter*r->rweight + .5;
+			if ((d = bright(scol)) <= minweight*ns2go)
+				ns2go = d/minweight;
+			if (ns2go > 1) {
+				d = 1./ns2go;
+				scalecolor(scol, d);
+			} else
+				ns2go = 1;
+		}
 		dimlist[ndims++] = (int)np->mp;
-		for (niter = 0; niter < MAXITER; niter++) {
-			if (niter)
+		for (niter = ns2go*MAXITER; (ns2go > 0) & (niter > 0); niter--) {
+			if (specjitter > 1.5)
 				d = frandom();
 			else
 				d = urand(ilhash(dimlist,ndims)+samplendx);
@@ -365,10 +376,11 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			d = 2.0*PI * rv[0];
 			cosp = tcos(d) * np->u_alpha;
 			sinp = tsin(d) * np->v_alpha;
-			d = sqrt(cosp*cosp + sinp*sinp);
-			cosp /= d;
-			sinp /= d;
-			rv[1] = 1.0 - specjitter*rv[1];
+			d = 1./sqrt(cosp*cosp + sinp*sinp);
+			cosp *= d;
+			sinp *= d;
+			if ((0. <= specjitter) & (specjitter < 1.))
+				rv[1] = 1.0 - specjitter*rv[1];
 			if (rv[1] <= FTINY)
 				d = 1.0;
 			else
@@ -379,15 +391,22 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 				h[i] = np->pnorm[i] +
 					d*(cosp*np->u[i] + sinp*np->v[i]);
 			d = -2.0 * DOT(h, r->rdir) / (1.0 + d*d);
-			for (i = 0; i < 3; i++)
-				sr.rdir[i] = r->rdir[i] + d*h[i];
-			if (DOT(sr.rdir, r->ron) > FTINY) {
-				checknorm(sr.rdir);
-				rayvalue(&sr);
-				multcolor(sr.rcol, sr.rcoef);
-				addcolor(r->rcol, sr.rcol);
-				break;
+			if (d <= np->pdot + FTINY)
+				continue;
+			VSUM(sr.rdir, r->rdir, h, d);
+			if (DOT(sr.rdir, r->ron) <= FTINY)
+				continue;
+			checknorm(sr.rdir);
+			if (specjitter > 1.5) {	/* adjusted W-G-M-D weight */
+				copycolor(sr.rcoef, scol);
+				d = 2.*(1. - np->pdot/d);
+				scalecolor(sr.rcoef, d);
+				rayclear(&sr);
 			}
+			rayvalue(&sr);
+			multcolor(sr.rcol, sr.rcoef);
+			addcolor(r->rcol, sr.rcol);
+			--ns2go;
 		}
 		ndims--;
 	}
@@ -396,9 +415,21 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
 			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
+		copycolor(scol, sr.rcoef);
+		ns2go = 1;
+		if (specjitter > 1.5) {	/* multiple samples? */
+			ns2go = specjitter*r->rweight + .5;
+			if ((d = bright(scol)) <= minweight*ns2go)
+				ns2go = d/minweight;
+			if (ns2go > 1) {
+				d = 1./ns2go;
+				scalecolor(scol, d);
+			} else
+				ns2go = 1;
+		}
 		dimlist[ndims++] = (int)np->mp;
-		for (niter = 0; niter < MAXITER; niter++) {
-			if (niter)
+		for (niter = ns2go*MAXITER; (ns2go > 0) & (niter > 0); niter--) {
+			if (specjitter > 1.5)
 				d = frandom();
 			else
 				d = urand(ilhash(dimlist,ndims)+1823+samplendx);
@@ -406,10 +437,11 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			d = 2.0*PI * rv[0];
 			cosp = tcos(d) * np->u_alpha;
 			sinp = tsin(d) * np->v_alpha;
-			d = sqrt(cosp*cosp + sinp*sinp);
-			cosp /= d;
-			sinp /= d;
-			rv[1] = 1.0 - specjitter*rv[1];
+			d = 1./sqrt(cosp*cosp + sinp*sinp);
+			cosp *= d;
+			sinp *= d;
+			if ((0. <= specjitter) & (specjitter < 1.))
+				rv[1] = 1.0 - specjitter*rv[1];
 			if (rv[1] <= FTINY)
 				d = 1.0;
 			else
@@ -419,13 +451,17 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			for (i = 0; i < 3; i++)
 				sr.rdir[i] = np->prdir[i] +
 						d*(cosp*np->u[i] + sinp*np->v[i]);
-			if (DOT(sr.rdir, r->ron) < -FTINY) {
-				normalize(sr.rdir);	/* OK, normalize */
-				rayvalue(&sr);
-				multcolor(sr.rcol, sr.rcoef);
-				addcolor(r->rcol, sr.rcol);
-				break;
+			if (DOT(sr.rdir, r->ron) >= -FTINY)
+				continue;
+			normalize(sr.rdir);	/* OK, normalize */
+			if (specjitter > 1.5) {	/* multi-sampling */
+				copycolor(sr.rcoef, scol);
+				rayclear(&sr);
 			}
+			rayvalue(&sr);
+			multcolor(sr.rcol, sr.rcoef);
+			addcolor(r->rcol, sr.rcol);
+			--ns2go;
 		}
 		ndims--;
 	}

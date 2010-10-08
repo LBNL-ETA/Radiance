@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.14 2010/01/26 04:42:16 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.15 2010/10/08 22:08:26 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -335,13 +335,13 @@ This option may be desirable in conjunction with the
 .I \-i
 option so that light sources do not appear in the output.
 .TP
-.BI -sj \ frac
-Set the specular sampling jitter to
-.I frac.
-This is the degree to which the highlights are sampled
-for rough specular materials.
-A value of one means that all highlights will be fully sampled
-using distributed ray tracing.
+.BI -ss \ samp
+Set the specular sampling to
+.I samp.
+For values less than 1, this is the degree to which the highlights
+are sampled for rough specular materials.
+A value greater than one causes multiple ray samples to be sent
+to reduce noise at a commmesurate cost.
 A value of zero means that no jittering will take place, and all
 reflections will appear sharp even when they should be diffuse.
 This may be desirable when used in combination with image sampling

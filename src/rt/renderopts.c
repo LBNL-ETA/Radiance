@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.13 2006/04/05 06:22:56 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.14 2010/10/08 22:08:26 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -82,7 +82,7 @@ getrenderopt(		/* get next render option */
 			check(3,"f");
 			specthresh = atof(av[1]);
 			return(1);
-		case 'j':				/* jitter */
+		case 's':				/* sampling */
 			check(3,"f");
 			specjitter = atof(av[1]);
 			return(1);
@@ -232,7 +232,7 @@ print_rdefaults(void)		/* print default render values to stdout */
 	printf("-dp %-9d\t\t\t# direct pretest density\n", vspretest);
 	printf(directvis ? "-dv+\t\t\t\t# direct visibility on\n" :
 			"-dv-\t\t\t\t# direct visibility off\n");
-	printf("-sj %f\t\t\t# specular jitter\n", specjitter);
+	printf("-ss %f\t\t\t# specular sampling\n", specjitter);
 	printf("-st %f\t\t\t# specular threshold\n", specthresh);
 	printf("-av %f %f %f\t# ambient value\n", colval(ambval,RED),
 			colval(ambval,GRN), colval(ambval, BLU));
