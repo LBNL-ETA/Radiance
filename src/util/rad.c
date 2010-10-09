@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.100 2010/10/08 23:06:53 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.101 2010/10/09 17:14:01 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -904,7 +904,7 @@ hiqopts(				/* high quality rendering options */
 		op = addarg(op, "-ds .1 -dj .9");
 	else
 		op = addarg(op, "-ds .2");
-	op = addarg(op, "-dt .05 -dc .75 -dr 3 -ss 50 -st .01");
+	op = addarg(op, "-dt .05 -dc .75 -dr 3 -ss 16 -st .01");
 	sprintf(op, " -ab %d", overture=vint(INDIRECT)+1);
 	op += strlen(op);
 	if (vdef(AMBFILE)) {
@@ -1396,25 +1396,21 @@ rpict(				/* run rpict and pfilt for each view */
 		} else {
 			if (overture) {		/* run overture calculation */
 				sprintf(combuf,
-				"%s%s %s%s -x 64 -y 64 -ps 1 %s > %s",
+					"%s%s %s%s -x 64 -y 64 -ps 1 %s > %s",
 						c_rpict, rep, vw, opts,
 						oct1name, overfile);
-				if (do_rpiece)
-					while (next_process(1))
-						sleep(5);
-				if (runcom(combuf)) {
-					fprintf(stderr,
+				if (!do_rpiece || !next_process(0)) {
+					if (runcom(combuf)) {
+						fprintf(stderr,
 					"%s: error in overture for view %s\n",
-						progname, vs);
-					quit(1);
-				}
-				if (do_rpiece) {
-					finish_process();
-					wait_process(1);
-				}
+							progname, vs);
+						quit(1);
+					}
 #ifndef NULL_DEVICE
-				rmfile(overfile);
+					rmfile(overfile);
 #endif
+				} else if (do_rpiece)
+					sleep(20);
 			}
 			if (do_rpiece) {
 				sprintf(combuf, "%s -F %s %s%s %s %s%s%s -o %s %s",
@@ -1570,6 +1566,7 @@ next_process(int reserve)		/* fork the next process */
 	child_pid = fork();		/* split process */
 	if (child_pid == 0) {		/* we're the child */
 		children_running = -1;
+		nprocs = 1;
 		return(0);
 	}
 	if (child_pid > 0) {		/* we're the parent */
