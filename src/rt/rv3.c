@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.33 2010/10/08 20:41:04 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.34 2010/10/09 22:38:35 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -203,8 +203,6 @@ paint(			/* compute and paint a rectangle */
 			return(0);
 		if (rval < 0)
 			return(-1);
-						/* random color place holder */
-		setcolor(p->v, frandom(), frandom(), frandom());
 						/* get node for returned ray */
 		p = (PNODE *)thisray.rno;
 	}

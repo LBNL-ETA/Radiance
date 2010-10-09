@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.33 2009/12/12 23:08:13 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.34 2010/10/09 22:38:35 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -22,10 +22,6 @@ void
 quit(code)			/* quit program */
 int  code;
 {
-#ifdef MSTATS
-	if (code == 2 && errno == ENOMEM)
-		printmemstats(stderr);
-#endif
 	if (ray_pnprocs > 0)	/* close children if any */
 		ray_pclose(0);
 	else if (!ray_pnprocs)	/* in parent */
@@ -193,16 +189,7 @@ again:
 		break;
 	case 'm':				/* move camera (or memstats) */
 		if (badcom("move"))
-#ifdef	MSTATS
-		{
-			if (badcom("memory"))
-				goto commerr;
-			printmemstats(stderr);
-			break;
-		}
-#else
 			goto commerr;
-#endif
 		getmove(args);
 		break;
 	case 'r':				/* rotate/repaint */
@@ -296,7 +283,7 @@ rsample(void)			/* sample the image */
 						/* sample the image */
 	for (y = 0; /* y < ysiz */ ; y++) {
 		for (x = 0; x < xsiz-1; x++) {
-			if (dev->inpready || errno == ENOMEM)
+			if (dev->inpready)
 				goto escape;
 			/*
 			 * Test super-pixel to the right.
@@ -310,7 +297,7 @@ rsample(void)			/* sample the image */
 		if (y >= ysiz-1)
 			break;
 		for (x = 0; x < xsiz; x++) {
-			if (dev->inpready || errno == ENOMEM)
+			if (dev->inpready)
 				goto escape;
 			/*
 			 * Find super-pixel at this position in next row.
