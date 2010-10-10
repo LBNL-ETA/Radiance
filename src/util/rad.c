@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.101 2010/10/09 17:14:01 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.102 2010/10/10 09:25:45 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1261,10 +1261,10 @@ rpict(				/* run rpict and pfilt for each view */
 )
 {
 #define do_rpiece	(sfile[0]!='\0')
-	char	combuf[4*PATH_MAX+512];
+	char	combuf[5*PATH_MAX+512];
 	char	rawfile[PATH_MAX], picfile[PATH_MAX];
 	char	zopt[PATH_MAX+4], rep[PATH_MAX+16], res[32];
-	char	rppopt[128], sfile[64], *pfile = NULL;
+	char	rppopt[32], sfile[PATH_MAX], *pfile = NULL;
 	char	pfopts[128];
 	char	vs[32], *vw;
 	int	vn, mult;
@@ -1316,7 +1316,9 @@ rpict(				/* run rpict and pfilt for each view */
 					getview(0, vs) != NULL) {
 		if (!strcmp(c_rpict, DEF_RPICT_PATH) &&
 				getview(1, NULL) == NULL) {
-			sprintf(sfile, "rpsync_%s.txt", vs);
+			sprintf(sfile, "%s_%s_rpsync.txt", 
+				vdef(RAWFILE) ? vval(RAWFILE) : vval(PICTURE),
+					vs);
 			strcpy(rppopt, "-PP pfXXXXXX");
 		} else {
 			strcpy(rppopt, "-S 1 -PP pfXXXXXX");
@@ -1359,6 +1361,11 @@ rpict(				/* run rpict and pfilt for each view */
 		if (do_rpiece) {
 			if (rfdt < oct1date || !fdate(sfile)) {
 				int	xdiv = 8+nprocs/3, ydiv = 8+nprocs/3;
+				if (rfdt >= oct1date) {
+					fprintf(stderr,
+		"%s: partial output not created with rpiece\n", rawfile);
+					quit(1);
+				}
 				rfdt = 0;		/* start fresh */
 				if (!silent)
 					printf("\techo %d %d > %s\n",
