@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.102 2010/10/10 09:25:45 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.103 2010/10/10 15:36:18 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1366,7 +1366,10 @@ rpict(				/* run rpict and pfilt for each view */
 		"%s: partial output not created with rpiece\n", rawfile);
 					quit(1);
 				}
-				rfdt = 0;		/* start fresh */
+				if (rfdt) {	/* start fresh */
+					rmfile(rawfile);
+					rfdt = 0;
+				}
 				if (!silent)
 					printf("\techo %d %d > %s\n",
 							xdiv, ydiv, sfile);
