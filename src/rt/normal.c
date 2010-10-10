@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.56 2010/10/10 19:49:17 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.57 2010/10/10 22:31:46 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -395,7 +395,7 @@ gaussamp(			/* sample Gaussian specular */
 		copycolor(scol, np->scolor);
 		ns2go = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			ns2go = specjitter*sr.rweight + .5;
+			ns2go = specjitter*r->rweight + .5;
 			if (sr.rweight <= minweight*ns2go)
 				ns2go = sr.rweight/minweight;
 			if (ns2go > 1) {
@@ -450,7 +450,7 @@ gaussamp(			/* sample Gaussian specular */
 			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
 		ns2go = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			ns2go = specjitter*sr.rweight + .5;
+			ns2go = specjitter*r->rweight + .5;
 			if (sr.rweight <= minweight*ns2go)
 				ns2go = sr.rweight/minweight;
 			if (ns2go > 1) {
