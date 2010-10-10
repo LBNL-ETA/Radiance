@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.58 2010/10/05 18:05:22 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.59 2010/10/10 01:26:51 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -957,8 +957,6 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 	default:
 		error(INTERNAL, "botched output format");
 	}
-	if (waitflush < 0 && frandom() < 0.001)
-		fflush(fout);			/* staggers writes */
 }
 
 /* output ray tallies and clear for next accumulation */
