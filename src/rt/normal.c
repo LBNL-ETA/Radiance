@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.55 2010/10/08 22:08:26 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.56 2010/10/10 19:49:17 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -395,12 +395,13 @@ gaussamp(			/* sample Gaussian specular */
 		copycolor(scol, np->scolor);
 		ns2go = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			ns2go = specjitter*r->rweight + .5;
-			if ((d = bright(scol)) <= minweight*ns2go)
-				ns2go = d/minweight;
+			ns2go = specjitter*sr.rweight + .5;
+			if (sr.rweight <= minweight*ns2go)
+				ns2go = sr.rweight/minweight;
 			if (ns2go > 1) {
 				d = 1./ns2go;
 				scalecolor(scol, d);
+				sr.rweight *= d;
 			} else
 				ns2go = 1;
 		}
@@ -430,8 +431,8 @@ gaussamp(			/* sample Gaussian specular */
 				continue;
 			checknorm(sr.rdir);
 			if (specjitter > 1.5) {	/* adjusted W-G-M-D weight */
-				copycolor(sr.rcoef, scol);
 				d = 2.*(1. - np->pdot/d);
+				copycolor(sr.rcoef, scol);
 				scalecolor(sr.rcoef, d);
 				rayclear(&sr);
 			}
@@ -447,15 +448,15 @@ gaussamp(			/* sample Gaussian specular */
 	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
 			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
-		copycolor(scol, sr.rcoef);
 		ns2go = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			ns2go = specjitter*r->rweight + .5;
-			if ((d = bright(scol)) <= minweight*ns2go)
-				ns2go = d/minweight;
+			ns2go = specjitter*sr.rweight + .5;
+			if (sr.rweight <= minweight*ns2go)
+				ns2go = sr.rweight/minweight;
 			if (ns2go > 1) {
 				d = 1./ns2go;
-				scalecolor(scol, d);
+				scalecolor(sr.rcoef, d);
+				sr.rweight *= d;
 			} else
 				ns2go = 1;
 		}
@@ -480,10 +481,8 @@ gaussamp(			/* sample Gaussian specular */
 			if (DOT(sr.rdir, r->ron) >= -FTINY)
 				continue;
 			normalize(sr.rdir);	/* OK, normalize */
-			if (specjitter > 1.5) {	/* multi-sampling */
-				copycolor(sr.rcoef, scol);
+			if (specjitter > 1.5)	/* multi-sampling */
 				rayclear(&sr);
-			}
 			rayvalue(&sr);
 			multcolor(sr.rcol, sr.rcoef);
 			addcolor(r->rcol, sr.rcol);
