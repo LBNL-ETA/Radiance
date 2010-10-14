@@ -1776,3 +1776,5 @@ Changed -sj (specular jitter) option to something called specular
 sampling (-ss), which if set less than 1 has the same behavior as
 the old -sj, but when set greater than 1, spawns multiple ray
 samples from semi-specular surfaces.
+
+Fixed bug noticed by Randolph Fritz that caused ambient sync errors.

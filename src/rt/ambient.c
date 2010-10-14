@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.67 2007/11/17 06:21:58 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.68 2010/10/14 05:54:44 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -188,12 +188,15 @@ setambient(void)				/* initialize calculation */
 		}
 	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
 		initambfile(1);			/* else create new file */
+		fflush(ambfp);
 		lastpos = ftell(ambfp);
 	} else {
 		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
 		error(SYSTEM, errmsg);
 	}
-	ambsync();			/* load previous values */
+#ifdef  F_SETLKW
+	aflock(F_UNLCK);			/* release file */
+#endif
 }
 
 
@@ -508,7 +511,7 @@ extambient(		/* extrapolate value at pv, nv */
 
 static void
 initambfile(		/* initialize ambient file */
-	int  creat
+	int  cre8
 )
 {
 	extern char  *progname, *octname;
@@ -521,7 +524,7 @@ initambfile(		/* initialize ambient file */
 	if (mybuf == NULL)
 		mybuf = (char *)bmalloc(BUFSIZ+8);
 	setbuf(ambfp, mybuf);
-	if (creat) {			/* new file */
+	if (cre8) {			/* new file */
 		newheader("RADIANCE", ambfp);
 		fprintf(ambfp, "%s -av %g %g %g -aw %d -ab %d -aa %g ",
 				progname, colval(ambval,RED),
@@ -530,13 +533,12 @@ initambfile(		/* initialize ambient file */
 		fprintf(ambfp, "-ad %d -as %d -ar %d ",
 				ambdiv, ambssamp, ambres);
 		if (octname != NULL)
-			printargs(1, &octname, ambfp);
-		else
-			fputc('\n', ambfp);
+			fputs(octname, ambfp);
+		fputc('\n', ambfp);
 		fprintf(ambfp, "SOFTWARE= %s\n", VersionID);
 		fputnow(ambfp);
 		fputformat(AMBFMT, ambfp);
-		putc('\n', ambfp);
+		fputc('\n', ambfp);
 		putambmagic(ambfp);
 	} else if (checkheader(ambfp, AMBFMT, NULL) < 0 || !hasambmagic(ambfp))
 		error(USER, "bad ambient file");
@@ -886,7 +888,7 @@ ambsync(void)			/* synchronize ambient file */
 				/* see if file has grown */
 	if ((flen = lseek(fileno(ambfp), (off_t)0, SEEK_END)) < 0)
 		goto seekerr;
-	if ( (n = flen - lastpos) ) {		/* file has grown */
+	if ((n = flen - lastpos) > 0) {		/* file has grown */
 		if (ambinp == NULL) {		/* use duplicate filedes */
 			ambinp = fdopen(dup(fileno(ambfp)), "r");
 			if (ambinp == NULL)
@@ -911,14 +913,6 @@ ambsync(void)			/* synchronize ambient file */
 			if (lseek(fileno(ambfp), (off_t)lastpos, SEEK_SET) < 0)
 				goto seekerr;
 	}
-#ifdef  DEBUG
-	if (ambfp->_ptr - ambfp->_base != nunflshed*AMBVALSIZ) {
-		sprintf(errmsg, "ambient file buffer at %d rather than %d",
-				ambfp->_ptr - ambfp->_base,
-				nunflshed*AMBVALSIZ);
-		error(CONSISTENCY, errmsg);
-	}
-#endif
 	n = fflush(ambfp);			/* calls write() at last */
 	if (n != EOF)
 		lastpos += (long)nunflshed*AMBVALSIZ;
