@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.34 2010/10/09 22:38:35 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.35 2010/10/16 15:08:14 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -266,20 +266,10 @@ newimage(					/* start a new image */
 )
 {
 	extern int	ray_pnprocs;
-	int		newnp;
-						/* change in nproc? */
-	if (s != NULL && sscanf(s, "%d", &newnp) == 1 &&
-			(newnp > 0) & (newnp != nproc)) {
-		if (!newparam) {
-			if (newnp == 1)
-				ray_pclose(0);
-			else if (newnp < ray_pnprocs)
-				ray_pclose(ray_pnprocs - newnp);
-			else
-				ray_popen(newnp - ray_pnprocs);
-		}
-		nproc = newnp;
-	}
+	int		newnp = 0;
+						/* # rendering procs arg? */
+	if (s != NULL)
+		sscanf(s, "%d", &newnp);
 						/* free old image */
 	freepkids(&ptrunk);
 						/* compute resolution */
@@ -296,9 +286,19 @@ newimage(					/* start a new image */
 	if (newparam) {				/* (re)start rendering procs */
 		if (ray_pnprocs > 0)
 			ray_pclose(0);
+		if (newnp > 0)
+			nproc = newnp;
 		if (nproc > 1)
 			ray_popen(nproc);
 		newparam = 0;
+	} else if ((newnp > 0) & (newnp != nproc)) {
+		if (newnp == 1)			/* change # rendering procs */
+			ray_pclose(0);
+		else if (newnp < ray_pnprocs)
+			ray_pclose(ray_pnprocs - newnp);
+		else
+			ray_popen(newnp - ray_pnprocs);
+		nproc = newnp;
 	}
 	niflush = 0;				/* get first value */
 	paint(&ptrunk);
