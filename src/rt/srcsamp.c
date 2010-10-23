@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.16 2009/06/06 02:11:44 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.17 2010/10/23 18:13:54 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -64,12 +64,11 @@ nextsample:
 			multisamp(vpos, 3, d);
 		for (i = 0; i < 3; i++)
 			vpos[i] = dstrsrc * (1. - 2.*vpos[i]) *
-					(double)size[i]/MAXSPART;
+					(double)size[i]*(1.0/MAXSPART);
 	} else
 		vpos[0] = vpos[1] = vpos[2] = 0.0;
 
-	for (i = 0; i < 3; i++)
-		vpos[i] += (double)cent[i]/MAXSPART;
+	VSUM(vpos, vpos, cent, 1.0/MAXSPART);
 					/* avoid circular aiming failures */
 	if ((srcp->sflags & SCIR) && (si->np > 1 || dstrsrc > 0.7)) {
 		FVECT	trim;
@@ -104,8 +103,7 @@ nextsample:
 				vpos[SW]*srcp->ss[SW][i];
 
 	if (!(srcp->sflags & SDISTANT))
-		for (i = 0; i < 3; i++)
-			r->rdir[i] -= r->rorg[i];
+		VSUB(r->rdir, r->rdir, r->rorg);
 					/* compute distance */
 	if ((d = normalize(r->rdir)) == 0.0)
 		goto nextsample;		/* at source! */
@@ -113,13 +111,13 @@ nextsample:
 					/* compute sample size */
 	if (srcp->sflags & SFLAT) {
 		si->dom = sflatform(si->sn, r->rdir);
-		si->dom *= size[SU]*size[SV]/(MAXSPART*(double)MAXSPART);
+		si->dom *= size[SU]*size[SV]*(1.0/MAXSPART/MAXSPART);
 	} else if (srcp->sflags & SCYL) {
 		si->dom = scylform(si->sn, r->rdir);
-		si->dom *= size[SU]/(double)MAXSPART;
+		si->dom *= size[SU]*(1.0/MAXSPART);
 	} else {
-		si->dom = size[SU]*size[SV]*(double)size[SW] /
-				(MAXSPART*MAXSPART*(double)MAXSPART) ;
+		si->dom = size[SU]*size[SV]*(double)size[SW] *
+				(1.0/MAXSPART/MAXSPART/MAXSPART) ;
 	}
 	if (srcp->sflags & SDISTANT) {
 		si->dom *= srcp->ss2;
