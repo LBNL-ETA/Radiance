@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_data.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: t_data.c,v 2.9 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  t_data.c - routine for stored textures
@@ -74,8 +74,7 @@ t_data(			/* interpolate texture data */
 		d = 1.0 / (mf->f->sca * r->rox->f.sca);
 	} else
 		d = 1.0 / mf->f->sca;
-	for (i = 0; i < 3; i++)
-		r->pert[i] += disp[i] * d;
+	VSUM(r->pert, r->pert, disp, d);
 	return(0);
 computerr:
 	objerror(m, WARNING, "compute error");

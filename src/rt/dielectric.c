@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.21 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.22 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -213,12 +213,10 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 			rayorigin(&p, REFLECTED, r, p.rcoef) == 0) {
 
 					/* compute reflected ray */
-		for (i = 0; i < 3; i++)
-			p.rdir[i] = r->rdir[i] + 2.0*cos1*dnorm[i];
+		VSUM(p.rdir, r->rdir, dnorm, 2.*cos1);
 					/* accidental penetration? */
 		if (hastexture && DOT(p.rdir,r->ron)*hastexture <= FTINY)
-			for (i = 0; i < 3; i++)		/* ignore texture */
-				p.rdir[i] = r->rdir[i] + 2.0*r->rod*r->ron[i];
+			VSUM(p.rdir, r->rdir, r->ron, 2.*r->rod);
 		checknorm(p.rdir);
 		rayvalue(&p);			/* reflected ray value */
 
@@ -309,10 +307,10 @@ disperse(  /* check light sources for dispersion */
 	VCOPY(n2, r->ron);
 
 					/* first order dispersion approx. */
-	dtmp1 = DOT(n1, v1);
-	dtmp2 = DOT(n2, v2);
+	dtmp1 = 1./DOT(n1, v1);
+	dtmp2 = 1./DOT(n2, v2);
 	for (i = 0; i < 3; i++)
-		dv[i] = v1[i] + v2[i] - n1[i]/dtmp1 - n2[i]/dtmp2;
+		dv[i] = v1[i] + v2[i] - n1[i]*dtmp1 - n2[i]*dtmp2;
 		
 	if (DOT(dv, dv) <= FTINY)	/* null effect */
 		return(0);
@@ -355,15 +353,13 @@ disperse(  /* check light sources for dispersion */
 		dtmp1 = sqrt(si.dom  / v2Xdvv2Xdv / PI);
 
 							/* compute first ray */
-		for (i = 0; i < 3; i++)
-			vtmp2[i] = sray.rdir[i] + dtmp1*vtmp1[i];
+		VSUM(vtmp2, sray.rdir, vtmp1, dtmp1);
 
 		l1 = lambda(m, v2, dv, vtmp2);		/* first lambda */
 		if (l1 < 0)
 			continue;
 							/* compute second ray */
-		for (i = 0; i < 3; i++)
-			vtmp2[i] = sray.rdir[i] - dtmp1*vtmp1[i];
+		VSUM(vtmp2, sray.rdir, vtmp1, -dtmp1);
 
 		l2 = lambda(m, v2, dv, vtmp2);		/* second lambda */
 		if (l2 < 0)
@@ -396,7 +392,7 @@ lambda(			/* compute lambda for material */
 
 	fcross(lrXdv, lr, dv);
 	for (i = 0; i < 3; i++)	
-		if (lrXdv[i] > FTINY || lrXdv[i] < -FTINY)
+		if ((lrXdv[i] > FTINY) | (lrXdv[i] < -FTINY))
 			break;
 	if (i >= 3)
 		return(-1);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.6 2004/06/28 10:07:17 greg Exp $";
+static const char RCSid[] = "$Id: o_cone.c,v 2.7 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -80,8 +80,7 @@ o_cone(			/* intersect ray with cone */
 			return(0);			/* outside radii */
 		r->ro = o;
 		r->rot = root[0];
-		for (i = 0; i < 3; i++)
-			r->rop[i] = r->rorg[i] + r->rdir[i]*r->rot;
+		VSUM(r->rop, r->rorg, r->rdir, r->rot);
 		VCOPY(r->ron, co->ad);
 		r->rod = -rdx[2];
 		r->rox = NULL;
@@ -96,10 +95,8 @@ o_cone(			/* intersect ray with cone */
 		if (root[rn] >= r->rot)
 			break;			/* too big */
 						/* check endpoints */
-		for (i = 0; i < 3; i++) {
-			rox[i] = r->rorg[i] + root[rn]*r->rdir[i];
-			rdx[i] = rox[i] - CO_P0(co)[i];
-		}
+		VSUM(rox, r->rorg, r->rdir, root[rn]);
+		VSUB(rdx, rox, CO_P0(co));
 		b = DOT(rdx, co->ad); 
 		if (b < 0.0)
 			continue;		/* before p0 */
@@ -126,7 +123,7 @@ o_cone(			/* intersect ray with cone */
 		if (o->otype == OBJ_CONE || o->otype == OBJ_CUP)
 			for (i = 0; i < 3; i++)
 				r->ron[i] = (co->al*r->ron[i] - c*co->ad[i])
-						/co->sl;
+						/ co->sl;
 		a = DOT(r->ron, r->ron);
 		if (a > 1.+FTINY || a < 1.-FTINY) {
 			c = 1./(.5 + .5*a);     /* avoid numerical error */

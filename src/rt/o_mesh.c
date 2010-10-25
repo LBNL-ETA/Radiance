@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.11 2006/02/25 19:49:16 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.12 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -198,8 +198,7 @@ o_mesh(			/* compute ray intersection with a mesh */
 					wt[2]*tv[2].n[i];
 		multv3(r->pert, rcont.pert, curmi->x.f.xfm);
 		if (normalize(r->pert) != 0.0)
-			for (i = 0; i < 3; i++)
-				r->pert[i] -= r->ron[i];
+			VSUB(r->pert, r->pert, r->ron);
 	} else
 		r->pert[0] = r->pert[1] = r->pert[2] = .0;
 

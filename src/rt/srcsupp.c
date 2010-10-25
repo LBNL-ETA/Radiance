@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.17 2008/12/06 01:08:53 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.18 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -399,14 +399,11 @@ FVECT  dir;
 {
 	FVECT  cent, c1, c2;
 	double  rad2, d;
-	register int  i;
 					/* move centers to common plane */
 	d = DOT(sp1->aim, dir);
-	for (i = 0; i < 3; i++)
-		c1[i] = sp1->aim[i] - d*dir[i];
+	VSUM(c1, sp1->aim, dir, -d);
 	d = DOT(sp2->aim, dir);
-	for (i = 0; i < 3; i++)
-		c2[i] = sp2->aim[i] - d*dir[i];
+	VSUM(c2, sp2->aim, dir, -d);
 					/* compute overlap */
 	rad2 = intercircle(cent, c1, c2, sp1->siz/PI, sp2->siz/PI);
 	if (rad2 <= FTINY)
@@ -442,7 +439,6 @@ FVECT  pos;
 {
 	FVECT  onorm;
 	double  offs, d, dist;
-	register int  i;
 
 	offs = getplaneq(onorm, op);
 	d = -DOT(onorm, sp->aim);
@@ -451,8 +447,7 @@ FVECT  pos;
 	dist = (DOT(pos, onorm) - offs)/d;
 	if (dist < 0.)
 		return(0.);
-	for (i = 0; i < 3; i++)
-		oc[i] = pos[i] + dist*sp->aim[i];
+	VSUM(oc, pos, sp->aim, dist);
 	return(sp->siz*dist*dist/PI/(d*d));
 }
 
@@ -466,15 +461,13 @@ FVECT  dir;
 {
 	FVECT  onorm;
 	double  offs, d, dist;
-	register int  i;
 
 	offs = getplaneq(onorm, op);
 	d = -DOT(onorm, dir);
 	if (d >= -FTINY && d <= FTINY)
 		return(0.);
 	dist = (DOT(sp->aim, onorm) - offs)/d;
-	for (i = 0; i < 3; i++)
-		oc[i] = sp->aim[i] + dist*dir[i];
+	VSUM(oc, sp->aim, dir, dist);
 	return(sp->siz/PI/(d*d));
 }
 
@@ -487,10 +480,8 @@ double  r1s, r2s;		/* radii squared */
 {
 	double  a2, d2, l;
 	FVECT  disp;
-	register int  i;
 
-	for (i = 0; i < 3; i++)
-		disp[i] = c2[i] - c1[i];
+	VSUB(disp, c2, c1);
 	d2 = DOT(disp,disp);
 					/* circle within overlap? */
 	if (r1s < r2s) {
@@ -510,7 +501,6 @@ double  r1s, r2s;		/* radii squared */
 		return(0.);
 					/* overlap, compute center */
 	l = sqrt((r1s - a2)/d2);
-	for (i = 0; i < 3; i++)
-		cc[i] = c1[i] + l*disp[i];
+	VSUM(cc, c1, disp, l);
 	return(a2);
 }

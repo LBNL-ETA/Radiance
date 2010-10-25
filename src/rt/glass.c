@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.18 2010/09/26 15:51:15 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.19 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -112,9 +112,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 						/* transmitted ray */
 		if (rayorigin(&p, TRANS, r, trans) == 0) {
 			if (!(r->crtype & SHADOW) && hastexture) {
-				for (i = 0; i < 3; i++)	/* perturb direction */
-					p.rdir[i] = r->rdir[i] +
-						2.*(1.-rindex)*r->pert[i];
+				VSUM(p.rdir, r->rdir, r->pert, 2.*(1.-rindex));
 				if (normalize(p.rdir) == 0.0) {
 					objerror(m, WARNING, "bad perturbation");
 					VCOPY(p.rdir, r->rdir);
@@ -143,8 +141,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	}
 						/* reflected ray */
 	if (rayorigin(&p, REFLECTED, r, refl) == 0) {
-		for (i = 0; i < 3; i++)
-			p.rdir[i] = r->rdir[i] + 2.0*pdot*pnorm[i];
+		VSUM(p.rdir, r->rdir, pnorm, 2.*pdot);
 		checknorm(p.rdir);
 		rayvalue(&p);
 		multcolor(p.rcol, p.rcoef);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.61 2010/09/26 15:51:15 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.62 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -520,8 +520,7 @@ localhit(		/* check for hit in the octree */
 	if (r->rmax > FTINY) {		/* except aft plane if one */
 		r->ro = &Aftplane;
 		r->rot = r->rmax;
-		for (i = 0; i < 3; i++)
-			r->rop[i] = r->rorg[i] + r->rot*r->rdir[i];
+		VSUM(r->rop, r->rorg, r->rdir, r->rot);
 	}
 					/* find global cube entrance point */
 	t = 0.0;
@@ -544,8 +543,7 @@ localhit(		/* check for hit in the octree */
 		if (t >= r->rot)	/* clipped already */
 			return(0);
 					/* advance position */
-		for (i = 0; i < 3; i++)
-			curpos[i] += r->rdir[i]*t;
+		VSUM(curpos, curpos, r->rdir, t);
 
 		if (!incube(scene, curpos))	/* non-intersecting ray */
 			return(0);
@@ -636,9 +634,7 @@ raymove(		/* check for hit as we move */
 			ax = 2;
 		}
 	}
-	pos[0] += r->rdir[0]*t;
-	pos[1] += r->rdir[1]*t;
-	pos[2] += r->rdir[2]*t;
+	VSUM(pos, pos, r->rdir, t);
 	return(ax);
 }
 

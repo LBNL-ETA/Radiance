@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.26 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.27 2010/10/25 22:57:45 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -271,8 +271,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, TRANS, r, ctmp) == 0) {
 		if (!(r->crtype & SHADOW) && hastexture) {
-			for (i = 0; i < 3; i++)	/* perturb direction */
-				sr.rdir[i] = r->rdir[i] - .75*r->pert[i];
+						/* perturb direction */
+			VSUM(sr.rdir, r->rdir, r->pert, -.75);
 			if (normalize(sr.rdir) == 0.0) {
 				objerror(m, WARNING, "illegal perturbation");
 				VCOPY(sr.rdir, r->rdir);
@@ -299,8 +299,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, REFLECTED, r, ctmp) == 0) {
-		for (i = 0; i < 3; i++)
-			sr.rdir[i] = r->rdir[i] + 2.0*nd.pdot*nd.pnorm[i];
+		VSUM(sr.rdir, r->rdir, nd.pnorm, 2.*nd.pdot);
 		checknorm(sr.rdir);
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
