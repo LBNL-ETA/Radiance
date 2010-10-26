@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.34 2010/09/26 15:51:15 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.35 2010/10/26 03:45:35 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -76,8 +76,8 @@ extern char  VersionID[];	/* Radiance version ID string */
 extern CUBE	thescene;	/* our scene */
 extern OBJECT	nsceneobjs;	/* number of objects in our scene */
 
-extern unsigned long	raynum;	/* next ray ID */
-extern unsigned long	nrays;	/* total rays traced so far */
+extern RNUMBER	raynum;		/* next ray ID */
+extern RNUMBER	nrays;		/* total rays traced so far */
 
 extern OBJREC  Lamb;		/* a Lambertian surface */
 extern OBJREC  Aftplane;	/* aft clipping object */
