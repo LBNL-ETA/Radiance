@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.58 2010/08/23 15:56:17 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.59 2010/10/28 09:38:46 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -184,35 +184,38 @@ srcray(				/* send a ray to a source, return domega */
 	SRCINDEX  *si			/* source sample index */
 )
 {
-    double  d;				/* distance to source */
-    register SRCREC  *srcp;
+	double  d;				/* distance to source */
+	register SRCREC  *srcp;
 
-    rayorigin(sr, SHADOW, r, NULL);		/* ignore limits */
+	rayorigin(sr, SHADOW, r, NULL);		/* ignore limits */
 
-    while ((d = nextssamp(sr, si)) != 0.0) {
-	sr->rsrc = si->sn;			/* remember source */
-	srcp = source + si->sn;
-	if (srcp->sflags & SDISTANT) {
-		if (srcp->sflags & SSPOT && spotout(sr, srcp->sl.s))
-			continue;
-		return(1);		/* sample OK */
-	}
+	if (r == NULL)
+		sr->rmax = 0.0;
+
+	while ((d = nextssamp(sr, si)) != 0.0) {
+		sr->rsrc = si->sn;			/* remember source */
+		srcp = source + si->sn;
+		if (srcp->sflags & SDISTANT) {
+			if (srcp->sflags & SSPOT && spotout(sr, srcp->sl.s))
+				continue;
+			return(1);		/* sample OK */
+		}
 				/* local source */
 						/* check proximity */
-	if (srcp->sflags & SPROX && d > srcp->sl.prox)
-		continue;
-						/* check angle */
-	if (srcp->sflags & SSPOT) {
-		if (spotout(sr, srcp->sl.s))
+		if (srcp->sflags & SPROX && d > srcp->sl.prox)
 			continue;
+						/* check angle */
+		if (srcp->sflags & SSPOT) {
+			if (spotout(sr, srcp->sl.s))
+				continue;
 					/* adjust solid angle */
-		si->dom *= d*d;
-		d += srcp->sl.s->flen;
-		si->dom /= d*d;
+			si->dom *= d*d;
+			d += srcp->sl.s->flen;
+			si->dom /= d*d;
+		}
+		return(1);			/* sample OK */
 	}
-	return(1);			/* sample OK */
-    }
-    return(0);			/* no more samples */
+	return(0);			/* no more samples */
 }
 
 
@@ -552,7 +555,6 @@ srcscatter(			/* compute source scattering into ray */
 			sr.rorg[0] = r->rorg[0] + r->rdir[0]*t;
 			sr.rorg[1] = r->rorg[1] + r->rdir[1]*t;
 			sr.rorg[2] = r->rorg[2] + r->rdir[2]*t;
-			sr.rmax = 0.;
 			initsrcindex(&si);	/* sample ray to this source */
 			si.sn = r->slights[i];
 			nopart(&si, &sr);
