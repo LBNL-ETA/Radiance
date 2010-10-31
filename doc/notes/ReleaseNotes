@@ -1749,9 +1749,9 @@ suggestions and help).
 
 Fixed bug in genklemsamp that caused non-uniform sampling over surfaces.
 
-Fied bugs in rhoptimize and rhcopy for 64-bit compilation.
+Fixed bugs in rhoptimize and rhcopy for 64-bit compilation.
 
-Made change to avoid problem using gcc --fast-math compile option.
+Made a change to avoid problem using gcc --fast-math compile option.
 
 ****** COMPATIBILITY CHANGE ********
 Changed behavior of rtrace and rtcontrib so that every scanline is
