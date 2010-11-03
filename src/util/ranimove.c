@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.13 2009/12/12 19:01:00 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.14 2010/11/03 05:05:21 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -614,19 +614,18 @@ getoctspec(			/* get octree for the given frame */
 )
 {
 	static char	combuf[1024];
-	int		cfm = 0;
+	static int	cfm = 0;
 	int	uses_inline;
 	FILE	*fp;
 	int	i;
 					/* is octree static? */
 	if (!vdef(MOVE))
 		return(vval(OCTREEF));
-					/* done already */
+					/* done already? */
 	if (n == cfm)
 		return(combuf);
 					/* else create object file */
-	strcpy(objtmpf, "movinobj.rad");
-	fp = fopen(objtmpf, "w");
+	fp = fopen(mktemp(strcpy(objtmpf, TEMPLATE)), "w");
 	if (fp == NULL) {
 		sprintf(errmsg, "cannot write to moving objects file '%s'",
 				objtmpf);
@@ -657,8 +656,9 @@ getoctspec(			/* get octree for the given frame */
 				vdef(OCONV) ? vval(OCONV) : "",
 				vval(OCTREEF), objtmpf);
 	else
-		sprintf(combuf, "!xform -f %s | oconv -f -i '%s' -",
-				objtmpf, vval(OCTREEF));
+		sprintf(combuf, "!xform -f %s | oconv %s -f -i '%s' -",
+				objtmpf, vdef(OCONV) ? vval(OCONV) : "",
+				vval(OCTREEF));
 	return(combuf);
 }
 
