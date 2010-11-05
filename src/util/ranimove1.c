@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.15 2008/11/10 19:08:20 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.16 2010/11/05 04:36:24 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -107,6 +107,7 @@ next_frame(void)			/* prepare next frame buffer */
 		error(USER, errmsg);
 	}
 	if (cbuffer == NULL) {
+		int	n;
 					/* compute resolution and allocate */
 		switch (sscanf(vval(RESOLUTION), "%d %d %lf",
 				&hres, &vres, &pixaspect)) {
@@ -142,6 +143,10 @@ next_frame(void)			/* prepare next frame buffer */
 				(cprev==NULL) | (zprev == NULL) |
 				(oprev==NULL) | (aprev==NULL))
 			error(SYSTEM, "out of memory in init_frame");
+		for (n = hres*vres; n--; ) {
+			zprev[n] = -1.f;
+			oprev[n] = OVOID;
+		}
 		frm_stop = getTime() + rtperfrm;
 	} else {
 		COLOR	*cp;		/* else just swap buffers */
@@ -371,8 +376,10 @@ init_frame_sample(void)		/* sample our initial frame */
 		if (!sample_here(x, y)) {	/* just cast */
 			rayorigin(&ir, PRIMARY, NULL, NULL);
 			if (!localhit(&ir, &thescene)) {
-				if (ir.ro != &Aftplane)
-					sourcehit(&ir);
+				if (ir.ro != &Aftplane && sourcehit(&ir)) {
+					rayshade(&ir, ir.ro->omod);
+					rayparticipate(&ir);
+				}
 				copycolor(cbuffer[n], ir.rcol);
 				zbuffer[n] = ir.rot;
 				obuffer[n] = ir.robj;
@@ -401,7 +408,7 @@ init_frame_sample(void)		/* sample our initial frame */
 		zbuffer[n] = ir.rot;
 		obuffer[n] = ir.robj;
 		sbuffer[n] = 1;
-		if (ir.rot >= FHUGE)
+		if (ir.rot >= 0.99*FHUGE)
 			abuffer[n] = ADISTANT;
 		else {
 			abuffer[n] = ALOWQ;
@@ -454,15 +461,12 @@ getambcolor(		/* get ambient color for object if we can */
 
 	if (obj == OVOID)
 		return(0);
-	op = objptr(obj);
-	if ((op->otype == OBJ_INSTANCE) & (op->omod == OVOID))
+	op = objptr(obj);		/* search for material */
+	if (op->omod == OVOID)
 		return(0);
-					/* search for material */
-	do {
-		if (op->omod == OVOID || ofun[op->otype].flags & T_X)
-			return(0);
-		op = objptr(op->omod);
-	} while (!ismaterial(op->otype));
+	op = findmaterial(objptr(op->omod));
+	if (op == NULL)
+		return(0);
 	/*
 	 * Since this routine is called to compute the difference
 	 * from rendering with and without interreflections,
@@ -476,7 +480,7 @@ getambcolor(		/* get ambient color for object if we can */
 			if (lv[0] == op->oname[0] &&
 					!strcmp(lv+1, op->oname+1))
 				break;
-		if ((lv != NULL) != hirendparams.ambincl)
+		if ((lv != NULL) ^ hirendparams.ambincl)
 			return(0);
 	}
 	switch (op->otype) {
