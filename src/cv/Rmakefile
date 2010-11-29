@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.33 2008/06/24 02:01:19 greg Exp $
+# RCSid $Id: Rmakefile,v 2.34 2010/11/29 17:22:30 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -20,7 +20,7 @@ LIBDIR = /usr/local/lib/ray
 
 MGF_LIB = ../lib/libmgf.a
 
-PROGS = ies2rad arch2rad nff2rad lampcolor tmesh2rad obj2rad \
+PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal
@@ -36,7 +36,7 @@ install:	$(PROGS) $(LIBFILES) optics2rad.csh
 
 clean:
 	set nonomatch; rm -f $(PROGS) *.o core
-	cd mgflib ; make clean
+	cd mgflib ; $(MAKE) clean
 
 ies2rad:	ies2rad.o
 	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad $(MLIB)
@@ -67,27 +67,27 @@ mgf2meta:	$(MGF_LIB) mgf2meta.o
 
 mgfilt:
 	cd mgflib ; rm -f mgfilt ; \
-	make mgfilt CC="$(CC)" \
+	$(MAKE) mgfilt CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
-	mv mgfilt ..
+	cp -p mgfilt ..
 
 mgf2inv:
 	cd mgflib ; rm -f mgf2inv ; \
-	make mgf2inv CC="$(CC)" \
+	$(MAKE) mgf2inv CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
-	mv mgf2inv ..
+	cp -p mgf2inv ..
 
 3ds2mgf:
 	cd mgflib ; rm -f 3ds2mgf ; \
-	make 3ds2mgf CC="$(CC)" \
+	$(MAKE) 3ds2mgf CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
-	mv 3ds2mgf ..
+	cp -p 3ds2mgf ..
 
 $(MGF_LIB):
 	cd mgflib ; rm -f libmgf.a ; \
-	make libmgf.a CC="$(CC)" \
+	$(MAKE) libmgf.a CC="$(CC)" \
 		CFLAGS="$(OPT) $(MACH)" ; \
-	mv libmgf.a ../../lib
+	cp -p libmgf.a ../../lib
 
 mgf2rad.o:	mgf2rad.c mgflib/parser.h ../common/tmesh.h ../common/color.h
 	$(CC) $(CFLAGS) -c mgf2rad.c
