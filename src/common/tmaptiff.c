@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.8 2009/02/09 20:48:08 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.9 2010/12/02 18:10:40 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -11,8 +11,8 @@ static const char	RCSid[] = "$Id: tmaptiff.c,v 3.8 2009/02/09 20:48:08 greg Exp 
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "tmprivat.h"
 #include "tiffio.h"
+#include "tmprivat.h"
 #include "tmaptiff.h"
 
 					/* input cases we handle */
