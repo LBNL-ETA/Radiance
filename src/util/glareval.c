@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.12 2006/05/29 16:47:54 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.13 2010/12/02 18:08:11 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: glareval.c,v 2.12 2006/05/29 16:47:54 greg Exp
 #include <stdlib.h>
 #include <string.h>
 
+#include "platform.h"
 #include "rtprocess.h" /* Windows: must come first because of conflicts */
 #include "glare.h"
 
@@ -319,6 +320,7 @@ open_pict(			/* open picture file */
 		fprintf(stderr, "%s: cannot open\n", fn);
 		exit(1);
 	}
+	SET_FILE_BINARY(pictfp);
 	exposure = 1.0;
 	getheader(pictfp, getexpos, NULL);
 	if (wrongformat || !fscnresolu(&pxsiz, &pysiz, pictfp)) {

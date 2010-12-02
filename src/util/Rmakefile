@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.56 2010/09/02 02:29:24 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.57 2010/12/02 18:08:11 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -137,6 +137,8 @@ rad.o ranimate.o rpiece.o rtcontrib.o xglaresrc.o:	../common/standard.h \
 xglaresrc.o:	../common/view.h
 
 glareval.o xglaresrc.o:	../common/resolu.h
+
+glareval.o:	../common/platform.h ../common/rtprocess.h
 
 rad.o ranimate.o:	../common/vars.h
 

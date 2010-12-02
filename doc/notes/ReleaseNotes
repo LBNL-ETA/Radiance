@@ -1778,3 +1778,5 @@ the old -sj, but when set greater than 1, spawns multiple ray
 samples from semi-specular surfaces.
 
 Fixed bug noticed by Randolph Fritz that caused ambient sync errors.
+
+Fixed bug in findglare for reading picture files under Windows.
