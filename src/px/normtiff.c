@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.11 2008/11/10 19:08:19 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.12 2010/12/04 00:24:43 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: normtiff.c,v 3.11 2008/11/10 19:08:19 greg Exp
 #include <time.h>
 #include <string.h>
 
+#include "platform.h"
 #include "tiffio.h"
 #include "color.h"
 #include "tonemap.h"
@@ -184,6 +185,7 @@ openpicture(			/* open/check Radiance picture file */
 					/* else try opening it */
 	if ((fp = fopen(fname, "r")) == NULL)
 		return(NULL);
+	SET_FILE_BINARY(fp);
 					/* allocate struct */
 	if ((pp = (PICTURE *)malloc(sizeof(PICTURE))) == NULL)
 		return(NULL);		/* serious error -- should exit? */

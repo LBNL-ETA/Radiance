@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.33 2008/11/10 19:08:19 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.34 2010/12/04 00:24:43 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.33 2008/11/10 19:08:19 greg Exp 
 #include  <time.h>
 #include  <string.h>
 
+#include  "platform.h"
 #include  "tiffio.h"
 #include  "color.h"
 #include  "resolu.h"
@@ -415,6 +416,7 @@ tiff2ra(		/* convert TIFF image to Radiance picture */
 		cvts.rfp = stdout;
 	else if ((cvts.rfp = fopen(av[ac+1], "w")) == NULL)
 		quiterr("cannot open Radiance output picture");
+	SET_FILE_BINARY(cvts.rfp);
 					/* start output header */
 	newheader("RADIANCE", cvts.rfp);
 	printargs(ac, av, cvts.rfp);
@@ -634,6 +636,7 @@ ra2tiff(		/* convert Radiance picture to TIFF image */
 		cvts.rfp = stdin;
 	else if ((cvts.rfp = fopen(av[ac], "r")) == NULL)
 		quiterr("cannot open Radiance input picture");
+	SET_FILE_BINARY(cvts.rfp);
 						/* open TIFF file */
 	if ((cvts.tif = TIFFOpen(av[ac+1], "w")) == NULL)
 		quiterr("cannot open TIFF output");
