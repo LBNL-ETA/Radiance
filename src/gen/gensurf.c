@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.18 2007/10/18 03:59:54 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.19 2010/12/08 21:37:51 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -35,7 +35,7 @@ char  VNAME[] = 	"valid";		/* valid vertex name */
 #define  pvect(p)	printf(vformat, (p)[0], (p)[1], (p)[2])
 
 char  vformat[] = "%18.12g %18.12g %18.12g\n";
-char  tsargs[] = "4 surf_dx surf_dy surf_dz surf.cal\n";
+char  tsargs[] = "4 surf_dx surf_dy surf_dz surf.cal";
 char  texname[] = "Phong";
 
 int  smooth = 0;		/* apply smoothing? */
@@ -382,8 +382,7 @@ putsquare(		/* put out a square */
 	if (ok1 & ok2 && fdot(vc1,vc2) >= 1.0-FTINY*FTINY) {
 		printf("\n%s ", modname);
 		if (axis != -1) {
-			printf("texfunc %s\n", texname);
-			printf(tsargs);
+			printf("texfunc %s\n%s\n", texname, tsargs);
 			printf("0\n13\t%d\n", axis);
 			pvect(norm[0]);
 			pvect(norm[1]);
@@ -405,8 +404,7 @@ putsquare(		/* put out a square */
 	if (ok1) {
 		printf("\n%s ", modname);
 		if (axis != -1) {
-			printf("texfunc %s\n", texname);
-			printf(tsargs);
+			printf("texfunc %s\n%s\n", texname, tsargs);
 			printf("0\n13\t%d\n", axis);
 			pvect(norm[0]);
 			pvect(norm[1]);
@@ -424,8 +422,7 @@ putsquare(		/* put out a square */
 	if (ok2) {
 		printf("\n%s ", modname);
 		if (axis != -1) {
-			printf("texfunc %s\n", texname);
-			printf(tsargs);
+			printf("texfunc %s\n%s\n", texname, tsargs);
 			printf("0\n13\t%d\n", axis);
 			pvect(norm[0]);
 			pvect(norm[1]);
