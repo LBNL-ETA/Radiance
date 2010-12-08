@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.24 2006/07/26 17:15:11 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.25 2010/12/08 21:22:33 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -180,9 +180,9 @@ char  *argv[];
 		else
 			userror("bad option");
 
-	if (fabs(s_meridian-s_longitude) > 45*PI/180)
+	if (month && !tsolar && fabs(s_meridian-s_longitude) > 45*PI/180)
 		fprintf(stderr,
-	"%s: warning: %.1f hours btwn. standard meridian and longitude\n",
+	"%s: warning - %.1f hours btwn. standard meridian and longitude\n",
 			progname, (s_longitude-s_meridian)*12/PI);
 
 	printhead(argc, argv);
