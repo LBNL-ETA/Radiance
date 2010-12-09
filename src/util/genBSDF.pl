@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.4 2010/12/09 06:14:04 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.5 2010/12/09 17:00:43 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -75,6 +75,7 @@ die "Could not compile scene\n" if ( $? );
 # Kbin to produce incident direction in full Klems basis with (x1,x2) randoms
 my $tcal = '
 DEGREE : PI/180;
+sq(x) : x*x;
 Kpola(r) : select(r+1, -5, 5, 15, 25, 35, 45, 55, 65, 75, 90);
 Knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12);
 Kaccum(r) : if(r-.5, Knaz(r) + Kaccum(r-1), 0);
@@ -88,9 +89,9 @@ sin_kpol = sin(Kpol);
 Dx = -cos(Kazi)*sin_kpol;
 Dy = sin(Kazi)*sin_kpol;
 Dz = sqrt(1 - sin_kpol*sin_kpol);
-Komega = 2*PI*if(Kbin-.5,
-	(cos(Kpola(Krow-1)*DEGREE) - cos(Kpola(Krow)*DEGREE))/Knaz(Krow),
-	1 - cos(Kpola(1)*DEGREE));
+KprojOmega = PI * if(Kbin-.5,
+	(sq(cos(Kpola(Krow-1)*DEGREE)) - sq(cos(Kpola(Krow)*DEGREE)))/Knaz(Krow),
+	1 - sq(cos(Kpola(1)*DEGREE)));
 ';
 # Compute Klems bin from exiting ray direction
 my $kcal = '
@@ -130,9 +131,9 @@ my $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
 	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
 	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
-	"| rcalc -e 'x1:.5;x2:.5;$tcal' " .
+	"| rcalc -e '$tcal' " .
 	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-1,$ndiv)' " .
-	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/(Komega*Dz)'};
+	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega'};
 my @darr = `$cmd`;
 die "Failure running: $cmd\n" if ( $? );
 # Output XML prologue
