@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.3 2010/09/09 06:02:16 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.4 2010/12/09 06:14:04 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -130,7 +130,8 @@ my $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
 	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
 	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
-	"| rcalc -e 'x1:.5;x2:.5;$tcal' -e 'Kbin=floor((recno-1)/$ndiv)' " .
+	"| rcalc -e 'x1:.5;x2:.5;$tcal' " .
+	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-1,$ndiv)' " .
 	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/(Komega*Dz)'};
 my @darr = `$cmd`;
 die "Failure running: $cmd\n" if ( $? );
