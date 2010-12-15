@@ -5,14 +5,17 @@ Import('env') # inherit from parent
 # math libs
 mlib = env['RAD_MLIB']
 
+#Make sure sun.c is compiled only once
+sun = env.Object(source="sun.c")
+
 # standard targets
 PROGS = (
 # name          sources           libs
-('gendaylit',   Split('gendaylit.c sun.c',), ['rtlamps']),
+('gendaylit',   Split('gendaylit.c',)+[sun], ['rtlamps']),
 ('genbeads',    Split('genbeads.c hermite3.c'),  []),
 ('genbox',      ['genbox.c',],    []),
 ('genmarble',   ['genmarble.c',], []),
-('gensky',      Split('gensky.c sun.c',), []),
+('gensky',      Split('gensky.c',)+[sun], []),
 ('genblinds',   ['genblinds.c',], []),
 ('genprism',    ['genprism.c',],  []),
 ('genrev',      ['genrev.c',],    ['rtfunc','rtcont','rtmem','rtio','rterror']),
@@ -44,6 +47,7 @@ prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mkillum'),
 		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtproc',
 		'rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']
 		+ mlib)
+progs.append(prog)
 prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mksource'),
 		source=['mksource.c'],
 		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
@@ -58,7 +62,7 @@ Default('#src/gen')
 env.Install('$RAD_BINDIR', progs)
 
 #surf.cal clockface.hex
-LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal')
+LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal perezlum.cal coeff_perez.dat defangle.dat')
 env.Append(RAD_RLIBINSTALL=env.Install('$RAD_RLIBDIR', LIBFILES))
 
 

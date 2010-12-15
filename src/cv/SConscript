@@ -50,6 +50,7 @@ for p in PROGS:
 prog = env.Program(target=rbin('mgf2meta'), source=['mgf2meta.c'],
 		CPPPATH=env.get('CPPPATH', []) + [os.path.join('#src','meta')],
 		LIBS=['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib)
+env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 LIBFILES = Split('source.cal tilt.cal window.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
