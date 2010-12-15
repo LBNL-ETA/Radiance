@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.41 2008/05/01 15:50:28 greg Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.42 2010/12/15 17:24:29 greg Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -39,9 +39,9 @@ static char	*persistfname = NULL;	/* persist file name */
 static int	persistfd = -1;		/* persist file descriptor */
 static char	inpname[TEMPLEN+1], outpname[TEMPLEN+1], errname[TEMPLEN+1];
 
-typedef void (sighandler_t)(int);
-static sighandler_t sig_io;
-static sighandler_t sig_alrm;
+typedef void (rsighandler_t)(int);
+static rsighandler_t sig_io;
+static rsighandler_t sig_alrm;
 
 
 extern void
@@ -122,7 +122,7 @@ static void sig_alrm(int i) { quit(0); }
 extern void
 pfhold(void)		/* holding pattern for idle rendering process */
 {
-	sighandler_t	*oldalrm;
+	rsighandler_t	*oldalrm;
 	char	buf[512];
 	register int	n;
 				/* close input and output descriptors */
