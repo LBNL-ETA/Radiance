@@ -33,7 +33,7 @@ RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
 		portio.c wordfile.c words.c header.c timegm.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
 RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
-RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
+RTLAMPS = Split('''fropen.c rexpr.c lamps.c''') + [getlibpath]
 
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
@@ -47,6 +47,8 @@ STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
 ALL = RTSCENE + RTPIC + STD + RTNET
 
 # build libraries
+rtall = env.StaticLibrary(target=radlib('rtall'), source=ALL)
+
 rtscene = env.StaticLibrary(target=radlib('rtscene'), source=RTSCENE)
 
 rterror = env.StaticLibrary(target=radlib('rterror'), source=RTERROR)

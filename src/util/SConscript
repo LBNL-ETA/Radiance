@@ -29,7 +29,7 @@ PROGS = [
 	['rtpic','rtargs','rtfunc','rtio','rtproc','rtcont','rtmem','rtpath',
 	'rtmath','rtnet','rterror','$RAD_SOCKETLIB']),
 ('dctimestep', ['dctimestep.c'],
-	['rtio','rtmath'])
+	['rtall'])
 ]
 
 for p in PROGS:

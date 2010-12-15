@@ -8,6 +8,7 @@ mlib = env['RAD_MLIB']
 # standard targets
 PROGS = (
 # name          sources           libs
+('gendaylit',   Split('gendaylit.c sun.c',), ['rtlamps']),
 ('genbeads',    Split('genbeads.c hermite3.c'),  []),
 ('genbox',      ['genbox.c',],    []),
 ('genmarble',   ['genmarble.c',], []),
