@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ra_xyze.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: ra_xyze.1,v 1.6 2010/12/16 21:34:41 greg Exp $"
 .TH RA_XYZE 1 5/30/96 RADIANCE
 .SH NAME
 ra_xyze - convert between RADIANCE RGBE and XYZE formats
@@ -64,7 +64,7 @@ CIE (x,y) chromaticity coordinates of the three RGB primaries
 plus the white point, in that order.
 The new primaries will be recorded in the header of the output file,
 so that the original information may be fully recovered later.
-It is not necessary that the input file by in XYZE format.
+It is not necessary that the input file be in XYZE format.
 Th
 .I \-r
 option may therefore be used to convert from one RGB primary
@@ -126,4 +126,4 @@ options first.
 COLORCORR= lines multiplied together.)
 Better still, get the picture before color correction is applied.
 .SH "SEE ALSO"
-pfilt(1), ra_rgbe(1), rpict(1)
+pfilt(1), pvalue(1), ra_rgbe(1), rpict(1)

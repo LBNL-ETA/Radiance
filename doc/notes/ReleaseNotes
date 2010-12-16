@@ -1780,3 +1780,6 @@ samples from semi-specular surfaces.
 Fixed bug noticed by Randolph Fritz that caused ambient sync errors.
 
 Fixed bug in findglare for reading picture files under Windows.
+
+Added options to pvalue to note other color spaces on reverse conversion.
+Thanks to Erich Philips for the feature request.

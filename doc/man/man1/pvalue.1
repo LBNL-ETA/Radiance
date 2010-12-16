@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pvalue.1,v 1.7 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: pvalue.1,v 1.8 2010/12/16 21:34:41 greg Exp $"
 .TH PVALUE 1 1/15/99 RADIANCE
 .SH NAME
 pvalue - convert RADIANCE picture to/from alternate formats
@@ -180,6 +180,14 @@ Specifying
 converts from a Radiance picture to other values, which is the
 default.
 .TP
+.BI \-p " xr yr xg yg xb yb xw yw"
+On reverse conversion, RGB input uses the given set of color primaries.
+These are written into the output header with the PRIMARIES variable.
+.TP
+.BR \-pXYZ
+On reverse conversion, input is in CIE XYZ coordinates, rather than RGB.
+The Y channel is assumed to be in candelas/meter^2.
+.TP
 .BI -y \ res
 Set the output y resolution to
 .I res.
@@ -241,4 +249,4 @@ conversion, so this information is not used in determining
 the scanline ordering or picture size.
 .SH "SEE ALSO"
 getinfo(1), pcompos(1), pfilt(1), pflip(1),
-protate(1), rpict(1), rtrace(1), rvu(1)
+protate(1), ra_xyze(1), rpict(1), rtrace(1), rvu(1)
