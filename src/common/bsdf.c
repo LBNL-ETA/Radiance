@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.8 2010/09/26 15:43:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.9 2011/01/03 19:27:00 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -61,7 +61,15 @@ static ANGLE_BASIS	abase_list[MAXABASES] = {
 
 static int	nabases = 3;	/* current number of defined bases */
 
-#define  FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
+#define  FEQ(a,b)	((a)-(b) <= 1e-6 && (b)-(a) <= 1e-6)
+
+static int
+fequal(double a, double b)
+{
+	if (b != .0)
+		a = a/b - 1.;
+	return((a <= 1e-6) & (a >= -1e-6));
+}
 
 // returns the name of the given tag
 #ifdef ezxml_name
@@ -227,7 +235,7 @@ load_angle_basis(	/* load custom BSDF angle basis */
 		if (!i)
 			abase_list[nabases].lat[i].tmin =
 					-abase_list[nabases].lat[i+1].tmin;
-		else if (!FEQ(atof(ezxml_txt(ezxml_child(ezxml_child(wbb,
+		else if (!fequal(atof(ezxml_txt(ezxml_child(ezxml_child(wbb,
 					"ThetaBounds"), "LowerTheta"))),
 				abase_list[nabases].lat[i].tmin))
 			error(WARNING, "theta values disagree in custom basis");
