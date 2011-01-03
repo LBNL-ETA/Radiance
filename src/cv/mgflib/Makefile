@@ -10,7 +10,7 @@ CFLAGS = $(MACH) $(OPT)
 CC = cc
 
 OBJS = parser.o context.o xf.o object.o lookup.o badarg.o \
-words.o fvect.o
+words.o fvect.o ccolor.o
 
 all:	libmgf.a mgfilt mgf2inv 3ds2mgf
 
@@ -30,7 +30,8 @@ mgf2inv:	libmgf.a mgf2inv.o cvrgb.o
 clean:
 	set nonomatch ; rm -f *.o libmgf.a mgfilt mgf2inv 3ds2mgf
 
-parser.o context.o xf.o object.o fvect.o mgf2inv.o cvrgb.o:	parser.h
+parser.o context.o xf.o object.o \
+fvect.o mgf2inv.o cvrgb.o:	parser.h ccolor.h
 
 parser.o context.o lookup.o:	lookup.h
 
@@ -41,3 +42,5 @@ mgfilt.o:	parser.h
 3ds2mgf.o rayopt.o:	rayopt.h
 
 3ds2mgf.o rayopt.o vect.o:	vect.h
+
+ccolor.o:	ccolor.h

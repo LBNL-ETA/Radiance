@@ -1,4 +1,4 @@
-/* RCSid: $Id: parser.h,v 1.37 2003/11/15 17:54:06 schorsch Exp $ */
+/* RCSid: $Id: parser.h,v 1.38 2011/01/03 20:30:21 greg Exp $ */
 /*
  * Header file for MGF interpreter
  */
@@ -8,10 +8,9 @@
 extern "C" {
 #endif
 
-
-#ifndef MG_VMAJOR
-
 /* must include stdio.h and stdlib.h before us */
+
+#include "ccolor.h"
 
 #define MG_VMAJOR	2		/* major version number */
 #define MG_VMINOR	0		/* minor version number */
@@ -198,41 +197,6 @@ extern void	fcross(FVECT,FVECT,FVECT);/* cross product of two vectors */
  *	(materials, colors, vectors)
  */
 
-#define C_CMINWL	380		/* minimum wavelength */
-#define C_CMAXWL	780		/* maximum wavelength */
-#define C_CNSS		41		/* number of spectral samples */
-#define C_CWLI		((C_CMAXWL-C_CMINWL)/(C_CNSS-1))
-#define C_CMAXV		10000		/* nominal maximum sample value */
-#define C_CLPWM		(683./C_CMAXV)	/* peak lumens/watt multiplier */
-
-#define C_CSSPEC	01		/* flag if spectrum is set */
-#define C_CDSPEC	02		/* flag if defined w/ spectrum */
-#define C_CSXY		04		/* flag if xy is set */
-#define C_CDXY		010		/* flag if defined w/ xy */
-#define C_CSEFF		020		/* flag if efficacy set */
-
-typedef struct {
-	int	clock;		/* incremented each change */
-	char	*client_data;	/* pointer to private client-owned data */
-	short	flags;		/* what's been set */
-	short	ssamp[C_CNSS];	/* spectral samples, min wl to max */
-	long	ssum;		/* straight sum of spectral values */
-	float	cx, cy;		/* xy chromaticity value */
-	float	eff;		/* efficacy (lumens/watt) */
-} C_COLOR;
-
-#define C_DEFCOLOR	{ 1, NULL, C_CDXY|C_CSXY|C_CSSPEC|C_CSEFF,\
-			{C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
-			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV},\
-			(long)C_CNSS*C_CMAXV, 1./3., 1./3., 178.006 }
-
-#define c_cval(c,l)	((double)(c)->ssamp[((l)-C_MINWL)/C_CWLI] / (c)->ssum)
-
 #define C_1SIDEDTHICK	0.005		/* assumed thickness of 1-sided mat. */
 
 typedef struct {
@@ -278,8 +242,6 @@ extern void	c_clearall(void);		/* clear context tables */
 extern C_MATERIAL	*c_getmaterial(char *);	/* get a named material */
 extern C_VERTEX	*c_getvert(char *);		/* get a named vertex */
 extern C_COLOR	*c_getcolor(char *);		/* get a named color */
-extern void	c_ccvt(C_COLOR *, int);		/* fix color representation */
-extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
 
 /*************************************************************************
  *	Definitions for hierarchical object name handler
@@ -393,9 +355,6 @@ extern void mgf2rgb(C_COLOR *cin, double intensity, float cout[3]);
 #ifndef MEM_PTR
 #define MEM_PTR		void *
 #endif
-
-#endif /*MG_VMAJOR*/
-
 
 #ifdef __cplusplus
 }
