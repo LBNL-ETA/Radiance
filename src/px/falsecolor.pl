@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.1 2010/10/05 00:59:39 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.2 2011/01/04 17:00:02 greg Exp $
 
 use strict;
 use File::Temp qw/ tempdir /;
@@ -249,10 +249,10 @@ if ($legwidth > 20 && $legheight > 40) {
     $legwidth = 0;
     $legheight = 0;
     open(FHscolpic, ">$scolpic");
-    print FHscolpic '\n-Y 1 +X 1\naaa\n';
+    print FHscolpic "\n-Y 1 +X 1\naaa\n";
     close(FHscolpic);
     open(FHslabpic, ">$slabpic");
-    print FHslabpic '\n-Y 1 +X 1\naaa\n';
+    print FHslabpic "\n-Y 1 +X 1\naaa\n";
     close(FHslabpic);
 }
 
