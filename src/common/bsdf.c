@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.12 2011/01/06 04:40:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.13 2011/01/06 22:27:56 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -542,15 +542,19 @@ load_BSDF(		/* load BSDF data from file */
 	load_geometry(dp, ezxml_child(wtl, "Material"));
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
-		if (strcasecmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
+		if (strcasecmp(ezxml_txt(ezxml_child(wld,"Wavelength")),
+				"Visible"))
 			continue;
-		wdb = ezxml_child(wld, "WavelengthDataBlock");
-		if (wdb == NULL) continue;
-		if (strcasecmp(ezxml_txt(ezxml_child(wdb,"WavelengthDataDirection")),
+		for (wdb = ezxml_child(wld, "WavelengthDataBlock");
+				wdb != NULL; wdb = wdb->next)
+			if (!strcasecmp(ezxml_txt(ezxml_child(wdb,
+					"WavelengthDataDirection")),
 					"Transmission Front"))
-			continue;
-		load_bsdf_data(dp, wdb);	/* load front BTDF */
-		break;				/* ignore the rest */
+				break;
+		if (wdb != NULL) {		/* load front BTDF */
+			load_bsdf_data(dp, wdb);
+			break;			/* ignore the rest */
+		}
 	}
 	ezxml_free(fl);				/* done with XML file */
 	if (!check_bsdf_data(dp)) {
