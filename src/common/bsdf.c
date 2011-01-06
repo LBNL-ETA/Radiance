@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.9 2011/01/03 19:27:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.10 2011/01/06 04:36:16 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -526,6 +526,16 @@ load_BSDF(		/* load BSDF data from file */
 		return(NULL);
 	}
 	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
+	if (strcasecmp(ezxml_txt(ezxml_child(ezxml_child(wtl,
+			"DataDefinition"), "IncidentDataStructure")),
+			"Columns")) {
+		sprintf(errmsg,
+			"BSDF \"%s\": unsupported IncidentDataStructure",
+				path);
+		error(WARNING, errmsg);
+		ezxml_free(fl);
+		return(NULL);
+	}		
 	load_angle_basis(ezxml_child(ezxml_child(wtl,
 				"DataDefinition"), "AngleBasis"));
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
