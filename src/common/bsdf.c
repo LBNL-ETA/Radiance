@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.10 2011/01/06 04:36:16 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.11 2011/01/06 04:39:08 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -219,7 +219,7 @@ load_angle_basis(	/* load custom BSDF angle basis */
 	if (!abname || !*abname)
 		return;
 	for (i = nabases; i--; )
-		if (!strcmp(abname, abase_list[i].name))
+		if (!strcasecamp(abname, abase_list[i].name))
 			return;		/* assume it's the same */
 	if (nabases >= MAXABASES)
 		error(INTERNAL, "too many angle bases");
@@ -320,7 +320,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 		return;
 	}
 	for (i = nabases; i--; )
-		if (!strcmp(cbasis, abase_list[i].name)) {
+		if (!strcasecamp(cbasis, abase_list[i].name)) {
 			dp->ninc = abase_list[i].nangles;
 			dp->ib_priv = (void *)&abase_list[i];
 			dp->ib_vec = ab_getvecR;
@@ -334,7 +334,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 		return;
 	}
 	for (i = nabases; i--; )
-		if (!strcmp(rbasis, abase_list[i].name)) {
+		if (!strcasecamp(rbasis, abase_list[i].name)) {
 			dp->nout = abase_list[i].nangles;
 			dp->ob_priv = (void *)&abase_list[i];
 			dp->ob_vec = ab_getvec;
@@ -542,11 +542,11 @@ load_BSDF(		/* load BSDF data from file */
 	load_geometry(dp, ezxml_child(wtl, "Material"));
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
-		if (strcmp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
+		if (strcasecamp(ezxml_txt(ezxml_child(wld,"Wavelength")), "Visible"))
 			continue;
 		wdb = ezxml_child(wld, "WavelengthDataBlock");
 		if (wdb == NULL) continue;
-		if (strcmp(ezxml_txt(ezxml_child(wdb,"WavelengthDataDirection")),
+		if (strcasecamp(ezxml_txt(ezxml_child(wdb,"WavelengthDataDirection")),
 					"Transmission Front"))
 			continue;
 		load_bsdf_data(dp, wdb);	/* load front BTDF */
