@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rholo.1,v 1.4 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rholo.1,v 1.5 2011/01/12 23:35:58 greg Exp $"
 .TH RHOLO 1 1/14/99 RADIANCE
 .SH NAME
 rholo - generate/view a RADIANCE holodeck
@@ -208,7 +208,7 @@ I.e., the world distance between the pupils of the left and right eyes.
 There is no default value for this variable.
 .TP
 .BR section
-A section is a 6-sided parallel prism given by an origin and three axis
+A section is a parallelepiped given by an origin and three axis
 vectors (i.e., 12 floating point values in world coordinates).
 The axis vectors define the three edges attached to the origin vertex,
 and the other edges and vertices are determined by the parallel wall
@@ -218,7 +218,7 @@ to obtain a view of what is outside that region.
 In object rendering mode, a section may instead contain a detailed
 object to be viewed from the outside.
 The grid dimensions for each axis may also be given by three additional
-integer arguments following the prism axes.
+integer arguments following the three axes.
 Otherwise, if the grid dimensions are left out or any are unspecified
 or zero, the "GRID" variable will be used to determine them from the
 section axis lengths.
@@ -520,7 +520,7 @@ The following shows a minimal holodeck control variable file:
 .IP "" .3i
 .nf
 RIF= sample.rif                       # rad input file
-section= 2 2 4  5 0 0  0 7 0  0 0 3   # section prism boundaries
+section= 2 2 4  5 0 0  0 7 0  0 0 3   # section parallelepiped origin & vectors
 .fi
 .PP
 Technically, the "RIF" setting is not necessary, but the results are
