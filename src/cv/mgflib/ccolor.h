@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 1.1 2011/01/03 20:30:21 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 1.2 2011/01/14 05:26:00 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -50,4 +50,7 @@ extern C_COLOR		c_dfcolor;		/* default color */
 extern void	c_ccvt(C_COLOR *, int);		/* fix color representation */
 extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
 
+#ifdef __cplusplus
+}
+#endif
 #endif	/* _MGF_COLOR_H_ */
