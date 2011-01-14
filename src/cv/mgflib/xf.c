@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xf.c,v 1.14 2003/02/28 20:11:30 greg Exp $";
+static const char	RCSid[] = "$Id: xf.c,v 1.15 2011/01/14 05:46:12 greg Exp $";
 #endif
 /*
  * Routines for 4x4 homogeneous, rigid-body transformations
@@ -129,7 +129,7 @@ char	**av;
 			newav[ac+i] = xf_argend[i-xf_context->xac];
 		*(xf_argend = newav + spec->xac) = NULL;
 		if (xf_argbeg != NULL)
-			free((MEM_PTR)xf_argbeg);
+			free(xf_argbeg);
 		xf_argbeg = newav;
 	}
 	cp = (char *)(spec + 1);	/* use memory allocated above */
@@ -154,8 +154,8 @@ free_xf(spec)			/* free a transform */
 register XF_SPEC	*spec;
 {
 	if (spec->xarr != NULL)
-		free((MEM_PTR)spec->xarr);
-	free((MEM_PTR)spec);
+		free(spec->xarr);
+	free(spec);
 }
 
 
@@ -209,7 +209,7 @@ xf_clear()			/* clear transform stack */
 	register XF_SPEC	*spec;
 
 	if (xf_argbeg != NULL) {
-		free((MEM_PTR)xf_argbeg);
+		free(xf_argbeg);
 		xf_argbeg = xf_argend = NULL;
 	}
 	while ((spec = xf_context) != NULL) {

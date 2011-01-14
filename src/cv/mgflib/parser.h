@@ -1,16 +1,17 @@
-/* RCSid: $Id: parser.h,v 1.38 2011/01/03 20:30:21 greg Exp $ */
+/* RCSid: $Id: parser.h,v 1.39 2011/01/14 05:46:12 greg Exp $ */
 /*
  * Header file for MGF interpreter
  */
 #ifndef _MGF_PARSER_H_
 #define _MGF_PARSER_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* must include stdio.h and stdlib.h before us */
 
 #include "ccolor.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MG_VMAJOR	2		/* major version number */
 #define MG_VMINOR	0		/* minor version number */
@@ -201,7 +202,7 @@ extern void	fcross(FVECT,FVECT,FVECT);/* cross product of two vectors */
 
 typedef struct {
 	int	clock;		/* incremented each change -- resettable */
-	char	*client_data;	/* pointer to private client-owned data */
+	void	*client_data;	/* pointer to private client-owned data */
 	int	sided;		/* 1 if surface is 1-sided, 0 for 2-sided */
 	float	nr, ni;		/* index of refraction, real and imaginary */
 	float	rd;		/* diffuse reflectance */
@@ -220,7 +221,7 @@ typedef struct {
 
 typedef struct {
 	int	clock;		/* incremented each change -- resettable */
-	char	*client_data;	/* pointer to private client-owned data */
+	void	*client_data;	/* pointer to private client-owned data */
 	FVECT	p, n;		/* point and normal */
 } C_VERTEX;		/* vertex context */
 
@@ -339,7 +340,6 @@ extern int	xf(XF *, int, char **);		/* interpret transform spec. */
 	/* cvrgb.c */
 extern void mgf2rgb(C_COLOR *cin, double intensity, float cout[3]);
 
-
 /************************************************************************
  *	Miscellaneous definitions
  */
@@ -350,10 +350,6 @@ extern void mgf2rgb(C_COLOR *cin, double intensity, float cout[3]);
 #else
 #define	 PI		3.14159265358979323846
 #endif
-#endif
-
-#ifndef MEM_PTR
-#define MEM_PTR		void *
 #endif
 
 #ifdef __cplusplus

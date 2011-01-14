@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 1.2 2011/01/14 05:26:00 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 1.3 2011/01/14 05:46:12 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -25,7 +25,7 @@ extern "C" {
 
 typedef struct {
 	int	clock;		/* incremented each change */
-	char	*client_data;	/* pointer to private client-owned data */
+	void	*client_data;	/* pointer to private client-owned data */
 	short	flags;		/* what's been set and how */
 	short	ssamp[C_CNSS];	/* spectral samples, min wl to max */
 	long	ssum;		/* straight sum of spectral values */

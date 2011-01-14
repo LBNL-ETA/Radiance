@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 1.11 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 1.12 2011/01/14 05:46:12 greg Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -49,7 +49,7 @@ struct face {
 
 #define newface(n)	(struct face *)malloc(sizeof(struct face) + \
 				((n) > 3 ? (n)-3 : 0)*sizeof(short))
-#define freeface(f)	free((MEM_PTR)f)
+#define freeface(f)	free(f)
 
 #define	TABSTOP		8	/* assumed number of characters per tab */
 #define	SHIFTW		2	/* nesting shift width */

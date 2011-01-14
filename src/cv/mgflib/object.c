@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: object.c,v 1.6 2003/02/28 20:11:29 greg Exp $";
+static const char	RCSid[] = "$Id: object.c,v 1.7 2011/01/14 05:46:12 greg Exp $";
 #endif
 /*
  * Header file for tracking hierarchical object names
@@ -27,7 +27,7 @@ char	**av;
 	if (ac == 1) {				/* just pop top object */
 		if (obj_nnames < 1)
 			return(MG_ECNTXT);
-		free((MEM_PTR)obj_name[--obj_nnames]);
+		free(obj_name[--obj_nnames]);
 		obj_name[obj_nnames] = NULL;
 		return(MG_OK);
 	}
@@ -40,7 +40,7 @@ char	**av;
 			obj_name = (char **)malloc(
 				(obj_maxname=ALLOC_INC)*sizeof(char *));
 		else
-			obj_name = (char **)realloc((MEM_PTR)obj_name,
+			obj_name = (char **)realloc(obj_name,
 				(obj_maxname+=ALLOC_INC)*sizeof(char *));
 		if (obj_name == NULL)
 			return(MG_EMEM);
@@ -59,9 +59,9 @@ void
 obj_clear()			/* clear object stack */
 {
 	while (obj_nnames)
-		free((MEM_PTR)obj_name[--obj_nnames]);
+		free(obj_name[--obj_nnames]);
 	if (obj_maxname) {
-		free((MEM_PTR)obj_name);
+		free(obj_name);
 		obj_maxname = 0;
 	}
 }
