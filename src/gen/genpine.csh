@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid: $Id: genpine.csh,v 2.3 2005/02/16 05:40:11 greg Exp $
+# RCSid: $Id: genpine.csh,v 2.4 2011/01/24 04:28:06 greg Exp $
 #
 # Generate a tree
 # Pine version 2
@@ -60,7 +60,7 @@ set thisrad=.035
 cat << _EOF_ > $tree
 
 void colorpict bark_pat
-9 red green blue pinebark.pic cyl.cal cyl_match_u cyl_match_v -s $thisrad
+9 red green blue pinebark.hdr cyl.cal cyl_match_u cyl_match_v -s $thisrad
 0
 2 1.5225225 1
 
@@ -99,7 +99,7 @@ while ($i < $nlevels)
 	set move=`ev "(2*$aspect)^($i+1)"`
 	set thisrad=`ev "$lastrad+$move*.015"`
 	xform -ry `ev "25/($i+1)"` -t 0 0 $move $oldtree > $tree
-	echo void colorpict bark_pat 9 red green blue pinebark.pic \
+	echo void colorpict bark_pat 9 red green blue pinebark.hdr \
 			cyl.cal cyl_match_u cyl_match_v -s $thisrad >> $tree
 	echo 0 2 1.5225225 1 bark_pat alias my_bark_mat bark_mat >> $tree
 	echo my_bark_mat cone level$i 0 0 8 0 0 0 0 0 \
