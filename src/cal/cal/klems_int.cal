@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_int.cal,v 1.4 2010/09/26 15:50:39 greg Exp $ }
+{ RCSid $Id: klems_int.cal,v 1.5 2011/01/26 23:42:03 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis (0-144)
 
@@ -40,6 +40,6 @@ kbinE = kbin(-1,0,0, 0,0,1);	{ East bins }
 kbinS = kbin(0,1,0, 0,0,1);	{ South bins }
 kbinW = kbin(1,0,0, 0,0,1);	{ West bins }
 
-kbinU = kbin(0,0,1, 0,1,0);	{ "Up" bins for skylights }
+kbinD = kbin(0,0,-1, 0,1,0);	{ Skylight bins }
 
-Nkbins : kaccum(knaz(0));	{ total number of bins }
+Nkbins : kaccum(knaz(0));	{ Number of bins for one elevation }
