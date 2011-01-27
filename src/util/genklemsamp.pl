@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.7 2010/09/26 15:40:53 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.8 2011/01/27 22:28:12 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
@@ -76,7 +76,7 @@ if ($#ARGV >= 0) {
 	push @vd, $_;
 	$_ = $vwset; s/^.*Vdz://; s/;.*$//;
 	push @vd, $_;
-	my @bcube = split /\s+/, `getinfo -d < $td/surf.oct`;
+	my @bcube = split ' ', `getinfo -d < $td/surf.oct`;
 	$width = $bcube[3]*sqrt(3);
 	$height = $width;
 	push @vopts, ("-vp", $bcube[0]+$bcube[3]/2-$width/2*$vd[0],

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.6 2010/12/15 17:23:58 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.7 2011/01/27 22:28:12 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -54,8 +54,7 @@ if ( $mgfin ) {
 	system "rad2mgf $radscn > $mgfscn" if ( $geout );
 }
 if ($#dim != 5) {
-	@dim = split /\s+/, `getbbox -h $radscn`;
-	shift @dim;
+	@dim = split ' ', `getbbox -h $radscn`;
 }
 print STDERR "Warning: Device extends into room\n" if ($dim[5] > 1e-5);
 # Add receiver surface (rectangle)

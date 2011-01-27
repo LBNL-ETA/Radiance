@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.4 2010/01/23 22:30:29 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.5 2011/01/27 22:28:12 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -32,7 +32,7 @@ while (<>) {
 		$srcmod = $_;
 		$lightline = $#skydesc;
 	} elsif (defined($srcmod) && /^($srcmod)\s+source\s/) {
-		@sunval = split(/\s+/, $skydesc[$lightline + 3]);
+		@sunval = split(' ', $skydesc[$lightline + 3]);
 		shift @sunval;
 		$sunline = $#skydesc;
 	} elsif (/\sskyfunc\s*$/) {
@@ -43,7 +43,7 @@ die "Bad sky description!\n" if (! $skyOK);
 # Strip out the solar source if present
 my @sundir;
 if (defined $sunline) {
-	@sundir = split(/\s+/, $skydesc[$sunline + 3]);
+	@sundir = split(' ', $skydesc[$sunline + 3]);
 	shift @sundir;
 	undef @sundir if ($sundir[2] <= 0);
 	splice(@skydesc, $sunline, 5);
@@ -102,12 +102,12 @@ if (@sundir) {
 	my (@ang, @dom, @ndx);
 	my $wtot = 0;
 	for my $i (0..2) {
-		($ang[$i], $dom[$i], $ndx[$i]) = split(/\s+/, $bestdir[$i]);
+		($ang[$i], $dom[$i], $ndx[$i]) = split(' ', $bestdir[$i]);
 		$wtot += 1./($ang[$i]+.02);
 	}
 	for my $i (0..2) {
 		my $wt = 1./($ang[$i]+.02)/$wtot * $somega / $dom[$i];
-		my @scolor = split(/\s+/, $tregval[$ndx[$i]]);
+		my @scolor = split(' ', $tregval[$ndx[$i]]);
 		for my $j (0..2) { $scolor[$j] += $wt * $sunval[$j]; }
 		$tregval[$ndx[$i]] = "$scolor[0]\t$scolor[1]\t$scolor[2]\n";
 	}
