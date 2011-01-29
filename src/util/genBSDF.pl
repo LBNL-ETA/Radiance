@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.7 2011/01/27 22:28:12 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.8 2011/01/29 16:44:01 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -31,7 +31,7 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-d/) {
 		userror() if ($#ARGV < 6);
-		@dim = "@ARGV[1..6]";
+		@dim = @ARGV[1..6];
 		shift @ARGV for (1..6);
 	} elsif ("$ARGV[0]" =~ /^[-+]./) {
 		userror();
