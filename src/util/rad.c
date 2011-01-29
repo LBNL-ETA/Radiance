@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.103 2010/10/10 15:36:18 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.104 2011/01/29 16:44:20 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1270,6 +1270,9 @@ rpict(				/* run rpict and pfilt for each view */
 	int	vn, mult;
 	FILE	*fp;
 	time_t	rfdt, pfdt;
+	int	xres, yres;
+	double	aspect;
+	int	n;
 					/* get pfilt options */
 	pfiltopts(pfopts);
 					/* get resolution, reporting */
@@ -1284,24 +1287,19 @@ rpict(				/* run rpict and pfilt for each view */
 		mult = 3;
 		break;
 	}
-	{
-		int	xres, yres;
-		double	aspect;
-		int	n;
-		n = sscanf(vval(RESOLUTION), "%d %d %lf", &xres, &yres, &aspect);
-		if (n == 3)
-			sprintf(res, "-x %d -y %d -pa %.3f",
-					mult*xres, mult*yres, aspect);
-		else if (n) {
-			if (n == 1) yres = xres;
-			sprintf(res, "-x %d -y %d", mult*xres, mult*yres);
-		} else
-			badvalue(RESOLUTION);
-	}
+	n = sscanf(vval(RESOLUTION), "%d %d %lf", &xres, &yres, &aspect);
+	if (n == 3)
+		sprintf(res, "-x %d -y %d -pa %.3f",
+				mult*xres, mult*yres, aspect);
+	else if (n) {
+		aspect = 1.;
+		if (n == 1) yres = xres;
+		sprintf(res, "-x %d -y %d", mult*xres, mult*yres);
+	} else
+		badvalue(RESOLUTION);
 	rep[0] = '\0';
 	if (vdef(REPORT)) {
 		double	minutes;
-		int	n;
 		n = sscanf(vval(REPORT), "%lf %s", &minutes, rawfile);
 		if (n == 2)
 			sprintf(rep, " -t %d -e %s", (int)(minutes*60), rawfile);
@@ -1456,7 +1454,12 @@ rpict(				/* run rpict and pfilt for each view */
 		}
 		if (!vdef(RAWFILE) || strcmp(vval(RAWFILE),vval(PICTURE))) {
 						/* build pfilt command */
-			if (mult > 1)
+			if (do_rpiece)
+				sprintf(combuf,
+					"%s%s -x %d -y %d -p %.3f %s > %s",
+					c_pfilt, pfopts, xres, yres, aspect,
+					rawfile, picfile);
+			else if (mult > 1)
 				sprintf(combuf, "%s%s -x /%d -y /%d %s > %s",
 					c_pfilt, pfopts, mult, mult,
 					rawfile, picfile);
