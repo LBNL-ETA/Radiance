@@ -1,11 +1,12 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 1.1 2011/01/03 20:30:21 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 1.2 2011/02/03 19:36:10 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
  */
 
 #include <stdio.h>
+#include <math.h>
 #include "ccolor.h"
 
 
@@ -56,32 +57,33 @@ static C_COLOR	cie_zp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			36057L, .0, .0,
 			};
 
-
+/* check if color is grey */
 int
-c_isgrey(clr)			/* check if color is grey */
-register C_COLOR	*clr;
+c_isgrey(C_COLOR *clr)
 {
 	if (!(clr->flags & (C_CSXY|C_CSSPEC)))
 		return(1);		/* no settings == grey */
+
 	c_ccvt(clr, C_CSXY);
+
 	return(clr->cx >= .323 && clr->cx <= .343 &&
 			clr->cy >= .323 && clr->cy <= .343);
 }
 
-
+/* convert color representations */
 void
-c_ccvt(clr, fl)			/* convert color representations */
-register C_COLOR	*clr;
-int	fl;
+c_ccvt(C_COLOR *clr, int fl)
 {
 	double	x, y, z;
-	register int	i;
+	int	i;
 
 	fl &= ~clr->flags;			/* ignore what's done */
 	if (!fl)				/* everything's done! */
 		return;
-	if (!(clr->flags & (C_CSXY|C_CSSPEC)))	/* nothing set! */
-		*clr = c_dfcolor;
+	if (!(clr->flags & (C_CSXY|C_CSSPEC))) {
+		*clr = c_dfcolor;		/* nothing was set! */
+		return;
+	}
 	if (fl & C_CSXY) {		/* cspec -> cxy */
 		x = y = z = 0.;
 		for (i = 0; i < C_CNSS; i++) {
@@ -124,3 +126,76 @@ int	fl;
 		clr->flags |= C_CSEFF;
 	}
 }
+
+/* mix two colors according to weights given */
+void
+c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
+{
+	double	scale;
+	float	cmix[C_CNSS];
+	register int	i;
+
+	if ((c1->flags|c2->flags) & C_CDSPEC) {		/* spectral mixing */
+		c_ccvt(c1, C_CSSPEC|C_CSEFF);
+		c_ccvt(c2, C_CSSPEC|C_CSEFF);
+		w1 /= c1->eff*c1->ssum;
+		w2 /= c2->eff*c2->ssum;
+		scale = 0.;
+		for (i = 0; i < C_CNSS; i++) {
+			cmix[i] = w1*c1->ssamp[i] + w2*c2->ssamp[i];
+			if (cmix[i] > scale)
+				scale = cmix[i];
+		}
+		scale = C_CMAXV / scale;
+		cres->ssum = 0;
+		for (i = 0; i < C_CNSS; i++)
+			cres->ssum += cres->ssamp[i] = scale*cmix[i] + .5;
+		cres->flags = C_CDSPEC|C_CSSPEC;
+	} else {					/* CIE xy mixing */
+		c_ccvt(c1, C_CSXY);
+		c_ccvt(c2, C_CSXY);
+		scale = w1/c1->cy + w2/c2->cy;
+		if (scale == 0.)
+			return;
+		scale = 1. / scale;
+		cres->cx = (c1->cx*w1/c1->cy + c2->cx*w2/c2->cy) * scale;
+		cres->cy = (w1 + w2) * scale;
+		cres->flags = C_CDXY|C_CSXY;
+	}
+}
+
+
+#define	C1		3.741832e-16	/* W-m^2 */
+#define C2		1.4388e-2	/* m-K */
+
+#define bbsp(l,t)	(C1/((l)*(l)*(l)*(l)*(l)*(exp(C2/((t)*(l)))-1.)))
+#define bblm(t)		(C2/5./(t))
+
+/* set black body spectrum */
+int
+c_bbtemp(C_COLOR *clr, double tk)
+{
+	double	sf, wl;
+	register int	i;
+
+	if (tk < 1000)
+		return(0);
+	wl = bblm(tk);			/* scalefactor based on peak */
+	if (wl < C_CMINWL*1e-9)
+		wl = C_CMINWL*1e-9;
+	else if (wl > C_CMAXWL*1e-9)
+		wl = C_CMAXWL*1e-9;
+	sf = C_CMAXV/bbsp(wl,tk);
+	clr->ssum = 0;
+	for (i = 0; i < C_CNSS; i++) {
+		wl = (C_CMINWL + i*C_CWLI)*1e-9;
+		clr->ssum += clr->ssamp[i] = sf*bbsp(wl,tk) + .5;
+	}
+	clr->flags = C_CDSPEC|C_CSSPEC;
+	return(1);
+}
+
+#undef	C1
+#undef	C2
+#undef	bbsp
+#undef	bblm

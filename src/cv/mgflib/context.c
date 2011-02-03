@@ -1,12 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: context.c,v 1.29 2011/01/03 20:30:21 greg Exp $";
+static const char	RCSid[] = "$Id: context.c,v 1.30 2011/02/03 19:36:10 greg Exp $";
 #endif
 /*
  * Context handlers
  */
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
@@ -34,8 +33,6 @@ static LUTAB	mat_tab = LU_SINIT(free,free);	/* material lookup table */
 static LUTAB	vtx_tab = LU_SINIT(free,free);	/* vertex lookup table */
 
 static int	setspectrum();
-static int	setbbtemp();
-static void	mixcolors();
 
 
 int
@@ -123,7 +120,10 @@ register char	**av;
 			return(MG_EARGC);
 		if (!isflt(av[1]))
 			return(MG_ETYPE);
-		return(setbbtemp(c_ccolor, atof(av[1])));
+		if (!c_bbtemp(c_ccolor, atof(av[1])))
+			return(MG_EILL);
+		c_ccolor->clock++;
+		return(MG_OK);
 	case MG_E_CMIX:		/* mix colors */
 		if (ac < 5 || (ac-1)%2)
 			return(MG_EARGC);
@@ -143,7 +143,7 @@ register char	**av;
 				return(MG_EMEM);
 			if (lp->data == NULL)
 				return(MG_EUNDEF);
-			mixcolors(c_ccolor, wsum, c_ccolor,
+			c_cmix(c_ccolor, wsum, c_ccolor,
 					w, (C_COLOR *)lp->data);
 			wsum += w;
 		}
@@ -522,80 +522,3 @@ char	**av;
 	clr->clock++;
 	return(MG_OK);
 }
-
-
-static void
-mixcolors(cres, w1, c1, w2, c2)	/* mix two colors according to weights given */
-register C_COLOR	*cres, *c1, *c2;
-double	w1, w2;
-{
-	double	scale;
-	float	cmix[C_CNSS];
-	register int	i;
-
-	if ((c1->flags|c2->flags) & C_CDSPEC) {		/* spectral mixing */
-		c_ccvt(c1, C_CSSPEC|C_CSEFF);
-		c_ccvt(c2, C_CSSPEC|C_CSEFF);
-		w1 /= c1->eff*c1->ssum;
-		w2 /= c2->eff*c2->ssum;
-		scale = 0.;
-		for (i = 0; i < C_CNSS; i++) {
-			cmix[i] = w1*c1->ssamp[i] + w2*c2->ssamp[i];
-			if (cmix[i] > scale)
-				scale = cmix[i];
-		}
-		scale = C_CMAXV / scale;
-		cres->ssum = 0;
-		for (i = 0; i < C_CNSS; i++)
-			cres->ssum += cres->ssamp[i] = scale*cmix[i] + .5;
-		cres->flags = C_CDSPEC|C_CSSPEC;
-	} else {					/* CIE xy mixing */
-		c_ccvt(c1, C_CSXY);
-		c_ccvt(c2, C_CSXY);
-		scale = w1/c1->cy + w2/c2->cy;
-		if (scale == 0.)
-			return;
-		scale = 1. / scale;
-		cres->cx = (c1->cx*w1/c1->cy + c2->cx*w2/c2->cy) * scale;
-		cres->cy = (w1 + w2) * scale;
-		cres->flags = C_CDXY|C_CSXY;
-	}
-}
-
-
-#define	C1		3.741832e-16	/* W-m^2 */
-#define C2		1.4388e-2	/* m-K */
-
-#define bbsp(l,t)	(C1/((l)*(l)*(l)*(l)*(l)*(exp(C2/((t)*(l)))-1.)))
-#define bblm(t)		(C2/5./(t))
-
-static int
-setbbtemp(clr, tk)		/* set black body spectrum */
-register C_COLOR	*clr;
-double	tk;
-{
-	double	sf, wl;
-	register int	i;
-
-	if (tk < 1000)
-		return(MG_EILL);
-	wl = bblm(tk);			/* scalefactor based on peak */
-	if (wl < C_CMINWL*1e-9)
-		wl = C_CMINWL*1e-9;
-	else if (wl > C_CMAXWL*1e-9)
-		wl = C_CMAXWL*1e-9;
-	sf = C_CMAXV/bbsp(wl,tk);
-	clr->ssum = 0;
-	for (i = 0; i < C_CNSS; i++) {
-		wl = (C_CMINWL + i*C_CWLI)*1e-9;
-		clr->ssum += clr->ssamp[i] = sf*bbsp(wl,tk) + .5;
-	}
-	clr->flags = C_CDSPEC|C_CSSPEC;
-	clr->clock++;
-	return(MG_OK);
-}
-
-#undef	C1
-#undef	C2
-#undef	bbsp
-#undef	bblm
