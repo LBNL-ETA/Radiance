@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 1.2 2011/02/03 19:36:10 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 1.3 2011/02/04 06:31:41 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -127,13 +127,13 @@ c_ccvt(C_COLOR *clr, int fl)
 	}
 }
 
-/* mix two colors according to weights given */
+/* mix two colors according to weights given -- cres can be c1 or c2 */
 void
 c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 {
 	double	scale;
 	float	cmix[C_CNSS];
-	register int	i;
+	int	i;
 
 	if ((c1->flags|c2->flags) & C_CDSPEC) {		/* spectral mixing */
 		c_ccvt(c1, C_CSSPEC|C_CSEFF);
@@ -154,16 +154,19 @@ c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 	} else {					/* CIE xy mixing */
 		c_ccvt(c1, C_CSXY);
 		c_ccvt(c2, C_CSXY);
-		scale = w1/c1->cy + w2/c2->cy;
-		if (scale == 0.)
+		w1 *= c2->cy;
+		w2 *= c1->cy;
+		scale = w1 + w2;
+		if (scale == 0.) {
+			*cres = c_dfcolor;
 			return;
+		}
 		scale = 1. / scale;
-		cres->cx = (c1->cx*w1/c1->cy + c2->cx*w2/c2->cy) * scale;
-		cres->cy = (w1 + w2) * scale;
+		cres->cx = (w1*c1->cx + w2*c2->cx) * scale;
+		cres->cy = (w1*c1->cy + w2*c2->cy) * scale;
 		cres->flags = C_CDXY|C_CSXY;
 	}
 }
-
 
 #define	C1		3.741832e-16	/* W-m^2 */
 #define C2		1.4388e-2	/* m-K */
@@ -176,7 +179,7 @@ int
 c_bbtemp(C_COLOR *clr, double tk)
 {
 	double	sf, wl;
-	register int	i;
+	int	i;
 
 	if (tk < 1000)
 		return(0);
