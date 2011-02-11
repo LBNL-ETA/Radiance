@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.13 2011/01/06 22:27:56 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.14 2011/02/11 17:31:25 greg Exp $";
 #endif
 /*
  * Routines for handling BSDF data
@@ -71,7 +71,7 @@ fequal(double a, double b)
 	return((a <= 1e-6) & (a >= -1e-6));
 }
 
-// returns the name of the given tag
+/* Returns the name of the given tag */
 #ifdef ezxml_name
 #undef ezxml_name
 static char *
@@ -83,7 +83,7 @@ ezxml_name(ezxml_t xml)
 }
 #endif
 
-// returns the given tag's character content or empty string if none
+/* Returns the given tag's character content or empty string if none */
 #ifdef ezxml_txt
 #undef ezxml_txt
 static char *
