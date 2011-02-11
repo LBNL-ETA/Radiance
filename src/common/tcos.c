@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcos.c,v 3.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: tcos.c,v 3.5 2011/02/11 00:35:14 greg Exp $";
 #endif
 /*
  * Table-based cosine approximation.
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: tcos.c,v 3.4 2003/07/17 09:21:29 schorsch Exp 
  *
  * No interpolation in this version.
  *
- * External symbols declared in standard.h
+ * External symbols declared in rtmath.h
  */
 
 #include "copyright.h"
@@ -22,16 +22,9 @@ static const char	RCSid[] = "$Id: tcos.c,v 3.4 2003/07/17 09:21:29 schorsch Exp 
 #define NCOSENTRY	256
 #endif
 
-#ifdef M_PI
-#define PI		((double)M_PI)
-#else
-#define PI		3.14159265358979323846
-#endif
-
 
 double
-tcos(x)				/* approximate cosine */
-register double	x;
+tcos(double x)				/* approximate cosine */
 {
 	static double	costab[NCOSENTRY+1];
 	register int	i;
@@ -43,8 +36,8 @@ register double	x;
 	if (x < 0.)
 		x = -x;
 	i = (NCOSENTRY*2./PI) * x  +  0.5;
-	if (i >= 4*NCOSENTRY)
-		i %= 4*NCOSENTRY;
+	while (i >= 4*NCOSENTRY)
+		i -= 4*NCOSENTRY;
 	switch (i / NCOSENTRY) {
 	case 0:
 		return(costab[i]);
