@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: srcobstr.c,v 2.15 2009/12/12 00:03:42 greg Exp $";
+static const char RCSid[] = "$Id: srcobstr.c,v 2.16 2011/02/14 20:13:38 greg Exp $";
 #endif
 /*
  * Source occlusion caching routines
@@ -335,6 +335,12 @@ markclip(OBJREC *m)
 {
 	OBJECT  *set2add, *oldset;
 
+	if (m == NULL) {		/* starting over */
+		if (antimodlist != NULL)
+			free((void *)antimodlist);
+		antimodlist = NULL;
+		return;
+	}
 	m_clip(m, NULL);		/* initialize modifier list */
 	if ((set2add = (OBJECT *)m->os) == NULL || !set2add[0])
 		return;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.59 2010/10/28 09:38:46 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.60 2011/02/14 20:13:38 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -167,6 +167,7 @@ freesources(void)			/* free all source structures */
 		source = NULL;
 		nsources = 0;
 	}
+	markclip(NULL);
 	if (maxcntr <= 0)
 		return;
 	free((void *)srccnt);
