@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.9 2005/09/15 18:06:23 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.10 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -9,18 +9,16 @@ static const char	RCSid[] = "$Id: preload.c,v 2.9 2005/09/15 18:06:23 greg Exp $
 
 #include "copyright.h"
 
-#include "standard.h"
-#include "octree.h"
-#include "object.h"
+#include "ray.h"
 #include "otypes.h"
 #include "face.h"
 #include "cone.h"
 #include "instance.h"
 #include "mesh.h"
-#include "color.h"
 #include "data.h"
 #include "func.h"
-#include "ray.h"
+#include "bsdf.h"
+#include "paths.h"
 
 
 /* KEEP THIS ROUTINE CONSISTENT WITH THE DIFFERENT OBJECT FUNCTIONS! */
@@ -32,6 +30,7 @@ load_os(			/* load associated data for object */
 )
 {
 	DATARRAY  *dp;
+	SDData  *sd;
 
 	switch (op->otype) {
 	case OBJ_FACE:		/* polygon */
@@ -102,6 +101,15 @@ load_os(			/* load associated data for object */
 		return(1);
 	case MAT_BRTDF:		/* BRDTfunc material */
 		getfunc(op, 9, 0x3f, 0);
+		return(1);
+	case MAT_BSDF:		/* BSDF material */
+		if (op->oargs.nsargs < 6)
+			goto sargerr;
+		getfunc(op, 5, 0x1d, 1);
+		sd = SDgetCache(op->oargs.sarg[1]);
+		if (sd != NULL && !SDisLoaded(sd))
+			SDloadFile(sd, getpath(op->oargs.sarg[1],
+						getrlibpath(), R_OK));
 		return(1);
 	case MAT_PDATA:		/* plastic BRDF data */
 	case MAT_MDATA:		/* metal BRDF data */

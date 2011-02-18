@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.22 2010/12/15 17:27:52 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.23 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -30,14 +30,9 @@ typedef struct {
 
 static MESH	*mlist = NULL;		/* list of loaded meshes */
 
-static lut_keycmpf_t cvcmp;
-static lut_hashf_t cvhash;
-
 
 static unsigned long
-cvhash(p)				/* hash an encoded vertex */
-/* MCVERT	*cvp; */
-const void	*p;
+cvhash(const char *p)			/* hash an encoded vertex */
 {
 	const MCVERT	*cvp = (const MCVERT *)p;
 	unsigned long	hval;
@@ -54,11 +49,9 @@ const void	*p;
 
 
 static int
-cvcmp(vv1, vv2)				/* compare encoded vertices */
-/* register MCVERT	*v1, *v2; */
-const void	*vv1, *vv2;
+cvcmp(const char *vv1, const char *vv2)		/* compare encoded vertices */
 {
-	const MCVERT	*v1 = vv1, *v2 = vv2;
+	const MCVERT	*v1 = (const MCVERT *)vv1, *v2 = (const MCVERT *)vv2;
 	if (v1->fl != v2->fl)
 		return(1);
 	if (v1->xyz[0] != v2->xyz[0])

@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.12 2003/09/16 06:30:20 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.13 2011/02/18 00:40:25 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -37,16 +37,18 @@ typedef RREAL  FVECT[3];
 			(vr)[2]=(v1)[0]*(v2)[1]-(v1)[1]*(v2)[0])
 
 
-extern double	fdot(FVECT v1, FVECT v2);
-extern double	dist2(FVECT v1, FVECT v2);
-extern double	dist2line(FVECT p, FVECT ep1, FVECT ep2);
-extern double	dist2lseg(FVECT p, FVECT ep1, FVECT ep2);
-extern void	fcross(FVECT vres, FVECT v1, FVECT v2);
-extern void	fvsum(FVECT vres, FVECT v0, FVECT v1, double f);
+extern double	fdot(const FVECT v1, const FVECT v2);
+extern double	dist2(const FVECT v1, const FVECT v2);
+extern double	dist2line(const FVECT p, const FVECT ep1, const FVECT ep2);
+extern double	dist2lseg(const FVECT p, const FVECT ep1, const FVECT ep2);
+extern void	fcross(FVECT vres, const FVECT v1, const FVECT v2);
+extern void	fvsum(FVECT vres, const FVECT v0, const FVECT v1, double f);
 extern double	normalize(FVECT v);
-extern int	closestapproach(RREAL t[2], FVECT rorg0, FVECT rdir0,
-				FVECT rorg1, FVECT rdir1);
-extern void	spinvector(FVECT vres, FVECT vorig, FVECT vnorm, double theta);
+extern int	closestapproach(RREAL t[2],
+			const FVECT rorg0, const FVECT rdir0,
+			const FVECT rorg1, const FVECT rdir1);
+extern void	spinvector(FVECT vres, const FVECT vorig,
+			const FVECT vnorm, double theta);
 
 
 #ifdef __cplusplus

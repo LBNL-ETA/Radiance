@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.34 2010/11/29 17:22:30 greg Exp $
+# RCSid $Id: Rmakefile,v 2.35 2011/02/18 00:40:25 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -18,8 +18,6 @@ INSTDIR = /usr/local/bin
 
 LIBDIR = /usr/local/lib/ray
 
-MGF_LIB = ../lib/libmgf.a
-
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf
 
@@ -36,7 +34,6 @@ install:	$(PROGS) $(LIBFILES) optics2rad.csh
 
 clean:
 	set nonomatch; rm -f $(PROGS) *.o core
-	cd mgflib ; $(MAKE) clean
 
 ies2rad:	ies2rad.o
 	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad $(MLIB)
@@ -56,43 +53,30 @@ tmesh2rad:	tmesh2rad.o
 obj2rad:	obj2rad.o trans.o
 	$(CC) $(CFLAGS) -o obj2rad obj2rad.o trans.o -lrtrad $(MLIB)
 
-mgf2rad:	$(MGF_LIB) mgf2rad.o
+mgf2rad:	mgf2rad.o
 	$(CC) $(CFLAGS) -o mgf2rad mgf2rad.o -lmgf -lrtrad $(MLIB)
 
 rad2mgf:	rad2mgf.o
 	$(CC) $(CFLAGS) -o rad2mgf rad2mgf.o -lrtrad $(MLIB)
 
-mgf2meta:	$(MGF_LIB) mgf2meta.o
+mgf2meta:	mgf2meta.o
 	$(CC) $(CFLAGS) -o mgf2meta mgf2meta.o -lmgf -lmeta -lrtrad $(MLIB)
 
-mgfilt:
-	cd mgflib ; rm -f mgfilt ; \
-	$(MAKE) mgfilt CC="$(CC)" \
-		CFLAGS="$(OPT) $(MACH)" ; \
-	cp -p mgfilt ..
+mgfilt:	mgfilt.o
+	$(CC) $(CFLAGS) -o mgfilt mgfilt.o -lmgf -lrtrad $(MLIB)
 
-mgf2inv:
-	cd mgflib ; rm -f mgf2inv ; \
-	$(MAKE) mgf2inv CC="$(CC)" \
-		CFLAGS="$(OPT) $(MACH)" ; \
-	cp -p mgf2inv ..
+mgf2inv:	mgf2inv.o
+	$(CC) $(CFLAGS) -o mgf2inv mgf2inv.o -lmgf -lrtrad $(MLIB)
 
-3ds2mgf:
-	cd mgflib ; rm -f 3ds2mgf ; \
-	$(MAKE) 3ds2mgf CC="$(CC)" \
-		CFLAGS="$(OPT) $(MACH)" ; \
-	cp -p 3ds2mgf ..
+3ds2mgf:	3ds2mgf.o rayopt3ds.o vect3ds.o
+	$(CC) $(CFLAGS) -o 3ds2mgf 3ds2mgf.o rayopt3ds.o vect3ds.o \
+-lmgf -lrtrad $(MLIB)
 
-$(MGF_LIB):
-	cd mgflib ; rm -f libmgf.a ; \
-	$(MAKE) libmgf.a CC="$(CC)" \
-		CFLAGS="$(OPT) $(MACH)" ; \
-	cp -p libmgf.a ../../lib
-
-mgf2rad.o:	mgf2rad.c mgflib/parser.h ../common/tmesh.h ../common/color.h
+mgf2rad.o:	mgf2rad.c ../common/mgf_parser.h ../common/tmesh.h \
+../common/color.h
 	$(CC) $(CFLAGS) -c mgf2rad.c
 
-mgf2meta.o:	mgf2meta.c mgflib/parser.h
+mgf2meta.o:	mgf2meta.c ../common/mgf_parser.h
 	$(CC) $(CFLAGS) $(METACFLAGS) -c mgf2meta.c
 
 arch2rad.o trans.o:	trans.h
@@ -110,3 +94,11 @@ obj2rad.o:	trans.h
 
 rad2mgf.o:	../common/standard.h ../common/mat4.h ../common/fvect.h \
 ../common/object.h ../common/color.h ../common/lookup.h
+
+mgfilt.o:	../common/mgf_parser.h ../common/ccolor.h
+
+mgf2inv.o:	../common/mgf_parser.h ../common/ccolor.h
+
+3ds2mgf.o rayopt3ds.o:	rayopt3ds.h
+
+3ds2mgf.o rayopt3ds.o vect3ds.o:	vect3ds.h

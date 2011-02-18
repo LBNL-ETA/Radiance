@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.12 2010/09/26 15:42:48 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.13 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -13,8 +13,8 @@ static const char	RCSid[] = "$Id: fvect.c,v 2.12 2010/09/26 15:42:48 greg Exp $"
 
 double
 fdot(				/* return the dot product of two vectors */
-FVECT v1,
-FVECT v2
+const FVECT v1,
+const FVECT v2
 )
 {
 	return(DOT(v1,v2));
@@ -23,8 +23,8 @@ FVECT v2
 
 double
 dist2(				/* return square of distance between points */
-FVECT p1,
-FVECT p2
+const FVECT p1,
+const FVECT p2
 )
 {
 	FVECT  delta;
@@ -39,9 +39,9 @@ FVECT p2
 
 double
 dist2line(			/* return square of distance to line */
-FVECT p,		/* the point */
-FVECT ep1,
-FVECT ep2		/* points on the line */
+const FVECT p,		/* the point */
+const FVECT ep1,
+const FVECT ep2		/* points on the line */
 )
 {
 	double  d, d1, d2;
@@ -56,9 +56,9 @@ FVECT ep2		/* points on the line */
 
 double
 dist2lseg(			/* return square of distance to line segment */
-FVECT p,		/* the point */
-FVECT ep1,
-FVECT ep2		/* the end points */
+const FVECT p,		/* the point */
+const FVECT ep1,
+const FVECT ep2		/* the end points */
 )
 {
 	double  d, d1, d2;
@@ -83,8 +83,8 @@ FVECT ep2		/* the end points */
 void
 fcross(				/* vres = v1 X v2 */
 FVECT vres,
-FVECT v1,
-FVECT v2
+const FVECT v1,
+const FVECT v2
 )
 {
 	vres[0] = v1[1]*v2[2] - v1[2]*v2[1];
@@ -96,8 +96,8 @@ FVECT v2
 void
 fvsum(				/* vres = v0 + f*v1 */
 FVECT vres,
-FVECT v0,
-FVECT v1,
+const FVECT v0,
+const FVECT v1,
 double f
 )
 {
@@ -137,10 +137,10 @@ FVECT  v
 int
 closestapproach(			/* closest approach of two rays */
 RREAL t[2],		/* returned distances along each ray */
-FVECT rorg0,		/* first origin */
-FVECT rdir0,		/* first direction (normalized) */
-FVECT rorg1,		/* second origin */
-FVECT rdir1		/* second direction (normalized) */
+const FVECT rorg0,		/* first origin */
+const FVECT rdir0,		/* first direction (normalized) */
+const FVECT rorg1,		/* second origin */
+const FVECT rdir1		/* second direction (normalized) */
 )
 {
 	double	dotprod = DOT(rdir0, rdir1);
@@ -163,8 +163,8 @@ FVECT rdir1		/* second direction (normalized) */
 void
 spinvector(				/* rotate vector around normal */
 FVECT vres,		/* returned vector */
-FVECT vorig,		/* original vector */
-FVECT vnorm,		/* normalized vector for rotation */
+const FVECT vorig,		/* original vector */
+const FVECT vnorm,		/* normalized vector for rotation */
 double theta		/* left-hand radians */
 )
 {

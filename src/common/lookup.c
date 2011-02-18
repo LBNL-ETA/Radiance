@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.17 2010/05/01 21:49:42 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.18 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Table lookup routines
@@ -11,16 +11,8 @@ static const char	RCSid[] = "$Id: lookup.c,v 2.17 2010/05/01 21:49:42 greg Exp $
 
 #include "lookup.h"
 
-extern int
-lu_strcmp(
-	const void *s1,
-	const void *s2
-)
-{
-	return strcmp((const char*)s1,(const char*)s2);
-}
 
-extern int
+int
 lu_init(		/* initialize tbl for at least nel elements */
 	register LUTAB	*tbl,
 	int	nel
@@ -47,9 +39,9 @@ lu_init(		/* initialize tbl for at least nel elements */
 }
 
 
-extern unsigned long
+unsigned long
 lu_shash(			/* hash a nul-terminated string */
-	const void	*s
+	const char	*s
 )
 {
 	static unsigned char shuffle[256] = {
@@ -89,7 +81,7 @@ lu_shash(			/* hash a nul-terminated string */
 }
 
 
-extern LUENT *
+LUENT *
 lu_find(		/* find a table entry */
 	register LUTAB	*tbl,
 	const char	*key
@@ -145,7 +137,7 @@ tryagain:
 }
 
 
-extern void
+void
 lu_delete(		/* delete a table entry */
 	register LUTAB	*tbl,
 	const char	*key
@@ -164,7 +156,7 @@ lu_delete(		/* delete a table entry */
 }
 
 
-extern int
+int
 lu_doall(		/* loop through all valid table entries */
 	register const LUTAB	*tbl,
 	/* int	(*f)(const LUENT *) */
@@ -189,7 +181,7 @@ lu_doall(		/* loop through all valid table entries */
 }
 
 
-extern void
+void
 lu_done(			/* free table and contents */
 	register LUTAB	*tbl
 )

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.18 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.19 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -94,6 +94,7 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.18 2010/09/26 15:51:15 greg Exp
 
 #include  "ray.h"
 #include  "source.h"
+#include  "bsdf.h"
 #include  "ambient.h"
 #include  "otypes.h"
 #include  "random.h"
@@ -207,10 +208,11 @@ ray_done(		/* free ray-tracing data */
 	octdone();
 	thescene.cutree = EMPTY;
 	octname = NULL;
+	retainfonts = 0;
 	if (freall) {
-		retainfonts = 0;
 		freefont(NULL);
 		freedata(NULL);
+		SDfreeCache(NULL);
 		initurand(0);
 	}
 	if (nobjects > 0) {

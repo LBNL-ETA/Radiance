@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglmat.c,v 3.6 2003/11/14 17:22:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglmat.c,v 3.7 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Routines for Radiance -> OpenGL materials.
@@ -11,11 +11,13 @@ static const char	RCSid[] = "$Id: rglmat.c,v 3.6 2003/11/14 17:22:06 schorsch Ex
 
 int	domats = 1;			/* are we doing materials? */
 
+extern lut_free_t	freemtl;
+
 LUTAB	mtab = LU_SINIT(free,freemtl);
 
 
 void
-rgl_matclear()			/* clean up materials */
+rgl_matclear(void)			/* clean up materials */
 {
 	lu_done(&mtab);
 	domats = 1;
@@ -23,8 +25,9 @@ rgl_matclear()			/* clean up materials */
 
 
 MATREC *
-getmatp(nam)			/* find material record for modifier name */
-char	*nam;
+getmatp(			/* find material record for modifier name */
+	char	*nam
+)
 {
 	register LUENT	*lup;
 
@@ -37,8 +40,9 @@ char	*nam;
 
 
 int
-o_default(o)			/* default object is non-material modifier */
-register OBJREC	*o;
+o_default(			/* default object is non-material modifier */
+	register OBJREC	*o
+)
 {
 	register LUENT	*lup;
 #ifdef DEBUG
@@ -65,8 +69,9 @@ memerr:
 
 
 int
-o_unsupported(o)		/* unsupported object primitive */
-OBJREC	*o;
+o_unsupported(		/* unsupported object primitive */
+	OBJREC	*o
+)
 {
 	objerror(o, WARNING, "unsupported type");
 	return(0);
@@ -74,8 +79,9 @@ OBJREC	*o;
 
 
 MATREC *
-newmaterial(nam)		/* get an entry for a new material */
-char	*nam;
+newmaterial(		/* get an entry for a new material */
+	char	*nam
+)
 {
 	register LUENT	*lup;
 					/* look it up (assign entry) */
@@ -100,8 +106,7 @@ memerr:
 
 
 void
-freemtl(p)			/* free a material */
-void	*p;
+freemtl(void *p)		/* free a material */
 {
 	register MATREC	*mp = (MATREC *)p;
 
@@ -111,8 +116,9 @@ void	*p;
 
 
 int
-m_normal(o)			/* compute normal material parameters */
-register OBJREC	*o;
+m_normal(			/* compute normal material parameters */
+	register OBJREC	*o
+)
 {
 	register MATREC	*m;
 					/* check arguments */
@@ -144,8 +150,9 @@ register OBJREC	*o;
 
 
 int
-m_aniso(o)			/* anisotropic material */
-register OBJREC	*o;
+m_aniso(			/* anisotropic material */
+	register OBJREC	*o
+)
 {
 	register MATREC	*m;
 					/* check arguments */
@@ -177,8 +184,9 @@ register OBJREC	*o;
 
 
 int
-m_glass(o)			/* glass material (hopeless) */
-OBJREC	*o;
+m_glass(			/* glass material (hopeless) */
+	OBJREC	*o
+)
 {
 	register MATREC	*m;
 

@@ -1,14 +1,764 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.14 2011/02/11 17:31:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.15 2011/02/18 00:40:25 greg Exp $";
 #endif
+/*
+ *  bsdf.c
+ *  
+ *  Definitions for bidirectional scattering distribution functions.
+ *
+ *  Created by Greg Ward on 1/10/11.
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include "ezxml.h"
+#include "hilbert.h"
+#include "bsdf.h"
+#include "bsdf_m.h"
+#include "bsdf_t.h"
+
+/* English ASCII strings corresponding to ennumerated errors */
+const char		*SDerrorEnglish[] = {
+				"No error",
+				"Memory error",
+				"File input/output error",
+				"File format error",
+				"Illegal argument",
+				"Invalid data",
+				"Unsupported feature",
+				"Internal program error",
+				"Unknown error"
+			};
+
+/* Additional information on last error (ASCII English) */
+char			SDerrorDetail[256];
+
+/* Cache of loaded BSDFs */
+struct SDCache_s	*SDcacheList = NULL;
+
+/* Retain BSDFs in cache list */
+int			SDretainSet = SDretainNone;
+
+/* Report any error to the indicated stream (in English) */
+SDError
+SDreportEnglish(SDError ec, FILE *fp)
+{
+	if (fp == NULL)
+		return ec;
+	if (!ec)
+		return SDEnone;
+	fputs(SDerrorEnglish[ec], fp);
+	if (SDerrorDetail[0]) {
+		fputs(": ", fp);
+		fputs(SDerrorDetail, fp);
+	}
+	fputc('\n', fp);
+	if (fp != stderr)
+		fflush(fp);
+	return ec;
+}
+
+static double
+to_meters(		/* return factor to convert given unit to meters */
+	const char *unit
+)
+{
+	if (unit == NULL) return(1.);		/* safe assumption? */
+	if (!strcasecmp(unit, "Meter")) return(1.);
+	if (!strcasecmp(unit, "Foot")) return(.3048);
+	if (!strcasecmp(unit, "Inch")) return(.0254);
+	if (!strcasecmp(unit, "Centimeter")) return(.01);
+	if (!strcasecmp(unit, "Millimeter")) return(.001);
+	sprintf(SDerrorDetail, "Unknown dimensional unit '%s'", unit);
+	return(-1.);
+}
+
+/* Load geometric dimensions and description (if any) */
+static SDError
+SDloadGeometry(SDData *dp, ezxml_t wdb)
+{
+	ezxml_t		geom;
+	double		cfact;
+	const char	*fmt, *mgfstr;
+
+	sprintf(SDerrorDetail, "Negative size in \"%s\"", dp->name);
+	dp->dim[0] = dp->dim[1] = dp->dim[2] = .0;
+	if ((geom = ezxml_child(wdb, "Width")) != NULL)
+		dp->dim[0] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((geom = ezxml_child(wdb, "Height")) != NULL)
+		dp->dim[1] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((geom = ezxml_child(wdb, "Thickness")) != NULL)
+		dp->dim[2] = atof(ezxml_txt(geom)) *
+				to_meters(ezxml_attr(geom, "unit"));
+	if ((dp->dim[0] < .0) | (dp->dim[1] < .0) | (dp->dim[2] < .0))
+		return SDEdata;
+	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
+			(mgfstr = ezxml_txt(geom)) == NULL)
+		return SDEnone;
+	if ((fmt = ezxml_attr(geom, "format")) != NULL &&
+			strcasecmp(fmt, "MGF")) {
+		sprintf(SDerrorDetail,
+			"Unrecognized geometry format '%s' in \"%s\"",
+					fmt, dp->name);
+		return SDEsupport;
+	}
+	cfact = to_meters(ezxml_attr(geom, "unit"));
+	dp->mgf = (char *)malloc(strlen(mgfstr)+32);
+	if (dp->mgf == NULL) {
+		strcpy(SDerrorDetail, "Out of memory in SDloadGeometry");
+		return SDEmemory;
+	}
+	if (cfact < 0.99 || cfact > 1.01)
+		sprintf(dp->mgf, "xf -s %.5f\n%s\nxf\n", cfact, mgfstr);
+	else
+		strcpy(dp->mgf, mgfstr);
+	return SDEnone;
+}
+
+
+/* Load a BSDF struct from the given file (free first and keep name) */
+SDError
+SDloadFile(SDData *sd, const char *fname)
+{
+	SDError		lastErr;
+	ezxml_t		fl;
+
+	if ((sd == NULL) | (fname == NULL || !*fname))
+		return SDEargument;
+				/* free old data, keeping name */
+	SDfreeBSDF(sd);
+				/* parse XML file */
+	fl = ezxml_parse_file(fname);
+	if (fl == NULL) {
+		sprintf(SDerrorDetail, "Cannot open BSDF \"%s\"", fname);
+		return SDEfile;
+	}
+	if (ezxml_error(fl)[0]) {
+		sprintf(SDerrorDetail, "BSDF \"%s\" %s", fname, ezxml_error(fl));
+		ezxml_free(fl);
+		return SDEformat;
+	}
+				/* load geometry if present */
+	if ((lastErr = SDloadGeometry(sd, fl)))
+		return lastErr;
+				/* try loading variable resolution data */
+	lastErr = SDloadTre(sd, fl);
+				/* check our result */
+	switch (lastErr) {
+	case SDEformat:
+	case SDEdata:
+	case SDEsupport:	/* possibly we just tried the wrong format */
+		lastErr = SDloadMtx(sd, fl);
+		break;
+	default:		/* variable res. OK else serious error */
+		break;
+	}
+				/* done with XML file */
+	ezxml_free(fl);
+				/* return success or failure */
+	return lastErr;
+}
+
+/* Allocate new spectral distribution function */
+SDSpectralDF *
+SDnewSpectralDF(int nc)
+{
+	SDSpectralDF	*df;
+	
+	if (nc <= 0) {
+		strcpy(SDerrorDetail, "Zero component spectral DF request");
+		return NULL;
+	}
+	df = (SDSpectralDF *)malloc(sizeof(SDSpectralDF) +
+					(nc-1)*sizeof(SDComponent));
+	if (df == NULL) {
+		sprintf(SDerrorDetail,
+				"Cannot allocate %d component spectral DF", nc);
+		return NULL;
+	}
+	df->minProjSA = .0;
+	df->maxHemi = .0;
+	df->ncomp = nc;
+	memset(df->comp, 0, nc*sizeof(SDComponent));
+	return df;
+}
+
+/* Free cached cumulative distributions for BSDF component */
+void
+SDfreeCumulativeCache(SDSpectralDF *df)
+{
+	int	n;
+	SDCDst	*cdp;
+
+	if (df == NULL)
+		return;
+	for (n = df->ncomp; n-- > 0; )
+		while ((cdp = df->comp[n].cdList) != NULL) {
+			df->comp[n].cdList = cdp->next;
+			free(cdp);
+		}
+}
+
+/* Free a spectral distribution function */
+void
+SDfreeSpectralDF(SDSpectralDF *df)
+{
+	int	n;
+
+	if (df == NULL)
+		return;
+	SDfreeCumulativeCache(df);
+	for (n = df->ncomp; n-- > 0; )
+		(*df->comp[n].func->freeSC)(df->comp[n].dist);
+	free(df);
+}
+
+/* Shorten file path to useable BSDF name, removing suffix */
+void
+SDclipName(char res[SDnameLn], const char *fname)
+{
+	const char	*cp, *dot = NULL;
+	
+	for (cp = fname; *cp; cp++)
+		if (*cp == '.')
+			dot = cp;
+	if ((dot == NULL) | (dot < fname+2))
+		dot = cp;
+	if (dot - fname >= SDnameLn)
+		fname = dot - SDnameLn + 1;
+	while (fname < dot)
+		*res++ = *fname++;
+	*res = '\0';
+}
+
+/* Initialize an unused BSDF struct (simply clears to zeroes) */
+void
+SDclearBSDF(SDData *sd)
+{
+	if (sd != NULL)
+		memset(sd, 0, sizeof(SDData));
+}
+
+/* Free data associated with BSDF struct */
+void
+SDfreeBSDF(SDData *sd)
+{
+	if (sd == NULL)
+		return;
+	if (sd->mgf != NULL) {
+		free(sd->mgf);
+		sd->mgf = NULL;
+	}
+	if (sd->rf != NULL) {
+		SDfreeSpectralDF(sd->rf);
+		sd->rf = NULL;
+	}
+	if (sd->rb != NULL) {
+		SDfreeSpectralDF(sd->rb);
+		sd->rb = NULL;
+	}
+	if (sd->tf != NULL) {
+		SDfreeSpectralDF(sd->tf);
+		sd->tf = NULL;
+	}
+	sd->rLambFront.cieY = .0;
+	sd->rLambFront.spec.clock = 0;
+	sd->rLambBack.cieY = .0;
+	sd->rLambBack.spec.clock = 0;
+	sd->tLamb.cieY = .0;
+	sd->tLamb.spec.clock = 0;
+}
+
+/* Find writeable BSDF by name, or allocate new cache entry if absent */
+SDData *
+SDgetCache(const char *bname)
+{
+	struct SDCache_s	*sdl;
+	char			sdnam[SDnameLn];
+
+	if (bname == NULL)
+		return NULL;
+
+	SDclipName(sdnam, bname);
+	for (sdl = SDcacheList; sdl != NULL; sdl = sdl->next)
+		if (!strcmp(sdl->bsdf.name, sdnam)) {
+			sdl->refcnt++;
+			return &sdl->bsdf;
+		}
+
+	sdl = (struct SDCache_s *)calloc(1, sizeof(struct SDCache_s));
+	if (sdl == NULL)
+		return NULL;
+
+	strcpy(sdl->bsdf.name, sdnam);
+	sdl->next = SDcacheList;
+	SDcacheList = sdl;
+
+	sdl->refcnt++;
+	return &sdl->bsdf;
+}
+
+/* Get loaded BSDF from cache (or load and cache it on first call) */
+/* Report any problem to stderr and return NULL on failure */
+const SDData *
+SDcacheFile(const char *fname)
+{
+	SDData		*sd;
+	SDError		ec;
+	
+	if (fname == NULL || !*fname)
+		return NULL;
+	SDerrorDetail[0] = '\0';
+	if ((sd = SDgetCache(fname)) == NULL) {
+		SDreportEnglish(SDEmemory, stderr);
+		return NULL;
+	}
+	if (!SDisLoaded(sd) && (ec = SDloadFile(sd, fname))) {
+		SDreportEnglish(ec, stderr);
+		SDfreeCache(sd);
+		return NULL;
+	}
+	return sd;
+}
+
+/* Free a BSDF from our cache (clear all if NULL) */
+void
+SDfreeCache(const SDData *sd)
+{
+	struct SDCache_s	*sdl, *sdLast = NULL;
+
+	if (sd == NULL) {		/* free entire list */
+		while ((sdl = SDcacheList) != NULL) {
+			SDcacheList = sdl->next;
+			SDfreeBSDF(&sdl->bsdf);
+			free(sdl);
+		}
+		return;
+	}
+	for (sdl = SDcacheList; sdl != NULL; sdl = (sdLast=sdl)->next)
+		if (&sdl->bsdf == sd)
+			break;
+	if (sdl == NULL || --sdl->refcnt)
+		return;			/* missing or still in use */
+					/* keep unreferenced data? */
+	if (SDisLoaded(sd) && SDretainSet) {
+		if (SDretainSet == SDretainAll)
+			return;		/* keep everything */
+					/* else free cumulative data */
+		SDfreeCumulativeCache(sd->rf);
+		SDfreeCumulativeCache(sd->rb);
+		SDfreeCumulativeCache(sd->tf);
+		return;
+	}
+					/* remove from list and free */
+	if (sdLast == NULL)
+		SDcacheList = sdl->next;
+	else
+		sdLast->next = sdl->next;
+	SDfreeBSDF(&sdl->bsdf);
+	free(sdl);
+}
+
+/* Sample an individual BSDF component */
+SDError
+SDsampComponent(SDValue *sv, FVECT outVec, const FVECT inVec,
+			double randX, SDComponent *sdc)
+{
+	float		coef[SDmaxCh];
+	SDError		ec;
+	const SDCDst	*cd;
+	double		d;
+	int		n;
+					/* check arguments */
+	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sdc == NULL))
+		return SDEargument;
+					/* get cumulative distribution */
+	cd = (*sdc->func->getCDist)(inVec, sdc);
+	if (cd == NULL)
+		return SDEmemory;
+	if (cd->cTotal <= 1e-7) {	/* anything to sample? */
+		sv->spec = c_dfcolor;
+		sv->cieY = .0;
+		memset(outVec, 0, 3*sizeof(double));
+		return SDEnone;
+	}
+	sv->cieY = cd->cTotal;
+					/* compute sample direction */
+	ec = (*sdc->func->sampCDist)(outVec, randX, cd);
+	if (ec)
+		return ec;
+					/* get BSDF color */
+	n = (*sdc->func->getBSDFs)(coef, outVec, inVec, sdc->dist);
+	if (n <= 0) {
+		strcpy(SDerrorDetail, "BSDF sample value error");
+		return SDEinternal;
+	}
+	sv->spec = sdc->cspec[0];
+	d = coef[0];
+	while (--n) {
+		c_cmix(&sv->spec, d, &sv->spec, coef[n], &sdc->cspec[n]);
+		d += coef[n];
+	}
+					/* make sure everything is set */
+	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	return SDEnone;
+}
+
+#define	MS_MAXDIM	15
+
+/* Convert 1-dimensional random variable to N-dimensional */
+void
+SDmultiSamp(double t[], int n, double randX)
+{
+	unsigned	nBits;
+	double		scale;
+	bitmask_t	ndx, coord[MS_MAXDIM];
+	
+	while (n > MS_MAXDIM)		/* punt for higher dimensions */
+		t[--n] = drand48();
+	nBits = (8*sizeof(bitmask_t) - 1) / n;
+	ndx = randX * (double)((bitmask_t)1 << (nBits*n));
+					/* get coordinate on Hilbert curve */
+	hilbert_i2c(n, nBits, ndx, coord);
+					/* convert back to [0,1) range */
+	scale = 1. / (double)((bitmask_t)1 << nBits);
+	while (n--)
+		t[n] = scale * ((double)coord[n] + drand48());
+}
+
+#undef MS_MAXDIM
+
+/* Generate diffuse hemispherical sample */
+static void
+SDdiffuseSamp(FVECT outVec, int outFront, double randX)
+{
+					/* convert to position on hemisphere */
+	SDmultiSamp(outVec, 2, randX);
+	SDsquare2disk(outVec, outVec[0], outVec[1]);
+	outVec[2] = 1. - outVec[0]*outVec[0] - outVec[1]*outVec[1];
+	if (outVec[2] > .0)		/* a bit of paranoia */
+		outVec[2] = sqrt(outVec[2]);
+	if (!outFront)			/* going out back? */
+		outVec[2] = -outVec[2];
+}
+
+/* Query projected solid angle coverage for non-diffuse BSDF direction */
+SDError
+SDsizeBSDF(double *projSA, const FVECT vec, int qflags, const SDData *sd)
+{
+	SDSpectralDF	*rdf;
+	SDError		ec;
+	int		i;
+					/* check arguments */
+	if ((projSA == NULL) | (vec == NULL) | (sd == NULL))
+		return SDEargument;
+					/* initialize extrema */
+	switch (qflags & SDqueryMin+SDqueryMax) {
+	case SDqueryMax:
+		projSA[0] = .0;
+		break;
+	case SDqueryMin+SDqueryMax:
+		projSA[1] = .0;
+		/* fall through */
+	case SDqueryMin:
+		projSA[0] = 10.;
+		break;
+	case 0:
+		return SDEargument;
+	}
+	if (vec[2] > .0)		/* front surface query? */
+		rdf = sd->rf;
+	else
+		rdf = sd->rb;
+	ec = SDEdata;			/* run through components */
+	for (i = (rdf==NULL) ? 0 : rdf->ncomp; i--; ) {
+		ec = (*rdf->comp[i].func->queryProjSA)(projSA, vec, qflags,
+							rdf->comp[i].dist);
+		if (ec)
+			return ec;
+	}
+	for (i = (sd->tf==NULL) ? 0 : sd->tf->ncomp; i--; ) {
+		ec = (*sd->tf->comp[i].func->queryProjSA)(projSA, vec, qflags,
+							sd->tf->comp[i].dist);
+		if (ec)
+			return ec;
+	}
+	return ec;
+}
+
+/* Return BSDF for the given incident and scattered ray vectors */
+SDError
+SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
+{
+	int		inFront, outFront;
+	SDSpectralDF	*sdf;
+	float		coef[SDmaxCh];
+	int		nch, i;
+					/* check arguments */
+	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sd == NULL))
+		return SDEargument;
+					/* whose side are we on? */
+	inFront = (inVec[2] > .0);
+	outFront = (outVec[2] > .0);
+					/* start with diffuse portion */
+	if (inFront & outFront) {
+		*sv = sd->rLambFront;
+		sdf = sd->rf;
+	} else if (!(inFront | outFront)) {
+		*sv = sd->rLambBack;
+		sdf = sd->rb;
+	} else /* inFront ^ outFront */ {
+		*sv = sd->tLamb;
+		sdf = sd->tf;
+	}
+	sv->cieY *= 1./M_PI;
+					/* add non-diffuse components */
+	i = (sdf != NULL) ? sdf->ncomp : 0;
+	while (i-- > 0) {
+		nch = (*sdf->comp[i].func->getBSDFs)(coef, outVec, inVec,
+							sdf->comp[i].dist);
+		while (nch-- > 0) {
+			c_cmix(&sv->spec, sv->cieY, &sv->spec,
+					coef[nch], &sdf->comp[i].cspec[nch]);
+			sv->cieY += coef[nch];
+		}
+	}
+					/* make sure everything is set */
+	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	return SDEnone;
+}
+
+/* Compute directional hemispherical scattering at this incident angle */
+double
+SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
+{
+	double		hsum;
+	SDSpectralDF	*rdf;
+	const SDCDst	*cd;
+	int		i;
+					/* check arguments */
+	if ((inVec == NULL) | (sd == NULL))
+		return .0;
+					/* gather diffuse components */
+	if (inVec[2] > .0) {
+		hsum = sd->rLambFront.cieY;
+		rdf = sd->rf;
+	} else /* !inFront */ {
+		hsum = sd->rLambBack.cieY;
+		rdf = sd->rb;
+	}
+	if ((sflags & SDsampDf+SDsampR) != SDsampDf+SDsampR)
+		hsum = .0;
+	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
+		hsum += sd->tLamb.cieY;
+					/* gather non-diffuse components */
+	i = ((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR &&
+			rdf != NULL) ? rdf->ncomp : 0;
+	while (i-- > 0) {		/* non-diffuse reflection */
+		cd = (*rdf->comp[i].func->getCDist)(inVec, &rdf->comp[i]);
+		if (cd != NULL)
+			hsum += cd->cTotal;
+	}
+	i = ((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT &&
+			sd->tf != NULL) ? sd->tf->ncomp : 0;
+	while (i-- > 0) {		/* non-diffuse transmission */
+		cd = (*sd->tf->comp[i].func->getCDist)(inVec, &sd->tf->comp[i]);
+		if (cd != NULL)
+			hsum += cd->cTotal;
+	}
+	return hsum;
+}
+
+/* Sample BSDF direction based on the given random variable */
+SDError
+SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
+			double randX, int sflags, const SDData *sd)
+{
+	SDError		ec;
+	int		inFront;
+	SDSpectralDF	*rdf;
+	double		rdiff;
+	float		coef[SDmaxCh];
+	int		i, j, n, nr;
+	SDComponent	*sdc;
+	const SDCDst	**cdarr = NULL;
+					/* check arguments */
+	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sd == NULL) |
+			(randX < .0) | (randX >= 1.))
+		return SDEargument;
+					/* whose side are we on? */
+	inFront = (inVec[2] > .0);
+					/* remember diffuse portions */
+	if (inFront) {
+		*sv = sd->rLambFront;
+		rdf = sd->rf;
+	} else /* !inFront */ {
+		*sv = sd->rLambBack;
+		rdf = sd->rb;
+	}
+	if ((sflags & SDsampDf+SDsampR) != SDsampDf+SDsampR)
+		sv->cieY = .0;
+	rdiff = sv->cieY;
+	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
+		sv->cieY += sd->tLamb.cieY;
+					/* gather non-diffuse components */
+	i = nr = ((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR &&
+			rdf != NULL) ? rdf->ncomp : 0;
+	j = ((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT &&
+			sd->tf != NULL) ? sd->tf->ncomp : 0;
+	n = i + j;
+	if (n > 0 && (cdarr = (const SDCDst **)malloc(n*sizeof(SDCDst *))) == NULL)
+		return SDEmemory;
+	while (j-- > 0) {		/* non-diffuse transmission */
+		cdarr[i+j] = (*sd->tf->comp[j].func->getCDist)(inVec, &sd->tf->comp[j]);
+		if (cdarr[i+j] == NULL) {
+			free(cdarr);
+			return SDEmemory;
+		}
+		sv->cieY += cdarr[i+j]->cTotal;
+	}
+	while (i-- > 0) {		/* non-diffuse reflection */
+		cdarr[i] = (*rdf->comp[i].func->getCDist)(inVec, &rdf->comp[i]);
+		if (cdarr[i] == NULL) {
+			free(cdarr);
+			return SDEmemory;
+		}
+		sv->cieY += cdarr[i]->cTotal;
+	}
+	if (sv->cieY <= 1e-7) {		/* anything to sample? */
+		sv->cieY = .0;
+		memset(outVec, 0, 3*sizeof(double));
+		return SDEnone;
+	}
+					/* scale random variable */
+	randX *= sv->cieY;
+					/* diffuse reflection? */
+	if (randX < rdiff) {
+		SDdiffuseSamp(outVec, inFront, randX/rdiff);
+		goto done;
+	}
+	randX -= rdiff;
+					/* diffuse transmission? */
+	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT) {
+		if (randX < sd->tLamb.cieY) {
+			sv->spec = sd->tLamb.spec;
+			SDdiffuseSamp(outVec, !inFront, randX/sd->tLamb.cieY);
+			goto done;
+		}
+		randX -= sd->tLamb.cieY;
+	}
+					/* else one of cumulative dist. */
+	for (i = 0; i < n && randX < cdarr[i]->cTotal; i++)
+		randX -= cdarr[i]->cTotal;
+	if (i >= n)
+		return SDEinternal;
+					/* compute sample direction */
+	sdc = (i < nr) ? &rdf->comp[i] : &sd->tf->comp[i-nr];
+	ec = (*sdc->func->sampCDist)(outVec, randX/cdarr[i]->cTotal, cdarr[i]);
+	if (ec)
+		return ec;
+					/* compute color */
+	j = (*sdc->func->getBSDFs)(coef, outVec, inVec, sdc->dist);
+	if (j <= 0) {
+		sprintf(SDerrorDetail, "BSDF \"%s\" sampling value error",
+				sd->name);
+		return SDEinternal;
+	}
+	sv->spec = sdc->cspec[0];
+	rdiff = coef[0];
+	while (--j) {
+		c_cmix(&sv->spec, rdiff, &sv->spec, coef[j], &sdc->cspec[j]);
+		rdiff += coef[j];
+	}
+done:
+	if (cdarr != NULL)
+		free(cdarr);
+					/* make sure everything is set */
+	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	return SDEnone;
+}
+
+/* Compute World->BSDF transform from surface normal and up (Y) vector */
+SDError	
+SDcompXform(RREAL vMtx[3][3], const FVECT sNrm, const FVECT uVec)
+{
+	if ((vMtx == NULL) | (sNrm == NULL) | (uVec == NULL))
+		return SDEargument;
+	VCOPY(vMtx[2], sNrm);
+	if (normalize(vMtx[2]) == .0)
+		return SDEargument;
+	fcross(vMtx[0], uVec, vMtx[2]);
+	if (normalize(vMtx[0]) == .0)
+		return SDEargument;
+	fcross(vMtx[1], vMtx[2], vMtx[0]);
+	return SDEnone;
+}
+
+/* Compute inverse transform */
+SDError	
+SDinvXform(RREAL iMtx[3][3], RREAL vMtx[3][3])
+{
+	RREAL	mTmp[3][3];
+	double	d;
+
+	if ((iMtx == NULL) | (vMtx == NULL))
+		return SDEargument;
+					/* compute determinant */
+	mTmp[0][0] = vMtx[2][2]*vMtx[1][1] - vMtx[2][1]*vMtx[1][2];
+	mTmp[0][1] = vMtx[2][1]*vMtx[0][2] - vMtx[2][2]*vMtx[0][1];
+	mTmp[0][2] = vMtx[1][2]*vMtx[0][1] - vMtx[1][1]*vMtx[0][2];
+	d = vMtx[0][0]*mTmp[0][0] + vMtx[1][0]*mTmp[0][1] + vMtx[2][0]*mTmp[0][2];
+	if (d == .0) {
+		strcpy(SDerrorDetail, "Zero determinant in matrix inversion");
+		return SDEargument;
+	}
+	d = 1./d;			/* invert matrix */
+	mTmp[0][0] *= d; mTmp[0][1] *= d; mTmp[0][2] *= d;
+	mTmp[1][0] = d*(vMtx[2][0]*vMtx[1][2] - vMtx[2][2]*vMtx[1][0]);
+	mTmp[1][1] = d*(vMtx[2][2]*vMtx[0][0] - vMtx[2][0]*vMtx[0][2]);
+	mTmp[1][2] = d*(vMtx[1][0]*vMtx[0][2] - vMtx[1][2]*vMtx[0][0]);
+	mTmp[2][0] = d*(vMtx[2][1]*vMtx[1][0] - vMtx[2][0]*vMtx[1][1]);
+	mTmp[2][1] = d*(vMtx[2][0]*vMtx[0][1] - vMtx[2][1]*vMtx[0][0]);
+	mTmp[2][2] = d*(vMtx[1][1]*vMtx[0][0] - vMtx[1][0]*vMtx[0][1]);
+	memcpy(iMtx, mTmp, sizeof(mTmp));
+	return SDEnone;
+}
+
+/* Transform and normalize direction (column) vector */
+SDError
+SDmapDir(FVECT resVec, RREAL vMtx[3][3], const FVECT inpVec)
+{
+	FVECT	vTmp;
+
+	if ((resVec == NULL) | (inpVec == NULL))
+		return SDEargument;
+	if (vMtx == NULL) {		/* assume they just want to normalize */
+		if (resVec != inpVec)
+			VCOPY(resVec, inpVec);
+		return (normalize(resVec) > .0) ? SDEnone : SDEargument;
+	}
+	vTmp[0] = DOT(vMtx[0], inpVec);
+	vTmp[1] = DOT(vMtx[1], inpVec);
+	vTmp[2] = DOT(vMtx[2], inpVec);
+	if (normalize(vTmp) == .0)
+		return SDEargument;
+	VCOPY(resVec, vTmp);
+	return SDEnone;
+}
+
+/*################################################################*/
+/*######### DEPRECATED ROUTINES AWAITING PERMANENT REMOVAL #######*/
+
 /*
  * Routines for handling BSDF data
  */
 
 #include "standard.h"
-#include "bsdf.h"
 #include "paths.h"
-#include "ezxml.h"
 #include <ctype.h>
 
 #define MAXLATS		46		/* maximum number of latitudes */
@@ -244,22 +994,6 @@ load_angle_basis(	/* load custom BSDF angle basis */
 				atoi(ezxml_txt(ezxml_child(wbb, "nPhis")));
 	}
 	abase_list[nabases++].lat[i].nphis = 0;
-}
-
-
-static double
-to_meters(		/* return factor to convert given unit to meters */
-	const char *unit
-)
-{
-	if (unit == NULL) return(1.);		/* safe assumption? */
-	if (!strcasecmp(unit, "Meter")) return(1.);
-	if (!strcasecmp(unit, "Foot")) return(.3048);
-	if (!strcasecmp(unit, "Inch")) return(.0254);
-	if (!strcasecmp(unit, "Centimeter")) return(.01);
-	if (!strcasecmp(unit, "Millimeter")) return(.001);
-	sprintf(errmsg, "unknown dimensional unit '%s'", unit);
-	error(USER, errmsg);
 }
 
 
@@ -730,3 +1464,6 @@ getBSDF_xfm(		/* compute BSDF orient. -> world orient. transform */
 	}
 	return(1);
 }
+
+/*######### END DEPRECATED ROUTINES #######*/
+/*################################################################*/

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: words.c,v 2.9 2004/09/28 17:54:18 greg Exp $";
+static const char RCSid[] = "$Id: words.c,v 2.10 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Routines for recognizing and moving about words in strings.
@@ -15,10 +15,7 @@ static const char RCSid[] = "$Id: words.c,v 2.9 2004/09/28 17:54:18 greg Exp $";
 #include  "rtio.h"
 
 char *
-atos(rs, nb, s)			/* get word from string, returning rs */
-char  *rs;
-register int  nb;
-register char  *s;
+atos(char *rs, int nb, char *s)		/* get word from string, returning rs */
 {
 	register char  *cp = rs;
 
@@ -32,10 +29,7 @@ register char  *s;
 
 
 char *
-nextword(cp, nb, s)		/* get (quoted) word, returning new s */
-register char  *cp;
-register int  nb;
-register char  *s;
+nextword(char *cp, int nb, char *s)	/* get (quoted) word, returning new s */
 {
 	int	quote = 0;
 
@@ -59,8 +53,7 @@ register char  *s;
 
 
 char *
-sskip(s)			/* skip word in string, leaving on space */
-register char  *s;
+sskip(char *s)			/* skip word in string, leaving on space */
 {
 	while (isspace(*s))
 		s++;
@@ -71,9 +64,7 @@ register char  *s;
 
 
 char *
-sskip2(s, n)			/* skip word(s) in string, leaving on word */
-register char  *s;
-register int	n;
+sskip2(char *s, int n)		/* skip word(s) in string, leaving on word */
 {
 	while (isspace(*s))
 		s++;
@@ -88,8 +79,7 @@ register int	n;
 
 
 char *
-iskip(s)			/* skip integer in string */
-register char  *s;
+iskip(char *s)			/* skip integer in string */
 {
 	while (isspace(*s))
 		s++;
@@ -105,8 +95,7 @@ register char  *s;
 
 
 char *
-fskip(s)			/* skip float in string */
-register char  *s;
+fskip(char *s)			/* skip float in string */
 {
 	register char  *cp;
 
@@ -131,8 +120,7 @@ register char  *s;
 
 
 int
-isint(s)			/* check integer format */
-char  *s;
+isint(char *s)			/* check integer format */
 {
 	register char  *cp;
 
@@ -142,8 +130,7 @@ char  *s;
 
 
 int
-isintd(s, ds)			/* check integer format with delimiter set */
-char  *s, *ds;
+isintd(char *s, char *ds)	/* check integer format with delimiter set */
 {
 	register char  *cp;
 
@@ -153,8 +140,7 @@ char  *s, *ds;
 
 
 int
-isflt(s)			/* check float format */
-char  *s;
+isflt(char *s)			/* check float format */
 {
 	register char  *cp;
 
@@ -164,11 +150,23 @@ char  *s;
 
 
 int
-isfltd(s, ds)			/* check integer format with delimiter set */
-char  *s, *ds;
+isfltd(char *s, char *ds)	/* check integer format with delimiter set */
 {
 	register char  *cp;
 
 	cp = fskip(s);
 	return(cp != NULL && strchr(ds, *cp) != NULL);
+}
+
+
+int
+isname(char *s)			/* check for legal identifier name */
+{
+	while (*s == '_')			/* skip leading underscores */
+		s++;
+	if (!isascii(*s) || !isalpha(*s))	/* start with a letter */
+		return(0);
+	while (isascii(*++s) && isgraph(*s))	/* all visible characters */
+		;
+	return(*s == '\0');			/* ending in nul */
 }

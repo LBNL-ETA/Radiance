@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.9 2010/09/03 21:18:15 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.10 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * 3D warping routines.
@@ -365,7 +365,7 @@ free3dw(			/* free WARP3D data */
 
 static unsigned long
 gridhash(			/* hash a grid point index */
-	const void	*gp
+	const char	*gp
 )
 {
 	return(((unsigned long)((const unsigned char*)gp)[0]<<GNBITS | ((const unsigned char*)gp)[1])<<GNBITS | ((const unsigned char*)gp)[2]);

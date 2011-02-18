@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglinst.c,v 3.15 2004/05/25 22:04:13 greg Exp $";
+static const char	RCSid[] = "$Id: rglinst.c,v 3.16 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Routines for reading instances and converting to OpenGL.
@@ -39,7 +39,7 @@ static FILE  *infp;			/* input file stream */
 static int  objsize;			/* size of stored OBJECT's */
 static short  otypmap[NUMOTYPE+8];	/* object type map */
 
-static unsigned long	imhash(mod) char *mod; {return((unsigned long)mod);}
+static unsigned long	imhash(const char *mod) {return((unsigned long)mod);}
 static LUTAB	imtab = {imhash,NULL,NULL,NULL,0,NULL,0};
 
 static LUTAB	ottab = LU_SINIT(free,free);
@@ -376,9 +376,9 @@ loadobj()				/* get next object */
 	(*ofun[ob.otype].funp)(&ob);
 					/* record material if modifier */
 	if (ismodifier(ob.otype)) {
-		if ((lep = lu_find(&imtab, (char *)nobjects)) == NULL)
+		if ((lep = lu_find(&imtab, (char *)(size_t)nobjects)) == NULL)
 			goto memerr;
-		lep->key = (char *)nobjects;
+		lep->key = (char *)(size_t)nobjects;
 		lep->data = (char *)getmatp(ob.oname);
 	}
 	freefargs(&ob.oargs);		/* free arguments */

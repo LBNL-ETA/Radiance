@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.62 2009/06/17 20:41:47 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.63 2011/02/18 00:40:25 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -21,7 +21,8 @@ PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
 	tmap16bit.o bmpfile.o falsecolor.o
 
-UTLOBJ = ezxml.o bsdf.o
+UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o \
+	disk2square.o hilbert.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 	urind.o calexpr.o caldefn.o calfunc.o calprnt.o biggerlib.o multisamp.o \
@@ -32,6 +33,8 @@ STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
 
 SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
+MGFOBJ = mgf_parser.o mgf_object.o mgf_xf.o mgf_context.o
+
 OGLOBJ = rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o
 
 LIBFILES = tmesh.cal
@@ -41,15 +44,20 @@ librtrad.a:	$(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	ar rc librtrad.a $(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	-ranlib librtrad.a
 
+libmgf.a:	$(MGFOBJ)
+	rm -f libmgf.a
+	ar rc libmgf.a $(MGFOBJ)
+	-ranlib libmgf.a
+
 install:	all
-	mv -f librtrad.a ../lib
+	mv -f librtrad.a libmgf.a ../lib
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp -f $(LIBFILES) $(LIBDIR)
 
-all:	librtrad.a $(SPECIAL)
+all:	librtrad.a libmgf.a $(SPECIAL)
 
 clean:
-	rm -f *.o librtrad.a
+	rm -f *.o librtrad.a libmgf.a
 
 ogl:	$(OGLOBJ)
 	rm -f librgl.a
@@ -148,8 +156,26 @@ bmpfile.o:	bmpfile.h tiff.h
 
 header.o readmesh.o readoct.o resolu.o rglinst.o tmapcolrs.o:	resolu.h
 
-ezxml.o bsdf.o:	ezxml.h
+ezxml.o bsdf.o bsdf_m.o bsdf_t.o:	ezxml.h
 
-bsdf.o:	../common/paths.h
+bsdf.o:	paths.h
 
-bsdf.o:	bsdf.h standard.h rtmisc.h rtio.h rtmath.h mat4.h fvect.h rterror.h
+bsdf.o:	bsdf_m.h bsdf_t.h hilbert.h fvect.h
+
+bsdf.o:	bsdf.h standard.h rtmisc.h rtio.h rtmath.h mat4.h rterror.h
+
+bsdf.o bsdf_m.o bsdf_t.o ccolor.o:	ccolor.h
+
+mgf_parser.o mgf_context.o mgf_xf.o mgf_object.o:	mgf_parser.h ccolor.h
+
+ccyrgb.o:	ccolor.h color.h
+
+mgf_parser.o mgf_context.o:	lookup.h
+
+mgf_parser.o:	mgf_mesg.h
+
+bsdf_m.o:	bsdf.h bsdf_m.h
+
+bsdf_t.o:	bsdf.h bsdf_t.h
+
+hilbert.o:	hilbert.h

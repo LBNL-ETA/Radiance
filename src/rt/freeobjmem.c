@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: freeobjmem.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: freeobjmem.c,v 2.8 2011/02/18 00:40:25 greg Exp $";
 #endif
 /*
  * Free memory associated with object(s)
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: freeobjmem.c,v 2.7 2004/03/30 16:13:01 schorsc
 #include "ray.h"
 #include "otypes.h"
 #include "rtotypes.h"
+#include "bsdf.h"
 #include "face.h"
 #include "cone.h"
 #include "instance.h"
@@ -91,4 +92,5 @@ free_objmem(void)			/* free all object cache memory */
 	free_objs(0, nobjects);
 	freedata(NULL);
 	freefont(NULL);
+	SDfreeCache(NULL);
 }

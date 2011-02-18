@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.15 2004/03/28 20:33:12 schorsch Exp $ */
+/* RCSid $Id: otypes.h,v 2.16 2011/02/18 00:40:25 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -23,8 +23,6 @@ extern int  o_default(FUN_ARGLIST);
 #else
 extern int  o_default(); /* XXX conflict with radogl.h */
 #endif
-
-/* extern void initotypes(void);*/ /* XXX don't mess with the linker... */
 
 				/* object types in decreasing frequency */
 #define  OBJ_FACE	0		/* polygon */
@@ -62,23 +60,24 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MAT_MIST	32		/* mist medium */
 #define  MAT_MIRROR	33		/* mirror (secondary source) */
 #define  MAT_TFUNC	34		/* trans brdf function */
-#define  MAT_BRTDF	35		/* brtd function */
-#define  MAT_PDATA	36		/* plastic brdf data */
-#define  MAT_MDATA	37		/* metal brdf data */
-#define  MAT_TDATA	38		/* trans brdf data */
-#define  PAT_CFUNC	39		/* color function */
-#define  MAT_CLIP	40		/* clipping surface */
-#define  PAT_CDATA	41		/* color data */
-#define  PAT_CTEXT	42		/* colored text */
-#define  TEX_DATA	43		/* surface texture data */
-#define  MIX_FUNC	44		/* mixing function */
-#define  MIX_DATA	45		/* mixing data */
-#define  MIX_TEXT	46		/* mixing text */
-#define  MIX_PICT	47		/* mixing picture */
-#define  MAT_DIRECT1	48		/* unidirecting material */
-#define  MAT_DIRECT2	49		/* bidirecting material */
+#define  MAT_BRTDF	35		/* BRTD function */
+#define  MAT_BSDF	36		/* BSDF data file */
+#define  MAT_PDATA	37		/* plastic brdf data */
+#define  MAT_MDATA	38		/* metal brdf data */
+#define  MAT_TDATA	39		/* trans brdf data */
+#define  PAT_CFUNC	40		/* color function */
+#define  MAT_CLIP	41		/* clipping surface */
+#define  PAT_CDATA	42		/* color data */
+#define  PAT_CTEXT	43		/* colored text */
+#define  TEX_DATA	44		/* surface texture data */
+#define  MIX_FUNC	45		/* mixing function */
+#define  MIX_DATA	46		/* mixing data */
+#define  MIX_TEXT	47		/* mixing text */
+#define  MIX_PICT	48		/* mixing picture */
+#define  MAT_DIRECT1	49		/* unidirecting material */
+#define  MAT_DIRECT2	50		/* bidirecting material */
 				/* number of object types */
-#define  NUMOTYPE	50
+#define  NUMOTYPE	51
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -153,6 +152,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "mirror",	T_M|T_LV,	o_default }, \
 				{ "transfunc",	T_M|T_F,	o_default }, \
 				{ "BRTDfunc",	T_M|T_F,	o_default }, \
+				{ "BSDF",	T_M|T_D,	o_default }, \
 				{ "plasdata",	T_M|T_D,	o_default }, \
 				{ "metdata",	T_M|T_D,	o_default }, \
 				{ "transdata",	T_M|T_D,	o_default }, \
