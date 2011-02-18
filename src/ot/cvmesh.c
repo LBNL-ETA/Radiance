@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvmesh.c,v 2.10 2004/11/25 14:45:38 greg Exp $";
+static const char RCSid[] = "$Id: cvmesh.c,v 2.11 2011/02/18 19:00:43 greg Exp $";
 #endif
 /*
  *  Radiance triangle mesh conversion routines
@@ -218,7 +218,7 @@ cvtri(
 		fop = objptr(fobj);
 		fop->omod = mo;
 		fop->otype = OBJ_FACE;
-		sprintf(buf, "t%ld", fobj);
+		sprintf(buf, "t%ld", (long)fobj);
 		fop->oname = savqstr(buf);
 		fop->oargs.nfargs = 9;
 		fop->oargs.farg = (RREAL *)malloc(9*sizeof(RREAL));
