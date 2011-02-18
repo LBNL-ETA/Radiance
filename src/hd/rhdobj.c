@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.18 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.19 2011/02/18 17:31:09 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -34,7 +34,7 @@ void	(*dobj_lightsamp)(COLR clr, FVECT direc, FVECT pos) = NULL;
 #define NALT		11		/* # sampling altitude angles */
 #endif
 #ifndef NAZI
-#define NAZI		((int)(PI/2.*NALT+.5))
+#define NAZI		17
 #endif
 
 typedef struct dlights {
