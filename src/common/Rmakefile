@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.63 2011/02/18 00:40:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.64 2011/02/18 02:41:55 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -21,7 +21,7 @@ PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
 	tmap16bit.o bmpfile.o falsecolor.o
 
-UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o \
+UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o loadbsdf.o \
 	disk2square.o hilbert.o
 
 STDOBJ = fgetline.o fropen.o linregr.o xf.o mat4.o invmat4.o fvect.o urand.o \
@@ -158,6 +158,8 @@ header.o readmesh.o readoct.o resolu.o rglinst.o tmapcolrs.o:	resolu.h
 
 ezxml.o bsdf.o bsdf_m.o bsdf_t.o:	ezxml.h
 
+bsdf_m.o bsdf_t.o:	rtio.h
+
 bsdf.o:	paths.h
 
 bsdf.o:	bsdf_m.h bsdf_t.h hilbert.h fvect.h
@@ -179,3 +181,5 @@ bsdf_m.o:	bsdf.h bsdf_m.h
 bsdf_t.o:	bsdf.h bsdf_t.h
 
 hilbert.o:	hilbert.h
+
+loadbsdf.o:	bsdf.h rtio.h rterror.h paths.h

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.2 2011/02/18 00:41:44 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.3 2011/02/18 02:41:55 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -11,10 +11,9 @@ static const char RCSid[] = "$Id: bsdf_m.c,v 3.2 2011/02/18 00:41:44 greg Exp $"
  *
  */
 
-#include <stdio.h>
+#include "rtio.h"
 #include <stdlib.h>
 #include <math.h>
-#include <strings.h>
 #include <ctype.h>
 #include "ezxml.h"
 #include "bsdf.h"
@@ -361,47 +360,6 @@ get_extrema(SDSpectralDF *df)
 	return (df->maxHemi <= 1.01);
 }
 
-/* skip integer in string */
-static char *
-i_skip(char  *s)
-{
-	while (isspace(*s))
-		s++;
-	if (*s == '-' || *s == '+')
-		s++;
-	if (!isdigit(*s))
-		return(NULL);
-	do
-		s++;
-	while (isdigit(*s));
-	return(s);
-}
-
-/* skip float in string */
-static char *
-f_skip(char  *s)
-{
-	register char  *cp;
-
-	while (isspace(*s))
-		s++;
-	if (*s == '-' || *s == '+')
-		s++;
-	cp = s;
-	while (isdigit(*cp))
-		cp++;
-	if (*cp == '.') {
-		cp++; s++;
-		while (isdigit(*cp))
-			cp++;
-	}
-	if (cp == s)
-		return(NULL);
-	if (*cp == 'e' || *cp == 'E')
-		return(i_skip(cp+1));
-	return(cp);
-}
-
 /* load BSDF distribution for this wavelength */
 static int
 load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
@@ -504,7 +462,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		return RC_FORMERR;
 	}
 	for (i = 0; i < dp->ninc*dp->nout; i++) {
-		char  *sdnext = f_skip(sdata);
+		char  *sdnext = fskip(sdata);
 		if (sdnext == NULL) {
 			sprintf(SDerrorDetail,
 				"Bad/missing BSDF ScatteringData in '%s'",

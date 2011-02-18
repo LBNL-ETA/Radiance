@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.4 2011/02/18 00:40:25 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.5 2011/02/18 02:41:55 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -223,6 +223,12 @@ extern SDError		SDinvXform(RREAL iMtx[3][3], RREAL vMtx[3][3]);
 /* Transform and normalize direction (column) vector */
 extern SDError		SDmapDir(FVECT resVec, RREAL vMtx[3][3],
 					const FVECT inpVec);
+
+/* System-specific BSDF loading routine (not part of our library) */
+extern SDData		*loadBSDF(char *name);
+
+/* System-specific BSDF error translator (not part of our library) */
+extern char		*transSDError(SDError ec);
 
 /*################################################################*/
 /*######### DEPRECATED DEFINITIONS AWAITING PERMANENT REMOVAL #######*/

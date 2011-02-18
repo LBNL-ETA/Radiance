@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.1 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.2 2011/02/18 02:41:55 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.1 2011/02/18 00:40:25 greg Exp $"
 #include "copyright.h"
 
 #include  "ray.h"
-#include  "paths.h"
 #include  "ambient.h"
 #include  "source.h"
 #include  "func.h"
@@ -65,16 +64,6 @@ typedef struct {
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
 
-/* Convert error from BSDF library */
-static char *
-cvt_sderr(SDError ec)
-{
-	if (!SDerrorDetail[0])
-		return(strcpy(errmsg, SDerrorEnglish[ec]));
-	sprintf(errmsg, "%s: %s", SDerrorEnglish[ec], SDerrorDetail);
-	return(errmsg);
-}
-
 /* Compute source contribution for BSDF */
 static void
 dirbsdf(
@@ -123,7 +112,7 @@ dirbsdf(
 		return;
 	ec = SDevalBSDF(&sv, vout, np->vinc, np->sd);
 	if (ec)
-		objerror(np->mp, USER, cvt_sderr(ec));
+		objerror(np->mp, USER, transSDError(ec));
 
 	if (sv.cieY <= FTINY)		/* not worth using? */
 		return;
@@ -174,7 +163,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 					: urand(ilhash(dimlist,ndims)+samplendx),
 						dcp);
 		if (ec)
-			objerror(ndp->mp, USER, cvt_sderr(ec));
+			objerror(ndp->mp, USER, transSDError(ec));
 						/* zero component? */
 		if (bsv.cieY <= FTINY)
 			break;
@@ -273,22 +262,8 @@ m_bsdf(OBJREC *m, RAY *r)
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
 
-	SDerrorDetail[0] = '\0';		/* get BSDF data */
-	nd.sd = SDgetCache(m->oargs.sarg[1]);
-	if (nd.sd == NULL)
-		error(SYSTEM, "out of memory in m_bsdf");
-	if (!SDisLoaded(nd.sd)) {
-		char	*pname = getpath(m->oargs.sarg[1], getrlibpath(), R_OK);
-		if (pname == NULL) {
-			sprintf(errmsg, "cannot find BSDF file \"%s\"",
-						m->oargs.sarg[1]);
-			objerror(m, USER, errmsg);
-		}
-		ec = SDloadFile(nd.sd, pname);
-		if (ec)
-			objerror(m, USER, cvt_sderr(ec));
-		SDretainSet = SDretainAll;
-	}
+						/* get BSDF data */
+	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* load cal file */
 	mf = getfunc(m, 5, 0x1d, 1);
 						/* get thickness */
@@ -373,7 +348,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	if (!ec)
 		ec = SDinvXform(nd.fromloc, nd.toloc);
 	if (ec) {
-		objerror(m, WARNING, cvt_sderr(ec));
+		objerror(m, WARNING, transSDError(ec));
 		SDfreeCache(nd.sd);
 		return(1);
 	}

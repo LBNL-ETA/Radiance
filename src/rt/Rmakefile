@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.62 2011/02/18 00:40:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.63 2011/02/18 02:41:55 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -224,8 +224,9 @@ rv2.o:	../common/resolu.h
 aniso.o func.o m_brdf.o m_direct.o mx_data.o mx_func.o p_data.o \
 p_func.o t_data.o t_func.o:	func.h ../common/calcomp.h
 
-preload.o:	../common/object.h ../common/face.h ../common/cone.h \
-../common/instance.h ../common/mesh.h ../common/color.h data.h
+preload.o:	data.h func.h ../common/object.h ../common/face.h \
+../common/cone.h ../common/instance.h ../common/mesh.h \
+../common/color.h ../common/bsdf.h ../common/otypes.h
 
 rtmain.o rpmain.o rvmain.o persist.o duphead.o \
 renderopts.o rpict.o:	../common/paths.h
@@ -245,4 +246,4 @@ o_mesh.o p_data.o p_func.o source.o sphere.o t_data.o t_func.o \
 srcobstr.o text.o:		rtotypes.h
 
 m_bsdf.o:	ambient.h source.h func.h \
-../common/calcomp.h ../common/paths.h ../common/bsdf.h ../common/random.h
+../common/calcomp.h ../common/bsdf.h ../common/random.h
