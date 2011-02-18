@@ -1,3 +1,4 @@
+/* RCSid $Id: hilbert.h,v 3.2 2011/02/18 18:41:04 greg Exp $ */
 /* C header file for Hilbert curve functions */
 #if !defined(_hilbert_h_)
 #define _hilbert_h_

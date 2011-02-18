@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: disk2square.c,v 3.2 2011/02/18 18:41:04 greg Exp $";
+#endif
 /*
  *  Disk2Square.c
  *  

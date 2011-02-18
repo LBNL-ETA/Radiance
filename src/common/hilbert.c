@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: hilbert.c,v 3.2 2011/02/18 18:41:04 greg Exp $";
+#endif
 /* See LICENSE below for information on rights to use, modify and distribute
    this code. */
 
