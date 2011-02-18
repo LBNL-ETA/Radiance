@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.6 2008/05/01 16:42:05 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.7 2011/02/18 18:46:38 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -59,3 +59,6 @@ calc.o ev.o rcalc.o:	../common/calcomp.h
 total.o rcalc.o:	../common/platform.h
 
 rcalc.o:	../common/rterror.h ../common/rtmisc.h ../common/rtio.h
+
+tabfunc.o:	../common/rtmath.h ../common/mat4.h \
+../common/fvect.h ../common/tiff.h
