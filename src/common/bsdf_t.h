@@ -1,3 +1,4 @@
+/* RCSid $Id: bsdf_t.h,v 3.2 2011/02/18 00:41:44 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
