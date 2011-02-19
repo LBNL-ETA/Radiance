@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.2 2011/02/18 02:41:55 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.3 2011/02/19 01:48:59 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -73,7 +73,7 @@ dirbsdf(
 	double  omega			/* light source size */
 )
 {
-	BSDFDAT		*np = nnp;
+	BSDFDAT		*np = (BSDFDAT *)nnp;
 	SDError		ec;
 	SDValue		sv;
 	FVECT		vout;
@@ -126,7 +126,7 @@ dirbsdf(
 		scalecolor(ctmp2, dtmp);
 		setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
 		addcolor(ctmp1, ctmp2);
-		multcolor(ctmp, ctmp1);	/* apply desaturated pattern */
+		multcolor(ctmp, ctmp1);	/* apply derated pattern */
 		dtmp = ldot * omega;
 	} else {			/* full pattern on transmission */
 		multcolor(ctmp, np->pr->pcol);
@@ -185,11 +185,11 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 			++nsent;		/* Russian roulette victim */
 			continue;
 		}
-						/* need to move origin? */
-		sthick = (ndp->pr->rod > .0) ? -ndp->thick : ndp->thick;
-		if (sthick < .0 ^ vout[2] > .0)
-			VSUM(sr.rorg, sr.rorg, ndp->pr->ron, sthick);
-
+		if (ndp->thick > FTINY) {	/* need to move origin? */
+			sthick = (ndp->pr->rod > .0) ? -ndp->thick : ndp->thick;
+			if (sthick < .0 ^ vout[2] > .0)
+				VSUM(sr.rorg, sr.rorg, ndp->pr->ron, sthick);
+		}
 		rayvalue(&sr);			/* send & evaluate sample */
 		multcolor(sr.rcol, sr.rcoef);
 		addcolor(ndp->pr->rcol, sr.rcol);
@@ -225,7 +225,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		return(0);
 						/* below sampling threshold? */
 	if (dfp->maxHemi <= specthresh+FTINY) {
-		if (dfp->maxHemi > FTINY) {	/* XXX no color from BSDF! */
+		if (dfp->maxHemi > FTINY) {	/* XXX no color from BSDF */
 			double	d = SDdirectHemi(ndp->vinc, sflags, ndp->sd);
 			COLOR	ctmp;
 			if (sflags == SDsampSpT) {
@@ -272,15 +272,14 @@ m_bsdf(OBJREC *m, RAY *r)
 		nd.thick = .0;
 						/* check shadow */
 	if (r->crtype & SHADOW) {
-		SDfreeCache(nd.sd);
-		if (nd.thick > FTINY && nd.sd->tf != NULL &&
-				nd.sd->tf->maxHemi > FTINY)
+		if ((nd.thick > FTINY) & (nd.sd->tf != NULL))
 			raytrans(r);		/* pass-through */
+		SDfreeCache(nd.sd);
 		return(1);			/* else shadow */
 	}
 						/* check unscattered ray */
-	if (!(r->crtype & (SPECULAR|AMBIENT)) && nd.thick > FTINY &&
-			nd.sd->tf != NULL && nd.sd->tf->maxHemi > FTINY) {
+	if (!(r->crtype & (SPECULAR|AMBIENT)) &&
+			(nd.thick > FTINY) & (nd.sd->tf != NULL)) {
 		SDfreeCache(nd.sd);
 		raytrans(r);			/* pass-through */
 		return(1);
@@ -295,10 +294,8 @@ m_bsdf(OBJREC *m, RAY *r)
 					m->oargs.farg[2]);
 	} else {
 		if (m->oargs.nfargs < 6) {	/* check invisible backside */
-			if (!backvis && (nd.sd->rb == NULL ||
-						nd.sd->rb->maxHemi <= FTINY) &&
-					(nd.sd->tf == NULL ||
-						nd.sd->tf->maxHemi <= FTINY)) {
+			if (!backvis && (nd.sd->rb == NULL) &
+						(nd.sd->tf == NULL)) {
 				SDfreeCache(nd.sd);
 				raytrans(r);
 				return(1);

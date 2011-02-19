@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.1 2011/02/18 02:41:55 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.2 2011/02/19 01:48:59 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -14,12 +14,11 @@ static const char RCSid[] = "$Id: loadbsdf.c,v 3.1 2011/02/18 02:41:55 greg Exp 
 char *
 transSDError(SDError ec)
 {
-	static char	mymess[128];
-
 	if (!SDerrorDetail[0])
-		return(strcpy(mymess, SDerrorEnglish[ec]));
-	sprintf(mymess, "%s: %s", SDerrorEnglish[ec], SDerrorDetail);
-	return(mymess);
+		return(strcpy(errmsg, SDerrorEnglish[ec]));
+
+	sprintf(errmsg, "%s: %s", SDerrorEnglish[ec], SDerrorDetail);
+	return(errmsg);
 }
 
 /* Make sure we're not over 100% scattering for this component */
@@ -36,30 +35,43 @@ checkDF(const char *nm, double amt, const SDSpectralDF *dfp, const char *desc)
 
 /* Load a BSDF file and perform some basic checks */
 SDData *
-loadBSDF(char *name)
+loadBSDF(char *fname)
 {
-	SDData	*sd = SDgetCache(name);
+	SDData	*sd;
 	SDError	ec;
 	char	*pname;
 
+	sd = SDgetCache(fname);			/* look up or allocate */
 	if (sd == NULL)
 		error(SYSTEM, "out of memory in loadBSDF");
-	if (SDisLoaded(sd))
+	if (SDisLoaded(sd))			/* already in memory? */
 		return(sd);
-	
-	pname = getpath(name, getrlibpath(), R_OK);
+						/* else find and load it */
+	pname = getpath(fname, getrlibpath(), R_OK);
 	if (pname == NULL) {
-		sprintf(errmsg, "cannot find BSDF file \"%s\"", name);
+		sprintf(errmsg, "cannot find BSDF file \"%s\"", fname);
 		error(USER, errmsg);
 	}
 	ec = SDloadFile(sd, pname);
 	if (ec)
 		error(USER, transSDError(ec));
 						/* simple checks */
-	checkDF(name, sd->rLambFront.cieY, sd->rf, "front reflection");
-	checkDF(name, sd->rLambBack.cieY, sd->rb, "rear reflection");
-	checkDF(name, sd->tLamb.cieY, sd->tf, "transmission");
-
+	checkDF(sd->name, sd->rLambFront.cieY, sd->rf, "front reflection");
+	checkDF(sd->name, sd->rLambBack.cieY, sd->rb, "rear reflection");
+	checkDF(sd->name, sd->tLamb.cieY, sd->tf, "transmission");
+fprintf(stderr, "Loaded BSDF '%s' (file \"%s\")\n", sd->name, pname);
+fprintf(stderr, "Front diffuse reflectance: %.1f%%\n", sd->rLambFront.cieY*100.);
+fprintf(stderr, "Back diffuse reflectance: %.1f%%\n", sd->rLambBack.cieY*100.);
+fprintf(stderr, "Diffuse transmittance: %.1f%%\n", sd->tLamb.cieY*100.);
+if (sd->rf)
+fprintf(stderr, "Maximum direct hemispherical front reflection: %.1f%%\n",
+sd->rf->maxHemi*100.);
+if (sd->rb)
+fprintf(stderr, "Maximum direct hemispherical back reflection: %.1f%%\n",
+sd->rb->maxHemi*100.);
+if (sd->tf)
+fprintf(stderr, "Maximum direct hemispherical transmission: %.1f%%\n",
+sd->tf->maxHemi*100.);
 	SDretainSet = SDretainAll;		/* keep data in core */
 	return(sd);
 }

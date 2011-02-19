@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.3 2011/02/18 02:41:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.4 2011/02/19 01:48:59 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -18,10 +18,6 @@ static const char RCSid[] = "$Id: bsdf_m.c,v 3.3 2011/02/18 02:41:55 greg Exp $"
 #include "ezxml.h"
 #include "bsdf.h"
 #include "bsdf_m.h"
-
-#ifndef FTINY
-#define FTINY		1e-6
-#endif
 
 /* Function return codes */
 #define	RC_GOOD		1
@@ -364,19 +360,11 @@ get_extrema(SDSpectralDF *df)
 static int
 load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 {
-	char		*cbasis = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
-	char		*rbasis = ezxml_txt(ezxml_child(wdb,"RowAngleBasis"));
 	SDSpectralDF	*df;
 	SDMat		*dp;
 	char		*sdata;
 	int		inbi, outbi;
 	int		i;
-
-	if ((!cbasis || !*cbasis) | (!rbasis || !*rbasis)) {
-		sprintf(SDerrorDetail, "Missing column/row basis for BSDF '%s'",
-				sd->name);
-		return RC_FORMERR;
-	}
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
 	if (!strcasecmp(sdata, "Transmission Front")) {
@@ -399,6 +387,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		df = sd->rb;
 	} else
 		return RC_FAIL;
+	/* XXX should also check "ScatteringDataType" for consistency? */
 					/* get angle bases */
 	sdata = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
 	if (!sdata || !*sdata) {
@@ -407,11 +396,10 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		return RC_FORMERR;
 	}
 	for (inbi = nabases; inbi--; )
-		if (!strcasecmp(cbasis, abase_list[inbi].name))
+		if (!strcasecmp(sdata, abase_list[inbi].name))
 			break;
 	if (inbi < 0) {
-		sprintf(SDerrorDetail, "Undefined ColumnAngleBasis '%s'",
-				cbasis);
+		sprintf(SDerrorDetail, "Undefined ColumnAngleBasis '%s'", sdata);
 		return RC_FORMERR;
 	}
 	sdata = ezxml_txt(ezxml_child(wdb,"RowAngleBasis"));
@@ -421,10 +409,10 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		return RC_FORMERR;
 	}
 	for (outbi = nabases; outbi--; )
-		if (!strcasecmp(rbasis, abase_list[outbi].name))
+		if (!strcasecmp(sdata, abase_list[outbi].name))
 			break;
 	if (outbi < 0) {
-		sprintf(SDerrorDetail, "Undefined RowAngleBasis '%s'", cbasis);
+		sprintf(SDerrorDetail, "Undefined RowAngleBasis '%s'", sdata);
 		return RC_FORMERR;
 	}
 					/* allocate BSDF matrix */
@@ -519,30 +507,29 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 		c_cmix(&dv->spec, dv->cieY, &dv->spec, ymin, &df->comp[n].cspec[0]);
 		dv->cieY += ymin;
 	}
-	df->maxHemi -= dv->cieY;	/* correct minimum hemispherical */
-	dv->spec.clock++;		/* make sure everything is set */
+	df->maxHemi -= dv->cieY;	/* adjust minimum hemispherical */
+					/* make sure everything is set */
 	c_ccvt(&dv->spec, C_CSXY+C_CSSPEC);
 }
 
 /* Load a BSDF matrix from an open XML file */
 SDError
-SDloadMtx(SDData *sd, ezxml_t fl)
+SDloadMtx(SDData *sd, ezxml_t wtl)
 {
-	ezxml_t			wtl, wld, wdb;
+	ezxml_t			wld, wdb;
 	int			rowIn;
 	struct BSDF_data	*dp;
 	char			*txt;
 	int			rval;
 	
-	if (strcmp(ezxml_name(fl), "WindowElement")) {
+	txt = ezxml_txt(ezxml_child(ezxml_child(wtl,
+			"DataDefinition"), "IncidentDataStructure"));
+	if (txt == NULL || !*txt) {
 		sprintf(SDerrorDetail,
-			"BSDF \"%s\": top level node not 'WindowElement'",
+			"BSDF \"%s\": missing IncidentDataStructure",
 				sd->name);
 		return SDEformat;
 	}
-	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
-	txt = ezxml_txt(ezxml_child(ezxml_child(wtl,
-			"DataDefinition"), "IncidentDataStructure"));
 	if (!strcasecmp(txt, "Rows"))
 		rowIn = 1;
 	else if (!strcasecmp(txt, "Columns"))
@@ -557,7 +544,7 @@ SDloadMtx(SDData *sd, ezxml_t fl)
 	rval = load_angle_basis(ezxml_child(ezxml_child(wtl,
 				"DataDefinition"), "AngleBasis"));
 	if (rval < 0)
-		goto err_return;
+		return convert_errcode(rval);
 				/* load BSDF components */
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
@@ -567,7 +554,7 @@ SDloadMtx(SDData *sd, ezxml_t fl)
 		for (wdb = ezxml_child(wld, "WavelengthDataBlock");
 					wdb != NULL; wdb = wdb->next)
 			if ((rval = load_bsdf_data(sd, wdb, rowIn)) < 0)
-				goto err_return;
+				return convert_errcode(rval);
 	}
 				/* separate diffuse components */
 	extract_diffuse(&sd->rLambFront, sd->rf);
@@ -575,20 +562,6 @@ SDloadMtx(SDData *sd, ezxml_t fl)
 	extract_diffuse(&sd->tLamb, sd->tf);
 				/* return success */
 	return SDEnone;
-err_return:			/* jump here on failure */
-	if (sd->rf != NULL) {
-		SDfreeSpectralDF(sd->rf);
-		sd->rf = NULL;
-	}
-	if (sd->rb != NULL) {
-		SDfreeSpectralDF(sd->rb);
-		sd->rb = NULL;
-	}
-	if (sd->tf != NULL) {
-		SDfreeSpectralDF(sd->tf);
-		sd->tf = NULL;
-	}
-	return convert_errcode(rval);
 }
 
 /* Get Matrix BSDF value */

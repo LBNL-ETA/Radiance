@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.15 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.16 2011/02/19 01:48:59 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -77,24 +77,26 @@ to_meters(		/* return factor to convert given unit to meters */
 
 /* Load geometric dimensions and description (if any) */
 static SDError
-SDloadGeometry(SDData *dp, ezxml_t wdb)
+SDloadGeometry(SDData *sd, ezxml_t wdb)
 {
 	ezxml_t		geom;
 	double		cfact;
 	const char	*fmt, *mgfstr;
 
-	sprintf(SDerrorDetail, "Negative size in \"%s\"", dp->name);
-	dp->dim[0] = dp->dim[1] = dp->dim[2] = .0;
+	if (wdb == NULL)		/* no geometry section? */
+		return SDEnone;
+	sprintf(SDerrorDetail, "Negative size in \"%s\"", sd->name);
+	sd->dim[0] = sd->dim[1] = sd->dim[2] = .0;
 	if ((geom = ezxml_child(wdb, "Width")) != NULL)
-		dp->dim[0] = atof(ezxml_txt(geom)) *
+		sd->dim[0] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
 	if ((geom = ezxml_child(wdb, "Height")) != NULL)
-		dp->dim[1] = atof(ezxml_txt(geom)) *
+		sd->dim[1] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
 	if ((geom = ezxml_child(wdb, "Thickness")) != NULL)
-		dp->dim[2] = atof(ezxml_txt(geom)) *
+		sd->dim[2] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
-	if ((dp->dim[0] < .0) | (dp->dim[1] < .0) | (dp->dim[2] < .0))
+	if ((sd->dim[0] < .0) | (sd->dim[1] < .0) | (sd->dim[2] < .0))
 		return SDEdata;
 	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
 			(mgfstr = ezxml_txt(geom)) == NULL)
@@ -103,29 +105,28 @@ SDloadGeometry(SDData *dp, ezxml_t wdb)
 			strcasecmp(fmt, "MGF")) {
 		sprintf(SDerrorDetail,
 			"Unrecognized geometry format '%s' in \"%s\"",
-					fmt, dp->name);
+					fmt, sd->name);
 		return SDEsupport;
 	}
 	cfact = to_meters(ezxml_attr(geom, "unit"));
-	dp->mgf = (char *)malloc(strlen(mgfstr)+32);
-	if (dp->mgf == NULL) {
+	sd->mgf = (char *)malloc(strlen(mgfstr)+32);
+	if (sd->mgf == NULL) {
 		strcpy(SDerrorDetail, "Out of memory in SDloadGeometry");
 		return SDEmemory;
 	}
 	if (cfact < 0.99 || cfact > 1.01)
-		sprintf(dp->mgf, "xf -s %.5f\n%s\nxf\n", cfact, mgfstr);
+		sprintf(sd->mgf, "xf -s %.5f\n%s\nxf\n", cfact, mgfstr);
 	else
-		strcpy(dp->mgf, mgfstr);
+		strcpy(sd->mgf, mgfstr);
 	return SDEnone;
 }
-
 
 /* Load a BSDF struct from the given file (free first and keep name) */
 SDError
 SDloadFile(SDData *sd, const char *fname)
 {
 	SDError		lastErr;
-	ezxml_t		fl;
+	ezxml_t		fl, wtl;
 
 	if ((sd == NULL) | (fname == NULL || !*fname))
 		return SDEargument;
@@ -142,25 +143,55 @@ SDloadFile(SDData *sd, const char *fname)
 		ezxml_free(fl);
 		return SDEformat;
 	}
+	if (strcmp(ezxml_name(fl), "WindowElement")) {
+		sprintf(SDerrorDetail,
+			"BSDF \"%s\": top level node not 'WindowElement'",
+				sd->name);
+		ezxml_free(fl);
+		return SDEformat;
+	}
+	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
+	if (wtl == NULL) {
+		sprintf(SDerrorDetail, "BSDF \"%s\": no optical layer'",
+				sd->name);
+		ezxml_free(fl);
+		return SDEformat;
+	}
 				/* load geometry if present */
-	if ((lastErr = SDloadGeometry(sd, fl)))
+	lastErr = SDloadGeometry(sd, ezxml_child(wtl, "Material"));
+	if (lastErr)
 		return lastErr;
 				/* try loading variable resolution data */
-	lastErr = SDloadTre(sd, fl);
+	lastErr = SDloadTre(sd, wtl);
 				/* check our result */
 	switch (lastErr) {
 	case SDEformat:
 	case SDEdata:
 	case SDEsupport:	/* possibly we just tried the wrong format */
-		lastErr = SDloadMtx(sd, fl);
+		lastErr = SDloadMtx(sd, wtl);
 		break;
 	default:		/* variable res. OK else serious error */
 		break;
 	}
 				/* done with XML file */
 	ezxml_free(fl);
-				/* return success or failure */
-	return lastErr;
+	
+	if (lastErr) {		/* was there a load error? */
+		SDfreeBSDF(sd);
+		return lastErr;
+	}
+				/* remove any insignificant components */
+	if (sd->rf != NULL && sd->rf->maxHemi <= .001) {
+		SDfreeSpectralDF(sd->rf); sd->rf = NULL;
+	}
+	if (sd->rb != NULL && sd->rb->maxHemi <= .001) {
+		SDfreeSpectralDF(sd->rb); sd->rb = NULL;
+	}
+	if (sd->tf != NULL && sd->tf->maxHemi <= .001) {
+		SDfreeSpectralDF(sd->tf); sd->tf = NULL;
+	}
+				/* return success */
+	return SDEnone;
 }
 
 /* Allocate new spectral distribution function */
@@ -219,7 +250,7 @@ SDfreeSpectralDF(SDSpectralDF *df)
 
 /* Shorten file path to useable BSDF name, removing suffix */
 void
-SDclipName(char res[SDnameLn], const char *fname)
+SDclipName(char *res, const char *fname)
 {
 	const char	*cp, *dot = NULL;
 	
@@ -266,11 +297,11 @@ SDfreeBSDF(SDData *sd)
 		sd->tf = NULL;
 	}
 	sd->rLambFront.cieY = .0;
-	sd->rLambFront.spec.clock = 0;
+	sd->rLambFront.spec.flags = 0;
 	sd->rLambBack.cieY = .0;
-	sd->rLambBack.spec.clock = 0;
+	sd->rLambBack.spec.flags = 0;
 	sd->tLamb.cieY = .0;
-	sd->tLamb.spec.clock = 0;
+	sd->tLamb.spec.flags = 0;
 }
 
 /* Find writeable BSDF by name, or allocate new cache entry if absent */
@@ -1077,7 +1108,7 @@ load_bsdf_data(		/* load BSDF distribution for this wavelength */
 			break;
 		}
 	if (i < 0) {
-		sprintf(errmsg, "undefined RowAngleBasis '%s'", cbasis);
+		sprintf(errmsg, "undefined RowAngleBasis '%s'", rbasis);
 		error(WARNING, errmsg);
 		return;
 	}

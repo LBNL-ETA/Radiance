@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.5 2011/02/18 02:41:55 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.6 2011/02/19 01:48:59 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -136,7 +136,7 @@ extern int		SDretainSet;	/* set to SDretainNone by default */
  * The following routines are less commonly used by applications.
  */
 
-#define	SDisLoaded(sd)	((sd)->rLambFront.spec.clock != 0)
+#define	SDisLoaded(sd)	((sd)->rLambFront.spec.flags != 0)
 
 /* Report an error to the indicated stream (in English) */
 extern SDError		SDreportEnglish(SDError ec, FILE *fp);

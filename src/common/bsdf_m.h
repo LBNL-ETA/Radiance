@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_m.h,v 3.2 2011/02/18 00:41:44 greg Exp $ */
+/* RCSid $Id: bsdf_m.h,v 3.3 2011/02/19 01:48:59 greg Exp $ */
 /*
  *  bsdf_m.h
  *  
@@ -54,7 +54,7 @@ typedef struct {
 } SDMatCDst;	
 
 /* Load a set of BSDF matrices from an open XML file */
-extern SDError		SDloadMtx(SDData *sd, ezxml_t fl);
+extern SDError		SDloadMtx(SDData *sd, ezxml_t wtl);
 
 /* Our matrix handling routines */
 extern SDFunc		SDhandleMtx;

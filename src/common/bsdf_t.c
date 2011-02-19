@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.3 2011/02/18 02:41:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.4 2011/02/19 01:48:59 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -150,7 +150,7 @@ SDavgBox(const SDNode *st, const double *bmin, const double *bmax)
 
 /* Load a variable-resolution BSDF tree from an open XML file */
 SDError
-SDloadTre(SDData *sd, ezxml_t fl)
+SDloadTre(SDData *sd, ezxml_t wtl)
 {
 	return SDEsupport;
 }
