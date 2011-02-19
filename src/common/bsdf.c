@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.16 2011/02/19 01:48:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.17 2011/02/19 23:42:09 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -85,7 +85,6 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 
 	if (wdb == NULL)		/* no geometry section? */
 		return SDEnone;
-	sprintf(SDerrorDetail, "Negative size in \"%s\"", sd->name);
 	sd->dim[0] = sd->dim[1] = sd->dim[2] = .0;
 	if ((geom = ezxml_child(wdb, "Width")) != NULL)
 		sd->dim[0] = atof(ezxml_txt(geom)) *
@@ -96,8 +95,10 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 	if ((geom = ezxml_child(wdb, "Thickness")) != NULL)
 		sd->dim[2] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
-	if ((sd->dim[0] < .0) | (sd->dim[1] < .0) | (sd->dim[2] < .0))
+	if ((sd->dim[0] < .0) | (sd->dim[1] < .0) | (sd->dim[2] < .0)) {
+		sprintf(SDerrorDetail, "Negative size in \"%s\"", sd->name);
 		return SDEdata;
+	}
 	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
 			(mgfstr = ezxml_txt(geom)) == NULL)
 		return SDEnone;
@@ -488,7 +489,7 @@ SDsizeBSDF(double *projSA, const FVECT vec, int qflags, const SDData *sd)
 	if ((projSA == NULL) | (vec == NULL) | (sd == NULL))
 		return SDEargument;
 					/* initialize extrema */
-	switch (qflags & SDqueryMin+SDqueryMax) {
+	switch (qflags) {
 	case SDqueryMax:
 		projSA[0] = .0;
 		break;
@@ -518,7 +519,12 @@ SDsizeBSDF(double *projSA, const FVECT vec, int qflags, const SDData *sd)
 		if (ec)
 			return ec;
 	}
-	return ec;
+	if (ec) {			/* all diffuse? */
+		projSA[0] = M_PI;
+		if (qflags == SDqueryMin+SDqueryMax)
+			projSA[1] = M_PI;
+	}
+	return SDEnone;
 }
 
 /* Return BSDF for the given incident and scattered ray vectors */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.3 2011/02/19 01:48:59 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.4 2011/02/19 23:42:09 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -47,11 +47,19 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.3 2011/02/19 01:48:59 greg Exp $"
  *		rdt	gdt	bdt
  */
 
+/*
+ * Note that our reverse ray-tracing process means that the positions
+ * of incoming and outgoing vectors may be reversed in our calls
+ * to the BSDF library.  This is fine, since the bidirectional nature
+ * of the BSDF (that's what the 'B' stands for) means it all works out.
+ */
+
 typedef struct {
 	OBJREC	*mp;		/* material pointer */
 	RAY	*pr;		/* intersected ray */
 	FVECT	pnorm;		/* perturbed surface normal */
-	FVECT	vinc;		/* local incident vector */
+	FVECT	vray;		/* local outgoing (return) vector */
+	double	sr_vpsa;	/* sqrt of BSDF projected solid angle */
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
@@ -63,6 +71,22 @@ typedef struct {
 }  BSDFDAT;		/* BSDF material data */
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
+
+/* Jitter ray sample according to projected solid angle and specjitter */
+static void
+bsdf_jitter(FVECT vres, BSDFDAT *ndp)
+{
+	double	sr_psa = ndp->sr_vpsa;
+
+	VCOPY(vres, ndp->vray);
+	if (specjitter < 1.)
+		sr_psa *= specjitter;
+	if (sr_psa <= FTINY)
+		return;
+	vres[0] += sr_psa*(.5 - frandom());
+	vres[1] += sr_psa*(.5 - frandom());
+	normalize(vres);
+}
 
 /* Compute source contribution for BSDF */
 static void
@@ -76,7 +100,8 @@ dirbsdf(
 	BSDFDAT		*np = (BSDFDAT *)nnp;
 	SDError		ec;
 	SDValue		sv;
-	FVECT		vout;
+	FVECT		vsrc;
+	FVECT		vjit;
 	double		ldot;
 	double		dtmp;
 	COLOR		ctmp;
@@ -108,9 +133,10 @@ dirbsdf(
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
-	if (SDmapDir(vout, np->toloc, ldir) != SDEnone)
+	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
 		return;
-	ec = SDevalBSDF(&sv, vout, np->vinc, np->sd);
+	bsdf_jitter(vjit, np);
+	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
 	if (ec)
 		objerror(np->mp, USER, transSDError(ec));
 
@@ -145,7 +171,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	SDError	ec;
 	SDValue bsv;
 	double	sthick;
-	FVECT	vout;
+	FVECT	vjit, vsmp;
 	RAY	sr;
 	int	ntrials;
 						/* multiple samples? */
@@ -158,20 +184,19 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	for (ntrials = 0; nsent < nstarget && ntrials < 9*nstarget; ntrials++) {
 		SDerrorDetail[0] = '\0';
 						/* sample direction & coef. */
-		ec = SDsampComponent(&bsv, vout, ndp->vinc,
-				ntrials ? frandom()
-					: urand(ilhash(dimlist,ndims)+samplendx),
-						dcp);
+		bsdf_jitter(vjit, ndp);
+		ec = SDsampComponent(&bsv, vsmp, vjit, ntrials ? frandom()
+				: urand(ilhash(dimlist,ndims)+samplendx), dcp);
 		if (ec)
 			objerror(ndp->mp, USER, transSDError(ec));
 						/* zero component? */
 		if (bsv.cieY <= FTINY)
 			break;
 						/* map vector to world */
-		if (SDmapDir(sr.rdir, ndp->fromloc, vout) != SDEnone)
+		if (SDmapDir(sr.rdir, ndp->fromloc, vsmp) != SDEnone)
 			break;
 						/* unintentional penetration? */
-		if (DOT(sr.rdir, ndp->pr->ron) > .0 ^ vout[2] > .0)
+		if (DOT(sr.rdir, ndp->pr->ron) > .0 ^ vsmp[2] > .0)
 			continue;
 						/* spawn a specular ray */
 		if (nstarget > 1)
@@ -187,7 +212,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 		}
 		if (ndp->thick > FTINY) {	/* need to move origin? */
 			sthick = (ndp->pr->rod > .0) ? -ndp->thick : ndp->thick;
-			if (sthick < .0 ^ vout[2] > .0)
+			if (sthick < .0 ^ vsmp[2] > .0)
 				VSUM(sr.rorg, sr.rorg, ndp->pr->ron, sthick);
 		}
 		rayvalue(&sr);			/* send & evaluate sample */
@@ -226,8 +251,11 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 						/* below sampling threshold? */
 	if (dfp->maxHemi <= specthresh+FTINY) {
 		if (dfp->maxHemi > FTINY) {	/* XXX no color from BSDF */
-			double	d = SDdirectHemi(ndp->vinc, sflags, ndp->sd);
+			FVECT	vjit;
+			double	d;
 			COLOR	ctmp;
+			bsdf_jitter(vjit, ndp);
+			d = SDdirectHemi(vjit, sflags, ndp->sd);
 			if (sflags == SDsampSpT) {
 				copycolor(ctmp, ndp->pr->pcol);
 				scalecolor(ctmp, d);
@@ -337,18 +365,24 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* compute local BSDF xform */
 	ec = SDcompXform(nd.toloc, nd.pnorm, upvec);
 	if (!ec) {
-		nd.vinc[0] = -r->rdir[0];
-		nd.vinc[1] = -r->rdir[1];
-		nd.vinc[2] = -r->rdir[2];
-		ec = SDmapDir(nd.vinc, nd.toloc, nd.vinc);
+		nd.vray[0] = -r->rdir[0];
+		nd.vray[1] = -r->rdir[1];
+		nd.vray[2] = -r->rdir[2];
+		ec = SDmapDir(nd.vray, nd.toloc, nd.vray);
 	}
 	if (!ec)
 		ec = SDinvXform(nd.fromloc, nd.toloc);
-	if (ec) {
+						/* determine BSDF resolution */
+	if (!ec)
+		ec = SDsizeBSDF(&nd.sr_vpsa, nd.vray, SDqueryMin, nd.sd);
+	if (!ec)
+		nd.sr_vpsa = sqrt(nd.sr_vpsa);
+	else {
 		objerror(m, WARNING, transSDError(ec));
 		SDfreeCache(nd.sd);
 		return(1);
 	}
+	
 	if (r->rod < .0) {			/* perturb normal towards hit */
 		nd.pnorm[0] = -nd.pnorm[0];
 		nd.pnorm[1] = -nd.pnorm[1];

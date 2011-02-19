@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.4 2011/02/19 01:48:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.5 2011/02/19 23:42:09 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -346,8 +346,7 @@ get_extrema(SDSpectralDF *df)
 	}
 	free(ohma);
 					/* need incoming solid angles, too? */
-	if (dp->ninc < dp->nout || dp->ib_ohm != dp->ob_ohm ||
-				dp->ib_priv != dp->ob_priv) {
+	if ((dp->ib_ohm != dp->ob_ohm) | (dp->ib_priv != dp->ob_priv)) {
 		double	ohm;
 		for (i = dp->ninc; i--; )
 			if ((ohm = mBSDF_incohm(dp,i)) < df->minProjSA)
@@ -419,26 +418,26 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	dp = SDnewMatrix(abase_list[inbi].nangles, abase_list[outbi].nangles);
 	if (dp == NULL)
 		return RC_MEMERR;
-	dp->ib_priv = (void *)&abase_list[inbi];
-	dp->ob_priv = (void *)&abase_list[outbi];
+	dp->ib_priv = &abase_list[inbi];
+	dp->ob_priv = &abase_list[outbi];
 	if (df == sd->tf) {
-		dp->ib_vec = ab_getvecR;
-		dp->ib_ndx = ab_getndxR;
-		dp->ob_vec = ab_getvec;
-		dp->ob_ndx = ab_getndx;
+		dp->ib_vec = &ab_getvecR;
+		dp->ib_ndx = &ab_getndxR;
+		dp->ob_vec = &ab_getvec;
+		dp->ob_ndx = &ab_getndx;
 	} else if (df == sd->rf) {
-		dp->ib_vec = ab_getvec;
-		dp->ib_ndx = ab_getndx;
-		dp->ob_vec = ab_getvec;
-		dp->ob_ndx = ab_getndx;
+		dp->ib_vec = &ab_getvec;
+		dp->ib_ndx = &ab_getndx;
+		dp->ob_vec = &ab_getvec;
+		dp->ob_ndx = &ab_getndx;
 	} else /* df == sd->rb */ {
-		dp->ib_vec = ab_getvecR;
-		dp->ib_ndx = ab_getndxR;
-		dp->ob_vec = ab_getvecR;
-		dp->ob_ndx = ab_getndxR;
+		dp->ib_vec = &ab_getvecR;
+		dp->ib_ndx = &ab_getndxR;
+		dp->ob_vec = &ab_getvecR;
+		dp->ob_ndx = &ab_getndxR;
 	}
-	dp->ib_ohm = ab_getohm;
-	dp->ob_ohm = ab_getohm;
+	dp->ib_ohm = &ab_getohm;
+	dp->ob_ohm = &ab_getohm;
 	df->comp[0].cspec[0] = c_dfcolor; /* XXX monochrome for now */
 	df->comp[0].dist = dp;
 	df->comp[0].func = &SDhandleMtx;
@@ -590,54 +589,39 @@ static SDError
 SDqueryMtxProjSA(double *psa, const FVECT vec, int qflags, const void *dist)
 {
 	const SDMat	*dp = (const SDMat *)dist;
-
-	if (!(qflags & SDqueryInc+SDqueryOut))
+	double		inc_psa, out_psa;
+					/* check arguments */
+	if ((psa == NULL) | (vec == NULL) | (dp == NULL))
 		return SDEargument;
-	if (qflags & SDqueryInc) {
-		double	inc_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, vec));
-		if (inc_psa < .0)
-			return SDEinternal;
-		switch (qflags & SDqueryMin+SDqueryMax) {
-		case SDqueryMax:
-			if (inc_psa > psa[0])
-				psa[0] = inc_psa;
-			break;
-		case SDqueryMin+SDqueryMax:
-			if (inc_psa > psa[1])
-				psa[1] = inc_psa;
-			/* fall through */
-		case SDqueryMin:
-			if (inc_psa < psa[0])
-				psa[0] = inc_psa;
-			break;
-		case 0:
+					/* get projected solid angles */
+	inc_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, vec));
+	out_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, vec));
+
+	switch (qflags) {		/* record based on flag settings */
+	case SDqueryVal:
+		psa[0] = .0;
+		/* fall through */
+	case SDqueryMax:
+		if (inc_psa > psa[0])
 			psa[0] = inc_psa;
-			break;
-		}
+		if (out_psa > psa[0])
+			psa[0] = out_psa;
+		break;
+	case SDqueryMin+SDqueryMax:
+		if (inc_psa > psa[0])
+			psa[1] = inc_psa;
+		if (out_psa > psa[0])
+			psa[1] = out_psa;
+		/* fall through */
+	case SDqueryMin:
+		if ((inc_psa > .0) & (inc_psa < psa[0]))
+			psa[0] = inc_psa;
+		if ((out_psa > .0) & (out_psa < psa[0]))
+			psa[0] = out_psa;
+		break;
 	}
-	if (qflags & SDqueryOut) {
-		double	out_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, vec));
-		if (out_psa < .0)
-			return SDEinternal;
-		switch (qflags & SDqueryMin+SDqueryMax) {
-		case SDqueryMax:
-			if (out_psa > psa[0])
-				psa[0] = out_psa;
-			break;
-		case SDqueryMin+SDqueryMax:
-			if (out_psa > psa[1])
-				psa[1] = out_psa;
-			/* fall through */
-		case SDqueryMin:
-			if (out_psa < psa[0])
-				psa[0] = out_psa;
-			break;
-		case 0:
-			psa[(qflags&SDqueryInc)!=0] = out_psa;
-			break;
-		}
-	}
-	return SDEnone;
+					/* make sure it's legal */
+	return (psa[0] <= .0) ? SDEinternal : SDEnone;
 }
 
 /* Compute new cumulative distribution from BSDF */
@@ -679,8 +663,8 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 	int		reverse;
 	SDMatCDst	myCD;
 	SDMatCDst	*cd, *cdlast;
-
-	if (dp == NULL)
+					/* check arguments */
+	if ((inVec == NULL) | (dp == NULL))
 		return NULL;
 	memset(&myCD, 0, sizeof(myCD));
 	myCD.indx = mBSDF_incndx(dp, inVec);
@@ -735,6 +719,9 @@ SDsampMtxCDist(FVECT outVec, double randX, const SDCDst *cdp)
 	const SDMatCDst	*mcd = (const SDMatCDst *)cdp;
 	const unsigned	target = randX*maxval;
 	int		i, iupper, ilower;
+					/* check arguments */
+	if ((outVec == NULL) | (mcd == NULL))
+		return SDEargument;
 					/* binary search to find index */
 	ilower = 0; iupper = mcd->calen;
 	while ((i = (iupper + ilower) >> 1) != ilower)
