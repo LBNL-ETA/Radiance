@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.4 2011/02/19 23:42:09 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.5 2011/02/20 06:34:19 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -17,25 +17,33 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.4 2011/02/19 23:42:09 greg Exp $"
 /*
  *	Arguments to this material include optional diffuse colors.
  *  String arguments include the BSDF and function files.
- *	A thickness variable causes the strange but useful behavior
- *  of translating transmitted rays this distance past the surface
- *  intersection in the normal direction to bypass intervening geometry.
- *  This only affects scattered, non-source directed samples.  Thus,
- *  thickness is relevant only if there is a transmitted component.
- *  A positive thickness has the further side-effect that an unscattered
+ *	A non-zero thickness causes the strange but useful behavior
+ *  of translating transmitted rays this distance beneath the surface
+ *  (opposite the surface normal) to bypass any intervening geometry.
+ *  Translation only affects scattered, non-source-directed samples.
+ *  A non-zero thickness has the further side-effect that an unscattered
  *  (view) ray will pass right through our material if it has any
- *  non-diffuse transmission, making our BSDF invisible.  This allows the
- *  underlying geometry to become visible.  A matching surface should be
- *  placed on the other side, less than the thickness away, if the backside
- *  reflectance is non-zero.
+ *  non-diffuse transmission, making the BSDF surface invisible.  This
+ *  shows the proxied geometry instead. Thickness has the further
+ *  effect of turning off reflection on the hidden side so that rays
+ *  heading in the opposite direction pass unimpeded through the BSDF
+ *  surface.  A paired surface may be placed on the opposide side of
+ *  the detail geometry, less than this thickness away, if a two-way
+ *  proxy is desired.  Note that the sign of the thickness is important.
+ *  A positive thickness hides geometry behind the BSDF surface and uses
+ *  front reflectance and transmission properties.  A negative thickness
+ *  hides geometry in front of the surface when rays hit from behind,
+ *  and applies only the transmission and backside reflectance properties.
+ *  Reflection is ignored on the hidden side, as those rays pass through.
  *	The "up" vector for the BSDF is given by three variables, defined
  *  (along with the thickness) by the named function file, or '.' if none.
  *  Together with the surface normal, this defines the local coordinate
  *  system for the BSDF.
  *	We do not reorient the surface, so if the BSDF has no back-side
- *  reflectance and none is given in the real arguments, the surface will
- *  appear as black when viewed from behind (unless backvis is false).
- *  The diffuse compnent arguments are added to components in the BSDF file,
+ *  reflectance and none is given in the real arguments, a BSDF surface
+ *  with zero thickness will appear black when viewed from behind
+ *  unless backface visibility is off.
+ *	The diffuse arguments are added to components in the BSDF file,
  *  not multiplied.  However, patterns affect this material as a multiplier
  *  on everything except non-diffuse reflection.
  *
@@ -88,9 +96,9 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp)
 	normalize(vres);
 }
 
-/* Compute source contribution for BSDF */
+/* Compute source contribution for BSDF (reflected & transmitted) */
 static void
-dirbsdf(
+dir_bsdf(
 	COLOR  cval,			/* returned coefficient */
 	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
@@ -162,6 +170,121 @@ dirbsdf(
 	addcolor(cval, ctmp);
 }
 
+/* Compute source contribution for BSDF (reflected only) */
+static void
+dir_brdf(
+	COLOR  cval,			/* returned coefficient */
+	void  *nnp,			/* material data */
+	FVECT  ldir,			/* light source direction */
+	double  omega			/* light source size */
+)
+{
+	BSDFDAT		*np = (BSDFDAT *)nnp;
+	SDError		ec;
+	SDValue		sv;
+	FVECT		vsrc;
+	FVECT		vjit;
+	double		ldot;
+	double		dtmp;
+	COLOR		ctmp, ctmp1, ctmp2;
+
+	setcolor(cval, .0, .0, .0);
+
+	ldot = DOT(np->pnorm, ldir);
+	
+	if (ldot <= FTINY)
+		return;
+
+	if (bright(np->rdiff) > FTINY) {
+		/*
+		 *  Compute added diffuse reflected component.
+		 */
+		copycolor(ctmp, np->rdiff);
+		dtmp = ldot * omega * (1./PI);
+		scalecolor(ctmp, dtmp);
+		addcolor(cval, ctmp);
+	}
+	/*
+	 *  Compute reflection coefficient using BSDF.
+	 */
+	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
+		return;
+	bsdf_jitter(vjit, np);
+	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
+	if (ec)
+		objerror(np->mp, USER, transSDError(ec));
+
+	if (sv.cieY <= FTINY)		/* not worth using? */
+		return;
+	cvt_sdcolor(ctmp, &sv);
+					/* pattern only diffuse reflection */
+	dtmp = (np->pr->rod > .0) ? np->sd->rLambFront.cieY
+				: np->sd->rLambBack.cieY;
+	dtmp /= PI * sv.cieY;		/* diffuse fraction */
+	copycolor(ctmp2, np->pr->pcol);
+	scalecolor(ctmp2, dtmp);
+	setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
+	addcolor(ctmp1, ctmp2);
+	multcolor(ctmp, ctmp1);		/* apply derated pattern */
+	dtmp = ldot * omega;
+	scalecolor(ctmp, dtmp);
+	addcolor(cval, ctmp);
+}
+
+/* Compute source contribution for BSDF (transmitted only) */
+static void
+dir_btdf(
+	COLOR  cval,			/* returned coefficient */
+	void  *nnp,			/* material data */
+	FVECT  ldir,			/* light source direction */
+	double  omega			/* light source size */
+)
+{
+	BSDFDAT		*np = (BSDFDAT *)nnp;
+	SDError		ec;
+	SDValue		sv;
+	FVECT		vsrc;
+	FVECT		vjit;
+	double		ldot;
+	double		dtmp;
+	COLOR		ctmp;
+
+	setcolor(cval, .0, .0, .0);
+
+	ldot = DOT(np->pnorm, ldir);
+
+	if (ldot >= -FTINY)
+		return;
+
+	if (bright(np->tdiff) > FTINY) {
+		/*
+		 *  Compute added diffuse transmission.
+		 */
+		copycolor(ctmp, np->tdiff);
+		dtmp = -ldot * omega * (1.0/PI);
+		scalecolor(ctmp, dtmp);
+		addcolor(cval, ctmp);
+	}
+	/*
+	 *  Compute scattering coefficient using BSDF.
+	 */
+	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
+		return;
+	bsdf_jitter(vjit, np);
+	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
+	if (ec)
+		objerror(np->mp, USER, transSDError(ec));
+
+	if (sv.cieY <= FTINY)		/* not worth using? */
+		return;
+	cvt_sdcolor(ctmp, &sv);
+					/* full pattern on transmission */
+	multcolor(ctmp, np->pr->pcol);
+	dtmp = -ldot * omega;
+	scalecolor(ctmp, dtmp);
+	addcolor(cval, ctmp);
+}
+
 /* Sample separate BSDF component */
 static int
 sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
@@ -210,11 +333,9 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 			++nsent;		/* Russian roulette victim */
 			continue;
 		}
-		if (ndp->thick > FTINY) {	/* need to move origin? */
-			sthick = (ndp->pr->rod > .0) ? -ndp->thick : ndp->thick;
-			if (sthick < .0 ^ vsmp[2] > .0)
-				VSUM(sr.rorg, sr.rorg, ndp->pr->ron, sthick);
-		}
+						/* need to offset origin? */
+		if (ndp->thick != .0 && ndp->pr->rod > .0 ^ vsmp[2] > .0)
+			VSUM(sr.rorg, sr.rorg, ndp->pr->ron, -ndp->thick);
 		rayvalue(&sr);			/* send & evaluate sample */
 		multcolor(sr.rcol, sr.rcoef);
 		addcolor(ndp->pr->rcol, sr.rcol);
@@ -282,7 +403,7 @@ m_bsdf(OBJREC *m, RAY *r)
 {
 	COLOR	ctmp;
 	SDError	ec;
-	FVECT	upvec, outVec;
+	FVECT	upvec, vtmp;
 	MFUNC	*mf;
 	BSDFDAT	nd;
 						/* check arguments */
@@ -290,28 +411,26 @@ m_bsdf(OBJREC *m, RAY *r)
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
 
-						/* get BSDF data */
-	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* load cal file */
 	mf = getfunc(m, 5, 0x1d, 1);
 						/* get thickness */
 	nd.thick = evalue(mf->ep[0]);
-	if (nd.thick < .0)
+	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
 		nd.thick = .0;
 						/* check shadow */
 	if (r->crtype & SHADOW) {
-		if ((nd.thick > FTINY) & (nd.sd->tf != NULL))
+		if (nd.thick != .0)
 			raytrans(r);		/* pass-through */
-		SDfreeCache(nd.sd);
-		return(1);			/* else shadow */
+		return(1);			/* or shadow */
 	}
-						/* check unscattered ray */
-	if (!(r->crtype & (SPECULAR|AMBIENT)) &&
-			(nd.thick > FTINY) & (nd.sd->tf != NULL)) {
-		SDfreeCache(nd.sd);
-		raytrans(r);			/* pass-through */
+						/* check other rays to pass */
+	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
+				nd.thick > .0 ^ r->rod > .0)) {
+		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
+						/* get BSDF data */
+	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* diffuse reflectance */
 	if (r->rod > .0) {
 		if (m->oargs.nfargs < 3)
@@ -345,10 +464,6 @@ m_bsdf(OBJREC *m, RAY *r)
 	nd.pr = r;
 						/* get modifiers */
 	raytexture(r, m->omod);
-	if (bright(r->pcol) <= FTINY) {		/* black pattern?! */
-		SDfreeCache(nd.sd);
-		return(1);
-	}
 						/* modify diffuse values */
 	multcolor(nd.rdiff, r->pcol);
 	multcolor(nd.tdiff, r->pcol);
@@ -382,7 +497,6 @@ m_bsdf(OBJREC *m, RAY *r)
 		SDfreeCache(nd.sd);
 		return(1);
 	}
-	
 	if (r->rod < .0) {			/* perturb normal towards hit */
 		nd.pnorm[0] = -nd.pnorm[0];
 		nd.pnorm[1] = -nd.pnorm[1];
@@ -395,7 +509,7 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* compute indirect diffuse */
 	copycolor(ctmp, nd.rdiff);
 	addcolor(ctmp, nd.runsamp);
-	if (bright(ctmp) > FTINY) {		/* ambient from this side */
+	if (bright(ctmp) > FTINY) {		/* ambient from reflection */
 		if (r->rod < .0)
 			flipsurface(r);
 		multambient(ctmp, r, nd.pnorm);
@@ -412,13 +526,29 @@ m_bsdf(OBJREC *m, RAY *r)
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
-		multambient(ctmp, r, bnorm);
+		if (nd.thick != .0) {		/* proxy with offset? */
+			VCOPY(vtmp, r->rop);
+			VSUM(r->rop, vtmp, r->ron, -nd.thick);
+			multambient(ctmp, r, bnorm);
+			VCOPY(r->rop, vtmp);
+		} else
+			multambient(ctmp, r, bnorm);
 		addcolor(r->rcol, ctmp);
 		if (r->rod > .0)
 			flipsurface(r);
 	}
 						/* add direct component */
-	direct(r, dirbsdf, &nd);
+	if ((bright(nd.tdiff) <= FTINY) & (nd.sd->tf == NULL)) {
+		direct(r, dir_brdf, &nd);	/* reflection only */
+	} else if (nd.thick == .0) {
+		direct(r, dir_bsdf, &nd);	/* thin surface scattering */
+	} else {
+		direct(r, dir_brdf, &nd);	/* reflection first */
+		VCOPY(vtmp, r->rop);		/* offset for transmitted */
+		VSUM(r->rop, vtmp, r->ron, -nd.thick);
+		direct(r, dir_btdf, &nd);
+		VCOPY(r->rop, vtmp);
+	}
 						/* clean up */
 	SDfreeCache(nd.sd);
 	return(1);
