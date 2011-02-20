@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.5 2011/02/20 06:34:19 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.6 2011/02/20 17:43:43 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -401,6 +401,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 int
 m_bsdf(OBJREC *m, RAY *r)
 {
+	int	hitfront;
 	COLOR	ctmp;
 	SDError	ec;
 	FVECT	upvec, vtmp;
@@ -410,7 +411,8 @@ m_bsdf(OBJREC *m, RAY *r)
 	if ((m->oargs.nsargs < 6) | (m->oargs.nfargs > 9) |
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
-
+						/* record surface struck */
+	hitfront = (r->rod > .0);
 						/* load cal file */
 	mf = getfunc(m, 5, 0x1d, 1);
 						/* get thickness */
@@ -425,14 +427,14 @@ m_bsdf(OBJREC *m, RAY *r)
 	}
 						/* check other rays to pass */
 	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
-				nd.thick > .0 ^ r->rod > .0)) {
+				nd.thick > .0 ^ hitfront)) {
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
 						/* get BSDF data */
 	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* diffuse reflectance */
-	if (r->rod > .0) {
+	if (hitfront) {
 		if (m->oargs.nfargs < 3)
 			setcolor(nd.rdiff, .0, .0, .0);
 		else
@@ -497,7 +499,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		SDfreeCache(nd.sd);
 		return(1);
 	}
-	if (r->rod < .0) {			/* perturb normal towards hit */
+	if (!hitfront) {			/* perturb normal towards hit */
 		nd.pnorm[0] = -nd.pnorm[0];
 		nd.pnorm[1] = -nd.pnorm[1];
 		nd.pnorm[2] = -nd.pnorm[2];
@@ -510,18 +512,18 @@ m_bsdf(OBJREC *m, RAY *r)
 	copycolor(ctmp, nd.rdiff);
 	addcolor(ctmp, nd.runsamp);
 	if (bright(ctmp) > FTINY) {		/* ambient from reflection */
-		if (r->rod < .0)
+		if (!hitfront)
 			flipsurface(r);
 		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);
-		if (r->rod < .0)
+		if (!hitfront)
 			flipsurface(r);
 	}
 	copycolor(ctmp, nd.tdiff);
 	addcolor(ctmp, nd.tunsamp);
 	if (bright(ctmp) > FTINY) {		/* ambient from other side */
 		FVECT  bnorm;
-		if (r->rod > .0)
+		if (hitfront)
 			flipsurface(r);
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
@@ -534,7 +536,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		} else
 			multambient(ctmp, r, bnorm);
 		addcolor(r->rcol, ctmp);
-		if (r->rod > .0)
+		if (hitfront)
 			flipsurface(r);
 	}
 						/* add direct component */
@@ -546,7 +548,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		direct(r, dir_brdf, &nd);	/* reflection first */
 		VCOPY(vtmp, r->rop);		/* offset for transmitted */
 		VSUM(r->rop, vtmp, r->ron, -nd.thick);
-		direct(r, dir_btdf, &nd);
+		direct(r, dir_btdf, &nd);	/* separate transmission */
 		VCOPY(r->rop, vtmp);
 	}
 						/* clean up */
