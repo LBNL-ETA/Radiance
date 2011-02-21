@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.7 2011/02/19 23:42:09 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.8 2011/02/21 22:50:37 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -8,6 +8,11 @@
  *  A material is oriented in right-hand coordinate system with X-axis
  *	in the surface plane pointed to the right as seen from the front.
  *	This means the Y-axis is "up" and the Z-axis is the surface normal.
+ *
+ *  Note that we reverse the identification of "front" and "back" from
+ *	the conventions used in WINDOW 6.  "Front" in our library points
+ *	in the +Z direction, towards the interior of the space rather
+ *	than the exterior.
  *
  *  BSDF vectors always oriented away from surface, even when "incident."
  *

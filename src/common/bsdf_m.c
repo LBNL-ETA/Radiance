@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.5 2011/02/19 23:42:09 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.6 2011/02/21 22:50:37 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -366,24 +366,25 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	int		i;
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
-	if (!strcasecmp(sdata, "Transmission Front")) {
+	if (!strcasecmp(sdata, "Transmission Back") || (sd->tf == NULL &&
+			!strcasecmp(sdata, "Transmission Front"))) {
 		if (sd->tf != NULL)
 			SDfreeSpectralDF(sd->tf);
 		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;
 		df = sd->tf;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
-		if (sd->rf != NULL)
-			SDfreeSpectralDF(sd->rf);
-		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
-			return RC_MEMERR;
-		df = sd->rf;
-	} else if (!strcasecmp(sdata, "Reflection Back")) {
-		if (sd->rb != NULL)
+		if (sd->rb != NULL)	/* note back-front reversal */
 			SDfreeSpectralDF(sd->rb);
 		if ((sd->rb = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;
 		df = sd->rb;
+	} else if (!strcasecmp(sdata, "Reflection Back")) {
+		if (sd->rf != NULL)	/* note front-back reversal */
+			SDfreeSpectralDF(sd->rf);
+		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
+			return RC_MEMERR;
+		df = sd->rf;
 	} else
 		return RC_FAIL;
 	/* XXX should also check "ScatteringDataType" for consistency? */
