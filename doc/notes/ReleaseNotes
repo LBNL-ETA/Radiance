@@ -1785,3 +1785,5 @@ Added options to pvalue to note other color spaces on reverse conversion.
 Thanks to Erich Philips for the feature request.
 
 Added BSDF data-driven material type with full sampling support.
+
+Added BRDF calculations to genBSDF.

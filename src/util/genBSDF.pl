@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.8 2011/01/29 16:44:01 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.9 2011/02/21 22:48:51 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -7,7 +7,7 @@
 #
 use strict;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-dim xmin xmax ymin ymax zmin zmax][{+|-}mgf][{+|-}geom] [input ..]\n";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom] [input ..]\n";
 	exit 1;
 }
 my $td = `mktemp -d /tmp/genBSDF.XXXXXX`;
@@ -16,6 +16,8 @@ my $nsamp = 1000;
 my $mgfin = 0;
 my $geout = 1;
 my $nproc = 1;
+my $doforw = 0;
+my $doback = 1;
 my @dim;
 # Get options
 while ($#ARGV >= 0) {
@@ -23,6 +25,10 @@ while ($#ARGV >= 0) {
 		$mgfin = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]g/) {
 		$geout = ("$ARGV[0]" =~ /^\+/);
+	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
+		$doforw = ("$ARGV[0]" =~ /^\+/);
+	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
+		$doback = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" eq "-c") {
 		$nsamp = $ARGV[1];
 		shift @ARGV;
@@ -40,6 +46,8 @@ while ($#ARGV >= 0) {
 	}
 	shift @ARGV;
 }
+# Check that we're actually being asked to do something
+die "Must have at least one of +forward or +backward" if (!$doforw && !$doback);
 # Get scene description and dimensions
 my $radscn = "$td/device.rad";
 my $mgfscn = "$td/device.mgf";
@@ -57,20 +65,27 @@ if ($#dim != 5) {
 	@dim = split ' ', `getbbox -h $radscn`;
 }
 print STDERR "Warning: Device extends into room\n" if ($dim[5] > 1e-5);
-# Add receiver surface (rectangle)
-my $modnm="_receiver_black_";
+# Add receiver surfaces (rectangular)
+my $bmodnm="receiver_behind";
+my $fmodnm="receiver_face";
 open(RADSCN, ">> $radscn");
-print RADSCN "void glow $modnm\n0\n0\n4 0 0 0 0\n\n";
-print RADSCN "$modnm polygon _receiver_\n0\n0\n12\n";
-print RADSCN "\t",$dim[0],"\t",$dim[2],"\t",$dim[5]+1e-5,"\n";
-print RADSCN "\t",$dim[0],"\t",$dim[3],"\t",$dim[5]+1e-5,"\n";
-print RADSCN "\t",$dim[1],"\t",$dim[3],"\t",$dim[5]+1e-5,"\n";
-print RADSCN "\t",$dim[1],"\t",$dim[2],"\t",$dim[5]+1e-5,"\n";
+print RADSCN "void glow $fmodnm\n0\n0\n4 0 0 0 0\n\n";
+print RADSCN "$fmodnm polygon f_receiver\n0\n0\n12\n";
+print RADSCN "\t",$dim[0],"\t",$dim[2],"\t",$dim[5]+2e-5,"\n";
+print RADSCN "\t",$dim[0],"\t",$dim[3],"\t",$dim[5]+2e-5,"\n";
+print RADSCN "\t",$dim[1],"\t",$dim[3],"\t",$dim[5]+2e-5,"\n";
+print RADSCN "\t",$dim[1],"\t",$dim[2],"\t",$dim[5]+2e-5,"\n";
+print RADSCN "void glow $bmodnm\n0\n0\n4 0 0 0 0\n\n";
+print RADSCN "$bmodnm polygon b_receiver\n0\n0\n12\n";
+print RADSCN "\t",$dim[1],"\t",$dim[2],"\t",$dim[4]-2e-5,"\n";
+print RADSCN "\t",$dim[1],"\t",$dim[3],"\t",$dim[4]-2e-5,"\n";
+print RADSCN "\t",$dim[0],"\t",$dim[3],"\t",$dim[4]-2e-5,"\n";
+print RADSCN "\t",$dim[0],"\t",$dim[2],"\t",$dim[4]-2e-5,"\n";
 close RADSCN;
 # Generate octree
 system "oconv -w $radscn > $octree";
 die "Could not compile scene\n" if ( $? );
-# Set up sampling
+# Set up sampling of interior portal
 # Kbin to produce incident direction in full Klems basis with (x1,x2) randoms
 my $tcal = '
 DEGREE : PI/180;
@@ -85,14 +100,14 @@ Kcol = Kbin - Kaccum(Krow-1);
 Kazi = 360*DEGREE * (Kcol + (.5 - x2)) / Knaz(Krow);
 Kpol = DEGREE * (x1*Kpola(Krow) + (1-x1)*Kpola(Krow-1));
 sin_kpol = sin(Kpol);
-Dx = -cos(Kazi)*sin_kpol;
+Dx = cos(Kazi)*sin_kpol;
 Dy = sin(Kazi)*sin_kpol;
 Dz = sqrt(1 - sin_kpol*sin_kpol);
 KprojOmega = PI * if(Kbin-.5,
 	(sq(cos(Kpola(Krow-1)*DEGREE)) - sq(cos(Kpola(Krow)*DEGREE)))/Knaz(Krow),
 	1 - sq(cos(Kpola(1)*DEGREE)));
 ';
-# Compute Klems bin from exiting ray direction
+# Compute Klems bin from exiting ray direction (forward or backward)
 my $kcal = '
 DEGREE : PI/180;
 Acos(x) : 1/DEGREE * if(x-1, 0, if(-1-x, 0, acos(x)));
@@ -115,26 +130,53 @@ kbin2(pol,azi) = select(kfindrow(1, pol),
 		kaccum(7) + kazn(azi,360/knaz(8)),
 		kaccum(8) + kazn(azi,360/knaz(9))
 	);
-kbin = kbin2(Acos(Dz), Atan2(Dy, -Dx));
+kbin = if(Dz, kbin2(Acos(Dz),Atan2(Dy,Dx)), kbin2(Acos(-Dz),Atan2(-Dy,-Dx)));
 ';
 my $ndiv = 145;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + .5);
 my $ny = int($nsamp/$nx + .5);
 $nsamp = $nx * $ny;
 # Compute scattering data using rtcontrib
-my $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
+my @tfarr;
+my @rfarr;
+my @tbarr;
+my @rbarr;
+my $cmd;
+my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
+my $rtcmd = "rtcontrib -h -ff -fo -n $nproc -c $nsamp " .
+	"-e '$kcal' -b kbin -bn $ndiv " .
+	"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $rtargs $octree";
+my $rccmd = "rcalc -e '$tcal' " .
+	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-.999,$ndiv)' " .
+	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega'};
+if ( $doforw ) {
+$cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
 	"-e 'zp:$dim[4]-1e-5' " .
 	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
 	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
-	"| rtcontrib -h -ff -n $nproc -c $nsamp -e '$kcal' -b kbin -bn $ndiv " .
-	"-m $modnm -w -ab 5 -ad 700 -lw 3e-6 $octree " .
-	"| rcalc -e '$tcal' " .
-	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-.999,$ndiv)' " .
-	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega'};
-my @darr = `$cmd`;
-die "Failure running: $cmd\n" if ( $? );
+	"| $rtcmd";
+system "$cmd" || die "Failure running: $cmd\n";
+@tfarr = `$rccmd $td/$fmodnm.flt`;
+die "Failure running: $rccmd $td/$fmodnm.flt\n" if ( $? );
+@rfarr = `$rccmd $td/$bmodnm.flt`;
+die "Failure running: $rccmd $td/$bmodnm.flt\n" if ( $? );
+}
+if ( $doback ) {
+$cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
+	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
+	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
+	"-e 'zp:$dim[5]+1e-5' " .
+	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
+	q{-e '$1=xp;$2=yp;$3=zp;$4=-Dx;$5=-Dy;$6=-Dz' } .
+	"| $rtcmd";
+system "$cmd" || die "Failure running: $cmd\n";
+@tbarr = `$rccmd $td/$bmodnm.flt`;
+die "Failure running: $rccmd $td/$bmodnm.flt\n" if ( $? );
+@rbarr = `$rccmd $td/$fmodnm.flt`;
+die "Failure running: $rccmd $td/$fmodnm.flt\n" if ( $? );
+}
 # Output XML prologue
 print
 '<?xml version="1.0" encoding="UTF-8"?>
@@ -237,7 +279,9 @@ print '			</Material>
 			</AngleBasisBlock>
 		</AngleBasis>
 	</DataDefinition>
-	<WavelengthData>
+';
+if ( $doforw ) {
+print '		<WavelengthData>
 		<LayerNumber>System</LayerNumber>
 		<Wavelength unit="Integral">Visible</Wavelength>
 		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
@@ -249,19 +293,93 @@ print '			</Material>
 			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Output computed data (transposed order)
+# Output front transmission (transposed order)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print $darr[$ndiv*$id + $od];
+		print $tfarr[$ndiv*$id + $od];
 	}
 	print "\n";
 }
-# Output XML epilogue
 print
 '		</ScatteringData>
 	</WavelengthDataBlock>
 	</WavelengthData>
-</Layer>
+	<WavelengthData>
+		<LayerNumber>System</LayerNumber>
+		<Wavelength unit="Integral">Visible</Wavelength>
+		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
+		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
+		<WavelengthDataBlock>
+			<WavelengthDataDirection>Reflection Front</WavelengthDataDirection>
+			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
+			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
+			<ScatteringDataType>BRDF</ScatteringDataType>
+			<ScatteringData>
+';
+# Output front reflection (transposed order)
+for (my $od = 0; $od < $ndiv; $od++) {
+	for (my $id = 0; $id < $ndiv; $id++) {
+		print $rfarr[$ndiv*$id + $od];
+	}
+	print "\n";
+}
+print
+'		</ScatteringData>
+	</WavelengthDataBlock>
+	</WavelengthData>
+';
+}
+if ( $doback ) {
+print '		<WavelengthData>
+		<LayerNumber>System</LayerNumber>
+		<Wavelength unit="Integral">Visible</Wavelength>
+		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
+		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
+		<WavelengthDataBlock>
+			<WavelengthDataDirection>Transmission Back</WavelengthDataDirection>
+			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
+			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
+			<ScatteringDataType>BTDF</ScatteringDataType>
+			<ScatteringData>
+';
+# Output back transmission (transposed order)
+for (my $od = 0; $od < $ndiv; $od++) {
+	for (my $id = 0; $id < $ndiv; $id++) {
+		print $tbarr[$ndiv*$id + $od];
+	}
+	print "\n";
+}
+print
+'		</ScatteringData>
+	</WavelengthDataBlock>
+	</WavelengthData>
+	<WavelengthData>
+		<LayerNumber>System</LayerNumber>
+		<Wavelength unit="Integral">Visible</Wavelength>
+		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
+		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
+		<WavelengthDataBlock>
+			<WavelengthDataDirection>Reflection Back</WavelengthDataDirection>
+			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
+			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
+			<ScatteringDataType>BRDF</ScatteringDataType>
+			<ScatteringData>
+';
+# Output back reflection (transposed order)
+for (my $od = 0; $od < $ndiv; $od++) {
+	for (my $id = 0; $id < $ndiv; $id++) {
+		print $rbarr[$ndiv*$id + $od];
+	}
+	print "\n";
+}
+print
+'		</ScatteringData>
+	</WavelengthDataBlock>
+	</WavelengthData>
+';
+}
+# Output XML epilogue
+print '</Layer>
 </Optical>
 </WindowElement>
 ';

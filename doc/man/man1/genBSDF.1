@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.2 2010/09/04 15:19:28 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.3 2011/02/21 22:48:50 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -8,6 +8,10 @@ genBSDF - generate BSDF description from Radiance or MGF input
 .B "\-c Nsamp"
 ][
 .B "\-n Nproc"
+][
+.B "{+|-}forward"
+][
+.B "{+|-}backward"
 ][
 .B "{+|-}mgf"
 ][
@@ -20,7 +24,7 @@ genBSDF - generate BSDF description from Radiance or MGF input
 ]
 .SH DESCRIPTION
 .I GenBSDF
-computes a bidirectional transmittance distribution function from
+computes a bidirectional scattering distribution function from
 a Radiance or MGF scene description given on the input.
 The program assumes the input is in Radiance format unless the
 .I \+mgf
@@ -29,8 +33,20 @@ The output conforms to the LBNL Window 6 XML standard for BSDF data,
 and will include an MGF representation of the input geometry if the
 .I \+geom
 option is given.
-(This is currently the default, and may be switche off using
+(This is the default, and may be switched off using
 .I \-geom.)\0
+.PP
+Normally,
+.I genBSDF
+computes components needed by a backwards ray-tracing process,
+.I \+backward.
+If both forward and backward (front and back) distributions are needed, the
+.I \+forward
+option may be given.
+To turn off backward components, use the
+.I \-backward
+option.
+Computing both components takes about twice as long as one component.
 .PP
 The geometry must fit a rectangular profile, whose width is along the X-axis,
 height is in the Y-axis, and depth is in the Z-axis.
