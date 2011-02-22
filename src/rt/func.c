@@ -1,13 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.23 2009/12/12 00:03:42 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.24 2011/02/22 16:45:12 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
  */
 
 #include "copyright.h"
-
-#include <math.h>
 
 #include  "ray.h"
 #include  "paths.h"

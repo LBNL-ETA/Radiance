@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2meta.c,v 2.11 2003/11/17 13:20:10 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2meta.c,v 2.12 2011/02/22 16:45:12 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Metafile 2-d graphics
@@ -12,7 +12,7 @@ static const char	RCSid[] = "$Id: mgf2meta.c,v 2.11 2003/11/17 13:20:10 schorsch
 
 #include "meta.h"
 #include "random.h"
-#include "mgflib/parser.h"
+#include "mgf_parser.h"
 #include "plocate.h" /* XXX shouldn't this rather be in rtmath.h? */
 
 #define MSIZE	((1<<14)-1)

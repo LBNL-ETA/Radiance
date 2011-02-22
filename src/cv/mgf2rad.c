@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.28 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.29 2011/02/22 16:45:12 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -11,7 +11,7 @@ static const char	RCSid[] = "$Id: mgf2rad.c,v 2.28 2003/11/15 17:54:06 schorsch 
 #include <string.h>
 
 #include "platform.h"
-#include "mgflib/parser.h"
+#include "mgf_parser.h"
 #include "color.h"
 #include "tmesh.h"
 
