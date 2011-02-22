@@ -29,3 +29,6 @@ Fixed header on VRML 1.0 output of mgf2inv.
 Added Philippe Bekaert's performance improvements to lu_hash() and lu_find().
 
 Added client data pointers to context structures (vertex, color, material).
+
+Subsumed MGF library into main Radiance distribution, in src/cv and src/common
+directories.  Files from the library proper are named src/common/mgf_*.[hc].
