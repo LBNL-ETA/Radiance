@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.3 2011/02/21 22:48:50 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.4 2011/02/22 22:51:23 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -8,6 +8,8 @@ genBSDF - generate BSDF description from Radiance or MGF input
 .B "\-c Nsamp"
 ][
 .B "\-n Nproc"
+][
+.B "\-r 'rtcontrib opts...'"
 ][
 .B "{+|-}forward"
 ][
@@ -79,12 +81,18 @@ option, which specifies the number of simultaneous
 .I rtrace(1)
 processes to run in
 .I rtcontrib(1).
+The
+.I \-r
+option may be used to specify a set of quoted arguments to be
+included on the
+.I rtcontrib
+command line.
 .SH EXAMPLE
 To create a BSDF description including geometry from a set of venetian blinds:
 .IP "" .2i
 genblinds blind_white blind1 .07 3 1.5 30 40 | xform -rz -90 -rx 90 > blind1.rad
 .br
-genBSDF blind_white.mat glazing.rad blind1.rad > blind1.xml
+genBSDF -r @rtc.opt blind_white.mat glazing.rad blind1.rad > blind1.xml
 .SH NOTES
 Currently,
 .I genBSDF

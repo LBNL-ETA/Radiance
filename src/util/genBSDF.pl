@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.9 2011/02/21 22:48:51 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.10 2011/02/22 22:51:23 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -13,6 +13,7 @@ sub userror {
 my $td = `mktemp -d /tmp/genBSDF.XXXXXX`;
 chomp $td;
 my $nsamp = 1000;
+my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
 my $mgfin = 0;
 my $geout = 1;
 my $nproc = 1;
@@ -23,6 +24,9 @@ my @dim;
 while ($#ARGV >= 0) {
 	if ("$ARGV[0]" =~ /^[-+]m/) {
 		$mgfin = ("$ARGV[0]" =~ /^\+/);
+	} elsif ("$ARGV[0]" eq "-r") {
+		$rtargs = "$rtargs $ARGV[1]";
+		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]g/) {
 		$geout = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
@@ -66,21 +70,13 @@ if ($#dim != 5) {
 }
 print STDERR "Warning: Device extends into room\n" if ($dim[5] > 1e-5);
 # Add receiver surfaces (rectangular)
-my $bmodnm="receiver_behind";
 my $fmodnm="receiver_face";
+my $bmodnm="receiver_behind";
 open(RADSCN, ">> $radscn");
-print RADSCN "void glow $fmodnm\n0\n0\n4 0 0 0 0\n\n";
-print RADSCN "$fmodnm polygon f_receiver\n0\n0\n12\n";
-print RADSCN "\t",$dim[0],"\t",$dim[2],"\t",$dim[5]+2e-5,"\n";
-print RADSCN "\t",$dim[0],"\t",$dim[3],"\t",$dim[5]+2e-5,"\n";
-print RADSCN "\t",$dim[1],"\t",$dim[3],"\t",$dim[5]+2e-5,"\n";
-print RADSCN "\t",$dim[1],"\t",$dim[2],"\t",$dim[5]+2e-5,"\n";
-print RADSCN "void glow $bmodnm\n0\n0\n4 0 0 0 0\n\n";
-print RADSCN "$bmodnm polygon b_receiver\n0\n0\n12\n";
-print RADSCN "\t",$dim[1],"\t",$dim[2],"\t",$dim[4]-2e-5,"\n";
-print RADSCN "\t",$dim[1],"\t",$dim[3],"\t",$dim[4]-2e-5,"\n";
-print RADSCN "\t",$dim[0],"\t",$dim[3],"\t",$dim[4]-2e-5,"\n";
-print RADSCN "\t",$dim[0],"\t",$dim[2],"\t",$dim[4]-2e-5,"\n";
+print RADSCN "void glow $fmodnm\n0\n0\n4 1 1 1 0\n\n";
+print RADSCN "$fmodnm source f_receiver\n0\n0\n4 0 0 1 180\n";
+print RADSCN "void glow $bmodnm\n0\n0\n4 1 1 1 0\n\n";
+print RADSCN "$bmodnm source b_receiver\n0\n0\n4 0 0 -1 180\n";
 close RADSCN;
 # Generate octree
 system "oconv -w $radscn > $octree";
@@ -142,7 +138,6 @@ my @rfarr;
 my @tbarr;
 my @rbarr;
 my $cmd;
-my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
 my $rtcmd = "rtcontrib -h -ff -fo -n $nproc -c $nsamp " .
 	"-e '$kcal' -b kbin -bn $ndiv " .
 	"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $rtargs $octree";
@@ -153,9 +148,9 @@ if ( $doforw ) {
 $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
-	"-e 'zp:$dim[4]-1e-5' " .
+	"-e 'zp:$dim[4]' " .
 	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
-	q{-e '$1=xp;$2=yp;$3=zp;$4=Dx;$5=Dy;$6=Dz' } .
+	q{-e '$1=xp-Dx;$2=yp-Dy;$3=zp-Dz;$4=Dx;$5=Dy;$6=Dz' } .
 	"| $rtcmd";
 system "$cmd" || die "Failure running: $cmd\n";
 @tfarr = `$rccmd $td/$fmodnm.flt`;
@@ -167,9 +162,9 @@ if ( $doback ) {
 $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
-	"-e 'zp:$dim[5]+1e-5' " .
+	"-e 'zp:$dim[5]' " .
 	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
-	q{-e '$1=xp;$2=yp;$3=zp;$4=-Dx;$5=-Dy;$6=-Dz' } .
+	q{-e '$1=xp+Dx;$2=yp+Dy;$3=zp+Dz;$4=-Dx;$5=-Dy;$6=-Dz' } .
 	"| $rtcmd";
 system "$cmd" || die "Failure running: $cmd\n";
 @tbarr = `$rccmd $td/$bmodnm.flt`;
