@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.6 2011/02/20 17:43:43 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.7 2011/02/22 05:41:02 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -96,6 +96,37 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp)
 	normalize(vres);
 }
 
+/* Evaluate BSDF for direct component, returning true if OK to proceed */
+static int
+direct_bsdf_OK(COLOR cval, FVECT ldir, BSDFDAT *ndp)
+{
+	FVECT	vsrc, vjit;
+	SDValue	sv;
+	SDError	ec;
+					/* transform source direction */
+	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
+		return(0);
+					/* jitter query direction */
+	bsdf_jitter(vjit, ndp);
+					/* avoid indirect over-counting */
+	if (ndp->thick != .0 && ndp->pr->crtype & (SPECULAR|AMBIENT) &&
+				vsrc[2] > .0 ^ vjit[2] > .0) {
+		double	dx = vsrc[0] + vjit[0];
+		double	dy = vsrc[1] + vjit[1];
+		if (dx*dx + dy*dy <= ndp->sr_vpsa*ndp->sr_vpsa)
+			return(0);
+	}
+	ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
+	if (ec)
+		objerror(ndp->mp, USER, transSDError(ec));
+
+	if (sv.cieY <= FTINY)		/* not worth using? */
+		return(0);
+					/* else we're good to go */
+	cvt_sdcolor(cval, &sv);
+	return(1);
+}
+
 /* Compute source contribution for BSDF (reflected & transmitted) */
 static void
 dir_bsdf(
@@ -106,10 +137,6 @@ dir_bsdf(
 )
 {
 	BSDFDAT		*np = (BSDFDAT *)nnp;
-	SDError		ec;
-	SDValue		sv;
-	FVECT		vsrc;
-	FVECT		vjit;
 	double		ldot;
 	double		dtmp;
 	COLOR		ctmp;
@@ -141,21 +168,14 @@ dir_bsdf(
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
-	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
+	if (!direct_bsdf_OK(ctmp, ldir, np))
 		return;
-	bsdf_jitter(vjit, np);
-	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
-	if (ec)
-		objerror(np->mp, USER, transSDError(ec));
-
-	if (sv.cieY <= FTINY)		/* not worth using? */
-		return;
-	cvt_sdcolor(ctmp, &sv);
 	if (ldot > .0) {		/* pattern only diffuse reflection */
 		COLOR	ctmp1, ctmp2;
 		dtmp = (np->pr->rod > .0) ? np->sd->rLambFront.cieY
 					: np->sd->rLambBack.cieY;
-		dtmp /= PI * sv.cieY;	/* diffuse fraction */
+					/* diffuse fraction */
+		dtmp /= PI * bright(ctmp);
 		copycolor(ctmp2, np->pr->pcol);
 		scalecolor(ctmp2, dtmp);
 		setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
@@ -180,10 +200,6 @@ dir_brdf(
 )
 {
 	BSDFDAT		*np = (BSDFDAT *)nnp;
-	SDError		ec;
-	SDValue		sv;
-	FVECT		vsrc;
-	FVECT		vjit;
 	double		ldot;
 	double		dtmp;
 	COLOR		ctmp, ctmp1, ctmp2;
@@ -207,20 +223,12 @@ dir_brdf(
 	/*
 	 *  Compute reflection coefficient using BSDF.
 	 */
-	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
+	if (!direct_bsdf_OK(ctmp, ldir, np))
 		return;
-	bsdf_jitter(vjit, np);
-	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
-	if (ec)
-		objerror(np->mp, USER, transSDError(ec));
-
-	if (sv.cieY <= FTINY)		/* not worth using? */
-		return;
-	cvt_sdcolor(ctmp, &sv);
 					/* pattern only diffuse reflection */
 	dtmp = (np->pr->rod > .0) ? np->sd->rLambFront.cieY
 				: np->sd->rLambBack.cieY;
-	dtmp /= PI * sv.cieY;		/* diffuse fraction */
+	dtmp /= PI * bright(ctmp);	/* diffuse fraction */
 	copycolor(ctmp2, np->pr->pcol);
 	scalecolor(ctmp2, dtmp);
 	setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
@@ -241,10 +249,6 @@ dir_btdf(
 )
 {
 	BSDFDAT		*np = (BSDFDAT *)nnp;
-	SDError		ec;
-	SDValue		sv;
-	FVECT		vsrc;
-	FVECT		vjit;
 	double		ldot;
 	double		dtmp;
 	COLOR		ctmp;
@@ -268,16 +272,8 @@ dir_btdf(
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
-	if (SDmapDir(vsrc, np->toloc, ldir) != SDEnone)
+	if (!direct_bsdf_OK(ctmp, ldir, np))
 		return;
-	bsdf_jitter(vjit, np);
-	ec = SDevalBSDF(&sv, vjit, vsrc, np->sd);
-	if (ec)
-		objerror(np->mp, USER, transSDError(ec));
-
-	if (sv.cieY <= FTINY)		/* not worth using? */
-		return;
-	cvt_sdcolor(ctmp, &sv);
 					/* full pattern on transmission */
 	multcolor(ctmp, np->pr->pcol);
 	dtmp = -ldot * omega;
@@ -426,7 +422,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		return(1);			/* or shadow */
 	}
 						/* check other rays to pass */
-	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
+	if (nd.thick != .0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
 				nd.thick > .0 ^ hitfront)) {
 		raytrans(r);			/* hide our proxy */
 		return(1);
