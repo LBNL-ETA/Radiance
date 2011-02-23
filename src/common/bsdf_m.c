@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.6 2011/02/21 22:50:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.7 2011/02/23 21:58:31 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -362,12 +362,14 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	SDSpectralDF	*df;
 	SDMat		*dp;
 	char		*sdata;
+	int		tback;
 	int		inbi, outbi;
 	int		i;
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
-	if (!strcasecmp(sdata, "Transmission Back") || (sd->tf == NULL &&
-			!strcasecmp(sdata, "Transmission Front"))) {
+	if ((tback = !strcasecmp(sdata, "Transmission Back")) ||
+			(sd->tf == NULL &&
+				!strcasecmp(sdata, "Transmission Front"))) {
 		if (sd->tf != NULL)
 			SDfreeSpectralDF(sd->tf);
 		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
@@ -422,10 +424,17 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	dp->ib_priv = &abase_list[inbi];
 	dp->ob_priv = &abase_list[outbi];
 	if (df == sd->tf) {
-		dp->ib_vec = &ab_getvecR;
-		dp->ib_ndx = &ab_getndxR;
-		dp->ob_vec = &ab_getvec;
-		dp->ob_ndx = &ab_getndx;
+		if (tback) {
+			dp->ib_vec = &ab_getvecR;
+			dp->ib_ndx = &ab_getndxR;
+			dp->ob_vec = &ab_getvec;
+			dp->ob_ndx = &ab_getndx;
+		} else {
+			dp->ib_vec = &ab_getvec;
+			dp->ib_ndx = &ab_getndx;
+			dp->ob_vec = &ab_getvecR;
+			dp->ob_ndx = &ab_getndxR;
+		}
 	} else if (df == sd->rf) {
 		dp->ib_vec = &ab_getvec;
 		dp->ib_ndx = &ab_getndx;

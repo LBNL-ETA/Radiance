@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.8 2011/02/21 22:50:37 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.9 2011/02/23 21:58:31 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -33,7 +33,7 @@ extern "C" {
 #define	SDnameLn	128		/* maximum BSDF name length */
 #define	SDmaxCh		3		/* maximum # spectral channels */
 
-/* Component flags for SDsampBSDF() and SDhemiScatter() */
+/* Component flags for SDsampBSDF() and SDdirectHemi() */
 #define	SDsampR		0x1		/* include reflection */
 #define	SDsampT		0x2		/* include transmission */
 #define	SDsampS		0x3		/* include scattering (R+T) */
@@ -44,7 +44,7 @@ extern "C" {
 #define	SDsampSpS	0x7		/* include non-diffuse scattering */
 #define	SDsampAll	0xF		/* include everything */
 
-/* Projected solid angle query flags fos SDsizeBSDF() */
+/* Projected solid angle query flags for SDsizeBSDF() */
 #define SDqueryVal	0x0		/* query single value */
 #define	SDqueryMin	0x1		/* query minimum proj. solid angle */
 #define	SDqueryMax	0x2		/* query maximum proj. solid angle */
