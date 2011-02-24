@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.11 2011/02/24 20:14:26 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.12 2011/02/24 20:27:00 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -7,7 +7,7 @@
 #
 use strict;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom] [input ..]\n";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-r \"ropts\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom] [input ..]\n";
 	exit 1;
 }
 my $td = `mktemp -d /tmp/genBSDF.XXXXXX`;
