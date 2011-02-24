@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.7 2011/02/23 21:58:31 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.8 2011/02/24 20:14:26 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -157,9 +157,9 @@ SDnewMatrix(int ni, int no)
 /* Free a BSDF matrix */
 #define	SDfreeMatrix		free
 
-/* get vector for this angle basis index */
+/* get vector for this angle basis index (front exiting) */
 static int
-ab_getvec(FVECT v, int ndx, double randX, void *p)
+fo_getvec(FVECT v, int ndx, double randX, void *p)
 {
 	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
 	double		rx[2];
@@ -181,9 +181,9 @@ ab_getvec(FVECT v, int ndx, double randX, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the given vector */
+/* get index corresponding to the given vector (front exiting) */
 static int
-ab_getndx(const FVECT v, void *p)
+fo_getndx(const FVECT v, void *p)
 {
 	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
 	int	li, ndx;
@@ -210,9 +210,9 @@ ab_getndx(const FVECT v, void *p)
 /* compute square of real value */
 static double sq(double x) { return x*x; }
 
-/* get projected solid angle for this angle basis index */
+/* get projected solid angle for this angle basis index (universal) */
 static double
-ab_getohm(int ndx, void *p)
+io_getohm(int ndx, void *p)
 {
 	static int	last_li = -1;
 	static double	last_ohm;
@@ -235,13 +235,11 @@ ab_getohm(int ndx, void *p)
 				(double)ab->lat[li].nphis;
 }
 
-/* get reverse vector for this angle basis index */
+/* get vector for this angle basis index (back incident) */
 static int
-ab_getvecR(FVECT v, int ndx, double randX, void *p)
+bi_getvec(FVECT v, int ndx, double randX, void *p)
 {
-	int	na = (*(ANGLE_BASIS *)p).nangles;
-
-	if (!ab_getvec(v, ndx, randX, p))
+	if (!fo_getvec(v, ndx, randX, p))
 		return RC_FAIL;
 
 	v[0] = -v[0];
@@ -251,9 +249,9 @@ ab_getvecR(FVECT v, int ndx, double randX, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the reverse vector */
+/* get index corresponding to the vector (back incident) */
 static int
-ab_getndxR(const FVECT v, void *p)
+bi_getndx(const FVECT v, void *p)
 {
 	FVECT  v2;
 	
@@ -261,7 +259,58 @@ ab_getndxR(const FVECT v, void *p)
 	v2[1] = -v[1];
 	v2[2] = -v[2];
 
-	return ab_getndx(v2, p);
+	return fo_getndx(v2, p);
+}
+
+/* get vector for this angle basis index (back exiting) */
+static int
+bo_getvec(FVECT v, int ndx, double randX, void *p)
+{
+	if (!fo_getvec(v, ndx, randX, p))
+		return RC_FAIL;
+
+	v[2] = -v[2];
+
+	return RC_GOOD;
+}
+
+/* get index corresponding to the vector (back exiting) */
+static int
+bo_getndx(const FVECT v, void *p)
+{
+	FVECT  v2;
+	
+	v2[0] = v[0];
+	v2[1] = v[1];
+	v2[2] = -v[2];
+
+	return fo_getndx(v2, p);
+}
+
+/* get vector for this angle basis index (front incident) */
+static int
+fi_getvec(FVECT v, int ndx, double randX, void *p)
+{
+	if (!fo_getvec(v, ndx, randX, p))
+		return RC_FAIL;
+
+	v[0] = -v[0];
+	v[1] = -v[1];
+
+	return RC_GOOD;
+}
+
+/* get index corresponding to the vector (front incident) */
+static int
+fi_getndx(const FVECT v, void *p)
+{
+	FVECT  v2;
+	
+	v2[0] = -v[0];
+	v2[1] = -v[1];
+	v2[2] = v[2];
+
+	return fo_getndx(v2, p);
 }
 
 /* load custom BSDF angle basis */
@@ -362,12 +411,15 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	SDSpectralDF	*df;
 	SDMat		*dp;
 	char		*sdata;
-	int		tback;
+	int		tfront;
 	int		inbi, outbi;
 	int		i;
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
-	if ((tback = !strcasecmp(sdata, "Transmission Back")) ||
+	/*
+	 * Remember that front and back are reversed from WINDOW 6 orientations
+	 */
+	if ((tfront = !strcasecmp(sdata, "Transmission Back")) ||
 			(sd->tf == NULL &&
 				!strcasecmp(sdata, "Transmission Front"))) {
 		if (sd->tf != NULL)
@@ -424,30 +476,30 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	dp->ib_priv = &abase_list[inbi];
 	dp->ob_priv = &abase_list[outbi];
 	if (df == sd->tf) {
-		if (tback) {
-			dp->ib_vec = &ab_getvecR;
-			dp->ib_ndx = &ab_getndxR;
-			dp->ob_vec = &ab_getvec;
-			dp->ob_ndx = &ab_getndx;
+		if (tfront) {
+			dp->ib_vec = &fi_getvec;
+			dp->ib_ndx = &fi_getndx;
+			dp->ob_vec = &bo_getvec;
+			dp->ob_ndx = &bo_getndx;
 		} else {
-			dp->ib_vec = &ab_getvec;
-			dp->ib_ndx = &ab_getndx;
-			dp->ob_vec = &ab_getvecR;
-			dp->ob_ndx = &ab_getndxR;
+			dp->ib_vec = &bi_getvec;
+			dp->ib_ndx = &bi_getndx;
+			dp->ob_vec = &fo_getvec;
+			dp->ob_ndx = &fo_getndx;
 		}
 	} else if (df == sd->rf) {
-		dp->ib_vec = &ab_getvec;
-		dp->ib_ndx = &ab_getndx;
-		dp->ob_vec = &ab_getvec;
-		dp->ob_ndx = &ab_getndx;
+		dp->ib_vec = &fi_getvec;
+		dp->ib_ndx = &fi_getndx;
+		dp->ob_vec = &fo_getvec;
+		dp->ob_ndx = &fo_getndx;
 	} else /* df == sd->rb */ {
-		dp->ib_vec = &ab_getvecR;
-		dp->ib_ndx = &ab_getndxR;
-		dp->ob_vec = &ab_getvecR;
-		dp->ob_ndx = &ab_getndxR;
+		dp->ib_vec = &bi_getvec;
+		dp->ib_ndx = &bi_getndx;
+		dp->ob_vec = &bo_getvec;
+		dp->ob_ndx = &bo_getndx;
 	}
-	dp->ib_ohm = &ab_getohm;
-	dp->ob_ohm = &ab_getohm;
+	dp->ib_ohm = &io_getohm;
+	dp->ob_ohm = &io_getohm;
 	df->comp[0].cspec[0] = c_dfcolor; /* XXX monochrome for now */
 	df->comp[0].dist = dp;
 	df->comp[0].func = &SDhandleMtx;

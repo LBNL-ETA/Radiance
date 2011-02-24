@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.10 2011/02/22 22:51:23 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.11 2011/02/24 20:14:26 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -106,6 +106,7 @@ KprojOmega = PI * if(Kbin-.5,
 # Compute Klems bin from exiting ray direction (forward or backward)
 my $kcal = '
 DEGREE : PI/180;
+abs(x) : if(x, x, -x);
 Acos(x) : 1/DEGREE * if(x-1, 0, if(-1-x, 0, acos(x)));
 posangle(a) : if(-a, a + 2*PI, a);
 Atan2(y,x) : 1/DEGREE * posangle(atan2(y,x));
@@ -126,7 +127,7 @@ kbin2(pol,azi) = select(kfindrow(1, pol),
 		kaccum(7) + kazn(azi,360/knaz(8)),
 		kaccum(8) + kazn(azi,360/knaz(9))
 	);
-kbin = if(Dz, kbin2(Acos(Dz),Atan2(Dy,Dx)), kbin2(Acos(-Dz),Atan2(-Dy,-Dx)));
+kbin = kbin2(Acos(abs(Dz)),Atan2(Dy,Dx));
 ';
 my $ndiv = 145;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + .5);
@@ -146,10 +147,10 @@ my $rccmd = "rcalc -e '$tcal' " .
 	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega'};
 if ( $doforw ) {
 $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
-	"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
-	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
+	"-e 'xp=(\$3+rand(.12*recno+288))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
+	"-e 'yp=(\$2+rand(.37*recno-44))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
 	"-e 'zp:$dim[4]' " .
-	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
+	q{-e 'Kbin=$1;x1=rand(2.75*recno+3.1);x2=rand(-2.01*recno-3.37)' } .
 	q{-e '$1=xp-Dx;$2=yp-Dy;$3=zp-Dz;$4=Dx;$5=Dy;$6=Dz' } .
 	"| $rtcmd";
 system "$cmd" || die "Failure running: $cmd\n";
@@ -164,7 +165,7 @@ $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
 	"-e 'zp:$dim[5]' " .
 	q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
-	q{-e '$1=xp+Dx;$2=yp+Dy;$3=zp+Dz;$4=-Dx;$5=-Dy;$6=-Dz' } .
+	q{-e '$1=xp-Dx;$2=yp-Dy;$3=zp+Dz;$4=Dx;$5=Dy;$6=-Dz' } .
 	"| $rtcmd";
 system "$cmd" || die "Failure running: $cmd\n";
 @tbarr = `$rccmd $td/$bmodnm.flt`;
