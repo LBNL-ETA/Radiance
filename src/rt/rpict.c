@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.83 2010/09/03 21:16:50 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.84 2011/02/25 06:51:50 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -91,7 +91,7 @@ double	specjitter = 1.;		/* specular sampling jitter */
 int  backvis = 1;			/* back face visibility */
 
 int  maxdepth = 7;			/* maximum recursion depth */
-double	minweight = 4e-3;		/* minimum ray weight */
+double	minweight = 1e-3;		/* minimum ray weight */
 
 char  *ambfile = NULL;			/* ambient file name */
 COLOR  ambval = BLKCOLOR;		/* ambient value */

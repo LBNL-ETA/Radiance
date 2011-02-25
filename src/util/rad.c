@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.104 2011/01/29 16:44:20 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.105 2011/02/25 06:51:51 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -772,7 +772,7 @@ lowqopts(			/* low quality rendering options */
 	d = ambval();
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
-	op = addarg(op, "-lr 6 -lw .01");
+	op = addarg(op, "-lr 6 -lw .003");
 }
 
 
@@ -850,7 +850,7 @@ medqopts(			/* medium quality rendering options */
 	d = ambval();
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
-	op = addarg(op, "-lr 8 -lw .002");
+	op = addarg(op, "-lr 8 -lw 1e-4");
 }
 
 
@@ -926,7 +926,7 @@ hiqopts(				/* high quality rendering options */
 	d = ambval();
 	sprintf(op, " -av %.2g %.2g %.2g", d, d, d);
 	op += strlen(op);
-	op = addarg(op, "-lr 12 -lw .0005");
+	op = addarg(op, "-lr 12 -lw 1e-5");
 }
 
 

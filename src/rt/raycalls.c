@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.19 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.20 2011/02/25 06:51:50 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -141,7 +141,7 @@ double	specjitter = 1.;		/* specular sampling jitter */
 int	backvis = 1;			/* back face visibility */
 
 int	maxdepth = 8;			/* maximum recursion depth */
-double	minweight = 2e-3;		/* minimum ray weight */
+double	minweight = 5e-4;		/* minimum ray weight */
 
 char	*ambfile = NULL;		/* ambient file name */
 COLOR	ambval = BLKCOLOR;		/* ambient value */
