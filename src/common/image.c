@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.35 2008/12/12 22:05:38 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.36 2011/03/02 17:24:55 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -326,7 +326,7 @@ int  px,
 int  py
 )
 {
-	register int  x, y;
+	int  x, y;
 
 	if (rp->rt & YMAJOR) {
 		x = px;
@@ -352,10 +352,10 @@ double  lx,
 double  ly
 )
 {
-	register int  x, y;
+	int  x, y;
 
-	x = lx * rp->xr;
-	y = ly * rp->yr;
+	x = (lx >= 0.0) ? (int)(lx * rp->xr) : -(int)(-lx * rp->xr);
+	y = (ly >= 0.0) ? (int)(ly * rp->yr) : -(int)(-ly * rp->yr);
 	if (rp->rt & XDECR)
 		x = rp->xr-1 - x;
 	if (rp->rt & YDECR)
@@ -498,7 +498,7 @@ VIEW  *vp
 )
 {
 	static char  vwstr[128];
-	register char  *cp = vwstr;
+	char  *cp = vwstr;
 
 	*cp = '\0';
 	if (vp->type != stdview.type) {
@@ -557,8 +557,8 @@ char  *s
 {
 	static char  *altname[]={NULL,VIEWSTR,"rpict","rview","rvu","rpiece","pinterp",NULL};
 	extern char  *progname;
-	register char  *cp;
-	register char  **an;
+	char  *cp;
+	char  **an;
 					/* add program name to list */
 	if (altname[0] == NULL) {
 		for (cp = progname; *cp; cp++)
