@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.22 2010/08/18 15:25:03 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.23 2011/03/07 20:49:19 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -30,7 +30,7 @@ extern "C" {
 #define	MINLDMAX	1.
 #define	DEFLDMAX	100.
 
-#define BRT2SCALE(l2)	(int)(M_LN2*TM_BRTSCALE*(l2) + ((l2)>0 ? .5 : -.5))
+#define BRT2SCALE(l2)	(int)(M_LN2*TM_BRTSCALE*(l2) + .5 - ((l2) < 0))
 
 #define HISTEP		16		/* steps in BRTSCALE for each bin */
 

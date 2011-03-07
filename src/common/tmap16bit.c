@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.8 2008/05/15 22:15:16 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.9 2011/03/07 20:49:19 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -235,7 +235,7 @@ tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs,
 						((1L<<LOGTABBITS)-1) ];
 			d -= M_LN2*(gv*nshft + nshft2);
 			d = (double)TM_BRTSCALE*(d + log_inpsf);
-			bi = (int)(d>0. ? d+.5 : d-.5);
+			bi = (int)(d + .5 - (d < 0.));
 		}
 							/* world luminance */
 		ls[i] = bi;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.34 2009/02/09 20:48:08 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.35 2011/03/07 20:49:19 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -180,9 +180,7 @@ double	lum
 #endif
 		return(TM_NOBRT);
 	d = TM_BRTSCALE*log(lum);
-	if (d > 0.)
-		return((TMbright)(d+.5));
-	return((TMbright)(d-.5));
+	return((TMbright)(d + .5 - (d < 0.)));
 }
 
 
