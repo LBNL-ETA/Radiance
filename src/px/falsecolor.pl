@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.2 2011/01/04 17:00:02 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.3 2011/03/23 19:33:29 greg Exp $
 
 use strict;
 use File::Temp qw/ tempdir /;
@@ -95,19 +95,32 @@ while ($#ARGV >= 0) {
 my $td = tempdir( CLEANUP => 1 );
 
 if ($needfile == 1 && $picture eq '-') {
-    $picture = $td . '/' . $picture;
+	# Pretend that $td/stdin.rad is the actual filename.
+    $picture = "$td/stdin.hdr";
     open(FHpic, ">$picture") or
             die("Unable to write to file $picture\n");
+	# Input is from STDIN: Capture to file.
+	while (<>) {
+		print FHpic;
+	}
     close(FHpic);
+
+	if ($cpict eq '-') {
+		$cpict =  "$td/stdin.hdr";
+	}
 }
 
 # Find a good scale for auto mode.
 if ($scale =~ m/[aA].*/) {
-    my $LogLmax = `phisto $picture| tail -2| sed -n '1s/[0-9]*\$//p'`;
+	my @histo = split(/\s/, `phisto $picture| tail -2`);
+	# e.g. $ phisto tests/richmond.hdr| tail -2
+	# 3.91267	14
+	# 3.94282	6
+	my $LogLmax = $histo[0];
     $scale = $mult / 179 * 10**$LogLmax;
 }
 
-my $pc0 = $td . '/pc0.cal';
+my $pc0 = "$td/pc0.cal";
 open(FHpc0, ">$pc0");
 print FHpc0 <<EndOfPC0;
 PI : 3.14159265358979323846 ;
@@ -174,7 +187,7 @@ go = if(in,clip($grnv),ga);
 bo = if(in,clip($bluv),ba);
 EndOfPC0
 
-my $pc1 = $td . '/pc1.cal';
+my $pc1 = "$td/pc1.cal";
 open(FHpc1, ">$pc1");
 print FHpc1 <<EndOfPC1;
 norm : mult/scale/le(1);
@@ -213,12 +226,12 @@ if ($decades > 0) {
 }
 
 # Colours in the legend
-my $scolpic = $td . '/scol.hdr';
+my $scolpic = "$td/scol.hdr";
 # Labels in the legend
-my $slabpic = $td . '/slab.hdr';
+my $slabpic = "$td/slab.hdr";
 my $cmd;
 
-if ($legwidth > 20 && $legheight > 40) {
+if (($legwidth > 20) && ($legheight > 40)) {
 	# Legend: Create the background colours
     $cmd = "pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v'";
     $cmd .= " -e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres'";
@@ -228,14 +241,13 @@ if ($legwidth > 20 && $legheight > 40) {
 	# Legend: Create the text labels
     my $sheight = floor($legheight / $ndivs + 0.5);
     my $text = "$label";
-    my $value;
-    my $i;
-    for ($i=0; $i<$ndivs; $i++) {
+    for (my $i=0; $i<$ndivs; $i++) {
         my $imap = ($ndivs - 0.5 - $i) / $ndivs;
+		my $value = $scale;
         if ($decades > 0) {
-            $value = $scale * 10**(($imap - 1) * $decades);
+            $value *= 10**(($imap - 1) * $decades);
         } else {
-            $value = $scale * $imap;
+            $value *= $imap;
         }
         # Have no more than 3 decimal places
         $value =~ s/(\.[0-9]{3})[0-9]*/$1/;
@@ -248,6 +260,8 @@ if ($legwidth > 20 && $legheight > 40) {
 	# Legend is too small to be legible. Don't bother doing one.
     $legwidth = 0;
     $legheight = 0;
+	# Create dummy colour scale and legend labels so we don't
+	# need to change the final command line.
     open(FHscolpic, ">$scolpic");
     print FHscolpic "\n-Y 1 +X 1\naaa\n";
     close(FHscolpic);
@@ -256,11 +270,15 @@ if ($legwidth > 20 && $legheight > 40) {
     close(FHslabpic);
 }
 
+# Legend: Invert the text labels (for dropshadow)
+my $slabinvpic = "$td/slabinv.hdr";
+$cmd = "pcomb -e 'lo=1-gi(1)' $slabpic > $slabinvpic";
+system $cmd;
+
 my $loff1 = $loff - 1;
 # Command line without extrema
 $cmd = "pcomb $pc0args $pc1args $picture $cpict";
-$cmd .= "| pcompos $scolpic 0 0 +t .1";
-$cmd .= " \"\!pcomb -e 'lo=1-gi(1)' $slabpic\" 2 $loff1";
+$cmd .= "| pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1";
 $cmd .= " -t .5 $slabpic 0 $loff - $legwidth 0";
 
 if ($doextrem == 1) {
@@ -273,16 +291,9 @@ if ($doextrem == 1) {
     # 211 202 1.292969e+00 1.308594e+00 1.300781e+00
 
     my @extrema = split(/\s/, $retval);
-    my $lxmin = $extrema[0] + $legwidth;
-    my $ymin = $extrema[1];
-    my $rmin = $extrema[2];
-    my $gmin = $extrema[3];
-    my $bmin = $extrema[4];
-    my $lxmax = $extrema[5] + $legwidth;
-    my $ymax = $extrema[6];
-    my $rmax = $extrema[7];
-    my $gmax = $extrema[8];
-    my $bmax = $extrema[9];
+    my ($lxmin, $ymin, $rmin, $gmin, $bmin, $lxmax, $ymax, $rmax, $gmax, $bmax) = @extrema;
+	$lxmin += $legwidth;
+	$lxmax += $legwidth;
 
 	# Weighted average of R,G,B
     my $minpos = "$lxmin $ymin";
@@ -293,10 +304,10 @@ if ($doextrem == 1) {
     $maxval =~ s/(\.[0-9]{3})[0-9]*/$1/;
 
 	# Create the labels for min/max intensity
-    my $minvpic = $td . '/minv.hdr';
+    my $minvpic = "$td/minv.hdr";
     $cmd1 = "psign -s -.15 -a 2 -h 16 $minval > $minvpic";
     system $cmd1;
-    my $maxvpic = $td . '/maxv.hdr';
+    my $maxvpic = "$td/maxv.hdr";
     $cmd1 = "psign -s -.15 -a 2 -h 16 $maxval > $maxvpic";
     system $cmd1;
 
