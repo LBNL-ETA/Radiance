@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.3 2011/03/23 19:33:29 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.4 2011/03/23 21:57:11 greg Exp $
 
 use strict;
 use File::Temp qw/ tempdir /;
@@ -18,7 +18,7 @@ my $cpict = '';
 my $legwidth = 100;   # Legend width and height
 my $legheight = 200;
 my $docont = '';    # Contours
-my $loff = 0;    # Offset for drop-shadow
+my $loff = 0;    # Offset to align with values
 my $doextrem = 0;    # Don't mark extrema
 my $needfile = 0;
 
@@ -76,10 +76,10 @@ while ($#ARGV >= 0) {
 	# Switches
     } elsif ("$ARGV[0]" eq '-cl') {    # Contour lines
         $docont = 'a';
-        $loff = 12;
+        $loff = 0.48;
     } elsif ("$ARGV[0]" eq '-cb') {    # Contour bands
         $docont = 'b';
-        $loff = 13;
+        $loff = 0.52;
     } elsif ("$ARGV[0]" eq '-e') {
         $doextrem = 1;
         $needfile = 1;
@@ -232,14 +232,10 @@ my $slabpic = "$td/slab.hdr";
 my $cmd;
 
 if (($legwidth > 20) && ($legheight > 40)) {
-	# Legend: Create the background colours
-    $cmd = "pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v'";
-    $cmd .= " -e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres'";
-    $cmd .= " -x $legwidth -y $legheight > $scolpic";
-    system $cmd;
-
 	# Legend: Create the text labels
     my $sheight = floor($legheight / $ndivs + 0.5);
+    $legheight = $sheight * $ndivs;
+    $loff = floor($loff * $sheight + 0.5);
     my $text = "$label";
     for (my $i=0; $i<$ndivs; $i++) {
         my $imap = ($ndivs - 0.5 - $i) / $ndivs;
@@ -256,10 +252,17 @@ if (($legwidth > 20) && ($legheight > 40)) {
     $cmd = "echo '$text' | psign -s -.15 -cf 1 1 1 -cb 0 0 0";
     $cmd .= " -h $sheight > $slabpic";
     system $cmd;
+
+	# Legend: Create the background colours
+    $cmd = "pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v'";
+    $cmd .= " -e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres'";
+    $cmd .= " -x $legwidth -y $legheight > $scolpic";
+    system $cmd;
 } else {
 	# Legend is too small to be legible. Don't bother doing one.
     $legwidth = 0;
     $legheight = 0;
+    $loff = 0;
 	# Create dummy colour scale and legend labels so we don't
 	# need to change the final command line.
     open(FHscolpic, ">$scolpic");
