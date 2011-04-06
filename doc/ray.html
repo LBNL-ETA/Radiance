@@ -1063,7 +1063,7 @@ unless the line integrals consider enclosed geometry.
 	Real arguments to this material may define additional
 	diffuse components that augment the BSDF data.
 	String arguments are used to define thickness for proxied
-	surfaces and the "up" orientation for the material.
+	surfaces and the &quot;up&quot; orientation for the material.
 
 <pre>
 	mod BSDF id
@@ -1076,7 +1076,7 @@ unless the line integrals consider enclosed geometry.
 </pre>
 
 <p>
-	The first string argument is a "thickness" parameter that may be used
+	The first string argument is a &quot;thickness&quot; parameter that may be used
 	to hide detail geometry being proxied by an aggregate BSDF material.
 	If a view or shadow ray hits a BSDF proxy with non-zero thickness,
 	it will pass directly through as if the surface were not there.
@@ -1095,7 +1095,7 @@ unless the line integrals consider enclosed geometry.
 <p>
 	The second string argument is the name of the BSDF file, which is
 	found in the usual auxiliary locations.
-	The following three string parameters name variables for an "up" vector,
+	The following three string parameters name variables for an &quot;up&quot; vector,
 	which together with the surface normal, define the
 	local coordinate system that orients the BSDF.
 	These variables, along with the thickness, are defined in a function
@@ -1116,7 +1116,7 @@ unless the line integrals consider enclosed geometry.
 <p>
 	The surface normal of this type is not altered to face the incoming ray,
 	so the front and back BSDF reflections may differ.
-	(Transmission is identical front-to-back by physical law.)\0
+	(Transmission is identical front-to-back by physical law.)
 	If back visibility is turned off during rendering and there is no
 	transmission or back-side reflection, only then the surface will be
 	invisible from behind.
