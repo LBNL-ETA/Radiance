@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.7 2011/02/22 05:41:02 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.8 2011/04/06 00:14:26 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -50,7 +50,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.7 2011/02/22 05:41:02 greg Exp $"
  *  Arguments for MAT_BSDF are:
  *	6+	thick	BSDFfile	ux uy uz	funcfile	transform
  *	0
- *	0|3|9	rdf	gdf	bdf
+ *	0|3|6|9	rdf	gdf	bdf
  *		rdb	gdb	bdb
  *		rdt	gdt	bdt
  */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.62 2010/10/25 22:57:45 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.63 2011/04/06 00:14:26 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -361,7 +361,7 @@ raydist(		/* compute (cumulative) ray distance */
 
 extern void
 raycontrib(		/* compute (cumulative) ray contribution */
-	double  rc[3],
+	RREAL  rc[3],
 	const RAY  *r,
 	int  flags
 )

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.64 2010/09/26 15:49:39 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.65 2011/04/06 00:14:26 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -53,7 +53,7 @@ OBJECT	traset[MAXTSET+1]={0};		/* trace include/exclude set */
 
 static RAY  thisray;			/* for our convenience */
 
-typedef void putf_t(double v);
+typedef void putf_t(RREAL *v, int n);
 static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
@@ -494,9 +494,7 @@ oputo(				/* print origin */
 	RAY  *r
 )
 {
-	(*putreal)(r->rorg[0]);
-	(*putreal)(r->rorg[1]);
-	(*putreal)(r->rorg[2]);
+	(*putreal)(r->rorg, 3);
 }
 
 
@@ -505,9 +503,7 @@ oputd(				/* print direction */
 	RAY  *r
 )
 {
-	(*putreal)(r->rdir[0]);
-	(*putreal)(r->rdir[1]);
-	(*putreal)(r->rdir[2]);
+	(*putreal)(r->rdir, 3);
 }
 
 
@@ -516,17 +512,20 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
+	RREAL	cval[3];
+
 	if (outform == 'c') {
 		COLR  cout;
 		setcolr(cout,	colval(r->rcol,RED),
 				colval(r->rcol,GRN),
 				colval(r->rcol,BLU));
-		fwrite((char *)cout, sizeof(cout), 1, stdout);
+		fwrite(cout, sizeof(cout), 1, stdout);
 		return;
 	}
-	(*putreal)(colval(r->rcol,RED));
-	(*putreal)(colval(r->rcol,GRN));
-	(*putreal)(colval(r->rcol,BLU));
+	cval[0] = colval(r->rcol,RED);
+	cval[1] = colval(r->rcol,GRN);
+	cval[2] = colval(r->rcol,BLU);
+	(*putreal)(cval, 3);
 }
 
 
@@ -535,13 +534,11 @@ oputV(				/* print value contribution */
 	RAY *r
 )
 {
-	double	contr[3];
+	RREAL	contr[3];
 
 	raycontrib(contr, r, PRIMARY);
 	multcolor(contr, r->rcol);
-	(*putreal)(contr[RED]);
-	(*putreal)(contr[GRN]);
-	(*putreal)(contr[BLU]);
+	(*putreal)(contr, 3);
 }
 
 
@@ -550,7 +547,7 @@ oputl(				/* print effective distance */
 	RAY  *r
 )
 {
-	(*putreal)(r->rt);
+	(*putreal)(&r->rt, 1);
 }
 
 
@@ -559,7 +556,7 @@ oputL(				/* print single ray length */
 	RAY  *r
 )
 {
-	(*putreal)(r->rot);
+	(*putreal)(&r->rot, 1);
 }
 
 
@@ -568,9 +565,11 @@ oputc(				/* print local coordinates */
 	RAY  *r
 )
 {
-	(*putreal)(r->uv[0]);
-	(*putreal)(r->uv[1]);
+	(*putreal)(r->uv, 2);
 }
+
+
+static RREAL	vdummy[3] = {0.0, 0.0, 0.0};
 
 
 static void
@@ -578,15 +577,10 @@ oputp(				/* print point */
 	RAY  *r
 )
 {
-	if (r->rot < FHUGE) {
-		(*putreal)(r->rop[0]);
-		(*putreal)(r->rop[1]);
-		(*putreal)(r->rop[2]);
-	} else {
-		(*putreal)(0.0);
-		(*putreal)(0.0);
-		(*putreal)(0.0);
-	}
+	if (r->rot < FHUGE)
+		(*putreal)(r->rop, 3);
+	else
+		(*putreal)(vdummy, 3);
 }
 
 
@@ -595,15 +589,10 @@ oputN(				/* print unperturbed normal */
 	RAY  *r
 )
 {
-	if (r->rot < FHUGE) {
-		(*putreal)(r->ron[0]);
-		(*putreal)(r->ron[1]);
-		(*putreal)(r->ron[2]);
-	} else {
-		(*putreal)(0.0);
-		(*putreal)(0.0);
-		(*putreal)(0.0);
-	}
+	if (r->rot < FHUGE)
+		(*putreal)(r->ron, 3);
+	else
+		(*putreal)(vdummy, 3);
 }
 
 
@@ -615,15 +604,11 @@ oputn(				/* print perturbed normal */
 	FVECT  pnorm;
 
 	if (r->rot >= FHUGE) {
-		(*putreal)(0.0);
-		(*putreal)(0.0);
-		(*putreal)(0.0);
+		(*putreal)(vdummy, 3);
 		return;
 	}
 	raynormal(pnorm, r);
-	(*putreal)(pnorm[0]);
-	(*putreal)(pnorm[1]);
-	(*putreal)(pnorm[2]);
+	(*putreal)(pnorm, 3);
 }
 
 
@@ -645,7 +630,9 @@ oputw(				/* print weight */
 	RAY  *r
 )
 {
-	(*putreal)(r->rweight);
+	RREAL	rwt = r->rweight;
+	
+	(*putreal)(&rwt, 1);
 }
 
 
@@ -654,12 +641,10 @@ oputW(				/* print coefficient */
 	RAY  *r
 )
 {
-	double	contr[3];
+	RREAL	contr[3];
 
 	raycontrib(contr, r, PRIMARY);
-	(*putreal)(contr[RED]);
-	(*putreal)(contr[GRN]);
-	(*putreal)(contr[BLU]);
+	(*putreal)(contr, 3);
 }
 
 
@@ -707,27 +692,37 @@ oputtilde(			/* output tilde (spacer) */
 
 
 static void
-puta(				/* print ascii value */
-	double  v
+puta(				/* print ascii value(s) */
+	RREAL *v, int n
 )
 {
-	printf("%e\t", v);
+	if (n == 3) {
+		printf("%e\t%e\t%e\t", v[0], v[1], v[2]);
+		return;
+	}
+	while (n--)
+		printf("%e\t", *v++);
 }
 
 
 static void
-putd(v)				/* print binary double */
-double  v;
+putd(RREAL *v, int n)		/* print binary double(s) */
 {
-	fwrite((char *)&v, sizeof(v), 1, stdout);
+	if (sizeof(RREAL) != sizeof(double))
+		error(INTERNAL, "code error in putd()");
+	fwrite(v, sizeof(RREAL), n, stdout);
 }
 
 
 static void
-putf(v)				/* print binary float */
-double  v;
+putf(RREAL *v, int n)		/* print binary float(s) */
 {
-	float f = v;
+	float	fa[3];
+	int	i;
 
-	fwrite((char *)&f, sizeof(f), 1, stdout);
+	if (n > 3)
+		error(INTERNAL, "code error in putf()");
+	for (i = n; i--; )
+		fa[i] = v[i];
+	fwrite(fa, sizeof(float), n, stdout);
 }
