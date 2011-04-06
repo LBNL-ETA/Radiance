@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.61 2011/04/04 22:17:35 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.62 2011/04/06 00:39:07 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -107,8 +107,8 @@ int  rtargc = 9;
 char		*myrtopts[] = { "-h-", "-x", "1", "-y", "0",
 				"-dt", "0", "-as", "0", "-aa", "0", NULL };
 
-#define	RTCOEFF		"-o~~~~TmWdp"	/* compute coefficients only */
-#define RTCONTRIB	"-o~~~~TmVdp"	/* compute ray contributions */
+#define	RTCOEFF		"-o~~~TmWdp"	/* compute coefficients only */
+#define RTCONTRIB	"-o~~~TmVdp"	/* compute ray contributions */
 
 struct rtproc	rt0;			/* head of rtrace process list */
 
@@ -1106,7 +1106,7 @@ wait_rproc(void)
 				continue;
 			if (rt->buf == NULL) {
 				rt->bsiz = treebufsiz;
-				rt->buf = (char *)malloc(treebufsiz);
+				rt->buf = (char *)malloc(rt->bsiz);
 			} else if (rt->nbr + BUFSIZ > rt->bsiz) {
 				if (rt->bsiz + BUFSIZ <= treebufsiz)
 					rt->bsiz = treebufsiz;
@@ -1120,9 +1120,9 @@ wait_rproc(void)
 			if (nr <= 0)
 				error(USER, "rtrace process died");
 			rt->nbr += nr;		/* advance & check */
-			if (rt->nbr >= 8 && !memcmp(rt->buf+rt->nbr-8,
-							"~\t~\t~\t~\t", 8)) {
-				rt->nbr -= 8;	/* elide terminator */
+			if (rt->nbr >= 6 && !memcmp(rt->buf+rt->nbr-6,
+							"~\t~\t~\t", 6)) {
+				rt->nbr -= 6;	/* elide terminator */
 				queue_raytree(rt);
 				rtfree = rt;	/* ready for next ray */
 			}
@@ -1164,8 +1164,7 @@ trace_contribs(FILE *fin)
 				lastray+1 < lastray) {
 			while (wait_rproc() != NULL)
 				process_queue();
-			if (lastray+1 < lastray)
-				lastdone = lastray = 0;
+			lastdone = lastray = 0;
 		}
 		rtp = get_rproc();		/* get avail. rtrace process */
 		rtp->raynum = ++lastray;	/* assign ray */
