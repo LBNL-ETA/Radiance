@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>
-The RADIANCE 4.0 Synthetic Imaging System
+The RADIANCE 4.1 Synthetic Imaging System
 </title>
 </head>
 <body>
@@ -9,7 +9,7 @@ The RADIANCE 4.0 Synthetic Imaging System
 <p>
 
 <h1>
-The RADIANCE 4.0 Synthetic Imaging System
+The RADIANCE 4.1 Synthetic Imaging System
 </h1>
 
 <p>
@@ -1053,6 +1053,78 @@ unless the line integrals consider enclosed geometry.
 <p>
 
 <dt>
+	<a NAME="BSDF">
+	<b>BSDF</b>
+	</a>
+
+<dd>
+	The BSDF material type loads an XML (eXtensible Markup Language)
+	file describing a bidirectional scattering distribution function.
+	Real arguments to this material may define additional
+	diffuse components that augment the BSDF data.
+	String arguments are used to define thickness for proxied
+	surfaces and the "up" orientation for the material.
+
+<pre>
+	mod BSDF id
+	6+ thick BSDFfile ux uy uz funcfile transform
+	0
+	0|3|6|9
+		rfdif gfdif bfdif
+		rbdif gbdif bbdif
+		rtdif gtdif btdif
+</pre>
+
+<p>
+	The first string argument is a "thickness" parameter that may be used
+	to hide detail geometry being proxied by an aggregate BSDF material.
+	If a view or shadow ray hits a BSDF proxy with non-zero thickness,
+	it will pass directly through as if the surface were not there.
+	Similar to the illum type, this permits direct viewing and
+	shadow testing of complex geometry.
+	The BSDF is used when a scattered (indirect) ray hits the surface,
+	and any transmitted sample rays will be offset by the thickness amount
+	to avoid the hidden geometry and gather samples from the other side.
+	In this manner, BSDF surfaces can improve the results for indirect
+	scattering from complex systems without sacrificing appearance or
+	shadow accuracy.
+	If the BSDF has transmission and back-side reflection data,
+	a parallel BSDF surface may be
+	placed slightly less than the given thickness away from the front surface
+	to enclose the complex geometry on both sides.
+<p>
+	The second string argument is the name of the BSDF file, which is
+	found in the usual auxiliary locations.
+	The following three string parameters name variables for an "up" vector,
+	which together with the surface normal, define the
+	local coordinate system that orients the BSDF.
+	These variables, along with the thickness, are defined in a function
+	file given as the next string argument.
+	An optional transform is used to scale the thickness and reorient the up vector.
+<p>
+	If no real arguments are given, the BSDF is used by itself to determine
+	reflection and transmission.
+	If there are at least 3 real arguments, the first triplet is an
+	additional diffuse reflectance for the front side.
+	At least 6 real arguments adds diffuse reflectance to the rear side of the surface.
+	If there are 9 real arguments, the final triplet will be taken as an additional
+	diffuse transmittance.
+	All diffuse components as well as the non-diffuse transmission are
+	modified by patterns applied to this material.
+	The non-diffuse reflection from either side are unaffected.
+	Textures perturb the effective surface normal in the usual way.
+<p>
+	The surface normal of this type is not altered to face the incoming ray,
+	so the front and back BSDF reflections may differ.
+	(Transmission is identical front-to-back by physical law.)\0
+	If back visibility is turned off during rendering and there is no
+	transmission or back-side reflection, only then the surface will be
+	invisible from behind.
+	Unlike other data-driven material types, the BSDF type is fully
+	supported and all parts of the distribution are properly sampled.
+<p>
+
+<dt>
 	<a NAME="Antimatter">
 	<b>Antimatter</b>
 	</a>
@@ -1921,6 +1993,7 @@ SURFACES	MATERIALS	TEXTURES	PATTERNS	MIXTURES</h4>
 		<a HREF="#Plasdata">Plasdata</a>
 		<a HREF="#Metdata">Metdata</a>
 		<a HREF="#Transdata">Transdata</a>
+		<a HREF="#BSDF">BSDF</a>
 		<a HREF="#Antimatter">Antimatter</a>
 				
 </pre>
