@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.14 2011/04/03 03:06:19 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.15 2011/04/08 18:13:48 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -10,9 +10,11 @@ static const char RCSid[] = "$Id: dctimestep.c,v 2.14 2011/04/03 03:06:19 greg E
 #include <ctype.h>
 #include "standard.h"
 #include "platform.h"
+#include "paths.h"
 #include "color.h"
 #include "resolu.h"
 #include "bsdf.h"
+#include "bsdf_m.h"
 
 char	*progname;			/* global argv[0] */
 
@@ -291,45 +293,112 @@ cm_print(const CMATRIX *cm, FILE *fp)
 	}
 }
 
-/* convert a BSDF to our matrix representation */
+/* Convert a BSDF to our matrix representation */
 static CMATRIX *
-cm_bsdf(const struct BSDF_data *bsdf)
+cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 {
-	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
+	CMATRIX	*cm;
 	int	nbadohm = 0;
 	int	nneg = 0;
+	FVECT	v;
+	float	dom;
+	int	doforward;
 	int	r, c;
-	
-	for (c = 0; c < cm->ncols; c++) {
-		float	dom = getBSDF_incohm(bsdf,c);
-		FVECT	v;
-		
-		if (dom <= .0) {
-			nbadohm++;
-			continue;
-		}
-		if (!getBSDF_incvec(v,bsdf,c) || v[2] > FTINY)
-			error(USER, "illegal incoming BTDF direction");
-		dom *= -v[2];
 
-		for (r = 0; r < cm->nrows; r++) {
-			float	f = BSDF_value(bsdf,c,r);
-			COLORV	*mp = cm_lval(cm,r,c);
+	mBSDF_incvec(v, bsdf, .5);	/* check BTDF orientation */
 
-			if (f <= .0) {
-				nneg += (f < -FTINY);
-				f = .0f;
+	if (v[2] < 0) {			/* incident from outside */
+		cm = cm_alloc(bsdf->nout, bsdf->ninc);
+		for (c = 0; c < cm->ncols; c++) {
+			dom = mBSDF_incohm(bsdf,c);
+			
+			nbadohm += (dom <= 0);
+
+			if (!mBSDF_incvec(v,bsdf,c+.5) || v[2] > 0)
+				error(USER, "illegal incoming BTDF direction");
+			dom *= -v[2];
+
+			for (r = 0; r < cm->nrows; r++) {
+				float	f = mBSDF_value(bsdf,c,r);
+				COLORV	*mp = cm_lval(cm,r,c);
+
+				if ((f <= 0) | (dom <= 0)) {
+					nneg += (f < -FTINY);
+					f = .0f;
+				}
+				copycolor(mp, specCol);
+				f *= dom;
+				scalecolor(mp, f);
+				addcolor(mp, bsdfLamb);
 			}
-			mp[0] = mp[1] = mp[2] = f * dom;
+		}
+	} else {			/* rely on reciprocity */
+		cm = cm_alloc(bsdf->ninc, bsdf->nout);
+		for (c = 0; c < cm->ncols; c++) {
+			dom = mBSDF_outohm(bsdf,c);
+			
+			nbadohm += (dom <= 0);
+
+			if (!mBSDF_outvec(v,bsdf,c+.5) || v[2] > 0)
+				error(USER, "illegal outgoing BTDF direction");
+			dom *= -v[2];
+
+			for (r = 0; r < cm->nrows; r++) {
+				float	f = mBSDF_value(bsdf,r,c);
+				COLORV	*mp = cm_lval(cm,r,c);
+
+				if ((f <= 0) | (dom <= 0)) {
+					nneg += (f < -FTINY);
+					f = .0f;
+				}
+				copycolor(mp, specCol);
+				f *= dom;
+				scalecolor(mp, f);
+				addcolor(mp, bsdfLamb);
+			}
 		}
 	}
-	if (nneg || nbadohm) {
+	if (nneg | nbadohm) {
 		sprintf(errmsg,
 		    "BTDF has %d negatives and %d bad incoming solid angles",
 				nneg, nbadohm);
 		error(WARNING, errmsg);
 	}
 	return(cm);
+}
+
+/* Load and convert a matrix BSDF from the given XML file */
+static CMATRIX *
+cm_loadBSDF(char *fname)
+{
+	CMATRIX	*Tmat;
+	char	*fpath;
+	SDError	ec;
+	SDData	myBSDF;
+	COLOR	bsdfLamb, specCol;
+					/* find path to BSDF file */
+	fpath = getpath(fname, getrlibpath(), R_OK);
+	if (fpath == NULL) {
+		sprintf(errmsg, "cannot find BSDF file '%s'", fname);
+		error(USER, errmsg);
+	}
+	SDclipName(myBSDF.name, fname);
+					/* load XML and check type */
+	ec = SDloadFile(&myBSDF, fpath);
+	if (ec)
+		error(USER, transSDError(ec));
+	if (myBSDF.tf == NULL || myBSDF.tf->ncomp != 1 ||
+			myBSDF.tf->comp[0].func != &SDhandleMtx) {
+		sprintf(errmsg, "unsupported BSDF '%s'", fpath);
+		error(USER, errmsg);
+	}
+					/* convert BTDF to matrix */
+	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
+	ccy2rgb(&myBSDF.tf->comp[0].cspec[0], 1., specCol);
+	Tmat = cm_bsdf(bsdfLamb, specCol, (SDMat *)myBSDF.tf->comp[0].dist);
+					/* free BSDF and return */
+	SDfreeBSDF(&myBSDF);
+	return(Tmat);
 }
 
 /* Sum together a set of images and write result to stdout */
@@ -351,7 +420,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		int		dt, xr, yr;
 		COLORV		*psp;
 							/* check for zero */
-		if ((scv[RED] == .0) & (scv[GRN] == .0) & (scv[BLU] == .0))
+		if ((scv[RED] == 0) & (scv[GRN] == 0) & (scv[BLU] == 0))
 			continue;
 							/* open next picture */
 		sprintf(fname, fspec, i);
@@ -421,7 +490,8 @@ hasNumberFormat(const char *s)
 		++s;
 	while (isdigit(*s));
 
-	return(*s == 'd' | *s == 'i' | *s == 'o' | *s == 'x' | *s == 'X');
+	return((*s == 'd') | (*s == 'i') | (*s == 'o') |
+			(*s == 'x') | (*s == 'X'));
 }
 
 int
@@ -440,20 +510,15 @@ main(int argc, char *argv[])
 
 	if (argc > 3) {				/* VTDs expression */
 		CMATRIX	*svec, *Dmat, *Tmat, *ivec;
-		struct BSDF_data	*btdf;
 						/* get sky vector */
 		svec = cm_load(argv[4], 0, 1, DTascii);
 						/* load BSDF */
-		btdf = load_BSDF(argv[2]);
-		if (btdf == NULL)
-			return(1);
+		Tmat = cm_loadBSDF(argv[2]);
 						/* load Daylight matrix */
-		Dmat = cm_load(argv[3], btdf->ninc, svec->nrows, DTfromHeader);
+		Dmat = cm_load(argv[3], Tmat->ncols, svec->nrows, DTfromHeader);
 						/* multiply vector through */
 		ivec = cm_multiply(Dmat, svec);
 		cm_free(Dmat); cm_free(svec);
-		Tmat = cm_bsdf(btdf);		/* convert BTDF to matrix */
-		free_BSDF(btdf);
 		cvec = cm_multiply(Tmat, ivec);	/* cvec = component vector */
 		cm_free(Tmat); cm_free(ivec);
 	} else {				/* else just use sky vector */

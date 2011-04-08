@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.8 2011/02/24 20:14:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.9 2011/04/08 18:13:48 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -86,7 +86,7 @@ fequal(double a, double b)
 	return (a <= 1e-6) & (a >= -1e-6);
 }
 
-/* returns the name of the given tag */
+/* Returns the name of the given tag */
 #ifdef ezxml_name
 #undef ezxml_name
 static char *
@@ -98,7 +98,7 @@ ezxml_name(ezxml_t xml)
 }
 #endif
 
-/* returns the given tag's character content or empty string if none */
+/* Returns the given tag's character content or empty string if none */
 #ifdef ezxml_txt
 #undef ezxml_txt
 static char *
@@ -159,14 +159,16 @@ SDnewMatrix(int ni, int no)
 
 /* get vector for this angle basis index (front exiting) */
 static int
-fo_getvec(FVECT v, int ndx, double randX, void *p)
+fo_getvec(FVECT v, double ndxr, void *p)
 {
-	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
+	ANGLE_BASIS	*ab = (ANGLE_BASIS *)p;
+	int		ndx = (int)ndxr;
+	double		randX = ndxr - ndx;
 	double		rx[2];
 	int		li;
 	double		pol, azi, d;
 	
-	if ((ndx < 0) | (ndx >= ab->nangles))
+	if ((ndxr < 0) | (ndx >= ab->nangles))
 		return RC_FAIL;
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
@@ -185,7 +187,7 @@ fo_getvec(FVECT v, int ndx, double randX, void *p)
 static int
 fo_getndx(const FVECT v, void *p)
 {
-	ANGLE_BASIS  *ab = (ANGLE_BASIS *)p;
+	ANGLE_BASIS	*ab = (ANGLE_BASIS *)p;
 	int	li, ndx;
 	double	pol, azi, d;
 
@@ -237,9 +239,9 @@ io_getohm(int ndx, void *p)
 
 /* get vector for this angle basis index (back incident) */
 static int
-bi_getvec(FVECT v, int ndx, double randX, void *p)
+bi_getvec(FVECT v, double ndxr, void *p)
 {
-	if (!fo_getvec(v, ndx, randX, p))
+	if (!fo_getvec(v, ndxr, p))
 		return RC_FAIL;
 
 	v[0] = -v[0];
@@ -264,9 +266,9 @@ bi_getndx(const FVECT v, void *p)
 
 /* get vector for this angle basis index (back exiting) */
 static int
-bo_getvec(FVECT v, int ndx, double randX, void *p)
+bo_getvec(FVECT v, double ndxr, void *p)
 {
-	if (!fo_getvec(v, ndx, randX, p))
+	if (!fo_getvec(v, ndxr, p))
 		return RC_FAIL;
 
 	v[2] = -v[2];
@@ -289,9 +291,9 @@ bo_getndx(const FVECT v, void *p)
 
 /* get vector for this angle basis index (front incident) */
 static int
-fi_getvec(FVECT v, int ndx, double randX, void *p)
+fi_getvec(FVECT v, double ndxr, void *p)
 {
-	if (!fo_getvec(v, ndx, randX, p))
+	if (!fo_getvec(v, ndxr, p))
 		return RC_FAIL;
 
 	v[0] = -v[0];
@@ -418,10 +420,11 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
 	/*
 	 * Remember that front and back are reversed from WINDOW 6 orientations
+	 * Favor their "Front" (incoming light) since that's more often valid
 	 */
-	if ((tfront = !strcasecmp(sdata, "Transmission Back")) ||
-			(sd->tf == NULL &&
-				!strcasecmp(sdata, "Transmission Front"))) {
+	tfront = !strcasecmp(sdata, "Transmission Back");
+	if (!strcasecmp(sdata, "Transmission Front") ||
+			tfront & (sd->tf == NULL)) {
 		if (sd->tf != NULL)
 			SDfreeSpectralDF(sd->tf);
 		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
@@ -795,7 +798,7 @@ SDsampMtxCDist(FVECT outVec, double randX, const SDCDst *cdp)
 	randX = (randX*maxval - mcd->carr[ilower]) /
 			(double)(mcd->carr[iupper] - mcd->carr[ilower]);
 					/* convert index to vector */
-	if ((*mcd->ob_vec)(outVec, i, randX, mcd->ob_priv))
+	if ((*mcd->ob_vec)(outVec, i+randX, mcd->ob_priv))
 		return SDEnone;
 	strcpy(SDerrorDetail, "BSDF sampling fault");
 	return SDEinternal;

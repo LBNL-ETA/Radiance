@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.57 2010/12/02 18:08:11 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.58 2011/04/08 18:13:48 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -122,8 +122,8 @@ rpiece.o:	../common/color.h ../common/view.h ../common/resolu.h
 dctimestep.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/platform.h \
-../common/color.h ../common/bsdf.h ../common/resolu.h
+../common/rterror.h ../common/platform.h ../common/paths.h \
+../common/color.h ../common/bsdf.h ../common/bsdf_m.h ../common/resolu.h
 
 rtcontrib.o:	../common/platform.h ../common/rtprocess.h \
 ../common/color.h ../common/resolu.h ../common/lookup.h \

@@ -1,8 +1,10 @@
-/* RCSid $Id: bsdf_m.h,v 3.3 2011/02/19 01:48:59 greg Exp $ */
+/* RCSid $Id: bsdf_m.h,v 3.4 2011/04/08 18:13:48 greg Exp $ */
 /*
  *  bsdf_m.h
  *  
- *  Support for BSDF matrices
+ *  Support for BSDF matrices.
+ *  Assumes "bsdf.h" already included.
+ *  Include after "ezxml.h" for SDloadMtx() declaration.
  *
  *  Created by Greg Ward on 2/2/11.
  *
@@ -15,7 +17,7 @@
 extern "C" {
 #endif
 				/* Fixed-position coordinate functions */
-typedef int	b_vecf(FVECT vec, int ndx, double randX, void *c_data);
+typedef int	b_vecf(FVECT vec, double ndxr, void *c_data);
 typedef int	b_ndxf(const FVECT vec, void *c_data);
 typedef double	b_ohmf(int ndx, void *c_data);
 
@@ -35,10 +37,10 @@ typedef struct {
 } SDMat;
 
 /* Matrix BSDF accessors */
-#define mBSDF_incvec(v,b,i)	(*(b)->ib_vec)(v,i,(b)->ib_priv)
+#define mBSDF_incvec(v,b,ix)	(*(b)->ib_vec)(v,ix,(b)->ib_priv)
 #define mBSDF_incndx(b,v)	(*(b)->ib_ndx)(v,(b)->ib_priv)
 #define mBSDF_incohm(b,i)	(*(b)->ib_ohm)(i,(b)->ib_priv)
-#define mBSDF_outvec(v,b,o)	(*(b)->ob_vec)(v,o,(b)->ob_priv)
+#define mBSDF_outvec(v,b,ox)	(*(b)->ob_vec)(v,ox,(b)->ob_priv)
 #define mBSDF_outndx(b,v)	(*(b)->ob_ndx)(v,(b)->ob_priv)
 #define mBSDF_outohm(b,o)	(*(b)->ob_ohm)(o,(b)->ob_priv)
 #define mBSDF_value(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
@@ -53,8 +55,10 @@ typedef struct {
 	unsigned	carr[1];	/* cumulative array (extends struct) */
 } SDMatCDst;	
 
+#ifdef _EZXML_H
 /* Load a set of BSDF matrices from an open XML file */
 extern SDError		SDloadMtx(SDData *sd, ezxml_t wtl);
+#endif
 
 /* Our matrix handling routines */
 extern SDFunc		SDhandleMtx;
