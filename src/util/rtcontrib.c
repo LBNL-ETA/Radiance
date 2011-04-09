@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.62 2011/04/06 00:39:07 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.63 2011/04/09 18:05:18 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -702,12 +702,19 @@ void
 printheader(FILE *fout, const char *info)
 {
 	extern char	VersionID[];
-	FILE		*fin = fopen(octree, "r");
-	
-	if (fin == NULL)
-		quit(1);
-	checkheader(fin, "ignore", fout);	/* copy octree header */
-	fclose(fin);
+						/* copy octree header */
+	if (octree[0] == '!') {
+		newheader("RADIANCE", fout);
+		fputs(octree+1, fout);
+		if (octree[strlen(octree)-1] != '\n')
+			fputc('\n', fout);
+	} else {
+		FILE	*fin = fopen(octree, "r");
+		if (fin == NULL)
+			quit(1);
+		checkheader(fin, "ignore", fout);
+		fclose(fin);
+	}
 	printargs(gargc-1, gargv, fout);	/* add our command */
 	fprintf(fout, "SOFTWARE= %s\n", VersionID);
 	fputnow(fout);
