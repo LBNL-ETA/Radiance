@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.9 2011/02/23 21:58:31 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.10 2011/04/11 03:47:46 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -154,8 +154,8 @@ extern SDSpectralDF	*SDnewSpectralDF(int nc);
 /* Free a spectral distribution function */
 extern void		SDfreeSpectralDF(SDSpectralDF *df);
 
-/* Initialize an unused BSDF struct (clears to zeroes) */
-extern void		SDclearBSDF(SDData *sd);
+/* Initialize an unused BSDF struct and assign name (calls SDclipName) */
+extern void		SDclearBSDF(SDData *sd, const char *fname);
 
 /* Load a BSDF struct from the given file (keeps name unchanged) */
 extern SDError		SDloadFile(SDData *sd, const char *fname);

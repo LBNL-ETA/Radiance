@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.15 2011/04/08 18:13:48 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.16 2011/04/11 03:47:46 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -297,65 +297,30 @@ cm_print(const CMATRIX *cm, FILE *fp)
 static CMATRIX *
 cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 {
-	CMATRIX	*cm;
+	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
 	int	nbadohm = 0;
 	int	nneg = 0;
-	FVECT	v;
 	float	dom;
 	int	doforward;
 	int	r, c;
+					/* reciprocity is "transparent" */
+	for (c = 0; c < cm->ncols; c++) {
+					/* get projected solid angle */
+		dom = mBSDF_incohm(bsdf,c);
+		nbadohm += (dom <= 0);
 
-	mBSDF_incvec(v, bsdf, .5);	/* check BTDF orientation */
-
-	if (v[2] < 0) {			/* incident from outside */
-		cm = cm_alloc(bsdf->nout, bsdf->ninc);
-		for (c = 0; c < cm->ncols; c++) {
-			dom = mBSDF_incohm(bsdf,c);
-			
-			nbadohm += (dom <= 0);
-
-			if (!mBSDF_incvec(v,bsdf,c+.5) || v[2] > 0)
-				error(USER, "illegal incoming BTDF direction");
-			dom *= -v[2];
-
-			for (r = 0; r < cm->nrows; r++) {
-				float	f = mBSDF_value(bsdf,c,r);
-				COLORV	*mp = cm_lval(cm,r,c);
-
-				if ((f <= 0) | (dom <= 0)) {
-					nneg += (f < -FTINY);
-					f = .0f;
-				}
-				copycolor(mp, specCol);
-				f *= dom;
-				scalecolor(mp, f);
-				addcolor(mp, bsdfLamb);
+		for (r = 0; r < cm->nrows; r++) {
+			float	f = mBSDF_value(bsdf,c,r);
+			COLORV	*mp = cm_lval(cm,r,c);
+					/* check BSDF value */
+			if ((f <= 0) | (dom <= 0)) {
+				nneg += (f < -FTINY);
+				f = .0f;
 			}
-		}
-	} else {			/* rely on reciprocity */
-		cm = cm_alloc(bsdf->ninc, bsdf->nout);
-		for (c = 0; c < cm->ncols; c++) {
-			dom = mBSDF_outohm(bsdf,c);
-			
-			nbadohm += (dom <= 0);
-
-			if (!mBSDF_outvec(v,bsdf,c+.5) || v[2] > 0)
-				error(USER, "illegal outgoing BTDF direction");
-			dom *= -v[2];
-
-			for (r = 0; r < cm->nrows; r++) {
-				float	f = mBSDF_value(bsdf,r,c);
-				COLORV	*mp = cm_lval(cm,r,c);
-
-				if ((f <= 0) | (dom <= 0)) {
-					nneg += (f < -FTINY);
-					f = .0f;
-				}
-				copycolor(mp, specCol);
-				f *= dom;
-				scalecolor(mp, f);
-				addcolor(mp, bsdfLamb);
-			}
+			copycolor(mp, specCol);
+			scalecolor(mp, f);
+			addcolor(mp, bsdfLamb);
+			scalecolor(mp, dom);
 		}
 	}
 	if (nneg | nbadohm) {
@@ -382,8 +347,7 @@ cm_loadBSDF(char *fname)
 		sprintf(errmsg, "cannot find BSDF file '%s'", fname);
 		error(USER, errmsg);
 	}
-	SDclipName(myBSDF.name, fname);
-					/* load XML and check type */
+	SDclearBSDF(&myBSDF, fname);	/* load XML and check type */
 	ec = SDloadFile(&myBSDF, fpath);
 	if (ec)
 		error(USER, transSDError(ec));

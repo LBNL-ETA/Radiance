@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.19 2011/04/09 15:39:16 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.20 2011/04/11 03:47:46 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -269,10 +269,14 @@ SDclipName(char *res, const char *fname)
 
 /* Initialize an unused BSDF struct (simply clears to zeroes) */
 void
-SDclearBSDF(SDData *sd)
+SDclearBSDF(SDData *sd, const char *fname)
 {
-	if (sd != NULL)
-		memset(sd, 0, sizeof(SDData));
+	if (sd == NULL)
+		return;
+	memset(sd, 0, sizeof(SDData));
+	if (fname == NULL)
+		return;
+	SDclipName(sd->name, fname);
 }
 
 /* Free data associated with BSDF struct */
