@@ -7,21 +7,12 @@ mlib = env['RAD_MLIB']
 
 # compose paths
 def rbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
-def rlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
-def mgfs(src): return map(lambda s:os.path.join('mgflib', s), src)
-
-MGFSRC = Split('''parser.c context.c xf.c object.c lookup.c badarg.c
-		words.c
-		fvect.c''')
-libmgf = env.StaticLibrary(rlib('mgf'), source=mgfs(MGFSRC))
 
 MGFPROGS = (
-('mgfilt',  Split('mgfilt.c')),
-('mgf2inv', Split('mgf2inv.c cvrgb.c')),
-('3ds2mgf', Split('3ds2mgf.c rayopt.c vect.c')),
+('3ds2mgf', Split('3ds2mgf.c rayopt3ds.c vect3ds.c')),
 )
 for p in MGFPROGS:
-	prog = env.Program(target=rbin(p[0]), source=mgfs(p[1]), LIBS=mlib+['mgf'])
+	prog = env.Program(target=rbin(p[0]), source=p[1], LIBS=mlib+['mgf','rtcont'])
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
@@ -34,9 +25,11 @@ PROGS = [
 ('nff2rad',   ['nff2rad.c'],       []),
 ('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtio','rtpath']),
 ('tmesh2rad', ['tmesh2rad.c'],     ['rtscene','rtmath'] + mlib),
+('mgf2inv',   ['mgf2inv.c'],       ['mgf','rtall'] + mlib),
 ('obj2rad',   ['obj2rad.c',trans], 
     ['rtscene','rtargs','rtio','rtcont','rtmem','rtmath','rterror'] + mlib),
-('mgf2rad',   ['mgf2rad.c'],       ['rtscene','rtcolor','mgf'] + mlib),
+('mgf2rad',   ['mgf2rad.c'],       ['mgf','rtall'] + mlib),
+('mgfilt',    ['mgfilt.c'],        ['mgf','rtall'] + mlib),
 ('rad2mgf',   ['rad2mgf.c'],
 	['rtproc', 'rtpath', # for win_popen()
     'rtscene','rtio','rtcolor','rtcont','rtmem','rterror'] + mlib),
@@ -49,7 +42,7 @@ for p in PROGS:
 # meta targets
 prog = env.Program(target=rbin('mgf2meta'), source=['mgf2meta.c'],
 		CPPPATH=env.get('CPPPATH', []) + [os.path.join('#src','meta')],
-		LIBS=['meta','rtmath','rtcont','rtmem','rterror','mgf'] + mlib)
+		LIBS=['meta','mgf','rtall'] + mlib)
 env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 LIBFILES = Split('source.cal tilt.cal window.cal')

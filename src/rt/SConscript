@@ -29,7 +29,7 @@ SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
 		o_face.c o_cone.c o_instance.c o_mesh.c''')
 
 MAT = Split('''aniso.c normal.c m_clip.c glass.c m_brdf.c m_mirror.c
-		m_direct.c m_mist.c fprism.c m_alias.c''') + [dielectric]
+		m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c''') + [dielectric]
 
 MOD = Split('p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c')
 

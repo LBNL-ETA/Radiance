@@ -18,12 +18,14 @@ RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
 		otypes.c objset.c octree.c readfargs.c modobject.c
 		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''') #addobjnotify.c
 
+RTMGFOBJ = Split('''mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c''')
 RTCOLOR = Split('''spec_rgb.c''')
 RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
-RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c')+ RTCOLOR + RTTMAP
+RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c falsecolor.c')+ RTCOLOR + RTTMAP
 
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
-RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ezxml''')
+RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ccolor.c ccyrgb.c bsdf_m.c bsdf_t.c disk2square.c hilbert.c loadbsdf.c ezxml''')
+#RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ezxml getpath.c gethomedir.c paths.c words.c fvect.c multisamp.c mat4.c''') + [getlibpath]
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 		zeroes.c dircode.c clip.c multisamp.c plocate.c byteswap.c'''
 		) + env.get('RAD_MATHCOMPAT', [])
@@ -33,7 +35,7 @@ RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
 		portio.c wordfile.c words.c header.c timegm.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
 RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
-RTLAMPS = Split('''fropen.c rexpr.c lamps.c''') + [getlibpath]
+RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')+ [getlibpath]
 
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
@@ -47,10 +49,8 @@ STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
 ALL = RTSCENE + RTPIC + STD + RTNET
 
 # build libraries
-rtall = env.StaticLibrary(target=radlib('rtall'), source=ALL)
-
 rtscene = env.StaticLibrary(target=radlib('rtscene'), source=RTSCENE)
-
+libmgf = env.StaticLibrary(target=radlib('mgf'), source=RTMGFOBJ)
 rterror = env.StaticLibrary(target=radlib('rterror'), source=RTERROR)
 rtpath = env.StaticLibrary(target=radlib('rtpath'), source=RTPATH)
 rtargs = env.StaticLibrary(target=radlib('rtargs'), source=RTARGS)
@@ -70,6 +70,7 @@ rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
 #   dynamically during program initialization.
 rtdummy = env.StaticLibrary(target=radlib('rtdummy'), source=RTDUMMY)
 
+rtall = env.StaticLibrary(target=radlib('rtall'), source=ALL)
 #librtrad = env.StaticLibrary(target=radlib('rtrad'), source=ALL)
 #Default(librtrad)
 
