@@ -1,16 +1,17 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.12 2011/02/24 20:27:00 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.13 2011/04/16 00:39:07 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
 #	G. Ward
 #
 use strict;
+use File::Temp qw/ :mktemp  /;
 sub userror {
 	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-r \"ropts\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom] [input ..]\n";
 	exit 1;
 }
-my $td = `mktemp -d /tmp/genBSDF.XXXXXX`;
+my $td = mkdtemp("/tmp/genBSDF.XXXXXX");
 chomp $td;
 my $nsamp = 1000;
 my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
@@ -61,7 +62,7 @@ if ( $mgfin ) {
 	die "Could not load MGF input\n" if ( $? );
 	system "mgf2rad $mgfscn > $radscn";
 } else {
-	system "cat @ARGV | xform -e > $radscn";
+	system "xform -e @ARGV > $radscn";
 	die "Could not load Radiance input\n" if ( $? );
 	system "rad2mgf $radscn > $mgfscn" if ( $geout );
 }

@@ -1,16 +1,17 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.9 2011/04/11 03:47:46 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.10 2011/04/16 00:39:07 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
 #	G. Ward
 #
 use strict;
+use File::Temp qw/ :mktemp  /;
 if ($#ARGV < 0) {
 	print STDERR "Usage: genklemsamp [-c N ][-f{a|f|d}] [view opts] [geom.rad ..]\n";
 	exit 1;
 }
-my $td = `mktemp -d /tmp/genklemsamp.XXXXXX`;
+my $td = mkdtemp("/tmp/genklemsamp.XXXXXX");
 chomp $td;
 my $nsamp = 1000;
 my $fmt = "a";

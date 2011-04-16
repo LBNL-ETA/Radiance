@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.63 2011/04/09 18:05:18 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.64 2011/04/16 00:39:07 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -20,7 +20,7 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.63 2011/04/09 18:05:18 greg Ex
 #define	MAXMODLIST	1024		/* maximum modifiers we'll track */
 #endif
 
-size_t	treebufsiz = BUFSIZ;		/* current tree buffer size */
+ssize_t	treebufsiz = BUFSIZ;		/* current tree buffer size */
 
 typedef double	DCOLOR[3];		/* double-precision color */
 
@@ -1117,14 +1117,20 @@ wait_rproc(void)
 			} else if (rt->nbr + BUFSIZ > rt->bsiz) {
 				if (rt->bsiz + BUFSIZ <= treebufsiz)
 					rt->bsiz = treebufsiz;
-				else
-					treebufsiz = rt->bsiz += BUFSIZ;
+				else if ((treebufsiz = rt->bsiz += BUFSIZ) < 0)
+					error(INTERNAL,
+					    "ray buffer does not fit memory");
 				rt->buf = (char *)realloc(rt->buf, rt->bsiz);
 			}
 			if (rt->buf == NULL)
 				error(SYSTEM, "out of memory in wait_rproc");
-			nr = read(rt->pd.r, rt->buf+rt->nbr, rt->bsiz-rt->nbr);
-			if (nr <= 0)
+			nr = rt->bsiz - rt->nbr;
+			if (nr & ~0x7fffffff)	/* avoid 32-bit OS issues */
+				nr = 0x7fffffff;
+			nr = read(rt->pd.r, rt->buf+rt->nbr, nr);
+			if (nr < 0)
+				error(SYSTEM, "read error from rtrace");
+			if (!nr)
 				error(USER, "rtrace process died");
 			rt->nbr += nr;		/* advance & check */
 			if (rt->nbr >= 6 && !memcmp(rt->buf+rt->nbr-6,
