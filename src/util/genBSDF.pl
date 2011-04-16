@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.13 2011/04/16 00:39:07 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.14 2011/04/16 01:13:22 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -193,7 +193,9 @@ print "\t\t\t<DeviceType>Integral</DeviceType>\n";
 if ( $geout ) {
 	print "\t\t\t<Geometry format=\"MGF\" unit=\"Meter\">\n";
 	printf "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
-	system "cat $mgfscn";
+	open(MGFSCN, "< $mgfscn");
+	while (<MGFSCN>) { print $_; }
+	close MGFSCN;
 	print "xf\n";
 	print "\t\t\t</Geometry>\n";
 }
