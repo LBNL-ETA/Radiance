@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.20 2011/04/11 03:47:46 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.21 2011/04/17 17:45:13 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -45,10 +45,14 @@ int			SDretainSet = SDretainNone;
 SDError
 SDreportEnglish(SDError ec, FILE *fp)
 {
-	if (fp == NULL)
-		return ec;
 	if (!ec)
 		return SDEnone;
+	if ((ec < SDEnone) | (ec > SDEunknown)) {
+		SDerrorDetail[0] = '\0';
+		ec = SDEunknown;
+	}
+	if (fp == NULL)
+		return ec;
 	fputs(SDerrorEnglish[ec], fp);
 	if (SDerrorDetail[0]) {
 		fputs(": ", fp);
@@ -334,7 +338,7 @@ SDgetCache(const char *bname)
 	sdl->next = SDcacheList;
 	SDcacheList = sdl;
 
-	sdl->refcnt++;
+	sdl->refcnt = 1;
 	return &sdl->bsdf;
 }
 
@@ -378,7 +382,7 @@ SDfreeCache(const SDData *sd)
 	for (sdl = SDcacheList; sdl != NULL; sdl = (sdLast=sdl)->next)
 		if (&sdl->bsdf == sd)
 			break;
-	if (sdl == NULL || --sdl->refcnt)
+	if (sdl == NULL || (sdl->refcnt -= (sdl->refcnt > 0)))
 		return;			/* missing or still in use */
 					/* keep unreferenced data? */
 	if (SDisLoaded(sd) && SDretainSet) {
