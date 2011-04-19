@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.13 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.14 2011/04/19 21:31:22 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -165,7 +165,7 @@ spinvector(				/* rotate vector around normal */
 FVECT vres,		/* returned vector */
 const FVECT vorig,		/* original vector */
 const FVECT vnorm,		/* normalized vector for rotation */
-double theta		/* left-hand radians */
+double theta		/* right-hand radians */
 )
 {
 	double  sint, cost, normprod;

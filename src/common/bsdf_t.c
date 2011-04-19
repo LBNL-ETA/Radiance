@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.4 2011/02/19 01:48:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.5 2011/04/19 21:31:22 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -37,7 +37,7 @@ SDnewNode(int nd, int lg)
 		st = (SDNode *)malloc(sizeof(SDNode) +
 				((1<<nd) - 1)*sizeof(st->u.t[0]));
 		if (st != NULL)
-			memset(st->u.t, 0, (1<<nd)*sizeof(st->u.t[0]));
+			memset(st->u.t, 0, sizeof(st->u.t[0])<<nd);
 	} else
 		st = (SDNode *)malloc(sizeof(SDNode) +
 				((1 << nd*lg) - 1)*sizeof(st->u.v[0]));
@@ -58,7 +58,7 @@ SDnewNode(int nd, int lg)
 
 /* Free an SD tree */
 static void
-SDfreeTree(void *p)
+SDfreeTre(void *p)
 {
 	SDNode	*st = (SDNode *)p;
 	int	i;
@@ -66,9 +66,11 @@ SDfreeTree(void *p)
 	if (st == NULL)
 		return;
 	for (i = (st->log2GR < 0) << st->ndim; i--; )
-		SDfreeTree(st->u.t[i]);
+		SDfreeTre(st->u.t[i]);
 	free((void *)st);
 }
+
+#if 0	/* Unused and untested routines */
 
 /* Add up N-dimensional hypercube array values over the given box */
 static double
@@ -148,6 +150,58 @@ SDavgBox(const SDNode *st, const double *bmin, const double *bmax)
 			(double)n;
 }
 
+#endif	/* 0 */
+
+/* Look up tree value at the given grid position */
+static float
+SDlookupTre(const SDNode *st, const double *pos)
+{
+	double	spos[SD_MAXDIM];
+	int	i, n, t;
+					/* climb the tree */
+	while (st->log2GR < 0) {
+		n = 0;			/* move to appropriate branch */
+		for (i = st->ndim; i--; ) {
+			spos[i] = 2.*pos[i];
+			t = (spos[i] >= 1.);
+			n |= t<<i;
+			spos[i] -= (double)t;
+		}
+		st = st->u.t[n];	/* avoids tail recursion */
+		pos = spos;
+	}
+	n = t = 0;			/* find grid array index */
+	for (i = st->ndim; i--; ) {
+		n += (int)((1<<st->log2GR)*pos[i]) << t;
+		t += st->log2GR;
+	}
+	return st->u.v[n];		/* XXX no interpolation */
+}
+
+/* Compute non-diffuse component for variable-resolution BSDF */
+static int
+SDgetTreBSDF(float coef[SDmaxCh], const FVECT outVec,
+				const FVECT inVec, const void *dist)
+{
+	const SDNode	*st = (const SDNode *)dist;
+	double		gridPos[4];
+					/* convert vector coordinates */
+	if (st->ndim == 3) {		/* reduce for isotropic BSDF? */
+		static const FVECT	zvec = {.0, .0, 1.};
+		FVECT			rOutVec;
+		spinvector(rOutVec, outVec, zvec, -atan2(inVec[1],inVec[0]));
+		SDdisk2square(gridPos, rOutVec[0], rOutVec[1]);
+		gridPos[2] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
+	} else if (st->ndim == 4) {	/* XXX no component identity checks */
+		SDdisk2square(gridPos, outVec[0], outVec[1]);
+		SDdisk2square(gridPos+2, -inVec[0], -inVec[1]);
+	} else
+		return 0;		/* should be internal error */
+					/* get nearest BSDF value */
+	coef[0] = SDlookupTre(st, gridPos);
+	return 1;			/* monochromatic for now */
+}
+
 /* Load a variable-resolution BSDF tree from an open XML file */
 SDError
 SDloadTre(SDData *sd, ezxml_t wtl)
@@ -156,10 +210,10 @@ SDloadTre(SDData *sd, ezxml_t wtl)
 }
 
 /* Variable resolution BSDF methods */
-const SDFunc SDhandleTre = {
+SDFunc SDhandleTre = {
+	&SDgetTreBSDF,
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	&SDfreeTree,
+	&SDfreeTre,
 };

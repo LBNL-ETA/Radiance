@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.10 2011/04/11 03:47:46 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.11 2011/04/19 21:31:22 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -83,8 +83,9 @@ typedef const struct {
 	int		(*getBSDFs)(float coef[SDmaxCh], const FVECT outVec,
 				    const FVECT inVec, const void *dist);
 					/* query non-diffuse PSA for vector */
-	SDError		(*queryProjSA)(double *psa, const FVECT vec,
-						int qflags, const void *dist);
+	SDError		(*queryProjSA)(double *psa, const FVECT v1,
+						const RREAL *v2, int qflags,
+						const void *dist);
 					/* get cumulative distribution */
 	const SDCDst	*(*getCDist)(const FVECT inVec, SDComponent *sdc);
 					/* sample cumulative distribution */
@@ -195,9 +196,10 @@ extern const SDData	*SDcacheFile(const char *fname);
 /* Free a BSDF from our cache (clear all if NULL) */
 extern void		SDfreeCache(const SDData *sd);
 
-/* Query projected solid angle resolution for non-diffuse BSDF direction */
-extern SDError		SDsizeBSDF(double *projSA, const FVECT vec,
-					int qflags, const SDData *sd);
+/* Query projected solid angle resolution for non-diffuse BSDF direction(s) */
+extern SDError		SDsizeBSDF(double *projSA, const FVECT v1,
+					const RREAL *v2, int qflags,
+					const SDData *sd);
 
 /* Return BSDF for the given incident and scattered ray vectors */
 extern SDError		SDevalBSDF(SDValue *sv, const FVECT outVec,

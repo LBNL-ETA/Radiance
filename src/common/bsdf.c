@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.21 2011/04/17 17:45:13 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.22 2011/04/19 21:31:22 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -488,13 +488,14 @@ SDdiffuseSamp(FVECT outVec, int outFront, double randX)
 
 /* Query projected solid angle coverage for non-diffuse BSDF direction */
 SDError
-SDsizeBSDF(double *projSA, const FVECT vec, int qflags, const SDData *sd)
+SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
+				int qflags, const SDData *sd)
 {
 	SDSpectralDF	*rdf;
 	SDError		ec;
 	int		i;
 					/* check arguments */
-	if ((projSA == NULL) | (vec == NULL) | (sd == NULL))
+	if ((projSA == NULL) | (v1 == NULL))
 		return SDEargument;
 					/* initialize extrema */
 	switch (qflags) {
@@ -510,20 +511,20 @@ SDsizeBSDF(double *projSA, const FVECT vec, int qflags, const SDData *sd)
 	case 0:
 		return SDEargument;
 	}
-	if (vec[2] > .0)		/* front surface query? */
+	if (v1[2] > .0)			/* front surface query? */
 		rdf = sd->rf;
 	else
 		rdf = sd->rb;
 	ec = SDEdata;			/* run through components */
 	for (i = (rdf==NULL) ? 0 : rdf->ncomp; i--; ) {
-		ec = (*rdf->comp[i].func->queryProjSA)(projSA, vec, qflags,
-							rdf->comp[i].dist);
+		ec = (*rdf->comp[i].func->queryProjSA)(projSA, v1, v2,
+						qflags, rdf->comp[i].dist);
 		if (ec)
 			return ec;
 	}
 	for (i = (sd->tf==NULL) ? 0 : sd->tf->ncomp; i--; ) {
-		ec = (*sd->tf->comp[i].func->queryProjSA)(projSA, vec, qflags,
-							sd->tf->comp[i].dist);
+		ec = (*sd->tf->comp[i].func->queryProjSA)(projSA, v1, v2,
+						qflags, sd->tf->comp[i].dist);
 		if (ec)
 			return ec;
 	}

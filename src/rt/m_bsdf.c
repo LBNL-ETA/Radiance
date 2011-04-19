@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.8 2011/04/06 00:14:26 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.9 2011/04/19 21:31:22 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -67,7 +67,8 @@ typedef struct {
 	RAY	*pr;		/* intersected ray */
 	FVECT	pnorm;		/* perturbed surface normal */
 	FVECT	vray;		/* local outgoing (return) vector */
-	double	sr_vpsa;	/* sqrt of BSDF projected solid angle */
+	double	sr_vpsa[2];	/* sqrt of BSDF projected solid angle extrema */
+	double	thru_psa;	/* through direction projected solid angle */
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
@@ -82,9 +83,9 @@ typedef struct {
 
 /* Jitter ray sample according to projected solid angle and specjitter */
 static void
-bsdf_jitter(FVECT vres, BSDFDAT *ndp)
+bsdf_jitter(FVECT vres, BSDFDAT *ndp, int domax)
 {
-	double	sr_psa = ndp->sr_vpsa;
+	double	sr_psa = ndp->sr_vpsa[domax];
 
 	VCOPY(vres, ndp->vray);
 	if (specjitter < 1.)
@@ -107,13 +108,13 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, BSDFDAT *ndp)
 	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
 		return(0);
 					/* jitter query direction */
-	bsdf_jitter(vjit, ndp);
+	bsdf_jitter(vjit, ndp, 0);
 					/* avoid indirect over-counting */
-	if (ndp->thick != .0 && ndp->pr->crtype & (SPECULAR|AMBIENT) &&
-				vsrc[2] > .0 ^ vjit[2] > .0) {
+	if (ndp->thick != 0 && ndp->pr->crtype & (SPECULAR|AMBIENT) &&
+				vsrc[2] > 0 ^ vjit[2] > 0) {
 		double	dx = vsrc[0] + vjit[0];
 		double	dy = vsrc[1] + vjit[1];
-		if (dx*dx + dy*dy <= ndp->sr_vpsa*ndp->sr_vpsa)
+		if (dx*dx + dy*dy <= ndp->thru_psa)
 			return(0);
 	}
 	ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
@@ -147,7 +148,7 @@ dir_bsdf(
 	if ((-FTINY <= ldot) & (ldot <= FTINY))
 		return;
 
-	if (ldot > .0 && bright(np->rdiff) > FTINY) {
+	if (ldot > 0 && bright(np->rdiff) > FTINY) {
 		/*
 		 *  Compute added diffuse reflected component.
 		 */
@@ -156,7 +157,7 @@ dir_bsdf(
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	if (ldot < .0 && bright(np->tdiff) > FTINY) {
+	if (ldot < 0 && bright(np->tdiff) > FTINY) {
 		/*
 		 *  Compute added diffuse transmission.
 		 */
@@ -170,9 +171,9 @@ dir_bsdf(
 	 */
 	if (!direct_bsdf_OK(ctmp, ldir, np))
 		return;
-	if (ldot > .0) {		/* pattern only diffuse reflection */
+	if (ldot > 0) {		/* pattern only diffuse reflection */
 		COLOR	ctmp1, ctmp2;
-		dtmp = (np->pr->rod > .0) ? np->sd->rLambFront.cieY
+		dtmp = (np->pr->rod > 0) ? np->sd->rLambFront.cieY
 					: np->sd->rLambBack.cieY;
 					/* diffuse fraction */
 		dtmp /= PI * bright(ctmp);
@@ -226,7 +227,7 @@ dir_brdf(
 	if (!direct_bsdf_OK(ctmp, ldir, np))
 		return;
 					/* pattern only diffuse reflection */
-	dtmp = (np->pr->rod > .0) ? np->sd->rLambFront.cieY
+	dtmp = (np->pr->rod > 0) ? np->sd->rLambFront.cieY
 				: np->sd->rLambBack.cieY;
 	dtmp /= PI * bright(ctmp);	/* diffuse fraction */
 	copycolor(ctmp2, np->pr->pcol);
@@ -303,7 +304,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	for (ntrials = 0; nsent < nstarget && ntrials < 9*nstarget; ntrials++) {
 		SDerrorDetail[0] = '\0';
 						/* sample direction & coef. */
-		bsdf_jitter(vjit, ndp);
+		bsdf_jitter(vjit, ndp, 0);
 		ec = SDsampComponent(&bsv, vsmp, vjit, ntrials ? frandom()
 				: urand(ilhash(dimlist,ndims)+samplendx), dcp);
 		if (ec)
@@ -315,7 +316,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 		if (SDmapDir(sr.rdir, ndp->fromloc, vsmp) != SDEnone)
 			break;
 						/* unintentional penetration? */
-		if (DOT(sr.rdir, ndp->pr->ron) > .0 ^ vsmp[2] > .0)
+		if (DOT(sr.rdir, ndp->pr->ron) > 0 ^ vsmp[2] > 0)
 			continue;
 						/* spawn a specular ray */
 		if (nstarget > 1)
@@ -330,7 +331,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 			continue;
 		}
 						/* need to offset origin? */
-		if (ndp->thick != .0 && ndp->pr->rod > .0 ^ vsmp[2] > .0)
+		if (ndp->thick != 0 && ndp->pr->rod > 0 ^ vsmp[2] > 0)
 			VSUM(sr.rorg, sr.rorg, ndp->pr->ron, -ndp->thick);
 		rayvalue(&sr);			/* send & evaluate sample */
 		multcolor(sr.rcol, sr.rcoef);
@@ -354,7 +355,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		cvt_sdcolor(unsc, &ndp->sd->tLamb);
 	} else /* sflags == SDsampSpR */ {
 		unsc = ndp->runsamp;
-		if (ndp->pr->rod > .0) {
+		if (ndp->pr->rod > 0) {
 			dfp = ndp->sd->rf;
 			cvt_sdcolor(unsc, &ndp->sd->rLambFront);
 		} else {
@@ -371,7 +372,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 			FVECT	vjit;
 			double	d;
 			COLOR	ctmp;
-			bsdf_jitter(vjit, ndp);
+			bsdf_jitter(vjit, ndp, 1);
 			d = SDdirectHemi(vjit, sflags, ndp->sd);
 			if (sflags == SDsampSpT) {
 				copycolor(ctmp, ndp->pr->pcol);
@@ -408,7 +409,7 @@ m_bsdf(OBJREC *m, RAY *r)
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
 						/* record surface struck */
-	hitfront = (r->rod > .0);
+	hitfront = (r->rod > 0);
 						/* load cal file */
 	mf = getfunc(m, 5, 0x1d, 1);
 						/* get thickness */
@@ -417,13 +418,13 @@ m_bsdf(OBJREC *m, RAY *r)
 		nd.thick = .0;
 						/* check shadow */
 	if (r->crtype & SHADOW) {
-		if (nd.thick != .0)
+		if (nd.thick != 0)
 			raytrans(r);		/* pass-through */
 		return(1);			/* or shadow */
 	}
 						/* check other rays to pass */
-	if (nd.thick != .0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
-				nd.thick > .0 ^ hitfront)) {
+	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
+				nd.thick > 0 ^ hitfront)) {
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
@@ -487,14 +488,24 @@ m_bsdf(OBJREC *m, RAY *r)
 		ec = SDinvXform(nd.fromloc, nd.toloc);
 						/* determine BSDF resolution */
 	if (!ec)
-		ec = SDsizeBSDF(&nd.sr_vpsa, nd.vray, SDqueryMin, nd.sd);
-	if (!ec)
-		nd.sr_vpsa = sqrt(nd.sr_vpsa);
-	else {
+		ec = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL,
+						SDqueryMin+SDqueryMax, nd.sd);
+	nd.thru_psa = .0;
+	if (!ec && nd.thick != 0 && r->crtype & (SPECULAR|AMBIENT)) {
+		FVECT	vthru;
+		vthru[0] = -nd.vray[0];
+		vthru[1] = -nd.vray[1];
+		vthru[2] = -nd.vray[2];
+		ec = SDsizeBSDF(&nd.thru_psa, nd.vray, vthru,
+						SDqueryMin, nd.sd);
+	}
+	if (ec) {
 		objerror(m, WARNING, transSDError(ec));
 		SDfreeCache(nd.sd);
 		return(1);
 	}
+	nd.sr_vpsa[0] = sqrt(nd.sr_vpsa[0]);
+	nd.sr_vpsa[1] = sqrt(nd.sr_vpsa[1]);
 	if (!hitfront) {			/* perturb normal towards hit */
 		nd.pnorm[0] = -nd.pnorm[0];
 		nd.pnorm[1] = -nd.pnorm[1];
@@ -524,7 +535,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
-		if (nd.thick != .0) {		/* proxy with offset? */
+		if (nd.thick != 0) {		/* proxy with offset? */
 			VCOPY(vtmp, r->rop);
 			VSUM(r->rop, vtmp, r->ron, -nd.thick);
 			multambient(ctmp, r, bnorm);
@@ -538,7 +549,7 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* add direct component */
 	if ((bright(nd.tdiff) <= FTINY) & (nd.sd->tf == NULL)) {
 		direct(r, dir_brdf, &nd);	/* reflection only */
-	} else if (nd.thick == .0) {
+	} else if (nd.thick == 0) {
 		direct(r, dir_bsdf, &nd);	/* thin surface scattering */
 	} else {
 		direct(r, dir_brdf, &nd);	/* reflection first */

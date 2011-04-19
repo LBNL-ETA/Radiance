@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.9 2011/04/08 18:13:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.10 2011/04/19 21:31:22 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -81,7 +81,7 @@ static int	nabases = 3;	/* current number of defined bases */
 static int
 fequal(double a, double b)
 {
-	if (b != .0)
+	if (b != 0)
 		a = a/b - 1.;
 	return (a <= 1e-6) & (a >= -1e-6);
 }
@@ -193,7 +193,7 @@ fo_getndx(const FVECT v, void *p)
 
 	if (v == NULL)
 		return -1;
-	if ((v[2] < .0) | (v[2] > 1.0))
+	if ((v[2] < 0) | (v[2] > 1.))
 		return -1;
 	pol = 180.0/M_PI*acos(v[2]);
 	azi = 180.0/M_PI*atan2(v[1], v[0]);
@@ -507,7 +507,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	df->comp[0].dist = dp;
 	df->comp[0].func = &SDhandleMtx;
 					/* read BSDF data */
-	sdata  = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
+	sdata = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
 	if (!sdata || !*sdata) {
 		sprintf(SDerrorDetail, "Missing BSDF ScatteringData in '%s'",
 				sd->name);
@@ -651,16 +651,19 @@ SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
 
 /* Query solid angle for vector */
 static SDError
-SDqueryMtxProjSA(double *psa, const FVECT vec, int qflags, const void *dist)
+SDqueryMtxProjSA(double *psa, const FVECT v1, const RREAL *v2,
+					int qflags, const void *dist)
 {
 	const SDMat	*dp = (const SDMat *)dist;
 	double		inc_psa, out_psa;
 					/* check arguments */
-	if ((psa == NULL) | (vec == NULL) | (dp == NULL))
+	if ((psa == NULL) | (v1 == NULL) | (dp == NULL))
 		return SDEargument;
+	if (v2 == NULL)
+		v2 = v1;
 					/* get projected solid angles */
-	inc_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, vec));
-	out_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, vec));
+	out_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, v1));
+	inc_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, v2));
 
 	switch (qflags) {		/* record based on flag settings */
 	case SDqueryVal:
@@ -679,14 +682,14 @@ SDqueryMtxProjSA(double *psa, const FVECT vec, int qflags, const void *dist)
 			psa[1] = out_psa;
 		/* fall through */
 	case SDqueryMin:
-		if ((inc_psa > .0) & (inc_psa < psa[0]))
+		if ((inc_psa > 0) & (inc_psa < psa[0]))
 			psa[0] = inc_psa;
-		if ((out_psa > .0) & (out_psa < psa[0]))
+		if ((out_psa > 0) & (out_psa < psa[0]))
 			psa[0] = out_psa;
 		break;
 	}
 					/* make sure it's legal */
-	return (psa[0] <= .0) ? SDEinternal : SDEnone;
+	return (psa[0] <= 0) ? SDEinternal : SDEnone;
 }
 
 /* Compute new cumulative distribution from BSDF */
