@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.22 2011/04/19 21:31:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.23 2011/04/20 14:44:05 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -99,7 +99,7 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 	if ((geom = ezxml_child(wdb, "Thickness")) != NULL)
 		sd->dim[2] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
-	if ((sd->dim[0] < .0) | (sd->dim[1] < .0) | (sd->dim[2] < .0)) {
+	if ((sd->dim[0] < 0) | (sd->dim[1] < 0) | (sd->dim[2] < 0)) {
 		sprintf(SDerrorDetail, "Negative size in \"%s\"", sd->name);
 		return SDEdata;
 	}
@@ -480,7 +480,7 @@ SDdiffuseSamp(FVECT outVec, int outFront, double randX)
 	SDmultiSamp(outVec, 2, randX);
 	SDsquare2disk(outVec, outVec[0], outVec[1]);
 	outVec[2] = 1. - outVec[0]*outVec[0] - outVec[1]*outVec[1];
-	if (outVec[2] > .0)		/* a bit of paranoia */
+	if (outVec[2] > 0)		/* a bit of paranoia */
 		outVec[2] = sqrt(outVec[2]);
 	if (!outFront)			/* going out back? */
 		outVec[2] = -outVec[2];
@@ -491,7 +491,7 @@ SDError
 SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 				int qflags, const SDData *sd)
 {
-	SDSpectralDF	*rdf;
+	SDSpectralDF	*rdf, *tdf;
 	SDError		ec;
 	int		i;
 					/* check arguments */
@@ -511,10 +511,15 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 	case 0:
 		return SDEargument;
 	}
-	if (v1[2] > .0)			/* front surface query? */
+	if (v1[2] > 0)			/* front surface query? */
 		rdf = sd->rf;
 	else
 		rdf = sd->rb;
+	tdf = NULL;			/* transmitted component? */
+	if (v2 != NULL && v1[2] > 0 ^ v2[2] > 0) {
+		rdf = NULL;
+		tdf = sd->tf;
+	}
 	ec = SDEdata;			/* run through components */
 	for (i = (rdf==NULL) ? 0 : rdf->ncomp; i--; ) {
 		ec = (*rdf->comp[i].func->queryProjSA)(projSA, v1, v2,
@@ -522,9 +527,9 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 		if (ec)
 			return ec;
 	}
-	for (i = (sd->tf==NULL) ? 0 : sd->tf->ncomp; i--; ) {
-		ec = (*sd->tf->comp[i].func->queryProjSA)(projSA, v1, v2,
-						qflags, sd->tf->comp[i].dist);
+	for (i = (tdf==NULL) ? 0 : tdf->ncomp; i--; ) {
+		ec = (*tdf->comp[i].func->queryProjSA)(projSA, v1, v2,
+						qflags, tdf->comp[i].dist);
 		if (ec)
 			return ec;
 	}
@@ -548,8 +553,8 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sd == NULL))
 		return SDEargument;
 					/* whose side are we on? */
-	inFront = (inVec[2] > .0);
-	outFront = (outVec[2] > .0);
+	inFront = (inVec[2] > 0);
+	outFront = (outVec[2] > 0);
 					/* start with diffuse portion */
 	if (inFront & outFront) {
 		*sv = sd->rLambFront;
@@ -590,7 +595,7 @@ SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
 	if ((inVec == NULL) | (sd == NULL))
 		return .0;
 					/* gather diffuse components */
-	if (inVec[2] > .0) {
+	if (inVec[2] > 0) {
 		hsum = sd->rLambFront.cieY;
 		rdf = sd->rf;
 	} else /* !inFront */ {
@@ -634,10 +639,10 @@ SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
 	const SDCDst	**cdarr = NULL;
 					/* check arguments */
 	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sd == NULL) |
-			(randX < .0) | (randX >= 1.))
+			(randX < 0) | (randX >= 1.))
 		return SDEargument;
 					/* whose side are we on? */
-	inFront = (inVec[2] > .0);
+	inFront = (inVec[2] > 0);
 					/* remember diffuse portions */
 	if (inFront) {
 		*sv = sd->rLambFront;
@@ -735,10 +740,10 @@ SDcompXform(RREAL vMtx[3][3], const FVECT sNrm, const FVECT uVec)
 	if ((vMtx == NULL) | (sNrm == NULL) | (uVec == NULL))
 		return SDEargument;
 	VCOPY(vMtx[2], sNrm);
-	if (normalize(vMtx[2]) == .0)
+	if (normalize(vMtx[2]) == 0)
 		return SDEargument;
 	fcross(vMtx[0], uVec, vMtx[2]);
-	if (normalize(vMtx[0]) == .0)
+	if (normalize(vMtx[0]) == 0)
 		return SDEargument;
 	fcross(vMtx[1], vMtx[2], vMtx[0]);
 	return SDEnone;
@@ -758,7 +763,7 @@ SDinvXform(RREAL iMtx[3][3], RREAL vMtx[3][3])
 	mTmp[0][1] = vMtx[2][1]*vMtx[0][2] - vMtx[2][2]*vMtx[0][1];
 	mTmp[0][2] = vMtx[1][2]*vMtx[0][1] - vMtx[1][1]*vMtx[0][2];
 	d = vMtx[0][0]*mTmp[0][0] + vMtx[1][0]*mTmp[0][1] + vMtx[2][0]*mTmp[0][2];
-	if (d == .0) {
+	if (d == 0) {
 		strcpy(SDerrorDetail, "Zero determinant in matrix inversion");
 		return SDEargument;
 	}
@@ -785,12 +790,12 @@ SDmapDir(FVECT resVec, RREAL vMtx[3][3], const FVECT inpVec)
 	if (vMtx == NULL) {		/* assume they just want to normalize */
 		if (resVec != inpVec)
 			VCOPY(resVec, inpVec);
-		return (normalize(resVec) > .0) ? SDEnone : SDEargument;
+		return (normalize(resVec) > 0) ? SDEnone : SDEargument;
 	}
 	vTmp[0] = DOT(vMtx[0], inpVec);
 	vTmp[1] = DOT(vMtx[1], inpVec);
 	vTmp[2] = DOT(vMtx[2], inpVec);
-	if (normalize(vTmp) == .0)
+	if (normalize(vTmp) == 0)
 		return SDEargument;
 	VCOPY(resVec, vTmp);
 	return SDEnone;
@@ -862,7 +867,7 @@ static int	nabases = 3;	/* current number of defined bases */
 static int
 fequal(double a, double b)
 {
-	if (b != .0)
+	if (b != 0)
 		a = a/b - 1.;
 	return((a <= 1e-6) & (a >= -1e-6));
 }
@@ -1180,7 +1185,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 	hemi_total = .0;
 	for (i = dp->ninc; i--; ) {
 		dom = getBSDF_incohm(dp,i);
-		if (dom <= .0) {
+		if (dom <= 0) {
 			error(WARNING, "zero/negative incoming solid angle");
 			continue;
 		}
@@ -1203,7 +1208,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 	hemi_total = .0;
 	for (o = dp->nout; o--; ) {
 		dom = getBSDF_outohm(dp,o);
-		if (dom <= .0) {
+		if (dom <= 0) {
 			error(WARNING, "zero/negative outgoing solid angle");
 			continue;
 		}
@@ -1227,7 +1232,7 @@ check_bsdf_data(	/* check that BSDF data is sane */
 		hemi_total = .0;
 		for (o = dp->nout; o--; ) {
 			double	f = BSDF_value(dp,i,o);
-			if (f >= .0)
+			if (f >= 0)
 				hemi_total += f*omega_oarr[o];
 			else {
 				nneg += (f < -FTINY);
