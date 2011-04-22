@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.35 2011/03/07 20:49:19 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.36 2011/04/22 14:35:54 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -134,18 +134,16 @@ MEM_PTR	dat
 		if (tms->inppri != tms->monpri &&
 				PRIMEQ(tms->inppri, tms->monpri))
 			tms->inppri = tms->monpri;	/* no xform */
-		comprgb2rgbWBmat(tms->cmat, tms->inppri, tms->monpri);
+		if (!comprgb2rgbWBmat(tms->cmat, tms->inppri, tms->monpri))
+			returnErr(TM_E_ILLEGAL);
 	}
 	for (i = 0; i < 3; i++)
 		for (j = 0; j < 3; j++)
 			tms->cmat[i][j] *= tms->inpsf;
 						/* set color divisors */
 	for (i = 0; i < 3; i++)
-		if (tms->clf[i] > .001)
-			tms->cdiv[i] =
-				256.*pow(tms->clf[i], 1./tms->mongam);
-		else
-			tms->cdiv[i] = 1;
+		tms->cdiv[i] = 256.*pow(tms->clf[i] < .001 ? .001 :
+						tms->clf[i], 1./tms->mongam);
 						/* notify packages */
 	for (i = tmNumPkgs; i--; )
 		if (tms->pd[i] != NULL && tmPkg[i]->NewSpace != NULL)
