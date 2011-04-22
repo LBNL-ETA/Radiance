@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.27 2010/12/02 18:10:40 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.28 2011/04/22 17:06:26 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.27 2010/12/02 18:10:40 greg Ex
 #include	"tmprivat.h"
 #include	"resolu.h"
 
-#define GAMTSZ	1024
+#define GAMTSZ	4096
 
 typedef struct {
 	BYTE		gamb[GAMTSZ];	/* gamma lookup table */
@@ -39,8 +39,7 @@ static struct tmPackage	colrPkg = {	/* our package functions */
 };
 static int	colrReg = -1;		/* our package registration number */
 
-#define	LOGISZ	260
-static TMbright	logi[LOGISZ];
+static TMbright	logi[256];
 
 
 int
@@ -54,9 +53,9 @@ int	len
 {
 	static const char	funcName[] = "tmCvColrs";
 	int	cmon[4];
-	register COLRDATA	*cd;
-	register int	i, j, li, bi;
-	int32	vl;
+	COLRDATA	*cd;
+	int	i, j, bi;
+	int32	li, vl;
 
 	if (tms == NULL)
 		returnErr(TM_E_TMINVAL);
@@ -68,8 +67,6 @@ int	len
 			returnErr(TM_E_CODERR1);
 		for (i = 256; i--; )
 			logi[i] = TM_BRTSCALE*log((i+.5)/256.) - .5;
-		for (i = 256; i < LOGISZ; i++)
-			logi[i] = 0;
 		tmMkMesofact();
 	}
 	if ((cd = (COLRDATA *)tmPkgData(tms,colrReg)) == NULL)
@@ -87,10 +84,10 @@ int	len
 		} else
 			copycolr(cmon, scan[i]);
 							/* world luminance */
-		li =	cd->clfb[RED]*cmon[RED] +
-			cd->clfb[GRN]*cmon[GRN] +
-			cd->clfb[BLU]*cmon[BLU] ;
-		if (li >= 0xfff00) li = 255;
+		li =	cd->clfb[RED]*(int32)cmon[RED] +
+			cd->clfb[GRN]*(int32)cmon[GRN] +
+			cd->clfb[BLU]*(int32)cmon[BLU] ;
+		if (li >= 1L<<(12+8)) li = 255;
 		else li >>= 12;
 		bi = BRT2SCALE(cmon[EXP]-COLXS) + cd->inpsfb;
 		if (li > 0)
@@ -124,11 +121,11 @@ int	len
 			for (j = 3; j--; )
 				if (cmon[j] < 0) cmon[j] = 0;
 		}
-		bi = ( (int32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 12;
+		bi = ( (uint32)GAMTSZ*cd->clfb[RED]*cmon[RED]/li ) >> 12;
 		cs[3*i  ] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 12;
+		bi = ( (uint32)GAMTSZ*cd->clfb[GRN]*cmon[GRN]/li ) >> 12;
 		cs[3*i+1] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
-		bi = ( (int32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 12;
+		bi = ( (uint32)GAMTSZ*cd->clfb[BLU]*cmon[BLU]/li ) >> 12;
 		cs[3*i+2] = bi>=GAMTSZ ? 255 : cd->gamb[bi];
 	}
 	returnOK;
@@ -150,12 +147,12 @@ static struct radhead {
 
 static int
 headline(			/* grok a header line */
-	register char	*s,
+	char	*s,
 	void	*vrh
 )
 {
 	char	fmt[32];
-	register struct radhead	*rh = vrh;
+	struct radhead	*rh = vrh;
 
 	if (formatval(fmt, s)) {
 		if (!strcmp(fmt, COLRFMT))
@@ -275,10 +272,10 @@ char	*fname;
 	TMstruct	*tms = NULL;
 	char	cmdbuf[1024];
 	FILE	*infp;
-	register COLR	*scan;
-	register BYTE	*rp;
+	COLR	*scan;
+	BYTE	*rp;
 	int	y;
-	register int	x;
+	int	x;
 					/* set up gamma correction */
 	if (setcolrcor(pow, 1./gamval) < 0)
 		returnErr(TM_E_NOMEM);
@@ -424,9 +421,9 @@ done:						/* clean up */
 
 static void
 colrNewSpace(tms)		/* color space changed for tone mapping */
-register TMstruct	*tms;
+TMstruct	*tms;
 {
-	register COLRDATA	*cd;
+	COLRDATA	*cd;
 	double	d;
 	int	i, j;
 
@@ -444,10 +441,10 @@ register TMstruct	*tms;
 
 static MEM_PTR
 colrInit(tms)			/* initialize private data for tone mapping */
-register TMstruct	*tms;
+TMstruct	*tms;
 {
-	register COLRDATA	*cd;
-	register int	i;
+	COLRDATA	*cd;
+	int	i;
 					/* allocate our data */
 	cd = (COLRDATA *)malloc(sizeof(COLRDATA));
 	if (cd == NULL)
