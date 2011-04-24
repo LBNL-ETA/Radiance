@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.11 2011/04/19 21:31:22 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.12 2011/04/24 19:39:21 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -81,15 +81,15 @@ typedef struct SDComp_s	SDComponent;
 typedef const struct {
 					/* return non-diffuse BSDF */
 	int		(*getBSDFs)(float coef[SDmaxCh], const FVECT outVec,
-				    const FVECT inVec, const void *dist);
+				    const FVECT inVec, SDComponent *sdc);
 					/* query non-diffuse PSA for vector */
 	SDError		(*queryProjSA)(double *psa, const FVECT v1,
 						const RREAL *v2, int qflags,
-						const void *dist);
+						SDComponent *sdc);
 					/* get cumulative distribution */
 	const SDCDst	*(*getCDist)(const FVECT inVec, SDComponent *sdc);
 					/* sample cumulative distribution */
-	SDError		(*sampCDist)(FVECT outVec, double randX,
+	SDError		(*sampCDist)(FVECT ioVec, double randX,
 						const SDCDst *cdp);
 					/* free a spectral BSDF component */
 	void		(*freeSC)(void *dist);
@@ -171,9 +171,8 @@ extern SDData		*SDgetCache(const char *bname);
 extern void		SDfreeCumulativeCache(SDSpectralDF *df);
 
 /* Sample an individual BSDF component */
-extern SDError		SDsampComponent(SDValue *sv, FVECT outVec,
-					const FVECT inVec, double randX,
-					SDComponent *sdc);
+extern SDError		SDsampComponent(SDValue *sv, FVECT ioVec,
+					double randX, SDComponent *sdc);
 
 /* Convert 1-dimensional random variable to N-dimensional */
 extern void		SDmultiSamp(double t[], int n, double randX);
@@ -210,8 +209,7 @@ extern double		SDdirectHemi(const FVECT inVec,
 					int sflags, const SDData *sd);
 
 /* Sample BSDF direction based on the given random variable */
-extern SDError		SDsampBSDF(SDValue *sv, FVECT outVec,
-					const FVECT inVec, double randX,
+extern SDError		SDsampBSDF(SDValue *sv, FVECT ioVec, double randX,
 					int sflags, const SDData *sd);
 
 /*****************************************************************

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.23 2011/04/20 14:44:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.24 2011/04/24 19:39:21 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -405,34 +405,35 @@ SDfreeCache(const SDData *sd)
 
 /* Sample an individual BSDF component */
 SDError
-SDsampComponent(SDValue *sv, FVECT outVec, const FVECT inVec,
-			double randX, SDComponent *sdc)
+SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 {
 	float		coef[SDmaxCh];
 	SDError		ec;
+	FVECT		inVec;
 	const SDCDst	*cd;
 	double		d;
 	int		n;
 					/* check arguments */
-	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sdc == NULL))
+	if ((sv == NULL) | (ioVec == NULL) | (sdc == NULL))
 		return SDEargument;
 					/* get cumulative distribution */
+	VCOPY(inVec, ioVec);
 	cd = (*sdc->func->getCDist)(inVec, sdc);
 	if (cd == NULL)
 		return SDEmemory;
 	if (cd->cTotal <= 1e-7) {	/* anything to sample? */
 		sv->spec = c_dfcolor;
 		sv->cieY = .0;
-		memset(outVec, 0, 3*sizeof(double));
+		memset(ioVec, 0, 3*sizeof(double));
 		return SDEnone;
 	}
 	sv->cieY = cd->cTotal;
 					/* compute sample direction */
-	ec = (*sdc->func->sampCDist)(outVec, randX, cd);
+	ec = (*sdc->func->sampCDist)(ioVec, randX, cd);
 	if (ec)
 		return ec;
 					/* get BSDF color */
-	n = (*sdc->func->getBSDFs)(coef, outVec, inVec, sdc->dist);
+	n = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc->dist);
 	if (n <= 0) {
 		strcpy(SDerrorDetail, "BSDF sample value error");
 		return SDEinternal;
@@ -626,10 +627,10 @@ SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
 
 /* Sample BSDF direction based on the given random variable */
 SDError
-SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
-			double randX, int sflags, const SDData *sd)
+SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 {
 	SDError		ec;
+	FVECT		inVec;
 	int		inFront;
 	SDSpectralDF	*rdf;
 	double		rdiff;
@@ -638,10 +639,11 @@ SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
 	SDComponent	*sdc;
 	const SDCDst	**cdarr = NULL;
 					/* check arguments */
-	if ((sv == NULL) | (outVec == NULL) | (inVec == NULL) | (sd == NULL) |
+	if ((sv == NULL) | (ioVec == NULL) | (sd == NULL) |
 			(randX < 0) | (randX >= 1.))
 		return SDEargument;
 					/* whose side are we on? */
+	VCOPY(inVec, ioVec);
 	inFront = (inVec[2] > 0);
 					/* remember diffuse portions */
 	if (inFront) {
@@ -682,14 +684,14 @@ SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
 	}
 	if (sv->cieY <= 1e-7) {		/* anything to sample? */
 		sv->cieY = .0;
-		memset(outVec, 0, 3*sizeof(double));
+		memset(ioVec, 0, 3*sizeof(double));
 		return SDEnone;
 	}
 					/* scale random variable */
 	randX *= sv->cieY;
 					/* diffuse reflection? */
 	if (randX < rdiff) {
-		SDdiffuseSamp(outVec, inFront, randX/rdiff);
+		SDdiffuseSamp(ioVec, inFront, randX/rdiff);
 		goto done;
 	}
 	randX -= rdiff;
@@ -697,7 +699,7 @@ SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT) {
 		if (randX < sd->tLamb.cieY) {
 			sv->spec = sd->tLamb.spec;
-			SDdiffuseSamp(outVec, !inFront, randX/sd->tLamb.cieY);
+			SDdiffuseSamp(ioVec, !inFront, randX/sd->tLamb.cieY);
 			goto done;
 		}
 		randX -= sd->tLamb.cieY;
@@ -709,11 +711,11 @@ SDsampBSDF(SDValue *sv, FVECT outVec, const FVECT inVec,
 		return SDEinternal;
 					/* compute sample direction */
 	sdc = (i < nr) ? &rdf->comp[i] : &sd->tf->comp[i-nr];
-	ec = (*sdc->func->sampCDist)(outVec, randX/cdarr[i]->cTotal, cdarr[i]);
+	ec = (*sdc->func->sampCDist)(ioVec, randX/cdarr[i]->cTotal, cdarr[i]);
 	if (ec)
 		return ec;
 					/* compute color */
-	j = (*sdc->func->getBSDFs)(coef, outVec, inVec, sdc->dist);
+	j = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc->dist);
 	if (j <= 0) {
 		sprintf(SDerrorDetail, "BSDF \"%s\" sampling value error",
 				sd->name);

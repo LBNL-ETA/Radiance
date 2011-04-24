@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.5 2011/04/19 21:31:22 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.6 2011/04/24 19:39:21 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -28,6 +28,25 @@ typedef struct SDNode_s {
 		float		v[1];		/* scattering value(s) */
 	} u;			/* subtrees or values (extends struct) */
 } SDNode;
+
+/* Variable-resolution BSDF holder */
+typedef struct {
+	int	isxmit;		/* transmitted component? */
+	SDNode	*st;		/* BSDF tree */
+} SDTre;
+
+/* Holder for cumulative distribution (sum of BSDF * projSA) */
+typedef struct {
+	SD_CDIST_BASE;		/* base fields; must come first */
+	double	clim[2][2];	/* input coordinate limits */
+	double	max_psa;	/* maximum projected solid angle */
+	int	isxmit;		/* transmitted component? */
+	int	calen;		/* cumulative array length */
+	struct {
+		unsigned	hndx;	/* hilbert index */
+		unsigned	cuml;	/* cumulative value */
+	}		carr[1];	/* cumulative array (extends struct) */
+} SDTreCDst;	
 
 #ifdef _EZXML_H
 /* Load a variable-resolution BSDF tree from an open XML file */

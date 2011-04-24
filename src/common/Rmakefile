@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.64 2011/02/18 02:41:55 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.65 2011/04/24 19:39:21 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -178,7 +178,7 @@ mgf_parser.o:	mgf_mesg.h
 
 bsdf_m.o:	bsdf.h bsdf_m.h
 
-bsdf_t.o:	bsdf.h bsdf_t.h
+bsdf_t.o:	bsdf.h bsdf_t.h hilbert.h
 
 hilbert.o:	hilbert.h
 

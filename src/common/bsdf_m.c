@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.11 2011/04/20 14:44:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.12 2011/04/24 19:39:21 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -352,7 +352,7 @@ load_angle_basis(ezxml_t wab)
 					"ThetaBounds"), "LowerTheta"))),
 				abase_list[nabases].lat[i].tmin)) {
 			sprintf(SDerrorDetail, "Theta values disagree in '%s'",
-				abname);
+					abname);
 			return RC_DATERR;
 		}
 		abase_list[nabases].nangles +=
@@ -362,7 +362,7 @@ load_angle_basis(ezxml_t wab)
 				(abase_list[nabases].lat[i].nphis == 1 &&
 				abase_list[nabases].lat[i].tmin > FTINY)) {
 			sprintf(SDerrorDetail, "Illegal phi count in '%s'",
-				abname);
+					abname);
 			return RC_DATERR;
 		}
 	}
@@ -631,10 +631,14 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 /* Get Matrix BSDF value */
 static int
 SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
-				const FVECT inVec, const void *dist)
+				const FVECT inVec, SDComponent *sdc)
 {
-	const SDMat	*dp = (const SDMat *)dist;
+	const SDMat	*dp;
 	int		i_ndx, o_ndx;
+					/* check arguments */
+	if ((coef == NULL) | (outVec == NULL) | (inVec == NULL) | (sdc == NULL)
+			|| (dp = (SDMat *)sdc->dist) == NULL)
+		return 0;
 					/* get angle indices */
 	i_ndx = mBSDF_incndx(dp, inVec);
 	o_ndx = mBSDF_outndx(dp, outVec);
@@ -649,30 +653,28 @@ SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
 	return 1;			/* XXX monochrome for now */
 }
 
-/* Query solid angle for vector */
+/* Query solid angle for vector(s) */
 static SDError
 SDqueryMtxProjSA(double *psa, const FVECT v1, const RREAL *v2,
-					int qflags, const void *dist)
+					int qflags, SDComponent *sdc)
 {
-	const SDMat	*dp = (const SDMat *)dist;
+	const SDMat	*dp;
 	double		inc_psa, out_psa;
 					/* check arguments */
-	if ((psa == NULL) | (v1 == NULL) | (dp == NULL))
+	if ((psa == NULL) | (v1 == NULL) | (sdc == NULL) ||
+			(dp = (SDMat *)sdc->dist) == NULL)
 		return SDEargument;
 	if (v2 == NULL)
 		v2 = v1;
 					/* get projected solid angles */
 	out_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, v1));
 	inc_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, v2));
-	if ((out_psa <= 0) & (inc_psa <= 0)) {
+	if ((v1 != v2) & (out_psa <= 0) & (inc_psa <= 0)) {
 		inc_psa = mBSDF_outohm(dp, mBSDF_outndx(dp, v2));
 		out_psa = mBSDF_incohm(dp, mBSDF_incndx(dp, v1));
 	}
 
 	switch (qflags) {		/* record based on flag settings */
-	case SDqueryVal:
-		psa[0] = .0;
-		/* fall through */
 	case SDqueryMax:
 		if (inc_psa > psa[0])
 			psa[0] = inc_psa;
@@ -686,6 +688,9 @@ SDqueryMtxProjSA(double *psa, const FVECT v1, const RREAL *v2,
 			psa[1] = out_psa;
 		/* fall through */
 	case SDqueryMin:
+	case SDqueryVal:
+		if (qflags == SDqueryVal)
+			psa[0] = M_PI;
 		if ((inc_psa > 0) & (inc_psa < psa[0]))
 			psa[0] = inc_psa;
 		if ((out_psa > 0) & (out_psa < psa[0]))
@@ -731,12 +736,13 @@ make_cdist(SDMatCDst *cd, const FVECT inVec, SDMat *dp, int rev)
 static const SDCDst *
 SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 {
-	SDMat		*dp = (SDMat *)sdc->dist;
+	SDMat		*dp;
 	int		reverse;
 	SDMatCDst	myCD;
 	SDMatCDst	*cd, *cdlast;
 					/* check arguments */
-	if ((inVec == NULL) | (dp == NULL))
+	if ((inVec == NULL) | (sdc == NULL) ||
+			(dp = (SDMat *)sdc->dist) == NULL)
 		return NULL;
 	memset(&myCD, 0, sizeof(myCD));
 	myCD.indx = mBSDF_incndx(dp, inVec);
@@ -785,14 +791,14 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 
 /* Sample cumulative distribution */
 static SDError
-SDsampMtxCDist(FVECT outVec, double randX, const SDCDst *cdp)
+SDsampMtxCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 {
 	const unsigned	maxval = ~0;
 	const SDMatCDst	*mcd = (const SDMatCDst *)cdp;
 	const unsigned	target = randX*maxval;
 	int		i, iupper, ilower;
 					/* check arguments */
-	if ((outVec == NULL) | (mcd == NULL))
+	if ((ioVec == NULL) | (mcd == NULL))
 		return SDEargument;
 					/* binary search to find index */
 	ilower = 0; iupper = mcd->calen;
@@ -805,9 +811,9 @@ SDsampMtxCDist(FVECT outVec, double randX, const SDCDst *cdp)
 	randX = (randX*maxval - mcd->carr[ilower]) /
 			(double)(mcd->carr[iupper] - mcd->carr[ilower]);
 					/* convert index to vector */
-	if ((*mcd->ob_vec)(outVec, i+randX, mcd->ob_priv))
+	if ((*mcd->ob_vec)(ioVec, i+randX, mcd->ob_priv))
 		return SDEnone;
-	strcpy(SDerrorDetail, "BSDF sampling fault");
+	strcpy(SDerrorDetail, "Matrix BSDF sampling fault");
 	return SDEinternal;
 }
 

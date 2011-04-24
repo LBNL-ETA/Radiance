@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.9 2011/04/19 21:31:22 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.10 2011/04/24 19:39:21 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -291,7 +291,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	SDError	ec;
 	SDValue bsv;
 	double	sthick;
-	FVECT	vjit, vsmp;
+	FVECT	vsmp;
 	RAY	sr;
 	int	ntrials;
 						/* multiple samples? */
@@ -304,8 +304,8 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	for (ntrials = 0; nsent < nstarget && ntrials < 9*nstarget; ntrials++) {
 		SDerrorDetail[0] = '\0';
 						/* sample direction & coef. */
-		bsdf_jitter(vjit, ndp, 0);
-		ec = SDsampComponent(&bsv, vsmp, vjit, ntrials ? frandom()
+		bsdf_jitter(vsmp, ndp, 0);
+		ec = SDsampComponent(&bsv, vsmp, ntrials ? frandom()
 				: urand(ilhash(dimlist,ndims)+samplendx), dcp);
 		if (ec)
 			objerror(ndp->mp, USER, transSDError(ec));
