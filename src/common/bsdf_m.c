@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.12 2011/04/24 19:39:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.13 2011/04/24 20:16:52 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -682,9 +682,9 @@ SDqueryMtxProjSA(double *psa, const FVECT v1, const RREAL *v2,
 			psa[0] = out_psa;
 		break;
 	case SDqueryMin+SDqueryMax:
-		if (inc_psa > psa[0])
+		if (inc_psa > psa[1])
 			psa[1] = inc_psa;
-		if (out_psa > psa[0])
+		if (out_psa > psa[1])
 			psa[1] = out_psa;
 		/* fall through */
 	case SDqueryMin:

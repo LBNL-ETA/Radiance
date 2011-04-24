@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.24 2011/04/24 19:39:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.25 2011/04/24 20:16:52 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -433,7 +433,7 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 	if (ec)
 		return ec;
 					/* get BSDF color */
-	n = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc->dist);
+	n = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc);
 	if (n <= 0) {
 		strcpy(SDerrorDetail, "BSDF sample value error");
 		return SDEinternal;
@@ -524,13 +524,13 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 	ec = SDEdata;			/* run through components */
 	for (i = (rdf==NULL) ? 0 : rdf->ncomp; i--; ) {
 		ec = (*rdf->comp[i].func->queryProjSA)(projSA, v1, v2,
-						qflags, rdf->comp[i].dist);
+						qflags, &rdf->comp[i]);
 		if (ec)
 			return ec;
 	}
 	for (i = (tdf==NULL) ? 0 : tdf->ncomp; i--; ) {
 		ec = (*tdf->comp[i].func->queryProjSA)(projSA, v1, v2,
-						qflags, tdf->comp[i].dist);
+						qflags, &tdf->comp[i]);
 		if (ec)
 			return ec;
 	}
@@ -572,7 +572,7 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 	i = (sdf != NULL) ? sdf->ncomp : 0;
 	while (i-- > 0) {
 		nch = (*sdf->comp[i].func->getBSDFs)(coef, outVec, inVec,
-							sdf->comp[i].dist);
+							&sdf->comp[i]);
 		while (nch-- > 0) {
 			c_cmix(&sv->spec, sv->cieY, &sv->spec,
 					coef[nch], &sdf->comp[i].cspec[nch]);
@@ -715,7 +715,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	if (ec)
 		return ec;
 					/* compute color */
-	j = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc->dist);
+	j = (*sdc->func->getBSDFs)(coef, ioVec, inVec, sdc);
 	if (j <= 0) {
 		sprintf(SDerrorDetail, "BSDF \"%s\" sampling value error",
 				sd->name);
