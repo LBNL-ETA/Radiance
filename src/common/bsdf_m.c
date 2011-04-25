@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.13 2011/04/24 20:16:52 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.14 2011/04/25 15:48:05 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -687,10 +687,11 @@ SDqueryMtxProjSA(double *psa, const FVECT v1, const RREAL *v2,
 		if (out_psa > psa[1])
 			psa[1] = out_psa;
 		/* fall through */
-	case SDqueryMin:
 	case SDqueryVal:
 		if (qflags == SDqueryVal)
 			psa[0] = M_PI;
+		/* fall through */
+	case SDqueryMin:
 		if ((inc_psa > 0) & (inc_psa < psa[0]))
 			psa[0] = inc_psa;
 		if ((out_psa > 0) & (out_psa < psa[0]))
@@ -761,17 +762,15 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 		reverse = 1;
 	}
 	cdlast = NULL;			/* check for it in cache list */
-	for (cd = (SDMatCDst *)sdc->cdList;
-				cd != NULL; cd = (SDMatCDst *)cd->next) {
+	for (cd = (SDMatCDst *)sdc->cdList; cd != NULL;
+				cdlast = cd, cd = (SDMatCDst *)cd->next)
 		if (cd->indx == myCD.indx && (cd->calen == myCD.calen) &
 					(cd->ob_priv == myCD.ob_priv) &
 					(cd->ob_vec == myCD.ob_vec))
 			break;
-		cdlast = cd;
-	}
 	if (cd == NULL) {		/* need to allocate new entry */
 		cd = (SDMatCDst *)malloc(sizeof(SDMatCDst) +
-					myCD.calen*sizeof(myCD.carr[0]));
+					sizeof(myCD.carr[0])*myCD.calen);
 		if (cd == NULL)
 			return NULL;
 		*cd = myCD;		/* compute cumulative distribution */
