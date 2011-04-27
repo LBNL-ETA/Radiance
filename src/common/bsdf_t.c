@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.8 2011/04/27 20:05:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.9 2011/04/27 23:05:51 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -151,14 +151,14 @@ SDsimplifyTre(SDNode *st)
 			return NULL;	/* propogate error up call stack */
 		match &= (st->u.t[n]->log2GR == st->u.t[0]->log2GR);
 	}
-	if (match && st->u.t[0]->log2GR >= 0) {
-		SDNode	*stn = SDnewNode(st->ndim, st->u.t[0]->log2GR + 1);
+	if (match && (match = st->u.t[0]->log2GR) >= 0) {
+		SDNode	*stn = SDnewNode(st->ndim, match + 1);
 		if (stn == NULL)	/* out of memory? */
 			return st;
 					/* transfer values to new grid */
 		for (n = 1 << st->ndim; n--; )
 			fill_grid_branch(grid_branch_start(stn, n),
-					st->u.t[n]->u.v, st->ndim, st->log2GR);
+					st->u.t[n]->u.v, stn->ndim, stn->log2GR);
 		SDfreeTre(st);		/* free old tree */
 		st = stn;		/* return new one */
 	}
@@ -712,19 +712,21 @@ next_token(char **spp)
 	return **spp;
 }
 
+#define eat_token(spp,c)	(next_token(spp)==(c) ? *(*(spp))++ : 0)
+
 /* Count words from this point in string to '}' */
 static int
 count_values(char *cp)
 {
 	int	n = 0;
 
-	while (next_token(&cp) != '}') {
+	while (next_token(&cp) != '}' && *cp) {
 		if (*cp == '{')
 			return -1;
-		while (*cp && !isspace(*cp))
+		while (*cp && (*cp != ',') & (*cp != '}') & !isspace(*cp))
 			++cp;
 		++n;
-		cp += (next_token(&cp) == ',');
+		eat_token(&cp, ',');
 	}
 	return n;
 }
@@ -739,7 +741,7 @@ load_values(char **spp, float *va, int n)
 	while (n-- > 0 && (svnext = fskip(*spp)) != NULL) {
 		*v++ = atof(*spp);
 		*spp = svnext;
-		*spp += (next_token(spp) == ',');
+		eat_token(spp, ',');
 	}
 	return v - va;
 }
@@ -751,11 +753,10 @@ load_tree_data(char **spp, int nd)
 	SDNode	*st;
 	int	n;
 
-	if (next_token(spp) != '{') {
+	if (!eat_token(spp, '{')) {
 		strcpy(SDerrorDetail, "Missing '{' in tensor tree");
 		return NULL;
 	}
-	++*spp;				/* in tree, now */
 	if (next_token(spp) == '{') {	/* tree branches */
 		st = SDnewNode(nd, -1);
 		if (st == NULL)
@@ -788,13 +789,12 @@ load_tree_data(char **spp, int nd)
 			return NULL;
 		}
 	}
-	if (next_token(spp) != '}') {
+	if (!eat_token(spp, '}')) {
 		strcpy(SDerrorDetail, "Missing '}' in tensor tree");
 		SDfreeTre(st);
 		return NULL;
 	}
-	++*spp;				/* walk past close and return */
-	*spp += (next_token(spp) == ',');
+	eat_token(spp, ',');
 	return st;
 }
 
@@ -992,7 +992,7 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 		return;
 	}
 	dv->spec = df->comp[0].cspec[0];
-	dv->cieY = subtract_min((*(SDTre *)df->comp[n].dist).st);
+	dv->cieY = subtract_min((*(SDTre *)df->comp[0].dist).st);
 					/* in case of multiple components */
 	for (n = df->ncomp; --n; ) {
 		double	ymin = subtract_min((*(SDTre *)df->comp[n].dist).st);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.26 2011/04/25 15:48:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.27 2011/04/27 23:05:51 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -168,6 +168,7 @@ SDloadFile(SDData *sd, const char *fname)
 		return lastErr;
 				/* try loading variable resolution data */
 	lastErr = SDloadTre(sd, wtl);
+#if 0
 				/* check our result */
 	switch (lastErr) {
 	case SDEformat:
@@ -178,6 +179,7 @@ SDloadFile(SDData *sd, const char *fname)
 	default:		/* variable res. OK else serious error */
 		break;
 	}
+#endif
 				/* done with XML file */
 	ezxml_free(fl);
 	
