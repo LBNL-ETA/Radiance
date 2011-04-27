@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.7 2011/04/27 20:03:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.8 2011/04/27 20:05:15 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -975,7 +975,7 @@ subtract_min(SDNode *st)
 	if (vmin <= FTINY)
 		return .0;
 
-	SDsubtractTreMin(st, vmin);
+	SDsubtractTreVal(st, vmin);
 
 	return M_PI * vmin;		/* return hemispherical value */
 }
