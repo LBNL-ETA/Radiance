@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.14 2011/04/25 15:48:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.15 2011/04/27 20:03:25 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -418,6 +418,8 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	int		i;
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
+	if (!sdata)
+		return RC_FAIL;
 	/*
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 * Favor their "Front" (incoming light) since that's more often valid
@@ -507,7 +509,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	df->comp[0].dist = dp;
 	df->comp[0].func = &SDhandleMtx;
 					/* read BSDF data */
-	sdata = ezxml_txt(ezxml_child(wdb,"ScatteringData"));
+	sdata = ezxml_txt(ezxml_child(wdb, "ScatteringData"));
 	if (!sdata || !*sdata) {
 		sprintf(SDerrorDetail, "Missing BSDF ScatteringData in '%s'",
 				sd->name);
@@ -521,7 +523,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 					sd->name);
 			return RC_FORMERR;
 		}
-		while (*sdnext && isspace(*sdnext))
+		while (isspace(*sdnext))
 			sdnext++;
 		if (*sdnext == ',') sdnext++;
 		if (rowinc) {
@@ -546,6 +548,10 @@ subtract_min(SDMat *sm)
 	for (i = n; --i; )
 		if (sm->bsdf[i] < minv)
 			minv = sm->bsdf[i];
+	
+	if (minv <= FTINY)
+		return .0;
+
 	for (i = n; i--; )
 		sm->bsdf[i] -= minv;
 
@@ -571,7 +577,7 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 		c_cmix(&dv->spec, dv->cieY, &dv->spec, ymin, &df->comp[n].cspec[0]);
 		dv->cieY += ymin;
 	}
-	df->maxHemi -= dv->cieY;	/* adjust minimum hemispherical */
+	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
 					/* make sure everything is set */
 	c_ccvt(&dv->spec, C_CSXY+C_CSSPEC);
 }
@@ -580,12 +586,11 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 SDError
 SDloadMtx(SDData *sd, ezxml_t wtl)
 {
-	ezxml_t			wld, wdb;
-	int			rowIn;
-	struct BSDF_data	*dp;
-	char			*txt;
-	int			rval;
-	
+	ezxml_t		wld, wdb;
+	int		rowIn;
+	char		*txt;
+	int		rval;
+					/* basic checks and data ordering */
 	txt = ezxml_txt(ezxml_child(ezxml_child(wtl,
 			"DataDefinition"), "IncidentDataStructure"));
 	if (txt == NULL || !*txt) {
@@ -604,12 +609,12 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 				sd->name);
 		return SDEsupport;
 	}
-				/* get angle basis */
+					/* get angle basis */
 	rval = load_angle_basis(ezxml_child(ezxml_child(wtl,
 				"DataDefinition"), "AngleBasis"));
 	if (rval < 0)
 		return convert_errcode(rval);
-				/* load BSDF components */
+					/* load BSDF components */
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
 		if (strcasecmp(ezxml_txt(ezxml_child(wld,"Wavelength")),
@@ -620,11 +625,11 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 			if ((rval = load_bsdf_data(sd, wdb, rowIn)) < 0)
 				return convert_errcode(rval);
 	}
-				/* separate diffuse components */
+					/* separate diffuse components */
 	extract_diffuse(&sd->rLambFront, sd->rf);
 	extract_diffuse(&sd->rLambBack, sd->rb);
 	extract_diffuse(&sd->tLamb, sd->tf);
-				/* return success */
+					/* return success */
 	return SDEnone;
 }
 

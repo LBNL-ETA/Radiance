@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.6 2011/04/24 19:39:21 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.7 2011/04/27 20:03:25 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -29,9 +29,13 @@ typedef struct SDNode_s {
 	} u;			/* subtrees or values (extends struct) */
 } SDNode;
 
+#define SD_UFRONT	0x1	/* flag for BSDF uses front side */
+#define SD_UBACK	0x2	/* flag for BSDF uses back side */
+#define SD_XMIT		0x3	/* combine the two for transmission */
+
 /* Variable-resolution BSDF holder */
 typedef struct {
-	int	isxmit;		/* transmitted component? */
+	int	sidef;		/* transmitted component? */
 	SDNode	*st;		/* BSDF tree */
 } SDTre;
 
@@ -40,7 +44,7 @@ typedef struct {
 	SD_CDIST_BASE;		/* base fields; must come first */
 	double	clim[2][2];	/* input coordinate limits */
 	double	max_psa;	/* maximum projected solid angle */
-	int	isxmit;		/* transmitted component? */
+	int	sidef;		/* which side(s) to use */
 	int	calen;		/* cumulative array length */
 	struct {
 		unsigned	hndx;	/* hilbert index */
