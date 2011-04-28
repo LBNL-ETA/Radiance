@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.9 2011/04/27 23:05:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.10 2011/04/28 04:05:11 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -129,8 +129,8 @@ grid_branch_start(SDNode *st, int n)
 	float		*vptr = st->u.v;
 	int		i;
 
-	for (i = st->ndim; i--; skipsiz <<= st->log2GR)
-		if (1<<i & n)
+	for (i = 0; i < st->ndim; skipsiz <<= st->log2GR)
+		if (1<<i++ & n)
 			vptr += skipsiz >> 1;
 	return vptr;
 }
@@ -187,7 +187,7 @@ SDsmallestLeaf(const SDNode *st)
 static double
 SDiterSum(const float *va, int nd, int shft, const int *imin, const int *imax)
 {
-	const unsigned	skipsiz = 1 << nd*shft;
+	const unsigned	skipsiz = 1 << --nd*shft;
 	double		sum = .0;
 	int		i;
 	
@@ -196,8 +196,7 @@ SDiterSum(const float *va, int nd, int shft, const int *imin, const int *imax)
 			sum += va[i];
 	else
 		for (i = *imin; i < *imax; i++)
-			sum += SDiterSum(va + i*skipsiz,
-					nd-1, shft, imin+1, imax+1);
+			sum += SDiterSum(va + i*skipsiz, nd, shft, imin+1, imax+1);
 	return sum;
 }
 
@@ -484,8 +483,8 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 					/* find Hilbert entry index */
 	bmin[0] = cmin[0]*(double)iwmax + .5;
 	bmin[1] = cmin[1]*(double)iwmax + .5;
-	bmax[0] = bmin[0] + wid;
-	bmax[1] = bmin[1] + wid;
+	bmax[0] = bmin[0] + wid-1;
+	bmax[1] = bmin[1] + wid-1;
 	hilbert_box_vtx(2, sizeof(bitmask_t), iwbits, 1, bmin, bmax);
 	sp->darr[sp->alen].hent = hilbert_c2i(2, iwbits, bmin);
 	sp->darr[sp->alen].wid = wid;
@@ -498,8 +497,18 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 static int
 sscmp(const void *p1, const void *p2)
 {
+	unsigned	h1 = (*(const struct outdir_s *)p1).hent;
+	unsigned	h2 = (*(const struct outdir_s *)p2).hent;
+
+	if (h1 > h2)
+		return 1;
+	if (h1 < h2)
+		return -1;
+	return 0;
+/*
 	return (int)((*(const struct outdir_s *)p1).hent -
 			(*(const struct outdir_s *)p2).hent);
+*/
 }
 
 /* Create a new cumulative distribution for the given input direction */
@@ -922,7 +931,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 static float
 SDgetTreMin(const SDNode *st)
 {
-	float	vmin = 1./M_PI;
+	float	vmin = FHUGE;
 	int	n;
 
 	if (st->log2GR < 0) {
@@ -960,15 +969,21 @@ subtract_min(SDNode *st)
 {
 	float	vmin;
 					/* be sure to skip unused portion */
-	if ((st->ndim == 3) & (st->log2GR < 0)) {
-		float	v;
-		int	i;
+	if (st->ndim == 3) {
+		int	n;
 		vmin = 1./M_PI;
-		for (i = 0; i < 4; i++) {
-			v = SDgetTreMin(st->u.t[i]);
-			if (v < vmin)
-				vmin = v;
-		}
+		if (st->log2GR < 0) {
+			for (n = 0; n < 4; n++) {
+				float	v = SDgetTreMin(st->u.t[n]);
+				if (v < vmin)
+					vmin = v;
+			}
+		} else if (st->log2GR) {
+			for (n = 1 << (3*st->log2GR - 1); n--; )
+				if (st->u.v[n] < vmin)
+					vmin = st->u.v[n];
+		} else
+			vmin = st->u.v[0];
 	} else				/* anisotropic covers entire tree */
 		vmin = SDgetTreMin(st);
 
