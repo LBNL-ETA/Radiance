@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: words.c,v 2.10 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: words.c,v 2.11 2011/04/28 17:46:25 greg Exp $";
 #endif
 /*
  * Routines for recognizing and moving about words in strings.
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: words.c,v 2.10 2011/02/18 00:40:25 greg Exp $"
 char *
 atos(char *rs, int nb, char *s)		/* get word from string, returning rs */
 {
-	register char  *cp = rs;
+	char  *cp = rs;
 
 	while (isspace(*s))
 		s++;
@@ -83,7 +83,7 @@ iskip(char *s)			/* skip integer in string */
 {
 	while (isspace(*s))
 		s++;
-	if (*s == '-' || *s == '+')
+	if ((*s == '-') | (*s == '+'))
 		s++;
 	if (!isdigit(*s))
 		return(NULL);
@@ -97,11 +97,11 @@ iskip(char *s)			/* skip integer in string */
 char *
 fskip(char *s)			/* skip float in string */
 {
-	register char  *cp;
+	char  *cp;
 
 	while (isspace(*s))
 		s++;
-	if (*s == '-' || *s == '+')
+	if ((*s == '-') | (*s == '+'))
 		s++;
 	cp = s;
 	while (isdigit(*cp))
@@ -113,8 +113,8 @@ fskip(char *s)			/* skip float in string */
 	}
 	if (cp == s)
 		return(NULL);
-	if (*cp == 'e' || *cp == 'E')
-		return(iskip(cp+1));
+	if ((*cp == 'e') | (*cp == 'E'))
+		return(isspace(*++cp) ? NULL : iskip(cp));
 	return(cp);
 }
 
@@ -122,7 +122,7 @@ fskip(char *s)			/* skip float in string */
 int
 isint(char *s)			/* check integer format */
 {
-	register char  *cp;
+	char  *cp;
 
 	cp = iskip(s);
 	return(cp != NULL && *cp == '\0');
@@ -132,7 +132,7 @@ isint(char *s)			/* check integer format */
 int
 isintd(char *s, char *ds)	/* check integer format with delimiter set */
 {
-	register char  *cp;
+	char  *cp;
 
 	cp = iskip(s);
 	return(cp != NULL && strchr(ds, *cp) != NULL);
@@ -142,7 +142,7 @@ isintd(char *s, char *ds)	/* check integer format with delimiter set */
 int
 isflt(char *s)			/* check float format */
 {
-	register char  *cp;
+	char  *cp;
 
 	cp = fskip(s);
 	return(cp != NULL && *cp == '\0');
@@ -152,7 +152,7 @@ isflt(char *s)			/* check float format */
 int
 isfltd(char *s, char *ds)	/* check integer format with delimiter set */
 {
-	register char  *cp;
+	char  *cp;
 
 	cp = fskip(s);
 	return(cp != NULL && strchr(ds, *cp) != NULL);
