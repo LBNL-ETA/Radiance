@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.11 2011/04/28 17:46:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.12 2011/05/01 16:34:37 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -61,20 +61,20 @@ SDnewNode(int nd, int lg)
 	if (lg < 0) {
 		st = (SDNode *)malloc(sizeof(SDNode) +
 				sizeof(st->u.t[0])*((1<<nd) - 1));
-		if (st != NULL)
-			memset(st->u.t, 0, sizeof(st->u.t[0])<<nd);
-	} else
-		st = (SDNode *)malloc(sizeof(SDNode) +
-				sizeof(st->u.v[0])*((1 << nd*lg) - 1));
-		
-	if (st == NULL) {
-		if (lg < 0)
+		if (st == NULL) {
 			sprintf(SDerrorDetail,
 				"Cannot allocate %d branch BSDF tree", 1<<nd);
-		else
+			return NULL;
+		}
+		memset(st->u.t, 0, sizeof(st->u.t[0])<<nd);
+	} else {
+		st = (SDNode *)malloc(sizeof(SDNode) +
+				sizeof(st->u.v[0])*((1 << nd*lg) - 1));		
+		if (st == NULL) {
 			sprintf(SDerrorDetail,
 				"Cannot allocate %d BSDF leaves", 1 << nd*lg);
-		return NULL;
+			return NULL;
+		}
 	}
 	st->ndim = nd;
 	st->log2GR = lg;
@@ -85,12 +85,12 @@ SDnewNode(int nd, int lg)
 static void
 SDfreeTre(SDNode *st)
 {
-	int	i;
+	int	n;
 
 	if (st == NULL)
 		return;
-	for (i = (st->log2GR < 0) << st->ndim; i--; )
-		SDfreeTre(st->u.t[i]);
+	for (n = (st->log2GR < 0) << st->ndim; n--; )
+		SDfreeTre(st->u.t[n]);
 	free((void *)st);
 }
 
@@ -473,11 +473,14 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 		sp->wmax = wid;
 	if (sp->alen >= sp->nall) {	/* need more space? */
 		struct outdir_s	*ndarr;
-		sp->nall += 8192;
+		sp->nall += 1024;
 		ndarr = (struct outdir_s *)realloc(sp->darr,
 					sizeof(struct outdir_s)*sp->nall);
-		if (ndarr == NULL)
+		if (ndarr == NULL) {
+			sprintf(SDerrorDetail,
+				"Cannot grow scaffold to %u entries", sp->nall);
 			return -1;	/* abort build */
+		}
 		sp->darr = ndarr;
 	}
 					/* find Hilbert entry index */
@@ -521,7 +524,7 @@ make_cdist(const SDTre *sdt, const double *pos)
 	myScaffold.wmax = 0;
 	myScaffold.nic = sdt->st->ndim - 2;
 	myScaffold.alen = 0;
-	myScaffold.nall = 8192;
+	myScaffold.nall = 512;
 	myScaffold.darr = (struct outdir_s *)malloc(sizeof(struct outdir_s) *
 							myScaffold.nall);
 	if (myScaffold.darr == NULL)
@@ -536,6 +539,9 @@ make_cdist(const SDTre *sdt, const double *pos)
 	cd = (SDTreCDst *)malloc(sizeof(SDTreCDst) +
 				sizeof(cd->carr[0])*myScaffold.alen);
 	if (cd == NULL) {
+		sprintf(SDerrorDetail,
+			"Cannot allocate %u entry cumulative distribution",
+				myScaffold.alen);
 		free(myScaffold.darr);
 		return NULL;
 	}
@@ -717,7 +723,8 @@ next_token(char **spp)
 	return **spp;
 }
 
-#define eat_token(spp,c)	(next_token(spp)==(c) ? *(*(spp))++ : 0)
+/* Advance pointer past matching token (or any token if c==0) */
+#define eat_token(spp,c)	(next_token(spp)==(c) ^ !(c) ? *(*(spp))++ : 0)
 
 /* Count words from this point in string to '}' */
 static int
