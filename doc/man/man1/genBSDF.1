@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.4 2011/02/22 22:51:23 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.5 2011/05/06 23:58:09 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -93,12 +93,6 @@ To create a BSDF description including geometry from a set of venetian blinds:
 genblinds blind_white blind1 .07 3 1.5 30 40 | xform -rz -90 -rx 90 > blind1.rad
 .br
 genBSDF -r @rtc.opt blind_white.mat glazing.rad blind1.rad > blind1.xml
-.SH NOTES
-Currently,
-.I genBSDF
-computes only the forward visible transmitted component,
-though the XML specification provides for front and back
-transmission and reflection as well.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
