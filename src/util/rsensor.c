@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.8 2010/09/26 15:41:46 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.9 2011/05/17 19:34:36 greg Exp $";
 #endif
 
 /*
@@ -34,8 +34,8 @@ int		nprocs = 1;     /* number of rendering processes */
 float		*sensor = NULL;	/* current sensor data */
 int		sntp[2];	/* number of sensor theta and phi angles */
 float		maxtheta;	/* maximum theta value for this sensor */
-float		tvals[MAXNT+1];	/* theta values (1-D table of 1-cos(t)) */
-float		*pvals = NULL;	/* phi values (2-D table in radians) */
+float		tvals[MAXNT+1];	/* theta prob. values (1-D table of 1-cos(t)) */
+float		*pvals = NULL;	/* phi prob. values (2-D table in radians) */
 int		ntheta = 0;	/* polar angle divisions */
 int		nphi = 0;	/* azimuthal angle divisions */
 double		gscale = 1.;	/* global scaling value */
@@ -235,6 +235,12 @@ load_sensor(
 		cp = fskip(cp);
 		if (cp == NULL)
 			break;
+		if (ntp[1] > 1 && sarr[ntp[1]+1] <= sarr[ntp[1]]) {
+			sprintf(errmsg,
+		"Phi values not monotinically increasing in sensor file '%s'",
+					sfile);
+			error(USER, errmsg);
+		}
 		++ntp[1];
 	}
 	ntp[0] = 0;				/* get thetas + data */
@@ -258,6 +264,13 @@ load_sensor(
 		}
 		if (i == ntp[0]*(ntp[1]+1))
 			break;
+		if (ntp[0] > 1 && sarr[ntp[0]*(ntp[1]+1)] <=
+					sarr[(ntp[0]-1)*(ntp[1]+1)]) {
+			sprintf(errmsg,
+		"Theta values not monotinically increasing in sensor file '%s'",
+					sfile);
+			error(USER, errmsg);
+		}
 		if (i != (ntp[0]+1)*(ntp[1]+1)) {
 			sprintf(errmsg,
 			"bad column count near line %d in sensor file '%s'",
@@ -327,36 +340,42 @@ init_ptable(
 		error(INTERNAL, errmsg);
 	}
 					/* compute boundary angles */
-	maxtheta = 1.5f*s_theta(sntp[0]-1) - 0.5f*s_theta(sntp[0]-2);
+	maxtheta = DEGREE*(1.5f*s_theta(sntp[0]-1) - 0.5f*s_theta(sntp[0]-2));
+	if (maxtheta > PI)
+		maxtheta = PI;
 	thdiv[0] = .0;
 	for (t = 1; t < sntp[0]; t++)
 		thdiv[t] = DEGREE/2.*(s_theta(t-1) + s_theta(t));
-	thdiv[sntp[0]] = maxtheta*DEGREE;
-	phdiv[0] = .0;
+	thdiv[sntp[0]] = maxtheta;
+	phdiv[0] = DEGREE*(1.5f*s_phi(0) - 0.5f*s_phi(1));
 	for (p = 1; p < sntp[1]; p++)
 		phdiv[p] = DEGREE/2.*(s_phi(p-1) + s_phi(p));
-	phdiv[sntp[1]] = 2.*PI;
+	phdiv[sntp[1]] = DEGREE*(1.5f*s_phi(sntp[1]-1) - 0.5f*s_phi(sntp[1]-2));
 					/* size our table */
-	tsize = 1. - cos(maxtheta*DEGREE);
-	psize = PI*tsize/(maxtheta*DEGREE);
+	tsize = 1. - cos(maxtheta);
+	psize = PI*tsize/maxtheta;
 	if (sntp[0]*sntp[1] < samptot)	/* don't overdo resolution */
 		samptot = sntp[0]*sntp[1];
 	ntheta = (int)(sqrt((double)samptot*tsize/psize) + 0.5);
 	if (ntheta > MAXNT)
 		ntheta = MAXNT;
 	nphi = samptot/ntheta;
-	pvals = (float *)malloc(sizeof(float)*ntheta*(nphi+1));
+	pvals = (float *)malloc(sizeof(float)*(ntheta+1)*(nphi+1));
 	if (pvals == NULL)
 		error(SYSTEM, "out of memory in init_ptable()");
 	gscale = .0;			/* compute our inverse table */
 	for (i = 0; i < sntp[0]; i++) {
 		rowp = &s_val(i,0);
-		rowsum[i] = 0.;
+		rowsum[i] = 1e-20;
 		for (j = 0; j < sntp[1]; j++)
 			rowsum[i] += *rowp++;
 		rowomega[i] = cos(thdiv[i]) - cos(thdiv[i+1]);
 		rowomega[i] *= 2.*PI / (double)sntp[1];
 		gscale += rowsum[i] * rowomega[i];
+	}
+	if (gscale <= FTINY) {
+		sprintf(errmsg, "Sensor values sum to zero in file '%s'", sfile);
+		error(USER, errmsg);
 	}
 	for (i = 0; i < ntheta; i++) {
 		prob = (double)i / (double)ntheta;
@@ -375,25 +394,25 @@ init_ptable(
 			frac += 0.5;
 			--t;
 		}
-		pvals[i*(nphi+1)] = .0f;
+		pvals[i*(nphi+1)] = phdiv[0];
 		for (j = 1; j < nphi; j++) {
 			prob = (double)j / (double)nphi;
 			rowp = &s_val(t,0);
 			rowp1 = &s_val(t+1,0);
-			for (p = 0; p < sntp[1]; p++) {
+			for (p = 0; p < sntp[1]; p++)
 				if ((prob -= (1.-frac)*rowp[p]/rowsum[t] +
 					    frac*rowp1[p]/rowsum[t+1]) <= .0)
 					break;
-				if (p >= sntp[1])
-					error(INTERNAL,
-					    "code error 2 in init_ptable()");
-				frac1 = 1. + prob/((1.-frac)*rowp[p]/rowsum[t]
-						+ frac*rowp1[p]/rowsum[t+1]);
-				pvals[i*(nphi+1) + j] = (1.-frac1)*phdiv[p] +
-							frac1*phdiv[p+1];
+			if (p >= sntp[1]) {
+				p = sntp[1] - 1;
+				prob = .5;
 			}
+			frac1 = 1. + prob/((1.-frac)*rowp[p]/rowsum[t]
+					+ frac*rowp1[p]/rowsum[t+1]);
+			pvals[i*(nphi+1) + j] = (1.-frac1)*phdiv[p] +
+						frac1*phdiv[p+1];
 		}
-		pvals[i*(nphi+1) + nphi] = (float)(2.*PI);
+		pvals[i*(nphi+1) + nphi] = phdiv[sntp[1]];
 	}
 	tvals[0] = .0f;
 	tvals[ntheta] = (float)tsize;
