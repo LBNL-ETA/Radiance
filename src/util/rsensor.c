@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.9 2011/05/17 19:34:36 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.10 2011/05/19 16:09:38 greg Exp $";
 #endif
 
 /*
@@ -207,6 +207,7 @@ load_sensor(
 	char	*sfile
 )
 {
+	int	warnedneg;
 	char	linebuf[8192];
 	int	nelem = 1000;
 	float	*sarr = (float *)malloc(sizeof(float)*nelem);
@@ -243,6 +244,7 @@ load_sensor(
 		}
 		++ntp[1];
 	}
+	warnedneg = 0;
 	ntp[0] = 0;				/* get thetas + data */
 	while (fgets(linebuf, sizeof(linebuf), fp) != NULL) {
 		++ntp[0];
@@ -260,6 +262,14 @@ load_sensor(
 			cp = fskip(cp);
 			if (cp == NULL)
 				break;
+			if (i && sarr[i] < .0) {
+				if (!warnedneg++) {
+					sprintf(errmsg,
+		"Negative value(s) in sensor file '%s' (ignored)\n", sfile);
+					error(WARNING, errmsg);
+				}
+				sarr[i] = .0;
+			}
 			++i;
 		}
 		if (i == ntp[0]*(ntp[1]+1))
@@ -388,9 +398,9 @@ init_ptable(
 		tvals[i] = 1. - ( (1.-frac)*cos(thdiv[t]) +
 						frac*cos(thdiv[t+1]) );
 				/* offset b/c sensor values are centered */
-		if (t <= 0 || frac > 0.5)
+		if (!t || (t < sntp[0]-1) & (frac >= 0.5))
 			frac -= 0.5;
-		else if (t >= sntp[0]-1 || frac < 0.5) {
+		else {
 			frac += 0.5;
 			--t;
 		}
@@ -403,7 +413,7 @@ init_ptable(
 				if ((prob -= (1.-frac)*rowp[p]/rowsum[t] +
 					    frac*rowp1[p]/rowsum[t+1]) <= .0)
 					break;
-			if (p >= sntp[1]) {
+			if (p >= sntp[1]) {	/* should never happen? */
 				p = sntp[1] - 1;
 				prob = .5;
 			}
