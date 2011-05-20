@@ -1,6 +1,6 @@
-{ RCSid $Id: disk2square.cal,v 1.1 2011/05/20 21:16:06 greg Exp $ }
+{ RCSid $Id: disk2square.cal,v 1.2 2011/05/20 21:23:21 greg Exp $ }
 {
-	Convert between unit square and disk, using Chiu-Shirley mapping
+	Convert between unit square and disk, using Shirley-Chiu mapping
 
 	5/20/2011	G. Ward
 
@@ -41,7 +41,7 @@ out_disk_x = out_disk_r*cos(out_disk_phi);
 out_disk_y = out_disk_r*sin(out_disk_phi);
 
 			{ Compute square position from disk coordinates }
-norm_radians(p) = if(-p - PI/4, p + 2*PI, p);
+norm_radians(p) : if(-p - PI/4, p + 2*PI, p);
 in_disk_r = sqrt(in_disk_x*in_disk_x + in_disk_y*in_disk_y);
 in_disk_phi = norm_radians(atan2(in_disk_y, in_disk_x));
 
