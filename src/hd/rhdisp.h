@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdisp.h,v 3.16 2004/01/01 11:21:55 schorsch Exp $ */
+/* RCSid: $Id: rhdisp.h,v 3.17 2011/05/20 02:06:39 greg Exp $ */
 /*
  * Header for holodeck display drivers.
  */
@@ -80,7 +80,7 @@ extern void beam_init(int fresh);
 extern void gridlines(void (*f)(FVECT wp[2]));
 	/* rhd_ctab.c */
 extern int new_ctab(int ncolors);
-extern int get_pixel(BYTE rgb[3], void (*set_pixel)(int h, int r, int g, int b));
+extern int get_pixel(uby8 rgb[3], void (*set_pixel)(int h, int r, int g, int b));
 
 
 #ifdef __cplusplus

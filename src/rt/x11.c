@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11.c,v 2.34 2008/08/21 07:05:59 greg Exp $";
+static const char	RCSid[] = "$Id: x11.c,v 2.35 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  x11.c - driver for X-windows version 11
@@ -558,7 +558,7 @@ true_pixel(			/* return true pixel value for color */
 )
 {
 	unsigned long  rval;
-	BYTE  rgb[3];
+	uby8  rgb[3];
 
 	map_color(rgb, col);
 	rval = ourvinfo.red_mask*rgb[RED]/255 & ourvinfo.red_mask;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: falsecolor.c,v 3.9 2008/07/03 03:35:10 greg Exp $";
+static const char RCSid[] = "$Id: falsecolor.c,v 3.10 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * False color mapping functions.
@@ -18,7 +18,7 @@ static const char RCSid[] = "$Id: falsecolor.c,v 3.9 2008/07/03 03:35:10 greg Ex
 
 /* Initialize new false color mapping */
 FCstruct *
-fcInit(BYTE fcscale[256][3])
+fcInit(uby8 fcscale[256][3])
 {
 	FCstruct	*fcs = (FCstruct *)malloc(sizeof(FCstruct));
 	
@@ -44,7 +44,7 @@ fcFixedLinear(FCstruct *fcs, double Lwmax)
 		free((void *)fcs->lumap);
 	fcs->mbrmin = tmCvLuminance(Lwmax/256.);
 	fcs->mbrmax = tmCvLuminance(Lwmax);
-	fcs->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
+	fcs->lumap = (uby8 *)malloc(sizeof(uby8)*(fcs->mbrmax - fcs->mbrmin + 1));
 	if (fcs->lumap == NULL)
 		return(TM_E_NOMEM);
 	mult = 255.999/tmLuminance(fcs->mbrmax);
@@ -69,7 +69,7 @@ fcFixedLog(FCstruct *fcs, double Lwmin, double Lwmax)
 		fcs->lumap = NULL;
 		return(TM_E_ILLEGAL);
 	}
-	fcs->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
+	fcs->lumap = (uby8 *)malloc(sizeof(uby8)*(fcs->mbrmax - fcs->mbrmin + 1));
 	if (fcs->lumap == NULL)
 		return(TM_E_NOMEM);
 	for (i = fcs->mbrmax - fcs->mbrmin; i >= 0; i--)
@@ -139,7 +139,7 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile)
  
 /* Apply false color mapping to pixel values */
 int
-fcMapPixels(FCstruct *fcs, BYTE *ps, TMbright *ls, int len)
+fcMapPixels(FCstruct *fcs, uby8 *ps, TMbright *ls, int len)
 {
 	int	li;
 
@@ -189,13 +189,13 @@ fcDup(FCstruct *fcs)
 	if (fcnew == NULL)
 		return(NULL);
 	if (fcs->lumap != NULL) {
-		fcnew->lumap = (BYTE *)malloc(sizeof(BYTE)*(fcs->mbrmax -
+		fcnew->lumap = (uby8 *)malloc(sizeof(uby8)*(fcs->mbrmax -
 							fcs->mbrmin + 1));
 		if (fcnew->lumap == NULL)
 			return(fcnew);
 		fcnew->mbrmin = fcs->mbrmin; fcnew->mbrmax = fcs->mbrmax;
 		memcpy((void *)fcnew->lumap, (void *)fcs->lumap,
-				sizeof(BYTE)*(fcs->mbrmax - fcs->mbrmin + 1));
+				sizeof(uby8)*(fcs->mbrmax - fcs->mbrmin + 1));
 	}
 	return(fcnew);
 }
@@ -211,7 +211,7 @@ fcDone(FCstruct *fcs)
 	free((void *)fcs);
 }
 
-BYTE	fcDefaultScale[256][3] = {	/* default false color scale */
+uby8	fcDefaultScale[256][3] = {	/* default false color scale */
 	111,8,132,
 	108,7,133,
 	105,7,134,

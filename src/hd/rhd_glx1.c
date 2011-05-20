@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.6 2006/06/07 17:52:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.7 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -344,7 +344,7 @@ dev_flush(void)			/* flush output */
 
 extern void
 dev_cone(		/* render a cone in view coordinates */
-	BYTE	rgb[3],
+	uby8	rgb[3],
 	FVECT	ip,
 	double	rad
 )
@@ -484,7 +484,7 @@ draw3dline(			/* draw 3d line in world coordinates */
 static void
 draw_grids(void)			/* draw holodeck section grids */
 {
-	static BYTE	gridrgba[4] = {0x0, 0xff, 0xff, 0x00};
+	static uby8	gridrgba[4] = {0x0, 0xff, 0xff, 0x00};
 	double	xmin, xmax, ymin, ymax, zmin, zmax;
 	double	d;
 					/* can we even do it? */

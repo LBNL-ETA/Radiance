@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.26 2010/09/30 15:43:30 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.27 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -176,7 +176,7 @@ addray(		/* add a ray to our output holodeck */
 	int	sn, bi, n;
 	register HOLO	*hp;
 	GCOORD	gc[2];
-	BYTE	rr[2][2];
+	uby8	rr[2][2];
 	BEAM	*bp;
 	double	d0, d1;
 	unsigned	dc;

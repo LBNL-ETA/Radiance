@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.28 2011/04/22 17:06:26 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.29 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -24,7 +24,7 @@ static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.28 2011/04/22 17:06:26 greg Ex
 #define GAMTSZ	4096
 
 typedef struct {
-	BYTE		gamb[GAMTSZ];	/* gamma lookup table */
+	uby8		gamb[GAMTSZ];	/* gamma lookup table */
 	int		clfb[3];	/* encoded tm->clf */
 	int32		cmatb[3][3];	/* encoded color transform */
 	TMbright	inpsfb;		/* encoded tm->inpsf */
@@ -46,7 +46,7 @@ int
 tmCvColrs(				/* convert RGBE/XYZE colors */
 TMstruct	*tms,
 TMbright	*ls,
-BYTE	*cs,
+uby8	*cs,
 COLR	*scan,
 int	len
 )
@@ -180,7 +180,7 @@ int
 tmLoadPicture(				/* convert Radiance picture */
 TMstruct	*tms,
 TMbright	**lpp,
-BYTE	**cpp,
+uby8	**cpp,
 int	*xp,
 int	*yp,
 char	*fname,
@@ -224,7 +224,7 @@ FILE	*fp
 	if (*lpp == NULL)
 		goto done;
 	if (cpp != TM_NOCHROMP) {
-		*cpp = (BYTE *)malloc(3*sizeof(BYTE) * *xp * *yp);
+		*cpp = (uby8 *)malloc(3*sizeof(uby8) * *xp * *yp);
 		if (*cpp == NULL)
 			goto done;
 	}
@@ -261,7 +261,7 @@ done:						/* clean up */
 #ifdef PCOND
 static int					/* run pcond to map picture */
 dopcond(psp, xp, yp, flags, monpri, gamval, Lddyn, Ldmax, fname)
-BYTE	**psp;
+uby8	**psp;
 int	*xp, *yp;
 int	flags;
 RGBPRIMP	monpri;
@@ -273,7 +273,7 @@ char	*fname;
 	char	cmdbuf[1024];
 	FILE	*infp;
 	COLR	*scan;
-	BYTE	*rp;
+	uby8	*rp;
 	int	y;
 	int	x;
 					/* set up gamma correction */
@@ -312,9 +312,9 @@ char	*fname;
 					/* allocate arrays */
 	scan = (COLR *)malloc(sizeof(COLR) * *xp);
 	if (flags & TM_F_BW)
-		rp = (BYTE *)malloc(sizeof(BYTE) * *xp * *yp);
+		rp = (uby8 *)malloc(sizeof(uby8) * *xp * *yp);
 	else
-		rp = (BYTE *)malloc(3*sizeof(BYTE) * *xp * *yp);
+		rp = (uby8 *)malloc(3*sizeof(uby8) * *xp * *yp);
 	if (((*psp = rp) == NULL) | (scan == NULL)) {
 		pclose(infp);
 		returnErr(TM_E_NOMEM);
@@ -348,7 +348,7 @@ char	*fname;
 
 int					/* map a Radiance picture */
 tmMapPicture(psp, xp, yp, flags, monpri, gamval, Lddyn, Ldmax, fname, fp)
-BYTE	**psp;
+uby8	**psp;
 int	*xp, *yp;
 int	flags;
 RGBPRIMP	monpri;
@@ -358,7 +358,7 @@ FILE	*fp;
 {
 	char	*funcName = fname==NULL ? "tmMapPicture" : fname;
 	TMstruct	*tms;
-	BYTE	*cp;
+	uby8	*cp;
 	TMbright	*lp;
 	int	err;
 						/* check arguments */
@@ -388,7 +388,7 @@ FILE	*fp;
 	}
 						/* allocate space for result */
 	if (flags & TM_F_BW) {
-		*psp = (BYTE *)malloc(sizeof(BYTE) * *xp * *yp);
+		*psp = (uby8 *)malloc(sizeof(uby8) * *xp * *yp);
 		if (*psp == NULL) {
 			free((MEM_PTR)lp);
 			tmDone(tms);

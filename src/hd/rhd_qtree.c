@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.26 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.27 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -103,7 +103,7 @@ qtFreeTree(		/* free allocated twigs */
 
 
 #define	LEAFSIZ		(3*sizeof(float)+sizeof(int32)+\
-			sizeof(TMbright)+6*sizeof(BYTE))
+			sizeof(TMbright)+6*sizeof(uby8))
 
 extern int
 qtAllocLeaves(		/* allocate space for n leaves */
@@ -132,8 +132,8 @@ qtAllocLeaves(		/* allocate space for n leaves */
 	qtL.wp = (float (*)[3])qtL.base;
 	qtL.wd = (int32 *)(qtL.wp + n);
 	qtL.brt = (TMbright *)(qtL.wd + n);
-	qtL.chr = (BYTE (*)[3])(qtL.brt + n);
-	qtL.rgb = (BYTE (*)[3])(qtL.chr + n);
+	qtL.chr = (uby8 (*)[3])(qtL.brt + n);
+	qtL.rgb = (uby8 (*)[3])(qtL.chr + n);
 	qtL.nl = n;
 	qtL.tml = qtL.bl = qtL.tl = 0;
 	falleaves = -1;
@@ -379,8 +379,8 @@ dev_value(		/* add a pixel value to our quadtree */
 	tmCvColrs(tmGlobal, &qtL.brt[li], qtL.chr[li], (COLR *)c, 1);
 	if (putleaf(li, 1)) {
 		if (mapit)
-			tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+li), qtL.brt+li,
-					(BYTE *)(qtL.chr+li), 1);
+			tmMapPixels(tmGlobal, (uby8 *)(qtL.rgb+li), qtL.brt+li,
+					(uby8 *)(qtL.chr+li), 1);
 		if (--rayqleft == 0)
 			dev_flush();		/* flush output */
 	}
@@ -434,12 +434,12 @@ qtMapLeaves(		/* map our leaves to RGB */
 		if (tmComputeMapping(tmGlobal, 0., 0., 0.) != TM_E_OK)
 			return(0);
 	}
-	if (tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+aorg), qtL.brt+aorg,
-			(BYTE *)(qtL.chr+aorg), alen) != TM_E_OK)
+	if (tmMapPixels(tmGlobal, (uby8 *)(qtL.rgb+aorg), qtL.brt+aorg,
+			(uby8 *)(qtL.chr+aorg), alen) != TM_E_OK)
 		return(0);
 	if (blen > 0)
-		tmMapPixels(tmGlobal, (BYTE *)(qtL.rgb+borg), qtL.brt+borg,
-				(BYTE *)(qtL.chr+borg), blen);
+		tmMapPixels(tmGlobal, (uby8 *)(qtL.rgb+borg), qtL.brt+borg,
+				(uby8 *)(qtL.chr+borg), blen);
 	qtL.tml = qtL.tl;
 	return(1);
 }

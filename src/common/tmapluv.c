@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapluv.c,v 3.15 2010/12/02 18:10:40 greg Exp $";
+static const char	RCSid[] = "$Id: tmapluv.c,v 3.16 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping LogLuv encoded pixels.
@@ -39,7 +39,7 @@ static void	luv24NewSpace(TMstruct *);
 
 typedef struct {
 	int	offset;			/* computed luminance offset */
-	BYTE	rgbval[1<<16][3];	/* computed RGB value for given uv */
+	uby8	rgbval[1<<16][3];	/* computed RGB value for given uv */
 	uint32	rgbflg[1<<(16-5)];	/* flags for computed values */
 } LUV32DATA;			/* LogLuv 32-bit conversion data */
 
@@ -53,7 +53,7 @@ static int	luv32Reg = -1;		/* 32-bit package reg. number */
 
 typedef struct {
 	int	offset;			/* computed luminance offset */
-	BYTE	rgbval[1<<14][3];	/* computed rgb value for uv index */
+	uby8	rgbval[1<<14][3];	/* computed rgb value for uv index */
 	uint32	rgbflg[1<<(14-5)];	/* flags for computed values */
 } LUV24DATA;			/* LogLuv 24-bit conversion data */
 
@@ -67,7 +67,7 @@ static int	uv14neu = -1;		/* neutral index for 14-bit (u',v') */
 
 static void
 uv2rgb(rgb, tms, uvp)			/* compute RGB from uv coordinate */
-BYTE	rgb[3];
+uby8	rgb[3];
 register TMstruct	*tms;
 double	uvp[2];
 {	/* Should check that tms->inppri==TM_XYZPRIM beforehand... */
@@ -127,7 +127,7 @@ int
 tmCvLuv32(				/* convert raw 32-bit LogLuv values */
 TMstruct	*tms,
 TMbright	*ls,
-BYTE	*cs,
+uby8	*cs,
 uint32	*luvs,
 int	len
 )
@@ -189,7 +189,7 @@ int
 tmCvLuv24(			/* convert raw 24-bit LogLuv values */
 TMstruct	*tms,
 TMbright	*ls,
-BYTE	*cs,
+uby8	*cs,
 uint32	*luvs,
 int	len
 )

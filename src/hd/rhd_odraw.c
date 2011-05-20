@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.17 2005/01/07 20:33:02 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.18 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Routines for drawing samples using depth buffer checks.
@@ -47,7 +47,7 @@ static int	needmapping;	/* what needs doing with tone map */
 
 
 #define SAMP32	(32*(2*sizeof(short)+sizeof(union ODfunion)+sizeof(TMbright)+\
-			6*sizeof(BYTE))+sizeof(int32))
+			6*sizeof(uby8))+sizeof(int32))
 
 static int sampcmp(const void *s0, const void *s1);
 static int odAllocBlockSamp(int vn, int hh, int vh, double prox);
@@ -102,8 +102,8 @@ odInit(				/* initialize drawing routines */
 		odS.redraw = (int32 *)(odS.f + n);
 		odS.ip = (short (*)[2])(odS.redraw + n/32);
 		odS.brt = (TMbright *)(odS.ip + n);
-		odS.chr = (BYTE (*)[3])(odS.brt + n);
-		odS.rgb = (BYTE (*)[3])(odS.chr + n);
+		odS.chr = (uby8 (*)[3])(odS.brt + n);
+		odS.rgb = (uby8 (*)[3])(odS.chr + n);
 		odS.nsamp = n;
 	}
 	if (!n)
@@ -494,8 +494,8 @@ odUpdate(				/* update this view */
 			needmapping &= ~NEWMAP;
 			odRedrawAll();			/* redraw everything */
 		}
-		if (tmMapPixels(tmGlobal, (BYTE *)(odS.rgb), odS.brt,
-				(BYTE *)(odS.chr), odS.nsamp) != TM_E_OK)
+		if (tmMapPixels(tmGlobal, (uby8 *)(odS.rgb), odS.brt,
+				(uby8 *)(odS.chr), odS.nsamp) != TM_E_OK)
 			return;
 		needmapping &= ~NEWRGB;
 	}

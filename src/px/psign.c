@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psign.c,v 2.26 2007/01/01 03:03:32 greg Exp $";
+static const char	RCSid[] = "$Id: psign.c,v 2.27 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  psign.c - produce picture from text.
@@ -218,7 +218,7 @@ makemap(void)			/* create the bit map */
 	if (ysiz % SSS)
 		ysiz += SSS - ysiz%SSS;
 	xdim = (xsiz+7)/8;
-	ourbitmap = (BYTE *)bmalloc(ysiz*xdim);
+	ourbitmap = (uby8 *)bmalloc(ysiz*xdim);
 	if (ourbitmap == NULL)
 		error(SYSTEM, "Out of memory in makemap");
 	memset((char *)ourbitmap, '\0', ysiz*xdim);

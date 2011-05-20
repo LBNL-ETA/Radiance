@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.10 2004/10/04 17:44:22 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.11 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -352,7 +352,7 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 	BMPWriter       *wtr;
 	FILE		*fp;
 	int		xr, yr;
-	BYTE		*pa;
+	uby8		*pa;
 	int		i;
 					/* check tone-mapping spec */
 	i = strlen(expec);
@@ -397,7 +397,7 @@ tmap2bmp(char *fnin, char *fnout, char *expec, RGBPRIMP monpri, double gamval)
 		quiterr("cannot allocate writer structure");
 					/* write to BMP file */
 	while (wtr->yscan < yr) {
-		BYTE    *scn = pa + xr*((tmflags & TM_F_BW) ? 1 : 3)*
+		uby8    *scn = pa + xr*((tmflags & TM_F_BW) ? 1 : 3)*
 						(yr-1 - wtr->yscan);
 		if (tmflags & TM_F_BW)
 			memcpy((void *)wtr->scanline, (void *)scn, xr);

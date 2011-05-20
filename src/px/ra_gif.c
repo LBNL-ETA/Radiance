@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_gif.c,v 2.11 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.12 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Convert from Radiance picture file to Compuserve GIF.
@@ -23,13 +23,13 @@ int bmap[MAXCOLORS];
 
 int currow;
 long  picstart;
-BYTE  clrtab[256][3];
+uby8  clrtab[256][3];
 
 extern int  samplefac;
 
 
 COLR	*scanln;
-BYTE	*pixscan;
+uby8	*pixscan;
 
 int  xmax, ymax;			/* picture size */
 double	gamv = 2.2;			/* gamma correction */
@@ -195,7 +195,7 @@ mkclrmap(			/* make our color map */
 		gmap[i] = clrtab[i][GRN];
 		bmap[i] = clrtab[i][BLU];
 	}
-	if (dither && (pixscan = (BYTE *)malloc(xmax)) == NULL)
+	if (dither && (pixscan = (uby8 *)malloc(xmax)) == NULL)
 		goto memerr;
 	return;
 memerr:

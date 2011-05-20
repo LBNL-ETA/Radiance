@@ -1,4 +1,4 @@
-/* RCSid: $Id: x11raster.h,v 2.4 2004/03/28 20:33:14 schorsch Exp $ */
+/* RCSid: $Id: x11raster.h,v 2.5 2011/05/20 02:06:39 greg Exp $ */
 /*
  * x11raster.h - header file for X routines using images.
  *
@@ -27,7 +27,7 @@ typedef struct {
 }	XRASTER;
 
 extern Colormap newcmap(Display	*disp, int	scrn, Visual	*vis);
-extern int init_rcolors(XRASTER	*xr, BYTE	cmap[][3]);
+extern int init_rcolors(XRASTER	*xr, uby8	cmap[][3]);
 extern unsigned long * map_rcolors(XRASTER	*xr, Window	w);
 extern Pixmap make_rpixmap(XRASTER	*xr, Window	w);
 extern XRASTER * make_raster( Display	*disp, XVisualInfo	*vis,

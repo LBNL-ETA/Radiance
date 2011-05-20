@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.19 2011/02/18 17:31:09 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.20 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -954,7 +954,7 @@ dobj_render(void)			/* render our objects in OpenGL */
 			continue;
 					/* set up lighting */
 		if (op->drawcode == DO_LIGHT && op->ol != NULL) {
-			BYTE	pval;
+			uby8	pval;
 			double	expval, d;
 						/* use computed sources */
 			if (tmMapPixels(tmGlobal, &pval, &op->ol->larb,

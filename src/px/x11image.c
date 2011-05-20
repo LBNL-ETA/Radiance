@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.73 2008/11/10 19:08:19 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.74 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -83,8 +83,8 @@ int  gotview = 0;			/* got parameters from file */
 
 COLR  *scanline;			/* scan line buffer */
 TMbright  *lscan;			/* encoded luminance scanline */
-BYTE  *cscan;				/* encoded chroma scanline */
-BYTE  *pscan;				/* compute pixel scanline */
+uby8  *cscan;				/* encoded chroma scanline */
+uby8  *pscan;				/* compute pixel scanline */
 
 RESOLU  inpres;				/* input resolution and ordering */
 int  xmax, ymax;			/* picture dimensions */
@@ -122,7 +122,7 @@ char  *progname;
 
 char  errmsg[128];
 
-BYTE  clrtab[256][3];			/* global color map */
+uby8  clrtab[256][3];			/* global color map */
 
 
 Display  *thedisplay;
@@ -1060,9 +1060,9 @@ make_tonemap(void)			/* initialize tone mapping */
 			goto memerr;
 		if (greyscale) {
 			cscan = TM_NOCHROM;
-			if ((pscan = (BYTE *)malloc(sizeof(BYTE)*xmax)) == NULL)
+			if ((pscan = (uby8 *)malloc(sizeof(uby8)*xmax)) == NULL)
 				goto memerr;
-		} else if ((pscan=cscan = (BYTE *)malloc(3*sizeof(BYTE)*xmax))
+		} else if ((pscan=cscan = (uby8 *)malloc(3*sizeof(uby8)*xmax))
 				== NULL)
 			goto memerr;
 						/* initialize tm library */
@@ -1100,7 +1100,7 @@ tmap_colrs(		/* apply tone mapping to scanline */
 	int  len
 )
 {
-	register BYTE  *ps;
+	register uby8  *ps;
 
 	if (tmflags == TM_F_LINEAR) {
 		if (scale)

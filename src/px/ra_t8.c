@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.13 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.14 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -27,16 +27,16 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.13 2004/03/28 20:33:14 schorsch Ex
 #define	 my_mapType(h)	((h)->mapType==CM_HASMAP && \
 				((h)->CMapBits==24 || (h)->CMapBits==32))
 
-#define	 taralloc(h)	(BYTE *)emalloc((h)->x*(h)->y)
+#define	 taralloc(h)	(uby8 *)emalloc((h)->x*(h)->y)
 
-BYTE  clrtab[256][3];
+uby8  clrtab[256][3];
 extern int	samplefac;
 double	gamv = 2.2;			/* gamv correction */
 int  bradj = 0;				/* brightness adjustment */
 char  *progname;
 char  errmsg[128];
 COLR	*inl;
-BYTE	*tarData;
+uby8	*tarData;
 int  xmax, ymax;
 
 static int getint2(FILE	*fp);
@@ -48,8 +48,8 @@ static int getrhead(struct hdStruct  *h, FILE  *fp);
 static void tg2ra(struct hdStruct	 *hp);
 static void getmapped(int  nc, int  dith);
 static void getgrey(int  nc);
-static void writetarga(struct hdStruct	 *h, BYTE  *d, FILE  *fp);
-static void readtarga(struct hdStruct	 *h, BYTE  *data, FILE  *fp);
+static void writetarga(struct hdStruct	 *h, uby8  *d, FILE  *fp);
+static void readtarga(struct hdStruct	 *h, uby8  *data, FILE  *fp);
 
 
 int
@@ -309,8 +309,8 @@ tg2ra(			/* targa file to RADIANCE file */
 )
 {
 	union {
-		BYTE  c3[256][3];
-		BYTE  c4[256][4];
+		uby8  c3[256][3];
+		uby8  c4[256][4];
 	} map;
 	COLR  ctab[256];
 	COLR  *scanline;
@@ -410,7 +410,7 @@ getgrey(			/* read in and convert to greyscale image */
 )
 {
 	int  y;
-	register BYTE  *dp;
+	register uby8  *dp;
 	register int  x;
 
 	setcolrgam(gamv);
@@ -441,7 +441,7 @@ getgrey(			/* read in and convert to greyscale image */
 static void
 writetarga(		/* write out targa data */
 	struct hdStruct	 *h,
-	BYTE  *d,
+	uby8  *d,
 	FILE  *fp
 )
 {
@@ -451,7 +451,7 @@ writetarga(		/* write out targa data */
 		for (j = 2; j >= 0; j--)
 			putc(clrtab[i][j], fp);
 	if (h->dataType == IM_CMAP) {		/* uncompressed */
-		if (fwrite((char *)d,h->x*sizeof(BYTE),h->y,fp) != h->y)
+		if (fwrite((char *)d,h->x*sizeof(uby8),h->y,fp) != h->y)
 			quiterr("error writing targa file");
 		return;
 	}
@@ -462,15 +462,15 @@ writetarga(		/* write out targa data */
 static void
 readtarga(		/* read in targa data */
 	struct hdStruct	 *h,
-	BYTE  *data,
+	uby8  *data,
 	FILE  *fp
 )
 {
 	register int  cnt, c;
-	register BYTE	*dp;
+	register uby8	*dp;
 
 	if (h->dataType == IM_CMAP) {		/* uncompressed */
-		if (fread((char *)data,h->x*sizeof(BYTE),h->y,fp) != h->y)
+		if (fread((char *)data,h->x*sizeof(uby8),h->y,fp) != h->y)
 			goto readerr;
 		return;
 	}

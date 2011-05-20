@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.13 2004/12/03 18:36:17 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.14 2011/05/20 02:06:38 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-#ifndef BYTE
-#define BYTE	unsigned char
+#ifndef uby8
+#define uby8	unsigned char
 #endif
 
 /*
@@ -53,19 +53,19 @@ typedef struct {
 	int32		*norm;		/* vertex normals */
 	uint32		(*uv)[2];	/* vertex local coordinates */
 	struct PTri {
-		BYTE		v1, v2, v3;	/* local vertices */
+		uby8		v1, v2, v3;	/* local vertices */
 	}		*tri;		/* local triangles */
 	short		solemat;	/* sole material */
 	int16		*trimat;	/* or local material indices */
 	struct PJoin1 {
 		int32		v1j;		/* non-local vertex */
 		int16		mat;		/* material index */
-		BYTE		v2, v3;		/* local vertices */
+		uby8		v2, v3;		/* local vertices */
 	}		*j1tri;		/* joiner triangles */
 	struct PJoin2 {
 		int32		v1j, v2j;	/* non-local vertices */
 		int16		mat;		/* material index */
-		BYTE		v3;		/* local vertex */
+		uby8		v3;		/* local vertex */
 	}		*j2tri;		/* double joiner triangles */
 	short		nverts;		/* vertex count */
 	short		ntris;		/* local triangle count */

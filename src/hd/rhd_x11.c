@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.42 2006/06/07 17:52:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.43 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -82,7 +82,7 @@ static int mytmflags(void);
 static void xnewcolr(int  ndx, int r, int g, int b);
 static int getpixels(void);
 static void freepixels(void);
-static unsigned long true_pixel(register BYTE rgb[3]);
+static unsigned long true_pixel(register uby8 rgb[3]);
 static void getevent(void);
 static int ilclip(int dp[2][2], FVECT wp[2]);
 static void draw3dline(FVECT wp[2]);
@@ -345,7 +345,7 @@ dev_input(void)			/* get X11 input */
 
 extern void
 dev_paintr(		/* fill a rectangle */
-	BYTE	rgb[3],
+	uby8	rgb[3],
 	int  xmin,
 	int  ymin,
 	int  xmax,
@@ -464,7 +464,7 @@ freepixels(void)				/* free our pixels */
 
 static unsigned long
 true_pixel(			/* return true pixel value for color */
-	register BYTE	rgb[3]
+	register uby8	rgb[3]
 )
 {
 	register unsigned long  rval;
@@ -570,7 +570,7 @@ draw3dline(			/* draw 3d line in world coordinates */
 static void
 draw_grids(void)			/* draw holodeck section grids */
 {
-	static BYTE	gridrgb[3] = {0x0, 0xff, 0xff};
+	static uby8	gridrgb[3] = {0x0, 0xff, 0xff};
 	unsigned long  pixel;
 
 	if (ncolors > 0)

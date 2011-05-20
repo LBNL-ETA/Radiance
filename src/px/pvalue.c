@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.30 2010/12/16 21:34:41 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.31 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -637,15 +637,15 @@ getcbyte(		/* get a byte color value from stream(s) */
 	COLOR  col
 )
 {
-	BYTE  vb[3];
+	uby8  vb[3];
 
 	if (fin2 == NULL) {
-		if (fread((char *)vb, sizeof(BYTE), 3, fin) != 3)
+		if (fread((char *)vb, sizeof(uby8), 3, fin) != 3)
 			return(-1);
 	} else {
-		if (fread((char *)vb, sizeof(BYTE), 1, fin) != 1 ||
-			fread((char *)(vb+1), sizeof(BYTE), 1, fin2) != 1 ||
-			fread((char *)(vb+2), sizeof(BYTE), 1, fin3) != 1)
+		if (fread((char *)vb, sizeof(uby8), 1, fin) != 1 ||
+			fread((char *)(vb+1), sizeof(uby8), 1, fin2) != 1 ||
+			fread((char *)(vb+2), sizeof(uby8), 1, fin3) != 1)
 			return(-1);
 	}
 	setcolor(col, (vb[rord[RED]]+.5)/256.,
@@ -745,10 +745,10 @@ getbbyte(		/* get a byte brightness value from fin */
 	COLOR  col
 )
 {
-	BYTE  vb;
+	uby8  vb;
 	double	d;
 
-	if (fread((char *)&vb, sizeof(BYTE), 1, fin) != 1)
+	if (fread((char *)&vb, sizeof(uby8), 1, fin) != 1)
 		return(-1);
 	d = (vb+.5)/256.;
 	setcolor(col, d, d, d);
@@ -844,7 +844,7 @@ putcbyte(			/* put a byte color to stdout */
 )
 {
 	long  i;
-	BYTE  vb[3];
+	uby8  vb[3];
 
 	i = colval(col,ord[0])*256.;
 	vb[0] = min(i,255);
@@ -852,7 +852,7 @@ putcbyte(			/* put a byte color to stdout */
 	vb[1] = min(i,255);
 	i = colval(col,ord[2])*256.;
 	vb[2] = min(i,255);
-	fwrite((char *)vb, sizeof(BYTE), 3, stdout);
+	fwrite((char *)vb, sizeof(uby8), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -940,11 +940,11 @@ putbbyte(			/* put a byte brightness to stdout */
 )
 {
 	register int  i;
-	BYTE  vb;
+	uby8  vb;
 
 	i = (*mybright)(col)*256.;
 	vb = min(i,255);
-	fwrite((char *)&vb, sizeof(BYTE), 1, stdout);
+	fwrite((char *)&vb, sizeof(uby8), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -1028,11 +1028,11 @@ putpbyte(			/* put a byte primary to stdout */
 )
 {
 	long  i;
-	BYTE  vb;
+	uby8  vb;
 
 	i = colval(col,putprim)*256.;
 	vb = min(i,255);
-	fwrite((char *)&vb, sizeof(BYTE), 1, stdout);
+	fwrite((char *)&vb, sizeof(uby8), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -1154,10 +1154,10 @@ set_io(void)			/* set put and get functions */
 				if (fin2 == NULL)
 					goto namerr;
 				if (fseek(fin2,
-				(long)sizeof(BYTE)*picres.xr*picres.yr, 1))
+				(long)sizeof(uby8)*picres.xr*picres.yr, 1))
 					goto seekerr;
 				if (fseek(fin3,
-				(long)sizeof(BYTE)*2*picres.xr*picres.yr, 1))
+				(long)sizeof(uby8)*2*picres.xr*picres.yr, 1))
 					goto seekerr;
 			}
 		}

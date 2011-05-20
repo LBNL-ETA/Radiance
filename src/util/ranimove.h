@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.6 2004/03/26 21:36:20 schorsch Exp $ */
+/* RCSid $Id: ranimove.h,v 3.7 2011/05/20 02:06:39 greg Exp $ */
 /*
  *  ranimove.h
  *
@@ -130,14 +130,14 @@ extern float	*zbuffer;	/* depth at each pixel */
 extern OBJECT	*obuffer;	/* object id at each pixel */
 extern short	*xmbuffer;	/* x motion at each pixel */
 extern short	*ymbuffer;	/* y motion at each pixel */
-extern BYTE	*abuffer;	/* accuracy at each pixel */
-extern BYTE	*sbuffer;	/* sample count per pixel */
+extern uby8	*abuffer;	/* accuracy at each pixel */
+extern uby8	*sbuffer;	/* sample count per pixel */
 
 extern VIEW	vwprev;		/* last frame's view */
 extern COLOR	*cprev;		/* last frame colors */
 extern float	*zprev;		/* last frame depth */
 extern OBJECT	*oprev;		/* last frame objects */
-extern BYTE	*aprev;		/* last frame accuracy */
+extern uby8	*aprev;		/* last frame accuracy */
 
 extern float	*cerrmap;	/* conspicuous error map */
 extern int	cerrzero;	/* is all of cerrmap zero? */

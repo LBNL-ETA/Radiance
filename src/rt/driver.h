@@ -1,4 +1,4 @@
-/* RCSid $Id: driver.h,v 2.9 2004/03/30 16:13:01 schorsch Exp $ */
+/* RCSid $Id: driver.h,v 2.10 2011/05/20 02:06:39 greg Exp $ */
 /*
  *  driver.h - header file for interactive device drivers.
  */
@@ -224,8 +224,8 @@ extern struct driver	*comm_init(char *dname, char *id);
 extern int	new_ctab(int ncolors);
 extern int	get_pixel(COLOR col, dr_newcolrf_t *newcolr);
 extern void	make_gmap(double gam);
-extern void	set_cmap(BYTE *rmap, BYTE *gmap, BYTE *bmap);
-extern void	map_color(BYTE rgb[3], COLOR col);
+extern void	set_cmap(uby8 *rmap, uby8 *gmap, uby8 *bmap);
+extern void	map_color(uby8 rgb[3], COLOR col);
 
 
 #ifdef __cplusplus

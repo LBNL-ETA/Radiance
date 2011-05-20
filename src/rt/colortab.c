@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colortab.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: colortab.c,v 2.10 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * colortab.c - allocate and control dynamic color table.
@@ -48,12 +48,12 @@ static const char	RCSid[] = "$Id: colortab.c,v 2.9 2004/03/30 16:13:01 schorsch 
 static struct tabent {
 	long	sum[3];		/* sum of colors using this entry */
 	int	n;		/* number of colors */
-	BYTE	ent[3];		/* current table value */
+	uby8	ent[3];		/* current table value */
 }	*clrtab = NULL;
 				/* color cube partition */
 static CNODE	*ctree = NULL;
 				/* our color correction map */
-static BYTE	clrmap[3][256];
+static uby8	clrmap[3][256];
 				/* histogram of colors used */
 static unsigned short	histo[NRED][NGRN][NBLU];
 				/* initial color cube boundary */
@@ -163,7 +163,7 @@ double	gam;
 
 void
 set_cmap(rmap, gmap, bmap)	/* set custom color correction map */
-BYTE	*rmap, *gmap, *bmap;
+uby8	*rmap, *gmap, *bmap;
 {
 	memcpy((void *)clrmap[RED], (void *)rmap, 256);
 	memcpy((void *)clrmap[GRN], (void *)gmap, 256);
@@ -173,7 +173,7 @@ BYTE	*rmap, *gmap, *bmap;
 
 void
 map_color(rgb, col)		/* map a color to a byte triplet */
-BYTE	rgb[3];
+uby8	rgb[3];
 COLOR	col;
 {
 	rgb[RED] = map_col(col,RED);

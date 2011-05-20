@@ -1,4 +1,4 @@
-/* RCSid $Id: falsecolor.h,v 3.3 2005/11/15 20:04:50 greg Exp $ */
+/* RCSid $Id: falsecolor.h,v 3.4 2011/05/20 02:06:38 greg Exp $ */
 /*
  * Header file for false color tone-mapping.
  *
@@ -13,14 +13,14 @@ extern "C" {
 				/* false color mapping data structure */
 typedef struct {
 	TMbright	mbrmin, mbrmax;	/* mapped min. & max. brightnesses */
-	BYTE		*lumap;		/* false color luminance map */
-	BYTE		(*scale)[3];	/* false color ordinal scale */
+	uby8		*lumap;		/* false color luminance map */
+	uby8		(*scale)[3];	/* false color ordinal scale */
 } FCstruct;
 
-extern BYTE	fcDefaultScale[256][3];		/* default false color scale */
+extern uby8	fcDefaultScale[256][3];		/* default false color scale */
 
 extern FCstruct *
-fcInit(BYTE fcscale[256][3]);
+fcInit(uby8 fcscale[256][3]);
 /*
 	Allocate and initialize false color mapping data structure.
 	
@@ -77,7 +77,7 @@ fcLogMapping(FCstruct *fcs, TMstruct *tms, double pctile);
  */
  
 extern int
-fcMapPixels(FCstruct *fcs, BYTE *ps, TMbright *ls, int len);
+fcMapPixels(FCstruct *fcs, uby8 *ps, TMbright *ls, int len);
 /*
 	Apply false color mapping to pixel values.
 	

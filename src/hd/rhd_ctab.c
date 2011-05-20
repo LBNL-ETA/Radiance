@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.5 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.6 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Allocate and control dynamic color table.
@@ -43,7 +43,7 @@ static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.5 2004/01/01 11:21:55 schorsch 
 static struct tabent {
 	long	sum[3];		/* sum of colors using this entry */
 	int	n;		/* number of colors */
-	BYTE	ent[3];		/* current table value */
+	uby8	ent[3];		/* current table value */
 }	*clrtab = NULL;
 				/* color cube partition */
 static CNODE	*ctree = NULL;
@@ -90,7 +90,7 @@ new_ctab(		/* start new color table with max ncolors */
 
 extern int
 get_pixel(	/* get pixel for color */
-	BYTE	rgb[3],
+	uby8	rgb[3],
 	void	(*set_pixel)(int h, int r, int g, int b)
 )
 {

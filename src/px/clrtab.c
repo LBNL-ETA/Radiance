@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clrtab.c,v 2.18 2005/09/19 02:23:58 greg Exp $";
+static const char	RCSid[] = "$Id: clrtab.c,v 2.19 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Simple median-cut color quantization based on colortab.c
@@ -25,7 +25,7 @@ static const char	RCSid[] = "$Id: clrtab.c,v 2.18 2005/09/19 02:23:58 greg Exp $
 #define part(cn)	((cn)>>2)
 #define prim(cn)	((cn)&3)
 				/* our color table (global) */
-extern BYTE	clrtab[256][3];
+extern uby8	clrtab[256][3];
 				/* histogram of colors / color assignments */
 static unsigned	histo[NRED][NGRN][NBLU];
 #define cndx(c)		histo[((c)[RED]*NRED)>>8][((c)[GRN]*NGRN)>>8][((c)[BLU]*NBLU)>>8]
@@ -41,9 +41,9 @@ static int	CLRCUBE[3][2] = {{0,NRED},{0,NGRN},{0,NBLU}};
 
 #ifdef CLOSEST
 static void closest(int n);
-static void setclosest(BYTE *nl[], int r, int g, int b);
-static void addneigh(BYTE *nl[], int i, int j);
-static unsigned int dist(BYTE col[3], int r, int g, int b);
+static void setclosest(uby8 *nl[], int r, int g, int b);
+static void addneigh(uby8 *nl[], int i, int j);
+static unsigned int dist(uby8 col[3], int r, int g, int b);
 #endif
 static void cut(int box[3][2], int c0, int c1);
 static int split(int box[3][2]);
@@ -62,7 +62,7 @@ new_histo(		/* clear our histogram */
 
 extern void
 cnt_pixel(		/* add pixel to our histogram */
-	register BYTE	col[]
+	register uby8	col[]
 )
 {
 	cndx(col)++;
@@ -97,7 +97,7 @@ new_clrtab(		/* make new color table using ncolors */
 	closest(ncolors);	/* ensure colors picked are closest */
 #endif
 				/* reset dithering function */
-	dith_colrs((BYTE *)NULL, (COLR *)NULL, 0);
+	dith_colrs((uby8 *)NULL, (COLR *)NULL, 0);
 				/* return new color table size */
 	return(ncolors);
 }
@@ -105,7 +105,7 @@ new_clrtab(		/* make new color table using ncolors */
 
 extern int
 map_pixel(			/* get pixel for color */
-	register BYTE	col[]
+	register uby8	col[]
 )
 {
     return(cndx(col));
@@ -114,7 +114,7 @@ map_pixel(			/* get pixel for color */
 
 extern void
 map_colrs(		/* convert a scanline to color index values */
-	register BYTE	*bs,
+	register uby8	*bs,
 	register COLR	*cs,
 	register int	n
 )
@@ -128,7 +128,7 @@ map_colrs(		/* convert a scanline to color index values */
 
 extern void
 dith_colrs(		/* convert scanline to dithered index values */
-	register BYTE	*bs,
+	register uby8	*bs,
 	register COLR	*cs,
 	int	n
 )
@@ -311,12 +311,12 @@ closest(			/* make sure we have the closest colors */
 	int	n
 )
 {
-	BYTE	*neigh[256];
+	uby8	*neigh[256];
 	register int	r, g, b;
 #define i r
 					/* get space for neighbor lists */
 	for (i = 0; i < n; i++) {
-		if ((neigh[i] = (BYTE *)malloc(NBSIZ)) == NULL) {
+		if ((neigh[i] = (uby8 *)malloc(NBSIZ)) == NULL) {
 			while (i--)
 				free(neigh[i]);
 			return;			/* ENOMEM -- abandon effort */
@@ -348,7 +348,7 @@ closest(			/* make sure we have the closest colors */
 
 static void
 addneigh(		/* i and j are neighbors; add them to list */
-	register BYTE	*nl[],
+	register uby8	*nl[],
 	register int	i,
 	int	j
 )
@@ -368,7 +368,7 @@ addneigh(		/* i and j are neighbors; add them to list */
 						t+NBSIZ)) == NULL)
 					t--;
 				else
-					nl[i] = (BYTE *)nnl;
+					nl[i] = (uby8 *)nnl;
 			}
 			nl[i][t] = i;		/* terminator */
 		}
@@ -379,7 +379,7 @@ addneigh(		/* i and j are neighbors; add them to list */
 
 static unsigned int
 dist(		/* find distance from clrtab entry to r,g,b */
-	register BYTE	col[3],
+	register uby8	col[3],
 	int	r,
 	int	g,
 	int	b
@@ -400,7 +400,7 @@ dist(		/* find distance from clrtab entry to r,g,b */
 
 static void
 setclosest(		/* find index closest to color and assign */
-	BYTE	*nl[],
+	uby8	*nl[],
 	int	r,
 	int	g,
 	int	b
@@ -409,7 +409,7 @@ setclosest(		/* find index closest to color and assign */
 	int	ident;
 	unsigned	min;
 	register unsigned	d;
-	register BYTE	*p;
+	register uby8	*p;
 					/* get starting value */
 	min = dist(clrtab[ident=histo[r][g][b]], r, g, b);
 					/* find minimum */

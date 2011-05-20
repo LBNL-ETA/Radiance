@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.16 2010/11/05 04:36:24 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.17 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -30,14 +30,14 @@ float		*zbuffer;	/* depth at each pixel */
 OBJECT		*obuffer;	/* object id at each pixel */
 short		*xmbuffer;	/* x motion at each pixel */
 short		*ymbuffer;	/* y motion at each pixel */
-BYTE		*abuffer;	/* accuracy at each pixel */
-BYTE		*sbuffer;	/* sample count per pixel */
+uby8		*abuffer;	/* accuracy at each pixel */
+uby8		*sbuffer;	/* sample count per pixel */
 
 VIEW		vwprev;		/* last frame's view */
 COLOR		*cprev;		/* last frame colors */
 float		*zprev;		/* last frame depth */
 OBJECT		*oprev;		/* last frame objects */
-BYTE		*aprev;		/* last frame accuracy */
+uby8		*aprev;		/* last frame accuracy */
 
 float		*cerrmap;	/* conspicuous error map */
 COLOR		*val2map;	/* value-squared map for variance */
@@ -131,12 +131,12 @@ next_frame(void)			/* prepare next frame buffer */
 		obuffer = (OBJECT *)malloc(sizeof(OBJECT)*hres*vres);
 		xmbuffer = (short *)malloc(sizeof(short)*hres*vres);
 		ymbuffer = (short *)malloc(sizeof(short)*hres*vres);
-		abuffer = (BYTE *)calloc(hres*vres, sizeof(BYTE));
-		sbuffer = (BYTE *)calloc(hres*vres, sizeof(BYTE));
+		abuffer = (uby8 *)calloc(hres*vres, sizeof(uby8));
+		sbuffer = (uby8 *)calloc(hres*vres, sizeof(uby8));
 		cprev = (COLOR *)malloc(sizeof(COLOR)*hres*vres);
 		zprev = (float *)malloc(sizeof(float)*hres*vres);
 		oprev = (OBJECT *)malloc(sizeof(OBJECT)*hres*vres);
-		aprev = (BYTE *)malloc(sizeof(BYTE)*hres*vres);
+		aprev = (uby8 *)malloc(sizeof(uby8)*hres*vres);
 		if ((cbuffer==NULL) | (zbuffer==NULL) | (obuffer==NULL) |
 				(xmbuffer==NULL) | (ymbuffer==NULL) |
 				(abuffer==NULL) | (sbuffer==NULL) |
@@ -152,13 +152,13 @@ next_frame(void)			/* prepare next frame buffer */
 		COLOR	*cp;		/* else just swap buffers */
 		float	*fp;
 		OBJECT	*op;
-		BYTE	*bp;
+		uby8	*bp;
 		cp = cprev; cprev = cbuffer; cbuffer = cp;
 		fp = zprev; zprev = zbuffer; zbuffer = fp;
 		op = oprev; oprev = obuffer; obuffer = op;
 		bp = aprev; aprev = abuffer; abuffer = bp;
-		memset(abuffer, '\0', sizeof(BYTE)*hres*vres);
-		memset(sbuffer, '\0', sizeof(BYTE)*hres*vres);
+		memset(abuffer, '\0', sizeof(uby8)*hres*vres);
+		memset(sbuffer, '\0', sizeof(uby8)*hres*vres);
 		frm_stop += rtperfrm;
 	}
 	cerrmap = NULL;
@@ -584,7 +584,7 @@ comperr(		/* estimate relative error in neighborhood */
 extern void
 comp_frame_error(void)		/* initialize frame error values */
 {
-	BYTE	*edone = NULL;
+	uby8	*edone = NULL;
 	COLOR	objamb;
 	double	eest;
 	int	neigh[NSAMPOK];
@@ -608,7 +608,7 @@ comp_frame_error(void)		/* initialize frame error values */
 		 * error should be less than the ambient value divided
 		 * by the returned ray value -- we take half of this.
 		 */
-		edone = (BYTE *)calloc(hres*vres, sizeof(BYTE));
+		edone = (uby8 *)calloc(hres*vres, sizeof(uby8));
 		for (y = vres; y--; )
 		    for (x = hres; x--; ) {
 			n = fndx(x, y);

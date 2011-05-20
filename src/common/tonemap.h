@@ -1,4 +1,4 @@
-/* RCSid $Id: tonemap.h,v 3.25 2010/08/18 15:25:03 greg Exp $ */
+/* RCSid $Id: tonemap.h,v 3.26 2011/05/20 02:06:38 greg Exp $ */
 /*
  * Header file for tone mapping functions.
  *
@@ -32,8 +32,8 @@ extern "C" {
 
 				/* special pointer values */
 #define	TM_XYZPRIM	(RGBPRIMP)NULL	/* indicate XYZ primaries (Note 1) */
-#define	TM_NOCHROM	(BYTE *)NULL	/* indicate no chrominance */
-#define	TM_NOCHROMP	(BYTE **)NULL	/* indicate no chrominances */
+#define	TM_NOCHROM	(uby8 *)NULL	/* indicate no chrominance */
+#define	TM_NOCHROMP	(uby8 **)NULL	/* indicate no chrominances */
 #define	TM_GETFILE	(FILE *)NULL	/* indicate file must be opened */
 
 
@@ -215,7 +215,7 @@ tmComputeMapping(TMstruct *tms, double gamval, double Lddyn, double Ldmax);
 */
 
 extern int
-tmMapPixels(TMstruct *tms, BYTE *ps, TMbright *ls, BYTE *cs, int len);
+tmMapPixels(TMstruct *tms, uby8 *ps, TMbright *ls, uby8 *cs, int len);
 /*
 	Apply tone mapping function to pixel values.
 
@@ -260,7 +260,7 @@ tmCvGrays(TMstruct *tms, TMbright *ls, float *scan, int len);
 */
 
 extern int
-tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
+tmCvColors(TMstruct *tms, TMbright *ls, uby8 *cs, COLOR *scan, int len);
 /*
 	Convert RGB/XYZ float scanline to encoded luminance and chrominance.
 
@@ -274,7 +274,7 @@ tmCvColors(TMstruct *tms, TMbright *ls, BYTE *cs, COLOR *scan, int len);
 */
 
 extern int
-tmCvColrs(TMstruct *tms, TMbright *ls, BYTE *cs, COLR *scan, int len);
+tmCvColrs(TMstruct *tms, TMbright *ls, uby8 *cs, COLR *scan, int len);
 /*
 	Convert RGBE/XYZE scanline to encoded luminance and chrominance.
 
@@ -288,7 +288,7 @@ tmCvColrs(TMstruct *tms, TMbright *ls, BYTE *cs, COLR *scan, int len);
 */
 
 extern int
-tmLoadPicture(TMstruct *tms, TMbright **lpp, BYTE **cpp, int *xp, int *yp,
+tmLoadPicture(TMstruct *tms, TMbright **lpp, uby8 **cpp, int *xp, int *yp,
 		char *fname, FILE *fp);
 /*
 	Load Radiance picture and convert to tone mapping representation.
@@ -307,7 +307,7 @@ tmLoadPicture(TMstruct *tms, TMbright **lpp, BYTE **cpp, int *xp, int *yp,
 */
 
 extern int
-tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
+tmMapPicture(uby8 **psp, int *xp, int *yp, int flags,
 		RGBPRIMP monpri, double gamval, double Lddyn, double Ldmax,
 		char *fname, FILE *fp);
 /*
@@ -332,7 +332,7 @@ tmMapPicture(BYTE **psp, int *xp, int *yp, int flags,
 */
 
 extern int
-tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs, uint16 (*scan)[3],
+tmCvRGB48(TMstruct *tms, TMbright *ls, uby8 *cs, uint16 (*scan)[3],
 		int len, double gv);
 /*
 	Convert 48-bit RGB scanline to encoded luminance and chrominance.

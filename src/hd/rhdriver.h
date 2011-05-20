@@ -1,4 +1,4 @@
-/* RCSid: $Id: rhdriver.h,v 3.25 2006/06/07 17:52:04 schorsch Exp $ */
+/* RCSid: $Id: rhdriver.h,v 3.26 2011/05/20 02:06:39 greg Exp $ */
 /*
  * Header file for holodeck device driver routines.
  */
@@ -182,8 +182,8 @@ extern VIEW *dev_auxview(int n, int hvres[2]);
 extern int dev_input(void);
 extern void dev_value(COLR c, FVECT d, FVECT p);
 extern int dev_flush(void);
-extern void dev_paintr(BYTE rgb[3], int xmin, int ymin, int xmax, int ymax);
-extern void dev_cone(BYTE rgb[3], FVECT ip, double rad);
+extern void dev_paintr(uby8 rgb[3], int xmin, int ymin, int xmax, int ymax);
+extern void dev_cone(uby8 rgb[3], FVECT ip, double rad);
 
 #ifdef __cplusplus
 }

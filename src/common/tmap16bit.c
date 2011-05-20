@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: tmap16bit.c,v 1.9 2011/03/07 20:49:19 greg Exp $";
+static const char RCSid[] = "$Id: tmap16bit.c,v 1.10 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Routines for tone-mapping 16-bit/primary pixels
@@ -21,7 +21,7 @@ static float	logtab[1<<LOGTABBITS];
 static float	gamtab[1<<GAMTABBITS];
 static float	gammul[16];
 static double	cur_gam = 0.;
-static BYTE	mongamtab[MONGAMTSZ];
+static uby8	mongamtab[MONGAMTSZ];
 static double	cur_mongam = 0.;
 
 #define imultpow2(i,s)	((s)>=0 ? (i)<<(s) : (i)>>-(s))
@@ -170,7 +170,7 @@ tmCvGray16(TMstruct *tms, TMbright *ls, uint16 *scan, int len, double gv)
 
 /* Convert a 48-bit RGB scanline to encoded luminance/chrominance */
 int
-tmCvRGB48(TMstruct *tms, TMbright *ls, BYTE *cs,
+tmCvRGB48(TMstruct *tms, TMbright *ls, uby8 *cs,
 		uint16 (*scan)[3], int len, double gv)
 {
 	static const char	funcName[] = "tmCvRGB48";

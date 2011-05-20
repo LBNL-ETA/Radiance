@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_odraw.h,v 3.13 2005/01/07 20:33:02 greg Exp $ */
+/* RCSid $Id: rhd_odraw.h,v 3.14 2011/05/20 02:06:39 greg Exp $ */
 /*
  * Header for OpenGL cone drawing routines with depth buffer checks.
  *
@@ -44,8 +44,8 @@ extern struct ODsamp {
 	} *f;				/* free list next or proximity */
 	short		(*ip)[2];	/* image position array */
 	TMbright	*brt;		/* encoded brightness array */
-	BYTE		(*chr)[3];	/* encoded chrominance array */
-	BYTE		(*rgb)[3];	/* tone-mapped color array */
+	uby8		(*chr)[3];	/* encoded chrominance array */
+	uby8		(*rgb)[3];	/* tone-mapped color array */
 	int32		*redraw;	/* redraw flags */
 	int		nsamp;		/* total number of samples */
 	char		*base;		/* base of allocated memory */

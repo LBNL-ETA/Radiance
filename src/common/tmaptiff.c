@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.9 2010/12/02 18:10:40 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.10 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -79,7 +79,7 @@ getTIFFtype(TIFF *tif)
 
 /* load and convert TIFF */
 int
-tmLoadTIFF(TMstruct *tms, TMbright **lpp, BYTE **cpp,
+tmLoadTIFF(TMstruct *tms, TMbright **lpp, uby8 **cpp,
 		int *xp, int *yp, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmLoadTIFF" : fname;
@@ -173,7 +173,7 @@ tmLoadTIFF(TMstruct *tms, TMbright **lpp, BYTE **cpp,
 	case TC_RGBSHORT:
 		if (cpp == TM_NOCHROMP)
 			break;
-		*cpp = (BYTE *)malloc(width*height*3*sizeof(BYTE));
+		*cpp = (uby8 *)malloc(width*height*3*sizeof(uby8));
 		if (*cpp == NULL) {
 			err = TM_E_NOMEM;
 			goto done;
@@ -252,13 +252,13 @@ done:					/* clean up */
  * As in tmMapPicture(), grey values are also returned if flags&TM_F_BW.
  */
 int
-tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
+tmMapTIFF(uby8 **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	double gamval, double Lddyn, double Ldmax, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmMapTIFF" : fname;
 	TMstruct	*tms;
 	TMbright	*lp;
-	BYTE	*cp;
+	uby8	*cp;
 	int	err;
 					/* check arguments */
 	if ((psp == NULL) | (xp == NULL) | (yp == NULL) | (monpri == NULL) |
@@ -280,7 +280,7 @@ tmMapTIFF(BYTE **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 		return(err);
 	}
 	if (cp == TM_NOCHROM) {
-		*psp = (BYTE *)malloc(*xp * *yp * sizeof(BYTE));
+		*psp = (uby8 *)malloc(*xp * *yp * sizeof(uby8));
 		if (*psp == NULL) {
 			free((MEM_PTR)lp);
 			tmDone(tms);

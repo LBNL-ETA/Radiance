@@ -1,4 +1,4 @@
-/* RCSid $Id: rhd_qtree.h,v 3.18 2005/01/07 20:33:02 greg Exp $ */
+/* RCSid $Id: rhd_qtree.h,v 3.19 2011/05/20 02:06:39 greg Exp $ */
 /*
  * Quadtree data structures for holodeck display drivers.
  */
@@ -39,8 +39,8 @@ extern struct rleaves {
 	float		(*wp)[3];	/* world intersection point array */
 	int32		*wd;		/* world direction array */
 	TMbright	*brt;		/* encoded brightness array */
-	BYTE		(*chr)[3];	/* encoded chrominance array */
-	BYTE		(*rgb)[3];	/* tone-mapped color array */
+	uby8		(*chr)[3];	/* encoded chrominance array */
+	uby8		(*rgb)[3];	/* tone-mapped color array */
 	int		nl;		/* count of leaves in our pile */
 	int		bl, tl;		/* bottom and top (next) leaf index */
 	int		tml;		/* next leaf needing tone-mapping */

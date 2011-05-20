@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.6 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.7 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Quadtree display support routines for rectangle output.
@@ -10,7 +10,7 @@ static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.6 2004/01/01 11:21:55 schors
 
 
 static void redraw(RTREE *tp, int x0, int y0, int x1, int y1, int l[2][2]);
-static void update( BYTE ca[3], RTREE *tp, int x0, int y0, int x1, int y1);
+static void update( uby8 ca[3], RTREE *tp, int x0, int y0, int x1, int y1);
 
 
 static void
@@ -49,7 +49,7 @@ redraw(	/* mark portion of a tree for redraw */
 
 static void
 update(	/* update tree display as needed */
-	BYTE	ca[3],		/* returned average color */
+	uby8	ca[3],		/* returned average color */
 	register RTREE	*tp,
 	int	x0,
 	int	y0,
@@ -58,8 +58,8 @@ update(	/* update tree display as needed */
 )
 {
 	int	csm[3], nc;
-	register BYTE	*cp;
-	BYTE	rgb[3];
+	register uby8	*cp;
+	uby8	rgb[3];
 	double	dpth2[4], d2;
 	int	gaps = 0;
 	int	mx, my;
@@ -139,7 +139,7 @@ qtRedraw(	/* redraw part or all of our screen */
 extern void
 qtUpdate(void)			/* update our tree display */
 {
-	BYTE	ca[3];
+	uby8	ca[3];
 
 	if (is_stump(&qtrunk))
 		return;

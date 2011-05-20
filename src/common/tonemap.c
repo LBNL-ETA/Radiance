@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tonemap.c,v 3.36 2011/04/22 14:35:54 greg Exp $";
+static const char	RCSid[] = "$Id: tonemap.c,v 3.37 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Tone mapping functions.
@@ -252,13 +252,13 @@ int
 tmCvColors(				/* convert float colors */
 TMstruct	*tms,
 TMbright	*ls,
-BYTE	*cs,
+uby8	*cs,
 COLOR	*scan,
 int	len
 )
 {
 	static const char funcName[] = "tmCvColors";
-	static BYTE	gamtab[1024];
+	static uby8	gamtab[1024];
 	static double	curgam = .0;
 	COLOR	cmon;
 	float	lum, slum, d;
@@ -555,9 +555,9 @@ linearmap:				/* linear tone-mapping */
 int
 tmMapPixels(			/* apply tone-mapping to pixel(s) */
 TMstruct	*tms,
-BYTE	*ps,
+uby8	*ps,
 TMbright	*ls,
-BYTE	*cs,
+uby8	*cs,
 int	len
 )
 {
@@ -651,7 +651,7 @@ TMstruct	*tms;
 
 /******************** Shared but Private library routines *********************/
 
-BYTE	tmMesofact[BMESUPPER-BMESLOWER];
+uby8	tmMesofact[BMESUPPER-BMESLOWER];
 
 void
 tmMkMesofact()				/* build mesopic lookup factor table */

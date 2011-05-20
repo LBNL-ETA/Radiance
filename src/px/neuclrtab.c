@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: neuclrtab.c,v 2.13 2007/09/08 19:17:52 greg Exp $";
+static const char	RCSid[] = "$Id: neuclrtab.c,v 2.14 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Neural-Net quantization algorithm based on work of Anthony Dekker
@@ -24,7 +24,7 @@ static const char	RCSid[] = "$Id: neuclrtab.c,v 2.13 2007/09/08 19:17:52 greg Ex
 #define neu_dith_colrs	dith_colrs
 #endif
 				/* our color table (global) */
-extern BYTE	clrtab[256][3];
+extern uby8	clrtab[256][3];
 static int	clrtabsiz;
 
 #ifndef DEFSMPFAC
@@ -36,9 +36,9 @@ int	samplefac = DEFSMPFAC;	/* sampling factor */
 		/* Samples array starts off holding spacing between adjacent
 		 * samples, and ends up holding actual BGR sample values.
 		 */
-static BYTE	*thesamples;
+static uby8	*thesamples;
 static int	nsamples;
-static BYTE	*cursamp;
+static uby8	*cursamp;
 static long	skipcount;
 
 #define MAXSKIP		(1<<24-1)
@@ -71,7 +71,7 @@ neu_init(		/* initialize our sample array */
 	nsamples = npixels/samplefac;
 	if (nsamples < 600)
 		return(-1);
-	thesamples = (BYTE *)malloc(nsamples*3);
+	thesamples = (uby8 *)malloc(nsamples*3);
 	if (thesamples == NULL)
 		return(-1);
 	cursamp = thesamples;
@@ -100,7 +100,7 @@ neu_init(		/* initialize our sample array */
 
 extern void
 neu_pixel(			/* add pixel to our samples */
-	register BYTE	col[]
+	register uby8	col[]
 )
 {
 	if (!skipcount--) {
@@ -148,7 +148,7 @@ neu_clrtab(		/* make new color table using ncolors */
 				/* we're done with our samples */
 	free((void *)thesamples);
 				/* reset dithering function */
-	neu_dith_colrs((BYTE *)NULL, (COLR *)NULL, 0);
+	neu_dith_colrs((uby8 *)NULL, (COLR *)NULL, 0);
 				/* return new color table size */
 	return(clrtabsiz);
 }
@@ -156,7 +156,7 @@ neu_clrtab(		/* make new color table using ncolors */
 
 extern int
 neu_map_pixel(		/* get pixel for color */
-	register BYTE	col[]
+	register uby8	col[]
 )
 {
 	return(inxsearch(col[BLU],col[GRN],col[RED]));
@@ -165,7 +165,7 @@ neu_map_pixel(		/* get pixel for color */
 
 extern void
 neu_map_colrs(	/* convert a scanline to color index values */
-	register BYTE	*bs,
+	register uby8	*bs,
 	register COLR	*cs,
 	register int	n
 )
@@ -179,7 +179,7 @@ neu_map_colrs(	/* convert a scanline to color index values */
 
 extern void
 neu_dith_colrs(	/* convert scanline to dithered index values */
-	register BYTE	*bs,
+	register uby8	*bs,
 	register COLR	*cs,
 	int	n
 )

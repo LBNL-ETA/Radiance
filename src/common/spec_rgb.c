@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: spec_rgb.c,v 2.22 2010/04/13 01:48:52 greg Exp $";
+static const char	RCSid[] = "$Id: spec_rgb.c,v 2.23 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Convert colors and spectral ranges.
@@ -38,7 +38,7 @@ float  xyneu[2] = {1./3., 1./3.};	/* neutral xy chromaticities */
 #define  INCWL		10		/* wavelength increment */
 #define  NINC		40		/* # of values */
 
-static BYTE  chroma[3][NINC] = {
+static uby8  chroma[3][NINC] = {
 	{							/* X */
 		0,   0,   0,   2,   6,   13,  22,  30,  36,  41,
 		42,  43,  43,  44,  46,  52,  60,  71,  87,  106,

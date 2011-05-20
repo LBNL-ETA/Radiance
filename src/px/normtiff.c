@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.12 2010/12/04 00:24:43 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.13 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -55,7 +55,7 @@ static PICTURE *openpicture(char *fname);
 static int tmap_picture(char *fname, PICTURE *pp);
 static int tmap_tiff(char *fname, TIFF *tp);
 static int putimage(uint16 or, uint32 xs, uint32 ys, float xr, float yr,
-	uint16 ru, BYTE	*pd);
+	uint16 ru, uby8	*pd);
 
 
 int
@@ -215,7 +215,7 @@ tmap_picture(			/* tone map Radiance picture */
 	uint16	orient;
 	double	paspect = (pp->rs.rt & YMAJOR) ? pp->pa : 1./pp->pa;
 	int	xsiz, ysiz;
-	BYTE	*pix;
+	uby8	*pix;
 					/* read and tone map picture */
 	if (tmMapPicture(&pix, &xsiz, &ysiz, flags,
 			rgbp, gamv, lddyn, ldmax, fname, pp->fp) != TM_E_OK)
@@ -244,7 +244,7 @@ tmap_tiff(			/* tone map SGILOG TIFF */
 	float	xres, yres;
 	uint16	orient, resunit, phot;
 	int	xsiz, ysiz;
-	BYTE	*pix;
+	uby8	*pix;
 					/* check to make sure it's SGILOG */
 	TIFFGetFieldDefaulted(tp, TIFFTAG_PHOTOMETRIC, &phot);
 	if ((phot == PHOTOMETRIC_LOGL) | (phot == PHOTOMETRIC_MINISBLACK))
@@ -276,7 +276,7 @@ putimage(	/* write out our image */
 	float	xr,
 	float	yr,
 	uint16	ru,
-	BYTE	*pd
+	uby8	*pd
 )
 {
 	register int	y;

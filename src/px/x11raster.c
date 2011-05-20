@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11raster.c,v 2.13 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: x11raster.c,v 2.14 2011/05/20 02:06:39 greg Exp $";
 #endif
 /*
  * x11raster.c - routines to handle images for X windows.
@@ -61,7 +61,7 @@ make_raster(
 extern int
 init_rcolors(			/* initialize colors */
 	register XRASTER	*xr,
-	BYTE	cmap[][3]
+	uby8	cmap[][3]
 )
 {
 	register unsigned char	*p;

@@ -1,4 +1,4 @@
-/* RCSid $Id: tmprivat.h,v 3.23 2011/03/07 20:49:19 greg Exp $ */
+/* RCSid $Id: tmprivat.h,v 3.24 2011/05/20 02:06:38 greg Exp $ */
 /*
  * Private header file for tone mapping routines.
  */
@@ -59,7 +59,7 @@ extern int	tmNewMap(TMstruct *tms);	/* allocate new tone-mapping */
 extern int	tmErrorReturn(const char *, TMstruct *, int);
 
 						/* lookup for mesopic scaling */
-extern BYTE	tmMesofact[BMESUPPER-BMESLOWER];
+extern uby8	tmMesofact[BMESUPPER-BMESLOWER];
 
 extern void	tmMkMesofact(void);			/* build tmMesofact */
 

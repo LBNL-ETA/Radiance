@@ -1,8 +1,6 @@
-/* RCSid $Id: color.h,v 2.30 2009/05/21 18:08:43 greg Exp $ */
+/* RCSid $Id: color.h,v 2.31 2011/05/20 02:06:38 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
- *
- *  Must be included after X11 headers, since they declare a BYTE type.
  *
  *  Two color representations are used, one for calculation and
  *  another for storage.  Calculation is done with three floats
@@ -28,10 +26,10 @@ extern "C" {
 #define  COLXS		128	/* excess used for exponent */
 #define  WHT		3	/* used for RGBPRIMS type */
 
-#undef  BYTE
-#define  BYTE 	unsigned char	/* 8-bit unsigned integer */
+#undef uby8
+#define uby8  unsigned char	/* 8-bit unsigned integer */
 
-typedef BYTE  COLR[4];		/* red, green, blue (or X,Y,Z), exponent */
+typedef uby8  COLR[4];		/* red, green, blue (or X,Y,Z), exponent */
 
 typedef float COLORV;
 typedef COLORV  COLOR[3];	/* red, green, blue (or X,Y,Z) */

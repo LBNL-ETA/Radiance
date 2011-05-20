@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: colrops.c,v 2.11 2003/07/30 10:11:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: colrops.c,v 2.12 2011/05/20 02:06:38 greg Exp $";
 #endif
 /*
  * Integer operations on COLR scanlines
@@ -16,9 +16,9 @@ static const char	RCSid[] = "$Id: colrops.c,v 2.11 2003/07/30 10:11:06 schorsch 
 
 #define MAXGSHIFT	31		/* maximum shift for gamma table */
 
-static BYTE	*g_mant = NULL, *g_nexp = NULL;
+static uby8	*g_mant = NULL, *g_nexp = NULL;
 
-static BYTE	(*g_bval)[256] = NULL;
+static uby8	(*g_bval)[256] = NULL;
 
 
 int
@@ -30,7 +30,7 @@ double	a2;
 	register int	i, j;
 					/* allocate tables */
 	if (g_bval == NULL && (g_bval =
-			(BYTE (*)[256])bmalloc((MAXGSHIFT+1)*256)) == NULL)
+			(uby8 (*)[256])bmalloc((MAXGSHIFT+1)*256)) == NULL)
 		return(-1);
 					/* compute colr -> gamb mapping */
 	mult = 1.0/256.0;
@@ -51,9 +51,9 @@ double	a2;
 	double	mult;
 	register int	i, j;
 					/* allocate tables */
-	if (g_mant == NULL && (g_mant = (BYTE *)bmalloc(256)) == NULL)
+	if (g_mant == NULL && (g_mant = (uby8 *)bmalloc(256)) == NULL)
 		return(-1);
-	if (g_nexp == NULL && (g_nexp = (BYTE *)bmalloc(256)) == NULL)
+	if (g_nexp == NULL && (g_nexp = (uby8 *)bmalloc(256)) == NULL)
 		return(-1);
 					/* compute gamb -> colr mapping */
 	i = 0;
