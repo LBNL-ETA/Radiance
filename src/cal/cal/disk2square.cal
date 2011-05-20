@@ -1,0 +1,63 @@
+{ RCSid $Id: disk2square.cal,v 1.1 2011/05/20 21:16:06 greg Exp $ }
+{
+	Convert between unit square and disk, using Chiu-Shirley mapping
+
+	5/20/2011	G. Ward
+
+	Inputs:
+		in_disk_x	Input unit disk Cartesian coordiantes
+		in_disk_y	center at (0,0)
+	or:
+		in_square_x	Input unit square [0,1]^2
+		in_square_y
+
+	Corresponding outputs:
+		out_square_x	Output unit square [0,1]^2
+		out_square_y
+	or:
+		out_disk_x	Output unit disk Cartesian coordinates
+		out_disk_y	center at (0,0)
+}
+			{ Compute disk position from square coordinates }
+in_square_a = 2*in_square_x - 1;
+in_square_b = 2*in_square_y - 1;
+
+in_square_rgn = if(in_square_a + in_square_b,
+			if(in_square_a - in_square_b, 1, 2),
+			if(in_square_b - in_square_a, 3, 4));
+
+out_disk_r = select(in_square_rgn, in_square_a, in_square_b,
+			-in_square_a, -in_square_b);
+
+out_disk_phi = PI/4 * select(in_square_rgn,
+				in_square_b/in_square_a,
+				2 - in_square_a/in_square_b,
+				4 + in_square_b/in_square_a,
+				if(in_square_b*in_square_b,
+					6 - in_square_a/in_square_b,
+					0));
+
+out_disk_x = out_disk_r*cos(out_disk_phi);
+out_disk_y = out_disk_r*sin(out_disk_phi);
+
+			{ Compute square position from disk coordinates }
+norm_radians(p) = if(-p - PI/4, p + 2*PI, p);
+in_disk_r = sqrt(in_disk_x*in_disk_x + in_disk_y*in_disk_y);
+in_disk_phi = norm_radians(atan2(in_disk_y, in_disk_x));
+
+in_disk_rgn = floor((in_disk_phi + PI/4)/(PI/2)) + 1;
+
+out_square_a = select(in_disk_rgn,
+			in_disk_r,
+			(PI/2 - in_disk_phi)*in_disk_r/(PI/4),
+			-in_disk_r,
+			(in_disk_phi - 3*PI/2)*in_disk_r/(PI/4));
+
+out_square_b = select(in_disk_rgn,
+			in_disk_phi*in_disk_r/(PI/4),
+			in_disk_r,
+			(PI - in_disk_phi)*in_disk_r/(PI/4),
+			-in_disk_r);
+
+out_square_x = (out_square_a + 1)/2;
+out_square_y = (out_square_b + 1)/2;
