@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.15 2011/05/25 19:24:11 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.16 2011/05/31 20:50:26 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -139,8 +139,7 @@ print
 </WindowElement>
 ';
 # Clean up temporary files and exit
-if ( $persistfile ) {
-	open(PFI, "< $persistfile");
+if ( $persistfile && open(PFI, "< $persistfile") ) {
 	while (<PFI>) {
 		s/^[^ ]* //;
 		kill('ALRM', $_);
@@ -148,8 +147,8 @@ if ( $persistfile ) {
 	}
 	close PFI;
 }
-system "rm -rf $td";
-exit 0;
+exec("rm -rf $td");
+
 #-------------- End of main program segment --------------#
 
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
@@ -204,9 +203,9 @@ out_square_x = (out_square_a + 1)/2;
 out_square_y = (out_square_b + 1)/2;
 ';
 # Announce ourselves in XML output
-print "		<DataDefinition>\n";
-print "			<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
-print "		</DataDefinition>\n";
+print "\t<DataDefinition>\n";
+print "\t\t<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
+print "\t</DataDefinition>\n";
 # Fork parallel rtcontrib processes to compute each side
 if ( $doback ) {
 	for (my $proc = 0; $proc < $nproc; $proc++) {

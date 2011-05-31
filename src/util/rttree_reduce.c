@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.1 2011/05/26 15:32:02 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.2 2011/05/31 20:50:26 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -16,12 +16,19 @@ float	*datarr;		/* our loaded BSDF data array */
 int	ttrank = 4;		/* tensor tree rank */
 int	log2g = 4;		/* log2 of grid resolution */
 int	infmt = 'a';		/* input format ('a','f','d') */
-double	tthresh = .05;		/* relative acceptance threshold */
+double	pctcull = 99.;		/* target culling percentile */
+
+#define HISTLEN		300	/* histogram resolution */
+#define HISTMAX		10.	/* maximum recorded value in histogram */
+
+int	histo[HISTLEN];		/* histogram freq. of max-min BSDF */
+
+double	tthresh;		/* acceptance threshold (TBD) */
 
 #define dval3(ix,ox,oy)		datarr[((((ix)<<log2g)+(ox))<<log2g)+(oy)]
 #define dval4(ix,iy,ox,oy)	datarr[((((((ix)<<log2g)+(iy))<<log2g)+(ox))<<log2g)+(oy)]
 
-#define above_threshold(tp)	((tp)->vmax - (tp)->vmin > 2.*tthresh*(tp)->vavg)
+#define above_threshold(tp)	((tp)->vmax - (tp)->vmin > tthresh)
 
 /* Tensor tree node */
 typedef struct ttree_s {
@@ -77,6 +84,10 @@ build_tree(TNODE *tp, const int bmin[], int l2s)
 			tp->vavg += val;
 		}
 		tp->vavg /= (float)(1<<ttrank);
+					/* record stats */
+		i = (HISTLEN/HISTMAX) * (tp->vmax - tp->vmin);
+		if (i >= HISTLEN) i = HISTLEN-1;
+		++histo[i];
 		return;
 	}
 	--l2s;				/* else still branching */
@@ -92,9 +103,36 @@ build_tree(TNODE *tp, const int bmin[], int l2s)
 		tp->vavg += tp->kid[i].vavg;
 	}
 	tp->vavg /= (float)(1<<ttrank);
-					/* is variation above threshold? */
-	if (!above_threshold(tp))
-		free_kids(tp);		/* if not, trim branches */
+}
+
+/* Set our trimming threshold */
+static void
+set_threshold()
+{
+	int	hsum = 0;
+	int	i;
+
+	for (i = HISTLEN; i--; )
+		hsum += histo[i];
+	hsum = pctcull*.01 * (double)hsum;
+	for (i = 0; hsum > 0; i++)
+		hsum -= histo[i];
+	tthresh = (HISTMAX/HISTLEN) * i;
+}
+
+/* Trim our tree according to the current threshold */
+static void
+trim_tree(TNODE *tp)
+{
+	if (tp->kid == NULL)
+		return;
+	if (above_threshold(tp)) {	/* keeping branches? */
+		int	i = 1<<ttrank;
+		while (i--)
+			trim_tree(tp->kid+i);
+		return;
+	}
+	free_kids(tp);			/* else trim at this point */
 }
 
 /* Print a tensor tree from the given hypercube */
@@ -275,8 +313,8 @@ main(int argc, char *argv[])
 				goto userr;
 			break;
 		case 't':
-			tthresh = atof(argv[++i]);
-			if (tthresh <= 0)
+			pctcull = atof(argv[++i]);
+			if ((pctcull < 0) | (pctcull >= 100.))
 				goto userr;
 			break;
 		case 'f':
@@ -307,6 +345,9 @@ main(int argc, char *argv[])
 	gtree.kid = NULL;		/* create our tree */
 	bmin[0] = bmin[1] = bmin[2] = bmin[3] = 0;
 	build_tree(&gtree, bmin, log2g);
+					/* compute threshold & trim tree */
+	set_threshold();
+	trim_tree(&gtree);
 					/* format to stdout */
 	print_tree(&gtree, bmin, log2g);
 	/* Clean up isn't necessary for main()...
@@ -315,7 +356,7 @@ main(int argc, char *argv[])
 	*/
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-h][-f{a|f|d}][-r {3|4}][-g log2grid][-t thresh] [input]\n",
+	fprintf(stderr, "Usage: %s [-h][-f{a|f|d}][-r {3|4}][-g log2grid][-t trim%%] [input]\n",
 			argv[0]);
 	return(1);
 }
