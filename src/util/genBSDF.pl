@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.17 2011/06/01 00:29:40 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.18 2011/06/01 22:50:24 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -248,7 +248,7 @@ sub bg_tree_rtcontrib {
 			"| rcalc -e 'r1=rand(($pn+.8681)*recno-.673892)' " .
 			"-e 'r2=rand(($pn-5.37138)*recno+67.1737811)' " .
 			"-e 'r3=rand(($pn+3.17603772)*recno+83.766771)' " .
-			"-e 'Dx=1-($pbeg+\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)' " .
+			"-e 'Dx=1-2*($pbeg+\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)' " .
 			"-e 'xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 			"-e 'yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
 			"-e 'zp=$dim[5-$forw]' -e 'myDz=Dz*($forw*2-1)' " .
