@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.12 2011/05/01 16:34:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.13 2011/06/01 00:29:40 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -214,7 +214,7 @@ SDavgTreBox(const SDNode *st, const double *bmin, const double *bmax)
 	for (i = st->ndim; i--; ) {
 		if (bmin[i] >= 1.)
 			return .0;
-		if (bmax[i] <= .0)
+		if (bmax[i] <= 0)
 			return .0;
 		if (bmin[i] >= bmax[i])
 			return .0;
@@ -234,6 +234,10 @@ SDavgTreBox(const SDNode *st, const double *bmin, const double *bmax)
 				}
 				if (sbmin[i] < .0) sbmin[i] = .0;
 				if (sbmax[i] > 1.) sbmax[i] = 1.;
+				if (sbmin[i] >= sbmax[i]) {
+					w = .0;
+					break;
+				}
 				w *= sbmax[i] - sbmin[i];
 			}
 			if (w > 1e-10) {
@@ -269,18 +273,19 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 					/* in branches? */
 	if (st->log2GR < 0) {
 		unsigned	skipmask = 0;
-
 		csiz *= .5;
 		for (i = st->ndim; i--; )
 			if (1<<i & cmask)
 				if (pos[i] < cmin[i] + csiz)
-					for (n = 1 << st->ndim; n--; )
+					for (n = 1 << st->ndim; n--; ) {
 						if (n & 1<<i)
 							skipmask |= 1<<n;
+					}
 				else
-					for (n = 1 << st->ndim; n--; )
+					for (n = 1 << st->ndim; n--; ) {
 						if (!(n & 1<<i))
 							skipmask |= 1<<n;
+					}
 		for (n = 1 << st->ndim; n--; ) {
 			if (1<<n & skipmask)
 				continue;

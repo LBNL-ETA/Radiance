@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.16 2011/05/31 20:50:26 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.17 2011/06/01 00:29:40 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -315,7 +315,9 @@ print
 		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
 		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
 		<WavelengthDataBlock>
-			<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>
+';
+print "\t\t\t<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>\n";
+print '
 			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
