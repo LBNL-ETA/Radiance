@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.13 2011/06/01 00:29:40 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.14 2011/06/01 05:21:18 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -91,7 +91,7 @@ SDfreeTre(SDNode *st)
 		return;
 	for (n = (st->log2GR < 0) << st->ndim; n--; )
 		SDfreeTre(st->u.t[n]);
-	free((void *)st);
+	free(st);
 }
 
 /* Free a variable-resolution BSDF */
@@ -125,13 +125,13 @@ fill_grid_branch(float *dptr, const float *sptr, int nd, int shft)
 static float *
 grid_branch_start(SDNode *st, int n)
 {
-	unsigned	skipsiz = 1 << st->log2GR;
+	unsigned	skipsiz = 1 << (st->log2GR - 1);
 	float		*vptr = st->u.v;
 	int		i;
 
-	for (i = 0; i < st->ndim; skipsiz <<= st->log2GR)
-		if (1<<i++ & n)
-			vptr += skipsiz >> 1;
+	for (i = st->ndim; i--; skipsiz <<= st->log2GR)
+		if (1<<i & n)
+			vptr += skipsiz;
 	return vptr;
 }
 
