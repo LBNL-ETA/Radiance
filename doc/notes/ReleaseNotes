@@ -1789,3 +1789,5 @@ Added BSDF data-driven material type with full sampling support.
 Added BRDF calculations to genBSDF.
 
 Bug fixes in rsensor thanks to help from David Geisler-Moroder.
+
+Added variable-resolution BSDF support in renderers and genBSDF.

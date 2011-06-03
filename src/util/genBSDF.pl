@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.18 2011/06/01 22:50:24 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.19 2011/06/03 19:41:14 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -317,8 +317,7 @@ print
 		<WavelengthDataBlock>
 ';
 print "\t\t\t<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>\n";
-print '
-			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
+print '			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';

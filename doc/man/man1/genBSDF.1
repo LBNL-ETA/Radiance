@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.5 2011/05/06 23:58:09 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.6 2011/06/03 19:41:14 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -10,6 +10,8 @@ genBSDF - generate BSDF description from Radiance or MGF input
 .B "\-n Nproc"
 ][
 .B "\-r 'rtcontrib opts...'"
+][
+.B "\-t{3|4} Nlog2"
 ][
 .B "{+|-}forward"
 ][
@@ -87,12 +89,61 @@ option may be used to specify a set of quoted arguments to be
 included on the
 .I rtcontrib
 command line.
+.PP
+The
+.I \-t4
+mode computes a non-uniform BSDF represented as a rank 4 tensor tree,
+suitable for use in the Radiance rendering tools.
+The parameter given to this option is the log to the base 2 of the
+sampling resolution in each dimension, and must be an integer.
+The
+.I \-c
+setting should be adjusted so that an appropriate number of samples
+lands in each region.
+A
+.I \-t4
+parameter of 5 corresponds to 32x32 or 1024 output regions, so a
+.I \-c
+setting of 102400 would provide 100 samples per region on average.
+Increasing the resolution to 6 corresponds to 64x64 or 4096
+regions, so the
+.I \-c
+setting would need to be increased by a factor of 4 to provide
+the same accuracy in each region.
+.PP
+The
+.I \-t3
+mode is similar to
+.I \-t4
+but computes a rank 3 tensor tree rather than rank 4.
+This provides a much faster computation, but only works
+in special circumstances.
+Specifically, do NOT use this option if the system is not in fact isotropic.
+I.e., only use
+.I \-t3
+when you are certain that the system has a high degree of radial symmetry.
+Again, the parameter to this option sets the maximum resolution as
+a power of 2 in each dimension, but in this case there is one less
+dimension being sampled.
 .SH EXAMPLE
 To create a BSDF description including geometry from a set of venetian blinds:
 .IP "" .2i
 genblinds blind_white blind1 .07 3 1.5 30 40 | xform -rz -90 -rx 90 > blind1.rad
 .br
 genBSDF -r @rtc.opt blind_white.mat glazing.rad blind1.rad > blind1.xml
+.PP
+To create a non-uniform, anisotropic BSDF distribution with a maximum
+resolution of 128x128 from the same description:
+.IP "" .2i
+genBSDF -r @rtc.opt -t4 7 -c 160000 blind_white.mat glazing.rad blind1.rad > blind12.xml
+.SH NOTES
+The variable resolution (tensor tree) BSDF representation is not supported
+by all software and applicatons, and should be used with caution.
+It provides practical, high-resolution data for use in the
+Radiance rendering programs, but does not work in the matrix formulation
+of the daylight coefficient method for example.
+Also, third party tools generally expect or require a fixed number of sample
+directions using the Klems directions or similar.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
