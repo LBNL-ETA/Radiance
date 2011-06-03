@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.3 2011/06/01 16:51:03 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.4 2011/06/03 18:12:58 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -17,7 +17,7 @@ float	*datarr;		/* our loaded BSDF data array */
 int	ttrank = 4;		/* tensor tree rank */
 int	log2g = 4;		/* log2 of grid resolution */
 int	infmt = 'a';		/* input format ('a','f','d') */
-double	pctcull = 99.;		/* target culling percentile */
+double	pctcull = 95.;		/* target culling percentile */
 
 #define dval3(ix,ox,oy)		datarr[((((ix)<<log2g)+(ox))<<log2g)+(oy)]
 #define dval4(ix,iy,ox,oy)	datarr[((((((ix)<<log2g)+(iy))<<log2g)+(ox))<<log2g)+(oy)]
@@ -260,10 +260,10 @@ load_data()
 		error(SYSTEM, "out of memory in load_data");
 	if (ttrank == 3) {
 		int	ix, ox;
-		for (ix = 0; ix < 1<<log2g; ix++)
+		for (ix = 0; ix < 1<<(log2g-1); ix++)
 			for (ox = 0; ox < 1<<log2g; ox++)
 				(*readf)(datarr+((((ix)<<log2g)+(ox))<<log2g),
-						1<<(log2g-1));
+						1<<log2g);
 	} else /* ttrank == 4 */ {
 		int	ix, iy, ox;
 		for (ix = 0; ix < 1<<log2g; ix++)

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.14 2011/06/01 05:21:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.15 2011/06/03 18:12:58 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -28,6 +28,8 @@ static const unsigned	iwbits = sizeof(unsigned)*4;
 static const unsigned	iwmax = (1<<(sizeof(unsigned)*4))-1;
 					/* maximum cumulative value */
 static const unsigned	cumlmax = ~0;
+					/* constant z-vector */
+static const FVECT	zvec = {.0, .0, 1.};
 
 /* Struct used for our distribution-building callback */
 typedef struct {
@@ -190,13 +192,15 @@ SDiterSum(const float *va, int nd, int shft, const int *imin, const int *imax)
 	const unsigned	skipsiz = 1 << --nd*shft;
 	double		sum = .0;
 	int		i;
-	
+
+	va += *imin * skipsiz;
+
 	if (skipsiz == 1)
 		for (i = *imin; i < *imax; i++)
-			sum += va[i];
+			sum += *va++;
 	else
-		for (i = *imin; i < *imax; i++)
-			sum += SDiterSum(va + i*skipsiz, nd, shft, imin+1, imax+1);
+		for (i = *imin; i < *imax; i++, va += skipsiz)
+			sum += SDiterSum(va, nd, shft, imin+1, imax+1);
 	return sum;
 }
 
@@ -204,7 +208,6 @@ SDiterSum(const float *va, int nd, int shft, const int *imin, const int *imax)
 static double
 SDavgTreBox(const SDNode *st, const double *bmin, const double *bmax)
 {
-	int		imin[SD_MAXDIM], imax[SD_MAXDIM];
 	unsigned	n;
 	int		i;
 
@@ -222,7 +225,6 @@ SDavgTreBox(const SDNode *st, const double *bmin, const double *bmax)
 	if (st->log2GR < 0) {		/* iterate on subtree */
 		double		sum = .0, wsum = 1e-20;
 		double		sbmin[SD_MAXDIM], sbmax[SD_MAXDIM], w;
-
 		for (n = 1 << st->ndim; n--; ) {
 			w = 1.;
 			for (i = st->ndim; i--; ) {
@@ -246,19 +248,22 @@ SDavgTreBox(const SDNode *st, const double *bmin, const double *bmax)
 			}
 		}
 		return sum / wsum;
+	} else {			/* iterate over leaves */
+		int		imin[SD_MAXDIM], imax[SD_MAXDIM];
+
+		n = 1;
+		for (i = st->ndim; i--; ) {
+			imin[i] = (bmin[i] <= 0) ? 0 :
+					(int)((1 << st->log2GR)*bmin[i]);
+			imax[i] = (bmax[i] >= 1.) ? (1 << st->log2GR) :
+				(int)((1 << st->log2GR)*bmax[i] + .999999);
+			n *= imax[i] - imin[i];
+		}
+		if (n)
+			return SDiterSum(st->u.v, st->ndim,
+					st->log2GR, imin, imax) / (double)n;
 	}
-	n = 1;				/* iterate over leaves */
-	for (i = st->ndim; i--; ) {
-		imin[i] = (bmin[i] <= 0) ? 0 
-				: (int)((1 << st->log2GR)*bmin[i]);
-		imax[i] = (bmax[i] >= 1.) ? (1 << st->log2GR)
-				: (int)((1 << st->log2GR)*bmax[i] + .999999);
-		n *= imax[i] - imin[i];
-	}
-	if (!n)
-		return .0;
-	
-	return SDiterSum(st->u.v, st->ndim, st->log2GR, imin, imax) / (double)n;
+	return .0;
 }
 
 /* Recursive call for SDtraverseTre() */
@@ -294,6 +299,8 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 					bmin[i] = cmin[i] + csiz;
 				else
 					bmin[i] = cmin[i];
+			for (i = SD_MAXDIM; i-- > st->ndim; )
+				bmin[i] = .0;
 
 			rval += rv = SDdotravTre(st->u.t[n], pos, cmask,
 							cf, cptr, bmin, csiz);
@@ -415,7 +422,6 @@ SDlookupTre(const SDNode *st, const double *pos, double *hcube)
 static float
 SDqueryTre(const SDTre *sdt, const FVECT outVec, const FVECT inVec, double *hc)
 {
-	static const FVECT	zvec = {.0, .0, 1.};
 	FVECT			rOutVec;
 	double			gridPos[4];
 
@@ -437,7 +443,7 @@ SDqueryTre(const SDTre *sdt, const FVECT outVec, const FVECT inVec, double *hc)
 	}
 					/* convert vector coordinates */
 	if (sdt->st->ndim == 3) {
-		spinvector(rOutVec, outVec, zvec, -atan2(inVec[1],inVec[0]));
+		spinvector(rOutVec, outVec, zvec, -atan2(-inVec[1],-inVec[0]));
 		gridPos[0] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 		SDdisk2square(gridPos+1, rOutVec[0], rOutVec[1]);
 	} else if (sdt->st->ndim == 4) {
@@ -550,6 +556,7 @@ make_cdist(const SDTre *sdt, const double *pos)
 		free(myScaffold.darr);
 		return NULL;
 	}
+	cd->isodist = (myScaffold.nic == 1);
 					/* sort the distribution */
 	qsort(myScaffold.darr, cd->calen = myScaffold.alen,
 				sizeof(struct outdir_s), &sscmp);
@@ -559,6 +566,10 @@ make_cdist(const SDTre *sdt, const double *pos)
 	for (i = myScaffold.nic; i--; ) {
 		cd->clim[i][0] = floor(pos[i]/scale) * scale;
 		cd->clim[i][1] = cd->clim[i][0] + scale;
+	}
+	if (cd->isodist) {		/* avoid issue in SDqueryTreProjSA() */
+		cd->clim[1][0] = cd->clim[0][0];
+		cd->clim[1][1] = cd->clim[0][1];
 	}
 	cd->max_psa = myScaffold.wmax / (double)iwmax;
 	cd->max_psa *= cd->max_psa * M_PI;
@@ -679,7 +690,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 	const SDTreCDst	*cd = (const SDTreCDst *)cdp;
 	const unsigned	target = randX*cumlmax;
 	bitmask_t	hndx, hcoord[2];
-	double		gpos[3];
+	double		gpos[3], rotangle;
 	int		i, iupper, ilower;
 					/* check arguments */
 	if ((ioVec == NULL) | (cd == NULL))
@@ -715,7 +726,12 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* emit from back? */
 	if (ioVec[2] > 0 ^ cd->sidef != SD_XMIT)
 		gpos[2] = -gpos[2];
-	VCOPY(ioVec, gpos);
+	if (cd->isodist) {		/* rotate isotropic result */
+		rotangle = atan2(-ioVec[1],-ioVec[0]);
+		VCOPY(ioVec, gpos);
+		spinvector(ioVec, ioVec, zvec, rotangle);
+	} else
+		VCOPY(ioVec, gpos);
 	return SDEnone;
 }
 
@@ -785,7 +801,7 @@ load_tree_data(char **spp, int nd)
 	} else {			/* else load value grid */
 		int	bsiz;
 		n = count_values(*spp);	/* see how big the grid is */
-		for (bsiz = 0; bsiz < 8*sizeof(size_t)-1; bsiz += nd)
+		for (bsiz = 0; bsiz < 8*sizeof(size_t); bsiz += nd)
 			if (1<<bsiz == n)
 				break;
 		if (bsiz >= 8*sizeof(size_t)) {
@@ -962,7 +978,8 @@ SDsubtractTreVal(SDNode *st, float val)
 			SDsubtractTreVal(st->u.t[n], val);
 	} else {
 		for (n = 1<<(st->ndim*st->log2GR); n--; )
-			st->u.v[n] -= val;
+			if ((st->u.v[n] -= val) < 0)
+				st->u.v[n] = .0f;
 	}
 }
 
@@ -976,7 +993,7 @@ subtract_min(SDNode *st)
 		int	n;
 		vmin = 1./M_PI;
 		if (st->log2GR < 0) {
-			for (n = 0; n < 4; n++) {
+			for (n = 0; n < 8; n += 2) {
 				float	v = SDgetTreMin(st->u.t[n]);
 				if (v < vmin)
 					vmin = v;

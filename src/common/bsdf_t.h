@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.7 2011/04/27 20:03:25 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.8 2011/06/03 18:12:58 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -44,7 +44,8 @@ typedef struct {
 	SD_CDIST_BASE;		/* base fields; must come first */
 	double	clim[2][2];	/* input coordinate limits */
 	double	max_psa;	/* maximum projected solid angle */
-	int	sidef;		/* which side(s) to use */
+	short	sidef;		/* which side(s) to use */
+	short	isodist;	/* isotropic distribution? */
 	int	calen;		/* cumulative array length */
 	struct {
 		unsigned	hndx;	/* hilbert index */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.28 2011/04/28 00:24:43 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.29 2011/06/03 18:12:58 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -169,15 +169,9 @@ SDloadFile(SDData *sd, const char *fname)
 				/* try loading variable resolution data */
 	lastErr = SDloadTre(sd, wtl);
 				/* check our result */
-	switch (lastErr) {
-	case SDEformat:
-	case SDEdata:
-	case SDEsupport:	/* possibly we just tried the wrong format */
+	if (lastErr == SDEsupport)	/* try matrix BSDF if not tree data */
 		lastErr = SDloadMtx(sd, wtl);
-		break;
-	default:		/* variable res. OK else serious error */
-		break;
-	}
+		
 				/* done with XML file */
 	ezxml_free(fl);
 	
