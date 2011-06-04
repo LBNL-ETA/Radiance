@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.19 2011/06/03 19:41:14 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.20 2011/06/04 00:33:53 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -13,6 +13,7 @@ sub userror {
 }
 my $td = mkdtemp("/tmp/genBSDF.XXXXXX");
 chomp $td;
+my @savedARGV = @ARGV;
 my $tensortree = 0;
 my $ttlog2 = 4;
 my $nsamp = 1000;
@@ -98,7 +99,10 @@ die "Could not compile scene\n" if ( $? );
 print
 '<?xml version="1.0" encoding="UTF-8"?>
 <WindowElement xmlns="http://windows.lbl.gov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://windows.lbl.gov/BSDF-v1.4.xsd">
-<WindowElementType>System</WindowElementType>
+';
+print "<!-- File produced by: genBSDF @savedARGV -->\n";
+print
+'<WindowElementType>System</WindowElementType>
 <Optical>
 <Layer>
 	<Material>
@@ -317,7 +321,8 @@ print
 		<WavelengthDataBlock>
 ';
 print "\t\t\t<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>\n";
-print '			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
+print
+'			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
