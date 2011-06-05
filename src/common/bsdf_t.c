@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.15 2011/06/03 18:12:58 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.16 2011/06/05 20:27:14 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -299,8 +299,6 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 					bmin[i] = cmin[i] + csiz;
 				else
 					bmin[i] = cmin[i];
-			for (i = SD_MAXDIM; i-- > st->ndim; )
-				bmin[i] = .0;
 
 			rval += rv = SDdotravTre(st->u.t[n], pos, cmask,
 							cf, cptr, bmin, csiz);
@@ -326,28 +324,37 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 				clim[i][0] = 0;
 				clim[i][1] = 1 << st->log2GR;
 			}
-					/* fill in unused dimensions */
-		for (i = SD_MAXDIM; i-- > st->ndim; ) {
-			clim[i][0] = 0; clim[i][1] = 1;
-		}
 #if (SD_MAXDIM == 4)
 		bmin[0] = cmin[0] + csiz*clim[0][0];
 		for (cpos[0] = clim[0][0]; cpos[0] < clim[0][1]; cpos[0]++) {
 		    bmin[1] = cmin[1] + csiz*clim[1][0];
 		    for (cpos[1] = clim[1][0]; cpos[1] < clim[1][1]; cpos[1]++) {
 			bmin[2] = cmin[2] + csiz*clim[2][0];
-			for (cpos[2] = clim[2][0]; cpos[2] < clim[2][1]; cpos[2]++) {
-			    bmin[3] = cmin[3] + csiz*(cpos[3] = clim[3][0]);
+			if (st->ndim == 3) {
+			    cpos[2] = clim[2][0];
 			    n = cpos[0];
-			    for (i = 1; i < st->ndim; i++)
+			    for (i = 1; i < 3; i++)
 				n = (n << st->log2GR) + cpos[i];
-			    for ( ; cpos[3] < clim[3][1]; cpos[3]++) {
+			    for ( ; cpos[2] < clim[2][1]; cpos[2]++) {
 				rval += rv = (*cf)(st->u.v[n++], bmin, csiz, cptr);
 				if (rv < 0)
 				    return rv;
-				bmin[3] += csiz;
+				bmin[2] += csiz;
 			    }
-			    bmin[2] += csiz;
+			} else {
+			    for (cpos[2] = clim[2][0]; cpos[2] < clim[2][1]; cpos[2]++) {
+				bmin[3] = cmin[3] + csiz*(cpos[3] = clim[3][0]);
+				n = cpos[0];
+				for (i = 1; i < 4; i++)
+				    n = (n << st->log2GR) + cpos[i];
+				for ( ; cpos[3] < clim[3][1]; cpos[3]++) {
+				    rval += rv = (*cf)(st->u.v[n++], bmin, csiz, cptr);
+				    if (rv < 0)
+					return rv;
+				    bmin[3] += csiz;
+				}
+				bmin[2] += csiz;
+			    }
 			}
 			bmin[1] += csiz;
 		    }

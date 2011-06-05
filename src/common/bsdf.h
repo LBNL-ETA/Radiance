@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.12 2011/04/24 19:39:21 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.13 2011/06/05 20:27:14 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -14,7 +14,7 @@
  *	in the +Z direction, towards the interior of the space rather
  *	than the exterior.
  *
- *  BSDF vectors always oriented away from surface, even when "incident."
+ *  BSDF incident & exiting vectors are always oriented away from surface.
  *
  *  Created by Greg Ward on 1/10/11.
  *
@@ -113,7 +113,7 @@ typedef struct {
 
 /* Loaded BSDF data */
 typedef struct {
-	char		name[SDnameLn];	/* BSDF name (derived from file) */
+	char		name[SDnameLn];	/* BSDF name (usu. derived from file) */
 	char		*mgf;		/* geometric description (if any) */
 	float		dim[3];		/* width, height, thickness (meters) */
 	SDValue		rLambFront;	/* diffuse front reflectance */
@@ -131,11 +131,11 @@ extern struct SDCache_s {
 } *SDcacheList;		/* Global BSDF cache */
 
 /* BSDF cache retention preference */
-#define SDretainNone	0		/* free unreferenced data (default) */
+#define SDretainNone	0		/* free unreferenced data*/
 #define	SDretainBSDFs	1		/* keep loaded BSDFs in cache */
 #define SDretainAll	2		/* also keep cumulative cache data */
 
-extern int		SDretainSet;	/* set to SDretainNone by default */
+extern int		SDretainSet;	/* =SDretainNone by default */
 
 /*****************************************************************
  * The following routines are less commonly used by applications.
@@ -189,10 +189,10 @@ void			SDdisk2square(double sq[2], double diskx, double disky);
  */
 
 /* Get BSDF from cache (or load and cache it on first call) */
-/* Report any problems to stderr and return NULL on failure */
+/* Report any problems to stderr (in English), return NULL on failure */
 extern const SDData	*SDcacheFile(const char *fname);
 
-/* Free a BSDF from our cache (clear all if NULL) */
+/* Free a BSDF from our cache (clear all if sd==NULL) */
 extern void		SDfreeCache(const SDData *sd);
 
 /* Query projected solid angle resolution for non-diffuse BSDF direction(s) */
@@ -217,7 +217,7 @@ extern SDError		SDsampBSDF(SDValue *sv, FVECT ioVec, double randX,
  * Directions may be passed unnormalized to these routines.
  */
 
-/* Compute World->BSDF transform from surface normal and up (Y) vector */
+/* Compute World->BSDF transform from surface normal and BSDF up vector */
 extern SDError		SDcompXform(RREAL vMtx[3][3], const FVECT sNrm,
 					const FVECT uVec);
 
@@ -228,10 +228,10 @@ extern SDError		SDinvXform(RREAL iMtx[3][3], RREAL vMtx[3][3]);
 extern SDError		SDmapDir(FVECT resVec, RREAL vMtx[3][3],
 					const FVECT inpVec);
 
-/* System-specific BSDF loading routine (not part of our library) */
+/* Application-specific BSDF loading routine (not part of our library) */
 extern SDData		*loadBSDF(char *name);
 
-/* System-specific BSDF error translator (not part of our library) */
+/* Application-specific BSDF error translator (not part of our library) */
 extern char		*transSDError(SDError ec);
 
 /*################################################################*/
