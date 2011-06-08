@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.20 2011/06/04 00:33:53 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.21 2011/06/08 23:16:47 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -402,7 +402,8 @@ my $rtcmd = "rtcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
 	"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $octree";
 my $rccmd = "rcalc -e '$tcal' " .
 	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-.999,$ndiv)' " .
-	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega'};
+	q{-if3 -e 'oval=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega' } .
+	q[-o '${  oval  },'];
 if ( $doforw ) {
 $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'xp=(\$3+rand(.12*recno+288))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
