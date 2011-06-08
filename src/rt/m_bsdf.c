@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.10 2011/04/24 19:39:21 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.11 2011/06/08 15:37:46 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -287,48 +287,44 @@ static int
 sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 {
 	int	nstarget = 1;
-	int	nsent = 0;
+	int	nsent;
 	SDError	ec;
 	SDValue bsv;
-	double	sthick;
+	double	xrand;
 	FVECT	vsmp;
 	RAY	sr;
-	int	ntrials;
 						/* multiple samples? */
 	if (specjitter > 1.5) {
 		nstarget = specjitter*ndp->pr->rweight + .5;
 		if (nstarget < 1)
 			nstarget = 1;
 	}
-						/* run through our trials */
-	for (ntrials = 0; nsent < nstarget && ntrials < 9*nstarget; ntrials++) {
-		SDerrorDetail[0] = '\0';
-						/* sample direction & coef. */
+						/* run through our samples */
+	for (nsent = 0; nsent < nstarget; nsent++) {
+		if (nstarget == 1)		/* stratify random variable */
+			xrand = urand(ilhash(dimlist,ndims)+samplendx);
+		else
+			xrand = (nsent + frandom())/(double)nstarget;
+		SDerrorDetail[0] = '\0';	/* sample direction & coef. */
 		bsdf_jitter(vsmp, ndp, 0);
-		ec = SDsampComponent(&bsv, vsmp, ntrials ? frandom()
-				: urand(ilhash(dimlist,ndims)+samplendx), dcp);
+		ec = SDsampComponent(&bsv, vsmp, xrand, dcp);
 		if (ec)
 			objerror(ndp->mp, USER, transSDError(ec));
-						/* zero component? */
-		if (bsv.cieY <= FTINY)
+		if (bsv.cieY <= FTINY)		/* zero component? */
 			break;
 						/* map vector to world */
 		if (SDmapDir(sr.rdir, ndp->fromloc, vsmp) != SDEnone)
 			break;
-						/* unintentional penetration? */
-		if (DOT(sr.rdir, ndp->pr->ron) > 0 ^ vsmp[2] > 0)
-			continue;
 						/* spawn a specular ray */
 		if (nstarget > 1)
 			bsv.cieY /= (double)nstarget;
-		cvt_sdcolor(sr.rcoef, &bsv);	/* use color */
-		if (usepat)			/* pattern on transmission */
+		cvt_sdcolor(sr.rcoef, &bsv);	/* use sample color */
+		if (usepat)			/* apply pattern? */
 			multcolor(sr.rcoef, ndp->pr->pcol);
 		if (rayorigin(&sr, SPECULAR, ndp->pr, sr.rcoef) < 0) {
-			if (maxdepth  > 0)
+			if (maxdepth > 0)
 				break;
-			++nsent;		/* Russian roulette victim */
-			continue;
+			continue;		/* Russian roulette victim */
 		}
 						/* need to offset origin? */
 		if (ndp->thick != 0 && ndp->pr->rod > 0 ^ vsmp[2] > 0)
@@ -336,7 +332,6 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 		rayvalue(&sr);			/* send & evaluate sample */
 		multcolor(sr.rcol, sr.rcoef);
 		addcolor(ndp->pr->rcol, sr.rcol);
-		++nsent;
 	}
 	return(nsent);
 }

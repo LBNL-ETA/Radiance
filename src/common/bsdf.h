@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.13 2011/06/05 20:27:14 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.14 2011/06/08 15:37:46 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -130,9 +130,9 @@ extern struct SDCache_s {
 			*next;
 } *SDcacheList;		/* Global BSDF cache */
 
-/* BSDF cache retention preference */
-#define SDretainNone	0		/* free unreferenced data*/
-#define	SDretainBSDFs	1		/* keep loaded BSDFs in cache */
+/* BSDF cache retention policies */
+#define SDretainNone	0		/* free unreferenced BSDF data */
+#define	SDretainBSDFs	1		/* keep loaded BSDFs in memory */
 #define SDretainAll	2		/* also keep cumulative cache data */
 
 extern int		SDretainSet;	/* =SDretainNone by default */
