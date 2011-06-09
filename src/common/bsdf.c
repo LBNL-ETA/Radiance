@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.29 2011/06/03 18:12:58 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.30 2011/06/09 17:09:39 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: bsdf.c,v 2.29 2011/06/03 18:12:58 greg Exp $";
  *
  */
 
+#define	_USE_MATH_DEFINES
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

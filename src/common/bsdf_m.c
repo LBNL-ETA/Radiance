@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.15 2011/04/27 20:03:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.16 2011/06/09 17:09:39 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: bsdf_m.c,v 3.15 2011/04/27 20:03:25 greg Exp $
  *
  */
 
+#define	_USE_MATH_DEFINES
 #include "rtio.h"
 #include <stdlib.h>
 #include <math.h>
@@ -528,7 +529,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		if (*sdnext == ',') sdnext++;
 		if (rowinc) {
 			int	r = i/dp->nout;
-			int	c = i - c*dp->nout;
+			int	c = i - r*dp->nout;
 			mBSDF_value(dp,r,c) = atof(sdata);
 		} else
 			dp->bsdf[i] = atof(sdata);

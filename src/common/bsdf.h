@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.14 2011/06/08 15:37:46 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.15 2011/06/09 17:09:39 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -28,6 +28,10 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _WIN32
+#define	strcasecmp	stricmp
 #endif
 
 #define	SDnameLn	128		/* maximum BSDF name length */

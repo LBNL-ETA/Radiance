@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.2 2011/06/01 00:29:40 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.3 2011/06/09 17:09:39 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -37,6 +37,14 @@ static const char RCSid[] = "$Id: ezxml.c,v 2.2 2011/06/01 00:29:40 greg Exp $";
 #endif /* EZXML_NOMMAP */
 #include <sys/stat.h>
 #include "ezxml.h"
+
+#ifdef _WIN32
+#include <io.h>
+#define snprintf	printf_s
+#define read		_read
+#define open		_open
+#define close		_close	
+#endif
 
 #define EZXML_WS   "\t\r\n "  /* whitespace */
 #define EZXML_ERRL 128        /* maximum error string length */
