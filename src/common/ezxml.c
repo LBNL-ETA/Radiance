@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.3 2011/06/09 17:09:39 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.4 2011/06/11 01:04:08 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -40,7 +40,6 @@ static const char RCSid[] = "$Id: ezxml.c,v 2.3 2011/06/09 17:09:39 greg Exp $";
 
 #ifdef _WIN32
 #include <io.h>
-#define snprintf	printf_s
 #define read		_read
 #define open		_open
 #define close		_close	
@@ -151,7 +150,7 @@ ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...)
     char *t, fmt[EZXML_ERRL];
     
     for (t = root->s; t < s; t++) if (*t == '\n') line++;
-    snprintf(fmt, EZXML_ERRL, "[error near line %d]: %s", line, err);
+    sprintf(fmt, "[error near line %d]: %s", line, err);
 
     va_start(ap, err);
     vsnprintf(root->err, EZXML_ERRL, fmt, ap);
