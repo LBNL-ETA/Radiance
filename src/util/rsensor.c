@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.10 2011/05/19 16:09:38 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.11 2011/06/20 23:08:43 greg Exp $";
 #endif
 
 /*
@@ -470,16 +470,18 @@ sens_val(
 	int	t, p;
 	
 	dv[2] = DOT(dvec, ourview.vdir);
-	theta = (float)((1./DEGREE) * acos(dv[2]));
+	theta = acos(dv[2]);
 	if (theta >= maxtheta)
 		return(.0f);
 	dv[0] = DOT(dvec, ourview.hvec);
 	dv[1] = DOT(dvec, ourview.vvec);
-	phi = (float)((1./DEGREE) * atan2(-dv[0], dv[1]));
-	while (phi < .0f) phi += 360.f;
+	phi = atan2(-dv[0], dv[1]);
+	while (phi < .0f) phi += (float)(2.*PI);
 	t = (int)(theta/maxtheta * sntp[0]);
-	p = (int)(phi*(1./360.) * sntp[1]);
+	p = (int)(phi*(1./(2.*PI)) * sntp[1]);
 			/* hack for non-uniform sensor grid */
+	theta *= (float)(1./DEGREE);
+	phi *= (float)(1./DEGREE);
 	while (t+1 < sntp[0] && theta >= s_theta(t+1))
 		++t;
 	while (t-1 >= 0 && theta <= s_theta(t-1))
