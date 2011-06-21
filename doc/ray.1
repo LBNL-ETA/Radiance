@@ -898,6 +898,11 @@ If the BSDF has transmission and back-side reflection data,
 a parallel BSDF surface may be
 placed slightly less than the given thickness away from the front surface
 to enclose the complex geometry on both sides.
+The sign of the thickness is important, as it indicates whether the
+proxied geometry is behind the.
+.I BSDF
+surface (when thickness is positive)
+or in front (when thickness is negative).
 .LP
 The second string argument is the name of the BSDF file, which is
 found in the usual auxiliary locations.

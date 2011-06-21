@@ -1092,36 +1092,42 @@ unless the line integrals consider enclosed geometry.
 	a parallel BSDF surface may be
 	placed slightly less than the given thickness away from the front surface
 	to enclose the complex geometry on both sides.
+	The sign of the thickness is important, as it indicates
+	whether the proxied geometry is behind the <emph>BSDF</emph>
+	surface (when thickness is positive) or in front (when
+	thickness is negative).
 <p>
-	The second string argument is the name of the BSDF file, which is
-	found in the usual auxiliary locations.
-	The following three string parameters name variables for an &quot;up&quot; vector,
-	which together with the surface normal, define the
-	local coordinate system that orients the BSDF.
-	These variables, along with the thickness, are defined in a function
-	file given as the next string argument.
-	An optional transform is used to scale the thickness and reorient the up vector.
+	The second string argument is the name of the BSDF file,
+	which is found in the usual auxiliary locations.  The
+	following three string parameters name variables for an
+	&quot;up&quot; vector, which together with the surface
+	normal, define the local coordinate system that orients the
+	BSDF.  These variables, along with the thickness, are defined
+	in a function file given as the next string argument.  An
+	optional transform is used to scale the thickness and
+	reorient the up vector.
 <p>
-	If no real arguments are given, the BSDF is used by itself to determine
-	reflection and transmission.
-	If there are at least 3 real arguments, the first triplet is an
-	additional diffuse reflectance for the front side.
-	At least 6 real arguments adds diffuse reflectance to the rear side of the surface.
-	If there are 9 real arguments, the final triplet will be taken as an additional
-	diffuse transmittance.
-	All diffuse components as well as the non-diffuse transmission are
-	modified by patterns applied to this material.
-	The non-diffuse reflection from either side are unaffected.
-	Textures perturb the effective surface normal in the usual way.
+	If no real arguments are given, the BSDF is used by itself
+	to determine reflection and transmission.  If there are at
+	least 3 real arguments, the first triplet is an additional
+	diffuse reflectance for the front side.  At least 6 real
+	arguments adds diffuse reflectance to the rear side of the
+	surface.  If there are 9 real arguments, the final triplet
+	will be taken as an additional diffuse transmittance.  All
+	diffuse components as well as the non-diffuse transmission
+	are modified by patterns applied to this material.  The
+	non-diffuse reflection from either side are unaffected.
+	Textures perturb the effective surface normal in the usual
+	way.
 <p>
-	The surface normal of this type is not altered to face the incoming ray,
-	so the front and back BSDF reflections may differ.
-	(Transmission is identical front-to-back by physical law.)
-	If back visibility is turned off during rendering and there is no
-	transmission or back-side reflection, only then the surface will be
-	invisible from behind.
-	Unlike other data-driven material types, the BSDF type is fully
-	supported and all parts of the distribution are properly sampled.
+	The surface normal of this type is not altered to face the
+	incoming ray, so the front and back BSDF reflections may
+	differ.  (Transmission is identical front-to-back by physical
+	law.) If back visibility is turned off during rendering and
+	there is no transmission or back-side reflection, only then
+	the surface will be invisible from behind.  Unlike other
+	data-driven material types, the BSDF type is fully supported
+	and all parts of the distribution are properly sampled.
 <p>
 
 <dt>
