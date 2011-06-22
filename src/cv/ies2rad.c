@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.25 2008/01/24 23:15:46 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.26 2011/06/22 19:57:17 greg Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -1145,7 +1145,7 @@ cvgeometry(
 	strcpy(buf, "mgf2rad ");		/* build mgf2rad command */
 	cp = buf+8;
 	if (!FEQ(sinf->mult, 1.0)) {
-		sprintf(cp, "-m %f ", sinf->mult);
+		sprintf(cp, "-e %f ", sinf->mult);
 		cp += strlen(cp);
 	}
 	sprintf(cp, "-g %f %s ",
