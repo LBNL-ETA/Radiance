@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.35 2011/02/18 00:40:25 greg Exp $
+# RCSid $Id: Rmakefile,v 2.36 2011/06/23 18:05:18 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -19,7 +19,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
-mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf
+mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf pkgBSDF
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal
 
@@ -72,6 +72,9 @@ mgf2inv:	mgf2inv.o
 	$(CC) $(CFLAGS) -o 3ds2mgf 3ds2mgf.o rayopt3ds.o vect3ds.o \
 -lmgf -lrtrad $(MLIB)
 
+pkgBSDF:	pkgBSDF.o
+	$(CC) $(CFLAGS) -o pkgBSDF pkgBSDF.o -lrtrad $(MLIB)
+
 mgf2rad.o:	mgf2rad.c ../common/mgf_parser.h ../common/tmesh.h \
 ../common/color.h
 	$(CC) $(CFLAGS) -c mgf2rad.c
@@ -102,3 +105,6 @@ mgf2inv.o:	../common/mgf_parser.h ../common/ccolor.h
 3ds2mgf.o rayopt3ds.o:	rayopt3ds.h
 
 3ds2mgf.o rayopt3ds.o vect3ds.o:	vect3ds.h
+
+pkgBSDF.o:	../common/bsdf.h ../common/fvect.h ../common/ccolor.h \
+../common/paths.h
