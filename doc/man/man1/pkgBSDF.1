@@ -1,4 +1,4 @@
-.\" RCSid $Id: pkgBSDF.1,v 1.1 2011/06/23 18:11:17 greg Exp $
+.\" RCSid $Id: pkgBSDF.1,v 1.2 2011/06/23 18:17:12 greg Exp $
 .TH PKGBSDF 1 6/23/2011 RADIANCE
 .SH NAME
 pkgBSDF - package BSDFs provided as XML for Radiance
@@ -20,6 +20,12 @@ no detail geometry and/or no rear-side reflectance distribution.
 If both front and back reflectance distributions are present with
 detail geometry, then two rectangles will be used to sandwich
 the geometry extracted from the BSDF file.
+The front surface will always be centered just in front of the
+origin facing the positive Z-direction, with "up" in the positive
+Y-direction.
+The back surface, if present, will parallel the front surface at
+a distance slightly greater than the BSDF system thickness.
+Scene units will always be in meters.
 .PP
 The
 .I \-i
