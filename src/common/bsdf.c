@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.31 2011/06/10 01:11:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.32 2011/06/23 16:00:37 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -15,6 +15,7 @@ static const char RCSid[] = "$Id: bsdf.c,v 2.31 2011/06/10 01:11:26 greg Exp $";
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include "ezxml.h"
 #include "hilbert.h"
 #include "bsdf.h"
@@ -107,6 +108,10 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 	}
 	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
 			(mgfstr = ezxml_txt(geom)) == NULL)
+		return SDEnone;
+	while (isspace(*mgfstr))
+		++mgfstr;
+	if (!*mgfstr)
 		return SDEnone;
 	if ((fmt = ezxml_attr(geom, "format")) != NULL &&
 			strcasecmp(fmt, "MGF")) {
@@ -809,7 +814,6 @@ SDmapDir(FVECT resVec, RREAL vMtx[3][3], const FVECT inpVec)
 
 #include "standard.h"
 #include "paths.h"
-#include <ctype.h>
 
 #define MAXLATS		46		/* maximum number of latitudes */
 
