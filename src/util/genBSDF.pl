@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.21 2011/06/08 23:16:47 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.22 2011/06/24 00:41:51 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -23,6 +23,7 @@ my $geout = 1;
 my $nproc = 1;
 my $doforw = 0;
 my $doback = 1;
+my $gunit = "Meter";
 my @dim;
 # Get options
 while ($#ARGV >= 0) {
@@ -33,6 +34,11 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]g/) {
 		$geout = ("$ARGV[0]" =~ /^\+/);
+		$gunit = $ARGV[1];
+		if ($gunit !~ /^(?i)(meter|foot|inch|centimeter|millimeter)$/) {
+			die "Illegal geometry unit '$gunit': must be meter, foot, inch, centimeter, or millimeter\n";
+		}
+		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
 		$doforw = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
@@ -109,13 +115,13 @@ print
 		<Name>Name</Name>
 		<Manufacturer>Manufacturer</Manufacturer>
 ';
-printf "\t\t<Thickness unit=\"Meter\">%.3f</Thickness>\n", $dim[5] - $dim[4];
-printf "\t\t<Width unit=\"Meter\">%.3f</Width>\n", $dim[1] - $dim[0];
-printf "\t\t<Height unit=\"Meter\">%.3f</Height>\n", $dim[3] - $dim[2];
+printf "\t\t<Thickness unit=\"$gunit\">%.3f</Thickness>\n", $dim[5] - $dim[4];
+printf "\t\t<Width unit=\"$gunit\">%.3f</Width>\n", $dim[1] - $dim[0];
+printf "\t\t<Height unit=\"$gunit\">%.3f</Height>\n", $dim[3] - $dim[2];
 print "\t\t<DeviceType>Integral</DeviceType>\n";
 # Output MGF description if requested
 if ( $geout ) {
-	print "\t\t<Geometry format=\"MGF\" unit=\"Meter\">\n";
+	print "\t\t<Geometry format=\"MGF\" unit=\"$gunit\">\n";
 	printf "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
 	open(MGFSCN, "< $mgfscn");
 	while (<MGFSCN>) { print $_; }

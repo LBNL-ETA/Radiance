@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.6 2011/06/03 19:41:14 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.7 2011/06/24 00:41:51 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -19,7 +19,7 @@ genBSDF - generate BSDF description from Radiance or MGF input
 ][
 .B "{+|-}mgf"
 ][
-.B "{+|-}geom
+.B "{+|-}geom unit"
 ][
 .B "\-dim Xmin Xmax Ymin Ymax Zmin Zmax"
 ]
@@ -36,9 +36,13 @@ option is specified.
 The output conforms to the LBNL Window 6 XML standard for BSDF data,
 and will include an MGF representation of the input geometry if the
 .I \+geom
-option is given.
-(This is the default, and may be switched off using
-.I \-geom.)\0
+option is given, followed by one of "meter," "foot," "inch,"
+"centimeter," or "millimeter," depending on the scene units.
+The default is to include the provided geometry,
+which is assumed to be in meters.
+Geometry output can be supressed with the
+.I \-geom
+option, which must also be followed by one of the above length units.
 .PP
 Normally,
 .I genBSDF
@@ -147,4 +151,5 @@ directions using the Klems directions or similar.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-dctimestep(1), genklemsamp(1), genskyvec(1), mkillum(1), rtcontrib(1), rtrace(1)
+dctimestep(1), genklemsamp(1), genskyvec(1), mkillum(1),
+pkgBSDF(1), rtcontrib(1), rtrace(1)
