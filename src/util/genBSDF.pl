@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.22 2011/06/24 00:41:51 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.23 2011/06/24 19:07:38 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -166,9 +166,13 @@ sub do_tree_bsdf {
 # Get sampling rate and subdivide task
 my $ns2 = $ns;
 $ns2 /= 2 if ( $tensortree == 3 );
-@pdiv = (0, int($ns2/$nproc));
-my $nrem = $ns2 % $nproc;
-for (my $i = 1; $i < $nproc; $i++) {
+my $nsplice = $nproc;
+$nsplice *= 10 if ($nproc > 1);
+$nsplice = $ns2 if ($nsplice > $ns2);
+$nsplice = 999 if ($nsplice > 999);
+@pdiv = (0, int($ns2/$nsplice));
+my $nrem = $ns2 % $nsplice;
+for (my $i = 1; $i < $nsplice; $i++) {
 	my $nv = $pdiv[$i] + $pdiv[1];
 	++$nv if ( $nrem-- > 0 );
 	push @pdiv, $nv;
@@ -217,27 +221,42 @@ print "\t<DataDefinition>\n";
 print "\t\t<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
 print "\t</DataDefinition>\n";
 # Fork parallel rtcontrib processes to compute each side
+my $npleft = $nproc;
 if ( $doback ) {
-	for (my $proc = 0; $proc < $nproc; $proc++) {
-		bg_tree_rtcontrib(0, $proc);
+	for (my $splice = 0; $splice < $nsplice; $splice++) {
+		if (! $npleft ) {
+			wait();
+			die "rtcontrib process reported error" if ( $? );
+			$npleft++;
+		}
+		bg_tree_rtcontrib(0, $splice);
+		$npleft--;
 	}
 	while (wait() >= 0) {
 		die "rtcontrib process reported error" if ( $? );
+		$npleft++;
 	}
 	ttree_out(0);
 }
 if ( $doforw ) {
-	for (my $proc = 0; $proc < $nproc; $proc++) {
-		bg_tree_rtcontrib(1, $proc);
+	for (my $splice = 0; $splice < $nsplice; $splice++) {
+		if (! $npleft ) {
+			wait();
+			die "rtcontrib process reported error" if ( $? );
+			$npleft++;
+		}
+		bg_tree_rtcontrib(1, $splice);
+		$npleft--;
 	}
 	while (wait() >= 0) {
 		die "rtcontrib process reported error" if ( $? );
+		$npleft++;
 	}
 	ttree_out(1);
 }
 }	# end of sub do_tree_bsdf()
 
-# Run i'th rtcontrib process for generating tensor tree samples
+# Run rtcontrib process in background to generate tensor tree samples
 sub bg_tree_rtcontrib {
 	my $pid = fork();
 	die "Cannot fork new process" unless defined $pid;
