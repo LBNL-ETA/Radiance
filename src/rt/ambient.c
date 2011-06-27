@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.68 2010/10/14 05:54:44 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.69 2011/06/27 22:10:37 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -518,7 +518,7 @@ initambfile(		/* initialize ambient file */
 	static char  *mybuf = NULL;
 
 #ifdef	F_SETLKW
-	aflock(creat ? F_WRLCK : F_RDLCK);
+	aflock(cre8 ? F_WRLCK : F_RDLCK);
 #endif
 	SET_FILE_BINARY(ambfp);
 	if (mybuf == NULL)
