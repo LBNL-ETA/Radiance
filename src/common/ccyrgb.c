@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ccyrgb.c,v 3.1 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: ccyrgb.c,v 3.2 2011/06/28 21:11:04 greg Exp $";
 #endif
 /*
  * Convert MGF color to RGB representation
@@ -38,7 +38,7 @@ rgb2ccy(COLOR cin, C_COLOR *cout)
 	*cout = c_dfcolor;
 	df = xyz[CIEX] + xyz[CIEY] + xyz[CIEZ];
 	if (df <= .0)
-		return;
+		return(.0);
 	df = 1./df;
 	cout->cx = xyz[CIEX]*df;
 	cout->cy = xyz[CIEZ]*df;

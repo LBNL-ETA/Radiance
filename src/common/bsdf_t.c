@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.17 2011/06/09 17:09:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.18 2011/06/28 21:13:46 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -608,7 +608,6 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 {
 	const SDTre	*sdt;
 	double		inCoord[2];
-	int		vflags;
 	int		i;
 	SDTreCDst	*cd, *cdlast;
 					/* check arguments */
@@ -881,7 +880,6 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 	SDSpectralDF	*df;
 	SDTre		*sdt;
 	char		*sdata;
-	int		i;
 					/* allocate BSDF component */
 	sdata = ezxml_txt(ezxml_child(wdb, "WavelengthDataDirection"));
 	if (!sdata)

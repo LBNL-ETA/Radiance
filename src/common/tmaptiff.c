@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmaptiff.c,v 3.10 2011/05/20 02:06:38 greg Exp $";
+static const char	RCSid[] = "$Id: tmaptiff.c,v 3.11 2011/06/28 21:11:04 greg Exp $";
 #endif
 /*
  * Perform tone mapping on TIFF input.
@@ -256,7 +256,7 @@ tmMapTIFF(uby8 **psp, int *xp, int *yp, int flags, RGBPRIMP monpri,
 	double gamval, double Lddyn, double Ldmax, char *fname, TIFF *tp)
 {
 	char	*funcName = fname==NULL ? "tmMapTIFF" : fname;
-	TMstruct	*tms;
+	TMstruct	*tms = NULL;
 	TMbright	*lp;
 	uby8	*cp;
 	int	err;

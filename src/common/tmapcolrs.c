@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.29 2011/05/20 02:06:38 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.30 2011/06/28 21:11:04 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -357,7 +357,7 @@ char	*fname;
 FILE	*fp;
 {
 	char	*funcName = fname==NULL ? "tmMapPicture" : fname;
-	TMstruct	*tms;
+	TMstruct	*tms = NULL;
 	uby8	*cp;
 	TMbright	*lp;
 	int	err;
