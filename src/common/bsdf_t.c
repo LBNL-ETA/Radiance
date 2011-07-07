@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.18 2011/06/28 21:13:46 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.19 2011/07/07 15:25:09 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -710,7 +710,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* binary search to find position */
 	ilower = 0; iupper = cd->calen;
 	while ((i = (iupper + ilower) >> 1) != ilower)
-		if ((long)target >= (long)cd->carr[i].cuml)
+		if (target >= cd->carr[i].cuml)
 			ilower = i;
 		else
 			iupper = i;

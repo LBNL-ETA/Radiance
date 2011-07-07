@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.17 2011/06/28 21:13:46 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.18 2011/07/07 15:25:09 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -598,11 +598,13 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 				sd->name);
 		return SDEsupport;
 	}
-					/* get angle basis */
-	rval = load_angle_basis(ezxml_child(ezxml_child(wtl,
-				"DataDefinition"), "AngleBasis"));
-	if (rval < 0)
-		return convert_errcode(rval);
+					/* get angle bases */
+	for (wld = ezxml_child(ezxml_child(wtl, "DataDefinition"), "AngleBasis");
+				wld != NULL; wld = wld->next) {
+		rval = load_angle_basis(wld);
+		if (rval < 0)
+			return convert_errcode(rval);
+	}
 					/* load BSDF components */
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
@@ -637,7 +639,7 @@ SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
 	i_ndx = mBSDF_incndx(dp, inVec);
 	o_ndx = mBSDF_outndx(dp, outVec);
 					/* try reciprocity if necessary */
-	if ((i_ndx < 0) & (o_ndx < 0)) {
+	if ((i_ndx < 0) & (o_ndx < 0) && dp->ninc == dp->nout) {
 		i_ndx = mBSDF_incndx(dp, outVec);
 		o_ndx = mBSDF_outndx(dp, inVec);
 	}
@@ -746,7 +748,7 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 		myCD.ob_vec = dp->ob_vec;
 		myCD.calen = dp->nout;
 		reverse = 0;
-	} else {			/* try reciprocity */
+	} else if (dp->ninc == dp->nout) {	/* try reciprocity */
 		myCD.indx = mBSDF_outndx(dp, inVec);
 		if (myCD.indx < 0)
 			return NULL;
@@ -796,7 +798,7 @@ SDsampMtxCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* binary search to find index */
 	ilower = 0; iupper = mcd->calen;
 	while ((i = (iupper + ilower) >> 1) != ilower)
-		if ((long)target >= (long)mcd->carr[i])
+		if (target >= mcd->carr[i])
 			ilower = i;
 		else
 			iupper = i;

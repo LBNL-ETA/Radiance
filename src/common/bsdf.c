@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.33 2011/06/28 21:11:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.34 2011/07/07 15:25:09 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -250,7 +250,8 @@ SDfreeSpectralDF(SDSpectralDF *df)
 		return;
 	SDfreeCumulativeCache(df);
 	for (n = df->ncomp; n-- > 0; )
-		(*df->comp[n].func->freeSC)(df->comp[n].dist);
+		if (df->comp[n].dist != NULL)
+			(*df->comp[n].func->freeSC)(df->comp[n].dist);
 	free(df);
 }
 
@@ -1323,9 +1324,11 @@ load_BSDF(		/* load BSDF data from file */
 		error(WARNING, errmsg);
 		ezxml_free(fl);
 		return(NULL);
-	}		
-	load_angle_basis(ezxml_child(ezxml_child(wtl,
-				"DataDefinition"), "AngleBasis"));
+	}
+	for (wld = ezxml_child(ezxml_child(wtl,
+				"DataDefinition"), "AngleBasis");
+			wld != NULL; wld = wld->next)
+		load_angle_basis(wld);
 	dp = (struct BSDF_data *)calloc(1, sizeof(struct BSDF_data));
 	load_geometry(dp, ezxml_child(wtl, "Material"));
 	for (wld = ezxml_child(wtl, "WavelengthData");
