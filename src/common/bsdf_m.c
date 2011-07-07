@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.18 2011/07/07 15:25:09 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.19 2011/07/07 15:48:00 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -639,7 +639,7 @@ SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
 	i_ndx = mBSDF_incndx(dp, inVec);
 	o_ndx = mBSDF_outndx(dp, outVec);
 					/* try reciprocity if necessary */
-	if ((i_ndx < 0) & (o_ndx < 0) && dp->ninc == dp->nout) {
+	if ((i_ndx < 0) & (o_ndx < 0)) {
 		i_ndx = mBSDF_incndx(dp, outVec);
 		o_ndx = mBSDF_outndx(dp, inVec);
 	}
@@ -748,7 +748,7 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 		myCD.ob_vec = dp->ob_vec;
 		myCD.calen = dp->nout;
 		reverse = 0;
-	} else if (dp->ninc == dp->nout) {	/* try reciprocity */
+	} else {			/* try reciprocity */
 		myCD.indx = mBSDF_outndx(dp, inVec);
 		if (myCD.indx < 0)
 			return NULL;
