@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.60 2011/02/14 20:13:38 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.61 2011/08/02 22:47:30 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -99,14 +99,15 @@ marksources(void)			/* find and mark source objects */
 				m->otype == MAT_SPOT ? 7 : 3))
 			objerror(m, USER, "bad # arguments");
 
-		if (m->otype == MAT_GLOW &&
-				o->otype != OBJ_SOURCE &&
-				m->oargs.farg[3] <= FTINY)
-			continue;			/* don't bother */
 		if (m->oargs.farg[0] <= FTINY && m->oargs.farg[1] <= FTINY &&
 				m->oargs.farg[2] <= FTINY)
 			continue;			/* don't bother */
-
+		if (m->otype == MAT_GLOW &&
+				o->otype != OBJ_SOURCE &&
+				m->oargs.farg[3] <= FTINY) {
+			foundsource += (ambounce > 0);
+			continue;			/* don't track these */
+		}
 		if (sfun[o->otype].of == NULL ||
 				sfun[o->otype].of->setsrc == NULL)
 			objerror(o, USER, "illegal material");
@@ -119,8 +120,10 @@ marksources(void)			/* find and mark source objects */
 		if (m->otype == MAT_GLOW) {
 			source[ns].sflags |= SPROX;
 			source[ns].sl.prox = m->oargs.farg[3];
-			if (source[ns].sflags & SDISTANT)
+			if (source[ns].sflags & SDISTANT) {
 				source[ns].sflags |= SSKIP;
+				foundsource += (ambounce > 0);
+			}
 		} else if (m->otype == MAT_SPOT) {
 			source[ns].sflags |= SSPOT;
 			if ((source[ns].sl.s = makespot(m)) == NULL)
@@ -135,8 +138,7 @@ marksources(void)			/* find and mark source objects */
 #if  SHADCACHE
 		initobscache(ns);
 #endif
-		if (!(source[ns].sflags & SSKIP))
-			foundsource++;
+		foundsource += !(source[ns].sflags & SSKIP);
 	}
 	if (!foundsource) {
 		error(WARNING, "no light sources found");

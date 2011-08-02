@@ -1795,3 +1795,6 @@ Added variable-resolution BSDF support in renderers and genBSDF.
 Created pkgBSDF program to extract BSDF geometry and put it
 together with surface description suitable for inclusion in
 a Radiance scene.
+
+Muted warning for "no light sources found" when there is at least
+one glow object and interreflections are on (-ab > 0).
