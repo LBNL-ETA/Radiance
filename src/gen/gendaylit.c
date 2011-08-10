@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.4 2011/08/10 22:28:45 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.5 2011/08/10 22:30:31 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -43,6 +43,7 @@ double  normsc();
 /* Perez sky parametrization : epsilon and delta calculations from the direct and diffuse irradiances */
 double sky_brightness();
 double sky_clearness();
+void computesky();
 
 /* calculation of the direct and diffuse components from the Perez parametrization */
 double	diffus_irradiance_from_sky_brightness();
