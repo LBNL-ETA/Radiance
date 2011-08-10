@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.3 2009/06/20 21:34:34 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.4 2011/08/10 22:28:45 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -273,6 +273,7 @@ char  *argv[];
 }
 
 
+void
 computesky()			/* compute sky parameters */
 {
 

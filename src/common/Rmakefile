@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.66 2011/06/23 16:00:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.67 2011/08/10 22:28:45 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -160,7 +160,7 @@ ezxml.o bsdf.o bsdf_m.o bsdf_t.o:	ezxml.h
 
 bsdf_m.o bsdf_t.o:	rtio.h
 
-bsdf.o:	bsdf.h fvect.h bsdf_m.h bsdf_t.h hilbert.h ezxml.h fvect.h
+bsdf.o:	bsdf.h fvect.h bsdf_m.h bsdf_t.h hilbert.h ezxml.h
 
 bsdf.o bsdf_m.o bsdf_t.o ccolor.o:	ccolor.h
 

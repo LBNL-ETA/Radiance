@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.5 2007/08/24 04:41:36 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.6 2011/08/10 22:28:45 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -242,8 +242,8 @@ get_ehisto(const TRITREE *node, long exphisto[256])
 double
 get_threshold(const TRITREE *tree)
 {
+	long	samptotal = 0;
 	long	exphisto[256];
-	long	samptotal;
 	int	i;
 						/* compute sample histogram */
 	memset((void *)exphisto, 0, sizeof(exphisto));
