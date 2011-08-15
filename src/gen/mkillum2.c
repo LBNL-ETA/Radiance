@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.35 2010/09/03 23:53:50 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.36 2011/08/15 19:48:06 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -29,14 +29,14 @@ newdist(			/* allocate & clear distribution array */
 {
 	if (siz <= 0) {
 		if (distsiz > 0)
-			free((void *)distarr);
+			free(distarr);
 		distarr = NULL;
 		distsiz = 0;
 		return;
 	}
 	if (distsiz < siz) {
 		if (distsiz > 0)
-			free((void *)distarr);
+			free(distarr);
 		distarr = (COLORV *)malloc(sizeof(COLOR)*siz);
 		if (distarr == NULL)
 			error(SYSTEM, "out of memory in newdist");
@@ -62,7 +62,7 @@ done_discount()			/* clear off direct contrib. record */
 {
 	if (direct_discount == NULL)
 		return;
-	free((void *)direct_discount);
+	free(direct_discount);
 	direct_discount = NULL;
 }
 
@@ -108,7 +108,7 @@ raysamp(			/* queue a ray sample */
 	VCOPY(myRay.rorg, org);
 	VCOPY(myRay.rdir, dir);
 	myRay.rmax = .0;
-	rayorigin(&myRay, PRIMARY, NULL, NULL);
+	rayorigin(&myRay, PRIMARY|SPECULAR, NULL, NULL);
 	myRay.rno = ndx;
 					/* queue ray, check result */
 	process_ray(&myRay, ray_pqueue(&myRay));
@@ -452,7 +452,7 @@ my_face(		/* make an illum face */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (!directvis && (il->flags & IL_LIGHT || il->sd != NULL)) {
+	if (il->flags & IL_LIGHT || il->sd != NULL) {
 		MAT4	ixfm;
 		if (il->sd == NULL) {
 			for (i = 3; i--; ) {
@@ -660,7 +660,7 @@ my_ring(		/* make an illum ring */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (!directvis && (il->flags & IL_LIGHT || il->sd != NULL)) {
+	if (il->flags & IL_LIGHT || il->sd != NULL) {
 		MAT4	ixfm;
 		if (il->sd == NULL) {
 			for (i = 3; i--; ) {

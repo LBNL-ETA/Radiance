@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum3.c,v 2.12 2007/09/13 17:52:35 greg Exp $";
+static const char RCSid[] = "$Id: mkillum3.c,v 2.13 2011/08/15 19:48:06 greg Exp $";
 #endif
 /*
  * Routines to print mkillum objects
@@ -152,7 +152,7 @@ flatout(		/* write hemispherical distribution */
 	printf("\t%f\t%f\t%f\n", v[0], v[1], v[2]);
 	printf("\t%f\t%f\t%f\n", w[0], w[1], w[2]);
 	il->dfnum++;
-	free((void *)Ninv);
+	free(Ninv);
 }
 
 
@@ -207,8 +207,8 @@ roundout(			/* write spherical distribution */
 	printf("\n\t%s il_alt il_azi", FNCFNM);
 	printf("\n0\n0\n");
 	il->dfnum++;
-	free((void *)Ninv);
-	free((void *)Sinv);
+	free(Ninv);
+	free(Sinv);
 }
 
 

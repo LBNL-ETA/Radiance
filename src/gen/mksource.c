@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.6 2011/08/10 22:28:45 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.7 2011/08/15 19:48:06 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -246,7 +246,7 @@ get_threshold(const TRITREE *tree)
 	long	exphisto[256];
 	int	i;
 						/* compute sample histogram */
-	memset((void *)exphisto, 0, sizeof(exphisto));
+	memset(exphisto, 0, sizeof(exphisto));
 	for (i = 0; i < NTRUNKBR; i++)
 		get_ehisto(&tree->kid[i], exphisto);
 						/* use 98th percentile */
@@ -355,7 +355,7 @@ claimlight(COLOR intens, TRITREE *node, FVECT cent, double maxr2)
 	if (remaining)
 		return;
 					/* consolidate empties */
-	free((void *)node->kid); node->kid = NULL;
+	free(node->kid); node->kid = NULL;
 	copycolr(node->val, blkclr);
 	node->sd = node->gdv[0];	/* doesn't really matter */
 }
@@ -387,7 +387,7 @@ getlost(LOSTLIGHT **llp, COLOR intens, FVECT cent, double omega)
 		if (fdir2diff(thisp->sd,cent) <= maxr2) {
 			LOSTLIGHT	*mynext = thisp->next;
 			addcolor(intens, thisp->intens);
-			free((void *)thisp);
+			free(thisp);
 			lastp->next = mynext;
 		} else
 			lastp = thisp;

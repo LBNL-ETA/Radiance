@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.19 2010/12/08 21:37:51 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.20 2011/08/15 19:48:06 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -229,7 +229,7 @@ loaddata(		/* load point data from file */
 		size--;
 	}
 	if (size == (m+n+1)*pointsize) {	/* no border after all */
-		dp = (RREAL *)realloc((void *)datarec.data,
+		dp = (RREAL *)realloc(datarec.data,
 				m*n*pointsize*sizeof(RREAL));
 		if (dp != NULL)
 			datarec.data = dp;
