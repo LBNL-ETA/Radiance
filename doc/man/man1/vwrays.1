@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwrays.1,v 1.6 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.7 2011/08/16 02:22:50 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
@@ -90,8 +90,8 @@ otherwise, which would produce a uniform clipping distance of 1.
 .PP
 If a picture is given on the command line rather than a set of view options,
 then the view and image dimensions are taken from the picture file, and
-the reported ray origins and directions will exactly match the center of each
-pixel in the picture.
+the reported ray origins and directions will match the center of each
+pixel in the picture (plus optional jitter).
 .PP
 If a depth buffer file is given as well, then
 .I vwrays

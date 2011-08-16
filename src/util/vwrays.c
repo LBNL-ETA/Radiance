@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.14 2009/06/22 00:12:04 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.15 2011/08/16 02:22:50 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -105,7 +105,7 @@ main(
 			if (argv[i][2] == 'a')
 				pa = atof(argv[++i]);
 			else if (argv[i][2] == 'j')
-				pj= atof(argv[++i]);
+				pj = atof(argv[++i]);
 			else
 				goto userr;
 			break;
