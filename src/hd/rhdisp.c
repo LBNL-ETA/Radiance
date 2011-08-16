@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.52 2008/03/11 02:21:47 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.53 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -543,7 +543,7 @@ serv_result(void)			/* get next server result and process it */
 		break;
 	case DS_STARTIMM:
 	case DS_ENDIMM:
-		if (!(imm_mode = msg.type==DS_STARTIMM))
+		if (!(imm_mode = (msg.type==DS_STARTIMM)))
 			dev_flush();
 #ifdef DEBUG
 		{

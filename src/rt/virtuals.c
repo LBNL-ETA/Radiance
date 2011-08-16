@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.18 2010/10/28 09:38:46 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.19 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -416,8 +416,6 @@ virtverb(	/* print verbose description of virtual source */
 	FILE  *fp
 )
 {
-	register int  i;
-
 	fprintf(fp, "%s virtual source %d in %s %s\n",
 			source[sn].sflags & SDISTANT ? "distant" : "local",
 			sn, ofun[source[sn].so->otype].funame,

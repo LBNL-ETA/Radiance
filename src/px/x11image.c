@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.74 2011/05/20 02:06:39 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.75 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -421,7 +421,7 @@ quiterr(		/* print message and exit */
 	register int  es;
 	int  cs;
 
-	if ( (es = err != NULL) )
+	if ( (es = (err != NULL)) )
 		fprintf(stderr, "%s: %s: %s\n", progname, 
 				fname==NULL?"<stdin>":fname, err);
 	if (thedisplay != NULL)

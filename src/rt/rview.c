@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.34 2010/10/09 22:38:35 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.35 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -331,7 +331,6 @@ refine(				/* refine a node */
 {
 	int  growth;
 	int  mx, my;
-	int  i;
 
 	if (dev->inpready)			/* quit for input */
 		return(0);

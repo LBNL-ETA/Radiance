@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.36 2011/08/15 19:48:06 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.37 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -123,16 +123,14 @@ srcsamps(			/* sample sources from this surface position */
 	MAT4 ixfm
 )
 {
-	int  nalt, nazi;
+	int  nalt=1, nazi=1;
 	SRCINDEX  si;
 	RAY  sr;
 	FVECT	v;
 	double  d;
 	int  i, j;
 						/* get sampling density */
-	if (il->sampdens <= 0) {
-		nalt = nazi = 1;
-	} else {
+	if (il->sd == NULL && il->sampdens > 0) {
 		i = PI * il->sampdens;
 		nalt = sqrt(i/PI) + .5;
 		nazi = PI*nalt + .5;
@@ -156,8 +154,7 @@ srcsamps(			/* sample sources from this surface position */
 			d = -1.0001*il->thick - 5.*FTINY;
 		else
 			d = 5.*FTINY;
-		for (i = 3; i--; )
-			sr.rorg[i] += d*nrm[i];
+		VSUM(sr.rorg, sr.rorg, nrm, d);
 		samplendx++;			/* increment sample counter */
 		if (!srcray(&sr, NULL, &si))
 			break;			/* end of sources */

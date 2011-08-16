@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mtext.c,v 1.6 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: mtext.c,v 1.7 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  *  Program to convert ascii file to metafile
@@ -135,7 +135,7 @@ execute(		/* execute a file */
     while (!done) {
         maxlen = 0;
         for (j = 0; j < nlines; j++) {
-            if ((done = fgets(linbuf, MAXLINE, fp) == NULL))
+            if ((done = (fgets(linbuf, MAXLINE, fp) == NULL)))
                 break;
             k = strlen(linbuf);
             if (linbuf[k-1] == '\n')

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.5 2011/08/10 22:30:31 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.6 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -279,12 +279,11 @@ computesky()			/* compute sky parameters */
 {
 
 	/* new variables */
-	int 	j, i;
+	int 	j;
 	float 	*lv_mod;  /* 145 luminance values*/
 	  /* 145 directions for the calculation of the normalization coefficient, coefficient Perez model */
 	float 	*theta_o, *phi_o, *coeff_perez;
 	double 	dzeta, gamma;
-	double	diffusion;
 	double	normfactor;
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.46 2011/08/15 19:48:06 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.47 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -134,7 +134,7 @@ main(		/* get transform options and transform file */
 
 	a += xf(&tot, argc-a, argv+a);
 
-	if ( (reverse = tot.sca < 0.0) )
+	if ( (reverse = (tot.sca < 0.0)) )
 		tot.sca = -tot.sca;
 	if (invert)
 		reverse = !reverse;

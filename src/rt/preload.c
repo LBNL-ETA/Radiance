@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.11 2011/02/18 02:41:55 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.12 2011/08/16 18:09:53 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -29,7 +29,6 @@ load_os(			/* load associated data for object */
 )
 {
 	DATARRAY  *dp;
-	SDData  *sd;
 
 	switch (op->otype) {
 	case OBJ_FACE:		/* polygon */
