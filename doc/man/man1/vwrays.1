@@ -1,10 +1,10 @@
-.\" RCSid "$Id: vwrays.1,v 1.7 2011/08/16 02:22:50 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.8 2011/08/20 20:57:51 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
 .SH SYNOPSIS
 .B vwrays
-.B "[ -i -f{a|f|d} | -d ]"
+.B "[ -i -u -f{a|f|d} | -d ]"
 {
 .B "view opts .."
 |
@@ -25,6 +25,9 @@ The
 .I \-i
 option may be used to specify desired pixel positions on the standard
 input rather than generating all the pixels for a given view.
+If the
+.I \-u
+option is also given, output will be unbuffered.
 .PP
 The
 .I \-f
