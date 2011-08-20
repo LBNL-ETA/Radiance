@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.4 2011/06/03 18:12:58 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.5 2011/08/20 02:46:13 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -152,7 +152,7 @@ print_tree(const TNODE *tp, const int bmin[], int l2s)
 		for (i = 0; i < 1<<ttrank; i++) {
 			float	val;
 			for (j = ttrank; j--; )
-				bkmin[j] = bmin[j] + (i>>j & 1);
+				bkmin[j] = bmin[j] + (i>>(ttrank-1-j) & 1);
 			val = (ttrank == 3) ? dval3(bkmin[0],bkmin[1],bkmin[2])
 				: dval4(bkmin[0],bkmin[1],bkmin[2],bkmin[3]);
 			printf(" %.4e", val);
@@ -262,7 +262,7 @@ load_data()
 		int	ix, ox;
 		for (ix = 0; ix < 1<<(log2g-1); ix++)
 			for (ox = 0; ox < 1<<log2g; ox++)
-				(*readf)(datarr+((((ix)<<log2g)+(ox))<<log2g),
+				(*readf)(datarr+(((ix<<log2g)+ox)<<log2g),
 						1<<log2g);
 	} else /* ttrank == 4 */ {
 		int	ix, iy, ox;
@@ -270,7 +270,7 @@ load_data()
 		    for (iy = 0; iy < 1<<log2g; iy++)
 			for (ox = 0; ox < 1<<log2g; ox++)
 				(*readf)(datarr +
-				((((((ix)<<log2g)+(iy))<<log2g)+(ox))<<log2g),
+				(((((ix<<log2g)+iy)<<log2g)+ox)<<log2g),
 						1<<log2g);
 	}
 	(*readf)(NULL, 0);	/* releases any buffers */
