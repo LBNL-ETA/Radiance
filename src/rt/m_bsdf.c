@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.13 2011/08/21 21:24:30 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.14 2011/08/21 22:38:12 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -100,7 +100,7 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, int domax)
 static int
 direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
-	int	nsamp, ok = 0;
+	int	nsamp = 1, ok = 0;
 	FVECT	vsrc, vsmp, vjit;
 	double	tomega;
 	double	sf, sd[2];
@@ -119,15 +119,17 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		if (dx*dx + dy*dy <= omega*(1./PI))
 			return(0);
 	}
-					/* get local BSDF resolution */
-	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
-	if (ec)
-		goto baderror;
-					/* assign number of samples */
-	if (tomega <= omega*.02)
-		nsamp = 50;
-	else
-		nsamp = 2.*omega/tomega + 1.;
+	if (specjitter > FTINY) {	/* assign number of samples */
+		ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
+		if (ec)
+			goto baderror;
+		sf = specjitter * ndp->pr->rweight;
+		if (tomega <= omega*.01)
+			nsamp = 100.*sf + .5;
+		else
+			nsamp = 4.*sf*omega/tomega + .5;
+		nsamp += !nsamp;
+	}
 	sf = sqrt(omega);
 	setcolor(cval, .0, .0, .0);	/* sample our source area */
 	for (i = nsamp; i--; ) {
@@ -327,8 +329,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 						/* multiple samples? */
 	if (specjitter > 1.5) {
 		nstarget = specjitter*ndp->pr->rweight + .5;
-		if (nstarget < 1)
-			nstarget = 1;
+		nstarget += !nstarget;
 	}
 						/* run through our samples */
 	for (nsent = 0; nsent < nstarget; nsent++) {

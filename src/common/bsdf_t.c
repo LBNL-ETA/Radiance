@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.19 2011/07/07 15:25:09 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.20 2011/08/21 22:38:12 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -622,7 +622,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 		return NULL;		/* should be internal error */
 	cdlast = NULL;			/* check for direction in cache list */
 	for (cd = (SDTreCDst *)sdc->cdList; cd != NULL;
-				cdlast = cd, cd = (SDTreCDst *)cd->next) {
+					cdlast = cd, cd = cd->next) {
 		for (i = sdt->st->ndim - 2; i--; )
 			if ((cd->clim[i][0] > inCoord[i]) |
 					(inCoord[i] >= cd->clim[i][1]))
@@ -634,7 +634,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 		cdlast = cd = make_cdist(sdt, inCoord);
 	if (cdlast != NULL) {		/* move entry to head of cache list */
 		cdlast->next = cd->next;
-		cd->next = sdc->cdList;
+		cd->next = (SDTreCDst *)sdc->cdList;
 		sdc->cdList = (SDCDst *)cd;
 	}
 	return (SDCDst *)cd;		/* ready to go */

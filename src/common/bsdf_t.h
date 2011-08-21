@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.8 2011/06/03 18:12:58 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.9 2011/08/21 22:38:12 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -40,8 +40,9 @@ typedef struct {
 } SDTre;
 
 /* Holder for cumulative distribution (sum of BSDF * projSA) */
-typedef struct {
-	SD_CDIST_BASE;		/* base fields; must come first */
+typedef struct SDTreCDst_s {
+				/* base fields; must come first */
+	SD_CDIST_BASE(SDTreCDst_s);
 	double	clim[2][2];	/* input coordinate limits */
 	double	max_psa;	/* maximum projected solid angle */
 	short	sidef;		/* which side(s) to use */

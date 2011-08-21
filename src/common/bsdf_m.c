@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.19 2011/07/07 15:48:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.20 2011/08/21 22:38:12 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -759,7 +759,7 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 	}
 	cdlast = NULL;			/* check for it in cache list */
 	for (cd = (SDMatCDst *)sdc->cdList; cd != NULL;
-				cdlast = cd, cd = (SDMatCDst *)cd->next)
+					cdlast = cd, cd = cd->next)
 		if (cd->indx == myCD.indx && (cd->calen == myCD.calen) &
 					(cd->ob_priv == myCD.ob_priv) &
 					(cd->ob_vec == myCD.ob_vec))
@@ -778,7 +778,7 @@ SDgetMtxCDist(const FVECT inVec, SDComponent *sdc)
 	}
 	if (cdlast != NULL) {		/* move entry to head of cache list */
 		cdlast->next = cd->next;
-		cd->next = sdc->cdList;
+		cd->next = (SDMatCDst *)sdc->cdList;
 		sdc->cdList = (SDCDst *)cd;
 	}
 	return (SDCDst *)cd;		/* ready to go */

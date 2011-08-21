@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_m.h,v 3.4 2011/04/08 18:13:48 greg Exp $ */
+/* RCSid $Id: bsdf_m.h,v 3.5 2011/08/21 22:38:12 greg Exp $ */
 /*
  *  bsdf_m.h
  *  
@@ -46,8 +46,8 @@ typedef struct {
 #define mBSDF_value(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
 
 /* Holder for cumulative distribution (sum of BSDF * projSA) */
-typedef struct {
-	SD_CDIST_BASE;			/* base fields; must come first */
+typedef struct SDMatCDst_s {
+	SD_CDIST_BASE(SDMatCDst_s);	/* base fields; must come first */
 	int		indx;		/* incident angle index */
 	void		*ob_priv;	/* private data for generator */
 	b_vecf		*ob_vec;	/* outbound vector generator */
