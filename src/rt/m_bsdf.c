@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.12 2011/08/21 16:55:29 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.13 2011/08/21 21:24:30 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -68,7 +68,6 @@ typedef struct {
 	FVECT	pnorm;		/* perturbed surface normal */
 	FVECT	vray;		/* local outgoing (return) vector */
 	double	sr_vpsa[2];	/* sqrt of BSDF projected solid angle extrema */
-	double	thru_r2;	/* through rejection angle squared */
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
@@ -99,32 +98,65 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, int domax)
 
 /* Evaluate BSDF for direct component, returning true if OK to proceed */
 static int
-direct_bsdf_OK(COLOR cval, FVECT ldir, BSDFDAT *ndp)
+direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
-	FVECT	vsrc, vjit;
+	int	nsamp, ok = 0;
+	FVECT	vsrc, vsmp, vjit;
+	double	tomega;
+	double	sf, sd[2];
+	COLOR	csmp;
 	SDValue	sv;
 	SDError	ec;
+	int	i;
 					/* transform source direction */
 	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
 		return(0);
-					/* jitter query direction */
-	bsdf_jitter(vjit, ndp, 0);
-					/* avoid indirect over-counting */
-	if (ndp->thru_r2 > FTINY && vsrc[2] > 0 ^ vjit[2] > 0) {
-		double	dx = vsrc[0] + vjit[0];
-		double	dy = vsrc[1] + vjit[1];
-		if (dx*dx + dy*dy <= ndp->thru_r2)
+					/* check indirect over-counting */
+	if (ndp->thick != 0 && ndp->pr->crtype & (SPECULAR|AMBIENT)
+				&& vsrc[2] > 0 ^ ndp->vray[2] > 0) {
+		double	dx = vsrc[0] + ndp->vray[0];
+		double	dy = vsrc[1] + ndp->vray[1];
+		if (dx*dx + dy*dy <= omega*(1./PI))
 			return(0);
 	}
-	ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
+					/* get local BSDF resolution */
+	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
-		objerror(ndp->mp, USER, transSDError(ec));
-
-	if (sv.cieY <= FTINY)		/* not worth using? */
-		return(0);
-					/* else we're good to go */
-	cvt_sdcolor(cval, &sv);
-	return(1);
+		goto baderror;
+					/* assign number of samples */
+	if (tomega <= omega*.02)
+		nsamp = 50;
+	else
+		nsamp = 2.*omega/tomega + 1.;
+	sf = sqrt(omega);
+	setcolor(cval, .0, .0, .0);	/* sample our source area */
+	for (i = nsamp; i--; ) {
+		VCOPY(vsmp, vsrc);	/* jitter query directions */
+		if (nsamp > 1) {
+			multisamp(sd, 2, (i + frandom())/(double)nsamp);
+			vsmp[0] += (sd[0] - .5)*sf;
+			vsmp[1] += (sd[1] - .5)*sf;
+			if (normalize(vsmp) == 0) {
+				--nsamp;
+				continue;
+			}
+		}
+		bsdf_jitter(vjit, ndp, 0);
+					/* compute BSDF */
+		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
+		if (ec)
+			goto baderror;
+		if (sv.cieY <= FTINY)	/* worth using? */
+			continue;
+		cvt_sdcolor(csmp, &sv);
+		addcolor(cval, csmp);	/* average it in */
+		++ok;
+	}
+	sf = 1./(double)nsamp;
+	scalecolor(cval, sf);
+	return(ok);
+baderror:
+	objerror(ndp->mp, USER, transSDError(ec));
 }
 
 /* Compute source contribution for BSDF (reflected & transmitted) */
@@ -168,7 +200,7 @@ dir_bsdf(
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, np))
+	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
 		return;
 	if (ldot > 0) {		/* pattern only diffuse reflection */
 		COLOR	ctmp1, ctmp2;
@@ -223,7 +255,7 @@ dir_brdf(
 	/*
 	 *  Compute reflection coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, np))
+	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
 		return;
 					/* pattern only diffuse reflection */
 	dtmp = (np->pr->rod > 0) ? np->sd->rLambFront.cieY
@@ -272,7 +304,7 @@ dir_btdf(
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, np))
+	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
 		return;
 					/* full pattern on transmission */
 	multcolor(ctmp, np->pr->pcol);
@@ -484,16 +516,6 @@ m_bsdf(OBJREC *m, RAY *r)
 	if (!ec)
 		ec = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL,
 						SDqueryMin+SDqueryMax, nd.sd);
-	nd.thru_r2 = .0;
-	if (!ec && nd.thick != 0 && r->crtype & (SPECULAR|AMBIENT)) {
-		FVECT	vthru;
-		vthru[0] = -nd.vray[0];
-		vthru[1] = -nd.vray[1];
-		vthru[2] = -nd.vray[2];
-		ec = SDsizeBSDF(&nd.thru_r2, nd.vray, vthru,
-						SDqueryMin, nd.sd);
-		nd.thru_r2 *= 1./PI;
-	}
 	if (ec) {
 		objerror(m, WARNING, transSDError(ec));
 		SDfreeCache(nd.sd);
