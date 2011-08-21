@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwright.c,v 2.8 2009/06/14 00:33:16 greg Exp $";
+static const char	RCSid[] = "$Id: vwright.c,v 2.9 2011/08/21 14:45:25 greg Exp $";
 #endif
 /*
  * Move a viewpoint the given distance to the right
@@ -23,12 +23,11 @@ main(
 	char	*argv[]
 )
 {
-	char	linebuf[256];
 	char	*err;
 	int	gotview = 0;
 	FVECT	hvn, vvn;
 	double	dist;
-	register int	i;
+	int	i;
 
 	progname = argv[0];
 	++argv; --argc;
@@ -59,16 +58,13 @@ main(
 	}
 	if (argc != 1)
 		goto userr;
-	if (!gotview)
-		while (fgets(linebuf, sizeof(linebuf), stdin) != NULL) {
-			if (linebuf[0] == '\n')
-				break;
-			if (isview(linebuf) && sscanview(&vw, linebuf) > 0)
-				++gotview;
-		}
 	if (!gotview) {
-		fprintf(stderr, "%s: no view on standard input\n", progname);
-		exit(1);
+		gotview = viewfile(NULL, &vw, NULL);
+		if (gotview <= 0) {
+			fprintf(stderr, "%s: no view on standard input\n",
+						progname);
+			exit(1);
+		}
 	}
 	if ((err= setview(&vw)) != NULL) {
 		fprintf(stderr, "%s: %s\n", progname, err);
@@ -112,10 +108,9 @@ main(
 	if (!isflt(argv[0]))
 		goto userr;
 	dist = atof(argv[0]);
-	for (i = 0; i < 3; i++)
-		vw.vp[i] += dist*hvn[i];
+	VSUM(vw.vp, vw.vp, hvn, dist);
 	fprintview(&vw, stdout);
-	putchar('\n');
+	fputc('\n', stdout);
 	exit(0);
 userr:
 	fprintf(stderr, "Usage: %s {offset|name}\n", progname);
