@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.11 2011/06/08 15:37:46 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.12 2011/08/21 16:55:29 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -68,7 +68,7 @@ typedef struct {
 	FVECT	pnorm;		/* perturbed surface normal */
 	FVECT	vray;		/* local outgoing (return) vector */
 	double	sr_vpsa[2];	/* sqrt of BSDF projected solid angle extrema */
-	double	thru_psa;	/* through direction projected solid angle */
+	double	thru_r2;	/* through rejection angle squared */
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
@@ -110,11 +110,10 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, BSDFDAT *ndp)
 					/* jitter query direction */
 	bsdf_jitter(vjit, ndp, 0);
 					/* avoid indirect over-counting */
-	if (ndp->thick != 0 && ndp->pr->crtype & (SPECULAR|AMBIENT) &&
-				vsrc[2] > 0 ^ vjit[2] > 0) {
+	if (ndp->thru_r2 > FTINY && vsrc[2] > 0 ^ vjit[2] > 0) {
 		double	dx = vsrc[0] + vjit[0];
 		double	dy = vsrc[1] + vjit[1];
-		if (dx*dx + dy*dy <= ndp->thru_psa)
+		if (dx*dx + dy*dy <= ndp->thru_r2)
 			return(0);
 	}
 	ec = SDevalBSDF(&sv, vjit, vsrc, ndp->sd);
@@ -485,14 +484,15 @@ m_bsdf(OBJREC *m, RAY *r)
 	if (!ec)
 		ec = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL,
 						SDqueryMin+SDqueryMax, nd.sd);
-	nd.thru_psa = .0;
+	nd.thru_r2 = .0;
 	if (!ec && nd.thick != 0 && r->crtype & (SPECULAR|AMBIENT)) {
 		FVECT	vthru;
 		vthru[0] = -nd.vray[0];
 		vthru[1] = -nd.vray[1];
 		vthru[2] = -nd.vray[2];
-		ec = SDsizeBSDF(&nd.thru_psa, nd.vray, vthru,
+		ec = SDsizeBSDF(&nd.thru_r2, nd.vray, vthru,
 						SDqueryMin, nd.sd);
+		nd.thru_r2 *= 1./PI;
 	}
 	if (ec) {
 		objerror(m, WARNING, transSDError(ec));
