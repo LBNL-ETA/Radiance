@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.21 2011/08/22 05:48:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.22 2011/08/22 14:19:49 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -31,6 +31,8 @@ static const unsigned	iwmax = (1<<(sizeof(unsigned)*4))-1;
 static const unsigned	cumlmax = ~0;
 					/* constant z-vector */
 static const FVECT	zvec = {.0, .0, 1.};
+					/* quantization value */
+static double		quantum = 1./256.;
 
 /* Struct used for our distribution-building callback */
 typedef struct {
@@ -607,7 +609,7 @@ const SDCDst *
 SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 {
 	const SDTre	*sdt;
-	double		inCoord[2], quantum;
+	double		inCoord[2];
 	int		i;
 	SDTreCDst	*cd, *cdlast;
 					/* check arguments */
@@ -621,7 +623,6 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	} else
 		return NULL;		/* should be internal error */
 					/* quantize to avoid f.p. errors */
-	quantum = SDsmallestLeaf(sdt->st);
 	for (i = sdt->st->ndim - 2; i--; )
 		inCoord[i] = floor(inCoord[i]/quantum)*quantum + .5*quantum;
 	cdlast = NULL;			/* check for direction in cache list */
@@ -845,6 +846,8 @@ get_extrema(SDSpectralDF *df)
 	double	stepWidth, dhemi, bmin[4], bmax[4];
 
 	stepWidth = SDsmallestLeaf(st);
+	if (quantum > stepWidth)	/* adjust quantization factor */
+		quantum = stepWidth;
 	df->minProjSA = M_PI*stepWidth*stepWidth;
 	if (stepWidth < .03125)
 		stepWidth = .03125;	/* 1/32 resolution good enough */
