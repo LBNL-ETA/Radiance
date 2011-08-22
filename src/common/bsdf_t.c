@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.22 2011/08/22 14:19:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.23 2011/08/22 18:21:05 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -26,7 +26,7 @@ typedef int	SDtreCallback(float val, const double *cmin,
 
 					/* reference width maximum (1.0) */
 static const unsigned	iwbits = sizeof(unsigned)*4;
-static const unsigned	iwmax = (1<<(sizeof(unsigned)*4))-1;
+static const unsigned	iwmax = 1<<(sizeof(unsigned)*4);
 					/* maximum cumulative value */
 static const unsigned	cumlmax = ~0;
 					/* constant z-vector */
