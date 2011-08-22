@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.14 2011/08/21 22:38:12 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.15 2011/08/22 16:00:47 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -82,10 +82,8 @@ typedef struct {
 
 /* Jitter ray sample according to projected solid angle and specjitter */
 static void
-bsdf_jitter(FVECT vres, BSDFDAT *ndp, int domax)
+bsdf_jitter(FVECT vres, BSDFDAT *ndp, double sr_psa)
 {
-	double	sr_psa = ndp->sr_vpsa[domax];
-
 	VCOPY(vres, ndp->vray);
 	if (specjitter < 1.)
 		sr_psa *= specjitter;
@@ -100,10 +98,10 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, int domax)
 static int
 direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
-	int	nsamp = 1, ok = 0;
+	int	nsamp, ok = 0;
 	FVECT	vsrc, vsmp, vjit;
 	double	tomega;
-	double	sf, sd[2];
+	double	sf, tsr, sd[2];
 	COLOR	csmp;
 	SDValue	sv;
 	SDError	ec;
@@ -119,19 +117,19 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		if (dx*dx + dy*dy <= omega*(1./PI))
 			return(0);
 	}
-	if (specjitter > FTINY) {	/* assign number of samples */
-		ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
-		if (ec)
-			goto baderror;
-		sf = specjitter * ndp->pr->rweight;
-		if (tomega <= omega*.01)
-			nsamp = 100.*sf + .5;
-		else
-			nsamp = 4.*sf*omega/tomega + .5;
-		nsamp += !nsamp;
-	}
-	sf = sqrt(omega);
+					/* assign number of samples */
+	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
+	if (ec)
+		goto baderror;
+	sf = specjitter * ndp->pr->rweight;
+	if (25.*tomega <= omega)
+		nsamp = 100.*sf + .5;
+	else
+		nsamp = 4.*sf*omega/tomega + .5;
+	nsamp += !nsamp;
 	setcolor(cval, .0, .0, .0);	/* sample our source area */
+	sf = sqrt(omega);
+	tsr = sqrt(tomega);
 	for (i = nsamp; i--; ) {
 		VCOPY(vsmp, vsrc);	/* jitter query directions */
 		if (nsamp > 1) {
@@ -143,7 +141,7 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 				continue;
 			}
 		}
-		bsdf_jitter(vjit, ndp, 0);
+		bsdf_jitter(vjit, ndp, tsr);
 					/* compute BSDF */
 		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
 		if (ec)
@@ -333,12 +331,15 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 	}
 						/* run through our samples */
 	for (nsent = 0; nsent < nstarget; nsent++) {
-		if (nstarget == 1)		/* stratify random variable */
+		if (nstarget == 1) {		/* stratify random variable */
 			xrand = urand(ilhash(dimlist,ndims)+samplendx);
-		else
+			if (specjitter < 1.)
+				xrand = .5 + specjitter*(xrand-.5);
+		} else {
 			xrand = (nsent + frandom())/(double)nstarget;
+		}
 		SDerrorDetail[0] = '\0';	/* sample direction & coef. */
-		bsdf_jitter(vsmp, ndp, 0);
+		bsdf_jitter(vsmp, ndp, ndp->sr_vpsa[0]);
 		ec = SDsampComponent(&bsv, vsmp, xrand, dcp);
 		if (ec)
 			objerror(ndp->mp, USER, transSDError(ec));
@@ -399,7 +400,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 			FVECT	vjit;
 			double	d;
 			COLOR	ctmp;
-			bsdf_jitter(vjit, ndp, 1);
+			bsdf_jitter(vjit, ndp, ndp->sr_vpsa[1]);
 			d = SDdirectHemi(vjit, sflags, ndp->sd);
 			if (sflags == SDsampSpT) {
 				copycolor(ctmp, ndp->pr->pcol);
