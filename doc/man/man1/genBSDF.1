@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.8 2011/08/23 14:02:41 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.9 2011/08/24 04:14:58 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -78,7 +78,7 @@ The variance in the results may be reduced by increasing the number of
 samples per incident direction using the
 .I \-c
 option.
-This value defaults to 10000 samples distributed over the incoming plane
+This value defaults to 2000 samples distributed over the incoming plane
 for each of the 145 Klems hemisphere directions.
 .PP
 In some cases, the processing time may be reduced by the
@@ -108,7 +108,7 @@ A
 .I \-t4
 parameter of 5 corresponds to 32x32 or 1024 output regions, so a
 .I \-c
-setting of 102400 would provide 100 samples per region on average.
+setting of 10240 would provide 10 samples per region on average.
 Increasing the resolution to 6 corresponds to 64x64 or 4096
 regions, so the
 .I \-c

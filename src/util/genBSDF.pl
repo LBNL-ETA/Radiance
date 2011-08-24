@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.24 2011/08/23 14:02:41 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.25 2011/08/24 04:14:58 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -16,7 +16,7 @@ chomp $td;
 my @savedARGV = @ARGV;
 my $tensortree = 0;
 my $ttlog2 = 4;
-my $nsamp = 10000;
+my $nsamp = 2000;
 my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
 my $mgfin = 0;
 my $geout = 1;
