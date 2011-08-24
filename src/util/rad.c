@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.105 2011/02/25 06:51:51 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.106 2011/08/24 05:54:42 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1254,6 +1254,32 @@ rvu(				/* run rvu with first view */
 }
 
 
+static int
+syncf_done(			/* check if an rpiece sync file is complete */
+	char *sfname
+)
+{
+	FILE	*fp = fopen(sfname, "r");
+	int	todo = 1;
+	int	x, y;
+
+	if (fp == NULL)
+		return(0);
+	if (fscanf(fp, "%d %d", &x, &y) != 2)
+		goto checked;
+	todo = x*y;		/* total number of tiles */
+	if (fscanf(fp, "%d %d", &x, &y) != 2 || (x != 0) | (y != 0))
+		goto checked;
+				/* XXX assume no redundant tiles */
+	while (fscanf(fp, "%d %d", &x, &y) == 2)
+		if (!--todo)
+			break;
+checked:
+	fclose(fp);
+	return(!todo);
+}
+
+
 static void
 rpict(				/* run rpict and pfilt for each view */
 	char	*opts,
@@ -1450,7 +1476,12 @@ rpict(				/* run rpict and pfilt for each view */
 		if (do_rpiece) {		/* need to finish raw, first */
 			finish_process();
 			wait_process(1);
-			/* XXX should check sync file to see if really done? */
+			if (!syncf_done(sfile)) {
+				fprintf(stderr,
+			"%s: rpiece did not complete rendering of view %s\n",
+						progname, vs);
+				quit(1);
+			}
 		}
 		if (!vdef(RAWFILE) || strcmp(vval(RAWFILE),vval(PICTURE))) {
 						/* build pfilt command */
