@@ -1,4 +1,4 @@
-.\" RCSid $Id: pkgBSDF.1,v 1.2 2011/06/23 18:17:12 greg Exp $
+.\" RCSid $Id: pkgBSDF.1,v 1.3 2011/08/25 15:16:22 greg Exp $
 .TH PKGBSDF 1 6/23/2011 RADIANCE
 .SH NAME
 pkgBSDF - package BSDFs provided as XML for Radiance
@@ -15,6 +15,8 @@ pkgBSDF - package BSDFs provided as XML for Radiance
 takes one or more XML files, each describing the bidirectional scattering
 distribution function of a surface or geometric system, and packages
 them into RADIANCE scene descriptions.
+If the input file(s) do not begin with a '.' or '/', the directories
+in the RAYPATH environment variable will be searched.
 One rectangle is produced for each BSDF that has
 no detail geometry and/or no rear-side reflectance distribution.
 If both front and back reflectance distributions are present with
