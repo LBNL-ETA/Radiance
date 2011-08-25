@@ -1,10 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.1 2011/06/23 18:05:18 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.2 2011/08/25 04:32:29 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
  */
 
+#include "rtio.h"
 #include "paths.h"
 #include "bsdf.h"
 
@@ -82,18 +83,24 @@ geomBSDF(const SDData *bsp)
 
 /* Load a BSDF XML file and produce a corresponding Radiance object */
 static int
-cvtBSDF(const char *fname)
+cvtBSDF(char *fname)
 {
 	int	retOK;
 	SDData	myBSDF;
-					/* load the XML file */
+	char	*pname;
+					/* find and load the XML file */
 	retOK = strlen(fname);
 	if (retOK < 5 || strcmp(fname+retOK-4, ".xml")) {
 		fprintf(stderr, "%s: input does not end in '.xml'\n", fname);
 		return(0);
 	}
+	pname = getpath(fname, getrlibpath(), R_OK);
+	if (pname == NULL) {
+		fprintf(stderr, "%s: cannot find BSDF file\n", fname);
+		return(0);
+	}
 	SDclearBSDF(&myBSDF, fname);
-	if (SDreportEnglish(SDloadFile(&myBSDF, fname), stderr))
+	if (SDreportEnglish(SDloadFile(&myBSDF, pname), stderr))
 		return(0);
 	retOK = (myBSDF.dim[0] > FTINY) & (myBSDF.dim[1] > FTINY);
 	if (!retOK) {
