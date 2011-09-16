@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.2 2011/08/25 04:32:29 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.3 2011/09/16 15:08:16 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -53,12 +53,12 @@ geomBSDF(const SDData *bsp)
 	char	command[SDnameLn+64];
 	int	fd;
 					/* write MGF to temp file */
-	fd = open(mktemp(strcpy(tmpfile,TEMPLATE)), O_WRONLY|O_CREAT|O_EXCL);
+	fd = open(mktemp(strcpy(tmpfile,TEMPLATE)), O_WRONLY|O_CREAT|O_EXCL, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Cannot open temp file '%s'\n", tmpfile);
 		return(0);
 	}
-	write(fd, bsp->mgf, strlen(bsp->mgf));
+	(void)write(fd, bsp->mgf, strlen(bsp->mgf));
 	close(fd);
 					/* set up command */
 	if (do_instance) {
