@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.35 2011/08/21 22:38:12 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.36 2011/09/17 22:09:33 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -171,8 +171,10 @@ SDloadFile(SDData *sd, const char *fname)
 	}
 				/* load geometry if present */
 	lastErr = SDloadGeometry(sd, ezxml_child(wtl, "Material"));
-	if (lastErr)
+	if (lastErr) {
+		ezxml_free(fl);
 		return lastErr;
+	}
 				/* try loading variable resolution data */
 	lastErr = SDloadTre(sd, wtl);
 				/* check our result */
