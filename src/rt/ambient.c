@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.69 2011/06/27 22:10:37 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.70 2011/09/22 02:15:56 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -232,8 +232,8 @@ ambnotify(			/* record new modifier */
 )
 {
 	static int  hitlimit = 0;
-	register OBJREC	 *o;
-	register char  **amblp;
+	OBJREC	 *o;
+	char  **amblp;
 
 	if (obj == OVOID) {		/* starting over */
 		ambset[0] = 0;
@@ -259,7 +259,7 @@ ambnotify(			/* record new modifier */
 extern void
 multambient(		/* compute ambient component & multiply by coef. */
 	COLOR  aval,
-	register RAY  *r,
+	RAY  *r,
 	FVECT  nrm
 )
 {
@@ -329,7 +329,7 @@ dumbamb:					/* return global value */
 extern double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
-	register RAY  *r,
+	RAY  *r,
 	FVECT  rn,
 	int  al,
 	AMBTREE	 *at,
@@ -341,8 +341,8 @@ sumambient(	/* get interpolated ambient value */
 	COLOR  ct;
 	FVECT  ck0;
 	int  i;
-	register int  j;
-	register AMBVAL	 *av;
+	int  j;
+	AMBVAL	 *av;
 
 	wsum = 0.0;
 					/* do this node */
@@ -360,13 +360,8 @@ sumambient(	/* get interpolated ambient value */
 		/*
 		 *  Ambient radius test.
 		 */
-		d = av->pos[0] - r->rop[0];
-		e1 = d * d;
-		d = av->pos[1] - r->rop[1];
-		e1 += d * d;
-		d = av->pos[2] - r->rop[2];
-		e1 += d * d;
-		e1 /= av->rad * av->rad;
+		VSUB(ck0, av->pos, r->rop);
+		e1 = DOT(ck0, ck0) / (av->rad * av->rad);
 		if (e1 > ambacc*ambacc*1.21)
 			continue;
 		/*
@@ -383,8 +378,9 @@ sumambient(	/* get interpolated ambient value */
 			}
 		}
 		e2 = (1.0 - d) * r->rweight;
-		if (e2 < 0.0) e2 = 0.0;
-		if (e1 + e2 > ambacc*ambacc*1.21)
+		if (e2 < 0.0)
+			e2 = 0.0;
+		else if (e1 + e2 > ambacc*ambacc*1.21)
 			continue;
 		/*
 		 *  Ray behind test.
@@ -484,13 +480,13 @@ makeambient(		/* make a new ambient value for storage */
 extern void
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
-	register AMBVAL	 *ap,
+	AMBVAL	 *ap,
 	FVECT  pv,
 	FVECT  nv
 )
 {
 	FVECT  v1;
-	register int  i;
+	int  i;
 	double	d;
 
 	d = 1.0;			/* zeroeth order */
@@ -566,10 +562,10 @@ writerr:
 
 static AMBVAL *
 avstore(				/* allocate memory and store aval */
-	register AMBVAL  *aval
+	AMBVAL  *aval
 )
 {
-	register AMBVAL  *av;
+	AMBVAL  *av;
 	double	d;
 
 	if ((av = newambval()) == NULL)
@@ -595,7 +591,7 @@ static AMBTREE  *atfreelist = NULL;	/* free ambient tree structures */
 static AMBTREE *
 newambtree(void)				/* allocate 8 ambient tree structs */
 {
-	register AMBTREE  *atp, *upperlim;
+	AMBTREE  *atp, *upperlim;
 
 	if (atfreelist == NULL) {	/* get more nodes */
 		atfreelist = (AMBTREE *)malloc(ATALLOCSZ*8*sizeof(AMBTREE));
@@ -629,13 +625,13 @@ avinsert(				/* insert ambient value in our tree */
 	void *av
 )
 {
-	register AMBTREE  *at;
-	register AMBVAL  *ap;
+	AMBTREE  *at;
+	AMBVAL  *ap;
 	AMBVAL  avh;
 	FVECT  ck0;
 	double	s;
 	int  branch;
-	register int  i;
+	int  i;
 
 	if (((AMBVAL*)av)->rad <= FTINY)
 		error(CONSISTENCY, "zero ambient radius in avinsert");
@@ -667,12 +663,12 @@ avinsert(				/* insert ambient value in our tree */
 
 static void
 unloadatree(			/* unload an ambient value tree */
-	register AMBTREE  *at,
+	AMBTREE  *at,
 	unloadtf_t *f
 )
 {
-	register AMBVAL  *av;
-	register int  i;
+	AMBVAL  *av;
+	int  i;
 					/* transfer values at this node */
 	for (av = at->alist; av != NULL; av = at->alist) {
 		at->alist = av->next;
@@ -716,7 +712,7 @@ alatcmp(			/* compare ambient values for MRA */
 	const void *av2
 )
 {
-	register long  lc = ((struct avl *)av2)->t - ((struct avl *)av1)->t;
+	long  lc = ((struct avl *)av2)->t - ((struct avl *)av1)->t;
 	return(lc<0 ? -1 : lc>0 ? 1 : 0);
 }
 
@@ -733,7 +729,7 @@ aposcmp(			/* compare ambient value positions */
 	const void	*avp2
 )
 {
-	register long	diff = *(char * const *)avp1 - *(char * const *)avp2;
+	long	diff = *(char * const *)avp1 - *(char * const *)avp2;
 	if (diff < 0)
 		return(-1);
 	return(diff > 0);
@@ -745,7 +741,7 @@ avlmemi(				/* find list position from address */
 	AMBVAL	*avaddr
 )
 {
-	register AMBVAL  **avlpp;
+	AMBVAL  **avlpp;
 
 	avlpp = (AMBVAL **)bsearch((char *)&avaddr, (char *)avlist2,
 			nambvals, sizeof(AMBVAL *), aposcmp);
@@ -766,7 +762,7 @@ sortambvals(			/* resort ambient values */
 {
 	AMBTREE  oldatrunk;
 	AMBVAL	tav, *tap, *pnext;
-	register int	i, j;
+	int	i, j;
 					/* see if it's time yet */
 	if (!always && (ambclock++ < lastsort+sortintvl ||
 			nambvals < SORT_THRESH))
@@ -879,7 +875,7 @@ ambsync(void)			/* synchronize ambient file */
 {
 	long  flen;
 	AMBVAL	avs;
-	register int  n;
+	int  n;
 
 	if (ambfp == NULL)	/* no ambient file? */
 		return(0);

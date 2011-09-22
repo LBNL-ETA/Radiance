@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.16 2011/08/24 04:31:13 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.17 2011/09/22 02:15:56 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -157,6 +157,7 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	return(ok);
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));
+	return(0);			/* gratis return */
 }
 
 /* Compute source contribution for BSDF (reflected & transmitted) */

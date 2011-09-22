@@ -1,4 +1,4 @@
-		RCSid "$Id: README,v 1.6 2008/12/17 04:30:02 greg Exp $"
+		RCSid "$Id: README,v 1.7 2011/09/22 02:15:56 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
 the seventeenth release, Version 4.0, and it includes all source files
@@ -117,7 +117,7 @@ with any of the ra_* programs listed in the doc/whatis database.
 
 There is a user interface built on top of this using Tcl/Tk, called trad.
 If you do not have Tcl/Tk installed on your system, you must do so prior
-to building this distribution if you ant trad to install.  (Try a google
+to building this distribution if you want trad to install.  (Try a google
 search on "Tcl/Tk" or go to "http://www.scriptics.com/software/tcltk/".)
 
 ----------------------------------------------------------------------

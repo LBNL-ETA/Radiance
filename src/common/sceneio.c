@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sceneio.c,v 2.4 2003/06/26 00:58:09 schorsch Exp $";
+static const char RCSid[] = "$Id: sceneio.c,v 2.5 2011/09/22 02:15:56 greg Exp $";
 #endif
 /*
  *  Portable, binary Radiance i/o routines.
@@ -18,15 +18,16 @@ static short  otypmap[NUMOTYPE+32];	/* object type map */
 
 
 static int
-getobj(fp, objsiz)			/* get next object */
-FILE	*fp;
-int	objsiz;
+getobj(				/* get next object */
+	FILE	*fp,
+	int	objsiz
+)
 {
 	char  sbuf[MAXSTR];
 	int  obj;
-	register int  i;
-	register long  m;
-	register OBJREC	 *objp;
+	int  i;
+	long  m;
+	OBJREC	 *objp;
 
 	i = getint(1, fp);
 	if (i == -1)
@@ -86,9 +87,10 @@ memerr:
 
 
 void
-readscene(fp, objsiz)			/* read binary scene description */
-FILE	*fp;
-int	objsiz;
+readscene(				/* read binary scene description */
+	FILE	*fp,
+	int	objsiz
+)
 {
 	char  sbuf[32];
 	int  i;
@@ -108,11 +110,12 @@ int	objsiz;
 
 
 static void
-putobj(o, fp)			/* write out object */
-FILE	*fp;
-register OBJREC  *o;
+putobj(				/* write out object */
+	OBJREC  *o,
+	FILE	*fp
+)
 {
-	register int  i;
+	int  i;
 
 	if (o == NULL) {		/* terminator */
 		putint(-1L, 1, fp);
@@ -136,9 +139,11 @@ register OBJREC  *o;
 
 
 void
-writescene(firstobj, nobjs, fp)		/* write binary scene description */
-int	firstobj, nobjs;
-FILE	*fp;
+writescene(				/* write binary scene description */
+	int	firstobj,
+	int	nobjs,
+	FILE	*fp
+)
 {
 	int	i;
 					/* write out type list */

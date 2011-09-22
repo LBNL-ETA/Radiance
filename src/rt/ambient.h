@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.17 2010/10/05 18:05:23 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.18 2011/09/22 02:15:56 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -16,6 +16,7 @@ extern "C" {
  * and don't pass these vectors to fvect routines.
  */
 typedef struct ambrec {
+	struct ambrec  *next;	/* next in list */
 	unsigned long  latick;	/* last accessed tick */
 	float  pos[3];		/* position in space */
 	float  dir[3];		/* normal direction */
@@ -25,7 +26,6 @@ typedef struct ambrec {
 	COLOR  val;		/* computed ambient value */
 	float  gpos[3];		/* gradient wrt. position */
 	float  gdir[3];		/* gradient wrt. direction */
-	struct ambrec  *next;	/* next in list */
 }  AMBVAL;			/* ambient value */
 
 typedef struct ambtree {
