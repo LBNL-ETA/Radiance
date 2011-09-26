@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.11 2011/06/20 23:08:43 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.12 2011/09/26 15:33:29 greg Exp $";
 #endif
 
 /*
@@ -544,7 +544,7 @@ comp_sensor(
 				continue;
 			}
 			rr.rmax = .0;
-			rayorigin(&rr, PRIMARY, NULL, NULL);
+			rayorigin(&rr, PRIMARY|SPECULAR, NULL, NULL);
 			scalecolor(rr.rcoef, sf);
 			if (ray_pqueue(&rr) == 1)
 				addcolor(vsum, rr.rcol);
@@ -560,7 +560,7 @@ comp_sensor(
 			continue;
 		}
 		rr.rmax = .0;
-		rayorigin(&rr, PRIMARY, NULL, NULL);
+		rayorigin(&rr, PRIMARY|SPECULAR, NULL, NULL);
 		scalecolor(rr.rcoef, sf);
 		if (ray_pqueue(&rr) == 1)
 			addcolor(vsum, rr.rcol);
