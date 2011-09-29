@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.6 2011/05/16 23:56:32 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.7 2011/09/29 22:36:11 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -81,11 +81,13 @@ if ($windoz) {
 		q{-e "Rbin=$1;x1=rand(recno*.37-5.3);x2=rand(recno*-1.47+.86)" } .
 		q{-e "$1=0;$2=0;$3=0;$4=Dx;$5=Dy;$6=Dz" } .
 		"| rtrace -h -ab 0 -w $octree | total -16 -m";
-	$suncmd = "cnt " . ($nbins-1) .
-		" | rcalc -e MF:$mf -e \"$rhcal\" -e Rbin=recno " .
-		"-e \"dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]\" " .
-		"-e \"cond=dot-.866\" " .
-		q{-e "$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno" };
+	if (@sundir) {
+		$suncmd = "cnt " . ($nbins-1) .
+			" | rcalc -e MF:$mf -e \"$rhcal\" -e Rbin=recno " .
+			"-e \"dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]\" " .
+			"-e \"cond=dot-.866\" " .
+			q{-e "$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno" };
+	}
 } else {
 	$nbins = `rcalc -n -e MF:$mf -e \'$rhcal\' -e \'\$1=Rmax+1\'`;
 	chomp $nbins;
@@ -94,11 +96,13 @@ if ($windoz) {
 		q{-e 'Rbin=$1;x1=rand(recno*.37-5.3);x2=rand(recno*-1.47+.86)' } .
 		q{-e '$1=0;$2=0;$3=0;$4=Dx;$5=Dy;$6=Dz' } .
 		"| rtrace -h -ff -ab 0 -w $octree | total -if3 -16 -m";
-	$suncmd = "cnt " . ($nbins-1) .
-		" | rcalc -e MF:$mf -e '$rhcal' -e Rbin=recno " .
-		"-e 'dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]' " .
-		"-e 'cond=dot-.866' " .
-		q{-e '$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno' };
+	if (@sundir) {
+		$suncmd = "cnt " . ($nbins-1) .
+			" | rcalc -e MF:$mf -e '$rhcal' -e Rbin=recno " .
+			"-e 'dot=Dx*$sundir[0] + Dy*$sundir[1] + Dz*$sundir[2]' " .
+			"-e 'cond=dot-.866' " .
+			q{-e '$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno' };
+	}
 }
 # Create octree for rtrace
 open OCONV, "| oconv - > $octree";
