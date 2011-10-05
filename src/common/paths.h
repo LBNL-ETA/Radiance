@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.22 2005/09/19 11:30:10 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.23 2011/10/05 17:20:55 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -41,9 +41,11 @@
   /* <io.h> only does half the work for access() */
   #ifndef F_OK
     #define  F_OK 00
-    #define  X_OK 01
     #define  W_OK 02
-    #define  R_OK 04
+  #endif
+  #ifndef R_OK
+    #define X_OK 01
+    #define R_OK 04
   #endif
   /* to make the permissions user specific we'd need to use CreateFile() */
   #ifndef S_IRUSR

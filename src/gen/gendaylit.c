@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.6 2011/08/16 18:09:53 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.7 2011/10/05 17:20:55 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -162,8 +162,8 @@ char  *argv[];
 	if (argc < 4)
 		userror("arg count");
 	if (!strcmp(argv[1], "-ang")) {
-		altitude = atof(argv[2]) * (M_PI/180);
-		azimuth = atof(argv[3]) * (M_PI/180);
+		altitude = atof(argv[2]) * (PI/180);
+		azimuth = atof(argv[3]) * (PI/180);
 		month = 0;
 	} else {
 		month = atoi(argv[1]);
@@ -203,13 +203,13 @@ char  *argv[];
 				gprefl = atof(argv[++i]);
 				break;
 			case 'a':
-				s_latitude = atof(argv[++i]) * (M_PI/180);
+				s_latitude = atof(argv[++i]) * (PI/180);
 				break;
 			case 'o':
-				s_longitude = atof(argv[++i]) * (M_PI/180);
+				s_longitude = atof(argv[++i]) * (PI/180);
 				break;
 			case 'm':
-				s_meridian = atof(argv[++i]) * (M_PI/180);
+				s_meridian = atof(argv[++i]) * (PI/180);
 				break;
 
 			
@@ -251,10 +251,10 @@ char  *argv[];
 		else
 			userror("bad option");
 
-	if (fabs(s_meridian-s_longitude) > 30*M_PI/180)
+	if (fabs(s_meridian-s_longitude) > 30*PI/180)
 		fprintf(stderr,
 		    "%s: warning: %.1f hours btwn. standard meridian and longitude\n",
-		    progname, (s_longitude-s_meridian)*12/M_PI);
+		    progname, (s_longitude-s_meridian)*12/PI);
 
 
 	/* allocation dynamique de memoire pour les pointeurs */
@@ -306,13 +306,13 @@ computesky()			/* compute sky parameters */
 		daynumber = (double)jdate(month, day);
 
 	}
-	if (!cloudy && altitude > 87.*M_PI/180.) {
+	if (!cloudy && altitude > 87.*PI/180.) {
 		fprintf(stderr,
 		    "%s: warning - sun too close to zenith, reducing altitude to 87 degrees\n",
 		    progname);
 		printf(
 		    "# warning - sun too close to zenith, reducing altitude to 87 degrees\n");
-		altitude = 87.*M_PI/180.;
+		altitude = 87.*PI/180.;
 	}
 	sundir[0] = -sin(azimuth)*cos(altitude);
 	sundir[1] = -cos(azimuth)*cos(altitude);
@@ -320,7 +320,7 @@ computesky()			/* compute sky parameters */
 	
 		
 	/* calculation for the new functions */
-	sunzenith = 90 - altitude*180/M_PI;
+	sunzenith = 90 - altitude*180/PI;
 	
 	
 
@@ -459,13 +459,13 @@ computesky()			/* compute sky parameters */
 
 /* calculation for the solar source */	
 	if (output==0) 
-		solarradiance = directilluminance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)))/WHTEFFICACY;
+		solarradiance = directilluminance/(2*PI*(1-cos(half_sun_angle*PI/180)))/WHTEFFICACY;
 		
 	else if (output==1)
-		solarradiance = directirradiance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)));
+		solarradiance = directirradiance/(2*PI*(1-cos(half_sun_angle*PI/180)));
 	
 	else
-		solarradiance = directilluminance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)));
+		solarradiance = directilluminance/(2*PI*(1-cos(half_sun_angle*PI/180)));
 	
 			
 
@@ -482,22 +482,22 @@ if (skyclearness==1)
 		
 if (skyclearness>=6)
 	{		
-	F2 = 0.274*(0.91 + 10.0*exp(-3.0*(M_PI/2.0-altitude)) + 0.45*sundir[2]*sundir[2]);
-	normfactor = normsc()/F2/M_PI;
+	F2 = 0.274*(0.91 + 10.0*exp(-3.0*(PI/2.0-altitude)) + 0.45*sundir[2]*sundir[2]);
+	normfactor = normsc()/F2/PI;
 	}
 
 if ( (skyclearness>1) && (skyclearness<6) )
 	{
 	S_INTER=1;
-	F2 = (2.739 + .9891*sin(.3119+2.6*altitude)) * exp(-(M_PI/2.0-altitude)*(.4441+1.48*altitude));
-	normfactor = normsc()/F2/M_PI;
+	F2 = (2.739 + .9891*sin(.3119+2.6*altitude)) * exp(-(PI/2.0-altitude)*(.4441+1.48*altitude));
+	normfactor = normsc()/F2/PI;
 	}
 
 groundbr = zenithbr*normfactor;
 printf("# Ground ambient level: %.1f\n", groundbr);
 
 if (dosun&&(skyclearness>1)) 
-groundbr += 6.8e-5/M_PI*solarradiance*sundir[2];		
+groundbr += 6.8e-5/PI*solarradiance*sundir[2];		
 
 groundbr *= gprefl;
 
@@ -551,9 +551,9 @@ printdefaults()			/* print default values */
 		printf("-b %f\t\t\t# Zenith radiance (watts/ster/m^2\n", zenithbr);
 	else
 		printf("-t %f\t\t\t# Atmospheric betaturbidity\n", betaturbidity);
-	printf("-a %f\t\t\t# Site latitude (degrees)\n", s_latitude*(180/M_PI));
-	printf("-o %f\t\t\t# Site longitude (degrees)\n", s_longitude*(180/M_PI));
-	printf("-m %f\t\t\t# Standard meridian (degrees)\n", s_meridian*(180/M_PI));
+	printf("-a %f\t\t\t# Site latitude (degrees)\n", s_latitude*(180/PI));
+	printf("-o %f\t\t\t# Site longitude (degrees)\n", s_longitude*(180/PI));
+	printf("-m %f\t\t\t# Standard meridian (degrees)\n", s_meridian*(180/PI));
 }
 
 
@@ -588,7 +588,7 @@ normsc()			/* compute normalization factor (E0*F2/L0) */
 	register int  i;
 					/* polynomial approximation */
 	nf = nfc[S_INTER];
-	x = (altitude - M_PI/4.0)/(M_PI/4.0);
+	x = (altitude - PI/4.0)/(PI/4.0);
 	nsc = nf[i=4];
 	while (i--)
 		nsc = nsc*x + nf[i];
@@ -707,7 +707,7 @@ fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check
 	}
 
 	value = a[category_number] + b[category_number]*atm_preci_water  + 
-	    c[category_number]*cos(sunzenith*M_PI/180) +  d[category_number]*log(skybrightness);
+	    c[category_number]*cos(sunzenith*PI/180) +  d[category_number]*log(skybrightness);
 
 	return(value);
 }
@@ -785,7 +785,7 @@ fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check
 			category_number = i;
 	}
 
-	value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*cos(sunzenith*M_PI/180) + 
+	value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*cos(sunzenith*PI/180) + 
 	    d[category_number]*log(skybrightness);
 
 	return(value);
@@ -866,7 +866,7 @@ if ( (skyclearness >= category_bounds[i]) && (skyclearness < category_bounds[i+1
 category_number = i;
 }
 
-value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*exp(5.73*sunzenith*M_PI/180 - 5) +  d[category_number]*skybrightness;
+value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*exp(5.73*sunzenith*PI/180 - 5) +  d[category_number]*skybrightness;
 
 if (value < 0) value = 0;
 
@@ -926,7 +926,7 @@ double sky_clearness()
 {
 double value;
 
-value = ( (diffusirradiance + directirradiance)/(diffusirradiance) + 1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180 ) / (1 + 1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180) ;
+value = ( (diffusirradiance + directirradiance)/(diffusirradiance) + 1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180 ) / (1 + 1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180) ;
 
 return(value);
 }
@@ -950,7 +950,7 @@ double direct_irradiance_from_sky_clearness()
 	double value;
 
 	value = diffus_irradiance_from_sky_brightness();
-	value = value * ( (skyclearness-1) * (1+1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180) );
+	value = value * ( (skyclearness-1) * (1+1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180) );
 
 	return(value);
 }
@@ -1148,13 +1148,13 @@ void coeff_lum_perez(double Z, double epsilon, double Delta, float *coeff_perez)
 /* degrees into radians */
 double radians(double degres)
 {
-	return degres*M_PI/180.0;
+	return degres*PI/180.0;
 }
 
 /* radian into degrees */
 double degres(double radians)
 {
-	return radians/M_PI*180.0;
+	return radians/PI*180.0;
 }
 
 /* calculation of the angles dzeta and gamma */
@@ -1288,7 +1288,7 @@ double integ_lv(float *lv,float *theta)
 	for (i=0;i<145;i++)
 		buffer += (*(lv+i))*cos(radians(*(theta+i)));
 
-	return buffer*2*M_PI/144;
+	return buffer*2*PI/144;
 
 }
 
@@ -1304,7 +1304,7 @@ double get_eccentricity()
 	double day_angle;
 	double E0;
 
-	day_angle  = 2*M_PI*(daynumber - 1)/365;
+	day_angle  = 2*PI*(daynumber - 1)/365;
 	E0         = 1.00011+0.034221*cos(day_angle)+0.00128*sin(day_angle)+
 	    0.000719*cos(2*day_angle)+0.000077*sin(2*day_angle);
 
@@ -1324,7 +1324,7 @@ if (sunzenith>90)
 	exit(1);
 	}
 	
-m = 1/( cos(sunzenith*M_PI/180)+0.15*exp( log(93.885-sunzenith)*(-1.253) ) );
+m = 1/( cos(sunzenith*PI/180)+0.15*exp( log(93.885-sunzenith)*(-1.253) ) );
 return(m);
 }
 
@@ -1339,8 +1339,8 @@ double angle;
 if (sun_zenith == 0)
         puts("WARNING: zenith_angle = 0 in function get_angle_sun_vert_plan");
 
-angle = acos( cos(sun_zenith*M_PI/180)*cos(direction_zenith*M_PI/180) + sin(sun_zenith*M_PI/180)*sin(direction_zenith*M_PI/180)*cos((sun_azimut-direction_azimut)*M_PI/180) );
-angle = angle*180/M_PI;
+angle = acos( cos(sun_zenith*PI/180)*cos(direction_zenith*PI/180) + sin(sun_zenith*PI/180)*sin(direction_zenith*PI/180)*cos((sun_azimut-direction_azimut)*PI/180) );
+angle = angle*180/PI;
 return(angle);
 }
 

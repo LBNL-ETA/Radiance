@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.61 2010/10/20 16:36:10 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.62 2011/10/05 17:20:55 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -13,6 +13,8 @@ static const char	RCSid[] = "$Id: rv2.c,v 2.61 2010/10/20 16:36:10 greg Exp $";
 #include  <string.h>
 
 #include  "platform.h"
+#include  "rtprocess.h"	/* win_popen() */
+#include  "paths.h"
 #include  "ray.h"
 #include  "source.h"
 #include  "ambient.h"
@@ -61,7 +63,7 @@ getrepaint(				/* get area and repaint */
 
 
 void
-getview(				/* get/show view parameters */
+getview(				/* get/show/save view parameters */
 	char  *s
 )
 {
@@ -80,7 +82,7 @@ getview(				/* get/show view parameters */
 			error(COMMAND, "bad view option(s)");
 		return;
 	}
-	if (sscanf(s, "%s", buf) == 1) {	/* write parameters to a file */
+	if (nextword(buf, sizeof(buf), s) != NULL) {	/* write to a file */
 		if ((fname = getpath(buf, NULL, 0)) == NULL ||
 				(fp = fopen(fname, "a")) == NULL) {
 			sprintf(errmsg, "cannot open \"%s\"", buf);
@@ -162,8 +164,8 @@ lastview(				/* return to a previous view */
 	char  *fname;
 	int  success;
 	VIEW  nv;
-
-	if (sscanf(s, "%s", buf) == 1) {	/* get parameters from a file */
+					/* get parameters from a file */
+	if (nextword(buf, sizeof(buf), s) != NULL) {
 		nv = stdview;
 		if ((fname = getpath(buf, "", R_OK)) == NULL ||
 				(success = viewfile(fname, &nv, NULL)) == -1) {
@@ -204,11 +206,7 @@ saveview(				/* save view to rad file */
 		}
 		s = sskip(s);
 	}
-	while (isspace(*s))
-		s++;
-	if (*s)
-		atos(rifname, sizeof(rifname), s);
-	else if (rifname[0] == '\0') {
+	if (nextword(rifname, sizeof(rifname), s) == NULL && !rifname[0]) {
 		error(COMMAND, "no previous rad file");
 		return;
 	}
@@ -241,9 +239,7 @@ loadview(				/* load view from rad file */
 		s = sskip(s);
 	else
 		strcat(buf, "1");
-	if (*s)
-		atos(rifname, sizeof(rifname), s);
-	else if (rifname[0] == '\0') {
+	if (nextword(rifname, sizeof(rifname), s) == NULL && !rifname[0]) {
 		error(COMMAND, "no previous rad file");
 		return;
 	}
@@ -804,12 +800,8 @@ writepict(				/* write the picture to a file */
 	FILE  *fp;
 	COLR  *scanline;
 	int  y;
-
-	while (isspace(*s))
-		s++;
-	if (*s)
-		atos(buf, sizeof(buf), s);
-	else if (buf[0] == '\0') {
+				/* XXX relies on words.c 2.11 behavior */
+	if (nextword(buf, sizeof(buf), s) == NULL && !buf[0]) {
 		error(COMMAND, "no file");
 		return;
 	}

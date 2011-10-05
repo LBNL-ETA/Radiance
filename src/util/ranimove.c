@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.14 2010/11/03 05:05:21 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.15 2011/10/05 17:20:55 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -851,6 +851,44 @@ obj_prio(			/* return priority for object */
 	return(obj_move[moi].cprio);
 }
 
+
+#ifdef _WIN32
+				/* replacement function for Windoze */
+static int
+gettimeofday(struct timeval *tp, void *dummy)
+{
+    FILETIME        ft;
+    LARGE_INTEGER   li;
+    __int64         t;
+
+	SYSTEMTIME		st;
+	FILETIME		ft2;
+	LARGE_INTEGER   li2;
+	__int64			t2;
+
+	st.wYear = 1970;
+	st.wHour = 0;
+	st.wMinute = 0;
+	st.wSecond = 0;
+	st.wMilliseconds = 1;
+
+	SystemTimeToFileTime(&st, &ft2);
+	li2.LowPart = ft2.dwLowDateTime;
+	li2.HighPart = ft2.dwHighDateTime;
+	t2 = li2.QuadPart;
+
+    GetSystemTimeAsFileTime(&ft);
+    li.LowPart  = ft.dwLowDateTime;
+    li.HighPart = ft.dwHighDateTime;
+    t  = li.QuadPart;      
+    t -= t2; // From 1970
+    t /= 10; // In microseconds
+    tp->tv_sec  = (long)(t / 1000000);
+    tp->tv_usec = (long)(t % 1000000);
+    return 0;
+}
+
+#endif
 
 extern double
 getTime(void)			/* get current time (CPU or real) */
