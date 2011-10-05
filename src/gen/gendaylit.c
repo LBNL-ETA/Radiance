@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.7 2011/10/05 17:20:55 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.8 2011/10/05 17:33:36 greg Exp $";
 #endif
 /*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
  *        			Oltmannstr 5, D-79100 Freiburg, Germany
@@ -23,8 +23,8 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.7 2011/10/05 17:20:55 greg Exp
 #include  <stdlib.h>
 #include  <ctype.h>
 
+#include  "rtmath.h"
 #include  "rtio.h"
-#include  "fvect.h"
 #include  "color.h"
 #include  "paths.h"
 
