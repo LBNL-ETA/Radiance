@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.17 2011/04/15 18:43:57 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.18 2011/10/21 16:31:03 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -444,16 +444,22 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 static int
 hasNumberFormat(const char *s)
 {
-	while (*s && *s != '%')
-		s++;
-	if (!*s)
-		return(0);
-	do
-		++s;
-	while (isdigit(*s));
-
-	return((*s == 'd') | (*s == 'i') | (*s == 'o') |
-			(*s == 'x') | (*s == 'X'));
+	while (*s) {
+		while (*s != '%')
+			if (!*s++)
+				return(0);
+		if (*++s == '%') {		/* ignore "%%" */
+			++s;
+			continue;
+		}
+		while (isdigit(*s))		/* field length */
+			++s;
+						/* field we'll use? */
+		if ((*s == 'd') | (*s == 'i') | (*s == 'o') |
+					(*s == 'x') | (*s == 'X'))
+			return(1);
+	}
+	return(0);				/* didn't find one */
 }
 
 int
