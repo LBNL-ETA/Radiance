@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.27 2010/09/03 23:53:50 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.28 2011/10/22 22:38:10 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -45,6 +45,9 @@ gensky:	gensky.o sun.o
 
 gendaylit:	gendaylit.o sun.o
 	$(CC) $(CFLAGS) -o gendaylit gendaylit.o sun.o -lrtrad $(MLIB)
+
+# gendaylit:	H32_gendaylit.o
+#	$(CC) $(CFLAGS) -o gendaylit H32_gendaylit.o $(MLIB)
 
 genblinds:	genblinds.o
 	$(CC) $(CFLAGS) -o genblinds genblinds.o $(MLIB)

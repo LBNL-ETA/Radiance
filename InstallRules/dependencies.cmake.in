@@ -1,0 +1,12 @@
+if("${CMAKE_VERSION}" VERSION_LESS "2.8.5")
+  # older CMake, add to CMAKE_MODULE_PATH, use local BundleUtilities and GetPrerequisites
+  set(CMAKE_MODULE_PATH "@CMAKE_CURRENT_SOURCE_DIR@" ${CMAKE_MODULE_PATH})
+endif()
+
+function(gp_item_default_embedded_path_override path)
+  set(path "@executable_path" PARENT_SCOPE)
+endfunction()
+
+include(BundleUtilities)
+
+fixup_bundle("$ENV{DESTDIR}@CMAKE_INSTALL_PREFIX@/bin/rvu@CMAKE_EXECUTABLE_SUFFIX@" "" "@QT_LIBRARY_DIR@")

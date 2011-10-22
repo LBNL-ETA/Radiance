@@ -1,0 +1,31 @@
+if(WIN32)
+  set(sep ";")
+else()
+  set(sep ":")
+  set(rtcontrib_threads "-n;2;")
+endif()
+
+
+file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/gen" gen_dir)
+file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/cal/cal" cal_dir)
+file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/rt" rt_dir)
+file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/util" util_dir)
+file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/px" px_dir)
+file(TO_NATIVE_PATH
+  "@radiance_BINARY_DIR@/Downloads/Source/radiance_support/lib" lib_dir)
+file(TO_NATIVE_PATH "@PERL_EXECUTABLE@" perl)
+set(office_dir @office_dir@)
+#office_dir is defined in CMakeLists.txt
+
+if(NOT EXISTS ${lib_dir}/pine.pic)
+  configure_file(${lib_dir}/pine.hdr ${lib_dir}/pine.pic COPYONLY)
+endif()
+
+file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin" rpath)
+set(ENV{RAYPATH}
+"${gen_dir}${sep}${cal_dir}${sep}${rt_dir}${sep}${lib_dir}${sep}@office_dir@")
+set(ENV{PATH} "$ENV{PATH}${sep}${rpath}")
+set(test_output_dir
+  @radiance_BINARY_DIR@/Downloads/Source/radiance_support/obj/office/test)
+set(CMAKE_EXECUTABLE_SUFFIX @CMAKE_EXECUTABLE_SUFFIX@)
+message(STATUS "raypath: $ENV{RAYPATH}")

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>exposureDialog</class>
+ <widget class="QDialog" name="exposureDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>303</width>
+    <height>197</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Exposure</string>
+  </property>
+  <property name="toolTip">
+   <string>adjust exposure here</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="exposureValueLabel">
+     <property name="text">
+      <string>Current value:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="exposureValue">
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="exposureModeLabel">
+     <property name="text">
+      <string>Mode:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QRadioButton" name="relative">
+     <property name="text">
+      <string>Relative</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <attribute name="buttonGroup">
+      <string>modeGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QRadioButton" name="absolute">
+     <property name="text">
+      <string>Absolute</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string>modeGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QRadioButton" name="fstop">
+     <property name="text">
+      <string>F-stop</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string>modeGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QRadioButton" name="natural">
+     <property name="text">
+      <string>Natural</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string>modeGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="exposureBasedLabel">
+     <property name="text">
+      <string>Based on:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QRadioButton" name="average">
+     <property name="text">
+      <string>Average</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+     <attribute name="buttonGroup">
+      <string>basedGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QRadioButton" name="point">
+     <property name="text">
+      <string>Point</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string>basedGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="exposureSettingLabel">
+     <property name="text">
+      <string>Setting:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLineEdit" name="exposureSetting">
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="3">
+    <widget class="QDialogButtonBox" name="exposureButtonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>exposureButtonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>exposureDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exposureButtonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>exposureDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="basedGroup"/>
+  <buttongroup name="modeGroup"/>
+ </buttongroups>
+</ui>
