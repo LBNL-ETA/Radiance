@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.25 2005/12/28 18:39:07 greg Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.26 2011/10/25 23:23:17 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -846,7 +846,7 @@ o_trans(	/* convert a trans material */
 	COLOR	cxyz, rrgb;
 	double	rough, trans, tspec, d;
 
-	if (typ[4] == '2') {		/* trans2 */
+	if (typ[5] == '2') {		/* trans2 */
 		if (fa->nfargs != 8)
 			return(-1);
 		rough = .5*(fa->farg[4] + fa->farg[5]);
