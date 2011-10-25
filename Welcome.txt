@@ -1,0 +1,3 @@
+Welcome to the Radiance 4.1 Lighting Simulation and Rendering System
+
+For information and support, go to "http://www.radiance-online.org"

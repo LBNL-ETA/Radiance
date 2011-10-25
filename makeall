@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.25 2010/11/29 17:22:44 greg Exp $
+# RCSid $Id: makeall,v 1.26 2011/10/25 22:53:14 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -84,7 +84,7 @@ if ( "`ls -tL $rmake $0 |& head -1`" == $rmake ) then
 	goto gotrmake
 endif
 set newrmake
-more src/common/copyright.h
+more License.txt
 echo -n "Do you understand and accept the terms of this agreement [n]? "
 set ans="$<"
 if ( "$ans" !~ [yY]* ) exit

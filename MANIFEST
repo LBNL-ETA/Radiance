@@ -1,5 +1,6 @@
 MANIFEST			This file
 README				Instructions
+License.txt			Radiance license agreement
 noX11.help			Help file for installation without X11
 makeall				Script for installing software
 installib			Script for installing library files
