@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.25 2011/08/24 04:14:58 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.26 2011/10/25 20:51:10 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -149,17 +149,21 @@ print
 </WindowElement>
 ';
 # Clean up temporary files and exit
-if ( $persistfile && open(PFI, "< $persistfile") ) {
-	while (<PFI>) {
-		s/^[^ ]* //;
-		kill('ALRM', $_);
-		last;
-	}
-	close PFI;
-}
 exec("rm -rf $td");
 
 #-------------- End of main program segment --------------#
+
+#++++++++++++++ Kill persistent rtrace +++++++++++++++++++#
+sub persist_end {
+	if ( $persistfile && open(PFI, "< $persistfile") ) {
+		while (<PFI>) {
+			s/^[^ ]* //;
+			kill('ALRM', $_);
+			last;
+		}
+		close PFI;
+	}
+}
 
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
 sub do_tree_bsdf {
@@ -236,6 +240,7 @@ if ( $doback ) {
 		die "rtcontrib process reported error" if ( $? );
 		$npleft++;
 	}
+	persist_end();
 	ttree_out(0);
 }
 if ( $doforw ) {
@@ -252,6 +257,7 @@ if ( $doforw ) {
 		die "rtcontrib process reported error" if ( $? );
 		$npleft++;
 	}
+	persist_end();
 	ttree_out(1);
 }
 }	# end of sub do_tree_bsdf()
