@@ -1,4 +1,4 @@
-#${CMAKE_COMMAND} -DVERSION_OUT_FILE=v  -DVERSION_IN_FILE=src/util/VERSION -P src/common/create_version.cmake
+#${CMAKE_COMMAND} -DVERSION_OUT_FILE=v  -DVERSION_IN_FILE=src/rt/VERSION -P src/common/create_version.cmake
 find_program(DATE date)
 if(DATE)
   execute_process(COMMAND ${DATE} OUTPUT_VARIABLE DATE_STR)

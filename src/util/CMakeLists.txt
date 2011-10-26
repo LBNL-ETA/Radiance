@@ -1,11 +1,11 @@
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/util/Version.c")
 add_custom_command(
   OUTPUT "${VERSION_FILE}"
-  DEPENDS "${radiance_SOURCE_DIR}/src/util/VERSION"
+  DEPENDS "${radiance_SOURCE_DIR}/src/rt/VERSION"
   COMMAND "${CMAKE_COMMAND}"
   -DVERSION_OUT_FILE="${VERSION_FILE}"
-  -DVERSION_IN_FILE="${radiance_SOURCE_DIR}/src/util/VERSION"
-  -P "${radiance_SOURCE_DIR}/src/common/create_version.cmake"
+  -DVERSION_IN_FILE="${radiance_SOURCE_DIR}/src/rt/VERSION"
+  -P "${radiance_SOURCE_DIR}/src/rt/create_version.cmake"
 )
 
 add_executable(dctimestep dctimestep.c)

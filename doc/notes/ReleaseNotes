@@ -1801,3 +1801,7 @@ one glow object and interreflections are on (-ab > 0).
 
 Fixed long-standing bug that caused underestimation of reflection
 when specular component was below -st threshold in non-metals.
+
+Checked in cross-platform cmake build system created by Bill Hoffman
+of KitWare and sponsored by NREL.  This includes a qt-based
+driver for rvu, which is built in the new subdirectory src/qtrvu.
