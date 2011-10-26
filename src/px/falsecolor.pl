@@ -1,122 +1,116 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.4 2011/03/23 21:57:11 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.5 2011/10/26 03:42:49 greg Exp $
 
+use warnings;
 use strict;
 use File::Temp qw/ tempdir /;
 use POSIX qw/ floor /;
 
-my $mult = 179.0;    # Multiplier. Default W/sr/m2 -> cd/m2
-my $label = 'cd/m2';    # Units shown in legend
-my $scale = 1000;    # Top of the scale
-my $decades = 0;    # Default is linear mapping
-my $redv = 'def_red(v)';    # Mapping function for R,G,B
-my $grnv = 'def_grn(v)';
-my $bluv = 'def_blu(v)';
-my $ndivs = 8;    # Number of lines in legend
+my @palettes = ('def', 'spec', 'pm3d', 'hot');
+
+my $mult = 179.0;              # Multiplier. Default W/sr/m2 -> cd/m2
+my $label = 'cd/m2';           # Units shown in legend
+my $scale = 1000;              # Top of the scale
+my $decades = 0;               # Default is linear mapping
+my $pal = 'def';               # Palette
+my $redv = "${pal}_red(v)";    # Mapping functions for R,G,B
+my $grnv = "${pal}_grn(v)";
+my $bluv = "${pal}_blu(v)";
+my $ndivs = 8;                 # Number of lines in legend
 my $picture = '-';
 my $cpict = '';
-my $legwidth = 100;   # Legend width and height
+my $legwidth = 100;            # Legend width and height
 my $legheight = 200;
-my $docont = '';    # Contours
-my $loff = 0;    # Offset to align with values
-my $doextrem = 0;    # Don't mark extrema
+my $docont = '';               # Contours
+my $loff = 0;                  # Offset to align with values
+my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
 
 while ($#ARGV >= 0) {
-	# Options with qualifiers
-    if ("$ARGV[0]" eq '-lw') {    # Legend width
-        $legwidth = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-lh') {    # Legend height
-        $legheight = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-m') {    # Multiplier
-        $mult = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-s') {    # Scale
-        $scale = $ARGV[1];
-        shift @ARGV;
+    $_ = shift;
+    # Options with qualifiers
+    if (m/-lw/) {              # Legend width
+        $legwidth = shift;
+    } elsif (m/-lh/) {         # Legend height
+        $legheight = shift;
+    } elsif (m/-m/) {          # Multiplier
+        $mult = shift;
+    } elsif (m/-s/) {          # Scale
+        $scale = shift;
         if ($scale =~ m/[aA].*/) {
             $needfile = 1;
         }
-    } elsif ("$ARGV[0]" eq '-l') {    # Label
-        $label = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-log') {    # Logarithmic mapping
-        $decades = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-r') {
-        $redv = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-g') {
-        $grnv = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-b') {
-        $bluv = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-pal') {
-	$redv = "$ARGV[1]_red(v)";
-	$grnv = "$ARGV[1]_grn(v)";
-	$bluv = "$ARGV[1]_blu(v)";
-	shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-i') {    # Image for intensity mapping
-        $picture = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-p') {    # Image for background
-        $cpict = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-ip' || "$ARGV[0]" eq '-pi') {
-        $picture = $ARGV[1];
-        $cpict = $ARGV[1];
-        shift @ARGV;
-    } elsif ("$ARGV[0]" eq '-n') {    # Number of contour lines
-        $ndivs = $ARGV[1];
-        shift @ARGV;
+    } elsif (m/-l$/) {         # Label
+        $label = shift;
+    } elsif (m/-log/) {        # Logarithmic mapping
+        $decades = shift;
+    } elsif (m/-r/) {          # Custom palette functions for R,G,B
+        $redv = shift;
+    } elsif (m/-g/) {
+        $grnv = shift;
+    } elsif (m/-b/) {
+        $bluv = shift;
+    } elsif (m/-pal$/) {        # Color palette
+        $pal = shift;
+        if (! grep $_ eq $pal, @palettes) {
+            die("invalid palette '$pal'.\n");
+        }
+        $redv = "${pal}_red(v)";
+        $grnv = "${pal}_grn(v)";
+        $bluv = "${pal}_blu(v)";
+    } elsif (m/-i$/) {          # Image for intensity mapping
+        $picture = shift;
+    } elsif (m/-p$/) {         # Image for background
+        $cpict = shift;
+    } elsif (m/-ip/ || m/-pi/) {
+        $picture = shift;
+        $cpict = $picture;
+    } elsif (m/-n/) {          # Number of contour lines
+        $ndivs = shift;
 
-	# Switches
-    } elsif ("$ARGV[0]" eq '-cl') {    # Contour lines
+    # Switches
+    } elsif (m/-cl/) {         # Contour lines
         $docont = 'a';
         $loff = 0.48;
-    } elsif ("$ARGV[0]" eq '-cb') {    # Contour bands
+    } elsif (m/-cb/) {         # Contour bands
         $docont = 'b';
         $loff = 0.52;
-    } elsif ("$ARGV[0]" eq '-e') {
+    } elsif (m/-e/) {
         $doextrem = 1;
         $needfile = 1;
 
-	# Oops! Illegal option
+    # Oops! Illegal option
     } else {
-        die("bad option \"$ARGV[0]\"\n");
+        die("bad option \"$_\"\n");
     }
-    shift @ARGV;
 }
 
 # Temporary directory. Will be removed upon successful program exit.
 my $td = tempdir( CLEANUP => 1 );
 
 if ($needfile == 1 && $picture eq '-') {
-	# Pretend that $td/stdin.rad is the actual filename.
+    # Pretend that $td/stdin.rad is the actual filename.
     $picture = "$td/stdin.hdr";
     open(FHpic, ">$picture") or
             die("Unable to write to file $picture\n");
-	# Input is from STDIN: Capture to file.
-	while (<>) {
-		print FHpic;
-	}
+    # Input is from STDIN: Capture to file.
+    while (<>) {
+        print FHpic;
+    }
     close(FHpic);
 
-	if ($cpict eq '-') {
-		$cpict =  "$td/stdin.hdr";
-	}
+    if ($cpict eq '-') {
+        $cpict =  "$td/stdin.hdr";
+    }
 }
 
 # Find a good scale for auto mode.
 if ($scale =~ m/[aA].*/) {
-	my @histo = split(/\s/, `phisto $picture| tail -2`);
-	# e.g. $ phisto tests/richmond.hdr| tail -2
-	# 3.91267	14
-	# 3.94282	6
-	my $LogLmax = $histo[0];
+    my @histo = split(/\s/, `phisto $picture| tail -2`);
+    # e.g. $ phisto tests/richmond.hdr| tail -2
+    # 3.91267	14
+    # 3.94282	6
+    my $LogLmax = $histo[0];
     $scale = $mult / 179 * 10**$LogLmax;
 }
 
@@ -142,7 +136,7 @@ spec_grn(x) = if(x-.375, 1.6-1.6*x, 8/3*x);
 spec_blu(x) = 1 - 8/3*x;
 
 pm3d_red(x) = sqrt(x) ^ gamma;
-pm3d_grn(x) = x*x*x ^ gamma;
+pm3d_grn(x) = (x*x*x) ^ gamma;
 pm3d_blu(x) = clip(sin(2*PI*x)) ^ gamma;
 
 hot_red(x) = clip(3*x) ^ gamma;
@@ -232,14 +226,14 @@ my $slabpic = "$td/slab.hdr";
 my $cmd;
 
 if (($legwidth > 20) && ($legheight > 40)) {
-	# Legend: Create the text labels
+    # Legend: Create the text labels
     my $sheight = floor($legheight / $ndivs + 0.5);
     $legheight = $sheight * $ndivs;
     $loff = floor($loff * $sheight + 0.5);
     my $text = "$label";
     for (my $i=0; $i<$ndivs; $i++) {
         my $imap = ($ndivs - 0.5 - $i) / $ndivs;
-		my $value = $scale;
+        my $value = $scale;
         if ($decades > 0) {
             $value *= 10**(($imap - 1) * $decades);
         } else {
@@ -253,18 +247,18 @@ if (($legwidth > 20) && ($legheight > 40)) {
     $cmd .= " -h $sheight > $slabpic";
     system $cmd;
 
-	# Legend: Create the background colours
+    # Legend: Create the background colours
     $cmd = "pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v'";
     $cmd .= " -e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres'";
     $cmd .= " -x $legwidth -y $legheight > $scolpic";
     system $cmd;
 } else {
-	# Legend is too small to be legible. Don't bother doing one.
+    # Legend is too small to be legible. Don't bother doing one.
     $legwidth = 0;
     $legheight = 0;
     $loff = 0;
-	# Create dummy colour scale and legend labels so we don't
-	# need to change the final command line.
+    # Create dummy colour scale and legend labels so we don't
+    # need to change the final command line.
     open(FHscolpic, ">$scolpic");
     print FHscolpic "\n-Y 1 +X 1\naaa\n";
     close(FHscolpic);
@@ -285,7 +279,7 @@ $cmd .= "| pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1";
 $cmd .= " -t .5 $slabpic 0 $loff - $legwidth 0";
 
 if ($doextrem == 1) {
-	# Get min/max image luminance
+    # Get min/max image luminance
     my $cmd1 = 'pextrem -o ' . $picture;
     my $retval = `$cmd1`;
     # e.g.
@@ -295,10 +289,10 @@ if ($doextrem == 1) {
 
     my @extrema = split(/\s/, $retval);
     my ($lxmin, $ymin, $rmin, $gmin, $bmin, $lxmax, $ymax, $rmax, $gmax, $bmax) = @extrema;
-	$lxmin += $legwidth;
-	$lxmax += $legwidth;
+    $lxmin += $legwidth;
+    $lxmax += $legwidth;
 
-	# Weighted average of R,G,B
+    # Weighted average of R,G,B
     my $minpos = "$lxmin $ymin";
     my $minval = ($rmin * .27 + $gmin * .67 + $bmin * .06) * $mult;
     $minval =~ s/(\.[0-9]{3})[0-9]*/$1/;
@@ -306,7 +300,7 @@ if ($doextrem == 1) {
     my $maxval = ($rmax * .27 + $gmax * .67 + $bmax * .06) * $mult;
     $maxval =~ s/(\.[0-9]{3})[0-9]*/$1/;
 
-	# Create the labels for min/max intensity
+    # Create the labels for min/max intensity
     my $minvpic = "$td/minv.hdr";
     $cmd1 = "psign -s -.15 -a 2 -h 16 $minval > $minvpic";
     system $cmd1;
@@ -314,7 +308,7 @@ if ($doextrem == 1) {
     $cmd1 = "psign -s -.15 -a 2 -h 16 $maxval > $maxvpic";
     system $cmd1;
 
-	# Add extrema labels to command line
+    # Add extrema labels to command line
     $cmd .= " $minvpic $minpos $maxvpic $maxpos";
 }
 
