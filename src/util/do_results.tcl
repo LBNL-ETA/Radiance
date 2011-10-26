@@ -1,4 +1,4 @@
-# RCSid: $Id: do_results.tcl,v 2.8 2008/11/10 19:08:19 greg Exp $
+# RCSid: $Id: do_results.tcl,v 2.9 2011/10/26 20:06:17 greg Exp $
 #
 # Results screen for trad
 #
@@ -9,6 +9,9 @@ set conv(TIFF-bw,suf)	.tif
 set conv(TIFF-24,nam)	"TIFF 24-bit"
 set conv(TIFF-24,com)	"ra_tiff %s %s"
 set conv(TIFF-24,suf)	.tif
+set conv(TIFF-Luv,nam)	"TIFF LogLuv"
+set conv(TIFF-Luv,com)	"ra_tiff -L %s %s"
+set conv(TIFF-Luv,suf)	.tif
 set conv(GIF-bw,nam)	"GIF B&W"
 set conv(GIF-bw,com)	"ra_gif -b %s %s"
 set conv(GIF-bw,suf)	.gif
@@ -21,18 +24,15 @@ set conv(PPM-bin,suf)	.ppm
 set conv(PPM-asc,nam)	"PPM (ASCII)"
 set conv(PPM-asc,com)	"ra_ppm -a %s %s"
 set conv(PPM-asc,suf)	.ppm
+set conv(BMP-bw,nam)	"BMP B&W"
+set conv(BMP-bw,com)	"ra_bmp -b %s %s"
+set conv(BMP-bw,suf)	.bmp
+set conv(BMP-clr,nam)	"BMP Color"
+set conv(BMP-clr,com)	"ra_bmp %s %s"
+set conv(BMP-clr,suf)	.bmp
 set conv(PICT,nam)	"PICT 32-bit"
 set conv(PICT,com)	"ra_pict -g 1.8 %s %s"
 set conv(PICT,suf)	.pict
-set conv(ras-bw,nam)	"Sun B&W"
-set conv(ras-bw,com)	"ra_pr -b %s %s"
-set conv(ras-bw,suf)	.ras
-set conv(ras-8,nam)	"Sun 8-bit"
-set conv(ras-8,com)	"ra_pr %s %s"
-set conv(ras-8,suf)	.ras
-set conv(ras-24,nam)	"Sun 24-bit"
-set conv(ras-24,com)	"ra_pr24 %s %s"
-set conv(ras-24,suf)	.ras
 set conv(PS-bw,nam)	"PostScript B&W"
 set conv(PS-bw,com)	"ra_ps -b -C %s %s"
 set conv(PS-bw,suf)	.ps
@@ -51,8 +51,8 @@ set conv(tga-16,suf)	.tga
 set conv(tga-24,nam)	"Targa 24-bit"
 set conv(tga-24,com)	"ra_t16 -3 %s %s"
 set conv(tga-24,suf)	.tga
-set conv(types) {GIF-bw GIF-8 PICT PS-bw PS-clr PPM-asc PPM-bin ras-bw ras-8\
-		ras-24 tga-bw tga-8 tga-16 tga-24 TIFF-bw TIFF-24}
+set conv(types) {GIF-bw GIF-8 PICT PS-bw PS-clr BMP-bw BMP-clr PPM-asc\
+		PPM-bin tga-bw tga-8 tga-16 tga-24 TIFF-bw TIFF-24}
 set conv(typ) tga-24
 
 proc testappend {flst tf} {	# test if tf exists and append to flst if so
