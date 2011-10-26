@@ -1798,3 +1798,6 @@ a Radiance scene.
 
 Muted warning for "no light sources found" when there is at least
 one glow object and interreflections are on (-ab > 0).
+
+Fixed long-standing bug that caused underestimation of reflection
+when specular component was below -st threshold in non-metals.

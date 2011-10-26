@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.60 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.61 2011/10/26 03:44:56 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -325,10 +325,9 @@ m_normal(			/* color a ray that hit something normal */
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
 		copycolor(ctmp, nd.mcolor);	/* modified by material color */
-		if (nd.specfl & SP_RBLT)
-			scalecolor(ctmp, 1.0-nd.trans);
-		else
-			scalecolor(ctmp, nd.rdiff);
+		scalecolor(ctmp, nd.rdiff);
+		if (nd.specfl & SP_RBLT)	/* add in specular as well? */
+			addcolor(ctmp, nd.scolor);
 		multambient(ctmp, r, hastexture ? nd.pnorm : r->ron);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}

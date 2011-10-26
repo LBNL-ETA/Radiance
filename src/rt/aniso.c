@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.51 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.52 2011/10/26 03:44:56 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -277,10 +277,9 @@ m_aniso(			/* shade ray that hit something anisotropic */
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
 		copycolor(ctmp, nd.mcolor);	/* modified by material color */
-		if (nd.specfl & SP_RBLT)
-			scalecolor(ctmp, 1.0-nd.trans);
-		else
-			scalecolor(ctmp, nd.rdiff);
+		scalecolor(ctmp, nd.rdiff);
+		if (nd.specfl & SP_RBLT)	/* add in specular as well? */
+			addcolor(ctmp, nd.scolor);
 		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}
