@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.26 2011/10/25 20:51:10 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.27 2011/10/27 16:35:54 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -23,6 +23,7 @@ my $geout = 1;
 my $nproc = 1;
 my $doforw = 0;
 my $doback = 1;
+my $pctcull = 95;
 my $gunit = "Meter";
 my @dim;
 # Get options
@@ -43,6 +44,9 @@ while ($#ARGV >= 0) {
 		$doforw = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
 		$doback = ("$ARGV[0]" =~ /^\+/);
+	} elsif ("$ARGV[0]" eq "-t") {
+		$pctcull = $ARGV[1];
+		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-t[34]$/) {
 		$tensortree = substr($ARGV[0], 2, 1);
 		$ttlog2 = $ARGV[1];
@@ -334,7 +338,7 @@ print
 system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
 	"$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt " .
-	"| rttree_reduce -h -ff -r $tensortree -g $ttlog2";
+	"| rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 die "Failure running rttree_reduce" if ( $? );
 print
 '			</ScatteringData>
@@ -360,7 +364,7 @@ print
 system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
 	"$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt " .
-	"| rttree_reduce -h -ff -r $tensortree -g $ttlog2";
+	"| rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 die "Failure running rttree_reduce" if ( $? );
 print
 '			</ScatteringData>
