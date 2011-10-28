@@ -1,11 +1,5 @@
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/rt/Version.c")
-add_custom_command(
-  OUTPUT "${VERSION_FILE}"
-  COMMAND "${CMAKE_COMMAND}"
-  -DVERSION_OUT_FILE="${VERSION_FILE}"
-  -DVERSION_IN_FILE="${radiance_SOURCE_DIR}/src/rt/VERSION"
-  -P "${radiance_SOURCE_DIR}/src/rt/create_version.cmake"
-)
+create_version_file("${VERSION_FILE}")
 
 add_library(radiance
   ambcomp.c ambient.c ambio.c aniso.c data.c dielectric.c fprism.c freeobjmem.c 
