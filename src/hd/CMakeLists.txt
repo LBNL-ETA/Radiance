@@ -1,12 +1,3 @@
-set(VERSION_FILE "${radiance_BINARY_DIR}/src/hd/Version.c")
-add_custom_command(
-  OUTPUT "${VERSION_FILE}"
-  COMMAND "${CMAKE_COMMAND}"
-  -DVERSION_OUT_FILE="${VERSION_FILE}"
-  -DVERSION_IN_FILE="${radiance_SOURCE_DIR}/src/rt/VERSION"
-  -P "${radiance_SOURCE_DIR}/src/rt/create_version.cmake"
-)
-
 add_executable(genrhgrid genrhgrid.c holo.c)
 target_link_libraries(genrhgrid rtrad)
 
