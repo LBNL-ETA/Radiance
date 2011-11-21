@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.27 2011/10/27 16:35:54 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.28 2011/11/21 20:07:50 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -338,7 +338,7 @@ print
 system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
 	"$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt " .
-	"| rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 die "Failure running rttree_reduce" if ( $? );
 print
 '			</ScatteringData>
@@ -364,7 +364,7 @@ print
 system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
 	"$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt " .
-	"| rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 die "Failure running rttree_reduce" if ( $? );
 print
 '			</ScatteringData>
@@ -585,10 +585,10 @@ print
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Output front reflection (transposed order)
+# Output front reflection (reciprocity averaging)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print $rfarr[$ndiv*$id + $od];
+		print .5*($rfarr[$ndiv*$id + $od] + $rfarr[$ndiv*$od + $id]);
 	}
 	print "\n";
 }
@@ -635,10 +635,10 @@ print
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Output back reflection (transposed order)
+# Output back reflection (reciprocity averaging)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print $rbarr[$ndiv*$id + $od];
+		print .5*($rbarr[$ndiv*$id + $od] + $rbarr[$ndiv*$od + $id]);
 	}
 	print "\n";
 }
