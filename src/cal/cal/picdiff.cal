@@ -1,3 +1,4 @@
+{ RCSid $Id: picdiff.cal,v 1.2 2011/11/30 21:26:39 greg Exp $ }
 {
 	Compute difference between luminance of two images.
 	Display towards red where first image is brighter,
@@ -6,8 +7,9 @@
 	29 August 1991
 }
 l1=li(1); l2=li(2);
+pos(x):if(x,x,0);
 avg=(l1+l2)/2;
 dif=(l1-l2)/2;
 ro=avg+dif;
-go=avg-dif*dif/2;
+go=pos(avg-dif*dif/2);
 bo=avg-dif;
