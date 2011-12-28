@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.17 2010/10/23 18:13:54 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.18 2011/12/28 18:39:36 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -16,24 +16,38 @@ static const char	RCSid[] = "$Id: srcsamp.c,v 2.17 2010/10/23 18:13:54 greg Exp 
 #include  "random.h"
 
 
-static int  cyl_partit(), flt_partit();
+static int
+srcskip(			/* pre-emptive test for out-of-range glow */
+	SRCREC  *sp,
+	FVECT  orig
+)
+{
+	if (sp->sflags & SSKIP)
+		return(1);
 
+	if ((sp->sflags & (SPROX|SDISTANT)) != SPROX)
+		return(0);
+
+	return(dist2(orig, sp->sloc) >
+			(sp->sl.prox + sp->srad)*(sp->sl.prox + sp->srad));
+}
 
 double
-nextssamp(r, si)		/* compute sample for source, rtn. distance */
-register RAY  *r;		/* origin is read, direction is set */
-register SRCINDEX  *si;		/* source index (modified to current) */
+nextssamp(			/* compute sample for source, rtn. distance */
+	RAY  *r,		/* origin is read, direction is set */
+	SRCINDEX  *si		/* source index (modified to current) */\
+)
 {
 	int  cent[3], size[3], parr[2];
 	SRCREC  *srcp;
 	FVECT  vpos;
 	double  d;
-	register int  i;
+	int  i;
 nextsample:
 	while (++si->sp >= si->np) {	/* get next sample */
 		if (++si->sn >= nsources)
 			return(0.0);	/* no more */
-		if (source[si->sn].sflags & SSKIP)
+		if (srcskip(source+si->sn, r->rorg))
 			si->np = 0;
 		else if (srcsizerat <= FTINY)
 			nopart(si, r);
@@ -131,12 +145,14 @@ nextsample:
 
 
 int
-skipparts(ct, sz, pp, pt)		/* skip to requested partition */
-int  ct[3], sz[3];		/* center and size of partition (returned) */
-register int  pp[2];		/* current index, number to skip (modified) */
-unsigned char  *pt;		/* partition array */
+skipparts(			/* skip to requested partition */
+	int  ct[3],
+	int  sz[3],		/* center and size of partition (returned) */
+	int  pp[2],		/* current index, number to skip (modified) */
+	unsigned char  *pt	/* partition array */
+)
 {
-	register int  p;
+	int  p;
 					/* check this partition */
 	p = spart(pt, pp[0]);
 	pp[0]++;
@@ -164,9 +180,10 @@ unsigned char  *pt;		/* partition array */
 
 
 void
-nopart(si, r)			/* single source partition */
-register SRCINDEX  *si;
-RAY  *r;
+nopart(				/* single source partition */
+	SRCINDEX  *si,
+	RAY  *r
+)
 {
 	clrpart(si->spt);
 	setpart(si->spt, 0, S0);
@@ -174,52 +191,16 @@ RAY  *r;
 }
 
 
-void
-cylpart(si, r)			/* partition a cylinder */
-SRCINDEX  *si;
-register RAY  *r;
-{
-	double  dist2, safedist2, dist2cent, rad2;
-	FVECT  v;
-	register SRCREC  *sp;
-	int  pi;
-					/* first check point location */
-	clrpart(si->spt);
-	sp = source + si->sn;
-	rad2 = 1.365 * DOT(sp->ss[SV],sp->ss[SV]);
-	v[0] = r->rorg[0] - sp->sloc[0];
-	v[1] = r->rorg[1] - sp->sloc[1];
-	v[2] = r->rorg[2] - sp->sloc[2];
-	dist2 = DOT(v,sp->ss[SU]);
-	safedist2 = DOT(sp->ss[SU],sp->ss[SU]);
-	dist2 *= dist2 / safedist2;
-	dist2cent = DOT(v,v);
-	dist2 = dist2cent - dist2;
-	if (dist2 <= rad2) {		/* point inside extended cylinder */
-		si->np = 0;
-		return;
-	}
-	safedist2 *= 4.*r->rweight*r->rweight/(srcsizerat*srcsizerat);
-	if (dist2 <= 4.*rad2 ||		/* point too close to subdivide */
-			dist2cent >= safedist2) {	/* or too far */
-		setpart(si->spt, 0, S0);
-		si->np = 1;
-		return;
-	}
-	pi = 0;
-	si->np = cyl_partit(r->rorg, si->spt, &pi, MAXSPART,
-			sp->sloc, sp->ss[SU], safedist2);
-}
-
-
 static int
-cyl_partit(ro, pt, pi, mp, cent, axis, d2)	/* slice a cylinder */
-FVECT  ro;
-unsigned char  *pt;
-register int  *pi;
-int  mp;
-FVECT  cent, axis;
-double  d2;
+cyl_partit(				/* slice a cylinder */
+	FVECT  ro,
+	unsigned char  *pt,
+	int  *pi,
+	int  mp,
+	FVECT  cent,
+	FVECT  axis,
+	double  d2
+)
 {
 	FVECT  newct, newax;
 	int  npl, npu;
@@ -252,46 +233,56 @@ double  d2;
 
 
 void
-flatpart(si, r)				/* partition a flat source */
-register SRCINDEX  *si;
-register RAY  *r;
+cylpart(			/* partition a cylinder */
+	SRCINDEX  *si,
+	RAY  *r
+)
 {
-	register RREAL  *vp;
+	double  dist2, safedist2, dist2cent, rad2;
 	FVECT  v;
-	double  du2, dv2;
+	SRCREC  *sp;
 	int  pi;
-
+					/* first check point location */
 	clrpart(si->spt);
-	vp = source[si->sn].sloc;
-	v[0] = r->rorg[0] - vp[0];
-	v[1] = r->rorg[1] - vp[1];
-	v[2] = r->rorg[2] - vp[2];
-	vp = source[si->sn].snorm;
-	if (DOT(v,vp) <= 0.) {		/* behind source */
+	sp = source + si->sn;
+	rad2 = 1.365 * DOT(sp->ss[SV],sp->ss[SV]);
+	v[0] = r->rorg[0] - sp->sloc[0];
+	v[1] = r->rorg[1] - sp->sloc[1];
+	v[2] = r->rorg[2] - sp->sloc[2];
+	dist2 = DOT(v,sp->ss[SU]);
+	safedist2 = DOT(sp->ss[SU],sp->ss[SU]);
+	dist2 *= dist2 / safedist2;
+	dist2cent = DOT(v,v);
+	dist2 = dist2cent - dist2;
+	if (dist2 <= rad2) {		/* point inside extended cylinder */
 		si->np = 0;
 		return;
 	}
-	dv2 = 2.*r->rweight/srcsizerat;
-	dv2 *= dv2;
-	vp = source[si->sn].ss[SU];
-	du2 = dv2 * DOT(vp,vp);
-	vp = source[si->sn].ss[SV];
-	dv2 *= DOT(vp,vp);
+	safedist2 *= 4.*r->rweight*r->rweight/(srcsizerat*srcsizerat);
+	if (dist2 <= 4.*rad2 ||		/* point too close to subdivide */
+			dist2cent >= safedist2) {	/* or too far */
+		setpart(si->spt, 0, S0);
+		si->np = 1;
+		return;
+	}
 	pi = 0;
-	si->np = flt_partit(r->rorg, si->spt, &pi, MAXSPART,
-		source[si->sn].sloc,
-		source[si->sn].ss[SU], source[si->sn].ss[SV], du2, dv2);
+	si->np = cyl_partit(r->rorg, si->spt, &pi, MAXSPART,
+			sp->sloc, sp->ss[SU], safedist2);
 }
 
 
 static int
-flt_partit(ro, pt, pi, mp, cent, u, v, du2, dv2)	/* partition flatty */
-FVECT  ro;
-unsigned char  *pt;
-register int  *pi;
-int  mp;
-FVECT  cent, u, v;
-double  du2, dv2;
+flt_partit(				/* partition flatty */
+	FVECT  ro,
+	unsigned char  *pt,
+	int  *pi,
+	int  mp,
+	FVECT  cent,
+	FVECT  u,
+	FVECT  v,
+	double  du2,
+	double  dv2
+)
 {
 	double  d2;
 	FVECT  newct, newax;
@@ -335,12 +326,47 @@ double  du2, dv2;
 }
 
 
-double
-scylform(sn, dir)		/* compute cosine for cylinder's projection */
-int  sn;
-register FVECT  dir;		/* assume normalized */
+void
+flatpart(				/* partition a flat source */
+	SRCINDEX  *si,
+	RAY  *r
+)
 {
-	register RREAL  *dv;
+	RREAL  *vp;
+	FVECT  v;
+	double  du2, dv2;
+	int  pi;
+
+	clrpart(si->spt);
+	vp = source[si->sn].sloc;
+	v[0] = r->rorg[0] - vp[0];
+	v[1] = r->rorg[1] - vp[1];
+	v[2] = r->rorg[2] - vp[2];
+	vp = source[si->sn].snorm;
+	if (DOT(v,vp) <= 0.) {		/* behind source */
+		si->np = 0;
+		return;
+	}
+	dv2 = 2.*r->rweight/srcsizerat;
+	dv2 *= dv2;
+	vp = source[si->sn].ss[SU];
+	du2 = dv2 * DOT(vp,vp);
+	vp = source[si->sn].ss[SV];
+	dv2 *= DOT(vp,vp);
+	pi = 0;
+	si->np = flt_partit(r->rorg, si->spt, &pi, MAXSPART,
+		source[si->sn].sloc,
+		source[si->sn].ss[SU], source[si->sn].ss[SV], du2, dv2);
+}
+
+
+double
+scylform(			/* compute cosine for cylinder's projection */
+	int  sn,
+	FVECT  dir		/* assume normalized */
+)
+{
+	RREAL  *dv;
 	double  d;
 
 	dv = source[sn].ss[SU];
