@@ -1720,7 +1720,7 @@ Added -n option to rtrace for executing on multiple cores
 using new rayfifo calls.
 
 =====================
-Version 4.1
+Version 4.1 (Released 11/04/2011)
 
 Changed ranimate behavior so remote login under a different user
 doesn't necessarily require the presence of the originating user's
@@ -1805,3 +1805,8 @@ when specular component was below -st threshold in non-metals.
 Checked in cross-platform cmake build system created by Bill Hoffman
 of KitWare and sponsored by NREL.  This includes a qt-based
 driver for rvu, which is built in the new subdirectory src/qtrvu.
+
+=====================
+Version 4.2
+
+Axel Jacobs added -cp and -palettes options to falsecolor.

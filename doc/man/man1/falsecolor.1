@@ -1,15 +1,15 @@
-.\" RCSid "$Id: falsecolor.1,v 1.8 2010/10/05 01:07:16 greg Exp $"
-.TH FALSECOLOR 1 11/15/93 RADIANCE
-.SH NAME
-falsecolor - make a false color RADIANCE picture
-.SH SYNOPSIS
+.\" RCSid "$Id: falsecolor.1,v 1.9 2012/01/18 00:30:35 greg Exp $"
+.TH "FALSECOLOR" "1" "12/12/11" "RADIANCE" ""
+.SH "NAME"
+falsecolor \- make a false color RADIANCE picture
+.SH "SYNOPSIS"
 .B falsecolor
 [
 .B "\-i input"
 ][
 .B "\-p picture"
 ][
-.B "\-cb | \-cl"
+.B "\-cb | \-cl | \-cp"
 ][
 .B \-e
 ][
@@ -35,13 +35,15 @@ falsecolor - make a false color RADIANCE picture
 ][
 .B "\-b bluv"
 ]
-.SH DESCRIPTION
+
+.B falsecolor \-palettes
+.SH "DESCRIPTION"
 .I Falsecolor
 produces a false color picture for lighting analysis.
 Input is a rendered Radiance picture.
-.PP
-By default, luminance is displayed on a linear scale from 0 to 1000 nits, where
-dark areas are blue and brighter areas move through the spectrum to red.
+.PP 
+By default, luminance is displayed on a linear scale from 0 to 1000 cd/m2, where
+dark areas are purple and brighter areas move through blue, green, red to yellow.
 A different scale can be given with the
 .I \-s
 option.
@@ -58,23 +60,23 @@ For a logarithmic rather than a linear mapping, the
 option can be used, where
 .I decades
 is the number of decades below the maximum scale desired.
-.PP
+.PP 
 A legend is produced for the new image with a label given by the
 .I \-l
 option.
-The default label is "Nits", which is appropriate for standard Radiance
+The default label is "cd/m2", which is appropriate for standard Radiance
 images.
 If the
-.I -i
+.I \-i
 option of
 .I rpict(1)
 was used to produce the image, then the appropriate label would be "Lux".
-.PP
+.PP 
 If contour lines are desired rather than just false color, the
 .I \-cl
 option can be used.
 These lines can be placed over another Radiance picture using the
-.I -p
+.I \-p
 option.
 If the input picture is given with
 .I \-ip
@@ -87,6 +89,10 @@ The
 option produces contour bands instead of lines, where the thickness of
 the bands is related to the rate of change in the image.
 The
+.I \-cp
+option creates a posterization effect where colours are banded without
+the background image showing through.
+The
 .I \-n
 option can be used to change the number of contours (and corresponding
 legend entries) from the default value of 8.
@@ -97,12 +103,12 @@ and
 options may be used to change the legend dimensions from the default width
 and height of 100x200.
 A value of zero in either eliminates the legend in the output.
-.PP
+.PP 
 The
 .I \-e
 option causes extrema points to be printed on the brightest and
 darkest pixels of the input picture.
-.PP
+.PP 
 The
 .I "\-pal"
 option provides different color palettes for
@@ -115,6 +121,9 @@ for a thermal scale, and
 .I pm3d
 for a variation of the default mapping,
 .I def.
+A Radiance HDR image of all available palettes can be created with the 
+.I \-palettes
+option.
 The remaining options,
 .I "\-r, \-g,"
 and
@@ -126,7 +135,7 @@ where
 .I v
 varies from 0 to 1.
 These options are not recommended for the casual user.
-.PP
+.PP 
 If no
 .I \-i
 or
@@ -134,25 +143,25 @@ or
 option is used, input is taken from the standard input.
 The output image is always written to standard output, which should
 be redirected.
-.SH EXAMPLES
+.SH "EXAMPLES"
 To create a false color image directly from
 .I rpict(1):
 .IP "" .2i
 rpict \-vf default.vp scene.oct | falsecolor > scene.hdr
-.PP
+.PP 
 To create a logarithmic contour plot of illuminance values on a
 Radiance image:
 .IP "" .2i
 rpict \-i \-vf default.vp scene.oct > irrad.hdr
-.br
+.br 
 rpict \-vf default.vp scene.oct > rad.hdr
-.br
+.br 
 falsecolor \-i irrad.hdr \-p rad.hdr \-cl \-log 2 \-l Lux > lux.hdr
-.SH AUTHOR
+.SH "AUTHOR"
 Greg Ward
-.br
-Axel Jacobs (Perl translation and -pal options)
-.SH ACKNOWLEDGEMENT
+.br 
+Axel Jacobs (Perl translation and \-pal options)
+.SH "ACKNOWLEDGEMENT"
 Work on this program was initiated and sponsored by the LESO
 group at EPFL in Switzerland.
 .SH "SEE ALSO"

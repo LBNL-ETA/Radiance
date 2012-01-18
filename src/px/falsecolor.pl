@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.5 2011/10/26 03:42:49 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.6 2012/01/18 00:30:35 greg Exp $
 
 use warnings;
 use strict;
@@ -21,10 +21,12 @@ my $picture = '-';
 my $cpict = '';
 my $legwidth = 100;            # Legend width and height
 my $legheight = 200;
-my $docont = '';               # Contours
+my $docont = '';               # Contours: -cl and -cb
+my $doposter = 0;              # Posterization: -cp
 my $loff = 0;                  # Offset to align with values
 my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
+my $showpal = 0;               # Show availabel colour palettes
 
 while ($#ARGV >= 0) {
     $_ = shift;
@@ -75,6 +77,11 @@ while ($#ARGV >= 0) {
     } elsif (m/-cb/) {         # Contour bands
         $docont = 'b';
         $loff = 0.52;
+    } elsif (m/-cp/) {              # Posterize
+        $doposter = 1;
+    } elsif (m/-palettes/) {        # Show all available palettes
+        $scale   = 45824;           # 256 * 179
+        $showpal = 1;
     } elsif (m/-e/) {
         $doextrem = 1;
         $needfile = 1;
@@ -100,7 +107,7 @@ if ($needfile == 1 && $picture eq '-') {
     close(FHpic);
 
     if ($cpict eq '-') {
-        $cpict =  "$td/stdin.hdr";
+        $cpict = "$td/stdin.hdr";
     }
 }
 
@@ -137,7 +144,7 @@ spec_blu(x) = 1 - 8/3*x;
 
 pm3d_red(x) = sqrt(x) ^ gamma;
 pm3d_grn(x) = (x*x*x) ^ gamma;
-pm3d_blu(x) = clip(sin(2*PI*x)) ^ gamma;
+pm3d_blu(x) = clip(sin(2*PI*clip(x))) ^ gamma;
 
 hot_red(x) = clip(3*x) ^ gamma;
 hot_grn(x) = clip(3*x - 1) ^ gamma;
@@ -180,6 +187,7 @@ ro = if(in,clip($redv),ra);
 go = if(in,clip($grnv),ga);
 bo = if(in,clip($bluv),ba);
 EndOfPC0
+close FHpc0;
 
 my $pc1 = "$td/pc1.cal";
 open(FHpc1, ">$pc1");
@@ -199,28 +207,53 @@ ra = ri(nfiles);
 ga = gi(nfiles);
 ba = bi(nfiles);
 EndOfPC1
+close FHpc1;
 
 my $pc0args = "-f $pc0";
 my $pc1args = "-f $pc1";
 
-# Contour lines or bands
+if ($showpal == 1) {
+    my $pc = "pcompos -a 1";
+    foreach my $pal (@palettes) {
+        my $fcimg = "$td/$pal.hdr";
+        my $lbimg = "$td/${pal}_label.hdr";
+        system "psign -cb 0 0 0 -cf 1 1 1 -h 20 $pal > $lbimg";
+
+        my $cmd = qq[pcomb $pc0args -e "v=x/256"];
+        $cmd .= qq[ -e "ro=clip(${pal}_red(v));go=clip(${pal}_grn(v));bo=clip(${pal}_blu(v))"];
+        $cmd .= qq[ -x 256 -y 30 > $fcimg];
+        system "$cmd";
+        $pc .= " $fcimg $lbimg";
+    }
+    system "$pc";
+    exit 0;
+}
+
+# Contours
 if ($docont ne '') {
-    $pc0args .= " -e 'in=iscont$docont'";
+    # -cl -> $docont = a
+    # -cb -> $docont = b
+    $pc0args .= qq[ -e "in=iscont$docont"];
+} elsif ($doposter == 1) {
+    # -cp -> $doposter = 1
+    $pc0args .= qq[ -e "ro=${pal}_red(seg(v));go=${pal}_grn(seg(v));bo=${pal}_blu(seg(v))"];
+    $pc0args .= q[ -e "seg(x)=(floor(v*ndivs)+.5)/ndivs"];
 }
 
 if ($cpict eq '') {
-    $pc1args .= " -e 'ra=0;ga=0;ba=0'";
+    $pc1args .= qq[ -e "ra=0;ga=0;ba=0"];
 } elsif ($cpict eq $picture) {
     $cpict = '';
 }
 
 # Logarithmic mapping
 if ($decades > 0) {
-    $pc1args .= " -e 'map(x)=if(x-10^-$decades,log10(x)/$decades+1,0)'";
+    $pc1args .= qq[ -e "map(x)=if(x-10^-$decades,log10(x)/$decades+1,0)"];
 }
 
 # Colours in the legend
 my $scolpic = "$td/scol.hdr";
+
 # Labels in the legend
 my $slabpic = "$td/slab.hdr";
 my $cmd;
@@ -239,24 +272,27 @@ if (($legwidth > 20) && ($legheight > 40)) {
         } else {
             $value *= $imap;
         }
+
         # Have no more than 3 decimal places
         $value =~ s/(\.[0-9]{3})[0-9]*/$1/;
         $text .= "\n$value";
     }
-    $cmd = "echo '$text' | psign -s -.15 -cf 1 1 1 -cb 0 0 0";
-    $cmd .= " -h $sheight > $slabpic";
-    system $cmd;
+    open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $sheight > $slabpic";
+    print PSIGN "$text";
+    close PSIGN;
 
     # Legend: Create the background colours
-    $cmd = "pcomb $pc0args -e 'v=(y+.5)/yres;vleft=v;vright=v'";
-    $cmd .= " -e 'vbelow=(y-.5)/yres;vabove=(y+1.5)/yres'";
-    $cmd .= " -x $legwidth -y $legheight > $scolpic";
+    $cmd = qq[pcomb $pc0args];
+    $cmd .= q[ -e "v=(y+.5)/yres;vleft=v;vright=v"];
+    $cmd .= q[ -e "vbelow=(y-.5)/yres;vabove=(y+1.5)/yres"];
+    $cmd .= qq[ -x $legwidth -y $legheight > $scolpic];
     system $cmd;
 } else {
     # Legend is too small to be legible. Don't bother doing one.
     $legwidth = 0;
     $legheight = 0;
     $loff = 0;
+
     # Create dummy colour scale and legend labels so we don't
     # need to change the final command line.
     open(FHscolpic, ">$scolpic");
@@ -269,14 +305,15 @@ if (($legwidth > 20) && ($legheight > 40)) {
 
 # Legend: Invert the text labels (for dropshadow)
 my $slabinvpic = "$td/slabinv.hdr";
-$cmd = "pcomb -e 'lo=1-gi(1)' $slabpic > $slabinvpic";
+$cmd = qq[pcomb -e "lo=1-gi(1)" $slabpic > $slabinvpic];
 system $cmd;
 
 my $loff1 = $loff - 1;
+
 # Command line without extrema
-$cmd = "pcomb $pc0args $pc1args $picture $cpict";
-$cmd .= "| pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1";
-$cmd .= " -t .5 $slabpic 0 $loff - $legwidth 0";
+$cmd = qq[pcomb $pc0args $pc1args $picture $cpict];
+$cmd .= qq[ | pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1];
+$cmd .= qq[ -t .5 $slabpic 0 $loff - $legwidth 0];
 
 if ($doextrem == 1) {
     # Get min/max image luminance
@@ -296,20 +333,17 @@ if ($doextrem == 1) {
     my $minpos = "$lxmin $ymin";
     my $minval = ($rmin * .27 + $gmin * .67 + $bmin * .06) * $mult;
     $minval =~ s/(\.[0-9]{3})[0-9]*/$1/;
-    my $maxpos = "$lxmax $ymax";
     my $maxval = ($rmax * .27 + $gmax * .67 + $bmax * .06) * $mult;
     $maxval =~ s/(\.[0-9]{3})[0-9]*/$1/;
 
     # Create the labels for min/max intensity
     my $minvpic = "$td/minv.hdr";
-    $cmd1 = "psign -s -.15 -a 2 -h 16 $minval > $minvpic";
-    system $cmd1;
+    system "psign -s -.15 -a 2 -h 16 $minval > $minvpic";
     my $maxvpic = "$td/maxv.hdr";
-    $cmd1 = "psign -s -.15 -a 2 -h 16 $maxval > $maxvpic";
-    system $cmd1;
+    system "psign -s -.15 -a 2 -h 16 $maxval > $maxvpic";
 
     # Add extrema labels to command line
-    $cmd .= " $minvpic $minpos $maxvpic $maxpos";
+    $cmd .= qq[ $minvpic $minpos $maxvpic $lxmax $ymax];
 }
 
 # Process image and combine with legend
