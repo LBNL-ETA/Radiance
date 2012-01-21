@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.52 2010/05/28 22:36:19 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.53 2012/01/21 22:04:02 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -78,6 +78,7 @@ int  nforked = 0;
 
 char  *progname;
 int  verbose = 0;
+int  nowarn = 0;
 unsigned  timelim = 0;
 int  rvrlim = -1;
 
@@ -114,6 +115,14 @@ main(
 		}
 		if (argv[i][0] == '-')
 			switch (argv[i][1]) {
+			case 'w':
+				if (!argv[i][2])
+					nowarn = !nowarn;
+				else if (argv[i][2] == '+')
+					nowarn = 0;
+				else if (argv[i][2] == '-')
+					nowarn = 1;
+				break;
 			case 'v':
 				switch (argv[i][2]) {
 				case '\0':	/* verbose option */
@@ -195,8 +204,9 @@ main(
 					break;
 				outfile = argv[++i];
 				continue;
-			} else if (i >= argc-1)
-				break;
+			}
+		else if (i >= argc-1)
+			break;
 		rpargv[rpargc++] = argv[i];
 	}
 	if (i >= argc) {
@@ -253,6 +263,9 @@ init(			/* set up output file and start rpict */
 		sflock(F_UNLCK);
 	}
 					/* compute piece size */
+	hr = hres; vr = vres;
+	if (pixaspect > FTINY)
+		normaspect(viewaspect(&ourview), &pixaspect, &hr, &vr);
 	hres /= hmult;
 	vres /= vmult;
 	if (hres <= 0 || vres <= 0) {
@@ -260,6 +273,10 @@ init(			/* set up output file and start rpict */
 		exit(1);
 	}
 	normaspect(viewaspect(&ourview)*hmult/vmult, &pixaspect, &hres, &vres);
+	if (!nowarn && (hr != hres*hmult) | (vr != vres*vmult))
+		fprintf(stderr,
+		"%s: warning - resolution changed from %dx%d to %dx%d\n",
+				progname, hr, vr, hres*hmult, vres*vmult);
 	sprintf(hrbuf, "%d", hres);
 	rpargv[rpargc++] = "-x"; rpargv[rpargc++] = hrbuf;
 	sprintf(vrbuf, "%d", vres);
