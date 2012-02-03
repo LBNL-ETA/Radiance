@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.8 2007/09/04 17:36:41 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.9 2012/02/03 17:55:16 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -202,7 +202,8 @@ and the following operators:
 .PP
 	+  -  *  /  ^
 .PP
-Operators are evaluated left to right.
+Operators are evaluated left to right, except '^',
+which is right associative.
 Powers have the highest precedence; multiplication and
 division are evaluated before addition and subtraction.
 Expressions can be grouped with parentheses.
@@ -234,6 +235,11 @@ are evaluated.
 This provides a convenient method for avoiding inappropriate calculations.
 The following library of pre-defined functions and variables is provided:
 .TP 10n
+.BR \$N
+Return the value for input column
+.I N.
+If an input format is given, using a channel number generates an error.
+.TP
 .BR "in(n)"
 Return the value for input column
 .I n,
