@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.42 2005/01/18 03:59:41 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.43 2012/02/08 13:43:21 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -133,6 +133,9 @@ main(			/* interpolate pictures */
 	char	*zfile = NULL;
 	char	*expcomp = NULL;
 	int	i, an, rval;
+
+        SET_DEFAULT_BINARY();
+        SET_FILE_BINARY(stdout);
 
 	progname = argv[0];
 
