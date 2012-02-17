@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.28 2011/11/21 20:07:50 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.29 2012/02/17 00:14:46 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -8,7 +8,7 @@
 use strict;
 use File::Temp qw/ :mktemp  /;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-t{3|4} Nlog2][-r \"ropts\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom] [input ..]\n";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-t{3|4} Nlog2][-r \"ropts\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom units] [input ..]\n";
 	exit 1;
 }
 my $td = mkdtemp("/tmp/genBSDF.XXXXXX");
@@ -437,8 +437,7 @@ my $rtcmd = "rtcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
 	"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $octree";
 my $rccmd = "rcalc -e '$tcal' " .
 	"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-.999,$ndiv)' " .
-	q{-if3 -e 'oval=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega' } .
-	q[-o '${  oval  },'];
+	q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega' };
 if ( $doforw ) {
 $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 	"-e 'xp=(\$3+rand(.12*recno+288))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
@@ -565,7 +564,7 @@ print
 # Output front transmission (transposed order)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print $tfarr[$ndiv*$id + $od];
+		print $tfarr[$ndiv*$id + $od], ",\n";
 	}
 	print "\n";
 }
@@ -588,7 +587,7 @@ print
 # Output front reflection (reciprocity averaging)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print .5*($rfarr[$ndiv*$id + $od] + $rfarr[$ndiv*$od + $id]);
+		print .5*($rfarr[$ndiv*$id + $od] + $rfarr[$ndiv*$od + $id]), ",\n";
 	}
 	print "\n";
 }
@@ -615,7 +614,7 @@ print
 # Output back transmission (transposed order)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print $tbarr[$ndiv*$id + $od];
+		print $tbarr[$ndiv*$id + $od], ",\n";
 	}
 	print "\n";
 }
@@ -638,7 +637,7 @@ print
 # Output back reflection (reciprocity averaging)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print .5*($rbarr[$ndiv*$id + $od] + $rbarr[$ndiv*$od + $id]);
+		print .5*($rbarr[$ndiv*$id + $od] + $rbarr[$ndiv*$od + $id]), ",\n";
 	}
 	print "\n";
 }

@@ -1810,3 +1810,5 @@ driver for rvu, which is built in the new subdirectory src/qtrvu.
 Version 4.2
 
 Axel Jacobs added -cp and -palettes options to falsecolor.
+
+Fixed bug in matrix output of genBSDF introduced shortly before 4.1 release.
