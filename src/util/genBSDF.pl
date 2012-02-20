@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.29 2012/02/17 00:14:46 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.30 2012/02/20 02:56:19 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -403,9 +403,9 @@ KprojOmega = PI * if(Kbin-.5,
 $kcal = '
 DEGREE : PI/180;
 abs(x) : if(x, x, -x);
-Acos(x) : 1/DEGREE * if(x-1, 0, if(-1-x, 0, acos(x)));
+Acos(x) : if(x-1, 0, if(-1-x, PI, acos(x))) / DEGREE;
 posangle(a) : if(-a, a + 2*PI, a);
-Atan2(y,x) : 1/DEGREE * posangle(atan2(y,x));
+Atan2(y,x) : posangle(atan2(y,x)) / DEGREE;
 kpola(r) : select(r, 5, 15, 25, 35, 45, 55, 65, 75, 90);
 knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12);
 kaccum(r) : if(r-.5, knaz(r) + kaccum(r-1), 0);
