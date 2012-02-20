@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.30 2012/02/20 02:56:19 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.31 2012/02/20 04:54:49 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -584,10 +584,10 @@ print
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Output front reflection (reciprocity averaging)
+# Output front reflection (transposed order)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print .5*($rfarr[$ndiv*$id + $od] + $rfarr[$ndiv*$od + $id]), ",\n";
+		print $rfarr[$ndiv*$id + $od], ",\n";
 	}
 	print "\n";
 }
@@ -637,7 +637,7 @@ print
 # Output back reflection (reciprocity averaging)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
-		print .5*($rbarr[$ndiv*$id + $od] + $rbarr[$ndiv*$od + $id]), ",\n";
+		print $rbarr[$ndiv*$id + $od], ",\n";
 	}
 	print "\n";
 }
