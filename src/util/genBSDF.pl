@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.31 2012/02/20 04:54:49 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.32 2012/02/23 21:28:42 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -463,8 +463,10 @@ $cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
 system "$cmd" || die "Failure running: $cmd\n";
 @tbarr = `$rccmd $td/$bmodnm.flt`;
 die "Failure running: $rccmd $td/$bmodnm.flt\n" if ( $? );
+chomp(@tbarr);
 @rbarr = `$rccmd $td/$fmodnm.flt`;
 die "Failure running: $rccmd $td/$fmodnm.flt\n" if ( $? );
+chomp(@rbarr);
 }
 # Output angle basis
 print
