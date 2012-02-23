@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.65 2011/10/05 17:20:55 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.66 2012/02/23 06:03:46 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.65 2011/10/05 17:20:55 greg Ex
 #include  "calcomp.h"
 
 #ifdef _WIN32
-typedef long	ssize_t;
+typedef int	ssize_t;
 #endif
 
 #ifndef	MAXMODLIST
