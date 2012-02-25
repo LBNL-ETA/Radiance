@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.4 2011/06/11 01:04:08 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.5 2012/02/25 01:15:02 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -170,12 +170,16 @@ char *ezxml_decode(char *s, char **ent, char t)
     char *e, *r = s, *m = s;
     long b, c, d, l;
 
-    for (; *s; s++) { /* normalize line endings */
-        while (*s == '\r') {
-            *(s++) = '\n';
-            if (*s == '\n') memmove(s, (s + 1), strlen(s));
-        }
-    }
+    for (; *s; s++)	/* normalize line endings */
+        if (*s == '\r') {
+	    char *s2 = s+1;
+	    do {
+		while (*s2 == '\r')
+		    ++s2;
+		*s++ = *s2;
+	    } while (*s2++);
+	    break;
+	}
     
     for (s = r; ; ) {
         while (*s && *s != '&' && (*s != '%' || t != '%') && !isspace(*s)) s++;
