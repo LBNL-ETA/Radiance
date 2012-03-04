@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.16 2011/08/21 22:38:12 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.17 2012/03/04 20:11:10 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -155,6 +155,9 @@ extern void		SDclipName(char res[SDnameLn], const char *fname);
 
 /* Allocate new spectral distribution function */
 extern SDSpectralDF	*SDnewSpectralDF(int nc);
+
+/* Add component(s) to spectral distribution function */
+extern SDSpectralDF	*SDaddComponent(SDSpectralDF *odf, int nadd);
 
 /* Free a spectral distribution function */
 extern void		SDfreeSpectralDF(SDSpectralDF *df);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.36 2011/09/17 22:09:33 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.37 2012/03/04 20:11:10 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -223,6 +223,29 @@ SDnewSpectralDF(int nc)
 	df->maxHemi = .0;
 	df->ncomp = nc;
 	memset(df->comp, 0, nc*sizeof(SDComponent));
+	return df;
+}
+
+/* Add component(s) to spectral distribution function */
+SDSpectralDF *
+SDaddComponent(SDSpectralDF *odf, int nadd)
+{
+	SDSpectralDF	*df;
+
+	if (odf == NULL)
+		return SDnewSpectralDF(nadd);
+	if (nadd <= 0)
+		return odf;
+	df = (SDSpectralDF *)realloc(odf, sizeof(SDSpectralDF) +
+				(odf->ncomp+nadd-1)*sizeof(SDComponent));
+	if (df == NULL) {
+		sprintf(SDerrorDetail,
+			"Cannot add %d component(s) to spectral DF", nadd);
+		SDfreeSpectralDF(odf);
+		return NULL;
+	}
+	memset(df->comp+df->ncomp, 0, nadd*sizeof(SDComponent));
+	df->ncomp += nadd;
 	return df;
 }
 
