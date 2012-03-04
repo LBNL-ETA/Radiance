@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.37 2012/03/04 20:11:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.38 2012/03/04 23:28:34 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -93,6 +93,7 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 	if (wdb == NULL)		/* no geometry section? */
 		return SDEnone;
 	sd->dim[0] = sd->dim[1] = sd->dim[2] = .0;
+	SDerrorDetail[0] = '\0';
 	if ((geom = ezxml_child(wdb, "Width")) != NULL)
 		sd->dim[0] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
@@ -103,7 +104,9 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 		sd->dim[2] = atof(ezxml_txt(geom)) *
 				to_meters(ezxml_attr(geom, "unit"));
 	if ((sd->dim[0] < 0) | (sd->dim[1] < 0) | (sd->dim[2] < 0)) {
-		sprintf(SDerrorDetail, "Negative size in \"%s\"", sd->name);
+		if (!SDerrorDetail[0])
+			sprintf(SDerrorDetail, "Negative dimension in \"%s\"",
+						sd->name);
 		return SDEdata;
 	}
 	if ((geom = ezxml_child(wdb, "Geometry")) == NULL ||
@@ -121,6 +124,8 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 		return SDEsupport;
 	}
 	cfact = to_meters(ezxml_attr(geom, "unit"));
+	if (cfact <= 0)
+		return SDEformat;
 	sd->mgf = (char *)malloc(strlen(mgfstr)+32);
 	if (sd->mgf == NULL) {
 		strcpy(SDerrorDetail, "Out of memory in SDloadGeometry");
@@ -164,7 +169,7 @@ SDloadFile(SDData *sd, const char *fname)
 	}
 	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
 	if (wtl == NULL) {
-		sprintf(SDerrorDetail, "BSDF \"%s\": no optical layer'",
+		sprintf(SDerrorDetail, "BSDF \"%s\": no optical layers'",
 				sd->name);
 		ezxml_free(fl);
 		return SDEformat;
