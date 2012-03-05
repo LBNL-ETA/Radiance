@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.39 2012/03/05 00:17:06 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.40 2012/03/05 15:27:08 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -94,11 +94,13 @@ SDloadGeometry(SDData *sd, ezxml_t wdb)
 		return SDEnone;
 	if ((geom = ezxml_child(wdb, "Name")) != NULL) {
 		strncpy(sd->matn, ezxml_txt(geom), SDnameLn);
-		sd->matn[SDnameLn-1] = '\0';
+		if (sd->matn[SDnameLn-1])
+			strcpy(sd->matn+(SDnameLn-4), "...");
 	}
 	if ((geom = ezxml_child(wdb, "Manufacturer")) != NULL) {
 		strncpy(sd->makr, ezxml_txt(geom), SDnameLn);
-		sd->makr[SDnameLn-1] = '\0';
+		if (sd->makr[SDnameLn-1])
+			strcpy(sd->makr+(SDnameLn-4), "...");
 	}
 	sd->dim[0] = sd->dim[1] = sd->dim[2] = .0;
 	SDerrorDetail[0] = '\0';
