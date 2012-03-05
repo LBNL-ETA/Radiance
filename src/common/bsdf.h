@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.17 2012/03/04 20:11:10 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.18 2012/03/05 00:17:06 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -118,6 +118,8 @@ typedef struct {
 /* Loaded BSDF data */
 typedef struct {
 	char		name[SDnameLn];	/* BSDF name (usu. derived from file) */
+	char		matn[SDnameLn];	/* material name */
+	char		makr[SDnameLn];	/* manufacturer */
 	char		*mgf;		/* geometric description (if any) */
 	float		dim[3];		/* width, height, thickness (meters) */
 	SDValue		rLambFront;	/* diffuse front reflectance */
