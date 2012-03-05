@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.3 2011/09/16 15:08:16 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.4 2012/03/05 00:25:15 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -113,6 +113,9 @@ cvtBSDF(char *fname)
 			retOK = (freopen(rname, "w", stdout) != NULL);
 		}
 		if (retOK) {
+			if (myBSDF.matn[0] && myBSDF.makr[0])
+				printf("# Material '%s' by '%s'\n\n",
+						myBSDF.matn, myBSDF.makr);
 			if (myBSDF.mgf == NULL) {
 				faceBSDF(&myBSDF, .0);
 			} else {
