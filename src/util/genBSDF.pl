@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.32 2012/02/23 21:28:42 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.33 2012/03/06 04:41:31 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -23,7 +23,7 @@ my $geout = 1;
 my $nproc = 1;
 my $doforw = 0;
 my $doback = 1;
-my $pctcull = 95;
+my $pctcull = 90;
 my $gunit = "Meter";
 my @dim;
 # Get options
@@ -45,6 +45,7 @@ while ($#ARGV >= 0) {
 	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
 		$doback = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" eq "-t") {
+		# Use value < 0 for rttree_reduce bypass
 		$pctcull = $ARGV[1];
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-t[34]$/) {
@@ -321,6 +322,7 @@ sub bg_tree_rtcontrib {
 sub ttree_out {
 	my $forw = shift;
 	my $side = ("Back","Front")[$forw];
+	my $cmd;
 # Only output one transmitted distribution, preferring backwards
 if ( !$forw || !$doback ) {
 print
@@ -335,11 +337,18 @@ print
 			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
-system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
-	"$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt " .
+$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
+	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
+if ($pctcull >= 0) {
+	$cmd .= "-of $td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt " .
 	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
-die "Failure running rttree_reduce" if ( $? );
+	system "$cmd" || die "Failure running rttree_reduce";
+} else {
+	$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt";
+	print "{\n";
+	system "$cmd" || die "Failure running rcalc";
+	print "}\n";
+}
 print
 '			</ScatteringData>
 		</WavelengthDataBlock>
@@ -361,11 +370,18 @@ print
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
-system "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' -of } .
-	"$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt " .
+$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
+	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
+if ($pctcull >= 0) {
+	$cmd .= "-of $td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt " .
 	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
-die "Failure running rttree_reduce" if ( $? );
+	system "$cmd" || die "Failure running rttree_reduce";
+} else {
+	$cmd .= "$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt";
+	print "{\n";
+	system "$cmd" || die "Failure running rcalc";
+	print "}\n";
+}
 print
 '			</ScatteringData>
 		</WavelengthDataBlock>
@@ -636,7 +652,7 @@ print
 			<ScatteringDataType>BRDF</ScatteringDataType>
 			<ScatteringData>
 ';
-# Output back reflection (reciprocity averaging)
+# Output back reflection (transposed order)
 for (my $od = 0; $od < $ndiv; $od++) {
 	for (my $id = 0; $id < $ndiv; $id++) {
 		print $rbarr[$ndiv*$id + $od], ",\n";
