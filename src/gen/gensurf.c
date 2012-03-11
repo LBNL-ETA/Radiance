@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.20 2011/08/15 19:48:06 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.21 2012/03/11 22:27:17 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -58,6 +58,7 @@ double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
 
 typedef struct {
 	int  valid;	/* point is valid (vertex number) */
+	int  nvalid;	/* normal is valid */
 	FVECT  p;	/* vertex position */
 	FVECT  n;	/* average normal */
 	RREAL  uv[2];	/* (u,v) position */
@@ -298,15 +299,19 @@ putobjrow(			/* output vertex row to .OBJ */
 )
 {
 	static int	nverts = 0;
+	static int	nnorms = 0;
 
 	for ( ; n-- >= 0; rp++) {
 		if (!rp->valid)
 			continue;
 		fputs("v ", stdout);
 		pvect(rp->p);
-		if (smooth && !ZEROVECT(rp->n))
+		if (smooth && !ZEROVECT(rp->n)) {
 			printf("\tvn %.9g %.9g %.9g\n",
 					rp->n[0], rp->n[1], rp->n[2]);
+			rp->nvalid = ++nnorms;
+		} else
+			rp->nvalid = 0;
 		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
 		rp->valid = ++nverts;
 	}
@@ -344,35 +349,24 @@ putsquare(		/* put out a square */
 	if (!(ok1 | ok2))
 		return;
 	if (objout) {			/* output .OBJ faces */
-		int	p0n=0, p1n=0, p2n=0, p3n=0;
-		if (smooth) {
-			if (!ZEROVECT(p0->n))
-				p0n = p0->valid;
-			if (!ZEROVECT(p1->n))
-				p1n = p1->valid;
-			if (!ZEROVECT(p2->n))
-				p2n = p2->valid;
-			if (!ZEROVECT(p3->n))
-				p3n = p3->valid;
-		}
 		if (ok1 & ok2 && fdot(vc1,vc2) >= 1.0-FTINY*FTINY) {
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0->valid, p0n,
-					p1->valid, p1->valid, p1n,
-					p3->valid, p3->valid, p3n,
-					p2->valid, p2->valid, p2n);
+					p0->valid, p0->valid, p0->nvalid,
+					p1->valid, p1->valid, p1->nvalid,
+					p3->valid, p3->valid, p3->nvalid,
+					p2->valid, p2->valid, p2->nvalid);
 			return;
 		}
 		if (ok1)
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0->valid, p0n,
-					p1->valid, p1->valid, p1n,
-					p2->valid, p2->valid, p2n);
+					p0->valid, p0->valid, p0->nvalid,
+					p1->valid, p1->valid, p1->nvalid,
+					p2->valid, p2->valid, p2->nvalid);
 		if (ok2)
 			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p2->valid, p2->valid, p2n,
-					p1->valid, p1->valid, p1n,
-					p3->valid, p3->valid, p3n);
+					p2->valid, p2->valid, p2->nvalid,
+					p1->valid, p1->valid, p1->nvalid,
+					p3->valid, p3->valid, p3->nvalid);
 		return;
 	}
 					/* compute normal interpolation */
