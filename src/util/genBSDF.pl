@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.33 2012/03/06 04:41:31 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.34 2012/03/15 02:32:19 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -347,6 +347,9 @@ if ($pctcull >= 0) {
 	$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt";
 	print "{\n";
 	system "$cmd" || die "Failure running rcalc";
+	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
+		print "0\n";
+	}
 	print "}\n";
 }
 print
@@ -380,6 +383,9 @@ if ($pctcull >= 0) {
 	$cmd .= "$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt";
 	print "{\n";
 	system "$cmd" || die "Failure running rcalc";
+	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
+		print "0\n";
+	}
 	print "}\n";
 }
 print
