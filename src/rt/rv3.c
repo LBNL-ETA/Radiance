@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.35 2010/10/16 15:08:14 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.36 2012/03/20 02:56:08 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -192,7 +192,7 @@ paint(			/* compute and paint a rectangle */
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir, &ourview,
 			h/hresolu, v/vresolu)) < -FTINY) {
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
-	} else if (nproc == 1) {		/* immediate mode */
+	} else if (nproc == 1 || newparam) {	/* immediate mode */
 		ray_trace(&thisray);
 	} else {				/* queuing mode */
 		int	rval;
