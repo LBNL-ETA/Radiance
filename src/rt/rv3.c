@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.36 2012/03/20 02:56:08 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.37 2012/03/20 03:37:08 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -28,6 +28,8 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.36 2012/03/20 02:56:08 greg Exp $";
 #else
 #define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
 #endif
+
+extern int	ray_pnprocs;
 
 static RNUMBER  niflush;		/* flushes since newimage() */
 
@@ -192,7 +194,7 @@ paint(			/* compute and paint a rectangle */
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir, &ourview,
 			h/hresolu, v/vresolu)) < -FTINY) {
 		setcolor(thisray.rcol, 0.0, 0.0, 0.0);
-	} else if (nproc == 1 || newparam) {	/* immediate mode */
+	} else if (!ray_pnprocs) {		/* immediate mode */
 		ray_trace(&thisray);
 	} else {				/* queuing mode */
 		int	rval;
@@ -216,15 +218,15 @@ paint(			/* compute and paint a rectangle */
 		static RNUMBER	lastflush = 0;
 		RNUMBER		counter = raynum;
 		int		flushintvl;
-		if (nproc == 1) {
+		if (!ray_pnprocs) {
 			counter = nrays;
 			flushintvl = WFLUSH1;
 		} else if (ambounce == 0)
-			flushintvl = nproc*WFLUSH;
+			flushintvl = ray_pnprocs*WFLUSH;
 		else if (niflush < WFLUSH)
-			flushintvl = nproc*niflush/(ambounce+1);
+			flushintvl = ray_pnprocs*niflush/(ambounce+1);
 		else
-			flushintvl = nproc*WFLUSH/(ambounce+1);
+			flushintvl = ray_pnprocs*WFLUSH/(ambounce+1);
 		if (lastflush > counter)
 			lastflush = 0;		/* counter wrapped */
 
@@ -245,7 +247,7 @@ waitrays(void)					/* finish up pending rays */
 	int	rval;
 	RAY	raydone;
 
-	if (nproc <= 1)				/* immediate mode? */
+	if (!ray_pnprocs)			/* immediate mode? */
 		return(0);
 	while ((rval = ray_presult(&raydone, 0)) > 0) {
 		PNODE  *p = (PNODE *)raydone.rno;
@@ -265,7 +267,6 @@ newimage(					/* start a new image */
 	char *s
 )
 {
-	extern int	ray_pnprocs;
 	int		newnp = 0;
 						/* # rendering procs arg? */
 	if (s != NULL)
@@ -284,8 +285,8 @@ newimage(					/* start a new image */
 	(*dev->clear)(hresolu, vresolu);
 
 	if (newparam) {				/* (re)start rendering procs */
-		if (ray_pnprocs > 0)
-			ray_pclose(0);
+		if (ray_pnprocs)
+			ray_pclose(0);		/* should already be closed */
 		if (newnp > 0)
 			nproc = newnp;
 		if (nproc > 1)
