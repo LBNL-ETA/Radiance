@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.6 2011/11/21 20:07:50 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.7 2012/03/25 15:23:55 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -393,7 +393,7 @@ main(int argc, char *argv[])
 	*/
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-h][-f{a|f|d}][-r {3|4}][-g log2grid][-t trim%%] [input]\n",
+	fprintf(stderr, "Usage: %s [-h][-a][-f{a|f|d}][-r {3|4}][-g log2grid][-t trim%%] [input]\n",
 			argv[0]);
 	return(1);
 }
