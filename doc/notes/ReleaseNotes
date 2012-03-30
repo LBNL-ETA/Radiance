@@ -1817,3 +1817,5 @@ Made rvu more responsive in multi-processing mode when changing parameters.
 Explicit "new" command not needed to show changes, because it goes back
 to "immediate mode" once something is changed.  Processing will be slow
 but response time quick until next "new" command.
+
+Fixed major bug in transmitting proxy material sampling.

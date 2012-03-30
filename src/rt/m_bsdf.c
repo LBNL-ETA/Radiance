@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.17 2011/09/22 02:15:56 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.18 2012/03/30 15:08:40 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -557,7 +557,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		bnorm[2] = -nd.pnorm[2];
 		if (nd.thick != 0) {		/* proxy with offset? */
 			VCOPY(vtmp, r->rop);
-			VSUM(r->rop, vtmp, r->ron, -nd.thick);
+			VSUM(r->rop, vtmp, r->ron, nd.thick);
 			multambient(ctmp, r, bnorm);
 			VCOPY(r->rop, vtmp);
 		} else
