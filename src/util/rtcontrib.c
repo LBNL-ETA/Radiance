@@ -1,9 +1,21 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.66 2012/02/23 06:03:46 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.67 2012/04/10 05:16:50 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
  */
+
+/*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	Need to refactor code by forking a subprocess for each
+	rtrace call to take output and accumulate it into bins
+	for the parent process.  This will avoid our current
+	bottleneck around processing output queues, computing
+	bins and the associated buffer growth, which can be crazy
+	(gigabytes/subprocess).  Each child process will return
+	a ray number and a fully computed and ready-to-output
+	record of modifiers and their summed bins.  These will
+	be queued and sorted by the parent for ordered output.
+ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
 
 #include  "standard.h"
 #include  <ctype.h>
@@ -172,6 +184,43 @@ void process_queue(void);
 void put_contrib(const DCOLOR cnt, FILE *fout);
 void add_contrib(const char *modn);
 void done_contrib(int navg);
+
+#ifdef getc_unlocked			/* avoid nasty overheads */
+#undef getc
+#define getc    getc_unlocked
+#undef putc
+#define putc    putc_unlocked
+#undef ferror
+#define ferror	ferror_unlocked
+static int
+fread_unl(void *ptr, int size, int nitems, FILE *fp)
+{
+	char	*p = (char *)ptr;
+	int	len = size*nitems;
+	while (len-- > 0) {
+		int	c = getc_unlocked(fp);
+		if (c == EOF)
+			return((p - (char *)ptr)/size);
+		*p++ = c;
+	}
+	return(nitems);
+}
+#undef fread
+#define fread	fread_unl
+static int
+fwrite_unl(const void *ptr, int size, int nitems, FILE *fp)
+{
+	const char	*p = (const char *)ptr;
+	int		len = size*nitems;
+	while (len-- > 0)
+		putc_unlocked(*p++, fp);
+	if (ferror_unlocked(fp))
+		return(0);
+	return(nitems);
+}
+#undef fwrite
+#define fwrite	fwrite_unl
+#endif
 
 /* return number of open rtrace processes */
 static int
@@ -810,6 +859,9 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			goto openerr;
 		if (outfmt != 'a')
 			SET_FILE_BINARY(sop->ofp);
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+		flockfile(sop->ofp);
+#endif
 		if (header) {
 			char	info[512];
 			char	*cp = info;
@@ -875,14 +927,14 @@ getinp(char *buf, FILE *fp)
 			return 0;	/* dummy ray */
 		return strlen(buf);
 	case 'f':
-		if (fread(buf, sizeof(float), 6, fp) < 6)
+		if (fread(buf, sizeof(float), 6, fp) != 6)
 			return -1;
 		fvp = (float *)buf + 3;
 		if (DOT(fvp,fvp) <= FTINY*FTINY)
 			return 0;	/* dummy ray */
 		return sizeof(float)*6;
 	case 'd':
-		if (fread(buf, sizeof(double), 6, fp) < 6)
+		if (fread(buf, sizeof(double), 6, fp) != 6)
 			return -1;
 		dvp = (double *)buf + 3;
 		if (DOT(dvp,dvp) <= FTINY*FTINY)
@@ -1315,6 +1367,9 @@ reload_output(void)
 					error(WARNING, errmsg);
 					break;
 				}
+#ifdef getc_unlocked					/* avoid lock/unlock overhead */
+				flockfile(sout.ofp);
+#endif
 				if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {
 					sprintf(errmsg, "format mismatch for '%s'",
 							oname);
