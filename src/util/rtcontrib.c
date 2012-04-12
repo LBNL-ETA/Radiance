@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rtcontrib.c,v 1.67 2012/04/10 05:16:50 greg Exp $";
+static const char RCSid[] = "$Id: rtcontrib.c,v 1.68 2012/04/12 01:56:07 greg Exp $";
 #endif
 /*
  * Gather rtrace output to compute contributions from particular sources
@@ -9,12 +9,13 @@ static const char RCSid[] = "$Id: rtcontrib.c,v 1.67 2012/04/10 05:16:50 greg Ex
 	Need to refactor code by forking a subprocess for each
 	rtrace call to take output and accumulate it into bins
 	for the parent process.  This will avoid our current
-	bottleneck around processing output queues, computing
-	bins and the associated buffer growth, which can be crazy
-	(gigabytes/subprocess).  Each child process will return
+	bottleneck around processing output queues.  We'll sum into
+	bins and avoid the associated buffer growth, which can be crazy
+	now (gigabytes/subprocess).  Each child process will return
 	a ray number and a fully computed and ready-to-output
-	record of modifiers and their summed bins.  These will
-	be queued and sorted by the parent for ordered output.
+	record of modifiers and their bin totals.  These will
+	be queued and sorted by the parent for ordered output or
+	accumulated for all rays if -c 0 is in play.
  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
 
 #include  "standard.h"
@@ -34,6 +35,10 @@ typedef int	ssize_t;
 
 #ifndef	MAXMODLIST
 #define	MAXMODLIST	1024		/* maximum modifiers we'll track */
+#endif
+
+#ifndef RNUMBER
+#define RNUMBER         unsigned long   /* ray counter (>= sizeof pointer) */
 #endif
 
 ssize_t	treebufsiz = BUFSIZ;		/* current tree buffer size */
@@ -107,7 +112,7 @@ void printresolu(FILE *fout, int xr, int yr);
 struct rtproc {
 	struct rtproc	*next;		/* next in list of processes */
 	SUBPROC		pd;		/* rtrace pipe descriptors */
-	unsigned long	raynum;		/* ray number for this tree */
+	RNUMBER		raynum;		/* ray number for this tree */
 	size_t		bsiz;		/* ray tree buffer length */
 	char		*buf;		/* ray tree buffer */
 	size_t		nbr;		/* number of bytes from rtrace */
@@ -154,11 +159,11 @@ int		xres = 0;		/* horiz. output resolution */
 int		yres = 0;		/* vert. output resolution */
 
 int		account;		/* current accumulation count */
-unsigned long	raysleft;		/* number of rays left to trace */
+RNUMBER		raysleft;		/* number of rays left to trace */
 long		waitflush;		/* how long until next flush */
 
-unsigned long	lastray = 0;		/* last ray number sent */
-unsigned long	lastdone = 0;		/* last ray processed */
+RNUMBER		lastray = 0;		/* last ray number sent */
+RNUMBER		lastdone = 0;		/* last ray processed */
 
 int		using_stdout = 0;	/* are we using stdout? */
 
@@ -591,7 +596,7 @@ init(int np)
 	rtp->next = NULL;		/* terminate list */
 	if (yres > 0) {
 		if (xres > 0)
-			raysleft = (unsigned long)xres*yres;
+			raysleft = (RNUMBER)xres*yres;
 		else
 			raysleft = yres;
 	} else
@@ -1566,7 +1571,7 @@ recover_output(FILE *fin)
 	for (nvals = 0; nvals < lastout; nvals++)
 		if (getinp(oname, fin) < 0)
 			error(USER, "unexpected EOF on input");
-	lastray = lastdone = (unsigned long)lastout * accumulate;
+	lastray = lastdone = (RNUMBER)lastout * accumulate;
 	if (raysleft)
 		raysleft -= lastray;
 }
