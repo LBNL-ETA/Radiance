@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.18 2012/03/30 15:08:40 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.19 2012/04/24 15:36:40 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -512,9 +512,12 @@ m_bsdf(OBJREC *m, RAY *r)
 		nd.vray[1] = -r->rdir[1];
 		nd.vray[2] = -r->rdir[2];
 		ec = SDmapDir(nd.vray, nd.toloc, nd.vray);
+	} 
+	if (ec) {
+		objerror(m, WARNING, "Illegal orientation vector");
+		return(1);
 	}
-	if (!ec)
-		ec = SDinvXform(nd.fromloc, nd.toloc);
+	ec = SDinvXform(nd.fromloc, nd.toloc);
 						/* determine BSDF resolution */
 	if (!ec)
 		ec = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL,
