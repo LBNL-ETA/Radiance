@@ -18,7 +18,7 @@ execute_process(
 
 execute_process(
   WORKING_DIRECTORY ${office_dir}
-  COMMAND vwrays -d ${view_def}
+  COMMAND vwrays${CMAKE_EXECUTABLE_SUFFIX} -d ${view_def}
   OUTPUT_VARIABLE vwrays_out
 )
 

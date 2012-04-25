@@ -7,9 +7,6 @@ else()
   set(LIB_M )
 endif()
 
-find_package(OpenGL)
-find_package(X11)
-
 include_directories(common)
 # create a macro to generate
 macro(create_version_file version_file)

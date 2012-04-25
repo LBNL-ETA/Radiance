@@ -24,6 +24,7 @@ if(WIN32)
   target_link_libraries(rtrad ws2_32)
 endif()
 
+add_library(rgl rglfile.c rglmat.c rgldomat.c rglsurf.c rglinst.c rglsrc.c)
 add_library(mgf mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c)
 
 install(TARGETS rtrad mgf

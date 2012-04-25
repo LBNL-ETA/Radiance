@@ -52,28 +52,55 @@ if(X11_FOUND)
   install(TARGETS xglaresrc RUNTIME DESTINATION bin)
 endif()
 
-find_library(LIB_RGL "rgl" DOC "Path to librgl")
-if(LIB_RGL)
-  #glrad needs to be able to include OpenGL headers
+#glrad needs to link against OpenGL libraries
+if(APPLE)
+  find_library(OPENGL_gl_LIBRARY
+    NAMES GL MesaGL
+    PATHS /usr/X11R6/lib
+  )
+  find_library(OPENGL_glu_LIBRARY
+    NAMES GLU MesaGLU
+    PATHS /usr/X11R6/lib
+  )
+  set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
+else()
+  find_package(OpenGL REQUIRED)
   include_directories(${OPENGL_INCLUDE_DIR})
-
-  #check if we have SGIStereo.h
-  find_file(HAVE_SGISTEREO_H "SGIStereo.h" ${OPENGL_INCLUDE_DIR})
-  if(NOT HAVE_SGISTEREO_H)
-    add_definitions(-DNOSTEREO)
-  endif()
-
-  add_executable(glrad glrad.c)
-  target_link_libraries(glrad
-    rtrad ${LIB_RGL} ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
-  install(TARGETS glrad RUNTIME DESTINATION bin)
 endif()
 
+#check if	we have	SGIStereo.h
+find_file(HAVE_SGISTEREO_H "SGIStereo.h" ${OPENGL_INCLUDE_DIR})
+if(NOT HAVE_SGISTEREO_H)
+	add_definitions(-DNOSTEREO)
+endif()
+if(UNIX)
+	add_executable(glrad glrad.c)
+	target_link_libraries(glrad rgl rtrad ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate rpiece
                 rtcontrib vwrays vwright ranimove rsensor
         RUNTIME DESTINATION bin)
-install(FILES objview.csh objpict.csh glare.csh dayfact.csh rlux.csh
-              raddepend.csh trad.wsh objline.csh compamb.csh vinfo.csh
-              genambpos.csh fieldcomb.csh genklemsamp.pl genskyvec.pl
-              genBSDF.pl tregsamp.dat
-        DESTINATION bin)
+
+if(WIN32)
+  install(PROGRAMS genBSDF.pl DESTINATION bin)
+  install(PROGRAMS genklemsamp.pl DESTINATION bin)
+  install(PROGRAMS genskyvec.pl DESTINATION bin)
+  install(FILES tregsamp.dat DESTINATION bin)
+else()
+  install(PROGRAMS genBSDF.pl DESTINATION bin RENAME genBSDF)
+  install(PROGRAMS genklemsamp.pl DESTINATION bin RENAME genklemsamp)
+  install(PROGRAMS genskyvec.pl DESTINATION bin RENAME genskyvec)
+  install(PROGRAMS objview.csh DESTINATION bin RENAME objview)
+  install(PROGRAMS objpict.csh DESTINATION bin RENAME objpict)
+  install(PROGRAMS glare.csh DESTINATION bin RENAME glare)
+  install(PROGRAMS dayfact.csh DESTINATION bin RENAME dayfact)
+  install(PROGRAMS rlux.csh DESTINATION bin RENAME rlux)
+  install(PROGRAMS raddepend.csh DESTINATION bin RENAME raddepend)
+  install(PROGRAMS trad.wsh DESTINATION bin RENAME trad)
+  install(PROGRAMS objline.csh DESTINATION bin RENAME objline)
+  install(PROGRAMS compamb.csh DESTINATION bin RENAME compamb)
+  install(PROGRAMS vinfo.csh DESTINATION bin RENAME vinfo)
+  install(PROGRAMS genambpos.csh DESTINATION bin RENAME genambpos)
+  install(PROGRAMS fieldcomb.csh DESTINATION bin RENAME fieldcomb)
+  install(FILES tregsamp.dat DESTINATION lib)
+endif()

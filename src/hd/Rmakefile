@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.34 2008/06/24 02:01:20 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.35 2012/04/25 22:21:06 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -18,7 +18,7 @@ LN = ln
 SPECIAL =
 
 INSTDIR = /usr/local/bin
-DEVDIR = $(INSTDIR)/dev
+DEVDIR = $(INSTDIR)
 
 LIBDIR = /usr/local/lib/ray
 

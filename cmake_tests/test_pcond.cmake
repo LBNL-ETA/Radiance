@@ -13,7 +13,7 @@ if(NOT ${res} EQUAL 0)
 endif()
 
 file(READ ${office_dir}/test/raytest_rpict_pcd.hdr test_output)
-if(test_output MATCHES "pcond -h")
+if(test_output MATCHES "pcond")
   message(STATUS "passed")
 else()
   message(STATUS "failed")

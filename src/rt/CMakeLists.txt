@@ -45,8 +45,8 @@ add_test(rtrace_Version ${EXECUTABLE_OUTPUT_PATH}/rtrace -version)
 set_tests_properties(rtrace_Version PROPERTIES
   PASS_REGULAR_EXPRESSION "RADIANCE")
 
-install(TARGETS radiance raycalls rtrace rpict rvu
+install(TARGETS lookamb radiance raycalls rtrace rpict rvu
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION bin
         ARCHIVE DESTINATION bin)
-install(FILES rayinit.cal DESTINATION bin)
+install(FILES rayinit.cal DESTINATION lib)

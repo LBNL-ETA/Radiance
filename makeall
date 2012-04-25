@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: makeall,v 1.26 2011/10/25 22:53:14 greg Exp $
+# RCSid $Id: makeall,v 1.27 2012/04/25 22:21:06 greg Exp $
 # 
 # Make all the Radiance programs
 #
@@ -62,13 +62,6 @@ if ( ! -d $idir ) then
 	mkdir $idir
 	if ( $status ) then
 		echo "Cannot create directory, please reenter"
-		goto again1
-	endif
-endif
-if ( ! -d $idir/dev ) then
-	mkdir $idir/dev
-	if ( $status ) then
-		echo "Cannot create subdirectory, please reenter"
 		goto again1
 	endif
 endif

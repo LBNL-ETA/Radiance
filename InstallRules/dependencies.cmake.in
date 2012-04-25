@@ -9,4 +9,4 @@ endfunction()
 
 include(BundleUtilities)
 
-fixup_bundle("$ENV{DESTDIR}@CMAKE_INSTALL_PREFIX@/bin/rvu@CMAKE_EXECUTABLE_SUFFIX@" "" "@QT_LIBRARY_DIR@")
+fixup_bundle("${CMAKE_INSTALL_PREFIX}/bin/rvu@CMAKE_EXECUTABLE_SUFFIX@" "" "@QT_LIBRARY_DIR@;@X11_LIBRARY_DIR@;@TIFF_LIBRARY_DIRS@")

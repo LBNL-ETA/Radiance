@@ -1,4 +1,4 @@
-/* RCSid $Id: radogl.h,v 3.11 2003/09/16 06:31:48 greg Exp $ */
+/* RCSid $Id: radogl.h,v 3.12 2012/04/25 22:21:06 greg Exp $ */
 /*
  * Header file for Radiance - OpenGL routines.
  */
@@ -6,7 +6,14 @@
 #define _RAD_RADOGL_H_
 
 #include "standard.h"
-#include <GL/glu.h>
+#ifdef __APPLE__
+  #include <OpenGL/glu.h>
+#else
+  #ifdef _WIN32
+    #include <windows.h>
+  #endif
+  #include <GL/glu.h>
+#endif
 #include "color.h"
 #include "object.h"
 #include "otypes.h"

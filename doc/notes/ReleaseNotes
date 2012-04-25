@@ -1819,3 +1819,5 @@ to "immediate mode" once something is changed.  Processing will be slow
 but response time quick until next "new" command.
 
 Fixed major bug in transmitting proxy material sampling.
+
+Patched cmake build tools (changes by Zack Galbreath).

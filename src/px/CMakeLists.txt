@@ -76,11 +76,29 @@ target_link_libraries(macbethcal rtrad)
 
 find_package(TIFF)
 mark_as_advanced(CLEAR TIFF_INCLUDE_DIR TIFF_LIBRARY)
+
+#special case for manually built libtiff on Mac where find_package fails
+if(NOT TIFF_FOUND)
+  unset(TIFF_INCLUDE_DIR CACHE)
+  find_library(TIFF_LIBRARY tiff
+    PATHS
+      ${CMAKE_CURRENT_SOURCE_DIR}/tiff/libtiff/.libs
+      ${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff/.libs)
+  find_library(Z_LIBRARY z)
+  if(TIFF_LIBRARY AND Z_LIBRARY)
+    set(TIFF_FOUND TRUE)
+    set(TIFF_LIBRARIES ${TIFF_LIBRARY} ${Z_LIBRARY})
+  endif()
+endif()
+
 if(TIFF_FOUND)
   add_executable(ra_tiff ra_tiff.c)
   target_link_libraries(ra_tiff rtrad ${TIFF_LIBRARIES})
-  install(TARGETS ra_tiff RUNTIME DESTINATION bin)
+  add_executable(normtiff normtiff.c)
+  target_link_libraries(normtiff rtrad ${TIFF_LIBRARIES})
+  install(TARGETS ra_tiff normtiff RUNTIME DESTINATION bin)
   install(FILES ${TIFF_LIBRARIES} DESTINATION bin)
+  install(PROGRAMS ran2tiff.csh DESTINATION bin RENAME ran2tiff)
 #TODO: else case
 endif()
 
@@ -89,6 +107,17 @@ install(TARGETS pfilt pflip ttyimage psign pvalue pcompos protate
   pextrem ra_gif ra_xyze macbethcal pcond pcwarp
   RUNTIME DESTINATION bin)
 
-install(FILES normpat.csh falsecolor.pl pdfblur.csh pmblur.csh pmdblur.csh
-  xyzimage.csh pgblur.csh ra_pfm.csh pbilat.csh
-  DESTINATION bin)
+if(WIN32)
+  install(PROGRAMS falsecolor.pl DESTINATION bin)
+else()
+  install(PROGRAMS falsecolor.pl DESTINATION bin RENAME falsecolor)
+  install(PROGRAMS normpat.csh DESTINATION bin RENAME normpat)
+  install(PROGRAMS pdfblur.csh DESTINATION bin RENAME pdfblur)
+  install(PROGRAMS pmblur.csh DESTINATION bin RENAME pmblur)
+  install(PROGRAMS pmdblur.csh DESTINATION bin RENAME pmdblur)
+  install(PROGRAMS xyzimage.csh DESTINATION bin RENAME xyzimage)
+  install(PROGRAMS pgblur.csh DESTINATION bin RENAME pgblur)
+  install(PROGRAMS ra_pfm.csh DESTINATION bin RENAME ra_pfm)
+  install(PROGRAMS pbilat.csh DESTINATION bin RENAME pbilat)
+  install(PROGRAMS phisto.csh DESTINATION bin RENAME phisto)
+endif()

@@ -7,19 +7,46 @@ include(CTest)
 option(BUILD_SHARED_LIBS "Build radiance using shared libraries?" OFF)
 
 if(NOT WIN32)
-  set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1) 
+  set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/ DESTINATION man)
 endif()
-set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+
+
+if (WIN32)
+
+  set(CPACK_NSIS_MODIFY_PATH 0)
+
+  set(CPACK_BINARY_ZIP 1)
+
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "")
+
+endif()
+
+if(UNIX)
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local/radiance")
+  add_definitions(-Dlinux -D_FILE_OFFSET_BITS=64 -DNOSTEREO)
+else()
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/radiance")
+endif()
+
+if(APPLE)
+  add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
+  include_directories(/usr/X11R6/include)
+endif()
+
 set(CPACK_PACKAGE_VERSION_MAJOR 4)
-set(CPACK_PACKAGE_VERSION_MINOR 1)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Radiance ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION_MINOR 2)
+set(CPACK_PACKAGE_VERSION_PATCH a)
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Radiance ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_RESOURCE_FILE_WELCOME "${radiance_SOURCE_DIR}/Welcome.txt")
-SET(CPACK_RESOURCE_FILE_README "${radiance_SOURCE_DIR}/README")
+SET(CPACK_RESOURCE_FILE_README "${radiance_SOURCE_DIR}/README.txt")
 SET(CPACK_RESOURCE_FILE_LICENSE "${radiance_SOURCE_DIR}/License.txt") 
+
+
 include(CPack)
 
 find_package(Qt4 COMPONENTS QtCore QtGui)
+find_package(X11)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
@@ -40,8 +67,8 @@ include(ExternalProject)
 set(base "${CMAKE_BINARY_DIR}/Downloads")
 set_property(DIRECTORY PROPERTY EP_BASE ${base})
 ExternalProject_Add(radiance_support
-  URL http://www.radiance-online.org/software/non-cvs/rad4R0supp.tar.gz
-  URL_MD5 123e3e40af59c8b246e1fdbf0661e877
+  URL http://www.radiance-online.org/software/non-cvs/rad4R1supp.tar.gz
+  URL_MD5 efd82970e1d0747eede8eb64c01048f4
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
@@ -76,24 +103,24 @@ install(
     ${lib_dir}/hexbit4x1.fnt
     ${test_dir}/model.oct
     ${test_dir}/model.vp
-  DESTINATION bin
+  DESTINATION lib
 )
 
-install(FILES ${lib_dir}/Earth.hdr DESTINATION bin RENAME Earth.pic)
-install(FILES ${lib_dir}/EarthBig.hdr DESTINATION bin RENAME EarthBig.pic)
-install(FILES ${lib_dir}/alberta.hdr DESTINATION bin RENAME alberta.pic)
-install(FILES ${lib_dir}/brick.hdr DESTINATION bin RENAME brick.pic)
-install(FILES ${lib_dir}/brickweave.hdr DESTINATION bin RENAME brickweave.pic)
-install(FILES ${lib_dir}/cabin.hdr DESTINATION bin RENAME cabin.pic)
-install(FILES ${lib_dir}/forestfl.hdr DESTINATION bin RENAME forestfl.pic)
-install(FILES ${lib_dir}/oakfloor.hdr DESTINATION bin RENAME oakfloor.pic)
-install(FILES ${lib_dir}/pine.hdr DESTINATION bin RENAME pine.pic)
-install(FILES ${lib_dir}/pinebark.hdr DESTINATION bin RENAME pinebark.pic)
-install(FILES ${lib_dir}/podlife.hdr DESTINATION bin RENAME podlife.pic)
-install(FILES ${lib_dir}/richgrove.hdr DESTINATION bin RENAME richgrove.pic)
-install(FILES ${lib_dir}/shingle.hdr DESTINATION bin RENAME shingle.pic)
-install(FILES ${lib_dir}/summercab.hdr DESTINATION bin RENAME summercab.pic)
-install(FILES ${lib_dir}/tulips.hdr DESTINATION bin RENAME tulips.pic)
+install(FILES ${lib_dir}/Earth.hdr DESTINATION lib RENAME Earth.pic)
+install(FILES ${lib_dir}/EarthBig.hdr DESTINATION lib RENAME EarthBig.pic)
+install(FILES ${lib_dir}/alberta.hdr DESTINATION lib RENAME alberta.pic)
+install(FILES ${lib_dir}/brick.hdr DESTINATION lib RENAME brick.pic)
+install(FILES ${lib_dir}/brickweave.hdr DESTINATION lib RENAME brickweave.pic)
+install(FILES ${lib_dir}/cabin.hdr DESTINATION lib RENAME cabin.pic)
+install(FILES ${lib_dir}/forestfl.hdr DESTINATION lib RENAME forestfl.pic)
+install(FILES ${lib_dir}/oakfloor.hdr DESTINATION lib RENAME oakfloor.pic)
+install(FILES ${lib_dir}/pine.hdr DESTINATION lib RENAME pine.pic)
+install(FILES ${lib_dir}/pinebark.hdr DESTINATION lib RENAME pinebark.pic)
+install(FILES ${lib_dir}/podlife.hdr DESTINATION lib RENAME podlife.pic)
+install(FILES ${lib_dir}/richgrove.hdr DESTINATION lib RENAME richgrove.pic)
+install(FILES ${lib_dir}/shingle.hdr DESTINATION lib RENAME shingle.pic)
+install(FILES ${lib_dir}/summercab.hdr DESTINATION lib RENAME summercab.pic)
+install(FILES ${lib_dir}/tulips.hdr DESTINATION lib RENAME tulips.pic)
 
 add_subdirectory(cmake_tests)
 

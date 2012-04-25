@@ -1,4 +1,4 @@
-		RCSid "$Id: README,v 1.9 2011/10/27 00:51:29 greg Exp $"
+		RCSid "$Id: README.txt,v 1.1 2012/04/25 22:21:06 greg Exp $"
 
 Hello and welcome to the Radiance synthetic imaging system.  This is
 the eighteenth release, Version 4.1, and it includes all source files

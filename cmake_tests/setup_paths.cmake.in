@@ -21,10 +21,17 @@ if(NOT EXISTS ${lib_dir}/pine.pic)
   configure_file(${lib_dir}/pine.hdr ${lib_dir}/pine.pic COPYONLY)
 endif()
 
-file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin" rpath)
+
+if(WIN32)
+  file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin/Release" rpath)
+else()
+  file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin" rpath)
+endif()
 set(ENV{RAYPATH}
 "${gen_dir}${sep}${cal_dir}${sep}${rt_dir}${sep}${lib_dir}${sep}@office_dir@")
-set(ENV{PATH} "$ENV{PATH}${sep}${rpath}")
+#set(ENV{PATH} "$ENV{PATH}${sep}${rpath}")
+#look in dashboard tree ONLY
+set(ENV{PATH} "${rpath}")
 set(test_output_dir
   @radiance_BINARY_DIR@/Downloads/Source/radiance_support/obj/office/test)
 set(CMAKE_EXECUTABLE_SUFFIX @CMAKE_EXECUTABLE_SUFFIX@)
