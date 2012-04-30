@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 2.1 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 2.2 2012/04/30 17:02:48 greg Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -29,7 +29,6 @@ static const char	RCSid[] = "$Id: mgf2inv.c,v 2.1 2011/02/18 00:40:25 greg Exp $
 
 #define VERTFMT		"%+16.9e %+16.9e %+16.9e\n%+6.3f %+6.3f %+6.3f"
 #define VZVECT		"+0.000 +0.000 +0.000"
-#define VFSEPPOS	50	/* position of newline in above */
 #define VFLEN		72	/* total vertex string length */
 #define MAXVERT		10240	/* maximum cached vertices */
 
@@ -529,6 +528,7 @@ to_id(			/* make sure a name is a valid Inventor ID */
 void
 flush_cache(void)			/* put out cached faces */
 {
+	int	VFSEPPOS = strchr(vlist[0],'\n') - vlist[0];
 	int	donorms = 0;
 	register struct face	*f;
 	register int	i;
