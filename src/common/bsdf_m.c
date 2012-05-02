@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.20 2011/08/21 22:38:12 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.21 2012/05/02 16:28:45 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -218,10 +218,8 @@ io_getohm(int ndx, void *p)
 	if (li == last_li)			/* cached latitude? */
 		return last_ohm;
 	last_li = li;
-	theta1 = M_PI/180. * ab->lat[li+1].tmin;
-	if (ab->lat[li].nphis == 1)		/* special case */
-		return last_ohm = M_PI*(1. - sq(cos(theta1)));
 	theta = M_PI/180. * ab->lat[li].tmin;
+	theta1 = M_PI/180. * ab->lat[li+1].tmin;
 	return last_ohm = M_PI*(sq(cos(theta)) - sq(cos(theta1))) /
 				(double)ab->lat[li].nphis;
 }
@@ -335,8 +333,7 @@ load_angle_basis(ezxml_t wab)
 				ezxml_child(ezxml_child(wbb,
 					"ThetaBounds"), "UpperTheta")));
 		if (!i)
-			abase_list[nabases].lat[i].tmin =
-					-abase_list[nabases].lat[i+1].tmin;
+			abase_list[nabases].lat[0].tmin = 0;
 		else if (!fequal(atof(ezxml_txt(ezxml_child(ezxml_child(wbb,
 					"ThetaBounds"), "LowerTheta"))),
 				abase_list[nabases].lat[i].tmin)) {

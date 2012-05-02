@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.5 2011/04/28 00:24:43 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.6 2012/05/02 16:28:45 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -61,17 +61,17 @@ loadBSDF(char *fname)
 	checkDF(sd->name, sd->tLamb.cieY, sd->tf, "transmission");
 #if 0
 fprintf(stderr, "Loaded BSDF '%s' (file \"%s\")\n", sd->name, pname);
-fprintf(stderr, "Front diffuse reflectance: %.1f%%\n", sd->rLambFront.cieY*100.);
-fprintf(stderr, "Back diffuse reflectance: %.1f%%\n", sd->rLambBack.cieY*100.);
-fprintf(stderr, "Diffuse transmittance: %.1f%%\n", sd->tLamb.cieY*100.);
+fprintf(stderr, "Front diffuse reflectance: %.3f%%\n", sd->rLambFront.cieY*100.);
+fprintf(stderr, "Back diffuse reflectance: %.3f%%\n", sd->rLambBack.cieY*100.);
+fprintf(stderr, "Diffuse transmittance: %.3f%%\n", sd->tLamb.cieY*100.);
 if (sd->rf)
-fprintf(stderr, "Maximum direct hemispherical front reflection: %.1f%%\n",
+fprintf(stderr, "Maximum direct hemispherical front reflection: %.3f%%\n",
 sd->rf->maxHemi*100.);
 if (sd->rb)
-fprintf(stderr, "Maximum direct hemispherical back reflection: %.1f%%\n",
+fprintf(stderr, "Maximum direct hemispherical back reflection: %.3f%%\n",
 sd->rb->maxHemi*100.);
 if (sd->tf)
-fprintf(stderr, "Maximum direct hemispherical transmission: %.1f%%\n",
+fprintf(stderr, "Maximum direct hemispherical transmission: %.3f%%\n",
 sd->tf->maxHemi*100.);
 #endif
 	SDretainSet = SDretainAll;		/* keep data in core */
