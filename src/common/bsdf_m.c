@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.21 2012/05/02 16:28:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.22 2012/05/07 23:17:59 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -46,7 +46,7 @@ typedef struct {
 static ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
 		"LBNL/Klems Full", 145,
-		{ {-5., 1},
+		{ {0., 1},
 		{5., 8},
 		{15., 16},
 		{25., 20},
@@ -58,7 +58,7 @@ static ANGLE_BASIS	abase_list[MAXABASES] = {
 		{90., 0} }
 	}, {
 		"LBNL/Klems Half", 73,
-		{ {-6.5, 1},
+		{ {0., 1},
 		{6.5, 8},
 		{19.5, 12},
 		{32.5, 16},
@@ -68,7 +68,7 @@ static ANGLE_BASIS	abase_list[MAXABASES] = {
 		{90., 0} }
 	}, {
 		"LBNL/Klems Quarter", 41,
-		{ {-9., 1},
+		{ {0., 1},
 		{9., 8},
 		{27., 12},
 		{46., 12},
