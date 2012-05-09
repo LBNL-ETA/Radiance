@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.34 2012/03/15 02:32:19 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.35 2012/05/09 17:40:17 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -404,7 +404,7 @@ sub do_matrix_bsdf {
 $tcal = '
 DEGREE : PI/180;
 sq(x) : x*x;
-Kpola(r) : select(r+1, -5, 5, 15, 25, 35, 45, 55, 65, 75, 90);
+Kpola(r) : select(r+1, 0, 5, 15, 25, 35, 45, 55, 65, 75, 90);
 Knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12);
 Kaccum(r) : if(r-.5, Knaz(r) + Kaccum(r-1), 0);
 Kmax : Kaccum(Knaz(0));
@@ -497,76 +497,76 @@ print
 		<AngleBasis>
 			<AngleBasisName>LBNL/Klems Full</AngleBasisName>
 			<AngleBasisBlock>
-				<Theta>0</Theta>
-				<nPhis>1</nPhis>
-				<ThetaBounds>
-					<LowerTheta>0</LowerTheta>
-					<UpperTheta>5</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>10</Theta>
-				<nPhis>8</nPhis>
-				<ThetaBounds>
-					<LowerTheta>5</LowerTheta>
-					<UpperTheta>15</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>20</Theta>
-				<nPhis>16</nPhis>
-				<ThetaBounds>
-					<LowerTheta>15</LowerTheta>
-					<UpperTheta>25</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>30</Theta>
-				<nPhis>20</nPhis>
-				<ThetaBounds>
-					<LowerTheta>25</LowerTheta>
-					<UpperTheta>35</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>40</Theta>
-				<nPhis>24</nPhis>
-				<ThetaBounds>
-					<LowerTheta>35</LowerTheta>
-					<UpperTheta>45</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>50</Theta>
-				<nPhis>24</nPhis>
-				<ThetaBounds>
-					<LowerTheta>45</LowerTheta>
-					<UpperTheta>55</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>60</Theta>
-				<nPhis>24</nPhis>
-				<ThetaBounds>
-					<LowerTheta>55</LowerTheta>
-					<UpperTheta>65</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>70</Theta>
-				<nPhis>16</nPhis>
-				<ThetaBounds>
-					<LowerTheta>65</LowerTheta>
-					<UpperTheta>75</UpperTheta>
-				</ThetaBounds>
-				</AngleBasisBlock>
-				<AngleBasisBlock>
-				<Theta>82.5</Theta>
-				<nPhis>12</nPhis>
-				<ThetaBounds>
-					<LowerTheta>75</LowerTheta>
-					<UpperTheta>90</UpperTheta>
-				</ThetaBounds>
+			<Theta>0</Theta>
+			<nPhis>1</nPhis>
+			<ThetaBounds>
+				<LowerTheta>0</LowerTheta>
+				<UpperTheta>5</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>10</Theta>
+			<nPhis>8</nPhis>
+			<ThetaBounds>
+				<LowerTheta>5</LowerTheta>
+				<UpperTheta>15</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>20</Theta>
+			<nPhis>16</nPhis>
+			<ThetaBounds>
+				<LowerTheta>15</LowerTheta>
+				<UpperTheta>25</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>30</Theta>
+			<nPhis>20</nPhis>
+			<ThetaBounds>
+				<LowerTheta>25</LowerTheta>
+				<UpperTheta>35</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>40</Theta>
+			<nPhis>24</nPhis>
+			<ThetaBounds>
+				<LowerTheta>35</LowerTheta>
+				<UpperTheta>45</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>50</Theta>
+			<nPhis>24</nPhis>
+			<ThetaBounds>
+				<LowerTheta>45</LowerTheta>
+				<UpperTheta>55</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>60</Theta>
+			<nPhis>24</nPhis>
+			<ThetaBounds>
+				<LowerTheta>55</LowerTheta>
+				<UpperTheta>65</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>70</Theta>
+			<nPhis>16</nPhis>
+			<ThetaBounds>
+				<LowerTheta>65</LowerTheta>
+				<UpperTheta>75</UpperTheta>
+			</ThetaBounds>
+			</AngleBasisBlock>
+			<AngleBasisBlock>
+			<Theta>82.5</Theta>
+			<nPhis>12</nPhis>
+			<ThetaBounds>
+				<LowerTheta>75</LowerTheta>
+				<UpperTheta>90</UpperTheta>
+			</ThetaBounds>
 			</AngleBasisBlock>
 		</AngleBasis>
 	</DataDefinition>
