@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.1 2011/02/18 00:40:25 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.2 2012/05/17 05:47:59 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -13,26 +13,26 @@ static const char RCSid[] = "$Id: ccolor.c,v 3.1 2011/02/18 00:40:25 greg Exp $"
 C_COLOR		c_dfcolor = C_DEFCOLOR;
 
 				/* CIE 1931 Standard Observer curves */
-static C_COLOR	cie_xf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+static const C_COLOR	cie_xf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{14,42,143,435,1344,2839,3483,3362,2908,1954,956,
 			320,49,93,633,1655,2904,4334,5945,7621,9163,10263,
 			10622,10026,8544,6424,4479,2835,1649,874,468,227,
 			114,58,29,14,7,3,2,1,0}, 106836L, .467, .368, 362.230
 			};
-static C_COLOR	cie_yf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+static const C_COLOR	cie_yf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{0,1,4,12,40,116,230,380,600,910,1390,2080,3230,
 			5030,7100,8620,9540,9950,9950,9520,8700,7570,6310,
 			5030,3810,2650,1750,1070,610,320,170,82,41,21,10,
 			5,2,1,1,0,0}, 106856L, .398, .542, 493.525
 			};
-static C_COLOR	cie_zf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+static const C_COLOR	cie_zf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{65,201,679,2074,6456,13856,17471,17721,16692,
 			12876,8130,4652,2720,1582,782,422,203,87,39,21,17,
 			11,8,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 			106770L, .147, .077, 54.363
 			};
 				/* Derived CIE 1931 Primaries (imaginary) */
-static C_COLOR	cie_xp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
+static const C_COLOR	cie_xp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			{-174,-198,-195,-197,-202,-213,-235,-272,-333,
 			-444,-688,-1232,-2393,-4497,-6876,-6758,-5256,
 			-3100,-815,1320,3200,4782,5998,6861,7408,7754,
@@ -40,7 +40,7 @@ static C_COLOR	cie_xp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			8336,8336,8336,8336,8336,8336},
 			127424L, 1., .0,
 			};
-static C_COLOR	cie_yp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
+static const C_COLOR	cie_yp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			{-451,-431,-431,-430,-427,-417,-399,-366,-312,
 			-204,57,691,2142,4990,8810,9871,9122,7321,5145,
 			3023,1123,-473,-1704,-2572,-3127,-3474,-3704,
@@ -48,7 +48,7 @@ static C_COLOR	cie_yp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			-4066,-4066,-4066,-4066,-4066,-4066},
 			-23035L, .0, 1.,
 			};
-static C_COLOR	cie_zp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
+static const C_COLOR	cie_zp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			{4051,4054,4052,4053,4054,4056,4059,4064,4071,
 			4074,4056,3967,3677,2933,1492,313,-440,-795,
 			-904,-918,-898,-884,-869,-863,-855,-855,-851,
@@ -56,6 +56,59 @@ static C_COLOR	cie_zp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			-845,-845,-845,-845,-845},
 			36057L, .0, .0,
 			};
+
+					/* Sharp primary matrix */
+static const float	toSharp[3][3] = {
+	{ 1.2694, -0.0988, -0.1706},
+	{-0.8364,  1.8006,  0.0357},
+	{ 0.0297, -0.0315,  1.0018}
+};
+					/* inverse Sharp primary matrix */
+static const float	fromSharp[3][3] = {
+	{ 0.8156,  0.0472,  0.1372},
+	{ 0.3791,  0.5769,  0.0440},
+	{-0.0123,  0.0167,  0.9955}
+};
+
+static void
+c_toSharpRGB(C_COLOR *cin, double cieY, float cout[3])
+{
+	double	xyz[3];
+
+	c_ccvt(cin, C_CSXY);
+
+	xyz[0] = cin->cx/cin->cy * cieY;
+	xyz[1] = cieY;
+	xyz[2] = (1. - cin->cx - cin->cy)/cin->cy * cieY;
+
+	cout[0] = toSharp[0][0]*xyz[0] + toSharp[0][1]*xyz[1] +
+				toSharp[0][2]*xyz[2];
+	cout[1] = toSharp[1][0]*xyz[0] + toSharp[1][1]*xyz[1] +
+				toSharp[1][2]*xyz[2];
+	cout[2] = toSharp[2][0]*xyz[0] + toSharp[2][1]*xyz[1] +
+				toSharp[2][2]*xyz[2];
+}
+
+static double
+c_fromSharpRGB(float cin[3], C_COLOR *cout)
+{
+	double	xyz[3], sf;
+
+	xyz[0] = fromSharp[0][0]*cin[0] + fromSharp[0][1]*cin[1] +
+				fromSharp[0][2]*cin[2];
+	xyz[1] = fromSharp[1][0]*cin[0] + fromSharp[1][1]*cin[1] +
+				fromSharp[1][2]*cin[2];
+	xyz[2] = fromSharp[2][0]*cin[0] + fromSharp[2][1]*cin[1] +
+				fromSharp[2][2]*cin[2];
+				
+	sf = 1./(xyz[0] + xyz[1] + xyz[2]);
+
+	cout->cx = xyz[0] * sf;
+	cout->cy = xyz[1] * sf;
+	cout->flags = C_CDXY|C_CSXY;
+	
+	return(xyz[1]);
+}
 
 /* check if color is grey */
 int
@@ -127,15 +180,16 @@ c_ccvt(C_COLOR *clr, int fl)
 	}
 }
 
-/* mix two colors according to weights given -- cres can be c1 or c2 */
+/* mix two colors according to weights given -- cres may be c1 or c2 */
 void
 c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 {
 	double	scale;
-	float	cmix[C_CNSS];
 	int	i;
 
 	if ((c1->flags|c2->flags) & C_CDSPEC) {		/* spectral mixing */
+		float	cmix[C_CNSS];
+
 		c_ccvt(c1, C_CSSPEC|C_CSEFF);
 		c_ccvt(c2, C_CSSPEC|C_CSEFF);
 		w1 /= c1->eff*c1->ssum;
@@ -168,11 +222,56 @@ c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 	}
 }
 
+/* multiply two colors -- cres may be c1 or c2 */
+double
+c_cmult(C_COLOR *cres, C_COLOR *c1, double y1, C_COLOR *c2, double y2)
+{
+	double	yres;
+	int	i;
+
+	if ((c1->flags|c2->flags) & C_CDSPEC) {
+		long	cmix[C_CNSS], cmax = 0;		/* spectral multiply */
+
+		c_ccvt(c1, C_CSSPEC|C_CSEFF);
+		c_ccvt(c2, C_CSSPEC|C_CSEFF);
+		for (i = 0; i < C_CNSS; i++) {
+			cmix[i] = c1->ssamp[i] * c2->ssamp[i];
+			if (cmix[i] > cmax)
+				cmax = cmix[i];
+		}
+		cmax /= C_CMAXV;
+		if (!cmax) {
+			*cres = c_dfcolor;
+			return(0.);
+		}
+		cres->ssum = 0;
+		for (i = 0; i < C_CNSS; i++)
+			cres->ssum += cres->ssamp[i] = cmix[i] / cmax;
+		cres->flags = C_CDSPEC|C_CSSPEC;
+
+		c_ccvt(cres, C_CSEFF);			/* nasty, but true */
+		yres = (y1 * y2 * cie_yf.ssum * C_CLPWM) /
+			(c1->eff*c1->ssum * c2->eff*c2->ssum) *
+			cres->eff*( cres->ssum*(double)cmax +
+						C_CNSS/2.0*(cmax-1) );
+	} else {
+		float	rgb1[3], rgb2[3];		/* CIE xy multiply */
+
+		c_toSharpRGB(c1, y1, rgb1);
+		c_toSharpRGB(c2, y2, rgb2);
+		
+		rgb2[0] *= rgb1[0]; rgb2[1] *= rgb1[1]; rgb2[2] *= rgb1[2];
+
+		yres = c_fromSharpRGB(rgb2, cres);
+	}
+	return(yres);
+}
+
 #define	C1		3.741832e-16	/* W-m^2 */
 #define C2		1.4388e-2	/* m-K */
 
 #define bbsp(l,t)	(C1/((l)*(l)*(l)*(l)*(l)*(exp(C2/((t)*(l)))-1.)))
-#define bblm(t)		(C2/5./(t))
+#define bblm(t)		(C2*0.2/(t))
 
 /* set black body spectrum */
 int

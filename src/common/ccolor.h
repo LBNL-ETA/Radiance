@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.1 2011/02/18 00:40:25 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.2 2012/05/17 05:47:59 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -52,6 +52,9 @@ extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
 						/* mix two colors */
 extern void	c_cmix(C_COLOR *cres, double w1, C_COLOR *c1,
 				double w2, C_COLOR *c2);
+						/* multiply two colors */
+extern double	c_cmult(C_COLOR *cres, C_COLOR *c1, double y1,
+				C_COLOR *c2, double y2);
 						/* set black body spectrum */
 extern int	c_bbtemp(C_COLOR *clr, double tk);
 						/* convert to RGB color */
