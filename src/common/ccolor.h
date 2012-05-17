@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.2 2012/05/17 05:47:59 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.3 2012/05/17 17:10:23 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -47,8 +47,11 @@ typedef struct {
 
 extern C_COLOR		c_dfcolor;		/* default color */
 
-extern void	c_ccvt(C_COLOR *, int);		/* fix color representation */
-extern int	c_isgrey(C_COLOR *);		/* check if color is grey */
+						/* assign arbitrary spectrum */
+extern double	c_sset(C_COLOR *clr, double wlmin, double wlmax,
+				const float spec[], int nwl);
+extern void	c_ccvt(C_COLOR *clr, int fl);	/* fix color representation */
+extern int	c_isgrey(C_COLOR *clr);		/* check if color is grey */
 						/* mix two colors */
 extern void	c_cmix(C_COLOR *cres, double w1, C_COLOR *c1,
 				double w2, C_COLOR *c2);

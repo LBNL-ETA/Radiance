@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf_context.c,v 3.1 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: mgf_context.c,v 3.2 2012/05/17 17:10:23 greg Exp $";
 #endif
 /*
  * Context handlers
@@ -32,16 +32,15 @@ static LUTAB	clr_tab = LU_SINIT(free,free);	/* color lookup table */
 static LUTAB	mat_tab = LU_SINIT(free,free);	/* material lookup table */
 static LUTAB	vtx_tab = LU_SINIT(free,free);	/* vertex lookup table */
 
-static int	setspectrum(C_COLOR *, double wlmin, double wlmax,
-				int ac, char **av);
+static int	setspectrum(C_COLOR *, int ac, char **av);
 
 
 int
 c_hcolor(int ac, char **av)		/* handle color entity */
 {
 	double	w, wsum;
-	register int	i;
-	register LUENT	*lp;
+	int	i;
+	LUENT	*lp;
 
 	switch (mg_entity(av[0])) {
 	case MG_E_COLOR:	/* get/set color context */
@@ -108,12 +107,7 @@ c_hcolor(int ac, char **av)		/* handle color entity */
 		c_ccolor->clock++;
 		return(MG_OK);
 	case MG_E_CSPEC:	/* assign spectral values */
-		if (ac < 5)
-			return(MG_EARGC);
-		if (!isflt(av[1]) | !isflt(av[2]))
-			return(MG_ETYPE);
-		return(setspectrum(c_ccolor, atof(av[1]), atof(av[2]),
-				ac-3, av+3));
+		return(setspectrum(c_ccolor, ac-1, av+1));
 	case MG_E_CCT:		/* assign black body spectrum */
 		if (ac != 2)
 			return(MG_EARGC);
@@ -159,7 +153,7 @@ int
 c_hmaterial(int ac, char **av)		/* handle material entity */
 {
 	int	i;
-	register LUENT	*lp;
+	LUENT	*lp;
 
 	switch (mg_entity(av[0])) {
 	case MG_E_MATERIAL:	/* get/set material context */
@@ -305,7 +299,7 @@ int
 c_hvertex(int ac, char **av)		/* handle a vertex entity */
 {
 	int	i;
-	register LUENT	*lp;
+	LUENT	*lp;
 
 	switch (mg_entity(av[0])) {
 	case MG_E_VERTEX:	/* get/set vertex context */
@@ -405,7 +399,7 @@ c_clearall(void)		/* empty context tables */
 C_MATERIAL *
 c_getmaterial(char *name)	/* get a named material */
 {
-	register LUENT	*lp;
+	LUENT	*lp;
 
 	if ((lp = lu_find(&mat_tab, name)) == NULL)
 		return(NULL);
@@ -416,7 +410,7 @@ c_getmaterial(char *name)	/* get a named material */
 C_VERTEX *
 c_getvert(char *name)			/* get a named vertex */
 {
-	register LUENT	*lp;
+	LUENT	*lp;
 
 	if ((lp = lu_find(&vtx_tab, name)) == NULL)
 		return(NULL);
@@ -427,7 +421,7 @@ c_getvert(char *name)			/* get a named vertex */
 C_COLOR *
 c_getcolor(char *name)		/* get a named color */
 {
-	register LUENT	*lp;
+	LUENT	*lp;
 
 	if ((lp = lu_find(&clr_tab, name)) == NULL)
 		return(NULL);
@@ -436,83 +430,36 @@ c_getcolor(char *name)		/* get a named color */
 
 
 static int
-setspectrum(		/* convert a spectrum */
-	register C_COLOR	*clr,
-	double	wlmin, 
-	double	wlmax,
+setspectrum(			/* convert a spectrum */
+	C_COLOR	*clr,
 	int	ac,
 	char	**av
 )
 {
-	double	scale;
-	float	va[C_CNSS];
-	register int	i, pos;
-	int	n, imax;
-	int	wl;
-	double	wl0, wlstep;
-	double	boxpos, boxstep;
-					/* check bounds */
-	if ((wlmax <= C_CMINWL) | (wlmax <= wlmin) | (wlmin >= C_CMAXWL))
+	double	wlmin, wlmax;
+	int	i;
+	float	*va;
+					/* get bounds */
+	if (ac < 4)
+		return(MG_EARGC);
+	if (!isflt(av[0]) || !isflt(av[1]))
+		return(MG_ETYPE);
+	wlmin = atof(av[0]);
+	wlmax = atof(av[1]);
+	ac -= 2; av += 2;
+	va = (float *)malloc(sizeof(float)*ac);
+	if (va == NULL)
+		return(MG_EMEM);
+	for (i = ac; i--; ) {
+		if (!isflt(av[i]))
+			return(MG_ETYPE);
+		va[i] = atof(av[i]);
+	}
+	if (c_sset(clr, wlmin, wlmax, va, ac) <= FTINY) {
+		free(va);
 		return(MG_EILL);
-	wlstep = (wlmax - wlmin)/(ac-1);
-	while (wlmin < C_CMINWL) {
-		wlmin += wlstep;
-		ac--; av++;
 	}
-	while (wlmax > C_CMAXWL) {
-		wlmax -= wlstep;
-		ac--;
-	}
-	imax = ac;			/* box filter if necessary */
-	boxpos = 0;
-	boxstep = 1;
-	if (wlstep < C_CWLI) {
-		imax = (wlmax - wlmin)/C_CWLI + (1-FTINY);
-		boxpos = (wlmin - C_CMINWL)/C_CWLI;
-		boxstep = wlstep/C_CWLI;
-		wlstep = C_CWLI;
-	}
-	scale = 0.;			/* get values and maximum */
-	pos = 0;
-	for (i = 0; i < imax; i++) {
-		va[i] = 0.; n = 0;
-		while (boxpos < i+.5 && pos < ac) {
-			if (!isflt(av[pos]))
-				return(MG_ETYPE);
-			va[i] += atof(av[pos++]);
-			n++;
-			boxpos += boxstep;
-		}
-		if (n > 1)
-			va[i] /= (double)n;
-		if (va[i] > scale)
-			scale = va[i];
-		else if (va[i] < -scale)
-			scale = -va[i];
-	}
-	if (scale <= FTINY)
-		return(MG_EILL);
-	scale = C_CMAXV / scale;
-	clr->ssum = 0;			/* convert to our spacing */
-	wl0 = wlmin;
-	pos = 0;
-	for (i = 0, wl = C_CMINWL; i < C_CNSS; i++, wl += C_CWLI)
-		if ((wl < wlmin) | (wl > wlmax))
-			clr->ssamp[i] = 0;
-		else {
-			while (wl0 + wlstep < wl+FTINY) {
-				wl0 += wlstep;
-				pos++;
-			}
-			if ((wl+FTINY >= wl0) & (wl-FTINY <= wl0))
-				clr->ssamp[i] = scale*va[pos] + .5;
-			else		/* interpolate if necessary */
-				clr->ssamp[i] = .5 + scale / wlstep *
-						( va[pos]*(wl0+wlstep - wl) +
-							va[pos+1]*(wl - wl0) );
-			clr->ssum += clr->ssamp[i];
-		}
-	clr->flags = C_CDSPEC|C_CSSPEC;
+	free(va);
 	clr->clock++;
 	return(MG_OK);
 }

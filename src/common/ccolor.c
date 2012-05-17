@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.2 2012/05/17 05:47:59 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.3 2012/05/17 17:10:23 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -110,6 +110,82 @@ c_fromSharpRGB(float cin[3], C_COLOR *cout)
 	return(xyz[1]);
 }
 
+/* assign arbitrary spectrum */
+double
+c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
+{
+	double	yval, scale;
+	float	va[C_CNSS];
+	int	i, pos, n, imax, wl;
+	double	wl0, wlstep;
+	double	boxpos, boxstep;
+					/* check arguments */
+	if ((nwl <= 1) | (spec == NULL) | (wlmin >= C_CMAXWL) |
+			(wlmax <= C_CMINWL) | (wlmin >= wlmax))
+		return(0.);
+	wlstep = (wlmax - wlmin)/(nwl-1);
+	while (wlmin < C_CMINWL) {
+		wlmin += wlstep;
+		--nwl; ++spec;
+	}
+	while (wlmax > C_CMAXWL) {
+		wlmax -= wlstep;
+		--nwl;
+	}
+	imax = nwl;			/* box filter if necessary */
+	boxpos = 0;
+	boxstep = 1;
+	if (wlstep < C_CWLI) {
+		imax = (wlmax - wlmin)/C_CWLI + 1e-7;
+		boxpos = (wlmin - C_CMINWL)/C_CWLI;
+		boxstep = wlstep/C_CWLI;
+		wlstep = C_CWLI;
+	}
+	scale = 0.;			/* get values and maximum */
+	yval = 0.;
+	pos = 0;
+	for (i = 0; i < imax; i++) {
+		va[i] = 0.; n = 0;
+		while (boxpos < i+.5 && pos < nwl) {
+			va[i] += spec[pos++];
+			n++;
+			boxpos += boxstep;
+		}
+		if (n > 1)
+			va[i] /= (double)n;
+		if (va[i] > scale)
+			scale = va[i];
+		else if (va[i] < -scale)
+			scale = -va[i];
+		yval += va[i] * cie_yf.ssamp[i];
+	}
+	if (scale <= 1e-7)
+		return(0.);
+	yval /= (double)cie_yf.ssum;
+	scale = C_CMAXV / scale;
+	clr->ssum = 0;			/* convert to our spacing */
+	wl0 = wlmin;
+	pos = 0;
+	for (i = 0, wl = C_CMINWL; i < C_CNSS; i++, wl += C_CWLI)
+		if ((wl < wlmin) | (wl > wlmax))
+			clr->ssamp[i] = 0;
+		else {
+			while (wl0 + wlstep < wl+1e-7) {
+				wl0 += wlstep;
+				pos++;
+			}
+			if ((wl+1e-7 >= wl0) & (wl-1e-7 <= wl0))
+				clr->ssamp[i] = scale*va[pos] + .5;
+			else		/* interpolate if necessary */
+				clr->ssamp[i] = .5 + scale / wlstep *
+						( va[pos]*(wl0+wlstep - wl) +
+							va[pos+1]*(wl - wl0) );
+			clr->ssum += clr->ssamp[i];
+		}
+	clr->flags = C_CDSPEC|C_CSSPEC;
+	return(yval);
+}
+
 /* check if color is grey */
 int
 c_isgrey(C_COLOR *clr)
@@ -199,6 +275,8 @@ c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 			cmix[i] = w1*c1->ssamp[i] + w2*c2->ssamp[i];
 			if (cmix[i] > scale)
 				scale = cmix[i];
+			else if (cmix[i] < -scale)
+				scale = -cmix[i];
 		}
 		scale = C_CMAXV / scale;
 		cres->ssum = 0;
@@ -238,6 +316,8 @@ c_cmult(C_COLOR *cres, C_COLOR *c1, double y1, C_COLOR *c2, double y2)
 			cmix[i] = c1->ssamp[i] * c2->ssamp[i];
 			if (cmix[i] > cmax)
 				cmax = cmix[i];
+			else if (cmix[i] < -cmax)
+				cmax = -cmix[i];
 		}
 		cmax /= C_CMAXV;
 		if (!cmax) {
@@ -250,7 +330,7 @@ c_cmult(C_COLOR *cres, C_COLOR *c1, double y1, C_COLOR *c2, double y2)
 		cres->flags = C_CDSPEC|C_CSSPEC;
 
 		c_ccvt(cres, C_CSEFF);			/* nasty, but true */
-		yres = (y1 * y2 * cie_yf.ssum * C_CLPWM) /
+		yres = y1 * y2 * cie_yf.ssum * C_CLPWM /
 			(c1->eff*c1->ssum * c2->eff*c2->ssum) *
 			cres->eff*( cres->ssum*(double)cmax +
 						C_CNSS/2.0*(cmax-1) );
