@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.3 2012/05/17 17:10:23 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.4 2012/05/17 21:16:02 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -43,10 +43,16 @@ typedef struct {
 			C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV},\
 			(long)C_CNSS*C_CMAXV, 1./3., 1./3., 178.006 }
 
-#define c_cval(c,l)	((double)(c)->ssamp[((l)-C_MINWL)/C_CWLI] / (c)->ssum)
+#define c_cval(c,l)	((c)->ssamp[((l)+(C_CWLI/2.-C_MINWL))/C_CWLI] \
+						/ (double)(c)->ssum)
 
 extern C_COLOR		c_dfcolor;		/* default color */
 
+						/* set CIE (x,y) chromaticity */
+#define c_cset(c,x,y)	((c)->cx=(x),(c)->cy=(y),(c)->flags=C_CDXY|C_CSXY)
+
+						/* set black body spectrum */
+extern int	c_bbtemp(C_COLOR *clr, double tk);
 						/* assign arbitrary spectrum */
 extern double	c_sset(C_COLOR *clr, double wlmin, double wlmax,
 				const float spec[], int nwl);
@@ -58,8 +64,6 @@ extern void	c_cmix(C_COLOR *cres, double w1, C_COLOR *c1,
 						/* multiply two colors */
 extern double	c_cmult(C_COLOR *cres, C_COLOR *c1, double y1,
 				C_COLOR *c2, double y2);
-						/* set black body spectrum */
-extern int	c_bbtemp(C_COLOR *clr, double tk);
 						/* convert to RGB color */
 extern void	ccy2rgb(C_COLOR *cin, double cieY, float cout[3]);
 						/* convert from RGB color */
