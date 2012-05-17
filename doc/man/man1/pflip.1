@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pflip.1,v 1.2 2003/12/09 15:59:06 greg Exp $"
+.\" RCSid "$Id: pflip.1,v 1.3 2012/05/17 17:36:14 greg Exp $"
 .TH PFLIP 1 11/15/93 RADIANCE
 .SH NAME
 pflip - flip a RADIANCE picture.
@@ -31,6 +31,10 @@ The
 option indicates that the action is to correct an improper original
 image orientation, thus the recorded scanline ordering should not
 be changed.
+.PP
+If the
+.I \-v
+option is not specified, the input may be piped from stdin.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

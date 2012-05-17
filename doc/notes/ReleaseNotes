@@ -1821,3 +1821,5 @@ but response time quick until next "new" command.
 Fixed major bug in transmitting proxy material sampling.
 
 Patched cmake build tools (changes by Zack Galbreath).
+
+Removed requirement for pflip -h to be given input file (can pipe from stdin).
