@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.4 2012/05/17 21:16:02 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.5 2012/05/18 20:43:13 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -64,6 +64,12 @@ extern void	c_cmix(C_COLOR *cres, double w1, C_COLOR *c1,
 						/* multiply two colors */
 extern double	c_cmult(C_COLOR *cres, C_COLOR *c1, double y1,
 				C_COLOR *c2, double y2);
+						/* convert to sharpened RGB */
+extern void	c_toSharpRGB(C_COLOR *cin, double cieY, float cout[3]);
+						/* convert from sharpened RGB */
+extern double	c_fromSharpRGB(float cin[3], C_COLOR *cout);
+
+/* The following two routines are not defined in ccolor.c */
 						/* convert to RGB color */
 extern void	ccy2rgb(C_COLOR *cin, double cieY, float cout[3]);
 						/* convert from RGB color */

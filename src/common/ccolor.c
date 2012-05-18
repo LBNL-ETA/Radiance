@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.3 2012/05/17 17:10:23 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.4 2012/05/18 20:43:13 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -9,6 +9,18 @@ static const char RCSid[] = "$Id: ccolor.c,v 3.3 2012/05/17 17:10:23 greg Exp $"
 #include <math.h>
 #include "ccolor.h"
 
+					/* Sharp primary matrix */
+float	XYZtoSharp[3][3] = {
+	{ 1.2694, -0.0988, -0.1706},
+	{-0.8364,  1.8006,  0.0357},
+	{ 0.0297, -0.0315,  1.0018}
+};
+					/* inverse Sharp primary matrix */
+float	XYZfromSharp[3][3] = {
+	{ 0.8156,  0.0472,  0.1372},
+	{ 0.3791,  0.5769,  0.0440},
+	{-0.0123,  0.0167,  0.9955}
+};
 
 C_COLOR		c_dfcolor = C_DEFCOLOR;
 
@@ -57,20 +69,9 @@ static const C_COLOR	cie_zp = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY,
 			36057L, .0, .0,
 			};
 
-					/* Sharp primary matrix */
-static const float	toSharp[3][3] = {
-	{ 1.2694, -0.0988, -0.1706},
-	{-0.8364,  1.8006,  0.0357},
-	{ 0.0297, -0.0315,  1.0018}
-};
-					/* inverse Sharp primary matrix */
-static const float	fromSharp[3][3] = {
-	{ 0.8156,  0.0472,  0.1372},
-	{ 0.3791,  0.5769,  0.0440},
-	{-0.0123,  0.0167,  0.9955}
-};
 
-static void
+/* convert to sharpened RGB color for low-error operations */
+void
 c_toSharpRGB(C_COLOR *cin, double cieY, float cout[3])
 {
 	double	xyz[3];
@@ -81,25 +82,26 @@ c_toSharpRGB(C_COLOR *cin, double cieY, float cout[3])
 	xyz[1] = cieY;
 	xyz[2] = (1. - cin->cx - cin->cy)/cin->cy * cieY;
 
-	cout[0] = toSharp[0][0]*xyz[0] + toSharp[0][1]*xyz[1] +
-				toSharp[0][2]*xyz[2];
-	cout[1] = toSharp[1][0]*xyz[0] + toSharp[1][1]*xyz[1] +
-				toSharp[1][2]*xyz[2];
-	cout[2] = toSharp[2][0]*xyz[0] + toSharp[2][1]*xyz[1] +
-				toSharp[2][2]*xyz[2];
+	cout[0] = XYZtoSharp[0][0]*xyz[0] + XYZtoSharp[0][1]*xyz[1] +
+				XYZtoSharp[0][2]*xyz[2];
+	cout[1] = XYZtoSharp[1][0]*xyz[0] + XYZtoSharp[1][1]*xyz[1] +
+				XYZtoSharp[1][2]*xyz[2];
+	cout[2] = XYZtoSharp[2][0]*xyz[0] + XYZtoSharp[2][1]*xyz[1] +
+				XYZtoSharp[2][2]*xyz[2];
 }
 
-static double
+/* convert back from sharpened RGB color */
+double
 c_fromSharpRGB(float cin[3], C_COLOR *cout)
 {
 	double	xyz[3], sf;
 
-	xyz[0] = fromSharp[0][0]*cin[0] + fromSharp[0][1]*cin[1] +
-				fromSharp[0][2]*cin[2];
-	xyz[1] = fromSharp[1][0]*cin[0] + fromSharp[1][1]*cin[1] +
-				fromSharp[1][2]*cin[2];
-	xyz[2] = fromSharp[2][0]*cin[0] + fromSharp[2][1]*cin[1] +
-				fromSharp[2][2]*cin[2];
+	xyz[0] = XYZfromSharp[0][0]*cin[0] + XYZfromSharp[0][1]*cin[1] +
+				XYZfromSharp[0][2]*cin[2];
+	xyz[1] = XYZfromSharp[1][0]*cin[0] + XYZfromSharp[1][1]*cin[1] +
+				XYZfromSharp[1][2]*cin[2];
+	xyz[2] = XYZfromSharp[2][0]*cin[0] + XYZfromSharp[2][1]*cin[1] +
+				XYZfromSharp[2][2]*cin[2];
 				
 	sf = 1./(xyz[0] + xyz[1] + xyz[2]);
 
