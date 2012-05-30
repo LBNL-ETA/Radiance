@@ -50,3 +50,13 @@ install(TARGETS lookamb radiance raycalls rtrace rpict rvu
         LIBRARY DESTINATION bin
         ARCHIVE DESTINATION bin)
 install(FILES rayinit.cal DESTINATION lib)
+
+#install qt.conf & Qt plugins loaded by rvu at runtime
+install(FILES ${QT_QGIF_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${QT_QICO_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${QT_QJPEG_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${QT_QMNG_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${QT_QSVG_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${QT_QTIFF_PLUGIN_RELEASE} DESTINATION bin/plugins/imageformats)
+install(FILES ${CMAKE_SOURCE_DIR}/InstallRules/qt.conf DESTINATION bin)
+

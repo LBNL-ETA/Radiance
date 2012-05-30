@@ -25,3 +25,5 @@ target_link_libraries(total ${LIB_M})
 
 install(TARGETS cnt ev histo icalc neaten rcalc rlam tabfunc total
   RUNTIME DESTINATION bin)
+
+add_subdirectory(cal)

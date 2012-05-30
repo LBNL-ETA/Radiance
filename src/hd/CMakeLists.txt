@@ -23,6 +23,9 @@ if(UNIX)
 
 	add_executable(x11.hdi rhdisp.c rhdisp2.c viewbeams.c rhd_x11.c rhd_qtree.c rhd_qtree2r.c rhd_ctab.c holo.c)
 	target_link_libraries (x11.hdi rtrad ${X11_LIBRARIES})
+  if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+    target_link_libraries(x11.hdi rt)
+  endif()
 	install(TARGETS x11.hdi RUNTIME DESTINATION bin)
 endif()
 

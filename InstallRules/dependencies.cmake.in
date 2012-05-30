@@ -9,4 +9,12 @@ endfunction()
 
 include(BundleUtilities)
 
-fixup_bundle("${CMAKE_INSTALL_PREFIX}/bin/rvu@CMAKE_EXECUTABLE_SUFFIX@" "" "@QT_LIBRARY_DIR@;@X11_LIBRARY_DIR@;@TIFF_LIBRARY_DIRS@")
+set(plugins "")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qgif_plugin@")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qico_plugin@")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qjpeg_plugin@")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qmng_plugin@")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qsvg_plugin@")
+list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@qtiff_plugin@")
+
+fixup_bundle("${CMAKE_INSTALL_PREFIX}/bin/rvu@CMAKE_EXECUTABLE_SUFFIX@" "${plugins}" "@QT_LIBRARY_DIR@;@X11_LIBRARY_DIR@;@TIFF_LIBRARY_DIRS@")

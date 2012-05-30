@@ -13,6 +13,15 @@ if(TIFF_LIBRARY)
     set(TIFF_LIBRARY_DIRS "${TIFF_LIBRARY_DIR}")
   endif()
 endif()
+
+#plugins loaded by rvu at runtime
+get_filename_component(qgif_plugin ${QT_QGIF_PLUGIN_RELEASE} NAME)
+get_filename_component(qico_plugin ${QT_QICO_PLUGIN_RELEASE} NAME)
+get_filename_component(qjpeg_plugin ${QT_QJPEG_PLUGIN_RELEASE} NAME)
+get_filename_component(qmng_plugin ${QT_QMNG_PLUGIN_RELEASE} NAME)
+get_filename_component(qsvg_plugin ${QT_QSVG_PLUGIN_RELEASE} NAME)
+get_filename_component(qtiff_plugin ${QT_QTIFF_PLUGIN_RELEASE} NAME)
+
 configure_file(
    "${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake.in"
    "${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake"

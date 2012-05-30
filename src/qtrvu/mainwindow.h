@@ -48,6 +48,7 @@ protected slots:
   void saveImage();
   void saveCurrentImage();
   void loadView();
+  void loadRif();
   void toggleToolBar();
   void toggleTranslateTool();
   void toggleStatusBar();

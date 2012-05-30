@@ -76,8 +76,12 @@ endif()
 if(UNIX)
 	add_executable(glrad glrad.c)
 	target_link_libraries(glrad rgl rtrad ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+	install(TARGETS rpiece RUNTIME DESTINATION bin)
+  if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+    target_link_libraries(glrad rt)
+  endif()
 endif()
-install(TARGETS dctimestep findglare getinfo glarendx rad ranimate rpiece
+install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
                 rtcontrib vwrays vwright ranimove rsensor
         RUNTIME DESTINATION bin)
 

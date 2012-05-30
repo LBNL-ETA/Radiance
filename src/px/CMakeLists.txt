@@ -74,20 +74,47 @@ target_link_libraries(ra_xyze rtrad)
 add_executable(macbethcal macbethcal.c pmapgen.c mx3.c warp3d.c)
 target_link_libraries(macbethcal rtrad)
 
-find_package(TIFF)
+if(NOT TIFF_LIBRARY)
+  find_package(TIFF)
+endif()
 mark_as_advanced(CLEAR TIFF_INCLUDE_DIR TIFF_LIBRARY)
 
-#special case for manually built libtiff on Mac where find_package fails
+#special case for manually built libtiff where find_package fails
 if(NOT TIFF_FOUND)
-  unset(TIFF_INCLUDE_DIR CACHE)
-  find_library(TIFF_LIBRARY tiff
+  find_library(TIFF_LIBRARY NAMES libtiff.a tiff tiff3 libtiff
     PATHS
       ${CMAKE_CURRENT_SOURCE_DIR}/tiff/libtiff/.libs
-      ${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff/.libs)
+      ${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff/.libs
+      "C:/Program Files/GnuWin32/lib"
+      "C:/Program Files (x86)/GnuWin32/lib"
+  )
+  #if we found the library, search for tiff.h in <tiff-lib-dir>/../include
+  if(TIFF_LIBRARY)
+    get_filename_component(TIFF_LIBRARY_DIR ${TIFF_LIBRARY} PATH)
+    set(TIFF_INCLUDE_HINT "${TIFF_LIBRARY_DIR}/../include")
+    get_filename_component(TIFF_INCLUDE_HINT "${TIFF_INCLUDE_HINT}" ABSOLUTE)
+    find_file(TIFF_HEADER tiff.h PATHS ${TIFF_INCLUDE_HINT})
+    mark_as_advanced(TIFF_HEADER)
+    if(TIFF_HEADER)
+      get_filename_component(TIFF_INCLUDE_DIR "${TIFF_HEADER}" PATH)
+      set(TIFF_INCLUDE_DIR "${TIFF_INCLUDE_DIR}" CACHE PATH "Directory containing tiff.h" FORCE)
+    endif()
+  endif()
+  #if tiff.h couldn't be found, default to the version in the support tarball
+  if(NOT TIFF_INCLUDE_DIR)
+    set(TIFF_INCLUDE_DIR "${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff" CACHE PATH "Directory containing tiff.h" FORCE)
+  endif()
+    
   find_library(Z_LIBRARY z)
   if(TIFF_LIBRARY AND Z_LIBRARY)
     set(TIFF_FOUND TRUE)
-    set(TIFF_LIBRARIES ${TIFF_LIBRARY} ${Z_LIBRARY})
+    get_filename_component(Z_LIBRARY_RESOLVED ${Z_LIBRARY} REALPATH) 
+    set(TIFF_LIBRARIES ${TIFF_LIBRARY} ${Z_LIBRARY_RESOLVED})
+  else()
+    #try find_package again
+    #it should succeed now if TIFF_LIBRARY and TIFF_INCLUDE_DIR are set
+    find_package(TIFF)
+    mark_as_advanced(CLEAR TIFF_INCLUDE_DIR TIFF_LIBRARY)
   endif()
 endif()
 

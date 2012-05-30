@@ -150,6 +150,8 @@ void MainWindow::connectSlots()
           this, SLOT(saveImage()));
   connect(m_ui->loadView, SIGNAL(triggered()),
           this, SLOT(loadView()));
+  connect(m_ui->loadRif, SIGNAL(triggered()),
+          this, SLOT(loadRif()));
   connect(m_ui->backfaceVisibility, SIGNAL(triggered()),
           this, SLOT(toggleBackfaceVisibility()));
   connect(m_ui->grayscale, SIGNAL(triggered()),
@@ -1012,6 +1014,21 @@ void MainWindow::toggleIrradiance()
     }
   this->runCommand(command.toAscii());
   this->runCommand("new");
+}
+  
+void MainWindow::loadRif()
+{
+  bool ok;
+  QString viewName = QInputDialog::getText(this, tr("Input view name"),
+                                      tr("Name of view:"), QLineEdit::Normal,
+                                      "", &ok);
+  if (ok && !viewName.isEmpty())
+    {
+    QString radFileName = QFileDialog::getOpenFileName(this, tr("Open rad File"),
+      "", tr("rad files (*.rif)"));
+    QString command = "L " + viewName + " " + radFileName;
+    this->runCommand(command.toAscii());
+    }
 }
   
 void MainWindow::appendToRif()
