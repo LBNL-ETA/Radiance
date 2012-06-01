@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.63 2011/04/06 00:14:26 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.64 2012/06/01 19:17:17 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -120,13 +120,13 @@ rayorigin(		/* start new ray from old one */
 		r->rweight = minweight;
 		return(0);
 	}
-	return(r->rlvl <= abs(maxdepth) && r->rweight >= minweight ? 0 : -1);
+	return(r->rweight >= minweight && r->rlvl <= abs(maxdepth) ? 0 : -1);
 }
 
 
 extern void
 rayclear(			/* clear a ray for (re)evaluation */
-	register RAY  *r
+	RAY  *r
 )
 {
 	r->rno = raynum++;
@@ -165,7 +165,7 @@ raytrace(			/* trace a ray and compute its value */
 
 extern void
 raycont(			/* check for clipped object and continue */
-	register RAY  *r
+	RAY  *r
 )
 {
 	if ((r->clipset != NULL && inset(r->clipset, r->ro->omod)) ||
@@ -176,7 +176,7 @@ raycont(			/* check for clipped object and continue */
 
 extern void
 raytrans(			/* transmit ray as is */
-	register RAY  *r
+	RAY  *r
 )
 {
 	RAY  tr;
@@ -192,11 +192,11 @@ raytrans(			/* transmit ray as is */
 
 extern int
 rayshade(		/* shade ray r with material mod */
-	register RAY  *r,
+	RAY  *r,
 	int  mod
 )
 {
-	register OBJREC  *m;
+	OBJREC  *m;
 
 	r->rt = r->rot;			/* set effective ray length */
 	for ( ; mod != OVOID; mod = m->omod) {
@@ -227,7 +227,7 @@ rayshade(		/* shade ray r with material mod */
 
 extern void
 rayparticipate(			/* compute ray medium participation */
-	register RAY  *r
+	RAY  *r
 )
 {
 	COLOR	ce, ca;
@@ -264,7 +264,7 @@ raytexture(			/* get material modifiers */
 	OBJECT  mod
 )
 {
-	register OBJREC  *m;
+	OBJREC  *m;
 					/* execute textures and patterns */
 	for ( ; mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
@@ -285,7 +285,7 @@ raytexture(			/* get material modifiers */
 
 extern int
 raymixture(		/* mix modifiers */
-	register RAY  *r,
+	RAY  *r,
 	OBJECT  fore,
 	OBJECT  back,
 	double  coef
@@ -293,7 +293,7 @@ raymixture(		/* mix modifiers */
 {
 	RAY  fr, br;
 	int  foremat, backmat;
-	register int  i;
+	int  i;
 					/* bound coefficient */
 	if (coef > 1.0)
 		coef = 1.0;
@@ -345,8 +345,8 @@ raymixture(		/* mix modifiers */
 
 extern double
 raydist(		/* compute (cumulative) ray distance */
-	register const RAY  *r,
-	register int  flags
+	const RAY  *r,
+	int  flags
 )
 {
 	double  sum = 0.0;
@@ -388,11 +388,11 @@ raycontrib(		/* compute (cumulative) ray contribution */
 extern double
 raynormal(		/* compute perturbed normal for ray */
 	FVECT  norm,
-	register RAY  *r
+	RAY  *r
 )
 {
 	double  newdot;
-	register int  i;
+	int  i;
 
 	/*	The perturbation is added to the surface normal to obtain
 	 *  the new normal.  If the new normal would affect the surface
@@ -430,8 +430,8 @@ newrayxf(			/* get new tranformation matrix for ray */
 		struct xfn  *next;
 		FULLXF  xf;
 	}  xfseed = { &xfseed }, *xflast = &xfseed;
-	register struct xfn  *xp;
-	register const RAY  *rp;
+	struct xfn  *xp;
+	const RAY  *rp;
 
 	/*
 	 * Search for transform in circular list that
@@ -442,7 +442,7 @@ newrayxf(			/* get new tranformation matrix for ray */
 		if (rp->rox == &xp->xf) {		/* xp in use */
 			xp = xp->next;			/* move to next */
 			if (xp == xflast) {		/* need new one */
-				xp = (struct xfn *)malloc(sizeof(struct xfn));
+				xp = (struct xfn *)bmalloc(sizeof(struct xfn));
 				if (xp == NULL)
 					error(SYSTEM,
 						"out of memory in newrayxf");
@@ -461,7 +461,7 @@ newrayxf(			/* get new tranformation matrix for ray */
 
 extern void
 flipsurface(			/* reverse surface orientation */
-	register RAY  *r
+	RAY  *r
 )
 {
 	r->rod = -r->rod;
@@ -493,15 +493,15 @@ rayhit(			/* standard ray hit test */
 
 extern int
 localhit(		/* check for hit in the octree */
-	register RAY  *r,
-	register CUBE  *scene
+	RAY  *r,
+	CUBE  *scene
 )
 {
 	OBJECT  cxset[MAXCSET+1];	/* set of checked objects */
 	FVECT  curpos;			/* current cube position */
 	int  sflags;			/* sign flags */
 	double  t, dt;
-	register int  i;
+	int  i;
 
 	nrays++;			/* increment trace counter */
 	sflags = 0;
@@ -559,8 +559,8 @@ raymove(		/* check for hit as we move */
 	FVECT  pos,			/* current position, modified herein */
 	OBJECT  *cxs,			/* checked objects, modified by checkhit */
 	int  dirf,			/* direction indicators to speed tests */
-	register RAY  *r,
-	register CUBE  *cu
+	RAY  *r,
+	CUBE  *cu
 )
 {
 	int  ax;
@@ -568,7 +568,7 @@ raymove(		/* check for hit as we move */
 
 	if (istree(cu->cutree)) {		/* recurse on subcubes */
 		CUBE  cukid;
-		register int  br, sgn;
+		int  br, sgn;
 
 		cukid.cusize = cu->cusize * 0.5;	/* find subcube */
 		VCOPY(cukid.cuorg, cu->cuorg);
@@ -641,7 +641,7 @@ raymove(		/* check for hit as we move */
 
 static int
 checkhit(		/* check for hit in full cube */
-	register RAY  *r,
+	RAY  *r,
 	CUBE  *cu,
 	OBJECT  *cxs
 )
@@ -662,12 +662,12 @@ checkhit(		/* check for hit in full cube */
 
 static void
 checkset(		/* modify checked set and set to check */
-	register OBJECT  *os,			/* os' = os - cs */
-	register OBJECT  *cs			/* cs' = cs + os */
+	OBJECT  *os,			/* os' = os - cs */
+	OBJECT  *cs			/* cs' = cs + os */
 )
 {
 	OBJECT  cset[MAXCSET+MAXSET+1];
-	register int  i, j;
+	int  i, j;
 	int  k;
 					/* copy os in place, cset <- cs */
 	cset[0] = 0;
