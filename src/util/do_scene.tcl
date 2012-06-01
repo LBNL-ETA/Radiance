@@ -1,4 +1,4 @@
-# RCSid: $Id: do_scene.tcl,v 2.4 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: do_scene.tcl,v 2.5 2012/06/01 22:55:14 greg Exp $
 #
 # Track octree and scene files
 #
@@ -216,7 +216,7 @@ proc do_scene w {		# Create scene screen
 			-anchor se
 	helplink $w.revert trad scene revert
 	button $w.copy -text Copy -relief raised -command {getfile -grab \
-			-send copyscene -view view_txt -glob $rif_glob}
+			-send copyscene -view view_txt -glob $myglob(rif)}
 	place $w.copy -relwidth .1071 -relheight .0610 -relx .98 -rely .90 \
 			-anchor se
 	helplink $w.copy trad scene copy

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.53 2012/01/21 22:04:02 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.54 2012/06/01 22:55:14 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -235,7 +235,7 @@ dolock(		/* lock or unlock a file */
 	if (fcntl(fd, F_SETLKW, &fls) < 0) {
 		fprintf(stderr, "%s: cannot lock/unlock file: %s\n",
 				progname, strerror(errno));
-		exit(1);
+		_exit(1);
 	}
 }
 
@@ -573,8 +573,12 @@ int	ypos
 				/* lock file section so NFS doesn't mess up */
 	fls.l_whence = 0;
 	fls.l_type = F_WRLCK;
+#if 0
 	if (fcntl(outfd, F_SETLKW, &fls) < 0)
 		filerr("lock");
+#else
+	dolock(outfd, F_WRLCK);
+#endif
 #endif
 				/* write new piece to file */
 	if (lseek(outfd, (off_t)fls.l_start, SEEK_SET) < 0)
@@ -595,8 +599,12 @@ int	ypos
 		}
 #if NFS
 	fls.l_type = F_UNLCK;		/* release lock */
+#if 0
 	if (fcntl(outfd, F_SETLKW, &fls) < 0)
 		filerr("lock");
+#else
+	dolock(outfd, F_UNLCK);
+#endif
 #endif
 	if (verbose) {				/* notify caller */
 		printf("%d %d done\n", xpos, ypos);

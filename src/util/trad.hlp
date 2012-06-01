@@ -1143,6 +1143,24 @@ is a batch job in progress, and thus the view cannot be changed.
 The batch rendering view menu also selects the view or views
 to use in producing a script during a dry run.
 
+.Action.Processes
+
+The "Number of processes" slider controls how many independent
+processes are initiated by the "rvu" and "Start" buttons above
+and below.
+This should be set no greater than the number of virtual cores
+on your system.
+
+For interactive rendering, the "new" command within rvu may
+be used to change the number of processes running.
+
+For rendering in the background, the number of processes will
+never be greater than the number of views if all views are
+bing rendered.
+If only a single view is selected for batch rendering, rad
+will call rpiece to render it in sections using the selected
+number of processes.
+
 .Action.Start
 
 The "Start" button for batch rendering on the Action screen

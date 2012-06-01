@@ -1,10 +1,11 @@
-# RCSid: $Id: do_action.tcl,v 2.12 2005/02/16 05:40:12 greg Exp $
+# RCSid: $Id: do_action.tcl,v 2.13 2012/06/01 22:55:14 greg Exp $
 #
 # Action screen for trad
 #
 
 set batch_fmt "Process %d on %s started"
 set hostname [exec hostname]
+set nproc 1
 
 proc make_script {} {		# make run script
 	global scname rpview curmess
@@ -48,6 +49,11 @@ proc make_oct args {		# Make octree file ($args is {-t} or {})
 	}
 }
 
+proc set_nproc v {		# set number of processes
+	global nproc
+	set nproc $v
+}
+
 proc run_rad args {		# Run rad command with given arguments
 	global curmess
 	set rfn /tmp/rf[pid]
@@ -67,7 +73,7 @@ proc run_rad args {		# Run rad command with given arguments
 }
 
 proc run_batch {} {		# start rendering in background
-	global rpview bfname batch_pid curmess rifname mywin batch_fmt hostname
+	global rpview bfname batch_pid curmess rifname mywin batch_fmt hostname nproc
 	if {! [chksave]} {return}
 	if [catch {set fo [open $bfname w]} curmess] {
 		return
@@ -76,9 +82,9 @@ proc run_batch {} {		# start rendering in background
 	puts $fo \
 "                                                                             "
 	if {$rpview == " ALL"} {
-		set radcom "rad"
+		set radcom "rad -N $nproc"
 	} else {
-		set radcom "rad -v $rpview"
+		set radcom "rad -v $rpview -N $nproc"
 	}
 	lappend radcom "[file tail $rifname]"
 	# Put out command
@@ -171,7 +177,7 @@ proc make_vmenus {} {		# make/update view menus
 }
 
 proc do_action w {		# Action screen
-	global rifname rvview rpview radvar bfname batch_pid \
+	global rifname rvview rpview radvar bfname batch_pid nproc \
 			curmess scname mywin alldone batch_fmt hostname
 	if {"$w" == "done"} {
 		unset rvview rpview bfname batch_pid mywin
@@ -195,33 +201,41 @@ proc do_action w {		# Action screen
 	helplink $w.octf trad action force
 	# Render interactively
 	label $w.ril -text {Render interactively}
-	place $w.ril -relx .1429 -rely .2439
+	place $w.ril -relx .1429 -rely .2329
 	button $w.rirv -text rvu -relief raised \
-			-command {run_rad -v $rvview -o x11}
-	place $w.rirv -relwidth .1071 -relheight .0610 -relx .4643 -rely .2439
+			-command {run_rad -v $rvview -o x11 -N $nproc}
+	place $w.rirv -relwidth .1071 -relheight .0610 -relx .4643 -rely .2329
 	helplink $w.rirv trad action rvu
 	label $w.rivl -text View:
-	place $w.rivl -relx .6072 -rely .2439
+	place $w.rivl -relx .6072 -rely .2329
 	menubutton $w.rivmb -textvariable rvview -anchor w -relief raised
-	place $w.rivmb -relwidth .1071 -relheight .0610 -relx .7143 -rely .2439
+	place $w.rivmb -relwidth .1071 -relheight .0610 -relx .7143 -rely .2329
 	helplink $w.rivmb trad action view
+	# Number of processes
+	label $w.rnpl -text {Number of processes:}
+	place $w.rnpl -relx .1429 -rely .3394
+	scale $w.rnps -showvalue yes -from 1 -to 64 \
+			-orient horizontal -command set_nproc
+	$w.rnps set $nproc
+	place $w.rnps -relwidth .5550 -relheight .1200 -relx .3683 -rely .3000
+	helplink $w.rnps trad action processes
 	# Render in background
 	label $w.rbl -text {Render in background}
-	place $w.rbl -relx .1429 -rely .4268
+	place $w.rbl -relx .1429 -rely .4458
 	button $w.rbst -text Start -relief raised -command run_batch
-	place $w.rbst -relwidth .1071 -relheight .0610 -relx .4643 -rely .4268
+	place $w.rbst -relwidth .1071 -relheight .0610 -relx .4643 -rely .4458
 	helplink $w.rbst trad action start
 	label $w.rbvl -text View:
-	place $w.rbvl -relx .6072 -rely .4268
+	place $w.rbvl -relx .6072 -rely .4458
 	menubutton $w.rbvmb -textvariable rpview -anchor w -relief raised
-	place $w.rbvmb -relwidth .1071 -relheight .0610 -relx .7143 -rely .4268
+	place $w.rbvmb -relwidth .1071 -relheight .0610 -relx .7143 -rely .4458
 	helplink $w.rbvmb trad action view
 	button $w.rbki -text Kill -relief raised -command kill_batch
-	place $w.rbki -relwidth .1071 -relheight .0610 -relx .4643 -rely .5488
+	place $w.rbki -relwidth .1071 -relheight .0610 -relx .4643 -rely .5668
 	helplink $w.rbki trad action kill
 	button $w.rbce -text "Check errors" -relief raised \
 			-command {view_txt $bfname}
-	place $w.rbce -relwidth .1786 -relheight .0610 -relx .6429 -rely .5488
+	place $w.rbce -relwidth .1786 -relheight .0610 -relx .6429 -rely .5668
 	helplink $w.rbce trad action checkerr
 	if [file isfile $bfname] {
 		set fi [open $bfname r]
@@ -273,17 +287,17 @@ proc do_action w {		# Action screen
 	make_vmenus
 	# Dry run
 	label $w.drl -text {Dry run}
-	place $w.drl -relx .1429 -rely .7317
+	place $w.drl -relx .1429 -rely .7357
 	button $w.drsc -text Script -relief raised -command make_script
-	place $w.drsc -relwidth .1071 -relheight .0610 -relx .4643 -rely .7317
+	place $w.drsc -relwidth .1071 -relheight .0610 -relx .4643 -rely .7357
 	entry $w.drsf -textvariable scname -relief sunken
-	place $w.drsf -relwidth .2143 -relheight .0610 -relx .6429 -rely .7317
+	place $w.drsf -relwidth .2143 -relheight .0610 -relx .6429 -rely .7357
 	helplink "$w.drsc $w.drsf" trad action script
 	button $w.drvw -text Edit -relief raised -command {view_txt $scname}
-	place $w.drvw -relwidth .1071 -relheight .0610 -relx .4643 -rely .8537
+	place $w.drvw -relwidth .1071 -relheight .0610 -relx .4643 -rely .8577
 	helplink $w.drvw trad action edit
 	button $w.drdel -text Delete -relief raised \
 			-command {catch {exec rm $scname < /dev/null} curmess}
-	place $w.drdel -relwidth .1071 -relheight .0610 -relx .6429 -rely .8537
+	place $w.drdel -relwidth .1071 -relheight .0610 -relx .6429 -rely .8577
 	helplink $w.drdel trad action delete
 }
