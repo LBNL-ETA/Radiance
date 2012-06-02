@@ -1156,9 +1156,9 @@ be used to change the number of processes running.
 
 For rendering in the background, the number of processes will
 never be greater than the number of views if all views are
-bing rendered.
-If only a single view is selected for batch rendering, rad
-will call rpiece to render it in sections using the selected
+being rendered.
+If only a single view is selected for rendering, rad
+will call rpiece to render it in tiles using the given
 number of processes.
 
 .Action.Start
