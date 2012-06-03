@@ -22,6 +22,8 @@ If an attempt is made to change to a non-existent or read-protected
 directory, an error message is printed in red and the interface
 returns to the previously selected directory.
 
+Hitting <return> in a list window is equivalent to double-clicking.
+
 .Directory.Match
 
 One or more matching (i.e. globbing) patterns may be given in this window,

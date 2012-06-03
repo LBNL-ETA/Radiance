@@ -1,4 +1,4 @@
-# RCSid: $Id: getfile.tcl,v 2.2 2003/02/22 02:07:30 greg Exp $
+# RCSid: $Id: getfile.tcl,v 2.3 2012/06/03 20:13:51 greg Exp $
 #
 # Usage: getfile [-win w] [-grab] [-perm] [-glob pattern] [-view proc] [-send proc]
 #
@@ -96,12 +96,16 @@ proc getfile args {		# get filename interactively
 	helplink $w.fm.fl file file intro
 	if [info exists sendproc] {
 		bind $w.fm.fl <Double-Button-1> "set_curfile $w $sendproc"
+		bind $w.fm.fl <Return> "set_curfile $w $sendproc"
 		if {$transient} {
 			bind $w.fm.fl <Double-Button-1> \
+					"+if {\$curfile > {}} {destroy $w}"
+			bind $w.fm.fl <Return> \
 					"+if {\$curfile > {}} {destroy $w}"
 		}
 	} else {
 		bind $w.fm.fl <Double-Button-1> "set_curfile $w"
+		bind $w.fm.fl <Return> "set_curfile $w"
 		label $w.fl -text File:
 		place $w.fl -relx .10625 -rely .875
 		entry $w.fn -relief sunken -textvariable curfile
