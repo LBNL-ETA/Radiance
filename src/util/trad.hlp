@@ -584,17 +584,17 @@ An invented name should be kept as short as possible, since it is
 added to the picture file name along with the standard ".pic" suffix.
 
 The standard views are specified by strings of the form
-"[Xx]?[Yy]?[Zz]?[vlahc]?".
+"[Xx]?[Yy]?[Zz]?[vlahsc]?".
 (That is, an optional upper or lower case X followed by an optional
 upper or lower case Y followed by an optional upper or lower case Z
-followed by an optional lower case V, L, A, H or C.)
+followed by an optional lower case view type.)
 The letters indicate the desired view position, where upper case "X"
 means maximum X, lower case "y" means minimum Y and so on.
 The final letter is the view type, where 'v' is perspective (the
 default), 'l' is parallel, 'a' is angular fisheye, 'h' is
-hemispherical fisheye and 'c' is for cylindrical panorama.
-A perspective view from maximum X, minimum Y would be "Xy" or
-"Xyv".
+hemispherical fisheye, 's' is for planisphere (stereographic) fisheye,
+and 'c' is for cylindrical panorama.
+A perspective view from maximum X, minimum Y would be "Xy" or "Xyv".
 A parallel view from maximum Z would be "Zl".
 If "ZONE" is an interior zone, the standard views will
 be inside the perimeter.
@@ -633,7 +633,7 @@ interaction mode for trad.
 Consult the rpict(1) manual page for a full description of the various
 view options, all of which begin with "-v".
 Just briefly, the "-vt?" option sets the view type, where "?" is
-replaced by one of the letters "v, l, a, h or c", corresponding to
+replaced by one of the letters "v, l, a, h, s or c", corresponding to
 perspective, parallel, angular fisheye, hemispherical fisheye
 and cylindrical panorama, respectively.
 The "-vp x y z" option sets the view position (eyepoint), where "x y z"
