@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.24 2011/02/22 16:45:12 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.25 2012/06/07 18:56:06 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -33,7 +33,7 @@ static RAY  *fray = NULL;	/* current function ray */
 static double  l_erf(char *), l_erfc(char *), l_arg(char *);
 
 
-extern MFUNC *
+MFUNC *
 getfunc(	/* get function for this modifier */
 	OBJREC  *m,
 	int  ff,
@@ -43,10 +43,10 @@ getfunc(	/* get function for this modifier */
 {
 	static char  initfile[] = INITFILE;
 	char  sbuf[MAXSTR];
-	register char  **arg;
-	register MFUNC  *f;
+	char  **arg;
+	MFUNC  *f;
 	int  ne, na;
-	register int  i;
+	int  i;
 					/* check to see if done already */
 	if ((f = (MFUNC *)m->os) != NULL)
 		return(f);
@@ -135,13 +135,13 @@ memerr:
 }
 
 
-extern void
+void
 freefunc(			/* free memory associated with modifier */
 	OBJREC  *m
 )
 {
-	register MFUNC  *f;
-	register int  i;
+	MFUNC  *f;
+	int  i;
 
 	if ((f = (MFUNC *)m->os) == NULL)
 		return;
@@ -158,28 +158,30 @@ freefunc(			/* free memory associated with modifier */
 	}
 	if (f->b != &unitxf)
 		free((void *)f->b);
-	if (f->f != NULL && f->f != &unitxf)
+	if ((f->f != NULL) & (f->f != &unitxf))
 		free((void *)f->f);
 	free((void *)f);
 	m->os = NULL;
 }
 
 
-extern int
+int
 setfunc(			/* set channels for function call */
-	OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,			/* can be NULL */
+	RAY  *r
 )
 {
 	static RNUMBER  lastrno = ~0;
-	register MFUNC  *f;
-					/* get function */
-	if ((f = (MFUNC *)m->os) == NULL)
-		objerror(m, CONSISTENCY, "setfunc called before getfunc");
-					/* set evaluator context */
-	setcontext(f->ctx);
+	MFUNC  *f;
+					/* get function if any */
+	if (m != NULL) {
+		if ((f = (MFUNC *)m->os) == NULL)
+			objerror(m, CONSISTENCY, "setfunc called before getfunc");
+		setcontext(f->ctx);	/* set evaluator context */
+	} else
+		setcontext("");
 					/* check to see if matrix set */
-	if (m == fobj && r->rno == lastrno)
+	if ((m == fobj) & (r->rno == lastrno))
 		return(0);
 	fobj = m;
 	fray = r;
@@ -197,7 +199,7 @@ setfunc(			/* set channels for function call */
 }
 
 
-extern void
+void
 loadfunc(			/* load definition file */
 	char  *fname
 )
@@ -215,10 +217,10 @@ loadfunc(			/* load definition file */
 static double
 l_arg(char *nm)			/* return nth real argument */
 {
-	register int  n;
+	int  n;
 
 	if (fobj == NULL)
-		syntax("arg(n) used in constant expression");
+		error(USER, "arg(n) called without a context");
 
 	n = argument(1) + .5;		/* round to integer */
 
@@ -247,9 +249,9 @@ l_erfc(char *nm)		/* cumulative error function */
 }
 
 
-extern double
+double
 chanvalue(			/* return channel n to calcomp */
-	register int  n
+	int  n
 )
 {
 	if (fray == NULL)
