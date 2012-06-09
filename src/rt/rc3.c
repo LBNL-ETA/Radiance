@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.1 2012/06/09 07:16:47 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.2 2012/06/09 16:47:27 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -23,6 +23,7 @@ static BINQ	*out_bq = NULL;		/* output bin queue */
 static BINQ	*free_bq = NULL;	/* free queue entries */
 
 static SUBPROC	kida[MAXPROCESS];	/* child processes */
+static FILE	*inq_fp[MAXPROCESS];	/* input streams */
 
 
 /* Get new (empty) bin queue entry */
@@ -122,13 +123,11 @@ add_modbin(BINQ *dst, BINQ *src)
 }
 
 
-/* Queue output, catching up with and freeing FIFO entries when possible */
-static int
+/* Queue values for later output */
+static void
 queue_output(BINQ *bp)
 {
-	int	nout = 0;
 	BINQ	*b_last, *b_cur;
-	int	i;
 
 	if (accumulate <= 0) {		/* just accumulating? */
 		if (out_bq == NULL) {
@@ -138,7 +137,7 @@ queue_output(BINQ *bp)
 			add_modbin(out_bq, bp);
 			free_binq(bp);
 		}
-		return(0);
+		return;
 	}
 	b_last = NULL;			/* else insert in output queue */
 	for (b_cur = out_bq; b_cur != NULL && b_cur->ndx < bp->ndx;
@@ -151,32 +150,45 @@ queue_output(BINQ *bp)
 		bp->next = out_bq;
 		out_bq = bp;
 	}
-	if (accumulate > 1) {		/* merge accumulation entries */
-		b_cur = out_bq;
-		while (b_cur->next != NULL) {
-			if (b_cur->n2add <= 0 ||
-					(b_cur->ndx-1)/accumulate !=
-					(b_cur->next->ndx-1)/accumulate) {
-				b_cur = b_cur->next;
-				continue;
-			}
-			add_modbin(b_cur, b_cur->next);
-			b_cur->n2add--;
-			b_last = b_cur->next;
-			b_cur->next = b_last->next;
-			b_last->next = NULL;
-			free_binq(b_last);
+	if (accumulate <= 1)		/* no accumulating? */
+		return;
+	b_cur = out_bq;			/* else merge accumulation entries */
+	while (b_cur->next != NULL) {
+		if (b_cur->n2add <= 0 ||
+				(b_cur->ndx-1)/accumulate !=
+				(b_cur->next->ndx-1)/accumulate) {
+			b_cur = b_cur->next;
+			continue;
 		}
+		add_modbin(b_cur, b_cur->next);
+		b_cur->n2add--;
+		b_last = b_cur->next;
+		b_cur->next = b_last->next;
+		b_last->next = NULL;
+		free_binq(b_last);
 	}
-					/* output ready results */
+}
+
+
+/* Get current with output FIFO by producing ready results */
+static int
+output_catchup()
+{
+	int	nout = 0;
+	BINQ	*bp;
+	int	i;
+
+	if (accumulate <= 0)		/* just accumulating? */
+		return(0);
+					/* else output ready results */
 	while (out_bq != NULL && (out_bq->ndx == lastdone+1) & !out_bq->n2add) {
-		b_cur = out_bq;			/* pop off first entry */
-		out_bq = b_cur->next;
-		b_cur->next = NULL;
+		bp = out_bq;			/* pop off first entry */
+		out_bq = bp->next;
+		bp->next = NULL;
 		for (i = 0; i < nmods; i++)	/* output record */
-			mod_output(b_cur->mca[i]);
+			mod_output(bp->mca[i]);
 		end_record();
-		free_binq(b_cur);		/* free this entry */
+		free_binq(bp);			/* free this entry */
 		lastdone += accumulate;
 		++nout;
 	}
@@ -247,6 +259,9 @@ in_rchild()
 		kida[nchild].w = p0[1];
 		kida[nchild].pid = pid;
 		kida[nchild].running = -1;
+		inq_fp[nchild] = fdopen(p1[0], "rb");
+		if (inq_fp[nchild] == NULL)
+			error(SYSTEM, "out of memory in in_rchild()");
 		++nchild;
 	}
 	return(0);			/* parent return value */
@@ -260,22 +275,28 @@ end_children()
 {
 	int	status;
 	
-	while (nchild-- > 0)
+	while (nchild-- > 0) {
+		kida[nchild].r = -1;	/* close(-1) error is ignored */
 		if ((status = close_process(&kida[nchild])) > 0) {
 			sprintf(errmsg,
 				"rendering process returned bad status (%d)",
 					status);
 			error(WARNING, errmsg);
 		}
+		fclose(inq_fp[nchild]);	/* performs actual close() */
+	}
 }
 
 
-/* Wait for the next available child */
+/* Wait for the next available child, managing output queue as well */
 static int
 next_child_nq(int force_wait)
 {
-	fd_set	readset, errset;
-	int	i, j, n, nr;
+	static struct timeval	polling;
+	struct timeval		*pmode = force_wait | (accumulate <= 0) ?
+					(struct timeval *)NULL : &polling;
+	fd_set			readset, errset;
+	int			i, j, n, nr;
 
 	if (!force_wait)		/* see if there's one free */
 		for (i = nchild; i--; )
@@ -295,9 +316,17 @@ next_child_nq(int force_wait)
 	}
 	if (!nr)			/* nothing going on */
 		return(-1);
-	if (nr > 1) {			/* call select if multiple busy */
+tryagain:
+	if (pmode == NULL)		/* about to block, so catch up */
+		output_catchup();
+	if ((nr > 1) | (pmode == &polling)) {
 		errno = 0;
-		if (select(n, &readset, NULL, &errset, NULL) < 0)
+		nr = select(n, &readset, NULL, &errset, pmode);
+		if (!nr & (pmode == &polling)) {
+			pmode = NULL;	/* try again, blocking this time */
+			goto tryagain;
+		}
+		if (nr <= 0)
 			error(SYSTEM, "select call error in next_child_nq()");
 	} else
 		FD_ZERO(&errset);
@@ -312,8 +341,8 @@ next_child_nq(int force_wait)
 		bq->ndx = kida[i].running;
 					/* read from child */
 		for (j = 0; j < nmods; j++) {
-			n = sizeof(DCOLOR)*bq->mca[j]->nbins;
-			nr = readbuf(kida[i].r, (char *)bq->mca[j]->cbin, n);
+			n = bq->mca[j]->nbins;
+			nr = fread(bq->mca[j]->cbin,sizeof(DCOLOR),n,inq_fp[i]);
 			if (nr != n)
 				error(SYSTEM, "read error from render process");
 		}
