@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_data.c,v 2.9 2010/10/25 22:57:45 greg Exp $";
+static const char	RCSid[] = "$Id: t_data.c,v 2.10 2012/06/09 07:16:47 greg Exp $";
 #endif
 /*
  *  t_data.c - routine for stored textures
@@ -67,13 +67,13 @@ t_data(			/* interpolate texture data */
 		disp[i] = funvalue(m->oargs.sarg[i], 3, dval);
 	if (errno == EDOM || errno == ERANGE)
 		goto computerr;
-	if (mf->f != &unitxf)
-		multv3(disp, disp, mf->f->xfm);
+	if (mf->fxp != &unitxf)
+		multv3(disp, disp, mf->fxp->xfm);
 	if (r->rox != NULL) {
 		multv3(disp, disp, r->rox->f.xfm);
-		d = 1.0 / (mf->f->sca * r->rox->f.sca);
+		d = 1.0 / (mf->fxp->sca * r->rox->f.sca);
 	} else
-		d = 1.0 / mf->f->sca;
+		d = 1.0 / mf->fxp->sca;
 	VSUM(r->pert, r->pert, disp, d);
 	return(0);
 computerr:

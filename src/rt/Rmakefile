@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.63 2011/02/18 02:41:55 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.64 2012/06/09 07:16:47 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -54,6 +54,9 @@ RPSRC = rpmain.c rpict.c srcdraw.c duphead.c persist.c
 RVOBJS = rvmain.o rview.o rv2.o rv3.o $(DOBJS)
 RVSRC = rvmain.c rview.c rv2.c rv3.c $(DSRC)
 
+RCOBJS = rcmain.o rcontrib.o rc2.o rc3.o
+RCSRC = rcmain.c rcontrib.c rc2.c rc3.c
+
 RLOBJS = raycalls.o raypcalls.o rayfifo.o
 RLSRC = raycalls.c raypcalls.c rayfifo.c
 
@@ -89,7 +92,8 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 # What this makefile produces:
 #
 
-PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/lookamb
+PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/rcontrib \
+$(DESTDIR)/lookamb
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
@@ -120,6 +124,9 @@ $(DESTDIR)/rpict:	$(RPOBJS) $(RLIB)
 $(DESTDIR)/rvu:	$(RVOBJS) $(RCLIB) $(RLIB)
 	$(CC) $(CFLAGS) -o $(DESTDIR)/rvu $(RVOBJS) $(RCLIB) \
 $(RLIB) $(LIBS) $(DLIBS)
+
+$(DESTDIR)/rcontrib:      $(RCOBJS) $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/rcontrib $(RCOBJS) $(RLIB) $(LIBS)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)

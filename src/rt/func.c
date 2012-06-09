@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.25 2012/06/07 18:56:06 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.26 2012/06/09 07:16:47 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -30,7 +30,36 @@ XF  funcxf;			/* current transformation */
 static OBJREC  *fobj = NULL;	/* current function object */
 static RAY  *fray = NULL;	/* current function ray */
 
+static char  rayinitcal[] = INITFILE;
+
 static double  l_erf(char *), l_erfc(char *), l_arg(char *);
+
+
+void
+initfunc()	/* initialize function evaluation */
+{
+	if (!rayinitcal[0])	/* already done? */
+		return;
+	esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
+	esupport &= ~(E_OUTCHAN);
+	setcontext("");
+	scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
+	scompile("Nx=$4;Ny=$5;Nz=$6;", NULL, 0);
+	scompile("Px=$7;Py=$8;Pz=$9;", NULL, 0);
+	scompile("T=$10;Ts=$25;Rdot=$11;", NULL, 0);
+	scompile("S=$12;Tx=$13;Ty=$14;Tz=$15;", NULL, 0);
+	scompile("Ix=$16;Iy=$17;Iz=$18;", NULL, 0);
+	scompile("Jx=$19;Jy=$20;Jz=$21;", NULL, 0);
+	scompile("Kx=$22;Ky=$23;Kz=$24;", NULL, 0);
+	scompile("Lu=$26;Lv=$27;", NULL, 0);
+	funset("arg", 1, '=', l_arg);
+	funset("erf", 1, ':', l_erf);
+	funset("erfc", 1, ':', l_erfc);
+	setnoisefuncs();
+	setprismfuncs();
+	loadfunc(rayinitcal);
+	rayinitcal[0] = '\0';
+}
 
 
 MFUNC *
@@ -41,7 +70,6 @@ getfunc(	/* get function for this modifier */
 	int  dofwd
 )
 {
-	static char  initfile[] = INITFILE;
 	char  sbuf[MAXSTR];
 	char  **arg;
 	MFUNC  *f;
@@ -51,36 +79,17 @@ getfunc(	/* get function for this modifier */
 	if ((f = (MFUNC *)m->os) != NULL)
 		return(f);
 	fobj = NULL; fray = NULL;
-	if (initfile[0]) {		/* initialize on first call */
-		esupport |= E_VARIABLE|E_FUNCTION|E_INCHAN|E_RCONST|E_REDEFW;
-		esupport &= ~(E_OUTCHAN);
-		setcontext("");
-		scompile("Dx=$1;Dy=$2;Dz=$3;", NULL, 0);
-		scompile("Nx=$4;Ny=$5;Nz=$6;", NULL, 0);
-		scompile("Px=$7;Py=$8;Pz=$9;", NULL, 0);
-		scompile("T=$10;Ts=$25;Rdot=$11;", NULL, 0);
-		scompile("S=$12;Tx=$13;Ty=$14;Tz=$15;", NULL, 0);
-		scompile("Ix=$16;Iy=$17;Iz=$18;", NULL, 0);
-		scompile("Jx=$19;Jy=$20;Jz=$21;", NULL, 0);
-		scompile("Kx=$22;Ky=$23;Kz=$24;", NULL, 0);
-		scompile("Lu=$26;Lv=$27;", NULL, 0);
-		funset("arg", 1, '=', l_arg);
-		funset("erf", 1, ':', l_erf);
-		funset("erfc", 1, ':', l_erfc);
-		setnoisefuncs();
-		setprismfuncs();
-		loadfunc(initfile);
-		initfile[0] = '\0';
-	}
+	if (rayinitcal[0])		/* initialize on first call */
+		initfunc();
 	if ((na = m->oargs.nsargs) <= ff)
 		goto toofew;
 	arg = m->oargs.sarg;
 	if ((f = (MFUNC *)calloc(1, sizeof(MFUNC))) == NULL)
 		goto memerr;
 	i = strlen(arg[ff]);			/* set up context */
-	if (i == 1 && arg[ff][0] == '.')
+	if (i == 1 && arg[ff][0] == '.') {
 		setcontext(f->ctx = "");	/* "." means no file */
-	else {
+	} else {
 		strcpy(sbuf,arg[ff]);		/* file name is context */
 		if (i > LCALSUF && !strcmp(sbuf+i-LCALSUF, CALSUF))
 			sbuf[i-LCALSUF] = '\0';	/* remove suffix */
@@ -108,21 +117,21 @@ getfunc(	/* get function for this modifier */
 		i = ff+1;
 	while (i < na && arg[i][0] != '-')
 		i++;
-	if (i == na)			/* no transform */
-		f->f = f->b = &unitxf;
-	else {				/* get transform */
-		if ((f->b = (XF *)malloc(sizeof(XF))) == NULL)
+	if (i == na) {			/* no transform */
+		f->fxp = f->bxp = &unitxf;
+	} else {			/* get transform */
+		if ((f->bxp = (XF *)malloc(sizeof(XF))) == NULL)
 			goto memerr;
-		if (invxf(f->b, na-i, arg+i) != na-i)
+		if (invxf(f->bxp, na-i, arg+i) != na-i)
 			objerror(m, USER, "bad transform");
-		if (f->b->sca < 0.0)
-			f->b->sca = -f->b->sca;
+		if (f->bxp->sca < 0.0)
+			f->bxp->sca = -f->bxp->sca;
 		if (dofwd) {			/* do both transforms */
-			if ((f->f = (XF *)malloc(sizeof(XF))) == NULL)
+			if ((f->fxp = (XF *)malloc(sizeof(XF))) == NULL)
 				goto memerr;
-			xf(f->f, na-i, arg+i);
-			if (f->f->sca < 0.0)
-				f->f->sca = -f->f->sca;
+			xf(f->fxp, na-i, arg+i);
+			if (f->fxp->sca < 0.0)
+				f->fxp->sca = -f->fxp->sca;
 		}
 	}
 	m->os = (char *)f;
@@ -156,10 +165,10 @@ freefunc(			/* free memory associated with modifier */
 			dcleanup(2);		/* remove definitions */
 		freestr(f->ctx);
 	}
-	if (f->b != &unitxf)
-		free((void *)f->b);
-	if ((f->f != NULL) & (f->f != &unitxf))
-		free((void *)f->f);
+	if (f->bxp != &unitxf)
+		free((void *)f->bxp);
+	if ((f->fxp != NULL) & (f->fxp != &unitxf))
+		free((void *)f->fxp);
 	free((void *)f);
 	m->os = NULL;
 }
@@ -167,32 +176,51 @@ freefunc(			/* free memory associated with modifier */
 
 int
 setfunc(			/* set channels for function call */
-	OBJREC  *m,			/* can be NULL */
-	RAY  *r
+	OBJREC	*m,
+	RAY	*r
 )
 {
-	static RNUMBER  lastrno = ~0;
-	MFUNC  *f;
+	static RNUMBER	lastrno = ~0;
+	MFUNC		*f;
 					/* get function if any */
-	if (m != NULL) {
-		if ((f = (MFUNC *)m->os) == NULL)
-			objerror(m, CONSISTENCY, "setfunc called before getfunc");
-		setcontext(f->ctx);	/* set evaluator context */
-	} else
-		setcontext("");
+	if ((f = (MFUNC *)m->os) == NULL)
+		objerror(m, CONSISTENCY, "setfunc called before getfunc");
+		
+	setcontext(f->ctx);		/* set evaluator context */
 					/* check to see if matrix set */
 	if ((m == fobj) & (r->rno == lastrno))
 		return(0);
 	fobj = m;
 	fray = r;
-	if (r->rox != NULL)
-		if (f->b != &unitxf) {
-			funcxf.sca = r->rox->b.sca * f->b->sca;
-			multmat4(funcxf.xfm, r->rox->b.xfm, f->b->xfm);
+	if (r->rox != NULL) {
+		if (f->bxp != &unitxf) {
+			funcxf.sca = r->rox->b.sca * f->bxp->sca;
+			multmat4(funcxf.xfm, r->rox->b.xfm, f->bxp->xfm);
 		} else
 			funcxf = r->rox->b;
-	else
-		funcxf = *(f->b);
+	} else
+		funcxf = *f->bxp;
+	lastrno = r->rno;
+	eclock++;		/* notify expression evaluator */
+	return(1);
+}
+
+
+int
+worldfunc(			/* special function context sans object */
+	char	*ctx,
+	RAY	*r
+)
+{
+	static RNUMBER	lastrno = ~0;
+					/* set evaluator context */
+	setcontext(ctx);
+					/* check if ray already set */
+	if ((fobj == NULL) & (r->rno == lastrno))
+		return(0);
+	fobj = NULL;
+	fray = r;
+	funcxf = unitxf;
 	lastrno = r->rno;
 	eclock++;		/* notify expression evaluator */
 	return(1);
