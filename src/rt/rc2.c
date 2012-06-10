@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.1 2012/06/09 07:16:47 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -83,10 +83,10 @@ printheader(FILE *fout, const char *info)
 		if (octname[strlen(octname)-1] != '\n')
 			fputc('\n', fout);
 	} else {
-		FILE	*fin = fopen(octname, "r");
+		FILE	*fin = fopen(octname, (outfmt=='a') ? "r" : "rb");
 		if (fin == NULL)
 			quit(1);
-		checkheader(fin, "ignore", fout);
+		checkheader(fin, OCTFMT, fout);
 		fclose(fin);
 	}
 	printargs(gargc-1, gargv, fout);	/* add our command */
@@ -256,7 +256,7 @@ static void
 put_contrib(const DCOLOR cnt, FILE *fout)
 {
 	double	sf = 1;
-	float	fv[3];
+	COLOR	fv;
 	COLR	cv;
 
 	if (accumulate > 1)
@@ -272,15 +272,17 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 		break;
 	case 'f':
 		if (accumulate > 1) {
-			fv[0] = sf*cnt[0]; fv[1] = sf*cnt[1]; fv[2] = sf*cnt[2];
+			copycolor(fv, cnt);
+			scalecolor(fv, sf);
 		} else
 			copycolor(fv, cnt);
 		fwrite(fv, sizeof(float), 3, fout);
 		break;
 	case 'd':
 		if (accumulate > 1) {
-			double	dv[3];
-			dv[0] = sf*cnt[0]; dv[1] = sf*cnt[1]; dv[2] = sf*cnt[2];
+			DCOLOR	dv;
+			copycolor(dv, cnt);
+			scalecolor(dv, sf);
 			fwrite(dv, sizeof(double), 3, fout);
 		} else
 			fwrite(cnt, sizeof(double), 3, fout);
@@ -302,17 +304,17 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 void
 mod_output(MODCONT *mp)
 {
-	STREAMOUT	*sop = getostream(mp->outspec, mp->modname, 0,0);
+	STREAMOUT	*sop = getostream(mp->outspec, mp->modname, 0, 0);
 	int		j;
 
 	put_contrib(mp->cbin[0], sop->ofp);
 	if (mp->nbins > 3 &&	/* minor optimization */
-			sop == getostream(mp->outspec, mp->modname, 1,0))
+			sop == getostream(mp->outspec, mp->modname, 1, 0))
 		for (j = 1; j < mp->nbins; j++)
 			put_contrib(mp->cbin[j], sop->ofp);
 	else
 		for (j = 1; j < mp->nbins; j++) {
-			sop = getostream(mp->outspec, mp->modname,j,0);
+			sop = getostream(mp->outspec, mp->modname, j, 0);
 			put_contrib(mp->cbin[j], sop->ofp);
 		}
 }

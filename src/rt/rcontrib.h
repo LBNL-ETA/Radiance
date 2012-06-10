@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.1 2012/06/09 07:16:47 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.2 2012/06/10 05:25:42 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -39,7 +39,7 @@ extern long		waitflush;	/* how long until next flush */
 extern int		lastray;	/* last ray number sent */
 extern int		lastdone;	/* last ray processed */
 
-typedef double	DCOLOR[3];		/* double-precision color */
+typedef double		DCOLOR[3];	/* double-precision color */
 
 /*
  * The MODCONT structure is used to accumulate ray contributions
@@ -119,7 +119,7 @@ extern int		getvec(FVECT vec);
 extern int		in_rchild(void);
 extern void		end_children(void);
 
-extern void		zero_record(int ndx);
+extern void		put_zero_record(int ndx);
 extern void		queue_modifiers(void);
 
 extern void		parental_loop(void);	/* controlling process */

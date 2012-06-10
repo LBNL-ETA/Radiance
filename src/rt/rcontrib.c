@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.1 2012/06/09 07:16:47 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -10,6 +10,8 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.1 2012/06/09 07:16:47 greg Exp 
 #include "source.h"
 #include "otypes.h"
 #include "platform.h"
+
+char	*shm_boundary = NULL;		/* boundary of shared memory */
 
 CUBE	thescene;			/* our scene */
 OBJECT	nsceneobjs;			/* number of objects in our scene */
@@ -222,14 +224,18 @@ rcinit()
 	if (nproc > MAXPROCESS)
 		sprintf(errmsg, "too many processes requested -- reducing to %d",
 				nproc = MAXPROCESS);
-		
+	if (nproc > 1) {
+		preload_objs();		/* preload auxiliary data */
+					/* set shared memory boundary */
+		shm_boundary = strcpy((char *)malloc(16), "SHM_BOUNDARY");
+	}
 	if ((nproc > 1) & (accumulate <= 0))
-		zero_record(0);		/* prime our queue to accumulate */
+		put_zero_record(0);	/* prime our queue to accumulate */
 
 	if (recover) {			/* recover previous output? */
 		if (accumulate <= 0) {
 			reload_output();
-			if ((nproc > 1) & (accumulate <= 0))
+			if (nproc > 1)
 				queue_modifiers();
 		} else
 			recover_output();
@@ -356,11 +362,11 @@ rcontrib()
 	static int	ignore_warning_given = 0;
 	FVECT		orig, direc;
 	double		d;
-					/* initialize & fork */
+					/* initialize (& fork more of us) */
 	rcinit();
 					/* load rays from stdin & process */
 #ifdef getc_unlocked
-	flockfile(stdin);		/* avoid lock/unlock overhead */
+	flockfile(stdin);		/* avoid mutex overhead */
 #endif
 	while (getvec(orig) == 0 && getvec(direc) == 0) {
 		d = normalize(direc);

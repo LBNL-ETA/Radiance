@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.2 2012/06/09 16:47:27 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.3 2012/06/10 05:25:42 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -150,7 +150,7 @@ queue_output(BINQ *bp)
 		bp->next = out_bq;
 		out_bq = bp;
 	}
-	if (accumulate <= 1)		/* no accumulating? */
+	if (accumulate == 1)		/* no accumulation? */
 		return;
 	b_cur = out_bq;			/* else merge accumulation entries */
 	while (b_cur->next != NULL) {
@@ -170,7 +170,7 @@ queue_output(BINQ *bp)
 }
 
 
-/* Get current with output FIFO by producing ready results */
+/* Get current with output queue by producing ready results */
 static int
 output_catchup()
 {
@@ -196,9 +196,9 @@ output_catchup()
 }
 
 
-/* Put a zero record in results queue */
+/* Put a zero record in results queue & output */
 void
-zero_record(int ndx)
+put_zero_record(int ndx)
 {
 	BINQ	*bp = new_binq();
 	int	i;
@@ -207,6 +207,7 @@ zero_record(int ndx)
 		memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*bp->mca[i]->nbins);
 	bp->ndx = ndx;
 	queue_output(bp);
+	output_catchup();
 }
 
 
@@ -233,6 +234,7 @@ in_rchild()
 		int	p0[2], p1[2];
 		int	pid;
 					/* prepare i/o pipes */
+		errno = 0;
 		if (pipe(p0) < 0 || pipe(p1) < 0)
 			error(SYSTEM, "pipe() call failed!");
 		pid = fork();		/* fork parent process */
@@ -253,7 +255,7 @@ in_rchild()
 		}
 		if (pid < 0)
 			error(SYSTEM, "fork() call failed!");
-					/* connect our pipes */
+					/* connect parent's pipes */
 		close(p0[0]); close(p1[1]);
 		kida[nchild].r = p1[0];
 		kida[nchild].w = p0[1];
@@ -262,6 +264,9 @@ in_rchild()
 		inq_fp[nchild] = fdopen(p1[0], "rb");
 		if (inq_fp[nchild] == NULL)
 			error(SYSTEM, "out of memory in in_rchild()");
+#ifdef getc_unlocked
+		flockfile(inq_fp[nchild]);	/* avoid mutex overhead */
+#endif
 		++nchild;
 	}
 	return(0);			/* parent return value */
@@ -314,20 +319,20 @@ next_child_nq(int force_wait)
 		if (kida[i].r >= n)
 			n = kida[i].r + 1;
 	}
-	if (!nr)			/* nothing going on */
-		return(-1);
 tryagain:
-	if (pmode == NULL)		/* about to block, so catch up */
+	if (pmode == NULL)		/* catch up in case we block */
 		output_catchup();
+	if (!nr)			/* nothing to wait for? */
+		return(-1);
 	if ((nr > 1) | (pmode == &polling)) {
 		errno = 0;
-		nr = select(n, &readset, NULL, &errset, pmode);
-		if (!nr & (pmode == &polling)) {
+		i = select(n, &readset, NULL, &errset, pmode);
+		if (!i) {
 			pmode = NULL;	/* try again, blocking this time */
 			goto tryagain;
 		}
-		if (nr <= 0)
-			error(SYSTEM, "select call error in next_child_nq()");
+		if (i < 0)
+			error(SYSTEM, "select() error in next_child_nq()");
 	} else
 		FD_ZERO(&errset);
 	n = -1;				/* read results from child(ren) */
@@ -341,16 +346,16 @@ tryagain:
 		bq->ndx = kida[i].running;
 					/* read from child */
 		for (j = 0; j < nmods; j++) {
-			n = bq->mca[j]->nbins;
-			nr = fread(bq->mca[j]->cbin,sizeof(DCOLOR),n,inq_fp[i]);
-			if (nr != n)
+			nr = bq->mca[j]->nbins;
+			if (fread(bq->mca[j]->cbin, sizeof(DCOLOR), nr,
+							inq_fp[i]) != nr)
 				error(SYSTEM, "read error from render process");
 		}
-		queue_output(bq);	/* put results in output queue */
+		queue_output(bq);	/* add results to output queue */
 		kida[i].running = -1;	/* mark child as available */
 		n = i;
 	}
-	return(n);			/* last available child */
+	return(n);			/* first available child */
 }
 
 
@@ -361,6 +366,7 @@ parental_loop()
 	static int	ignore_warning_given = 0;
 	FVECT		orgdir[2];
 	double		d;
+	int		i;
 					/* load rays from stdin & process */
 #ifdef getc_unlocked
 	flockfile(stdin);		/* avoid lock/unlock overhead */
@@ -376,19 +382,19 @@ parental_loop()
 		}
 		if ((d == 0.0) | (lastray+1 < lastray)) {
 			while (next_child_nq(1) >= 0)
-				;
+				;			/* clear the queue */
 			lastdone = lastray = 0;
 		}
 		if (d == 0.0) {
 			if ((yres <= 0) | (xres <= 0))
 				waitflush = 1;		/* flush right after */
-			zero_record(++lastray);
-		} else {				/* else assign */
-			int	avail = next_child_nq(0);
-			if (writebuf(kida[avail].w, (char *)orgdir,
-					sizeof(FVECT)*2) != sizeof(FVECT)*2)
+			put_zero_record(++lastray);
+		} else {				/* else assign ray */
+			i = next_child_nq(0);
+			if (writebuf(kida[i].w, (char *)orgdir,
+					sizeof(orgdir)) != sizeof(orgdir))
 				error(SYSTEM, "pipe write error");
-			kida[avail].running = ++lastray;
+			kida[i].running = ++lastray;
 		}
 		if (raysleft && !--raysleft)
 			break;				/* preemptive EOI */
@@ -397,7 +403,6 @@ parental_loop()
 		;
 						/* output accumulated record */
 	if (accumulate <= 0 || account < accumulate) {
-		int	i;
 		if (account < accumulate) {
 			error(WARNING, "partial accumulation in final record");
 			accumulate -= account;
@@ -405,6 +410,8 @@ parental_loop()
 		for (i = 0; i < nmods; i++)
 			mod_output(out_bq->mca[i]);
 		end_record();
+		free_binq(out_bq);
+		out_bq = NULL;
 	}
 	if (raysleft)
 		error(USER, "unexpected EOF on input");
