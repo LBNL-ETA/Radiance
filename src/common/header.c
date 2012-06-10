@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.26 2010/05/27 19:32:12 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.27 2012/06/10 02:46:12 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -215,10 +215,6 @@ getheader(		/* get header from file */
 			return(-1);
 		if (buf[0] == '\n')
 			return(0);
-#ifdef MSDOS
-		if (buf[0] == '\r' && buf[1] == '\n')
-			return(0);
-#endif
 		if (buf[MAXLINE-2] != '\n') {
 			ungetc(buf[MAXLINE-2], fp);	/* prevent false end */
 			buf[MAXLINE-2] = '\0';
