@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.3 2012/06/11 05:07:55 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -9,6 +9,26 @@ static const char RCSid[] = "$Id: rc2.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
 #include "rcontrib.h"
 #include "resolu.h"
 #include "platform.h"
+
+/* Close output stream and free record */
+static void
+closestream(void *p)
+{
+	STREAMOUT	*sop = (STREAMOUT *)p;
+	
+	if (sop->ofp != NULL) {
+		int	status = 0;
+		if (sop->outpipe)
+			status = pclose(sop->ofp);
+		else if (sop->ofp != stdout)
+			status = fclose(sop->ofp);
+		if (status)
+			error(SYSTEM, "error closing output stream");
+	}
+	free(p);
+}
+
+LUTAB	ofiletab = LU_SINIT(free,closestream);	/* output file table */
 
 #define OF_MODIFIER	01
 #define OF_BIN		02
@@ -120,7 +140,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 	STREAMOUT		*sop;
 	
 	if (ospec == NULL) {			/* use stdout? */
-		if (!noopen && !using_stdout) {
+		if (!noopen & !using_stdout) {
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
 			if (header)
@@ -309,14 +329,15 @@ mod_output(MODCONT *mp)
 
 	put_contrib(mp->cbin[0], sop->ofp);
 	if (mp->nbins > 3 &&	/* minor optimization */
-			sop == getostream(mp->outspec, mp->modname, 1, 0))
+			sop == getostream(mp->outspec, mp->modname, 1, 0)) {
 		for (j = 1; j < mp->nbins; j++)
 			put_contrib(mp->cbin[j], sop->ofp);
-	else
+	} else {
 		for (j = 1; j < mp->nbins; j++) {
 			sop = getostream(mp->outspec, mp->modname, j, 0);
 			put_contrib(mp->cbin[j], sop->ofp);
 		}
+	}
 }
 
 

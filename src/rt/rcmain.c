@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.3 2012/06/11 05:07:55 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -54,6 +54,9 @@ printdefaults(void)			/* print default values to stdout */
 {
 	char  *cp;
 
+	printf("-c %-5d\t\t\t# accumulated rays per record\n", accumulate);
+	printf("-V%c\t\t\t\t# output %s\n", contrib ? '+' : '-',
+			contrib ? "contributions" : "coefficients");
 	if (imm_irrad)
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.3 2012/06/10 05:25:42 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.4 2012/06/11 05:07:55 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -14,7 +14,7 @@ static const char RCSid[] = "$Id: rc3.c,v 2.3 2012/06/10 05:25:42 greg Exp $";
 /* Modifier contribution queue (results waiting to be output) */
 typedef struct s_binq {
 	int		ndx;		/* index for this entry */
-	int		n2add;		/* number left to add */
+	int		nadded;		/* accumulated so far */
 	struct s_binq	*next;		/* next in queue */
 	MODCONT		*mca[1];	/* contrib. array (extends struct) */
 } BINQ;
@@ -26,21 +26,22 @@ static SUBPROC	kida[MAXPROCESS];	/* child processes */
 static FILE	*inq_fp[MAXPROCESS];	/* input streams */
 
 
-/* Get new (empty) bin queue entry */
+/* Get new bin queue entry */
 static BINQ *
 new_binq()
 {
-	BINQ	*bp = free_bq;
+	BINQ	*bp;
 	int	i;
 
-	if (bp != NULL) {		/* something already available? */
+	if (free_bq != NULL) {		/* something already available? */
+		bp = free_bq;
 		free_bq = bp->next;
 		bp->next = NULL;
-		bp->n2add = accumulate-1;
+		bp->nadded = 1;
 		return(bp);
 	}
 					/* else allocate fresh */
-	bp = (BINQ *)malloc(sizeof(BINQ)+(nmods-1)*sizeof(MODCONT *));
+	bp = (BINQ *)malloc(sizeof(BINQ) + sizeof(MODCONT *)*(nmods-1));
 	if (bp == NULL)
 		goto memerr;
 	for (i = nmods; i--; ) {
@@ -53,7 +54,7 @@ new_binq()
 		/* memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*mp->nbins); */
 	}
 	bp->ndx = 0;
-	bp->n2add = accumulate-1;
+	bp->nadded = 1;
 	bp->next = NULL;
 	return(bp);
 memerr:
@@ -108,7 +109,7 @@ queue_modifiers()
 }
 
 
-/* Sum one modifier record into another (doesn't update n2add) */
+/* Sum one modifier record into another (updates nadded) */
 static void
 add_modbin(BINQ *dst, BINQ *src)
 {
@@ -120,6 +121,7 @@ add_modbin(BINQ *dst, BINQ *src)
 		for (j = mpout->nbins; j--; )
 			addcolor(mpout->cbin[j], mpin->cbin[j]);
 	}
+	dst->nadded += src->nadded;
 }
 
 
@@ -143,6 +145,7 @@ queue_output(BINQ *bp)
 	for (b_cur = out_bq; b_cur != NULL && b_cur->ndx < bp->ndx;
 				b_cur = b_cur->next)
 		b_last = b_cur;
+
 	if (b_last != NULL) {
 		bp->next = b_cur;
 		b_last->next = bp;
@@ -154,14 +157,13 @@ queue_output(BINQ *bp)
 		return;
 	b_cur = out_bq;			/* else merge accumulation entries */
 	while (b_cur->next != NULL) {
-		if (b_cur->n2add <= 0 ||
+		if (b_cur->nadded >= accumulate ||
 				(b_cur->ndx-1)/accumulate !=
 				(b_cur->next->ndx-1)/accumulate) {
 			b_cur = b_cur->next;
 			continue;
 		}
 		add_modbin(b_cur, b_cur->next);
-		b_cur->n2add--;
 		b_last = b_cur->next;
 		b_cur->next = b_last->next;
 		b_last->next = NULL;
@@ -170,9 +172,28 @@ queue_output(BINQ *bp)
 }
 
 
-/* Get current with output queue by producing ready results */
+/* Count number of records ready for output */
 static int
-output_catchup()
+queue_ready()
+{
+	int	nready = 0;
+	BINQ	*bp;
+
+	if (accumulate <= 0)		/* just accumulating? */
+		return(0);
+
+	for (bp = out_bq; bp != NULL && bp->nadded >= accumulate &&
+				bp->ndx == lastdone+nready*accumulate+1;
+				bp = bp->next)
+		++nready;
+
+	return(nready);
+}
+
+
+/* Catch up with output queue by producing ready results */
+static int
+output_catchup(int nmax)
 {
 	int	nout = 0;
 	BINQ	*bp;
@@ -181,7 +202,10 @@ output_catchup()
 	if (accumulate <= 0)		/* just accumulating? */
 		return(0);
 					/* else output ready results */
-	while (out_bq != NULL && (out_bq->ndx == lastdone+1) & !out_bq->n2add) {
+	while (out_bq != NULL && out_bq->nadded >= accumulate
+				&& out_bq->ndx == lastdone+1) {
+		if ((nmax > 0) & (nout >= nmax))
+			break;
 		bp = out_bq;			/* pop off first entry */
 		out_bq = bp->next;
 		bp->next = NULL;
@@ -207,7 +231,7 @@ put_zero_record(int ndx)
 		memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*bp->mca[i]->nbins);
 	bp->ndx = ndx;
 	queue_output(bp);
-	output_catchup();
+	output_catchup(0);
 }
 
 
@@ -240,6 +264,12 @@ in_rchild()
 		pid = fork();		/* fork parent process */
 		if (pid == 0) {		/* if in child, set up & return true */
 			close(p0[1]); close(p1[0]);
+			lu_doall(&modconttab, set_stdout, NULL);
+			lu_done(&ofiletab);
+			while (nchild--) {
+				close(kida[nchild].w);
+				fclose(inq_fp[nchild]);
+			}
 			dup2(p0[0], 0); close(p0[0]);
 			dup2(p1[1], 1); close(p1[1]);
 			inpfmt = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
@@ -249,8 +279,6 @@ in_rchild()
 			yres = 0;
 			raysleft = 0;
 			account = accumulate = 1;
-			lu_doall(&modconttab, set_stdout, NULL);
-			nchild = -1;
 			return(1);	/* child return value */
 		}
 		if (pid < 0)
@@ -298,15 +326,26 @@ static int
 next_child_nq(int force_wait)
 {
 	static struct timeval	polling;
-	struct timeval		*pmode = force_wait | (accumulate <= 0) ?
-					(struct timeval *)NULL : &polling;
+	struct timeval		*pmode;
 	fd_set			readset, errset;
-	int			i, j, n, nr;
+	int			i, j, n, nr, nqr;
 
 	if (!force_wait)		/* see if there's one free */
 		for (i = nchild; i--; )
 			if (kida[i].running < 0)
 				return(i);
+
+	nqr = queue_ready();		/* wait mode or polling? */
+	if (!nqr | force_wait | (accumulate <= 0))
+		pmode = NULL;
+	else
+		pmode = &polling;
+tryagain:
+	n = 0;				/* catch up with output? */
+	if ((pmode == &polling) & (nqr > nchild))
+		n = nqr - nchild;
+	if ((pmode == NULL) & (nqr > 0) | (n > 0))
+		nqr -= output_catchup(n);
 					/* prepare select() call */
 	FD_ZERO(&readset); FD_ZERO(&errset);
 	n = nr = 0;
@@ -319,9 +358,6 @@ next_child_nq(int force_wait)
 		if (kida[i].r >= n)
 			n = kida[i].r + 1;
 	}
-tryagain:
-	if (pmode == NULL)		/* catch up in case we block */
-		output_catchup();
 	if (!nr)			/* nothing to wait for? */
 		return(-1);
 	if ((nr > 1) | (pmode == &polling)) {

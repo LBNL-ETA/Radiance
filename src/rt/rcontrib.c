@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.2 2012/06/10 05:25:42 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.3 2012/06/11 05:07:55 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -25,7 +25,7 @@ void	(*trace)() = trace_contrib;
 
 int	do_irrad = 0;			/* compute irradiance? */
 
-int	rand_samp = 0;			/* pure Monte Carlo sampling? */
+int	rand_samp = 1;			/* pure Monte Carlo sampling? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
 double	shadthresh = .03;		/* shadow threshold */
@@ -45,8 +45,8 @@ double	specjitter = 1.;		/* specular sampling jitter */
 
 int	backvis = 1;			/* back face visibility */
 
-int	maxdepth = 8;			/* maximum recursion depth */
-double	minweight = 5e-4;		/* minimum ray weight */
+int	maxdepth = -10;			/* maximum recursion depth */
+double	minweight = 2e-3;		/* minimum ray weight */
 
 char	*ambfile = NULL;		/* ambient file name */
 COLOR	ambval = BLKCOLOR;		/* ambient value */
@@ -65,26 +65,6 @@ long	waitflush;			/* how long until next flush */
 
 int	lastray = 0;			/* last ray number sent */
 int	lastdone = 0;			/* last ray output */
-
-/* Close output stream and free record */
-static void
-closestream(void *p)
-{
-	STREAMOUT	*sop = (STREAMOUT *)p;
-	int		status = 0;
-	if (sop->outpipe)
-		status = pclose(sop->ofp);
-	else if (sop->ofp != stdout)
-		status = fclose(sop->ofp);
-	if (status)
-		error(SYSTEM, "error closing output stream");
-	free(p);
-}
-
-LUTAB	ofiletab = LU_SINIT(free,closestream);	/* output file table */
-
-#define OF_MODIFIER	01
-#define OF_BIN		02
 
 static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
 
