@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.7 2012/06/12 22:40:30 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.8 2012/06/12 22:46:45 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -423,15 +423,15 @@ parental_loop()
 	int		qlimit = (accumulate == 1) ? 1 : MAXIQ-1;
 	int		ninq = 0;
 	FVECT		orgdir[2*MAXIQ];
-	double		d;
 	int		i, n;
 					/* load rays from stdin & process */
 #ifdef getc_unlocked
 	flockfile(stdin);		/* avoid lock/unlock overhead */
 #endif
 	while (getvec(orgdir[2*ninq]) == 0 && getvec(orgdir[2*ninq+1]) == 0) {
-		d = normalize(orgdir[2*ninq+1]);
-		if (d == 0.0) {				/* asking for flush? */
+		if (orgdir[2*ninq+1][0] == 0.0 &&	/* asking for flush? */
+				(orgdir[2*ninq+1][1] == 0.0) &
+				(orgdir[2*ninq+1][2] == 0.0)) {
 			if (accumulate != 1) {
 				if (!ignore_warning_given++)
 					error(WARNING,
