@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.3 2012/06/11 05:07:55 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.4 2012/06/12 17:20:44 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -63,8 +63,8 @@ int	account;			/* current accumulation count */
 RNUMBER	raysleft;			/* number of rays left to trace */
 long	waitflush;			/* how long until next flush */
 
-int	lastray = 0;			/* last ray number sent */
-int	lastdone = 0;			/* last ray output */
+RNUMBER	lastray = 0;			/* last ray number sent */
+RNUMBER	lastdone = 0;			/* last ray output */
 
 static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
 
@@ -350,7 +350,7 @@ rcontrib()
 #endif
 	while (getvec(orig) == 0 && getvec(direc) == 0) {
 		d = normalize(direc);
-		if ((d == 0.0) & (accumulate != 1)) {
+		if (nchild != -1 && (d == 0.0) & (accumulate != 1)) {
 			if (!ignore_warning_given++)
 				error(WARNING,
 				"dummy ray(s) ignored during accumulation\n");
@@ -362,6 +362,7 @@ rcontrib()
 		if (d == 0.0) {				/* zero ==> flush */
 			if ((yres <= 0) | (xres <= 0))
 				waitflush = 1;		/* flush right after */
+			account = 1;
 		} else {				/* else compute */
 			eval_ray(orig, direc, lim_dist ? d : 0.0);
 		}
@@ -370,7 +371,7 @@ rcontrib()
 		if (raysleft && !--raysleft)
 			break;		/* preemptive EOI */
 	}
-	if (accumulate <= 0 || account < accumulate) {
+	if (nchild != -1 && (accumulate <= 0) | (account < accumulate)) {
 		if (account < accumulate) {
 			error(WARNING, "partial accumulation in final record");
 			accumulate -= account;

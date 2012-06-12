@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.2 2012/06/10 05:25:42 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.3 2012/06/12 17:20:44 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -36,8 +36,8 @@ extern int		account;	/* current accumulation count */
 extern RNUMBER		raysleft;	/* number of rays left to trace */
 extern long		waitflush;	/* how long until next flush */
 
-extern int		lastray;	/* last ray number sent */
-extern int		lastdone;	/* last ray processed */
+extern RNUMBER		lastray;	/* last ray number sent */
+extern RNUMBER		lastdone;	/* last ray processed */
 
 typedef double		DCOLOR[3];	/* double-precision color */
 

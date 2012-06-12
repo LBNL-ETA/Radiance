@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.3 2012/06/11 05:07:55 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.4 2012/06/12 17:20:44 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -677,7 +677,7 @@ recover_output()
 		if (getvec(vdummy) < 0 || getvec(vdummy) < 0)
 			error(USER, "unexpected EOF on input");
 	}
-	lastray = lastdone = lastout * accumulate;
+	lastray = lastdone = (RNUMBER)lastout * accumulate;
 	if (raysleft)
 		raysleft -= lastray;
 }
