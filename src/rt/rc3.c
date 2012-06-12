@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.4 2012/06/11 05:07:55 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.5 2012/06/12 01:06:59 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -106,6 +106,7 @@ queue_modifiers()
 			addcolor(mpout->cbin[j], mpin->cbin[j]);
 		memset(mpin->cbin, 0, sizeof(DCOLOR)*mpin->nbins);
 	}
+	out_bq->nadded++;
 }
 
 
@@ -266,7 +267,7 @@ in_rchild()
 			close(p0[1]); close(p1[0]);
 			lu_doall(&modconttab, set_stdout, NULL);
 			lu_done(&ofiletab);
-			while (nchild--) {
+			while (nchild--) {	/* don't share other pipes */
 				close(kida[nchild].w);
 				fclose(inq_fp[nchild]);
 			}
@@ -308,7 +309,8 @@ end_children()
 {
 	int	status;
 	
-	while (nchild-- > 0) {
+	while (nchild > 0) {
+		nchild--;
 		kida[nchild].r = -1;	/* close(-1) error is ignored */
 		if ((status = close_process(&kida[nchild])) > 0) {
 			sprintf(errmsg,
@@ -321,31 +323,31 @@ end_children()
 }
 
 
-/* Wait for the next available child, managing output queue as well */
+/* Wait for the next available child, managing output queue simultaneously */
 static int
-next_child_nq(int force_wait)
+next_child_nq(int flushing)
 {
 	static struct timeval	polling;
 	struct timeval		*pmode;
 	fd_set			readset, errset;
 	int			i, j, n, nr, nqr;
 
-	if (!force_wait)		/* see if there's one free */
+	if (!flushing)			/* see if there's one free */
 		for (i = nchild; i--; )
 			if (kida[i].running < 0)
 				return(i);
 
-	nqr = queue_ready();		/* wait mode or polling? */
-	if (!nqr | force_wait | (accumulate <= 0))
-		pmode = NULL;
-	else
+	nqr = queue_ready();		/* choose blocking mode or polling */
+	if ((nqr > 0) & !flushing)
 		pmode = &polling;
-tryagain:
-	n = 0;				/* catch up with output? */
-	if ((pmode == &polling) & (nqr > nchild))
-		n = nqr - nchild;
-	if ((pmode == NULL) & (nqr > 0) | (n > 0))
-		nqr -= output_catchup(n);
+	else
+		pmode = NULL;
+tryagain:				/* catch up with output? */
+	if (pmode == &polling) {
+		if (nqr > nchild)	/* don't get too far behind */
+			nqr -= output_catchup(nqr-nchild);
+	} else if (nqr > 0)		/* clear output before blocking */
+		nqr -= output_catchup(0);
 					/* prepare select() call */
 	FD_ZERO(&readset); FD_ZERO(&errset);
 	n = nr = 0;
@@ -362,12 +364,12 @@ tryagain:
 		return(-1);
 	if ((nr > 1) | (pmode == &polling)) {
 		errno = 0;
-		i = select(n, &readset, NULL, &errset, pmode);
-		if (!i) {
+		nr = select(n, &readset, NULL, &errset, pmode);
+		if (!nr) {
 			pmode = NULL;	/* try again, blocking this time */
 			goto tryagain;
 		}
-		if (i < 0)
+		if (nr < 0)
 			error(SYSTEM, "select() error in next_child_nq()");
 	} else
 		FD_ZERO(&errset);
@@ -423,14 +425,14 @@ parental_loop()
 		}
 		if (d == 0.0) {
 			if ((yres <= 0) | (xres <= 0))
-				waitflush = 1;		/* flush right after */
+				waitflush = 1;		/* flush next */
 			put_zero_record(++lastray);
 		} else {				/* else assign ray */
-			i = next_child_nq(0);
+			i = next_child_nq(0);		/* manages output */
 			if (writebuf(kida[i].w, (char *)orgdir,
 					sizeof(orgdir)) != sizeof(orgdir))
 				error(SYSTEM, "pipe write error");
-			kida[i].running = ++lastray;
+			kida[i].running = ++lastray;	/* busy now */
 		}
 		if (raysleft && !--raysleft)
 			break;				/* preemptive EOI */
@@ -439,6 +441,7 @@ parental_loop()
 		;
 						/* output accumulated record */
 	if (accumulate <= 0 || account < accumulate) {
+		end_children();			/* frees up file descriptors */
 		if (account < accumulate) {
 			error(WARNING, "partial accumulation in final record");
 			accumulate -= account;
