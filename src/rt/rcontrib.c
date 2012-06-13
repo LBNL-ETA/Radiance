@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.4 2012/06/12 17:20:44 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.5 2012/06/13 00:16:42 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -212,14 +212,6 @@ rcinit()
 	if ((nproc > 1) & (accumulate <= 0))
 		put_zero_record(0);	/* prime our queue to accumulate */
 
-	if (recover) {			/* recover previous output? */
-		if (accumulate <= 0) {
-			reload_output();
-			if (nproc > 1)
-				queue_modifiers();
-		} else
-			recover_output();
-	}
 	if (yres > 0) {			/* set up flushing & ray counts */
 		if (xres > 0)
 			raysleft = (RNUMBER)xres*yres;
@@ -234,8 +226,19 @@ rcinit()
 	for (i = 0; i < nsources; i++)
 		source[i].sflags |= SFOLLOW;
 
-	if (nproc == 1 || in_rchild())	/* single process or child */
+	if (nproc > 1 && in_rchild())	/* forked child? */
 		return;			/* return to main processing loop */
+
+	if (recover) {			/* recover previous output? */
+		if (accumulate <= 0) {
+			reload_output();
+			if (nproc > 1)
+				queue_modifiers();
+		} else
+			recover_output();
+	}
+	if (nproc == 1)			/* single process? */
+		return;
 
 	parental_loop();		/* else run controller */
 	quit(0);			/* parent musn't return! */
