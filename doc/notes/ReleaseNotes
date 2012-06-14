@@ -1826,3 +1826,5 @@ Removed requirement for pflip -h to be given input file (can pipe from stdin).
 
 Added "Number of processes" slider to trad "Action" pane to control rad -N
 option for rvu and batch rendering.
+
+Added -c option to vwrays to repeat pixels for rtcontrib.

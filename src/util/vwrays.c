@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.16 2011/08/20 20:57:52 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.17 2012/06/14 05:19:05 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -33,6 +33,8 @@ int	fromstdin = 0;
 
 int	unbuffered = 0;
 
+int	repeatcnt = 1;
+
 char	*progname;
 
 
@@ -44,7 +46,7 @@ main(
 {
 	char	*err;
 	int	rval, getdim = 0;
-	register int	i;
+	int	i;
 
 	progname = argv[0];
 	if (argc < 2)
@@ -103,6 +105,9 @@ main(
 				exit(1);
 			}
 			break;
+		case 'c':			/* repeat count */
+			repeatcnt = atoi(argv[++i]);
+			break;
 		case 'p':			/* pixel aspect or jitter */
 			if (argv[i][2] == 'a')
 				pa = atof(argv[++i]);
@@ -156,7 +161,7 @@ main(
 	exit(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [ -i -u -f{a|f|d} | -d ] { view opts .. | picture [zbuf] }\n",
+	"Usage: %s [ -i -u -f{a|f|d} -c rept | -d ] { view opts .. | picture [zbuf] }\n",
 			progname);
 	exit(1);
 }
@@ -185,7 +190,7 @@ pix2rays(
 	RREAL	loc[2];
 	int	pp[2];
 	double	d;
-	register int	i;
+	int	i;
 
 	while (fscanf(fp, "%lf %lf", &px, &py) == 2) {
 		px += .5; py += .5;
@@ -234,7 +239,7 @@ putrays(void)
 	float	*zbuf = NULL;
 	int	sc;
 	double	d;
-	register int	si, i;
+	int	si, i, c;
 
 	if (zfd >= 0) {
 		zbuf = (float *)malloc(scanlen(&rs)*sizeof(float));
@@ -253,6 +258,7 @@ putrays(void)
 			}
 		}
 		for (si = 0; si < scanlen(&rs); si++) {
+		    for (c = repeatcnt; c-- > 0; ) {
 			pix2loc(loc, &rs, si, sc);
 			jitterloc(loc);
 			d = viewray(rorg, rdir, &vw, loc[0], loc[1]);
@@ -268,6 +274,7 @@ putrays(void)
 				rdir[0] *= d; rdir[1] *= d; rdir[2] *= d;
 			}
 			(*putr)(rorg, rdir);
+		    }
 		}
 	}
 	if (zfd >= 0)
