@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.2 2012/06/14 22:44:50 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.3 2012/06/14 22:45:23 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -42,7 +42,7 @@ rtrace options
 .br
 .B "rcontrib [ options ] \-defaults"
 .SH DESCRIPTION
-.I Rtcontrib
+.I Rcontrib
 computes ray coefficients
 for objects whose modifiers are named in one or more
 .I \-m
@@ -128,7 +128,7 @@ More generally,
 can be used to compute arbitrary input-output relationships in optical
 systems, such as luminaires, light pipes, and shading devices.
 .PP
-.I Rtcontrib
+.I Rcontrib
 calls
 .I rtrace(1)
 with the \-oTW (or \-oTV) option to calculate the daughter ray
