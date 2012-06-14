@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.8 2012/06/12 22:46:45 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.9 2012/06/14 05:13:25 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -274,30 +274,20 @@ set_stdout(const LUENT *le, void *p)
 int
 in_rchild()
 {
-#ifdef _WIN32
-	error(WARNING, "multiprocessing unsupported -- running solo");
-	nproc = 1;
-	return(1);
-#else
-					/* try to fork ourselves */
-	while (nchild < nproc) {
-		int	p0[2], p1[2];
-		int	pid;
-					/* prepare i/o pipes */
+	int	rval;
+
+	while (nchild < nproc) {	/* fork until target reached */
 		errno = 0;
-		if (pipe(p0) < 0 || pipe(p1) < 0)
-			error(SYSTEM, "pipe() call failed!");
-		pid = fork();		/* fork parent process */
-		if (pid == 0) {		/* if in child, set up & return true */
-			close(p0[1]); close(p1[0]);
+		rval = open_process(&kida[nchild].pr, NULL);
+		if (rval < 0)
+			error(SYSTEM, "open_process() call failed");
+		if (rval == 0) {	/* if in child, set up & return true */
 			lu_doall(&modconttab, set_stdout, NULL);
 			lu_done(&ofiletab);
 			while (nchild--) {	/* don't share other pipes */
 				close(kida[nchild].pr.w);
 				fclose(kida[nchild].infp);
 			}
-			dup2(p0[0], 0); close(p0[0]);
-			dup2(p1[1], 1); close(p1[1]);
 			inpfmt = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
 			outfmt = 'd';
 			header = 0;
@@ -310,17 +300,12 @@ in_rchild()
 				waitflush = xres = 0;
 				account = accumulate = 0;
 			}
-			return(1);	/* child return value */
+			return(1);	/* return "true" in child */
 		}
-		if (pid < 0)
-			error(SYSTEM, "fork() call failed!");
-					/* connect parent's pipes */
-		close(p0[0]); close(p1[1]);
-		kida[nchild].pr.r = p1[0];
-		kida[nchild].pr.w = p0[1];
-		kida[nchild].pr.pid = pid;
-		kida[nchild].pr.running = 1;
-		kida[nchild].infp = fdopen(p1[0], "rb");
+		if (rval != PIPE_BUF)
+			error(CONSISTENCY, "bad value from open_process()");
+					/* connect to child's output */
+		kida[nchild].infp = fdopen(kida[nchild].pr.r, "rb");
 		if (kida[nchild].infp == NULL)
 			error(SYSTEM, "out of memory in in_rchild()");
 #ifdef getc_unlocked
@@ -328,8 +313,7 @@ in_rchild()
 #endif
 		kida[nchild++].nr = 0;	/* mark as available */
 	}
-	return(0);			/* parent return value */
-#endif
+	return(0);			/* return "false" in parent */
 }
 
 
@@ -341,14 +325,13 @@ end_children()
 	
 	while (nchild > 0) {
 		nchild--;
-		fclose(kida[nchild].infp);	
-		kida[nchild].pr.r = -1;		/* close(-1) error is ignored */
 		if ((status = close_process(&kida[nchild].pr)) > 0) {
 			sprintf(errmsg,
 				"rendering process returned bad status (%d)",
 					status);
 			error(WARNING, errmsg);
 		}
+		fclose(kida[nchild].infp);
 	}
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.6 2005/09/19 11:30:10 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.7 2012/06/14 05:13:25 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -185,7 +185,7 @@ error: /* cleanup */
 	if(hWrite) CloseHandle(hWrite);
 	if(hCurProc) CloseHandle(hCurProc);
 	proc->running = 0;
-	return 0;
+	return -1;
 	/* There... Are we happy now? */
 }
 
@@ -280,6 +280,7 @@ open_process(SUBPROC *proc, char *av[])
 	char *cmdstr;
 
 	proc->running = 0;
+	if (av == NULL) { return -1; }
 	cmdpath = getpath(av[0], getenv("PATH"), X_OK);
 	cmdstr = quoted_cmdline(cmdpath, av+1);
 	if (cmdstr == NULL) { return 0; }

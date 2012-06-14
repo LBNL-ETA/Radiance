@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.9 2009/12/12 23:08:13 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.10 2012/06/14 05:13:25 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -28,14 +28,15 @@ char	*av[]
 	char	*compath;
 	int	p0[2], p1[2];
 
-	pd->running = 0; /* not yet */
-					/* find executable */
-	compath = getpath(av[0], getenv("PATH"), 1);
-	if (compath == 0)
+	pd->running = 0;		/* not going yet */
+	
+	if (av == NULL)			/* cloning operation? */
+		compath = NULL;
+	else if ((compath = getpath(av[0], getenv("PATH"), X_OK)) == NULL)
 		return(0);
 	if (pipe(p0) < 0 || pipe(p1) < 0)
 		return(-1);
-	if ((pd->pid = fork()) == 0) {		/* if child */
+	if ((pd->pid = fork()) == 0) {	/* if child... */
 		close(p0[1]);
 		close(p1[0]);
 		if (p0[0] != 0) {	/* connect p0 to stdin */
@@ -46,7 +47,9 @@ char	*av[]
 			dup2(p1[1], 1);
 			close(p1[1]);
 		}
-		execv(compath, av);	/* exec command */
+		if (compath == NULL)	/* just cloning? */
+			return(0);
+		execv(compath, av);	/* else exec command */
 		perror(compath);
 		_exit(127);
 	}
@@ -79,11 +82,11 @@ SUBPROC *pd
 	if (!pd->running)
 		return(0);
 	close(pd->w);
+	close(pd->r);
 	pd->running = 0;
-	if (waitpid(pd->pid, &status, 0) == pd->pid) {
-		close(pd->r);
+	if (waitpid(pd->pid, &status, 0) == pd->pid)
 		return(status>>8 & 0xff);
-	}
+
 	return(-1);		/* ? unknown status */
 }
 
