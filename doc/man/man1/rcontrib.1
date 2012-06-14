@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.3 2012/06/14 22:45:23 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.4 2012/06/14 22:49:34 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -61,7 +61,6 @@ character.)\0
 If the
 .I \-n
 option is specified with a value greater than 1, multiple
-.I rtrace
 processes will be used to accelerate computation on a shared
 memory machine.
 Note that there is no benefit to using more processes
@@ -129,11 +128,8 @@ can be used to compute arbitrary input-output relationships in optical
 systems, such as luminaires, light pipes, and shading devices.
 .PP
 .I Rcontrib
-calls
-.I rtrace(1)
-with the \-oTW (or \-oTV) option to calculate the daughter ray
-contributions for each input ray, and the output tallies
-are sent to one or more destinations according to the given
+sends the accumulated rays tallies
+to one or more destinations according to the given
 .I \-o
 specification.
 If a destination begins with an exclamation mark ('!'), then
@@ -196,8 +192,7 @@ If a
 .I \-b
 expression is defined for a particular modifier,
 the bin number will be evaluated at run time for each
-ray contribution from
-.I rtrace.
+ray contribution.
 Specifically, each ray's world intersection point will be assigned to
 the variables Px, Py, and Pz, and the normalized ray direction
 will be assigned to Dx, Dy, and Dz.
