@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.4 2012/06/14 22:49:34 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.5 2012/06/14 22:51:04 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -158,7 +158,7 @@ this will be applied to a "%d" format in the output file
 specification if present.
 The actual bin number is computed at run time based on ray direction
 and surface intersection, as described below.
-If the number of bins is known in advance, it should be specified with the
+The number of bins must be specified in advance with the
 .I \-bn
 option, and this is critical for output files containing multiple values
 per record.
