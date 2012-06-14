@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.35 2012/05/09 17:40:17 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.36 2012/06/14 18:35:03 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -71,12 +71,6 @@ while ($#ARGV >= 0) {
 }
 # Check that we're actually being asked to do something
 die "Must have at least one of +forward or +backward\n" if (!$doforw && !$doback);
-# Name our own persist file?
-my $persistfile;
-if ( $tensortree && $nproc > 1 && "$rtargs" !~ /-PP /) {
-	$persistfile = "$td/pfile.txt";
-	$rtargs = "-PP $persistfile $rtargs";
-}
 # Get scene description and dimensions
 my $radscn = "$td/device.rad";
 my $mgfscn = "$td/device.mgf";
@@ -158,35 +152,8 @@ exec("rm -rf $td");
 
 #-------------- End of main program segment --------------#
 
-#++++++++++++++ Kill persistent rtrace +++++++++++++++++++#
-sub persist_end {
-	if ( $persistfile && open(PFI, "< $persistfile") ) {
-		while (<PFI>) {
-			s/^[^ ]* //;
-			kill('ALRM', $_);
-			last;
-		}
-		close PFI;
-	}
-}
-
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
 sub do_tree_bsdf {
-# Get sampling rate and subdivide task
-my $ns2 = $ns;
-$ns2 /= 2 if ( $tensortree == 3 );
-my $nsplice = $nproc;
-$nsplice *= 10 if ($nproc > 1);
-$nsplice = $ns2 if ($nsplice > $ns2);
-$nsplice = 999 if ($nsplice > 999);
-@pdiv = (0, int($ns2/$nsplice));
-my $nrem = $ns2 % $nsplice;
-for (my $i = 1; $i < $nsplice; $i++) {
-	my $nv = $pdiv[$i] + $pdiv[1];
-	++$nv if ( $nrem-- > 0 );
-	push @pdiv, $nv;
-}
-die "Script error 1" if ($pdiv[-1] != $ns2);
 # Shirley-Chiu mapping from unit square to disk
 $sq2disk = '
 in_square_a = 2*in_square_x - 1;
@@ -229,66 +196,30 @@ out_square_y = (out_square_b + 1)/2;
 print "\t<DataDefinition>\n";
 print "\t\t<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
 print "\t</DataDefinition>\n";
-# Fork parallel rtcontrib processes to compute each side
-my $npleft = $nproc;
-if ( $doback ) {
-	for (my $splice = 0; $splice < $nsplice; $splice++) {
-		if (! $npleft ) {
-			wait();
-			die "rtcontrib process reported error" if ( $? );
-			$npleft++;
-		}
-		bg_tree_rtcontrib(0, $splice);
-		$npleft--;
-	}
-	while (wait() >= 0) {
-		die "rtcontrib process reported error" if ( $? );
-		$npleft++;
-	}
-	persist_end();
-	ttree_out(0);
-}
-if ( $doforw ) {
-	for (my $splice = 0; $splice < $nsplice; $splice++) {
-		if (! $npleft ) {
-			wait();
-			die "rtcontrib process reported error" if ( $? );
-			$npleft++;
-		}
-		bg_tree_rtcontrib(1, $splice);
-		$npleft--;
-	}
-	while (wait() >= 0) {
-		die "rtcontrib process reported error" if ( $? );
-		$npleft++;
-	}
-	persist_end();
-	ttree_out(1);
-}
+
+# Start rtcontrib processes for compute each side
+do_tree_rtcontrib(0) if ( $doback );
+do_tree_rtcontrib(1) if ( $doforw );
+
 }	# end of sub do_tree_bsdf()
 
 # Run rtcontrib process in background to generate tensor tree samples
-sub bg_tree_rtcontrib {
-	my $pid = fork();
-	die "Cannot fork new process" unless defined $pid;
-	if ($pid > 0) { return $pid; }
+sub do_tree_rtcontrib {
 	my $forw = shift;
-	my $pn = shift;
-	my $pbeg = $pdiv[$pn];
-	my $plen = $pdiv[$pn+1] - $pbeg;
 	my $matargs = "-m $bmodnm";
 	if ( !$forw || !$doback ) { $matargs .= " -m $fmodnm"; }
-	my $cmd = "rtcontrib $rtargs -h -ff -fo -c $nsamp " .
+	my $cmd = "rcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
 		"-e '$disk2sq' -bn '$ns*$ns' " .
 		"-b '$ns*floor(out_square_x*$ns)+floor(out_square_y*$ns)' " .
-		"-o $td/%s_" . sprintf("%03d", $pn) . ".flt $matargs $octree";
+		"-o $td/%s.flt $matargs $octree";
 	if ( $tensortree == 3 ) {
 		# Isotropic BSDF
-		$cmd = "cnt $plen $ny $nx " .
-			"| rcalc -e 'r1=rand(($pn+.8681)*recno-.673892)' " .
-			"-e 'r2=rand(($pn-5.37138)*recno+67.1737811)' " .
-			"-e 'r3=rand(($pn+3.17603772)*recno+83.766771)' " .
-			"-e 'Dx=1-2*($pbeg+\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)' " .
+		my $ns2 = $ns / 2;
+		$cmd = "cnt $ns2 $ny $nx " .
+			"| rcalc -e 'r1=rand(.8681*recno-.673892)' " .
+			"-e 'r2=rand(-5.37138*recno+67.1737811)' " .
+			"-e 'r3=rand(+3.17603772*recno+83.766771)' " .
+			"-e 'Dx=1-2*(\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)' " .
 			"-e 'xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 			"-e 'yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
 			"-e 'zp=$dim[5-$forw]' -e 'myDz=Dz*($forw*2-1)' " .
@@ -299,12 +230,12 @@ sub bg_tree_rtcontrib {
 		# Anisotropic BSDF
 		# Sample area vertically to improve load balance, since
 		# shading systems usually have bilateral symmetry (L-R)
-		$cmd = "cnt $plen $ns $ny $nx " .
-			"| rcalc -e 'r1=rand(($pn+.8681)*recno-.673892)' " .
-			"-e 'r2=rand(($pn-5.37138)*recno+67.1737811)' " .
-			"-e 'r3=rand(($pn+3.17603772)*recno+83.766771)' " .
-			"-e 'r4=rand(($pn-2.3857833)*recno-964.72738)' " .
-			"-e 'in_square_x=($pbeg+\$1+r1)/$ns' " .
+		$cmd = "cnt $ns $ns $ny $nx " .
+			"| rcalc -e 'r1=rand(.8681*recno-.673892)' " .
+			"-e 'r2=rand(-5.37138*recno+67.1737811)' " .
+			"-e 'r3=rand(3.17603772*recno+83.766771)' " .
+			"-e 'r4=rand(-2.3857833*recno-964.72738)' " .
+			"-e 'in_square_x=(\$1+r1)/$ns' " .
 			"-e 'in_square_y=(\$2+r2)/$ns' -e '$sq2disk' " .
 			"-e 'xp=(\$4+r3)*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
 			"-e 'yp=(\$3+r4)*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
@@ -314,9 +245,9 @@ sub bg_tree_rtcontrib {
 			"| $cmd";
 	}
 # print STDERR "Starting: $cmd\n";
-	exec($cmd);		# no return; status report to parent via wait
-	die "Cannot exec: $cmd\n";
-}	# end of bg_tree_rtcontrib()
+	system "$cmd" || die "Failure running rtcontrib";
+	ttree_out($forw);
+}	# end of do_tree_rtcontrib()
 
 # Simplify and output tensor tree results
 sub ttree_out {
@@ -340,11 +271,11 @@ print
 $cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
 if ($pctcull >= 0) {
-	$cmd .= "-of $td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt " .
+	$cmd .= "-of $td/" . ($bmodnm,$fmodnm)[$forw] . ".flt " .
 	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 	system "$cmd" || die "Failure running rttree_reduce";
 } else {
-	$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . "_???.flt";
+	$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . ".flt";
 	print "{\n";
 	system "$cmd" || die "Failure running rcalc";
 	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
@@ -376,11 +307,11 @@ print
 $cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
 if ($pctcull >= 0) {
-	$cmd .= "-of $td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt " .
+	$cmd .= "-of $td/" . ($fmodnm,$bmodnm)[$forw] . ".flt " .
 	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 	system "$cmd" || die "Failure running rttree_reduce";
 } else {
-	$cmd .= "$td/" . ($fmodnm,$bmodnm)[$forw] . "_???.flt";
+	$cmd .= "$td/" . ($fmodnm,$bmodnm)[$forw] . ".flt";
 	print "{\n";
 	system "$cmd" || die "Failure running rcalc";
 	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
@@ -454,7 +385,7 @@ my @rfarr;
 my @tbarr;
 my @rbarr;
 my $cmd;
-my $rtcmd = "rtcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
+my $rtcmd = "rcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
 	"-e '$kcal' -b kbin -bn $ndiv " .
 	"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $octree";
 my $rccmd = "rcalc -e '$tcal' " .
