@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.9 2011/08/24 04:14:58 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.10 2012/06/14 22:42:21 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -9,7 +9,7 @@ genBSDF - generate BSDF description from Radiance or MGF input
 ][
 .B "\-n Nproc"
 ][
-.B "\-r 'rtcontrib opts...'"
+.B "\-r 'rcontrib opts...'"
 ][
 .B "\-t{3|4} Nlog2"
 ][
@@ -86,12 +86,12 @@ In some cases, the processing time may be reduced by the
 option, which specifies the number of simultaneous
 .I rtrace(1)
 processes to run in
-.I rtcontrib(1).
+.I rcontrib(1).
 The
 .I \-r
 option may be used to specify a set of quoted arguments to be
 included on the
-.I rtcontrib
+.I rcontrib
 command line.
 .PP
 The
@@ -152,4 +152,4 @@ directions using the Klems directions or similar.
 Greg Ward
 .SH "SEE ALSO"
 dctimestep(1), genklemsamp(1), genskyvec(1), mkillum(1),
-pkgBSDF(1), rtcontrib(1), rtrace(1)
+pkgBSDF(1), rcontrib(1), rtrace(1)

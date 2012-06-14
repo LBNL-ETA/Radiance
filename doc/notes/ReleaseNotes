@@ -1828,3 +1828,7 @@ Added "Number of processes" slider to trad "Action" pane to control rad -N
 option for rvu and batch rendering.
 
 Added -c option to vwrays to repeat pixels for rtcontrib.
+
+Reworked rtcontrib program and renamed to rcontrib.  New version runs much
+faster, especially on multiprocessor systems, and doesn't require as much
+memory.  No longer calls rtrace; instead does all the work itself.

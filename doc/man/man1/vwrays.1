@@ -1,4 +1,4 @@
-.\" RCSid "$Id: vwrays.1,v 1.9 2012/06/14 05:19:05 greg Exp $"
+.\" RCSid "$Id: vwrays.1,v 1.10 2012/06/14 22:42:21 greg Exp $"
 .TH VWRAYS 1 1/15/99 RADIANCE
 .SH NAME
 vwrays - compute rays for a given picture or view
@@ -41,7 +41,7 @@ The
 .I \-c
 option repeats each pixel the given number of times (default is 1).
 This is most useful when sending rays to
-.I rtcontrib(1)
+.I rcontrib(1)
 with the same
 .I \-c
 setting, providing a much faster way to average pixels over image sets.
@@ -144,4 +144,4 @@ can reproduce any pixel ordering (i.e., any image orientation) when given
 a rendered picture, it will only produce standard scanline-ordered rays when 
 given a set of view parameters.
 .SH "SEE ALSO"
-rcalc(1), rpict(1), rtcontrib(1), rtrace(1)
+rcalc(1), rpict(1), rcontrib(1), rtrace(1)

@@ -1,4 +1,4 @@
-.\" RCSid $Id: genklemsamp.1,v 1.4 2010/09/03 23:53:49 greg Exp $
+.\" RCSid $Id: genklemsamp.1,v 1.5 2012/06/14 22:42:21 greg Exp $
 .TH GENKLEMSAMP 1 6/13/09 RADIANCE
 .SH NAME
 genklemsamp - generate ray samples over surfaces using Klems BSDF basis
@@ -20,7 +20,7 @@ genklemsamp - generate ray samples over surfaces using Klems BSDF basis
 generates ray origins and directions to sample planar surfaces
 needed to determine incident radiances or daylight coefficients.
 This command is typically used in conjunction with
-.I rtcontrib(1)
+.I rcontrib(1)
 to analyze exterior daylight coefficients
 for an annual simulation.
 .PP
@@ -55,7 +55,7 @@ The
 option specifies that output rays should be generated as 32-bit IEEE binary
 float values.
 This may be more efficient if passed directly to
-.I rtcontrib
+.I rcontrib
 or
 .I rtrace(1)
 with the same option.
@@ -68,13 +68,13 @@ produces ASCII floating point values.
 .SH EXAMPLE
 To generate 500 samples per direction over a set of south-facing windows and
 pass to
-.I rtcontrib
+.I rcontrib
 to compute daylight coefficients in a matrix:
 .IP "" .2i
 genklemsamp -c 500 -vd 0 -1 0 -vu 0 0 1 south_windows.rad
-| rtcontrib -c 500 -e MF:1 -f reinhart.cal -b rbin -bn Nrbins exterior.oct > Dsouth.dat
+| rcontrib -c 500 -e MF:1 -f reinhart.cal -b rbin -bn Nrbins exterior.oct > Dsouth.dat
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
 dctimestep(1), genBSDF(1), genskyvec(1), mkillum(1),
-rtcontrib(1), rtrace(1), vwrays(1)
+rcontrib(1), rtrace(1), vwrays(1)

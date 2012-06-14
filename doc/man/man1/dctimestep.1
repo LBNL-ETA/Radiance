@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.2 2010/07/01 21:54:55 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.3 2012/06/14 22:42:21 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step via matrix multiplication
@@ -35,7 +35,7 @@ The first argument is the View matrix file that specifies how window output
 directions are related to some set of measured values, such as an array of
 illuminance points or images.
 This matrix is usually computed by
-.I rtcontrib(1)
+.I rcontrib(1)
 for a particular set of windows or skylight openings.
 The second argument is the window transmission matrix, or BSDF, given as
 a standard XML description.
@@ -44,7 +44,7 @@ relate to input directions on the same opening.
 This is usually computed using
 .I genklemsamp(1)
 with
-.I rtcontrib
+.I rcontrib
 in a separate run for each window or skylight orientation.
 The final input is the sky contribution vector,
 usually computed by
@@ -88,4 +88,4 @@ gensky 6 21 12 | genskyvec | dctimestep view%03d.hdr Blinds30.xml Window2.dmx > 
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-genklemsamp(1), genskyvec(1), mkillum(1), rtcontrib(1), rtrace(1), vwrays(1)
+genklemsamp(1), genskyvec(1), mkillum(1), rcontrib(1), rtrace(1), vwrays(1)

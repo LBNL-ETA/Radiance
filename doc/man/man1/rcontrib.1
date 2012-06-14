@@ -1,9 +1,9 @@
-.\" RCSid "$Id: rtcontrib.1,v 1.23 2010/09/26 15:51:14 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.1 2012/06/14 22:42:21 greg Exp $"
 .TH RTCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
-rtcontrib - compute contribution coefficients in a RADIANCE scene
+rcontrib - compute contribution coefficients in a RADIANCE scene
 .SH SYNOPSIS
-.B rtcontrib
+.B rcontrib
 [
 .B "\-n nprocs"
 ][
@@ -40,7 +40,7 @@ rtrace options
 ]
 .B octree
 .br
-.B "rtcontrib [ options ] \-defaults"
+.B "rcontrib [ options ] \-defaults"
 .SH DESCRIPTION
 .I Rtcontrib
 computes ray coefficients
@@ -66,20 +66,20 @@ processes will be used to accelerate computation on a shared
 memory machine.
 Note that there is no benefit to using more processes
 than there are local CPUs available to do the work, and the
-.I rtcontrib
+.I rcontrib
 process itself may use a considerable amount of CPU time.
 .PP
 By setting the boolean
 .I \-V
 option, you may instruct
-.I rtcontrib
+.I rcontrib
 to report the contribution from each material rather than the ray
 coefficient.
 This is particularly useful for light sources with directional output
 distributions, whose value would otherwise be lost in the shuffle.
 With the default
 .I -V-
-setting, the output of rtcontrib is a coefficient that must be multiplied
+setting, the output of rcontrib is a coefficient that must be multiplied
 by the radiance of each material to arrive at a final contribution.
 This is more convenient for computing daylight coefficeints, or cases
 where the actual radiance is not desired.
@@ -100,7 +100,7 @@ coefficients contain an additonal factor of PI.
 The
 .I \-c
 option tells
-.I rtcontrib
+.I rcontrib
 how many rays to accumulate for each record.
 The default value is 1, meaning a full record will be produced for
 each input ray.
@@ -118,13 +118,13 @@ Note that output flushing via zero-direction rays is disabled
 for accumulated evaluations.
 .PP
 The output of
-.I rtcontrib
+.I rcontrib
 has many potential uses.
 Source contributions can be used as components in linear combination to
 reproduce any desired variation, e.g., simulating lighting controls or
 changing sky conditions via daylight coefficients.
 More generally,
-.I rtcontrib
+.I rcontrib
 can be used to compute arbitrary input-output relationships in optical
 systems, such as luminaires, light pipes, and shading devices.
 .PP
@@ -218,7 +218,7 @@ described in the
 man page.
 Unlike
 .I rcalc,
-.I rtcontrib
+.I rcontrib
 will search the RADIANCE library directories for each file given in a
 .I \-f
 option.
@@ -275,13 +275,13 @@ replaced by the contents of the given file.
 To compute the proportional contributions from sources modified
 by "light1" vs. "light2" on a set of illuminance values:
 .IP "" .2i
-rtcontrib \-I+ @render.opt \-o c_%s.dat \-m light1 \-m light2 scene.oct < test.dat
+rcontrib \-I+ @render.opt \-o c_%s.dat \-m light1 \-m light2 scene.oct < test.dat
 .PP
 To generate a pair of images corresponding to these two lights'
 contributions:
 .IP "" .2i
 vwrays \-ff \-x 1024 \-y 1024 \-vf best.vf |
-rtcontrib \-ffc `vwrays \-d \-x 1024 \-y 1024 \-vf best.vf`
+rcontrib \-ffc `vwrays \-d \-x 1024 \-y 1024 \-vf best.vf`
 @render.opt \-o c_%s.hdr \-m light1 \-m light2 scene.oct
 .PP
 These images may then be recombined using the desired outputs
@@ -291,7 +291,7 @@ pcomb \-c 100 90 75 c_light1.hdr \-c 50 55 57 c_light2.hdr > combined.hdr
 .PP
 To compute an array of illuminance contributions according to a Tregenza sky:
 .IP "" .2i
-rtcontrib \-I+ \-b tbin \-o sky.dat \-m skyglow \-b 0 \-o ground.dat \-m groundglow
+rcontrib \-I+ \-b tbin \-o sky.dat \-m skyglow \-b 0 \-o ground.dat \-m groundglow
 @render.opt \-f tregenza.cal scene.oct < test.dat
 .SH ENVIRONMENT
 RAYPATH		path to search for \-f and \-M files

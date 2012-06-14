@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.36 2012/06/14 18:35:03 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.37 2012/06/14 22:42:21 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -197,13 +197,13 @@ print "\t<DataDefinition>\n";
 print "\t\t<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
 print "\t</DataDefinition>\n";
 
-# Start rtcontrib processes for compute each side
+# Start rcontrib processes for compute each side
 do_tree_rtcontrib(0) if ( $doback );
 do_tree_rtcontrib(1) if ( $doforw );
 
 }	# end of sub do_tree_bsdf()
 
-# Run rtcontrib process in background to generate tensor tree samples
+# Run rcontrib process in background to generate tensor tree samples
 sub do_tree_rtcontrib {
 	my $forw = shift;
 	my $matargs = "-m $bmodnm";
@@ -245,7 +245,7 @@ sub do_tree_rtcontrib {
 			"| $cmd";
 	}
 # print STDERR "Starting: $cmd\n";
-	system "$cmd" || die "Failure running rtcontrib";
+	system "$cmd" || die "Failure running rcontrib";
 	ttree_out($forw);
 }	# end of do_tree_rtcontrib()
 
@@ -379,7 +379,7 @@ kbin2(pol,azi) = select(kfindrow(1, pol),
 kbin = kbin2(Acos(abs(Dz)),Atan2(Dy,Dx));
 ';
 my $ndiv = 145;
-# Compute scattering data using rtcontrib
+# Compute scattering data using rcontrib
 my @tfarr;
 my @rfarr;
 my @tbarr;
