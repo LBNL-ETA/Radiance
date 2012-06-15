@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.6 2012/06/15 00:57:40 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.7 2012/06/15 21:32:11 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -244,43 +244,36 @@ trace_contrib(RAY *r)
 }
 
 
+/* Evaluate irradiance contributions */
 static void
-rayirrad(			/* compute irradiance rather than radiance */
-	RAY *r
-)
+eval_irrad(FVECT org, FVECT dir)
 {
-	r->rot = 1e-5;			/* pretend we hit surface */
-	VSUM(r->rop, r->rorg, r->rdir, r->rot);
-	r->ron[0] = -r->rdir[0];
-	r->ron[1] = -r->rdir[1];
-	r->ron[2] = -r->rdir[2];
-	r->rod = 1.0;
-					/* compute result */
-	r->revf = raytrace;
-	(*ofun[Lamb.otype].funp)(&Lamb, r);
-	r->revf = rayirrad;
+	RAY	thisray;
+
+	VSUM(thisray.rorg, org, dir, 1.1e-4);
+	thisray.rdir[0] = -dir[0];
+	thisray.rdir[1] = -dir[1];
+	thisray.rdir[2] = -dir[2];
+	thisray.rmax = 0.0;
+	rayorigin(&thisray, PRIMARY, NULL, NULL);
+	thisray.rot = 1e-5;		/* pretend we hit surface */
+	thisray.rod = 1.0;
+	VSUM(thisray.rop, org, dir, 1e-4);
+	samplendx++;			/* compute result */
+	(*ofun[Lamb.otype].funp)(&Lamb, &thisray);
 }
 
 
-/* Evaluate ray contributions */
+/* Evaluate radiance contributions */
 static void
-eval_ray(FVECT  org, FVECT  dir, double	dmax)
+eval_rad(FVECT org, FVECT dir, double dmax)
 {
 	RAY	thisray;
 					/* set up ray */
+	VCOPY(thisray.rorg, org);
+	VCOPY(thisray.rdir, dir);
+	thisray.rmax = dmax;
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
-	if (imm_irrad) {
-		VSUM(thisray.rorg, org, dir, 1.1e-4);
-		thisray.rdir[0] = -dir[0];
-		thisray.rdir[1] = -dir[1];
-		thisray.rdir[2] = -dir[2];
-		thisray.rmax = 0.0;
-		thisray.revf = rayirrad;
-	} else {
-		VCOPY(thisray.rorg, org);
-		VCOPY(thisray.rdir, dir);
-		thisray.rmax = dmax;
-	}
 	samplendx++;			/* call ray evaluation */
 	rayvalue(&thisray);
 }
@@ -335,8 +328,10 @@ rcontrib()
 			if ((yres <= 0) | (xres <= 0))
 				waitflush = 1;		/* flush right after */
 			account = 1;
-		} else {				/* else compute */
-			eval_ray(orig, direc, lim_dist ? d : 0.0);
+		} else if (imm_irrad) {			/* else compute */
+			eval_irrad(orig, direc);
+		} else {
+			eval_rad(orig, direc, lim_dist ? d : 0.0);
 		}
 		done_contrib();		/* accumulate/output */
 		++lastdone;
