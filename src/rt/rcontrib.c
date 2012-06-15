@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.5 2012/06/13 00:16:42 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.6 2012/06/15 00:57:40 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -70,38 +70,7 @@ static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
 
 LUTAB	modconttab = LU_SINIT(NULL,mcfree);	/* modifier lookup table */
 
-static OBJECT		traset[MAXTSET+1]={0};	/* trace include set */
-
 /************************** INITIALIZATION ROUTINES ***********************/
-
-void
-tranotify(			/* record new modifier */
-	OBJECT	obj
-)
-{
-	static int	hitlimit = 0;
-	OBJREC		*o = objptr(obj);
-	int		i;
-
-	if (obj == OVOID) {		/* starting over */
-		traset[0] = 0;
-		hitlimit = 0;
-		return;
-	}
-	if (hitlimit || !ismodifier(o->otype))
-		return;
-	for (i = nmods; i-- > 0; )
-		if (!strcmp(o->oname, modname[i])) {
-			if (traset[0] >= MAXTSET) {
-				error(WARNING, "too many same-named modifiers");
-				hitlimit++;
-				return;		/* should this be fatal? */
-			}
-			insertelem(traset, obj);
-			break;
-		}
-}
-
 
 char *
 formstr(				/* return format identifier */
@@ -254,13 +223,13 @@ trace_contrib(RAY *r)
 	int	bn;
 	RREAL	contr[3];
 
-	if (r->ro == NULL || !inset(traset, r->ro->omod))
+	if (r->ro == NULL || r->ro->omod == OVOID)
 		return;
 
 	mp = (MODCONT *)lu_find(&modconttab,objptr(r->ro->omod)->oname)->data;
 
-	if (mp == NULL)
-		error(CONSISTENCY, "unexpected modifier in trace_contrib()");
+	if (mp == NULL)				/* not in our list? */
+		return;
 
 	worldfunc(RCCONTEXT, r);		/* get bin number */
 	bn = (int)(evalue(mp->binv) + .5);

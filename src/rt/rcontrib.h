@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.3 2012/06/12 17:20:44 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.4 2012/06/15 00:57:40 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -85,16 +85,11 @@ extern LUTAB		ofiletab;	/* output stream table */
 #ifndef	MAXMODLIST
 #define	MAXMODLIST	2048		/* maximum modifiers we'll track */
 #endif
-#ifndef  MAXTSET
-#define	 MAXTSET	16383		/* maximum number in trace set */
-#endif
 
 extern const char	*modname[MAXMODLIST];	/* ordered modifier name list */
 extern int		nmods;			/* number of modifiers */
 
 extern char		RCCONTEXT[];		/* special evaluation context */
-
-extern void		tranotify(OBJECT obj);	/* new trace modifier */
 
 extern char		*formstr(int f);	/* return format identifier */
 
