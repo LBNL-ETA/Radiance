@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.7 2012/06/15 21:32:11 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.8 2012/06/16 17:09:49 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -27,7 +27,7 @@ int	do_irrad = 0;			/* compute irradiance? */
 
 int	rand_samp = 1;			/* pure Monte Carlo sampling? */
 
-double	dstrsrc = 0.0;			/* square source distribution */
+double	dstrsrc = 0.9;			/* square source distribution */
 double	shadthresh = .03;		/* shadow threshold */
 double	shadcert = .75;			/* shadow certainty */
 int	directrelay = 3;		/* number of source relays */
@@ -178,9 +178,6 @@ rcinit()
 					/* set shared memory boundary */
 		shm_boundary = strcpy((char *)malloc(16), "SHM_BOUNDARY");
 	}
-	if ((nproc > 1) & (accumulate <= 0))
-		put_zero_record(0);	/* prime our queue to accumulate */
-
 	if (yres > 0) {			/* set up flushing & ray counts */
 		if (xres > 0)
 			raysleft = (RNUMBER)xres*yres;
@@ -199,17 +196,18 @@ rcinit()
 		return;			/* return to main processing loop */
 
 	if (recover) {			/* recover previous output? */
-		if (accumulate <= 0) {
+		if (accumulate <= 0)
 			reload_output();
-			if (nproc > 1)
-				queue_modifiers();
-		} else
+		else
 			recover_output();
 	}
 	if (nproc == 1)			/* single process? */
 		return;
-
-	parental_loop();		/* else run controller */
+					/* else run appropriate controller */
+	if (accumulate <= 0)
+		feeder_loop();
+	else
+		parental_loop();
 	quit(0);			/* parent musn't return! */
 }
 
@@ -338,7 +336,7 @@ rcontrib()
 		if (raysleft && !--raysleft)
 			break;		/* preemptive EOI */
 	}
-	if (nchild != -1 && (accumulate <= 0) | (account < accumulate)) {
+	if ((accumulate <= 0) | (account < accumulate)) {
 		if (account < accumulate) {
 			error(WARNING, "partial accumulation in final record");
 			accumulate -= account;

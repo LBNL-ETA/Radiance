@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.9 2012/06/14 05:13:25 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.10 2012/06/16 17:09:49 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -10,6 +10,8 @@ static const char RCSid[] = "$Id: rc3.c,v 2.9 2012/06/14 05:13:25 greg Exp $";
 #include "platform.h"
 #include "rtprocess.h"
 #include "selcall.h"
+
+#define	MAXIQ		(int)(PIPE_BUF/(sizeof(FVECT)*2))
 
 /* Modifier contribution queue (results waiting to be output) */
 typedef struct s_binq {
@@ -26,7 +28,7 @@ static struct {
 	RNUMBER	r1;			/* assigned ray starting index */
 	SUBPROC	pr;			/* PID, i/o descriptors */
 	FILE	*infp;			/* file pointer to read from process */
-	int	nr;			/* number rays to sum (0 if free) */
+	int	nr;			/* number of rays to sum (0 if free) */
 } kida[MAXPROCESS];		/* our child processes */
 
 
@@ -94,7 +96,7 @@ free_binq(BINQ *bp)
 
 
 /* Add modifier values to accumulation record in queue and clear */
-void
+static void
 queue_modifiers()
 {
 	MODCONT	*mpin, *mpout;
@@ -146,7 +148,7 @@ queue_output(BINQ *bp)
 		}
 		return;
 	}
-	b_last = NULL;			/* else insert in output queue */
+	b_last = NULL;			/* insert in output queue */
 	for (b_cur = out_bq; b_cur != NULL && b_cur->ndx < bp->ndx;
 				b_cur = b_cur->next)
 		b_last = b_cur;
@@ -184,9 +186,6 @@ queue_ready()
 	int	nready = 0;
 	BINQ	*bp;
 
-	if (accumulate <= 0)		/* just accumulating? */
-		return(0);
-
 	for (bp = out_bq; bp != NULL && bp->nadded >= accumulate &&
 				bp->ndx == lastdone+nready*accumulate+1;
 				bp = bp->next)
@@ -203,10 +202,7 @@ output_catchup(int nmax)
 	int	nout = 0;
 	BINQ	*bp;
 	int	i;
-
-	if (accumulate <= 0)		/* just accumulating? */
-		return(0);
-					/* else output ready results */
+					/* output ready results */
 	while (out_bq != NULL && out_bq->nadded >= accumulate
 				&& out_bq->ndx == lastdone+1) {
 		if ((nmax > 0) & (nout >= nmax))
@@ -401,7 +397,6 @@ tryagain:				/* catch up with output? */
 void
 parental_loop()
 {
-#define	MAXIQ		(int)(PIPE_BUF/(sizeof(FVECT)*2))
 	static int	ignore_warning_given = 0;
 	int		qlimit = (accumulate == 1) ? 1 : MAXIQ-1;
 	int		ninq = 0;
@@ -427,7 +422,7 @@ parental_loop()
 			if ((yres <= 0) | (xres <= 0))
 				waitflush = 1;		/* flush next */
 			put_zero_record(++lastray);
-		} else if (++ninq >= qlimit || accumulate > 1 &&
+		} else if (++ninq >= qlimit ||
 			    lastray/accumulate != (lastray+ninq)/accumulate) {
 			i = next_child_nq(0);		/* manages output */
 			n = ninq;
@@ -450,22 +445,112 @@ parental_loop()
 	}
 	while (next_child_nq(1) >= 0)		/* empty results queue */
 		;
-						/* output accumulated record */
-	if (accumulate <= 0 || account < accumulate) {
-		end_children();			/* frees up file descriptors */
-		if (account < accumulate) {
-			error(WARNING, "partial accumulation in final record");
-			accumulate -= account;
-		}
-		for (i = 0; i < nmods; i++)
-			mod_output(out_bq->mca[i]);
-		end_record();
-		free_binq(out_bq);
+	if (account < accumulate) {
+		error(WARNING, "partial accumulation in final record");
+		free_binq(out_bq);		/* XXX just ignore it */
 		out_bq = NULL;
 	}
-	if (raysleft)
-		error(USER, "unexpected EOF on input");
 	free_binq(NULL);			/* clean up */
 	lu_done(&ofiletab);
-#undef MAXIQ
+	if (raysleft)
+		error(USER, "unexpected EOF on input");
+}
+
+
+/* Wait for the next available child by monitoring "to" pipes */
+static int
+next_child_ready()
+{
+	fd_set			writeset, errset;
+	int			i, n, nqr;
+
+	for (i = nchild; i--; )		/* see if there's one free first */
+		if (!kida[i].nr)
+			return(i);
+					/* prepare select() call */
+	FD_ZERO(&writeset); FD_ZERO(&errset);
+	n = 0;
+	for (i = nchild; i--; ) {
+		FD_SET(kida[i].pr.w, &writeset);
+		FD_SET(kida[i].pr.r, &errset);
+		if (kida[i].pr.w >= n)
+			n = kida[i].pr.w + 1;
+		if (kida[i].pr.r >= n)
+			n = kida[i].pr.r + 1;
+	}
+	errno = 0;
+	n = select(n, NULL, &writeset, &errset, NULL);
+	if (n < 0)
+		error(SYSTEM, "select() error in next_child_ready()");
+	n = -1;				/* identify waiting child */
+	for (i = nchild; i--; ) {
+		if (FD_ISSET(kida[i].pr.r, &errset))
+			error(USER, "rendering process died");
+		if (FD_ISSET(kida[i].pr.w, &writeset))
+			kida[n = i].nr = 0;
+	}
+	return(n);			/* first available child */
+}
+
+
+/* Modified parental loop for full accumulation mode (-c 0) */
+void
+feeder_loop()
+{
+	static int	ignore_warning_given = 0;
+	int		ninq = 0;
+	FVECT		orgdir[2*MAXIQ];
+	int		i, n;
+					/* load rays from stdin & process */
+#ifdef getc_unlocked
+	flockfile(stdin);		/* avoid lock/unlock overhead */
+#endif
+	while (getvec(orgdir[2*ninq]) == 0 && getvec(orgdir[2*ninq+1]) == 0) {
+		if (orgdir[2*ninq+1][0] == 0.0 &&	/* asking for flush? */
+				(orgdir[2*ninq+1][1] == 0.0) &
+				(orgdir[2*ninq+1][2] == 0.0)) {
+			if (!ignore_warning_given++)
+				error(WARNING,
+				"dummy ray(s) ignored during accumulation\n");
+			continue;
+		} 
+		if (++ninq >= MAXIQ) {
+			i = next_child_ready();		/* get eager child */
+			n = sizeof(FVECT)*2 * ninq;	/* give assignment */
+			if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+				error(SYSTEM, "pipe write error");
+			kida[i].r1 = lastray+1;
+			lastray += kida[i].nr = ninq;
+			ninq = 0;
+			if (lastray < lastdone)		/* RNUMBER wrapped? */
+				lastdone = lastray = 0;
+		}
+		if (raysleft && !--raysleft)
+			break;				/* preemptive EOI */
+	}
+	if (ninq) {				/* polish off input */
+		i = next_child_ready();
+		n = sizeof(FVECT)*2 * ninq;
+		if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+			error(SYSTEM, "pipe write error");
+		kida[i].r1 = lastray+1;
+		lastray += kida[i].nr = ninq;
+		ninq = 0;
+	}
+	for (i = nchild; i--; ) {		/* get results */
+		close(kida[i].pr.w);
+		queue_results(i);
+	}
+	if (recover)				/* and from before? */
+		queue_modifiers();
+	end_children();				/* free up file descriptors */
+	for (i = 0; i < nmods; i++)
+		mod_output(out_bq->mca[i]);	/* output accumulated record */
+	end_record();
+	free_binq(out_bq);			/* clean up */
+	out_bq = NULL;
+	free_binq(NULL);
+	lu_done(&ofiletab);
+	if (raysleft)
+		error(USER, "unexpected EOF on input");
 }
