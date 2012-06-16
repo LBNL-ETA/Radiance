@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.8 2012/06/16 17:09:49 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.9 2012/06/16 17:30:13 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -344,7 +344,7 @@ rcontrib()
 		account = 1;		/* output accumulated totals */
 		done_contrib();
 	}
+	lu_done(&ofiletab);		/* close output files */
 	if (raysleft)
 		error(USER, "unexpected EOF on input");
-	lu_done(&ofiletab);		/* close output files */
 }

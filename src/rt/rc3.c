@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.10 2012/06/16 17:09:49 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.11 2012/06/16 17:30:13 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -462,7 +462,7 @@ static int
 next_child_ready()
 {
 	fd_set			writeset, errset;
-	int			i, n, nqr;
+	int			i, n;
 
 	for (i = nchild; i--; )		/* see if there's one free first */
 		if (!kida[i].nr)
