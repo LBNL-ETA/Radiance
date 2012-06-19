@@ -41,11 +41,14 @@ endif()
 add_executable(lookamb lookamb.c ambio.c)
 target_link_libraries(lookamb rtrad)
 
+add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
+target_link_libraries(rcontrib radiance rtrad)
+
 add_test(rtrace_Version ${EXECUTABLE_OUTPUT_PATH}/rtrace -version)
 set_tests_properties(rtrace_Version PROPERTIES
   PASS_REGULAR_EXPRESSION "RADIANCE")
 
-install(TARGETS lookamb radiance raycalls rtrace rpict rvu
+install(TARGETS lookamb radiance raycalls rtrace rpict rvu rcontrib
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION bin
         ARCHIVE DESTINATION bin)
