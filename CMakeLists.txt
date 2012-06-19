@@ -9,6 +9,7 @@ option(BUILD_SHARED_LIBS "Build radiance using shared libraries?" OFF)
 if(NOT WIN32)
   set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/ DESTINATION man)
+  set(qt_plugin_term "PLUGIN")
 endif()
 
 
@@ -19,6 +20,7 @@ if (WIN32)
   set(CPACK_BINARY_ZIP 1)
 
   set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "")
+  set(qt_plugin_term "LIBRARY")
 
 endif()
 
