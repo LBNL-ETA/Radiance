@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.4 2012/06/12 17:20:44 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.5 2012/06/19 00:12:08 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -672,12 +672,13 @@ recover_output()
 	nvals = lastout * outvsiz;
 	lu_doall(&ofiletab, myseeko, &nvals);
 						/* skip repeated input */
+	lastout *= accumulate;
 	for (nvals = 0; nvals < lastout; nvals++) {
 		FVECT	vdummy;
 		if (getvec(vdummy) < 0 || getvec(vdummy) < 0)
 			error(USER, "unexpected EOF on input");
 	}
-	lastray = lastdone = (RNUMBER)lastout * accumulate;
+	lastray = lastdone = (RNUMBER)lastout;
 	if (raysleft)
 		raysleft -= lastray;
 }

@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.5 2012/06/16 17:09:49 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.6 2012/06/19 00:12:08 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -112,7 +112,7 @@ extern void		recover_output(void);
 extern int		getvec(FVECT vec);
 
 extern int		in_rchild(void);
-extern void		end_children(void);
+extern void		end_children(int immed);
 
 extern void		put_zero_record(int ndx);
 

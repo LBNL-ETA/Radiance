@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.9 2012/06/16 17:30:13 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.10 2012/06/19 00:12:08 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -137,7 +137,7 @@ addmodifier(char *modn, char *outf, char *binv, int bincnt)
 }
 
 
-/* add modifiers from a file list */
+/* Add modifiers from a file list */
 void
 addmodfile(char *fname, char *outf, char *binv, int bincnt)
 {
@@ -159,7 +159,7 @@ quit(			/* quit program */
 )
 {
 	if (nchild > 0)		/* close children if any */
-		end_children();
+		end_children(code != 0);
 	exit(code);
 }
 
