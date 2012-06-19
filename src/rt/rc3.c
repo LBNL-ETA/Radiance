@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.12 2012/06/19 00:12:08 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.13 2012/06/19 01:27:13 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -539,8 +539,9 @@ feeder_loop()
 		lastray += kida[i].nr = ninq;
 		ninq = 0;
 	}
-	for (i = nchild; i--; ) {		/* get results */
-		close(kida[i].pr.w);
+	memset(orgdir, 0, sizeof(FVECT)*2);	/* get results */
+	for (i = nchild; i--; ) {
+		writebuf(kida[i].pr.w, (char *)orgdir, sizeof(FVECT)*2);
 		queue_results(i);
 	}
 	if (recover)				/* and from before? */

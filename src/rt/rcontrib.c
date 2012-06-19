@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.10 2012/06/19 00:12:08 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.11 2012/06/19 01:27:13 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -336,7 +336,7 @@ rcontrib()
 		if (raysleft && !--raysleft)
 			break;		/* preemptive EOI */
 	}
-	if ((accumulate <= 0) | (account < accumulate)) {
+	if (nchild != -1 && (accumulate <= 0) | (account < accumulate)) {
 		if (account < accumulate) {
 			error(WARNING, "partial accumulation in final record");
 			accumulate -= account;
