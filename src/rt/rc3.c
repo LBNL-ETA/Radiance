@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.14 2012/06/20 21:36:34 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.15 2012/06/21 17:14:32 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: rc3.c,v 2.14 2012/06/20 21:36:34 greg Exp $";
 
 #include <signal.h>
 #include "rcontrib.h"
-#include "platform.h"
 #include "rtprocess.h"
 #include "selcall.h"
 
@@ -322,8 +321,10 @@ end_children(int immed)
 	
 	while (nchild > 0) {
 		nchild--;
+#ifdef SIGKILL
 		if (immed)		/* error mode -- quick exit */
 			kill(kida[nchild].pr.pid, SIGKILL);
+#endif
 		if ((status = close_process(&kida[nchild].pr)) > 0 && !immed) {
 			sprintf(errmsg,
 				"rendering process returned bad status (%d)",

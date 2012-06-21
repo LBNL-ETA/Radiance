@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.11 2012/06/19 01:27:13 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.12 2012/06/21 17:14:32 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -9,7 +9,6 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.11 2012/06/19 01:27:13 greg Exp
 #include "rcontrib.h"
 #include "source.h"
 #include "otypes.h"
-#include "platform.h"
 
 char	*shm_boundary = NULL;		/* boundary of shared memory */
 

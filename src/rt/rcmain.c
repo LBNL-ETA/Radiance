@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.4 2012/06/15 00:57:40 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.5 2012/06/21 17:14:32 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -9,8 +9,6 @@ static const char	RCSid[] = "$Id: rcmain.c,v 2.4 2012/06/15 00:57:40 greg Exp $"
 
 #include <signal.h>
 #include "rcontrib.h"
-#include "platform.h"
-#include "paths.h"
 #include "source.h"
 #include "ambient.h"
 
