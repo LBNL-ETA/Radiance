@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.65 2012/06/14 22:42:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.66 2012/06/22 16:52:06 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -197,7 +197,8 @@ m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o o_mesh.o \
 mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o rayfifo.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
-text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o:	ray.h \
+text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o rcmain.o \
+rcontrib.o rc2.o rc3.o:	ray.h \
 ../common/standard.h ../common/rtmisc.h ../common/rtio.h ../common/rtmath.h \
 ../common/rterror.h ../common/octree.h \
 ../common/mat4.h ../common/fvect.h ../common/object.h ../common/color.h
@@ -255,3 +256,15 @@ srcobstr.o text.o:		rtotypes.h
 
 m_bsdf.o:	ambient.h source.h func.h \
 ../common/calcomp.h ../common/bsdf.h ../common/random.h
+
+rcmain.o rcontrib.o rc2.o rc3.o:	rcontrib.h \
+../common/platform.h ../common/paths.h ../common/lookup.h \
+func.h ../common/calcomp.h
+
+rcmain.o:	source.h ambient.h
+
+rcontrib.o:	source.h ../common/otypes.h
+
+rc2.o:	../common/resolu.h
+
+rc3.o:	../common/rtprocess.h ../common/selcall.h
