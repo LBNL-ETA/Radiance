@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.66 2012/06/22 16:52:06 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.67 2012/06/22 22:03:02 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -189,7 +189,7 @@ raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o srcsupp.o text.o \
 srcdraw.o srcobstr.o virtuals.o:	../common/otypes.h
 
 ambient.o ambcomp.o aniso.o normal.o raycalls.o raytrace.o rpict.o \
-rvmain.o rtmain.o rpmain.o persist.o source.o rv3.o \
+rvmain.o rtmain.o rpmain.o rcmain.o persist.o source.o rv3.o \
 srcsamp.o virtuals.o:	../common/random.h
 
 ambcomp.o ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o m_bsdf.o \
@@ -259,12 +259,12 @@ m_bsdf.o:	ambient.h source.h func.h \
 
 rcmain.o rcontrib.o rc2.o rc3.o:	rcontrib.h \
 ../common/platform.h ../common/paths.h ../common/lookup.h \
-func.h ../common/calcomp.h
+func.h ../common/calcomp.h ../common/rtprocess.h
 
 rcmain.o:	source.h ambient.h
 
-rcontrib.o:	source.h ../common/otypes.h
+rcontrib.o:	../common/otypes.h
 
 rc2.o:	../common/resolu.h
 
-rc3.o:	../common/rtprocess.h ../common/selcall.h
+rc3.o:	../common/selcall.h

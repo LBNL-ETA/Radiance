@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.12 2012/06/21 17:14:32 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.13 2012/06/22 22:03:02 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -7,7 +7,6 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.12 2012/06/21 17:14:32 greg Exp
  */
 
 #include "rcontrib.h"
-#include "source.h"
 #include "otypes.h"
 
 char	*shm_boundary = NULL;		/* boundary of shared memory */
@@ -187,9 +186,6 @@ rcinit()
 	if ((account = accumulate) > 1)
 		raysleft *= accumulate;
 	waitflush = (yres > 0) & (xres > 1) ? 0 : xres;
-					/* tracing to sources as well */
-	for (i = 0; i < nsources; i++)
-		source[i].sflags |= SFOLLOW;
 
 	if (nproc > 1 && in_rchild())	/* forked child? */
 		return;			/* return to main processing loop */
