@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.15 2012/06/21 17:14:32 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.16 2012/06/22 21:58:45 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: rc3.c,v 2.15 2012/06/21 17:14:32 greg Exp $";
 
 #include <signal.h>
 #include "rcontrib.h"
-#include "rtprocess.h"
 #include "selcall.h"
 
 #define	MAXIQ		(int)(PIPE_BUF/(sizeof(FVECT)*2))
