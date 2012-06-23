@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.40 2012/03/05 15:27:08 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.41 2012/06/23 16:47:39 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -500,7 +500,15 @@ SDmultiSamp(double t[], int n, double randX)
 	unsigned	nBits;
 	double		scale;
 	bitmask_t	ndx, coord[MS_MAXDIM];
-	
+
+	if (n <= 0)			/* check corner cases */
+		return;
+	if (randX < 0) randX = 0;
+	else if (randX >= 1.) randX = 0.999999999999999;
+	if (n == 1) {
+		t[0] = randX;
+		return;
+	}
 	while (n > MS_MAXDIM)		/* punt for higher dimensions */
 		t[--n] = rand()*(1./(RAND_MAX+.5));
 	nBits = (8*sizeof(bitmask_t) - 1) / n;
@@ -1429,7 +1437,7 @@ r_BSDF_incvec(		/* compute random input vector at given location */
 	if (!getBSDF_incvec(v, b, i))
 		return(0);
 	rad = sqrt(getBSDF_incohm(b, i) / PI);
-	multisamp(pert, 3, rv);
+	SDmultiSamp(pert, 3, rv);
 	for (j = 0; j < 3; j++)
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
@@ -1454,7 +1462,7 @@ r_BSDF_outvec(		/* compute random output vector at given location */
 	if (!getBSDF_outvec(v, b, o))
 		return(0);
 	rad = sqrt(getBSDF_outohm(b, o) / PI);
-	multisamp(pert, 3, rv);
+	SDmultiSamp(pert, 3, rv);
 	for (j = 0; j < 3; j++)
 		v[j] += rad*(2.*pert[j] - 1.);
 	if (xm != NULL)
