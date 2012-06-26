@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.4 2012/05/18 20:43:13 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.5 2012/06/26 17:59:16 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -22,22 +22,22 @@ float	XYZfromSharp[3][3] = {
 	{-0.0123,  0.0167,  0.9955}
 };
 
-C_COLOR		c_dfcolor = C_DEFCOLOR;
+const C_COLOR	c_dfcolor = C_DEFCOLOR;
 
 				/* CIE 1931 Standard Observer curves */
-static const C_COLOR	cie_xf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+const C_COLOR	c_x31 = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{14,42,143,435,1344,2839,3483,3362,2908,1954,956,
 			320,49,93,633,1655,2904,4334,5945,7621,9163,10263,
 			10622,10026,8544,6424,4479,2835,1649,874,468,227,
 			114,58,29,14,7,3,2,1,0}, 106836L, .467, .368, 362.230
 			};
-static const C_COLOR	cie_yf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+const C_COLOR	c_y31 = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{0,1,4,12,40,116,230,380,600,910,1390,2080,3230,
 			5030,7100,8620,9540,9950,9950,9520,8700,7570,6310,
 			5030,3810,2650,1750,1070,610,320,170,82,41,21,10,
 			5,2,1,1,0,0}, 106856L, .398, .542, 493.525
 			};
-static const C_COLOR	cie_zf = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
+const C_COLOR	c_z31 = { 1, NULL, C_CDSPEC|C_CSSPEC|C_CSXY|C_CSEFF,
 			{65,201,679,2074,6456,13856,17471,17721,16692,
 			12876,8130,4652,2720,1582,782,422,203,87,39,21,17,
 			11,8,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -159,11 +159,11 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 			scale = va[i];
 		else if (va[i] < -scale)
 			scale = -va[i];
-		yval += va[i] * cie_yf.ssamp[i];
+		yval += va[i] * c_y31.ssamp[i];
 	}
 	if (scale <= 1e-7)
 		return(0.);
-	yval /= (double)cie_yf.ssum;
+	yval /= (double)c_y31.ssum;
 	scale = C_CMAXV / scale;
 	clr->ssum = 0;			/* convert to our spacing */
 	wl0 = wlmin;
@@ -218,13 +218,13 @@ c_ccvt(C_COLOR *clr, int fl)
 	if (fl & C_CSXY) {		/* cspec -> cxy */
 		x = y = z = 0.;
 		for (i = 0; i < C_CNSS; i++) {
-			x += cie_xf.ssamp[i] * clr->ssamp[i];
-			y += cie_yf.ssamp[i] * clr->ssamp[i];
-			z += cie_zf.ssamp[i] * clr->ssamp[i];
+			x += c_x31.ssamp[i] * clr->ssamp[i];
+			y += c_y31.ssamp[i] * clr->ssamp[i];
+			z += c_z31.ssamp[i] * clr->ssamp[i];
 		}
-		x /= (double)cie_xf.ssum;
-		y /= (double)cie_yf.ssum;
-		z /= (double)cie_zf.ssum;
+		x /= (double)c_x31.ssum;
+		y /= (double)c_y31.ssum;
+		z /= (double)c_z31.ssum;
 		z += x + y;
 		clr->cx = x / z;
 		clr->cy = y / z;
@@ -248,11 +248,11 @@ c_ccvt(C_COLOR *clr, int fl)
 		if (clr->flags & C_CSSPEC) {		/* from spectrum */
 			y = 0.;
 			for (i = 0; i < C_CNSS; i++)
-				y += cie_yf.ssamp[i] * clr->ssamp[i];
+				y += c_y31.ssamp[i] * clr->ssamp[i];
 			clr->eff = C_CLPWM * y / clr->ssum;
 		} else /* clr->flags & C_CSXY */ {	/* from (x,y) */
-			clr->eff = clr->cx*cie_xf.eff + clr->cy*cie_yf.eff +
-					(1. - clr->cx - clr->cy)*cie_zf.eff;
+			clr->eff = clr->cx*c_x31.eff + clr->cy*c_y31.eff +
+					(1. - clr->cx - clr->cy)*c_z31.eff;
 		}
 		clr->flags |= C_CSEFF;
 	}
@@ -331,8 +331,8 @@ c_cmult(C_COLOR *cres, C_COLOR *c1, double y1, C_COLOR *c2, double y2)
 			cres->ssum += cres->ssamp[i] = cmix[i] / cmax;
 		cres->flags = C_CDSPEC|C_CSSPEC;
 
-		c_ccvt(cres, C_CSEFF);			/* nasty, but true */
-		yres = y1 * y2 * cie_yf.ssum * C_CLPWM /
+		c_ccvt(cres, C_CSEFF);			/* don't touch below */
+		yres = y1 * y2 * c_y31.ssum * C_CLPWM /
 			(c1->eff*c1->ssum * c2->eff*c2->ssum) *
 			cres->eff*( cres->ssum*(double)cmax +
 						C_CNSS/2.0*(cmax-1) );
