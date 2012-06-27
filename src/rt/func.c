@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.26 2012/06/09 07:16:47 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.27 2012/06/27 16:29:26 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -213,6 +213,9 @@ worldfunc(			/* special function context sans object */
 )
 {
 	static RNUMBER	lastrno = ~0;
+
+	if (rayinitcal[0])		/* initialize on first call */
+		initfunc();
 					/* set evaluator context */
 	setcontext(ctx);
 					/* check if ray already set */
