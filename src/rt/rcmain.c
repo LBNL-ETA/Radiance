@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.7 2012/06/22 22:03:02 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.8 2012/06/27 15:32:58 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -335,8 +335,6 @@ main(int argc, char *argv[])
 	nsceneobjs = nobjects;
 
 	marksources();			/* find and mark sources */
-	for (i = 0; i < nsources; i++)	/* tracing to sources as well */
-		source[i].sflags |= SFOLLOW;
 
 	setambient();			/* initialize ambient calculation */
 

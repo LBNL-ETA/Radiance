@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.67 2012/06/22 22:03:02 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.68 2012/06/27 15:32:58 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -263,7 +263,7 @@ func.h ../common/calcomp.h ../common/rtprocess.h
 
 rcmain.o:	source.h ambient.h
 
-rcontrib.o:	../common/otypes.h
+rcontrib.o:	source.h ../common/otypes.h
 
 rc2.o:	../common/resolu.h
 

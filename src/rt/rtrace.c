@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.66 2012/06/09 07:16:47 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.67 2012/06/27 15:32:58 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -642,8 +642,12 @@ oputW(				/* print coefficient */
 )
 {
 	RREAL	contr[3];
+				/* shadow ray not on source? */
+	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
+		setcolor(contr, 0.0, 0.0, 0.0);
+	else
+		raycontrib(contr, r, PRIMARY);
 
-	raycontrib(contr, r, PRIMARY);
 	(*putreal)(contr, 3);
 }
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.13 2012/06/22 22:03:02 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.14 2012/06/27 15:32:58 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.13 2012/06/22 22:03:02 greg Exp
 
 #include "rcontrib.h"
 #include "otypes.h"
+#include "source.h"
 
 char	*shm_boundary = NULL;		/* boundary of shared memory */
 
@@ -176,6 +177,8 @@ rcinit()
 					/* set shared memory boundary */
 		shm_boundary = strcpy((char *)malloc(16), "SHM_BOUNDARY");
 	}
+	for (i = 0; i < nsources; i++)	/* tracing to sources as well */
+		source[i].sflags |= SFOLLOW;
 	if (yres > 0) {			/* set up flushing & ray counts */
 		if (xres > 0)
 			raysleft = (RNUMBER)xres*yres;
@@ -223,16 +226,19 @@ trace_contrib(RAY *r)
 
 	if (mp == NULL)				/* not in our list? */
 		return;
+						/* shadow ray not on source? */
+	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
+		return;
 
-	worldfunc(RCCONTEXT, r);		/* get bin number */
+	worldfunc(RCCONTEXT, r);		/* else get bin number */
 	bn = (int)(evalue(mp->binv) + .5);
 	if ((bn < 0) | (bn >= mp->nbins)) {
 		error(WARNING, "bad bin number (ignored)");
 		return;
 	}
-	raycontrib(contr, r, PRIMARY);
+	raycontrib(contr, r, PRIMARY);		/* compute coefficient */
 	if (contrib)
-		multcolor(contr, r->rcol);
+		multcolor(contr, r->rcol);	/* -> contribution */
 	addcolor(mp->cbin[bn], contr);
 }
 
