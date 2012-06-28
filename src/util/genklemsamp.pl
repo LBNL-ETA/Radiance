@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genklemsamp.pl,v 2.11 2011/05/16 23:56:32 greg Exp $
+# RCSid $Id: genklemsamp.pl,v 2.12 2012/06/28 17:35:18 greg Exp $
 #
 # Sample Klems (full) directions impinging on surface(s)
 #
@@ -99,7 +99,7 @@ sub GetNOrigins {
 }
 # Do we have any Radiance input files?
 if ($#ARGV >= 0) {
-	system "oconv -f @ARGV > $td/surf.oct";
+	system "xform -m void @ARGV | oconv - > $td/surf.oct";
 	# Set our own view center and size based on bounding cube
 	$_ = $vwset; s/^.*Vdx://; s/;.*$//;
 	my @vd = $_;
