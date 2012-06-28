@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.7 2011/09/29 22:36:11 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.8 2012/06/28 20:48:03 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -9,13 +9,16 @@ use strict;
 my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 my @skycolor = (0.960, 1.004, 1.118);
 my $mf = 4;
+my $dosky = 1;
 while ($#ARGV >= 0) {
 	if ("$ARGV[0]" eq "-c") {
 		@skycolor = @ARGV[1..3];
-		shift @ARGV; shift @ARGV; shift @ARGV;
+		shift @ARGV for (1..3);
 	} elsif ("$ARGV[0]" eq "-m") {
 		$mf = $ARGV[1];
 		shift @ARGV;
+	} elsif ("$ARGV[0]" eq "-d") {
+		$dosky = 0;
 	}
 	shift @ARGV;
 }
@@ -104,15 +107,20 @@ if ($windoz) {
 			q{-e '$1=if(1-dot,acos(dot),0);$2=Romega;$3=recno' };
 	}
 }
-# Create octree for rtrace
-open OCONV, "| oconv - > $octree";
-print OCONV @skydesc;
-print OCONV "skyfunc glow skyglow 0 0 4 @skycolor 0\n";
-print OCONV "skyglow source sky 0 0 4 0 0 1 360\n";
-close OCONV;
-# Run rtrace and average output for every 16 samples
-my @tregval = `$tregcommand`;
-unlink $octree;
+my @tregval;
+if ($dosky) {
+	# Create octree for rtrace
+	open OCONV, "| oconv - > $octree";
+	print OCONV @skydesc;
+	print OCONV "skyfunc glow skyglow 0 0 4 @skycolor 0\n";
+	print OCONV "skyglow source sky 0 0 4 0 0 1 360\n";
+	close OCONV;
+	# Run rtrace and average output for every 16 samples
+	@tregval = `$tregcommand`;
+	unlink $octree;
+} else {
+	push @tregval, "0\t0\t0\n" for (1..$nbins);
+}
 # Find closest 3 patches to sun and divvy up direct solar contribution
 sub numSort1 {
 	my @a1 = split("\t", $a);
