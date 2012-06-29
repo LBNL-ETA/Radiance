@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.23 2011/10/05 17:20:55 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.24 2012/06/29 23:09:06 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -21,13 +21,10 @@
   #define PATH_MAX _MAX_PATH
   #define NULL_DEVICE	"NUL"
   #define DIRSEP		'/'
-  #define ISDIRSEP(c)	((c)=='/' || (c)=='\\')
-  #define ISABS(s)	((s)!=NULL \
-		  && (s[0])!='\0' \
-          && (   ISDIRSEP(s[0]) \
-              || (   (s[1])!='\0' \
-                  && (isupper(s[0])||islower(s[0])) \
-                  && (s[1])==':')))
+  #define ISDIRSEP(c)	(((c)=='/') | ((c)=='\\'))
+  #define ISABS(s)	( ISDIRSEP((s)[0]) \
+		|| ( isupper((s)[0]) | islower((s)[0]) \
+			&& (s)[1]==':' && ISDIRSEP((s)[2]) ) )
   #define CASEDIRSEP	case '/': case '\\'
   #define PATHSEP		';'
   #define CURDIR		'.'
@@ -77,7 +74,7 @@
 
 	#define NULL_DEVICE	"NIL:"
     #define DIRSEP		'/'
-    #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
+    #define ISABS(s)		ISDIRSEP((s)[0])
     #define PATHSEP		';'
 	#define CURDIR		'.'
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
@@ -96,7 +93,7 @@
 	/* this is defined as _PATH_DEVNULL in /usr/include/paths.h on Linux */
 	#define NULL_DEVICE	"/dev/null"
     #define DIRSEP		'/'
-    #define ISABS(s) ((s)!=NULL && (ISDIRSEP(s[0])))
+    #define ISABS(s)		ISDIRSEP((s)[0])
     #define PATHSEP		':'
 	#define CURDIR		'.'
     #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
