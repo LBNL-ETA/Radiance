@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.14 2012/06/27 15:32:58 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.15 2012/07/13 05:07:06 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -257,6 +257,7 @@ eval_irrad(FVECT org, FVECT dir)
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	thisray.rot = 1e-5;		/* pretend we hit surface */
 	thisray.rod = 1.0;
+	VCOPY(thisray.ron, dir);
 	VSUM(thisray.rop, org, dir, 1e-4);
 	samplendx++;			/* compute result */
 	(*ofun[Lamb.otype].funp)(&Lamb, &thisray);
