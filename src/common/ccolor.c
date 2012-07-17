@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.5 2012/06/26 17:59:16 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.6 2012/07/17 23:40:24 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -112,7 +112,7 @@ c_fromSharpRGB(float cin[3], C_COLOR *cout)
 	return(xyz[1]);
 }
 
-/* assign arbitrary spectrum */
+/* assign arbitrary spectrum and return Y value */
 double
 c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 {
@@ -134,6 +134,8 @@ c_sset(C_COLOR *clr, double wlmin, double wlmax, const float spec[], int nwl)
 		wlmax -= wlstep;
 		--nwl;
 	}
+	if ((nwl <= 1) | (wlmin >= wlmax))
+		return(0.);
 	imax = nwl;			/* box filter if necessary */
 	boxpos = 0;
 	boxstep = 1;
@@ -229,7 +231,8 @@ c_ccvt(C_COLOR *clr, int fl)
 		clr->cx = x / z;
 		clr->cy = y / z;
 		clr->flags |= C_CSXY;
-	} else if (fl & C_CSSPEC) {	/* cxy -> cspec */
+	}
+	if (fl & C_CSSPEC) {		/* cxy -> cspec */
 		x = clr->cx;
 		y = clr->cy;
 		z = 1. - x - y;
@@ -331,7 +334,7 @@ c_cmult(C_COLOR *cres, C_COLOR *c1, double y1, C_COLOR *c2, double y2)
 			cres->ssum += cres->ssamp[i] = cmix[i] / cmax;
 		cres->flags = C_CDSPEC|C_CSSPEC;
 
-		c_ccvt(cres, C_CSEFF);			/* don't touch below */
+		c_ccvt(cres, C_CSEFF);			/* below is correct */
 		yres = y1 * y2 * c_y31.ssum * C_CLPWM /
 			(c1->eff*c1->ssum * c2->eff*c2->ssum) *
 			cres->eff*( cres->ssum*(double)cmax +
