@@ -1834,3 +1834,6 @@ faster, especially on multiprocessor systems, and doesn't require as much
 memory.  No longer calls rtrace; instead does all the work itself.
 
 Added -d option to genskyvec to produce direct-only (sun no sky) vector.
+
+Added Ashikhmin-Shirley anisotropic BRDF model (ashik2) with help
+from Nicolas Boneel.

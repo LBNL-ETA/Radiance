@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.16 2011/02/18 00:40:25 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.17 2012/07/29 19:01:39 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -76,8 +76,9 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MIX_PICT	48		/* mixing picture */
 #define  MAT_DIRECT1	49		/* unidirecting material */
 #define  MAT_DIRECT2	50		/* bidirecting material */
+#define  MAT_ASHIKHMIN	51		/* Ashikhmin-Shirley BRDF material */
 				/* number of object types */
-#define  NUMOTYPE	51
+#define  NUMOTYPE	52
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -167,6 +168,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "mixpict",	T_X|T_I,	o_default }, \
 				{ "prism1",	T_M|T_F|T_LV,	o_default }, \
 				{ "prism2",	T_M|T_F|T_LV,	o_default }, \
+				{ "ashik2",	T_M|T_F,	o_default }, \
 			}
 
 

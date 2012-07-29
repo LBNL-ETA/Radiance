@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.68 2012/06/27 15:32:58 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.69 2012/07/29 19:01:39 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -76,9 +76,11 @@ SURFSRC = sphere.c source.c srcobstr.c srcsupp.c srcsamp.c virtuals.c \
 	o_face.c srcsamp.c o_cone.c o_instance.c o_mesh.c
 
 MATOBJS = aniso.o normal.o dielectric.o m_clip.o glass.o m_brdf.o \
-	m_mirror.o m_direct.o m_mist.o fprism.o m_alias.o m_bsdf.o
+	m_mirror.o m_direct.o m_mist.o fprism.o m_alias.o m_bsdf.o \
+	ashikhmin.o
 MATSRC = aniso.c normal.c dielectric.c m_clip.c glass.c m_brdf.c \
-	m_mirror.c m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c
+	m_mirror.c m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c \
+	ashikhmin.c
 
 MODOBJS = p_func.o t_func.o p_data.o t_data.o text.o mx_func.o mx_data.o
 MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c

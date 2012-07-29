@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.53 2012/06/09 07:16:47 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.54 2012/07/29 19:01:39 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -21,14 +21,15 @@ static const char RCSid[] = "$Id: aniso.c,v 2.53 2012/06/09 07:16:47 greg Exp $"
 
 /*
  *	This routine implements the anisotropic Gaussian
- *  model described by Ward in Siggraph `92 article.
+ *  model described by Ward in Siggraph `92 article, updated with
+ *  normalization and sampling adjustments due to Geisler-Moroder and Duer.
  *	We orient the surface towards the incoming ray, so a single
  *  surface can be used to represent an infinitely thin object.
  *
  *  Arguments for MAT_PLASTIC2 and MAT_METAL2 are:
  *  4+ ux	uy	uz	funcfile	[transform...]
  *  0
- *  6  red	grn	blu	specular-frac.	u-facet-slope v-facet-slope
+ *  6  red	grn	blu	specular-frac.	u-rough v-rough
  *
  *  Real arguments for MAT_TRANS2 are:
  *  8  red 	grn	blu	rspec	u-rough	v-rough	trans	tspec
@@ -60,7 +61,6 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  ANISODAT;		/* anisotropic material data */
 
-static srcdirf_t diraniso;
 static void getacoords(RAY  *r, ANISODAT  *np);
 static void agaussamp(RAY  *r, ANISODAT  *np);
 
@@ -68,12 +68,12 @@ static void agaussamp(RAY  *r, ANISODAT  *np);
 static void
 diraniso(		/* compute source contribution */
 	COLOR  cval,			/* returned coefficient */
-	void  *nnp,		/* material data */
+	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
 	double  omega			/* light source size */
 )
 {
-	register ANISODAT *np = nnp;
+	ANISODAT *np = nnp;
 	double  ldot;
 	double  dtmp, dtmp1, dtmp2;
 	FVECT  h;
@@ -87,7 +87,7 @@ diraniso(		/* compute source contribution */
 	if (ldot < 0.0 ? np->trans <= FTINY : np->trans >= 1.0-FTINY)
 		return;		/* wrong side */
 
-	if (ldot > FTINY && np->rdiff > FTINY) {
+	if ((ldot > FTINY) & (np->rdiff > FTINY)) {
 		/*
 		 *  Compute and add diffuse reflected component to returned
 		 *  color.  The diffuse reflected component will always be
@@ -111,9 +111,7 @@ diraniso(		/* compute source contribution */
 		au2 += np->u_alpha*np->u_alpha;
 		av2 += np->v_alpha*np->v_alpha;
 						/* half vector */
-		h[0] = ldir[0] - np->rp->rdir[0];
-		h[1] = ldir[1] - np->rp->rdir[1];
-		h[2] = ldir[2] - np->rp->rdir[2];
+		VSUB(h, ldir, np->rp->rdir);
 						/* ellipse */
 		dtmp1 = DOT(np->u, h);
 		dtmp1 *= dtmp1 / au2;
@@ -133,7 +131,7 @@ diraniso(		/* compute source contribution */
 			addcolor(cval, ctmp);
 		}
 	}
-	if (ldot < -FTINY && np->tdiff > FTINY) {
+	if ((ldot < -FTINY) & (np->tdiff > FTINY)) {
 		/*
 		 *  Compute diffuse transmission.
 		 */
@@ -152,9 +150,7 @@ diraniso(		/* compute source contribution */
 		au2 += np->u_alpha*np->u_alpha;
 		av2 += np->v_alpha*np->v_alpha;
 						/* "half vector" */
-		h[0] = ldir[0] - np->prdir[0];
-		h[1] = ldir[1] - np->prdir[1];
-		h[2] = ldir[2] - np->prdir[2];
+		VSUB(h, ldir, np->prdir);
 		dtmp = DOT(h,h);
 		if (dtmp > FTINY*FTINY) {
 			dtmp1 = DOT(h,np->pnorm);
@@ -181,15 +177,15 @@ diraniso(		/* compute source contribution */
 }
 
 
-extern int
+int
 m_aniso(			/* shade ray that hit something anisotropic */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	ANISODAT  nd;
 	COLOR  ctmp;
-	register int  i;
+	int  i;
 						/* easy shadow test */
 	if (r->crtype & SHADOW)
 		return(1);
@@ -216,7 +212,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 	nd.specfl = 0;
 	nd.u_alpha = m->oargs.farg[4];
 	nd.v_alpha = m->oargs.farg[5];
-	if (nd.u_alpha <= FTINY || nd.v_alpha <= FTINY)
+	if ((nd.u_alpha <= FTINY) | (nd.v_alpha <= FTINY))
 		objerror(m, USER, "roughness too small");
 
 	nd.pdot = raynormal(nd.pnorm, r);	/* perturb normal */
@@ -309,18 +305,18 @@ m_aniso(			/* shade ray that hit something anisotropic */
 static void
 getacoords(		/* set up coordinate system */
 	RAY  *r,
-	register ANISODAT  *np
+	ANISODAT  *np
 )
 {
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 
 	mf = getfunc(np->mp, 3, 0x7, 1);
 	setfunc(np->mp, r);
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
-	if (errno == EDOM || errno == ERANGE) {
+	if ((errno == EDOM) | (errno == ERANGE)) {
 		objerror(np->mp, WARNING, "compute error");
 		np->specfl |= SP_BADU;
 		return;
@@ -340,7 +336,7 @@ getacoords(		/* set up coordinate system */
 static void
 agaussamp(		/* sample anisotropic Gaussian specular */
 	RAY  *r,
-	register ANISODAT  *np
+	ANISODAT  *np
 )
 {
 	RAY  sr;
@@ -349,7 +345,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	double  d, sinp, cosp;
 	COLOR	scol;
 	int  maxiter, ntrials, nstarget, nstaken;
-	register int  i;
+	int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
 			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {

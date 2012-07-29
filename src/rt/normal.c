@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.61 2011/10/26 03:44:56 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.62 2012/07/29 19:01:39 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -65,19 +65,18 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  NORMDAT;		/* normal material data */
 
-static srcdirf_t dirnorm;
 static void gaussamp(RAY  *r, NORMDAT  *np);
 
 
 static void
 dirnorm(		/* compute source contribution */
 	COLOR  cval,			/* returned coefficient */
-	void  *nnp,		/* material data */
+	void  *nnp,			/* material data */
 	FVECT  ldir,			/* light source direction */
 	double  omega			/* light source size */
 )
 {
-	register NORMDAT *np = nnp;
+	NORMDAT *np = nnp;
 	double  ldot;
 	double  lrdiff, ltdiff;
 	double  dtmp, d2, d3, d4;
@@ -123,9 +122,7 @@ dirnorm(		/* compute source contribution */
 		if (np->specfl & SP_FLAT)
 			dtmp += omega * (0.25/PI);
 						/* half vector */
-		vtmp[0] = ldir[0] - np->rp->rdir[0];
-		vtmp[1] = ldir[1] - np->rp->rdir[1];
-		vtmp[2] = ldir[2] - np->rp->rdir[2];
+		VSUB(vtmp, ldir, np->rp->rdir);
 		d2 = DOT(vtmp, np->pnorm);
 		d2 *= d2;
 		d3 = DOT(vtmp,vtmp);
@@ -169,10 +166,10 @@ dirnorm(		/* compute source contribution */
 }
 
 
-extern int
+int
 m_normal(			/* color a ray that hit something normal */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	NORMDAT  nd;
@@ -182,7 +179,7 @@ m_normal(			/* color a ray that hit something normal */
 	int	hastexture;
 	double	d;
 	COLOR  ctmp;
-	register int  i;
+	int  i;
 						/* easy shadow test */
 	if (r->crtype & SHADOW && m->otype != MAT_TRANS)
 		return(1);
@@ -227,7 +224,7 @@ m_normal(			/* color a ray that hit something normal */
 	nd.rspec = m->oargs.farg[3];
 						/* compute Fresnel approx. */
 	if (nd.specfl & SP_PURE && nd.rspec >= FRESTHRESH) {
-		fest = FRESNE(r->rod);
+		fest = FRESNE(nd.pdot);
 		nd.rspec += fest*(1. - nd.rspec);
 	} else
 		fest = 0.;
@@ -365,16 +362,16 @@ m_normal(			/* color a ray that hit something normal */
 static void
 gaussamp(			/* sample Gaussian specular */
 	RAY  *r,
-	register NORMDAT  *np
+	NORMDAT  *np
 )
 {
 	RAY  sr;
 	FVECT  u, v, h;
 	double  rv[2];
 	double  d, sinp, cosp;
-	COLOR	scol;
+	COLOR  scol;
 	int  maxiter, ntrials, nstarget, nstaken;
-	register int  i;
+	int  i;
 					/* quick test */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) != SP_REFL &&
 			(np->specfl & (SP_TRAN|SP_TBLT)) != SP_TRAN)
