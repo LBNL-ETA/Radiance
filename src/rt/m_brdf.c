@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.27 2010/10/25 22:57:45 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.28 2012/07/29 21:56:16 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -77,8 +77,7 @@ typedef struct {
 }  BRDFDAT;		/* BRDF material data */
 
 
-static srcdirf_t dirbrdf;
-static int setbrdfunc(BRDFDAT  *np);
+static int setbrdfunc(BRDFDAT *np);
 
 
 static void
@@ -89,14 +88,14 @@ dirbrdf(		/* compute source contribution */
 	double  omega			/* light source size */
 )
 {
-	register BRDFDAT *np = nnp;
+	BRDFDAT *np = nnp;
 	double  ldot;
 	double  dtmp;
 	COLOR  ctmp;
 	FVECT  ldx;
 	static double  vldx[5], pt[MAXDIM];
-	register char	**sa;
-	register int	i;
+	char	**sa;
+	int	i;
 #define lddx (vldx+1)
 
 	setcolor(cval, 0.0, 0.0, 0.0);
@@ -197,10 +196,10 @@ dirbrdf(		/* compute source contribution */
 }
 
 
-extern int
+int
 m_brdf(			/* color a ray that hit a BRDTfunc material */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	int  hitfront = 1;
@@ -213,8 +212,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	COLOR  ctmp;
 	FVECT  vtmp;
 	double  d;
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 						/* check arguments */
 	if ((m->oargs.nsargs < 10) | (m->oargs.nfargs < 9))
 		objerror(m, USER, "bad # arguments");
@@ -345,10 +344,10 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 
 
 
-extern int
+int
 m_brdf2(			/* color a ray that hit a BRDF material */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	BRDFDAT  nd;
@@ -434,7 +433,7 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 
 static int
 setbrdfunc(			/* set up brdf function and variables */
-	register BRDFDAT  *np
+	BRDFDAT  *np
 )
 {
 	FVECT  vec;

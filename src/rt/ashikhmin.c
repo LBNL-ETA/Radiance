@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.1 2012/07/29 19:01:39 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.2 2012/07/29 21:56:16 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -47,16 +47,11 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  ASHIKDAT;		/* anisotropic material data */
 
-static void getacoords_as(RAY *r, ASHIKDAT *np);
-static void ashiksamp(RAY *r, ASHIKDAT *np);
+static void getacoords_as(ASHIKDAT *np);
+static void ashiksamp(ASHIKDAT *np);
 
-
-static double
-max(double a, double b) {
-	if (a > b)
-		return(a);
-	return(b);
-}
+#undef MAX
+#define MAX(a,b)	((a)>(b) ? (a) : (b))
 
 
 static double
@@ -115,7 +110,7 @@ dirashik(		/* compute source contribution */
 	dtmp = DOT(np->pnorm, h);
 	dtmp = pow(dtmp, (dtmp1+dtmp2)/(1.-dtmp*dtmp));
 	dtmp *= sqrt((np->u_power+1.)*(np->v_power+1.));
-	dtmp /= 8.*PI * DOT(ldir,h) * max(ldot,np->pdot);
+	dtmp /= 8.*PI * DOT(ldir,h) * MAX(ldot,np->pdot);
 					/* worth using? */
 	if (dtmp > FTINY) {
 		copycolor(ctmp, np->scolor);
@@ -183,10 +178,10 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 	if (r->ro != NULL && isflat(r->ro->otype))
 		nd.specfl |= SPA_FLAT;
 						/* set up coordinates */
-	getacoords_as(r, &nd);
+	getacoords_as(&nd);
 						/* specular sampling? */
 	if ((nd.specfl & (SPA_REFL|SPA_RBLT)) == SPA_REFL)
-		ashiksamp(r, &nd);
+		ashiksamp(&nd);
 						/* diffuse interreflection */
 	if (bright(nd.mcolor) > FTINY) {
 		copycolor(ctmp, nd.mcolor);	/* modified by material color */		
@@ -203,7 +198,6 @@ m_ashikhmin(			/* shade ray that hit something anisotropic */
 
 static void
 getacoords_as(		/* set up coordinate system */
-	RAY  *r,
 	ASHIKDAT  *np
 )
 {
@@ -211,7 +205,7 @@ getacoords_as(		/* set up coordinate system */
 	int  i;
 
 	mf = getfunc(np->mp, 3, 0x7, 1);
-	setfunc(np->mp, r);
+	setfunc(np->mp, np->rp);
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
@@ -234,7 +228,6 @@ getacoords_as(		/* set up coordinate system */
 
 static void
 ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
-	RAY  *r,
 	ASHIKDAT  *np
 )
 {
@@ -247,12 +240,12 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 	int  i;
 
 	if (np->specfl & SPA_BADU ||
-			rayorigin(&sr, SPECULAR, r, np->scolor) < 0)
+			rayorigin(&sr, SPECULAR, np->rp, np->scolor) < 0)
 		return;
 
 	nstarget = 1;
 	if (specjitter > 1.5) {			/* multiple samples? */
-		nstarget = specjitter*r->rweight + .5;
+		nstarget = specjitter*np->rp->rweight + .5;
 		if (sr.rweight <= minweight*nstarget)
 			nstarget = sr.rweight/minweight;
 		if (nstarget > 1) {
@@ -269,12 +262,12 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 		if (ntrials)
 			dtmp = frandom();
 		else
-			dtmp = urand(ilhash(dimlist,ndims)+1823+samplendx);
+			dtmp = urand(ilhash(dimlist,ndims)+647+samplendx);
 		multisamp(rv, 2, dtmp);
 		dtmp = 2.*PI * rv[0];
-		cosph = sqrt(np->u_power + 1.) * tcos(dtmp);
-		sinph = sqrt(np->v_power + 1.) * tsin(dtmp);
-		dtmp = 1./(cosph*cosph + sinph*sinph);
+		cosph = sqrt(np->v_power + 1.) * tcos(dtmp);
+		sinph = sqrt(np->u_power + 1.) * tsin(dtmp);
+		dtmp = 1./sqrt(cosph*cosph + sinph*sinph);
 		cosph *= dtmp;
 		sinph *= dtmp;
 		costh = pow(rv[1], 1./(np->u_power*cosph*cosph+np->v_power*sinph*sinph+1.));
@@ -286,14 +279,15 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 
 		if (nstaken)
 			rayclear(&sr);
-		dtmp = -2.*DOT(h, r->rdir);
-		VSUM(sr.rdir, r->rdir, h, dtmp);				
+		dtmp = -2.*DOT(h, np->rp->rdir);
+		VSUM(sr.rdir, np->rp->rdir, h, dtmp);				
 						/* sample rejection test */
-		if (DOT(sr.rdir, r->ron) <= FTINY)
+		if (DOT(sr.rdir, np->rp->ron) <= FTINY)
 			continue;
+		checknorm(sr.rdir);
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
-		addcolor(r->rcol, sr.rcol);
+		addcolor(np->rp->rcol, sr.rcol);
 		++nstaken;
 	}
 	ndims--;

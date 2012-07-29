@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.62 2012/07/29 19:01:39 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.63 2012/07/29 21:56:16 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -65,7 +65,7 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  NORMDAT;		/* normal material data */
 
-static void gaussamp(RAY  *r, NORMDAT  *np);
+static void gaussamp(NORMDAT  *np);
 
 
 static void
@@ -318,7 +318,7 @@ m_normal(			/* color a ray that hit something normal */
 		return(1);			/* 100% pure specular */
 
 	if (!(nd.specfl & SP_PURE))
-		gaussamp(r, &nd);		/* checks *BLT flags */
+		gaussamp(&nd);		/* checks *BLT flags */
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
 		copycolor(ctmp, nd.mcolor);	/* modified by material color */
@@ -361,7 +361,6 @@ m_normal(			/* color a ray that hit something normal */
 
 static void
 gaussamp(			/* sample Gaussian specular */
-	RAY  *r,
 	NORMDAT  *np
 )
 {
@@ -387,10 +386,10 @@ gaussamp(			/* sample Gaussian specular */
 	fcross(v, np->pnorm, u);
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {
+			rayorigin(&sr, SPECULAR, np->rp, np->scolor) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			nstarget = specjitter*r->rweight + .5;
+			nstarget = specjitter*np->rp->rweight + .5;
 			if (sr.rweight <= minweight*nstarget)
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
@@ -421,22 +420,22 @@ gaussamp(			/* sample Gaussian specular */
 				d = sqrt( np->alpha2 * -log(rv[1]) );
 			for (i = 0; i < 3; i++)
 				h[i] = np->pnorm[i] + d*(cosp*u[i] + sinp*v[i]);
-			d = -2.0 * DOT(h, r->rdir) / (1.0 + d*d);
-			VSUM(sr.rdir, r->rdir, h, d);
+			d = -2.0 * DOT(h, np->rp->rdir) / (1.0 + d*d);
+			VSUM(sr.rdir, np->rp->rdir, h, d);
 						/* sample rejection test */
-			if ((d = DOT(sr.rdir, r->ron)) <= FTINY)
+			if ((d = DOT(sr.rdir, np->rp->ron)) <= FTINY)
 				continue;
 			checknorm(sr.rdir);
 			if (nstarget > 1) {	/* W-G-M-D adjustment */
 				if (nstaken) rayclear(&sr);
 				rayvalue(&sr);
-				d = 2./(1. + r->rod/d);
+				d = 2./(1. + np->rp->rod/d);
 				scalecolor(sr.rcol, d);
 				addcolor(scol, sr.rcol);
 			} else {
 				rayvalue(&sr);
 				multcolor(sr.rcol, sr.rcoef);
-				addcolor(r->rcol, sr.rcol);
+				addcolor(np->rp->rcol, sr.rcol);
 			}
 			++nstaken;
 		}
@@ -444,7 +443,7 @@ gaussamp(			/* sample Gaussian specular */
 			multcolor(scol, sr.rcoef);
 			d = (double)nstarget/ntrials;
 			scalecolor(scol, d);
-			addcolor(r->rcol, scol);
+			addcolor(np->rp->rcol, scol);
 		}
 		ndims--;
 	}
@@ -452,10 +451,10 @@ gaussamp(			/* sample Gaussian specular */
 	copycolor(sr.rcoef, np->mcolor);	/* modified by color */
 	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
+			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			nstarget = specjitter*r->rweight + .5;
+			nstarget = specjitter*np->rp->rweight + .5;
 			if (sr.rweight <= minweight*nstarget)
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
@@ -486,14 +485,14 @@ gaussamp(			/* sample Gaussian specular */
 			for (i = 0; i < 3; i++)
 				sr.rdir[i] = np->prdir[i] + d*(cosp*u[i] + sinp*v[i]);
 						/* sample rejection test */
-			if (DOT(sr.rdir, r->ron) >= -FTINY)
+			if (DOT(sr.rdir, np->rp->ron) >= -FTINY)
 				continue;
 			normalize(sr.rdir);	/* OK, normalize */
 			if (nstaken)		/* multi-sampling */
 				rayclear(&sr);
 			rayvalue(&sr);
 			multcolor(sr.rcol, sr.rcoef);
-			addcolor(r->rcol, sr.rcol);
+			addcolor(np->rp->rcol, sr.rcol);
 			++nstaken;
 		}
 		ndims--;

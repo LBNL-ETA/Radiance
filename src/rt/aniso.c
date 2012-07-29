@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.54 2012/07/29 19:01:39 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.55 2012/07/29 21:56:16 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -61,8 +61,8 @@ typedef struct {
 	double  pdot;		/* perturbed dot product */
 }  ANISODAT;		/* anisotropic material data */
 
-static void getacoords(RAY  *r, ANISODAT  *np);
-static void agaussamp(RAY  *r, ANISODAT  *np);
+static void getacoords(ANISODAT  *np);
+static void agaussamp(ANISODAT  *np);
 
 
 static void
@@ -266,10 +266,10 @@ m_aniso(			/* shade ray that hit something anisotropic */
 	if (r->ro != NULL && isflat(r->ro->otype))
 		nd.specfl |= SP_FLAT;
 
-	getacoords(r, &nd);			/* set up coordinates */
+	getacoords(&nd);			/* set up coordinates */
 
 	if (nd.specfl & (SP_REFL|SP_TRAN) && !(nd.specfl & SP_BADU))
-		agaussamp(r, &nd);
+		agaussamp(&nd);
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
 		copycolor(ctmp, nd.mcolor);	/* modified by material color */
@@ -304,7 +304,6 @@ m_aniso(			/* shade ray that hit something anisotropic */
 
 static void
 getacoords(		/* set up coordinate system */
-	RAY  *r,
 	ANISODAT  *np
 )
 {
@@ -312,7 +311,7 @@ getacoords(		/* set up coordinate system */
 	int  i;
 
 	mf = getfunc(np->mp, 3, 0x7, 1);
-	setfunc(np->mp, r);
+	setfunc(np->mp, np->rp);
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
@@ -335,7 +334,6 @@ getacoords(		/* set up coordinate system */
 
 static void
 agaussamp(		/* sample anisotropic Gaussian specular */
-	RAY  *r,
 	ANISODAT  *np
 )
 {
@@ -348,10 +346,10 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	int  i;
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&
-			rayorigin(&sr, SPECULAR, r, np->scolor) == 0) {
+			rayorigin(&sr, SPECULAR, np->rp, np->scolor) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			nstarget = specjitter*r->rweight + .5;
+			nstarget = specjitter*np->rp->rweight + .5;
 			if (sr.rweight <= minweight*nstarget)
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
@@ -388,22 +386,22 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			for (i = 0; i < 3; i++)
 				h[i] = np->pnorm[i] +
 					d*(cosp*np->u[i] + sinp*np->v[i]);
-			d = -2.0 * DOT(h, r->rdir) / (1.0 + d*d);
-			VSUM(sr.rdir, r->rdir, h, d);
+			d = -2.0 * DOT(h, np->rp->rdir) / (1.0 + d*d);
+			VSUM(sr.rdir, np->rp->rdir, h, d);
 						/* sample rejection test */
-			if ((d = DOT(sr.rdir, r->ron)) <= FTINY)
+			if ((d = DOT(sr.rdir, np->rp->ron)) <= FTINY)
 				continue;
 			checknorm(sr.rdir);
 			if (nstarget > 1) {	/* W-G-M-D adjustment */
 				if (nstaken) rayclear(&sr);
 				rayvalue(&sr);
-				d = 2./(1. + r->rod/d);
+				d = 2./(1. + np->rp->rod/d);
 				scalecolor(sr.rcol, d);
 				addcolor(scol, sr.rcol);
 			} else {
 				rayvalue(&sr);
 				multcolor(sr.rcol, sr.rcoef);
-				addcolor(r->rcol, sr.rcol);
+				addcolor(np->rp->rcol, sr.rcol);
 			}
 			++nstaken;
 		}
@@ -411,7 +409,7 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			multcolor(scol, sr.rcoef);
 			d = (double)nstarget/ntrials;
 			scalecolor(scol, d);
-			addcolor(r->rcol, scol);
+			addcolor(np->rp->rcol, scol);
 		}
 		ndims--;
 	}
@@ -419,10 +417,10 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 	copycolor(sr.rcoef, np->mcolor);		/* modify by material color */
 	scalecolor(sr.rcoef, np->tspec);
 	if ((np->specfl & (SP_TRAN|SP_TBLT)) == SP_TRAN &&
-			rayorigin(&sr, SPECULAR, r, sr.rcoef) == 0) {
+			rayorigin(&sr, SPECULAR, np->rp, sr.rcoef) == 0) {
 		nstarget = 1;
 		if (specjitter > 1.5) {	/* multiple samples? */
-			nstarget = specjitter*r->rweight + .5;
+			nstarget = specjitter*np->rp->rweight + .5;
 			if (sr.rweight <= minweight*nstarget)
 				nstarget = sr.rweight/minweight;
 			if (nstarget > 1) {
@@ -458,14 +456,14 @@ agaussamp(		/* sample anisotropic Gaussian specular */
 			for (i = 0; i < 3; i++)
 				sr.rdir[i] = np->prdir[i] +
 						d*(cosp*np->u[i] + sinp*np->v[i]);
-			if (DOT(sr.rdir, r->ron) >= -FTINY)
+			if (DOT(sr.rdir, np->rp->ron) >= -FTINY)
 				continue;
 			normalize(sr.rdir);	/* OK, normalize */
 			if (nstaken)		/* multi-sampling */
 				rayclear(&sr);
 			rayvalue(&sr);
 			multcolor(sr.rcol, sr.rcoef);
-			addcolor(r->rcol, sr.rcol);
+			addcolor(np->rp->rcol, sr.rcol);
 			++nstaken;
 		}
 		ndims--;
