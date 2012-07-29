@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.24 2010/03/05 17:28:46 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.25 2012/07/29 22:10:45 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -115,7 +115,7 @@ evariable(			/* evaluate a variable */
 	EPNODE	*ep
 )
 {
-    register VARDEF  *dp = ep->v.ln;
+    VARDEF  *dp = ep->v.ln;
 
     return(dvalue(dp->name, dp->def));
 }
@@ -129,11 +129,12 @@ varset(		/* set a variable's value */
 )
 {
     char  *qname;
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 					/* get qualified name */
     qname = qualname(vname, 0);
 					/* check for quick set */
-    if ((ep1 = dlookup(qname)) != NULL && ep1->v.kid->type == SYM) {
+    if ((ep1 = dlookup(qname)) != NULL && ep1->v.kid->type == SYM &&
+		(ep1->type == ':') <= (assign == ':')) {
 	ep2 = ep1->v.kid->sibling;
 	if (ep2->type == NUM) {
 	    ep2->v.num = val;
@@ -152,7 +153,10 @@ varset(		/* set a variable's value */
     ep2->type = NUM;
     ep2->v.num = val;
     addekid(ep1, ep2);
-    dremove(qname);
+    if (assign == ':')
+	dremove(qname);
+    else
+	dclear(qname);
     dpush(qname, ep1);
 }
 
@@ -162,7 +166,7 @@ dclear(			/* delete variable definitions of name */
 	char  *name
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
 
     while ((ep = dpop(name)) != NULL) {
 	if (ep->type == ':') {
@@ -179,7 +183,7 @@ dremove(			/* delete all definitions of name */
 	char  *name
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
 
     while ((ep = dpop(name)) != NULL)
 	epfree(ep);
@@ -191,7 +195,7 @@ vardefined(	/* return non-zero if variable defined */
 	char  *name
 )
 {
-    register EPNODE  *dp;
+    EPNODE  *dp;
 
     return((dp = dlookup(name)) != NULL && dp->v.kid->type == SYM);
 }
@@ -199,10 +203,10 @@ vardefined(	/* return non-zero if variable defined */
 
 char *
 setcontext(			/* set a new context path */
-	register char  *ctx
+	char  *ctx
 )
 {
-    register char  *cpp;
+    char  *cpp;
 
     if (ctx == NULL)
 	return(context);		/* just asking */
@@ -236,7 +240,7 @@ pushcontext(		/* push on another context */
 )
 {
     char  oldcontext[MAXCNTX+1];
-    register int  n;
+    int  n;
 
     strcpy(oldcontext, context);	/* save old context */
     setcontext(ctx);			/* set new context */
@@ -253,7 +257,7 @@ pushcontext(		/* push on another context */
 char *
 popcontext(void)			/* pop off top context */
 {
-    register char  *cp1, *cp2;
+    char  *cp1, *cp2;
 
     if (!context[0])			/* nothing left to pop */
 	return(context);
@@ -269,12 +273,12 @@ popcontext(void)			/* pop off top context */
 
 char *
 qualname(		/* get qualified name */
-	register char  *nam,
+	char  *nam,
 	int  lvl
 )
 {
     static char	 nambuf[RMAXWORD+1];
-    register char  *cp = nambuf, *cpp;
+    char  *cp = nambuf, *cpp;
 				/* check for explicit local */
     if (*nam == CNTXMARK)
 	if (lvl > 0)		/* only action is to refuse search */
@@ -316,7 +320,7 @@ toolong:
 
 int
 incontext(			/* is qualified name in current context? */
-	register char  *qn
+	char  *qn
 )
 {
     if (!context[0])			/* global context accepts all */
@@ -332,7 +336,7 @@ chanout(			/* set output channels */
 	void  (*cs)(int n, double v)
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
 
     for (ep = outchan; ep != NULL; ep = ep->sibling)
 	(*cs)(ep->v.kid->v.chan, evalue(ep->v.kid->sibling));
@@ -345,9 +349,9 @@ dcleanup(		/* clear definitions (0->vars,1->output,2->consts) */
 	int  lvl
 )
 {
-    register int  i;
-    register VARDEF  *vp;
-    register EPNODE  *ep;
+    int  i;
+    VARDEF  *vp;
+    EPNODE  *ep;
 				/* if context is global, clear all */
     for (i = 0; i < NHASH; i++)
 	for (vp = hashtbl[i]; vp != NULL; vp = vp->next)
@@ -370,7 +374,7 @@ dlookup(			/* look up a definition */
 	char  *name
 )
 {
-    register VARDEF  *vp;
+    VARDEF  *vp;
     
     if ((vp = varlookup(name)) == NULL)
 	return(NULL);
@@ -384,8 +388,8 @@ varlookup(			/* look up a variable */
 )
 {
     int	 lvl = 0;
-    register char  *qname;
-    register VARDEF  *vp;
+    char  *qname;
+    VARDEF  *vp;
 				/* find most qualified match */
     while ((qname = qualname(name, lvl++)) != NULL)
 	for (vp = hashtbl[hash(qname)]; vp != NULL; vp = vp->next)
@@ -400,7 +404,7 @@ varinsert(			/* get a link to a variable */
 	char  *name
 )
 {
-    register VARDEF  *vp;
+    VARDEF  *vp;
     int	 hv;
     
     if ((vp = varlookup(name)) != NULL) {
@@ -426,8 +430,8 @@ libupdate(			/* update library links */
 	char  *fn
 )
 {
-    register int  i;
-    register VARDEF  *vp;
+    int  i;
+    VARDEF  *vp;
 					/* if fn is NULL then relink all */
     for (i = 0; i < NHASH; i++)
 	for (vp = hashtbl[i]; vp != NULL; vp = vp->next)
@@ -438,10 +442,10 @@ libupdate(			/* update library links */
 
 void
 varfree(				/* release link to variable */
-	register VARDEF	 *ln
+	VARDEF	 *ln
 )
 {
-    register VARDEF  *vp;
+    VARDEF  *vp;
     int	 hv;
 
     if (--ln->nlinks > 0)
@@ -474,8 +478,8 @@ dfirst(void)			/* return pointer to first definition */
 EPNODE *
 dnext(void)				/* return pointer to next definition */
 {
-    register EPNODE  *ep;
-    register char  *nm;
+    EPNODE  *ep;
+    char  *nm;
 
     while (htndx < NHASH) {
 	if (htpos == NULL)
@@ -499,8 +503,8 @@ dpop(			/* pop a definition */
 	char  *name
 )
 {
-    register VARDEF  *vp;
-    register EPNODE  *dp;
+    VARDEF  *vp;
+    EPNODE  *dp;
     
     if ((vp = varlookup(name)) == NULL || vp->def == NULL)
 	return(NULL);
@@ -514,10 +518,10 @@ dpop(			/* pop a definition */
 void
 dpush(			/* push on a definition */
 	char  *nm,
-	register EPNODE	 *ep
+	EPNODE	 *ep
 )
 {
-    register VARDEF  *vp;
+    VARDEF  *vp;
 
     vp = varinsert(nm);
     ep->sibling = vp->def;
@@ -531,7 +535,7 @@ addchan(			/* add an output channel assignment */
 )
 {
     int	 ch = sp->v.kid->v.chan;
-    register EPNODE  *ep, *epl;
+    EPNODE  *ep, *epl;
 
     for (epl = NULL, ep = outchan; ep != NULL; epl = ep, ep = ep->sibling)
 	if (ep->v.kid->v.chan >= ch) {
@@ -559,9 +563,9 @@ addchan(			/* add an output channel assignment */
 void
 getstatement(void)			/* get next statement */
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
     char  *qname;
-    register VARDEF  *vdef;
+    VARDEF  *vdef;
 
     if (nextc == ';') {		/* empty statement */
 	scan();
@@ -607,7 +611,7 @@ getdefn(void)
 	/*	FUNC(SYM,..) = E1 */
 	/*	FUNC(SYM,..) : E1 */
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 
     if (!isalpha(nextc) && nextc != CNTXMARK)
 	syntax("illegal variable name");
@@ -663,7 +667,7 @@ getdefn(void)
 EPNODE *
 getchan(void)			/* A -> $N = E1 */
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 
     if (nextc != '$')
 	syntax("missing '$'");
@@ -695,7 +699,7 @@ getchan(void)			/* A -> $N = E1 */
 static double			/* evaluate a variable */
 dvalue(char  *name, EPNODE	*d)
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
     
     if (d == NULL || d->v.kid->type != SYM) {
 	eputs(name);
