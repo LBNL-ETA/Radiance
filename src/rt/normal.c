@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.64 2012/07/30 17:46:50 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.65 2012/08/01 15:26:36 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -282,7 +282,8 @@ m_normal(			/* color a ray that hit something normal */
 		} else if (fest > FTINY) {
 			d = m->oargs.farg[3]*(1. - fest);
 			for (i = 0; i < 3; i++)
-				nd.scolor[i] = fest + nd.mcolor[i]*d;
+				colval(nd.scolor,i) = fest +
+						colval(nd.mcolor,i)*d;
 		} else {
 			copycolor(nd.scolor, nd.mcolor);
 			scalecolor(nd.scolor, nd.rspec);
