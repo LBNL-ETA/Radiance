@@ -686,6 +686,10 @@ void MainWindow::showViewDialog()
     {
     m_viewDialogUi->angular->setChecked(true);
     }
+  else if(ourview.type==VT_PLS)
+    {
+    m_viewDialogUi->planispheric->setChecked(true);
+    }
   else if(ourview.type==VT_CYL)
     {
     m_viewDialogUi->cylindrical->setChecked(true);
@@ -743,6 +747,11 @@ void MainWindow::adjustView()
     {
     nv.type = VT_ANG;
     changed = true;
+    }
+  if(m_viewDialogUi->planispheric->isChecked() && nv.type != VT_PLS)
+    {
+    nv.type = VT_PLS;
+   changed = true;
     }
   if(m_viewDialogUi->cylindrical->isChecked() && nv.type != VT_CYL)
     {

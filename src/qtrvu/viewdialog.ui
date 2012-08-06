@@ -55,6 +55,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QRadioButton" name="planispheric">
+           <property name="text">
+            <string>Planispheric</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QRadioButton" name="parallel">
            <property name="text">
             <string>Parallel</string>
