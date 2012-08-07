@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.19 2012/02/21 20:09:25 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.20 2012/08/07 18:17:17 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -252,7 +252,28 @@ not_handled:
 	return(NULL);	/* gratis return */
 }
 
-/* Multiply two matrices (or a matrix and a vector) and allocate the result*/
+/* Scale a matrix by a single value */
+static CMATRIX *
+cm_scale(const CMATRIX *cm1, const COLOR sca)
+{
+	CMATRIX	*cmr;
+	int	dr, dc;
+
+	cmr = cm_alloc(cm1->nrows, cm1->ncols);
+	if (cmr == NULL)
+		return(NULL);
+	for (dr = 0; dr < cmr->nrows; dr++)
+	    for (dc = 0; dc < cmr->ncols; dc++) {
+	        const COLORV	*sp = cm_lval(cm1,dr,dc);
+		COLORV		*dp = cm_lval(cmr,dr,dc);
+		dp[0] = sp[0] * sca[0];
+		dp[1] = sp[1] * sca[1];
+		dp[2] = sp[2] * sca[2];
+	    }
+	return(cmr);
+}
+
+/* Multiply two matrices (or a matrix and a vector) and allocate the result */
 static CMATRIX *
 cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 {
@@ -332,7 +353,7 @@ cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 
 /* Load and convert a matrix BSDF from the given XML file */
 static CMATRIX *
-cm_loadBSDF(char *fname)
+cm_loadBSDF(char *fname, COLOR cLamb)
 {
 	CMATRIX	*Tmat;
 	char	*fpath;
@@ -349,15 +370,22 @@ cm_loadBSDF(char *fname)
 	ec = SDloadFile(&myBSDF, fpath);
 	if (ec)
 		error(USER, transSDError(ec));
-	if (myBSDF.tf == NULL || myBSDF.tf->ncomp != 1 ||
-			myBSDF.tf->comp[0].func != &SDhandleMtx) {
+	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
+	if (myBSDF.tf == NULL) {	/* no non-Lambertian transmission? */
+		if (cLamb != NULL)
+			copycolor(cLamb, bsdfLamb);
+		SDfreeBSDF(&myBSDF);
+		return(NULL);
+	}
+	if (myBSDF.tf->ncomp != 1 || myBSDF.tf->comp[0].func != &SDhandleMtx) {
 		sprintf(errmsg, "unsupported BSDF '%s'", fpath);
 		error(USER, errmsg);
 	}
 					/* convert BTDF to matrix */
-	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
 	ccy2rgb(&myBSDF.tf->comp[0].cspec[0], 1., specCol);
 	Tmat = cm_bsdf(bsdfLamb, specCol, (SDMat *)myBSDF.tf->comp[0].dist);
+	if (cLamb != NULL)		/* Lambertian is included */
+		setcolor(cLamb, .0, .0, .0);
 					/* free BSDF and return */
 	SDfreeBSDF(&myBSDF);
 	return(Tmat);
@@ -466,7 +494,7 @@ hasNumberFormat(const char *s)
 int
 main(int argc, char *argv[])
 {
-	CMATRIX			*cvec;
+	CMATRIX			*cvec;		/* component vector result */
 
 	progname = argv[0];
 
@@ -479,17 +507,24 @@ main(int argc, char *argv[])
 
 	if (argc > 3) {				/* VTDs expression */
 		CMATRIX	*svec, *Dmat, *Tmat, *ivec;
+		COLOR	tLamb;
 						/* get sky vector */
 		svec = cm_load(argv[4], 0, 1, DTascii);
 						/* load BSDF */
-		Tmat = cm_loadBSDF(argv[2]);
+		Tmat = cm_loadBSDF(argv[2], tLamb);
 						/* load Daylight matrix */
-		Dmat = cm_load(argv[3], Tmat->ncols, svec->nrows, DTfromHeader);
+		Dmat = cm_load(argv[3], Tmat==NULL ? 0 : Tmat->ncols,
+					svec->nrows, DTfromHeader);
 						/* multiply vector through */
 		ivec = cm_multiply(Dmat, svec);
 		cm_free(Dmat); cm_free(svec);
-		cvec = cm_multiply(Tmat, ivec);	/* cvec = component vector */
-		cm_free(Tmat); cm_free(ivec);
+		if (Tmat == NULL) {		/* diffuse only */
+			cvec = cm_scale(ivec, tLamb);
+		} else {			/* else apply BTDF matrix */
+			cvec = cm_multiply(Tmat, ivec);
+			cm_free(Tmat); 
+		}
+		cm_free(ivec);
 	} else {				/* else just use sky vector */
 		cvec = cm_load(argv[2], 0, 1, DTascii);
 	}
