@@ -30,3 +30,5 @@ add_library(mgf mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c)
 install(TARGETS rtrad mgf
   LIBRARY DESTINATION bin
   ARCHIVE DESTINATION bin)
+
+install(FILES tmesh.cal DESTINATION lib)
