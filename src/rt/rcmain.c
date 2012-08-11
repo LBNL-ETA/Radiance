@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.8 2012/06/27 15:32:58 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.9 2012/08/11 01:41:35 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -45,7 +45,7 @@ int		nmods = 0;		/* number of modifiers */
 
 void	(*addobjnotify[8])() = {ambnotify, NULL};
 
-char	RCCONTEXT[] = "RCONTRIB";	/* our special evaluation context */
+char	RCCONTEXT[] = "RC";		/* our special evaluation context */
 
 
 static void
