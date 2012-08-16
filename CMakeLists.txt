@@ -36,6 +36,10 @@ if(APPLE)
   include_directories(/usr/X11R6/include)
 endif()
 
+IF( BUILD_PACKAGE )
+  INCLUDE(radianceCPack.cmake )
+ENDIF( BUILD_PACKAGE )
+
 set(CPACK_PACKAGE_VERSION_MAJOR 4)
 set(CPACK_PACKAGE_VERSION_MINOR 2)
 set(CPACK_PACKAGE_VERSION_PATCH a)
