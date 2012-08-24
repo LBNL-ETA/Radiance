@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.2 2012/08/24 20:55:28 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.3 2012/08/24 22:08:50 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -20,8 +20,7 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.2 2012/08/24 20:55:28 greg E
 #define GRIDRES		200		/* max. grid resolution per side */
 #endif
 
-#define RSCA		3.		/* radius scaling factor (empirical) */
-#define MSCA		.2		/* magnitude scaling (empirical) */
+#define RSCA		2.7		/* radius scaling factor (empirical) */
 
 #define R2ANG(c)	(((c)+.5)*(M_PI/(1<<16)))
 #define ANG2R(r)	(int)((r)*((1<<16)/M_PI))
@@ -52,56 +51,6 @@ static GRIDVAL	bsdf_grid[GRIDRES][GRIDRES];
 				/* processed incident BSDF measurements */
 static RBFLIST	*bsdf_list = NULL;
 
-/* Count up non-empty nodes and build RBF representation from current grid */ 
-static RBFLIST *
-make_rbfrep(void)
-{
-	int	nn = 0;
-	RBFLIST	*newnode;
-	int	i, j;
-				/* count non-empty bins */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		nn += (bsdf_grid[i][j].nval > 0);
-				/* allocate RBF array */
-	newnode = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(nn-1));
-	if (newnode == NULL) {
-		fputs("Out of memory in make_rbfrep\n", stderr);
-		exit(1);
-	}
-	newnode->invec[2] = sin(M_PI/180.*theta_in_deg);
-	newnode->invec[0] = cos(M_PI/180.*phi_in_deg)*newnode->invec[2];
-	newnode->invec[1] = sin(M_PI/180.*phi_in_deg)*newnode->invec[2];
-	newnode->invec[2] = sqrt(1. - newnode->invec[2]*newnode->invec[2]);
-	newnode->nrbf = nn;
-	nn = 0;			/* fill RBF array */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (bsdf_grid[i][j].nval) {
-			newnode->rbfa[nn].bsdf = MSCA*bsdf_grid[i][j].vsum /
-						(double)bsdf_grid[i][j].nval;
-			newnode->rbfa[nn].crad = RSCA*bsdf_grid[i][j].crad + .5;
-			newnode->rbfa[nn].gx = i;
-			newnode->rbfa[nn].gy = j;
-			++nn;
-		}
-	newnode->next = bsdf_list;
-	return(bsdf_list = newnode);
-}
-
-/* Compute grid position from normalized outgoing vector */
-static void
-pos_from_vec(int pos[2], const FVECT vec)
-{
-	double	sq[2];		/* uniform hemispherical projection */
-	double	norm = 1./sqrt(1. + vec[2]);
-
-	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
-
-	pos[0] = (int)(sq[0]*GRIDRES);
-	pos[1] = (int)(sq[1]*GRIDRES);
-}
-
 /* Compute outgoing vector from grid position */
 static void
 vec_from_pos(FVECT vec, int xpos, int ypos)
@@ -116,6 +65,19 @@ vec_from_pos(FVECT vec, int xpos, int ypos)
 	vec[0] *= uv[0];
 	vec[1] *= uv[1];
 	vec[2] = 1. - r2;
+}
+
+/* Compute grid position from normalized outgoing vector */
+static void
+pos_from_vec(int pos[2], const FVECT vec)
+{
+	double	sq[2];		/* uniform hemispherical projection */
+	double	norm = 1./sqrt(1. + vec[2]);
+
+	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
+
+	pos[0] = (int)(sq[0]*GRIDRES);
+	pos[1] = (int)(sq[1]*GRIDRES);
 }
 
 /* Evaluate RBF for BSDF at the given normalized outgoing direction */
@@ -137,6 +99,61 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 			res += rbfp->bsdf * exp(sig2);
 	}
 	return(res);
+}
+
+/* Count up filled nodes and build RBF representation from current grid */ 
+static RBFLIST *
+make_rbfrep(void)
+{
+	int	niter = 4;
+	int	nn;
+	RBFLIST	*newnode;
+	int	i, j;
+	
+	nn = 0;			/* count selected bins */
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++)
+		nn += (bsdf_grid[i][j].nval > 0);
+				/* allocate RBF array */
+	newnode = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(nn-1));
+	if (newnode == NULL) {
+		fputs("Out of memory in make_rbfrep\n", stderr);
+		exit(1);
+	}
+	newnode->next = NULL;
+	newnode->invec[2] = sin(M_PI/180.*theta_in_deg);
+	newnode->invec[0] = cos(M_PI/180.*phi_in_deg)*newnode->invec[2];
+	newnode->invec[1] = sin(M_PI/180.*phi_in_deg)*newnode->invec[2];
+	newnode->invec[2] = sqrt(1. - newnode->invec[2]*newnode->invec[2]);
+	newnode->nrbf = nn;
+	nn = 0;			/* fill RBF array */
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++)
+		if (bsdf_grid[i][j].nval) {
+			newnode->rbfa[nn].bsdf =
+					bsdf_grid[i][j].vsum /=
+						(double)bsdf_grid[i][j].nval;
+			bsdf_grid[i][j].nval = 1;
+			newnode->rbfa[nn].crad = RSCA*bsdf_grid[i][j].crad + .5;
+			newnode->rbfa[nn].gx = i;
+			newnode->rbfa[nn].gy = j;
+			++nn;
+		}
+				/* iterate for better convergence */
+	while (niter--) {
+		nn = 0;
+		for (i = 0; i < GRIDRES; i++)
+		    for (j = 0; j < GRIDRES; j++)
+			if (bsdf_grid[i][j].nval) {
+				FVECT	odir;
+				vec_from_pos(odir, i, j);
+				newnode->rbfa[nn++].bsdf *=
+						bsdf_grid[i][j].vsum /
+						eval_rbfrep(newnode, odir);
+			}
+	}
+	newnode->next = bsdf_list;
+	return(bsdf_list = newnode);
 }
 
 /* Load a set of measurements corresponding to a particular incident angle */
@@ -357,42 +374,35 @@ main(int argc, char *argv[])
 	}
 	if (!load_bsdf_meas(argv[1]))
 		return(1);
-						/* produce spheres at meas. */
-	puts("void plastic orange\n0\n0\n5 .6 .4 .01 .04 .08\n");
-	n = 0;
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (bsdf_grid[i][j].nval) {
-			double	bsdf = bsdf_grid[i][j].vsum /
-					(double)bsdf_grid[i][j].nval;
-			FVECT	dir;
 
-			vec_from_pos(dir, i, j);
-			printf("orange sphere s%04d\n0\n0\n", ++n);
-			printf("4 %.6g %.6g %.6g .0015\n\n",
-					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
-		}
 	compute_radii();
 	cull_values();
-						/* highlight chosen values */
+	make_rbfrep();
+						/* produce spheres at meas. */
+	puts("void plastic yellow\n0\n0\n5 .6 .4 .01 .04 .08\n");
 	puts("void plastic pink\n0\n0\n5 .5 .05 .9 .04 .08\n");
 	n = 0;
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		if (bsdf_grid[i][j].nval) {
-			bsdf = bsdf_grid[i][j].vsum /
-					(double)bsdf_grid[i][j].nval;
+		if (bsdf_grid[i][j].vsum > .0f) {
+			bsdf = bsdf_grid[i][j].vsum;
 			vec_from_pos(dir, i, j);
-			printf("pink cone c%04d\n0\n0\n8\n", ++n);
-			printf("\t%.6g %.6g %.6g\n",
+			if (bsdf_grid[i][j].nval) {
+				printf("pink cone c%04d\n0\n0\n8\n", ++n);
+				printf("\t%.6g %.6g %.6g\n",
 					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
-			printf("\t%.6g %.6g %.6g\n",
+				printf("\t%.6g %.6g %.6g\n",
 					dir[0]*(bsdf+.005), dir[1]*(bsdf+.005),
 					dir[2]*(bsdf+.005));
-			puts("\t.003\t0\n");
+				puts("\t.003\t0\n");
+			} else {
+				vec_from_pos(dir, i, j);
+				printf("yellow sphere s%04d\n0\n0\n", ++n);
+				printf("4 %.6g %.6g %.6g .0015\n\n",
+					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
+			}
 		}
 						/* output continuous surface */
-	make_rbfrep();
 	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 .9\n");
 	fflush(stdout);
 	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES, GRIDRES);
