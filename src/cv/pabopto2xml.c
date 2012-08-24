@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.1 2012/08/24 15:20:18 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.2 2012/08/24 20:55:28 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -20,18 +20,21 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.1 2012/08/24 15:20:18 greg E
 #define GRIDRES		200		/* max. grid resolution per side */
 #endif
 
-#define RSCA		1.9		/* radius scaling factor (empirical) */
-#define MSCA		.12		/* magnitude scaling (empirical) */
+#define RSCA		3.		/* radius scaling factor (empirical) */
+#define MSCA		.2		/* magnitude scaling (empirical) */
+
+#define R2ANG(c)	(((c)+.5)*(M_PI/(1<<16)))
+#define ANG2R(r)	(int)((r)*((1<<16)/M_PI))
 
 typedef struct {
 	float		vsum;		/* BSDF sum */
 	unsigned short	nval;		/* number of values in sum */
-	unsigned short	hrad2;		/* half radius squared */
+	unsigned short	crad;		/* radius (coded angle) */
 } GRIDVAL;			/* grid value */
 
 typedef struct {
-	float		bsdf;		/* BSDF value at peak */
-	unsigned short	rad;		/* radius */
+	float		bsdf;		/* lobe value at peak */
+	unsigned short	crad;		/* radius (coded angle) */
 	unsigned char	gx, gy;		/* grid position */
 } RBFVAL;			/* radial basis function value */
 
@@ -77,8 +80,7 @@ make_rbfrep(void)
 		if (bsdf_grid[i][j].nval) {
 			newnode->rbfa[nn].bsdf = MSCA*bsdf_grid[i][j].vsum /
 						(double)bsdf_grid[i][j].nval;
-			newnode->rbfa[nn].rad =
-				(int)(2.*RSCA*sqrt((double)bsdf_grid[i][j].hrad2) + .5);
+			newnode->rbfa[nn].crad = RSCA*bsdf_grid[i][j].crad + .5;
 			newnode->rbfa[nn].gx = i;
 			newnode->rbfa[nn].gy = j;
 			++nn;
@@ -116,29 +118,6 @@ vec_from_pos(FVECT vec, int xpos, int ypos)
 	vec[2] = 1. - r2;
 }
 
-/* Evaluate RBF at this grid position */
-static double
-eval_rbfrep2(const RBFLIST *rp, int xi, int yi)
-{
-	double		res = .0;
-	const RBFVAL	*rbfp;
-	double		sig2;
-	int		x2, y2;
-	int		n;
-
-	rbfp = rp->rbfa;
-	for (n = rp->nrbf; n--; rbfp++) {
-		x2 = (signed)rbfp->gx - xi;
-		x2 *= x2;
-		y2 = (signed)rbfp->gy - yi;
-		y2 *= y2;
-		sig2 = -.5*(x2 + y2)/(double)(rbfp->rad*rbfp->rad);
-		if (sig2 > -19.)
-			res += rbfp->bsdf * exp(sig2);
-	}
-	return(res);
-}
-
 /* Evaluate RBF for BSDF at the given normalized outgoing direction */
 static double
 eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
@@ -152,9 +131,8 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
 		vec_from_pos(odir, rbfp->gx, rbfp->gy);
-		sig2 = (DOT(odir, outvec) - 1.) /
-				((M_PI*M_PI/(double)(GRIDRES*GRIDRES)) *
-						rbfp->rad*rbfp->rad);
+		sig2 = R2ANG(rbfp->crad);
+		sig2 = (DOT(odir,outvec) - 1.) / (sig2*sig2);
 		if (sig2 > -19.)
 			res += rbfp->bsdf * exp(sig2);
 	}
@@ -241,19 +219,21 @@ load_bsdf_meas(const char *fname)
 static void
 compute_radii(void)
 {
-	unsigned char	fill_grid[GRIDRES][GRIDRES];
-	int		r, r2, lastr2;
-	int		i, j, jn, ii, jj, inear, jnear;
-						/* proceed in zig-zag */
-	lastr2 = GRIDRES*GRIDRES;
+	unsigned short	fill_grid[GRIDRES][GRIDRES];
+	FVECT		ovec0, ovec1;
+	double		ang2, lastang2;
+	int		r2, lastr2;
+	int		r, i, j, jn, ii, jj, inear, jnear;
+
+	r = GRIDRES/2;				/* proceed in zig-zag */
 	for (i = 0; i < GRIDRES; i++)
 	    for (jn = 0; jn < GRIDRES; jn++) {
 		j = (i&1) ? jn : GRIDRES-1-jn;
 		if (bsdf_grid[i][j].nval)	/* find empty grid pos. */
 			continue;
-		r = (int)sqrt((double)lastr2) + 2;
+		vec_from_pos(ovec0, i, j);
 		inear = jnear = -1;		/* find nearest non-empty */
-		lastr2 = 2*GRIDRES*GRIDRES;
+		lastang2 = M_PI*M_PI;
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
@@ -262,62 +242,79 @@ compute_radii(void)
 			if (jj >= GRIDRES) break;
 			if (!bsdf_grid[ii][jj].nval)
 				continue;
-			r2 = (ii-i)*(ii-i) + (jj-j)*(jj-j);
-			if (r2 >= lastr2)
+			vec_from_pos(ovec1, ii, jj);
+			ang2 = 2. - 2.*DOT(ovec0,ovec1);
+			if (ang2 >= lastang2)
 				continue;
-			lastr2 = r2;
+			lastang2 = ang2;
 			inear = ii; jnear = jj;
 		    }
 		}
-						/* record if > previous */
-		if (bsdf_grid[inear][jnear].hrad2 < lastr2)
-			bsdf_grid[inear][jnear].hrad2 = lastr2;
+		if (inear < 0) {
+			fputs("Could not find non-empty neighbor!\n", stderr);
+			exit(1);
+		}
+		ang2 = sqrt(lastang2);
+		r = ANG2R(ang2);		/* record if > previous */
+		if (r > bsdf_grid[inear][jnear].crad)
+			bsdf_grid[inear][jnear].crad = r;
+						/* next search radius */
+		r = ang2*(2.*GRIDRES/M_PI) + 1;
 	    }
-						/* fill in others */
+						/* fill in neighbors */
 	memset(fill_grid, 0, sizeof(fill_grid));
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
 		if (!bsdf_grid[i][j].nval)
-			continue;
-		if (bsdf_grid[i][j].hrad2)
-			continue;
+			continue;		/* no value -- skip */
+		if (bsdf_grid[i][j].crad)
+			continue;		/* has distance already */
 		r = GRIDRES/20;
-		lastr2 = 2*r*r;
+		lastr2 = 2*r*r + 1;
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
 		    for (jj = j-r; jj <= j+r; jj++) {
 			if (jj < 0) continue;
 			if (jj >= GRIDRES) break;
-			if (!bsdf_grid[ii][jj].hrad2)
+			if (!bsdf_grid[ii][jj].crad)
 				continue;
+						/* OK to use approx. closest */
 			r2 = (ii-i)*(ii-i) + (jj-j)*(jj-j);
 			if (r2 >= lastr2)
 				continue;
-			fill_grid[i][j] = bsdf_grid[ii][jj].hrad2;
+			fill_grid[i][j] = bsdf_grid[ii][jj].crad;
 			lastr2 = r2;
 		    }
 		}
 	    }
+						/* copy back filled entries */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		if (fill_grid[i][j])
-			bsdf_grid[i][j].hrad2 = fill_grid[i][j];
+			bsdf_grid[i][j].crad = fill_grid[i][j];
 }
 
 /* Cull points for more uniform distribution */
 static void
 cull_values(void)
 {
-	int	i, j, ii, jj, r, r2;
+	FVECT	ovec0, ovec1;
+	double	maxang, maxang2;
+	int	i, j, ii, jj, r;
 						/* simple greedy algorithm */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
 		if (!bsdf_grid[i][j].nval)
 			continue;
-		if (!bsdf_grid[i][j].hrad2)
-			continue;
-		r = (int)(2.*sqrt((double)bsdf_grid[i][j].hrad2) + .9999);
+		if (!bsdf_grid[i][j].crad)
+			continue;		/* shouldn't happen */
+		vec_from_pos(ovec0, i, j);
+		maxang = 2.*R2ANG(bsdf_grid[i][j].crad);
+		if (maxang > ovec0[2])		/* clamp near horizon */
+			maxang = ovec0[2];
+		r = maxang*(2.*GRIDRES/M_PI) + 1;
+		maxang2 = maxang*maxang;
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
@@ -326,13 +323,17 @@ cull_values(void)
 			if (jj >= GRIDRES) break;
 			if (!bsdf_grid[ii][jj].nval)
 				continue;
-			r2 = (ii-i)*(ii-i) + (jj-j)*(jj-j);
-			if (!r2 | (r2 > r*r))
+			if ((ii == i) & (jj == j))
+				continue;	/* don't get self-absorbed */
+			vec_from_pos(ovec1, ii, jj);
+			if (2. - 2.*DOT(ovec0,ovec1) >= maxang2)
 				continue;
-						/* absorb victim's value */
+						/* absorb sum */
 			bsdf_grid[i][j].vsum += bsdf_grid[ii][jj].vsum;
 			bsdf_grid[i][j].nval += bsdf_grid[ii][jj].nval;
-			memset(&bsdf_grid[ii][jj], 0, sizeof(GRIDVAL));
+						/* keep value, though */
+			bsdf_grid[ii][jj].vsum /= (double)bsdf_grid[ii][jj].nval;
+			bsdf_grid[ii][jj].nval = 0;
 		    }
 		}
 	    }
