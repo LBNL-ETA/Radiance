@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.4 2012/08/25 02:53:06 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.5 2012/08/25 22:39:03 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -26,13 +26,13 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.4 2012/08/25 02:53:06 greg E
 #define ANG2R(r)	(int)((r)*((1<<16)/M_PI))
 
 typedef struct {
-	float		vsum;		/* BSDF sum */
+	float		vsum;		/* DSF sum */
 	unsigned short	nval;		/* number of values in sum */
 	unsigned short	crad;		/* radius (coded angle) */
 } GRIDVAL;			/* grid value */
 
 typedef struct {
-	float		bsdf;		/* lobe value at peak */
+	float		peak;		/* lobe value at peak */
 	unsigned short	crad;		/* radius (coded angle) */
 	unsigned char	gx, gy;		/* grid position */
 } RBFVAL;			/* radial basis function value */
@@ -42,14 +42,14 @@ typedef struct s_rbflist {
 	FVECT			invec;		/* incident vector direction */
 	int			nrbf;		/* number of RBFs */
 	RBFVAL			rbfa[1];	/* RBF array (extends struct) */
-} RBFLIST;			/* RBF representation of BSDF @ 1 incidence */
+} RBFLIST;			/* RBF representation of DSF @ 1 incidence */
 
 				/* our loaded grid for this incident angle */
 static double	theta_in_deg, phi_in_deg;
-static GRIDVAL	bsdf_grid[GRIDRES][GRIDRES];
+static GRIDVAL	dsf_grid[GRIDRES][GRIDRES];
 
-				/* processed incident BSDF measurements */
-static RBFLIST	*bsdf_list = NULL;
+				/* processed incident DSF measurements */
+static RBFLIST	*dsf_list = NULL;
 
 /* Compute outgoing vector from grid position */
 static void
@@ -80,7 +80,7 @@ pos_from_vec(int pos[2], const FVECT vec)
 	pos[1] = (int)(sq[1]*GRIDRES);
 }
 
-/* Evaluate RBF for BSDF at the given normalized outgoing direction */
+/* Evaluate RBF for DSF at the given normalized outgoing direction */
 static double
 eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 {
@@ -96,7 +96,7 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 		sig2 = R2ANG(rbfp->crad);
 		sig2 = (DOT(odir,outvec) - 1.) / (sig2*sig2);
 		if (sig2 > -19.)
-			res += rbfp->bsdf * exp(sig2);
+			res += rbfp->peak * exp(sig2);
 	}
 	return(res);
 }
@@ -113,7 +113,7 @@ make_rbfrep(void)
 	nn = 0;			/* count selected bins */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		nn += (bsdf_grid[i][j].nval > 0);
+		nn += (dsf_grid[i][j].nval > 0);
 				/* allocate RBF array */
 	newnode = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL) {
@@ -129,12 +129,12 @@ make_rbfrep(void)
 	nn = 0;			/* fill RBF array */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		if (bsdf_grid[i][j].nval) {
-			newnode->rbfa[nn].bsdf =
-					bsdf_grid[i][j].vsum /=
-						(double)bsdf_grid[i][j].nval;
-			bsdf_grid[i][j].nval = 1;
-			newnode->rbfa[nn].crad = RSCA*bsdf_grid[i][j].crad + .5;
+		if (dsf_grid[i][j].nval) {
+			newnode->rbfa[nn].peak =
+					dsf_grid[i][j].vsum /=
+						(double)dsf_grid[i][j].nval;
+			dsf_grid[i][j].nval = 1;
+			newnode->rbfa[nn].crad = RSCA*dsf_grid[i][j].crad + .5;
 			newnode->rbfa[nn].gx = i;
 			newnode->rbfa[nn].gy = j;
 			++nn;
@@ -145,12 +145,12 @@ make_rbfrep(void)
 		nn = 0;
 		for (i = 0; i < GRIDRES; i++)
 		    for (j = 0; j < GRIDRES; j++)
-			if (bsdf_grid[i][j].nval) {
+			if (dsf_grid[i][j].nval) {
 				FVECT	odir;
 				/* double	corr; */
 				vec_from_pos(odir, i, j);
-				newnode->rbfa[nn++].bsdf *= /* corr = */
-					bsdf_grid[i][j].vsum /
+				newnode->rbfa[nn++].peak *= /* corr = */
+					dsf_grid[i][j].vsum /
 						eval_rbfrep(newnode, odir);
 				/*
 				dsum += corr - 1.;
@@ -163,8 +163,8 @@ make_rbfrep(void)
 					100.*sqrt(dsum2/(double)nn));
 		*/
 	}
-	newnode->next = bsdf_list;
-	return(bsdf_list = newnode);
+	newnode->next = dsf_list;
+	return(dsf_list = newnode);
 }
 
 /* Load a set of measurements corresponding to a particular incident angle */
@@ -182,7 +182,7 @@ load_bsdf_meas(const char *fname)
 		fputs(": cannot open\n", stderr);
 		return(0);
 	}
-	memset(bsdf_grid, 0, sizeof(bsdf_grid));
+	memset(dsf_grid, 0, sizeof(dsf_grid));
 				/* read header information */
 	while ((c = getc(fp)) == '#' || c == EOF) {
 		if (fgets(buf, sizeof(buf), fp) == NULL) {
@@ -223,13 +223,13 @@ load_bsdf_meas(const char *fname)
 		ovec[1] = sin(M_PI/180.*phi_out) * ovec[2];
 		ovec[2] = sqrt(1. - ovec[2]*ovec[2]);
 
-		if (inp_is_DSF)
-			val /= ovec[2];	/* convert from DSF to BSDF */
+		if (!inp_is_DSF)
+			val *= ovec[2];	/* convert from BSDF to DSF */
 
 		pos_from_vec(pos, ovec);
 
-		bsdf_grid[pos[0]][pos[1]].vsum += val;
-		bsdf_grid[pos[0]][pos[1]].nval++;
+		dsf_grid[pos[0]][pos[1]].vsum += val;
+		dsf_grid[pos[0]][pos[1]].nval++;
 	}
 	n = 0;
 	while ((c = getc(fp)) != EOF)
@@ -257,7 +257,7 @@ compute_radii(void)
 	for (i = 0; i < GRIDRES; i++)
 	    for (jn = 0; jn < GRIDRES; jn++) {
 		j = (i&1) ? jn : GRIDRES-1-jn;
-		if (bsdf_grid[i][j].nval)	/* find empty grid pos. */
+		if (dsf_grid[i][j].nval)	/* find empty grid pos. */
 			continue;
 		vec_from_pos(ovec0, i, j);
 		inear = jnear = -1;		/* find nearest non-empty */
@@ -268,7 +268,7 @@ compute_radii(void)
 		    for (jj = j-r; jj <= j+r; jj++) {
 			if (jj < 0) continue;
 			if (jj >= GRIDRES) break;
-			if (!bsdf_grid[ii][jj].nval)
+			if (!dsf_grid[ii][jj].nval)
 				continue;
 			vec_from_pos(ovec1, ii, jj);
 			ang2 = 2. - 2.*DOT(ovec0,ovec1);
@@ -284,8 +284,8 @@ compute_radii(void)
 		}
 		ang2 = sqrt(lastang2);
 		r = ANG2R(ang2);		/* record if > previous */
-		if (r > bsdf_grid[inear][jnear].crad)
-			bsdf_grid[inear][jnear].crad = r;
+		if (r > dsf_grid[inear][jnear].crad)
+			dsf_grid[inear][jnear].crad = r;
 						/* next search radius */
 		r = ang2*(2.*GRIDRES/M_PI) + 1;
 	    }
@@ -294,9 +294,9 @@ compute_radii(void)
 	memset(fill_cnt, 0, sizeof(fill_cnt));
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
-		if (!bsdf_grid[i][j].crad)
+		if (!dsf_grid[i][j].crad)
 			continue;		/* missing distance */
-		r = R2ANG(bsdf_grid[i][j].crad)*(2.*RSCA*GRIDRES/M_PI);
+		r = R2ANG(dsf_grid[i][j].crad)*(2.*RSCA*GRIDRES/M_PI);
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
@@ -305,7 +305,7 @@ compute_radii(void)
 			if (jj >= GRIDRES) break;
 			if ((ii-i)*(ii-i) + (jj-j)*(jj-j) > r*r)
 				continue;
-			fill_grid[ii][jj] += bsdf_grid[i][j].crad;
+			fill_grid[ii][jj] += dsf_grid[i][j].crad;
 			fill_cnt[ii][jj]++;
 		    }
 		}
@@ -314,7 +314,7 @@ compute_radii(void)
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		if (fill_cnt[i][j])
-			bsdf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
+			dsf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
 }
 
 /* Cull points for more uniform distribution */
@@ -327,12 +327,12 @@ cull_values(void)
 						/* simple greedy algorithm */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
-		if (!bsdf_grid[i][j].nval)
+		if (!dsf_grid[i][j].nval)
 			continue;
-		if (!bsdf_grid[i][j].crad)
+		if (!dsf_grid[i][j].crad)
 			continue;		/* shouldn't happen */
 		vec_from_pos(ovec0, i, j);
-		maxang = 2.*R2ANG(bsdf_grid[i][j].crad);
+		maxang = 2.*R2ANG(dsf_grid[i][j].crad);
 		if (maxang > ovec0[2])		/* clamp near horizon */
 			maxang = ovec0[2];
 		r = maxang*(2.*GRIDRES/M_PI) + 1;
@@ -343,7 +343,7 @@ cull_values(void)
 		    for (jj = j-r; jj <= j+r; jj++) {
 			if (jj < 0) continue;
 			if (jj >= GRIDRES) break;
-			if (!bsdf_grid[ii][jj].nval)
+			if (!dsf_grid[ii][jj].nval)
 				continue;
 			if ((ii == i) & (jj == j))
 				continue;	/* don't get self-absorbed */
@@ -351,11 +351,11 @@ cull_values(void)
 			if (2. - 2.*DOT(ovec0,ovec1) >= maxang2)
 				continue;
 						/* absorb sum */
-			bsdf_grid[i][j].vsum += bsdf_grid[ii][jj].vsum;
-			bsdf_grid[i][j].nval += bsdf_grid[ii][jj].nval;
+			dsf_grid[i][j].vsum += dsf_grid[ii][jj].vsum;
+			dsf_grid[i][j].nval += dsf_grid[ii][jj].nval;
 						/* keep value, though */
-			bsdf_grid[ii][jj].vsum /= (double)bsdf_grid[ii][jj].nval;
-			bsdf_grid[ii][jj].nval = 0;
+			dsf_grid[ii][jj].vsum /= (double)dsf_grid[ii][jj].nval;
+			dsf_grid[ii][jj].nval = 0;
 		    }
 		}
 	    }
@@ -389,10 +389,10 @@ main(int argc, char *argv[])
 	n = 0;
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		if (bsdf_grid[i][j].vsum > .0f) {
-			bsdf = bsdf_grid[i][j].vsum;
+		if (dsf_grid[i][j].vsum > .0f) {
 			vec_from_pos(dir, i, j);
-			if (bsdf_grid[i][j].nval) {
+			bsdf = dsf_grid[i][j].vsum / dir[2];
+			if (dsf_grid[i][j].nval) {
 				printf("pink cone c%04d\n0\n0\n8\n", ++n);
 				printf("\t%.6g %.6g %.6g\n",
 					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
@@ -410,7 +410,7 @@ main(int argc, char *argv[])
 						/* output continuous surface */
 	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 .9\n");
 	fflush(stdout);
-	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES, GRIDRES);
+	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
 	pfp = popen(buf, "w");
 	if (pfp == NULL) {
 		fputs(buf, stderr);
@@ -420,7 +420,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
 		vec_from_pos(dir, i, j);
-		bsdf = eval_rbfrep(bsdf_list, dir);
+		bsdf = eval_rbfrep(dsf_list, dir) / dir[2];
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
 	    }
