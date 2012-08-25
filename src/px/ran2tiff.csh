@@ -94,7 +94,6 @@ foreach inp ($argv:q)
 	set datf="$vald/$datf:r.dat"
 	set outp="$inp:t"
 	set outp="$outdir$outp:r.tif"
-	endif
 	histo $Lmin $Lmax $histosiz < $datf > $vald/newhisto.dat
 	if (-f $vald/oldhisto.dat) then
 		rlam $vald/newhisto.dat $vald/oldhisto.dat \
