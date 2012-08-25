@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.3 2012/08/24 22:08:50 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.4 2012/08/25 02:53:06 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -105,7 +105,7 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 static RBFLIST *
 make_rbfrep(void)
 {
-	int	niter = 4;
+	int	niter = 6;
 	int	nn;
 	RBFLIST	*newnode;
 	int	i, j;
@@ -141,16 +141,27 @@ make_rbfrep(void)
 		}
 				/* iterate for better convergence */
 	while (niter--) {
+		double	dsum = .0, dsum2 = .0;
 		nn = 0;
 		for (i = 0; i < GRIDRES; i++)
 		    for (j = 0; j < GRIDRES; j++)
 			if (bsdf_grid[i][j].nval) {
 				FVECT	odir;
+				/* double	corr; */
 				vec_from_pos(odir, i, j);
-				newnode->rbfa[nn++].bsdf *=
-						bsdf_grid[i][j].vsum /
+				newnode->rbfa[nn++].bsdf *= /* corr = */
+					bsdf_grid[i][j].vsum /
 						eval_rbfrep(newnode, odir);
+				/*
+				dsum += corr - 1.;
+				dsum2 += (corr-1.)*(corr-1.);
+				*/
 			}
+		/*
+		fprintf(stderr, "Avg., RMS error: %.1f%%  %.1f%%\n",
+					100.*dsum/(double)nn,
+					100.*sqrt(dsum2/(double)nn));
+		*/
 	}
 	newnode->next = bsdf_list;
 	return(bsdf_list = newnode);
@@ -236,10 +247,10 @@ load_bsdf_meas(const char *fname)
 static void
 compute_radii(void)
 {
-	unsigned short	fill_grid[GRIDRES][GRIDRES];
+	unsigned int	fill_grid[GRIDRES][GRIDRES];
+	unsigned short	fill_cnt[GRIDRES][GRIDRES];
 	FVECT		ovec0, ovec1;
 	double		ang2, lastang2;
-	int		r2, lastr2;
 	int		r, i, j, jn, ii, jj, inear, jnear;
 
 	r = GRIDRES/2;				/* proceed in zig-zag */
@@ -278,38 +289,32 @@ compute_radii(void)
 						/* next search radius */
 		r = ang2*(2.*GRIDRES/M_PI) + 1;
 	    }
-						/* fill in neighbors */
+						/* blur radii over hemisphere */
 	memset(fill_grid, 0, sizeof(fill_grid));
+	memset(fill_cnt, 0, sizeof(fill_cnt));
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
-		if (!bsdf_grid[i][j].nval)
-			continue;		/* no value -- skip */
-		if (bsdf_grid[i][j].crad)
-			continue;		/* has distance already */
-		r = GRIDRES/20;
-		lastr2 = 2*r*r + 1;
+		if (!bsdf_grid[i][j].crad)
+			continue;		/* missing distance */
+		r = R2ANG(bsdf_grid[i][j].crad)*(2.*RSCA*GRIDRES/M_PI);
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
 		    for (jj = j-r; jj <= j+r; jj++) {
 			if (jj < 0) continue;
 			if (jj >= GRIDRES) break;
-			if (!bsdf_grid[ii][jj].crad)
+			if ((ii-i)*(ii-i) + (jj-j)*(jj-j) > r*r)
 				continue;
-						/* OK to use approx. closest */
-			r2 = (ii-i)*(ii-i) + (jj-j)*(jj-j);
-			if (r2 >= lastr2)
-				continue;
-			fill_grid[i][j] = bsdf_grid[ii][jj].crad;
-			lastr2 = r2;
+			fill_grid[ii][jj] += bsdf_grid[i][j].crad;
+			fill_cnt[ii][jj]++;
 		    }
 		}
 	    }
-						/* copy back filled entries */
+						/* copy back averaged radii */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		if (fill_grid[i][j])
-			bsdf_grid[i][j].crad = fill_grid[i][j];
+		if (fill_cnt[i][j])
+			bsdf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
 }
 
 /* Cull points for more uniform distribution */
