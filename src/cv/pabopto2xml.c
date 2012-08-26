@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.5 2012/08/25 22:39:03 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.6 2012/08/26 19:40:02 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -22,8 +22,9 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.5 2012/08/25 22:39:03 greg E
 
 #define RSCA		2.7		/* radius scaling factor (empirical) */
 
-#define R2ANG(c)	(((c)+.5)*(M_PI/(1<<16)))
+					/* convert to/from coded radians */
 #define ANG2R(r)	(int)((r)*((1<<16)/M_PI))
+#define R2ANG(c)	(((c)+.5)*(M_PI/(1<<16)))
 
 typedef struct {
 	float		vsum;		/* DSF sum */
@@ -105,7 +106,8 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 static RBFLIST *
 make_rbfrep(void)
 {
-	int	niter = 6;
+	int	niter = 16;
+	double	lastVar, thisVar = 100.;
 	int	nn;
 	RBFLIST	*newnode;
 	int	i, j;
@@ -113,7 +115,7 @@ make_rbfrep(void)
 	nn = 0;			/* count selected bins */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		nn += (dsf_grid[i][j].nval > 0);
+		nn += dsf_grid[i][j].nval;
 				/* allocate RBF array */
 	newnode = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL) {
@@ -130,39 +132,37 @@ make_rbfrep(void)
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		if (dsf_grid[i][j].nval) {
-			newnode->rbfa[nn].peak =
-					dsf_grid[i][j].vsum /=
-						(double)dsf_grid[i][j].nval;
-			dsf_grid[i][j].nval = 1;
+			newnode->rbfa[nn].peak = dsf_grid[i][j].vsum;
 			newnode->rbfa[nn].crad = RSCA*dsf_grid[i][j].crad + .5;
 			newnode->rbfa[nn].gx = i;
 			newnode->rbfa[nn].gy = j;
 			++nn;
 		}
-				/* iterate for better convergence */
-	while (niter--) {
+				/* iterate to improve interpolation accuracy */
+	do {
 		double	dsum = .0, dsum2 = .0;
 		nn = 0;
 		for (i = 0; i < GRIDRES; i++)
 		    for (j = 0; j < GRIDRES; j++)
 			if (dsf_grid[i][j].nval) {
 				FVECT	odir;
-				/* double	corr; */
+				double	corr;
 				vec_from_pos(odir, i, j);
-				newnode->rbfa[nn++].peak *= /* corr = */
+				newnode->rbfa[nn++].peak *= corr =
 					dsf_grid[i][j].vsum /
 						eval_rbfrep(newnode, odir);
-				/*
 				dsum += corr - 1.;
 				dsum2 += (corr-1.)*(corr-1.);
-				*/
 			}
+		lastVar = thisVar;
+		thisVar = dsum2/(double)nn;
 		/*
 		fprintf(stderr, "Avg., RMS error: %.1f%%  %.1f%%\n",
 					100.*dsum/(double)nn,
-					100.*sqrt(dsum2/(double)nn));
+					100.*sqrt(thisVar));
 		*/
-	}
+	} while (--niter > 0 && lastVar-thisVar > 0.02*lastVar);
+
 	newnode->next = dsf_list;
 	return(dsf_list = newnode);
 }
@@ -310,14 +310,14 @@ compute_radii(void)
 		    }
 		}
 	    }
-						/* copy back averaged radii */
+						/* copy back blurred radii */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		if (fill_cnt[i][j])
 			dsf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
 }
 
-/* Cull points for more uniform distribution */
+/* Cull points for more uniform distribution, leave all nval 0 or 1 */
 static void
 cull_values(void)
 {
@@ -354,11 +354,18 @@ cull_values(void)
 			dsf_grid[i][j].vsum += dsf_grid[ii][jj].vsum;
 			dsf_grid[i][j].nval += dsf_grid[ii][jj].nval;
 						/* keep value, though */
-			dsf_grid[ii][jj].vsum /= (double)dsf_grid[ii][jj].nval;
+			dsf_grid[ii][jj].vsum /= (float)dsf_grid[ii][jj].nval;
 			dsf_grid[ii][jj].nval = 0;
 		    }
 		}
 	    }
+						/* final averaging pass */
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++)
+		if (dsf_grid[i][j].nval > 1) {
+			dsf_grid[i][j].vsum /= (float)dsf_grid[i][j].nval;
+			dsf_grid[i][j].nval = 1;
+		}
 }
 
 
