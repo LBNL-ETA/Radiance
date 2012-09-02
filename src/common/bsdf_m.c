@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.22 2012/05/07 23:17:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.23 2012/09/02 15:33:15 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -399,7 +399,6 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	SDSpectralDF	*df;
 	SDMat		*dp;
 	char		*sdata;
-	int		tfront;
 	int		inbi, outbi;
 	int		i;
 					/* allocate BSDF component */
@@ -408,16 +407,19 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 		return RC_FAIL;
 	/*
 	 * Remember that front and back are reversed from WINDOW 6 orientations
-	 * Favor their "Front" (incoming light) since that's more often valid
 	 */
-	tfront = !strcasecmp(sdata, "Transmission Back");
-	if (!strcasecmp(sdata, "Transmission Front") ||
-			tfront & (sd->tf == NULL)) {
+	if (!strcasecmp(sdata, "Transmission Front")) {
 		if (sd->tf != NULL)
 			SDfreeSpectralDF(sd->tf);
 		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;
 		df = sd->tf;
+	} else if (!strcasecmp(sdata, "Transmission Back")) {
+		if (sd->tb != NULL)
+			SDfreeSpectralDF(sd->tb);
+		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
+			return RC_MEMERR;
+		df = sd->tb;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
 		if (sd->rb != NULL)	/* note back-front reversal */
 			SDfreeSpectralDF(sd->rb);
@@ -467,17 +469,15 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	dp->ib_priv = &abase_list[inbi];
 	dp->ob_priv = &abase_list[outbi];
 	if (df == sd->tf) {
-		if (tfront) {
-			dp->ib_vec = &fi_getvec;
-			dp->ib_ndx = &fi_getndx;
-			dp->ob_vec = &bo_getvec;
-			dp->ob_ndx = &bo_getndx;
-		} else {
-			dp->ib_vec = &bi_getvec;
-			dp->ib_ndx = &bi_getndx;
-			dp->ob_vec = &fo_getvec;
-			dp->ob_ndx = &fo_getndx;
-		}
+		dp->ib_vec = &fi_getvec;
+		dp->ib_ndx = &fi_getndx;
+		dp->ob_vec = &bo_getvec;
+		dp->ob_ndx = &bo_getndx;
+	} else if (df == sd->tb) {
+		dp->ib_vec = &bi_getvec;
+		dp->ib_ndx = &bi_getndx;
+		dp->ob_vec = &fo_getvec;
+		dp->ob_ndx = &fo_getndx;
 	} else if (df == sd->rf) {
 		dp->ib_vec = &fi_getvec;
 		dp->ib_ndx = &fi_getndx;
@@ -616,7 +616,7 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 					/* separate diffuse components */
 	extract_diffuse(&sd->rLambFront, sd->rf);
 	extract_diffuse(&sd->rLambBack, sd->rb);
-	extract_diffuse(&sd->tLamb, sd->tf);
+	extract_diffuse(&sd->tLamb, (sd->tf != NULL) ? sd->tf : sd->tb);
 					/* return success */
 	return SDEnone;
 }

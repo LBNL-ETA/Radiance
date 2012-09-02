@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.9 2011/08/21 22:38:12 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.10 2012/09/02 15:33:15 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -29,9 +29,10 @@ typedef struct SDNode_s {
 	} u;			/* subtrees or values (extends struct) */
 } SDNode;
 
-#define SD_UFRONT	0x1	/* flag for BSDF uses front side */
-#define SD_UBACK	0x2	/* flag for BSDF uses back side */
-#define SD_XMIT		0x3	/* combine the two for transmission */
+#define SD_FREFL	1	/* component reflects off front side */
+#define SD_BREFL	2	/* component reflects off back side */
+#define SD_FXMIT	3	/* component transmits through front side */
+#define SD_BXMIT	4	/* component transmits through back side */
 
 /* Variable-resolution BSDF holder */
 typedef struct {
@@ -45,7 +46,7 @@ typedef struct SDTreCDst_s {
 	SD_CDIST_BASE(SDTreCDst_s);
 	double	clim[2][2];	/* input coordinate limits */
 	double	max_psa;	/* maximum projected solid angle */
-	short	sidef;		/* which side(s) to use */
+	short	sidef;		/* which mode is in play */
 	short	isodist;	/* isotropic distribution? */
 	int	calen;		/* cumulative array length */
 	struct {

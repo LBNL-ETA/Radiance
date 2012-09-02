@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.23 2011/08/22 18:21:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.24 2012/09/02 15:33:15 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -36,7 +36,8 @@ static double		quantum = 1./256.;
 
 /* Struct used for our distribution-building callback */
 typedef struct {
-	int		nic;		/* number of input coordinates */
+	short		nic;		/* number of input coordinates */
+	short		rev;		/* reversing query */
 	unsigned	alen;		/* current array length */
 	unsigned	nall;		/* number of allocated entries */
 	unsigned	wmin;		/* minimum square size so far */
@@ -432,20 +433,33 @@ SDlookupTre(const SDNode *st, const double *pos, double *hcube)
 static float
 SDqueryTre(const SDTre *sdt, const FVECT outVec, const FVECT inVec, double *hc)
 {
-	FVECT			rOutVec;
-	double			gridPos[4];
+	const RREAL	*vtmp;
+	FVECT		rOutVec;
+	double		gridPos[4];
 
 	switch (sdt->sidef) {		/* whose side are you on? */
-	case SD_UFRONT:
+	case SD_FREFL:
 		if ((outVec[2] < 0) | (inVec[2] < 0))
 			return -1.;
 		break;
-	case SD_UBACK:
+	case SD_BREFL:
 		if ((outVec[2] > 0) | (inVec[2] > 0))
 			return -1.;
 		break;
-	case SD_XMIT:
-		if ((outVec[2] > 0) == (inVec[2] > 0))
+	case SD_FXMIT:
+		if (outVec[2] > 0) {
+			if (inVec[2] > 0)
+				return -1.;
+			vtmp = outVec; outVec = inVec; inVec = vtmp;
+		} else if (inVec[2] < 0)
+			return -1.;
+		break;
+	case SD_BXMIT:
+		if (inVec[2] > 0) {
+			if (outVec[2] > 0)
+				return -1.;
+			vtmp = outVec; outVec = inVec; inVec = vtmp;
+		} else if (outVec[2] < 0)
 			return -1.;
 		break;
 	default:
@@ -487,7 +501,7 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 	int		wid = csiz*(double)iwmax + .5;
 	bitmask_t	bmin[2], bmax[2];
 
-	cmin += sp->nic;		/* skip to output coords */
+	cmin += sp->nic * !sp->rev;	/* skip to output coords */
 	if (wid < sp->wmin)		/* new minimum width? */
 		sp->wmin = wid;
 	if (wid > sp->wmax)		/* new maximum? */
@@ -533,9 +547,11 @@ sscmp(const void *p1, const void *p2)
 
 /* Create a new cumulative distribution for the given input direction */
 static SDTreCDst *
-make_cdist(const SDTre *sdt, const double *pos)
+make_cdist(const SDTre *sdt, const double *invec, int rev)
 {
 	SDdistScaffold	myScaffold;
+	double		pos[4];
+	int		cmask;
 	SDTreCDst	*cd;
 	struct outdir_s	*sp;
 	double		scale, cursum;
@@ -544,14 +560,20 @@ make_cdist(const SDTre *sdt, const double *pos)
 	myScaffold.wmin = iwmax;
 	myScaffold.wmax = 0;
 	myScaffold.nic = sdt->st->ndim - 2;
+	myScaffold.rev = rev;
 	myScaffold.alen = 0;
 	myScaffold.nall = 512;
 	myScaffold.darr = (struct outdir_s *)malloc(sizeof(struct outdir_s) *
 							myScaffold.nall);
 	if (myScaffold.darr == NULL)
 		return NULL;
+					/* set up traversal */
+	cmask = (1<<myScaffold.nic) - 1;
+	for (i = myScaffold.nic; i--; )
+			pos[i+2*rev] = invec[i];
+	cmask <<= 2*rev;
 					/* grow the distribution */
-	if (SDtraverseTre(sdt->st, pos, (1<<myScaffold.nic)-1,
+	if (SDtraverseTre(sdt->st, pos, cmask,
 				&build_scaffold, &myScaffold) < 0) {
 		free(myScaffold.darr);
 		return NULL;
@@ -583,7 +605,10 @@ make_cdist(const SDTre *sdt, const double *pos)
 	}
 	cd->max_psa = myScaffold.wmax / (double)iwmax;
 	cd->max_psa *= cd->max_psa * M_PI;
-	cd->sidef = sdt->sidef;
+	if (rev)
+		cd->sidef = (sdt->sidef==SD_BXMIT) ? SD_FXMIT : SD_BXMIT;
+	else
+		cd->sidef = sdt->sidef;
 	cd->cTotal = 1e-20;		/* compute directional total */
 	sp = myScaffold.darr;
 	for (i = myScaffold.alen; i--; sp++)
@@ -611,12 +636,35 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	const SDTre	*sdt;
 	double		inCoord[2];
 	int		i;
+	int		mode;
 	SDTreCDst	*cd, *cdlast;
 					/* check arguments */
 	if ((inVec == NULL) | (sdc == NULL) ||
 			(sdt = (SDTre *)sdc->dist) == NULL)
 		return NULL;
+	switch (mode = sdt->sidef) {	/* check direction */
+	case SD_FREFL:
+		if (inVec[2] < 0)
+			return NULL;
+		break;
+	case SD_BREFL:
+		if (inVec[2] > 0)
+			return NULL;
+		break;
+	case SD_FXMIT:
+		if (inVec[2] < 0)
+			mode = SD_BXMIT;
+		break;
+	case SD_BXMIT:
+		if (inVec[2] > 0)
+			mode = SD_FXMIT;
+		break;
+	default:
+		return NULL;
+	}
 	if (sdt->st->ndim == 3) {	/* isotropic BSDF? */
+		if (mode != sdt->sidef)	/* XXX unhandled reciprocity */
+			return &SDemptyCD;
 		inCoord[0] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 	} else if (sdt->st->ndim == 4) {
 		SDdisk2square(inCoord, -inVec[0], -inVec[1]);
@@ -628,6 +676,8 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	cdlast = NULL;			/* check for direction in cache list */
 	for (cd = (SDTreCDst *)sdc->cdList; cd != NULL;
 					cdlast = cd, cd = cd->next) {
+		if (cd->sidef != mode)
+			continue;
 		for (i = sdt->st->ndim - 2; i--; )
 			if ((cd->clim[i][0] > inCoord[i]) |
 					(inCoord[i] >= cd->clim[i][1]))
@@ -636,7 +686,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 			break;		/* means we have a match */
 	}
 	if (cd == NULL)			/* need to create new entry? */
-		cdlast = cd = make_cdist(sdt, inCoord);
+		cdlast = cd = make_cdist(sdt, inCoord, mode != sdt->sidef);
 	if (cdlast != NULL) {		/* move entry to head of cache list */
 		cdlast->next = cd->next;
 		cd->next = (SDTreCDst *)sdc->cdList;
@@ -707,10 +757,12 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* check arguments */
 	if ((ioVec == NULL) | (cd == NULL))
 		return SDEargument;
+	if (!cd->sidef)
+		return SDEnone;		/* XXX should never happen */
 	if (ioVec[2] > 0) {
-		if (!(cd->sidef & SD_UFRONT))
+		if ((cd->sidef != SD_FREFL) & (cd->sidef != SD_FXMIT))
 			return SDEargument;
-	} else if (!(cd->sidef & SD_UBACK))
+	} else if ((cd->sidef != SD_BREFL) & (cd->sidef != SD_BXMIT))
 		return SDEargument;
 					/* binary search to find position */
 	ilower = 0; iupper = cd->calen;
@@ -736,7 +788,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 	if (gpos[2] > 0)		/* paranoia, I hope */
 		gpos[2] = sqrt(gpos[2]);
 					/* emit from back? */
-	if (ioVec[2] > 0 ^ cd->sidef != SD_XMIT)
+	if ((cd->sidef == SD_BREFL) | (cd->sidef == SD_FXMIT))
 		gpos[2] = -gpos[2];
 	if (cd->isodist) {		/* rotate isotropic result */
 		rotangle = atan2(-ioVec[1],-ioVec[0]);
@@ -894,12 +946,18 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 	/*
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 */
-	if (!strcasecmp(sdata, "Transmission")) {
+	if (!strcasecmp(sdata, "Transmission Front")) {
 		if (sd->tf != NULL)
 			SDfreeSpectralDF(sd->tf);
 		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->tf;
+	} else if (!strcasecmp(sdata, "Transmission Back")) {
+		if (sd->tb != NULL)
+			SDfreeSpectralDF(sd->tb);
+		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
+			return SDEmemory;
+		df = sd->tb;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
 		if (sd->rb != NULL)	/* note back-front reversal */
 			SDfreeSpectralDF(sd->rb);
@@ -927,11 +985,13 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 	if (sdt == NULL)
 		return SDEmemory;
 	if (df == sd->rf)
-		sdt->sidef = SD_UFRONT;
+		sdt->sidef = SD_FREFL;
 	else if (df == sd->rb)
-		sdt->sidef = SD_UBACK;
-	else
-		sdt->sidef = SD_XMIT;
+		sdt->sidef = SD_BREFL;
+	else if (df == sd->tf)
+		sdt->sidef = SD_FXMIT;
+	else /* df == sd->tb */
+		sdt->sidef = SD_BXMIT;
 	sdt->st = NULL;
 	df->comp[0].cspec[0] = c_dfcolor; /* XXX monochrome for now */
 	df->comp[0].dist = sdt;
@@ -1093,7 +1153,7 @@ SDloadTre(SDData *sd, ezxml_t wtl)
 					/* separate diffuse components */
 	extract_diffuse(&sd->rLambFront, sd->rf);
 	extract_diffuse(&sd->rLambBack, sd->rb);
-	extract_diffuse(&sd->tLamb, sd->tf);
+	extract_diffuse(&sd->tLamb, (sd->tf != NULL) ? sd->tf : sd->tb);
 					/* return success */
 	return SDEnone;
 }

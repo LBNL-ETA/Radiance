@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.21 2012/06/09 07:16:47 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.22 2012/09/02 15:33:15 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -380,7 +380,10 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 
 	if (sflags == SDsampSpT) {
 		unsc = ndp->tunsamp;
-		dfp = ndp->sd->tf;
+		if (ndp->pr->rod > 0)
+			dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
+		else
+			dfp = (ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf;
 		cvt_sdcolor(unsc, &ndp->sd->tLamb);
 	} else /* sflags == SDsampSpR */ {
 		unsc = ndp->runsamp;
@@ -470,7 +473,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	} else {
 		if (m->oargs.nfargs < 6) {	/* check invisible backside */
 			if (!backvis && (nd.sd->rb == NULL) &
-						(nd.sd->tf == NULL)) {
+					(nd.sd->tb == NULL)) {
 				SDfreeCache(nd.sd);
 				raytrans(r);
 				return(1);
@@ -567,7 +570,8 @@ m_bsdf(OBJREC *m, RAY *r)
 			flipsurface(r);
 	}
 						/* add direct component */
-	if ((bright(nd.tdiff) <= FTINY) & (nd.sd->tf == NULL)) {
+	if ((bright(nd.tdiff) <= FTINY) & (nd.sd->tf == NULL) &
+					(nd.sd->tb == NULL)) {
 		direct(r, dir_brdf, &nd);	/* reflection only */
 	} else if (nd.thick == 0) {
 		direct(r, dir_bsdf, &nd);	/* thin surface scattering */

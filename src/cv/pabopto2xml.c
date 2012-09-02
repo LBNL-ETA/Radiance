@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.6 2012/08/26 19:40:02 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.7 2012/09/02 15:33:15 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -38,8 +38,18 @@ typedef struct {
 	unsigned char	gx, gy;		/* grid position */
 } RBFVAL;			/* radial basis function value */
 
-typedef struct s_rbflist {
-	struct s_rbflist	*next;		/* next in our RBF list */
+struct s_rbfnode;		/* forward declaration of RBF struct */
+
+typedef struct s_migration {
+	struct s_migration	*next;		/* next in global edge list */
+	struct s_rbfnode	*rbfv[2];	/* from,to vertex */
+	struct s_migration	*enxt[2];	/* next from,to sibling */
+	float			mtx[1];		/* matrix (extends struct) */
+} MIGRATION;			/* migration link (winged edge structure) */
+
+typedef struct s_rbfnode {
+	struct s_rbfnode	*next;		/* next in global RBF list */
+	MIGRATION		*ejl;		/* edge list for this vertex */
 	FVECT			invec;		/* incident vector direction */
 	int			nrbf;		/* number of RBFs */
 	RBFVAL			rbfa[1];	/* RBF array (extends struct) */
@@ -50,7 +60,13 @@ static double	theta_in_deg, phi_in_deg;
 static GRIDVAL	dsf_grid[GRIDRES][GRIDRES];
 
 				/* processed incident DSF measurements */
-static RBFLIST	*dsf_list = NULL;
+static RBFLIST		*dsf_list = NULL;
+
+				/* edge (linking) matrices */
+static MIGRATION	*mig_list = NULL;
+
+#define mtxval(m,i,j)	(m)->mtx[(i)*(m)->rbfv[1]->nrbf+(j)]
+#define nextedge(rbf,m)	(m)->enxt[(rbf)==(m)->rbfv[1]]
 
 /* Compute outgoing vector from grid position */
 static void
@@ -123,6 +139,7 @@ make_rbfrep(void)
 		exit(1);
 	}
 	newnode->next = NULL;
+	newnode->ejl = NULL;
 	newnode->invec[2] = sin(M_PI/180.*theta_in_deg);
 	newnode->invec[0] = cos(M_PI/180.*phi_in_deg)*newnode->invec[2];
 	newnode->invec[1] = sin(M_PI/180.*phi_in_deg)*newnode->invec[2];

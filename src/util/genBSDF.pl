@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.37 2012/06/14 22:42:21 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.38 2012/09/02 15:33:16 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -203,11 +203,11 @@ do_tree_rtcontrib(1) if ( $doforw );
 
 }	# end of sub do_tree_bsdf()
 
-# Run rcontrib process in background to generate tensor tree samples
+# Run rcontrib process to generate tensor tree samples
 sub do_tree_rtcontrib {
 	my $forw = shift;
 	my $matargs = "-m $bmodnm";
-	if ( !$forw || !$doback ) { $matargs .= " -m $fmodnm"; }
+	if ( !$forw || !$doback || $tensortree==3 ) { $matargs .= " -m $fmodnm"; }
 	my $cmd = "rcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
 		"-e '$disk2sq' -bn '$ns*$ns' " .
 		"-b '$ns*floor(out_square_x*$ns)+floor(out_square_y*$ns)' " .
@@ -254,8 +254,8 @@ sub ttree_out {
 	my $forw = shift;
 	my $side = ("Back","Front")[$forw];
 	my $cmd;
-# Only output one transmitted distribution, preferring backwards
-if ( !$forw || !$doback ) {
+# Only output one transmitted anisotropic distribution, preferring backwards
+if ( !$forw || !$doback || $tensortree==3 ) {
 print
 '	<WavelengthData>
 		<LayerNumber>System</LayerNumber>
@@ -263,8 +263,10 @@ print
 		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
 		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
 		<WavelengthDataBlock>
-			<WavelengthDataDirection>Transmission</WavelengthDataDirection>
-			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
+';
+print "\t\t\t<WavelengthDataDirection>Transmission $side</WavelengthDataDirection>\n";
+print
+'			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
 			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';

@@ -1839,3 +1839,6 @@ Added Ashikhmin-Shirley anisotropic BRDF model (ashik2) with help
 from Nicolas Boneel.
 
 Added Ruby rewrite of objview.csh by Rob Guglielmetti.
+
+Fixed bug in reciprocity for tensor tree BTDF representations.  Thanks
+to Andy McNeil for identifying the problem.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.41 2012/06/23 16:47:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.42 2012/09/02 15:33:15 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -37,6 +37,9 @@ const char		*SDerrorEnglish[] = {
 
 /* Additional information on last error (ASCII English) */
 char			SDerrorDetail[256];
+
+/* Empty distribution for getCDist() calls that fail for some reason */
+const SDCDst		SDemptyCD;
 
 /* Cache of loaded BSDFs */
 struct SDCache_s	*SDcacheList = NULL;
@@ -213,6 +216,9 @@ SDloadFile(SDData *sd, const char *fname)
 	if (sd->tf != NULL && sd->tf->maxHemi <= .001) {
 		SDfreeSpectralDF(sd->tf); sd->tf = NULL;
 	}
+	if (sd->tb != NULL && sd->tb->maxHemi <= .001) {
+		SDfreeSpectralDF(sd->tb); sd->tb = NULL;
+	}
 				/* return success */
 	return SDEnone;
 }
@@ -347,6 +353,10 @@ SDfreeBSDF(SDData *sd)
 		SDfreeSpectralDF(sd->tf);
 		sd->tf = NULL;
 	}
+	if (sd->tb != NULL) {
+		SDfreeSpectralDF(sd->tb);
+		sd->tb = NULL;
+	}
 	sd->rLambFront.cieY = .0;
 	sd->rLambFront.spec.flags = 0;
 	sd->rLambBack.cieY = .0;
@@ -434,6 +444,7 @@ SDfreeCache(const SDData *sd)
 		SDfreeCumulativeCache(sd->rf);
 		SDfreeCumulativeCache(sd->rb);
 		SDfreeCumulativeCache(sd->tf);
+		SDfreeCumulativeCache(sd->tb);
 		return;
 	}
 					/* remove from list and free */
@@ -562,11 +573,13 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 	case 0:
 		return SDEargument;
 	}
-	if (v1[2] > 0)			/* front surface query? */
+	if (v1[2] > 0) {		/* front surface query? */
 		rdf = sd->rf;
-	else
+		tdf = (sd->tf != NULL) ? sd->tf : sd->tb;
+	} else {
 		rdf = sd->rb;
-	tdf = sd->tf;
+		tdf = (sd->tb != NULL) ? sd->tb : sd->tf;
+	}
 	if (v2 != NULL)			/* bidirectional? */
 		if (v1[2] > 0 ^ v2[2] > 0)
 			rdf = NULL;
@@ -614,9 +627,12 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 	} else if (!(inFront | outFront)) {
 		*sv = sd->rLambBack;
 		sdf = sd->rb;
-	} else /* inFront ^ outFront */ {
+	} else if (inFront) {
 		*sv = sd->tLamb;
-		sdf = sd->tf;
+		sdf = (sd->tf != NULL) ? sd->tf : sd->tb;
+	} else /* inBack */ {
+		*sv = sd->tLamb;
+		sdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
 	sv->cieY *= 1./M_PI;
 					/* add non-diffuse components */
@@ -640,7 +656,7 @@ double
 SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
 {
 	double		hsum;
-	SDSpectralDF	*rdf;
+	SDSpectralDF	*rdf, *tdf;
 	const SDCDst	*cd;
 	int		i;
 					/* check arguments */
@@ -650,26 +666,28 @@ SDdirectHemi(const FVECT inVec, int sflags, const SDData *sd)
 	if (inVec[2] > 0) {
 		hsum = sd->rLambFront.cieY;
 		rdf = sd->rf;
+		tdf = (sd->tf != NULL) ? sd->tf : sd->tb;
 	} else /* !inFront */ {
 		hsum = sd->rLambBack.cieY;
 		rdf = sd->rb;
+		tdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
 	if ((sflags & SDsampDf+SDsampR) != SDsampDf+SDsampR)
 		hsum = .0;
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
 		hsum += sd->tLamb.cieY;
 					/* gather non-diffuse components */
-	i = ((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR &&
-			rdf != NULL) ? rdf->ncomp : 0;
+	i = (((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR) &
+			(rdf != NULL)) ? rdf->ncomp : 0;
 	while (i-- > 0) {		/* non-diffuse reflection */
 		cd = (*rdf->comp[i].func->getCDist)(inVec, &rdf->comp[i]);
 		if (cd != NULL)
 			hsum += cd->cTotal;
 	}
-	i = ((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT &&
-			sd->tf != NULL) ? sd->tf->ncomp : 0;
+	i = (((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT) &
+			(tdf != NULL)) ? tdf->ncomp : 0;
 	while (i-- > 0) {		/* non-diffuse transmission */
-		cd = (*sd->tf->comp[i].func->getCDist)(inVec, &sd->tf->comp[i]);
+		cd = (*tdf->comp[i].func->getCDist)(inVec, &tdf->comp[i]);
 		if (cd != NULL)
 			hsum += cd->cTotal;
 	}
@@ -683,7 +701,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	SDError		ec;
 	FVECT		inVec;
 	int		inFront;
-	SDSpectralDF	*rdf;
+	SDSpectralDF	*rdf, *tdf;
 	double		rdiff;
 	float		coef[SDmaxCh];
 	int		i, j, n, nr;
@@ -700,9 +718,11 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	if (inFront) {
 		*sv = sd->rLambFront;
 		rdf = sd->rf;
+		tdf = (sd->tf != NULL) ? sd->tf : sd->tb;
 	} else /* !inFront */ {
 		*sv = sd->rLambBack;
 		rdf = sd->rb;
+		tdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
 	if ((sflags & SDsampDf+SDsampR) != SDsampDf+SDsampR)
 		sv->cieY = .0;
@@ -710,15 +730,15 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	if ((sflags & SDsampDf+SDsampT) == SDsampDf+SDsampT)
 		sv->cieY += sd->tLamb.cieY;
 					/* gather non-diffuse components */
-	i = nr = ((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR &&
-			rdf != NULL) ? rdf->ncomp : 0;
-	j = ((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT &&
-			sd->tf != NULL) ? sd->tf->ncomp : 0;
+	i = nr = (((sflags & SDsampSp+SDsampR) == SDsampSp+SDsampR) &
+			(rdf != NULL)) ? rdf->ncomp : 0;
+	j = (((sflags & SDsampSp+SDsampT) == SDsampSp+SDsampT) &
+			(tdf != NULL)) ? tdf->ncomp : 0;
 	n = i + j;
 	if (n > 0 && (cdarr = (const SDCDst **)malloc(n*sizeof(SDCDst *))) == NULL)
 		return SDEmemory;
 	while (j-- > 0) {		/* non-diffuse transmission */
-		cdarr[i+j] = (*sd->tf->comp[j].func->getCDist)(inVec, &sd->tf->comp[j]);
+		cdarr[i+j] = (*tdf->comp[j].func->getCDist)(inVec, &tdf->comp[j]);
 		if (cdarr[i+j] == NULL) {
 			free(cdarr);
 			return SDEmemory;
@@ -761,7 +781,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	if (i >= n)
 		return SDEinternal;
 					/* compute sample direction */
-	sdc = (i < nr) ? &rdf->comp[i] : &sd->tf->comp[i-nr];
+	sdc = (i < nr) ? &rdf->comp[i] : &tdf->comp[i-nr];
 	ec = (*sdc->func->sampCDist)(ioVec, randX/cdarr[i]->cTotal, cdarr[i]);
 	if (ec)
 		return ec;
