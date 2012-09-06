@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.21 2010/09/26 15:47:33 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.22 2012/09/06 00:07:43 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -646,12 +646,11 @@ moveview(	/* move our view */
 		VSUM(nv.vp, wp, odir, -1.);
 		spinvector(nv.vdir, nv.vdir, nv.vup, d);
 	} else if (orb) {		/* orbit up/down */
-		fcross(v1, odir, nv.vup);
-		if (normalize(v1) == 0.)
+		if (geodesic(odir, odir, nv.vup,
+				d=MOVDEG*PI/180.*orb, GEOD_RAD) == 0.0)
 			return(0);
-		spinvector(odir, odir, v1, d=MOVDEG*PI/180.*orb);
 		VSUM(nv.vp, wp, odir, -1.);
-		spinvector(nv.vdir, nv.vdir, v1, d);
+		geodesic(nv.vdir, nv.vdir, nv.vup, d, GEOD_RAD);
 	} else if (mov) {		/* move forward/backward */
 		d = MOVPCT/100. * mov;
 		VSUM(nv.vp, nv.vp, odir, d);

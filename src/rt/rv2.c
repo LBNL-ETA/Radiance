@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.62 2011/10/05 17:20:55 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.63 2012/09/06 00:07:43 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -337,7 +337,6 @@ getrotate(				/* rotate camera */
 )
 {
 	VIEW  nv = ourview;
-	FVECT  v1;
 	double  angle, elev, zfact;
 	
 	elev = 0.0; zfact = 1.0;
@@ -346,11 +345,9 @@ getrotate(				/* rotate camera */
 		return;
 	}
 	spinvector(nv.vdir, ourview.vdir, ourview.vup, angle*(PI/180.));
-	if (elev != 0.0) {
-		fcross(v1, nv.vdir, ourview.vup);
-		normalize(v1);
-		spinvector(nv.vdir, nv.vdir, v1, elev*(PI/180.));
-	}
+	if (elev != 0.0)
+		geodesic(nv.vdir, nv.vdir, nv.vup, elev*(PI/180.), GEOD_RAD);
+	
 	zoomview(&nv, zfact);
 	newview(&nv);
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.14 2011/04/19 21:31:22 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.15 2012/09/06 00:07:43 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -119,7 +119,7 @@ FVECT  v
 	if (d == 0.0)
 		return(0.0);
 	
-	if (d <= 1.0+FTINY && d >= 1.0-FTINY) {
+	if ((d <= 1.0+FTINY) & (d >= 1.0-FTINY)) {
 		len = 0.5 + 0.5*d;	/* first order approximation */
 		d = 2.0 - len;
 	} else {
@@ -162,7 +162,7 @@ const FVECT rdir1		/* second direction (normalized) */
 
 void
 spinvector(				/* rotate vector around normal */
-FVECT vres,		/* returned vector */
+FVECT vres,		/* returned vector (same magnitude as vorig) */
 const FVECT vorig,		/* original vector */
 const FVECT vnorm,		/* normalized vector for rotation */
 double theta		/* right-hand radians */
@@ -183,4 +183,49 @@ double theta		/* right-hand radians */
 	fcross(vperp, vnorm, vorig);
 	for (i = 0; i < 3; i++)
 		vres[i] = vorig[i]*cost + vnorm[i]*normprod + vperp[i]*sint;
+}
+
+double
+geodesic(		/* rotate vector on great circle towards target */
+FVECT vres,		/* returned vector (same magnitude as vorig) */
+const FVECT vorig,	/* original vector */
+const FVECT vtarg,	/* vector we are rotating towards */
+double t,		/* amount along arc directed towards vtarg */
+int meas		/* distance measure (radians, absolute, relative) */
+)
+{
+	FVECT	normtarg;
+	double	volen, dotprod, sint, cost;
+	int	i;
+
+	if (vres != vorig)
+		VCOPY(vres, vorig);
+	if (t == 0.0)
+		return(VLEN(vres));	/* no rotation requested */
+	if ((volen = normalize(vres)) == 0.0)
+		return(0.0);
+	VCOPY(normtarg, vtarg);
+	if (normalize(normtarg) == 0.0)
+		return(0.0);		/* target vector is zero */
+	dotprod = DOT(vres, normtarg);
+					/* check for colinear */
+	if (dotprod >= 1.0-FTINY*FTINY) {
+		if (meas != GEOD_REL)
+			return(0.0);
+		vres[0] *= volen; vres[1] *= volen; vres[2] *= volen;
+		return(volen);
+	}
+	if (dotprod <= -1.0+FTINY*FTINY)
+		return(0.0);
+	if (meas == GEOD_ABS)
+		t /= volen;
+	else if (meas == GEOD_REL)
+		t *= acos(dotprod);
+	cost = cos(t);
+	sint = sin(t);
+	for (i = 0; i < 3; i++)
+		vres[i] = volen*( cost*vres[i] +
+				  sint*(normtarg[i] - dotprod*vres[i]) );
+
+	return(volen);			/* return vector length */
 }

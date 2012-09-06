@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.43 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.44 2012/09/06 00:07:43 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -612,12 +612,11 @@ moveview(	/* move our view */
 		VSUM(nv.vp, qtL.wp[li], odir, -1.);
 		spinvector(nv.vdir, nv.vdir, nv.vup, d);
 	} else if (orb) {		/* orbit up/down */
-		fcross(v1, odir, nv.vup);
-		if (normalize(v1) == 0.)
+		if (geodesic(odir, odir, nv.vup,
+				d=MOVDEG*PI/180.*orb, GEOD_RAD) == 0.0)
 			return(0);
-		spinvector(odir, odir, v1, d=MOVDEG*PI/180.*orb);
 		VSUM(nv.vp, qtL.wp[li], odir, -1.);
-		spinvector(nv.vdir, nv.vdir, v1, d);
+		geodesic(nv.vdir, nv.vdir, nv.vup, d, GEOD_RAD);
 	} else if (mov) {		/* move forward/backward */
 		d = MOVPCT/100. * mov;
 		VSUM(nv.vp, nv.vp, odir, d);

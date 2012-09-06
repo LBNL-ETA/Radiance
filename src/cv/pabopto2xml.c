@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.8 2012/09/05 00:39:32 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.9 2012/09/06 00:07:43 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -487,7 +487,7 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 {
 	static double	*src_cost = NULL;
 	int		n_alloc = 0;
-	const double	maxamt = 0.5/(mtx_nrows(mig)*mtx_ncols(mig));
+	const double	maxamt = 2./(mtx_nrows(mig)*mtx_ncols(mig));
 	double		amt = 0;
 	struct {
 		int	s, d;	/* source and destination */

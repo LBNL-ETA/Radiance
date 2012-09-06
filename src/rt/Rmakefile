@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.69 2012/07/29 19:01:39 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.70 2012/09/06 00:07:43 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -185,18 +185,18 @@ rtrace.o rvmain.o rv2.o rv3.o:	../common/octree.h
 
 o_instance.o:	../common/instance.h
 
-ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o initotypes.o \
-m_brdf.o m_direct.o m_mirror.o normal.o o_cone.o preload.o \
+ambient.o aniso.o ashikhmin.o dielectric.o freeobjmem.o func.o glass.o \
+initotypes.o m_brdf.o m_direct.o m_mirror.o normal.o o_cone.o preload.o \
 raycalls.o raytrace.o rtrace.o rv2.o source.o sphere.o srcsupp.o text.o \
 srcdraw.o srcobstr.o virtuals.o:	../common/otypes.h
 
-ambient.o ambcomp.o aniso.o normal.o raycalls.o raytrace.o rpict.o \
-rvmain.o rtmain.o rpmain.o rcmain.o persist.o source.o rv3.o \
+ambient.o ambcomp.o aniso.o ashikhmin.o normal.o raycalls.o raytrace.o \
+rpict.o rvmain.o rtmain.o rpmain.o rcmain.o persist.o source.o rv3.o \
 srcsamp.o virtuals.o:	../common/random.h
 
-ambcomp.o ambient.o aniso.o dielectric.o freeobjmem.o func.o glass.o m_bsdf.o \
-m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o o_mesh.o \
-mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
+ambcomp.o ambient.o aniso.o ashikhmin.o dielectric.o freeobjmem.o func.o \
+glass.o m_bsdf.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o mx_data.o \
+o_mesh.o mx_func.o normal.o o_cone.o o_face.o o_instance.o p_data.o p_func.o \
 raycalls.o raypcalls.o rayfifo.o raytrace.o rpict.o rtrace.o rv2.o rv3.o rview.o \
 source.o sphere.o srcdraw.o srcobstr.o srcsamp.o srcsupp.o t_data.o t_func.o \
 text.o rpmain.o rtmain.o rvmain.o virtuals.o m_alias.o rcmain.o \
@@ -250,7 +250,7 @@ o_mesh.o:	../common/mesh.h
 
 noise3.o:	../common/calcomp.h
 
-aniso.o dielectric.o freeobjmem.o glass.o initotypes.o \
+aniso.o ashikhmin.o dielectric.o freeobjmem.o glass.o initotypes.o \
 m_alias.o m_brdf.o m_clip.o m_direct.o m_mirror.o m_mist.o \
 mx_data.o mx_func.o normal.o o_cone.o o_face.o o_instance.o \
 o_mesh.o p_data.o p_func.o source.o sphere.o t_data.o t_func.o \

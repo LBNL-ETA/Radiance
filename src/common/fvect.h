@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.13 2011/02/18 00:40:25 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.14 2012/09/06 00:07:43 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -36,6 +36,9 @@ typedef RREAL  FVECT[3];
 			(vr)[1]=(v1)[2]*(v2)[0]-(v1)[0]*(v2)[2], \
 			(vr)[2]=(v1)[0]*(v2)[1]-(v1)[1]*(v2)[0])
 
+#define	GEOD_RAD	0	/* geodesic distance specified in radians */
+#define	GEOD_ABS	1	/* absolute geodesic distance */
+#define	GEOD_REL	2	/* relative geodesic distance */
 
 extern double	fdot(const FVECT v1, const FVECT v2);
 extern double	dist2(const FVECT v1, const FVECT v2);
@@ -49,8 +52,8 @@ extern int	closestapproach(RREAL t[2],
 			const FVECT rorg1, const FVECT rdir1);
 extern void	spinvector(FVECT vres, const FVECT vorig,
 			const FVECT vnorm, double theta);
-
-
+extern double	geodesic(FVECT vres, const FVECT vorig,
+			const FVECT vtarg, double t, int meas);
 #ifdef __cplusplus
 }
 #endif
