@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.18 2005/09/23 19:04:52 greg Exp $ */
+/* RCSid $Id: object.h,v 2.19 2012/09/07 21:45:22 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -32,7 +32,7 @@ typedef struct {
 #endif
 }  FUNARGS;
 
-#define  MAXSTR		128		/* maximum string length */
+#define  MAXSTR		512		/* maximum string (word) length */
 
 /*
  *	An object is defined as an index into an array of
