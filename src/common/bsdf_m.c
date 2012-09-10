@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.23 2012/09/02 15:33:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.24 2012/09/10 18:06:08 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -409,25 +409,25 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 */
 	if (!strcasecmp(sdata, "Transmission Front")) {
-		if (sd->tf != NULL)
-			SDfreeSpectralDF(sd->tf);
-		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
-			return RC_MEMERR;
-		df = sd->tf;
-	} else if (!strcasecmp(sdata, "Transmission Back")) {
 		if (sd->tb != NULL)
 			SDfreeSpectralDF(sd->tb);
 		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;
 		df = sd->tb;
+	} else if (!strcasecmp(sdata, "Transmission Back")) {
+		if (sd->tf != NULL)
+			SDfreeSpectralDF(sd->tf);
+		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
+			return RC_MEMERR;
+		df = sd->tf;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
-		if (sd->rb != NULL)	/* note back-front reversal */
+		if (sd->rb != NULL)
 			SDfreeSpectralDF(sd->rb);
 		if ((sd->rb = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;
 		df = sd->rb;
 	} else if (!strcasecmp(sdata, "Reflection Back")) {
-		if (sd->rf != NULL)	/* note front-back reversal */
+		if (sd->rf != NULL)
 			SDfreeSpectralDF(sd->rf);
 		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
 			return RC_MEMERR;

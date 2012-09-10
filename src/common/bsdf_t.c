@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.24 2012/09/02 15:33:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.25 2012/09/10 18:06:08 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -499,9 +499,16 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 {
 	SDdistScaffold	*sp = (SDdistScaffold *)cptr;
 	int		wid = csiz*(double)iwmax + .5;
+	double		revcmin[2];
 	bitmask_t	bmin[2], bmax[2];
 
-	cmin += sp->nic * !sp->rev;	/* skip to output coords */
+	if (sp->rev) {			/* need to reverse sense? */
+		revcmin[0] = 1. - cmin[0] - csiz;
+		revcmin[1] = 1. - cmin[1] - csiz;
+		cmin = revcmin;
+	} else {
+		cmin += sp->nic;	/* else skip to output coords */
+	}
 	if (wid < sp->wmin)		/* new minimum width? */
 		sp->wmin = wid;
 	if (wid > sp->wmax)		/* new maximum? */
@@ -667,7 +674,10 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 			return &SDemptyCD;
 		inCoord[0] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 	} else if (sdt->st->ndim == 4) {
-		SDdisk2square(inCoord, -inVec[0], -inVec[1]);
+		if (mode != sdt->sidef)	/* use reciprocity? */
+			SDdisk2square(inCoord, inVec[0], inVec[1]);
+		else
+			SDdisk2square(inCoord, -inVec[0], -inVec[1]);
 	} else
 		return NULL;		/* should be internal error */
 					/* quantize to avoid f.p. errors */
@@ -947,25 +957,25 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 */
 	if (!strcasecmp(sdata, "Transmission Front")) {
-		if (sd->tf != NULL)
-			SDfreeSpectralDF(sd->tf);
-		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
-			return SDEmemory;
-		df = sd->tf;
-	} else if (!strcasecmp(sdata, "Transmission Back")) {
 		if (sd->tb != NULL)
 			SDfreeSpectralDF(sd->tb);
 		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->tb;
+	} else if (!strcasecmp(sdata, "Transmission Back")) {
+		if (sd->tf != NULL)
+			SDfreeSpectralDF(sd->tf);
+		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
+			return SDEmemory;
+		df = sd->tf;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
-		if (sd->rb != NULL)	/* note back-front reversal */
+		if (sd->rb != NULL)
 			SDfreeSpectralDF(sd->rb);
 		if ((sd->rb = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->rb;
 	} else if (!strcasecmp(sdata, "Reflection Back")) {
-		if (sd->rf != NULL)	/* note front-back reversal */
+		if (sd->rf != NULL)
 			SDfreeSpectralDF(sd->rf);
 		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
