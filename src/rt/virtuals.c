@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.19 2011/08/16 18:09:53 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.20 2012/09/14 13:34:02 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -21,16 +21,31 @@ static const char	RCSid[] = "$Id: virtuals.c,v 2.19 2011/08/16 18:09:53 greg Exp
 #define  MINSAMPLES	16		/* minimum number of pretest samples */
 #define  STESTMAX	32		/* maximum seeks per sample */
 
+#define FEQ(a,b)	((a)-(b)+FTINY >= 0 && (b)-(a)+FTINY >= 0)
+
 
 static OBJECT  *vobject;		/* virtual source objects */
 static int  nvobjects = 0;		/* number of virtual source objects */
 
 
-extern void
+static int
+isident4(MAT4 m)
+{
+	int	i, j;
+
+	for (i = 4; i--; )
+		for (j = 4; j--; )
+			if (!FEQ(m[i][j], i==j))
+				return(0);
+	return(1);
+}
+
+
+void
 markvirtuals(void)			/* find and mark virtual sources */
 {
-	register OBJREC  *o;
-	register int  i;
+	OBJREC  *o;
+	int  i;
 					/* check number of direct relays */
 	if (directrelay <= 0)
 		return;
@@ -69,13 +84,13 @@ markvirtuals(void)			/* find and mark virtual sources */
 }
 
 
-extern void
+void
 addvirtuals(		/* add virtuals associated with source */
 	int  sn,
 	int  nr
 )
 {
-	register int  i;
+	int  i;
 				/* check relay limit first */
 	if (nr <= 0)
 		return;
@@ -88,15 +103,15 @@ addvirtuals(		/* add virtuals associated with source */
 }
 
 
-extern void
+void
 vproject(		/* create projected source(s) if they exist */
 	OBJREC  *o,
 	int  sn,
 	int  n
 )
 {
-	register int  i;
-	register VSMATERIAL  *vsmat;
+	int  i;
+	VSMATERIAL  *vsmat;
 	MAT4  proj;
 	int  ns;
 
@@ -117,13 +132,13 @@ vproject(		/* create projected source(s) if they exist */
 }
 
 
-extern OBJREC *
+OBJREC *
 vsmaterial(			/* get virtual source material pointer */
 	OBJREC  *o
 )
 {
-	register int  i;
-	register OBJREC  *m;
+	int  i;
+	OBJREC  *m;
 
 	i = o->omod;
 	m = findmaterial(objptr(i));
@@ -137,10 +152,10 @@ vsmaterial(			/* get virtual source material pointer */
 }
 
 
-extern int
+int
 makevsrc(		/* make virtual source if reasonable */
 	OBJREC  *op,
-	register int  sn,
+	int  sn,
 	MAT4  pm
 )
 {
@@ -148,8 +163,10 @@ makevsrc(		/* make virtual source if reasonable */
 	double  maxrad2, d;
 	int  nsflags;
 	SPOT  theirspot, ourspot;
-	register int  i;
-
+	int  i;
+					/* check for no-op */
+	if (isident4(pm))
+		return(0);
 	nsflags = source[sn].sflags | (SVIRTUAL|SSPOT|SFOLLOW);
 					/* get object center and max. radius */
 	maxrad2 = getdisk(ocent, op, sn);
@@ -263,11 +280,11 @@ memerr:
 }
 
 
-extern double
+double
 getdisk(		/* get visible object disk */
 	FVECT  oc,
 	OBJREC  *op,
-	register int  sn
+	int  sn
 )
 {
 	double  rad2, roffs, offs, d, rd, rdoto;
@@ -296,13 +313,13 @@ getdisk(		/* get visible object disk */
 }
 
 
-extern int
+int
 vstestvis(		/* pretest source visibility */
 	int  f,			/* virtual source flags */
 	OBJREC  *o,		/* relay object */
 	FVECT  oc,		/* relay object center */
 	double  or2,		/* relay object radius squared */
-	register int  sn	/* target source number */
+	int  sn	/* target source number */
 )
 {
 	RAY  sr;
@@ -312,7 +329,7 @@ vstestvis(		/* pretest source visibility */
 	double  or, d, d1;
 	int  stestlim, ssn;
 	int  nhit, nok;
-	register int  i, n;
+	int  i, n;
 				/* return if pretesting disabled */
 	if (vspretest <= 0)
 		return(f);
@@ -410,9 +427,9 @@ vstestvis(		/* pretest source visibility */
 	
 
 #ifdef DEBUG
-extern void
+void
 virtverb(	/* print verbose description of virtual source */
-	register int  sn,
+	int  sn,
 	FILE  *fp
 )
 {
