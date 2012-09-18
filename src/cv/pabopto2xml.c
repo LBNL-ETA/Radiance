@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.9 2012/09/06 00:07:43 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.10 2012/09/18 02:50:13 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -16,8 +16,10 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.9 2012/09/06 00:07:43 greg E
 #include <math.h>
 #include "bsdf.h"
 
+#define DEBUG		1
+
 #ifndef GRIDRES
-#define GRIDRES		200		/* max. grid resolution per side */
+#define GRIDRES		200		/* grid resolution per side */
 #endif
 
 #define RSCA		2.7		/* radius scaling factor (empirical) */
@@ -54,17 +56,27 @@ typedef struct s_rbfnode {
 	double			vtotal;		/* volume for normalization */
 	int			nrbf;		/* number of RBFs */
 	RBFVAL			rbfa[1];	/* RBF array (extends struct) */
-} RBFLIST;			/* RBF representation of DSF @ 1 incidence */
+} RBFNODE;			/* RBF representation of DSF @ 1 incidence */
 
 				/* our loaded grid for this incident angle */
-static double	theta_in_deg, phi_in_deg;
-static GRIDVAL	dsf_grid[GRIDRES][GRIDRES];
+static double		theta_in_deg, phi_in_deg;
+static GRIDVAL		dsf_grid[GRIDRES][GRIDRES];
+
+				/* all incident angles in-plane so far? */
+static int		single_plane_incident = -1;
+
+				/* input/output orientations */
+static int		input_orient = 0;
+static int		output_orient = 0;
 
 				/* processed incident DSF measurements */
-static RBFLIST		*dsf_list = NULL;
+static RBFNODE		*dsf_list = NULL;
 
 				/* RBF-linking matrices (edges) */
 static MIGRATION	*mig_list = NULL;
+
+				/* migration edges drawn in raster fashion */
+static MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 
 #define mtx_nrows(m)	((m)->rbfv[0]->nrbf)
 #define mtx_ncols(m)	((m)->rbfv[1]->nrbf)
@@ -72,6 +84,9 @@ static MIGRATION	*mig_list = NULL;
 #define is_src(rbf,m)	((rbf) == (m)->rbfv[0])
 #define is_dest(rbf,m)	((rbf) == (m)->rbfv[1])
 #define nextedge(rbf,m)	(m)->enxt[is_dest(rbf,m)]
+#define opp_rbf(rbf,m)	(m)->rbfv[is_src(rbf,m)]
+
+#define	round(v)	(int)((v) + .5 - ((v) < -.5))
 
 /* Compute volume associated with Gaussian lobe */
 static double
@@ -84,7 +99,7 @@ rbf_volume(const RBFVAL *rbfp)
 
 /* Compute outgoing vector from grid position */
 static void
-vec_from_pos(FVECT vec, int xpos, int ypos)
+ovec_from_pos(FVECT vec, int xpos, int ypos)
 {
 	double	uv[2];
 	double	r2;
@@ -95,15 +110,15 @@ vec_from_pos(FVECT vec, int xpos, int ypos)
 	vec[0] = vec[1] = sqrt(2. - r2);
 	vec[0] *= uv[0];
 	vec[1] *= uv[1];
-	vec[2] = 1. - r2;
+	vec[2] = output_orient*(1. - r2);
 }
 
-/* Compute grid position from normalized outgoing vector */
+/* Compute grid position from normalized input/output vector */
 static void
 pos_from_vec(int pos[2], const FVECT vec)
 {
 	double	sq[2];		/* uniform hemispherical projection */
-	double	norm = 1./sqrt(1. + vec[2]);
+	double	norm = 1./sqrt(1. + fabs(vec[2]));
 
 	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
 
@@ -113,7 +128,7 @@ pos_from_vec(int pos[2], const FVECT vec)
 
 /* Evaluate RBF for DSF at the given normalized outgoing direction */
 static double
-eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
+eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 {
 	double		res = .0;
 	const RBFVAL	*rbfp;
@@ -123,7 +138,7 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
-		vec_from_pos(odir, rbfp->gx, rbfp->gy);
+		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
 		sig2 = R2ANG(rbfp->crad);
 		sig2 = (DOT(odir,outvec) - 1.) / (sig2*sig2);
 		if (sig2 > -19.)
@@ -132,14 +147,35 @@ eval_rbfrep(const RBFLIST *rp, const FVECT outvec)
 	return(res);
 }
 
+/* Insert a new directional scattering function in our global list */
+static void
+insert_dsf(RBFNODE *newrbf)
+{
+	RBFNODE		*rbf, *rbf_last;
+
+					/* keep in ascending theta order */
+	for (rbf_last = NULL, rbf = dsf_list;
+			single_plane_incident & (rbf != NULL);
+					rbf_last = rbf, rbf = rbf->next)
+		if (input_orient*rbf->invec[2] < input_orient*newrbf->invec[2])
+			break;
+	if (rbf_last == NULL) {
+		newrbf->next = dsf_list;
+		dsf_list = newrbf;
+		return;
+	}
+	newrbf->next = rbf;
+	rbf_last->next = newrbf;
+}
+
 /* Count up filled nodes and build RBF representation from current grid */ 
-static RBFLIST *
+static RBFNODE *
 make_rbfrep(void)
 {
 	int	niter = 16;
 	double	lastVar, thisVar = 100.;
 	int	nn;
-	RBFLIST	*newnode;
+	RBFNODE	*newnode;
 	int	i, j;
 	
 	nn = 0;			/* count selected bins */
@@ -147,7 +183,7 @@ make_rbfrep(void)
 	    for (j = 0; j < GRIDRES; j++)
 		nn += dsf_grid[i][j].nval;
 				/* allocate RBF array */
-	newnode = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(nn-1));
+	newnode = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL) {
 		fputs("Out of memory in make_rbfrep()\n", stderr);
 		exit(1);
@@ -157,7 +193,7 @@ make_rbfrep(void)
 	newnode->invec[2] = sin(M_PI/180.*theta_in_deg);
 	newnode->invec[0] = cos(M_PI/180.*phi_in_deg)*newnode->invec[2];
 	newnode->invec[1] = sin(M_PI/180.*phi_in_deg)*newnode->invec[2];
-	newnode->invec[2] = sqrt(1. - newnode->invec[2]*newnode->invec[2]);
+	newnode->invec[2] = input_orient*sqrt(1. - newnode->invec[2]*newnode->invec[2]);
 	newnode->vtotal = 0;
 	newnode->nrbf = nn;
 	nn = 0;			/* fill RBF array */
@@ -179,7 +215,7 @@ make_rbfrep(void)
 			if (dsf_grid[i][j].nval) {
 				FVECT	odir;
 				double	corr;
-				vec_from_pos(odir, i, j);
+				ovec_from_pos(odir, i, j);
 				newnode->rbfa[nn++].peak *= corr =
 					dsf_grid[i][j].vsum /
 						eval_rbfrep(newnode, odir);
@@ -188,28 +224,28 @@ make_rbfrep(void)
 			}
 		lastVar = thisVar;
 		thisVar = dsum2/(double)nn;
-		/*
+#ifdef DEBUG
 		fprintf(stderr, "Avg., RMS error: %.1f%%  %.1f%%\n",
 					100.*dsum/(double)nn,
 					100.*sqrt(thisVar));
-		*/
+#endif
 	} while (--niter > 0 && lastVar-thisVar > 0.02*lastVar);
 
 	nn = 0;			/* compute sum for normalization */
 	while (nn < newnode->nrbf)
 		newnode->vtotal += rbf_volume(&newnode->rbfa[nn++]);
 
-	newnode->next = dsf_list;
-	return(dsf_list = newnode);
+	insert_dsf(newnode);
+	return(newnode);
 }
 
 /* Load a set of measurements corresponding to a particular incident angle */
 static int
-load_bsdf_meas(const char *fname)
+load_pabopto_meas(const char *fname)
 {
 	FILE	*fp = fopen(fname, "r");
 	int	inp_is_DSF = -1;
-	double	theta_out, phi_out, val;
+	double	new_phi, theta_out, phi_out, val;
 	char	buf[2048];
 	int	n, c;
 	
@@ -219,6 +255,9 @@ load_bsdf_meas(const char *fname)
 		return(0);
 	}
 	memset(dsf_grid, 0, sizeof(dsf_grid));
+#ifdef DEBUG
+	fprintf(stderr, "Loading measurement file '%s'...\n", fname);
+#endif
 				/* read header information */
 	while ((c = getc(fp)) == '#' || c == EOF) {
 		if (fgets(buf, sizeof(buf), fp) == NULL) {
@@ -237,10 +276,10 @@ load_bsdf_meas(const char *fname)
 		}
 		if (sscanf(buf, "intheta %lf", &theta_in_deg) == 1)
 			continue;
-		if (sscanf(buf, "inphi %lf", &phi_in_deg) == 1)
+		if (sscanf(buf, "inphi %lf", &new_phi) == 1)
 			continue;
 		if (sscanf(buf, "incident_angle %lf %lf",
-				&theta_in_deg, &phi_in_deg) == 2)
+				&theta_in_deg, &new_phi) == 2)
 			continue;
 	}
 	if (inp_is_DSF < 0) {
@@ -249,11 +288,30 @@ load_bsdf_meas(const char *fname)
 		fclose(fp);
 		return(0);
 	}
-	ungetc(c, fp);		/* read actual data */
+	if (!input_orient)		/* check input orientation */
+		input_orient = 1 - 2*(theta_in_deg > 90.);
+	else if (input_orient > 0 ^ theta_in_deg < 90.) {
+		fputs("Cannot handle input angles on both sides of surface\n",
+				stderr);
+		exit(1);
+	}
+	if (single_plane_incident > 0)	/* check if still in plane */
+		single_plane_incident = (round(new_phi) == round(phi_in_deg));
+	else if (single_plane_incident < 0)
+		single_plane_incident = 1;
+	phi_in_deg = new_phi;
+	ungetc(c, fp);			/* read actual data */
 	while (fscanf(fp, "%lf %lf %lf\n", &theta_out, &phi_out, &val) == 3) {
 		FVECT	ovec;
 		int	pos[2];
 
+		if (!output_orient)	/* check output orientation */
+			output_orient = 1 - 2*(theta_out > 90.);
+		else if (output_orient > 0 ^ theta_out < 90.) {
+			fputs("Cannot handle output angles on both sides of surface\n",
+					stderr);
+			exit(1);
+		}
 		ovec[2] = sin(M_PI/180.*theta_out);
 		ovec[0] = cos(M_PI/180.*phi_out) * ovec[2];
 		ovec[1] = sin(M_PI/180.*phi_out) * ovec[2];
@@ -295,7 +353,7 @@ compute_radii(void)
 		j = (i&1) ? jn : GRIDRES-1-jn;
 		if (dsf_grid[i][j].nval)	/* find empty grid pos. */
 			continue;
-		vec_from_pos(ovec0, i, j);
+		ovec_from_pos(ovec0, i, j);
 		inear = jnear = -1;		/* find nearest non-empty */
 		lastang2 = M_PI*M_PI;
 		for (ii = i-r; ii <= i+r; ii++) {
@@ -306,7 +364,7 @@ compute_radii(void)
 			if (jj >= GRIDRES) break;
 			if (!dsf_grid[ii][jj].nval)
 				continue;
-			vec_from_pos(ovec1, ii, jj);
+			ovec_from_pos(ovec1, ii, jj);
 			ang2 = 2. - 2.*DOT(ovec0,ovec1);
 			if (ang2 >= lastang2)
 				continue;
@@ -323,7 +381,7 @@ compute_radii(void)
 		if (r > dsf_grid[inear][jnear].crad)
 			dsf_grid[inear][jnear].crad = r;
 						/* next search radius */
-		r = ang2*(2.*GRIDRES/M_PI) + 1;
+		r = ang2*(2.*GRIDRES/M_PI) + 3;
 	    }
 						/* blur radii over hemisphere */
 	memset(fill_grid, 0, sizeof(fill_grid));
@@ -367,7 +425,7 @@ cull_values(void)
 			continue;
 		if (!dsf_grid[i][j].crad)
 			continue;		/* shouldn't happen */
-		vec_from_pos(ovec0, i, j);
+		ovec_from_pos(ovec0, i, j);
 		maxang = 2.*R2ANG(dsf_grid[i][j].crad);
 		if (maxang > ovec0[2])		/* clamp near horizon */
 			maxang = ovec0[2];
@@ -383,7 +441,7 @@ cull_values(void)
 				continue;
 			if ((ii == i) & (jj == j))
 				continue;	/* don't get self-absorbed */
-			vec_from_pos(ovec1, ii, jj);
+			ovec_from_pos(ovec1, ii, jj);
 			if (2. - 2.*DOT(ovec0,ovec1) >= maxang2)
 				continue;
 						/* absorb sum */
@@ -406,7 +464,7 @@ cull_values(void)
 
 /* Compute (and allocate) migration price matrix for optimization */
 static float *
-price_routes(const RBFLIST *from_rbf, const RBFLIST *to_rbf)
+price_routes(const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 {
 	float	*pmtx = (float *)malloc(sizeof(float) *
 					from_rbf->nrbf * to_rbf->nrbf);
@@ -418,12 +476,12 @@ price_routes(const RBFLIST *from_rbf, const RBFLIST *to_rbf)
 		exit(1);
 	}
 	for (j = to_rbf->nrbf; j--; )		/* save repetitive ops. */
-		vec_from_pos(vto[j], to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy);
+		ovec_from_pos(vto[j], to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy);
 
 	for (i = from_rbf->nrbf; i--; ) {
 	    const double	from_ang = R2ANG(from_rbf->rbfa[i].crad);
 	    FVECT		vfrom;
-	    vec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
+	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
 	    for (j = to_rbf->nrbf; j--; )
 		pmtx[i*to_rbf->nrbf + j] = acos(DOT(vfrom, vto[j])) +
 				fabs(R2ANG(to_rbf->rbfa[j].crad) - from_ang);
@@ -477,7 +535,6 @@ min_cost(double amt2move, const double *avail, const float *price, int n)
 		total_cost += amt * price[d];
 		amt2move -= amt;
 	}
-if (amt2move > 1e-5) fprintf(stderr, "%g leftover!\n", amt2move);
 	return(total_cost);
 }
 
@@ -551,7 +608,7 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 
 /* Compute (and insert) migration along directed edge */
 static MIGRATION *
-make_migration(RBFLIST *from_rbf, RBFLIST *to_rbf)
+make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
 	const double	end_thresh = 0.02/(from_rbf->nrbf*to_rbf->nrbf);
 	float		*pmtx = price_routes(from_rbf, to_rbf);
@@ -567,6 +624,18 @@ make_migration(RBFLIST *from_rbf, RBFLIST *to_rbf)
 		fputs("Out of memory in make_migration()\n", stderr);
 		exit(1);
 	}
+#ifdef DEBUG
+	{
+		double	theta, phi;
+		theta = acos(from_rbf->invec[2])*(180./M_PI);
+		phi = atan2(from_rbf->invec[1],from_rbf->invec[0])*(180./M_PI);
+		fprintf(stderr, "Building path from (theta,phi) (%d,%d) to ",
+				round(theta), round(phi));
+		theta = acos(to_rbf->invec[2])*(180./M_PI);
+		phi = atan2(to_rbf->invec[1],to_rbf->invec[0])*(180./M_PI);
+		fprintf(stderr, "(%d,%d)\n", round(theta), round(phi));
+	}
+#endif
 	newmig->next = NULL;
 	newmig->rbfv[0] = from_rbf;
 	newmig->rbfv[1] = to_rbf;
@@ -601,20 +670,354 @@ make_migration(RBFLIST *from_rbf, RBFLIST *to_rbf)
 	return(mig_list = newmig);
 }
 
-#if 0
-/* Partially advect between the given RBFs to a newly allocated one */
-static RBFLIST *
-advect_rbf(const RBFLIST *from_rbf, const RBFLIST *to_rbf,
-			const float *mtx, const FVECT invec)
+/* Get triangle surface orientation (unnormalized) */
+static void
+tri_orient(FVECT vres, const FVECT v1, const FVECT v2, const FVECT v3)
 {
-	RBFLIST		*rbf;
+	FVECT	v2minus1, v3minus2;
 
-	if (from_rbf->nrbf > to_rbf->nrbf) {
-		fputs("Internal error: source RBF won't fit destination\n",
-				stderr);
+	VSUB(v2minus1, v2, v1);
+	VSUB(v3minus2, v3, v2);
+	VCROSS(vres, v2minus1, v3minus2);
+}
+
+/* Determine if vertex order is reversed (inward normal) */
+static int
+is_rev_tri(const FVECT v1, const FVECT v2, const FVECT v3)
+{
+	FVECT	tor;
+
+	tri_orient(tor, v1, v2, v3);
+
+	return(DOT(tor, v2) < 0.);
+}
+
+/* Find vertices completing triangles on either side of the given edge */
+static int
+get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
+{
+	const MIGRATION	*ej, *ej2;
+	RBFNODE		*tv;
+
+	rbfv[0] = rbfv[1] = NULL;
+	for (ej = mig->rbfv[0]->ejl; ej != NULL;
+				ej = nextedge(mig->rbfv[0],ej)) {
+		if (ej == mig)
+			continue;
+		tv = opp_rbf(mig->rbfv[0],ej);
+		for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
+			if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
+				rbfv[is_rev_tri(mig->rbfv[0]->invec,
+						mig->rbfv[1]->invec,
+						tv->invec)] = tv;
+				break;
+			}
+	}
+	return((rbfv[0] != NULL) + (rbfv[1] != NULL));
+}
+
+/* Find context hull vertex to complete triangle (oriented call) */
+static RBFNODE *
+find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
+{
+	FVECT	vmid, vor;
+	RBFNODE	*rbf, *rbfbest = NULL;
+	double	dprod2, bestdprod2 = 0.5;
+
+	VADD(vmid, rbf0->invec, rbf1->invec);
+	if (normalize(vmid) == 0)
+		return(NULL);
+						/* XXX exhaustive search */
+	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
+		if ((rbf == rbf0) | (rbf == rbf1))
+			continue;
+		tri_orient(vor, rbf0->invec, rbf1->invec, rbf->invec);
+		dprod2 = DOT(vor, vmid);
+		if (dprod2 <= FTINY)
+			continue;		/* wrong orientation */
+		dprod2 *= dprod2 / DOT(vor,vor);
+		if (dprod2 > bestdprod2) {	/* more convex than prev? */
+			rbfbest = rbf;
+			bestdprod2 = dprod2;
+		}
+	}
+	return(rbf);
+}
+
+/* Create new migration edge and grow mesh recursively around it */
+static void
+mesh_from_edge(RBFNODE *rbf0, RBFNODE *rbf1)
+{
+	MIGRATION	*newej;
+	RBFNODE		*tvert[2];
+
+	if (rbf0 < rbf1)			/* avoid migration loops */
+		newej = make_migration(rbf0, rbf1);
+	else
+		newej = make_migration(rbf1, rbf0);
+						/* triangle on either side? */
+	get_triangles(tvert, newej);
+	if (tvert[0] == NULL) {			/* recurse on new right edge */
+		tvert[0] = find_chull_vert(newej->rbfv[0], newej->rbfv[1]);
+		if (tvert[0] != NULL) {
+			mesh_from_edge(rbf0, tvert[0]);
+			mesh_from_edge(rbf1, tvert[0]);
+		}
+	}
+	if (tvert[1] == NULL) {			/* recurse on new left edge */
+		tvert[1] = find_chull_vert(newej->rbfv[1], newej->rbfv[0]);
+		if (tvert[1] != NULL) {
+			mesh_from_edge(rbf0, tvert[1]);
+			mesh_from_edge(rbf1, tvert[1]);
+		}
+	}
+}
+
+/* Draw edge list into mig_grid array */
+static void
+draw_edges()
+{
+	int		nnull = 0, ntot = 0;
+	MIGRATION	*ej;
+	int		p0[2], p1[2];
+
+	/* memset(mig_grid, 0, sizeof(mig_grid)); */
+	for (ej = mig_list; ej != NULL; ej = ej->next) {
+		++ntot;
+		pos_from_vec(p0, ej->rbfv[0]->invec);
+		pos_from_vec(p1, ej->rbfv[1]->invec);
+		if ((p0[0] == p1[0]) & (p0[1] == p1[1])) {
+			++nnull;
+			mig_grid[p0[0]][p0[1]] = ej;
+			continue;
+		}
+		if (abs(p1[0]-p0[0]) > abs(p1[1]-p0[1])) {
+			const int	xstep = 2*(p1[0] > p0[0]) - 1;
+			const double	ystep = (double)((p1[1]-p0[1])*xstep) /
+							(double)(p1[0]-p0[0]);
+			int		x;
+			double		y;
+			for (x = p0[0], y = p0[1]+.5; x != p1[0];
+						x += xstep, y += ystep)
+				mig_grid[x][(int)y] = ej;
+			mig_grid[x][(int)y] = ej;
+		} else {
+			const int	ystep = 2*(p1[1] > p0[1]) - 1;
+			const double	xstep = (double)((p1[0]-p0[0])*ystep) /
+							(double)(p1[1]-p0[1]);
+			int		y;
+			double		x;
+			for (y = p0[1], x = p0[0]+.5; y != p1[1];
+						y += ystep, x += xstep)
+				mig_grid[(int)x][y] = ej;
+			mig_grid[(int)x][y] = ej;
+		}
+	}
+	if (nnull)
+		fprintf(stderr, "Warning: %d of %d edges are null\n",
+				nnull, ntot);
+}
+	
+/* Build our triangle mesh from recorded RBFs */
+static void
+build_mesh()
+{
+	double		best2 = M_PI*M_PI;
+	RBFNODE		*rbf, *rbf_near = NULL;
+						/* check if isotropic */
+	if (single_plane_incident) {
+		for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
+			if (rbf->next != NULL)
+				make_migration(rbf, rbf->next);
+		return;
+	}
+						/* find RBF nearest to head */
+	if (dsf_list == NULL)
+		return;
+	for (rbf = dsf_list->next; rbf != NULL; rbf = rbf->next) {
+		double	dist2 = 2. - 2.*DOT(dsf_list->invec,rbf->invec);
+		if (dist2 < best2) {
+			rbf_near = rbf;
+			best2 = dist2;
+		}
+	}
+	if (rbf_near == NULL) {
+		fputs("Cannot find nearest point for first edge\n", stderr);
 		exit(1);
 	}
-	rbf = (RBFLIST *)malloc(sizeof(RBFLIST) + sizeof(RBFVAL)*(to_rbf->nrbf-1));
+						/* build mesh from this edge */
+	mesh_from_edge(dsf_list, rbf_near);
+						/* draw edge list into grid */
+	draw_edges();
+}
+
+/* Identify enclosing triangle for this position (flood fill raster check) */
+static int
+identify_tri(MIGRATION *miga[3], unsigned char vmap[GRIDRES][(GRIDRES+7)/8],
+			int px, int py)
+{
+	const int	btest = 1<<(py&07);
+
+	if (vmap[px][py>>3] & btest)		/* already visited here? */
+		return(1);
+						/* else mark it */
+	vmap[px][py>>3] |= btest;
+
+	if (mig_grid[px][py] != NULL) {		/* are we on an edge? */
+		int	i;
+		for (i = 0; i < 3; i++) {
+			if (miga[i] == mig_grid[px][py])
+				return(1);
+			if (miga[i] != NULL)
+				continue;
+			while (i > 0 && miga[i-1] > mig_grid[px][py]) {
+				miga[i] = miga[i-1];
+				--i;		/* order vertices by pointer */
+			}
+			miga[i] = mig_grid[px][py];
+			return(1);
+		}
+		return(0);			/* outside triangle! */
+	}
+						/* check neighbors (flood) */
+	if (px > 0 && !identify_tri(miga, vmap, px-1, py))
+		return(0);
+	if (px < GRIDRES-1 && !identify_tri(miga, vmap, px+1, py))
+		return(0);
+	if (py > 0 && !identify_tri(miga, vmap, px, py-1))
+		return(0);
+	if (py < GRIDRES-1 && !identify_tri(miga, vmap, px, py+1))
+		return(0);
+	return(1);				/* this neighborhood done */
+}
+
+/* Find edge(s) for interpolating the given incident vector */
+static int
+get_interp(MIGRATION *miga[3], const FVECT invec)
+{
+	miga[0] = miga[1] = miga[2] = NULL;
+	if (single_plane_incident) {		/* isotropic BSDF? */
+		RBFNODE	*rbf;			/* find edge we're on */
+		for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
+			if (input_orient*rbf->invec[2] < input_orient*invec[2])
+				break;
+			if (rbf->next != NULL &&
+					input_orient*rbf->next->invec[2] <
+							input_orient*invec[2]) {
+				for (miga[0] = rbf->ejl; miga[0] != NULL;
+						miga[0] = nextedge(rbf,miga[0]))
+					if (opp_rbf(rbf,miga[0]) == rbf->next)
+						return(1);
+				break;
+			}
+		}
+		return(0);			/* outside range! */
+	}
+	{					/* else use triagnle mesh */
+		unsigned char	floodmap[GRIDRES][(GRIDRES+7)/8];
+		int		pstart[2];
+
+		pos_from_vec(pstart, invec);
+		memset(floodmap, 0, sizeof(floodmap));
+						/* call flooding function */
+		if (!identify_tri(miga, floodmap, pstart[0], pstart[1]))
+			return(0);		/* outside mesh */
+		if ((miga[0] == NULL) | (miga[2] == NULL))
+			return(0);		/* should never happen */
+		if (miga[1] == NULL)
+			return(1);		/* on edge */
+		return(3);			/* else in triangle */
+	}
+}
+
+/* Advect and allocate new RBF along edge */
+static RBFNODE *
+e_advect_rbf(const MIGRATION *mig, const FVECT invec)
+{
+	RBFNODE		*rbf;
+	int		n, i, j;
+	double		t, full_dist;
+						/* get relative position */
+	t = acos(DOT(invec, mig->rbfv[0]->invec));
+	if (t < M_PI/GRIDRES) {			/* near first DSF */
+		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[0]->nrbf-1);
+		rbf = (RBFNODE *)malloc(n);
+		if (rbf == NULL)
+			goto memerr;
+		memcpy(rbf, mig->rbfv[0], n);	/* just duplicate */
+		return(rbf);
+	}
+	full_dist = acos(DOT(mig->rbfv[0]->invec, mig->rbfv[1]->invec));
+	if (t > full_dist-M_PI/GRIDRES) {	/* near second DSF */
+		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[1]->nrbf-1);
+		rbf = (RBFNODE *)malloc(n);
+		if (rbf == NULL)
+			goto memerr;
+		memcpy(rbf, mig->rbfv[1], n);	/* just duplicate */
+		return(rbf);
+	}
+	t /= full_dist;	
+	n = 0;					/* count migrating particles */
+	for (i = 0; i < mtx_nrows(mig); i++)
+	    for (j = 0; j < mtx_ncols(mig); j++)
+		n += (mig->mtx[mtx_ndx(mig,i,j)] > FTINY);
+	
+	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
+	if (rbf == NULL)
+		goto memerr;
+	rbf->next = NULL; rbf->ejl = NULL;
+	VCOPY(rbf->invec, invec);
+	rbf->nrbf = n;
+	rbf->vtotal = 1.-t + t*mig->rbfv[1]->vtotal/mig->rbfv[0]->vtotal;
+	n = 0;					/* advect RBF lobes */
+	for (i = 0; i < mtx_nrows(mig); i++) {
+	    const RBFVAL	*rbf0i = &mig->rbfv[0]->rbfa[i];
+	    const float		peak0 = rbf0i->peak;
+	    const double	rad0 = R2ANG(rbf0i->crad);
+	    FVECT		v0;
+	    float		mv;
+	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    for (j = 0; j < mtx_ncols(mig); j++)
+		if ((mv = mig->mtx[mtx_ndx(mig,i,j)]) > FTINY) {
+			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
+			double		rad1 = R2ANG(rbf1j->crad);
+			FVECT		v;
+			int		pos[2];
+			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal;
+			rbf->rbfa[n].crad = ANG2R(sqrt(rad0*rad0*(1.-t) +
+							rad1*rad1*t));
+			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
+			geodesic(v, v0, v, t, GEOD_REL);
+			pos_from_vec(pos, v);
+			rbf->rbfa[n].gx = pos[0];
+			rbf->rbfa[n].gy = pos[1];
+			++n;
+		}
+	}
+	rbf->vtotal *= mig->rbfv[0]->vtotal;	/* turn ratio into actual */
+	return(rbf);
+memerr:
+	fputs("Out of memory in e_advect_rbf()\n", stderr);
+	exit(1);
+	return(NULL);	/* pro forma return */
+}
+
+/* Partially advect between recorded incident angles and allocate new RBF */
+static RBFNODE *
+advect_rbf(const FVECT invec)
+{
+	MIGRATION	*miga[3];
+	RBFNODE		*rbf;
+	int		n, i, j;
+	double		s, t;
+
+	if (!get_interp(miga, invec))		/* can't interpolate? */
+		return(NULL);
+	if (miga[1] == NULL)			/* along edge? */
+		return(e_advect_rbf(miga[0], invec));
+						/* figure out position */
+	
+	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
 	if (rbf == NULL) {
 		fputs("Out of memory in advect_rbf()\n", stderr);
 		exit(1);
@@ -622,11 +1025,10 @@ advect_rbf(const RBFLIST *from_rbf, const RBFLIST *to_rbf,
 	rbf->next = NULL; rbf->ejl = NULL;
 	VCOPY(rbf->invec, invec);
 	rbf->vtotal = 0;
-	rbf->nrbf = to_rbf->nrbf;
+	rbf->nrbf = n;
 	
-	return rbf;
+	return(rbf);
 }
-#endif
 
 #if 1
 /* Test main produces a Radiance model from the given input file */
@@ -643,7 +1045,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Usage: %s input.dat > output.rad\n", argv[0]);
 		return(1);
 	}
-	if (!load_bsdf_meas(argv[1]))
+	if (!load_pabopto_meas(argv[1]))
 		return(1);
 
 	compute_radii();
@@ -656,7 +1058,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		if (dsf_grid[i][j].vsum > .0f) {
-			vec_from_pos(dir, i, j);
+			ovec_from_pos(dir, i, j);
 			bsdf = dsf_grid[i][j].vsum / dir[2];
 			if (dsf_grid[i][j].nval) {
 				printf("pink cone c%04d\n0\n0\n8\n", ++n);
@@ -667,7 +1069,7 @@ main(int argc, char *argv[])
 					dir[2]*(bsdf+.005));
 				puts("\t.003\t0\n");
 			} else {
-				vec_from_pos(dir, i, j);
+				ovec_from_pos(dir, i, j);
 				printf("yellow sphere s%04d\n0\n0\n", ++n);
 				printf("4 %.6g %.6g %.6g .0015\n\n",
 					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
@@ -685,7 +1087,7 @@ main(int argc, char *argv[])
 	}
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
-		vec_from_pos(dir, i, j);
+		ovec_from_pos(dir, i, j);
 		bsdf = eval_rbfrep(dsf_list, dir) / dir[2];
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
