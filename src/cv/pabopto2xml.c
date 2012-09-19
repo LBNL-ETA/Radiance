@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.10 2012/09/18 02:50:13 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.11 2012/09/19 22:03:37 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -870,10 +870,6 @@ identify_tri(MIGRATION *miga[3], unsigned char vmap[GRIDRES][(GRIDRES+7)/8],
 				return(1);
 			if (miga[i] != NULL)
 				continue;
-			while (i > 0 && miga[i-1] > mig_grid[px][py]) {
-				miga[i] = miga[i-1];
-				--i;		/* order vertices by pointer */
-			}
 			miga[i] = mig_grid[px][py];
 			return(1);
 		}
@@ -1002,21 +998,100 @@ memerr:
 	return(NULL);	/* pro forma return */
 }
 
+/* Insert vertex in ordered list */
+static void
+insert_vert(RBFNODE **vlist, RBFNODE *v)
+{
+	int	i, j;
+
+	for (i = 0; vlist[i] != NULL; i++) {
+		if (v == vlist[i])
+			return;
+		if (v < vlist[i])
+			break;
+	}
+	for (j = i; vlist[j] != NULL; j++)
+		;
+	while (j > i) {
+		vlist[j] = vlist[j-1];
+		--j;
+	}
+	vlist[i] = v;
+}
+
+/* Sort triangle edges in standard order */
+static void
+order_triangle(MIGRATION *miga[3])
+{
+	RBFNODE		*vert[4];
+	MIGRATION	*ord[3];
+	int		i;
+						/* order vertices, first */
+	memset(vert, 0, sizeof(vert));
+	for (i = 0; i < 3; i++) {
+		insert_vert(vert, miga[i]->rbfv[0]);
+		insert_vert(vert, miga[i]->rbfv[1]);
+	}
+						/* identify edge 0 */
+	for (i = 0; i < 3; i++)
+		if (miga[i]->rbfv[0] == vert[0] &&
+				miga[i]->rbfv[1] == vert[1]) {
+			ord[0] = miga[i];
+			break;
+		}
+						/* identify edge 1 */
+	for (i = 0; i < 3; i++)
+		if (miga[i]->rbfv[0] == vert[1] &&
+				miga[i]->rbfv[1] == vert[2]) {
+			ord[1] = miga[i];
+			break;
+		}
+						/* identify edge 2 */
+	for (i = 0; i < 3; i++)
+		if (miga[i]->rbfv[0] == vert[0] &&
+				miga[i]->rbfv[1] == vert[2]) {
+			ord[2] = miga[i];
+			break;
+		}
+	miga[0] = ord[0]; miga[1] = ord[1]; miga[2] = ord[2];
+}
+
 /* Partially advect between recorded incident angles and allocate new RBF */
 static RBFNODE *
 advect_rbf(const FVECT invec)
 {
 	MIGRATION	*miga[3];
 	RBFNODE		*rbf;
-	int		n, i, j;
+	float		mbfact, mcfact;
+	int		n, i, j, k;
+	FVECT		v0, v1, v2;
 	double		s, t;
 
 	if (!get_interp(miga, invec))		/* can't interpolate? */
 		return(NULL);
 	if (miga[1] == NULL)			/* along edge? */
 		return(e_advect_rbf(miga[0], invec));
+						/* put in standard order */
+	order_triangle(miga);
 						/* figure out position */
-	
+	fcross(v0, miga[2]->rbfv[0]->invec, miga[2]->rbfv[1]->invec);
+	normalize(v0);
+	fcross(v2, miga[1]->rbfv[0]->invec, miga[1]->rbfv[1]->invec);
+	normalize(v2);
+	fcross(v1, invec, miga[1]->rbfv[1]->invec);
+	normalize(v1);
+	s = acos(DOT(v0,v1)) / acos(DOT(v0,v2));
+	geodesic(v1, miga[0]->rbfv[0]->invec, miga[0]->rbfv[1]->invec,
+			s, GEOD_REL);
+	t = acos(DOT(v1,invec)) / acos(DOT(v1,miga[1]->rbfv[1]->invec));
+	n = 0;					/* count migrating particles */
+	for (i = 0; i < mtx_nrows(miga[0]); i++)
+	    for (j = 0; j < mtx_ncols(miga[0]); j++)
+		for (k = (miga[0]->mtx[mtx_ndx(miga[0],i,j)] > FTINY) *
+					mtx_ncols(miga[2]); k--; )
+			n += (miga[2]->mtx[mtx_ndx(miga[2],i,k)] > FTINY &&
+				miga[1]->mtx[mtx_ndx(miga[1],j,k)] > FTINY);
+				
 	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
 	if (rbf == NULL) {
 		fputs("Out of memory in advect_rbf()\n", stderr);
@@ -1024,9 +1099,51 @@ advect_rbf(const FVECT invec)
 	}
 	rbf->next = NULL; rbf->ejl = NULL;
 	VCOPY(rbf->invec, invec);
-	rbf->vtotal = 0;
 	rbf->nrbf = n;
-	
+	n = 0;					/* compute RBF lobes */
+	mbfact = s * miga[0]->rbfv[1]->vtotal/miga[0]->rbfv[0]->vtotal *
+		(1.-t + t*miga[1]->rbfv[1]->vtotal/miga[1]->rbfv[0]->vtotal);
+	mcfact = (1.-s) *
+		(1.-t + t*miga[2]->rbfv[1]->vtotal/miga[2]->rbfv[0]->vtotal);
+	for (i = 0; i < mtx_nrows(miga[0]); i++) {
+	    const RBFVAL	*rbf0i = &miga[0]->rbfv[0]->rbfa[i];
+	    const float		w0i = rbf0i->peak;
+	    const double	rad0i = R2ANG(rbf0i->crad);
+	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    for (j = 0; j < mtx_ncols(miga[0]); j++) {
+		const float	ma = miga[0]->mtx[mtx_ndx(miga[0],i,j)];
+		const RBFVAL	*rbf1j;
+		double		rad1j, srad2;
+		if (ma <= FTINY)
+			continue;
+		rbf1j = &miga[0]->rbfv[1]->rbfa[j];
+		rad1j = R2ANG(rbf1j->crad);
+		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*rad1j*rad1j;
+		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
+		geodesic(v1, v0, v1, s, GEOD_REL);
+		for (k = 0; k < mtx_ncols(miga[2]); k++) {
+		    float		mb = miga[1]->mtx[mtx_ndx(miga[1],j,k)];
+		    float		mc = miga[2]->mtx[mtx_ndx(miga[2],i,k)];
+		    const RBFVAL	*rbf2k;
+		    double		rad2k;
+		    FVECT		vout;
+		    int			pos[2];
+		    if ((mb <= FTINY) | (mc <= FTINY))
+			continue;
+		    rbf2k = &miga[2]->rbfv[1]->rbfa[k];
+		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact);
+		    rad2k = R2ANG(rbf2k->crad);
+		    rbf->rbfa[n].crad = RAD2R(sqrt(srad2 + t*rad2k*rad2k));
+		    ovec_from_pos(v2, rbf2k->gx, rbf2k->gy);
+		    geodesic(vout, v1, v2, t, GEOD_REL);
+		    pos_from_vec(pos, vout);
+		    rbf->rbfa[n].gx = pos[0];
+		    rbf->rbfa[n].gy = pos[1];
+		    ++n;
+		}
+	    }
+	}
+	rbf->vtotal = miga[0]->rbfv[0]->vtotal * (mbfact + mcfact);
 	return(rbf);
 }
 
