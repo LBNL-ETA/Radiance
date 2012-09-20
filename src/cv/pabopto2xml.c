@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.11 2012/09/19 22:03:37 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.12 2012/09/20 01:23:36 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -88,6 +88,12 @@ static MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 
 #define	round(v)	(int)((v) + .5 - ((v) < -.5))
 
+char			*progname;
+				/* percentage to cull (<0 to turn off) */
+int			pctcull = 90;
+				/* sampling order */
+int			samp_order = 0;
+
 /* Compute volume associated with Gaussian lobe */
 static double
 rbf_volume(const RBFVAL *rbfp)
@@ -136,6 +142,8 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 	double		sig2;
 	int		n;
 
+	if (rp == NULL)
+		return(.0);
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
@@ -173,6 +181,7 @@ static RBFNODE *
 make_rbfrep(void)
 {
 	int	niter = 16;
+	int	minrad = ANG2R(pow(2., 1.-samp_order));
 	double	lastVar, thisVar = 100.;
 	int	nn;
 	RBFNODE	*newnode;
@@ -204,6 +213,8 @@ make_rbfrep(void)
 			newnode->rbfa[nn].crad = RSCA*dsf_grid[i][j].crad + .5;
 			newnode->rbfa[nn].gx = i;
 			newnode->rbfa[nn].gy = j;
+			if (newnode->rbfa[nn].crad < minrad)
+				minrad = newnode->rbfa[nn].crad;
 			++nn;
 		}
 				/* iterate to improve interpolation accuracy */
@@ -236,6 +247,9 @@ make_rbfrep(void)
 		newnode->vtotal += rbf_volume(&newnode->rbfa[nn++]);
 
 	insert_dsf(newnode);
+				/* adjust sampling resolution */
+	samp_order = log(2./R2ANG(minrad))/log(2.) + .5;
+
 	return(newnode);
 }
 
@@ -909,7 +923,7 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 		}
 		return(0);			/* outside range! */
 	}
-	{					/* else use triagnle mesh */
+	{					/* else use triangle mesh */
 		unsigned char	floodmap[GRIDRES][(GRIDRES+7)/8];
 		int		pstart[2];
 
@@ -957,7 +971,10 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	for (i = 0; i < mtx_nrows(mig); i++)
 	    for (j = 0; j < mtx_ncols(mig); j++)
 		n += (mig->mtx[mtx_ndx(mig,i,j)] > FTINY);
-	
+#ifdef DEBUG
+	fprintf(stderr, "Input RBFs have %d, %d nodes -> output has %d\n",
+			mig->rbfv[0]->nrbf, mig->rbfv[1]->nrbf, n);
+#endif
 	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
 	if (rbf == NULL)
 		goto memerr;
@@ -1073,6 +1090,14 @@ advect_rbf(const FVECT invec)
 		return(e_advect_rbf(miga[0], invec));
 						/* put in standard order */
 	order_triangle(miga);
+#ifdef DEBUG
+	if (miga[0]->rbfv[0] != miga[2]->rbfv[0] |
+			miga[0]->rbfv[1] != miga[1]->rbfv[0] |
+			miga[1]->rbfv[1] != miga[2]->rbfv[1]) {
+		fputs("Triangle vertex screw-up!\n", stderr);
+		exit(1);
+	}
+#endif
 						/* figure out position */
 	fcross(v0, miga[2]->rbfv[0]->invec, miga[2]->rbfv[1]->invec);
 	normalize(v0);
@@ -1091,7 +1116,11 @@ advect_rbf(const FVECT invec)
 					mtx_ncols(miga[2]); k--; )
 			n += (miga[2]->mtx[mtx_ndx(miga[2],i,k)] > FTINY &&
 				miga[1]->mtx[mtx_ndx(miga[1],j,k)] > FTINY);
-				
+#ifdef DEBUG
+	fprintf(stderr, "Input RBFs have %d, %d, %d nodes -> output has %d\n",
+			miga[0]->rbfv[0]->nrbf, miga[0]->rbfv[1]->nrbf,
+			miga[2]->rbfv[1]->nrbf, n);
+#endif
 	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
 	if (rbf == NULL) {
 		fputs("Out of memory in advect_rbf()\n", stderr);
@@ -1133,7 +1162,7 @@ advect_rbf(const FVECT invec)
 		    rbf2k = &miga[2]->rbfv[1]->rbfa[k];
 		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact);
 		    rad2k = R2ANG(rbf2k->crad);
-		    rbf->rbfa[n].crad = RAD2R(sqrt(srad2 + t*rad2k*rad2k));
+		    rbf->rbfa[n].crad = ANG2R(sqrt(srad2 + t*rad2k*rad2k));
 		    ovec_from_pos(v2, rbf2k->gx, rbf2k->gy);
 		    geodesic(vout, v1, v2, t, GEOD_REL);
 		    pos_from_vec(pos, vout);
@@ -1147,7 +1176,149 @@ advect_rbf(const FVECT invec)
 	return(rbf);
 }
 
+/* Interpolate and output isotropic BSDF data */
+static void
+interp_isotropic()
+{
+	const int	sqres = 1<<samp_order;
+	FILE		*ofp = NULL;
+	char		cmd[128];
+	int		ix, ox, oy;
+	FVECT		ivec, ovec;
+	double		bsdf;
+
+	if (pctcull >= 0) {			/* begin output */
+		sprintf(cmd, "rttree_reduce -h -a -fd -r 3 -t %d -g %d",
+				pctcull, samp_order);
+		fflush(stdout);
+		ofp = popen(cmd, "w");
+		if (ofp == NULL) {
+			fputs("Cannot create pipe for rttree_reduce\n", stderr);
+			exit(1);
+		}
+	} else
+		fputs("{\n", stdout);
+						/* run through directions */
+	for (ix = 0; ix < sqres/2; ix++) {
+		RBFNODE	*rbf;
+		SDsquare2disk(ivec, (ix+.5)/sqres, .5);
+		ivec[2] = input_orient *
+				sqrt(1. - ivec[0]*ivec[0] - ivec[1]*ivec[1]);
+		rbf = advect_rbf(ivec);
+		for (ox = 0; ox < sqres; ox++)
+		    for (oy = 0; oy < sqres; oy++) {
+			SDsquare2disk(ovec, (ox+.5)/sqres, (oy+.5)/sqres);
+			ovec[2] = output_orient *
+				sqrt(1. - ovec[0]*ovec[0] - ovec[1]*ovec[1]);
+			bsdf = eval_rbfrep(rbf, ovec) / fabs(ovec[2]);
+			if (pctcull >= 0)
+				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
+			else
+				printf("\t%.3e\n", bsdf);
+		    }
+		free(rbf);
+	}
+	if (pctcull >= 0) {			/* finish output */
+		if (pclose(ofp)) {
+			fprintf(stderr, "Error running '%s'\n", cmd);
+			exit(1);
+		}
+	} else {
+		for (ix = sqres*sqres*sqres/2; ix--; )
+			fputs("\t0\n", stdout);
+		fputs("}\n", stdout);
+	}
+}
+
+/* Interpolate and output anisotropic BSDF data */
+static void
+interp_anisotropic()
+{
+	const int	sqres = 1<<samp_order;
+	FILE		*ofp = NULL;
+	char		cmd[128];
+	int		ix, iy, ox, oy;
+	FVECT		ivec, ovec;
+	double		bsdf;
+
+	if (pctcull >= 0) {			/* begin output */
+		sprintf(cmd, "rttree_reduce -h -a -fd -r 4 -t %d -g %d",
+				pctcull, samp_order);
+		fflush(stdout);
+		ofp = popen(cmd, "w");
+		if (ofp == NULL) {
+			fputs("Cannot create pipe for rttree_reduce\n", stderr);
+			exit(1);
+		}
+	} else
+		fputs("{\n", stdout);
+						/* run through directions */
+	for (ix = 0; ix < sqres; ix++)
+	    for (iy = 0; iy < sqres; iy++) {
+		RBFNODE	*rbf;
+		SDsquare2disk(ivec, (ix+.5)/sqres, (iy+.5)/sqres);
+		ivec[2] = input_orient *
+				sqrt(1. - ivec[0]*ivec[0] - ivec[1]*ivec[1]);
+		rbf = advect_rbf(ivec);
+		for (ox = 0; ox < sqres; ox++)
+		    for (oy = 0; oy < sqres; oy++) {
+			SDsquare2disk(ovec, (ox+.5)/sqres, (oy+.5)/sqres);
+			ovec[2] = output_orient *
+				sqrt(1. - ovec[0]*ovec[0] - ovec[1]*ovec[1]);
+			bsdf = eval_rbfrep(rbf, ovec) / fabs(ovec[2]);
+			if (pctcull >= 0)
+				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
+			else
+				printf("\t%.3e\n", bsdf);
+		    }
+		free(rbf);
+	    }
+	if (pctcull >= 0) {			/* finish output */
+		if (pclose(ofp)) {
+			fprintf(stderr, "Error running '%s'\n", cmd);
+			exit(1);
+		}
+	} else
+		fputs("}\n", stdout);
+}
+
 #if 1
+/* Read in BSDF files and interpolate as tensor tree representation */
+int
+main(int argc, char *argv[])
+{
+	RBFNODE		*rbf;
+	double		bsdf;
+	int		i;
+
+	progname = argv[0];
+	if (argc > 2 && !strcmp(argv[1], "-t")) {
+		pctcull = atoi(argv[2]);
+		argv += 2; argc -= 2;
+	}
+	if (argc < 3) {
+		fprintf(stderr,
+		"Usage: %s [-t pctcull] meas1.dat meas2.dat .. > bsdf.xml\n",
+				progname);
+		return(1);
+	}
+	for (i = 1; i < argc; i++) {		/* compile measurements */
+		if (!load_pabopto_meas(argv[i]))
+			return(1);
+		compute_radii();
+		cull_values();
+		make_rbfrep();
+	}
+	build_mesh();				/* create interpolation */
+	/* xml_prologue();				/* start XML output */
+	if (single_plane_incident)		/* resample dist. */
+		interp_isotropic();
+	else
+		interp_anisotropic();
+	/* xml_epilogue();				/* finish XML output */
+	return(0);
+}
+#else
 /* Test main produces a Radiance model from the given input file */
 int
 main(int argc, char *argv[])
