@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.12 2012/09/20 01:23:36 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.13 2012/09/21 05:17:22 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -89,9 +89,13 @@ static MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 #define	round(v)	(int)((v) + .5 - ((v) < -.5))
 
 char			*progname;
-				/* percentage to cull (<0 to turn off) */
+
+#ifdef DEBUG			/* percentage to cull (<0 to turn off) */
+int			pctcull = -1;
+#else
 int			pctcull = 90;
-				/* sampling order */
+#endif
+				/* sampling order (set by data density) */
 int			samp_order = 0;
 
 /* Compute volume associated with Gaussian lobe */
@@ -160,7 +164,6 @@ static void
 insert_dsf(RBFNODE *newrbf)
 {
 	RBFNODE		*rbf, *rbf_last;
-
 					/* keep in ascending theta order */
 	for (rbf_last = NULL, rbf = dsf_list;
 			single_plane_incident & (rbf != NULL);
@@ -219,7 +222,7 @@ make_rbfrep(void)
 		}
 				/* iterate to improve interpolation accuracy */
 	do {
-		double	dsum = .0, dsum2 = .0;
+		double	dsum = 0, dsum2 = 0;
 		nn = 0;
 		for (i = 0; i < GRIDRES; i++)
 		    for (j = 0; j < GRIDRES; j++)
@@ -248,7 +251,7 @@ make_rbfrep(void)
 
 	insert_dsf(newnode);
 				/* adjust sampling resolution */
-	samp_order = log(2./R2ANG(minrad))/log(2.) + .5;
+	samp_order = log(2./R2ANG(minrad))/M_LN2 + .5;
 
 	return(newnode);
 }
@@ -647,7 +650,7 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 				round(theta), round(phi));
 		theta = acos(to_rbf->invec[2])*(180./M_PI);
 		phi = atan2(to_rbf->invec[1],to_rbf->invec[0])*(180./M_PI);
-		fprintf(stderr, "(%d,%d)\n", round(theta), round(phi));
+		fprintf(stderr, "(%d,%d)", round(theta), round(phi));
 	}
 #endif
 	newmig->next = NULL;
@@ -661,8 +664,16 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	for (i = to_rbf->nrbf; i--; )
 		dst_rem[i] = rbf_volume(&to_rbf->rbfa[i]) / to_rbf->vtotal;
 						/* move a bit at a time */
-	while (total_rem > end_thresh)
+	while (total_rem > end_thresh) {
 		total_rem -= migration_step(newmig, src_rem, dst_rem, pmtx);
+#ifdef DEBUG
+		fputc('.', stderr);
+/*XXX*/break;
+#endif
+	}
+#ifdef DEBUG
+	fputs("done.\n", stderr);
+#endif
 
 	free(pmtx);				/* free working arrays */
 	free(src_rem);
@@ -714,6 +725,8 @@ get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 	RBFNODE		*tv;
 
 	rbfv[0] = rbfv[1] = NULL;
+	if (mig == NULL)
+		return(0);
 	for (ej = mig->rbfv[0]->ejl; ej != NULL;
 				ej = nextedge(mig->rbfv[0],ej)) {
 		if (ej == mig)
@@ -730,13 +743,39 @@ get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 	return((rbfv[0] != NULL) + (rbfv[1] != NULL));
 }
 
+/* Check if prospective vertex would create overlapping triangle */
+static int
+overlaps_tri(const RBFNODE *bv0, const RBFNODE *bv1, const RBFNODE *pv)
+{
+	const MIGRATION	*ej;
+	RBFNODE		*vother[2];
+	int		im_rev;
+					/* find shared edge in mesh */
+	for (ej = pv->ejl; ej != NULL; ej = nextedge(pv,ej)) {
+		const RBFNODE	*tv = opp_rbf(pv,ej);
+		if (tv == bv0) {
+			im_rev = is_rev_tri(ej->rbfv[0]->invec,
+					ej->rbfv[1]->invec, bv1->invec);
+			break;
+		}
+		if (tv == bv1) {
+			im_rev = is_rev_tri(ej->rbfv[0]->invec,
+					ej->rbfv[1]->invec, bv0->invec);
+			break;
+		}
+	}
+	if (!get_triangles(vother, ej))
+		return(0);
+	return(vother[im_rev] != NULL);
+}
+
 /* Find context hull vertex to complete triangle (oriented call) */
 static RBFNODE *
 find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 {
 	FVECT	vmid, vor;
 	RBFNODE	*rbf, *rbfbest = NULL;
-	double	dprod2, bestdprod2 = 0.5;
+	double	dprod2, area2, bestarea2 = FHUGE, bestdprod2 = 0.5;
 
 	VADD(vmid, rbf0->invec, rbf1->invec);
 	if (normalize(vmid) == 0)
@@ -749,43 +788,103 @@ find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 		dprod2 = DOT(vor, vmid);
 		if (dprod2 <= FTINY)
 			continue;		/* wrong orientation */
-		dprod2 *= dprod2 / DOT(vor,vor);
-		if (dprod2 > bestdprod2) {	/* more convex than prev? */
+		area2 = DOT(vor, vor);
+		dprod2 *= dprod2 / area2;
+		if (dprod2 > bestdprod2 +
+				FTINY*(1 - 2*(area2 < bestarea2)) &&
+				!overlaps_tri(rbf0, rbf1, rbf)) {
 			rbfbest = rbf;
 			bestdprod2 = dprod2;
+			bestarea2 = area2;
 		}
 	}
-	return(rbf);
+	return(rbfbest);
 }
 
 /* Create new migration edge and grow mesh recursively around it */
 static void
-mesh_from_edge(RBFNODE *rbf0, RBFNODE *rbf1)
+mesh_from_edge(MIGRATION *edge)
 {
-	MIGRATION	*newej;
+	MIGRATION	*ej0, *ej1;
 	RBFNODE		*tvert[2];
-
-	if (rbf0 < rbf1)			/* avoid migration loops */
-		newej = make_migration(rbf0, rbf1);
-	else
-		newej = make_migration(rbf1, rbf0);
 						/* triangle on either side? */
-	get_triangles(tvert, newej);
-	if (tvert[0] == NULL) {			/* recurse on new right edge */
-		tvert[0] = find_chull_vert(newej->rbfv[0], newej->rbfv[1]);
+	get_triangles(tvert, edge);
+	if (tvert[0] == NULL) {			/* grow mesh on right */
+		tvert[0] = find_chull_vert(edge->rbfv[0], edge->rbfv[1]);
 		if (tvert[0] != NULL) {
-			mesh_from_edge(rbf0, tvert[0]);
-			mesh_from_edge(rbf1, tvert[0]);
+			if (tvert[0] > edge->rbfv[0])
+				ej0 = make_migration(edge->rbfv[0], tvert[0]);
+			else
+				ej0 = make_migration(tvert[0], edge->rbfv[0]);
+			if (tvert[0] > edge->rbfv[1])
+				ej1 = make_migration(edge->rbfv[1], tvert[0]);
+			else
+				ej1 = make_migration(tvert[0], edge->rbfv[1]);
+			mesh_from_edge(ej0);
+			mesh_from_edge(ej1);
 		}
 	}
-	if (tvert[1] == NULL) {			/* recurse on new left edge */
-		tvert[1] = find_chull_vert(newej->rbfv[1], newej->rbfv[0]);
+	if (tvert[1] == NULL) {			/* grow mesh on left */
+		tvert[1] = find_chull_vert(edge->rbfv[1], edge->rbfv[0]);
 		if (tvert[1] != NULL) {
-			mesh_from_edge(rbf0, tvert[1]);
-			mesh_from_edge(rbf1, tvert[1]);
+			if (tvert[1] > edge->rbfv[0])
+				ej0 = make_migration(edge->rbfv[0], tvert[1]);
+			else
+				ej0 = make_migration(tvert[1], edge->rbfv[0]);
+			if (tvert[1] > edge->rbfv[1])
+				ej1 = make_migration(edge->rbfv[1], tvert[1]);
+			else
+				ej1 = make_migration(tvert[1], edge->rbfv[1]);
+			mesh_from_edge(ej0);
+			mesh_from_edge(ej1);
 		}
 	}
 }
+
+#ifdef DEBUG
+#include "random.h"
+#include "bmpfile.h"
+/* Hash pointer to byte value */
+static int
+byte_hash(const void *p)
+{
+	size_t	h = (size_t)p;
+	h ^= (size_t)p >> 8;
+	h ^= (size_t)p >> 16;
+	h ^= (size_t)p >> 24;
+	return(h & 0xff);
+}
+/* Write out BMP image showing edges */
+static void
+write_edge_image(const char *fname)
+{
+	BMPHeader	*hdr = BMPmappedHeader(GRIDRES, GRIDRES, 0, 256);
+	BMPWriter	*wtr;
+	int		i, j;
+
+	fprintf(stderr, "Writing incident mesh drawing to '%s'\n", fname);
+	hdr->compr = BI_RLE8;
+	for (i = 256; --i; ) {			/* assign random color map */
+		hdr->palette[i].r = random() & 0xff;
+		hdr->palette[i].r = random() & 0xff;
+		hdr->palette[i].r = random() & 0xff;
+	}
+	hdr->palette[0].r = hdr->palette[0].g = hdr->palette[0].b = 0;
+						/* open output */
+	wtr = BMPopenOutputFile(fname, hdr);
+	if (wtr == NULL) {
+		free(hdr);
+		return;
+	}
+	for (i = 0; i < GRIDRES; i++) {		/* write scanlines */
+		for (j = 0; j < GRIDRES; j++)
+			wtr->scanline[j] = byte_hash(mig_grid[i][j]);
+		if (BMPwriteScanline(wtr) != BIR_OK)
+			break;
+	}
+	BMPcloseOutput(wtr);			/* close & clean up */
+}
+#endif
 
 /* Draw edge list into mig_grid array */
 static void
@@ -830,6 +929,9 @@ draw_edges()
 	if (nnull)
 		fprintf(stderr, "Warning: %d of %d edges are null\n",
 				nnull, ntot);
+#ifdef DEBUG
+	write_edge_image("bsdf_edges.bmp");
+#endif
 }
 	
 /* Build our triangle mesh from recorded RBFs */
@@ -837,30 +939,35 @@ static void
 build_mesh()
 {
 	double		best2 = M_PI*M_PI;
-	RBFNODE		*rbf, *rbf_near = NULL;
+	RBFNODE		*shrt_edj[2];
+	RBFNODE		*rbf0, *rbf1;
 						/* check if isotropic */
 	if (single_plane_incident) {
-		for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
-			if (rbf->next != NULL)
-				make_migration(rbf, rbf->next);
+		for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
+			if (rbf0->next != NULL)
+				make_migration(rbf0, rbf0->next);
 		return;
 	}
-						/* find RBF nearest to head */
-	if (dsf_list == NULL)
-		return;
-	for (rbf = dsf_list->next; rbf != NULL; rbf = rbf->next) {
-		double	dist2 = 2. - 2.*DOT(dsf_list->invec,rbf->invec);
+						/* start w/ shortest edge */
+	shrt_edj[0] = shrt_edj[1] = NULL;
+	for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
+	    for (rbf1 = rbf0->next; rbf1 != NULL; rbf1 = rbf1->next) {
+		double	dist2 = 2. - 2.*DOT(rbf0->invec,rbf1->invec);
 		if (dist2 < best2) {
-			rbf_near = rbf;
+			shrt_edj[0] = rbf0;
+			shrt_edj[1] = rbf1;
 			best2 = dist2;
 		}
 	}
-	if (rbf_near == NULL) {
-		fputs("Cannot find nearest point for first edge\n", stderr);
+	if (shrt_edj[0] == NULL) {
+		fputs("Cannot find shortest edge\n", stderr);
 		exit(1);
 	}
 						/* build mesh from this edge */
-	mesh_from_edge(dsf_list, rbf_near);
+	if (shrt_edj[0] < shrt_edj[1])
+		mesh_from_edge(make_migration(shrt_edj[0], shrt_edj[1]));
+	else
+		mesh_from_edge(make_migration(shrt_edj[1], shrt_edj[0]));
 						/* draw edge list into grid */
 	draw_edges();
 }
@@ -1086,7 +1193,7 @@ advect_rbf(const FVECT invec)
 
 	if (!get_interp(miga, invec))		/* can't interpolate? */
 		return(NULL);
-	if (miga[1] == NULL)			/* along edge? */
+	if (miga[1] == NULL)			/* advect along edge? */
 		return(e_advect_rbf(miga[0], invec));
 						/* put in standard order */
 	order_triangle(miga);
@@ -1186,7 +1293,11 @@ interp_isotropic()
 	int		ix, ox, oy;
 	FVECT		ivec, ovec;
 	double		bsdf;
-
+#if DEBUG
+	fprintf(stderr, "Writing isotropic order %d ", samp_order);
+	if (pctcull >= 0) fprintf(stderr, "data with %d%% culling\n", pctcull);
+	else fputs("raw data\n", stderr);
+#endif
 	if (pctcull >= 0) {			/* begin output */
 		sprintf(cmd, "rttree_reduce -h -a -fd -r 3 -t %d -g %d",
 				pctcull, samp_order);
@@ -1240,7 +1351,11 @@ interp_anisotropic()
 	int		ix, iy, ox, oy;
 	FVECT		ivec, ovec;
 	double		bsdf;
-
+#if DEBUG
+	fprintf(stderr, "Writing anisotropic order %d ", samp_order);
+	if (pctcull >= 0) fprintf(stderr, "data with %d%% culling\n", pctcull);
+	else fputs("raw data\n", stderr);
+#endif
 	if (pctcull >= 0) {			/* begin output */
 		sprintf(cmd, "rttree_reduce -h -a -fd -r 4 -t %d -g %d",
 				pctcull, samp_order);
