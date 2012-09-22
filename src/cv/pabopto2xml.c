@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.13 2012/09/21 05:17:22 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.14 2012/09/22 23:10:24 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -164,6 +164,13 @@ static void
 insert_dsf(RBFNODE *newrbf)
 {
 	RBFNODE		*rbf, *rbf_last;
+					/* check for redundant meas. */
+	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
+		if (DOT(rbf->invec, newrbf->invec) >= 1.-FTINY) {
+			fputs("Duplicate incident measurement (ignored)\n", stderr);
+			free(newrbf);
+			return;
+		}
 					/* keep in ascending theta order */
 	for (rbf_last = NULL, rbf = dsf_list;
 			single_plane_incident & (rbf != NULL);
@@ -561,7 +568,7 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 {
 	static double	*src_cost = NULL;
 	int		n_alloc = 0;
-	const double	maxamt = 2./(mtx_nrows(mig)*mtx_ncols(mig));
+	const double	maxamt = .1; /* 2./(mtx_nrows(mig)*mtx_ncols(mig)); */
 	double		amt = 0;
 	struct {
 		int	s, d;	/* source and destination */
@@ -623,34 +630,51 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 	return(best.amt);
 }
 
+#ifdef DEBUG
+static char *
+thetaphi(const FVECT v)
+{
+	static char	buf[128];
+	double		theta, phi;
+
+	theta = 180./M_PI*acos(v[2]);
+	phi = 180./M_PI*atan2(v[1],v[0]);
+	sprintf(buf, "(%.0f,%.0f)", theta, phi);
+
+	return(buf);
+}
+#endif
+
 /* Compute (and insert) migration along directed edge */
 static MIGRATION *
-make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
+make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf, int creat_only)
 {
 	const double	end_thresh = 0.02/(from_rbf->nrbf*to_rbf->nrbf);
-	float		*pmtx = price_routes(from_rbf, to_rbf);
-	MIGRATION	*newmig = (MIGRATION *)malloc(sizeof(MIGRATION) +
-							sizeof(float) *
-					(from_rbf->nrbf*to_rbf->nrbf - 1));
-	double		*src_rem = (double *)malloc(sizeof(double)*from_rbf->nrbf);
-	double		*dst_rem = (double *)malloc(sizeof(double)*to_rbf->nrbf);
+	float		*pmtx;
+	MIGRATION	*newmig;
+	double		*src_rem, *dst_rem;
 	double		total_rem = 1.;
 	int		i;
-
+						/* check if exists already */
+	for (newmig = from_rbf->ejl; newmig != NULL;
+			newmig = nextedge(from_rbf,newmig))
+		if (newmig->rbfv[1] == to_rbf)
+			return(creat_only ? (MIGRATION *)NULL : newmig);
+						/* else allocate */
+	pmtx = price_routes(from_rbf, to_rbf);
+	newmig = (MIGRATION *)malloc(sizeof(MIGRATION) + sizeof(float) *
+					(from_rbf->nrbf*to_rbf->nrbf - 1));
+	src_rem = (double *)malloc(sizeof(double)*from_rbf->nrbf);
+	dst_rem = (double *)malloc(sizeof(double)*to_rbf->nrbf);
 	if ((newmig == NULL) | (src_rem == NULL) | (dst_rem == NULL)) {
 		fputs("Out of memory in make_migration()\n", stderr);
 		exit(1);
 	}
 #ifdef DEBUG
 	{
-		double	theta, phi;
-		theta = acos(from_rbf->invec[2])*(180./M_PI);
-		phi = atan2(from_rbf->invec[1],from_rbf->invec[0])*(180./M_PI);
-		fprintf(stderr, "Building path from (theta,phi) (%d,%d) to ",
-				round(theta), round(phi));
-		theta = acos(to_rbf->invec[2])*(180./M_PI);
-		phi = atan2(to_rbf->invec[1],to_rbf->invec[0])*(180./M_PI);
-		fprintf(stderr, "(%d,%d)", round(theta), round(phi));
+		fprintf(stderr, "Building path from (theta,phi) %s ",
+				thetaphi(from_rbf->invec));
+		fprintf(stderr, "to %s", thetaphi(to_rbf->invec));
 	}
 #endif
 	newmig->next = NULL;
@@ -667,8 +691,8 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	while (total_rem > end_thresh) {
 		total_rem -= migration_step(newmig, src_rem, dst_rem, pmtx);
 #ifdef DEBUG
-		fputc('.', stderr);
-/*XXX*/break;
+		/* fputc('.', stderr); */
+		fprintf(stderr, "\n%.9f remaining...", total_rem);
 #endif
 	}
 #ifdef DEBUG
@@ -773,30 +797,33 @@ overlaps_tri(const RBFNODE *bv0, const RBFNODE *bv1, const RBFNODE *pv)
 static RBFNODE *
 find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 {
-	FVECT	vmid, vor;
+	FVECT	vmid, vejn, vp;
 	RBFNODE	*rbf, *rbfbest = NULL;
-	double	dprod2, area2, bestarea2 = FHUGE, bestdprod2 = 0.5;
+	double	dprod, area2, bestarea2 = FHUGE, bestdprod = -.5;
 
+	VSUB(vejn, rbf1->invec, rbf0->invec);
 	VADD(vmid, rbf0->invec, rbf1->invec);
-	if (normalize(vmid) == 0)
+	if (normalize(vejn) == 0 || normalize(vmid) == 0)
 		return(NULL);
 						/* XXX exhaustive search */
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
 		if ((rbf == rbf0) | (rbf == rbf1))
 			continue;
-		tri_orient(vor, rbf0->invec, rbf1->invec, rbf->invec);
-		dprod2 = DOT(vor, vmid);
-		if (dprod2 <= FTINY)
+		tri_orient(vp, rbf0->invec, rbf1->invec, rbf->invec);
+		if (DOT(vp, vmid) <= FTINY)
 			continue;		/* wrong orientation */
-		area2 = DOT(vor, vor);
-		dprod2 *= dprod2 / area2;
-		if (dprod2 > bestdprod2 +
-				FTINY*(1 - 2*(area2 < bestarea2)) &&
-				!overlaps_tri(rbf0, rbf1, rbf)) {
-			rbfbest = rbf;
-			bestdprod2 = dprod2;
-			bestarea2 = area2;
-		}
+		area2 = DOT(vp,vp);
+		VSUB(vp, rbf->invec, rbf0->invec);
+		dprod = -DOT(vp, vejn);
+		VSUM(vp, vp, vejn, dprod);
+		dprod = DOT(vp, vmid) / VLEN(vp);
+		if (dprod <= bestdprod + FTINY*(1 - 2*(area2 < bestarea2)))
+			continue;		/* found better already */
+		if (overlaps_tri(rbf0, rbf1, rbf))
+			continue;		/* overlaps another triangle */
+		rbfbest = rbf;
+		bestdprod = dprod;		/* new one to beat */
+		bestarea2 = area2;
 	}
 	return(rbfbest);
 }
@@ -807,34 +834,36 @@ mesh_from_edge(MIGRATION *edge)
 {
 	MIGRATION	*ej0, *ej1;
 	RBFNODE		*tvert[2];
+	
+	if (edge == NULL)
+		return;
 						/* triangle on either side? */
 	get_triangles(tvert, edge);
 	if (tvert[0] == NULL) {			/* grow mesh on right */
 		tvert[0] = find_chull_vert(edge->rbfv[0], edge->rbfv[1]);
 		if (tvert[0] != NULL) {
 			if (tvert[0] > edge->rbfv[0])
-				ej0 = make_migration(edge->rbfv[0], tvert[0]);
+				ej0 = make_migration(edge->rbfv[0], tvert[0], 1);
 			else
-				ej0 = make_migration(tvert[0], edge->rbfv[0]);
+				ej0 = make_migration(tvert[0], edge->rbfv[0], 1);
 			if (tvert[0] > edge->rbfv[1])
-				ej1 = make_migration(edge->rbfv[1], tvert[0]);
+				ej1 = make_migration(edge->rbfv[1], tvert[0], 1);
 			else
-				ej1 = make_migration(tvert[0], edge->rbfv[1]);
+				ej1 = make_migration(tvert[0], edge->rbfv[1], 1);
 			mesh_from_edge(ej0);
 			mesh_from_edge(ej1);
 		}
-	}
-	if (tvert[1] == NULL) {			/* grow mesh on left */
+	} else if (tvert[1] == NULL) {		/* grow mesh on left */
 		tvert[1] = find_chull_vert(edge->rbfv[1], edge->rbfv[0]);
 		if (tvert[1] != NULL) {
 			if (tvert[1] > edge->rbfv[0])
-				ej0 = make_migration(edge->rbfv[0], tvert[1]);
+				ej0 = make_migration(edge->rbfv[0], tvert[1], 1);
 			else
-				ej0 = make_migration(tvert[1], edge->rbfv[0]);
+				ej0 = make_migration(tvert[1], edge->rbfv[0], 1);
 			if (tvert[1] > edge->rbfv[1])
-				ej1 = make_migration(edge->rbfv[1], tvert[1]);
+				ej1 = make_migration(edge->rbfv[1], tvert[1], 1);
 			else
-				ej1 = make_migration(tvert[1], edge->rbfv[1]);
+				ej1 = make_migration(tvert[1], edge->rbfv[1], 1);
 			mesh_from_edge(ej0);
 			mesh_from_edge(ej1);
 		}
@@ -945,7 +974,7 @@ build_mesh()
 	if (single_plane_incident) {
 		for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
 			if (rbf0->next != NULL)
-				make_migration(rbf0, rbf0->next);
+				make_migration(rbf0, rbf0->next, 1);
 		return;
 	}
 						/* start w/ shortest edge */
@@ -965,9 +994,9 @@ build_mesh()
 	}
 						/* build mesh from this edge */
 	if (shrt_edj[0] < shrt_edj[1])
-		mesh_from_edge(make_migration(shrt_edj[0], shrt_edj[1]));
+		mesh_from_edge(make_migration(shrt_edj[0], shrt_edj[1], 0));
 	else
-		mesh_from_edge(make_migration(shrt_edj[1], shrt_edj[0]));
+		mesh_from_edge(make_migration(shrt_edj[1], shrt_edj[0], 0));
 						/* draw edge list into grid */
 	draw_edges();
 }
