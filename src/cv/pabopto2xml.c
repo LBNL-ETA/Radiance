@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.14 2012/09/22 23:10:24 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.15 2012/09/23 16:45:20 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -774,7 +774,7 @@ overlaps_tri(const RBFNODE *bv0, const RBFNODE *bv1, const RBFNODE *pv)
 	const MIGRATION	*ej;
 	RBFNODE		*vother[2];
 	int		im_rev;
-					/* find shared edge in mesh */
+						/* find shared edge in mesh */
 	for (ej = pv->ejl; ej != NULL; ej = nextedge(pv,ej)) {
 		const RBFNODE	*tv = opp_rbf(pv,ej);
 		if (tv == bv0) {
@@ -788,7 +788,7 @@ overlaps_tri(const RBFNODE *bv0, const RBFNODE *bv1, const RBFNODE *pv)
 			break;
 		}
 	}
-	if (!get_triangles(vother, ej))
+	if (!get_triangles(vother, ej))		/* triangle on same side? */
 		return(0);
 	return(vother[im_rev] != NULL);
 }
@@ -806,16 +806,17 @@ find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 	if (normalize(vejn) == 0 || normalize(vmid) == 0)
 		return(NULL);
 						/* XXX exhaustive search */
+	/* Find triangle with minimum rotation from perpendicular */
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
 		if ((rbf == rbf0) | (rbf == rbf1))
 			continue;
 		tri_orient(vp, rbf0->invec, rbf1->invec, rbf->invec);
 		if (DOT(vp, vmid) <= FTINY)
 			continue;		/* wrong orientation */
-		area2 = DOT(vp,vp);
+		area2 = .25*DOT(vp,vp);
 		VSUB(vp, rbf->invec, rbf0->invec);
 		dprod = -DOT(vp, vejn);
-		VSUM(vp, vp, vejn, dprod);
+		VSUM(vp, vp, vejn, dprod);	/* above guarantees non-zero */
 		dprod = DOT(vp, vmid) / VLEN(vp);
 		if (dprod <= bestdprod + FTINY*(1 - 2*(area2 < bestarea2)))
 			continue;		/* found better already */
@@ -873,7 +874,7 @@ mesh_from_edge(MIGRATION *edge)
 #ifdef DEBUG
 #include "random.h"
 #include "bmpfile.h"
-/* Hash pointer to byte value */
+/* Hash pointer to byte value (must return 0 for NULL) */
 static int
 byte_hash(const void *p)
 {
@@ -895,8 +896,11 @@ write_edge_image(const char *fname)
 	hdr->compr = BI_RLE8;
 	for (i = 256; --i; ) {			/* assign random color map */
 		hdr->palette[i].r = random() & 0xff;
-		hdr->palette[i].r = random() & 0xff;
-		hdr->palette[i].r = random() & 0xff;
+		hdr->palette[i].g = random() & 0xff;
+		hdr->palette[i].b = random() & 0xff;
+						/* reject dark colors */
+		i += (hdr->palette[i].r + hdr->palette[i].g +
+						hdr->palette[i].b < 128);
 	}
 	hdr->palette[0].r = hdr->palette[0].g = hdr->palette[0].b = 0;
 						/* open output */
@@ -1037,6 +1041,77 @@ identify_tri(MIGRATION *miga[3], unsigned char vmap[GRIDRES][(GRIDRES+7)/8],
 	return(1);				/* this neighborhood done */
 }
 
+/* Insert vertex in ordered list */
+static void
+insert_vert(RBFNODE **vlist, RBFNODE *v)
+{
+	int	i, j;
+
+	for (i = 0; vlist[i] != NULL; i++) {
+		if (v == vlist[i])
+			return;
+		if (v < vlist[i])
+			break;
+	}
+	for (j = i; vlist[j] != NULL; j++)
+		;
+	while (j > i) {
+		vlist[j] = vlist[j-1];
+		--j;
+	}
+	vlist[i] = v;
+}
+
+/* Sort triangle edges in standard order */
+static int
+order_triangle(MIGRATION *miga[3])
+{
+	RBFNODE		*vert[7];
+	MIGRATION	*ord[3];
+	int		i;
+						/* order vertices, first */
+	memset(vert, 0, sizeof(vert));
+	for (i = 3; i--; ) {
+		if (miga[i] == NULL)
+			return(0);
+		insert_vert(vert, miga[i]->rbfv[0]);
+		insert_vert(vert, miga[i]->rbfv[1]);
+	}
+						/* should be just 3 vertices */
+	if ((vert[3] == NULL) | (vert[4] != NULL))
+		return(0);
+						/* identify edge 0 */
+	for (i = 3; i--; )
+		if (miga[i]->rbfv[0] == vert[0] &&
+				miga[i]->rbfv[1] == vert[1]) {
+			ord[0] = miga[i];
+			break;
+		}
+	if (i < 0)
+		return(0);
+						/* identify edge 1 */
+	for (i = 3; i--; )
+		if (miga[i]->rbfv[0] == vert[1] &&
+				miga[i]->rbfv[1] == vert[2]) {
+			ord[1] = miga[i];
+			break;
+		}
+	if (i < 0)
+		return(0);
+						/* identify edge 2 */
+	for (i = 3; i--; )
+		if (miga[i]->rbfv[0] == vert[0] &&
+				miga[i]->rbfv[1] == vert[2]) {
+			ord[2] = miga[i];
+			break;
+		}
+	if (i < 0)
+		return(0);
+						/* reassign order */
+	miga[0] = ord[0]; miga[1] = ord[1]; miga[2] = ord[2];
+	return(1);
+}
+
 /* Find edge(s) for interpolating the given incident vector */
 static int
 get_interp(MIGRATION *miga[3], const FVECT invec)
@@ -1062,6 +1137,9 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 	{					/* else use triangle mesh */
 		unsigned char	floodmap[GRIDRES][(GRIDRES+7)/8];
 		int		pstart[2];
+		RBFNODE		*vother;
+		MIGRATION	*ej;
+		int		i;
 
 		pos_from_vec(pstart, invec);
 		memset(floodmap, 0, sizeof(floodmap));
@@ -1072,7 +1150,44 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 			return(0);		/* should never happen */
 		if (miga[1] == NULL)
 			return(1);		/* on edge */
-		return(3);			/* else in triangle */
+						/* verify triangle */
+		if (!order_triangle(miga)) {
+#ifdef DEBUG
+			fputs("Munged triangle in get_interp()\n", stderr);
+#endif
+			vother = NULL;		/* find triangle from edge */
+			for (i = 3; i--; ) {
+			    RBFNODE	*tpair[2];
+			    if (get_triangles(tpair, miga[i]) &&
+					(vother = tpair[ is_rev_tri(
+							miga[i]->rbfv[0]->invec,
+							miga[i]->rbfv[1]->invec,
+							invec) ]) != NULL)
+					break;
+			}
+			if (vother == NULL) {	/* couldn't find 3rd vertex */
+#ifdef DEBUG
+				fputs("No triangle in get_interp()\n", stderr);
+#endif
+				return(0);
+			}
+						/* reassign other two edges */
+			for (ej = vother->ejl; ej != NULL;
+						ej = nextedge(vother,ej)) {
+				RBFNODE	*vorig = opp_rbf(vother,ej);
+				if (vorig == miga[i]->rbfv[0])
+					miga[(i+1)%3] = ej;
+				else if (vorig == miga[i]->rbfv[1])
+					miga[(i+2)%3] = ej;
+			}
+			if (!order_triangle(miga)) {
+#ifdef DEBUG
+				fputs("Bad triangle in get_interp()\n", stderr);
+#endif
+				return(0);
+			}
+		}
+		return(3);			/* return in standard order */
 	}
 }
 
@@ -1151,64 +1266,6 @@ memerr:
 	return(NULL);	/* pro forma return */
 }
 
-/* Insert vertex in ordered list */
-static void
-insert_vert(RBFNODE **vlist, RBFNODE *v)
-{
-	int	i, j;
-
-	for (i = 0; vlist[i] != NULL; i++) {
-		if (v == vlist[i])
-			return;
-		if (v < vlist[i])
-			break;
-	}
-	for (j = i; vlist[j] != NULL; j++)
-		;
-	while (j > i) {
-		vlist[j] = vlist[j-1];
-		--j;
-	}
-	vlist[i] = v;
-}
-
-/* Sort triangle edges in standard order */
-static void
-order_triangle(MIGRATION *miga[3])
-{
-	RBFNODE		*vert[4];
-	MIGRATION	*ord[3];
-	int		i;
-						/* order vertices, first */
-	memset(vert, 0, sizeof(vert));
-	for (i = 0; i < 3; i++) {
-		insert_vert(vert, miga[i]->rbfv[0]);
-		insert_vert(vert, miga[i]->rbfv[1]);
-	}
-						/* identify edge 0 */
-	for (i = 0; i < 3; i++)
-		if (miga[i]->rbfv[0] == vert[0] &&
-				miga[i]->rbfv[1] == vert[1]) {
-			ord[0] = miga[i];
-			break;
-		}
-						/* identify edge 1 */
-	for (i = 0; i < 3; i++)
-		if (miga[i]->rbfv[0] == vert[1] &&
-				miga[i]->rbfv[1] == vert[2]) {
-			ord[1] = miga[i];
-			break;
-		}
-						/* identify edge 2 */
-	for (i = 0; i < 3; i++)
-		if (miga[i]->rbfv[0] == vert[0] &&
-				miga[i]->rbfv[1] == vert[2]) {
-			ord[2] = miga[i];
-			break;
-		}
-	miga[0] = ord[0]; miga[1] = ord[1]; miga[2] = ord[2];
-}
-
 /* Partially advect between recorded incident angles and allocate new RBF */
 static RBFNODE *
 advect_rbf(const FVECT invec)
@@ -1224,8 +1281,6 @@ advect_rbf(const FVECT invec)
 		return(NULL);
 	if (miga[1] == NULL)			/* advect along edge? */
 		return(e_advect_rbf(miga[0], invec));
-						/* put in standard order */
-	order_triangle(miga);
 #ifdef DEBUG
 	if (miga[0]->rbfv[0] != miga[2]->rbfv[0] |
 			miga[0]->rbfv[1] != miga[1]->rbfv[0] |
