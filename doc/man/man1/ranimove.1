@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimove.1,v 1.6 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: ranimove.1,v 1.7 2012/09/28 02:26:59 greg Exp $"
 .TH RANIMOVE 1 1/30/03 RADIANCE
 .SH NAME
 ranimove - render a RADIANCE animation with motion
@@ -192,8 +192,8 @@ The first is the name of a parent move object, or "void" if none.
 If given, the object's transformation will be prepended to that
 of its parent.
 The second argument is the name of this object, which will be used
-to name surfaces it contains, and as a modifier for any child objects
-that reference it.
+to name surfaces it contains, and as a parent identifier for any child
+objects that reference it.
 The third argument is the transformation string or file for this object.
 If this argument is enclosed in quotes and begins with a hyphen
 ('-'), then it will be interpreted as a
@@ -215,17 +215,17 @@ appended to the command, and its output will be passed to
 the input of
 .I xform
 for each frame.
-An optinal fifth argument
+An optional fifth argument
 specifies the rendering priority for this object.
-Values greater than 1 will result in preferential rendering of
+Values greater than 1.0 will result in preferential rendering of
 this object over other portions of the image when it appears in a frame.
-Values less than 1 will cause the rendering to neglect this object in
+Values less than 1.0 will cause the rendering to neglect this object in
 favor of other parts of the image.
 A value of 3.0 can be interpreted as saying the viewer is three times more
 likely to look at this object than the background.
 A file may be given rather than a floating point value, and this file must
-contain one floating point number per line, corresponding to frames in the
-animation.
+contain one floating point number per line, corresponding to priorities
+for frames in the animation.
 .TP
 .BR VIEWFILE
 This variable names a file from which
