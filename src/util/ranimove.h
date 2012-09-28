@@ -1,4 +1,4 @@
-/* RCSid $Id: ranimove.h,v 3.7 2011/05/20 02:06:39 greg Exp $ */
+/* RCSid $Id: ranimove.h,v 3.8 2012/09/28 22:20:49 greg Exp $ */
 /*
  *  ranimove.h
  *
@@ -34,15 +34,17 @@ extern "C" {
 #define HIGHQ		3		/* high quality setting */
 #define LOWQ		4		/* low quality setting */
 #define MBLUR		5		/* motion blur parameter */
-#define MOVE		6		/* object movement */
-#define OCONV		7		/* oconv options */
-#define OCTREEF		8		/* octree file name */
-#define RATE		9		/* frame rate (fps) */
-#define RESOLUTION	10		/* desired final resolution */
-#define RIF		11		/* rad input file */
-#define VIEWFILE	12		/* animation frame views */
+#define MNAME		6		/* motion vector file */
+#define MOVE		7		/* object movement */
+#define OCONV		8		/* oconv options */
+#define OCTREEF		9		/* octree file name */
+#define RATE		10		/* frame rate (fps) */
+#define RESOLUTION	11		/* desired final resolution */
+#define RIF		12		/* rad input file */
+#define VIEWFILE	13		/* animation frame views */
+#define ZNAME		14		/* depth file */
 
-#define NV_INIT		13		/* number of variables */
+#define NV_INIT		15		/* number of variables */
 
 #define VV_INIT { \
 		{"BASENAME",	3,	0,	NULL,	onevalue}, \
@@ -51,13 +53,15 @@ extern "C" {
 		{"highq",	2,	0,	NULL,	catvalues}, \
 		{"lowq",	2,	0,	NULL,	catvalues}, \
 		{"MBLUR",	2,	0,	NULL,	fltvalue}, \
+		{"MNAME",	2,	0,	NULL,	onevalue}, \
 		{"move",	2,	0,	NULL,	NULL}, \
 		{"oconv",	2,	0,	NULL,	catvalues}, \
 		{"OCTREE",	3,	0,	NULL,	onevalue}, \
 		{"RATE",	2,	0,	NULL,	fltvalue}, \
 		{"RESOLUTION",	3,	0,	NULL,	onevalue}, \
 		{"RIF",		3,	0,	NULL,	onevalue}, \
-		{"VIEWFILE",	2,	0,	NULL,	onevalue} \
+		{"VIEWFILE",	2,	0,	NULL,	onevalue}, \
+		{"ZNAME",	2,	0,	NULL,	onevalue} \
 	}
 
 struct ObjMove {
@@ -173,14 +177,14 @@ extern void	init_frame(void);
 extern void filter_frame(void);
 extern void send_frame(void);
 extern void free_frame(void);
-extern void write_map(float	*mp, char	*fn);
-extern void sample_pos(double	hv[2], int	x, int	y, int	sn);
+extern void write_map(float *mp, char *fn);
+extern void sample_pos(double hv[2], int x, int y, int sn);
 extern void comp_frame_error(void);
-extern int	getclosest(int	*iarr, int	nc, int	x, int	y);
-extern int getambcolor(COLOR	clr, int	obj);
-extern double	sample_wt(int	xo, int yo);
-extern double estimaterr(COLOR	cs, COLOR	cs2, int	ns, int ns0);
-extern double comperr(int	*neigh, int	nc, int	ns0); 
+extern int	getclosest(int *iarr, int nc, int x, int y);
+extern int getambcolor(COLOR clr, int obj);
+extern double	sample_wt(int xo, int yo);
+extern double estimaterr(COLOR cs, COLOR cs2, int ns, int ns0);
+extern double comperr(int *neigh, int nc, int ns0); 
 
 	/* ranimove2.c */
 extern int refine_first();
@@ -189,8 +193,8 @@ extern int refine_frame(int pass);
 
 	/* ranimove.c */
 extern double getTime(void);
-extern double obj_prio(OBJECT	obj);
-extern int getmove(OBJECT	obj);
+extern double obj_prio(OBJECT obj);
+extern int getmove(OBJECT obj);
 extern char * getoctspec(int n);
 extern double expspec_val(char *s);
 extern char *getexp(int n); /* XXX partly duplicated function */

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimove.1,v 1.7 2012/09/28 02:26:59 greg Exp $"
+.\" RCSid "$Id: ranimove.1,v 1.8 2012/09/28 22:20:49 greg Exp $"
 .TH RANIMOVE 1 1/30/03 RADIANCE
 .SH NAME
 ranimove - render a RADIANCE animation with motion
@@ -328,6 +328,31 @@ manual page for a list of valid options.
 (The
 .I \-f
 option is specified by default.)\0
+.TP
+.BR ZNAME
+The base file name for the depth buffer output frames.
+This string should contain a
+.I printf(3)
+style integer field to distinguish one frame number from another.
+The final frames will use this name with a ".zbf" suffix.
+This is intended for debugging purposes, and is not useful in
+most circumstances.
+There is no default setting for this variable.
+.TP
+.BR MNAME
+The base file name for the motion vector output frames.
+This string should contain a
+.I printf(3)
+style integer field to distinguish one frame number from another.
+The final frames will use this name with a ".mvo" suffix.
+This is mostly for debugging and special applications,
+and not intended for normal use.
+The file will contain 3 16-bit unsigned values per pixel.
+The first two are the x and y offsets from the previous frame, with
+an offset of 32768.
+The third value is 0 if the previous frame's pixel was on a
+different object, and 32768 if it was on the same object.
+There is no default setting for this variable.
 .SH EXAMPLES
 A minimal input file for
 .I ranimove
@@ -383,5 +408,5 @@ Note the use of abbreviation for variable names.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-fieldcomb(1), oconv(1), pfilt(1), pinterp(1), rad(1),
+fieldcomb(1), oconv(1), pfilt(1), pinterp(1), pvalue(1), rad(1),
 ran2tiff(1), ranimate(1), rpict(1), xform(1)

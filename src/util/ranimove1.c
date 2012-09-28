@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.17 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.18 2012/09/28 22:20:49 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -145,6 +145,7 @@ next_frame(void)			/* prepare next frame buffer */
 			error(SYSTEM, "out of memory in init_frame");
 		for (n = hres*vres; n--; ) {
 			zprev[n] = -1.f;
+			xmbuffer[n] = ymbuffer[n] = MO_UNK;
 			oprev[n] = OVOID;
 		}
 		frm_stop = getTime() + rtperfrm;
@@ -172,8 +173,8 @@ next_frame(void)			/* prepare next frame buffer */
 
 static int
 sample_here(		/* 4x4 quincunx sample at this pixel? */
-	register int	x,
-	register int	y
+	int	x,
+	int	y
 )
 {
 	if (y & 0x1)		/* every other row has samples */
@@ -248,7 +249,7 @@ getclosest(	/* get nc closest neighbors on same object */
 	static int	ioffs[NSCHECK];
 	OBJECT	myobj;
 	int	i0, nf;
-	register int	i, j;
+	int	i, j;
 					/* get our object number */
 	myobj = obuffer[fndx(x, y)];
 					/* special case for borders */
@@ -312,7 +313,7 @@ getclosest(	/* get nc closest neighbors on same object */
 
 static void
 setmotion(		/* compute motion vector for this pixel */
-		register int	n,
+		int	n,
 		FVECT	wpos
 )
 {
@@ -351,7 +352,7 @@ init_frame_sample(void)		/* sample our initial frame */
 {
 	RAY	ir;
 	int	x, y;
-	register int	n;
+	int	n;
 
 	if (!silent) {
 		printf("\tComputing initial samples...");
@@ -457,7 +458,7 @@ getambcolor(		/* get ambient color for object if we can */
 		int	obj
 )
 {
-	register OBJREC	*op;
+	OBJREC	*op;
 
 	if (obj == OVOID)
 		return(0);
@@ -556,7 +557,7 @@ comperr(		/* estimate relative error in neighborhood */
 	COLOR	ctmp;
 	int	i;
 	int	ns;
-	register int	n;
+	int	n;
 					/* add together samples */
 	setcolor(csum, 0., 0., 0.);
 	setcolor(csum2, 0., 0., 0.);
@@ -590,7 +591,7 @@ comp_frame_error(void)		/* initialize frame error values */
 	int	neigh[NSAMPOK];
 	int	nc;
 	int	x, y, i;
-	register int	n;
+	int	n;
 
 	if (!silent) {
 		printf("\tComputing error map\n");
@@ -705,7 +706,7 @@ init_frame(void)			/* render base (low quality) frame */
 {
 	float	*ebuf = (float *)malloc(sizeof(float)*hres*vres);
 	char	fnm[256];
-	register int	n;
+	int	n;
 	for (n = hres*vres; n--; )
 		ebuf[n] = acctab[abuffer[n]];
 	sprintf(fnm, vval(BASENAME), fcur);
@@ -726,7 +727,7 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 	int	nc;
 	COLOR	cval;
 	double	w, wsum;
-	register int	n;
+	int	n;
 
 #if 0
 	/* XXX TEMPORARY!! */
@@ -898,21 +899,21 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 extern void
 send_frame(void)			/* send frame to destination */
 {
-	char	pfname[1024];
+	char	fname[1024];
 	double	d;
 	FILE	*fp;
 	int	y;
 					/* open output picture */
-	sprintf(pfname, vval(BASENAME), fcur);
-	strcat(pfname, ".hdr");
-	fp = fopen(pfname, "w");
+	sprintf(fname, vval(BASENAME), fcur);
+	strcat(fname, ".hdr");
+	fp = fopen(fname, "w");
 	if (fp == NULL) {
-		sprintf(errmsg, "cannot open output frame \"%s\"", pfname);
+		sprintf(errmsg, "cannot open output frame \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}
 	SET_FILE_BINARY(fp);
 	if (!silent) {
-		printf("\tWriting to \"%s\"\n", pfname);
+		printf("\tWriting to \"%s\"\n", fname);
 		fflush(stdout);
 	}
 					/* write header */
@@ -941,9 +942,62 @@ send_frame(void)			/* send frame to destination */
 			goto writerr;
 	if (fclose(fp) == EOF)
 		goto writerr;
+	if (vdef(ZNAME)) {		/* output z-buffer */
+		sprintf(fname, vval(ZNAME), fcur);
+		strcat(fname, ".zbf");
+		fp = fopen(fname, "w");
+		if (fp == NULL) {
+			sprintf(errmsg, "cannot open z-file \"%s\"\n", fname);
+			error(SYSTEM, errmsg);
+		}
+		SET_FILE_BINARY(fp);
+		if (!silent) {
+			printf("\tWriting depths to \"%s\"\n", fname);
+			fflush(stdout);
+		}
+		for (y = vres; y--; )
+			if (fwrite(zbuffer+y*hres, sizeof(float),
+						hres, fp) != hres)
+				goto writerr;
+		if (fclose(fp) == EOF)
+			goto writerr;
+	}
+	if (vdef(MNAME)) {		/* output motion buffer */
+		unsigned short	*mbuffer = (unsigned short *)malloc(
+						sizeof(unsigned short)*3*hres);
+		int		x;
+		if (mbuffer == NULL)
+			error(SYSTEM, "out of memory in send_frame()");
+		sprintf(fname, vval(MNAME), fcur);
+		strcat(fname, ".mvo");
+		fp = fopen(fname, "w");
+		if (fp == NULL) {
+			sprintf(errmsg, "cannot open motion file \"%s\"\n",
+							fname);
+			error(SYSTEM, errmsg);
+		}
+		SET_FILE_BINARY(fp);
+		if (!silent) {
+			printf("\tWriting motion vectors to \"%s\"\n", fname);
+			fflush(stdout);
+		}
+		for (y = vres; y--; ) {
+			for (x = hres; x--; ) {
+				mbuffer[3*x] = xmbuffer[fndx(x,y)] + 0x8000;
+				mbuffer[3*x+1] = ymbuffer[fndx(x,y)] + 0x8000;
+				mbuffer[3*x+2] = (oprev[fndx(x,y)]!=OVOID)*0x8000;
+			}
+			if (fwrite(mbuffer, sizeof(*mbuffer),
+						3*hres, fp) != 3*hres)
+				goto writerr;
+		}
+		free((void *)mbuffer);
+		if (fclose(fp) == EOF)
+			goto writerr;
+	}
 	return;				/* all is well */
 writerr:
-	sprintf(errmsg, "error writing frame \"%s\"", pfname);
+	sprintf(errmsg, "error writing file \"%s\"", fname);
 	error(SYSTEM, errmsg);
 }
 
