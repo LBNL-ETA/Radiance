@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.25 2012/09/10 18:06:08 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.26 2012/09/29 21:18:20 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -603,7 +603,7 @@ make_cdist(const SDTre *sdt, const double *invec, int rev)
 					/* record input range */
 	scale = myScaffold.wmin / (double)iwmax;
 	for (i = myScaffold.nic; i--; ) {
-		cd->clim[i][0] = floor(pos[i]/scale) * scale;
+		cd->clim[i][0] = floor(pos[i+2*rev]/scale) * scale;
 		cd->clim[i][1] = cd->clim[i][0] + scale;
 	}
 	if (cd->isodist) {		/* avoid issue in SDqueryTreProjSA() */
