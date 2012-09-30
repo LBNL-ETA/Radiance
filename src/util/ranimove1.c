@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.18 2012/09/28 22:20:49 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.19 2012/09/30 19:18:41 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -55,7 +55,7 @@ static void init_frame_sample(void);
 
 
 #if 0
-extern void
+void
 write_map(		/* write out float map (debugging) */
 	float	*mp,
 	char	*fn
@@ -185,7 +185,7 @@ sample_here(		/* 4x4 quincunx sample at this pixel? */
 }
 
 
-extern void
+void
 sample_pos(	/* compute jittered sample position */
 	double	hv[2],
 	int	x,
@@ -202,7 +202,7 @@ sample_pos(	/* compute jittered sample position */
 }
 
 
-extern double
+double
 sample_wt(		/* compute interpolant sample weight */
 	int	xo,
 	int yo
@@ -236,7 +236,7 @@ offset_cmp(		/* compare offset distances */
 }
 
 
-extern int
+int
 getclosest(	/* get nc closest neighbors on same object */
 	int	*iarr,
 	int	nc,
@@ -452,7 +452,7 @@ init_frame_sample(void)		/* sample our initial frame */
 }
 
 
-extern int
+int
 getambcolor(		/* get ambient color for object if we can */
 		COLOR	clr,
 		int	obj
@@ -520,7 +520,7 @@ getambcolor(		/* get ambient color for object if we can */
 }
 
 
-extern double
+double
 estimaterr(		/* estimate relative error from samples */
 		COLOR	cs,
 		COLOR	cs2,
@@ -546,7 +546,7 @@ estimaterr(		/* estimate relative error from samples */
 }
 
 
-extern double
+double
 comperr(		/* estimate relative error in neighborhood */
 		int	*neigh,
 		int	nc,
@@ -582,7 +582,7 @@ comperr(		/* estimate relative error in neighborhood */
 }
 
 
-extern void
+void
 comp_frame_error(void)		/* initialize frame error values */
 {
 	uby8	*edone = NULL;
@@ -610,9 +610,7 @@ comp_frame_error(void)		/* initialize frame error values */
 		 * by the returned ray value -- we take half of this.
 		 */
 		edone = (uby8 *)calloc(hres*vres, sizeof(uby8));
-		for (y = vres; y--; )
-		    for (x = hres; x--; ) {
-			n = fndx(x, y);
+		for (n = hres*vres; n--; ) {
 			if ((abuffer[n] != ALOWQ) | (obuffer[n] == OVOID))
 				continue;
 			if (!getambcolor(objamb, obuffer[n]))
@@ -629,7 +627,7 @@ comp_frame_error(void)		/* initialize frame error values */
 			else if (i >= ADISTANT/2) i = ADISTANT/2-1;
 			abuffer[n] = i;
 			edone[n] = 1;
-		    }
+		}
 	}
 					/* final statistical estimate */
 	for (y = vres; y--; )
@@ -661,7 +659,7 @@ comp_frame_error(void)		/* initialize frame error values */
 }
 
 
-extern void
+void
 init_frame(void)			/* render base (low quality) frame */
 {
 	int	restart;
@@ -718,16 +716,16 @@ init_frame(void)			/* render base (low quality) frame */
 }
 
 
-extern void
+void
 filter_frame(void)			/* interpolation, motion-blur, and exposure */
 {
-	double	expval = expspec_val(getexp(fcur));
-	int	x, y;
-	int	neigh[NPINTERP];
-	int	nc;
-	COLOR	cval;
-	double	w, wsum;
-	int	n;
+	const double	expval = expspec_val(getexp(fcur));
+	int		x, y;
+	int		neigh[NPINTERP];
+	int		nc;
+	COLOR		cval;
+	double		w, wsum;
+	int		n;
 
 #if 0
 	/* XXX TEMPORARY!! */
@@ -747,14 +745,12 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 		fflush(stdout);
 	}
 					/* normalize samples */
-	for (y = vres; y--; )
-	    for (x = hres; x--; ) {
-		n = fndx(x, y);
+	for (n = hres*vres; n--; ) {
 		if (sbuffer[n] <= 1)
 			continue;
 		w = 1.0/(double)sbuffer[n];
 		scalecolor(cbuffer[n], w);
-	    }
+	}
 					/* interpolate samples */
 	for (y = vres; y--; )
 	    for (x = hres; x--; ) {
@@ -861,26 +857,22 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 			}
 		    }
 					/* compute final results */
-		for (y = vres; y--; )
-		    for (x = hres; x--; ) {
-			n = fndx(x, y);
+		for (n = hres*vres; n--; ) {
 			if (wbuffer[n] <= FTINY)
 				continue;
-			w = 1./wbuffer[n];
+			w = expval/wbuffer[n];
 			scalecolor(outbuffer[n], w);
-		    }
-	} else
-		for (n = hres*vres; n--; )
-			copycolor(outbuffer[n], cbuffer[n]);
+		}
+	} else {			/* no blur -- just exposure */
+		memcpy(outbuffer, cbuffer, sizeof(COLOR)*hres*vres);
+		for (n = ((expval < 0.99) | (expval > 1.01))*hres*vres; n--; )
+			scalecolor(outbuffer[n], expval);
+	}
 	/*
 	   for (n = hres*vres; n--; )
 		   if (!sbuffer[n])
 			   setcolor(outbuffer[n], 0., 0., 0.);
 	 */
-	/* adjust exposure */
-	if ((expval < 0.99) | (expval > 1.01))
-		for (n = hres*vres; n--; )
-			scalecolor(outbuffer[n], expval);
 #if 0
 	{
 		float	*sbuf = (float *)malloc(sizeof(float)*hres*vres);
@@ -896,7 +888,7 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 }
 
 
-extern void
+void
 send_frame(void)			/* send frame to destination */
 {
 	char	fname[1024];
@@ -1002,7 +994,7 @@ writerr:
 }
 
 
-extern void
+void
 free_frame(void)			/* free frame allocation */
 {
 	if (cbuffer == NULL)
