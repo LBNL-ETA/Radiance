@@ -1,4 +1,7 @@
-hermite(p0,p1,r0,r1,t) =	p0 * ((2*t-3)*t*t+1) +
+{ RCSid $Id: hermite.cal,v 1.2 2012/10/01 19:53:38 greg Exp $ }
+{ Hermite spline function }
+
+hermite(p0,p1,r0,r1,t) :	p0 * ((2*t-3)*t*t+1) +
 				p1 * (-2*t+3)*t*t +
 				r0 * (((t-2)*t+1)*t) +
 				r1 * ((t-1)*t*t);
