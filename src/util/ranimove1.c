@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.19 2012/09/30 19:18:41 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.20 2012/10/02 21:56:20 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -48,9 +48,9 @@ double		hlsmax;		/* maximum high-level saliency this frame */
 
 
 static void next_frame(void);
-static int sample_here(int	x, int	y);
-static int offset_cmp(const void	*p1, const void	*p2);
-static void setmotion(int	n, FVECT	wpos);
+static int sample_here(int x, int y);
+static int offset_cmp(const void *p1, const void *p2);
+static void setmotion(int n, FVECT wpos);
 static void init_frame_sample(void);
 
 
@@ -145,8 +145,7 @@ next_frame(void)			/* prepare next frame buffer */
 			error(SYSTEM, "out of memory in init_frame");
 		for (n = hres*vres; n--; ) {
 			zprev[n] = -1.f;
-			xmbuffer[n] = ymbuffer[n] = MO_UNK;
-			oprev[n] = OVOID;
+ 			oprev[n] = OVOID;
 		}
 		frm_stop = getTime() + rtperfrm;
 	} else {
@@ -363,8 +362,7 @@ init_frame_sample(void)		/* sample our initial frame */
 	    for (x = hres; x--; ) {
 		double	hv[2];
 		n = fndx(x, y);
-		xmbuffer[n] = MO_UNK;
-		ymbuffer[n] = MO_UNK;
+		xmbuffer[n] = ymbuffer[n] = MO_UNK;
 		sample_pos(hv, x, y, 0);
 		ir.rmax = viewray(ir.rorg, ir.rdir, &vw, hv[0], hv[1]);
 		if (ir.rmax < -FTINY) {
@@ -739,7 +737,6 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 		free((void *)ebuf);
 	}
 #endif
-
 	if (!silent) {
 		printf("\tFiltering frame\n");
 		fflush(stdout);
@@ -957,9 +954,9 @@ send_frame(void)			/* send frame to destination */
 	if (vdef(MNAME)) {		/* output motion buffer */
 		unsigned short	*mbuffer = (unsigned short *)malloc(
 						sizeof(unsigned short)*3*hres);
-		int		x;
+		int		x, n;
 		if (mbuffer == NULL)
-			error(SYSTEM, "out of memory in send_frame()");
+			error(SYSTEM, "out of memory in send_frame");
 		sprintf(fname, vval(MNAME), fcur);
 		strcat(fname, ".mvo");
 		fp = fopen(fname, "w");
@@ -975,9 +972,10 @@ send_frame(void)			/* send frame to destination */
 		}
 		for (y = vres; y--; ) {
 			for (x = hres; x--; ) {
-				mbuffer[3*x] = xmbuffer[fndx(x,y)] + 0x8000;
-				mbuffer[3*x+1] = ymbuffer[fndx(x,y)] + 0x8000;
-				mbuffer[3*x+2] = (oprev[fndx(x,y)]!=OVOID)*0x8000;
+				n = fndx(x,y);
+				mbuffer[3*x] = xmbuffer[n] + 0x8000;
+				mbuffer[3*x+1] = ymbuffer[n] + 0x8000;
+				mbuffer[3*x+2] = (oprev[n]!=OVOID)*0x8000;
 			}
 			if (fwrite(mbuffer, sizeof(*mbuffer),
 						3*hres, fp) != 3*hres)
