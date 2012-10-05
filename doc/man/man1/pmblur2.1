@@ -1,10 +1,10 @@
-.\" RCSid "$Id: pmblur2.1,v 1.1 2012/10/05 00:59:38 greg Exp $"
+.\" RCSid "$Id: pmblur2.1,v 1.2 2012/10/05 02:07:10 greg Exp $"
 .TH PMBLUR2 1 10/4/2012 RADIANCE
 .SH NAME
 pmblur2 - apply motion blur to a frame from an animation
 .SH SYNOPSIS
 .B pmblur2
-.B f0,f1
+.B f0,f1/n
 .B HDRspec
 .B ZBFspec
 .B MVOspec
@@ -30,7 +30,10 @@ The starting and ending frame number are usually given as floating-point
 values.
 For example, the range "10.75,11.25" would simulate a 180-degree shutter
 around frame 11.
-The range "5,15" would blur all the frames from 5 to 15 continuously.
+An optional time slice count may be given to override the one that is
+computed by default.
+The range "5,15/30" would blur all the frames from 5 to 15 continuously
+using 30 time slices.
 The blurred image is always sent to stdout.
 .SH EXAMPLES
 To blur and downsample frame 95 with a 360-degree shutter:

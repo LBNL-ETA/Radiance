@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.1 2012/10/05 00:59:38 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.2 2012/10/05 02:07:10 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -384,12 +384,16 @@ main(int argc, char *argv[])
 	SET_DEFAULT_BINARY();
 	if (argc != 5)
 		goto userr;
-				/* get frame range */
-	switch (sscanf(argv[1], "%lf,%lf", &fstart, &fend)) {
+				/* get frame range & sampling */
+	switch (sscanf(argv[1], "%lf,%lf/%d", &fstart, &fend, &nsamps)) {
 	case 1:
+		nsamps = 0;
 		fend = fstart;
 		break;
 	case 2:
+		nsamps = 0;
+		/* fall through */
+	case 3:
 		if (fend < fstart)
 			goto userr;
 		break;
@@ -398,17 +402,19 @@ main(int argc, char *argv[])
 	}
 	if (fstart < 1)
 		goto userr;
-	hdrspec = argv[2];
-	zbfspec = argv[3];
-	mvospec = argv[4];
-	nsamps = (fend - fstart)*12.;
+	if (nsamps <= 0)
+		nsamps = (fend - fstart)*17.;
 	if (nsamps) {
+		if (nsamps > 100) nsamps = 100;
 		fstep = (fend - fstart)/nsamps;
 	} else {
 		fstep = 1.;
 		fstart -= .5;
 		nsamps = 1;
 	}
+	hdrspec = argv[2];
+	zbfspec = argv[3];
+	mvospec = argv[4];
 				/* load and filter each subframe */
 	for (fcur = fstart + .5*fstep; fcur <= fend; fcur += fstep)
 		addframe(fcur);
