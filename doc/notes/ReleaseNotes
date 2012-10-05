@@ -1844,3 +1844,6 @@ Fixed bug in reciprocity for tensor tree BTDF representations.  Thanks
 to Andy McNeil for identifying the problem.
 
 Added MNAME and ZNAME variables to ranimove for debugging & testing.
+
+Created pmblur2 command to take motion and depth buffers from ranimove
+to compute a better motion blur.

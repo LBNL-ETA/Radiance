@@ -1,0 +1,42 @@
+.\" RCSid "$Id: pmblur2.1,v 1.1 2012/10/05 00:59:38 greg Exp $"
+.TH PMBLUR2 1 10/4/2012 RADIANCE
+.SH NAME
+pmblur2 - apply motion blur to a frame from an animation
+.SH SYNOPSIS
+.B pmblur2
+.B f0,f1
+.B HDRspec
+.B ZBFspec
+.B MVOspec
+.SH DESCRIPTION
+.I Pmblur2
+Computes a square-shutter blur from frame position
+.I f0
+to frame position
+.I f1
+using the given picture, depth buffer, and motion vector offset files
+produced by
+.I ranimove(1).
+These arguments should be set similarly to the
+.I BASENAME,
+.I ZNAME,
+and
+.I MNAME
+variables in the
+.I ranimove
+input file, but should include the suffixes as well.
+.PP
+The starting and ending frame number are usually given as floating-point
+values.
+For example, the range "10.75,11.25" would simulate a 180-degree shutter
+around frame 11.
+The range "5,15" would blur all the frames from 5 to 15 continuously.
+The blurred image is always sent to stdout.
+.SH EXAMPLES
+To blur and downsample frame 95 with a 360-degree shutter:
+.IP "" .2i
+pmblur2 94.5,95.5 frame%03d.hdr frame%03d.zbf frame%03d.mvo | pfilt -1 -x /2 -y /2 > final95.hdr
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+pdfblur(1), pfilt(1), pinterp(1), pmblur(1), pmdblur(1), ranimove(1)

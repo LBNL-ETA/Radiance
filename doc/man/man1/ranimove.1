@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ranimove.1,v 1.8 2012/09/28 22:20:49 greg Exp $"
+.\" RCSid "$Id: ranimove.1,v 1.9 2012/10/05 00:59:38 greg Exp $"
 .TH RANIMOVE 1 1/30/03 RADIANCE
 .SH NAME
 ranimove - render a RADIANCE animation with motion
@@ -277,8 +277,17 @@ This variable specifies the fraction of a frame time that the shutter
 is simulated as being open for motion blur.
 Motion blur is computed by
 .I ranimove
-using image-based rendering methods, and will not be exact.
-The default value is 0, meaning no motion blurring.
+using image-based rendering methods in a rather crude fashion.
+A much better result is achieved by setting
+.I MBLUR=0
+and using the
+.I pmblur2(1)
+command as a post-process, assigning the
+.I ZNAME
+and
+.I MNAME
+variables described below.
+The default motion blur is 0.
 .TP
 .BR RATE
 This variable specifies the animation frame rate, in frames per second.
@@ -335,8 +344,9 @@ This string should contain a
 .I printf(3)
 style integer field to distinguish one frame number from another.
 The final frames will use this name with a ".zbf" suffix.
-This is intended for debugging purposes, and is not useful in
-most circumstances.
+This is needed by the
+.I pmblur2
+command to compute a better motion blur.
 There is no default setting for this variable.
 .TP
 .BR MNAME
@@ -345,11 +355,15 @@ This string should contain a
 .I printf(3)
 style integer field to distinguish one frame number from another.
 The final frames will use this name with a ".mvo" suffix.
-This is mostly for debugging and special applications,
-and not intended for normal use.
+This file is used together with the image and depth buffer by
+.I pmblur2
+to compute a better motion blur.
+In this case, the
+.I MBLUR
+variable should be unset or zero.
 The file will contain 3 16-bit unsigned values per pixel.
-The first two are the x and y offsets from the previous frame, with
-an offset of 32768.
+The first two are the x and y offsets to each pixel in the previous frame,
+with an offset of 32768 being no movement.
 The third value is 0 if the previous frame's pixel was on a
 different object, and 32768 if it was on the same object.
 There is no default setting for this variable.
@@ -408,5 +422,5 @@ Note the use of abbreviation for variable names.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-fieldcomb(1), oconv(1), pfilt(1), pinterp(1), pvalue(1), rad(1),
+fieldcomb(1), oconv(1), pfilt(1), pinterp(1), pmblur2(1), pvalue(1), rad(1),
 ran2tiff(1), ranimate(1), rpict(1), xform(1)
