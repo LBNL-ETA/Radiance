@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.2 2012/10/05 02:07:10 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.3 2012/10/05 15:25:12 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -111,6 +111,10 @@ loadprev(int fno)
 	exprev = ih.ev;
 	if (!fgetsresolu(&rs, fp))
 		goto readerr;
+	if (rs.rt != PIXSTANDARD) {
+		sprintf(errmsg, "unsupported orientation in picture \"%s\"", fname);
+		error(USER, errmsg);
+	}
 	if (!imres.xr) {		/* allocate buffers */
 		imres = rs;
 		imsum = (COLOR *)ecalloc(imres.xr*imres.yr, sizeof(COLOR));
@@ -146,15 +150,15 @@ readerr:
 /* Interpolate between two image pixels */
 /* XXX skipping expensive ray vector calculations for now */
 static void
-interp_pixel(COLOR con, const VIEW *vwn, int xn, int yn, double zn,
-			double pos, int xp, int yp)
+interp_pixel(COLOR con, const VIEW *vwn, int xn, int yn, double zval,
+			double pos, int xp, int yp, int interpOK)
 {
 	const int	hres = scanlen(&imres);
 	RREAL		ipos;
 	FVECT		wprev, wcoor, rdir;
 	int		np, xd, yd, nd;
 	COLOR		cpr;
-	double		sf, zval;
+	double		sf;
 					/* check if off image */
 	if ((xp < 0) | (xp >= hres))
 		return;
@@ -164,17 +168,20 @@ interp_pixel(COLOR con, const VIEW *vwn, int xn, int yn, double zn,
 	xd = (1.-pos)*xp + pos*xn + .5;
 	yd = (1.-pos)*yp + pos*yn + .5;
 	nd = yd*hres + xd;
-					/* check interpolated depth */
-	zval = (1.-pos)*zprev[np] + pos*zn;
+					/* check depth */
+	if (interpOK)
+		zval = (1.-pos)*zprev[np] + pos*zval;
 	if (zval >= zbuf[nd])
 		return;
-	copycolor(imbuf[nd], con);	/* assign interpolated color */
+	zbuf[nd] = zval;		/* assign new depth */
+	copycolor(imbuf[nd], con);	/* assign new color */
+	if (!interpOK)
+		return;
 	scalecolor(imbuf[nd], pos);
 	sf = (1.-pos)/exprev;
 	colr_color(cpr, imprev[np]);
 	scalecolor(cpr, sf);
 	addcolor(imbuf[nd], cpr);
-	zbuf[nd] = zval;		/* assign new depth */
 }
 
 
@@ -258,6 +265,10 @@ addframe(double fpos)
 		error(USER, err);
 	if (!fgetsresolu(&rs, fpimg))
 		goto readerr;
+	if (rs.rt != PIXSTANDARD) {
+		sprintf(errmsg, "unsupported orientation in picture \"%s\"", fname);
+		error(USER, errmsg);
+	}
 	if ((rs.xr != imres.xr) | (rs.yr != imres.yr)) {
 		sprintf(errmsg, "resolution mismatch for picture \"%s\"", fname);
 		error(USER, errmsg);
@@ -311,7 +322,8 @@ addframe(double fpos)
 			scalecolor(cval, sf);
 			interp_pixel(cval, &fvw, h, n, zscan[h], fpos,
 					h + (int)mscan[3*h] - 32768,
-					n - (int)mscan[3*h+1] + 32768);
+					n - (int)mscan[3*h+1] + 32768,
+					mscan[3*h+2]);
 		}
 	}
 					/* fill in missing pixels */
