@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.21 2012/10/05 00:59:38 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.22 2012/10/05 01:03:22 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -32,7 +32,6 @@ short		*xmbuffer;	/* x motion at each pixel */
 short		*ymbuffer;	/* y motion at each pixel */
 uby8		*abuffer;	/* accuracy at each pixel */
 uby8		*sbuffer;	/* sample count per pixel */
-COLOR		*outbuffer;	/* output buffer (may equal cbuffer) */
 
 VIEW		vwprev;		/* last frame's view */
 COLOR		*cprev;		/* last frame colors */
@@ -108,7 +107,8 @@ next_frame(void)			/* prepare next frame buffer */
 		error(USER, errmsg);
 	}
 	if (cbuffer == NULL) {
-		int	n;		/* compute resolution and allocate */
+		int	n;
+					/* compute resolution and allocate */
 		switch (sscanf(vval(RESOLUTION), "%d %d %lf",
 				&hres, &vres, &pixaspect)) {
 		case 1:
@@ -137,38 +137,28 @@ next_frame(void)			/* prepare next frame buffer */
 		zprev = (float *)malloc(sizeof(float)*hres*vres);
 		oprev = (OBJECT *)malloc(sizeof(OBJECT)*hres*vres);
 		aprev = (uby8 *)malloc(sizeof(uby8)*hres*vres);
-		if (mblur > .02)
-			outbuffer = (COLOR *)malloc(sizeof(COLOR)*hres*vres);
-		else
-			outbuffer = cbuffer;
 		if ((cbuffer==NULL) | (zbuffer==NULL) | (obuffer==NULL) |
 				(xmbuffer==NULL) | (ymbuffer==NULL) |
 				(abuffer==NULL) | (sbuffer==NULL) |
 				(cprev==NULL) | (zprev == NULL) |
-				(oprev==NULL) | (aprev==NULL) |
-				(outbuffer==NULL))
+				(oprev==NULL) | (aprev==NULL))
 			error(SYSTEM, "out of memory in init_frame");
 		for (n = hres*vres; n--; ) {
 			zprev[n] = -1.f;
  			oprev[n] = OVOID;
 		}
 		frm_stop = getTime() + rtperfrm;
-	} else {			/* else just swap buffers */
+	} else {
+		COLOR	*cp;		/* else just swap buffers */
 		float	*fp;
 		OBJECT	*op;
 		uby8	*bp;
-		if (outbuffer != cbuffer) {
-			COLOR	*cp = cprev;
-			cprev = cbuffer; cbuffer = cp;
-		} else {
-			outbuffer = cprev; cprev = cbuffer;
-			cbuffer = outbuffer;
-		}
+		cp = cprev; cprev = cbuffer; cbuffer = cp;
 		fp = zprev; zprev = zbuffer; zbuffer = fp;
 		op = oprev; oprev = obuffer; obuffer = op;
 		bp = aprev; aprev = abuffer; abuffer = bp;
-		memset(abuffer, 0, sizeof(uby8)*hres*vres);
-		memset(sbuffer, 0, sizeof(uby8)*hres*vres);
+		memset(abuffer, '\0', sizeof(uby8)*hres*vres);
+		memset(sbuffer, '\0', sizeof(uby8)*hres*vres);
 		frm_stop += rtperfrm;
 	}
 	cerrmap = NULL;
@@ -579,8 +569,10 @@ comperr(		/* estimate relative error in neighborhood */
 		}
 		if (sbuffer[n] != 1)
 			error(CONSISTENCY, "bad count in comperr");
-		copycolor(ctmp, cbuffer[n]);
-		multcolor(ctmp, ctmp);
+		setcolor(ctmp,
+			colval(cbuffer[n],RED)*colval(cbuffer[n],RED),
+			colval(cbuffer[n],GRN)*colval(cbuffer[n],GRN),
+			colval(cbuffer[n],BLU)*colval(cbuffer[n],BLU));
 		addcolor(csum2, ctmp);
 		ns++;
 	}
@@ -787,17 +779,15 @@ filter_frame(void)			/* interpolation, motion-blur, and exposure */
 		scalecolor(cbuffer[n], w);
 	    }
 					/* motion blur if requested */
-	if (outbuffer != cbuffer) {
+	if (mblur > .02) {
 		int	xs, ys, xl, yl;
 		int	rise, run;
 		long	rise2, run2;
 		int	n2;
 		int	cnt;
-fprintf(stderr, "outbuffer=0x%lx, cbuffer=0x%lx, cprev=0x%lx\n",
-(size_t)outbuffer, (size_t)cbuffer, (size_t)cprev);
 					/* sum in motion streaks */
-		memset(outbuffer, 0, sizeof(COLOR)*hres*vres);
-		memset(wbuffer, 0, sizeof(float)*hres*vres);
+		memset(outbuffer, '\0', sizeof(COLOR)*hres*vres);
+		memset(wbuffer, '\0', sizeof(float)*hres*vres);
 		for (y = vres; y--; )
 		    for (x = hres; x--; ) {
 			n = fndx(x, y);
@@ -812,7 +802,8 @@ fprintf(stderr, "outbuffer=0x%lx, cbuffer=0x%lx, cprev=0x%lx\n",
 				wbuffer[n] += 1.;
 				continue;
 			}
-			xl = x; yl = y;
+			xl = x - run/4;
+			yl = y - rise/4;
 			if (run < 0) { xs = -1; run = -run; }
 			else xs = 1;
 			if (rise < 0) { ys = -1; rise = -rise; }
@@ -863,20 +854,17 @@ fprintf(stderr, "outbuffer=0x%lx, cbuffer=0x%lx, cprev=0x%lx\n",
 			}
 		    }
 					/* compute final results */
-		for (n = hres*vres; n--; )
-			if (wbuffer[n] > 1.02) {
-				w = 1./wbuffer[n];
-				scalecolor(outbuffer[n], w);
-			} else if (wbuffer[n] < 0.98) {
-				w = 1.-wbuffer[n];
-				copycolor(cval, cprev[n]);
-				scalecolor(cval, w);
-				addcolor(outbuffer[n], cval);
-			}
+		for (n = hres*vres; n--; ) {
+			if (wbuffer[n] <= FTINY)
+				continue;
+			w = expval/wbuffer[n];
+			scalecolor(outbuffer[n], w);
+		}
+	} else {			/* no blur -- just exposure */
+		memcpy(outbuffer, cbuffer, sizeof(COLOR)*hres*vres);
+		for (n = ((expval < 0.99) | (expval > 1.01))*hres*vres; n--; )
+			scalecolor(outbuffer[n], expval);
 	}
-					/* adjust exposure */
-	for (n = ((expval < 0.98) | (expval > 1.02))*hres*vres; n--; )
-		scalecolor(outbuffer[n], expval);
 	/*
 	   for (n = hres*vres; n--; )
 		   if (!sbuffer[n])
@@ -1009,9 +997,6 @@ free_frame(void)			/* free frame allocation */
 {
 	if (cbuffer == NULL)
 		return;
-	if (outbuffer != cbuffer)
-		free((void *)outbuffer);
-	outbuffer = NULL;
 	free((void *)cbuffer); cbuffer = NULL;
 	free((void *)zbuffer); zbuffer = NULL;
 	free((void *)obuffer); obuffer = NULL;
