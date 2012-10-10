@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.13 2010/12/02 18:08:11 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.14 2012/10/10 21:41:02 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -249,8 +249,10 @@ getviewspan(		/* compute a span of view pixels */
 						/* send to rtrace */
 		if (n >= maxpix) {			/* flush */
 			rt_compute(rt_buf, n);
-			while (n-- > 0)
+			while (n > 0) {
+				--n;
 				vb[buf_vh[n]+hsize] = luminance(rt_buf+3*n);
+			}
 		}
 		rt_buf[6*n] = ourview.vp[0];
 		rt_buf[6*n+1] = ourview.vp[1];
