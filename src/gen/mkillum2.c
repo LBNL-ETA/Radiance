@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.37 2011/08/16 18:09:53 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.38 2012/10/13 20:15:43 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -19,7 +19,6 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.37 2011/08/16 18:09:53 greg Exp
 
 COLORV *	distarr = NULL;		/* distribution array */
 int		distsiz = 0;
-COLORV *	direct_discount = NULL;	/* amount to take off direct */
 
 
 void
@@ -46,27 +45,6 @@ newdist(			/* allocate & clear distribution array */
 }
 
 
-static void
-new_discount()			/* allocate space for direct contrib. record */
-{
-	if (distsiz <= 0)
-		return;
-	direct_discount = (COLORV *)calloc(distsiz, sizeof(COLOR));
-	if (direct_discount == NULL)
-		error(SYSTEM, "out of memory in new_discount");
-}
-
-
-static void
-done_discount()			/* clear off direct contrib. record */
-{
-	if (direct_discount == NULL)
-		return;
-	free(direct_discount);
-	direct_discount = NULL;
-}
-
-
 int
 process_ray(			/* process a ray result or report error */
 	RAY *r,
@@ -84,11 +62,6 @@ process_ray(			/* process a ray result or report error */
 	multcolor(r->rcol, r->rcoef);	/* in case it's a source ray */
 	colp = &distarr[r->rno * 3];
 	addcolor(colp, r->rcol);
-	if (r->rsrc >= 0 &&		/* remember source contrib. */
-			direct_discount != NULL) {
-		colp = &direct_discount[r->rno * 3];
-		addcolor(colp, r->rcol);
-	}
 	return(1);
 }
 
@@ -130,7 +103,7 @@ srcsamps(			/* sample sources from this surface position */
 	double  d;
 	int  i, j;
 						/* get sampling density */
-	if (il->sd == NULL && il->sampdens > 0) {
+	if (il->sampdens > 0) {
 		i = PI * il->sampdens;
 		nalt = sqrt(i/PI) + .5;
 		nazi = PI*nalt + .5;
@@ -138,22 +111,7 @@ srcsamps(			/* sample sources from this surface position */
 	initsrcindex(&si);			/* loop over (sub)sources */
 	for ( ; ; ) {
 		VCOPY(sr.rorg, org);		/* pick side to shoot from */
-		if (il->sd != NULL) {
-			int  sn = si.sn;
-			if (si.sp+1 >= si.np) ++sn;
-			if (sn >= nsources) break;
-			if (source[sn].sflags & SDISTANT)
-				d = DOT(source[sn].sloc, nrm);
-			else {
-				VSUB(v, source[sn].sloc, org);
-				d = DOT(v, nrm);
-			}
-		} else
-			d = 1.0;		/* only transmission */
-		if (d < 0.0)
-			d = -1.0001*il->thick - 5.*FTINY;
-		else
-			d = 5.*FTINY;
+		d = 5.*FTINY;
 		VSUM(sr.rorg, sr.rorg, nrm, d);
 		samplendx++;			/* increment sample counter */
 		if (!srcray(&sr, NULL, &si))
@@ -163,19 +121,11 @@ srcsamps(			/* sample sources from this surface position */
 			multv3(v, sr.rdir, ixfm);
 		else
 			VCOPY(v, sr.rdir);
-		if (il->sd != NULL) {
-			i = getBSDF_incndx(il->sd, v);
-			if (i < 0)
-				continue;	/* must not be important */
-			sr.rno = i;
-			d = 1.0/getBSDF_incohm(il->sd, i);
-		} else {
-			if (v[2] >= -FTINY)
-				continue;	/* only sample transmission */
-			v[0] = -v[0]; v[1] = -v[1]; v[2] = -v[2];
-			sr.rno = flatindex(v, nalt, nazi);
-			d = nalt*nazi*(1./PI) * v[2];
-		}
+		if (v[2] >= -FTINY)
+			continue;	/* only sample transmission */
+		v[0] = -v[0]; v[1] = -v[1]; v[2] = -v[2];
+		sr.rno = flatindex(v, nalt, nazi);
+		d = nalt*nazi*(1./PI) * v[2];
 		d *= si.dom;			/* solid angle correction */
 		scalecolor(sr.rcoef, d);
 		process_ray(&sr, ray_pqueue(&sr));
@@ -268,51 +218,6 @@ flatindex(		/* compute index for hemispherical direction */
 
 
 int
-printgeom(		/* print out detailed geometry for BSDF */
-	struct BSDF_data *sd,
-	char *xfrot,
-	FVECT ctr,
-	double s1,
-	double s2
-)
-{
-        static char	mgftemp[] = TEMPLATE;
-	char		cmdbuf[64];
-	FILE		*fp;
-	double		sca;
-
-	if (sd == NULL || sd->mgf == NULL)
-		return(0);
-	if (sd->dim[0] <= FTINY || sd->dim[1] <= FTINY)
-		return(0);
-	if ((s1 > s2) ^ (sd->dim[0] > sd->dim[1])) {
-		sca = s1; s1 = s2; s2 = sca;
-	}
-	s1 /= sd->dim[0];
-	s2 /= sd->dim[1];
-	sca = s1 > s2 ? s1 : s2;
-	strcpy(mgftemp, TEMPLATE);
-	if ((fp = fopen(mktemp(mgftemp), "w")) == NULL)
-		error(SYSTEM, "cannot create temporary file for MGF");
-					/* prepend our transform */
-	fprintf(fp, "xf%s -s %.5f -t %.5g %.5g %.5g\n",
-			xfrot, sca, ctr[0], ctr[1], ctr[2]);
-					/* output given MGF description */
-	fputs(sd->mgf, fp);
-	fputs("\nxf\n", fp);
-	if (fclose(fp) == EOF)
-		error(SYSTEM, "error writing MGF temporary file");
-					/* execute mgf2rad to convert MGF */
-	strcpy(cmdbuf, "mgf2rad ");
-	strcpy(cmdbuf+8, mgftemp);
-	fflush(stdout);
-	system(cmdbuf);
-	unlink(mgftemp);		/* clean up */
-	return(1);
-}
-
-
-int
 my_default(	/* default illum action */
 	OBJREC  *ob,
 	struct illum_args  *il,
@@ -353,23 +258,14 @@ my_face(		/* make an illum face */
 		return(my_default(ob, il, nm));
 	}
 				/* set up sampling */
-	if (il->sd != NULL) {
-		if (!getBSDF_xfm(xfm, fa->norm, il->udir, xfrot)) {
-			objerror(ob, WARNING, "illegal up direction");
-			freeface(ob);
-			return(my_default(ob, il, nm));
-		}
-		n = il->sd->ninc;
+	if (il->sampdens <= 0) {
+		nalt = nazi = 1;	/* diffuse assumption */
 	} else {
-		if (il->sampdens <= 0) {
-			nalt = nazi = 1;	/* diffuse assumption */
-		} else {
-			n = PI * il->sampdens;
-			nalt = sqrt(n/PI) + .5;
-			nazi = PI*nalt + .5;
-		}
-		n = nazi*nalt;
+		n = PI * il->sampdens;
+		nalt = sqrt(n/PI) + .5;
+		nazi = PI*nalt + .5;
 	}
+	n = nazi*nalt;
 	newdist(n);
 				/* take first edge >= sqrt(area) */
 	for (j = fa->nv-1, i = 0; i < fa->nv; j = i++) {
@@ -396,15 +292,6 @@ my_face(		/* make an illum face */
 		if (r2 < vr[0]) vr[0] = r2;
 		if (r2 > vr[1]) vr[1] = r2;
 	}
-				/* output detailed geometry? */
-	if (!(il->flags & IL_LIGHT) && il->sd != NULL && il->sd->mgf != NULL &&
-			il->thick <= FTINY) {
-		for (j = 3; j--; )
-			org[j] = .5*(ur[0]+ur[1])*u[j] +
-					.5*(vr[0]+vr[1])*v[j] +
-					fa->offset*fa->norm[j];
-		printgeom(il->sd, xfrot, org, ur[1]-ur[0], vr[1]-vr[0]);
-	}
 	dim[0] = random();
 				/* sample polygon */
 	nallow = 5*n*il->nsamps;
@@ -412,18 +299,14 @@ my_face(		/* make an illum face */
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize direction */
 		    h = ilhash(dim, 2) + i;
-		    if (il->sd != NULL) {
-			r_BSDF_incvec(dir, il->sd, dim[1], urand(h), xfm);
-		    } else {
-			multisamp(sp, 2, urand(h));
-			alti = dim[1]/nazi;
-			r1 = (alti + sp[0])/nalt;
-			r2 = (dim[1] - alti*nazi + sp[1] - .5)/nazi;
-			flatdir(dn, r1, r2);
-			for (j = 0; j < 3; j++)
+		    multisamp(sp, 2, urand(h));
+		    alti = dim[1]/nazi;
+		    r1 = (alti + sp[0])/nalt;
+		    r2 = (dim[1] - alti*nazi + sp[1] - .5)/nazi;
+		    flatdir(dn, r1, r2);
+		    for (j = 0; j < 3; j++)
 			    dir[j] = -dn[0]*u[j] - dn[1]*v[j] -
 						dn[2]*fa->norm[j];
-		    }
 					/* randomize location */
 		    do {
 			multisamp(sp, 2, urand(h+4862+nallow));
@@ -439,34 +322,23 @@ my_face(		/* make an illum face */
 			freeface(ob);
 			return(my_default(ob, il, nm));
 		    }
-		    if (il->sd != NULL && DOT(dir, fa->norm) < -FTINY)
-			r1 = -1.0001*il->thick - 5.*FTINY;
-		    else
-			r1 = 5.*FTINY;
+		    r1 = 5.*FTINY;
 		    for (j = 0; j < 3; j++)
 			org[j] += r1*fa->norm[j];
 					/* send sample */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (il->flags & IL_LIGHT || il->sd != NULL) {
+	if (il->flags & IL_LIGHT) {
 		MAT4	ixfm;
-		if (il->sd == NULL) {
-			for (i = 3; i--; ) {
-				ixfm[i][0] = u[i];
-				ixfm[i][1] = v[i];
-				ixfm[i][2] = fa->norm[i];
-				ixfm[i][3] = 0.;
-			}
-			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
-			ixfm[3][3] = 1.;
-		} else {
-			if (!invmat4(ixfm, xfm))
-				objerror(ob, INTERNAL,
-					"cannot invert BSDF transform");
-			if (!(il->flags & IL_LIGHT))
-				new_discount();
+		for (i = 3; i--; ) {
+			ixfm[i][0] = u[i];
+			ixfm[i][1] = v[i];
+			ixfm[i][2] = fa->norm[i];
+			ixfm[i][3] = 0.;
 		}
+		ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
+		ixfm[3][3] = 1.;
 		dim[0] = random();
 		nallow = 10*il->nsamps;
 		for (i = 0; i < il->nsamps; i++) {
@@ -492,14 +364,6 @@ my_face(		/* make an illum face */
 	}
 				/* wait for all rays to finish */
 	rayclean();
-	if (il->sd != NULL) {	/* run distribution through BSDF */
-		nalt = sqrt(il->sd->nout/PI) + .5;
-		nazi = PI*nalt + .5;
-		redistribute(il->sd, nalt, nazi, u, v, fa->norm, xfm);
-		done_discount();
-		if (!il->sampdens)
-			il->sampdens = nalt*nazi/PI + .999;
-	}
 				/* write out the face and its distribution */
 	if (average(il, distarr, n)) {
 		if (il->sampdens > 0)
@@ -537,8 +401,6 @@ my_sphere(	/* make an illum sphere */
 		nalt = sqrt(2./PI*n) + .5;
 		nazi = PI/2.*nalt + .5;
 	}
-	if (il->sd != NULL)
-		objerror(ob, WARNING, "BSDF ignored");
 	n = nalt*nazi;
 	newdist(n);
 	dim[0] = random();
@@ -602,23 +464,14 @@ my_ring(		/* make an illum ring */
 				/* get/check arguments */
 	co = getcone(ob, 0);
 				/* set up sampling */
-	if (il->sd != NULL) {
-		if (!getBSDF_xfm(xfm, co->ad, il->udir, NULL)) {
-			objerror(ob, WARNING, "illegal up direction");
-			freecone(ob);
-			return(my_default(ob, il, nm));
-		}
-		n = il->sd->ninc;
+	if (il->sampdens <= 0) {
+		nalt = nazi = 1;	/* diffuse assumption */
 	} else {
-		if (il->sampdens <= 0) {
-			nalt = nazi = 1;	/* diffuse assumption */
-		} else {
-			n = PI * il->sampdens;
-			nalt = sqrt(n/PI) + .5;
-			nazi = PI*nalt + .5;
-		}
-		n = nazi*nalt;
+		n = PI * il->sampdens;
+		nalt = sqrt(n/PI) + .5;
+		nazi = PI*nalt + .5;
 	}
+	n = nazi*nalt;
 	newdist(n);
 	mkaxes(u, v, co->ad);
 	dim[0] = random();
@@ -628,17 +481,13 @@ my_ring(		/* make an illum ring */
 					/* next sample point */
 		    h = ilhash(dim,2) + i;
 					/* randomize direction */
-		    if (il->sd != NULL) {
-			r_BSDF_incvec(dir, il->sd, dim[1], urand(h), xfm);
-		    } else {
-			multisamp(sp, 2, urand(h));
-			alti = dim[1]/nazi;
-			r1 = (alti + sp[0])/nalt;
-			r2 = (dim[1] - alti*nazi + sp[1] - .5)/nazi;
-			flatdir(dn, r1, r2);
-			for (j = 0; j < 3; j++)
-				dir[j] = -dn[0]*u[j] - dn[1]*v[j] - dn[2]*co->ad[j];
-		    }
+		    multisamp(sp, 2, urand(h));
+		    alti = dim[1]/nazi;
+		    r1 = (alti + sp[0])/nalt;
+		    r2 = (dim[1] - alti*nazi + sp[1] - .5)/nazi;
+		    flatdir(dn, r1, r2);
+		    for (j = 0; j < 3; j++)
+			dir[j] = -dn[0]*u[j] - dn[1]*v[j] - dn[2]*co->ad[j];
 					/* randomize location */
 		    multisamp(sp, 2, urand(h+8371));
 		    r3 = sqrt(CO_R0(co)*CO_R0(co) +
@@ -646,10 +495,7 @@ my_ring(		/* make an illum ring */
 		    r2 = 2.*PI*sp[1];
 		    r1 = r3*cos(r2);
 		    r2 = r3*sin(r2);
-		    if (il->sd != NULL && DOT(dir, co->ad) < -FTINY)
-			r3 = -1.0001*il->thick - 5.*FTINY;
-		    else
-			r3 = 5.*FTINY;
+		    r3 = 5.*FTINY;
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j] +
 						r3*co->ad[j];
@@ -657,24 +503,16 @@ my_ring(		/* make an illum ring */
 		    raysamp(dim[1], org, dir);
 		}
 				/* add in direct component? */
-	if (il->flags & IL_LIGHT || il->sd != NULL) {
+	if (il->flags & IL_LIGHT) {
 		MAT4	ixfm;
-		if (il->sd == NULL) {
-			for (i = 3; i--; ) {
-				ixfm[i][0] = u[i];
-				ixfm[i][1] = v[i];
-				ixfm[i][2] = co->ad[i];
-				ixfm[i][3] = 0.;
-			}
-			ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
-			ixfm[3][3] = 1.;
-		} else {
-			if (!invmat4(ixfm, xfm))
-				objerror(ob, INTERNAL,
-					"cannot invert BSDF transform");
-			if (!(il->flags & IL_LIGHT))
-				new_discount();
+		for (i = 3; i--; ) {
+			ixfm[i][0] = u[i];
+			ixfm[i][1] = v[i];
+			ixfm[i][2] = co->ad[i];
+			ixfm[i][3] = 0.;
 		}
+		ixfm[3][0] = ixfm[3][1] = ixfm[3][2] = 0.;
+		ixfm[3][3] = 1.;
 		dim[0] = random();
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize location */
@@ -693,14 +531,6 @@ my_ring(		/* make an illum ring */
 	}
 				/* wait for all rays to finish */
 	rayclean();
-	if (il->sd != NULL) {	/* run distribution through BSDF */
-		nalt = sqrt(il->sd->nout/PI) + .5;
-		nazi = PI*nalt + .5;
-		redistribute(il->sd, nalt, nazi, u, v, co->ad, xfm);
-		done_discount();
-		if (!il->sampdens)
-			il->sampdens = nalt*nazi/PI + .999;
-	}
 				/* write out the ring and its distribution */
 	if (average(il, distarr, n)) {
 		if (il->sampdens > 0)
@@ -711,110 +541,4 @@ my_ring(		/* make an illum ring */
 				/* clean up */
 	freecone(ob);
 	return(1);
-}
-
-
-void
-redistribute(		/* pass distarr ray sums through BSDF */
-	struct BSDF_data *b,
-	int nalt,
-	int nazi,
-	FVECT u,
-	FVECT v,
-	FVECT w,
-	MAT4 xm
-)
-{
-	int	nout = 0;
-	MAT4	mymat, inmat;
-	COLORV	*idist;
-	COLORV	*cp;
-	FVECT	dv;
-	double	wt;
-	int	i, j, k, c, o;
-	COLOR	col, cinc;
-					/* copy incoming distribution */
-	if (b->ninc > distsiz)
-		error(INTERNAL, "error 1 in redistribute");
-	idist = (COLORV *)malloc(sizeof(COLOR)*b->ninc);
-	if (idist == NULL)
-		error(SYSTEM, "out of memory in redistribute");
-	memcpy(idist, distarr, sizeof(COLOR)*b->ninc);
-					/* compose direction transform */
-	for (i = 3; i--; ) {
-		mymat[i][0] = u[i];
-		mymat[i][1] = v[i];
-		mymat[i][2] = w[i];
-		mymat[i][3] = 0.;
-	}
-	mymat[3][0] = mymat[3][1] = mymat[3][2] = 0.;
-	mymat[3][3] = 1.;
-	if (xm != NULL)
-		multmat4(mymat, xm, mymat);
-	for (i = 3; i--; ) {		/* make sure it's normalized */
-		wt = 1./sqrt(	mymat[0][i]*mymat[0][i] +
-				mymat[1][i]*mymat[1][i] +
-				mymat[2][i]*mymat[2][i]	);
-		for (j = 3; j--; )
-			mymat[j][i] *= wt;
-	}
-	if (!invmat4(inmat, mymat))	/* need inverse as well */
-		error(INTERNAL, "cannot invert BSDF transform");
-	newdist(nalt*nazi);		/* resample distribution */
-	for (i = b->ninc; i--; ) {
-		int	direct_out = -1;
-		COLOR	cdir;
-		getBSDF_incvec(dv, b, i);	/* compute incident irrad. */
-		multv3(dv, dv, mymat);
-		if (dv[2] < 0.0) {
-			dv[0] = -dv[0]; dv[1] = -dv[1]; dv[2] = -dv[2];
-			direct_out += (direct_discount != NULL);
-		}
-		wt = getBSDF_incohm(b, i);
-		wt *= dv[2];			/* solid_angle*cosine(theta) */
-		cp = &idist[3*i];
-		copycolor(cinc, cp);
-		scalecolor(cinc, wt);
-		if (!direct_out) {		/* discount direct contr. */
-			cp = &direct_discount[3*i];
-			copycolor(cdir, cp);
-			scalecolor(cdir, -wt);
-			if (b->nout != b->ninc)
-				direct_out = flatindex(dv, nalt, nazi);
-			else
-				direct_out = i;	/* assumes dist. mirroring */
-		}
-		for (k = nalt; k--; )		/* loop over distribution */
-		  for (j = nazi; j--; ) {
-		    int	rstart = random();
-		    for (c = NBSDFSAMPS; c--; ) {
-			double  sp[2];
-			multisamp(sp, 2, urand(rstart+c));
-			flatdir(dv, (k + sp[0])/nalt,
-					(j + .5 - sp[1])/nazi);
-			multv3(dv, dv, inmat);
-						/* evaluate BSDF @ outgoing */
-			o = getBSDF_outndx(b, dv);
-			if (o < 0) {
-				nout++;
-				continue;
-			}
-			wt = BSDF_value(b, i, o) * (1./NBSDFSAMPS);
-			copycolor(col, cinc);
-			if (b->nout != b->ninc)
-				o = k*nazi + j;
-			if (o == direct_out)
-				addcolor(col, cdir);	/* minus direct */
-			scalecolor(col, wt);
-			cp = &distarr[3*(k*nazi + j)];
-			addcolor(cp, col);	/* sum into distribution */
-		    }
-		  }
-	}
-	free(idist);			/* free temp space */
-	if (nout) {
-		sprintf(errmsg, "missing %.1f%% of BSDF directions",
-				100.*nout/(b->ninc*nalt*nazi*NBSDFSAMPS));
-		error(WARNING, errmsg);
-	}
 }

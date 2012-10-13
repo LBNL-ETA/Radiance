@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.38 2011/10/05 17:20:55 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.39 2012/10/13 20:15:43 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -24,7 +24,6 @@ static const char RCSid[] = "$Id: mkillum.c,v 2.38 2011/10/05 17:20:55 greg Exp 
 
 struct illum_args  thisillum = {	/* our illum and default values */
 		0,
-		UDzpos,
 		0.,
 		DFLMAT,
 		DFLDAT,
@@ -32,7 +31,6 @@ struct illum_args  thisillum = {	/* our illum and default values */
 		VOIDID,
 		SAMPDENS,
 		NSAMPS,
-		NULL,
 		0.,
 	};
 
@@ -307,22 +305,16 @@ xoptions(			/* process options in string s */
 			}
 			cp = sskip(cp);
 			continue;
-		case 'd':			/* sample density / BSDF data */
+		case 'd':			/* sample density */
 			if (*++cp != '=')
 				break;
-			if (thisillum.sd != NULL) {
-				free_BSDF(thisillum.sd);
-				thisillum.sd = NULL;
-			}
 			if (!*++cp || isspace(*cp))
 				continue;
 			if (isintd(cp, " \t\n\r")) {
 				thisillum.sampdens = atoi(cp);
 			} else {
-				atos(buf, sizeof(buf), cp);
-				thisillum.sd = load_BSDF(buf);
-				if (thisillum.sd == NULL)
-					break;
+				error(WARNING, "direct BSDF input unsupported");
+				goto opterr;
 			}
 			cp = sskip(cp);
 			continue;
@@ -367,40 +359,6 @@ xoptions(			/* process options in string s */
 				error(SYSTEM, errmsg);
 			}
 			doneheader = 0;
-			continue;
-		case 'u':			/* up direction */
-			if (*++cp != '=')
-				break;
-			if (!*++cp || isspace(*cp)) {
-				thisillum.udir = UDunknown;
-				continue;
-			}
-			negax = 0;
-			if (*cp == '+')
-				cp++;
-			else if (*cp == '-') {
-				negax++;
-				cp++;
-			}
-			switch (*cp++) {
-			case 'x':
-			case 'X':
-				thisillum.udir = negax ? UDxneg : UDxpos;
-				break;
-			case 'y':
-			case 'Y':
-				thisillum.udir = negax ? UDyneg : UDypos;
-				break;
-			case 'z':
-			case 'Z':
-				thisillum.udir = negax ? UDzneg : UDzpos;
-				break;
-			default:
-				thisillum.udir = UDunknown;
-				break;
-			}
-			if (thisillum.udir == UDunknown || !isspace(*cp))
-				break;
 			continue;
 		case 't':			/* object thickness */
 			if (*++cp != '=')
@@ -457,28 +415,6 @@ printopts(void)			/* print out option default values */
 	printf("d=%d\t\t\t\t# density of directions\n", thisillum.sampdens);
 	printf("s=%d\t\t\t\t# samples per direction\n", thisillum.nsamps);
 	printf("b=%f\t\t\t# minimum average brightness\n", thisillum.minbrt);
-	switch (thisillum.udir) {
-	case UDzneg:
-		fputs("u=-Z\t\t\t\t# up is negative Z\n", stdout);
-		break;
-	case UDyneg:
-		fputs("u=-Y\t\t\t\t# up is negative Y\n", stdout);
-		break;
-	case UDxneg:
-		fputs("u=-X\t\t\t\t# up is negative X\n", stdout);
-		break;
-	case UDxpos:
-		fputs("u=+X\t\t\t\t# up is positive X\n", stdout);
-		break;
-	case UDypos:
-		fputs("u=+Y\t\t\t\t# up is positive Y\n", stdout);
-		break;
-	case UDzpos:
-		fputs("u=+Z\t\t\t\t# up is positive Z\n", stdout);
-		break;
-	case UDunknown:
-		break;
-	}
 	printf("t=%f\t\t\t# object thickness\n", thisillum.thick);
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.39 2012/09/10 18:06:08 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.40 2012/10/13 20:15:43 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -108,6 +108,7 @@ print
 print "<!-- File produced by: genBSDF @savedARGV -->\n";
 print
 '<WindowElementType>System</WindowElementType>
+<FileType>BSDF</FileType>
 <Optical>
 <Layer>
 	<Material>
@@ -117,18 +118,20 @@ print
 printf "\t\t<Thickness unit=\"$gunit\">%.3f</Thickness>\n", $dim[5] - $dim[4];
 printf "\t\t<Width unit=\"$gunit\">%.3f</Width>\n", $dim[1] - $dim[0];
 printf "\t\t<Height unit=\"$gunit\">%.3f</Height>\n", $dim[3] - $dim[2];
-print "\t\t<DeviceType>Integral</DeviceType>\n";
+print "\t\t<DeviceType>Other</DeviceType>\n";
+print "	</Material>\n";
 # Output MGF description if requested
 if ( $geout ) {
-	print "\t\t<Geometry format=\"MGF\" unit=\"$gunit\">\n";
+	print "\t<Geometry format=\"MGF\">\n";
+	print "\t\t<MGFblock unit=\"$gunit\">\n";
 	printf "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
 	open(MGFSCN, "< $mgfscn");
 	while (<MGFSCN>) { print $_; }
 	close MGFSCN;
 	print "xf\n";
-	print "\t\t</Geometry>\n";
+	print "\t\t</MGFblock>\n";
+	print "\t</Geometry>\n";
 }
-print "	</Material>\n";
 # Set up surface sampling
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + .5);
 my $ny = int($nsamp/$nx + .5);
@@ -303,7 +306,7 @@ print
 print "\t\t\t<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>\n";
 print
 '			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
-			<ScatteringDataType>BRDF</ScatteringDataType>
+			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
 $cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
@@ -540,7 +543,7 @@ print
 			<WavelengthDataDirection>Reflection Front</WavelengthDataDirection>
 			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
 			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BRDF</ScatteringDataType>
+			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
 # Output front reflection (transposed order)
@@ -590,7 +593,7 @@ print
 			<WavelengthDataDirection>Reflection Back</WavelengthDataDirection>
 			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
 			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BRDF</ScatteringDataType>
+			<ScatteringDataType>BTDF</ScatteringDataType>
 			<ScatteringData>
 ';
 # Output back reflection (transposed order)

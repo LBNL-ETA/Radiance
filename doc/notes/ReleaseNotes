@@ -1847,3 +1847,7 @@ Added MNAME and ZNAME variables to ranimove for debugging & testing.
 
 Created pmblur2 command to take motion and depth buffers from ranimove
 to compute a better motion blur.
+
+****** COMPATIBILITY CHANGE ********
+Changed BSDF routines to use updated/corrected XML specification and
+removed depracated BSDF support from mkillum.

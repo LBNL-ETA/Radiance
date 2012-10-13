@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.10 2010/09/03 23:53:49 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.11 2012/10/13 20:15:43 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -172,24 +172,6 @@ If
 is zero, then a diffuse source is assumed and no distribution is
 created.
 .TP
-.BI d =string
-Set the surface Bidirectional Scattering Distribution Function (BSDF)
-to the given file.
-The RADIANCE library path will be searched if the file does not begin
-with a '.' or '~' character.
-This file must contain an LBNL Window 6 XML specification of a valid
-BSDF for the given surface, and all rays will be interpreted through
-this function, which may be produced by the Radiance
-.I genBSDF(1)
-program.
-The orientation of the BSDF may be controlled with the
-.I u
-setting, described below.
-If this variable has no setting or an integer is specified,
-.I mkillum
-returns to the default behavior of computing the output distribution
-directly.
-.TP
 .BI s =integer
 Set the number of ray samples per direction to
 .I integer.
@@ -210,16 +192,6 @@ will use the material type "illum" with the input surface modifier
 as its alternate material.
 The default is
 .I l-.
-.TP
-.BI u =[+|-]{X|Y|Z}
-The given axis will be considered "up" for the purposes of interpreting
-BSDF data specified with the
-.I d
-variable.
-The BSDF will be reoriented relative to the surface as necessary to keep
-the up vector in the vertical plane that contains this axis and the
-surface normal, corresponding to an azimuth of 90 degrees.
-The default up vector is +Z.
 .TP
 .BI t =real
 Set the surface thickness to
