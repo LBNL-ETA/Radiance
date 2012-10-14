@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.15 2012/09/23 16:45:20 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.16 2012/10/14 22:31:20 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -8,6 +8,11 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.15 2012/09/23 16:45:20 greg 
  *	G.Ward
  */
 
+#ifndef _WIN32
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/mman.h>
+#endif
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,6 +100,11 @@ int			pctcull = -1;
 #else
 int			pctcull = 90;
 #endif
+				/* number of processes to run */
+int			nprocs = 1;
+				/* number of children (-1 in child) */
+int			nchild = 0;
+
 				/* sampling order (set by data density) */
 int			samp_order = 0;
 
@@ -645,9 +655,100 @@ thetaphi(const FVECT v)
 }
 #endif
 
-/* Compute (and insert) migration along directed edge */
+/* Create a new migration holder (sharing memory for multiprocessing) */
 static MIGRATION *
-make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf, int creat_only)
+new_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
+{
+	size_t		memlen = sizeof(MIGRATION) +
+				sizeof(float)*(from_rbf->nrbf*to_rbf->nrbf - 1);
+	MIGRATION	*newmig;
+#ifdef _WIN32
+	newmig = (MIGRATION *)malloc(memlen);
+#else
+	if (nprocs <= 1) {			/* single process? */
+		newmig = (MIGRATION *)malloc(memlen);
+	} else {				/* else need to share memory */
+		newmig = (MIGRATION *)mmap(NULL, memlen, PROT_READ|PROT_WRITE,
+						MAP_ANON|MAP_SHARED, -1, 0);
+		if ((void *)newmig == MAP_FAILED)
+			newmig = NULL;
+	}
+#endif
+	if (newmig == NULL) {
+		fprintf(stderr, "%s: cannot allocate new migration\n", progname);
+		exit(1);
+	}
+	newmig->rbfv[0] = from_rbf;
+	newmig->rbfv[1] = to_rbf;
+						/* insert in edge lists */
+	newmig->enxt[0] = from_rbf->ejl;
+	from_rbf->ejl = newmig;
+	newmig->enxt[1] = to_rbf->ejl;
+	to_rbf->ejl = newmig;
+	newmig->next = mig_list;		/* push onto global list */
+	return(mig_list = newmig);
+}
+
+#ifdef _WIN32
+#define await_children(n)	(void)(n)
+#define run_subprocess()	0
+#define end_subprocess()	(void)0
+#else
+
+/* Wait for the specified number of child processes to complete */
+static void
+await_children(int n)
+{
+	if (n > nchild)
+		n = nchild;
+	while (n-- > 0) {
+		int	status;
+		if (wait(&status) < 0) {
+			fprintf(stderr, "%s: missing child(ren)!\n", progname);
+			nchild = 0;
+			break;
+		}
+		--nchild;
+		if (status) {
+			if ((status = WEXITSTATUS(status)))
+				exit(status);
+			fprintf(stderr, "%s: subprocess died\n", progname);
+			exit(1);
+		}
+	}
+}
+
+/* Start child process if multiprocessing selected */
+static pid_t
+run_subprocess(void)
+{
+	int	status;
+	pid_t	pid;
+
+	if (nprocs <= 1)			/* any children requested? */
+		return(0);
+	await_children(nchild + 1 - nprocs);	/* free up child process */
+	if ((pid = fork())) {
+		if (pid < 0) {
+			fprintf(stderr, "%s: cannot fork subprocess\n",
+					progname);
+			exit(1);
+		}
+		++nchild;			/* subprocess started */
+		return(pid);
+	}
+	nchild = -1;
+	return(0);				/* put child to work */
+}
+
+/* If we are in subprocess, call exit */
+#define	end_subprocess()	if (nchild < 0) _exit(0); else
+
+#endif	/* ! _WIN32 */
+
+/* Compute and insert migration along directed edge (may fork child) */
+static MIGRATION *
+create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
 	const double	end_thresh = 0.02/(from_rbf->nrbf*to_rbf->nrbf);
 	float		*pmtx;
@@ -659,30 +760,26 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf, int creat_only)
 	for (newmig = from_rbf->ejl; newmig != NULL;
 			newmig = nextedge(from_rbf,newmig))
 		if (newmig->rbfv[1] == to_rbf)
-			return(creat_only ? (MIGRATION *)NULL : newmig);
+			return(NULL);
 						/* else allocate */
+	newmig = new_migration(from_rbf, to_rbf);
+	if (run_subprocess())
+		return(newmig);			/* child continues */
 	pmtx = price_routes(from_rbf, to_rbf);
-	newmig = (MIGRATION *)malloc(sizeof(MIGRATION) + sizeof(float) *
-					(from_rbf->nrbf*to_rbf->nrbf - 1));
 	src_rem = (double *)malloc(sizeof(double)*from_rbf->nrbf);
 	dst_rem = (double *)malloc(sizeof(double)*to_rbf->nrbf);
-	if ((newmig == NULL) | (src_rem == NULL) | (dst_rem == NULL)) {
-		fputs("Out of memory in make_migration()\n", stderr);
+	if ((src_rem == NULL) | (dst_rem == NULL)) {
+		fputs("Out of memory in create_migration()\n", stderr);
 		exit(1);
 	}
 #ifdef DEBUG
-	{
-		fprintf(stderr, "Building path from (theta,phi) %s ",
-				thetaphi(from_rbf->invec));
-		fprintf(stderr, "to %s", thetaphi(to_rbf->invec));
-	}
+	fprintf(stderr, "Building path from (theta,phi) %s ",
+			thetaphi(from_rbf->invec));
+	fprintf(stderr, "to %s", thetaphi(to_rbf->invec));
+	/* if (nchild) */ fputc('\n', stderr);
 #endif
-	newmig->next = NULL;
-	newmig->rbfv[0] = from_rbf;
-	newmig->rbfv[1] = to_rbf;
-	newmig->enxt[0] = newmig->enxt[1] = NULL;
-	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
 						/* starting quantities */
+	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
 	for (i = from_rbf->nrbf; i--; )
 		src_rem[i] = rbf_volume(&from_rbf->rbfa[i]) / from_rbf->vtotal;
 	for (i = to_rbf->nrbf; i--; )
@@ -691,12 +788,13 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf, int creat_only)
 	while (total_rem > end_thresh) {
 		total_rem -= migration_step(newmig, src_rem, dst_rem, pmtx);
 #ifdef DEBUG
-		/* fputc('.', stderr); */
-		fprintf(stderr, "\n%.9f remaining...", total_rem);
+		if (!nchild)
+			/* fputc('.', stderr); */
+			fprintf(stderr, "%.9f remaining...\r", total_rem);
 #endif
 	}
 #ifdef DEBUG
-	fputs("done.\n", stderr);
+	if (!nchild) fputs("done.\n", stderr);
 #endif
 
 	free(pmtx);				/* free working arrays */
@@ -710,13 +808,8 @@ make_migration(RBFNODE *from_rbf, RBFNODE *to_rbf, int creat_only)
 	    for (j = to_rbf->nrbf; j--; )
 		newmig->mtx[mtx_ndx(newmig,i,j)] *= nf;
 	}
-						/* insert in edge lists */
-	newmig->enxt[0] = from_rbf->ejl;
-	from_rbf->ejl = newmig;
-	newmig->enxt[1] = to_rbf->ejl;
-	to_rbf->ejl = newmig;
-	newmig->next = mig_list;
-	return(mig_list = newmig);
+	end_subprocess();			/* exit here if subprocess */
+	return(newmig);
 }
 
 /* Get triangle surface orientation (unnormalized) */
@@ -844,13 +937,13 @@ mesh_from_edge(MIGRATION *edge)
 		tvert[0] = find_chull_vert(edge->rbfv[0], edge->rbfv[1]);
 		if (tvert[0] != NULL) {
 			if (tvert[0] > edge->rbfv[0])
-				ej0 = make_migration(edge->rbfv[0], tvert[0], 1);
+				ej0 = create_migration(edge->rbfv[0], tvert[0]);
 			else
-				ej0 = make_migration(tvert[0], edge->rbfv[0], 1);
+				ej0 = create_migration(tvert[0], edge->rbfv[0]);
 			if (tvert[0] > edge->rbfv[1])
-				ej1 = make_migration(edge->rbfv[1], tvert[0], 1);
+				ej1 = create_migration(edge->rbfv[1], tvert[0]);
 			else
-				ej1 = make_migration(tvert[0], edge->rbfv[1], 1);
+				ej1 = create_migration(tvert[0], edge->rbfv[1]);
 			mesh_from_edge(ej0);
 			mesh_from_edge(ej1);
 		}
@@ -858,13 +951,13 @@ mesh_from_edge(MIGRATION *edge)
 		tvert[1] = find_chull_vert(edge->rbfv[1], edge->rbfv[0]);
 		if (tvert[1] != NULL) {
 			if (tvert[1] > edge->rbfv[0])
-				ej0 = make_migration(edge->rbfv[0], tvert[1], 1);
+				ej0 = create_migration(edge->rbfv[0], tvert[1]);
 			else
-				ej0 = make_migration(tvert[1], edge->rbfv[0], 1);
+				ej0 = create_migration(tvert[1], edge->rbfv[0]);
 			if (tvert[1] > edge->rbfv[1])
-				ej1 = make_migration(edge->rbfv[1], tvert[1], 1);
+				ej1 = create_migration(edge->rbfv[1], tvert[1]);
 			else
-				ej1 = make_migration(tvert[1], edge->rbfv[1], 1);
+				ej1 = create_migration(tvert[1], edge->rbfv[1]);
 			mesh_from_edge(ej0);
 			mesh_from_edge(ej1);
 		}
@@ -978,7 +1071,8 @@ build_mesh()
 	if (single_plane_incident) {
 		for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
 			if (rbf0->next != NULL)
-				make_migration(rbf0, rbf0->next, 1);
+				create_migration(rbf0, rbf0->next);
+		await_children(nchild);
 		return;
 	}
 						/* start w/ shortest edge */
@@ -998,9 +1092,11 @@ build_mesh()
 	}
 						/* build mesh from this edge */
 	if (shrt_edj[0] < shrt_edj[1])
-		mesh_from_edge(make_migration(shrt_edj[0], shrt_edj[1], 0));
+		mesh_from_edge(create_migration(shrt_edj[0], shrt_edj[1]));
 	else
-		mesh_from_edge(make_migration(shrt_edj[1], shrt_edj[0], 0));
+		mesh_from_edge(create_migration(shrt_edj[1], shrt_edj[0]));
+						/* complete migrations */
+	await_children(nchild);
 						/* draw edge list into grid */
 	draw_edges();
 }
@@ -1388,7 +1484,8 @@ interp_isotropic()
 		fflush(stdout);
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
-			fputs("Cannot create pipe for rttree_reduce\n", stderr);
+			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
+					progname);
 			exit(1);
 		}
 	} else
@@ -1415,7 +1512,8 @@ interp_isotropic()
 	}
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
-			fprintf(stderr, "Error running '%s'\n", cmd);
+			fprintf(stderr, "%s: error running '%s'\n",
+					progname, cmd);
 			exit(1);
 		}
 	} else {
@@ -1446,7 +1544,8 @@ interp_anisotropic()
 		fflush(stdout);
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
-			fputs("Cannot create pipe for rttree_reduce\n", stderr);
+			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
+					progname);
 			exit(1);
 		}
 	} else
@@ -1474,7 +1573,8 @@ interp_anisotropic()
 	    }
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
-			fprintf(stderr, "Error running '%s'\n", cmd);
+			fprintf(stderr, "%s: error running '%s'\n",
+					progname, cmd);
 			exit(1);
 		}
 	} else
@@ -1490,17 +1590,29 @@ main(int argc, char *argv[])
 	double		bsdf;
 	int		i;
 
-	progname = argv[0];
-	if (argc > 2 && !strcmp(argv[1], "-t")) {
-		pctcull = atoi(argv[2]);
+	progname = argv[0];			/* get options */
+	while (argc > 2 && argv[1][0] == '-') {
+		switch (argv[1][1]) {
+		case 'n':
+			nprocs = atoi(argv[2]);
+			break;
+		case 't':
+			pctcull = atoi(argv[2]);
+			break;
+		default:
+			goto userr;
+		}
 		argv += 2; argc -= 2;
 	}
-	if (argc < 3) {
-		fprintf(stderr,
-		"Usage: %s [-t pctcull] meas1.dat meas2.dat .. > bsdf.xml\n",
+	if (argc < 3)
+		goto userr;
+#ifdef _WIN32
+	if (nprocs > 1) {
+		fprintf(stderr, "%s: multiprocessing not supported\n",
 				progname);
 		return(1);
 	}
+#endif
 	for (i = 1; i < argc; i++) {		/* compile measurements */
 		if (!load_pabopto_meas(argv[i]))
 			return(1);
@@ -1516,6 +1628,11 @@ main(int argc, char *argv[])
 		interp_anisotropic();
 	/* xml_epilogue();				/* finish XML output */
 	return(0);
+userr:
+	fprintf(stderr,
+	"Usage: %s [-n nprocs][-t pctcull] meas1.dat meas2.dat .. > bsdf.xml\n",
+				progname);
+	return(1);
 }
 #else
 /* Test main produces a Radiance model from the given input file */
