@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.16 2012/10/14 22:31:20 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.17 2012/10/16 22:00:51 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -577,7 +577,7 @@ static double
 migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pmtx)
 {
 	static double	*src_cost = NULL;
-	int		n_alloc = 0;
+	static int	n_alloc = 0;
 	const double	maxamt = .1; /* 2./(mtx_nrows(mig)*mtx_ncols(mig)); */
 	double		amt = 0;
 	struct {
@@ -699,6 +699,8 @@ new_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 static void
 await_children(int n)
 {
+	int	exit_status = 0;
+
 	if (n > nchild)
 		n = nchild;
 	while (n-- > 0) {
@@ -709,13 +711,17 @@ await_children(int n)
 			break;
 		}
 		--nchild;
-		if (status) {
+		if (status) {			/* something wrong */
 			if ((status = WEXITSTATUS(status)))
-				exit(status);
+				exit_status = status;
+			else
+				exit_status += !exit_status;
 			fprintf(stderr, "%s: subprocess died\n", progname);
-			exit(1);
+			n = nchild;		/* wait for the rest */
 		}
 	}
+	if (exit_status)
+		exit(exit_status);
 }
 
 /* Start child process if multiprocessing selected */
@@ -750,11 +756,12 @@ run_subprocess(void)
 static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
-	const double	end_thresh = 0.02/(from_rbf->nrbf*to_rbf->nrbf);
+	const double	end_thresh = 0.1/(from_rbf->nrbf*to_rbf->nrbf);
+	const double	rel_thresh = 0.0001;
 	float		*pmtx;
 	MIGRATION	*newmig;
 	double		*src_rem, *dst_rem;
-	double		total_rem = 1.;
+	double		total_rem = 1., move_amt;
 	int		i;
 						/* check if exists already */
 	for (newmig = from_rbf->ejl; newmig != NULL;
@@ -784,17 +791,17 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 		src_rem[i] = rbf_volume(&from_rbf->rbfa[i]) / from_rbf->vtotal;
 	for (i = to_rbf->nrbf; i--; )
 		dst_rem[i] = rbf_volume(&to_rbf->rbfa[i]) / to_rbf->vtotal;
-						/* move a bit at a time */
-	while (total_rem > end_thresh) {
-		total_rem -= migration_step(newmig, src_rem, dst_rem, pmtx);
+	do {					/* move a bit at a time */
+		move_amt = migration_step(newmig, src_rem, dst_rem, pmtx);
+		total_rem -= move_amt;
 #ifdef DEBUG
 		if (!nchild)
 			/* fputc('.', stderr); */
 			fprintf(stderr, "%.9f remaining...\r", total_rem);
 #endif
-	}
+	} while ((total_rem > end_thresh) & (move_amt > rel_thresh*total_rem));
 #ifdef DEBUG
-	if (!nchild) fputs("done.\n", stderr);
+	if (!nchild) fputs("\ndone.\n", stderr);
 #endif
 
 	free(pmtx);				/* free working arrays */
