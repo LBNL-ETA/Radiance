@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.20 2012/08/07 18:17:17 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.21 2012/10/16 15:53:04 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -355,11 +355,12 @@ cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 static CMATRIX *
 cm_loadBSDF(char *fname, COLOR cLamb)
 {
-	CMATRIX	*Tmat;
-	char	*fpath;
-	SDError	ec;
-	SDData	myBSDF;
-	COLOR	bsdfLamb, specCol;
+	CMATRIX		*Tmat;
+	char		*fpath;
+	SDError		ec;
+	SDData		myBSDF;
+	SDSpectralDF	*tdf;
+	COLOR		bsdfLamb, specCol;
 					/* find path to BSDF file */
 	fpath = getpath(fname, getrlibpath(), R_OK);
 	if (fpath == NULL) {
@@ -371,19 +372,20 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	if (ec)
 		error(USER, transSDError(ec));
 	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
-	if (myBSDF.tf == NULL) {	/* no non-Lambertian transmission? */
+	tdf = (myBSDF.tf != NULL) ? myBSDF.tf : myBSDF.tb;
+	if (tdf == NULL) {		/* no non-Lambertian transmission? */
 		if (cLamb != NULL)
 			copycolor(cLamb, bsdfLamb);
 		SDfreeBSDF(&myBSDF);
 		return(NULL);
 	}
-	if (myBSDF.tf->ncomp != 1 || myBSDF.tf->comp[0].func != &SDhandleMtx) {
+	if (tdf->ncomp != 1 || tdf->comp[0].func != &SDhandleMtx) {
 		sprintf(errmsg, "unsupported BSDF '%s'", fpath);
 		error(USER, errmsg);
 	}
 					/* convert BTDF to matrix */
-	ccy2rgb(&myBSDF.tf->comp[0].cspec[0], 1., specCol);
-	Tmat = cm_bsdf(bsdfLamb, specCol, (SDMat *)myBSDF.tf->comp[0].dist);
+	ccy2rgb(&tdf->comp[0].cspec[0], 1., specCol);
+	Tmat = cm_bsdf(bsdfLamb, specCol, (SDMat *)tdf->comp[0].dist);
 	if (cLamb != NULL)		/* Lambertian is included */
 		setcolor(cLamb, .0, .0, .0);
 					/* free BSDF and return */
