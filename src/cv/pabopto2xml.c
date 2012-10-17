@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.17 2012/10/16 22:00:51 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.18 2012/10/17 19:01:47 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -26,6 +26,8 @@ static const char RCSid[] = "$Id: pabopto2xml.c,v 2.17 2012/10/16 22:00:51 greg 
 #ifndef GRIDRES
 #define GRIDRES		200		/* grid resolution per side */
 #endif
+
+#define	MAXSAMPORD	7		/* don't sample finer than this */
 
 #define RSCA		2.7		/* radius scaling factor (empirical) */
 
@@ -95,13 +97,11 @@ static MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 
 char			*progname;
 
-#ifdef DEBUG			/* percentage to cull (<0 to turn off) */
-int			pctcull = -1;
-#else
+				/* percentage to cull (<0 to turn off) */
 int			pctcull = 90;
-#endif
 				/* number of processes to run */
 int			nprocs = 1;
+
 				/* number of children (-1 in child) */
 int			nchild = 0;
 
@@ -269,6 +269,8 @@ make_rbfrep(void)
 	insert_dsf(newnode);
 				/* adjust sampling resolution */
 	samp_order = log(2./R2ANG(minrad))/M_LN2 + .5;
+	if (samp_order > MAXSAMPORD)
+		samp_order = MAXSAMPORD;
 
 	return(newnode);
 }
@@ -576,10 +578,9 @@ min_cost(double amt2move, const double *avail, const float *price, int n)
 static double
 migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pmtx)
 {
+	const double	maxamt = .1;
 	static double	*src_cost = NULL;
 	static int	n_alloc = 0;
-	const double	maxamt = .1; /* 2./(mtx_nrows(mig)*mtx_ncols(mig)); */
-	double		amt = 0;
 	struct {
 		int	s, d;	/* source and destination */
 		double	price;	/* price estimate per amount moved */
@@ -621,11 +622,11 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 				src_rem[cur.s] : dst_rem[cur.d];
 	    if (cur.amt > maxamt) cur.amt = maxamt;
 	    dst_rem[cur.d] -= cur.amt;		/* add up differential costs */
-	    for (i = mtx_nrows(mig); i--; ) {
-		if (i == cur.s) continue;
-		cost_others += min_cost(src_rem[i], dst_rem, price, mtx_ncols(mig))
+	    for (i = mtx_nrows(mig); i--; )
+		if (i != cur.s)
+			cost_others += min_cost(src_rem[i], dst_rem,
+						price, mtx_ncols(mig))
 					- src_cost[i];
-	    }
 	    dst_rem[cur.d] += cur.amt;		/* undo trial move */
 	    cur.price += cost_others/cur.amt;	/* adjust effective price */
 	    if (cur.price < best.price)		/* are we better than best? */
@@ -803,10 +804,6 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 #ifdef DEBUG
 	if (!nchild) fputs("\ndone.\n", stderr);
 #endif
-
-	free(pmtx);				/* free working arrays */
-	free(src_rem);
-	free(dst_rem);
 	for (i = from_rbf->nrbf; i--; ) {	/* normalize final matrix */
 	    float	nf = rbf_volume(&from_rbf->rbfa[i]);
 	    int		j;
@@ -816,6 +813,9 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 		newmig->mtx[mtx_ndx(newmig,i,j)] *= nf;
 	}
 	end_subprocess();			/* exit here if subprocess */
+	free(pmtx);				/* free working arrays */
+	free(src_rem);
+	free(dst_rem);
 	return(newmig);
 }
 
@@ -1102,10 +1102,10 @@ build_mesh()
 		mesh_from_edge(create_migration(shrt_edj[0], shrt_edj[1]));
 	else
 		mesh_from_edge(create_migration(shrt_edj[1], shrt_edj[0]));
-						/* complete migrations */
-	await_children(nchild);
 						/* draw edge list into grid */
 	draw_edges();
+						/* complete migrations */
+	await_children(nchild);
 }
 
 /* Identify enclosing triangle for this position (flood fill raster check) */
