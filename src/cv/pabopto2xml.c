@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xml.c,v 2.18 2012/10/17 19:01:47 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xml.c,v 2.19 2012/10/18 04:28:20 greg Exp $";
 #endif
 /*
  * Convert PAB-Opto measurements to XML format using tensor tree representation
@@ -72,6 +72,18 @@ static GRIDVAL		dsf_grid[GRIDRES][GRIDRES];
 				/* all incident angles in-plane so far? */
 static int		single_plane_incident = -1;
 
+				/* represented incident quadrants */
+#define INP_QUAD1	1		/* 0-90 degree quadrant */
+#define	INP_QUAD2	2		/* 90-180 degree quadrant */
+#define INP_QUAD3	4		/* 180-270 degree quadrant */
+#define INP_QUAD4	8		/* 270-360 degree quadrant */
+
+static int		inp_coverage = 0;
+
+				/* symmetry operations */
+#define MIRROR_X	1		/* mirror(ed) x-coordinate */
+#define MIRROR_Y	2		/* mirror(ed) y-coordinate */
+
 				/* input/output orientations */
 static int		input_orient = 0;
 static int		output_orient = 0;
@@ -107,6 +119,109 @@ int			nchild = 0;
 
 				/* sampling order (set by data density) */
 int			samp_order = 0;
+
+				/* get phi value in degrees, [0,360) range */
+#define	get_phi360(v)	((180./M_PI)*atan2((v)[1],(v)[0]) + 180.)
+
+/* Apply symmetry to the given vector based on distribution */
+static int
+use_symmetry(FVECT vec)
+{
+	double	phi = get_phi360(vec);
+
+	switch (inp_coverage) {
+	case INP_QUAD1|INP_QUAD2|INP_QUAD3|INP_QUAD4:
+		break;
+	case INP_QUAD1|INP_QUAD2:
+		if ((-FTINY > phi) | (phi > 180.+FTINY))
+			goto mir_y;
+		break;
+	case INP_QUAD2|INP_QUAD3:
+		if ((90.-FTINY > phi) | (phi > 270.+FTINY))
+			goto mir_x;
+		break;
+	case INP_QUAD3|INP_QUAD4:
+		if ((180.-FTINY > phi) | (phi > 360.+FTINY))
+			goto mir_y;
+		break;
+	case INP_QUAD4|INP_QUAD1:
+		if ((270.-FTINY > phi) & (phi > 90.+FTINY))
+			goto mir_x;
+		break;
+	case INP_QUAD1:
+		if ((-FTINY > phi) | (phi > 90.+FTINY))
+			switch ((int)(phi*(1./90.))) {
+			case 1: goto mir_x;
+			case 2: goto mir_xy;
+			case 3: goto mir_y;
+			}
+		break;
+	case INP_QUAD2:
+		if ((90.-FTINY > phi) | (phi > 180.+FTINY))
+			switch ((int)(phi*(1./90.))) {
+			case 0: goto mir_x;
+			case 2: goto mir_y;
+			case 3: goto mir_xy;
+			}
+		break;
+	case INP_QUAD3:
+		if ((180.-FTINY > phi) | (phi > 270.+FTINY))
+			switch ((int)(phi*(1./90.))) {
+			case 0: goto mir_xy;
+			case 1: goto mir_y;
+			case 3: goto mir_x;
+			}
+		break;
+	case INP_QUAD4:
+		if ((270.-FTINY > phi) | (phi > 360.+FTINY))
+			switch ((int)(phi*(1./90.))) {
+			case 0: goto mir_y;
+			case 1: goto mir_xy;
+			case 2: goto mir_x;
+			}
+		break;
+	default:
+		fprintf(stderr, "%s: Illegal input coverage (%d)\n",
+					progname, inp_coverage);
+		exit(1);
+	}
+	return(0);		/* in range */
+mir_x:
+	vec[0] = -vec[0];
+	return(MIRROR_X);
+mir_y:
+	vec[1] = -vec[1];
+	return(MIRROR_Y);
+mir_xy:
+	vec[0] = -vec[0];
+	vec[1] = -vec[1];
+	return(MIRROR_X|MIRROR_Y);
+}
+
+/* Reverse symmetry based on what was done before */
+static void
+rev_symmetry(FVECT vec, int sym)
+{
+	if (sym & MIRROR_X)
+		vec[0] = -vec[0];
+	if (sym & MIRROR_Y)
+		vec[1] = -vec[1];
+}
+
+/* Reverse symmetry for an RBF distribution */
+static void
+rev_rbf_symmetry(RBFNODE *rbf, int sym)
+{
+	int	n;
+
+	rev_symmetry(rbf->invec, sym);
+	if (sym & MIRROR_X)
+		for (n = rbf->nrbf; n-- > 0; )
+			rbf->rbfa[n].gx = GRIDRES-1 - rbf->rbfa[n].gx;
+	if (sym & MIRROR_Y)
+		for (n = rbf->nrbf; n-- > 0; )
+			rbf->rbfa[n].gy = GRIDRES-1 - rbf->rbfa[n].gy;
+}
 
 /* Compute volume associated with Gaussian lobe */
 static double
@@ -177,7 +292,9 @@ insert_dsf(RBFNODE *newrbf)
 					/* check for redundant meas. */
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
 		if (DOT(rbf->invec, newrbf->invec) >= 1.-FTINY) {
-			fputs("Duplicate incident measurement (ignored)\n", stderr);
+			fprintf(stderr,
+				"%s: Duplicate incident measurement (ignored)\n",
+					progname);
 			free(newrbf);
 			return;
 		}
@@ -214,7 +331,7 @@ make_rbfrep(void)
 				/* allocate RBF array */
 	newnode = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL) {
-		fputs("Out of memory in make_rbfrep()\n", stderr);
+		fprintf(stderr, "%s: Out of memory in make_rbfrep()\n", progname);
 		exit(1);
 	}
 	newnode->next = NULL;
@@ -331,11 +448,20 @@ load_pabopto_meas(const char *fname)
 				stderr);
 		exit(1);
 	}
-	if (single_plane_incident > 0)	/* check if still in plane */
+	if (single_plane_incident > 0)	/* check input coverage */
 		single_plane_incident = (round(new_phi) == round(phi_in_deg));
 	else if (single_plane_incident < 0)
 		single_plane_incident = 1;
 	phi_in_deg = new_phi;
+	new_phi += 360.*(new_phi < -FTINY);
+	if ((1. < new_phi) & (new_phi < 89.))
+		inp_coverage |= INP_QUAD1;
+	else if ((91. < new_phi) & (new_phi < 179.))
+		inp_coverage |= INP_QUAD2;
+	else if ((181. < new_phi) & (new_phi < 269.))
+		inp_coverage |= INP_QUAD3;
+	else if ((271. < new_phi) & (new_phi < 359.))
+		inp_coverage |= INP_QUAD4;
 	ungetc(c, fp);			/* read actual data */
 	while (fscanf(fp, "%lf %lf %lf\n", &theta_out, &phi_out, &val) == 3) {
 		FVECT	ovec;
@@ -409,7 +535,9 @@ compute_radii(void)
 		    }
 		}
 		if (inear < 0) {
-			fputs("Could not find non-empty neighbor!\n", stderr);
+			fprintf(stderr,
+				"%s: Could not find non-empty neighbor!\n",
+					progname);
 			exit(1);
 		}
 		ang2 = sqrt(lastang2);
@@ -508,7 +636,8 @@ price_routes(const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	int	i, j;
 
 	if ((pmtx == NULL) | (vto == NULL)) {
-		fputs("Out of memory in migration_costs()\n", stderr);
+		fprintf(stderr, "%s: Out of memory in migration_costs()\n",
+				progname);
 		exit(1);
 	}
 	for (j = to_rbf->nrbf; j--; )		/* save repetitive ops. */
@@ -554,7 +683,8 @@ min_cost(double amt2move, const double *avail, const float *price, int n)
 		if (n_alloc) free(price_sort);
 		price_sort = (int *)malloc(sizeof(int)*n);
 		if (price_sort == NULL) {
-			fputs("Out of memory in min_cost()\n", stderr);
+			fprintf(stderr, "%s: Out of memory in min_cost()\n",
+					progname);
 			exit(1);
 		}
 		n_alloc = n;
@@ -579,6 +709,7 @@ static double
 migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pmtx)
 {
 	const double	maxamt = .1;
+	const double	minamt = maxamt*.0001;
 	static double	*src_cost = NULL;
 	static int	n_alloc = 0;
 	struct {
@@ -593,7 +724,8 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 			free(src_cost);
 		src_cost = (double *)malloc(sizeof(double)*mtx_nrows(mig));
 		if (src_cost == NULL) {
-			fputs("Out of memory in migration_step()\n", stderr);
+			fprintf(stderr, "%s: Out of memory in migration_step()\n",
+					progname);
 			exit(1);
 		}
 		n_alloc = mtx_nrows(mig);
@@ -607,11 +739,11 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pm
 	for (cur.s = mtx_nrows(mig); cur.s--; ) {
 	    const float	*price = pmtx + cur.s*mtx_ncols(mig);
 	    double	cost_others = 0;
-	    if (src_rem[cur.s] <= FTINY)
+	    if (src_rem[cur.s] < minamt)
 		    continue;
 	    cur.d = -1;				/* examine cheapest dest. */
 	    for (i = mtx_ncols(mig); i--; )
-		if (dst_rem[i] > FTINY &&
+		if (dst_rem[i] > minamt &&
 				(cur.d < 0 || price[i] < price[cur.d]))
 			cur.d = i;
 	    if (cur.d < 0)
@@ -758,7 +890,8 @@ static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
 	const double	end_thresh = 0.1/(from_rbf->nrbf*to_rbf->nrbf);
-	const double	rel_thresh = 0.0001;
+	const double	check_thresh = 0.01;
+	const double	rel_thresh = 5e-6;
 	float		*pmtx;
 	MIGRATION	*newmig;
 	double		*src_rem, *dst_rem;
@@ -777,7 +910,8 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	src_rem = (double *)malloc(sizeof(double)*from_rbf->nrbf);
 	dst_rem = (double *)malloc(sizeof(double)*to_rbf->nrbf);
 	if ((src_rem == NULL) | (dst_rem == NULL)) {
-		fputs("Out of memory in create_migration()\n", stderr);
+		fprintf(stderr, "%s: Out of memory in create_migration()\n",
+				progname);
 		exit(1);
 	}
 #ifdef DEBUG
@@ -800,9 +934,11 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 			/* fputc('.', stderr); */
 			fprintf(stderr, "%.9f remaining...\r", total_rem);
 #endif
-	} while ((total_rem > end_thresh) & (move_amt > rel_thresh*total_rem));
+	} while (total_rem > end_thresh && (total_rem > check_thresh) |
+					(move_amt > rel_thresh*total_rem));
 #ifdef DEBUG
 	if (!nchild) fputs("\ndone.\n", stderr);
+	else fprintf(stderr, "finished with %.9f remaining\n", total_rem);
 #endif
 	for (i = from_rbf->nrbf; i--; ) {	/* normalize final matrix */
 	    float	nf = rbf_volume(&from_rbf->rbfa[i]);
@@ -1082,8 +1218,7 @@ build_mesh()
 		await_children(nchild);
 		return;
 	}
-						/* start w/ shortest edge */
-	shrt_edj[0] = shrt_edj[1] = NULL;
+	shrt_edj[0] = shrt_edj[1] = NULL;	/* start w/ shortest edge */
 	for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
 	    for (rbf1 = rbf0->next; rbf1 != NULL; rbf1 = rbf1->next) {
 		double	dist2 = 2. - 2.*DOT(rbf0->invec,rbf1->invec);
@@ -1094,7 +1229,7 @@ build_mesh()
 		}
 	}
 	if (shrt_edj[0] == NULL) {
-		fputs("Cannot find shortest edge\n", stderr);
+		fprintf(stderr, "%s: Cannot find shortest edge\n", progname);
 		exit(1);
 	}
 						/* build mesh from this edge */
@@ -1215,9 +1350,9 @@ order_triangle(MIGRATION *miga[3])
 	return(1);
 }
 
-/* Find edge(s) for interpolating the given incident vector */
+/* Find edge(s) for interpolating the given vector, applying symmetry */
 static int
-get_interp(MIGRATION *miga[3], const FVECT invec)
+get_interp(MIGRATION *miga[3], FVECT invec)
 {
 	miga[0] = miga[1] = miga[2] = NULL;
 	if (single_plane_incident) {		/* isotropic BSDF? */
@@ -1231,13 +1366,14 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 				for (miga[0] = rbf->ejl; miga[0] != NULL;
 						miga[0] = nextedge(rbf,miga[0]))
 					if (opp_rbf(rbf,miga[0]) == rbf->next)
-						return(1);
+						return(0);
 				break;
 			}
 		}
-		return(0);			/* outside range! */
+		return(-1);			/* outside range! */
 	}
 	{					/* else use triangle mesh */
+		const int	sym = use_symmetry(invec);
 		unsigned char	floodmap[GRIDRES][(GRIDRES+7)/8];
 		int		pstart[2];
 		RBFNODE		*vother;
@@ -1248,11 +1384,11 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 		memset(floodmap, 0, sizeof(floodmap));
 						/* call flooding function */
 		if (!identify_tri(miga, floodmap, pstart[0], pstart[1]))
-			return(0);		/* outside mesh */
+			return(-1);		/* outside mesh */
 		if ((miga[0] == NULL) | (miga[2] == NULL))
-			return(0);		/* should never happen */
+			return(-1);		/* should never happen */
 		if (miga[1] == NULL)
-			return(1);		/* on edge */
+			return(sym);		/* on edge */
 						/* verify triangle */
 		if (!order_triangle(miga)) {
 #ifdef DEBUG
@@ -1272,7 +1408,7 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 #ifdef DEBUG
 				fputs("No triangle in get_interp()\n", stderr);
 #endif
-				return(0);
+				return(-1);
 			}
 						/* reassign other two edges */
 			for (ej = vother->ejl; ej != NULL;
@@ -1287,10 +1423,10 @@ get_interp(MIGRATION *miga[3], const FVECT invec)
 #ifdef DEBUG
 				fputs("Bad triangle in get_interp()\n", stderr);
 #endif
-				return(0);
+				return(-1);
 			}
 		}
-		return(3);			/* return in standard order */
+		return(sym);			/* return in standard order */
 	}
 }
 
@@ -1364,7 +1500,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	rbf->vtotal *= mig->rbfv[0]->vtotal;	/* turn ratio into actual */
 	return(rbf);
 memerr:
-	fputs("Out of memory in e_advect_rbf()\n", stderr);
+	fprintf(stderr, "%s: Out of memory in e_advect_rbf()\n", progname);
 	exit(1);
 	return(NULL);	/* pro forma return */
 }
@@ -1373,22 +1509,29 @@ memerr:
 static RBFNODE *
 advect_rbf(const FVECT invec)
 {
+	FVECT		sivec;
 	MIGRATION	*miga[3];
 	RBFNODE		*rbf;
+	int		sym;
 	float		mbfact, mcfact;
 	int		n, i, j, k;
 	FVECT		v0, v1, v2;
 	double		s, t;
 
-	if (!get_interp(miga, invec))		/* can't interpolate? */
+	VCOPY(sivec, invec);			/* find triangle/edge */
+	sym = get_interp(miga, sivec);
+	if (sym < 0)				/* can't interpolate? */
 		return(NULL);
-	if (miga[1] == NULL)			/* advect along edge? */
-		return(e_advect_rbf(miga[0], invec));
+	if (miga[1] == NULL) {			/* advect along edge? */
+		rbf = e_advect_rbf(miga[0], sivec);
+		rev_rbf_symmetry(rbf, sym);
+		return(rbf);
+	}
 #ifdef DEBUG
 	if (miga[0]->rbfv[0] != miga[2]->rbfv[0] |
 			miga[0]->rbfv[1] != miga[1]->rbfv[0] |
 			miga[1]->rbfv[1] != miga[2]->rbfv[1]) {
-		fputs("Triangle vertex screw-up!\n", stderr);
+		fprintf(stderr, "%s: Triangle vertex screw-up!\n", progname);
 		exit(1);
 	}
 #endif
@@ -1397,12 +1540,12 @@ advect_rbf(const FVECT invec)
 	normalize(v0);
 	fcross(v2, miga[1]->rbfv[0]->invec, miga[1]->rbfv[1]->invec);
 	normalize(v2);
-	fcross(v1, invec, miga[1]->rbfv[1]->invec);
+	fcross(v1, sivec, miga[1]->rbfv[1]->invec);
 	normalize(v1);
 	s = acos(DOT(v0,v1)) / acos(DOT(v0,v2));
 	geodesic(v1, miga[0]->rbfv[0]->invec, miga[0]->rbfv[1]->invec,
 			s, GEOD_REL);
-	t = acos(DOT(v1,invec)) / acos(DOT(v1,miga[1]->rbfv[1]->invec));
+	t = acos(DOT(v1,sivec)) / acos(DOT(v1,miga[1]->rbfv[1]->invec));
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(miga[0]); i++)
 	    for (j = 0; j < mtx_ncols(miga[0]); j++)
@@ -1417,11 +1560,11 @@ advect_rbf(const FVECT invec)
 #endif
 	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
 	if (rbf == NULL) {
-		fputs("Out of memory in advect_rbf()\n", stderr);
+		fprintf(stderr, "%s: Out of memory in advect_rbf()\n", progname);
 		exit(1);
 	}
 	rbf->next = NULL; rbf->ejl = NULL;
-	VCOPY(rbf->invec, invec);
+	VCOPY(rbf->invec, sivec);
 	rbf->nrbf = n;
 	n = 0;					/* compute RBF lobes */
 	mbfact = s * miga[0]->rbfv[1]->vtotal/miga[0]->rbfv[0]->vtotal *
@@ -1467,6 +1610,7 @@ advect_rbf(const FVECT invec)
 	    }
 	}
 	rbf->vtotal = miga[0]->rbfv[0]->vtotal * (mbfact + mcfact);
+	rev_rbf_symmetry(rbf, sym);
 	return(rbf);
 }
 
