@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.37 2012/08/24 15:20:18 greg Exp $
+# RCSid $Id: Rmakefile,v 2.38 2012/10/19 04:14:29 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -19,7 +19,8 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
-mgf2rad rad2mgf mgf2meta mgfilt mgf2inv pabopto2xml pkgBSDF 3ds2mgf
+mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf \
+pabopto2bsdf bsdf2ttree pkgBSDF
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal
 
@@ -72,8 +73,13 @@ mgf2inv:	mgf2inv.o
 	$(CC) $(CFLAGS) -o 3ds2mgf 3ds2mgf.o rayopt3ds.o vect3ds.o \
 -lmgf -lrtrad $(MLIB)
 
-pabopto2xml:	pabopto2xml.o
-	$(CC) $(CFLAGS) -o pabopto2xml pabopto2xml.o -lrtrad $(MLIB)
+pabopto2bsdf:	pabopto2bsdf.o bsdfrep.o bsdfrbf.o bsdfmesh.o
+	$(CC) $(CFLAGS) -o pabopto2bsdf pabopto2bsdf.o bsdfrep.o \
+bsdfrbf.o bsdfmesh.o -lrtrad $(MLIB)
+
+bsdf2ttree:	bsdf2ttree.o bsdfrep.o bsdfinterp.o
+	$(CC) $(CFLAGS) -o bsdf2ttree bsdf2ttree.o bsdfrep.o bsdfinterp.o \
+-lrtrad $(MLIB)
 
 pkgBSDF:	pkgBSDF.o
 	$(CC) $(CFLAGS) -o pkgBSDF pkgBSDF.o -lrtrad $(MLIB)
@@ -112,4 +118,9 @@ mgf2inv.o:	../common/mgf_parser.h ../common/ccolor.h
 pkgBSDF.o:	../common/bsdf.h ../common/fvect.h ../common/ccolor.h \
 ../common/paths.h
 
-pabopto2xml.o:	../common/bsdf.h ../common/fvect.h ../common/ccolor.h
+bsdf2ttree.o bsdfinterp.o bsdfmesh.o bsdfrbf.o bsdfrep.o \
+pabopto2bsdf.o:	bsdfrep.h ../common/bsdf.h ../common/fvect.h ../common/ccolor.h
+
+bsdf2ttree.o pabopto2bsdf.o:	../common/platform.h
+
+bsdfrep.o:	../common/resolu.h ../common/rtio.h
