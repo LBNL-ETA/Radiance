@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.14 2006/12/23 17:27:45 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.15 2012/10/19 01:40:33 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -22,9 +22,10 @@ static const char	RCSid[] = "$Id: portio.c,v 2.14 2006/12/23 17:27:45 greg Exp $
 
 
 void
-putstr(s, fp)			/* write null-terminated string to fp */
-register char  *s;
-register FILE  *fp;
+putstr(				/* write null-terminated string to fp */
+	char  *s,
+	FILE  *fp
+)
 {
 	do
 		putc(*s, fp);
@@ -33,10 +34,11 @@ register FILE  *fp;
 
 
 void
-putint(i, siz, fp)		/* write a siz-byte integer to fp */
-long  i;
-register int  siz;
-register FILE  *fp;
+putint(				/* write a siz-byte integer to fp */
+	long  i,
+	int  siz,
+	FILE  *fp
+)
 {
 	while (siz--)
 		putc((int)(i>>(siz<<3) & 0xff), fp);
@@ -44,9 +46,10 @@ register FILE  *fp;
 
 
 void
-putflt(f, fp)			/* put out floating point number */
-double	f;
-FILE  *fp;
+putflt(				/* put out floating point number */
+	double	f,
+	FILE  *fp
+)
 {
 	long  m;
 	int  e;
@@ -65,12 +68,13 @@ FILE  *fp;
 
 
 char *
-getstr(s, fp)			/* get null-terminated string */
-char  *s;
-register FILE  *fp;
+getstr(				/* get null-terminated string */
+	char  *s,
+	FILE  *fp
+)
 {
-	register char  *cp;
-	register int  c;
+	char  *cp;
+	int  c;
 
 	cp = s;
 	while ((c = getc(fp)) != EOF)
@@ -82,12 +86,13 @@ register FILE  *fp;
 
 
 long
-getint(siz, fp)			/* get a siz-byte integer */
-int  siz;
-register FILE  *fp;
+getint(				/* get a siz-byte integer */
+	int  siz,
+	FILE  *fp
+)
 {
-	register int  c;
-	register long  r;
+	int  c;
+	long  r;
 
 	if ((c = getc(fp)) == EOF)
 		return(EOF);
@@ -103,13 +108,16 @@ register FILE  *fp;
 
 
 double
-getflt(fp)			/* get a floating point number */
-FILE  *fp;
+getflt(				/* get a floating point number */
+	FILE  *fp
+)
 {
 	long	l;
 	double	d;
 
 	l = getint(4, fp);
+	if (l == EOF && feof(fp))	/* EOF? */
+		return((double)EOF);
 	if (l == 0) {
 		getc(fp);		/* exactly zero -- ignore exponent */
 		return(0.0);
