@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.2 2012/10/20 07:02:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.3 2012/10/20 17:01:26 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -281,7 +281,7 @@ get_dsf(int ord)
 	RBFNODE		*rbf;
 
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
-		if (rbf->ord == ord);
+		if (rbf->ord == ord)
 			return(rbf);
 	return(NULL);
 }
@@ -370,8 +370,8 @@ save_bsdf_rep(FILE *ofp)
 					/* write out as sparse data */
 		n = mtx_nrows(mig) * mtx_ncols(mig);
 		for (i = 0; i < n; i++) {
-			if (zerocnt >= 0xff) {
-				putint(zerocnt, 1, ofp); zerocnt = 0;
+			if (zerocnt == 0xff) {
+				putint(0xff, 1, ofp); zerocnt = 0;
 			}
 			if (mig->mtx[i] != 0) {
 				putint(zerocnt, 1, ofp); zerocnt = 0;
@@ -441,9 +441,8 @@ load_bsdf_rep(FILE *ifp)
 		rbfh.invec[0] = getflt(ifp);
 		rbfh.invec[1] = getflt(ifp);
 		rbfh.invec[2] = getflt(ifp);
+		rbfh.vtotal = getflt(ifp);
 		rbfh.nrbf = getint(4, ifp);
-		if (!new_input_vector(rbfh.invec))
-			return(0);
 		newrbf = (RBFNODE *)malloc(sizeof(RBFNODE) +
 					sizeof(RBFVAL)*(rbfh.nrbf-1));
 		if (newrbf == NULL)
@@ -487,12 +486,10 @@ load_bsdf_rep(FILE *ifp)
 		memset(newmig->mtx, 0, sizeof(float)*n);
 		for (i = 0; ; ) {	/* read sparse data */
 			int	zc = getint(1, ifp) & 0xff;
-			if (zc == 0xff) {
-				i += 0xff;
-				continue;
-			}
 			if ((i += zc) >= n)
 				break;
+			if (zc == 0xff)
+				continue;
 			newmig->mtx[i++] = getflt(ifp);
 		}
 		if (feof(ifp))

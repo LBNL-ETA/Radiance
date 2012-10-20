@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.2 2012/10/20 17:01:26 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -160,9 +160,14 @@ main(int argc, char *argv[])
 		}
 		argv += 2; argc -= 2;
 	}
-	if (argc == 2)
+	if (argc == 2) {			/* open input if given */
 		fpin = fopen(argv[1], "r");
-	else if (argc != 1)
+		if (fpin == NULL) {
+			fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
+					progname, argv[1]);
+			return(1);
+		}
+	} else if (argc != 1)
 		goto userr;
 	SET_FILE_BINARY(fpin);			/* load BSDF interpolant */
 	if (!load_bsdf_rep(fpin))
