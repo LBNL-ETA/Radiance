@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.2 2012/10/20 07:02:00 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -22,168 +22,6 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.1 2012/10/19 04:14:29 greg Exp 
 int			nprocs = 1;
 				/* number of children (-1 in child) */
 static int		nchild = 0;
-
-/* Compute (and allocate) migration price matrix for optimization */
-static float *
-price_routes(const RBFNODE *from_rbf, const RBFNODE *to_rbf)
-{
-	float	*pmtx = (float *)malloc(sizeof(float) *
-					from_rbf->nrbf * to_rbf->nrbf);
-	FVECT	*vto = (FVECT *)malloc(sizeof(FVECT) * to_rbf->nrbf);
-	int	i, j;
-
-	if ((pmtx == NULL) | (vto == NULL)) {
-		fprintf(stderr, "%s: Out of memory in migration_costs()\n",
-				progname);
-		exit(1);
-	}
-	for (j = to_rbf->nrbf; j--; )		/* save repetitive ops. */
-		ovec_from_pos(vto[j], to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy);
-
-	for (i = from_rbf->nrbf; i--; ) {
-	    const double	from_ang = R2ANG(from_rbf->rbfa[i].crad);
-	    FVECT		vfrom;
-	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
-	    for (j = to_rbf->nrbf; j--; )
-		pmtx[i*to_rbf->nrbf + j] = acos(DOT(vfrom, vto[j])) +
-				fabs(R2ANG(to_rbf->rbfa[j].crad) - from_ang);
-	}
-	free(vto);
-	return(pmtx);
-}
-
-/* Comparison routine needed for sorting price row */
-static const float	*price_arr;
-static int
-msrt_cmp(const void *p1, const void *p2)
-{
-	float	c1 = price_arr[*(const int *)p1];
-	float	c2 = price_arr[*(const int *)p2];
-
-	if (c1 > c2) return(1);
-	if (c1 < c2) return(-1);
-	return(0);
-}
-
-/* Compute minimum (optimistic) cost for moving the given source material */
-static double
-min_cost(double amt2move, const double *avail, const float *price, int n)
-{
-	static int	*price_sort = NULL;
-	static int	n_alloc = 0;
-	double		total_cost = 0;
-	int		i;
-
-	if (amt2move <= FTINY)			/* pre-emptive check */
-		return(0.);
-	if (n > n_alloc) {			/* (re)allocate sort array */
-		if (n_alloc) free(price_sort);
-		price_sort = (int *)malloc(sizeof(int)*n);
-		if (price_sort == NULL) {
-			fprintf(stderr, "%s: Out of memory in min_cost()\n",
-					progname);
-			exit(1);
-		}
-		n_alloc = n;
-	}
-	for (i = n; i--; )
-		price_sort[i] = i;
-	price_arr = price;
-	qsort(price_sort, n, sizeof(int), &msrt_cmp);
-						/* move cheapest first */
-	for (i = 0; i < n && amt2move > FTINY; i++) {
-		int	d = price_sort[i];
-		double	amt = (amt2move < avail[d]) ? amt2move : avail[d];
-
-		total_cost += amt * price[d];
-		amt2move -= amt;
-	}
-	return(total_cost);
-}
-
-/* Take a step in migration by choosing optimal bucket to transfer */
-static double
-migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pmtx)
-{
-	const double	maxamt = .1;
-	const double	minamt = maxamt*.0001;
-	static double	*src_cost = NULL;
-	static int	n_alloc = 0;
-	struct {
-		int	s, d;	/* source and destination */
-		double	price;	/* price estimate per amount moved */
-		double	amt;	/* amount we can move */
-	} cur, best;
-	int		i;
-
-	if (mtx_nrows(mig) > n_alloc) {		/* allocate cost array */
-		if (n_alloc)
-			free(src_cost);
-		src_cost = (double *)malloc(sizeof(double)*mtx_nrows(mig));
-		if (src_cost == NULL) {
-			fprintf(stderr, "%s: Out of memory in migration_step()\n",
-					progname);
-			exit(1);
-		}
-		n_alloc = mtx_nrows(mig);
-	}
-	for (i = mtx_nrows(mig); i--; )		/* starting costs for diff. */
-		src_cost[i] = min_cost(src_rem[i], dst_rem,
-					pmtx+i*mtx_ncols(mig), mtx_ncols(mig));
-
-						/* find best source & dest. */
-	best.s = best.d = -1; best.price = FHUGE; best.amt = 0;
-	for (cur.s = mtx_nrows(mig); cur.s--; ) {
-	    const float	*price = pmtx + cur.s*mtx_ncols(mig);
-	    double	cost_others = 0;
-	    if (src_rem[cur.s] < minamt)
-		    continue;
-	    cur.d = -1;				/* examine cheapest dest. */
-	    for (i = mtx_ncols(mig); i--; )
-		if (dst_rem[i] > minamt &&
-				(cur.d < 0 || price[i] < price[cur.d]))
-			cur.d = i;
-	    if (cur.d < 0)
-		    return(.0);
-	    if ((cur.price = price[cur.d]) >= best.price)
-		    continue;			/* no point checking further */
-	    cur.amt = (src_rem[cur.s] < dst_rem[cur.d]) ?
-				src_rem[cur.s] : dst_rem[cur.d];
-	    if (cur.amt > maxamt) cur.amt = maxamt;
-	    dst_rem[cur.d] -= cur.amt;		/* add up differential costs */
-	    for (i = mtx_nrows(mig); i--; )
-		if (i != cur.s)
-			cost_others += min_cost(src_rem[i], dst_rem,
-						price, mtx_ncols(mig))
-					- src_cost[i];
-	    dst_rem[cur.d] += cur.amt;		/* undo trial move */
-	    cur.price += cost_others/cur.amt;	/* adjust effective price */
-	    if (cur.price < best.price)		/* are we better than best? */
-		    best = cur;
-	}
-	if ((best.s < 0) | (best.d < 0))
-		return(.0);
-						/* make the actual move */
-	mig->mtx[mtx_ndx(mig,best.s,best.d)] += best.amt;
-	src_rem[best.s] -= best.amt;
-	dst_rem[best.d] -= best.amt;
-	return(best.amt);
-}
-
-#ifdef DEBUG
-static char *
-thetaphi(const FVECT v)
-{
-	static char	buf[128];
-	double		theta, phi;
-
-	theta = 180./M_PI*acos(v[2]);
-	phi = 180./M_PI*atan2(v[1],v[0]);
-	sprintf(buf, "(%.0f,%.0f)", theta, phi);
-
-	return(buf);
-}
-#endif
 
 /* Create a new migration holder (sharing memory for multiprocessing) */
 static MIGRATION *
@@ -286,13 +124,173 @@ run_subprocess(void)
 
 #endif	/* ! _WIN32 */
 
+/* Compute (and allocate) migration price matrix for optimization */
+static float *
+price_routes(const RBFNODE *from_rbf, const RBFNODE *to_rbf)
+{
+	float	*pmtx = (float *)malloc(sizeof(float) *
+					from_rbf->nrbf * to_rbf->nrbf);
+	FVECT	*vto = (FVECT *)malloc(sizeof(FVECT) * to_rbf->nrbf);
+	int	i, j;
+
+	if ((pmtx == NULL) | (vto == NULL)) {
+		fprintf(stderr, "%s: Out of memory in migration_costs()\n",
+				progname);
+		exit(1);
+	}
+	for (j = to_rbf->nrbf; j--; )		/* save repetitive ops. */
+		ovec_from_pos(vto[j], to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy);
+
+	for (i = from_rbf->nrbf; i--; ) {
+	    const double	from_ang = R2ANG(from_rbf->rbfa[i].crad);
+	    FVECT		vfrom;
+	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
+	    for (j = to_rbf->nrbf; j--; )
+		pmtx[i*to_rbf->nrbf + j] = acos(DOT(vfrom, vto[j])) +
+				fabs(R2ANG(to_rbf->rbfa[j].crad) - from_ang);
+	}
+	free(vto);
+	return(pmtx);
+}
+
+/* Comparison routine needed for sorting price row */
+static const float	*price_arr;
+static int
+msrt_cmp(const void *p1, const void *p2)
+{
+	float	c1 = price_arr[*(const int *)p1];
+	float	c2 = price_arr[*(const int *)p2];
+
+	if (c1 > c2) return(1);
+	if (c1 < c2) return(-1);
+	return(0);
+}
+
+/* Compute minimum (optimistic) cost for moving the given source material */
+static double
+min_cost(double amt2move, const double *avail, const float *price, int n)
+{
+	static int	*price_sort = NULL;
+	static int	n_alloc = 0;
+	double		total_cost = 0;
+	int		i;
+
+	if (amt2move <= FTINY)			/* pre-emptive check */
+		return(0.);
+	if (n > n_alloc) {			/* (re)allocate sort array */
+		if (n_alloc) free(price_sort);
+		price_sort = (int *)malloc(sizeof(int)*n);
+		if (price_sort == NULL) {
+			fprintf(stderr, "%s: Out of memory in min_cost()\n",
+					progname);
+			exit(1);
+		}
+		n_alloc = n;
+	}
+	for (i = n; i--; )
+		price_sort[i] = i;
+	price_arr = price;
+	qsort(price_sort, n, sizeof(int), &msrt_cmp);
+						/* move cheapest first */
+	for (i = 0; i < n && amt2move > FTINY; i++) {
+		int	d = price_sort[i];
+		double	amt = (amt2move < avail[d]) ? amt2move : avail[d];
+
+		total_cost += amt * price[d];
+		amt2move -= amt;
+	}
+	return(total_cost);
+}
+
+/* Take a step in migration by choosing optimal bucket to transfer */
+static double
+migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const float *pmtx)
+{
+	const double	maxamt = .1;
+	const double	minamt = maxamt*5e-6;
+	static double	*src_cost = NULL;
+	static int	n_alloc = 0;
+	struct {
+		int	s, d;	/* source and destination */
+		double	price;	/* price estimate per amount moved */
+		double	amt;	/* amount we can move */
+	} cur, best;
+	int		i;
+
+	if (mtx_nrows(mig) > n_alloc) {		/* allocate cost array */
+		if (n_alloc)
+			free(src_cost);
+		src_cost = (double *)malloc(sizeof(double)*mtx_nrows(mig));
+		if (src_cost == NULL) {
+			fprintf(stderr, "%s: Out of memory in migration_step()\n",
+					progname);
+			exit(1);
+		}
+		n_alloc = mtx_nrows(mig);
+	}
+	for (i = mtx_nrows(mig); i--; )		/* starting costs for diff. */
+		src_cost[i] = min_cost(src_rem[i], dst_rem,
+					pmtx+i*mtx_ncols(mig), mtx_ncols(mig));
+
+						/* find best source & dest. */
+	best.s = best.d = -1; best.price = FHUGE; best.amt = 0;
+	for (cur.s = mtx_nrows(mig); cur.s--; ) {
+	    const float	*price = pmtx + cur.s*mtx_ncols(mig);
+	    double	cost_others = 0;
+	    if (src_rem[cur.s] <= minamt)
+		    continue;
+	    cur.d = -1;				/* examine cheapest dest. */
+	    for (i = mtx_ncols(mig); i--; )
+		if (dst_rem[i] > minamt &&
+				(cur.d < 0 || price[i] < price[cur.d]))
+			cur.d = i;
+	    if (cur.d < 0)
+		    return(.0);
+	    if ((cur.price = price[cur.d]) >= best.price)
+		    continue;			/* no point checking further */
+	    cur.amt = (src_rem[cur.s] < dst_rem[cur.d]) ?
+				src_rem[cur.s] : dst_rem[cur.d];
+	    if (cur.amt > maxamt) cur.amt = maxamt;
+	    dst_rem[cur.d] -= cur.amt;		/* add up differential costs */
+	    for (i = mtx_nrows(mig); i--; )
+		if (i != cur.s)
+			cost_others += min_cost(src_rem[i], dst_rem,
+						price, mtx_ncols(mig))
+					- src_cost[i];
+	    dst_rem[cur.d] += cur.amt;		/* undo trial move */
+	    cur.price += cost_others/cur.amt;	/* adjust effective price */
+	    if (cur.price < best.price)		/* are we better than best? */
+		    best = cur;
+	}
+	if ((best.s < 0) | (best.d < 0))
+		return(.0);
+						/* make the actual move */
+	mtx_coef(mig,best.s,best.d) += best.amt;
+	src_rem[best.s] -= best.amt;
+	dst_rem[best.d] -= best.amt;
+	return(best.amt);
+}
+
+#ifdef DEBUG
+static char *
+thetaphi(const FVECT v)
+{
+	static char	buf[128];
+	double		theta, phi;
+
+	theta = 180./M_PI*acos(v[2]);
+	phi = 180./M_PI*atan2(v[1],v[0]);
+	sprintf(buf, "(%.0f,%.0f)", theta, phi);
+
+	return(buf);
+}
+#endif
+
 /* Compute and insert migration along directed edge (may fork child) */
 static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
-	const double	end_thresh = 0.1/(from_rbf->nrbf*to_rbf->nrbf);
-	const double	check_thresh = 0.01;
-	const double	rel_thresh = 5e-6;
+	const double	end_thresh = 5e-6;
 	float		*pmtx;
 	MIGRATION	*newmig;
 	double		*src_rem, *dst_rem;
@@ -318,8 +316,9 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 #ifdef DEBUG
 	fprintf(stderr, "Building path from (theta,phi) %s ",
 			thetaphi(from_rbf->invec));
-	fprintf(stderr, "to %s", thetaphi(to_rbf->invec));
-	/* if (nchild) */ fputc('\n', stderr);
+	fprintf(stderr, "to %s with %d x %d matrix\n",
+			thetaphi(to_rbf->invec), 
+			from_rbf->nrbf, to_rbf->nrbf);
 #endif
 						/* starting quantities */
 	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
@@ -332,13 +331,11 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 		total_rem -= move_amt;
 #ifdef DEBUG
 		if (!nchild)
-			/* fputc('.', stderr); */
-			fprintf(stderr, "%.9f remaining...\r", total_rem);
+			fprintf(stderr, "\r%.9f remaining...", total_rem);
 #endif
-	} while (total_rem > end_thresh && (total_rem > check_thresh) |
-					(move_amt > rel_thresh*total_rem));
+	} while ((total_rem > end_thresh) & (move_amt > 0));
 #ifdef DEBUG
-	if (!nchild) fputs("\ndone.\n", stderr);
+	if (!nchild) fputs("done.\n", stderr);
 	else fprintf(stderr, "finished with %.9f remaining\n", total_rem);
 #endif
 	for (i = from_rbf->nrbf; i--; ) {	/* normalize final matrix */
@@ -347,7 +344,7 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	    if (nf <= FTINY) continue;
 	    nf = from_rbf->vtotal / nf;
 	    for (j = to_rbf->nrbf; j--; )
-		newmig->mtx[mtx_ndx(newmig,i,j)] *= nf;
+		mtx_coef(newmig,i,j) *= nf;
 	}
 	end_subprocess();			/* exit here if subprocess */
 	free(pmtx);				/* free working arrays */

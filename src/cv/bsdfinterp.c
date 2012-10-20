@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.2 2012/10/20 07:02:00 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -329,7 +329,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(mig); i++)
 	    for (j = 0; j < mtx_ncols(mig); j++)
-		n += (mig->mtx[mtx_ndx(mig,i,j)] > FTINY);
+		n += (mtx_coef(mig,i,j) > FTINY);
 #ifdef DEBUG
 	fprintf(stderr, "Input RBFs have %d, %d nodes -> output has %d\n",
 			mig->rbfv[0]->nrbf, mig->rbfv[1]->nrbf, n);
@@ -350,7 +350,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	    float		mv;
 	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
 	    for (j = 0; j < mtx_ncols(mig); j++)
-		if ((mv = mig->mtx[mtx_ndx(mig,i,j)]) > FTINY) {
+		if ((mv = mtx_coef(mig,i,j)) > FTINY) {
 			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
 			double		rad1 = R2ANG(rbf1j->crad);
 			FVECT		v;
@@ -418,10 +418,10 @@ advect_rbf(const FVECT invec)
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(miga[0]); i++)
 	    for (j = 0; j < mtx_ncols(miga[0]); j++)
-		for (k = (miga[0]->mtx[mtx_ndx(miga[0],i,j)] > FTINY) *
+		for (k = (mtx_coef(miga[0],i,j) > FTINY) *
 					mtx_ncols(miga[2]); k--; )
-			n += (miga[2]->mtx[mtx_ndx(miga[2],i,k)] > FTINY &&
-				miga[1]->mtx[mtx_ndx(miga[1],j,k)] > FTINY);
+			n += (mtx_coef(miga[2],i,k) > FTINY &&
+				mtx_coef(miga[1],j,k) > FTINY);
 #ifdef DEBUG
 	fprintf(stderr, "Input RBFs have %d, %d, %d nodes -> output has %d\n",
 			miga[0]->rbfv[0]->nrbf, miga[0]->rbfv[1]->nrbf,
@@ -446,7 +446,7 @@ advect_rbf(const FVECT invec)
 	    const double	rad0i = R2ANG(rbf0i->crad);
 	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
 	    for (j = 0; j < mtx_ncols(miga[0]); j++) {
-		const float	ma = miga[0]->mtx[mtx_ndx(miga[0],i,j)];
+		const float	ma = mtx_coef(miga[0],i,j);
 		const RBFVAL	*rbf1j;
 		double		rad1j, srad2;
 		if (ma <= FTINY)
@@ -457,8 +457,8 @@ advect_rbf(const FVECT invec)
 		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
 		geodesic(v1, v0, v1, s, GEOD_REL);
 		for (k = 0; k < mtx_ncols(miga[2]); k++) {
-		    float		mb = miga[1]->mtx[mtx_ndx(miga[1],j,k)];
-		    float		mc = miga[2]->mtx[mtx_ndx(miga[2],i,k)];
+		    float		mb = mtx_coef(miga[1],j,k);
+		    float		mc = mtx_coef(miga[2],i,k);
 		    const RBFVAL	*rbf2k;
 		    double		rad2k;
 		    FVECT		vout;

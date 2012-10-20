@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.2 2012/10/20 07:02:00 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.1 2012/10/19 04:14:29 greg Exp $
 
 #define _USE_MATH_DEFINES
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "rtio.h"
 #include "resolu.h"
@@ -341,6 +342,8 @@ save_bsdf_rep(FILE *ofp)
 	MIGRATION	*mig;
 	int		i, n;
 					/* finish header */
+	fprintf(ofp, "SYMMETRY=%d\n", !single_plane_incident * inp_coverage);
+	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
 					/* write each DSF */
@@ -360,12 +363,23 @@ save_bsdf_rep(FILE *ofp)
 	}
 	putint(-1, 4, ofp);		/* terminator */
 					/* write each migration matrix */
-	for (mig = mig_list; mig != NULL; mig = mig_list->next) {
+	for (mig = mig_list; mig != NULL; mig = mig->next) {
+		int	zerocnt = 0;
 		putint(mig->rbfv[0]->ord, 4, ofp);
 		putint(mig->rbfv[1]->ord, 4, ofp);
+					/* write out as sparse data */
 		n = mtx_nrows(mig) * mtx_ncols(mig);
-		for (i = 0; i < n; i++)
-			putflt(mig->mtx[i], ofp);
+		for (i = 0; i < n; i++) {
+			if (zerocnt >= 0xff) {
+				putint(zerocnt, 1, ofp); zerocnt = 0;
+			}
+			if (mig->mtx[i] != 0) {
+				putint(zerocnt, 1, ofp); zerocnt = 0;
+				putflt(mig->mtx[i], ofp);
+			} else
+				++zerocnt;
+		}
+		putint(zerocnt, 1, ofp);
 	}
 	putint(-1, 4, ofp);		/* terminator */
 	putint(-1, 4, ofp);
@@ -374,6 +388,26 @@ save_bsdf_rep(FILE *ofp)
 				progname);
 		exit(1);
 	}
+}
+
+/* Check header line for critical information */
+static int
+headline(char *s, void *p)
+{
+	char	fmt[32];
+
+	if (!strncmp(s, "SYMMETRY=", 9)) {
+		inp_coverage = atoi(s+9);
+		single_plane_incident = !inp_coverage;
+		return(0);
+	}
+	if (!strncmp(s, "IO_SIDES=", 9)) {
+		sscanf(s+9, "%d %d", &input_orient, &output_orient);
+		return(0);
+	}
+	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))
+		return(-1);
+	return(0);
 }
 
 /* Read a BSDF mesh interpolant from the given binary stream */
@@ -391,7 +425,10 @@ load_bsdf_rep(FILE *ifp)
 		return(0);
 	}
 #endif
-	if (checkheader(ifp, BSDFREP_FMT, NULL) <= 0) {
+	input_orient = output_orient = 0;
+	single_plane_incident = -1;
+	if (getheader(ifp, headline, NULL) < 0 || single_plane_incident < 0 |
+			!input_orient | !output_orient) {
 		fprintf(stderr, "%s: missing/bad format for BSDF interpolant\n",
 				progname);
 		return(0);
@@ -447,9 +484,17 @@ load_bsdf_rep(FILE *ifp)
 			goto memerr;
 		newmig->rbfv[0] = from_rbf;
 		newmig->rbfv[1] = to_rbf;
-					/* read matrix coefficients */
-		for (i = 0; i < n; i++)
-			newmig->mtx[i] = getflt(ifp);
+		memset(newmig->mtx, 0, sizeof(float)*n);
+		for (i = 0; ; ) {	/* read sparse data */
+			int	zc = getint(1, ifp) & 0xff;
+			if (zc == 0xff) {
+				i += 0xff;
+				continue;
+			}
+			if ((i += zc) >= n)
+				break;
+			newmig->mtx[i++] = getflt(ifp);
+		}
 		if (feof(ifp))
 			goto badEOF;
 					/* insert in edge lists */

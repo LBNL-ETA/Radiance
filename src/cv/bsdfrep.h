@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.1 2012/10/19 04:14:29 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.2 2012/10/20 07:02:00 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -77,7 +77,7 @@ extern MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 
 #define mtx_nrows(m)	((m)->rbfv[0]->nrbf)
 #define mtx_ncols(m)	((m)->rbfv[1]->nrbf)
-#define mtx_ndx(m,i,j)	((i)*mtx_ncols(m) + (j))
+#define mtx_coef(m,i,j)	(m)->mtx[(i)*mtx_ncols(m) + (j)]
 #define is_src(rbf,m)	((rbf) == (m)->rbfv[0])
 #define is_dest(rbf,m)	((rbf) == (m)->rbfv[1])
 #define nextedge(rbf,m)	(m)->enxt[is_dest(rbf,m)]
@@ -85,7 +85,7 @@ extern MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 
 #define	round(v)	(int)((v) + .5 - ((v) < -.5))
 
-#define	BSDFREP_FMT	"binary_RBF_BSDF_mesh"
+#define	BSDFREP_FMT	"BSDF_RBFmesh"
 
 				/* global argv[0] */
 extern char		*progname;
