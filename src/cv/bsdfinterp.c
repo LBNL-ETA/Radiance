@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.2 2012/10/20 07:02:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.3 2012/10/23 05:10:42 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -13,140 +13,6 @@ static const char RCSid[] = "$Id: bsdfinterp.c,v 2.2 2012/10/20 07:02:00 greg Ex
 #include <string.h>
 #include <math.h>
 #include "bsdfrep.h"
-				/* migration edges drawn in raster fashion */
-MIGRATION		*mig_grid[GRIDRES][GRIDRES];
-
-#ifdef DEBUG
-#include "random.h"
-#include "bmpfile.h"
-/* Hash pointer to byte value (must return 0 for NULL) */
-static int
-byte_hash(const void *p)
-{
-	size_t	h = (size_t)p;
-	h ^= (size_t)p >> 8;
-	h ^= (size_t)p >> 16;
-	h ^= (size_t)p >> 24;
-	return(h & 0xff);
-}
-/* Write out BMP image showing edges */
-static void
-write_edge_image(const char *fname)
-{
-	BMPHeader	*hdr = BMPmappedHeader(GRIDRES, GRIDRES, 0, 256);
-	BMPWriter	*wtr;
-	int		i, j;
-
-	fprintf(stderr, "Writing incident mesh drawing to '%s'\n", fname);
-	hdr->compr = BI_RLE8;
-	for (i = 256; --i; ) {			/* assign random color map */
-		hdr->palette[i].r = random() & 0xff;
-		hdr->palette[i].g = random() & 0xff;
-		hdr->palette[i].b = random() & 0xff;
-						/* reject dark colors */
-		i += (hdr->palette[i].r + hdr->palette[i].g +
-						hdr->palette[i].b < 128);
-	}
-	hdr->palette[0].r = hdr->palette[0].g = hdr->palette[0].b = 0;
-						/* open output */
-	wtr = BMPopenOutputFile(fname, hdr);
-	if (wtr == NULL) {
-		free(hdr);
-		return;
-	}
-	for (i = 0; i < GRIDRES; i++) {		/* write scanlines */
-		for (j = 0; j < GRIDRES; j++)
-			wtr->scanline[j] = byte_hash(mig_grid[i][j]);
-		if (BMPwriteScanline(wtr) != BIR_OK)
-			break;
-	}
-	BMPcloseOutput(wtr);			/* close & clean up */
-}
-#endif
-
-/* Draw edge list into mig_grid array */
-void
-draw_edges(void)
-{
-	int		nnull = 0, ntot = 0;
-	MIGRATION	*ej;
-	int		p0[2], p1[2];
-
-	memset(mig_grid, 0, sizeof(mig_grid));
-	for (ej = mig_list; ej != NULL; ej = ej->next) {
-		++ntot;
-		pos_from_vec(p0, ej->rbfv[0]->invec);
-		pos_from_vec(p1, ej->rbfv[1]->invec);
-		if ((p0[0] == p1[0]) & (p0[1] == p1[1])) {
-			++nnull;
-			mig_grid[p0[0]][p0[1]] = ej;
-			continue;
-		}
-		if (abs(p1[0]-p0[0]) > abs(p1[1]-p0[1])) {
-			const int	xstep = 2*(p1[0] > p0[0]) - 1;
-			const double	ystep = (double)((p1[1]-p0[1])*xstep) /
-							(double)(p1[0]-p0[0]);
-			int		x;
-			double		y;
-			for (x = p0[0], y = p0[1]+.5; x != p1[0];
-						x += xstep, y += ystep)
-				mig_grid[x][(int)y] = ej;
-			mig_grid[x][(int)y] = ej;
-		} else {
-			const int	ystep = 2*(p1[1] > p0[1]) - 1;
-			const double	xstep = (double)((p1[0]-p0[0])*ystep) /
-							(double)(p1[1]-p0[1]);
-			int		y;
-			double		x;
-			for (y = p0[1], x = p0[0]+.5; y != p1[1];
-						y += ystep, x += xstep)
-				mig_grid[(int)x][y] = ej;
-			mig_grid[(int)x][y] = ej;
-		}
-	}
-	if (nnull)
-		fprintf(stderr, "Warning: %d of %d edges are null\n",
-				nnull, ntot);
-#ifdef DEBUG
-	write_edge_image("bsdf_edges.bmp");
-#endif
-}
-
-/* Identify enclosing triangle for this position (flood fill raster check) */
-static int
-identify_tri(MIGRATION *miga[3], unsigned char vmap[GRIDRES][(GRIDRES+7)/8],
-			int px, int py)
-{
-	const int	btest = 1<<(py&07);
-
-	if (vmap[px][py>>3] & btest)		/* already visited here? */
-		return(1);
-						/* else mark it */
-	vmap[px][py>>3] |= btest;
-
-	if (mig_grid[px][py] != NULL) {		/* are we on an edge? */
-		int	i;
-		for (i = 0; i < 3; i++) {
-			if (miga[i] == mig_grid[px][py])
-				return(1);
-			if (miga[i] != NULL)
-				continue;
-			miga[i] = mig_grid[px][py];
-			return(1);
-		}
-		return(0);			/* outside triangle! */
-	}
-						/* check neighbors (flood) */
-	if (px > 0 && !identify_tri(miga, vmap, px-1, py))
-		return(0);
-	if (px < GRIDRES-1 && !identify_tri(miga, vmap, px+1, py))
-		return(0);
-	if (py > 0 && !identify_tri(miga, vmap, px, py-1))
-		return(0);
-	if (py < GRIDRES-1 && !identify_tri(miga, vmap, px, py+1))
-		return(0);
-	return(1);				/* this neighborhood done */
-}
 
 /* Insert vertex in ordered list */
 static void
@@ -219,6 +85,81 @@ order_triangle(MIGRATION *miga[3])
 	return(1);
 }
 
+/* Determine if we are close enough to the given edge */
+static int
+on_edge(const MIGRATION *ej, const FVECT ivec)
+{
+	double	cos_a = DOT(ej->rbfv[0]->invec, ivec);
+	double	cos_b = DOT(ej->rbfv[1]->invec, ivec);
+	double	cos_c = DOT(ej->rbfv[0]->invec, ej->rbfv[1]->invec);
+	double	cos_aplusb = cos_a*cos_b -
+				sqrt((1.-cos_a*cos_a)*(1.-cos_b*cos_b));
+
+	return(cos_aplusb - cos_c < .01);
+}
+
+/* Determine if we are inside the given triangle */
+static int
+in_tri(const RBFNODE *v1, const RBFNODE *v2, const RBFNODE *v3, const FVECT p)
+{
+	FVECT	vc;
+	int	sgn1, sgn2, sgn3;
+					/* signed volume test */
+	VCROSS(vc, v1->invec, v2->invec);
+	sgn1 = (DOT(p, vc) > 0);
+	VCROSS(vc, v2->invec, v3->invec);
+	sgn2 = (DOT(p, vc) > 0);
+	if (sgn1 != sgn2)
+		return(0);
+	VCROSS(vc, v3->invec, v1->invec);
+	sgn3 = (DOT(p, vc) > 0);
+	return(sgn2 == sgn3);
+}
+
+/* Compute intersection with the given position over remaining mesh */
+static int
+in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
+			const FVECT ivec, MIGRATION *mig)
+{
+	MIGRATION	*ej1, *ej2;
+	RBFNODE		*tv;
+	int		ejndx;
+						/* check visitation record */
+	if (mig->rbfv[0]->ord > mig->rbfv[1]->ord)
+		ejndx = mig->rbfv[1]->ord + (nedges-1)*mig->rbfv[0]->ord;
+	else
+		ejndx = mig->rbfv[0]->ord + (nedges-1)*mig->rbfv[1]->ord;
+	if (emap[ejndx>>3] & 1<<(ejndx&07))	/* tested already? */
+		return(0);
+	emap[ejndx>>3] |= 1<<(ejndx&07);	/* else mark & test it */
+	if (on_edge(mig, ivec)) {
+		miga[0] = mig;			/* close enough to edge */
+		return(1);
+	}
+						/* do triangles either side */
+	for (ej1 = mig->rbfv[0]->ejl; ej1 != NULL;
+				ej1 = nextedge(mig->rbfv[0],ej1)) {
+		if (ej1 == mig)
+			continue;
+		tv = opp_rbf(mig->rbfv[0],ej1);
+		for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
+			if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
+				if (in_mesh(miga, emap, nedges, ivec, ej1))
+					return(1);
+				if (in_mesh(miga, emap, nedges, ivec, ej2))
+					return(1);
+				if (in_tri(mig->rbfv[0], mig->rbfv[1],
+						tv, ivec)) {
+					miga[0] = mig;
+					miga[1] = ej1;
+					miga[2] = ej2;
+					return(1);
+				}
+			}
+	}
+	return(0);
+}
+
 /* Find edge(s) for interpolating the given vector, applying symmetry */
 int
 get_interp(MIGRATION *miga[3], FVECT invec)
@@ -242,59 +183,30 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 		return(-1);			/* outside range! */
 	}
 	{					/* else use triangle mesh */
-		const int	sym = use_symmetry(invec);
-		unsigned char	floodmap[GRIDRES][(GRIDRES+7)/8];
-		int		pstart[2];
-		RBFNODE		*vother;
-		MIGRATION	*ej;
-		int		i;
-
-		pos_from_vec(pstart, invec);
-		memset(floodmap, 0, sizeof(floodmap));
-						/* call flooding function */
-		if (!identify_tri(miga, floodmap, pstart[0], pstart[1]))
-			return(-1);		/* outside mesh */
-		if ((miga[0] == NULL) | (miga[2] == NULL))
-			return(-1);		/* should never happen */
-		if (miga[1] == NULL)
-			return(sym);		/* on edge */
-						/* verify triangle */
-		if (!order_triangle(miga)) {
+		int		sym = use_symmetry(invec);
+		int		nedges = 0;
+		MIGRATION	*mep;
+		unsigned char	*emap;
+						/* clear visitation map */
+		for (mep = mig_list; mep != NULL; mep = mep->next)
+			++nedges;
+		emap = (unsigned char *)calloc((nedges*(nedges-1) + 7)>>3, 1);
+		if (emap == NULL) {
+			fprintf(stderr, "%s: Out of memory in get_interp()\n",
+					progname);
+			exit(1);
+		}
+						/* identify intersection  */
+		if (!in_mesh(miga, emap, nedges, invec, mig_list))
+			sym = -1;		/* outside mesh */
+		else if (miga[1] != NULL &&
+				(miga[2] == NULL || !order_triangle(miga))) {
 #ifdef DEBUG
 			fputs("Munged triangle in get_interp()\n", stderr);
 #endif
-			vother = NULL;		/* find triangle from edge */
-			for (i = 3; i--; ) {
-			    RBFNODE	*tpair[2];
-			    if (get_triangles(tpair, miga[i]) &&
-					(vother = tpair[ is_rev_tri(
-							miga[i]->rbfv[0]->invec,
-							miga[i]->rbfv[1]->invec,
-							invec) ]) != NULL)
-					break;
-			}
-			if (vother == NULL) {	/* couldn't find 3rd vertex */
-#ifdef DEBUG
-				fputs("No triangle in get_interp()\n", stderr);
-#endif
-				return(-1);
-			}
-						/* reassign other two edges */
-			for (ej = vother->ejl; ej != NULL;
-						ej = nextedge(vother,ej)) {
-				RBFNODE	*vorig = opp_rbf(vother,ej);
-				if (vorig == miga[i]->rbfv[0])
-					miga[(i+1)%3] = ej;
-				else if (vorig == miga[i]->rbfv[1])
-					miga[(i+2)%3] = ej;
-			}
-			if (!order_triangle(miga)) {
-#ifdef DEBUG
-				fputs("Bad triangle in get_interp()\n", stderr);
-#endif
-				return(-1);
-			}
+			sym = -1;
 		}
+		free(emap);
 		return(sym);			/* return in standard order */
 	}
 }

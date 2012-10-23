@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.2 2012/10/20 07:02:00 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.3 2012/10/23 05:10:42 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -57,6 +57,7 @@ typedef struct s_rbfnode {
 #define INP_QUAD3	4		/* 180-270 degree quadrant */
 #define INP_QUAD4	8		/* 270-360 degree quadrant */
 
+				/* coverage/symmetry using INP_QUAD? flags */
 extern int		inp_coverage;
 
 				/* all incident angles in-plane so far? */
@@ -72,11 +73,8 @@ extern RBFNODE		*dsf_list;
 				/* RBF-linking matrices (edges) */
 extern MIGRATION	*mig_list;
 
-				/* migration edges drawn in raster fashion */
-extern MIGRATION	*mig_grid[GRIDRES][GRIDRES];
-
-#define mtx_nrows(m)	((m)->rbfv[0]->nrbf)
-#define mtx_ncols(m)	((m)->rbfv[1]->nrbf)
+#define mtx_nrows(m)	(m)->rbfv[0]->nrbf
+#define mtx_ncols(m)	(m)->rbfv[1]->nrbf
 #define mtx_coef(m,i,j)	(m)->mtx[(i)*mtx_ncols(m) + (j)]
 #define is_src(rbf,m)	((rbf) == (m)->rbfv[0])
 #define is_dest(rbf,m)	((rbf) == (m)->rbfv[1])
@@ -91,7 +89,7 @@ extern MIGRATION	*mig_grid[GRIDRES][GRIDRES];
 extern char		*progname;
 
 				/* get theta value in degrees [0,180) range */
-#define get_theta180(v)	(180./M_PI)*acos((v)[2])
+#define get_theta180(v)	((180./M_PI)*acos((v)[2]))
 				/* get phi value in degrees, [0,360) range */
 #define	get_phi360(v)	((180./M_PI)*atan2((v)[1],(v)[0]) + 180.)
 
@@ -143,6 +141,9 @@ extern int		is_rev_tri(const FVECT v1,
 /* Find vertices completing triangles on either side of the given edge */
 extern int		get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig);
 
+/* Clear our BSDF representation and free memory */
+extern void		clear_bsdf_rep(void);
+
 /* Write our BSDF mesh interpolant out to the given binary stream */
 extern void		save_bsdf_rep(FILE *ofp);
 
@@ -161,9 +162,6 @@ extern RBFNODE *	make_rbfrep(void);
 
 /* Build our triangle mesh from recorded RBFs */
 extern void		build_mesh(void);
-
-/* Draw edge list into mig_grid array */
-extern void		draw_edges(void);
 
 /* Find edge(s) for interpolating the given vector, applying symmetry */
 extern int		get_interp(MIGRATION *miga[3], FVECT invec);

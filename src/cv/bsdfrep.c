@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.3 2012/10/20 17:01:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.4 2012/10/23 05:10:42 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -14,7 +14,7 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.3 2012/10/20 17:01:26 greg Exp $
 #include "rtio.h"
 #include "resolu.h"
 #include "bsdfrep.h"
-				/* which quadrants are represented */
+				/* coverage/symmetry using INP_QUAD? flags */
 int			inp_coverage = 0;
 				/* all incident angles in-plane so far? */
 int			single_plane_incident = -1;
@@ -312,17 +312,17 @@ is_rev_tri(const FVECT v1, const FVECT v2, const FVECT v3)
 int
 get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 {
-	const MIGRATION	*ej, *ej2;
+	const MIGRATION	*ej1, *ej2;
 	RBFNODE		*tv;
 
 	rbfv[0] = rbfv[1] = NULL;
 	if (mig == NULL)
 		return(0);
-	for (ej = mig->rbfv[0]->ejl; ej != NULL;
-				ej = nextedge(mig->rbfv[0],ej)) {
-		if (ej == mig)
+	for (ej1 = mig->rbfv[0]->ejl; ej1 != NULL;
+				ej1 = nextedge(mig->rbfv[0],ej1)) {
+		if (ej1 == mig)
 			continue;
-		tv = opp_rbf(mig->rbfv[0],ej);
+		tv = opp_rbf(mig->rbfv[0],ej1);
 		for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
 			if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
 				rbfv[is_rev_tri(mig->rbfv[0]->invec,
@@ -332,6 +332,25 @@ get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 			}
 	}
 	return((rbfv[0] != NULL) + (rbfv[1] != NULL));
+}
+
+/* Clear our BSDF representation and free memory */
+void
+clear_bsdf_rep(void)
+{
+	while (mig_list != NULL) {
+		MIGRATION	*mig = mig_list;
+		mig_list = mig->next;
+		free(mig);
+	}
+	while (dsf_list != NULL) {
+		RBFNODE		*rbf = dsf_list;
+		dsf_list = rbf->next;
+		free(rbf);
+	}
+	inp_coverage = 0;
+	single_plane_incident = -1;
+	input_orient = output_orient = 0;
 }
 
 /* Write our BSDF mesh interpolant out to the given binary stream */
@@ -417,16 +436,8 @@ load_bsdf_rep(FILE *ifp)
 	RBFNODE		rbfh;
 	int		from_ord, to_ord;
 	int		i;
-#ifdef DEBUG
-	if ((dsf_list != NULL) | (mig_list != NULL)) {
-		fprintf(stderr,
-		"%s: attempt to load BSDF interpolant over existing\n",
-				progname);
-		return(0);
-	}
-#endif
-	input_orient = output_orient = 0;
-	single_plane_incident = -1;
+
+	clear_bsdf_rep();
 	if (getheader(ifp, headline, NULL) < 0 || single_plane_incident < 0 |
 			!input_orient | !output_orient) {
 		fprintf(stderr, "%s: missing/bad format for BSDF interpolant\n",

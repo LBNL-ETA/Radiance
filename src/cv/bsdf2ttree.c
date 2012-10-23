@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.2 2012/10/20 17:01:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.3 2012/10/23 05:10:42 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -66,7 +66,8 @@ interp_isotropic()
 			else
 				printf("\t%.3e\n", bsdf);
 		    }
-		free(rbf);
+		if (rbf != NULL)
+			free(rbf);
 	}
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
@@ -127,7 +128,8 @@ interp_anisotropic()
 			else
 				printf("\t%.3e\n", bsdf);
 		    }
-		free(rbf);
+		if (rbf != NULL)
+			free(rbf);
 	    }
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
@@ -172,7 +174,6 @@ main(int argc, char *argv[])
 	SET_FILE_BINARY(fpin);			/* load BSDF interpolant */
 	if (!load_bsdf_rep(fpin))
 		return(1);
-	draw_edges();
 	/* xml_prologue();				/* start XML output */
 	if (single_plane_incident)		/* resample dist. */
 		interp_isotropic();
