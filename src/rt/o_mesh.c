@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.12 2010/10/25 22:57:45 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.13 2012/10/23 05:03:52 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -113,9 +113,10 @@ RAY	*r;
 				"missing triangle vertices in mesh_hit");
 		sv1 = volume_sign(r, tvi[0], tvi[1]);
 		sv2 = volume_sign(r, tvi[1], tvi[2]);
+		if (sv1 != sv2)			/* compare volume signs */
+			continue;
 		sv3 = volume_sign(r, tvi[2], tvi[0]);
-						/* compare volume signs */
-		if ((sv1 != sv2) | (sv2 != sv3))
+		if (sv2 != sv3)
 			continue;
 						/* compute intersection */
 		getmeshvert(&tv[0], curmsh, tvi[0], MT_V);
