@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.3 2012/10/23 05:10:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.4 2012/10/23 21:09:29 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -51,7 +51,7 @@ order_triangle(MIGRATION *miga[3])
 		insert_vert(vert, miga[i]->rbfv[1]);
 	}
 						/* should be just 3 vertices */
-	if ((vert[3] == NULL) | (vert[4] != NULL))
+	if ((vert[2] == NULL) | (vert[3] != NULL))
 		return(0);
 						/* identify edge 0 */
 	for (i = 3; i--; )
@@ -85,17 +85,27 @@ order_triangle(MIGRATION *miga[3])
 	return(1);
 }
 
-/* Determine if we are close enough to the given edge */
+/* Determine if we are close enough to an edge */
 static int
 on_edge(const MIGRATION *ej, const FVECT ivec)
 {
-	double	cos_a = DOT(ej->rbfv[0]->invec, ivec);
-	double	cos_b = DOT(ej->rbfv[1]->invec, ivec);
-	double	cos_c = DOT(ej->rbfv[0]->invec, ej->rbfv[1]->invec);
-	double	cos_aplusb = cos_a*cos_b -
-				sqrt((1.-cos_a*cos_a)*(1.-cos_b*cos_b));
+	double	cos_a, cos_b, cos_c, cos_aplusb;
+					/* use triangle inequality */
+	cos_a = DOT(ej->rbfv[0]->invec, ivec);
+	if (cos_a <= 0)
+		return(0);
 
-	return(cos_aplusb - cos_c < .01);
+	cos_b = DOT(ej->rbfv[1]->invec, ivec);
+	if (cos_b <= 0)
+		return(0);
+
+	cos_aplusb = cos_a*cos_b - sqrt((1.-cos_a*cos_a)*(1.-cos_b*cos_b));
+	if (cos_aplusb <= 0)
+		return(0);
+
+	cos_c = DOT(ej->rbfv[0]->invec, ej->rbfv[1]->invec);
+
+	return(cos_c - cos_aplusb < .001);
 }
 
 /* Determine if we are inside the given triangle */
@@ -116,6 +126,26 @@ in_tri(const RBFNODE *v1, const RBFNODE *v2, const RBFNODE *v3, const FVECT p)
 	return(sgn2 == sgn3);
 }
 
+/* Test and set for edge */
+static int
+check_edge(unsigned char *emap, int nedges, const MIGRATION *mig, int mark)
+{
+	int	ejndx, bit2check;
+
+	if (mig->rbfv[0]->ord > mig->rbfv[1]->ord)
+		ejndx = mig->rbfv[1]->ord + (nedges-1)*mig->rbfv[0]->ord;
+	else
+		ejndx = mig->rbfv[0]->ord + (nedges-1)*mig->rbfv[1]->ord;
+
+	bit2check = 1<<(ejndx&07);
+
+	if (emap[ejndx>>3] & bit2check)
+		return(0);
+	if (mark)
+		emap[ejndx>>3] |= bit2check;
+	return(1);
+}
+
 /* Compute intersection with the given position over remaining mesh */
 static int
 in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
@@ -123,15 +153,9 @@ in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
 {
 	MIGRATION	*ej1, *ej2;
 	RBFNODE		*tv;
-	int		ejndx;
 						/* check visitation record */
-	if (mig->rbfv[0]->ord > mig->rbfv[1]->ord)
-		ejndx = mig->rbfv[1]->ord + (nedges-1)*mig->rbfv[0]->ord;
-	else
-		ejndx = mig->rbfv[0]->ord + (nedges-1)*mig->rbfv[1]->ord;
-	if (emap[ejndx>>3] & 1<<(ejndx&07))	/* tested already? */
+	if (!check_edge(emap, nedges, mig, 1))
 		return(0);
-	emap[ejndx>>3] |= 1<<(ejndx&07);	/* else mark & test it */
 	if (on_edge(mig, ivec)) {
 		miga[0] = mig;			/* close enough to edge */
 		return(1);
@@ -139,25 +163,28 @@ in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
 						/* do triangles either side */
 	for (ej1 = mig->rbfv[0]->ejl; ej1 != NULL;
 				ej1 = nextedge(mig->rbfv[0],ej1)) {
-		if (ej1 == mig)
-			continue;
-		tv = opp_rbf(mig->rbfv[0],ej1);
-		for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
-			if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
-				if (in_mesh(miga, emap, nedges, ivec, ej1))
-					return(1);
-				if (in_mesh(miga, emap, nedges, ivec, ej2))
-					return(1);
-				if (in_tri(mig->rbfv[0], mig->rbfv[1],
-						tv, ivec)) {
-					miga[0] = mig;
-					miga[1] = ej1;
-					miga[2] = ej2;
-					return(1);
-				}
+	    if (ej1 == mig)
+		continue;
+	    tv = opp_rbf(mig->rbfv[0],ej1);
+	    for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
+		if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
+			int	do_ej1 = check_edge(emap, nedges, ej1, 0);
+			int	do_ej2 = check_edge(emap, nedges, ej2, 0);
+			if (do_ej1 && in_mesh(miga, emap, nedges, ivec, ej1))
+				return(1);
+			if (do_ej2 && in_mesh(miga, emap, nedges, ivec, ej2))
+				return(1);
+						/* check just once */
+			if (do_ej1 & do_ej2 && in_tri(mig->rbfv[0],
+						mig->rbfv[1], tv, ivec)) {
+				miga[0] = mig;
+				miga[1] = ej1;
+				miga[2] = ej2;
+				return(1);
 			}
+		}
 	}
-	return(0);
+	return(0);				/* not near this edge */
 }
 
 /* Find edge(s) for interpolating the given vector, applying symmetry */
@@ -332,7 +359,7 @@ advect_rbf(const FVECT invec)
 	    for (j = 0; j < mtx_ncols(miga[0]); j++)
 		for (k = (mtx_coef(miga[0],i,j) > FTINY) *
 					mtx_ncols(miga[2]); k--; )
-			n += (mtx_coef(miga[2],i,k) > FTINY &&
+			n += (mtx_coef(miga[2],i,k) > FTINY ||
 				mtx_coef(miga[1],j,k) > FTINY);
 #ifdef DEBUG
 	fprintf(stderr, "Input RBFs have %d, %d, %d nodes -> output has %d\n",
@@ -375,7 +402,7 @@ advect_rbf(const FVECT invec)
 		    double		rad2k;
 		    FVECT		vout;
 		    int			pos[2];
-		    if ((mb <= FTINY) | (mc <= FTINY))
+		    if ((mb <= FTINY) & (mc <= FTINY))
 			continue;
 		    rbf2k = &miga[2]->rbfv[1]->rbfa[k];
 		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact);

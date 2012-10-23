@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.3 2012/10/23 05:10:42 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.4 2012/10/23 21:09:29 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -91,7 +91,7 @@ extern char		*progname;
 				/* get theta value in degrees [0,180) range */
 #define get_theta180(v)	((180./M_PI)*acos((v)[2]))
 				/* get phi value in degrees, [0,360) range */
-#define	get_phi360(v)	((180./M_PI)*atan2((v)[1],(v)[0]) + 180.)
+#define	get_phi360(v)	((180./M_PI)*atan2((v)[1],(v)[0]) + 360.*((v)[1]<0))
 
 				/* our loaded grid for this incident angle */
 extern double		theta_in_deg, phi_in_deg;
