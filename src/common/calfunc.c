@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.15 2006/05/10 15:21:20 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.16 2012/10/24 00:39:09 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -73,11 +73,12 @@ static int  libsize = 16;
 
 
 int
-fundefined(fname)		/* return # of arguments for function */
-char  *fname;
+fundefined(			/* return # of arguments for function */
+	char  *fname
+)
 {
-    register LIBR  *lp;
-    register VARDEF  *vp;
+    LIBR  *lp;
+    VARDEF  *vp;
 
     if ((vp = varlookup(fname)) != NULL && vp->def != NULL
 		&& vp->def->v.kid->type == FUNC)
@@ -90,13 +91,14 @@ char  *fname;
 
 
 double
-funvalue(fname, n, a)		/* return a function value to the user */
-char  *fname;
-int  n;
-double  *a;
+funvalue(			/* return a function value to the user */
+	char  *fname,
+	int  n,
+	double  *a
+)
 {
     ACTIVATION  act;
-    register VARDEF  *vp;
+    VARDEF  *vp;
     double  rval;
 					/* push environment */
     act.name = fname;
@@ -121,15 +123,16 @@ double  *a;
 
 
 void
-funset(fname, nargs, assign, fptr)	/* set a library function */
-char  *fname;
-int  nargs;
-int  assign;
-double  (*fptr)(char *);
+funset(				/* set a library function */
+	char  *fname,
+	int  nargs,
+	int  assign,
+	double  (*fptr)(char *)
+)
 {
     int  oldlibsize = libsize;
     char *cp;
-    register LIBR  *lp;
+    LIBR  *lp;
 						/* check for context */
     for (cp = fname; *cp; cp++)
 	;
@@ -173,9 +176,9 @@ double  (*fptr)(char *);
 
 
 int
-nargum()			/* return number of available arguments */
+nargum(void)			/* return number of available arguments */
 {
-    register int  n;
+    int  n;
 
     if (curact == NULL)
 	return(0);
@@ -189,11 +192,10 @@ nargum()			/* return number of available arguments */
 
 
 double
-argument(n)			/* return nth argument for active function */
-register int  n;
+argument(int n)			/* return nth argument for active function */
 {
-    register ACTIVATION  *actp = curact;
-    register EPNODE  *ep = NULL;
+    ACTIVATION  *actp = curact;
+    EPNODE  *ep = NULL;
     double  aval;
 
     if (actp == NULL || --n < 0) {
@@ -221,11 +223,10 @@ register int  n;
 
 
 VARDEF *
-argf(n)				/* return function def for nth argument */
-int  n;
+argf(int n)			/* return function def for nth argument */
 {
-    register ACTIVATION  *actp;
-    register EPNODE  *ep;
+    ACTIVATION  *actp;
+    EPNODE  *ep;
 
     for (actp = curact; actp != NULL; actp = actp->prev) {
 
@@ -260,21 +261,19 @@ badarg:
 
 
 char *
-argfun(n)			/* return function name for nth argument */
-int  n;
+argfun(int n)			/* return function name for nth argument */
 {
     return(argf(n)->name);
 }
 
 
 double
-efunc(ep)				/* evaluate a function */
-register EPNODE  *ep;
+efunc(EPNODE *ep)			/* evaluate a function */
 {
     ACTIVATION  act;
     double  alist[ALISTSIZ];
     double  rval;
-    register VARDEF  *dp;
+    VARDEF  *dp;
 					/* push environment */
     dp = resolve(ep->v.kid);
     act.name = dp->name;
@@ -295,11 +294,10 @@ register EPNODE  *ep;
 
 
 LIBR *
-liblookup(fname)		/* look up a library function */
-char  *fname;
+liblookup(char *fname)		/* look up a library function */
 {
     int  upper, lower;
-    register int  cm, i;
+    int  cm, i;
 
     lower = 0;
     upper = cm = libsize;
@@ -324,11 +322,12 @@ char  *fname;
 
 
 static double
-libfunc(fname, vp)			/* execute library function */
-char  *fname;
-VARDEF  *vp;
+libfunc(				/* execute library function */
+	char  *fname,
+	VARDEF  *vp
+)
 {
-    register LIBR  *lp;
+    LIBR  *lp;
     double  d;
     int  lasterrno;
 
@@ -385,7 +384,7 @@ l_if(char *nm)		/* if(cond, then, else) conditional expression */
 static double
 l_select(char *nm)	/* return argument #(A1+1) */
 {
-	register int  n;
+	int  n;
 
 	n = (int)(argument(1) + .5);
 	if (n == 0)
