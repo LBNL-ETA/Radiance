@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.36 2011/03/02 17:24:55 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.37 2012/10/27 03:01:21 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -354,8 +354,9 @@ double  ly
 {
 	int  x, y;
 
-	x = (lx >= 0.0) ? (int)(lx * rp->xr) : -(int)(-lx * rp->xr);
-	y = (ly >= 0.0) ? (int)(ly * rp->yr) : -(int)(-ly * rp->yr);
+	x = (int)(lx*rp->xr + .5 - (lx < 0.0));
+	y = (int)(ly*rp->yr + .5 - (ly < 0.0));
+
 	if (rp->rt & XDECR)
 		x = rp->xr-1 - x;
 	if (rp->rt & YDECR)
