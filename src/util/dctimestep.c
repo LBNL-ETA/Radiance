@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.22 2012/10/23 22:24:09 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.23 2012/11/02 00:26:55 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -436,8 +436,8 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	if (ec)
 		error(USER, transSDError(ec));
 	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
-	recip = (myBSDF.tf == NULL);
-	tdf = recip ? myBSDF.tb : myBSDF.tf;
+	recip = (myBSDF.tb == NULL);
+	tdf = recip ? myBSDF.tf : myBSDF.tb;
 	if (tdf == NULL) {		/* no non-Lambertian transmission? */
 		if (cLamb != NULL)
 			copycolor(cLamb, bsdfLamb);
