@@ -1,4 +1,4 @@
-/* RCSid $Id: mesh.h,v 2.14 2011/05/20 02:06:38 greg Exp $ */
+/* RCSid $Id: mesh.h,v 2.15 2012/11/06 01:04:23 greg Exp $ */
 /*
  * Header for compact triangle mesh geometry
  *
@@ -117,6 +117,7 @@ typedef struct {
 
 extern MESH	*getmesh(char *mname, int flags);
 extern MESHINST	*getmeshinst(OBJREC *o, int flags);
+extern int	nextmeshtri(OBJECT *tip, MESH *mp);
 extern int	getmeshtrivid(int32 tvid[3], OBJECT *mo,
 				MESH *mp, OBJECT ti);
 extern int	getmeshvert(MESHVERT *vp, MESH *mp, int32 vid, int what);
