@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.25 2012/11/06 01:56:37 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.26 2012/11/06 17:12:35 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -148,41 +148,27 @@ nextmeshtri(				/* get next triangle ID */
 	MESH *mp
 )
 {
-	int		advance = 1;
 	int		pn;
 	MESHPATCH	*pp;
 
-	if (*tip == OVOID) {			/* check for first index */
-		*tip = 0;
-		advance = 0;
-	}
-	pn = *tip >> 10;
+	pn = ++(*tip) >> 10;			/* next triangle (OVOID init) */
 	while (pn < mp->npatches) {
 		pp = &mp->patch[pn];
 		if (!(*tip & 0x200)) {		/* local triangle? */
-			if ((*tip & 0x1ff) < pp->ntris - advance) {
-				*tip += advance;
+			if ((*tip & 0x1ff) < pp->ntris)
 				return(1);
-			}
 			*tip &= ~0x1ff;		/* move on to single-joiners */
 			*tip |= 0x200;
-			advance = 0;
 		}
 		if (!(*tip & 0x100)) {		/* single joiner? */
-			if ((*tip & 0xff) < pp->nj1tris - advance) {
-				*tip += advance;
+			if ((*tip & 0xff) < pp->nj1tris)
 				return(1);
-			}
 			*tip &= ~0xff;		/* move on to double-joiners */
 			*tip |= 0x100;
-			advance = 0;
 		}
-		if ((*tip & 0xff) < pp->nj2tris - advance) {
-			*tip += advance;
+		if ((*tip & 0xff) < pp->nj2tris)
 			return(1);
-		}
 		*tip = ++pn << 10;		/* first in next patch */
-		advance = 0;
 	}
 	return(0);				/* out of patches */
 }
