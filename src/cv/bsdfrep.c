@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.4 2012/10/23 05:10:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.5 2012/11/07 03:04:23 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -14,6 +14,9 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.4 2012/10/23 05:10:42 greg Exp $
 #include "rtio.h"
 #include "resolu.h"
 #include "bsdfrep.h"
+				/* active grid resolution */
+int			grid_res = GRIDRES;
+
 				/* coverage/symmetry using INP_QUAD? flags */
 int			inp_coverage = 0;
 				/* all incident angles in-plane so far? */
@@ -168,10 +171,10 @@ rev_rbf_symmetry(RBFNODE *rbf, int sym)
 	rev_symmetry(rbf->invec, sym);
 	if (sym & MIRROR_X)
 		for (n = rbf->nrbf; n-- > 0; )
-			rbf->rbfa[n].gx = GRIDRES-1 - rbf->rbfa[n].gx;
+			rbf->rbfa[n].gx = grid_res-1 - rbf->rbfa[n].gx;
 	if (sym & MIRROR_Y)
 		for (n = rbf->nrbf; n-- > 0; )
-			rbf->rbfa[n].gy = GRIDRES-1 - rbf->rbfa[n].gy;
+			rbf->rbfa[n].gy = grid_res-1 - rbf->rbfa[n].gy;
 }
 
 /* Compute volume associated with Gaussian lobe */
@@ -190,7 +193,7 @@ ovec_from_pos(FVECT vec, int xpos, int ypos)
 	double	uv[2];
 	double	r2;
 	
-	SDsquare2disk(uv, (1./GRIDRES)*(xpos+.5), (1./GRIDRES)*(ypos+.5));
+	SDsquare2disk(uv, (1./grid_res)*(xpos+.5), (1./grid_res)*(ypos+.5));
 				/* uniform hemispherical projection */
 	r2 = uv[0]*uv[0] + uv[1]*uv[1];
 	vec[0] = vec[1] = sqrt(2. - r2);
@@ -208,8 +211,8 @@ pos_from_vec(int pos[2], const FVECT vec)
 
 	SDdisk2square(sq, vec[0]*norm, vec[1]*norm);
 
-	pos[0] = (int)(sq[0]*GRIDRES);
-	pos[1] = (int)(sq[1]*GRIDRES);
+	pos[0] = (int)(sq[0]*grid_res);
+	pos[1] = (int)(sq[1]*grid_res);
 }
 
 /* Evaluate RBF for DSF at the given normalized outgoing direction */
@@ -351,6 +354,7 @@ clear_bsdf_rep(void)
 	inp_coverage = 0;
 	single_plane_incident = -1;
 	input_orient = output_orient = 0;
+	grid_res = GRIDRES;
 }
 
 /* Write our BSDF mesh interpolant out to the given binary stream */
@@ -363,6 +367,7 @@ save_bsdf_rep(FILE *ofp)
 					/* finish header */
 	fprintf(ofp, "SYMMETRY=%d\n", !single_plane_incident * inp_coverage);
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
+	fprintf(ofp, "GRIDRES=%d\n", grid_res);
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
 					/* write each DSF */
@@ -424,6 +429,10 @@ headline(char *s, void *p)
 		sscanf(s+9, "%d %d", &input_orient, &output_orient);
 		return(0);
 	}
+	if (!strncmp(s, "GRIDRES=", 8)) {
+		sscanf(s+8, "%d", &grid_res);
+		return(0);
+	}
 	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))
 		return(-1);
 	return(0);
@@ -438,6 +447,8 @@ load_bsdf_rep(FILE *ifp)
 	int		i;
 
 	clear_bsdf_rep();
+	if (ifp == NULL)
+		return(0);
 	if (getheader(ifp, headline, NULL) < 0 || single_plane_incident < 0 |
 			!input_orient | !output_orient) {
 		fprintf(stderr, "%s: missing/bad format for BSDF interpolant\n",

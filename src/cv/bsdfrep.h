@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.4 2012/10/23 21:09:29 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.5 2012/11/07 03:04:23 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -57,6 +57,8 @@ typedef struct s_rbfnode {
 #define INP_QUAD3	4		/* 180-270 degree quadrant */
 #define INP_QUAD4	8		/* 270-360 degree quadrant */
 
+				/* active grid resolution */
+extern int		grid_res;
 				/* coverage/symmetry using INP_QUAD? flags */
 extern int		inp_coverage;
 
