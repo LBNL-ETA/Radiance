@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.3 2012/11/08 22:05:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.4 2012/11/08 23:11:41 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -213,7 +213,7 @@ min_cost(double amt2move, const double *avail, const PRICEMAT *pm, int s)
 static double
 migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const PRICEMAT *pm)
 {
-	const double	maxamt = .1;
+	const double	maxamt = 1./(double)pm->ncols;
 	const double	minamt = maxamt*5e-6;
 	static double	*src_cost = NULL;
 	static int	n_alloc = 0;
@@ -241,18 +241,16 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const PRICEMAT 
 						/* find best source & dest. */
 	best.s = best.d = -1; best.price = FHUGE; best.amt = 0;
 	for (cur.s = pm->nrows; cur.s--; ) {
-	    const float	*price = pricerow(pm,cur.s);
 	    double	cost_others = 0;
 	    if (src_rem[cur.s] <= minamt)
 		    continue;
-	    cur.d = -1;				/* examine cheapest dest. */
-	    for (i = pm->ncols; i--; )
-		if (dst_rem[i] > minamt &&
-				(cur.d < 0 || price[i] < price[cur.d]))
-			cur.d = i;
-	    if (cur.d < 0)
+						/* examine cheapest dest. */
+	    for (i = 0; i < pm->ncols; i++)
+		if (dst_rem[cur.d = psortrow(pm,cur.s)[i]] > minamt)
+			break;
+	    if (i >= pm->ncols)
 		    return(.0);
-	    if ((cur.price = price[cur.d]) >= best.price)
+	    if ((cur.price = pricerow(pm,cur.s)[cur.d]) >= best.price)
 		    continue;			/* no point checking further */
 	    cur.amt = (src_rem[cur.s] < dst_rem[cur.d]) ?
 				src_rem[cur.s] : dst_rem[cur.d];
