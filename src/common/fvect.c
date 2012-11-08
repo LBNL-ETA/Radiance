@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.15 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.16 2012/11/08 00:31:17 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -198,13 +198,13 @@ int meas		/* distance measure (radians, absolute, relative) */
 	double	volen, dotprod, sint, cost;
 	int	i;
 
+	VCOPY(normtarg, vtarg);		/* in case vtarg==vres */
 	if (vres != vorig)
 		VCOPY(vres, vorig);
 	if (t == 0.0)
 		return(VLEN(vres));	/* no rotation requested */
 	if ((volen = normalize(vres)) == 0.0)
 		return(0.0);
-	VCOPY(normtarg, vtarg);
 	if (normalize(normtarg) == 0.0)
 		return(0.0);		/* target vector is zero */
 	dotprod = DOT(vres, normtarg);

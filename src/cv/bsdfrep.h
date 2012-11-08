@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.5 2012/11/07 03:04:23 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.6 2012/11/08 00:31:17 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -113,6 +113,9 @@ extern void		rev_symmetry(FVECT vec, int sym);
 
 /* Reverse symmetry for an RBF distribution */
 extern void		rev_rbf_symmetry(RBFNODE *rbf, int sym);
+
+/* Rotate RBF to correspond to given incident vector */
+extern void		rotate_rbf(RBFNODE *rbf, const FVECT invec);
 
 /* Compute volume associated with Gaussian lobe */
 extern double		rbf_volume(const RBFVAL *rbfp);

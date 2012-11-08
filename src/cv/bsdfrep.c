@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.5 2012/11/07 03:04:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.6 2012/11/08 00:31:17 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -56,6 +56,8 @@ new_input_direction(double new_theta, double new_phi)
 		new_theta = -new_theta;
 		new_phi += 180.;
 	}
+	if ((theta_in_deg = new_theta) < 1.0)
+		return(1);		/* don't rely on phi near normal */
 	while (new_phi < 0)
 		new_phi += 360.;
 	while (new_phi >= 360.)
@@ -64,7 +66,6 @@ new_input_direction(double new_theta, double new_phi)
 		single_plane_incident = (round(new_phi) == round(phi_in_deg));
 	else if (single_plane_incident < 0)
 		single_plane_incident = 1;
-	theta_in_deg = new_theta;	/* assume it's OK */
 	phi_in_deg = new_phi;
 	if ((1. < new_phi) & (new_phi < 89.))
 		inp_coverage |= INP_QUAD1;
@@ -175,6 +176,35 @@ rev_rbf_symmetry(RBFNODE *rbf, int sym)
 	if (sym & MIRROR_Y)
 		for (n = rbf->nrbf; n-- > 0; )
 			rbf->rbfa[n].gy = grid_res-1 - rbf->rbfa[n].gy;
+}
+
+/* Rotate RBF to correspond to given incident vector */
+void
+rotate_rbf(RBFNODE *rbf, const FVECT invec)
+{
+	static const FVECT	vnorm = {.0, .0, 1.};
+	const double		phi = atan2(invec[1],invec[0]) -
+					atan2(rbf->invec[1],rbf->invec[0]);
+	FVECT			outvec;
+	int			pos[2];
+	int			n;
+#ifdef DEBUG
+	{
+		double	tdiff = 180./M_PI*fabs(acos(invec[2])-acos(rbf->invec[2]));
+		if (tdiff >= 1.5)
+			fprintf(stderr,
+			"%s: Warning - rotated theta differs by %.1f degrees\n",
+					progname, tdiff);
+	}
+#endif
+	for (n = rbf->nrbf; n-- > 0; ) {
+		ovec_from_pos(outvec, rbf->rbfa[n].gx, rbf->rbfa[n].gy);
+		spinvector(outvec, outvec, vnorm, phi);
+		pos_from_vec(pos, outvec);
+		rbf->rbfa[n].gx = pos[0];
+		rbf->rbfa[n].gy = pos[1];
+	}
+	VCOPY(rbf->invec, invec);
 }
 
 /* Compute volume associated with Gaussian lobe */

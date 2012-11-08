@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.4 2012/10/23 21:09:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.5 2012/11/08 00:31:17 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -202,8 +202,15 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 							input_orient*invec[2]) {
 				for (miga[0] = rbf->ejl; miga[0] != NULL;
 						miga[0] = nextedge(rbf,miga[0]))
-					if (opp_rbf(rbf,miga[0]) == rbf->next)
+					if (opp_rbf(rbf,miga[0]) == rbf->next) {
+						double	nf = 1.-rbf->invec[2]*rbf->invec[2];
+						if (nf > FTINY) {
+							nf = sqrt((1.-invec[2]*invec[2])/nf);
+							invec[0] = nf*rbf->invec[0];
+							invec[1] = nf*rbf->invec[1];
+						}
 						return(0);
+					}
 				break;
 			}
 		}
@@ -247,7 +254,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	double		t, full_dist;
 						/* get relative position */
 	t = acos(DOT(invec, mig->rbfv[0]->invec));
-	if (t < M_PI/GRIDRES) {			/* near first DSF */
+	if (t < M_PI/grid_res) {		/* near first DSF */
 		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[0]->nrbf-1);
 		rbf = (RBFNODE *)malloc(n);
 		if (rbf == NULL)
@@ -256,7 +263,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 		return(rbf);
 	}
 	full_dist = acos(DOT(mig->rbfv[0]->invec, mig->rbfv[1]->invec));
-	if (t > full_dist-M_PI/GRIDRES) {	/* near second DSF */
+	if (t > full_dist-M_PI/grid_res) {	/* near second DSF */
 		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[1]->nrbf-1);
 		rbf = (RBFNODE *)malloc(n);
 		if (rbf == NULL)
@@ -332,7 +339,10 @@ advect_rbf(const FVECT invec)
 		return(NULL);
 	if (miga[1] == NULL) {			/* advect along edge? */
 		rbf = e_advect_rbf(miga[0], sivec);
-		rev_rbf_symmetry(rbf, sym);
+		if (single_plane_incident)
+			rotate_rbf(rbf, invec);
+		else
+			rev_rbf_symmetry(rbf, sym);
 		return(rbf);
 	}
 #ifdef DEBUG
