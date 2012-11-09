@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.5 2012/11/09 02:16:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.6 2012/11/09 02:25:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -145,57 +145,44 @@ interp_anisotropic()
 static void
 xml_prologue(int ac, char *av[])
 {
-	static const char	*prologue0[] = {
-"<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-"<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">",
-				NULL};
-	static const char	*prologue1[] = {
-"<WindowElementType>System</WindowElementType>",
-"<FileType>BSDF</FileType>",
-"<Optical>",
-"<Layer>",
-"\t<Material>",
-"\t\t<Name>Name</Name>",
-"\t\t<Manufacturer>Manufacturer</Manufacturer>",
-"\t\t<DeviceType>Other</DeviceType>",
-"\t</Material>",
-				NULL};
-	static const char	*prologue2[] = {
-"\t<WavelengthData>",
-"\t\t<LayerNumber>System</LayerNumber>",
-"\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>",
-"\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>",
-"\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>",
-"\t\t<WavelengthDataBlock>",
-"\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>",
-"\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>",
-				NULL};
 	static const char	*bsdf_type[4] = {
 					"Reflection Back",
 					"Transmission Back",
 					"Transmission Front",
 					"Reflection Front"
 				};
-	int			i;
 
-	for (i = 0; prologue0[i] != NULL; i++)
-		puts(prologue0[i]);
+	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+	puts("<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">");
 	fputs("<!-- File produced by:", stdout);
 	while (ac-- > 0) {
 		fputc(' ', stdout);
 		fputs(*av++, stdout);
 	}
 	puts(" -->");
-	for (i = 0; prologue1[i] != NULL; i++)
-		puts(prologue1[i]);
+	puts("<WindowElementType>System</WindowElementType>");
+	puts("<FileType>BSDF</FileType>");
+	puts("<Optical>");
+	puts("<Layer>");
+	puts("\t<Material>");
+	puts("\t\t<Name>Name</Name>");
+	puts("\t\t<Manufacturer>Manufacturer</Manufacturer>");
+	puts("\t\t<DeviceType>Other</DeviceType>");
+	puts("\t</Material>");
 	puts("\t<DataDefinition>");
 	printf("\t\t<IncidentDataStructure>TensorTree%c</IncidentDataStructure>\n",
 			single_plane_incident ? '3' : '4');
 	puts("\t</DataDefinition>");
-	for (i = 0; prologue2[i] != NULL; i++)
-		puts(prologue2[i]);
+	puts("\t<WavelengthData>");
+	puts("\t\t<LayerNumber>System</LayerNumber>");
+	puts("\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>");
+	puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+	puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
+	puts("\t\t<WavelengthDataBlock>");
 	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
 		bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
+	puts("\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>");
+	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
 	puts("\t\t\t<ScatteringData>");
 }
 
@@ -203,18 +190,12 @@ xml_prologue(int ac, char *av[])
 static void
 xml_epilogue(void)
 {
-	static const char	*epilogue[] = {
-"\t\t\t</ScatteringData>",
-"\t\t</WavelengthDataBlock>",
-"\t</WavelengthData>",
-"</Layer>",
-"</Optical>",
-"</WindowElement>",
-				NULL};
-	int			i;
-
-	for (i = 0; epilogue[i] != NULL; i++)
-		puts(epilogue[i]);
+	puts("\t\t\t</ScatteringData>");
+	puts("\t\t</WavelengthDataBlock>");
+	puts("\t</WavelengthData>");
+	puts("</Layer>");
+	puts("</Optical>");
+	puts("</WindowElement>");
 }
 
 /* Read in BSDF and interpolate as tensor tree representation */
