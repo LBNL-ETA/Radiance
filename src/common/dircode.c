@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.7 2003/06/27 06:53:21 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.8 2012/11/09 01:35:00 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -20,12 +20,11 @@ static const char RCSid[] = "$Id: dircode.c,v 2.7 2003/06/27 06:53:21 greg Exp $
 #define FMASK		0x1fff
 
 int32
-encodedir(dv)		/* encode a normalized direction vector */
-FVECT	dv;
+encodedir(FVECT dv)		/* encode a normalized direction vector */
 {
-	register int32	dc = 0;
+	int32	dc = 0;
 	int	cd[3], cm;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < 3; i++)
 		if (dv[i] < 0.) {
@@ -53,9 +52,7 @@ FVECT	dv;
 
 
 void
-decodedir(dv, dc)	/* decode a normalized direction vector */
-register FVECT	dv;	/* returned */
-register int32	dc;
+decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
 {
 	double	d1, d2, der;
 
@@ -82,8 +79,7 @@ register int32	dc;
 
 
 double
-dir2diff(dc1, dc2)		/* approx. radians^2 between directions */
-int32	dc1, dc2;
+dir2diff(int32 dc1, int32 dc2)	/* approx. radians^2 between directions */
 {
 	FVECT	v1, v2;
 
@@ -95,9 +91,7 @@ int32	dc1, dc2;
 
 
 double
-fdir2diff(dc1, v2)		/* approx. radians^2 between directions */
-int32	dc1;
-register FVECT	v2;
+fdir2diff(int32 dc1, FVECT v2)	/* approx. radians^2 between directions */
 {
 	FVECT	v1;
 
