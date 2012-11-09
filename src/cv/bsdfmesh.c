@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.5 2012/11/08 23:32:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.6 2012/11/09 02:16:29 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -119,6 +119,7 @@ run_subprocess(void)
 		if (pid < 0) {
 			fprintf(stderr, "%s: cannot fork subprocess\n",
 					progname);
+			await_children(nchild);
 			exit(1);
 		}
 		++nchild;			/* subprocess started */
@@ -271,21 +272,6 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const PRICEMAT 
 	return(best.amt);
 }
 
-#ifdef DEBUG
-static char *
-thetaphi(const FVECT v)
-{
-	static char	buf[128];
-	double		theta, phi;
-
-	theta = 180./M_PI*acos(v[2]);
-	phi = 180./M_PI*atan2(v[1],v[0]);
-	sprintf(buf, "(%.0f,%.0f)", theta, phi);
-
-	return(buf);
-}
-#endif
-
 /* Compute and insert migration along directed edge (may fork child) */
 static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
@@ -295,7 +281,7 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	MIGRATION	*newmig;
 	double		*src_rem, *dst_rem;
 	double		total_rem = 1., move_amt;
-	int		i;
+	int		i, j;
 						/* check if exists already */
 	for (newmig = from_rbf->ejl; newmig != NULL;
 			newmig = nextedge(from_rbf,newmig))
@@ -314,37 +300,32 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 		exit(1);
 	}
 #ifdef DEBUG
-	fprintf(stderr, "Building path from (theta,phi) %s ",
-			thetaphi(from_rbf->invec));
-	fprintf(stderr, "to %s with %d x %d matrix\n",
-			thetaphi(to_rbf->invec), 
+	fprintf(stderr, "Building path from (theta,phi) (%.0f,%.0f) ",
+			get_theta180(from_rbf->invec),
+			get_phi360(from_rbf->invec));
+	fprintf(stderr, "to (%.0f,%.0f) with %d x %d matrix\n",
+			get_theta180(to_rbf->invec),
+			get_phi360(to_rbf->invec), 
 			from_rbf->nrbf, to_rbf->nrbf);
 #endif
 						/* starting quantities */
 	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
 	for (i = from_rbf->nrbf; i--; )
 		src_rem[i] = rbf_volume(&from_rbf->rbfa[i]) / from_rbf->vtotal;
-	for (i = to_rbf->nrbf; i--; )
-		dst_rem[i] = rbf_volume(&to_rbf->rbfa[i]) / to_rbf->vtotal;
+	for (j = to_rbf->nrbf; j--; )
+		dst_rem[j] = rbf_volume(&to_rbf->rbfa[j]) / to_rbf->vtotal;
+
 	do {					/* move a bit at a time */
 		move_amt = migration_step(newmig, src_rem, dst_rem, &pmtx);
 		total_rem -= move_amt;
-#ifdef DEBUG
-		if (!nchild)
-			fprintf(stderr, "\r%.9f remaining...", total_rem);
-#endif
 	} while ((total_rem > end_thresh) & (move_amt > 0));
-#ifdef DEBUG
-	if (!nchild) fputs("done.\n", stderr);
-	else fprintf(stderr, "finished with %.9f remaining\n", total_rem);
-#endif
+
 	for (i = from_rbf->nrbf; i--; ) {	/* normalize final matrix */
-	    float	nf = rbf_volume(&from_rbf->rbfa[i]);
-	    int		j;
+	    double	nf = rbf_volume(&from_rbf->rbfa[i]);
 	    if (nf <= FTINY) continue;
 	    nf = from_rbf->vtotal / nf;
 	    for (j = to_rbf->nrbf; j--; )
-		mtx_coef(newmig,i,j) *= nf;
+		mtx_coef(newmig,i,j) *= nf;	/* row now sums to 1.0 */
 	}
 	end_subprocess();			/* exit here if subprocess */
 	free_routes(&pmtx);			/* free working arrays */

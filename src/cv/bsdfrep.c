@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.7 2012/11/08 22:05:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.8 2012/11/09 02:16:29 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -188,13 +188,7 @@ rotate_rbf(RBFNODE *rbf, const FVECT invec)
 	FVECT			outvec;
 	int			pos[2];
 	int			n;
-#ifdef DEBUG
-	double	tdiff = 180./M_PI*fabs(acos(invec[2])-acos(rbf->invec[2]));
-	if (tdiff >= 1.5)
-		fprintf(stderr,
-			"%s: Warning - rotated theta differs by %.1f degrees\n",
-				progname, tdiff);
-#endif
+
 	for (n = rbf->nrbf; n-- > 0; ) {
 		ovec_from_pos(outvec, rbf->rbfa[n].gx, rbf->rbfa[n].gy);
 		spinvector(outvec, outvec, vnorm, phi);
@@ -221,7 +215,7 @@ ovec_from_pos(FVECT vec, int xpos, int ypos)
 	double	uv[2];
 	double	r2;
 	
-	SDsquare2disk(uv, (1./grid_res)*(xpos+.5), (1./grid_res)*(ypos+.5));
+	SDsquare2disk(uv, (xpos+.5)/grid_res, (ypos+.5)/grid_res);
 				/* uniform hemispherical projection */
 	r2 = uv[0]*uv[0] + uv[1]*uv[1];
 	vec[0] = vec[1] = sqrt(2. - r2);
@@ -247,7 +241,7 @@ pos_from_vec(int pos[2], const FVECT vec)
 double
 eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 {
-	double		res = .0;
+	double		res = 0;
 	const RBFVAL	*rbfp;
 	FVECT		odir;
 	double		sig2;
@@ -497,7 +491,7 @@ load_bsdf_rep(FILE *ifp)
 					sizeof(RBFVAL)*(rbfh.nrbf-1));
 		if (newrbf == NULL)
 			goto memerr;
-		memcpy(newrbf, &rbfh, sizeof(RBFNODE));
+		memcpy(newrbf, &rbfh, sizeof(RBFNODE)-sizeof(RBFVAL));
 		for (i = 0; i < rbfh.nrbf; i++) {
 			newrbf->rbfa[i].peak = getflt(ifp);
 			newrbf->rbfa[i].crad = getint(2, ifp) & 0xffff;

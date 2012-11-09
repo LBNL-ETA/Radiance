@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.4 2012/11/07 03:04:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.5 2012/11/09 02:16:29 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -60,7 +60,7 @@ interp_isotropic()
 			SDsquare2disk(ovec, (ox+.5)/sqres, (oy+.5)/sqres);
 			ovec[2] = output_orient *
 				sqrt(1. - ovec[0]*ovec[0] - ovec[1]*ovec[1]);
-			bsdf = eval_rbfrep(rbf, ovec) / fabs(ovec[2]);
+			bsdf = eval_rbfrep(rbf, ovec) * output_orient/ovec[2];
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
@@ -122,7 +122,7 @@ interp_anisotropic()
 			SDsquare2disk(ovec, (ox+.5)/sqres, (oy+.5)/sqres);
 			ovec[2] = output_orient *
 				sqrt(1. - ovec[0]*ovec[0] - ovec[1]*ovec[1]);
-			bsdf = eval_rbfrep(rbf, ovec) / fabs(ovec[2]);
+			bsdf = eval_rbfrep(rbf, ovec) * output_orient/ovec[2];
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
@@ -141,6 +141,82 @@ interp_anisotropic()
 		fputs("}\n", stdout);
 }
 
+/* Output XML prologue to stdout */
+static void
+xml_prologue(int ac, char *av[])
+{
+	static const char	*prologue0[] = {
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+"<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">",
+				NULL};
+	static const char	*prologue1[] = {
+"<WindowElementType>System</WindowElementType>",
+"<FileType>BSDF</FileType>",
+"<Optical>",
+"<Layer>",
+"\t<Material>",
+"\t\t<Name>Name</Name>",
+"\t\t<Manufacturer>Manufacturer</Manufacturer>",
+"\t\t<DeviceType>Other</DeviceType>",
+"\t</Material>",
+				NULL};
+	static const char	*prologue2[] = {
+"\t<WavelengthData>",
+"\t\t<LayerNumber>System</LayerNumber>",
+"\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>",
+"\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>",
+"\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>",
+"\t\t<WavelengthDataBlock>",
+"\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>",
+"\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>",
+				NULL};
+	static const char	*bsdf_type[4] = {
+					"Reflection Back",
+					"Transmission Back",
+					"Transmission Front",
+					"Reflection Front"
+				};
+	int			i;
+
+	for (i = 0; prologue0[i] != NULL; i++)
+		puts(prologue0[i]);
+	fputs("<!-- File produced by:", stdout);
+	while (ac-- > 0) {
+		fputc(' ', stdout);
+		fputs(*av++, stdout);
+	}
+	puts(" -->");
+	for (i = 0; prologue1[i] != NULL; i++)
+		puts(prologue1[i]);
+	puts("\t<DataDefinition>");
+	printf("\t\t<IncidentDataStructure>TensorTree%c</IncidentDataStructure>\n",
+			single_plane_incident ? '3' : '4');
+	puts("\t</DataDefinition>");
+	for (i = 0; prologue2[i] != NULL; i++)
+		puts(prologue2[i]);
+	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
+		bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
+	puts("\t\t\t<ScatteringData>");
+}
+
+/* Output XML epilogue to stdout */
+static void
+xml_epilogue(void)
+{
+	static const char	*epilogue[] = {
+"\t\t\t</ScatteringData>",
+"\t\t</WavelengthDataBlock>",
+"\t</WavelengthData>",
+"</Layer>",
+"</Optical>",
+"</WindowElement>",
+				NULL};
+	int			i;
+
+	for (i = 0; epilogue[i] != NULL; i++)
+		puts(epilogue[i]);
+}
+
 /* Read in BSDF and interpolate as tensor tree representation */
 int
 main(int argc, char *argv[])
@@ -148,38 +224,38 @@ main(int argc, char *argv[])
 	FILE	*fpin = stdin;
 	int	i;
 
-	progname = argv[0];			/* get options */
-	while (argc > 2 && argv[1][0] == '-') {
-		switch (argv[1][1]) {
+	progname = argv[0];
+	for (i = 1; i < argc-1 && argv[i][0] == '-'; i++)
+		switch (argv[i][1]) {		/* get option */
 		case 't':
-			pctcull = atoi(argv[2]);
+			pctcull = atoi(argv[++i]);
 			break;
 		case 'g':
-			samp_order = atoi(argv[2]);
+			samp_order = atoi(argv[++i]);
 			break;
 		default:
 			goto userr;
 		}
-		argv += 2; argc -= 2;
-	}
-	if (argc == 2) {			/* open input if given */
-		fpin = fopen(argv[1], "r");
+
+	if (i == argc-1) {			/* open input if given */
+		fpin = fopen(argv[i], "r");
 		if (fpin == NULL) {
 			fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
 					progname, argv[1]);
 			return(1);
 		}
-	} else if (argc != 1)
+	} else if (i < argc-1)
 		goto userr;
 	SET_FILE_BINARY(fpin);			/* load BSDF interpolant */
 	if (!load_bsdf_rep(fpin))
 		return(1);
-	/* xml_prologue();				/* start XML output */
+	fclose(fpin);
+	xml_prologue(argc, argv);		/* start XML output */
 	if (single_plane_incident)		/* resample dist. */
 		interp_isotropic();
 	else
 		interp_anisotropic();
-	/* xml_epilogue();				/* finish XML output */
+	xml_epilogue();				/* finish XML output */
 	return(0);
 userr:
 	fprintf(stderr,
