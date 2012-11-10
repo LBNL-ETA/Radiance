@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.6 2012/11/09 02:25:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.7 2012/11/10 19:47:42 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.6 2012/11/09 02:25:32 greg Ex
 				/* global argv[0] */
 char			*progname;
 				/* percentage to cull (<0 to turn off) */
-int			pctcull = 90;
+double			pctcull = 90.;
 				/* sampling order */
 int			samp_order = 6;
 
@@ -32,11 +32,11 @@ interp_isotropic()
 	float		bsdf;
 #if DEBUG
 	fprintf(stderr, "Writing isotropic order %d ", samp_order);
-	if (pctcull >= 0) fprintf(stderr, "data with %d%% culling\n", pctcull);
+	if (pctcull >= 0) fprintf(stderr, "data with %f%% culling\n", pctcull);
 	else fputs("raw data\n", stderr);
 #endif
 	if (pctcull >= 0) {			/* begin output */
-		sprintf(cmd, "rttree_reduce -h -a -ff -r 3 -t %d -g %d",
+		sprintf(cmd, "rttree_reduce -h -a -ff -r 3 -t %f -g %d",
 				pctcull, samp_order);
 		fflush(stdout);
 		ofp = popen(cmd, "w");
@@ -94,11 +94,11 @@ interp_anisotropic()
 	float		bsdf;
 #if DEBUG
 	fprintf(stderr, "Writing anisotropic order %d ", samp_order);
-	if (pctcull >= 0) fprintf(stderr, "data with %d%% culling\n", pctcull);
+	if (pctcull >= 0) fprintf(stderr, "data with %f%% culling\n", pctcull);
 	else fputs("raw data\n", stderr);
 #endif
 	if (pctcull >= 0) {			/* begin output */
-		sprintf(cmd, "rttree_reduce -h -a -ff -r 4 -t %d -g %d",
+		sprintf(cmd, "rttree_reduce -h -a -ff -r 4 -t %f -g %d",
 				pctcull, samp_order);
 		fflush(stdout);
 		ofp = popen(cmd, "w");
@@ -146,10 +146,10 @@ static void
 xml_prologue(int ac, char *av[])
 {
 	static const char	*bsdf_type[4] = {
-					"Reflection Back",
-					"Transmission Back",
+					"Reflection Front",
 					"Transmission Front",
-					"Reflection Front"
+					"Transmission Back",
+					"Reflection Back"
 				};
 
 	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -209,7 +209,7 @@ main(int argc, char *argv[])
 	for (i = 1; i < argc-1 && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {		/* get option */
 		case 't':
-			pctcull = atoi(argv[++i]);
+			pctcull = atof(argv[++i]);
 			break;
 		case 'g':
 			samp_order = atoi(argv[++i]);

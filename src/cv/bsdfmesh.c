@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.6 2012/11/09 02:16:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.7 2012/11/10 19:47:42 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -173,7 +173,8 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	    FVECT		vfrom;
 	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
 	    for (j = to_rbf->nrbf; j--; ) {
-		pricerow(pm,i)[j] = acos(DOT(vfrom, vto[j])) +
+		double		dprod = DOT(vfrom, vto[j]);
+		pricerow(pm,i)[j] = ((dprod >= 1.) ? .0 : acos(dprod)) +
 				fabs(R2ANG(to_rbf->rbfa[j].crad) - from_ang);
 		psortrow(pm,i)[j] = j;
 	    }
@@ -288,6 +289,15 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 		if (newmig->rbfv[1] == to_rbf)
 			return(NULL);
 						/* else allocate */
+#ifdef DEBUG
+	fprintf(stderr, "Building path from (theta,phi) (%.0f,%.0f) ",
+			get_theta180(from_rbf->invec),
+			get_phi360(from_rbf->invec));
+	fprintf(stderr, "to (%.0f,%.0f) with %d x %d matrix\n",
+			get_theta180(to_rbf->invec),
+			get_phi360(to_rbf->invec), 
+			from_rbf->nrbf, to_rbf->nrbf);
+#endif
 	newmig = new_migration(from_rbf, to_rbf);
 	if (run_subprocess())
 		return(newmig);			/* child continues */
@@ -299,15 +309,6 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 				progname);
 		exit(1);
 	}
-#ifdef DEBUG
-	fprintf(stderr, "Building path from (theta,phi) (%.0f,%.0f) ",
-			get_theta180(from_rbf->invec),
-			get_phi360(from_rbf->invec));
-	fprintf(stderr, "to (%.0f,%.0f) with %d x %d matrix\n",
-			get_theta180(to_rbf->invec),
-			get_phi360(to_rbf->invec), 
-			from_rbf->nrbf, to_rbf->nrbf);
-#endif
 						/* starting quantities */
 	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
 	for (i = from_rbf->nrbf; i--; )
