@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.2 2012/11/13 04:23:38 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -193,6 +193,7 @@ make_rbfrep(void)
 	double	lastVar, thisVar = 100.;
 	int	nn;
 	RBFNODE	*newnode;
+	RBFVAL	*itera;
 	int	i, j;
 				/* compute RBF radii */
 	compute_radii();
@@ -204,10 +205,8 @@ make_rbfrep(void)
 		nn += dsf_grid[i][j].nval;
 				/* allocate RBF array */
 	newnode = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
-	if (newnode == NULL) {
-		fprintf(stderr, "%s: Out of memory in make_rbfrep()\n", progname);
-		exit(1);
-	}
+	if (newnode == NULL)
+		goto memerr;
 	newnode->ord = -1;
 	newnode->next = NULL;
 	newnode->ejl = NULL;
@@ -228,6 +227,10 @@ make_rbfrep(void)
 			++nn;
 		}
 				/* iterate to improve interpolation accuracy */
+	itera = (RBFVAL *)malloc(sizeof(RBFVAL)*newnode->nrbf);
+	if (itera == NULL)
+		goto memerr;
+	memcpy(itera, newnode->rbfa, sizeof(RBFVAL)*newnode->nrbf);
 	do {
 		double	dsum = 0, dsum2 = 0;
 		nn = 0;
@@ -237,12 +240,13 @@ make_rbfrep(void)
 				FVECT	odir;
 				double	corr;
 				ovec_from_pos(odir, i, j);
-				newnode->rbfa[nn++].peak *= corr =
+				itera[nn++].peak *= corr =
 					dsf_grid[i][j].vsum /
 						eval_rbfrep(newnode, odir);
-				dsum += corr - 1.;
-				dsum2 += (corr-1.)*(corr-1.);
+				dsum += 1. - corr;
+				dsum2 += (1.-corr)*(1.-corr);
 			}
+		memcpy(newnode->rbfa, itera, sizeof(RBFVAL)*newnode->nrbf);
 		lastVar = thisVar;
 		thisVar = dsum2/(double)nn;
 #ifdef DEBUG
@@ -252,6 +256,7 @@ make_rbfrep(void)
 #endif
 	} while (--niter > 0 && lastVar-thisVar > 0.02*lastVar);
 
+	free(itera);
 	nn = 0;			/* compute sum for normalization */
 	while (nn < newnode->nrbf)
 		newnode->vtotal += rbf_volume(&newnode->rbfa[nn++]);
@@ -259,4 +264,7 @@ make_rbfrep(void)
 	insert_dsf(newnode);
 
 	return(newnode);
+memerr:
+	fprintf(stderr, "%s: Out of memory in make_rbfrep()\n", progname);
+	exit(1);
 }

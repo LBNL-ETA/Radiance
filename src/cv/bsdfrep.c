@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.8 2012/11/09 02:16:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.9 2012/11/13 04:23:38 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -485,6 +485,10 @@ load_bsdf_rep(FILE *ifp)
 		rbfh.invec[0] = getflt(ifp);
 		rbfh.invec[1] = getflt(ifp);
 		rbfh.invec[2] = getflt(ifp);
+		if (normalize(rbfh.invec) == 0) {
+			fprintf(stderr, "%s: zero incident vector\n", progname);
+			return(0);
+		}
 		rbfh.vtotal = getflt(ifp);
 		rbfh.nrbf = getint(4, ifp);
 		newrbf = (RBFNODE *)malloc(sizeof(RBFNODE) +
