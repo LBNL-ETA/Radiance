@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.6 2012/06/21 17:14:32 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.7 2012/11/15 19:41:03 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -363,7 +363,7 @@ void
 end_record()
 {
 	--waitflush;
-	lu_doall(&ofiletab, puteol, NULL);
+	lu_doall(&ofiletab, &puteol, NULL);
 	if (using_stdout & (outfmt == 'a'))
 		putc('\n', stdout);
 	if (!waitflush) {
@@ -513,7 +513,7 @@ reload_output()
 			*(STREAMOUT *)oent->data = sout;
 		}
 	}
-	lu_doall(&ofiletab, myclose, NULL);	/* close all files */
+	lu_doall(&ofiletab, &myclose, NULL);	/* close all files */
 }
 
 
@@ -669,7 +669,7 @@ recover_output()
 	}
 						/* seek on all files */
 	nvals = lastout * outvsiz;
-	lu_doall(&ofiletab, myseeko, &nvals);
+	lu_doall(&ofiletab, &myseeko, &nvals);
 						/* skip repeated input */
 	lastout *= accumulate;
 	for (nvals = 0; nvals < lastout; nvals++) {

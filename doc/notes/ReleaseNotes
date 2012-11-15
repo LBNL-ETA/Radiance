@@ -1851,3 +1851,6 @@ to compute a better motion blur.
 ****** COMPATIBILITY CHANGE ********
 Changed BSDF routines to use updated/corrected XML specification and
 removed depracated BSDF support from mkillum.
+
+Fixed behavior of i/o flushing in rcontrib with -c > 1 (averaging).  Thanks
+to Lars Grobe for help identifying this problem.

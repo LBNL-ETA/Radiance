@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.17 2012/11/15 15:26:52 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.18 2012/11/15 19:41:03 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -326,7 +326,7 @@ rcontrib()
 			lastray = lastdone = 0;
 		++lastray;
 		if (d == 0.0) {				/* zero ==> flush */
-			if ((yres <= 0) | (xres <= 0))
+			if ((yres <= 0) | (xres <= 1))
 				waitflush = 1;		/* flush after */
 			if (nchild == -1)
 				account = 1;

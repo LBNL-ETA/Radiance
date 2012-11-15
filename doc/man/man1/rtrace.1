@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.23 2012/06/14 22:42:21 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.24 2012/11/15 19:41:03 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -30,7 +30,7 @@ Input for each ray is:
 If the direction vector is (0,0,0), a bogus record
 is printed and the output is flushed if the
 .I -x
-value is unset or zero.
+value is one or zero.
 (See the notes on this option below.)\0
 This may be useful for programs that run
 .I rtrace

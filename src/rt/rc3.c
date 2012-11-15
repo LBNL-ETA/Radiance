@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.17 2012/11/15 15:26:52 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.18 2012/11/15 19:41:03 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -277,7 +277,7 @@ in_rchild()
 		if (rval < 0)
 			error(SYSTEM, "open_process() call failed");
 		if (rval == 0) {	/* if in child, set up & return true */
-			lu_doall(&modconttab, set_stdout, NULL);
+			lu_doall(&modconttab, &set_stdout, NULL);
 			lu_done(&ofiletab);
 			while (nchild--) {	/* don't share other pipes */
 				close(kida[nchild].pr.w);
@@ -409,33 +409,16 @@ parental_loop()
 	flockfile(stdin);		/* avoid lock/unlock overhead */
 #endif
 	while (getvec(orgdir[2*ninq]) == 0 && getvec(orgdir[2*ninq+1]) == 0) {
-		if (orgdir[2*ninq+1][0] == 0.0 &&	/* asking for flush? */
-				(orgdir[2*ninq+1][1] == 0.0) &
-				(orgdir[2*ninq+1][2] == 0.0)) {
-			if (ninq) {			/* preempt our queue */
-				i = next_child_nq(0);
-				n = ninq;
-				memset(orgdir[2*n++], 0, sizeof(FVECT)*2);
-				n *= sizeof(FVECT)*2;
-				if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
-					error(SYSTEM, "pipe write error");
-				kida[i].r1 = lastray+1;
-				lastray += kida[i].nr = ninq;
-				ninq = 0;
-			}
-			if ((yres <= 0) | (xres <= 0) &&
-					(lastray+1) % accumulate == 0) {
-				while (next_child_nq(1) >= 0)
-					;		/* clear the queue */
-				lastdone = lastray %= accumulate;
-				waitflush = 1;		/* flush next */
-			}
-			put_zero_record(++lastray);
-		} else if (++ninq >= qlimit ||
+		const int	zero_ray = orgdir[2*ninq+1][0] == 0.0 &&
+						(orgdir[2*ninq+1][1] == 0.0) &
+						(orgdir[2*ninq+1][2] == 0.0);
+		ninq += !zero_ray;
+				/* Zero ray cannot go in input queue */
+		if (zero_ray ? ninq : ninq >= qlimit ||
 			    lastray/accumulate != (lastray+ninq)/accumulate) {
 			i = next_child_nq(0);		/* manages output */
 			n = ninq;
-			if (accumulate != 1)		/* request flush? */
+			if (accumulate > 1)		/* need terminator? */
 				memset(orgdir[2*n++], 0, sizeof(FVECT)*2);
 			n *= sizeof(FVECT)*2;		/* send assignment */
 			if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
@@ -449,6 +432,16 @@ parental_loop()
 				lastdone = lastray %= accumulate;
 			}
 			ninq = 0;
+		}
+		if (zero_ray) {				/* put bogus record? */
+			if ((yres <= 0) | (xres <= 1) &&
+					(lastray+1) % accumulate == 0) {
+				while (next_child_nq(1) >= 0)
+					;		/* clear the queue */
+				lastdone = lastray = accumulate-1;
+				waitflush = 1;		/* flush next */
+			}
+			put_zero_record(++lastray);
 		}
 		if (raysleft && !--raysleft)
 			break;				/* preemptive EOI */
@@ -531,9 +524,9 @@ feeder_loop()
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;
-			ninq = 0;
 			if (lastray < lastdone)		/* RNUMBER wrapped? */
 				lastdone = lastray = 0;
+			ninq = 0;
 		}
 		if (raysleft && !--raysleft)
 			break;				/* preemptive EOI */
