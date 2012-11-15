@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.16 2012/06/22 21:58:45 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.17 2012/11/15 15:26:52 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -400,8 +400,7 @@ tryagain:				/* catch up with output? */
 void
 parental_loop()
 {
-	static int	ignore_warning_given = 0;
-	int		qlimit = (accumulate == 1) ? 1 : MAXIQ-1;
+	const int	qlimit = (accumulate == 1) ? 1 : MAXIQ-1;
 	int		ninq = 0;
 	FVECT		orgdir[2*MAXIQ];
 	int		i, n;
@@ -413,17 +412,24 @@ parental_loop()
 		if (orgdir[2*ninq+1][0] == 0.0 &&	/* asking for flush? */
 				(orgdir[2*ninq+1][1] == 0.0) &
 				(orgdir[2*ninq+1][2] == 0.0)) {
-			if (accumulate != 1) {
-				if (!ignore_warning_given++)
-					error(WARNING,
-				"dummy ray(s) ignored during accumulation\n");
-				continue;
+			if (ninq) {			/* preempt our queue */
+				i = next_child_nq(0);
+				n = ninq;
+				memset(orgdir[2*n++], 0, sizeof(FVECT)*2);
+				n *= sizeof(FVECT)*2;
+				if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+					error(SYSTEM, "pipe write error");
+				kida[i].r1 = lastray+1;
+				lastray += kida[i].nr = ninq;
+				ninq = 0;
 			}
-			while (next_child_nq(1) >= 0)
-				;			/* clear the queue */
-			lastdone = lastray = 0;
-			if ((yres <= 0) | (xres <= 0))
+			if ((yres <= 0) | (xres <= 0) &&
+					(lastray+1) % accumulate == 0) {
+				while (next_child_nq(1) >= 0)
+					;		/* clear the queue */
+				lastdone = lastray %= accumulate;
 				waitflush = 1;		/* flush next */
+			}
 			put_zero_record(++lastray);
 		} else if (++ninq >= qlimit ||
 			    lastray/accumulate != (lastray+ninq)/accumulate) {
@@ -436,12 +442,13 @@ parental_loop()
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;	/* mark as busy */
-			ninq = 0;
 			if (lastray < lastdone) {	/* RNUMBER wrapped? */
 				while (next_child_nq(1) >= 0)
 					;
-				lastdone = lastray = 0;
+				lastray -= ninq;
+				lastdone = lastray %= accumulate;
 			}
+			ninq = 0;
 		}
 		if (raysleft && !--raysleft)
 			break;				/* preemptive EOI */
