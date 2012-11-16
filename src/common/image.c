@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.37 2012/10/27 03:01:21 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.38 2012/11/16 00:14:19 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -221,9 +221,8 @@ double  y
 		y *= sqrt(v->vn2);
 		d = x*x + y*y;
 		z = (1. - d)/(1. + d);
-		d = d <= FTINY*FTINY ? PI : sqrt((1.0 - z*z)/d);
-		x *= d;
-		y *= d;
+		x *= (1. + z);
+		y *= (1. + z);
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
@@ -308,9 +307,8 @@ FVECT  p
 			return;
 		if (d <= -(1.0-FTINY))
 			return;		/* really an error */
-		d = sqrt(1.0 - d*d) / (1.0 + d);
-		ip[0] += DOT(disp,v->hvec)*d/sqrt(v->hn2);
-		ip[1] += DOT(disp,v->vvec)*d/sqrt(v->vn2);
+		ip[0] += DOT(disp,v->hvec)/((1. + d)*sqrt(v->hn2));
+		ip[1] += DOT(disp,v->vvec)/((1. + d)*sqrt(v->vn2));
 		return;
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
