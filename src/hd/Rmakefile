@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.35 2012/04/25 22:21:06 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.36 2012/11/19 17:40:37 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -142,20 +142,16 @@ viewbeams.o holo.o rhd_odraw.o rhd_geom.o rhdobj.o \
 -lrgl -lrtrad -lGLU -lGL -lX11 -lXext $(MLIB)
 
 rhd_ogl0.o:	rhd_ogl.c
-	$(CC) $(CFLAGS) -c rhd_ogl.c
-	mv -f rhd_ogl.o rhd_ogl0.o
+	$(CC) $(CFLAGS) -o rhd_ogl0.o -c rhd_ogl.c
 
 rhd_oglo.o:	rhd_ogl.c
-	$(CC) $(CFLAGS) -DDOBJ -c rhd_ogl.c
-	mv -f rhd_ogl.o rhd_oglo.o
+	$(CC) $(CFLAGS) -DDOBJ -o rhd_oglo.o -c rhd_ogl.c
 
 rhd_ogls.o:	rhd_ogl.c
-	$(CC) $(CFLAGS) -DSTEREO -c rhd_ogl.c
-	mv -f rhd_ogl.o rhd_ogls.o
+	$(CC) $(CFLAGS) -DSTEREO -o rhd_ogls.o -c rhd_ogl.c
 
 rhd_oglso.o:	rhd_ogl.c
-	$(CC) $(CFLAGS) -DDOBJ -DSTEREO -c rhd_ogl.c
-	mv -f rhd_ogl.o rhd_oglso.o
+	$(CC) $(CFLAGS) -DDOBJ -DSTEREO -o rhd_oglso.o -c rhd_ogl.c
 
 rholo.o rholo2.o rholo2l.o rholo3.o rholo4.o \
 rhdisp.o rhdisp2.o rhpict.o viewbeams.o:	rholo.h
