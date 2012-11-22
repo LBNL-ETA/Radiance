@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.8 2012/11/13 04:23:38 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.9 2012/11/22 06:07:17 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -180,7 +180,7 @@ xml_prologue(int ac, char *av[])
 	puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
 	puts("\t\t<WavelengthDataBlock>");
 	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
-		bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
+			bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
 	puts("\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>");
 	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
 	puts("\t\t\t<ScatteringData>");

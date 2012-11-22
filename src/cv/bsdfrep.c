@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.10 2012/11/18 03:56:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.11 2012/11/22 06:07:17 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -82,7 +82,7 @@ new_input_direction(double new_theta, double new_phi)
 int
 use_symmetry(FVECT vec)
 {
-	double	phi = get_phi360(vec);
+	const double	phi = get_phi360(vec);
 
 	switch (inp_coverage) {
 	case INP_QUAD1|INP_QUAD2|INP_QUAD3|INP_QUAD4:

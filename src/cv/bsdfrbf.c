@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.2 2012/11/13 04:23:38 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.3 2012/11/22 06:07:17 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -260,7 +260,11 @@ make_rbfrep(void)
 	nn = 0;			/* compute sum for normalization */
 	while (nn < newnode->nrbf)
 		newnode->vtotal += rbf_volume(&newnode->rbfa[nn++]);
-
+#ifdef DEBUG
+	fprintf(stderr, "Integrated DSF at (%.1f,%.1f) deg. is %.2f\n",
+			get_theta180(newnode->invec), get_phi360(newnode->invec),
+			newnode->vtotal);
+#endif
 	insert_dsf(newnode);
 
 	return(newnode);

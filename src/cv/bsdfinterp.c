@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.5 2012/11/08 00:31:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.6 2012/11/22 06:07:17 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -126,7 +126,7 @@ in_tri(const RBFNODE *v1, const RBFNODE *v2, const RBFNODE *v3, const FVECT p)
 	return(sgn2 == sgn3);
 }
 
-/* Test and set for edge */
+/* Test (and set) bitmap for edge */
 static int
 check_edge(unsigned char *emap, int nedges, const MIGRATION *mig, int mark)
 {
@@ -305,7 +305,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 			rbf->rbfa[n].crad = ANG2R(sqrt(rad0*rad0*(1.-t) +
 							rad1*rad1*t));
 			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
-			geodesic(v, v0, v, t, GEOD_REL);
+			geodesic(v, v0, v, t*full_dist, GEOD_RAD);
 			pos_from_vec(pos, v);
 			rbf->rbfa[n].gx = pos[0];
 			rbf->rbfa[n].gy = pos[1];
@@ -331,7 +331,7 @@ advect_rbf(const FVECT invec)
 	float		mbfact, mcfact;
 	int		n, i, j, k;
 	FVECT		v0, v1, v2;
-	double		s, t;
+	double		s, t, s_full, t_full;
 
 	VCOPY(sivec, invec);			/* find triangle/edge */
 	sym = get_interp(miga, sivec);
@@ -360,10 +360,12 @@ advect_rbf(const FVECT invec)
 	normalize(v2);
 	fcross(v1, sivec, miga[1]->rbfv[1]->invec);
 	normalize(v1);
-	s = acos(DOT(v0,v1)) / acos(DOT(v0,v2));
+	s = acos(DOT(v0,v1));
 	geodesic(v1, miga[0]->rbfv[0]->invec, miga[0]->rbfv[1]->invec,
-			s, GEOD_REL);
-	t = acos(DOT(v1,sivec)) / acos(DOT(v1,miga[1]->rbfv[1]->invec));
+			s, GEOD_RAD);
+	s /= s_full = acos(DOT(v0,v2));
+	t = acos(DOT(v1,sivec)) /
+			(t_full = acos(DOT(v1,miga[1]->rbfv[1]->invec)));
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(miga[0]); i++)
 	    for (j = 0; j < mtx_ncols(miga[0]); j++)
@@ -404,7 +406,7 @@ advect_rbf(const FVECT invec)
 		rad1j = R2ANG(rbf1j->crad);
 		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*rad1j*rad1j;
 		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
-		geodesic(v1, v0, v1, s, GEOD_REL);
+		geodesic(v1, v0, v1, s*s_full, GEOD_RAD);
 		for (k = 0; k < mtx_ncols(miga[2]); k++) {
 		    float		mb = mtx_coef(miga[1],j,k);
 		    float		mc = mtx_coef(miga[2],i,k);
@@ -419,7 +421,7 @@ advect_rbf(const FVECT invec)
 		    rad2k = R2ANG(rbf2k->crad);
 		    rbf->rbfa[n].crad = ANG2R(sqrt(srad2 + t*rad2k*rad2k));
 		    ovec_from_pos(v2, rbf2k->gx, rbf2k->gy);
-		    geodesic(vout, v1, v2, t, GEOD_REL);
+		    geodesic(vout, v1, v2, t*t_full, GEOD_RAD);
 		    pos_from_vec(pos, vout);
 		    rbf->rbfa[n].gx = pos[0];
 		    rbf->rbfa[n].gy = pos[1];
