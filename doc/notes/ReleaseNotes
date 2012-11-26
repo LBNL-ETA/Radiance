@@ -1854,3 +1854,7 @@ removed depracated BSDF support from mkillum.
 
 Fixed behavior of i/o flushing in rcontrib with -c > 1 (averaging).  Thanks
 to Lars Grobe for help identifying this problem.
+
+Fixed bug in depth-of-field blur where view distance was measured from
+fore clipping plane rather than viewpoint.  Thanks to Peter A-B for
+pointing this out.

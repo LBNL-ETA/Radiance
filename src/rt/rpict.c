@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.84 2011/02/25 06:51:50 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.85 2012/11/26 07:04:07 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -236,7 +236,7 @@ rpict(			/* generate image(s) */
 {
 	char  fbuf[128], fbuf2[128];
 	int  npicts;
-	register char  *cp;
+	char  *cp;
 	RESOLU	rs;
 	double	pa;
 					/* check sampling */
@@ -252,7 +252,7 @@ rpict(			/* generate image(s) */
 	if (seq <= 0)
 		seq = 0;
 	else if (prvr != NULL && isint(prvr)) {
-		register int  rn;		/* skip to specified view */
+		int  rn;		/* skip to specified view */
 		if ((rn = atoi(prvr)) < seq)
 			error(USER, "recover frame less than start frame");
 		if (pout == NULL)
@@ -341,7 +341,7 @@ rpict(			/* generate image(s) */
 		fputs(VIEWSTR, stdout);
 		fprintview(&ourview, stdout);
 		putchar('\n');
-		if (pa < .99 || pa > 1.01)
+		if ((pa < .99) | (pa > 1.01))
 			fputaspect(pa, stdout);
 		fputnow(stdout);
 		fputformat(COLRFMT, stdout);
@@ -390,9 +390,9 @@ render(				/* render the scene */
 	int  zfd;
 	COLOR  *colptr;
 	float  *zptr;
-	register int  i;
+	int  i;
 					/* check for empty image */
-	if (hres <= 0 || vres <= 0) {
+	if ((hres <= 0) | (vres <= 0)) {
 		error(WARNING, "empty output picture");
 		fprtresolu(0, 0, stdout);
 		return;
@@ -436,7 +436,7 @@ render(				/* render the scene */
 	i = salvage(oldfile);
 	if (i >= vres)
 		goto alldone;
-	if (zfd != -1 && i > 0 &&
+	if ((zfd != -1) & (i > 0) &&
 			lseek(zfd, (off_t)i*hres*sizeof(float), SEEK_SET) < 0)
 		error(SYSTEM, "z-file seek error in render");
 	pctdone = 100.0*i/vres;
@@ -530,9 +530,9 @@ memerr:
 
 static void
 fillscanline(	/* fill scan at y */
-	register COLOR	*scanline,
-	register float	*zline,
-	register char  *sd,
+	COLOR	*scanline,
+	float	*zline,
+	char  *sd,
 	int  xres,
 	int  y,
 	int  xstep
@@ -541,7 +541,7 @@ fillscanline(	/* fill scan at y */
 	static int  nc = 0;		/* number of calls */
 	int  bl = xstep, b = xstep;
 	double	z;
-	register int  i;
+	int  i;
 
 	z = pixvalue(scanline[0], 0, y);
 	if (zline) zline[0] = z;
@@ -569,8 +569,8 @@ fillscanline(	/* fill scan at y */
 
 static void
 fillscanbar(	/* fill interior */
-	register COLOR	*scanbar[],
-	register float	*zbar[],
+	COLOR	*scanbar[],
+	float	*zbar[],
 	int  xres,
 	int  y,
 	int  ysize
@@ -579,7 +579,7 @@ fillscanbar(	/* fill interior */
 	COLOR  vline[MAXDIV+1];
 	float  zline[MAXDIV+1];
 	int  b = ysize;
-	register int  i, j;
+	int  i, j;
 
 	for (i = 0; i < xres; i++) {
 		copycolor(vline[0], scanbar[0][i]);
@@ -602,8 +602,8 @@ fillscanbar(	/* fill interior */
 
 static int
 fillsample( /* fill interior points */
-	register COLOR	*colline,
-	register float	*zline,
+	COLOR	*colline,
+	float	*zline,
 	int  x,
 	int  y,
 	int  xlen,
@@ -615,7 +615,7 @@ fillsample( /* fill interior points */
 	double	z;
 	COLOR  ctmp;
 	int  ncut;
-	register int  len;
+	int  len;
 
 	if (xlen > 0)			/* x or y length is zero */
 		len = xlen;
@@ -666,22 +666,22 @@ pixvalue(		/* compute pixel value */
 	RAY  thisray;
 	FVECT	lorg, ldir;
 	double	hpos, vpos, vdist, lmax;
-	register int	i;
+	int	i;
 						/* compute view ray */
+	setcolor(col, 0.0, 0.0, 0.0);
 	hpos = (x+pixjitter())/hres;
 	vpos = (y+pixjitter())/vres;
 	if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir,
-					&ourview, hpos, vpos)) < -FTINY) {
-		setcolor(col, 0.0, 0.0, 0.0);
+					&ourview, hpos, vpos)) < -FTINY)
 		return(0.0);
-	}
+
 	vdist = ourview.vdist;
 						/* set pixel index */
 	samplendx = pixnumber(x,y,hres,vres);
 						/* optional motion blur */
 	if (lastview.type && mblur > FTINY && (lmax = viewray(lorg, ldir,
 					&lastview, hpos, vpos)) >= -FTINY) {
-		register double  d = mblur*(.5-urand(281+samplendx));
+		double  d = mblur*(.5-urand(281+samplendx));
 
 		thisray.rmax = (1.-d)*thisray.rmax + d*lmax;
 		for (i = 3; i--; ) {
@@ -693,31 +693,34 @@ pixvalue(		/* compute pixel value */
 		vdist = (1.-d)*vdist + d*lastview.vdist;
 	}
 						/* optional depth-of-field */
-	if (dblur > FTINY && vdist > FTINY) {
+	if (dblur > FTINY) {
 		double  vc, dfh, dfv;
 						/* square/circle conv. */
 		dfh = vc = 1. - 2.*frandom();
 		dfv = 1. - 2.*frandom();
 		dfh *= .5*dblur*sqrt(1. - .5*dfv*dfv);
 		dfv *= .5*dblur*sqrt(1. - .5*vc*vc);
-		if (ourview.type == VT_PER || ourview.type == VT_PAR) {
+		if ((ourview.type == VT_PER) | (ourview.type == VT_PAR)) {
+			double	adj = 1.0;
+			if (ourview.type == VT_PER)
+				adj /= DOT(thisray.rdir, ourview.vdir);
 			dfh /= sqrt(ourview.hn2);
 			dfv /= sqrt(ourview.vn2);
 			for (i = 3; i--; ) {
-				vc = thisray.rorg[i] + vdist*thisray.rdir[i];
+				vc = ourview.vp[i] + adj*vdist*thisray.rdir[i];
 				thisray.rorg[i] += dfh*ourview.hvec[i] +
 							dfv*ourview.vvec[i] ;
 				thisray.rdir[i] = vc - thisray.rorg[i];
 			}
 		} else {			/* non-standard view case */
 			double	dfd = PI/4.*dblur*(.5 - frandom());
-			if (ourview.type != VT_ANG && ourview.type != VT_PLS) {
+			if ((ourview.type != VT_ANG) & (ourview.type != VT_PLS)) {
 				if (ourview.type != VT_CYL)
 					dfh /= sqrt(ourview.hn2);
 				dfv /= sqrt(ourview.vn2);
 			}
 			for (i = 3; i--; ) {
-				vc = thisray.rorg[i] + vdist*thisray.rdir[i];
+				vc = ourview.vp[i] + vdist*thisray.rdir[i];
 				thisray.rorg[i] += dfh*ourview.hvec[i] +
 							dfv*ourview.vvec[i] +
 							dfd*ourview.vdir[i] ;
@@ -767,7 +770,7 @@ salvage(		/* salvage scanlines from killed program */
 		goto gotzip;
 	}
 
-	if (x != hres || y != vres) {
+	if ((x != hres) | (y != vres)) {
 		sprintf(errmsg, "resolution mismatch in recover file \"%s\"",
 				oldfile);
 		error(USER, errmsg);
@@ -800,8 +803,8 @@ writerr:
 
 static int
 pixnumber(		/* compute pixel index (brushed) */
-	register int  x,
-	register int  y,
+	int  x,
+	int  y,
 	int  xres,
 	int  yres
 )
