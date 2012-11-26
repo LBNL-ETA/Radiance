@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.6 2012/11/22 06:07:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.7 2012/11/26 07:02:20 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -331,7 +331,7 @@ advect_rbf(const FVECT invec)
 	float		mbfact, mcfact;
 	int		n, i, j, k;
 	FVECT		v0, v1, v2;
-	double		s, t, s_full, t_full;
+	double		s, t, t_full;
 
 	VCOPY(sivec, invec);			/* find triangle/edge */
 	sym = get_interp(miga, sivec);
@@ -360,10 +360,9 @@ advect_rbf(const FVECT invec)
 	normalize(v2);
 	fcross(v1, sivec, miga[1]->rbfv[1]->invec);
 	normalize(v1);
-	s = acos(DOT(v0,v1));
+	s = acos(DOT(v0,v1)) / acos(DOT(v0,v2));
 	geodesic(v1, miga[0]->rbfv[0]->invec, miga[0]->rbfv[1]->invec,
-			s, GEOD_RAD);
-	s /= s_full = acos(DOT(v0,v2));
+			s, GEOD_REL);
 	t = acos(DOT(v1,sivec)) /
 			(t_full = acos(DOT(v1,miga[1]->rbfv[1]->invec)));
 	n = 0;					/* count migrating particles */
@@ -406,7 +405,7 @@ advect_rbf(const FVECT invec)
 		rad1j = R2ANG(rbf1j->crad);
 		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*rad1j*rad1j;
 		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
-		geodesic(v1, v0, v1, s*s_full, GEOD_RAD);
+		geodesic(v1, v0, v1, s, GEOD_REL);
 		for (k = 0; k < mtx_ncols(miga[2]); k++) {
 		    float		mb = mtx_coef(miga[1],j,k);
 		    float		mc = mtx_coef(miga[2],i,k);
