@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.9 2012/11/22 06:07:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.10 2012/12/12 04:49:59 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -112,8 +112,9 @@ interp_anisotropic()
 						/* run through directions */
 	for (ix = 0; ix < sqres; ix++)
 	    for (iy = 0; iy < sqres; iy++) {
-		RBFNODE	*rbf;
+		RBFNODE	*rbf;			/* Klems reversal */
 		SDsquare2disk(ivec, (ix+.5)/sqres, (iy+.5)/sqres);
+		ivec[0] = -ivec[0]; ivec[1] = -ivec[1];
 		ivec[2] = input_orient *
 				sqrt(1. - ivec[0]*ivec[0] - ivec[1]*ivec[1]);
 		rbf = advect_rbf(ivec);
