@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.8 2012/12/12 04:49:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.9 2012/12/14 22:41:44 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -151,8 +151,9 @@ static int
 in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
 			const FVECT ivec, MIGRATION *mig)
 {
-	MIGRATION	*ej1, *ej2;
-	RBFNODE		*tv;
+	RBFNODE		*tv[2];
+	MIGRATION	*sej[2], *dej[2];
+	int		i;
 						/* check visitation record */
 	if (!check_edge(emap, nedges, mig, 1))
 		return(0);
@@ -160,28 +161,36 @@ in_mesh(MIGRATION *miga[3], unsigned char *emap, int nedges,
 		miga[0] = mig;			/* close enough to edge */
 		return(1);
 	}
-						/* do triangles either side */
-	for (ej1 = mig->rbfv[0]->ejl; ej1 != NULL;
-				ej1 = nextedge(mig->rbfv[0],ej1)) {
-	    if (ej1 == mig)
-		continue;
-	    tv = opp_rbf(mig->rbfv[0],ej1);
-	    for (ej2 = tv->ejl; ej2 != NULL; ej2 = nextedge(tv,ej2))
-		if (opp_rbf(tv,ej2) == mig->rbfv[1]) {
-			int	do_ej1 = check_edge(emap, nedges, ej1, 0);
-			int	do_ej2 = check_edge(emap, nedges, ej2, 0);
-			if (do_ej1 && in_mesh(miga, emap, nedges, ivec, ej1))
-				return(1);
-			if (do_ej2 && in_mesh(miga, emap, nedges, ivec, ej2))
-				return(1);
-						/* check just once */
-			if (do_ej1 & do_ej2 && in_tri(mig->rbfv[0],
-						mig->rbfv[1], tv, ivec)) {
-				miga[0] = mig;
-				miga[1] = ej1;
-				miga[2] = ej2;
-				return(1);
+	if (!get_triangles(tv, mig))		/* do triangles either side? */
+		return(0);
+	for (i = 2; i--; ) {			/* identify edges to check */
+		MIGRATION	*ej;
+		sej[i] = dej[i] = NULL;
+		if (tv[i] == NULL)
+			continue;
+		for (ej = tv[i]->ejl; ej != NULL; ej = nextedge(tv[i],ej)) {
+			RBFNODE	*rbfop = opp_rbf(tv[i],ej);
+			if (rbfop == mig->rbfv[0]) {
+				if (check_edge(emap, nedges, ej, 0))
+					sej[i] = ej;
+			} else if (rbfop == mig->rbfv[1]) {
+				if (check_edge(emap, nedges, ej, 0))
+					dej[i] = ej;
 			}
+		}
+	}
+	for (i = 2; i--; ) {			/* check triangles just once */
+		if (sej[i] != NULL && in_mesh(miga, emap, nedges, ivec, sej[i]))
+			return(1);
+		if (dej[i] != NULL && in_mesh(miga, emap, nedges, ivec, dej[i]))
+			return(1);
+		if ((sej[i] == NULL) | (dej[i] == NULL))
+			continue;
+		if (in_tri(mig->rbfv[0], mig->rbfv[1], tv[i], ivec)) {
+			miga[0] = mig;
+			miga[1] = sej[i];
+			miga[2] = dej[i];
+			return(1);
 		}
 	}
 	return(0);				/* not near this edge */
@@ -231,9 +240,14 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 			exit(1);
 		}
 						/* identify intersection  */
-		if (!in_mesh(miga, emap, nedges, invec, mig_list))
+		if (!in_mesh(miga, emap, nedges, invec, mig_list)) {
+#ifdef DEBUG
+			fprintf(stderr,
+			"Incident angle (%.1f,%.1f) deg. outside mesh\n",
+					get_theta180(invec), get_phi360(invec));
+#endif
 			sym = -1;		/* outside mesh */
-		else if (miga[1] != NULL &&
+		} else if (miga[1] != NULL &&
 				(miga[2] == NULL || !order_triangle(miga))) {
 #ifdef DEBUG
 			fputs("Munged triangle in get_interp()\n", stderr);
