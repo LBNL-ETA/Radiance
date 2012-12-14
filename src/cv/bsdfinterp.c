@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.9 2012/12/14 22:41:44 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.10 2012/12/14 23:16:43 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -202,28 +202,27 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 {
 	miga[0] = miga[1] = miga[2] = NULL;
 	if (single_plane_incident) {		/* isotropic BSDF? */
-		RBFNODE	*rbf;			/* find edge we're on */
-		for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
-			if (input_orient*rbf->invec[2] < input_orient*invec[2])
-				break;
-			if (rbf->next != NULL &&
-					input_orient*rbf->next->invec[2] <
+	    RBFNODE	*rbf;			/* find edge we're on */
+	    for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
+		if (input_orient*rbf->invec[2] < input_orient*invec[2])
+			break;
+		if (rbf->next != NULL && input_orient*rbf->next->invec[2] <
 							input_orient*invec[2]) {
-				for (miga[0] = rbf->ejl; miga[0] != NULL;
-						miga[0] = nextedge(rbf,miga[0]))
-					if (opp_rbf(rbf,miga[0]) == rbf->next) {
-						double	nf = 1.-rbf->invec[2]*rbf->invec[2];
-						if (nf > FTINY) {
-							nf = sqrt((1.-invec[2]*invec[2])/nf);
-							invec[0] = nf*rbf->invec[0];
-							invec[1] = nf*rbf->invec[1];
-						}
-						return(0);
-					}
-				break;
+		    for (miga[0] = rbf->ejl; miga[0] != NULL;
+					miga[0] = nextedge(rbf,miga[0]))
+			if (opp_rbf(rbf,miga[0]) == rbf->next) {
+				double	nf = 1. - rbf->invec[2]*rbf->invec[2];
+				if (nf > FTINY) {	/* rotate to match */
+					nf = sqrt((1.-invec[2]*invec[2])/nf);
+					invec[0] = nf*rbf->invec[0];
+					invec[1] = nf*rbf->invec[1];
+				}
+				return(0);
 			}
+		    break;
 		}
-		return(-1);			/* outside range! */
+	    }
+	    return(-1);				/* outside range! */
 	}
 	{					/* else use triangle mesh */
 		int		sym = use_symmetry(invec);
