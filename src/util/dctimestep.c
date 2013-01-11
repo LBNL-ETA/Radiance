@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.24 2013/01/11 05:07:47 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.25 2013/01/11 17:21:39 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -107,8 +107,8 @@ getDTfromHeader(FILE *fp)
 static CMATRIX *
 cm_load(const char *fname, int nrows, int ncols, int dtype)
 {
-	CMATRIX	*cm;
 	FILE	*fp = stdin;
+	CMATRIX	*cm;
 
 	if (ncols <= 0)
 		error(USER, "Non-positive number of columns");
@@ -118,6 +118,9 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		sprintf(errmsg, "cannot open file '%s'", fname);
 		error(SYSTEM, errmsg);
 	}
+#ifdef getc_unlocked
+	flockfile(fp);
+#endif
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);
 	if (dtype == DTfromHeader)
@@ -158,7 +161,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		cm = cm_alloc(guessrows, ncols);
 	} else
 		cm = cm_alloc(nrows, ncols);
-	if (cm == NULL)
+	if (cm == NULL)					/* XXX never happens */
 		return(NULL);
 	if (dtype == DTascii) {				/* read text file */
 		int	maxrow = (nrows > 0 ? nrows : 32000);
@@ -233,7 +236,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 				cvp += 3;
 			}
 		}
-		if (getc(fp) != EOF) {
+		if (fgetc(fp) != EOF) {
 				sprintf(errmsg,
 				"unexpected data at end of binary file %s",
 						fname);
@@ -242,10 +245,13 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 	}
 	if (fp != stdin)
 		fclose(fp);
+#ifdef getc_unlocked
+	else
+		funlockfile(fp);
+#endif
 	return(cm);
 EOFerror:
-	sprintf(errmsg, "unexpected EOF reading %s",
-			fname);
+	sprintf(errmsg, "unexpected EOF reading %s", fname);
 	error(USER, errmsg);
 not_handled:
 	error(INTERNAL, "unhandled data size or length in cm_load()");
@@ -587,6 +593,7 @@ hasNumberFormat(const char *s)
 int
 main(int argc, char *argv[])
 {
+	int		skyfmt = DTascii;
 	int		nsteps = 1;
 	char		*ofspec = NULL;
 	FILE		*ofp = stdout;
@@ -596,8 +603,8 @@ main(int argc, char *argv[])
 
 	progname = argv[0];
 					/* get options */
-	for (a = 1; a < argc-1 && argv[a][0] == '-'; a++)
-		switch (argv[0][1]) {
+	for (a = 1; a < argc && argv[a][0] == '-'; a++)
+		switch (argv[a][1]) {
 		case 'n':
 			nsteps = atoi(argv[++a]);
 			if (nsteps <= 0)
@@ -605,6 +612,21 @@ main(int argc, char *argv[])
 			break;
 		case 'o':
 			ofspec = argv[++a];
+			break;
+		case 'i':
+			switch (argv[a][2]) {
+			case 'f':
+				skyfmt = DTfloat;
+				break;
+			case 'd':
+				skyfmt = DTdouble;
+				break;
+			case 'a':
+				skyfmt = DTascii;
+				break;
+			default:
+				goto userr;
+			}
 			break;
 		default:
 			goto userr;
@@ -616,7 +638,7 @@ main(int argc, char *argv[])
 		CMATRIX	*smtx, *Dmat, *Tmat, *imtx;
 		COLOR	tLamb;
 						/* get sky vector/matrix */
-		smtx = cm_load(argv[a+3], 0, nsteps, DTascii);
+		smtx = cm_load(argv[a+3], 0, nsteps, skyfmt);
 						/* load BSDF */
 		Tmat = cm_loadBSDF(argv[a+1], tLamb);
 						/* load Daylight matrix */
@@ -633,7 +655,7 @@ main(int argc, char *argv[])
 		}
 		cm_free(imtx);
 	} else {				/* sky vector/matrix only */
-		cmtx = cm_load(argv[a+1], 0, nsteps, DTascii);
+		cmtx = cm_load(argv[a+1], 0, nsteps, skyfmt);
 	}
 						/* prepare output stream */
 	if ((ofspec != NULL) & (nsteps == 1) && hasNumberFormat(ofspec)) {
@@ -721,9 +743,9 @@ main(int argc, char *argv[])
 	cm_free(cmtx);
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec] DCspec [skyf]\n",
+	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d}] DCspec [skyf]\n",
 				progname);
-	fprintf(stderr, "   or: %s [-n nsteps][-o ospec] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
+	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
 				progname);
 	return(1);
 }
