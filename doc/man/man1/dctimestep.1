@@ -1,20 +1,30 @@
-.\" RCSid $Id: dctimestep.1,v 1.3 2012/06/14 22:42:21 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.4 2013/01/11 05:07:47 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
-dctimestep - compute annual simulation time-step via matrix multiplication
+dctimestep - compute annual simulation time-step(s) via matrix multiplication
 .SH SYNOPSIS
 .B dctimestep
+[
+.B "\-n nsteps"
+][
+.B "\-o ospec"
+]
 .B DCspec
 [
-.B skyvec
+.B skyf
 ]
 .br
 .B dctimestep
+[
+.B "\-n nsteps"
+][
+.B "\-o ospec"
+]
 .B Vspec
 .B Tbsdf.xml
 .B Dmat.dat
 [
-.B skyvec
+.B skyf
 ]
 .SH DESCRIPTION
 .I Dctimestep
@@ -22,9 +32,9 @@ has two invocation forms.
 In the first form,
 .I dctimestep
 is given a daylight coefficient specification and an optional sky
-vector, which may be read from the standard input if unspecified.
-The daylight coefficients are multiplied against this vector and the results
-are written to the standard output.
+vector or matrix, which may be read from the standard input if unspecified.
+The daylight coefficients are multiplied against these sky values
+and the results are written to the standard output.
 This may be a list of color values or a combined Radiance image,
 as explained below.
 .PP
@@ -46,7 +56,7 @@ This is usually computed using
 with
 .I rcontrib
 in a separate run for each window or skylight orientation.
-The final input is the sky contribution vector,
+The final input is the sky contribution vector or matrix,
 usually computed by
 .I genskyvec(1),
 which may be passed on the standard input.
@@ -68,6 +78,27 @@ interpreted as a list of
 .I Radiance
 component pictures, which will be summed according to the computed
 vector.
+.PP
+The
+.I \-n
+option may be used to compute multiple time steps in a
+single invocation.
+The sky input file must contain the number of
+columns specified in each sky patch row, whether it is read
+from the standard input or from an ASCII file.
+The columns do not need to be given on the same
+line, so long as the number of values totals 3*Nsteps*Npatches.
+Input starts from the first patch at the first time step, then the
+first patch at the second time step, and so on.
+.PP
+The
+.I \-o
+option may be used to specify a file or a set of output files
+to use rather than the standard output.
+If the given specification contains a '%d' format string, this
+will be replaced by the time step index, starting from 1.
+In this way, multiple output pictures may be produced,
+or separate results vector (one per time step).
 .SH EXAMPLES
 To compute workplane illuminances at 3:30pm on Feb 10th:
 .IP "" .2i

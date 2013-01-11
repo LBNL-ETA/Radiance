@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.23 2012/11/02 00:26:55 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.24 2013/01/11 05:07:47 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -252,6 +252,28 @@ not_handled:
 	return(NULL);	/* gratis return */
 }
 
+/* Extract a column vector from a matrix */
+static CMATRIX *
+cm_column(const CMATRIX *cm, int c)
+{
+	CMATRIX	*cvr;
+	int	dr;
+
+	if ((c < 0) | (c >= cm->ncols))
+		return(NULL);
+	cvr = cm_alloc(cm->nrows, 1);
+	if (cvr == NULL)
+		return(NULL);
+	for (dr = 0; dr < cm->nrows; dr++) {
+		const COLORV	*sp = cm_lval(cm,dr,c);
+		COLORV		*dp = cv_lval(cvr,dr);
+		dp[0] = sp[0];
+		dp[1] = sp[1];
+		dp[2] = sp[2];
+	}
+	return(cvr);
+}
+
 /* Scale a matrix by a single value */
 static CMATRIX *
 cm_scale(const CMATRIX *cm1, const COLOR sca)
@@ -459,14 +481,14 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	return(Tmat);
 }
 
-/* Sum together a set of images and write result to stdout */
+/* Sum together a set of images and write result to fout */
 static int
 sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 {
 	int	myDT = DTfromHeader;
-	CMATRIX	*pmat;
-	COLOR	*scanline;
-	int	myXR, myYR;
+	COLOR	*scanline = NULL;
+	CMATRIX	*pmat = NULL;
+	int	myXR=0, myYR=0;
 	int	i, y;
 
 	if (cv->ncols != 1)
@@ -541,6 +563,9 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 static int
 hasNumberFormat(const char *s)
 {
+	if (s == NULL)
+		return(0);
+
 	while (*s) {
 		while (*s != '%')
 			if (!*s++)
@@ -562,55 +587,143 @@ hasNumberFormat(const char *s)
 int
 main(int argc, char *argv[])
 {
-	CMATRIX			*cvec;		/* component vector result */
+	int		nsteps = 1;
+	char		*ofspec = NULL;
+	FILE		*ofp = stdout;
+	CMATRIX		*cmtx;		/* component vector/matrix result */
+	char		fnbuf[256];
+	int		a, i;
 
 	progname = argv[0];
+					/* get options */
+	for (a = 1; a < argc-1 && argv[a][0] == '-'; a++)
+		switch (argv[0][1]) {
+		case 'n':
+			nsteps = atoi(argv[++a]);
+			if (nsteps <= 0)
+				goto userr;
+			break;
+		case 'o':
+			ofspec = argv[++a];
+			break;
+		default:
+			goto userr;
+		}
+	if ((argc-a < 1) | (argc-a > 4))
+		goto userr;
 
-	if ((argc < 2) | (argc > 5)) {
-		fprintf(stderr, "Usage: %s DCspec [tregvec]\n", progname);
-		fprintf(stderr, "   or: %s Vspec Tbsdf.xml Dmat.dat [tregvec]\n",
-					progname);
-		return(1);
-	}
-
-	if (argc > 3) {				/* VTDs expression */
-		CMATRIX	*svec, *Dmat, *Tmat, *ivec;
+	if (argc-a > 2) {			/* VTDs expression */
+		CMATRIX	*smtx, *Dmat, *Tmat, *imtx;
 		COLOR	tLamb;
-						/* get sky vector */
-		svec = cm_load(argv[4], 0, 1, DTascii);
+						/* get sky vector/matrix */
+		smtx = cm_load(argv[a+3], 0, nsteps, DTascii);
 						/* load BSDF */
-		Tmat = cm_loadBSDF(argv[2], tLamb);
+		Tmat = cm_loadBSDF(argv[a+1], tLamb);
 						/* load Daylight matrix */
-		Dmat = cm_load(argv[3], Tmat==NULL ? 0 : Tmat->ncols,
-					svec->nrows, DTfromHeader);
+		Dmat = cm_load(argv[a+2], Tmat==NULL ? 0 : Tmat->ncols,
+					smtx->nrows, DTfromHeader);
 						/* multiply vector through */
-		ivec = cm_multiply(Dmat, svec);
-		cm_free(Dmat); cm_free(svec);
+		imtx = cm_multiply(Dmat, smtx);
+		cm_free(Dmat); cm_free(smtx);
 		if (Tmat == NULL) {		/* diffuse only */
-			cvec = cm_scale(ivec, tLamb);
+			cmtx = cm_scale(imtx, tLamb);
 		} else {			/* else apply BTDF matrix */
-			cvec = cm_multiply(Tmat, ivec);
+			cmtx = cm_multiply(Tmat, imtx);
 			cm_free(Tmat); 
 		}
-		cm_free(ivec);
-	} else {				/* else just use sky vector */
-		cvec = cm_load(argv[2], 0, 1, DTascii);
+		cm_free(imtx);
+	} else {				/* sky vector/matrix only */
+		cmtx = cm_load(argv[a+1], 0, nsteps, DTascii);
 	}
-
-	if (hasNumberFormat(argv[1])) {		/* generating image */
-		SET_FILE_BINARY(stdout);
-		newheader("RADIANCE", stdout);
-		printargs(argc, argv, stdout);
-		fputnow(stdout);
-		if (!sum_images(argv[1], cvec, stdout))
+						/* prepare output stream */
+	if ((ofspec != NULL) & (nsteps == 1) && hasNumberFormat(ofspec)) {
+		sprintf(fnbuf, ofspec, 1);
+		ofspec = fnbuf;
+	}
+	if (ofspec != NULL && !hasNumberFormat(ofspec)) {
+		if ((ofp = fopen(ofspec, "w")) == NULL) {
+			fprintf(stderr, "%s: cannot open '%s' for output\n",
+					progname, ofspec);
 			return(1);
-	} else {				/* generating vector */
-		CMATRIX	*Vmat = cm_load(argv[1], 0, cvec->nrows, DTfromHeader);
-		CMATRIX	*rvec = cm_multiply(Vmat, cvec);
-		cm_free(Vmat);
-		cm_print(rvec, stdout);
-		cm_free(rvec);
+		}
+		ofspec = NULL;			/* only need to open once */
 	}
-	cm_free(cvec);				/* final clean-up */
+	if (hasNumberFormat(argv[a])) {		/* generating image(s) */
+		if (ofspec == NULL) {
+			SET_FILE_BINARY(ofp);
+			newheader("RADIANCE", ofp);
+			printargs(argc, argv, ofp);
+			fputnow(ofp);
+		}
+		if (nsteps > 1)			/* multiple output frames? */
+			for (i = 0; i < nsteps; i++) {
+				CMATRIX	*cvec = cm_column(cmtx, i);
+				if (ofspec != NULL) {
+					sprintf(fnbuf, ofspec, i+1);
+					if ((ofp = fopen(fnbuf, "wb")) == NULL) {
+						fprintf(stderr,
+					"%s: cannot open '%s' for output\n",
+							progname, fnbuf);
+						return(1);
+					}
+					newheader("RADIANCE", ofp);
+					printargs(argc, argv, ofp);
+					fputnow(ofp);
+				}
+				fprintf(ofp, "FRAME=%d\n", i+1);
+				if (!sum_images(argv[a], cvec, ofp))
+					return(1);
+				if (ofspec != NULL) {
+					if (fclose(ofp) == EOF) {
+						fprintf(stderr,
+						"%s: error writing to '%s'\n",
+							progname, fnbuf);
+						return(1);
+					}
+					ofp = stdout;
+				}
+				cm_free(cvec);
+			}
+		else if (!sum_images(argv[a], cmtx, ofp))
+			return(1);
+	} else {				/* generating vector/matrix */
+		CMATRIX	*Vmat = cm_load(argv[a], 0, cmtx->nrows, DTfromHeader);
+		CMATRIX	*rmtx = cm_multiply(Vmat, cmtx);
+		cm_free(Vmat);
+		if (ofspec != NULL)		/* multiple vector files? */
+			for (i = 0; i < nsteps; i++) {
+				CMATRIX	*rvec = cm_column(rmtx, i);
+				sprintf(fnbuf, ofspec, i+1);
+				if ((ofp = fopen(fnbuf, "w")) == NULL) {
+					fprintf(stderr,
+					"%s: cannot open '%s' for output\n",
+							progname, fnbuf);
+					return(1);
+				}
+				cm_print(rvec, ofp);
+				if (fclose(ofp) == EOF) {
+					fprintf(stderr,
+						"%s: error writing to '%s'\n",
+							progname, fnbuf);
+					return(1);
+				}
+				ofp = stdout;
+				cm_free(rvec);
+			}
+		else
+			cm_print(rmtx, ofp);
+		cm_free(rmtx);
+	}
+	if (fflush(ofp) == EOF) {		/* final clean-up */
+		fprintf(stderr, "%s: write error on output\n", progname);
+		return(1);
+	}
+	cm_free(cmtx);
 	return(0);
+userr:
+	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec] DCspec [skyf]\n",
+				progname);
+	fprintf(stderr, "   or: %s [-n nsteps][-o ospec] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
+				progname);
+	return(1);
 }
