@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.25 2013/01/11 17:21:39 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.26 2013/01/11 17:54:17 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -122,7 +122,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 	flockfile(fp);
 #endif
 	if (dtype != DTascii)
-		SET_FILE_BINARY(fp);
+		SET_FILE_BINARY(fp);		/* doesn't really work */
 	if (dtype == DTfromHeader)
 		dtype = getDTfromHeader(fp);
 	switch (dtype) {
@@ -266,7 +266,7 @@ cm_column(const CMATRIX *cm, int c)
 	int	dr;
 
 	if ((c < 0) | (c >= cm->ncols))
-		return(NULL);
+		error(INTERNAL, "column requested outside matrix");
 	cvr = cm_alloc(cm->nrows, 1);
 	if (cvr == NULL)
 		return(NULL);
