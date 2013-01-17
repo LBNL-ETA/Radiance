@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcos.c,v 3.5 2011/02/11 00:35:14 greg Exp $";
+static const char	RCSid[] = "$Id: tcos.c,v 3.6 2013/01/17 22:48:21 greg Exp $";
 #endif
 /*
  * Table-based cosine approximation.
@@ -19,7 +19,7 @@ static const char	RCSid[] = "$Id: tcos.c,v 3.5 2011/02/11 00:35:14 greg Exp $";
 #include "rtmath.h"
 
 #ifndef NCOSENTRY
-#define NCOSENTRY	256
+#define NCOSENTRY	1024
 #endif
 
 
