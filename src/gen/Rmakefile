@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.29 2012/10/13 20:15:43 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.30 2013/01/18 01:12:59 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -13,7 +13,7 @@ INSTDIR = /usr/local/bin
 
 LIBDIR = /usr/local/lib/ray
 
-PROGS = genbox gensky xform genblinds genrev genworm gendaylit \
+PROGS = genbox gensky xform genblinds genrev genworm gendaylit gendaymtx \
 		gensurf genprism replmarks mkillum mksource genclock
 
 LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
@@ -46,8 +46,8 @@ gensky:	gensky.o sun.o
 gendaylit:	gendaylit.o sun.o
 	$(CC) $(CFLAGS) -o gendaylit gendaylit.o sun.o -lrtrad $(MLIB)
 
-# gendaylit:	H32_gendaylit.o
-#	$(CC) $(CFLAGS) -o gendaylit H32_gendaylit.o $(MLIB)
+gendaymtx:	gendaymtx.o sun.o
+	$(CC) $(CFLAGS) -o gendaymtx gendaymtx.o sun.o -lrtrad $(MLIB)
 
 genblinds:	genblinds.o
 	$(CC) $(CFLAGS) -o genblinds genblinds.o $(MLIB)
