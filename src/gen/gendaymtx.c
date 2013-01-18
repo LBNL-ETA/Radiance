@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.1 2013/01/18 01:12:59 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.2 2013/01/18 19:56:03 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -358,7 +358,7 @@ main(int argc, char *argv[])
 					progname);
 	}
 					/* read weather tape header */
-	if (scanf("place %[^\n]\n", buf) != 1)
+	if (scanf("place %[^\r\n] ", buf) != 1)
 		goto fmterr;
 	if (scanf("latitude %lf\n", &s_latitude) != 1)
 		goto fmterr;
@@ -394,6 +394,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: %d sky patches per time step\n",
 				progname, nskypatch);
 	}
+					/* convert quantities to radians */
+	s_latitude = DegToRad(s_latitude);
+	s_longitude = DegToRad(s_longitude);
+	s_meridian = DegToRad(s_meridian);
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
 		double		sda, sta;
@@ -412,7 +416,7 @@ main(int argc, char *argv[])
 		sda = sdec(julian_date);
 		sta = stadj(julian_date);
 		altitude = salt(sda, hr+sta);
-		azimuth = sazi(sda, hr+sta);
+		azimuth = sazi(sda, hr+sta) + PI;
 					/* convert measured values */
 		if (dir_is_horiz && altitude > 0.)
 			dir /= sin(altitude);
@@ -456,7 +460,8 @@ main(int argc, char *argv[])
 						mtx_data[mtx_offset+2]);
 				mtx_offset += 3*nskypatch;
 			}
-			fputc('\n', stdout);
+			if (ntsteps > 1)
+				fputc('\n', stdout);
 			break;
 		case 'f':
 			for (j = 0; j < ntsteps; j++) {
@@ -508,11 +513,6 @@ ComputeSky(float *parr)
 	double norm_diff_illum;		/* Normalized diffuse illuimnance */
 	double zlumin;			/* Zenith luminance */
 	int i;
-
-	if (bright(skycolor) <= 1e-4) {			/* 0 sky component? */
-		memset(parr, 0, sizeof(float)*3*nskypatch);
-		return;
-	}
 	
 	/* Calculate atmospheric precipitable water content */
 	apwc = CalcPrecipWater(dew_point);
@@ -553,6 +553,10 @@ ComputeSky(float *parr)
 		index = CalcSkyParamFromIllum();
 	}
 
+	if (bright(skycolor) <= 1e-4) {			/* 0 sky component? */
+		memset(parr, 0, sizeof(float)*3*nskypatch);
+		return;
+	}
 	/* Compute ground radiance (include solar contribution if any) */
 	parr[0] = diff_illum * (1./PI/WHTEFFICACY);
 	if (altitude > 0)
@@ -620,9 +624,14 @@ AddDirect(float *parr)
 	for (i = 4; i--; )
 		wtot += wta[i] = 1./(1.002 - near_dprod[i]);
 					/* add to nearest patch radiances */
-	for (i = 4; i--; )
-		parr[near_patch[i]] += wta[i] * dir_illum /
-					(wtot * rh_dom[near_patch[i]]);
+	for (i = 4; i--; ) {
+		float	*pdest = parr + 3*near_patch[i];
+		float	val_add = wta[i] * dir_illum /
+				(WHTEFFICACY * wtot * rh_dom[near_patch[i]]);
+		*pdest++ += val_add;
+		*pdest++ += val_add;
+		*pdest++ += val_add;
+	}
 }
 
 /* Initialize Reinhart sky patch positions (GW) */
