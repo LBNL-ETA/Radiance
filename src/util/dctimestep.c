@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.26 2013/01/11 17:54:17 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.27 2013/01/19 22:30:55 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -305,6 +305,7 @@ cm_scale(const CMATRIX *cm1, const COLOR sca)
 static CMATRIX *
 cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 {
+	char	*rowcheck=NULL, *colcheck=NULL;
 	CMATRIX	*cmr;
 	int	dr, dc, i;
 
@@ -313,10 +314,32 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 	cmr = cm_alloc(cm1->nrows, cm2->ncols);
 	if (cmr == NULL)
 		return(NULL);
+				/* optimization: check for zero rows & cols */
+	if (((cm1->nrows > 5) | (cm2->ncols > 5)) & (cm1->ncols > 5)) {
+		static const COLOR	czero;
+		rowcheck = (char *)calloc(cmr->nrows, 1);
+		for (dr = cm1->nrows*(rowcheck != NULL); dr--; )
+		    for (dc = cm1->ncols; dc--; )
+			if (memcmp(cm_lval(cm1,dr,dc), czero, sizeof(COLOR))) {
+				rowcheck[dr] = 1;
+				break;
+			}
+		colcheck = (char *)calloc(cmr->ncols, 1);
+		for (dc = cm2->ncols*(colcheck != NULL); dc--; )
+		    for (dr = cm2->nrows; dr--; )
+			if (memcmp(cm_lval(cm2,dr,dc), czero, sizeof(COLOR))) {
+				colcheck[dc] = 1;
+				break;
+			}
+	}
 	for (dr = 0; dr < cmr->nrows; dr++)
 	    for (dc = 0; dc < cmr->ncols; dc++) {
 		COLORV	*dp = cm_lval(cmr,dr,dc);
 		dp[0] = dp[1] = dp[2] = 0;
+		if (rowcheck != NULL && !rowcheck[dr])
+			continue;
+		if (colcheck != NULL && !colcheck[dc])
+			continue;
 		for (i = 0; i < cm1->ncols; i++) {
 		    const COLORV	*cp1 = cm_lval(cm1,dr,i);
 		    const COLORV	*cp2 = cm_lval(cm2,i,dc);
@@ -325,6 +348,8 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 		    dp[2] += cp1[2] * cp2[2];
 		}
 	    }
+	if (rowcheck != NULL) free(rowcheck);
+	if (colcheck != NULL) free(colcheck);
 	return(cmr);
 }
 
