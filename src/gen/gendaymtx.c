@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.2 2013/01/18 19:56:03 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.3 2013/01/19 20:38:36 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -246,6 +246,10 @@ static const ModelCoeff DirectLumEff[8] =
 	{ 101.18,  1.58, -1.10,  -8.29 }
 };
 
+#ifndef NSUNPATCH
+#define	NSUNPATCH	4		/* # patches to spread sun into */
+#endif
+
 extern int jdate(int month, int day);
 extern double stadj(int  jd);
 extern double sdec(int  jd);
@@ -455,7 +459,7 @@ main(int argc, char *argv[])
 		switch (outfmt) {
 		case 'a':
 			for (j = 0; j < ntsteps; j++) {
-				printf("%.3e %.3e %.3e\n", mtx_data[mtx_offset],
+				printf("%.3g %.3g %.3g\n", mtx_data[mtx_offset],
 						mtx_data[mtx_offset+1],
 						mtx_data[mtx_offset+2]);
 				mtx_offset += 3*nskypatch;
@@ -558,10 +562,10 @@ ComputeSky(float *parr)
 		return;
 	}
 	/* Compute ground radiance (include solar contribution if any) */
-	parr[0] = diff_illum * (1./PI/WHTEFFICACY);
+	parr[0] = diff_illum;
 	if (altitude > 0)
-		parr[0] += dir_illum * sin(altitude) * (1./PI/WHTEFFICACY);
-	parr[2] = parr[1] = parr[0];
+		parr[0] += dir_illum * sin(altitude);
+	parr[2] = parr[1] = parr[0] *= grefl*(1./PI/WHTEFFICACY);
 
 	/* Calculate Perez sky model parameters */
 	CalcPerezParam(sun_zenith, sky_clearness, sky_brightness, index);
@@ -593,15 +597,15 @@ void
 AddDirect(float *parr)
 {
 	FVECT	svec;
-	double	near_dprod[4];
-	int	near_patch[4];
-	double	wta[4], wtot;
+	double	near_dprod[NSUNPATCH];
+	int	near_patch[NSUNPATCH];
+	double	wta[NSUNPATCH], wtot;
 	int	i, j, p;
 
 	if (!do_sun || dir_illum < 1e-4)
 		return;
-					/* identify 4 closest patches */
-	for (i = 4; i--; )
+					/* identify NSUNPATCH closest patches */
+	for (i = NSUNPATCH; i--; )
 		near_dprod[i] = -1.;
 	vector(svec, altitude, azimuth);
 	for (p = 1; p < nskypatch; p++) {
@@ -609,9 +613,9 @@ AddDirect(float *parr)
 		double	dprod;
 		rh_vector(pvec, p);
 		dprod = DOT(pvec, svec);
-		for (i = 0; i < 4; i++)
+		for (i = 0; i < NSUNPATCH; i++)
 			if (dprod > near_dprod[i]) {
-				for (j = 4; --j > i; ) {
+				for (j = NSUNPATCH; --j > i; ) {
 					near_dprod[j] = near_dprod[j-1];
 					near_patch[j] = near_patch[j-1];
 				}
@@ -621,10 +625,10 @@ AddDirect(float *parr)
 			}
 	}
 	wtot = 0;			/* weight by proximity */
-	for (i = 4; i--; )
+	for (i = NSUNPATCH; i--; )
 		wtot += wta[i] = 1./(1.002 - near_dprod[i]);
 					/* add to nearest patch radiances */
-	for (i = 4; i--; ) {
+	for (i = NSUNPATCH; i--; ) {
 		float	*pdest = parr + 3*near_patch[i];
 		float	val_add = wta[i] * dir_illum /
 				(WHTEFFICACY * wtot * rh_dom[near_patch[i]]);
@@ -665,7 +669,8 @@ rh_init(void)
 	for (i = 0; i < NROW*rhsubdiv; i++) {
 		const float	ralt = alpha*(i + .5);
 		const int	ninrow = tnaz[i/rhsubdiv]*rhsubdiv;
-		const float	dom = (sin(alpha*(i+1)) - sin(alpha*i))/ninrow;
+		const float	dom = 2.*PI*(sin(alpha*(i+1)) - sin(alpha*i)) /
+						(double)ninrow;
 		for (j = 0; j < ninrow; j++) {
 			rh_palt[p] = ralt;
 			rh_pazi[p] = 2.*PI * j / (double)ninrow;
