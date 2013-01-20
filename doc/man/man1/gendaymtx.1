@@ -1,0 +1,98 @@
+.\" RCSid $Id: gendaymtx.1,v 1.1 2013/01/20 02:07:16 greg Exp $
+.TH GENDAYMTX 1 01/19/13 RADIANCE
+.SH NAME
+gendaymtx - generate an annual Perez sky matrix from a weather tape
+.SH SYNOPSIS
+.B gendaymtx
+[
+.B "\-v"
+][
+.B "\-d|\-s"
+][
+.B "\-m N"
+][
+.B "\-g r g b"
+][
+.B "\-c r g b"
+][
+.B "-o{f|d}"
+]
+[
+.B "tape.wea"
+]
+.SH DESCRIPTION
+.I Gendaymtx
+takes a weather tape as input and produces a matrix of sky patch
+values using the Perez all-weather model.
+The weather tape is assumed to be in the simple ASCII format understood
+by DAYSIM, which contains a short header with the site parameters followed
+by the month, day, standard time, direct normal and diffuse horizontal
+irradiance values, one time step per line.
+Each time step line is used to compute a column in the output matrix,
+where rows correspond to sky patch positions, starting with 0 for
+the ground and continuing to 145 for the zenith using the default
+.I "\-m 1"
+parameter setting.
+.PP
+Increasing the
+.I \-m
+parameter, typically by factors of two, yields a higher resolution
+sky using the Reinhart patch subdivision.
+For example, setting
+.I "\-m 4"
+yields a sky with 2305 patches plus one patch for the ground.
+Each matrix entry is in fact three values, corresponding to
+red green and blue radiance channels (watts/sr/meter^2).
+Thus, an hourly weather tape for an entire year would
+yield 8760x3 (26280) values per output line (row).
+.PP
+The
+.I \-c
+option may be used to specify a color for the sky.
+The gray value should equal 1 for proper energy balance
+The default sky color is
+.I "\-c 0.960 1.004 1.118".
+Similarly, the
+.I \-g
+option may be used to specify a ground color.
+The default value is
+.I "\-g 0.2 0.2 0.2"
+corresponding to a 20% gray.
+.PP
+The
+.I \-d
+option may be used to produce a sun-only matrix, with no sky contributions.
+Alternatively, the
+.I \-s
+option may be used to exclude any direct solar component from the output.
+.PP
+The
+.I \-of
+or
+.I \-od
+option may be used to specify binary float or double output, respectively.
+This is much faster to write and to read, and is therefore preferred on
+systems that support it.
+(MS Windows is not one of them.)\0
+Finally, the
+.I \-v
+option will enable verbose reporting, which is mostly useful for
+finding out how many time steps are actually in the weather tape.
+.SH EXAMPLES
+Produce an uncolored Tregenza sky matrix without solar direct:
+.IP "" .2i
+gendaymtx -m 1 -c 1 1 1 -s Detroit.wea > Detroit.mtx
+.PP
+Produce an hourly, annual Reinhart sky matrix
+with 2306 patches including solar contributions
+and send float output to
+.I dctimestep(1)
+to compute a sensor value matrix:
+.IP "" .2i
+gendaymtx -m 4 -of VancouverBC.wea | dctimestep -if -n 8760 DCoef.mtx > res.dat
+.SH AUTHORS
+Ian Ashdown wrote most of the code,
+based on Jean-Jacques Delaunay's original gendaylit(1) implementation.
+Greg Ward wrote the final parameter parsing and weather tape conversion.
+.SH "SEE ALSO"
+dctimestep(1), genBSDF(1), gendaylit(1), genskyvec(1), rcontrib(1)

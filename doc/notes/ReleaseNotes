@@ -1862,3 +1862,7 @@ pointing this out.
 Added options to dctimestep to allow multiple time steps (-n)
 and multiple output pictures or sensor files (-o).  Also added -i
 option to specify float (-if) or double (-id) input for sky matrix.
+
+Created gendaymtx program to compute annual sky patch matrix based
+on Ian Ashdown's implementation of Perez all-weather sky model.
+Output can be sent directly to dctimestep in ASCII or binary stream.

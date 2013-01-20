@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.5 2013/01/11 17:21:39 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.6 2013/01/20 02:07:16 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -60,20 +60,21 @@ This is usually computed using
 with
 .I rcontrib
 in a separate run for each window or skylight orientation.
-The final input is the sky contribution vector or matrix,
-usually computed by
-.I genskyvec(1),
-which may be passed on the standard input.
-This data is expected to be in ASCII format, whereas the
-View and Daylight matrices
-are more efficiently represented as binary float data if machine
-byte-order is not an issue.
+The last file is the sky contribution vector or matrix,
+typically computed by
+.I genskyvec(1)
+or
+.I gendaymtx(1),
+and may be passed on the standard input.
+This data is assumed by default to be in ASCII format, whereas the
+formats of the View and Daylight matrices
+are detected automatically if given as binary data.
 The
 .I \-if
 or
 .I \-id
 option may be used to specify that sky data is in float or double
-format, instead.
+format, respectively, which is more efficient for large matrices.
 (Note that binary double data may not be read from stdin.)\0
 .PP
 Sent to the standard output of
@@ -97,7 +98,7 @@ option may be used to compute multiple time steps in a
 single invocation.
 The sky input file must contain the number of
 columns specified in each sky patch row, whether it is read
-from the standard input or from an ASCII file.
+from the standard input or from a file.
 The columns do not need to be given on the same
 line, so long as the number of values totals 3*Nsteps*Npatches.
 Input starts from the first patch at the first time step, then the
@@ -110,7 +111,7 @@ to use rather than the standard output.
 If the given specification contains a '%d' format string, this
 will be replaced by the time step index, starting from 1.
 In this way, multiple output pictures may be produced,
-or separate results vector (one per time step).
+or separate result vectors (one per time step).
 .SH EXAMPLES
 To compute workplane illuminances at 3:30pm on Feb 10th:
 .IP "" .2i
@@ -118,7 +119,7 @@ gensky 2 10 15:30 | genskyvec | dctimestep workplaneDC.dmx > Ill_02-10-1530.dat
 .PP
 To compute an image at 10am on the equinox from a set of component images:
 .IP "" .2i
-gensky 3 21 10 | genskyvec | dctimestep viewc%03d.hdr > view_03-21-10.hdr
+gensky 3 21 10 | genskyvec | dctimestep dcomp%03d.hdr > view_03-21-10.hdr
 .PP
 To compute a set of illuminance contributions for Window 1 on
 the Winter solstice at 2pm:
@@ -127,8 +128,22 @@ gensky 12 21 14 | genskyvec | dctimestep IllPts.vmx Blinds20.xml Window1.dmx > I
 .PP
 To compute Window2's contribution to an interior view at 12 noon on the Summer solstice:
 .IP "" .2i
-gensky 6 21 12 | genskyvec | dctimestep view%03d.hdr Blinds30.xml Window2.dmx > view_6-21-12.hdr
+gensky 6 21 12 | genskyvec | dctimestep view%03d.hdr Blinds30.xml
+Window2.dmx > view_6-21-12.hdr
+.PP
+To generate an hourly matrix of sensor value contributions from Skylight3
+using a 3-phase calculation, where output columns are time steps:
+.IP "" .2i
+gendaymtx -of Tampa.wea | dctimestep -if -n 8760 WPpts.vmx
+shade3.xml Skylight3.dmx > wp_win3.dat
+.IP "" .2i
+.PP
+Generate a series of pictures corresponding to timesteps
+in an annual simulation:
+.IP "" .2i
+gendaymtx NYCity.wea | dctimestep -n 8760 -o tstep%04d.hdr dcomp%03d.hdr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-genklemsamp(1), genskyvec(1), mkillum(1), rcontrib(1), rtrace(1), vwrays(1)
+gendaymtx(1), genklemsamp(1), genskyvec(1),
+mkillum(1), rcontrib(1), rtrace(1), vwrays(1)
