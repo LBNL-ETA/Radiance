@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.4 2013/01/20 01:16:15 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.5 2013/01/20 01:16:49 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -494,7 +494,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-d|-s][-m N][-g refl][-c r g b][-o{f|d}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-d|-s][-m N][-g r g b][-c r g b][-o{f|d}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:
