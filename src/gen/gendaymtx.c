@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.3 2013/01/19 20:38:36 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.4 2013/01/20 01:16:15 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -260,17 +260,15 @@ extern double  s_latitude;
 extern double  s_longitude;
 extern double  s_meridian;
 
-double		grefl = 0.2;		/* diffuse ground reflectance */
-
 int		verbose = 0;		/* progress reports to stderr? */
 
 int		outfmt = 'a';		/* output format */
 
 int		rhsubdiv = 1;		/* Reinhart sky subdivisions */
 
-float		skycolor[3] = {.96, 1.004, 1.118};	/* sky coloration */
-
-int		do_sun = 1;		/* output direct solar contribution? */
+COLOR		skycolor = {.96, 1.004, 1.118};	/* sky coloration */
+COLOR		suncolor = {1., 1., 1.};	/* sun color */
+COLOR		grefl = {.2, .2, .2};		/* ground reflectance */
 
 int		nskypatch;		/* number of Reinhart patches */
 float		*rh_palt;		/* sky patch altitudes (radians) */
@@ -309,13 +307,15 @@ main(int argc, char *argv[])
 					/* get options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
-		case 'g':
-			grefl = atof(argv[++i]);
+		case 'g':			/* ground reflectance */
+			grefl[0] = atof(argv[++i]);
+			grefl[1] = atof(argv[++i]);
+			grefl[2] = atof(argv[++i]);
 			break;
-		case 'v':
+		case 'v':			/* verbose progress reports */
 			verbose++;
 			break;
-		case 'o':
+		case 'o':			/* output format */
 			switch (argv[i][2]) {
 			case 'f':
 			case 'd':
@@ -326,20 +326,21 @@ main(int argc, char *argv[])
 				goto userr;
 			}
 			break;
-		case 'm':
+		case 'm':			/* Reinhart subdivisions */
 			rhsubdiv = atoi(argv[++i]);
 			break;
-		case 'c':
+		case 'c':			/* sky color */
 			skycolor[0] = atof(argv[++i]);
 			skycolor[1] = atof(argv[++i]);
 			skycolor[2] = atof(argv[++i]);
 			break;
-		case 'd':
-			do_sun = 1;
+		case 'd':			/* solar (direct) only */
 			skycolor[0] = skycolor[1] = skycolor[2] = 0;
+			if (suncolor[1] <= 1e-4)
+				suncolor[0] = suncolor[1] = suncolor[2] = 1;
 			break;
-		case 's':
-			do_sun = 0;
+		case 's':			/* sky only (no direct) */
+			suncolor[0] = suncolor[1] = suncolor[2] = 0;
 			if (skycolor[1] <= 1e-4)
 				skycolor[0] = skycolor[1] = skycolor[2] = 1;
 			break;
@@ -433,8 +434,7 @@ main(int argc, char *argv[])
 		}
 					/* compute sky patch values */
 		ComputeSky(mtx_data+mtx_offset);
-		if (do_sun)
-			AddDirect(mtx_data+mtx_offset);
+		AddDirect(mtx_data+mtx_offset);
 	}
 					/* check for junk at end */
 	while ((i = fgetc(stdin)) != EOF)
@@ -565,7 +565,8 @@ ComputeSky(float *parr)
 	parr[0] = diff_illum;
 	if (altitude > 0)
 		parr[0] += dir_illum * sin(altitude);
-	parr[2] = parr[1] = parr[0] *= grefl*(1./PI/WHTEFFICACY);
+	parr[2] = parr[1] = parr[0] *= (1./PI/WHTEFFICACY);
+	multcolor(parr, grefl);
 
 	/* Calculate Perez sky model parameters */
 	CalcPerezParam(sun_zenith, sky_clearness, sky_brightness, index);
@@ -602,7 +603,7 @@ AddDirect(float *parr)
 	double	wta[NSUNPATCH], wtot;
 	int	i, j, p;
 
-	if (!do_sun || dir_illum < 1e-4)
+	if (dir_illum <= 1e-4 || bright(suncolor) <= 1e-4)
 		return;
 					/* identify NSUNPATCH closest patches */
 	for (i = NSUNPATCH; i--; )
@@ -632,9 +633,9 @@ AddDirect(float *parr)
 		float	*pdest = parr + 3*near_patch[i];
 		float	val_add = wta[i] * dir_illum /
 				(WHTEFFICACY * wtot * rh_dom[near_patch[i]]);
-		*pdest++ += val_add;
-		*pdest++ += val_add;
-		*pdest++ += val_add;
+		*pdest++ += val_add*suncolor[0];
+		*pdest++ += val_add*suncolor[1];
+		*pdest++ += val_add*suncolor[2];
 	}
 }
 
