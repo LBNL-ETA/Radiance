@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.5 2013/01/20 01:16:49 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.6 2013/01/25 23:17:31 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -521,12 +521,14 @@ ComputeSky(float *parr)
 	/* Calculate atmospheric precipitable water content */
 	apwc = CalcPrecipWater(dew_point);
 
-	/* Limit solar altitude to keep circumsolar off zenith */
-	if (altitude > DegToRad(87.0))
-		altitude = DegToRad(87.0);
-
-	/* Calculate sun zenith angle */
-	sun_zenith = DegToRad(90.0) - altitude;
+	/* Calculate sun zenith angle (don't let it dip below horizon) */
+	/* Also limit minimum angle to keep circumsolar off zenith */
+	if (altitude <= 0.0)
+		sun_zenith = DegToRad(90.0);
+	else if (altitude >= DegToRad(87.0))
+		sun_zenith = DegToRad(3.0);
+	else
+		sun_zenith = DegToRad(90.0) - altitude;
 
 	/* Compute the inputs for the calculation of the sky distribution */
 	
