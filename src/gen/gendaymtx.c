@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.6 2013/01/25 23:17:31 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.7 2013/01/26 00:59:08 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -515,7 +515,6 @@ ComputeSky(float *parr)
 {
 	int index;			/* Category index */
 	double norm_diff_illum;		/* Normalized diffuse illuimnance */
-	double zlumin;			/* Zenith luminance */
 	int i;
 	
 	/* Calculate atmospheric precipitable water content */
@@ -582,15 +581,9 @@ ComputeSky(float *parr)
 	/* Normalization coefficient */
 	norm_diff_illum = diff_illum / norm_diff_illum;
 
-	/* Calculate relative zenith luminance */
-	zlumin = CalcRelLuminance(sun_zenith, 0.0);
-
-	/* Calculate absolute zenith illuminance */
-	zlumin *= norm_diff_illum;
-
 	/* Apply to sky patches to get absolute radiance values */
 	for (i = 1; i < nskypatch; i++) {
-		scalecolor(parr+3*i, zlumin*(1./WHTEFFICACY));
+		scalecolor(parr+3*i, norm_diff_illum*(1./WHTEFFICACY));
 		multcolor(parr+3*i, skycolor);
 	}
 }
@@ -945,9 +938,9 @@ double CalcRelHorzIllum( float *parr )
 	double rh_illum = 0.0;	/* Relative horizontal illuminance */
 
 	for (i = 1; i < nskypatch; i++)
-		rh_illum += parr[3*i+1] * rh_cos(i);
+		rh_illum += parr[3*i+1] * rh_cos(i) * rh_dom[i];
 
-	return rh_illum * (2.0 * PI / (nskypatch-1));
+	return rh_illum;
 }
 
 /* Calculate earth orbit eccentricity correction factor */
