@@ -1,15 +1,19 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.8 2011/10/05 17:33:36 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp $";
 #endif
-/*        Copyright (c) 1994 	*Fraunhofer Institut for Solar Energy Systems
- *        			Oltmannstr 5, D-79100 Freiburg, Germany
+/*      Copyright (c) 1994,2006 *Fraunhofer Institut for Solar Energy Systems
+ *        			Heidenhofstr. 2, D-79110 Freiburg, Germany
  *      			*Agence de l'Environnement et de la Maitrise de l'Energie
  *      			Centre de Valbonne, 500 route des Lucioles, 06565 Sophia Antipolis Cedex, France
  * 				*BOUYGUES 
  *				1 Avenue Eugene Freyssinet, Saint-Quentin-Yvelines, France
+*
+*      24.1.2006                some adjustments for cygwin compilation, inclusion of RADIANCE3.7 libraries, by J. Wienold
+*		2011/10/08	chr@riap.de:
+*						- integrated coeff_perez.dat and defangles.dat
+*						- avoid some segfaults caused by out of range parameters and
+*						- numerically dangerous range checks 
 */
-
-
 
 /*
  *  gendaylit.c 	program to generate the angular distribution of the daylight.
@@ -21,32 +25,39 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.8 2011/10/05 17:33:36 greg Exp
 #include  <string.h>
 #include  <math.h>
 #include  <stdlib.h>
-#include  <ctype.h>
 
-#include  "rtmath.h"
-#include  "rtio.h"
 #include  "color.h"
 #include  "paths.h"
 
-extern int jdate(int month, int day);
-extern double stadj(int  jd);
-extern double sdec(int  jd);
-extern double salt(double sd, double st);
-extern double sazi(double sd, double st);
+#define  DOT(v1,v2)	(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
 
 double  normsc();
 
-#define	DATFILE		"coeff_perez.dat"
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp $";*/
+
+float coeff_perez[] = {
+	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,0.9738,0.2809,0.0356,-0.1246,-0.5718,0.9938,
+	-1.2219,-0.7730,1.4148,1.1016,-0.2054,0.0367,-3.9128,0.9156,6.9750,0.1774,6.4477,-0.1239,-1.5798,-0.5081,-1.7812,0.1080,0.2624,0.0672,-0.2190,-0.4285,
+	-1.1000,-0.2515,0.8952,0.0156,0.2782,-0.1812,-4.5000,1.1766,24.7219,-13.0812,-37.7000,34.8438,-5.0000,1.5218,3.9229,-2.6204,-0.0156,0.1597,0.4199,-0.5562,
+	-0.5484,-0.6654,-0.2672,0.7117,0.7234,-0.6219,-5.6812,2.6297,33.3389,-18.3000,-62.2500,52.0781,-3.5000,0.0016,1.1477,0.1062,0.4659,-0.3296,-0.0876,-0.0329,
+	-0.6000,-0.3566,-2.5000,2.3250,0.2937,0.0496,-5.6812,1.8415,21.0000,-4.7656,-21.5906,7.2492,-3.5000,-0.1554,1.4062,0.3988,0.0032,0.0766,-0.0656,-0.1294,
+	-1.0156,-0.3670,1.0078,1.4051,0.2875,-0.5328,-3.8500,3.3750,14.0000,-0.9999,-7.1406,7.5469,-3.4000,-0.1078,-1.0750,1.5702,-0.0672,0.4016,0.3017,-0.4844,
+	-1.0000,0.0211,0.5025,-0.5119,-0.3000,0.1922,0.7023,-1.6317,19.0000,-5.0000,1.2438,-1.9094,-4.0000,0.0250,0.3844,0.2656,1.0468,-0.3788,-2.4517,1.4656,
+	-1.0500,0.0289,0.4260,0.3590,-0.3250,0.1156,0.7781,0.0025,31.0625,-14.5000,-46.1148,55.3750,-7.2312,0.4050,13.3500,0.6234,1.5000,-0.6426,1.8564,0.5636};
+
+
+float defangle_theta[] = {84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 12, 12, 12, 12, 12, 12, 0};
+
+float defangle_phi[] = {0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300, 312, 324, 336, 348, 0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 300, 312, 324, 336, 348, 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 0, 60, 120, 180, 240, 300, 0};
 
 
 
 /* Perez sky parametrization : epsilon and delta calculations from the direct and diffuse irradiances */
 double sky_brightness();
 double sky_clearness();
-void computesky();
 
 /* calculation of the direct and diffuse components from the Perez parametrization */
-double	diffus_irradiance_from_sky_brightness();
+double	diffuse_irradiance_from_sky_brightness();
 double 	direct_irradiance_from_sky_clearness();
 
 
@@ -59,35 +70,36 @@ void 	check_parametrization();
 void 	check_irradiances();
 void 	check_illuminances();
 void 	illu_to_irra_index();
+void	print_error_sky();
 
 
 /* Perez sky luminance model */
-int 	lect_coeff_perez(char *filename,float **coeff_perez);
 double  calc_rel_lum_perez(double dzeta,double gamma,double Z,
-		double epsilon,double Delta,float *coeff_perez);
+		double epsilon,double Delta,float coeff_perez[]);
 /* coefficients for the sky luminance perez model */
-void 	coeff_lum_perez(double Z, double epsilon, double Delta, float *coeff_perez);
+void 	coeff_lum_perez(double Z, double epsilon, double Delta, float coeff_perez[]);
 double	radians(double degres);
 double	degres(double radians);
 void	theta_phi_to_dzeta_gamma(double theta,double phi,double *dzeta,double *gamma, double Z);
 double 	integ_lv(float *lv,float *theta);
-float 	*theta_ordered(char *filename);
-float 	*phi_ordered(char *filename);
-void	skip_comments(FILE *fp);
 
+void printdefaults();
+void computesky();
+void printhead(int ac, char** av);
+void userror(char* msg);
+void printsky();
 
+FILE * frlibopen(char* fname);
 
 /* astronomy and geometry*/
 double 	get_eccentricity();
 double 	air_mass();
-double 	get_angle_sun_direction(double sun_zenith, double sun_azimut, double direction_zenith, double direction_azimut);
 
-
-/* date*/
-int     jdate(int month, int day);
-
-
-
+extern int jdate(int month, int day);
+extern double stadj(int  jd);
+extern double sdec(int  jd);
+extern double salt(double sd, double st);
+extern double sazi(double sd, double st);
 
 
 /* sun calculation constants */
@@ -118,16 +130,21 @@ double  altitude, azimuth;			/* or solar angles */
 
 
 /* definition of the sky conditions through the Perez parametrization */
-double	skyclearness, skybrightness;
+double	skyclearness = 0; 
+double  skybrightness = 0;
 double	solarradiance;	/*radiance of the sun disk and of the circumsolar area*/
-double	diffusilluminance, directilluminance, diffusirradiance, directirradiance;
+double	diffuseilluminance, directilluminance, diffuseirradiance, directirradiance;
 double	sunzenith, daynumber=150, atm_preci_water=2;
 
-double 	diffnormalization, dirnormalization;
+double sunaltitude_border = 0;
+double 	diffnormalization = 0;
+double dirnormalization = 0;
 double 	*c_perez;
 
 int	output=0;	/*define the unit of the output (sky luminance or radiance): visible watt=0, solar watt=1, lumen=2*/
 int	input=0;	/*define the input for the calulation*/
+
+int	suppress_warnings=0;
 
 	/* default values */
 int  cloudy = 0;				/* 1=standard, 2=uniform */
@@ -139,7 +156,7 @@ int	S_INTER=0;
 
 	/* computed values */
 double  sundir[3];
-double  groundbr;
+double  groundbr = 0;
 double  F2;
 double  solarbr = 0.0;
 int	u_solar = 0;				/* -1=irradiance, 1=radiance */
@@ -148,22 +165,20 @@ char  *progname;
 char  errmsg[128];
 
 
-main(argc, argv)
-int  argc;
-char  *argv[];
+int main(int argc, char** argv)
 {
 	int  i;
 
 	progname = argv[0];
 	if (argc == 2 && !strcmp(argv[1], "-defaults")) {
 		printdefaults();
-		exit(0);
+		return 0;
 	}
 	if (argc < 4)
 		userror("arg count");
 	if (!strcmp(argv[1], "-ang")) {
-		altitude = atof(argv[2]) * (PI/180);
-		azimuth = atof(argv[3]) * (PI/180);
+		altitude = atof(argv[2]) * (M_PI/180);
+		azimuth = atof(argv[3]) * (M_PI/180);
 		month = 0;
 	} else {
 		month = atoi(argv[1]);
@@ -196,6 +211,9 @@ char  *argv[];
 			case 't':
 				betaturbidity = atof(argv[++i]);
 				break;
+			case 'w':
+				suppress_warnings = 1;
+				break;			
 			case 'b':
 				zenithbr = atof(argv[++i]);
 				break;
@@ -203,20 +221,18 @@ char  *argv[];
 				gprefl = atof(argv[++i]);
 				break;
 			case 'a':
-				s_latitude = atof(argv[++i]) * (PI/180);
+				s_latitude = atof(argv[++i]) * (M_PI/180);
 				break;
 			case 'o':
-				s_longitude = atof(argv[++i]) * (PI/180);
+				s_longitude = atof(argv[++i]) * (M_PI/180);
 				break;
 			case 'm':
-				s_meridian = atof(argv[++i]) * (PI/180);
+				s_meridian = atof(argv[++i]) * (M_PI/180);
 				break;
-
 			
 			case 'O':
 				output = atof(argv[++i]);	/*define the unit of the output of the program : 
-								sky and sun luminance/radiance (0==W visible, 1==W solar radiation, 2==lm) 
-								default is set to 0*/
+								sky and sun luminance/radiance (0==W visible, 1==W solar radiation, 2==lm) */
 				break;
 				
 			case 'P':
@@ -228,21 +244,25 @@ char  *argv[];
 			case 'W':					/* direct normal Irradiance [W/m^2] */
 				input = 1;				/* diffuse horizontal Irrad. [W/m^2] */
 				directirradiance = atof(argv[++i]);
-				diffusirradiance = atof(argv[++i]);
+				diffuseirradiance = atof(argv[++i]);
 				break;
 				
 			case 'L':					/* direct normal Illuminance [Lux] */
 				input = 2;				/* diffuse horizontal Ill. [Lux] */
 				directilluminance = atof(argv[++i]);
-				diffusilluminance = atof(argv[++i]);
+				diffuseilluminance = atof(argv[++i]);
 				break;
 			
 			case 'G':					/* direct horizontal Irradiance [W/m^2] */
 				input = 3;				/* diffuse horizontal Irrad. [W/m^2] */
 				directirradiance = atof(argv[++i]);
-				diffusirradiance = atof(argv[++i]);
+				diffuseirradiance = atof(argv[++i]);
 				break;
-				
+			
+		 	case 'l':
+				sunaltitude_border = atof(argv[++i]);
+				break;
+			
 			
 			default:
 				sprintf(errmsg, "unknown option: %s", argv[i]);
@@ -251,38 +271,36 @@ char  *argv[];
 		else
 			userror("bad option");
 
-	if (fabs(s_meridian-s_longitude) > 30*PI/180)
+	if (fabs(s_meridian-s_longitude) > 30*M_PI/180)
 		fprintf(stderr,
 		    "%s: warning: %.1f hours btwn. standard meridian and longitude\n",
-		    progname, (s_longitude-s_meridian)*12/PI);
+		    progname, (s_longitude-s_meridian)*12/M_PI);
 
 
 	/* allocation dynamique de memoire pour les pointeurs */
-	if ( (c_perez = malloc(5*sizeof(double))) == NULL )
+	if ( (c_perez = calloc(5, sizeof(double))) == NULL )
 	{
 		fprintf(stderr,"Out of memory error in function main !");
-		exit(1);
+		return 1;
 	}
-
 
 	printhead(argc, argv);
 
 	computesky();
 	printsky();
 
-	exit(0);
+	return 0;
 }
 
 
-void
-computesky()			/* compute sky parameters */
+void computesky()			/* compute sky parameters */
 {
 
 	/* new variables */
 	int 	j;
 	float 	*lv_mod;  /* 145 luminance values*/
 	  /* 145 directions for the calculation of the normalization coefficient, coefficient Perez model */
-	float 	*theta_o, *phi_o, *coeff_perez;
+	float 	*theta_o, *phi_o;
 	double 	dzeta, gamma;
 	double	normfactor;
 
@@ -306,35 +324,56 @@ computesky()			/* compute sky parameters */
 		daynumber = (double)jdate(month, day);
 
 	}
-	if (!cloudy && altitude > 87.*PI/180.) {
-		fprintf(stderr,
+	
+	
+	
+	
+	
+	/* if loop for the -l option. 01/2013 Sprenger  */
+	
+	if (altitude*180/M_PI < sunaltitude_border) {
+	
+	if (suppress_warnings==0)
+	    fprintf(stderr, "Warning: sun altitude (%.3f degrees) below the border (%.3f degrees)\n",altitude*180/M_PI,sunaltitude_border);
+	print_error_sky();
+	exit(0);
+	}
+	
+	
+			
+	
+			
+	if (!cloudy && altitude > 87.*M_PI/180.) {
+		
+		if (suppress_warnings==0) { 
+		    fprintf(stderr,
 		    "%s: warning - sun too close to zenith, reducing altitude to 87 degrees\n",
 		    progname);
-		printf(
-		    "# warning - sun too close to zenith, reducing altitude to 87 degrees\n");
-		altitude = 87.*PI/180.;
+		}
+		altitude = 87.*M_PI/180.;
 	}
+	
 	sundir[0] = -sin(azimuth)*cos(altitude);
 	sundir[1] = -cos(azimuth)*cos(altitude);
 	sundir[2] = sin(altitude);
 	
 		
 	/* calculation for the new functions */
-	sunzenith = 90 - altitude*180/PI;
+	sunzenith = 90 - altitude*180/M_PI;
 	
 	
 
-/* compute the inputs for the calculation of the light distribution over the sky*/
+        /* compute the inputs for the calculation of the light distribution over the sky*/
 	if (input==0)
 		{
 		check_parametrization();
-		diffusirradiance = diffus_irradiance_from_sky_brightness(); /*diffuse horizontal irradiance*/
+		diffuseirradiance = diffuse_irradiance_from_sky_brightness(); /*diffuse horizontal irradiance*/
 		directirradiance = direct_irradiance_from_sky_clearness();
 		check_irradiances();
 		
 		if (output==0 || output==2)
 			{
-			diffusilluminance = diffusirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
+			diffuseilluminance = diffuseirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
 			directilluminance = directirradiance*direct_n_effi_PEREZ();
 			check_illuminances();
 			}
@@ -350,7 +389,7 @@ computesky()			/* compute sky parameters */
 
 		if (output==0 || output==2)
 			{
-			diffusilluminance = diffusirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
+			diffuseilluminance = diffuseirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
 			directilluminance = directirradiance*direct_n_effi_PEREZ();
 			check_illuminances();
 			}
@@ -370,11 +409,13 @@ computesky()			/* compute sky parameters */
 		{
 			if (altitude<=0)
 			{
-			fprintf(stderr, "solar zenith angle larger than 90³ \n the models used are not more valid\n");
-			exit(1);
+				if (suppress_warnings==0)
+				     fprintf(stderr, "Warning: solar zenith angle larger than 90 degrees; using zero irradiance to proceed\n");
+				directirradiance = 0;
+				diffuseirradiance = 0;
+			} else {
+				directirradiance=directirradiance/sin(altitude);
 			}
-
-		directirradiance=directirradiance/sin(altitude);
 		check_irradiances();
 		skybrightness = sky_brightness();
 		skyclearness =  sky_clearness();
@@ -382,7 +423,7 @@ computesky()			/* compute sky parameters */
 
 		if (output==0 || output==2)
 			{
-			diffusilluminance = diffusirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
+			diffuseilluminance = diffuseirradiance*glob_h_diffuse_effi_PEREZ();/*diffuse horizontal illuminance*/
 			directilluminance = directirradiance*direct_n_effi_PEREZ();
 			check_illuminances();
 			}
@@ -394,21 +435,7 @@ computesky()			/* compute sky parameters */
 
 
 	
-/* normalization factor for the relative sky luminance distribution, diffuse part*/
-
-	/* allocation dynamique de memoire pour les pointeurs */
-	if ( (coeff_perez = malloc(8*20*sizeof(float))) == NULL )
-	{
-		fprintf(stderr,"Out of memory error in function main !");
-		exit(1);
-	}
-
-/* read the coefficients for the Perez sky luminance model */
-	if (lect_coeff_perez(DATFILE, &coeff_perez) > 0)
-	{
-		fprintf(stderr,"lect_coeff_perez does not work\n");
-		exit(2);
-	}
+        /* normalization factor for the relative sky luminance distribution, diffuse part*/
 
 	if ( (lv_mod = malloc(145*sizeof(float))) == NULL)
 	{
@@ -417,18 +444,18 @@ computesky()			/* compute sky parameters */
 	}
 
 	/* read the angles */
-	theta_o = theta_ordered("defangle.dat");
-	phi_o = phi_ordered("defangle.dat");
+	theta_o = defangle_theta;
+	phi_o = defangle_phi;
 
-/* parameters for the perez model */
+        /* parameters for the perez model */
 	coeff_lum_perez(radians(sunzenith), skyclearness, skybrightness, coeff_perez);
 
-/*calculation of the modelled luminance */
+        /*calculation of the modelled luminance */
 	for (j=0;j<145;j++)
 	{
 		theta_phi_to_dzeta_gamma(radians(*(theta_o+j)),radians(*(phi_o+j)),&dzeta,&gamma,radians(sunzenith));
 		*(lv_mod+j) = calc_rel_lum_perez(dzeta,gamma,radians(sunzenith),skyclearness,skybrightness,coeff_perez);
-		/*printf("theta, phi, lv_mod %lf\t %lf\t %lf\n", *(theta_o+j),*(phi_o+j),*(lv_mod+j));*/
+		// printf("theta, phi, lv_mod %f\t %f\t %f\n", *(theta_o+j),*(phi_o+j),*(lv_mod+j));
 	}
 
 	/* integration of luminance for the normalization factor, diffuse part of the sky*/
@@ -438,34 +465,34 @@ computesky()			/* compute sky parameters */
 	
 
 
-/*normalization coefficient in lumen or in watt*/
+        /*normalization coefficient in lumen or in watt*/
 	if (output==0)
 		{
-		diffnormalization = diffusilluminance/diffnormalization/WHTEFFICACY;
+		diffnormalization = diffuseilluminance/diffnormalization/WHTEFFICACY;
 		}
 	else if (output==1)
 		{
-		diffnormalization = diffusirradiance/diffnormalization;
+		diffnormalization = diffuseirradiance/diffnormalization;
 		}
 	else if (output==2)
 		{
-		diffnormalization = diffusilluminance/diffnormalization;
+		diffnormalization = diffuseilluminance/diffnormalization;
 		}
 
-	else	{fprintf(stderr,"output argument : wrong number"); exit(1);}
+	else	{fprintf(stderr,"Wrong output specification.\n"); exit(1);}
 
 
 
 
-/* calculation for the solar source */	
+        /* calculation for the solar source */	
 	if (output==0) 
-		solarradiance = directilluminance/(2*PI*(1-cos(half_sun_angle*PI/180)))/WHTEFFICACY;
+		solarradiance = directilluminance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)))/WHTEFFICACY;
 		
 	else if (output==1)
-		solarradiance = directirradiance/(2*PI*(1-cos(half_sun_angle*PI/180)));
+		solarradiance = directirradiance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)));
 	
 	else
-		solarradiance = directilluminance/(2*PI*(1-cos(half_sun_angle*PI/180)));
+		solarradiance = directilluminance/(2*M_PI*(1-cos(half_sun_angle*M_PI/180)));
 	
 			
 
@@ -473,31 +500,27 @@ computesky()			/* compute sky parameters */
 /* Compute the ground radiance */
 zenithbr=calc_rel_lum_perez(0.0,radians(sunzenith),radians(sunzenith),skyclearness,skybrightness,coeff_perez);
 zenithbr*=diffnormalization;
-/*
-fprintf(stderr, "gendaylit : the actual zenith radiance(W/m^2/sr) or luminance(cd/m^2) is : %.0lf\n", zenithbr);
-*/
-
+	
 if (skyclearness==1)
 	normfactor = 0.777778;
 		
 if (skyclearness>=6)
 	{		
-	F2 = 0.274*(0.91 + 10.0*exp(-3.0*(PI/2.0-altitude)) + 0.45*sundir[2]*sundir[2]);
-	normfactor = normsc()/F2/PI;
+	F2 = 0.274*(0.91 + 10.0*exp(-3.0*(M_PI/2.0-altitude)) + 0.45*sundir[2]*sundir[2]);
+	normfactor = normsc()/F2/M_PI;
 	}
 
 if ( (skyclearness>1) && (skyclearness<6) )
 	{
 	S_INTER=1;
-	F2 = (2.739 + .9891*sin(.3119+2.6*altitude)) * exp(-(PI/2.0-altitude)*(.4441+1.48*altitude));
-	normfactor = normsc()/F2/PI;
+	F2 = (2.739 + .9891*sin(.3119+2.6*altitude)) * exp(-(M_PI/2.0-altitude)*(.4441+1.48*altitude));
+	normfactor = normsc()/F2/M_PI;
 	}
 
 groundbr = zenithbr*normfactor;
-printf("# Ground ambient level: %.1f\n", groundbr);
 
 if (dosun&&(skyclearness>1)) 
-groundbr += 6.8e-5/PI*solarradiance*sundir[2];		
+	groundbr += 6.8e-5/M_PI*solarradiance*sundir[2];		
 
 groundbr *= gprefl;
 
@@ -509,73 +532,79 @@ return;
 
 
 
+void print_error_sky()
+{
+	sundir[0] = -sin(azimuth)*cos(altitude);
+	sundir[1] = -cos(azimuth)*cos(altitude);
+	sundir[2] = sin(altitude);
+	
+	printf("\nvoid brightfunc skyfunc\n");
+	printf("2 skybright perezlum.cal\n");
+	printf("0\n");
+	printf("10 0.00 0.00  0.000 0.000 0.000 0.000 0.000  %f %f %f \n", sundir[0], sundir[1], sundir[2]);
+}
+	
 
 
-
-printsky()			/* print out sky */
+void printsky()			/* print out sky */
 {
 	if (dosun&&(skyclearness>1)) 
-		{		
+	{		
 		printf("\nvoid light solar\n");
 		printf("0\n0\n");
 		printf("3 %.3e %.3e %.3e\n", solarradiance, solarradiance, solarradiance);
 		printf("\nsolar source sun\n");
 		printf("0\n0\n");
 		printf("4 %f %f %f %f\n", sundir[0], sundir[1], sundir[2], 2*half_sun_angle);
-		}
-		
-	if (dosun&&(skyclearness==1)) 
-		{		
+	} else if (dosun) {
 		printf("\nvoid light solar\n");
 		printf("0\n0\n");
 		printf("3 0.0 0.0 0.0\n");
 		printf("\nsolar source sun\n");
 		printf("0\n0\n");
 		printf("4 %f %f %f %f\n", sundir[0], sundir[1], sundir[2], 2*half_sun_angle);
-		}
+	}
 	
-
 	printf("\nvoid brightfunc skyfunc\n");
 	printf("2 skybright perezlum.cal\n");
 	printf("0\n");
 	printf("10 %.3e %.3e %lf %lf %lf %lf %lf %f %f %f \n", diffnormalization, groundbr,
-	    *(c_perez+0),*(c_perez+1),*(c_perez+2),*(c_perez+3),*(c_perez+4), 
-	    sundir[0], sundir[1], sundir[2]);
+	    	*(c_perez+0),*(c_perez+1),*(c_perez+2),*(c_perez+3),*(c_perez+4), 
+	    	sundir[0], sundir[1], sundir[2]);
 }
 
 
-printdefaults()			/* print default values */
+void printdefaults()			/* print default values */
 {
 	printf("-g %f\t\t\t# Ground plane reflectance\n", gprefl);
 	if (zenithbr > 0.0)
 		printf("-b %f\t\t\t# Zenith radiance (watts/ster/m^2\n", zenithbr);
 	else
 		printf("-t %f\t\t\t# Atmospheric betaturbidity\n", betaturbidity);
-	printf("-a %f\t\t\t# Site latitude (degrees)\n", s_latitude*(180/PI));
-	printf("-o %f\t\t\t# Site longitude (degrees)\n", s_longitude*(180/PI));
-	printf("-m %f\t\t\t# Standard meridian (degrees)\n", s_meridian*(180/PI));
+	printf("-a %f\t\t\t# Site latitude (degrees)\n", s_latitude*(180/M_PI));
+	printf("-o %f\t\t\t# Site longitude (degrees)\n", s_longitude*(180/M_PI));
+	printf("-m %f\t\t\t# Standard meridian (degrees)\n", s_meridian*(180/M_PI));
 }
 
 
-userror(msg)			/* print usage error and quit */
-char  *msg;
+void userror(char* msg)			/* print usage error and quit */
 {
 	if (msg != NULL)
 		fprintf(stderr, "%s: Use error - %s\n", progname, msg);
-	fprintf(stderr, "Usage: %s month day hour [-P|-W|-L] direct_value diffus_value [options]\n", progname);
-	fprintf(stderr, "or   : %s -ang altitude azimuth [-P|-W|-L] direct_value diffus_value [options]\n", progname);
+	fprintf(stderr, "Usage: %s month day hour [-P|-W|-L|-G] direct_value diffuse_value [options]\n", progname);
+	fprintf(stderr, "or:    %s -ang altitude azimuth [-P|-W|-L|-G] direct_value diffuse_value [options]\n", progname);
 	fprintf(stderr, "	-P epsilon delta  (these are the Perez parameters) \n");
 	fprintf(stderr, "	-W direct-normal-irradiance diffuse-horizontal-irradiance (W/m^2)\n");
 	fprintf(stderr, "	-L direct-normal-illuminance diffuse-horizontal-illuminance (lux)\n");
 	fprintf(stderr, "	-G direct-horizontal-irradiance diffuse-horizontal-irradiance (W/m^2)\n");
 	fprintf(stderr, "	-O [0|1|2]  (0=output in W/m^2/sr visible, 1=output in W/m^2/sr solar, 2=output in candela/m^2), default is 0 \n");
+	fprintf(stderr, "	gendaylit version 2.00 (2013/01/28)  \n");
 	exit(1);
 }
 
 
 
-double
-normsc()			/* compute normalization factor (E0*F2/L0) */
+double normsc()	          /* compute normalization factor (E0*F2/L0) */
 {
 	static double  nfc[2][5] = {
 				/* clear sky approx. */
@@ -588,7 +617,7 @@ normsc()			/* compute normalization factor (E0*F2/L0) */
 	register int  i;
 					/* polynomial approximation */
 	nf = nfc[S_INTER];
-	x = (altitude - PI/4.0)/(PI/4.0);
+	x = (altitude - M_PI/4.0)/(M_PI/4.0);
 	nsc = nf[i=4];
 	while (i--)
 		nsc = nsc*x + nf[i];
@@ -598,9 +627,7 @@ normsc()			/* compute normalization factor (E0*F2/L0) */
 
 
 
-printhead(ac, av)		/* print command header */
-register int  ac;
-register char  **av;
+void printhead(int ac, char** av)		/* print command header */
 {
 	putchar('#');
 	while (ac--) {
@@ -612,22 +639,6 @@ register char  **av;
 
 
 
-
-void
-skip_comments(FILE *fp)		/* skip comments in file */
-{
-	int	c;
-	
-	while ((c = getc(fp)) != EOF)
-		if (c == '#') {
-			while ((c = getc(fp)) != EOF)
-				if (c == '\n')
-					break;
-		} else if (!isspace(c)) {
-			ungetc(c, fp);
-			break;
-		}
-}
 
 
 
@@ -642,8 +653,8 @@ double glob_h_effi_PEREZ()
 	int   	category_total_number, category_number, i;
 
 
-if (skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<=skybriginf || skybrightness>skybrigsup)
-fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check your input parameters\n");
+if ((skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<skybriginf || skybrightness>skybrigsup) && suppress_warnings==0)
+     fprintf(stderr, "Warning: skyclearness or skybrightness out of range in function glob_h_effi_PEREZ \n");
 
 	/* initialize category bounds (clearness index bounds) */
 
@@ -707,7 +718,7 @@ fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check
 	}
 
 	value = a[category_number] + b[category_number]*atm_preci_water  + 
-	    c[category_number]*cos(sunzenith*PI/180) +  d[category_number]*log(skybrightness);
+	    c[category_number]*cos(sunzenith*M_PI/180) +  d[category_number]*log(skybrightness);
 
 	return(value);
 }
@@ -721,13 +732,14 @@ double glob_h_diffuse_effi_PEREZ()
 	int   	category_total_number, category_number, i;
 
 	
-if (skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<=skybriginf || skybrightness>skybrigsup)
-fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check your input parameters\n");
+if ((skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<skybriginf || skybrightness>skybrigsup) && suppress_warnings==0)
+     fprintf(stderr, "Warning: skyclearness or skybrightness out of range in function glob_h_diffuse_effi_PEREZ \n");
 
 /* initialize category bounds (clearness index bounds) */
 
 	category_total_number = 8;
 
+//XXX: category_bounds > 0.1
 	category_bounds[1] = 1;
 	category_bounds[2] = 1.065;
 	category_bounds[3] = 1.230;
@@ -779,13 +791,22 @@ fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check
 
 
 
+	category_number = -1;
 	for (i=1; i<=category_total_number; i++)
 	{
 		if ( (skyclearness >= category_bounds[i]) && (skyclearness < category_bounds[i+1]) )
 			category_number = i;
 	}
 
-	value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*cos(sunzenith*PI/180) + 
+	if (category_number == -1) {
+		if (suppress_warnings==0)
+		    fprintf(stderr, "ERROR: Model parameters out of range\n");
+		print_error_sky();
+		exit(1);
+	}
+		
+
+	value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*cos(sunzenith*M_PI/180) + 
 	    d[category_number]*log(skybrightness);
 
 	return(value);
@@ -802,8 +823,8 @@ double 	category_bounds[10], a[10], b[10], c[10], d[10];
 int   	category_total_number, category_number, i;
 
 
-if (skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<=skybriginf || skybrightness>skybrigsup)
-fprintf(stderr, "Warning : skyclearness or skybrightness out of range ; \n Check your input parameters\n");
+if ((skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<skybriginf || skybrightness>skybrigsup) && suppress_warnings==0)
+   fprintf(stderr, "Warning: skyclearness or skybrightness out of range in function direct_n_effi_PEREZ \n");
 
 
 /* initialize category bounds (clearness index bounds) */
@@ -866,7 +887,7 @@ if ( (skyclearness >= category_bounds[i]) && (skyclearness < category_bounds[i+1
 category_number = i;
 }
 
-value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*exp(5.73*sunzenith*PI/180 - 5) +  d[category_number]*skybrightness;
+value = a[category_number] + b[category_number]*atm_preci_water  + c[category_number]*exp(5.73*sunzenith*M_PI/180 - 5) +  d[category_number]*skybrightness;
 
 if (value < 0) value = 0;
 
@@ -877,35 +898,68 @@ return(value);
 /*check the range of epsilon and delta indexes of the perez parametrization*/
 void check_parametrization()
 {
-if (skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<=skybriginf || skybrightness>skybrigsup)
+if (skyclearness<skyclearinf || skyclearness>skyclearsup || skybrightness<skybriginf || skybrightness>skybrigsup)
 		{
-		fprintf(stderr,"sky clearness or sky brightness out of range %lf\t %lf\n", skyclearness, skybrightness);
-		exit(1);	
+
+/*  limit sky clearness or sky brightness, 2009 11 13 by J. Wienold */
+		if (skyclearness<skyclearinf){
+			skyclearness=skyclearinf;
+			if (suppress_warnings==0)
+			    fprintf(stderr,"Range warning: sky clearness too low (%lf)\n", skyclearness);
 		}
+		if (skyclearness>skyclearsup){
+			skyclearness=skyclearsup-0.1;
+			if (suppress_warnings==0)
+			    fprintf(stderr,"Range warning: sky clearness too high (%lf)\n", skyclearness);
+		}
+		if (skybrightness<skybriginf){
+			skybrightness=skybriginf;
+			if (suppress_warnings==0)
+			    fprintf(stderr,"Range warning: sky brightness too low (%lf)\n", skybrightness);
+		}
+		if (skybrightness>skybrigsup){
+			skybrightness=skybrigsup;
+			if (suppress_warnings==0)
+			    fprintf(stderr,"Range warning: sky brightness too high (%lf)\n", skybrightness);
+		}
+
+	return;	}
 	else return;
 }
 
 
-/* likelihood of the direct and diffuse components */
+/* validity of the direct and diffuse components */
 void 	check_illuminances()
 {
-	if (!( (directilluminance>=0) && (directilluminance<=solar_constant_l*1000) && (diffusilluminance>0) ))
-	{
-	fprintf(stderr,"direct or diffuse illuminances out of range\n");
-	exit(1);
+	if (directilluminance < 0) {
+		fprintf(stderr,"WARNING: direct illuminance < 0. Using 0.0\n");
+		directilluminance = 0.0;
 	}
-return;
+	if (diffuseilluminance < 0) {
+		fprintf(stderr,"WARNING: diffuse illuminance < 0. Using 0.0\n");
+		diffuseilluminance = 0.0;
+	}
+	if (directilluminance > solar_constant_l*1000.0) {
+		fprintf(stderr,"ERROR: direct illuminance exceeds solar constant\n");
+		exit(1);
+	}
 }
 
 
 void 	check_irradiances()
 {
-	if (!( (directirradiance>=0) && (directirradiance<=solar_constant_e) && (diffusirradiance>0) ))
-	{
-	fprintf(stderr,"direct or diffuse irradiances out of range\n");
-	exit(1);
-	}	
-return;
+	if (directirradiance < 0) {
+		fprintf(stderr,"WARNING: direct irradiance < 0. Using 0.0\n");
+		directirradiance = 0.0;
+	}
+	if (diffuseirradiance < 0) {
+		fprintf(stderr,"WARNING: diffuse irradiance < 0. Using 0.0\n");
+		diffuseirradiance = 0.0;
+	}
+	if (directirradiance > solar_constant_e) {
+		fprintf(stderr,"ERROR: direct irradiance exceeds solar constant\n");
+		exit(1);
+	}
 }
 	
 
@@ -915,7 +969,7 @@ double sky_brightness()
 {
 double value;
 
-value = diffusirradiance * air_mass() / ( solar_constant_e*get_eccentricity());
+value = diffuseirradiance * air_mass() / ( solar_constant_e*get_eccentricity());
 
 return(value);
 }
@@ -924,17 +978,17 @@ return(value);
 /* Perez sky's clearness */
 double sky_clearness()
 {
-double value;
+	double value;
 
-value = ( (diffusirradiance + directirradiance)/(diffusirradiance) + 1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180 ) / (1 + 1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180) ;
+	value = ( (diffuseirradiance + directirradiance)/(diffuseirradiance) + 1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180 ) / (1 + 1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180) ;
 
-return(value);
+	return(value);
 }
 
 
 
 /* diffus horizontal irradiance from Perez sky's brightness */
-double diffus_irradiance_from_sky_brightness()
+double diffuse_irradiance_from_sky_brightness()
 {
 	double value;
 
@@ -949,89 +1003,72 @@ double direct_irradiance_from_sky_clearness()
 {
 	double value;
 
-	value = diffus_irradiance_from_sky_brightness();
-	value = value * ( (skyclearness-1) * (1+1.041*sunzenith*PI/180*sunzenith*PI/180*sunzenith*PI/180) );
+	value = diffuse_irradiance_from_sky_brightness();
+	value = value * ( (skyclearness-1) * (1+1.041*sunzenith*M_PI/180*sunzenith*M_PI/180*sunzenith*M_PI/180) );
 
 	return(value);
 }
 
 
-void illu_to_irra_index(void)
+void illu_to_irra_index()
 {
-double	test1=0.1, test2=0.1;
+double	test1=0.1, test2=0.1, d_eff;
 int	counter=0;	
 
-diffusirradiance = diffusilluminance*solar_constant_e/(solar_constant_l*1000);
+diffuseirradiance = diffuseilluminance*solar_constant_e/(solar_constant_l*1000);
 directirradiance = directilluminance*solar_constant_e/(solar_constant_l*1000);
 skyclearness =  sky_clearness(); 
 skybrightness = sky_brightness();
-if (skyclearness>12) skyclearness=12;
-if (skybrightness<0.05) skybrightness=0.01; 
+check_parametrization();
 	
-	
-while ( ((fabs(diffusirradiance-test1)>10) || (fabs(directirradiance-test2)>10)
+while ( ((fabs(diffuseirradiance-test1)>10) || (fabs(directirradiance-test2)>10)
 		|| skyclearness>skyclearinf || skyclearness<skyclearsup 
 		|| skybrightness>skybriginf || skybrightness<skybrigsup )
 		 && !(counter==5) )
 	{
-		/*fprintf(stderr, "conversion illuminance into irradiance %lf\t %lf\n", diffusirradiance, directirradiance);*/
 
-	test1=diffusirradiance;
+	test1=diffuseirradiance;
 	test2=directirradiance;	
 	counter++;
 	
-	diffusirradiance = diffusilluminance/glob_h_diffuse_effi_PEREZ();
-	directirradiance = directilluminance/direct_n_effi_PEREZ();
-	/*fprintf(stderr, "conversion illuminance into irradiance %lf\t %lf\n", diffusirradiance, directirradiance);*/
+	diffuseirradiance = diffuseilluminance/glob_h_diffuse_effi_PEREZ();
+	d_eff = direct_n_effi_PEREZ();
+	if (d_eff < 0.1)
+		directirradiance = 0;
+	else
+		directirradiance = directilluminance/d_eff;
 	
 	skybrightness = sky_brightness();
 	skyclearness =  sky_clearness();
-	if (skyclearness>12) skyclearness=12;
-	if (skybrightness<0.05) skybrightness=0.01; 
-
-		/*fprintf(stderr, "%lf\t %lf\n", skybrightness, skyclearness);*/
-
+	check_parametrization();
+	
 	}
 
 
 return;
 }		
 
-
-int lect_coeff_perez(char *filename,float **coeff_perez)
+static int get_numlin(float epsilon)
 {
-	FILE *fcoeff_perez;
-	float temp;
-	int i,j;
-
-	if ((fcoeff_perez = frlibopen(filename)) == NULL)
-	{
-		fprintf(stderr,"file %s cannot be opened\n", filename);
-		return 1; /* il y a un probleme de fichier */
-	}
-	else
-	{
-		/*printf("file %s  open\n", filename);*/
-	}
-	
-	skip_comments(fcoeff_perez);
-
-	for (i=0;i<8;i++)
-		for (j=0;j<20;j++)
-		{
-			fscanf(fcoeff_perez,"%f",&temp);
-			*(*coeff_perez+i*20+j) = temp;
-		}
-	fclose(fcoeff_perez);
-
-	return 0; /* tout est OK */
+	if (epsilon < 1.065)
+		return 0;
+	else if (epsilon < 1.230) 
+		return 1;
+	else if (epsilon < 1.500)
+		return 2;
+	else if (epsilon < 1.950)
+		return 3;
+	else if (epsilon < 2.800)
+		return 4;
+	else if (epsilon < 4.500)
+		return 5;
+	else if (epsilon < 6.200)
+		return 6;
+	return 7;
 }
 
-
-
 /* sky luminance perez model */
-double calc_rel_lum_perez(double dzeta,double gamma,double Z,
-double epsilon,double Delta,float *coeff_perez)
+double calc_rel_lum_perez(double dzeta,double gamma,double Z,double epsilon,double Delta,float coeff_perez[])
 {
 	float x[5][4];
 	int i,j,num_lin;
@@ -1039,7 +1076,7 @@ double epsilon,double Delta,float *coeff_perez)
 
 	if ( (epsilon <  skyclearinf) || (epsilon >= skyclearsup) )
 	{
-		fprintf(stderr,"Epsilon out of range in function calc_rel_lum_perez !\n");
+		fprintf(stderr,"Epsilon out of range in function calc_rel_lum_perez!\n");
 		exit(1);
 	}
 
@@ -1049,14 +1086,7 @@ double epsilon,double Delta,float *coeff_perez)
 		if ( Delta < 0.2 ) Delta = 0.2;
 	}
 
-	if ( (epsilon >= 1.000) && (epsilon < 1.065) ) num_lin = 0;
-	if ( (epsilon >= 1.065) && (epsilon < 1.230) ) num_lin = 1;
-	if ( (epsilon >= 1.230) && (epsilon < 1.500) ) num_lin = 2;
-	if ( (epsilon >= 1.500) && (epsilon < 1.950) ) num_lin = 3;
-	if ( (epsilon >= 1.950) && (epsilon < 2.800) ) num_lin = 4;
-	if ( (epsilon >= 2.800) && (epsilon < 4.500) ) num_lin = 5;
-	if ( (epsilon >= 4.500) && (epsilon < 6.200) ) num_lin = 6;
-	if ( (epsilon >= 6.200) && (epsilon < 14.00) ) num_lin = 7;
+	num_lin = get_numlin(epsilon);
 
 	for (i=0;i<5;i++)
 		for (j=0;j<4;j++)
@@ -1089,7 +1119,7 @@ double epsilon,double Delta,float *coeff_perez)
 
 
 /* coefficients for the sky luminance perez model */
-void coeff_lum_perez(double Z, double epsilon, double Delta, float *coeff_perez)
+void coeff_lum_perez(double Z, double epsilon, double Delta, float coeff_perez[])
 {
 	float x[5][4];
 	int i,j,num_lin;
@@ -1106,14 +1136,9 @@ void coeff_lum_perez(double Z, double epsilon, double Delta, float *coeff_perez)
 		if ( Delta < 0.2 ) Delta = 0.2;
 	}
 
-	if ( (epsilon >= 1.000) && (epsilon < 1.065) ) num_lin = 0;
-	if ( (epsilon >= 1.065) && (epsilon < 1.230) ) num_lin = 1;
-	if ( (epsilon >= 1.230) && (epsilon < 1.500) ) num_lin = 2;
-	if ( (epsilon >= 1.500) && (epsilon < 1.950) ) num_lin = 3;
-	if ( (epsilon >= 1.950) && (epsilon < 2.800) ) num_lin = 4;
-	if ( (epsilon >= 2.800) && (epsilon < 4.500) ) num_lin = 5;
-	if ( (epsilon >= 4.500) && (epsilon < 6.200) ) num_lin = 6;
-	if ( (epsilon >= 6.200) && (epsilon < 14.00) ) num_lin = 7;
+	num_lin = get_numlin(epsilon);
+
+	//fprintf(stderr,"numlin %d\n", num_lin);
 
 	for (i=0;i<5;i++)
 		for (j=0;j<4;j++)
@@ -1148,13 +1173,13 @@ void coeff_lum_perez(double Z, double epsilon, double Delta, float *coeff_perez)
 /* degrees into radians */
 double radians(double degres)
 {
-	return degres*PI/180.0;
+	return degres*M_PI/180.0;
 }
 
 /* radian into degrees */
 double degres(double radians)
 {
-	return radians/PI*180.0;
+	return radians/M_PI*180.0;
 }
 
 /* calculation of the angles dzeta and gamma */
@@ -1172,97 +1197,6 @@ void theta_phi_to_dzeta_gamma(double theta,double phi,double *dzeta,double *gamm
 		*gamma = acos(cos(Z)*cos(theta)+sin(Z)*sin(theta)*cos(phi));
 }
 
-
-/********************************************************************************/
-/*	Fonction: theta_ordered							*/
-/*										*/
-/*	In: char *filename							*/
-/*										*/
-/*	Out: float *								*/
-/*										*/
-/*	Update: 29/08/93							*/
-/*										*/
-/*	Rem: theta en degres							*/
-/*										*/
-/*	But: fournit les valeurs de theta du fichier d'entree a la memoire	*/
-/*										*/
-/********************************************************************************/
-float *theta_ordered(char *filename)
-{
-	int i;
-	float buffer,*ptr;
-	FILE *file_in;
-
-	if ( (file_in = frlibopen(filename)) == NULL )
-	{
-		fprintf(stderr,"Cannot open file %s in function theta_ordered\n",filename);
-		exit(1);
-	}
-	
-	skip_comments(file_in);
-
-	if ( (ptr = malloc(145*sizeof(float))) == NULL )
-	{
-		fprintf(stderr,"Out of memory in function theta_ordered\n");
-		exit(1);
-	}
-
-	for (i=0;i<145;i++)
-	{
-		fscanf(file_in,"%f",&buffer);
-		*(ptr+i) = buffer;
-		fscanf(file_in,"%f",&buffer);
-	}
-
-	fclose(file_in);
-	return ptr;
-}
-
-
-/********************************************************************************/
-/*	Fonction: phi_ordered							*/
-/*										*/
-/*	In: char *filename							*/
-/*										*/
-/*	Out: float *								*/
-/*										*/
-/*	Update: 29/08/93							*/
-/*										*/
-/*	Rem: valeurs de Phi en DEGRES						*/
-/*										*/
-/*	But: mettre les angles contenus dans le fichier d'entree dans la memoire */
-/*										*/
-/********************************************************************************/
-float *phi_ordered(char *filename)
-{
-	int i;
-	float buffer,*ptr;
-	FILE *file_in;
-
-	if ( (file_in = frlibopen(filename)) == NULL )
-	{
-		fprintf(stderr,"Cannot open file %s in function phi_ordered\n",filename);
-		exit(1);
-	}
-	
-	skip_comments(file_in);
-
-	if ( (ptr = malloc(145*sizeof(float))) == NULL )
-	{
-		fprintf(stderr,"Out of memory in function phi_ordered");
-		exit(1);
-	}
-
-	for (i=0;i<145;i++)
-	{
-		fscanf(file_in,"%f",&buffer);
-		fscanf(file_in,"%f",&buffer);
-		*(ptr+i) = buffer;
-	}
-
-	fclose(file_in);
-	return ptr;
-}
 
 
 /********************************************************************************/
@@ -1288,7 +1222,7 @@ double integ_lv(float *lv,float *theta)
 	for (i=0;i<145;i++)
 		buffer += (*(lv+i))*cos(radians(*(theta+i)));
 
-	return buffer*2*PI/144;
+	return buffer*2*M_PI/144;
 
 }
 
@@ -1304,7 +1238,7 @@ double get_eccentricity()
 	double day_angle;
 	double E0;
 
-	day_angle  = 2*PI*(daynumber - 1)/365;
+	day_angle  = 2*M_PI*(daynumber - 1)/365;
 	E0         = 1.00011+0.034221*cos(day_angle)+0.00128*sin(day_angle)+
 	    0.000719*cos(2*day_angle)+0.000077*sin(2*day_angle);
 
@@ -1320,34 +1254,13 @@ double	m;
 
 if (sunzenith>90)
 	{
-	fprintf(stderr, "solar zenith angle larger than 90³ in fuction air_mass():\n the models used are not more valid\n");
+	fprintf(stderr, "Solar zenith angle larger than 90 degrees in function air_mass()\n");
 	exit(1);
 	}
 	
-m = 1/( cos(sunzenith*PI/180)+0.15*exp( log(93.885-sunzenith)*(-1.253) ) );
+m = 1/( cos(sunzenith*M_PI/180)+0.15*exp( log(93.885-sunzenith)*(-1.253) ) );
 return(m);
 }
-
-
-double get_angle_sun_direction(double sun_zenith, double sun_azimut, double direction_zenith, double direction_azimut)
-
-{
-
-double angle;
-
-
-if (sun_zenith == 0)
-        puts("WARNING: zenith_angle = 0 in function get_angle_sun_vert_plan");
-
-angle = acos( cos(sun_zenith*PI/180)*cos(direction_zenith*PI/180) + sin(sun_zenith*PI/180)*sin(direction_zenith*PI/180)*cos((sun_azimut-direction_azimut)*PI/180) );
-angle = angle*180/PI;
-return(angle);
-}
-
-
-
-
-
 
 
 

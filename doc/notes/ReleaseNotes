@@ -1866,3 +1866,6 @@ option to specify float (-if) or double (-id) input for sky matrix.
 Created gendaymtx program to compute annual sky patch matrix based
 on Ian Ashdown's implementation of Perez all-weather sky model.
 Output can be sent directly to dctimestep in ASCII or binary stream.
+
+Replaced existing gendaylit.c with improved version from Wendelin Sprenger
+and Jan Wienold of ISE.
