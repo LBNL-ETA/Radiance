@@ -58,7 +58,7 @@ install(TARGETS genbox gensky xform genblinds genrev genworm gendaylit gensurf
         DESTINATION bin)
 
 install(FILES illum.cal rev.cal skybright.cal surf.cal clockface.hex glaze1.cal
-              glaze2.cal perezlum.cal coeff_perez.dat defangle.dat
+              glaze2.cal perezlum.cal
         DESTINATION lib)
 
 if (NOT WIN32)
