@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.22 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.23 2013/02/05 05:40:06 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -18,14 +18,14 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.22 2010/09/26 15:51:15 greg Exp 
 
 void
 inithemi(			/* initialize sampling hemisphere */
-	register AMBHEMI  *hp,
+	AMBHEMI  *hp,
 	COLOR ac,
 	RAY  *r,
 	double  wt
 )
 {
 	double	d;
-	register int  i;
+	int  i;
 					/* set number of divisions */
 	if (ambacc <= FTINY &&
 			wt > (d = 0.8*intens(ac)*r->rweight/(ambdiv*minweight)))
@@ -58,7 +58,7 @@ inithemi(			/* initialize sampling hemisphere */
 
 int
 divsample(				/* sample a division */
-	register AMBSAMP  *dp,
+	AMBSAMP  *dp,
 	AMBHEMI  *h,
 	RAY  *r
 )
@@ -69,7 +69,7 @@ divsample(				/* sample a division */
 	double  xd, yd, zd;
 	double  b2;
 	double  phi;
-	register int  i;
+	int  i;
 					/* ambient coefficient for weight */
 	if (ambacc > FTINY)
 		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
@@ -139,7 +139,7 @@ ambnorm(				/* standard order */
 {
 	const AMBSAMP	*d1 = (const AMBSAMP *)p1;
 	const AMBSAMP	*d2 = (const AMBSAMP *)p2;
-	register int	c;
+	int	c;
 
 	if ( (c = d1->t - d2->t) )
 		return(c);
@@ -149,7 +149,7 @@ ambnorm(				/* standard order */
 
 double
 doambient(				/* compute ambient component */
-	COLOR  acol,
+	COLOR  rcol,
 	RAY  *r,
 	double  wt,
 	FVECT  pg,
@@ -160,19 +160,20 @@ doambient(				/* compute ambient component */
 	AMBHEMI  hemi;
 	AMBSAMP  *div;
 	AMBSAMP  dnew;
-	register AMBSAMP  *dp;
+	double  acol[3];
+	AMBSAMP  *dp;
 	double  arad;
 	int  divcnt;
-	register int  i, j;
+	int  i, j;
 					/* initialize hemisphere */
-	inithemi(&hemi, acol, r, wt);
+	inithemi(&hemi, rcol, r, wt);
 	divcnt = hemi.nt * hemi.np;
 					/* initialize */
 	if (pg != NULL)
 		pg[0] = pg[1] = pg[2] = 0.0;
 	if (dg != NULL)
 		dg[0] = dg[1] = dg[2] = 0.0;
-	setcolor(acol, 0.0, 0.0, 0.0);
+	setcolor(rcol, 0.0, 0.0, 0.0);
 	if (divcnt == 0)
 		return(0.0);
 					/* allocate super-samples */
@@ -184,6 +185,7 @@ doambient(				/* compute ambient component */
 		div = NULL;
 					/* sample the divisions */
 	arad = 0.0;
+	acol[0] = acol[1] = acol[2] = 0.0;
 	if ((dp = div) == NULL)
 		dp = &dnew;
 	divcnt = 0;
@@ -265,6 +267,7 @@ doambient(				/* compute ambient component */
 		}
 		free((void *)div);
 	}
+	copycolor(rcol, acol);
 	if (arad <= FTINY)
 		arad = maxarad;
 	else
@@ -291,12 +294,12 @@ doambient(				/* compute ambient component */
 void
 comperrs(			/* compute initial error estimates */
 	AMBSAMP  *da,	/* assumes standard ordering */
-	register AMBHEMI  *hp
+	AMBHEMI  *hp
 )
 {
 	double  b, b2;
 	int  i, j;
-	register AMBSAMP  *dp;
+	AMBSAMP  *dp;
 				/* sum differences from neighbors */
 	dp = da;
 	for (i = 0; i < hp->nt; i++)
@@ -344,14 +347,14 @@ void
 posgradient(					/* compute position gradient */
 	FVECT  gv,
 	AMBSAMP  *da,			/* assumes standard ordering */
-	register AMBHEMI  *hp
+	AMBHEMI  *hp
 )
 {
-	register int  i, j;
+	int  i, j;
 	double  nextsine, lastsine, b, d;
 	double  mag0, mag1;
 	double  phi, cosp, sinp, xd, yd;
-	register AMBSAMP  *dp;
+	AMBSAMP  *dp;
 
 	xd = yd = 0.0;
 	for (j = 0; j < hp->np; j++) {
@@ -402,13 +405,13 @@ void
 dirgradient(					/* compute direction gradient */
 	FVECT  gv,
 	AMBSAMP  *da,			/* assumes standard ordering */
-	register AMBHEMI  *hp
+	AMBHEMI  *hp
 )
 {
-	register int  i, j;
+	int  i, j;
 	double  mag;
 	double  phi, xd, yd;
-	register AMBSAMP  *dp;
+	AMBSAMP  *dp;
 
 	xd = yd = 0.0;
 	for (j = 0; j < hp->np; j++) {

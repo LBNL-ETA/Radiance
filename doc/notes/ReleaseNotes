@@ -1869,3 +1869,6 @@ Output can be sent directly to dctimestep in ASCII or binary stream.
 
 Replaced existing gendaylit.c with improved version from Wendelin Sprenger
 and Jan Wienold of ISE.
+
+Improved accuracy of ambient calculation for large -ad settings.  Thanks
+to Lars Grobe for noticing the problem.
