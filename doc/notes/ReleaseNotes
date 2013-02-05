@@ -1872,3 +1872,6 @@ and Jan Wienold of ISE.
 
 Improved accuracy of ambient calculation for large -ad settings.  Thanks
 to Lars Grobe for noticing the problem.
+
+Added -r option to gendaymtx to rotate the sky the specified number of
+degrees about the zenith as suggested by A. McNeil.

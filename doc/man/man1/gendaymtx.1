@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.1 2013/01/20 02:07:16 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.2 2013/02/05 06:00:19 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -8,6 +8,8 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 .B "\-v"
 ][
 .B "\-d|\-s"
+][
+.B "\-r deg"
 ][
 .B "\-m N"
 ][
@@ -67,6 +69,20 @@ Alternatively, the
 option may be used to exclude any direct solar component from the output.
 .PP
 The
+.I \-r
+(or
+.I \-rz)
+option rotates the sky the specified number of degrees counter-clockwise
+about the zenith, i.e., east of South.
+This is in keeping with the effect of passing the output of
+.I gensky(1)
+or
+.I gendaylit(1)
+through
+.I xform(1)
+using a similar transform.
+.PP
+The
 .I \-of
 or
 .I \-od
@@ -95,4 +111,5 @@ Ian Ashdown wrote most of the code,
 based on Jean-Jacques Delaunay's original gendaylit(1) implementation.
 Greg Ward wrote the final parameter parsing and weather tape conversion.
 .SH "SEE ALSO"
-dctimestep(1), genBSDF(1), gendaylit(1), genskyvec(1), rcontrib(1)
+dctimestep(1), genBSDF(1), gendaylit(1), gensky(1), genskyvec(1), rcontrib(1),
+xform(1)

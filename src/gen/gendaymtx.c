@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.7 2013/01/26 00:59:08 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.8 2013/02/05 06:00:19 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -292,6 +292,7 @@ int
 main(int argc, char *argv[])
 {
 	char	buf[256];
+	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
 	float	*mtx_data = NULL;	/* our matrix data */
@@ -343,6 +344,11 @@ main(int argc, char *argv[])
 			suncolor[0] = suncolor[1] = suncolor[2] = 0;
 			if (skycolor[1] <= 1e-4)
 				skycolor[0] = skycolor[1] = skycolor[2] = 1;
+			break;
+		case 'r':			/* rotate distribution */
+			if (argv[i][2] && argv[i][2] != 'z')
+				goto userr;
+			rotation = atof(argv[++i]);
 			break;
 		default:
 			goto userr;
@@ -398,6 +404,9 @@ main(int argc, char *argv[])
 				progname, s_latitude, s_longitude);
 		fprintf(stderr, "%s: %d sky patches per time step\n",
 				progname, nskypatch);
+		if (rotation != 0)
+			fprintf(stderr, "%s: rotating output %.0f degrees\n",
+					progname, rotation);
 	}
 					/* convert quantities to radians */
 	s_latitude = DegToRad(s_latitude);
@@ -421,7 +430,7 @@ main(int argc, char *argv[])
 		sda = sdec(julian_date);
 		sta = stadj(julian_date);
 		altitude = salt(sda, hr+sta);
-		azimuth = sazi(sda, hr+sta) + PI;
+		azimuth = sazi(sda, hr+sta) + PI - DegToRad(rotation);
 					/* convert measured values */
 		if (dir_is_horiz && altitude > 0.)
 			dir /= sin(altitude);
@@ -494,7 +503,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-d|-s][-m N][-g r g b][-c r g b][-o{f|d}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:
