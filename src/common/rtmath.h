@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.4 2008/05/31 19:38:36 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.5 2013/02/07 20:19:52 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -45,6 +45,7 @@ typedef struct {
 #endif
 					/* defined in tcos.c */
 extern double	tcos(double x);
+extern double	aatan2(double y, double x);
 					/* defined in xf.c */
 extern int	xf(XF *ret, int ac, char *av[]);
 extern int	invxf(XF *ret, int ac, char *av[]);
