@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcos.c,v 3.7 2013/02/07 20:19:52 greg Exp $";
+static const char	RCSid[] = "$Id: tcos.c,v 3.8 2013/02/08 16:10:07 greg Exp $";
 #endif
 /*
  * Table-based cosine approximation.
@@ -54,7 +54,7 @@ tcos(double x)				/* approximate cosine */
 
 /* Fast arctangent approximation due to Rajan et al. 2006 */
 double
-aatan2(double y, double x)
+atan2a(double y, double x)
 {
 	double	ratio, aratio, val;
 
