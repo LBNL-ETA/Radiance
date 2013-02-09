@@ -1,9 +1,16 @@
-/* RCSid $Id: interp2d.h,v 2.2 2013/02/09 17:39:21 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.3 2013/02/09 20:56:40 greg Exp $ */
 /*
  * Header for interpolation of anisotropic values on 2-D plane.
  *
  *	G.Ward Feb 2013
  */
+
+#ifndef _RAD_INTERP2D_H_
+#define _RAD_INTERP2D_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define	NI2DSMF	0.42f			/* minimal smoothing radius */
 
@@ -35,3 +42,8 @@ extern void	interp2_free(INTERP2 *ip);
 
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
 extern int	interp2_analyze(INTERP2 *ip);
+
+#ifdef __cplusplus
+}
+#endif
+#endif	/* !_RAD_INTERP2D_H_ */
