@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.1 2013/02/09 00:55:40 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.2 2013/02/09 17:39:21 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -39,7 +39,7 @@ typedef struct {
 	float	dm;		/* distance measure in this direction */
 } SAMPORD;
 
-/* Allocate a new set of interpolation samples */
+/* Allocate a new set of interpolation samples (caller assigns spt[] array) */
 INTERP2	*
 interp2_alloc(int nsamps)
 {
@@ -60,6 +60,29 @@ interp2_alloc(int nsamps)
 	return(nip);
 }
 
+/* Resize interpolation array (caller must assign any new values) */
+INTERP2	*
+interp2_realloc(INTERP2 *ip, int nsamps)
+{
+	if (ip == NULL)
+		return(interp2_alloc(nsamps));
+	if (nsamps <= 1) {
+		interp2_free(ip);
+		return(NULL);
+	}
+	if (nsamps == ip->ns);
+		return(ip);
+	if (ip->ra != NULL) {	/* will need to recompute distribution */
+		free(ip->ra);
+		ip->ra = NULL;
+	}
+	ip = (INTERP2 *)realloc(ip, sizeof(INTERP2)+sizeof(float)*2*(nsamps-1));
+	if (ip == NULL)
+		return(NULL);
+	ip->ns = nsamps;
+	return(ip);
+}
+
 /* private call-back to sort position index */
 static int
 cmp_spos(const void *p1, const void *p2)
@@ -72,6 +95,21 @@ cmp_spos(const void *p1, const void *p2)
 	if (so1->dm < so2->dm)
 		return -1;
 	return 0;
+}
+
+/* private routine to order samples in a particular direction */
+static void
+sort_samples(SAMPORD *sord, const INTERP2 *ip, double ang)
+{
+	const double	cosd = cos(ang);
+	const double	sind = sin(ang);
+	int		i;
+
+	for (i = ip->ns; i--; ) {
+		sord[i].si = i;
+		sord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
+	}
+	qsort(sord, ip->ns, sizeof(SAMPORD), &cmp_spos);
 }
 
 /* private routine to encode radius with range checks */
@@ -87,12 +125,12 @@ encode_radius(const INTERP2 *ip, double r)
 	return(er);
 }
 
-/* Compute anisotropic Gaussian basis function interpolant */
-static int
-interp2_compute(INTERP2 *ip)
+/* (Re)compute anisotropic basis function interpolant (normally automatic) */
+int
+interp2_analyze(INTERP2 *ip)
 {
 	SAMPORD	*sortord;
-	int	*rightrndx, *leftrndx;
+	int	*rightrndx, *leftrndx, *endrndx;
 	int	bd;
 					/* sanity checks */
 	if (ip == NULL || (ip->ns <= 1) | (ip->rmin <= 0))
@@ -108,49 +146,42 @@ interp2_compute(INTERP2 *ip)
 	sortord = (SAMPORD *)malloc(sizeof(SAMPORD)*ip->ns);
 	rightrndx = (int *)malloc(sizeof(int)*ip->ns);
 	leftrndx = (int *)malloc(sizeof(int)*ip->ns);
-	if ((sortord == NULL) | (rightrndx == NULL) | (leftrndx == NULL))
+	endrndx = (int *)malloc(sizeof(int)*ip->ns);
+	if ((sortord == NULL) | (rightrndx == NULL) |
+			(leftrndx == NULL) | (endrndx == NULL))
 		return(0);
 					/* run through bidirections */
 	for (bd = 0; bd < NI2DIR/2; bd++) {
 	    const double	ang = 2.*PI/NI2DIR*bd;
-	    double		cosd, sind;
+	    int			*sptr;
 	    int			i;
 					/* create right reverse index */
-	    if (bd) {			/* re-use from prev. iteration? */
-		int	*sptr = rightrndx;
+	    if (bd) {			/* re-use from previous iteration? */
+		sptr = rightrndx;
 		rightrndx = leftrndx;
 		leftrndx = sptr;
-	    } else {			/* else compute it */
-		cosd = cos(ang + (PI/2. - PI/NI2DIR));
-		sind = sin(ang + (PI/2. - PI/NI2DIR));
-		for (i = 0; i < ip->ns; i++) {
-		    sortord[i].si = i;
-		    sortord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
-		}
-		qsort(sortord, ip->ns, sizeof(SAMPORD), &cmp_spos);
-		for (i = 0; i < ip->ns; i++)
+	    } else {			/* else sort first half-plane */
+		sort_samples(sortord, ip, PI/2. - PI/NI2DIR);
+		for (i = ip->ns; i--; )
 		    rightrndx[sortord[i].si] = i;
+					/* & store reverse order for later */
+		for (i = ip->ns; i--; )
+		    endrndx[sortord[i].si] = ip->ns-1 - i;
 	    }
 					/* create new left reverse index */
-	    cosd = cos(ang + (PI/2. + PI/NI2DIR));
-	    sind = sin(ang + (PI/2. + PI/NI2DIR));
-	    for (i = 0; i < ip->ns; i++) {
-		    sortord[i].si = i;
-		    sortord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
-	    }
-	    qsort(sortord, ip->ns, sizeof(SAMPORD), &cmp_spos);
-	    for (i = 0; i < ip->ns; i++)
+	    if (bd == NI2DIR/2 - 1) {	/* use order from first iteration? */
+		sptr = leftrndx;
+		leftrndx = endrndx;
+		endrndx = sptr;
+	    } else {			/* else compute new half-plane */
+		sort_samples(sortord, ip, ang + (PI/2. + PI/NI2DIR));
+		for (i = ip->ns; i--; )
 		    leftrndx[sortord[i].si] = i;
-					/* sort grid values in this direction */
-	    cosd = cos(ang);
-	    sind = sin(ang);
-	    for (i = 0; i < ip->ns; i++) {
-		    sortord[i].si = i;
-		    sortord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
 	    }
-	    qsort(sortord, ip->ns, sizeof(SAMPORD), &cmp_spos);
+					/* sort grid values in this direction */
+	    sort_samples(sortord, ip, ang);
 					/* find nearest neighbors each side */
-	    for (i = 0; i < ip->ns; i++) {
+	    for (i = ip->ns; i--; ) {
 		const int	rpos = rightrndx[sortord[i].si];
 		const int	lpos = leftrndx[sortord[i].si];
 		int		j;
@@ -176,6 +207,7 @@ interp2_compute(INTERP2 *ip)
 	free(sortord);			/* clean up */
 	free(rightrndx);
 	free(leftrndx);
+	free(endrndx);
 	return(1);
 }
 
@@ -210,7 +242,7 @@ interp2_weights(float wtv[], INTERP2 *ip, double x, double y)
 	if ((wtv == NULL) | (ip == NULL))
 		return(0);
 					/* need to compute interpolant? */
-	if (ip->ra == NULL && !interp2_compute(ip))
+	if (ip->ra == NULL && !interp2_analyze(ip))
 		return(0);
 
 	wnorm = 0;			/* compute raw weights */
@@ -244,7 +276,7 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 	if ((n <= 0) | (wt == NULL) | (si == NULL) | (ip == NULL))
 		return(0);
 					/* need to compute interpolant? */
-	if (ip->ra == NULL && !interp2_compute(ip))
+	if (ip->ra == NULL && !interp2_analyze(ip))
 		return(0);
 					/* identify top n weights */
 	for (i = ip->ns; i--; ) {
