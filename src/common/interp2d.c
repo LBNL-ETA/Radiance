@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.4 2013/02/11 22:56:22 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.5 2013/02/11 23:33:35 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -82,6 +82,29 @@ interp2_realloc(INTERP2 *ip, int nsamps)
 		return(NULL);
 	ip->ns = nsamps;
 	return(ip);
+}
+
+/* Set minimum distance under which samples will start to merge */
+void
+interp2_spacing(INTERP2 *ip, double mind)
+{
+	if (mind <= 0)
+		return;
+	if ((.998*ip->dmin <= mind) && (mind <= 1.002*ip->dmin))
+		return;
+	if (ip->da != NULL) {	/* will need to recompute distribution */
+		free(ip->da);
+		ip->da = NULL;
+	}
+	ip->dmin = mind;
+}
+
+/* Modify smoothing parameter by the given factor */
+void
+interp2_smooth(INTERP2 *ip, double sf)
+{
+	if ((ip->smf *= sf) < NI2DSMF)
+		ip->smf = NI2DSMF;
 }
 
 /* private call-back to sort position index */

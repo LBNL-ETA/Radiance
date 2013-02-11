@@ -1,4 +1,4 @@
-/* RCSid $Id: interp2d.h,v 2.4 2013/02/11 22:56:22 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.5 2013/02/11 23:33:35 greg Exp $ */
 /*
  * Header for interpolation of anisotropic samples on 2-D plane.
  *
@@ -31,6 +31,12 @@ extern INTERP2	*interp2_alloc(int nsamps);
 /* Resize interpolation array (caller must assign any new values) */
 extern INTERP2	*interp2_realloc(INTERP2 *ip, int nsamps);
 
+/* Set minimum distance under which samples will start to merge */
+extern void	interp2_spacing(INTERP2 *ip, double mind);
+
+/* Modify smoothing parameter by the given factor */
+extern void	interp2_smooth(INTERP2 *ip, double sf);
+
 /* Assign full set of normalized weights to interpolate the given location */
 extern int	interp2_weights(float wtv[], INTERP2 *ip, double x, double y);
 
@@ -53,18 +59,19 @@ extern int	interp2_analyze(INTERP2 *ip);
  * get the most important N samples for the specified location.
  * The weights (and indexes in the case of interp2_topsamp)
  * are then used as coefficients for corresponding sample values
- * in a vector sum together that interpolates the function at that
- * location.  Between the initial allocation call and the first
- * weight evaluation, the dmin member may be adjusted to
- * the distance under which samples will start to merge.  If this
- * parameter is later changed, interp2_analyze() should be called
- * to recompute the interpolant.
- * The smf member sets the smoothing factor for interpolation.
- * The default setting of NI2DSMF produces near-optimal
- * interpolation when well-separated sample values are known
- * precisely.  If a greater degree of mixing is desired, this
- * paremter may be increased and it will affect the next call
- * to interp2_weights() or interp2_topsamp().
+ * in a vector sum that interpolates the function at that
+ * location.
+ * The minimum distance between sample positions defaults to 1.0.
+ * Values spaced closer than this will be merged (averaged).  The
+ * interp2_spacing() call may be used to alter this member,
+ * causing the interpolant to be recalculated during the
+ * next call to either of the sampling functions.
+ * The default smoothing factor NI2DSMF provides near-optimal
+ * interpolation when well-separated values are known
+ * precisely.  Increase this setting by a factor > 1.0
+ * with the interp2_smooth() call if greater mixing is desired.
+ * A call of interp2_smooth(ip,0.0) resets to the minimum
+ * default.  It is not possible to "sharpen" the data.
  **************************************************************/
  
 #ifdef __cplusplus
