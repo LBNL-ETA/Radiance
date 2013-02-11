@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.3 2013/02/11 20:01:15 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.4 2013/02/11 22:56:22 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -9,30 +9,30 @@ static const char RCSid[] = "$Id: interp2d.c,v 2.3 2013/02/11 20:01:15 greg Exp 
 
 #include "copyright.h"
 
-/*************************************************************
+/***************************************************************
  * This is a general method for 2-D interpolation similar to
  * radial basis functions but allowing for a good deal of local
  * anisotropy in the point distribution.  Each sample point
  * is examined to determine the closest neighboring samples in
  * each of NI2DIR surrounding directions.  To speed this
- * calculation, we sort the data into 3 half-planes and
- * perform simple tests to see which neighbor is closest in
- * a each direction.  Once we have our approximate neighborhood
+ * calculation, we sort the data into half-planes and apply
+ * simple tests to see which neighbor is closest in each
+ * direction.  Once we have our approximate neighborhood
  * for a sample, we can use it in a modified Gaussian weighting
- * scheme with anisotropic surround.  Harmonic weighting is added
+ * with allowing local anisotropy.  Harmonic weighting is added
  * to reduce the influence of distant neighbors.  This yields a
  * smooth interpolation regardless of how the sample points are
- * initiallydistributed.  Evaluation is accelerated by use of a
- * fast approximation to the atan2(y,x) function.
- **************************************************************/
+ * initially distributed.  Evaluation is accelerated by use of
+ * a fast approximation to the atan2(y,x) function.
+ ****************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "rtmath.h"
 #include "interp2d.h"
 
-#define DECODE_RAD(ip,er)	((ip)->rmin*(1. + .5*(er)))
-#define ENCODE_RAD(ip,r)	((int)(2.*(r)/(ip)->rmin) - 2)
+#define DECODE_DIA(ip,ed)	((ip)->dmin*(1. + .5*(ed)))
+#define ENCODE_DIA(ip,d)	((int)(2.*(d)/(ip)->dmin) - 2)
 
 /* Sample order (private) */
 typedef struct {
@@ -54,9 +54,9 @@ interp2_alloc(int nsamps)
 		return(NULL);
 
 	nip->ns = nsamps;
-	nip->rmin = .5;		/* default radius minimum */
+	nip->dmin = 1;		/* default minimum diameter */
 	nip->smf = NI2DSMF;	/* default smoothing factor */
-	nip->ra = NULL;
+	nip->da = NULL;
 				/* caller must assign spt[] array */
 	return(nip);
 }
@@ -73,9 +73,9 @@ interp2_realloc(INTERP2 *ip, int nsamps)
 	}
 	if (nsamps == ip->ns);
 		return(ip);
-	if (ip->ra != NULL) {	/* will need to recompute distribution */
-		free(ip->ra);
-		ip->ra = NULL;
+	if (ip->da != NULL) {	/* will need to recompute distribution */
+		free(ip->da);
+		ip->da = NULL;
 	}
 	ip = (INTERP2 *)realloc(ip, sizeof(INTERP2)+sizeof(float)*2*(nsamps-1));
 	if (ip == NULL)
@@ -113,17 +113,17 @@ sort_samples(SAMPORD *sord, const INTERP2 *ip, double ang)
 	qsort(sord, ip->ns, sizeof(SAMPORD), &cmp_spos);
 }
 
-/* private routine to encode radius with range checks */
+/* private routine to encode sample diameter with range checks */
 static int
-encode_radius(const INTERP2 *ip, double r)
+encode_diameter(const INTERP2 *ip, double d)
 {
-	const int	er = ENCODE_RAD(ip, r);
+	const int	ed = ENCODE_DIA(ip, d);
 
-	if (er <= 0)
+	if (ed <= 0)
 		return(0);
-	if (er >= 0xffff)
+	if (ed >= 0xffff)
 		return(0xffff);
-	return(er);
+	return(ed);
 }
 
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
@@ -134,13 +134,13 @@ interp2_analyze(INTERP2 *ip)
 	int	*rightrndx, *leftrndx, *endrndx;
 	int	bd;
 					/* sanity checks */
-	if (ip == NULL || (ip->ns <= 1) | (ip->rmin <= 0))
+	if (ip == NULL || (ip->ns <= 1) | (ip->dmin <= 0))
 		return(0);
 					/* need to allocate? */
-	if (ip->ra == NULL) {
-		ip->ra = (unsigned short (*)[NI2DIR])malloc(
+	if (ip->da == NULL) {
+		ip->da = (unsigned short (*)[NI2DIR])malloc(
 				sizeof(unsigned short)*NI2DIR*ip->ns);
-		if (ip->ra == NULL)
+		if (ip->da == NULL)
 			return(0);
 	}
 					/* get temporary arrays */
@@ -186,20 +186,20 @@ interp2_analyze(INTERP2 *ip)
 		const int	ii = sortord[i].si;
 		int		j;
 					/* preload with large radii */
-		ip->ra[ii][bd] = ip->ra[ii][bd+NI2DIR/2] = encode_radius(ip,
-			    .25*(sortord[ip->ns-1].dm - sortord[0].dm));
+		ip->da[ii][bd] = ip->da[ii][bd+NI2DIR/2] = encode_diameter(ip,
+			    .5*(sortord[ip->ns-1].dm - sortord[0].dm));
 		for (j = i; ++j < ip->ns; )	/* nearest above */
 		    if (rightrndx[sortord[j].si] > rightrndx[ii] &&
 				    leftrndx[sortord[j].si] < leftrndx[ii]) {
-			ip->ra[ii][bd] = encode_radius(ip,
-					.5*(sortord[j].dm - sortord[i].dm));
+			ip->da[ii][bd] = encode_diameter(ip,
+						sortord[j].dm - sortord[i].dm);
 			break;
 		    }
 		for (j = i; j-- > 0; )		/* nearest below */
 		    if (rightrndx[sortord[j].si] < rightrndx[ii] &&
 				    leftrndx[sortord[j].si] > leftrndx[ii]) {
-			ip->ra[ii][bd+NI2DIR/2] = encode_radius(ip,
-					.5*(sortord[i].dm - sortord[j].dm));
+			ip->da[ii][bd+NI2DIR/2] = encode_diameter(ip,
+						sortord[i].dm - sortord[j].dm);
 			break;
 		    }
 	    }
@@ -226,11 +226,11 @@ get_wt(const INTERP2 *ip, const int i, double x, double y)
 	rd = dir * (NI2DIR/2./PI);
 	ri = (int)rd;
 	rd -= (double)ri;
-	rd = (1.-rd)*ip->ra[i][ri] + rd*ip->ra[i][(ri+1)%NI2DIR];
-	rd = ip->smf * DECODE_RAD(ip, rd);
+	rd = (1.-rd)*ip->da[i][ri] + rd*ip->da[i][(ri+1)%NI2DIR];
+	rd = ip->smf * DECODE_DIA(ip, rd);
 	d2 = x*x + y*y;
 				/* Gaussian times harmonic weighting */
-	return( exp(d2/(-2.*rd*rd)) * ip->rmin/(ip->rmin + sqrt(d2)) );
+	return( exp(d2/(-2.*rd*rd)) * ip->dmin/(ip->dmin + sqrt(d2)) );
 }
 
 /* Assign full set of normalized weights to interpolate the given position */
@@ -243,7 +243,7 @@ interp2_weights(float wtv[], INTERP2 *ip, double x, double y)
 	if ((wtv == NULL) | (ip == NULL))
 		return(0);
 					/* need to compute interpolant? */
-	if (ip->ra == NULL && !interp2_analyze(ip))
+	if (ip->da == NULL && !interp2_analyze(ip))
 		return(0);
 
 	wnorm = 0;			/* compute raw weights */
@@ -272,7 +272,7 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 	if ((n <= 0) | (wt == NULL) | (si == NULL) | (ip == NULL))
 		return(0);
 					/* need to compute interpolant? */
-	if (ip->ra == NULL && !interp2_analyze(ip))
+	if (ip->da == NULL && !interp2_analyze(ip))
 		return(0);
 					/* identify top n weights */
 	for (i = ip->ns; i--; ) {
@@ -308,7 +308,7 @@ interp2_free(INTERP2 *ip)
 {
 	if (ip == NULL)
 		return;
-	if (ip->ra != NULL)
-		free(ip->ra);
+	if (ip->da != NULL)
+		free(ip->da);
 	free(ip);
 }
