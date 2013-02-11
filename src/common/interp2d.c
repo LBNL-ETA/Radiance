@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.2 2013/02/09 17:39:21 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.3 2013/02/11 20:01:15 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -18,11 +18,12 @@ static const char RCSid[] = "$Id: interp2d.c,v 2.2 2013/02/09 17:39:21 greg Exp 
  * calculation, we sort the data into 3 half-planes and
  * perform simple tests to see which neighbor is closest in
  * a each direction.  Once we have our approximate neighborhood
- * for a sample, we can use it in a Gaussian weighting scheme
- * with anisotropic surround.  This gives us a fairly smooth
- * interpolation however the sample points may be initially
- * distributed.  Evaluation is accelerated by use of a fast
- * approximation to the atan2(y,x) function.
+ * for a sample, we can use it in a modified Gaussian weighting
+ * scheme with anisotropic surround.  Harmonic weighting is added
+ * to reduce the influence of distant neighbors.  This yields a
+ * smooth interpolation regardless of how the sample points are
+ * initiallydistributed.  Evaluation is accelerated by use of a
+ * fast approximation to the atan2(y,x) function.
  **************************************************************/
 
 #include <stdio.h>
@@ -182,23 +183,22 @@ interp2_analyze(INTERP2 *ip)
 	    sort_samples(sortord, ip, ang);
 					/* find nearest neighbors each side */
 	    for (i = ip->ns; i--; ) {
-		const int	rpos = rightrndx[sortord[i].si];
-		const int	lpos = leftrndx[sortord[i].si];
+		const int	ii = sortord[i].si;
 		int		j;
-					/* preload with large radius */
-		ip->ra[i][bd] = ip->ra[i][bd+NI2DIR/2] = encode_radius(ip,
+					/* preload with large radii */
+		ip->ra[ii][bd] = ip->ra[ii][bd+NI2DIR/2] = encode_radius(ip,
 			    .25*(sortord[ip->ns-1].dm - sortord[0].dm));
 		for (j = i; ++j < ip->ns; )	/* nearest above */
-		    if (rightrndx[sortord[j].si] > rpos &&
-				    leftrndx[sortord[j].si] < lpos) {
-			ip->ra[i][bd] = encode_radius(ip,
+		    if (rightrndx[sortord[j].si] > rightrndx[ii] &&
+				    leftrndx[sortord[j].si] < leftrndx[ii]) {
+			ip->ra[ii][bd] = encode_radius(ip,
 					.5*(sortord[j].dm - sortord[i].dm));
 			break;
 		    }
 		for (j = i; j-- > 0; )		/* nearest below */
-		    if (rightrndx[sortord[j].si] < rpos &&
-				    leftrndx[sortord[j].si] > lpos) {
-			ip->ra[i][bd+NI2DIR/2] = encode_radius(ip,
+		    if (rightrndx[sortord[j].si] < rightrndx[ii] &&
+				    leftrndx[sortord[j].si] > leftrndx[ii]) {
+			ip->ra[ii][bd+NI2DIR/2] = encode_radius(ip,
 					.5*(sortord[i].dm - sortord[j].dm));
 			break;
 		    }
@@ -211,11 +211,11 @@ interp2_analyze(INTERP2 *ip)
 	return(1);
 }
 
-/* private call returns log of raw weight for a particular sample */
+/* private call returns raw weight for a particular sample */
 static double
-get_ln_wt(const INTERP2 *ip, const int i, double x, double y)
+get_wt(const INTERP2 *ip, const int i, double x, double y)
 {
-	double	dir, rd;
+	double	dir, rd, d2;
 	int	ri;
 				/* get relative direction */
 	x -= ip->spt[i][0];
@@ -228,8 +228,9 @@ get_ln_wt(const INTERP2 *ip, const int i, double x, double y)
 	rd -= (double)ri;
 	rd = (1.-rd)*ip->ra[i][ri] + rd*ip->ra[i][(ri+1)%NI2DIR];
 	rd = ip->smf * DECODE_RAD(ip, rd);
-				/* return log of Gaussian weight */
-	return( (x*x + y*y) / (-2.*rd*rd) );
+	d2 = x*x + y*y;
+				/* Gaussian times harmonic weighting */
+	return( exp(d2/(-2.*rd*rd)) * ip->rmin/(ip->rmin + sqrt(d2)) );
 }
 
 /* Assign full set of normalized weights to interpolate the given position */
@@ -247,12 +248,7 @@ interp2_weights(float wtv[], INTERP2 *ip, double x, double y)
 
 	wnorm = 0;			/* compute raw weights */
 	for (i = ip->ns; i--; ) {
-		double	wt = get_ln_wt(ip, i, x, y);
-		if (wt < -21.) {
-			wtv[i] = 0;	/* ignore weights < 1e-9 */
-			continue;
-		}
-		wt = exp(wt);		/* Gaussian weight */
+		double	wt = get_wt(ip, i, x, y);
 		wtv[i] = wt;
 		wnorm += wt;
 	}
@@ -280,9 +276,9 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 		return(0);
 					/* identify top n weights */
 	for (i = ip->ns; i--; ) {
-		const double	lnwt = get_ln_wt(ip, i, x, y);
+		const double	wti = get_wt(ip, i, x, y);
 		for (j = nn; j > 0; j--) {
-			if (wt[j-1] >= lnwt)
+			if (wt[j-1] >= wti)
 				break;
 			if (j < n) {
 				wt[j] = wt[j-1];
@@ -290,17 +286,14 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 			}
 		}
 		if (j < n) {		/* add/insert sample */
-			wt[j] = lnwt;
+			wt[j] = wti;
 			si[j] = i;
 			nn += (nn < n);
 		}
 	}
-	wnorm = 0;			/* exponentiate and normalize */
-	for (j = nn; j--; ) {
-		double	dwt = exp(wt[j]);
-		wt[j] = dwt;
-		wnorm += dwt;
-	}
+	wnorm = 0;			/* normalize sample weights */
+	for (j = nn; j--; )
+		wnorm += wt[j];
 	if (wnorm <= 0)
 		return(0);
 	wnorm = 1./wnorm;
