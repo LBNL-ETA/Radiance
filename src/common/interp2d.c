@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.7 2013/02/12 17:47:58 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.8 2013/02/12 18:13:28 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -71,7 +71,7 @@ interp2_realloc(INTERP2 *ip, int nsamps)
 		interp2_free(ip);
 		return(NULL);
 	}
-	if (nsamps == ip->ns);
+	if (nsamps == ip->ns)
 		return(ip);
 	if (ip->da != NULL) {	/* will need to recompute distribution */
 		free(ip->da);
