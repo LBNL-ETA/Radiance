@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.5 2013/02/11 23:33:35 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.6 2013/02/12 02:56:05 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -238,7 +238,7 @@ interp2_analyze(INTERP2 *ip)
 static double
 get_wt(const INTERP2 *ip, const int i, double x, double y)
 {
-	double	dir, rd, d2;
+	double	dir, rd, r2, d2;
 	int	ri;
 				/* get relative direction */
 	x -= ip->spt[i][0];
@@ -251,9 +251,12 @@ get_wt(const INTERP2 *ip, const int i, double x, double y)
 	rd -= (double)ri;
 	rd = (1.-rd)*ip->da[i][ri] + rd*ip->da[i][(ri+1)%NI2DIR];
 	rd = ip->smf * DECODE_DIA(ip, rd);
+	r2 = 2.*rd*rd;
 	d2 = x*x + y*y;
+	if (d2 > 21.*r2)	/* result would be < 1e-9 */
+		return(.0);
 				/* Gaussian times harmonic weighting */
-	return( exp(d2/(-2.*rd*rd)) * ip->dmin/(ip->dmin + sqrt(d2)) );
+	return( exp(-d2/r2) * ip->dmin/(ip->dmin + sqrt(d2)) );
 }
 
 /* Assign full set of normalized weights to interpolate the given position */
