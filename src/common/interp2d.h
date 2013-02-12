@@ -1,4 +1,4 @@
-/* RCSid $Id: interp2d.h,v 2.5 2013/02/11 23:33:35 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.6 2013/02/12 00:18:28 greg Exp $ */
 /*
  * Header for interpolation of anisotropic samples on 2-D plane.
  *
@@ -58,19 +58,19 @@ extern int	interp2_analyze(INTERP2 *ip);
  * vector for all the samples, or interp2_topsamp() is called to
  * get the most important N samples for the specified location.
  * The weights (and indexes in the case of interp2_topsamp)
- * are then used as coefficients for corresponding sample values
- * in a vector sum that interpolates the function at that
- * location.
+ * are then used as coefficients for corresponding sample
+ * values in a vector sum that interpolates the function at
+ * that location.
  * The minimum distance between sample positions defaults to 1.0.
- * Values spaced closer than this will be merged (averaged).  The
- * interp2_spacing() call may be used to alter this member,
+ * Values spaced closer than this will be merged/averaged.
+ * The interp2_spacing() call may be used to alter this distance,
  * causing the interpolant to be recalculated during the
- * next call to either of the sampling functions.
+ * next call to the sampling functions.
  * The default smoothing factor NI2DSMF provides near-optimal
  * interpolation when well-separated values are known
- * precisely.  Increase this setting by a factor > 1.0
+ * precisely.  Increase this setting by a factor > 1
  * with the interp2_smooth() call if greater mixing is desired.
- * A call of interp2_smooth(ip,0.0) resets to the minimum
+ * A call of interp2_smooth(ip,0) resets to the minimum
  * default.  It is not possible to "sharpen" the data.
  **************************************************************/
  
