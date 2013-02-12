@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.8 2013/02/12 18:13:28 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.9 2013/02/12 18:41:39 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -303,6 +303,8 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 					/* identify top n weights */
 	for (i = ip->ns; i--; ) {
 		const double	wti = get_wt(ip, i, x, y);
+		if (wti <= 1e-9)
+			continue;
 		for (j = nn; j > 0; j--) {
 			if (wt[j-1] >= wti)
 				break;
