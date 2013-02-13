@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.10 2013/02/13 18:30:22 greg Exp $";
 #endif
 /*      Copyright (c) 1994,2006 *Fraunhofer Institut for Solar Energy Systems
  *        			Heidenhofstr. 2, D-79110 Freiburg, Germany
@@ -21,6 +21,8 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp
  *			points east, and the Y-axis points north.
 */
 
+#define _USE_MATH_DEFINES
+
 #include  <stdio.h>
 #include  <string.h>
 #include  <math.h>
@@ -33,7 +35,7 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.9 2013/01/30 01:02:42 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.10 2013/02/13 18:30:22 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,0.9738,0.2809,0.0356,-0.1246,-0.5718,0.9938,
