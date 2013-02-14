@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.9 2013/02/12 18:41:39 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.10 2013/02/14 19:57:10 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -23,7 +23,8 @@ static const char RCSid[] = "$Id: interp2d.c,v 2.9 2013/02/12 18:41:39 greg Exp 
  * to reduce the influence of distant neighbors.  This yields a
  * smooth interpolation regardless of how the sample points are
  * initially distributed.  Evaluation is accelerated by use of
- * a fast approximation to the atan2(y,x) function.
+ * a fast approximation to the atan2(y,x) function and an array
+ * of flags indicating where weights are (nearly) zero.
  ****************************************************************/
 
 #include <stdio.h>
@@ -155,17 +156,44 @@ interp2_analyze(INTERP2 *ip)
 {
 	SAMPORD	*sortord;
 	int	*rightrndx, *leftrndx, *endrndx;
-	int	bd;
+	int	i, bd;
 					/* sanity checks */
-	if (ip == NULL || (ip->ns <= 1) | (ip->dmin <= 0))
+	if (ip == NULL)
 		return(0);
-					/* need to allocate? */
-	if (ip->da == NULL) {
-		ip->da = (unsigned short (*)[NI2DIR])malloc(
-				sizeof(unsigned short)*NI2DIR*ip->ns);
-		if (ip->da == NULL)
-			return(0);
+	if (ip->da != NULL) {		/* free previous data if any */
+		free(ip->da);
+		ip->da = NULL;
 	}
+	if ((ip->ns <= 1) | (ip->dmin <= 0))
+		return(0);
+					/* compute sample domain */
+	ip->smin[0] = ip->smin[1] = FHUGE;
+	ip->smul[0] = ip->smul[1] = -FHUGE;
+	for (i = ip->ns; i--; ) {
+		if (ip->spt[i][0] < ip->smin[0])
+			ip->smin[0] = ip->spt[i][0];
+		if (ip->spt[i][0] > ip->smul[0])
+			ip->smul[0] = ip->spt[i][0];
+		if (ip->spt[i][1] < ip->smin[1])
+			ip->smin[1] = ip->spt[i][1];
+		if (ip->spt[i][1] > ip->smul[1])
+			ip->smul[1] = ip->spt[i][1];
+	}
+	ip->smul[0] -= ip->smin[0];
+	ip->smul[1] -= ip->smin[1];
+	ip->grid2 = (ip->smul[0]*ip->smul[0] + ip->smul[1]*ip->smul[1]) *
+			(4./NI2DIM/NI2DIM);
+	if (ip->grid2 <= FTINY*ip->dmin*ip->dmin)
+		return(0);
+	if (ip->smul[0] > FTINY)
+		ip->smul[0] = NI2DIM / ip->smul[0];
+	if (ip->smul[1] > FTINY)
+		ip->smul[1] = NI2DIM / ip->smul[1];
+					/* allocate analysis data */
+	ip->da = (struct interp2_samp *)calloc( ip->ns,
+					sizeof(struct interp2_samp) );
+	if (ip->da == NULL)
+		return(0);
 					/* get temporary arrays */
 	sortord = (SAMPORD *)malloc(sizeof(SAMPORD)*ip->ns);
 	rightrndx = (int *)malloc(sizeof(int)*ip->ns);
@@ -178,7 +206,6 @@ interp2_analyze(INTERP2 *ip)
 	for (bd = 0; bd < NI2DIR/2; bd++) {
 	    const double	ang = 2.*PI/NI2DIR*bd;
 	    int			*sptr;
-	    int			i;
 					/* create right reverse index */
 	    if (bd) {			/* re-use from previous iteration? */
 		sptr = rightrndx;
@@ -209,19 +236,20 @@ interp2_analyze(INTERP2 *ip)
 		const int	ii = sortord[i].si;
 		int		j;
 					/* preload with large radii */
-		ip->da[ii][bd] = ip->da[ii][bd+NI2DIR/2] = encode_diameter(ip,
-			    .5*(sortord[ip->ns-1].dm - sortord[0].dm));
+		ip->da[ii].dia[bd] =
+		ip->da[ii].dia[bd+NI2DIR/2] = encode_diameter(ip,
+				.5*(sortord[ip->ns-1].dm - sortord[0].dm));
 		for (j = i; ++j < ip->ns; )	/* nearest above */
 		    if (rightrndx[sortord[j].si] > rightrndx[ii] &&
 				    leftrndx[sortord[j].si] < leftrndx[ii]) {
-			ip->da[ii][bd] = encode_diameter(ip,
+			ip->da[ii].dia[bd] = encode_diameter(ip,
 						sortord[j].dm - sortord[i].dm);
 			break;
 		    }
 		for (j = i; j-- > 0; )		/* nearest below */
 		    if (rightrndx[sortord[j].si] < rightrndx[ii] &&
 				    leftrndx[sortord[j].si] > leftrndx[ii]) {
-			ip->da[ii][bd+NI2DIR/2] = encode_diameter(ip,
+			ip->da[ii].dia[bd+NI2DIR/2] = encode_diameter(ip,
 						sortord[i].dm - sortord[j].dm);
 			break;
 		    }
@@ -234,27 +262,47 @@ interp2_analyze(INTERP2 *ip)
 	return(1);
 }
 
-/* private call returns raw weight for a particular sample */
-static double
-get_wt(const INTERP2 *ip, const int i, double x, double y)
+/* Compute unnormalized weight for a position relative to a sample */
+double
+interp2_wti(INTERP2 *ip, const int i, double x, double y)
 {
+	int	xfi, yfi;
 	double	dir, rd, r2, d2;
 	int	ri;
-				/* get relative direction */
-	x -= ip->spt[i][0];
+				/* need to compute interpolant? */
+	if (ip->da == NULL && !interp2_analyze(ip))
+		return(0);
+				/* get grid position */
+	xfi = (x - ip->smin[0]) * ip->smul[0];
+	if (xfi >= NI2DIM)
+		xfi = NI2DIM-1;
+	else
+		xfi *= (xfi >= 0);
+	yfi = (y - ip->smin[1]) * ip->smul[1];
+	if (yfi >= NI2DIM)
+		yfi = NI2DIM-1;
+	else
+		yfi *= (yfi >= 0);
+	x -= ip->spt[i][0];	/* check distance */
 	y -= ip->spt[i][1];
-	dir = atan2a(y, x);
+	d2 = x*x + y*y;
+				/* zero weight this zone? */
+	if (d2 > ip->grid2 && ip->da[i].blkflg[yfi] & 1<<xfi)
+		return(.0);
+
+	dir = atan2a(y, x);	/* get relative direction */
 	dir += 2.*PI*(dir < 0);
 				/* linear radius interpolation */
 	rd = dir * (NI2DIR/2./PI);
 	ri = (int)rd;
 	rd -= (double)ri;
-	rd = (1.-rd)*ip->da[i][ri] + rd*ip->da[i][(ri+1)%NI2DIR];
+	rd = (1.-rd)*ip->da[i].dia[ri] + rd*ip->da[i].dia[(ri+1)%NI2DIR];
 	rd = ip->smf * DECODE_DIA(ip, rd);
 	r2 = 2.*rd*rd;
-	d2 = x*x + y*y;
-	if (d2 > 21.*r2)	/* result would be < 1e-9 */
+	if (d2 > 21.*r2) {	/* result would be < 1e-9 */
+		ip->da[i].blkflg[yfi] |= 1<<xfi;
 		return(.0);
+	}
 				/* Gaussian times harmonic weighting */
 	return( exp(-d2/r2) * ip->dmin/(ip->dmin + sqrt(d2)) );
 }
@@ -268,13 +316,10 @@ interp2_weights(float wtv[], INTERP2 *ip, double x, double y)
 
 	if ((wtv == NULL) | (ip == NULL))
 		return(0);
-					/* need to compute interpolant? */
-	if (ip->da == NULL && !interp2_analyze(ip))
-		return(0);
 
 	wnorm = 0;			/* compute raw weights */
 	for (i = ip->ns; i--; ) {
-		double	wt = get_wt(ip, i, x, y);
+		double	wt = interp2_wti(ip, i, x, y);
 		wtv[i] = wt;
 		wnorm += wt;
 	}
@@ -297,12 +342,9 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 
 	if ((n <= 0) | (wt == NULL) | (si == NULL) | (ip == NULL))
 		return(0);
-					/* need to compute interpolant? */
-	if (ip->da == NULL && !interp2_analyze(ip))
-		return(0);
 					/* identify top n weights */
 	for (i = ip->ns; i--; ) {
-		const double	wti = get_wt(ip, i, x, y);
+		const double	wti = interp2_wti(ip, i, x, y);
 		if (wti <= 1e-9)
 			continue;
 		for (j = nn; j > 0; j--) {

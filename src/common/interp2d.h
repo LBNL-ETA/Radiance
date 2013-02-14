@@ -1,4 +1,4 @@
-/* RCSid $Id: interp2d.h,v 2.6 2013/02/12 00:18:28 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.7 2013/02/14 19:57:10 greg Exp $ */
 /*
  * Header for interpolation of anisotropic samples on 2-D plane.
  *
@@ -15,13 +15,20 @@ extern "C" {
 #define	NI2DSMF	0.42f			/* minimal smoothing factor */
 
 #define NI2DIR	(2*4)			/* # interpolation directions */
+#define NI2DIM	16			/* size of black flag array */
 
 /* Data structure for interpolant */
 typedef struct {
 	int		ns;		/* number of sample positions */
 	float		dmin;		/* minimum diameter (default=1) */
 	float		smf;		/* smoothing factor (def=NI2DSMF) */
-	unsigned short	(*da)[NI2DIR];	/* anisotropic distances (private) */
+	float		smin[2];	/* sample minima */
+	float		smul[2];	/* NI2DIM/(smax-smin) */
+	float		grid2;		/* twice grid diameter squared */
+	struct interp2_samp {
+		unsigned short	dia[NI2DIR];
+		unsigned short	blkflg[NI2DIM];
+	}		*da;		/* direction array (private) */
 	float		spt[1][2];	/* sample positions (extends struct) */
 } INTERP2;
 
@@ -48,6 +55,9 @@ extern void	interp2_free(INTERP2 *ip);
 
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
 extern int	interp2_analyze(INTERP2 *ip);
+
+/* Compute unnormalized weight for a position relative to a sample */
+double		interp2_wti(INTERP2 *ip, const int i, double x, double y);
 
 /***************************************************************
  * Typical use is to allocate an INTERP2 struct and assign the
