@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.11 2013/02/15 01:26:47 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.12 2013/02/15 19:15:16 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -150,13 +150,107 @@ encode_diameter(const INTERP2 *ip, double d)
 	return(ed);
 }
 
+/* Compute unnormalized weight for a position relative to a sample */
+double
+interp2_wti(INTERP2 *ip, const int i, double x, double y)
+{
+	double		dir, rd, r2, d2;
+	int		ri;
+				/* get relative direction */
+	x -= ip->spt[i][0];
+	y -= ip->spt[i][1];
+	dir = atan2a(y, x);
+	dir += 2.*PI*(dir < 0);
+				/* linear radius interpolation */
+	rd = dir * (NI2DIR/2./PI);
+	ri = (int)rd;
+	rd -= (double)ri;
+	rd = (1.-rd)*ip->da[i].dia[ri] + rd*ip->da[i].dia[(ri+1)%NI2DIR];
+	rd = ip->smf * DECODE_DIA(ip, rd);
+	r2 = 2.*rd*rd;
+	d2 = x*x + y*y;
+	if (d2 > 21.*r2)	/* result would be < 1e-9 */
+		return(.0);
+				/* Gaussian times harmonic weighting */
+	return( exp(-d2/r2) * ip->dmin/(ip->dmin + sqrt(d2)) );
+}
+
+/* private call to get grid flag index */
+static int
+interp2_flagpos(int fgi[2], INTERP2 *ip, double x, double y)
+{
+	int	inbounds = 0;
+
+	if (ip == NULL)		/* paranoia */
+		return(-1);
+				/* need to compute interpolant? */
+	if (ip->da == NULL && !interp2_analyze(ip))
+		return(-1);
+				/* get x & y grid positions */
+	fgi[0] = (x - ip->smin[0]) * NI2DIM / (ip->smax[0] - ip->smin[0]);
+
+	if (fgi[0] >= NI2DIM)
+		fgi[0] = NI2DIM-1;
+	else if (fgi[0] < 0)
+		fgi[0] = 0;
+	else
+		++inbounds;
+
+	fgi[1] = (y - ip->smin[1]) * NI2DIM / (ip->smax[1] - ip->smin[1]);
+
+	if (fgi[1] >= NI2DIM)
+		fgi[1] = NI2DIM-1;
+	else if (fgi[1] < 0)
+		fgi[1] = 0;
+	else
+		++inbounds;
+
+	return(inbounds == 2);
+}
+
+#define setflg(fl,xi,yi)	((fl)[yi] |= 1<<(xi))
+
+#define chkflg(fl,xi,yi)	((fl)[yi]>>(xi) & 1)
+
+/* private flood function to determine sample influence */
+static void
+influence_flood(INTERP2 *ip, const int i, unsigned short visited[NI2DIM],
+			int xfi, int yfi)
+{
+	double	gx = (xfi+.5)*(1./NI2DIM)*(ip->smax[0] - ip->smin[0]) +
+					ip->smin[0];
+	double	gy = (yfi+.5)*(1./NI2DIM)*(ip->smax[1] - ip->smin[1]) +
+					ip->smin[1];
+	double	dx = gx - ip->spt[i][0];
+	double	dy = gy - ip->spt[i][1];
+
+	setflg(visited, xfi, yfi);
+
+	if (dx*dx + dy*dy > 2.*ip->grid2 && interp2_wti(ip, i, gx, gy) <= 1e-7)
+		return;
+
+	setflg(ip->da[i].infl, xfi, yfi);
+
+	if (xfi > 0 && !chkflg(visited, xfi-1, yfi))
+		influence_flood(ip, i, visited, xfi-1, yfi);
+
+	if (yfi > 0 && !chkflg(visited, xfi, yfi-1))
+		influence_flood(ip, i, visited, xfi, yfi-1);
+
+	if (xfi < NI2DIM-1 && !chkflg(visited, xfi+1, yfi))
+		influence_flood(ip, i, visited, xfi+1, yfi);
+
+	if (yfi < NI2DIM-1 && !chkflg(visited, xfi, yfi+1))
+		influence_flood(ip, i, visited, xfi, yfi+1);
+}
+
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
 int
 interp2_analyze(INTERP2 *ip)
 {
 	SAMPORD	*sortord;
 	int	*rightrndx, *leftrndx, *endrndx;
-	int	i, bd;
+	int	i, j, bd;
 					/* sanity checks */
 	if (ip == NULL)
 		return(0);
@@ -170,14 +264,10 @@ interp2_analyze(INTERP2 *ip)
 	ip->smin[0] = ip->smin[1] = FHUGE;
 	ip->smax[0] = ip->smax[1] = -FHUGE;
 	for (i = ip->ns; i--; ) {
-		if (ip->spt[i][0] < ip->smin[0])
-			ip->smin[0] = ip->spt[i][0];
-		if (ip->spt[i][0] > ip->smax[0])
-			ip->smax[0] = ip->spt[i][0];
-		if (ip->spt[i][1] < ip->smin[1])
-			ip->smin[1] = ip->spt[i][1];
-		if (ip->spt[i][1] > ip->smax[1])
-			ip->smax[1] = ip->spt[i][1];
+		if (ip->spt[i][0] < ip->smin[0]) ip->smin[0] = ip->spt[i][0];
+		if (ip->spt[i][0] > ip->smax[0]) ip->smax[0] = ip->spt[i][0];
+		if (ip->spt[i][1] < ip->smin[1]) ip->smin[1] = ip->spt[i][1];
+		if (ip->spt[i][1] > ip->smax[1]) ip->smax[1] = ip->spt[i][1];
 	}
 	ip->grid2 = ((ip->smax[0]-ip->smin[0])*(ip->smax[0]-ip->smin[0]) +
 			(ip->smax[1]-ip->smin[1])*(ip->smax[1]-ip->smin[1])) *
@@ -189,7 +279,7 @@ interp2_analyze(INTERP2 *ip)
 					sizeof(struct interp2_samp) );
 	if (ip->da == NULL)
 		return(0);
-					/* get temporary arrays */
+					/* allocate temporary arrays */
 	sortord = (SAMPORD *)malloc(sizeof(SAMPORD)*ip->ns);
 	rightrndx = (int *)malloc(sizeof(int)*ip->ns);
 	leftrndx = (int *)malloc(sizeof(int)*ip->ns);
@@ -229,7 +319,6 @@ interp2_analyze(INTERP2 *ip)
 					/* find nearest neighbors each side */
 	    for (i = ip->ns; i--; ) {
 		const int	ii = sortord[i].si;
-		int		j;
 					/* preload with large radii */
 		ip->da[ii].dia[bd] =
 		ip->da[ii].dia[bd+NI2DIR/2] = encode_diameter(ip,
@@ -250,83 +339,21 @@ interp2_analyze(INTERP2 *ip)
 		    }
 	    }
 	}
-	free(sortord);			/* clean up */
+	free(sortord);			/* release temp arrays */
 	free(rightrndx);
 	free(leftrndx);
 	free(endrndx);
-	return(1);
-}
+					/* fill influence maps */
+	for (i = ip->ns; i--; ) {
+		unsigned short	visited[NI2DIM];
+		int		fgi[2];
 
-/* Compute unnormalized weight for a position relative to a sample */
-double
-interp2_wti(INTERP2 *ip, const int i, double x, double y)
-{
-	double		dir, rd, r2, d2;
-	int		ri;
-				/* get relative direction */
-	x -= ip->spt[i][0];
-	y -= ip->spt[i][1];
-	dir = atan2a(y, x);
-	dir += 2.*PI*(dir < 0);
-				/* linear radius interpolation */
-	rd = dir * (NI2DIR/2./PI);
-	ri = (int)rd;
-	rd -= (double)ri;
-	rd = (1.-rd)*ip->da[i].dia[ri] + rd*ip->da[i].dia[(ri+1)%NI2DIR];
-	rd = ip->smf * DECODE_DIA(ip, rd);
-	r2 = 2.*rd*rd;
-	d2 = x*x + y*y;
-	if (d2 > 21.*r2)	/* result would be < 1e-9 */
-		return(.0);
-				/* Gaussian times harmonic weighting */
-	return( exp(-d2/r2) * ip->dmin/(ip->dmin + sqrt(d2)) );
-}
-
-/* private call to get grid flag index */
-static int
-interp2_flagpos(int fgi[2], INTERP2 *ip, double x, double y)
-{
-	int	ingrid = 1;
-
-	if (ip == NULL)		/* paranoia */
-		return(-1);
-				/* need to compute interpolant? */
-	if (ip->da == NULL && !interp2_analyze(ip))
-		return(-1);
-				/* get grid position */
-	fgi[0] = (x - ip->smin[0]) * NI2DIM / (ip->smax[0] - ip->smin[0]);
-	if (fgi[0] >= NI2DIM) {
-		fgi[0] = NI2DIM-1;
-		ingrid = 0;
-	} else if (fgi[0] < 0) {
-		fgi[0] = 0;
-		ingrid = 0;
+		for (j = NI2DIM; j--; ) visited[j] = 0;
+		interp2_flagpos(fgi, ip, ip->spt[i][0], ip->spt[i][1]);
+		influence_flood(ip, i, visited, fgi[0], fgi[1]);
 	}
-	fgi[1] = (y - ip->smin[1]) * NI2DIM / (ip->smax[1] - ip->smin[1]);
-	if (fgi[1] >= NI2DIM) {
-		fgi[1] = NI2DIM-1;
-		ingrid = 0;
-	} else if (fgi[1] < 0) {
-		fgi[1] = 0;
-		ingrid = 0;
-	}
-	return(ingrid);
+	return(1);			/* all done */
 }
-
-/* private call to set black flag if not too close to the given sample */
-static void
-setblk(INTERP2 *ip, const int i, const int gi[2])
-{
-	double	dx = (gi[0]+.5)*(1./NI2DIM)*(ip->smax[0] - ip->smin[0]) +
-					ip->smin[0] - ip->spt[i][0];
-	double	dy = (gi[1]+.5)*(1./NI2DIM)*(ip->smax[1] - ip->smin[1]) +
-					ip->smin[1] - ip->spt[i][1];
-
-	if (dx*dx + dy*dy > 2.*ip->grid2)
-		ip->da[i].blkflg[gi[1]] |= 1<<gi[0];
-}
-
-#define chkblk(ip,i,gi)	((ip)->da[i].blkflg[(gi)[1]]>>(gi)[0] & 1)
 
 /* Assign full set of normalized weights to interpolate the given position */
 int
@@ -334,26 +361,22 @@ interp2_weights(float wtv[], INTERP2 *ip, double x, double y)
 {
 	double	wnorm;
 	int	fgi[2];
-	int	ingrid;
 	int	i;
 
 	if (wtv == NULL)
 		return(0);
 					/* get flag position */
-	if ((ingrid = interp2_flagpos(fgi, ip, x, y)) < 0)
+	if (interp2_flagpos(fgi, ip, x, y) < 0)
 		return(0);
 
 	wnorm = 0;			/* compute raw weights */
 	for (i = ip->ns; i--; )
-	    if (chkblk(ip, i, fgi)) {
-		wtv[i] = 0;
-	    } else {
+	    if (chkflg(ip->da[i].infl, fgi[0], fgi[1])) {
 		double	wt = interp2_wti(ip, i, x, y);
 		wtv[i] = wt;
 		wnorm += wt;
-		if (wt <= 1e-9 && ingrid)
-			setblk(ip, i, fgi);
-	    }
+	    } else
+		wtv[i] = 0;
 	if (wnorm <= 0)			/* too far from all our samples! */
 		return(0);
 	wnorm = 1./wnorm;		/* normalize weights */
@@ -369,24 +392,18 @@ interp2_topsamp(float wt[], int si[], const int n, INTERP2 *ip, double x, double
 {
 	int	nn = 0;
 	int	fgi[2];
-	int	ingrid;
 	double	wnorm;
 	int	i, j;
 
 	if ((n <= 0) | (wt == NULL) | (si == NULL))
 		return(0);
 					/* get flag position */
-	if ((ingrid = interp2_flagpos(fgi, ip, x, y)) < 0)
+	if (interp2_flagpos(fgi, ip, x, y) < 0)
 		return(0);
 					/* identify top n weights */
 	for (i = ip->ns; i--; )
-	    if (!chkblk(ip, i, fgi)) {
+	    if (chkflg(ip->da[i].infl, fgi[0], fgi[1])) {
 		const double	wti = interp2_wti(ip, i, x, y);
-		if (wti <= 1e-9) {
-			if (ingrid)
-				setblk(ip, i, fgi);
-			continue;
-		}
 		for (j = nn; j > 0; j--) {
 			if (wt[j-1] >= wti)
 				break;

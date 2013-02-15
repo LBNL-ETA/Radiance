@@ -1,4 +1,4 @@
-/* RCSid $Id: interp2d.h,v 2.8 2013/02/15 01:26:47 greg Exp $ */
+/* RCSid $Id: interp2d.h,v 2.9 2013/02/15 19:15:16 greg Exp $ */
 /*
  * Header for interpolation of anisotropic samples on 2-D plane.
  *
@@ -15,7 +15,7 @@ extern "C" {
 #define	NI2DSMF	0.42f			/* minimal smoothing factor */
 
 #define NI2DIR	(2*4)			/* # interpolation directions */
-#define NI2DIM	16			/* size of black flag array */
+#define NI2DIM	16			/* size of influence map */
 
 /* Data structure for interpolant */
 typedef struct {
@@ -27,7 +27,7 @@ typedef struct {
 	float		grid2;		/* grid diameter squared */
 	struct interp2_samp {
 		unsigned short	dia[NI2DIR];
-		unsigned short	blkflg[NI2DIM];
+		unsigned short	infl[NI2DIM];
 	}		*da;		/* direction array (private) */
 	float		spt[1][2];	/* sample positions (extends struct) */
 } INTERP2;
