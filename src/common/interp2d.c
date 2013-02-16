@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.12 2013/02/15 19:15:16 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.13 2013/02/16 00:41:12 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -23,8 +23,8 @@ static const char RCSid[] = "$Id: interp2d.c,v 2.12 2013/02/15 19:15:16 greg Exp
  * to reduce the influence of distant neighbors.  This yields a
  * smooth interpolation regardless of how the sample points are
  * initially distributed.  Evaluation is accelerated by use of
- * a fast approximation to the atan2(y,x) function and an array
- * of flags indicating where weights are (nearly) zero.
+ * a fast approximation to the atan2(y,x) function and a low-res
+ * map indicating where sample weights are significant.
  ****************************************************************/
 
 #include <stdio.h>
@@ -40,6 +40,19 @@ typedef struct {
 	int	si;		/* sample index */
 	float	dm;		/* distance measure in this direction */
 } SAMPORD;
+
+/* private routine to encode sample diameter with range checks */
+static int
+encode_diameter(const INTERP2 *ip, double d)
+{
+	const int	ed = ENCODE_DIA(ip, d);
+
+	if (ed <= 0)
+		return(0);
+	if (ed >= 0xffff)
+		return(0xffff);
+	return(ed);
+}
 
 /* Allocate a new set of interpolation samples (caller assigns spt[] array) */
 INTERP2	*
@@ -98,56 +111,6 @@ interp2_spacing(INTERP2 *ip, double mind)
 		ip->da = NULL;
 	}
 	ip->dmin = mind;
-}
-
-/* Modify smoothing parameter by the given factor */
-void
-interp2_smooth(INTERP2 *ip, double sf)
-{
-	if ((ip->smf *= sf) < NI2DSMF)
-		ip->smf = NI2DSMF;
-}
-
-/* private call-back to sort position index */
-static int
-cmp_spos(const void *p1, const void *p2)
-{
-	const SAMPORD	*so1 = (const SAMPORD *)p1;
-	const SAMPORD	*so2 = (const SAMPORD *)p2;
-
-	if (so1->dm > so2->dm)
-		return 1;
-	if (so1->dm < so2->dm)
-		return -1;
-	return 0;
-}
-
-/* private routine to order samples in a particular direction */
-static void
-sort_samples(SAMPORD *sord, const INTERP2 *ip, double ang)
-{
-	const double	cosd = cos(ang);
-	const double	sind = sin(ang);
-	int		i;
-
-	for (i = ip->ns; i--; ) {
-		sord[i].si = i;
-		sord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
-	}
-	qsort(sord, ip->ns, sizeof(SAMPORD), &cmp_spos);
-}
-
-/* private routine to encode sample diameter with range checks */
-static int
-encode_diameter(const INTERP2 *ip, double d)
-{
-	const int	ed = ENCODE_DIA(ip, d);
-
-	if (ed <= 0)
-		return(0);
-	if (ed >= 0xffff)
-		return(0xffff);
-	return(ed);
 }
 
 /* Compute unnormalized weight for a position relative to a sample */
@@ -244,13 +207,75 @@ influence_flood(INTERP2 *ip, const int i, unsigned short visited[NI2DIM],
 		influence_flood(ip, i, visited, xfi, yfi+1);
 }
 
+/* private call to compute sample influence maps */
+static void
+map_influence(INTERP2 *ip)
+{
+	unsigned short	visited[NI2DIM];
+	int		fgi[2];
+	int		i, j;
+
+	for (i = ip->ns; i--; ) {
+		for (j = NI2DIM; j--; ) {
+			ip->da[i].infl[j] = 0;
+			visited[j] = 0;
+		}
+		interp2_flagpos(fgi, ip, ip->spt[i][0], ip->spt[i][1]);
+
+		influence_flood(ip, i, visited, fgi[0], fgi[1]);
+	}
+}
+
+/* Modify smoothing parameter by the given factor */
+void
+interp2_smooth(INTERP2 *ip, double sf)
+{
+	float	old_smf = ip->smf;
+
+	if ((ip->smf *= sf) < NI2DSMF)
+		ip->smf = NI2DSMF;
+					/* need to recompute influence maps? */
+	if (ip->da != NULL && (old_smf*.85 > ip->smf) |
+				(ip->smf > old_smf*1.15))
+		map_influence(ip);
+}
+
+/* private call-back to sort position index */
+static int
+cmp_spos(const void *p1, const void *p2)
+{
+	const SAMPORD	*so1 = (const SAMPORD *)p1;
+	const SAMPORD	*so2 = (const SAMPORD *)p2;
+
+	if (so1->dm > so2->dm)
+		return 1;
+	if (so1->dm < so2->dm)
+		return -1;
+	return 0;
+}
+
+/* private routine to order samples in a particular direction */
+static void
+sort_samples(SAMPORD *sord, const INTERP2 *ip, double ang)
+{
+	const double	cosd = cos(ang);
+	const double	sind = sin(ang);
+	int		i;
+
+	for (i = ip->ns; i--; ) {
+		sord[i].si = i;
+		sord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
+	}
+	qsort(sord, ip->ns, sizeof(SAMPORD), &cmp_spos);
+}
+
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
 int
 interp2_analyze(INTERP2 *ip)
 {
 	SAMPORD	*sortord;
 	int	*rightrndx, *leftrndx, *endrndx;
-	int	i, j, bd;
+	int	i, bd;
 					/* sanity checks */
 	if (ip == NULL)
 		return(0);
@@ -275,8 +300,8 @@ interp2_analyze(INTERP2 *ip)
 	if (ip->grid2 <= FTINY*ip->dmin*ip->dmin)
 		return(0);
 					/* allocate analysis data */
-	ip->da = (struct interp2_samp *)calloc( ip->ns,
-					sizeof(struct interp2_samp) );
+	ip->da = (struct interp2_samp *)malloc(
+				sizeof(struct interp2_samp)*ip->ns );
 	if (ip->da == NULL)
 		return(0);
 					/* allocate temporary arrays */
@@ -319,6 +344,7 @@ interp2_analyze(INTERP2 *ip)
 					/* find nearest neighbors each side */
 	    for (i = ip->ns; i--; ) {
 		const int	ii = sortord[i].si;
+		int		j;
 					/* preload with large radii */
 		ip->da[ii].dia[bd] =
 		ip->da[ii].dia[bd+NI2DIR/2] = encode_diameter(ip,
@@ -343,15 +369,8 @@ interp2_analyze(INTERP2 *ip)
 	free(rightrndx);
 	free(leftrndx);
 	free(endrndx);
-					/* fill influence maps */
-	for (i = ip->ns; i--; ) {
-		unsigned short	visited[NI2DIM];
-		int		fgi[2];
-
-		for (j = NI2DIM; j--; ) visited[j] = 0;
-		interp2_flagpos(fgi, ip, ip->spt[i][0], ip->spt[i][1]);
-		influence_flood(ip, i, visited, fgi[0], fgi[1]);
-	}
+					/* map sample influence areas */
+	map_influence(ip);
 	return(1);			/* all done */
 }
 
