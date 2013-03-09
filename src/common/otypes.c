@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: otypes.c,v 2.5 2011/02/18 18:47:56 greg Exp $";
+static const char RCSid[] = "$Id: otypes.c,v 2.6 2013/03/09 19:20:31 greg Exp $";
 #endif
 /*
  * Object type lookup and error reporting
@@ -17,13 +17,15 @@ static const char RCSid[] = "$Id: otypes.c,v 2.5 2011/02/18 18:47:56 greg Exp $"
 
 
 int
-otype(ofname)			/* get object function number from its name */
-register char  *ofname;
+otype(				/* get object function number from its name */
+	char  *ofname
+)
 {
-	register int  i;
+	int  i;
 
 	for (i = 0; i < NUMOTYPE; i++)
-		if (!strcmp(ofun[i].funame, ofname))
+		if (ofun[i].funame[0] == ofname[0] &&
+				!strcmp(ofun[i].funame, ofname))
 			return(i);
 
 	return(-1);		/* not found */
@@ -31,10 +33,11 @@ register char  *ofname;
 
 
 void
-objerror(o, etyp, msg)		/* report error related to object */
-OBJREC  *o;
-int  etyp;
-char  *msg;
+objerror(			/* report error related to object */
+	OBJREC  *o,
+	int  etyp,
+	char  *msg
+)
 {
 	char  msgbuf[512];
 
