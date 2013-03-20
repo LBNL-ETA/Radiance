@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.28 2012/07/29 21:56:16 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.29 2013/03/20 23:07:51 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -38,12 +38,12 @@ static const char	RCSid[] = "$Id: m_brdf.c,v 2.28 2012/07/29 21:56:16 greg Exp $
  *  Arguments for MAT_TFUNC are:
  *	2+	func	funcfile	transform
  *	0
- *	4+	red	grn	blu	rspec	trans	tspec	A7 ..
+ *	6+	red	grn	blu	rspec	trans	tspec	A7 ..
  *
  *  Arguments for MAT_TDATA are:
  *	4+	func	datafile	funcfile	v0 ..	transform
  *	0
- *	4+	red	grn	blu	rspec	trans	tspec	A7 ..
+ *	6+	red	grn	blu	rspec	trans	tspec	A7 ..
  *
  *  Arguments for the more general MAT_BRTDF are:
  *	10+	rrefl	grefl	brefl
