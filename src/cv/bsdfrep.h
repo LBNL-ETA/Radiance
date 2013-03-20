@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.6 2012/11/08 00:31:17 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.7 2013/03/20 01:00:22 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -68,6 +68,18 @@ extern int		single_plane_incident;
 				/* input/output orientations */
 extern int		input_orient;
 extern int		output_orient;
+
+				/* log BSDF histogram */
+#define	HISTLEN		256
+#define BSDF2BIG	(1./M_PI)
+#define	BSDF2SML	1e-8
+#define	HISTLNR		17.2759509		/* log(BSDF2BIG/BSDF2SML) */
+extern int		bsdf_hist[HISTLEN];
+#define histndx(v)	(int)(log((v)*(1./BSDF2SML))*(HISTLEN/HISTLNR))
+#define histval(i)	(exp(((i)+.5)*(HISTLNR/HISTLEN))*BSDF2SML)
+
+				/* BSDF value for boundary regions */
+extern double		bsdf_min;
 
 				/* processed incident DSF measurements */
 extern RBFNODE		*dsf_list;

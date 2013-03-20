@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.7 2012/11/10 19:47:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.8 2013/03/20 01:00:22 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -438,6 +438,25 @@ mesh_from_edge(MIGRATION *edge)
 		}
 	}
 }
+
+/* Compute minimum BSDF from histogram and clear it */
+static void
+comp_bsdf_min()
+{
+	int	cnt;
+	int	i, target;
+
+	cnt = 0;
+	for (i = HISTLEN; i--; )
+		cnt += bsdf_hist[i];
+
+	target = cnt/100;			/* ignore bottom 1% */
+	cnt = 0;
+	for (i = 0; cnt <= target; i++)
+		cnt += bsdf_hist[i];
+	bsdf_min = histval(i-1);
+	memset(bsdf_hist, 0, sizeof(bsdf_hist));
+}
 	
 /* Build our triangle mesh from recorded RBFs */
 void
@@ -473,6 +492,8 @@ build_mesh(void)
 		mesh_from_edge(create_migration(shrt_edj[0], shrt_edj[1]));
 	else
 		mesh_from_edge(create_migration(shrt_edj[1], shrt_edj[0]));
+						/* compute minimum BSDF */
+	comp_bsdf_min();
 						/* complete migrations */
 	await_children(nchild);
 }

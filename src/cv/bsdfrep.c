@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.11 2012/11/22 06:07:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.12 2013/03/20 01:00:22 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -25,6 +25,12 @@ int			single_plane_incident = -1;
 				/* input/output orientations */
 int			input_orient = 0;
 int			output_orient = 0;
+
+				/* BSDF histogram */
+int			bsdf_hist[HISTLEN];
+
+				/* BSDF value for boundary regions */
+double			bsdf_min = 0;
 
 				/* processed incident DSF measurements */
 RBFNODE			*dsf_list = NULL;
@@ -246,9 +252,12 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 	FVECT		odir;
 	double		sig2;
 	int		n;
-
-	if (rp == NULL)
-		return(.0);
+				/* use minimum if no information avail. */
+	if (rp == NULL) {
+		if (outvec[2] > 0 ^ output_orient > 0)
+			return(.0);
+		return(bsdf_min*output_orient*outvec[2]);
+	}
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
@@ -390,6 +399,7 @@ save_bsdf_rep(FILE *ofp)
 	fprintf(ofp, "SYMMETRY=%d\n", !single_plane_incident * inp_coverage);
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
 	fprintf(ofp, "GRIDRES=%d\n", grid_res);
+	fprintf(ofp, "BSDFMIN=%g\n", bsdf_min);
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
 					/* write each DSF */
@@ -453,6 +463,10 @@ headline(char *s, void *p)
 	}
 	if (!strncmp(s, "GRIDRES=", 8)) {
 		sscanf(s+8, "%d", &grid_res);
+		return(0);
+	}
+	if (!strncmp(s, "BSDFMIN=", 8)) {
+		sscanf(s+8, "%lf", &bsdf_min);
 		return(0);
 	}
 	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))

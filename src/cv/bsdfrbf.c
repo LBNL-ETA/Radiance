@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.3 2012/11/22 06:07:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.4 2013/03/20 01:00:22 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -50,6 +50,10 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 
 	if (!isDSF)
 		val *= ovec[2];		/* convert from BSDF to DSF */
+
+					/* update BSDF histogram */
+	if (val < BSDF2BIG*ovec[2] && val > BSDF2SML*ovec[2])
+		++bsdf_hist[histndx(val/ovec[2])];
 
 	pos_from_vec(pos, ovec);
 
