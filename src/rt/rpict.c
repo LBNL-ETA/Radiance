@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.85 2012/11/26 07:04:07 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.86 2013/03/21 00:03:09 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -663,6 +663,7 @@ pixvalue(		/* compute pixel value */
 	int  y
 )
 {
+	extern void  SDsquare2disk(double ds[2], double seedx, double seedy);
 	RAY  thisray;
 	FVECT	lorg, ldir;
 	double	hpos, vpos, vdist, lmax;
@@ -694,35 +695,34 @@ pixvalue(		/* compute pixel value */
 	}
 						/* optional depth-of-field */
 	if (dblur > FTINY) {
-		double  vc, dfh, dfv;
-						/* square/circle conv. */
-		dfh = vc = 1. - 2.*frandom();
-		dfv = 1. - 2.*frandom();
-		dfh *= .5*dblur*sqrt(1. - .5*dfv*dfv);
-		dfv *= .5*dblur*sqrt(1. - .5*vc*vc);
+		double  vc, df[2];
+						/* random point on disk */
+		SDsquare2disk(df, frandom(), frandom());
+		df[0] *= .5*dblur;
+		df[1] *= .5*dblur;
 		if ((ourview.type == VT_PER) | (ourview.type == VT_PAR)) {
 			double	adj = 1.0;
 			if (ourview.type == VT_PER)
 				adj /= DOT(thisray.rdir, ourview.vdir);
-			dfh /= sqrt(ourview.hn2);
-			dfv /= sqrt(ourview.vn2);
+			df[0] /= sqrt(ourview.hn2);
+			df[1] /= sqrt(ourview.vn2);
 			for (i = 3; i--; ) {
 				vc = ourview.vp[i] + adj*vdist*thisray.rdir[i];
-				thisray.rorg[i] += dfh*ourview.hvec[i] +
-							dfv*ourview.vvec[i] ;
+				thisray.rorg[i] += df[0]*ourview.hvec[i] +
+							df[1]*ourview.vvec[i] ;
 				thisray.rdir[i] = vc - thisray.rorg[i];
 			}
 		} else {			/* non-standard view case */
 			double	dfd = PI/4.*dblur*(.5 - frandom());
 			if ((ourview.type != VT_ANG) & (ourview.type != VT_PLS)) {
 				if (ourview.type != VT_CYL)
-					dfh /= sqrt(ourview.hn2);
-				dfv /= sqrt(ourview.vn2);
+					df[0] /= sqrt(ourview.hn2);
+				df[1] /= sqrt(ourview.vn2);
 			}
 			for (i = 3; i--; ) {
 				vc = ourview.vp[i] + vdist*thisray.rdir[i];
-				thisray.rorg[i] += dfh*ourview.hvec[i] +
-							dfv*ourview.vvec[i] +
+				thisray.rorg[i] += df[0]*ourview.hvec[i] +
+							df[1]*ourview.vvec[i] +
 							dfd*ourview.vdir[i] ;
 				thisray.rdir[i] = vc - thisray.rorg[i];
 			}
