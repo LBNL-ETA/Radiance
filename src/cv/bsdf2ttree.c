@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.11 2013/03/22 02:15:06 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.12 2013/03/22 16:39:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -276,8 +276,12 @@ main(int argc, char *argv[])
 	if (single_plane_incident >= 0) {	/* function-based BSDF? */
 		void	(*evf)(char *s) = single_plane_incident ?
 				&eval_isotropic : &eval_anisotropic;
-		if (i != argc-1 || fundefined(argv[i]) != 6)
+		if (i != argc-1 || fundefined(argv[i]) != 6) {
+			fprintf(stderr,
+	"%s: need single function with 6 arguments: bsdf(ix,iy,iz,ox,oy,oz)\n",
+					progname);
 			goto userr;
+		}
 		xml_prologue(argc, argv);	/* start XML output */
 		if (dofwd) {
 			input_orient = -1;
@@ -297,7 +301,7 @@ main(int argc, char *argv[])
 		return(0);
 	}
 	if (i < argc) {				/* open input files if given */
-		xml_prologue(argc, argv);	/* start XML output */
+		int	nbsdf = 0;
 		for ( ; i < argc; i++) {	/* interpolate each component */
 			FILE	*fpin = fopen(argv[i], "rb");
 			if (fpin == NULL) {
@@ -308,6 +312,8 @@ main(int argc, char *argv[])
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
+			if (!nbsdf++)		/* start XML on first dist. */
+				xml_prologue(argc, argv);
 			if (single_plane_incident)
 				eval_isotropic(NULL);
 			else
