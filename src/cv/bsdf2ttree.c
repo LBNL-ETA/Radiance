@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.12 2013/03/22 16:39:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.13 2013/03/23 02:21:14 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -255,10 +255,10 @@ main(int argc, char *argv[])
 		case 't':
 			switch (argv[i][2]) {
 			case '3':
-				single_plane_incident = 0;
+				single_plane_incident = 1;
 				break;
 			case '4':
-				single_plane_incident = 1;
+				single_plane_incident = 0;
 				break;
 			case '\0':
 				pctcull = atof(argv[++i]);
