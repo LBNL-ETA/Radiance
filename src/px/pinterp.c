@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.43 2012/02/08 13:43:21 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.44 2013/03/24 19:00:33 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -394,7 +394,7 @@ nextview(				/* get and set next view */
 {
 	char	linebuf[256];
 	char	*err;
-	register int	i;
+	int	i;
 
 	if (fp != NULL) {
 		do			/* get new view */
@@ -431,7 +431,7 @@ nextview(				/* get and set next view */
 static void
 compavgview(void)				/* compute average view */
 {
-	register int	i;
+	int	i;
 	double	f;
 
 	if (nvavg < 2)
@@ -499,7 +499,7 @@ addpicture(		/* add picture to output */
 		syserror(progname);
 	if ((zfd = open(zspec, O_RDONLY)) == -1) {
 		double	zvalue;
-		register int	x;
+		int	x;
 		if (!isflt(zspec) || (zvalue = atof(zspec)) <= 0.0)
 			syserror(zspec);
 		for (x = scanlen(&tresolu); x-- > 0; )
@@ -558,12 +558,12 @@ addpicture(		/* add picture to output */
 
 static int
 pixform(		/* compute view1 to view2 matrix */
-	register MAT4	xfmat,
-	register VIEW	*vw1,
-	register VIEW	*vw2
+	MAT4	xfmat,
+	VIEW	*vw1,
+	VIEW	*vw2
 )
 {
-	double	m4t[4][4];
+	MAT4	m4t;
 
 	if ((vw1->type != VT_PER) & (vw1->type != VT_PAR))
 		return(0);
@@ -612,7 +612,7 @@ addscanline(	/* add scanline to output */
 	FVECT	pos;
 	struct position	lastx, newpos;
 	double	wt;
-	register int	x;
+	int	x;
 
 	lastx.z = 0;
 	for (x = xl->max; x >= xl->min; x--) {
@@ -650,7 +650,7 @@ addpixel(		/* fill in pixel parallelogram */
 	int	l1, l2, c1, c2;			/* side lengths and counters */
 	int	p1isy;				/* p0p1 along y? */
 	int	x1, y1;				/* p1 position */
-	register int	x, y;			/* final position */
+	int	x, y;			/* final position */
 
 					/* compute vector p0p1 */
 	if (fillo&F_FORE && ABS(p1->z-p0->z) <= zt) {
@@ -717,7 +717,7 @@ addpixel(		/* fill in pixel parallelogram */
 
 static double
 movepixel(				/* reposition image point */
-	register FVECT	pos
+	FVECT	pos
 )
 {
 	FVECT	pt, tdir, odir;
@@ -783,7 +783,7 @@ movepixel(				/* reposition image point */
 
 static int
 getperim(		/* compute overlapping image area */
-	register struct bound	*xl,
+	struct bound	*xl,
 	struct bound	*yl,
 	float	*zline,
 	int	zfd
@@ -791,7 +791,7 @@ getperim(		/* compute overlapping image area */
 {
 	int	step;
 	FVECT	pos;
-	register int	x, y;
+	int	x, y;
 						/* set up step size */
 	if (scanlen(&tresolu) < numscans(&tresolu))
 		step = scanlen(&tresolu)/NSTEPS;
@@ -875,7 +875,7 @@ backpicture(			/* background fill algorithm */
 {
 	int	*yback, xback;
 	int	y;
-	register int	x, i;
+	int	x, i;
 							/* get back buffer */
 	yback = (int *)malloc(hresolu*sizeof(int));
 	if (yback == NULL)
@@ -982,7 +982,7 @@ fillpicture(		/* paint in empty pixels using fill */
 	fillfunc_t *fill
 )
 {
-	register int	x, y;
+	int	x, y;
 
 	for (y = 0; y < vresolu; y++)
 		for (x = 0; x < hresolu; x++)
@@ -996,7 +996,7 @@ fillpicture(		/* paint in empty pixels using fill */
 static int
 clipaft(void)			/* perform aft clipping as indicated */
 {
-	register int	x, y;
+	int	x, y;
 	int	adjtest = (ourview.type == VT_PER) & zisnorm;
 	double	tstdist;
 	double	yzn2, vx;
@@ -1035,7 +1035,7 @@ addblur(void)				/* add to blurred picture */
 {
 	COLOR	cval;
 	double	d;
-	register int	i;
+	int	i;
 
 	if (!blurring)
 		return(0);
@@ -1075,7 +1075,7 @@ static void
 writepicture(void)				/* write out picture (alters buffer) */
 {
 	int	y;
-	register int	x;
+	int	x;
 	double	d;
 
 	fprtresolu(hresolu, vresolu, stdout);
@@ -1118,7 +1118,7 @@ writedistance(			/* write out z file (alters buffer) */
 	for (y = vresolu-1; y >= 0; y--) {
 		if (donorm) {
 			double	vx, yzn2, d;
-			register int	x;
+			int	x;
 			yzn2 = (y+.5)/vresolu + ourview.voff - .5;
 			yzn2 = 1. + yzn2*yzn2*ourview.vn2;
 			for (x = 0; x < hresolu; x++) {
@@ -1162,7 +1162,7 @@ calstart(                    /* start fill calculation */
 	char	combuf[512];
 	char	*argv[64];
 	int	rval;
-	register char	**wp, *cp;
+	char	**wp, *cp;
 
 	if (PDesc.running) {
 		fprintf(stderr, "%s: too many calculations\n", progname);
@@ -1226,8 +1226,8 @@ clearqueue(void)				/* process queue */
 {
 	FVECT	orig, dir;
 	float	fbuf[6*(PACKSIZ+1)];
-	register float	*fbp;
-	register int	i;
+	float	*fbp;
+	int	i;
 	double	vx, vy;
 
 	if (queuesiz == 0)
