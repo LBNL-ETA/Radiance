@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.12 2013/03/20 01:00:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.13 2013/03/24 17:22:23 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -247,6 +247,7 @@ pos_from_vec(int pos[2], const FVECT vec)
 double
 eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 {
+	double		minval = bsdf_min*output_orient*outvec[2];
 	double		res = 0;
 	const RBFVAL	*rbfp;
 	FVECT		odir;
@@ -256,7 +257,7 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 	if (rp == NULL) {
 		if (outvec[2] > 0 ^ output_orient > 0)
 			return(.0);
-		return(bsdf_min*output_orient*outvec[2]);
+		return(minval);
 	}
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
@@ -266,6 +267,8 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 		if (sig2 > -19.)
 			res += rbfp->peak * exp(sig2);
 	}
+	if (res < minval)	/* never return less than minval */
+		return(minval);
 	return(res);
 }
 
