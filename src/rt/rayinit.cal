@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.14 2003/03/11 19:29:05 greg Exp $ }
+{ RCSid $Id: rayinit.cal,v 2.15 2013/03/25 16:10:00 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -21,7 +21,7 @@
 
 	Lu, Lv				- local (u,v) coordinates
 
-	For brdf functions, the following are also available:
+	For *func & *data materials, the following are also available:
 
  	NxP, NyP, NzP			- perturbed surface normal
  	RdotP				- perturbed ray dot product
@@ -41,7 +41,7 @@
 
 	sin(x), cos(x), tan(x),
 	asin(x), acos(x),
-	atan(x), atan2(y,x)		- standard trig functions
+	atan(x), atan2(y,x)		- standard trig functions (radians)
 
 	floor(x), ceil(x)		- g.l.b. & l.u.b.
 
