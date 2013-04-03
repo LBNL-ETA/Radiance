@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.17 2012/11/22 06:07:17 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.18 2013/04/03 00:22:12 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -29,9 +29,7 @@ const FVECT p2
 {
 	FVECT  delta;
 
-	delta[0] = p2[0] - p1[0];
-	delta[1] = p2[1] - p1[1];
-	delta[2] = p2[2] - p1[2];
+	VSUB(delta, p2, p1);
 
 	return(DOT(delta, delta));
 }
@@ -87,9 +85,7 @@ const FVECT v1,
 const FVECT v2
 )
 {
-	vres[0] = v1[1]*v2[2] - v1[2]*v2[1];
-	vres[1] = v1[2]*v2[0] - v1[0]*v2[2];
-	vres[2] = v1[0]*v2[1] - v1[1]*v2[0];
+	VCROSS(vres, v1, v2);
 }
 
 
@@ -101,9 +97,7 @@ const FVECT v1,
 double f
 )
 {
-	vres[0] = v0[0] + f*v1[0];
-	vres[1] = v0[1] + f*v1[1];
-	vres[2] = v0[2] + f*v1[2];
+	VSUM(vres, v0, v1, f);
 }
 
 
@@ -180,7 +174,7 @@ double theta		/* right-hand radians */
 	cost = cos(theta);
 	sint = sin(theta);
 	normprod = DOT(vorig, vnorm)*(1.-cost);
-	fcross(vperp, vnorm, vorig);
+	VCROSS(vperp, vnorm, vorig);
 	for (i = 0; i < 3; i++)
 		vres[i] = vorig[i]*cost + vnorm[i]*normprod + vperp[i]*sint;
 }
