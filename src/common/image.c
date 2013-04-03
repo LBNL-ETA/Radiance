@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.39 2013/03/24 19:40:26 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.40 2013/04/03 00:35:09 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -170,9 +170,7 @@ double  y
 		direc[0] = v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
-		orig[0] = v->vp[0] + v->vfore*direc[0];
-		orig[1] = v->vp[1] + v->vfore*direc[1];
-		orig[2] = v->vp[2] + v->vfore*direc[2];
+		VSUM(orig, v->vp, direc, v->vfore);
 		d = normalize(direc);
 		return(v->vaft > FTINY ? (v->vaft - v->vfore)*d : 0.0);
 	case VT_HEM:			/* hemispherical fisheye */
@@ -183,9 +181,7 @@ double  y
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
-		orig[0] = v->vp[0] + v->vfore*direc[0];
-		orig[1] = v->vp[1] + v->vfore*direc[1];
-		orig[2] = v->vp[2] + v->vfore*direc[2];
+		VSUM(orig, v->vp, direc, v->vfore);
 		return(v->vaft > FTINY ? v->vaft - v->vfore : 0.0);
 	case VT_CYL:			/* cylindrical panorama */
 		d = x * v->horiz * (PI/180.0);
@@ -194,9 +190,7 @@ double  y
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
-		orig[0] = v->vp[0] + v->vfore*direc[0];
-		orig[1] = v->vp[1] + v->vfore*direc[1];
-		orig[2] = v->vp[2] + v->vfore*direc[2];
+		VSUM(orig, v->vp, direc, v->vfore);
 		d = normalize(direc);
 		return(v->vaft > FTINY ? (v->vaft - v->vfore)*d : 0.0);
 	case VT_ANG:			/* angular fisheye */
@@ -213,9 +207,7 @@ double  y
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
-		orig[0] = v->vp[0] + v->vfore*direc[0];
-		orig[1] = v->vp[1] + v->vfore*direc[1];
-		orig[2] = v->vp[2] + v->vfore*direc[2];
+		VSUM(orig, v->vp, direc, v->vfore);
 		return(v->vaft > FTINY ? v->vaft - v->vfore : 0.0);
 	case VT_PLS:			/* planispheric fisheye */
 		x *= sqrt(v->hn2);
@@ -227,9 +219,7 @@ double  y
 		direc[0] = z*v->vdir[0] + x*v->hvec[0] + y*v->vvec[0];
 		direc[1] = z*v->vdir[1] + x*v->hvec[1] + y*v->vvec[1];
 		direc[2] = z*v->vdir[2] + x*v->hvec[2] + y*v->vvec[2];
-		orig[0] = v->vp[0] + v->vfore*direc[0];
-		orig[1] = v->vp[1] + v->vfore*direc[1];
-		orig[2] = v->vp[2] + v->vfore*direc[2];
+		VSUM(orig, v->vp, direc, v->vfore);
 		return(v->vaft > FTINY ? v->vaft - v->vfore : 0.0);
 	}
 	return(-1.0);
