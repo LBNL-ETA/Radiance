@@ -1876,4 +1876,4 @@ to Lars Grobe for noticing the problem.
 Added -r option to gendaymtx to rotate the sky the specified number of
 degrees about the zenith as suggested by A. McNeil.
 
-Axel Jacobs added -pal eco color map that does a blue-to-yellow range.
+Axel Jacobs added -pal eco color map that does a blue-red-yellow scale.
