@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.8 2012/04/26 21:03:58 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.9 2013/04/04 02:59:20 greg Exp $
 
 use warnings;
 use strict;
 use File::Temp qw/ tempdir /;
 use POSIX qw/ floor /;
 
-my @palettes = ('def', 'spec', 'pm3d', 'hot');
+my @palettes = ('def', 'spec', 'pm3d', 'hot', 'eco');
 
 my $mult = 179.0;              # Multiplier. Default W/sr/m2 -> cd/m2
 my $label = 'cd/m2';           # Units shown in legend
@@ -37,6 +37,8 @@ while ($#ARGV >= 0) {
         $legheight = shift;
     } elsif (m/-m/) {          # Multiplier
         $mult = shift;
+    } elsif (m/-spec/) {
+        die("depricated option '-spec'. Please use '-pal spec' instead.");
     } elsif (m/-s/) {          # Scale
         $scale = shift;
         if ($scale =~ m/[aA].*/) {
@@ -149,6 +151,10 @@ pm3d_blu(x) = clip(sin(2*PI*clip(x))) ^ gamma;
 hot_red(x) = clip(3*x) ^ gamma;
 hot_grn(x) = clip(3*x - 1) ^ gamma;
 hot_blu(x) = clip(3*x - 2) ^ gamma;
+
+eco_red(x) = clip(2*x) ^ gamma;
+eco_grn(x) = clip(2*(x-0.5)) ^ gamma;
+eco_blu(x) = clip(2*(0.5-x)) ^ gamma;
 
 interp_arr2(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
 interp_arr(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
