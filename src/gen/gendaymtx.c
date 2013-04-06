@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.9 2013/02/09 00:20:24 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.10 2013/04/06 00:44:59 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -247,7 +247,7 @@ static const ModelCoeff DirectLumEff[8] =
 };
 
 #ifndef NSUNPATCH
-#define	NSUNPATCH	4		/* # patches to spread sun into */
+#define	NSUNPATCH	4		/* max. # patches to spread sun into */
 #endif
 
 extern int jdate(int month, int day);
@@ -259,6 +259,9 @@ extern double sazi(double sd, double st);
 extern double  s_latitude;
 extern double  s_longitude;
 extern double  s_meridian;
+
+int		nsuns = NSUNPATCH;	/* number of sun patches to use */
+double		fixed_sun_sa = -1;	/* fixed solid angle per sun? */
 
 int		verbose = 0;		/* progress reports to stderr? */
 
@@ -349,6 +352,10 @@ main(int argc, char *argv[])
 			if (argv[i][2] && argv[i][2] != 'z')
 				goto userr;
 			rotation = atof(argv[++i]);
+			break;
+		case '5':			/* 5-phase calculation */
+			nsuns = 1;
+			fixed_sun_sa = 6.797e-05;
 			break;
 		default:
 			goto userr;
@@ -617,8 +624,12 @@ AddDirect(float *parr)
 
 	if (dir_illum <= 1e-4 || bright(suncolor) <= 1e-4)
 		return;
-					/* identify NSUNPATCH closest patches */
-	for (i = NSUNPATCH; i--; )
+					/* identify nsuns closest patches */
+	if (nsuns > NSUNPATCH)
+		nsuns = NSUNPATCH;
+	else if (nsuns <= 0)
+		nsuns = 1;
+	for (i = nsuns; i--; )
 		near_dprod[i] = -1.;
 	vector(svec, altitude, azimuth);
 	for (p = 1; p < nskypatch; p++) {
@@ -626,9 +637,9 @@ AddDirect(float *parr)
 		double	dprod;
 		rh_vector(pvec, p);
 		dprod = DOT(pvec, svec);
-		for (i = 0; i < NSUNPATCH; i++)
+		for (i = 0; i < nsuns; i++)
 			if (dprod > near_dprod[i]) {
-				for (j = NSUNPATCH; --j > i; ) {
+				for (j = nsuns; --j > i; ) {
 					near_dprod[j] = near_dprod[j-1];
 					near_patch[j] = near_patch[j-1];
 				}
@@ -638,13 +649,15 @@ AddDirect(float *parr)
 			}
 	}
 	wtot = 0;			/* weight by proximity */
-	for (i = NSUNPATCH; i--; )
+	for (i = nsuns; i--; )
 		wtot += wta[i] = 1./(1.002 - near_dprod[i]);
 					/* add to nearest patch radiances */
-	for (i = NSUNPATCH; i--; ) {
+	for (i = nsuns; i--; ) {
 		float	*pdest = parr + 3*near_patch[i];
-		float	val_add = wta[i] * dir_illum /
-				(WHTEFFICACY * wtot * rh_dom[near_patch[i]]);
+		float	val_add = wta[i] * dir_illum / (WHTEFFICACY * wtot);
+
+		val_add /= (fixed_sun_sa > 0)	? fixed_sun_sa 
+						: rh_dom[near_patch[i]] ;
 		*pdest++ += val_add*suncolor[0];
 		*pdest++ += val_add*suncolor[1];
 		*pdest++ += val_add*suncolor[2];
