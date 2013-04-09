@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.22 2012/09/02 15:33:15 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.23 2013/04/09 16:55:15 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -506,6 +506,10 @@ m_bsdf(OBJREC *m, RAY *r)
 	if (mf->fxp != &unitxf) {
 		multv3(upvec, upvec, mf->fxp->xfm);
 		nd.thick *= mf->fxp->sca;
+	}
+	if (r->rox != NULL) {
+		multv3(upvec, upvec, r->rox->f.xfm);
+		nd.thick *= r->rox->f.sca;
 	}
 	raynormal(nd.pnorm, r);
 						/* compute local BSDF xform */
