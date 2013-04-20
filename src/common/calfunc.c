@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.16 2012/10/24 00:39:09 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.17 2013/04/20 02:31:41 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -146,21 +146,15 @@ funset(				/* set a library function */
 	    quit(1);
 	}
 	for (lp = &library[libsize]; lp > library; lp--)
-	    if (strcmp(lp[-1].fname, fname) > 0) {
-		lp[0].fname = lp[-1].fname;
-		lp[0].nargs = lp[-1].nargs;
-		lp[0].atyp = lp[-1].atyp;
-		lp[0].f = lp[-1].f;
-	    } else
+	    if (strcmp(lp[-1].fname, fname) > 0)
+		lp[0] = lp[-1];
+	    else
 		break;
 	libsize++;
     }
     if (fptr == NULL) {				/* delete */
 	while (lp < &library[libsize-1]) {
-	    lp[0].fname = lp[1].fname;
-	    lp[0].nargs = lp[1].nargs;
-	    lp[0].atyp = lp[1].atyp;
-	    lp[0].f = lp[1].f;
+	    lp[0] = lp[1];
 	    lp++;
 	}
 	libsize--;
