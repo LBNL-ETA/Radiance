@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.7 2012/09/02 15:33:15 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.8 2013/04/21 21:36:23 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -15,9 +15,9 @@ char *
 transSDError(SDError ec)
 {
 	if (!SDerrorDetail[0])
-		return(strcpy(errmsg, SDerrorEnglish[ec]));
+		return(strcpy(errmsg, SDerrorList[ec]));
 
-	sprintf(errmsg, "%s: %s", SDerrorEnglish[ec], SDerrorDetail);
+	sprintf(errmsg, "%s: %s", SDerrorList[ec], SDerrorDetail);
 	return(errmsg);
 }
 

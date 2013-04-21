@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.21 2013/01/26 04:00:25 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.22 2013/04/21 21:36:23 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -58,10 +58,13 @@ extern "C" {
 typedef enum {SDEnone=0, SDEmemory, SDEfile, SDEformat, SDEargument,
 		SDEdata, SDEsupport, SDEinternal, SDEunknown} SDError;
 
-/* English ASCII strings corresponding to ennumerated errors */
+/* English strings corresponding to ennumerated errors */
 extern const char	*SDerrorEnglish[];
 
-/* Additional information on last error (ASCII English) */
+/* Pointer to error list in preferred language */
+extern const char	**SDerrorList;
+
+/* Additional information on last error (generally in English) */
 extern char		SDerrorDetail[];
 
 /* Holder for BSDF value and spectral color */
@@ -152,8 +155,8 @@ extern int		SDretainSet;	/* =SDretainNone by default */
 
 #define	SDisLoaded(sd)	((sd)->rLambFront.spec.flags != 0)
 
-/* Report an error to the indicated stream (in English) */
-extern SDError		SDreportEnglish(SDError ec, FILE *fp);
+/* Report an error to the indicated stream */
+extern SDError		SDreportError(SDError ec, FILE *fp);
 
 /* Shorten file path to useable BSDF name, removing suffix */
 extern void		SDclipName(char res[SDnameLn], const char *fname);
@@ -201,7 +204,7 @@ extern void		SDdisk2square(double sq[2], double diskx, double disky);
  */
 
 /* Get BSDF from cache (or load and cache it on first call) */
-/* Report any problems to stderr (in English), return NULL on failure */
+/* Report any problems to stderr, return NULL on failure */
 extern const SDData	*SDcacheFile(const char *fname);
 
 /* Free a BSDF from our cache (clear all if sd==NULL) */

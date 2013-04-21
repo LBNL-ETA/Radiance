@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.43 2012/10/13 20:15:43 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.44 2013/04/21 21:36:23 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -35,6 +35,9 @@ const char		*SDerrorEnglish[] = {
 				"Unknown error"
 			};
 
+/* Pointer to error list in preferred language */
+const char		**SDerrorList = SDerrorEnglish;
+
 /* Additional information on last error (ASCII English) */
 char			SDerrorDetail[256];
 
@@ -47,9 +50,9 @@ struct SDCache_s	*SDcacheList = NULL;
 /* Retain BSDFs in cache list */
 int			SDretainSet = SDretainNone;
 
-/* Report any error to the indicated stream (in English) */
+/* Report any error to the indicated stream */
 SDError
-SDreportEnglish(SDError ec, FILE *fp)
+SDreportError(SDError ec, FILE *fp)
 {
 	if (!ec)
 		return SDEnone;
@@ -59,7 +62,7 @@ SDreportEnglish(SDError ec, FILE *fp)
 	}
 	if (fp == NULL)
 		return ec;
-	fputs(SDerrorEnglish[ec], fp);
+	fputs(SDerrorList[ec], fp);
 	if (SDerrorDetail[0]) {
 		fputs(": ", fp);
 		fputs(SDerrorDetail, fp);
@@ -420,11 +423,11 @@ SDcacheFile(const char *fname)
 		return NULL;
 	SDerrorDetail[0] = '\0';
 	if ((sd = SDgetCache(fname)) == NULL) {
-		SDreportEnglish(SDEmemory, stderr);
+		SDreportError(SDEmemory, stderr);
 		return NULL;
 	}
 	if (!SDisLoaded(sd) && (ec = SDloadFile(sd, fname))) {
-		SDreportEnglish(ec, stderr);
+		SDreportError(ec, stderr);
 		SDfreeCache(sd);
 		return NULL;
 	}
