@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.24 2012/09/10 18:06:08 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.25 2013/04/21 22:58:40 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -29,21 +29,7 @@ static const char RCSid[] = "$Id: bsdf_m.c,v 3.24 2012/09/10 18:06:08 greg Exp $
 #define RC_INTERR	(-4)
 #define RC_MEMERR	(-5)
 
-#define MAXLATS		46		/* maximum number of latitudes */
-
-/* BSDF angle specification */
-typedef struct {
-	char	name[64];		/* basis name */
-	int	nangles;		/* total number of directions */
-	struct {
-		float	tmin;			/* starting theta */
-		int	nphis;			/* number of phis (0 term) */
-	} lat[MAXLATS+1];		/* latitudes */
-} ANGLE_BASIS;
-
-#define	MAXABASES	7		/* limit on defined bases */
-
-static ANGLE_BASIS	abase_list[MAXABASES] = {
+ANGLE_BASIS	abase_list[MAXABASES] = {
 	{
 		"LBNL/Klems Full", 145,
 		{ {0., 1},
@@ -77,7 +63,7 @@ static ANGLE_BASIS	abase_list[MAXABASES] = {
 	}
 };
 
-static int	nabases = 3;	/* current number of defined bases */
+int		nabases = 3;		/* current number of defined bases */
 
 static int
 fequal(double a, double b)
@@ -146,8 +132,8 @@ SDnewMatrix(int ni, int no)
 /* Free a BSDF matrix */
 #define	SDfreeMatrix		free
 
-/* get vector for this angle basis index (front exiting) */
-static int
+/* Get vector for this angle basis index (front exiting) */
+int
 fo_getvec(FVECT v, double ndxr, void *p)
 {
 	ANGLE_BASIS	*ab = (ANGLE_BASIS *)p;
@@ -172,8 +158,8 @@ fo_getvec(FVECT v, double ndxr, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the given vector (front exiting) */
-static int
+/* Get index corresponding to the given vector (front exiting) */
+int
 fo_getndx(const FVECT v, void *p)
 {
 	ANGLE_BASIS	*ab = (ANGLE_BASIS *)p;
@@ -201,8 +187,8 @@ fo_getndx(const FVECT v, void *p)
 /* compute square of real value */
 static double sq(double x) { return x*x; }
 
-/* get projected solid angle for this angle basis index (universal) */
-static double
+/* Get projected solid angle for this angle basis index (universal) */
+double
 io_getohm(int ndx, void *p)
 {
 	static int	last_li = -1;
@@ -224,8 +210,8 @@ io_getohm(int ndx, void *p)
 				(double)ab->lat[li].nphis;
 }
 
-/* get vector for this angle basis index (back incident) */
-static int
+/* Get vector for this angle basis index (back incident) */
+int
 bi_getvec(FVECT v, double ndxr, void *p)
 {
 	if (!fo_getvec(v, ndxr, p))
@@ -238,8 +224,8 @@ bi_getvec(FVECT v, double ndxr, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the vector (back incident) */
-static int
+/* Get index corresponding to the vector (back incident) */
+int
 bi_getndx(const FVECT v, void *p)
 {
 	FVECT  v2;
@@ -251,8 +237,8 @@ bi_getndx(const FVECT v, void *p)
 	return fo_getndx(v2, p);
 }
 
-/* get vector for this angle basis index (back exiting) */
-static int
+/* Get vector for this angle basis index (back exiting) */
+int
 bo_getvec(FVECT v, double ndxr, void *p)
 {
 	if (!fo_getvec(v, ndxr, p))
@@ -263,8 +249,8 @@ bo_getvec(FVECT v, double ndxr, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the vector (back exiting) */
-static int
+/* Get index corresponding to the vector (back exiting) */
+int
 bo_getndx(const FVECT v, void *p)
 {
 	FVECT  v2;
@@ -276,8 +262,8 @@ bo_getndx(const FVECT v, void *p)
 	return fo_getndx(v2, p);
 }
 
-/* get vector for this angle basis index (front incident) */
-static int
+/* Get vector for this angle basis index (front incident) */
+int
 fi_getvec(FVECT v, double ndxr, void *p)
 {
 	if (!fo_getvec(v, ndxr, p))
@@ -289,8 +275,8 @@ fi_getvec(FVECT v, double ndxr, void *p)
 	return RC_GOOD;
 }
 
-/* get index corresponding to the vector (front incident) */
-static int
+/* Get index corresponding to the vector (front incident) */
+int
 fi_getndx(const FVECT v, void *p)
 {
 	FVECT  v2;
