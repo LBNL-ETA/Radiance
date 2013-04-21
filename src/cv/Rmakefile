@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.38 2012/10/19 04:14:29 greg Exp $
+# RCSid $Id: Rmakefile,v 2.39 2013/04/21 23:01:14 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -20,7 +20,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf \
-pabopto2bsdf bsdf2ttree pkgBSDF
+pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF
 
 LIBFILES = source.cal tilt.cal lamp.tab window.cal
 
@@ -79,6 +79,10 @@ bsdfrbf.o bsdfmesh.o -lrtrad $(MLIB)
 
 bsdf2ttree:	bsdf2ttree.o bsdfrep.o bsdfinterp.o
 	$(CC) $(CFLAGS) -o bsdf2ttree bsdf2ttree.o bsdfrep.o bsdfinterp.o \
+-lrtrad $(MLIB)
+
+bsdf2klems:	bsdf2klems.o bsdfrep.o bsdfinterp.o
+	$(CC) $(CFLAGS) -o bsdf2klems bsdf2klems.o bsdfrep.o bsdfinterp.o \
 -lrtrad $(MLIB)
 
 pkgBSDF:	pkgBSDF.o

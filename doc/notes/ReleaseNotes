@@ -1877,3 +1877,6 @@ Added -r option to gendaymtx to rotate the sky the specified number of
 degrees about the zenith as suggested by A. McNeil.
 
 Axel Jacobs added -pal eco color map that does a blue-red-yellow scale.
+
+Created bsdf2klems tool to convert from various BSDF representations to
+Klems basis matrix in XML file.
