@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.1 2013/04/21 23:01:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.2 2013/04/23 04:40:23 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -127,7 +127,7 @@ xml_epilogue(void)
 	puts("</WindowElement>");
 }
 
-/* Load and resample XML BSDF description */
+/* Load and resample XML BSDF description using Klems basis */
 static void
 eval_bsdf(const char *fname)
 {
@@ -233,7 +233,7 @@ err:
 	exit(1);
 }
 
-/* Interpolate and output a BSDF function */
+/* Interpolate and output a BSDF function using Klems basis */
 static void
 eval_function(char *funame)
 {
@@ -253,9 +253,9 @@ eval_function(char *funame)
 			bo_getvec(iovec+3, j+(n+frandom())/npsamps, abp);
 
 		    if (input_orient > 0)
-			fi_getvec(iovec, j+(n+frandom())/npsamps, abp);
+			fi_getvec(iovec, i+(n+frandom())/npsamps, abp);
 		    else
-			bi_getvec(iovec, j+(n+frandom())/npsamps, abp);
+			bi_getvec(iovec, i+(n+frandom())/npsamps, abp);
 
 		    sum += funvalue(funame, 6, iovec);
 		}
@@ -270,13 +270,48 @@ eval_function(char *funame)
 static void
 eval_rbf(void)
 {
+#define MAXPATCHES	145
 	ANGLE_BASIS	*abp = get_basis(kbasis);
-	double		iovec[6];
+	float		bsdfarr[MAXPATCHES*MAXPATCHES];
+	FVECT		vin, vout;
+	RBFNODE		*rbf;
 	double		sum;
 	int		i, j, n;
+						/* sanity check */
+	if (abp->nangles > MAXPATCHES) {
+		fprintf(stderr, "%s: too many patches!\n", progname);
+		exit(1);
+	}
+	data_prologue();			/* begin output */
+	for (i = 0; i < abp->nangles; i++) {
+	    if (input_orient > 0)		/* use incident patch center */
+		fi_getvec(vin, i+.5*(i>0), abp);
+	    else
+		bi_getvec(vin, i+.5*(i>0), abp);
 
-fprintf(stder, "%s: RBF evaluation currently unimplemented\n", progname);
-exit(1);
+	    rbf = advect_rbf(vin);		/* compute radial basis func */
+
+	    for (j = 0; j < abp->nangles; j++) {
+	        sum = 0;			/* sample over exiting patch */
+		for (n = npsamps; n--; ) {
+		    if (output_orient > 0)
+			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
+		    else
+			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
+
+		    sum += eval_rbfrep(rbf, vout) / vout[2];
+		}
+		bsdfarr[j*abp->nangles + i] = sum*output_orient/npsamps;
+	    }
+	}
+	n = 0;					/* write out our matrix */
+	for (j = 0; j < abp->nangles; j++) {
+	    for (i = 0; i < abp->nangles; i++)
+		printf("\t%.3e\n", bsdfarr[n++]);
+	    putchar('\n');
+	}
+	data_epilogue();			/* finish output */
+#undef MAXPATCHES
 }
 
 /* Read in BSDF and interpolate as Klems matrix representation */
@@ -292,7 +327,7 @@ main(int argc, char *argv[])
 	esupport &= ~(E_INCHAN|E_OUTCHAN);
 	scompile("PI:3.14159265358979323846", NULL, 0);
 	biggerlib();
-	for (i = 1; i < argc-1 && (argv[i][0] == '-') | (argv[i][0] == '+'); i++)
+	for (i = 1; i < argc && (argv[i][0] == '-') | (argv[i][0] == '+'); i++)
 		switch (argv[i][1]) {		/* get options */
 		case 'n':
 			npsamps = atoi(argv[++i]);
@@ -347,8 +382,9 @@ main(int argc, char *argv[])
 		xml_epilogue();			/* finish XML output & exit */
 		return(0);
 	}
-	if (i == argc-1 && (cp = strstr(argv[i], ".xml")) != NULL &&
-			strlen(cp) == 4) {	/* XML input? */
+						/* XML input? */
+	if (i == argc-1 && (cp = argv[i]+strlen(argv[i])-4) > argv[i] &&
+				!strcasecmp(cp, ".xml")) {
 		xml_prologue(argc, argv);	/* start XML output */
 		eval_bsdf(argv[i]);		/* load & resample BSDF */
 		xml_epilogue();			/* finish XML output & exit */
