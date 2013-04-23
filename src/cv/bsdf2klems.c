@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.2 2013/04/23 04:40:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.3 2013/04/23 23:19:09 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -36,17 +36,10 @@ get_basis(const char *bn)
 	return NULL;
 }
 
-/* Output XML prologue to stdout */
+/* Output XML header to stdout */
 static void
-xml_prologue(int ac, char *av[])
+xml_header(int ac, char *av[])
 {
-	ANGLE_BASIS	*abp = get_basis(kbasis);
-	int		i;
-
-	if (abp == NULL) {
-		fprintf(stderr, "%s: unknown angle basis '%s'\n", progname, kbasis);
-		exit(1);
-	}
 	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 	puts("<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">");
 	fputs("<!-- File produced by:", stdout);
@@ -55,15 +48,42 @@ xml_prologue(int ac, char *av[])
 		fputs(*av++, stdout);
 	}
 	puts(" -->");
+}
+
+/* Output XML prologue to stdout */
+static void
+xml_prologue(const SDData *sd)
+{
+	const char	*matn = (sd && sd->matn[0]) ? sd->matn : "Name";
+	const char	*makr = (sd && sd->makr[0]) ? sd->makr : "Manufacturer";
+	ANGLE_BASIS	*abp = get_basis(kbasis);
+	int		i;
+
+	if (abp == NULL) {
+		fprintf(stderr, "%s: unknown angle basis '%s'\n", progname, kbasis);
+		exit(1);
+	}
 	puts("<WindowElementType>System</WindowElementType>");
 	puts("<FileType>BSDF</FileType>");
 	puts("<Optical>");
 	puts("<Layer>");
 	puts("\t<Material>");
-	puts("\t\t<Name>Name</Name>");
-	puts("\t\t<Manufacturer>Manufacturer</Manufacturer>");
+	printf("\t\t<Name>%s</Name>\n", matn);
+	printf("\t\t<Manufacturer>%s</Manufacturer>\n", makr);
+	if (sd && sd->dim[2] > .001) {
+		printf("\t\t<Thickness unit=\"meter\">%.3f</Thickness>\n", sd->dim[2]);
+		printf("\t\t<Width unit=\"meter\">%.3f</Width>\n", sd->dim[0]);
+		printf("\t\t<Height unit=\"meter\">%.3f</Height>\n", sd->dim[1]);
+	}
 	puts("\t\t<DeviceType>Other</DeviceType>");
 	puts("\t</Material>");
+	if (sd && sd->mgf != NULL) {
+		puts("\t<Geometry format=\"MGF\">");
+		puts("\t\t<MGFblock unit=\"meter\">");
+		fputs(sd->mgf, stdout);
+		puts("</MGFblock>");
+		puts("\t</Geometry>");
+	}
 	puts("\t<DataDefinition>");
 	puts("\t\t<IncidentDataStructure>Columns</IncidentDataStructure>");
 	puts("\t\t<AngleBasis>");
@@ -73,7 +93,7 @@ xml_prologue(int ac, char *av[])
 		printf("\t\t\t<Theta>%g</Theta>\n", i ?
 				.5*(abp->lat[i].tmin + abp->lat[i+1].tmin) :
 				.0 );
-		printf("\t\t\t<nPhis>%d</nPhis>", abp->lat[i].nphis);
+		printf("\t\t\t<nPhis>%d</nPhis>\n", abp->lat[i].nphis);
 		puts("\t\t\t<ThetaBounds>");
 		printf("\t\t\t\t<LowerTheta>%g</LowerTheta>\n", abp->lat[i].tmin);
 		printf("\t\t\t\t<UpperTheta>%g</UpperTheta>\n", abp->lat[i+1].tmin);
@@ -142,6 +162,7 @@ eval_bsdf(const char *fname)
 	SDclearBSDF(&bsd, fname);		/* load BSDF file */
 	if ((ec = SDloadFile(&bsd, fname)) != SDEnone)
 		goto err;
+	xml_prologue(&bsd);			/* pass geometry */
 						/* front reflection */
 	if (bsd.rf != NULL || bsd.rLambFront.cieY > .002) {
 	    input_orient = 1; output_orient = 1;
@@ -364,7 +385,8 @@ main(int argc, char *argv[])
 					progname);
 			goto userr;
 		}
-		xml_prologue(argc, argv);	/* start XML output */
+		xml_header(argc, argv);			/* start XML output */
+		xml_prologue(NULL);
 		if (dofwd) {
 			input_orient = -1;
 			output_orient = -1;
@@ -385,7 +407,7 @@ main(int argc, char *argv[])
 						/* XML input? */
 	if (i == argc-1 && (cp = argv[i]+strlen(argv[i])-4) > argv[i] &&
 				!strcasecmp(cp, ".xml")) {
-		xml_prologue(argc, argv);	/* start XML output */
+		xml_header(argc, argv);		/* start XML output */
 		eval_bsdf(argv[i]);		/* load & resample BSDF */
 		xml_epilogue();			/* finish XML output & exit */
 		return(0);
@@ -402,8 +424,10 @@ main(int argc, char *argv[])
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
-			if (!nbsdf++)		/* start XML on first dist. */
-				xml_prologue(argc, argv);
+			if (!nbsdf++) {		/* start XML on first dist. */
+				xml_header(argc, argv);
+				xml_prologue(NULL);
+			}
 			eval_rbf();
 		}
 		xml_epilogue();			/* finish XML output & exit */
@@ -412,17 +436,16 @@ main(int argc, char *argv[])
 	SET_FILE_BINARY(stdin);			/* load from stdin */
 	if (!load_bsdf_rep(stdin))
 		return(1);
-	xml_prologue(argc, argv);		/* start XML output */
+	xml_header(argc, argv);			/* start XML output */
+	xml_prologue(NULL);
 	eval_rbf();				/* resample dist. */
 	xml_epilogue();				/* finish XML output & exit */
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-n spp][-h|-q][bsdf.sir ..] > bsdf.xml\n",
-				progname);
+	"Usage: %s [-n spp][-h|-q][bsdf.sir ..] > bsdf.xml\n", progname);
 	fprintf(stderr,
-	"   or: %s [-n spp][-h|-q] bsdf_in.xml > bsdf_out.xml\n",
-				progname);
+	"   or: %s [-n spp][-h|-q] bsdf_in.xml > bsdf_out.xml\n", progname);
 	fprintf(stderr,
 	"   or: %s [-n spp][-h|-q][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",
 				progname);
