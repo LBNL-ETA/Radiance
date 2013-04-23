@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.41 2013/04/23 23:19:09 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.42 2013/04/23 23:22:09 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -123,13 +123,13 @@ print "	</Material>\n";
 # Output MGF description if requested
 if ( $geout ) {
 	print "\t<Geometry format=\"MGF\">\n";
-	print "<MGFblock unit=\"$gunit\">\n";
+	print "\t\t<MGFblock unit=\"$gunit\">\n";
 	printf "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
 	open(MGFSCN, "< $mgfscn");
 	while (<MGFSCN>) { print $_; }
 	close MGFSCN;
 	print "xf\n";
-	print "\t\t</MGFblock>\n";
+	print "</MGFblock>\n";
 	print "\t</Geometry>\n";
 }
 # Set up surface sampling
