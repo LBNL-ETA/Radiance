@@ -1,0 +1,142 @@
+.\" RCSid $Id: bsdf2klems.1,v 1.1 2013/04/25 00:43:20 greg Exp $
+.TH BSDF2KLEMS 1 4/24/2013 RADIANCE
+.SH NAME
+bsdf2klems - generate XML Klems matrix description of a BSDF
+.SH SYNOPSIS
+.B bsdf2klems
+[
+.B "\-n spp"
+][
+.B "\-h|\-q"
+]
+[
+.B "bsdf.sir .."
+]
+.br
+or
+.br
+.B bsdf2klems
+[
+.B "\-n spp"
+][
+.B "\-h|\-q"
+]
+.B bsdf_in.xml
+.br
+or
+.br
+.B bsdf2klems
+[
+.B "\-n spp"
+][
+.B "\-h|\-q"
+][
+.B "{+|-}forward"
+][
+.B "{+|-}backward"
+][
+.B "\-e expr
+][
+.B "\-f file
+]
+.B bsdf_func
+.SH DESCRIPTION
+.I Bsdf2klems
+produces a Klems matrix representation of a
+bidirectional scattering distribution function (BSDF)
+based on an intermediate representation (in the first form),
+an input XML representation (in the second form),
+or a functional description (in the third form).
+A complete XML description is written to the standard output,
+which is normally redirected to a file.
+.PP
+The Klems matrix representation divides the input and output
+hemisphere into a default 145 patches.
+The
+.I \-h
+option may be used to reduce this number to 73 patches per hemisphere.
+The
+.I \-q
+option may be used to reduce this number to 41 patches.
+Neither option is recommended unless the distribution is known to
+be approximately diffuse.
+.PP
+Normally, multiple samples are taken from random points on each input
+and output patch to improve accuracy.
+The number of samples to take for each input-output patch pair may
+be controlled using the
+.I \-n
+option, which defaults to 256.
+.PP
+The first invocation form takes a intermediate scattering representation
+as produced by
+.I pabopto2bsdf(1)
+or similar, and produces a Klems representation with as many
+components as there are independent input distributions.
+Each intermediate scattering file contains one of
+the four components, and if the first component
+is isotropic, all components must be isotropic.
+A similar rule holds for anisotropic inputs.
+Only the center of each incident patches is sampled, due to
+the time required to interpolate incident positions.
+.PP
+In the second invocation form, an input XML representation
+is resampled to produce the desired Klems matrix representation.
+This is primarily used to convert a tensor tree representation
+into a matrix for annual daylighting simulations.
+Any components in the input are reproduced on output, and inline
+geometric descriptions are passed unchanged.
+.PP
+In the third invocation form,
+.I bsdf2klems
+takes a functional specification of a BSDF.
+The named function must accept 6 parameters corresponding to the
+normalized incident and exiting vectors, respectively.
+By convention, these vectors point away from the surface, and a positive
+Z-component corresponds to the front side.
+The Y-component corresponds to the "up" orientation of the surface,
+as specified in the eventual scene description that references the XML
+output.
+.PP
+The function is defined by one or more
+.I \-e
+and
+.I \-f
+options, and should obey both Helmholtz reciprocity and
+integrate to less than 1 over each projected incident hemisphere
+for energy conservation.
+.PP
+Similar to the
+.I genBSDF(1)
+command,
+the
+.I \+backward
+option (default) specifies that rays arriving from the front side of
+the surface will be tested for reflection and transmission.
+If both forward and backward (front and back) distributions are needed, the
+.I \+forward
+option may be given.
+To turn off the backward components, use the
+.I \-backward
+option.
+Computing both incident hemispheres takes about twice as long as one, but
+is recommended when rays will be impinging from either side.
+.SH EXAMPLE
+To take two components of an intermediate BSDF representation and create
+a full Klems matrix representation:
+.IP "" .2i
+bsdf2klems transmitted.sir reflected.sir > combined.xml
+.PP
+To reduce a tensor tree representation into a half-Klems matrix representation:
+.IP "" .2i
+bsdf2klems -h ttree.xml > klems_half.xml
+.PP
+To create a low-res BSDF corresponding to a one-sided,
+isotropic Phong distribution:
+.IP "" .2i
+bsdf2klems -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+oy)^2+(iz+oz)^2))^50, 0)' phong > phong.xml
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bsdf2ttree(1), dctimestep(1), icalc(1), gendaymtx(1), genklemsamp(1),
+genskyvec(1), mkillum(1), genBSDF(1), pkgBSDF(1), rcontrib(1), rtrace(1)

@@ -1,0 +1,121 @@
+.\" RCSid $Id: bsdf2ttree.1,v 1.1 2013/04/25 00:43:20 greg Exp $
+.TH BSDF2TTREE 1 4/24/2013 RADIANCE
+.SH NAME
+bsdf2ttree - generate XML tensor tree description of a BSDF
+.SH SYNOPSIS
+.B bsdf2ttree
+[
+.B "\-g Nlog2"
+][
+.B "\-t pctcull
+]
+[
+.B "bsdf.sir .."
+]
+.br
+or
+.br
+.B bsdf2ttree
+.B "\-t{3|4}"
+[
+.B "\-g Nlog2"
+][
+.B "\-t pctcull
+][
+.B "{+|-}forward"
+][
+.B "{+|-}backward"
+][
+.B "\-e expr
+][
+.B "\-f file
+]
+.B bsdf_func
+.SH DESCRIPTION
+.I Bsdf2ttree
+produces a tensor tree representation of a
+bidirectional scattering distribution function (BSDF)
+based on an intermediate representation (in the first form) or
+a functional description (in the second form).
+A complete XML description is written to the standard output,
+which is normally redirected to a file.
+.PP
+The maximum resolution of the tensor tree may be controlled by the
+.I \-g
+option, which defaults to a value of 6.
+This corresponds to a peak resolution of 2^6 (64) in each dimension.
+Due to memory and time constraints, it is not recommended to set
+.I \-g
+higher than 7, which corresponds to a 128x128x128x128 initial sampling,
+or 268 million values.
+.PP
+The initial sampling is pared down by the percentage specified with the
+.I \-t
+option, which defaults to 90.
+Setting this parameter to -1 turns culling off entirely, which may be
+useful for comparisons.
+.PP
+The first invocation form takes a intermediate scattering representation
+as produced by
+.I pabopto2bsdf(1)
+or similar, and produces a tensor tree representation with as many
+components as there are independent input distributions.
+Each intermediate scattering file contains one of
+the four components, and if the first component
+is isotropic, all components must be isotropic.
+A similar rule holds for anisotropic inputs.
+.PP
+In the second invocation form,
+.I bsdf2ttree
+takes a functional specification of a BSDF.
+The named function must accept 6 parameters corresponding to the
+normalized incident and exiting vectors, respectively.
+By convention, these vectors point away from the surface, and a positive
+Z-component corresponds to the front side.
+The Y-component corresponds to the "up" orientation of the surface,
+as specified in the eventual scene description that references the XML
+output.
+.PP
+The function is defined by one or more
+.I \-e
+and
+.I \-f
+options, and should obey both Helmholtz reciprocity and
+integrate to less than 1 over each projected incident hemisphere
+for energy conservation.
+If the
+.I \-t3
+option is specified, the defined function is assumed to be isotropic.
+If the
+.I \-t4
+option is given, the function is assumed to be anisotropic.
+.PP
+Similar to the
+.I genBSDF(1)
+command,
+the
+.I \+backward
+option (default) specifies that rays arriving from the front side of
+the surface will be tested for reflection and transmission.
+If both forward and backward (front and back) distributions are needed, the
+.I \+forward
+option may be given.
+To turn off the backward components, use the
+.I \-backward
+option.
+Computing both incident hemispheres takes about twice as long as one, but
+is recommended when rays will be impinging from either side.
+.SH EXAMPLE
+To take two components of an intermediate BSDF representation and create
+a high-resolution tensor tree with 85% culling:
+.IP "" .2i
+bsdf2ttree -g 7 -t 85 transmitted.sir reflected.sir > combined.xml
+.PP
+To create a low-res BSDF corresponding to a one-sided,
+isotropic Phong distribution:
+.IP "" .2i
+bsdf2ttree -g 5 -t3 -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+oy)^2+(iz+oz)^2))^50, 0)' phong > phong.xml
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bsdf2klems(1), icalc(1), genBSDF(1), pkgBSDF(1)
