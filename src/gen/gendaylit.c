@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaylit.c,v 2.10 2013/02/13 18:30:22 greg Exp $";
+static const char RCSid[] = "$Id: gendaylit.c,v 2.11 2013/04/30 17:05:27 greg Exp $";
 #endif
 /*      Copyright (c) 1994,2006 *Fraunhofer Institut for Solar Energy Systems
  *        			Heidenhofstr. 2, D-79110 Freiburg, Germany
@@ -35,7 +35,7 @@ static const char RCSid[] = "$Id: gendaylit.c,v 2.10 2013/02/13 18:30:22 greg Ex
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.10 2013/02/13 18:30:22 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.11 2013/04/30 17:05:27 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,0.9738,0.2809,0.0356,-0.1246,-0.5718,0.9938,
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
 				break;
 			
 			case 'O':
-				output = atof(argv[++i]);	/*define the unit of the output of the program : 
+				output = atoi(argv[++i]);	/*define the unit of the output of the program : 
 								sky and sun luminance/radiance (0==W visible, 1==W solar radiation, 2==lm) */
 				break;
 				

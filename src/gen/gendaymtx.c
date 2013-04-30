@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.10 2013/04/06 00:44:59 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.11 2013/04/30 17:05:27 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -108,6 +108,7 @@ double sky_clearness;			/* Sky clearness */
 double solar_rad;			/* Solar radiance */
 double sun_zenith;			/* Sun zenith angle (radians) */
 int	input = 0;				/* Input type */
+int	output = 0;				/* Output type */
 
 extern double dmax( double, double );
 extern double CalcAirMass();
@@ -330,6 +331,20 @@ main(int argc, char *argv[])
 				goto userr;
 			}
 			break;
+		case 'O':			/* output type */
+			switch (argv[i][2]) {
+			case '0':
+				output = 0;
+				break;
+			case '1':
+				output = 1;
+				break;
+			default:
+				goto userr;
+			}
+			if (argv[i][3])
+				goto userr;
+			break;
 		case 'm':			/* Reinhart subdivisions */
 			rhsubdiv = atoi(argv[++i]);
 			break;
@@ -510,7 +525,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:
@@ -569,7 +584,7 @@ ComputeSky(float *parr)
 
 		/* Limit sky brightness */
 		if (sky_brightness < 0.01)
-			sky_brightness = 0.01; 
+			sky_brightness = 0.01;
 
 		/* Calculate illuminance */
 		index = GetCategoryIndex();
@@ -580,6 +595,11 @@ ComputeSky(float *parr)
 	{
 		/* Calculate sky brightness and clearness from illuminance values */
 		index = CalcSkyParamFromIllum();
+	}
+
+	if (output == 1) {			/* hack for solar radiance */
+		diff_illum = diff_irrad * WHTEFFICACY;
+		dir_illum = dir_irrad * WHTEFFICACY;
 	}
 
 	if (bright(skycolor) <= 1e-4) {			/* 0 sky component? */
@@ -801,7 +821,7 @@ double CalcSkyClearness()
 	double sz_cubed;	/* Sun zenith angle cubed */
 
 	/* Calculate sun zenith angle cubed */
-	sz_cubed = pow(sun_zenith, 3.0);
+	sz_cubed = sun_zenith*sun_zenith*sun_zenith;
 
 	return ((diff_irrad + dir_irrad) / diff_irrad + 1.041 *
 			sz_cubed) / (1.0 + 1.041 * sz_cubed);
@@ -832,7 +852,7 @@ double CalcDiffuseIrradiance()
 double CalcDirectIrradiance()
 {
 	return CalcDiffuseIrradiance() * ((sky_clearness - 1.0) * (1 + 1.041
-			* pow(sun_zenith, 3.0)));
+			* sun_zenith*sun_zenith*sun_zenith));
 }
 
 /* Calculate sky brightness and clearness from illuminance values */
