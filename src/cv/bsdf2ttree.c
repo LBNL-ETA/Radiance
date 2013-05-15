@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.14 2013/03/23 04:14:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.15 2013/05/15 03:22:31 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -20,6 +20,10 @@ char			*progname;
 double			pctcull = 90.;
 				/* sampling order */
 int			samp_order = 6;
+				/* super-sampling threshold */
+const double		ssamp_thresh = 0.35;
+				/* number of super-samples */
+const int		nssamp = 100;
 
 /* Output XML prologue to stdout */
 static void
@@ -90,6 +94,18 @@ xml_epilogue(void)
 	puts("</WindowElement>");
 }
 
+/* Compute absolute relative difference */
+static double
+abs_diff(double v1, double v0)
+{
+	if ((v0 < 0) | (v1 < 0))
+		return(.0);
+	v1 = (v1-v0)*2./(v0+v1+.0001);
+	if (v1 < 0)
+		return(-v1);
+	return(v1);
+}
+
 /* Interpolate and output isotropic BSDF data */
 static void
 eval_isotropic(char *funame)
@@ -100,11 +116,7 @@ eval_isotropic(char *funame)
 	int		ix, ox, oy;
 	double		iovec[6];
 	float		bsdf;
-#if DEBUG
-	fprintf(stderr, "Writing isotropic order %d ", samp_order);
-	if (pctcull >= 0) fprintf(stderr, "data with %.1f%% culling\n", pctcull);
-	else fputs("raw data\n", stderr);
-#endif
+
 	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
 		sprintf(cmd, "rttree_reduce -h -a -ff -r 3 -t %f -g %d",
@@ -127,21 +139,44 @@ eval_isotropic(char *funame)
 		iovec[2] = input_orient * sqrt(1. - iovec[0]*iovec[0]);
 		if (funame == NULL)
 			rbf = advect_rbf(iovec);
-		for (ox = 0; ox < sqres; ox++)
+		for (ox = 0; ox < sqres; ox++) {
+		    float	last_bsdf = -1;
 		    for (oy = 0; oy < sqres; oy++) {
 			SDsquare2disk(iovec+3, (ox+.5)/sqres, (oy+.5)/sqres);
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			if (funame == NULL)
-				bsdf = eval_rbfrep(rbf, iovec+3) *
+			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
-			else
-				bsdf = funvalue(funame, 6, iovec);
+			else {
+			    double	ssa[3], ssvec[6];
+			    int		ssi;
+			    bsdf = funvalue(funame, 6, iovec);
+			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
+				bsdf = 0;	/* super-sample voxel */
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 3, (ssi+drand48())/nssamp);
+				    ssvec[0] = 2.*(ix+ssa[0])/sqres - 1.;
+				    ssvec[1] = .0;
+				    ssvec[2] = input_orient *
+						sqrt(1. - ssvec[0]*ssvec[0]);
+				    SDsquare2disk(ssvec+3, (ox+ssa[1])/sqres,
+						(oy+ssa[2])/sqres);
+				    ssvec[5] = output_orient *
+						sqrt(1. - ssvec[3]*ssvec[3] -
+							ssvec[4]*ssvec[4]);
+				    bsdf += funvalue(funame, 6, ssvec);
+				}
+				bsdf /= (float)nssamp;
+			    }
+			}
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
 				printf("\t%.3e\n", bsdf);
+			last_bsdf = bsdf;
 		    }
+		}
 		if (rbf != NULL)
 			free(rbf);
 	}
@@ -169,11 +204,7 @@ eval_anisotropic(char *funame)
 	int		ix, iy, ox, oy;
 	double		iovec[6];
 	float		bsdf;
-#if DEBUG
-	fprintf(stderr, "Writing anisotropic order %d ", samp_order);
-	if (pctcull >= 0) fprintf(stderr, "data with %.1f%% culling\n", pctcull);
-	else fputs("raw data\n", stderr);
-#endif
+
 	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
 		sprintf(cmd, "rttree_reduce -h -a -ff -r 4 -t %f -g %d",
@@ -191,27 +222,50 @@ eval_anisotropic(char *funame)
 	for (ix = 0; ix < sqres; ix++)
 	    for (iy = 0; iy < sqres; iy++) {
 		RBFNODE	*rbf = NULL;		/* Klems reversal */
-		SDsquare2disk(iovec, (ix+.5)/sqres, (iy+.5)/sqres);
-		iovec[0] = -iovec[0]; iovec[1] = -iovec[1];
+		SDsquare2disk(iovec, 1.-(ix+.5)/sqres, 1.-(iy+.5)/sqres);
 		iovec[2] = input_orient *
 				sqrt(1. - iovec[0]*iovec[0] - iovec[1]*iovec[1]);
 		if (funame == NULL)
 			rbf = advect_rbf(iovec);
-		for (ox = 0; ox < sqres; ox++)
+		for (ox = 0; ox < sqres; ox++) {
+		    float	last_bsdf = -1;
 		    for (oy = 0; oy < sqres; oy++) {
 			SDsquare2disk(iovec+3, (ox+.5)/sqres, (oy+.5)/sqres);
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			if (funame == NULL)
-				bsdf = eval_rbfrep(rbf, iovec+3) *
+			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
-			else
-				bsdf = funvalue(funame, 6, iovec);
+			else {
+			    double	ssa[4], ssvec[6];
+			    int		ssi;
+			    bsdf = funvalue(funame, 6, iovec);
+			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
+				bsdf = 0;	/* super-sample voxel */
+				for (ssi = nssamp; ssi--; ) {
+				    SDmultiSamp(ssa, 4, (ssi+drand48())/nssamp);
+				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])/sqres,
+						1.-(iy+ssa[1])/sqres);
+				    ssvec[2] = output_orient *
+						sqrt(1. - ssvec[0]*ssvec[0] -
+							ssvec[1]*ssvec[1]);
+				    SDsquare2disk(ssvec+3, (ox+ssa[2])/sqres,
+						(oy+ssa[3])/sqres);
+				    ssvec[5] = output_orient *
+						sqrt(1. - ssvec[3]*ssvec[3] -
+							ssvec[4]*ssvec[4]);
+				    bsdf += funvalue(funame, 6, ssvec);
+				}
+				bsdf /= (float)nssamp;
+			    }
+			}
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
 				printf("\t%.3e\n", bsdf);
+			last_bsdf = bsdf;
 		    }
+		}
 		if (rbf != NULL)
 			free(rbf);
 	    }
