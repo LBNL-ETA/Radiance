@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.15 2013/05/15 03:22:31 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.16 2013/05/15 17:29:30 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -149,11 +149,11 @@ eval_isotropic(char *funame)
 			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
 			else {
-			    double	ssa[3], ssvec[6];
+			    double	ssa[3], ssvec[6], sum;
 			    int		ssi;
 			    bsdf = funvalue(funame, 6, iovec);
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
-				bsdf = 0;	/* super-sample voxel */
+				sum = 0;	/* super-sample voxel */
 				for (ssi = nssamp; ssi--; ) {
 				    SDmultiSamp(ssa, 3, (ssi+drand48())/nssamp);
 				    ssvec[0] = 2.*(ix+ssa[0])/sqres - 1.;
@@ -165,9 +165,9 @@ eval_isotropic(char *funame)
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
-				    bsdf += funvalue(funame, 6, ssvec);
+				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf /= (float)nssamp;
+				bsdf = sum/nssamp;
 			    }
 			}
 			if (pctcull >= 0)
@@ -237,11 +237,11 @@ eval_anisotropic(char *funame)
 			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
 			else {
-			    double	ssa[4], ssvec[6];
+			    double	ssa[4], ssvec[6], sum;
 			    int		ssi;
 			    bsdf = funvalue(funame, 6, iovec);
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
-				bsdf = 0;	/* super-sample voxel */
+				sum = 0;	/* super-sample voxel */
 				for (ssi = nssamp; ssi--; ) {
 				    SDmultiSamp(ssa, 4, (ssi+drand48())/nssamp);
 				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])/sqres,
@@ -254,9 +254,9 @@ eval_anisotropic(char *funame)
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
-				    bsdf += funvalue(funame, 6, ssvec);
+				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf /= (float)nssamp;
+				bsdf = sum/nssamp;
 			    }
 			}
 			if (pctcull >= 0)
