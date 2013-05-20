@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.44 2013/03/24 19:00:33 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.45 2013/05/20 21:52:06 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -753,8 +753,7 @@ movepixel(				/* reposition image point */
 		if (viewray(pt, tdir, &theirview, pos[0], pos[1]) < -FTINY)
 			return(0);
 		if ((!normdist) & (theirview.type == VT_PER))	/* adjust */
-			pos[2] *= sqrt(1. + pos[0]*pos[0]*theirview.hn2
-					+ pos[1]*pos[1]*theirview.vn2);
+			pos[2] /= DOT(theirview.vdir, tdir);
 		pt[0] += tdir[0]*pos[2];
 		pt[1] += tdir[1]*pos[2];
 		pt[2] += tdir[2]*pos[2];
