@@ -26,10 +26,6 @@ target_link_libraries(ranimate rtrad)
 add_executable(rpiece rpiece.c "${VERSION_FILE}")
 target_link_libraries(rpiece rtrad)
 
-add_executable(rtcontrib
-  rtcontrib.c "${VERSION_FILE}")
-target_link_libraries(rtcontrib rtrad)
-
 add_executable(vwrays vwrays.c)
 target_link_libraries(vwrays rtrad)
 
@@ -85,7 +81,7 @@ if(UNIX)
   endif()
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
-                rtcontrib vwrays vwright ranimove rsensor rttree_reduce
+                vwrays vwright ranimove rsensor rttree_reduce
         RUNTIME DESTINATION bin)
 
 if(WIN32)
