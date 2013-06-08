@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.54 2008/11/10 19:08:20 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.55 2013/06/08 02:49:19 greg Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -416,9 +416,9 @@ setdefaults(void)			/* set default values */
 	if (!vdef(DISKSPACE)) {
 		if (!nowarn)
 			fprintf(stderr,
-		"%s: warning - no %s setting, assuming 100 Mbytes available\n",
+		"%s: warning - no %s setting, assuming 1000 Mbytes available\n",
 					progname, vnam(DISKSPACE));
-		vval(DISKSPACE) = "100";
+		vval(DISKSPACE) = "1000";
 		vdef(DISKSPACE)++;
 	}
 	if (!vdef(RSH)) {
