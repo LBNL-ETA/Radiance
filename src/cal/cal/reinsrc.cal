@@ -1,0 +1,38 @@
+{ RCSid $Id: reinsrc.cal,v 1.1 2013/06/11 17:22:55 greg Exp $ }
+{
+	Compute Reinhart sky directions from bin number
+
+	Actual density controlled by MF constant
+
+	Modified from genskyvec.pl
+
+	Need to specify MF constant before loading (usu. power of two)
+
+	Rbin is bin number from 0 (ground) to Rmax.
+
+	x1, x2 may be used as random variables to subsample direction.
+
+	June 2013	G. Ward
+}
+DEGREE : PI/180;
+x1 = .5; x2 = .5;
+alpha : 90/(MF*7 + .5);
+tnaz(r) : select(r, 30, 30, 24, 24, 18, 12, 6);
+rnaz(r) : if(r-(7*MF-.5), 1, MF*tnaz(floor((r+.5)/MF) + 1));
+raccum(r) : if(r-.5, rnaz(r-1) + raccum(r-1), 0);
+RowMax : 7*MF + 1;
+Rmax : raccum(RowMax);
+Rfindrow(r, rem) : if(rem-rnaz(r)-.5, Rfindrow(r+1, rem-rnaz(r)), r);
+Rrow = if(Rbin-(Rmax-.5), RowMax-1, Rfindrow(0, Rbin));
+Rcol = Rbin - raccum(Rrow) - 1;
+Razi_width = 2*PI / rnaz(Rrow);
+RAH : alpha*DEGREE;
+Razi = if(Rbin-.5, (Rcol + x2 - .5)*Razi_width, 2*PI*x2);
+Ralt = if(Rbin-.5, (Rrow + x1)*RAH, asin(-x1));
+Romega = if(.5-Rbin, 2*PI, if(Rmax-.5-Rbin, 
+	Razi_width*(sin(RAH*(Rrow+1)) - sin(RAH*Rrow)),
+	2*PI*(1 - cos(RAH/2)) ) );
+cos_ralt = cos(Ralt);
+Dx = sin(Razi)*cos_ralt;
+Dy = cos(Razi)*cos_ralt;
+Dz = sin(Ralt);
