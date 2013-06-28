@@ -15,12 +15,12 @@ if(TIFF_LIBRARY)
 endif()
 
 #plugins loaded by rvu at runtime
-get_filename_component(qgif_plugin ${QT_QGIF_${qt_plugin_term}_RELEASE} NAME)
-get_filename_component(qico_plugin ${QT_QICO_${qt_plugin_term}_RELEASE} NAME)
-get_filename_component(qjpeg_plugin ${QT_QJPEG_${qt_plugin_term}_RELEASE} NAME)
-get_filename_component(qmng_plugin ${QT_QMNG_${qt_plugin_term}_RELEASE} NAME)
-get_filename_component(qsvg_plugin ${QT_QSVG_${qt_plugin_term}_RELEASE} NAME)
-get_filename_component(qtiff_plugin ${QT_QTIFF_${qt_plugin_term}_RELEASE} NAME)
+get_filename_component(qgif_plugin "${QT_QGIF_${qt_plugin_term}_RELEASE}" NAME)
+get_filename_component(qico_plugin "${QT_QICO_${qt_plugin_term}_RELEASE}" NAME)
+get_filename_component(qjpeg_plugin "${QT_QJPEG_${qt_plugin_term}_RELEASE}" NAME)
+get_filename_component(qmng_plugin "${QT_QMNG_${qt_plugin_term}_RELEASE}" NAME)
+get_filename_component(qsvg_plugin "${QT_QSVG_${qt_plugin_term}_RELEASE}" NAME)
+get_filename_component(qtiff_plugin "${QT_QTIFF_${qt_plugin_term}_RELEASE}" NAME)
 
 configure_file(
    "${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake.in"
