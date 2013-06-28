@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.4 2013/03/20 01:00:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.5 2013/06/28 23:18:51 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -189,6 +189,28 @@ cull_values(void)
 		}
 }
 
+/* Compute minimum BSDF from histogram and clear it */
+static void
+comp_bsdf_min()
+{
+	int	cnt;
+	int	i, target;
+
+	cnt = 0;
+	for (i = HISTLEN; i--; )
+		cnt += bsdf_hist[i];
+	if (!cnt) {				/* shouldn't happen */
+		bsdf_min = 0;
+		return;
+	}
+	target = cnt/100;			/* ignore bottom 1% */
+	cnt = 0;
+	for (i = 0; cnt <= target; i++)
+		cnt += bsdf_hist[i];
+	bsdf_min = histval(i-1);
+	memset(bsdf_hist, 0, sizeof(bsdf_hist));
+}
+
 /* Count up filled nodes and build RBF representation from current grid */ 
 RBFNODE *
 make_rbfrep(void)
@@ -207,6 +229,8 @@ make_rbfrep(void)
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
 		nn += dsf_grid[i][j].nval;
+				/* compute minimum BSDF */
+	comp_bsdf_min();
 				/* allocate RBF array */
 	newnode = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL)
