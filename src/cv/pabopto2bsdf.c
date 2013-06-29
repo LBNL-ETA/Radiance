@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.1 2012/10/19 04:14:29 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.2 2013/06/29 22:35:15 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.1 2012/10/19 04:14:29 greg 
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "platform.h"
@@ -15,24 +16,50 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.1 2012/10/19 04:14:29 greg 
 				/* global argv[0] */
 char			*progname;
 
-/* Load a set of measurements corresponding to a particular incident angle */
+typedef struct {
+	const char	*fname;		/* input file path */
+	double		theta, phi;	/* incident angles (in degrees) */
+	int		isDSF;		/* data is DSF (rather than BSDF)? */
+	long		dstart;		/* data start offset in file */
+} PGINPUT;
+
+PGINPUT		*inpfile;	/* input files sorted by incidence */
+int		ninpfiles;	/* number of input files */
+
+/* Compare incident angles */
 static int
-load_pabopto_meas(const char *fname)
+cmp_inang(const void *p1, const void *p2)
+{
+	const PGINPUT	*inp1 = (const PGINPUT *)p1;
+	const PGINPUT	*inp2 = (const PGINPUT *)p2;
+	
+	if (inp1->theta > inp2->theta+FTINY)
+		return(1);
+	if (inp1->theta < inp2->theta-FTINY)
+		return(-1);
+	if (inp1->phi > inp2->phi+FTINY)
+		return(1);
+	if (inp1->phi < inp2->phi-FTINY)
+		return(-1);
+	return(0);
+}
+
+/* Prepare a PAB-Opto input file by reading its header */
+static int
+init_pabopto_inp(const int i, const char *fname)
 {
 	FILE	*fp = fopen(fname, "r");
-	int	inp_is_DSF = -1;
-	double	new_theta, new_phi, theta_out, phi_out, val;
 	char	buf[2048];
-	int	n, c;
+	int	c;
 	
 	if (fp == NULL) {
 		fputs(fname, stderr);
 		fputs(": cannot open\n", stderr);
 		return(0);
 	}
-#ifdef DEBUG
-	fprintf(stderr, "Loading measurement file '%s'...\n", fname);
-#endif
+	inpfile[i].fname = fname;
+	inpfile[i].isDSF = -1;
+	inpfile[i].theta = inpfile[i].phi = -10001.;
 				/* read header information */
 	while ((c = getc(fp)) == '#' || c == EOF) {
 		if (fgets(buf, sizeof(buf), fp) == NULL) {
@@ -42,40 +69,72 @@ load_pabopto_meas(const char *fname)
 			return(0);
 		}
 		if (!strcmp(buf, "format: theta phi DSF\n")) {
-			inp_is_DSF = 1;
+			inpfile[i].isDSF = 1;
 			continue;
 		}
 		if (!strcmp(buf, "format: theta phi BSDF\n")) {
-			inp_is_DSF = 0;
+			inpfile[i].isDSF = 0;
 			continue;
 		}
-		if (sscanf(buf, "intheta %lf", &new_theta) == 1)
+		if (sscanf(buf, "intheta %lf", &inpfile[i].theta) == 1)
 			continue;
-		if (sscanf(buf, "inphi %lf", &new_phi) == 1)
+		if (sscanf(buf, "inphi %lf", &inpfile[i].phi) == 1)
 			continue;
 		if (sscanf(buf, "incident_angle %lf %lf",
-				&new_theta, &new_phi) == 2)
+				&inpfile[i].theta, &inpfile[i].phi) == 2)
 			continue;
 	}
-	ungetc(c, fp);
-	if (inp_is_DSF < 0) {
+	inpfile[i].dstart = ftell(fp) - 1;
+	fclose(fp);
+	if (inpfile[i].isDSF < 0) {
 		fputs(fname, stderr);
 		fputs(": unknown format\n", stderr);
-		fclose(fp);
 		return(0);
 	}
+	if ((inpfile[i].theta < -10000.) | (inpfile[i].phi < -10000.)) {
+		fputs(fname, stderr);
+		fputs(": unknown incident angle\n", stderr);
+		return(0);
+	}
+	return(1);
+}
+
+/* Load a set of measurements corresponding to a particular incident angle */
+static int
+add_pabopto_inp(const int i)
+{
+	FILE	*fp = fopen(inpfile[i].fname, "r");
+	double	theta_out, phi_out, val;
+	int	n, c;
+	
+	if (fp == NULL || fseek(fp, inpfile[i].dstart, 0) == EOF) {
+		fputs(inpfile[i].fname, stderr);
+		fputs(": cannot open\n", stderr);
+		return(0);
+	}
+#ifdef DEBUG
+	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
+#endif
 					/* prepare input grid */
-	new_bsdf_data(new_theta, new_phi);
-					/* read actual data */
+	if (!i || cmp_inang(&inpfile[i-1], &inpfile[i])) {
+		if (i)			/* need to process previous incidence */
+			make_rbfrep();
+#ifdef DEBUG
+		fprintf(stderr, "New incident (theta,phi)=(%f,%f)\n",
+					inpfile[i].theta, inpfile[i].phi);
+#endif
+		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
+	}
+					/* read scattering data */
 	while (fscanf(fp, "%lf %lf %lf\n", &theta_out, &phi_out, &val) == 3)
-		add_bsdf_data(theta_out, phi_out, val, inp_is_DSF);
+		add_bsdf_data(theta_out, phi_out, val, inpfile[i].isDSF);
 	n = 0;
 	while ((c = getc(fp)) != EOF)
 		n += !isspace(c);
 	if (n) 
 		fprintf(stderr,
 			"%s: warning: %d unexpected characters past EOD\n",
-				fname, n);
+				inpfile[i].fname, n);
 	fclose(fp);
 	return(1);
 }
@@ -102,13 +161,22 @@ main(int argc, char *argv[])
 		}
 		argv += 2; argc -= 2;
 	}
-	if (argc < 3)
+						/* initialize & sort inputs */
+	ninpfiles = argc - 1;
+	if (ninpfiles < 2)
 		goto userr;
-	for (i = 1; i < argc; i++) {		/* compile measurements */
-		if (!load_pabopto_meas(argv[i]))
+	inpfile = (PGINPUT *)malloc(sizeof(PGINPUT)*ninpfiles);
+	if (inpfile == NULL)
+		return(1);
+	for (i = 0; i < ninpfiles; i++)
+		if (!init_pabopto_inp(i, argv[i+1]))
 			return(1);
-		make_rbfrep();
-	}
+	qsort(inpfile, ninpfiles, sizeof(PGINPUT), &cmp_inang);
+						/* compile measurements */
+	for (i = 0; i < ninpfiles; i++)
+		if (!add_pabopto_inp(i))
+			return(1);
+	make_rbfrep();				/* process last data set */
 	build_mesh();				/* create interpolation */
 	save_bsdf_rep(stdout);			/* write it out */
 	return(0);
