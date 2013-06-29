@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.10 2012/12/14 23:16:43 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.11 2013/06/29 21:03:25 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -266,7 +266,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	int		n, i, j;
 	double		t, full_dist;
 						/* get relative position */
-	t = acos(DOT(invec, mig->rbfv[0]->invec));
+	t = Acos(DOT(invec, mig->rbfv[0]->invec));
 	if (t < M_PI/grid_res) {		/* near first DSF */
 		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[0]->nrbf-1);
 		rbf = (RBFNODE *)malloc(n);

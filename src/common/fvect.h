@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.14 2012/09/06 00:07:43 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.15 2013/06/29 21:03:44 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -40,6 +40,8 @@ typedef RREAL  FVECT[3];
 #define	GEOD_ABS	1	/* absolute geodesic distance */
 #define	GEOD_REL	2	/* relative geodesic distance */
 
+extern double	Acos(double x);
+extern double	Asin(double x);
 extern double	fdot(const FVECT v1, const FVECT v2);
 extern double	dist2(const FVECT v1, const FVECT v2);
 extern double	dist2line(const FVECT p, const FVECT ep1, const FVECT ep2);

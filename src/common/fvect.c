@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.18 2013/04/03 00:22:12 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.19 2013/06/29 21:03:44 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -7,9 +7,29 @@ static const char	RCSid[] = "$Id: fvect.c,v 2.18 2013/04/03 00:22:12 greg Exp $"
 
 #include "copyright.h"
 
+#define _USE_MATH_DEFINES
 #include  <math.h>
 #include  "fvect.h"
 
+double
+Acos(double x)			/* insurance for touchy math library */
+{
+	if (x <= -1.+FTINY*FTINY)
+		return(M_PI);
+	if (x >= 1.-FTINY*FTINY)
+		return(.0);
+	return(acos(x));
+}
+
+double
+Asin(double x)			/* insurance for touchy math library */
+{
+	if (x <= -1.+FTINY*FTINY)
+		return(-M_PI/2.);
+	if (x >= 1.-FTINY*FTINY)
+		return(M_PI/2);
+	return(asin(x));
+}
 
 double
 fdot(				/* return the dot product of two vectors */
