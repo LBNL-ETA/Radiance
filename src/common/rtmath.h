@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.6 2013/02/08 16:10:07 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.7 2013/06/29 15:46:02 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -37,7 +37,7 @@ typedef struct {
 extern double	tcos(double x);
 extern double	atan2a(double y, double x);
 
-#ifdef  FASTMATH
+#ifdef  __FAST_MATH__
 #define  tcos			cos
 #define  tsin			sin
 #define  ttan			tan
