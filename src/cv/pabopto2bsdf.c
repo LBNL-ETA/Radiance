@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.2 2013/06/29 22:35:15 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.3 2013/06/29 22:38:25 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -112,9 +112,6 @@ add_pabopto_inp(const int i)
 		fputs(": cannot open\n", stderr);
 		return(0);
 	}
-#ifdef DEBUG
-	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
-#endif
 					/* prepare input grid */
 	if (!i || cmp_inang(&inpfile[i-1], &inpfile[i])) {
 		if (i)			/* need to process previous incidence */
@@ -125,6 +122,9 @@ add_pabopto_inp(const int i)
 #endif
 		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
 	}
+#ifdef DEBUG
+	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
+#endif
 					/* read scattering data */
 	while (fscanf(fp, "%lf %lf %lf\n", &theta_out, &phi_out, &val) == 3)
 		add_bsdf_data(theta_out, phi_out, val, inpfile[i].isDSF);
