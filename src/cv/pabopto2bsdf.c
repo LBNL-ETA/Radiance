@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.3 2013/06/29 22:38:25 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.4 2013/06/30 14:46:29 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -96,6 +96,8 @@ init_pabopto_inp(const int i, const char *fname)
 		fputs(": unknown incident angle\n", stderr);
 		return(0);
 	}
+	while (inpfile[i].phi < 0)	/* normalize phi direction */
+		inpfile[i].phi += 360.;
 	return(1);
 }
 
