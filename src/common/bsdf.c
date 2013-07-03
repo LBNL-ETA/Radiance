@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.44 2013/04/21 21:36:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.45 2013/07/03 18:56:19 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -488,16 +488,15 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 		return SDEargument;
 					/* get cumulative distribution */
 	VCOPY(inVec, ioVec);
+	sv->cieY = 0;
 	cd = (*sdc->func->getCDist)(inVec, sdc);
-	if (cd == NULL)
-		return SDEmemory;
-	if (cd->cTotal <= 1e-6) {	/* anything to sample? */
+	if (cd != NULL)
+		sv->cieY = cd->cTotal;
+	if (sv->cieY <= 1e-6) {		/* nothing to sample? */
 		sv->spec = c_dfcolor;
-		sv->cieY = .0;
 		memset(ioVec, 0, 3*sizeof(double));
 		return SDEnone;
 	}
-	sv->cieY = cd->cTotal;
 					/* compute sample direction */
 	ec = (*sdc->func->sampCDist)(ioVec, randX, cd);
 	if (ec)
@@ -756,19 +755,16 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 		return SDEmemory;
 	while (j-- > 0) {		/* non-diffuse transmission */
 		cdarr[i+j] = (*tdf->comp[j].func->getCDist)(inVec, &tdf->comp[j]);
-		if (cdarr[i+j] == NULL) {
-			free(cdarr);
-			return SDEmemory;
-		}
+		if (cdarr[i+j] == NULL)
+			cdarr[i+j] = &SDemptyCD;
 		sv->cieY += cdarr[i+j]->cTotal;
 	}
 	while (i-- > 0) {		/* non-diffuse reflection */
 		cdarr[i] = (*rdf->comp[i].func->getCDist)(inVec, &rdf->comp[i]);
-		if (cdarr[i] == NULL) {
-			free(cdarr);
-			return SDEmemory;
-		}
-		sv->cieY += cdarr[i]->cTotal;
+		if (cdarr[i] == NULL)
+			cdarr[i] = &SDemptyCD;
+		else
+			sv->cieY += cdarr[i]->cTotal;
 	}
 	if (sv->cieY <= 1e-6) {		/* anything to sample? */
 		sv->cieY = .0;
