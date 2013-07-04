@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.28 2013/07/04 01:22:47 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.29 2013/07/04 01:24:17 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -728,10 +728,12 @@ SDqueryTreProjSA(double *psa, const FVECT v1, const RREAL *v2,
 	} else {
 		const SDTreCDst	*cd = (const SDTreCDst *)SDgetTreCDist(v1, sdc);
 		if (cd == NULL)
-			cd = &SDemptyCD;
-		myPSA[0] = M_PI * (cd->clim[0][1] - cd->clim[0][0]) *
-				(cd->clim[1][1] - cd->clim[1][0]);
-		myPSA[1] = cd->max_psa;
+			myPSA[0] = myPSA[1] = 0;
+		else {
+			myPSA[0] = M_PI * (cd->clim[0][1] - cd->clim[0][0]) *
+					(cd->clim[1][1] - cd->clim[1][0]);
+			myPSA[1] = cd->max_psa;
+		}
 	}
 	switch (qflags) {		/* record based on flag settings */
 	case SDqueryVal:
