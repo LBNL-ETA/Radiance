@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.27 2013/04/23 17:25:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.28 2013/07/04 01:22:47 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -728,7 +728,7 @@ SDqueryTreProjSA(double *psa, const FVECT v1, const RREAL *v2,
 	} else {
 		const SDTreCDst	*cd = (const SDTreCDst *)SDgetTreCDist(v1, sdc);
 		if (cd == NULL)
-			return SDEmemory;
+			cd = &SDemptyCD;
 		myPSA[0] = M_PI * (cd->clim[0][1] - cd->clim[0][0]) *
 				(cd->clim[1][1] - cd->clim[1][0]);
 		myPSA[1] = cd->max_psa;
