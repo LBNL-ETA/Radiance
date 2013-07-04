@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.45 2013/07/03 18:56:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.46 2013/07/04 15:14:45 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -618,7 +618,8 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 		projSA[0] = M_PI;
 		if (qflags == SDqueryMin+SDqueryMax)
 			projSA[1] = M_PI;
-	}
+	} else if (qflags == SDqueryMin+SDqueryMax && projSA[0] > projSA[1])
+		projSA[0] = projSA[1];
 	return SDEnone;
 }
 

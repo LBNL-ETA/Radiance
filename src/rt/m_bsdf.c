@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.23 2013/04/09 16:55:15 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.24 2013/07/04 15:14:45 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -122,7 +122,9 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			return(0);
 	}
 	sf = specjitter * ndp->pr->rweight;
-	if (25.*tomega <= omega)
+	if (tomega <= .0)
+		nsamp = 1;
+	else if (25.*tomega <= omega)
 		nsamp = 100.*sf + .5;
 	else
 		nsamp = 4.*sf*omega/tomega + .5;
