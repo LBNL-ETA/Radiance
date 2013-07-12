@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tcos.c,v 3.9 2013/02/08 16:39:01 greg Exp $";
+static const char	RCSid[] = "$Id: tcos.c,v 3.10 2013/07/12 05:16:02 greg Exp $";
 #endif
 /*
  * Table-based cosine approximation.
@@ -18,10 +18,11 @@ static const char	RCSid[] = "$Id: tcos.c,v 3.9 2013/02/08 16:39:01 greg Exp $";
 
 #include "rtmath.h"
 
+#ifndef __FAST_MATH__
+
 #ifndef NCOSENTRY
 #define NCOSENTRY	1024
 #endif
-
 
 double
 tcos(double x)				/* approximate cosine */
@@ -51,6 +52,7 @@ tcos(double x)				/* approximate cosine */
 	return(0.);		/* should never be reached */
 }
 
+#endif
 
 /* Fast arctangent approximation due to Rajan et al. 2006 */
 double
