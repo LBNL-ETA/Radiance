@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.11 2010/06/18 21:22:49 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.12 2013/07/26 16:45:04 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -67,16 +67,16 @@ char	*argv[];
 					curbytes = 1;
 					break;
 				case 'a':
-					curbytes = argv[i][3] ? 1 : 0;
+					curbytes = argv[i][3] ? -1 : 0;
 					break;
 				default:
 					goto badopt;
 				}
 				if (isdigit(argv[i][3]))
 					curbytes *= atoi(argv[i]+3);
-				if (curbytes < 0 || curbytes > MAXLINE) {
+				if (abs(curbytes) > MAXLINE) {
 					fputs(argv[0], stderr);
-					fputs(": illegal input size\n", stderr);
+					fputs(": input size too big\n", stderr);
 					exit(1);
 				}
 				if (curbytes)
@@ -84,8 +84,12 @@ char	*argv[];
 				break;
 			case '\0':
 				tabc[nfiles] = curtab;
-				bytsiz[nfiles] = curbytes;
-				input[nfiles++] = stdin;
+				input[nfiles] = stdin;
+				if (curbytes > 0)
+					SET_FILE_BINARY(input[nfiles]);
+				else
+					curbytes = -curbytes;
+				bytsiz[nfiles++] = curbytes;
 				break;
 			badopt:;
 			default:
@@ -95,26 +99,28 @@ char	*argv[];
 			}
 		} else if (argv[i][0] == '!') {
 			tabc[nfiles] = curtab;
-			bytsiz[nfiles] = curbytes;
 			if ((input[nfiles] = popen(argv[i]+1, "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
 				exit(1);
 			}
-			if (bytsiz[nfiles])
+			if (curbytes > 0)
 				SET_FILE_BINARY(input[nfiles]);
-			++nfiles;
+			else
+				curbytes = -curbytes;
+			bytsiz[nfiles++] = curbytes;
 		} else {
 			tabc[nfiles] = curtab;
-			bytsiz[nfiles] = curbytes;
 			if ((input[nfiles] = fopen(argv[i], "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot open file\n", stderr);
 				exit(1);
 			}
-			if (bytsiz[nfiles])
+			if (curbytes > 0)
 				SET_FILE_BINARY(input[nfiles]);
-			++nfiles;
+			else
+				curbytes = -curbytes;
+			bytsiz[nfiles++] = curbytes;
 		}
 		if (nfiles >= MAXFILE) {
 			fputs(argv[0], stderr);
