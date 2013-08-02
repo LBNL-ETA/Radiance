@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.16 2013/05/15 17:29:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.17 2013/08/02 20:56:19 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -112,6 +112,7 @@ eval_isotropic(char *funame)
 {
 	const int	sqres = 1<<samp_order;
 	FILE		*ofp = NULL;
+	int		assignD = 0;
 	char		cmd[128];
 	int		ix, ox, oy;
 	double		iovec[6];
@@ -131,6 +132,9 @@ eval_isotropic(char *funame)
 		SET_FILE_BINARY(ofp);
 	} else
 		fputs("{\n", stdout);
+						/* need to assign Dx, Dy, Dz? */
+	if (funame != NULL)
+		assignD = (fundefined(funame) < 6);
 						/* run through directions */
 	for (ix = 0; ix < sqres/2; ix++) {
 		RBFNODE	*rbf = NULL;
@@ -151,6 +155,12 @@ eval_isotropic(char *funame)
 			else {
 			    double	ssa[3], ssvec[6], sum;
 			    int		ssi;
+			    if (assignD) {
+				varset("Dx", '=', -iovec[3]);
+				varset("Dy", '=', -iovec[4]);
+				varset("Dz", '=', -iovec[5]);
+				++eclock;
+			    }
 			    bsdf = funvalue(funame, 6, iovec);
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
 				sum = 0;	/* super-sample voxel */
@@ -165,6 +175,12 @@ eval_isotropic(char *funame)
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
+				    if (assignD) {
+					varset("Dx", '=', -iovec[3]);
+					varset("Dy", '=', -iovec[4]);
+					varset("Dz", '=', -iovec[5]);
+					++eclock;
+				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
 				bsdf = sum/nssamp;
@@ -200,6 +216,7 @@ eval_anisotropic(char *funame)
 {
 	const int	sqres = 1<<samp_order;
 	FILE		*ofp = NULL;
+	int		assignD = 0;
 	char		cmd[128];
 	int		ix, iy, ox, oy;
 	double		iovec[6];
@@ -218,6 +235,9 @@ eval_anisotropic(char *funame)
 		}
 	} else
 		fputs("{\n", stdout);
+						/* need to assign Dx, Dy, Dz? */
+	if (funame != NULL)
+		assignD = (fundefined(funame) < 6);
 						/* run through directions */
 	for (ix = 0; ix < sqres; ix++)
 	    for (iy = 0; iy < sqres; iy++) {
@@ -239,6 +259,12 @@ eval_anisotropic(char *funame)
 			else {
 			    double	ssa[4], ssvec[6], sum;
 			    int		ssi;
+			    if (assignD) {
+				varset("Dx", '=', -iovec[3]);
+				varset("Dy", '=', -iovec[4]);
+				varset("Dz", '=', -iovec[5]);
+				++eclock;
+			    }
 			    bsdf = funvalue(funame, 6, iovec);
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
 				sum = 0;	/* super-sample voxel */
@@ -254,6 +280,12 @@ eval_anisotropic(char *funame)
 				    ssvec[5] = output_orient *
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
+				    if (assignD) {
+					varset("Dx", '=', -iovec[3]);
+					varset("Dy", '=', -iovec[4]);
+					varset("Dz", '=', -iovec[5]);
+					++eclock;
+				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
 				bsdf = sum/nssamp;
@@ -330,12 +362,15 @@ main(int argc, char *argv[])
 	if (single_plane_incident >= 0) {	/* function-based BSDF? */
 		void	(*evf)(char *s) = single_plane_incident ?
 				&eval_isotropic : &eval_anisotropic;
-		if (i != argc-1 || fundefined(argv[i]) != 6) {
+		if (i != argc-1 || fundefined(argv[i]) < 3) {
 			fprintf(stderr,
 	"%s: need single function with 6 arguments: bsdf(ix,iy,iz,ox,oy,oz)\n",
 					progname);
+			fprintf(stderr, "\tor 3 arguments using Dx,Dy,Dz: bsdf(ix,iy,iz)\n",
+					progname);
 			goto userr;
 		}
+		++eclock;
 		xml_prologue(argc, argv);	/* start XML output */
 		if (dofwd) {
 			input_orient = -1;

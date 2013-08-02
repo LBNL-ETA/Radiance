@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2klems.1,v 1.1 2013/04/25 00:43:20 greg Exp $
+.\" RCSid $Id: bsdf2klems.1,v 1.2 2013/08/02 20:56:19 greg Exp $
 .TH BSDF2KLEMS 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2klems - generate XML Klems matrix description of a BSDF
@@ -90,13 +90,20 @@ geometric descriptions are passed unchanged.
 In the third invocation form,
 .I bsdf2klems
 takes a functional specification of a BSDF.
-The named function must accept 6 parameters corresponding to the
+The named function should accept 6 parameters corresponding to the
 normalized incident and exiting vectors, respectively.
 By convention, these vectors point away from the surface, and a positive
 Z-component corresponds to the front side.
 The Y-component corresponds to the "up" orientation of the surface,
 as specified in the eventual scene description that references the XML
 output.
+If the function only takes 3 parameters, then the variables "Dx", "Dy",
+and "Dz" will be assigned to the reverse of the outgoing direction at
+each evaluation.
+(I.e., the vector will point into the surface and
+Dz will be negative on the front side.)\0
+This simplifies conversion of functional BSDF specifications using the
+legacy material primitives "plasfunc", "metfunc", and "transfunc".
 .PP
 The function is defined by one or more
 .I \-e
