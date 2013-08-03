@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.7 2013/06/29 15:46:02 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.8 2013/08/03 17:53:46 greg Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -14,7 +14,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 				/* regular transformation */
 typedef struct {
 	MAT4  xfm;				/* transform matrix */
@@ -45,6 +44,11 @@ extern double	atan2a(double y, double x);
 					/* table-based cosine approximation */
 #define  tsin(x)		tcos((x)-(PI/2.))
 #define  ttan(x)		(tsin(x)/tcos(x))
+#endif
+
+#ifdef _WIN32
+extern double	erf(double x);
+extern double	erfc(double x);
 #endif
 					/* defined in xf.c */
 extern int	xf(XF *ret, int ac, char *av[]);
