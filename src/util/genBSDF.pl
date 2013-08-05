@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.42 2013/04/23 23:22:09 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.43 2013/08/05 22:56:50 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -277,7 +277,7 @@ $cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
 	q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
 if ($pctcull >= 0) {
 	$cmd .= "-of $td/" . ($bmodnm,$fmodnm)[$forw] . ".flt " .
-	"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+	"| rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
 	system "$cmd" || die "Failure running rttree_reduce";
 } else {
 	$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . ".flt";

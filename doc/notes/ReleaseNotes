@@ -1880,3 +1880,6 @@ Axel Jacobs added -pal eco color map that does a blue-red-yellow scale.
 
 Created bsdf2klems tool to convert from various BSDF representations to
 Klems basis matrix in XML file.
+
+Fixed problem with inappropriate reciprocity enforcement on tensor
+tree reduction in genBSDF.  (Thanks to A.McNeil for discovering issue.)
