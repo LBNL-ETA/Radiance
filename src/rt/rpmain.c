@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.14 2008/03/11 02:21:47 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.15 2013/08/07 05:10:09 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -76,7 +76,7 @@ main(int  argc, char  *argv[])
 	int  loadflags = ~IO_FILES;
 	int  seqstart = 0;
 	int  persist = 0;
-	int  duped1;
+	int  duped1 = -1;
 	int  rval;
 	int  i;
 					/* record start time */

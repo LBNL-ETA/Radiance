@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.8 2012/06/22 21:58:45 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.9 2013/08/07 05:10:09 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -120,5 +120,7 @@ extern void		end_children(int immed);
 extern void		put_zero_record(int ndx);
 
 extern void		parental_loop(void);	/* controlling process */
+
+extern void		feeder_loop(void);	/* feeder process */
 
 extern void		rcontrib(void);		/* main calculation loop */

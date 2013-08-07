@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.21 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.22 2013/08/07 05:10:09 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -77,8 +77,8 @@ main(int  argc, char  *argv[])
 				default: goto badopt; }
 	int  persist = 0;
 	char  *octnm = NULL;
-	char  **tralp;
-	int  duped1;
+	char  **tralp = NULL;
+	int  duped1 = -1;
 	int  rval;
 	int  i;
 					/* global program name */

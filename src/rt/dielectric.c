@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.22 2010/10/25 22:57:45 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.23 2013/08/07 05:10:09 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -74,8 +74,8 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 	COLOR  ctrans;
 	COLOR  talb;
 	int  hastexture;
-	double  transdist, transtest=0;
-	double  mirdist, mirtest=0;
+	double  transdist=0, transtest=0;
+	double  mirdist=0, mirtest=0;
 	int	flatsurface;
 	double  refl, trans;
 	FVECT  dnorm;

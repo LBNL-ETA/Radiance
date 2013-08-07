@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fprism.c,v 2.8 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: fprism.c,v 2.9 2013/08/07 05:10:09 greg Exp $";
 #endif
 /* Ce programme calcule les directions et les energies des rayons lumineux
    resultant du passage d'un rayon au travers d'un vitrage prismatique
@@ -776,7 +776,7 @@ l_get_val(
  int val, dir, i, trouve, curseur;
  int nb;
  double valeur;
- TRAYON *rayt, raynull;
+ TRAYON *rayt=NULL, raynull;
  
  if (prismclock < 0 || prismclock < eclock) setprism();
  if (bidon == BADVAL) {
