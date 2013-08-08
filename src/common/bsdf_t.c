@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.30 2013/07/04 15:14:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.31 2013/08/08 05:26:56 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -468,7 +468,8 @@ SDqueryTre(const SDTre *sdt, const FVECT outVec, const FVECT inVec, double *hc)
 					/* convert vector coordinates */
 	if (sdt->st->ndim == 3) {
 		spinvector(rOutVec, outVec, zvec, -atan2(-inVec[1],-inVec[0]));
-		gridPos[0] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
+		gridPos[0] = (.5-FTINY) -
+				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 		SDdisk2square(gridPos+1, rOutVec[0], rOutVec[1]);
 	} else if (sdt->st->ndim == 4) {
 		SDdisk2square(gridPos, -inVec[0], -inVec[1]);
@@ -672,7 +673,8 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	if (sdt->st->ndim == 3) {	/* isotropic BSDF? */
 		if (mode != sdt->sidef)	/* XXX unhandled reciprocity */
 			return &SDemptyCD;
-		inCoord[0] = .5 - .5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
+		inCoord[0] = (.5-FTINY) -
+				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 	} else if (sdt->st->ndim == 4) {
 		if (mode != sdt->sidef)	/* use reciprocity? */
 			SDdisk2square(inCoord, inVec[0], inVec[1]);

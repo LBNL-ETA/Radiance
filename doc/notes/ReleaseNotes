@@ -1883,3 +1883,7 @@ Klems basis matrix in XML file.
 
 Fixed problem with inappropriate reciprocity enforcement on tensor
 tree reduction in genBSDF.  (Thanks to A.McNeil for discovering issue.)
+
+Fixed bug in isotropic tensor tree sampling for impinging rays
+exactly normal to surface.  Thanks to Peter Apian-Bennewitz for
+discovering and pointing out the error.
