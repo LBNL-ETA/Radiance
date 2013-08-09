@@ -1,14 +1,14 @@
-.\" RCSid "$Id: gendaylit.1,v 1.3 2013/01/30 01:02:42 greg Exp $"
+.\" RCSid "$Id: gendaylit.1,v 1.4 2013/08/09 16:44:19 greg Exp $"
 .TH GENDAYLIT 1 4/12/94 "RADIANCE ISE/ADEME EXTENSIONS"
 .SH NAME
-gendaylit - generates a RADIANCE description of the daylit sources using Perez models for diffuse and direct components
+gendaylit - generates a RADIANCE description of the daylight sources using Perez models for direct and diffuse components
 .SH SYNOPSIS
-.B "gendaylit month day hour [-P|-W|-L|-G] direct_value diffuse_value "
+.B "gendaylit month day hour [-P|-W|-L|-G|-E] input_value(s) "
 [
 .B options
 ]
 .br
-.B "gendaylit -ang altitude azimuth [-P|-W|-L|-G] direct_value diffuse_value "
+.B "gendaylit -ang altitude azimuth [-P|-W|-L|-G|-E] input_value(s) "
 [
 .B options
 ]
@@ -31,10 +31,11 @@ resulting sky radiance/luminance values in this simulation is ensured through th
 sky diffuse to the measured sky diffuse irradiances/illuminances.
 
 As described below, the radiation can be defined with the pairs direct-normal and diffuse-horizontal irradiance
-(-W option), direct-horizontal and diffuse-horizontal irradiance (-G option) or direct-normal and diffuse-horizontal
-illuminance (-L option). The direct-normal radiation is understood here as the radiant flux coming from the sun
-and an area of approximately 3 degrees around the sun (World Meteorological Organisation specifications
-for measuring the direct radiation. The aperture angle of a pyrheliometer is approximately 6 degrees). 
+(-W option), direct-horizontal and diffuse-horizontal irradiance (-G option), direct-normal and diffuse-horizontal
+illuminance (-L option) or global-horizontal irradiation alone (-E option). The direct-normal radiation
+is understood here as the radiant flux coming from the sun and an area of approximately 3 degrees around the sun
+(World Meteorological Organisation specifications for measuring the direct radiation.
+The aperture angle of a pyrheliometer is approximately 6 degrees). 
 To simplify the calculations for the direct radiation, the sun is represented as a disk and no   
 circumsolar radiation is modelled in the 3 degrees around the sun. This means that
 all the measured/evaluated direct radiation is added to the 0.5 degree sun source. 
@@ -75,8 +76,7 @@ luminance = (RED*.263 + GREEN*.655 + BLUE*.082) * 179    with the capability
 to model colour (where radiance_integrated_over_visible_range == (RED + GREEN + BLUE)/3).
 
 From 
-.I gensky
-, if the hour is preceded by a plus sign ('+'), then it is interpreted as local solar time instead of standard time.
+.I gensky, if the hour is preceded by a plus sign ('+'), then it is interpreted as local solar time instead of standard time.
 The second form gives the solar angles explicitly. The altitude is measured in degrees above the horizon, and the
 azimuth is measured in degrees west of South. The x axis points east, the y axis points north, and the z axis
 corresponds to the zenith. The actual material and surface(s) used for the sky is left up to the user.
@@ -113,6 +113,14 @@ to run it: with the Perez parametrization, with irradiance values and with illum
 (lm/m^2), 
 .I diffuse-horizontal-illuminance
 (lm/m^2)
+.TP
+.BR \-E 
+.I global-horizontal-irradiance
+(W/m^2)
+.PP
+The -E option calculates the diffuse irradiance fraction with the model of Erbs, Klein and Duffie (Solar Energy 28/4, 1982), 
+being followed by the calculation of the -G option. Due to the high uncertainty of the model, the results have to be handled 
+with care. A second irradiance value, if available, is definitely recommended.
 .PP
 The output can be set to either the radiance of the visible radiation, the solar radiance (full spectrum) or the luminance.
 .TP 10n
@@ -163,15 +171,12 @@ This is used in the calculation of solar time.
 Be sure to give the correct longitude also!
 If solar time is given directly, then this option has no effect.
 .TP
-.BI -l \ min_angle
+.BI -i \ time_interval [min]
 If gendaylit is used with weather files, the specified instantaneous points of time may be incorrect. This error occurs
 due to the fact that measurement results are frequently defined for time intervals, not for specific points of time.
 Although gendaylit is working correctly, this may lead to wrong outputs especially at low sun altitudes.
-The -l option avoids these errors by returning zero values if the sun altitude is below
-.I min_angle
-degrees over the horizon. The default value is zero; the recommended number for
-.I min_angle
-in the case of using weather files is 1 degree.
+The -i option allows to specify the time interval of the measurements in minutes, causing the solar position to be corrected for low sun
+altitudes. A warning message is returned if a correction has been performed.
 
 .SH EXAMPLES
 A clear non-turbid sky for a solar altitude of 60 degrees and an azimut of 0 degree might be defined by:
