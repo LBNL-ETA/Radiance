@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: sun.c,v 2.5 2009/06/06 20:18:32 greg Exp $";
+static const char	RCSid[] = "$Id: sun.c,v 2.6 2013/08/09 16:51:15 greg Exp $";
 #endif
 /*
  *           SOLAR CALCULATIONS
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: sun.c,v 2.5 2009/06/06 20:18:32 greg Exp $";
  */
 
 #include  <math.h>
+#include  "sun.h"
 
 #ifdef M_PI
 #define  PI	M_PI
