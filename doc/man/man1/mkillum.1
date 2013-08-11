@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mkillum.1,v 1.11 2012/10/13 20:15:43 greg Exp $"
+.\" RCSid "$Id: mkillum.1,v 1.12 2013/08/11 02:57:49 greg Exp $"
 .TH MKILLUM 1 10/6/95 RADIANCE
 .SH NAME
 mkillum - compute illum sources for a RADIANCE scene
@@ -192,20 +192,6 @@ will use the material type "illum" with the input surface modifier
 as its alternate material.
 The default is
 .I l-.
-.TP
-.BI t =real
-Set the surface thickness to
-.I real
-in world coordinates.
-This value is used for determining where to start rays that need to begin
-on the opposite side of a fenestration system, specifically
-to compute the incoming distribution for a BSDF computation.
-If the thickness is set to 0 and a BSDF contains detailed geometry,
-it will be translated and output as part of the new description, provided the
-.I l-
-option is also in effect.
-(This currently works only for rectangular polygons.)\0
-The default thickness is 0.
 .SH EXAMPLES
 The following command generates illum's corresponding to geometry
 in the files "it1.rad" and "it2.rad":

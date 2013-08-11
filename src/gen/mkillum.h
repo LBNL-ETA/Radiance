@@ -1,4 +1,4 @@
-/* RCSid: $Id: mkillum.h,v 2.19 2012/10/13 20:15:43 greg Exp $ */
+/* RCSid: $Id: mkillum.h,v 2.20 2013/08/11 02:57:49 greg Exp $ */
 /*
  * Common definitions for mkillum
  */
@@ -20,7 +20,6 @@ extern "C" {
 
 struct illum_args {
 	int	flags;			/* flags from list above */
-	double	thick;			/* object thickness */
 	char	matname[MAXSTR];	/* illum material name */
 	char	datafile[MAXSTR];	/* distribution data file name */
 	int	dfnum;			/* data file number */
