@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.10 2013/08/07 05:10:09 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.11 2013/08/11 13:48:48 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -289,6 +289,8 @@ main(int argc, char *argv[])
 			goto badopt;
 		}
 	}
+	if (nmods <= 0)
+		error(USER, "missing required modifier argument");
 					/* override some option settings */
 	override_options();
 					/* initialize object types */
