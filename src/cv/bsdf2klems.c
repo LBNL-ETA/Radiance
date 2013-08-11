@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.8 2013/08/02 20:56:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.9 2013/08/11 14:32:34 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -154,7 +154,6 @@ static void
 eval_bsdf(const char *fname)
 {
 	ANGLE_BASIS	*abp = get_basis(kbasis);
-	float		*trans_mtx = NULL;
 	SDData		bsd;
 	SDError		ec;
 	FVECT		vin, vout;
@@ -210,9 +209,6 @@ eval_bsdf(const char *fname)
 	}
 						/* front transmission */
 	if (bsd.tf != NULL || bsd.tLamb.cieY > .002) {
-	    if (bsd.tb == NULL)
-		trans_mtx = (float *)malloc(sizeof(float) *
-						abp->nangles*abp->nangles);
 	    input_orient = 1; output_orient = -1;
 	    data_prologue();
 	    for (j = 0; j < abp->nangles; j++) {
@@ -227,56 +223,33 @@ eval_bsdf(const char *fname)
 			sum += sv.cieY;
 		    }
 		    printf("\t%.3e\n", sum/npsamps);
-		    if (trans_mtx != NULL)
-			trans_mtx[j*abp->nangles + i] = sum/npsamps;
 		}
 		putchar('\n');			/* extra space between rows */
 	    }
 	    data_epilogue();
 	}
 						/* back transmission */
-	if (bsd.tb != NULL || trans_mtx != NULL) {
-	    if (bsd.tf == NULL)
-		trans_mtx = (float *)malloc(sizeof(float) *
-						abp->nangles*abp->nangles);
+	if ((bsd.tb != NULL) | (bsd.tf != NULL)) {
 	    input_orient = -1; output_orient = 1;
 	    data_prologue();
 	    for (j = 0; j < abp->nangles; j++) {
-	        for (i = 0; i < abp->nangles; i++)
-		    if (bsd.tb != NULL) {	/* use tb if we have it */
-			sum = 0;		/* average over patches */
-			for (n = npsamps; n-- > 0; ) {
-			    fo_getvec(vout, j+(n+frandom())/npsamps, abp);
-			    bi_getvec(vin, i+urand(n), abp);
-			    ec = SDevalBSDF(&sv, vout, vin, &bsd);
-			    if (ec != SDEnone)
+	        for (i = 0; i < abp->nangles; i++) {
+		    sum = 0;		/* average over patches */
+		    for (n = npsamps; n-- > 0; ) {
+			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
+			bi_getvec(vin, i+urand(n), abp);
+			ec = SDevalBSDF(&sv, vout, vin, &bsd);
+			if (ec != SDEnone)
 				goto err;
-			    sum += sv.cieY;
-			}
-			printf("\t%.3e\n", sum/npsamps);
-			if (trans_mtx != NULL)
-			    trans_mtx[i*abp->nangles + j] = sum/npsamps;
-		    } else {			/* else transpose tf */
-			printf("\t%.3e\n", trans_mtx[i*abp->nangles + j]);
+			sum += sv.cieY;
 		    }
-		putchar('\n');			/* extra space between rows */
-	    }
-	    data_epilogue();
-	}
-						/* derived front transmission */
-	if (bsd.tf == NULL && trans_mtx != NULL) {
-	    input_orient = 1; output_orient = -1;
-	    data_prologue();
-	    for (j = 0; j < abp->nangles; j++) {
-	        for (i = 0; i < abp->nangles; i++)
-		    printf("\t%.3e\n", trans_mtx[j*abp->nangles + i]);
+		    printf("\t%.3e\n", sum/npsamps);
+		}
 		putchar('\n');			/* extra space between rows */
 	    }
 	    data_epilogue();
 	}
 	SDfreeBSDF(&bsd);			/* all done */
-	if (trans_mtx != NULL)
-		free(trans_mtx);
 	return;
 err:
 	SDreportError(ec, stderr);
