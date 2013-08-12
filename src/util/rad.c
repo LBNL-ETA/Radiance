@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.107 2011/08/26 22:39:56 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.108 2013/08/12 21:01:00 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -558,6 +558,7 @@ oconv(void)				/* run oconv and mkillum if necessary */
 			unlink(illumtmp);
 			quit(1);
 		}
+		rmfile(oct0name);
 						/* make octree1 (frozen) */
 		if (octreedate)
 			sprintf(combuf, "%s%s -f -i %s %s > %s", c_oconv,
