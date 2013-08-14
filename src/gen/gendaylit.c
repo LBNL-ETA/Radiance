@@ -6,6 +6,7 @@
  *				1 Avenue Eugene Freyssinet, Saint-Quentin-Yvelines, France
 */
 
+#define _USE_MATH_DEFINES
 #include  <stdio.h>
 #include  <string.h>
 #include  <math.h>
@@ -19,7 +20,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.12 2013/08/09 16:44:19 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.13 2013/08/14 17:11:43 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
