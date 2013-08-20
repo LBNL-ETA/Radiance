@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.10 2007/07/25 04:12:36 greg Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.11 2013/08/20 21:37:46 greg Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -19,16 +19,16 @@ static const char	RCSid[] = "$Id: m_clip.c,v 2.10 2007/07/25 04:12:36 greg Exp $
  */
 
 
-extern int
+int
 m_clip(			/* clip objects from ray */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	OBJECT  cset[MAXSET+1], *modset;
 	OBJECT  obj, mod;
 	int  entering;
-	register int  i;
+	int  i;
 
 	obj = objndx(m);
 	if ((modset = (OBJECT *)m->os) == NULL) {
@@ -62,25 +62,23 @@ m_clip(			/* clip objects from ray */
 	else
 		cset[0] = 0;
 
-	entering = r->rod > 0.0;		/* entering clipped region? */
+	entering = (r->rod > 0.0);		/* entering clipped region? */
 
-	for (i = modset[0]; i > 0; i--) {
+	for (i = modset[0]; i > 0; i--)
 		if (entering) {
 			if (!inset(cset, modset[i])) {
 				if (cset[0] >= MAXSET)
 					error(INTERNAL, "set overflow in m_clip");
 				insertelem(cset, modset[i]);
 			}
-		} else {
-			if (inset(cset, modset[i]))
-				deletelem(cset, modset[i]);
-		}
-	}
+		} else if (inset(cset, modset[i]))
+			deletelem(cset, modset[i]);
+
 					/* compute ray value */
 	r->newcset = cset;
 	if (strcmp(m->oargs.sarg[0], VOIDID)) {
 		int  inside = 0;
-		register const RAY  *rp;
+		const RAY  *rp;
 					/* check for penetration */
 		for (rp = r; rp->parent != NULL; rp = rp->parent)
 			if (!(rp->rtype & RAYREFL) && rp->parent->ro != NULL
