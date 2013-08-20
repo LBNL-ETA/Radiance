@@ -1,8 +1,8 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.27 2010/09/28 21:28:23 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.28 2013/08/20 16:19:03 greg Exp $";
 #endif
 /*
- * Convert a Wavefront .obj file to Radiance format.
+ * Convert a Wavefront .OBJ file to Radiance format.
  *
  * Currently, we support only polygonal geometry.  Non-planar
  * faces are broken rather haphazardly into triangles.
@@ -73,7 +73,7 @@ int	flatten = 0;		/* discard surface normal information */
 
 char	mapname[128];		/* current picture file */
 char	matname[64];		/* current material name */
-char	group[16][32];		/* current group names */
+char	group[8][256];		/* current group name(s) */
 char	objname[128];		/* current object name */
 char	*inpfile;		/* input file name */
 int	lineno;			/* current line number */
@@ -97,7 +97,7 @@ static void syntax(char *er);
 
 
 int
-main(		/* read in .obj file and convert */
+main(		/* read in .OBJ file and convert */
 	int	argc,
 	char	*argv[]
 )
@@ -163,7 +163,7 @@ getnames(			/* get valid qualifier names */
 	char	*argv[MAXARG];
 	int	argc;
 	ID	tmpid;
-	register int	i;
+	int	i;
 
 	while ( (argc = getstmt(argv, fp)) )
 		switch (argv[0][0]) {
@@ -207,14 +207,14 @@ getnames(			/* get valid qualifier names */
 
 
 void
-convert(			/* convert a T-mesh */
+convert(			/* convert an OBJ stream */
 	FILE	*fp
 )
 {
 	char	*argv[MAXARG];
 	int	argc;
 	int	nstats, nunknown;
-	register int	i;
+	int	i;
 
 	nstats = nunknown = 0;
 					/* scan until EOF */
@@ -293,7 +293,7 @@ convert(			/* convert a T-mesh */
 				goto unknown;
 			for (i = 1; i < argc; i++)
 				strcpy(group[i-1], argv[i]);
-			group[i-1][0] = '\0';
+			group[argc-1][0] = '\0';
 			break;
 		case '#':		/* comment */
 			printargs(argc, argv, stdout);
@@ -313,13 +313,13 @@ convert(			/* convert a T-mesh */
 
 int
 getstmt(				/* read the next statement from fp */
-	register char	*av[MAXARG],
+	char	*av[MAXARG],
 	FILE	*fp
 )
 {
 	static char	sbuf[MAXARG*16];
-	register char	*cp;
-	register int	i;
+	char	*cp;
+	int	i;
 
 	do {
 		if (fgetline(cp=sbuf, sizeof(sbuf), fp) == NULL)
@@ -354,7 +354,7 @@ getstmt(				/* read the next statement from fp */
 char *
 getmtl(void)				/* figure material for this face */
 {
-	register RULEHD	*rp = ourmapping;
+	RULEHD	*rp = ourmapping;
 
 	if (rp == NULL) {		/* no rule set */
 		if (matname[0])
@@ -381,8 +381,8 @@ char *
 getonm(void)				/* invent a good name for object */
 {
 	static char	name[64];
-	register char	*cp1, *cp2;
-	register int	i;
+	char	*cp1, *cp2;
+	int	i;
 					/* check for preset */
 	if (objname[0])
 		return(objname);
@@ -405,12 +405,12 @@ getonm(void)				/* invent a good name for object */
 
 int
 matchrule(				/* check for a match on this rule */
-	register RULEHD	*rp
+	RULEHD	*rp
 )
 {
 	ID	tmpid;
 	int	gotmatch;
-	register int	i;
+	int	i;
 
 	if (rp->qflg & FL(Q_MTL)) {
 		if (!matname[0])
@@ -458,8 +458,8 @@ matchrule(				/* check for a match on this rule */
 
 int
 cvtndx(				/* convert vertex string to index */
-	register VNDX	vi,
-	register char	*vs
+	VNDX	vi,
+	char	*vs
 )
 {
 					/* get point */
@@ -510,15 +510,15 @@ cvtndx(				/* convert vertex string to index */
 
 int
 nonplanar(			/* are vertices non-planar? */
-	register int	ac,
-	register char	**av
+	int	ac,
+	char	**av
 )
 {
 	VNDX	vi;
 	RREAL	*p0, *p1;
 	FVECT	v1, v2, nsum, newn;
 	double	d;
-	register int	i;
+	int	i;
 
 	if (!cvtndx(vi, av[0]))
 		return(0);
@@ -564,12 +564,12 @@ nonplanar(			/* are vertices non-planar? */
 int
 putface(				/* put out an N-sided polygon */
 	int	ac,
-	register char	**av
+	char	**av
 )
 {
 	VNDX	vi;
 	char	*cp;
-	register int	i;
+	int	i;
 
 	if (nonplanar(ac, av)) {	/* break into triangles */
 		while (ac > 2) {
@@ -609,7 +609,7 @@ puttri(			/* put out a triangle */
 	RREAL	bcoor[3][3];
 	int	texOK = 0, patOK;
 	int	flatness;
-	register int	i;
+	int	i;
 
 	if ((mod = getmtl()) == NULL)
 		return(-1);
