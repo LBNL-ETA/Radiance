@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.13 2010/09/26 15:51:15 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.14 2013/08/29 15:37:16 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -43,7 +43,8 @@ m_mirror(			/* shade mirrored ray */
 	if (m->oargs.nfargs != 3 || m->oargs.nsargs > 1)
 		objerror(m, USER, "bad number of arguments");
 					/* check for substitute material */
-	if (m->oargs.nsargs > 0 &&
+					/* but avoid double-counting */
+	if (m->oargs.nsargs > 0 && !(r->crtype & (AMBIENT|SPECULAR)) &&
 			(r->rsrc < 0 || source[r->rsrc].so != r->ro)) {
 		if (!strcmp(m->oargs.sarg[0], VOIDID)) {
 			raytrans(r);

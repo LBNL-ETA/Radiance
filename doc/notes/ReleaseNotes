@@ -1887,3 +1887,7 @@ tree reduction in genBSDF.  (Thanks to A.McNeil for discovering issue.)
 Fixed bug in isotropic tensor tree sampling for impinging rays
 exactly normal to surface.  Thanks to Peter Apian-Bennewitz for
 discovering and pointing out the error.
+
+Fixed double-counting bug in mirror material with alternate type.
+Thanks to David Geisler-Moroder for spotting the problem and helping
+to fix it.
