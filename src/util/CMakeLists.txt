@@ -44,6 +44,9 @@ target_link_libraries(rsensor raycalls radiance rtrad)
 add_executable(rttree_reduce rttree_reduce.c)
 target_link_libraries(rttree_reduce rtrad)
 
+add_executable(rcollate rcollate.c)
+target_link_libraries(rcollate rtrad)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c ${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c)
@@ -81,7 +84,7 @@ if(UNIX)
   endif()
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
-                vwrays vwright ranimove rsensor rttree_reduce
+                vwrays vwright ranimove rsensor rttree_reduce rcollate
         RUNTIME DESTINATION bin)
 
 if(WIN32)

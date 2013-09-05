@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.6 2013/01/20 02:07:16 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.7 2013/09/05 17:53:22 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -146,4 +146,4 @@ gendaymtx NYCity.wea | dctimestep -n 8760 -o tstep%04d.hdr dcomp%03d.hdr
 Greg Ward
 .SH "SEE ALSO"
 gendaymtx(1), genklemsamp(1), genskyvec(1),
-mkillum(1), rcontrib(1), rtrace(1), vwrays(1)
+mkillum(1), rcollate(1), rcontrib(1), rtrace(1), vwrays(1)

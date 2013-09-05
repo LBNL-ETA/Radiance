@@ -1,0 +1,116 @@
+.\" RCSid "$Id: rcollate.1,v 1.1 2013/09/05 17:53:22 greg Exp $"
+.TH RCOLLATE 1 7/8/97 RADIANCE
+.SH NAME
+rcollate - resize or transpose matrix data
+.SH SYNOPSIS
+.B rcollate
+[
+.B \-h
+][
+.B \-f[afdb][N]]
+][
+.B \-t
+][
+.B "\-ic in_col"
+][
+.B "\-ir in_row"
+][
+.B "\-oc out_col"
+][
+.B "\-or out_row"
+]
+[
+.B input.dat
+]
+.SH DESCRIPTION
+.I Rcollate
+reads in a single matrix file (table) and reshapes it to have
+the number of columns specified by the
+.I \-oc
+option.
+By default, the file is assumed to include an information header, which
+is copied to the standard output along with the command name, but the
+.I \-h
+option may be used to turn this behavior off.
+.PP
+The input format is assumed to be ASCII, with three white-space separated words
+(typically numbers) in each record.
+A different input format may be specified with the
+.I \-f
+option.
+The suboptions are
+.I \-fa,
+.I \-ff,
+.I \-fd,
+and
+.I \-fb
+for ASCII, float, double, and binary, respectively.
+An optional count may be attached to specify the number of data elements per
+record, which defaults to 1.
+Thus, the default setting is
+.I \-fa3.
+Since
+.I rcollate
+does not interpret the fields, all binary options of the same
+length have the same result.
+On most architectures,
+.I \-ff6,
+.I \-fd3,
+and
+.I \-fb24
+would all be equivalent.
+Note also that the lack of row separators in binary files means that
+.I rcollate
+does not actually do anything for binary files unless the transpose
+.I \(\-t\)
+option is given, also.
+.PP
+The transpose option,
+.I \-t
+swaps rows and columns on the input.
+For binary files, the user must specify at least one input or output
+dimension to define the matrix size.
+For ASCII files,
+.I rcollate
+will automatically determine the number of columns based on the
+position of the first EOL (end-of-line) character, and the number
+of rows based on the count of records in the file.
+The user may override these determinations, allowing the matrix to
+be resized as well as transposed.
+If input and output dimensions are given, the number of input rows
+must equal the number of output columns,
+and the number of input columns must equal the number of output rows
+with the
+.I \-t
+option.
+For large transpose operations on Unix systems, it is much more efficient
+to specify the input file on the command line, rather than reading
+from the standard input, since
+.I rcollate
+can map the file directly into memory.
+.SH EXAMPLE
+To change put 8760 color triplets per row in a matrix with no header:
+.IP "" .2i
+rcollate -h \-oc 8760 input.dat > col8760.dat
+.PP
+To transpose a binary file with 145 float triplets per input row:
+.IP "" .2i
+rcollate -ff3 -ic 145 -t orig.flt > transpose.flt
+.SH AUTHOR
+Greg Ward
+.SH NOTES
+The
+.I rcollate
+command is rather inflexible when it comes to output field and record
+separators for ASCII data.
+It accepts any number or type of white space between input fields
+on input, but only produces spaces as field separators
+between words and tabs as record separators.
+Output row separtors will always be an EOL, which may differ between systems.
+.PP
+If no options are given on the command line, or a binary file is specified
+without a transpose,
+.I rcollate
+issues a warning and simply copies its input to the standard output.
+.SH "SEE ALSO"
+cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), tabfunc(1), total(1)

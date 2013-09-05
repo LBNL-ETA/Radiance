@@ -1891,3 +1891,6 @@ discovering and pointing out the error.
 Fixed double-counting bug in mirror material with alternate type.
 Thanks to David Geisler-Moroder for spotting the problem and helping
 to fix it.
+
+Created rcollate program to resize and transpose matrix data for Andy
+McNeil's 5-phase annual simulation method.

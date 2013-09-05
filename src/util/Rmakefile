@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.61 2012/06/14 22:42:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.62 2013/09/05 17:53:23 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -20,7 +20,7 @@ INSTDIR = /usr/local/bin
 LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
-		vwrays xglaresrc rsensor dctimestep rttree_reduce
+		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate
 
 all:	$(PROGS)
 
@@ -110,6 +110,9 @@ dctimestep:	dctimestep.o
 rttree_reduce:	rttree_reduce.o
 	$(CC) $(CFLAGS) -o rttree_reduce rttree_reduce.o -lrtrad $(MLIB)
 
+rcollate:	rcollate.o
+	$(CC) $(CFLAGS) -o rcollate rcollate.o -lrtrad
+
 setscan.o:	setscan.h
 
 findglare.o glareval.o \
@@ -179,6 +182,8 @@ rsensor.o:	../rt/ray.h ../common/octree.h \
 ../common/rterror.h
 
 rsensor.o:	../common/view.h ../common/resolu.h ../rt/source.h
+
+rcollate.o:	../common/platform.h ../common/rtio.h ../common/resolu.h
 
 Version.c:	../rt/Version.c
 	cp ../rt/Version.c .
