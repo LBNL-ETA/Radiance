@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.2 2013/09/05 18:30:58 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.3 2013/09/05 18:47:12 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -279,9 +279,14 @@ do_transpose(const MEMLOAD *mp)
 		if (ni_columns <= 0)
 			ni_columns = count_columns(rp);
 		nrecords = rp->nrecs;
-	} else if ((ni_rows > 0) & (ni_columns > 0))
+	} else if ((ni_rows > 0) & (ni_columns > 0)) {
 		nrecords = ni_rows*ni_columns;
-	else
+		if (nrecords > mp->len / -record_width) {
+			fprintf(stderr,
+			    "Input too small for specified size and type\n");
+			return(0);
+		}
+	} else
 		nrecords = mp->len / -record_width;
 						/* check sizes */
 	if (ni_rows <= 0)
