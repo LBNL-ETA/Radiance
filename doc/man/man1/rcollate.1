@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.1 2013/09/05 17:53:22 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.2 2013/09/05 18:50:30 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -59,10 +59,9 @@ On most architectures,
 and
 .I \-fb24
 would all be equivalent.
-Note also that the lack of row separators in binary files means that
+Note that the lack of row separators in binary files means that
 .I rcollate
 does not actually do anything for binary files unless the transpose
-.I \(\-t\)
 option is given, also.
 .PP
 The transpose option,
@@ -74,16 +73,13 @@ For ASCII files,
 .I rcollate
 will automatically determine the number of columns based on the
 position of the first EOL (end-of-line) character, and the number
-of rows based on the count of records in the file.
+of rows based on the total count of records in the file.
 The user may override these determinations, allowing the matrix to
 be resized as well as transposed.
 If input and output dimensions are given, the number of input rows
 must equal the number of output columns,
-and the number of input columns must equal the number of output rows
-with the
-.I \-t
-option.
-For large transpose operations on Unix systems, it is much more efficient
+and the number of input columns must equal the number of output rows.
+For large transpose operations on Unix systems, it is most efficient
 to specify the input file on the command line, rather than reading
 from the standard input, since
 .I rcollate
@@ -103,14 +99,14 @@ The
 .I rcollate
 command is rather inflexible when it comes to output field and record
 separators for ASCII data.
-It accepts any number or type of white space between input fields
+It accepts any amount of white space between fields
 on input, but only produces spaces as field separators
-between words and tabs as record separators.
+between words and tabs as record separators on output.
 Output row separtors will always be an EOL, which may differ between systems.
 .PP
 If no options are given on the command line, or a binary file is specified
 without a transpose,
 .I rcollate
-issues a warning and simply copies its input to the standard output.
+issues a warning and simply copies its input to its standard output.
 .SH "SEE ALSO"
 cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), tabfunc(1), total(1)
