@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.1 2013/09/05 17:53:23 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.2 2013/09/05 18:30:58 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -73,8 +73,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 	mp->len = (size_t)(flen - skip);
 #ifdef MAP_FILE
 	if (mp->len > 1L<<20) {		/* map file if > 1 MByte */
-		mp->base = mmap(NULL, mp->len, PROT_READ|PROT_WRITE,
-						MAP_PRIVATE, fd, skip);
+		mp->base = mmap(NULL, mp->len, PROT_READ, MAP_PRIVATE, fd, skip);
 		if (mp->base != MAP_FAILED) {
 			mp->mapped = 1;
 			return(1);	/* mmap() success */
