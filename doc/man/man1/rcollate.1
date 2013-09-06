@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.2 2013/09/05 18:50:30 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.3 2013/09/06 21:34:38 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -6,6 +6,8 @@ rcollate - resize or transpose matrix data
 .B rcollate
 [
 .B \-h
+][
+.B \-w
 ][
 .B \-f[afdb][N]]
 ][
@@ -32,6 +34,9 @@ By default, the file is assumed to include an information header, which
 is copied to the standard output along with the command name, but the
 .I \-h
 option may be used to turn this behavior off.
+The
+.I \-w
+option turns off non-fatal warning messages, such as unexpected EOD.
 .PP
 The input format is assumed to be ASCII, with three white-space separated words
 (typically numbers) in each record.
