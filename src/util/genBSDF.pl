@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.43 2013/08/05 22:56:50 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.44 2013/09/07 17:56:02 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -181,7 +181,7 @@ $disk2sq = '
 norm_radians(p) : if(-p - PI/4, p + 2*PI, p);
 in_disk_r = .999995*sqrt(Dx*Dx + Dy*Dy);
 in_disk_phi = norm_radians(atan2(Dy, Dx));
-in_disk_rgn = floor((in_disk_phi + PI/4)/(PI/2)) + 1;
+in_disk_rgn = floor((.999995*in_disk_phi + PI/4)/(PI/2)) + 1;
 out_square_a = select(in_disk_rgn,
 			in_disk_r,
 			(PI/2 - in_disk_phi)*in_disk_r/(PI/4),
