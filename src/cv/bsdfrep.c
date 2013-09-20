@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.13 2013/03/24 17:22:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.14 2013/09/20 00:21:39 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -205,15 +205,6 @@ rotate_rbf(RBFNODE *rbf, const FVECT invec)
 	VCOPY(rbf->invec, invec);
 }
 
-/* Compute volume associated with Gaussian lobe */
-double
-rbf_volume(const RBFVAL *rbfp)
-{
-	double	rad = R2ANG(rbfp->crad);
-
-	return((2.*M_PI) * rbfp->peak * rad*rad);
-}
-
 /* Compute outgoing vector from grid position */
 void
 ovec_from_pos(FVECT vec, int xpos, int ypos)
@@ -243,6 +234,26 @@ pos_from_vec(int pos[2], const FVECT vec)
 	pos[1] = (int)(sq[1]*grid_res);
 }
 
+/* Compute volume associated with Gaussian lobe */
+double
+rbf_volume(const RBFVAL *rbfp)
+{
+	double	rad = R2ANG(rbfp->crad);
+	FVECT	odir;
+	double	elev, integ;
+				/* infinite integral approximation */
+	integ = (2.*M_PI) * rbfp->peak * rad*rad;
+				/* check if we're near horizon */
+	ovec_from_pos(odir, rbfp->gx, rbfp->gy);
+	elev = output_orient*odir[2];
+				/* apply cut-off correction if > 1% */
+	if (elev < 2.8*rad) {
+		/* elev = asin(elev);	/* this is so crude, anyway... */
+		integ *= 1. - .5*exp(-.5*elev*elev/(rad*rad));
+	}
+	return(integ);
+}
+
 /* Evaluate RBF for DSF at the given normalized outgoing direction */
 double
 eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
@@ -253,12 +264,13 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 	FVECT		odir;
 	double		sig2;
 	int		n;
+				/* check for wrong side */
+	if (outvec[2] > 0 ^ output_orient > 0)
+		return(.0);
 				/* use minimum if no information avail. */
-	if (rp == NULL) {
-		if (outvec[2] > 0 ^ output_orient > 0)
-			return(.0);
+	if (rp == NULL)
 		return(minval);
-	}
+				/* sum radial basis function */
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
