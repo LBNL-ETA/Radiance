@@ -34,6 +34,7 @@ endif()
 if(APPLE)
   add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
   include_directories(/usr/X11R6/include)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.6")
 endif()
 
 IF( BUILD_PACKAGE )
