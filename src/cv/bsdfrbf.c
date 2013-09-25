@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.6 2013/09/25 05:03:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.7 2013/09/25 17:42:45 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -16,6 +16,12 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.6 2013/09/25 05:03:10 greg Exp $
 
 #ifndef RSCA
 #define RSCA		2.7		/* radius scaling factor (empirical) */
+#endif
+#ifndef MAXFRAC
+#define MAXFRAC		0.5		/* maximum contribution to neighbor */
+#endif
+#ifndef NNEIGH
+#define NNEIGH		10		/* number of neighbors to consider */
 #endif
 				/* our loaded grid for this incident angle */
 GRIDVAL			dsf_grid[GRIDRES][GRIDRES];
@@ -245,21 +251,20 @@ get_neighbors(int neigh[][2], int n, const int i, const int j)
 static int
 adj_coded_radius(const int i, const int j)
 {
-	const double	max_frac = 0.33;
 	const double	rad0 = R2ANG(dsf_grid[i][j].crad);
 	double		currad = RSCA * rad0;
-	int		neigh[5][2];
+	int		neigh[NNEIGH][2];
 	int		n;
 	FVECT		our_dir;
 
 	ovec_from_pos(our_dir, i, j);
-	n = get_neighbors(neigh, 5, i, j);
+	n = get_neighbors(neigh, NNEIGH, i, j);
 	while (n--) {
 		FVECT	their_dir;
 		double	max_ratio, rad_ok2;
 						/* check our value at neighbor */
 		ovec_from_pos(their_dir, neigh[n][0], neigh[n][1]);
-		max_ratio = max_frac * dsf_grid[neigh[n][0]][neigh[n][1]].vsum
+		max_ratio = MAXFRAC * dsf_grid[neigh[n][0]][neigh[n][1]].vsum
 				/ dsf_grid[i][j].vsum;
 		if (max_ratio >= 1)
 			continue;
