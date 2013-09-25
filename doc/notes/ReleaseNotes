@@ -1894,3 +1894,5 @@ to fix it.
 
 Created rcollate program to resize and transpose matrix data for Andy
 McNeil's 5-phase annual simulation method.
+
+Added epw2wea conversion program by Christoph Reinhart.

@@ -37,9 +37,11 @@ target_link_libraries(3ds2mgf rtrad)
 add_executable(mgf2inv mgf2inv.c)
 target_link_libraries(mgf2inv mgf rtrad) 
 
+add_executable(epw2wea epw2wea.c)
+
 install(TARGETS 
     ies2rad nff2rad lampcolor tmesh2rad obj2rad mgf2rad
-    rad2mgf mgf2meta mgfilt mgf2inv pkgBSDF 3ds2mgf
+    rad2mgf mgf2meta mgfilt mgf2inv pkgBSDF 3ds2mgf epw2wea
   RUNTIME DESTINATION bin)
 
 INSTALL(FILES source.cal tilt.cal lamp.tab window.cal
