@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.2 2013/08/02 20:56:19 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.3 2013/09/26 17:05:00 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -7,7 +7,9 @@ bsdf2ttree - generate XML tensor tree description of a BSDF
 [
 .B "\-g Nlog2"
 ][
-.B "\-t pctcull
+.B "\-t pctcull"
+][
+.B "\-l maxlobes"
 ]
 [
 .B "bsdf.sir .."
@@ -20,15 +22,15 @@ or
 [
 .B "\-g Nlog2"
 ][
-.B "\-t pctcull
+.B "\-t pctcull"
 ][
 .B "{+|-}forward"
 ][
 .B "{+|-}backward"
 ][
-.B "\-e expr
+.B "\-e expr"
 ][
-.B "\-f file
+.B "\-f file"
 ]
 .B bsdf_func
 .SH DESCRIPTION
@@ -64,6 +66,12 @@ Each intermediate scattering file contains one of
 the four components, and if the first component
 is isotropic, all components must be isotropic.
 A similar rule holds for anisotropic inputs.
+The
+.I \-l
+option may be used to specify the maximum number of lobes in any
+interpolated radial basis function.
+The default value is 15000, which generally keeps the interpolation tractable.
+Setting the value to 0 turns off this limit.
 .PP
 In the second invocation form,
 .I bsdf2ttree

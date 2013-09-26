@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.7 2013/03/20 01:00:22 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.8 2013/09/26 17:05:00 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -184,4 +184,4 @@ extern void		build_mesh(void);
 extern int		get_interp(MIGRATION *miga[3], FVECT invec);
 
 /* Partially advect between recorded incident angles and allocate new RBF */
-extern RBFNODE *	advect_rbf(const FVECT invec);
+extern RBFNODE *	advect_rbf(const FVECT invec, int lobe_lim);

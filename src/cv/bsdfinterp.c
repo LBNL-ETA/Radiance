@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.11 2013/06/29 21:03:25 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.12 2013/09/26 17:05:00 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -337,8 +337,9 @@ memerr:
 
 /* Partially advect between recorded incident angles and allocate new RBF */
 RBFNODE *
-advect_rbf(const FVECT invec)
+advect_rbf(const FVECT invec, int lobe_lim)
 {
+	double		cthresh = FTINY;
 	FVECT		sivec;
 	MIGRATION	*miga[3];
 	RBFNODE		*rbf;
@@ -379,13 +380,18 @@ advect_rbf(const FVECT invec)
 	geodesic(v1, miga[0]->rbfv[0]->invec, miga[0]->rbfv[1]->invec,
 			s, GEOD_REL);
 	t = acos(DOT(v1,sivec)) / acos(DOT(v1,miga[1]->rbfv[1]->invec));
+tryagain:
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(miga[0]); i++)
 	    for (j = 0; j < mtx_ncols(miga[0]); j++)
-		for (k = (mtx_coef(miga[0],i,j) > FTINY) *
+		for (k = (mtx_coef(miga[0],i,j) > cthresh) *
 					mtx_ncols(miga[2]); k--; )
-			n += (mtx_coef(miga[2],i,k) > FTINY ||
-				mtx_coef(miga[1],j,k) > FTINY);
+			n += (mtx_coef(miga[2],i,k) > cthresh ||
+				mtx_coef(miga[1],j,k) > cthresh);
+	if ((lobe_lim > 0) & (n > lobe_lim)) {
+		cthresh = cthresh*2. + 10.*FTINY;
+		goto tryagain;
+	}
 #ifdef DEBUG
 	fprintf(stderr, "Input RBFs have %d, %d, %d nodes -> output has %d\n",
 			miga[0]->rbfv[0]->nrbf, miga[0]->rbfv[1]->nrbf,
@@ -413,7 +419,7 @@ advect_rbf(const FVECT invec)
 		const float	ma = mtx_coef(miga[0],i,j);
 		const RBFVAL	*rbf1j;
 		double		rad1j, srad2;
-		if (ma <= FTINY)
+		if (ma <= cthresh)
 			continue;
 		rbf1j = &miga[0]->rbfv[1]->rbfa[j];
 		rad1j = R2ANG(rbf1j->crad);
@@ -426,7 +432,7 @@ advect_rbf(const FVECT invec)
 		    const RBFVAL	*rbf2k;
 		    double		rad2k;
 		    int			pos[2];
-		    if ((mb <= FTINY) & (mc <= FTINY))
+		    if ((mb <= cthresh) & (mc <= cthresh))
 			continue;
 		    rbf2k = &miga[2]->rbfv[1]->rbfa[k];
 		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact);

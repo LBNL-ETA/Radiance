@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.17 2013/08/02 20:56:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.18 2013/09/26 17:05:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -24,6 +24,8 @@ int			samp_order = 6;
 const double		ssamp_thresh = 0.35;
 				/* number of super-samples */
 const int		nssamp = 100;
+				/* limit on number of RBF lobes */
+static int		lobe_lim = 15000;
 
 /* Output XML prologue to stdout */
 static void
@@ -142,7 +144,7 @@ eval_isotropic(char *funame)
 		iovec[1] = .0;
 		iovec[2] = input_orient * sqrt(1. - iovec[0]*iovec[0]);
 		if (funame == NULL)
-			rbf = advect_rbf(iovec);
+			rbf = advect_rbf(iovec, lobe_lim);
 		for (ox = 0; ox < sqres; ox++) {
 		    float	last_bsdf = -1;
 		    for (oy = 0; oy < sqres; oy++) {
@@ -246,7 +248,7 @@ eval_anisotropic(char *funame)
 		iovec[2] = input_orient *
 				sqrt(1. - iovec[0]*iovec[0] - iovec[1]*iovec[1]);
 		if (funame == NULL)
-			rbf = advect_rbf(iovec);
+			rbf = advect_rbf(iovec, lobe_lim);
 		for (ox = 0; ox < sqres; ox++) {
 		    float	last_bsdf = -1;
 		    for (oy = 0; oy < sqres; oy++) {
@@ -356,6 +358,9 @@ main(int argc, char *argv[])
 		case 'g':
 			samp_order = atoi(argv[++i]);
 			break;
+		case 'l':
+			lobe_lim = atoi(argv[++i]);
+			break;
 		default:
 			goto userr;
 		}
@@ -423,7 +428,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-g Nlog2][-t pctcull] [bsdf.sir ..] > bsdf.xml\n",
+	"Usage: %s [-g Nlog2][-t pctcull][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
 				progname);
 	fprintf(stderr,
 	"   or: %s -t{3|4} [-g Nlog2][-t pctcull][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",

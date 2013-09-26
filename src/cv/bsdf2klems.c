@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.9 2013/08/11 14:32:34 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.10 2013/09/26 17:05:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -25,6 +25,8 @@ char			*progname;
 static const char	*kbasis = "LBNL/Klems Full";
 				/* number of BSDF samples per patch */
 static int		npsamps = 256;
+				/* limit on number of RBF lobes */
+static int		lobe_lim = 15000;
 
 /* Return angle basis corresponding to the given name */
 ANGLE_BASIS *
@@ -319,7 +321,7 @@ eval_rbf(void)
 	    else
 		bi_getvec(vin, i+.5*(i>0), abp);
 
-	    rbf = advect_rbf(vin);		/* compute radial basis func */
+	    rbf = advect_rbf(vin, lobe_lim);	/* compute radial basis func */
 
 	    for (j = 0; j < abp->nangles; j++) {
 	        sum = 0;			/* sample over exiting patch */
@@ -384,6 +386,9 @@ main(int argc, char *argv[])
 			break;
 		case 'q':
 			kbasis = "LBNL/Klems Quarter";
+			break;
+		case 'l':
+			lobe_lim = atoi(argv[++i]);
 			break;
 		default:
 			goto userr;
@@ -456,7 +461,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-n spp][-h|-q][bsdf.sir ..] > bsdf.xml\n", progname);
+	"Usage: %s [-n spp][-h|-q][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n", progname);
 	fprintf(stderr,
 	"   or: %s [-n spp][-h|-q] bsdf_in.xml > bsdf_out.xml\n", progname);
 	fprintf(stderr,
