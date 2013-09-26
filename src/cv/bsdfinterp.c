@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.12 2013/09/26 17:05:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.13 2013/09/26 17:15:22 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -260,8 +260,9 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 
 /* Advect and allocate new RBF along edge */
 static RBFNODE *
-e_advect_rbf(const MIGRATION *mig, const FVECT invec)
+e_advect_rbf(const MIGRATION *mig, const FVECT invec, int lobe_lim)
 {
+	double		cthresh = FTINY;
 	RBFNODE		*rbf;
 	int		n, i, j;
 	double		t, full_dist;
@@ -286,11 +287,17 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 		rbf->next = NULL; rbf->ejl = NULL;
 		return(rbf);
 	}
-	t /= full_dist;	
+	t /= full_dist;
+tryagain:
 	n = 0;					/* count migrating particles */
 	for (i = 0; i < mtx_nrows(mig); i++)
 	    for (j = 0; j < mtx_ncols(mig); j++)
-		n += (mtx_coef(mig,i,j) > FTINY);
+		n += (mtx_coef(mig,i,j) > cthresh);
+						/* are we over our limit? */
+	if ((lobe_lim > 0) & (n > lobe_lim)) {
+		cthresh = cthresh*2. + 10.*FTINY;
+		goto tryagain;
+	}
 #ifdef DEBUG
 	fprintf(stderr, "Input RBFs have %d, %d nodes -> output has %d\n",
 			mig->rbfv[0]->nrbf, mig->rbfv[1]->nrbf, n);
@@ -311,7 +318,7 @@ e_advect_rbf(const MIGRATION *mig, const FVECT invec)
 	    float		mv;
 	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
 	    for (j = 0; j < mtx_ncols(mig); j++)
-		if ((mv = mtx_coef(mig,i,j)) > FTINY) {
+		if ((mv = mtx_coef(mig,i,j)) > cthresh) {
 			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
 			double		rad1 = R2ANG(rbf1j->crad);
 			FVECT		v;
@@ -354,7 +361,7 @@ advect_rbf(const FVECT invec, int lobe_lim)
 	if (sym < 0)				/* can't interpolate? */
 		return(NULL);
 	if (miga[1] == NULL) {			/* advect along edge? */
-		rbf = e_advect_rbf(miga[0], sivec);
+		rbf = e_advect_rbf(miga[0], sivec, lobe_lim);
 		if (single_plane_incident)
 			rotate_rbf(rbf, invec);
 		else
@@ -388,6 +395,7 @@ tryagain:
 					mtx_ncols(miga[2]); k--; )
 			n += (mtx_coef(miga[2],i,k) > cthresh ||
 				mtx_coef(miga[1],j,k) > cthresh);
+						/* are we over our limit? */
 	if ((lobe_lim > 0) & (n > lobe_lim)) {
 		cthresh = cthresh*2. + 10.*FTINY;
 		goto tryagain;
