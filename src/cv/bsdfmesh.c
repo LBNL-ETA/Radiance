@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.9 2013/06/28 23:18:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.10 2013/09/26 14:57:18 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -27,6 +27,7 @@ typedef struct {
 	int		nrows, ncols;	/* array size (matches migration) */
 	float		*price;		/* migration prices */
 	short		*sord;		/* sort for each row, low to high */
+	float		*prow;		/* current price row */
 } PRICEMAT;			/* sorted pricing matrix */
 
 #define	pricerow(p,i)	((p)->price + (i)*(p)->ncols)
@@ -139,9 +140,8 @@ static int
 msrt_cmp(void *b, const void *p1, const void *p2)
 {
 	PRICEMAT	*pm = (PRICEMAT *)b;
-	int		ri = ((const short *)p1 - pm->sord) / pm->ncols;
-	float		c1 = pricerow(pm,ri)[*(const short *)p1];
-	float		c2 = pricerow(pm,ri)[*(const short *)p2];
+	float		c1 = pm->prow[*(const short *)p1];
+	float		c2 = pm->prow[*(const short *)p2];
 
 	if (c1 > c2) return(1);
 	if (c1 < c2) return(-1);
@@ -171,14 +171,17 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	for (i = from_rbf->nrbf; i--; ) {
 	    const double	from_ang = R2ANG(from_rbf->rbfa[i].crad);
 	    FVECT		vfrom;
+	    short		*srow;
 	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
+	    pm->prow = pricerow(pm,i);
+	    srow = psortrow(pm,i);
 	    for (j = to_rbf->nrbf; j--; ) {
 		double		dprod = DOT(vfrom, vto[j]);
-		pricerow(pm,i)[j] = ((dprod >= 1.) ? .0 : acos(dprod)) +
+		pm->prow[j] = ((dprod >= 1.) ? .0 : acos(dprod)) +
 				fabs(R2ANG(to_rbf->rbfa[j].crad) - from_ang);
-		psortrow(pm,i)[j] = j;
+		srow[j] = j;
 	    }
-	    qsort_r(psortrow(pm,i), pm->ncols, sizeof(short), pm, &msrt_cmp);
+	    qsort_r(srow, pm->ncols, sizeof(short), pm, &msrt_cmp);
 	}
 	free(vto);
 }
