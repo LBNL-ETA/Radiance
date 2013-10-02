@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.7 2013/09/25 17:42:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.8 2013/10/02 20:38:26 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -54,7 +54,9 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 	ovec[1] = sin((M_PI/180.)*phi_out) * ovec[2];
 	ovec[2] = sqrt(1. - ovec[2]*ovec[2]);
 
-	if (!isDSF)
+	if (val <= 0)			/* truncate to zero */
+		val = 0;
+	else if (!isDSF)
 		val *= ovec[2];		/* convert from BSDF to DSF */
 
 					/* update BSDF histogram */
