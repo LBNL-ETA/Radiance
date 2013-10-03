@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.18 2013/09/26 17:05:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.19 2013/10/03 17:01:02 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -122,7 +122,8 @@ eval_isotropic(char *funame)
 
 	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
-		sprintf(cmd, "rttree_reduce -h -a -ff -r 3 -t %f -g %d",
+		sprintf(cmd, "rttree_reduce%s -h -ff -r 3 -t %f -g %d",
+				(input_orient>0 ^ output_orient>0) ? "" : " -a",
 				pctcull, samp_order);
 		fflush(stdout);
 		ofp = popen(cmd, "w");
@@ -226,7 +227,8 @@ eval_anisotropic(char *funame)
 
 	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
-		sprintf(cmd, "rttree_reduce -h -a -ff -r 4 -t %f -g %d",
+		sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d",
+				(input_orient>0 ^ output_orient>0) ? "" : " -a",
 				pctcull, samp_order);
 		fflush(stdout);
 		ofp = popen(cmd, "w");
