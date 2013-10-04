@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.12 2013/06/06 20:21:10 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.13 2013/10/04 04:31:18 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -622,6 +622,12 @@ ComputeSky(float *parr)
 	/* Calculate relative horizontal illuminance */
 	norm_diff_illum = CalcRelHorzIllum(parr);
 
+	/* Check for zero sky -- make uniform in that case */
+	if (norm_diff_illum <= FTINY) {
+		for (i = 1; i < nskypatch; i++)
+			setcolor(parr+3*i, 1., 1., 1.);
+		norm_diff_illum = PI;
+	}
 	/* Normalization coefficient */
 	norm_diff_illum = diff_illum / norm_diff_illum;
 
