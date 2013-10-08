@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.15 2013/03/25 16:10:00 greg Exp $ }
+{ RCSid $Id: rayinit.cal,v 2.16 2013/10/08 18:59:44 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -50,8 +50,6 @@
 	erf(z), erfc(z)			- error functions
 
 	rand(x)				- pseudo-random function (0 to 1)
-
-	hermite(p0,p1,r0,r1,t)		- 1-dimensional hermite polynomial
 
 	noise3(x,y,z), noise3x(x,y,z),
 	noise3y(x,y,z), noise3z(x,y,z)	- noise function with gradient (-1 to 1)
@@ -122,6 +120,11 @@ cross(i,v1,v2) : select(i,	v1(2)*v2(3) - v1(3)*v2(2),
 
 fade(near_val,far_val,dist) : far_val +
 		if (16-dist, (near_val-far_val)/(1+dist*dist), 0);
+
+hermite(p0,p1,r0,r1,t) :	p0 * ((2*t-3)*t*t+1) +
+				p1 * (-2*t+3)*t*t +
+				r0 * (((t-2)*t+1)*t) +
+				r1 * ((t-1)*t*t);
 
 bezier(p1, p2, p3, p4, t) : 	p1 * (1+t*(-3+t*(3-t))) +
 				p2 * 3*t*(1+t*(-2+t)) +
