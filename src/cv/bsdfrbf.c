@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.8 2013/10/02 20:38:26 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.9 2013/10/17 19:09:11 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -14,8 +14,11 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.8 2013/10/02 20:38:26 greg Exp $
 #include <math.h>
 #include "bsdfrep.h"
 
-#ifndef RSCA
-#define RSCA		2.7		/* radius scaling factor (empirical) */
+#ifndef MINRSCA
+#define MINRSCA		0.15		/* minimum radius scaling factor */
+#endif
+#ifndef MAXRSCA
+#define MAXRSCA		2.7		/* maximum radius scaling factor */
 #endif
 #ifndef MAXFRAC
 #define MAXFRAC		0.5		/* maximum contribution to neighbor */
@@ -70,15 +73,21 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 }
 
 /* Compute radii for non-empty bins */
-/* (distance to furthest empty bin for which non-empty bin is the closest) */
+/* (distance to furthest empty bin for which non-empty test bin is closest) */
 static void
 compute_radii(void)
 {
+	const int	cradmin = ANG2R(.5*M_PI/GRIDRES);
 	unsigned int	fill_grid[GRIDRES][GRIDRES];
 	unsigned short	fill_cnt[GRIDRES][GRIDRES];
 	FVECT		ovec0, ovec1;
 	double		ang2, lastang2;
 	int		r, i, j, jn, ii, jj, inear, jnear;
+
+	for (i = 0; i < GRIDRES; i++)		/* initialize minimum radii */
+	    for (j = 0; j < GRIDRES; j++)
+		if (dsf_grid[i][j].nval)
+		    dsf_grid[i][j].crad = cradmin;
 
 	r = GRIDRES/2;				/* proceed in zig-zag */
 	for (i = 0; i < GRIDRES; i++)
@@ -123,9 +132,9 @@ compute_radii(void)
 	memset(fill_cnt, 0, sizeof(fill_cnt));
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
-		if (!dsf_grid[i][j].crad)
-			continue;		/* missing distance */
-		r = R2ANG(dsf_grid[i][j].crad)*(2.*RSCA*GRIDRES/M_PI);
+		if (!dsf_grid[i][j].nval)
+			continue;		/* not part of this */
+		r = R2ANG(dsf_grid[i][j].crad)*(2.*MAXRSCA*GRIDRES/M_PI);
 		for (ii = i-r; ii <= i+r; ii++) {
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
@@ -170,12 +179,12 @@ cull_values(void)
 		    if (ii < 0) continue;
 		    if (ii >= GRIDRES) break;
 		    for (jj = j-r; jj <= j+r; jj++) {
+			if ((ii == i) & (jj == j))
+				continue;	/* don't get self-absorbed */
 			if (jj < 0) continue;
 			if (jj >= GRIDRES) break;
 			if (!dsf_grid[ii][jj].nval)
 				continue;
-			if ((ii == i) & (jj == j))
-				continue;	/* don't get self-absorbed */
 			ovec_from_pos(ovec1, ii, jj);
 			if (2. - 2.*DOT(ovec0,ovec1) >= maxang2)
 				continue;
@@ -254,7 +263,8 @@ static int
 adj_coded_radius(const int i, const int j)
 {
 	const double	rad0 = R2ANG(dsf_grid[i][j].crad);
-	double		currad = RSCA * rad0;
+	const double	minrad = MINRSCA * rad0;
+	double		currad = MAXRSCA * rad0;
 	int		neigh[NNEIGH][2];
 	int		n;
 	FVECT		our_dir;
@@ -274,8 +284,8 @@ adj_coded_radius(const int i, const int j)
 		if (rad_ok2 >= currad*currad)
 			continue;		/* value fraction OK */
 		currad = sqrt(rad_ok2);		/* else reduce lobe radius */
-		if (currad <= rad0)		/* limit how small we'll go */
-			return(dsf_grid[i][j].crad);
+		if (currad <= minrad)		/* limit how small we'll go */
+			return(ANG2R(minrad));
 	}
 	return(ANG2R(currad));			/* encode selected radius */
 }
@@ -284,12 +294,32 @@ adj_coded_radius(const int i, const int j)
 RBFNODE *
 make_rbfrep(void)
 {
+	long	cradsum = 0, ocradsum = 0;
 	int	niter = 16;
 	double	lastVar, thisVar = 100.;
 	int	nn;
 	RBFNODE	*newnode;
 	RBFVAL	*itera;
 	int	i, j;
+
+#ifdef DEBUG
+{
+	int	maxcnt = 0, nempty = 0;
+	long	cntsum = 0;
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++)
+		if (!dsf_grid[i][j].nval) {
+			++nempty;
+		} else {
+			if (dsf_grid[i][j].nval > maxcnt)
+				maxcnt = dsf_grid[i][j].nval;
+			cntsum += dsf_grid[i][j].nval;
+		}
+	fprintf(stderr, "Average, maximum bin count: %d, %d (%.1f%% empty)\n",
+			(int)(cntsum/((GRIDRES*GRIDRES)-nempty)), maxcnt,
+			100./(GRIDRES*GRIDRES)*nempty);
+}
+#endif
 				/* compute RBF radii */
 	compute_radii();
 				/* coagulate lobes */
@@ -318,11 +348,19 @@ make_rbfrep(void)
 	    for (j = 0; j < GRIDRES; j++)
 		if (dsf_grid[i][j].nval) {
 			newnode->rbfa[nn].peak = dsf_grid[i][j].vsum;
+			ocradsum += dsf_grid[i][j].crad;
+			cradsum +=
 			newnode->rbfa[nn].crad = adj_coded_radius(i, j);
 			newnode->rbfa[nn].gx = i;
 			newnode->rbfa[nn].gy = j;
 			++nn;
 		}
+#ifdef DEBUG
+	fprintf(stderr,
+	"Average radius reduced from %.2f to %.2f degrees for %d lobes\n",
+			180./M_PI*MAXRSCA*R2ANG(ocradsum/newnode->nrbf),
+			180./M_PI*R2ANG(cradsum/newnode->nrbf), newnode->nrbf);
+#endif
 				/* iterate to improve interpolation accuracy */
 	itera = (RBFVAL *)malloc(sizeof(RBFVAL)*newnode->nrbf);
 	if (itera == NULL)
