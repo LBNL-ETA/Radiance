@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rview.c,v 2.36 2012/03/20 03:37:08 greg Exp $";
+static const char	RCSid[] = "$Id: rview.c,v 2.37 2013/10/18 17:04:13 greg Exp $";
 #endif
 /*
  *  rview.c - routines and variables for interactive view generation.
@@ -212,6 +212,11 @@ again:
 			goto again;
 		}
 		getpivot(args);
+		break;
+	case 'o':				/* origin view */
+		if (badcom("origin"))
+			goto commerr;
+		getorigin(args);
 		break;
 	case CTRL('R'):				/* redraw */
 		redraw();

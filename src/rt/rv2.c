@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.63 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.64 2013/10/18 17:04:13 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -369,6 +369,52 @@ getpivot(				/* pivot viewpoint */
 	if (getinterest(sskip2(s,2), 0, vc, &mag) < 0)
 		return;
 	moveview(angle, elev, mag, vc);
+}
+
+
+void
+getorigin(				/* origin viewpoint */
+	char  *s
+)
+{
+	VIEW	nv = ourview;
+	double	d;
+					/* get new view origin */
+	if (!sscanvec(s, nv.vp)) {
+		int	x, y;
+		RAY	thisray;
+		if (dev->getcur == NULL)
+			return;
+		(*dev->comout)("Pick point on surface for new origin\n");
+		if ((*dev->getcur)(&x, &y) == ABORT)
+			return;
+		if ((thisray.rmax = viewray(thisray.rorg, thisray.rdir,
+			&ourview, (x+.5)/hresolu, (y+.5)/vresolu)) < -FTINY) {
+			error(COMMAND, "not on image");
+			return;
+		}
+		rayorigin(&thisray, PRIMARY, NULL, NULL);
+		if (!localhit(&thisray, &thescene)) {
+			error(COMMAND, "not a local object");
+			return;
+		}
+		if (thisray.rod < 0.0)	/* don't look through other side */
+			flipsurface(&thisray);
+		VSUM(nv.vp, thisray.rop, thisray.ron, 2.0*FTINY);
+		VCOPY(nv.vdir, thisray.ron);
+	} else if (!sscanvec(sskip2(s,3), nv.vdir) || normalize(nv.vdir) == 0.0)
+		VCOPY(nv.vdir, ourview.vdir);
+
+	d = DOT(nv.vdir, nv.vup);	/* need different up vector? */
+	if (d*d >= 1.-2.*FTINY) {
+		int	i;
+		nv.vup[0] = nv.vup[1] = nv.vup[2] = 0.0;
+		for (i = 3; i--; )
+			if (nv.vdir[i]*nv.vdir[i] < 0.34)
+				break;
+		nv.vup[i] = 1.;
+	}
+	newview(&nv);
 }
 
 

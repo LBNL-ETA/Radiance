@@ -1899,3 +1899,6 @@ Added epw2wea conversion program by Christoph Reinhart.
 
 Implemented Perlin's improved noise function with help from Rahul Narain.
 This will change the appearance of renderings using this function.
+
+Added "origin" command to rvu as requested by John Mardaljevic
+to place view origin at selected point in scene.

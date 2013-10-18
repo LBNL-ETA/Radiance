@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.5 2008/08/21 07:05:58 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.6 2013/10/18 17:04:13 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -159,13 +159,13 @@ Set focus distance for depth-of-field sampling.
 If a distance in world coordinates is absent, then the cursor
 is used to choose a point in the scene on which to focus.
 (The focus distance setting does not affect rendering in
-.I rview,
+.I rvu,
 but can be used in
 .I rpict
 with the
 .I \-pd
 option to simulate depth-of-field on views saved from
-.I rview.)
+.I rvu.)
 .TP
 .BI frame " [ xmin ymin xmax ymax ]"
 Set frame for refinement.
@@ -229,6 +229,18 @@ Care must be taken to avoid moving behind or inside other objects.
 .BI new " [ nproc ]"
 Restart the image, using the specified number of rendering processes.
 Usually used after the "set" command.
+.TP
+.BI origin " [ xo yo zo [ xd yd zd ] ]"
+Change view origin to the indicated world position
+.I "xo yo zo"
+looking in the direction
+.I "xd yd zd."
+If the direction is missing, the current view direction is used.
+If the origin is missing, the cursor is used to select the
+view origin, and the direction will be determined by the
+(reoriented) surface normal.
+The view type and size will not be altered, but the up vector
+may be changed if the new direction coincides.
 .TP
 .BI pivot " angle [ elev [ mag [ x y z ] ] ]"
 Similar to the "move" command, but pivots the view about a selected point.
