@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.9 2013/10/17 19:09:11 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.10 2013/10/18 02:49:30 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -15,10 +15,13 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.9 2013/10/17 19:09:11 greg Exp $
 #include "bsdfrep.h"
 
 #ifndef MINRSCA
-#define MINRSCA		0.15		/* minimum radius scaling factor */
+#define MINRSCA		0.5		/* minimum radius scaling factor */
 #endif
 #ifndef MAXRSCA
 #define MAXRSCA		2.7		/* maximum radius scaling factor */
+#endif
+#ifndef DIFFTHRESH
+#define DIFFTHRESH	0.2		/* culling difference threshold */
 #endif
 #ifndef MAXFRAC
 #define MAXFRAC		0.5		/* maximum contribution to neighbor */
@@ -72,6 +75,18 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 	dsf_grid[pos[0]][pos[1]].nval++;
 }
 
+/* Check if the two DSF values are significantly different */
+static int
+big_diff(double ref, double tst)
+{
+	if (ref > 0) {
+		tst = tst/ref - 1.;
+		if (tst < 0) tst = -tst;
+	} else
+		tst *= 50.;
+	return(tst > DIFFTHRESH);
+}
+
 /* Compute radii for non-empty bins */
 /* (distance to furthest empty bin for which non-empty test bin is closest) */
 static void
@@ -83,11 +98,6 @@ compute_radii(void)
 	FVECT		ovec0, ovec1;
 	double		ang2, lastang2;
 	int		r, i, j, jn, ii, jj, inear, jnear;
-
-	for (i = 0; i < GRIDRES; i++)		/* initialize minimum radii */
-	    for (j = 0; j < GRIDRES; j++)
-		if (dsf_grid[i][j].nval)
-		    dsf_grid[i][j].crad = cradmin;
 
 	r = GRIDRES/2;				/* proceed in zig-zag */
 	for (i = 0; i < GRIDRES; i++)
@@ -126,6 +136,35 @@ compute_radii(void)
 			dsf_grid[inear][jnear].crad = r;
 						/* next search radius */
 		r = ang2*(2.*GRIDRES/M_PI) + 3;
+	    }
+	for (i = 0; i < GRIDRES; i++)		/* grow radii where uniform */
+	    for (j = 0; j < GRIDRES; j++) {
+		double	midmean;
+		if (!dsf_grid[i][j].nval)
+			continue;
+		midmean = dsf_grid[i][j].vsum / (double)dsf_grid[i][j].nval;
+		r = R2ANG(dsf_grid[i][j].crad)*(MAXRSCA*GRIDRES/M_PI);
+		while (++r < GRIDRES) {		/* attempt to grow perimeter */
+		    for (ii = i-r; ii <= i+r; ii++) {
+			int	jstep = 1;
+			if (ii < 0) continue;
+			if (ii >= GRIDRES) break;
+			if ((i-r < ii) & (ii < i+r))
+				jstep = r<<1;
+			for (jj = j-r; jj <= j+r; jj += jstep) {
+				if (jj < 0) continue;
+				if (jj >= GRIDRES) break;
+				if (dsf_grid[ii][jj].nval && big_diff(midmean,
+						dsf_grid[ii][jj].vsum /
+						(double)dsf_grid[ii][jj].nval))
+					goto hit_diff;
+			}
+		    }
+		}
+hit_diff:	--r;
+		dsf_grid[i][j].crad = ANG2R(r*(M_PI/MAXRSCA/GRIDRES));
+		if (dsf_grid[i][j].crad < cradmin)
+			dsf_grid[i][j].crad = cradmin;
 	    }
 						/* blur radii over hemisphere */
 	memset(fill_grid, 0, sizeof(fill_grid));
@@ -171,8 +210,9 @@ cull_values(void)
 			continue;		/* shouldn't happen */
 		ovec_from_pos(ovec0, i, j);
 		maxang = 2.*R2ANG(dsf_grid[i][j].crad);
-		if (maxang > ovec0[2])		/* clamp near horizon */
-			maxang = ovec0[2];
+						/* clamp near horizon */
+		if (maxang > output_orient*ovec0[2])
+			maxang = output_orient*ovec0[2];
 		r = maxang*(2.*GRIDRES/M_PI) + 1;
 		maxang2 = maxang*maxang;
 		for (ii = i-r; ii <= i+r; ii++) {
