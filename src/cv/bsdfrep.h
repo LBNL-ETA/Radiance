@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.8 2013/09/26 17:05:00 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.9 2013/10/19 00:11:50 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -18,7 +18,7 @@
 
 typedef struct {
 	float		vsum;		/* DSF sum */
-	unsigned short	nval;		/* number of values in sum */
+	unsigned int	nval;		/* number of values in sum */
 	unsigned short	crad;		/* radius (coded angle) */
 } GRIDVAL;			/* grid value */
 
@@ -74,7 +74,7 @@ extern int		output_orient;
 #define BSDF2BIG	(1./M_PI)
 #define	BSDF2SML	1e-8
 #define	HISTLNR		17.2759509		/* log(BSDF2BIG/BSDF2SML) */
-extern int		bsdf_hist[HISTLEN];
+extern unsigned long	bsdf_hist[HISTLEN];
 #define histndx(v)	(int)(log((v)*(1./BSDF2SML))*(HISTLEN/HISTLNR))
 #define histval(i)	(exp(((i)+.5)*(HISTLNR/HISTLEN))*BSDF2SML)
 

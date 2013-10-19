@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.14 2013/09/20 00:21:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.15 2013/10/19 00:11:50 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -27,7 +27,7 @@ int			input_orient = 0;
 int			output_orient = 0;
 
 				/* BSDF histogram */
-int			bsdf_hist[HISTLEN];
+unsigned long		bsdf_hist[HISTLEN];
 
 				/* BSDF value for boundary regions */
 double			bsdf_min = 0;

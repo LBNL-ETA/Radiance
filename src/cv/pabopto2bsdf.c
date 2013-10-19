@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.5 2013/09/12 16:09:31 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.6 2013/10/19 00:11:50 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.5 2013/09/12 16:09:31 greg 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include "platform.h"
 #include "bsdfrep.h"
 				/* global argv[0] */
@@ -144,6 +145,7 @@ add_pabopto_inp(const int i)
 	return(1);
 }
 
+#if 1
 /* Read in PAB-Opto BSDF files and output RBF interpolant */
 int
 main(int argc, char *argv[])
@@ -190,3 +192,75 @@ userr:
 					progname);
 	return(1);
 }
+#else
+/* Test main produces a Radiance model from the given input file */
+int
+main(int argc, char *argv[])
+{
+	PGINPUT	pginp;
+	char	buf[128];
+	FILE	*pfp;
+	double	bsdf, min_log;
+	FVECT	dir;
+	int	i, j, n;
+
+	if (argc != 2) {
+		fprintf(stderr, "Usage: %s input.dat > output.rad\n", argv[0]);
+		return(1);
+	}
+	ninpfiles = 1;
+	inpfile = &pginp;
+	if (!init_pabopto_inp(0, argv[1]) || !add_pabopto_inp(0))
+		return(1);
+						/* reduce data set */
+	make_rbfrep();
+						/* produce spheres at meas. */
+	puts("void plastic yellow\n0\n0\n5 .6 .4 .01 .04 .08\n");
+	puts("void plastic pink\n0\n0\n5 .5 .05 .9 .04 .08\n");
+	min_log = log(bsdf_min*.5);
+	n = 0;
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++)
+		if (dsf_grid[i][j].vsum > .0f) {
+			ovec_from_pos(dir, i, j);
+			bsdf = dsf_grid[i][j].vsum / dir[2];
+			if (bsdf <= bsdf_min*.6)
+				continue;
+			bsdf = log(bsdf) - min_log;
+			if (dsf_grid[i][j].nval) {
+				printf("pink cone c%04d\n0\n0\n8\n", ++n);
+				printf("\t%.6g %.6g %.6g\n",
+					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
+				printf("\t%.6g %.6g %.6g\n",
+					dir[0]*bsdf*1.02, dir[1]*bsdf*1.02,
+					dir[2]*bsdf*1.02);
+				printf("\t%.6g\t0\n", .02*bsdf);
+			} else {
+				ovec_from_pos(dir, i, j);
+				printf("yellow sphere s%04d\n0\n0\n", ++n);
+				printf("4 %.6g %.6g %.6g %.6g\n\n",
+					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf,
+					.01*bsdf);
+			}
+		}
+						/* output continuous surface */
+	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 1\n");
+	fflush(stdout);
+	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
+	pfp = popen(buf, "w");
+	if (pfp == NULL) {
+		fputs(buf, stderr);
+		fputs(": cannot start command\n", stderr);
+		return(1);
+	}
+	for (i = 0; i < GRIDRES; i++)
+	    for (j = 0; j < GRIDRES; j++) {
+		ovec_from_pos(dir, i, j);
+		bsdf = eval_rbfrep(dsf_list, dir) / dir[2];
+		bsdf = log(bsdf) - min_log;
+		fprintf(pfp, "%.8e %.8e %.8e\n",
+				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
+	    }
+	return(pclose(pfp)==0 ? 0 : 1);
+}
+#endif

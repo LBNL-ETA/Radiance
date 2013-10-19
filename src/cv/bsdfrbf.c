@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.10 2013/10/18 02:49:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.11 2013/10/19 00:11:50 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -15,13 +15,16 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.10 2013/10/18 02:49:30 greg Exp 
 #include "bsdfrep.h"
 
 #ifndef MINRSCA
-#define MINRSCA		0.5		/* minimum radius scaling factor */
+#define MINRSCA		1.0		/* minimum radius scaling factor */
 #endif
 #ifndef MAXRSCA
 #define MAXRSCA		2.7		/* maximum radius scaling factor */
 #endif
-#ifndef DIFFTHRESH
-#define DIFFTHRESH	0.2		/* culling difference threshold */
+#ifndef VARTHRESH
+#define VARTHRESH	0.0015		/* culling variance threshold */
+#endif
+#ifndef DIFFMAX2
+#define DIFFMAX2	(16.*VARTHRESH)	/* maximum ignored sample variance */
 #endif
 #ifndef MAXFRAC
 #define MAXFRAC		0.5		/* maximum contribution to neighbor */
@@ -73,18 +76,6 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 
 	dsf_grid[pos[0]][pos[1]].vsum += val;
 	dsf_grid[pos[0]][pos[1]].nval++;
-}
-
-/* Check if the two DSF values are significantly different */
-static int
-big_diff(double ref, double tst)
-{
-	if (ref > 0) {
-		tst = tst/ref - 1.;
-		if (tst < 0) tst = -tst;
-	} else
-		tst *= 50.;
-	return(tst > DIFFTHRESH);
 }
 
 /* Compute radii for non-empty bins */
@@ -139,12 +130,25 @@ compute_radii(void)
 	    }
 	for (i = 0; i < GRIDRES; i++)		/* grow radii where uniform */
 	    for (j = 0; j < GRIDRES; j++) {
-		double	midmean;
+		double	midmean = 0.0;
+		int	nsum = 0;
 		if (!dsf_grid[i][j].nval)
 			continue;
-		midmean = dsf_grid[i][j].vsum / (double)dsf_grid[i][j].nval;
-		r = R2ANG(dsf_grid[i][j].crad)*(MAXRSCA*GRIDRES/M_PI);
+		r = 1;				/* avg. immediate neighbors */
+		for (ii = i-r; ii <= i+r; ii++) {
+		    if (ii < 0) continue;
+		    if (ii >= GRIDRES) break;
+		    for (jj = j-r; jj <= j+r; jj++) {
+			if (jj < 0) continue;
+			if (jj >= GRIDRES) break;
+			midmean += dsf_grid[ii][jj].vsum;
+			nsum += dsf_grid[ii][jj].nval;
+		    }
+		}
+		midmean /= (double)nsum;
 		while (++r < GRIDRES) {		/* attempt to grow perimeter */
+		    double	diff2sum = 0.0;
+		    nsum = 0;
 		    for (ii = i-r; ii <= i+r; ii++) {
 			int	jstep = 1;
 			if (ii < 0) continue;
@@ -152,19 +156,29 @@ compute_radii(void)
 			if ((i-r < ii) & (ii < i+r))
 				jstep = r<<1;
 			for (jj = j-r; jj <= j+r; jj += jstep) {
+				double	d2;
 				if (jj < 0) continue;
 				if (jj >= GRIDRES) break;
-				if (dsf_grid[ii][jj].nval && big_diff(midmean,
-						dsf_grid[ii][jj].vsum /
-						(double)dsf_grid[ii][jj].nval))
-					goto hit_diff;
+				if (!dsf_grid[ii][jj].nval)
+					continue;
+				d2 = midmean - dsf_grid[ii][jj].vsum /
+						(double)dsf_grid[ii][jj].nval;
+				d2 *= d2;
+				if (d2 > DIFFMAX2*midmean*midmean)
+					goto escape;
+				diff2sum += d2;
+				++nsum;
 			}
 		    }
+		    if (diff2sum > VARTHRESH*midmean*midmean*(double)nsum)
+			break;
 		}
-hit_diff:	--r;
-		dsf_grid[i][j].crad = ANG2R(r*(M_PI/MAXRSCA/GRIDRES));
-		if (dsf_grid[i][j].crad < cradmin)
-			dsf_grid[i][j].crad = cradmin;
+escape:		--r;
+		r = ANG2R(r*(M_PI/MAXRSCA/GRIDRES));
+		if (r < cradmin)
+			r = cradmin;
+		if (dsf_grid[i][j].crad < r)
+			dsf_grid[i][j].crad = r;
 	    }
 						/* blur radii over hemisphere */
 	memset(fill_grid, 0, sizeof(fill_grid));
@@ -194,20 +208,34 @@ hit_diff:	--r;
 			dsf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
 }
 
+/* Radius comparison for qsort() */
+static int
+radius_cmp(const void *p1, const void *p2)
+{
+	return( (int)dsf_grid[0][*(const int *)p1].crad -
+		(int)dsf_grid[0][*(const int *)p2].crad );
+}
+
 /* Cull points for more uniform distribution, leave all nval 0 or 1 */
 static void
 cull_values(void)
 {
+	int	indx[GRIDRES*GRIDRES];
 	FVECT	ovec0, ovec1;
 	double	maxang, maxang2;
-	int	i, j, ii, jj, r;
+	int	i, j, k, ii, jj, r;
+						/* sort by radius first */
+	for (k = GRIDRES*GRIDRES; k--; )
+		indx[k] = k;
+	qsort(indx, GRIDRES*GRIDRES, sizeof(int), &radius_cmp);
 						/* simple greedy algorithm */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++) {
+	for (k = GRIDRES*GRIDRES; k--; ) {
+		i = indx[k]/GRIDRES;		/* from biggest radius down */
+		j = indx[k] - i*GRIDRES;
 		if (!dsf_grid[i][j].nval)
 			continue;
 		if (!dsf_grid[i][j].crad)
-			continue;		/* shouldn't happen */
+			break;		/* shouldn't happen */
 		ovec_from_pos(ovec0, i, j);
 		maxang = 2.*R2ANG(dsf_grid[i][j].crad);
 						/* clamp near horizon */
@@ -236,7 +264,7 @@ cull_values(void)
 			dsf_grid[ii][jj].nval = 0;
 		    }
 		}
-	    }
+	}
 						/* final averaging pass */
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
@@ -246,7 +274,7 @@ cull_values(void)
 		}
 }
 
-/* Compute minimum BSDF from histogram and clear it */
+/* Compute minimum BSDF from histogram (does not clear) */
 static void
 comp_bsdf_min()
 {
@@ -265,7 +293,6 @@ comp_bsdf_min()
 	for (i = 0; cnt <= target; i++)
 		cnt += bsdf_hist[i];
 	bsdf_min = histval(i-1);
-	memset(bsdf_hist, 0, sizeof(bsdf_hist));
 }
 
 /* Find n nearest sub-sampled neighbors to the given grid position */
