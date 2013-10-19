@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.7 2013/10/18 17:20:55 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.8 2013/10/19 18:40:26 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -246,7 +246,8 @@ may be changed if the new direction coincides.
 Similar to the "move" command, but pivots the view about a selected point.
 The
 .I angle
-is measured in degrees around the view up vector using the right hand rule.
+is measured in degrees around the view up vector using the right hand rule,
+so a positive value pivots the viewer to the right of the selected point.
 The optional
 .I elev
 is the elevation in degrees from the pivot point; positive raises the view point
@@ -265,7 +266,9 @@ color table selection.
 .BI rotate " angle [ elev [ mag ] ]"
 Rotate the camera horizontally by
 .I angle
-degrees.
+degrees using the right-hand rule.
+A positive value rotates the view towards the left, and a negative value
+looks to the right.
 If an elevation is specified, the camera looks upward
 .I elev
 degrees.
