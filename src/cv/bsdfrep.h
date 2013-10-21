@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.9 2013/10/19 00:11:50 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.10 2013/10/21 18:33:15 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -10,7 +10,7 @@
 #define DEBUG		1
 
 #ifndef GRIDRES
-#define GRIDRES		200		/* grid resolution per side */
+#define GRIDRES		(1<<8)		/* grid resolution per side */
 #endif
 					/* convert to/from coded radians */
 #define ANG2R(r)	(int)((r)*((1<<16)/M_PI))

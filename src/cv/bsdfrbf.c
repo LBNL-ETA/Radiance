@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.11 2013/10/19 00:11:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.12 2013/10/21 18:33:15 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -14,24 +14,19 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.11 2013/10/19 00:11:50 greg Exp 
 #include <math.h>
 #include "bsdfrep.h"
 
-#ifndef MINRSCA
-#define MINRSCA		1.0		/* minimum radius scaling factor */
+#ifndef RSCA
+#define RSCA		2.2		/* radius scaling factor (empirical) */
 #endif
-#ifndef MAXRSCA
-#define MAXRSCA		2.7		/* maximum radius scaling factor */
+#ifndef SMOOTH_MSE
+#define SMOOTH_MSE	5e-5		/* acceptable mean squared error */
 #endif
-#ifndef VARTHRESH
-#define VARTHRESH	0.0015		/* culling variance threshold */
+#ifndef SMOOTH_MSER
+#define SMOOTH_MSER	0.07		/* acceptable relative MSE */
 #endif
-#ifndef DIFFMAX2
-#define DIFFMAX2	(16.*VARTHRESH)	/* maximum ignored sample variance */
-#endif
-#ifndef MAXFRAC
-#define MAXFRAC		0.5		/* maximum contribution to neighbor */
-#endif
-#ifndef NNEIGH
-#define NNEIGH		10		/* number of neighbors to consider */
-#endif
+#define MAX_RAD		(GRIDRES/8)	/* maximum lobe radius */
+
+#define	RBFALLOCB	10		/* RBF allocation block size */
+
 				/* our loaded grid for this incident angle */
 GRIDVAL			dsf_grid[GRIDRES][GRIDRES];
 
@@ -78,202 +73,6 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 	dsf_grid[pos[0]][pos[1]].nval++;
 }
 
-/* Compute radii for non-empty bins */
-/* (distance to furthest empty bin for which non-empty test bin is closest) */
-static void
-compute_radii(void)
-{
-	const int	cradmin = ANG2R(.5*M_PI/GRIDRES);
-	unsigned int	fill_grid[GRIDRES][GRIDRES];
-	unsigned short	fill_cnt[GRIDRES][GRIDRES];
-	FVECT		ovec0, ovec1;
-	double		ang2, lastang2;
-	int		r, i, j, jn, ii, jj, inear, jnear;
-
-	r = GRIDRES/2;				/* proceed in zig-zag */
-	for (i = 0; i < GRIDRES; i++)
-	    for (jn = 0; jn < GRIDRES; jn++) {
-		j = (i&1) ? jn : GRIDRES-1-jn;
-		if (dsf_grid[i][j].nval)	/* find empty grid pos. */
-			continue;
-		ovec_from_pos(ovec0, i, j);
-		inear = jnear = -1;		/* find nearest non-empty */
-		lastang2 = M_PI*M_PI;
-		for (ii = i-r; ii <= i+r; ii++) {
-		    if (ii < 0) continue;
-		    if (ii >= GRIDRES) break;
-		    for (jj = j-r; jj <= j+r; jj++) {
-			if (jj < 0) continue;
-			if (jj >= GRIDRES) break;
-			if (!dsf_grid[ii][jj].nval)
-				continue;
-			ovec_from_pos(ovec1, ii, jj);
-			ang2 = 2. - 2.*DOT(ovec0,ovec1);
-			if (ang2 >= lastang2)
-				continue;
-			lastang2 = ang2;
-			inear = ii; jnear = jj;
-		    }
-		}
-		if (inear < 0) {
-			fprintf(stderr,
-				"%s: Could not find non-empty neighbor!\n",
-					progname);
-			exit(1);
-		}
-		ang2 = sqrt(lastang2);
-		r = ANG2R(ang2);		/* record if > previous */
-		if (r > dsf_grid[inear][jnear].crad)
-			dsf_grid[inear][jnear].crad = r;
-						/* next search radius */
-		r = ang2*(2.*GRIDRES/M_PI) + 3;
-	    }
-	for (i = 0; i < GRIDRES; i++)		/* grow radii where uniform */
-	    for (j = 0; j < GRIDRES; j++) {
-		double	midmean = 0.0;
-		int	nsum = 0;
-		if (!dsf_grid[i][j].nval)
-			continue;
-		r = 1;				/* avg. immediate neighbors */
-		for (ii = i-r; ii <= i+r; ii++) {
-		    if (ii < 0) continue;
-		    if (ii >= GRIDRES) break;
-		    for (jj = j-r; jj <= j+r; jj++) {
-			if (jj < 0) continue;
-			if (jj >= GRIDRES) break;
-			midmean += dsf_grid[ii][jj].vsum;
-			nsum += dsf_grid[ii][jj].nval;
-		    }
-		}
-		midmean /= (double)nsum;
-		while (++r < GRIDRES) {		/* attempt to grow perimeter */
-		    double	diff2sum = 0.0;
-		    nsum = 0;
-		    for (ii = i-r; ii <= i+r; ii++) {
-			int	jstep = 1;
-			if (ii < 0) continue;
-			if (ii >= GRIDRES) break;
-			if ((i-r < ii) & (ii < i+r))
-				jstep = r<<1;
-			for (jj = j-r; jj <= j+r; jj += jstep) {
-				double	d2;
-				if (jj < 0) continue;
-				if (jj >= GRIDRES) break;
-				if (!dsf_grid[ii][jj].nval)
-					continue;
-				d2 = midmean - dsf_grid[ii][jj].vsum /
-						(double)dsf_grid[ii][jj].nval;
-				d2 *= d2;
-				if (d2 > DIFFMAX2*midmean*midmean)
-					goto escape;
-				diff2sum += d2;
-				++nsum;
-			}
-		    }
-		    if (diff2sum > VARTHRESH*midmean*midmean*(double)nsum)
-			break;
-		}
-escape:		--r;
-		r = ANG2R(r*(M_PI/MAXRSCA/GRIDRES));
-		if (r < cradmin)
-			r = cradmin;
-		if (dsf_grid[i][j].crad < r)
-			dsf_grid[i][j].crad = r;
-	    }
-						/* blur radii over hemisphere */
-	memset(fill_grid, 0, sizeof(fill_grid));
-	memset(fill_cnt, 0, sizeof(fill_cnt));
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++) {
-		if (!dsf_grid[i][j].nval)
-			continue;		/* not part of this */
-		r = R2ANG(dsf_grid[i][j].crad)*(2.*MAXRSCA*GRIDRES/M_PI);
-		for (ii = i-r; ii <= i+r; ii++) {
-		    if (ii < 0) continue;
-		    if (ii >= GRIDRES) break;
-		    for (jj = j-r; jj <= j+r; jj++) {
-			if (jj < 0) continue;
-			if (jj >= GRIDRES) break;
-			if ((ii-i)*(ii-i) + (jj-j)*(jj-j) > r*r)
-				continue;
-			fill_grid[ii][jj] += dsf_grid[i][j].crad;
-			fill_cnt[ii][jj]++;
-		    }
-		}
-	    }
-						/* copy back blurred radii */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (fill_cnt[i][j])
-			dsf_grid[i][j].crad = fill_grid[i][j]/fill_cnt[i][j];
-}
-
-/* Radius comparison for qsort() */
-static int
-radius_cmp(const void *p1, const void *p2)
-{
-	return( (int)dsf_grid[0][*(const int *)p1].crad -
-		(int)dsf_grid[0][*(const int *)p2].crad );
-}
-
-/* Cull points for more uniform distribution, leave all nval 0 or 1 */
-static void
-cull_values(void)
-{
-	int	indx[GRIDRES*GRIDRES];
-	FVECT	ovec0, ovec1;
-	double	maxang, maxang2;
-	int	i, j, k, ii, jj, r;
-						/* sort by radius first */
-	for (k = GRIDRES*GRIDRES; k--; )
-		indx[k] = k;
-	qsort(indx, GRIDRES*GRIDRES, sizeof(int), &radius_cmp);
-						/* simple greedy algorithm */
-	for (k = GRIDRES*GRIDRES; k--; ) {
-		i = indx[k]/GRIDRES;		/* from biggest radius down */
-		j = indx[k] - i*GRIDRES;
-		if (!dsf_grid[i][j].nval)
-			continue;
-		if (!dsf_grid[i][j].crad)
-			break;		/* shouldn't happen */
-		ovec_from_pos(ovec0, i, j);
-		maxang = 2.*R2ANG(dsf_grid[i][j].crad);
-						/* clamp near horizon */
-		if (maxang > output_orient*ovec0[2])
-			maxang = output_orient*ovec0[2];
-		r = maxang*(2.*GRIDRES/M_PI) + 1;
-		maxang2 = maxang*maxang;
-		for (ii = i-r; ii <= i+r; ii++) {
-		    if (ii < 0) continue;
-		    if (ii >= GRIDRES) break;
-		    for (jj = j-r; jj <= j+r; jj++) {
-			if ((ii == i) & (jj == j))
-				continue;	/* don't get self-absorbed */
-			if (jj < 0) continue;
-			if (jj >= GRIDRES) break;
-			if (!dsf_grid[ii][jj].nval)
-				continue;
-			ovec_from_pos(ovec1, ii, jj);
-			if (2. - 2.*DOT(ovec0,ovec1) >= maxang2)
-				continue;
-						/* absorb sum */
-			dsf_grid[i][j].vsum += dsf_grid[ii][jj].vsum;
-			dsf_grid[i][j].nval += dsf_grid[ii][jj].nval;
-						/* keep value, though */
-			dsf_grid[ii][jj].vsum /= (float)dsf_grid[ii][jj].nval;
-			dsf_grid[ii][jj].nval = 0;
-		    }
-		}
-	}
-						/* final averaging pass */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (dsf_grid[i][j].nval > 1) {
-			dsf_grid[i][j].vsum /= (float)dsf_grid[i][j].nval;
-			dsf_grid[i][j].nval = 1;
-		}
-}
-
 /* Compute minimum BSDF from histogram (does not clear) */
 static void
 comp_bsdf_min()
@@ -295,112 +94,163 @@ comp_bsdf_min()
 	bsdf_min = histval(i-1);
 }
 
-/* Find n nearest sub-sampled neighbors to the given grid position */
+/* Determine if the given region is empty of grid samples */
 static int
-get_neighbors(int neigh[][2], int n, const int i, const int j)
+empty_region(int x0, int x1, int y0, int y1)
 {
-	int	k = 0;
-	int	r;
-						/* search concentric squares */
-	for (r = 1; r < GRIDRES; r++) {
-		int	ii, jj;
-		for (ii = i-r; ii <= i+r; ii++) {
-			int	jstep = 1;
-			if (ii < 0) continue;
-			if (ii >= GRIDRES) break;
-			if ((i-r < ii) & (ii < i+r))
-				jstep = r<<1;
-			for (jj = j-r; jj <= j+r; jj += jstep) {
-				if (jj < 0) continue;
-				if (jj >= GRIDRES) break;
-				if (dsf_grid[ii][jj].nval) {
-					neigh[k][0] = ii;
-					neigh[k][1] = jj;
-					if (++k >= n)
-						return(n);
-				}
-			}
-		}
-	}
-	return(k);
+	int	x, y;
+
+	for (x = x0; x < x1; x++)
+	    for (y = y0; y < y1; y++)
+		if (dsf_grid[x][y].nval)
+			return(0);
+	return(1);
 }
 
-/* Adjust coded radius for the given grid position based on neighborhood */
+/* Determine if the given region is smooth enough to be a single lobe */
 static int
-adj_coded_radius(const int i, const int j)
+smooth_region(int x0, int x1, int y0, int y1)
 {
-	const double	rad0 = R2ANG(dsf_grid[i][j].crad);
-	const double	minrad = MINRSCA * rad0;
-	double		currad = MAXRSCA * rad0;
-	int		neigh[NNEIGH][2];
-	int		n;
-	FVECT		our_dir;
+	RREAL	rMtx[3][3];
+	FVECT	xvec;
+	double	A, B, C, nvs, sqerr;
+	int	x, y, n;
+					/* compute planar regression */
+	memset(rMtx, 0, sizeof(rMtx));
+	memset(xvec, 0, sizeof(xvec));
+	for (x = x0; x < x1; x++)
+	    for (y = y0; y < y1; y++)
+		if ((n = dsf_grid[x][y].nval) > 0) {
+			double	z = dsf_grid[x][y].vsum;
+			rMtx[0][0] += n*x*x;
+			rMtx[0][1] += n*x*y;
+			rMtx[0][2] += n*x;
+			rMtx[1][1] += n*y*y;
+			rMtx[1][2] += n*y;
+			rMtx[2][2] += n;
+			xvec[0] += x*z;
+			xvec[1] += y*z;
+			xvec[2] += z;
+		}
+	rMtx[1][0] = rMtx[0][1];
+	rMtx[2][1] = rMtx[1][2];
+	nvs = rMtx[2][2];
+	if (SDinvXform(rMtx, rMtx) != SDEnone)
+		return(0);
+	A = DOT(rMtx[0], xvec);
+	B = DOT(rMtx[1], xvec);
+	C = DOT(rMtx[2], xvec);
+	sqerr = 0.0;			/* compute mean squared error */
+	for (x = x0; x < x1; x++)
+	    for (y = y0; y < y1; y++)
+		if ((n = dsf_grid[x][y].nval) > 0) {
+			double	d = A*x + B*y + C - dsf_grid[x][y].vsum/n;
+			sqerr += n*d*d;
+		}
+	if (sqerr <= nvs*SMOOTH_MSE)	/* below absolute MSE threshold? */
+		return(1);
+					/* below relative MSE threshold? */
+	return(sqerr*nvs <= xvec[2]*xvec[2]*SMOOTH_MSER);
+}
 
-	ovec_from_pos(our_dir, i, j);
-	n = get_neighbors(neigh, NNEIGH, i, j);
-	while (n--) {
-		FVECT	their_dir;
-		double	max_ratio, rad_ok2;
-						/* check our value at neighbor */
-		ovec_from_pos(their_dir, neigh[n][0], neigh[n][1]);
-		max_ratio = MAXFRAC * dsf_grid[neigh[n][0]][neigh[n][1]].vsum
-				/ dsf_grid[i][j].vsum;
-		if (max_ratio >= 1)
-			continue;
-		rad_ok2 = (DOT(their_dir,our_dir) - 1.)/log(max_ratio);
-		if (rad_ok2 >= currad*currad)
-			continue;		/* value fraction OK */
-		currad = sqrt(rad_ok2);		/* else reduce lobe radius */
-		if (currad <= minrad)		/* limit how small we'll go */
-			return(ANG2R(minrad));
+/* Create new lobe based on integrated samples in region */
+static void
+create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
+{
+	double	vtot = 0.0;
+	int	nv = 0;
+	double	rad;
+	int	x, y;
+					/* compute average for region */
+	for (x = x0; x < x1; x++)
+	    for (y = y0; y < y1; y++) {
+		vtot += dsf_grid[x][y].vsum;
+		nv += dsf_grid[x][y].nval;
+	    }
+	if (!nv) {
+		fprintf(stderr, "%s: internal - missing samples in create_lobe\n",
+				progname);
+		exit(1);
 	}
-	return(ANG2R(currad));			/* encode selected radius */
+					/* peak value based on integral */
+	vtot *= (x1-x0)*(y1-y0)*(2.*M_PI/GRIDRES/GRIDRES)/(double)nv;
+	rad = (RSCA/(double)GRIDRES)*(x1-x0);
+	rvp->peak =  vtot / ((2.*M_PI) * rad*rad);
+	rvp->crad = ANG2R(rad);
+	rvp->gx = (x0+x1)>>1;
+	rvp->gy = (y0+y1)>>1;
+}
+
+/* Recursive function to build radial basis function representation */
+static int
+build_rbfrep(RBFVAL **arp, int *np, int x0, int x1, int y0, int y1)
+{
+	int	xmid = (x0+x1)>>1;
+	int	ymid = (y0+y1)>>1;
+	int	branched[4];
+	int	nadded, nleaves;
+					/* need to make this a leaf? */
+	if (empty_region(x0, xmid, y0, ymid) ||
+			empty_region(xmid, x1, y0, ymid) ||
+			empty_region(x0, xmid, ymid, y1) ||
+			empty_region(xmid, x1, ymid, y1))
+		return(0);
+					/* add children (branches+leaves) */
+	if ((branched[0] = build_rbfrep(arp, np, x0, xmid, y0, ymid)) < 0)
+		return(-1);
+	if ((branched[1] = build_rbfrep(arp, np, xmid, x1, y0, ymid)) < 0)
+		return(-1);
+	if ((branched[2] = build_rbfrep(arp, np, x0, xmid, ymid, y1)) < 0)
+		return(-1);
+	if ((branched[3] = build_rbfrep(arp, np, xmid, x1, ymid, y1)) < 0)
+		return(-1);
+	nadded = branched[0] + branched[1] + branched[2] + branched[3];
+	nleaves = !branched[0] + !branched[1] + !branched[2] + !branched[3];
+	if (!nleaves)			/* nothing but branches? */
+		return(nadded);
+					/* combine 4 leaves into 1? */
+	if (nleaves == 4 && x1-x0 < MAX_RAD && smooth_region(x0, x1, y0, y1))
+		return(0);
+					/* need more array space? */
+	if ((*np+nleaves-1)>>RBFALLOCB != (*np-1)>>RBFALLOCB) {
+		*arp = (RBFVAL *)realloc(*arp,
+				sizeof(RBFVAL)*(*np+nleaves-1+(1<<RBFALLOCB)));
+		if (*arp == NULL)
+			return(-1);
+	}
+					/* create lobes for leaves */
+	if (!branched[0])
+		create_lobe(*arp+(*np)++, x0, xmid, y0, ymid);
+	if (!branched[1])
+		create_lobe(*arp+(*np)++, xmid, x1, y0, ymid);
+	if (!branched[2])
+		create_lobe(*arp+(*np)++, x0, xmid, ymid, y1);
+	if (!branched[3])
+		create_lobe(*arp+(*np)++, xmid, x1, ymid, y1);
+	nadded += nleaves;
+	return(nadded);
 }
 
 /* Count up filled nodes and build RBF representation from current grid */ 
 RBFNODE *
-make_rbfrep(void)
+make_rbfrep()
 {
-	long	cradsum = 0, ocradsum = 0;
-	int	niter = 16;
-	double	lastVar, thisVar = 100.;
-	int	nn;
 	RBFNODE	*newnode;
-	RBFVAL	*itera;
-	int	i, j;
-
-#ifdef DEBUG
-{
-	int	maxcnt = 0, nempty = 0;
-	long	cntsum = 0;
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (!dsf_grid[i][j].nval) {
-			++nempty;
-		} else {
-			if (dsf_grid[i][j].nval > maxcnt)
-				maxcnt = dsf_grid[i][j].nval;
-			cntsum += dsf_grid[i][j].nval;
-		}
-	fprintf(stderr, "Average, maximum bin count: %d, %d (%.1f%% empty)\n",
-			(int)(cntsum/((GRIDRES*GRIDRES)-nempty)), maxcnt,
-			100./(GRIDRES*GRIDRES)*nempty);
-}
-#endif
-				/* compute RBF radii */
-	compute_radii();
-				/* coagulate lobes */
-	cull_values();
-	nn = 0;			/* count selected bins */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		nn += dsf_grid[i][j].nval;
+	RBFVAL	*rbfarr;
+	int	nn;
 				/* compute minimum BSDF */
 	comp_bsdf_min();
-				/* allocate RBF array */
-	newnode = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
+				/* create RBF node list */
+	rbfarr = NULL; nn = 0;
+	if (build_rbfrep(&rbfarr, &nn, 0, GRIDRES, 0, GRIDRES) <= 0)
+		goto memerr;
+				/* (re)allocate RBF array */
+	newnode = (RBFNODE *)realloc(rbfarr,
+			sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
 	if (newnode == NULL)
 		goto memerr;
+				/* copy computed lobes into RBF node */
+	memmove(newnode->rbfa, newnode, sizeof(RBFVAL)*nn);
 	newnode->ord = -1;
 	newnode->next = NULL;
 	newnode->ejl = NULL;
@@ -408,61 +258,13 @@ make_rbfrep(void)
 	newnode->invec[0] = cos((M_PI/180.)*phi_in_deg)*newnode->invec[2];
 	newnode->invec[1] = sin((M_PI/180.)*phi_in_deg)*newnode->invec[2];
 	newnode->invec[2] = input_orient*sqrt(1. - newnode->invec[2]*newnode->invec[2]);
-	newnode->vtotal = 0;
+	newnode->vtotal = .0;
 	newnode->nrbf = nn;
-	nn = 0;			/* fill RBF array */
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
-		if (dsf_grid[i][j].nval) {
-			newnode->rbfa[nn].peak = dsf_grid[i][j].vsum;
-			ocradsum += dsf_grid[i][j].crad;
-			cradsum +=
-			newnode->rbfa[nn].crad = adj_coded_radius(i, j);
-			newnode->rbfa[nn].gx = i;
-			newnode->rbfa[nn].gy = j;
-			++nn;
-		}
+				/* compute sum for normalization */
+	while (nn-- > 0)
+		newnode->vtotal += rbf_volume(&newnode->rbfa[nn]);
 #ifdef DEBUG
-	fprintf(stderr,
-	"Average radius reduced from %.2f to %.2f degrees for %d lobes\n",
-			180./M_PI*MAXRSCA*R2ANG(ocradsum/newnode->nrbf),
-			180./M_PI*R2ANG(cradsum/newnode->nrbf), newnode->nrbf);
-#endif
-				/* iterate to improve interpolation accuracy */
-	itera = (RBFVAL *)malloc(sizeof(RBFVAL)*newnode->nrbf);
-	if (itera == NULL)
-		goto memerr;
-	memcpy(itera, newnode->rbfa, sizeof(RBFVAL)*newnode->nrbf);
-	do {
-		double	dsum = 0, dsum2 = 0;
-		nn = 0;
-		for (i = 0; i < GRIDRES; i++)
-		    for (j = 0; j < GRIDRES; j++)
-			if (dsf_grid[i][j].nval) {
-				FVECT	odir;
-				double	corr;
-				ovec_from_pos(odir, i, j);
-				itera[nn++].peak *= corr =
-					dsf_grid[i][j].vsum /
-						eval_rbfrep(newnode, odir);
-				dsum += 1. - corr;
-				dsum2 += (1.-corr)*(1.-corr);
-			}
-		memcpy(newnode->rbfa, itera, sizeof(RBFVAL)*newnode->nrbf);
-		lastVar = thisVar;
-		thisVar = dsum2/(double)nn;
-#ifdef DEBUG
-		fprintf(stderr, "Avg., RMS error: %.1f%%  %.1f%%\n",
-					100.*dsum/(double)nn,
-					100.*sqrt(thisVar));
-#endif
-	} while (--niter > 0 && lastVar-thisVar > 0.02*lastVar);
-
-	free(itera);
-	nn = 0;			/* compute sum for normalization */
-	while (nn < newnode->nrbf)
-		newnode->vtotal += rbf_volume(&newnode->rbfa[nn++]);
-#ifdef DEBUG
+	fprintf(stderr, "Built RBF with %d lobes\n", newnode->nrbf);
 	fprintf(stderr, "Integrated DSF at (%.1f,%.1f) deg. is %.2f\n",
 			get_theta180(newnode->invec), get_phi360(newnode->invec),
 			newnode->vtotal);

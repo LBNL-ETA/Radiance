@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.6 2013/10/19 00:11:50 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.7 2013/10/21 18:33:15 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -216,32 +216,21 @@ main(int argc, char *argv[])
 	make_rbfrep();
 						/* produce spheres at meas. */
 	puts("void plastic yellow\n0\n0\n5 .6 .4 .01 .04 .08\n");
-	puts("void plastic pink\n0\n0\n5 .5 .05 .9 .04 .08\n");
 	min_log = log(bsdf_min*.5);
 	n = 0;
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++)
-		if (dsf_grid[i][j].vsum > .0f) {
+		if (dsf_grid[i][j].nval > 0) {
 			ovec_from_pos(dir, i, j);
-			bsdf = dsf_grid[i][j].vsum / dir[2];
+			bsdf = dsf_grid[i][j].vsum/(dsf_grid[i][j].nval*dir[2]);
 			if (bsdf <= bsdf_min*.6)
 				continue;
 			bsdf = log(bsdf) - min_log;
-			if (dsf_grid[i][j].nval) {
-				printf("pink cone c%04d\n0\n0\n8\n", ++n);
-				printf("\t%.6g %.6g %.6g\n",
-					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
-				printf("\t%.6g %.6g %.6g\n",
-					dir[0]*bsdf*1.02, dir[1]*bsdf*1.02,
-					dir[2]*bsdf*1.02);
-				printf("\t%.6g\t0\n", .02*bsdf);
-			} else {
-				ovec_from_pos(dir, i, j);
-				printf("yellow sphere s%04d\n0\n0\n", ++n);
-				printf("4 %.6g %.6g %.6g %.6g\n\n",
+			ovec_from_pos(dir, i, j);
+			printf("yellow sphere s%04d\n0\n0\n", ++n);
+			printf("4 %.6g %.6g %.6g %.6g\n\n",
 					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf,
-					.01*bsdf);
-			}
+					.007*bsdf);
 		}
 						/* output continuous surface */
 	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 1\n");
