@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.13 2013/10/21 21:48:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.14 2013/10/21 22:03:03 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -223,7 +223,8 @@ build_rbfrep(RBFVAL **arp, int *np, int x0, int x1, int y0, int y1)
 	if (!nleaves)			/* nothing but branches? */
 		return(nadded);
 					/* combine 4 leaves into 1? */
-	if (nleaves == 4 && x1-x0 < MAX_RAD && smooth_region(x0, x1, y0, y1))
+	if ((nleaves == 4) & (x1-x0 <= MAX_RAD) &&
+			smooth_region(x0, x1, y0, y1))
 		return(0);
 					/* need more array space? */
 	if ((*np+nleaves-1)>>RBFALLOCB != (*np-1)>>RBFALLOCB) {
