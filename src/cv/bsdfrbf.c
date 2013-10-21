@@ -1,11 +1,25 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.12 2013/10/21 18:33:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.13 2013/10/21 21:48:42 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
  *
  *	G. Ward
  */
+
+/****************************************************************
+1) Collect samples into a grid using the Shirley-Chiu
+	angular mapping from a hemisphere to a square.
+
+2) Compute an adaptive quadtree by subdividing the grid so that
+	each leaf node has at least one sample up to as many
+	samples as fit nicely on a plane to within a certain
+	MSE tolerance.
+
+3) Place one Gaussian lobe at each leaf node in the quadtree,
+	sizing it to have a radius equal to the leaf size and
+	a volume equal to the energy in that node.
+*****************************************************************/
 
 #define _USE_MATH_DEFINES
 #include <stdio.h>
@@ -122,12 +136,12 @@ smooth_region(int x0, int x1, int y0, int y1)
 	    for (y = y0; y < y1; y++)
 		if ((n = dsf_grid[x][y].nval) > 0) {
 			double	z = dsf_grid[x][y].vsum;
-			rMtx[0][0] += n*x*x;
-			rMtx[0][1] += n*x*y;
-			rMtx[0][2] += n*x;
-			rMtx[1][1] += n*y*y;
-			rMtx[1][2] += n*y;
-			rMtx[2][2] += n;
+			rMtx[0][0] += x*x*(double)n;
+			rMtx[0][1] += x*y*(double)n;
+			rMtx[0][2] += x*(double)n;
+			rMtx[1][1] += y*y*(double)n;
+			rMtx[1][2] += y*(double)n;
+			rMtx[2][2] += (double)n;
 			xvec[0] += x*z;
 			xvec[1] += y*z;
 			xvec[2] += z;
@@ -149,7 +163,7 @@ smooth_region(int x0, int x1, int y0, int y1)
 		}
 	if (sqerr <= nvs*SMOOTH_MSE)	/* below absolute MSE threshold? */
 		return(1);
-					/* below relative MSE threshold? */
+					/* OR below relative MSE threshold? */
 	return(sqerr*nvs <= xvec[2]*xvec[2]*SMOOTH_MSER);
 }
 
