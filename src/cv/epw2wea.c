@@ -1,28 +1,24 @@
-#ifndef lint
-static const char RCSid[] = "$Id: epw2wea.c,v 2.1 2013/09/25 16:52:28 greg Exp $";
-#endif
 /*  Copyright (c) 2003
  *  National Research Council Canada
  *  written by Christoph Reinhart
  */
 
-/* epw2wea: daylight analysis subprogram of DAYSIM
-   Program converts EnergyPlus weather format (*.ppw) into DAYSIM format (*.wea)
-*/
+/* epw2wea: daylight analysis subprogram of DAYSIM */
+/* Program converts EnergyPlus weather format (*.ppw) into DAYSIM format (*.wea) */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
-int
-main(int argc, char *argv[])
+int main( int argc, char  *argv[])
 {
 	FILE *EPW_FILE;
 	FILE* WEA_FILE;
-	int year, month,day, hour_in,minute,i;
+	int year, month,day, hour_in,minute=60,i;
+	int minute_message=1;
 	float dir_norm_rad, dif_or_rad,dummy_float;
-	char keyword[2000]="";
+    char keyword[2000]="";
+	char minute_string[2000]="";
 	char epw_file[200]="";
 	char wea_file[200] ="";
 	char city[200] ="";
@@ -32,8 +28,8 @@ main(int argc, char *argv[])
 	if (argc < 3)
 	{
 		fprintf(stderr,"epw2wea: FATAL ERROR - wrong number of arguments\n");
-		fprintf(stderr,"start program with: epw2wea file-name.epw file-name.wea\n");
-		return(1);
+		fprintf(stderr,"start program with: epw2wea <file-name.epw> <file-name.wea>\n");
+		exit(1);
 	}
 	if (argc >= 3)
 	{
@@ -45,21 +41,18 @@ main(int argc, char *argv[])
 			{
 				case 'h':	/* scaling factor */
 					break;
-			}//end switch (argv[i][1])
+			}
 		else
 		{
 			fprintf(stdout,"epw2wea: fatal error - %s bad option for input arguments\n", argv[i]);
-			return(1);
-		}//end else
+			exit(0);
+		}
 	}
 
-	EPW_FILE=fopen(epw_file, "r");;
-	WEA_FILE=fopen(wea_file, "w");;
+	EPW_FILE=fopen(epw_file, "r");
+	WEA_FILE=fopen(wea_file, "w");
 	fscanf(EPW_FILE,"%[^,]s",keyword);
-	if(strcmp(keyword,"LOCATION") ){
-		fprintf(stderr,"epw2wea: FATAL ERROR - this does not seem to be an epw file \n");
-		return(1);
-	}
+	if( !strcmp(keyword,"LOCATION") ){
 	fscanf(EPW_FILE,",%[^,]s",city);
 	fscanf(EPW_FILE,",%[^,]s",country);
 	fscanf(EPW_FILE,",%[^,]s",country);
@@ -68,7 +61,7 @@ main(int argc, char *argv[])
 	fprintf(WEA_FILE,"%s",keyword);
 
 	fscanf(EPW_FILE,",%[^,]s",country);
-	fscanf(EPW_FILE,",%[^,]s",country);//printf("%s\n",country);
+	fscanf(EPW_FILE,",%[^,]s",country);
 	fscanf(EPW_FILE,",%[^,]s",latitude);
 	printf("latitude %s\n",latitude);
 	fprintf(WEA_FILE,"latitude %s\n",latitude);
@@ -90,12 +83,21 @@ main(int argc, char *argv[])
 	fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
 	fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
 	fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
+		
+	/* read in time step interval */
+	fscanf(EPW_FILE,"%[^,]s",keyword);
+	fscanf(EPW_FILE,",%[^,]s",keyword);
+	fscanf(EPW_FILE,",%[^,]s",minute_string);
+	minute=atoi(minute_string);
+	if(minute==1)   /* one measurement per hour equals a 60 minute time step */
+		minute=60;
 	fscanf(EPW_FILE,"%*[^\n]");fscanf(EPW_FILE,"%*[\n\r]");
-
-
-	while( EOF != fscanf(EPW_FILE,"%d,%d,%d,%d,%d",&year,&month,&day, &hour_in,&minute)){
+    
+	while( EOF != fscanf(EPW_FILE,"%d,%d,%d,%d",&year,&month,&day, &hour_in)){
+		
 		fprintf(WEA_FILE,"%d %d %.3f ",month,day,hour_in*1.0-minute*(0.5/60));
-
+		
+		fscanf(EPW_FILE,",%f",&dummy_float);
 		fscanf(EPW_FILE,",%[^,]s",city);
 		fscanf(EPW_FILE,",%f",&dummy_float);
 		fscanf(EPW_FILE,",%f",&dummy_float);
@@ -113,10 +115,13 @@ main(int argc, char *argv[])
 		fprintf(WEA_FILE,"\n");
 	}
 
-	fclose(EPW_FILE);
-	fclose(WEA_FILE);
+}else{
+		fprintf(stderr,"epw2wea: FATAL ERROR - this does not seem to be an epw file \n");exit(1);
+}
 
-	return(0);
+fclose(EPW_FILE);
+fclose(WEA_FILE);
+return 0;
 }
 
 
