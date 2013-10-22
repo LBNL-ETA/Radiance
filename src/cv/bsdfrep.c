@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.15 2013/10/19 00:11:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.16 2013/10/22 05:48:05 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -259,10 +259,11 @@ double
 eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 {
 	double		minval = bsdf_min*output_orient*outvec[2];
+	int		pos[2];
 	double		res = 0;
 	const RBFVAL	*rbfp;
 	FVECT		odir;
-	double		sig2;
+	double		rad2;
 	int		n;
 				/* check for wrong side */
 	if (outvec[2] > 0 ^ output_orient > 0)
@@ -270,14 +271,19 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 				/* use minimum if no information avail. */
 	if (rp == NULL)
 		return(minval);
+				/* optimization for fast lobe culling */
+	pos_from_vec(pos, outvec);
 				/* sum radial basis function */
 	rbfp = rp->rbfa;
 	for (n = rp->nrbf; n--; rbfp++) {
+		int	d2 = (pos[0]-rbfp->gx)*(pos[0]-rbfp->gx) +
+				(pos[1]-rbfp->gy)*(pos[1]-rbfp->gy);
+		rad2 = R2ANG(rbfp->crad);
+		rad2 *= rad2;
+		if (d2 > (38.*GRIDRES*GRIDRES/M_PI/M_PI)*rad2)
+			continue;
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
-		sig2 = R2ANG(rbfp->crad);
-		sig2 = (DOT(odir,outvec) - 1.) / (sig2*sig2);
-		if (sig2 > -19.)
-			res += rbfp->peak * exp(sig2);
+		res += rbfp->peak * exp((DOT(odir,outvec) - 1.) / rad2);
 	}
 	if (res < minval)	/* never return less than minval */
 		return(minval);
