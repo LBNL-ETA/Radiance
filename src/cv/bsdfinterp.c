@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.13 2013/09/26 17:15:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.14 2013/10/22 04:29:27 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -320,12 +320,14 @@ tryagain:
 	    for (j = 0; j < mtx_ncols(mig); j++)
 		if ((mv = mtx_coef(mig,i,j)) > cthresh) {
 			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
-			double		rad1 = R2ANG(rbf1j->crad);
+			double		rad2;
 			FVECT		v;
 			int		pos[2];
-			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal;
-			rbf->rbfa[n].crad = ANG2R(sqrt(rad0*rad0*(1.-t) +
-							rad1*rad1*t));
+			rad2 = R2ANG(rbf1j->crad);
+			rad2 = rad0*rad0*(1.-t) + rad2*rad2*t;
+			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal *
+						rad0*rad0/rad2;
+			rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
 			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
 			geodesic(v, v0, v, t, GEOD_REL);
 			pos_from_vec(pos, v);
@@ -426,26 +428,28 @@ tryagain:
 	    for (j = 0; j < mtx_ncols(miga[0]); j++) {
 		const float	ma = mtx_coef(miga[0],i,j);
 		const RBFVAL	*rbf1j;
-		double		rad1j, srad2;
+		double		srad2;
 		if (ma <= cthresh)
 			continue;
 		rbf1j = &miga[0]->rbfv[1]->rbfa[j];
-		rad1j = R2ANG(rbf1j->crad);
-		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*rad1j*rad1j;
+		srad2 = R2ANG(rbf1j->crad);
+		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*srad2*srad2;
 		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
 		geodesic(v1, v0, v1, s, GEOD_REL);
 		for (k = 0; k < mtx_ncols(miga[2]); k++) {
 		    float		mb = mtx_coef(miga[1],j,k);
 		    float		mc = mtx_coef(miga[2],i,k);
 		    const RBFVAL	*rbf2k;
-		    double		rad2k;
+		    double		rad2;
 		    int			pos[2];
 		    if ((mb <= cthresh) & (mc <= cthresh))
 			continue;
 		    rbf2k = &miga[2]->rbfv[1]->rbfa[k];
-		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact);
-		    rad2k = R2ANG(rbf2k->crad);
-		    rbf->rbfa[n].crad = ANG2R(sqrt(srad2 + t*rad2k*rad2k));
+		    rad2 = R2ANG(rbf2k->crad);
+		    rad2 = srad2 + t*rad2*rad2;
+		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact) *
+					rad0i*rad0i/rad2;
+		    rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
 		    ovec_from_pos(v2, rbf2k->gx, rbf2k->gy);
 		    geodesic(v2, v1, v2, t, GEOD_REL);
 		    pos_from_vec(pos, v2);

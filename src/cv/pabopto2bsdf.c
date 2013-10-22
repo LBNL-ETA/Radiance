@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.7 2013/10/21 18:33:15 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.8 2013/10/22 04:29:27 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -145,7 +145,7 @@ add_pabopto_inp(const int i)
 	return(1);
 }
 
-#if 1
+#ifndef TEST_MAIN
 /* Read in PAB-Opto BSDF files and output RBF interpolant */
 int
 main(int argc, char *argv[])
@@ -222,7 +222,8 @@ main(int argc, char *argv[])
 	    for (j = 0; j < GRIDRES; j++)
 		if (dsf_grid[i][j].nval > 0) {
 			ovec_from_pos(dir, i, j);
-			bsdf = dsf_grid[i][j].vsum/(dsf_grid[i][j].nval*dir[2]);
+			bsdf = dsf_grid[i][j].vsum /
+				(dsf_grid[i][j].nval*output_orient*dir[2]);
 			if (bsdf <= bsdf_min*.6)
 				continue;
 			bsdf = log(bsdf) - min_log;
@@ -238,14 +239,13 @@ main(int argc, char *argv[])
 	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
 	pfp = popen(buf, "w");
 	if (pfp == NULL) {
-		fputs(buf, stderr);
-		fputs(": cannot start command\n", stderr);
+		fprintf(stderr, "%s: cannot open '| %s'\n", argv[0], buf);
 		return(1);
 	}
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
 		ovec_from_pos(dir, i, j);
-		bsdf = eval_rbfrep(dsf_list, dir) / dir[2];
+		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
 		bsdf = log(bsdf) - min_log;
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
