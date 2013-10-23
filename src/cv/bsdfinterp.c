@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.14 2013/10/22 04:29:27 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.15 2013/10/23 03:41:39 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -94,10 +94,14 @@ on_edge(const MIGRATION *ej, const FVECT ivec)
 	cos_a = DOT(ej->rbfv[0]->invec, ivec);
 	if (cos_a <= 0)
 		return(0);
+	if (cos_a >= 1.)		/* handles rounding error */
+		return(1);
 
 	cos_b = DOT(ej->rbfv[1]->invec, ivec);
 	if (cos_b <= 0)
 		return(0);
+	if (cos_b >= 1.)
+		return(1);
 
 	cos_aplusb = cos_a*cos_b - sqrt((1.-cos_a*cos_a)*(1.-cos_b*cos_b));
 	if (cos_aplusb <= 0)
