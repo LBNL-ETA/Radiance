@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.10 2013/09/26 14:57:18 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.11 2013/10/24 16:11:37 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -198,75 +198,112 @@ free_routes(PRICEMAT *pm)
 static double
 min_cost(double amt2move, const double *avail, const PRICEMAT *pm, int s)
 {
+	const short	*srow = psortrow(pm,s);
+	const float	*prow = pricerow(pm,s);
 	double		total_cost = 0;
 	int		j;
-
-	if (amt2move <= FTINY)			/* pre-emptive check */
-		return(.0);
 						/* move cheapest first */
-	for (j = 0; j < pm->ncols && amt2move > FTINY; j++) {
-		int	d = psortrow(pm,s)[j];
+	for (j = 0; (j < pm->ncols) & (amt2move > FTINY); j++) {
+		int	d = srow[j];
 		double	amt = (amt2move < avail[d]) ? amt2move : avail[d];
 
-		total_cost += amt * pricerow(pm,s)[d];
+		total_cost += amt * prow[d];
 		amt2move -= amt;
 	}
 	return(total_cost);
 }
 
-/* Take a step in migration by choosing optimal bucket to transfer */
-static double
-migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const PRICEMAT *pm)
+/* Compare entries by moving price */
+static int
+rmovcmp(void *b, const void *p1, const void *p2)
 {
+	PRICEMAT	*pm = (PRICEMAT *)b;
+	const short	*ij1 = (const short *)p1;
+	const short	*ij2 = (const short *)p2;
+	float		price_diff;
+
+	if (ij1[1] < 0) return(ij2[1] >= 0);
+	if (ij2[1] < 0) return(-1);
+	price_diff = pricerow(pm,ij1[0])[ij1[1]] - pricerow(pm,ij2[0])[ij2[1]];
+	if (price_diff > 0) return(1);
+	if (price_diff < 0) return(-1);
+	return(0);
+}
+
+/* Take a step in migration by choosing reasonable bucket to transfer */
+static double
+migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, PRICEMAT *pm)
+{
+	const int	max2check = 100;
 	const double	maxamt = 1./(double)pm->ncols;
 	const double	minamt = maxamt*5e-6;
 	double		*src_cost;
+	short		(*rord)[2];
 	struct {
 		int	s, d;	/* source and destination */
 		double	price;	/* price estimate per amount moved */
 		double	amt;	/* amount we can move */
 	} cur, best;
-	int		i;
+	int		r2check, i, ri;
+	/*
+	 * Check cheapest available routes only -- a higher adjusted
+	 * destination price implies that another source is closer, so
+	 * we can hold off considering more expensive options until
+	 * some other (hopefully better) moves have been made.
+	 */
+						/* most promising row order */
+	rord = (short (*)[2])malloc(sizeof(short)*2*pm->nrows);
+	if (rord == NULL)
+		goto memerr;
+	for (ri = pm->nrows; ri--; ) {
+	    rord[ri][0] = ri;
+	    rord[ri][1] = -1;
+	    if (src_rem[ri] <= minamt)		/* enough source material? */
+		    continue;
+	    for (i = 0; i < pm->ncols; i++)
+		if (dst_rem[ rord[ri][1] = psortrow(pm,ri)[i] ] > minamt)
+			break;
+	    if (i >= pm->ncols) {		/* moved all we can? */
+		free(rord);
+		return(.0);
+	    }
+	}
+	if (pm->nrows > max2check)		/* sort if too many sources */
+		qsort_r(rord, pm->nrows, sizeof(short)*2, pm, &rmovcmp);
 						/* allocate cost array */
 	src_cost = (double *)malloc(sizeof(double)*pm->nrows);
-	if (src_cost == NULL) {
-		fprintf(stderr, "%s: Out of memory in migration_step()\n",
-				progname);
-		exit(1);
-	}
+	if (src_cost == NULL)
+		goto memerr;
 	for (i = pm->nrows; i--; )		/* starting costs for diff. */
 		src_cost[i] = min_cost(src_rem[i], dst_rem, pm, i);
-
 						/* find best source & dest. */
 	best.s = best.d = -1; best.price = FHUGE; best.amt = 0;
-	for (cur.s = pm->nrows; cur.s--; ) {
+	if ((r2check = pm->nrows) > max2check)
+		r2check = max2check;		/* put a limit on search */
+	for (ri = 0; ri < r2check; ri++) {	/* check each source row */
 	    double	cost_others = 0;
-
-	    if (src_rem[cur.s] <= minamt)
-		    continue;
-						/* examine cheapest dest. */
-	    for (i = 0; i < pm->ncols; i++)
-		if (dst_rem[ cur.d = psortrow(pm,cur.s)[i] ] > minamt)
-			break;
-	    if (i >= pm->ncols)
-		break;
-	    if ((cur.price = pricerow(pm,cur.s)[cur.d]) >= best.price)
-		continue;			/* no point checking further */
+	    cur.s = rord[ri][0];
+	    if ((cur.d = rord[ri][1]) < 0 ||
+			(cur.price = pricerow(pm,cur.s)[cur.d]) >= best.price) {
+		if (pm->nrows > max2check) break;	/* sorted end */
+		continue;			/* else skip this one */
+	    }
 	    cur.amt = (src_rem[cur.s] < dst_rem[cur.d]) ?
 				src_rem[cur.s] : dst_rem[cur.d];
-	    if (cur.amt > maxamt) cur.amt = maxamt;
-	    dst_rem[cur.d] -= cur.amt;		/* add up differential costs */
+						/* don't just leave smidgen */
+	    if (cur.amt > maxamt*1.02) cur.amt = maxamt;
+	    dst_rem[cur.d] -= cur.amt;		/* add up opportunity costs */
 	    for (i = pm->nrows; i--; )
 		if (i != cur.s)
-			cost_others += min_cost(src_rem[i], dst_rem, pm, i)
+		    cost_others += min_cost(src_rem[i], dst_rem, pm, i)
 					- src_cost[i];
 	    dst_rem[cur.d] += cur.amt;		/* undo trial move */
 	    cur.price += cost_others/cur.amt;	/* adjust effective price */
 	    if (cur.price < best.price)		/* are we better than best? */
-		    best = cur;
+		best = cur;
 	}
-	free(src_cost);				/* finish up */
-
+	free(src_cost);				/* clean up */
+	free(rord);
 	if ((best.s < 0) | (best.d < 0))	/* nothing left to move? */
 		return(.0);
 						/* else make the actual move */
@@ -274,6 +311,9 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, const PRICEMAT 
 	src_rem[best.s] -= best.amt;
 	dst_rem[best.d] -= best.amt;
 	return(best.amt);
+memerr:
+	fprintf(stderr, "%s: Out of memory in migration_step()\n", progname);
+	exit(1);
 }
 
 /* Compute and insert migration along directed edge (may fork child) */
