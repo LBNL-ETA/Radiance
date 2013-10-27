@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.11 2013/10/24 16:11:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.12 2013/10/27 20:16:06 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -236,7 +236,7 @@ migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, PRICEMAT *pm)
 {
 	const int	max2check = 100;
 	const double	maxamt = 1./(double)pm->ncols;
-	const double	minamt = maxamt*5e-6;
+	const double	minamt = maxamt*1e-4;
 	double		*src_cost;
 	short		(*rord)[2];
 	struct {
