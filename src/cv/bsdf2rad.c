@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.2 2013/10/31 18:03:13 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.3 2013/10/31 18:19:18 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant representation
@@ -59,13 +59,17 @@ main(int argc, char *argv[])
 		dir[0] = dir[2] * cos((M_PI/180.)*atof(argv[2*n+3]));
 		dir[1] = dir[2] * sin((M_PI/180.)*atof(argv[2*n+3]));
 		dir[2] = input_orient * sqrt(1. - dir[2]*dir[2]);
+#ifdef DEBUG
 		fprintf(stderr, "Computing DSF for incident direction (%.1f,%.1f)\n",
 				get_theta180(dir), get_phi360(dir));
+#endif
 		rbf = advect_rbf(dir, 15000);
+#ifdef DEBUG
 		if (rbf == NULL)
 			fputs("NULL RBF\n", stderr);
 		else
 			fprintf(stderr, "Hemispherical reflectance: %.3f\n", rbf->vtotal);
+#endif
 		printf("void trans tmat\n0\n0\n7 %f %f %f .04 .04 .9 1\n",
 				colarr[n][0], colarr[n][1], colarr[n][2]);
 		if (showPeaks && rbf != NULL) {
