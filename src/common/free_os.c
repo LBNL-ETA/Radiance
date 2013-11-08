@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: free_os.c,v 3.4 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: free_os.c,v 3.5 2013/11/08 17:11:42 greg Exp $";
 #endif
 /*
  * Free memory associated with object(s)
@@ -20,8 +20,9 @@ static const char	RCSid[] = "$Id: free_os.c,v 3.4 2003/07/17 09:21:29 schorsch E
 
 
 int
-free_os(op)			/* free unneeded memory for object */
-register OBJREC	*op;
+free_os(			/* free unneeded memory for object */
+	OBJREC	*op
+)
 {
 	if (op->os == NULL)
 		return(0);

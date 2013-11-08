@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.12 2011/08/16 18:09:53 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.13 2013/11/08 17:11:42 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -23,9 +23,9 @@ static const char	RCSid[] = "$Id: preload.c,v 2.12 2011/08/16 18:09:53 greg Exp 
 /* KEEP THIS ROUTINE CONSISTENT WITH THE DIFFERENT OBJECT FUNCTIONS! */
 
 
-extern int
+int
 load_os(			/* load associated data for object */
-	register OBJREC	*op
+	OBJREC	*op
 )
 {
 	DATARRAY  *dp;
@@ -134,10 +134,10 @@ sargerr:
 }
 
 
-extern void
+void
 preload_objs(void)		/* preload object data structures */
 {
-	register OBJECT on;
+	OBJECT on;
 				/* note that nobjects may change during loop */
 	for (on = 0; on < nobjects; on++)
 		load_os(objptr(on));
