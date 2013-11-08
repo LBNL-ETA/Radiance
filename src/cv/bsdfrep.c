@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.17 2013/10/24 16:11:38 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.18 2013/11/08 05:37:20 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -513,8 +513,7 @@ load_bsdf_rep(FILE *ifp)
 				progname);
 		return(0);
 	}
-	rbfh.next = NULL;		/* read each DSF */
-	rbfh.ejl = NULL;
+	memset(&rbfh, 0, sizeof(rbfh));	/* read each DSF */
 	while ((rbfh.ord = getint(4, ifp)) >= 0) {
 		RBFNODE		*newrbf;
 
@@ -531,7 +530,7 @@ load_bsdf_rep(FILE *ifp)
 					sizeof(RBFVAL)*(rbfh.nrbf-1));
 		if (newrbf == NULL)
 			goto memerr;
-		memcpy(newrbf, &rbfh, sizeof(RBFNODE)-sizeof(RBFVAL));
+		*newrbf = rbfh;
 		for (i = 0; i < rbfh.nrbf; i++) {
 			newrbf->rbfa[i].peak = getflt(ifp);
 			newrbf->rbfa[i].crad = getint(2, ifp) & 0xffff;
