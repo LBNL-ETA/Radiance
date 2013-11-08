@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.13 2013/11/01 18:23:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.14 2013/11/08 03:42:13 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -336,10 +336,10 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 			return(NULL);
 						/* else allocate */
 #ifdef DEBUG
-	fprintf(stderr, "Building path from (theta,phi) (%.0f,%.0f) ",
+	fprintf(stderr, "Building path from (theta,phi) (%.1f,%.1f) ",
 			get_theta180(from_rbf->invec),
 			get_phi360(from_rbf->invec));
-	fprintf(stderr, "to (%.0f,%.0f) with %d x %d matrix\n",
+	fprintf(stderr, "to (%.1f,%.1f) with %d x %d matrix\n",
 			get_theta180(to_rbf->invec),
 			get_phi360(to_rbf->invec), 
 			from_rbf->nrbf, to_rbf->nrbf);
@@ -407,7 +407,7 @@ overlaps_tri(const RBFNODE *bv0, const RBFNODE *bv1, const RBFNODE *pv)
 	return(vother[im_rev] != NULL);
 }
 
-/* Find context hull vertex to complete triangle (oriented call) */
+/* Find convex hull vertex to complete triangle (oriented call) */
 static RBFNODE *
 find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 {
@@ -428,7 +428,7 @@ find_chull_vert(const RBFNODE *rbf0, const RBFNODE *rbf1)
 		if (DOT(vp, vmid) <= FTINY)
 			continue;		/* wrong orientation */
 		area2 = .25*DOT(vp,vp);
-		VSUB(vp, rbf->invec, rbf0->invec);
+		VSUB(vp, rbf->invec, vmid);
 		dprod = -DOT(vp, vejn);
 		VSUM(vp, vp, vejn, dprod);	/* above guarantees non-zero */
 		dprod = DOT(vp, vmid) / VLEN(vp);
