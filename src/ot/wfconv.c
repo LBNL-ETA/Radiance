@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.9 2004/04/23 16:20:56 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.10 2013/11/08 16:49:04 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -26,8 +26,8 @@ static int	nvts;
 
 static char	*inpfile;	/* input file name */
 static int	havemats;	/* materials available? */
-static char	material[64];	/* current material name */
-static char	group[64];	/* current group name */
+static char	material[256];	/* current material name */
+static char	group[256];	/* current group name */
 static int	lineno;		/* current line number */
 static int	faceno;		/* current face number */
 
@@ -158,13 +158,13 @@ wfreadobj(		/* read in .OBJ file and convert */
 
 static int
 getstmt(				/* read the next statement from fp */
-	register char	*av[MAXARG],
+	char	*av[MAXARG],
 	FILE	*fp
 )
 {
 	static char	sbuf[MAXARG*16];
-	register char	*cp;
-	register int	i;
+	char	*cp;
+	int	i;
 
 	do {
 		if (fgetline(cp=sbuf, sizeof(sbuf), fp) == NULL)
@@ -198,8 +198,8 @@ getstmt(				/* read the next statement from fp */
 
 static int
 cvtndx(				/* convert vertex string to index */
-	register VNDX	vi,
-	register char	*vs
+	VNDX	vi,
+	char	*vs
 )
 {
 					/* get point */
@@ -248,11 +248,11 @@ cvtndx(				/* convert vertex string to index */
 static int
 putface(				/* put out an N-sided polygon */
 	int	ac,
-	register char	**av
+	char	**av
 )
 {
 	char		*cp;
-	register int	i;
+	int	i;
 
 	while (ac > 3) {		/* break into triangles */
 		if (!puttri(av[0], av[1], av[2]))

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.28 2013/08/20 16:19:03 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.29 2013/11/08 16:49:04 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .OBJ file to Radiance format.
@@ -71,10 +71,10 @@ char	*defobj = DEFOBJ;	/* default (starting) object name */
 
 int	flatten = 0;		/* discard surface normal information */
 
-char	mapname[128];		/* current picture file */
-char	matname[64];		/* current material name */
+char	mapname[256];		/* current picture file */
+char	matname[256];		/* current material name */
 char	group[8][256];		/* current group name(s) */
-char	objname[128];		/* current object name */
+char	objname[256];		/* current object name */
 char	*inpfile;		/* input file name */
 int	lineno;			/* current line number */
 int	faceno;			/* current face number */
