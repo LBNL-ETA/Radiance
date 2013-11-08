@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.108 2013/08/12 21:01:00 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.109 2013/11/08 18:08:07 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -264,8 +264,8 @@ userr:
 
 static void
 rootname(		/* remove tail from end of fn */
-	register char	*rn,
-	register char	*fn
+	char	*rn,
+	char	*fn
 )
 {
 	char	*tp, *dp;
@@ -282,7 +282,7 @@ rootname(		/* remove tail from end of fn */
 
 static time_t
 checklast(			/* check files and find most recent */
-	register char	*fnames
+	char	*fnames
 )
 {
 	char	thisfile[PATH_MAX];
@@ -312,8 +312,8 @@ newfname(		/* create modified file name */
 	int	pred
 )
 {
-	register char	*cp;
-	register int	n;
+	char	*cp;
+	int	n;
 	int	suffix;
 
 	n = 0; cp = orig; suffix = -1;		/* suffix position, length */
@@ -378,7 +378,7 @@ getoctcube(		/* get octree bounding cube */
 	double	min[3], max[3];
 	char	buf[1024];
 	FILE	*fp;
-	register int	i;
+	int	i;
 
 	if (osiz <= FTINY) {
 		if (!nprocs && fdate(oct1name) <
@@ -587,8 +587,8 @@ oconv(void)				/* run oconv and mkillum if necessary */
 
 static char *
 addarg(				/* append argument and advance pointer */
-register char	*op,
-register char	*arg
+char	*op,
+char	*arg
 )
 {
 	while (*op)
@@ -602,7 +602,7 @@ register char	*arg
 
 static void
 oconvopts(				/* get oconv options */
-	register char	*oo
+	char	*oo
 )
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
@@ -711,7 +711,7 @@ renderopts(			/* set rendering options */
 
 static void
 lowqopts(			/* low quality rendering options */
-	register char	*op,
+	char	*op,
 	char	*po
 )
 {
@@ -779,7 +779,7 @@ lowqopts(			/* low quality rendering options */
 
 static void
 medqopts(			/* medium quality rendering options */
-	register char	*op,
+	char	*op,
 	char	*po
 )
 {
@@ -857,7 +857,7 @@ medqopts(			/* medium quality rendering options */
 
 static void
 hiqopts(				/* high quality rendering options */
-	register char	*op,
+	char	*op,
 	char	*po
 )
 {
@@ -931,13 +931,36 @@ hiqopts(				/* high quality rendering options */
 }
 
 
+#ifdef _WIN32
+static void
+setenv(			/* set an environment variable */
+	char	*vname,
+	char	*value
+)
+{
+	char	*evp;
+
+	evp = bmalloc(strlen(vname)+strlen(value)+2);
+	if (evp == NULL)
+		syserr(progname);
+	sprintf(evp, "%s=%s", vname, value);
+	if (putenv(evp) != 0) {
+		fprintf(stderr, "%s: out of environment space\n", progname);
+		quit(1);
+	}
+	if (!silent)
+		printf("set %s\n", evp);
+}
+#endif
+
+
 static void
 xferopts(				/* transfer options if indicated */
 	char	*ro
 )
 {
 	int	fd, n;
-	register char	*cp;
+	char	*cp;
 	
 	n = strlen(ro);
 	if (n < 2)
@@ -966,7 +989,7 @@ xferopts(				/* transfer options if indicated */
 
 static void
 pfiltopts(				/* get pfilt options */
-	register char	*po
+	char	*po
 )
 {
 	*po = '\0';
@@ -993,8 +1016,8 @@ pfiltopts(				/* get pfilt options */
 
 static int
 matchword(			/* match white-delimited words */
-	register char	*s1,
-	register char	*s2
+	char	*s1,
+	char	*s2
 )
 {
 	while (isspace(*s1)) s1++;
@@ -1008,15 +1031,15 @@ matchword(			/* match white-delimited words */
 
 static char *
 specview(				/* get proper view spec from vs */
-	register char	*vs
+	char	*vs
 )
 {
 	static char	vup[7][12] = {"-vu 0 0 -1","-vu 0 -1 0","-vu -1 0 0",
 			"-vu 0 0 1", "-vu 1 0 0","-vu 0 1 0","-vu 0 0 1"};
 	static char	viewopts[128];
-	register char	*cp;
+	char	*cp;
 	int	xpos, ypos, zpos, viewtype, upax;
-	register int	i;
+	int	i;
 	double	cent[3], dim[3], mult, d;
 
 	if (vs == NULL || *vs == '-')
@@ -1148,7 +1171,7 @@ getview(				/* get view n, or NULL if none */
 	char	*vn		/* returned view name */
 )
 {
-	register char	*mv;
+	char	*mv;
 
 	if (viewselect != NULL) {		/* command-line selected */
 		if (n)				/* only do one */
@@ -1180,7 +1203,7 @@ numview:
 	mv = nvalue(VIEWS, n);		/* use view n */
 	if ((vn != NULL) & (mv != NULL))
 		if (*mv != '-') {
-			register char	*mv2 = mv;
+			char	*mv2 = mv;
 			while (*mv2 && !isspace(*mv2))
 				*vn++ = *mv2++;
 			*vn = '\0';
@@ -1193,13 +1216,13 @@ numview:
 
 static int
 myprintview(			/* print out selected view */
-	register char	*vopts,
+	char	*vopts,
 	FILE	*fp
 )
 {
 	VIEW	vwr;
 	char	buf[128];
-	register char	*cp;
+	char	*cp;
 #ifdef _WIN32
 /* XXX Should we allow something like this for all platforms? */
 /* XXX Or is it still required at all? */
@@ -1679,25 +1702,6 @@ finish_process(void)			/* exit a child process */
 		return;			/* in parent -- noop */
 	exit(0);
 }
-
-#ifdef _WIN32
-setenv(vname, value)		/* set an environment variable */
-char	*vname, *value;
-{
-	register char	*evp;
-
-	evp = bmalloc(strlen(vname)+strlen(value)+2);
-	if (evp == NULL)
-		syserr(progname);
-	sprintf(evp, "%s=%s", vname, value);
-	if (putenv(evp) != 0) {
-		fprintf(stderr, "%s: out of environment space\n", progname);
-		quit(1);
-	}
-	if (!silent)
-		printf("set %s\n", evp);
-}
-#endif
 
 
 static void

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.54 2012/06/01 22:55:14 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.55 2013/11/08 18:08:07 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -37,7 +37,11 @@ main(
 #ifndef NFS
 #define  NFS			1
 #endif
-				/* set the following to 0 to forgo forking */
+
+#ifndef RHAS_FORK_EXEC
+#undef MAXFORK
+#define MAXFORK			0
+#endif
 #ifndef MAXFORK
 #if NFS
 #define  MAXFORK		3	/* allotment of duped processes */
@@ -101,7 +105,7 @@ main(
 	char  *argv[]
 )
 {
-	register int  i, rval;
+	int  i, rval;
 	
 	progname = argv[0];
 	for (i = 1; i < argc; i++) {
@@ -392,13 +396,13 @@ nextpiece(		/* get next piece assignment */
 
 static int
 rvrpiece(		/* check for recoverable pieces */
-	register int	*xp,
-	register int	*yp
+	int	*xp,
+	int	*yp
 )
 {
 	static char  *pdone = NULL;	/* which pieces are done */
 	static long  readpos = -1;	/* how far we've read */
-	register int  i;
+	int  i;
 	/*
 	 * This routine is called by nextpiece() with an
 	 * exclusive lock on syncfp and the file pointer at the
@@ -522,7 +526,7 @@ int	ypos
 	struct flock  fls;
 	int  pid, status;
 	int  hr, vr;
-	register int  y;
+	int  y;
 				/* check bounds */
 	if ((xpos < 0) | (ypos < 0) | (xpos >= hmult) | (ypos >= vmult)) {
 		fprintf(stderr, "%s: requested piece (%d,%d) out of range\n",

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: persist.c,v 2.42 2010/12/15 17:24:29 greg Exp $";
+static const char	RCSid[] = "$Id: persist.c,v 2.43 2013/11/08 18:08:07 greg Exp $";
 #endif
 /*
  * Routines for persistent rtrace and rpict processes.
@@ -44,7 +44,7 @@ static rsighandler_t sig_io;
 static rsighandler_t sig_alrm;
 
 
-extern void
+void
 pfdetach(void)		/* release persist (and header) resources */
 {
 	if (persistfd >= 0)
@@ -58,7 +58,7 @@ pfdetach(void)		/* release persist (and header) resources */
 }
 
 
-extern void
+void
 pfclean(void)		/* clean up persist files */
 {
 	if (persistfd >= 0)
@@ -74,7 +74,7 @@ pfclean(void)		/* clean up persist files */
 }
 
 
-extern void
+void
 pflock(		/* place or release exclusive lock on file */
 	int	lf
 )
@@ -90,7 +90,7 @@ pflock(		/* place or release exclusive lock on file */
 }
 
 
-extern void
+void
 persistfile(	/* open persist file and lock it */
 	char	*pfn
 )
@@ -119,12 +119,12 @@ static void sig_io(int i) { got_io++; }
 static void sig_alrm(int i) { quit(0); }
 
 
-extern void
+void
 pfhold(void)		/* holding pattern for idle rendering process */
 {
 	rsighandler_t	*oldalrm;
 	char	buf[512];
-	register int	n;
+	int	n;
 				/* close input and output descriptors */
 	close(0);
 	close(1);
@@ -182,11 +182,11 @@ createrr:
 }
 
 
-extern void
+void
 io_process(void)		/* just act as go-between for actual process */
 {
-	register char	*cp;
-	register int	nr, n;
+	char	*cp;
+	int	nr, n;
 	char	buf[BUFSIZ], *pfin, *pfout, *pferr;
 	int	pid, nfds;
 	int	fdout, fderr = -1;
@@ -297,7 +297,7 @@ io_process(void)		/* just act as go-between for actual process */
 				if (!strncmp(cp, progname, n) &&
 						cp[n++] == ':' &&
 						cp[n++] == ' ') {
-					register struct erract	*ep;
+					struct erract	*ep;
 					for (ep = erract; ep < erract+NERRS;
 							ep++)
 						if (ep->pre[0] &&
@@ -345,6 +345,6 @@ writerr:
 
 #else
 
-extern void pfclean(void) {}
+void pfclean(void) {}
 
 #endif

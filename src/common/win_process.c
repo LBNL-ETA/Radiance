@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.7 2012/06/14 05:13:25 greg Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.8 2013/11/08 18:08:07 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -279,6 +279,10 @@ open_process(SUBPROC *proc, char *av[])
 	char *cmdpath;
 	char *cmdstr;
 
+	if (av == NULL || av[0] == NULL) {
+		fputs("Illegal call to open_process()!\n", stderr);
+		return -1;
+	}
 	proc->running = 0;
 	if (av == NULL) { return -1; }
 	cmdpath = getpath(av[0], getenv("PATH"), X_OK);
