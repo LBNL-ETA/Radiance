@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.14 2013/10/21 22:03:03 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.15 2013/11/08 23:32:54 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -147,6 +147,7 @@ smooth_region(int x0, int x1, int y0, int y1)
 			xvec[2] += z;
 		}
 	rMtx[1][0] = rMtx[0][1];
+	rMtx[2][0] = rMtx[0][2];
 	rMtx[2][1] = rMtx[1][2];
 	nvs = rMtx[2][2];
 	if (SDinvXform(rMtx, rMtx) != SDEnone)
