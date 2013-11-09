@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.18 2013/11/08 05:37:20 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.19 2013/11/09 05:47:49 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -14,6 +14,9 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.18 2013/11/08 05:37:20 greg Exp 
 #include "rtio.h"
 #include "resolu.h"
 #include "bsdfrep.h"
+				/* name and manufacturer if known */
+char			bsdf_name[256];
+char			bsdf_manuf[256];
 				/* active grid resolution */
 int			grid_res = GRIDRES;
 
@@ -404,6 +407,8 @@ clear_bsdf_rep(void)
 		dsf_list = rbf->next;
 		free(rbf);
 	}
+	bsdf_name[0] = '\0';
+	bsdf_manuf[0] = '\0';
 	inp_coverage = 0;
 	single_plane_incident = -1;
 	input_orient = output_orient = 0;
@@ -418,6 +423,10 @@ save_bsdf_rep(FILE *ofp)
 	MIGRATION	*mig;
 	int		i, n;
 					/* finish header */
+	if (bsdf_name[0])
+		fprintf(ofp, "NAME=%s\n", bsdf_name);
+	if (bsdf_manuf[0])
+		fprintf(ofp, "MANUFACT=%s\n", bsdf_manuf);
 	fprintf(ofp, "SYMMETRY=%d\n", !single_plane_incident * inp_coverage);
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
 	fprintf(ofp, "GRIDRES=%d\n", grid_res);
@@ -474,6 +483,14 @@ headline(char *s, void *p)
 {
 	char	fmt[32];
 
+	if (!strncmp(s, "NAME=", 5)) {
+		strcpy(bsdf_name, s+5);
+		bsdf_name[strlen(bsdf_name)-1] = '\0';
+	}
+	if (!strncmp(s, "MANUFACT=", 9)) {
+		strcpy(bsdf_manuf, s+9);
+		bsdf_manuf[strlen(bsdf_manuf)-1] = '\0';
+	}
 	if (!strncmp(s, "SYMMETRY=", 9)) {
 		inp_coverage = atoi(s+9);
 		single_plane_incident = !inp_coverage;

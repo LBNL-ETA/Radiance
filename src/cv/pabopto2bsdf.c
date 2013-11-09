@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.9 2013/11/08 03:43:01 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.10 2013/11/09 05:47:49 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -70,6 +70,8 @@ init_pabopto_inp(const int i, const char *fname)
 			fclose(fp);
 			return(0);
 		}
+		if (sscanf(buf, "sample_name \"%[^\"]\"", bsdf_name) == 1)
+			continue;
 		if (sscanf(buf, "format: theta phi %s", typ) == 1) {
 			if (!strcasecmp(typ, "DSF")) {
 				inpfile[i].isDSF = 1;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.10 2013/09/26 17:05:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.11 2013/11/09 05:47:49 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -58,8 +58,10 @@ xml_header(int ac, char *av[])
 static void
 xml_prologue(const SDData *sd)
 {
-	const char	*matn = (sd && sd->matn[0]) ? sd->matn : "Name";
-	const char	*makr = (sd && sd->makr[0]) ? sd->makr : "Manufacturer";
+	const char	*matn = (sd && sd->matn[0]) ? sd->matn :
+				bsdf_name[0] ? bsdf_name : "Unknown";
+	const char	*makr = (sd && sd->makr[0]) ? sd->makr :
+				bsdf_manuf[0] ? bsdf_manuf : "Unknown";
 	ANGLE_BASIS	*abp = get_basis(kbasis);
 	int		i;
 

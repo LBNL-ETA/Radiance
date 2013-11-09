@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.20 2013/10/03 17:27:41 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.21 2013/11/09 05:47:49 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -44,8 +44,9 @@ xml_prologue(int ac, char *av[])
 	puts("<Optical>");
 	puts("<Layer>");
 	puts("\t<Material>");
-	puts("\t\t<Name>Name</Name>");
-	puts("\t\t<Manufacturer>Manufacturer</Manufacturer>");
+	printf("\t\t<Name>%s</Name>\n", bsdf_name[0] ? bsdf_name : "Unknown");
+	printf("\t\t<Manufacturer>%s</Manufacturer>\n",
+			bsdf_manuf[0] ? bsdf_manuf : "Unknown");
 	puts("\t\t<DeviceType>Other</DeviceType>");
 	puts("\t</Material>");
 	puts("\t<DataDefinition>");
