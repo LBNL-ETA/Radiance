@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.10 2012/09/02 15:33:15 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.11 2013/11/10 17:32:09 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -52,7 +52,7 @@ typedef struct SDTreCDst_s {
 	struct {
 		unsigned	hndx;	/* hilbert index */
 		unsigned	cuml;	/* cumulative value */
-	}		carr[1];	/* cumulative array (extends struct) */
+	}	carr[1];	/* cumulative array (extends struct) */
 } SDTreCDst;	
 
 #ifdef _EZXML_H
