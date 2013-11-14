@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: editline.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: editline.c,v 2.9 2013/11/14 02:05:09 greg Exp $";
 #endif
 /*
  *  editline.c - routine for editing raw input for rview.
@@ -23,7 +23,7 @@ static const char	RCSid[] = "$Id: editline.c,v 2.8 2004/03/30 16:13:01 schorsch 
 #define iskill(c)	((c) == 'U'-'@' || (c) == 'X'-'@')
 
 
-extern void
+void
 editline(	/* edit input line */
 	char  *buf,
 	dr_getchf_t *c_get,
@@ -32,8 +32,8 @@ editline(	/* edit input line */
 {
 	static char  erases[] = "\b \b";
 	static char  obuf[4];
-	register int  i;
-	register int  c;
+	int  i;
+	int  c;
 	
 	i = 0;
 	while ((c = (*c_get)()&0177) != '\n' && c != '\r')
@@ -76,11 +76,12 @@ static char  mybuf[512];
 
 
 void
-tocombuf(b, d)				/* add command(s) to my buffer */
-register char  *b;
-register struct driver  *d;
+tocombuf(				/* add command(s) to my buffer */
+	char  *b,
+	struct driver  *d
+)
 {
-	register char  *cp;
+	char  *cp;
 	char  *comstart;
 
 	for (cp = mybuf; *cp; cp++)
@@ -98,11 +99,12 @@ register struct driver  *d;
 
 
 int
-fromcombuf(b, d)			/* get command from my buffer */
-char  *b;
-struct driver  *d;
+fromcombuf(				/* get command from my buffer */
+	char  *b,
+	struct driver  *d
+)
 {
-	register char	*cp;
+	char	*cp, *cp1;
 						/* get next command */
 	for (cp = mybuf; *cp != '\n'; cp++)
 		if (!*cp)
@@ -116,6 +118,8 @@ struct driver  *d;
 	strcpy(b, mybuf);
 	d->inpready--;
 						/* advance commands */
-	strcpy(mybuf, cp);
+	cp1 = mybuf;
+	while ((*cp1++ = *cp++))
+		;
 	return(1);
 }
