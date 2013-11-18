@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.6 2013/11/18 18:07:16 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.7 2013/11/18 22:02:12 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -11,7 +11,12 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.6 2013/11/18 18:07:16 greg Exp 
 #include "platform.h"
 #include "rtio.h"
 #include "resolu.h"
-#ifndef _WIN32
+#ifdef _WIN32
+#undef ftello
+#define	ftello	ftell
+#undef ssize_t
+#define ssize_t	size_t
+#else
 #include <sys/mman.h>
 #endif
 
