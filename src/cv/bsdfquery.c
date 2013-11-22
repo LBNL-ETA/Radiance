@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.1 2013/11/21 23:57:28 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.2 2013/11/22 00:00:27 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -74,13 +74,13 @@ main(int argc, char *argv[])
 			outfmt = argv[1][3];
 		++argv; --argc;
 	}
-	if ((n = strlen(argv[1])-4) > 0) {
+	if (argc > 1 && (n = strlen(argv[1])-4) > 0) {
 		if (!strcasecmp(argv[1]+n, ".xml"))
 			inpXML = 1;
 		else if (!strcasecmp(argv[1]+n, ".sir"))
 			inpXML = 0;
 	}
-	if (inpXML < 0) {
+	if ((argc != 2) | (inpXML < 0)) {
 		fprintf(stderr, "Usage: %s [-fio] bsdf.{sir|xml}\n", progname);
 		return(1);
 	}
