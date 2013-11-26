@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.22 2013/11/26 17:33:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.23 2013/11/26 17:35:59 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.22 2013/11/26 17:33:55 greg E
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "random.h"
 #include "platform.h"
 #include "rtprocess.h"
 #include "calcomp.h"
@@ -169,7 +170,7 @@ eval_isotropic(char *funame)
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
 				sum = 0;	/* super-sample voxel */
 				for (ssi = nssamp; ssi--; ) {
-				    SDmultiSamp(ssa, 3, (ssi+drand48())/nssamp);
+				    SDmultiSamp(ssa, 3, (ssi+frandom())/nssamp);
 				    ssvec[0] = 2.*(ix+ssa[0])/sqres - 1.;
 				    ssvec[1] = .0;
 				    ssvec[2] = input_orient *
@@ -274,7 +275,7 @@ eval_anisotropic(char *funame)
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
 				sum = 0;	/* super-sample voxel */
 				for (ssi = nssamp; ssi--; ) {
-				    SDmultiSamp(ssa, 4, (ssi+drand48())/nssamp);
+				    SDmultiSamp(ssa, 4, (ssi+frandom())/nssamp);
 				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])/sqres,
 						1.-(iy+ssa[1])/sqres);
 				    ssvec[2] = output_orient *
