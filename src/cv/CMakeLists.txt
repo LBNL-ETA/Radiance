@@ -30,11 +30,15 @@ target_link_libraries(mgf2inv mgf rtrad)
 add_executable(3ds2mgf 3ds2mgf.c rayopt3ds.c vect3ds.c)
 target_link_libraries(3ds2mgf rtrad) 
 
-add_executable(pabopto2bsdf pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c)
-target_link_libraries(pabopto2bsdf rtrad) 
+if (NOT WIN32)
 
-add_executable(pabopto2rad	pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c)
-target_link_libraries(pabopto2rad rtrad)
+  add_executable(pabopto2bsdf pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c)
+  target_link_libraries(pabopto2bsdf rtrad) 
+
+  add_executable(pabopto2rad	pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c)
+  target_link_libraries(pabopto2rad rtrad)
+
+endif()
 
 add_executable(bsdf2rad	bsdf2rad.c bsdfrep.c bsdfinterp.c)
 target_link_libraries(bsdf2rad rtrad)
@@ -60,7 +64,7 @@ target_link_libraries(mgf2meta mgf meta rtrad)
 install(TARGETS 
 	ies2rad nff2rad lampcolor tmesh2rad obj2rad 
 	mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf 
-	pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF epw2wea
+	bsdf2ttree bsdf2klems pkgBSDF epw2wea
   RUNTIME DESTINATION bin)
 
 INSTALL(FILES source.cal tilt.cal lamp.tab window.cal
@@ -68,4 +72,5 @@ INSTALL(FILES source.cal tilt.cal lamp.tab window.cal
 
 if (NOT WIN32)
   INSTALL(PROGRAMS optics2rad.csh DESTINATION bin RENAME optics2rad)
+  INSTALL(TARGETS pabopto2rad pabopto2bsdf)
 endif()
