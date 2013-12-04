@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.62 2013/09/05 17:53:23 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.63 2013/12/04 20:07:07 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -24,13 +24,13 @@ PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 
 all:	$(PROGS)
 
-install:	all $(SPECIAL) objview.csh objpict.csh glare.csh dayfact.csh \
+install:	all $(SPECIAL) objview.pl objpict.pl glare.csh dayfact.csh \
 rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh vinfo.csh \
 genambpos.csh fieldcomb.csh genklemsamp.pl genskyvec.pl genBSDF.pl tregsamp.dat
 	cp $(PROGS) $(INSTDIR)
-	cp objview.csh $(INSTDIR)/objview
+	cp objview.pl $(INSTDIR)/objview
 	cp objline.csh $(INSTDIR)/objline
-	cp objpict.csh $(INSTDIR)/objpict
+	cp objpict.pl $(INSTDIR)/objpict
 	cp glare.csh $(INSTDIR)/glare
 	cp dayfact.csh $(INSTDIR)/dayfact
 	cp debugcal.csh $(INSTDIR)/debugcal
