@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.55 2013/11/08 18:08:07 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.56 2013/12/05 03:02:56 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -402,7 +402,7 @@ rvrpiece(		/* check for recoverable pieces */
 {
 	static char  *pdone = NULL;	/* which pieces are done */
 	static long  readpos = -1;	/* how far we've read */
-	int  i;
+	int  px, py, i;
 	/*
 	 * This routine is called by nextpiece() with an
 	 * exclusive lock on syncfp and the file pointer at the
@@ -411,15 +411,15 @@ rvrpiece(		/* check for recoverable pieces */
 	if (rvrlim < 0)
 		return(0);		/* only check if asked */
 	if (pdone == NULL)		/* first call */
-		pdone = calloc(hmult*vmult, sizeof(char));
+		pdone = (char *)calloc(hmult*vmult, sizeof(char));
 	if (pdone == NULL) {
 		fprintf(stderr, "%s: out of memory\n", progname);
 		exit(1);
 	}
 	if (readpos != -1)		/* mark what's been done */
 		fseek(syncfp, readpos, 0);
-	while (fscanf(syncfp, "%d %d", xp, yp) == 2)
-		pdone[*xp*vmult+*yp] = 1;
+	while (fscanf(syncfp, "%d %d", &px, &py) == 2)
+		pdone[px*vmult+py] = 1;
 	if (!feof(syncfp)) {
 		fprintf(stderr, "%s: format error in sync file\n", progname);
 		exit(1);
