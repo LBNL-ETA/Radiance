@@ -1902,3 +1902,5 @@ This will change the appearance of renderings using this function.
 
 Added "origin" command to rvu as requested by John Mardaljevic
 to place view origin at selected point in scene.
+
+Switch to Perl versions of objview and objpict written by Axel Jacobs.
