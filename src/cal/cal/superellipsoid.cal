@@ -1,0 +1,26 @@
+{ RCSid $Id: superellipsoid.cal,v 1.1 2013/12/07 01:56:28 greg Exp $ }
+{
+	Calculate superellipsoid surface
+	using parametric formulation taken
+	from Wikipedia
+
+	12/6/2013	G. Ward
+
+	Input parameters:
+		A	- Radius in X-direction
+		B	- Radius in Y-direction
+		C	- Radius in Z-direction
+		e	- 2/r parameter
+		n	- 2/t parameter
+
+	Example:
+		gensurf mat name 'x(s,t)' 'y(s,t)' 'z(s,t)' 50 50 \
+			-e 'A:1;B:1.5;C:2;e:.5;n:.7' -f superellipsoid.cal
+}
+ap(x,m) : if(x, x^m, if(-x, -(-x^m), 0));
+fc(w,m) : ap(cos(w),m);
+fs(w,m) : ap(sin(w),m);
+
+x(s,t) = A * fc(t*PI-PI/2, n) * fc(s*2*PI-PI, e);
+y(s,t) = B * fc(t*PI-PI/2, n) * fs(s*2*PI-PI, e);
+z(s,t) = C * fs(t*PI-PI/2, n);
