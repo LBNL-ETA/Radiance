@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.14 2013/12/08 18:59:53 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.15 2013/12/08 19:25:36 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -88,7 +88,7 @@ object(				/* get an object number from its name */
 #endif
 
 
-static int
+int
 eqreal(				/* are two real values close enough to equal? */
 	double	d1,
 	double	d2
@@ -109,35 +109,35 @@ eqobjects(			/* check if two objects are equal */
 	OBJREC	*op1, *op2;
 	int	i;
 
-	if (obj1 == OVOID)
-		return(obj2 == OVOID);
-	if (obj2 == OVOID)
-		return(0);
-	op1 = objptr(obj1);
-	op2 = objptr(obj2);
-	if (op1->omod != op2->omod)
-		return(0);
-	if (op1->otype != op2->otype)
-		return(0);
-	if (strcmp(op1->oname, op2->oname))
-		return(0);
-	if (op1->oargs.nsargs != op2->oargs.nsargs)
-		return(0);
-	if (op1->oargs.nfargs != op2->oargs.nfargs)
-		return(0);
+	while (obj1 != obj2) {
+		if (obj1 == OVOID)
+			return(0);
+		if (obj2 == OVOID)
+			return(0);
+		op1 = objptr(obj1);
+		op2 = objptr(obj2);
+		if (op1->otype != op2->otype)
+			return(0);
+		if (op1->oargs.nsargs != op2->oargs.nsargs)
+			return(0);
+		if (op1->oargs.nfargs != op2->oargs.nfargs)
+			return(0);
 #ifdef IARGS
-	if (op1->oargs.niargs != op2->oargs.niargs)
-		return(0);
-	for (i = op1->oargs.niargs; i-- > 0; )
-		if (op1->oargs.iarg[i] != op2->oargs.iarg[i])
+		if (op1->oargs.niargs != op2->oargs.niargs)
 			return(0);
+		for (i = op1->oargs.niargs; i-- > 0; )
+			if (op1->oargs.iarg[i] != op2->oargs.iarg[i])
+				return(0);
 #endif
-	for (i = op1->oargs.nfargs; i-- > 0; )
-		if (!eqreal(op1->oargs.farg[i], op2->oargs.farg[i]))
-			return(0);
-	for (i = op1->oargs.nsargs; i-- > 0; )
-		if (strcmp(op1->oargs.sarg[i], op2->oargs.sarg[i]))
-			return(0);
+		for (i = op1->oargs.nfargs; i-- > 0; )
+			if (!eqreal(op1->oargs.farg[i], op2->oargs.farg[i]))
+				return(0);
+		for (i = op1->oargs.nsargs; i-- > 0; )
+			if (strcmp(op1->oargs.sarg[i], op2->oargs.sarg[i]))
+				return(0);
+		obj1 = op1->omod;
+		obj2 = op2->omod;
+	}
 	return(1);
 }
 

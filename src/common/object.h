@@ -1,4 +1,4 @@
-/* RCSid $Id: object.h,v 2.20 2013/12/08 18:59:53 greg Exp $ */
+/* RCSid $Id: object.h,v 2.21 2013/12/08 19:25:36 greg Exp $ */
 /*
  *  object.h - header file for routines using objects and object sets.
  *
@@ -90,6 +90,7 @@ extern OBJECT	objndx(OBJREC *op);
 extern OBJECT	lastmod(OBJECT obj, char *mname);
 extern OBJECT	modifier(char *name);
 extern OBJECT	object(char *oname);
+extern int	eqreal(double d1, double d2);
 extern int	eqobjects(OBJECT obj1, OBJECT obj2);
 extern void	insertobject(OBJECT obj);
 extern void	clearobjndx(void);
