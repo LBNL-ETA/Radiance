@@ -1904,3 +1904,7 @@ Added "origin" command to rvu as requested by John Mardaljevic
 to place view origin at selected point in scene.
 
 Switch to Perl versions of objview and objpict written by Axel Jacobs.
+
+Improved rendering speed of scenes with aliases by not entering new
+modifiers into table if they are the same as the previously defined
+modifier for that name.
