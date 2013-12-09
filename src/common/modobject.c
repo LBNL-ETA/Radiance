@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: modobject.c,v 2.15 2013/12/08 19:25:36 greg Exp $";
+static const char RCSid[] = "$Id: modobject.c,v 2.16 2013/12/09 17:57:44 greg Exp $";
 #endif
 /*
  *  Routines for tracking object modifiers
@@ -135,6 +135,27 @@ eqobjects(			/* check if two objects are equal */
 		for (i = op1->oargs.nsargs; i-- > 0; )
 			if (strcmp(op1->oargs.sarg[i], op2->oargs.sarg[i]))
 				return(0);
+		i = 0;
+		switch (op1->otype) {	/* special cases (KEEP CONSISTENT!) */
+		case MOD_ALIAS:
+		case MAT_ILLUM:
+		case MAT_MIRROR:
+			i = (op1->oargs.nsargs > 0);
+			break;
+		case MIX_FUNC:
+		case MIX_DATA:
+		case MIX_TEXT:
+		case MIX_PICT:
+			i = 2*(op1->oargs.nsargs >= 2);
+			break;
+		case MAT_CLIP:
+			i = op1->oargs.nsargs;
+			break;
+		}
+		while (i-- > 0)		/* check modifier references */
+			if (!eqobjects( lastmod(obj1, op1->oargs.sarg[i]),
+					lastmod(obj2, op2->oargs.sarg[i]) ))
+				return(0);
 		obj1 = op1->omod;
 		obj2 = op2->omod;
 	}
@@ -152,7 +173,7 @@ insertobject(			/* insert new object into our list */
 	if (ismodifier(objptr(obj)->otype)) {
 		i = otndx(objptr(obj)->oname, &modtab);
 		if (eqobjects(obj, modtab.htab[i]))
-			return;
+			return;	/* don't index if same as earlier def. */
 		modtab.htab[i] = obj;
 	}
 #ifdef  GETOBJ
