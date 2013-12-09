@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.21 2012/03/11 22:27:17 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.22 2013/12/09 22:08:13 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -198,8 +198,8 @@ loaddata(		/* load point data from file */
 {
 	FILE  *fp;
 	char  word[64];
-	register int  size;
-	register RREAL  *dp;
+	int  size;
+	RREAL  *dp;
 
 	datarec.flags = HASBORDER;		/* assume border values */
 	datarec.m = m+1;
@@ -255,8 +255,8 @@ l_dataval(				/* return recorded data value */
 )
 {
 	double  u, v;
-	register int  i, j;
-	register RREAL  *dp;
+	int  i, j;
+	RREAL  *dp;
 	double  d00, d01, d10, d11;
 						/* compute coordinates */
 	u = argument(1); v = argument(2);
@@ -294,7 +294,7 @@ l_dataval(				/* return recorded data value */
 
 void
 putobjrow(			/* output vertex row to .OBJ */
-	register POINT  *rp,
+	POINT  *rp,
 	int  n
 )
 {
@@ -437,14 +437,14 @@ putsquare(		/* put out a square */
 void
 comprow(			/* compute row of values */
 	double  s,
-	register POINT  *row,
+	POINT  *row,
 	int  siz
 )
 {
 	double  st[2];
 	int  end;
 	int  checkvalid;
-	register int  i;
+	int  i;
 	
 	if (smooth) {
 		i = -1;			/* compute one past each end */
@@ -478,9 +478,9 @@ comprow(			/* compute row of values */
 
 void
 compnorms(		/* compute row of averaged normals */
-	register POINT  *r0,
-	register POINT  *r1,
-	register POINT  *r2,
+	POINT  *r0,
+	POINT  *r1,
+	POINT  *r2,
 	int  siz
 )
 {
@@ -521,7 +521,7 @@ compnorms(		/* compute row of averaged normals */
 
 int
 norminterp(	/* compute normal interpolation */
-	register FVECT  resmat[4],
+	FVECT  resmat[4],
 	POINT  *p0,
 	POINT  *p1,
 	POINT  *p2,
@@ -531,10 +531,10 @@ norminterp(	/* compute normal interpolation */
 #define u  ((ax+1)%3)
 #define v  ((ax+2)%3)
 
-	register int  ax;
+	int  ax;
 	MAT4  eqnmat;
 	FVECT  v1;
-	register int  i, j;
+	int  i, j;
 
 	if (!smooth)			/* no interpolation if no smoothing */
 		return(-1);
