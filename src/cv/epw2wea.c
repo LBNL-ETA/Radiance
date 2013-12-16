@@ -70,7 +70,7 @@ int main( int argc, char  *argv[])
 	printf("longitude %.2f\n",-1.0*atof(longitude));
 	fprintf(WEA_FILE,"longitude %.2f\n",-1.0*atof(longitude));
 	fscanf(EPW_FILE,",%[^,]s",time_zone);
-	printf("time_zone %.0f\n",-15.0*atoi(time_zone));
+	printf("time_zone %.2f\n",-15.0*atof(time_zone));
 	fprintf(WEA_FILE,"time_zone %.0f\n",-15.0*atoi(time_zone));
 	fscanf(EPW_FILE,",%s[^\n]",elevation);
 	printf("site_elevation %s\nweather_data_file_units 1\n",elevation);
