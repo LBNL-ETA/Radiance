@@ -1,4 +1,4 @@
-.\" RCSid "$Id: icalc.1,v 1.2 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: icalc.1,v 1.3 2013/12/19 16:38:12 greg Exp $"
 .TH ICALC 1 2/3/95 RADIANCE
 .SH NAME
 icalc - interactive calculator
@@ -13,7 +13,7 @@ is a algebraic calculator designed primarily for
 interactive use.
 Each formula definition
 .I file
-is read and compiled.
+is read and compiled from the RADIANCE library where it is found.
 The standard input is then read, expressions are evaluated
 and results are sent to the standard output.
 If a newline is escaped using a backslash, input is continued
@@ -129,6 +129,8 @@ inverse trigonometric functions.
 .TP
 .BR "atan2(y, x)"
 inverse tangent of y/x (range \-pi to pi).
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

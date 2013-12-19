@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.10 2013/09/05 17:53:22 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.11 2013/12/19 16:38:12 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -94,7 +94,7 @@ or stream without affecting the rest of the data.
 .PP
 The variable and function definitions in each
 .I \-f source
-file are read and compiled.
+file are read and compiled from the RADIANCE library where it is found.
 The
 .I \-e expr
 option can be used to define variables on the command line.
@@ -305,6 +305,8 @@ To print the square root of column two in column one,
 and column one times column three in column two:
 .IP "" .2i
 rcalc \-e '$1=sqrt($2);$2=$1*$3' inputfile > outputfile
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH BUGS

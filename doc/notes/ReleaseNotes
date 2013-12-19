@@ -1908,3 +1908,7 @@ Switch to Perl versions of objview and objpict written by Axel Jacobs.
 Improved rendering speed of scenes with aliases by not entering new
 modifiers into table if they are the same as the previously defined
 modifier for that name.
+
+Made it so icalc and rcalc search RAYPATH directories for *.cal files
+given on command line.  This simplifies script writing and makes these
+utilities consistent with other tools in Radiance.

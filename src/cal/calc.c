@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calc.c,v 1.6 2003/12/09 15:55:46 greg Exp $";
+static const char	RCSid[] = "$Id: calc.c,v 1.7 2013/12/19 16:38:12 greg Exp $";
 #endif
 /*
  *  calc.c - simple algebraic desk calculator program.
@@ -8,11 +8,10 @@ static const char	RCSid[] = "$Id: calc.c,v 1.6 2003/12/09 15:55:46 greg Exp $";
  */
 
 #include  <stdlib.h>
-#include  <stdio.h>
-#include  <string.h>
 #include  <setjmp.h>
 #include  <ctype.h>
 
+#include  "rtio.h"
 #include  "rterror.h"
 #include  "calcomp.h"
 
@@ -43,9 +42,17 @@ char  *argv[];
 #endif
 	varset("PI", ':', 3.14159265358979323846);
 
-	for (i = 1; i < argc; i++)
-		fcompile(argv[i]);
-
+	for (i = 1; i < argc; i++) {
+		char	*path = getpath(argv[i], getrlibpath(), 0);
+		if (path == NULL) {
+			eputs(argv[0]);
+			eputs(": cannot find file '");
+			eputs(argv[i]);
+			eputs("'\n");
+			quit(1);
+		}
+		fcompile(path);
+	}
 	setjmp(env);
 	recover = 1;
 	eclock++;

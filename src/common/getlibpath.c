@@ -1,10 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getlibpath.c,v 2.5 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: getlibpath.c,v 2.6 2013/12/19 16:38:12 greg Exp $";
 #endif
 /*
  * Return Radiance library search path
  *
- *  External symbols declared in standard.h
+ *  External symbols declared in rtio.h
  */
 
 #include "copyright.h"

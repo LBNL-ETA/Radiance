@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fropen.c,v 2.15 2012/06/29 23:09:06 greg Exp $";
+static const char	RCSid[] = "$Id: fropen.c,v 2.16 2013/12/19 16:38:12 greg Exp $";
 #endif
 /*
  * Find and open a Radiance library file.
@@ -16,12 +16,13 @@ static const char	RCSid[] = "$Id: fropen.c,v 2.15 2012/06/29 23:09:06 greg Exp $
 
 
 FILE *
-frlibopen(fname)		/* find file and open for reading */
-register char  *fname;
+frlibopen(			/* find file and open for reading */
+	char  *fname
+)
 {
 	FILE  *fp;
 	char  pname[PATH_MAX];
-	register char  *sp, *cp;
+	char  *sp, *cp;
 
 	if (fname == NULL)
 		return(NULL);
