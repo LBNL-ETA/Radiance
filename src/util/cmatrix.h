@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.1 2014/01/20 21:29:04 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.2 2014/01/20 21:30:34 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -38,7 +38,7 @@ extern CMATRIX *cm_resize(CMATRIX *cm, int nrows);
 #define cm_free(cm)	free(cm)
 
 /* Load header to obtain data type */
-int getDTfromHeader(FILE *fp);
+extern int getDTfromHeader(FILE *fp);
 
 /* Allocate and load a matrix from the given file (or stdin if NULL) */
 extern CMATRIX *cm_load(const char *fname, int nrows, int ncols, int dtype);
