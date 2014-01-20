@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.1 2014/01/20 21:29:04 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.2 2014/01/20 22:18:29 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: cmbsdf.c,v 2.1 2014/01/20 21:29:04 greg Exp $"
 
 /* Convert a BSDF to our matrix representation */
 static CMATRIX *
-cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
+cm_bsdf(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
 	int	nbadohm = 0;
@@ -37,7 +37,7 @@ cm_bsdf(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 			}
 			copycolor(mp, specCol);
 			scalecolor(mp, f);
-			addcolor(mp, bsdfLamb);
+			addcolor(mp, diffBSDF);
 			scalecolor(mp, dom);
 		}
 	}
@@ -76,7 +76,7 @@ recip_in_from_out(const SDMat *bsdf, int out_recip)
 
 /* Convert a BSDF to our matrix representation, applying reciprocity */
 static CMATRIX *
-cm_bsdf_recip(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
+cm_bsdf_recip(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->ninc, bsdf->nout);
 	int	nbadohm = 0;
@@ -100,7 +100,7 @@ cm_bsdf_recip(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 			}
 			copycolor(mp, specCol);
 			scalecolor(mp, f);
-			addcolor(mp, bsdfLamb);
+			addcolor(mp, diffBSDF);
 			scalecolor(mp, dom);
 		}
 	}
@@ -113,9 +113,24 @@ cm_bsdf_recip(const COLOR bsdfLamb, const COLOR specCol, const SDMat *bsdf)
 	return(cm);
 }
 
-/* Load and convert a matrix BSDF from the given XML file */
+/* Return a Lambertian (diffuse) matrix */
+static CMATRIX *
+cm_bsdf_Lamb(const COLOR diffBSDF)
+{
+	CMATRIX	*cm = cm_alloc(145, 145);	/* this is a hack */
+	int	r, c;
+
+	for (c = 0; c < cm->ncols; c++)
+		for (r = 0; r < cm->nrows; r++) {
+			COLORV	*mp = cm_lval(cm,r,c);
+			copycolor(mp, diffBSDF);
+		}
+	return(cm);
+}
+
+/* Load and convert a matrix BTDF from the given XML file */
 CMATRIX *
-cm_loadBSDF(char *fname, COLOR cLamb)
+cm_loadBTDF(char *fname)
 {
 	CMATRIX		*Tmat;
 	char		*fpath;
@@ -123,7 +138,7 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	SDError		ec;
 	SDData		myBSDF;
 	SDSpectralDF	*tdf;
-	COLOR		bsdfLamb, specCol;
+	COLOR		diffBSDF, specCol;
 					/* find path to BSDF file */
 	fpath = getpath(fname, getrlibpath(), R_OK);
 	if (fpath == NULL) {
@@ -134,14 +149,12 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	ec = SDloadFile(&myBSDF, fpath);
 	if (ec)
 		error(USER, transSDError(ec));
-	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, bsdfLamb);
+	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, diffBSDF);
 	recip = (myBSDF.tb == NULL);
 	tdf = recip ? myBSDF.tf : myBSDF.tb;
 	if (tdf == NULL) {		/* no non-Lambertian transmission? */
-		if (cLamb != NULL)
-			copycolor(cLamb, bsdfLamb);
 		SDfreeBSDF(&myBSDF);
-		return(NULL);
+		return(cm_bsdf_Lamb(diffBSDF));
 	}
 	if (tdf->ncomp != 1 || tdf->comp[0].func != &SDhandleMtx) {
 		sprintf(errmsg, "unsupported BSDF '%s'", fpath);
@@ -149,10 +162,8 @@ cm_loadBSDF(char *fname, COLOR cLamb)
 	}
 					/* convert BTDF to matrix */
 	ccy2rgb(&tdf->comp[0].cspec[0], 1., specCol);
-	Tmat = recip ? cm_bsdf_recip(bsdfLamb, specCol, (SDMat *)tdf->comp[0].dist)
-			: cm_bsdf(bsdfLamb, specCol, (SDMat *)tdf->comp[0].dist);
-	if (cLamb != NULL)		/* Lambertian is included */
-		setcolor(cLamb, .0, .0, .0);
+	Tmat = recip ? cm_bsdf_recip(diffBSDF, specCol, (SDMat *)tdf->comp[0].dist)
+			: cm_bsdf(diffBSDF, specCol, (SDMat *)tdf->comp[0].dist);
 					/* free BSDF and return */
 	SDfreeBSDF(&myBSDF);
 	return(Tmat);
