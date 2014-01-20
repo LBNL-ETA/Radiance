@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.63 2013/12/04 20:07:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.64 2014/01/20 21:29:04 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -104,8 +104,9 @@ glrad:	glrad.o
 	$(CC) $(CFLAGS) -o glrad glrad.o -lrgl -lrtrad -lGLU -lGL \
 -lX11 -lXext $(MLIB)
 
-dctimestep:	dctimestep.o
-	$(CC) $(CFLAGS) -o dctimestep dctimestep.o -lrtrad $(MLIB)
+dctimestep:	dctimestep.o cmbsdf.o cmatrix.o
+	$(CC) $(CFLAGS) -o dctimestep dctimestep.o cmbsdf.o cmatrix.o \
+-lrtrad $(MLIB)
 
 rttree_reduce:	rttree_reduce.o
 	$(CC) $(CFLAGS) -o rttree_reduce rttree_reduce.o -lrtrad $(MLIB)
@@ -128,8 +129,18 @@ rpiece.o:	../common/color.h ../common/view.h ../common/resolu.h
 dctimestep.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/rterror.h ../common/platform.h ../common/paths.h \
-../common/color.h ../common/bsdf.h ../common/bsdf_m.h ../common/resolu.h
+../common/rterror.h ../common/resolu.h
+
+dctimestep.o cmatrix.o cmbsdf.o:	cmatrix.h ../common/color.h
+
+cmatrix.o cmbsdf.o:	../common/standard.h \
+../common/rtmisc.h ../common/rtio.h \
+../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+../common/rterror.h
+
+cmbsdf.o:	../common/paths.h ../common/bsdf.h ../common/bsdf_m.h
+
+dctimestep.o cmatrix.o:	../common/platform.h
 
 rtcontrib.o:	../common/platform.h ../common/rtprocess.h \
 ../common/color.h ../common/resolu.h ../common/lookup.h \
