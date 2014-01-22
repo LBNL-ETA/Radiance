@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.24 2013/07/04 15:14:45 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.25 2014/01/22 16:39:57 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -446,6 +446,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	hitfront = (r->rod > 0);
 						/* load cal file */
 	mf = getfunc(m, 5, 0x1d, 1);
+	setfunc(m, r);
 						/* get thickness */
 	nd.thick = evalue(mf->ep[0]);
 	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
