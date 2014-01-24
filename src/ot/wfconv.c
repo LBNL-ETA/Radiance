@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.10 2013/11/08 16:49:04 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.11 2014/01/24 01:26:44 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: wfconv.c,v 2.10 2013/11/08 16:49:04 greg Exp $
 #include "copyright.h"
 #include "standard.h"
 #include "cvmesh.h"
+#include "triangulate.h"
 #include <ctype.h>
 
 typedef int	VNDX[3];	/* vertex index (point,map,normal) */
@@ -244,6 +245,31 @@ cvtndx(				/* convert vertex string to index */
 	return(1);
 }
 
+/* determine dominant axis for triangle */
+static int
+dominant_axis(char *v1, char *v2, char *v3)
+{
+	int	v1i = atoi(v1), v2i = atoi(v2), v3i = atoi(v3);
+	FVECT	e1, e2, vn;
+	int	i, imax;
+
+	VSUB(e1, vlist[v2i], vlist[v1i]);
+	VSUB(e2, vlist[v3i], vlist[v2i]);
+	VCROSS(vn, e1, e2);
+	for (i = imax = 2; i--; )
+		if (vn[i]*vn[i] > vn[imax]*vn[imax])
+			imax = i;
+	return(vn[imax]*vn[imax] > FTINY ? imax : -1);
+}
+
+/* callback for triangle output from polygon */
+static int
+tri_out(const Vert2_list *tp, int a, int b, int c)
+{
+	return( puttri(	((char **)tp->p)[a],
+			((char **)tp->p)[b],
+			((char **)tp->p)[c] ) );
+}
 
 static int
 putface(				/* put out an N-sided polygon */
@@ -251,19 +277,35 @@ putface(				/* put out an N-sided polygon */
 	char	**av
 )
 {
-	char		*cp;
-	int	i;
+	Vert2_list	*poly = polyAlloc(ac);
+	int		i, ax, ay;
 
-	while (ac > 3) {		/* break into triangles */
-		if (!puttri(av[0], av[1], av[2]))
+	if (poly == NULL)
+		return(0);
+	poly->p = (void *)av;
+	for (i = ac-3; i >= 0; i--)	/* identify dominant axis */
+		if ((ax = dominant_axis(av[i], av[i+1], av[i+2])) >= 0)
+			break;
+	if (ax < 0)
+		return(0);
+	if (++ax >= 3) ax = 0;
+	ay = ax;
+	if (++ay >= 3) ay = 0;
+	for (i = 0; i < ac; i++) {	/* convert to 2-D polygon */
+		VNDX	vi;
+		if (!cvtndx(vi, av[i])) {
+			error(WARNING, "bad vertex reference");
+			polyFree(poly);
 			return(0);
-		ac--;			/* remove vertex & rotate */
-		cp = av[0];
-		for (i = 0; i < ac-1; i++)
-			av[i] = av[i+2];
-		av[i] = cp;
+		}
+		poly->v[i].mX = vlist[vi[0]][ax];
+		poly->v[i].mY = vlist[vi[0]][ay];
 	}
-	return(puttri(av[0], av[1], av[2]));
+					/* break into triangles & output */
+	if (!polyTriangulate(poly, &tri_out))
+		return(0);
+	polyFree(poly);
+	return(1);
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: triangulate.c,v 2.1 2014/01/23 23:51:41 greg Exp $";
+static const char RCSid[] = "$Id: triangulate.c,v 2.2 2014/01/24 01:26:44 greg Exp $";
 #endif
 /*
  *  triangulate.c
@@ -133,7 +133,7 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
 
   /* we want a counter-clockwise polygon in V */
 
-  if ( 0.0 < Area(contour) )
+  if ( 0.0 < polyArea(contour) )
     for (v=0; v<contour->nv; v++) V[v] = v;
   else
     for(v=0; v<contour->nv; v++) V[v] = (contour->nv-1)-v;
@@ -165,7 +165,7 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
       a = V[u]; b = V[v]; c = V[w];
 
       /* output Triangle */
-      (*cb)(contour, a, b, c);
+      if (!(*cb)(contour, a, b, c)) return false;
  
       m++;
 

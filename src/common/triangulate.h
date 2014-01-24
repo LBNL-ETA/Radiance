@@ -1,4 +1,4 @@
-/* RCSid $Id: triangulate.h,v 2.1 2014/01/23 23:51:41 greg Exp $ */
+/* RCSid $Id: triangulate.h,v 2.2 2014/01/24 01:26:44 greg Exp $ */
 /*
  *  triangulate.h
  *  
@@ -48,7 +48,7 @@ extern Vert2_list *polyAlloc(int nv);
 #define polyFree	free
 
 /* callback for output triangle */
-typedef void tri_out_t(const Vert2_list *tp, int a, int b, int c);
+typedef int tri_out_t(const Vert2_list *tp, int a, int b, int c);
 
 /* triangulate a contour/polygon, places results in STL vector
  * as series of triangles. */

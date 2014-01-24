@@ -1,4 +1,4 @@
-/* RCSid $Id: cvmesh.h,v 2.5 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid $Id: cvmesh.h,v 2.6 2014/01/24 01:26:44 greg Exp $ */
 /*
  *  Header for Radiance triangle mesh conversion
  *
@@ -21,8 +21,6 @@ extern FVECT	meshbounds[2];		/* mesh bounding box */
 
 
 extern MESH	*cvinit(char *nm);
-extern int	cvpoly(OBJECT mo, int n, FVECT *vp,
-				FVECT *vn, RREAL (*vc)[2]);
 extern int	cvtri(OBJECT mo, FVECT vp1, FVECT vp2, FVECT vp3,
 			FVECT vn1, FVECT vn2, FVECT vn3,
 			RREAL vc1[2], RREAL vc2[2], RREAL vc3[2]);

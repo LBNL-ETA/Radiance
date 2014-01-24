@@ -1912,3 +1912,5 @@ modifier for that name.
 Made it so icalc and rcalc search RAYPATH directories for *.cal files
 given on command line.  This simplifies script writing and makes these
 utilities consistent with other tools in Radiance.
+
+Added triangulation routine to handle convex polygons in obj2mesh.
