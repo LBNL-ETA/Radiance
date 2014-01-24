@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.11 2014/01/24 01:26:44 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.12 2014/01/24 02:22:49 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -249,12 +249,14 @@ cvtndx(				/* convert vertex string to index */
 static int
 dominant_axis(char *v1, char *v2, char *v3)
 {
-	int	v1i = atoi(v1), v2i = atoi(v2), v3i = atoi(v3);
+	VNDX	v1i, v2i, v3i;
 	FVECT	e1, e2, vn;
 	int	i, imax;
 
-	VSUB(e1, vlist[v2i], vlist[v1i]);
-	VSUB(e2, vlist[v3i], vlist[v2i]);
+	if (!cvtndx(v1i, v1) || !cvtndx(v2i, v2) || !cvtndx(v3i, v3))
+		return(-1);
+	VSUB(e1, vlist[v2i[0]], vlist[v1i[0]]);
+	VSUB(e2, vlist[v3i[0]], vlist[v2i[0]]);
 	VCROSS(vn, e1, e2);
 	for (i = imax = 2; i--; )
 		if (vn[i]*vn[i] > vn[imax]*vn[imax])
@@ -287,7 +289,7 @@ putface(				/* put out an N-sided polygon */
 		if ((ax = dominant_axis(av[i], av[i+1], av[i+2])) >= 0)
 			break;
 	if (ax < 0)
-		return(0);
+		return(1);		/* ignore degenerate face */
 	if (++ax >= 3) ax = 0;
 	ay = ax;
 	if (++ay >= 3) ay = 0;
@@ -303,7 +305,7 @@ putface(				/* put out an N-sided polygon */
 	}
 					/* break into triangles & output */
 	if (!polyTriangulate(poly, &tri_out))
-		return(0);
+		error(WARNING, "self-intersecting face");
 	polyFree(poly);
 	return(1);
 }

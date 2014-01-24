@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: triangulate.c,v 2.2 2014/01/24 01:26:44 greg Exp $";
+static const char RCSid[] = "$Id: triangulate.c,v 2.3 2014/01/24 02:22:49 greg Exp $";
 #endif
 /*
  *  triangulate.c
@@ -53,7 +53,7 @@ polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
 
   for (p=0;p<n;p++)
   {
-    if( (p == u) || (p == v) || (p == w) ) continue;
+    if( (p == u) | (p == v) | (p == w) ) continue;
     Px = contour->v[V[p]].mX;
     Py = contour->v[V[p]].mY;
     if (insideTriangle(Ax,Ay,Bx,By,Cx,Cy,Px,Py)) return false;
@@ -146,9 +146,9 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
   for(m=0, v=nv-1; nv>2; )
   {
     /* if we loop, it is probably a non-simple polygon */
-    if (0 >= (count--))
+    if (0 >= count--)
     {
-      /* Triangulate: ERROR - probable bad polygon! */
+      /* Triangulate: ERROR - probable bad polygon */
       return false;
     }
 
@@ -172,7 +172,7 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
       /* remove v from remaining polygon */
       for(s=v,t=v+1;t<nv;s++,t++) V[s] = V[t]; nv--;
 
-      /* resest error detection counter */
+      /* reset error detection counter */
       count = 2*nv;
     }
   }
