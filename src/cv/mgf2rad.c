@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2rad.c,v 2.29 2011/02/22 16:45:12 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2rad.c,v 2.30 2014/01/25 18:02:06 greg Exp $";
 #endif
 /*
  * Convert MGF (Materials and Geometry Format) to Radiance
@@ -26,18 +26,19 @@ double  emult = 1.;			/* emitter multiplier */
 FILE	*matfp;				/* material output file */
 
 
-int r_comment(int ac, char **av);
-int r_cone(int ac, char **av);
-int r_cyl(int ac, char **av);
-int r_sph(int ac, char **av);
-int r_ring(int ac, char **av);
-int r_face(int ac, char **av);
-int r_ies(int ac, char **av);
-char * material(void);
-char * object(void);
-char * addarg(char *op, char *arg);
-void do_tri(char *mat, C_VERTEX *cv1, C_VERTEX *cv2, C_VERTEX *cv3, int iv);
-void cvtcolor(COLOR radrgb, register C_COLOR *ciec, double intensity);
+extern int r_comment(int ac, char **av);
+extern int r_cone(int ac, char **av);
+extern int r_cyl(int ac, char **av);
+extern int r_sph(int ac, char **av);
+extern int r_ring(int ac, char **av);
+extern int r_face(int ac, char **av);
+extern int r_ies(int ac, char **av);
+extern void putsided(char *mname);
+extern char * material(void);
+extern char * object(void);
+extern char * addarg(char *op, char *arg);
+extern void do_tri(char *mat, C_VERTEX *cv1, C_VERTEX *cv2, C_VERTEX *cv3, int iv);
+extern void cvtcolor(COLOR radrgb, register C_COLOR *ciec, double intensity);
 
 
 int
@@ -484,6 +485,14 @@ do_tri(		/* put out smoothed triangle */
 }
 
 
+void
+putsided(char *mname)		/* print out mixfunc for sided material */
+{
+	fprintf(matfp, "\nvoid mixfunc %s\n", mname);
+	fprintf(matfp, "4 %s void if(Rdot,1,0) .\n0\n0\n", mname);
+}
+
+
 char *
 material(void)			/* get (and print) current material */
 {
@@ -546,38 +555,32 @@ material(void)			/* get (and print) current material */
 		}
 					/* check for trans */
 	if (c_cmaterial->td > .01 || c_cmaterial->ts > .01) {
-		double	ts, a5, a6;
-
-		if (c_cmaterial->sided) {
-			ts = sqrt(c_cmaterial->ts);	/* approximate */
-			a5 = .5;
-		} else {
-			ts = c_cmaterial->ts;
-			a5 = 1.;
-		}
+		double	a5, a6;
 						/* average colors */
-		d = c_cmaterial->rd + c_cmaterial->td + ts;
+		d = c_cmaterial->rd + c_cmaterial->td + c_cmaterial->ts;
 		cvtcolor(radrgb, &c_cmaterial->rd_c, c_cmaterial->rd/d);
 		cvtcolor(c2, &c_cmaterial->td_c, c_cmaterial->td/d);
 		addcolor(radrgb, c2);
-		cvtcolor(c2, &c_cmaterial->ts_c, ts/d);
+		cvtcolor(c2, &c_cmaterial->ts_c, c_cmaterial->ts/d);
 		addcolor(radrgb, c2);
-		if (c_cmaterial->rs + ts > .0001)
+		if (c_cmaterial->rs + c_cmaterial->ts > .0001)
 			a5 = (c_cmaterial->rs*c_cmaterial->rs_a +
-					ts*a5*c_cmaterial->ts_a) /
-					(c_cmaterial->rs + ts);
-		a6 = (c_cmaterial->td + ts) /
-				(c_cmaterial->rd + c_cmaterial->td + ts);
+					c_cmaterial->ts*c_cmaterial->ts_a) /
+					(c_cmaterial->rs + c_cmaterial->ts);
+		a6 = (c_cmaterial->td + c_cmaterial->ts) /
+				(c_cmaterial->rd + c_cmaterial->td + c_cmaterial->ts);
 		if (a6 < .999)
 			d = c_cmaterial->rd/(1. - c_cmaterial->rs)/(1. - a6);
 		else
-			d = c_cmaterial->td + ts;
+			d = c_cmaterial->td + c_cmaterial->ts;
 		scalecolor(radrgb, d);
 		fprintf(matfp, "\nvoid trans %s\n0\n0\n", mname);
 		fprintf(matfp, "7 %f %f %f\n", colval(radrgb,RED),
 				colval(radrgb,GRN), colval(radrgb,BLU));
 		fprintf(matfp, "\t%f %f %f %f\n", c_cmaterial->rs, a5, a6,
-				ts/(ts + c_cmaterial->td));
+				c_cmaterial->ts/(c_cmaterial->ts + c_cmaterial->td));
+		if (c_cmaterial->sided)
+			putsided(mname);
 		return(mname);
 	}
 					/* check for plastic */
@@ -588,6 +591,8 @@ material(void)			/* get (and print) current material */
 		fprintf(matfp, "5 %f %f %f %f %f\n", colval(radrgb,RED),
 				colval(radrgb,GRN), colval(radrgb,BLU),
 				c_cmaterial->rs, c_cmaterial->rs_a);
+		if (c_cmaterial->sided)
+			putsided(mname);
 		return(mname);
 	}
 					/* else it's metal */
@@ -600,6 +605,8 @@ material(void)			/* get (and print) current material */
 			colval(radrgb,GRN), colval(radrgb,BLU),
 			c_cmaterial->rs/(c_cmaterial->rd + c_cmaterial->rs),
 			c_cmaterial->rs_a);
+	if (c_cmaterial->sided)
+		putsided(mname);
 	return(mname);
 }
 
