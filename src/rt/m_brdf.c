@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.30 2013/08/07 05:10:09 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.31 2014/01/25 18:27:39 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -363,8 +363,7 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		objerror(m, USER, "bad # arguments");
 						/* check for back side */
 	if (r->rod < 0.0) {
-		if (!backvis && m->otype != MAT_TFUNC
-				&& m->otype != MAT_TDATA) {
+		if (!backvis) {
 			raytrans(r);
 			return(1);
 		}

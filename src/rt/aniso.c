@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.55 2012/07/29 21:56:16 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.56 2014/01/25 18:27:39 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -194,7 +194,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 		objerror(m, USER, "bad number of real arguments");
 						/* check for back side */
 	if (r->rod < 0.0) {
-		if (!backvis && m->otype != MAT_TRANS2) {
+		if (!backvis) {
 			raytrans(r);
 			return(1);
 		}

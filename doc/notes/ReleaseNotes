@@ -1914,3 +1914,10 @@ given on command line.  This simplifies script writing and makes these
 utilities consistent with other tools in Radiance.
 
 Added triangulation routine to handle convex polygons in obj2mesh.
+
+****** COMPATIBILITY CHANGE ********
+Made backface visibility apply to all material types, including
+transparent and translucent materials (except dielectric and interface).
+This makes the option useful in cases where adjacent trans surfaces
+are placed next to each other by a modeler that only understands
+volumetric objects.

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.15 2010/10/08 22:08:26 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.16 2014/01/25 18:27:39 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -365,15 +365,14 @@ accuracy and rendering time.
 .TP
 .BR -bv
 Boolean switch for back face visibility.
-With this switch off, back faces of opaque objects will be invisible
-to all rays.
+With this switch off, back faces of all objects will be invisible
+to view rays.
 This is dangerous unless the model was constructed such that
-all surface normals on opaque objects face outward.
+all surface normals face outward.
 Although turning off back face visibility does not save much
 computation time under most circumstances, it may be useful as a
 tool for scene debugging, or for seeing through one-sided walls from
 the outside.
-This option has no effect on transparent or translucent materials.
 .TP
 .BI -av " red grn blu"
 Set the ambient value to a radiance of

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.65 2012/08/01 15:26:36 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.66 2014/01/25 18:27:39 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -188,7 +188,7 @@ m_normal(			/* color a ray that hit something normal */
 		objerror(m, USER, "bad number of arguments");
 						/* check for back side */
 	if (r->rod < 0.0) {
-		if (!backvis && m->otype != MAT_TRANS) {
+		if (!backvis) {
 			raytrans(r);
 			return(1);
 		}

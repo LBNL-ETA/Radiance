@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.24 2012/11/15 19:41:03 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.25 2014/01/25 18:27:39 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -361,15 +361,14 @@ accuracy and rendering time.
 .TP
 .BR -bv
 Boolean switch for back face visibility.
-With this switch off, back faces of opaque objects will be invisible
-to all rays.
+With this switch off, back faces of all objects will be invisible
+to view rays.
 This is dangerous unless the model was constructed such that
-all surface normals on opaque objects face outward.
+all surface normals face outward.
 Although turning off back face visibility does not save much
 computation time under most circumstances, it may be useful as a
 tool for scene debugging, or for seeing through one-sided walls from
 the outside.
-This option has no effect on transparent or translucent materials.
 .TP
 .BI -av " red grn blu"
 Set the ambient value to a radiance of

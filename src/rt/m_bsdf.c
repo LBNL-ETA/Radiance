@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.25 2014/01/22 16:39:57 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.26 2014/01/25 18:27:39 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -457,6 +457,11 @@ m_bsdf(OBJREC *m, RAY *r)
 			raytrans(r);		/* pass-through */
 		return(1);			/* or shadow */
 	}
+						/* check backface visibility */
+	if (!hitfront & !backvis) {
+		raytrans(r);
+		return(1);
+	}
 						/* check other rays to pass */
 	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
 				nd.thick > 0 ^ hitfront)) {
@@ -474,15 +479,9 @@ m_bsdf(OBJREC *m, RAY *r)
 					m->oargs.farg[1],
 					m->oargs.farg[2]);
 	} else {
-		if (m->oargs.nfargs < 6) {	/* check invisible backside */
-			if (!backvis && (nd.sd->rb == NULL) &
-					(nd.sd->tb == NULL)) {
-				SDfreeCache(nd.sd);
-				raytrans(r);
-				return(1);
-			}
+		if (m->oargs.nfargs < 6)
 			setcolor(nd.rdiff, .0, .0, .0);
-		} else
+		else
 			setcolor(nd.rdiff, m->oargs.farg[3],
 					m->oargs.farg[4],
 					m->oargs.farg[5]);

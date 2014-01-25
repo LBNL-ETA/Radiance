@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.14 2013/08/29 15:37:16 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.15 2014/01/25 18:27:39 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -56,8 +56,11 @@ m_mirror(			/* shade mirrored ray */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
 		return(1);
 
-	if (r->rod < 0.)		/* back is black */
+	if (r->rod < 0.) {		/* back is black */
+		if (!backvis)
+			raytrans(r);	/* unless back visibility is off */
 		return(1);
+	}
 					/* get modifiers */
 	raytexture(r, m->omod);
 					/* assign material color */
