@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.10 2013/11/09 05:47:49 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.11 2014/01/30 18:19:43 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -219,7 +219,7 @@ main(int argc, char *argv[])
 #ifdef DEBUG
 	fprintf(stderr, "Minimum BSDF = %.4f\n", bsdf_min);
 #endif
-						/* produce spheres at meas. */
+#if 1						/* produce spheres at meas. */
 	puts("void plastic yellow\n0\n0\n5 .6 .4 .01 .04 .08\n");
 	min_log = log(bsdf_min*.5);
 	n = 0;
@@ -238,7 +238,21 @@ main(int argc, char *argv[])
 					dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf,
 					.007*bsdf);
 		}
-						/* output continuous surface */
+#endif
+#if 1						/* spheres at RBF peaks */
+	puts("void plastic red\n0\n0\n5 .8 .01 .01 .04 .08\n");
+	for (n = 0; n < dsf_list->nrbf; n++) {
+		RBFVAL	*rbf = &dsf_list->rbfa[n];
+		ovec_from_pos(dir, rbf->gx, rbf->gy);
+		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
+		bsdf = log(bsdf) - min_log;
+		printf("red sphere p%04d\n0\n0\n", ++n);
+		printf("4 %.6g %.6g %.6g %.6g\n\n",
+				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf,
+				.011*bsdf);
+	}
+#endif
+#if 1						/* output continuous surface */
 	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 1\n");
 	fflush(stdout);
 	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
@@ -255,6 +269,9 @@ main(int argc, char *argv[])
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
 	    }
-	return(pclose(pfp)==0 ? 0 : 1);
+	if (pclose(pfp) != 0)
+		return(1);
+#endif
+	return(0);
 }
 #endif
