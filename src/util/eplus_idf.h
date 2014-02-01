@@ -1,4 +1,4 @@
-/* RCSid $Id: eplus_idf.h,v 2.1 2014/02/01 01:28:43 greg Exp $ */
+/* RCSid $Id: eplus_idf.h,v 2.2 2014/02/01 02:13:24 greg Exp $ */
 /*
  *  eplus_idf.h
  *
@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 #define	IDF_MAXLINE	512			/* maximum line length */
-#define IDF_MAXARGL	128			/* maximum argument length */
+#define IDF_MAXARGL	104			/* maximum argument length */
 
 /* Input Data File parameter argument list */
 typedef struct s_idf_field {

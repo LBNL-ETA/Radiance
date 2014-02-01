@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.1 2014/02/01 01:28:43 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.2 2014/02/01 02:13:24 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -163,7 +163,7 @@ idf_read_argument(char *buf, FILE *fp, int trim)
 		if (skipwhite && isspace(c))
 			continue;
 		skipwhite = 0;
-		if (cp-buf < IDF_MAXLINE-1)
+		if (cp-buf < IDF_MAXARGL-1)
 			*cp++ = c;
 	}
 	if (trim)
@@ -203,7 +203,7 @@ idf_read_comment(char *buf, int len, FILE *fp)
 IDF_PARAMETER *
 idf_readparam(IDF_LOADED *idf, FILE *fp)
 {
-	char		abuf[IDF_MAXLINE], cbuf[IDF_MAXLINE];
+	char		abuf[IDF_MAXARGL], cbuf[IDF_MAXLINE];
 	int		delim;
 	IDF_PARAMETER	*pnew;
 	
@@ -221,6 +221,21 @@ idf_readparam(IDF_LOADED *idf, FILE *fp)
 	return(pnew);
 }
 
+/* Upper-case string hashing function */
+static unsigned long
+strcasehash(const char *s)
+{
+	char		strup[IDF_MAXARGL];
+	char		*cdst = strup;
+
+	while ((*cdst++ = toupper(*s++)))
+		if (cdst >= strup+(sizeof(strup)-1)) {
+			*cdst = '\0';
+			break;
+		}
+	return(lu_shash(strup));
+}
+
 /* Initialize an IDF struct */
 IDF_LOADED *
 idf_create(const char *hdrcomm)
@@ -229,8 +244,8 @@ idf_create(const char *hdrcomm)
 
 	if (idf == NULL)
 		return(NULL);
-	idf->ptab.hashf = &lu_shash;
-	idf->ptab.keycmp = &strcmp;
+	idf->ptab.hashf = &strcasehash;
+	idf->ptab.keycmp = &strcasecmp;
 	idf->ptab.freek = &free;
 	lu_init(&idf->ptab, 200);
 	if (hdrcomm != NULL && *hdrcomm) {
