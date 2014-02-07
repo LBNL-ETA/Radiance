@@ -72,5 +72,5 @@ INSTALL(FILES source.cal tilt.cal lamp.tab window.cal
 
 if (NOT WIN32)
   INSTALL(PROGRAMS optics2rad.csh DESTINATION bin RENAME optics2rad)
-  INSTALL(TARGETS pabopto2rad pabopto2bsdf)
+  INSTALL(TARGETS pabopto2rad pabopto2bsdf DESTINATION bin)
 endif()
