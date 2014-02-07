@@ -1,4 +1,4 @@
-/* RCSid $Id: triangulate.h,v 2.2 2014/01/24 01:26:44 greg Exp $ */
+/* RCSid $Id: triangulate.h,v 2.3 2014/02/07 18:58:40 greg Exp $ */
 /*
  *  triangulate.h
  *  
@@ -50,15 +50,13 @@ extern Vert2_list *polyAlloc(int nv);
 /* callback for output triangle */
 typedef int tri_out_t(const Vert2_list *tp, int a, int b, int c);
 
-/* triangulate a contour/polygon, places results in STL vector
- * as series of triangles. */
+/* triangulate a polygon, send results to the given callback function */
 extern int polyTriangulate(const Vert2_list *contour, tri_out_t *cb);
 
 /* compute area of a contour/polygon */
 extern double polyArea(const Vert2_list *contour);
 
-/* decide if point Px/Py is inside triangle defined by
- * (Ax,Ay) (Bx,By) (Cx,Cy) */
+/* decide if point P is inside triangle defined by ABC */
 extern int insideTriangle(double Ax, double Ay,
                       double Bx, double By,
                       double Cx, double Cy,
