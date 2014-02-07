@@ -10,7 +10,7 @@ set(rtrad_SOURCES
   paths.c plocate.c portio.c process.c quit.c readfargs.c readmesh.c readobj.c
   readoct.c resolu.c rexpr.c savqstr.c savestr.c sceneio.c spec_rgb.c tcos.c
   tmap16bit.c tmapcolrs.c tmapluv.c timegm.c tmaptiff.c tmesh.c tonemap.c
-  urand.c urind.c words.c wordfile.c wputs.c xf.c zeroes.c)
+  triangulate.c urand.c urind.c words.c wordfile.c wputs.c xf.c zeroes.c)
 
 if(UNIX)
   list(APPEND rtrad_SOURCES unix_process.c strcmp.c)

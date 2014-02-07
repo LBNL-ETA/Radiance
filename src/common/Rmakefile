@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.69 2014/01/23 23:51:41 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.70 2014/02/07 19:00:45 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -181,3 +181,5 @@ hilbert.o:	hilbert.h
 loadbsdf.o:	bsdf.h rtio.h rterror.h paths.h
 
 interp2d.o:	interp2d.h
+
+triangulate.o:	triangulate.h
