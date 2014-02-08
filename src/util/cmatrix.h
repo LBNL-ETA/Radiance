@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.3 2014/01/20 22:18:29 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.4 2014/02/08 01:28:06 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -15,7 +15,10 @@ extern "C" {
 #endif
 
 /* Data types for file loading */
-enum {DTfromHeader, DTascii, DTfloat, DTdouble, DTrgbe, DTxyze};
+enum {DTfromHeader, DTascii, DTfloat, DTdouble, DTrgbe, DTxyze, DTend};
+
+extern const char	*cm_fmt_id[];
+extern const int	cm_elem_size[];
 
 /* A color coefficient matrix -- vectors have ncols==1 */
 typedef struct {
@@ -52,8 +55,8 @@ extern CMATRIX *cm_scale(const CMATRIX *cm1, const COLOR sca);
 /* Multiply two matrices (or a matrix and a vector) and allocate the result */
 extern CMATRIX *cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2);
 
-/* print out matrix as ASCII text -- no header */
-extern void cm_print(const CMATRIX *cm, FILE *fp);
+/* write out matrix to file (precede by resolution string if picture) */
+extern int cm_write(const CMATRIX *cm, int dtype, FILE *fp);
 
 /* Load and convert a matrix BTDF from the given XML file */
 extern CMATRIX *cm_loadBTDF(char *fname);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.29 2014/01/20 22:18:29 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.30 2014/02/08 01:28:06 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -59,9 +59,8 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 			pmat = cm_alloc(myYR, myXR);
 			memset(pmat->cmem, 0, sizeof(COLOR)*myXR*myYR);
 							/* finish header */
-			fputformat(myDT==DTrgbe ? COLRFMT : CIEFMT, fout);
+			fputformat((char *)cm_fmt_id[myDT], fout);
 			fputc('\n', fout);
-			fprtresolu(myXR, myYR, fout);
 			fflush(fout);
 		} else if ((dt != myDT) | (xr != myXR) | (yr != myYR)) {
 			sprintf(errmsg, "picture '%s' format/size mismatch",
@@ -85,12 +84,9 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		fclose(fp);				/* done this picture */
 	}
 	free(scanline);
-							/* write scanlines */
-	for (y = 0; y < myYR; y++)
-		if (fwritescan((COLOR *)cm_lval(pmat, y, 0), myXR, fout) < 0)
-			return(0);
-	cm_free(pmat);					/* all done */
-	return(fflush(fout) == 0);
+	i = cm_write(pmat, myDT, fout);			/* write picture */
+	cm_free(pmat);					/* free data */
+	return(i);
 }
 
 /* check to see if a string contains a %d or %o specification */
@@ -122,6 +118,7 @@ int
 main(int argc, char *argv[])
 {
 	int		skyfmt = DTascii;
+	int		outfmt = DTascii;
 	int		nsteps = 1;
 	char		*ofspec = NULL;
 	FILE		*ofp = stdout;
@@ -138,9 +135,6 @@ main(int argc, char *argv[])
 			if (nsteps <= 0)
 				goto userr;
 			break;
-		case 'o':
-			ofspec = argv[++a];
-			break;
 		case 'i':
 			switch (argv[a][2]) {
 			case 'f':
@@ -151,6 +145,24 @@ main(int argc, char *argv[])
 				break;
 			case 'a':
 				skyfmt = DTascii;
+				break;
+			default:
+				goto userr;
+			}
+			break;
+		case 'o':
+			switch (argv[a][2]) {
+			case '\0':	/* output specification (not format) */
+				ofspec = argv[++a];
+				break;
+			case 'f':
+				outfmt = DTfloat;
+				break;
+			case 'd':
+				outfmt = DTdouble;
+				break;
+			case 'a':
+				outfmt = DTascii;
 				break;
 			default:
 				goto userr;
@@ -235,17 +247,18 @@ main(int argc, char *argv[])
 		CMATRIX	*Vmat = cm_load(argv[a], 0, cmtx->nrows, DTfromHeader);
 		CMATRIX	*rmtx = cm_multiply(Vmat, cmtx);
 		cm_free(Vmat);
-		if (ofspec != NULL)		/* multiple vector files? */
+		if (ofspec != NULL) {		/* multiple vector files? */
+			const char	*wtype = (outfmt==DTascii) ? "w" : "wb";
 			for (i = 0; i < nsteps; i++) {
 				CMATRIX	*rvec = cm_column(rmtx, i);
 				sprintf(fnbuf, ofspec, i+1);
-				if ((ofp = fopen(fnbuf, "w")) == NULL) {
+				if ((ofp = fopen(fnbuf, wtype)) == NULL) {
 					fprintf(stderr,
 					"%s: cannot open '%s' for output\n",
 							progname, fnbuf);
 					return(1);
 				}
-				cm_print(rvec, ofp);
+				cm_write(rvec, outfmt, ofp);
 				if (fclose(ofp) == EOF) {
 					fprintf(stderr,
 						"%s: error writing to '%s'\n",
@@ -255,8 +268,18 @@ main(int argc, char *argv[])
 				ofp = stdout;
 				cm_free(rvec);
 			}
-		else
-			cm_print(rmtx, ofp);
+		} else {
+			if (outfmt != DTascii)
+				SET_FILE_BINARY(ofp);
+			if (rmtx->ncols > 1) {	/* header if actual matrix */
+				newheader("RADIANCE", ofp);
+				printargs(argc, argv, ofp);
+				fputnow(ofp);
+				fputformat((char *)cm_fmt_id[outfmt], ofp);
+				fputc('\n', ofp);
+			}
+			cm_write(rmtx, outfmt, ofp);
+		}
 		cm_free(rmtx);
 	}
 	if (fflush(ofp) == EOF) {		/* final clean-up */
@@ -266,9 +289,9 @@ main(int argc, char *argv[])
 	cm_free(cmtx);
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d}] DCspec [skyf]\n",
+	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d}][-o{f|d}] DCspec [skyf]\n",
 				progname);
-	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
+	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d}][-o{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
 				progname);
 	return(1);
 }

@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.7 2013/09/05 17:53:22 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.8 2014/02/08 01:28:05 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -10,6 +10,8 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 .B "\-o ospec"
 ][
 .B "\-i{f|d}
+][
+.B "\-o{f|d}
 ]
 .B DCspec
 [
@@ -23,6 +25,8 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 .B "\-o ospec"
 ][
 .B "\-i{f|d}
+][
+.B "\-o{f|d}
 ]
 .B Vspec
 .B Tbsdf.xml
@@ -79,7 +83,7 @@ format, respectively, which is more efficient for large matrices.
 .PP
 Sent to the standard output of
 .I dctimestep
-is either an ASCII color vector with as many RGB triplets
+is either a color vector with as many RGB triplets
 as there are rows in the View matrix, or a combined
 .I Radiance
 picture.
@@ -112,6 +116,24 @@ If the given specification contains a '%d' format string, this
 will be replaced by the time step index, starting from 1.
 In this way, multiple output pictures may be produced,
 or separate result vectors (one per time step).
+If the standard output is used or the
+.I \-o
+option specifies a single output file, then an information header
+will precede the output.
+This can be removed if desired using the
+.I getinfo\(1\)
+command with a single hyphen ('-') argument.
+.PP
+The
+.I \-of
+or
+.I \-od
+option may be used to specify IEEE float or double binary output
+data, respectively.
+This enables
+.I dctimestep
+to be used as a pure matrix multiplier, as the output file with
+header specifying the format is suitable for subsequent calls.
 .SH EXAMPLES
 To compute workplane illuminances at 3:30pm on Feb 10th:
 .IP "" .2i
@@ -142,8 +164,13 @@ Generate a series of pictures corresponding to timesteps
 in an annual simulation:
 .IP "" .2i
 gendaymtx NYCity.wea | dctimestep -n 8760 -o tstep%04d.hdr dcomp%03d.hdr
+.PP
+To multiply two color matrices (second matrix is IEEE-float with
+145 RGB columns) into a IEEE-double result (also 145 RGB columns):
+.IP "" .2i
+getinfo - < Inp2.fmx | dctimestep -n 145 -if -od Inp1.fmx > Inp1xInp2.dmx
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-gendaymtx(1), genklemsamp(1), genskyvec(1),
+gendaymtx(1), genklemsamp(1), genskyvec(1), getinfo(1),
 mkillum(1), rcollate(1), rcontrib(1), rtrace(1), vwrays(1)

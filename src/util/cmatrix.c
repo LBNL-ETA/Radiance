@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.1 2014/01/20 21:29:04 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.2 2014/02/08 01:28:06 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -11,6 +11,16 @@ static const char RCSid[] = "$Id: cmatrix.c,v 2.1 2014/01/20 21:29:04 greg Exp $
 #include "standard.h"
 #include "cmatrix.h"
 #include "platform.h"
+#include "resolu.h"
+
+const char	*cm_fmt_id[] = {
+			"unknown", "ascii", "float", "double",
+			COLRFMT, CIEFMT
+		};
+
+const int	cm_elem_size[] = {
+			0, 0, 3*sizeof(float), 3*sizeof(double), 4, 4
+		};
 
 /* Allocate a color coefficient matrix */
 CMATRIX *
@@ -51,19 +61,13 @@ static int
 getDT(char *s, void *p)
 {
 	char	fmt[32];
+	int	i;
 	
-	if (formatval(fmt, s)) {
-		if (!strcmp(fmt, "ascii"))
-			*((int *)p) = DTascii;
-		else if (!strcmp(fmt, "float"))
-			*((int *)p) = DTfloat;
-		else if (!strcmp(fmt, "double"))
-			*((int *)p) = DTdouble;
-		else if (!strcmp(fmt, COLRFMT))
-			*((int *)p) = DTrgbe;
-		else if (!strcmp(fmt, CIEFMT))
-			*((int *)p) = DTxyze;
-	}
+	if (!formatval(fmt, s))
+		return(0);
+	for (i = 1; i < DTend; i++)
+		if (!strcmp(fmt, cm_fmt_id[i]))
+			*((int *)p) = i;
 	return(0);
 }
 
@@ -165,8 +169,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 				break;
 			}
 	} else {					/* read binary file */
-		if (sizeof(COLORV) == (dtype==DTfloat ? sizeof(float) :
-							sizeof(double))) {
+		if (sizeof(COLOR) == cm_elem_size[dtype]) {
 			int	nread = 0;
 			do {				/* read all we can */
 				nread += fread(cm->cmem + 3*nread,
@@ -330,16 +333,63 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 	return(cmr);
 }
 
-/* print out matrix as ASCII text -- no header */
-void
-cm_print(const CMATRIX *cm, FILE *fp)
+/* write out matrix to file (precede by resolution string if picture) */
+int
+cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 {
-	int		r, c;
 	const COLORV	*mp = cm->cmem;
-	
-	for (r = 0; r < cm->nrows; r++) {
-		for (c = 0; c < cm->ncols; c++, mp += 3)
-			fprintf(fp, "\t%.6e %.6e %.6e", mp[0], mp[1], mp[2]);
-		fputc('\n', fp);
+	int		r, c;
+
+	switch (dtype) {
+	case DTascii:
+		for (r = 0; r < cm->nrows; r++) {
+			for (c = 0; c < cm->ncols; c++, mp += 3)
+				fprintf(fp, "\t%.6e %.6e %.6e",
+						mp[0], mp[1], mp[2]);
+			fputc('\n', fp);
+		}
+		break;
+	case DTfloat:
+	case DTdouble:
+		if (sizeof(COLOR) == cm_elem_size[dtype]) {
+			r = cm->ncols*cm->nrows;
+			while (r > 0) {
+				c = fwrite(mp, sizeof(COLOR), r, fp);
+				if (c <= 0)
+					return(0);
+				mp += 3*c;
+				r -= c;
+			}
+		} else if (dtype == DTdouble) {
+			double	dc[3];
+			r = cm->ncols*cm->nrows;
+			while (r--) {
+				copycolor(dc, mp);
+				if (fwrite(dc, sizeof(double), 3, fp) != 3)
+					return(0);
+				mp += 3;
+			}
+		} else /* dtype == DTfloat */ {
+			float	fc[3];
+			r = cm->ncols*cm->nrows;
+			while (r--) {
+				copycolor(fc, mp);
+				if (fwrite(fc, sizeof(float), 3, fp) != 3)
+					return(0);
+				mp += 3;
+			}
+		}
+		break;
+	case DTrgbe:
+	case DTxyze:
+		fprtresolu(cm->ncols, cm->nrows, fp);
+		for (r = 0; r < cm->nrows; r++, mp += 3*cm->ncols)
+			if (fwritescan((COLOR *)mp, cm->ncols, fp) < 0)
+				return(0);
+		break;
+	default:
+		fputs("Unsupported data type in cm_write()!\n", stderr);
+		return(0);
 	}
+	return(fflush(fp) == 0);
 }

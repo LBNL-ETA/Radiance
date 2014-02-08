@@ -1921,3 +1921,6 @@ transparent and translucent materials (except dielectric and interface).
 This makes the option useful in cases where adjacent trans surfaces
 are placed next to each other by a modeler that only understands
 volumetric objects.
+
+Changed dctimestep so that output matrices (-n > 1) are preceded by a
+header, and added support for float and double output formats with -o[fd].
