@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookup.c,v 2.18 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: lookup.c,v 2.19 2014/02/09 00:08:18 greg Exp $";
 #endif
 /*
  * Table lookup routines
@@ -14,7 +14,7 @@ static const char	RCSid[] = "$Id: lookup.c,v 2.18 2011/02/18 00:40:25 greg Exp $
 
 int
 lu_init(		/* initialize tbl for at least nel elements */
-	register LUTAB	*tbl,
+	LUTAB	*tbl,
 	int	nel
 )
 {
@@ -23,7 +23,7 @@ lu_init(		/* initialize tbl for at least nel elements */
 		32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 
 		4194301, 8388593, 0
 	};
-	register int  *hsp;
+	int  *hsp;
 
 	nel += nel>>1;			/* 66% occupancy */
 	for (hsp = hsiztab; *hsp; hsp++)
@@ -70,9 +70,9 @@ lu_shash(			/* hash a nul-terminated string */
 		106, 7, 164, 65, 222, 123, 24, 181, 82, 239, 140,
 		41, 198, 99
 	};
-	register int	i = 0;
-	register unsigned long	h = 0;
-	register unsigned const char *t = (unsigned const char *)s;
+	int			i = 0;
+	unsigned long		h = 0;
+	unsigned const char	*t = (unsigned const char *)s;
 
 	while (*t)
 	    	h ^= (unsigned long)shuffle[*t++] << ((i+=11) & 0xf);
@@ -83,14 +83,14 @@ lu_shash(			/* hash a nul-terminated string */
 
 LUENT *
 lu_find(		/* find a table entry */
-	register LUTAB	*tbl,
+	LUTAB	*tbl,
 	const char	*key
 )
 {
 	unsigned long	hval;
 	int	i, n;
-	register int	ndx;
-	register LUENT	*le;
+	int	ndx;
+	LUENT	*le;
 					/* look up object */
 	if (tbl->tsiz == 0 && !lu_init(tbl, 1))
 		return(NULL);
@@ -139,11 +139,11 @@ tryagain:
 
 void
 lu_delete(		/* delete a table entry */
-	register LUTAB	*tbl,
-	const char	*key
+	LUTAB *tbl,
+	const char *key
 )
 {
-	register LUENT	*le;
+	LUENT	*le;
 
 	if ((le = lu_find(tbl, key)) == NULL)
 		return;
@@ -158,14 +158,14 @@ lu_delete(		/* delete a table entry */
 
 int
 lu_doall(		/* loop through all valid table entries */
-	register const LUTAB	*tbl,
-	/* int	(*f)(const LUENT *) */
+	const LUTAB *tbl,
+	/* int	(*f)(const LUENT *, void *) */
 	lut_doallf_t *f,
 	void *p
 )
 {
 	int	rval = 0;
-	register const LUENT	*tp;
+	const LUENT	*tp;
 
 	for (tp = tbl->tabl + tbl->tsiz; tp-- > tbl->tabl; )
 		if (tp->data != NULL) {
@@ -183,10 +183,10 @@ lu_doall(		/* loop through all valid table entries */
 
 void
 lu_done(			/* free table and contents */
-	register LUTAB	*tbl
+	LUTAB	*tbl
 )
 {
-	register LUENT	*tp;
+	LUENT	*tp;
 
 	if (!tbl->tsiz)
 		return;
