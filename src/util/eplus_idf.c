@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.2 2014/02/01 02:13:24 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.3 2014/02/09 02:18:16 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -97,6 +97,20 @@ idf_addfield(IDF_PARAMETER *param, const char *fval, const char *comm)
 	return(fnum);
 }
 
+/* Retrieve the indexed field from parameter (first field index is 1) */
+IDF_FIELD *
+idf_getfield(IDF_PARAMETER *param, int fn)
+{
+	IDF_FIELD	*fld;
+
+	if ((param == NULL) | (fn <= 0))
+		return(NULL);
+	fld = param->flist;
+	while ((--fn > 0) & (fld != NULL))
+		fld = fld->next;
+	return(fld);
+}
+
 /* Delete the specified parameter from loaded IDF */
 int
 idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param)
@@ -186,10 +200,9 @@ idf_read_comment(char *buf, int len, FILE *fp)
 		buf = &dummyc;
 		len = 1;
 	}
-	while ((c = getc(fp)) != EOF && isspace(c) | incomm) {
-		if (c == '!')
-			++incomm;
-		else if (c == '\n')
+	while ((c = getc(fp)) != EOF &&
+			(isspace(c) || (incomm += (c == '!')))) {
+		if (c == '\n')
 			incomm = 0;
 		if (cp-buf < len-1)
 			*cp++ = c;
@@ -217,7 +230,7 @@ idf_readparam(IDF_LOADED *idf, FILE *fp)
 			idf_addfield(pnew, abuf, cbuf);
 		}
 	if (delim != ';')
-		fprintf(stderr, "Expected ';' at end of parameter list\n");
+		fputs("Expected ';' at end of parameter list!\n", stderr);
 	return(pnew);
 }
 
@@ -260,7 +273,7 @@ idf_create(const char *hdrcomm)
 IDF_LOADED *
 idf_load(const char *fname)
 {
-	char		*hdrcomm;
+	char		hdrcomm[300*IF_MAXLINE];
 	FILE		*fp;
 	IDF_LOADED	*idf;
 
@@ -269,10 +282,8 @@ idf_load(const char *fname)
 	else if ((fp = fopen(fname, "r")) == NULL)
 		return(NULL);
 					/* read header comments */
-	hdrcomm = (char *)malloc(100*IDF_MAXLINE);
-	idf_read_comment(hdrcomm, 100*IDF_MAXLINE, fp);
+	idf_read_comment(hdrcomm, sizeof(hdrcomm), fp);
 	idf = idf_create(hdrcomm);	/* create IDF struct */
-	free(hdrcomm);
 	if (idf == NULL)
 		return(NULL);
 					/* read each parameter */
