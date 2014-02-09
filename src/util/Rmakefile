@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.66 2014/02/09 05:49:21 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.67 2014/02/09 22:19:30 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -120,7 +120,7 @@ eplus_adduvf:	eplus_adduvf.o eplus_idf.o
 
 setscan.o:	setscan.h
 
-eplus_adduvf.o:	../common/triangulate.h
+eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h ../common/paths.h
 
 eplus_adduvf.o eplus_idf.o:	eplus_idf.h \
 ../common/lookup.h

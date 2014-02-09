@@ -1,4 +1,4 @@
-/* RCSid $Id: eplus_idf.h,v 2.4 2014/02/09 05:49:21 greg Exp $ */
+/* RCSid $Id: eplus_idf.h,v 2.5 2014/02/09 22:19:30 greg Exp $ */
 /*
  *  eplus_idf.h
  *
@@ -31,6 +31,7 @@ typedef struct s_idf_parameter {
 	const char		*pname;		/* parameter name (type) */
 	struct s_idf_parameter	*pnext;		/* next parameter same type */
 	struct s_idf_parameter	*dnext;		/* next parameter in IDF */
+	int			nfield;		/* field count */
 	IDF_FIELD		*flist;		/* field list */
 	char			rem[1];		/* comment (extends struct) */
 } IDF_PARAMETER;
