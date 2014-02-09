@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.3 2014/02/09 02:18:16 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.4 2014/02/09 05:49:21 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -134,11 +134,9 @@ idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param)
 		plast->pnext = param->pnext;
 					/* remove from global list */
 	for (plast = NULL, pptr = idf->pfirst;
-				pptr != NULL; plast = pptr, pptr = pptr->dnext)
-		if (pptr == param)
-			break;
-	if (pptr == NULL)
-		return(0);
+				pptr != param; plast = pptr, pptr = pptr->dnext)
+		if (pptr == NULL)
+			return(0);
 	if (plast == NULL)
 		idf->pfirst = param->dnext;
 	else
@@ -152,6 +150,40 @@ idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param)
 		free(fdel);
 	}
 	free(param);			/* free parameter struct */
+	return(1);
+}
+
+/* Move the specified parameter to the given position in the IDF */
+int
+idf_movparam(IDF_LOADED *idf, IDF_PARAMETER *param, IDF_PARAMETER *prev)
+{
+	IDF_PARAMETER	*pptr, *plast;
+
+	if ((idf == NULL) | (param == NULL))
+		return(0);
+					/* find in IDF list, first*/
+	for (plast = NULL, pptr = idf->pfirst;
+				pptr != param; plast = pptr, pptr = pptr->dnext)
+		if (pptr == NULL)
+			return(0);
+	if (plast == NULL) {
+		if (prev == NULL)
+			return(1);	/* already in place */
+		idf->pfirst = param->dnext;
+	} else {
+		if (prev == plast)
+			return(1);	/* already in place */
+		plast->dnext = param->dnext;
+	}
+	if (idf->plast == param)
+		idf->plast = plast;
+	if (prev == NULL) {		/* means they want it at beginning */
+		param->dnext = idf->pfirst;
+		idf->pfirst = param;
+	} else {
+		param->dnext = prev->dnext;
+		prev->dnext = param;
+	}
 	return(1);
 }
 
@@ -269,11 +301,36 @@ idf_create(const char *hdrcomm)
 	return(idf);
 }
 
+/* Add comment(s) to header */
+int
+idf_add2hdr(IDF_LOADED *idf, const char *hdrcomm)
+{
+	int	olen, len;
+
+	if ((idf == NULL) | (hdrcomm == NULL))
+		return(0);
+	len = strlen(hdrcomm);
+	if (!len)
+		return(0);
+	if (idf->hrem == NULL)
+		olen = 0;
+	else
+		olen = strlen(idf->hrem);
+	if (olen)
+		idf->hrem = (char *)realloc(idf->hrem, olen+len+1);
+	else
+		idf->hrem = (char *)malloc(len+1);
+	if (idf->hrem == NULL)
+		return(0);
+	strcpy(idf->hrem+olen, hdrcomm);
+	return(1);
+}
+
 /* Load an Input Data File */
 IDF_LOADED *
 idf_load(const char *fname)
 {
-	char		hdrcomm[300*IF_MAXLINE];
+	char		hdrcomm[256*IDF_MAXLINE];
 	FILE		*fp;
 	IDF_LOADED	*idf;
 
@@ -296,7 +353,7 @@ idf_load(const char *fname)
 
 /* Write a parameter and fields to an open file */
 int
-idf_writeparam(IDF_PARAMETER *param, FILE *fp)
+idf_writeparam(IDF_PARAMETER *param, FILE *fp, int incl_comm)
 {
 	IDF_FIELD	*fptr;
 
@@ -304,18 +361,24 @@ idf_writeparam(IDF_PARAMETER *param, FILE *fp)
 		return(0);
 	fputs(param->pname, fp);
 	fputc(',', fp);
-	fputs(param->rem, fp);
+	if (incl_comm)
+		fputs(param->rem, fp);
 	for (fptr = param->flist; fptr != NULL; fptr = fptr->next) {
+		if (!incl_comm)
+			fputs("\n\t", fp);
 		fputs(fptr->arg, fp);
 		fputc((fptr->next==NULL ? ';' : ','), fp);
-		fputs(fptr->rem, fp);
+		if (incl_comm)
+			fputs(fptr->rem, fp);
 	}
+	if (!incl_comm)
+		fputs("\n\n", fp);
 	return(!ferror(fp));
 }
 
 /* Write out an Input Data File */
 int
-idf_write(IDF_LOADED *idf, const char *fname)
+idf_write(IDF_LOADED *idf, const char *fname, int incl_comm)
 {
 	FILE		*fp;
 	IDF_PARAMETER	*pptr;
@@ -326,9 +389,10 @@ idf_write(IDF_LOADED *idf, const char *fname)
 		fp = stdout;		/* open file if not stdout */
 	else if ((fp = fopen(fname, "w")) == NULL)
 		return(0);
-	fputs(idf->hrem, fp);		/* write header then parameters */
+	if (incl_comm)
+		fputs(idf->hrem, fp);	/* write header then parameters */
 	for (pptr = idf->pfirst; pptr != NULL; pptr = pptr->dnext)
-		if (!idf_writeparam(pptr, fp)) {
+		if (!idf_writeparam(pptr, fp, incl_comm>0)) {
 			fclose(fp);
 			return(0);
 		}

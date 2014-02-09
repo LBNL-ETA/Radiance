@@ -1,4 +1,4 @@
-/* RCSid $Id: eplus_idf.h,v 2.3 2014/02/09 02:18:16 greg Exp $ */
+/* RCSid $Id: eplus_idf.h,v 2.4 2014/02/09 05:49:21 greg Exp $ */
 /*
  *  eplus_idf.h
  *
@@ -54,8 +54,12 @@ extern int		idf_addfield(IDF_PARAMETER *param, const char *fval,
 /* Retrieve the indexed field from parameter (first field index is 1) */
 extern IDF_FIELD	*idf_getfield(IDF_PARAMETER *param, int fn);
 
-/* Delete the specified parameter from our IDF */
+/* Delete the specified parameter from the IDF */
 extern int		idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param);
+
+/* Move the specified parameter to the given position in the IDF */
+extern int		idf_movparam(IDF_LOADED *idf, IDF_PARAMETER *param,
+						IDF_PARAMETER *prev);
 
 /* Get a named parameter list */
 extern IDF_PARAMETER	*idf_getparam(IDF_LOADED *idf, const char *pname);
@@ -66,14 +70,19 @@ extern IDF_PARAMETER	*idf_readparam(IDF_LOADED *idf, FILE *fp);
 /* Initialize an IDF struct */
 extern IDF_LOADED	*idf_create(const char *hdrcomm);
 
+/* Add comment(s) to header */
+extern int		idf_add2hdr(IDF_LOADED *idf, const char *hdrcomm);
+
 /* Load an Input Data File */
 extern IDF_LOADED	*idf_load(const char *fname);
 
 /* Write a parameter and fields to an open file */
-int			idf_writeparam(IDF_PARAMETER *param, FILE *fp);
+int			idf_writeparam(IDF_PARAMETER *param, FILE *fp,
+					int incl_comm);
 
 /* Write out an Input Data File */
-extern int		idf_write(IDF_LOADED *idf, const char *fname);
+extern int		idf_write(IDF_LOADED *idf, const char *fname,
+					int incl_comm);
 
 /* Free a loaded IDF */
 extern void		idf_free(IDF_LOADED *idf);
