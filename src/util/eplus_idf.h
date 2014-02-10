@@ -1,4 +1,4 @@
-/* RCSid $Id: eplus_idf.h,v 2.5 2014/02/09 22:19:30 greg Exp $ */
+/* RCSid $Id: eplus_idf.h,v 2.6 2014/02/10 04:51:26 greg Exp $ */
 /*
  *  eplus_idf.h
  *
@@ -23,7 +23,7 @@ extern "C" {
 typedef struct s_idf_field {
 	struct s_idf_field	*next;		/* next in parameter list */
 	char			*rem;		/* string following argument */
-	char			arg[2];		/* argument (extends struct) */
+	char			val[2];		/* value (extends struct) */
 } IDF_FIELD;
 
 /* Input Data File parameter */

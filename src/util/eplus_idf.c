@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.5 2014/02/09 22:19:30 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.6 2014/02/10 04:51:26 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -77,7 +77,7 @@ idf_addfield(IDF_PARAMETER *param, const char *fval, const char *comm)
 	if (fnew == NULL)
 		return(0);
 	fnew->next = NULL;
-	cp = fnew->arg;			/* copy argument and comments */
+	cp = fnew->val;			/* copy value and comments */
 	while ((*cp++ = *fval++))
 		;
 	fnew->rem = cp;
@@ -367,8 +367,8 @@ idf_writeparam(IDF_PARAMETER *param, FILE *fp, int incl_comm)
 		fputs(param->rem, fp);
 	for (fptr = param->flist; fptr != NULL; fptr = fptr->next) {
 		if (!incl_comm)
-			fputs("\n\t", fp);
-		fputs(fptr->arg, fp);
+			fputs("\n    ", fp);
+		fputs(fptr->val, fp);
 		fputc((fptr->next==NULL ? ';' : ','), fp);
 		if (incl_comm)
 			fputs(fptr->rem, fp);
