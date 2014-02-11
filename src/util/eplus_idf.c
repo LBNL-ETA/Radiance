@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.6 2014/02/10 04:51:26 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.7 2014/02/11 23:30:11 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -163,20 +163,18 @@ idf_movparam(IDF_LOADED *idf, IDF_PARAMETER *param, IDF_PARAMETER *prev)
 
 	if ((idf == NULL) | (param == NULL))
 		return(0);
+					/* quick check if already there */
+	if (param == (prev==NULL ? idf->pfirst : prev->dnext))
+		return(1);
 					/* find in IDF list, first*/
 	for (plast = NULL, pptr = idf->pfirst;
 				pptr != param; plast = pptr, pptr = pptr->dnext)
 		if (pptr == NULL)
 			return(0);
-	if (plast == NULL) {
-		if (prev == NULL)
-			return(1);	/* already in place */
+	if (plast == NULL)
 		idf->pfirst = param->dnext;
-	} else {
-		if (prev == plast)
-			return(1);	/* already in place */
+	else
 		plast->dnext = param->dnext;
-	}
 	if (idf->plast == param)
 		idf->plast = plast;
 	if (prev == NULL) {		/* means they want it at beginning */
