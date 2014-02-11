@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.6 2014/02/11 22:01:44 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.7 2014/02/11 23:44:11 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -16,10 +16,12 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.6 2014/02/11 22:01:44 greg 
 #include "rtprocess.h"
 
 #ifndef NSAMPLES
-#define NSAMPLES	80000			/* number of samples to use */
+#define NSAMPLES	80000			/* default number of samples */
 #endif
 
 char		*progname;			/* global argv[0] */
+
+int		nsamps = NSAMPLES;		/* number of samples to use */
 
 char		temp_octree[128];		/* temporary octree */
 
@@ -43,7 +45,7 @@ const SURF_PTYPE	surf_type[] = {
 		{"RoofCeiling:Detailed", 3, 9},
 		{"Wall:Detailed", 3, 9},
 		{NULL}
-	};
+	};				/* IDF surface types */
 
 typedef struct s_zone {
 	const char	*zname;			/* zone name */
@@ -56,6 +58,14 @@ typedef struct s_zone {
 ZONE		*zone_list = NULL;	/* our list of zones */
 
 IDF_LOADED	*our_idf = NULL;	/* loaded/modified IDF */
+
+typedef struct {
+	FVECT		sdir[3];	/* UVW unit sampling vectors */
+	double		poff;		/* W-offset for plane of polygon */
+	double		area_left;	/* area left to sample */
+	int		samp_left;	/* remaining samples */
+	int		wd;		/* output file descriptor */
+} POLYSAMP;		/* structure for polygon sampling */
 
 /* Create a new zone and push to top of our list */
 static ZONE *
@@ -168,7 +178,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 		return(0);
 	for (i = 0; i < BASE_AC; i++)
 		av[i] = base_av[i];
-	sprintf(cbuf, "%d", NSAMPLES);
+	sprintf(cbuf, "%d", nsamps);
 	av[i++] = "-c";
 	av[i++] = cbuf;				/* add modifier arguments */
 	for (n = zp->nsurf, pptr = zp->pfirst; n--; pptr = pptr->dnext) {
@@ -199,14 +209,6 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 	return(1);
 #undef BASE_AC
 }
-
-typedef struct {
-	FVECT		sdir[3];	/* XYZ unit sampling vectors */
-	double		poff;		/* Z-offset for plane of polygon */
-	double		area_left;	/* area left to sample */
-	int		samp_left;	/* remaining samples */
-	int		wd;		/* output file descriptor */
-} POLYSAMP;		/* structure for polygon sampling */
 
 /* Initialize polygon sampling */
 static Vert2_list *
@@ -349,7 +351,7 @@ sample_surface(IDF_PARAMETER *param, int wd)
 				idf_getfield(param,NAME_FLD)->val);
 		return(0);
 	}
-	psamp.samp_left = NSAMPLES;	/* assign samples & destination */
+	psamp.samp_left = nsamps;	/* assign samples & destination */
 	psamp.wd = wd;
 					/* sample each subtriangle */
 	if (!polyTriangulate(vlist2, &sample_triangle))
@@ -467,19 +469,28 @@ main(int argc, char *argv[])
 	IDF_PARAMETER	*pptr;
 	int		i;
 
-	progname = argv[0];
-	if (argc > 2 && !strcmp(argv[1], "-c")) {
-		incl_comments = -1;		/* output header only */
-		++argv; --argc;
-	}
-	if ((argc < 2) | (argc > 3)) {
-		fputs("Usage: ", stderr);
-		fputs(progname, stderr);
-		fputs(" [-c] Model.idf [Revised.idf]\n", stderr);
-		return(1);
-	}
-	origIDF = argv[1];
-	revIDF = (argc == 2) ? argv[1] : argv[2];
+	progname = *argv++; argc--;		/* get options if any */
+	while (argc > 1 && argv[0][0] == '-')
+		switch (argv[0][1]) {
+		case 'c':			/* elide comments */
+			incl_comments = -1;		/* header only */
+			argv++; argc--;
+			continue;
+		case 's':			/* samples */
+			nsamps = 1000*atoi(*++argv);
+			argv++; argc -= 2;
+			continue;
+		default:
+			fputs(progname, stderr);
+			fputs(": unknown option '", stderr);
+			fputs(argv[0], stderr);
+			fputs("'\n", stderr);
+			goto userr;
+		}
+	if ((argc < 1) | (argc > 2))
+		goto userr;
+	origIDF = argv[0];
+	revIDF = (argc == 1) ? argv[0] : argv[1];
 						/* load Input Data File */
 	our_idf = idf_load(origIDF);
 	if (our_idf == NULL) {
@@ -530,4 +541,9 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	return(0);				/* finito! */
+userr:
+	fputs("Usage: ", stderr);
+	fputs(progname, stderr);
+	fputs(" [-c][-s Ksamps] Model.idf [Revised.idf]\n", stderr);
+	return(1);
 }
