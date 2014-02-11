@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.4 2014/02/10 17:50:02 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.5 2014/02/11 21:17:29 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -16,18 +16,18 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.4 2014/02/10 17:50:02 greg 
 #include "rtprocess.h"
 
 #ifndef NSAMPLES
-#define NSAMPLES	100000			/* number of samples to use */
+#define NSAMPLES	10000			/* number of samples to use */
 #endif
 
 char		*progname;			/* global argv[0] */
 
-char		temp_octree[128];			/* temporary octree */
+char		temp_octree[128];		/* temporary octree */
 
 const char	UVF_PNAME[] =
 			"ZoneProperty:UserViewFactor:bySurfaceName";
 
 const char	ADD_HEADER[] =
-			"!+++ User View Factors computed by Radiance +++!\n";
+			"\n!+++ User View Factors computed by Radiance +++!\n\n";
 
 #define NAME_FLD	1			/* name field always first? */
 
@@ -39,6 +39,9 @@ typedef struct {
 
 const SURF_PTYPE	surf_type[] = {
 		{"BuildingSurface:Detailed", 4, 10},
+		{"Floor:Detailed", 3, 9},
+		{"RoofCeiling:Detailed", 3, 9},
+		{"Wall:Detailed", 3, 9},
 		{NULL}
 	};
 
@@ -143,9 +146,9 @@ rad_surface(IDF_PARAMETER *param, FILE *ofp)
 static int
 start_rcontrib(SUBPROC *pd, ZONE *zp)
 {
-#define	BASE_AC		3
+#define	BASE_AC		5
 	static char	*base_av[BASE_AC] = {
-				"rcontrib", "-ff", "-h"
+				"rcontrib", "-ff", "-h", "-x", "1"
 			};
 	char		cbuf[300];
 	char		**av;
@@ -221,14 +224,15 @@ init_poly(POLYSAMP *ps, IDF_FIELD *f0, int nv)
 	vl3 = (FVECT *)malloc(sizeof(FVECT)*nv);
 	if (vl3 == NULL)
 		return(NULL);
-	for (i = 0; i < nv; i++)
+	for (i = nv; i--; )		/* reverse vertex ordering */
 		for (j = 0; j < 3; j++) {
 			if (fptr == NULL) {
 				fputs(progname, stderr);
-				fputs(": bad vertex in init_poly()\n", stderr);
+				fputs(": missing vertex in init_poly()\n", stderr);
 				return(NULL);
 			}
 			vl3[i][j] = atof(fptr->val);
+			fptr = fptr->next;
 		}
 					/* compute area and normal */
 	ps->sdir[2][0] = ps->sdir[2][1] = ps->sdir[2][2] = 0;
@@ -252,7 +256,7 @@ init_poly(POLYSAMP *ps, IDF_FIELD *f0, int nv)
 	normalize(ps->sdir[0]);
 	fcross(ps->sdir[1], ps->sdir[2], ps->sdir[0]);
 					/* compute plane offset */
-	ps->poff = DOT(vl3[0], ps->sdir[2]) + FTINY;
+	ps->poff = DOT(vl3[0], ps->sdir[2]);
 					/* assign 2-D vertices */
 	for (i = 0; i < nv; i++) {
 		vl2->v[i].mX = DOT(vl3[i], ps->sdir[0]);
@@ -276,7 +280,7 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 	for (i = 3; i--; ) {
 		orig[i] = vl2->v[a].mX*ps->sdir[0][i] +
 				vl2->v[a].mY*ps->sdir[1][i] +
-				ps->poff*ps->sdir[2][i];
+				(ps->poff+.001)*ps->sdir[2][i];
 		ab[i] = (vl2->v[b].mX - vl2->v[a].mX)*ps->sdir[0][i] +
 				(vl2->v[b].mY - vl2->v[a].mY)*ps->sdir[1][i];
 		ac[i] = (vl2->v[c].mX - vl2->v[a].mX)*ps->sdir[0][i] +
@@ -307,16 +311,21 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 		return(0);
 	for (i = ns; i--; ) {		/* stratified Monte Carlo sampling */
 		double	sv[4];
+		FVECT	dv;
 		multisamp(sv, 4, (i+frandom())/(double)ns);
 		sv[0] *= sv[1] = sqrt(sv[1]);
 		sv[1] = 1. - sv[1];
 		for (j = 3; j--; )
-			samp[ns*6 + j] = orig[j] + sv[0]*ab[j] + sv[1]*ac[j];
-		sv[3] = sqrt(sv[3]);
-		sv[4] *= 2.*PI;
-		samp[ns*6 + 3] = tcos(sv[4]) * sv[3];
-		samp[ns*6 + 4] = tsin(sv[4]) * sv[3];
-		samp[ns*6 + 5] = sqrt(1. - sv[3]*sv[3]);
+			samp[i*6 + j] = orig[j] + sv[0]*ab[j] + sv[1]*ac[j];
+		sv[2] = sqrt(sv[2]);
+		sv[3] *= 2.*PI;
+		dv[0] = tcos(sv[3]) * sv[2];
+		dv[1] = tsin(sv[3]) * sv[2];
+		dv[2] = sqrt(1. - sv[2]*sv[2]);
+		for (j = 3; j--; )
+			samp[i*6 + 3 + j] = dv[0]*ps->sdir[0][j] +
+						dv[1]*ps->sdir[1][j] +
+						dv[2]*ps->sdir[2][j] ;
 	}
 					/* send to our process */
 	writebuf(ps->wd, (char *)samp, sizeof(float)*6*ns);
@@ -333,15 +342,13 @@ sample_surface(IDF_PARAMETER *param, int wd)
 	int		nv;
 	Vert2_list	*vlist2;
 					/* set up our polygon sampler */
-	if (fptr == NULL || (nv = atoi(fptr->val)) < 3) {
-		fprintf(stderr, "%s: error in %s '%s'\n",
+	if (fptr == NULL || (nv = atoi(fptr->val)) < 3 ||
+			(vlist2 = init_poly(&psamp, fptr->next, nv)) == NULL) {
+		fprintf(stderr, "%s: bad polygon %s '%s'\n",
 				progname, param->pname,
 				idf_getfield(param,NAME_FLD)->val);
 		return(0);
 	}
-	vlist2 = init_poly(&psamp, fptr->next, nv);
-	if (vlist2 == NULL)
-		return(0);
 	psamp.samp_left = NSAMPLES;	/* assign samples & destination */
 	psamp.wd = wd;
 					/* sample each subtriangle */
@@ -397,8 +404,8 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 			if (pptr1 == pptr) {
 				if (uvfa[3*m + 1] > .001)
 					fprintf(stderr,
-		"%s: warning - non-zero self-VF (%.3e) for surface '%s'\n",
-						progname, uvfa[3*m + 1],
+		"%s: warning - non-zero self-VF (%.1f%%) for surface '%s'\n",
+						progname, 100.*uvfa[3*m + 1],
 						idf_getfield(pptr,NAME_FLD)->val);
 				continue;	/* don't record self-factor */
 			}
@@ -431,11 +438,7 @@ compute_zones(void)
 {
 	ZONE	*zptr;
 						/* temporary octree name */
-	if (temp_filename(temp_octree, sizeof(temp_octree), TEMPLATE) == NULL) {
-		fputs(progname, stderr);
-		fputs(": cannot create temporary octree\n", stderr);
-		return(0);
-	}
+	mktemp(strcpy(temp_octree, TEMPLATE));
 						/* compute each zone */
 	for (zptr = zone_list; zptr != NULL; zptr = zptr->next) {
 		SUBPROC	rcproc;
