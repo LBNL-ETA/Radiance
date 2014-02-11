@@ -1924,3 +1924,5 @@ volumetric objects.
 
 Changed dctimestep so that output matrices (-n > 1) are preceded by a
 header, and added support for float and double output formats with -o[fd].
+
+Introduced eplus_adduvf program to compute user view factors for EnergyPlus.

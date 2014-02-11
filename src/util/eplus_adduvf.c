@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.5 2014/02/11 21:17:29 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.6 2014/02/11 22:01:44 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.5 2014/02/11 21:17:29 greg 
 #include "rtprocess.h"
 
 #ifndef NSAMPLES
-#define NSAMPLES	10000			/* number of samples to use */
+#define NSAMPLES	80000			/* number of samples to use */
 #endif
 
 char		*progname;			/* global argv[0] */
@@ -409,7 +409,7 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 						idf_getfield(pptr,NAME_FLD)->val);
 				continue;	/* don't record self-factor */
 			}
-			sprintf(uvfbuf, "%.6f", uvfa[3*m + 1]);
+			sprintf(uvfbuf, "%.4f", uvfa[3*m + 1]);
 			if (!idf_addfield(pout,
 					idf_getfield(pptr,NAME_FLD)->val, NULL) ||
 				!idf_addfield(pout,
