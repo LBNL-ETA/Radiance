@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.7 2014/02/11 23:30:11 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.8 2014/02/12 17:40:07 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -20,13 +20,13 @@ static const char RCSid[] = "$Id: eplus_idf.c,v 2.7 2014/02/11 23:30:11 greg Exp
 #define getc    getc_unlocked
 #endif
 
-/* Create a new parameter with empty field list (comment optional) */
-IDF_PARAMETER *
-idf_newparam(IDF_LOADED *idf, const char *pname, const char *comm,
-			IDF_PARAMETER *prev)
+/* Create a new object with empty field list (comment optional) */
+IDF_OBJECT *
+idf_newobject(IDF_LOADED *idf, const char *pname, const char *comm,
+			IDF_OBJECT *prev)
 {
 	LUENT		*pent;
-	IDF_PARAMETER	*pnew;
+	IDF_OBJECT	*pnew;
 
 	if ((idf == NULL) | (pname == NULL))
 		return(NULL);
@@ -34,20 +34,20 @@ idf_newparam(IDF_LOADED *idf, const char *pname, const char *comm,
 	pent = lu_find(&idf->ptab, pname);
 	if (pent == NULL)
 		return(NULL);
-	if (pent->key == NULL) {	/* new parameter name/type? */
+	if (pent->key == NULL) {	/* new object name/type? */
 		pent->key = (char *)malloc(strlen(pname)+1);
 		if (pent->key == NULL)
 			return(NULL);
 		strcpy(pent->key, pname);
 	}
-	pnew = (IDF_PARAMETER *)malloc(sizeof(IDF_PARAMETER)+strlen(comm));
+	pnew = (IDF_OBJECT *)malloc(sizeof(IDF_OBJECT)+strlen(comm));
 	if (pnew == NULL)
 		return(NULL);
 	strcpy(pnew->rem, comm);
 	pnew->nfield = 0;
 	pnew->flist = NULL;
 	pnew->pname = pent->key;	/* add to table */
-	pnew->pnext = (IDF_PARAMETER *)pent->data;
+	pnew->pnext = (IDF_OBJECT *)pent->data;
 	pent->data = (char *)pnew;
 	pnew->dnext = NULL;		/* add to file list */
 	if (prev != NULL || (prev = idf->plast) != NULL) {
@@ -62,9 +62,9 @@ idf_newparam(IDF_LOADED *idf, const char *pname, const char *comm,
 	return(pnew);
 }
 
-/* Add a field to the given parameter and follow with the given text */
+/* Add a field to the given object and follow with the given text */
 int
-idf_addfield(IDF_PARAMETER *param, const char *fval, const char *comm)
+idf_addfield(IDF_OBJECT *param, const char *fval, const char *comm)
 {
 	int		fnum = 1;	/* returned argument number */
 	IDF_FIELD	*fnew, *flast;
@@ -83,7 +83,7 @@ idf_addfield(IDF_PARAMETER *param, const char *fval, const char *comm)
 	fnew->rem = cp;
 	while ((*cp++ = *comm++))
 		;
-					/* add to parameter's field list */
+					/* add to object's field list */
 	if ((flast = param->flist) != NULL) {
 		++fnum;
 		while (flast->next != NULL) {
@@ -99,9 +99,9 @@ idf_addfield(IDF_PARAMETER *param, const char *fval, const char *comm)
 	return(fnum);
 }
 
-/* Retrieve the indexed field from parameter (first field index is 1) */
+/* Retrieve the indexed field from object (first field index is 1) */
 IDF_FIELD *
-idf_getfield(IDF_PARAMETER *param, int fn)
+idf_getfield(IDF_OBJECT *param, int fn)
 {
 	IDF_FIELD	*fld;
 
@@ -113,18 +113,18 @@ idf_getfield(IDF_PARAMETER *param, int fn)
 	return(fld);
 }
 
-/* Delete the specified parameter from loaded IDF */
+/* Delete the specified object from loaded IDF */
 int
-idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param)
+idf_delobject(IDF_LOADED *idf, IDF_OBJECT *param)
 {
 	LUENT		*pent;
-	IDF_PARAMETER	*pptr, *plast;
+	IDF_OBJECT	*pptr, *plast;
 
 	if ((idf == NULL) | (param == NULL))
 		return(0);
-					/* remove from parameter table */
+					/* remove from object table */
 	pent = lu_find(&idf->ptab, param->pname);
-	for (plast = NULL, pptr = (IDF_PARAMETER *)pent->data;
+	for (plast = NULL, pptr = (IDF_OBJECT *)pent->data;
 				pptr != NULL; plast = pptr, pptr = pptr->pnext)
 		if (pptr == param)
 			break;
@@ -151,15 +151,15 @@ idf_delparam(IDF_LOADED *idf, IDF_PARAMETER *param)
 		param->flist = fdel->next;
 		free(fdel);
 	}
-	free(param);			/* free parameter struct */
+	free(param);			/* free object struct */
 	return(1);
 }
 
-/* Move the specified parameter to the given position in the IDF */
+/* Move the specified object to the given position in the IDF */
 int
-idf_movparam(IDF_LOADED *idf, IDF_PARAMETER *param, IDF_PARAMETER *prev)
+idf_movobject(IDF_LOADED *idf, IDF_OBJECT *param, IDF_OBJECT *prev)
 {
-	IDF_PARAMETER	*pptr, *plast;
+	IDF_OBJECT	*pptr, *plast;
 
 	if ((idf == NULL) | (param == NULL))
 		return(0);
@@ -187,14 +187,14 @@ idf_movparam(IDF_LOADED *idf, IDF_PARAMETER *param, IDF_PARAMETER *prev)
 	return(1);
 }
 
-/* Get a named parameter list */
-IDF_PARAMETER *
-idf_getparam(IDF_LOADED *idf, const char *pname)
+/* Get a named object list */
+IDF_OBJECT *
+idf_getobject(IDF_LOADED *idf, const char *pname)
 {
 	if ((idf == NULL) | (pname == NULL))
 		return(NULL);
 
-	return((IDF_PARAMETER *)lu_find(&idf->ptab,pname)->data);
+	return((IDF_OBJECT *)lu_find(&idf->ptab,pname)->data);
 }
 
 /* Read an argument including terminating ',' or ';' -- return which */
@@ -244,25 +244,25 @@ idf_read_comment(char *buf, int len, FILE *fp)
 		ungetc(c, fp);
 }
 
-/* Read a parameter and fields from an open file and add to end of list */
-IDF_PARAMETER *
-idf_readparam(IDF_LOADED *idf, FILE *fp)
+/* Read a object and fields from an open file and add to end of list */
+IDF_OBJECT *
+idf_readobject(IDF_LOADED *idf, FILE *fp)
 {
 	char		abuf[IDF_MAXARGL], cbuf[IDF_MAXLINE];
 	int		delim;
-	IDF_PARAMETER	*pnew;
+	IDF_OBJECT	*pnew;
 	
 	if ((delim = idf_read_argument(abuf, fp, 1)) == EOF)
 		return(NULL);
 	idf_read_comment(cbuf, IDF_MAXLINE, fp);
-	pnew = idf_newparam(idf, abuf, cbuf, NULL);
+	pnew = idf_newobject(idf, abuf, cbuf, NULL);
 	while (delim == ',')
 		if ((delim = idf_read_argument(abuf, fp, 1)) != EOF) {
 			idf_read_comment(cbuf, IDF_MAXLINE, fp);
 			idf_addfield(pnew, abuf, cbuf);
 		}
 	if (delim != ';')
-		fputs("Expected ';' at end of parameter list!\n", stderr);
+		fputs("Expected ';' at end of object list!\n", stderr);
 	return(pnew);
 }
 
@@ -343,17 +343,17 @@ idf_load(const char *fname)
 	idf = idf_create(hdrcomm);	/* create IDF struct */
 	if (idf == NULL)
 		return(NULL);
-					/* read each parameter */
-	while (idf_readparam(idf, fp) != NULL)
+					/* read each object */
+	while (idf_readobject(idf, fp) != NULL)
 		;
 	if (fp != stdin)		/* close file if not stdin */
 		fclose(fp);
 	return(idf);			/* success! */
 }
 
-/* Write a parameter and fields to an open file */
+/* Write a object and fields to an open file */
 int
-idf_writeparam(IDF_PARAMETER *param, FILE *fp, int incl_comm)
+idf_writeparam(IDF_OBJECT *param, FILE *fp, int incl_comm)
 {
 	IDF_FIELD	*fptr;
 
@@ -381,7 +381,7 @@ int
 idf_write(IDF_LOADED *idf, const char *fname, int incl_comm)
 {
 	FILE		*fp;
-	IDF_PARAMETER	*pptr;
+	IDF_OBJECT	*pptr;
 
 	if (idf == NULL)
 		return(0);
@@ -410,6 +410,6 @@ idf_free(IDF_LOADED *idf)
 	if (idf->hrem != NULL)
 		free(idf->hrem);
 	while (idf->pfirst != NULL)
-		idf_delparam(idf, idf->pfirst);
+		idf_delobject(idf, idf->pfirst);
 	lu_done(&idf->ptab);
 }

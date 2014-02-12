@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.8 2014/02/12 00:12:38 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.9 2014/02/12 17:40:07 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -34,7 +34,7 @@ const char	ADD_HEADER[] =
 #define NAME_FLD	1			/* name field always first? */
 
 typedef struct {
-	const char	*pname;			/* parameter type name */
+	const char	*pname;			/* object type name */
 	short		zone_fld;		/* zone field index */
 	short		vert_fld;		/* vertex field index */
 } SURF_PTYPE;		/* surface type we're interested in */
@@ -51,8 +51,8 @@ typedef struct s_zone {
 	const char	*zname;			/* zone name */
 	struct s_zone	*next;			/* next zone in list */
 	int		nsurf;			/* surface count */
-	IDF_PARAMETER	*pfirst;		/* first matching parameter */
-	IDF_PARAMETER	*plast;			/* last matching parameter */
+	IDF_OBJECT	*pfirst;		/* first matching object */
+	IDF_OBJECT	*plast;			/* last matching object */
 } ZONE;			/* a list of collected zone surfaces */
 
 ZONE		*zone_list = NULL;	/* our list of zones */
@@ -69,7 +69,7 @@ typedef struct {
 
 /* Create a new zone and push to top of our list */
 static ZONE *
-new_zone(const char *zname, IDF_PARAMETER *param)
+new_zone(const char *zname, IDF_OBJECT *param)
 {
 	ZONE	*znew = (ZONE *)malloc(sizeof(ZONE));
 
@@ -84,7 +84,7 @@ new_zone(const char *zname, IDF_PARAMETER *param)
 
 /* Add the detailed surface (polygon) to the named zone */
 static ZONE *
-add2zone(IDF_PARAMETER *param, const char *zname)
+add2zone(IDF_OBJECT *param, const char *zname)
 {
 	ZONE	*zptr;
 
@@ -94,16 +94,16 @@ add2zone(IDF_PARAMETER *param, const char *zname)
 	if (zptr == NULL)
 		return(new_zone(zname, param));
 						/* keep surfaces together */
-	if (!idf_movparam(our_idf, param, zptr->plast))
+	if (!idf_movobject(our_idf, param, zptr->plast))
 		return(NULL);
 	zptr->plast = param;
 	zptr->nsurf++;
 	return(zptr);
 }
 
-/* Return field for vertices in the given parameter */
+/* Return field for vertices in the given object */
 static IDF_FIELD *
-get_vlist(IDF_PARAMETER *param, const char *zname)
+get_vlist(IDF_OBJECT *param, const char *zname)
 {
 	int		i = 0;
 	IDF_FIELD	*fptr;
@@ -123,7 +123,7 @@ get_vlist(IDF_PARAMETER *param, const char *zname)
 
 /* Convert surface to Radiance with modifier based on unique name */
 static int
-rad_surface(IDF_PARAMETER *param, FILE *ofp)
+rad_surface(IDF_OBJECT *param, FILE *ofp)
 {
 	const char	*sname = idf_getfield(param,NAME_FLD)->val;
 	IDF_FIELD	*fptr = get_vlist(param, NULL);
@@ -163,7 +163,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 	char		cbuf[300];
 	char		**av;
 	FILE		*ofp;
-	IDF_PARAMETER	*pptr;
+	IDF_OBJECT	*pptr;
 	int		i, n;
 						/* start oconv command */
 	sprintf(cbuf, "oconv - > '%s'", temp_octree);
@@ -185,7 +185,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 		IDF_FIELD	*fptr = idf_getfield(pptr,NAME_FLD);
 		if (fptr == NULL || !fptr->val[0]) {
 			fputs(progname, stderr);
-			fputs(": missing name for surface parameter\n", stderr);
+			fputs(": missing name for surface object\n", stderr);
 			return(0);
 		}
 		if (!rad_surface(pptr, ofp))	/* add surface to octree */
@@ -337,7 +337,7 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 
 /* Sample the given surface */
 static int
-sample_surface(IDF_PARAMETER *param, int wd)
+sample_surface(IDF_OBJECT *param, int wd)
 {
 	IDF_FIELD	*fptr = get_vlist(param, NULL);
 	POLYSAMP	psamp;
@@ -364,16 +364,16 @@ sample_surface(IDF_PARAMETER *param, int wd)
 static int
 compute_uvfs(SUBPROC *pd, ZONE *zp)
 {
-	IDF_PARAMETER	*pptr, *pout, *pptr1;
+	IDF_OBJECT	*pptr, *pout, *pptr1;
 	float		*uvfa;
 	char		uvfbuf[24];
 	int		n, m;
-						/* create output parameter */
-	pout = idf_newparam(our_idf, UVF_PNAME,
+						/* create output object */
+	pout = idf_newobject(our_idf, UVF_PNAME,
 			"    ! computed by Radiance\n        ", zp->plast);
 	if (pout == NULL) {
 		fputs(progname, stderr);
-		fputs(": cannot create new IDF parameter\n", stderr);
+		fputs(": cannot create new IDF object\n", stderr);
 		return(0);
 	}
 	if (!idf_addfield(pout, zp->zname,
@@ -466,7 +466,7 @@ main(int argc, char *argv[])
 {
 	int		incl_comments = 1;
 	char		*origIDF, *revIDF;
-	IDF_PARAMETER	*pptr;
+	IDF_OBJECT	*pptr;
 	int		i;
 
 	progname = *argv++; argc--;		/* get options if any */
@@ -501,13 +501,13 @@ main(int argc, char *argv[])
 		return(1);
 	}
 						/* remove existing UVFs */
-	if ((pptr = idf_getparam(our_idf, UVF_PNAME)) != NULL) {
-		IDF_PARAMETER	*pnext;
+	if ((pptr = idf_getobject(our_idf, UVF_PNAME)) != NULL) {
+		IDF_OBJECT	*pnext;
 		fputs(progname, stderr);
 		fputs(": removing previous User View Factors\n", stderr);
 		do {
 			pnext = pptr->pnext;
-			idf_delparam(our_idf, pptr);
+			idf_delobject(our_idf, pptr);
 		} while (pnext != NULL);
 	}
 						/* add to header */
@@ -517,7 +517,7 @@ main(int argc, char *argv[])
 		idf_add2hdr(our_idf, ADD_HEADER);
 						/* gather zone surfaces */
 	for (i = 0; surf_type[i].pname != NULL; i++)
-		for (pptr = idf_getparam(our_idf, surf_type[i].pname);
+		for (pptr = idf_getobject(our_idf, surf_type[i].pname);
 				pptr != NULL; pptr = pptr->pnext) {
 			IDF_FIELD	*fptr = idf_getfield(pptr,
 							surf_type[i].zone_fld);
