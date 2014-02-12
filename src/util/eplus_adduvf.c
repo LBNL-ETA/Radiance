@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.7 2014/02/11 23:44:11 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.8 2014/02/12 00:12:38 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -158,7 +158,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 {
 #define	BASE_AC		5
 	static char	*base_av[BASE_AC] = {
-				"rcontrib", "-ff", "-h", "-x", "1"
+				"rcontrib", "-fff", "-h", "-x", "1"
 			};
 	char		cbuf[300];
 	char		**av;
@@ -200,7 +200,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 	}
 	av[i++] = temp_octree;			/* add final octree argument */
 	av[i] = NULL;
-	if (!open_process(pd, av)) {		/* start process */
+	if (open_process(pd, av) <= 0) {	/* start process */
 		fputs(progname, stderr);
 		fputs(": cannot start rcontrib process\n", stderr);
 		return(0);
