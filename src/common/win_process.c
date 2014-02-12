@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.8 2013/11/08 18:08:07 greg Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.9 2014/02/12 00:15:40 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -167,8 +167,8 @@ start_process(SUBPROC *proc, char *cmdstr)
 	CloseHandle(hFromChildWrite); hFromChildWrite = NULL;
 	CloseHandle(hToChildRead); hToChildRead = NULL;
 	/* get the file descriptors */
-	proc->r = _open_osfhandle((long)hRead, _O_RDONLY);
-	proc->w = _open_osfhandle((long)hWrite, _O_APPEND);
+	proc->r = _open_osfhandle((long)hRead, _O_RDONLY|_O_BINARY);
+	proc->w = _open_osfhandle((long)hWrite, _O_APPEND|_O_BINARY);
 	proc->pid = PInfo.dwProcessId;
 	proc->running = 1;
 	CloseHandle(hCurProc);
