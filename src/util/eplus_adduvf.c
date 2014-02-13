@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.9 2014/02/12 17:40:07 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.10 2014/02/13 17:33:37 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -26,7 +26,7 @@ int		nsamps = NSAMPLES;		/* number of samples to use */
 char		temp_octree[128];		/* temporary octree */
 
 const char	UVF_PNAME[] =
-			"ZoneProperty:UserViewFactor:bySurfaceName";
+			"ZoneProperty:UserViewFactors:bySurfaceName";
 
 const char	ADD_HEADER[] =
 			"\n!+++ User View Factors computed by Radiance +++!\n\n";

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.8 2014/02/12 17:40:07 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.9 2014/02/13 17:33:37 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -248,17 +248,17 @@ idf_read_comment(char *buf, int len, FILE *fp)
 IDF_OBJECT *
 idf_readobject(IDF_LOADED *idf, FILE *fp)
 {
-	char		abuf[IDF_MAXARGL], cbuf[IDF_MAXLINE];
+	char		abuf[IDF_MAXARGL], cbuf[100*IDF_MAXLINE];
 	int		delim;
 	IDF_OBJECT	*pnew;
 	
 	if ((delim = idf_read_argument(abuf, fp, 1)) == EOF)
 		return(NULL);
-	idf_read_comment(cbuf, IDF_MAXLINE, fp);
+	idf_read_comment(cbuf, sizeof(cbuf), fp);
 	pnew = idf_newobject(idf, abuf, cbuf, NULL);
 	while (delim == ',')
 		if ((delim = idf_read_argument(abuf, fp, 1)) != EOF) {
-			idf_read_comment(cbuf, IDF_MAXLINE, fp);
+			idf_read_comment(cbuf, sizeof(cbuf), fp);
 			idf_addfield(pnew, abuf, cbuf);
 		}
 	if (delim != ';')
