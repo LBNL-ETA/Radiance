@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.68 2014/02/10 04:51:26 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.69 2014/02/14 17:35:09 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -116,7 +116,8 @@ rcollate:	rcollate.o
 	$(CC) $(CFLAGS) -o rcollate rcollate.o -lrtrad
 
 eplus_adduvf:	eplus_adduvf.o eplus_idf.o
-	$(CC) $(CFLAGS) -o eplus_adduvf eplus_adduvf.o eplus_idf.o -lrtrad
+	$(CC) $(CFLAGS) -o eplus_adduvf eplus_adduvf.o eplus_idf.o \
+-lrtrad $(MLIB)
 
 setscan.o:	setscan.h
 
