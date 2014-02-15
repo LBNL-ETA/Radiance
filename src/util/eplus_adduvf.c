@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.10 2014/02/13 17:33:37 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.11 2014/02/15 01:31:36 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -19,6 +19,8 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.10 2014/02/13 17:33:37 greg
 #define NSAMPLES	80000			/* default number of samples */
 #endif
 
+#define	SURF_EPS	0.0005			/* surface testing epsilon */
+
 char		*progname;			/* global argv[0] */
 
 int		nsamps = NSAMPLES;		/* number of samples to use */
@@ -28,10 +30,16 @@ char		temp_octree[128];		/* temporary octree */
 const char	UVF_PNAME[] =
 			"ZoneProperty:UserViewFactors:bySurfaceName";
 
+const char	SUBSURF_PNAME[] =
+			"FenestrationSurface:Detailed";
+
 const char	ADD_HEADER[] =
 			"\n!+++ User View Factors computed by Radiance +++!\n\n";
 
 #define NAME_FLD	1			/* name field always first? */
+
+#define SS_BASE_FLD	4			/* subsurface base surface */
+#define SS_VERT_FLD	10			/* subsurface vertex count */
 
 typedef struct {
 	const char	*pname;			/* object type name */
@@ -51,13 +59,24 @@ typedef struct s_zone {
 	const char	*zname;			/* zone name */
 	struct s_zone	*next;			/* next zone in list */
 	int		nsurf;			/* surface count */
+	int		ntotal;			/* surfaces+subsurfaces */
 	IDF_OBJECT	*pfirst;		/* first matching object */
-	IDF_OBJECT	*plast;			/* last matching object */
+	IDF_OBJECT	*plast;			/* last before subsurfaces */
 } ZONE;			/* a list of collected zone surfaces */
 
 ZONE		*zone_list = NULL;	/* our list of zones */
 
+LUTAB		zonesurf_lut =		/* zone surface lookup table */
+			LU_SINIT(NULL,NULL);
+
 IDF_LOADED	*our_idf = NULL;	/* loaded/modified IDF */
+
+typedef struct {
+	FVECT		norm;		/* surface normal */
+	double		area;		/* surface area */
+	int		nv;		/* number of vertices */
+	FVECT		vl[3];		/* vertex list (extends struct) */
+} SURFACE;		/* a polygonal surface */
 
 typedef struct {
 	FVECT		sdir[3];	/* UVW unit sampling vectors */
@@ -78,7 +97,7 @@ new_zone(const char *zname, IDF_OBJECT *param)
 	znew->zname = zname;			/* assumes static */
 	znew->next = zone_list;
 	znew->pfirst = znew->plast = param;
-	znew->nsurf = 1;
+	znew->ntotal = znew->nsurf = 1;
 	return(zone_list = znew);
 }
 
@@ -86,18 +105,68 @@ new_zone(const char *zname, IDF_OBJECT *param)
 static ZONE *
 add2zone(IDF_OBJECT *param, const char *zname)
 {
-	ZONE	*zptr;
+	IDF_FIELD	*nfp = idf_getfield(param, NAME_FLD);
+	ZONE		*zptr;
+	LUENT		*lep;
 
+	if (nfp == NULL) {
+		fputs(progname, stderr);
+		fputs(": surface missing name field!\n", stderr);
+		return(NULL);
+	}
 	for (zptr = zone_list; zptr != NULL; zptr = zptr->next)
 		if (!strcmp(zptr->zname, zname))
 			break;
-	if (zptr == NULL)
-		return(new_zone(zname, param));
-						/* keep surfaces together */
+	if (zptr == NULL) {
+		zptr = new_zone(zname, param);
+	} else {				/* keep surfaces together */
+		if (!idf_movobject(our_idf, param, zptr->plast))
+			return(NULL);
+		zptr->plast = param;
+		zptr->nsurf++;
+		zptr->ntotal++;
+	}
+						/* add to lookup table */
+	lep = lu_find(&zonesurf_lut, nfp->val);
+	if (lep == NULL)
+		return(NULL);
+	if (lep->data != NULL) {
+		fputs(progname, stderr);
+		fputs(": duplicate surface name '", stderr);
+		fputs(nfp->val, stderr);
+		fputs("'\n", stderr);
+		return(NULL);
+	}
+	lep->key = nfp->val;
+	lep->data = (char *)zptr;
+	return(zptr);
+}
+
+/* Add a subsurface by finding its base surface and the corresponding zone */
+static ZONE *
+add_subsurf(IDF_OBJECT *param)
+{
+	IDF_FIELD	*bfp = idf_getfield(param, SS_BASE_FLD);
+	ZONE		*zptr;
+	LUENT		*lep;
+
+	if (bfp == NULL) {
+		fputs(progname, stderr);
+		fputs(": missing base field name in subsurface!\n", stderr);
+		return(NULL);
+	}
+	lep = lu_find(&zonesurf_lut, bfp->val);	/* find base zone */
+	if (lep == NULL || lep->data == NULL) {
+		fputs(progname, stderr);
+		fputs(": cannot find referenced base surface '", stderr);
+		fputs(bfp->val, stderr);
+		fputs("'\n", stderr);
+		return(NULL);
+	}
+	zptr = (ZONE *)lep->data;		/* add this subsurface */
 	if (!idf_movobject(our_idf, param, zptr->plast))
 		return(NULL);
-	zptr->plast = param;
-	zptr->nsurf++;
+	zptr->ntotal++;
 	return(zptr);
 }
 
@@ -106,19 +175,84 @@ static IDF_FIELD *
 get_vlist(IDF_OBJECT *param, const char *zname)
 {
 	int		i = 0;
-	IDF_FIELD	*fptr;
+						/* check if subsurface */
+	if (!strcmp(param->pname, SUBSURF_PNAME)) {
+		if (zname != NULL) {
+			LUENT	*lep = lu_find(&zonesurf_lut,
+					idf_getfield(param,SS_BASE_FLD)->val);
+			if (strcmp((*(ZONE *)lep->data).zname, zname))
+				return(NULL);
+		}
+		return(idf_getfield(param, SS_VERT_FLD));
+	}
 						/* check for surface type */
 	while (strcmp(surf_type[i].pname, param->pname))
 		if (surf_type[++i].pname == NULL)
 			return(NULL);
 
 	if (zname != NULL) {			/* matches specified zone? */
-		fptr = idf_getfield(param, surf_type[i].zone_fld);
+		IDF_FIELD	*fptr = idf_getfield(param, surf_type[i].zone_fld);
 		if (fptr == NULL || strcmp(fptr->val, zname))
 			return(NULL);
 	}
 						/* return field for #verts */
 	return(idf_getfield(param, surf_type[i].vert_fld));
+}
+
+/* Get/allocate surface polygon */
+static SURFACE *
+get_surface(IDF_FIELD *fptr)
+{
+	SURFACE	*surf;
+	int	nv;
+	FVECT	e1, e2, vc;
+	int	i, j;
+					/* get number of vertices */
+	if (fptr == NULL || (nv = atoi(fptr->val)) < 3) {
+		fputs(progname, stderr);
+		fputs(": bad vertex count for surface!\n", stderr);
+		return(NULL);
+	}
+	surf = (SURFACE *)malloc(sizeof(SURFACE)+sizeof(FVECT)*(nv-3));
+	if (surf == NULL)
+		return(NULL);
+	surf->nv = nv;
+	for (i = nv; i--; )		/* reverse vertex order/orientation */
+		for (j = 0; j < 3; j++) {
+			fptr = fptr->next;
+			if (fptr == NULL) {
+				fputs(progname, stderr);
+				fputs(": missing vertex in get_surface()\n", stderr);
+				free(surf);
+				return(NULL);
+			}
+			if ((surf->vl[i][j] = atof(fptr->val)) == 0 &&
+							!isflt(fptr->val)) {
+				fputs(progname, stderr);
+				fputs(": bad vertex in get_surface()\n", stderr);
+				free(surf);
+				return(NULL);
+			}
+		}
+					/* compute area and normal */
+	surf->norm[0] = surf->norm[1] = surf->norm[2] = 0;
+	VSUB(e1, surf->vl[1], surf->vl[0]);
+	for (i = 2; i < nv; i++) {
+		VSUB(e2, surf->vl[i], surf->vl[0]); 
+		fcross(vc, e1, e2);
+		surf->norm[0] += vc[0];
+		surf->norm[1] += vc[1];
+		surf->norm[2] += vc[2];
+		VCOPY(e1, e2);
+	}
+	surf->area = .5 * normalize(surf->norm);
+	if (surf->area == 0) {
+		fputs(progname, stderr);
+		fputs(": degenerate polygon in get_surface()\n", stderr);
+		free(surf);
+		return(NULL);
+	}
+	return(surf);
 }
 
 /* Convert surface to Radiance with modifier based on unique name */
@@ -127,16 +261,20 @@ rad_surface(IDF_OBJECT *param, FILE *ofp)
 {
 	const char	*sname = idf_getfield(param,NAME_FLD)->val;
 	IDF_FIELD	*fptr = get_vlist(param, NULL);
-	int		nvert, i;
+	const char	**fargs;
+	int		nvert, i, j;
 
 	if (fptr == NULL || (nvert = atoi(fptr->val)) < 3) {
 		fprintf(stderr, "%s: bad surface '%s'\n", progname, sname);
 		return(0);
 	}
+	fargs = (const char **)malloc(sizeof(const char *)*3*nvert);
+	if (fargs == NULL)
+		return(0);
 	fprintf(ofp, "\nvoid glow '%s'\n0\n0\n4 1 1 1 0\n", sname);
 	fprintf(ofp, "\n'%s' polygon 's_%s'\n0\n0\n%d\n", sname, sname, 3*nvert);
-	while (nvert--) {
-		for (i = 3; i--; ) {
+	for (j = nvert; j--; ) {		/* get arguments in reverse */
+		for (i = 0; i < 3; i++) {
 			fptr = fptr->next;
 			if (fptr == NULL || !isflt(fptr->val)) {
 				fprintf(stderr,
@@ -144,11 +282,41 @@ rad_surface(IDF_OBJECT *param, FILE *ofp)
 						progname, param->pname, sname);
 				return(0);
 			}
+			fargs[3*j + i] = fptr->val;
+		}
+	}
+	for (j = 0; j < nvert; j++) {		/* output reversed verts */
+		for (i = 0; i < 3; i++) {
 			fputc('\t', ofp);
-			fputs(fptr->val, ofp);
+			fputs(fargs[3*j + i], ofp);
 		}
 		fputc('\n', ofp);
 	}
+	free(fargs);
+	return(!ferror(ofp));
+}
+
+/* Convert subsurface to Radiance with modifier based on unique name */
+static int
+rad_subsurface(IDF_OBJECT *param, FILE *ofp)
+{
+	const char	*sname = idf_getfield(param,NAME_FLD)->val;
+	SURFACE		*surf = get_surface(idf_getfield(param,SS_VERT_FLD));
+	int		i;
+
+	if (surf == NULL) {
+		fprintf(stderr, "%s: bad subsurface '%s'\n", progname, sname);
+		return(0);
+	}
+	fprintf(ofp, "\nvoid glow '%s'\n0\n0\n4 1 1 1 0\n", sname);
+	fprintf(ofp, "\n'%s' polygon 'ss_%s'\n0\n0\n%d\n",
+						sname, sname, 3*surf->nv);
+	for (i = 0; i < surf->nv; i++) {	/* offset vertices */
+		FVECT	vert;
+		VSUM(vert, surf->vl[i], surf->norm, 2.*SURF_EPS);
+		fprintf(ofp, "\t%.12f %.12f %.12f\n", vert[0], vert[1], vert[2]);
+	}
+	free(surf);
 	return(!ferror(ofp));
 }
 
@@ -156,14 +324,15 @@ rad_surface(IDF_OBJECT *param, FILE *ofp)
 static int
 start_rcontrib(SUBPROC *pd, ZONE *zp)
 {
-#define	BASE_AC		5
+#define	BASE_AC		6
 	static char	*base_av[BASE_AC] = {
-				"rcontrib", "-fff", "-h", "-x", "1"
+				"rcontrib", "-V+", "-fff", "-h", "-x", "1"
 			};
 	char		cbuf[300];
 	char		**av;
 	FILE		*ofp;
 	IDF_OBJECT	*pptr;
+	IDF_FIELD	*fptr;
 	int		i, n;
 						/* start oconv command */
 	sprintf(cbuf, "oconv - > '%s'", temp_octree);
@@ -173,22 +342,35 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 		return(0);
 	}
 						/* allocate argument list */
-	av = (char **)malloc(sizeof(char *)*(BASE_AC+4+2*zp->nsurf));
+	av = (char **)malloc(sizeof(char *)*(BASE_AC+4+2*(zp->ntotal)));
 	if (av == NULL)
 		return(0);
 	for (i = 0; i < BASE_AC; i++)
 		av[i] = base_av[i];
 	sprintf(cbuf, "%d", nsamps);
 	av[i++] = "-c";
-	av[i++] = cbuf;				/* add modifier arguments */
-	for (n = zp->nsurf, pptr = zp->pfirst; n--; pptr = pptr->dnext) {
-		IDF_FIELD	*fptr = idf_getfield(pptr,NAME_FLD);
+	av[i++] = cbuf;				/* add modifiers & surfaces */
+	for (n = 0, pptr = zp->pfirst; n < zp->nsurf; n++, pptr = pptr->dnext) {
+		fptr = idf_getfield(pptr,NAME_FLD);
 		if (fptr == NULL || !fptr->val[0]) {
 			fputs(progname, stderr);
 			fputs(": missing name for surface object\n", stderr);
 			return(0);
 		}
 		if (!rad_surface(pptr, ofp))	/* add surface to octree */
+			return(0);
+		av[i++] = "-m";
+		av[i++] = fptr->val;
+	}
+						/* now subsurfaces */
+	for ( ; n < zp->ntotal; n++, pptr = pptr->dnext) {
+		fptr = idf_getfield(pptr,NAME_FLD);
+		if (fptr == NULL || !fptr->val[0]) {
+			fputs(progname, stderr);
+			fputs(": missing name for subsurface object\n", stderr);
+			return(0);
+		}
+		if (!rad_subsurface(pptr, ofp))	/* add surface to octree */
 			return(0);
 		av[i++] = "-m";
 		av[i++] = fptr->val;
@@ -212,59 +394,33 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 
 /* Initialize polygon sampling */
 static Vert2_list *
-init_poly(POLYSAMP *ps, IDF_FIELD *f0, int nv)
+init_poly(POLYSAMP *ps, IDF_FIELD *f0)
 {
-	IDF_FIELD	*fptr = f0;
-	int		i, j;
-	FVECT		*vl3, e1, e2, vc;
-	Vert2_list	*vl2 = polyAlloc(nv);
-
+	SURFACE		*surf;
+	Vert2_list	*vl2;
+	int		i;
+					/* get 3-D polygon vertices */
+	if ((surf = get_surface(f0)) == NULL)
+		return(NULL);
+	vl2 = polyAlloc(surf->nv);
 	if (vl2 == NULL)
 		return(NULL);
-	vl2->p = ps;
-					/* get 3-D vertices */
-	vl3 = (FVECT *)malloc(sizeof(FVECT)*nv);
-	if (vl3 == NULL)
-		return(NULL);
-	for (i = nv; i--; )		/* reverse vertex ordering */
-		for (j = 0; j < 3; j++) {
-			if (fptr == NULL) {
-				fputs(progname, stderr);
-				fputs(": missing vertex in init_poly()\n", stderr);
-				return(NULL);
-			}
-			vl3[i][j] = atof(fptr->val);
-			fptr = fptr->next;
-		}
-					/* compute area and normal */
-	ps->sdir[2][0] = ps->sdir[2][1] = ps->sdir[2][2] = 0;
-	VSUB(e1, vl3[1], vl3[0]);
-	for (i = 2; i < nv; i++) {
-		VSUB(e2, vl3[i], vl3[0]); 
-		fcross(vc, e1, e2);
-		ps->sdir[2][0] += vc[0];
-		ps->sdir[2][1] += vc[1];
-		ps->sdir[2][2] += vc[2];
-		VCOPY(e1, e2);
-	}
-	ps->area_left = .5 * normalize(ps->sdir[2]);
-	if (ps->area_left == .0) {
-		fputs(progname, stderr);
-		fputs(": degenerate polygon in init_poly()\n", stderr);
-		return(0);
-	}
 					/* create X & Y axes */
-	VCOPY(ps->sdir[0], e1);
-	normalize(ps->sdir[0]);
+	VCOPY(ps->sdir[2], surf->norm);
+	VSUB(ps->sdir[0], surf->vl[1], surf->vl[0]);
+	if (normalize(ps->sdir[0]) == 0)
+		return(NULL);
 	fcross(ps->sdir[1], ps->sdir[2], ps->sdir[0]);
 					/* compute plane offset */
-	ps->poff = DOT(vl3[0], ps->sdir[2]);
+	ps->poff = DOT(surf->vl[0], ps->sdir[2]);
 					/* assign 2-D vertices */
-	for (i = 0; i < nv; i++) {
-		vl2->v[i].mX = DOT(vl3[i], ps->sdir[0]);
-		vl2->v[i].mY = DOT(vl3[i], ps->sdir[1]);
+	for (i = 0; i < surf->nv; i++) {
+		vl2->v[i].mX = DOT(surf->vl[i], ps->sdir[0]);
+		vl2->v[i].mY = DOT(surf->vl[i], ps->sdir[1]);
 	}
-	free(vl3);			/* it's ready! */
+	ps->area_left = surf->area;
+	free(surf);			/* it's ready! */
+	vl2->p = (void *)ps;
 	return(vl2);
 }
 
@@ -282,7 +438,7 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 	for (i = 3; i--; ) {
 		orig[i] = vl2->v[a].mX*ps->sdir[0][i] +
 				vl2->v[a].mY*ps->sdir[1][i] +
-				(ps->poff+.001)*ps->sdir[2][i];
+				(ps->poff+SURF_EPS)*ps->sdir[2][i];
 		ab[i] = (vl2->v[b].mX - vl2->v[a].mX)*ps->sdir[0][i] +
 				(vl2->v[b].mY - vl2->v[a].mY)*ps->sdir[1][i];
 		ac[i] = (vl2->v[c].mX - vl2->v[a].mX)*ps->sdir[0][i] +
@@ -339,13 +495,11 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 static int
 sample_surface(IDF_OBJECT *param, int wd)
 {
-	IDF_FIELD	*fptr = get_vlist(param, NULL);
 	POLYSAMP	psamp;
 	int		nv;
 	Vert2_list	*vlist2;
 					/* set up our polygon sampler */
-	if (fptr == NULL || (nv = atoi(fptr->val)) < 3 ||
-			(vlist2 = init_poly(&psamp, fptr->next, nv)) == NULL) {
+	if ((vlist2 = init_poly(&psamp, get_vlist(param, NULL))) == NULL) {
 		fprintf(stderr, "%s: bad polygon %s '%s'\n",
 				progname, param->pname,
 				idf_getfield(param,NAME_FLD)->val);
@@ -353,6 +507,8 @@ sample_surface(IDF_OBJECT *param, int wd)
 	}
 	psamp.samp_left = nsamps;	/* assign samples & destination */
 	psamp.wd = wd;
+					/* hack for subsurface sampling */
+	psamp.poff += 2.*SURF_EPS * !strcmp(param->pname, SUBSURF_PNAME);
 					/* sample each subtriangle */
 	if (!polyTriangulate(vlist2, &sample_triangle))
 		return(0);
@@ -370,7 +526,7 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 	int		n, m;
 						/* create output object */
 	pout = idf_newobject(our_idf, UVF_PNAME,
-			"    ! computed by Radiance\n        ", zp->plast);
+			"    ! computed by Radiance\n        ", our_idf->plast);
 	if (pout == NULL) {
 		fputs(progname, stderr);
 		fputs(": cannot create new IDF object\n", stderr);
@@ -383,42 +539,39 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 		return(0);
 	}
 						/* allocate read buffer */
-	uvfa = (float *)malloc(sizeof(float)*3*zp->nsurf);
+	uvfa = (float *)malloc(sizeof(float)*3*zp->ntotal);
 	if (uvfa == NULL)
 		return(0);
 						/* UVFs from each surface */
-	for (n = zp->nsurf, pptr = zp->pfirst; n--; pptr = pptr->dnext) {
+	for (n = 0, pptr = zp->pfirst; n < zp->ntotal; n++, pptr = pptr->dnext) {
 		double	vfsum = 0;
 						/* send samples to rcontrib */
 		if (!sample_surface(pptr, pd->w))
 			return(0);
 						/* read results */
-		if (readbuf(pd->r, (char *)uvfa, sizeof(float)*3*zp->nsurf) !=
-				sizeof(float)*3*zp->nsurf) {
+		if (readbuf(pd->r, (char *)uvfa, sizeof(float)*3*zp->ntotal) !=
+				sizeof(float)*3*zp->ntotal) {
 			fputs(progname, stderr);
 			fputs(": read error from rcontrib process\n", stderr);
 			return(0);
 		}
 						/* append UVF fields */
 		for (m = 0, pptr1 = zp->pfirst;
-				m < zp->nsurf; m++, pptr1 = pptr1->dnext) {
+				m < zp->ntotal; m++, pptr1 = pptr1->dnext) {
 			vfsum += uvfa[3*m + 1];
-			if (pptr1 == pptr) {
-				if (uvfa[3*m + 1] > .001)
-					fprintf(stderr,
+			if (pptr1 == pptr && uvfa[3*m + 1] > .001)
+				fprintf(stderr,
 		"%s: warning - non-zero self-VF (%.1f%%) for surface '%s'\n",
 						progname, 100.*uvfa[3*m + 1],
 						idf_getfield(pptr,NAME_FLD)->val);
-				continue;	/* don't record self-factor */
-			}
 			sprintf(uvfbuf, "%.4f", uvfa[3*m + 1]);
 			if (!idf_addfield(pout,
 					idf_getfield(pptr,NAME_FLD)->val, NULL) ||
 				!idf_addfield(pout,
 					idf_getfield(pptr1,NAME_FLD)->val, NULL) ||
 				!idf_addfield(pout, uvfbuf,
-						(n || m < zp->nsurf-2) ?
-							"\n        " : "\n\n")) {
+						(n+m < 2*zp->ntotal-2) ?
+						"\n        " : "\n\n")) {
 				fputs(progname, stderr);
 				fputs(": error adding UVF fields\n", stderr);
 				return(0);
@@ -529,6 +682,11 @@ main(int argc, char *argv[])
 			if (add2zone(pptr, fptr->val) == NULL)
 				return(1);
 		}
+						/* add subsurfaces */
+	for (pptr = idf_getobject(our_idf, SUBSURF_PNAME);
+			pptr != NULL; pptr = pptr->pnext)
+		if (add_subsurf(pptr) == NULL)
+			return(1);
 						/* run rcontrib on each zone */
 	if (!compute_zones())
 		return(1);
