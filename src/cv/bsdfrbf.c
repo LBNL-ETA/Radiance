@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.16 2013/11/08 23:49:07 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.17 2014/02/17 21:56:22 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -91,8 +91,8 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 static void
 comp_bsdf_min()
 {
-	int	cnt;
-	int	i, target;
+	unsigned long	cnt, target;
+	int		i;
 
 	cnt = 0;
 	for (i = HISTLEN; i--; )

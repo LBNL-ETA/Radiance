@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.5 2013/11/26 17:33:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.6 2014/02/17 21:56:22 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 #ifdef DEBUG
 	fprintf(stderr, "Minimum BSDF set to %.4f\n", bsdf_min);
 #endif
-	min_log = log(bsdf_min*.5);
+	min_log = log(bsdf_min*.5 + 1e-5);
 						/* output BSDF rep. */
 	for (n = 0; (n < 6) & (2*n+3 < argc); n++) {
 		double	theta = atof(argv[2*n+2]);
