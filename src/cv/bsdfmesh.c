@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.14 2013/11/08 03:42:13 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.15 2014/02/18 16:06:51 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -484,6 +484,114 @@ mesh_from_edge(MIGRATION *edge)
 		}
 	}
 }
+
+/* Add normal direction if missing */
+static void
+check_normal_incidence(void)
+{
+	const int	saved_nprocs = nprocs;
+	RBFNODE		*near_rbf, *mir_rbf, *rbf;
+	double		bestd;
+	int		n, i, j;
+
+	if (dsf_list == NULL)
+		return;				/* XXX should be error? */
+	near_rbf = dsf_list;
+	bestd = input_orient*near_rbf->invec[2];
+	if (single_plane_incident) {		/* ordered plane incidence? */
+		if (bestd >= 1.-2.*FTINY)
+			return;			/* already have normal */
+	} else {
+		switch (inp_coverage) {
+		case INP_QUAD1:
+		case INP_QUAD2:
+		case INP_QUAD3:
+		case INP_QUAD4:
+			break;			/* quadrilateral symmetry? */
+		default:
+			return;			/* else we can interpolate */
+		}
+		for (rbf = near_rbf->next; rbf != NULL; rbf = rbf->next) {
+			const double	d = input_orient*rbf->invec[2];
+			if (d >= 1.-2.*FTINY)
+				return;		/* seems we have normal */
+			if (d > bestd) {
+				near_rbf = rbf;
+				bestd = d;
+			}
+		}
+	}
+	if (mig_list != NULL) {			/* need to be called first */
+		fprintf(stderr, "%s: Late call to check_normal_incidence()\n",
+				progname);
+		exit(1);
+	}
+#ifdef DEBUG
+	fprintf(stderr, "Interpolating normal incidence by mirroring (%.1f,%.1f)\n",
+			get_theta180(near_rbf->invec), get_phi360(near_rbf->invec));
+#endif
+						/* mirror nearest incidence */
+	n = sizeof(RBFNODE) + sizeof(RBFVAL)*(near_rbf->nrbf-1);
+	mir_rbf = (RBFNODE *)malloc(n);
+	if (mir_rbf == NULL)
+		goto memerr;
+	memcpy(mir_rbf, near_rbf, n);
+	mir_rbf->ord = near_rbf->ord - 1;	/* not used, I think */
+	mir_rbf->next = NULL;
+	rev_rbf_symmetry(mir_rbf, MIRROR_X|MIRROR_Y);
+	nprocs = 1;				/* compute migration matrix */
+	if (mig_list != create_migration(mir_rbf, near_rbf))
+		exit(1);			/* XXX should never happen! */
+	n = 0;					/* count migrating particles */
+	for (i = 0; i < mtx_nrows(mig_list); i++)
+	    for (j = 0; j < mtx_ncols(mig_list); j++)
+		n += (mtx_coef(mig_list,i,j) > FTINY);
+	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
+	if (rbf == NULL)
+		goto memerr;
+	rbf->next = NULL; rbf->ejl = NULL;
+	rbf->invec[0] = rbf->invec[1] = 0; rbf->invec[2] = 1.;
+	rbf->nrbf = n;
+	rbf->vtotal = .5 + .5*mig_list->rbfv[1]->vtotal/mig_list->rbfv[0]->vtotal;
+	n = 0;					/* advect RBF lobes halfway */
+	for (i = 0; i < mtx_nrows(mig_list); i++) {
+	    const RBFVAL	*rbf0i = &mig_list->rbfv[0]->rbfa[i];
+	    const float		peak0 = rbf0i->peak;
+	    const double	rad0 = R2ANG(rbf0i->crad);
+	    FVECT		v0;
+	    float		mv;
+	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    for (j = 0; j < mtx_ncols(mig_list); j++)
+		if ((mv = mtx_coef(mig_list,i,j)) > FTINY) {
+			const RBFVAL	*rbf1j = &mig_list->rbfv[1]->rbfa[j];
+			double		rad2;
+			FVECT		v;
+			int		pos[2];
+			rad2 = R2ANG(rbf1j->crad);
+			rad2 = .5*(rad0*rad0 + rad2*rad2);
+			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal *
+						rad0*rad0/rad2;
+			rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
+			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
+			geodesic(v, v0, v, .5, GEOD_REL);
+			pos_from_vec(pos, v);
+			rbf->rbfa[n].gx = pos[0];
+			rbf->rbfa[n].gy = pos[1];
+			++n;
+		}
+	}
+	rbf->vtotal *= mig_list->rbfv[0]->vtotal;
+	nprocs = saved_nprocs;			/* final clean-up */
+	free(mir_rbf);
+	free(mig_list);
+	mig_list = near_rbf->ejl = NULL;
+	insert_dsf(rbf);			/* insert interpolated normal */
+	return;
+memerr:
+	fprintf(stderr, "%s: Out of memory in check_normal_incidence()\n",
+				progname);
+	exit(1);
+}
 	
 /* Build our triangle mesh from recorded RBFs */
 void
@@ -492,6 +600,8 @@ build_mesh(void)
 	double		best2 = M_PI*M_PI;
 	RBFNODE		*shrt_edj[2];
 	RBFNODE		*rbf0, *rbf1;
+						/* add normal if needed */
+	check_normal_incidence();
 						/* check if isotropic */
 	if (single_plane_incident) {
 		for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)

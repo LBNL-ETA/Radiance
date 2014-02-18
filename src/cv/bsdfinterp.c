@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.15 2013/10/23 03:41:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.16 2014/02/18 16:06:51 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -208,10 +208,10 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 	if (single_plane_incident) {		/* isotropic BSDF? */
 	    RBFNODE	*rbf;			/* find edge we're on */
 	    for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
-		if (input_orient*rbf->invec[2] < input_orient*invec[2])
+		if (input_orient*rbf->invec[2] < input_orient*invec[2]-FTINY)
 			break;
 		if (rbf->next != NULL && input_orient*rbf->next->invec[2] <
-							input_orient*invec[2]) {
+						input_orient*invec[2]+FTINY) {
 		    for (miga[0] = rbf->ejl; miga[0] != NULL;
 					miga[0] = nextedge(rbf,miga[0]))
 			if (opp_rbf(rbf,miga[0]) == rbf->next) {
@@ -348,7 +348,7 @@ memerr:
 	return(NULL);	/* pro forma return */
 }
 
-/* Partially advect between recorded incident angles and allocate new RBF */
+/* Advect between recorded incident angles and allocate new RBF */
 RBFNODE *
 advect_rbf(const FVECT invec, int lobe_lim)
 {
@@ -375,9 +375,9 @@ advect_rbf(const FVECT invec, int lobe_lim)
 		return(rbf);
 	}
 #ifdef DEBUG
-	if (miga[0]->rbfv[0] != miga[2]->rbfv[0] |
-			miga[0]->rbfv[1] != miga[1]->rbfv[0] |
-			miga[1]->rbfv[1] != miga[2]->rbfv[1]) {
+	if ((miga[0]->rbfv[0] != miga[2]->rbfv[0]) |
+			(miga[0]->rbfv[1] != miga[1]->rbfv[0]) |
+			(miga[1]->rbfv[1] != miga[2]->rbfv[1])) {
 		fprintf(stderr, "%s: Triangle vertex screw-up!\n", progname);
 		exit(1);
 	}
