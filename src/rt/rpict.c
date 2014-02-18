@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.86 2013/03/21 00:03:09 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.87 2014/02/18 12:13:42 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -33,7 +33,7 @@ static const char RCSid[] = "$Id: rpict.c,v 2.86 2013/03/21 00:03:09 greg Exp $"
 #include  "view.h"
 #include  "random.h"
 #include  "paths.h"
-#include  "rtmisc.h" /* myhostname() */
+#include  "hilbert.h"
 
 
 #define	 RFTEMPLATE	"rfXXXXXX"
@@ -802,15 +802,21 @@ writerr:
 }
 
 static int
-pixnumber(		/* compute pixel index (brushed) */
+pixnumber(		/* compute pixel index (screen door) */
 	int  x,
 	int  y,
 	int  xres,
 	int  yres
 )
 {
-	x -= y;
-	while (x < 0)
-		x += xres;
-	return((((x>>2)*yres + y) << 2) + (x & 3));
+	unsigned	nbits = 0;
+	bitmask_t	coord[2];
+
+	if (xres < yres) xres = yres;
+	while (xres > 0) {
+		xres >>= 1;
+		++nbits;
+	}
+	coord[0] = x; coord[1] = y;
+	return ((int)hilbert_c2i(2, nbits, coord));
 }

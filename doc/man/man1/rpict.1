@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.16 2014/01/25 18:27:39 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.17 2014/02/18 12:13:38 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -565,7 +565,7 @@ option (above) may be used to override this.
 .BR \-u
 Boolean switch to control uncorrelated random sampling.
 When "off", a low-discrepancy sequence is used, which reduces
-variance but can result in a brushed appearance in specular highlights.
+variance but can result in a dithered appearance in specular highlights.
 When "on", pure Monte Carlo sampling is used in all calculations.
 .TP
 .BI -lr \ N

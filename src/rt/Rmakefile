@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.70 2012/09/06 00:07:43 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.71 2014/02/18 12:13:42 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -222,6 +222,8 @@ initotypes.o srcobstr.o raytrace.o:	otspecial.h
 
 rpmain.o rtmain.o rvmain.o rpict.o \
 srcdraw.o:	../common/view.h ../common/resolu.h
+
+rpict.o:	../common/hilbert.h
 
 x11.o x11twind.o: x11twind.h
 
