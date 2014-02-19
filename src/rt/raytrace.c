@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.64 2012/06/01 19:17:17 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.65 2014/02/19 14:12:48 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -35,7 +35,7 @@ static int checkhit(RAY  *r, CUBE  *cu, OBJECT  *cxs);
 static void checkset(OBJECT  *os, OBJECT  *cs);
 
 
-extern int
+int
 rayorigin(		/* start new ray from old one */
 	RAY  *r,
 	int  rt,
@@ -124,7 +124,7 @@ rayorigin(		/* start new ray from old one */
 }
 
 
-extern void
+void
 rayclear(			/* clear a ray for (re)evaluation */
 	RAY  *r
 )
@@ -143,7 +143,7 @@ rayclear(			/* clear a ray for (re)evaluation */
 }
 
 
-extern void
+void
 raytrace(			/* trace a ray and compute its value */
 	RAY  *r
 )
@@ -163,7 +163,7 @@ raytrace(			/* trace a ray and compute its value */
 }
 
 
-extern void
+void
 raycont(			/* check for clipped object and continue */
 	RAY  *r
 )
@@ -174,7 +174,7 @@ raycont(			/* check for clipped object and continue */
 }
 
 
-extern void
+void
 raytrans(			/* transmit ray as is */
 	RAY  *r
 )
@@ -190,7 +190,7 @@ raytrans(			/* transmit ray as is */
 }
 
 
-extern int
+int
 rayshade(		/* shade ray r with material mod */
 	RAY  *r,
 	int  mod
@@ -225,7 +225,7 @@ rayshade(		/* shade ray r with material mod */
 }
 
 
-extern void
+void
 rayparticipate(			/* compute ray medium participation */
 	RAY  *r
 )
@@ -258,7 +258,7 @@ rayparticipate(			/* compute ray medium participation */
 }
 
 
-extern void
+void
 raytexture(			/* get material modifiers */
 	RAY  *r,
 	OBJECT  mod
@@ -283,7 +283,7 @@ raytexture(			/* get material modifiers */
 }
 
 
-extern int
+int
 raymixture(		/* mix modifiers */
 	RAY  *r,
 	OBJECT  fore,
@@ -343,7 +343,7 @@ raymixture(		/* mix modifiers */
 }
 
 
-extern double
+double
 raydist(		/* compute (cumulative) ray distance */
 	const RAY  *r,
 	int  flags
@@ -359,7 +359,7 @@ raydist(		/* compute (cumulative) ray distance */
 }
 
 
-extern void
+void
 raycontrib(		/* compute (cumulative) ray contribution */
 	RREAL  rc[3],
 	const RAY  *r,
@@ -385,7 +385,7 @@ raycontrib(		/* compute (cumulative) ray contribution */
 }
 
 
-extern double
+double
 raynormal(		/* compute perturbed normal for ray */
 	FVECT  norm,
 	RAY  *r
@@ -421,7 +421,7 @@ raynormal(		/* compute perturbed normal for ray */
 }
 
 
-extern void
+void
 newrayxf(			/* get new tranformation matrix for ray */
 	RAY  *r
 )
@@ -459,7 +459,7 @@ newrayxf(			/* get new tranformation matrix for ray */
 }
 
 
-extern void
+void
 flipsurface(			/* reverse surface orientation */
 	RAY  *r
 )
@@ -474,7 +474,7 @@ flipsurface(			/* reverse surface orientation */
 }
 
 
-extern void
+void
 rayhit(			/* standard ray hit test */
 	OBJECT  *oset,
 	RAY  *r
@@ -491,7 +491,7 @@ rayhit(			/* standard ray hit test */
 }
 
 
-extern int
+int
 localhit(		/* check for hit in the octree */
 	RAY  *r,
 	CUBE  *scene
