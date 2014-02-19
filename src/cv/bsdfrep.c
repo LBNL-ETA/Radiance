@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.19 2013/11/09 05:47:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.20 2014/02/19 05:16:06 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -391,6 +391,92 @@ get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 			}
 	}
 	return((rbfv[0] != NULL) + (rbfv[1] != NULL));
+}
+
+/* Advect and allocate new RBF along edge (internal call) */
+RBFNODE *
+e_advect_rbf(const MIGRATION *mig, const FVECT invec, int lobe_lim)
+{
+	double		cthresh = FTINY;
+	RBFNODE		*rbf;
+	int		n, i, j;
+	double		t, full_dist;
+						/* get relative position */
+	t = Acos(DOT(invec, mig->rbfv[0]->invec));
+	if (t < M_PI/grid_res) {		/* near first DSF */
+		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[0]->nrbf-1);
+		rbf = (RBFNODE *)malloc(n);
+		if (rbf == NULL)
+			goto memerr;
+		memcpy(rbf, mig->rbfv[0], n);	/* just duplicate */
+		rbf->next = NULL; rbf->ejl = NULL;
+		return(rbf);
+	}
+	full_dist = acos(DOT(mig->rbfv[0]->invec, mig->rbfv[1]->invec));
+	if (t > full_dist-M_PI/grid_res) {	/* near second DSF */
+		n = sizeof(RBFNODE) + sizeof(RBFVAL)*(mig->rbfv[1]->nrbf-1);
+		rbf = (RBFNODE *)malloc(n);
+		if (rbf == NULL)
+			goto memerr;
+		memcpy(rbf, mig->rbfv[1], n);	/* just duplicate */
+		rbf->next = NULL; rbf->ejl = NULL;
+		return(rbf);
+	}
+	t /= full_dist;
+tryagain:
+	n = 0;					/* count migrating particles */
+	for (i = 0; i < mtx_nrows(mig); i++)
+	    for (j = 0; j < mtx_ncols(mig); j++)
+		n += (mtx_coef(mig,i,j) > cthresh);
+						/* are we over our limit? */
+	if ((lobe_lim > 0) & (n > lobe_lim)) {
+		cthresh = cthresh*2. + 10.*FTINY;
+		goto tryagain;
+	}
+#ifdef DEBUG
+	fprintf(stderr, "Input RBFs have %d, %d nodes -> output has %d\n",
+			mig->rbfv[0]->nrbf, mig->rbfv[1]->nrbf, n);
+#endif
+	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
+	if (rbf == NULL)
+		goto memerr;
+	rbf->next = NULL; rbf->ejl = NULL;
+	VCOPY(rbf->invec, invec);
+	rbf->nrbf = n;
+	rbf->vtotal = 1.-t + t*mig->rbfv[1]->vtotal/mig->rbfv[0]->vtotal;
+	n = 0;					/* advect RBF lobes */
+	for (i = 0; i < mtx_nrows(mig); i++) {
+	    const RBFVAL	*rbf0i = &mig->rbfv[0]->rbfa[i];
+	    const float		peak0 = rbf0i->peak;
+	    const double	rad0 = R2ANG(rbf0i->crad);
+	    FVECT		v0;
+	    float		mv;
+	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    for (j = 0; j < mtx_ncols(mig); j++)
+		if ((mv = mtx_coef(mig,i,j)) > cthresh) {
+			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
+			double		rad2;
+			FVECT		v;
+			int		pos[2];
+			rad2 = R2ANG(rbf1j->crad);
+			rad2 = rad0*rad0*(1.-t) + rad2*rad2*t;
+			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal *
+						rad0*rad0/rad2;
+			rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
+			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
+			geodesic(v, v0, v, t, GEOD_REL);
+			pos_from_vec(pos, v);
+			rbf->rbfa[n].gx = pos[0];
+			rbf->rbfa[n].gy = pos[1];
+			++n;
+		}
+	}
+	rbf->vtotal *= mig->rbfv[0]->vtotal;	/* turn ratio into actual */
+	return(rbf);
+memerr:
+	fprintf(stderr, "%s: Out of memory in e_advect_rbf()\n", progname);
+	exit(1);
+	return(NULL);	/* pro forma return */
 }
 
 /* Clear our BSDF representation and free memory */

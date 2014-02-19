@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.15 2014/02/18 16:06:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.16 2014/02/19 05:16:06 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -489,10 +489,11 @@ mesh_from_edge(MIGRATION *edge)
 static void
 check_normal_incidence(void)
 {
-	const int	saved_nprocs = nprocs;
-	RBFNODE		*near_rbf, *mir_rbf, *rbf;
-	double		bestd;
-	int		n, i, j;
+	static const FVECT	norm_vec = {.0, .0, 1.};
+	const int		saved_nprocs = nprocs;
+	RBFNODE			*near_rbf, *mir_rbf, *rbf;
+	double			bestd;
+	int			n;
 
 	if (dsf_list == NULL)
 		return;				/* XXX should be error? */
@@ -542,45 +543,8 @@ check_normal_incidence(void)
 	nprocs = 1;				/* compute migration matrix */
 	if (mig_list != create_migration(mir_rbf, near_rbf))
 		exit(1);			/* XXX should never happen! */
-	n = 0;					/* count migrating particles */
-	for (i = 0; i < mtx_nrows(mig_list); i++)
-	    for (j = 0; j < mtx_ncols(mig_list); j++)
-		n += (mtx_coef(mig_list,i,j) > FTINY);
-	rbf = (RBFNODE *)malloc(sizeof(RBFNODE) + sizeof(RBFVAL)*(n-1));
-	if (rbf == NULL)
-		goto memerr;
-	rbf->next = NULL; rbf->ejl = NULL;
-	rbf->invec[0] = rbf->invec[1] = 0; rbf->invec[2] = 1.;
-	rbf->nrbf = n;
-	rbf->vtotal = .5 + .5*mig_list->rbfv[1]->vtotal/mig_list->rbfv[0]->vtotal;
-	n = 0;					/* advect RBF lobes halfway */
-	for (i = 0; i < mtx_nrows(mig_list); i++) {
-	    const RBFVAL	*rbf0i = &mig_list->rbfv[0]->rbfa[i];
-	    const float		peak0 = rbf0i->peak;
-	    const double	rad0 = R2ANG(rbf0i->crad);
-	    FVECT		v0;
-	    float		mv;
-	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
-	    for (j = 0; j < mtx_ncols(mig_list); j++)
-		if ((mv = mtx_coef(mig_list,i,j)) > FTINY) {
-			const RBFVAL	*rbf1j = &mig_list->rbfv[1]->rbfa[j];
-			double		rad2;
-			FVECT		v;
-			int		pos[2];
-			rad2 = R2ANG(rbf1j->crad);
-			rad2 = .5*(rad0*rad0 + rad2*rad2);
-			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal *
-						rad0*rad0/rad2;
-			rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
-			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
-			geodesic(v, v0, v, .5, GEOD_REL);
-			pos_from_vec(pos, v);
-			rbf->rbfa[n].gx = pos[0];
-			rbf->rbfa[n].gy = pos[1];
-			++n;
-		}
-	}
-	rbf->vtotal *= mig_list->rbfv[0]->vtotal;
+						/* interpolate normal dist. */
+	rbf = e_advect_rbf(mig_list, norm_vec, 2*near_rbf->nrbf);
 	nprocs = saved_nprocs;			/* final clean-up */
 	free(mir_rbf);
 	free(mig_list);
