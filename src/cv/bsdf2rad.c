@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.6 2014/02/17 21:56:22 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.7 2014/02/20 09:21:32 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -131,7 +131,7 @@ main(int argc, char *argv[])
 			for (i = 0; i < rbf->nrbf; i++) {
 				ovec_from_pos(odir, rbf->rbfa[i].gx, rbf->rbfa[i].gy);
 				bsdf = eval_rbfrep(rbf, odir) / (output_orient*odir[2]);
-				bsdf = log(bsdf) - min_log;
+				bsdf = log(bsdf + 1e-5) - min_log;
 				printf("pmat sphere p%d\n0\n0\n4 %f %f %f %f\n",
 					i+1, odir[0]*bsdf, odir[1]*bsdf, odir[2]*bsdf,
 						.007*bsdf);
@@ -156,7 +156,7 @@ main(int argc, char *argv[])
 			} else
 				bsdf = eval_rbfrep(rbf, odir) /
 						(output_orient*odir[2]);
-			bsdf = log(bsdf) - min_log;
+			bsdf = log(bsdf + 1e-5) - min_log;
 			fprintf(fp, "%.8e %.8e %.8e\n",
 					odir[0]*bsdf, odir[1]*bsdf, odir[2]*bsdf);
 		    }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.13 2014/02/17 21:56:22 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.14 2014/02/20 09:21:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -231,7 +231,7 @@ main(int argc, char *argv[])
 				(dsf_grid[i][j].nval*output_orient*dir[2]);
 			if (bsdf <= bsdf_min*.6)
 				continue;
-			bsdf = log(bsdf) - min_log;
+			bsdf = log(bsdf + 1e-5) - min_log;
 			ovec_from_pos(dir, i, j);
 			printf("yellow sphere s%04d\n0\n0\n", ++n);
 			printf("4 %.6g %.6g %.6g %.6g\n\n",
@@ -245,7 +245,7 @@ main(int argc, char *argv[])
 		RBFVAL	*rbf = &dsf_list->rbfa[n];
 		ovec_from_pos(dir, rbf->gx, rbf->gy);
 		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
-		bsdf = log(bsdf) - min_log;
+		bsdf = log(bsdf + 1e-5) - min_log;
 		printf("red sphere p%04d\n0\n0\n", ++n);
 		printf("4 %.6g %.6g %.6g %.6g\n\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf,
@@ -265,7 +265,7 @@ main(int argc, char *argv[])
 	    for (j = 0; j < GRIDRES; j++) {
 		ovec_from_pos(dir, i, j);
 		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
-		bsdf = log(bsdf) - min_log;
+		bsdf = log(bsdf + 1e-5) - min_log;
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);
 	    }
