@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.11 2014/02/15 01:31:36 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.12 2014/02/21 13:17:45 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -62,6 +62,7 @@ typedef struct s_zone {
 	int		ntotal;			/* surfaces+subsurfaces */
 	IDF_OBJECT	*pfirst;		/* first matching object */
 	IDF_OBJECT	*plast;			/* last before subsurfaces */
+	float		*area_redu;		/* subsurface area per surf. */
 } ZONE;			/* a list of collected zone surfaces */
 
 ZONE		*zone_list = NULL;	/* our list of zones */
@@ -98,6 +99,7 @@ new_zone(const char *zname, IDF_OBJECT *param)
 	znew->next = zone_list;
 	znew->pfirst = znew->plast = param;
 	znew->ntotal = znew->nsurf = 1;
+	znew->area_redu = NULL;
 	return(zone_list = znew);
 }
 
@@ -297,16 +299,17 @@ rad_surface(IDF_OBJECT *param, FILE *ofp)
 }
 
 /* Convert subsurface to Radiance with modifier based on unique name */
-static int
+static double
 rad_subsurface(IDF_OBJECT *param, FILE *ofp)
 {
 	const char	*sname = idf_getfield(param,NAME_FLD)->val;
 	SURFACE		*surf = get_surface(idf_getfield(param,SS_VERT_FLD));
+	double		area;
 	int		i;
 
 	if (surf == NULL) {
 		fprintf(stderr, "%s: bad subsurface '%s'\n", progname, sname);
-		return(0);
+		return(-1.);
 	}
 	fprintf(ofp, "\nvoid glow '%s'\n0\n0\n4 1 1 1 0\n", sname);
 	fprintf(ofp, "\n'%s' polygon 'ss_%s'\n0\n0\n%d\n",
@@ -316,8 +319,11 @@ rad_subsurface(IDF_OBJECT *param, FILE *ofp)
 		VSUM(vert, surf->vl[i], surf->norm, 2.*SURF_EPS);
 		fprintf(ofp, "\t%.12f %.12f %.12f\n", vert[0], vert[1], vert[2]);
 	}
+	area = surf->area;
 	free(surf);
-	return(!ferror(ofp));
+	if (ferror(ofp))
+		return(-1.);
+	return(area);
 }
 
 /* Start rcontrib process */
@@ -333,7 +339,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 	FILE		*ofp;
 	IDF_OBJECT	*pptr;
 	IDF_FIELD	*fptr;
-	int		i, n;
+	int		i, j, n;
 						/* start oconv command */
 	sprintf(cbuf, "oconv - > '%s'", temp_octree);
 	if ((ofp = popen(cbuf, "w")) == NULL) {
@@ -363,15 +369,34 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 		av[i++] = fptr->val;
 	}
 						/* now subsurfaces */
+	if (zp->ntotal > zp->nsurf) {
+		if (zp->area_redu != NULL)
+			memset(zp->area_redu, 0, sizeof(float)*zp->nsurf);
+		else if ((zp->area_redu = (float *)calloc(zp->nsurf,
+						sizeof(float))) == NULL)
+			return(0);
+	}
 	for ( ; n < zp->ntotal; n++, pptr = pptr->dnext) {
+		double		ssarea;
+		const char	*bname;
+		IDF_OBJECT	*pptr1;
 		fptr = idf_getfield(pptr,NAME_FLD);
 		if (fptr == NULL || !fptr->val[0]) {
 			fputs(progname, stderr);
 			fputs(": missing name for subsurface object\n", stderr);
 			return(0);
 		}
-		if (!rad_subsurface(pptr, ofp))	/* add surface to octree */
+						/* add subsurface to octree */
+		if ((ssarea = rad_subsurface(pptr, ofp)) < 0)
 			return(0);
+						/* mark area for subtraction */
+		bname = idf_getfield(pptr,SS_BASE_FLD)->val;
+		for (j = 0, pptr1 = zp->pfirst;
+				j < zp->nsurf; j++, pptr1 = pptr1->dnext)
+			if (!strcmp(idf_getfield(pptr1,NAME_FLD)->val, bname)) {
+				zp->area_redu[j] += ssarea;
+				break;
+			}
 		av[i++] = "-m";
 		av[i++] = fptr->val;
 	}
@@ -492,10 +517,11 @@ sample_triangle(const Vert2_list *vl2, int a, int b, int c)
 }
 
 /* Sample the given surface */
-static int
+static double
 sample_surface(IDF_OBJECT *param, int wd)
 {
 	POLYSAMP	psamp;
+	double		area;
 	int		nv;
 	Vert2_list	*vlist2;
 					/* set up our polygon sampler */
@@ -503,17 +529,19 @@ sample_surface(IDF_OBJECT *param, int wd)
 		fprintf(stderr, "%s: bad polygon %s '%s'\n",
 				progname, param->pname,
 				idf_getfield(param,NAME_FLD)->val);
-		return(0);
+		return(-1.);
 	}
 	psamp.samp_left = nsamps;	/* assign samples & destination */
 	psamp.wd = wd;
 					/* hack for subsurface sampling */
 	psamp.poff += 2.*SURF_EPS * !strcmp(param->pname, SUBSURF_PNAME);
+
+	area = psamp.area_left;		/* remember starting surface area */
 					/* sample each subtriangle */
 	if (!polyTriangulate(vlist2, &sample_triangle))
-		return(0);
+		return(-1.);
 	polyFree(vlist2);		/* clean up and return */
-	return(1);
+	return(area);
 }
 
 /* Compute User View Factors using open rcontrib process */
@@ -545,9 +573,14 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 						/* UVFs from each surface */
 	for (n = 0, pptr = zp->pfirst; n < zp->ntotal; n++, pptr = pptr->dnext) {
 		double	vfsum = 0;
+		double	adj_factor;
 						/* send samples to rcontrib */
-		if (!sample_surface(pptr, pd->w))
+		if ((adj_factor = sample_surface(pptr, pd->w)) < 0)
 			return(0);
+		if (zp->area_redu == NULL)
+			adj_factor = 1.;
+		else				/* comp. for subsurface area */
+			adj_factor /= adj_factor - zp->area_redu[n];
 						/* read results */
 		if (readbuf(pd->r, (char *)uvfa, sizeof(float)*3*zp->ntotal) !=
 				sizeof(float)*3*zp->ntotal) {
@@ -558,13 +591,14 @@ compute_uvfs(SUBPROC *pd, ZONE *zp)
 						/* append UVF fields */
 		for (m = 0, pptr1 = zp->pfirst;
 				m < zp->ntotal; m++, pptr1 = pptr1->dnext) {
-			vfsum += uvfa[3*m + 1];
-			if (pptr1 == pptr && uvfa[3*m + 1] > .001)
+			const double	uvf = uvfa[3*m + 1] * adj_factor;
+			vfsum += uvf;
+			if (pptr1 == pptr && uvf > .001)
 				fprintf(stderr,
 		"%s: warning - non-zero self-VF (%.1f%%) for surface '%s'\n",
-						progname, 100.*uvfa[3*m + 1],
+						progname, 100.*uvf,
 						idf_getfield(pptr,NAME_FLD)->val);
-			sprintf(uvfbuf, "%.4f", uvfa[3*m + 1]);
+			sprintf(uvfbuf, "%.4f", uvf);
 			if (!idf_addfield(pout,
 					idf_getfield(pptr,NAME_FLD)->val, NULL) ||
 				!idf_addfield(pout,
