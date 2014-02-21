@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.7 2013/11/18 22:02:12 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.8 2014/02/21 13:49:00 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -103,6 +103,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 static int
 load_stream(MEMLOAD *mp, FILE *fp)
 {
+	size_t	alloced = 0;
 	char	buf[8192];
 	size_t	nr;
 
@@ -114,10 +115,11 @@ load_stream(MEMLOAD *mp, FILE *fp)
 	if (fp == NULL)
 		return(-1);
 	while ((nr = fread(buf, 1, sizeof(buf), fp)) > 0) {
-		if (!mp->len)
+		if (!alloced)
 			mp->base = malloc(nr);
-		else
-			mp->base = realloc(mp->base, mp->len+nr);
+		else if (mp->len+nr > alloced)
+			mp->base = realloc(mp->base,
+				alloced = alloced*(2+(nr==sizeof(buf)))/2+nr);
 		if (mp->base == NULL)
 			return(-1);
 		memcpy((char *)mp->base + mp->len, buf, nr);
@@ -127,6 +129,8 @@ load_stream(MEMLOAD *mp, FILE *fp)
 		free_load(mp);
 		return(-1);
 	}
+	if (alloced > mp->len*5/4)	/* don't waste too much space */
+		mp->base = realloc(mp->base, mp->len);
 	return(mp->len > 0);
 }
 
