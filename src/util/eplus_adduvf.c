@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.13 2014/02/27 20:39:04 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.14 2014/02/27 22:42:53 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -176,11 +176,11 @@ add_subsurf(IDF_OBJECT *param)
 static IDF_FIELD *
 get_vlist(IDF_OBJECT *param, const char *zname)
 {
-	const int	itm_len = sizeof(IDF_FIELD)+6;
-	static char	fld_buf[4*itm_len];
-	static char	*next_fbp = fld_buf;
-	int		i;
-	IDF_FIELD	*res;
+	static const int	itm_len = sizeof(IDF_FIELD)+6;
+	static char		fld_buf[4*itm_len];
+	static char		*next_fbp = fld_buf;
+	int			i;
+	IDF_FIELD		*res;
 						/* check if subsurface */
 	if (!strcmp(param->pname, SUBSURF_PNAME)) {
 		if (zname != NULL) {
@@ -323,7 +323,7 @@ static double
 rad_subsurface(IDF_OBJECT *param, FILE *ofp)
 {
 	const char	*sname = idf_getfield(param,NAME_FLD)->val;
-	SURFACE		*surf = get_surface(idf_getfield(param,SS_VERT_FLD));
+	SURFACE		*surf = get_surface(get_vlist(param, NULL));
 	double		area;
 	int		i;
 
