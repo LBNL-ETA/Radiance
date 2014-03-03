@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.15 2014/02/28 19:14:10 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.16 2014/03/03 17:51:50 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -362,7 +362,7 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 	IDF_FIELD	*fptr;
 	int		i, j, n;
 						/* start oconv command */
-	sprintf(cbuf, "oconv - > '%s'", temp_octree);
+	sprintf(cbuf, "oconv - > \"%s\"", temp_octree);
 	if ((ofp = popen(cbuf, "w")) == NULL) {
 		fputs(progname, stderr);
 		fputs(": cannot open oconv process\n", stderr);
