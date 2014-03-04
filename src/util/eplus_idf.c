@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.10 2014/02/13 17:39:39 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.11 2014/03/04 17:06:42 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -353,6 +353,16 @@ idf_load(const char *fname)
 	return(idf);			/* success! */
 }
 
+/* Check string for end-of-line */
+static int
+idf_hasEOL(const char *s)
+{
+	while (*s)
+		if (*s++ == '\n')
+			return(1);
+	return(0);
+}
+
 /* Write a object and fields to an open file */
 int
 idf_writeparam(IDF_OBJECT *param, FILE *fp, int incl_comm)
@@ -365,16 +375,25 @@ idf_writeparam(IDF_OBJECT *param, FILE *fp, int incl_comm)
 	fputc(',', fp);
 	if (incl_comm)
 		fputs(param->rem, fp);
+	else
+		fputc('\n', fp);
 	for (fptr = param->flist; fptr != NULL; fptr = fptr->next) {
 		if (!incl_comm)
-			fputs("\n    ", fp);
+			fputs("    ", fp);
 		fputs(fptr->val, fp);
-		fputc((fptr->next==NULL ? ';' : ','), fp);
+		if (fptr->next == NULL) {
+			fputc(';', fp);
+			if (incl_comm && !idf_hasEOL(fptr->rem))
+				fputc('\n', fp);
+		} else
+			fputc(',', fp);
 		if (incl_comm)
 			fputs(fptr->rem, fp);
+		else
+			fputc('\n', fp);
 	}
 	if (!incl_comm)
-		fputs("\n\n", fp);
+		fputc('\n', fp);
 	return(!ferror(fp));
 }
 
