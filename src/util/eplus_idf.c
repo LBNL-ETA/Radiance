@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_idf.c,v 2.11 2014/03/04 17:06:42 greg Exp $";
+static const char RCSid[] = "$Id: eplus_idf.c,v 2.12 2014/03/05 19:49:39 greg Exp $";
 #endif
 /*
  *  eplus_idf.c
@@ -428,9 +428,18 @@ idf_free(IDF_LOADED *idf)
 {
 	if (idf == NULL)
 		return;
+	while (idf->pfirst != NULL) {
+		IDF_OBJECT	*pdel = idf->pfirst;
+		idf->pfirst = pdel->dnext;
+		while (pdel->flist != NULL) {
+			IDF_FIELD	*fdel = pdel->flist;
+			pdel->flist = fdel->next;
+			free(fdel);
+		}
+		free(pdel);
+	}
+	lu_done(&idf->ptab);
 	if (idf->hrem != NULL)
 		free(idf->hrem);
-	while (idf->pfirst != NULL)
-		idf_delobject(idf, idf->pfirst);
-	lu_done(&idf->ptab);
+	free(idf);
 }
