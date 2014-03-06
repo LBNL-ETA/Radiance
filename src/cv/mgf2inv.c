@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf2inv.c,v 2.3 2012/05/15 15:36:33 greg Exp $";
+static const char	RCSid[] = "$Id: mgf2inv.c,v 2.4 2014/03/06 00:40:37 greg Exp $";
 #endif
 /*
  * Convert MGF to Inventor file.
@@ -486,13 +486,8 @@ i_cyl(			/* translate a cylinder description */
 	va[0] = v2->p[0] - v1->p[0];
 	va[1] = v2->p[1] - v1->p[1];
 	va[2] = v2->p[2] - v1->p[2];
-	length = sqrt(DOT(va,va));
-	if (va[1] >= length)
-		angle = 0.;
-	else if (va[1] <= -length)
-		angle = PI;
-	else
-		angle = acos(va[1]/length);
+	length = VLEN(va);
+	angle = Acos(va[1]/length);
 	printf("%sTranslation { translation %13.9g %13.9g %13.9g }\n", tabs,
 			.5*(v1->p[0]+v2->p[0]), .5*(v1->p[1]+v2->p[1]),
 			.5*(v1->p[2]+v2->p[2]));

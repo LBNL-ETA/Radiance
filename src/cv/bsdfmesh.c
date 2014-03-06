@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.17 2014/03/05 22:47:16 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.18 2014/03/06 00:40:37 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -177,8 +177,7 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	    srow = psortrow(pm,i);
 	    for (j = to_rbf->nrbf; j--; ) {
 		double		d;		/* quadratic cost function */
-		d = DOT(vfrom, vto[j]);
-		d = (d >= 1.) ? .0 : acos(d);
+		d = Acos(DOT(vfrom, vto[j]));
 		pm->prow[j] = d*d;
 		d = R2ANG(to_rbf->rbfa[j].crad) - from_ang;
 		pm->prow[j] += d*d;	
