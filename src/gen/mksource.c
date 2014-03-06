@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mksource.c,v 2.7 2011/08/15 19:48:06 greg Exp $";
+static const char RCSid[] = "$Id: mksource.c,v 2.8 2014/03/06 00:42:21 greg Exp $";
 #endif
 /*
  * Generate distant sources corresponding to the given environment map
@@ -457,7 +457,7 @@ mksources(TRITREE *samptree, double thresh, double maxang)
 						thisethresh);
 			if (normalize(vsum) == .0)
 				break;
-			movedist = acos(DOT(vsum,curcent));
+			movedist = Acos(DOT(vsum,curcent));
 			if (movedist > growstep) {
 				VSUB(vsum, vsum, curcent);
 				movedist = growstep/VLEN(vsum); 
