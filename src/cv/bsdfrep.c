@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.20 2014/02/19 05:16:06 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.21 2014/03/07 21:21:02 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -610,7 +610,7 @@ load_bsdf_rep(FILE *ifp)
 	clear_bsdf_rep();
 	if (ifp == NULL)
 		return(0);
-	if (getheader(ifp, headline, NULL) < 0 || single_plane_incident < 0 |
+	if (getheader(ifp, headline, NULL) < 0 || (single_plane_incident < 0) |
 			!input_orient | !output_orient) {
 		fprintf(stderr, "%s: missing/bad format for BSDF interpolant\n",
 				progname);
