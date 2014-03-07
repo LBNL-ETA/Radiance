@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: badarg.c,v 2.10 2014/03/01 18:56:41 greg Exp $";
+static const char	RCSid[] = "$Id: badarg.c,v 2.11 2014/03/07 17:32:12 greg Exp $";
 #endif
 /*
  * Check argument list against format string.
@@ -32,12 +32,14 @@ char	*fl
 		s = *av;
 		switch (*fl) {
 		case 's':		/* string */
-			while (*s == ' ')
+			while (isspace(*s))
 				++s;
-			do
-				if (!isprint(*s))
-					return(i);
-			while (*++s);
+                        if (!isprint(*s))
+                                return(i);
+                        while (isprint(*s) | isspace(*s))
+                                ++s;
+                        if (*s)
+                                return(i);
 			break;
 		case 'i':		/* integer */
 			if (!isintd(s, " \t\r\n"))
