@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.14 2014/02/20 09:21:32 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.15 2014/03/08 01:05:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.14 2014/02/20 09:21:32 greg
 #include <math.h>
 #include "platform.h"
 #include "bsdfrep.h"
+#include "resolu.h"
 				/* global argv[0] */
 char			*progname;
 
