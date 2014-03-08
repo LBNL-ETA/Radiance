@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.13 2014/03/06 00:40:37 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.14 2014/03/08 06:37:59 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -19,7 +19,6 @@
 typedef struct {
 	float		vsum;		/* DSF sum */
 	unsigned int	nval;		/* number of values in sum */
-	unsigned short	crad;		/* radius (coded angle) */
 } GRIDVAL;			/* grid value */
 
 typedef struct {
