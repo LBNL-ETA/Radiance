@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.19 2014/03/02 01:56:03 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.20 2014/03/08 18:16:49 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -41,7 +41,7 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.19 2014/03/02 01:56:03 greg Exp 
 
 #define	RBFALLOCB	10		/* RBF allocation block size */
 
-				/* our loaded grid for this incident angle */
+				/* our loaded grid or comparison DSFs */
 GRIDVAL			dsf_grid[GRIDRES][GRIDRES];
 
 /* Start new DSF input grid */
@@ -83,8 +83,8 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 
 	pos_from_vec(pos, ovec);
 
-	dsf_grid[pos[0]][pos[1]].vsum += val;
-	dsf_grid[pos[0]][pos[1]].nval++;
+	dsf_grid[pos[0]][pos[1]].sum.v += val;
+	dsf_grid[pos[0]][pos[1]].sum.n++;
 }
 
 /* Compute minimum BSDF from histogram (does not clear) */
@@ -116,7 +116,7 @@ empty_region(int x0, int x1, int y0, int y1)
 
 	for (x = x0; x < x1; x++)
 	    for (y = y0; y < y1; y++)
-		if (dsf_grid[x][y].nval)
+		if (dsf_grid[x][y].sum.n)
 			return(0);
 	return(1);
 }
@@ -134,8 +134,8 @@ smooth_region(int x0, int x1, int y0, int y1)
 	memset(xvec, 0, sizeof(xvec));
 	for (x = x0; x < x1; x++)
 	    for (y = y0; y < y1; y++)
-		if ((n = dsf_grid[x][y].nval) > 0) {
-			double	z = dsf_grid[x][y].vsum;
+		if ((n = dsf_grid[x][y].sum.n) > 0) {
+			double	z = dsf_grid[x][y].sum.v;
 			rMtx[0][0] += x*x*(double)n;
 			rMtx[0][1] += x*y*(double)n;
 			rMtx[0][2] += x*(double)n;
@@ -158,8 +158,8 @@ smooth_region(int x0, int x1, int y0, int y1)
 	sqerr = 0.0;			/* compute mean squared error */
 	for (x = x0; x < x1; x++)
 	    for (y = y0; y < y1; y++)
-		if ((n = dsf_grid[x][y].nval) > 0) {
-			double	d = A*x + B*y + C - dsf_grid[x][y].vsum/n;
+		if ((n = dsf_grid[x][y].sum.n) > 0) {
+			double	d = A*x + B*y + C - dsf_grid[x][y].sum.v/n;
 			sqerr += n*d*d;
 		}
 	if (sqerr <= nvs*SMOOTH_MSE)	/* below absolute MSE threshold? */
@@ -179,8 +179,8 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 					/* compute average for region */
 	for (x = x0; x < x1; x++)
 	    for (y = y0; y < y1; y++) {
-		vtot += dsf_grid[x][y].vsum;
-		nv += dsf_grid[x][y].nval;
+		vtot += dsf_grid[x][y].sum.v;
+		nv += dsf_grid[x][y].sum.n;
 	    }
 	if (!nv) {
 		fprintf(stderr, "%s: internal - missing samples in create_lobe\n",

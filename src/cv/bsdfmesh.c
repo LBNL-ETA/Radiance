@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.18 2014/03/06 00:40:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.19 2014/03/08 18:16:48 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -18,6 +18,10 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.18 2014/03/06 00:40:37 greg Exp
 #include <string.h>
 #include <math.h>
 #include "bsdfrep.h"
+
+#ifndef NEIGH_FACT2
+#define NEIGH_FACT2	0.2	/* empirical neighborhood distance weight */
+#endif
 				/* number of processes to run */
 int			nprocs = 1;
 				/* number of children (-1 in child) */
@@ -135,6 +139,50 @@ run_subprocess(void)
 
 #endif	/* ! _WIN32 */
 
+/* Compute normalized distribution scattering functions for comparison */
+static void
+compute_nDSFs(const RBFNODE *rbf0, const RBFNODE *rbf1)
+{
+	const double	nf0 = (GRIDRES*GRIDRES) / rbf0->vtotal;
+	const double	nf1 = (GRIDRES*GRIDRES) / rbf1->vtotal;
+	int		x, y;
+	FVECT		dv;
+
+	for (x = GRIDRES; x--; )
+	    for (y = GRIDRES; y--; ) {
+		ovec_from_pos(dv, x, y);
+		dsf_grid[x][y].val[0] = nf0 * eval_rbfrep(rbf0, dv);
+		dsf_grid[x][y].val[1] = nf1 * eval_rbfrep(rbf1, dv);
+	    }
+}	
+
+/* Compute neighborhood distance-squared (dissimilarity) */
+static double
+neighborhood_dist2(int x0, int y0, int x1, int y1)
+{
+	int	rad = GRIDRES>>5;
+	double	sum2 = 0.;
+	double	d;
+	int	p[4];
+	int	i, j;
+
+	if ((x0 == x1) & (y0 == y1))
+		return(0.);
+						/* check radius */
+	p[0] = x0; p[1] = y0; p[2] = x1; p[3] = y1;
+	for (i = 4; i--; ) {
+		if (p[i] < rad) rad = p[i];
+		if (GRIDRES-1-p[i] < rad) rad = GRIDRES-1-p[i];
+	}
+	for (i = -rad; i <= rad; i++)
+	    for (j = -rad; j <= rad; j++) {
+	    	d = dsf_grid[x0+i][y0+j].val[0] -
+			dsf_grid[x1+i][y1+j].val[1];
+		sum2 += d*d;
+	    }
+	return(sum2 / (4*rad*(rad+1) + 1));
+}
+
 /* Comparison routine needed for sorting price row */
 static int
 msrt_cmp(void *b, const void *p1, const void *p2)
@@ -155,6 +203,7 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	FVECT	*vto = (FVECT *)malloc(sizeof(FVECT) * to_rbf->nrbf);
 	int	i, j;
 
+	compute_nDSFs(from_rbf, to_rbf);
 	pm->nrows = from_rbf->nrbf;
 	pm->ncols = to_rbf->nrbf;
 	pm->price = (float *)malloc(sizeof(float) * pm->nrows*pm->ncols);
@@ -180,7 +229,11 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 		d = Acos(DOT(vfrom, vto[j]));
 		pm->prow[j] = d*d;
 		d = R2ANG(to_rbf->rbfa[j].crad) - from_ang;
-		pm->prow[j] += d*d;	
+		pm->prow[j] += d*d;
+						/* neighborhood difference */
+		pm->prow[j] += NEIGH_FACT2 * neighborhood_dist2(
+				from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy,
+				to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy );
 		srow[j] = j;
 	    }
 	    qsort_r(srow, pm->ncols, sizeof(short), pm, &msrt_cmp);
