@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.19 2014/03/08 18:16:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.20 2014/03/08 21:06:14 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -20,7 +20,7 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.19 2014/03/08 18:16:48 greg Exp
 #include "bsdfrep.h"
 
 #ifndef NEIGH_FACT2
-#define NEIGH_FACT2	0.2	/* empirical neighborhood distance weight */
+#define NEIGH_FACT2	15.	/* empirical neighborhood distance weight */
 #endif
 				/* number of processes to run */
 int			nprocs = 1;
@@ -150,9 +150,9 @@ compute_nDSFs(const RBFNODE *rbf0, const RBFNODE *rbf1)
 
 	for (x = GRIDRES; x--; )
 	    for (y = GRIDRES; y--; ) {
-		ovec_from_pos(dv, x, y);
-		dsf_grid[x][y].val[0] = nf0 * eval_rbfrep(rbf0, dv);
-		dsf_grid[x][y].val[1] = nf1 * eval_rbfrep(rbf1, dv);
+		ovec_from_pos(dv, x, y);	/* cube root (brightness) */
+		dsf_grid[x][y].val[0] = pow(nf0*eval_rbfrep(rbf0, dv), .3333);
+		dsf_grid[x][y].val[1] = pow(nf1*eval_rbfrep(rbf1, dv), .3333);
 	    }
 }	
 
@@ -225,7 +225,7 @@ price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
 	    pm->prow = pricerow(pm,i);
 	    srow = psortrow(pm,i);
 	    for (j = to_rbf->nrbf; j--; ) {
-		double		d;		/* quadratic cost function */
+		double	d;			/* quadratic cost function */
 		d = Acos(DOT(vfrom, vto[j]));
 		pm->prow[j] = d*d;
 		d = R2ANG(to_rbf->rbfa[j].crad) - from_ang;
