@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.20 2014/03/08 21:06:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.21 2014/03/09 01:51:48 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -20,7 +20,7 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.20 2014/03/08 21:06:14 greg Exp
 #include "bsdfrep.h"
 
 #ifndef NEIGH_FACT2
-#define NEIGH_FACT2	15.	/* empirical neighborhood distance weight */
+#define NEIGH_FACT2	0.1	/* empirical neighborhood distance weight */
 #endif
 				/* number of processes to run */
 int			nprocs = 1;
