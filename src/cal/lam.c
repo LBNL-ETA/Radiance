@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.13 2014/02/11 17:05:00 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.14 2014/03/09 20:07:27 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -32,6 +32,7 @@ int	argc;
 char	*argv[];
 {
 	int	unbuff = 0;
+	int	binout = 0;
 	int	i;
 	char	*curtab;
 	int	curbytes;
@@ -79,8 +80,10 @@ char	*argv[];
 					fputs(": input size too big\n", stderr);
 					exit(1);
 				}
-				if (curbytes)
+				if (curbytes) {
 					curtab = "";
+					++binout;
+				}
 				break;
 			case '\0':
 				tabc[nfiles] = curtab;
@@ -128,6 +131,13 @@ char	*argv[];
 			exit(1);
 		}
 	}
+	if (binout)				/* binary output? */
+		SET_FILE_BINARY(stdout);
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+	for (i = nfiles; i--; )
+		flockfile(input[i]);
+	flockfile(stdout);
+#endif
 	puteol = 0;				/* check for ASCII output */
 	for (i = nfiles; i--; )
 		if (!bytsiz[i] || isprint(tabc[i][0]) || tabc[i][0] == '\t') {
