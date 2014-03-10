@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.21 2014/03/09 01:51:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.22 2014/03/10 20:58:29 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -400,7 +400,9 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	for (newmig = from_rbf->ejl; newmig != NULL;
 			newmig = nextedge(from_rbf,newmig))
 		if (newmig->rbfv[1] == to_rbf)
+{fprintf(stderr, "Edge already exists!\n");
 			return(NULL);
+}
 						/* else allocate */
 #ifdef DEBUG
 	fprintf(stderr, "Building path from (theta,phi) (%.1f,%.1f) ",
@@ -562,6 +564,7 @@ check_normal_incidence(void)
 	double			bestd;
 	int			n;
 
+
 	if (dsf_list == NULL)
 		return;				/* XXX should be error? */
 	near_rbf = dsf_list;
@@ -606,9 +609,10 @@ check_normal_incidence(void)
 	memcpy(mir_rbf, near_rbf, n);
 	mir_rbf->ord = near_rbf->ord - 1;	/* not used, I think */
 	mir_rbf->next = NULL;
+	mir_rbf->ejl = NULL;
 	rev_rbf_symmetry(mir_rbf, MIRROR_X|MIRROR_Y);
 	nprocs = 1;				/* compute migration matrix */
-	if (mig_list != create_migration(mir_rbf, near_rbf))
+	if (create_migration(mir_rbf, near_rbf) == NULL)
 		exit(1);			/* XXX should never happen! */
 						/* interpolate normal dist. */
 	rbf = e_advect_rbf(mig_list, norm_vec, 2*near_rbf->nrbf);
