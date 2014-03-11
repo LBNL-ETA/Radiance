@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.24 2014/03/08 01:05:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.25 2014/03/11 19:37:45 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -135,6 +135,9 @@ eval_isotropic(char *funame)
 			exit(1);
 		}
 		SET_FILE_BINARY(ofp);
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+		flockfile(ofp);
+#endif
 	} else
 		fputs("{\n", stdout);
 						/* need to assign Dx, Dy, Dz? */
@@ -239,6 +242,10 @@ eval_anisotropic(char *funame)
 					progname);
 			exit(1);
 		}
+		SET_FILE_BINARY(ofp);
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+		flockfile(ofp);
+#endif
 	} else
 		fputs("{\n", stdout);
 						/* need to assign Dx, Dy, Dz? */
