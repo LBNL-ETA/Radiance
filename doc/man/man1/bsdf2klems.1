@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2klems.1,v 1.3 2013/09/26 17:05:00 greg Exp $
+.\" RCSid $Id: bsdf2klems.1,v 1.4 2014/03/12 21:15:31 greg Exp $
 .TH BSDF2KLEMS 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2klems - generate XML Klems matrix description of a BSDF
@@ -8,6 +8,8 @@ bsdf2klems - generate XML Klems matrix description of a BSDF
 .B "\-n spp"
 ][
 .B "\-h|\-q"
+][
+.B "\-pC"
 ][
 .B "\-l maxlobes"
 ]
@@ -22,6 +24,8 @@ or
 .B "\-n spp"
 ][
 .B "\-h|\-q"
+][
+.B "\-pC"
 ]
 .B bsdf_in.xml
 .br
@@ -32,6 +36,8 @@ or
 .B "\-n spp"
 ][
 .B "\-h|\-q"
+][
+.B "\-pC"
 ][
 .B "{+|-}forward"
 ][
@@ -62,6 +68,13 @@ The
 option may be used to reduce this number to 41 patches.
 Neither option is recommended unless the distribution is known to
 be approximately diffuse.
+.PP
+The
+.I \-p
+option by itself turns off the progress bar, whose length may be set
+by an immediately following integer argument.
+(The default progress bar length is 79 characters.)\0
+.PP
 The
 .I \-l
 option may be used to specify the maximum number of lobes in any

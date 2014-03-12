@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.25 2014/03/11 19:37:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.26 2014/03/12 21:15:31 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -28,6 +28,35 @@ const double		ssamp_thresh = 0.35;
 const int		nssamp = 100;
 				/* limit on number of RBF lobes */
 static int		lobe_lim = 15000;
+				/* progress bar length */
+static int		do_prog = 79;
+
+
+/* Start new progress bar */
+#define prog_start(s)	if (do_prog) fprintf(stderr, "%s: %s...\n", progname, s); else
+
+/* Draw progress bar of the appropriate length */
+static void
+prog_show(double frac)
+{
+	char	pbar[256];
+	int	nchars;
+
+	if (do_prog <= 0) return;
+	if (do_prog > sizeof(pbar)-2)
+		do_prog = sizeof(pbar)-2;
+	if (frac < 0) frac = 0;
+	else if (frac > 1) frac = 1;
+	nchars = do_prog*frac + .5;
+	pbar[0] = '\r';
+	memset(pbar+1, '*', nchars);
+	memset(pbar+1+nchars, '-', do_prog-nchars);
+	pbar[do_prog+1] = '\0';
+	fputs(pbar, stderr);
+}
+
+/* Finish progress bar */
+#define	prog_done()	if (do_prog) fputc('\n',stderr); else
 
 /* Output XML prologue to stdout */
 static void
@@ -203,6 +232,7 @@ eval_isotropic(char *funame)
 		}
 		if (rbf != NULL)
 			free(rbf);
+		prog_show((ix+1.)*(2./sqres));
 	}
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
@@ -216,6 +246,7 @@ eval_isotropic(char *funame)
 		fputs("}\n", stdout);
 	}
 	data_epilogue();
+	prog_done();
 }
 
 /* Interpolate and output anisotropic BSDF data */
@@ -313,6 +344,7 @@ eval_anisotropic(char *funame)
 		}
 		if (rbf != NULL)
 			free(rbf);
+		prog_show((ix*sqres+iy+1.)/(sqres*sqres));
 	    }
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
@@ -323,6 +355,7 @@ eval_anisotropic(char *funame)
 	} else
 		fputs("}\n", stdout);
 	data_epilogue();
+	prog_done();
 }
 
 /* Read in BSDF and interpolate as tensor tree representation */
@@ -372,6 +405,9 @@ main(int argc, char *argv[])
 		case 'l':
 			lobe_lim = atoi(argv[++i]);
 			break;
+		case 'p':
+			do_prog = atoi(argv[i]+2);
+			break;
 		default:
 			goto userr;
 		}
@@ -390,16 +426,20 @@ main(int argc, char *argv[])
 		if (dofwd) {
 			input_orient = -1;
 			output_orient = -1;
-			(*evf)(argv[i]);	/* outside reflectance */
+			prog_start("Evaluating outside reflectance");
+			(*evf)(argv[i]);
 			output_orient = 1;
-			(*evf)(argv[i]);	/* outside -> inside */
+			prog_start("Evaluating outside->inside transmission");
+			(*evf)(argv[i]);
 		}
 		if (dobwd) {
 			input_orient = 1;
 			output_orient = 1;
-			(*evf)(argv[i]);	/* inside reflectance */
+			prog_start("Evaluating inside reflectance");
+			(*evf)(argv[i]);
 			output_orient = -1;
-			(*evf)(argv[i]);	/* inside -> outside */
+			prog_start("Evaluating inside->outside transmission");
+			(*evf)(argv[i]);
 		}
 		xml_epilogue();			/* finish XML output & exit */
 		return(0);
@@ -407,6 +447,7 @@ main(int argc, char *argv[])
 	if (i < argc) {				/* open input files if given */
 		int	nbsdf = 0;
 		for ( ; i < argc; i++) {	/* interpolate each component */
+			char	pbuf[256];
 			FILE	*fpin = fopen(argv[i], "rb");
 			if (fpin == NULL) {
 				fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
@@ -418,6 +459,8 @@ main(int argc, char *argv[])
 			fclose(fpin);
 			if (!nbsdf++)		/* start XML on first dist. */
 				xml_prologue(argc, argv);
+			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
+			prog_start(pbuf);
 			if (single_plane_incident)
 				eval_isotropic(NULL);
 			else
@@ -430,6 +473,7 @@ main(int argc, char *argv[])
 	if (!load_bsdf_rep(stdin))
 		return(1);
 	xml_prologue(argc, argv);		/* start XML output */
+	prog_start("Interpolating from standard input");
 	if (single_plane_incident)		/* resample dist. */
 		eval_isotropic(NULL);
 	else
