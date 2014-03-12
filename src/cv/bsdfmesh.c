@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.22 2014/03/10 20:58:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.23 2014/03/12 00:39:43 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -400,9 +400,7 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	for (newmig = from_rbf->ejl; newmig != NULL;
 			newmig = nextedge(from_rbf,newmig))
 		if (newmig->rbfv[1] == to_rbf)
-{fprintf(stderr, "Edge already exists!\n");
 			return(NULL);
-}
 						/* else allocate */
 #ifdef DEBUG
 	fprintf(stderr, "Building path from (theta,phi) (%.1f,%.1f) ",
