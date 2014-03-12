@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.26 2014/03/12 21:15:31 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.27 2014/03/12 22:24:59 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -56,7 +56,17 @@ prog_show(double frac)
 }
 
 /* Finish progress bar */
-#define	prog_done()	if (do_prog) fputc('\n',stderr); else
+static void
+prog_done(void)
+{
+	int	n = do_prog;
+
+	if (n <= 1) return;
+	fputc('\r', stderr);
+	while (n--)
+		fputc(' ', stderr);
+	fputc('\r', stderr);
+}
 
 /* Output XML prologue to stdout */
 static void
