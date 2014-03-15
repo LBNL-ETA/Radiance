@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.23 2014/03/12 00:39:43 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.24 2014/03/15 18:11:37 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -165,9 +165,6 @@ neighborhood_dist2(int x0, int y0, int x1, int y1)
 	double	d;
 	int	p[4];
 	int	i, j;
-
-	if ((x0 == x1) & (y0 == y1))
-		return(0.);
 						/* check radius */
 	p[0] = x0; p[1] = y0; p[2] = x1; p[3] = y1;
 	for (i = 4; i--; ) {
