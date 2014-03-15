@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.20 2014/03/08 18:16:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.21 2014/03/15 19:47:16 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -72,9 +72,7 @@ add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
 	ovec[1] = sin((M_PI/180.)*phi_out) * ovec[2];
 	ovec[2] = sqrt(1. - ovec[2]*ovec[2]);
 
-	if (val <= 0)			/* truncate to zero */
-		val = 0;
-	else if (!isDSF)
+	if (!isDSF)
 		val *= ovec[2];		/* convert from BSDF to DSF */
 
 					/* update BSDF histogram */
@@ -169,7 +167,7 @@ smooth_region(int x0, int x1, int y0, int y1)
 }
 
 /* Create new lobe based on integrated samples in region */
-static void
+static int
 create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 {
 	double	vtot = 0.0;
@@ -187,6 +185,8 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 				progname);
 		exit(1);
 	}
+	if (vtot <= 0)			/* only create positive lobes */
+		return(0);
 					/* peak value based on integral */
 	vtot *= (x1-x0)*(y1-y0)*(2.*M_PI/GRIDRES/GRIDRES)/(double)nv;
 	rad = (RSCA/(double)GRIDRES)*(x1-x0);
@@ -194,6 +194,7 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 	rvp->crad = ANG2R(rad);
 	rvp->gx = (x0+x1)>>1;
 	rvp->gy = (y0+y1)>>1;
+	return(1);
 }
 
 /* Recursive function to build radial basis function representation */
@@ -235,15 +236,18 @@ build_rbfrep(RBFVAL **arp, int *np, int x0, int x1, int y0, int y1)
 			return(-1);
 	}
 					/* create lobes for leaves */
-	if (!branched[0])
-		create_lobe(*arp+(*np)++, x0, xmid, y0, ymid);
-	if (!branched[1])
-		create_lobe(*arp+(*np)++, xmid, x1, y0, ymid);
-	if (!branched[2])
-		create_lobe(*arp+(*np)++, x0, xmid, ymid, y1);
-	if (!branched[3])
-		create_lobe(*arp+(*np)++, xmid, x1, ymid, y1);
-	nadded += nleaves;
+	if (!branched[0] && create_lobe(*arp+*np, x0, xmid, y0, ymid)) {
+		++(*np); ++nadded;
+	}
+	if (!branched[1] && create_lobe(*arp+*np, xmid, x1, y0, ymid)) {
+		++(*np); ++nadded;
+	}
+	if (!branched[2] && create_lobe(*arp+*np, x0, xmid, ymid, y1)) {
+		++(*np); ++nadded;
+	}
+	if (!branched[3] && create_lobe(*arp+*np, xmid, x1, ymid, y1)) {
+		++(*np); ++nadded;
+	}
 	return(nadded);
 }
 
