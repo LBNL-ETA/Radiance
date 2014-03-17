@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.31 2013/08/08 05:26:56 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.32 2014/03/17 01:53:51 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -284,7 +284,7 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 		unsigned	skipmask = 0;
 		csiz *= .5;
 		for (i = st->ndim; i--; )
-			if (1<<i & cmask)
+			if (1<<i & cmask) {
 				if (pos[i] < cmin[i] + csiz)
 					for (n = 1 << st->ndim; n--; ) {
 						if (n & 1<<i)
@@ -295,6 +295,7 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 						if (!(n & 1<<i))
 							skipmask |= 1<<n;
 					}
+			}
 		for (n = 1 << st->ndim; n--; ) {
 			if (1<<n & skipmask)
 				continue;
@@ -799,8 +800,7 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 	SDsquare2disk(gpos, gpos[0], gpos[1]);
 					/* compute Z-coordinate */
 	gpos[2] = 1. - gpos[0]*gpos[0] - gpos[1]*gpos[1];
-	if (gpos[2] > 0)		/* paranoia, I hope */
-		gpos[2] = sqrt(gpos[2]);
+	gpos[2] = sqrt(gpos[2]*(gpos[2]>0));
 					/* emit from back? */
 	if ((cd->sidef == SD_BREFL) | (cd->sidef == SD_FXMIT))
 		gpos[2] = -gpos[2];
