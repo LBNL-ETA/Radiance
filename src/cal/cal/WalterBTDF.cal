@@ -1,0 +1,36 @@
+{ RCSid $Id: WalterBTDF.cal,v 1.1 2014/03/18 16:16:37 greg Exp $ }
+{
+	BTDF model by Walter et al.
+}
+			{ Model parameters (change these) }
+ksint : 0.126221381019119;
+sigma_i : 1.434228082595141;
+sigma_o : 1.656368055960319;
+f0 : 0.2;
+alpha : 0.149990535073450;
+
+			{ Useful functions }
+s(x) : x*x;
+abs(x) : if(x, x, -x);
+G(x) : 2/(1 + sqrt(1 + s(alpha)*(1-s(x))/s(x)));
+F(w) : f0 + (1-f0)*(1-w)^5;
+D(htn) : s(alpha)/PI/s( s(htn)*(s(alpha)-1) + 1 );
+
+			{ Lobe calculation }
+lobe3(wiht,woht,win,won,htn) : abs(wiht)*abs(woht)/(abs(win)*abs(won)) *
+		s(sigma_o)*(1-F(wiht))*D(htn)*G(win)*G(won) /
+			s(sigma_i*wiht + sigma_o*woht);
+
+lobe2(ix,iy,iz,ox,oy,oz,htx,hty,htz,nf) : lobe3((ix*htx+iy*hty+iz*htz)*nf,
+		(ox*htx+oy*hty+oz*htz)*nf, iz, oz, htz*nf);
+
+lobe1(ix,iy,iz,ox,oy,oz,htx,hty,htz) : lobe2(ix,iy,iz,ox,oy,oz,htx,hty,htz,
+						1/sqrt(s(htx)+s(hty)+s(htz)));
+
+			{ Final function call - transmission only! }
+			{ vectors normalized, pointing away from surface }
+walter(ix,iy,iz,ox,oy,oz) : if(iz*oz, 0,
+				ksint * lobe1(ix,iy,iz,ox,oy,oz,
+				-sigma_i*ix-sigma_o*ox,
+				-sigma_i*iy-sigma_o*oy,
+				-sigma_i*iz-sigma_o*oz) );

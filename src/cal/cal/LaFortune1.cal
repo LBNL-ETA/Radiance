@@ -1,0 +1,23 @@
+{ RCSid $Id: LaFortune1.cal,v 1.1 2014/03/18 16:16:37 greg Exp $ }
+{ LaFortune reflectance model with one lobe }
+
+	{ Sample parameters (change these) }
+rho_d : 0.136465483630983;
+rho_s : 0.144594472775860;
+Cx : -0.605122636448704;
+Cy : -0.664960041454502;
+Cz : 0.586571000768196;
+n : 29.629194300125050;
+
+			{ Useful functions }
+max(a,b) : if(a-b, a, b);
+abs(x) : if(x, x, -x);
+noneg(x) : if(x, x, 0);
+
+	{ Normalization factor based on parameters }
+snf : (n+2)/(2*PI*max(abs(Cx),max(abs(Cy),abs(Cz)))^n);
+
+{ Note that we assume i and o vectors are normalized, both pointing away }
+
+lafortune(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0,
+		rho_d/PI + rho_s*snf*noneg(Cx*ix*ox + Cy*iy*oy + Cz*iz*oz)^n );
