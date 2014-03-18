@@ -1,13 +1,13 @@
-{ RCSid $Id: LaFortune.cal,v 1.1 2014/03/18 16:16:37 greg Exp $ }
+{ RCSid $Id: LaFortune.cal,v 1.2 2014/03/18 19:03:41 greg Exp $ }
 { LaFortune reflectance model with N lobes }
 
 	{ Sample parameters (change these) }
-rho_d : 0.136465483630983;
-rho_s(i) : select(i, 0.144594472775860);
-Cx(i) : select(i, -0.605122636448704);
-Cy(i) : select(i, -0.664960041454502);
-Cz(i) : select(i, 0.586571000768196);
-n(i) : select(i, 29.629194300125050);
+rho_d : 0.017615787130711;
+rho_s : 0.654729812719232;
+Cx(i) : select(i, -0.75, -0.78);
+Cy(i) : select(i, -0.91, -.81);
+Cz(i) : select(i, .75, .83);
+n(i) : select(i, 30, 15);
 NL : n(0);
 
 			{ Useful functions }
@@ -15,15 +15,16 @@ max(a,b) : if(a-b, a, b);
 abs(x) : if(x, x, -x);
 noneg(x) : if(x, x, 0);
 
-	{ Normalization factor based on parameters }
+		{ Normalization factor based on parameters }
 snf(i) : (n(i)+2)/(2*PI*max(abs(Cx(i)),max(abs(Cy(i)),abs(Cz(i))))^n(i));
 
-	{ CHANGE THE FOLOWING TO MATCH NL }
-snfk(i) : select(i, snf(1));
+		{ CHANGE THE FOLOWING TO MATCH NL }
+snfk(i) : select(i, snf(1), snf(2));
 
 { Note that we assume i and o vectors are normalized, both pointing away }
 
-sum(i,dx,dy,dz) : if(.5-i, 0, sum(i-1) +
-		rho_s(i)*snfk(i)*noneg(Cx(i)*dx + Cy(i)*dy + Cz(i)*dz)^n(i));
+sum(i,dx,dy,dz) : if(.5-i, 0, sum(i-1,dx,dy,dz) +
+		snfk(i)*noneg(Cx(i)*dx + Cy(i)*dy + Cz(i)*dz)^n(i));
 
-lafortune(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0, rho_d/PI + sum(NL,ix*ox,iy*oy,iz*oz) );
+lafortune(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0,
+			rho_d/PI + rho_s*sum(NL,ix*ox,iy*oy,iz*oz) );
