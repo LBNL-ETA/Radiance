@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.9 2014/03/17 01:59:48 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.10 2014/03/18 01:33:07 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -110,7 +110,7 @@ build_tree(TNODE *tp, const int bmin[], int l2s)
 
 /* Set our trimming threshold */
 static void
-set_threshold()
+set_threshold(void)
 {
 	int	hsum = 0;
 	int	i;
@@ -235,9 +235,30 @@ read_double(float *rowp, int n)
 	return(nread);
 }
 
+/* Truncate any negative values to zero */
+static void
+noneg(float *varr, int n)
+{
+	int	nnan = 0;
+
+	while (n-- > 0) {
+#ifdef isnan
+		if (isnan(*varr)) {
+			*varr = 0;
+			++nnan;
+		} else
+#endif
+		if (*varr < 0) *varr = 0;
+		++varr;
+	}
+	if (nnan)
+		fprintf(stderr, "Warning: BSDF data contains %d NaN values\n",
+				nnan);
+}
+
 /* Load data array, filling zeroes for rank 3 demi-tensor */
 static void
-load_data()
+load_data(void)
 {
 	int	(*readf)(float *, int) = NULL;
 	
@@ -289,11 +310,13 @@ load_data()
 		}
 	} else if (getc(stdin) != EOF)
 		error(WARNING, "binary data past end of expected input");
+
+	noneg(datarr, 1<<(log2g*ttrank));	/* take precautions */
 }
 
 /* Enforce reciprocity by averaging data values */
 static void
-do_reciprocity()
+do_reciprocity(void)
 {
 	const int	siz = 1<<log2g;
 	float		*v1p, *v2p;
