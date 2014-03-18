@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.16 2014/03/17 01:52:51 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.17 2014/03/18 19:08:24 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -25,6 +25,8 @@ typedef struct {
 	long		dstart;		/* data start offset in file */
 } PGINPUT;
 
+const double	ANGLE_EPS = 180./2./GRIDRES;
+
 PGINPUT		*inpfile;	/* input files sorted by incidence */
 int		ninpfiles;	/* number of input files */
 
@@ -35,13 +37,13 @@ cmp_inang(const void *p1, const void *p2)
 	const PGINPUT	*inp1 = (const PGINPUT *)p1;
 	const PGINPUT	*inp2 = (const PGINPUT *)p2;
 	
-	if (inp1->theta > inp2->theta+FTINY)
+	if (inp1->theta > inp2->theta+ANGLE_EPS)
 		return(1);
-	if (inp1->theta < inp2->theta-FTINY)
+	if (inp1->theta < inp2->theta-ANGLE_EPS)
 		return(-1);
-	if (inp1->phi > inp2->phi+FTINY)
+	if (inp1->phi > inp2->phi+ANGLE_EPS)
 		return(1);
-	if (inp1->phi < inp2->phi-FTINY)
+	if (inp1->phi < inp2->phi-ANGLE_EPS)
 		return(-1);
 	return(0);
 }
