@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.17 2014/03/18 19:08:24 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.18 2014/03/19 00:19:11 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -25,7 +25,7 @@ typedef struct {
 	long		dstart;		/* data start offset in file */
 } PGINPUT;
 
-const double	ANGLE_EPS = 180./2./GRIDRES;
+double		angle_eps = 0;	/* epsilon for angle comparisons */
 
 PGINPUT		*inpfile;	/* input files sorted by incidence */
 int		ninpfiles;	/* number of input files */
@@ -37,13 +37,13 @@ cmp_inang(const void *p1, const void *p2)
 	const PGINPUT	*inp1 = (const PGINPUT *)p1;
 	const PGINPUT	*inp2 = (const PGINPUT *)p2;
 	
-	if (inp1->theta > inp2->theta+ANGLE_EPS)
+	if (inp1->theta > inp2->theta+angle_eps)
 		return(1);
-	if (inp1->theta < inp2->theta-ANGLE_EPS)
+	if (inp1->theta < inp2->theta-angle_eps)
 		return(-1);
-	if (inp1->phi > inp2->phi+ANGLE_EPS)
+	if (inp1->phi > inp2->phi+angle_eps)
 		return(1);
-	if (inp1->phi < inp2->phi-ANGLE_EPS)
+	if (inp1->phi < inp2->phi-angle_eps)
 		return(-1);
 	return(0);
 }
@@ -124,6 +124,7 @@ add_pabopto_inp(const int i)
 		return(0);
 	}
 					/* prepare input grid */
+	angle_eps = 180./2./GRIDRES;
 	if (!i || cmp_inang(&inpfile[i-1], &inpfile[i])) {
 		if (i)			/* need to process previous incidence */
 			make_rbfrep();
@@ -183,6 +184,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < ninpfiles; i++)
 		if (!init_pabopto_inp(i, argv[i+1]))
 			return(1);
+	angle_eps = 0;
 	qsort(inpfile, ninpfiles, sizeof(PGINPUT), &cmp_inang);
 						/* compile measurements */
 	for (i = 0; i < ninpfiles; i++)
