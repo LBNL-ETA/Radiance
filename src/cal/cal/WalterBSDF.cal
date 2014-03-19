@@ -1,0 +1,56 @@
+{ RCSid $Id: WalterBSDF.cal,v 1.1 2014/03/19 19:06:20 greg Exp $ }
+{
+	Isotropic BSDF model by Walter et al.
+}
+			{ BRDF parameters (change these) }
+kdinr : 0.;
+ksinr : 1.;
+f0r : 0.277605834967475;
+alpha_r : 0.077419771872748;
+			{ BTDF parameters (change these) }
+ksint : 0.126221381019119;
+sigma_i : 1.434228082595141;
+sigma_o : 1.656368055960319;
+f0t : 0.2;
+alpha_t : 0.149990535073450;
+
+			{ Useful functions }
+s(x) : x*x;
+abs(x) : if(x, x, -x);
+noneg(x) : if(x, x, 0);
+
+			{ Reflection functions }
+Gr(x) : 2/(1 + sqrt(1 + s(alpha_r)*(1-s(x))/s(x)));
+Fr(w) : f0r + (1-f0r)*(1-w)^5;
+Dr(htn) : s(alpha_r)/PI/s( s(htn)*(s(alpha_r)-1) + 1 );
+
+lobe3r(wihr,win,won,htn) : Fr(wihr)*Dr(htn)*Gr(win)*Gr(won) / (4*win*won);
+lobe2r(ix,iy,iz,ox,oy,oz,htx,hty,htz,nf) : lobe3r((ix*htx+iy*hty+iz*htz)*nf,
+							iz, oz, htz*nf);
+lobe1r(ix,iy,iz,ox,oy,oz,htx,hty,htz) : lobe2r(ix,iy,iz,ox,oy,oz,htx,hty,htz,
+						1/sqrt(s(htx)+s(hty)+s(htz)));
+
+			{ Transmission functions }
+Gt(x) : 2/(1 + sqrt(1 + s(alpha_t)*(1-s(x))/s(x)));
+Ft(w) : f0t + (1-f0t)*(1-w)^5;
+Dt(htn) : s(alpha_t)/PI/s( s(htn)*(s(alpha_t)-1) + 1 );
+
+lobe3t(wiht,woht,win,won,htn) : abs(wiht*woht/(win*won)) *
+		s(sigma_o)*(1-Ft(wiht))*Dt(htn)*Gt(win)*Gt(won) /
+			s(sigma_i*wiht + sigma_o*woht);
+
+lobe2t(ix,iy,iz,ox,oy,oz,htx,hty,htz,nf) : lobe3t((ix*htx+iy*hty+iz*htz)*nf,
+		(ox*htx+oy*hty+oz*htz)*nf, iz, oz, htz*nf);
+
+lobe1t(ix,iy,iz,ox,oy,oz,htx,hty,htz) : lobe2t(ix,iy,iz,ox,oy,oz,htx,hty,htz,
+						1/sqrt(s(htx)+s(hty)+s(htz)));
+
+			{ Final function call - reflection & transmission }
+			{ vectors normalized, pointing away from surface }
+walter(ix,iy,iz,ox,oy,oz) : if(iz*oz, kdinr/PI +
+					ksinr*lobe1r(ix,iy,iz,ox,oy,oz,
+						ix+ox, iy+oy, iz+oz),
+					ksint*noneg(lobe1t(ix,iy,iz,ox,oy,oz,
+						-sigma_i*ix-sigma_o*ox,
+						-sigma_i*iy-sigma_o*oy,
+						-sigma_i*iz-sigma_o*oz)) );
