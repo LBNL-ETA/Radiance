@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.18 2014/03/19 00:19:11 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.19 2014/03/19 19:48:57 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -114,9 +114,10 @@ init_pabopto_inp(const int i, const char *fname)
 static int
 add_pabopto_inp(const int i)
 {
-	FILE	*fp = fopen(inpfile[i].fname, "r");
-	double	theta_out, phi_out, val;
-	int	n, c;
+	static int	lastnew = -1;
+	FILE		*fp = fopen(inpfile[i].fname, "r");
+	double		theta_out, phi_out, val;
+	int		n, c;
 	
 	if (fp == NULL || fseek(fp, inpfile[i].dstart, 0) == EOF) {
 		fputs(inpfile[i].fname, stderr);
@@ -125,14 +126,15 @@ add_pabopto_inp(const int i)
 	}
 					/* prepare input grid */
 	angle_eps = 180./2./GRIDRES;
-	if (!i || cmp_inang(&inpfile[i-1], &inpfile[i])) {
-		if (i)			/* need to process previous incidence */
+	if (lastnew < 0 || cmp_inang(&inpfile[lastnew], &inpfile[i])) {
+		if (lastnew >= 0)	/* need to process previous incidence */
 			make_rbfrep();
 #ifdef DEBUG
 		fprintf(stderr, "New incident (theta,phi)=(%f,%f)\n",
 					inpfile[i].theta, inpfile[i].phi);
 #endif
 		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
+		lastnew = i;
 	}
 #ifdef DEBUG
 	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
