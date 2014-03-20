@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.19 2014/03/19 19:48:57 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.20 2014/03/20 16:54:23 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.19 2014/03/19 19:48:57 greg
  *	G. Ward
  */
 
+#define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,32 +21,27 @@ char			*progname;
 
 typedef struct {
 	const char	*fname;		/* input file path */
-	double		theta, phi;	/* incident angles (in degrees) */
+	double		theta, phi;	/* input angles */
+	int		igp[2];		/* input grid position */
 	int		isDSF;		/* data is DSF (rather than BSDF)? */
 	long		dstart;		/* data start offset in file */
 } PGINPUT;
-
-double		angle_eps = 0;	/* epsilon for angle comparisons */
 
 PGINPUT		*inpfile;	/* input files sorted by incidence */
 int		ninpfiles;	/* number of input files */
 
 /* Compare incident angles */
 static int
-cmp_inang(const void *p1, const void *p2)
+cmp_indir(const void *p1, const void *p2)
 {
 	const PGINPUT	*inp1 = (const PGINPUT *)p1;
 	const PGINPUT	*inp2 = (const PGINPUT *)p2;
+	int		ydif = inp1->igp[1] - inp2->igp[1];
 	
-	if (inp1->theta > inp2->theta+angle_eps)
-		return(1);
-	if (inp1->theta < inp2->theta-angle_eps)
-		return(-1);
-	if (inp1->phi > inp2->phi+angle_eps)
-		return(1);
-	if (inp1->phi < inp2->phi-angle_eps)
-		return(-1);
-	return(0);
+	if (ydif)
+		return(ydif);
+
+	return(inp1->igp[0] - inp2->igp[0]);
 }
 
 /* Prepare a PAB-Opto input file by reading its header */
@@ -53,6 +49,7 @@ static int
 init_pabopto_inp(const int i, const char *fname)
 {
 	FILE	*fp = fopen(fname, "r");
+	FVECT	dv;
 	char	buf[2048];
 	int	c;
 	
@@ -105,8 +102,12 @@ init_pabopto_inp(const int i, const char *fname)
 		fputs(": unknown incident angle\n", stderr);
 		return(0);
 	}
-	while (inpfile[i].phi < 0)	/* normalize phi direction */
-		inpfile[i].phi += 360.;
+				/* convert angle to grid position */
+	dv[2] = sin(M_PI/180.*inpfile[i].theta);
+	dv[0] = cos(M_PI/180.*inpfile[i].phi)*dv[2];
+	dv[1] = sin(M_PI/180.*inpfile[i].phi)*dv[2];
+	dv[2] = sqrt(1. - dv[2]*dv[2]);
+	pos_from_vec(inpfile[i].igp, dv);
 	return(1);
 }
 
@@ -114,7 +115,6 @@ init_pabopto_inp(const int i, const char *fname)
 static int
 add_pabopto_inp(const int i)
 {
-	static int	lastnew = -1;
 	FILE		*fp = fopen(inpfile[i].fname, "r");
 	double		theta_out, phi_out, val;
 	int		n, c;
@@ -125,16 +125,14 @@ add_pabopto_inp(const int i)
 		return(0);
 	}
 					/* prepare input grid */
-	angle_eps = 180./2./GRIDRES;
-	if (lastnew < 0 || cmp_inang(&inpfile[lastnew], &inpfile[i])) {
-		if (lastnew >= 0)	/* need to process previous incidence */
+	if (!i || cmp_indir(&inpfile[i-1], &inpfile[i])) {
+		if (i)			/* process previous incidence */
 			make_rbfrep();
 #ifdef DEBUG
 		fprintf(stderr, "New incident (theta,phi)=(%f,%f)\n",
 					inpfile[i].theta, inpfile[i].phi);
 #endif
 		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
-		lastnew = i;
 	}
 #ifdef DEBUG
 	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
@@ -186,8 +184,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < ninpfiles; i++)
 		if (!init_pabopto_inp(i, argv[i+1]))
 			return(1);
-	angle_eps = 0;
-	qsort(inpfile, ninpfiles, sizeof(PGINPUT), &cmp_inang);
+	qsort(inpfile, ninpfiles, sizeof(PGINPUT), &cmp_indir);
 						/* compile measurements */
 	for (i = 0; i < ninpfiles; i++)
 		if (!add_pabopto_inp(i))
