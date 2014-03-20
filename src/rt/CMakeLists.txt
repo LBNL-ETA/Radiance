@@ -22,21 +22,6 @@ target_link_libraries(rtrace raycalls radiance rtrad)
 
 add_executable(rpict rpmain.c rpict.c srcdraw.c duphead.c persist.c)
 target_link_libraries(rpict radiance rtrad)
-if(X11_FOUND)
-  set(X11_SOURCES x11.c x11twind.c)
-  add_definitions("-DHAS_X11")
-endif()
-if(QT4_FOUND)
-  add_definitions("-DHAS_QT")
-endif()
-add_executable(rvu
-  rvmain.c rview.c rv2.c rv3.c devtable.c devcomm.c editline.c ${X11_SOURCES}
-  colortab.c)
-target_link_libraries(rvu raycalls radiance rtrad ${X11_LIBRARIES})
-# only link to rvu-qt-lib if qt is found
-if(QT4_FOUND)
-  target_link_libraries(rvu qtrvu)
-endif()
 
 add_executable(lookamb lookamb.c ambio.c)
 target_link_libraries(lookamb rtrad)
@@ -44,11 +29,33 @@ target_link_libraries(lookamb rtrad)
 add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
 target_link_libraries(rcontrib radiance rtrad)
 
+set(targets_to_install lookamb radiance raycalls rtrace rpict rcontrib)
+
+if(X11_FOUND)
+  set(X11_SOURCES x11.c x11twind.c)
+  add_definitions("-DHAS_X11")
+endif()
+if(QT4_FOUND)
+  add_definitions("-DHAS_QT")
+endif()
+if (X11_FOUND OR QT4_FOUND)
+  add_executable(rvu
+    rvmain.c rview.c rv2.c rv3.c devtable.c devcomm.c editline.c ${X11_SOURCES}
+    colortab.c)
+  target_link_libraries(rvu raycalls radiance rtrad ${X11_LIBRARIES})
+  list(APPEND targets_to_install rvu)
+
+  # only link to rvu-qt-lib if qt is found
+  if(QT4_FOUND)
+    target_link_libraries(rvu qtrvu)
+  endif()
+endif()
+
 add_test(rtrace_Version ${EXECUTABLE_OUTPUT_PATH}/rtrace -version)
 set_tests_properties(rtrace_Version PROPERTIES
   PASS_REGULAR_EXPRESSION "RADIANCE")
 
-install(TARGETS lookamb radiance raycalls rtrace rpict rvu rcontrib
+install(TARGETS ${targets_to_install}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION bin
         ARCHIVE DESTINATION bin)

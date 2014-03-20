@@ -5,6 +5,7 @@ enable_testing()
 include(CTest)
 
 option(BUILD_SHARED_LIBS "Build radiance using shared libraries?" OFF)
+option(BUILD_HEADLESS "Build radiance without any GUI components?" OFF)
 
 if(NOT WIN32)
   set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
@@ -52,8 +53,10 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${radiance_SOURCE_DIR}/License.txt")
 
 include(CPack)
 
-find_package(Qt4 COMPONENTS QtCore QtGui)
-find_package(X11)
+if(NOT BUILD_HEADLESS)
+  find_package(Qt4 COMPONENTS QtCore QtGui)
+  find_package(X11)
+endif()
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
