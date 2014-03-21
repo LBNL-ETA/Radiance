@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.20 2014/03/20 16:54:23 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.21 2014/03/21 01:04:42 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -210,8 +210,9 @@ main(int argc, char *argv[])
 	FVECT	dir;
 	int	i, j, n;
 
+	progname = argv[0];
 	if (argc != 2) {
-		fprintf(stderr, "Usage: %s input.dat > output.rad\n", argv[0]);
+		fprintf(stderr, "Usage: %s input.dat > output.rad\n", progname);
 		return(1);
 	}
 	ninpfiles = 1;
@@ -219,7 +220,10 @@ main(int argc, char *argv[])
 	if (!init_pabopto_inp(0, argv[1]) || !add_pabopto_inp(0))
 		return(1);
 						/* reduce data set */
-	make_rbfrep();
+	if (make_rbfrep() == NULL) {
+		fprintf(stderr, "%s: nothing to plot!\n", progname);
+		exit(1);
+	}
 #ifdef DEBUG
 	fprintf(stderr, "Minimum BSDF = %.4f\n", bsdf_min);
 #endif
@@ -262,7 +266,7 @@ main(int argc, char *argv[])
 	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
 	pfp = popen(buf, "w");
 	if (pfp == NULL) {
-		fprintf(stderr, "%s: cannot open '| %s'\n", argv[0], buf);
+		fprintf(stderr, "%s: cannot open '| %s'\n", progname, buf);
 		return(1);
 	}
 	for (i = 0; i < GRIDRES; i++)
