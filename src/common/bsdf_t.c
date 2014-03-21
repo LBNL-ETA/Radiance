@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.32 2014/03/17 01:53:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.33 2014/03/21 17:49:53 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -849,7 +849,8 @@ load_values(char **spp, float *va, int n)
 	char	*svnext;
 
 	while (n-- > 0 && (svnext = fskip(*spp)) != NULL) {
-		*v++ = atof(*spp);
+		if ((*v++ = atof(*spp)) < 0)
+			v[-1] = 0;
 		*spp = svnext;
 		eat_token(spp, ',');
 	}
