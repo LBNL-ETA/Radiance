@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.21 2014/03/21 01:04:42 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.22 2014/03/21 23:11:44 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -129,7 +129,7 @@ add_pabopto_inp(const int i)
 		if (i)			/* process previous incidence */
 			make_rbfrep();
 #ifdef DEBUG
-		fprintf(stderr, "New incident (theta,phi)=(%f,%f)\n",
+		fprintf(stderr, "New incident (theta,phi)=(%.1f,%.1f)\n",
 					inpfile[i].theta, inpfile[i].phi);
 #endif
 		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
