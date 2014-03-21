@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.21 2014/03/15 19:47:16 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.22 2014/03/21 00:27:39 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -262,8 +262,13 @@ make_rbfrep()
 	comp_bsdf_min();
 				/* create RBF node list */
 	rbfarr = NULL; nn = 0;
-	if (build_rbfrep(&rbfarr, &nn, 0, GRIDRES, 0, GRIDRES) <= 0)
-		goto memerr;
+	if (build_rbfrep(&rbfarr, &nn, 0, GRIDRES, 0, GRIDRES) <= 0) {
+		if (nn)
+			goto memerr;
+		fprintf(stderr, "%s: no usable data in make_rbfrep()\n",
+				progname);
+		return(NULL);
+	}
 				/* (re)allocate RBF array */
 	newnode = (RBFNODE *)realloc(rbfarr,
 			sizeof(RBFNODE) + sizeof(RBFVAL)*(nn-1));
