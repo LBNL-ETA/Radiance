@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.21 2014/03/07 21:21:02 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.22 2014/03/21 16:28:23 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -304,8 +304,9 @@ insert_dsf(RBFNODE *newrbf)
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
 		if (DOT(rbf->invec, newrbf->invec) >= 1.-FTINY) {
 			fprintf(stderr,
-				"%s: Duplicate incident measurement (ignored)\n",
-					progname);
+		"%s: Duplicate incident measurement ignored at (%.1f,%.1f)\n",
+					progname, get_theta180(newrbf->invec),
+					get_phi360(newrbf->invec));
 			free(newrbf);
 			return(-1);
 		}
