@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.22 2014/03/21 00:27:39 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.23 2014/03/21 00:42:46 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -267,7 +267,7 @@ make_rbfrep()
 			goto memerr;
 		fprintf(stderr, "%s: no usable data in make_rbfrep()\n",
 				progname);
-		return(NULL);
+		exit(1);
 	}
 				/* (re)allocate RBF array */
 	newnode = (RBFNODE *)realloc(rbfarr,
