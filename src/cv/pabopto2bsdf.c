@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.22 2014/03/21 23:11:44 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.23 2014/03/23 17:46:25 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -77,7 +77,9 @@ init_pabopto_inp(const int i, const char *fname)
 				inpfile[i].isDSF = 1;
 				continue;
 			}
-			if (!strcasecmp(typ, "BSDF")) {
+			if (!strcasecmp(typ, "BSDF") ||
+					!strcasecmp(typ, "BRDF") ||
+					!strcasecmp(typ, "BTDF")) {
 				inpfile[i].isDSF = 0;
 				continue;
 			}
