@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.33 2014/03/21 17:49:53 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.34 2014/03/23 19:24:11 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -804,10 +804,9 @@ SDsampTreCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 					/* emit from back? */
 	if ((cd->sidef == SD_BREFL) | (cd->sidef == SD_FXMIT))
 		gpos[2] = -gpos[2];
-	if (cd->isodist) {		/* rotate isotropic result */
+	if (cd->isodist) {		/* rotate isotropic sample */
 		rotangle = atan2(-ioVec[1],-ioVec[0]);
-		VCOPY(ioVec, gpos);
-		spinvector(ioVec, ioVec, zvec, rotangle);
+		spinvector(ioVec, gpos, zvec, rotangle);
 	} else
 		VCOPY(ioVec, gpos);
 	return SDEnone;
