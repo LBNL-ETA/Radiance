@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.7 2014/02/20 09:21:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.8 2014/03/24 05:36:40 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -138,7 +138,8 @@ main(int argc, char *argv[])
 			}
 		}
 		fflush(stdout);
-		sprintf(buf, "gensurf tmat bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
+		sprintf(buf, "gensurf tmat bsdf%d - - - %d %d", n+1,
+						GRIDRES-1, GRIDRES-1);
 		fp = popen(buf, "w");
 		if (fp == NULL) {
 			fprintf(stderr, "%s: cannot open '| %s'\n", progname, buf);
