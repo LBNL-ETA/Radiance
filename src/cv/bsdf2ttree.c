@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.27 2014/03/12 22:24:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.28 2014/03/24 03:50:28 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -25,7 +25,9 @@ int			samp_order = 6;
 				/* super-sampling threshold */
 const double		ssamp_thresh = 0.35;
 				/* number of super-samples */
-const int		nssamp = 100;
+#ifndef NSSAMP
+#define	NSSAMP		100
+#endif
 				/* limit on number of RBF lobes */
 static int		lobe_lim = 15000;
 				/* progress bar length */
@@ -200,8 +202,6 @@ eval_isotropic(char *funame)
 			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
 			else {
-			    double	ssa[3], ssvec[6], sum;
-			    int		ssi;
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);
 				varset("Dy", '=', -iovec[4]);
@@ -209,10 +209,14 @@ eval_isotropic(char *funame)
 				++eclock;
 			    }
 			    bsdf = funvalue(funame, 6, iovec);
+#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
-				sum = 0;	/* super-sample voxel */
-				for (ssi = nssamp; ssi--; ) {
-				    SDmultiSamp(ssa, 3, (ssi+frandom())/nssamp);
+				int	ssi;
+				double	ssa[3], ssvec[6], sum = 0;
+						/* super-sample voxel */
+				for (ssi = NSSAMP; ssi--; ) {
+				    SDmultiSamp(ssa, 3, (ssi+frandom()) *
+							(1./NSSAMP));
 				    ssvec[0] = 2.*(ix+ssa[0])/sqres - 1.;
 				    ssvec[1] = .0;
 				    ssvec[2] = input_orient *
@@ -223,15 +227,16 @@ eval_isotropic(char *funame)
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
 				    if (assignD) {
-					varset("Dx", '=', -iovec[3]);
-					varset("Dy", '=', -iovec[4]);
-					varset("Dz", '=', -iovec[5]);
+					varset("Dx", '=', -ssvec[3]);
+					varset("Dy", '=', -ssvec[4]);
+					varset("Dz", '=', -ssvec[5]);
 					++eclock;
 				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf = sum/nssamp;
+				bsdf = sum/NSSAMP;
 			    }
+#endif
 			}
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
@@ -311,8 +316,6 @@ eval_anisotropic(char *funame)
 			    bsdf = eval_rbfrep(rbf, iovec+3) *
 						output_orient/iovec[5];
 			else {
-			    double	ssa[4], ssvec[6], sum;
-			    int		ssi;
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);
 				varset("Dy", '=', -iovec[4]);
@@ -320,13 +323,17 @@ eval_anisotropic(char *funame)
 				++eclock;
 			    }
 			    bsdf = funvalue(funame, 6, iovec);
+#if (NSSAMP > 0)
 			    if (abs_diff(bsdf, last_bsdf) > ssamp_thresh) {
-				sum = 0;	/* super-sample voxel */
-				for (ssi = nssamp; ssi--; ) {
-				    SDmultiSamp(ssa, 4, (ssi+frandom())/nssamp);
+				int	ssi;
+				double	ssa[4], ssvec[6], sum = 0;
+						/* super-sample voxel */
+				for (ssi = NSSAMP; ssi--; ) {
+				    SDmultiSamp(ssa, 4, (ssi+frandom()) *
+							(1./NSSAMP));
 				    SDsquare2disk(ssvec, 1.-(ix+ssa[0])/sqres,
 						1.-(iy+ssa[1])/sqres);
-				    ssvec[2] = output_orient *
+				    ssvec[2] = input_orient *
 						sqrt(1. - ssvec[0]*ssvec[0] -
 							ssvec[1]*ssvec[1]);
 				    SDsquare2disk(ssvec+3, (ox+ssa[2])/sqres,
@@ -335,15 +342,16 @@ eval_anisotropic(char *funame)
 						sqrt(1. - ssvec[3]*ssvec[3] -
 							ssvec[4]*ssvec[4]);
 				    if (assignD) {
-					varset("Dx", '=', -iovec[3]);
-					varset("Dy", '=', -iovec[4]);
-					varset("Dz", '=', -iovec[5]);
+					varset("Dx", '=', -ssvec[3]);
+					varset("Dy", '=', -ssvec[4]);
+					varset("Dz", '=', -ssvec[5]);
 					++eclock;
 				    }
 				    sum += funvalue(funame, 6, ssvec);
 				}
-				bsdf = sum/nssamp;
+				bsdf = sum/NSSAMP;
 			    }
+#endif
 			}
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
