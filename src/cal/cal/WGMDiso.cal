@@ -1,0 +1,16 @@
+{ RCSid $Id: WGMDiso.cal,v 1.1 2014/03/24 20:51:16 greg Exp $ }
+{ Ward-Geisler-Moroder-Duer isotropic BRDF model }
+
+			{ Parameters (change these) }
+rho_d : 0.095;
+rho_s : 0.05;
+a : 0.08;
+
+exfunc(hx,hy,hz) : exp(-(hx*hx + hy*hy)/(a*a*hz*hz)) *
+			(hx*hx + hy*hy + hz*hz) /
+			(PI*a*a*hz*hz*hz*hz);
+
+{ Note that we assume i and o vectors are normalized }
+
+wgmdiso(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0,
+			rho_d/PI + rho_s*exfunc(ix+ox,iy+oy,iz+oz) );

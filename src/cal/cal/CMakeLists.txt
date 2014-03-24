@@ -1,4 +1,4 @@
-install(FILES LaFortune.cal LaFortune1.cal WalterBTDF.cal WalterBSDF.cal clamp.cal	disk2square.cal	gensky-s.fmt	mat3.cal printwarp.cal	sf.cal tregenza.cal vwparab.cal clouds.cal	errfile.fmt	graypatch.cal	metals.cal	quadratic.cal	spharm.cal	tregsrc.cal	vwplanis.cal
+install(FILES LaFortune.cal LaFortune1.cal WalterBTDF.cal WalterBSDF.cal WGMDiso.cal WGMDaniso.cal Ashikhmin.cal clamp.cal	disk2square.cal	gensky-s.fmt	mat3.cal printwarp.cal	sf.cal tregenza.cal vwparab.cal clouds.cal	errfile.fmt	graypatch.cal	metals.cal	quadratic.cal	spharm.cal	tregsrc.cal	vwplanis.cal
 bezier2.cal	cmat.fmt	ferwerda.cal	hermite.cal	noise.cal	reinhard.cal	sphsamp.cal	trix.dat	xyz_rgb.cal
 blackbody.cal	color.fmt	filt.cal	illum.fmt	noise2.cal	reinhard.csh	spline.cal	triy.dat	xyz_srgb.cal
 blinds.cal	colorcal.csh	fitSH.cal	illumcal.csh	noise3.cal	reinhart.cal	stdrefl.cal	triz.dat

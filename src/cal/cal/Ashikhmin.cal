@@ -1,0 +1,30 @@
+{ RCSid $Id: Ashikhmin.cal,v 1.1 2014/03/24 20:51:16 greg Exp $ }
+{
+	Ashikhmin-Shirley BRDF model
+
+	Includes Schlick estimate of Fresnel fraction,
+	but unlike Radiance material, does not remove
+	this from diffuse component.
+}
+		{ Parameters (change these) }
+MF : 30;
+lcorr(r,g,b) : MF*(.265*r + .670*g + .065*b);
+rho_d : lcorr(0.0039510616569, 0.0036905000484, 0.0027494885161);
+rho_s : lcorr(0.0090625419097, 0.0083144131101, 0.0060292909118);
+f0 : 0.9999999990000;
+nu : 962.839595;
+nv : 72.3236783;
+		{ Lobe calculation }
+abs(x) : if(x, x, -x);
+max(a,b) : if(a-b, a, b);
+Schlick(odoth) : f0 + (1-f0)*(1-odoth)^5;
+lobe2(iz,oz,hx,hy,hz,odoth) : Schlick(odoth)*sqrt((nu+1)*(nv+1)) /
+			(8*PI*max(abs(iz),abs(oz))*odoth) *
+			abs(hz)^((hx*hx*nu + hy*hy*nv)/(1-hz*hz));
+lobe1(iz,ox,oy,oz,hx,hy,hz,nf) :
+		lobe2(iz,oz,hx*nf,hy*nf,hz*nf,(ox*hx+oy*hy+oz*hz)*nf);
+lobe(iz,ox,oy,oz,hx,hy,hz) : lobe1(iz,ox,oy,oz,hx,hy,hz,
+						1/sqrt(hx*hx+hy*hy+hz*hz));
+
+ashikhmin(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0,
+		rho_d/PI + rho_s*lobe(iz,ox,oy,oz,ix+ox,iy+oy,iz+oz) );

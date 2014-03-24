@@ -1,0 +1,17 @@
+{ RCSid $Id: WGMDaniso.cal,v 1.1 2014/03/24 20:51:16 greg Exp $ }
+{ Ward-Geisler-Moroder-Duer anisotropic BRDF model }
+
+			{ Parameters (change these) }
+rho_d : 0.095;
+rho_s : 0.05;
+ax : 0.02;
+ay : 0.08;
+
+exfunc(hx,hy,hz) : exp(-(hx*hx/(ax*ax) + hy*hy/(ay*ay))/(hz*hz)) *
+			(hx*hx + hy*hy + hz*hz) /
+			(PI*ax*ay*hz*hz*hz*hz);
+
+{ Note that we assume i and o vectors are normalized }
+
+wgmdaniso(ix,iy,iz,ox,oy,oz) : if( -iz*oz, 0,
+			rho_d/PI + rho_s*exfunc(ix+ox,iy+oy,iz+oz) );
