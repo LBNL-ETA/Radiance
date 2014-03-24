@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.34 2014/03/23 19:24:11 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.35 2014/03/24 04:00:45 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -517,7 +517,7 @@ build_scaffold(float val, const double *cmin, double csiz, void *cptr)
 		sp->wmax = wid;
 	if (sp->alen >= sp->nall) {	/* need more space? */
 		struct outdir_s	*ndarr;
-		sp->nall += 1024;
+		sp->nall = (int)(1.5*sp->nall) + 256;
 		ndarr = (struct outdir_s *)realloc(sp->darr,
 					sizeof(struct outdir_s)*sp->nall);
 		if (ndarr == NULL) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.47 2014/03/23 23:15:53 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.48 2014/03/24 04:00:45 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -558,8 +558,7 @@ SDdiffuseSamp(FVECT outVec, int outFront, double randX)
 	SDmultiSamp(outVec, 2, randX);
 	SDsquare2disk(outVec, outVec[0], outVec[1]);
 	outVec[2] = 1. - outVec[0]*outVec[0] - outVec[1]*outVec[1];
-	if (outVec[2] > 0)		/* a bit of paranoia */
-		outVec[2] = sqrt(outVec[2]);
+	outVec[2] = sqrt(outVec[2]*(outVec[2]>0));
 	if (!outFront)			/* going out back? */
 		outVec[2] = -outVec[2];
 }
