@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.24 2014/03/15 18:11:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.25 2014/03/24 06:07:46 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -553,12 +553,11 @@ mesh_from_edge(MIGRATION *edge)
 static void
 check_normal_incidence(void)
 {
-	static const FVECT	norm_vec = {.0, .0, 1.};
+	static FVECT		norm_vec = {.0, .0, 1.};
 	const int		saved_nprocs = nprocs;
 	RBFNODE			*near_rbf, *mir_rbf, *rbf;
 	double			bestd;
 	int			n;
-
 
 	if (dsf_list == NULL)
 		return;				/* XXX should be error? */
@@ -609,7 +608,7 @@ check_normal_incidence(void)
 	nprocs = 1;				/* compute migration matrix */
 	if (create_migration(mir_rbf, near_rbf) == NULL)
 		exit(1);			/* XXX should never happen! */
-						/* interpolate normal dist. */
+	norm_vec[2] = input_orient;		/* interpolate normal dist. */
 	rbf = e_advect_rbf(mig_list, norm_vec, 2*near_rbf->nrbf);
 	nprocs = saved_nprocs;			/* final clean-up */
 	free(mir_rbf);

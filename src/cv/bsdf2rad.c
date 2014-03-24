@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.8 2014/03/24 05:36:40 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.9 2014/03/24 06:07:46 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -94,14 +94,20 @@ main(int argc, char *argv[])
 	min_log = log(bsdf_min*.5 + 1e-5);
 						/* output BSDF rep. */
 	for (n = 0; (n < 6) & (2*n+3 < argc); n++) {
-		double	theta = atof(argv[2*n+2]);
+		double	theta = (M_PI/180.)*atof(argv[2*n+2]);
+		double	phi = (M_PI/180.)*atof(argv[2*n+3]);
+		if (theta < -FTINY) {
+			fprintf(stderr, "%s: theta values must be positive\n",
+					progname);
+			return(1);
+		}
 		if (inpXML) {
-			input_orient = (theta <= 90.) ? 1 : -1;
+			input_orient = (theta <= M_PI/2.) ? 1 : -1;
 			output_orient = doTrans ? -input_orient : input_orient;
 		}
-		idir[2] = sin((M_PI/180.)*theta);
-		idir[0] = idir[2] * cos((M_PI/180.)*atof(argv[2*n+3]));
-		idir[1] = idir[2] * sin((M_PI/180.)*atof(argv[2*n+3]));
+		idir[2] = sin(theta);
+		idir[0] = idir[2] * cos(phi);
+		idir[1] = idir[2] * sin(phi);
 		idir[2] = input_orient * sqrt(1. - idir[2]*idir[2]);
 #ifdef DEBUG
 		fprintf(stderr, "Computing BSDF for incident direction (%.1f,%.1f)\n",
