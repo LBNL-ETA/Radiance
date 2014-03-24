@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.23 2014/03/23 17:46:25 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.24 2014/03/24 02:31:02 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -238,7 +238,7 @@ main(int argc, char *argv[])
 		if (dsf_grid[i][j].sum.n > 0) {
 			ovec_from_pos(dir, i, j);
 			bsdf = dsf_grid[i][j].sum.v /
-				(dsf_grid[i][j].sum.n*output_orient*dir[2]);
+			   ((double)dsf_grid[i][j].sum.n*output_orient*dir[2]);
 			if (bsdf <= bsdf_min*.6)
 				continue;
 			bsdf = log(bsdf + 1e-5) - min_log;
