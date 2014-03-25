@@ -15,14 +15,18 @@ endif()
 
 
 if (WIN32)
-
-  set(CPACK_NSIS_MODIFY_PATH 0)
-
-  set(CPACK_BINARY_ZIP 1)
-
-  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "")
+  set(CPACK_NSIS_MODIFY_PATH 1)
   set(qt_plugin_term "LIBRARY")
 
+  # Set RAYPATH on install
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
+    "WriteRegExpandStr HKLM \\\"SYSTEM\\\\CurrentControlSet\\\\Control\\\\Session Manager\\\\Environment\\\" RAYPATH '\\\"$INSTDIR\\\\lib\\\"'"
+  )
+
+  # Unset RAYPATH on uninstall
+  set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS
+    "DeleteRegValue HKLM \\\"SYSTEM\\\\CurrentControlSet\\\\Control\\\\Session Manager\\\\Environment\\\" RAYPATH"
+  )
 endif()
 
 if(UNIX)
