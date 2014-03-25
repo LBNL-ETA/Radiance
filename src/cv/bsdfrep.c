@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.23 2014/03/24 06:07:46 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.24 2014/03/25 14:55:35 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -198,7 +198,7 @@ rotate_rbf(RBFNODE *rbf, const FVECT invec)
 	int			pos[2];
 	int			n;
 
-	for (n = ((-.01 > phi) | (phi > .01))*rbf->nrbf; n-- > 0; ) {
+	for (n = (cos(phi) < 1.-FTINY)*rbf->nrbf; n-- > 0; ) {
 		ovec_from_pos(outvec, rbf->rbfa[n].gx, rbf->rbfa[n].gy);
 		spinvector(outvec, outvec, vnorm, phi);
 		pos_from_vec(pos, outvec);
