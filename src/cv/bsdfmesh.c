@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.25 2014/03/24 06:07:46 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.26 2014/03/26 00:11:30 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -383,6 +383,42 @@ memerr:
 #undef discount
 }
 
+#ifdef DUMP_MATRIX
+/* Dump transport plan and corresponding price matrix to a text file */
+static void
+dump_matrix(const MIGRATION *me, const PRICEMAT *pm)
+{
+	char	fname[256];
+	FILE	*fp;
+	int	i, j;
+
+	sprintf(fname, "edge_%d-%d.txt", me->rbfv[0]->ord, me->rbfv[1]->ord);
+	if ((fp = fopen(fname, "w")) == NULL)
+		return;
+	for (j = 0; j < 2; j++) {
+		fprintf(fp, "Available from %d source RBF lobes in node %d:\n",
+					me->rbfv[j]->nrbf, me->rbfv[j]->ord);
+		for (i = 0; i < me->rbfv[j]->nrbf; i++)
+			fprintf(fp, " %.4e", rbf_volume(&me->rbfv[j]->rbfa[i]) /
+							me->rbfv[j]->vtotal);
+		fputc('\n', fp);
+	}
+	fprintf(fp, "Price (quadratic distance metric) matrix:\n");
+	for (i = 0; i < pm->nrows; i++) {
+	    for (j = 0; j < pm->ncols; j++)
+		fprintf(fp, " %.4e", pricerow(pm,i)[j]);
+	    fputc('\n', fp);
+	}
+	fprintf(fp, "Solution matrix (transport plan):\n");
+	for (i = 0; i < mtx_nrows(me); i++) {
+	    for (j = 0; j < mtx_ncols(me); j++)
+		fprintf(fp, " %.4e", mtx_coef(me,i,j));
+	    fputc('\n', fp);
+	}
+	fclose(fp);
+}
+#endif
+
 /* Compute and insert migration along directed edge (may fork child) */
 static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
@@ -438,6 +474,9 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	    for (j = to_rbf->nrbf; j--; )
 		mtx_coef(newmig,i,j) *= nf;	/* row now sums to 1.0 */
 	}
+#ifdef DUMP_MATRIX
+	dump_matrix(newmig, &pmtx);
+#endif
 	end_subprocess();			/* exit here if subprocess */
 	free_routes(&pmtx);			/* free working arrays */
 	free(src_rem);
