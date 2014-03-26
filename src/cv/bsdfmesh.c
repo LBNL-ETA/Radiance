@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.26 2014/03/26 00:11:30 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.27 2014/03/26 02:52:31 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -26,16 +26,6 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.26 2014/03/26 00:11:30 greg Exp
 int			nprocs = 1;
 				/* number of children (-1 in child) */
 static int		nchild = 0;
-
-typedef struct {
-	int		nrows, ncols;	/* array size (matches migration) */
-	float		*price;		/* migration prices */
-	short		*sord;		/* sort for each row, low to high */
-	float		*prow;		/* current price row */
-} PRICEMAT;			/* sorted pricing matrix */
-
-#define	pricerow(p,i)	((p)->price + (i)*(p)->ncols)
-#define psortrow(p,i)	((p)->sord + (i)*(p)->ncols)
 
 /* Create a new migration holder (sharing memory for multiprocessing) */
 static MIGRATION *
@@ -180,254 +170,31 @@ neighborhood_dist2(int x0, int y0, int x1, int y1)
 	return(sum2 / (4*rad*(rad+1) + 1));
 }
 
-/* Comparison routine needed for sorting price row */
-static int
-msrt_cmp(void *b, const void *p1, const void *p2)
+/* Compute distance between two RBF lobes */
+double
+lobe_distance(RBFVAL *rbf1, RBFVAL *rbf2)
 {
-	PRICEMAT	*pm = (PRICEMAT *)b;
-	float		c1 = pm->prow[*(const short *)p1];
-	float		c2 = pm->prow[*(const short *)p2];
-
-	if (c1 > c2) return(1);
-	if (c1 < c2) return(-1);
-	return(0);
+	FVECT	vfrom, vto;
+	double	d, res;
+					/* quadratic cost function */
+	ovec_from_pos(vfrom, rbf1->gx, rbf1->gy);
+	ovec_from_pos(vto, rbf2->gx, rbf2->gy);
+	d = Acos(DOT(vfrom, vto));
+	res = d*d;
+	d = R2ANG(rbf2->crad) - R2ANG(rbf1->crad);
+	res += d*d;
+					/* neighborhood difference */
+	res += NEIGH_FACT2 * neighborhood_dist2( rbf1->gx, rbf1->gy,
+						rbf2->gx, rbf2->gy );
+	return(res);
 }
 
-/* Compute (and allocate) migration price matrix for optimization */
-static void
-price_routes(PRICEMAT *pm, const RBFNODE *from_rbf, const RBFNODE *to_rbf)
-{
-	FVECT	*vto = (FVECT *)malloc(sizeof(FVECT) * to_rbf->nrbf);
-	int	i, j;
-
-	compute_nDSFs(from_rbf, to_rbf);
-	pm->nrows = from_rbf->nrbf;
-	pm->ncols = to_rbf->nrbf;
-	pm->price = (float *)malloc(sizeof(float) * pm->nrows*pm->ncols);
-	pm->sord = (short *)malloc(sizeof(short) * pm->nrows*pm->ncols);
-	
-	if ((pm->price == NULL) | (pm->sord == NULL) | (vto == NULL)) {
-		fprintf(stderr, "%s: Out of memory in migration_costs()\n",
-				progname);
-		exit(1);
-	}
-	for (j = to_rbf->nrbf; j--; )		/* save repetitive ops. */
-		ovec_from_pos(vto[j], to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy);
-
-	for (i = from_rbf->nrbf; i--; ) {
-	    const double	from_ang = R2ANG(from_rbf->rbfa[i].crad);
-	    FVECT		vfrom;
-	    short		*srow;
-	    ovec_from_pos(vfrom, from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy);
-	    pm->prow = pricerow(pm,i);
-	    srow = psortrow(pm,i);
-	    for (j = to_rbf->nrbf; j--; ) {
-		double	d;			/* quadratic cost function */
-		d = Acos(DOT(vfrom, vto[j]));
-		pm->prow[j] = d*d;
-		d = R2ANG(to_rbf->rbfa[j].crad) - from_ang;
-		pm->prow[j] += d*d;
-						/* neighborhood difference */
-		pm->prow[j] += NEIGH_FACT2 * neighborhood_dist2(
-				from_rbf->rbfa[i].gx, from_rbf->rbfa[i].gy,
-				to_rbf->rbfa[j].gx, to_rbf->rbfa[j].gy );
-		srow[j] = j;
-	    }
-	    qsort_r(srow, pm->ncols, sizeof(short), pm, &msrt_cmp);
-	}
-	free(vto);
-}
-
-/* Free price matrix */
-static void
-free_routes(PRICEMAT *pm)
-{
-	free(pm->price); pm->price = NULL;
-	free(pm->sord); pm->sord = NULL;
-}
-
-/* Compute minimum (optimistic) cost for moving the given source material */
-static double
-min_cost(double amt2move, const double *avail, const PRICEMAT *pm, int s)
-{
-	const short	*srow = psortrow(pm,s);
-	const float	*prow = pricerow(pm,s);
-	double		total_cost = 0;
-	int		j;
-						/* move cheapest first */
-	for (j = 0; (j < pm->ncols) & (amt2move > FTINY); j++) {
-		int	d = srow[j];
-		double	amt = (amt2move < avail[d]) ? amt2move : avail[d];
-
-		total_cost += amt * prow[d];
-		amt2move -= amt;
-	}
-	return(total_cost);
-}
-
-typedef struct {
-	short	s, d;		/* source and destination */
-	float	dc;		/* discount to push inventory */
-} ROWSENT;		/* row sort entry */
-
-/* Compare entries by discounted moving price */
-static int
-rmovcmp(void *b, const void *p1, const void *p2)
-{
-	PRICEMAT	*pm = (PRICEMAT *)b;
-	const ROWSENT	*re1 = (const ROWSENT *)p1;
-	const ROWSENT	*re2 = (const ROWSENT *)p2;
-	double		price_diff;
-
-	if (re1->d < 0) return(re2->d >= 0);
-	if (re2->d < 0) return(-1);
-	price_diff = re1->dc*pricerow(pm,re1->s)[re1->d] -
-			re2->dc*pricerow(pm,re2->s)[re2->d];
-	if (price_diff > 0) return(1);
-	if (price_diff < 0) return(-1);
-	return(0);
-}
-
-/* Take a step in migration by choosing reasonable bucket to transfer */
-static double
-migration_step(MIGRATION *mig, double *src_rem, double *dst_rem, PRICEMAT *pm)
-{
-	const int	max2check = 100;
-	const double	maxamt = 1./(double)pm->ncols;
-	const double	minamt = maxamt*1e-4;
-	double		*src_cost;
-	ROWSENT		*rord;
-	struct {
-		int	s, d;	/* source and destination */
-		double	price;	/* cost per amount moved */
-		double	amt;	/* amount we can move */
-	} cur, best;
-	int		r2check, i, ri;
-	/*
-	 * Check cheapest available routes only -- a higher adjusted
-	 * destination price implies that another source is closer, so
-	 * we can hold off considering more expensive options until
-	 * some other (hopefully better) moves have been made.
-	 * A discount based on source remaining is supposed to prioritize
-	 * movement from large lobes, but it doesn't seem to do much,
-	 * so we have it set to 1.0 at the moment.
-	 */
-#define discount(qr)	1.0
-						/* most promising row order */
-	rord = (ROWSENT *)malloc(sizeof(ROWSENT)*pm->nrows);
-	if (rord == NULL)
-		goto memerr;
-	for (ri = pm->nrows; ri--; ) {
-	    rord[ri].s = ri;
-	    rord[ri].d = -1;
-	    rord[ri].dc = 1.f;
-	    if (src_rem[ri] <= minamt)		/* enough source material? */
-		    continue;
-	    for (i = 0; i < pm->ncols; i++)
-		if (dst_rem[ rord[ri].d = psortrow(pm,ri)[i] ] > minamt)
-			break;
-	    if (i >= pm->ncols) {		/* moved all we can? */
-		free(rord);
-		return(.0);
-	    }
-	    rord[ri].dc = discount(src_rem[ri]);
-	}
-	if (pm->nrows > max2check)		/* sort if too many sources */
-		qsort_r(rord, pm->nrows, sizeof(ROWSENT), pm, &rmovcmp);
-						/* allocate cost array */
-	src_cost = (double *)malloc(sizeof(double)*pm->nrows);
-	if (src_cost == NULL)
-		goto memerr;
-	for (i = pm->nrows; i--; )		/* starting costs for diff. */
-		src_cost[i] = min_cost(src_rem[i], dst_rem, pm, i);
-						/* find best source & dest. */
-	best.s = best.d = -1; best.price = FHUGE; best.amt = 0;
-	if ((r2check = pm->nrows) > max2check)
-		r2check = max2check;		/* put a limit on search */
-	for (ri = 0; ri < r2check; ri++) {	/* check each source row */
-	    double	cost_others = 0;
-	    cur.s = rord[ri].s;
-	    if ((cur.d = rord[ri].d) < 0 ||
-			rord[ri].dc*pricerow(pm,cur.s)[cur.d] >= best.price) {
-		if (pm->nrows > max2check) break;	/* sorted end */
-		continue;			/* else skip this one */
-	    }
-	    cur.amt = (src_rem[cur.s] < dst_rem[cur.d]) ?
-				src_rem[cur.s] : dst_rem[cur.d];
-						/* don't just leave smidgen */
-	    if (cur.amt > maxamt*1.02) cur.amt = maxamt;
-	    dst_rem[cur.d] -= cur.amt;		/* add up opportunity costs */
-	    for (i = pm->nrows; i--; )
-		if (i != cur.s)
-		    cost_others += min_cost(src_rem[i], dst_rem, pm, i)
-					- src_cost[i];
-	    dst_rem[cur.d] += cur.amt;		/* undo trial move */
-						/* discount effective price */
-	    cur.price = ( pricerow(pm,cur.s)[cur.d] + cost_others/cur.amt ) *
-					rord[ri].dc;
-	    if (cur.price < best.price)		/* are we better than best? */
-		best = cur;
-	}
-	free(src_cost);				/* clean up */
-	free(rord);
-	if ((best.s < 0) | (best.d < 0))	/* nothing left to move? */
-		return(.0);
-						/* else make the actual move */
-	mtx_coef(mig,best.s,best.d) += best.amt;
-	src_rem[best.s] -= best.amt;
-	dst_rem[best.d] -= best.amt;
-	return(best.amt);
-memerr:
-	fprintf(stderr, "%s: Out of memory in migration_step()\n", progname);
-	exit(1);
-#undef discount
-}
-
-#ifdef DUMP_MATRIX
-/* Dump transport plan and corresponding price matrix to a text file */
-static void
-dump_matrix(const MIGRATION *me, const PRICEMAT *pm)
-{
-	char	fname[256];
-	FILE	*fp;
-	int	i, j;
-
-	sprintf(fname, "edge_%d-%d.txt", me->rbfv[0]->ord, me->rbfv[1]->ord);
-	if ((fp = fopen(fname, "w")) == NULL)
-		return;
-	for (j = 0; j < 2; j++) {
-		fprintf(fp, "Available from %d source RBF lobes in node %d:\n",
-					me->rbfv[j]->nrbf, me->rbfv[j]->ord);
-		for (i = 0; i < me->rbfv[j]->nrbf; i++)
-			fprintf(fp, " %.4e", rbf_volume(&me->rbfv[j]->rbfa[i]) /
-							me->rbfv[j]->vtotal);
-		fputc('\n', fp);
-	}
-	fprintf(fp, "Price (quadratic distance metric) matrix:\n");
-	for (i = 0; i < pm->nrows; i++) {
-	    for (j = 0; j < pm->ncols; j++)
-		fprintf(fp, " %.4e", pricerow(pm,i)[j]);
-	    fputc('\n', fp);
-	}
-	fprintf(fp, "Solution matrix (transport plan):\n");
-	for (i = 0; i < mtx_nrows(me); i++) {
-	    for (j = 0; j < mtx_ncols(me); j++)
-		fprintf(fp, " %.4e", mtx_coef(me,i,j));
-	    fputc('\n', fp);
-	}
-	fclose(fp);
-}
-#endif
 
 /* Compute and insert migration along directed edge (may fork child) */
 static MIGRATION *
 create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 {
-	const double	end_thresh = 5e-6;
-	PRICEMAT	pmtx;
 	MIGRATION	*newmig;
-	double		*src_rem, *dst_rem;
-	double		total_rem = 1., move_amt;
 	int		i, j;
 						/* check if exists already */
 	for (newmig = from_rbf->ejl; newmig != NULL;
@@ -447,25 +214,10 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	newmig = new_migration(from_rbf, to_rbf);
 	if (run_subprocess())
 		return(newmig);			/* child continues */
-	price_routes(&pmtx, from_rbf, to_rbf);
-	src_rem = (double *)malloc(sizeof(double)*from_rbf->nrbf);
-	dst_rem = (double *)malloc(sizeof(double)*to_rbf->nrbf);
-	if ((src_rem == NULL) | (dst_rem == NULL)) {
-		fprintf(stderr, "%s: Out of memory in create_migration()\n",
-				progname);
-		exit(1);
-	}
-						/* starting quantities */
-	memset(newmig->mtx, 0, sizeof(float)*from_rbf->nrbf*to_rbf->nrbf);
-	for (i = from_rbf->nrbf; i--; )
-		src_rem[i] = rbf_volume(&from_rbf->rbfa[i]) / from_rbf->vtotal;
-	for (j = to_rbf->nrbf; j--; )
-		dst_rem[j] = rbf_volume(&to_rbf->rbfa[j]) / to_rbf->vtotal;
 
-	do {					/* move a bit at a time */
-		move_amt = migration_step(newmig, src_rem, dst_rem, &pmtx);
-		total_rem -= move_amt;
-	} while ((total_rem > end_thresh) & (move_amt > 0));
+						/* compute transport plan */
+	compute_nDSFs(from_rbf, to_rbf);
+	plan_transport(newmig);
 
 	for (i = from_rbf->nrbf; i--; ) {	/* normalize final matrix */
 	    double	nf = rbf_volume(&from_rbf->rbfa[i]);
@@ -474,13 +226,7 @@ create_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	    for (j = to_rbf->nrbf; j--; )
 		mtx_coef(newmig,i,j) *= nf;	/* row now sums to 1.0 */
 	}
-#ifdef DUMP_MATRIX
-	dump_matrix(newmig, &pmtx);
-#endif
 	end_subprocess();			/* exit here if subprocess */
-	free_routes(&pmtx);			/* free working arrays */
-	free(src_rem);
-	free(dst_rem);
 	return(newmig);
 }
 

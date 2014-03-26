@@ -1,11 +1,18 @@
-/* RCSid $Id: bsdfrep.h,v 2.18 2014/03/19 20:49:01 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.19 2014/03/26 02:52:31 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
  *	G. Ward
  */
 
+#ifndef _BSDFREP_H_
+#define _BSDFREP_H_
+
 #include "bsdf.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef GRIDRES
 #define GRIDRES		(1<<8)		/* grid resolution per side */
@@ -190,5 +197,16 @@ extern int		get_interp(MIGRATION *miga[3], FVECT invec);
 extern RBFNODE *	e_advect_rbf(const MIGRATION *mig,
 					const FVECT invec, int lobe_lim);
 
+/* Compute distance between two RBF lobes (internal call) */
+extern double		lobe_distance(RBFVAL *rbf1, RBFVAL *rbf2);
+
+/* Compute mass transport plan (internal call) */
+extern void		plan_transport(MIGRATION *mig);
+
 /* Partially advect between recorded incident angles and allocate new RBF */
 extern RBFNODE *	advect_rbf(const FVECT invec, int lobe_lim);
+
+#ifdef __cplusplus
+}
+#endif
+#endif	/* _BSDFREP_H_ */
