@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.27 2014/03/26 02:52:31 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.28 2014/03/26 22:29:08 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -316,8 +316,10 @@ mesh_from_edge(MIGRATION *edge)
 				ej1 = create_migration(tvert[0], edge->rbfv[1]);
 			mesh_from_edge(ej0);
 			mesh_from_edge(ej1);
+			return;
 		}
-	} else if (tvert[1] == NULL) {		/* grow mesh on left */
+	}
+	if (tvert[1] == NULL) {			/* grow mesh on left */
 		tvert[1] = find_chull_vert(edge->rbfv[1], edge->rbfv[0]);
 		if (tvert[1] != NULL) {
 			if (tvert[1]->ord > edge->rbfv[0]->ord)

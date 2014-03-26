@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.47 2014/03/26 02:52:31 greg Exp $
+# RCSid $Id: Rmakefile,v 2.48 2014/03/26 22:29:08 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -12,7 +12,7 @@ CXXFLAGS = $(CFLAGS)
 METACFLAGS = -I../meta
 
 CC = cc
-CXX = g++
+CXX = c++
 
 MLIB = -lm
 
