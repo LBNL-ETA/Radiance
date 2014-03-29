@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdftrans.cpp,v 2.2 2014/03/26 22:29:08 greg Exp $";
+static const char RCSid[] = "$Id: bsdftrans.cpp,v 2.3 2014/03/29 21:51:59 greg Exp $";
 #endif
 /*
  * Compute mass transport plan for RBF lobes
@@ -39,6 +39,11 @@ plan_transport(MIGRATION *mig)
 		transportSimplex(&srcSig, &dstSig, &lobe_distance, flow, &n);
 	} catch (...) {
 		fprintf(stderr, "%s: caught exception from transportSimplex()!\n",
+				progname);
+		exit(1);
+	}
+	if (n > mtx_nrows(mig)+mtx_ncols(mig)-1) {
+		fprintf(stderr, "%s: signature overflow in plan_transport()!\n",
 				progname);
 		exit(1);
 	}
