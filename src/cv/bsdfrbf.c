@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.24 2014/03/21 01:04:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.25 2014/03/30 00:19:09 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -29,7 +29,7 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.24 2014/03/21 01:04:42 greg Exp 
 #include "bsdfrep.h"
 
 #ifndef RSCA
-#define RSCA		2.2		/* radius scaling factor (empirical) */
+#define RSCA		2.0		/* radius scaling factor (empirical) */
 #endif
 #ifndef SMOOTH_MSE
 #define SMOOTH_MSE	5e-5		/* acceptable mean squared error */
@@ -41,7 +41,7 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.24 2014/03/21 01:04:42 greg Exp 
 
 #define	RBFALLOCB	10		/* RBF allocation block size */
 
-				/* our loaded grid or comparison DSFs */
+					/* loaded grid or comparison DSFs */
 GRIDVAL			dsf_grid[GRIDRES][GRIDRES];
 
 /* Start new DSF input grid */
@@ -172,14 +172,25 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 {
 	double	vtot = 0.0;
 	int	nv = 0;
+	double	wxsum = 0.0, wysum = 0.0, wtsum = 0.0;
 	double	rad;
 	int	x, y;
 					/* compute average for region */
 	for (x = x0; x < x1; x++)
-	    for (y = y0; y < y1; y++) {
-		vtot += dsf_grid[x][y].sum.v;
-		nv += dsf_grid[x][y].sum.n;
-	    }
+	    for (y = y0; y < y1; y++)
+		if (dsf_grid[x][y].sum.n) {
+		    const double	v = dsf_grid[x][y].sum.v;
+		    const int		n = dsf_grid[x][y].sum.n;
+
+		    if (v > 0) {
+			double	wt = v / (double)n;
+			wxsum += wt * x;
+			wysum += wt * y;
+			wtsum += wt;
+		    }
+		    vtot += v;
+		    nv += n;
+		}
 	if (!nv) {
 		fprintf(stderr, "%s: internal - missing samples in create_lobe\n",
 				progname);
@@ -191,9 +202,9 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 	vtot *= (x1-x0)*(y1-y0)*(2.*M_PI/GRIDRES/GRIDRES)/(double)nv;
 	rad = (RSCA/(double)GRIDRES)*(x1-x0);
 	rvp->peak =  vtot / ((2.*M_PI) * rad*rad);
-	rvp->crad = ANG2R(rad);
-	rvp->gx = (x0+x1)>>1;
-	rvp->gy = (y0+y1)>>1;
+	rvp->crad = ANG2R(rad);		/* put peak at centroid */
+	rvp->gx = (int)(wxsum/wtsum + .5);
+	rvp->gy = (int)(wysum/wtsum + .5);
 	return(1);
 }
 
