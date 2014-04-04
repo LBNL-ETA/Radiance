@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.16 2014/03/03 17:51:50 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.17 2014/04/04 17:56:45 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -392,8 +392,8 @@ start_rcontrib(SUBPROC *pd, ZONE *zp)
 						/* now subsurfaces */
 	if (zp->ntotal > zp->nsurf) {
 		if (zp->area_redu != NULL)
-			memset(zp->area_redu, 0, sizeof(float)*zp->nsurf);
-		else if ((zp->area_redu = (float *)calloc(zp->nsurf,
+			memset(zp->area_redu, 0, sizeof(float)*zp->ntotal);
+		else if ((zp->area_redu = (float *)calloc(zp->ntotal,
 						sizeof(float))) == NULL)
 			return(0);
 	}
