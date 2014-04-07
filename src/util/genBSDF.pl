@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.45 2013/10/03 17:27:41 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.46 2014/04/07 21:33:25 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -133,8 +133,8 @@ if ( $geout ) {
 	print "\t</Geometry>\n";
 }
 # Set up surface sampling
-my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + .5);
-my $ny = int($nsamp/$nx + .5);
+my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
+my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
 my $ns = 2**$ttlog2;
 my (@pdiv, $disk2sq, $sq2disk, $tcal, $kcal);
