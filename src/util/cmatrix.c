@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.2 2014/02/08 01:28:06 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.3 2014/04/08 23:45:33 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -337,17 +337,17 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 int
 cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 {
-	const COLORV	*mp = cm->cmem;
-	int		r, c;
+	static const char	tabEOL[2] = {'\t','\n'};
+	const COLORV		*mp = cm->cmem;
+	int			r, c;
 
 	switch (dtype) {
 	case DTascii:
-		for (r = 0; r < cm->nrows; r++) {
+		for (r = 0; r < cm->nrows; r++)
 			for (c = 0; c < cm->ncols; c++, mp += 3)
-				fprintf(fp, "\t%.6e %.6e %.6e",
-						mp[0], mp[1], mp[2]);
-			fputc('\n', fp);
-		}
+				fprintf(fp, "%.6e %.6e %.6e%c",
+						mp[0], mp[1], mp[2],
+						tabEOL[c >= cm->ncols-1]);
 		break;
 	case DTfloat:
 	case DTdouble:
