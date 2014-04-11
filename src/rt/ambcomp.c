@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.24 2013/08/07 05:10:09 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.25 2014/04/11 20:31:37 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -10,10 +10,12 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.24 2013/08/07 05:10:09 greg Exp 
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "ambient.h"
-
 #include  "random.h"
+
+#ifdef NEWAMB
+
+#else /* ! NEWAMB */
 
 
 void
@@ -434,3 +436,5 @@ dirgradient(					/* compute direction gradient */
 	for (i = 0; i < 3; i++)
 		gv[i] = xd*hp->ux[i] + yd*hp->uy[i];
 }
+
+#endif	/* ! NEWAMB */

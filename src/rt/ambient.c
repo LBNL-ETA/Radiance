@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.70 2011/09/22 02:15:56 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.71 2014/04/11 20:31:37 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -39,9 +39,9 @@ static int  nunflshed = 0;	/* number of unflushed ambient values */
 
 #ifndef SORT_THRESH
 #ifdef SMLMEM
-#define SORT_THRESH	((3L<<20)/sizeof(AMBVAL))
+#define SORT_THRESH	((16L<<20)/sizeof(AMBVAL))
 #else
-#define SORT_THRESH	((9L<<20)/sizeof(AMBVAL))
+#define SORT_THRESH	((64L<<20)/sizeof(AMBVAL))
 #endif
 #endif
 #ifndef SORT_INTVL
@@ -84,9 +84,10 @@ static AMBVAL *avstore(AMBVAL  *aval);
 static AMBTREE *newambtree(void);
 static void freeambtree(AMBTREE  *atp);
 
-typedef void unloadtf_t(void *);
+typedef void unloadtf_t(AMBVAL *);
 static unloadtf_t avinsert;
 static unloadtf_t av2list;
+static unloadtf_t avfree;
 static void unloadatree(AMBTREE  *at, unloadtf_t *f);
 
 static int aposcmp(const void *avp1, const void *avp2);
@@ -98,7 +99,7 @@ static void aflock(int  typ);
 #endif
 
 
-extern void
+void
 setambres(				/* set ambient resolution */
 	int  ar
 )
@@ -121,7 +122,7 @@ setambres(				/* set ambient resolution */
 }
 
 
-extern void
+void
 setambacc(				/* set ambient accuracy */
 	double  newa
 )
@@ -136,7 +137,7 @@ setambacc(				/* set ambient accuracy */
 }
 
 
-extern void
+void
 setambient(void)				/* initialize calculation */
 {
 	int	readonly = 0;
@@ -194,13 +195,16 @@ setambient(void)				/* initialize calculation */
 		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
 		error(SYSTEM, errmsg);
 	}
+#ifdef getc_unlocked
+	flockfile(ambfp);			/* application-level lock */
+#endif
 #ifdef  F_SETLKW
 	aflock(F_UNLCK);			/* release file */
 #endif
 }
 
 
-extern void
+void
 ambdone(void)			/* close ambient file and free memory */
 {
 	if (ambfp != NULL) {		/* close ambient file */
@@ -214,7 +218,7 @@ ambdone(void)			/* close ambient file and free memory */
 		lastpos = -1;
 	}
 					/* free ambient tree */
-	unloadatree(&atrunk, free);
+	unloadatree(&atrunk, &avfree);
 					/* reset state variables */
 	avsum = 0.;
 	navsum = 0;
@@ -226,7 +230,7 @@ ambdone(void)			/* close ambient file and free memory */
 }
 
 
-extern void
+void
 ambnotify(			/* record new modifier */
 	OBJECT	obj
 )
@@ -255,8 +259,290 @@ ambnotify(			/* record new modifier */
 		}
 }
 
+/************ THE FOLLOWING ROUTINES DIFFER BETWEEN NEW & OLD ***************/
 
-extern void
+#ifdef NEWAMB
+
+#define tfunc(lwr, x, upr)	(((x)-(lwr)/((upr)-(lwr)))
+
+
+void
+multambient(		/* compute ambient component & multiply by coef. */
+	COLOR  aval,
+	RAY  *r,
+	FVECT  nrm
+)
+{
+	static int  rdepth = 0;			/* ambient recursion */
+	COLOR	acol;
+	int	ok;
+	double	d, l;
+
+	if (ambdiv <= 0)			/* no ambient calculation */
+		goto dumbamb;
+						/* check number of bounces */
+	if (rdepth >= ambounce)
+		goto dumbamb;
+						/* check ambient list */
+	if (ambincl != -1 && r->ro != NULL &&
+			ambincl != inset(ambset, r->ro->omod))
+		goto dumbamb;
+
+	if (ambacc <= FTINY) {			/* no ambient storage */
+		copycolor(acol, aval);
+		rdepth++;
+		ok = doambient(acol, r, r->rweight, NULL, NULL, NULL, NULL);
+		rdepth--;
+		if (!ok)
+			goto dumbamb;
+		copycolor(aval, acol);
+		return;
+	}
+
+	if (tracktime)				/* sort to minimize thrashing */
+		sortambvals(0);
+						/* interpolate ambient value */
+	setcolor(acol, 0.0, 0.0, 0.0);
+	d = sumambient(acol, r, nrm, rdepth,
+			&atrunk, thescene.cuorg, thescene.cusize);
+	if (d > FTINY) {
+		d = 1.0/d;
+		scalecolor(acol, d);
+		multcolor(aval, acol);
+		return;
+	}
+	rdepth++;				/* need to cache new value */
+	ok = makeambient(acol, r, nrm, rdepth-1);
+	rdepth--;
+	if (ok) {
+		multcolor(aval, acol);		/* got new value */
+		return;
+	}
+dumbamb:					/* return global value */
+	if ((ambvwt <= 0) | (navsum == 0)) {
+		multcolor(aval, ambval);
+		return;
+	}
+	l = bright(ambval);			/* average in computations */
+	if (l > FTINY) {
+		d = (log(l)*(double)ambvwt + avsum) /
+				(double)(ambvwt + navsum);
+		d = exp(d) / l;
+		scalecolor(aval, d);
+		multcolor(aval, ambval);	/* apply color of ambval */
+	} else {
+		d = exp( avsum / (double)navsum );
+		scalecolor(aval, d);		/* neutral color */
+	}
+}
+
+
+double
+sumambient(	/* get interpolated ambient value */
+	COLOR  acol,
+	RAY  *r,
+	FVECT  rn,
+	int  al,
+	AMBTREE	 *at,
+	FVECT  c0,
+	double	s
+)
+{					/* initial limit is ambacc radians */
+	const double	maxangle = (ambacc-PI/2.)*pow(r->rweight,0.13) + PI/2.;
+	double		wsum = 0.0;
+	FVECT		ck0;
+	int		i, j;
+	AMBVAL		*av;
+					/* sum this node */
+	for (av = at->alist; av != NULL; av = av->next) {
+		double	d, delta_r2, delta_t2;
+		COLOR	ct;
+		FVECT	uvw[3];
+					/* record access */
+		if (tracktime)
+			av->latick = ambclock;
+		/*
+		 *  Ambient level test.
+		 */
+		if (av->lvl > al)	/* list sorted, so this works */
+			break;
+		if (av->weight < 0.9*r->rweight)
+			continue;
+		/*
+		 *  Direction test using unperturbed normal.
+		 */
+		decodedir(uvw[2], av->ndir);
+		d = DOT(uvw[2], r->ron);
+		if (d <= 0.0)		/* >= 90 degrees */
+			continue;
+		delta_r2 = 2.0 - 2.0*d;	/* approx. radians^2 */
+		if (delta_r2 >= maxangle*maxangle)
+			continue;
+		/*
+		 *  Ambient radius test.
+		 */
+		decodedir(uvw[0], av->udir);
+		VCROSS(uvw[1], uvw[2], uvw[0]);
+		VSUB(ck0, av->pos, r->rop);
+		d = DOT(ck0, uvw[0]) / av->rad[0];
+		delta_t2 = d*d;
+		d = DOT(ck0, uvw[1]) / av->rad[1];
+		delta_t2 += d*d;
+		if (delta_t2 >= ambacc*ambacc)
+			continue;
+		/*
+		 *  Ray behind test.
+		 */
+		d = 0.0;
+		for (j = 0; j < 3; j++)
+			d += (r->rop[j] - av->pos[j])*(uvw[2][j] + r->ron[j]);
+		if (d*0.5 < -minarad*ambacc-.001)
+			continue;
+		/*
+		 *  Convert to final weight (hat function)
+		 */
+		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
+			tfunc(ambacc, sqrt(delta_t2), 0.0);
+		wsum += d;
+		extambient(ct, av, uvw, r->rop, rn);
+		scalecolor(ct, d);
+		addcolor(acol, ct);
+	}
+	if (at->kid == NULL)
+		return(wsum);
+					/* sum children */
+	s *= 0.5;
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 3; j++) {
+			ck0[j] = c0[j];
+			if (1<<j & i)
+				ck0[j] += s;
+			if (r->rop[j] < ck0[j] - OCTSCALE*s)
+				break;
+			if (r->rop[j] > ck0[j] + (1.0+OCTSCALE)*s)
+				break;
+		}
+		if (j == 3)
+			wsum += sumambient(acol, r, rn, al,
+						at->kid+i, ck0, s);
+	}
+	return(wsum);
+}
+
+
+int
+makeambient(		/* make a new ambient value for storage */
+	COLOR  acol,
+	RAY  *r,
+	FVECT  rn,
+	int  al
+)
+{
+	AMBVAL	amb;
+	FVECT	uv[2];
+	int	i;
+
+	amb.weight = 1.0;			/* compute weight */
+	for (i = al; i-- > 0; )
+		amb.weight *= AVGREFL;
+	if (r->rweight < 0.1*amb.weight)	/* heuristic override */
+		amb.weight = 1.25*r->rweight;
+	setcolor(acol, AVGREFL, AVGREFL, AVGREFL);
+						/* compute ambient */
+	if (!doambient(acol, r, amb.weight, uv, amb.rad, amb.gpos, amb.gdir)) {
+		setcolor(acol, 0.0, 0.0, 0.0);
+		return(0);
+	}
+	scalecolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
+						/* store value */
+	VCOPY(amb.pos, r->rop);
+	amb.ndir = encodedir(r->ron);
+	amb.udir = encodedir(uv[0]);
+	amb.lvl = al;
+	copycolor(amb.val, acol);
+						/* insert into tree */
+	avsave(&amb);				/* and save to file */
+	if (rn != r->ron)
+		extambient(acol, &amb, r->rop, rn);	/* texture */
+	return(1);
+}
+
+
+void
+extambient(		/* extrapolate value at pv, nv */
+	COLOR  cr,
+	AMBVAL	 *ap,
+	FVECT  uvw[3],
+	FVECT  pv,
+	FVECT  nv
+)
+{
+	FVECT  v1;
+	int  i;
+	double	d = 1.0;		/* zeroeth order */
+
+	for (i = 3; i--; )		/* gradient due to translation */
+		d += (pv[i] - ap->pos[i]) *
+			(ap->gpos[0]*uvw[0][i] + ap->gpos[1]*uvw[1][i]);
+
+	VCROSS(v1, uvw[2], nv);		/* gradient due to rotation */
+	for (i = 3; i--; )
+		d += v1[i] * (ap->gdir[0]*uvw[0][i] + ap->gdir[1]*uvw[1][i]);
+	
+	if (d <= 0.0) {
+		setcolor(cr, 0.0, 0.0, 0.0);
+		return;
+	}
+	copycolor(cr, ap->val);
+	scalecolor(cr, d);
+}
+
+
+static void
+avinsert(				/* insert ambient value in our tree */
+	AMBVAL *av
+)
+{
+	AMBTREE  *at;
+	AMBVAL  *ap;
+	AMBVAL  avh;
+	FVECT  ck0;
+	double	s;
+	int  branch;
+	int  i;
+
+	if (av->rad[0] <= FTINY)
+		error(CONSISTENCY, "zero ambient radius in avinsert");
+	at = &atrunk;
+	VCOPY(ck0, thescene.cuorg);
+	s = thescene.cusize;
+	while (s*(OCTSCALE/2) > av->rad[1]*ambacc) {
+		if (at->kid == NULL)
+			if ((at->kid = newambtree()) == NULL)
+				error(SYSTEM, "out of memory in avinsert");
+		s *= 0.5;
+		branch = 0;
+		for (i = 0; i < 3; i++)
+			if (av->pos[i] > ck0[i] + s) {
+				ck0[i] += s;
+				branch |= 1 << i;
+			}
+		at = at->kid + branch;
+	}
+	avh.next = at->alist;		/* order by increasing level */
+	for (ap = &avh; ap->next != NULL; ap = ap->next)
+		if (ap->next->lvl >= av->lvl)
+			break;
+	av->next = ap->next;
+	ap->next = (AMBVAL*)av;
+	at->alist = avh.next;
+}
+
+
+#else /* ! NEWAMB */
+
+
+void
 multambient(		/* compute ambient component & multiply by coef. */
 	COLOR  aval,
 	RAY  *r,
@@ -326,7 +612,7 @@ dumbamb:					/* return global value */
 }
 
 
-extern double
+double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
 	RAY  *r,
@@ -437,7 +723,7 @@ sumambient(	/* get interpolated ambient value */
 }
 
 
-extern double
+double
 makeambient(		/* make a new ambient value for storage */
 	COLOR  acol,
 	RAY  *r,
@@ -477,7 +763,7 @@ makeambient(		/* make a new ambient value for storage */
 }
 
 
-extern void
+void
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
 	AMBVAL	 *ap,
@@ -504,6 +790,50 @@ extambient(		/* extrapolate value at pv, nv */
 	scalecolor(cr, d);
 }
 
+
+static void
+avinsert(				/* insert ambient value in our tree */
+	AMBVAL *av
+)
+{
+	AMBTREE  *at;
+	AMBVAL  *ap;
+	AMBVAL  avh;
+	FVECT  ck0;
+	double	s;
+	int  branch;
+	int  i;
+
+	if (av->rad <= FTINY)
+		error(CONSISTENCY, "zero ambient radius in avinsert");
+	at = &atrunk;
+	VCOPY(ck0, thescene.cuorg);
+	s = thescene.cusize;
+	while (s*(OCTSCALE/2) > av->rad*ambacc) {
+		if (at->kid == NULL)
+			if ((at->kid = newambtree()) == NULL)
+				error(SYSTEM, "out of memory in avinsert");
+		s *= 0.5;
+		branch = 0;
+		for (i = 0; i < 3; i++)
+			if (av->pos[i] > ck0[i] + s) {
+				ck0[i] += s;
+				branch |= 1 << i;
+			}
+		at = at->kid + branch;
+	}
+	avh.next = at->alist;		/* order by increasing level */
+	for (ap = &avh; ap->next != NULL; ap = ap->next)
+		if (ap->next->lvl >= av->lvl)
+			break;
+	av->next = ap->next;
+	ap->next = (AMBVAL*)av;
+	at->alist = avh.next;
+}
+
+#endif	/* ! NEWAMB */
+
+/************* FOLLOWING ROUTINES SAME FOR NEW & OLD METHODS ***************/
 
 static void
 initambfile(		/* initialize ambient file */
@@ -621,47 +951,6 @@ freeambtree(			/* free 8 ambient tree structs */
 
 
 static void
-avinsert(				/* insert ambient value in our tree */
-	void *av
-)
-{
-	AMBTREE  *at;
-	AMBVAL  *ap;
-	AMBVAL  avh;
-	FVECT  ck0;
-	double	s;
-	int  branch;
-	int  i;
-
-	if (((AMBVAL*)av)->rad <= FTINY)
-		error(CONSISTENCY, "zero ambient radius in avinsert");
-	at = &atrunk;
-	VCOPY(ck0, thescene.cuorg);
-	s = thescene.cusize;
-	while (s*(OCTSCALE/2) > ((AMBVAL*)av)->rad*ambacc) {
-		if (at->kid == NULL)
-			if ((at->kid = newambtree()) == NULL)
-				error(SYSTEM, "out of memory in avinsert");
-		s *= 0.5;
-		branch = 0;
-		for (i = 0; i < 3; i++)
-			if (((AMBVAL*)av)->pos[i] > ck0[i] + s) {
-				ck0[i] += s;
-				branch |= 1 << i;
-			}
-		at = at->kid + branch;
-	}
-	avh.next = at->alist;		/* order by increasing level */
-	for (ap = &avh; ap->next != NULL; ap = ap->next)
-		if (ap->next->lvl >= ((AMBVAL*)av)->lvl)
-			break;
-	((AMBVAL*)av)->next = ap->next;
-	ap->next = (AMBVAL*)av;
-	at->alist = avh.next;
-}
-
-
-static void
 unloadatree(			/* unload an ambient value tree */
 	AMBTREE  *at,
 	unloadtf_t *f
@@ -693,8 +982,14 @@ static int	i_avlist;		/* index for lists */
 static int alatcmp(const void *av1, const void *av2);
 
 static void
+avfree(AMBVAL *av)
+{
+	free(av);
+}
+
+static void
 av2list(
-	void *av
+	AMBVAL *av
 )
 {
 #ifdef DEBUG
@@ -702,7 +997,7 @@ av2list(
 		error(CONSISTENCY, "too many ambient values in av2list1");
 #endif
 	avlist1[i_avlist].p = avlist2[i_avlist] = (AMBVAL*)av;
-	avlist1[i_avlist++].t = ((AMBVAL*)av)->latick;
+	avlist1[i_avlist++].t = av->latick;
 }
 
 
@@ -735,7 +1030,7 @@ aposcmp(			/* compare ambient value positions */
 	return(diff > 0);
 }
 
-#if 1
+
 static int
 avlmemi(				/* find list position from address */
 	AMBVAL	*avaddr
@@ -744,15 +1039,11 @@ avlmemi(				/* find list position from address */
 	AMBVAL  **avlpp;
 
 	avlpp = (AMBVAL **)bsearch((char *)&avaddr, (char *)avlist2,
-			nambvals, sizeof(AMBVAL *), aposcmp);
+			nambvals, sizeof(AMBVAL *), &aposcmp);
 	if (avlpp == NULL)
 		error(CONSISTENCY, "address not found in avlmemi");
 	return(avlpp - avlist2);
 }
-#else
-#define avlmemi(avaddr)	((AMBVAL **)bsearch((char *)&avaddr,(char *)avlist2, \
-				nambvals,sizeof(AMBVAL *),aposcmp) - avlist2)
-#endif
 
 
 static void
@@ -796,7 +1087,7 @@ sortambvals(			/* resort ambient values */
 			oldatrunk = atrunk;
 			atrunk.alist = NULL;
 			atrunk.kid = NULL;
-			unloadatree(&oldatrunk, avinsert);
+			unloadatree(&oldatrunk, &avinsert);
 		}
 	} else {			/* sort memory by last access time */
 		/*
@@ -813,13 +1104,13 @@ sortambvals(			/* resort ambient values */
 		eputs(errmsg);
 #endif
 		i_avlist = 0;
-		unloadatree(&atrunk, av2list);	/* empty current tree */
+		unloadatree(&atrunk, &av2list);	/* empty current tree */
 #ifdef DEBUG
 		if (i_avlist < nambvals)
 			error(CONSISTENCY, "missing ambient values in sortambvals");
 #endif
-		qsort((char *)avlist1, nambvals, sizeof(struct avl), alatcmp);
-		qsort((char *)avlist2, nambvals, sizeof(AMBVAL *), aposcmp);
+		qsort((char *)avlist1, nambvals, sizeof(struct avl), &alatcmp);
+		qsort((char *)avlist2, nambvals, sizeof(AMBVAL *), &aposcmp);
 		for (i = 0; i < nambvals; i++) {
 			if (avlist1[i].p == NULL)
 				continue;
@@ -870,7 +1161,7 @@ aflock(			/* lock/unlock ambient file */
 }
 
 
-extern int
+int
 ambsync(void)			/* synchronize ambient file */
 {
 	long  flen;
@@ -923,9 +1214,9 @@ seekerr:
 	return -1; /* pro forma return */
 }
 
-#else
+#else	/* ! F_SETLKW */
 
-extern int
+int
 ambsync(void)			/* flush ambient file */
 {
 	if (ambfp == NULL)
@@ -934,4 +1225,4 @@ ambsync(void)			/* flush ambient file */
 	return(fflush(ambfp));
 }
 
-#endif
+#endif	/* ! F_SETLKW */
