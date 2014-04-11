@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.71 2014/04/11 20:31:37 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.72 2014/04/11 22:54:34 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -263,8 +263,13 @@ ambnotify(			/* record new modifier */
 
 #ifdef NEWAMB
 
-#define tfunc(lwr, x, upr)	(((x)-(lwr)/((upr)-(lwr)))
+#define tfunc(lwr, x, upr)	(((x)-(lwr))/((upr)-(lwr)))
 
+static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
+				AMBTREE *at, FVECT c0, double s);
+static int	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
+static void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv, 
+				FVECT uvw[3]);
 
 void
 multambient(		/* compute ambient component & multiply by coef. */
@@ -338,7 +343,7 @@ dumbamb:					/* return global value */
 
 
 double
-sumambient(	/* get interpolated ambient value */
+sumambient(		/* get interpolated ambient value */
 	COLOR  acol,
 	RAY  *r,
 	FVECT  rn,
@@ -362,14 +367,14 @@ sumambient(	/* get interpolated ambient value */
 		if (tracktime)
 			av->latick = ambclock;
 		/*
-		 *  Ambient level test.
+		 *  Ambient level test
 		 */
 		if (av->lvl > al)	/* list sorted, so this works */
 			break;
 		if (av->weight < 0.9*r->rweight)
 			continue;
 		/*
-		 *  Direction test using unperturbed normal.
+		 *  Direction test using unperturbed normal
 		 */
 		decodedir(uvw[2], av->ndir);
 		d = DOT(uvw[2], r->ron);
@@ -379,7 +384,7 @@ sumambient(	/* get interpolated ambient value */
 		if (delta_r2 >= maxangle*maxangle)
 			continue;
 		/*
-		 *  Ambient radius test.
+		 *  Elliptical radii test based on Hessian
 		 */
 		decodedir(uvw[0], av->udir);
 		VCROSS(uvw[1], uvw[2], uvw[0]);
@@ -391,7 +396,7 @@ sumambient(	/* get interpolated ambient value */
 		if (delta_t2 >= ambacc*ambacc)
 			continue;
 		/*
-		 *  Ray behind test.
+		 *  Intersection behind test
 		 */
 		d = 0.0;
 		for (j = 0; j < 3; j++)
@@ -399,14 +404,14 @@ sumambient(	/* get interpolated ambient value */
 		if (d*0.5 < -minarad*ambacc-.001)
 			continue;
 		/*
-		 *  Convert to final weight (hat function)
+		 *  Extrapolate value and compute final weight (hat function)
 		 */
+		extambient(ct, av, r->rop, rn, uvw);
 		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
 			tfunc(ambacc, sqrt(delta_t2), 0.0);
-		wsum += d;
-		extambient(ct, av, uvw, r->rop, rn);
 		scalecolor(ct, d);
 		addcolor(acol, ct);
+		wsum += d;
 	}
 	if (at->kid == NULL)
 		return(wsum);
@@ -439,7 +444,7 @@ makeambient(		/* make a new ambient value for storage */
 )
 {
 	AMBVAL	amb;
-	FVECT	uv[2];
+	FVECT	uvw[3];
 	int	i;
 
 	amb.weight = 1.0;			/* compute weight */
@@ -449,7 +454,7 @@ makeambient(		/* make a new ambient value for storage */
 		amb.weight = 1.25*r->rweight;
 	setcolor(acol, AVGREFL, AVGREFL, AVGREFL);
 						/* compute ambient */
-	if (!doambient(acol, r, amb.weight, uv, amb.rad, amb.gpos, amb.gdir)) {
+	if (!doambient(acol, r, amb.weight, uvw, amb.rad, amb.gpos, amb.gdir)) {
 		setcolor(acol, 0.0, 0.0, 0.0);
 		return(0);
 	}
@@ -457,13 +462,15 @@ makeambient(		/* make a new ambient value for storage */
 						/* store value */
 	VCOPY(amb.pos, r->rop);
 	amb.ndir = encodedir(r->ron);
-	amb.udir = encodedir(uv[0]);
+	amb.udir = encodedir(uvw[0]);
 	amb.lvl = al;
 	copycolor(amb.val, acol);
 						/* insert into tree */
 	avsave(&amb);				/* and save to file */
-	if (rn != r->ron)
-		extambient(acol, &amb, r->rop, rn);	/* texture */
+	if (rn != r->ron) {			/* texture */
+		VCOPY(uvw[2], r->ron);
+		extambient(acol, &amb, r->rop, rn, uvw);
+	}
 	return(1);
 }
 
@@ -472,15 +479,22 @@ void
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
 	AMBVAL	 *ap,
-	FVECT  uvw[3],
 	FVECT  pv,
-	FVECT  nv
+	FVECT  nv,
+	FVECT  uvw[3]
 )
 {
-	FVECT  v1;
-	int  i;
-	double	d = 1.0;		/* zeroeth order */
+	static FVECT	my_uvw[3];
+	FVECT		v1;
+	int		i;
+	double		d = 1.0;	/* zeroeth order */
 
+	if (uvw == NULL) {		/* need local coordinates? */
+		decodedir(my_uvw[2], ap->ndir);
+		decodedir(my_uvw[0], ap->udir);
+		VCROSS(my_uvw[1], my_uvw[2], my_uvw[0]);
+		uvw = my_uvw;
+	}
 	for (i = 3; i--; )		/* gradient due to translation */
 		d += (pv[i] - ap->pos[i]) *
 			(ap->gpos[0]*uvw[0][i] + ap->gpos[1]*uvw[1][i]);
@@ -540,6 +554,11 @@ avinsert(				/* insert ambient value in our tree */
 
 
 #else /* ! NEWAMB */
+
+static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
+				AMBTREE *at, FVECT c0, double s);
+static double	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
+static void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
 
 
 void
@@ -612,7 +631,7 @@ dumbamb:					/* return global value */
 }
 
 
-double
+static double
 sumambient(	/* get interpolated ambient value */
 	COLOR  acol,
 	RAY  *r,
@@ -723,7 +742,7 @@ sumambient(	/* get interpolated ambient value */
 }
 
 
-double
+static double
 makeambient(		/* make a new ambient value for storage */
 	COLOR  acol,
 	RAY  *r,
@@ -763,7 +782,7 @@ makeambient(		/* make a new ambient value for storage */
 }
 
 
-void
+static void
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
 	AMBVAL	 *ap,

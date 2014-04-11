@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.19 2014/04/11 20:31:37 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.20 2014/04/11 22:54:34 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -68,26 +68,17 @@ extern void	setambient(void);
 extern void	multambient(COLOR aval, RAY *r, FVECT nrm);
 extern void	ambdone(void);
 extern void	ambnotify(OBJECT obj);
-extern double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
-				AMBTREE *at, FVECT c0, double s);
-extern int	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
-extern void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
 extern int	ambsync(void);
 					/* defined in ambcomp.c */
 extern int	doambient(COLOR acol, RAY *r, double wt,
 				FVECT uv[2], float rad[2],
 				float gpos[2], float gdir[2]);
-extern void	inithemi(AMBHEMI *hp, COLOR ac, RAY *r, double wt);
-extern int	divsample(AMBSAMP *dp, AMBHEMI *h, RAY *r);
-extern void	comperrs(AMBSAMP *da, AMBHEMI *hp);
-extern void	posgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
-extern void	dirgradient(FVECT gv, AMBSAMP *da, AMBHEMI *hp);
 					/* defined in ambio.c */
 extern void	putambmagic(FILE *fp);
 extern int	hasambmagic(FILE *fp);
 extern int	writambval(AMBVAL *av, FILE *fp);
-extern int	ambvalOK(AMBVAL *av);
 extern int	readambval(AMBVAL *av, FILE *fp);
+extern int	ambvalOK(AMBVAL *av);
 
 #else /* ! NEWAMB */
 
@@ -147,10 +138,6 @@ extern void	setambient(void);
 extern void	multambient(COLOR aval, RAY *r, FVECT nrm);
 extern void	ambdone(void);
 extern void	ambnotify(OBJECT obj);
-extern double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
-				AMBTREE *at, FVECT c0, double s);
-extern double	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
-extern void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv);
 extern int	ambsync(void);
 					/* defined in ambcomp.c */
 extern double	doambient(COLOR acol, RAY *r, double wt,
