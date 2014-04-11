@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.16 2008/11/10 19:08:18 greg Exp $";
+static const char	RCSid[] = "$Id: tmesh2rad.c,v 2.17 2014/04/11 20:27:23 greg Exp $";
 #endif
 /*
  * Convert a trianglular mesh into a Radiance description.
@@ -124,8 +124,8 @@ convert(		/* convert a T-mesh */
 	char	picfile[128];
 	char	matname[64];
 	char	objname[64];
-	register int	i;
-	register VERTEX	*lastv;
+	int	i;
+	VERTEX	*lastv;
 					/* start fresh */
 	i = nverts;
 	lastv = vlist;
@@ -212,9 +212,9 @@ triangle(	/* put out a triangle */
 	char	*pn,
 	char	*mod,
 	char	*obj,
-	register VERTEX	*v1,
-	register VERTEX	*v2,
-	register VERTEX	*v3
+	VERTEX	*v1,
+	VERTEX	*v2,
+	VERTEX	*v3
 )
 {
 	static char	vfmt[] = "%18.12g %18.12g %18.12g\n";
@@ -222,7 +222,7 @@ triangle(	/* put out a triangle */
 	int		flatness = ISFLAT;
 	BARYCCM	bvecs;
 	RREAL	bvm[3][3];
-	register int	i;
+	int	i;
 					/* compute barycentric coordinates */
 	if (v1->flags & v2->flags & v3->flags & (V_HASINDX|V_HASNORM))
 		if (comp_baryc(&bvecs, v1->pos, v2->pos, v3->pos) < 0)
@@ -277,13 +277,13 @@ triangle(	/* put out a triangle */
 
 VERTEX *
 vnew(			/* create a new vertex */
-	register int	id,
+	int	id,
 	double	x,
 	double	y,
 	double	z
 )
 {
-	register int	i;
+	int	i;
 
 	if (id >= nverts) {		/* get some more */
 		i = nverts;
@@ -314,13 +314,13 @@ vnew(			/* create a new vertex */
 void
 syntax(			/* report syntax error and exit */
 	char	*fn,
-	register FILE	*fp,
+	FILE	*fp,
 	char	*er
 )
 {
 	extern long	ftell();
-	register long	cpos;
-	register int	c;
+	long	cpos;
+	int	c;
 	int	lineno;
 
 	if (fp == stdin)

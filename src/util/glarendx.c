@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.10 2004/01/02 12:48:36 schorsch Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.11 2014/04/11 20:27:23 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -187,8 +187,8 @@ read_input(void)			/* read glare sources from stdin */
 #define S_DIREC		2
 	int	state = S_SEARCH;
 	char	buf[128];
-	register struct glare_src	*gs;
-	register struct glare_dir	*gd;
+	struct glare_src	*gs;
+	struct glare_dir	*gd;
 
 	while (fgets(buf, sizeof(buf), stdin) != NULL)
 		switch (state) {
@@ -205,9 +205,10 @@ read_input(void)			/* read glare sources from stdin */
 			}
 			if ((gs = newp(struct glare_src)) == NULL)
 				goto memerr;
-			if (sscanf(buf, "%lf %lf %lf %lf %lf",
-					&gs->dir[0], &gs->dir[1], &gs->dir[2],
-					&gs->dom, &gs->lum) != 5)
+			if (sscanf(buf, FVFORMAT, &gs->dir[0], &gs->dir[1],
+						&gs->dir[2]) != 3 ||
+					sscanf(buf, "%lf %lf",
+						&gs->dom, &gs->lum) != 2)
 				goto readerr;
 			normalize(gs->dir);
 			gs->next = all_srcs;
@@ -246,7 +247,7 @@ print_values(		/* print out calculations */
 	gdfun *func
 )
 {
-	register struct glare_dir	*gd;
+	struct glare_dir	*gd;
 
 	for (gd = all_dirs; gd != NULL; gd = gd->next)
 		printf("%f\t%f\n", gd->ang*(180.0/PI), (*func)(gd));
@@ -260,7 +261,7 @@ direct(			/* compute direct vertical illuminance */
 {
 	FVECT	mydir;
 	double	d, dval;
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 
 	spinvector(mydir, midview.vdir, midview.vup, gd->ang);
 	dval = 0.0;
@@ -337,7 +338,7 @@ dgi(		/* compute Daylight Glare Index */
 	struct glare_dir	*gd
 )
 {
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 	FVECT	mydir,testdir[7],vhor;
 	double	r,posn,omega,p[7],sum;
 	int	i,n;
@@ -388,7 +389,7 @@ brs_gi(		/* compute BRS Glare Index */
 	struct glare_dir	*gd
 )
 {
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 	FVECT	mydir;
 	double	p;
 	double	sum;
@@ -414,7 +415,7 @@ guth_dgr(		/* compute Guth discomfort glare rating */
 )
 {
 #define q(w)	(20.4*w+1.52*pow(w,.2)-.075)
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 	FVECT	mydir;
 	double	p;
 	double	sum;
@@ -467,7 +468,7 @@ cie_cgi(		/* compute CIE Glare Index */
 	struct glare_dir	*gd
 )
 {
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 	FVECT	mydir;
 	double	dillum;
 	double	p;
@@ -493,7 +494,7 @@ ugr(		/* compute Unified Glare Rating */
 	struct glare_dir	*gd
 )
 {
-	register struct glare_src	*gs;
+	struct glare_src	*gs;
 	FVECT	mydir;
 	double	p;
 	double	sum;

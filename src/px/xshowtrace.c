@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xshowtrace.c,v 2.12 2005/07/30 22:02:29 greg Exp $";
+static const char	RCSid[] = "$Id: xshowtrace.c,v 2.13 2014/04/11 20:27:23 greg Exp $";
 #endif
 /*
  *  Display an image and watch the rays get traced.
@@ -15,11 +15,7 @@ static const char	RCSid[] = "$Id: xshowtrace.c,v 2.12 2005/07/30 22:02:29 greg E
 
 #define MAXDEPTH	32		/* ridiculous ray tree depth */
 
-#ifdef  SMLFLT
-#define  sscanvec(s,v)	(sscanf(s,"%f %f %f",v,v+1,v+2)==3)
-#else
-#define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
-#endif
+#define  sscanvec(s,v)	(sscanf(s,FVFORMAT,v,v+1,v+2)==3)
 
 char	rtcom[64] = "rtrace -h- -otp -fa -x 1";
 char	xicom[] = "ximage -c 256";

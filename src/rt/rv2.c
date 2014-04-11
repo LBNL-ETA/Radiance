@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.64 2013/10/18 17:04:13 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.65 2014/04/11 20:27:23 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -26,11 +26,7 @@ extern double  maxdiff;			/* max. sample difference */
 
 #define  CTRL(c)	((c)-'@')
 
-#ifdef  SMLFLT
-#define  sscanvec(s,v)	(sscanf(s,"%f %f %f",v,v+1,v+2)==3)
-#else
-#define  sscanvec(s,v)	(sscanf(s,"%lf %lf %lf",v,v+1,v+2)==3)
-#endif
+#define  sscanvec(s,v)	(sscanf(s,FVFORMAT,v,v+1,v+2)==3)
 
 extern char  rifname[128];		/* rad input file name */
 

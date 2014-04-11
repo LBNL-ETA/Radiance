@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.67 2012/06/27 15:32:58 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.68 2014/04/11 20:27:23 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -712,15 +712,25 @@ puta(				/* print ascii value(s) */
 static void
 putd(RREAL *v, int n)		/* print binary double(s) */
 {
-	if (sizeof(RREAL) != sizeof(double))
+#ifdef	SMLFLT
+	double	da[3];
+	int	i;
+
+	if (n > 3)
 		error(INTERNAL, "code error in putd()");
+	for (i = n; i--; )
+		da[i] = v[i];
+	fwrite(da, sizeof(double), n, stdout);
+#else
 	fwrite(v, sizeof(RREAL), n, stdout);
+#endif
 }
 
 
 static void
 putf(RREAL *v, int n)		/* print binary float(s) */
 {
+#ifndef	SMLFLT
 	float	fa[3];
 	int	i;
 
@@ -729,4 +739,7 @@ putf(RREAL *v, int n)		/* print binary float(s) */
 	for (i = n; i--; )
 		fa[i] = v[i];
 	fwrite(fa, sizeof(float), n, stdout);
+#else
+	fwrite(v, sizeof(RREAL), n, stdout);
+#endif
 }
