@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.9 2013/04/04 02:59:20 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.10 2014/04/15 21:34:31 greg Exp $
 
 use warnings;
 use strict;
@@ -317,7 +317,8 @@ system $cmd;
 my $loff1 = $loff - 1;
 
 # Command line without extrema
-$cmd = qq[pcomb $pc0args $pc1args $picture $cpict];
+$cmd = qq[pcomb $pc0args $pc1args "$picture"];
+$cmd .= qq[ "$cpict"] if ($cpict);
 $cmd .= qq[ | pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1];
 $cmd .= qq[ -t .5 $slabpic 0 $loff - $legwidth 0];
 
