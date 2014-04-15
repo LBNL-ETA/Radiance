@@ -1929,3 +1929,6 @@ Introduced eplus_adduvf program to compute user view factors for EnergyPlus.
 
 Changed image-plane sampling in rpict to use Hilbert curve, which gives
 less of a brushed/striped appearance to output pixels with -u- (default).
+
+Added ltview and ltpict Perl scripts contributed by Axel Jacobs, inspired
+by Rob Guglielmetti.
