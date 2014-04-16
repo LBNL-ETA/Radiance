@@ -1,4 +1,4 @@
-.\" RCSid $Id: ltview.1,v 1.1 2014/04/15 22:36:25 greg Exp $
+.\" 
 .TH "LTVIEW" "1" "08/04/14" "RADIANCE" ""
 .SH "NAME"
 ltview \- view photometry of a light source
@@ -9,23 +9,20 @@ ltview \- view photometry of a light source
 ][
 .B "\-b boxsize"
 ][
-.B "\-o output device"
+.B "\-o device"
 ]
 input
 .SH "DESCRIPTION"
 .I ltview
 renders a Radiance luminiare or IES photometry interactively using
-.I rad(1)
-.  This program is merely a shell script that calls
-.I rad(1)
-to make an octree and view the scene interactively.
+.I rad(1).
 .PP 
 .I ltview
 accepts exactly one Radiance object or IES photometry
 file as input.  No input is taken from STDIN.  The
 .I \-i
-option tells it that the file name given is 
-an IES photometry file rather then a Radiance description of a 
+option tells it that the input file contains 
+IES photometry rather then a Radiance description of a 
 luminiare.  In this case, Radiance's
 .I ies2rad(1)
 is called with its default settings to convert the IES file into a 
@@ -34,8 +31,8 @@ Radiance object.
 Unlike
 .I objpict(1)
 or
-.I objview(1)
-, no additional light sources are added to the scene, since it is
+.I objview(1),
+no additional light sources are added to the scene, since it is
 assumed that the object is a luminaire.
 .PP 
 .I ltview
@@ -46,33 +43,36 @@ command to compile an octree using
 and to call
 .I rvu(1)
 to display an interactive preview of the luminaire.
-The default behaviour for
+The luminaire, or output from 
+.I ies2rad(1),
+is moved so that its center is at world origin.
 .I ltview
-is to scale the luminaire or output from 
-.I ies2rad(1)
-so that the largest dimension of the fitting is unity, centered at the origin.
-This scaled representation of the original fitting is then placed inside a 
-square box 10 units in length.  The \-y face of the box is left open so that 
+then generates an open box around the fitting that is ten times
+as big as the largest axis\-aligned dimension of the fitting.
+The \-y face of the box is left open so that 
 the camera can look inside, facing +y.
-If it is desirable to keep the original luminaire in both its original size,
-and its original location, the
-.I "\-r roomsize"
-option may be used to fix the room size to a certain
-.I roomsize.
-In this case, the size and location of the fitting is not adjusted, and
-it is up to the user to decide on appropriate room dimensions.  Note that
-when
-.I \-r
-and
+The overall dimensions of the enclosing box may be overwritten with the
+.I "\-b boxsize"
+option.  Note that both the fitting and the box are always centred at the
+origin.
+.PP 
+When
+.I ltview
+is run with the
 .I \-i
-are combined, then the dimensions of the luminaire and intesity of its 
+option, i.e. the file is an IES photometry file,
+then the dimensions of the luminaire and intesity of its 
 output are determined by
 .I ies2rad(1)'s
 default settings.  If this is not acceptable, then it is best to run
 .I ies2rad(1)
 manually, and to feed
 .I ltview
-the hand\-crafted fitting, rather than the IES photometry.
+the hand\-crafted fitting, rather than the IES photometry.  In any case,
+it is likely that the initial exposure within the 
+.I rvu(1)
+window window needs to be adjusted before the distribution of the fitting
+can be fully appreciated.
 .PP 
 The default
 .I rvu(1)
@@ -95,7 +95,7 @@ ltview \-o qt ABC123.ies
 .PP 
 To look at a typical fluorescent fitting that is modelled in millimeters
 .IP "" .2i
-ltview \-r 5000 XYZ_batten.rad
+ltview \-b 5000 XYZ_batten.rad
 .SH "AUTHOR"
 Axel Jacobs
 .SH "SEE ALSO"
