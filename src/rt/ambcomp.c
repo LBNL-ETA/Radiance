@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.25 2014/04/11 20:31:37 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.26 2014/04/16 20:32:00 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -14,6 +14,204 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.25 2014/04/11 20:31:37 greg Exp 
 #include  "random.h"
 
 #ifdef NEWAMB
+
+extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
+
+typedef struct {
+	RAY	*rp;		/* originating ray sample */
+	FVECT	ux, uy;		/* tangent axis directions */
+	int	ns;		/* number of samples per axis */
+	COLOR	acoef;		/* division contribution coefficient */
+	struct s_ambsamp {
+		COLOR	v;		/* hemisphere sample value */
+		float	p[3];		/* intersection point */
+	} sa[1];		/* sample array (extends struct) */
+}  AMBHEMI;		/* ambient sample hemisphere */
+
+#define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
+
+
+static AMBHEMI *
+inithemi(			/* initialize sampling hemisphere */
+	COLOR	ac,
+	RAY	*r,
+	double	wt
+)
+{
+	AMBHEMI	*hp;
+	double	d;
+	int	n, i;
+					/* set number of divisions */
+	if (ambacc <= FTINY &&
+			wt > (d = 0.8*intens(ac)*r->rweight/(ambdiv*minweight)))
+		wt = d;			/* avoid ray termination */
+	n = sqrt(ambdiv * wt) + 0.5;
+	i = 1 + 4*(ambacc > FTINY);	/* minimum number of samples */
+	if (n < i)
+		n = i;
+					/* allocate sampling array */
+	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) +
+				sizeof(struct s_ambsamp)*(n*n - 1));
+	if (hp == NULL)
+		return(NULL);
+	hp->rp = r;
+	hp->ns = n;
+					/* assign coefficient */
+	copycolor(hp->acoef, ac);
+	d = 1.0/(n*n);
+	scalecolor(hp->acoef, d);
+					/* make tangent axes */
+	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
+	for (i = 0; i < 3; i++)
+		if (r->rn[i] < 0.6 && r->rn[i] > -0.6)
+			break;
+	if (i >= 3)
+		error(CONSISTENCY, "bad ray direction in inithemi()");
+	hp->uy[i] = 1.0;
+	VCROSS(hp->ux, hp->uy, r->rn);
+	normalize(hp->ux);
+	VCROSS(hp->uy, r->rn, hp->ux);
+					/* we're ready to sample */
+	return(hp);
+}
+
+
+static int
+ambsample(				/* sample an ambient direction */
+	AMBHEMI	*hp,
+	int	i,
+	int	j,
+)
+{
+	struct s_ambsamp	*ap = &ambsamp(hp,i,j);
+	RAY			ar;
+	int			hlist[3];
+	double			spt[2], dz;
+	int			ii;
+					/* ambient coefficient for weight */
+	if (ambacc > FTINY)
+		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
+	else
+		copycolor(ar.rcoef, hp->acoef);
+	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
+		setcolor(ap->v, 0., 0., 0.);
+		ap->r = 0.;
+		return(0);		/* no sample taken */
+	}
+	if (ambacc > FTINY) {
+		multcolor(ar.rcoef, hp->acoef);
+		scalecolor(ar.rcoef, 1./AVGREFL);
+	}
+					/* generate hemispherical sample */
+	SDsquare2disk(spt, (i+frandom())/hp->ns, (j+frandom())/hp->ns);
+	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
+	for (ii = 3; ii--; )
+		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
+				spt[1]*hp->uy[ii] +
+				zd*hp->rp->ron[ii];
+	checknorm(ar.rdir);
+	dimlist[ndims++] = i*hp->ns + j + 90171;
+	rayvalue(&ar);			/* evaluate ray */
+	ndims--;
+	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
+	copycolor(ap->v, ar.rcol);
+	if (ar.rt > 20.0*maxarad)	/* limit vertex distance */
+		ar.rt = 20.0*maxarad;
+	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
+	return(1);
+}
+
+
+static void
+ambHessian(				/* anisotropic radii & pos. gradient */
+	AMBHEMI	*hp,
+	FVECT	uv[2],			/* returned */
+	float	ra[2],			/* returned */
+	float	pg[2]			/* returned */
+)
+{
+	if (ra != NULL) {		/* compute Hessian-derived radii */
+	} else {			/* else copy original tangent axes */
+		VCOPY(uv[0], hp->ux);
+		VCOPY(uv[1], hp->uy);
+	}
+	if (pg == NULL)			/* no position gradient requested? */
+		return;
+}
+
+int
+doambient(				/* compute ambient component */
+	COLOR	rcol,			/* input/output color */
+	RAY	*r,
+	double	wt,
+	FVECT	uv[2],			/* returned */
+	float	ra[2],			/* returned */
+	float	pg[2],			/* returned */
+	float	dg[2]			/* returned */
+)
+{
+	int			cnt = 0;
+	FVECT			my_uv[2];
+	AMBHEMI			*hp;
+	double			d, acol[3];
+	struct s_ambsamp	*ap;
+	int			i, j;
+					/* initialize */
+	if ((hp = inithemi(rcol, r, wt)) == NULL)
+		return(0);
+	if (uv != NULL)
+		memset(uv, 0, sizeof(FVECT)*2);
+	if (ra != NULL)
+		ra[0] = ra[1] = 0.0;
+	if (pg != NULL)
+		pg[0] = pg[1] = 0.0;
+	if (dg != NULL)
+		dg[0] = dg[1] = 0.0;
+					/* sample the hemisphere */
+	acol[0] = acol[1] = acol[2] = 0.0;
+	for (i = hemi.ns; i--; )
+		for (j = hemi.ns; j--; )
+			if (ambsample(hp, i, j)) {
+				ap = &ambsamp(hp,i,j);
+				addcolor(acol, ap->v);
+				++cnt;
+			}
+	if (!cnt) {
+		setcolor(rcol, 0.0, 0.0, 0.0);
+		free(hp);
+		return(0);		/* no valid samples */
+	}
+	d = 1.0 / cnt;			/* final indirect irradiance/PI */
+	acol[0] *= d; acol[1] *= d; acol[2] *= d;
+	copycolor(rcol, acol);
+	if (cnt < hp->ns*hp->ns ||	/* incomplete sampling? */
+			(ra == NULL) & (pg == NULL) & (dg == NULL)) {
+		free(hp);
+		return(-1);		/* no radius or gradient calc. */
+	}
+	d = 0.01 * bright(rcol);	/* add in 1% before Hessian comp. */
+	if (d < FTINY) d = FTINY;
+	ap = hp->sa;			/* using Y channel from here on... */
+	for (i = hp->ns*hp->ns; i--; ap++)
+		colval(ap->v,CIEY) = bright(ap->v) + d;
+
+	if (uv == NULL)			/* make sure we have axis pointers */
+		uv = my_uv;
+					/* compute radii & pos. gradient */
+	ambHessian(hp, uv, ra, pg);
+	if (dg != NULL)			/* compute direction gradient */
+		ambdirgrad(hp, uv, dg);
+	if (ra != NULL) {		/* adjust/clamp radii */
+		d = pow(wt, -0.25);
+		if ((ra[0] *= d) > maxarad)
+			ra[0] = maxarad;
+		if ((ra[1] *= d) > 2.0*ra[0])
+			ra[1] = 2.0*ra[0];
+	}
+	free(hp);			/* clean up and return */
+	return(1);
+}
+
 
 #else /* ! NEWAMB */
 
