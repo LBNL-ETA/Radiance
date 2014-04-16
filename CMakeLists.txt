@@ -7,12 +7,31 @@ include(CTest)
 option(BUILD_SHARED_LIBS "Build radiance using shared libraries?" OFF)
 option(BUILD_HEADLESS "Build radiance without any GUI components?" OFF)
 
+option(CPACK_NREL_SUPPORT "Include OpenStudio ToolFinder Help?" OFF)
+
+if( CPACK_NREL_SUPPORT )
+  # find git so we can query for the current git tag
+  find_program(git git)
+  if (NOT git)
+    message(ERROR "Please specify the path to the git executable")
+  endif()
+
+  # call git log to get output containing the tag
+  execute_process(
+    COMMAND ${git} branch
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE git_log_output)
+
+  # create & install the source version .txt file
+  file(WRITE "NREL_ver.txt" "Radiance built from source branch(*):\n ${git_log_output}")
+  install(FILES NREL_ver.txt DESTINATION bin/..)
+endif()
+ 
 if(NOT WIN32)
   set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/ DESTINATION man)
   set(qt_plugin_term "PLUGIN")
 endif()
-
 
 if (WIN32)
   set(CPACK_NSIS_MODIFY_PATH 1)
@@ -20,7 +39,7 @@ if (WIN32)
 
   # Set RAYPATH on install
   set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
-    "WriteRegExpandStr HKLM \\\"SYSTEM\\\\CurrentControlSet\\\\Control\\\\Session Manager\\\\Environment\\\" RAYPATH '\\\"$INSTDIR\\\\lib\\\"'"
+    "WriteRegExpandStr HKLM \\\"SYSTEM\\\\CurrentControlSet\\\\Control\\\\Session Manager\\\\Environment\\\" RAYPATH '\\\$INSTDIR\\\\lib\\\;.'"
   )
 
   # Unset RAYPATH on uninstall

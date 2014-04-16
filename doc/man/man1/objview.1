@@ -1,4 +1,4 @@
-.\" RCSid "$Id: objview.1,v 1.4 2012/08/07 18:17:17 greg Exp $"
+.\" RCSid "$Id: objview.1,v 1.5 2014/04/16 20:48:07 greg Exp $"
 .TH OBJVIEW 1 6/10/98 RADIANCE
 .SH NAME
 objview - view RADIANCE object(s)
@@ -21,12 +21,7 @@ glrad options
 ]
 input ..
 .br
-.B objview.rb
 [
-.B \-l
-][
-.B "\-r roomsiz"
-][
 .B "\-n nprocs"
 ]
 input ..
@@ -53,20 +48,9 @@ option to
 Any number of material and scene files may be given,
 but no in-line commands or standard input.
 .PP
-There is also a Ruby version of objview (objview.rb)
-available, primarily for Windows compatibility, but 
-the Ruby version also adds a luminaire viewer option.
-.PP 
-If the user specifies the -l option, then a Radiance 
-luminaire description is the input to the program. 
-objview.rb will place the centroid of the luminiare at 0,0,0
-and surround the distribution with a room that is 4' square
-(in meters), with a view along the positive y. Scale the
-room size with the -r option.
-.PP
 The number of processors to use may be specified with the 
 -n option.
 .SH AUTHOR(s)
-Greg Ward Larson, Rob Guglielmetti
+Greg Ward Larson
 .SH "SEE ALSO"
 glrad(1), oconv(1), rad(1), rvu(1)
