@@ -18,12 +18,12 @@ if( CPACK_NREL_SUPPORT )
 
   # call git log to get output containing the tag
   execute_process(
-    COMMAND ${git} branch
+    COMMAND ${git} describe --tag --exact-match
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE git_log_output)
+    OUTPUT_VARIABLE git_tag_output)
 
   # create & install the source version .txt file
-  file(WRITE "NREL_ver.txt" "Radiance built from source branch(*):\n ${git_log_output}")
+  file(WRITE "NREL_ver.txt" "Radiance version ${git_tag_output}")
   install(FILES NREL_ver.txt DESTINATION bin/..)
 endif()
  
