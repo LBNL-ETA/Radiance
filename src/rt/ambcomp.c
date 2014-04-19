@@ -1,8 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.26 2014/04/16 20:32:00 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.27 2014/04/19 02:39:44 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
+ *
+ *  Hessian calculations based on "Practical Hessian-Based Error Control
+ *	for Irradiance Caching" by Schwarzhaupt, Wann Jensen, & Jarosz
+ *	from ACM SIGGRAPH Asia 2012 conference proceedings.
  *
  *  Declarations of external symbols in ambient.h
  */
@@ -19,7 +23,7 @@ extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
 typedef struct {
 	RAY	*rp;		/* originating ray sample */
-	FVECT	ux, uy;		/* tangent axis directions */
+	FVECT	ux, uy;		/* tangent axis unit vectors */
 	int	ns;		/* number of samples per axis */
 	COLOR	acoef;		/* division contribution coefficient */
 	struct s_ambsamp {
@@ -29,6 +33,11 @@ typedef struct {
 }  AMBHEMI;		/* ambient sample hemisphere */
 
 #define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
+
+typedef struct {
+	FVECT	r_i, r_i1, e_i;
+	double	nf, I1, I2, J2;
+} FFTRI;		/* vectors and coefficients for Hessian calculation */
 
 
 static AMBHEMI *
@@ -46,7 +55,7 @@ inithemi(			/* initialize sampling hemisphere */
 			wt > (d = 0.8*intens(ac)*r->rweight/(ambdiv*minweight)))
 		wt = d;			/* avoid ray termination */
 	n = sqrt(ambdiv * wt) + 0.5;
-	i = 1 + 4*(ambacc > FTINY);	/* minimum number of samples */
+	i = 1 + 5*(ambacc > FTINY);	/* minimum number of samples */
 	if (n < i)
 		n = i;
 					/* allocate sampling array */
@@ -63,14 +72,14 @@ inithemi(			/* initialize sampling hemisphere */
 					/* make tangent axes */
 	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
 	for (i = 0; i < 3; i++)
-		if (r->rn[i] < 0.6 && r->rn[i] > -0.6)
+		if (r->ron[i] < 0.6 && r->ron[i] > -0.6)
 			break;
 	if (i >= 3)
 		error(CONSISTENCY, "bad ray direction in inithemi()");
 	hp->uy[i] = 1.0;
-	VCROSS(hp->ux, hp->uy, r->rn);
+	VCROSS(hp->ux, hp->uy, r->ron);
 	normalize(hp->ux);
-	VCROSS(hp->uy, r->rn, hp->ux);
+	VCROSS(hp->uy, r->ron, hp->ux);
 					/* we're ready to sample */
 	return(hp);
 }
@@ -80,13 +89,13 @@ static int
 ambsample(				/* sample an ambient direction */
 	AMBHEMI	*hp,
 	int	i,
-	int	j,
+	int	j
 )
 {
 	struct s_ambsamp	*ap = &ambsamp(hp,i,j);
 	RAY			ar;
 	int			hlist[3];
-	double			spt[2], dz;
+	double			spt[2], zd;
 	int			ii;
 					/* ambient coefficient for weight */
 	if (ambacc > FTINY)
@@ -95,7 +104,7 @@ ambsample(				/* sample an ambient direction */
 		copycolor(ar.rcoef, hp->acoef);
 	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
 		setcolor(ap->v, 0., 0., 0.);
-		ap->r = 0.;
+		VCOPY(ap->p, hp->rp->rop);
 		return(0);		/* no sample taken */
 	}
 	if (ambacc > FTINY) {
@@ -103,7 +112,8 @@ ambsample(				/* sample an ambient direction */
 		scalecolor(ar.rcoef, 1./AVGREFL);
 	}
 					/* generate hemispherical sample */
-	SDsquare2disk(spt, (i+frandom())/hp->ns, (j+frandom())/hp->ns);
+	SDsquare2disk(spt,	(i+.1+.8*frandom())/hp->ns,
+				(j+.1+.8*frandom())/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
 		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
@@ -122,6 +132,222 @@ ambsample(				/* sample an ambient direction */
 }
 
 
+/* Compute vectors and coefficients for Hessian/gradient calcs */
+static void
+comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
+{
+	FVECT	v1;
+	double	dot_e, dot_er, dot_r, dot_r1;
+
+	VSUB(ftp->r_i, ap0, rop);
+	VSUB(ftp->r_i1, ap1, rop);
+	VSUB(ftp->e_i, ap1, ap0);
+	VCROSS(v1, ftp->e_i, ftp->r_i);
+	ftp->nf = 1.0/DOT(v1,v1);
+	VCROSS(v1, ftp->r_i, ftp->r_i1);
+	ftp->I1 = sqrt(DOT(v1,v1)*ftp->nf);
+	dot_e = DOT(ftp->e_i,ftp->e_i);
+	dot_er = DOT(ftp->e_i, ftp->r_i);
+	dot_r = DOT(ftp->r_i,ftp->r_i);
+	dot_r1 = DOT(ftp->r_i1,ftp->r_i1);
+	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)/dot_r1 - dot_er/dot_r +
+			dot_e*ftp->I1 )*0.5*ftp->nf;
+	ftp->J2 =  0.25*ftp->nf*( 1.0/dot_r - 1.0/dot_r1 ) -
+			dot_er/dot_e*ftp->I2;
+}
+
+
+/* Compose matrix from two vectors */
+static void
+compose_matrix(FVECT mat[3], FVECT va, FVECT vb)
+{
+	mat[0][0] = 2.0*va[0]*vb[0];
+	mat[1][1] = 2.0*va[1]*vb[1];
+	mat[2][2] = 2.0*va[2]*vb[2];
+	mat[0][1] = mat[1][0] = va[0]*vb[1] + va[1]*vb[0];
+	mat[0][2] = mat[2][0] = va[0]*vb[2] + va[2]*vb[0];
+	mat[1][2] = mat[2][1] = va[1]*vb[2] + va[2]*vb[1];
+}
+
+
+/* Compute partial 3x3 Hessian matrix for edge */
+static void
+comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
+{
+	FVECT	v1, v2;
+	FVECT	m1[3], m2[3], m3[3], m4[3];
+	double	d1, d2, d3, d4;
+	double	I3, J3, K3;
+	int	i, j;
+					/* compute intermediate coefficients */
+	d1 = 1.0/DOT(ftp->r_i,ftp->r_i);
+	d2 = 1.0/DOT(ftp->r_i1,ftp->r_i1);
+	d3 = 1.0/DOT(ftp->e_i,ftp->e_i);
+	d4 = DOT(ftp->e_i, ftp->r_i);
+	I3 = 0.25*ftp->nf*( DOT(ftp->e_i, ftp->r_i1)*d2*d2 - d4*d1*d1 +
+				3.0*ftp->I2*d3 );
+	J3 = 0.25*d3*(d1*d1 - d2*d2) - d4*d3*I3;
+	K3 = d3*(ftp->I2 - I3/d1 - 2.0*d4*J3);
+					/* intermediate matrices */
+	VCROSS(v1, nrm, ftp->e_i);
+	for (j = 3; j--; )
+		v2[i] = ftp->I2*ftp->r_i[j] + ftp->J2*ftp->e_i[j];
+	compose_matrix(m1, v1, v2);
+	compose_matrix(m2, ftp->r_i, ftp->r_i);
+	compose_matrix(m3, ftp->e_i, ftp->e_i);
+	compose_matrix(m4, ftp->r_i, ftp->e_i);
+	VCROSS(v1, ftp->r_i, ftp->e_i);
+	d1 = DOT(nrm, v1);
+	d2 = -d1*ftp->I2;
+	d1 *= 2.0;
+	for (i = 3; i--; )		/* final matrix sum */
+	    for (j = 3; j--; ) {
+		hess[i][j] = m1[i][j] + d1*( I3*m2[i][j] + K3*m3[i][j] +
+						2.0*J3*m4[i][j] );
+		hess[i][j] += d2*(i==j);
+		hess[i][j] *= -1.0/PI;
+	    }
+}
+
+
+/* Reverse hessian calculation result for edge in other direction */
+static void
+rev_hessian(FVECT hess[3])
+{
+	int	i;
+
+	for (i = 3; i--; ) {
+		hess[i][0] = -hess[i][0];
+		hess[i][1] = -hess[i][1];
+		hess[i][2] = -hess[i][2];
+	}
+}
+
+
+/* Add to radiometric Hessian from the given triangle */
+static void
+add2hessian(FVECT hess[3], FVECT ehess1[3],
+		FVECT ehess2[3], FVECT ehess3[3], COLORV v)
+{
+	int	i, j;
+
+	for (i = 3; i--; )
+	    for (j = 3; j--; )
+		hess[i][j] += v*( ehess1[i][j] + ehess2[i][j] + ehess3[i][j] );
+}
+
+
+/* Compute partial displacement form factor gradient for edge */
+static void
+comp_gradient(FVECT grad, FFTRI *ftp, FVECT nrm)
+{
+	FVECT	vcp;
+	double	f1;
+	int	i;
+
+	VCROSS(vcp, ftp->r_i, ftp->r_i1);
+	f1 = 2.0*DOT(nrm, vcp);
+	VCROSS(vcp, nrm, ftp->e_i);
+	for (i = 3; i--; )
+		grad[i] = (0.5/PI)*( ftp->I1*vcp[i] +
+			    f1*(ftp->I2*ftp->r_i[i] + ftp->J2*ftp->e_i[i]) );
+}
+
+
+/* Reverse gradient calculation result for edge in other direction */
+static void
+rev_gradient(FVECT grad)
+{
+	grad[0] = -grad[0];
+	grad[1] = -grad[1];
+	grad[2] = -grad[2];
+}
+
+
+/* Add to displacement gradient from the given triangle */
+static void
+add2gradient(FVECT grad, FVECT egrad1, FVECT egrad2, FVECT egrad3, COLORV v)
+{
+	int	i;
+
+	for (i = 3; i--; )
+		grad[i] += v*( egrad1[i] + egrad2[i] + egrad3[i] );
+}
+
+
+/* Return brightness of furthest ambient sample */
+static COLORV
+back_ambval(struct s_ambsamp *ap1, struct s_ambsamp *ap2,
+		struct s_ambsamp *ap3, FVECT orig)
+{
+	COLORV	vback;
+	FVECT	vec;
+	double	d2, d2best;
+
+	VSUB(vec, ap1->p, orig);
+	d2best = DOT(vec,vec);
+	vback = ap1->v[CIEY];
+	VSUB(vec, ap2->p, orig);
+	d2 = DOT(vec,vec);
+	if (d2 > d2best) {
+		d2best = d2;
+		vback = ap2->v[CIEY];
+	}
+	VSUB(vec, ap3->p, orig);
+	d2 = DOT(vec,vec);
+	if (d2 > d2best)
+		return(ap3->v[CIEY]);
+	return(vback);
+}
+
+
+/* Compute anisotropic radii and eigenvector directions */
+static int
+eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
+{
+	double	hess2[2][2];
+	FVECT	a, b;
+	double	evalue[2], slope1, xmag1;
+	int	i;
+					/* project Hessian to sample plane */
+	for (i = 3; i--; ) {
+		a[i] = DOT(hessian[i], uv[0]);
+		b[i] = DOT(hessian[i], uv[1]);
+	}
+	hess2[0][0] = DOT(uv[0], a);
+	hess2[0][1] = DOT(uv[0], b);
+	hess2[1][0] = DOT(uv[1], a);
+	hess2[1][1] = DOT(uv[1], b);
+					/* compute eigenvalues */
+	if (quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
+			hess2[0][0]*hess2[1][1]-hess2[0][1]*hess2[1][0]) != 2 ||
+			(evalue[0] = fabs(evalue[0])) <= FTINY*FTINY*FTINY ||
+			(evalue[1] = fabs(evalue[1])) <= FTINY*FTINY*FTINY)
+		error(INTERNAL, "bad eigenvalue calculation");
+
+	if (evalue[0] > evalue[1]) {
+		ra[0] = 1.0/sqrt(sqrt(evalue[0]));
+		ra[1] = 1.0/sqrt(sqrt(evalue[1]));
+		slope1 = evalue[1];
+	} else {
+		ra[0] = 1.0/sqrt(sqrt(evalue[1]));
+		ra[1] = 1.0/sqrt(sqrt(evalue[0]));
+		slope1 = evalue[0];
+	}
+					/* compute unit eigenvectors */
+	if (fabs(hess2[0][1]) <= FTINY)
+		return;			/* uv OK as is */
+	slope1 = (slope1 - hess2[0][0]) / hess2[0][1];
+	xmag1 = sqrt(1.0/(1.0 + slope1*slope1));
+	for (i = 3; i--; ) {
+		b[i] = xmag1*uv[0][i] + slope1*xmag1*uv[1][i];
+		a[i] = slope1*xmag1*uv[0][i] - xmag1*uv[1][i];
+	}
+	VCOPY(uv[0], a);
+	VCOPY(uv[1], b);
+}
+
+
 static void
 ambHessian(				/* anisotropic radii & pos. gradient */
 	AMBHEMI	*hp,
@@ -130,24 +356,140 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	float	pg[2]			/* returned */
 )
 {
-	if (ra != NULL) {		/* compute Hessian-derived radii */
-	} else {			/* else copy original tangent axes */
-		VCOPY(uv[0], hp->ux);
-		VCOPY(uv[1], hp->uy);
-	}
-	if (pg == NULL)			/* no position gradient requested? */
+	static char	memerrmsg[] = "out of memory in ambHessian()";
+	FVECT		(*hessrow)[3] = NULL;
+	FVECT		*gradrow = NULL;
+	FVECT		hessian[3];
+	FVECT		gradient;
+	FFTRI		fftr;
+	int		i, j;
+					/* be sure to assign unit vectors */
+	VCOPY(uv[0], hp->ux);
+	VCOPY(uv[1], hp->uy);
+			/* clock-wise vertex traversal from sample POV */
+	if (ra != NULL) {		/* initialize Hessian row buffer */
+		hessrow = (FVECT (*)[3])malloc(sizeof(FVECT)*3*hp->ns);
+		if (hessrow == NULL)
+			error(SYSTEM, memerrmsg);
+		memset(hessian, 0, sizeof(hessian));
+	} else if (pg == NULL)		/* bogus call? */
 		return;
+	if (pg != NULL) {		/* initialize form factor row buffer */
+		gradrow = (FVECT *)malloc(sizeof(FVECT)*hp->ns);
+		if (gradrow == NULL)
+			error(SYSTEM, memerrmsg);
+		memset(gradient, 0, sizeof(gradient));
+	}
+					/* compute first row of edges */
+	for (j = 0; j < hp->ns-1; j++) {
+		comp_fftri(&fftr, ambsamp(hp,0,j).p,
+				ambsamp(hp,0,j+1).p, hp->rp->rop);
+		if (hessrow != NULL)
+			comp_hessian(hessrow[j], &fftr, hp->rp->ron);
+		if (gradrow != NULL)
+			comp_gradient(gradrow[j], &fftr, hp->rp->ron);
+	}
+					/* sum each row of triangles */
+	for (i = 0; i < hp->ns-1; i++) {
+	    FVECT	hesscol[3];	/* compute first vertical edge */
+	    FVECT	gradcol;
+	    comp_fftri(&fftr, ambsamp(hp,i,0).p,
+			ambsamp(hp,i+1,0).p, hp->rp->rop);
+	    if (hessrow != NULL)
+		comp_hessian(hesscol, &fftr, hp->rp->ron);
+	    if (gradrow != NULL)
+		comp_gradient(gradcol, &fftr, hp->rp->ron);
+	    for (j = 0; j < hp->ns-1; j++) {
+		FVECT	hessdia[3];	/* compute triangle contributions */
+		FVECT	graddia;
+		COLORV	backg;
+		backg = back_ambval(&ambsamp(hp,i,j), &ambsamp(hp,i,j+1),
+					&ambsamp(hp,i+1,j), hp->rp->rop);
+					/* diagonal (inner) edge */
+		comp_fftri(&fftr, ambsamp(hp,i,j+1).p,
+				ambsamp(hp,i+1,j).p, hp->rp->rop);
+		if (hessrow != NULL) {
+		    comp_hessian(hessdia, &fftr, hp->rp->ron);
+		    rev_hessian(hesscol);
+		    add2hessian(hessian, hessrow[j], hessdia, hesscol, backg);
+		}
+		if (gradient != NULL) {
+		    comp_gradient(graddia, &fftr, hp->rp->ron);
+		    rev_gradient(gradcol);
+		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
+		}
+					/* initialize edge in next row */
+		comp_fftri(&fftr, ambsamp(hp,i+1,j+1).p,
+				ambsamp(hp,i+1,j).p, hp->rp->rop);
+		if (hessrow != NULL)
+		    comp_hessian(hessrow[j], &fftr, hp->rp->ron);
+		if (gradrow != NULL)
+		    comp_gradient(gradrow[j], &fftr, hp->rp->ron);
+					/* new column edge & paired triangle */
+		backg = back_ambval(&ambsamp(hp,i,j+1), &ambsamp(hp,i+1,j+1),
+					&ambsamp(hp,i+1,j), hp->rp->rop);
+		comp_fftri(&fftr, ambsamp(hp,i,j+1).p, ambsamp(hp,i+1,j+1).p,
+				hp->rp->rop);
+		if (hessrow != NULL) {
+		    comp_hessian(hesscol, &fftr, hp->rp->ron);
+		    rev_hessian(hessdia);
+		    add2hessian(hessian, hessrow[j], hessdia, hesscol, backg);
+		    if (i < hp->ns-2)
+			rev_hessian(hessrow[j]);
+		}
+		if (gradrow != NULL) {
+		    comp_gradient(gradcol, &fftr, hp->rp->ron);
+		    rev_gradient(graddia);
+		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
+		    if (i < hp->ns-2)
+			rev_gradient(gradrow[j]);
+		}
+	    }
+	}
+					/* release row buffers */
+	if (hessrow != NULL) free(hessrow);
+	if (gradrow != NULL) free(gradrow);
+	
+	if (ra != NULL)			/* extract eigenvectors & radii */
+		eigenvectors(uv, ra, hessian);
+	if (pg != NULL) {		/* project position gradient */
+		pg[0] = DOT(gradient, uv[0]);
+		pg[1] = DOT(gradient, uv[1]);
+	}
 }
+
+
+/* Compute direction gradient from a hemispherical sampling */
+static void
+ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
+{
+	struct s_ambsamp	*ap;
+	int			n;
+
+	dg[0] = dg[1] = 0;
+	for (ap = hp->sa, n = hp->ns*hp->ns; n--; ap++) {
+		FVECT	vd;
+		double	gfact;
+					/* use vector for azimuth + 90deg */
+		VSUB(vd, ap->p, hp->rp->rop);
+					/* brightness with tangent factor */
+		gfact = ap->v[CIEY] / DOT(hp->rp->ron, vd);
+					/* sine = proj_radius/vd_length */
+		dg[0] -= DOT(uv[1], vd) * gfact ;
+		dg[1] += DOT(uv[0], vd) * gfact;
+	}
+}
+
 
 int
 doambient(				/* compute ambient component */
 	COLOR	rcol,			/* input/output color */
 	RAY	*r,
 	double	wt,
-	FVECT	uv[2],			/* returned */
-	float	ra[2],			/* returned */
-	float	pg[2],			/* returned */
-	float	dg[2]			/* returned */
+	FVECT	uv[2],			/* returned (optional) */
+	float	ra[2],			/* returned (optional) */
+	float	pg[2],			/* returned (optional) */
+	float	dg[2]			/* returned (optional) */
 )
 {
 	int			cnt = 0;
@@ -169,8 +511,8 @@ doambient(				/* compute ambient component */
 		dg[0] = dg[1] = 0.0;
 					/* sample the hemisphere */
 	acol[0] = acol[1] = acol[2] = 0.0;
-	for (i = hemi.ns; i--; )
-		for (j = hemi.ns; j--; )
+	for (i = hp->ns; i--; )
+		for (j = hp->ns; j--; )
 			if (ambsample(hp, i, j)) {
 				ap = &ambsamp(hp,i,j);
 				addcolor(acol, ap->v);
@@ -202,7 +544,7 @@ doambient(				/* compute ambient component */
 	if (dg != NULL)			/* compute direction gradient */
 		ambdirgrad(hp, uv, dg);
 	if (ra != NULL) {		/* adjust/clamp radii */
-		d = pow(wt, -0.25);
+		d = sqrt(sqrt((4.0/PI)*bright(rcol)/wt));
 		if ((ra[0] *= d) > maxarad)
 			ra[0] = maxarad;
 		if ((ra[1] *= d) > 2.0*ra[0])

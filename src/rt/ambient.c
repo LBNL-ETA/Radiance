@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.73 2014/04/16 20:32:00 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.74 2014/04/19 02:39:44 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -51,6 +51,8 @@ static int  nunflshed = 0;	/* number of unflushed ambient values */
 #define MAX_SORT_INTVL	(SORT_INTVL<<6)
 #endif
 
+
+static double  qambacc = 0.;		/* ambient accuracy to the 1/4 power */
 static double  avsum = 0.;		/* computed ambient value sum (log) */
 static unsigned int  navsum = 0;	/* number of values in avsum */
 static unsigned int  nambvals = 0;	/* total number of indirect values */
@@ -132,8 +134,11 @@ setambacc(				/* set ambient accuracy */
 	if (newa < 0.0)
 		newa = 0.0;
 	ambdiff = fabs(newa - ambacc);
-	if (ambdiff >= .01 && (ambacc = newa) > FTINY && nambvals > 0)
-		sortambvals(1);			/* rebuild tree */
+	if (ambdiff >= .01 && (ambacc = newa) > FTINY) {
+		qambacc = sqrt(sqrt(ambacc));
+		if (nambvals > 0)
+			sortambvals(1);		/* rebuild tree */
+	}
 }
 
 
@@ -529,7 +534,7 @@ avinsert(				/* insert ambient value in our tree */
 	at = &atrunk;
 	VCOPY(ck0, thescene.cuorg);
 	s = thescene.cusize;
-	while (s*(OCTSCALE/2) > av->rad[1]*ambacc) {
+	while (s*(OCTSCALE/2) > av->rad[1]*qambacc) {
 		if (at->kid == NULL)
 			if ((at->kid = newambtree()) == NULL)
 				error(SYSTEM, "out of memory in avinsert");

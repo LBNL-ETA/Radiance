@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.20 2014/04/11 22:54:34 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.21 2014/04/19 02:39:44 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -34,21 +34,6 @@ typedef struct ambtree {
 	AMBVAL	*alist;		/* ambient value list */
 	struct ambtree	*kid;	/* 8 child nodes */
 }  AMBTREE;			/* ambient octree */
-
-typedef struct {
-	COLOR  v;		/* division sum (partial) */
-	float  r;		/* 1/distance sum */
-	float  k;		/* variance for this division */
-	int    n;		/* number of subsamples */
-	unsigned short  t, p;	/* theta, phi indices */
-}  AMBSAMP;		/* ambient sample division */
-
-typedef struct {
-	FVECT  ux, uy, uz;	/* x, y and z axis directions */
-	COLOR  acoef;		/* division contribution coefficient */
-	int    ns;		/* number of super-samples */
-	int    nt, np;		/* number of theta and phi directions */
-}  AMBHEMI;		/* ambient sample hemisphere */
 
 extern double  maxarad;		/* maximum ambient radius */
 extern double  minarad;		/* minimum ambient radius */
