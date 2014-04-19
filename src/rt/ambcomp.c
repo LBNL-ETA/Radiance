@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.27 2014/04/19 02:39:44 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.28 2014/04/19 19:20:47 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -69,8 +69,10 @@ inithemi(			/* initialize sampling hemisphere */
 	copycolor(hp->acoef, ac);
 	d = 1.0/(n*n);
 	scalecolor(hp->acoef, d);
-					/* make tangent axes */
-	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
+					/* make tangent plane axes */
+	hp->uy[0] = 0.1 - 0.2*frandom();
+	hp->uy[1] = 0.1 - 0.2*frandom();
+	hp->uy[2] = 0.1 - 0.2*frandom();
 	for (i = 0; i < 3; i++)
 		if (r->ron[i] < 0.6 && r->ron[i] > -0.6)
 			break;
@@ -85,7 +87,7 @@ inithemi(			/* initialize sampling hemisphere */
 }
 
 
-static int
+static struct s_ambsamp *
 ambsample(				/* sample an ambient direction */
 	AMBHEMI	*hp,
 	int	i,
@@ -105,7 +107,7 @@ ambsample(				/* sample an ambient direction */
 	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
 		setcolor(ap->v, 0., 0., 0.);
 		VCOPY(ap->p, hp->rp->rop);
-		return(0);		/* no sample taken */
+		return(NULL);		/* no sample taken */
 	}
 	if (ambacc > FTINY) {
 		multcolor(ar.rcoef, hp->acoef);
@@ -113,7 +115,7 @@ ambsample(				/* sample an ambient direction */
 	}
 					/* generate hemispherical sample */
 	SDsquare2disk(spt,	(i+.1+.8*frandom())/hp->ns,
-				(j+.1+.8*frandom())/hp->ns);
+				(j+.1+.8*frandom())/hp->ns );
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
 		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
@@ -128,7 +130,7 @@ ambsample(				/* sample an ambient direction */
 	if (ar.rt > 20.0*maxarad)	/* limit vertex distance */
 		ar.rt = 20.0*maxarad;
 	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
-	return(1);
+	return(ap);
 }
 
 
@@ -157,7 +159,7 @@ comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
 }
 
 
-/* Compose matrix from two vectors */
+/* Compose 3x3 matrix from two vectors */
 static void
 compose_matrix(FVECT mat[3], FVECT va, FVECT vb)
 {
@@ -185,13 +187,13 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 	d3 = 1.0/DOT(ftp->e_i,ftp->e_i);
 	d4 = DOT(ftp->e_i, ftp->r_i);
 	I3 = 0.25*ftp->nf*( DOT(ftp->e_i, ftp->r_i1)*d2*d2 - d4*d1*d1 +
-				3.0*ftp->I2*d3 );
+				3.0*d3*ftp->I2 );
 	J3 = 0.25*d3*(d1*d1 - d2*d2) - d4*d3*I3;
 	K3 = d3*(ftp->I2 - I3/d1 - 2.0*d4*J3);
 					/* intermediate matrices */
 	VCROSS(v1, nrm, ftp->e_i);
 	for (j = 3; j--; )
-		v2[i] = ftp->I2*ftp->r_i[j] + ftp->J2*ftp->e_i[j];
+		v2[j] = ftp->I2*ftp->r_i[j] + ftp->J2*ftp->e_i[j];
 	compose_matrix(m1, v1, v2);
 	compose_matrix(m2, ftp->r_i, ftp->r_i);
 	compose_matrix(m3, ftp->e_i, ftp->e_i);
@@ -319,10 +321,10 @@ eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 	hess2[1][0] = DOT(uv[1], a);
 	hess2[1][1] = DOT(uv[1], b);
 					/* compute eigenvalues */
-	if (quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
+	if ( quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
 			hess2[0][0]*hess2[1][1]-hess2[0][1]*hess2[1][0]) != 2 ||
-			(evalue[0] = fabs(evalue[0])) <= FTINY*FTINY*FTINY ||
-			(evalue[1] = fabs(evalue[1])) <= FTINY*FTINY*FTINY)
+			(evalue[0] = fabs(evalue[0])) <= FTINY*FTINY ||
+			(evalue[1] = fabs(evalue[1])) <= FTINY*FTINY )
 		error(INTERNAL, "bad eigenvalue calculation");
 
 	if (evalue[0] > evalue[1]) {
@@ -352,8 +354,8 @@ static void
 ambHessian(				/* anisotropic radii & pos. gradient */
 	AMBHEMI	*hp,
 	FVECT	uv[2],			/* returned */
-	float	ra[2],			/* returned */
-	float	pg[2]			/* returned */
+	float	ra[2],			/* returned (optional) */
+	float	pg[2]			/* returned (optional) */
 )
 {
 	static char	memerrmsg[] = "out of memory in ambHessian()";
@@ -368,14 +370,14 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	VCOPY(uv[1], hp->uy);
 			/* clock-wise vertex traversal from sample POV */
 	if (ra != NULL) {		/* initialize Hessian row buffer */
-		hessrow = (FVECT (*)[3])malloc(sizeof(FVECT)*3*hp->ns);
+		hessrow = (FVECT (*)[3])malloc(sizeof(FVECT)*3*(hp->ns-1));
 		if (hessrow == NULL)
 			error(SYSTEM, memerrmsg);
 		memset(hessian, 0, sizeof(hessian));
 	} else if (pg == NULL)		/* bogus call? */
 		return;
 	if (pg != NULL) {		/* initialize form factor row buffer */
-		gradrow = (FVECT *)malloc(sizeof(FVECT)*hp->ns);
+		gradrow = (FVECT *)malloc(sizeof(FVECT)*(hp->ns-1));
 		if (gradrow == NULL)
 			error(SYSTEM, memerrmsg);
 		memset(gradient, 0, sizeof(gradient));
@@ -465,17 +467,17 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 {
 	struct s_ambsamp	*ap;
 	int			n;
+	FVECT			vd;
+	double			gfact;
 
 	dg[0] = dg[1] = 0;
 	for (ap = hp->sa, n = hp->ns*hp->ns; n--; ap++) {
-		FVECT	vd;
-		double	gfact;
 					/* use vector for azimuth + 90deg */
 		VSUB(vd, ap->p, hp->rp->rop);
 					/* brightness with tangent factor */
 		gfact = ap->v[CIEY] / DOT(hp->rp->ron, vd);
 					/* sine = proj_radius/vd_length */
-		dg[0] -= DOT(uv[1], vd) * gfact ;
+		dg[0] -= DOT(uv[1], vd) * gfact;
 		dg[1] += DOT(uv[0], vd) * gfact;
 	}
 }
@@ -492,14 +494,14 @@ doambient(				/* compute ambient component */
 	float	dg[2]			/* returned (optional) */
 )
 {
+	AMBHEMI			*hp = inithemi(rcol, r, wt);
 	int			cnt = 0;
 	FVECT			my_uv[2];
-	AMBHEMI			*hp;
 	double			d, acol[3];
 	struct s_ambsamp	*ap;
 	int			i, j;
-					/* initialize */
-	if ((hp = inithemi(rcol, r, wt)) == NULL)
+					/* check/initialize */
+	if (hp == NULL)
 		return(0);
 	if (uv != NULL)
 		memset(uv, 0, sizeof(FVECT)*2);
@@ -513,8 +515,7 @@ doambient(				/* compute ambient component */
 	acol[0] = acol[1] = acol[2] = 0.0;
 	for (i = hp->ns; i--; )
 		for (j = hp->ns; j--; )
-			if (ambsample(hp, i, j)) {
-				ap = &ambsamp(hp,i,j);
+			if ((ap = ambsample(hp, i, j)) != NULL) {
 				addcolor(acol, ap->v);
 				++cnt;
 			}
@@ -543,12 +544,16 @@ doambient(				/* compute ambient component */
 	ambHessian(hp, uv, ra, pg);
 	if (dg != NULL)			/* compute direction gradient */
 		ambdirgrad(hp, uv, dg);
-	if (ra != NULL) {		/* adjust/clamp radii */
+	if (ra != NULL) {		/* scale/clamp radii */
 		d = sqrt(sqrt((4.0/PI)*bright(rcol)/wt));
-		if ((ra[0] *= d) > maxarad)
-			ra[0] = maxarad;
+		ra[0] *= d;
 		if ((ra[1] *= d) > 2.0*ra[0])
 			ra[1] = 2.0*ra[0];
+		if (ra[1] > maxarad) {
+			ra[1] = maxarad;
+			if (ra[0] > maxarad)
+				ra[0] = maxarad;
+		}
 	}
 	free(hp);			/* clean up and return */
 	return(1);

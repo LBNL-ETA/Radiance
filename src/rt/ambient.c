@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.74 2014/04/19 02:39:44 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.75 2014/04/19 19:20:47 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -398,7 +398,7 @@ sumambient(		/* get interpolated ambient value */
 		delta_t2 = d*d;
 		d = DOT(ck0, uvw[1]) / av->rad[1];
 		delta_t2 += d*d;
-		if (delta_t2 >= ambacc*ambacc)
+		if (delta_t2 >= qambacc*qambacc)
 			continue;
 		/*
 		 *  Intersection behind test
@@ -413,7 +413,7 @@ sumambient(		/* get interpolated ambient value */
 		 */
 		extambient(ct, av, r->rop, rn, uvw);
 		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
-			tfunc(ambacc, sqrt(delta_t2), 0.0);
+			tfunc(qambacc, sqrt(delta_t2), 0.0);
 		scalecolor(ct, d);
 		addcolor(acol, ct);
 		wsum += d;
