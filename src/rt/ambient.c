@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.76 2014/04/23 06:04:18 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.77 2014/04/23 17:30:10 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -152,7 +152,7 @@ setambient(void)				/* initialize calculation */
 	ambdone();
 						/* init ambient limits */
 	setambres(ambres);
-	setambacc(ambacc);
+	qambacc = sqrt(sqrt(ambacc *= (ambacc > FTINY)));
 	if (ambfile == NULL || !ambfile[0])
 		return;
 	if (ambacc <= FTINY) {

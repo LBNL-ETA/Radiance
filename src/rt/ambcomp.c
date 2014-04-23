@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.29 2014/04/23 06:04:17 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.30 2014/04/23 17:30:10 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -35,8 +35,8 @@ typedef struct {
 #define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
 
 typedef struct {
-	FVECT	r_i, r_i1, e_i;
-	double	nf, I1, I2, J2;
+	FVECT	r_i, r_i1, e_i, rI2_eJ2;
+	double	nf, I1, I2;
 } FFTRI;		/* vectors and coefficients for Hessian calculation */
 
 
@@ -138,14 +138,15 @@ ambsample(				/* sample an ambient direction */
 static void
 comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
 {
-	FVECT	v1;
-	double	dot_e, dot_er, dot_r, dot_r1;
+	FVECT	vcp;
+	double	dot_e, dot_er, dot_r, dot_r1, J2;
+	int	i;
 
 	VSUB(ftp->r_i, ap0, rop);
 	VSUB(ftp->r_i1, ap1, rop);
 	VSUB(ftp->e_i, ap1, ap0);
-	VCROSS(v1, ftp->e_i, ftp->r_i);
-	ftp->nf = 1.0/DOT(v1,v1);
+	VCROSS(vcp, ftp->e_i, ftp->r_i);
+	ftp->nf = 1.0/DOT(vcp,vcp);
 	dot_e = DOT(ftp->e_i,ftp->e_i);
 	dot_er = DOT(ftp->e_i, ftp->r_i);
 	dot_r = DOT(ftp->r_i,ftp->r_i);
@@ -154,8 +155,9 @@ comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
 			sqrt( ftp->nf );
 	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)/dot_r1 - dot_er/dot_r +
 			dot_e*ftp->I1 )*0.5*ftp->nf;
-	ftp->J2 =  0.5/dot_e*( 1.0/dot_r - 1.0/dot_r1 ) -
-			dot_er/dot_e*ftp->I2;
+	J2 =  0.5/dot_e*( 1.0/dot_r - 1.0/dot_r1 ) - dot_er/dot_e*ftp->I2;
+	for (i = 3; i--; )
+		ftp->rI2_eJ2[i] = ftp->I2*ftp->r_i[i] + J2*ftp->e_i[i];
 }
 
 
@@ -176,7 +178,7 @@ compose_matrix(FVECT mat[3], FVECT va, FVECT vb)
 static void
 comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 {
-	FVECT	v1, v2;
+	FVECT	vcp;
 	FVECT	m1[3], m2[3], m3[3], m4[3];
 	double	d1, d2, d3, d4;
 	double	I3, J3, K3;
@@ -191,15 +193,13 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 	J3 = 0.25*d3*(d1*d1 - d2*d2) - d4*d3*I3;
 	K3 = d3*(ftp->I2 - I3/d1 - 2.0*d4*J3);
 					/* intermediate matrices */
-	VCROSS(v1, nrm, ftp->e_i);
-	for (j = 3; j--; )
-		v2[j] = ftp->I2*ftp->r_i[j] + ftp->J2*ftp->e_i[j];
-	compose_matrix(m1, v1, v2);
+	VCROSS(vcp, nrm, ftp->e_i);
+	compose_matrix(m1, vcp, ftp->rI2_eJ2);
 	compose_matrix(m2, ftp->r_i, ftp->r_i);
 	compose_matrix(m3, ftp->e_i, ftp->e_i);
 	compose_matrix(m4, ftp->r_i, ftp->e_i);
-	VCROSS(v1, ftp->r_i, ftp->e_i);
-	d1 = DOT(nrm, v1);
+	VCROSS(vcp, ftp->r_i, ftp->e_i);
+	d1 = DOT(nrm, vcp);
 	d2 = -d1*ftp->I2;
 	d1 *= 2.0;
 	for (i = 3; i--; )		/* final matrix sum */
@@ -251,8 +251,7 @@ comp_gradient(FVECT grad, FFTRI *ftp, FVECT nrm)
 	f1 = 2.0*DOT(nrm, vcp);
 	VCROSS(vcp, nrm, ftp->e_i);
 	for (i = 3; i--; )
-		grad[i] = (0.5/PI)*( ftp->I1*vcp[i] +
-			    f1*(ftp->I2*ftp->r_i[i] + ftp->J2*ftp->e_i[i]) );
+		grad[i] = (0.5/PI)*( ftp->I1*vcp[i] + f1*ftp->rI2_eJ2[i] );
 }
 
 
