@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.28 2014/04/19 19:20:47 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.29 2014/04/23 06:04:17 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -96,7 +96,6 @@ ambsample(				/* sample an ambient direction */
 {
 	struct s_ambsamp	*ap = &ambsamp(hp,i,j);
 	RAY			ar;
-	int			hlist[3];
 	double			spt[2], zd;
 	int			ii;
 					/* ambient coefficient for weight */
@@ -128,8 +127,9 @@ ambsample(				/* sample an ambient direction */
 	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	copycolor(ap->v, ar.rcol);
 	if (ar.rt > 20.0*maxarad)	/* limit vertex distance */
-		ar.rt = 20.0*maxarad;
-	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
+		VSUM(ap->p, ar.rorg, ar.rdir, 20.0*maxarad);
+	else
+		VCOPY(ap->p, ar.rop);
 	return(ap);
 }
 
@@ -146,15 +146,15 @@ comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
 	VSUB(ftp->e_i, ap1, ap0);
 	VCROSS(v1, ftp->e_i, ftp->r_i);
 	ftp->nf = 1.0/DOT(v1,v1);
-	VCROSS(v1, ftp->r_i, ftp->r_i1);
-	ftp->I1 = sqrt(DOT(v1,v1)*ftp->nf);
 	dot_e = DOT(ftp->e_i,ftp->e_i);
 	dot_er = DOT(ftp->e_i, ftp->r_i);
 	dot_r = DOT(ftp->r_i,ftp->r_i);
 	dot_r1 = DOT(ftp->r_i1,ftp->r_i1);
+	ftp->I1 = acos( DOT(ftp->r_i, ftp->r_i1) / sqrt(dot_r*dot_r1) ) *
+			sqrt( ftp->nf );
 	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)/dot_r1 - dot_er/dot_r +
 			dot_e*ftp->I1 )*0.5*ftp->nf;
-	ftp->J2 =  0.25*ftp->nf*( 1.0/dot_r - 1.0/dot_r1 ) -
+	ftp->J2 =  0.5/dot_e*( 1.0/dot_r - 1.0/dot_r1 ) -
 			dot_er/dot_e*ftp->I2;
 }
 
@@ -187,7 +187,7 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 	d3 = 1.0/DOT(ftp->e_i,ftp->e_i);
 	d4 = DOT(ftp->e_i, ftp->r_i);
 	I3 = 0.25*ftp->nf*( DOT(ftp->e_i, ftp->r_i1)*d2*d2 - d4*d1*d1 +
-				3.0*d3*ftp->I2 );
+				3.0/d3*ftp->I2 );
 	J3 = 0.25*d3*(d1*d1 - d2*d2) - d4*d3*I3;
 	K3 = d3*(ftp->I2 - I3/d1 - 2.0*d4*J3);
 					/* intermediate matrices */
@@ -288,17 +288,17 @@ back_ambval(struct s_ambsamp *ap1, struct s_ambsamp *ap2,
 
 	VSUB(vec, ap1->p, orig);
 	d2best = DOT(vec,vec);
-	vback = ap1->v[CIEY];
+	vback = colval(ap1->v,CIEY);
 	VSUB(vec, ap2->p, orig);
 	d2 = DOT(vec,vec);
 	if (d2 > d2best) {
 		d2best = d2;
-		vback = ap2->v[CIEY];
+		vback = colval(ap2->v,CIEY);
 	}
 	VSUB(vec, ap3->p, orig);
 	d2 = DOT(vec,vec);
 	if (d2 > d2best)
-		return(ap3->v[CIEY]);
+		return(colval(ap3->v,CIEY));
 	return(vback);
 }
 
@@ -328,12 +328,12 @@ eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 		error(INTERNAL, "bad eigenvalue calculation");
 
 	if (evalue[0] > evalue[1]) {
-		ra[0] = 1.0/sqrt(sqrt(evalue[0]));
-		ra[1] = 1.0/sqrt(sqrt(evalue[1]));
+		ra[0] = sqrt(sqrt(4.0/evalue[0]));
+		ra[1] = sqrt(sqrt(4.0/evalue[1]));
 		slope1 = evalue[1];
 	} else {
-		ra[0] = 1.0/sqrt(sqrt(evalue[1]));
-		ra[1] = 1.0/sqrt(sqrt(evalue[0]));
+		ra[0] = sqrt(sqrt(4.0/evalue[1]));
+		ra[1] = sqrt(sqrt(4.0/evalue[0]));
 		slope1 = evalue[0];
 	}
 					/* compute unit eigenvectors */
@@ -454,9 +454,9 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	
 	if (ra != NULL)			/* extract eigenvectors & radii */
 		eigenvectors(uv, ra, hessian);
-	if (pg != NULL) {		/* project position gradient */
-		pg[0] = DOT(gradient, uv[0]);
-		pg[1] = DOT(gradient, uv[1]);
+	if (pg != NULL) {		/* tangential position gradient/PI */
+		pg[0] = DOT(gradient, uv[0]) / PI;
+		pg[1] = DOT(gradient, uv[1]) / PI;
 	}
 }
 
@@ -466,20 +466,23 @@ static void
 ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 {
 	struct s_ambsamp	*ap;
+	double			dgsum[2];
 	int			n;
 	FVECT			vd;
 	double			gfact;
 
-	dg[0] = dg[1] = 0;
+	dgsum[0] = dgsum[1] = 0.0;	/* sum values times -tan(theta) */
 	for (ap = hp->sa, n = hp->ns*hp->ns; n--; ap++) {
 					/* use vector for azimuth + 90deg */
 		VSUB(vd, ap->p, hp->rp->rop);
-					/* brightness with tangent factor */
-		gfact = ap->v[CIEY] / DOT(hp->rp->ron, vd);
-					/* sine = proj_radius/vd_length */
-		dg[0] -= DOT(uv[1], vd) * gfact;
-		dg[1] += DOT(uv[0], vd) * gfact;
+					/* brightness over cosine factor */
+		gfact = colval(ap->v,CIEY) / DOT(hp->rp->ron, vd);
+					/* -sine = -proj_radius/vd_length */
+		dgsum[0] += DOT(uv[1], vd) * gfact;
+		dgsum[1] -= DOT(uv[0], vd) * gfact;
 	}
+	dg[0] = dgsum[0] / (hp->ns*hp->ns);
+	dg[1] = dgsum[1] / (hp->ns*hp->ns);
 }
 
 
@@ -524,29 +527,36 @@ doambient(				/* compute ambient component */
 		free(hp);
 		return(0);		/* no valid samples */
 	}
-	d = 1.0 / cnt;			/* final indirect irradiance/PI */
-	acol[0] *= d; acol[1] *= d; acol[2] *= d;
-	copycolor(rcol, acol);
+	copycolor(rcol, acol);		/* final indirect irradiance/PI */
 	if (cnt < hp->ns*hp->ns ||	/* incomplete sampling? */
 			(ra == NULL) & (pg == NULL) & (dg == NULL)) {
 		free(hp);
 		return(-1);		/* no radius or gradient calc. */
 	}
-	d = 0.01 * bright(rcol);	/* add in 1% before Hessian comp. */
-	if (d < FTINY) d = FTINY;
-	ap = hp->sa;			/* using Y channel from here on... */
+	multcolor(acol, hp->acoef);	/* normalize Y values */
+	if ((d = bright(acol)) > FTINY)
+		d = 1.0/d;
+	else
+		d = 0.0;
+	ap = hp->sa;			/* relative Y channel from here on... */
 	for (i = hp->ns*hp->ns; i--; ap++)
-		colval(ap->v,CIEY) = bright(ap->v) + d;
+		colval(ap->v,CIEY) = bright(ap->v)*d + 0.0314;
 
 	if (uv == NULL)			/* make sure we have axis pointers */
 		uv = my_uv;
 					/* compute radii & pos. gradient */
 	ambHessian(hp, uv, ra, pg);
+
 	if (dg != NULL)			/* compute direction gradient */
 		ambdirgrad(hp, uv, dg);
+
 	if (ra != NULL) {		/* scale/clamp radii */
-		d = sqrt(sqrt((4.0/PI)*bright(rcol)/wt));
-		ra[0] *= d;
+		if (ra[0] < minarad) {
+			ra[0] = minarad;
+			if (ra[1] < minarad)
+				ra[1] = minarad;
+		}
+		ra[0] *= d = 1.0/sqrt(sqrt(wt));
 		if ((ra[1] *= d) > 2.0*ra[0])
 			ra[1] = 2.0*ra[0];
 		if (ra[1] > maxarad) {

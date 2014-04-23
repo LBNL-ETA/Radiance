@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.75 2014/04/19 19:20:47 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.76 2014/04/23 06:04:18 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -461,7 +461,7 @@ makeambient(		/* make a new ambient value for storage */
 						/* compute ambient */
 	i = doambient(acol, r, amb.weight, uvw, amb.rad, amb.gpos, amb.gdir);
 	scalecolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
-	if (i <= 0)				/* no Hessian => no storage */
+	if (i <= 0 || amb.rad[0] <= FTINY)	/* no Hessian or zero radius */
 		return(i);
 						/* store value */
 	VCOPY(amb.pos, r->rop);

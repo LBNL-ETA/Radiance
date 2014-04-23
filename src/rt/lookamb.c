@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.11 2014/04/11 20:31:37 greg Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.12 2014/04/23 06:04:18 greg Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -46,11 +46,11 @@ lookamb(			/* load & convert ambient values from a file */
 		} else {
 			printf("\nPosition:\t%f\t%f\t%f\n", av.pos[0],
 					av.pos[1], av.pos[2]);
-			printf("Normal:\t%f\t%f\t%f\n",
+			printf("Normal:\t\t%f\t%f\t%f\n",
 					norm[0], norm[1], norm[2]);
 			printf("Uvector:\t%f\t%f\t%f\n",
 					uvec[0], uvec[1], uvec[2]);
-			printf("Lvl,Wt,Urad,Vrad:\t%d\t\t%f\t%f\n", av.lvl,
+			printf("Lvl,Wt,UVrad:\t%d\t\t%f\t%f\t%f\n", av.lvl,
 					av.weight, av.rad[0], av.rad[1]);
 			printf("Value:\t\t%e\t%e\t%e\n", colval(av.val,RED),
 					colval(av.val,GRN), colval(av.val,BLU));
