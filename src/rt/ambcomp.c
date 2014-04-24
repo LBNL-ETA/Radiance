@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.31 2014/04/24 06:03:15 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.32 2014/04/24 17:36:43 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -141,7 +141,7 @@ static void
 comp_fftri(FFTRI *ftp, FVECT ap0, FVECT ap1, FVECT rop)
 {
 	FVECT	vcp;
-	double	dot_e, dot_er, dot_r, dot_r1, J2;
+	double	dot_e, dot_er, rdot_r, rdot_r1, J2;
 	int	i;
 
 	VSUB(ftp->r_i, ap0, rop);
@@ -151,13 +151,13 @@ comp_fftri(FFTRI *ftp, FVECT ap0, FVECT ap1, FVECT rop)
 	ftp->nf = 1.0/DOT(vcp,vcp);
 	dot_e = DOT(ftp->e_i,ftp->e_i);
 	dot_er = DOT(ftp->e_i, ftp->r_i);
-	dot_r = DOT(ftp->r_i,ftp->r_i);
-	dot_r1 = DOT(ftp->r_i1,ftp->r_i1);
-	ftp->I1 = acos( DOT(ftp->r_i, ftp->r_i1) / sqrt(dot_r*dot_r1) ) *
+	rdot_r = 1.0/DOT(ftp->r_i,ftp->r_i);
+	rdot_r1 = 1.0/DOT(ftp->r_i1,ftp->r_i1);
+	ftp->I1 = acos( DOT(ftp->r_i, ftp->r_i1) * sqrt(rdot_r*rdot_r1) ) *
 			sqrt( ftp->nf );
-	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)/dot_r1 - dot_er/dot_r +
+	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)*rdot_r1 - dot_er*rdot_r +
 			dot_e*ftp->I1 )*0.5*ftp->nf;
-	J2 =  0.5/dot_e*( 1.0/dot_r - 1.0/dot_r1 ) - dot_er/dot_e*ftp->I2;
+	J2 =  ( 0.5*(rdot_r - rdot_r1) - dot_er*ftp->I2 ) / dot_e;
 	for (i = 3; i--; )
 		ftp->rI2_eJ2[i] = ftp->I2*ftp->r_i[i] + J2*ftp->e_i[i];
 }
@@ -209,7 +209,7 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 		hess[i][j] = m1[i][j] + d1*( I3*m2[i][j] + K3*m3[i][j] +
 						2.0*J3*m4[i][j] );
 		hess[i][j] += d2*(i==j);
-		hess[i][j] *= -1.0/PI;
+		hess[i][j] *= 1.0/PI;
 	    }
 }
 
@@ -253,7 +253,7 @@ comp_gradient(FVECT grad, FFTRI *ftp, FVECT nrm)
 	f1 = 2.0*DOT(nrm, vcp);
 	VCROSS(vcp, nrm, ftp->e_i);
 	for (i = 3; i--; )
-		grad[i] = (0.5/PI)*( ftp->I1*vcp[i] + f1*ftp->rI2_eJ2[i] );
+		grad[i] = (-0.5/PI)*( ftp->I1*vcp[i] + f1*ftp->rI2_eJ2[i] );
 }
 
 
@@ -455,9 +455,9 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	
 	if (ra != NULL)			/* extract eigenvectors & radii */
 		eigenvectors(uv, ra, hessian);
-	if (pg != NULL) {		/* tangential position gradient/PI */
-		pg[0] = DOT(gradient, uv[0]) / PI;
-		pg[1] = DOT(gradient, uv[1]) / PI;
+	if (pg != NULL) {		/* tangential position gradient */
+		pg[0] = DOT(gradient, uv[0]);
+		pg[1] = DOT(gradient, uv[1]);
 	}
 }
 
@@ -534,14 +534,13 @@ doambient(				/* compute ambient component */
 		free(hp);
 		return(-1);		/* no radius or gradient calc. */
 	}
-	multcolor(acol, hp->acoef);	/* normalize Y values */
-	if ((d = bright(acol)) > FTINY)
-		d = 1.0/d;
+	if (bright(acol) > FTINY)	/* normalize Y values */
+		d = cnt/bright(acol);
 	else
 		d = 0.0;
 	ap = hp->sa;			/* relative Y channel from here on... */
 	for (i = hp->ns*hp->ns; i--; ap++)
-		colval(ap->v,CIEY) = bright(ap->v)*d + 0.0314;
+		colval(ap->v,CIEY) = bright(ap->v)*d + 0.01;
 
 	if (uv == NULL)			/* make sure we have axis pointers */
 		uv = my_uv;
