@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.30 2014/04/23 17:30:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.31 2014/04/24 06:03:15 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -28,7 +28,7 @@ typedef struct {
 	COLOR	acoef;		/* division contribution coefficient */
 	struct s_ambsamp {
 		COLOR	v;		/* hemisphere sample value */
-		float	p[3];		/* intersection point */
+		FVECT	p;		/* intersection point */
 	} sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
 
@@ -103,11 +103,8 @@ ambsample(				/* sample an ambient direction */
 		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
 	else
 		copycolor(ar.rcoef, hp->acoef);
-	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
-		setcolor(ap->v, 0., 0., 0.);
-		VCOPY(ap->p, hp->rp->rop);
-		return(NULL);		/* no sample taken */
-	}
+	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0)
+		goto badsample;
 	if (ambacc > FTINY) {
 		multcolor(ar.rcoef, hp->acoef);
 		scalecolor(ar.rcoef, 1./AVGREFL);
@@ -124,19 +121,24 @@ ambsample(				/* sample an ambient direction */
 	dimlist[ndims++] = i*hp->ns + j + 90171;
 	rayvalue(&ar);			/* evaluate ray */
 	ndims--;
+	if (ar.rt > 20.0*maxarad)	/* limit vertex distance */
+		ar.rt = 20.0*maxarad;
+	else if (ar.rt <= FTINY)	/* should never happen! */
+		goto badsample;
+	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
 	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	copycolor(ap->v, ar.rcol);
-	if (ar.rt > 20.0*maxarad)	/* limit vertex distance */
-		VSUM(ap->p, ar.rorg, ar.rdir, 20.0*maxarad);
-	else
-		VCOPY(ap->p, ar.rop);
 	return(ap);
+badsample:
+	setcolor(ap->v, 0., 0., 0.);
+	VCOPY(ap->p, hp->rp->rop);
+	return(NULL);
 }
 
 
 /* Compute vectors and coefficients for Hessian/gradient calcs */
 static void
-comp_fftri(FFTRI *ftp, float ap0[3], float ap1[3], FVECT rop)
+comp_fftri(FFTRI *ftp, FVECT ap0, FVECT ap1, FVECT rop)
 {
 	FVECT	vcp;
 	double	dot_e, dot_er, dot_r, dot_r1, J2;
