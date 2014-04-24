@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.71 2014/04/15 22:36:25 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.72 2014/04/24 23:15:42 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -23,12 +23,14 @@ PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf
 
+LIBFILES = rambpos.cal ambpos.cal tregsamp.dat
+
 all:	$(PROGS)
 
 install:	all $(SPECIAL) objview.pl objpict.pl glare.csh dayfact.csh \
 rlux.csh raddepend.csh trad.wsh objline.csh compamb.csh vinfo.csh \
-ltview.pl ltpict.pl genambpos.csh fieldcomb.csh genklemsamp.pl \
-genskyvec.pl genBSDF.pl tregsamp.dat
+ltview.pl ltpict.pl genambpos.pl fieldcomb.csh genklemsamp.pl \
+genskyvec.pl genBSDF.pl $(LIBFILES)
 	cp $(PROGS) $(INSTDIR)
 	cp objview.pl $(INSTDIR)/objview
 	cp objline.csh $(INSTDIR)/objline
@@ -40,7 +42,7 @@ genskyvec.pl genBSDF.pl tregsamp.dat
 	cp raddepend.csh $(INSTDIR)/raddepend
 	cp compamb.csh $(INSTDIR)/compamb
 	cp vinfo.csh $(INSTDIR)/vinfo
-	cp genambpos.csh $(INSTDIR)/genambpos
+	cp genambpos.pl $(INSTDIR)/genambpos
 	cp fieldcomb.csh $(INSTDIR)/fieldcomb
 	cp genklemsamp.pl $(INSTDIR)/genklemsamp
 	cp genskyvec.pl $(INSTDIR)/genskyvec
@@ -51,7 +53,8 @@ genskyvec.pl genBSDF.pl tregsamp.dat
 		glare dayfact debugcal rlux raddepend objline \
 		compamb vinfo genambpos fieldcomb genklemsamp \
 		genskyvec genBSDF
-	cp tregsamp.dat $(LIBDIR)
+	cd $(LIBDIR) && rm -f $(LIBFILES)
+	cp $(LIBFILES) $(LIBDIR)
 	csh -f tradinstall.csh $(INSTDIR) $(LIBDIR)/tcl
 
 clean:

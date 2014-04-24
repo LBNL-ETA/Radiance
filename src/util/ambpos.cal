@@ -1,0 +1,28 @@
+{ RCSid $Id: ambpos.cal,v 2.1 2014/04/24 23:15:42 greg Exp $ }
+{
+	Compute patterns for ambient position markers
+}
+{ Relative hit point }
+rpx = Px - arg(1);
+rpy = Py - arg(2);
+rpz = Pz - arg(3);
+
+{ Calculation of directional gradient pattern }
+ndx = arg(4); ndy = arg(5); ndz = arg(6);
+dgx = arg(7); dgy = arg(8); dgz = arg(9);
+dg = sqrt(dgx*dgx + dgy*dgy + dgz*dgz);
+dux = (ndy*dgz - ndz*dgy)/dg;
+duy = (ndz*dgx - ndx*dgz)/dg;
+duz = (ndx*dgy - ndy*dgx)/dg;
+dsine = (dux*rpx + duy*rpy + duz*rpz)/sqrt(rpx*rpx + rpy*rpy + rpz*rpz);
+dirfunc = bound(0, 1 + dg*dsine, 2);
+
+{ Calculation of positional gradient pattern }
+pgx = arg(4); pgy = arg(5); pgz = arg(6);
+posfunc = bound(0, 1 + (pgx*rpx + pgy*rpy + pgz*rpz), 2);
+
+{ Calculation of ellipse stencil for base }
+usx = arg(4); usy = arg(5); usz = arg(6);
+vsx = arg(7); vsy = arg(8); vsz = arg(9);
+ellipstencil = if(1 - sq(usx*rpx + usy*rpy + usz*rpz) - sq(vsx*rpx + vsy*rpy + vsz*rpz),
+			1, 0);

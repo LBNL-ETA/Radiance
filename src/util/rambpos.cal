@@ -1,0 +1,50 @@
+{ RCSid $Id: rambpos.cal,v 2.1 2014/04/24 23:15:42 greg Exp $ }
+{
+	Compute ambient position factors for genambpos.pl
+}
+and(a,b) : if(a,b,a);
+				{ level selector }
+cond = if(LV+.5, and($10-LV-.5,LV+.5-$10), 1);
+px = $1; py = $2; pz = $3;
+r0 = SF*$12; r1 = SF*$13;
+nx = $4; ny = $5; nz = $6;
+ux = $7; uy = $8; uz = $9;
+vx = ny*uz - nz*uy;
+vy = nz*ux - nx*uz;
+vz = nx*uy - ny*ux;
+avr = $14; avg = $15; avb = $16;
+				{ magnified position gradient }
+pgx = ($17*ux + $18*vx)/SF;
+pgy = ($17*uy + $18*vy)/SF;
+pgz = ($17*uz + $18*vz)/SF;
+pg = sqrt(pgx*pgx + pgy*pgy + pgz*pgz);
+				{ direction gradient }
+dgx = $19*ux + $20*vx;
+dgy = $19*uy + $20*vy;
+dgz = $19*uz + $20*vz;
+val = avr + avg + avb;		{ ambient position color }
+agr = select($10+1, val, 0, 0, val, 0, val, val);
+agg = select($10+1, 0, val, 0, val, val, 0, val/2);
+agb = select($10+1, 0, 0, val, 0, val, val, val/2);
+psiz = r0/10;
+				{ base polygon vertices }
+px1 = px + r0*ux + r1*vx + .0001*nx;
+py1 = py + r0*uy + r1*vy + .0001*ny;
+pz1 = pz + r0*uz + r1*vz + .0001*nz;
+px2 = px - r0*ux + r1*vx + .0001*nx;
+py2 = py - r0*uy + r1*vy + .0001*ny;
+pz2 = pz - r0*uz + r1*vz + .0001*nz;
+px3 = px - r0*ux - r1*vx + .0001*nx;
+py3 = py - r0*uy - r1*vy + .0001*ny;
+pz3 = pz - r0*uz - r1*vz + .0001*nz;
+px4 = px + r0*ux - r1*vx + .0001*nx;
+py4 = py + r0*uy - r1*vy + .0001*ny;
+pz4 = pz + r0*uz - r1*vz + .0001*nz;
+alen = psiz*3;			{ arrow length & coordinates }
+cx0 = px + psiz*psiz/alen*pgx/pg;
+cy0 = py + psiz*psiz/alen*pgy/pg;
+cz0 = pz + psiz*psiz/alen*pgz/pg;
+cr0 = psiz*sqrt(1 - psiz*psiz/(alen*alen));
+cx1 = px + alen*pgx/pg;
+cy1 = py + alen*pgy/pg;
+cz1 = pz + alen*pgz/pg;
