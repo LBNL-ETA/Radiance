@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.79 2014/04/25 00:21:52 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.80 2014/04/25 18:38:47 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -357,8 +357,8 @@ sumambient(		/* get interpolated ambient value */
 	FVECT  c0,
 	double	s
 )
-{			/* initial limit is 5 degrees plus ambacc radians */
-	const double	minangle = 5.0 * PI/180.;
+{			/* initial limit is 10 degrees plus ambacc radians */
+	const double	minangle = 10.0 * PI/180.;
 	const double	maxangle = (minangle+ambacc-PI/2.)*pow(r->rweight,0.13)
 					+ PI/2.;
 	double		wsum = 0.0;
@@ -400,15 +400,9 @@ sumambient(		/* get interpolated ambient value */
 		delta_t2 = d*d;
 		d = DOT(ck0, uvw[1]) / av->rad[1];
 		delta_t2 += d*d;
+		d = DOT(ck0, uvw[2]) / av->rad[0];
+		delta_t2 += d*d;
 		if (delta_t2 >= qambacc*qambacc)
-			continue;
-		/*
-		 *  Intersection behind test
-		 */
-		d = 0.0;
-		for (j = 0; j < 3; j++)
-			d += (r->rop[j] - av->pos[j])*(uvw[2][j] + r->ron[j]);
-		if (d*0.5 < -minarad*qambacc-.001)
 			continue;
 		/*
 		 *  Extrapolate value and compute final weight (hat function)
