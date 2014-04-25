@@ -1,4 +1,4 @@
-{ RCSid $Id: rambpos.cal,v 2.2 2014/04/25 18:13:47 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.3 2014/04/25 22:56:06 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
@@ -14,7 +14,7 @@ ux = $7; uy = $8; uz = $9;
 vx = ny*uz - nz*uy;
 vy = nz*ux - nx*uz;
 vz = nx*uy - ny*ux;
-avr = $14; avg = $15; avb = $16;
+avr = .5/PI*$14; avg = .5/PI*$15; avb = .5/PI*$16;
 				{ magnified position gradient }
 pgx = ($17*ux + $18*vx)/SF;
 pgy = ($17*uy + $18*vy)/SF;
