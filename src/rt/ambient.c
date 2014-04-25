@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.80 2014/04/25 18:38:47 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.81 2014/04/25 23:04:16 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -391,16 +391,24 @@ sumambient(		/* get interpolated ambient value */
 		if (delta_r2 >= maxangle*maxangle)
 			continue;
 		/*
+		 *  Modified ray behind test
+		 */
+		VSUB(ck0, av->pos, r->rop);
+		d = DOT(ck0, uvw[2]);
+		if (d < -minarad*qambacc-.001)
+			continue;
+		d /= av->rad[0];
+		delta_t2 = d*d;
+		if (delta_t2 >= qambacc*qambacc)
+			continue;
+		/*
 		 *  Elliptical radii test based on Hessian
 		 */
 		decodedir(uvw[0], av->udir);
 		VCROSS(uvw[1], uvw[2], uvw[0]);
-		VSUB(ck0, av->pos, r->rop);
 		d = DOT(ck0, uvw[0]) / av->rad[0];
-		delta_t2 = d*d;
-		d = DOT(ck0, uvw[1]) / av->rad[1];
 		delta_t2 += d*d;
-		d = DOT(ck0, uvw[2]) / av->rad[0];
+		d = DOT(ck0, uvw[1]) / av->rad[1];
 		delta_t2 += d*d;
 		if (delta_t2 >= qambacc*qambacc)
 			continue;
