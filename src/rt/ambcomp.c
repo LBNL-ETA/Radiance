@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.34 2014/04/24 23:15:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.35 2014/04/25 18:39:22 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -35,8 +35,8 @@ typedef struct {
 #define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
 
 typedef struct {
-	FVECT	r_i, r_i1, e_i, rI2_eJ2;
-	double	nf, I1, I2;
+	FVECT	r_i, r_i1, e_i, rcp, rI2_eJ2;
+	double	I1, I2;
 } FFTRI;		/* vectors and coefficients for Hessian calculation */
 
 
@@ -141,23 +141,22 @@ badsample:
 static void
 comp_fftri(FFTRI *ftp, FVECT ap0, FVECT ap1, FVECT rop)
 {
-	FVECT	vcp;
-	double	dot_e, dot_er, rdot_r, rdot_r1, J2;
+	double	rdot_cp, dot_e, dot_er, rdot_r, rdot_r1, J2;
 	int	i;
 
 	VSUB(ftp->r_i, ap0, rop);
 	VSUB(ftp->r_i1, ap1, rop);
 	VSUB(ftp->e_i, ap1, ap0);
-	VCROSS(vcp, ftp->e_i, ftp->r_i);
-	ftp->nf = 1.0/DOT(vcp,vcp);
+	VCROSS(ftp->rcp, ftp->r_i, ftp->r_i1);
+	rdot_cp = 1.0/DOT(ftp->rcp,ftp->rcp);
 	dot_e = DOT(ftp->e_i,ftp->e_i);
 	dot_er = DOT(ftp->e_i, ftp->r_i);
 	rdot_r = 1.0/DOT(ftp->r_i,ftp->r_i);
 	rdot_r1 = 1.0/DOT(ftp->r_i1,ftp->r_i1);
 	ftp->I1 = acos( DOT(ftp->r_i, ftp->r_i1) * sqrt(rdot_r*rdot_r1) ) *
-			sqrt( ftp->nf );
+			sqrt( rdot_cp );
 	ftp->I2 = ( DOT(ftp->e_i, ftp->r_i1)*rdot_r1 - dot_er*rdot_r +
-			dot_e*ftp->I1 )*0.5*ftp->nf;
+			dot_e*ftp->I1 )*0.5*rdot_cp;
 	J2 =  ( 0.5*(rdot_r - rdot_r1) - dot_er*ftp->I2 ) / dot_e;
 	for (i = 3; i--; )
 		ftp->rI2_eJ2[i] = ftp->I2*ftp->r_i[i] + J2*ftp->e_i[i];
@@ -181,7 +180,7 @@ compose_matrix(FVECT mat[3], FVECT va, FVECT vb)
 static void
 comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 {
-	FVECT	vcp;
+	FVECT	ncp;
 	FVECT	m1[3], m2[3], m3[3], m4[3];
 	double	d1, d2, d3, d4;
 	double	I3, J3, K3;
@@ -191,18 +190,17 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 	d2 = 1.0/DOT(ftp->r_i1,ftp->r_i1);
 	d3 = 1.0/DOT(ftp->e_i,ftp->e_i);
 	d4 = DOT(ftp->e_i, ftp->r_i);
-	I3 = 0.25*ftp->nf*( DOT(ftp->e_i, ftp->r_i1)*d2*d2 - d4*d1*d1 +
-				3.0/d3*ftp->I2 );
+	I3 = ( DOT(ftp->e_i, ftp->r_i1)*d2*d2 - d4*d1*d1 + 3.0/d3*ftp->I2 )
+			/ ( 4.0*DOT(ftp->rcp,ftp->rcp) );
 	J3 = 0.25*d3*(d1*d1 - d2*d2) - d4*d3*I3;
 	K3 = d3*(ftp->I2 - I3/d1 - 2.0*d4*J3);
 					/* intermediate matrices */
-	VCROSS(vcp, nrm, ftp->e_i);
-	compose_matrix(m1, vcp, ftp->rI2_eJ2);
+	VCROSS(ncp, nrm, ftp->e_i);
+	compose_matrix(m1, ncp, ftp->rI2_eJ2);
 	compose_matrix(m2, ftp->r_i, ftp->r_i);
 	compose_matrix(m3, ftp->e_i, ftp->e_i);
 	compose_matrix(m4, ftp->r_i, ftp->e_i);
-	VCROSS(vcp, ftp->r_i, ftp->e_i);
-	d1 = DOT(nrm, vcp);
+	d1 = DOT(nrm, ftp->rcp);
 	d2 = -d1*ftp->I2;
 	d1 *= 2.0;
 	for (i = 3; i--; )		/* final matrix sum */
@@ -246,15 +244,14 @@ add2hessian(FVECT hess[3], FVECT ehess1[3],
 static void
 comp_gradient(FVECT grad, FFTRI *ftp, FVECT nrm)
 {
-	FVECT	vcp;
+	FVECT	ncp;
 	double	f1;
 	int	i;
 
-	VCROSS(vcp, ftp->r_i, ftp->r_i1);
-	f1 = 2.0*DOT(nrm, vcp);
-	VCROSS(vcp, nrm, ftp->e_i);
+	f1 = 2.0*DOT(nrm, ftp->rcp);
+	VCROSS(ncp, nrm, ftp->e_i);
 	for (i = 3; i--; )
-		grad[i] = (-0.5/PI)*( ftp->I1*vcp[i] + f1*ftp->rI2_eJ2[i] );
+		grad[i] = (-0.5/PI)*( ftp->I1*ncp[i] + f1*ftp->rI2_eJ2[i] );
 }
 
 
@@ -325,8 +322,8 @@ eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 					/* compute eigenvalues */
 	if ( quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
 			hess2[0][0]*hess2[1][1]-hess2[0][1]*hess2[1][0]) != 2 ||
-			(evalue[0] = fabs(evalue[0])) <= FTINY*FTINY ||
-			(evalue[1] = fabs(evalue[1])) <= FTINY*FTINY )
+			((evalue[0] = fabs(evalue[0])) <= FTINY*FTINY) |
+			((evalue[1] = fabs(evalue[1])) <= FTINY*FTINY) )
 		error(INTERNAL, "bad eigenvalue calculation");
 
 	if (evalue[0] > evalue[1]) {
@@ -552,20 +549,18 @@ doambient(				/* compute ambient component */
 		ambdirgrad(hp, uv, dg);
 
 	if (ra != NULL) {		/* scale/clamp radii */
+		if (pg != NULL) {
+			if (ra[0]*(d = fabs(pg[0])) > 1.0)
+				ra[0] = 1.0/d;
+			if (ra[1]*(d = fabs(pg[1])) > 1.0)
+				ra[1] = 1.0/d;
+			if (ra[0] > ra[1])
+				ra[0] = ra[1];
+		}
 		if (ra[0] < minarad) {
 			ra[0] = minarad;
 			if (ra[1] < minarad)
 				ra[1] = minarad;
-					/* cap gradient if necessary */
-			if (pg != NULL) {
-				d = pg[0]*pg[0]*ra[0]*ra[0] +
-						pg[1]*pg[1]*ra[1]*ra[1];
-				if (d > 1.0) {
-					d = 1.0/sqrt(d);
-					pg[0] *= d;
-					pg[1] *= d;
-				}
-			}
 		}
 		ra[0] *= d = 1.0/sqrt(sqrt(wt));
 		if ((ra[1] *= d) > 2.0*ra[0])
@@ -574,6 +569,14 @@ doambient(				/* compute ambient component */
 			ra[1] = maxarad;
 			if (ra[0] > maxarad)
 				ra[0] = maxarad;
+		}
+		if (pg != NULL) {	/* cap gradient if necessary */
+			d = pg[0]*pg[0]*ra[0]*ra[0] + pg[1]*pg[1]*ra[1]*ra[1];
+			if (d > 1.0) {
+				d = 1.0/sqrt(d);
+				pg[0] *= d;
+				pg[1] *= d;
+			}
 		}
 	}
 	free(hp);			/* clean up and return */
