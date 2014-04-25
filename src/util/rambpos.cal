@@ -1,10 +1,12 @@
-{ RCSid $Id: rambpos.cal,v 2.1 2014/04/24 23:15:42 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.2 2014/04/25 18:13:47 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
 and(a,b) : if(a,b,a);
 				{ level selector }
-cond = if(LV+.5, and($10-LV-.5,LV+.5-$10), 1);
+lvl = $10;
+wt = $11;
+cond = and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) );
 px = $1; py = $2; pz = $3;
 r0 = SF*$12; r1 = SF*$13;
 nx = $4; ny = $5; nz = $6;
@@ -23,9 +25,9 @@ dgx = $19*ux + $20*vx;
 dgy = $19*uy + $20*vy;
 dgz = $19*uz + $20*vz;
 val = avr + avg + avb;		{ ambient position color }
-agr = select($10+1, val, 0, 0, val, 0, val, val);
-agg = select($10+1, 0, val, 0, val, val, 0, val/2);
-agb = select($10+1, 0, 0, val, 0, val, val, val/2);
+agr = select(lvl+1, val, 0, 0, val, 0, val, val);
+agg = select(lvl+1, 0, val, 0, val, val, 0, val/2);
+agb = select(lvl+1, 0, 0, val, 0, val, val, val/2);
 psiz = r0/10;
 				{ base polygon vertices }
 px1 = px + r0*ux + r1*vx + .0001*nx;
