@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.83 2014/04/26 05:15:17 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.84 2014/04/26 15:54:43 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -52,7 +52,6 @@ static int  nunflshed = 0;	/* number of unflushed ambient values */
 #endif
 
 
-static double  qambacc = 0.;		/* ambient accuracy to the 1/4 power */
 static double  avsum = 0.;		/* computed ambient value sum (log) */
 static unsigned int  navsum = 0;	/* number of values in avsum */
 static unsigned int  nambvals = 0;	/* total number of indirect values */
@@ -129,11 +128,11 @@ setambacc(				/* set ambient accuracy */
 	double  newa
 )
 {
-	double	olda = qambacc*qambacc*qambacc*qambacc;
+	static double	olda;		/* remember previous setting here */
 	
 	newa *= (newa > 0);
 	if (fabs(newa - olda) >= .05*(newa + olda)) {
-		qambacc = sqrt(sqrt(ambacc = newa));
+		ambacc = newa;
 		if (nambvals > 0)
 			sortambvals(1);		/* rebuild tree */
 	}
@@ -357,8 +356,7 @@ sumambient(		/* get interpolated ambient value */
 )
 {			/* initial limit is 10 degrees plus ambacc radians */
 	const double	minangle = 10.0 * PI/180.;
-	const double	maxangle = (minangle+ambacc-PI/2.)*pow(r->rweight,0.13)
-					+ PI/2.;
+	double		maxangle = minangle + ambacc;
 	double		wsum = 0.0;
 	FVECT		ck0;
 	int		i, j;
@@ -381,9 +379,12 @@ sumambient(		/* get interpolated ambient value */
 							at->kid+i, ck0, s);
 		}
 					/* good enough? */
-		if (wsum > 0.04 && s > (minarad*0.8+maxarad*0.2))
+		if (wsum >= 0.05 && s > minarad*10.0)
 			return(wsum);
 	}
+					/* adjust maximum angle */
+	if (at->alist != NULL && (at->alist->lvl <= al) & (r->rweight < 0.6))
+		maxangle = (maxangle - PI/2.)*pow(r->rweight,0.13) + PI/2.;
 					/* sum this node */
 	for (av = at->alist; av != NULL; av = av->next) {
 		double	d, delta_r2, delta_t2;
@@ -414,11 +415,11 @@ sumambient(		/* get interpolated ambient value */
 		 */
 		VSUB(ck0, av->pos, r->rop);
 		d = DOT(ck0, uvw[2]);
-		if (d < -minarad*qambacc-.001)
+		if (d < -minarad*ambacc-.001)
 			continue;
 		d /= av->rad[0];
 		delta_t2 = d*d;
-		if (delta_t2 >= qambacc*qambacc)
+		if (delta_t2 >= ambacc*ambacc)
 			continue;
 		/*
 		 *  Elliptical radii test based on Hessian
@@ -429,14 +430,14 @@ sumambient(		/* get interpolated ambient value */
 		delta_t2 += d*d;
 		d = DOT(ck0, uvw[1]) / av->rad[1];
 		delta_t2 += d*d;
-		if (delta_t2 >= qambacc*qambacc)
+		if (delta_t2 >= ambacc*ambacc)
 			continue;
 		/*
 		 *  Extrapolate value and compute final weight (hat function)
 		 */
 		extambient(ct, av, r->rop, rn, uvw);
 		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
-			tfunc(qambacc, sqrt(delta_t2), 0.0);
+			tfunc(ambacc, sqrt(delta_t2), 0.0);
 		scalecolor(ct, d);
 		addcolor(acol, ct);
 		wsum += d;
@@ -539,7 +540,7 @@ avinsert(				/* insert ambient value in our tree */
 	at = &atrunk;
 	VCOPY(ck0, thescene.cuorg);
 	s = thescene.cusize;
-	while (s*(OCTSCALE/2) > av->rad[1]*qambacc) {
+	while (s*(OCTSCALE/2) > av->rad[1]*ambacc) {
 		if (at->kid == NULL)
 			if ((at->kid = newambtree()) == NULL)
 				error(SYSTEM, "out of memory in avinsert");
