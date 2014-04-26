@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.81 2014/04/25 23:04:16 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.82 2014/04/26 02:59:16 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -129,13 +129,11 @@ setambacc(				/* set ambient accuracy */
 	double  newa
 )
 {
-	double  ambdiff;
-
-	if (newa < 0.0)
-		newa = 0.0;
-	ambdiff = fabs(newa - ambacc);
-	if (ambdiff >= .01 && (ambacc = newa) > FTINY) {
-		qambacc = sqrt(sqrt(ambacc));
+	double	olda = qambacc*qambacc*qambacc*qambacc;
+	
+	newa *= (newa > 0);
+	if (fabs(newa - olda) >= .05*(newa + olda)) {
+		qambacc = sqrt(sqrt(ambacc = newa));
 		if (nambvals > 0)
 			sortambvals(1);		/* rebuild tree */
 	}
@@ -152,7 +150,7 @@ setambient(void)				/* initialize calculation */
 	ambdone();
 						/* init ambient limits */
 	setambres(ambres);
-	qambacc = sqrt(sqrt(ambacc *= (ambacc > FTINY)));
+	setambacc(ambacc);
 	if (ambfile == NULL || !ambfile[0])
 		return;
 	if (ambacc <= FTINY) {
