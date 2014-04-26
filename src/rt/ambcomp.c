@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.37 2014/04/26 05:09:54 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.38 2014/04/26 15:54:17 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -70,7 +70,9 @@ inithemi(			/* initialize sampling hemisphere */
 	d = 1.0/(n*n);
 	scalecolor(hp->acoef, d);
 					/* make tangent plane axes */
-	hp->uy[0] = hp->uy[1] = hp->uy[2] = 0.0;
+	hp->uy[0] = 0.5 - frandom();
+	hp->uy[1] = 0.5 - frandom();
+	hp->uy[2] = 0.5 - frandom();
 	for (i = 3; i--; )
 		if ((-0.6 < r->ron[i]) & (r->ron[i] < 0.6))
 			break;
@@ -317,10 +319,12 @@ eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 	hess2[0][1] = DOT(uv[0], b);
 	hess2[1][0] = DOT(uv[1], a);
 	hess2[1][1] = DOT(uv[1], b);
-					/* compute eigenvalues */
-	if ( quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
-			hess2[0][0]*hess2[1][1]-hess2[0][1]*hess2[1][0]) != 2 ||
-			((evalue[0] = fabs(evalue[0])) <= FTINY*FTINY) |
+					/* compute eigenvalue(s) */
+	i = quadratic(evalue, 1.0, -hess2[0][0]-hess2[1][1],
+			hess2[0][0]*hess2[1][1]-hess2[0][1]*hess2[1][0]);
+	if (i == 1)			/* double-root (circle) */
+		evalue[1] = evalue[0];
+	if (!i || ((evalue[0] = fabs(evalue[0])) <= FTINY*FTINY) |
 			((evalue[1] = fabs(evalue[1])) <= FTINY*FTINY) )
 		error(INTERNAL, "bad eigenvalue calculation");
 
@@ -497,7 +501,7 @@ doambient(				/* compute ambient component */
 	AMBHEMI			*hp = inithemi(rcol, r, wt);
 	int			cnt = 0;
 	FVECT			my_uv[2];
-	double			d, acol[3];
+	double			d, K, acol[3];
 	struct s_ambsamp	*ap;
 	int			i, j;
 					/* check/initialize */
@@ -530,13 +534,18 @@ doambient(				/* compute ambient component */
 		free(hp);
 		return(-1);		/* no radius or gradient calc. */
 	}
-	if (bright(acol) > FTINY)	/* normalize Y values */
-		d = cnt/bright(acol);
-	else
+	if (bright(acol) > FTINY) {	/* normalize Y values */
+		d = 0.99*cnt/bright(acol);
+		K = 0.01;
+	} else {			/* geometric Hessian fall-back */
 		d = 0.0;
+		K = 1.0;
+		pg = NULL;
+		dg = NULL;
+	}
 	ap = hp->sa;			/* relative Y channel from here on... */
 	for (i = hp->ns*hp->ns; i--; ap++)
-		colval(ap->v,CIEY) = bright(ap->v)*d + 0.01;
+		colval(ap->v,CIEY) = bright(ap->v)*d + K;
 
 	if (uv == NULL)			/* make sure we have axis pointers */
 		uv = my_uv;
