@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.49 2014/03/27 03:49:14 greg Exp $
+# RCSid $Id: Rmakefile,v 2.50 2014/04/26 15:59:38 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -36,7 +36,7 @@ install:	$(PROGS) $(LIBFILES) optics2rad.csh
 	cp $(LIBFILES) $(LIBDIR)
 
 clean:
-	set nonomatch; rm -f $(PROGS) *.o core
+	set nonomatch; rm -f $(PROGS) *.o
 
 ies2rad:	ies2rad.o
 	$(CC) $(CFLAGS) -o ies2rad ies2rad.o -lrtrad $(MLIB)

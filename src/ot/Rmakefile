@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.17 2008/06/24 02:01:20 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.18 2014/04/26 15:59:38 greg Exp $
 #
 #  Compiles for octree conversion program
 #
@@ -39,7 +39,7 @@ install:	$(PROGS)
 	cp $(PROGS) $(INSTDIR)
 
 clean:
-	set nonomatch; rm -f $(PROGS) *.o core
+	set nonomatch; rm -f $(PROGS) *.o
 
 bbox.o initotypes.o o_cone.o o_face.o \
 o_instance.o oconv.o sphere.o \

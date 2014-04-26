@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 3.36 2012/11/19 17:40:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 3.37 2014/04/26 15:59:38 greg Exp $
 #
 # Radiance makefile for holodeck programs
 #
@@ -32,7 +32,7 @@ install:	all $(DEVS) $(SPECIAL)
 	cp $(PROGS) $(INSTDIR)
 
 clean:
-	set nonomatch; rm -f *.o $(PROGS) core Version.c
+	set nonomatch; rm -f *.o $(PROGS) Version.c
 
 ogl:	$(DEVDIR)/ogl.hdi $(DEVDIR)/oglh.hdi \
 	$(DEVDIR)/oglo.hdi $(DEVDIR)/ogloh.hdi \
