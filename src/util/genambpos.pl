@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.2 2014/04/25 18:13:47 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.3 2014/04/26 04:02:03 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
@@ -38,7 +38,7 @@ while ($#ARGV >= 0) {
 }
 userror() if ($#ARGV != 0);
 my $cmd = "getinfo < $ARGV[0] " . 
-		q[| sed -n 's/^.* -aa \([.0-9][.0-9]*\) .*$/\1/p'];
+		q[| sed -n 's/^.* -aa \([.0-9][^ ]*\) .*$/\1/p'];
 my $ambacc=`$cmd`;
 die "Missing -aa setting in header\n" if (! $ambacc );
 $scale *= $ambacc**.25;
