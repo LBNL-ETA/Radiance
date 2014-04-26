@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.82 2014/04/26 02:59:16 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.83 2014/04/26 05:15:17 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -110,17 +110,17 @@ setambres(				/* set ambient resolution */
 						/* set min & max radii */
 	if (ar <= 0) {
 		minarad = 0;
-		maxarad = thescene.cusize / 2.0;
+		maxarad = thescene.cusize*0.5;
 	} else {
 		minarad = thescene.cusize / ar;
-		maxarad = 64 * minarad;			/* heuristic */
-		if (maxarad > thescene.cusize / 2.0)
-			maxarad = thescene.cusize / 2.0;
+		maxarad = 64.0 * minarad;		/* heuristic */
+		if (maxarad > thescene.cusize*0.5)
+			maxarad = thescene.cusize*0.5;
 	}
 	if (minarad <= FTINY)
-		minarad = 10*FTINY;
+		minarad = 10.0*FTINY;
 	if (maxarad <= minarad)
-		maxarad = 64 * minarad;
+		maxarad = 64.0 * minarad;
 }
 
 
@@ -363,6 +363,27 @@ sumambient(		/* get interpolated ambient value */
 	FVECT		ck0;
 	int		i, j;
 	AMBVAL		*av;
+
+	if (at->kid != NULL) {		/* sum children first */				
+		s *= 0.5;
+		for (i = 0; i < 8; i++) {
+			for (j = 0; j < 3; j++) {
+				ck0[j] = c0[j];
+				if (1<<j & i)
+					ck0[j] += s;
+				if (r->rop[j] < ck0[j] - OCTSCALE*s)
+					break;
+				if (r->rop[j] > ck0[j] + (1.0+OCTSCALE)*s)
+					break;
+			}
+			if (j == 3)
+				wsum += sumambient(acol, r, rn, al,
+							at->kid+i, ck0, s);
+		}
+					/* good enough? */
+		if (wsum > 0.04 && s > (minarad*0.8+maxarad*0.2))
+			return(wsum);
+	}
 					/* sum this node */
 	for (av = at->alist; av != NULL; av = av->next) {
 		double	d, delta_r2, delta_t2;
@@ -419,24 +440,6 @@ sumambient(		/* get interpolated ambient value */
 		scalecolor(ct, d);
 		addcolor(acol, ct);
 		wsum += d;
-	}
-	if (at->kid == NULL)
-		return(wsum);
-					/* sum children */
-	s *= 0.5;
-	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 3; j++) {
-			ck0[j] = c0[j];
-			if (1<<j & i)
-				ck0[j] += s;
-			if (r->rop[j] < ck0[j] - OCTSCALE*s)
-				break;
-			if (r->rop[j] > ck0[j] + (1.0+OCTSCALE)*s)
-				break;
-		}
-		if (j == 3)
-			wsum += sumambient(acol, r, rn, al,
-						at->kid+i, ck0, s);
 	}
 	return(wsum);
 }
