@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.38 2014/04/26 15:54:17 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.39 2014/04/29 15:40:00 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -416,7 +416,7 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 		    rev_hessian(hesscol);
 		    add2hessian(hessian, hessrow[j], hessdia, hesscol, backg);
 		}
-		if (gradient != NULL) {
+		if (gradrow != NULL) {
 		    comp_gradient(graddia, &fftr, hp->rp->ron);
 		    rev_gradient(gradcol);
 		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
