@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.41 2014/04/30 23:38:58 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.42 2014/04/30 23:44:06 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -163,23 +163,24 @@ getambdiffs(AMBHEMI *hp)
 {
 	float	*earr = calloc(hp->ns*hp->ns, sizeof(float));
 	float	*ep;
+	AMBSAMP	*ap;
 	double	b, d2;
 	int	i, j;
 
 	if (earr == NULL)		/* out of memory? */
 		return(NULL);
 					/* compute squared neighbor diffs */
-	for (ep = earr, i = 0; i < hp->ns; i++)
-	    for (j = 0; j < hp->ns; j++, ep++) {
-		b = bright(ambsamp(hp,i,j).v);
+	for (ap = hp->sa, ep = earr, i = 0; i < hp->ns; i++)
+	    for (j = 0; j < hp->ns; j++, ap++, ep++) {
+		b = bright(ap[0].v);
 		if (i) {		/* from above */
-			d2 = b - bright(ambsamp(hp,i-1,j).v);
+			d2 = b - bright(ap[-hp->ns].v);
 			d2 *= d2;
 			ep[0] += d2;
 			ep[-hp->ns] += d2;
 		}
 		if (j) {		/* from behind */
-			d2 = b - bright(ambsamp(hp,i,j-1).v);
+			d2 = b - bright(ap[-1].v);
 			d2 *= d2;
 			ep[0] += d2;
 			ep[-1] += d2;
