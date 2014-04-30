@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.39 2014/04/29 15:40:00 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.40 2014/04/30 18:27:14 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -478,9 +478,9 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 		VSUB(vd, ap->p, hp->rp->rop);
 					/* brightness over cosine factor */
 		gfact = colval(ap->v,CIEY) / DOT(hp->rp->ron, vd);
-					/* -sine = -proj_radius/vd_length */
-		dgsum[0] += DOT(uv[1], vd) * gfact;
-		dgsum[1] -= DOT(uv[0], vd) * gfact;
+					/* sine = proj_radius/vd_length */
+		dgsum[0] -= DOT(uv[1], vd) * gfact;
+		dgsum[1] += DOT(uv[0], vd) * gfact;
 	}
 	dg[0] = dgsum[0] / (hp->ns*hp->ns);
 	dg[1] = dgsum[1] / (hp->ns*hp->ns);
