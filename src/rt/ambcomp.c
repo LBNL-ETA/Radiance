@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.40 2014/04/30 18:27:14 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.41 2014/04/30 23:38:58 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -32,6 +32,8 @@ typedef struct {
 	} sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
 
+typedef struct s_ambsamp	AMBSAMP;
+
 #define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
 
 typedef struct {
@@ -59,8 +61,7 @@ inithemi(			/* initialize sampling hemisphere */
 	if (n < i)
 		n = i;
 					/* allocate sampling array */
-	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) +
-				sizeof(struct s_ambsamp)*(n*n - 1));
+	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) + sizeof(AMBSAMP)*(n*n - 1));
 	if (hp == NULL)
 		return(NULL);
 	hp->rp = r;
@@ -87,37 +88,56 @@ inithemi(			/* initialize sampling hemisphere */
 }
 
 
-static struct s_ambsamp *
+/* Prepare ambient division sample */
+static int
+prepambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
+{
+	int	hlist[3], ii;
+	double	spt[2], zd;
+					/* ambient coefficient for weight */
+	if (ambacc > FTINY)
+		setcolor(arp->rcoef, AVGREFL, AVGREFL, AVGREFL);
+	else
+		copycolor(arp->rcoef, hp->acoef);
+	if (rayorigin(arp, AMBIENT, hp->rp, arp->rcoef) < 0)
+		return(0);
+	if (ambacc > FTINY) {
+		multcolor(arp->rcoef, hp->acoef);
+		scalecolor(arp->rcoef, 1./AVGREFL);
+	}
+	hlist[0] = hp->rp->rno;
+	hlist[1] = i;
+	hlist[2] = j;
+	multisamp(spt, 2, urand(ilhash(hlist,3)+n));
+	if (!n) {			/* avoid border samples for n==0 */
+		if ((spt[0] < 0.1) | (spt[0] > 0.9))
+			spt[0] = 0.1 + 0.8*frandom();
+		if ((spt[1] < 0.1) | (spt[1] > 0.9))
+			spt[1] = 0.1 + 0.8*frandom();
+	}
+	SDsquare2disk(spt, (i+spt[0])/hp->ns, (j+spt[1])/hp->ns);
+	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
+	for (ii = 3; ii--; )
+		arp->rdir[ii] =	spt[0]*hp->ux[ii] +
+				spt[1]*hp->uy[ii] +
+				zd*hp->rp->ron[ii];
+	checknorm(arp->rdir);
+	return(1);
+}
+
+
+static AMBSAMP *
 ambsample(				/* sample an ambient direction */
 	AMBHEMI	*hp,
 	int	i,
 	int	j
 )
 {
-	struct s_ambsamp	*ap = &ambsamp(hp,i,j);
-	RAY			ar;
-	double			spt[2], zd;
-	int			ii;
-					/* ambient coefficient for weight */
-	if (ambacc > FTINY)
-		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
-	else
-		copycolor(ar.rcoef, hp->acoef);
-	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0)
-		goto badsample;
-	if (ambacc > FTINY) {
-		multcolor(ar.rcoef, hp->acoef);
-		scalecolor(ar.rcoef, 1./AVGREFL);
-	}
+	AMBSAMP	*ap = &ambsamp(hp,i,j);
+	RAY	ar;
 					/* generate hemispherical sample */
-	SDsquare2disk(spt,	(i+.1+.8*frandom())/hp->ns,
-				(j+.1+.8*frandom())/hp->ns );
-	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
-	for (ii = 3; ii--; )
-		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
-				spt[1]*hp->uy[ii] +
-				zd*hp->rp->ron[ii];
-	checknorm(ar.rdir);
+	if (!prepambsamp(&ar, hp, i, j, 0))
+		goto badsample;
 	dimlist[ndims++] = i*hp->ns + j + 90171;
 	rayvalue(&ar);			/* evaluate ray */
 	ndims--;
@@ -134,6 +154,97 @@ badsample:
 	setcolor(ap->v, 0., 0., 0.);
 	VCOPY(ap->p, hp->rp->rop);
 	return(NULL);
+}
+
+
+/* Estimate errors based on ambient division differences */
+static float *
+getambdiffs(AMBHEMI *hp)
+{
+	float	*earr = calloc(hp->ns*hp->ns, sizeof(float));
+	float	*ep;
+	double	b, d2;
+	int	i, j;
+
+	if (earr == NULL)		/* out of memory? */
+		return(NULL);
+					/* compute squared neighbor diffs */
+	for (ep = earr, i = 0; i < hp->ns; i++)
+	    for (j = 0; j < hp->ns; j++, ep++) {
+		b = bright(ambsamp(hp,i,j).v);
+		if (i) {		/* from above */
+			d2 = b - bright(ambsamp(hp,i-1,j).v);
+			d2 *= d2;
+			ep[0] += d2;
+			ep[-hp->ns] += d2;
+		}
+		if (j) {		/* from behind */
+			d2 = b - bright(ambsamp(hp,i,j-1).v);
+			d2 *= d2;
+			ep[0] += d2;
+			ep[-1] += d2;
+		}
+	    }
+					/* correct for number of neighbors */
+	earr[0] *= 2.f;
+	earr[hp->ns-1] *= 2.f;
+	earr[(hp->ns-1)*hp->ns] *= 2.f;
+	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 2.f;
+	for (i = 1; i < hp->ns-1; i++) {
+		earr[i*hp->ns] *= 4./3.;
+		earr[i*hp->ns + hp->ns-1] *= 4./3.;
+	}
+	for (j = 1; j < hp->ns-1; j++) {
+		earr[j] *= 4./3.;
+		earr[(hp->ns-1)*hp->ns + j] *= 4./3.;
+	}
+	return(earr);
+}
+
+
+/* Perform super-sampling on hemisphere */
+static void
+ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
+{
+	float	*earr = getambdiffs(hp);
+	double	e2sum = 0;
+	AMBSAMP	*ap;
+	RAY	ar;
+	COLOR	asum;
+	float	*ep;
+	int	i, j, n;
+
+	if (earr == NULL)		/* just skip calc. if no memory */
+		return;
+					/* add up estimated variances */
+	for (ep = earr + hp->ns*hp->ns; ep-- > earr; )
+		e2sum += *ep;
+	ep = earr;			/* perform super-sampling */
+	for (ap = hp->sa, i = 0; i < hp->ns; i++)
+	    for (j = 0; j < hp->ns; j++, ap++) {
+		int	nss = *ep/e2sum*cnt + frandom();
+		setcolor(asum, 0., 0., 0.);
+		for (n = 1; n <= nss; n++) {
+			if (!prepambsamp(&ar, hp, i, j, n)) {
+				nss = n-1;
+				break;
+			}
+			dimlist[ndims++] = i*hp->ns + j + 90171;
+			rayvalue(&ar);	/* evaluate super-sample */
+			ndims--;
+			multcolor(ar.rcol, ar.rcoef);
+			addcolor(asum, ar.rcol);
+		}
+		if (nss) {		/* update returned ambient value */
+			const double	ssf = 1./(nss + 1);
+			for (n = 3; n--; )
+				acol[n] += ssf*colval(asum,n) +
+						(ssf - 1.)*colval(ap->v,n);
+		}
+		e2sum -= *ep++;		/* update remainders */
+		cnt -= nss;
+	}
+	free(earr);
 }
 
 
@@ -278,8 +389,7 @@ add2gradient(FVECT grad, FVECT egrad1, FVECT egrad2, FVECT egrad3, COLORV v)
 
 /* Return brightness of furthest ambient sample */
 static COLORV
-back_ambval(struct s_ambsamp *ap1, struct s_ambsamp *ap2,
-		struct s_ambsamp *ap3, FVECT orig)
+back_ambval(AMBSAMP *ap1, AMBSAMP *ap2, AMBSAMP *ap3, FVECT orig)
 {
 	COLORV	vback;
 	FVECT	vec;
@@ -466,11 +576,11 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 static void
 ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 {
-	struct s_ambsamp	*ap;
-	double			dgsum[2];
-	int			n;
-	FVECT			vd;
-	double			gfact;
+	AMBSAMP	*ap;
+	double	dgsum[2];
+	int	n;
+	FVECT	vd;
+	double	gfact;
 
 	dgsum[0] = dgsum[1] = 0.0;	/* sum values times -tan(theta) */
 	for (ap = hp->sa, n = hp->ns*hp->ns; n--; ap++) {
@@ -498,12 +608,12 @@ doambient(				/* compute ambient component */
 	float	dg[2]			/* returned (optional) */
 )
 {
-	AMBHEMI			*hp = inithemi(rcol, r, wt);
-	int			cnt = 0;
-	FVECT			my_uv[2];
-	double			d, K, acol[3];
-	struct s_ambsamp	*ap;
-	int			i, j;
+	AMBHEMI	*hp = inithemi(rcol, r, wt);
+	int	cnt = 0;
+	FVECT	my_uv[2];
+	double	d, K, acol[3];
+	AMBSAMP	*ap;
+	int	i, j;
 					/* check/initialize */
 	if (hp == NULL)
 		return(0);
@@ -528,9 +638,16 @@ doambient(				/* compute ambient component */
 		free(hp);
 		return(0);		/* no valid samples */
 	}
+	if (cnt < hp->ns*hp->ns) {	/* incomplete sampling? */
+		copycolor(rcol, acol);
+		free(hp);
+		return(-1);		/* return value w/o Hessian */
+	}
+	cnt = ambssamp*wt + 0.5;	/* perform super-sampling? */
+	if (cnt > 0)
+		ambsupersamp(acol, hp, cnt);
 	copycolor(rcol, acol);		/* final indirect irradiance/PI */
-	if (cnt < hp->ns*hp->ns ||	/* incomplete sampling? */
-			(ra == NULL) & (pg == NULL) & (dg == NULL)) {
+	if ((ra == NULL) & (pg == NULL) & (dg == NULL)) {
 		free(hp);
 		return(-1);		/* no radius or gradient calc. */
 	}
