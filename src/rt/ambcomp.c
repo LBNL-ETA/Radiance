@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.42 2014/04/30 23:44:06 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.43 2014/05/01 16:01:59 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct s_ambsamp	AMBSAMP;
 
-#define ambsamp(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
+#define ambsam(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
 
 typedef struct {
 	FVECT	r_i, r_i1, e_i, rcp, rI2_eJ2;
@@ -88,9 +88,9 @@ inithemi(			/* initialize sampling hemisphere */
 }
 
 
-/* Prepare ambient division sample */
+/* Sample ambient division and apply weighting coefficient */
 static int
-prepambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
+getambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
 {
 	int	hlist[3], ii;
 	double	spt[2], zd;
@@ -122,32 +122,32 @@ prepambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
 				spt[1]*hp->uy[ii] +
 				zd*hp->rp->ron[ii];
 	checknorm(arp->rdir);
+	dimlist[ndims++] = i*hp->ns + j + 90171;
+	rayvalue(arp);			/* evaluate ray */
+	ndims--;			/* apply coefficient */
+	multcolor(arp->rcol, arp->rcoef);
 	return(1);
 }
 
 
 static AMBSAMP *
-ambsample(				/* sample an ambient direction */
+ambsample(				/* initial ambient division sample */
 	AMBHEMI	*hp,
 	int	i,
 	int	j
 )
 {
-	AMBSAMP	*ap = &ambsamp(hp,i,j);
+	AMBSAMP	*ap = &ambsam(hp,i,j);
 	RAY	ar;
 					/* generate hemispherical sample */
-	if (!prepambsamp(&ar, hp, i, j, 0))
+	if (!getambsamp(&ar, hp, i, j, 0))
 		goto badsample;
-	dimlist[ndims++] = i*hp->ns + j + 90171;
-	rayvalue(&ar);			/* evaluate ray */
-	ndims--;
 					/* limit vertex distance */
 	if (ar.rt > 10.0*thescene.cusize)
 		ar.rt = 10.0*thescene.cusize;
 	else if (ar.rt <= FTINY)	/* should never happen! */
 		goto badsample;
 	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
-	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	copycolor(ap->v, ar.rcol);
 	return(ap);
 badsample:
@@ -203,7 +203,7 @@ getambdiffs(AMBHEMI *hp)
 }
 
 
-/* Perform super-sampling on hemisphere */
+/* Perform super-sampling on hemisphere (introduces bias) */
 static void
 ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 {
@@ -226,14 +226,10 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 		int	nss = *ep/e2sum*cnt + frandom();
 		setcolor(asum, 0., 0., 0.);
 		for (n = 1; n <= nss; n++) {
-			if (!prepambsamp(&ar, hp, i, j, n)) {
+			if (!getambsamp(&ar, hp, i, j, n)) {
 				nss = n-1;
 				break;
 			}
-			dimlist[ndims++] = i*hp->ns + j + 90171;
-			rayvalue(&ar);	/* evaluate super-sample */
-			ndims--;
-			multcolor(ar.rcol, ar.rcoef);
 			addcolor(asum, ar.rcol);
 		}
 		if (nss) {		/* update returned ambient value */
@@ -496,8 +492,8 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	}
 					/* compute first row of edges */
 	for (j = 0; j < hp->ns-1; j++) {
-		comp_fftri(&fftr, ambsamp(hp,0,j).p,
-				ambsamp(hp,0,j+1).p, hp->rp->rop);
+		comp_fftri(&fftr, ambsam(hp,0,j).p,
+				ambsam(hp,0,j+1).p, hp->rp->rop);
 		if (hessrow != NULL)
 			comp_hessian(hessrow[j], &fftr, hp->rp->ron);
 		if (gradrow != NULL)
@@ -507,8 +503,8 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	for (i = 0; i < hp->ns-1; i++) {
 	    FVECT	hesscol[3];	/* compute first vertical edge */
 	    FVECT	gradcol;
-	    comp_fftri(&fftr, ambsamp(hp,i,0).p,
-			ambsamp(hp,i+1,0).p, hp->rp->rop);
+	    comp_fftri(&fftr, ambsam(hp,i,0).p,
+			ambsam(hp,i+1,0).p, hp->rp->rop);
 	    if (hessrow != NULL)
 		comp_hessian(hesscol, &fftr, hp->rp->ron);
 	    if (gradrow != NULL)
@@ -517,11 +513,11 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 		FVECT	hessdia[3];	/* compute triangle contributions */
 		FVECT	graddia;
 		COLORV	backg;
-		backg = back_ambval(&ambsamp(hp,i,j), &ambsamp(hp,i,j+1),
-					&ambsamp(hp,i+1,j), hp->rp->rop);
+		backg = back_ambval(&ambsam(hp,i,j), &ambsam(hp,i,j+1),
+					&ambsam(hp,i+1,j), hp->rp->rop);
 					/* diagonal (inner) edge */
-		comp_fftri(&fftr, ambsamp(hp,i,j+1).p,
-				ambsamp(hp,i+1,j).p, hp->rp->rop);
+		comp_fftri(&fftr, ambsam(hp,i,j+1).p,
+				ambsam(hp,i+1,j).p, hp->rp->rop);
 		if (hessrow != NULL) {
 		    comp_hessian(hessdia, &fftr, hp->rp->ron);
 		    rev_hessian(hesscol);
@@ -533,16 +529,16 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
 		}
 					/* initialize edge in next row */
-		comp_fftri(&fftr, ambsamp(hp,i+1,j+1).p,
-				ambsamp(hp,i+1,j).p, hp->rp->rop);
+		comp_fftri(&fftr, ambsam(hp,i+1,j+1).p,
+				ambsam(hp,i+1,j).p, hp->rp->rop);
 		if (hessrow != NULL)
 		    comp_hessian(hessrow[j], &fftr, hp->rp->ron);
 		if (gradrow != NULL)
 		    comp_gradient(gradrow[j], &fftr, hp->rp->ron);
 					/* new column edge & paired triangle */
-		backg = back_ambval(&ambsamp(hp,i,j+1), &ambsamp(hp,i+1,j+1),
-					&ambsamp(hp,i+1,j), hp->rp->rop);
-		comp_fftri(&fftr, ambsamp(hp,i,j+1).p, ambsamp(hp,i+1,j+1).p,
+		backg = back_ambval(&ambsam(hp,i,j+1), &ambsam(hp,i+1,j+1),
+					&ambsam(hp,i+1,j), hp->rp->rop);
+		comp_fftri(&fftr, ambsam(hp,i,j+1).p, ambsam(hp,i+1,j+1).p,
 				hp->rp->rop);
 		if (hessrow != NULL) {
 		    comp_hessian(hesscol, &fftr, hp->rp->ron);
