@@ -1,4 +1,4 @@
-{ RCSid $Id: ambpos.cal,v 2.2 2014/05/01 02:52:03 greg Exp $ }
+{ RCSid $Id: ambpos.cal,v 2.3 2014/05/01 03:00:59 greg Exp $ }
 {
 	Compute patterns for ambient position markers
 }
@@ -15,11 +15,6 @@ rdy = ndz*rpx - ndx*rpz;
 rdz = ndx*rpy - ndy*rpx;
 dgrad = (rdx*dgx + rdy*dgy + rdz*dgz)/sqrt(rpx*rpx + rpy*rpy + rpz*rpz);
 dirfunc = bound(0, 1 + dgrad, 2);
-
-{ Relative hit point }
-rpx = Px - arg(1);
-rpy = Py - arg(2);
-rpz = Pz - arg(3);
 
 { Calculation of positional gradient pattern }
 pgx = arg(4); pgy = arg(5); pgz = arg(6);
