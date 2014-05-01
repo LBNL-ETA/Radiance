@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.44 2014/05/01 16:06:11 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.45 2014/05/01 22:34:25 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -161,7 +161,7 @@ badsample:
 static float *
 getambdiffs(AMBHEMI *hp)
 {
-	float	*earr = calloc(hp->ns*hp->ns, sizeof(float));
+	float	*earr = (float *)calloc(hp->ns*hp->ns, sizeof(float));
 	float	*ep;
 	AMBSAMP	*ap;
 	double	b, d2;
@@ -606,7 +606,7 @@ doambient(				/* compute ambient component */
 )
 {
 	AMBHEMI	*hp = inithemi(rcol, r, wt);
-	int	cnt = 0;
+	int	cnt;
 	FVECT	my_uv[2];
 	double	d, K, acol[3];
 	AMBSAMP	*ap;
@@ -624,6 +624,7 @@ doambient(				/* compute ambient component */
 		dg[0] = dg[1] = 0.0;
 					/* sample the hemisphere */
 	acol[0] = acol[1] = acol[2] = 0.0;
+	cnt = 0;
 	for (i = hp->ns; i--; )
 		for (j = hp->ns; j--; )
 			if ((ap = ambsample(hp, i, j)) != NULL) {
@@ -648,11 +649,10 @@ doambient(				/* compute ambient component */
 		free(hp);
 		return(-1);		/* no radius or gradient calc. */
 	}
-	if (bright(acol) > FTINY) {	/* normalize Y values */
-		d = 0.99*cnt/bright(acol);
+	if ((d = bright(acol)) > FTINY) {	/* normalize Y values */
+		d = 0.99*(hp->ns*hp->ns)/d;
 		K = 0.01;
-	} else {			/* geometric Hessian fall-back */
-		d = 0.0;
+	} else {			/* or fall back on geometric Hessian */
 		K = 1.0;
 		pg = NULL;
 		dg = NULL;
