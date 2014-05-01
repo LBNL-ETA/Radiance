@@ -1,11 +1,11 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.4 2014/05/01 02:52:03 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.5 2014/05/01 04:51:12 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
 use strict;
 sub userror {
-	print STDERR "Usage: genambpos [-l lvl][-w minwt][-s scale][-p][-d] scene.amb > ambloc.rad\n";
+	print STDERR "Usage: genambpos [-l lvl][-w minwt][-r rad][-s sf][-p][-d] scene.amb > ambloc.rad\n";
 	exit 1;
 }
 my $lvlsel = -1;
@@ -13,6 +13,7 @@ my $scale = 0.25;
 my $doposgrad = 0;
 my $dodirgrad = 0;
 my $minwt = 0.5001**6;
+my $fixedrad="";
 my $savedARGV = "genambpos @ARGV";
 # Get options
 while ($#ARGV >= 0) {
@@ -28,6 +29,9 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-s/) {
 		$scale = $ARGV[1];
+		shift @ARGV;
+	} elsif ("$ARGV[0]" =~ /^-r/) {
+		$fixedrad = "-e psiz:$ARGV[1]";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-./) {
 		userror();
@@ -132,11 +136,11 @@ dgval ring dgdisk${recno}b
 # Load & convert ambient values
 print "# Output produced by: $savedARGV\n";
 system "lookamb -h -d $ARGV[0] | rcalc -e 'LV:$lvlsel;MW:$minwt;SF:$scale'" .
-		" -f rambpos.cal -e cond=acond -o '$ambfmt'";
+		" -f rambpos.cal -e cond=acond $fixedrad -o '$ambfmt'";
 if ($doposgrad) {
 	system "lookamb -h -d $ARGV[0] " .
 		"| rcalc -e 'LV:$lvlsel;MW:$minwt;SF:$scale'" .
-		" -f rambpos.cal -e cond=pcond -o '$posgradfmt'";
+		" -f rambpos.cal -e cond=pcond $fixedrad -o '$posgradfmt'";
 }
 if ($dodirgrad) {
 	system "lookamb -h -d $ARGV[0] " .
