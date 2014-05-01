@@ -1,4 +1,4 @@
-{ RCSid $Id: rambpos.cal,v 2.3 2014/04/25 22:56:06 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.4 2014/05/01 02:52:03 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
@@ -6,7 +6,7 @@ and(a,b) : if(a,b,a);
 				{ level selector }
 lvl = $10;
 wt = $11;
-cond = and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) );
+acond = and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) );
 px = $1; py = $2; pz = $3;
 r0 = SF*$12; r1 = SF*$13;
 nx = $4; ny = $5; nz = $6;
@@ -20,6 +20,7 @@ pgx = ($17*ux + $18*vx)/SF;
 pgy = ($17*uy + $18*vy)/SF;
 pgz = ($17*uz + $18*vz)/SF;
 pg = sqrt(pgx*pgx + pgy*pgy + pgz*pgz);
+pcond = and( acond, pg - .0001 );
 				{ direction gradient }
 dgx = $19*ux + $20*vx;
 dgy = $19*uy + $20*vy;
@@ -29,6 +30,7 @@ agr = select(lvl+1, val, 0, 0, val, 0, val, val);
 agg = select(lvl+1, 0, val, 0, val, val, 0, val/2);
 agb = select(lvl+1, 0, 0, val, 0, val, val, val/2);
 psiz = r0/10;
+dcond = and( acond, dgx*dgx+dgy*dgy+dgz*dgz - 1e-8 );
 				{ base polygon vertices }
 px1 = px + r0*ux + r1*vx + .0001*nx;
 py1 = py + r0*uy + r1*vy + .0001*ny;

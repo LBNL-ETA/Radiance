@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.3 2014/04/26 04:02:03 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.4 2014/05/01 02:52:03 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
@@ -41,8 +41,8 @@ my $cmd = "getinfo < $ARGV[0] " .
 		q[| sed -n 's/^.* -aa \([.0-9][^ ]*\) .*$/\1/p'];
 my $ambacc=`$cmd`;
 die "Missing -aa setting in header\n" if (! $ambacc );
-$scale *= $ambacc**.25;
-my $outfmt = '
+$scale *= $ambacc;
+my $ambfmt = '
 void glow posglow
 0
 0
@@ -52,7 +52,8 @@ posglow sphere position${recno}
 0
 0
 4 ${px} ${py} ${pz} ${psiz}
-
+';
+my $posgradfmt = '
 void glow arrglow
 0
 0
@@ -65,8 +66,7 @@ arrglow cone pgarrow${recno}
 	${ cx0 }	${ cy0 }	${ cz0 }
 	${ cx1 }	${ cy1 }	${ cz1 }
 	${ cr0 }	0
-';
-my $posgradfmt = '
+
 void brightfunc pgpat
 2 posfunc ambpos.cal
 0
@@ -91,8 +91,7 @@ pgeval polygon pgellipse${recno}
 	${ px3 } ${ py3 } ${ pz3 }
 	${ px4 } ${ py4 } ${ pz4 }
 ';
-$outfmt .= $posgradfmt if ($doposgrad);
-my $dirgradfmt='
+$posgradfmt .= '
 void glow tipglow
 0
 0
@@ -102,7 +101,8 @@ tipglow sphere atip
 0
 0
 4 ${ cx1 } ${ cy1 } ${ cz1 } ${psiz/7}
-
+' if ($dodirgrad);
+my $dirgradfmt='
 void brightfunc dgpat
 2 dirfunc ambpos.cal
 0
@@ -117,7 +117,7 @@ dgval ring dgdisk${recno}a
 0
 0
 8
-	${ px+dgx*.0001 } ${ py+dgy*.0001 } ${ pz+dgz*.0001 }
+	${ px+dgx*.001 } ${ py+dgy*.001 } ${ pz+dgz*.001 }
 	${ dgx } ${ dgy } ${ dgz }
 	0	${ r0/2 }
 
@@ -125,13 +125,22 @@ dgval ring dgdisk${recno}b
 0
 0
 8
-	${ px-dgx*.0001 } ${ py-dgy*.0001 } ${ pz-dgz*.0001 }
+	${ px-dgx*.001 } ${ py-dgy*.001 } ${ pz-dgz*.001 }
 	${ -dgx } ${ -dgy } ${ -dgz }
 	0	${ r0/2 }
 ';
-$outfmt .= $dirgradfmt if ($dodirgrad);
 # Load & convert ambient values
 print "# Output produced by: $savedARGV\n";
 system "lookamb -h -d $ARGV[0] | rcalc -e 'LV:$lvlsel;MW:$minwt;SF:$scale'" .
-		" -f rambpos.cal -o '$outfmt'";
+		" -f rambpos.cal -e cond=acond -o '$ambfmt'";
+if ($doposgrad) {
+	system "lookamb -h -d $ARGV[0] " .
+		"| rcalc -e 'LV:$lvlsel;MW:$minwt;SF:$scale'" .
+		" -f rambpos.cal -e cond=pcond -o '$posgradfmt'";
+}
+if ($dodirgrad) {
+	system "lookamb -h -d $ARGV[0] " .
+		"| rcalc -e 'LV:$lvlsel;MW:$minwt;SF:$scale'" .
+		" -f rambpos.cal -e cond=dcond -o '$dirgradfmt'";
+}
 exit;
