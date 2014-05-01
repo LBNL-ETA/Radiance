@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.43 2014/05/01 16:01:59 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.44 2014/05/01 16:06:11 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -22,17 +22,17 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.43 2014/05/01 16:01:59 greg Exp 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
 typedef struct {
+	COLOR	v;		/* hemisphere sample value */
+	FVECT	p;		/* intersection point */
+} AMBSAMP;		/* sample value */
+
+typedef struct {
 	RAY	*rp;		/* originating ray sample */
 	FVECT	ux, uy;		/* tangent axis unit vectors */
 	int	ns;		/* number of samples per axis */
 	COLOR	acoef;		/* division contribution coefficient */
-	struct s_ambsamp {
-		COLOR	v;		/* hemisphere sample value */
-		FVECT	p;		/* intersection point */
-	} sa[1];		/* sample array (extends struct) */
+	AMBSAMP	sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
-
-typedef struct s_ambsamp	AMBSAMP;
 
 #define ambsam(h,i,j)	(h)->sa[(i)*(h)->ns + (j)]
 
