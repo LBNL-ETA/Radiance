@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.46 2014/05/02 21:58:50 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.47 2014/05/03 05:46:19 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -22,6 +22,8 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.46 2014/05/02 21:58:50 greg Exp 
 #include  "random.h"
 
 #ifdef NEWAMB
+
+/* #define HEM_MULT	4.0	/* hem multiplier (bigger => sparser cache) */
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
@@ -50,6 +52,7 @@ static const int  adjacent_trifl[8] = {
 
 typedef struct {
 	COLOR	v;		/* hemisphere sample value */
+	float	d;		/* reciprocal distance (1/rt) */
 	FVECT	p;		/* intersection point */
 } AMBSAMP;		/* sample value */
 
@@ -207,20 +210,16 @@ ambsample(				/* initial ambient division sample */
 	AMBSAMP	*ap = &ambsam(hp,i,j);
 	RAY	ar;
 					/* generate hemispherical sample */
-	if (!getambsamp(&ar, hp, i, j, 0))
-		goto badsample;
-					/* limit vertex distance */
+	if (!getambsamp(&ar, hp, i, j, 0) || ar.rt <= FTINY) {
+		memset(ap, 0, sizeof(AMBSAMP));
+		return(NULL);
+	}
+	ap->d = 1.0/ar.rt;		/* limit vertex distance */
 	if (ar.rt > 10.0*thescene.cusize)
 		ar.rt = 10.0*thescene.cusize;
-	else if (ar.rt <= FTINY)	/* should never happen! */
-		goto badsample;
 	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
 	copycolor(ap->v, ar.rcol);
 	return(ap);
-badsample:
-	setcolor(ap->v, 0., 0., 0.);
-	VCOPY(ap->p, hp->rp->rop);
-	return(NULL);
 }
 
 
@@ -317,51 +316,42 @@ static uby8 *
 vertex_flags(AMBHEMI *hp)
 {
 	uby8	*vflags = (uby8 *)calloc(hp->ns*hp->ns, sizeof(uby8));
-	double	*dist2a = (double *)malloc(sizeof(double)*hp->ns);
 	uby8	*vf;
+	AMBSAMP	*ap;
 	int	i, j;
 
-	if ((vflags == NULL) | (dist2a == NULL))
+	if (vflags == NULL)
 		error(SYSTEM, "out of memory in vertex_flags()");
-	vf = vflags;		/* compute distances along first row */
-	for (j = 0; j < hp->ns; j++) {
-		dist2a[j] = dist2(ambsam(hp,0,j).p, hp->rp->rop);
-		++vf;
-		if (!j) continue;
-		if (dist2a[j] >= dist2a[j-1])
-			vf[0] |= 1<<VDB_x;
-		else
-			vf[-1] |= 1<<VDB_X;
-	}
-				/* flag subsequent rows */
-	for (i = 1; i < hp->ns; i++) {
-	    double	d2n = dist2(ambsam(hp,i,0).p, hp->rp->rop);
-	    for (j = 0; j < hp->ns-1; j++) {
-		double	d2 = d2n;
-		if (d2 >= dist2a[j])	/* row before */
-			vf[0] |= 1<<VDB_y;
-		else
-			vf[-hp->ns] |= 1<<VDB_Y;
-		dist2a[j] = d2n;
-		if (d2 >= dist2a[j+1])	/* diagonal we care about */
-			vf[0] |= 1<<VDB_Xy;
-		else
-			vf[1-hp->ns] |= 1<<VDB_xY;
-		d2n = dist2(ambsam(hp,i,j+1).p, hp->rp->rop);
-		if (d2 >= d2n)		/* column after */
+	vf = vflags;
+	ap = hp->sa;		/* compute farthest along first row */
+	for (j = 0; j < hp->ns-1; j++, vf++, ap++)
+		if (ap[0].d <= ap[1].d)
 			vf[0] |= 1<<VDB_X;
 		else
 			vf[1] |= 1<<VDB_x;
-		++vf;
+	++vf; ++ap;
+				/* flag subsequent rows */
+	for (i = 1; i < hp->ns; i++) {
+	    for (j = 0; j < hp->ns-1; j++, vf++, ap++) {
+		if (ap[0].d <= ap[-hp->ns].d)	/* row before */
+			vf[0] |= 1<<VDB_y;
+		else
+			vf[-hp->ns] |= 1<<VDB_Y;
+		if (ap[0].d <= ap[1-hp->ns].d)	/* diagonal we care about */
+			vf[0] |= 1<<VDB_Xy;
+		else
+			vf[1-hp->ns] |= 1<<VDB_xY;
+		if (ap[0].d <= ap[1].d)		/* column after */
+			vf[0] |= 1<<VDB_X;
+		else
+			vf[1] |= 1<<VDB_x;
 	    }
-	    if (d2n >= dist2a[j])	/* final column edge */
+	    if (ap[0].d <= ap[-hp->ns].d)	/* final column edge */
 		vf[0] |= 1<<VDB_y;
 	    else
 		vf[-hp->ns] |= 1<<VDB_Y;
-	    dist2a[j] = d2n;
-	    ++vf;
+	    ++vf; ++ap;
 	}
-	free(dist2a);
 	return(vflags);
 }
 
@@ -730,6 +720,41 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 }
 
 
+/* Make sure radii don't extend beyond what we see in our periphery */
+static void
+hem_radii(AMBHEMI *hp, FVECT uv[2], float ra[2])
+{
+#ifdef HEM_MULT
+	double		udsum = 0, vdsum = 0;
+	double		uwsum = 0, vwsum = 0;
+	int		i, j;
+					/* circle around perimeter */
+	for (i = 0; i < hp->ns; i++)
+	    for (j = 0; j < hp->ns; j += !i|(i==hp->ns-1) ? 1 : hp->ns-1) {
+		AMBSAMP	*ap = &ambsam(hp,i,j);
+		FVECT	vec;
+		double	us2, vs2;
+		VSUB(vec, ap->p, hp->rp->rop);
+		us2 = DOT(vec, uv[0]) * ap->d;
+		us2 *= us2;
+		vs2 = DOT(vec, uv[1]) * ap->d;
+		vs2 *= vs2;
+		udsum += us2 * ap->d;
+		uwsum += us2;
+		vdsum += vs2 * ap->d;
+		vwsum += vs2;
+	    }
+	uwsum *= HEM_MULT;		/* adjust effective hem size */
+	vwsum *= HEM_MULT;
+					/* cap radii (recall d=1/rt) */
+	if (ra[0]*udsum > uwsum)
+		ra[0] = uwsum/udsum;
+	if (ra[1]*vdsum > vwsum)
+		ra[1] = vwsum/vdsum;
+#endif
+}
+
+
 int
 doambient(				/* compute ambient component */
 	COLOR	rcol,			/* input/output color */
@@ -811,9 +836,10 @@ doambient(				/* compute ambient component */
 				ra[0] = 1.0/d;
 			if (ra[1]*(d = fabs(pg[1])) > 1.0)
 				ra[1] = 1.0/d;
-			if (ra[0] > ra[1])
-				ra[0] = ra[1];
 		}
+		hem_radii(hp, uv, ra);
+		if (ra[0] > ra[1])
+			ra[0] = ra[1];
 		if (ra[0] < minarad) {
 			ra[0] = minarad;
 			if (ra[1] < minarad)
