@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.47 2014/05/03 05:46:19 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.48 2014/05/04 01:02:13 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -23,7 +23,7 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.47 2014/05/03 05:46:19 greg Exp 
 
 #ifdef NEWAMB
 
-/* #define HEM_MULT	4.0	/* hem multiplier (bigger => sparser cache) */
+/* #define AHEM_MARG	1.2	/* hem margin */
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
@@ -721,36 +721,49 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 
 
 /* Make sure radii don't extend beyond what we see in our periphery */
-static void
+static int
 hem_radii(AMBHEMI *hp, FVECT uv[2], float ra[2])
 {
-#ifdef HEM_MULT
-	double		udsum = 0, vdsum = 0;
-	double		uwsum = 0, vwsum = 0;
-	int		i, j;
+#ifdef AHEM_MARG
+#define	MAXDACCUM	47
+	const double	hemarg = AHEM_MARG*ambacc;	/* hem margin */
+	float		radivisor2[MAXDACCUM+1];
+	int		i, j, k = hp->ns/10 + 1;	/* around 5%ile */
+	const int	n2accum = (k < MAXDACCUM) ? k : MAXDACCUM ;
+	int		na = 0;
+	double		d;
 					/* circle around perimeter */
 	for (i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j += !i|(i==hp->ns-1) ? 1 : hp->ns-1) {
 		AMBSAMP	*ap = &ambsam(hp,i,j);
+		double	radiv2 = 0;
 		FVECT	vec;
-		double	us2, vs2;
+		if (ap->d <= FTINY)
+			continue;
 		VSUB(vec, ap->p, hp->rp->rop);
-		us2 = DOT(vec, uv[0]) * ap->d;
-		us2 *= us2;
-		vs2 = DOT(vec, uv[1]) * ap->d;
-		vs2 *= vs2;
-		udsum += us2 * ap->d;
-		uwsum += us2;
-		vdsum += vs2 * ap->d;
-		vwsum += vs2;
+		for (k = 2; k--; ) {
+			d = ap->d * DOT(vec, uv[k]) * ra[k];
+			radiv2 += d*d;
+		}
+		radiv2 *= hemarg*hemarg * ap->d * ap->d;
+		if (radiv2 <= 1.0)
+			continue;
+					/* insert in percentile list */
+		for (k = na; k && radiv2 > radivisor2[k-1]; k--)
+			radivisor2[k] = radivisor2[k-1];
+		radivisor2[k] = radiv2;
+		na += (na < n2accum);
 	    }
-	uwsum *= HEM_MULT;		/* adjust effective hem size */
-	vwsum *= HEM_MULT;
-					/* cap radii (recall d=1/rt) */
-	if (ra[0]*udsum > uwsum)
-		ra[0] = uwsum/udsum;
-	if (ra[1]*vdsum > vwsum)
-		ra[1] = vwsum/vdsum;
+	if (na < n2accum)		/* current radii are OK? */
+		return(0);
+					/* else apply divisor */
+	d = 1.0/sqrt(radivisor2[na-1]);
+	ra[0] *= d;
+	ra[1] *= d;
+	return(1);
+#undef MAXDACCUM
+#else
+	return(0);
 #endif
 }
 
@@ -836,10 +849,10 @@ doambient(				/* compute ambient component */
 				ra[0] = 1.0/d;
 			if (ra[1]*(d = fabs(pg[1])) > 1.0)
 				ra[1] = 1.0/d;
+			if (ra[0] > ra[1])
+				ra[0] = ra[1];
 		}
 		hem_radii(hp, uv, ra);
-		if (ra[0] > ra[1])
-			ra[0] = ra[1];
 		if (ra[0] < minarad) {
 			ra[0] = minarad;
 			if (ra[1] < minarad)
