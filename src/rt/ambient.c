@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.84 2014/04/26 15:54:43 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.85 2014/05/06 17:15:11 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -413,7 +413,7 @@ sumambient(		/* get interpolated ambient value */
 		/*
 		 *  Modified ray behind test
 		 */
-		VSUB(ck0, av->pos, r->rop);
+		VSUB(ck0, r->rop, av->pos);
 		d = DOT(ck0, uvw[2]);
 		if (d < -minarad*ambacc-.001)
 			continue;
