@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.49 2014/05/07 01:16:02 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.50 2014/05/07 16:02:26 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -272,10 +272,10 @@ static void
 ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 {
 	float	*earr = getambdiffs(hp);
-	double	e2sum = 0;
+	double	e2sum = 0.0;
 	AMBSAMP	*ap;
 	RAY	ar;
-	COLOR	asum;
+	double	asum[3];
 	float	*ep;
 	int	i, j, n;
 
@@ -288,7 +288,7 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 	for (ap = hp->sa, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++) {
 		int	nss = *ep/e2sum*cnt + frandom();
-		setcolor(asum, 0., 0., 0.);
+		asum[0] = asum[1] = asum[2] = 0.0;
 		for (n = 1; n <= nss; n++) {
 			if (!getambsamp(&ar, hp, i, j, n)) {
 				nss = n-1;
@@ -299,7 +299,7 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 		if (nss) {		/* update returned ambient value */
 			const double	ssf = 1./(nss + 1);
 			for (n = 3; n--; )
-				acol[n] += ssf*colval(asum,n) +
+				acol[n] += ssf*asum[n] +
 						(ssf - 1.)*colval(ap->v,n);
 		}
 		e2sum -= *ep++;		/* update remainders */
@@ -722,30 +722,29 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 static uint32
 ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 {
-	uint32	flgs = 0;
-	int	i, j;
+	const double	max_d = 1.0/(minarad*ambacc + 0.001);
+	const double	ang_res = 0.5*PI/(hp->ns-1);
+	const double	ang_step = ang_res/((int)(16/PI*ang_res) + (1+FTINY));
+	uint32		flgs = 0;
+	int		i, j;
 					/* circle around perimeter */
 	for (i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j += !i|(i==hp->ns-1) ? 1 : hp->ns-1) {
 		AMBSAMP	*ap = &ambsam(hp,i,j);
 		FVECT	vec;
 		double	u, v;
-		double	ang;
+		double	ang, a1;
 		int	abp;
-		if (ap->d <= FTINY)
-			continue;
+		if ((ap->d <= FTINY) | (ap->d >= max_d))
+			continue;	/* too far or too near */
 		VSUB(vec, ap->p, hp->rp->rop);
 		u = DOT(vec, uv[0]) * ap->d;
 		v = DOT(vec, uv[1]) * ap->d;
 		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= 1.0)
 			continue;	/* occluder outside ellipse */
 		ang = atan2a(v, u);	/* else set direction flags */
-		ang += 2.0*PI*(ang < 0);
-		ang *= 16./PI;
-		if ((ang < .5) | (ang >= 31.5))
-			flgs |= 0x80000001;
-		else
-			flgs |= 3L<<(int)(ang-.5);
+		for (a1 = ang-.5*ang_res; a1 <= ang+.5*ang_res; a1 += ang_step)
+			flgs |= 1L<<(int)(16/PI*(a1 + 2.*PI*(a1 < 0)));
 	    }
 	return(flgs);
 }
@@ -802,7 +801,7 @@ doambient(				/* compute ambient component */
 		return(-1);		/* return value w/o Hessian */
 	}
 	cnt = ambssamp*wt + 0.5;	/* perform super-sampling? */
-	if (cnt > 0)
+	if (cnt > 8)
 		ambsupersamp(acol, hp, cnt);
 	copycolor(rcol, acol);		/* final indirect irradiance/PI */
 	if ((ra == NULL) & (pg == NULL) & (dg == NULL)) {
