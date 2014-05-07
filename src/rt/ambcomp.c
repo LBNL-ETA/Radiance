@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.51 2014/05/07 20:20:24 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.52 2014/05/07 21:45:13 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -728,12 +728,17 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	double		avg_d = 0;
 	uint32		flgs = 0;
 	int		i, j;
-					/* check distances above us */
+					/* don't bother for a few samples */
+	if (hp->ns < 12)
+		return(0);
+					/* check distances overhead */
 	for (i = hp->ns*3/4; i-- > hp->ns>>2; )
 	    for (j = hp->ns*3/4; j-- > hp->ns>>2; )
 		avg_d += ambsam(hp,i,j).d;
 	avg_d *= 4.0/(hp->ns*hp->ns);
-	if (avg_d >= max_d)		/* too close to corral? */
+	if (avg_d*r0 >= 1.0)		/* ceiling too low for corral? */
+		return(0);
+	if (avg_d >= max_d)		/* insurance */
 		return(0);
 					/* else circle around perimeter */
 	for (i = 0; i < hp->ns; i++)
