@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.7 2014/04/24 06:03:15 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.8 2014/05/07 01:16:03 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -68,6 +68,7 @@ writambval(			/* write ambient value to stream */
 	putv2(av->rad, fp);
 	putv2(av->gpos, fp);
 	putv2(av->gdir, fp);
+	putint(av->corral, sizeof(av->corral), fp);
 	return(ferror(fp) ? -1 : 0);
 }
 
@@ -118,6 +119,7 @@ readambval(			/* read ambient value from stream */
 	getv2(av->rad, fp);
 	getv2(av->gpos, fp);
 	getv2(av->gdir, fp);
+	av->corral = (uint32)getint(sizeof(av->corral), fp);
 	return(feof(fp) ? 0 : ambvalOK(av));
 }
 

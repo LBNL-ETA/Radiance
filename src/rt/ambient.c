@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.85 2014/05/06 17:15:11 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.86 2014/05/07 01:16:03 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -267,6 +267,7 @@ ambnotify(			/* record new modifier */
 
 #define tfunc(lwr, x, upr)	(((x)-(lwr))/((upr)-(lwr)))
 
+static int	plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang);
 static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
 static int	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
@@ -298,7 +299,8 @@ multambient(		/* compute ambient component & multiply by coef. */
 	if (ambacc <= FTINY) {			/* no ambient storage */
 		copycolor(acol, aval);
 		rdepth++;
-		ok = doambient(acol, r, r->rweight, NULL, NULL, NULL, NULL);
+		ok = doambient(acol, r, r->rweight,
+				NULL, NULL, NULL, NULL, NULL);
 		rdepth--;
 		if (!ok)
 			goto dumbamb;
@@ -344,7 +346,52 @@ dumbamb:					/* return global value */
 }
 
 
-double
+/* Plug a potential leak where ambient cache value is occluded */
+static int
+plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang)
+{
+	const double	cost70sq = 0.1169778;	/* cos(70deg)^2 */
+	RAY		rtst;
+	FVECT		vdif;
+	double		normdot, ndotd, nadotd;
+	double		a, b, c, t[2];
+
+	ang += 2.*PI*(ang < 0);			/* check direction flags */
+	if ( !(ap->corral>>(int)(ang*(16./PI)) & 1) )
+		return(0);
+	/*
+	 * Generate test ray, targeting 20 degrees above sample point plane
+	 * along surface normal from cache position.  This should be high
+	 * enough to miss local geometry we don't really care about.
+	 */
+	VSUB(vdif, ap->pos, r->rop);
+	normdot = DOT(anorm, r->ron);
+	ndotd = DOT(vdif, r->ron);
+	nadotd = DOT(vdif, anorm);
+	a = normdot*normdot - cost70sq;
+	b = 2.0*(normdot*ndotd - nadotd*cost70sq);
+	c = ndotd*ndotd - DOT(vdif,vdif)*cost70sq;
+	if (quadratic(t, a, b, c) != 2)
+		return(1);			/* should rarely happen */
+	if (t[1] <= FTINY)
+		return(0);			/* should fail behind test */
+	rayorigin(&rtst, SHADOW, r, NULL);
+	VSUM(rtst.rdir, vdif, anorm, t[1]);	/* further dist. > plane */
+	rtst.rmax = normalize(rtst.rdir);	/* short ray test */
+	while (localhit(&rtst, &thescene)) {	/* check for occluder */
+		if (rtst.ro->omod != OVOID &&
+				(rtst.clipset == NULL ||
+					!inset(rtst.clipset, rtst.ro->omod)))
+			return(1);		/* plug light leak */
+		VCOPY(rtst.rorg, rtst.rop);	/* skip invisible surface */
+		rtst.rmax -= rtst.rot;
+		rayclear(&rtst);
+	}
+	return(0);				/* seems we're OK */
+}
+
+
+static double
 sumambient(		/* get interpolated ambient value */
 	COLOR  acol,
 	RAY  *r,
@@ -387,7 +434,7 @@ sumambient(		/* get interpolated ambient value */
 		maxangle = (maxangle - PI/2.)*pow(r->rweight,0.13) + PI/2.;
 					/* sum this node */
 	for (av = at->alist; av != NULL; av = av->next) {
-		double	d, delta_r2, delta_t2;
+		double	u, v, d, delta_r2, delta_t2;
 		COLOR	ct;
 		FVECT	uvw[3];
 					/* record access */
@@ -426,11 +473,16 @@ sumambient(		/* get interpolated ambient value */
 		 */
 		decodedir(uvw[0], av->udir);
 		VCROSS(uvw[1], uvw[2], uvw[0]);
-		d = DOT(ck0, uvw[0]) / av->rad[0];
+		d = (u = DOT(ck0, uvw[0])) / av->rad[0];
 		delta_t2 += d*d;
-		d = DOT(ck0, uvw[1]) / av->rad[1];
+		d = (v = DOT(ck0, uvw[1])) / av->rad[1];
 		delta_t2 += d*d;
 		if (delta_t2 >= ambacc*ambacc)
+			continue;
+		/*
+		 *  Test for potential light leak
+		 */
+		if (av->corral && plugaleak(r, av, uvw[2], atan2a(v,u)))
 			continue;
 		/*
 		 *  Extrapolate value and compute final weight (hat function)
@@ -446,7 +498,7 @@ sumambient(		/* get interpolated ambient value */
 }
 
 
-int
+static int
 makeambient(		/* make a new ambient value for storage */
 	COLOR  acol,
 	RAY  *r,
@@ -465,7 +517,8 @@ makeambient(		/* make a new ambient value for storage */
 		amb.weight = 1.25*r->rweight;
 	setcolor(acol, AVGREFL, AVGREFL, AVGREFL);
 						/* compute ambient */
-	i = doambient(acol, r, amb.weight, uvw, amb.rad, amb.gpos, amb.gdir);
+	i = doambient(acol, r, amb.weight,
+			uvw, amb.rad, amb.gpos, amb.gdir, &amb.corral);
 	scalecolor(acol, 1./AVGREFL);		/* undo assumed reflectance */
 	if (i <= 0 || amb.rad[0] <= FTINY)	/* no Hessian or zero radius */
 		return(i);
@@ -485,7 +538,7 @@ makeambient(		/* make a new ambient value for storage */
 }
 
 
-void
+static void
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
 	AMBVAL	 *ap,

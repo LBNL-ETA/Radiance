@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.48 2014/05/04 01:02:13 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.49 2014/05/07 01:16:02 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -22,8 +22,6 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.48 2014/05/04 01:02:13 greg Exp 
 #include  "random.h"
 
 #ifdef NEWAMB
-
-/* #define AHEM_MARG	1.2	/* hem margin */
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
@@ -720,51 +718,36 @@ ambdirgrad(AMBHEMI *hp, FVECT uv[2], float dg[2])
 }
 
 
-/* Make sure radii don't extend beyond what we see in our periphery */
-static int
-hem_radii(AMBHEMI *hp, FVECT uv[2], float ra[2])
+/* Compute potential light leak direction flags for cache value */
+static uint32
+ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 {
-#ifdef AHEM_MARG
-#define	MAXDACCUM	47
-	const double	hemarg = AHEM_MARG*ambacc;	/* hem margin */
-	float		radivisor2[MAXDACCUM+1];
-	int		i, j, k = hp->ns/10 + 1;	/* around 5%ile */
-	const int	n2accum = (k < MAXDACCUM) ? k : MAXDACCUM ;
-	int		na = 0;
-	double		d;
+	uint32	flgs = 0;
+	int	i, j;
 					/* circle around perimeter */
 	for (i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j += !i|(i==hp->ns-1) ? 1 : hp->ns-1) {
 		AMBSAMP	*ap = &ambsam(hp,i,j);
-		double	radiv2 = 0;
 		FVECT	vec;
+		double	u, v;
+		double	ang;
+		int	abp;
 		if (ap->d <= FTINY)
 			continue;
 		VSUB(vec, ap->p, hp->rp->rop);
-		for (k = 2; k--; ) {
-			d = ap->d * DOT(vec, uv[k]) * ra[k];
-			radiv2 += d*d;
-		}
-		radiv2 *= hemarg*hemarg * ap->d * ap->d;
-		if (radiv2 <= 1.0)
-			continue;
-					/* insert in percentile list */
-		for (k = na; k && radiv2 > radivisor2[k-1]; k--)
-			radivisor2[k] = radivisor2[k-1];
-		radivisor2[k] = radiv2;
-		na += (na < n2accum);
+		u = DOT(vec, uv[0]) * ap->d;
+		v = DOT(vec, uv[1]) * ap->d;
+		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= 1.0)
+			continue;	/* occluder outside ellipse */
+		ang = atan2a(v, u);	/* else set direction flags */
+		ang += 2.0*PI*(ang < 0);
+		ang *= 16./PI;
+		if ((ang < .5) | (ang >= 31.5))
+			flgs |= 0x80000001;
+		else
+			flgs |= 3L<<(int)(ang-.5);
 	    }
-	if (na < n2accum)		/* current radii are OK? */
-		return(0);
-					/* else apply divisor */
-	d = 1.0/sqrt(radivisor2[na-1]);
-	ra[0] *= d;
-	ra[1] *= d;
-	return(1);
-#undef MAXDACCUM
-#else
-	return(0);
-#endif
+	return(flgs);
 }
 
 
@@ -776,7 +759,8 @@ doambient(				/* compute ambient component */
 	FVECT	uv[2],			/* returned (optional) */
 	float	ra[2],			/* returned (optional) */
 	float	pg[2],			/* returned (optional) */
-	float	dg[2]			/* returned (optional) */
+	float	dg[2],			/* returned (optional) */
+	uint32	*crlp			/* returned (optional) */
 )
 {
 	AMBHEMI	*hp = inithemi(rcol, r, wt);
@@ -796,6 +780,8 @@ doambient(				/* compute ambient component */
 		pg[0] = pg[1] = 0.0;
 	if (dg != NULL)
 		dg[0] = dg[1] = 0.0;
+	if (crlp != NULL)
+		*crlp = 0;
 					/* sample the hemisphere */
 	acol[0] = acol[1] = acol[2] = 0.0;
 	cnt = 0;
@@ -852,7 +838,6 @@ doambient(				/* compute ambient component */
 			if (ra[0] > ra[1])
 				ra[0] = ra[1];
 		}
-		hem_radii(hp, uv, ra);
 		if (ra[0] < minarad) {
 			ra[0] = minarad;
 			if (ra[1] < minarad)
@@ -866,6 +851,8 @@ doambient(				/* compute ambient component */
 			if (ra[0] > maxarad)
 				ra[0] = maxarad;
 		}
+		if (crlp != NULL)	/* flag encroached directions */
+			*crlp = ambcorral(hp, uv, ra[0]*ambacc, ra[1]*ambacc);
 		if (pg != NULL) {	/* cap gradient if necessary */
 			d = pg[0]*pg[0]*ra[0]*ra[0] + pg[1]*pg[1]*ra[1]*ra[1];
 			if (d > 1.0) {

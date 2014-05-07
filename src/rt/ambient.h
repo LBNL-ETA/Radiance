@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.21 2014/04/19 02:39:44 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.22 2014/05/07 01:16:03 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -22,12 +22,13 @@ typedef struct ambrec {
 	float  pos[3];		/* position in space */
 	int32  ndir;		/* encoded surface normal */
 	int32  udir;		/* u-vector direction */
-	int    lvl;		/* recursion level of parent ray */
+	int  lvl;		/* recursion level of parent ray */
 	float  weight;		/* weight of parent ray */
 	float  rad[2];		/* anisotropic radii (rad[0] <= rad[1]) */
 	COLOR  val;		/* computed ambient value */
 	float  gpos[2];		/* (u,v) gradient wrt. position */
 	float  gdir[2];		/* (u,v) gradient wrt. direction */
+	uint32  corral;		/* potential light leak direction flags */
 }  AMBVAL;			/* ambient value */
 
 typedef struct ambtree {
@@ -42,8 +43,8 @@ extern double  minarad;		/* minimum ambient radius */
 #define  AVGREFL	0.5	/* assumed average reflectance */
 #endif
 
-#define  AMBVALSIZ	63	/* number of bytes in portable AMBVAL struct */
-#define  AMBMAGIC	558	/* magic number for ambient value files */
+#define  AMBVALSIZ	67	/* number of bytes in portable AMBVAL struct */
+#define  AMBMAGIC	559	/* magic number for ambient value files */
 #define  AMBFMT		"Radiance_ambval"	/* format id string */
 
 					/* defined in ambient.c */
@@ -57,7 +58,7 @@ extern int	ambsync(void);
 					/* defined in ambcomp.c */
 extern int	doambient(COLOR acol, RAY *r, double wt,
 				FVECT uv[2], float rad[2],
-				float gpos[2], float gdir[2]);
+				float gpos[2], float gdir[2], uint32 *crlp);
 					/* defined in ambio.c */
 extern void	putambmagic(FILE *fp);
 extern int	hasambmagic(FILE *fp);
