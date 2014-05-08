@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.52 2014/05/07 21:45:13 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.53 2014/05/08 04:02:40 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -105,7 +105,7 @@ vdb_edge(int db1, int db2)
 	case VDB_xY:	return(db2==VDB_x ? VDB_y : VDB_X);
 	case VDB_Xy:	return(db2==VDB_y ? VDB_x : VDB_Y);
 	}
-	error(INTERNAL, "forbidden diagonal in vdb_edge()");
+	error(CONSISTENCY, "forbidden diagonal in vdb_edge()");
 	return(-1);
 }
 
@@ -537,7 +537,7 @@ add2gradient(FVECT grad, FVECT egrad1, FVECT egrad2, FVECT egrad3, double v)
 
 
 /* Compute anisotropic radii and eigenvector directions */
-static int
+static void
 eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 {
 	double	hess2[2][2];
@@ -559,9 +559,10 @@ eigenvectors(FVECT uv[2], float ra[2], FVECT hessian[3])
 	if (i == 1)			/* double-root (circle) */
 		evalue[1] = evalue[0];
 	if (!i || ((evalue[0] = fabs(evalue[0])) <= FTINY*FTINY) |
-			((evalue[1] = fabs(evalue[1])) <= FTINY*FTINY) )
-		error(INTERNAL, "bad eigenvalue calculation");
-
+			((evalue[1] = fabs(evalue[1])) <= FTINY*FTINY) ) {
+		ra[0] = ra[1] = maxarad;
+		return;
+	}
 	if (evalue[0] > evalue[1]) {
 		ra[0] = sqrt(sqrt(4.0/evalue[0]));
 		ra[1] = sqrt(sqrt(4.0/evalue[1]));
@@ -828,6 +829,7 @@ doambient(				/* compute ambient component */
 		K = 1.0;
 		pg = NULL;
 		dg = NULL;
+		crlp = NULL;
 	}
 	ap = hp->sa;			/* relative Y channel from here on... */
 	for (i = hp->ns*hp->ns; i--; ap++)
@@ -863,7 +865,8 @@ doambient(				/* compute ambient component */
 			if (ra[0] > maxarad)
 				ra[0] = maxarad;
 		}
-		if (crlp != NULL)	/* flag encroached directions */
+					/* flag encroached directions */
+		if ((wt >= 0.5-FTINY) & (crlp != NULL))
 			*crlp = ambcorral(hp, uv, ra[0]*ambacc, ra[1]*ambacc);
 		if (pg != NULL) {	/* cap gradient if necessary */
 			d = pg[0]*pg[0]*ra[0]*ra[0] + pg[1]*pg[1]*ra[1]*ra[1];
