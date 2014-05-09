@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.56 2014/05/09 20:05:00 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.57 2014/05/09 22:53:11 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -738,7 +738,7 @@ doambient(				/* compute ambient component */
 				ra[0] = maxarad;
 		}
 					/* flag encroached directions */
-		if ((wt >= 0.5-FTINY) & (crlp != NULL))
+		if ((wt >= 0.89*AVGREFL) & (crlp != NULL))
 			*crlp = ambcorral(hp, uv, ra[0]*ambacc, ra[1]*ambacc);
 		if (pg != NULL) {	/* cap gradient if necessary */
 			d = pg[0]*pg[0]*ra[0]*ra[0] + pg[1]*pg[1]*ra[1]*ra[1];
