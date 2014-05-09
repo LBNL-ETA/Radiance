@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.86 2014/05/07 01:16:03 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.87 2014/05/09 16:40:01 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -443,10 +443,9 @@ sumambient(		/* get interpolated ambient value */
 		/*
 		 *  Ambient level test
 		 */
-		if (av->lvl > al)	/* list sorted, so this works */
+		if (av->lvl > al ||	/* list sorted, so this works */
+				(av->lvl == al) & (av->weight < 0.9*r->rweight))
 			break;
-		if (av->weight < 0.9*r->rweight)
-			continue;
 		/*
 		 *  Direction test using unperturbed normal
 		 */
@@ -608,7 +607,9 @@ avinsert(				/* insert ambient value in our tree */
 	}
 	avh.next = at->alist;		/* order by increasing level */
 	for (ap = &avh; ap->next != NULL; ap = ap->next)
-		if (ap->next->lvl >= av->lvl)
+		if ( ap->next->lvl > av->lvl ||
+				(ap->next->lvl == av->lvl) &
+				(ap->next->weight <= av->weight) )
 			break;
 	av->next = ap->next;
 	ap->next = (AMBVAL*)av;
@@ -721,10 +722,9 @@ sumambient(	/* get interpolated ambient value */
 		/*
 		 *  Ambient level test.
 		 */
-		if (av->lvl > al)	/* list sorted, so this works */
+		if (av->lvl > al ||	/* list sorted, so this works */
+				(av->lvl == al) & (av->weight < 0.9*r->rweight))
 			break;
-		if (av->weight < 0.9*r->rweight)
-			continue;
 		/*
 		 *  Ambient radius test.
 		 */
@@ -906,7 +906,9 @@ avinsert(				/* insert ambient value in our tree */
 	}
 	avh.next = at->alist;		/* order by increasing level */
 	for (ap = &avh; ap->next != NULL; ap = ap->next)
-		if (ap->next->lvl >= av->lvl)
+		if ( ap->next->lvl > av->lvl ||
+				(ap->next->lvl == av->lvl) &
+				(ap->next->weight <= av->weight) )
 			break;
 	av->next = ap->next;
 	ap->next = (AMBVAL*)av;
