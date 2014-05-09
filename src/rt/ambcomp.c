@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.53 2014/05/08 04:02:40 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.54 2014/05/09 04:55:19 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -225,7 +225,7 @@ ambsample(				/* initial ambient division sample */
 static float *
 getambdiffs(AMBHEMI *hp)
 {
-	float	*earr = (float *)calloc(hp->ns*hp->ns, sizeof(float));
+	float	*earr = (float *)malloc(sizeof(float)*hp->ns*hp->ns);
 	float	*ep;
 	AMBSAMP	*ap;
 	double	b, d2;
@@ -236,6 +236,7 @@ getambdiffs(AMBHEMI *hp)
 					/* compute squared neighbor diffs */
 	for (ap = hp->sa, ep = earr, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++, ep++) {
+		ep[0] = FTINY;
 		b = bright(ap[0].v);
 		if (i) {		/* from above */
 			d2 = b - bright(ap[-hp->ns].v);
@@ -272,7 +273,7 @@ static void
 ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 {
 	float	*earr = getambdiffs(hp);
-	double	e2sum = 0.0;
+	double	e2rem = 0;
 	AMBSAMP	*ap;
 	RAY	ar;
 	double	asum[3];
@@ -281,13 +282,13 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 
 	if (earr == NULL)		/* just skip calc. if no memory */
 		return;
-					/* add up estimated variances */
+					/* accumulate estimated variances */
 	for (ep = earr + hp->ns*hp->ns; ep-- > earr; )
-		e2sum += *ep;
+		e2rem += *ep;
 	ep = earr;			/* perform super-sampling */
 	for (ap = hp->sa, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++) {
-		int	nss = *ep/e2sum*cnt + frandom();
+		int	nss = *ep/e2rem*cnt + frandom();
 		asum[0] = asum[1] = asum[2] = 0.0;
 		for (n = 1; n <= nss; n++) {
 			if (!getambsamp(&ar, hp, i, j, n)) {
@@ -297,12 +298,12 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 			addcolor(asum, ar.rcol);
 		}
 		if (nss) {		/* update returned ambient value */
-			const double	ssf = 1./(nss + 1);
+			const double	ssf = 1./(nss + 1.);
 			for (n = 3; n--; )
 				acol[n] += ssf*asum[n] +
 						(ssf - 1.)*colval(ap->v,n);
 		}
-		e2sum -= *ep++;		/* update remainders */
+		e2rem -= *ep++;		/* update remainders */
 		cnt -= nss;
 	}
 	free(earr);
