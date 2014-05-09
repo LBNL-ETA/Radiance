@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.55 2014/05/09 16:05:09 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.56 2014/05/09 20:05:00 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -25,29 +25,6 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.55 2014/05/09 16:05:09 greg Exp 
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
-				/* vertex direction bit positions */
-#define	VDB_xy	0
-#define VDB_y	01
-#define VDB_x	02
-#define VDB_Xy	03
-#define VDB_xY	04
-#define VDB_X	05
-#define VDB_Y	06
-#define VDB_XY	07
-				/* get opposite vertex direction bit */
-#define VDB_OPP(f)	(~(f) & 07)
-				/* adjacent triangle vertex flags */
-static const int  adjacent_trifl[8] = {
-			0,			/* forbidden diagonal */
-			1<<VDB_x|1<<VDB_y|1<<VDB_Xy,
-			1<<VDB_y|1<<VDB_x|1<<VDB_xY,
-			1<<VDB_y|1<<VDB_Xy|1<<VDB_X,
-			1<<VDB_x|1<<VDB_xY|1<<VDB_Y,
-			1<<VDB_Xy|1<<VDB_X|1<<VDB_Y,
-			1<<VDB_xY|1<<VDB_Y|1<<VDB_X,
-			0,			/* forbidden diagonal */
-		};
-
 typedef struct {
 	COLOR	v;		/* hemisphere sample value */
 	float	d;		/* reciprocal distance (1/rt) */
@@ -62,52 +39,13 @@ typedef struct {
 	AMBSAMP	sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
 
-#define ambndx(h,i,j)	((i)*(h)->ns + (j))
-#define ambsam(h,i,j)	(h)->sa[ambndx(h,i,j)]
+#define AI(h,i,j)	((i)*(h)->ns + (j))
+#define ambsam(h,i,j)	(h)->sa[AI(h,i,j)]
 
 typedef struct {
 	FVECT	r_i, r_i1, e_i, rcp, rI2_eJ2;
 	double	I1, I2;
-	int	valid;
 } FFTRI;		/* vectors and coefficients for Hessian calculation */
-
-
-/* Get index for adjacent vertex */
-static int
-adjacent_verti(AMBHEMI *hp, int i, int j, int dbit)
-{
-	int	i0 = i*hp->ns + j;
-
-	switch (dbit) {
-	case VDB_y:	return(i0 - hp->ns);
-	case VDB_x:	return(i0 - 1);
-	case VDB_Xy:	return(i0 - hp->ns + 1);
-	case VDB_xY:	return(i0 + hp->ns - 1);
-	case VDB_X:	return(i0 + 1);
-	case VDB_Y:	return(i0 + hp->ns);
-				/* the following should never occur */
-	case VDB_xy:	return(i0 - hp->ns - 1);
-	case VDB_XY:	return(i0 + hp->ns + 1);
-	}
-	return(-1);
-}
-
-
-/* Get vertex direction bit for the opposite edge to complete triangle */
-static int
-vdb_edge(int db1, int db2)
-{
-	switch (db1) {
-	case VDB_x:	return(db2==VDB_y ? VDB_Xy : VDB_Y);
-	case VDB_y:	return(db2==VDB_x ? VDB_xY : VDB_X);
-	case VDB_X:	return(db2==VDB_Xy ? VDB_y : VDB_xY);
-	case VDB_Y:	return(db2==VDB_xY ? VDB_x : VDB_Xy);
-	case VDB_xY:	return(db2==VDB_x ? VDB_y : VDB_X);
-	case VDB_Xy:	return(db2==VDB_y ? VDB_x : VDB_Y);
-	}
-	error(CONSISTENCY, "forbidden diagonal in vdb_edge()");
-	return(-1);
-}
 
 
 static AMBHEMI *
@@ -190,7 +128,7 @@ getambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
 				spt[1]*hp->uy[ii] +
 				zd*hp->rp->ron[ii];
 	checknorm(arp->rdir);
-	dimlist[ndims++] = ambndx(hp,i,j) + 90171;
+	dimlist[ndims++] = AI(hp,i,j) + 90171;
 	rayvalue(arp);			/* evaluate ray */
 	ndims--;			/* apply coefficient */
 	multcolor(arp->rcol, arp->rcoef);
@@ -318,94 +256,31 @@ done:
 }
 
 
-/* Compute vertex flags, indicating farthest in each direction */
-static uby8 *
-vertex_flags(AMBHEMI *hp)
-{
-	uby8	*vflags = (uby8 *)calloc(hp->ns*hp->ns, sizeof(uby8));
-	uby8	*vf;
-	AMBSAMP	*ap;
-	int	i, j;
-
-	if (vflags == NULL)
-		error(SYSTEM, "out of memory in vertex_flags()");
-	vf = vflags;
-	ap = hp->sa;		/* compute farthest along first row */
-	for (j = 0; j < hp->ns-1; j++, vf++, ap++)
-		if (ap[0].d <= ap[1].d)
-			vf[0] |= 1<<VDB_X;
-		else
-			vf[1] |= 1<<VDB_x;
-	++vf; ++ap;
-				/* flag subsequent rows */
-	for (i = 1; i < hp->ns; i++) {
-	    for (j = 0; j < hp->ns-1; j++, vf++, ap++) {
-		if (ap[0].d <= ap[-hp->ns].d)	/* row before */
-			vf[0] |= 1<<VDB_y;
-		else
-			vf[-hp->ns] |= 1<<VDB_Y;
-		if (ap[0].d <= ap[1-hp->ns].d)	/* diagonal we care about */
-			vf[0] |= 1<<VDB_Xy;
-		else
-			vf[1-hp->ns] |= 1<<VDB_xY;
-		if (ap[0].d <= ap[1].d)		/* column after */
-			vf[0] |= 1<<VDB_X;
-		else
-			vf[1] |= 1<<VDB_x;
-	    }
-	    if (ap[0].d <= ap[-hp->ns].d)	/* final column edge */
-		vf[0] |= 1<<VDB_y;
-	    else
-		vf[-hp->ns] |= 1<<VDB_Y;
-	    ++vf; ++ap;
-	}
-	return(vflags);
-}
-
-
 /* Return brightness of farthest ambient sample */
 static double
-back_ambval(AMBHEMI *hp, int i, int j, int dbit1, int dbit2, const uby8 *vflags)
+back_ambval(AMBHEMI *hp, const int n1, const int n2, const int n3)
 {
-	const int	v0 = ambndx(hp,i,j);
-	const int	tflags = (1<<dbit1 | 1<<dbit2);
-	int		v1, v2;
-
-	if ((vflags[v0] & tflags) == tflags)	/* is v0 the farthest? */
-		return(colval(hp->sa[v0].v,CIEY));
-	v1 = adjacent_verti(hp, i, j, dbit1);
-	if (vflags[v0] & 1<<dbit2)		/* v1 farthest if v0>v2 */
-		return(colval(hp->sa[v1].v,CIEY));
-	v2 = adjacent_verti(hp, i, j, dbit2);
-	if (vflags[v0] & 1<<dbit1)		/* v2 farthest if v0>v1 */
-		return(colval(hp->sa[v2].v,CIEY));
-						/* else check if v1>v2 */
-	if (vflags[v1] & 1<<vdb_edge(dbit1,dbit2))
-		return(colval(hp->sa[v1].v,CIEY));
-	return(colval(hp->sa[v2].v,CIEY));
+	if (hp->sa[n1].d <= hp->sa[n2].d) {
+		if (hp->sa[n1].d <= hp->sa[n3].d)
+			return(colval(hp->sa[n1].v,CIEY));
+		return(colval(hp->sa[n3].v,CIEY));
+	}
+	if (hp->sa[n2].d <= hp->sa[n3].d)
+		return(colval(hp->sa[n2].v,CIEY));
+	return(colval(hp->sa[n3].v,CIEY));
 }
 
 
 /* Compute vectors and coefficients for Hessian/gradient calcs */
 static void
-comp_fftri(FFTRI *ftp, AMBHEMI *hp, int i, int j, int dbit, const uby8 *vflags)
+comp_fftri(FFTRI *ftp, AMBHEMI *hp, const int n0, const int n1)
 {
-	const int	i0 = ambndx(hp,i,j);
-	double		rdot_cp, dot_e, dot_er, rdot_r, rdot_r1, J2;
-	int		i1, ii;
+	double	rdot_cp, dot_e, dot_er, rdot_r, rdot_r1, J2;
+	int	ii;
 
-	ftp->valid = 0;			/* check if we can skip this edge */
-	ii = adjacent_trifl[dbit];
-	if ((vflags[i0] & ii) == ii)	/* cancels if vertex used as value */
-		return;
-	i1 = adjacent_verti(hp, i, j, dbit);
-	ii = adjacent_trifl[VDB_OPP(dbit)];
-	if ((vflags[i1] & ii) == ii)	/* on either end (for both triangles) */
-		return;
-					/* else go ahead with calculation */
-	VSUB(ftp->r_i, hp->sa[i0].p, hp->rp->rop);
-	VSUB(ftp->r_i1, hp->sa[i1].p, hp->rp->rop);
-	VSUB(ftp->e_i, hp->sa[i1].p, hp->sa[i0].p);
+	VSUB(ftp->r_i, hp->sa[n0].p, hp->rp->rop);
+	VSUB(ftp->r_i1, hp->sa[n1].p, hp->rp->rop);
+	VSUB(ftp->e_i, hp->sa[n1].p, hp->sa[n0].p);
 	VCROSS(ftp->rcp, ftp->r_i, ftp->r_i1);
 	rdot_cp = 1.0/DOT(ftp->rcp,ftp->rcp);
 	dot_e = DOT(ftp->e_i,ftp->e_i);
@@ -419,7 +294,6 @@ comp_fftri(FFTRI *ftp, AMBHEMI *hp, int i, int j, int dbit, const uby8 *vflags)
 	J2 =  ( 0.5*(rdot_r - rdot_r1) - dot_er*ftp->I2 ) / dot_e;
 	for (ii = 3; ii--; )
 		ftp->rI2_eJ2[ii] = ftp->I2*ftp->r_i[ii] + J2*ftp->e_i[ii];
-	ftp->valid++;
 }
 
 
@@ -445,11 +319,6 @@ comp_hessian(FVECT hess[3], FFTRI *ftp, FVECT nrm)
 	double	d1, d2, d3, d4;
 	double	I3, J3, K3;
 	int	i, j;
-
-	if (!ftp->valid) {		/* preemptive test */
-		memset(hess, 0, sizeof(FVECT)*3);
-		return;
-	}
 					/* compute intermediate coefficients */
 	d1 = 1.0/DOT(ftp->r_i,ftp->r_i);
 	d2 = 1.0/DOT(ftp->r_i1,ftp->r_i1);
@@ -513,10 +382,6 @@ comp_gradient(FVECT grad, FFTRI *ftp, FVECT nrm)
 	double	f1;
 	int	i;
 
-	if (!ftp->valid) {		/* preemptive test */
-		memset(grad, 0, sizeof(FVECT));
-		return;
-	}
 	f1 = 2.0*DOT(nrm, ftp->rcp);
 	VCROSS(ncp, nrm, ftp->e_i);
 	for (i = 3; i--; )
@@ -606,7 +471,6 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	static char	memerrmsg[] = "out of memory in ambHessian()";
 	FVECT		(*hessrow)[3] = NULL;
 	FVECT		*gradrow = NULL;
-	uby8		*vflags;
 	FVECT		hessian[3];
 	FVECT		gradient;
 	FFTRI		fftr;
@@ -628,11 +492,9 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 			error(SYSTEM, memerrmsg);
 		memset(gradient, 0, sizeof(gradient));
 	}
-					/* get vertex position flags */
-	vflags = vertex_flags(hp);
 					/* compute first row of edges */
 	for (j = 0; j < hp->ns-1; j++) {
-		comp_fftri(&fftr, hp, 0, j, VDB_X, vflags);
+		comp_fftri(&fftr, hp, AI(hp,0,j), AI(hp,0,j+1));
 		if (hessrow != NULL)
 			comp_hessian(hessrow[j], &fftr, hp->rp->ron);
 		if (gradrow != NULL)
@@ -642,7 +504,7 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 	for (i = 0; i < hp->ns-1; i++) {
 	    FVECT	hesscol[3];	/* compute first vertical edge */
 	    FVECT	gradcol;
-	    comp_fftri(&fftr, hp, i, 0, VDB_Y, vflags);
+	    comp_fftri(&fftr, hp, AI(hp,i,0), AI(hp,i+1,0));
 	    if (hessrow != NULL)
 		comp_hessian(hesscol, &fftr, hp->rp->ron);
 	    if (gradrow != NULL)
@@ -651,9 +513,10 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 		FVECT	hessdia[3];	/* compute triangle contributions */
 		FVECT	graddia;
 		double	backg;
-		backg = back_ambval(hp, i, j, VDB_X, VDB_Y, vflags);
+		backg = back_ambval(hp, AI(hp,i,j),
+					AI(hp,i,j+1), AI(hp,i+1,j));
 					/* diagonal (inner) edge */
-		comp_fftri(&fftr, hp, i, j+1, VDB_xY, vflags);
+		comp_fftri(&fftr, hp, AI(hp,i,j+1), AI(hp,i+1,j));
 		if (hessrow != NULL) {
 		    comp_hessian(hessdia, &fftr, hp->rp->ron);
 		    rev_hessian(hesscol);
@@ -665,14 +528,15 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 		    add2gradient(gradient, gradrow[j], graddia, gradcol, backg);
 		}
 					/* initialize edge in next row */
-		comp_fftri(&fftr, hp, i+1, j+1, VDB_x, vflags);
+		comp_fftri(&fftr, hp, AI(hp,i+1,j+1), AI(hp,i+1,j));
 		if (hessrow != NULL)
 		    comp_hessian(hessrow[j], &fftr, hp->rp->ron);
 		if (gradrow != NULL)
 		    comp_gradient(gradrow[j], &fftr, hp->rp->ron);
 					/* new column edge & paired triangle */
-		backg = back_ambval(hp, i+1, j+1, VDB_x, VDB_y, vflags);
-		comp_fftri(&fftr, hp, i, j+1, VDB_Y, vflags);
+		backg = back_ambval(hp, AI(hp,i+1,j+1),
+					AI(hp,i+1,j), AI(hp,i,j+1));
+		comp_fftri(&fftr, hp, AI(hp,i,j+1), AI(hp,i+1,j+1));
 		if (hessrow != NULL) {
 		    comp_hessian(hesscol, &fftr, hp->rp->ron);
 		    rev_hessian(hessdia);
@@ -692,7 +556,6 @@ ambHessian(				/* anisotropic radii & pos. gradient */
 					/* release row buffers */
 	if (hessrow != NULL) free(hessrow);
 	if (gradrow != NULL) free(gradrow);
-	free(vflags);
 	
 	if (ra != NULL)			/* extract eigenvectors & radii */
 		eigenvectors(uv, ra, hessian);
