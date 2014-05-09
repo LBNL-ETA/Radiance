@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.87 2014/05/09 16:40:01 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.88 2014/05/09 23:08:50 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -165,7 +165,7 @@ setambient(void)				/* initialize calculation */
 		initambfile(0);			/* file exists */
 		lastpos = ftell(ambfp);
 		while (readambval(&amb, ambfp))
-			avinsert(avstore(&amb));
+			avstore(&amb);
 		nambshare = nambvals;		/* share loaded values */
 		if (readonly) {
 			sprintf(errmsg,
@@ -960,7 +960,7 @@ avsave(				/* insert and save an ambient value */
 	AMBVAL	*av
 )
 {
-	avinsert(avstore(av));
+	avstore(av);
 	if (ambfp == NULL)
 		return;
 	if (writambval(av, ambfp) < 0)
@@ -975,7 +975,7 @@ writerr:
 
 
 static AMBVAL *
-avstore(				/* allocate memory and store aval */
+avstore(				/* allocate memory and save aval */
 	AMBVAL  *aval
 )
 {
@@ -993,6 +993,7 @@ avstore(				/* allocate memory and store aval */
 		avsum += log(d);
 		navsum++;
 	}
+	avinsert(av);			/* insert in our cache tree */
 	return(av);
 }
 
@@ -1275,7 +1276,7 @@ ambsync(void)			/* synchronize ambient file */
 				error(WARNING, errmsg);
 				break;
 			}
-			avinsert(avstore(&avs));
+			avstore(&avs);
 			n -= AMBVALSIZ;
 		}
 		lastpos = flen - n;
