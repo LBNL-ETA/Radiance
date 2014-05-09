@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.54 2014/05/09 04:55:19 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.55 2014/05/09 16:05:09 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -225,7 +225,7 @@ ambsample(				/* initial ambient division sample */
 static float *
 getambdiffs(AMBHEMI *hp)
 {
-	float	*earr = (float *)malloc(sizeof(float)*hp->ns*hp->ns);
+	float	*earr = (float *)calloc(hp->ns*hp->ns, sizeof(float));
 	float	*ep;
 	AMBSAMP	*ap;
 	double	b, d2;
@@ -236,7 +236,6 @@ getambdiffs(AMBHEMI *hp)
 					/* compute squared neighbor diffs */
 	for (ap = hp->sa, ep = earr, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++, ep++) {
-		ep[0] = FTINY;
 		b = bright(ap[0].v);
 		if (i) {		/* from above */
 			d2 = b - bright(ap[-hp->ns].v);
@@ -244,25 +243,31 @@ getambdiffs(AMBHEMI *hp)
 			ep[0] += d2;
 			ep[-hp->ns] += d2;
 		}
-		if (j) {		/* from behind */
-			d2 = b - bright(ap[-1].v);
-			d2 *= d2;
-			ep[0] += d2;
-			ep[-1] += d2;
-		}
+		if (!j) continue;
+					/* from behind */
+		d2 = b - bright(ap[-1].v);
+		d2 *= d2;
+		ep[0] += d2;
+		ep[-1] += d2;
+		if (!i) continue;
+					/* diagonal */
+		d2 = b - bright(ap[-hp->ns-1].v);
+		d2 *= d2;
+		ep[0] += d2;
+		ep[-hp->ns-1] += d2;
 	    }
 					/* correct for number of neighbors */
-	earr[0] *= 2.f;
-	earr[hp->ns-1] *= 2.f;
-	earr[(hp->ns-1)*hp->ns] *= 2.f;
-	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 2.f;
+	earr[0] *= 8./3.;
+	earr[hp->ns-1] *= 8./3.;
+	earr[(hp->ns-1)*hp->ns] *= 8./3.;
+	earr[(hp->ns-1)*hp->ns + hp->ns-1] *= 8./3.;
 	for (i = 1; i < hp->ns-1; i++) {
-		earr[i*hp->ns] *= 4./3.;
-		earr[i*hp->ns + hp->ns-1] *= 4./3.;
+		earr[i*hp->ns] *= 8./5.;
+		earr[i*hp->ns + hp->ns-1] *= 8./5.;
 	}
 	for (j = 1; j < hp->ns-1; j++) {
-		earr[j] *= 4./3.;
-		earr[(hp->ns-1)*hp->ns + j] *= 4./3.;
+		earr[j] *= 8./5.;
+		earr[(hp->ns-1)*hp->ns + j] *= 8./5.;
 	}
 	return(earr);
 }
@@ -278,17 +283,19 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 	RAY	ar;
 	double	asum[3];
 	float	*ep;
-	int	i, j, n;
+	int	i, j, n, nss;
 
 	if (earr == NULL)		/* just skip calc. if no memory */
 		return;
 					/* accumulate estimated variances */
-	for (ep = earr + hp->ns*hp->ns; ep-- > earr; )
-		e2rem += *ep;
+	for (ep = earr + hp->ns*hp->ns; ep > earr; )
+		e2rem += *--ep;
 	ep = earr;			/* perform super-sampling */
 	for (ap = hp->sa, i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j++, ap++) {
-		int	nss = *ep/e2rem*cnt + frandom();
+		if (e2rem <= FTINY)
+			goto done;	/* nothing left to do */
+		nss = *ep/e2rem*cnt + frandom();
 		asum[0] = asum[1] = asum[2] = 0.0;
 		for (n = 1; n <= nss; n++) {
 			if (!getambsamp(&ar, hp, i, j, n)) {
@@ -306,6 +313,7 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 		e2rem -= *ep++;		/* update remainders */
 		cnt -= nss;
 	}
+done:
 	free(earr);
 }
 
