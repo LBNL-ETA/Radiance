@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.5 2014/05/01 04:51:12 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.6 2014/05/09 23:49:05 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
@@ -45,6 +45,7 @@ my $cmd = "getinfo < $ARGV[0] " .
 		q[| sed -n 's/^.* -aa \([.0-9][^ ]*\) .*$/\1/p'];
 my $ambacc=`$cmd`;
 die "Missing -aa setting in header\n" if (! $ambacc );
+die "Zero -aa setting in header\n" if ($ambacc <= .00001);
 $scale *= $ambacc;
 my $ambfmt = '
 void glow posglow
@@ -55,7 +56,7 @@ void glow posglow
 posglow sphere position${recno}
 0
 0
-4 ${px} ${py} ${pz} ${psiz}
+4 ${  px  } ${  py  } ${  pz  } ${ psiz }
 ';
 my $posgradfmt = '
 void glow arrglow
@@ -104,7 +105,7 @@ void glow tipglow
 tipglow sphere atip
 0
 0
-4 ${ cx1 } ${ cy1 } ${ cz1 } ${psiz/7}
+4 ${  cx1  } ${  cy1  } ${  cz1  } ${psiz/7}
 ' if ($dodirgrad);
 my $dirgradfmt='
 void brightfunc dgpat

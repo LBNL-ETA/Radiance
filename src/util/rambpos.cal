@@ -1,4 +1,4 @@
-{ RCSid $Id: rambpos.cal,v 2.4 2014/05/01 02:52:03 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.5 2014/05/09 23:49:05 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
@@ -6,9 +6,9 @@ and(a,b) : if(a,b,a);
 				{ level selector }
 lvl = $10;
 wt = $11;
-acond = and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) );
-px = $1; py = $2; pz = $3;
 r0 = SF*$12; r1 = SF*$13;
+acond = and( r0-5e-5, and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) ) );
+px = $1; py = $2; pz = $3;
 nx = $4; ny = $5; nz = $6;
 ux = $7; uy = $8; uz = $9;
 vx = ny*uz - nz*uy;
