@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.23 2014/03/09 20:07:27 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.24 2014/05/10 01:27:14 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -801,10 +801,11 @@ struct field  *f
 static void
 putrec(void)                                /* output a record */
 {
-	char  fmt[32];
+	char  fmt[32], typ[32];
 	int  n;
 	struct field  *f;
 	int  adlast, adnext;
+	double  dv, av;
 	
 	adlast = 0;
 	for (f = outfmt; f != NULL; f = f->next) {
@@ -835,13 +836,21 @@ putrec(void)                                /* output a record */
 			break;
 		case T_NUM:
 			n = f->type & F_WID;
+			typ[0] = (n <= 6) ? 'g' : 'e';
+			typ[1] = '\0';
+			dv = evalue(f->f.ne);
+			if ((av = fabs(dv)) < 1L<<31) {
+				long	iv = (int)(av + .5);
+				if (iv && fabs(av-iv) <= av*1e-14)
+					strcpy(typ, ".0f");
+			}
 			if (adlast && adnext)
-				strcpy(fmt, "%g");
+				sprintf(fmt, "%%%s", typ);
 			else if (adlast)
-				sprintf(fmt, "%%-%dg", n);
+				sprintf(fmt, "%%-%d%s", n, typ);
 			else
-				sprintf(fmt, "%%%dg", n);
-			printf(fmt, evalue(f->f.ne));
+				sprintf(fmt, "%%%d%s", n, typ);
+			printf(fmt, dv);
 			adlast = 1;
 			break;
 		}
