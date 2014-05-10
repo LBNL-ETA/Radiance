@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.6 2014/05/09 23:49:05 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.7 2014/05/10 01:58:22 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
@@ -68,9 +68,9 @@ arrglow cone pgarrow${recno}
 0
 0
 8
-	${ cx0 }	${ cy0 }	${ cz0 }
-	${ cx1 }	${ cy1 }	${ cz1 }
-	${ cr0 }	0
+	${    cx0    }	${    cy0    }	${    cz0    }
+	${    cx1    }	${    cy1    }	${    cz1    }
+	${   cr0   }	0
 
 void brightfunc pgpat
 2 posfunc ambpos.cal
@@ -91,10 +91,10 @@ pgeval polygon pgellipse${recno}
 0
 0
 12
-	${ px1 } ${ py1 } ${ pz1 }
-	${ px2 } ${ py2 } ${ pz2 }
-	${ px3 } ${ py3 } ${ pz3 }
-	${ px4 } ${ py4 } ${ pz4 }
+	${   px1   } ${   py1   } ${   pz1   }
+	${   px2   } ${   py2   } ${   pz2   }
+	${   px3   } ${   py3   } ${   pz3   }
+	${   px4   } ${   py4   } ${   pz4   }
 ';
 $posgradfmt .= '
 void glow tipglow
@@ -105,7 +105,7 @@ void glow tipglow
 tipglow sphere atip
 0
 0
-4 ${  cx1  } ${  cy1  } ${  cz1  } ${psiz/7}
+4 ${   cx1   } ${   cy1   } ${   cz1   } ${psiz/7}
 ' if ($dodirgrad);
 my $dirgradfmt='
 void brightfunc dgpat
@@ -122,9 +122,9 @@ dgval ring dgdisk${recno}a
 0
 0
 8
-	${ px+dgx*.001 } ${ py+dgy*.001 } ${ pz+dgz*.001 }
+	${ px+dgx*.0002 } ${ py+dgy*.0002 } ${ pz+dgz*.0002 }
 	${ dgx } ${ dgy } ${ dgz }
-	0	${ r0/2 }
+	0	${  r0/2  }
 
 dgval ring dgdisk${recno}b
 0
@@ -132,7 +132,7 @@ dgval ring dgdisk${recno}b
 8
 	${ px-dgx*.001 } ${ py-dgy*.001 } ${ pz-dgz*.001 }
 	${ -dgx } ${ -dgy } ${ -dgz }
-	0	${ r0/2 }
+	0	${  r0/2  }
 ';
 # Load & convert ambient values
 print "# Output produced by: $savedARGV\n";
