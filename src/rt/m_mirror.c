@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.15 2014/01/25 18:27:39 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.16 2014/05/10 17:43:01 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -29,16 +29,16 @@ static void mirrorproj(MAT4  m, FVECT  nv, double  offs);
 VSMATERIAL  mirror_vs = {mir_proj, 1};
 
 
-extern int
+int
 m_mirror(			/* shade mirrored ray */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	COLOR  mcolor;
 	RAY  nr;
 	int  rpure = 1;
-	register int  i;
+	int  i;
 					/* check arguments */
 	if (m->oargs.nfargs != 3 || m->oargs.nsargs > 1)
 		objerror(m, USER, "bad number of arguments");
@@ -82,7 +82,8 @@ m_mirror(			/* shade mirrored ray */
 
 		if (rayorigin(&nr, REFLECTED, r, mcolor) < 0)
 			return(1);
-		if (DOT(r->pert,r->pert) > FTINY*FTINY) {
+		if (!(r->crtype & AMBIENT) &&
+				DOT(r->pert,r->pert) > FTINY*FTINY) {
 			pdot = raynormal(pnorm, r);	/* use textures */
 			for (i = 0; i < 3; i++)
 				nr.rdir[i] = r->rdir[i] + 2.*pdot*pnorm[i];
@@ -106,7 +107,7 @@ m_mirror(			/* shade mirrored ray */
 static int
 mir_proj(		/* compute a mirror's projection */
 	MAT4  pm,
-	register OBJREC  *o,
+	OBJREC  *o,
 	SRCREC  *s,
 	int  n
 )
@@ -142,12 +143,12 @@ mir_proj(		/* compute a mirror's projection */
 
 static void
 mirrorproj(		/* get mirror projection for surface */
-	register MAT4  m,
+	MAT4  m,
 	FVECT  nv,
 	double  offs
 )
 {
-	register int  i, j;
+	int  i, j;
 					/* assign matrix */
 	setident4(m);
 	for (j = 0; j < 3; j++) {

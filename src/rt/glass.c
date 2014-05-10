@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.21 2014/01/25 18:27:39 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.22 2014/05/10 17:43:01 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -41,10 +41,10 @@ static const char RCSid[] = "$Id: glass.c,v 2.21 2014/01/25 18:27:39 greg Exp $"
 #define  RINDEX		1.52		/* refractive index of glass */
 
 
-extern int
+int
 m_glass(		/* color a ray which hit a thin glass surface */
 	OBJREC  *m,
-	register RAY  *r
+	RAY  *r
 )
 {
 	COLOR  mcolor;
@@ -57,7 +57,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	double  transtest, transdist;
 	double  mirtest, mirdist;
 	RAY  p;
-	register int  i;
+	int  i;
 						/* check arguments */
 	if (m->oargs.nfargs == 3)
 		rindex = RINDEX;		/* default value of n */
@@ -116,7 +116,7 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		multcolor(trans, r->pcol);	/* modify by pattern */
 						/* transmitted ray */
 		if (rayorigin(&p, TRANS, r, trans) == 0) {
-			if (!(r->crtype & SHADOW) && hastexture) {
+			if (!(r->crtype & (SHADOW|AMBIENT)) && hastexture) {
 				VSUM(p.rdir, r->rdir, r->pert, 2.*(1.-rindex));
 				if (normalize(p.rdir) == 0.0) {
 					objerror(m, WARNING, "bad perturbation");
@@ -151,7 +151,8 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		rayvalue(&p);
 		multcolor(p.rcol, p.rcoef);
 		addcolor(r->rcol, p.rcol);
-		if (!hastexture && r->ro != NULL && isflat(r->ro->otype)) {
+		if (r->ro != NULL && isflat(r->ro->otype) &&
+				!hastexture | (r->crtype & AMBIENT)) {
 			mirtest = 2.0*bright(p.rcol);
 			mirdist = r->rot + p.rt;
 		}
