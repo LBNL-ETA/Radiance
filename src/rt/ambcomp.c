@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.57 2014/05/09 22:53:11 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.58 2014/05/11 19:03:37 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -600,6 +600,9 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	const double	ang_step = ang_res/((int)(16/PI*ang_res) + (1+FTINY));
 	double		avg_d = 0;
 	uint32		flgs = 0;
+	FVECT		vec;
+	double		u, v;
+	double		ang, a1;
 	int		i, j;
 					/* don't bother for a few samples */
 	if (hp->ns < 12)
@@ -617,10 +620,6 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	for (i = 0; i < hp->ns; i++)
 	    for (j = 0; j < hp->ns; j += !i|(i==hp->ns-1) ? 1 : hp->ns-1) {
 		AMBSAMP	*ap = &ambsam(hp,i,j);
-		FVECT	vec;
-		double	u, v;
-		double	ang, a1;
-		int	abp;
 		if ((ap->d <= FTINY) | (ap->d >= max_d))
 			continue;	/* too far or too near */
 		VSUB(vec, ap->p, hp->rp->rop);
@@ -632,6 +631,20 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 		for (a1 = ang-.5*ang_res; a1 <= ang+.5*ang_res; a1 += ang_step)
 			flgs |= 1L<<(int)(16/PI*(a1 + 2.*PI*(a1 < 0)));
 	    }
+					/* add low-angle incident (< 20deg) */
+	if (fabs(hp->rp->rod) <= 0.342) {
+		u = -DOT(hp->rp->rdir, uv[0]);
+		v = -DOT(hp->rp->rdir, uv[1]);
+		if ((r0*r0*u*u + r1*r1*v*v) > hp->rp->rot*hp->rp->rot) {
+			ang = atan2a(v, u);
+			ang += 2.*PI*(ang < 0);
+			ang *= 16/PI;
+			if ((ang < .5) | (ang >= 31.5))
+				flgs |= 0x80000001;
+			else
+				flgs |= 3L<<(int)(ang-.5);
+		}
+	}
 	return(flgs);
 }
 
