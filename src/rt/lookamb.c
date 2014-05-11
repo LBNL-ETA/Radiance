@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lookamb.c,v 2.13 2014/05/07 01:16:03 greg Exp $";
+static const char	RCSid[] = "$Id: lookamb.c,v 2.14 2014/05/11 19:51:39 greg Exp $";
 #endif
 /*
  *  lookamb.c - program to examine ambient components.
@@ -45,7 +45,7 @@ lookamb(			/* load & convert ambient values from a file */
 			printf("%f\t%f\t", av.gdir[0], av.gdir[1]);
 			printf("%u\n", av.corral);
 		} else {
-			printf("\nPosition:\t%f\t%f\t%f\n", av.pos[0],
+			printf("Position:\t%f\t%f\t%f\n", av.pos[0],
 					av.pos[1], av.pos[2]);
 			printf("Normal:\t\t%f\t%f\t%f\n",
 					norm[0], norm[1], norm[2]);
@@ -57,7 +57,7 @@ lookamb(			/* load & convert ambient values from a file */
 					colval(av.val,GRN), colval(av.val,BLU));
 			printf("Pos.Grad:\t%f\t%f\n", av.gpos[0], av.gpos[1]);
 			printf("Dir.Grad:\t%f\t%f\n", av.gdir[0], av.gdir[1]);
-			printf("Corral:\t\t%8X\n", av.corral);
+			printf("Corral:\t\t%8X\n\n", av.corral);
 		}
 		if (ferror(stdout))
 			exit(1);
@@ -140,7 +140,7 @@ lookamb(			/* get ambient values from a file */
 			printf("%f\t%f\t%f\n", av.gdir[0],
 					av.gdir[1], av.gdir[2]);
 		} else {
-			printf("\nPosition:\t%f\t%f\t%f\n", av.pos[0],
+			printf("Position:\t%f\t%f\t%f\n", av.pos[0],
 					av.pos[1], av.pos[2]);
 			printf("Direction:\t%f\t%f\t%f\n", av.dir[0],
 					av.dir[1], av.dir[2]);
@@ -150,7 +150,7 @@ lookamb(			/* get ambient values from a file */
 					colval(av.val,GRN), colval(av.val,BLU));
 			printf("Pos.Grad:\t%f\t%f\t%f\n", av.gpos[0],
 					av.gpos[1], av.gpos[2]);
-			printf("Dir.Grad:\t%f\t%f\t%f\n", av.gdir[0],
+			printf("Dir.Grad:\t%f\t%f\t%f\n\n", av.gdir[0],
 					av.gdir[1], av.gdir[2]);
 		}
 		if (ferror(stdout))
