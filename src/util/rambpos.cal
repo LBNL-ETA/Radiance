@@ -1,4 +1,4 @@
-{ RCSid $Id: rambpos.cal,v 2.5 2014/05/09 23:49:05 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.6 2014/05/15 17:30:53 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
@@ -7,13 +7,16 @@ and(a,b) : if(a,b,a);
 lvl = $10;
 wt = $11;
 r0 = SF*$12; r1 = SF*$13;
+eps = r0*.015;
 acond = and( r0-5e-5, and( wt-MW, if(LV+.5, and(lvl-LV+.5,LV+.5-lvl), 6.5-lvl) ) );
-px = $1; py = $2; pz = $3;
 nx = $4; ny = $5; nz = $6;
 ux = $7; uy = $8; uz = $9;
 vx = ny*uz - nz*uy;
 vy = nz*ux - nx*uz;
 vz = nx*uy - ny*ux;
+px = $1 + nx*eps;
+py = $2 + ny*eps;
+pz = $3 + nz*eps;
 avr = .5/PI*$14; avg = .5/PI*$15; avb = .5/PI*$16;
 				{ magnified position gradient }
 pgx = ($17*ux + $18*vx)/SF;
@@ -25,25 +28,26 @@ pcond = and( acond, pg - .0001 );
 dgx = $19*ux + $20*vx;
 dgy = $19*uy + $20*vy;
 dgz = $19*uz + $20*vz;
+dg = sqrt(dgx*dgx + dgy*dgy + dgz*dgz);
 val = avr + avg + avb;		{ ambient position color }
 agr = select(lvl+1, val, 0, 0, val, 0, val, val);
 agg = select(lvl+1, 0, val, 0, val, val, 0, val/2);
 agb = select(lvl+1, 0, 0, val, 0, val, val, val/2);
 psiz = r0/10;
-dcond = and( acond, dgx*dgx+dgy*dgy+dgz*dgz - 1e-8 );
+dcond = and( acond, dg - .0001 );
 				{ base polygon vertices }
-px1 = px + r0*ux + r1*vx + .0001*nx;
-py1 = py + r0*uy + r1*vy + .0001*ny;
-pz1 = pz + r0*uz + r1*vz + .0001*nz;
-px2 = px - r0*ux + r1*vx + .0001*nx;
-py2 = py - r0*uy + r1*vy + .0001*ny;
-pz2 = pz - r0*uz + r1*vz + .0001*nz;
-px3 = px - r0*ux - r1*vx + .0001*nx;
-py3 = py - r0*uy - r1*vy + .0001*ny;
-pz3 = pz - r0*uz - r1*vz + .0001*nz;
-px4 = px + r0*ux - r1*vx + .0001*nx;
-py4 = py + r0*uy - r1*vy + .0001*ny;
-pz4 = pz + r0*uz - r1*vz + .0001*nz;
+px1 = px + r0*ux + r1*vx;
+py1 = py + r0*uy + r1*vy;
+pz1 = pz + r0*uz + r1*vz;
+px2 = px - r0*ux + r1*vx;
+py2 = py - r0*uy + r1*vy;
+pz2 = pz - r0*uz + r1*vz;
+px3 = px - r0*ux - r1*vx;
+py3 = py - r0*uy - r1*vy;
+pz3 = pz - r0*uz - r1*vz;
+px4 = px + r0*ux - r1*vx;
+py4 = py + r0*uy - r1*vy;
+pz4 = pz + r0*uz - r1*vz;
 alen = psiz*3;			{ arrow length & coordinates }
 cx0 = px + psiz*psiz/alen*pgx/pg;
 cy0 = py + psiz*psiz/alen*pgy/pg;
