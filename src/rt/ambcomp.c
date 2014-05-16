@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.58 2014/05/11 19:03:37 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.59 2014/05/16 23:39:24 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -689,15 +689,10 @@ doambient(				/* compute ambient component */
 				addcolor(acol, ap->v);
 				++cnt;
 			}
-	if (!cnt) {
-		setcolor(rcol, 0.0, 0.0, 0.0);
-		free(hp);
-		return(0);		/* no valid samples */
-	}
-	if (cnt < hp->ns*hp->ns) {	/* incomplete sampling? */
+	if ((hp->ns < 4) | (cnt < hp->ns*hp->ns)) {
+		free(hp);		/* inadequate sampling */
 		copycolor(rcol, acol);
-		free(hp);
-		return(-1);		/* return value w/o Hessian */
+		return(-cnt);		/* value-only result */
 	}
 	cnt = ambssamp*wt + 0.5;	/* perform super-sampling? */
 	if (cnt > 8)
@@ -705,7 +700,7 @@ doambient(				/* compute ambient component */
 	copycolor(rcol, acol);		/* final indirect irradiance/PI */
 	if ((ra == NULL) & (pg == NULL) & (dg == NULL)) {
 		free(hp);
-		return(-1);		/* no radius or gradient calc. */
+		return(-1);		/* no Hessian or gradients requested */
 	}
 	if ((d = bright(acol)) > FTINY) {	/* normalize Y values */
 		d = 0.99*(hp->ns*hp->ns)/d;
