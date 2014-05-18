@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.60 2014/05/17 00:49:17 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.61 2014/05/18 18:59:55 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -33,9 +33,11 @@ typedef struct {
 
 typedef struct {
 	RAY	*rp;		/* originating ray sample */
-	FVECT	ux, uy;		/* tangent axis unit vectors */
 	int	ns;		/* number of samples per axis */
+	int	sampOK;		/* acquired full sample set? */
 	COLOR	acoef;		/* division contribution coefficient */
+	double	acol[3];	/* accumulated color */
+	FVECT	ux, uy;		/* tangent axis unit vectors */
 	AMBSAMP	sa[1];		/* sample array (extends struct) */
 }  AMBHEMI;		/* ambient sample hemisphere */
 
@@ -48,68 +50,31 @@ typedef struct {
 } FFTRI;		/* vectors and coefficients for Hessian calculation */
 
 
-static AMBHEMI *
-inithemi(			/* initialize sampling hemisphere */
-	COLOR	ac,
-	RAY	*r,
-	double	wt
+static int
+ambsample(				/* initial ambient division sample */
+	AMBHEMI	*hp,
+	int	i,
+	int	j,
+	int	n
 )
 {
-	AMBHEMI	*hp;
-	double	d;
-	int	n, i;
-					/* set number of divisions */
-	if (ambacc <= FTINY &&
-			wt > (d = 0.8*intens(ac)*r->rweight/(ambdiv*minweight)))
-		wt = d;			/* avoid ray termination */
-	n = sqrt(ambdiv * wt) + 0.5;
-	i = 1 + 5*(ambacc > FTINY);	/* minimum number of samples */
-	if (n < i)
-		n = i;
-					/* allocate sampling array */
-	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) + sizeof(AMBSAMP)*(n*n - 1));
-	if (hp == NULL)
-		return(NULL);
-	hp->rp = r;
-	hp->ns = n;
-					/* assign coefficient */
-	copycolor(hp->acoef, ac);
-	d = 1.0/(n*n);
-	scalecolor(hp->acoef, d);
-					/* make tangent plane axes */
-	hp->uy[0] = 0.5 - frandom();
-	hp->uy[1] = 0.5 - frandom();
-	hp->uy[2] = 0.5 - frandom();
-	for (i = 3; i--; )
-		if ((-0.6 < r->ron[i]) & (r->ron[i] < 0.6))
-			break;
-	if (i < 0)
-		error(CONSISTENCY, "bad ray direction in inithemi");
-	hp->uy[i] = 1.0;
-	VCROSS(hp->ux, hp->uy, r->ron);
-	normalize(hp->ux);
-	VCROSS(hp->uy, r->ron, hp->ux);
-					/* we're ready to sample */
-	return(hp);
-}
-
-
-/* Sample ambient division and apply weighting coefficient */
-static int
-getambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
-{
+	AMBSAMP	*ap = &ambsam(hp,i,j);
+	RAY	ar;
 	int	hlist[3], ii;
 	double	spt[2], zd;
+					/* generate hemispherical sample */
 					/* ambient coefficient for weight */
 	if (ambacc > FTINY)
-		setcolor(arp->rcoef, AVGREFL, AVGREFL, AVGREFL);
+		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
 	else
-		copycolor(arp->rcoef, hp->acoef);
-	if (rayorigin(arp, AMBIENT, hp->rp, arp->rcoef) < 0)
+		copycolor(ar.rcoef, hp->acoef);
+	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
+		if (!n) memset(ap, 0, sizeof(AMBSAMP));
 		return(0);
+	}
 	if (ambacc > FTINY) {
-		multcolor(arp->rcoef, hp->acoef);
-		scalecolor(arp->rcoef, 1./AVGREFL);
+		multcolor(ar.rcoef, hp->acoef);
+		scalecolor(ar.rcoef, 1./AVGREFL);
 	}
 	hlist[0] = hp->rp->rno;
 	hlist[1] = j;
@@ -124,38 +89,35 @@ getambsamp(RAY *arp, AMBHEMI *hp, int i, int j, int n)
 	SDsquare2disk(spt, (j+spt[1])/hp->ns, (i+spt[0])/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
-		arp->rdir[ii] =	spt[0]*hp->ux[ii] +
+		ar.rdir[ii] =	spt[0]*hp->ux[ii] +
 				spt[1]*hp->uy[ii] +
 				zd*hp->rp->ron[ii];
-	checknorm(arp->rdir);
+	checknorm(ar.rdir);
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
-	rayvalue(arp);			/* evaluate ray */
-	ndims--;			/* apply coefficient */
-	multcolor(arp->rcol, arp->rcoef);
-	return(1);
-}
-
-
-static AMBSAMP *
-ambsample(				/* initial ambient division sample */
-	AMBHEMI	*hp,
-	int	i,
-	int	j
-)
-{
-	AMBSAMP	*ap = &ambsam(hp,i,j);
-	RAY	ar;
-					/* generate hemispherical sample */
-	if (!getambsamp(&ar, hp, i, j, 0) || ar.rt <= FTINY) {
-		memset(ap, 0, sizeof(AMBSAMP));
-		return(NULL);
+	rayvalue(&ar);			/* evaluate ray */
+	ndims--;
+	if (ar.rt <= FTINY)
+		return(0);		/* should never happen */
+	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
+	if (!n || ar.rt*ap->d < 1.0)	/* new/closer distance? */
+		ap->d = 1.0/ar.rt;
+	if (!n) {			/* record first vertex & value */
+		if (ar.rt > 10.0*thescene.cusize)
+			ar.rt = 10.0*thescene.cusize;
+		VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
+		copycolor(ap->v, ar.rcol);
+	} else {			/* else update recorded value */
+		hp->acol[RED] -= colval(ap->v,RED);
+		hp->acol[GRN] -= colval(ap->v,GRN);
+		hp->acol[BLU] -= colval(ap->v,BLU);
+		zd = 1.0/(double)(n+1);
+		scalecolor(ar.rcol, zd);
+		zd *= (double)n;
+		scalecolor(ap->v, zd);
+		addcolor(ap->v, ar.rcol);
 	}
-	ap->d = 1.0/ar.rt;		/* limit vertex distance */
-	if (ar.rt > 10.0*thescene.cusize)
-		ar.rt = 10.0*thescene.cusize;
-	VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
-	copycolor(ap->v, ar.rcol);
-	return(ap);
+	addcolor(hp->acol, ap->v);	/* add to our sum */
+	return(1);
 }
 
 
@@ -213,13 +175,12 @@ getambdiffs(AMBHEMI *hp)
 
 /* Perform super-sampling on hemisphere (introduces bias) */
 static void
-ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
+ambsupersamp(AMBHEMI *hp, int cnt)
 {
 	float	*earr = getambdiffs(hp);
 	double	e2rem = 0;
 	AMBSAMP	*ap;
 	RAY	ar;
-	double	asum[3];
 	float	*ep;
 	int	i, j, n, nss;
 
@@ -234,25 +195,77 @@ ambsupersamp(double acol[3], AMBHEMI *hp, int cnt)
 		if (e2rem <= FTINY)
 			goto done;	/* nothing left to do */
 		nss = *ep/e2rem*cnt + frandom();
-		asum[0] = asum[1] = asum[2] = 0.0;
-		for (n = 1; n <= nss; n++) {
-			if (!getambsamp(&ar, hp, i, j, n)) {
-				nss = n-1;
-				break;
-			}
-			addcolor(asum, ar.rcol);
-		}
-		if (nss) {		/* update returned ambient value */
-			const double	ssf = 1./(nss + 1.);
-			for (n = 3; n--; )
-				acol[n] += ssf*asum[n] +
-						(ssf - 1.)*colval(ap->v,n);
-		}
-		e2rem -= *ep++;		/* update remainders */
-		cnt -= nss;
+		for (n = 1; n <= nss; n++)
+			cnt -= ambsample(hp, i, j, n);
+		e2rem -= *ep++;		/* update remainder */
 	}
 done:
 	free(earr);
+}
+
+
+static AMBHEMI *
+samp_hemi(				/* sample indirect hemisphere */
+	COLOR	rcol,
+	RAY	*r,
+	double	wt
+)
+{
+	AMBHEMI	*hp;
+	double	d;
+	int	n, i, j;
+					/* set number of divisions */
+	if (ambacc <= FTINY &&
+			wt > (d = 0.8*intens(rcol)*r->rweight/(ambdiv*minweight)))
+		wt = d;			/* avoid ray termination */
+	n = sqrt(ambdiv * wt) + 0.5;
+	i = 1 + 5*(ambacc > FTINY);	/* minimum number of samples */
+	if (n < i)
+		n = i;
+					/* allocate sampling array */
+	hp = (AMBHEMI *)malloc(sizeof(AMBHEMI) + sizeof(AMBSAMP)*(n*n - 1));
+	if (hp == NULL)
+		error(SYSTEM, "out of memory in samp_hemi");
+	hp->rp = r;
+	hp->ns = n;
+	hp->acol[RED] = hp->acol[GRN] = hp->acol[BLU] = 0.0;
+	hp->sampOK = 0;
+					/* assign coefficient */
+	copycolor(hp->acoef, rcol);
+	d = 1.0/(n*n);
+	scalecolor(hp->acoef, d);
+					/* make tangent plane axes */
+	hp->uy[0] = 0.5 - frandom();
+	hp->uy[1] = 0.5 - frandom();
+	hp->uy[2] = 0.5 - frandom();
+	for (i = 3; i--; )
+		if ((-0.6 < r->ron[i]) & (r->ron[i] < 0.6))
+			break;
+	if (i < 0)
+		error(CONSISTENCY, "bad ray direction in samp_hemi");
+	hp->uy[i] = 1.0;
+	VCROSS(hp->ux, hp->uy, r->ron);
+	normalize(hp->ux);
+	VCROSS(hp->uy, r->ron, hp->ux);
+					/* sample divisions */
+	for (i = hp->ns; i--; )
+	    for (j = hp->ns; j--; )
+		hp->sampOK += ambsample(hp, i, j, 0);
+	copycolor(rcol, hp->acol);
+	if (!hp->sampOK) {		/* utter failure? */
+		free(hp);
+		return(NULL);
+	}
+	if (hp->sampOK < hp->ns*hp->ns) {
+		hp->sampOK *= -1;	/* soft failure */
+		return(hp);
+	}
+	n = ambssamp*wt + 0.5;
+	if (n > 8) {			/* perform super-sampling? */
+		ambsupersamp(hp, n);
+		copycolor(rcol, hp->acol);
+	}
+	return(hp);			/* all is well */
 }
 
 
@@ -601,7 +614,7 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	double		avg_d = 0;
 	uint32		flgs = 0;
 	FVECT		vec;
-	double		u, v;
+	double		d, u, v;
 	double		ang, a1;
 	int		i, j;
 					/* don't bother for a few samples */
@@ -623,8 +636,10 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 		if ((ap->d <= FTINY) | (ap->d >= max_d))
 			continue;	/* too far or too near */
 		VSUB(vec, ap->p, hp->rp->rop);
-		u = DOT(vec, uv[0]) * ap->d;
-		v = DOT(vec, uv[1]) * ap->d;
+		d = DOT(vec, hp->rp->ron);
+		d = 1.0/sqrt(DOT(vec,vec) - d*d);
+		u = DOT(vec, uv[0]) * d;
+		v = DOT(vec, uv[1]) * d;
 		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= 1.0)
 			continue;	/* occluder outside ellipse */
 		ang = atan2a(v, u);	/* else set direction flags */
@@ -661,15 +676,12 @@ doambient(				/* compute ambient component */
 	uint32	*crlp			/* returned (optional) */
 )
 {
-	AMBHEMI	*hp = inithemi(rcol, r, wt);
-	int	cnt;
+	AMBHEMI	*hp = samp_hemi(rcol, r, wt);
 	FVECT	my_uv[2];
-	double	d, K, acol[3];
+	double	d, K;
 	AMBSAMP	*ap;
-	int	i, j;
-					/* check/initialize */
-	if (hp == NULL)
-		return(0);
+	int	i;
+					/* clear return values */
 	if (uv != NULL)
 		memset(uv, 0, sizeof(FVECT)*2);
 	if (ra != NULL)
@@ -680,29 +692,15 @@ doambient(				/* compute ambient component */
 		dg[0] = dg[1] = 0.0;
 	if (crlp != NULL)
 		*crlp = 0;
-					/* sample the hemisphere */
-	acol[0] = acol[1] = acol[2] = 0.0;
-	cnt = 0;
-	for (i = hp->ns; i--; )
-		for (j = hp->ns; j--; )
-			if ((ap = ambsample(hp, i, j)) != NULL) {
-				addcolor(acol, ap->v);
-				++cnt;
-			}
-	if ((hp->ns < 4) | (cnt < hp->ns*hp->ns)) {
-		free(hp);		/* inadequate sampling */
-		copycolor(rcol, acol);
-		return(-cnt);		/* value-only result */
+	if (hp == NULL)			/* sampling falure? */
+		return(0);
+
+	if ((ra == NULL) & (pg == NULL) & (dg == NULL) ||
+			(hp->sampOK < 0) | (hp->ns < 4)) {
+		free(hp);		/* Hessian not requested/possible */
+		return(-1);		/* value-only return value */
 	}
-	cnt = ambssamp*wt + 0.5;	/* perform super-sampling? */
-	if (cnt > 8)
-		ambsupersamp(acol, hp, cnt);
-	copycolor(rcol, acol);		/* final indirect irradiance/PI */
-	if ((ra == NULL) & (pg == NULL) & (dg == NULL)) {
-		free(hp);
-		return(-1);		/* no Hessian or gradients requested */
-	}
-	if ((d = bright(acol)) > FTINY) {	/* normalize Y values */
+	if ((d = bright(rcol)) > FTINY) {	/* normalize Y values */
 		d = 0.99*(hp->ns*hp->ns)/d;
 		K = 0.01;
 	} else {			/* or fall back on geometric Hessian */
