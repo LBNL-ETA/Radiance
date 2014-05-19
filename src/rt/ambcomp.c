@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.61 2014/05/18 18:59:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.62 2014/05/19 20:23:48 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -68,10 +68,8 @@ ambsample(				/* initial ambient division sample */
 		setcolor(ar.rcoef, AVGREFL, AVGREFL, AVGREFL);
 	else
 		copycolor(ar.rcoef, hp->acoef);
-	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0) {
-		if (!n) memset(ap, 0, sizeof(AMBSAMP));
+	if (rayorigin(&ar, AMBIENT, hp->rp, ar.rcoef) < 0)
 		return(0);
-	}
 	if (ambacc > FTINY) {
 		multcolor(ar.rcoef, hp->acoef);
 		scalecolor(ar.rcoef, 1./AVGREFL);
@@ -99,7 +97,7 @@ ambsample(				/* initial ambient division sample */
 	if (ar.rt <= FTINY)
 		return(0);		/* should never happen */
 	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
-	if (!n || ar.rt*ap->d < 1.0)	/* new/closer distance? */
+	if (ar.rt*ap->d < 1.0)		/* new/closer distance? */
 		ap->d = 1.0/ar.rt;
 	if (!n) {			/* record first vertex & value */
 		if (ar.rt > 10.0*thescene.cusize)
@@ -195,8 +193,8 @@ ambsupersamp(AMBHEMI *hp, int cnt)
 		if (e2rem <= FTINY)
 			goto done;	/* nothing left to do */
 		nss = *ep/e2rem*cnt + frandom();
-		for (n = 1; n <= nss; n++)
-			cnt -= ambsample(hp, i, j, n);
+		for (n = 1; n <= nss && ambsample(hp,i,j,n); n++)
+			--cnt;
 		e2rem -= *ep++;		/* update remainder */
 	}
 done:
@@ -229,6 +227,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	hp->rp = r;
 	hp->ns = n;
 	hp->acol[RED] = hp->acol[GRN] = hp->acol[BLU] = 0.0;
+	memset(hp->sa, 0, sizeof(AMBSAMP)*n*n);
 	hp->sampOK = 0;
 					/* assign coefficient */
 	copycolor(hp->acoef, rcol);
@@ -614,7 +613,7 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	double		avg_d = 0;
 	uint32		flgs = 0;
 	FVECT		vec;
-	double		d, u, v;
+	double		u, v;
 	double		ang, a1;
 	int		i, j;
 					/* don't bother for a few samples */
@@ -636,11 +635,9 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 		if ((ap->d <= FTINY) | (ap->d >= max_d))
 			continue;	/* too far or too near */
 		VSUB(vec, ap->p, hp->rp->rop);
-		d = DOT(vec, hp->rp->ron);
-		d = 1.0/sqrt(DOT(vec,vec) - d*d);
-		u = DOT(vec, uv[0]) * d;
-		v = DOT(vec, uv[1]) * d;
-		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= 1.0)
+		u = DOT(vec, uv[0]);
+		v = DOT(vec, uv[1]);
+		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= u*u + v*v)
 			continue;	/* occluder outside ellipse */
 		ang = atan2a(v, u);	/* else set direction flags */
 		for (a1 = ang-.5*ang_res; a1 <= ang+.5*ang_res; a1 += ang_step)
