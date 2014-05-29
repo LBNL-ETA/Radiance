@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.3 2014/04/08 23:45:33 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.4 2014/05/29 17:28:09 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -31,7 +31,7 @@ cm_alloc(int nrows, int ncols)
 	if ((nrows <= 0) | (ncols <= 0))
 		error(USER, "attempt to create empty matrix");
 	cm = (CMATRIX *)malloc(sizeof(CMATRIX) +
-				3*sizeof(COLORV)*(nrows*ncols - 1));
+				sizeof(COLOR)*(nrows*ncols - 1));
 	if (cm == NULL)
 		error(SYSTEM, "out of memory in cm_alloc()");
 	cm->nrows = nrows;
@@ -50,7 +50,7 @@ cm_resize(CMATRIX *cm, int nrows)
 		return(NULL);
 	}
 	cm = (CMATRIX *)realloc(cm, sizeof(CMATRIX) +
-			3*sizeof(COLORV)*(nrows*cm->ncols - 1));
+			sizeof(COLOR)*(nrows*cm->ncols - 1));
 	if (cm == NULL)
 		error(SYSTEM, "out of memory in cm_resize()");
 	cm->nrows = nrows;
@@ -173,7 +173,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 			int	nread = 0;
 			do {				/* read all we can */
 				nread += fread(cm->cmem + 3*nread,
-						3*sizeof(COLORV),
+						sizeof(COLOR),
 						cm->nrows*cm->ncols - nread,
 						fp);
 				if (nrows <= 0) {	/* unknown length */
@@ -315,18 +315,21 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 	for (dr = 0; dr < cmr->nrows; dr++)
 	    for (dc = 0; dc < cmr->ncols; dc++) {
 		COLORV	*dp = cm_lval(cmr,dr,dc);
+		double	res[3];
 		dp[0] = dp[1] = dp[2] = 0;
 		if (rowcheck != NULL && !rowcheck[dr])
 			continue;
 		if (colcheck != NULL && !colcheck[dc])
 			continue;
+		res[0] = res[1] = res[2] = 0;
 		for (i = 0; i < cm1->ncols; i++) {
 		    const COLORV	*cp1 = cm_lval(cm1,dr,i);
 		    const COLORV	*cp2 = cm_lval(cm2,i,dc);
-		    dp[0] += cp1[0] * cp2[0];
-		    dp[1] += cp1[1] * cp2[1];
-		    dp[2] += cp1[2] * cp2[2];
+		    res[0] += cp1[0] * cp2[0];
+		    res[1] += cp1[1] * cp2[1];
+		    res[2] += cp1[2] * cp2[2];
 		}
+		copycolor(dp, res);
 	    }
 	if (rowcheck != NULL) free(rowcheck);
 	if (colcheck != NULL) free(colcheck);
