@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.8 2013/08/07 05:10:09 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.9 2014/05/29 04:56:43 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -112,6 +112,7 @@ printheader(FILE *fout, const char *info)
 	printargs(gargc-1, gargv, fout);	/* add our command */
 	fprintf(fout, "SOFTWARE= %s\n", VersionID);
 	fputnow(fout);
+	fputs("NCOMP=3\n", fout);		/* always RGB */
 	if (info != NULL)			/* add extra info if given */
 		fputs(info, fout);
 	fputformat(formstr(outfmt), fout);
@@ -132,8 +133,8 @@ printresolu(FILE *fout, int xr, int yr)
 STREAMOUT *
 getostream(const char *ospec, const char *mname, int bn, int noopen)
 {
-	/* static const DCOLOR	nocontrib = BLKCOLOR; */
 	static STREAMOUT	stdos;
+	char			info[1024];
 	int			ofl;
 	char			oname[1024];
 	LUENT			*lep;
@@ -143,8 +144,10 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		if (!noopen & !using_stdout) {
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
-			if (header)
-				printheader(stdout, NULL);
+			if (header) {
+				sprintf(info, "NCOLS=%d\n", stdos.reclen);
+				printheader(stdout, info);
+			}
 			printresolu(stdout, xres, yres);
 			if (waitflush > 0)
 				fflush(stdout);
@@ -195,7 +198,6 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 		flockfile(sop->ofp);		/* avoid lock/unlock overhead */
 #endif
 		if (header) {
-			char	info[512];
 			char	*cp = info;
 			if (ofl & OF_MODIFIER || sop->reclen == 1) {
 				sprintf(cp, "MODIFIER=%s\n", mname);
@@ -205,7 +207,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 				sprintf(cp, "BIN=%d\n", bn);
 				while (*cp) ++cp;
 			}
-			*cp = '\0';
+			sprintf(cp, "NCOLS=%d\n", sop->reclen);
 			printheader(sop->ofp, info);
 		}
 		if (accumulate > 0) {		/* global resolution */
