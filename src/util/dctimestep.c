@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.31 2014/05/30 00:00:54 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.32 2014/05/30 00:07:37 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -302,9 +302,9 @@ main(int argc, char *argv[])
 	cm_free(cmtx);
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d}][-o{f|d}] DCspec [skyf]\n",
+	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d|h}][-o{f|d}] DCspec [skyf]\n",
 				progname);
-	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d}][-o{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
+	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d|h}][-o{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
 				progname);
 	return(1);
 }
