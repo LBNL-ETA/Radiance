@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.30 2014/02/08 01:28:06 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.31 2014/05/30 00:00:54 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -26,25 +26,27 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 	int	i, y;
 
 	if (cv->ncols != 1)
-		error(INTERNAL, "expected vector in sum_images()");
+		error(INTERNAL, "expected matrix in sum_images()");
 	for (i = 0; i < cv->nrows; i++) {
 		const COLORV	*scv = cv_lval(cv,i);
 		char		fname[1024];
 		FILE		*fp;
 		int		dt, xr, yr;
 		COLORV		*psp;
+		char		*err;
 							/* check for zero */
 		if ((scv[RED] == 0) & (scv[GRN] == 0) & (scv[BLU] == 0) &&
 				(myDT != DTfromHeader) | (i < cv->nrows-1))
 			continue;
 							/* open next picture */
 		sprintf(fname, fspec, i);
-		if ((fp = fopen(fname, "r")) == NULL) {
+		if ((fp = fopen(fname, "rb")) == NULL) {
 			sprintf(errmsg, "cannot open picture '%s'", fname);
 			error(SYSTEM, errmsg);
 		}
-		SET_FILE_BINARY(fp);
-		dt = getDTfromHeader(fp);
+		dt = DTfromHeader;
+		if ((err = cm_getheader(&dt, NULL, NULL, fp)) != NULL)
+			error(USER, err);
 		if ((dt != DTrgbe) & (dt != DTxyze) ||
 				!fscnresolu(&xr, &yr, fp)) {
 			sprintf(errmsg, "file '%s' not a picture", fname);
@@ -132,7 +134,7 @@ main(int argc, char *argv[])
 		switch (argv[a][1]) {
 		case 'n':
 			nsteps = atoi(argv[++a]);
-			if (nsteps <= 0)
+			if (nsteps < 0)
 				goto userr;
 			break;
 		case 'i':
@@ -145,6 +147,9 @@ main(int argc, char *argv[])
 				break;
 			case 'a':
 				skyfmt = DTascii;
+				break;
+			case 'h':
+				skyfmt = DTfromHeader;
 				break;
 			default:
 				goto userr;
@@ -258,6 +263,9 @@ main(int argc, char *argv[])
 							progname, fnbuf);
 					return(1);
 				}
+#ifdef getc_unlocked
+				flockfile(ofp);
+#endif
 				cm_write(rvec, outfmt, ofp);
 				if (fclose(ofp) == EOF) {
 					fprintf(stderr,
@@ -269,12 +277,17 @@ main(int argc, char *argv[])
 				cm_free(rvec);
 			}
 		} else {
+#ifdef getc_unlocked
+			flockfile(ofp);
+#endif
 			if (outfmt != DTascii)
 				SET_FILE_BINARY(ofp);
 			if (rmtx->ncols > 1) {	/* header if actual matrix */
 				newheader("RADIANCE", ofp);
 				printargs(argc, argv, ofp);
 				fputnow(ofp);
+				fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
+				fputs("NCOMP=3\n", ofp);
 				fputformat((char *)cm_fmt_id[outfmt], ofp);
 				fputc('\n', ofp);
 			}

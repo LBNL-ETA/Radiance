@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.4 2014/05/29 17:28:09 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.5 2014/05/30 00:00:54 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -57,31 +57,72 @@ cm_resize(CMATRIX *cm, int nrows)
 	return(cm);
 }
 
+typedef struct {
+	int	dtype;		/* data type */
+	int	nrows, ncols;	/* matrix size */
+	char	*err;		/* error message */
+} CMINFO;		/* header info record */
+
 static int
-getDT(char *s, void *p)
+get_cminfo(char *s, void *p)
 {
+	CMINFO	*ip = (CMINFO *)p;
 	char	fmt[32];
 	int	i;
-	
+
+	if (!strncmp(s, "NCOMP=", 6) && atoi(s+6) != 3) {
+		ip->err = "unexpected # components (must be 3)";
+		return(-1);
+	}
+	if (!strncmp(s, "NROWS=", 6)) {
+		ip->nrows = atoi(s+6);
+		return(0);
+	}
+	if (!strncmp(s, "NCOLS=", 6)) {
+		ip->ncols = atoi(s+6);
+		return(0);
+	}
 	if (!formatval(fmt, s))
 		return(0);
 	for (i = 1; i < DTend; i++)
 		if (!strcmp(fmt, cm_fmt_id[i]))
-			*((int *)p) = i;
+			ip->dtype = i;
 	return(0);
 }
 
-/* Load header to obtain data type */
-int
-getDTfromHeader(FILE *fp)
+/* Load header to obtain/check data type and number of columns */
+char *
+cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 {
-	int	dt = DTfromHeader;
-	
-	if (getheader(fp, getDT, &dt) < 0)
-		error(SYSTEM, "header read error");
-	if (dt == DTfromHeader)
-		error(USER, "missing data format in header");
-	return(dt);
+	CMINFO	cmi;
+						/* read header */
+	cmi.dtype = DTfromHeader;
+	cmi.nrows = cmi.ncols = 0;
+	cmi.err = "unexpected EOF in header";
+	if (getheader(fp, &get_cminfo, &cmi) < 0)
+		return(cmi.err);
+	if (dt != NULL) {			/* get/check data type? */
+		if (cmi.dtype == DTfromHeader) {
+			if (*dt == DTfromHeader)
+				return("missing/unknown data format in header");
+		} else if (*dt == DTfromHeader)
+			*dt = cmi.dtype;
+		else if (*dt != cmi.dtype)
+			return("unexpected data format in header");
+	}
+	if (nr != NULL) {			/* get/check #rows? */
+		if (*nr <= 0)
+			*nr = cmi.nrows;
+		else if ((cmi.nrows > 0) & (*nr != cmi.nrows))
+			return("unexpected row count in header");
+	}
+	if (nc != NULL) {			/* get/check #columns? */
+		if (*nc <= 0)
+			*nc = cmi.ncols;
+		else if ((cmi.ncols > 0) & (*nc != cmi.ncols))
+			return("unexpected column count in header");
+	}
+	return(NULL);
 }
 
 /* Allocate and load a matrix from the given file (or stdin if NULL) */
@@ -91,8 +132,6 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 	FILE	*fp = stdin;
 	CMATRIX	*cm;
 
-	if (ncols <= 0)
-		error(USER, "Non-positive number of columns");
 	if (fname == NULL)
 		fname = "<stdin>";
 	else if ((fp = fopen(fname, "r")) == NULL) {
@@ -104,8 +143,13 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 #endif
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
-	if (dtype == DTfromHeader)
-		dtype = getDTfromHeader(fp);
+	if (!dtype | !ncols) {			/* expecting header? */
+		char	*err = cm_getheader(&dtype, &nrows, &ncols, fp);
+		if (err != NULL)
+			error(USER, err);
+		if (ncols <= 0)
+			error(USER, "unspecified number of columns");
+	}
 	switch (dtype) {
 	case DTascii:
 	case DTfloat:

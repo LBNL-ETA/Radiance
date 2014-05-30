@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.8 2014/02/21 13:49:00 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.9 2014/05/30 00:00:54 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -267,12 +267,31 @@ fget_word(char buf[256], FILE *fp)
 	return(buf);
 }
 
-char		*fmtid = "ascii";		/* format id */
-int		record_width = 3;		/* words/record (<0 binary) */
+char		*fmtid = NULL;			/* format id */
+int		comp_size = 0;			/* binary bytes/channel */
+int		n_comp = 0;			/* components/record */
 int		ni_columns = 0;			/* number of input columns */
 int		ni_rows = 0;			/* number of input rows */
 int		no_columns = 0;			/* number of output columns */
 int		no_rows = 0;			/* number of output rows */
+
+/* check settings and assign defaults */
+static void
+check_sizes()
+{
+	if (fmtid == NULL) {
+		fmtid = "ascii";
+	} else if (!comp_size) {
+		if (!strcmp(fmtid, "float"))
+			comp_size = sizeof(float);
+		else if (!strcmp(fmtid, "double"))
+			comp_size = sizeof(double);
+		else if (!strcmp(fmtid, "byte"))
+			comp_size = 1;
+	}
+	if (n_comp <= 0)
+		n_comp = 3;
+}
 
 /* output transposed ASCII or binary data from memory */
 static int
@@ -288,21 +307,21 @@ do_transpose(const MEMLOAD *mp)
 	if (ni_columns <= 0)
 		ni_columns = no_rows;
 						/* get # records (& index) */
-	if (record_width > 0) {
-		if ((rp = index_records(mp, record_width)) == NULL)
+	if (!comp_size) {
+		if ((rp = index_records(mp, n_comp)) == NULL)
 			return(0);
 		if (ni_columns <= 0)
 			ni_columns = count_columns(rp);
 		nrecords = rp->nrecs;
 	} else if ((ni_rows > 0) & (ni_columns > 0)) {
 		nrecords = ni_rows*ni_columns;
-		if (nrecords > mp->len / -record_width) {
+		if (nrecords > mp->len/(n_comp*comp_size)) {
 			fprintf(stderr,
 			    "Input too small for specified size and type\n");
 			return(0);
 		}
 	} else
-		nrecords = mp->len / -record_width;
+		nrecords = mp->len/(n_comp*comp_size);
 						/* check sizes */
 	if ((ni_rows <= 0) & (ni_columns > 0))
 		ni_rows = nrecords/ni_columns;
@@ -324,8 +343,8 @@ do_transpose(const MEMLOAD *mp)
 			putc(tabEOL[j >= no_columns-1], stdout);
 		} else {			/* binary output */
 			fwrite((char *)mp->base +
-					-record_width*(j*ni_columns + i),
-					-record_width, 1, stdout);
+					(n_comp*comp_size)*(j*ni_columns + i),
+					n_comp*comp_size, 1, stdout);
 		}
 	    if (ferror(stdout)) {
 		fprintf(stderr, "Error writing to stdout\n");
@@ -348,9 +367,8 @@ do_resize(FILE *fp)
 	int	columns2go = no_columns;
 	char	word[256];
 						/* sanity checks */
-	if (record_width <= 0) {
-		fprintf(stderr, "Bad call to do_resize (record_width = %d)\n",
-				record_width);
+	if (comp_size) {
+		fputs("Bad call to do_resize (binary input)\n", stderr);
 		return(0);
 	}
 	if (no_columns <= 0) {
@@ -368,9 +386,9 @@ do_resize(FILE *fp)
 	do {					/* reshape records */
 		int	n;
 
-		for (n = record_width; n--; ) {
+		for (n = n_comp; n--; ) {
 			if (fget_word(word, fp) == NULL) {
-				if (records2go > 0 || n < record_width-1)
+				if (records2go > 0 || n < n_comp-1)
 					break;
 				goto done;	/* normal EOD */
 			}
@@ -405,13 +423,45 @@ done:
 static int
 headline(char *s, void *p)
 {
-	char	fmt[32];
+	static char	fmt[32];
+	int		n;
 
 	if (formatval(fmt, s)) {
+		if (fmtid == NULL) {
+			fmtid = fmt;
+			return(0);
+		}
 		if (!strcmp(fmt, fmtid))
 			return(0);
 		fprintf(stderr, "Input format '%s' != '%s'\n", fmt, fmtid);
 		return(-1);
+	}
+	if (!strncmp(s, "NROWS=", 6)) {
+		n = atoi(s+6);
+		if ((ni_rows > 0) & (n != ni_rows)) {
+			fputs("Incorrect input row count\n", stderr);
+			return(-1);
+		}
+		ni_rows = n;
+		return(0);
+	}
+	if (!strncmp(s, "NCOLS=", 6)) {
+		n = atoi(s+6);
+		if ((ni_columns > 0) & (n != ni_columns)) {
+			fputs("Incorrect input column count\n", stderr);
+			return(-1);
+		}
+		ni_columns = n;
+		return(0);
+	}
+	if (!strncmp(s, "NCOMP=", 6)) {
+		n = atoi(s+6);
+		if ((n_comp > 0) & (n != n_comp)) {
+			fputs("Incorrect number of components", stderr);
+			return(-1);
+		}
+		n_comp = n;
+		return(0);
 	}
 	fputs(s, stdout);			/* copy header info. */
 	return(0);
@@ -454,22 +504,22 @@ main(int argc, char *argv[])
 			case 'a':		/* ASCII */
 			case 'A':
 				fmtid = "ascii";
-				record_width = 1;
+				comp_size = 0;
 				break;
 			case 'f':		/* float */
 			case 'F':
 				fmtid = "float";
-				record_width = -(int)sizeof(float);
+				comp_size = sizeof(float);
 				break;
 			case 'd':		/* double */
 			case 'D':
 				fmtid = "double";
-				record_width = -(int)sizeof(double);
+				comp_size = sizeof(double);
 				break;
 			case 'b':		/* binary (bytes) */
 			case 'B':
 				fmtid = "byte";
-				record_width = -1;
+				comp_size = 1;
 				break;
 			default:
 				goto userr;
@@ -477,7 +527,7 @@ main(int argc, char *argv[])
 			if (argv[i][3]) {
 				if (!isdigit(argv[i][3]))
 					goto userr;
-				record_width *= atoi(argv[i]+3);
+				n_comp = atoi(argv[i]+3);
 			}
 			break;
 		case 'w':			/* warnings on/off */
@@ -486,8 +536,6 @@ main(int argc, char *argv[])
 		default:
 			goto userr;
 		}
-	if (!record_width)
-		goto userr;
 	if (i < argc-1)				/* arg count OK? */
 		goto userr;
 						/* open input file? */
@@ -495,12 +543,12 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: cannot open for reading\n", argv[i]);
 		return(1);
 	}
-	if (record_width < 0) {
+	if (comp_size) {
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
 	}
 						/* check for no-op */
-	if (!transpose && (record_width < 0 ||
+	if (!transpose && (comp_size ||
 			(no_columns == ni_columns) & (no_rows == ni_rows))) {
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
@@ -512,10 +560,25 @@ main(int argc, char *argv[])
 	if (do_header) {			/* read/write header */
 		if (getheader(stdin, &headline, NULL) < 0)
 			return(1);
+		check_sizes();
+		if (comp_size) {		/* a little late... */
+			SET_FILE_BINARY(stdin);
+			SET_FILE_BINARY(stdout);
+		}
 		printargs(argc, argv, stdout);
+		if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
+			if (ni_rows > 0) no_columns = ni_rows;
+			if (ni_columns > 0) no_rows = ni_columns;
+		}
+		if (no_rows > 0)
+			printf("NROWS=%d\n", no_rows);
+		if (no_columns > 0)
+			printf("NCOLS=%d\n", no_columns);
+		printf("NCOMP=%d\n", n_comp);
 		fputformat(fmtid, stdout);
 		fputc('\n', stdout);		/* finish new header */
-	}
+	} else
+		check_sizes();
 	if (transpose) {			/* transposing rows & columns? */
 		MEMLOAD	myMem;			/* need to load into memory */
 		if (i == argc-1) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.13 2013/10/04 04:31:18 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.14 2014/05/30 00:00:54 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -86,6 +86,7 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.13 2013/10/04 04:31:18 greg Ex
 #include <string.h>
 #include <ctype.h>
 #include "rtmath.h"
+#include "platform.h"
 #include "color.h"
 
 char *progname;								/* Program name */
@@ -292,10 +293,27 @@ extern int	rh_init(void);
 extern float *	resize_dmatrix(float *mtx_data, int nsteps, int npatch);
 extern void	AddDirect(float *parr);
 
+
+static const char *
+getfmtname(int fmt)
+{
+	switch (fmt) {
+	case 'a':
+		return("ascii");
+	case 'f':
+		return("float");
+	case 'd':
+		return("double");
+	}
+	return("unknown");
+}
+
+
 int
 main(int argc, char *argv[])
 {
 	char	buf[256];
+	int	doheader = 1;		/* output header? */
 	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
@@ -319,6 +337,9 @@ main(int argc, char *argv[])
 			break;
 		case 'v':			/* verbose progress reports */
 			verbose++;
+			break;
+		case 'h':			/* turn off header */
+			doheader = 0;
 			break;
 		case 'o':			/* output format */
 			switch (argv[i][2]) {
@@ -478,12 +499,25 @@ main(int argc, char *argv[])
 			break;
 		}
 					/* write out matrix */
+	if (outfmt != 'a')
+		SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked
 	flockfile(stdout);
 #endif
 	if (verbose)
 		fprintf(stderr, "%s: writing %smatrix with %d time steps...\n",
 				progname, outfmt=='a' ? "" : "binary ", ntsteps);
+	if (doheader) {
+		newheader("RADIANCE", stdout);
+		printargs(argc, argv, stdout);
+		printf("LATLONG= %.8f %.8f\n", RadToDeg(s_latitude),
+					-RadToDeg(s_longitude));
+		printf("NROWS=%d\n", nskypatch);
+		printf("NCOLS=%d\n", ntsteps);
+		printf("NCOMP=3\n");
+		fputformat(getfmtname(outfmt), stdout);
+		putchar('\n');
+	}
 					/* patches are rows (outer sort) */
 	for (i = 0; i < nskypatch; i++) {
 		mtx_offset = 3*i;
@@ -525,7 +559,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-h][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:

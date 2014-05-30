@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.4 2013/09/18 21:24:36 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.5 2014/05/30 00:00:54 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -68,6 +68,16 @@ Note that the lack of row separators in binary files means that
 .I rcollate
 does not actually do anything for binary files unless the transpose
 option is given, also.
+.PP
+If an input header is present, it may contain the format, number of components
+and matrix dimensions.
+In such cases, the
+.I \-ic,
+.I \-ir
+and
+.I \-f
+options are not required, but will be checked against the header
+information if provided.
 .PP
 The transpose option,
 .I \-t

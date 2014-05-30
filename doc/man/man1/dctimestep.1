@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.8 2014/02/08 01:28:05 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.9 2014/05/30 00:00:54 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -9,7 +9,7 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 ][
 .B "\-o ospec"
 ][
-.B "\-i{f|d}
+.B "\-i{f|d|h}
 ][
 .B "\-o{f|d}
 ]
@@ -24,7 +24,7 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 ][
 .B "\-o ospec"
 ][
-.B "\-i{f|d}
+.B "\-i{f|d|h}
 ][
 .B "\-o{f|d}
 ]
@@ -79,9 +79,12 @@ or
 .I \-id
 option may be used to specify that sky data is in float or double
 format, respectively, which is more efficient for large matrices.
-(Note that binary double data may not be read from stdin.)\0
+The
+.I \-ih
+option says to check the header to determine the data type.
+(Note that binary double data may not be read from stdin without a header.)\0
 .PP
-Sent to the standard output of
+The standard output of
 .I dctimestep
 is either a color vector with as many RGB triplets
 as there are rows in the View matrix, or a combined
@@ -107,6 +110,9 @@ The columns do not need to be given on the same
 line, so long as the number of values totals 3*Nsteps*Npatches.
 Input starts from the first patch at the first time step, then the
 first patch at the second time step, and so on.
+If the input matrix has a header, then you may use
+.I \-n 0
+to get the number of columns from the header rather than specifying it.
 .PP
 The
 .I \-o

@@ -1932,3 +1932,7 @@ less of a brushed/striped appearance to output pixels with -u- (default).
 
 Added ltview and ltpict Perl scripts contributed by Axel Jacobs, inspired
 by Rob Guglielmetti.
+
+Added header variables for NROWS, NCOLS and NCOMP to help standardize
+matrix files.  This functionality has been incorporated into
+rcollate, gendaymtx, and dctimestep.

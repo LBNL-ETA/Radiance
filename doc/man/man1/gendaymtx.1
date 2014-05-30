@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.5 2013/09/05 17:53:22 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.6 2014/05/30 00:00:54 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -6,6 +6,8 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 .B gendaymtx
 [
 .B "\-v"
+][
+.B "\-h"
 ][
 .B "\-d|\-s"
 ][
@@ -101,6 +103,9 @@ The
 .I \-O1
 option specifies that output should be total solar radiance rather
 than visible radiance.
+The
+.I \-h
+option prevents the output of the usual header information.
 Finally, the
 .I \-v
 option will enable verbose reporting, which is mostly useful for

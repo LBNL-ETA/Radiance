@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.33 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.34 2014/05/30 00:00:54 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -120,3 +120,6 @@ gensky.o:	../common/color.h
 gensurf.o genworm.o genrev.o:	../common/calcomp.h
 
 sun.o:	sun.h
+
+gendaymtx.o:	../common/platform.h ../common/rtmath.h \
+../common/mat4.h ../common/fvect.h ../common/color.h
