@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.28 2012/08/09 23:15:38 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.29 2014/05/30 23:43:48 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -43,7 +43,7 @@ const char  GMTSTR[] = "GMT=";		/* GMT identifier */
 static gethfunc mycheck;
 
 
-extern void
+void
 newheader(		/* identifying line of information header */
 	char  *s,
 	FILE  *fp
@@ -55,7 +55,7 @@ newheader(		/* identifying line of information header */
 }
 
 
-extern int
+int
 headidval(			/* get header id (return true if is id) */
 	char  *r,
 	char	*s
@@ -71,7 +71,7 @@ headidval(			/* get header id (return true if is id) */
 }
 
 
-extern int
+int
 dateval(		/* convert capture date line to UTC */
 	time_t	*tloc,
 	char	*s
@@ -97,7 +97,7 @@ dateval(		/* convert capture date line to UTC */
 }
 
 
-extern int
+int
 gmtval(			/* convert GMT date line to UTC */
 	time_t	*tloc,
 	char	*s
@@ -122,7 +122,7 @@ gmtval(			/* convert GMT date line to UTC */
 }
 
 
-extern void
+void
 fputdate(		/* write out the given time value (local & GMT) */
 	time_t	tv,
 	FILE	*fp
@@ -143,7 +143,7 @@ fputdate(		/* write out the given time value (local & GMT) */
 }
 
 
-extern void
+void
 fputnow(			/* write out the current time */
 	FILE	*fp
 )
@@ -154,7 +154,7 @@ fputnow(			/* write out the current time */
 }
 
 
-extern void
+void
 printargs(		/* print arguments to a file */
 	int  ac,
 	char  **av,
@@ -168,7 +168,7 @@ printargs(		/* print arguments to a file */
 }
 
 
-extern int
+int
 formatval(			/* get format value (return true if format) */
 	char  *r,
 	char  *s
@@ -188,7 +188,7 @@ formatval(			/* get format value (return true if format) */
 }
 
 
-extern void
+void
 fputformat(		/* put out a format value */
 	char  *s,
 	FILE  *fp
@@ -200,7 +200,7 @@ fputformat(		/* put out a format value */
 }
 
 
-extern int
+int
 getheader(		/* get header from file */
 	FILE  *fp,
 	gethfunc *f,
@@ -245,7 +245,7 @@ mycheck(			/* check a header line for format info. */
 }
 
 
-extern int
+int
 globmatch(			/* check for match of s against pattern p */
 	char	*p,
 	char	*s
@@ -313,7 +313,7 @@ globmatch(			/* check for match of s against pattern p */
  * if fout is not NULL.
  */
 
-extern int
+int
 checkheader(
 	FILE  *fin,
 	char  *fmt,
