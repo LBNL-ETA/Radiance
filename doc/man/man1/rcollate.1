@@ -1,11 +1,11 @@
-.\" RCSid "$Id: rcollate.1,v 1.5 2014/05/30 00:00:54 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.6 2014/05/30 16:50:43 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
 .SH SYNOPSIS
 .B rcollate
 [
-.B \-h
+.B \-h[io]
 ][
 .B \-w
 ][
@@ -31,9 +31,15 @@ the number of columns specified by the
 .I \-oc
 option.
 By default, the file is assumed to include an information header, which
-is copied to the standard output along with the command name, but the
+is copied to the standard output along with the command name.
+The
+.I \-hi
+option may be used to turn off the expectation of a header on input.
+The
+.I \-ho
+option turns off header output, and
 .I \-h
-option may be used to turn this behavior off.
+by itself turns off both input and output headers.
 The
 .I \-w
 option turns off non-fatal warning messages, such as unexpected EOD.

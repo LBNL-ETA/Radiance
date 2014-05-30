@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.9 2014/05/30 00:00:54 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.10 2014/05/30 16:50:43 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -471,7 +471,8 @@ headline(char *s, void *p)
 int
 main(int argc, char *argv[])
 {
-	int	do_header = 1;			/* header i/o? */
+	int	i_header = 1;			/* input header? */
+	int	o_header = 1;			/* output header? */
 	int	transpose = 0;			/* transpose rows & cols? */
 	int	i;
 
@@ -493,8 +494,20 @@ main(int argc, char *argv[])
 			else
 				goto userr;
 			break;
-		case 'h':			/* header on/off */
-			do_header = !do_header;
+		case 'h':			/* turn off header */
+			switch (argv[i][2]) {
+			case 'i':
+				i_header = 0;
+				break;
+			case 'o':
+				o_header = 0;
+				break;
+			case '\0':
+				i_header = o_header = 0;
+				break;
+			default:
+				goto userr;
+			}
 			break;
 		case 't':			/* transpose on/off */
 			transpose = !transpose;
@@ -557,7 +570,7 @@ main(int argc, char *argv[])
 			return(1);
 		return(0);
 	}
-	if (do_header) {			/* read/write header */
+	if (i_header) {				/* read header */
 		if (getheader(stdin, &headline, NULL) < 0)
 			return(1);
 		check_sizes();
@@ -565,6 +578,9 @@ main(int argc, char *argv[])
 			SET_FILE_BINARY(stdin);
 			SET_FILE_BINARY(stdout);
 		}
+	} else
+		check_sizes();
+	if (o_header) {				/* write header */
 		printargs(argc, argv, stdout);
 		if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
 			if (ni_rows > 0) no_columns = ni_rows;
@@ -577,8 +593,7 @@ main(int argc, char *argv[])
 		printf("NCOMP=%d\n", n_comp);
 		fputformat(fmtid, stdout);
 		fputc('\n', stdout);		/* finish new header */
-	} else
-		check_sizes();
+	}
 	if (transpose) {			/* transposing rows & columns? */
 		MEMLOAD	myMem;			/* need to load into memory */
 		if (i == argc-1) {
@@ -600,7 +615,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-h][-w][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row] [input.dat]\n",
+"Usage: %s [-h[io]][-w][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row] [input.dat]\n",
 			argv[0]);
 	return(1);
 }
