@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.9 2014/05/29 04:56:43 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.10 2014/05/30 16:05:52 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -145,7 +145,8 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
 			if (header) {
-				sprintf(info, "NCOLS=%d\n", stdos.reclen);
+				sprintf(info, "NCOLS=%d\nNCOMP=3\n",
+						stdos.reclen);
 				printheader(stdout, info);
 			}
 			printresolu(stdout, xres, yres);
@@ -207,7 +208,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 				sprintf(cp, "BIN=%d\n", bn);
 				while (*cp) ++cp;
 			}
-			sprintf(cp, "NCOLS=%d\n", sop->reclen);
+			sprintf(cp, "NCOLS=%d\nNCOMP=3\n", sop->reclen);
 			printheader(sop->ofp, info);
 		}
 		if (accumulate > 0) {		/* global resolution */
