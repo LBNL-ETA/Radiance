@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.10 2014/05/30 16:50:43 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.11 2014/05/30 17:29:28 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -276,7 +276,7 @@ int		no_columns = 0;			/* number of output columns */
 int		no_rows = 0;			/* number of output rows */
 
 /* check settings and assign defaults */
-static void
+static int
 check_sizes()
 {
 	if (fmtid == NULL) {
@@ -288,9 +288,14 @@ check_sizes()
 			comp_size = sizeof(double);
 		else if (!strcmp(fmtid, "byte"))
 			comp_size = 1;
+		else {
+			fprintf(stderr, "Unsupported format: %s\n", fmtid);
+			return(0);
+		}
 	}
 	if (n_comp <= 0)
 		n_comp = 3;
+	return(1);
 }
 
 /* output transposed ASCII or binary data from memory */
@@ -573,13 +578,14 @@ main(int argc, char *argv[])
 	if (i_header) {				/* read header */
 		if (getheader(stdin, &headline, NULL) < 0)
 			return(1);
-		check_sizes();
+		if (!check_sizes())
+			return(1);
 		if (comp_size) {		/* a little late... */
 			SET_FILE_BINARY(stdin);
 			SET_FILE_BINARY(stdout);
 		}
-	} else
-		check_sizes();
+	} else if (!check_sizes())
+		return(1);
 	if (o_header) {				/* write header */
 		printargs(argc, argv, stdout);
 		if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
