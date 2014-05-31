@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.1 2014/05/31 05:02:37 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.2 2014/05/31 19:21:21 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -18,9 +18,7 @@ typedef struct {
 	double	mtx[1];			/* extends struct */
 } RMATRIX;
 
-#define rmx_indx(rm,r,c,i)	(((i)*(rm)->nrows+(r))*(rm)->ncols+(c))
-
-#define rmx_lval(rm,r,c,i)	(rm)->mtx[rmx_indx(rm,r,c,i)]
+#define rmx_lval(rm,r,c,i)	(rm)->mtx[((i)*(rm)->nrows+(r))*(rm)->ncols+(c)]
 
 #define rmx_free(rm)		free(rm)
 
@@ -39,8 +37,8 @@ extern RMATRIX	*rmx_identity(int dim, int n);
 /* Duplicate the given matrix */
 extern RMATRIX	*rmx_copy(const RMATRIX *rm);
 
-/* Swap rows and columns in the given matrix in situ */
-extern int	rmx_transpose(RMATRIX *rm);
+/* Allocate and assign transposed matrix */
+extern RMATRIX	*rmx_transpose(const RMATRIX *rm);
 
 /* Multiply (concatenate) two matrices and allocate the result */
 extern RMATRIX	*rmx_multiply(const RMATRIX *m1, const RMATRIX *m2);

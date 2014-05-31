@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.1 2014/05/31 05:02:37 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.2 2014/05/31 19:21:21 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -382,29 +382,23 @@ rmx_copy(const RMATRIX *rm)
 	return(dnew);
 }
 
-/* Swap rows and columns in the given matrix in situ */
-int
-rmx_transpose(RMATRIX *rm)
+/* Allocate and assign transposed matrix */
+RMATRIX *
+rmx_transpose(const RMATRIX *rm)
 {
-	RMATRIX	dswap;
+	RMATRIX	*dnew;
 	int	i, j, k;
 
 	if (rm == NULL)
 		return(0);
-	dswap.nrows = rm->ncols;
-	dswap.ncols = rm->nrows;
-	dswap.ncomp = rm->ncomp;
-	for (i = 1; i < rm->nrows; i++)
-	    for (j = 0; j < i; j++)
-		for (k = rm->ncomp; k--; ) {
-			double	*opp = rm->mtx + rmx_indx(&dswap,j,i,k);
-			double	d = *opp;
-			*opp = rmx_lval(rm,i,j,k);
-			rmx_lval(rm,i,j,k) = d;
-		}
-	rm->nrows = dswap.nrows;
-	rm->ncols = dswap.ncols;
-	return(1);
+	dnew = rmx_alloc(rm->ncols, rm->nrows, rm->ncomp);
+	if (dnew == NULL)
+		return(NULL);
+	for (i = dnew->nrows; i--; )
+	    for (j = dnew->ncols; j--; )
+		for (k = dnew->ncomp; k--; )
+			rmx_lval(dnew,i,j,k) = rmx_lval(rm,j,i,k);
+	return(dnew);
 }
 
 /* Multiply (concatenate) two matrices and allocate the result */

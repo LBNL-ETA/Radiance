@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.13 2014/05/30 18:24:06 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.14 2014/05/31 19:21:21 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -288,7 +288,7 @@ check_sizes()
 			comp_size = sizeof(double);
 		else if (!strcmp(fmtid, "byte"))
 			comp_size = 1;
-		else {
+		else if (strcmp(fmtid, "ascii")) {
 			fprintf(stderr, "Unsupported format: %s\n", fmtid);
 			return(0);
 		}
@@ -460,7 +460,7 @@ headline(char *s, void *p)
 	if (!strncmp(s, "NCOMP=", 6)) {
 		n = atoi(s+6);
 		if ((n_comp > 0) & (n != n_comp)) {
-			fputs("Incorrect number of components", stderr);
+			fputs("Incorrect number of components\n", stderr);
 			return(-1);
 		}
 		n_comp = n;
@@ -477,28 +477,28 @@ main(int argc, char *argv[])
 	int	i_header = 1;			/* input header? */
 	int	o_header = 1;			/* output header? */
 	int	transpose = 0;			/* transpose rows & cols? */
-	int	i;
+	int	a;
 
-	for (i = 1; i < argc && argv[i][0] == '-'; i++)
-		switch (argv[i][1]) {
+	for (a = 1; a < argc && argv[a][0] == '-'; a++)
+		switch (argv[a][1]) {
 		case 'i':			/* input */
-			if (argv[i][2] == 'c')	/* columns */
-				ni_columns = atoi(argv[++i]);
-			else if (argv[i][2] == 'r')
-				ni_rows = atoi(argv[++i]);
+			if (argv[a][2] == 'c')	/* columns */
+				ni_columns = atoi(argv[++a]);
+			else if (argv[a][2] == 'r')
+				ni_rows = atoi(argv[++a]);
 			else
 				goto userr;
 			break;
 		case 'o':			/* output */
-			if (argv[i][2] == 'c')	/* columns */
-				no_columns = atoi(argv[++i]);
-			else if (argv[i][2] == 'r')
-				no_rows = atoi(argv[++i]);
+			if (argv[a][2] == 'c')	/* columns */
+				no_columns = atoi(argv[++a]);
+			else if (argv[a][2] == 'r')
+				no_rows = atoi(argv[++a]);
 			else
 				goto userr;
 			break;
 		case 'h':			/* turn off header */
-			switch (argv[i][2]) {
+			switch (argv[a][2]) {
 			case 'i':
 				i_header = 0;
 				break;
@@ -516,7 +516,7 @@ main(int argc, char *argv[])
 			transpose = !transpose;
 			break;
 		case 'f':			/* format */
-			switch (argv[i][2]) {
+			switch (argv[a][2]) {
 			case 'a':		/* ASCII */
 			case 'A':
 				fmtid = "ascii";
@@ -540,11 +540,12 @@ main(int argc, char *argv[])
 			default:
 				goto userr;
 			}
-			if (argv[i][3]) {
-				if (!isdigit(argv[i][3]))
+			if (argv[a][3]) {
+				if (!isdigit(argv[a][3]))
 					goto userr;
-				n_comp = atoi(argv[i]+3);
-			}
+				n_comp = atoi(argv[a]+3);
+			} else
+				n_comp = 1;
 			break;
 		case 'w':			/* warnings on/off */
 			warnings = !warnings;
@@ -552,11 +553,11 @@ main(int argc, char *argv[])
 		default:
 			goto userr;
 		}
-	if (i < argc-1)				/* arg count OK? */
+	if (a < argc-1)				/* arg count OK? */
 		goto userr;
 						/* open input file? */
-	if (i == argc-1 && freopen(argv[i], "r", stdin) == NULL) {
-		fprintf(stderr, "%s: cannot open for reading\n", argv[i]);
+	if (a == argc-1 && freopen(argv[a], "r", stdin) == NULL) {
+		fprintf(stderr, "%s: cannot open for reading\n", argv[a]);
 		return(1);
 	}
 	if (comp_size) {
@@ -585,7 +586,7 @@ main(int argc, char *argv[])
 	} else if (!check_sizes())
 		return(1);
 	if (o_header) {				/* write header */
-		printargs(argc, argv, stdout);
+		printargs(a, argv, stdout);
 		if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
 			if (ni_rows > 0) no_columns = ni_rows;
 			if (ni_columns > 0) no_rows = ni_columns;
@@ -600,10 +601,10 @@ main(int argc, char *argv[])
 	}
 	if (transpose) {			/* transposing rows & columns? */
 		MEMLOAD	myMem;			/* need to load into memory */
-		if (i == argc-1) {
+		if (a == argc-1) {
 			if (load_file(&myMem, stdin) <= 0) {
 				fprintf(stderr, "%s: error loading file into memory\n",
-						argv[i]);
+						argv[a]);
 				return(1);
 			}
 		} else if (load_stream(&myMem, stdin) <= 0) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.1 2014/05/31 05:02:37 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.2 2014/05/31 19:21:21 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -18,7 +18,7 @@ typedef struct {
 	int		nsf;			/* number of scalars */
 	double		cmat[MAXCOMP*MAXCOMP];	/* component transformation */
 	int		clen;			/* number of coefficients */
-	int		transpose;		/* do transpose? (<0 first) */
+	int		transpose;		/* do transpose? */
 	int		op;			/* '*' or '+' */
 } ROPERAT;				/* matrix operation */
 
@@ -36,6 +36,7 @@ static RMATRIX *
 operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 {
 	RMATRIX	*mright = rmx_load(fname);
+	RMATRIX	*mtmp;
 	int	i;
 
 	if (fname == NULL)
@@ -45,8 +46,9 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 		fputs(": cannot load matrix\n", stderr);
 		return(NULL);
 	}
-	if (op->transpose < 0) {	/* transpose first? */
-		if (!rmx_transpose(mright)) {
+	if (op->transpose) {		/* transpose matrix? */
+		mtmp = rmx_transpose(mright);
+		if (mtmp == NULL) {
 			fputs(fname, stderr);
 			fputs(": transpose failed\n", stderr);
 			rmx_free(mright);
@@ -56,6 +58,8 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 			fputs(fname, stderr);
 			fputs(": transposed rows and columns\n", stderr);
 		}
+		rmx_free(mright);
+		mright = mtmp;
 	}
 	if (op->nsf > 0) {		/* apply scalar(s) */
 		if (op->clen > 0) {
@@ -88,7 +92,6 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 		}
 	}
 	if (op->clen > 0) {		/* apply transform */
-		RMATRIX	*mtmp;
 		if (op->clen % mright->ncomp) {
 			fprintf(stderr, "%s: -c must have N x %d coefficients\n",
 					fname, mright->ncomp);
@@ -106,18 +109,6 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 					fname, mtmp->ncomp, mright->ncomp);
 		rmx_free(mright);
 		mright = mtmp;
-	}
-	if (op->transpose > 0) {	/* transpose after? */
-		if (!rmx_transpose(mright)) {
-			fputs(fname, stderr);
-			fputs(": transpose failed\n", stderr);
-			rmx_free(mright);
-			return(NULL);
-		}
-		if (verbose) {
-			fputs(fname, stderr);
-			fputs(": transposed rows and columns\n", stderr);
-		}
 	}
 	if (mleft == NULL)		/* just one matrix */
 		return(mright);
@@ -220,10 +211,7 @@ main(int argc, char *argv[])
 				}
 				break;
 			case 't':
-				if (!op.nsf & !op.clen)
-					op.transpose = -1;
-				else
-					op.transpose = 1;
+				op.transpose = 1;
 				break;
 			case 's':
 				if (n > MAXCOMP) n = MAXCOMP;
@@ -257,7 +245,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-v][-f[adfc][-t][-s sf ..][-c ce ..] m1 [+] .. > mres\n",
+	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..] m1 [+] .. > mres\n",
 			argv[0]);
 	return(1);
 }
