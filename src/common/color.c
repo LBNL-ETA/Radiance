@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.16 2005/02/09 00:00:17 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.17 2014/05/31 20:13:31 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -10,11 +10,8 @@ static const char	RCSid[] = "$Id: color.c,v 2.16 2005/02/09 00:00:17 greg Exp $"
 #include "copyright.h"
 
 #include  <stdio.h>
-
 #include  <stdlib.h>
-
 #include  <math.h>
-
 #include  "color.h"
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
@@ -30,8 +27,9 @@ static const char	RCSid[] = "$Id: color.c,v 2.16 2005/02/09 00:00:17 greg Exp $"
 
 
 char *
-tempbuffer(len)			/* get a temporary buffer */
-unsigned int  len;
+tempbuffer(			/* get a temporary buffer */
+	unsigned int  len
+)
 {
 	static char  *tempbuf = NULL;
 	static unsigned  tempbuflen = 0;
@@ -48,12 +46,13 @@ unsigned int  len;
 
 
 int
-fwritecolrs(scanline, len, fp)		/* write out a colr scanline */
-register COLR  *scanline;
-int  len;
-register FILE  *fp;
+fwritecolrs(			/* write out a colr scanline */
+	COLR  *scanline,
+	int  len,
+	FILE  *fp
+)
 {
-	register int  i, j, beg, cnt = 1;
+	int  i, j, beg, cnt = 1;
 	int  c2;
 	
 	if ((len < MINELEN) | (len > MAXELEN))	/* OOBs, write out flat */
@@ -101,13 +100,14 @@ register FILE  *fp;
 
 
 static int
-oldreadcolrs(scanline, len, fp)		/* read in an old colr scanline */
-register COLR  *scanline;
-int  len;
-register FILE  *fp;
+oldreadcolrs(			/* read in an old colr scanline */
+	COLR  *scanline,
+	int  len,
+	FILE  *fp
+)
 {
 	int  rshift;
-	register int  i;
+	int  i;
 	
 	rshift = 0;
 	
@@ -138,12 +138,13 @@ register FILE  *fp;
 
 
 int
-freadcolrs(scanline, len, fp)		/* read in an encoded colr scanline */
-register COLR  *scanline;
-int  len;
-register FILE  *fp;
+freadcolrs(			/* read in an encoded colr scanline */
+	COLR  *scanline,
+	int  len,
+	FILE  *fp
+)
 {
-	register int  i, j;
+	int  i, j;
 	int  code, val;
 					/* determine scanline type */
 	if ((len < MINELEN) | (len > MAXELEN))
@@ -193,14 +194,15 @@ register FILE  *fp;
 
 
 int
-fwritescan(scanline, len, fp)		/* write out a scanline */
-register COLOR  *scanline;
-int  len;
-FILE  *fp;
+fwritescan(			/* write out a scanline */
+	COLOR  *scanline,
+	int  len,
+	FILE  *fp
+)
 {
 	COLR  *clrscan;
 	int  n;
-	register COLR  *sp;
+	COLR  *sp;
 					/* get scanline buffer */
 	if ((sp = (COLR *)tempbuffer(len*sizeof(COLR))) == NULL)
 		return(-1);
@@ -219,12 +221,13 @@ FILE  *fp;
 
 
 int
-freadscan(scanline, len, fp)		/* read in a scanline */
-register COLOR  *scanline;
-int  len;
-FILE  *fp;
+freadscan(			/* read in a scanline */
+	COLOR  *scanline,
+	int  len,
+	FILE  *fp
+)
 {
-	register COLR  *clrscan;
+	COLR  *clrscan;
 
 	if ((clrscan = (COLR *)tempbuffer(len*sizeof(COLR))) == NULL)
 		return(-1);
@@ -247,9 +250,12 @@ FILE  *fp;
 
 
 void
-setcolr(clr, r, g, b)		/* assign a short color value */
-register COLR  clr;
-double  r, g, b;
+setcolr(			/* assign a short color value */
+	COLR  clr,
+	double  r,
+	double  g,
+	double  b
+)
 {
 	double  d;
 	int  e;
@@ -283,9 +289,10 @@ double  r, g, b;
 
 
 void
-colr_color(col, clr)		/* convert short to float color */
-register COLOR  col;
-register COLR  clr;
+colr_color(			/* convert short to float color */
+	COLOR  col,
+	COLR  clr
+)
 {
 	double  f;
 	
@@ -301,11 +308,13 @@ register COLR  clr;
 
 
 int
-bigdiff(c1, c2, md)			/* c1 delta c2 > md? */
-register COLOR  c1, c2;
-double  md;
+bigdiff(				/* c1 delta c2 > md? */
+	COLOR  c1,
+	COLOR  c2,
+	double  md
+)
 {
-	register int  i;
+	int  i;
 
 	for (i = 0; i < 3; i++)
 		if (colval(c1,i)-colval(c2,i) > md*colval(c2,i) ||
