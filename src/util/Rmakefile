@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.73 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.74 2014/05/31 05:02:37 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
-		eplus_adduvf
+		eplus_adduvf rmtxop
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat
 
@@ -122,6 +122,10 @@ eplus_adduvf:	eplus_adduvf.o eplus_idf.o
 	$(CC) $(CFLAGS) -o eplus_adduvf eplus_adduvf.o eplus_idf.o \
 -lrtrad $(MLIB)
 
+rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
+	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
+-lrtrad $(MLIB)
+
 setscan.o:	setscan.h
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
@@ -214,3 +218,7 @@ x11findwind.c:	../common/x11findwind.c
 	cp ../common/x11findwind.c .
 
 rttree_reduce.o:	../common/rtio.h ../common/rterror.h
+
+rmatrix.o:	rmatrix.h cmatrix.h ../common/resolu.h
+
+rmtxop.o:	rmatrix.h cmatrix.h ../common/rtio.h ../common/resolu.h
