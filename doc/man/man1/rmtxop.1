@@ -1,0 +1,145 @@
+.\" RCSid "$Id: rmtxop.1,v 1.1 2014/05/31 21:33:21 greg Exp $"
+.TH RMTXOP 1 7/8/97 RADIANCE
+.SH NAME
+rmtxop - concatenate, add, transpose, scale, and convert matrices
+.SH SYNOPSIS
+.B rmtxop
+[
+.B \-v
+][
+.B \-f[afd]
+][
+.B \-t
+][
+.B "\-s sf .."
+][
+.B "\-c ce .."
+]
+.B m1
+[
+.B +
+]
+.B ".."
+.SH DESCRIPTION
+.I Rmtxop
+loads and concatenates (multiplies) or adds together component matrix files
+given on the command line.
+Each file must have a header containing the following variables:
+.sp
+.nf
+NROWS={number of rows}
+NCOLS={number of columns}
+NCOMP={number of components}
+FORMAT={ascii|float|double|32-bit_rle_rgbe|32-bit_rle_xyze}
+.sp
+.fi
+The number of components indicates that each matrix element is actually
+composed of multiple elements, most commonly an RGB triple.
+This is essentially dividing the matrix into planes, where each component
+participates in a separate calculation.
+If an appropriate header is not present, it may be added with a call to
+.I rcollate(1).
+A matrix may be read from the standard input using a hyphen by itself ('-')
+in the appropriate place on the command line.
+.PP
+Two special cases are handled for component matrices that are either
+XML files containing BTDF data, or Radiance picture files.
+In the first case, a BSDF library is used to load and interpret the
+transmission matrix.
+(XML files cannot be read from the standard input.)\0
+In the second case, the RGBE or XYZE values are loaded in a 3-component
+matrix where the number of columns match the X-dimension of the picture, and
+the number of rows match the Y-dimension.
+The picture must be in standard pixel ordering, and the first row
+as at the top with the first column on the left.
+.PP
+Before each file, the
+.I \-t
+and
+.I \-s
+or
+.I \-c
+options may be used to modify the matrix.
+The
+.I \-t
+option transposes the matrix, swapping rows and columns.
+The
+.I \-s
+option applies the given scalar factor(s) to the elements of the matrix.
+If only one factor is provided,
+it will be used for all components.
+If multiple factors are given, their number must match the number of matrix
+components.
+Alternatively, the
+.I \-c
+option may be used to "transform" the element values, possibly changing
+the number of components in the matrix.
+For example, a 3-component matrix can be transformed into a single-component
+matrix by using
+.I \-c
+with three coefficients.
+A four-component matrix can be turned into a two-component matrix using 8
+coefficients, where the first four coefficients will be used to compute
+the first new component, and the second four coefficients
+yield the second new component.
+Note that the number of coefficients must be an even multiple of the number
+of original components.
+The
+.I \-s
+and
+.I \-c
+options are mutually exclusive, insofar as they cannot be applied together
+to the same input matrix.
+.PP
+If present, the second and subsequent matrices on the command
+line are concatenated to the result unless separated by a plus ('+') symbol,
+in which case the elements are added together.
+The number of components in the new matrix after applying any
+.I -c
+transform must agree with the prior result.
+For concatenation (matrix multiplication), the number of columns
+in the prior result must equal the number of rows in the new matrix, and
+the result will have the number of rows of the previous and the number
+of columns of the new matrix.
+In the case of addition, the number of rows and columns of the prior
+result and the new matrix must match, and will not be changed by the
+operation.
+.PP
+Results are sent to the standard output.
+By default, the values will be written in ASCII format, but the
+.I \-f
+option may be used to output components
+as binary doubles (-fd), floats (-ff), or RGBE colors (-fc).
+In the latter case, the actual matrix dimensions are written in the resolution
+string rather than the header.
+Also, matrix results written as Radiance pictures must have either one
+or three components.
+In the one-component case, the output is written as grayscale.
+.PP
+The
+.I \-v
+option turns on verbose reporting, which announces each operation.
+.SH EXAMPLES
+To concatenate two matrix files with a BTDF between them and write
+the result as binary double:
+.IP "" .2i
+rmtxop -fd view.vmx blinds.xml exterior.dmx > dcoef.dmx
+.PP
+To convert a BTDF matrix into a Radiance picture:
+.IP "" .2i
+rmtxop -fc blinds.xml > blinds.hdr
+.PP
+To scale a matrix by 4 and add it to the transpose of another matrix:
+.IP "" .2i
+rmtxop -s 4 left.mtx + -t right.mtx > result.mtx
+.PP
+To send the elements of a binary matrix to 
+.I rcalc(1)
+for further processing:
+.IP "" .2i
+rmtxop -fa orig.mtx | rcollate -ho -oc 1 | rcalc [opertions]
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), histo(1), neaten(1), rcalc(1), rcollate(1),
+rlam(1), tabfunc(1), total(1)

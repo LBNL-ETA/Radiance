@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.6 2014/05/30 16:50:43 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.7 2014/05/31 21:33:21 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -9,7 +9,7 @@ rcollate - resize or transpose matrix data
 ][
 .B \-w
 ][
-.B \-f[afdb][N]]
+.B \-f[afdb][N]
 ][
 .B \-t
 ][
@@ -113,6 +113,11 @@ rcollate -h \-oc 8760 input.dat > col8760.dat
 To transpose a binary file with 145 float triplets per input row:
 .IP "" .2i
 rcollate -ff3 -ic 145 -t orig.flt > transpose.flt
+.PP
+To create an appropriate header for a binary float matrix as required by
+.I rmtxop(1)\:
+.IP "" .2i
+rcollate -hi -ff3 -or 145 -oc 8760 input.smx | rmtxop dcoef.dmx - > res.txt
 .SH AUTHOR
 Greg Ward
 .SH NOTES
@@ -130,4 +135,4 @@ without a transpose,
 .I rcollate
 issues a warning and simply copies its input to its standard output.
 .SH "SEE ALSO"
-cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), tabfunc(1), total(1)
+cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), rmtxop(1), tabfunc(1), total(1)
