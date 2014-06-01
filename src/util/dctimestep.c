@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.32 2014/05/30 00:07:37 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.33 2014/06/01 03:20:29 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -286,6 +286,7 @@ main(int argc, char *argv[])
 				newheader("RADIANCE", ofp);
 				printargs(argc, argv, ofp);
 				fputnow(ofp);
+				fprintf(ofp, "NROWS=%d\n", rmtx->nrows);
 				fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
 				fputs("NCOMP=3\n", ofp);
 				fputformat((char *)cm_fmt_id[outfmt], ofp);

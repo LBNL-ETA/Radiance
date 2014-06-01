@@ -47,6 +47,9 @@ target_link_libraries(rttree_reduce rtrad)
 add_executable(rcollate rcollate.c)
 target_link_libraries(rcollate rtrad)
 
+add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
+target_link_libraries(rmtxop rtrad)
+
 add_executable(eplus_adduvf eplus_adduvf.c eplus_idf.c)
 target_link_libraries(eplus_adduvf rtrad)
 
@@ -87,7 +90,8 @@ if(UNIX AND X11_FOUND)
   endif()
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
-                vwrays vwright ranimove rsensor rttree_reduce rcollate eplus_adduvf
+                vwrays vwright ranimove rsensor rttree_reduce rcollate
+		rmtxop eplus_adduvf
         RUNTIME DESTINATION bin)
 
 install(FILES tregsamp.dat DESTINATION lib)
