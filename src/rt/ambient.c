@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.89 2014/05/11 19:03:37 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.90 2014/06/06 00:57:46 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -1194,8 +1194,8 @@ sortambvals(			/* resort ambient values */
 		if (i_avlist < nambvals)
 			error(CONSISTENCY, "missing ambient values in sortambvals");
 #endif
-		qsort((char *)avlist1, nambvals, sizeof(struct avl), &alatcmp);
-		qsort((char *)avlist2, nambvals, sizeof(AMBVAL *), &aposcmp);
+		qsort((char *)avlist1, nambvals, sizeof(struct avl), alatcmp);
+		qsort((char *)avlist2, nambvals, sizeof(AMBVAL *), aposcmp);
 		for (i = 0; i < nambvals; i++) {
 			if (avlist1[i].p == NULL)
 				continue;
