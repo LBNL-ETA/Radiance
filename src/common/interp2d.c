@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: interp2d.c,v 2.13 2013/02/16 00:41:12 greg Exp $";
+static const char RCSid[] = "$Id: interp2d.c,v 2.14 2014/06/06 00:56:42 greg Exp $";
 #endif
 /*
  * General interpolation method for unstructured values on 2-D plane.
@@ -266,7 +266,7 @@ sort_samples(SAMPORD *sord, const INTERP2 *ip, double ang)
 		sord[i].si = i;
 		sord[i].dm = cosd*ip->spt[i][0] + sind*ip->spt[i][1];
 	}
-	qsort(sord, ip->ns, sizeof(SAMPORD), &cmp_spos);
+	qsort(sord, ip->ns, sizeof(SAMPORD), cmp_spos);
 }
 
 /* (Re)compute anisotropic basis function interpolant (normally automatic) */
