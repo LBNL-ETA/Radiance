@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.12 2014/01/24 02:22:49 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.13 2014/06/10 23:19:00 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -32,15 +32,15 @@ static char	group[256];	/* current group name */
 static int	lineno;		/* current line number */
 static int	faceno;		/* current face number */
 
-static int getstmt(char	*av[MAXARG], FILE	*fp);
-static int cvtndx(VNDX	vi, char	*vs);
-static int putface(int	ac, char	**av);
+static int getstmt(char	*av[MAXARG], FILE *fp);
+static int cvtndx(VNDX vi, char *vs);
+static int putface(int ac, char **av);
 static OBJECT getmod(void);
-static int puttri(char	*v1, char	*v2, char	*v3);
+static int puttri(char	*v1, char *v2, char *v3);
 static void freeverts(void);
-static int newv(double	x, double	y, double	z);
-static int newvn(double	x, double	y, double	z);
-static int newvt(double	x, double	y);
+static int newv(double	x, double y, double z);
+static int newvn(double	x, double y, double z);
+static int newvt(double	x, double y);
 static void syntax(char	*er);
 
 
@@ -304,8 +304,10 @@ putface(				/* put out an N-sided polygon */
 		poly->v[i].mY = vlist[vi[0]][ay];
 	}
 					/* break into triangles & output */
-	if (!polyTriangulate(poly, &tri_out))
-		error(WARNING, "self-intersecting face");
+	if (!polyTriangulate(poly, &tri_out)) {
+		sprintf(errmsg, "self-intersecting face with %d vertices", ac);
+		error(WARNING, errmsg);
+	}
 	polyFree(poly);
 	return(1);
 }
