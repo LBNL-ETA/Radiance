@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.13 2014/06/10 23:19:00 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.14 2014/06/11 00:08:30 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -261,7 +261,7 @@ dominant_axis(char *v1, char *v2, char *v3)
 	for (i = imax = 2; i--; )
 		if (vn[i]*vn[i] > vn[imax]*vn[imax])
 			imax = i;
-	return(vn[imax]*vn[imax] > FTINY ? imax : -1);
+	return(vn[imax]*vn[imax] > FTINY*FTINY ? imax : -1);
 }
 
 /* callback for triangle output from polygon */
