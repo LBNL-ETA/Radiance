@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.10 2014/05/30 16:05:52 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.11 2014/06/13 01:16:41 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -139,13 +139,20 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 	char			oname[1024];
 	LUENT			*lep;
 	STREAMOUT		*sop;
+	char			*cp;
 	
 	if (ospec == NULL) {			/* use stdout? */
 		if (!noopen & !using_stdout) {
 			if (outfmt != 'a')
 				SET_FILE_BINARY(stdout);
 			if (header) {
-				sprintf(info, "NCOLS=%d\nNCOMP=3\n",
+				cp = info;
+				if (yres > 0) {
+					sprintf(cp, "NROWS=%d\n", yres *
+							(xres + !xres) );
+					while (*cp) ++cp;
+				}
+				sprintf(cp, "NCOLS=%d\nNCOMP=3\n",
 						stdos.reclen);
 				printheader(stdout, info);
 			}
@@ -198,8 +205,11 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 #ifdef getc_unlocked
 		flockfile(sop->ofp);		/* avoid lock/unlock overhead */
 #endif
+		if (accumulate > 0) {		/* global resolution */
+			sop->xr = xres; sop->yr = yres;
+		}
 		if (header) {
-			char	*cp = info;
+			cp = info;
 			if (ofl & OF_MODIFIER || sop->reclen == 1) {
 				sprintf(cp, "MODIFIER=%s\n", mname);
 				while (*cp) ++cp;
@@ -208,11 +218,13 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 				sprintf(cp, "BIN=%d\n", bn);
 				while (*cp) ++cp;
 			}
+			if (sop->yr > 0) {
+				sprintf(cp, "NROWS=%d\n", sop->yr *
+						(sop->xr + !sop->xr) );
+				while (*cp) ++cp;
+			}
 			sprintf(cp, "NCOLS=%d\nNCOMP=3\n", sop->reclen);
 			printheader(sop->ofp, info);
-		}
-		if (accumulate > 0) {		/* global resolution */
-			sop->xr = xres; sop->yr = yres;
 		}
 		printresolu(sop->ofp, sop->xr, sop->yr);
 		if (waitflush > 0)
