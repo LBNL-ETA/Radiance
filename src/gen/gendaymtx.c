@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.15 2014/06/17 18:51:47 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.16 2014/06/17 21:01:21 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -319,6 +319,7 @@ main(int argc, char *argv[])
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
 	float	*mtx_data = NULL;	/* our matrix data */
 	int	ntsteps = 0;		/* number of rows in matrix */
+	int	step_alloc = 0;
 	int	last_monthly = 0;	/* month of last report */
 	int	mo, da;			/* month (1-12) and day (1-31) */
 	double	hr;			/* hour (local standard time) */
@@ -457,12 +458,11 @@ main(int argc, char *argv[])
 	s_meridian = DegToRad(s_meridian);
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
-		static int	step_alloc = 0;
 		double		sda, sta;
 					/* make space for next time step */
 		mtx_offset = 3*nskypatch*ntsteps++;
 		if (ntsteps > step_alloc) {
-			step_alloc += step_alloc>>1 + 8;
+			step_alloc += (step_alloc>>1) + ntsteps + 7;
 			mtx_data = resize_dmatrix(mtx_data, step_alloc, nskypatch);
 		}
 		if (dif <= 1e-4) {
