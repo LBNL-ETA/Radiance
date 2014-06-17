@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.5 2014/05/30 00:00:54 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.6 2014/06/17 18:03:48 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -39,20 +39,38 @@ cm_alloc(int nrows, int ncols)
 	return(cm);
 }
 
+static void
+adjacent_ra_sizes(size_t bounds[2], size_t target)
+{
+	bounds[0] = 0; bounds[1] = 2048;
+	while (bounds[1] < target) {
+		bounds[0] = bounds[1];
+		bounds[1] += bounds[1]>>1;
+	}
+}
+
 /* Resize color coefficient matrix */
 CMATRIX *
 cm_resize(CMATRIX *cm, int nrows)
 {
+	size_t	old_size, new_size, ra_bounds[2];
+
 	if (nrows == cm->nrows)
 		return(cm);
 	if (nrows <= 0) {
 		cm_free(cm);
 		return(NULL);
 	}
-	cm = (CMATRIX *)realloc(cm, sizeof(CMATRIX) +
-			sizeof(COLOR)*(nrows*cm->ncols - 1));
-	if (cm == NULL)
-		error(SYSTEM, "out of memory in cm_resize()");
+	old_size = sizeof(CMATRIX) + sizeof(COLOR)*(cm->nrows*cm->ncols - 1);
+	adjacent_ra_sizes(ra_bounds, old_size);
+	new_size = sizeof(CMATRIX) + sizeof(COLOR)*(nrows*cm->ncols - 1);
+	if (nrows < cm->nrows ? new_size <= ra_bounds[0] :
+				new_size > ra_bounds[1]) {
+		adjacent_ra_sizes(ra_bounds, new_size);
+		cm = (CMATRIX *)realloc(cm, ra_bounds[1]);
+		if (cm == NULL)
+			error(SYSTEM, "out of memory in cm_resize()");
+	}
 	cm->nrows = nrows;
 	return(cm);
 }
