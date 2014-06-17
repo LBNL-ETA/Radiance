@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.14 2014/05/30 00:00:54 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.15 2014/06/17 18:51:47 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -457,10 +457,14 @@ main(int argc, char *argv[])
 	s_meridian = DegToRad(s_meridian);
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
+		static int	step_alloc = 0;
 		double		sda, sta;
 					/* make space for next time step */
 		mtx_offset = 3*nskypatch*ntsteps++;
-		mtx_data = resize_dmatrix(mtx_data, ntsteps, nskypatch);
+		if (ntsteps > step_alloc) {
+			step_alloc += step_alloc>>1 + 8;
+			mtx_data = resize_dmatrix(mtx_data, step_alloc, nskypatch);
+		}
 		if (dif <= 1e-4) {
 			memset(mtx_data+mtx_offset, 0, sizeof(float)*3*nskypatch);
 			continue;
