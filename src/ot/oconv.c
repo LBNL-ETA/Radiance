@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: oconv.c,v 2.21 2005/09/23 19:04:52 greg Exp $";
+static const char RCSid[] = "$Id: oconv.c,v 2.22 2014/06/17 18:18:50 greg Exp $";
 #endif
 /*
  *  oconv.c - main program for object to octree conversion.
@@ -18,7 +18,7 @@ static const char RCSid[] = "$Id: oconv.c,v 2.21 2005/09/23 19:04:52 greg Exp $"
 
 #define	 OMARGIN	(10*FTINY)	/* margin around global cube */
 
-#define	 MAXOBJFIL	127		/* maximum number of scene files */
+#define	 MAXOBJFIL	255		/* maximum number of scene files */
 
 char  *progname;			/* argv[0] */
 
