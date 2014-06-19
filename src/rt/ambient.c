@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.90 2014/06/06 00:57:46 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.91 2014/06/19 16:26:55 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -263,7 +263,7 @@ ambnotify(			/* record new modifier */
 
 /************ THE FOLLOWING ROUTINES DIFFER BETWEEN NEW & OLD ***************/
 
-#ifdef NEWAMB
+#ifndef OLDAMB
 
 #define tfunc(lwr, x, upr)	(((x)-(lwr))/((upr)-(lwr)))
 

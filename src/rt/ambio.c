@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.8 2014/05/07 01:16:03 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.9 2014/06/19 16:26:55 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -39,7 +39,7 @@ FILE  *fp;
 }
 
 
-#ifdef NEWAMB
+#ifndef OLDAMB
 
 #define  putpos(v,fp)	putflt((v)[0],fp);putflt((v)[1],fp);putflt((v)[2],fp)
 

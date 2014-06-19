@@ -1940,3 +1940,9 @@ rcollate, gendaymtx, and dctimestep.
 Created rmtxop utility to operate on multi-component matrices.  This
 facilitates some daylight matrix calculations, and provides a general
 tool for manipulating matrix data.
+
+****** COMPATIBILITY CHANGE ********
+Introduced new Hessian-based error control in irradiance caching (ambient)
+calculation.  Since the format of the stored ambient values is different,
+the old files will be rejected with an error message and must be removed.
+The programs may be compiled with the -DOLDAMB option if this is a problem.

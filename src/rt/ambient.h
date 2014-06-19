@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.22 2014/05/07 01:16:03 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.23 2014/06/19 16:26:55 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#ifdef NEWAMB
+#ifndef OLDAMB
 
 /*
  * Normal and u-vector directions encoded using dircode.c

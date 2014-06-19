@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.62 2014/05/19 20:23:48 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.63 2014/06/19 16:26:55 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -21,7 +21,7 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.62 2014/05/19 20:23:48 greg Exp 
 #include  "ambient.h"
 #include  "random.h"
 
-#ifdef NEWAMB
+#ifndef OLDAMB
 
 extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
