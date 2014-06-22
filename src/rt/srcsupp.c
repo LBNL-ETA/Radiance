@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.19 2014/06/17 18:57:41 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.20 2014/06/22 18:05:28 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -28,7 +28,7 @@ SRCFUNC  sfun[NUMOTYPE];		/* source dispatch table */
 
 
 void
-initstypes()			/* initialize source dispatch table */
+initstypes(void)			/* initialize source dispatch table */
 {
 	extern VSMATERIAL  mirror_vs, direct1_vs, direct2_vs;
 	static SOBJECT  fsobj = {fsetsrc, flatpart, fgetplaneq, fgetmaxdisk};
@@ -49,7 +49,7 @@ initstypes()			/* initialize source dispatch table */
 
 
 int
-newsource()			/* allocate new source in our array */
+newsource(void)			/* allocate new source in our array */
 {
 	if (nsources == 0)
 		source = (SRCREC *)malloc(SRCINC*sizeof(SRCREC));
@@ -69,11 +69,12 @@ newsource()			/* allocate new source in our array */
 
 
 void
-setflatss(src)				/* set sampling for a flat source */
-register SRCREC  *src;
+setflatss(				/* set sampling for a flat source */
+	SRCREC  *src
+)
 {
 	double  mult;
-	register int  i;
+	int  i;
 
 	src->ss[SV][0] = src->ss[SV][1] = src->ss[SV][2] = 0.0;
 	for (i = 0; i < 3; i++)
@@ -89,12 +90,13 @@ register SRCREC  *src;
 
 
 void
-fsetsrc(src, so)			/* set a face as a source */
-register SRCREC  *src;
-OBJREC  *so;
+fsetsrc(			/* set a face as a source */
+	SRCREC  *src,
+	OBJREC  *so
+)
 {
-	register FACE  *f;
-	register int  i, j;
+	FACE  *f;
+	int  i, j;
 	double  d;
 	
 	src->sa.success = 2*AIMREQT-1;		/* bitch on second failure */
@@ -135,9 +137,10 @@ OBJREC  *so;
 
 
 void
-ssetsrc(src, so)			/* set a source as a source */
-register SRCREC  *src;
-register OBJREC  *so;
+ssetsrc(			/* set a source as a source */
+	SRCREC  *src,
+	OBJREC  *so
+)
 {
 	double  theta;
 	
@@ -162,11 +165,12 @@ register OBJREC  *so;
 
 
 void
-sphsetsrc(src, so)			/* set a sphere as a source */
-register SRCREC  *src;
-register OBJREC  *so;
+sphsetsrc(			/* set a sphere as a source */
+	SRCREC  *src,
+	OBJREC  *so
+)
 {
-	register int  i;
+	int  i;
 
 	src->sa.success = 2*AIMREQT-1;		/* bitch on second failure */
 	src->so = so;
@@ -186,11 +190,12 @@ register OBJREC  *so;
 
 
 void
-rsetsrc(src, so)			/* set a ring (disk) as a source */
-register SRCREC  *src;
-OBJREC  *so;
+rsetsrc(			/* set a ring (disk) as a source */
+	SRCREC  *src,
+	OBJREC  *so
+)
 {
-	register CONE  *co;
+	CONE  *co;
 	
 	src->sa.success = 2*AIMREQT-1;		/* bitch on second failure */
 	src->so = so;
@@ -210,12 +215,13 @@ OBJREC  *so;
 
 
 void
-cylsetsrc(src, so)			/* set a cylinder as a source */
-register SRCREC  *src;
-OBJREC  *so;
+cylsetsrc(			/* set a cylinder as a source */
+	SRCREC  *src,
+	OBJREC  *so
+)
 {
-	register CONE  *co;
-	register int  i;
+	CONE  *co;
+	int  i;
 	
 	src->sa.success = 4*AIMREQT-1;		/* bitch on fourth failure */
 	src->so = so;
@@ -247,10 +253,11 @@ OBJREC  *so;
 
 
 SPOT *
-makespot(m)			/* make a spotlight */
-register OBJREC  *m;
+makespot(			/* make a spotlight */
+	OBJREC  *m
+)
 {
-	register SPOT  *ns;
+	SPOT  *ns;
 
 	if ((ns = (SPOT *)m->os) != NULL)
 		return(ns);
@@ -268,9 +275,10 @@ register OBJREC  *m;
 
 
 int
-spotout(r, s)			/* check if we're outside spot region */
-register RAY  *r;
-register SPOT  *s;
+spotout(			/* check if we're outside spot region */
+	RAY  *r,
+	SPOT  *s
+)
 {
 	double  d;
 	FVECT  vd;
@@ -298,14 +306,15 @@ register SPOT  *s;
 
 
 double
-fgetmaxdisk(ocent, op)		/* get center and squared radius of face */
-FVECT  ocent;
-OBJREC  *op;
+fgetmaxdisk(		/* get center and squared radius of face */
+	FVECT  ocent,
+	OBJREC  *op
+)
 {
 	double  maxrad2;
 	double  d;
-	register int  i, j;
-	register FACE  *f;
+	int  i, j;
+	FACE  *f;
 	
 	f = getface(op);
 	if (f->area == 0.)
@@ -330,11 +339,12 @@ OBJREC  *op;
 
 
 double
-rgetmaxdisk(ocent, op)		/* get center and squared radius of ring */
-FVECT  ocent;
-OBJREC  *op;
+rgetmaxdisk(		/* get center and squared radius of ring */
+	FVECT  ocent,
+	OBJREC  *op
+)
 {
-	register CONE  *co;
+	CONE  *co;
 	
 	co = getcone(op, 0);
 	VCOPY(ocent, CO_P0(co));
@@ -343,11 +353,12 @@ OBJREC  *op;
 
 
 double
-fgetplaneq(nvec, op)			/* get plane equation for face */
-FVECT  nvec;
-OBJREC  *op;
+fgetplaneq(			/* get plane equation for face */
+	FVECT  nvec,
+	OBJREC  *op
+)
 {
-	register FACE  *fo;
+	FACE  *fo;
 
 	fo = getface(op);
 	VCOPY(nvec, fo->norm);
@@ -356,11 +367,12 @@ OBJREC  *op;
 
 
 double
-rgetplaneq(nvec, op)			/* get plane equation for ring */
-FVECT  nvec;
-OBJREC  *op;
+rgetplaneq(			/* get plane equation for ring */
+	FVECT  nvec,
+	OBJREC  *op
+)
 {
-	register CONE  *co;
+	CONE  *co;
 
 	co = getcone(op, 0);
 	VCOPY(nvec, co->ad);
@@ -369,9 +381,11 @@ OBJREC  *op;
 
 
 int
-commonspot(sp1, sp2, org)	/* set sp1 to intersection of sp1 and sp2 */
-register SPOT  *sp1, *sp2;
-FVECT  org;
+commonspot(		/* set sp1 to intersection of sp1 and sp2 */
+	SPOT  *sp1,
+	SPOT  *sp2,
+	FVECT  org
+)
 {
 	FVECT  cent;
 	double  rad2, cos1, cos2;
@@ -393,9 +407,11 @@ FVECT  org;
 
 
 int
-commonbeam(sp1, sp2, dir)	/* set sp1 to intersection of sp1 and sp2 */
-register SPOT  *sp1, *sp2;
-FVECT  dir;
+commonbeam(		/* set sp1 to intersection of sp1 and sp2 */
+	SPOT  *sp1,
+	SPOT  *sp2,
+	FVECT  dir
+)
 {
 	FVECT  cent, c1, c2;
 	double  rad2, d;
@@ -415,9 +431,10 @@ FVECT  dir;
 
 
 int
-checkspot(sp, nrm)		/* check spotlight for behind source */
-register SPOT  *sp;	/* spotlight */
-FVECT  nrm;		/* source surface normal */
+checkspot(			/* check spotlight for behind source */
+	SPOT  *sp,	/* spotlight */
+	FVECT  nrm	/* source surface normal */
+)
 {
 	double  d, d1;
 
@@ -431,11 +448,12 @@ FVECT  nrm;		/* source surface normal */
 
 
 double
-spotdisk(oc, op, sp, pos)	/* intersect spot with object op */
-FVECT  oc;
-OBJREC  *op;
-register SPOT  *sp;
-FVECT  pos;
+spotdisk(		/* intersect spot with object op */
+	FVECT  oc,
+	OBJREC  *op,
+	SPOT  *sp,
+	FVECT  pos
+)
 {
 	FVECT  onorm;
 	double  offs, d, dist;
@@ -453,11 +471,12 @@ FVECT  pos;
 
 
 double
-beamdisk(oc, op, sp, dir)	/* intersect beam with object op */
-FVECT  oc;
-OBJREC  *op;
-register SPOT  *sp;
-FVECT  dir;
+beamdisk(		/* intersect beam with object op */
+	FVECT  oc,
+	OBJREC  *op,
+	SPOT  *sp,
+	FVECT  dir
+)
 {
 	FVECT  onorm;
 	double  offs, d, dist;
@@ -473,10 +492,13 @@ FVECT  dir;
 
 
 double
-intercircle(cc, c1, c2, r1s, r2s)	/* intersect two circles */
-FVECT  cc;			/* midpoint (return value) */
-FVECT  c1, c2;			/* circle centers */
-double  r1s, r2s;		/* radii squared */
+intercircle(				/* intersect two circles */
+	FVECT  cc,		/* midpoint (return value) */
+	FVECT  c1,		/* circle centers */
+	FVECT  c2,
+	double  r1s,		/* radii squared */
+	double	r2s
+)
 {
 	double  a2, d2, l;
 	FVECT  disp;
