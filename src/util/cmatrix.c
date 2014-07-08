@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.6 2014/06/17 18:03:48 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.7 2014/07/08 16:39:41 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -117,7 +117,7 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 	cmi.dtype = DTfromHeader;
 	cmi.nrows = cmi.ncols = 0;
 	cmi.err = "unexpected EOF in header";
-	if (getheader(fp, &get_cminfo, &cmi) < 0)
+	if (getheader(fp, get_cminfo, &cmi) < 0)
 		return(cmi.err);
 	if (dt != NULL) {			/* get/check data type? */
 		if (cmi.dtype == DTfromHeader) {
