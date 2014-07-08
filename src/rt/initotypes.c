@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.18 2012/07/29 19:01:39 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.19 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -16,7 +16,7 @@ static const char RCSid[] = "$Id: initotypes.c,v 2.18 2012/07/29 19:01:39 greg E
 FUN  ofun[NUMOTYPE] = INIT_OTYPE;
 
 
-extern void
+void
 initotypes(void)			/* initialize ofun array */
 {
 	ofun[OBJ_SPHERE].funp =
@@ -90,7 +90,7 @@ initotypes(void)			/* initialize ofun array */
 }
 
 
-extern int
+int
 o_default(OBJREC *o, RAY *r)			/* default action is error */
 {
 	objerror(o, CONSISTENCY, "unexpected object call");

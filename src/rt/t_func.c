@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_func.c,v 2.9 2012/06/09 07:16:47 greg Exp $";
+static const char	RCSid[] = "$Id: t_func.c,v 2.10 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  t_func.c - routine for procedural textures.
@@ -28,16 +28,16 @@ static const char	RCSid[] = "$Id: t_func.c,v 2.9 2012/06/09 07:16:47 greg Exp $"
  */
 
 
-extern int
+int
 t_func(			/* compute texture for ray */
-	register OBJREC  *m,
-	register RAY  *r
+	OBJREC  *m,
+	RAY  *r
 )
 {
 	FVECT  disp;
 	double  d;
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 
 	if (m->oargs.nsargs < 4)
 		objerror(m, USER, "bad # arguments");

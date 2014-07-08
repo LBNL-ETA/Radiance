@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_data.c,v 2.9 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: mx_data.c,v 2.10 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  mx_data.c - routine for stored mixtures.
@@ -41,9 +41,9 @@ static const char	RCSid[] = "$Id: mx_data.c,v 2.9 2004/03/30 16:13:01 schorsch E
  */
 
 
-extern int
+int
 mx_data(			/* interpolate mixture data */
-	register OBJREC  *m,
+	OBJREC  *m,
 	RAY  *r
 )
 {
@@ -52,8 +52,8 @@ mx_data(			/* interpolate mixture data */
 	double  pt[MAXDIM];
 	DATARRAY  *dp;
 	OBJECT  mod[2];
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 
 	if (m->oargs.nsargs < 6)
 		objerror(m, USER, "bad # arguments");
@@ -93,9 +93,9 @@ computerr:
 }
 
 
-extern int
+int
 mx_pdata(			/* interpolate mixture picture */
-	register OBJREC  *m,
+	OBJREC  *m,
 	RAY  *r
 )
 {
@@ -104,8 +104,8 @@ mx_pdata(			/* interpolate mixture picture */
 	double  pt[MAXDIM];
 	DATARRAY  *dp;
 	OBJECT  mod[2];
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 
 	if (m->oargs.nsargs < 7)
 		objerror(m, USER, "bad # arguments");

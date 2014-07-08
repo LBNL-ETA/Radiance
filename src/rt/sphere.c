@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: sphere.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: sphere.c,v 2.8 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  sphere.c - compute ray intersection with spheres.
@@ -12,18 +12,18 @@ static const char RCSid[] = "$Id: sphere.c,v 2.7 2004/03/30 16:13:01 schorsch Ex
 #include  "rtotypes.h"
 
 
-extern int
+int
 o_sphere(			/* compute intersection with sphere */
 	OBJREC  *so,
-	register RAY  *r
+	RAY  *r
 )
 {
 	double  a, b, c;	/* coefficients for quadratic equation */
 	double  root[2];	/* quadratic roots */
 	int  nroots;
 	double  t;
-	register RREAL  *ap;
-	register int  i;
+	RREAL  *ap;
+	int  i;
 
 	if (so->oargs.nfargs != 4)
 		objerror(so, USER, "bad # arguments");

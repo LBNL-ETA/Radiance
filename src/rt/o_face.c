@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_face.c,v 2.6 2006/03/02 16:51:55 greg Exp $";
+static const char RCSid[] = "$Id: o_face.c,v 2.7 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  o_face.c - compute ray intersection with faces.
@@ -12,16 +12,16 @@ static const char RCSid[] = "$Id: o_face.c,v 2.6 2006/03/02 16:51:55 greg Exp $"
 #include  "rtotypes.h"
 
 
-extern int
+int
 o_face(		/* compute intersection with polygonal face */
 	OBJREC  *o,
-	register RAY  *r
+	RAY  *r
 )
 {
 	double  rdot;		/* direction . normal */
 	double  t;		/* distance to intersection */
 	FVECT  pisect;		/* intersection point */
-	register FACE  *f;	/* face record */
+	FACE  *f;	/* face record */
 
 	f = getface(o);
 		

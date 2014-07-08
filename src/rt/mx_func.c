@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mx_func.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: mx_func.c,v 2.9 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  mx_func.c - routine for mixture functions.
@@ -26,17 +26,17 @@ static const char	RCSid[] = "$Id: mx_func.c,v 2.8 2004/03/30 16:13:01 schorsch E
  */
 
 
-extern int
+int
 mx_func(			/* compute mixture function */
-	register OBJREC  *m,
+	OBJREC  *m,
 	RAY  *r
 )
 {
 	OBJECT	obj;
-	register int  i;
+	int  i;
 	double  coef;
 	OBJECT  mod[2];
-	register MFUNC  *mf;
+	MFUNC  *mf;
 
 	if (m->oargs.nsargs < 4)
 		objerror(m, USER, "bad # arguments");

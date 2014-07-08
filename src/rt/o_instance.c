@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_instance.c,v 2.8 2004/03/30 16:13:01 schorsch Exp $";
+static const char RCSid[] = "$Id: o_instance.c,v 2.9 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  o_instance.c - routines for computing ray intersections with octrees.
@@ -12,16 +12,16 @@ static const char RCSid[] = "$Id: o_instance.c,v 2.8 2004/03/30 16:13:01 schorsc
 #include  "rtotypes.h"
 
 
-extern int
+int
 o_instance(		/* compute ray intersection with octree */
 	OBJREC  *o,
-	register RAY  *r
+	RAY  *r
 )
 {
 	RAY  rcont;
 	double  d;
-	register INSTANCE  *ins;
-	register int  i;
+	INSTANCE  *ins;
+	int  i;
 					/* get the octree */
 	ins = getinstance(o, IO_ALL);
 					/* copy and transform ray */

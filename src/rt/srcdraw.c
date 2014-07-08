@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.16 2005/04/19 01:15:07 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.17 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -70,8 +70,8 @@ inregion(			/* check if vertex is in region */
 
 static void
 clipregion(		/* find intersection with boundary */
-	register RREAL	a[2],
-	register RREAL	b[2],
+	RREAL	a[2],
+	RREAL	b[2],
 	double	cv,
 	int	crit,
 	RREAL	r[2]	/* return value */
@@ -102,7 +102,7 @@ hp_clip_poly(	/* clip polygon to half-plane */
 )
 {
 	RREAL	*s, *p;
-	register int	j, nvo;
+	int	j, nvo;
 
 	s = vl[nv-1];
 	nvo = 0;
@@ -151,7 +151,7 @@ minw2(			/* compute square of minimum width */
 )
 {
 	double	d2, w2, w2min, w2max;
-	register RREAL	*p0, *p1, *p2;
+	RREAL	*p0, *p1, *p2;
 	int	i, j;
 				/* find minimum for all widths */
 	w2min = FHUGE;
@@ -179,12 +179,12 @@ minw2(			/* compute square of minimum width */
 
 static void
 convex_center(		/* compute center of convex polygon */
-	register RREAL	vl[][2],
+	RREAL	vl[][2],
 	int	nv,
 	RREAL	cv[2]		/* return value */
 )
 {
-	register int	i;
+	int	i;
 					/* simple average (suboptimal) */
 	cv[0] = cv[1] = 0.;
 	for (i = 0; i < nv; i++) {
@@ -198,13 +198,13 @@ convex_center(		/* compute center of convex polygon */
 
 static double
 poly_area(			/* compute area of polygon */
-	register RREAL	vl[][2],
+	RREAL	vl[][2],
 	int	nv
 )
 {
 	double	a;
 	RREAL	v0[2], v1[2];
-	register int	i;
+	int	i;
 
 	a = 0.;
 	v0[0] = vl[1][0] - vl[0][0];
@@ -229,7 +229,7 @@ convex_hull(		/* compute polygon's convex hull */
 	int	nvo, nvt;
 	RREAL	vlt[MAXVERT][2];
 	double	voa, vta;
-	register int	i, j;
+	int	i, j;
 					/* start with original polygon */
 	for (i = nvo = nv; i--; ) {
 		vlo[i][0] = vl[i][0]; vlo[i][1] = vl[i][1];
@@ -263,8 +263,8 @@ spinsert(			/* insert new source polygon */
 	int	nv
 )
 {
-	register SPLIST	*spn;
-	register int	i;
+	SPLIST	*spn;
+	int	i;
 
 	if (nv < 3)
 		return;
@@ -293,11 +293,11 @@ sourcepoly(			/* compute image polygon for source */
 					 {0,1,3,7,6,4},{0,1,5,7,6,2},
 					 {0,2,6,7,5,1},{0,4,6,7,3,1},
 					 {0,2,3,7,5,4},{1,5,4,6,2,3}};
-	register SRCREC	*s = source + sn;
+	SRCREC	*s = source + sn;
 	FVECT	ap, ip;
 	RREAL	pt[6][2];
 	int	dir;
-	register int	i, j;
+	int	i, j;
 
 	if (s->sflags & (SDISTANT|SFLAT)) {
 		if (s->sflags & SDISTANT) {
@@ -358,15 +358,15 @@ sourcepoly(			/* compute image polygon for source */
 
 
 			/* initialize by finding sources smaller than rad */
-extern void
+void
 init_drawsources(
 	int	rad				/* source sample size */
 )
 {
 	RREAL	spoly[MAXVERT][2];
 	int	nsv;
-	register SPLIST	*sp;
-	register int	i;
+	SPLIST	*sp;
+	int	i;
 					/* free old source list if one */
 	for (sp = sphead; sp != NULL; sp = sphead) {
 		sphead = sp->next;
@@ -392,7 +392,7 @@ init_drawsources(
 	}
 }
 
-extern void			/* add sources smaller than rad to computed subimage */
+void				/* add sources smaller than rad to computed subimage */
 drawsources(
 	COLOR	*pic[],				/* subimage pixel value array */
 	float	*zbf[],				/* subimage distance array (opt.) */
@@ -408,8 +408,8 @@ drawsources(
 	RREAL	cxy[2];
 	double	w;
 	RAY	sr;
-	register SPLIST	*sp;
-	register int	i;
+	SPLIST	*sp;
+	int	i;
 					/* check each source in our list */
 	for (sp = sphead; sp != NULL; sp = sp->next) {
 					/* clip source poly to subimage */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.13 2012/10/23 05:03:52 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.14 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -59,11 +59,11 @@ OBJREC	*o;
 
 static int
 volume_sign(r, v1, v2)	/* get signed volume for ray and edge */
-register RAY	*r;
+RAY	*r;
 int32		v1, v2;
 {
-	int				reversed = 0;
-	register struct EdgeSide	*ecp;
+	int		reversed = 0;
+	struct EdgeSide	*ecp;
 	
 	if (v1 > v2) {
 		int32	t = v2; v2 = v1; v1 = t;
@@ -142,10 +142,10 @@ RAY	*r;
 }
 
 
-extern int
+int
 o_mesh(			/* compute ray intersection with a mesh */
 	OBJREC		*o,
-	register RAY	*r
+	RAY	*r
 )
 {
 	RAY		rcont;

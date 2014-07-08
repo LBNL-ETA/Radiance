@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.25 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.26 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -82,9 +82,9 @@ static int intext(FVECT p, OBJREC *m);
 static int inglyph(double x, double y, GLYPH *gl);
 
 
-extern int
+int
 do_text(
-	register OBJREC  *m,
+	OBJREC  *m,
 	RAY  *r
 )
 {
@@ -138,8 +138,8 @@ tlalloc(			/* allocate and assign text line */
 	char  *s
 )
 {
-	register int  siz;
-	register TLINE  *tl;
+	int  siz;
+	TLINE  *tl;
 
 	siz = strlen(s) + 1;
 	if ((tl=(TLINE *)malloc(sizeof(TLINE)+siz)) == NULL ||
@@ -153,7 +153,7 @@ tlalloc(			/* allocate and assign text line */
 
 static TEXT *
 gettext(			/* get text structure for material */
-	register OBJREC  *tm
+	OBJREC  *tm
 )
 {
 #define  R	(tm->oargs.farg+3)
@@ -163,9 +163,9 @@ gettext(			/* get text structure for material */
 	FILE  *fp;
 	char  linbuf[512];
 	TEXT  *t;
-	register int  i;
-	register TLINE  *tlp;
-	register char  *s;
+	int  i;
+	TLINE  *tlp;
+	char  *s;
 
 	if ((t = (TEXT *)tm->os) != NULL)
 		return(t);
@@ -245,13 +245,13 @@ gettext(			/* get text structure for material */
 }
 
 
-extern void
+void
 freetext(			/* free text structures associated with m */
 	OBJREC  *m
 )
 {
-	register TEXT  *tp;
-	register TLINE  *tlp;
+	TEXT  *tp;
+	TLINE  *tlp;
 
 	tp = (TEXT *)m->os;
 	if (tp == NULL)
@@ -273,11 +273,11 @@ intext(			/* check to see if p is in text glyph */
 	OBJREC  *m
 )
 {
-	register TEXT  *tp;
-	register TLINE  *tlp;
+	TEXT  *tp;
+	TLINE  *tlp;
 	FVECT  v;
 	double  y, x;
-	register int  i, h;
+	int  i, h;
 				/* first, compute position in text */
 	tp = gettext(m);
 	v[0] = p[0] - m->oargs.farg[0];
@@ -313,13 +313,13 @@ static int
 inglyph(		/* (x,y) within font glyph gl? */
 	double  x,		/* real coordinates in range [0,255) */
 	double  y,
-	register GLYPH  *gl
+	GLYPH  *gl
 )
 {
 	int  n, ncross;
 	int  xlb, ylb;
 	int  tv;
-	register GORD  *p0, *p1;
+	GORD  *p0, *p1;
 
 	if (gl == NULL)
 		return(0);

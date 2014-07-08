@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_mist.c,v 2.17 2005/04/19 01:15:06 greg Exp $";
+static const char RCSid[] = "$Id: m_mist.c,v 2.18 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  * Mist volumetric material.
@@ -58,11 +58,11 @@ static void add2slist(RAY  *r, int  *sl);
 
 static int
 inslist(		/* return index of source n if it's in list sl */
-	register int  *sl,
-	register int  n
+	int  *sl,
+	int  n
 )
 {
-	register int  i;
+	int  i;
 
 	for (i = sl[0]; i > 0; i--)
 		if (sl[i] == n)
@@ -73,11 +73,11 @@ inslist(		/* return index of source n if it's in list sl */
 
 static int
 srcmatch(	/* check for an id match on a light source */
-	register SRCREC  *sp,
-	register char  *id
+	SRCREC  *sp,
+	char  *id
 )
 {
-	register char  *cp;
+	char  *cp;
 						/* check for relay sources */
 	while ((cp = strchr(id, RELAYDELIM)) != NULL) {
 		if (!(sp->sflags & SVIRTUAL) || sp->so == NULL)
@@ -95,12 +95,12 @@ srcmatch(	/* check for an id match on a light source */
 
 static void
 add2slist(	/* add source list to ray's */
-	register RAY  *r,
-	register int  *sl
+	RAY  *r,
+	int  *sl
 )
 {
 	static int  slspare[MAXSLIST+1];	/* in case of emergence */
-	register int  i;
+	int  i;
 
 	if (sl == NULL || sl[0] == 0)		/* nothing to add */
 		return;
@@ -116,10 +116,10 @@ add2slist(	/* add source list to ray's */
 }
 
 
-extern int
+int
 m_mist(		/* process a ray entering or leaving some mist */
 	OBJREC  *m,
-	register RAY  *r
+	RAY  *r
 )
 {
 	RAY  p;
@@ -127,7 +127,7 @@ m_mist(		/* process a ray entering or leaving some mist */
 	int  newslist[MAXSLIST+1];
 	COLOR  mext;
 	double  re, ge, be;
-	register int  i, j;
+	int  i, j;
 					/* check arguments */
 	if (m->oargs.nfargs > 7)
 		objerror(m, USER, "bad arguments");

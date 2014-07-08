@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: t_data.c,v 2.10 2012/06/09 07:16:47 greg Exp $";
+static const char	RCSid[] = "$Id: t_data.c,v 2.11 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  t_data.c - routine for stored textures
@@ -30,9 +30,9 @@ static const char	RCSid[] = "$Id: t_data.c,v 2.10 2012/06/09 07:16:47 greg Exp $
  */
 
 
-extern int
+int
 t_data(			/* interpolate texture data */
-	register OBJREC  *m,
+	OBJREC  *m,
 	RAY  *r
 )
 {
@@ -41,8 +41,8 @@ t_data(			/* interpolate texture data */
 	double  dval[3], pt[MAXDIM];
 	double  d;
 	DATARRAY  *dp;
-	register MFUNC  *mf;
-	register int  i;
+	MFUNC  *mf;
+	int  i;
 
 	if (m->oargs.nsargs < 8)
 		objerror(m, USER, "bad # arguments");

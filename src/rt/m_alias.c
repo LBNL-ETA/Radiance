@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.6 2006/07/12 05:47:05 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.7 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -23,7 +23,7 @@ static const char RCSid[] = "$Id: m_alias.c,v 2.6 2006/07/12 05:47:05 greg Exp $
  *  chain at all.
  */
 
-extern int
+int
 m_alias(			/* transfer shading to alias target */
 	OBJREC	*m,
 	RAY	*r

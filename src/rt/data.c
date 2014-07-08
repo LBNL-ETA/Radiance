@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.30 2013/08/07 05:10:09 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.31 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -38,7 +38,7 @@ static DATARRAY	 *dtab[TABSIZ];		/* data array list */
 static gethfunc headaspect;
 
 
-extern DATARRAY *
+DATARRAY *
 getdata(				/* get data array dname */
 	char  *dname
 )
@@ -46,8 +46,8 @@ getdata(				/* get data array dname */
 	char  *dfname;
 	FILE  *fp;
 	int  asize=0;
-	register int  i, j;
-	register DATARRAY  *dp;
+	int  i, j;
+	DATARRAY  *dp;
 						/* look for array in list */
 	for (dp = dtab[hash(dname)]; dp != NULL; dp = dp->next)
 		if (!strcmp(dname, dp->name))
@@ -159,7 +159,7 @@ headaspect(			/* check string for aspect ratio */
 }
 
 
-extern DATARRAY *
+DATARRAY *
 getpict(				/* get picture pname */
 	char  *pname
 )
@@ -172,8 +172,8 @@ getpict(				/* get picture pname */
 	RESOLU	inpres;
 	RREAL  loc[2];
 	int  y;
-	register int  x, i;
-	register DATARRAY  *pp;
+	int  x, i;
+	DATARRAY  *pp;
 						/* look for array in list */
 	for (pp = dtab[hash(pname)]; pp != NULL; pp = pp->next)
 		if (!strcmp(pname, pp->name))
@@ -258,15 +258,15 @@ readerr:
 }
 
 
-extern void
+void
 freedata(			/* release data array reference */
 	DATARRAY  *dta
 )
 {
 	DATARRAY  head;
 	int  hval, nents;
-	register DATARRAY  *dpl, *dp;
-	register int  i;
+	DATARRAY  *dpl, *dp;
+	int  i;
 
 	if (dta == NULL) {			/* free all if NULL */
 		hval = 0; nents = TABSIZ;
@@ -295,16 +295,16 @@ freedata(			/* release data array reference */
 }
 
 
-extern double
+double
 datavalue(		/* interpolate data value at a point */
-	register DATARRAY  *dp,
+	DATARRAY  *dp,
 	double	*pt
 )
 {
 	DATARRAY  sd;
 	int  asize;
 	int  lower, upper;
-	register int  i;
+	int  i;
 	double	x, y0, y1;
 					/* set up dimensions for recursion */
 	if (dp->nd > 1) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: p_func.c,v 2.7 2004/03/30 16:13:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: p_func.c,v 2.8 2014/07/08 18:25:00 greg Exp $";
 #endif
 /*
  *  p_func.c - routine for procedural patterns.
@@ -34,14 +34,14 @@ static const char	RCSid[] = "$Id: p_func.c,v 2.7 2004/03/30 16:13:01 schorsch Ex
  */
 
 
-extern int
+int
 p_bfunc(			/* compute brightness pattern */
 	OBJREC  *m,
 	RAY  *r
 )
 {
 	double  bval;
-	register MFUNC  *mf;
+	MFUNC  *mf;
 
 	if (m->oargs.nsargs < 2)
 		objerror(m, USER, "bad # arguments");
@@ -58,14 +58,14 @@ p_bfunc(			/* compute brightness pattern */
 }
 
 
-extern int
+int
 p_cfunc(			/* compute color pattern */
 	OBJREC  *m,
 	RAY  *r
 )
 {
 	COLOR  cval;
-	register MFUNC  *mf;
+	MFUNC  *mf;
 
 	if (m->oargs.nsargs < 4)
 		objerror(m, USER, "bad # arguments");
