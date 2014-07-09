@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.15 2014/07/08 16:39:41 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.16 2014/07/09 21:45:48 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -274,6 +274,9 @@ int		ni_columns = 0;			/* number of input columns */
 int		ni_rows = 0;			/* number of input rows */
 int		no_columns = 0;			/* number of output columns */
 int		no_rows = 0;			/* number of output rows */
+int		transpose = 0;			/* transpose rows & cols? */
+int		i_header = 1;			/* input header? */
+int		o_header = 1;			/* output header? */
 
 /* check settings and assign defaults */
 static int
@@ -293,6 +296,12 @@ check_sizes()
 			return(0);
 		}
 	}
+	if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
+		if (ni_rows > 0) no_columns = ni_rows;
+		if (ni_columns > 0) no_rows = ni_columns;
+	} else if ((no_rows <= 0) & (no_columns > 0) &&
+			!((ni_rows*ni_columns) % no_columns))
+		no_rows = ni_rows*ni_columns/no_columns;
 	if (n_comp <= 0)
 		n_comp = 3;
 	return(1);
@@ -466,7 +475,8 @@ headline(char *s, void *p)
 		n_comp = n;
 		return(0);
 	}
-	fputs(s, stdout);			/* copy header info. */
+	if (o_header)
+		fputs(s, stdout);		/* copy header info. */
 	return(0);
 }
 
@@ -474,9 +484,6 @@ headline(char *s, void *p)
 int
 main(int argc, char *argv[])
 {
-	int	i_header = 1;			/* input header? */
-	int	o_header = 1;			/* output header? */
-	int	transpose = 0;			/* transpose rows & cols? */
 	int	a;
 
 	for (a = 1; a < argc && argv[a][0] == '-'; a++)
@@ -587,10 +594,6 @@ main(int argc, char *argv[])
 		return(1);
 	if (o_header) {				/* write header */
 		printargs(a, argv, stdout);
-		if (transpose && (no_rows <= 0) & (no_columns <= 0)) {
-			if (ni_rows > 0) no_columns = ni_rows;
-			if (ni_columns > 0) no_rows = ni_columns;
-		}
 		if (no_rows > 0)
 			printf("NROWS=%d\n", no_rows);
 		if (no_columns > 0)
