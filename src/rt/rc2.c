@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.11 2014/06/13 01:16:41 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.12 2014/07/09 21:09:28 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -152,8 +152,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 							(xres + !xres) );
 					while (*cp) ++cp;
 				}
-				sprintf(cp, "NCOLS=%d\nNCOMP=3\n",
-						stdos.reclen);
+				sprintf(cp, "NCOLS=%d\n", stdos.reclen);
 				printheader(stdout, info);
 			}
 			printresolu(stdout, xres, yres);
