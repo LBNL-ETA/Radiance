@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.47 2011/08/16 18:09:53 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.48 2014/07/09 23:14:58 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -18,6 +18,11 @@ static const char RCSid[] = "$Id: xform.c,v 2.47 2011/08/16 18:09:53 greg Exp $"
 #include  "rtmath.h"
 #include  "object.h"
 #include  "otypes.h"
+
+#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#define getc    getc_unlocked
+#endif
 
 int  xac;				/* global xform argument count */
 char  **xav;				/* global xform argument pointer */
@@ -98,7 +103,7 @@ main(		/* get transform options and transform file */
 				if (idprefix == NULL)
 					idprefix = argv[a];
 				else {
-					register char	*newp;
+					char	*newp;
 					newp = (char *)malloc(strlen(idprefix)+
 							strlen(argv[a])+2);
 					if (newp == NULL)
@@ -184,7 +189,7 @@ doargf(			/* take argument list from file */
 	char  argbuf[2048];
 	char  *newid, newidbuf[128];
 	char  *oldid;
-	register char	*cp;
+	char	*cp;
 	FILE	*argfp;
 	int  n, i, k, newac, err;
 	
@@ -343,11 +348,11 @@ doarray(			/* make array */
 void
 xform(			/* transform stream by tot.xfm */
 	char  *name,
-	register FILE  *fin
+	FILE  *fin
 )
 {
 	int  nobjs = 0;
-	register int  c;
+	int  c;
 
 	while ((c = getc(fin)) != EOF) {
 		if (isspace(c))				/* blank */
@@ -456,7 +461,7 @@ o_default(			/* pass on arguments unchanged */
 	FILE  *fin
 )
 {
-	register int  i;
+	int  i;
 	FUNARGS	 fa;
 
 	if (readfargs(&fa, fin) != 1)
@@ -492,7 +497,7 @@ addxform(			/* add xf arguments to strings */
 	FILE  *fin
 )
 {
-	register int  i;
+	int  i;
 	int  resetarr = 0;
 	FUNARGS	 fa;
 
@@ -605,7 +610,7 @@ m_mist(		/* transform arguments for mist */
 	else
 		for (i = 0; i < fa.nsargs; i++) {
 			char	sname[256], *sp;
-			register char	*cp1, *cp2 = sname;
+			char	*cp1, *cp2 = sname;
 							/* add idprefix */
 			for (sp = fa.sarg[i]; *sp; sp = cp1) {
 				for (cp1 = idprefix; *cp1; )
@@ -775,7 +780,7 @@ o_face(			/* transform face arguments */
 )
 {
 	FVECT  p;
-	register int  i;
+	int  i;
 	FUNARGS	 fa;
 
 	if (readfargs(&fa, fin) != 1)
@@ -889,7 +894,7 @@ o_ring(			/* transform ring arguments */
 void
 initotypes(void)			/* initialize ofun[] array */
 {
-	register int  i;
+	int  i;
 
 	if (ofun[OBJ_SOURCE].funp == o_source)
 		return;			/* done already */
@@ -967,11 +972,11 @@ openmain(		/* open input, changing directory for file */
 	static char  origdir[PATH_MAX];
 	static char  curfn[PATH_MAX];
 	static int  diffdir;
-	register char  *fpath;
+	char  *fpath;
 
 	if (iname == NULL) {			/* standard input */
 		if (mainfp == NULL) {
-			register int  c;
+			int  c;
 			strcpy(mainfn, "standard input");
 			if (nrept <= 1) {
 				mainfp = stdin;
@@ -1015,7 +1020,7 @@ openmain(		/* open input, changing directory for file */
 						/* record path name */
 	strcpy(mainfn, fpath);
 	if (expand) {				/* change to local directory */
-		register char  *cp = fpath + strlen(fpath);	/* get dir. */
+		char  *cp = fpath + strlen(fpath);	/* get dir. */
 		while (cp > fpath) {
 			cp--;
 			if (ISDIRSEP(*cp)) {
