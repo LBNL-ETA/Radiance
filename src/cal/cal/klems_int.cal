@@ -1,6 +1,7 @@
-{ RCSid $Id: klems_int.cal,v 1.7 2012/02/20 02:56:19 greg Exp $ }
+{ RCSid $Id: klems_int.cal,v 1.8 2014/07/10 17:43:18 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis (0-144)
+	Returns 145 (Nkbins) for wrong-side rays
 
 	Modified from Tregenza.cal, which is similar but different
 
@@ -19,7 +20,8 @@ kfindrow(r, pol) : if(r-kpola(0)+.5, r,
 
 kazn(azi,inc) : if((360-.5*inc)-azi, floor((azi+.5*inc)/inc), 0);
 
-kbin2(pol,azi) = select(kfindrow(1, pol),
+kbin2(pol,azi) = if(pol-90, Nkbins,
+	select(kfindrow(1, pol),
 		kazn(azi,360/knaz(1)),
 		kaccum(1) + kazn(azi,360/knaz(2)),
 		kaccum(2) + kazn(azi,360/knaz(3)),
@@ -29,7 +31,7 @@ kbin2(pol,azi) = select(kfindrow(1, pol),
 		kaccum(6) + kazn(azi,360/knaz(7)),
 		kaccum(7) + kazn(azi,360/knaz(8)),
 		kaccum(8) + kazn(azi,360/knaz(9))
-	);
+	) );
 
 kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
 	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
