@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.7 2013/11/01 15:32:58 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.8 2014/07/11 01:52:38 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -171,7 +171,6 @@ or
 option.
 Since bin numbers start from zero, the bin count is always equal to
 the last bin plus one.
-Set the this value to zero if the bin count is unknown (the default).
 The most recent
 .I \-b,
 .I \-bn
@@ -204,6 +203,9 @@ arguments and files read using the
 option.
 The computed bin value will be
 rounded to the nearest whole number.
+For a single bin, you may specify
+.I "\-b 0",
+which is the default.
 This mechanism allows the user to define precise regions or directions
 they wish to accumulate, such as the Tregenza sky discretization,
 which would be otherwise impossible to specify
@@ -212,7 +214,7 @@ The rules and predefined functions available for these expressions are
 described in the
 .I rcalc(1)
 man page.
-Unlike
+Like
 .I rcalc,
 .I rcontrib
 will search the RADIANCE library directories for each file given in a
