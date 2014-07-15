@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.20 2012/09/14 13:34:02 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.21 2014/07/15 23:44:53 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -324,7 +324,7 @@ vstestvis(		/* pretest source visibility */
 {
 	RAY  sr;
 	FVECT  onorm;
-	FVECT  offsdir;
+	double  offsdir[3];
 	SRCINDEX  si;
 	double  or, d, d1;
 	int  stestlim, ssn;
@@ -340,8 +340,7 @@ vstestvis(		/* pretest source visibility */
 					/* 32. == heuristic constant */
 		n = 32.*or2/(thescene.cusize*thescene.cusize)*vspretest + .5;
 	} else {
-		for (i = 0; i < 3; i++)
-			offsdir[i] = source[sn].sloc[i] - oc[i];
+		VSUB(offsdir, source[sn].sloc, oc);
 		d = DOT(offsdir,offsdir);
 		if (d <= FTINY)
 			n = 2.*PI * vspretest + .5;

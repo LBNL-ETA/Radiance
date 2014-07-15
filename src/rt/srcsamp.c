@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsamp.c,v 2.18 2011/12/28 18:39:36 greg Exp $";
+static const char	RCSid[] = "$Id: srcsamp.c,v 2.19 2014/07/15 23:44:53 greg Exp $";
 #endif
 /*
  * Source sampling routines
@@ -40,7 +40,7 @@ nextssamp(			/* compute sample for source, rtn. distance */
 {
 	int  cent[3], size[3], parr[2];
 	SRCREC  *srcp;
-	FVECT  vpos;
+	double  vpos[3];
 	double  d;
 	int  i;
 nextsample:
