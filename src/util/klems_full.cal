@@ -1,7 +1,7 @@
-{ RCSid $Id: klems_int.cal,v 1.9 2014/07/19 00:09:18 greg Exp $ }
+{ RCSid $Id: klems_full.cal,v 1.1 2014/07/19 00:28:38 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis (0-144)
-	Returns 145 (Nkbins) for wrong-side rays
+	Returns -1 for wrong-side rays
 
 	Modified from Tregenza.cal, which is similar but different
 

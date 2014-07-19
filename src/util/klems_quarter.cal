@@ -1,0 +1,36 @@
+{ RCSid $Id: klems_quarter.cal,v 1.1 2014/07/19 00:28:38 greg Exp $ }
+{
+	Compute interior bin for half Klems BSDF basis (0-72)
+	Returns -1 for wrong-side rays
+
+	Modified from klems_full.cal
+
+	7/18/2014	G. Ward
+}
+DEGREE : PI/180;
+Acos(x) : if(x-1, 0, if(-1-x, PI, acos(x))) / DEGREE;
+posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
+Atan2(y,x) : posangle(atan2(y,x));
+
+kqpola(r) : select(r, 9, 27, 46, 66, 90);
+kqnaz(r) : select(r, 1, 88, 12, 12, 8);
+kqaccum(r) : if(r-.5, kqnaz(r) + kqaccum(r-1), 0);
+kqfindrow(r, pol) : if(r-kqpola(0)+.5, r,
+		if(pol-kqpola(r), kqfindrow(r+1, pol), r) );
+
+kqazn(azi,inc) : if((360-.5*inc)-azi, floor((azi+.5*inc)/inc), 0);
+
+kqbin2(pol,azi) = if(pol-90, -1,
+	select(kqfindrow(1, pol),
+		kqazn(azi,360/kqnaz(1)),
+		kqaccum(1) + kqazn(azi,360/kqnaz(2)),
+		kqaccum(2) + kqazn(azi,360/kqnaz(3)),
+		kqaccum(3) + kqazn(azi,360/kqnaz(4)),
+		kqaccum(4) + kqazn(azi,360/kqnaz(5))
+	) );
+
+kqbin(Nx,Ny,Nz,Ux,Uy,Uz) = kqbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
+	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
+		-Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx)));
+				
+Nkqbins : kqaccum(kqnaz(0));	{ Number of bins for one elevation }
