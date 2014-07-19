@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.12 2014/07/19 18:19:33 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.13 2014/07/19 20:03:03 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -271,7 +271,7 @@ main(int argc, char *argv[])
 			break;
 		case 'p':			/* parameter setting(s) */
 			check(2,"s");
-			prms = argv[++i];
+			set_eparams(prms = argv[++i]);
 			break;
 		case 'b':			/* bin expression/count */
 			if (argv[i][2] == 'n') {

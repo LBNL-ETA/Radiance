@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.10 2014/07/19 18:19:33 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.11 2014/07/19 20:03:03 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -104,6 +104,8 @@ extern STREAMOUT *	getostream(const char *ospec, const char *mname,
 
 extern void		mod_output(MODCONT *mp);
 extern void		end_record(void);
+
+extern void		set_eparams(char *prms);
 
 extern MODCONT		*addmodifier(char *modn, char *outf,
 					char *prms, char *binv, int bincnt);
