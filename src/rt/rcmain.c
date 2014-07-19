@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.11 2013/08/11 13:48:48 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.12 2014/07/19 18:19:33 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -169,6 +169,7 @@ main(int argc, char *argv[])
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	char	*curout = NULL;
+	char	*prms = NULL;
 	char	*binval = NULL;
 	int	bincnt = 0;
 	int	rval;
@@ -268,6 +269,10 @@ main(int argc, char *argv[])
 		case 'h':			/* header output */
 			bool(2,header);
 			break;
+		case 'p':			/* parameter setting(s) */
+			check(2,"s");
+			prms = argv[++i];
+			break;
 		case 'b':			/* bin expression/count */
 			if (argv[i][2] == 'n') {
 				check(3,"s");
@@ -279,11 +284,11 @@ main(int argc, char *argv[])
 			break;
 		case 'm':			/* modifier name */
 			check(2,"s");
-			addmodifier(argv[++i], curout, binval, bincnt);
+			addmodifier(argv[++i], curout, prms, binval, bincnt);
 			break;
 		case 'M':			/* modifier file */
 			check(2,"s");
-			addmodfile(argv[++i], curout, binval, bincnt);
+			addmodfile(argv[++i], curout, prms, binval, bincnt);
 			break;
 		default:
 			goto badopt;
@@ -347,7 +352,7 @@ main(int argc, char *argv[])
 
 badopt:
 	fprintf(stderr,
-"Usage: %s [-n nprocs][-V][-r][-e expr][-f source][-o ospec][-b binv][-bn N] {-m mod | -M file} [rtrace options] octree\n",
+"Usage: %s [-n nprocs][-V][-r][-e expr][-f source][-o ospec][-p p1=V1,p2=V2][-b binv][-bn N] {-m mod | -M file} [rtrace options] octree\n",
 			progname);
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
 	error(USER, errmsg);

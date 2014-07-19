@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.9 2014/07/19 00:07:03 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.10 2014/07/19 18:19:33 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -20,6 +20,8 @@ rcontrib - compute contribution coefficients in a RADIANCE scene
 .B "\-f source"
 ][
 .B "\-o ospec"
+][
+.B "\-p p1=V1,p2=V2"
 ][
 .B "\-b binv"
 ][
@@ -172,6 +174,7 @@ option.
 Since bin numbers start from zero, the bin count is always equal to
 the last bin plus one.
 The most recent
+.I \-p,
 .I \-b,
 .I \-bn
 and
@@ -201,6 +204,11 @@ These parameters may be combined with definitions given in
 arguments and files read using the
 .I \-f
 option.
+Additional parameter values that apply only to this modifier may be specified
+with a
+.I \-p
+option, which contains a list of variable names and assigned values, separated
+by commas or semicolons.
 The computed bin value will be
 rounded to the nearest whole number.
 (Negative bin values will be silently ignored.)\0

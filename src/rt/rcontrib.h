@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.9 2013/08/07 05:10:09 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.10 2014/07/19 18:19:33 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -57,6 +57,7 @@ typedef double		DCOLOR[3];	/* double-precision color */
 typedef struct {
 	const char	*outspec;	/* output file specification */
 	const char	*modname;	/* modifier name */
+	const char	*params;	/* parameter list */
 	EPNODE		*binv;		/* bin value expression */
 	int		nbins;		/* number of contribution bins */
 	DCOLOR		cbin[1];	/* contribution bins (extends struct) */
@@ -105,9 +106,9 @@ extern void		mod_output(MODCONT *mp);
 extern void		end_record(void);
 
 extern MODCONT		*addmodifier(char *modn, char *outf,
-						char *binv, int bincnt);
+					char *prms, char *binv, int bincnt);
 extern void		addmodfile(char *fname, char *outf,
-						char *binv, int bincnt);
+					char *prms, char *binv, int bincnt);
 
 extern void		reload_output(void);
 extern void		recover_output(void);
