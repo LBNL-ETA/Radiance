@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.8 2014/07/11 01:52:38 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.9 2014/07/19 00:07:03 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -203,6 +203,7 @@ arguments and files read using the
 option.
 The computed bin value will be
 rounded to the nearest whole number.
+(Negative bin values will be silently ignored.)\0
 For a single bin, you may specify
 .I "\-b 0",
 which is the default.
