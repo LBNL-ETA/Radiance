@@ -1,6 +1,6 @@
-{ RCSid $Id: klems_quarter.cal,v 1.1 2014/07/19 00:28:38 greg Exp $ }
+{ RCSid $Id: klems_quarter.cal,v 1.2 2014/07/19 00:30:03 greg Exp $ }
 {
-	Compute interior bin for half Klems BSDF basis (0-72)
+	Compute interior bin for quarter Klems BSDF basis (0-40)
 	Returns -1 for wrong-side rays
 
 	Modified from klems_full.cal
