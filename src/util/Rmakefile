@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.74 2014/05/31 05:02:37 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.75 2014/07/19 01:19:49 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
-		eplus_adduvf rmtxop
+		eplus_adduvf rfluxmtx rmtxop
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat
 
@@ -122,6 +122,9 @@ eplus_adduvf:	eplus_adduvf.o eplus_idf.o
 	$(CC) $(CFLAGS) -o eplus_adduvf eplus_adduvf.o eplus_idf.o \
 -lrtrad $(MLIB)
 
+rfluxmtx:	rfluxmtx.o
+	$(CC) $(CFLAGS) -o rfluxmtx rfluxmtx.o -lrtrad $(MLIB)
+
 rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
 	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
 -lrtrad $(MLIB)
@@ -158,6 +161,10 @@ cmatrix.o cmbsdf.o:	../common/standard.h \
 ../common/rterror.h
 
 cmbsdf.o:	../common/paths.h ../common/bsdf.h ../common/bsdf_m.h
+
+rfluxmtx.o:	../common/rtio.h ../common/random.h ../common/triangulate.h \
+../common/rtmath.h ../common/fvect.h ../common/mat4.h ../common/tiff.h \
+../common/platform.h ../common/bsdf.h ../common/bsdf_m.h
 
 dctimestep.o cmatrix.o:	../common/platform.h
 
