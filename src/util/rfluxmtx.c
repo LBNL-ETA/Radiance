@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.1 2014/07/19 01:19:49 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.2 2014/07/21 15:59:47 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -23,10 +23,10 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.1 2014/07/19 01:19:49 greg Exp 
 #endif
 
 #ifdef _WIN32
-#define	SPECIALS	" \t$*?"
+#define	SPECIALS	" \t\"$*?"
 #define QUOTCHAR	'"'
 #else
-#define SPECIALS	" \t\n'\"()${}*?[]"
+#define SPECIALS	" \t\n'\"()${}*?[];|&"
 #define QUOTCHAR	'\''
 #define ALTQUOT		'"'
 #endif
@@ -45,10 +45,10 @@ const char	overflowerr[] = "%s: too many arguments!\n";
 #define	CHECKARGC(n)	if (nrcargs >= MAXRCARG-(n)) \
 	{ fprintf(stderr, overflowerr, progname); exit(1); }
 
-int		sampcnt = 0;		/* sample count (unset) */
+int		sampcnt = 0;		/* sample count (0==unset) */
 
-char		*reinhfn = "reinhart.cal";
-char		*shirchufn = "disk2square.cal";
+char		*reinhfn = "reinhartb.cal";
+char		*shirchiufn = "disk2square.cal";
 char		*kfullfn = "klems_full.cal";
 char		*khalffn = "klems_half.cal";
 char		*kquarterfn = "klems_quarter.cal";
@@ -68,8 +68,8 @@ typedef struct surf_s {
 	FVECT		snrm;		/* surface normal */
 	double		area;		/* surface area (or solid angle) */
 	short		styp;		/* surface type */
-	short		nfargs;		/* number of arguments */
-	double		farg[1];	/* arguments (extends struct) */
+	short		nfargs;		/* number of real arguments */
+	double		farg[1];	/* real values (extends struct) */
 } SURF;				/* surface structure */
 
 typedef struct {
@@ -372,7 +372,11 @@ parse_params(char *pargs)
 static void
 finish_receiver(void)
 {
-	char	binbuf[128];
+	char	*calfn = NULL;
+	char	*binv = NULL;
+	char	*binf = NULL;
+	char	*nbins = NULL;
+	char	sbuf[256];
 
 	if (!curmod[0]) {
 		fputs(progname, stderr);
@@ -401,90 +405,78 @@ finish_receiver(void)
 		else
 			curparams.vup[1] = 1;
 	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1') {
-		CHECKARGC(2);
-		rcarg[nrcargs++] = "-b";
-		rcarg[nrcargs++] = "0";
+		binv = "0";
 	} else if (tolower(curparams.hemis[0]) == 's' &&
 				tolower(curparams.hemis[1]) == 'c') {
-		if (shirchufn != NULL) {
-			CHECKARGC(2);
-			rcarg[nrcargs++] = "-f";
-			rcarg[nrcargs++] = shirchufn;
-			shirchufn = NULL;
-		}
-fputs("Shirley-Chiu unimplemented...\n",stderr); exit(1);
+					/* assign parameters */
 		if (curparams.hsiz <= 1) {
 			fputs(progname, stderr);
 			fputs(": missing size for Shirley-Chiu sampling!\n", stderr);
 			exit(1);
 		}
+		sprintf(sbuf, "SCdim=%d,Nx=%g,Ny=%g,Nz=%g,Ux=%g,Uy=%g,Uz=%g",
+				curparams.hsiz,
+			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
+			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
+		CHECKARGC(2);
+		rcarg[nrcargs++] = "-p";
+		rcarg[nrcargs++] = savqstr(sbuf);
+		calfn = shirchiufn; shirchiufn = NULL;
+		binv = "scbin";
+		nbins = "SCdim*SCdim";
 	} else if ((tolower(curparams.hemis[0]) == 'r') |
 			(tolower(curparams.hemis[0]) == 't')) {
-		if (reinhfn != NULL) {
-			CHECKARGC(2);
-			rcarg[nrcargs++] = "-f";
-			rcarg[nrcargs++] = reinhfn;
-			reinhfn = NULL;
-		}
-fputs("Reinhart/Tregenza unimplemented...\n",stderr); exit(1);
+		calfn = reinhfn; reinhfn = NULL;
+/* XXX Need to set number of divisions */
+		binf = "rhbin";
+		nbins = "Nrhbins";
 	} else if (tolower(curparams.hemis[0]) == 'k' &&
 			!curparams.hemis[1] |
 			(tolower(curparams.hemis[1]) == 'f') |
 			(curparams.hemis[1] == '1')) {
-		if (kfullfn != NULL) {
-			CHECKARGC(2);
-			rcarg[nrcargs++] = "-f";
-			rcarg[nrcargs++] = kfullfn;
-			kfullfn = NULL;
-		}
-		CHECKARGC(4);
-		sprintf(binbuf, "kbin(%g,%g,%g,%g,%g,%g)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
-			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
-		rcarg[nrcargs++] = "-b";
-		rcarg[nrcargs++] = savqstr(binbuf);
-		rcarg[nrcargs++] = "-bn";
-		rcarg[nrcargs++] = "Nkbins";
+		calfn = kfullfn; kfullfn = NULL;
+		binf = "kbin";
+		nbins = "Nkbins";
 	} else if (tolower(curparams.hemis[0]) == 'k' &&
 			(tolower(curparams.hemis[1]) == 'h') |
 			(curparams.hemis[1] == '2')) {
-		if (khalffn != NULL) {
-			CHECKARGC(2);
-			rcarg[nrcargs++] = "-f";
-			rcarg[nrcargs++] = khalffn;
-			khalffn = NULL;
-		}
-		CHECKARGC(4);
-		sprintf(binbuf, "khbin(%g,%g,%g,%g,%g,%g)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
-			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
-		rcarg[nrcargs++] = "-b";
-		rcarg[nrcargs++] = savqstr(binbuf);
-		rcarg[nrcargs++] = "-bn";
-		rcarg[nrcargs++] = "Nkhbins";
+		calfn = khalffn; khalffn = NULL;
+		binf = "khbin";
+		nbins = "Nkhbins";
 	} else if (tolower(curparams.hemis[0]) == 'k' &&
 			(tolower(curparams.hemis[1]) == 'q') |
 			(curparams.hemis[1] == '4')) {
-		if (kquarterfn != NULL) {
-			CHECKARGC(2);
-			rcarg[nrcargs++] = "-f";
-			rcarg[nrcargs++] = kquarterfn;
-			kquarterfn = NULL;
-		}
-		CHECKARGC(4);
-		sprintf(binbuf, "kqbin(%g,%g,%g,%g,%g,%g)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
-			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
-		rcarg[nrcargs++] = "-b";
-		rcarg[nrcargs++] = savqstr(binbuf);
-		rcarg[nrcargs++] = "-bn";
-		rcarg[nrcargs++] = "Nkqbins";
+		calfn = kquarterfn; kquarterfn = NULL;
+		binf = "kqbin";
+		nbins = "Nkqbins";
 	} else {
 		fprintf(stderr, "%s: unrecognized hemisphere sampling: h=%s\n",
 				progname, curparams.hemis);
 		exit(1);
 	}
-	CHECKARGC(2);			/* modifier argument goes last */
+	if (calfn != NULL) {		/* add cal file if needed */
+		CHECKARGC(2);
+		rcarg[nrcargs++] = "-f";
+		rcarg[nrcargs++] = calfn;
+	}
+	if (nbins != NULL) {		/* add #bins if set */
+		CHECKARGC(2);
+		rcarg[nrcargs++] = "-bn";
+		rcarg[nrcargs++] = nbins;
+	}
+	if (binfv != NULL) {
+		CHECKARGC(2);		/* assign bin variable */
+		rcarg[nrcargs++] = "-b";
+		rcarg[nrcargs++] = binv;
+	} else if (binf != NULL) {
+		CHECKARGC(2);		/* assign bin function */
+		sprintf(sbuf, "%s(%g,%g,%g,%g,%g,%g)", binf,
+			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
+			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
+		rcarg[nrcargs++] = "-b";
+		rcarg[nrcargs++] = savqstr(sbuf);
+	}
+	CHECKARGC(2);				/* modifier argument goes last */
 	rcarg[nrcargs++] = "-m";
 	rcarg[nrcargs++] = savqstr(curmod);
 }

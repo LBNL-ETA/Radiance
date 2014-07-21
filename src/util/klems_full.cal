@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_full.cal,v 1.1 2014/07/19 00:28:38 greg Exp $ }
+{ RCSid $Id: klems_full.cal,v 1.2 2014/07/21 15:59:47 greg Exp $ }
 {
 	Compute interior bin for (full) Klems BSDF basis (0-144)
 	Returns -1 for wrong-side rays
@@ -34,7 +34,7 @@ kbin2(pol,azi) = if(pol-90, -1,
 	) );
 
 kbin(Nx,Ny,Nz,Ux,Uy,Uz) = kbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
-	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
+	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz + (Nx*Dx+Ny*Dy+Nz*Dz)*(Nx*Ux+Ny*Uy+Nz*Uz),
 		-Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx)));
 				
 kbinN = kbin(0,-1,0, 0,0,1);	{ North bins }

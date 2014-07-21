@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.75 2014/07/19 01:19:49 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.76 2014/07/21 15:59:47 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -23,7 +23,8 @@ PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf rfluxmtx rmtxop
 
-LIBFILES = rambpos.cal ambpos.cal tregsamp.dat
+LIBFILES = rambpos.cal ambpos.cal tregsamp.dat \
+klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal
 
 all:	$(PROGS)
 

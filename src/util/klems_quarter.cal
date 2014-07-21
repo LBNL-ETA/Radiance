@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_quarter.cal,v 1.3 2014/07/19 00:47:37 greg Exp $ }
+{ RCSid $Id: klems_quarter.cal,v 1.4 2014/07/21 15:59:47 greg Exp $ }
 {
 	Compute interior bin for quarter Klems BSDF basis (0-40)
 	Returns -1 for wrong-side rays
@@ -30,7 +30,7 @@ kqbin2(pol,azi) = if(pol-90, -1,
 	) );
 
 kqbin(Nx,Ny,Nz,Ux,Uy,Uz) = kqbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
-	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz,
+	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz + (Nx*Dx+Ny*Dy+Nz*Dz)*(Nx*Ux+Ny*Uy+Nz*Uz),
 		-Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx)));
 				
 Nkqbins : kqaccum(kqnaz(0));	{ Number of bins for one elevation }
