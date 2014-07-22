@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.3 2014/07/22 02:12:48 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.4 2014/07/22 21:55:31 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -66,7 +66,7 @@ typedef struct surf_s {
 	void		*priv;		/* private data (malloc'ed) */
 	char		sname[32];	/* surface name */
 	FVECT		snrm;		/* surface normal */
-	double		area;		/* surface area (or solid angle) */
+	double		area;		/* surface area / proj. solid angle */
 	short		styp;		/* surface type */
 	short		nfargs;		/* number of real arguments */
 	double		farg[1];	/* real values (extends struct) */
@@ -372,12 +372,13 @@ parse_params(char *pargs)
 static void
 finish_receiver(void)
 {
+	char	sbuf[256];
+	int	uniform = 0;
 	char	*calfn = NULL;
 	char	*params = NULL;
 	char	*binv = NULL;
 	char	*binf = NULL;
 	char	*nbins = NULL;
-	char	sbuf[256];
 
 	if (!curmod[0]) {
 		fputs(progname, stderr);
@@ -389,7 +390,7 @@ finish_receiver(void)
 		rcarg[nrcargs++] = "-o";
 		rcarg[nrcargs++] = curparams.outfn;
 	}
-					/* add bin specification */
+					/* check arguments */
 	if (!curparams.hemis[0]) {
 		fputs(progname, stderr);
 		fputs(": missing hemisphere sampling type!\n", stderr);
@@ -405,8 +406,10 @@ finish_receiver(void)
 			curparams.vup[2] = 1;
 		else
 			curparams.vup[1] = 1;
+					/* determine sample type/bin */
 	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1') {
 		binv = "0";		/* uniform sampling -- one bin */
+		uniform = 1;
 	} else if (tolower(curparams.hemis[0]) == 's' &&
 				tolower(curparams.hemis[1]) == 'c') {
 					/* assign parameters */
@@ -456,6 +459,15 @@ finish_receiver(void)
 		fprintf(stderr, "%s: unrecognized hemisphere sampling: h=%s\n",
 				progname, curparams.hemis);
 		exit(1);
+	}
+	if (!uniform & (curparams.slist->styp == ST_SOURCE)) {
+		SURF	*sp;
+		for (sp = curparams.slist; sp != NULL; sp = sp->next)
+			if (fabs(sp->area - PI) > 1e-3) {
+				fprintf(stderr, "%s: source '%s' must be 180-degrees\n",
+						progname, sp->sname);
+				exit(1);
+			}
 	}
 	if (calfn != NULL) {		/* add cal file if needed */
 		CHECKARGC(2);
@@ -979,7 +991,8 @@ add_surface(int st, const char *oname, FILE *fp)
 		VCOPY(snew->snrm, snew->farg);
 		if (normalize(snew->snrm) == 0)
 			goto badnorm;
-		snew->area = 2.*PI*(1. - cos((PI/180./2.)*snew->farg[3]));
+		snew->area = sin((PI/180./2.)*snew->farg[3]);
+		snew->area *= PI*snew->area;
 		break;
 	}
 	if (snew->area <= FTINY) {
@@ -1139,6 +1152,7 @@ int
 main(int argc, char *argv[])
 {
 	char	fmtopt[6] = "-faa";	/* default output is ASCII */
+	char	*xrs=NULL, *yrs=NULL, *ldopt=NULL;
 	char	*sendfn;
 	char	sampcntbuf[32], nsbinbuf[32];
 	FILE	*rcfp;
@@ -1172,6 +1186,14 @@ main(int argc, char *argv[])
 				goto userr;
 			}
 			break;
+		case 'x':		/* x-resolution */
+			xrs = argv[++a];
+			na = 0;
+			continue;
+		case 'y':		/* y-resolution */
+			yrs = argv[++a];
+			na = 0;
+			continue;
 		case 'c':		/* number of samples */
 			sampcnt = atoi(argv[a+1]);
 			if (sampcnt <= 0)
@@ -1183,6 +1205,7 @@ main(int argc, char *argv[])
 		case 'u':
 		case 'i':
 		case 'h':
+		case 'r':
 			break;
 		case 'n':		/* options with 1 argument */
 		case 's':
@@ -1193,7 +1216,11 @@ main(int argc, char *argv[])
 			if (argv[a][2] != 'v') goto userr;
 			break;
 		case 'l':		/* special case */
-			if (argv[a][2] == 'd') goto userr;
+			if (argv[a][2] == 'd') {
+				ldopt = argv[a];
+				na = 0;
+				continue;
+			}
 			na = 2;
 			break;
 		case 'd':		/* special case */
@@ -1224,6 +1251,20 @@ done_opts:
 	if (sendfn[0] == '-') {		/* user wants pass-through mode? */
 		if (sendfn[1]) goto userr;
 		sendfn = NULL;
+		if (xrs) {
+			CHECKARGC(2);
+			rcarg[nrcargs++] = "-x";
+			rcarg[nrcargs++] = xrs;
+		}
+		if (yrs) {
+			CHECKARGC(2);
+			rcarg[nrcargs++] = "-y";
+			rcarg[nrcargs++] = yrs;
+		}
+		if (ldopt) {
+			CHECKARGC(1);
+			rcarg[nrcargs++] = ldopt;
+		}
 		if (sampcnt <= 0) sampcnt = 1;
 	} else {			/* else FVECT determines input format */
 		fmtopt[3] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';

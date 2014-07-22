@@ -1949,3 +1949,7 @@ The programs may be compiled with the -DOLDAMB option if this is a problem.
 
 Added -p option to rcontrib to set function file parameters on a per-modifier
 basis to simplify bin evaluation.
+
+Created rfluxmtx program to compute flux transfer matrices from a sender
+surface to one or more receiver surfaces.  (Renamed the file klems_int.cal
+to klems_full.cal in the process.)

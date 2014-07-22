@@ -1,0 +1,157 @@
+.\" RCSid "$Id: rfluxmtx.1,v 1.1 2014/07/22 21:55:31 greg Exp $"
+.TH RFLUXMTX 1 07/22/14 RADIANCE
+.SH NAME
+rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
+.SH SYNOPSIS
+.B rfluxmtx
+[
+.B \-v
+][
+.B "rcontrib options"
+]
+.B "{ sender.rad | - }"
+.B receivers.rad
+.B "[ scene.rad .. ]"
+.SH DESCRIPTION
+.I Rfluxmtx
+samples rays uniformly over the surface given in
+.I sender.rad
+and records rays arriving at surfaces in the file
+.I receivers.rad,
+producing a flux transfer matrix per receiver.
+Additional scene surfaces are given in optional
+.I scene.rad
+files, which are compiled with the receivers into an octree sent to the
+.I rcontrib(1)
+program to do the actual work.
+If a single hyphen ('-') is given in place of the sender file, then
+.I rfluxmtx
+passes ray samples from its standard input directly to
+.I rcontrib
+without interpretation.
+By default, all resulting matrix data are interleaved and sent to the standard output
+in ASCII format, but this behavior is typically overridden using inline options
+as described below.
+.PP
+The
+.I \-v
+option turns on verbose reporting for the number of samples and the executed
+.I rcontrib
+command.
+All other supported options are passed on to
+.I rcontrib(1).
+However, the
+.I \-f,
+.I \-e,
+.I \-p,
+.I \-b,
+.I \-bn,
+.I \-m,
+and
+.I \-M
+options are controlled by
+.I rfluxmtx
+and may not be set by the user.
+Also, the
+.I \-x,
+.I \-y,
+and
+.I \-ld
+options are ignored unless
+.I rfluxmtx
+is invoked in the pass-through mode,
+in which case they may be needed to generate RADIANCE views from
+.I vwrays(1).
+The sample count, unless set by the
+.I \-c
+option, defaults to 10000 when a sender file is given, and 1 for pass-through mode.
+.SH VARIABLES
+The sender and receiver scene files given to
+.I rfluxmtx
+contain controlling parameters in specal comments of the form:
+.nf
+
+	#@rfluxmtx variable=value ..
+
+.fi
+At minimum, both sender and receiver must specify one of the
+hemisphere sampling types, and there must be at least
+one surface in each file.
+.TP 10n
+.BI h =u
+Set hemisphere sampling to "uniform," meaning a single bin
+of (cosine-distributed) samples.
+In the case of distant "source" primatives, this is the only
+sampling method that supports arbitrary receiver sizes.
+The other methods below require a full hemispherical source.
+.TP
+.BI h =kf
+Divide the hemisphere using the LBNL/Klems "full" sampling basis.
+.TP
+.BI h =kh
+Divide the hemisphere using the LBNL/Klems "half" sampling basis.
+.TP
+.BI h =kq
+Divide the hemisphere using the LBNL/Klems "quarter" sampling basis.
+.TP
+.BI h =rN
+Divide the hemisphere using Reinhart's substructuring of the Tregenza
+sky pattern with
+.I N
+divisions in each dimension.
+If it is not given,
+.I N
+defaults to 1, which is just the Tregenza sky.
+.TP
+.BI h =scN
+Subdivide the hemisphere using the Shirley-Chiu square-to-disk mapping with an
+.I NxN
+grid over the square.
+.TP
+.BI u =[-]{X|Y|Z|ux,uy,uz}
+Orient the "up" direction for the hemisphere using the indicated axis or direction
+vector.
+.TP
+.BI o =output.mtx
+Send the matrix data for this receiver to the indicated output file.
+The file format will be determined by the command-line
+.I \-fio
+option and will include an information header unless the
+.I \-h
+option was used to turn headers off.
+(The output file specification is ignored for senders.)\0
+.PP
+In normal execution, only a single sender surface is sampled, but it may be
+comprised of any number of subsurfaces, as in a triangle mesh or similar.
+The surface normal will be computed as the average of all the constituent
+subsurfaces.
+The subsurfaces themselves must be planer, thus only
+.I polygon
+and
+.I ring
+surface primitives are supported.
+Other primitives will be silently ignored and will have no effect on the calculation.
+.PP
+In the receiver file, the
+.I source
+primitive is supported as well, and multiple receivers (and multiple output
+matrices) are identified by different modifier names.
+Though it may be counter-intuitive, receivers are often light sources,
+since samples end up there in a backwards ray-tracing system such as RADIANCE.
+.PP
+Rays always eminate from the back side of the sender surface and arrive at the
+front side of receiver surfaces.
+In this way, a receiver surface may be reused as a sender in a subsequent
+.I rfluxmtx
+calculation and the resulting matrices will concatenate properly.
+(Note that it is important to keep receiver surfaces together, otherwise a
+"duplicate modifier" error will result.)\0
+.SH EXAMPLES
+To generate a flux transfer matrix connecting input and output apertures
+on a light pipe:
+.IP "" .3i
+rcontrib int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+genBSDF(1), getinfo(1), rcalc(1), rcollate(1), rcontrib(1), rmtxop(1), vwrays(1)
