@@ -1,0 +1,49 @@
+{ RCSid $Id: reinhartb.cal,v 2.1 2014/07/22 02:12:48 greg Exp $ }
+{
+	Compute Reinhart high-density sky patch bin (rbin)
+
+	MF		- Subdivision value (usually a power of two)
+	Dx,Dy,Dz	- Incident direction (normalized, towards surface face)
+	Nx,Ny,Nz	- Surface normal (normalized, away from surface)
+	Ux,Uy,Uz	- Up direction vector (does not need to be normalized)
+
+	Modified from reinhart.cal
+
+	July 2014	G. Ward
+}
+				{ Useful factors and functions }
+DEGREE : PI/180;
+Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x)));
+posangle(a) : if(-a, a + 2*PI, a);
+Atan2(y,x) : posangle(atan2(y,x));
+
+				{ Default to Tregenza sky }
+MF = 1;
+				{ Default axis orientation (+Y == north) }
+Nx = 0; Ny = 0; Nz = 1;
+Ux = 0; Uy = 1; Uz = 0;
+				{ Compute oriented axis angles }
+inc_dz = -Dx*Nx-Dy*Ny-Dz*Nz;
+inc_rx = -Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx);
+inc_ry = -Dx*Ux-Dy*Uy-Dz*Uz - inc_dz*(Nx*Ux+Ny*Uy+Nz*Uz);
+
+r_alt = Asin(inc_dz)/DEGREE;
+r_azi = Atan2(inc_rx,inc_ry)/DEGREE;
+
+alpha = 90/(MF*7 + .5);		{ Separation between rows in degrees }
+				{ Number of patches per row }
+tnaz(r) : select(r, 30, 30, 24, 24, 18, 12, 6);
+rnaz(r) = if(r-(7*MF-.5), 1, MF*tnaz(floor((r+.5)/MF) + 1));
+
+raccum(r) = if(r-.5, rnaz(r-1) + raccum(r-1), 0);
+
+r_row = floor(r_alt/alpha);
+
+r_inc = 360/rnaz(r_row);
+
+r_azn = if(359.9999-.5*r_inc - r_azi, floor((r_azi +.5*r_inc)/r_inc), 0);
+
+				{ Final bin value, -1 for "ground" }
+rbin = if (r_alt, raccum(r_row) + r_azn, -1);
+
+Nrbins = raccum(7*MF+1);	{ total number of bins }

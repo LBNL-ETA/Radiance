@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.2 2014/07/21 15:59:47 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.3 2014/07/22 02:12:48 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -373,6 +373,7 @@ static void
 finish_receiver(void)
 {
 	char	*calfn = NULL;
+	char	*params = NULL;
 	char	*binv = NULL;
 	char	*binf = NULL;
 	char	*nbins = NULL;
@@ -405,7 +406,7 @@ finish_receiver(void)
 		else
 			curparams.vup[1] = 1;
 	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1') {
-		binv = "0";
+		binv = "0";		/* uniform sampling -- one bin */
 	} else if (tolower(curparams.hemis[0]) == 's' &&
 				tolower(curparams.hemis[1]) == 'c') {
 					/* assign parameters */
@@ -414,22 +415,24 @@ finish_receiver(void)
 			fputs(": missing size for Shirley-Chiu sampling!\n", stderr);
 			exit(1);
 		}
+		calfn = shirchiufn; shirchiufn = NULL;
 		sprintf(sbuf, "SCdim=%d,Nx=%g,Ny=%g,Nz=%g,Ux=%g,Uy=%g,Uz=%g",
 				curparams.hsiz,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
-		CHECKARGC(2);
-		rcarg[nrcargs++] = "-p";
-		rcarg[nrcargs++] = savqstr(sbuf);
-		calfn = shirchiufn; shirchiufn = NULL;
+		params = savqstr(sbuf);
 		binv = "scbin";
 		nbins = "SCdim*SCdim";
 	} else if ((tolower(curparams.hemis[0]) == 'r') |
 			(tolower(curparams.hemis[0]) == 't')) {
 		calfn = reinhfn; reinhfn = NULL;
-/* XXX Need to set number of divisions */
-		binf = "rhbin";
-		nbins = "Nrhbins";
+		sprintf(sbuf, "MF=%d,Nx=%g,Ny=%g,Nz=%g,Ux=%g,Uy=%g,Uz=%g",
+				curparams.hsiz,
+			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
+			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
+		params = savqstr(sbuf);
+		binv = "rbin";
+		nbins = "Nrbins";
 	} else if (tolower(curparams.hemis[0]) == 'k' &&
 			!curparams.hemis[1] |
 			(tolower(curparams.hemis[1]) == 'f') |
@@ -459,21 +462,26 @@ finish_receiver(void)
 		rcarg[nrcargs++] = "-f";
 		rcarg[nrcargs++] = calfn;
 	}
+	if (params != NULL) {		/* parameters _after_ cal file */
+		CHECKARGC(2);
+		rcarg[nrcargs++] = "-p";
+		rcarg[nrcargs++] = params;
+	}
 	if (nbins != NULL) {		/* add #bins if set */
 		CHECKARGC(2);
 		rcarg[nrcargs++] = "-bn";
 		rcarg[nrcargs++] = nbins;
 	}
-	if (binfv != NULL) {
+	if (binv != NULL) {
 		CHECKARGC(2);		/* assign bin variable */
 		rcarg[nrcargs++] = "-b";
 		rcarg[nrcargs++] = binv;
 	} else if (binf != NULL) {
 		CHECKARGC(2);		/* assign bin function */
+		rcarg[nrcargs++] = "-b";
 		sprintf(sbuf, "%s(%g,%g,%g,%g,%g,%g)", binf,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
-		rcarg[nrcargs++] = "-b";
 		rcarg[nrcargs++] = savqstr(sbuf);
 	}
 	CHECKARGC(2);				/* modifier argument goes last */
