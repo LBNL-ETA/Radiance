@@ -1,4 +1,4 @@
-{ RCSid $Id: reinhartb.cal,v 2.1 2014/07/22 02:12:48 greg Exp $ }
+{ RCSid $Id: reinhartb.cal,v 2.2 2014/07/22 23:21:56 greg Exp $ }
 {
 	Compute Reinhart high-density sky patch bin (rbin)
 
@@ -13,8 +13,8 @@
 }
 				{ Useful factors and functions }
 DEGREE : PI/180;
-Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x)));
-posangle(a) : if(-a, a + 2*PI, a);
+Asin(x) : if(x-1, PI/2, if(-1-x, -PI/2, asin(x))) / DEGREE;
+posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
 Atan2(y,x) : posangle(atan2(y,x));
 
 				{ Default to Tregenza sky }
@@ -28,7 +28,7 @@ inc_rx = -Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx);
 inc_ry = -Dx*Ux-Dy*Uy-Dz*Uz - inc_dz*(Nx*Ux+Ny*Uy+Nz*Uz);
 
 r_alt = Asin(inc_dz)/DEGREE;
-r_azi = Atan2(inc_rx,inc_ry)/DEGREE;
+r_azi = Atan2(inc_rx,inc_ry);
 
 alpha = 90/(MF*7 + .5);		{ Separation between rows in degrees }
 				{ Number of patches per row }

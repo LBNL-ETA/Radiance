@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.4 2014/07/22 21:55:31 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.5 2014/07/22 23:21:56 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -53,7 +53,8 @@ char		*kfullfn = "klems_full.cal";
 char		*khalffn = "klems_half.cal";
 char		*kquarterfn = "klems_quarter.cal";
 
-#define	PARAMSTART	"@rfluxmtx"	/* string indicating parameters */
+					/* string indicating parameters */
+const char	PARAMSTART[] = "@rfluxmtx";
 
 				/* surface type IDs */
 #define ST_NONE		0
@@ -1122,7 +1123,9 @@ load_scene(const char *inspec, int (*ocb)(FILE *))
 			continue;
 		}
 		if (c == '#') {		/* parameters/comment */
-			if (fscanf(fp, "%s", inpbuf) == 1 &&
+			if ((c = getc(fp)) == EOF || ungetc(c,fp) == EOF)
+				break;
+			if (!isspace(c) && fscanf(fp, "%s", inpbuf) == 1 &&
 					!strcmp(inpbuf, PARAMSTART)) {
 				if (fgets(inpbuf, sizeof(inpbuf), fp) != NULL)
 					parse_params(inpbuf);
@@ -1317,7 +1320,7 @@ done_opts:
 userr:
 	if (a < argc-2)
 		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [rcontrib options] sender.rad receiver.rad [system.rad ..]\n",
+	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [system.rad ..]\n",
 				progname);
 	return(1);
 }
