@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.5 2014/07/22 23:21:56 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.6 2014/07/23 00:40:17 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -96,6 +96,7 @@ typedef struct param_s {
 
 PARAMS		curparams;
 char		curmod[128];
+char		newparams[1024];
 
 typedef int	SURFSAMP(FVECT, SURF *, double);
 
@@ -109,7 +110,6 @@ SURFSAMP	*orig_in_surf[4] = {
 static void
 clear_params(PARAMS *p, int reset_only)
 {
-	curmod[0] = '\0';
 	while (p->slist != NULL) {
 		SURF	*sdel = p->slist;
 		p->slist = sdel->next;
@@ -124,7 +124,7 @@ clear_params(PARAMS *p, int reset_only)
 		p->outfn = NULL;
 		return;
 	}
-	memset(p, 0, sizeof(curparams));
+	memset(p, 0, sizeof(PARAMS));
 }
 
 /* Get surface type from name */
@@ -309,7 +309,7 @@ nextchar:
 
 /* Parse program parameters (directives) */
 static int
-parse_params(char *pargs)
+parse_params(PARAMS *p, char *pargs)
 {
 	char	*cp = pargs;
 	int	nparams = 0;
@@ -320,24 +320,23 @@ parse_params(char *pargs)
 		case 'h':
 			if (*cp++ != '=')
 				break;
-			curparams.hsiz = 0;
+			p->hsiz = 0;
 			i = 0;
 			while (*cp && !isspace(*cp)) {
 				if (isdigit(*cp))
-					curparams.hsiz = 10*curparams.hsiz +
-								*cp - '0';
-				curparams.hemis[i++] = *cp++;
+					p->hsiz = 10*p->hsiz + *cp - '0';
+				p->hemis[i++] = *cp++;
 			}
 			if (!i)
 				break;
-			curparams.hemis[i] = '\0';
-			curparams.hsiz += !curparams.hsiz;
+			p->hemis[i] = '\0';
+			p->hsiz += !p->hsiz;
 			++nparams;
 			continue;
 		case 'u':
 			if (*cp++ != '=')
 				break;
-			if (!get_direction(curparams.vup, cp))
+			if (!get_direction(p->vup, cp))
 				break;
 			++nparams;
 			continue;
@@ -350,7 +349,7 @@ parse_params(char *pargs)
 			if (!i)
 				break;
 			*--cp = '\0';
-			curparams.outfn = savqstr(cp-i);
+			p->outfn = savqstr(cp-i);
 			*cp++ = ' ';
 			++nparams;
 			continue;
@@ -554,7 +553,7 @@ ssamp_ring(FVECT orig, SURF *sp, double x)
 		sp->priv = (void *)uva;
 	}
 	SDmultiSamp(samp2, 2, x);
-	samp2[0] = sp->farg[6] + sqrt(samp2[0]*sp->area*(1./PI));
+	samp2[0] = sqrt(samp2[0]*sp->area*(1./PI) + sp->farg[6]*sp->farg[6]);
 	samp2[1] *= 2.*PI;
 	uv[0] = samp2[0]*tcos(samp2[1]);
 	uv[1] = samp2[0]*tsin(samp2[1]);
@@ -1044,6 +1043,8 @@ add_recv_object(FILE *fp)
 				finish_receiver();
 				clear_params(&curparams, 1);
 			}
+			parse_params(&curparams, newparams);
+			newparams[0] = '\0';
 			strcpy(curmod, thismod);
 		}
 		add_surface(st, oname, fp);	/* read & store surface */
@@ -1080,6 +1081,8 @@ add_send_object(FILE *fp)
 			fputs(": cannot use source as a sender!\n", stderr);
 			return(-1);
 		}
+		parse_params(&curparams, newparams);
+		newparams[0] = '\0';
 		add_surface(st, oname, fp);	/* read & store surface */
 		return(0);
 	}
@@ -1128,7 +1131,7 @@ load_scene(const char *inspec, int (*ocb)(FILE *))
 			if (!isspace(c) && fscanf(fp, "%s", inpbuf) == 1 &&
 					!strcmp(inpbuf, PARAMSTART)) {
 				if (fgets(inpbuf, sizeof(inpbuf), fp) != NULL)
-					parse_params(inpbuf);
+					strcat(newparams, inpbuf);
 				continue;
 			}
 			while ((c = getc(fp)) != EOF && c != '\n');
@@ -1180,9 +1183,9 @@ main(int argc, char *argv[])
 			case 'f':
 			case 'd':
 			case 'c':
-				if (!(fmtopt[4] = argv[a][3]))
-					fmtopt[4] = argv[a][2];
-				fmtopt[3] = argv[a][2];
+				if (!(fmtopt[3] = argv[a][3]))
+					fmtopt[3] = argv[a][2];
+				fmtopt[2] = argv[a][2];
 				na = 0;
 				continue;	/* will pass later */
 			default:
@@ -1198,7 +1201,7 @@ main(int argc, char *argv[])
 			na = 0;
 			continue;
 		case 'c':		/* number of samples */
-			sampcnt = atoi(argv[a+1]);
+			sampcnt = atoi(argv[++a]);
 			if (sampcnt <= 0)
 				goto userr;
 			na = 0;		/* we re-add this later */
@@ -1270,7 +1273,7 @@ done_opts:
 		}
 		if (sampcnt <= 0) sampcnt = 1;
 	} else {			/* else FVECT determines input format */
-		fmtopt[3] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
+		fmtopt[2] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
 		if (sampcnt <= 0) sampcnt = 10000;
 	}
 	sprintf(sampcntbuf, "%d", sampcnt);
