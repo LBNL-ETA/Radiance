@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.6 2014/07/23 00:40:17 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.7 2014/07/23 22:39:40 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -606,8 +606,12 @@ ssamp_poly(FVECT orig, SURF *sp, double x)
 			}
 			ptp->ntris = 0;
 			v2l->p = (void *)ptp;
-			if (!polyTriangulate(v2l, add_triangle))
+			if (!polyTriangulate(v2l, add_triangle)) {
+				fprintf(stderr,
+					"%s: cannot triangulate polygon '%s'\n",
+						progname, sp->sname);
 				return(0);
+			}
 			for (i = ptp->ntris; i--; ) {
 				int	a = ptp->tri[i].vndx[0];
 				int	b = ptp->tri[i].vndx[1];
@@ -656,8 +660,12 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 					/* special case for lone surface */
 	if (p->nsurfs == 1) {
 		sp = p->slist;
-		if (DOT(sp->snrm, rdir) >= -FTINY)
-			return(0);	/* behind surface! */
+		if (DOT(sp->snrm, rdir) >= -FTINY) {
+			fprintf(stderr,
+				"%s: internal - sample behind sender '%s'\n",
+					progname, sp->sname);
+			return(0);
+		}
 		return((*orig_in_surf[sp->styp])(orig, sp, x));
 	}
 	if (p->nsurfs > nall) {		/* (re)allocate surface area cache */
@@ -671,8 +679,12 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 		projsa[i] = -DOT(sp->snrm, rdir) * sp->area;
 		tarea += projsa[i] *= (double)(projsa[i] > FTINY);
 	}
-	if (tarea <= FTINY)		/* wrong side of sender? */
+	if (tarea <= FTINY) {		/* wrong side of sender? */
+		fputs(progname, stderr);
+		fputs(": internal - sample behind all sender elements!\n",
+				stderr);
 		return(0);
+	}
 	tarea *= x;			/* get surface from list */
 	for (i = 0, sp = p->slist; tarea > projsa[i]; sp = sp->next)
 		tarea -= projsa[i++];
@@ -745,7 +757,7 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 #define T_NALT	7
 	static const int	tnaz[T_NALT] = {30, 30, 24, 24, 18, 12, 6};
 	const int		RowMax = T_NALT*p->hsiz + 1;
-	const double		RAH = (.25*PI)/(RowMax-.5);
+	const double		RAH = (.5*PI)/(RowMax-.5);
 #define rnaz(r)			(r >= RowMax-1 ? 1 : p->hsiz*tnaz[r/p->hsiz])
 	int			n = sampcnt;
 	int			row, col;
@@ -770,7 +782,7 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 		SDmultiSamp(samp3, 3, (n+frandom())/sampcnt);
 		alt = (row+samp3[1])*RAH;
 		azi = (2.*PI)*(col+samp3[2]-.5)/rnaz(row);
-		duvw[2] = tcos(alt);	/* measured from horizon */
+		duvw[2] = cos(alt);	/* measured from horizon */
 		duvw[0] = tcos(azi)*duvw[2];
 		duvw[1] = tsin(azi)*duvw[2];
 		duvw[2] = sqrt(1. - duvw[2]*duvw[2]);
@@ -1007,11 +1019,11 @@ add_surface(int st, const char *oname, FILE *fp)
 	curparams.nsurfs++;
 	return;
 badcount:
-	fprintf(stderr, "%s: bad argument count for surface '%s'\n",
+	fprintf(stderr, "%s: bad argument count for surface element '%s'\n",
 			progname, oname);
 	exit(1);
 badnorm:
-	fprintf(stderr, "%s: bad orientation for surface '%s'\n",
+	fprintf(stderr, "%s: bad orientation for surface element '%s'\n",
 			progname, oname);
 	exit(1);
 }
@@ -1312,7 +1324,7 @@ done_opts:
 	if (verbose) {
 		fprintf(stderr, "%s: sampling %d directions", progname, nsbins);
 		if (curparams.nsurfs > 1)
-			fprintf(stderr, " (%d surfaces)\n", curparams.nsurfs);
+			fprintf(stderr, " (%d elements)\n", curparams.nsurfs);
 		else
 			fputc('\n', stderr);
 	}
