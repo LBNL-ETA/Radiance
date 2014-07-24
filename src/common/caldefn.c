@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.25 2012/07/29 22:10:45 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.26 2014/07/24 15:41:13 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -141,6 +141,13 @@ varset(		/* set a variable's value */
 	    ep1->type = assign;
 	    return;
 	}
+    }
+    if (ep1 != NULL && esupport&E_REDEFW) {
+	wputs(qname);
+	if (ep1->type == ':')
+	    wputs(": reset constant expression\n");
+	else
+	    wputs(": reset expression\n");
     }
 					/* hand build definition */
     ep1 = newnode();
