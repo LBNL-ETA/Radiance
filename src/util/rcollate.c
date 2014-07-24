@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.16 2014/07/09 21:45:48 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.17 2014/07/24 16:28:17 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -617,8 +617,11 @@ main(int argc, char *argv[])
 		}
 		if (!do_transpose(&myMem))
 			return(1);
-		/* free_load(&myMem); */
-	} else if (!do_resize(stdin))		/* just reshaping input */
+		/* free_load(&myMem);	about to exit, so don't bother */
+	} else if (comp_size || (no_columns==ni_columns) & (no_rows==ni_rows)) {
+		if (!output_stream(stdin))	/* just changed header */
+			return(1);
+	} else if (!do_resize(stdin))		/* reshaping input */
 		return(1);
 	return(0);
 userr:

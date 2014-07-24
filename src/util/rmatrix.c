@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.3 2014/07/08 16:39:41 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.4 2014/07/24 16:28:17 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -177,12 +177,18 @@ rmx_load(const char *fname)
 		fclose(fp);
 		return(NULL);
 	}
-	if ((dinfo.dtype == DTrgbe) | (dinfo.dtype == DTxyze)) {
+	if ((dinfo.nrows <= 0) | (dinfo.ncols <= 0)) {
 		if (!fscnresolu(&dinfo.ncols, &dinfo.nrows, fp)) {
 			fclose(fp);
 			return(NULL);
 		}
-		dinfo.ncomp = 3;
+		if (dinfo.ncomp <= 0)
+			dinfo.ncomp = 3;
+		else if ((dinfo.dtype == DTrgbe) | (dinfo.dtype == DTxyze) &&
+				dinfo.ncomp != 3) {
+			fclose(fp);
+			return(NULL);
+		}
 	}
 	dnew = rmx_alloc(dinfo.nrows, dinfo.ncols, dinfo.ncomp);
 	if (dnew == NULL) {

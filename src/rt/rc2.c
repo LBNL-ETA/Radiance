@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.12 2014/07/09 21:09:28 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.13 2014/07/24 16:28:17 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -152,10 +152,12 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 							(xres + !xres) );
 					while (*cp) ++cp;
 				}
-				sprintf(cp, "NCOLS=%d\n", stdos.reclen);
+				if ((xres <= 0) | (stdos.reclen > 1))
+					sprintf(cp, "NCOLS=%d\n", stdos.reclen);
 				printheader(stdout, info);
 			}
-			printresolu(stdout, xres, yres);
+			if (stdos.reclen == 1)
+				printresolu(stdout, xres, yres);
 			if (waitflush > 0)
 				fflush(stdout);
 			stdos.xr = xres; stdos.yr = yres;
@@ -222,10 +224,12 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 						(sop->xr + !sop->xr) );
 				while (*cp) ++cp;
 			}
-			sprintf(cp, "NCOLS=%d\nNCOMP=3\n", sop->reclen);
+			if ((sop->xr <= 0) | (sop->reclen > 1))
+				sprintf(cp, "NCOLS=%d\n", sop->reclen);
 			printheader(sop->ofp, info);
 		}
-		printresolu(sop->ofp, sop->xr, sop->yr);
+		if (sop->reclen == 1)
+			printresolu(sop->ofp, sop->xr, sop->yr);
 		if (waitflush > 0)
 			fflush(sop->ofp);
 	}
