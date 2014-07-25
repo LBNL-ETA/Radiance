@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.10 2014/07/25 17:03:06 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.11 2014/07/25 19:23:14 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1174,7 +1174,7 @@ main(int argc, char *argv[])
 {
 	char	fmtopt[6] = "-faa";	/* default output is ASCII */
 	char	*xrs=NULL, *yrs=NULL, *ldopt=NULL;
-	int	wantIrradiance = 0;
+	char	*iropt = NULL;
 	char	*sendfn;
 	char	sampcntbuf[32], nsbinbuf[32];
 	FILE	*rcfp;
@@ -1223,13 +1223,13 @@ main(int argc, char *argv[])
 			na = 0;		/* we re-add this later */
 			continue;
 		case 'I':		/* only for pass-through mode */
-			wantIrradiance = 1;
+		case 'i':
+			iropt = argv[a];
 			na = 0;
 			continue;
 		case 'V':		/* options without arguments */
 		case 'w':
 		case 'u':
-		case 'i':
 		case 'h':
 		case 'r':
 			break;
@@ -1277,9 +1277,9 @@ done_opts:
 	if (sendfn[0] == '-') {		/* user wants pass-through mode? */
 		if (sendfn[1]) goto userr;
 		sendfn = NULL;
-		if (wantIrradiance) {
+		if (iropt) {
 			CHECKARGC(1);
-			rcarg[nrcargs++] = "-I";
+			rcarg[nrcargs++] = iropt;
 		}
 		if (xrs) {
 			CHECKARGC(2);
@@ -1297,9 +1297,9 @@ done_opts:
 		}
 		if (sampcnt <= 0) sampcnt = 1;
 	} else {			/* else in sampling mode */
-		if (wantIrradiance) {
+		if (iropt) {
 			fputs(progname, stderr);
-			fputs(": -I supported for pass-through only\n", stderr);
+			fputs(": -i, -I supported for pass-through only\n", stderr);
 			return(1);
 		}
 		fmtopt[2] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
