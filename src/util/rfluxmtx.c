@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.9 2014/07/25 16:58:20 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.10 2014/07/25 17:03:06 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -401,11 +401,12 @@ finish_receiver(void)
 		fputs(": undefined normal for hemisphere sampling\n", stderr);
 		exit(1);
 	}
-	if (normalize(curparams.vup) == 0)
+	if (normalize(curparams.vup) == 0) {
 		if (fabs(curparams.nrm[2]) < .7)
 			curparams.vup[2] = 1;
 		else
 			curparams.vup[1] = 1;
+	}
 					/* determine sample type/bin */
 	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1') {
 		binv = "0";		/* uniform sampling -- one bin */
@@ -872,11 +873,12 @@ prepare_sampler(void)
 		fputs(": undefined normal for sender sampling\n", stderr);
 		return(-1);
 	}
-	if (normalize(curparams.vup) == 0)
+	if (normalize(curparams.vup) == 0) {
 		if (fabs(curparams.nrm[2]) < .7)
 			curparams.vup[2] = 1;
 		else
 			curparams.vup[1] = 1;
+	}
 	VCROSS(curparams.udir, curparams.vup, curparams.nrm);
 	if (normalize(curparams.udir) == 0) {
 		fputs(progname, stderr);
@@ -1066,9 +1068,9 @@ add_recv_object(FILE *fp)
 					/* else skip arguments */
 	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*s");
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*d");
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*f");
 	return(0);
 }
@@ -1102,9 +1104,9 @@ add_send_object(FILE *fp)
 					/* else skip arguments */
 	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*s");
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*d");
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*f");
 	return(0);
 }
@@ -1147,7 +1149,7 @@ load_scene(const char *inspec, int (*ocb)(FILE *))
 					strcat(newparams, inpbuf);
 				continue;
 			}
-			while ((c = getc(fp)) != EOF && c != '\n');
+			while ((c = getc(fp)) != EOF && c != '\n')
 				;	/* else skipping comment */
 			continue;
 		}
