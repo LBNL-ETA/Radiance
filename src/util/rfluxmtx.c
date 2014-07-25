@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.7 2014/07/23 22:39:40 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.8 2014/07/25 15:46:10 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1000,7 +1000,8 @@ add_surface(int st, const char *oname, FILE *fp)
 	case ST_SOURCE:
 		if (snew->nfargs != 4)
 			goto badcount;
-		VCOPY(snew->snrm, snew->farg);
+		for (n = 3; n--; )	/* need to reverse "normal" */
+			snew->snrm[n] = -snew->farg[n];
 		if (normalize(snew->snrm) == 0)
 			goto badnorm;
 		snew->area = sin((PI/180./2.)*snew->farg[3]);
@@ -1063,7 +1064,7 @@ add_recv_object(FILE *fp)
 		return(1);
 	}
 					/* else skip arguments */
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*s");
 	if (!fscanf(fp, "%d", &n)) return;
 	while (n-- > 0) fscanf(fp, "%*d");
@@ -1099,7 +1100,7 @@ add_send_object(FILE *fp)
 		return(0);
 	}
 					/* else skip arguments */
-	if (!fscanf(fp, "%d", &n)) return;
+	if (!fscanf(fp, "%d", &n)) return(0);
 	while (n-- > 0) fscanf(fp, "%*s");
 	if (!fscanf(fp, "%d", &n)) return;
 	while (n-- > 0) fscanf(fp, "%*d");
@@ -1171,6 +1172,7 @@ main(int argc, char *argv[])
 {
 	char	fmtopt[6] = "-faa";	/* default output is ASCII */
 	char	*xrs=NULL, *yrs=NULL, *ldopt=NULL;
+	int	wantIrradiance = 0;
 	char	*sendfn;
 	char	sampcntbuf[32], nsbinbuf[32];
 	FILE	*rcfp;
@@ -1217,6 +1219,10 @@ main(int argc, char *argv[])
 			if (sampcnt <= 0)
 				goto userr;
 			na = 0;		/* we re-add this later */
+			continue;
+		case 'I':		/* only for pass-through mode */
+			wantIrradiance = 1;
+			na = 0;
 			continue;
 		case 'V':		/* options without arguments */
 		case 'w':
@@ -1269,6 +1275,10 @@ done_opts:
 	if (sendfn[0] == '-') {		/* user wants pass-through mode? */
 		if (sendfn[1]) goto userr;
 		sendfn = NULL;
+		if (wantIrradiance) {
+			CHECKARGC(1);
+			rcarg[nrcargs++] = "-I";
+		}
 		if (xrs) {
 			CHECKARGC(2);
 			rcarg[nrcargs++] = "-x";
@@ -1284,7 +1294,12 @@ done_opts:
 			rcarg[nrcargs++] = ldopt;
 		}
 		if (sampcnt <= 0) sampcnt = 1;
-	} else {			/* else FVECT determines input format */
+	} else {			/* else in sampling mode */
+		if (wantIrradiance) {
+			fputs(progname, stderr);
+			fputs(": -I supported for pass-through only\n", stderr);
+			return(1);
+		}
 		fmtopt[2] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
 		if (sampcnt <= 0) sampcnt = 10000;
 	}
