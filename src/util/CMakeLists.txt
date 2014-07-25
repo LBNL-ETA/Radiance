@@ -53,6 +53,9 @@ target_link_libraries(rmtxop rtrad)
 add_executable(eplus_adduvf eplus_adduvf.c eplus_idf.c)
 target_link_libraries(eplus_adduvf rtrad)
 
+add_executable(rfluxmtx rfluxmtx.c)
+target_link_libraries(rfluxmtx rtrad)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c ${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c)
@@ -90,11 +93,13 @@ if(UNIX AND X11_FOUND)
   endif()
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
-                vwrays vwright ranimove rsensor rttree_reduce rcollate
-		rmtxop eplus_adduvf
-        RUNTIME DESTINATION bin)
+    vwrays vwright ranimove rsensor rttree_reduce rcollate
+		eplus_adduvf rfluxmtx rmtxop 
+    RUNTIME DESTINATION bin)
 
-install(FILES tregsamp.dat DESTINATION lib)
+install(FILES rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal 
+    klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal
+    DESTINATION lib)
 
 if(WIN32)
   install(PROGRAMS genBSDF.pl DESTINATION bin)
