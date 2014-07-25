@@ -1,4 +1,4 @@
-{ RCSid $Id: disk2square.cal,v 2.2 2014/07/22 23:21:56 greg Exp $ }
+{ RCSid $Id: disk2square.cal,v 2.3 2014/07/25 16:58:20 greg Exp $ }
 {
 	Convert between unit square and disk, using Shirley-Chiu mapping
 
@@ -65,7 +65,7 @@ out_square_y = (out_square_b + 1)/2;
 	The following forumulas compute Shirley-Chiu bin "scbin" based on:
 
 	Dx,Dy,Dz	- Incident direction (normalized, towards surface front)
-	Nx,Ny,Nz	- Surface normal (normalized, away from surface)
+	rNx,rNy,rNz	- Surface normal (normalized, away from surface)
 	Ux,Uy,Uz	- Up direction vector (does not need to be normalized)
 
 	The SCdim variable assigns the square side dimension for bins, which are
@@ -73,11 +73,11 @@ out_square_y = (out_square_b + 1)/2;
 }
 
 				{ Compute oriented axis values }
-inc_dz = -Dx*Nx-Dy*Ny-Dz*Nz;
-inc_rx = -Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx);
-inc_ry = -Dx*Ux-Dy*Uy-Dz*Uz - inc_dz*(Nx*Ux+Ny*Uy+Nz*Uz);
+inc_dz = -Dx*rNx-Dy*rNy-Dz*rNz;
+inc_rx = -Dx*(Uy*rNz-Uz*rNy) - Dy*(Uz*rNx-Ux*rNz) - Dz*(Ux*rNy-Uy*rNx);
+inc_ry = -Dx*Ux-Dy*Uy-Dz*Uz - inc_dz*(rNx*Ux+rNy*Uy+rNz*Uz);
 inc_den2 = inc_rx*inc_rx + inc_ry*inc_ry;
-inc_radf = if(inc_den2-1e-7, sqrt((1 - inc_dz* inc_dz)/inc_den2), 0);
+inc_radf = if(inc_den2-1e-7, sqrt((1 - inc_dz*inc_dz)/inc_den2), 0);
 				{ Pass to formulas in first section }
 in_disk_x = inc_rx*inc_radf;
 in_disk_y = inc_ry*inc_radf;

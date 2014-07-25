@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.8 2014/07/25 15:46:10 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.9 2014/07/25 16:58:20 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -419,7 +419,7 @@ finish_receiver(void)
 			exit(1);
 		}
 		calfn = shirchiufn; shirchiufn = NULL;
-		sprintf(sbuf, "SCdim=%d,Nx=%g,Ny=%g,Nz=%g,Ux=%g,Uy=%g,Uz=%g",
+		sprintf(sbuf, "SCdim=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g",
 				curparams.hsiz,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
@@ -429,7 +429,7 @@ finish_receiver(void)
 	} else if ((tolower(curparams.hemis[0]) == 'r') |
 			(tolower(curparams.hemis[0]) == 't')) {
 		calfn = reinhfn; reinhfn = NULL;
-		sprintf(sbuf, "MF=%d,Nx=%g,Ny=%g,Nz=%g,Ux=%g,Uy=%g,Uz=%g",
+		sprintf(sbuf, "MF=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g",
 				curparams.hsiz,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
