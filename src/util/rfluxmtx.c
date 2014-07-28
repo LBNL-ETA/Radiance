@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.11 2014/07/25 19:23:14 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.12 2014/07/28 16:30:18 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.11 2014/07/25 19:23:14 greg Exp
 #include <stdlib.h>
 #include "rtio.h"
 #include "rtmath.h"
+#include "rtprocess.h"
 #include "bsdf.h"
 #include "bsdf_m.h"
 #include "random.h"
