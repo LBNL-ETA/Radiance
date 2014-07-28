@@ -1,4 +1,4 @@
-.\" RCSid "$Id: getinfo.1,v 1.5 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: getinfo.1,v 1.6 2014/07/28 17:25:03 greg Exp $"
 .TH GETINFO 1 1/15/99 RADIANCE
 .SH NAME
 getinfo - get header information from a RADIANCE file
@@ -12,6 +12,10 @@ getinfo - get header information from a RADIANCE file
 .br
 .B getinfo
 -
+.br
+.B getinfo
+.B -c
+.B "command .."
 .SH DESCRIPTION
 .I Getinfo
 reads the header of each RADIANCE
@@ -37,9 +41,22 @@ If no
 .I file
 is given, the standard input is read.
 .PP
-The second form of getinfo with a hyphen simply removes the header
+The second form of
+.I getinfo
+with a hyphen simply removes the header
 and copies the body of the file from the standard
 input to the standard output.
+.PP
+The third form of
+.I "getinfo \-c"
+is followed by a command and its arguments, which is executed
+on the data segment of the standard input.
+The header is passed along, with the addition of the command
+at the end.
+This is roughly equivalent to the following sequence, but does not
+require the input to be in a file:
+.IP "" .2i
+( getinfo < input ; getinfo - < input | command .. )
 .SH EXAMPLE
 To print the header information from scene1.oct and scene2.hdr:
 .IP "" .2i
@@ -47,4 +64,4 @@ getinfo scene1.oct scene2.hdr
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-oconv(1), pfilt(1), rhinfo(1), rpict(1), rvu(1)
+oconv(1), pfilt(1), rcalc(1), rhinfo(1), rpict(1), rvu(1)

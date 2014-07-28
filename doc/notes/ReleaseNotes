@@ -1953,3 +1953,5 @@ basis to simplify bin evaluation.
 Created rfluxmtx program to compute flux transfer matrices from a sender
 surface to one or more receiver surfaces.  (Renamed the file klems_int.cal
 to klems_full.cal in the process.)
+
+Added "-c" option to getinfo to execute command on data segment.
