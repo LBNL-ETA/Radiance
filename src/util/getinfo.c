@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.10 2014/07/28 17:25:03 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.11 2014/07/28 20:12:20 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -21,6 +21,7 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.10 2014/07/28 17:25:03 greg Exp 
 #endif
 
 #ifdef _WIN32
+#include <process.h>
 #define	execvp	_execvp
 #endif
 
@@ -145,7 +146,7 @@ static void
 copycat(void)			/* copy input to output */
 {
 	char	buf[8192];
-	ssize_t	n;
+	int	n;
 
 	fflush(stdout);
 	while ((n = fread(buf, 1, sizeof(buf), stdin)) > 0)
