@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.2 2014/07/28 18:35:40 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.3 2014/07/28 21:03:22 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -68,7 +68,7 @@ option, defaults to 10000 when a sender file is given, or to 1 for pass-through 
 .SH VARIABLES
 The sender and receiver scene files given to
 .I rfluxmtx
-contain controlling parameters in specal comments of the form:
+contain controlling parameters in special comments of the form:
 .nf
 
 	#@rfluxmtx variable=value ..
@@ -81,7 +81,7 @@ one surface in each file.
 .BI h =u
 Set hemisphere sampling to "uniform," meaning a single bin
 of (cosine-distributed) samples.
-In the case of distant "source" primatives, this is the only
+In the case of distant "source" primitives, this is the only
 sampling method that supports arbitrary receiver sizes.
 The other methods below require a full hemispherical source.
 .TP
@@ -142,7 +142,7 @@ When using local geometry, the overall aperture shape should be close to flat.
 Large displacements may give rise to errors due to a convex receiver's
 larger profile at low angles of incidence.
 .PP
-Rays always eminate from the back side of the sender surface and arrive at the
+Rays always emanate from the back side of the sender surface and arrive at the
 front side of receiver surfaces.
 In this way, a receiver surface may be reused as a sender in a subsequent
 .I rfluxmtx
