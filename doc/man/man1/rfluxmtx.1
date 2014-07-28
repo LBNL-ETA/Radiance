@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.1 2014/07/22 21:55:31 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.2 2014/07/28 18:35:40 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -64,7 +64,7 @@ in which case they may be needed to generate RADIANCE views from
 .I vwrays(1).
 The sample count, unless set by the
 .I \-c
-option, defaults to 10000 when a sender file is given, and 1 for pass-through mode.
+option, defaults to 10000 when a sender file is given, or to 1 for pass-through mode.
 .SH VARIABLES
 The sender and receiver scene files given to
 .I rfluxmtx
@@ -125,7 +125,7 @@ In normal execution, only a single sender surface is sampled, but it may be
 comprised of any number of subsurfaces, as in a triangle mesh or similar.
 The surface normal will be computed as the average of all the constituent
 subsurfaces.
-The subsurfaces themselves must be planer, thus only
+The subsurfaces themselves must be planar, thus only
 .I polygon
 and
 .I ring
@@ -138,6 +138,9 @@ primitive is supported as well, and multiple receivers (and multiple output
 matrices) are identified by different modifier names.
 Though it may be counter-intuitive, receivers are often light sources,
 since samples end up there in a backwards ray-tracing system such as RADIANCE.
+When using local geometry, the overall aperture shape should be close to flat.
+Large displacements may give rise to errors due to a convex receiver's
+larger profile at low angles of incidence.
 .PP
 Rays always eminate from the back side of the sender surface and arrive at the
 front side of receiver surfaces.
