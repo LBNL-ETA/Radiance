@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: findglare.c,v 2.13 2009/02/07 05:40:47 greg Exp $";
+static const char	RCSid[] = "$Id: findglare.c,v 2.14 2014/07/29 21:36:08 greg Exp $";
 #endif
 /*
  * Find glare sources in a scene or image.
@@ -129,15 +129,26 @@ main(
 			/* FALL THROUGH */
 		case 's':
 		case 'P':
+		case 'n':
 			rtargv[rtargc++] = argv[i];
 			rtargv[rtargc++] = argv[++i];
 			break;
 		case 'w':
+		case 'u':
+		case 'b':
 			rtargv[rtargc++] = argv[i];
 			break;
 		case 'a':
 			rtargv[rtargc++] = argv[i];
 			if (argv[i][2] == 'v') {
+				rtargv[rtargc++] = argv[++i];
+				rtargv[rtargc++] = argv[++i];
+			}
+			rtargv[rtargc++] = argv[++i];
+			break;
+		case 'm':
+			rtargv[rtargc++] = argv[i];
+			if ((argv[i][2] == 'e') | (argv[i][2] == 'a')) {
 				rtargv[rtargc++] = argv[++i];
 				rtargv[rtargc++] = argv[++i];
 			}
