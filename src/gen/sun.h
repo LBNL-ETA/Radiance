@@ -1,4 +1,4 @@
-/* RCSid $Id: sun.h,v 2.1 2013/08/09 16:51:15 greg Exp $ */
+/* RCSid $Id: sun.h,v 2.2 2014/07/30 17:30:27 greg Exp $ */
 /*
  * Header file for solar position calculations
  */
@@ -9,6 +9,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+					/* sun calculation constants */
+extern double  s_latitude;
+extern double  s_longitude;
+extern double  s_meridian;
 
 extern int jdate(int month, int day);
 extern double stadj(int  jd);

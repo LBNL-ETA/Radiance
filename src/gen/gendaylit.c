@@ -20,7 +20,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.15 2013/11/18 18:07:16 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.16 2014/07/30 17:30:27 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -102,12 +102,6 @@ double  solar_sunset(int month, int day);
 double  solar_sunrise(int month, int day);
 double  stadj();
 int     jdate(int month, int day);
-
-
-/* sun calculation constants */
-extern double   s_latitude;
-extern double   s_longitude;
-extern double   s_meridian;
 
 const double	AU = 149597890E3;
 const double 	solar_constant_e = 1367;    /* solar constant W/m^2 */

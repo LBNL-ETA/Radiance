@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.25 2010/12/08 21:22:33 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.26 2014/07/30 17:30:27 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -15,14 +15,8 @@ static const char	RCSid[] = "$Id: gensky.c,v 2.25 2010/12/08 21:22:33 greg Exp $
 #include  <string.h>
 #include  <math.h>
 #include  <ctype.h>
-
+#include  "sun.h"
 #include  "color.h"
-
-extern int jdate(int month, int day);
-extern double stadj(int  jd);
-extern double sdec(int  jd);
-extern double salt(double sd, double st);
-extern double sazi(double sd, double st);
 
 #ifndef  PI
 #define  PI		3.14159265358979323846
@@ -38,10 +32,6 @@ extern double sazi(double sd, double st);
 #define  overcast	((skytype==S_OVER)|(skytype==S_UNIF))
 
 double  normsc();
-					/* sun calculation constants */
-extern double  s_latitude;
-extern double  s_longitude;
-extern double  s_meridian;
 
 #undef  toupper
 #define  toupper(c)	((c) & ~0x20)	/* ASCII trick to convert case */
@@ -96,13 +86,14 @@ void printdefaults(void);
 void userror(char  *msg);
 double normsc(void);
 int cvthour(char  *hs);
-void printhead(register int  ac, register char  **av);
+void printhead(int  ac, char  **av);
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	int  got_meridian = 0;
 	int  i;
@@ -361,9 +352,9 @@ normsc(void)			/* compute normalization factor (E0*F2/L0) */
 				/* intermediate sky approx. */
 		{3.5556, -2.7152, -1.3081, 1.0660, 0.60227},
 	};
-	register double  *nf;
+	double  *nf;
 	double  x, nsc;
-	register int  i;
+	int  i;
 					/* polynomial approximation */
 	nf = nfc[skytype==S_INTER];
 	x = (altitude - PI/4.0)/(PI/4.0);
@@ -380,8 +371,8 @@ cvthour(			/* convert hour string */
 	char  *hs
 )
 {
-	register char  *cp = hs;
-	register int	i, j;
+	char  *cp = hs;
+	int	i, j;
 
 	if ( (tsolar = *cp == '+') ) cp++;		/* solar time? */
 	while (isdigit(*cp)) cp++;
@@ -420,8 +411,8 @@ cvthour(			/* convert hour string */
 
 void
 printhead(		/* print command header */
-	register int  ac,
-	register char  **av
+	int  ac,
+	char  **av
 )
 {
 	putchar('#');
