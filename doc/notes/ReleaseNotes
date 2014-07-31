@@ -1807,7 +1807,7 @@ of KitWare and sponsored by NREL.  This includes a qt-based
 driver for rvu, which is built in the new subdirectory src/qtrvu.
 
 =====================
-Version 4.2
+Version 4.2 (Release date 7/31/2014)
 
 Axel Jacobs added -cp and -palettes options to falsecolor.
 
@@ -1955,3 +1955,5 @@ surface to one or more receiver surfaces.  (Renamed the file klems_int.cal
 to klems_full.cal in the process.)
 
 Added "-c" option to getinfo to execute command on data segment.
+
+=====================
