@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.4 2014/07/24 16:28:17 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.5 2014/08/01 23:37:24 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -12,9 +12,13 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.4 2014/07/24 16:28:17 greg Exp $
 #include "resolu.h"
 #include "rmatrix.h"
 
+#define	MAX_INFO	16000
+
 typedef struct {
 	int	nrows, ncols, ncomp;
 	int	dtype;
+	int	info_len;
+	char	info[MAX_INFO];
 } DMINFO;
 
 /* Allocate a nr x nc matrix with n components */
@@ -30,14 +34,32 @@ rmx_alloc(int nr, int nc, int n)
 	if (dnew == NULL)
 		return(NULL);
 	dnew->nrows = nr; dnew->ncols = nc; dnew->ncomp = n;
+	dnew->info = NULL;
 	return(dnew);
+}
+
+/* Append header information associated with matrix data */
+int
+rmx_addinfo(RMATRIX *rm, const char *info)
+{
+	if (!info || !*info)
+		return(0);
+	if (!rm->info)
+		rm->info = (char *)malloc(strlen(info)+1);
+	else
+		rm->info = (char *)realloc(rm->info,
+				strlen(rm->info)+strlen(info)+1);
+	if (!rm->info)
+		return(0);
+	strcat(rm->info, info);
+	return(1);
 }
 
 static int
 get_dminfo(char *s, void *p)
 {
 	DMINFO	*ip = (DMINFO *)p;
-	char	fmt[32];
+	char	fmt[64];
 	int	i;
 
 	if (!strncmp(s, "NCOMP=", 6)) {
@@ -52,8 +74,20 @@ get_dminfo(char *s, void *p)
 		ip->ncols = atoi(s+6);
 		return(0);
 	}
-	if (!formatval(fmt, s))
+	if (!formatval(fmt, s)) {
+		if (headidval(fmt, s))
+			return(0);
+		while (*s) {
+			if (ip->info_len == MAX_INFO-2 &&
+					ip->info[MAX_INFO-3] != '\n')
+				ip->info[ip->info_len++] = '\n';
+			if (ip->info_len >= MAX_INFO-1)
+				break;
+			ip->info[ip->info_len++] = *s++;
+		}
+		ip->info[ip->info_len] = '\0';
 		return(0);
+	}
 	for (i = 1; i < DTend; i++)
 		if (!strcmp(fmt, cm_fmt_id[i])) {
 			ip->dtype = i;
@@ -173,6 +207,7 @@ rmx_load(const char *fname)
 #endif
 	dinfo.nrows = dinfo.ncols = dinfo.ncomp = 0;
 	dinfo.dtype = DTascii;
+	dinfo.info_len = 0;
 	if (getheader(fp, get_dminfo, &dinfo) < 0) {
 		fclose(fp);
 		return(NULL);
@@ -195,6 +230,8 @@ rmx_load(const char *fname)
 		fclose(fp);
 		return(NULL);
 	}
+	if (dinfo.info_len)
+		rmx_addinfo(dnew, dinfo.info);
 	switch (dinfo.dtype) {
 	case DTascii:
 		if (!rmx_load_ascii(dnew, fp))
@@ -315,6 +352,8 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 	if ((rm == NULL) | (fp == NULL))
 		return(0);
 						/* complete header */
+	if (rm->info)
+		fputs(rm->info, fp);
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
 		fprintf(fp, "NROWS=%d\n", rm->nrows);
 		fprintf(fp, "NCOLS=%d\n", rm->ncols);
@@ -383,6 +422,7 @@ rmx_copy(const RMATRIX *rm)
 	dnew = rmx_alloc(rm->nrows, rm->ncols, rm->ncomp);
 	if (dnew == NULL)
 		return(NULL);
+	rmx_addinfo(dnew, rm->info);
 	memcpy(dnew->mtx, rm->mtx,
 		sizeof(rm->mtx[0])*rm->ncomp*rm->nrows*rm->ncols);
 	return(dnew);
@@ -400,6 +440,10 @@ rmx_transpose(const RMATRIX *rm)
 	dnew = rmx_alloc(rm->ncols, rm->nrows, rm->ncomp);
 	if (dnew == NULL)
 		return(NULL);
+	if (rm->info) {
+		rmx_addinfo(dnew, rm->info);
+		rmx_addinfo(dnew, "Transposed rows and columns\n");
+	}
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; )
 		for (k = dnew->ncomp; k--; )

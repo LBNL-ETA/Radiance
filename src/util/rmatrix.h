@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.2 2014/05/31 19:21:21 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.3 2014/08/01 23:37:24 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -15,6 +15,7 @@ extern "C" {
 /* General plane-ordered component matrix */
 typedef struct {
 	int	nrows, ncols, ncomp;
+	char	*info;
 	double	mtx[1];			/* extends struct */
 } RMATRIX;
 
@@ -27,6 +28,9 @@ extern RMATRIX	*rmx_alloc(int nr, int nc, int n);
 
 /* Load matrix from supported file type */
 extern RMATRIX	*rmx_load(const char *fname);
+
+/* Append header information associated with matrix data */
+extern int	rmx_addinfo(RMATRIX *rm, const char *info);
 
 /* Write matrix to file type indicated by dt */
 extern long	rmx_write(const RMATRIX *rm, int dtype, FILE *fp);
