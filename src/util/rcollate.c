@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.17 2014/07/24 16:28:17 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.18 2014/08/01 18:21:04 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -572,7 +572,7 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdout);
 	}
 						/* check for no-op */
-	if (!transpose & (i_header == o_header) && (comp_size ||
+	if (!transpose & !i_header & !o_header && (comp_size ||
 			(no_columns == ni_columns) & (no_rows == ni_rows))) {
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
