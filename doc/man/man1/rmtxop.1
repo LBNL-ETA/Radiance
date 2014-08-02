@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.3 2014/08/01 22:58:03 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.4 2014/08/02 17:10:43 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, transpose, scale, and convert matrices
@@ -106,10 +106,11 @@ result and the new matrix must match, and will not be changed by the
 operation.
 .PP
 Results are sent to the standard output.
-By default, the values will be written in ASCII format, but the
+By default, the values will be written in the lowest resolution format
+amont the inputs, but the
 .I \-f
-option may be used to output components
-as binary doubles (-fd), floats (-ff), or RGBE colors (-fc).
+option may be used to explicitly output components
+as ASCII (-fa), binary doubles (-fd), floats (-ff), or RGBE colors (-fc).
 In the latter case, the actual matrix dimensions are written in the resolution
 string rather than the header.
 Also, matrix results written as Radiance pictures must have either one

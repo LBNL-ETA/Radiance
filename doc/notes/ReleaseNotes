@@ -1957,3 +1957,7 @@ to klems_full.cal in the process.)
 Added "-c" option to getinfo to execute command on data segment.
 
 =====================
+Version 4.3
+
+Changed rmtxop so it writes out same type as lesser of inputs unless
+direction otherwise using -f? option.

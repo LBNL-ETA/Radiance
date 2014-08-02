@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.2 2014/05/31 19:21:21 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.3 2014/08/02 17:10:43 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -22,7 +22,7 @@ typedef struct {
 	int		op;			/* '*' or '+' */
 } ROPERAT;				/* matrix operation */
 
-int	outfmt = DTascii;		/* output format */
+int	outfmt = DTfromHeader;		/* output format */
 int	verbose = 0;			/* verbose reporting? */
 
 static void

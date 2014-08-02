@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.3 2014/08/01 23:37:24 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.4 2014/08/02 17:10:43 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -15,16 +15,21 @@ extern "C" {
 /* General plane-ordered component matrix */
 typedef struct {
 	int	nrows, ncols, ncomp;
+	int	dtype;
 	char	*info;
 	double	mtx[1];			/* extends struct */
 } RMATRIX;
 
 #define rmx_lval(rm,r,c,i)	(rm)->mtx[((i)*(rm)->nrows+(r))*(rm)->ncols+(c)]
 
-#define rmx_free(rm)		free(rm)
-
 /* Allocate a nr x nc matrix with n components */
 extern RMATRIX	*rmx_alloc(int nr, int nc, int n);
+
+/* Free a RMATRIX array */
+extern void	rmx_free(RMATRIX *rm);
+
+/* Resolve data type based on two input types (returns 0 for mismatch) */
+extern int	rmx_newtype(int dtyp1, int dtyp2);
 
 /* Load matrix from supported file type */
 extern RMATRIX	*rmx_load(const char *fname);
@@ -32,7 +37,7 @@ extern RMATRIX	*rmx_load(const char *fname);
 /* Append header information associated with matrix data */
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);
 
-/* Write matrix to file type indicated by dt */
+/* Write matrix to file type indicated by dtype */
 extern long	rmx_write(const RMATRIX *rm, int dtype, FILE *fp);
 
 /* Allocate and assign square identity matrix with n components */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.5 2014/08/01 23:37:24 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.6 2014/08/02 17:10:43 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -12,14 +12,7 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.5 2014/08/01 23:37:24 greg Exp $
 #include "resolu.h"
 #include "rmatrix.h"
 
-#define	MAX_INFO	16000
-
-typedef struct {
-	int	nrows, ncols, ncomp;
-	int	dtype;
-	int	info_len;
-	char	info[MAX_INFO];
-} DMINFO;
+static char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
 
 /* Allocate a nr x nc matrix with n components */
 RMATRIX *
@@ -34,8 +27,30 @@ rmx_alloc(int nr, int nc, int n)
 	if (dnew == NULL)
 		return(NULL);
 	dnew->nrows = nr; dnew->ncols = nc; dnew->ncomp = n;
+	dnew->dtype = DTdouble;
 	dnew->info = NULL;
 	return(dnew);
+}
+
+/* Free a RMATRIX array */
+void
+rmx_free(RMATRIX *rm)
+{
+	if (!rm) return;
+	if (rm->info)
+		free(rm->info);
+	free(rm);
+}
+
+/* Resolve data type based on two input types (returns 0 for mismatch) */
+int
+rmx_newtype(int dtyp1, int dtyp2)
+{
+	if ((dtyp1==DTxyze) | (dtyp1==DTrgbe) && dtyp1 != dtyp2)
+		return(0);
+	if (dtyp1 < dtyp2)
+		return(dtyp1);
+	return(dtyp2);
 }
 
 /* Append header information associated with matrix data */
@@ -58,10 +73,12 @@ rmx_addinfo(RMATRIX *rm, const char *info)
 static int
 get_dminfo(char *s, void *p)
 {
-	DMINFO	*ip = (DMINFO *)p;
+	RMATRIX	*ip = (RMATRIX *)p;
 	char	fmt[64];
 	int	i;
 
+	if (headidval(fmt, s))
+		return(0);
 	if (!strncmp(s, "NCOMP=", 6)) {
 		ip->ncomp = atoi(s+6);
 		return(0);
@@ -75,17 +92,7 @@ get_dminfo(char *s, void *p)
 		return(0);
 	}
 	if (!formatval(fmt, s)) {
-		if (headidval(fmt, s))
-			return(0);
-		while (*s) {
-			if (ip->info_len == MAX_INFO-2 &&
-					ip->info[MAX_INFO-3] != '\n')
-				ip->info[ip->info_len++] = '\n';
-			if (ip->info_len >= MAX_INFO-1)
-				break;
-			ip->info[ip->info_len++] = *s++;
-		}
-		ip->info[ip->info_len] = '\0';
+		rmx_addinfo(ip, s);
 		return(0);
 	}
 	for (i = 1; i < DTend; i++)
@@ -179,7 +186,7 @@ RMATRIX *
 rmx_load(const char *fname)
 {
 	FILE		*fp = stdin;
-	DMINFO		dinfo;
+	RMATRIX		dinfo;
 	RMATRIX		*dnew;
 
 	if (fname == NULL) {			/* reading from stdin? */
@@ -206,8 +213,8 @@ rmx_load(const char *fname)
 	flockfile(fp);
 #endif
 	dinfo.nrows = dinfo.ncols = dinfo.ncomp = 0;
-	dinfo.dtype = DTascii;
-	dinfo.info_len = 0;
+	dinfo.dtype = DTascii;			/* assumed w/o FORMAT */
+	dinfo.info = NULL;
 	if (getheader(fp, get_dminfo, &dinfo) < 0) {
 		fclose(fp);
 		return(NULL);
@@ -230,8 +237,7 @@ rmx_load(const char *fname)
 		fclose(fp);
 		return(NULL);
 	}
-	if (dinfo.info_len)
-		rmx_addinfo(dnew, dinfo.info);
+	dnew->info = dinfo.info;
 	switch (dinfo.dtype) {
 	case DTascii:
 		if (!rmx_load_ascii(dnew, fp))
@@ -240,15 +246,18 @@ rmx_load(const char *fname)
 	case DTfloat:
 		if (!rmx_load_float(dnew, fp))
 			goto loaderr;
+		dnew->dtype = DTfloat;
 		break;
 	case DTdouble:
 		if (!rmx_load_double(dnew, fp))
 			goto loaderr;
+		dnew->dtype = DTdouble;
 		break;
 	case DTrgbe:
 	case DTxyze:
 		if (!rmx_load_rgbe(dnew, fp))
 			goto loaderr;
+		dnew->dtype = dinfo.dtype;
 		break;
 	default:
 		goto loaderr;
@@ -342,7 +351,7 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 	return(1);
 }
 
-/* Write matrix to file type indicated by dt */
+/* Write matrix to file type indicated by dtype */
 long
 rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 {
@@ -354,6 +363,12 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 						/* complete header */
 	if (rm->info)
 		fputs(rm->info, fp);
+	if (dtype == DTfromHeader)
+		dtype = rm->dtype;
+	else if ((dtype == DTrgbe) & (rm->dtype == DTxyze))
+		dtype = DTxyze;
+	else if ((dtype = DTxyze) & (rm->dtype == DTrgbe))
+		dtype = DTrgbe;
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
 		fprintf(fp, "NROWS=%d\n", rm->nrows);
 		fprintf(fp, "NCOLS=%d\n", rm->ncols);
@@ -423,6 +438,7 @@ rmx_copy(const RMATRIX *rm)
 	if (dnew == NULL)
 		return(NULL);
 	rmx_addinfo(dnew, rm->info);
+	dnew->dtype = rm->dtype;
 	memcpy(dnew->mtx, rm->mtx,
 		sizeof(rm->mtx[0])*rm->ncomp*rm->nrows*rm->ncols);
 	return(dnew);
@@ -444,6 +460,7 @@ rmx_transpose(const RMATRIX *rm)
 		rmx_addinfo(dnew, rm->info);
 		rmx_addinfo(dnew, "Transposed rows and columns\n");
 	}
+	dnew->dtype = rm->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; )
 		for (k = dnew->ncomp; k--; )
@@ -464,6 +481,11 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	mres = rmx_alloc(m1->nrows, m2->ncols, m1->ncomp);
 	if (mres == NULL)
 		return(NULL);
+	i = rmx_newtype(m1->dtype, m2->dtype);
+	if (i)
+		mres->dtype = i;
+	else
+		rmx_addinfo(mres, rmx_mismatch_warn);
 	for (i = mres->nrows; i--; )
 	    for (j = mres->ncols; j--; )
 	        for (h = m1->ncols; h--; ) {
@@ -496,6 +518,11 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 			mysf[k] = 1;
 		sf = mysf;
 	}
+	i = rmx_newtype(msum->dtype, madd->dtype);
+	if (i)
+		msum->dtype = i;
+	else
+		rmx_addinfo(msum, rmx_mismatch_warn);
 	for (i = msum->nrows; i--; )
 	    for (j = msum->ncols; j--; )
 		for (k = msum->ncomp; k--; )
@@ -533,6 +560,7 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	dnew = rmx_alloc(msrc->nrows, msrc->ncols, n);
 	if (dnew == NULL)
 		return(NULL);
+	dnew->dtype = msrc->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; )
 	        for (kd = dnew->ncomp; kd--; ) {
@@ -556,6 +584,7 @@ rmx_from_cmatrix(const CMATRIX *cm)
 	dnew = rmx_alloc(cm->nrows, cm->ncols, 3);
 	if (dnew == NULL)
 		return(NULL);
+	dnew->dtype = DTfloat;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; ) {
 		const COLORV	*cv = cm_lval(cm,i,j);

@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.5 2014/05/30 00:00:54 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.6 2014/08/02 17:10:43 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /* Data types for file loading */
-enum {DTfromHeader=0, DTascii, DTfloat, DTdouble, DTrgbe, DTxyze, DTend};
+enum {DTfromHeader=0, DTascii, DTrgbe, DTxyze, DTfloat, DTdouble, DTend};
 
 extern const char	*cm_fmt_id[];
 extern const int	cm_elem_size[];
