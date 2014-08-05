@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.6 2014/08/02 17:10:43 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.7 2014/08/05 21:45:05 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -191,6 +191,9 @@ rmx_load(const char *fname)
 
 	if (fname == NULL) {			/* reading from stdin? */
 		fname = "<stdin>";
+#ifdef _WIN32
+		_setmode(fileno(stdin), _O_BINARY);
+#endif
 	} else {
 		const char	*sp = fname;	/* check suffix */
 		while (*sp)
