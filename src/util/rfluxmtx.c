@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.12 2014/07/28 16:30:18 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.13 2014/08/06 00:59:53 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -145,20 +145,23 @@ surf_type(const char *otype)
 static char *
 oconv_command(int ac, char *av[])
 {
-	static char	oconvbuf[2048] = "!oconv -f";
-	char		*cp = oconvbuf + 9;
-
+	static char	oconvbuf[2048] = "!oconv -f ";
+	char		*cp = oconvbuf + 10;
+	char		*recv = *av++;
+	
+	if (ac-- <= 0)
+		return(NULL);
 	while (ac-- > 0) {
+		strcpy(cp, *av++);
+		while (*cp) cp++;
+		*cp++ = ' ';
 		if (cp >= oconvbuf+(sizeof(oconvbuf)-32)) {
 			fputs(progname, stderr);
 			fputs(": too many file arguments!\n", stderr);
 			exit(1);
 		}
-		*cp++ = ' ';
-		strcpy(cp, *av++);
-		while (*cp) cp++;
 	}
-	*cp = '\0';
+	strcpy(cp, recv);	/* receiver goes last */
 	return(oconvbuf);
 }
 
@@ -1353,7 +1356,7 @@ done_opts:
 userr:
 	if (a < argc-2)
 		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [system.rad ..]\n",
+	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	return(1);
 }

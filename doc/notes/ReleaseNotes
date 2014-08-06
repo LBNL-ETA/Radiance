@@ -1961,3 +1961,7 @@ Version 4.3
 
 Changed rmtxop so it writes out same type as lesser of inputs unless
 direction otherwise using -f? option.
+
+Changed order of oconv arguments in rfluxmtx so user can specify input
+octree using -i option at the end instead of (or in addition to) a
+list of scene files.

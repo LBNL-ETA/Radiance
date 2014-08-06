@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.3 2014/07/28 21:03:22 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.4 2014/08/06 00:59:53 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -11,7 +11,8 @@ rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
 ]
 .B "{ sender.rad | - }"
 .B receivers.rad
-.B "[ scene.rad .. ]"
+.B "[ -i system.oct ]"
+.B "[ system.rad .. ]"
 .SH DESCRIPTION
 .I Rfluxmtx
 samples rays uniformly over the surface given in
@@ -19,9 +20,12 @@ samples rays uniformly over the surface given in
 and records rays arriving at surfaces in the file
 .I receivers.rad,
 producing a flux transfer matrix per receiver.
-Additional scene surfaces are given in optional
-.I scene.rad
-files, which are compiled with the receivers into an octree sent to the
+A system octree to which the receivers will be appended may be given with a
+.I \-i
+option following the receiver file.
+Additional system surfaces may be given in one or more
+.I system.rad
+files, which are compiled before the receiver file into an octree sent to the
 .I rcontrib(1)
 program to do the actual work.
 If a single hyphen ('-') is given in place of the sender file, then
