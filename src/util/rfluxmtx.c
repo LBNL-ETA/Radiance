@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.13 2014/08/06 00:59:53 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.14 2014/08/06 02:38:24 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1186,9 +1186,20 @@ main(int argc, char *argv[])
 	int	a, i;
 					/* screen rcontrib options */
 	progname = argv[0];
-	for (a = 1; a < argc-2 && argv[a][0] == '-'; a++) {
-		int	na = 1;		/* !! Keep consistent !! */
-		switch (argv[a][1]) {
+	for (a = 1; a < argc-2; a++) {
+		int	na;
+					/* check for argument expansion */
+		while ((na = expandarg(&argc, &argv, a)) > 0)
+			;
+		if (na < 0) {
+			fprintf(stderr, "%s: cannot expand '%s'\n",
+					progname, argv[a]);
+			return(1);
+		}
+		if (argv[a][0] != '-' || !argv[a][1])
+			break;
+		na = 1;	
+		switch (argv[a][1]) {	/* !! Keep consistent !! */
 		case 'v':		/* verbose mode */
 			verbose = !verbose;
 			na = 0;
@@ -1263,8 +1274,6 @@ main(int argc, char *argv[])
 			if (!argv[a][2]) goto userr;
 			na = (argv[a][2] == 'e') | (argv[a][2] == 'a') ? 4 : 2;
 			break;
-		case '\0':		/* pass-through mode */
-			goto done_opts;
 		default:		/* anything else is verbotten */
 			goto userr;
 		}
@@ -1274,7 +1283,6 @@ main(int argc, char *argv[])
 		while (--na)		/* + arguments if any */
 			rcarg[nrcargs++] = argv[++a];
 	}
-done_opts:
 	if (a > argc-2)
 		goto userr;		/* check at end of options */
 	sendfn = argv[a++];		/* assign sender & receiver inputs */
