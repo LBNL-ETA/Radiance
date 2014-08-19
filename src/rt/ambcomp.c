@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.63 2014/06/19 16:26:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.64 2014/08/19 15:04:40 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -78,7 +78,9 @@ ambsample(				/* initial ambient division sample */
 	hlist[1] = j;
 	hlist[2] = i;
 	multisamp(spt, 2, urand(ilhash(hlist,3)+n));
-	if (!n) {			/* avoid border samples for n==0 */
+					/* avoid coincident samples */
+	if (!n && (0 < i) & (i < hp->ns-1) &&
+			(0 < j) & (j < hp->ns-1)) {
 		if ((spt[0] < 0.1) | (spt[0] >= 0.9))
 			spt[0] = 0.1 + 0.8*frandom();
 		if ((spt[1] < 0.1) | (spt[1] >= 0.9))
