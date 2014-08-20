@@ -1,4 +1,4 @@
-{ RCSid $Id: reinhartb.cal,v 2.3 2014/07/25 16:58:20 greg Exp $ }
+{ RCSid $Id: reinhartb.cal,v 2.4 2014/08/20 06:32:07 greg Exp $ }
 {
 	Compute Reinhart high-density sky patch bin (rbin)
 
@@ -27,7 +27,7 @@ inc_dz = -Dx*rNx-Dy*rNy-Dz*rNz;
 inc_rx = -Dx*(Uy*rNz-Uz*rNy) - Dy*(Uz*rNx-Ux*rNz) - Dz*(Ux*rNy-Uy*rNx);
 inc_ry = -Dx*Ux-Dy*Uy-Dz*Uz - inc_dz*(rNx*Ux+rNy*Uy+rNz*Uz);
 
-r_alt = Asin(inc_dz)/DEGREE;
+r_alt = Asin(inc_dz);
 r_azi = Atan2(inc_rx,inc_ry);
 
 alpha = 90/(MF*7 + .5);		{ Separation between rows in degrees }
