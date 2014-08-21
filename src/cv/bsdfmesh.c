@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.31 2014/08/21 13:44:05 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.32 2014/08/21 19:31:23 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -72,18 +72,25 @@ est_DSFrad(const RBFNODE *rbf, const FVECT outvec)
 	double		DSFoutside = eval_DSFsurround(rbf, outvec, outside_rad);
 #define	interp_rad	inside_rad + (outside_rad-inside_rad) * \
 				(DSFtarget-DSFinside) / (DSFoutside-DSFinside)
-						/* interpolation search */
-	while (outside_rad-inside_rad > rad_epsilon) {
+						/* Newton's method (sort of) */
+	do {
 		double	test_rad = interp_rad;
-		double	DSFtest = eval_DSFsurround(rbf, outvec, test_rad);
-		if (DSFtarget < DSFtest) {
+		double	DSFtest;
+		if (test_rad >= outside_rad)
+			return(test_rad);
+		if (test_rad <= inside_rad)
+			return(test_rad*(test_rad>0));
+		DSFtest = eval_DSFsurround(rbf, outvec, test_rad);
+		if (DSFtest > DSFtarget) {
 			inside_rad = test_rad;
 			DSFinside = DSFtest;
 		} else {
 			outside_rad = test_rad;
 			DSFoutside = DSFtest;
 		}
-	}
+		if (DSFoutside >= DSFinside)
+			return(test_rad);
+	} while (outside_rad-inside_rad > rad_epsilon);
 	return(interp_rad);
 #undef interp_rad
 }
