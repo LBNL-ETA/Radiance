@@ -1966,4 +1966,8 @@ Changed order of oconv arguments in rfluxmtx so user can specify input
 octree using -i option at the end instead of (or in addition to) a
 list of scene files.
 
-Added support for argument expansion to rfluxmtx.
+Added support for argument expansion to rfluxmtx and bug fixes.
+
+Fixed bug in indirect hemisphere sampling for some corner cases.
+
+Added default specular lobe to BSDF interpolation.
