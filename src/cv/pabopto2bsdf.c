@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.25 2014/06/06 00:58:22 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.26 2014/08/21 10:33:48 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -254,7 +254,7 @@ main(int argc, char *argv[])
 	for (n = 0; n < dsf_list->nrbf; n++) {
 		RBFVAL	*rbf = &dsf_list->rbfa[n];
 		ovec_from_pos(dir, rbf->gx, rbf->gy);
-		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
+		bsdf = eval_rbfrep(dsf_list, dir);
 		bsdf = log(bsdf + 1e-5) - min_log;
 		printf("red sphere p%04d\n0\n0\n", ++n);
 		printf("4 %.6g %.6g %.6g %.6g\n\n",
@@ -274,7 +274,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < GRIDRES; i++)
 	    for (j = 0; j < GRIDRES; j++) {
 		ovec_from_pos(dir, i, j);
-		bsdf = eval_rbfrep(dsf_list, dir) / (output_orient*dir[2]);
+		bsdf = eval_rbfrep(dsf_list, dir);
 		bsdf = log(bsdf + 1e-5) - min_log;
 		fprintf(pfp, "%.8e %.8e %.8e\n",
 				dir[0]*bsdf, dir[1]*bsdf, dir[2]*bsdf);

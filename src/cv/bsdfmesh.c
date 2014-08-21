@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.29 2014/03/27 03:49:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.30 2014/08/21 10:33:48 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -26,6 +26,94 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.29 2014/03/27 03:49:14 greg Exp
 int			nprocs = 1;
 				/* number of children (-1 in child) */
 static int		nchild = 0;
+
+/* Compute average DSF value at the given radius from central vector */
+static double
+eval_DSFsurround(const RBFNODE *rbf, const FVECT outvec, const double rad)
+{
+	const int	ninc = 12;
+	const double	phinc = 2.*M_PI/ninc;
+	double		sum = 0;
+	int		n = 0;
+	FVECT		tvec;
+	int		i;
+						/* compute initial vector */
+	if (output_orient*outvec[2] >= 1.-FTINY) {
+		tvec[0] = tvec[2] = 0;
+		tvec[1] = 1;
+	} else {
+		tvec[0] = tvec[1] = 0;
+		tvec[2] = 1;
+	}
+	geodesic(tvec, outvec, tvec, rad, GEOD_RAD);
+						/* average surrounding DSF */
+	for (i = 0; i < ninc; i++) {
+		if (i) spinvector(tvec, tvec, outvec, phinc);
+		if (tvec[2] > 0 ^ output_orient > 0)
+			continue;
+		sum += eval_rbfrep(rbf, tvec) * output_orient*tvec[2];
+		++n;
+	}
+	if (n < 2)				/* should never happen! */
+		return(sum);
+	return(sum/(double)n);
+}
+
+/* Estimate single-lobe radius for DSF at the given outgoing angle */
+static double
+est_DSFrad(const RBFNODE *rbf, const FVECT outvec)
+{
+	const double	rad_epsilon = 0.03;
+	const double	DSFtarget = 0.60653066 * eval_rbfrep(rbf,outvec)
+						* output_orient*outvec[2];
+	double		inside_rad = rad_epsilon;
+	double		outside_rad = 0.5;
+	double		DSFinside = eval_DSFsurround(rbf, outvec, inside_rad);
+	double		DSFoutside = eval_DSFsurround(rbf, outvec, outside_rad);
+#define	interp_rad	inside_rad + (outside_rad-inside_rad) * \
+				(DSFtarget-DSFinside) / (DSFoutside-DSFinside)
+						/* interpolation search */
+	while (outside_rad-inside_rad > rad_epsilon) {
+		double	test_rad = interp_rad;
+		double	DSFtest = eval_DSFsurround(rbf, outvec, test_rad);
+		if (DSFtarget < DSFtest) {
+			inside_rad = test_rad;
+			DSFinside = DSFtest;
+		} else {
+			outside_rad = test_rad;
+			DSFoutside = DSFtest;
+		}
+	}
+	return(interp_rad);
+#undef interp_rad
+}
+
+/* Compute average BSDF peak from current DSF's */
+static void
+comp_bsdf_spec(void)
+{
+	double		peak_sum = 0;
+	double		rad_sum = 0;
+	int		n = 0;
+	RBFNODE		*rbf;
+	FVECT		sdv;
+
+	if (dsf_list == NULL) {
+		bsdf_spec_peak = 0;
+		bsdf_spec_crad = 0;
+		return;
+	}
+	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
+		sdv[0] = -rbf->invec[0];
+		sdv[1] = -rbf->invec[1];
+		sdv[2] = rbf->invec[2]*(2*(input_orient==output_orient) - 1);
+		peak_sum += eval_rbfrep(rbf, sdv);
+		rad_sum += est_DSFrad(rbf, sdv);
+		++n;
+	}
+	bsdf_spec_peak = peak_sum/(double)n;
+	bsdf_spec_crad = ANG2R( rad_sum/(double)n );
+}
 
 /* Create a new migration holder (sharing memory for multiprocessing) */
 static MIGRATION *
@@ -416,6 +504,8 @@ build_mesh(void)
 	double		best2 = M_PI*M_PI;
 	RBFNODE		*shrt_edj[2];
 	RBFNODE		*rbf0, *rbf1;
+						/* average specular peak */
+	comp_bsdf_spec();
 						/* add normal if needed */
 	check_normal_incidence();
 						/* check if isotropic */

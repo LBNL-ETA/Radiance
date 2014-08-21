@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.24 2014/03/25 14:55:35 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.25 2014/08/21 10:33:48 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -34,6 +34,8 @@ unsigned long		bsdf_hist[HISTLEN];
 
 				/* BSDF value for boundary regions */
 double			bsdf_min = 0;
+float			bsdf_spec_peak = 0;
+int			bsdf_spec_crad = 0;
 
 				/* processed incident DSF measurements */
 RBFNODE			*dsf_list = NULL;
@@ -257,12 +259,11 @@ rbf_volume(const RBFVAL *rbfp)
 	return(integ);
 }
 
-/* Evaluate RBF for DSF at the given normalized outgoing direction */
+/* Evaluate BSDF at the given normalized outgoing direction */
 double
 eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 {
 	const double	rfact2 = (38./M_PI/M_PI)*(grid_res*grid_res);
-	double		minval = bsdf_min*output_orient*outvec[2];
 	int		pos[2];
 	double		res = 0;
 	const RBFVAL	*rbfp;
@@ -274,7 +275,7 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 		return(.0);
 				/* use minimum if no information avail. */
 	if (rp == NULL)
-		return(minval);
+		return(bsdf_min);
 				/* optimization for fast lobe culling */
 	pos_from_vec(pos, outvec);
 				/* sum radial basis function */
@@ -289,8 +290,9 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
 		res += rbfp->peak * exp((DOT(odir,outvec) - 1.) / rad2);
 	}
-	if (res < minval)	/* never return less than minval */
-		return(minval);
+	res /= output_orient*outvec[2];
+	if (res < bsdf_min)	/* never return less than bsdf_min */
+		return(bsdf_min);
 	return(res);
 }
 
@@ -392,6 +394,38 @@ get_triangles(RBFNODE *rbfv[2], const MIGRATION *mig)
 			}
 	}
 	return((rbfv[0] != NULL) + (rbfv[1] != NULL));
+}
+
+/* Return single-lobe specular RBF for the given incident direction */
+RBFNODE *
+def_rbf_spec(const FVECT invec)
+{
+	RBFNODE		*rbf;
+	FVECT		ovec;
+	int		pos[2];
+
+	if (input_orient > 0 ^ invec[2] > 0)	/* wrong side? */
+		return(NULL);
+	if ((bsdf_spec_peak <= bsdf_min) | (bsdf_spec_crad <= 0))
+		return(NULL);			/* nothing set */
+	rbf = (RBFNODE *)malloc(sizeof(RBFNODE));
+	if (rbf == NULL)
+		return(NULL);
+	ovec[0] = -invec[0];
+	ovec[1] = -invec[1];
+	ovec[2] = invec[2]*(2*(input_orient==output_orient) - 1);
+	pos_from_vec(pos, ovec);
+	rbf->ord = 0;
+	rbf->next = NULL;
+	rbf->ejl = NULL;
+	VCOPY(rbf->invec, invec);
+	rbf->nrbf = 1;
+	rbf->rbfa[0].peak = bsdf_spec_peak * output_orient*ovec[2];
+	rbf->rbfa[0].crad = bsdf_spec_crad;
+	rbf->rbfa[0].gx = pos[0];
+	rbf->rbfa[0].gy = pos[1];
+	rbf->vtotal = rbf_volume(rbf->rbfa);
+	return(rbf);
 }
 
 /* Advect and allocate new RBF along edge (internal call) */
@@ -500,6 +534,9 @@ clear_bsdf_rep(void)
 	single_plane_incident = -1;
 	input_orient = output_orient = 0;
 	grid_res = GRIDRES;
+	bsdf_min = 0;
+	bsdf_spec_peak = 0;
+	bsdf_spec_crad = 0;
 }
 
 /* Write our BSDF mesh interpolant out to the given binary stream */
@@ -518,6 +555,9 @@ save_bsdf_rep(FILE *ofp)
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
 	fprintf(ofp, "GRIDRES=%d\n", grid_res);
 	fprintf(ofp, "BSDFMIN=%g\n", bsdf_min);
+	if ((bsdf_spec_peak > bsdf_min) & (bsdf_spec_crad > 0))
+		fprintf(ofp, "BSDFSPEC= %f %f\n", bsdf_spec_peak,
+					R2ANG(bsdf_spec_crad));
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
 					/* write each DSF */
@@ -593,6 +633,12 @@ headline(char *s, void *p)
 	}
 	if (!strncmp(s, "BSDFMIN=", 8)) {
 		sscanf(s+8, "%lf", &bsdf_min);
+		return(0);
+	}
+	if (!strncmp(s, "BSDFSPEC=", 9)) {
+		float	bsdf_spec_rad = 0;
+		sscanf(s+9, "%f %f", &bsdf_spec_peak, &bsdf_spec_rad);
+		bsdf_spec_crad = ANG2R(bsdf_spec_rad);
 		return(0);
 	}
 	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.28 2014/03/24 03:50:28 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.29 2014/08/21 10:33:48 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -199,8 +199,7 @@ eval_isotropic(char *funame)
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			if (funame == NULL)
-			    bsdf = eval_rbfrep(rbf, iovec+3) *
-						output_orient/iovec[5];
+			    bsdf = eval_rbfrep(rbf, iovec+3);
 			else {
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);
@@ -313,8 +312,7 @@ eval_anisotropic(char *funame)
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
 			if (funame == NULL)
-			    bsdf = eval_rbfrep(rbf, iovec+3) *
-						output_orient/iovec[5];
+			    bsdf = eval_rbfrep(rbf, iovec+3);
 			else {
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);

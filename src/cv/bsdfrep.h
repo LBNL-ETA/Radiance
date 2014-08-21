@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.19 2014/03/26 02:52:31 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.20 2014/08/21 10:33:48 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -90,6 +90,8 @@ extern unsigned long	bsdf_hist[HISTLEN];
 
 				/* BSDF value for boundary regions */
 extern double		bsdf_min;
+extern float		bsdf_spec_peak;
+extern int		bsdf_spec_crad;
 
 				/* processed incident DSF measurements */
 extern RBFNODE		*dsf_list;
@@ -148,7 +150,7 @@ extern void		ovec_from_pos(FVECT vec, int xpos, int ypos);
 /* Compute grid position from normalized input/output vector */
 extern void		pos_from_vec(int pos[2], const FVECT vec);
 
-/* Evaluate RBF for DSF at the given normalized outgoing direction */
+/* Evaluate BSDF at the given normalized outgoing direction */
 extern double		eval_rbfrep(const RBFNODE *rp, const FVECT outvec);
 
 /* Insert a new directional scattering function in our global list */
@@ -192,6 +194,9 @@ extern void		build_mesh(void);
 
 /* Find edge(s) for interpolating the given vector, applying symmetry */
 extern int		get_interp(MIGRATION *miga[3], FVECT invec);
+
+/* Return single-lobe specular RBF for the given incident direction */
+extern RBFNODE *	def_rbf_spec(const FVECT invec);
 
 /* Advect and allocate new RBF along edge (internal call) */
 extern RBFNODE *	e_advect_rbf(const MIGRATION *mig,

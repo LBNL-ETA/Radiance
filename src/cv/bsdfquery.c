@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.3 2014/04/11 20:27:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.4 2014/08/21 10:33:48 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -127,7 +127,7 @@ main(int argc, char *argv[])
 						progname);
 				return(1);
 			}
-			bsdf = eval_rbfrep(rbf, odir)/(output_orient*odir[2]);
+			bsdf = eval_rbfrep(rbf, odir);
 		}
 		switch (outfmt) {		/* write to stdout */
 		case 'a':
