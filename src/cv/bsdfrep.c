@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.25 2014/08/21 10:33:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.26 2014/08/21 13:44:05 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -34,8 +34,8 @@ unsigned long		bsdf_hist[HISTLEN];
 
 				/* BSDF value for boundary regions */
 double			bsdf_min = 0;
-float			bsdf_spec_peak = 0;
-int			bsdf_spec_crad = 0;
+double			bsdf_spec_peak = 0;
+double			bsdf_spec_rad = 0;
 
 				/* processed incident DSF measurements */
 RBFNODE			*dsf_list = NULL;
@@ -406,7 +406,7 @@ def_rbf_spec(const FVECT invec)
 
 	if (input_orient > 0 ^ invec[2] > 0)	/* wrong side? */
 		return(NULL);
-	if ((bsdf_spec_peak <= bsdf_min) | (bsdf_spec_crad <= 0))
+	if ((bsdf_spec_peak <= bsdf_min) | (bsdf_spec_rad <= 0))
 		return(NULL);			/* nothing set */
 	rbf = (RBFNODE *)malloc(sizeof(RBFNODE));
 	if (rbf == NULL)
@@ -421,7 +421,7 @@ def_rbf_spec(const FVECT invec)
 	VCOPY(rbf->invec, invec);
 	rbf->nrbf = 1;
 	rbf->rbfa[0].peak = bsdf_spec_peak * output_orient*ovec[2];
-	rbf->rbfa[0].crad = bsdf_spec_crad;
+	rbf->rbfa[0].crad = ANG2R(bsdf_spec_rad);
 	rbf->rbfa[0].gx = pos[0];
 	rbf->rbfa[0].gy = pos[1];
 	rbf->vtotal = rbf_volume(rbf->rbfa);
@@ -536,7 +536,7 @@ clear_bsdf_rep(void)
 	grid_res = GRIDRES;
 	bsdf_min = 0;
 	bsdf_spec_peak = 0;
-	bsdf_spec_crad = 0;
+	bsdf_spec_rad = 0;
 }
 
 /* Write our BSDF mesh interpolant out to the given binary stream */
@@ -555,9 +555,8 @@ save_bsdf_rep(FILE *ofp)
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
 	fprintf(ofp, "GRIDRES=%d\n", grid_res);
 	fprintf(ofp, "BSDFMIN=%g\n", bsdf_min);
-	if ((bsdf_spec_peak > bsdf_min) & (bsdf_spec_crad > 0))
-		fprintf(ofp, "BSDFSPEC= %f %f\n", bsdf_spec_peak,
-					R2ANG(bsdf_spec_crad));
+	if ((bsdf_spec_peak > bsdf_min) & (bsdf_spec_rad > 0))
+		fprintf(ofp, "BSDFSPEC= %f %f\n", bsdf_spec_peak, bsdf_spec_rad);
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
 					/* write each DSF */
@@ -636,9 +635,7 @@ headline(char *s, void *p)
 		return(0);
 	}
 	if (!strncmp(s, "BSDFSPEC=", 9)) {
-		float	bsdf_spec_rad = 0;
-		sscanf(s+9, "%f %f", &bsdf_spec_peak, &bsdf_spec_rad);
-		bsdf_spec_crad = ANG2R(bsdf_spec_rad);
+		sscanf(s+9, "%lf %lf", &bsdf_spec_peak, &bsdf_spec_rad);
 		return(0);
 	}
 	if (formatval(fmt, s) && strcmp(fmt, BSDFREP_FMT))
