@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.21 2014/08/21 13:44:05 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.22 2014/08/22 05:38:44 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -20,6 +20,9 @@ extern "C" {
 					/* convert to/from coded radians */
 #define ANG2R(r)	(int)((r)*((1<<16)/M_PI))
 #define R2ANG(c)	(((c)+.5)*(M_PI/(1<<16)))
+
+					/* moderated cosine factor */
+#define COSF(z)		(fabs(z)*0.98 + 0.02)
 
 typedef union {
 	struct {

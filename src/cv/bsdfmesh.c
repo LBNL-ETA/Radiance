@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.32 2014/08/21 19:31:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.33 2014/08/22 05:38:44 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -51,7 +51,7 @@ eval_DSFsurround(const RBFNODE *rbf, const FVECT outvec, const double rad)
 		if (i) spinvector(tvec, tvec, outvec, phinc);
 		if (tvec[2] > 0 ^ output_orient > 0)
 			continue;
-		sum += eval_rbfrep(rbf, tvec) * output_orient*tvec[2];
+		sum += eval_rbfrep(rbf, tvec) * COSF(tvec[2]);
 		++n;
 	}
 	if (n < 2)				/* should never happen! */
@@ -64,8 +64,8 @@ static double
 est_DSFrad(const RBFNODE *rbf, const FVECT outvec)
 {
 	const double	rad_epsilon = 0.03;
-	const double	DSFtarget = 0.60653066 * eval_rbfrep(rbf,outvec)
-						* output_orient*outvec[2];
+	const double	DSFtarget = 0.60653066 * eval_rbfrep(rbf,outvec) *
+							COSF(outvec[2]);
 	double		inside_rad = rad_epsilon;
 	double		outside_rad = 0.5;
 	double		DSFinside = eval_DSFsurround(rbf, outvec, inside_rad);
