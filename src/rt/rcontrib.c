@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.22 2014/07/19 20:03:03 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.23 2014/08/25 13:18:30 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -286,7 +286,8 @@ trace_contrib(RAY *r)
 	if ((bval = evalue(mp->binv)) <= -.5)	/* and get bin number */
 		return;				/* silently ignore negatives */
 	if ((bn = (int)(bval + .5)) >= mp->nbins) {
-		error(WARNING, "bad bin number (ignored)");
+		sprintf(errmsg, "bad bin number (%d ignored)", bn);
+		error(WARNING, errmsg);
 		return;
 	}
 	raycontrib(contr, r, PRIMARY);		/* compute coefficient */
