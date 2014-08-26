@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.17 2014/08/26 18:56:19 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.18 2014/08/26 19:10:10 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -792,8 +792,8 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 		alt = (row+samp3[1])*RAH;
 		azi = (2.*PI)*(col+samp3[2]-.5)/rnaz(row);
 		duvw[2] = cos(alt);	/* measured from horizon */
-		duvw[0] = tcos(azi)*duvw[2];
-		duvw[1] = tsin(azi)*duvw[2];
+		duvw[0] = tsin(azi)*duvw[2];
+		duvw[1] = tcos(azi)*duvw[2];
 		duvw[2] = sqrt(1. - duvw[2]*duvw[2]);
 		for (i = 3; i--; )
 			orig_dir[1][i] = -duvw[0]*p->udir[i] -
