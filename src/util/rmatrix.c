@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.7 2014/08/05 21:45:05 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.8 2014/08/27 13:33:47 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -59,9 +59,10 @@ rmx_addinfo(RMATRIX *rm, const char *info)
 {
 	if (!info || !*info)
 		return(0);
-	if (!rm->info)
+	if (!rm->info) {
 		rm->info = (char *)malloc(strlen(info)+1);
-	else
+		if (rm->info) rm->info[0] = '\0';
+	} else
 		rm->info = (char *)realloc(rm->info,
 				strlen(rm->info)+strlen(info)+1);
 	if (!rm->info)
@@ -491,9 +492,9 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 		rmx_addinfo(mres, rmx_mismatch_warn);
 	for (i = mres->nrows; i--; )
 	    for (j = mres->ncols; j--; )
-	        for (h = m1->ncols; h--; ) {
+	        for (k = mres->ncomp; k--; ) {
 		    long double	d = 0;
-		    for (k = mres->ncomp; k--; )
+		    for (h = m1->ncols; h--; )
 			d += (long double)rmx_lval(m1,i,h,k) *
 				(long double)rmx_lval(m2,h,j,k);
 		    rmx_lval(mres,i,j,k) = (double)d;
