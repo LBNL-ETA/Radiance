@@ -1,0 +1,56 @@
+{ RCSid $Id: uniq_rgb.cal,v 1.1 2014/08/28 16:37:04 greg Exp $ }
+{
+	Generate unique (distinguishable) RGB colors.
+
+	8/28/2014	G. Ward
+
+	Usage:
+		cnt `rcalc -n -f xyz_srgb.cal -f cieluv.cal \
+				-f uniq_rgb.cal -e '$1=Nu;$2=Nv'` \
+			| rcalc -f xyz_srgb.cal -f cieluv.cal -f uniq_rgb.cal \
+				-e '$1=Runq;$2=Gunq;$3=Bunq'
+}
+Umin : up(X(0,1,0),Y(0,1,0),Z(0,1,0));
+Umax : up(X(1,0,0),Y(1,0,0),Z(1,0,0));
+Vmin : vp(X(0,0,1),Y(0,0,1),Z(0,0,1));
+Vmax : vp(X(0,1,0),Y(0,1,0),Z(0,1,0));
+
+Yref : Y(0,0,1);
+
+NDstep : 1/(13/7*Ls(Yref));
+
+Nu : ceil((Umax - Umin)/NDstep);
+Nv : ceil((Vmax - Vmin)/NDstep);
+
+x_uv(u,v) : 9*u/(6*u - 16*v + 12);
+y_uv(u,v) : 4*v/(6*u - 16*v + 12);
+
+btwn(a,x,b) : if(x-a,b-x,-1);
+and(a,b) : if(a, b, -1);
+max(a,b) : if(a-b, a, b);
+
+NeuMargin : 2*NDstep;
+
+uneu : up(Yref,Yref,Yref);
+vneu : vp(Yref,Yref,Yref);
+
+utst = $1*NDstep + Umin;
+vtst = $2*NDstep + Vmin;
+
+Ytst : Yref;
+Xtst = 9/4*utst/vtst * Ytst;
+Ztst = (1/y_uv(utst,vtst) - 1)*Ytst - Xtst;
+
+Rtst = R(Xtst,Ytst,Ztst);
+Gtst = G(Xtst,Ytst,Ztst);
+Btst = B(Xtst,Ytst,Ztst);
+
+dist2neu = (utst-uneu)*(utst-uneu) + (vtst-vneu)*(vtst-vneu);
+
+cond = and(btwn(0,Rtst,1), and(btwn(0,Gtst,1), and(btwn(0,Btst,1),
+		dist2neu-NeuMargin*NeuMargin)));
+
+sca = 1/max(Rtst,max(Gtst,Btst));
+Runq = sca*Rtst;
+Gunq = sca*Gtst;
+Bunq = sca*Btst;
