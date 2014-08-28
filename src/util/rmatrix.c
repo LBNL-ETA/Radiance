@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.8 2014/08/27 13:33:47 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.9 2014/08/28 05:59:42 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -371,7 +371,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 		dtype = rm->dtype;
 	else if ((dtype == DTrgbe) & (rm->dtype == DTxyze))
 		dtype = DTxyze;
-	else if ((dtype = DTxyze) & (rm->dtype == DTrgbe))
+	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
 		dtype = DTrgbe;
 	if ((dtype != DTrgbe) & (dtype != DTxyze)) {
 		fprintf(fp, "NROWS=%d\n", rm->nrows);
