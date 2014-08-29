@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.4 2014/08/02 17:10:43 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.5 2014/08/29 08:33:34 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, transpose, scale, and convert matrices
@@ -138,9 +138,9 @@ To send the elements of a binary matrix to
 .I rcalc(1)
 for further processing:
 .IP "" .2i
-rmtxop -fa orig.mtx | rcollate -ho -oc 1 | rcalc [opertions]
+rmtxop -fa orig.mtx | rcollate -ho -oc 1 | rcalc [operations]
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), histo(1), neaten(1), rcalc(1), rcollate(1),
+cnt(1), getinfo(1), histo(1), neaten(1), rcalc(1), rcollate(1),
 rcontrib(1), rfluxmtx(1), rlam(1), tabfunc(1), total(1)

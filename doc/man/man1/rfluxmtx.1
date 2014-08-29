@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.4 2014/08/06 00:59:53 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.5 2014/08/29 08:33:34 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -157,7 +157,7 @@ calculation and the resulting matrices will concatenate properly.
 To generate a flux transfer matrix connecting input and output apertures
 on a light pipe:
 .IP "" .3i
-rcontrib int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
+rfluxmtx int_aperture.rad ext_aperture.rad lpipe.rad > lpipe.mtx
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
