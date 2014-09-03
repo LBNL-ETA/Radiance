@@ -1,4 +1,4 @@
-{ RCSid $Id: rambpos.cal,v 2.6 2014/05/15 17:30:53 greg Exp $ }
+{ RCSid $Id: rambpos.cal,v 2.7 2014/09/03 14:05:55 greg Exp $ }
 {
 	Compute ambient position factors for genambpos.pl
 }
@@ -29,7 +29,10 @@ dgx = $19*ux + $20*vx;
 dgy = $19*uy + $20*vy;
 dgz = $19*uz + $20*vz;
 dg = sqrt(dgx*dgx + dgy*dgy + dgz*dgz);
-val = avr + avg + avb;		{ ambient position color }
+				{ corral flags pattern }
+cflags = $21;
+				{ ambient position color }
+val = avr + avg + avb;
 agr = select(lvl+1, val, 0, 0, val, 0, val, val);
 agg = select(lvl+1, 0, val, 0, val, val, 0, val/2);
 agb = select(lvl+1, 0, 0, val, 0, val, val, val/2);

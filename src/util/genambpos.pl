@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genambpos.pl,v 2.8 2014/05/15 17:30:53 greg Exp $
+# RCSid $Id: genambpos.pl,v 2.9 2014/09/03 14:05:55 greg Exp $
 #
 # Visualize ambient positions and gradients
 #
@@ -76,6 +76,11 @@ void brightfunc pgpat
 2 posfunc ambpos.cal
 0
 6 ${ px } ${ py } ${ pz } ${ pgx } ${ pgy } ${ pgz }
+
+pgpat colorfunc pgpat
+4 1 if(corralled,.1,1) if(corralled,.1,1) ambpos.cal
+0
+7 ${ px } ${ py } ${ pz } ${  ux  } ${  uy  } ${  uz  } ${   cflags    }
 
 pgpat glow pgval
 0

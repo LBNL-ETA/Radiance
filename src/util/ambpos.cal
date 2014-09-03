@@ -1,7 +1,9 @@
-{ RCSid $Id: ambpos.cal,v 2.3 2014/05/01 03:00:59 greg Exp $ }
+{ RCSid $Id: ambpos.cal,v 2.4 2014/09/03 14:05:55 greg Exp $ }
 {
 	Compute patterns for ambient position markers
 }
+odd(n) : .5*n - floor(.5*n) - .25;
+posangle(a) : if(-a, a + 2*PI, a) / DEGREE;
 { Relative hit point }
 rpx = Px - arg(1);
 rpy = Py - arg(2);
@@ -19,6 +21,15 @@ dirfunc = bound(0, 1 + dgrad, 2);
 { Calculation of positional gradient pattern }
 pgx = arg(4); pgy = arg(5); pgz = arg(6);
 posfunc = bound(0, 1 + (pgx*rpx + pgy*rpy + pgz*rpz), 2);
+				{ corral flags and associated pattern }
+ux = arg(4); uy = arg(5); uz = arg(6);
+cflags = arg(7);
+vx = Ny*uz - Nz*uy;
+vy = Nz*ux - Nx*uz;
+vz = Nx*uy - Ny*ux;
+cflg(i) = if(odd(floor( cflags / 2^i )), 1, -1);
+corralled = cflg(floor(32/360*posangle(
+		atan2(rpx*vx+rpy*vy+rpz*vz, rpx*ux+rpy*uy+rpz*uz) )));
 
 { Calculation of ellipse stencil for base }
 usx = arg(4); usy = arg(5); usz = arg(6);
