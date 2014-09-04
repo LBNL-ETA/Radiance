@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.65 2014/08/21 10:33:49 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.66 2014/09/04 09:09:08 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -610,8 +610,8 @@ static uint32
 ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 {
 	const double	max_d = 1.0/(minarad*ambacc + 0.001);
-	const double	ang_res = 0.5*PI/(hp->ns-1);
-	const double	ang_step = ang_res/((int)(16/PI*ang_res) + (1+FTINY));
+	const double	ang_res = 0.5*PI/hp->ns;
+	const double	ang_step = ang_res/((int)(16/PI*ang_res) + 1.01);
 	double		avg_d = 0;
 	uint32		flgs = 0;
 	FVECT		vec;
@@ -642,7 +642,7 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 		if ((r0*r0*u*u + r1*r1*v*v) * ap->d*ap->d <= u*u + v*v)
 			continue;	/* occluder outside ellipse */
 		ang = atan2a(v, u);	/* else set direction flags */
-		for (a1 = ang-.5*ang_res; a1 <= ang+.5*ang_res; a1 += ang_step)
+		for (a1 = ang-ang_res; a1 <= ang+ang_res; a1 += ang_step)
 			flgs |= 1L<<(int)(16/PI*(a1 + 2.*PI*(a1 < 0)));
 	    }
 					/* add low-angle incident (< 20deg) */
