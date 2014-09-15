@@ -1973,3 +1973,5 @@ Fixed bug in indirect hemisphere sampling for some corner cases.
 Added default specular lobe to BSDF interpolation.
 
 Set minimum number of shadow checks before direct optimization (4).
+
+(Above changes included in 4.2.1 patch release.)
