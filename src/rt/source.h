@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.18 2008/12/06 01:08:53 greg Exp $ */
+/* RCSid $Id: source.h,v 2.19 2014/09/15 00:54:39 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -18,6 +18,9 @@ extern "C" {
 #endif
 #ifndef  SHADCACHE
 #define  SHADCACHE	20		/* shadow cache resolution */
+#endif
+#ifndef  MINSHADCNT
+#define  MINSHADCNT	4		/* test all sources if this few */
 #endif
 
 #define  SDISTANT	01		/* source distant flag */

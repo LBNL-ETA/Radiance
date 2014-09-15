@@ -1971,3 +1971,5 @@ Added support for argument expansion to rfluxmtx and bug fixes.
 Fixed bug in indirect hemisphere sampling for some corner cases.
 
 Added default specular lobe to BSDF interpolation.
+
+Set minimum number of shadow checks before direct optimization (4).

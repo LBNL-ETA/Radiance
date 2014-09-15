@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.62 2014/05/07 02:08:12 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.63 2014/09/15 00:54:39 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -440,7 +440,10 @@ direct(					/* add direct component */
 						/* compute number to check */
 	nshadcheck = pow((double)ncnts, shadcert) + .5;
 						/* modify threshold */
-	ourthresh = shadthresh / r->rweight;
+	if (ncnts > MINSHADCNT)
+		ourthresh = shadthresh / r->rweight;
+	else
+		ourthresh = 0;
 						/* test for shadows */
 	for (nhits = 0, hwt = 0.0, sn = 0; sn < ncnts;
 			hwt += (double)source[scp->sno].nhits /
