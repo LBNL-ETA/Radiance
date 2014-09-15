@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.12 2014/08/21 10:33:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.13 2014/09/15 00:54:03 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -124,15 +124,17 @@ main(int argc, char *argv[])
 #ifdef DEBUG
 		if (inpXML)
 			fprintf(stderr, "Hemispherical %s: %.3f\n",
-				(output_orient > 0 ? "reflection" : "transmission"),
+				(output_orient > 0 ^ input_orient > 0 ?
+					"transmission" : "reflection"),
 				SDdirectHemi(idir, SDsampSp|SDsampDf |
-						(output_orient > 0 ?
-						 SDsampR : SDsampT), &myBSDF));
+					(output_orient > 0 ^ input_orient > 0 ?
+						 SDsampT : SDsampR), &myBSDF));
 		else if (rbf == NULL)
 			fputs("Empty RBF\n", stderr);
 		else
 			fprintf(stderr, "Hemispherical %s: %.3f\n",
-				(output_orient > 0 ? "reflection" : "transmission"),
+				(output_orient > 0 ^ input_orient > 0 ?
+					"transmission" : "reflection"),
 				rbf->vtotal);
 #endif
 		printf("void trans tmat\n0\n0\n7 %f %f %f .04 .04 .9 1\n",
