@@ -1975,3 +1975,7 @@ Added default specular lobe to BSDF interpolation.
 Set minimum number of shadow checks before direct optimization (4).
 
 (Above changes included in 4.2.1 patch release.)
+
+****** COMPATIBILITY CHANGE ********
+Made header input and output the default behavior for dctimestep and
+genskyvec.

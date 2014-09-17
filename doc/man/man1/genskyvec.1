@@ -1,10 +1,12 @@
-.\" RCSid $Id: genskyvec.1,v 1.5 2013/01/20 02:07:16 greg Exp $
+.\" RCSid $Id: genskyvec.1,v 1.6 2014/09/17 22:40:49 greg Exp $
 .TH GENSKYVEC 1 12/09/09 RADIANCE
 .SH NAME
 genskyvec - compute patch radiance averages for a specific sky
 .SH SYNOPSIS
 .B genskyvec
 [
+.B "\-h"
+][
 .B "\-m N"
 ][
 .B "\-c r g b"
@@ -50,6 +52,13 @@ The
 option may be used to produce a sun-only vector, with no sky contributions.
 If a time of day is selected or sky type that has no sun, then a zero vector
 is produced.
+.PP
+Normally, a header will be produced containing the number of rows and other
+information required by
+.I dctimestep(1).
+The
+.I \-h
+option may be used to elide this information header, producing data values only.
 .SH EXAMPLE
 To generate 578 patches corresponding to a 2x2 subdivision of the
 Tregenza sky on a sunny equinox noon:
@@ -59,4 +68,4 @@ gensky 9 21 12 | genskyvec -m 2 > sky09_21_12.dat
 Greg Ward
 .SH "SEE ALSO"
 dctimestep(1), genBSDF(1), gendaylit(1),
-gendaymtx(1), gensky(1), rcontrib(1), rtrace(1)
+gendaymtx(1), gensky(1), rcollate(1), rcontrib(1), rmtxop(1), rtrace(1)

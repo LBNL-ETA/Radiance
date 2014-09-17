@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.33 2014/06/01 03:20:29 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.34 2014/09/17 22:40:49 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -119,9 +119,10 @@ hasNumberFormat(const char *s)
 int
 main(int argc, char *argv[])
 {
-	int		skyfmt = DTascii;
+	int		skyfmt = DTfromHeader;
 	int		outfmt = DTascii;
-	int		nsteps = 1;
+	int		headout = 1;
+	int		nsteps = 0;
 	char		*ofspec = NULL;
 	FILE		*ofp = stdout;
 	CMATRIX		*cmtx;		/* component vector/matrix result */
@@ -136,6 +137,10 @@ main(int argc, char *argv[])
 			nsteps = atoi(argv[++a]);
 			if (nsteps < 0)
 				goto userr;
+			skyfmt = nsteps ? DTascii : DTfromHeader;
+			break;
+		case 'h':
+			headout = !headout;
 			break;
 		case 'i':
 			switch (argv[a][2]) {
@@ -147,9 +152,6 @@ main(int argc, char *argv[])
 				break;
 			case 'a':
 				skyfmt = DTascii;
-				break;
-			case 'h':
-				skyfmt = DTfromHeader;
 				break;
 			default:
 				goto userr;
@@ -266,6 +268,16 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 				flockfile(ofp);
 #endif
+				if (headout) {	/* header output */
+					newheader("RADIANCE", ofp);
+					printargs(argc, argv, ofp);
+					fputnow(ofp);
+					fprintf(ofp, "FRAME=%d\n", i+1);
+					fprintf(ofp, "NROWS=%d\n", rvec->nrows);
+					fputs("NCOLS=1\nNCOMP=3\n", ofp);
+					fputformat((char *)cm_fmt_id[outfmt], ofp);
+					fputc('\n', ofp);
+				}
 				cm_write(rvec, outfmt, ofp);
 				if (fclose(ofp) == EOF) {
 					fprintf(stderr,
@@ -282,7 +294,7 @@ main(int argc, char *argv[])
 #endif
 			if (outfmt != DTascii)
 				SET_FILE_BINARY(ofp);
-			if (rmtx->ncols > 1) {	/* header if actual matrix */
+			if (headout) {		/* header output */
 				newheader("RADIANCE", ofp);
 				printargs(argc, argv, ofp);
 				fputnow(ofp);
