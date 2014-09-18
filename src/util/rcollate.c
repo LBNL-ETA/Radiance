@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.18 2014/08/01 18:21:04 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.19 2014/09/18 00:12:42 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -381,8 +381,8 @@ do_resize(FILE *fp)
 	int	columns2go = no_columns;
 	char	word[256];
 						/* sanity checks */
-	if (comp_size)
-		return(output_stream(fp));	/* binary data -- just copy */
+	if (comp_size || (no_columns == ni_columns) & (no_rows == ni_rows))
+		return(output_stream(fp));	/* no-op -- just copy */
 	if (no_columns <= 0) {
 		fprintf(stderr, "Missing -oc specification\n");
 		return(0);
@@ -572,8 +572,8 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdout);
 	}
 						/* check for no-op */
-	if (!transpose & !i_header & !o_header && (comp_size ||
-			(no_columns == ni_columns) & (no_rows == ni_rows))) {
+	if (!transpose & (i_header == o_header) &&
+			(no_columns == ni_columns) & (no_rows == ni_rows)) {
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
 				argv[0]);
@@ -603,7 +603,7 @@ main(int argc, char *argv[])
 		fputc('\n', stdout);		/* finish new header */
 	}
 	if (transpose) {			/* transposing rows & columns? */
-		MEMLOAD	myMem;			/* need to load into memory */
+		MEMLOAD	myMem;			/* need to map into memory */
 		if (a == argc-1) {
 			if (load_file(&myMem, stdin) <= 0) {
 				fprintf(stderr, "%s: error loading file into memory\n",
@@ -618,9 +618,6 @@ main(int argc, char *argv[])
 		if (!do_transpose(&myMem))
 			return(1);
 		/* free_load(&myMem);	about to exit, so don't bother */
-	} else if (comp_size || (no_columns==ni_columns) & (no_rows==ni_rows)) {
-		if (!output_stream(stdin))	/* just changed header */
-			return(1);
 	} else if (!do_resize(stdin))		/* reshaping input */
 		return(1);
 	return(0);
