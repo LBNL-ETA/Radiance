@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.9 2014/08/28 05:59:42 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.10 2014/09/18 23:20:12 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -356,7 +356,7 @@ rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 }
 
 /* Write matrix to file type indicated by dtype */
-long
+int
 rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 {
 	RMATRIX	*mydm = NULL;
@@ -409,7 +409,7 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 	}
 	ok &= (fflush(fp) == 0);
 	rmx_free(mydm);
-	return(ftell(fp) * ok);		/* return # bytes written */
+	return(ok);
 }
 
 /* Allocate and assign square identity matrix with n components */

@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.5 2014/08/27 13:33:47 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.6 2014/09/18 23:20:12 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -38,7 +38,7 @@ extern RMATRIX	*rmx_load(const char *fname);
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);
 
 /* Write matrix to file type indicated by dtype */
-extern long	rmx_write(const RMATRIX *rm, int dtype, FILE *fp);
+extern int	rmx_write(const RMATRIX *rm, int dtype, FILE *fp);
 
 /* Allocate and assign square identity matrix with n components */
 extern RMATRIX	*rmx_identity(int dim, int n);

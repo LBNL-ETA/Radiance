@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.4 2014/08/05 21:45:05 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.5 2014/09/18 23:20:12 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -167,7 +167,6 @@ main(int argc, char *argv[])
 {
 	RMATRIX	*mres = NULL;
 	ROPERAT	op;
-	long	nbw;
 	int	i;
 					/* initialize */
 	op_default(&op);
@@ -241,14 +240,11 @@ main(int argc, char *argv[])
 #endif
 	newheader("RADIANCE", stdout);
 	printargs(argc, argv, stdout);
-	nbw = rmx_write(mres, outfmt, stdout);
-	/* rmx_free(mres); mres = NULL; */
-	if (nbw <= 0) {
+	if (!rmx_write(mres, outfmt, stdout)) {
 		fprintf(stderr, "%s: error writing result matrix\n", argv[0]);
 		return(1);
 	}
-	if (verbose)
-		fprintf(stderr, "%s: %ld bytes written\n", argv[0], nbw);
+	/* rmx_free(mres); mres = NULL; */
 	return(0);
 userr:
 	fprintf(stderr,
