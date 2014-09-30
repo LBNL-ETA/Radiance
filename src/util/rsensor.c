@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.13 2013/10/16 04:35:50 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.14 2014/09/30 23:14:34 greg Exp $";
 #endif
 
 /*
@@ -398,9 +398,8 @@ init_ptable(
 		tvals[i] = 1. - ( (1.-frac)*cos(thdiv[t]) +
 						frac*cos(thdiv[t+1]) );
 				/* offset b/c sensor values are centered */
-		if ((t < sntp[0]-1) & (frac >= 0.5)) {
-			if ((frac -= 0.5) < 0)
-				frac = 0;
+		if ((t < sntp[0]-1) & (!t | (frac >= 0.5))) {
+			frac -= 0.5;
 		} else {
 			frac += 0.5;
 			--t;
