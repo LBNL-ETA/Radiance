@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.15 2014/08/21 10:33:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.16 2014/10/01 23:32:42 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -376,7 +376,6 @@ eval_rbf(void)
 
 		    sum += eval_rbfrep(rbf, vout);
 		}
-		fo_getvec(vout, j+.5, abp);	/* use centered secant */
 		bsdfarr[j*abp->nangles + i] = sum / (double)npsamps;
 	    }
 	    if (rbf != NULL)
