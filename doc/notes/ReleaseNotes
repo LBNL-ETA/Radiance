@@ -1979,3 +1979,13 @@ Set minimum number of shadow checks before direct optimization (4).
 ****** COMPATIBILITY CHANGE ********
 Made header input and output the default behavior for dctimestep and
 genskyvec.
+
+****** COMPATIBILITY CHANGE ********
+Changed pabopto2bsdf default behavior to add 90-degree rotation
+to bring pgII's definition of "up" in line with Klems axis
+conventions.  Introduced a new header variable "upphi" to
+control this added rotation.  Using "#upphi 90" in each
+BSDF input file gets back the original behavior, where it
+assumes that the up direction is 90-degrees from the X-axis.
+The default value of 0 corresponds to PAB's definition of
+the X-axis as being "up".
