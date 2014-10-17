@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.66 2014/09/04 09:09:08 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.67 2014/10/17 20:47:59 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -180,7 +180,6 @@ ambsupersamp(AMBHEMI *hp, int cnt)
 	float	*earr = getambdiffs(hp);
 	double	e2rem = 0;
 	AMBSAMP	*ap;
-	RAY	ar;
 	float	*ep;
 	int	i, j, n, nss;
 
