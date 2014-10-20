@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.24 2006/06/07 17:52:04 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.25 2014/10/20 13:42:13 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -344,6 +344,7 @@ getfovimg(void)			/* load foveal sampled image */
 	sprintf(combuf, "pfilt -1 -b -pa 0 -x %d -y %d \"%s\"", fvxr, fvyr, infn);
 	if ((fp = popen(combuf, "r")) == NULL)
 		syserror("popen");
+	SET_FILE_BINARY(fp);
 	getheader(fp, NULL, NULL);	/* skip header */
 	if (fgetresolu(&x, &y, fp) < 0 || (x != fvxr) | (y != fvyr))
 		goto readerr;
