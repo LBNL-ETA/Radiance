@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.67 2014/10/17 20:47:59 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.68 2014/10/23 18:19:14 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -218,7 +218,7 @@ samp_hemi(				/* sample indirect hemisphere */
 			wt > (d = 0.8*intens(rcol)*r->rweight/(ambdiv*minweight)))
 		wt = d;			/* avoid ray termination */
 	n = sqrt(ambdiv * wt) + 0.5;
-	i = 1 + 8*(ambacc > FTINY);	/* minimum number of samples */
+	i = 1 + 5*(ambacc > FTINY);	/* minimum number of samples */
 	if (n < i)
 		n = i;
 					/* allocate sampling array */
@@ -694,7 +694,7 @@ doambient(				/* compute ambient component */
 		return(0);
 
 	if ((ra == NULL) & (pg == NULL) & (dg == NULL) ||
-			(hp->sampOK < 0) | (hp->ns < 9)) {
+			(hp->sampOK < 0) | (hp->ns < 6)) {
 		free(hp);		/* Hessian not requested/possible */
 		return(-1);		/* value-only return value */
 	}

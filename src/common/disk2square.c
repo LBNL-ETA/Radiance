@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: disk2square.c,v 3.3 2011/06/09 17:09:39 greg Exp $";
+static const char RCSid[] = "$Id: disk2square.c,v 3.4 2014/10/23 18:19:14 greg Exp $";
 #endif
 /*
  *  Disk2Square.c
@@ -70,7 +70,7 @@ SDsquare2disk(double ds[2], double seedx, double seedy)
                 phi = 0.;
        }
    }
-
+   r *= 0.9999999999999;	/* prophylactic against MS sin()/cos() impl. */
    ds[0] = r * cos(phi);
    ds[1] = r * sin(phi);
 
@@ -102,6 +102,6 @@ SDdisk2square(double sq[2], double diskx, double disky)
         a = -(phi - 3*M_PI/2) * b / (M_PI/4);
     }
 
-    sq[0] = (a + 1) * 0.5;
-    sq[1] = (b + 1) * 0.5;
+    sq[0] = a*(0.5/0.9999999999999) + 0.5;
+    sq[1] = b*(0.5/0.9999999999999) + 0.5;
 }
