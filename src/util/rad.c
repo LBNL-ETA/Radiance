@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.110 2013/12/04 20:07:07 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.111 2014/10/26 17:35:53 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -24,6 +24,7 @@ static const char	RCSid[] = "$Id: rad.c,v 2.110 2013/12/04 20:07:07 greg Exp $";
   #define RENAMECMD "mv"
   #include <sys/types.h>
   #include <sys/wait.h>
+  #include <signal.h>
 #endif
 
 				/* variables (alphabetical by name) */

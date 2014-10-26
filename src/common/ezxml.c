@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.5 2012/02/25 01:15:02 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.6 2014/10/26 17:35:53 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -374,8 +374,8 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
             if (*(s = t + strcspn(t, EZXML_WS ">")) == '>') continue;
             else *s = '\0'; /* null terminate tag name */
             for (i = 0; root->attr[i] && strcmp(n, root->attr[i][0]); i++);
-
-            while (*(n = ++s + strspn(s, EZXML_WS)) && *n != '>') {
+	    ++s;
+            while (*(n = s + strspn(s, EZXML_WS)) && *n != '>') {
                 if (*(s = n + strcspn(n, EZXML_WS))) *s = '\0'; /* attr name */
                 else { ezxml_err(root, t, "malformed <!ATTLIST"); break; }
 
@@ -416,6 +416,7 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
                 root->attr[i][j + 1] = (v) ? ezxml_decode(v, root->ent, *c)
                                            : NULL;
                 root->attr[i][j] = n; /* attribute name  */
+		++s;
             }
         }
         else if (! strncmp(s, "<!--", 4)) s = strstr(s + 4, "-->"); /* comments */

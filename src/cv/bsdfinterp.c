@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.19 2014/08/21 10:33:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.20 2014/10/26 17:35:53 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -262,8 +262,6 @@ get_interp(MIGRATION *miga[3], FVECT invec)
 		return(sym);			/* return in standard order */
 	}
 }
-
-/* 
 
 /* Advect between recorded incident angles and allocate new RBF */
 RBFNODE *
