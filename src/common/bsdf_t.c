@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.35 2014/03/24 04:00:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.36 2014/11/11 23:33:21 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -721,7 +721,7 @@ SDqueryTreProjSA(double *psa, const FVECT v1, const RREAL *v2,
 					/* get projected solid angle(s) */
 	if (v2 != NULL) {
 		const SDTre	*sdt = (SDTre *)sdc->dist;
-		double		hcube[SD_MAXDIM];
+		double		hcube[SD_MAXDIM+1];
 		if (SDqueryTre(sdt, v1, v2, hcube) < 0) {
 			strcpy(SDerrorDetail, "Bad call to SDqueryTreProjSA");
 			return SDEinternal;
