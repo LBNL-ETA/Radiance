@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.13 2014/09/15 00:54:03 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.14 2014/11/20 19:10:48 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -137,6 +137,8 @@ main(int argc, char *argv[])
 					"transmission" : "reflection"),
 				rbf->vtotal);
 #endif
+		printf("# Incident direction (theta,phi) = (%.2f,%.2f) deg.\n\n",
+				(180./M_PI)*theta, (180./M_PI)*phi);
 		printf("void trans tmat\n0\n0\n7 %f %f %f .04 .04 .9 1\n",
 				colarr[n][0], colarr[n][1], colarr[n][2]);
 		if (showPeaks && rbf != NULL) {
