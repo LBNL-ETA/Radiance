@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.92 2014/11/21 00:30:11 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.93 2014/11/21 00:53:52 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -547,6 +547,7 @@ extambient(		/* extrapolate value at pv, nv */
 	FVECT  uvw[3]
 )
 {
+	const double	min_d = 0.05;
 	static FVECT	my_uvw[3];
 	FVECT		v1;
 	int		i;
@@ -566,13 +567,11 @@ extambient(		/* extrapolate value at pv, nv */
 	for (i = 3; i--; )
 		d += v1[i] * (ap->gdir[0]*uvw[0][i] + ap->gdir[1]*uvw[1][i]);
 	
-	if (d <= 0.0) {
-		setcolor(cr, 0.0, 0.0, 0.0);
-		return(0);		/* should not use if we can avoid it */
-	}
+	if (d < min_d)			/* should not use if we can avoid it */
+		d = min_d;
 	copycolor(cr, ap->val);
 	scalecolor(cr, d);
-	return(1);
+	return(d > min_d);
 }
 
 

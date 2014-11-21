@@ -2000,3 +2000,6 @@ Fixed bug in tensor tree BSDF code that caused bus error on
 some systems, and may have been source of other errors as well.
 
 (Above changes included in 4.2.2 patch release.)
+
+Improved ambient extrapolation to avoid zero values.  Actual
+threshold set to 5% of recorded value.
