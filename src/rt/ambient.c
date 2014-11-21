@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.91 2014/06/19 16:26:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.92 2014/11/21 00:30:11 greg Exp $";
 #endif
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
@@ -271,7 +271,7 @@ static int	plugaleak(RAY *r, AMBVAL *ap, FVECT anorm, double ang);
 static double	sumambient(COLOR acol, RAY *r, FVECT rn, int al,
 				AMBTREE *at, FVECT c0, double s);
 static int	makeambient(COLOR acol, RAY *r, FVECT rn, int al);
-static void	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv, 
+static int	extambient(COLOR cr, AMBVAL *ap, FVECT pv, FVECT nv, 
 				FVECT uvw[3]);
 
 void
@@ -486,7 +486,8 @@ sumambient(		/* get interpolated ambient value */
 		/*
 		 *  Extrapolate value and compute final weight (hat function)
 		 */
-		extambient(ct, av, r->rop, rn, uvw);
+		if (!extambient(ct, av, r->rop, rn, uvw))
+			continue;
 		d = tfunc(maxangle, sqrt(delta_r2), 0.0) *
 			tfunc(ambacc, sqrt(delta_t2), 0.0);
 		scalecolor(ct, d);
@@ -537,7 +538,7 @@ makeambient(		/* make a new ambient value for storage */
 }
 
 
-static void
+static int
 extambient(		/* extrapolate value at pv, nv */
 	COLOR  cr,
 	AMBVAL	 *ap,
@@ -567,10 +568,11 @@ extambient(		/* extrapolate value at pv, nv */
 	
 	if (d <= 0.0) {
 		setcolor(cr, 0.0, 0.0, 0.0);
-		return;
+		return(0);		/* should not use if we can avoid it */
 	}
 	copycolor(cr, ap->val);
 	scalecolor(cr, d);
+	return(1);
 }
 
 
