@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.20 2014/06/22 18:05:28 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.21 2014/12/04 05:26:28 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -76,13 +76,8 @@ setflatss(				/* set sampling for a flat source */
 	double  mult;
 	int  i;
 
-	src->ss[SV][0] = src->ss[SV][1] = src->ss[SV][2] = 0.0;
-	for (i = 0; i < 3; i++)
-		if (src->snorm[i] < 0.6 && src->snorm[i] > -0.6)
-			break;
-	src->ss[SV][i] = 1.0;
-	fcross(src->ss[SU], src->ss[SV], src->snorm);
-	mult = .5 * sqrt( src->ss2 / DOT(src->ss[SU],src->ss[SU]) );
+	getperpendicular(src->ss[SU], src->snorm);
+	mult = .5 * sqrt( src->ss2 );
 	for (i = 0; i < 3; i++)
 		src->ss[SU][i] *= mult;
 	fcross(src->ss[SV], src->snorm, src->ss[SU]);
@@ -239,13 +234,7 @@ cylsetsrc(			/* set a cylinder as a source */
 						/* set sampling vectors */
 	for (i = 0; i < 3; i++)
 		src->ss[SU][i] = .5 * co->al * co->ad[i];
-	src->ss[SV][0] = src->ss[SV][1] = src->ss[SV][2] = 0.0;
-	for (i = 0; i < 3; i++)
-		if (co->ad[i] < 0.6 && co->ad[i] > -0.6)
-			break;
-	src->ss[SV][i] = 1.0;
-	fcross(src->ss[SW], src->ss[SV], co->ad);
-	normalize(src->ss[SW]);
+	getperpendicular(src->ss[SW], co->ad);
 	for (i = 0; i < 3; i++)
 		src->ss[SW][i] *= .8559 * CO_R0(co);
 	fcross(src->ss[SV], src->ss[SW], co->ad);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.3 2013/08/07 05:10:09 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.4 2014/12/04 05:26:28 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -32,7 +32,6 @@ static const char RCSid[] = "$Id: ashikhmin.c,v 2.3 2013/08/07 05:10:09 greg Exp
 #define  SPA_REFL	01		/* has reflected specular component */
 #define  SPA_FLAT	02		/* reflecting surface is flat */
 #define  SPA_RBLT	010		/* reflection below sample threshold */
-#define  SPA_BADU	020		/* bad u direction calculation */
 
 typedef struct {
 	OBJREC  *mp;		/* material pointer */
@@ -93,7 +92,7 @@ dirashik(		/* compute source contribution */
 	scalecolor(ctmp, dtmp);		
 	addcolor(cval, ctmp);
 
-	if ((np->specfl & (SPA_REFL|SPA_BADU)) != SPA_REFL)
+	if (!(np->specfl & SPA_REFL))
 		return;
 	/*
 	 *  Compute specular reflection coefficient
@@ -209,20 +208,20 @@ getacoords_as(		/* set up coordinate system */
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
-	if ((errno == EDOM) | (errno == ERANGE)) {
-		objerror(np->mp, WARNING, "compute error");
-		np->specfl |= SPA_BADU;
-		return;
-	}
+	if ((errno == EDOM) | (errno == ERANGE))
+		np->u[0] = np->u[1] = np->u[2] = 0.0;
 	if (mf->fxp != &unitxf)
 		multv3(np->u, np->u, mf->fxp->xfm);
 	fcross(np->v, np->pnorm, np->u);
 	if (normalize(np->v) == 0.0) {
-		objerror(np->mp, WARNING, "illegal orientation vector");
-		np->specfl |= SPA_BADU;
-		return;
-	}
-	fcross(np->u, np->v, np->pnorm);
+		if (fabs(np->u_power - np->v_power) > 0.1)
+			objerror(np->mp, WARNING, "bad orientation vector");
+		getperpendicular(np->u, np->pnorm);	/* punting */
+		fcross(np->v, np->pnorm, np->u);
+		np->u_power = np->v_power =
+			2./(1./(np->u_power+1e-5) + 1./(np->v_power+1e-5));
+	} else
+		fcross(np->u, np->v, np->pnorm);
 }
 
 
@@ -238,8 +237,7 @@ ashiksamp(		/* sample anisotropic Ashikhmin-Shirley specular */
 	int  maxiter, ntrials, nstarget, nstaken;
 	int  i;
 
-	if (np->specfl & SPA_BADU ||
-			rayorigin(&sr, SPECULAR, np->rp, np->scolor) < 0)
+	if (rayorigin(&sr, SPECULAR, np->rp, np->scolor) < 0)
 		return;
 
 	nstarget = 1;

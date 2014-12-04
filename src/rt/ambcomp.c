@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.68 2014/10/23 18:19:14 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.69 2014/12/04 05:26:28 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -235,17 +235,8 @@ samp_hemi(				/* sample indirect hemisphere */
 	d = 1.0/(n*n);
 	scalecolor(hp->acoef, d);
 					/* make tangent plane axes */
-	hp->uy[0] = 0.5 - frandom();
-	hp->uy[1] = 0.5 - frandom();
-	hp->uy[2] = 0.5 - frandom();
-	for (i = 3; i--; )
-		if ((-0.6 < r->ron[i]) & (r->ron[i] < 0.6))
-			break;
-	if (i < 0)
+	if (!getperpendicular(hp->ux, r->ron))
 		error(CONSISTENCY, "bad ray direction in samp_hemi");
-	hp->uy[i] = 1.0;
-	VCROSS(hp->ux, hp->uy, r->ron);
-	normalize(hp->ux);
 	VCROSS(hp->uy, r->ron, hp->ux);
 					/* sample divisions */
 	for (i = hp->ns; i--; )

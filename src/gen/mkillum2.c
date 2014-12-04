@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.38 2012/10/13 20:15:43 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.39 2014/12/04 05:26:28 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -150,22 +150,14 @@ mkaxes(			/* compute u and v to go with n */
 	FVECT  n
 )
 {
-	register int  i;
-
-	v[0] = v[1] = v[2] = 0.0;
-	for (i = 0; i < 3; i++)
-		if (n[i] < 0.6 && n[i] > -0.6)
-			break;
-	v[i] = 1.0;
-	fcross(u, v, n);
-	normalize(u);
+	getperpendicular(u, n);
 	fcross(v, n, u);
 }
 
 
 static void
 rounddir(		/* compute uniform spherical direction */
-	register FVECT  dv,
+	FVECT  dv,
 	double  alt,
 	double  azi
 )
@@ -379,7 +371,7 @@ my_face(		/* make an illum face */
 
 int
 my_sphere(	/* make an illum sphere */
-	register OBJREC  *ob,
+	OBJREC  *ob,
 	struct illum_args  *il,
 	char  *nm
 )
@@ -389,7 +381,7 @@ my_sphere(	/* make an illum sphere */
 	double  sp[4], r1, r2, r3;
 	FVECT  org, dir;
 	FVECT  u, v;
-	register int  i, j;
+	int  i, j;
 				/* check arguments */
 	if (ob->oargs.nfargs != 4)
 		objerror(ob, USER, "bad # of arguments");

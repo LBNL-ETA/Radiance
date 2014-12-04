@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.56 2014/01/25 18:27:39 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.57 2014/12/04 05:26:28 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -41,7 +41,6 @@ static const char RCSid[] = "$Id: aniso.c,v 2.56 2014/01/25 18:27:39 greg Exp $"
 #define  SP_FLAT	04		/* reflecting surface is flat */
 #define  SP_RBLT	010		/* reflection below sample threshold */
 #define  SP_TBLT	020		/* transmission below threshold */
-#define  SP_BADU	040		/* bad u direction calculation */
 
 typedef struct {
 	OBJREC  *mp;		/* material pointer */
@@ -98,7 +97,7 @@ diraniso(		/* compute source contribution */
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	if (ldot > FTINY && (np->specfl&(SP_REFL|SP_BADU)) == SP_REFL) {
+	if (ldot > FTINY && np->specfl&SP_REFL) {
 		/*
 		 *  Compute specular reflection coefficient using
 		 *  anisotropic Gaussian distribution model.
@@ -140,7 +139,7 @@ diraniso(		/* compute source contribution */
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	if (ldot < -FTINY && (np->specfl&(SP_TRAN|SP_BADU)) == SP_TRAN) {
+	if (ldot < -FTINY && np->specfl&SP_TRAN) {
 		/*
 		 *  Compute specular transmission.  Specular transmission
 		 *  is always modified by material color.
@@ -268,7 +267,7 @@ m_aniso(			/* shade ray that hit something anisotropic */
 
 	getacoords(&nd);			/* set up coordinates */
 
-	if (nd.specfl & (SP_REFL|SP_TRAN) && !(nd.specfl & SP_BADU))
+	if (nd.specfl & (SP_REFL|SP_TRAN))
 		agaussamp(&nd);
 
 	if (nd.rdiff > FTINY) {		/* ambient from this side */
@@ -315,20 +314,20 @@ getacoords(		/* set up coordinate system */
 	errno = 0;
 	for (i = 0; i < 3; i++)
 		np->u[i] = evalue(mf->ep[i]);
-	if ((errno == EDOM) | (errno == ERANGE)) {
-		objerror(np->mp, WARNING, "compute error");
-		np->specfl |= SP_BADU;
-		return;
-	}
+	if ((errno == EDOM) | (errno == ERANGE))
+		np->u[0] = np->u[1] = np->u[2] = 0.0;
 	if (mf->fxp != &unitxf)
 		multv3(np->u, np->u, mf->fxp->xfm);
 	fcross(np->v, np->pnorm, np->u);
 	if (normalize(np->v) == 0.0) {
-		objerror(np->mp, WARNING, "illegal orientation vector");
-		np->specfl |= SP_BADU;
-		return;
-	}
-	fcross(np->u, np->v, np->pnorm);
+		if (fabs(np->u_alpha - np->v_alpha) > 0.001)
+			objerror(np->mp, WARNING, "illegal orientation vector");
+		getperpendicular(np->u, np->pnorm);	/* punting */
+		fcross(np->v, np->pnorm, np->u);
+		np->u_alpha = np->v_alpha = sqrt( 0.5 *
+			(np->u_alpha*np->u_alpha + np->v_alpha*np->v_alpha) );
+	} else
+		fcross(np->u, np->v, np->pnorm);
 }
 
 

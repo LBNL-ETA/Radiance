@@ -1,4 +1,4 @@
-/* RCSid $Id: fvect.h,v 2.16 2014/04/11 20:27:23 greg Exp $ */
+/* RCSid $Id: fvect.h,v 2.17 2014/12/04 05:26:27 greg Exp $ */
 /*
  * Declarations for floating-point vector operations.
  */
@@ -51,6 +51,7 @@ extern double	dist2lseg(const FVECT p, const FVECT ep1, const FVECT ep2);
 extern void	fcross(FVECT vres, const FVECT v1, const FVECT v2);
 extern void	fvsum(FVECT vres, const FVECT v0, const FVECT v1, double f);
 extern double	normalize(FVECT v);
+extern int	getperpendicular(FVECT vp, const FVECT v);
 extern int	closestapproach(RREAL t[2],
 			const FVECT rorg0, const FVECT rdir0,
 			const FVECT rorg1, const FVECT rdir1);
