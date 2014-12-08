@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.48 2014/03/24 04:00:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.49 2014/12/08 23:51:12 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -763,8 +763,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 		cdarr[i] = (*rdf->comp[i].func->getCDist)(inVec, &rdf->comp[i]);
 		if (cdarr[i] == NULL)
 			cdarr[i] = &SDemptyCD;
-		else
-			sv->cieY += cdarr[i]->cTotal;
+		sv->cieY += cdarr[i]->cTotal;
 	}
 	if (sv->cieY <= 1e-6) {		/* anything to sample? */
 		sv->cieY = .0;
