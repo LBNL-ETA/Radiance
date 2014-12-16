@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.10 2014/09/18 23:20:12 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.11 2014/12/16 20:21:46 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -246,6 +246,7 @@ rmx_load(const char *fname)
 	case DTascii:
 		if (!rmx_load_ascii(dnew, fp))
 			goto loaderr;
+		dnew->dtype = DTascii;		/* should leave double? */
 		break;
 	case DTfloat:
 		if (!rmx_load_float(dnew, fp))

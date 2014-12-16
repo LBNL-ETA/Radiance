@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.5 2014/09/18 23:20:12 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.6 2014/12/16 20:21:46 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -234,6 +234,8 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 	flockfile(stdout);
 #endif
+	if (outfmt == DTfromHeader)
+		outfmt = mres->dtype;
 #ifdef _WIN32
 	if (outfmt != DTascii)
 		_setmode(fileno(stdout), _O_BINARY);
