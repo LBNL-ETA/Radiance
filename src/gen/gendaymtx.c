@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.18 2014/10/26 17:37:34 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.19 2014/12/30 20:35:34 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -393,7 +393,8 @@ main(int argc, char *argv[])
 			break;
 		case '5':			/* 5-phase calculation */
 			nsuns = 1;
-			fixed_sun_sa = 6.797e-05;
+			fixed_sun_sa = PI/360.*atof(argv[++i]);
+			fixed_sun_sa *= fixed_sun_sa*PI;
 			break;
 		default:
 			goto userr;
