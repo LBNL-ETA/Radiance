@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.49 2014/12/08 23:51:12 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.50 2015/02/08 22:14:50 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -199,7 +199,7 @@ SDloadFile(SDData *sd, const char *fname)
 	}
 	wtl = ezxml_child(ezxml_child(fl, "Optical"), "Layer");
 	if (wtl == NULL) {
-		sprintf(SDerrorDetail, "BSDF \"%s\": no optical layers'",
+		sprintf(SDerrorDetail, "BSDF \"%s\": no optical layers",
 				sd->name);
 		ezxml_free(fl);
 		return SDEformat;
