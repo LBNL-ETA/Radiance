@@ -1,10 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.1 2015/02/11 18:08:10 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.2 2015/02/11 19:38:18 greg Exp $";
 #endif
 /*
- * Wrap BSDF data in valid WINDOW XML wrapper
+ * Wrap BSDF data in valid WINDOW XML file
  *
- *	G. Ward		January 2015
+ *	G. Ward		February 2015
  */
 
 #include <ctype.h>
@@ -22,7 +22,7 @@ const char	stdin_name[] = "<stdin>";
 					/* input files (can be stdin_name) */
 const char	*xml_input = NULL;
 					/* unit for materials & geometry */
-const char	*attr_unit = "millimeter";
+const char	*attr_unit = "meter";
 const char	legal_units[] = "meter|foot|inch|centimeter|millimeter";
 					/* system materials & geometry */
 const char	*mgf_geometry = NULL;
@@ -49,7 +49,7 @@ struct s_fieldID {
 	{"t", 1, "Thickness"},
 	{"h", 1, "Height"},
 	{"w", 1, "Width"},
-	{"\0", -1, NULL}	/* terminator */
+	{"\0", 0, NULL}	/* terminator */
 };
 					/* field assignments */
 #define MAXASSIGN	12
@@ -130,11 +130,11 @@ input2str(const char *inpspec)
 		return "";
 	if (inpspec == stdin_name) {		/* read from stdin */
 		fp = stdin;
-	} else if (*inpspec == '!') {		/* read from command */
+	} else if (inpspec[0] == '!') {		/* read from command */
 		fp = popen(inpspec+1, "r");
 		if (fp == NULL) {
 			fprintf(stderr, "Cannot start process '%s'\n",
-					inpspec+1);
+					inpspec);
 			return "";
 		}
 	} else {				/* else load file */
@@ -186,15 +186,15 @@ input2str(const char *inpspec)
 		if (str == NULL)
 			goto memerr;
 	}
-	if (*inpspec != '!')
+	if (inpspec[0] != '!')
 		fclose(fp);
 	else if (pclose(fp))
-		fprintf(stderr, "Error running command '%s'\n", inpspec+1);
+		fprintf(stderr, "Error running command '%s'\n", inpspec);
 	return str;
 memerr:
 	fprintf(stderr, "%s: error allocating memory\n", inpspec);
 	if (fp != NULL)
-		(*inpspec == '!') ? pclose(fp) : fclose(fp);
+		(inpspec[0] == '!') ? pclose(fp) : fclose(fp);
 	return "";
 }
 
@@ -232,9 +232,10 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 				}
 				sbuf[j++] = *fnext++;
 			}
-			sbuf[j] = '\0';		/* check nick-names */
+			sbuf[j] = '\0';		/* check known field */
 			for (j = 0; XMLfieldID[j].nickName[0]; j++)
-				if (!strcasecmp(sbuf, XMLfieldID[j].nickName)) {
+				if (!strcasecmp(sbuf, XMLfieldID[j].nickName) ||
+					!strcasecmp(sbuf, XMLfieldID[j].fullName)) {
 					strcpy(sbuf, XMLfieldID[j].fullName);
 					break;
 				}
@@ -433,14 +434,14 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 	fflush(stdout);
 	if (df->fname == stdin_name) {
 		copy_and_close(fileno(stdin));
-	} else if (*df->fname != '!') {
+	} else if (df->fname[0] != '!') {
 		if (!copy_and_close(open(df->fname, O_RDONLY))) {
 			fprintf(stderr, "%s: error reading from '%s'\n",
 					caller, df->fname);
 			return 0;
 		}
 	} else if (system(df->fname+1)) {
-		fprintf(stderr, "%s: error running '%s'\n", caller, df->fname+1);
+		fprintf(stderr, "%s: error running '%s'\n", caller, df->fname);
 		return 0;
 	}
 	puts("\t\t\t</ScatteringData>");
@@ -453,7 +454,7 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 static int
 writeBSDF(const char *caller, ezxml_t fl)
 {
-	char	*xml = ezxml_toxml(fl);
+	char	*xml = ezxml_toxml(fl);		/* store XML in string */
 	int	ei, i;
 						/* locate trailer */
 	for (ei = strlen(xml)-strlen("</Layer></Optical></WindowElement>");
@@ -477,7 +478,7 @@ writeBSDF(const char *caller, ezxml_t fl)
 			return 0;
 		}
 	fputs(xml+ei, stdout);			/* write trailer */
-	free(xml);
+	free(xml);				/* free string */
 	return (fflush(stdout) == 0);
 }
 
@@ -485,22 +486,39 @@ writeBSDF(const char *caller, ezxml_t fl)
 static int
 wrapBSDF(const char *caller)
 {
-	const char	*xml_path = getpath((char *)xml_input, getrlibpath(), R_OK);
+	const char	*xml_path = xml_input;
 	ezxml_t		fl, wtl;
 					/* load previous XML/template */
-	if (xml_path == NULL) {
-		fprintf(stderr, "%s: cannot find XML file named '%s'\n",
-				caller, xml_input==NULL ? "NULL" : xml_input);
-		return 0;
+	if (xml_input == stdin_name) {
+		fl = ezxml_parse_fp(stdin);
+	} else if (xml_input[0] == '!') {
+		FILE	*pfp = popen(xml_input+1, "r");
+		if (pfp == NULL) {
+			fprintf(stderr, "%s: cannot start process '%s'\n",
+					caller, xml_input);
+			return 0;
+		}
+		fl = ezxml_parse_fp(pfp);
+		if (pclose(pfp)) {
+			fprintf(stderr, "%s: error running '%s'\n",
+					caller, xml_input);
+			return 0;
+		}
+	} else {
+		xml_path = getpath((char *)xml_input, getrlibpath(), R_OK);
+		if (xml_path == NULL) {
+			fprintf(stderr, "%s: cannot find XML file named '%s'\n",
+					caller, xml_input==NULL ? "NULL" : xml_input);
+			return 0;
+		}
+		fl = ezxml_parse_file(xml_path);
 	}
-	fl = ezxml_parse_file(xml_path);
 	if (fl == NULL) {
-		fprintf(stderr, "%s: cannot open XML path '%s'\n",
-				caller, xml_path);
+		fprintf(stderr, "%s: cannot load XML '%s'\n", caller, xml_path);
 		return 0;
 	}
 	if (ezxml_error(fl)[0]) {
-		fprintf(stderr, "%s: error in XML %s: %s\n", caller, xml_path,
+		fprintf(stderr, "%s: error in XML '%s': %s\n", caller, xml_path,
 				ezxml_error(fl));
 		goto failure;
 	}
@@ -580,7 +598,9 @@ UsageExit(const char *pname)
 {
 	fputs("Usage: ", stderr);
 	fputs(pname, stderr);
-	fputs(" [options] [input.xml]\n", stderr);
+	fputs(" [-W][-a {kf|kh|kq|t3|t4}][-u unit][-g geom][-f 'x=string;y=string']", stderr);
+	fputs(" [-s spectr][-tb inp][-tf inp][-rb inp][-rf inp]", stderr);
+	fputs(" [input.xml]\n", stderr);
 	exit(1);
 }
 
@@ -617,8 +637,8 @@ main(int argc, char *argv[])
 						argv[0]);
 				return 1;
 			}
-			if (strstr(argv[i], legal_units) == NULL) {
-				fprintf(stderr, "%s: unit must be one of (%s)\n",
+			if (strstr(legal_units, argv[i]) == NULL) {
+				fprintf(stderr, "%s: -u unit must be one of (%s)\n",
 						argv[0], legal_units);
 				return 1;
 			}
