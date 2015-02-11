@@ -50,6 +50,9 @@ target_link_libraries(rcollate rtrad)
 add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
 target_link_libraries(rmtxop rtrad)
 
+add_executable(wrapBSDF wrapBSDF.c)
+target_link_libraries(wrapBSDF rtrad)
+
 add_executable(eplus_adduvf eplus_adduvf.c eplus_idf.c)
 target_link_libraries(eplus_adduvf rtrad)
 
@@ -94,7 +97,7 @@ if(UNIX AND X11_FOUND)
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
     vwrays vwright ranimove rsensor rttree_reduce rcollate
-		eplus_adduvf rfluxmtx rmtxop 
+		eplus_adduvf rfluxmtx rmtxop wrapBSDF
     RUNTIME DESTINATION bin)
 
 install(FILES rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal 
