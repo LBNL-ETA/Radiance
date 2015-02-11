@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.78 2014/07/28 16:30:18 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.79 2015/02/11 18:08:10 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
-		eplus_adduvf rfluxmtx rmtxop
+		eplus_adduvf rfluxmtx rmtxop wrapBSDF
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal
@@ -130,6 +130,9 @@ rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
 	$(CC) $(CFLAGS) -o rmtxop rmtxop.o rmatrix.o cmatrix.o cmbsdf.o \
 -lrtrad $(MLIB)
 
+wrapBSDF:	wrapBSDF.o
+	$(CC) $(CFLAGS) -o wrapBSDF wrapBSDF.o -lrtrad $(MLIB)
+
 setscan.o:	setscan.h
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
@@ -230,3 +233,6 @@ rttree_reduce.o:	../common/rtio.h ../common/rterror.h
 rmatrix.o:	rmatrix.h cmatrix.h ../common/resolu.h
 
 rmtxop.o:	rmatrix.h cmatrix.h ../common/rtio.h ../common/resolu.h
+
+wrapBSDF.o:	../common/rtio.h ../common/rtprocess.h ../common/ezxml.h \
+../common/bsdf.h ../common/bsdf_m.h ../common/fvect.h ../common/ccolor.h
