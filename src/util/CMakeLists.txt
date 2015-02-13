@@ -102,6 +102,7 @@ install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
 
 install(FILES rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal 
     klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal
+    WINDOW6BSDFt.xml minimalBSDFt.xml
     DESTINATION lib)
 
 if(WIN32)
