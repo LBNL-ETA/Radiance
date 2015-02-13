@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.2 2015/02/11 19:38:18 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.3 2015/02/13 20:49:59 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: wrapBSDF.c,v 2.2 2015/02/11 19:38:18 greg Exp 
 #include "bsdf_m.h"
 					/* XML template file names */
 const char	def_template[] = "minimalBSDFt.xml";
-const char	win6_template[] = "window6BSDFt.xml";
+const char	win6_template[] = "WINDOW6BSDFt.xml";
 
 const char	stdin_name[] = "<stdin>";
 
@@ -36,20 +36,21 @@ int		angle_basis = ABdefault;
 					/* field IDs and nicknames */
 struct s_fieldID {
 	char		nickName[4];
-	int		has_unit;
+	short		has_unit;
+	short		win_need;
 	const char	*fullName;
 } XMLfieldID[] = {
-	{"m", 0, "Manufacturer"},
-	{"n", 0, "Name"},
-	{"c", 0, "ThermalConductivity"},
-	{"ef", 0, "EmissivityFront"},
-	{"eb", 0, "EmissivityBack"},
-	{"tir", 0, "TIR"},
-	{"eo", 0, "EffectiveOpennessFraction"},
-	{"t", 1, "Thickness"},
-	{"h", 1, "Height"},
-	{"w", 1, "Width"},
-	{"\0", 0, NULL}	/* terminator */
+	{"m", 0, 1, "Manufacturer"},
+	{"n", 0, 1, "Name"},
+	{"c", 0, 0, "ThermalConductivity"},
+	{"ef", 0, 0, "EmissivityFront"},
+	{"eb", 0, 0, "EmissivityBack"},
+	{"tir", 0, 0, "TIR"},
+	{"eo", 0, 0, "EffectiveOpennessFraction"},
+	{"t", 1, 1, "Thickness"},
+	{"h", 1, 0, "Height"},
+	{"w", 1, 0, "Width"},
+	{"\0", 0, 0, NULL}	/* terminator */
 };
 					/* field assignments */
 #define MAXASSIGN	12
@@ -76,7 +77,7 @@ const char	*spectr_file[MAXFILES];	/* custom spectral curve input */
 
 const char	top_level_name[] = "WindowElement";
 
-static char	*basis_definition[] = {
+static char	basis_definition[][256] = {
 
 	"\t\t<IncidentDataStructure>Columns</IncidentDataStructure>\n"
 	"\t\t<AngleBasis>\n"
@@ -144,26 +145,24 @@ input2str(const char *inpspec)
 			return "";
 		}
 		len = lseek(fd, 0L, SEEK_END);
-		if (len < 0) {
-			fprintf(stderr, "%s: seek error\n", inpspec);
+		if (len > 0) {
+			lseek(fd, 0L, SEEK_SET);
+			str = (char *)malloc(len+1);
+			if (str == NULL) {
+				close(fd);
+				goto memerr;
+			}
+			if (read(fd, str, len) != len) {
+				fprintf(stderr, "%s: read error\n", inpspec);
+				free(str);
+				close(fd);
+				return "";
+			}
+			str[len] = '\0';
 			close(fd);
-			return "";
+			return str;
 		}
-		lseek(fd, 0L, SEEK_SET);
-		str = (char *)malloc(len+1);
-		if (str == NULL) {
-			close(fd);
-			goto memerr;
-		}
-		if (read(fd, str, len) != len) {
-			fprintf(stderr, "%s: read error\n", inpspec);
-			free(str);
-			close(fd);
-			return "";
-		}
-		str[len] = '\0';
-		close(fd);
-		return str;
+		fp = fdopen(fd, "r");		/* not a regular file */
 	}
 						/* reading from stream */
 	str = (char *)malloc((len=8192)+1);
@@ -204,8 +203,6 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 {
 	int	i;
 
-	if (!nfield_assign)
-		return 1;
 	wtl = ezxml_child(wtl, "Material");
 	if (wtl == NULL) {
 		fprintf(stderr, "%s: missing <Material> tag\n", fn);
@@ -222,7 +219,7 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 				++fnext;
 			if (!*fnext)
 				break;
-			for (j = 0; (*fnext != '=') & !isspace(*fnext); ) {
+			for (j = 0; *fnext != '=' && !isspace(*fnext); ) {
 				if (!*fnext | (*fnext == FASEP) |
 						(j >= sizeof(sbuf)-1)) {
 					fprintf(stderr,
@@ -242,12 +239,15 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 						/* check if tag exists */
 			fld = ezxml_child(wtl, sbuf);
 			if (fld == NULL) {	/* otherwise, create one */
-				fprintf(stderr, "%s: warning - adding tag <%s>\n",
-					fn, sbuf);
+				if (!XMLfieldID[j].nickName[0])
+					fprintf(stderr,
+						"%s: warning - adding tag <%s>\n",
+							fn, sbuf);
 				fld = ezxml_add_child_d(wtl, sbuf, strlen(wtl->txt));
 			}
 			if (XMLfieldID[j].has_unit)
 				ezxml_set_attr(fld, "unit", attr_unit);
+			XMLfieldID[j].win_need = 0;
 			while (isspace(*fnext))
 				++fnext;
 			if (*fnext++ != '=') {
@@ -256,7 +256,7 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 						caller, field_assignment[i]);
 				return 0;
 			}
-			for (j = 0; *fnext & (*fnext != FASEP); ) {
+			for (j = 0; *fnext && *fnext != FASEP; ) {
 				if (j >= sizeof(sbuf)-1) {
 					fprintf(stderr,
 					"%s: field too long in '%s'\n",
@@ -270,6 +270,17 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 			fnext += (*fnext == FASEP);
 		}
 	}
+					/* check required WINDOW settings */
+	if (xml_input == win6_template)
+	    for (i = 0; XMLfieldID[i].nickName[0]; i++)
+		if (XMLfieldID[i].win_need &&
+			!ezxml_txt(ezxml_child(wtl,XMLfieldID[i].fullName))[0]) {
+			fprintf(stderr,
+			"%s: missing required '%s' assignment for WINDOW <%s>\n",
+					caller, XMLfieldID[i].nickName,
+					XMLfieldID[i].fullName);
+			return 0;
+		}
 	return 1;		/* no errors */
 }
 
@@ -540,18 +551,17 @@ wrapBSDF(const char *caller)
 		goto failure;
 	}
 					/* make material assignments */
-	if (!mat_assignments(caller, xml_path, wtl)) {
+	if (!mat_assignments(caller, xml_path, wtl))
 		goto failure;
-	}
 	if (mgf_geometry != NULL) {	/* add geometry if specified */
 		ezxml_t	geom = ezxml_child(wtl, "Geometry");
 		if (geom == NULL)
-			geom = ezxml_add_child(wtl, "Geometry", 0);
+			geom = ezxml_add_child(wtl, "Geometry", strlen(wtl->txt));
 		ezxml_set_attr(geom, "format", "MGF");
 		geom = ezxml_child(geom, "MGFblock");
 		if (geom == NULL) {
 			geom = ezxml_child(wtl, "Geometry");
-			geom = ezxml_add_child(geom, "MGFblock", strlen(geom->txt));
+			geom = ezxml_add_child(geom, "MGFblock", 0);
 		}
 		ezxml_set_attr(geom, "unit", attr_unit);
 		ezxml_set_txt(geom, input2str(mgf_geometry));
@@ -562,14 +572,14 @@ wrapBSDF(const char *caller)
 	if (angle_basis != ABdefault) {
 		ezxml_t	ab, dd = ezxml_child(wtl, "DataDefinition");
 		if (dd == NULL) {
-			dd = ezxml_add_child(wtl, "DataDefinition", 0);
-		} else {
-			if (ezxml_child(dd, "DataDefinition") != NULL)
-				fprintf(stderr,
+			dd = ezxml_add_child(wtl, "DataDefinition", strlen(wtl->txt));
+		} else if (dd->child != NULL) {
+			fprintf(stderr,
 		"%s: warning - replacing existing <DataDefinition> in '%s'\n",
 						caller, xml_path);
-			while (dd->child != NULL)
+			do
 				ezxml_remove(dd->child);
+			while (dd->child != NULL);
 		}
 		ezxml_insert(ezxml_parse_str(basis_definition[angle_basis],
 					strlen(basis_definition[angle_basis])),
