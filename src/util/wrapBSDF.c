@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.3 2015/02/13 20:49:59 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.4 2015/02/14 00:39:21 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -79,24 +79,34 @@ const char	top_level_name[] = "WindowElement";
 
 static char	basis_definition[][256] = {
 
+	"\t<DataDefinition>\n"
 	"\t\t<IncidentDataStructure>Columns</IncidentDataStructure>\n"
 	"\t\t<AngleBasis>\n"
 	"\t\t\t<AngleBasisName>LBNL/Klems Full</AngleBasisName>\n"
-	"\t\t</AngleBasis>\n",
+	"\t\t\t</AngleBasis>\n"
+	"\t</DataDefinition>\n",
 
+	"\t<DataDefinition>\n"
 	"\t\t<IncidentDataStructure>Columns</IncidentDataStructure>\n"
 	"\t\t<AngleBasis>\n"
 	"\t\t\t<AngleBasisName>LBNL/Klems Half</AngleBasisName>\n"
-	"\t\t</AngleBasis>\n",
+	"\t\t\t</AngleBasis>\n"
+	"\t</DataDefinition>\n",
 
+	"\t<DataDefinition>\n"
 	"\t\t<IncidentDataStructure>Columns</IncidentDataStructure>\n"
 	"\t\t<AngleBasis>\n"
 	"\t\t\t<AngleBasisName>LBNL/Klems Quarter</AngleBasisName>\n"
-	"\t\t</AngleBasis>\n",
+	"\t\t\t</AngleBasis>\n"
+	"\t</DataDefinition>\n",
 
-	"\t\t<IncidentDataStructure>TensorTree3</IncidentDataStructure>\n",
+	"\t<DataDefinition>\n"
+	"\t\t<IncidentDataStructure>TensorTree3</IncidentDataStructure>\n"
+	"\t</DataDefinition>\n",
 
-	"\t\t<IncidentDataStructure>TensorTree4</IncidentDataStructure>\n",
+	"\t<DataDefinition>\n"
+	"\t\t<IncidentDataStructure>TensorTree4</IncidentDataStructure>\n"
+	"\t</DataDefinition>\n",
 };
 
 /* Copy data from file descriptor to stdout and close */
@@ -309,14 +319,22 @@ finish_angle_basis(ezxml_t ab)
 		sprintf(buf, "%g", i ?
 		.5*(abase_list[n].lat[i].tmin + abase_list[n].lat[i+1].tmin) :
 				.0);
+		ezxml_add_txt(abb, "\n\t\t\t\t");
 		ezxml_set_txt_d(ezxml_add_child(abb,"Theta",strlen(abb->txt)), buf);
 		sprintf(buf, "%d", abase_list[n].lat[i].nphis);
+		ezxml_add_txt(abb, "\n\t\t\t\t");
 		ezxml_set_txt_d(ezxml_add_child(abb,"nPhis",strlen(abb->txt)), buf);
+		ezxml_add_txt(abb, "\n\t\t\t\t");
 		tb = ezxml_add_child(abb, "ThetaBounds", strlen(abb->txt));
+		ezxml_add_txt(tb, "\n\t\t\t\t\t");
 		sprintf(buf, "%g", abase_list[n].lat[i].tmin);
-		ezxml_set_txt(ezxml_add_child(tb,"LowerTheta",strlen(tb->txt)), buf);
+		ezxml_set_txt_d(ezxml_add_child(tb,"LowerTheta",strlen(tb->txt)), buf);
+		ezxml_add_txt(tb, "\n\t\t\t\t\t");
 		sprintf(buf, "%g", abase_list[n].lat[i+1].tmin);
-		ezxml_set_txt(ezxml_add_child(tb,"UpperTheta",strlen(tb->txt)), buf);
+		ezxml_set_txt_d(ezxml_add_child(tb,"UpperTheta",strlen(tb->txt)), buf);
+		ezxml_add_txt(tb, "\n\t\t\t\t");
+		ezxml_add_txt(abb, "\n\t\t\t");
+		ezxml_add_txt(ab, "\n\t\t\t");
 	}
 	return 1;
 }
@@ -332,7 +350,7 @@ determine_angle_basis(const char *fn, ezxml_t wtl)
 	if (wtl == NULL)
 		return -1;
 	ids = ezxml_txt(ezxml_child(wtl, "IncidentDataStructure"));
-	if (ids == NULL)
+	if (!ids[0])
 		return -1;
 	for (i = 0; i < ABend; i++) {
 		ezxml_t	parsed = ezxml_parse_str(basis_definition[i],
@@ -490,6 +508,7 @@ writeBSDF(const char *caller, ezxml_t fl)
 		}
 	fputs(xml+ei, stdout);			/* write trailer */
 	free(xml);				/* free string */
+	fputc('\n', stdout);
 	return (fflush(stdout) == 0);
 }
 
@@ -570,20 +589,19 @@ wrapBSDF(const char *caller)
 	}
 					/* check basis */
 	if (angle_basis != ABdefault) {
+		size_t	offset = 0;
 		ezxml_t	ab, dd = ezxml_child(wtl, "DataDefinition");
-		if (dd == NULL) {
-			dd = ezxml_add_child(wtl, "DataDefinition", strlen(wtl->txt));
-		} else if (dd->child != NULL) {
+		if (dd != NULL) {
+			offset = dd->off;
 			fprintf(stderr,
 		"%s: warning - replacing existing <DataDefinition> in '%s'\n",
 						caller, xml_path);
-			do
-				ezxml_remove(dd->child);
-			while (dd->child != NULL);
-		}
-		ezxml_insert(ezxml_parse_str(basis_definition[angle_basis],
+			ezxml_remove(dd);
+		} else
+			offset = strlen(wtl->txt);
+		dd = ezxml_insert(ezxml_parse_str(basis_definition[angle_basis],
 					strlen(basis_definition[angle_basis])),
-				dd, 0);
+				wtl, offset);
 		if ((ab = ezxml_child(dd, "AngleBasis")) != NULL &&
 				!finish_angle_basis(ab))
 			goto failure;
