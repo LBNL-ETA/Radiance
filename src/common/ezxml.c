@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.6 2014/10/26 17:35:53 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.7 2015/02/14 00:34:43 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -922,10 +922,28 @@ ezxml_t ezxml_add_child(ezxml_t xml, const char *name, size_t off)
 ezxml_t ezxml_set_txt(ezxml_t xml, const char *txt)
 {
     if (! xml) return NULL;
+    if (txt == xml->txt) return xml;
     if (xml->flags & EZXML_TXTM) free(xml->txt); /* existing txt was malloced */
     xml->flags &= ~EZXML_TXTM;
     xml->txt = (char *)txt;
     return xml;
+}
+
+/* add text to the current character content, allocating memory as needed (GW) */
+ezxml_t ezxml_add_txt(ezxml_t xml, const char *txt)
+{
+	int	len;
+	if (! xml) return NULL;
+	if (!*txt) return xml;
+	len = strlen(xml->txt) + strlen(txt) + 1;
+	if (xml->flags & EZXML_TXTM) {
+		xml->txt = (char *)realloc(xml->txt, len);
+	} else {
+		xml->txt = strcpy((char *)malloc(len), xml->txt);
+		xml->flags |= EZXML_TXTM;
+	}
+	strcat(xml->txt, txt);
+	return xml;
 }
 
 /* Sets the given tag attribute or adds a new attribute if not found. A value */

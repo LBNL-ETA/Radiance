@@ -1,4 +1,4 @@
-/* RCSid $Id: ezxml.h,v 2.2 2011/06/01 00:29:40 greg Exp $ */
+/* RCSid $Id: ezxml.h,v 2.3 2015/02/14 00:34:43 greg Exp $ */
 /* ezxml.h
  *
  * Copyright 2004-2006 Aaron Voisine <aaron@voisine.org>
@@ -141,6 +141,9 @@ ezxml_t ezxml_set_txt(ezxml_t xml, const char *txt);
 /* wrapper for ezxml_set_txt() that strdup()s txt */
 #define ezxml_set_txt_d(xml, txt) \
     ezxml_set_flag(ezxml_set_txt(xml, strdup(txt)), EZXML_TXTM)
+
+/* add text to the current character content, allocating memory as needed */
+ezxml_t ezxml_add_txt(ezxml_t xml, const char *txt);
 
 /* Sets the given tag attribute or adds a new attribute if not found. A value */
 /* of NULL will remove the specified attribute. Returns the tag given. */
