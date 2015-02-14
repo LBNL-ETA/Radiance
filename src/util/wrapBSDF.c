@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.4 2015/02/14 00:39:21 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.5 2015/02/14 18:33:07 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -221,6 +221,7 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 	for (i = 0; i < nfield_assign; i++) {
 		const char	*fnext = field_assignment[i];
 		for ( ; ; ) {
+			int	added = 0;
 			ezxml_t	fld;
 			char	sbuf[512];
 			int	j;
@@ -253,7 +254,9 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 					fprintf(stderr,
 						"%s: warning - adding tag <%s>\n",
 							fn, sbuf);
+				ezxml_add_txt(wtl, "\t");
 				fld = ezxml_add_child_d(wtl, sbuf, strlen(wtl->txt));
+				++added;
 			}
 			if (XMLfieldID[j].has_unit)
 				ezxml_set_attr(fld, "unit", attr_unit);
@@ -277,6 +280,8 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 			}
 			sbuf[j] = '\0';
 			ezxml_set_txt_d(fld, sbuf);
+			if (added)
+				ezxml_add_txt(wtl, "\n\t");
 			fnext += (*fnext == FASEP);
 		}
 	}
@@ -593,7 +598,8 @@ wrapBSDF(const char *caller)
 		ezxml_t	ab, dd = ezxml_child(wtl, "DataDefinition");
 		if (dd != NULL) {
 			offset = dd->off;
-			fprintf(stderr,
+			if (dd->child != NULL)
+				fprintf(stderr,
 		"%s: warning - replacing existing <DataDefinition> in '%s'\n",
 						caller, xml_path);
 			ezxml_remove(dd);
