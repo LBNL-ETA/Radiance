@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.6 2015/02/15 17:23:06 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.7 2015/02/16 19:11:28 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -18,7 +18,6 @@ const char	def_template[] = "minimalBSDFt.xml";
 const char	win6_template[] = "WINDOW6BSDFt.xml";
 
 const char	stdin_name[] = "<stdin>";
-
 					/* input files (can be stdin_name) */
 const char	*xml_input = NULL;
 					/* unit for materials & geometry */
@@ -33,6 +32,13 @@ enum { ABdefault=-1, ABklemsFull=0, ABklemsHalf, ABklemsQuarter,
 
 int		angle_basis = ABdefault;
 
+int		correct_solid_angle = 0;
+
+const char	*klems_basis_name[] = {
+	"LBNL/Klems Full",
+	"LBNL/Klems Half",
+	"LBNL/Klems Quarter",
+};
 					/* field IDs and nicknames */
 struct s_fieldID {
 	char		nickName[4];
@@ -57,7 +63,6 @@ struct s_fieldID {
 const char	*field_assignment[MAXASSIGN];
 int		nfield_assign = 0;
 #define FASEP	';'
-
 					/* data file(s) & spectra */
 enum { DTtransForward, DTtransBackward, DTreflForward, DTreflBackward };
 
@@ -378,29 +383,22 @@ determine_angle_basis(const char *fn, ezxml_t wtl)
 	return -1;
 }
 
-/* Filter Klems angle basis, applying appropriate solid angle correction */
+/* Filter Klems angle basis, factoring out incident projected solid angle */
 static int
 filter_klems_matrix(FILE *fp)
 {
 #define MAX_COLUMNS	145
+	const char	*bn = klems_basis_name[angle_basis];
 	float		col_corr[MAX_COLUMNS];
-	const char	*bn;
 	int		i, j, n = nabases;
 					/* get angle basis */
-	switch (angle_basis) {
-	case ABklemsFull:	bn = "LBNL/Klems Full"; break;
-	case ABklemsHalf:	bn = "LBNL/Klems Half"; break;
-	case ABklemsQuarter:	bn = "LBNL/Klems Quarter"; break;
-	default:
-		return 0;
-	}
 	while (n-- > 0)
 		if (!strcasecmp(bn, abase_list[n].name))
 			break;
 	if (n < 0)
 		return 0;
 	if (abase_list[n].nangles > MAX_COLUMNS) {
-		fprintf(stderr, "Internal error - too many Klems columns!\n");
+		fputs("Internal error - too many Klems columns!\n", stderr);
 		return 0;
 	}
 					/* get correction factors */
@@ -412,11 +410,20 @@ filter_klems_matrix(FILE *fp)
 		double	d;
 		if (fscanf(fp, "%lf", &d) != 1)
 			return 0;
-		printf(" %f", d*col_corr[j]);
+		if (d < -1e-3) {
+			fputs("Negative BSDF data!\n", stderr);
+			return 0;
+		}
+		printf(" %.3e", d*col_corr[j]*(d > 0));
 	    }
 	    fputc('\n', stdout);
 	}
-	return 1;
+	while ((i = getc(fp)) != EOF)
+		if (!isspace(i)) {
+			fputs("Unexpected data past EOF\n", stderr);
+			return 0;
+		}
+	return 1;			/* all is good */
 #undef MAX_COLUMNS
 }
 
@@ -424,7 +431,7 @@ filter_klems_matrix(FILE *fp)
 static int
 writeBSDFblock(const char *caller, struct s_dfile *df)
 {
-	int	klems_data = 0;
+	int	correct_klems = correct_solid_angle;
 	char	*cp;
 
 	puts("\t<WavelengthData>");
@@ -432,7 +439,7 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 	switch (df->spectrum) {
 	case DSvisible:
 		puts("\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
 		break;
 	case DSxbar31:
@@ -488,21 +495,21 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 		return 0;
 	}
 	puts("</WavelengthDataDirection>");
-	klems_data = 1;
 	switch (angle_basis) {
 	case ABklemsFull:
-		puts("\t\t\t<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>");
-		break;
 	case ABklemsHalf:
-		puts("\t\t\t<ColumnAngleBasis>LBNL/Klems Half</ColumnAngleBasis>");
-		break;
 	case ABklemsQuarter:
-		puts("\t\t\t<ColumnAngleBasis>LBNL/Klems Quarter</ColumnAngleBasis>");
+		fputs("\t\t\t<ColumnAngleBasis>", stdout);
+		fputs(klems_basis_name[angle_basis], stdout);
+		puts("</ColumnAngleBasis>");
+		fputs("\t\t\t<RowAngleBasis>", stdout);
+		fputs(klems_basis_name[angle_basis], stdout);
+		puts("</RowAngleBasis>");
 		break;
 	case ABtensorTree3:
 	case ABtensorTree4:
 		puts("\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>");
-		klems_data = 0;
+		correct_klems = 0;
 		break;
 	default:
 		fprintf(stderr, "%s: bad angle basis (%d)\n", caller, angle_basis);
@@ -511,7 +518,7 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
 	puts("\t\t\t<ScatteringData>");
 	fflush(stdout);
-	if (klems_data) {
+	if (correct_klems) {			/* correct Klems matrix data */
 		FILE	*fp = stdin;
 		if (df->fname[0] == '!')
 			fp = popen(df->fname+1, "r");
@@ -766,6 +773,9 @@ main(int argc, char *argv[])
 				angle_basis = ABtensorTree4;
 			else
 				UsageExit(argv[0]);
+			continue;
+		case 'c':		/* correct solid angle */
+			correct_solid_angle ^= 1;
 			continue;
 		case 't':		/* transmission */
 			if (i >= argc-1)
