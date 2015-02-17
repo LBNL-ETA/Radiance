@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.7 2015/02/16 19:11:28 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.8 2015/02/17 02:44:54 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -818,7 +818,8 @@ main(int argc, char *argv[])
 				argv[i] = (char *)stdin_name;
 			}
 			data_file[ndataf].fname = argv[i];
-			data_file[ndataf++].spectrum = cur_spectrum;
+			data_file[ndataf].spectrum = cur_spectrum;
+			ndataf++;
 			continue;
 		case 's':		/* spectrum name or input file */
 			if (++i >= argc)
@@ -880,8 +881,6 @@ doneOptions:					/* get XML input */
 	} else {
 		xml_input = argv[i];
 	}
-	if ((xml_input == win6_template) & (angle_basis == ABdefault))
-		angle_basis = ABklemsFull;
 						/* wrap it! */
 	return !wrapBSDF(argv[0]);
 }
