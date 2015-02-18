@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.21 2015/02/18 05:56:12 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.22 2015/02/18 06:16:02 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1350,7 +1350,7 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 	flockfile(rcfp);
 #endif
-	if (verbose) {
+	if (verbose > 0) {
 		fprintf(stderr, "%s: sampling %d directions", progname, nsbins);
 		if (curparams.nsurfs > 1)
 			fprintf(stderr, " (%d elements)\n", curparams.nsurfs);
