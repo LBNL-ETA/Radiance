@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.20 2015/02/02 16:04:11 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.21 2015/02/18 05:56:12 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -362,8 +362,8 @@ parse_params(PARAMS *p, char *pargs)
 		case ' ':
 		case '\t':
 		case '\r':
-			continue;
 		case '\n':
+			continue;
 		case '\0':
 			return(nparams);
 		default:
