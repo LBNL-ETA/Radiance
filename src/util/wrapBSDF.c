@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.8 2015/02/17 02:44:54 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.9 2015/02/18 06:18:38 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -775,7 +775,7 @@ main(int argc, char *argv[])
 				UsageExit(argv[0]);
 			continue;
 		case 'c':		/* correct solid angle */
-			correct_solid_angle ^= 1;
+			correct_solid_angle = 1;
 			continue;
 		case 't':		/* transmission */
 			if (i >= argc-1)

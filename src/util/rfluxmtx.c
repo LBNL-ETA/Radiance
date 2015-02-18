@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.22 2015/02/18 06:16:02 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.23 2015/02/18 06:18:38 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1360,7 +1360,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < nsbins; i++)	/* send rcontrib ray samples */
 		if (!(*curparams.sample_basis)(&curparams, i, rcfp))
 			return(1);
-	return(pclose(rcfp) == 0);	/* all finished! */
+	return(pclose(rcfp) < 0);	/* all finished! */
 userr:
 	if (a < argc-2)
 		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
