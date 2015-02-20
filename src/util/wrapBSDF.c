@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.9 2015/02/18 06:18:38 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.10 2015/02/20 17:05:40 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -294,14 +294,12 @@ mat_assignments(const char *caller, const char *fn, ezxml_t wtl)
 	if (xml_input == win6_template)
 	    for (i = 0; XMLfieldID[i].nickName[0]; i++)
 		if (XMLfieldID[i].win_need &&
-			!ezxml_txt(ezxml_child(wtl,XMLfieldID[i].fullName))[0]) {
+			!ezxml_txt(ezxml_child(wtl,XMLfieldID[i].fullName))[0])
 			fprintf(stderr,
-			"%s: missing required '%s' assignment for WINDOW <%s>\n",
+			"%s: warning - missing '%s' assignment for WINDOW <%s>\n",
 					caller, XMLfieldID[i].nickName,
 					XMLfieldID[i].fullName);
-			return 0;
-		}
-	return 1;		/* no errors */
+	return 1;
 }
 
 /* Complete angle basis specification */
