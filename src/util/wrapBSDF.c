@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.10 2015/02/20 17:05:40 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.11 2015/02/20 18:07:10 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -66,7 +66,8 @@ int		nfield_assign = 0;
 					/* data file(s) & spectra */
 enum { DTtransForward, DTtransBackward, DTreflForward, DTreflBackward };
 
-enum { DSsolar=-1, DSnir=-2, DSxbar31=-3, DSvisible=-4, DSzbar31=-5 };
+enum { DSsolar=-1, DSnir=-2, DSxbar31=-3, DSvisible=-4, DSzbar31=-5,
+	DSuprime=-6, DSvprime=-7 };
 
 #define MAXFILES	20
 
@@ -450,6 +451,16 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>ASTM E308 1931 Z.dsp</DetectorSpectrum>");
 		break;
+	case DSuprime:
+		puts("\t\t<Wavelength unit=\"Integral\">CIE-Z</Wavelength>");
+		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<DetectorSpectrum>ASTM E308 1931 u.dsp</DetectorSpectrum>");
+		break;
+	case DSvprime:
+		puts("\t\t<Wavelength unit=\"Integral\">CIE-Z</Wavelength>");
+		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<DetectorSpectrum>ASTM E308 1931 v.dsp</DetectorSpectrum>");
+		break;
 	case DSsolar:
 		puts("\t\t<Wavelength unit=\"Integral\">Solar</Wavelength>");
 		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
@@ -705,7 +716,7 @@ UsageExit(const char *pname)
 {
 	fputs("Usage: ", stderr);
 	fputs(pname, stderr);
-	fputs(" [-W][-a {kf|kh|kq|t3|t4}][-u unit][-g geom][-f 'x=string;y=string']", stderr);
+	fputs(" [-W][-c][-a {kf|kh|kq|t3|t4}][-u unit][-g geom][-f 'x=string;y=string']", stderr);
 	fputs(" [-s spectr][-tb inp][-tf inp][-rb inp][-rf inp]", stderr);
 	fputs(" [input.xml]\n", stderr);
 	exit(1);
@@ -831,6 +842,10 @@ main(int argc, char *argv[])
 				cur_spectrum = DSxbar31;
 			else if (!strcasecmp(argv[i], "CIE-Z"))
 				cur_spectrum = DSzbar31;
+			else if (!strcasecmp(argv[i], "CIE-u"))
+				cur_spectrum = DSuprime;
+			else if (!strcasecmp(argv[i], "CIE-v"))
+				cur_spectrum = DSvprime;
 			else if (!strcasecmp(argv[i], "NIR"))
 				cur_spectrum = DSnir;
 			else {
