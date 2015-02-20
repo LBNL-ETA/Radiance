@@ -2006,3 +2006,6 @@ threshold set to 5% of recorded value.
 
 Changed anisotropic Gaussian and Ashikhmin models so that
 illegal orientation vectors are dealt with more gracefully.
+
+Created wrapBSDF tool and incorporated into genBSDF along
+with new rfluxmtx computation.

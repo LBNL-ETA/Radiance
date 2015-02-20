@@ -1,0 +1,130 @@
+.\" RCSid $Id: wrapBSDF.1,v 1.1 2015/02/20 18:26:09 greg Exp $
+.TH WRAPBSDF 1 2/20/2015 RADIANCE
+.SH NAME
+wrapBSDF - put XML wrapper around WINDOW6 BSDF data
+.SH SYNOPSIS
+.B wrapBSDF
+[
+.B \-W
+][
+.B \-c
+][
+.B "\-a {kf|kh|kq|t3|t4}"
+][
+.B "\-u unit"
+][
+.B "\-g geom.mgf"
+][
+.B "\-f 'x=string;y=string'"
+][
+.B "\-s spectr"
+][
+.B "\-tb inp"
+][
+.B "\-tf inp"
+][
+.B "\-rb inp"
+][
+.B "\-rf inp"
+][
+.B "input.xml"
+]
+.SH DESCRIPTION
+.I WrapBSDF
+takes ASCII matrix or tensor tree data given in one or more
+.I "\-tf, \-tb, \-rf,"
+and
+.I \-rb
+options and adds them to the given
+.I input.xml
+file or to a standard template suitable for
+.I Radiance
+and
+.I WINDOW6.
+The
+.I \-W
+option may be given to ensure adherence to the
+.I WINDOW6
+requirements, which draws from a standard template
+and warns the user if the required additional fields are not
+provided.
+.PP
+Fields may be set by one or more
+.I \-f
+options, which take pairs of XML tag names and values, such as
+.I "\-f Manufacturer=ACME".
+A number of shorthand names are provided corresponding to the
+following tags (asterisk tags are required with -W):
+.sp
+.nf
+	m	Manufacturer(*)
+	n	Name(*)
+	c	ThermalConductivity
+	ef	EmissivityFront
+	eb	EmissivityBack
+	eo	EffectiveOpennessFraction
+	t	Thickness(*)
+	h	Height
+	w	Width
+.fi
+.PP
+If any dimensions are given, thier units will correspond to
+meters by default, or the
+.I \-u
+option may be used to specify one of:
+meter, foot, inch, centimeter, or millimeter.
+Any other unit specification will result in an error, and
+only one set of units may be selected.
+A "Materials and Geometry Format" file may be provided with the
+.I \-g
+option, and will also be in the indicated units.
+.PP
+The spectrum corresponding to a particular set of data may be given
+before the data option using a
+.I \-s
+specification, whose argument is either the name of a spectral
+sensitivity file or one of the standard spectra:
+Visible, Solar, NIR, CIE-u, CIE-v, CIE-X, or CIE-Z.
+Different spectra may be given for different distribution data,
+and the default spectrum is Visible (CIE-Y).
+.PP
+The
+.I \-a
+option specifies the angular sampling basis for all the data
+provided, and must be set if any data is given.
+Legal arguments for this option are:
+.sp
+.nf
+	kf	Klems full sampling (145x145 matrix)
+	kh	Klems half sampling (73x73 matrix)
+	kq	Klems quarter sampling (41x41 matrix)
+	t3	Tensor tree isotropic sampling
+	t4	Tensor tree anisotropic sampling
+.fi
+.sp
+In the case of Klems data, the
+.I \-c
+option may be specified to include a correction for solid
+angle, which is necessary to convert flux form factors into
+BSDF data.
+Since it flux factors rather than BSDF values are computed by
+.I rfluxmtx(1)
+and similar sources, this is often necessary for proper conversion.
+.PP
+Most options that accept file names
+can take data from the standard input by using a hyphen ('-')
+in place of the file, but only one option at most may read from stdin.
+.SH EXAMPLE
+Create an WINDOW6 BSDF from computed transmission matrix:
+.IP "" .2i
+rfluxmtx -fa ... | wrapBSDF -W -u millimeter -f 't=5;m=3M;n=Trans30' -c -tb - > Trans30.xml
+.PP
+Add a name and MGF geometry to an XML file:
+Add a name and MGF geometry to an XML file:
+.IP "" .2i
+wrapBSDF -f 'Name=My Device' -g MyDevice.mgf orig.xml > revised.xml
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bsdf2klems(1), bsdf2ttree(1), genBSDF(1), mgf2rad(1),
+pkgBSDF(1), rad2mgf(1), rfluxmtx(1)

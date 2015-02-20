@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.4 2014/03/12 21:15:31 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.5 2015/02/20 18:26:08 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -143,4 +143,5 @@ bsdf2ttree -g 5 -t3 -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+o
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-bsdf2klems(1), icalc(1), genBSDF(1), pkgBSDF(1)
+bsdf2klems(1), icalc(1), genBSDF(1), pkgBSDF(1), rcontrib(1),
+rfluxmtx(1), wrapBSDF(1)

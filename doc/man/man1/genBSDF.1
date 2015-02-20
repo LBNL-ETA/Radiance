@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.13 2013/01/20 02:07:16 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.14 2015/02/20 18:26:08 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -10,6 +10,10 @@ genBSDF - generate BSDF description from Radiance or MGF input
 .B "\-n Nproc"
 ][
 .B "\-r 'rcontrib opts...'"
+][
+.B "\-W"
+][
+.B "\-f 'x=string;y=string'"
 ][
 .B "\-t{3|4} Nlog2"
 ][
@@ -95,6 +99,15 @@ included on the
 command line.
 .PP
 The
+.I \-W
+and
+.I \-f
+options are passed to
+.I wrapBSDF(1),
+and prepare the output for WINDOW6 and make addition settings, such as
+the Manufacturer (e.g., -f m=MF) and device Name (e.g, -f n=NM).
+.PP
+The
 .I \-t4
 mode computes a non-uniform BSDF represented as a rank 4 tensor tree,
 suitable for use in the Radiance rendering tools.
@@ -152,4 +165,4 @@ directions using the Klems directions or similar.
 Greg Ward
 .SH "SEE ALSO"
 dctimestep(1), gendaymtx(1), genklemsamp(1), genskyvec(1), mkillum(1),
-pkgBSDF(1), rcontrib(1), rtrace(1)
+pkgBSDF(1), rcontrib(1), rfluxmtx(1), rmtxop(1), rtrace(1)

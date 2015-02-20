@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2klems.1,v 1.4 2014/03/12 21:15:31 greg Exp $
+.\" RCSid $Id: bsdf2klems.1,v 1.5 2015/02/20 18:26:08 greg Exp $
 .TH BSDF2KLEMS 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2klems - generate XML Klems matrix description of a BSDF
@@ -167,4 +167,5 @@ bsdf2klems -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+
 Greg Ward
 .SH "SEE ALSO"
 bsdf2ttree(1), dctimestep(1), icalc(1), gendaymtx(1), genklemsamp(1),
-genskyvec(1), mkillum(1), genBSDF(1), pkgBSDF(1), rcontrib(1), rtrace(1)
+genskyvec(1), mkillum(1), genBSDF(1), pkgBSDF(1), rcontrib(1), rfluxmtx(1),
+rmtxop(1), wrapBSDF(1)

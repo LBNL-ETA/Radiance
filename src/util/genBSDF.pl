@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.48 2014/07/09 15:03:11 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.49 2015/02/20 18:26:09 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -9,10 +9,11 @@ use strict;
 my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 use File::Temp qw/ :mktemp  /;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-t{3|4} Nlog2][-r \"ropts\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom units] [input ..]\n";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-W][-t{3|4} Nlog2][-r \"ropts\"][-f \"x=string;y=string\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}C][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom units] [input ..]\n";
 	exit 1;
 }
-my ($td,$radscn,$mgfscn,$octree,$cnttmp,$rmtmp);
+my ($td,$radscn,$mgfscn,$octree,$fsender,$bsender,$receivers,$facedat,$behinddat,$rmtmp);
+my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz);
 if ($windoz) {
 	my $tmploc = `echo \%TMP\%`;
 	chomp($tmploc);
@@ -20,35 +21,72 @@ if ($windoz) {
 	$radscn = "$td\\device.rad";
 	$mgfscn = "$td\\device.mgf";
 	$octree = "$td\\device.oct";
+	$fsender = "$td\\fsender.rad";
+	$bsender = "$td\\bsender.rad";
+	$receivers = "$td\\receivers.rad";
+	$facedat = "$td\\face.dat";
+	$behinddat = "$td\\behind.dat";
+	$tf = "$td\\tf.dat";
+	$rf = "$td\\rf.dat";
+	$tb = "$td\\tb.dat";
+	$rb = "$td\\rb.dat";
+	$tfx = "$td\\tfx.dat";
+	$rfx = "$td\\rfx.dat";
+	$tbx = "$td\\tbx.dat";
+	$rbx = "$td\\rbx.dat";
+	$tfz = "$td\\tfz.dat";
+	$rfz = "$td\\rfz.dat";
+	$tbz = "$td\\tbz.dat";
+	$rbz = "$td\\rbz.dat";
 	chomp $td;
 	$rmtmp = "rmdir /S /Q $td";
-} else{
+} else {
 	$td = mkdtemp("/tmp/genBSDF.XXXXXX");
 	chomp $td;
 	$radscn = "$td/device.rad";
 	$mgfscn = "$td/device.mgf";
 	$octree = "$td/device.oct";
+	$fsender = "$td/fsender.rad";
+	$bsender = "$td/bsender.rad";
+	$receivers = "$td/receivers.rad";
+	$facedat = "$td/face.dat";
+	$behinddat = "$td/behind.dat";
+	$tf = "$td/tf.dat";
+	$rf = "$td/rf.dat";
+	$tb = "$td/tb.dat";
+	$rb = "$td/rb.dat";
+	$tfx = "$td/tfx.dat";
+	$rfx = "$td/rfx.dat";
+	$tbx = "$td/tbx.dat";
+	$rbx = "$td/rbx.dat";
+	$tfz = "$td/tfz.dat";
+	$rfz = "$td/rfz.dat";
+	$tbz = "$td/tbz.dat";
+	$rbz = "$td/rbz.dat";
 	$rmtmp = "rm -rf $td";
 }
 my @savedARGV = @ARGV;
+my $rfluxmtx = "rfluxmtx -v -ab 5 -ad 700 -lw 3e-6";
+my $wrapper = "wrapBSDF";
 my $tensortree = 0;
 my $ttlog2 = 4;
 my $nsamp = 2000;
-my $rtargs = "-w -ab 5 -ad 700 -lw 3e-6";
 my $mgfin = 0;
 my $geout = 1;
 my $nproc = 1;
+my $docolor = 0;
 my $doforw = 0;
 my $doback = 1;
 my $pctcull = 90;
 my $gunit = "meter";
+my $curspec = "Visible";
 my @dim;
 # Get options
 while ($#ARGV >= 0) {
 	if ("$ARGV[0]" =~ /^[-+]m/) {
 		$mgfin = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" eq "-r") {
-		$rtargs = "$rtargs $ARGV[1]";
+		$rfluxmtx .= " $ARGV[1]";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]g/) {
 		$geout = ("$ARGV[0]" =~ /^\+/);
@@ -57,6 +95,8 @@ while ($#ARGV >= 0) {
 			die "Illegal geometry unit '$gunit': must be meter, foot, inch, centimeter, or millimeter\n";
 		}
 		shift @ARGV;
+	} elsif ("$ARGV[0]" =~ /^[-+]C/) {
+		$docolor = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
 		$doforw = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
@@ -69,6 +109,11 @@ while ($#ARGV >= 0) {
 		$tensortree = substr($ARGV[0], 2, 1);
 		$ttlog2 = $ARGV[1];
 		shift @ARGV;
+	} elsif ("$ARGV[0]" eq "-f") {
+		$wrapper .= " -f \"$ARGV[1]\"";
+		shift @ARGV;
+	} elsif ("$ARGV[0]" eq "-W") {
+		$wrapper .= " -W";
 	} elsif ("$ARGV[0]" eq "-c") {
 		$nsamp = $ARGV[1];
 		shift @ARGV;
@@ -89,85 +134,90 @@ while ($#ARGV >= 0) {
 # Check that we're actually being asked to do something
 die "Must have at least one of +forward or +backward\n" if (!$doforw && !$doback);
 # Issue warning for unhandled reciprocity case
-print STDERR "Warning: recommend both +forward and +backward with -t3" if
+print STDERR "Warning: recommend both +forward and +backward with -t3\n" if
 		($tensortree==3 && !($doforw && $doback));
+$wrapper .= $tensortree ? " -a t$tensortree" : " -a kf -c";
+$wrapper .= " -u $gunit";
 # Get scene description and dimensions
-
 if ( $mgfin ) {
-	system qq{mgfilt "#,o,xf,c,cxy,cspec,cmix,m,sides,rd,td,rs,ts,ir,v,p,n,f,fh,sph,cyl,cone,prism,ring,torus" @ARGV > $mgfscn};
+	system "mgf2rad @ARGV > $radscn";
 	die "Could not load MGF input\n" if ( $? );
-	system "mgf2rad $mgfscn > $radscn";
 } else {
 	system "xform -e @ARGV > $radscn";
 	die "Could not load Radiance input\n" if ( $? );
-	system "rad2mgf $radscn > $mgfscn" if ( $geout );
 }
 if ($#dim != 5) {
 	@dim = split ' ', `getbbox -h $radscn`;
 }
 print STDERR "Warning: Device extends into room\n" if ($dim[5] > 1e-5);
-# Add receiver surfaces (rectangular)
-my $fmodnm="receiver_face";
-my $bmodnm="receiver_behind";
-open(RADSCN, ">> $radscn");
-print RADSCN "void glow $fmodnm\n0\n0\n4 1 1 1 0\n\n";
-print RADSCN "$fmodnm source f_receiver\n0\n0\n4 0 0 1 180\n";
-print RADSCN "void glow $bmodnm\n0\n0\n4 1 1 1 0\n\n";
-print RADSCN "$bmodnm source b_receiver\n0\n0\n4 0 0 -1 180\n";
-close RADSCN;
+$wrapper .= ' -f "t=' . ($dim[5] - $dim[4]) . ';w=' . ($dim[1] - $dim[0]) .
+		';h=' . ($dim[3] - $dim[2]) . '"';
 # Generate octree
 system "oconv -w $radscn > $octree";
 die "Could not compile scene\n" if ( $? );
-# Output XML prologue
-print
-'<?xml version="1.0" encoding="UTF-8"?>
-<WindowElement xmlns="http://windows.lbl.gov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://windows.lbl.gov/BSDF-v1.4.xsd">
-';
-print "<!-- File produced by: genBSDF @savedARGV -->\n";
-print
-'<WindowElementType>System</WindowElementType>
-<FileType>BSDF</FileType>
-<Optical>
-<Layer>
-	<Material>
-		<Name>Name</Name>
-		<Manufacturer>Manufacturer</Manufacturer>
-';
-printf qq{\t\t<Thickness unit="$gunit">%.6f</Thickness>\n}, $dim[5] - $dim[4];
-printf qq{\t\t<Width unit="$gunit">%.6f</Width>\n}, $dim[1] - $dim[0];
-printf qq{\t\t<Height unit="$gunit">%.6f</Height>\n}, $dim[3] - $dim[2];
-print "\t\t<DeviceType>Other</DeviceType>\n";
-print "\t</Material>\n";
-# Output MGF description if requested
+# Add MGF description if requested
 if ( $geout ) {
-	print qq{\t\t<Geometry format="MGF">\n};
-	print qq{\t\t<MGFblock unit="$gunit">\n};
-	printf "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
-	open(MGFSCN, "< $mgfscn");
-	while (<MGFSCN>) { print $_; }
+	open(MGFSCN, "> $mgfscn");
+	printf MGFSCN "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
 	close MGFSCN;
-	print "xf\n";
-	print "</MGFblock>\n";
-	print "\t</Geometry>\n";
+	if ( $mgfin ) {
+		system qq{mgfilt "#,o,xf,c,cxy,cspec,cmix,m,sides,rd,td,rs,ts,ir,v,p,n,f,fh,sph,cyl,cone,prism,ring,torus" @ARGV >> $mgfscn};
+	} else {
+		system "rad2mgf $radscn >> $mgfscn";
+	}
+	open(MGFSCN, ">> $mgfscn");
+	print MGFSCN "xf\n";
+	close MGFSCN;
+	$wrapper .= " -g $mgfscn";
 }
-# Set up surface sampling
+# Create receiver & sender surfaces (rectangular)
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
 my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
 my $ns = 2**$ttlog2;
-my (@pdiv, $disk2sq, $sq2disk, $tcal, $kcal);
+open(RADSCN, "> $receivers");
+print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=sc$ns\n" : "h=kf\n");
+print RADSCN '#@rfluxmtx ' . "u=Y o=$facedat\n\n";
+print RADSCN "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n";
+print RADSCN "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n";
+print RADSCN '#@rfluxmtx ' . "u=Y o=$behinddat\n\n";
+print RADSCN "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n";
+print RADSCN "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n";
+close RADSCN;
+# Finish rfluxmtx command and prepare sender surfaces
+$rfluxmtx .= " -n $nproc -c $nsamp";
+if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
+	open (RADSCN, "> $fsender");
+	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=sc$ns\n\n" : "h=kf\n\n");
+	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[4];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[4];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[3], $dim[4];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[4];
+	close RADSCN;
+	open (RADSCN, "> $bsender");
+	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=sc$ns\n\n" : "h=kf\n\n");
+	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[5];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[5];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[3], $dim[5];
+	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[5];
+	close RADSCN;
+}
 # Create data segments (all the work happens here)
 if ( $tensortree ) {
 	do_tree_bsdf();
 } else {
 	do_matrix_bsdf();
 }
-# Output XML epilogue
-print
-'</Layer>
-</Optical>
-</WindowElement>
-';
+# Output XML
+my $old_fh = select(STDOUT);
+$| = 1;
+select($old_fh);
+print "<!-- Created by: genBSDF @savedARGV -->\n";
+# print STDERR "Running: $wrapper\n";
+system $wrapper;
+die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
 system $rmtmp;
 
@@ -175,68 +225,17 @@ system $rmtmp;
 
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
 sub do_tree_bsdf {
-# Shirley-Chiu mapping from unit square to disk
-$sq2disk = 'in_square_a = 2*in_square_x - 1; ' .
-	'in_square_b = 2*in_square_y - 1; ' .
-	'in_square_rgn = if(in_square_a + in_square_b, ' .
-				'if(in_square_a - in_square_b, 1, 2), ' .
-				'if(in_square_b - in_square_a, 3, 4)); ' .
-	'out_disk_r = .999995*select(in_square_rgn, in_square_a, in_square_b, ' .
-				'-in_square_a, -in_square_b); ' .
-	'out_disk_phi = PI/4 * select(in_square_rgn, ' .
-					'in_square_b/in_square_a, ' .
-					'2 - in_square_a/in_square_b, ' .
-					'4 + in_square_b/in_square_a, ' .
-					'if(in_square_b*in_square_b, ' .
-						'6 - in_square_a/in_square_b, 0)); ' .
-	'Dx = out_disk_r*cos(out_disk_phi); ' .
-	'Dy = out_disk_r*sin(out_disk_phi); ' .
-	'Dz = sqrt(1 - out_disk_r*out_disk_r);' ;
-# Shirley-Chiu mapping from unit disk to square
-$disk2sq = 'norm_radians(p) : if(-p - PI/4, p + 2*PI, p); ' .
-	'in_disk_r = .999995*sqrt(Dx*Dx + Dy*Dy); ' .
-	'in_disk_phi = norm_radians(atan2(Dy, Dx)); ' .
-	'in_disk_rgn = floor((.999995*in_disk_phi + PI/4)/(PI/2)) + 1; ' .
-	'out_square_a = select(in_disk_rgn, ' .
-				'in_disk_r, ' .
-				'(PI/2 - in_disk_phi)*in_disk_r/(PI/4), ' .
-				'-in_disk_r, ' .
-				'(in_disk_phi - 3*PI/2)*in_disk_r/(PI/4)); ' .
-	'out_square_b = select(in_disk_rgn, ' .
-				'in_disk_phi*in_disk_r/(PI/4), ' .
-				'in_disk_r, ' .
-				'(PI - in_disk_phi)*in_disk_r/(PI/4), ' .
-				'-in_disk_r); ' .
-	'out_square_x = (out_square_a + 1)/2; ' .
-	'out_square_y = (out_square_b + 1)/2;';
-# Announce ourselves in XML output
-print "\t<DataDefinition>\n";
-print "\t\t<IncidentDataStructure>TensorTree$tensortree</IncidentDataStructure>\n";
-print "\t</DataDefinition>\n";
 
-# Start rcontrib processes for compute each side
-do_tree_rtcontrib(0) if ( $doback );
-do_tree_rtcontrib(1) if ( $doforw );
+	# Run rfluxmtx processes to compute each side
+	do_ttree_dir(0) if ( $doback );
+	do_ttree_dir(1) if ( $doforw );
 
 }	# end of sub do_tree_bsdf()
 
-# Run rcontrib process to generate tensor tree samples
-sub do_tree_rtcontrib {
+# Call rfluxmtx and process tensor tree BSDF for the given direction
+sub do_ttree_dir {
 	my $forw = shift;
 	my $cmd;
-	my $matargs = "-m $bmodnm";
-	if ( !$forw || !$doback || $tensortree==3 ) { $matargs .= " -m $fmodnm"; }
-	if ($windoz) {
-		$cmd = "rcontrib $rtargs -h -faa -fo -n $nproc -c $nsamp " .
-			qq{-e "$disk2sq" -bn "$ns*$ns" } .
-			qq{-b "$ns*floor(out_square_x*$ns)+floor(out_square_y*$ns)" } .
-			"-o $td/%s.flt $matargs $octree";
-	} else {
-		$cmd = "rcontrib $rtargs -h -fff -fo -n $nproc -c $nsamp " .
-			qq{-e "$disk2sq" -bn "$ns*$ns" } .
-			qq{-b "$ns*floor(out_square_x*$ns)+floor(out_square_y*$ns)" } .
-			"-o $td/%s.flt $matargs $octree";
-	}
 	if ( $tensortree == 3 ) {
 		# Isotropic BSDF
 		my $ns2 = $ns / 2;
@@ -251,7 +250,7 @@ sub do_tree_rtcontrib {
 				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
 				qq{-e "\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz" } .
 				qq{-e "\$4=Dx;\$5=Dy;\$6=myDz" } .
-				"| $cmd";
+				"| $rfluxmtx -fa -y $ns2 - $receivers -i $octree";
 		} else {
 			$cmd = "cnt $ns2 $ny $nx " .
 				qq{| rcalc -e "r1=rand(.8681*recno-.673892)" } .
@@ -263,482 +262,193 @@ sub do_tree_rtcontrib {
 				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
 				qq{-e '\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz' } .
 				qq{-e '\$4=Dx;\$5=Dy;\$6=myDz' -of } .
-				"| $cmd";
+				"| $rfluxmtx -h -ff -y $ns2 - $receivers -i $octree";
 		}
 	} else {
 		# Anisotropic BSDF
-		# Sample area vertically to improve load balance, since
-		# shading systems usually have bilateral symmetry (L-R)
+		my $sender = ($bsender,$fsender)[$forw];
 		if ($windoz) {
-			$cmd = "cnt $ns $ns $ny $nx " .
-				qq{| rcalc -e "r1=rand(.8681*recno-.673892)" } .
-				qq{-e "r2=rand(-5.37138*recno+67.1737811)" } .
-				qq{-e "r3=rand(3.17603772*recno+83.766771)" } .
-				qq{-e "r4=rand(-2.3857833*recno-964.72738)" } .
-				qq{-e "in_square_x=(\$1+r1)/$ns" } .
-				qq{-e "in_square_y=(\$2+r2)/$ns" -e "$sq2disk" } .
-				qq{-e "xp=(\$4+r3)*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
-				qq{-e "yp=(\$3+r4)*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
-				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
-				qq{-e "\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz" } .
-				qq{-e "\$4=Dx;\$5=Dy;\$6=myDz" } .
-				"| $cmd";
+			$cmd = "$rfluxmtx -fa $sender $receivers -i $octree";
 		} else {
-			$cmd = "cnt $ns $ns $ny $nx " .
-				qq{| rcalc -e "r1=rand(.8681*recno-.673892)" } .
-				qq{-e "r2=rand(-5.37138*recno+67.1737811)" } .
-				qq{-e "r3=rand(3.17603772*recno+83.766771)" } .
-				qq{-e "r4=rand(-2.3857833*recno-964.72738)" } .
-				qq{-e "in_square_x=(\$1+r1)/$ns" } .
-				qq{-e "in_square_y=(\$2+r2)/$ns" -e "$sq2disk" } .
-				qq{-e "xp=(\$4+r3)*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
-				qq{-e "yp=(\$3+r4)*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
-				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
-				qq{-e '\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz' } .
-				qq{-e '\$4=Dx;\$5=Dy;\$6=myDz' -of } .
-				"| $cmd";
+			$cmd = "$rfluxmtx -h -ff $sender $receivers -i $octree";
 		}
 	}
-# print STDERR "Starting: $cmd\n";
-	system "$cmd" || die "Failure running rcontrib";
+	# print STDERR "Starting: $cmd\n";
+	system $cmd;
+	die "Failure running rfluxmtx" if ( $? );
 	ttree_out($forw);
-}	# end of do_tree_rtcontrib()
+}	# end of do_ttree_dir()
 
-# Simplify and output tensor tree results
+# Simplify and store tensor tree results
 sub ttree_out {
 	my $forw = shift;
-	my $side = ("Back","Front")[$forw];
-	my $cmd;
-# Only output one transmitted anisotropic distribution, preferring backwards
-if ( !$forw || !$doback || $tensortree==3 ) {
-print
-'	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>' ;
-print "\t\t\t<WavelengthDataDirection>Transmission $side</WavelengthDataDirection>\n";
-print
-'			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-if ($windoz) {
-	$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-		q{-e "$1=(0.265*$1+0.670*$2+0.065*$3)/Omega" };
-} else {
-	$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-		q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };
-}
-if ($pctcull >= 0) {
-	if ($windoz) {
-		$cmd = "rcollate -h -oc 1 $td/" . ($bmodnm,$fmodnm)[$forw] . ".flt | " .
-				$cmd .
-				"| rttree_reduce -h -fa  -t $pctcull -r $tensortree -g $ttlog2";
+	my ($refldat,$transdat);
+	if ( $forw ) {
+		$transdat = $facedat;
+		$refldat = $behinddat;
 	} else {
-		$cmd .= "-of $td/" . ($bmodnm,$fmodnm)[$forw] . ".flt " .
-				" | rttree_reduce -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+		$transdat = $behinddat;
+		$refldat = $facedat;
 	}
-	system "$cmd" || die "Failure running rttree_reduce";
-} else {
-	if ($windoz) {
-		$cmd = "rcollate -h -oc 1 $td/" . ($bmodnm,$fmodnm)[$forw] . ".flt | " .
-				$cmd ;
-	} else {
-		$cmd .= "$td/" . ($bmodnm,$fmodnm)[$forw] . ".flt";
+	# Only output one transmitted anisotropic distribution, preferring backwards
+	if ( !$forw || !$doback || $tensortree==3 ) {
+		my $ttyp = ("tb","tf")[$forw];
+		ttree_comp($ttyp, "Visible", $transdat, ($tb,$tf)[$forw]);
+		if ( $docolor ) {
+			ttree_comp($ttyp, "CIE-X", $transdat, ($tbx,$tfx)[$forw]);
+			ttree_comp($ttyp, "CIE-Z", $transdat, ($tbz,$tfz)[$forw]);
+		}
 	}
-	print "{\n";
-	system "$cmd" || die "Failure running rcalc";
-	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
-		print "0\n";
+	# Output reflection
+	my $rtyp = ("rb","rf")[$forw];
+	ttree_comp($rtyp, "Visible", $refldat, ($rb,$rf)[$forw]);
+	if ( $docolor ) {
+		ttree_comp($rtyp, "CIE-X", $refldat, ($rbx,$rfx)[$forw]);
+		ttree_comp($rtyp, "CIE-Z", $refldat, ($rbz,$rfz)[$forw]);
 	}
-	print "}\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-';
-}
-# Output reflection
-print
-'	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>
-';
-print "\t\t\t<WavelengthDataDirection>Reflection $side</WavelengthDataDirection>\n";
-print
-'			<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-if ($windoz) {
-	$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-		q{-e "$1=(0.265*$1+0.670*$2+0.065*$3)/Omega" };
-}else {
-	$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-		q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega' };		
-}
-if ($pctcull >= 0) {
-	if ($windoz) {
-		$cmd = "rcollate -h -oc 1 $td/" . ($fmodnm,$bmodnm)[$forw] . ".flt |" .
-				$cmd .
-				" | rttree_reduce -a -h -fa -t $pctcull -r $tensortree -g $ttlog2";
-
-	} else {
-		$cmd .= "-of $td/" . ($fmodnm,$bmodnm)[$forw] . ".flt " .
-				"| rttree_reduce -a -h -ff -t $pctcull -r $tensortree -g $ttlog2";
-	}
-	system "$cmd" || die "Failure running rttree_reduce";
-} else {
-	if ($windoz) {
-		$cmd = "rcollate -h -oc 1 $td/" . ($fmodnm,$bmodnm)[$forw] . ".flt |" .
-				$cmd ;
-	} else {
-		$cmd .= "$td/" . ($fmodnm,$bmodnm)[$forw] . ".flt";
-	}
-	print "{\n";
-	system "$cmd" || die "Failure running rcalc";
-	for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
-		print "0\n";
-	}
-	print "}\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-';
 }	# end of ttree_out()
+
+# Call rttree_reduce on the given component
+sub ttree_comp {
+	my $typ = shift;
+	my $spec = shift;
+	my $src = shift;
+	my $dest = shift;
+	my $cmd;
+	if ($windoz) {
+		if ("$spec" eq "Visible") {
+			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
+				q{-e "$1=(0.265*$1+0.670*$2+0.065*$3)/Omega"};
+		} elsif ("$spec" eq "CIE-X") {
+			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
+				q{-e "$1=(0.514*$1+0.324*$2+0.162*$3)/Omega"};
+		} elsif ("$spec" eq "CIE-Z") {
+			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
+				q{-e "$1=(0.024*$1+0.123*$2+0.853*$3)/Omega"};
+		}
+	} else {
+		if ("$spec" eq "Visible") {
+			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
+				q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega'};
+		} elsif ("$spec" eq "CIE-X") {
+			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
+				q{-e '$1=(0.514*$1+0.324*$2+0.162*$3)/Omega'};
+		} elsif ("$spec" eq "CIE-Z") {
+			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
+				q{-e '$1=(0.024*$1+0.123*$2+0.853*$3)/Omega'};
+		}
+	}
+	if ($pctcull >= 0) {
+		my $avg = ( "$typ" =~ /^r[fb]/ ) ? " -a" : "";
+		if ($windoz) {
+			$cmd = "rcollate -ho -oc 1 $src | " .
+					$cmd .
+					" | rttree_reduce$avg -h -fa -t $pctcull -r $tensortree -g $ttlog2";
+		} else {
+			$cmd .= " -of $src " .
+					"| rttree_reduce$avg -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+		}
+		# print STDERR "Running: $cmd\n";
+		system "$cmd > $dest";
+		die "Failure running rttree_reduce" if ( $? );
+	} else {
+		if ($windoz) {
+			$cmd = "rcollate -ho -oc 1 $src | " . $cmd ;
+		} else {
+			$cmd .= " $src";
+		}
+		open(DATOUT, "> $dest");
+		print DATOUT "{\n";
+		close DATOUT;
+		# print STDERR "Running: $cmd\n";
+		system "$cmd >> $dest";
+		die "Failure running rcalc" if ( $? );
+		open(DATOUT, ">> $dest");
+		for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
+			print DATOUT "0\n";
+		}
+		print DATOUT "}\n";
+		close DATOUT;
+	}
+	if ( "$spec" ne "$curspec" ) {
+		$wrapper .= " -s $spec"
+		$curspec = $spec;
+	}
+	$wrapper .= " -$typ $dest";
+}	# end of ttree_comp()
 
 #------------- End of do_tree_bsdf() & subroutines -------------#
 
 #+++++++++++++++ Klems matrix BSDF generation +++++++++++++++#
 sub do_matrix_bsdf {
-# Set up sampling of portal
-# Kbin to produce incident direction in full Klems basis with (x1,x2) randoms
-$tcal = 'DEGREE : PI/180; ' .
-	'sq(x) : x*x; ' .
-	'Kpola(r) : select(r+1, 0, 5, 15, 25, 35, 45, 55, 65, 75, 90); ' .
-	'Knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12); ' .
-	'Kaccum(r) : if(r-.5, Knaz(r) + Kaccum(r-1), 0); ' .
-	'Kmax : Kaccum(Knaz(0)); ' .
-	'Kfindrow(r, rem) : if(rem-Knaz(r)+.5, Kfindrow(r+1, rem-Knaz(r)), r); ' .
-	'Krow = if(Kbin-(Kmax-.5), 0, Kfindrow(1, Kbin)); ' .
-	'Kcol = Kbin - Kaccum(Krow-1); ' .
-	'Kazi = 360*DEGREE * (Kcol + (.5 - x2)) / Knaz(Krow); ' .
-	'Kpol = DEGREE * (x1*Kpola(Krow) + (1-x1)*Kpola(Krow-1)); ' .
-	'sin_kpol = sin(Kpol); ' .
-	'Dx = cos(Kazi)*sin_kpol; ' .
-	'Dy = sin(Kazi)*sin_kpol; ' .
-	'Dz = sqrt(1 - sin_kpol*sin_kpol); ' .
-	'KprojOmega = PI * if(Kbin-.5, ' .
-	'(sq(cos(Kpola(Krow-1)*DEGREE)) - sq(cos(Kpola(Krow)*DEGREE)))/Knaz(Krow), ' .
-	'1 - sq(cos(Kpola(1)*DEGREE))); ';
-# Compute Klems bin from exiting ray direction (forward or backward)
-$kcal = 'DEGREE : PI/180; ' .
-	'abs(x) : if(x, x, -x); ' .
-	'Acos(x) : if(x-1, 0, if(-1-x, PI, acos(x)))/DEGREE; ' .
-	'posangle(a) : if(-a, a + 2*PI, a); ' .
-	'Atan2(y,x) : posangle(atan2(y,x))/DEGREE; ' .
-	'kpola(r) : select(r, 5, 15, 25, 35, 45, 55, 65, 75, 90); ' .
-	'knaz(r) : select(r, 1, 8, 16, 20, 24, 24, 24, 16, 12); ' .
-	'kaccum(r) : if(r-.5, knaz(r) + kaccum(r-1), 0); ' .
-	'kfindrow(r, pol) : if(r-kpola(0)+.5, r, ' .
-	'if(pol-kpola(r), kfindrow(r+1, pol), r) ); ' .
-	'kazn(azi,inc) : if((360-.5*inc)-azi, floor((azi+.5*inc)/inc), 0); ' .
-	'kbin2(pol,azi) = select(kfindrow(1, pol), ' .
-	'kazn(azi,360/knaz(1)), ' .
-	'kaccum(1) + kazn(azi,360/knaz(2)), ' .
-	'kaccum(2) + kazn(azi,360/knaz(3)), ' .
-	'kaccum(3) + kazn(azi,360/knaz(4)), ' .
-	'kaccum(4) + kazn(azi,360/knaz(5)), ' .
-	'kaccum(5) + kazn(azi,360/knaz(6)), ' .
-	'kaccum(6) + kazn(azi,360/knaz(7)), ' .
-	'kaccum(7) + kazn(azi,360/knaz(8)), ' .
-	'kaccum(8) + kazn(azi,360/knaz(9)) ' .
-	'); ' .
-	'kbin = kbin2(Acos(abs(Dz)),Atan2(Dy,Dx));';
-my $ndiv = 145;
-# Compute scattering data using rcontrib
-my @tfarr;
-my @rfarr;
-my @tbarr;
-my @rbarr;
-my (@data,@line); # for windows
-my $cmd;
-my $rtcmd;
-my $rccmd;
-if ($windoz) {
-	$rtcmd = "rcontrib $rtargs -h -fo -n $nproc -c $nsamp " .
-		qq{-e "$kcal" -b kbin -bn $ndiv } .
-		qq{-o "$td\\%s.flt" -m $fmodnm -m $bmodnm $octree };
-	$rccmd = qq{rcalc -e "$tcal" } .
-		qq{-e "mod(n,d):n-floor(n/d)*d" -e "Kbin=mod(recno-.999,$ndiv)" } .
-		q{ -e "$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega" };
-} else {
-	$rtcmd = "rcontrib $rtargs -h -ff -fo -n $nproc -c $nsamp " .
-		"-e '$kcal' -b kbin -bn $ndiv " .
-		"-o '$td/%s.flt' -m $fmodnm -m $bmodnm $octree";
-	$rccmd = "rcalc -e '$tcal' " .
-		"-e 'mod(n,d):n-floor(n/d)*d' -e 'Kbin=mod(recno-.999,$ndiv)' " .
-		q{-if3 -e '$1=(0.265*$1+0.670*$2+0.065*$3)/KprojOmega' };
-}
-if ( $doforw ) {
-	if ($windoz) {
-	$cmd = qq{cnt $ndiv $ny $nx | rcalc -e "$tcal" } .
-		qq{-e "xp=(\$3+rand(.12*recno+288))*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
-		qq{-e "yp=(\$2+rand(.37*recno-44))*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
-		qq{-e "zp:$dim[4]" } .
-		q{-e "Kbin=$1;x1=rand(2.75*recno+3.1);x2=rand(-2.01*recno-3.37)" } .
-		q{-e "$1=xp-Dx;$2=yp-Dy;$3=zp-Dz;$4=Dx;$5=Dy;$6=Dz" } .
-		"| $rtcmd ";
-	} else {
-	$cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
-		"-e 'xp=(\$3+rand(.12*recno+288))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
-		"-e 'yp=(\$2+rand(.37*recno-44))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
-		"-e 'zp:$dim[4]' " .
-		q{-e 'Kbin=$1;x1=rand(2.75*recno+3.1);x2=rand(-2.01*recno-3.37)' } .
-		q{-e '$1=xp-Dx;$2=yp-Dy;$3=zp-Dz;$4=Dx;$5=Dy;$6=Dz' } .
-		"| $rtcmd";
-	}
-system "$cmd" || die "Failure running: $cmd\n";
-if ($windoz) {
-	@tfarr = `rcollate -h -oc 1 $td\\$fmodnm.flt | $rccmd`;
-} else {
-	@tfarr = `$rccmd $td/$fmodnm.flt`;
-}
-die "Failure running: $rccmd $td/$fmodnm.flt\n" if ( $? );
-if ($windoz) {
-	@rfarr = `rcollate -h -oc 1 $td\\$bmodnm.flt | $rccmd`;
-} else {
-	@rfarr = `$rccmd $td/$bmodnm.flt`;
-}
-die "Failure running: $rccmd $td/$bmodnm.flt\n" if ( $? );
-}
-if ( $doback ) {
-	if ($windoz) {
-	$cmd = qq{cnt $ndiv $ny $nx | rcalc -e "$tcal" } .
-		qq{-e "xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
-		qq{-e "yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
-		qq{-e "zp:$dim[5]" } .
-		q{-e "Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)" } .
-		q{-e "$1=xp-Dx;$2=yp-Dy;$3=zp+Dz;$4=Dx;$5=Dy;$6=-Dz" } .
-		"| $rtcmd";
-	} else {
-	$cmd = "cnt $ndiv $ny $nx | rcalc -of -e '$tcal' " .
-		"-e 'xp=(\$3+rand(.35*recno-15))*(($dim[1]-$dim[0])/$nx)+$dim[0]' " .
-		"-e 'yp=(\$2+rand(.86*recno+11))*(($dim[3]-$dim[2])/$ny)+$dim[2]' " .
-		"-e 'zp:$dim[5]' " .
-		q{-e 'Kbin=$1;x1=rand(1.21*recno+2.75);x2=rand(-3.55*recno-7.57)' } .
-		q{-e '$1=xp-Dx;$2=yp-Dy;$3=zp+Dz;$4=Dx;$5=Dy;$6=-Dz' } .
-		"| $rtcmd";
-	}
-system "$cmd" || die "Failure running: $cmd\n";
-if ($windoz) {
-	@tbarr = `rcollate -h -oc 1 $td\\$bmodnm.flt | $rccmd`;
-} else {
-	@tbarr = `$rccmd $td/$bmodnm.flt`;
-}
-die "Failure running: $rccmd $td/$bmodnm.flt\n" if ( $? );
-chomp(@tbarr);
-if ($windoz) {
-	@rbarr = `rcollate -h -oc 1 $td\\$fmodnm.flt | $rccmd`;
-} else {
-	@rbarr = `$rccmd $td/$fmodnm.flt`;
-}
-die "Failure running: $rccmd $td/$fmodnm.flt\n" if ( $? );
-chomp(@rbarr);
-}
 
-# Output angle basis
-print
-'	<DataDefinition>
-		<IncidentDataStructure>Columns</IncidentDataStructure>
-		<AngleBasis>
-			<AngleBasisName>LBNL/Klems Full</AngleBasisName>
-			<AngleBasisBlock>
-			<Theta>0</Theta>
-			<nPhis>1</nPhis>
-			<ThetaBounds>
-				<LowerTheta>0</LowerTheta>
-				<UpperTheta>5</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>10</Theta>
-			<nPhis>8</nPhis>
-			<ThetaBounds>
-				<LowerTheta>5</LowerTheta>
-				<UpperTheta>15</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>20</Theta>
-			<nPhis>16</nPhis>
-			<ThetaBounds>
-				<LowerTheta>15</LowerTheta>
-				<UpperTheta>25</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>30</Theta>
-			<nPhis>20</nPhis>
-			<ThetaBounds>
-				<LowerTheta>25</LowerTheta>
-				<UpperTheta>35</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>40</Theta>
-			<nPhis>24</nPhis>
-			<ThetaBounds>
-				<LowerTheta>35</LowerTheta>
-				<UpperTheta>45</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>50</Theta>
-			<nPhis>24</nPhis>
-			<ThetaBounds>
-				<LowerTheta>45</LowerTheta>
-				<UpperTheta>55</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>60</Theta>
-			<nPhis>24</nPhis>
-			<ThetaBounds>
-				<LowerTheta>55</LowerTheta>
-				<UpperTheta>65</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>70</Theta>
-			<nPhis>16</nPhis>
-			<ThetaBounds>
-				<LowerTheta>65</LowerTheta>
-				<UpperTheta>75</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-			<AngleBasisBlock>
-			<Theta>82.5</Theta>
-			<nPhis>12</nPhis>
-			<ThetaBounds>
-				<LowerTheta>75</LowerTheta>
-				<UpperTheta>90</UpperTheta>
-			</ThetaBounds>
-			</AngleBasisBlock>
-		</AngleBasis>
-	</DataDefinition>
-';
-if ( $doforw ) {
-print
-'	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>
-			<WavelengthDataDirection>Transmission Front</WavelengthDataDirection>
-			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
-			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-# Output front transmission (transposed order)
-for (my $od = 0; $od < $ndiv; $od++) {
-	for (my $id = 0; $id < $ndiv; $id++) {
-		chomp $tfarr[$ndiv*$id + $od];
-		print $tfarr[$ndiv*$id + $od], ",\t";
+	# Run rfluxmtx processes to compute each side
+	do_matrix_dir(0) if ( $doback );
+	do_matrix_dir(1) if ( $doforw );
+
+}	# end of sub do_matrix_bsdf()
+
+# Call rfluxmtx and process tensor tree BSDF for the given direction
+sub do_matrix_dir {
+	my $forw = shift;
+	my $cmd;
+	my $sender = ($bsender,$fsender)[$forw];
+	$cmd = "$rfluxmtx -fd $sender $receivers -i $octree";
+	# print STDERR "Starting: $cmd\n";
+	system $cmd;
+	die "Failure running rfluxmtx" if ( $? );
+	matrix_out($forw);
+}	# end of do_matrix_dir()
+
+sub matrix_out {
+	my $forw = shift;
+	my ($refldat,$transdat);
+	if ( $forw ) {
+		$transdat = $facedat;
+		$refldat = $behinddat;
+	} else {
+		$transdat = $behinddat;
+		$refldat = $facedat;
 	}
-	print "\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>
-			<WavelengthDataDirection>Reflection Front</WavelengthDataDirection>
-			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
-			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-# Output front reflection (transposed order)
-for (my $od = 0; $od < $ndiv; $od++) {
-	for (my $id = 0; $id < $ndiv; $id++) {
-		chomp $rfarr[$ndiv*$id + $od];
-		print $rfarr[$ndiv*$id + $od], ",\t";
+	# Output transmission
+	my $ttyp = ("tb","tf")[$forw];
+	matrix_comp($ttyp, "Visible", $transdat, ($tb,$tf)[$forw]);
+	if ( $docolor ) {
+		matrix_comp($ttyp, "CIE-X", $transdat, ($tbx,$tfx)[$forw]);
+		matrix_comp($ttyp, "CIE-Z", $transdat, ($tbz,$tfz)[$forw]);
 	}
-	print "\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-';
-}
-if ( $doback ) {
-print
-'	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>
-			<WavelengthDataDirection>Transmission Back</WavelengthDataDirection>
-			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
-			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-# Output back transmission (transposed order)
-for (my $od = 0; $od < $ndiv; $od++) {
-	for (my $id = 0; $id < $ndiv; $id++) {
-		chomp $tbarr[$ndiv*$id + $od];
-		print $tbarr[$ndiv*$id + $od], ",\t";
+	# Output reflection
+	my $rtyp = ("rb","rf")[$forw];
+	matrix_comp($rtyp, "Visible", $refldat, ($rb,$rf)[$forw]);
+	if ( $docolor ) {
+		matrix_comp($rtyp, "CIE-X", $refldat, ($rbx,$rfx)[$forw]);
+		matrix_comp($rtyp, "CIE-Z", $refldat, ($rbz,$rfz)[$forw]);
 	}
-	print "\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-	<WavelengthData>
-		<LayerNumber>System</LayerNumber>
-		<Wavelength unit="Integral">Visible</Wavelength>
-		<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>
-		<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>
-		<WavelengthDataBlock>
-			<WavelengthDataDirection>Reflection Back</WavelengthDataDirection>
-			<ColumnAngleBasis>LBNL/Klems Full</ColumnAngleBasis>
-			<RowAngleBasis>LBNL/Klems Full</RowAngleBasis>
-			<ScatteringDataType>BTDF</ScatteringDataType>
-			<ScatteringData>
-';
-# Output back reflection (transposed order)
-for (my $od = 0; $od < $ndiv; $od++) {
-	for (my $id = 0; $id < $ndiv; $id++) {
-		chomp $rbarr[$ndiv*$id + $od];
-		print $rbarr[$ndiv*$id + $od], ",\t";
+}	# end of matrix_out()
+
+# Transpose matrix component data and save to file
+sub matrix_comp {
+	my $typ = shift;
+	my $spec = shift;
+	my $src = shift;
+	my $dest = shift;
+	my $cmd = "rmtxop -fa -t";
+	if ("$spec" eq "Visible") {
+		$cmd .= " -c 0.265 0.670 0.065";
+	} elsif ("$spec" eq "CIE-X") {
+		$cmd .= " -c 0.514 0.324 0.162";
+	} elsif ("$spec" eq "CIE-Z") {
+		$cmd .= " -c 0.024 0.123 0.853";
 	}
-	print "\n";
-}
-print
-'			</ScatteringData>
-		</WavelengthDataBlock>
-	</WavelengthData>
-';
-}
-}
-#------------- End of do_matrix_bsdf() --------------#
+	$cmd .= " $src | getinfo -";
+	# print STDERR "Running: $cmd\n";
+	system "$cmd > $dest";
+	die "Failure running rttree_reduce" if ( $? );
+	if ( "$spec" ne "$curspec" ) {
+		$wrapper .= " -s $spec"
+		$curspec = $spec;
+	}
+	$wrapper .= " -$typ $dest";
+}	# end of matrix_comp()
+
+#------------- End of do_matrix_bsdf() & subroutines --------------#
