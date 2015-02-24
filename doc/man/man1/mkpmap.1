@@ -1,0 +1,309 @@
+.\" RCSid "$Id: mkpmap.1,v 1.1 2015/02/24 19:39:26 greg Exp $"
+.TH MKPMAP 1 "$Date: 2015/02/24 19:39:26 $ $Revision: 1.1 $" RADIANCE
+
+.SH NAME
+mkpmap - generate RADIANCE photon map
+
+.SH SYNOPSIS
+mkpmap \fB\-apg\fR|\fB\-apc\fR|\fB\-apv\fR|\fB\-apd\fR|\fB\-app\fR|\fB\-apC\fR
+\fIfile nphotons\fR [\fIbwidth\fR] ...
+       [options] \fIoctree\fR
+
+.SH DESCRIPTION
+\fIMkpmap\fR takes a RADIANCE scene description as an octree and
+performs Monte Carlo forward path tracing from the light sources,
+depositing indirect ray hitpoints along with their energy (flux) as
+"photons". The resulting localised energy distribution represents a
+global illumination solution which is written to a file for subsequent
+evaluation by \fIrpict(1), rtrace(1)\fR and \fIrvu(1)\fR in a backward
+raytracing pass. The photon map(s) can be reused for multiple viewpoints
+and sensor locations as long as the geometry remains unchanged.
+
+.SH OPTIONS
+\fIMkpmap\fR can generate different types of photon maps depending on
+the materials present in the scene. In most cases, these can be
+specified independently or in combination on the command line. If
+multiple photon maps of the same type are specified, the last instance
+takes precedence.
+
+.IP "\fB\-apg \fIfile nphotons\fR"
+Generate a global photon map containing approximately \fInphotons\fR
+photons, and output to \fIfile\fR. This accounts for all
+indirect illumination, from both specular and diffuse scattering, on
+surfaces with a diffuse component. This is the most general type of
+photon map and replaces the ambient calculation in \fIrpict(1),
+rtrace(1)\fR and \fIrvu(1)\fR.
+
+.IP "\fB\-apc \fIfile nphotons\fR"
+Generate a separate caustic photon map containing approximately
+\fInphotons\fR photons, and output to file \fIfile\fR. This is a
+subset of the global photon map intended for direct visualisation at
+primary rays,  This accounts for all indirect illumination on diffuse
+surfaces from specular scattering, which usually exhibits a large
+gradient and requires a higher resolution than the global photon map,
+typically containing the tenfold number of photons.
+
+.IP "\fB\-apv \fIfile nphotons\fR"
+Generate a volume photon map containing approximately \fInphotons\fR
+photons, and output to file \fIfile\fR. These account for indirect
+inscattering in participating media such as \fBmist\fR and complement
+the direct inscattering computed by \fIrpict(1), rtrace(1)\fR and
+\fIrvu(1)\fR. See also the \fB\-me\fR, \fB\-ma\fR and \fB\-mg\fR options
+below.
+
+.IP "\fB\-apd \fIfile nphotons\fR"
+Generate a direct photon map containing approximately \fInphotons\fR
+photons, and output to file \fIfile\fR. This only accounts for direct
+illumination and is intended for debugging and validation of photon emission
+from the light sources, as the quality is too low for actual rendering.
+
+.IP "\fB\-apC \fIfile nphotons \fB(EXPERIMENTAL)\fR" 
+Generate a contribution photon map containing approximately
+\fInphotons\fR photons, and output to file \fIfile\fR. This may then be
+used by \fIrcontrib(1)\fR to compute light source contributions.
+.IP
+With this option, \fImkpmap\fR uses a modified photon distribution
+algorithm that ensures all light sources contribute approximately the
+same number of photons. Each photon indexes a primary hitpoint, incident
+direction, and emitting light source which can be used to bin
+contributions per light source and direction.
+.IP
+\fIMkpmap\fR cannot generate a contribution photon map in combination with
+others in a single run, as it uses a different distribution algorithm. Other
+photon maps specified on the command line will be ignored.
+
+.IP "\fB\-app \fIfile nphotons bwidth\fR"
+Generate a precomputed global photon map containing a fraction of
+\fInphotons\fR photons (specified with the \fB\-apP\fR option, see
+below), and output to file \fIfile\fR. This is a special case of the
+global photon map where the irradiance is evaluated for a fraction of
+the photon positions using \fIbwidth\fR nearest photons, and stored as
+photon flux; the remaining photons are discarded as their contributions
+have been accounted for. 
+.IP 
+This obviates the explicit irradiance
+evaluation by \fIrpict(1), rtrace(1)\fR and \fIrvu(1)\fR, thus providing
+a speedup at the expense of accuracy. The resulting error is tolerable
+if the indirect illumination has a low gradient, as is usually the case
+with diffuse illumination.
+
+.IP "\fB\-apD \fIpredistrib\fR"
+Photon predistribution factor; this is the fraction of \fInphotons\fR
+which are emitted in a distribution prepass in order to estimate the
+remaining number of photons to emit in the main pass to approximately
+yield a photon map of size \fInphotons\fR. 
+.IP
+Setting this too high may
+yield more than \fInphotons\fR in the initial pass with highly
+reflective geometry. Note that this value may exceed 1, which may be
+useful if the resulting photon map size greatly deviates from
+\fInphotons\fR with a very low average reflectance.
+
+.IP "\fB\-apP \fIprecomp\fR"
+Fraction of global photons to precompute in the range ]0,1] when using the
+\fB\-app\fR option.
+
+.IP "\fB\-apm \fImaxbounce\fR"
+Maximum number of bounces (scattering events) along a photon path before
+being considered "runaway" and terminated. Photons paths are normally
+terminated via \fIRussian Roulette\fR, depending on their albedo. With
+unrealistically high albedos, this is not guaranteed, and this options
+imposes a hard limit to avoid an infinite loop.
+
+.IP "\fB\-apM \fImaxprepass\fR"
+Maximum number of iterations of the distribution prepass before terminating
+if some photon maps are still empty. This option is rarely needed as a
+an aborted prepass indicates an anomaly in the geometry or an
+incompatibility with the specified photon map types (see \fBNOTES\fR below).
+
+.IP "\fB\-apo \fImod\fR"
+Specifies a modifier \fImod\fR to act as a \fIphoton port\fR. All
+objects using this modifier will emit photons directly in lieu of any
+light sources defined with the \fIsource\fR material. This greatly
+accelerates photon distribution in scenes where photons have to enter a
+space which separates them from the emitting light source via an
+opening, or port. 
+.IP
+A typical application is daylight simulation, where a
+fenestration acts as port to admit photons into an interior after
+emission from an external light source. Multiple instances of this
+option may be specified.
+.IP
+Note that port objects must be defined with their surface normals
+pointing \fIinside\fR as per \fImkillum\fR convention.
+
+.IP "\fB\-apO \fImodfile\fR"
+Read photon port modifiers from the file \fImodfile\fR as a more convenient
+alternative to multiple instances of \fB\-apo\fR.
+
+.IP "\fB\-apr \fIseed\fR"
+Seed for the random number generator. This is necessary for generating 
+different photon distributions for the same octree and photon map size.
+
+.IP "\fB\-aps \fImod\fR"
+Specifies a modifier \fImod\fR defined as \fIantimatter\fR material to act
+as a dummy (i.e.  invisible) sensor surface.  Photons will be deposited on
+all surfaces using this modifier, just like regular materials, but will then
+be transferred through the surface without undergoing scattering; the
+surface therefore does not affect the light transport and simply acts as an
+invisible photon receiver.  This is useful when photon irradiance is to be
+evaluated at points which do not lie on regular geometry, e.g.  at workplane
+height with \firtrace\fR's \fB-I\fR option.  Without this workaround,
+photons would be collected from parallel but distant planes, leading to
+underestimation.  Note that photons are only deposited when incident from
+the front side of the sensor surface, i.e.  when entering the
+\fIantimatter\fR, thus the surface normal is relevant.  \fIMkpmap\fR reports
+an error if the specified modifier is not an \fIantimatter\fR material.
+
+.IP "\fB\-apS \fImodfile\fR"
+Read dummy sensor surface modifiers from the file \fImodfile\fR as a more
+convenient alternative to multiple instances of \fB\-aps\fR.
+
+.IP "\fB\-bv\fR[\fB+\fR|\fB-\fR]"
+Toggles backface visibility; enabling this causes photons to be stored and
+possibly scattered if they strike the back of a surface, otherwise they
+are unconditionally absorbed and discarded.
+
+.IP "\fB\-dp \fIsampleres\fR"
+Resolution for sampling the spatial emission distribution of a modified
+light source (e.g. via \fIbrightfunc\fR), in samples per steradian. This
+is required for numerically integrating the flux emitted by the light
+source and for constructing a probability density function for photon
+emission. The accuracy of photon emission from modified sources
+therefore depends on this parameter. This parameter may need increasing
+with complex emission distributions in combination with caustics.
+
+.IP "\fB\-ds \fIpartsize\fR"
+Light source partition size ratio; a light source object is spatially 
+partitioned to distribute the photon emission over its surface. This
+parameter specifies the ratio of the size (per dimension) of each
+partition to the scene cube, and may need increasing for modified light 
+sources (e.g. via \fIbrightfunc\fR) with high spatial variation.
+
+.IP "\fB\-e \fIfile\fR"
+Redirect diagnostics and progress reports to \fIfile\fR instead of the
+console.
+
+.IP "\fB\-fo\fR[\fB+\fR|\fB-\fR]"
+Toggles overwriting of output files. By default, \fImkpmap\fR will not
+overwrite an already existing photon map file. This is to prevent
+inadvertently destroying the results of potentially lengthy photon
+mapping runs.
+
+.IP "\fB\-i \fIinc\fR"
+Photon heap size increment; the photon heap is enlarged by this amount
+when storage overflows during photon distribution. No need to fiddle
+with this under ordinary circumstances.
+
+.IP "\fB\-ma \fIralb galb balb\fR"
+Set the global scattering albedo for participating media in conjunction
+with the \fB\-apv\fR option. See \fIrpict(1)\fR for details.
+
+.IP "\fB\-me \fIrext gext bext\fR"
+Set the global extinction coefficient for participating media in conjunction
+with the \fB\-apv\fR option. See \fIrpict(1)\fR for details.
+
+.IP "\fB\-mg \fIgecc\fR"
+Set the global scattering eccentricity for participating media in conjunction
+with the \fB\-apv\fR option. See \fIrpict(1)\fR for details.
+
+.IP "\fB\-t \fIinterval\fR"
+Output a progress report every \fIinterval\fR seconds. This includes 
+statistics about the currently emitting light source (including number of
+partitions), the total number of photons emitted, the number of each type 
+stored, the percentage of the completed pass (pre or main), and the elapsed
+time.
+
+.SH NOTES
+
+.SS Parametrisation
+\fIMkpmap\fR recognises multiplier suffixes (k = 1000, m = 1000000) to 
+facilitate the specification of \fInphotons\fR, both in upper and lower
+case.
+.PP
+
+.SS Distribution Algorithm
+The photon distribution algorithm estimates the number of required
+photons to emit to arrive at the specified target count \fInphotons\fR
+per photon map using a distribution prepass followed by a main pass.
+As a result, \fImkpmap\fR generates the \fBapproximate\fR number of photons
+specified, which can vary by up to 10% for typical scenes, but can be
+higher for scenes with unusually high or low reflectance. In this case,
+the predistribution factor \fB\-apD\fR should be increased for scenes
+with low reflectance, and reduced for those with high reflectance.
+.PP
+There are situations which may prevent certain (or any)
+photon types from being generated, depending on the light source and material
+configuration. This typically occurs when attempting to generate a caustic
+photon map without specular materials present in the scene, or a volume 
+photon map without participating media. Ill-configured light sources may also
+prevent indirect rays from reaching a surface, and thus no photons being 
+deposited. In these cases, \fImkpmap\fR will make a number of distribution
+attempts before terminating with an error. This can be adjusted with the 
+\fB\-apM\fR option.
+
+.SS Material Support
+The \fIplasfunc\fR, \fImetfunc\fR, \fItransfunc\fR, \fIbrtdfunc\fR,
+\fIplasdata\fR, \fImetdata\fR and \fItransdata\fR materials are not
+supported by the photon mapping extension. Use the newer \fIbsdf\fR material
+instead.
+.PP
+Virtual light sources (normally enabled with the \fImirror\fR material) are
+disabled with the photon map, as the resulting caustics are already accounted
+for.
+
+.SS Dummy Sensor Surfaces
+Since photons are surface bound, the density estimate is only asymptotically
+correct when performed at points which lie on the scene geometry.  The
+irradiance is underestimated for arbitrarily placed points when photons are
+collected from distant surfaces.  \fIMkpmap\fR offers a workaround with a
+dummy sensor surface using the \fIantimatter\fR material; see the \fB-aps\fR
+and \fB-apS\fR options for details.
+
+.SH EXAMPLES
+The following command generates a global photon map \fIbonzo.gpm\fR and a 
+caustic photon map \fIbonzo.cpm\fR containing approximately 10000 and 100000 
+photons, respectively, with progress report every 5 seconds:
+.IP
+mkpmap \-apg bonzo.gpm 10k \-apc bonzo.cpm 100k -t 5 bonzo.oct
+.PP
+Generate a global photon map containing 80000 photons, then precompute the
+diffuse irradiance for 1/4 of these with a bandwidth of 40 photons:
+.IP
+mkpmap \-app bonzo-precomp.gpm 80k 40 \-apP 0.25 bonzo.oct
+.PP
+Generate 1 million global photons by emitting them from external light 
+sources of type \fIsource\fR into a reference room via a fenestration 
+with modifier \fIglazingMat\fR:
+.IP
+mkpmap \-apg refRoom.gpm 1m \-apo glazingMat refRoom.oct
+.PP
+Generate a contribution photon map containing 200000 photons suitable for 
+obtaining light source contributions with \fIrcontrib(1)\fR:
+.IP
+mkpmap \-apl bonzo-contrib.gpm 200k bonzo.oct
+
+.SH BUGS
+The focus of a spotlight source, as defined by the length of its direction
+vector, is ignored by the photon map; photons are unconditionally emitted
+from the light source surface, which can lead to deviations from standard
+RADIANCE.
+.PP
+Light sources simply absorb incoming photons.
+
+.SH AUTHOR
+Roland Schregle (roland.schregle@{hslu.ch,gmail.com})
+
+.SH COPYRIGHT
+(c) Fraunhofer Institute for Solar Energy Systems, Lucerne University of 
+Applied Sciences and Arts.
+
+.SH ACKNOWLEDGEMENT
+Development of the RADIANCE photon mapping extension was sponsored by the 
+German Research Foundation (DFG) and the Swiss National Science Foundation 
+(SNF). 
+
+.SH "SEE ALSO"
+rpict(1), rtrace(1), rvu(1), rcontrib(1), 
+\fIThe RADIANCE Photon Map Manual\fR
+

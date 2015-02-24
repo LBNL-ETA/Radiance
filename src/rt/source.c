@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.63 2014/09/15 00:54:39 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.64 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -12,6 +12,8 @@ static const char RCSid[] = "$Id: source.c,v 2.63 2014/09/15 00:54:39 greg Exp $
 #include  "rtotypes.h"
 #include  "source.h"
 #include  "random.h"
+#include  "pmap.h"
+#include  "pmapsrc.h"
 
 #ifndef MAXSSAMP
 #define MAXSSAMP	16		/* maximum samples per ray */
@@ -142,7 +144,11 @@ marksources(void)			/* find and mark source objects */
 		error(WARNING, "no light sources found");
 		return;
 	}
-	markvirtuals();			/* find and add virtual sources */
+	
+	/* PMAP: disable virtual sources */
+	if (!photonMapping)
+		markvirtuals();			/* find and add virtual sources */
+		
 				/* allocate our contribution arrays */
 	maxcntr = nsources + MAXSPART;	/* start with this many */
 	srccnt = (CONTRIB *)malloc(maxcntr*sizeof(CONTRIB));
@@ -378,6 +384,14 @@ direct(					/* add direct component */
 	int  nhits;
 	double  prob, ourthresh, hwt;
 	RAY  sr;
+	
+	/* PMAP: Factor in direct photons (primarily for debugging/validation) */
+	if (directPhotonMapping) {
+		(*f)(r -> rcol, p, r -> ron, PI);		
+		multDirectPmap(r);
+		return;
+	}
+	
 			/* NOTE: srccnt and cntord global so no recursion */
 	if (nsources <= 0)
 		return;		/* no sources?! */
@@ -529,12 +543,15 @@ srcscatter(			/* compute source scattering into ray */
 	SRCINDEX  si;
 	double  t, d;
 	double  re, ge, be;
-	COLOR  cvext;
+	COLOR  cvext, pmapInscatter;
 	int  i, j;
 
+	/* PMAP: do unconditional inscattering for volume photons ? */
+	/* if (!volumePhotonMapping) */
 	if (r->slights == NULL || r->slights[0] == 0
 			|| r->gecc >= 1.-FTINY || r->rot >= FHUGE)
 		return;
+		
 	if (ssampdist <= FTINY || (nsamps = r->rot/ssampdist + .5) < 1)
 		nsamps = 1;
 #if MAXSSAMP
@@ -589,9 +606,17 @@ srcscatter(			/* compute source scattering into ray */
 			}
 							/* other factors */
 			d *= si.dom * r->rot / (4.*PI*nsamps);
+			scalecolor(sr.rcol, d);
+			
+			/* PMAP: Add ambient inscattering from volume photons once only */
+			if (volumePhotonMapping && i == 1) {
+			   inscatterVolumePmap(&sr, pmapInscatter);
+            scalecolor(pmapInscatter, r -> rot / nsamps);
+            addcolor(sr.rcol, pmapInscatter);
+         }
+			
 			multcolor(sr.rcol, r->cext);
 			multcolor(sr.rcol, r->albedo);
-			scalecolor(sr.rcol, d);
 			multcolor(sr.rcol, cvext);
 			addcolor(r->rcol, sr.rcol);	/* add it in */
 		}

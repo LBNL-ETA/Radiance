@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.24 2014/05/10 17:43:01 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.25 2015/02/24 19:39:26 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: dielectric.c,v 2.24 2014/05/10 17:43:01 greg E
 #include  "ray.h"
 #include  "otypes.h"
 #include  "rtotypes.h"
+#include  "pmapmat.h"
 
 #ifdef  DISPERSE
 #include  "source.h"
@@ -50,8 +51,8 @@ static double mylog(double  x);
 
 #define  MINCOS		0.997		/* minimum dot product for dispersion */
 
-
-static double
+static
+double
 mylog(		/* special log for extinction coefficients */
 	double  x
 )
@@ -83,6 +84,10 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 	RAY  p;
 	int  i;
 
+	/* PMAP: skip refracted shadow ray if accounted for by photon map */
+	if (shadowRayInPmap(r))
+		return(1);
+	
 	if (m->oargs.nfargs != (m->otype==MAT_DIELECTRIC ? 5 : 8))
 		objerror(m, USER, "bad arguments");
 

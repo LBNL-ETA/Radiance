@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.20 2011/02/25 06:51:50 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.21 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -100,6 +100,7 @@ static const char	RCSid[] = "$Id: raycalls.c,v 2.20 2011/02/25 06:51:50 greg Exp
 #include  "random.h"
 #include  "data.h"
 #include  "font.h"
+#include  "pmapray.h"
 
 char	*progname = "unknown_app";	/* caller sets to argv[0] */
 
@@ -176,11 +177,13 @@ ray_init(			/* initialize ray-tracing calculation */
 					/* read scene octree */
 	readoct(octname = otnm, ~(IO_FILES|IO_INFO), &thescene, NULL);
 	nsceneobjs = nobjects;
+					/* PMAP: Init & load photon maps */
+	ray_init_pmap();
 					/* find and mark sources */
 	marksources();
 					/* initialize ambient calculation */
 	setambient();
-					/* ready to go... */
+					/* ready to go... (almost) */
 }
 
 void
@@ -220,6 +223,8 @@ ray_done(		/* free ray-tracing data */
 				(long)nobjects);
 		error(WARNING, errmsg);
 	}
+	
+	ray_done_pmap();
 }
 
 
@@ -271,6 +276,9 @@ ray_save(			/* save current parameter settings */
 	}
 	while (i <= AMBLLEN)
 		rp->amblndx[i++] = -1;
+		
+	/* PMAP: save photon mapping params */
+	ray_save_pmap(rp);
 }
 
 
@@ -339,6 +347,9 @@ ray_restore(			/* restore parameter settings */
 		ambres = rp->ambres;
 		ambacc = rp->ambacc;
 	}
+	
+	/* PMAP: restore photon mapping params */
+	ray_restore_pmap(rp);
 }
 
 

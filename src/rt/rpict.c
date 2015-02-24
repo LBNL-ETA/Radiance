@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.88 2014/05/09 23:28:57 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.89 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -34,7 +34,8 @@ static const char RCSid[] = "$Id: rpict.c,v 2.88 2014/05/09 23:28:57 greg Exp $"
 #include  "random.h"
 #include  "paths.h"
 #include  "hilbert.h"
-
+#include  "pmapbias.h"
+#include  "pmapdiag.h"
 
 #define	 RFTEMPLATE	"rfXXXXXX"
 
@@ -167,6 +168,7 @@ int  code;
 static void
 report(int dummy)		/* report progress */
 {
+	char			bcStat [128];
 	double		u, s;
 #ifdef BSD
 	struct rusage	rubuf;
@@ -192,9 +194,12 @@ report(int dummy)		/* report progress */
 	s = ( tbuf.tms_stime + tbuf.tms_cstime ) * period;
 #endif
 
+	/* PMAP: Get photon map bias compensation statistics */
+	pmapBiasCompReport(bcStat);
+	
 	sprintf(errmsg,
-	    "%lu rays, %4.2f%% after %.3fu %.3fs %.3fr hours on %s (PID %d)\n",
-			nrays, pctdone, u*(1./3600.), s*(1./3600.),
+			"%lu rays, %s %4.2f%% after %.3fu %.3fs %.3fr hours on %s (PID %d)\n",
+			nrays, bcStat, pctdone, u*(1./3600.), s*(1./3600.),
 			(tlastrept-tstart)*(1./3600.), myhostname(), getpid());
 	eputs(errmsg);
 #ifdef SIGCONT
@@ -205,9 +210,15 @@ report(int dummy)		/* report progress */
 static void
 report(int dummy)		/* report progress */
 {
+	char	bcStat [128];
+	
 	tlastrept = time((time_t *)NULL);
-	sprintf(errmsg, "%lu rays, %4.2f%% after %5.4f hours\n",
-			nrays, pctdone, (tlastrept-tstart)/3600.0);
+
+	/* PMAP: Get photon map bias compensation statistics */
+	pmapBiasCompReport(bcStat);
+	
+	sprintf(errmsg, "%lu rays, %s %4.2f%% after %5.4f hours\n",
+			nrays, bcStat, pctdone, (tlastrept-tstart)/3600.0);
 	eputs(errmsg);
 }
 #endif

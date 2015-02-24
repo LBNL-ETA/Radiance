@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.16 2014/05/10 17:43:01 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.17 2015/02/24 19:39:26 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: m_mirror.c,v 2.16 2014/05/10 17:43:01 greg Exp
 #include  "otypes.h"
 #include  "rtotypes.h"
 #include  "source.h"
+#include  "pmapmat.h"
 
 /*
  * The real arguments for MAT_MIRROR are simply:
@@ -39,6 +40,11 @@ m_mirror(			/* shade mirrored ray */
 	RAY  nr;
 	int  rpure = 1;
 	int  i;
+	
+	/* PMAP: skip specular refl via ambient bounce if already accounted for
+	 * in photon map */
+	if (ambRayInPmap(r))
+		return(1);
 					/* check arguments */
 	if (m->oargs.nfargs != 3 || m->oargs.nsargs > 1)
 		objerror(m, USER, "bad number of arguments");

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.26 2014/01/25 18:27:39 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.27 2015/02/24 19:39:26 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.26 2014/01/25 18:27:39 greg Exp $
 #include  "func.h"
 #include  "bsdf.h"
 #include  "random.h"
+#include  "pmapmat.h"
 
 /*
  *	Arguments to this material include optional diffuse colors.
@@ -468,6 +469,11 @@ m_bsdf(OBJREC *m, RAY *r)
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
+	
+	/* PMAP: skip ambient ray if accounted for by photon map */
+	if (ambRayInPmap(r))
+	   return(1);
+	
 						/* get BSDF data */
 	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* diffuse reflectance */

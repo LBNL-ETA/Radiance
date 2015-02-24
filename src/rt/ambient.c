@@ -1,6 +1,4 @@
-#ifndef lint
-static const char	RCSid[] = "$Id: ambient.c,v 2.93 2014/11/21 00:53:52 greg Exp $";
-#endif
+static const char	RCSid[] = "$Id: ambient.c,v 2.94 2015/02/24 19:39:26 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -17,6 +15,7 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.93 2014/11/21 00:53:52 greg Exp 
 #include  "resolu.h"
 #include  "ambient.h"
 #include  "random.h"
+#include  "pmapamb.h"
 
 #ifndef  OCTSCALE
 #define	 OCTSCALE	1.0	/* ceil((valid rad.)/(cube size)) */
@@ -282,10 +281,22 @@ multambient(		/* compute ambient component & multiply by coef. */
 )
 {
 	static int  rdepth = 0;			/* ambient recursion */
-	COLOR	acol;
+	COLOR	acol, caustic;
 	int	ok;
 	double	d, l;
 
+	/* PMAP: Factor in ambient from photon map, if enabled and ray is
+	 * ambient. Return as all ambient components accounted for, else
+	 * continue. */
+	if (ambPmap(aval, r, rdepth))
+		return;
+
+	/* PMAP: Factor in specular-diffuse ambient (caustics) from photon
+	 * map, if enabled and ray is primary, else caustic is zero.  Continue
+	 * with RADIANCE ambient calculation */
+	copycolor(caustic, aval);
+	ambPmapCaustic(caustic, r, rdepth);
+	
 	if (ambdiv <= 0)			/* no ambient calculation */
 		goto dumbamb;
 						/* check number of bounces */
@@ -305,6 +316,9 @@ multambient(		/* compute ambient component & multiply by coef. */
 		if (!ok)
 			goto dumbamb;
 		copycolor(aval, acol);
+
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);
 		return;
 	}
 
@@ -314,25 +328,39 @@ multambient(		/* compute ambient component & multiply by coef. */
 	setcolor(acol, 0.0, 0.0, 0.0);
 	d = sumambient(acol, r, nrm, rdepth,
 			&atrunk, thescene.cuorg, thescene.cusize);
+			
 	if (d > FTINY) {
 		d = 1.0/d;
 		scalecolor(acol, d);
 		multcolor(aval, acol);
+
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);
 		return;
 	}
+	
 	rdepth++;				/* need to cache new value */
 	ok = makeambient(acol, r, nrm, rdepth-1);
 	rdepth--;
+	
 	if (ok) {
 		multcolor(aval, acol);		/* computed new value */
+
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);
 		return;
 	}
+	
 dumbamb:					/* return global value */
 	if ((ambvwt <= 0) | (navsum == 0)) {
 		multcolor(aval, ambval);
+		
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);
 		return;
 	}
-	l = bright(ambval);			/* average in computations */
+	
+	l = bright(ambval);			/* average in computations */	
 	if (l > FTINY) {
 		d = (log(l)*(double)ambvwt + avsum) /
 				(double)(ambvwt + navsum);
@@ -634,9 +662,20 @@ multambient(		/* compute ambient component & multiply by coef. */
 )
 {
 	static int  rdepth = 0;			/* ambient recursion */
-	COLOR	acol;
+	COLOR	acol, caustic;
 	double	d, l;
 
+	/* PMAP: Factor in ambient from global photon map (if enabled) and return
+	 * as all ambient components accounted for */
+	if (ambGlobalPmap(aval, r, rdepth))
+		return;
+
+	/* PMAP: Otherwise factor in ambient from caustic photon map
+	 * (ambCausticPmap() returns zero if caustic photons disabled) and
+	 * continue with RADIANCE ambient calculation */
+	copycolor(caustic, aval);
+	ambCausticPmap(caustic, r, rdepth);
+	
 	if (ambdiv <= 0)			/* no ambient calculation */
 		goto dumbamb;
 						/* check number of bounces */
@@ -654,7 +693,10 @@ multambient(		/* compute ambient component & multiply by coef. */
 		rdepth--;
 		if (d <= FTINY)
 			goto dumbamb;
-		copycolor(aval, acol);
+		copycolor(aval, acol);		
+	
+	   /* PMAP: add in caustic */
+		addcolor(aval, caustic);	
 		return;
 	}
 
@@ -664,24 +706,38 @@ multambient(		/* compute ambient component & multiply by coef. */
 	setcolor(acol, 0.0, 0.0, 0.0);
 	d = sumambient(acol, r, nrm, rdepth,
 			&atrunk, thescene.cuorg, thescene.cusize);
+			
 	if (d > FTINY) {
 		d = 1.0/d;
 		scalecolor(acol, d);
 		multcolor(aval, acol);
+		
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);	
 		return;
 	}
+	
 	rdepth++;				/* need to cache new value */
 	d = makeambient(acol, r, nrm, rdepth-1);
 	rdepth--;
+	
 	if (d > FTINY) {
 		multcolor(aval, acol);		/* got new value */
+
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);			
 		return;
 	}
+	
 dumbamb:					/* return global value */
 	if ((ambvwt <= 0) | (navsum == 0)) {
 		multcolor(aval, ambval);
+
+		/* PMAP: add in caustic */
+		addcolor(aval, caustic);	
 		return;
 	}
+	
 	l = bright(ambval);			/* average in computations */
 	if (l > FTINY) {
 		d = (log(l)*(double)ambvwt + avsum) /

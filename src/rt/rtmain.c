@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.22 2013/08/07 05:10:09 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.23 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -17,6 +17,7 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.22 2013/08/07 05:10:09 greg Exp $
 #include  "ambient.h"
 #include  "random.h"
 #include  "paths.h"
+#include  "pmapray.h"
 
 extern char	*progname;		/* global argv[0] */
 
@@ -324,11 +325,13 @@ main(int  argc, char  *argv[])
 		fputformat(formstr(outform), stdout);
 		putchar('\n');
 	}
-
+	
+	ray_init_pmap();     /* PMAP: set up & load photon maps */
+	
 	marksources();			/* find and mark sources */
 
 	setambient();			/* initialize ambient calculation */
-
+	
 #ifdef  PERSIST
 	if (persist) {
 		fflush(stdout);
@@ -374,6 +377,9 @@ runagain:
 		goto runagain;
 	}
 #endif
+
+	ray_done_pmap();           /* PMAP: free photon maps */
+	
 	quit(0);
 
 badopt:

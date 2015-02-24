@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.37 2011/06/29 13:41:26 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.38 2015/02/24 19:39:27 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -9,6 +9,7 @@
 #include  "octree.h"
 #include  "object.h"
 #include  "color.h"
+#include  "pmapparm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -164,6 +165,9 @@ typedef struct {		/* rendering parameter holder */
 	int	ambincl;
 	short	amblndx[AMBLLEN+1];
 	char	amblval[AMBLLEN*AMBWORD];
+	
+	/* PMAP: photon mapping parameters */
+	PhotonMapParams pmapParams [NUM_PMAP_TYPES];
 } RAYPARAMS;
 
 #define rpambmod(p,i)	( (i)>=AMBLLEN||(p)->amblndx[i]<0 ? \

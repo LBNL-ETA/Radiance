@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.25 2014/01/25 18:27:39 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.26 2015/02/24 19:39:26 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -401,9 +401,17 @@ indirect contributions, such as when both indoor and outdoor
 .BI -ab \ N
 Set the number of ambient bounces to
 .I N.
-This is the maximum number of diffuse bounces 
-computed by the indirect calculation.
-A value of zero implies no indirect calculation.
+This is the maximum number of diffuse bounces computed by the indirect
+calculation. A value of zero implies no indirect calculation. 
+.IP
+In photon mapping mode (see
+.I -ap
+below), a positive value implies that global photon irradiance is
+always computed via
+.I one
+ambient bounce. A negative value enables a preview mode that directly
+visualises the irradiance from the global photon map without any ambient
+bounces.
 .TP
 .BI -ar \ res
 Set the ambient resolution to
@@ -508,6 +516,47 @@ Same as
 .I \-ai,
 except read modifiers to be included from
 .I file.
+.TP
+.BI -ap " file [bwidth1 [bwidth2]]"
+Enable photon mapping mode. Loads a photon map generated with
+.I mkpmap(1)
+from
+.I file,
+and evaluates the indirect irradiance depending on the photon type 
+(automagically detected) using density estimates with a bandwidth of
+.I bwidth1
+photons, or the default bandwidth if none is specified (a warning will be
+issued in this case).
+.IP
+Global photon irradiance is evaluated as part of the ambient calculation (see
+.I \-ab
+above), caustic photon irradiance is evaluated at primary rays, and 
+indirect inscattering in 
+.I mist
+is accounted for by volume photons.
+.IP
+Additionally specifying 
+.I bwidth2
+enables bias compensation for the density estimates with a
+minimum and maximum bandwidth of
+.I bwidth1
+and
+.I bwidth2,
+respectively.
+.IP
+Global photon irradiance may be optionally precomputed by
+.I mkpmap(1),
+in which case the bandwidth, if specified, is ignored, as the nearest photon
+is invariably looked up.
+.IP
+Using direct photons replaces the direct calculation with density estimates
+for debugging and validation of photon emission.       
+.TP
+.BI -am " frac"
+Coefficient for maximum search radius for photon map lookups. The search 
+radius is automatically determined based on the average photon distance to the
+distribution's centre of gravity, and scaled by this coefficient. Increase this
+value if multiple warnings about short photon lookups are issued.
 .TP
 .BI -me " rext gext bext"
 Set the global medium extinction coefficient to the indicated color,
@@ -632,6 +681,10 @@ This provides a simple and reliable mechanism of memory sharing
 on most multiprocessing platforms, since the
 .I fork(2)
 system call will share memory on a copy-on-write basis.
+.SH NOTES
+Photons are generally surface bound (an exception are volume photons), thus
+the ambient irradiance in photon mapping mode will be biased at positions 
+which do not lie on a surface.
 .SH EXAMPLES
 To compute radiance values for the rays listed in samples.inp:
 .IP "" .2i
@@ -651,6 +704,13 @@ To compute an image with an unusual view mapping:
 .IP "" .2i
 cnt 480 640 | rcalc \-e 'xr:640;yr:480' \-f unusual_view.cal | rtrace
 \-x 640 \-y 480 \-fac scene.oct > unusual.hdr
+.PP
+To compute ambient illuminance in photon mapping mode from a global photon 
+map global.pm via one ambient bounce, and from a caustic photon map 
+caustic.pm at sensor positions in samples.inp:
+.IP "" .2i
+rtrace -h -ov -ab 1 -ap global.pm 50 -ap caustic.pm 50 scene.oct < 
+samples.inp > illum.out
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH FILES
@@ -668,5 +728,5 @@ option.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), lookamb(1), oconv(1), pfilt(1), pinterp(1),
+getinfo(1), lookamb(1), mkpmap(1), oconv(1), pfilt(1), pinterp(1),
 pvalue(1), rpict(1), rcontrib(1), rvu(1), vwrays(1), ximage(1)

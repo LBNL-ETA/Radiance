@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.72 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.73 2015/02/24 19:39:26 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -61,7 +61,7 @@ RLOBJS = raycalls.o raypcalls.o rayfifo.o
 RLSRC = raycalls.c raypcalls.c rayfifo.c
 
 ROBJS = $(RAYOBJS) $(SURFOBJS) $(MATOBJS) \
-	$(MODOBJS) $(SUPPOBJS)
+	$(MODOBJS) $(SUPPOBJS) $(PMOBJS)
 RSRC = $(RAYSRC) $(SURFSRC) $(MATSRC) \
 	$(MODSRC) $(SUPPSRC)
 
@@ -88,6 +88,13 @@ MODSRC = p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c
 SUPPOBJS = func.o noise3.o data.o
 SUPPSRC = func.c noise3.c data.c
 
+PMOBJS = pmap.o pmapsrc.o pmapmat.o pmaprand.o pmapio.o pmapdata.o \
+         pmapbias.o pmapparm.o pmapcontrib.o pmapamb.o pmapray.o pmapopt.o \
+         pmapdiag.o pmaptype.o
+PMSRC = pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c \
+        pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c \
+        pmapdiag.c pmaptype.c
+
 HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
 #
@@ -95,7 +102,7 @@ HEADERS = ambient.h ray.h data.h otspecial.h source.h
 #
 
 PROGS = $(DESTDIR)/rtrace $(DESTDIR)/rpict $(DESTDIR)/rvu $(DESTDIR)/rcontrib \
-$(DESTDIR)/lookamb
+$(DESTDIR)/lookamb $(DESTDIR)/mkpmap $(DESTDIR)/pmapdump
 
 all:	$(PROGS) $(RCLIB) $(SPECIAL)
 
@@ -133,6 +140,12 @@ $(DESTDIR)/rcontrib:      $(RCOBJS) $(RLIB)
 
 $(DESTDIR)/lookamb:	lookamb.o ambio.o
 	$(CC) $(CFLAGS) -o $(DESTDIR)/lookamb lookamb.o ambio.o $(LIBS)
+
+$(DESTDIR)/mkpmap: mkpmap.o $(RLIB)
+	$(CC) $(CFLAGS) -o $(DESTDIR)/mkpmap mkpmap.o $(RLIB) $(LIBS)
+
+$(DESTDIR)/pmapdump: pmapdump.o pmaptype.o pmapparm.o
+	$(CC) $(CFLAGS) -o pmapdump pmapdump.o pmaptype.o pmapparm.o $(LIBS)
 
 $(RLIB):	$(ROBJS) Version.o
 	rm -f $(RLIB)
@@ -272,3 +285,121 @@ rcontrib.o:	source.h ../common/otypes.h
 rc2.o:	../common/resolu.h
 
 rc3.o:	../common/selcall.h
+
+#
+# Photon map include dependencies (via 'gcc -MM -I../common')
+#
+
+
+ambient.o: pmapparm.h pmaptype.h pmapamb.h pmapdata.h
+
+aniso.o dielectric.o glass.o m_mirror.o normal.o: \
+   pmapparm.h pmaptype.h pmapmat.h pmap.h pmapdata.h
+   
+raycalls.o rpmain.o rcmain.o rtmain.o rvmain.o: \
+   pmapparm.h pmaptype.h pmapray.h
+   
+rcmain.o: pmapparm.h pmaptype.h pmapray.h pmapcontrib.h pmapdata.h
+   
+raytrace.o: pmapparm.h pmaptype.h pmap.h pmapdata.h
+
+renderopts.o: pmapparm.h pmaptype.h pmapopt.h
+
+rpict.o: pmapparm.h pmaptype.h pmapbias.h pmapdata.h pmapdiag.h
+
+source.o: pmapparm.h pmaptype.h pmap.h pmapdata.h pmapsrc.h
+
+pmapamb.o: pmapamb.c pmapamb.h pmapdata.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h ../common/lookup.h pmap.h
+
+pmapbias.o: pmapbias.c pmapbias.h pmapdata.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h ../common/lookup.h pmap.h \
+ pmaprand.h
+
+pmap.o: pmap.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h ../common/lookup.h pmapmat.h \
+ pmapsrc.h source.h pmaprand.h pmapio.h pmapbias.h pmapdiag.h \
+ ../common/platform.h ../common/otypes.h
+
+pmapcontrib.o: pmapcontrib.c pmapcontrib.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h pmapparm.h pmaptype.h \
+ ../common/lookup.h pmap.h pmapmat.h pmapsrc.h source.h pmaprand.h \
+ pmapio.h pmapdiag.h ../common/platform.h rcontrib.h ../common/paths.h \
+ ../common/rtprocess.h ../common/paths.h func.h ../common/calcomp.h \
+ ../common/otypes.h
+
+pmapdata.o: pmapdata.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h ../common/lookup.h pmaprand.h \
+ pmapmat.h ../common/otypes.h source.h rcontrib.h ../common/platform.h \
+ ../common/paths.h ../common/rtprocess.h ../common/paths.h func.h \
+ ../common/calcomp.h
+
+pmapdiag.o: pmapdiag.c pmapdiag.h ../common/platform.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h pmapparm.h pmaptype.h \
+ ../common/lookup.h
+
+pmapdump.o: pmapdump.c pmapio.h pmapdata.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h ../common/lookup.h \
+ ../common/rtio.h ../common/resolu.h
+
+pmapio.o: pmapio.c pmapio.h pmapdata.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h ../common/lookup.h pmapdiag.h \
+ ../common/platform.h ../common/resolu.h
+
+pmapmat.o: pmapmat.c pmapmat.h pmap.h pmapparm.h pmaptype.h pmapdata.h \
+ ray.h ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h ../common/lookup.h pmaprand.h \
+ ../common/otypes.h data.h func.h ../common/calcomp.h ../common/bsdf.h \
+ ../common/ccolor.h
+
+pmapopt.o: pmapopt.c pmapparm.h pmaptype.h ../common/rtio.h \
+ ../common/rterror.h
+
+pmapparm.o: pmapparm.c pmapparm.h pmaptype.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h ../common/lookup.h
+
+pmapray.o: pmapray.c pmapray.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h pmap.h pmapdata.h \
+ ../common/lookup.h
+
+pmapsrc.o: pmapsrc.c pmapsrc.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h source.h pmap.h pmapdata.h \
+ ../common/lookup.h pmaprand.h ../common/otypes.h
+
+pmaptype.o: pmaptype.c pmaptype.h
+

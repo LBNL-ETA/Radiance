@@ -2009,3 +2009,6 @@ illegal orientation vectors are dealt with more gracefully.
 
 Created wrapBSDF tool and incorporated into genBSDF along
 with new rfluxmtx computation.
+
+Initial check-in of Roland Schregle's photon map integration.
+New 5.0a version designation as suggested by Andy McNeil.

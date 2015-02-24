@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.65 2014/02/19 14:12:48 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.66 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: raytrace.c,v 2.65 2014/02/19 14:12:48 greg Exp
 #include  "otypes.h"
 #include  "otspecial.h"
 #include  "random.h"
+#include  "pmap.h"
 
 #define  MAXCSET	((MAXSET+1)*2-1)	/* maximum check set size */
 
@@ -249,11 +250,16 @@ rayparticipate(			/* compute ray medium participation */
 	multcolor(r->rcol, ce);			/* path extinction */
 	if (r->crtype & SHADOW || intens(r->albedo) <= FTINY)
 		return;				/* no scattering */
-	setcolor(ca,
-		colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
-		colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
-		colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
-	addcolor(r->rcol, ca);			/* ambient in scattering */
+	
+	/* PMAP: indirect inscattering accounted for by volume photons? */
+	if (!volumePhotonMapping) {
+		setcolor(ca,
+			colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
+			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
+			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
+		addcolor(r->rcol, ca);			/* ambient in scattering */
+	}
+	
 	srcscatter(r);				/* source in scattering */
 }
 

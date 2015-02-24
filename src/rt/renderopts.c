@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.15 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.16 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.15 2014/07/08 18:25:00 greg E
 
 #include  "ray.h"
 #include  "paths.h"
+#include  "pmapopt.h"
 
 
 int
@@ -208,7 +209,11 @@ getrenderopt(		/* get next render option */
 		}
 		break;
 	}
-	return(-1);		/* unknown option */
+	
+	/* PMAP: Parse photon mapping options */
+	return(getPmapRenderOpt(ac, av));
+	
+/*	return(-1); */		/* unknown option */
 
 #undef	check
 #undef	bool
@@ -253,4 +258,7 @@ print_rdefaults(void)		/* print default render values to stdout */
 	printf("-lr %-9d\t\t\t# limit reflection%s\n", maxdepth,
 			maxdepth<=0 ? " (Russian roulette)" : "");
 	printf("-lw %.2e\t\t\t# limit weight\n", minweight);
+	
+	/* PMAP: output photon map defaults */
+	printPmapDefaults();
 }

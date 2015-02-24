@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.13 2014/07/19 20:03:03 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.14 2015/02/24 19:39:27 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -13,6 +13,8 @@ static const char	RCSid[] = "$Id: rcmain.c,v 2.13 2014/07/19 20:03:03 greg Exp $
 #include "random.h"
 #include "source.h"
 #include "ambient.h"
+#include "pmapray.h"
+#include "pmapcontrib.h"
 
 int	gargc;				/* global argc */
 char	**gargv;			/* global argv */
@@ -340,14 +342,23 @@ main(int argc, char *argv[])
 	readoct(octname, ~(IO_FILES|IO_INFO), &thescene, NULL);
 	nsceneobjs = nobjects;
 
+	/* PMAP: set up & load photon maps */
+	ray_init_pmap();     
+	
 	marksources();			/* find and mark sources */
+	
+	/* PMAP: init photon map for light source contributions */
+	initPmapContrib(&modconttab, nmods);
 
 	setambient();			/* initialize ambient calculation */
-
+	
 	rcontrib();			/* trace ray contributions (loop) */
 
 	ambsync();			/* flush ambient file */
 
+	/* PMAP: free photon maps */
+	ray_done_pmap();     
+	
 	quit(0);	/* exit clean */
 
 badopt:

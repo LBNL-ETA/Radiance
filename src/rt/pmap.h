@@ -1,0 +1,74 @@
+/* 
+   ==================================================================
+   Photon map main header
+
+   Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
+   (c) Fraunhofer Institute for Solar Energy Systems,
+       Lucerne University of Applied Sciences & Arts   
+   ==================================================================
+   
+   $Id: pmap.h,v 2.1 2015/02/24 19:39:26 greg Exp $
+*/
+
+
+#ifndef PMAP_H
+   #define PMAP_H
+
+   #include "pmapparm.h"
+   #include "pmapdata.h"
+
+
+
+   #define min(a, b) ((a) < (b) ? (a) : (b))
+   #define max(a, b) ((a) > (b) ? (a) : (b))
+   #define sqr(a)    ((a) * (a))
+
+   /* Average over colour channels */
+   #define colorAvg(col) ((col [0] + col [1] + col [2]) / 3)
+
+   /* Macros to test for enabled photon maps */
+   #define photonMapping         (globalPmap || preCompPmap || \
+                                  causticPmap ||contribPmap)
+   #define causticPhotonMapping  (causticPmap)
+   #define directPhotonMapping   (directPmap)
+   #define volumePhotonMapping   (volumePmap)
+   #define contribPhotonMapping  (contribPmap && contribPmap -> srcContrib)
+   
+   
+
+   extern void (*pmapLookup [])(PhotonMap*, RAY*, COLOR);
+   /* Photon map lookup functions per type */
+   
+   void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *params);
+   /* Load photon and set their respective parameters, checking timestamps
+    * relative to octree for possible staleness */
+
+   void savePmaps (const PhotonMap **pmaps, int argc, char **argv);
+   /* Save all defined photon maps with specified command line */
+
+   void cleanUpPmaps (PhotonMap **pmaps);
+   /* Trash all photon maps after processing is complete */
+
+   void distribPhotons (PhotonMap **pmaps);
+   /* Emit photons from light sources and build photon maps for non-NULL
+    * entries in photon map array */
+
+   void tracePhoton (RAY*);
+   /* Follow photon as it bounces around the scene. Analogon to
+    * raytrace(). */
+
+   void photonDensity (PhotonMap*, RAY*, COLOR irrad);
+   /* Perform surface density estimate from incoming photon flux at
+      ray's intersection point. Returns irradiance from found photons. */
+
+   void photonPreCompDensity (PhotonMap *pmap, RAY *r, COLOR irrad);
+   /* Returns precomputed photon density estimate at ray -> rop. */
+      
+   void volumePhotonDensity (PhotonMap*, RAY*, COLOR);
+   /* Perform volume density estimate from incoming photon flux at 
+      ray's intersection point. Returns irradiance. */
+
+   void colorNorm (COLOR);
+   /* Normalise colour channels to average of 1 */
+
+#endif
