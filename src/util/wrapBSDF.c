@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.11 2015/02/20 18:07:10 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.12 2015/03/04 17:42:54 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -160,6 +160,7 @@ input2str(const char *inpspec)
 			fprintf(stderr, "%s: cannot open\n", inpspec);
 			return "";
 		}
+#ifndef _WIN32				/* XXX somehow broken on Windows */
 		len = lseek(fd, 0L, SEEK_END);
 		if (len > 0) {
 			lseek(fd, 0L, SEEK_SET);
@@ -178,6 +179,7 @@ input2str(const char *inpspec)
 			close(fd);
 			return str;
 		}
+#endif
 		fp = fdopen(fd, "r");		/* not a regular file */
 	}
 						/* reading from stream */

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.49 2015/02/20 18:26:09 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.50 2015/03/04 17:42:54 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -440,7 +440,7 @@ sub matrix_comp {
 	} elsif ("$spec" eq "CIE-Z") {
 		$cmd .= " -c 0.024 0.123 0.853";
 	}
-	$cmd .= " $src | getinfo -";
+	$cmd .= " $src | rcollate -ho";
 	# print STDERR "Running: $cmd\n";
 	system "$cmd > $dest";
 	die "Failure running rttree_reduce" if ( $? );
