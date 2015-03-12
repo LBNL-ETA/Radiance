@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.50 2015/03/04 17:42:54 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.51 2015/03/12 13:24:41 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -371,7 +371,7 @@ sub ttree_comp {
 		close DATOUT;
 	}
 	if ( "$spec" ne "$curspec" ) {
-		$wrapper .= " -s $spec"
+		$wrapper .= " -s $spec";
 		$curspec = $spec;
 	}
 	$wrapper .= " -$typ $dest";
@@ -445,7 +445,7 @@ sub matrix_comp {
 	system "$cmd > $dest";
 	die "Failure running rttree_reduce" if ( $? );
 	if ( "$spec" ne "$curspec" ) {
-		$wrapper .= " -s $spec"
+		$wrapper .= " -s $spec";
 		$curspec = $spec;
 	}
 	$wrapper .= " -$typ $dest";
