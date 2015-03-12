@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.6 2015/02/20 18:26:08 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.7 2015/03/12 18:24:11 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -139,7 +139,8 @@ Other primitives will be silently ignored and will have no effect on the calcula
 In the receiver file, the
 .I source
 primitive is supported as well, and multiple receivers (and multiple output
-matrices) are identified by different modifier names.
+matrices) may be identified by different modifier names.
+(Make sure that surfaces using the same modifier are grouped together.)\0
 Though it may be counter-intuitive, receivers are often light sources,
 since samples end up there in a backwards ray-tracing system such as RADIANCE.
 When using local geometry, the overall aperture shape should be close to flat.
