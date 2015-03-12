@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.23 2015/02/18 06:18:38 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.24 2015/03/12 15:36:11 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1083,10 +1083,10 @@ static int
 add_send_object(FILE *fp)
 {
 	int		st;
-	char		otype[32], oname[128];
+	char		thismod[128], otype[32], oname[128];
 	int		n;
 
-	if (fscanf(fp, "%*s %s %s", otype, oname) != 2)
+	if (fscanf(fp, "%s %s %s", thismod, otype, oname) != 2)
 		return(0);		/* must have hit EOF! */
 	if (!strcmp(otype, "alias")) {
 		fscanf(fp, "%*s");	/* skip alias */
@@ -1098,6 +1098,14 @@ add_send_object(FILE *fp)
 			fputs(progname, stderr);
 			fputs(": cannot use source as a sender!\n", stderr);
 			return(-1);
+		}
+		if (strcmp(thismod, curmod)) {
+			if (curmod[0]) {
+				fputs(progname, stderr);
+				fputs(": warning - multiple modifiers in sender\n",
+						stderr);
+			}
+			strcpy(curmod, thismod);
 		}
 		parse_params(&curparams, newparams);
 		newparams[0] = '\0';
@@ -1333,6 +1341,7 @@ main(int argc, char *argv[])
 		return(my_exec(rcarg));	/* rcontrib does everything */
 	}
 	clear_params(&curparams, 0);	/* else load sender surface & params */
+	curmod[0] = '\0';
 	if (load_scene(sendfn, add_send_object) < 0)
 		return(1);
 	if ((nsbins = prepare_sampler()) <= 0)
