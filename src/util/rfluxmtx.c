@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.24 2015/03/12 15:36:11 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.25 2015/03/20 15:19:22 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1086,7 +1086,7 @@ add_send_object(FILE *fp)
 	char		thismod[128], otype[32], oname[128];
 	int		n;
 
-	if (fscanf(fp, "%s %s %s", thismod, otype, oname) != 2)
+	if (fscanf(fp, "%s %s %s", thismod, otype, oname) != 3)
 		return(0);		/* must have hit EOF! */
 	if (!strcmp(otype, "alias")) {
 		fscanf(fp, "%*s");	/* skip alias */
