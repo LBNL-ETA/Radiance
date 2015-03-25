@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.52 2015/03/16 00:40:51 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.53 2015/03/25 19:18:28 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -66,7 +66,7 @@ if ($windoz) {
 	$rmtmp = "rm -rf $td";
 }
 my @savedARGV = @ARGV;
-my $rfluxmtx = "rfluxmtx -v -ab 5 -ad 700 -lw 3e-6";
+my $rfluxmtx = "rfluxmtx -ab 5 -ad 700 -lw 3e-6";
 my $wrapper = "wrapBSDF";
 my $tensortree = 0;
 my $ttlog2 = 4;
@@ -204,6 +204,12 @@ if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[5];
 	close RADSCN;
 }
+# Calculate CIE (u',v') from Radiance RGB:
+my $CIEuv =	'Xi=.5141*Ri+.3239*Gi+.1620*Bi;' .
+		'Yi=.2651*Ri+.6701*Gi+.0648*Bi;' .
+		'Zi=.0241*Ri+.1229*Gi+.8530*Bi;' .
+		'den=Xi+15*Yi+3*Zi;' .
+		'uprime=4*Xi/den;vprime=9*Yi/den;' ;
 # Create data segments (all the work happens here)
 if ( $tensortree ) {
 	do_tree_bsdf();
@@ -219,7 +225,7 @@ print "<!-- Created by: genBSDF @savedARGV -->\n";
 system $wrapper;
 die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
-system $rmtmp;
+exec $rmtmp;
 
 #-------------- End of main program segment --------------#
 
@@ -295,16 +301,16 @@ sub ttree_out {
 		my $ttyp = ("tb","tf")[$forw];
 		ttree_comp($ttyp, "Visible", $transdat, ($tb,$tf)[$forw]);
 		if ( $docolor ) {
-			ttree_comp($ttyp, "CIE-X", $transdat, ($tbx,$tfx)[$forw]);
-			ttree_comp($ttyp, "CIE-Z", $transdat, ($tbz,$tfz)[$forw]);
+			ttree_comp($ttyp, "CIE-u", $transdat, ($tbx,$tfx)[$forw]);
+			ttree_comp($ttyp, "CIE-v", $transdat, ($tbz,$tfz)[$forw]);
 		}
 	}
 	# Output reflection
 	my $rtyp = ("rb","rf")[$forw];
 	ttree_comp($rtyp, "Visible", $refldat, ($rb,$rf)[$forw]);
 	if ( $docolor ) {
-		ttree_comp($rtyp, "CIE-X", $refldat, ($rbx,$rfx)[$forw]);
-		ttree_comp($rtyp, "CIE-Z", $refldat, ($rbz,$rfz)[$forw]);
+		ttree_comp($rtyp, "CIE-u", $refldat, ($rbx,$rfx)[$forw]);
+		ttree_comp($rtyp, "CIE-v", $refldat, ($rbz,$rfz)[$forw]);
 	}
 }	# end of ttree_out()
 
@@ -318,35 +324,49 @@ sub ttree_comp {
 	if ($windoz) {
 		if ("$spec" eq "Visible") {
 			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-				q{-e "$1=(0.265*$1+0.670*$2+0.065*$3)/Omega"};
-		} elsif ("$spec" eq "CIE-X") {
+				q{-e "Ri=$1;Gi=$2;Bi=$3" } .
+				qq{-e "$CIEuv" } .
+				q{-e "$1=Yi/Omega"};
+		} elsif ("$spec" eq "CIE-u") {
 			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-				q{-e "$1=(0.514*$1+0.324*$2+0.162*$3)/Omega"};
-		} elsif ("$spec" eq "CIE-Z") {
+				q{-e "Ri=$1;Gi=$2;Bi=$3" } .
+				qq{-e "$CIEuv" } .
+				q{-e "$1=uprime/Omega"};
+		} elsif ("$spec" eq "CIE-v") {
 			$cmd = qq{rcalc -e "Omega:PI/($ns*$ns)" } .
-				q{-e "$1=(0.024*$1+0.123*$2+0.853*$3)/Omega"};
+				q{-e "Ri=$1;Gi=$2;Bi=$3" } .
+				qq{-e "$CIEuv" } .
+				q{-e "$1=vprime/Omega"};
 		}
 	} else {
 		if ("$spec" eq "Visible") {
 			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-				q{-e '$1=(0.265*$1+0.670*$2+0.065*$3)/Omega'};
-		} elsif ("$spec" eq "CIE-X") {
+				q{-e 'Ri=$1;Gi=$2;Bi=$3' } .
+				"-e '$CIEuv' " .
+				q{-e '$1=Yi/Omega'};
+		} elsif ("$spec" eq "CIE-u") {
 			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-				q{-e '$1=(0.514*$1+0.324*$2+0.162*$3)/Omega'};
-		} elsif ("$spec" eq "CIE-Z") {
+				q{-e 'Ri=$1;Gi=$2;Bi=$3' } .
+				"-e '$CIEuv' " .
+				q{-e '$1=uprime/Omega'};
+		} elsif ("$spec" eq "CIE-v") {
 			$cmd = "rcalc -if3 -e 'Omega:PI/($ns*$ns)' " .
-				q{-e '$1=(0.024*$1+0.123*$2+0.853*$3)/Omega'};
+				q{-e 'Ri=$1;Gi=$2;Bi=$3' } .
+				"-e '$CIEuv' " .
+				q{-e '$1=vprime/Omega'};
 		}
 	}
 	if ($pctcull >= 0) {
 		my $avg = ( "$typ" =~ /^r[fb]/ ) ? " -a" : "";
+		my $pcull = ("$spec" eq "Visible") ? $pctcull :
+						     (100 - (100-$pctcull)/3) ;
 		if ($windoz) {
 			$cmd = "rcollate -ho -oc 1 $src | " .
 					$cmd .
-					" | rttree_reduce$avg -h -fa -t $pctcull -r $tensortree -g $ttlog2";
+					" | rttree_reduce$avg -h -fa -t $pcull -r $tensortree -g $ttlog2";
 		} else {
 			$cmd .= " -of $src " .
-					"| rttree_reduce$avg -h -ff -t $pctcull -r $tensortree -g $ttlog2";
+					"| rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
 		}
 		# print STDERR "Running: $cmd\n";
 		system "$cmd > $dest";
