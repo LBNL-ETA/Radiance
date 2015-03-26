@@ -1,4 +1,4 @@
-/* RCSid $Id: color.h,v 2.33 2013/09/11 16:00:13 greg Exp $ */
+/* RCSid $Id: color.h,v 2.34 2015/03/26 15:40:32 greg Exp $ */
 /*
  *  color.h - header for routines using pixel color values.
  *
@@ -62,8 +62,8 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  CIE_y_g		0.710
 #define  CIE_x_b		0.140
 #define  CIE_y_b		0.080
-#define  CIE_x_w		0.3333		/* use true white */
-#define  CIE_y_w		0.3333
+#define  CIE_x_w		(1./3.)		/* use true white */
+#define  CIE_y_w		(1./3.)
 #else
 #define  CIE_x_r		0.640		/* nominal CRT primaries */
 #define  CIE_y_r		0.330
@@ -71,8 +71,8 @@ typedef float  COLORMAT[3][3];	/* color coordinate conversion matrix */
 #define  CIE_y_g		0.600
 #define  CIE_x_b		0.150
 #define  CIE_y_b		0.060
-#define  CIE_x_w		0.3333		/* use true white */
-#define  CIE_y_w		0.3333
+#define  CIE_x_w		(1./3.)		/* use true white */
+#define  CIE_y_w		(1./3.)
 #endif
 
 #define  STDPRIMS	{{CIE_x_r,CIE_y_r},{CIE_x_g,CIE_y_g}, \
