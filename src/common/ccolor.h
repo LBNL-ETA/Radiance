@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.6 2012/06/26 17:59:16 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.7 2015/03/26 15:57:19 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -32,6 +32,8 @@ typedef struct {
 	float	cx, cy;		/* xy chromaticity value */
 	float	eff;		/* efficacy (lumens/watt) */
 } C_COLOR;
+
+typedef unsigned short	C_CHROMA;	/* encoded (x,y) chromaticity */
 
 #define C_DEFCOLOR	{ 1, NULL, C_CDXY|C_CSXY|C_CSSPEC|C_CSEFF,\
 			{C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,C_CMAXV,\
@@ -70,6 +72,10 @@ extern double	c_cmult(C_COLOR *cres, C_COLOR *c1, double y1,
 extern void	c_toSharpRGB(C_COLOR *cin, double cieY, float cout[3]);
 						/* convert from sharpened RGB */
 extern double	c_fromSharpRGB(float cin[3], C_COLOR *cout);
+						/* encode (x,y) chromaticity */
+extern C_CHROMA	c_encodeChroma(C_COLOR *clr);
+						/* decode (x,y) chromaticity */
+extern void	c_decodeChroma(C_COLOR *cres, C_CHROMA ccode);
 
 /* The following two routines are not defined in ccolor.c */
 						/* convert to RGB color */

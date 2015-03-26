@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.6 2012/07/17 23:40:24 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.7 2015/03/26 15:57:19 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -386,3 +386,39 @@ c_bbtemp(C_COLOR *clr, double tk)
 #undef	C2
 #undef	bbsp
 #undef	bblm
+
+#define UV_NORMF	410.
+
+/* encode (x,y) chromaticity */
+C_CHROMA
+c_encodeChroma(C_COLOR *clr)
+{
+	double	df;
+	int	ub, vb;
+
+	c_ccvt(clr, C_CSXY);
+	df = UV_NORMF/(-2.*clr->cx + 12.*clr->cy + 3.);
+	ub = 4.*clr->cx * df;
+	if (ub < 0) ub = 0;
+	else if (ub > 0xff) ub = 0xff;
+	vb = 9.*clr->cy * df;
+	if (vb < 0) vb = 0;
+	else if (vb > 0xff) vb = 0xff;
+
+	return(vb<<8 | ub);
+}
+
+/* decode (x,y) chromaticity */
+void
+c_decodeChroma(C_COLOR *cres, C_CHROMA ccode)
+{
+	double	up = ((ccode & 0xff) + .5)*(1./UV_NORMF);
+	double	vp = ((ccode>>8 & 0xff) + .5)*(1./UV_NORMF);
+	double	df = 1./(6.*up - 16.*vp + 12.);
+
+	cres->cx = 9.*up * df;
+	cres->cy = 4.*vp * df;
+	cres->flags = C_CDXY|C_CSXY;
+}
+
+#undef	UV_NORMF
