@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.14 2015/02/20 18:26:08 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.15 2015/03/27 00:08:49 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -13,7 +13,7 @@ genBSDF - generate BSDF description from Radiance or MGF input
 ][
 .B "\-W"
 ][
-.B "\-f 'x=string;y=string'"
+.B "\-s 'x=string;y=string'"
 ][
 .B "\-t{3|4} Nlog2"
 ][
@@ -100,12 +100,17 @@ command line.
 .PP
 The
 .I \-W
-and
+option is passed to
+.I wrapBSDF(1)
+to prepare the XML file for WINDOW6.
+Any
+.I \-s
+parameters are passed to the
 .I \-f
-options are passed to
-.I wrapBSDF(1),
-and prepare the output for WINDOW6 and make addition settings, such as
-the Manufacturer (e.g., -f m=MF) and device Name (e.g, -f n=NM).
+option of
+.I wrapBSDF,
+controlling XML fields such as
+the Manufacturer (e.g., -s m=MF) and device Name (e.g, -s n=NM).
 .PP
 The
 .I \-t4
