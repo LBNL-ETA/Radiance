@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.54 2015/03/25 22:50:48 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.55 2015/03/27 18:58:06 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -104,12 +104,15 @@ while ($#ARGV >= 0) {
 	} elsif ("$ARGV[0]" eq "-t") {
 		# Use value < 0 for rttree_reduce bypass
 		$pctcull = $ARGV[1];
+		if ($pctcull >= 100) {
+			die "Illegal -t culling percentage, must be < 100\n";
+		}
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^-t[34]$/) {
 		$tensortree = substr($ARGV[0], 2, 1);
 		$ttlog2 = $ARGV[1];
 		shift @ARGV;
-	} elsif ("$ARGV[0]" eq "-f") {
+	} elsif ("$ARGV[0]" eq "-s") {
 		$wrapper .= " -f \"$ARGV[1]\"";
 		shift @ARGV;
 	} elsif ("$ARGV[0]" eq "-W") {
@@ -176,10 +179,11 @@ my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
 my $ns = 2**$ttlog2;
 open(RADSCN, "> $receivers");
-print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=sc$ns\n" : "h=kf\n");
+print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=+sc$ns\n" : "h=+kf\n");
 print RADSCN '#@rfluxmtx ' . "u=Y o=$facedat\n\n";
 print RADSCN "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n";
 print RADSCN "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n";
+print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=-sc$ns\n" : "h=-kf\n");
 print RADSCN '#@rfluxmtx ' . "u=Y o=$behinddat\n\n";
 print RADSCN "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n";
 print RADSCN "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n";
@@ -188,7 +192,7 @@ close RADSCN;
 $rfluxmtx .= " -n $nproc -c $nsamp";
 if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
 	open (RADSCN, "> $fsender");
-	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=sc$ns\n\n" : "h=kf\n\n");
+	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=+sc$ns\n\n" : "h=+kf\n\n");
 	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[4];
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[4];
@@ -196,8 +200,8 @@ if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[4];
 	close RADSCN;
 	open (RADSCN, "> $bsender");
-	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=sc$ns\n\n" : "h=kf\n\n");
-	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
+	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=-sc$ns\n\n" : "h=-kf\n\n");
+	print RADSCN "void polygon bwd_sender\n0\n0\n12\n";
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[5];
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[5];
 	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[3], $dim[5];
@@ -355,7 +359,7 @@ sub ttree_comp {
 	if ($pctcull >= 0) {
 		my $avg = ( "$typ" =~ /^r[fb]/ ) ? " -a" : "";
 		my $pcull = ("$spec" eq "Visible") ? $pctcull :
-						     (100 - (100-$pctcull)/3) ;
+						     (100 - (100-$pctcull)*.25) ;
 		if ($windoz) {
 			$cmd = "rcollate -ho -oc 1 $src | " .
 					$cmd .
@@ -450,11 +454,11 @@ sub matrix_comp {
 	my $dest = shift;
 	my $cmd = "rmtxop -fa -t";
 	if ("$spec" eq "Visible") {
-		$cmd .= " -c 0.265 0.670 0.065";
+		$cmd .= " -c 0.2651 0.6701 0.0648";
 	} elsif ("$spec" eq "CIE-X") {
-		$cmd .= " -c 0.514 0.324 0.162";
+		$cmd .= " -c 0.5141 0.3239 0.1620";
 	} elsif ("$spec" eq "CIE-Z") {
-		$cmd .= " -c 0.024 0.123 0.853";
+		$cmd .= " -c 0.0241 0.1229 0.8530";
 	}
 	$cmd .= " $src | rcollate -ho -oc 145";
 	# print STDERR "Running: $cmd\n";

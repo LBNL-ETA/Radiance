@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.7 2015/03/12 18:24:11 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.8 2015/03/27 18:58:06 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -91,12 +91,15 @@ The other methods below require a full hemispherical source.
 .TP
 .BI h =kf
 Divide the hemisphere using the LBNL/Klems "full" sampling basis.
+(Use "h=-kf" for left-handed coordinates.)
 .TP
 .BI h =kh
 Divide the hemisphere using the LBNL/Klems "half" sampling basis.
+(Use "h=-kh" for left-handed coordinates.)
 .TP
 .BI h =kq
 Divide the hemisphere using the LBNL/Klems "quarter" sampling basis.
+(Use "h=-kq" for left-handed coordinates.)
 .TP
 .BI h =rN
 Divide the hemisphere using Reinhart's substructuring of the Tregenza
@@ -106,11 +109,13 @@ divisions in each dimension.
 If it is not given,
 .I N
 defaults to 1, which is just the Tregenza sky.
+(Use "h=-rN" for left-handed coordinates.)
 .TP
 .BI h =scN
 Subdivide the hemisphere using the Shirley-Chiu square-to-disk mapping with an
 .I NxN
 grid over the square.
+(Use "h=-scN" for left-handed coordinates.)
 .TP
 .BI u =[-]{X|Y|Z|ux,uy,uz}
 Orient the "up" direction for the hemisphere using the indicated axis or direction

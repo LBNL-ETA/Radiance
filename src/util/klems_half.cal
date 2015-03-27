@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_half.cal,v 1.2 2014/07/21 15:59:47 greg Exp $ }
+{ RCSid $Id: klems_half.cal,v 1.3 2015/03/27 18:58:06 greg Exp $ }
 {
 	Compute interior bin for half Klems BSDF basis (0-72)
 	Returns -1 for wrong-side rays
@@ -32,8 +32,10 @@ khbin2(pol,azi) = if(pol-90, -1,
 		khaccum(7) + khazn(azi,360/khnaz(8))
 	) );
 
+RHS = 1;	{ set to -1 for left-handed system }
+
 khbin(Nx,Ny,Nz,Ux,Uy,Uz) = khbin2(Acos(-Dx*Nx-Dy*Ny-Dz*Nz),
 	Atan2(-Dx*Ux-Dy*Uy-Dz*Uz + (Nx*Dx+Ny*Dy+Nz*Dz)*(Nx*Ux+Ny*Uy+Nz*Uz),
-		-Dx*(Uy*Nz-Uz*Ny) - Dy*(Uz*Nx-Ux*Nz) - Dz*(Ux*Ny-Uy*Nx)));
+		-RHS*(Dx*(Uy*Nz-Uz*Ny) + Dy*(Uz*Nx-Ux*Nz) + Dz*(Ux*Ny-Uy*Nx))));
 				
 Nkhbins : khaccum(khnaz(0));	{ Number of bins for one elevation }

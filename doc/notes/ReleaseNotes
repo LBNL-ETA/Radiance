@@ -2001,6 +2001,9 @@ some systems, and may have been source of other errors as well.
 
 (Above changes included in 4.2.2 patch release.)
 
+===================
+Version 5.0
+
 Improved ambient extrapolation to avoid zero values.  Actual
 threshold set to 5% of recorded value.
 
@@ -2012,3 +2015,7 @@ with new rfluxmtx computation.
 
 Initial check-in of Roland Schregle's photon map integration.
 New 5.0a version designation as suggested by Andy McNeil.
+
+Added left-hand coordinate sytems to rfluxmtx to correct
+problems with coordinate axis orientations pointed out by
+David Geisler-Moroder.

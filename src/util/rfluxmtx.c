@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.25 2015/03/20 15:19:22 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.26 2015/03/27 18:58:06 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -84,13 +84,14 @@ typedef struct {
 } POLYTRIS;			/* triangulated polygon */
 
 typedef struct param_s {
-	char		hemis[32];	/* hemispherical sampling spec. */
+	char		sign;		/* '-' for axis reversal */
+	char		hemis[31];	/* hemispherical sampling spec. */
 	int		hsiz;		/* hemisphere basis size */
 	int		nsurfs;		/* number of surfaces */
 	SURF		*slist;		/* list of surfaces */
 	FVECT		vup;		/* up vector (zero if unset) */
 	FVECT		nrm;		/* average normal direction */
-	FVECT		udir, vdir;	/* v-up tangent axes */
+	FVECT		udir, vdir;	/* tangent axes */
 	char		*outfn;		/* output file name (receiver) */
 	int		(*sample_basis)(struct param_s *p, int, FILE *);
 } PARAMS;			/* sender/receiver parameters */
@@ -324,6 +325,10 @@ parse_params(PARAMS *p, char *pargs)
 		case 'h':
 			if (*cp++ != '=')
 				break;
+			if ((*cp == '+') | (*cp == '-'))
+				p->sign = *cp++;
+			else
+				p->sign = '+';
 			p->hsiz = 0;
 			i = 0;
 			while (*cp && !isspace(*cp)) {
@@ -431,20 +436,22 @@ finish_receiver(void)
 			exit(1);
 		}
 		calfn = shirchiufn; shirchiufn = NULL;
-		sprintf(sbuf, "SCdim=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g",
+		sprintf(sbuf, "SCdim=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g,RHS=%c1",
 				curparams.hsiz,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
-			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
+			curparams.vup[0], curparams.vup[1], curparams.vup[2],
+			curparams.sign);
 		params = savqstr(sbuf);
 		binv = "scbin";
 		nbins = "SCdim*SCdim";
 	} else if ((tolower(curparams.hemis[0]) == 'r') |
 			(tolower(curparams.hemis[0]) == 't')) {
 		calfn = reinhfn; reinhfn = NULL;
-		sprintf(sbuf, "MF=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g",
+		sprintf(sbuf, "MF=%d,rNx=%g,rNy=%g,rNz=%g,Ux=%g,Uy=%g,Uz=%g,RHS=%c1",
 				curparams.hsiz,
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
-			curparams.vup[0], curparams.vup[1], curparams.vup[2]);
+			curparams.vup[0], curparams.vup[1], curparams.vup[2],
+			curparams.sign);
 		params = savqstr(sbuf);
 		binv = "rbin";
 		nbins = "Nrbins";
@@ -471,6 +478,10 @@ finish_receiver(void)
 		fprintf(stderr, "%s: unrecognized hemisphere sampling: h=%s\n",
 				progname, curparams.hemis);
 		exit(1);
+	}
+	if (tolower(curparams.hemis[0]) == 'k') {
+		sprintf(sbuf, "RHS=%c1", curparams.sign);
+		params = savqstr(sbuf);
 	}
 	if (!uniform & (curparams.slist->styp == ST_SOURCE)) {
 		SURF	*sp;
@@ -838,11 +849,11 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 
 	while (n--) {			/* stratified sampling */
 		SDmultiSamp(samp2, 2, (n+frandom())/sampcnt);
-		if (!bi_getvec(duvw, b+samp2[1], kbasis[bi]))
+		if (!fi_getvec(duvw, b+samp2[1], kbasis[bi]))
 			return(0);
 		for (i = 3; i--; )
-			orig_dir[1][i] = duvw[0]*p->udir[i] +
-						duvw[1]*p->vdir[i] +
+			orig_dir[1][i] = -duvw[0]*p->udir[i] -
+						duvw[1]*p->vdir[i] -
 						duvw[2]*p->nrm[i] ;
 		if (!sample_origin(p, orig_dir[0], orig_dir[1], samp2[0]))
 			return(0);
@@ -882,13 +893,18 @@ prepare_sampler(void)
 		else
 			curparams.vup[1] = 1;
 	}
-	VCROSS(curparams.udir, curparams.vup, curparams.nrm);
+	fcross(curparams.udir, curparams.vup, curparams.nrm);
 	if (normalize(curparams.udir) == 0) {
 		fputs(progname, stderr);
 		fputs(": up vector coincides with sender normal\n", stderr);
 		return(-1);
 	}
-	VCROSS(curparams.vdir, curparams.nrm, curparams.udir);
+	fcross(curparams.vdir, curparams.nrm, curparams.udir);
+	if (curparams.sign == '-') {	/* left-handed coordinate system? */
+		curparams.udir[0] *= -1.;
+		curparams.udir[1] *= -1.;
+		curparams.udir[2] *= -1.;
+	}
 	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1')
 		curparams.sample_basis = sample_uniform;
 	else if (tolower(curparams.hemis[0]) == 's' &&
