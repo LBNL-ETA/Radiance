@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.26 2015/03/27 18:58:06 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.27 2015/04/01 01:38:36 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -849,7 +849,7 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 
 	while (n--) {			/* stratified sampling */
 		SDmultiSamp(samp2, 2, (n+frandom())/sampcnt);
-		if (!fi_getvec(duvw, b+samp2[1], kbasis[bi]))
+		if (!fo_getvec(duvw, b+samp2[1], kbasis[bi]))
 			return(0);
 		for (i = 3; i--; )
 			orig_dir[1][i] = -duvw[0]*p->udir[i] -

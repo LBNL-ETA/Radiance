@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.55 2015/03/27 18:58:06 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.56 2015/04/01 01:38:35 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -174,17 +174,18 @@ if ( $geout ) {
 	$wrapper .= " -g $mgfscn";
 }
 # Create receiver & sender surfaces (rectangular)
+my $FEPS = 1e-5;
 my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
 my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
 my $ns = 2**$ttlog2;
 open(RADSCN, "> $receivers");
-print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=+sc$ns\n" : "h=+kf\n");
-print RADSCN '#@rfluxmtx ' . "u=Y o=$facedat\n\n";
+print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=-sc$ns\n" : "h=-kf\n");
+print RADSCN '#@rfluxmtx ' . "u=-Y o=$facedat\n\n";
 print RADSCN "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n";
 print RADSCN "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n";
-print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=-sc$ns\n" : "h=-kf\n");
-print RADSCN '#@rfluxmtx ' . "u=Y o=$behinddat\n\n";
+print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=+sc$ns\n" : "h=+kf\n");
+print RADSCN '#@rfluxmtx ' . "u=-Y o=$behinddat\n\n";
 print RADSCN "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n";
 print RADSCN "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n";
 close RADSCN;
@@ -192,20 +193,20 @@ close RADSCN;
 $rfluxmtx .= " -n $nproc -c $nsamp";
 if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
 	open (RADSCN, "> $fsender");
-	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=+sc$ns\n\n" : "h=+kf\n\n");
+	print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=-sc$ns\n\n" : "h=-kf\n\n");
 	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[4];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[4];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[3], $dim[4];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[4];
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[4]-$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[4]-$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[4]-$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[4]-$FEPS;
 	close RADSCN;
 	open (RADSCN, "> $bsender");
-	print RADSCN '#@rfluxmtx u=Y ' . ($tensortree ? "h=-sc$ns\n\n" : "h=-kf\n\n");
+	print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=+sc$ns\n\n" : "h=+kf\n\n");
 	print RADSCN "void polygon bwd_sender\n0\n0\n12\n";
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[2], $dim[5];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[2], $dim[5];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[1], $dim[3], $dim[5];
-	printf RADSCN "\t%f\t%f\t%f\n", $dim[0], $dim[3], $dim[5];
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[5]+$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[5]+$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[5]+$FEPS;
+	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[5]+$FEPS;
 	close RADSCN;
 }
 # Calculate CIE (u',v') from Radiance RGB:
