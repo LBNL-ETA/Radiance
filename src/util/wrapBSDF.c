@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.13 2015/03/25 22:50:48 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.14 2015/04/02 16:40:32 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -445,32 +445,30 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 		break;
 	case DSxbar31:
 		puts("\t\t<Wavelength unit=\"Integral\">CIE-X</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>ASTM E308 1931 X.dsp</DetectorSpectrum>");
 		break;
 	case DSzbar31:
 		puts("\t\t<Wavelength unit=\"Integral\">CIE-Z</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>ASTM E308 1931 Z.dsp</DetectorSpectrum>");
 		break;
 	case DSuprime:
 		puts("\t\t<Wavelength unit=\"Integral\">CIE-u</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
-		puts("\t\t<DetectorSpectrum>ASTM E308 1931 u.dsp</DetectorSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		break;
 	case DSvprime:
 		puts("\t\t<Wavelength unit=\"Integral\">CIE-v</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
-		puts("\t\t<DetectorSpectrum>ASTM E308 1931 v.dsp</DetectorSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		break;
 	case DSsolar:
 		puts("\t\t<Wavelength unit=\"Integral\">Solar</Wavelength>");
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>None</DetectorSpectrum>");
 		break;
 	case DSnir:
 		puts("\t\t<Wavelength unit=\"Integral\">NIR</Wavelength>");
-		puts("\t\tSourceSpectrum>PLACE_HOLDER</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>PLACE_HOLDER</SourceSpectrum>");
 		puts("\t\t<DetectorSpectrum>PLACE_HOLDER</DetectorSpectrum>");
 		break;
 	default:
@@ -481,7 +479,7 @@ writeBSDFblock(const char *caller, struct s_dfile *df)
 				spectr_file[df->spectrum]);
 		if (cp != NULL)
 			*cp = '.';
-		puts("\t\tSourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
+		puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
 		printf("\t\t<DetectorSpectrum>%s</DetectorSpectrum>\n",
 				spectr_file[df->spectrum]);
 		break;

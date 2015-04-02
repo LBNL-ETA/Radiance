@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ezxml.c,v 2.7 2015/02/14 00:34:43 greg Exp $";
+static const char RCSid[] = "$Id: ezxml.c,v 2.8 2015/04/02 16:40:32 greg Exp $";
 #endif
 /* ezxml.c
  *
@@ -72,6 +72,14 @@ ezxml_t ezxml_child(ezxml_t xml, const char *name)
     xml = (xml) ? xml->child : NULL;
     while (xml && strcmp(name, xml->name)) xml = xml->sibling;
     return xml;
+}
+
+/* returns the given tag's character content or empty string if none */
+char *ezxml_txt(ezxml_t xml)
+{
+	if (xml == NULL)
+		return "";
+	return xml->txt;
 }
 
 /* returns the Nth tag with the same name in the same subsection or NULL if not */

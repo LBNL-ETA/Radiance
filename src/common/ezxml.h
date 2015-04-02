@@ -1,4 +1,4 @@
-/* RCSid $Id: ezxml.h,v 2.3 2015/02/14 00:34:43 greg Exp $ */
+/* RCSid $Id: ezxml.h,v 2.4 2015/04/02 16:40:32 greg Exp $ */
 /* ezxml.h
  *
  * Copyright 2004-2006 Aaron Voisine <aaron@voisine.org>
@@ -94,7 +94,7 @@ ezxml_t ezxml_idx(ezxml_t xml, int idx);
 #define ezxml_name(xml) ((xml) ? xml->name : NULL)
 
 /* returns the given tag's character content or empty string if none */
-#define ezxml_txt(xml) ((xml) ? xml->txt : "")
+char *ezxml_txt(ezxml_t xml);
 
 /* returns the value of the requested tag attribute, or NULL if not found */
 const char *ezxml_attr(ezxml_t xml, const char *attr);

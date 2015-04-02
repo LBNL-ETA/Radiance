@@ -2019,3 +2019,6 @@ New 5.0a version designation as suggested by Andy McNeil.
 Added left-hand coordinate sytems to rfluxmtx to correct
 problems with coordinate axis orientations pointed out by
 David Geisler-Moroder.
+
+Added color output to genBSDF (+C option) and support for
+color rendering of Klems data.

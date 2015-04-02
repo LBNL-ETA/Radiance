@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.28 2014/03/21 17:49:53 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.29 2015/04/02 16:40:32 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -13,7 +13,6 @@ static const char RCSid[] = "$Id: bsdf_m.c,v 3.28 2014/03/21 17:49:53 greg Exp $
 
 #define	_USE_MATH_DEFINES
 #include "rtio.h"
-#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 #include "ezxml.h"
@@ -65,6 +64,12 @@ ANGLE_BASIS	abase_list[MAXABASES] = {
 
 int		nabases = 3;		/* current number of defined bases */
 
+C_COLOR	mtx_RGB_prim[3];		/* our RGB primaries  */
+float	mtx_RGB_coef[3];		/* corresponding Y coefficients */
+
+enum {mtx_Y, mtx_X, mtx_Z};		/* matrix components (mtx_Y==0) */
+
+/* check if two real values are near enough to equal */
 static int
 fequal(double a, double b)
 {
@@ -73,19 +78,7 @@ fequal(double a, double b)
 	return (a <= 1e-6) & (a >= -1e-6);
 }
 
-/* Returns the given tag's character content or empty string if none */
-#ifdef ezxml_txt
-#undef ezxml_txt
-static char *
-ezxml_txt(ezxml_t xml)
-{
-	if (xml == NULL)
-		return "";
-	return xml->txt;
-}
-#endif
-
-/* Convert error to standard BSDF code */
+/* convert error to standard BSDF code */
 static SDError
 convert_errcode(int ec)
 {
@@ -106,7 +99,7 @@ convert_errcode(int ec)
 	return SDEunknown;
 }
 
-/* Allocate a BSDF matrix of the given size */
+/* allocate a BSDF matrix of the given size */
 static SDMat *
 SDnewMatrix(int ni, int no)
 {
@@ -130,7 +123,14 @@ SDnewMatrix(int ni, int no)
 }
 
 /* Free a BSDF matrix */
-#define	SDfreeMatrix		free
+void
+SDfreeMatrix(void *ptr)
+{
+	SDMat	*mp = (SDMat *)ptr;
+
+	if (mp->chroma != NULL) free(mp->chroma);
+	free(ptr);
+}
 
 /* Get vector for this angle basis index (front exiting) */
 int
@@ -288,6 +288,24 @@ fi_getndx(const FVECT v, void *p)
 	return fo_getndx(v2, p);
 }
 
+/* Get color or grayscale value for BSDF for the given direction pair */
+int
+mBSDF_color(float coef[], const SDMat *dp, int i, int o)
+{
+	C_COLOR	cxy;
+
+	coef[0] = mBSDF_value(dp, i, o);
+	if (dp->chroma == NULL)
+		return 1;	/* grayscale */
+
+	c_decodeChroma(&cxy, dp->chroma[o*dp->ninc + i]);
+	c_toSharpRGB(&cxy, coef[0], coef);
+	coef[0] *= mtx_RGB_coef[0];
+	coef[1] *= mtx_RGB_coef[1];
+	coef[2] *= mtx_RGB_coef[2];
+	return 3;		/* RGB color */
+}
+
 /* load custom BSDF angle basis */
 static int
 load_angle_basis(ezxml_t wab)
@@ -380,7 +398,7 @@ get_extrema(SDSpectralDF *df)
 
 /* load BSDF distribution for this wavelength */
 static int
-load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
+load_bsdf_data(SDData *sd, ezxml_t wdb, int ct, int rowinc)
 {
 	SDSpectralDF	*df;
 	SDMat		*dp;
@@ -395,32 +413,28 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 */
 	if (!strcasecmp(sdata, "Transmission Front")) {
-		if (sd->tb != NULL)
-			SDfreeSpectralDF(sd->tb);
-		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
+		if (sd->tb == NULL && (sd->tb = SDnewSpectralDF(3)) == NULL)
 			return RC_MEMERR;
 		df = sd->tb;
 	} else if (!strcasecmp(sdata, "Transmission Back")) {
-		if (sd->tf != NULL)
-			SDfreeSpectralDF(sd->tf);
-		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
+		if (sd->tf == NULL && (sd->tf = SDnewSpectralDF(3)) == NULL)
 			return RC_MEMERR;
 		df = sd->tf;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
-		if (sd->rb != NULL)
-			SDfreeSpectralDF(sd->rb);
-		if ((sd->rb = SDnewSpectralDF(1)) == NULL)
+		if (sd->rb == NULL && (sd->rb = SDnewSpectralDF(3)) == NULL)
 			return RC_MEMERR;
 		df = sd->rb;
 	} else if (!strcasecmp(sdata, "Reflection Back")) {
-		if (sd->rf != NULL)
-			SDfreeSpectralDF(sd->rf);
-		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
+		if (sd->rf == NULL && (sd->rf = SDnewSpectralDF(3)) == NULL)
 			return RC_MEMERR;
 		df = sd->rf;
 	} else
 		return RC_FAIL;
-	/* XXX should also check "ScatteringDataType" for consistency? */
+					/* free previous matrix if any */
+	if (df->comp[ct].dist != NULL) {
+		SDfreeMatrix(df->comp[ct].dist);
+		df->comp[ct].dist = NULL;
+	}
 					/* get angle bases */
 	sdata = ezxml_txt(ezxml_child(wdb,"ColumnAngleBasis"));
 	if (!sdata || !*sdata) {
@@ -477,9 +491,8 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 	}
 	dp->ib_ohm = &io_getohm;
 	dp->ob_ohm = &io_getohm;
-	df->comp[0].cspec[0] = c_dfcolor; /* XXX monochrome for now */
-	df->comp[0].dist = dp;
-	df->comp[0].func = &SDhandleMtx;
+	df->comp[ct].dist = dp;
+	df->comp[ct].func = &SDhandleMtx;
 					/* read BSDF data */
 	sdata = ezxml_txt(ezxml_child(wdb, "ScatteringData"));
 	if (!sdata || !*sdata) {
@@ -509,52 +522,134 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int rowinc)
 			dp->bsdf[i] = val;
 		sdata = sdnext;
 	}
-	return get_extrema(df);
+	return (ct == mtx_Y) ? get_extrema(df) : RC_GOOD;
 }
 
-/* Subtract minimum (diffuse) scattering amount from BSDF */
-static double
-subtract_min(SDMat *sm)
-{
-	float	minv = sm->bsdf[0];
-	int	n = sm->ninc*sm->nout;
-	int	i;
-	
-	for (i = n; --i; )
-		if (sm->bsdf[i] < minv)
-			minv = sm->bsdf[i];
-	
-	if (minv <= FTINY)
-		return .0;
-
-	for (i = n; i--; )
-		sm->bsdf[i] -= minv;
-
-	return minv*M_PI;		/* be sure to include multiplier */
-}
-
-/* Extract and separate diffuse portion of BSDF */
+/* copy our RGB (x,y) primary chromaticities */
 static void
-extract_diffuse(SDValue *dv, SDSpectralDF *df)
+copy_RGB_prims(C_COLOR cspec[])
 {
+	if (mtx_RGB_coef[1] < .001) {	/* need to initialize */
+		int	i = 3;
+		while (i--) {
+			float	rgb[3];
+			rgb[0] = rgb[1] = rgb[2] = .0f;
+			rgb[i] = 1.f;
+			mtx_RGB_coef[i] = c_fromSharpRGB(rgb, &mtx_RGB_prim[i]);
+		}
+	}
+	memcpy(cspec, mtx_RGB_prim, sizeof(mtx_RGB_prim));
+}
+
+/* encode chromaticity if XYZ -- reduce to one channel in any case */
+static SDSpectralDF *
+encode_chroma(SDSpectralDF *df)
+{
+	SDMat	*mpx, *mpy, *mpz;
 	int	n;
 
+	if (df == NULL || df->ncomp != 3)
+		return df;
+
+	mpy = (SDMat *)df->comp[mtx_Y].dist;
+	if (mpy == NULL) {
+		free(df);
+		return NULL;
+	}
+	mpx = (SDMat *)df->comp[mtx_X].dist;
+	mpz = (SDMat *)df->comp[mtx_Z].dist;
+	if (mpx == NULL || (mpx->ninc != mpy->ninc) | (mpx->nout != mpy->nout))
+		goto done;
+	if (mpz == NULL || (mpz->ninc != mpy->ninc) | (mpz->nout != mpy->nout))
+		goto done;
+	mpy->chroma = (C_CHROMA *)malloc(sizeof(C_CHROMA)*mpy->ninc*mpy->nout);
+	if (mpy->chroma == NULL)
+		goto done;		/* XXX punt */
+					/* encode chroma values */
+	for (n = mpy->ninc*mpy->nout; n--; ) {
+		const double	sum = mpx->bsdf[n] + mpy->bsdf[n] + mpz->bsdf[n];
+		C_COLOR		cxy;
+		if (sum > .0)
+			c_cset(&cxy, mpx->bsdf[n]/sum, mpy->bsdf[n]/sum);
+		else
+			c_cset(&cxy, 1./3., 1./3.);
+		mpy->chroma[n] = c_encodeChroma(&cxy);
+	}
+done:					/* free X & Z channels */
+	if (mpx != NULL) SDfreeMatrix(mpx);
+	if (mpz != NULL) SDfreeMatrix(mpz);
+	if (mpy->chroma == NULL)	/* grayscale after all? */
+		df->comp[0].cspec[0] = c_dfcolor;
+	else				/* else copy RGB primaries */
+		copy_RGB_prims(df->comp[0].cspec);
+	df->ncomp = 1;			/* return resized struct */
+	return (SDSpectralDF *)realloc(df, sizeof(SDSpectralDF));
+}
+
+/* subtract minimum (diffuse) scattering amount from BSDF */
+static double
+subtract_min(C_COLOR *cs, SDMat *sm)
+{
+	const int	ncomp = 1 + 2*(sm->chroma != NULL);
+	float		min_coef[3], coef[3];
+	int		i, o, c;
+	
+	min_coef[0] = min_coef[1] = min_coef[2] = FHUGE;
+	for (i = 0; i < sm->ninc; i++)
+		for (o = 0; o < sm->nout; o++) {
+			c = mBSDF_color(coef, sm, i, o);
+			while (c--)
+				if (coef[c] < min_coef[c])
+					min_coef[c] = coef[c];
+		}
+	for (c = ncomp; c--; )
+		if (min_coef[c] > FTINY)
+			break;
+	if (c < 0)
+		return .0;
+	if (ncomp == 1) {		/* subtract grayscale minimum */
+		for (i = sm->ninc*sm->nout; i--; )
+			sm->bsdf[i] -= min_coef[0];
+		*cs = c_dfcolor;
+		return min_coef[0]*M_PI;
+	}
+					/* else subtract colored minimum */
+	for (i = 0; i < sm->ninc; i++)
+		for (o = 0; o < sm->nout; o++) {
+			C_COLOR	cxy;
+			c = mBSDF_color(coef, sm, i, o);
+			while (c--)
+				coef[c] = (coef[c] - min_coef[c]) /
+						mtx_RGB_coef[c];
+			c_fromSharpRGB(coef, &cxy);
+			sm->chroma[o*sm->ninc + i] = c_encodeChroma(&cxy);
+			mBSDF_value(sm,i,o) -= min_coef[0]+min_coef[1]+min_coef[2];
+		}
+
+					/* return colored minimum */
+	c_cmix(cs, min_coef[0], &mtx_RGB_prim[0], min_coef[1], &mtx_RGB_prim[1]);
+	c_cmix(cs, min_coef[0]+min_coef[1], cs, min_coef[2], &mtx_RGB_prim[2]);
+
+	return (min_coef[0]+min_coef[1]+min_coef[2])*M_PI;
+}
+
+/* Extract and separate diffuse portion of BSDF & convert color */
+static SDSpectralDF *
+extract_diffuse(SDValue *dv, SDSpectralDF *df)
+{
+
+	df = encode_chroma(df);		/* reduce XYZ to Y + chroma */
 	if (df == NULL || df->ncomp <= 0) {
 		dv->spec = c_dfcolor;
 		dv->cieY = .0;
-		return;
+		return df;
 	}
-	dv->spec = df->comp[0].cspec[0];
-	dv->cieY = subtract_min((SDMat *)df->comp[0].dist);
-					/* in case of multiple components */
-	for (n = df->ncomp; --n; ) {
-		double	ymin = subtract_min((SDMat *)df->comp[n].dist);
-		c_cmix(&dv->spec, dv->cieY, &dv->spec, ymin, &df->comp[n].cspec[0]);
-		dv->cieY += ymin;
-	}
+					/* subtract minimum value */
+	dv->cieY = subtract_min(&dv->spec, (SDMat *)df->comp[0].dist);
 	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
 					/* make sure everything is set */
 	c_ccvt(&dv->spec, C_CSXY+C_CSSPEC);
+	return df;
 }
 
 /* Load a BSDF matrix from an open XML file */
@@ -594,21 +689,28 @@ SDloadMtx(SDData *sd, ezxml_t wtl)
 					/* load BSDF components */
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
-		if (strcasecmp(ezxml_txt(ezxml_child(wld,"Wavelength")),
-				"Visible"))
-			continue;	/* just visible for now */
+		const char	*cnm = ezxml_txt(ezxml_child(wld,"Wavelength"));
+		int		ct = -1;
+		if (!strcasecmp(cnm, "Visible"))
+			ct = mtx_Y;
+		else if (!strcasecmp(cnm, "CIE-X"))
+			ct = mtx_X;
+		else if (!strcasecmp(cnm, "CIE-Z"))
+			ct = mtx_Z;
+		else
+			continue;
 		for (wdb = ezxml_child(wld, "WavelengthDataBlock");
 					wdb != NULL; wdb = wdb->next)
-			if ((rval = load_bsdf_data(sd, wdb, rowIn)) < 0)
+			if ((rval = load_bsdf_data(sd, wdb, ct, rowIn)) < 0)
 				return convert_errcode(rval);
 	}
 					/* separate diffuse components */
-	extract_diffuse(&sd->rLambFront, sd->rf);
-	extract_diffuse(&sd->rLambBack, sd->rb);
+	sd->rf = extract_diffuse(&sd->rLambFront, sd->rf);
+	sd->rb = extract_diffuse(&sd->rLambBack, sd->rb);
 	if (sd->tf != NULL)
-		extract_diffuse(&sd->tLamb, sd->tf);
+		sd->tf = extract_diffuse(&sd->tLamb, sd->tf);
 	if (sd->tb != NULL)
-		extract_diffuse(&sd->tLamb, sd->tb);
+		sd->tb = extract_diffuse(&sd->tLamb, sd->tb);
 					/* return success */
 	return SDEnone;
 }
@@ -634,8 +736,8 @@ SDgetMtxBSDF(float coef[SDmaxCh], const FVECT outVec,
 	}
 	if ((i_ndx < 0) | (o_ndx < 0))
 		return 0;		/* nothing from this component */
-	coef[0] = mBSDF_value(dp, i_ndx, o_ndx);
-	return 1;			/* XXX monochrome for now */
+
+	return mBSDF_color(coef, dp, i_ndx, o_ndx);
 }
 
 /* Query solid angle for vector(s) */
