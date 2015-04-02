@@ -7,6 +7,9 @@ add_library(radiance
   m_mirror.c m_mist.c mx_func.c mx_data.c noise3.c normal.c o_face.c o_cone.c
   o_instance.c o_mesh.c p_data.c p_func.c preload.c raytrace.c renderopts.c
   source.c sphere.c srcobstr.c srcsupp.c srcsamp.c t_data.c t_func.c text.c
+  pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c 
+  pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c 
+  pmapdata.c pmapdiag.c pmaptype.c
   "${VERSION_FILE}" virtuals.c)
 
 if(WIN32)
@@ -29,7 +32,13 @@ target_link_libraries(lookamb rtrad)
 add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
 target_link_libraries(rcontrib radiance rtrad)
 
-set(targets_to_install lookamb radiance raycalls rtrace rpict rcontrib)
+add_executable(mkpmap mkpmap.c)
+target_link_libraries(mkpmap radiance rtrad)
+
+add_executable(pmapdump pmapdump.c pmaptype.c pmapparm.c)
+target_link_libraries(pmapdump radiance rtrad)
+
+set(targets_to_install lookamb radiance raycalls rtrace rpict rcontrib mkpmap pmapdump)
 
 if(X11_FOUND)
   set(X11_SOURCES x11.c x11twind.c)
