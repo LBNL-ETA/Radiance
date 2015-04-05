@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.37 2015/04/05 01:32:01 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.38 2015/04/05 06:02:43 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1241,8 +1241,9 @@ adjust_utree(float uprime, const double *cmin, double csiz, void *cptr)
 {
 	SDextRGBs	*mp = (SDextRGBs *)cptr;
 	double		cmax[SD_MAXDIM];
+	double		yval;
 	float		rgb[3];
-	int		ok;
+	C_COLOR		clr;
 
 	if (mp->stc[tt_Y]->ndim == 3) {
 		if (cmin[0] + .5*csiz >= .5)
@@ -1253,18 +1254,14 @@ adjust_utree(float uprime, const double *cmin, double csiz, void *cptr)
 	cmax[1] = cmin[1] + csiz;
 	cmax[2] = cmin[2] + csiz;
 					/* average RGB color over voxel */
-	SDyuv2rgb(SDavgTreBox(mp->stc[tt_Y], cmin, cmax), uprime,
+	SDyuv2rgb(yval=SDavgTreBox(mp->stc[tt_Y], cmin, cmax), uprime,
 			SDavgTreBox(mp->stc[tt_v], cmin, cmax), rgb);
-					/* subtract minimum */
-	ok = (rgb[0] -= mp->rgb[0]) > 1e-5;
-	ok &= (rgb[1] -= mp->rgb[1]) > 1e-5;
-	ok &= (rgb[2] -= mp->rgb[2]) > 1e-5;
-	if (ok) {			/* compute new u' for adj. RGB */
-		C_COLOR	clr;
-		c_fromSharpRGB(rgb, &clr);
-		uprime = 4.*clr.cx/(-2.*clr.cx + 12.*clr.cy + 3.);
-	} else
-		uprime = 4./3./(-2./3. + 12./3. + 3.);
+					/* subtract minimum (& clamp) */
+	if ((rgb[0] -= mp->rgb[0]) < 1e-5*yval) rgb[0] = 1e-5*yval;
+	if ((rgb[1] -= mp->rgb[1]) < 1e-5*yval) rgb[1] = 1e-5*yval;
+	if ((rgb[2] -= mp->rgb[2]) < 1e-5*yval) rgb[2] = 1e-5*yval;
+	c_fromSharpRGB(rgb, &clr);	/* compute new u' for adj. RGB */
+	uprime = 4.*clr.cx/(-2.*clr.cx + 12.*clr.cy + 3.);
 					/* assign in new u' tree */
 	mp->new_stu = SDsetVoxel(mp->new_stu, mp->stc[tt_Y]->ndim,
 					cmin, csiz, uprime);
@@ -1277,8 +1274,9 @@ adjust_vtree(float vprime, const double *cmin, double csiz, void *cptr)
 {
 	SDextRGBs	*mp = (SDextRGBs *)cptr;
 	double		cmax[SD_MAXDIM];
+	double		yval;
 	float		rgb[3];
-	int		ok;
+	C_COLOR		clr;
 
 	if (mp->stc[tt_Y]->ndim == 3) {
 		if (cmin[0] + .5*csiz >= .5)
@@ -1289,19 +1287,15 @@ adjust_vtree(float vprime, const double *cmin, double csiz, void *cptr)
 	cmax[1] = cmin[1] + csiz;
 	cmax[2] = cmin[2] + csiz;
 					/* average RGB color over voxel */
-	SDyuv2rgb(SDavgTreBox(mp->stc[tt_Y], cmin, cmax),
+	SDyuv2rgb(yval=SDavgTreBox(mp->stc[tt_Y], cmin, cmax),
 			SDavgTreBox(mp->stc[tt_u], cmin, cmax),
 			vprime, rgb);
-					/* subtract minimum */
-	ok = (rgb[0] -= mp->rgb[0]) > 1e-5;
-	ok &= (rgb[1] -= mp->rgb[1]) > 1e-5;
-	ok &= (rgb[2] -= mp->rgb[2]) > 1e-5;
-	if (ok) {			/* compute new v' for adj. RGB */
-		C_COLOR	clr;
-		c_fromSharpRGB(rgb, &clr);
-		vprime = 9.*clr.cy/(-2.*clr.cx + 12.*clr.cy + 3.);
-	} else
-		vprime = 9./3./(-2./3. + 12./3. + 3.);
+					/* subtract minimum (& clamp) */
+	if ((rgb[0] -= mp->rgb[0]) < 1e-5*yval) rgb[0] = 1e-5*yval;
+	if ((rgb[1] -= mp->rgb[1]) < 1e-5*yval) rgb[1] = 1e-5*yval;
+	if ((rgb[2] -= mp->rgb[2]) < 1e-5*yval) rgb[2] = 1e-5*yval;
+	c_fromSharpRGB(rgb, &clr);	/* compute new v' for adj. RGB */
+	vprime = 9.*clr.cy/(-2.*clr.cx + 12.*clr.cy + 3.);
 					/* assign in new v' tree */
 	mp->new_stv = SDsetVoxel(mp->new_stv, mp->stc[tt_Y]->ndim,
 					cmin, csiz, vprime);
