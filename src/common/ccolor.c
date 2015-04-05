@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.7 2015/03/26 15:57:19 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.8 2015/04/05 01:32:01 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -96,13 +96,17 @@ c_fromSharpRGB(float cin[3], C_COLOR *cout)
 {
 	double	xyz[3], sf;
 
-	xyz[0] = XYZfromSharp[0][0]*cin[0] + XYZfromSharp[0][1]*cin[1] +
-				XYZfromSharp[0][2]*cin[2];
 	xyz[1] = XYZfromSharp[1][0]*cin[0] + XYZfromSharp[1][1]*cin[1] +
 				XYZfromSharp[1][2]*cin[2];
+	if (xyz[1] <= 1e-6) {
+		*cout = c_dfcolor;	/* punting, here... */
+		return xyz[1];
+	}
+	xyz[0] = XYZfromSharp[0][0]*cin[0] + XYZfromSharp[0][1]*cin[1] +
+				XYZfromSharp[0][2]*cin[2];
 	xyz[2] = XYZfromSharp[2][0]*cin[0] + XYZfromSharp[2][1]*cin[1] +
 				XYZfromSharp[2][2]*cin[2];
-				
+	
 	sf = 1./(xyz[0] + xyz[1] + xyz[2]);
 
 	cout->cx = xyz[0] * sf;

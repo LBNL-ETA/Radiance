@@ -2021,4 +2021,4 @@ problems with coordinate axis orientations pointed out by
 David Geisler-Moroder.
 
 Added color output to genBSDF (+C option) and support for
-color rendering of Klems data.
+color rendering of Klems and tensor tree data.

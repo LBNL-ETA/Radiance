@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.29 2015/04/02 16:40:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.30 2015/04/05 01:32:01 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -64,8 +64,8 @@ ANGLE_BASIS	abase_list[MAXABASES] = {
 
 int		nabases = 3;		/* current number of defined bases */
 
-C_COLOR	mtx_RGB_prim[3];		/* our RGB primaries  */
-float	mtx_RGB_coef[3];		/* corresponding Y coefficients */
+C_COLOR		mtx_RGB_prim[3];	/* our RGB primaries  */
+float		mtx_RGB_coef[3];	/* corresponding Y coefficients */
 
 enum {mtx_Y, mtx_X, mtx_Z};		/* matrix components (mtx_Y==0) */
 
@@ -621,14 +621,14 @@ subtract_min(C_COLOR *cs, SDMat *sm)
 			while (c--)
 				coef[c] = (coef[c] - min_coef[c]) /
 						mtx_RGB_coef[c];
-			c_fromSharpRGB(coef, &cxy);
-			sm->chroma[o*sm->ninc + i] = c_encodeChroma(&cxy);
+			if (c_fromSharpRGB(coef, &cxy) > 1e-5)
+				sm->chroma[o*sm->ninc + i] = c_encodeChroma(&cxy);
 			mBSDF_value(sm,i,o) -= min_coef[0]+min_coef[1]+min_coef[2];
 		}
-
 					/* return colored minimum */
-	c_cmix(cs, min_coef[0], &mtx_RGB_prim[0], min_coef[1], &mtx_RGB_prim[1]);
-	c_cmix(cs, min_coef[0]+min_coef[1], cs, min_coef[2], &mtx_RGB_prim[2]);
+	for (i = 3; i--; )
+		coef[i] = min_coef[i]/mtx_RGB_coef[i];
+	c_fromSharpRGB(coef, cs);
 
 	return (min_coef[0]+min_coef[1]+min_coef[2])*M_PI;
 }

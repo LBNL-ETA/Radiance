@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.36 2014/11/11 23:33:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.37 2015/04/05 01:32:01 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -21,9 +21,8 @@ static const char RCSid[] = "$Id: bsdf_t.c,v 3.36 2014/11/11 23:33:21 greg Exp $
 #include "hilbert.h"
 
 /* Callback function type for SDtraverseTre() */
-typedef int	SDtreCallback(float val, const double *cmin,
-					double csiz, void *cptr);
-
+typedef int	SDtreCallback(float val, const double *cmin, double csiz,
+						void *cptr);
 					/* reference width maximum (1.0) */
 static const unsigned	iwbits = sizeof(unsigned)*4;
 static const unsigned	iwmax = 1<<(sizeof(unsigned)*4);
@@ -33,6 +32,13 @@ static const unsigned	cumlmax = ~0;
 static const FVECT	zvec = {.0, .0, 1.};
 					/* quantization value */
 static double		quantum = 1./256.;
+					/* our RGB primaries */
+static C_COLOR		tt_RGB_prim[3];
+static float		tt_RGB_coef[3];
+
+static const double	czero[SD_MAXDIM];
+
+enum {tt_Y, tt_u, tt_v};		/* tree components (tt_Y==0) */
 
 /* Struct used for our distribution-building callback */
 typedef struct {
@@ -108,7 +114,9 @@ SDFreeBTre(void *p)
 
 	if (sdt == NULL)
 		return;
-	SDfreeTre(sdt->st);
+	SDfreeTre(sdt->stc[tt_Y]);
+	SDfreeTre(sdt->stc[tt_u]);
+	SDfreeTre(sdt->stc[tt_v]);
 	free(sdt);
 }
 
@@ -169,6 +177,68 @@ SDsimplifyTre(SDNode *st)
 		st = stn;		/* return new one */
 	}
 	return st;
+}
+
+/* Assign the given voxel in tree (produces no grid nodes) */
+static SDNode *
+SDsetVoxel(SDNode *sroot, int nd, const double *tmin, const double tsiz, float val)
+{
+	double	ctrk[SD_MAXDIM];
+	double	csiz = 1.;
+	SDNode	*st;
+	int	i, n;
+					/* check arguments */
+	for (i = nd; i-- > 0; )
+		if ((tmin[i] < .0) | (tmin[i] >= 1.-FTINY))
+			break;
+	if ((i >= 0) | (nd <= 0) | (tsiz <= FTINY) | (tsiz > 1.+FTINY) |
+			(sroot != NULL && sroot->ndim != nd)) {
+		SDfreeTre(sroot);
+		return NULL;
+	}
+	if (tsiz >= 1.-FTINY) {		/* special case when tree is a leaf */
+		SDfreeTre(sroot);
+		if ((sroot = SDnewNode(nd, 0)) != NULL)
+			sroot->u.v[0] = val;
+		return sroot;
+	}
+					/* make sure we have branching root */
+	if (sroot != NULL && sroot->log2GR >= 0) {
+		SDfreeTre(sroot); sroot = NULL;
+	}
+	if (sroot == NULL && (sroot = SDnewNode(nd, -1)) == NULL)
+		return NULL;
+	st = sroot;			/* climb/grow tree */
+	memset(ctrk, 0, sizeof(ctrk));
+	for ( ; ; ) {
+		csiz *= .5;		/* find appropriate branch */
+		n = 0;
+		for (i = nd; i--; )
+			if (ctrk[i]+csiz <= tmin[i]+FTINY) {
+				ctrk[i] += csiz;
+				n |= 1 << i;
+			}
+					/* reached desired voxel? */
+		if (csiz <= tsiz+FTINY) {
+			SDfreeTre(st->u.t[n]);
+			st = st->u.t[n] = SDnewNode(nd, 0);
+			break;
+		}
+					/* else grow tree as needed */
+		if (st->u.t[n] != NULL && st->u.t[n]->log2GR >= 0) {
+			SDfreeTre(st->u.t[n]); st->u.t[n] = NULL;
+		}
+		if (st->u.t[n] == NULL)
+			st->u.t[n] = SDnewNode(nd, -1);
+		if ((st = st->u.t[n]) == NULL)
+			break;
+	}
+	if (st == NULL) {
+		SDfreeTre(sroot);
+		return NULL;
+	}
+	st->u.v[0] = val;		/* assign leaf and return root */
+	return sroot;
 }
 
 /* Find smallest leaf in tree */
@@ -279,6 +349,9 @@ SDdotravTre(const SDNode *st, const double *pos, int cmask,
 	int	rv, rval = 0;
 	double	bmin[SD_MAXDIM];
 	int	i, n;
+					/* paranoia */
+	if (st == NULL)
+		return 0;
 					/* in branches? */
 	if (st->log2GR < 0) {
 		unsigned	skipmask = 0;
@@ -377,7 +450,6 @@ static int
 SDtraverseTre(const SDNode *st, const double *pos, int cmask,
 				SDtreCallback *cf, void *cptr)
 {
-	static double	czero[SD_MAXDIM];
 	int		i;
 					/* check arguments */
 	if ((st == NULL) | (cf == NULL))
@@ -402,7 +474,7 @@ SDlookupTre(const SDNode *st, const double *pos, double *hcube)
 			hcube[i] = .0;
 	}
 					/* climb the tree */
-	while (st->log2GR < 0) {
+	while (st != NULL && st->log2GR < 0) {
 		n = 0;			/* move to appropriate branch */
 		if (hcube) hcube[st->ndim] *= .5;
 		for (i = st->ndim; i--; ) {
@@ -415,6 +487,8 @@ SDlookupTre(const SDNode *st, const double *pos, double *hcube)
 		st = st->u.t[n];	/* avoids tail recursion */
 		pos = spos;
 	}
+	if (st == NULL)			/* should never happen? */
+		return .0;
 	if (st->log2GR == 0)		/* short cut */
 		return st->u.v[0];
 	n = t = 0;			/* find grid array index */
@@ -430,55 +504,84 @@ SDlookupTre(const SDNode *st, const double *pos, double *hcube)
 	return st->u.v[n];		/* no interpolation */
 }
 
+/* Convert CIE (Y,u',v') color to our RGB */
+static void
+SDyuv2rgb(double yval, double uprime, double vprime, float rgb[3])
+{
+	const double	dfact = 1./(6.*uprime - 16.*vprime + 12.);
+	C_COLOR		cxy;
+
+	c_cset(&cxy, 9.*uprime*dfact, 4.*vprime*dfact);
+	c_toSharpRGB(&cxy, yval, rgb);
+}
+
 /* Query BSDF value and sample hypercube for the given vectors */
-static float
-SDqueryTre(const SDTre *sdt, const FVECT outVec, const FVECT inVec, double *hc)
+static int
+SDqueryTre(const SDTre *sdt, float *coef,
+		const FVECT outVec, const FVECT inVec, double *hc)
 {
 	const RREAL	*vtmp;
+	float		yval;
 	FVECT		rOutVec;
 	double		gridPos[4];
+
+	if (sdt->stc[tt_Y] == NULL)	/* paranoia, I hope */
+		return 0;
 
 	switch (sdt->sidef) {		/* whose side are you on? */
 	case SD_FREFL:
 		if ((outVec[2] < 0) | (inVec[2] < 0))
-			return -1.;
+			return 0;
 		break;
 	case SD_BREFL:
 		if ((outVec[2] > 0) | (inVec[2] > 0))
-			return -1.;
+			return 0;
 		break;
 	case SD_FXMIT:
 		if (outVec[2] > 0) {
 			if (inVec[2] > 0)
-				return -1.;
+				return 0;
 			vtmp = outVec; outVec = inVec; inVec = vtmp;
 		} else if (inVec[2] < 0)
-			return -1.;
+			return 0;
 		break;
 	case SD_BXMIT:
 		if (inVec[2] > 0) {
 			if (outVec[2] > 0)
-				return -1.;
+				return 0;
 			vtmp = outVec; outVec = inVec; inVec = vtmp;
 		} else if (outVec[2] < 0)
-			return -1.;
+			return 0;
 		break;
 	default:
-		return -1.;
+		return 0;
 	}
 					/* convert vector coordinates */
-	if (sdt->st->ndim == 3) {
+	if (sdt->stc[tt_Y]->ndim == 3) {
 		spinvector(rOutVec, outVec, zvec, -atan2(-inVec[1],-inVec[0]));
 		gridPos[0] = (.5-FTINY) -
 				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
 		SDdisk2square(gridPos+1, rOutVec[0], rOutVec[1]);
-	} else if (sdt->st->ndim == 4) {
+	} else if (sdt->stc[tt_Y]->ndim == 4) {
 		SDdisk2square(gridPos, -inVec[0], -inVec[1]);
 		SDdisk2square(gridPos+2, outVec[0], outVec[1]);
 	} else
-		return -1.;		/* should be internal error */
-
-	return SDlookupTre(sdt->st, gridPos, hc);
+		return 0;		/* should be internal error */
+					/* get BSDF value */
+	yval = SDlookupTre(sdt->stc[tt_Y], gridPos, hc);
+	if (sdt->stc[tt_u] == NULL || sdt->stc[tt_v] == NULL) {
+		if (coef != NULL) *coef = yval;
+		return 1;		/* no color */
+	}
+	if (coef == NULL)		/* just getting hypercube? */
+		return 1;
+					/* else decode color */
+	SDyuv2rgb(yval, SDlookupTre(sdt->stc[tt_u], gridPos, NULL),
+			SDlookupTre(sdt->stc[tt_v], gridPos, NULL), coef);
+	coef[0] *= tt_RGB_coef[0];
+	coef[1] *= tt_RGB_coef[1];
+	coef[2] *= tt_RGB_coef[2];
+	return 3;
 }
 
 /* Compute non-diffuse component for variable-resolution BSDF */
@@ -491,8 +594,7 @@ SDgetTreBSDF(float coef[SDmaxCh], const FVECT outVec,
 				|| sdc->dist == NULL)
 		return 0;
 					/* get nearest BSDF value */
-	coef[0] = SDqueryTre((SDTre *)sdc->dist, outVec, inVec, NULL);
-	return (coef[0] >= 0);		/* monochromatic for now */
+	return SDqueryTre((SDTre *)sdc->dist, coef, outVec, inVec, NULL);
 }
 
 /* Callback to build cumulative distribution using SDtraverseTre() */
@@ -568,7 +670,7 @@ make_cdist(const SDTre *sdt, const double *invec, int rev)
 					/* initialize scaffold */
 	myScaffold.wmin = iwmax;
 	myScaffold.wmax = 0;
-	myScaffold.nic = sdt->st->ndim - 2;
+	myScaffold.nic = sdt->stc[tt_Y]->ndim - 2;
 	myScaffold.rev = rev;
 	myScaffold.alen = 0;
 	myScaffold.nall = 512;
@@ -582,8 +684,8 @@ make_cdist(const SDTre *sdt, const double *invec, int rev)
 			pos[i+2*rev] = invec[i];
 	cmask <<= 2*rev;
 					/* grow the distribution */
-	if (SDtraverseTre(sdt->st, pos, cmask,
-				&build_scaffold, &myScaffold) < 0) {
+	if (SDtraverseTre(sdt->stc[tt_Y], pos, cmask,
+				build_scaffold, &myScaffold) < 0) {
 		free(myScaffold.darr);
 		return NULL;
 	}
@@ -600,7 +702,7 @@ make_cdist(const SDTre *sdt, const double *invec, int rev)
 	cd->isodist = (myScaffold.nic == 1);
 					/* sort the distribution */
 	qsort(myScaffold.darr, cd->calen = myScaffold.alen,
-				sizeof(struct outdir_s), &sscmp);
+				sizeof(struct outdir_s), sscmp);
 
 					/* record input range */
 	scale = myScaffold.wmin / (double)iwmax;
@@ -671,12 +773,12 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	default:
 		return NULL;
 	}
-	if (sdt->st->ndim == 3) {	/* isotropic BSDF? */
+	if (sdt->stc[tt_Y]->ndim == 3) {	/* isotropic BSDF? */
 		if (mode != sdt->sidef)	/* XXX unhandled reciprocity */
 			return &SDemptyCD;
 		inCoord[0] = (.5-FTINY) -
 				.5*sqrt(inVec[0]*inVec[0] + inVec[1]*inVec[1]);
-	} else if (sdt->st->ndim == 4) {
+	} else if (sdt->stc[tt_Y]->ndim == 4) {
 		if (mode != sdt->sidef)	/* use reciprocity? */
 			SDdisk2square(inCoord, inVec[0], inVec[1]);
 		else
@@ -684,14 +786,14 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	} else
 		return NULL;		/* should be internal error */
 					/* quantize to avoid f.p. errors */
-	for (i = sdt->st->ndim - 2; i--; )
+	for (i = sdt->stc[tt_Y]->ndim - 2; i--; )
 		inCoord[i] = floor(inCoord[i]/quantum)*quantum + .5*quantum;
 	cdlast = NULL;			/* check for direction in cache list */
 	for (cd = (SDTreCDst *)sdc->cdList; cd != NULL;
 					cdlast = cd, cd = cd->next) {
 		if (cd->sidef != mode)
 			continue;
-		for (i = sdt->st->ndim - 2; i--; )
+		for (i = sdt->stc[tt_Y]->ndim - 2; i--; )
 			if ((cd->clim[i][0] > inCoord[i]) |
 					(inCoord[i] >= cd->clim[i][1]))
 				break;
@@ -722,11 +824,11 @@ SDqueryTreProjSA(double *psa, const FVECT v1, const RREAL *v2,
 	if (v2 != NULL) {
 		const SDTre	*sdt = (SDTre *)sdc->dist;
 		double		hcube[SD_MAXDIM+1];
-		if (SDqueryTre(sdt, v1, v2, hcube) < 0) {
+		if (!SDqueryTre(sdt, NULL, v1, v2, hcube)) {
 			strcpy(SDerrorDetail, "Bad call to SDqueryTreProjSA");
 			return SDEinternal;
 		}
-		myPSA[0] = hcube[sdt->st->ndim];
+		myPSA[0] = hcube[sdt->stc[tt_Y]->ndim];
 		myPSA[1] = myPSA[0] *= myPSA[0] * M_PI;
 	} else {
 		const SDTreCDst	*cd = (const SDTreCDst *)SDgetTreCDist(v1, sdc);
@@ -908,7 +1010,7 @@ load_tree_data(char **spp, int nd)
 static SDError
 get_extrema(SDSpectralDF *df)
 {
-	SDNode	*st = (*(SDTre *)df->comp[0].dist).st;
+	SDNode	*st = (*(SDTre *)df->comp[0].dist).stc[tt_Y];
 	double	stepWidth, dhemi, bmin[4], bmax[4];
 
 	stepWidth = SDsmallestLeaf(st);
@@ -948,7 +1050,7 @@ get_extrema(SDSpectralDF *df)
 
 /* Load BSDF distribution for this wavelength */
 static SDError
-load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
+load_bsdf_data(SDData *sd, ezxml_t wdb, int ct, int ndim)
 {
 	SDSpectralDF	*df;
 	SDTre		*sdt;
@@ -961,32 +1063,23 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 	 * Remember that front and back are reversed from WINDOW 6 orientations
 	 */
 	if (!strcasecmp(sdata, "Transmission Front")) {
-		if (sd->tb != NULL)
-			SDfreeSpectralDF(sd->tb);
-		if ((sd->tb = SDnewSpectralDF(1)) == NULL)
+		if (sd->tb == NULL && (sd->tb = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->tb;
 	} else if (!strcasecmp(sdata, "Transmission Back")) {
-		if (sd->tf != NULL)
-			SDfreeSpectralDF(sd->tf);
-		if ((sd->tf = SDnewSpectralDF(1)) == NULL)
+		if (sd->tf == NULL && (sd->tf = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->tf;
 	} else if (!strcasecmp(sdata, "Reflection Front")) {
-		if (sd->rb != NULL)
-			SDfreeSpectralDF(sd->rb);
-		if ((sd->rb = SDnewSpectralDF(1)) == NULL)
+		if (sd->rb == NULL && (sd->rb = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->rb;
 	} else if (!strcasecmp(sdata, "Reflection Back")) {
-		if (sd->rf != NULL)
-			SDfreeSpectralDF(sd->rf);
-		if ((sd->rf = SDnewSpectralDF(1)) == NULL)
+		if (sd->rf == NULL && (sd->rf = SDnewSpectralDF(1)) == NULL)
 			return SDEmemory;
 		df = sd->rf;
 	} else
 		return SDEnone;
-	/* XXX should also check "ScatteringDataType" for consistency? */
 					/* get angle bases */
 	sdata = ezxml_txt(ezxml_child(wdb,"AngleBasis"));
 	if (!sdata || strcasecmp(sdata, "LBNL/Shirley-Chiu")) {
@@ -994,22 +1087,28 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 				!sdata ? "Missing" : "Unsupported", sd->name);
 		return !sdata ? SDEformat : SDEsupport;
 	}
-					/* allocate BSDF tree */
-	sdt = (SDTre *)malloc(sizeof(SDTre));
-	if (sdt == NULL)
-		return SDEmemory;
-	if (df == sd->rf)
-		sdt->sidef = SD_FREFL;
-	else if (df == sd->rb)
-		sdt->sidef = SD_BREFL;
-	else if (df == sd->tf)
-		sdt->sidef = SD_FXMIT;
-	else /* df == sd->tb */
-		sdt->sidef = SD_BXMIT;
-	sdt->st = NULL;
-	df->comp[0].cspec[0] = c_dfcolor; /* XXX monochrome for now */
-	df->comp[0].dist = sdt;
-	df->comp[0].func = &SDhandleTre;
+	if (df->comp[0].dist == NULL) {	/* need to allocate BSDF tree? */
+		sdt = (SDTre *)malloc(sizeof(SDTre));
+		if (sdt == NULL)
+			return SDEmemory;
+		if (df == sd->rf)
+			sdt->sidef = SD_FREFL;
+		else if (df == sd->rb)
+			sdt->sidef = SD_BREFL;
+		else if (df == sd->tf)
+			sdt->sidef = SD_FXMIT;
+		else /* df == sd->tb */
+			sdt->sidef = SD_BXMIT;
+		sdt->stc[tt_Y] = sdt->stc[tt_u] = sdt->stc[tt_v] = NULL;
+		df->comp[0].dist = sdt;
+		df->comp[0].func = &SDhandleTre;
+	} else {
+		sdt = (SDTre *)df->comp[0].dist;
+		if (sdt->stc[ct] != NULL) {
+			SDfreeTre(sdt->stc[ct]);
+			sdt->stc[ct] = NULL;
+		}
+	}
 					/* read BSDF data */
 	sdata = ezxml_txt(ezxml_child(wdb, "ScatteringData"));
 	if (!sdata || !next_token(&sdata)) {
@@ -1017,8 +1116,8 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 				sd->name);
 		return SDEformat;
 	}
-	sdt->st = load_tree_data(&sdata, ndim);
-	if (sdt->st == NULL)
+	sdt->stc[ct] = load_tree_data(&sdata, ndim);
+	if (sdt->stc[ct] == NULL)
 		return SDEformat;
 	if (next_token(&sdata)) {	/* check for unconsumed characters */
 		sprintf(SDerrorDetail,
@@ -1027,10 +1126,11 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ndim)
 		return SDEformat;
 	}
 					/* flatten branches where possible */
-	sdt->st = SDsimplifyTre(sdt->st);
-	if (sdt->st == NULL)
+	sdt->stc[ct] = SDsimplifyTre(sdt->stc[ct]);
+	if (sdt->stc[ct] == NULL)
 		return SDEinternal;
-	return get_extrema(df);		/* compute global quantities */
+					/* compute global quantities for Y */
+	return (ct == tt_Y) ? get_extrema(df) : SDEnone;
 }
 
 /* Find minimum value in tree */
@@ -1070,9 +1170,9 @@ SDsubtractTreVal(SDNode *st, float val)
 	}
 }
 
-/* Subtract minimum value from BSDF */
+/* Subtract minimum Y value from BSDF */
 static double
-subtract_min(SDNode *st)
+subtract_min_Y(SDNode *st)
 {
 	float	vmin;
 					/* be sure to skip unused portion */
@@ -1102,24 +1202,170 @@ subtract_min(SDNode *st)
 	return M_PI * vmin;		/* return hemispherical value */
 }
 
+/* Struct used in callback to find RGB extrema */
+typedef struct {
+	SDNode	**stc;			/* original Y, u' & v' trees */
+	float	rgb[3];			/* RGB value */
+	SDNode	*new_stu, *new_stv;	/* replacement u' & v' trees */
+} SDextRGBs;
+
+/* Callback to find minimum RGB from Y value plus CIE (u',v') trees */
+static int
+get_min_RGB(float yval, const double *cmin, double csiz, void *cptr)
+{
+	SDextRGBs	*mp = (SDextRGBs *)cptr;
+	double		cmax[SD_MAXDIM];
+	float		rgb[3];
+
+	if (mp->stc[tt_Y]->ndim == 3) {
+		if (cmin[0] + .5*csiz >= .5)
+			return 0;	/* ignore dead half of isotropic */
+	} else
+		cmax[3] = cmin[3] + csiz;
+	cmax[0] = cmin[0] + csiz;
+	cmax[1] = cmin[1] + csiz;
+	cmax[2] = cmin[2] + csiz;
+					/* average RGB color over voxel */
+	SDyuv2rgb(yval, SDavgTreBox(mp->stc[tt_u], cmin, cmax),
+			SDavgTreBox(mp->stc[tt_v], cmin, cmax), rgb);
+					/* track smallest components */
+	if (rgb[0] < mp->rgb[0]) mp->rgb[0] = rgb[0];
+	if (rgb[1] < mp->rgb[1]) mp->rgb[1] = rgb[1];
+	if (rgb[2] < mp->rgb[2]) mp->rgb[2] = rgb[2];
+	return 0;
+}
+
+/* Callback to build adjusted u' tree */
+static int
+adjust_utree(float uprime, const double *cmin, double csiz, void *cptr)
+{
+	SDextRGBs	*mp = (SDextRGBs *)cptr;
+	double		cmax[SD_MAXDIM];
+	float		rgb[3];
+	int		ok;
+
+	if (mp->stc[tt_Y]->ndim == 3) {
+		if (cmin[0] + .5*csiz >= .5)
+			return 0;	/* ignore dead half of isotropic */
+	} else
+		cmax[3] = cmin[3] + csiz;
+	cmax[0] = cmin[0] + csiz;
+	cmax[1] = cmin[1] + csiz;
+	cmax[2] = cmin[2] + csiz;
+					/* average RGB color over voxel */
+	SDyuv2rgb(SDavgTreBox(mp->stc[tt_Y], cmin, cmax), uprime,
+			SDavgTreBox(mp->stc[tt_v], cmin, cmax), rgb);
+					/* subtract minimum */
+	ok = (rgb[0] -= mp->rgb[0]) > 1e-5;
+	ok &= (rgb[1] -= mp->rgb[1]) > 1e-5;
+	ok &= (rgb[2] -= mp->rgb[2]) > 1e-5;
+	if (ok) {			/* compute new u' for adj. RGB */
+		C_COLOR	clr;
+		c_fromSharpRGB(rgb, &clr);
+		uprime = 4.*clr.cx/(-2.*clr.cx + 12.*clr.cy + 3.);
+	} else
+		uprime = 4./3./(-2./3. + 12./3. + 3.);
+					/* assign in new u' tree */
+	mp->new_stu = SDsetVoxel(mp->new_stu, mp->stc[tt_Y]->ndim,
+					cmin, csiz, uprime);
+	return -(mp->new_stu == NULL);
+}
+
+/* Callback to build adjusted v' tree */
+static int
+adjust_vtree(float vprime, const double *cmin, double csiz, void *cptr)
+{
+	SDextRGBs	*mp = (SDextRGBs *)cptr;
+	double		cmax[SD_MAXDIM];
+	float		rgb[3];
+	int		ok;
+
+	if (mp->stc[tt_Y]->ndim == 3) {
+		if (cmin[0] + .5*csiz >= .5)
+			return 0;	/* ignore dead half of isotropic */
+	} else
+		cmax[3] = cmin[3] + csiz;
+	cmax[0] = cmin[0] + csiz;
+	cmax[1] = cmin[1] + csiz;
+	cmax[2] = cmin[2] + csiz;
+					/* average RGB color over voxel */
+	SDyuv2rgb(SDavgTreBox(mp->stc[tt_Y], cmin, cmax),
+			SDavgTreBox(mp->stc[tt_u], cmin, cmax),
+			vprime, rgb);
+					/* subtract minimum */
+	ok = (rgb[0] -= mp->rgb[0]) > 1e-5;
+	ok &= (rgb[1] -= mp->rgb[1]) > 1e-5;
+	ok &= (rgb[2] -= mp->rgb[2]) > 1e-5;
+	if (ok) {			/* compute new v' for adj. RGB */
+		C_COLOR	clr;
+		c_fromSharpRGB(rgb, &clr);
+		vprime = 9.*clr.cy/(-2.*clr.cx + 12.*clr.cy + 3.);
+	} else
+		vprime = 9./3./(-2./3. + 12./3. + 3.);
+					/* assign in new v' tree */
+	mp->new_stv = SDsetVoxel(mp->new_stv, mp->stc[tt_Y]->ndim,
+					cmin, csiz, vprime);
+	return -(mp->new_stv == NULL);
+}
+
+/* Subtract minimum (diffuse) color and return luminance & CIE (x,y) */
+static double
+subtract_min_RGB(C_COLOR *cs, SDNode *stc[])
+{
+	SDextRGBs	my_min;
+	double		ymin;
+
+	my_min.stc = stc;
+	my_min.rgb[0] = my_min.rgb[1] = my_min.rgb[2] = FHUGE;
+	my_min.new_stu = my_min.new_stv = NULL;
+					/* get minimum RGB value */
+	SDtraverseTre(stc[tt_Y], NULL, 0, get_min_RGB, &my_min);
+	ymin = tt_RGB_coef[0]*my_min.rgb[0] +
+			tt_RGB_coef[1]*my_min.rgb[1] +
+					tt_RGB_coef[2]*my_min.rgb[2];
+	if (ymin <= 1e-5) {
+		*cs = c_dfcolor;
+		return .0;		/* not worth bothering about */
+	}
+					/* adjust u' & v' values */
+	SDtraverseTre(stc[tt_u], NULL, 0, adjust_utree, &my_min);
+	SDtraverseTre(stc[tt_v], NULL, 0, adjust_vtree, &my_min);
+	SDfreeTre(stc[tt_u]); SDfreeTre(stc[tt_v]);
+	stc[tt_u] = SDsimplifyTre(my_min.new_stu);
+	stc[tt_v] = SDsimplifyTre(my_min.new_stv);
+					/* finally, subtract Y value */
+	SDsubtractTreVal(stc[tt_Y], ymin);
+					/* return color and Y */
+	c_fromSharpRGB(my_min.rgb, cs);
+	return M_PI*ymin;
+}
+
 /* Extract and separate diffuse portion of BSDF */
 static void
 extract_diffuse(SDValue *dv, SDSpectralDF *df)
 {
 	int	n;
+	SDTre	*sdt;
 
 	if (df == NULL || df->ncomp <= 0) {
 		dv->spec = c_dfcolor;
 		dv->cieY = .0;
 		return;
 	}
-	dv->spec = df->comp[0].cspec[0];
-	dv->cieY = subtract_min((*(SDTre *)df->comp[0].dist).st);
-					/* in case of multiple components */
-	for (n = df->ncomp; --n; ) {
-		double	ymin = subtract_min((*(SDTre *)df->comp[n].dist).st);
-		c_cmix(&dv->spec, dv->cieY, &dv->spec, ymin, &df->comp[n].cspec[0]);
-		dv->cieY += ymin;
+	sdt = (SDTre *)df->comp[0].dist;
+					/* subtract minimum color/grayscale */
+	if (sdt->stc[tt_u] != NULL && sdt->stc[tt_v] != NULL) {
+		int	i = 3*(tt_RGB_coef[1] < .001);
+		while (i--) {		/* initialize on first call */
+			float	rgb[3];
+			rgb[0] = rgb[1] = rgb[2] = .0f; rgb[i] = 1.f;
+			tt_RGB_coef[i] = c_fromSharpRGB(rgb, &tt_RGB_prim[i]);
+		}
+		memcpy(df->comp[0].cspec, tt_RGB_prim, sizeof(tt_RGB_prim));
+		dv->cieY = subtract_min_RGB(&dv->spec, sdt->stc);
+	} else {
+		df->comp[0].cspec[0] = c_dfcolor;
+		dv->cieY = subtract_min_Y(sdt->stc[tt_Y]);
 	}
 	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
 					/* make sure everything is set */
@@ -1156,12 +1402,19 @@ SDloadTre(SDData *sd, ezxml_t wtl)
 					/* load BSDF components */
 	for (wld = ezxml_child(wtl, "WavelengthData");
 				wld != NULL; wld = wld->next) {
-		if (strcasecmp(ezxml_txt(ezxml_child(wld,"Wavelength")),
-				"Visible"))
-			continue;	/* just visible for now */
+		const char	*cnm = ezxml_txt(ezxml_child(wld,"Wavelength"));
+		int		ct = -1;
+		if (!strcasecmp(cnm, "Visible"))
+			ct = tt_Y;
+		else if (!strcasecmp(cnm, "CIE-u"))
+			ct = tt_u;
+		else if (!strcasecmp(cnm, "CIE-v"))
+			ct = tt_v;
+		else
+			continue;
 		for (wdb = ezxml_child(wld, "WavelengthDataBlock");
 					wdb != NULL; wdb = wdb->next)
-			if ((ec = load_bsdf_data(sd, wdb, rank)) != SDEnone)
+			if ((ec = load_bsdf_data(sd, wdb, ct, rank)) != SDEnone)
 				return ec;
 	}
 					/* separate diffuse components */

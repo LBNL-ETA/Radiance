@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.11 2013/11/10 17:32:09 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.12 2015/04/05 01:32:01 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -36,8 +36,8 @@ typedef struct SDNode_s {
 
 /* Variable-resolution BSDF holder */
 typedef struct {
-	int	sidef;		/* transmitted component? */
-	SDNode	*st;		/* BSDF tree */
+	int	sidef;		/* which component */
+	SDNode	*stc[3];	/* BSDF (Y,u,v) trees */
 } SDTre;
 
 /* Holder for cumulative distribution (sum of BSDF * projSA) */
