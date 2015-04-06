@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.38 2015/04/05 06:02:43 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.39 2015/04/06 16:00:15 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1194,8 +1194,8 @@ subtract_min_Y(SDNode *st)
 	} else				/* anisotropic covers entire tree */
 		vmin = SDgetTreMin(st);
 
-	if (vmin <= FTINY)
-		return .0;
+	if (vmin <= .01/M_PI)
+		return .0;		/* not worth bothering about */
 
 	SDsubtractTreVal(st, vmin);
 
@@ -1317,7 +1317,7 @@ subtract_min_RGB(C_COLOR *cs, SDNode *stc[])
 	ymin = tt_RGB_coef[0]*my_min.rgb[0] +
 			tt_RGB_coef[1]*my_min.rgb[1] +
 					tt_RGB_coef[2]*my_min.rgb[2];
-	if (ymin <= 1e-5) {
+	if (ymin <= .01/M_PI) {
 		*cs = c_dfcolor;
 		return .0;		/* not worth bothering about */
 	}

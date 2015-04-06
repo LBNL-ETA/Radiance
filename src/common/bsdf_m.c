@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.30 2015/04/05 01:32:01 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.31 2015/04/06 16:00:15 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -591,7 +591,7 @@ static double
 subtract_min(C_COLOR *cs, SDMat *sm)
 {
 	const int	ncomp = 1 + 2*(sm->chroma != NULL);
-	float		min_coef[3], coef[3];
+	float		min_coef[3], ymin, coef[3];
 	int		i, o, c;
 	
 	min_coef[0] = min_coef[1] = min_coef[2] = FHUGE;
@@ -602,16 +602,16 @@ subtract_min(C_COLOR *cs, SDMat *sm)
 				if (coef[c] < min_coef[c])
 					min_coef[c] = coef[c];
 		}
+	ymin = 0;
 	for (c = ncomp; c--; )
-		if (min_coef[c] > FTINY)
-			break;
-	if (c < 0)
+		ymin += min_coef[c];
+	if (ymin <= .01/M_PI)		/* not worth bothering about? */
 		return .0;
 	if (ncomp == 1) {		/* subtract grayscale minimum */
 		for (i = sm->ninc*sm->nout; i--; )
-			sm->bsdf[i] -= min_coef[0];
+			sm->bsdf[i] -= ymin;
 		*cs = c_dfcolor;
-		return min_coef[0]*M_PI;
+		return M_PI*ymin;
 	}
 					/* else subtract colored minimum */
 	for (i = 0; i < sm->ninc; i++)
@@ -623,14 +623,14 @@ subtract_min(C_COLOR *cs, SDMat *sm)
 						mtx_RGB_coef[c];
 			if (c_fromSharpRGB(coef, &cxy) > 1e-5)
 				sm->chroma[o*sm->ninc + i] = c_encodeChroma(&cxy);
-			mBSDF_value(sm,i,o) -= min_coef[0]+min_coef[1]+min_coef[2];
+			mBSDF_value(sm,i,o) -= ymin;
 		}
 					/* return colored minimum */
 	for (i = 3; i--; )
 		coef[i] = min_coef[i]/mtx_RGB_coef[i];
 	c_fromSharpRGB(coef, cs);
 
-	return (min_coef[0]+min_coef[1]+min_coef[2])*M_PI;
+	return M_PI*ymin;
 }
 
 /* Extract and separate diffuse portion of BSDF & convert color */
