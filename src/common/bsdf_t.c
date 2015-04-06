@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.39 2015/04/06 16:00:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.40 2015/04/06 18:28:35 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1314,24 +1314,20 @@ subtract_min_RGB(C_COLOR *cs, SDNode *stc[])
 	my_min.new_stu = my_min.new_stv = NULL;
 					/* get minimum RGB value */
 	SDtraverseTre(stc[tt_Y], NULL, 0, get_min_RGB, &my_min);
-	ymin = tt_RGB_coef[0]*my_min.rgb[0] +
-			tt_RGB_coef[1]*my_min.rgb[1] +
-					tt_RGB_coef[2]*my_min.rgb[2];
-	if (ymin <= .01/M_PI) {
-		*cs = c_dfcolor;
-		return .0;		/* not worth bothering about */
-	}
-					/* adjust u' & v' values */
+					/* convert to C_COLOR */
+	ymin = 	c_fromSharpRGB(my_min.rgb, cs);
+	if (ymin <= .01/M_PI)		/* not worth bothering about? */
+		return .0;
+					/* adjust u' & v' trees */
 	SDtraverseTre(stc[tt_u], NULL, 0, adjust_utree, &my_min);
 	SDtraverseTre(stc[tt_v], NULL, 0, adjust_vtree, &my_min);
 	SDfreeTre(stc[tt_u]); SDfreeTre(stc[tt_v]);
 	stc[tt_u] = SDsimplifyTre(my_min.new_stu);
 	stc[tt_v] = SDsimplifyTre(my_min.new_stv);
-					/* finally, subtract Y value */
+					/* subtract Y & return hemispherical */
 	SDsubtractTreVal(stc[tt_Y], ymin);
-					/* return color and Y */
-	c_fromSharpRGB(my_min.rgb, cs);
-	return M_PI*ymin;
+
+	return M_PI * ymin;
 }
 
 /* Extract and separate diffuse portion of BSDF */
