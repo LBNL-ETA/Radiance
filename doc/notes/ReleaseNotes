@@ -2022,3 +2022,7 @@ David Geisler-Moroder.
 
 Added color output to genBSDF (+C option) and support for
 color rendering of Klems and tensor tree data.
+
+Fixed bug discovered by Jacob Jonsson in Klems BSDF
+interpolator that caused it to over-predict normal
+transmittance and reflectance.

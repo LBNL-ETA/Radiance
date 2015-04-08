@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.31 2015/04/06 16:00:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.32 2015/04/08 02:41:02 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -132,6 +132,9 @@ SDfreeMatrix(void *ptr)
 	free(ptr);
 }
 
+/* compute square of real value */
+static double sq(double x) { return x*x; }
+
 /* Get vector for this angle basis index (front exiting) */
 int
 fo_getvec(FVECT v, double ndxr, void *p)
@@ -141,17 +144,17 @@ fo_getvec(FVECT v, double ndxr, void *p)
 	double		randX = ndxr - ndx;
 	double		rx[2];
 	int		li;
-	double		pol, azi, d;
+	double		azi, d;
 	
 	if ((ndxr < 0) | (ndx >= ab->nangles))
 		return RC_FAIL;
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
 	SDmultiSamp(rx, 2, randX);
-	pol = M_PI/180.*( (1.-rx[0])*ab->lat[li].tmin +
-				rx[0]*ab->lat[li+1].tmin );
+	d = (1. - randX)*sq(cos(M_PI/180.*ab->lat[li].tmin)) +
+		randX*sq(cos(M_PI/180.*ab->lat[li+1].tmin));
+	v[2] = d = sqrt(d);	/* cos(pol) */
 	azi = 2.*M_PI*(ndx + rx[1] - .5)/ab->lat[li].nphis;
-	v[2] = d = cos(pol);
 	d = sqrt(1. - d*d);	/* sin(pol) */
 	v[0] = cos(azi)*d;
 	v[1] = sin(azi)*d;
@@ -183,9 +186,6 @@ fo_getndx(const FVECT v, void *p)
 		ndx += ab->lat[li].nphis;
 	return ndx;
 }
-
-/* compute square of real value */
-static double sq(double x) { return x*x; }
 
 /* Get projected solid angle for this angle basis index (universal) */
 double
