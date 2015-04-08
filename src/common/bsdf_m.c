@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.32 2015/04/08 02:41:02 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.33 2015/04/08 16:10:47 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -151,8 +151,8 @@ fo_getvec(FVECT v, double ndxr, void *p)
 	for (li = 0; ndx >= ab->lat[li].nphis; li++)
 		ndx -= ab->lat[li].nphis;
 	SDmultiSamp(rx, 2, randX);
-	d = (1. - randX)*sq(cos(M_PI/180.*ab->lat[li].tmin)) +
-		randX*sq(cos(M_PI/180.*ab->lat[li+1].tmin));
+	d = (1. - rx[0])*sq(cos(M_PI/180.*ab->lat[li].tmin)) +
+		rx[0]*sq(cos(M_PI/180.*ab->lat[li+1].tmin));
 	v[2] = d = sqrt(d);	/* cos(pol) */
 	azi = 2.*M_PI*(ndx + rx[1] - .5)/ab->lat[li].nphis;
 	d = sqrt(1. - d*d);	/* sin(pol) */
