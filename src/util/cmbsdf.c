@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.2 2014/01/20 22:18:29 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.3 2015/04/17 01:47:03 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -15,7 +15,7 @@ static const char RCSid[] = "$Id: cmbsdf.c,v 2.2 2014/01/20 22:18:29 greg Exp $"
 
 /* Convert a BSDF to our matrix representation */
 static CMATRIX *
-cm_bsdf(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
+cm_bsdf(const COLOR diffBSDF, const SDMat *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->nout, bsdf->ninc);
 	int	nbadohm = 0;
@@ -33,10 +33,14 @@ cm_bsdf(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
 					/* check BSDF value */
 			if ((f <= 0) | (dom <= 0)) {
 				nneg += (f < -FTINY);
-				f = .0f;
-			}
-			copycolor(mp, specCol);
-			scalecolor(mp, f);
+				setcolor(mp, .0f, .0f, .0f);
+			} else if (bsdf->chroma != NULL) {
+				C_COLOR	cxy;
+				c_decodeChroma(&cxy,
+					bsdf->chroma[r*bsdf->ninc + c]);
+				ccy2rgb(&cxy, f, mp);
+			} else
+				setcolor(mp, f, f, f);
 			addcolor(mp, diffBSDF);
 			scalecolor(mp, dom);
 		}
@@ -76,7 +80,7 @@ recip_in_from_out(const SDMat *bsdf, int out_recip)
 
 /* Convert a BSDF to our matrix representation, applying reciprocity */
 static CMATRIX *
-cm_bsdf_recip(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
+cm_bsdf_recip(const COLOR diffBSDF, const SDMat *bsdf)
 {
 	CMATRIX	*cm = cm_alloc(bsdf->ninc, bsdf->nout);
 	int	nbadohm = 0;
@@ -96,10 +100,14 @@ cm_bsdf_recip(const COLOR diffBSDF, const COLOR specCol, const SDMat *bsdf)
 					/* check BSDF value */
 			if ((f <= 0) | (dom <= 0)) {
 				nneg += (f < -FTINY);
-				f = .0f;
-			}
-			copycolor(mp, specCol);
-			scalecolor(mp, f);
+				setcolor(mp, .0f, .0f, .0f);
+			} else if (bsdf->chroma != NULL) {
+				C_COLOR	cxy;
+				c_decodeChroma(&cxy,
+					bsdf->chroma[ro*bsdf->ninc + ri]);
+				ccy2rgb(&cxy, f, mp);
+			} else
+				setcolor(mp, f, f, f);
 			addcolor(mp, diffBSDF);
 			scalecolor(mp, dom);
 		}
@@ -138,7 +146,7 @@ cm_loadBTDF(char *fname)
 	SDError		ec;
 	SDData		myBSDF;
 	SDSpectralDF	*tdf;
-	COLOR		diffBSDF, specCol;
+	COLOR		diffBSDF;
 					/* find path to BSDF file */
 	fpath = getpath(fname, getrlibpath(), R_OK);
 	if (fpath == NULL) {
@@ -161,9 +169,8 @@ cm_loadBTDF(char *fname)
 		error(USER, errmsg);
 	}
 					/* convert BTDF to matrix */
-	ccy2rgb(&tdf->comp[0].cspec[0], 1., specCol);
-	Tmat = recip ? cm_bsdf_recip(diffBSDF, specCol, (SDMat *)tdf->comp[0].dist)
-			: cm_bsdf(diffBSDF, specCol, (SDMat *)tdf->comp[0].dist);
+	Tmat = recip ? cm_bsdf_recip(diffBSDF, (SDMat *)tdf->comp[0].dist)
+			: cm_bsdf(diffBSDF, (SDMat *)tdf->comp[0].dist);
 					/* free BSDF and return */
 	SDfreeBSDF(&myBSDF);
 	return(Tmat);
