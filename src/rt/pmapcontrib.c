@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmapcontrib.c,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmapcontrib.c,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -20,7 +20,6 @@
 #include "pmapdiag.h"
 #include "rcontrib.h"
 #include "otypes.h"
-#include <signal.h>
 
 
 

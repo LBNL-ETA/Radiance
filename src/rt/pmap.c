@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmap.c,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmap.c,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -20,7 +20,6 @@
 #include "pmapbias.h"
 #include "pmapdiag.h"
 #include "otypes.h"
-#include <signal.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -28,7 +27,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.1 $";
+static char PmapRevision [] = "$Revision: 2.2 $";
 
 
 
@@ -266,7 +265,7 @@ static void preComputeGlobal (PhotonMap *pmap)
    repStartTime = time(NULL);
    signal(SIGCONT, pmapPreCompReport);
    repProgress = 0;
-   bcopy(pmap -> heap, nuHeap, nuHeapSize * sizeof(Photon));
+   memcpy(nuHeap, pmap -> heap, nuHeapSize * sizeof(Photon));
    
    for (i = 0, p = nuHeap; i < nuHeapSize; i++, p++) {
       ray.ro = NULL;

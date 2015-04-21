@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmapsrc.c,v 2.1 2015/02/24 19:39:27 greg Exp $
+   $Id: pmapsrc.c,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -46,8 +46,8 @@ static int flatPhotonPartition2 (EmissionMap* emap, unsigned long mp,
       if (!emap -> partitions) 
          error(USER, "can't allocate source partitions");
 
-      bzero(emap -> partitions + (emap -> maxPartitions >> 2), 
-            emap -> maxPartitions >> 2);
+      memset(emap -> partitions + (emap -> maxPartitions >> 2), 0,
+             emap -> maxPartitions >> 2);
    }
    
    if (du2 * dv2 <= 1) {                /* hit limit? */
@@ -100,7 +100,7 @@ static void flatPhotonPartition (EmissionMap* emap)
    RREAL    *vp;
    double   du2, dv2;
 
-   bzero(emap -> partitions, emap -> maxPartitions >> 1);
+   memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
    emap -> partArea = srcsizerat * thescene.cusize;
    emap -> partArea *= emap -> partArea;
    vp = emap -> src -> ss [SU];
@@ -132,7 +132,7 @@ static void sourcePhotonPartition (EmissionMap* emap)
    
    else {
       /* No photon ports defined, so partition scene cube faces */
-      bzero(emap -> partitions, emap -> maxPartitions >> 1);
+      memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
       setpart(emap -> partitions, 0, S0);
       emap -> partitionCnt = 0;
       emap -> numPartitions = 1 / srcsizerat;
@@ -150,7 +150,7 @@ static void spherePhotonPartition (EmissionMap* emap)
 {
    unsigned numTheta, numPhi;
    
-   bzero(emap -> partitions, emap -> maxPartitions >> 1);
+   memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
    setpart(emap -> partitions, 0, S0);
    emap -> partArea = 4 * PI * sqr(emap -> src -> srad);
    emap -> numPartitions = emap -> partArea / 
@@ -180,7 +180,8 @@ static int cylPhotonPartition2 (EmissionMap* emap, unsigned long mp,
                                                    emap -> maxPartitions >> 1);
       if (!emap -> partitions) 
          error(USER, "can't allocate source partitions");
-      bzero(emap -> partitions + (emap -> maxPartitions >> 2), 
+         
+      memset(emap -> partitions + (emap -> maxPartitions >> 2), 0,
             emap -> maxPartitions >> 2);
    }
    
@@ -222,7 +223,7 @@ static void cylPhotonPartition (EmissionMap* emap)
 {
    double d2;
 
-   bzero(emap -> partitions, emap -> maxPartitions >> 1);
+   memset(emap -> partitions, 0, emap -> maxPartitions >> 1);
    d2 = srcsizerat * thescene.cusize;
    d2 = PI * emap -> src -> ss2 / (2 * emap -> src -> srad * sqr(d2));
    d2 *= d2 * DOT(emap -> src -> ss [SU], emap -> src -> ss [SU]);

@@ -10,7 +10,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: pmaprand.h,v 2.1 2015/02/24 19:39:27 greg Exp $
+   $Id: pmaprand.h,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -20,11 +20,19 @@
    erand48() with separate states for photon emission, scattering, and
    russian roulette. The pmapSeed() and pmapRandom() macros can be adapted
    to other (better?) RNGs. */   
-   
-#define pmapSeed(seed, state) (state [0] += seed, state [1] += seed, \
-                               state [2] += seed)
-#define pmapRandom(state) erand48(state)
 
+#if defined(_WIN32) || defined(BSD)
+   /* Assume no erand48(), so use standard RNG without explicit multistate 
+      control; the resulting sequences will be suboptimal */      
+   #include "random.h"
+   
+   #define pmapSeed(seed, state) (srandom(seed))
+   #define pmapRandom(state)     (frandom())
+#else
+   #define pmapSeed(seed, state) (state [0] += seed, state [1] += seed, \
+                                  state [2] += seed)
+   #define pmapRandom(state) erand48(state)
+#endif
 
    
 extern unsigned short partState [3], emitState [3], cntState [3],
@@ -32,3 +40,4 @@ extern unsigned short partState [3], emitState [3], cntState [3],
                       randSeed;
 
 #endif
+

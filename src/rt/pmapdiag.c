@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: pmapdiag.c,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmapdiag.c,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -15,7 +15,6 @@
 #include "pmapdiag.h"
 #include "pmapdata.h"
 #include "standard.h"
-#include <signal.h>
 
 
 
@@ -190,6 +189,8 @@ void pmapBiasCompReport (char *stats)
    void pmapPreCompReport()
    /* Report global photon precomputation progress */
    {
+      char tmp [512];
+      
       repLastTime = time(NULL);
       sprintf(errmsg, "%lu precomputed, ", repProgress);
 

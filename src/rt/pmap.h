@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmap.h,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmap.h,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -18,9 +18,14 @@
    #include "pmapdata.h"
 
 
-
-   #define min(a, b) ((a) < (b) ? (a) : (b))
-   #define max(a, b) ((a) > (b) ? (a) : (b))
+   #ifndef min
+      #define min(a, b) ((a) < (b) ? (a) : (b))
+   #endif
+   
+   #ifndef max
+      #define max(a, b) ((a) > (b) ? (a) : (b))
+   #endif
+   
    #define sqr(a)    ((a) * (a))
 
    /* Average over colour channels */

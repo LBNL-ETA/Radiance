@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmapdump.c,v 2.1 2015/02/24 19:39:27 greg Exp $
+   $Id: pmapdump.c,v 2.2 2015/04/21 19:16:51 greg Exp $
 */
 
 
@@ -18,6 +18,7 @@
 #include "rtio.h"
 #include "resolu.h"
 #include "random.h"
+#include "math.h"
 
 
 /* Defaults */
@@ -35,7 +36,7 @@ typedef struct {
 } RadianceDef;
 
    
-static char header [] = "$Revision: 2.1 $";
+static char header [] = "$Revision: 2.2 $";
 
 
 /* Colour code is as follows:    global         = blue
@@ -166,7 +167,7 @@ int main (int argc, char** argv)
          (= sphere distrib density ^-1/3) */
       vol = (maxPos [0] - minPos [0]) * (maxPos [1] - minPos [1]) * 
             (maxPos [2] - minPos [2]);
-      rad = radScale * RADCOEFF * cbrt(vol / numSpheres);
+      rad = radScale * RADCOEFF * pow(vol / numSpheres, 1./3.);
       
       /* Photon dump probability to satisfy target sphere count */
       dumpRatio = numSpheres < numPhotons ? (float)numSpheres / numPhotons
