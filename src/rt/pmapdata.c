@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmapdata.c,v 2.2 2015/04/22 15:44:57 rschregle Exp $
 */
 
 
@@ -384,11 +384,13 @@ void findPhotons (PhotonMap* pmap, const RAY* ray)
                error(WARNING, errmsg);
 #endif
             }
+#ifdef PMAP_LOOKUP_REDO
             else {
                sprintf(errmsg, "max photon lookup radius clamped to %.1e",
                        pmap -> maxDist0);
                error(WARNING, errmsg);
             }
+#endif
          }
          
          /* Reset successful lookup counter */
