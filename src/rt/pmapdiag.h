@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: pmapdiag.h,v 2.2 2015/04/21 19:16:51 greg Exp $
+   $Id: pmapdiag.h,v 2.3 2015/04/22 20:28:16 rschregle Exp $
 */
    
 
@@ -33,13 +33,7 @@
    #include  <time.h>   
    #include  <signal.h>
    
-   #ifdef _WIN32
-      #ifndef SIGCONT
-         #define SIGCONT	0
-      #endif
-   #endif
-   
-   
+
    /* Time at start & last report */
    extern time_t repStartTime, repLastTime;   
    /* Report progress & completion counters */

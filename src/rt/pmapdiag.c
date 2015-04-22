@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: pmapdiag.c,v 2.2 2015/04/21 19:16:51 greg Exp $
+   $Id: pmapdiag.c,v 2.3 2015/04/22 20:28:16 rschregle Exp $
 */
 
 
@@ -118,7 +118,7 @@ void pmapBiasCompReport (char *stats)
       eputs(errmsg);
       fflush(stderr);
       
-      #ifndef BSD
+      #ifdef SIGCONT
          signal(SIGCONT, pmapPreCompReport);
       #endif
    }
@@ -179,7 +179,7 @@ void pmapBiasCompReport (char *stats)
       eputs(errmsg);
       fflush(stderr);
       
-      #ifndef BSD
+      #ifndef SIGCONT
          signal(SIGCONT, pmapDistribReport);
       #endif
    }

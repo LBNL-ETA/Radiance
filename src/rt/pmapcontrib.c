@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmapcontrib.c,v 2.2 2015/04/21 19:16:51 greg Exp $
+   $Id: pmapcontrib.c,v 2.3 2015/04/22 20:28:16 rschregle Exp $
 */
 
 
@@ -268,7 +268,9 @@ void distribPhotonContrib (PhotonMap* pm)
 
    /* Record start time and enable progress report signal handler */
    repStartTime = time(NULL);
-   signal(SIGCONT, pmapDistribReport);
+   #ifdef SIGCONT   
+      signal(SIGCONT, pmapDistribReport);
+   #endif   
    
    for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
       unsigned portCnt = 0, passCnt = 0, prePassCnt = 0;
@@ -437,7 +439,7 @@ void distribPhotonContrib (PhotonMap* pm)
                      if (photonRepTime > 0 && 
                          time(NULL) >= repLastTime + photonRepTime)
                         pmapDistribReport();
-                     #ifndef BSD
+                     #ifdef SIGCONT
                         else signal(SIGCONT, pmapDistribReport);
                      #endif
                   }
@@ -468,7 +470,9 @@ void distribPhotonContrib (PhotonMap* pm)
    /* ================================================================
     * POST-DISTRIBUTION - Set photon flux and build kd-tree, etc.
     * ================================================================ */
-   signal(SIGCONT, SIG_DFL);
+   #ifdef SIGCONT    
+      signal(SIGCONT, SIG_DFL);
+   #endif   
    free(emap.samples);
 
    if (!pm -> heapEnd)

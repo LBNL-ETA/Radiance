@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts   
    ==================================================================
    
-   $Id: pmap.c,v 2.2 2015/04/21 19:16:51 greg Exp $
+   $Id: pmap.c,v 2.3 2015/04/22 20:28:16 rschregle Exp $
 */
 
 
@@ -27,7 +27,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.2 $";
+static char PmapRevision [] = "$Revision: 2.3 $";
 
 
 
@@ -263,7 +263,9 @@ static void preComputeGlobal (PhotonMap *pmap)
    
    /* Record start time, baby */
    repStartTime = time(NULL);
-   signal(SIGCONT, pmapPreCompReport);
+   #ifdef SIGCONT
+      signal(SIGCONT, pmapPreCompReport);
+   #endif
    repProgress = 0;
    memcpy(nuHeap, pmap -> heap, nuHeapSize * sizeof(Photon));
    
@@ -284,12 +286,14 @@ static void preComputeGlobal (PhotonMap *pmap)
       
       if (photonRepTime > 0 && time(NULL) >= repLastTime + photonRepTime)
          pmapPreCompReport();
-#ifndef BSD
-      else signal(SIGCONT, pmapPreCompReport);
-#endif
+      #ifdef SIGCONT
+         else signal(SIGCONT, pmapPreCompReport);
+      #endif
    }
    
-   signal(SIGCONT, SIG_DFL);
+   #ifdef SIGCONT   
+      signal(SIGCONT, SIG_DFL);
+   #endif
    
    /* Replace & rebuild heap */
    free(pmap -> heap);
@@ -400,7 +404,9 @@ void distribPhotons (PhotonMap **pmaps)
 
    /* Record start time and enable progress report signal handler */
    repStartTime = time(NULL);
-   signal(SIGCONT, pmapDistribReport);
+   #ifdef SIGCONT
+      signal(SIGCONT, pmapDistribReport);
+   #endif
    repProgress = prePassCnt = 0;
    
    if (photonRepTime)
@@ -560,7 +566,7 @@ void distribPhotons (PhotonMap **pmaps)
                   if (photonRepTime > 0 && 
                       time(NULL) >= repLastTime + photonRepTime)
                      pmapDistribReport();
-                  #ifndef BSD
+                  #ifdef SIGCONT
                      else signal(SIGCONT, pmapDistribReport);
                   #endif
                }
@@ -590,7 +596,9 @@ void distribPhotons (PhotonMap **pmaps)
    /* ===================================================================
     * POST-DISTRIBUTION - Set photon flux and build kd-tree, etc.
     * =================================================================== */
-   signal(SIGCONT, SIG_DFL);
+   #ifdef SIGCONT    
+      signal(SIGCONT, SIG_DFL);
+   #endif
    free(emap.samples);
    
    /* Set photon flux (repProgress is total num emitted) */
