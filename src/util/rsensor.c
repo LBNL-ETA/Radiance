@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.15 2015/04/23 23:34:18 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.16 2015/04/23 23:54:08 greg Exp $";
 #endif
 
 /*
@@ -209,6 +209,7 @@ load_sensor(
 {
 	int	warnedneg;
 	char	linebuf[8192];
+	int	last_pos_val = 0;
 	int	nelem = 1000;
 	float	*sarr = (float *)malloc(sizeof(float)*nelem);
 	FILE	*fp;
@@ -269,7 +270,8 @@ load_sensor(
 					error(WARNING, errmsg);
 				}
 				sarr[i] = .0;
-			}
+			} else if (i > ntp[0]*(ntp[1]+1) && sarr[i] > FTINY)
+				last_pos_val = i;
 			++i;
 		}
 		if (i == ntp[0]*(ntp[1]+1))
@@ -288,9 +290,13 @@ load_sensor(
 			error(USER, errmsg);
 		}
 	}
-	nelem = i;
+						/* truncate zero region */
+	ntp[0] = (last_pos_val + ntp[1])/(ntp[1]+1) - 1;
+	nelem = (ntp[0]+1)*(ntp[1]+1);
 	fclose(fp);
 	errmsg[0] = '\0';			/* sanity checks */
+	if (!last_pos_val)
+		sprintf(errmsg, "no positive sensor values in file '%s'", sfile);
 	if (ntp[0] <= 0)
 		sprintf(errmsg, "no data in sensor file '%s'", sfile);
 	else if (fabs(sarr[ntp[1]+1]) > FTINY)
@@ -305,8 +311,8 @@ load_sensor(
 				sfile);
 	else if (sarr[ntp[0]*(ntp[1]+1)] <= FTINY)
 		sprintf(errmsg,
-			"maximum theta must be positive in sensor file '%s'",
-				sfile);
+			"maximum theta (%f) must be positive in sensor file '%s'",
+				sarr[ntp[0]*(ntp[1]+1)], sfile);
 	if (errmsg[0])
 		error(USER, errmsg);
 	return((float *)realloc((void *)sarr, sizeof(float)*nelem));
