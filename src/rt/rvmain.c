@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.12 2015/02/24 19:39:27 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.13 2015/04/23 17:42:04 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -228,11 +228,8 @@ main(int argc, char *argv[])
 					/* set up output & start process(es) */
 	SET_FILE_BINARY(stdout);
 	
-	ray_init(octnm);
+	ray_init(octnm);		/* also calls ray_init_pmap() */
 	
-	/* PMAP: set up & load photon maps */
-	ray_init_pmap();
-
 	rview();			/* run interactive viewer */
 
 	devclose();			/* close output device */
