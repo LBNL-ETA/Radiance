@@ -4,10 +4,11 @@
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts   
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.c,v 2.3 2015/04/22 20:28:16 rschregle Exp $
+   $Id: pmap.c,v 2.4 2015/04/23 20:02:04 rschregle Exp $
 */
 
 
@@ -27,7 +28,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.3 $";
+static char PmapRevision [] = "$Revision: 2.4 $";
 
 
 
@@ -64,7 +65,8 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
    for (t = 0; t < NUM_PMAP_TYPES; t++)
       if (setPmapParam(&pm, parm + t)) {         
          /* Check if photon map newer than octree */
-         if (!stat(pm -> fileName, &pmstat) && !stat(octname, &octstat) && 
+         if (pm -> fileName && octname &&
+             !stat(pm -> fileName, &pmstat) && !stat(octname, &octstat) && 
              octstat.st_mtime > pmstat.st_mtime) {
             sprintf(errmsg, "photon map in file %s may be stale", 
                     pm -> fileName);
