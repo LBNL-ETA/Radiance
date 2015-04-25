@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.9 2015/04/05 01:32:01 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.10 2015/04/25 19:08:29 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -60,7 +60,7 @@ loadBSDF(char *fname)
 	checkDF(sd->name, sd->rLambBack.cieY, sd->rb, "rear reflection");
 	checkDF(sd->name, sd->tLamb.cieY, sd->tf, "front transmission");
 	checkDF(sd->name, sd->tLamb.cieY, sd->tb, "back transmission");
-#if 0
+#ifdef DEBUG
 {
 float	rgb[3];
 fprintf(stderr, "Loaded BSDF '%s' (file \"%s\")\n", sd->name, pname);

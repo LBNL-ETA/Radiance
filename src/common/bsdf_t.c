@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.41 2015/04/24 21:02:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.42 2015/04/25 19:08:29 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -571,7 +571,7 @@ SDqueryTre(const SDTre *sdt, float *coef,
 	yval = SDlookupTre(sdt->stc[tt_Y], gridPos, hc);
 	if (coef == NULL)		/* just getting hypercube? */
 		return 1;
-	if ((sdt->stc[tt_u] == NULL) | (sdt->stc[tt_v] == NULL)) {
+	if (sdt->stc[tt_u] == NULL || sdt->stc[tt_v] == NULL) {
 		*coef = yval;
 		return 1;		/* no color */
 	}
@@ -1354,7 +1354,7 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 		memcpy(df->comp[0].cspec, tt_RGB_prim, sizeof(tt_RGB_prim));
 		dv->cieY = subtract_min_RGB(&dv->spec, sdt->stc);
 	} else {
-		df->comp[0].cspec[0] = c_dfcolor;
+		df->comp[0].cspec[0] = dv->spec = c_dfcolor;
 		dv->cieY = subtract_min_Y(sdt->stc[tt_Y]);
 	}
 	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
