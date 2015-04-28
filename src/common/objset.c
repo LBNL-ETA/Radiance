@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: objset.c,v 2.16 2006/02/22 17:05:36 greg Exp $";
+static const char	RCSid[] = "$Id: objset.c,v 2.17 2015/04/28 16:56:10 greg Exp $";
 #endif
 /*
  *  objset.c - routines for maintaining object sets.
@@ -23,15 +23,23 @@ static const char	RCSid[] = "$Id: objset.c,v 2.16 2006/02/22 17:05:36 greg Exp $
 #endif
 #endif
 
+#undef xtra_long
+#ifdef _WIN64
+typedef unsigned long long int	xtra_long;
+#else
+typedef unsigned long int	xtra_long;
+#endif
+
 static OBJECT  *ostable[OSTSIZ];	/* the object set table */
 
 
 void
-insertelem(os, obj)		/* insert obj into os, no questions */
-register OBJECT  *os;
-OBJECT  obj;
+insertelem(			/* insert obj into os, no questions */
+	OBJECT  *os,
+	OBJECT  obj
+)
 {
-	register int  i;
+	int  i;
 	
 	for (i = os[0]++; i > 0; i--)
 		if (os[i] > obj)
@@ -43,11 +51,12 @@ OBJECT  obj;
 
 
 void
-deletelem(os, obj)		/* delete obj from os, no questions */
-register OBJECT  *os;
-OBJECT  obj;
+deletelem(			/* delete obj from os, no questions */
+	OBJECT  *os,
+	OBJECT  obj
+)
 {
-	register int  i;
+	int  i;
 
 	i = (*os)--;
 	os++;
@@ -63,12 +72,13 @@ OBJECT  obj;
 
 
 int
-inset(os, obj)			/* determine if object is in set */
-register OBJECT  *os;
-OBJECT  obj;
+inset(				/* determine if object is in set */
+	OBJECT  *os,
+	OBJECT  obj
+)
 {
 	int  upper, lower;
-	register int  cm, i;
+	int  cm, i;
 
 	if ((i = os[0]) <= 12) {	/* linear search algorithm */
 		cm = obj;
@@ -95,10 +105,12 @@ OBJECT  obj;
 
 
 int
-setequal(os1, os2)		/* determine if two sets are equal */
-register OBJECT  *os1, *os2;
+setequal(			/* determine if two sets are equal */
+	OBJECT  *os1,
+	OBJECT	*os2
+)
 {
-	register int  i;
+	int  i;
 
 	for (i = *os1; i-- >= 0; )
 		if (*os1++ != *os2++)
@@ -108,10 +120,12 @@ register OBJECT  *os1, *os2;
 
 
 void
-setcopy(os1, os2)		/* copy object set os2 into os1 */
-register OBJECT  *os1, *os2;
+setcopy(			/* copy object set os2 into os1 */
+	OBJECT  *os1,
+	OBJECT	*os2
+)
 {
-	register int  i;
+	int  i;
 
 	for (i = *os2; i-- >= 0; )
 		*os1++ = *os2++;
@@ -119,12 +133,13 @@ register OBJECT  *os1, *os2;
 
 
 OBJECT *
-setsave(os)			/* allocate space and save set */
-register OBJECT  *os;
+setsave(			/* allocate space and save set */
+	OBJECT  *os
+)
 {
 	OBJECT  *osnew;
-	register OBJECT  *oset;
-	register int  i;
+	OBJECT  *oset;
+	int  i;
 
 	if ((osnew = oset = (OBJECT *)malloc((*os+1)*sizeof(OBJECT))) == NULL)
 		error(SYSTEM, "out of memory in setsave\n");
@@ -135,10 +150,13 @@ register OBJECT  *os;
 
 
 void
-setunion(osr, os1, os2)		/* osr = os1 Union os2 */
-register OBJECT  *osr, *os1, *os2;
+setunion(			/* osr = os1 Union os2 */
+	OBJECT  *osr,
+	OBJECT  *os1,
+	OBJECT	*os2
+)
 {
-	register int	i1, i2;
+	int	i1, i2;
 
 	osr[0] = 0;
 	for (i1 = i2 = 1; i1 <= os1[0] || i2 <= os2[0]; ) {
@@ -155,10 +173,13 @@ register OBJECT  *osr, *os1, *os2;
 
 
 void
-setintersect(osr, os1, os2)	/* osr = os1 Intersect os2 */
-register OBJECT  *osr, *os1, *os2;
+setintersect(			/* osr = os1 Intersect os2 */
+	OBJECT  *osr,
+	OBJECT  *os1,
+	OBJECT	*os2
+)
 {
-	register int	i1, i2;
+	int	i1, i2;
 
 	osr[0] = 0;
 	if (os1[0] <= 0)
@@ -177,14 +198,15 @@ register OBJECT  *osr, *os1, *os2;
 
 
 OCTREE
-fullnode(oset)			/* return octree for object set */
-OBJECT  *oset;
+fullnode(			/* return octree for object set */
+	OBJECT  *oset
+)
 {
-	int  osentry, ntries;
-	long  hval;
+	unsigned int  ntries;
+	xtra_long  hval;
 	OCTREE  ot;
-	register int  i;
-	register OBJECT  *os;
+	int  osentry, i;
+	OBJECT  *os;
 					/* hash on set */
 	hval = 0;
 	os = oset;
@@ -193,7 +215,7 @@ OBJECT  *oset;
 		hval += *os++;
 	ntries = 0;
 tryagain:
-	osentry = (hval + (long)ntries*ntries) % OSTSIZ;
+	osentry = (hval + (xtra_long)ntries*ntries) % OSTSIZ;
 	os = ostable[osentry];
 	if (os == NULL) {
 		os = ostable[osentry] = (OBJECT *)malloc(
@@ -235,12 +257,13 @@ memerr:
 
 
 void
-objset(oset, ot)		/* get object set for full node */
-register OBJECT  *oset;
-OCTREE  ot;
+objset(			/* get object set for full node */
+	OBJECT  *oset,
+	OCTREE  ot
+)
 {
-	register OBJECT  *os;
-	register int  i;
+	OBJECT  *os;
+	int  i;
 
 	if (!isfull(ot))
 		goto noderr;
@@ -259,9 +282,9 @@ noderr:
 
 
 void
-donesets()			/* free ALL SETS in our table */
+donesets(void)			/* free ALL SETS in our table */
 {
-	register int  n;
+	int  n;
 
 	for (n = 0; n < OSTSIZ; n++) 
 		if (ostable[n] != NULL) {
