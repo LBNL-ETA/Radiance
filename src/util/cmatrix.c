@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.8 2014/08/02 17:10:43 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.9 2015/05/04 20:53:21 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -143,17 +143,23 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 	return(NULL);
 }
 
-/* Allocate and load a matrix from the given file (or stdin if NULL) */
+/* Allocate and load a matrix from the given input (or stdin if NULL) */
 CMATRIX *
-cm_load(const char *fname, int nrows, int ncols, int dtype)
+cm_load(const char *inspec, int nrows, int ncols, int dtype)
 {
 	FILE	*fp = stdin;
 	CMATRIX	*cm;
 
-	if (fname == NULL)
-		fname = "<stdin>";
-	else if ((fp = fopen(fname, "r")) == NULL) {
-		sprintf(errmsg, "cannot open file '%s'", fname);
+	if (inspec == NULL)
+		inspec = "<stdin>";
+	else if (inspec[0] == '!') {
+		fp = popen(inspec+1, "r");
+		if (fp == NULL) {
+			sprintf(errmsg, "cannot start command '%s'", inspec);
+			error(SYSTEM, errmsg);
+		}
+	} else if ((fp = fopen(inspec, "r")) == NULL) {
+		sprintf(errmsg, "cannot open file '%s'", inspec);
 		error(SYSTEM, errmsg);
 	}
 #ifdef getc_unlocked
@@ -178,7 +184,7 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 	}
 	if (nrows <= 0) {			/* don't know length? */
 		int	guessrows = 147;	/* usually big enough */
-		if ((dtype != DTascii) & (fp != stdin)) {
+		if ((dtype != DTascii) & (fp != stdin) & (inspec[0] != '!')) {
 			long	startpos = ftell(fp);
 			if (fseek(fp, 0L, SEEK_END) == 0) {
 				long	endpos = ftell(fp);
@@ -188,14 +194,14 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 				if ((endpos - startpos) % (ncols*elemsiz)) {
 					sprintf(errmsg,
 					"improper length for binary file '%s'",
-							fname);
+							inspec);
 					error(USER, errmsg);
 				}
 				guessrows = (endpos - startpos)/(ncols*elemsiz);
 				if (fseek(fp, startpos, SEEK_SET) < 0) {
 					sprintf(errmsg,
 						"fseek() error on file '%s'",
-							fname);
+							inspec);
 					error(SYSTEM, errmsg);
 				}
 				nrows = guessrows;	/* we're confident */
@@ -225,8 +231,8 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		while ((c = getc(fp)) != EOF)
 			if (!isspace(c)) {
 				sprintf(errmsg,
-				"unexpected data at end of ascii file %s",
-						fname);
+				"unexpected data at end of ascii input '%s'",
+						inspec);
 				error(WARNING, errmsg);
 				break;
 			}
@@ -280,20 +286,26 @@ cm_load(const char *fname, int nrows, int ncols, int dtype)
 		}
 		if (fgetc(fp) != EOF) {
 				sprintf(errmsg,
-				"unexpected data at end of binary file %s",
-						fname);
+				"unexpected data at end of binary input '%s'",
+						inspec);
 				error(WARNING, errmsg);
 		}
 	}
-	if (fp != stdin)
-		fclose(fp);
+	if (fp != stdin) {
+		if (inspec[0] != '!')
+			fclose(fp);
+		else if (pclose(fp)) {
+			sprintf(errmsg, "error running command '%s'", inspec);
+			error(WARNING, errmsg);
+		}
+	}
 #ifdef getc_unlocked
 	else
 		funlockfile(fp);
 #endif
 	return(cm);
 EOFerror:
-	sprintf(errmsg, "unexpected EOF reading %s", fname);
+	sprintf(errmsg, "unexpected EOF reading %s", inspec);
 	error(USER, errmsg);
 not_handled:
 	error(INTERNAL, "unhandled data size or length in cm_load()");

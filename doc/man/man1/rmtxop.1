@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.8 2015/02/20 18:26:09 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.9 2015/05/04 20:53:21 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, transpose, scale, and convert matrices
@@ -42,11 +42,15 @@ If an appropriate header is not present, it may be added with a call to
 A matrix may be read from the standard input using a hyphen by itself ('-')
 in the appropriate place on the command line.
 .PP
+Any of the matrix inputs may be read from a command
+instead of a file by
+using quotes and a beginning exclamation point ('!').
+.PP
 Two special cases are handled for component matrices that are either
 XML files containing BTDF data, or Radiance picture files.
 In the first case, a BSDF library is used to load and interpret the
 transmission matrix.
-(XML files cannot be read from the standard input.)\0
+(XML files cannot be read from the standard input or from a command.)\0
 In the second case, the RGBE or XYZE values are loaded in a 3-component
 matrix where the number of columns match the X-dimension of the picture, and
 the number of rows match the Y-dimension.

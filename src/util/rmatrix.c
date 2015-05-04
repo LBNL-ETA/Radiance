@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.12 2015/01/23 01:14:20 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.13 2015/05/04 20:53:21 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -184,25 +184,31 @@ rmx_load_rgbe(RMATRIX *rm, FILE *fp)
 
 /* Load matrix from supported file type */
 RMATRIX *
-rmx_load(const char *fname)
+rmx_load(const char *inspec)
 {
 	FILE		*fp = stdin;
 	RMATRIX		dinfo;
 	RMATRIX		*dnew;
 
-	if (fname == NULL) {			/* reading from stdin? */
-		fname = "<stdin>";
+	if (inspec == NULL) {			/* reading from stdin? */
+		inspec = "<stdin>";
 #ifdef _WIN32
 		_setmode(fileno(stdin), _O_BINARY);
 #endif
+	} else if (inspec[0] == '!') {
+		if ((fp = popen(inspec+1, "r")) == NULL)
+			return(NULL);
+#ifdef _WIN32
+		_setmode(fileno(fp), _O_BINARY);
+#endif
 	} else {
-		const char	*sp = fname;	/* check suffix */
+		const char	*sp = inspec;	/* check suffix */
 		while (*sp)
 			++sp;
-		while (sp > fname && sp[-1] != '.')
+		while (sp > inspec && sp[-1] != '.')
 			--sp;
 		if (!strcasecmp(sp, "XML")) {	/* assume it's a BSDF */
-			CMATRIX	*cm = cm_loadBTDF((char *)fname);
+			CMATRIX	*cm = cm_loadBTDF((char *)inspec);
 			if (cm == NULL)
 				return(NULL);
 			dnew = rmx_from_cmatrix(cm);
@@ -210,7 +216,7 @@ rmx_load(const char *fname)
 			return(dnew);
 		}
 						/* else open it ourselves */
-		if ((fp = fopen(fname, "rb")) == NULL)
+		if ((fp = fopen(inspec, "rb")) == NULL)
 			return(NULL);
 	}
 #ifdef getc_unlocked
@@ -267,11 +273,22 @@ rmx_load(const char *fname)
 	default:
 		goto loaderr;
 	}
-	if (fp != stdin)
-		fclose(fp);
+	if (fp != stdin) {
+		if (inspec[0] == '!')
+			pclose(fp);
+		else
+			fclose(fp);
+	}
+#ifdef getc_unlocked
+	else
+		funlockfile(fp);
+#endif
 	return(dnew);
 loaderr:					/* should report error? */
-	fclose(fp);
+	if (inspec[0] == '!')
+		pclose(fp);
+	else
+		fclose(fp);
 	rmx_free(dnew);
 	return(NULL);
 }

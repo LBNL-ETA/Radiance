@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.10 2014/09/17 22:40:49 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.11 2015/05/04 20:53:21 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -95,6 +95,10 @@ option may be used to specify that sky data is in float or double
 format, respectively, which is more efficient for large matrices.
 These options are unnecessary in the when the sky
 input has a header.
+.PP
+Any of the matrix or vector files may be read from a command
+instead of a file by
+using quotes and a beginning exclamation point ('!').
 .PP
 The standard output of
 .I dctimestep
