@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.13 2015/05/04 20:53:21 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.14 2015/05/04 23:27:04 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -46,7 +46,9 @@ rmx_free(RMATRIX *rm)
 int
 rmx_newtype(int dtyp1, int dtyp2)
 {
-	if ((dtyp1==DTxyze) | (dtyp1==DTrgbe) && dtyp1 != dtyp2)
+	if ((dtyp1==DTxyze) | (dtyp1==DTrgbe) |
+			(dtyp2==DTxyze) | (dtyp2==DTrgbe)
+			&& dtyp1 != dtyp2)
 		return(0);
 	if (dtyp1 < dtyp2)
 		return(dtyp1);
