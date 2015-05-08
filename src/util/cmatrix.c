@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.9 2015/05/04 20:53:21 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.10 2015/05/08 18:25:03 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: cmatrix.c,v 2.9 2015/05/04 20:53:21 greg Exp $
 #include "standard.h"
 #include "cmatrix.h"
 #include "platform.h"
+#include "rtprocess.h"
 #include "resolu.h"
 
 const char	*cm_fmt_id[] = {

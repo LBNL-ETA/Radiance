@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.14 2015/05/04 23:27:04 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.15 2015/05/08 18:25:03 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.14 2015/05/04 23:27:04 greg Exp 
 #include <string.h>
 #include <fcntl.h>
 #include "resolu.h"
+#include "rtprocess.h"
 #include "rmatrix.h"
 
 static char	rmx_mismatch_warn[] = "WARNING: data type mismatch\n";
