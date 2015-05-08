@@ -1,13 +1,14 @@
 /* 
-   ===============================================================   
+   ==================================================================
    Dump photon maps as RADIANCE scene description to stdout
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts   
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdump.c,v 2.2 2015/04/21 19:16:51 greg Exp $
+   $Id: pmapdump.c,v 2.3 2015/05/08 13:20:23 rschregle Exp $
 */
 
 
@@ -36,7 +37,7 @@ typedef struct {
 } RadianceDef;
 
    
-static char header [] = "$Revision: 2.2 $";
+static char header [] = "$Revision: 2.3 $";
 
 
 /* Colour code is as follows:    global         = blue

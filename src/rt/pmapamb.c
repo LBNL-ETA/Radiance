@@ -4,10 +4,11 @@
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapamb.c,v 2.1 2015/02/24 19:39:26 greg Exp $
+   $Id: pmapamb.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $
 */
 
 

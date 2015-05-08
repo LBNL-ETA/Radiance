@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.c,v 2.4 2015/04/23 20:02:04 rschregle Exp $
+   $Id: pmap.c,v 2.5 2015/05/08 13:20:23 rschregle Exp $
 */
 
 
@@ -28,7 +28,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.4 $";
+static char PmapRevision [] = "$Revision: 2.5 $";
 
 
 
@@ -206,10 +206,12 @@ void tracePhoton (RAY *ray)
    OBJREC* mat;
  
    if (ray -> rlvl > photonMaxBounce) {
+#ifdef PMAP_RUNAWAY_WARN   
       error(WARNING, "runaway photon!");
+#endif      
       return;
    }
-   
+  
    if (colorAvg(ray -> cext) > FTINY && !photonParticipate(ray)) 
       return;
       

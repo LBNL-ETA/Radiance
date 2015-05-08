@@ -4,10 +4,11 @@
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.c,v 2.2 2015/04/22 15:50:44 rschregle Exp $ 
+   $Id: pmapmat.c,v 2.3 2015/05/08 13:20:23 rschregle Exp $ 
 */
 
 
@@ -1658,6 +1659,12 @@ static int pattexPhotonScatter (OBJREC *mat, RAY *rayIn)
       return 0;
    }
 #else
+
+/* 
+   The following code is
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
+*/   
 
 static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 /* Generate new photon ray for BSDF modifier and recurse. */

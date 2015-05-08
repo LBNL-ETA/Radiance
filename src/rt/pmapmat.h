@@ -4,10 +4,11 @@
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
-       Lucerne University of Applied Sciences & Arts
+   (c) Lucerne University of Applied Sciences and Arts,
+   supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.h,v 2.1 2015/02/24 19:39:27 greg Exp $
+   $Id: pmapmat.h,v 2.2 2015/05/08 13:20:22 rschregle Exp $
 */
 
 
@@ -33,12 +34,13 @@
                            accounted for by caustic photons in the global,
                            contrib, or dedicated caustic photon map.
    */
-   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && photonMapping)
-   
+   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && \
+                               ((photonMapping && \
+                                 (ambounce < 0 || (r) -> rlvl > 1)) || \
+                                 causticPhotonMapping || contribPhotonMapping))
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
                                ((photonMapping && ambounce < 0) || \
-                                (causticPhotonMapping || \
-                                 contribPhotonMapping)))
+                                causticPhotonMapping || contribPhotonMapping))
    
    /* Check if scattered ray spawns a caustic photon */
    #define PMAP_CAUSTICRAY(r) ((r) -> rtype & SPECULAR)
