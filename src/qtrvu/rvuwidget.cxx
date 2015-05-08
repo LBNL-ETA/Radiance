@@ -1,11 +1,11 @@
 #include "rvuwidget.h"
 
-#include <QtGui/QApplication>
-#include <QtGui/QCursor>
-#include <QtGui/QColor>
-#include <QtGui/QPainter>
-#include <QtGui/QPixmap>
-#include <QtGui/QMouseEvent>
+#include <QApplication>
+#include <QCursor>
+#include <QColor>
+#include <QPainter>
+#include <QPixmap>
+#include <QMouseEvent>
 
 RvuWidget::RvuWidget(QWidget* parent) : QWidget(parent), m_x(0), m_y(0)
 {

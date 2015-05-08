@@ -1,6 +1,6 @@
-#include <QtGui/QApplication>
-#include <QtGui/QInputDialog>
-#include <QtGui/QColor>
+#include <QApplication>
+#include <QInputDialog>
+#include <QColor>
 #include <QtCore/QDir>
 #include <string>
 #include <iostream>
@@ -94,7 +94,7 @@ int qt_open_text_dialog(char* inp, const char* prompt)
     {
     if(text != inp)
       {
-      strcpy(inp, text.toAscii());
+      strcpy(inp, text.toLatin1());
       return 1;
       }
     }

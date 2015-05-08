@@ -29,8 +29,8 @@ add_subdirectory(ot)
 add_subdirectory(px)
 add_subdirectory(rt)
 add_subdirectory(util)
-# only use rvu if qt4 is found
-if(QT4_FOUND)
+# only use rvu if qt5 is found
+if(Qt5Widgets_DIR)
   add_subdirectory(qtrvu)
 endif()
 

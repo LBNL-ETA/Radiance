@@ -6,14 +6,14 @@
 #include "ui_incrementsdialog.h"
 #include "ui_commandsdialog.h"
 
-#include <QtGui/QMessageBox>
-#include <QtGui/QLineEdit>
-#include <QtGui/QCloseEvent>
-#include <QtGui/QFileDialog>
-#include <QtGui/QInputDialog>
-#include <QtCore/QDebug>
-#include <QtCore/QTime>
-#include <QtCore/QTextStream>
+#include <QMessageBox>
+#include <QLineEdit>
+#include <QCloseEvent>
+#include <QFileDialog>
+#include <QInputDialog>
+#include <QDebug>
+#include <QTime>
+#include <QTextStream>
 
 #include <iostream>
 
@@ -243,7 +243,7 @@ void MainWindow::doSubmit()
     enableInterface(true);
     return;
     }
-  qt_process_command(command.toAscii());
+  qt_process_command(command.toLatin1());
   QString msg;
   QTextStream(&msg) << "Render Time: " << t.elapsed() << " ms";
   m_ui->messageBox->appendPlainText(msg);
@@ -496,7 +496,7 @@ void MainWindow::adjustExposure()
     command += m_exposureDialogUi->exposureSetting->text();
     }
 
-  runCommand(command.toAscii());
+  runCommand(command.toLatin1());
 }
 
 void MainWindow::updatePointRadio()
@@ -526,85 +526,85 @@ void MainWindow::adjustParameters()
     command += m_parameterDialogUi->valueY->text();
     command += " ";
     command += m_parameterDialogUi->valueZ->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->weight->isModified())
     {
     QString command = "set aw ";
     command += m_parameterDialogUi->weight->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->accuracy->isModified())
     {
     QString command = "set aa ";
     command += m_parameterDialogUi->accuracy->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->divisions->isModified())
     {
     QString command = "set ad ";
     command += m_parameterDialogUi->divisions->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->supersamples->isModified())
     {
     QString command = "set as ";
     command += m_parameterDialogUi->supersamples->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->bounces->isModified())
     {
     QString command = "set ab ";
     command += m_parameterDialogUi->bounces->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->resolution->isModified())
     {
     QString command = "set ar ";
     command += m_parameterDialogUi->resolution->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->certainty->isModified())
     {
     QString command = "set dc ";
     command += m_parameterDialogUi->certainty->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->threshold->isModified())
     {
     QString command = "set dt ";
     command += m_parameterDialogUi->threshold->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->visibility->isModified())
     {
     QString command = "set dv ";
     command += m_parameterDialogUi->visibility->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->jitter->isModified())
     {
     QString command = "set dj ";
     command += m_parameterDialogUi->jitter->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->sampling->isModified())
     {
     QString command = "set ds ";
     command += m_parameterDialogUi->sampling->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->limit_weight->isModified())
     {
     QString command = "set lw ";
     command += m_parameterDialogUi->limit_weight->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->reflection->isModified())
     {
     QString command = "set lr ";
     command += m_parameterDialogUi->reflection->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->albedoX->isModified() ||
      m_parameterDialogUi->albedoY->isModified() ||
@@ -616,7 +616,7 @@ void MainWindow::adjustParameters()
     command += m_parameterDialogUi->albedoY->text();
     command += " ";
     command += m_parameterDialogUi->albedoZ->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->extinctionX->isModified() ||
      m_parameterDialogUi->extinctionY->isModified() ||
@@ -633,37 +633,37 @@ void MainWindow::adjustParameters()
     {
     QString command = "set mg ";
     command += m_parameterDialogUi->eccentricity->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->mistDistance->isModified())
     {
     QString command = "set ms ";
     command += m_parameterDialogUi->mistDistance->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->sample->isModified())
     {
     QString command = "set ps ";
     command += m_parameterDialogUi->sample->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->px_threshold->isModified())
     {
     QString command = "set pt ";
     command += m_parameterDialogUi->px_threshold->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->sp_jitter->isModified())
     {
     QString command = "set ss ";
     command += m_parameterDialogUi->sp_jitter->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   if(m_parameterDialogUi->sp_threshold->isModified())
     {
     QString command = "set st ";
     command += m_parameterDialogUi->sp_threshold->text();
-    runCommand(command.toAscii());
+    runCommand(command.toLatin1());
     }
   m_parameterDialog->hide();
 }
@@ -958,7 +958,7 @@ void MainWindow::saveImage()
   this->currentImageName = QFileDialog::getSaveFileName(this, tr("Save File"),
     "", tr(".hdr images (*.hdr)"));
   QString command = "write " + this->currentImageName;
-  this->runCommand(command.toAscii());
+  this->runCommand(command.toLatin1());
 }
 
 void MainWindow::saveCurrentImage()
@@ -969,7 +969,7 @@ void MainWindow::saveCurrentImage()
 	return;
 	}
   QString command = "write " + this->currentImageName;
-  this->runCommand(command.toAscii());
+  this->runCommand(command.toLatin1());
 }
 
 void MainWindow::loadView()
@@ -977,7 +977,7 @@ void MainWindow::loadView()
  QString viewFileName = QFileDialog::getOpenFileName(this, tr("Open View File"),
    "", tr("View Files (*.vp *.vf)"));
  QString command = "last " + viewFileName;
- this->runCommand(command.toAscii());
+ this->runCommand(command.toLatin1());
 }
           
 void MainWindow::toggleGrayscale()
@@ -991,7 +991,7 @@ void MainWindow::toggleGrayscale()
     {
     command += " 0";
     }
-  this->runCommand(command.toAscii());
+  this->runCommand(command.toLatin1());
   this->runCommand("new");
 }
 
@@ -1006,7 +1006,7 @@ void MainWindow::toggleBackfaceVisibility()
     {
     command += " 0";
     }
-  this->runCommand(command.toAscii());
+  this->runCommand(command.toLatin1());
   this->runCommand("new");
 }
 
@@ -1021,7 +1021,7 @@ void MainWindow::toggleIrradiance()
     {
     command += " 0";
     }
-  this->runCommand(command.toAscii());
+  this->runCommand(command.toLatin1());
   this->runCommand("new");
 }
   
@@ -1036,7 +1036,7 @@ void MainWindow::loadRif()
     QString radFileName = QFileDialog::getOpenFileName(this, tr("Open rad File"),
       "", tr("rad files (*.rif)"));
     QString command = "L " + viewName + " " + radFileName;
-    this->runCommand(command.toAscii());
+    this->runCommand(command.toLatin1());
     }
 }
   
@@ -1051,7 +1051,7 @@ void MainWindow::appendToRif()
     QString radFileName = QFileDialog::getSaveFileName(this, tr("Save File"),
       "", tr("rad files (*.rif)"), 0, QFileDialog::DontConfirmOverwrite);
     QString command = "V " + viewName + " " + radFileName;
-    this->runCommand(command.toAscii());
+    this->runCommand(command.toLatin1());
     }
 }
 
@@ -1062,7 +1062,7 @@ void MainWindow::appendToView()
  if(viewFileName != "")
    {
    QString command = "view " + viewFileName;
-   this->runCommand(command.toAscii());
+   this->runCommand(command.toLatin1());
    }
 }
 

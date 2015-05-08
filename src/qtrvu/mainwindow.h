@@ -2,7 +2,7 @@
 #ifndef __MainWindow_H
 #define __MainWindow_H
 
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 #include "fvect.h"
 #include "rpaint.h"
 

@@ -2,7 +2,7 @@
 #ifndef __RvuWidget_H
 #define __RvuWidget_H
 
-#include <QtGui/QWidget>
+#include <QWidget>
 
 class QPixmap;
 class QColor;

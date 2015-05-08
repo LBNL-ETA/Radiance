@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 2.8.4)
 project("radiance")
 
+if(NOT ${CMAKE_VERSION} VERSION_LESS "2.8.11")
+  cmake_policy(SET CMP0020 NEW)
+  if(NOT ${CMAKE_VERSION} VERSION_LESS "3.0")
+    cmake_policy(SET CMP0042 NEW)
+    if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
+      cmake_policy(SET CMP0054 NEW)
+    endif()
+  endif()
+endif()
+
 enable_testing()
 include(CTest)
 
@@ -77,7 +87,7 @@ SET(CPACK_RESOURCE_FILE_LICENSE "${radiance_SOURCE_DIR}/License.txt")
 include(CPack)
 
 if(NOT BUILD_HEADLESS)
-  find_package(Qt4 COMPONENTS QtCore QtGui)
+  find_package(Qt5Widgets)
   find_package(X11)
 endif()
 

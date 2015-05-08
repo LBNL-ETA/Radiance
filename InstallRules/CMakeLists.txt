@@ -15,12 +15,25 @@ if(TIFF_LIBRARY)
 endif()
 
 #plugins loaded by rvu at runtime
-get_filename_component(qgif_plugin "${QT_QGIF_${qt_plugin_term}_RELEASE}" NAME)
-get_filename_component(qico_plugin "${QT_QICO_${qt_plugin_term}_RELEASE}" NAME)
-get_filename_component(qjpeg_plugin "${QT_QJPEG_${qt_plugin_term}_RELEASE}" NAME)
-get_filename_component(qmng_plugin "${QT_QMNG_${qt_plugin_term}_RELEASE}" NAME)
-get_filename_component(qsvg_plugin "${QT_QSVG_${qt_plugin_term}_RELEASE}" NAME)
-get_filename_component(qtiff_plugin "${QT_QTIFF_${qt_plugin_term}_RELEASE}" NAME)
+get_target_property(GIF_PLUGIN Qt5::QGifPlugin LOCATION)
+get_target_property(ICO_PLUGIN Qt5::QICOPlugin LOCATION)
+get_target_property(JPEG_PLUGIN Qt5::QJpegPlugin LOCATION)
+get_target_property(MNG_PLUGIN Qt5::QMngPlugin LOCATION)
+get_target_property(TIFF_PLUGIN Qt5::QTiffPlugin LOCATION)
+get_filename_component(GIF_PLUGIN_NAME "${GIF_PLUGIN}" NAME)
+get_filename_component(ICO_PLUGIN_NAME "${ICO_PLUGIN}" NAME)
+get_filename_component(JPEG_PLUGIN_NAME "${JPEG_PLUGIN}" NAME)
+get_filename_component(MNG_PLUGIN_NAME "${MNG_PLUGIN}" NAME)
+get_filename_component(TIFF_PLUGIN_NAME "${TIFF_PLUGIN}" NAME)
+
+if(APPLE OR WIN32)
+  if(WIN32)
+    get_target_property(QPA_PLUGIN Qt5::QWindowsIntegrationPlugin LOCATION)
+  elseif(APPLE)
+    get_target_property(QPA_PLUGIN Qt5::QCocoaIntegrationPlugin LOCATION)
+  endif()
+  get_filename_component(QPA_PLUGIN_NAME "${QPA_PLUGIN}" NAME)
+endif()
 
 configure_file(
    "${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake.in"
