@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.94 2015/02/24 19:39:26 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.95 2015/05/19 13:52:37 rschregle Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -667,14 +667,14 @@ multambient(		/* compute ambient component & multiply by coef. */
 
 	/* PMAP: Factor in ambient from global photon map (if enabled) and return
 	 * as all ambient components accounted for */
-	if (ambGlobalPmap(aval, r, rdepth))
+	if (ambPmap(aval, r, rdepth))
 		return;
 
 	/* PMAP: Otherwise factor in ambient from caustic photon map
 	 * (ambCausticPmap() returns zero if caustic photons disabled) and
 	 * continue with RADIANCE ambient calculation */
 	copycolor(caustic, aval);
-	ambCausticPmap(caustic, r, rdepth);
+	ambPmapCaustic(caustic, r, rdepth);
 	
 	if (ambdiv <= 0)			/* no ambient calculation */
 		goto dumbamb;
