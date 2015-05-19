@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.27 2012/06/27 16:29:26 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.28 2015/05/19 11:49:05 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -305,12 +305,15 @@ chanvalue(			/* return channel n to calcomp */
 				fray->ron[2]*funcxf.xfm[2][n-3]	)
 			 / funcxf.sca );
 
-	if (n <= 8)			/* intersection */
+	if (n <= 8) {			/* intersection point */
+		if (fray->rot >= FHUGE)
+			return(0.0);	/* XXX should be runtime error? */
 
 		return( fray->rop[0]*funcxf.xfm[0][n-6] +
 				fray->rop[1]*funcxf.xfm[1][n-6] +
 				fray->rop[2]*funcxf.xfm[2][n-6] +
 					     funcxf.xfm[3][n-6] );
+	}
 
 	if (n == 9)			/* total distance */
 		return(raydist(fray,PRIMARY) * funcxf.sca);
