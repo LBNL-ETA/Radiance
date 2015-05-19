@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.27 2015/04/01 01:38:36 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.28 2015/05/19 12:13:53 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1292,7 +1292,12 @@ main(int argc, char *argv[])
 			if (argv[a][2] != 'v') na = 2;
 			break;
 		case 'a':		/* special case */
-			na = (argv[a][2] == 'v') ? 4 : 2;
+			if (argv[a][2] == 'p') {
+				na = 2;	/* photon map [+ bandwidth(s)] */
+				if (a < argc-3 && atoi(argv[a+1]) > 0)
+					na += 1 + (a < argc-4 && atoi(argv[a+2]) > 0);
+			} else
+				na = (argv[a][2] == 'v') ? 4 : 2;
 			break;
 		case 'm':		/* special case */
 			if (!argv[a][2]) goto userr;
