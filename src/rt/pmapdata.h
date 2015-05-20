@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdata.h,v 2.3 2015/05/20 12:58:31 greg Exp $
+   $Id: pmapdata.h,v 2.4 2015/05/20 14:15:26 greg Exp $
 */
 
 
@@ -53,7 +53,7 @@
          COLR flux;                  /* Photon flux */
       #endif
 
-      unsigned primary;              /* Index to primary ray */
+      uint32 primary;              /* Index to primary ray */
    } Photon;
    
    /* Photon flag bitmasks and manipulation macros */
