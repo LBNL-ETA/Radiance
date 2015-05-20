@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.38 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.39 2015/05/20 09:36:48 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -139,7 +139,7 @@ getinterest(		/* get area of interest */
 }
 
 
-float *		/* keep consistent with COLOR typedef */
+COLORV *
 greyof(				/* convert color to greyscale */
 	COLOR  col
 )
