@@ -1957,10 +1957,10 @@ to klems_full.cal in the process.)
 Added "-c" option to getinfo to execute command on data segment.
 
 =====================
-Version 4.3
+Version 5.0
 
 Changed rmtxop so it writes out same type as lesser of inputs unless
-direction otherwise using -f? option.
+directed otherwise using -f? option.
 
 Changed order of oconv arguments in rfluxmtx so user can specify input
 octree using -i option at the end instead of (or in addition to) a
@@ -2001,9 +2001,6 @@ some systems, and may have been source of other errors as well.
 
 (Above changes included in 4.2.2 patch release.)
 
-===================
-Version 5.0
-
 Improved ambient extrapolation to avoid zero values.  Actual
 threshold set to 5% of recorded value.
 
@@ -2023,9 +2020,12 @@ David Geisler-Moroder.
 Added color output to genBSDF (+C option) and support for
 color rendering of Klems and tensor tree data.
 
+Fixed another bug in rsensor that caused rays to be generated
+on opposite side of hemisphere even where sensitivity was zero.
+
 Fixed bug discovered by Jacob Jonsson in Klems BSDF
 interpolator that caused it to over-predict normal
 transmittance and reflectance.
 
 Added ability to read input from commands in dctimestep
-and rmtxop
+and rmtxop.
