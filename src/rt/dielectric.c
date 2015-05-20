@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.25 2015/02/24 19:39:26 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.26 2015/05/20 13:12:06 rschregle Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -84,8 +84,9 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 	RAY  p;
 	int  i;
 
-	/* PMAP: skip refracted shadow ray if accounted for by photon map */
-	if (shadowRayInPmap(r))
+	/* PMAP: skip refracted shadow or ambient ray if accounted for in
+	   photon map */
+	if (shadowRayInPmap(r) || ambRayInPmap(r))
 		return(1);
 	
 	if (m->oargs.nfargs != (m->otype==MAT_DIELECTRIC ? 5 : 8))
