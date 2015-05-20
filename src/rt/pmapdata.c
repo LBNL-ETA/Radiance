@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.4 2015/05/20 12:58:31 greg Exp $
+   $Id: pmapdata.c,v 2.5 2015/05/20 14:44:12 greg Exp $
 */
 
 
@@ -66,6 +66,7 @@ void initPhotonMap (PhotonMap *pmap, PhotonMapType t)
 const PhotonPrimary* addPhotonPrimary (PhotonMap *pmap, const RAY *ray)
 {
    PhotonPrimary *prim = NULL;
+   FVECT dvec;
    
    if (!pmap || !ray)
       return NULL;
@@ -98,9 +99,10 @@ const PhotonPrimary* addPhotonPrimary (PhotonMap *pmap, const RAY *ray)
    prim -> srcIdx = -1;
       
    /* Reverse incident direction to point to light source */
-   prim -> dir [0] = -ray -> rdir [0];
-   prim -> dir [1] = -ray -> rdir [1];
-   prim -> dir [2] = -ray -> rdir [2];
+   dvec [0] = -ray -> rdir [0];
+   dvec [1] = -ray -> rdir [1];
+   dvec [2] = -ray -> rdir [2];
+   prim -> dir = encodedir(dvec);
 
    VCOPY(prim -> pos, ray -> rop);
    
