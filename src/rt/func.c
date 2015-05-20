@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.29 2015/05/20 12:58:30 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.30 2015/05/20 13:16:20 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: func.c,v 2.29 2015/05/20 12:58:30 greg Exp $";
 #include  "paths.h"
 #include  "otypes.h"
 #include  "func.h"
+#include <ctype.h>
 
 
 #define  INITFILE	"rayinit.cal"

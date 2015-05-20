@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.24 2015/05/20 12:58:31 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.25 2015/05/20 13:16:20 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: rcontrib.c,v 2.24 2015/05/20 12:58:31 greg Exp
 
 #include "copyright.h"
 
-#include <ctype.h>
 #include "rcontrib.h"
 #include "otypes.h"
 #include "source.h"
