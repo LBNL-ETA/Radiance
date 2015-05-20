@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.3 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapdata.c,v 2.4 2015/05/20 12:58:31 greg Exp $
 */
 
 
@@ -102,7 +102,7 @@ const PhotonPrimary* addPhotonPrimary (PhotonMap *pmap, const RAY *ray)
    prim -> dir [1] = -ray -> rdir [1];
    prim -> dir [2] = -ray -> rdir [2];
 
-   VCOPY(prim -> org, ray -> rorg);
+   VCOPY(prim -> pos, ray -> rop);
    
    return prim;
 }

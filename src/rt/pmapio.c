@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapio.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $    
+   $Id: pmapio.c,v 2.3 2015/05/20 12:58:31 greg Exp $    
 */
 
 
@@ -131,7 +131,7 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
             putflt(prim -> dir [j], file);
             
          for (j = 0; j < 3; j++)
-            putflt(prim -> org [j], file);
+            putflt(prim -> pos [j], file);
          
          if (ferror(file))
             error(SYSTEM, "error writing primary photon rays");
@@ -253,7 +253,7 @@ PhotonMapType loadPhotonMap (PhotonMap *pmap, const char *fname)
             prim -> dir [j] = getflt(file);
             
          for (j = 0; j < 3; j++)
-            prim -> org [j] = getflt(file);
+            prim -> pos [j] = getflt(file);
             
          if (feof(file))
             error(SYSTEM, "error reading primary photon rays");

@@ -1,4 +1,4 @@
-/* RCSid $Id: func.h,v 2.9 2012/06/09 07:16:47 greg Exp $ */
+/* RCSid $Id: func.h,v 2.10 2015/05/20 12:58:31 greg Exp $ */
 /*
  * Header file for modifiers using function files.
  *
@@ -25,6 +25,7 @@ extern XF  unitxf;		/* identity transform */
 extern XF  funcxf;		/* current transform */
 
 extern void	initfunc(void);
+extern void	set_eparams(char *prms);
 extern MFUNC	*getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
 extern void	freefunc(OBJREC *m);
 extern int	setfunc(OBJREC *m, RAY *r);
