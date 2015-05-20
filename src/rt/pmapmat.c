@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.c,v 2.3 2015/05/08 13:20:23 rschregle Exp $ 
+   $Id: pmapmat.c,v 2.4 2015/05/20 15:59:44 greg Exp $ 
 */
 
 
@@ -199,12 +199,7 @@ static int isoSpecPhotonScatter (NORMDAT *nd, RAY *rayOut)
    int      niter, i = 0;
    
    /* Set up sample coordinates */  
-   do {
-      v [0] = v [1] = v [2] = 0;
-      v [i++] = 1;
-      fcross(u, v, nd -> pnorm);
-   } while (normalize(u) < FTINY);
-   
+   getperpendicular(u, nd -> pnorm);   
    fcross(v, nd -> pnorm, u);
    
    if (nd -> specfl & SP_REFL) {
@@ -268,12 +263,7 @@ static void diffPhotonScatter (FVECT normal, RAY* rayOut)
    int         i = 0;
 
    /* Set up sample coordinates */
-   do {
-      v [0] = v [1] = v [2] = 0;
-      v [i++] = 1;
-      fcross(u, v, normal);
-   } while (normalize(u) < FTINY);
-   
+   getperpendicular(u, normal);
    fcross(v, normal, u);
    
    /* Convert theta & phi to cartesian */
@@ -324,7 +314,7 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
       nd.specfl |= SP_FLAT;  
       
    /* Perturb normal */
-   if ((hastexture = DOT(rayIn -> pert, rayIn -> pert)) > sqr(FTINY))
+   if ((hastexture = (DOT(rayIn -> pert, rayIn -> pert) > sqr(FTINY)) ))
       nd.pdot = raynormal(nd.pnorm, rayIn);
    else {
       VCOPY(nd.pnorm, rayIn -> ron);
@@ -753,7 +743,7 @@ static int dielectricPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* get modifiers */
    raytexture(rayIn, mat -> omod);			
    
-   if ((hastexture = DOT(rayIn -> pert, rayIn -> pert)) > FTINY * FTINY)
+   if ((hastexture = (DOT(rayIn -> pert, rayIn -> pert) > FTINY * FTINY)))
       /* Perturb normal */
       cos1 = raynormal(dnorm, rayIn);
    else {
@@ -900,7 +890,7 @@ static int glassPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* reorient if necessary */
    if (rayIn -> rod < 0) 
       flipsurface(rayIn);
-   if ((hastexture = DOT(rayIn -> pert, rayIn -> pert)) > FTINY * FTINY)
+   if ((hastexture = (DOT(rayIn -> pert, rayIn -> pert) > FTINY * FTINY) ))
       pdot = raynormal(pnorm, rayIn);
    else {
       VCOPY(pnorm, rayIn -> ron);
