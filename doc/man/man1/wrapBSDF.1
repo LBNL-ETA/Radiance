@@ -1,4 +1,4 @@
-.\" RCSid $Id: wrapBSDF.1,v 1.1 2015/02/20 18:26:09 greg Exp $
+.\" RCSid $Id: wrapBSDF.1,v 1.2 2015/05/20 08:40:48 greg Exp $
 .TH WRAPBSDF 1 2/20/2015 RADIANCE
 .SH NAME
 wrapBSDF - put XML wrapper around WINDOW6 BSDF data
@@ -114,6 +114,8 @@ and similar sources, this is often necessary for proper conversion.
 Most options that accept file names
 can take data from the standard input by using a hyphen ('-')
 in place of the file, but only one option at most may read from stdin.
+Data input may be read from another program by beginning the input
+specification with a quoted exclamation point ('!') followed by the command.
 .SH EXAMPLE
 Create an WINDOW6 BSDF from computed transmission matrix:
 .IP "" .2i
