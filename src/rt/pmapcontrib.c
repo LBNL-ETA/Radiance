@@ -7,7 +7,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapcontrib.c,v 2.5 2015/05/20 12:58:31 greg Exp $
+   $Id: pmapcontrib.c,v 2.6 2015/05/20 13:43:28 greg Exp $
 */
 
 
@@ -158,53 +158,54 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
          OBJREC *srcMod = objptr(sp -> so -> omod);
          MODCONT *srcContrib = (MODCONT*)lu_find(pmap -> srcContrib, 
                                                  srcMod -> oname) -> data;
-         
-         if (srcContrib) {
-            /* Photon's emitting light source has modifier whose
-             * contributions are sought */
-	    double srcBinReal;
-            int srcBin;
-	    RAY srcRay;
+         if (!srcContrib)
+	    continue;
 
-	    if (srcContrib -> binv -> type != NUM) {
-               /* Use intersection function to set shadow ray parameters
-	        */
-	       rayorigin(&srcRay, SHADOW, NULL, NULL);
-	       srcRay.rsrc = primary -> srcIdx;
-	       VCOPY(srcRay.rorg, primary -> pos);
-	       VCOPY(srcRay.rdir, primary -> dir);
-	       if (!(source [primary -> srcIdx].sflags & SDISTANT ?
+	 /* Photon's emitting light source has modifier whose
+          * contributions are sought */
+	 double srcBinReal;
+         int srcBin;
+         RAY srcRay;
+
+         if (srcContrib -> binv -> type != NUM) {
+            /* Use intersection function to set shadow ray parameters
+	     * if it's not simply a constant
+	     */
+            rayorigin(&srcRay, SHADOW, NULL, NULL);
+	    srcRay.rsrc = primary -> srcIdx;
+            VCOPY(srcRay.rorg, primary -> pos);
+            VCOPY(srcRay.rdir, primary -> dir);
+            if (!(source [primary -> srcIdx].sflags & SDISTANT ?
 			sourcehit(&srcRay) :
 			(*ofun[sp -> so -> otype].funp)(sp -> so, &srcRay)))
-		    continue;		/* XXX shouldn't happen! */
-	       worldfunc(RCCONTEXT, &srcRay);
-	       set_eparams((char *)srcContrib -> params);
-          }
-	    if ((srcBinReal = evalue(srcContrib -> binv)) < -.5)
-		continue;		/* silently ignore negative bins */
-  
-            if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
-               error(WARNING, "bad bin number (ignored)");
-               continue;
-            }
-            
-            if (!contrib) {
-               /* Ray coefficient mode; normalise by light source radiance
-                * after applying distrib pattern */
-               int j;
-               raytexture(ray, srcMod -> omod);
-               setcolor(ray -> rcol, srcMod -> oargs.farg [0], 
-                        srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
-               multcolor(ray -> rcol, ray -> pcol);
-               for (j = 0; j < 3; j++)
-                  flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j]
-                                             : 0;
-            }
-                     
-            multcolor(flux, rayCoeff);
-            addcolor(srcContrib -> cbin [srcBin], flux);
+                continue;		/* XXX shouldn't happen! */
+            worldfunc(RCCONTEXT, &srcRay);
+            set_eparams((char *)srcContrib -> params);
          }
-         else fprintf(stderr, "Skipped contrib from %s\n", srcMod -> oname);
+
+         if ((srcBinReal = evalue(srcContrib -> binv)) < -.5)
+             continue;		/* silently ignore negative bins */
+  
+	 if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
+             error(WARNING, "bad bin number (ignored)");
+             continue;
+         }
+            
+         if (!contrib) {
+             /* Ray coefficient mode; normalise by light source radiance
+              * after applying distrib pattern */
+             int j;
+             raytexture(ray, srcMod -> omod);
+             setcolor(ray -> rcol, srcMod -> oargs.farg [0], 
+                        srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
+             multcolor(ray -> rcol, ray -> pcol);
+             for (j = 0; j < 3; j++)
+                flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j]
+                                             : 0;
+	 }
+                     
+         multcolor(flux, rayCoeff);
+         addcolor(srcContrib -> cbin [srcBin], flux);
       }
    }
         
