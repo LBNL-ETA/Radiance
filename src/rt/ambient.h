@@ -1,4 +1,4 @@
-/* RCSid $Id: ambient.h,v 2.23 2014/06/19 16:26:55 greg Exp $ */
+/* RCSid $Id: ambient.h,v 2.24 2015/05/21 12:25:53 greg Exp $ */
 /*
  * Common definitions for interreflection routines.
  *
@@ -22,7 +22,7 @@ typedef struct ambrec {
 	float  pos[3];		/* position in space */
 	int32  ndir;		/* encoded surface normal */
 	int32  udir;		/* u-vector direction */
-	int  lvl;		/* recursion level of parent ray */
+	short  lvl;		/* recursion level of parent ray */
 	float  weight;		/* weight of parent ray */
 	float  rad[2];		/* anisotropic radii (rad[0] <= rad[1]) */
 	COLOR  val;		/* computed ambient value */
@@ -78,7 +78,7 @@ typedef struct ambrec {
 	unsigned long  latick;	/* last accessed tick */
 	float  pos[3];		/* position in space */
 	float  dir[3];		/* normal direction */
-	int    lvl;		/* recursion level of parent ray */
+	short  lvl;		/* recursion level of parent ray */
 	float  weight;		/* weight of parent ray */
 	float  rad;		/* validity radius */
 	COLOR  val;		/* computed ambient value */
