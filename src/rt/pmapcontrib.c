@@ -7,7 +7,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapcontrib.c,v 2.7 2015/05/20 14:44:12 greg Exp $
+   $Id: pmapcontrib.c,v 2.8 2015/05/21 13:54:59 greg Exp $
 */
 
 
@@ -51,7 +51,7 @@ static void checkPmapContribs (const PhotonMap *pmap, LUTAB *srcContrib)
       if (primary -> srcIdx < 0 || primary -> srcIdx >= nsources)
          error(INTERNAL, "invalid light source index in photon map");
          
-      srcMod = objptr(source [primary -> srcIdx].so -> omod);
+      srcMod = findmaterial(source [primary -> srcIdx].so);
       if ((MODCONT*)lu_find(srcContrib, srcMod -> oname) -> data)
          ++found;
    }
@@ -155,7 +155,7 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
          const PhotonPrimary *primary = pmap -> primary + 
                                         sq -> photon -> primary;
 	 const SRCREC *sp = &source[primary -> srcIdx];
-         OBJREC *srcMod = objptr(sp -> so -> omod);
+         OBJREC *srcMod = findmaterial(sp -> so);
          MODCONT *srcContrib = (MODCONT*)lu_find(pmap -> srcContrib, 
                                                  srcMod -> oname) -> data;
          if (!srcContrib)

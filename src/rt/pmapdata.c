@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.5 2015/05/20 14:44:12 greg Exp $
+   $Id: pmapdata.c,v 2.6 2015/05/21 13:54:59 greg Exp $
 */
 
 
@@ -240,7 +240,7 @@ static void nearestNeighbours (PhotonMap* pmap, const float pos [3],
       if (srcIdx < 0 || srcIdx >= nsources)
          error(INTERNAL, "invalid light source index in photon map");
       
-      srcMod = objptr(source [srcIdx].so -> omod);
+      srcMod = findmaterial(source [srcIdx].so);
 
       /* Reject photon if contributions from light source which emitted it
        * are not sought */

@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.c,v 2.3 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapsrc.c,v 2.4 2015/05/21 13:54:59 greg Exp $
 */
 
 
@@ -592,12 +592,14 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
    unsigned i, t, p;
    double phi, cosTheta, sinTheta, du, dv, dOmega, thetaScale;
    EmissionSample* sample;
-   const OBJREC* mod =  objptr(emap -> src -> so -> omod);
+   const OBJREC* mod =  findmaterial(emap -> src -> so);
    static RAY r;
 #if 0   
    static double lastCosNorm = FHUGE;
    static SRCREC *lastSrc = NULL, *lastPort = NULL;
 #endif   
+
+   setcolor(emap -> partFlux, 0, 0, 0);
 
    photonOrigin [emap -> src -> so -> otype] (emap);
    cosTheta = DOT(emap -> ws, emap -> wh);
@@ -621,7 +623,6 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
 #endif
          
    /* Need to recompute flux & PDF */
-   setcolor(emap -> partFlux, 0, 0, 0);
    emap -> cdf = 0;
    emap -> numSamples = 0;
    
@@ -740,7 +741,7 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
    unsigned long i, lo, hi;
    const EmissionSample* sample = emap -> samples;
    RREAL du, dv, cosTheta, cosThetaSqr, sinTheta, phi;  
-   const OBJREC* mod = objptr(emap -> src -> so -> omod);
+   const OBJREC* mod = findmaterial(emap -> src -> so);
    
    /* Choose a new origin within current partition for every 
       emitted photon to break up clustering artifacts */

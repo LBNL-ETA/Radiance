@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.c,v 2.5 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmap.c,v 2.6 2015/05/21 13:54:59 greg Exp $
 */
 
 
@@ -28,7 +28,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.5 $";
+static char PmapRevision [] = "$Revision: 2.6 $";
 
 
 
@@ -509,7 +509,7 @@ void distribPhotons (PhotonMap **pmaps)
       for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
          unsigned portCnt = 0;
          emap.src = source + srcIdx;
-                  
+
          do {
             emap.port = emap.src -> sflags & SDISTANT ? photonPorts + portCnt 
                                                       : NULL;

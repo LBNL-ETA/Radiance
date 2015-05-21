@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.26 2015/05/20 13:12:06 rschregle Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.27 2015/05/21 13:54:59 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -51,8 +51,7 @@ static double mylog(double  x);
 
 #define  MINCOS		0.997		/* minimum dot product for dispersion */
 
-static
-double
+static double
 mylog(		/* special log for extinction coefficients */
 	double  x
 )
@@ -86,7 +85,7 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 
 	/* PMAP: skip refracted shadow or ambient ray if accounted for in
 	   photon map */
-	if (shadowRayInPmap(r) || ambRayInPmap(r))
+	if (shadowRayInPmap(r))
 		return(1);
 	
 	if (m->oargs.nfargs != (m->otype==MAT_DIELECTRIC ? 5 : 8))
