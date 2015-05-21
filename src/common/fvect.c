@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.22 2015/05/21 05:54:54 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.23 2015/05/21 07:02:23 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -170,22 +170,16 @@ int randomize				/* randomize orientation */
 		v1[0] = 0.5 - frandom();
 		v1[1] = 0.5 - frandom();
 		v1[2] = 0.5 - frandom();
-		switch (ord[0] = (int)(frandom()*2.99999)) {
-		case 0:
-			ord[1] = 1 + (frandom() > .5);
-			ord[2] = 2 - ord[1];
-			break;
-		case 1:
-			ord[1] = 2*(frandom() > .5);
-			ord[2] = 2 - ord[1];
-			break;
-		case 2:
-			ord[1] = (frandom() > .5);
-			ord[2] = 1 - ord[1];
-			break;
+		switch ((int)(frandom()*5.99999)) {
+		case 0: ord[0] = 0; ord[1] = 1; ord[2] = 2; break;
+		case 1: ord[0] = 0; ord[1] = 2; ord[2] = 1; break;
+		case 2: ord[0] = 1; ord[1] = 0; ord[2] = 2; break;
+		case 3: ord[0] = 1; ord[1] = 2; ord[2] = 0; break;
+		case 4: ord[0] = 2; ord[1] = 0; ord[2] = 1; break;
+		case 5: ord[0] = 2; ord[1] = 1; ord[2] = 0; break;
 		}
 	} else {
-		v1[0] = v1[1] = v1[2] = .0;
+		v1[0] = v1[1] = v1[2] = 0.0;
 		ord[0] = 0; ord[1] = 1; ord[2] = 2;
 	}
 
