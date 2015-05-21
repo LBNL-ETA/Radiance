@@ -8,15 +8,13 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapopt.c,v 2.3 2015/05/21 15:26:35 greg Exp $
 */
 
 
 
-#include <stdlib.h>
+#include "ray.h"
 #include "pmapparm.h"
-#include "rtio.h"
-#include "rterror.h"
 
 
 
@@ -35,6 +33,8 @@ int getPmapRenderOpt (int ac, char *av [])
       case 'a':
          switch (av [0][2]) {
             case 'p': /* photon map */
+	       /* Asking for photon map, ergo ambounce != 0 */
+	       ambounce += (ambounce == 0);
                if (!check(3, "s")) {
                   /* File -> assume bwidth = 1 or precomputed pmap */
                   if (++t >= NUM_PMAP_TYPES)
