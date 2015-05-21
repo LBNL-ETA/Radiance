@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: mkpmap.c,v 2.1 2015/02/24 19:39:26 greg Exp $    
+   $Id: mkpmap.c,v 2.2 2015/05/21 05:54:54 greg Exp $    
 */
 
 
@@ -44,7 +44,7 @@ double seccg = 0;                       /* global scattering eccentricity */
 int ambincl = -1;                       /* photon port flag */
 char *amblist [AMBLLEN + 1];            /* photon port list */
 char *diagFile = NULL;                  /* diagnostics output file */
-
+int rand_samp = 1;			/* uncorrelated random sampling */
 
 
 /* Dummies for linkage */

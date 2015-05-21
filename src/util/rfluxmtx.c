@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.28 2015/05/19 12:13:53 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.29 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -530,7 +530,7 @@ make_axes(FVECT uva[2], const FVECT nrm)
 {
 	int	i;
 
-	if (!getperpendicular(uva[0], nrm)) {
+	if (!getperpendicular(uva[0], nrm, 1)) {
 		fputs(progname, stderr);
 		fputs(": bad surface normal in make_axes!\n", stderr);
 		exit(1);

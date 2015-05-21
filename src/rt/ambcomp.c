@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.69 2014/12/04 05:26:28 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.70 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -235,7 +235,7 @@ samp_hemi(				/* sample indirect hemisphere */
 	d = 1.0/(n*n);
 	scalecolor(hp->acoef, d);
 					/* make tangent plane axes */
-	if (!getperpendicular(hp->ux, r->ron))
+	if (!getperpendicular(hp->ux, r->ron, 1))
 		error(CONSISTENCY, "bad ray direction in samp_hemi");
 	VCROSS(hp->uy, r->ron, hp->ux);
 					/* sample divisions */

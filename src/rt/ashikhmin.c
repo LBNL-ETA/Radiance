@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.4 2014/12/04 05:26:28 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.5 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -216,7 +216,7 @@ getacoords_as(		/* set up coordinate system */
 	if (normalize(np->v) == 0.0) {
 		if (fabs(np->u_power - np->v_power) > 0.1)
 			objerror(np->mp, WARNING, "bad orientation vector");
-		getperpendicular(np->u, np->pnorm);	/* punting */
+		getperpendicular(np->u, np->pnorm, 1);	/* punting */
 		fcross(np->v, np->pnorm, np->u);
 		np->u_power = np->v_power =
 			2./(1./(np->u_power+1e-5) + 1./(np->v_power+1e-5));

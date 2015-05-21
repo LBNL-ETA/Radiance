@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.21 2014/12/04 05:26:28 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.22 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -76,7 +76,7 @@ setflatss(				/* set sampling for a flat source */
 	double  mult;
 	int  i;
 
-	getperpendicular(src->ss[SU], src->snorm);
+	getperpendicular(src->ss[SU], src->snorm, rand_samp);
 	mult = .5 * sqrt( src->ss2 );
 	for (i = 0; i < 3; i++)
 		src->ss[SU][i] *= mult;
@@ -234,7 +234,7 @@ cylsetsrc(			/* set a cylinder as a source */
 						/* set sampling vectors */
 	for (i = 0; i < 3; i++)
 		src->ss[SU][i] = .5 * co->al * co->ad[i];
-	getperpendicular(src->ss[SW], co->ad);
+	getperpendicular(src->ss[SW], co->ad, rand_samp);
 	for (i = 0; i < 3; i++)
 		src->ss[SW][i] *= .8559 * CO_R0(co);
 	fcross(src->ss[SV], src->ss[SW], co->ad);

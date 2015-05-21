@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.39 2014/12/04 05:26:28 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.40 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -150,7 +150,7 @@ mkaxes(			/* compute u and v to go with n */
 	FVECT  n
 )
 {
-	getperpendicular(u, n);
+	getperpendicular(u, n, 1);
 	fcross(v, n, u);
 }
 

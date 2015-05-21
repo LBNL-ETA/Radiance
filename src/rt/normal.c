@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.69 2015/02/24 19:39:26 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.70 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -402,7 +402,7 @@ gaussamp(			/* sample Gaussian specular */
 			(np->specfl & (SP_TRAN|SP_TBLT)) != SP_TRAN)
 		return;
 					/* set up sample coordinates */
-	getperpendicular(u, np->pnorm);
+	getperpendicular(u, np->pnorm, rand_samp);
 	fcross(v, np->pnorm, u);
 					/* compute reflection */
 	if ((np->specfl & (SP_REFL|SP_RBLT)) == SP_REFL &&

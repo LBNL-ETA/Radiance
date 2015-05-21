@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fvect.c,v 2.21 2014/12/08 23:51:12 greg Exp $";
+static const char	RCSid[] = "$Id: fvect.c,v 2.22 2015/05/21 05:54:54 greg Exp $";
 #endif
 /*
  *  fvect.c - routines for floating-point vector calculations
@@ -156,24 +156,48 @@ FVECT  v
 
 
 int
-getperpendicular(		/* choose random perpedicular direction */
+getperpendicular(		/* choose perpedicular direction */
 FVECT vp,				/* returns normalized */
-const FVECT v				/* input vector must be normalized */
+const FVECT v,				/* input vector must be normalized */
+int randomize				/* randomize orientation */
 )
 {
+	int	ord[3];
 	FVECT	v1;
 	int	i;
-					/* randomize other coordinates */
-	v1[0] = 0.5 - frandom();
-	v1[1] = 0.5 - frandom();
-	v1[2] = 0.5 - frandom();
+
+	if (randomize) {		/* randomize coordinates? */
+		v1[0] = 0.5 - frandom();
+		v1[1] = 0.5 - frandom();
+		v1[2] = 0.5 - frandom();
+		switch (ord[0] = (int)(frandom()*2.99999)) {
+		case 0:
+			ord[1] = 1 + (frandom() > .5);
+			ord[2] = 2 - ord[1];
+			break;
+		case 1:
+			ord[1] = 2*(frandom() > .5);
+			ord[2] = 2 - ord[1];
+			break;
+		case 2:
+			ord[1] = (frandom() > .5);
+			ord[2] = 1 - ord[1];
+			break;
+		}
+	} else {
+		v1[0] = v1[1] = v1[2] = .0;
+		ord[0] = 0; ord[1] = 1; ord[2] = 2;
+	}
+
 	for (i = 3; i--; )
-		if ((-0.6 < v[i]) & (v[i] < 0.6))
+		if ((-0.6 < v[ord[i]]) & (v[ord[i]] < 0.6))
 			break;
 	if (i < 0)
 		return(0);
-	v1[i] = 1.0;
+
+	v1[ord[i]] = 1.0;
 	fcross(vp, v1, v);
+
 	return(normalize(vp) > 0.0);
 }
 

@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.c,v 2.4 2015/05/20 15:59:44 greg Exp $ 
+   $Id: pmapmat.c,v 2.5 2015/05/21 05:54:54 greg Exp $ 
 */
 
 
@@ -199,7 +199,7 @@ static int isoSpecPhotonScatter (NORMDAT *nd, RAY *rayOut)
    int      niter, i = 0;
    
    /* Set up sample coordinates */  
-   getperpendicular(u, nd -> pnorm);   
+   getperpendicular(u, nd -> pnorm, 1);   
    fcross(v, nd -> pnorm, u);
    
    if (nd -> specfl & SP_REFL) {
@@ -263,7 +263,7 @@ static void diffPhotonScatter (FVECT normal, RAY* rayOut)
    int         i = 0;
 
    /* Set up sample coordinates */
-   getperpendicular(u, normal);
+   getperpendicular(u, normal, 1);
    fcross(v, normal, u);
    
    /* Convert theta & phi to cartesian */
