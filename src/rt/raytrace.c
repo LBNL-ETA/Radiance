@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.67 2015/05/21 15:28:24 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.68 2015/05/22 09:19:11 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -108,7 +108,7 @@ rayorigin(		/* start new ray from old one */
 	if (r->crtype & SHADOW)			/* shadow commitment */
 		return(0);
 						/* ambient in photon map? */
-	if (r->crtype & AMBIENT && photonMapping)
+	if (photonMapping && ro != NULL && ro->crtype & AMBIENT)
 		return(-1);
 	if (maxdepth <= 0 && rc != NULL) {	/* Russian roulette */
 		if (minweight <= 0.0)
