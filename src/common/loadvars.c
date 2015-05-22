@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.14 2003/07/30 10:11:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.15 2015/05/22 14:44:11 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -20,12 +20,13 @@ extern char  *fgetline();
 
 
 void
-loadvars(rfname)		/* load variables into vv from file */
-char	*rfname;
+loadvars(			/* load variables into vv from file */
+	char	*rfname
+)
 {
 	FILE	*fp;
 	char	buf[512];
-	register char	*cp;
+	char	*cp;
 
 	if (rfname == NULL)
 		fp = stdin;
@@ -58,15 +59,16 @@ char	*rfname;
 
 
 int
-setvariable(ass, mv)		/* assign variable according to string */
-register char	*ass;
-VARIABLE	*(*mv)(char*);
+setvariable(			/* assign variable according to string */
+	char	*ass,
+	VARIABLE	*(*mv)(char*)
+)
 {
 	char	varname[32];
 	int	n;
-	register char	*cp;
-	register VARIABLE	*vp;
-	register int	i;
+	char	*cp;
+	VARIABLE	*vp;
+	int	i;
 
 	while (isspace(*ass))		/* skip leading space */
 		ass++;
@@ -120,11 +122,12 @@ VARIABLE	*(*mv)(char*);
 
 
 VARIABLE *
-matchvar(nam)			/* match a variable by its name */
-char	*nam;
+matchvar(			/* match a variable by its name */
+	char	*nam
+)
 {
 	int	n = strlen(nam);
-	register int	i;
+	int	i;
 
 	for (i = 0; i < NVARS; i++)
 		if (n >= vv[i].nick && !strncmp(nam, vv[i].name, n))
@@ -134,11 +137,12 @@ char	*nam;
 
 
 char *
-nvalue(vn, n)			/* return nth variable value */
-register int	vn;
-register int	n;
+nvalue(				/* return nth variable value */
+	int	vn,
+	int	n
+)
 {
-	register char	*cp;
+	char	*cp;
 
 	if ((vval(vn) == NULL) | (n < 0) | (n >= vdef(vn)))
 		return(NULL);
@@ -151,9 +155,9 @@ register int	n;
 
 
 void
-checkvalues()			/* check assignments */
+checkvalues(void)		/* check assignments */
 {
-	register int	i;
+	int	i;
 
 	for (i = 0; i < NVARS; i++)
 		if (vv[i].fixval != NULL)
@@ -162,8 +166,9 @@ checkvalues()			/* check assignments */
 
 
 void
-onevalue(vp)			/* only one assignment for this variable */
-register VARIABLE	*vp;
+onevalue(			/* only one assignment for this variable */
+	VARIABLE	*vp
+)
 {
 	if (vp->nass < 2)
 		return;
@@ -178,10 +183,11 @@ register VARIABLE	*vp;
 
 
 void
-catvalues(vp)			/* concatenate variable values */
-register VARIABLE	*vp;
+catvalues(			/* concatenate variable values */
+	VARIABLE	*vp
+)
 {
-	register char	*cp;
+	char	*cp;
 
 	if (vp->nass < 2)
 		return;
@@ -194,8 +200,10 @@ register VARIABLE	*vp;
 
 
 int
-badmatch(tv, cv)		/* case insensitive truncated comparison */
-register char	*tv, *cv;
+badmatch(			/* case insensitive truncated comparison */
+	char	*tv,
+	char	*cv
+)
 {
 	if (!*tv) return(1);		/* null string cannot match */
 	do
@@ -207,8 +215,9 @@ register char	*tv, *cv;
 
 
 void
-boolvalue(vp)			/* check boolean for legal values */
-register VARIABLE	*vp;
+boolvalue(			/* check boolean for legal values */
+	VARIABLE	*vp
+)
 {
 	if (!vp->nass) return;
 	onevalue(vp);
@@ -227,8 +236,9 @@ register VARIABLE	*vp;
 
 
 void
-qualvalue(vp)			/* check qualitative var. for legal values */
-register VARIABLE	*vp;
+qualvalue(			/* check qualitative var. for legal values */
+	VARIABLE	*vp
+)
 {
 	if (!vp->nass) return;
 	onevalue(vp);
@@ -250,8 +260,9 @@ register VARIABLE	*vp;
 
 
 void
-intvalue(vp)			/* check integer variable for legal values */
-register VARIABLE	*vp;
+intvalue(				/* check integer variable for legal values */
+	VARIABLE	*vp
+)
 {
 	if (!vp->nass) return;
 	onevalue(vp);
@@ -263,8 +274,9 @@ register VARIABLE	*vp;
 
 
 void
-fltvalue(vp)			/* check float variable for legal values */
-register VARIABLE	*vp;
+fltvalue(				/* check float variable for legal values */
+	VARIABLE	*vp
+)
 {
 	if (!vp->nass) return;
 	onevalue(vp);
@@ -276,11 +288,12 @@ register VARIABLE	*vp;
 
 
 void
-printvars(fp)			/* print variable values */
-register FILE	*fp;
+printvars(				/* print variable values */
+	FILE	*fp
+)
 {
 	int	i, j, k, clipline;
-	register char	*cp;
+	char	*cp;
 
 	for (i = 0; i < NVARS; i++)		/* print each variable */
 	    for (j = 0; j < vdef(i); j++) {	/* print each assignment */
