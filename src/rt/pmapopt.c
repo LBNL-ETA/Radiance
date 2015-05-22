@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.3 2015/05/21 15:26:35 greg Exp $
+   $Id: pmapopt.c,v 2.4 2015/05/22 14:12:11 greg Exp $
 */
 
 
@@ -90,6 +90,5 @@ int getPmapRenderOpt (int ac, char *av [])
 void printPmapDefaults ()
 /* Print defaults for photon map render options */
 {
-   puts("-ap file [bwidth1 [bwidth2]]\t# photon map");
    printf("-am %.1f\t\t\t# max photon search radius coeff\n", maxDistCoeff);
 }
