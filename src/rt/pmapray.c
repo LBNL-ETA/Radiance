@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapray.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapray.c,v 2.3 2015/05/22 14:09:01 greg Exp $
 */
 
 
@@ -36,11 +36,9 @@ void ray_save_pmap (RAYPARAMS *rp)
    unsigned t;
    
    for (t = 0; t < NUM_PMAP_TYPES; t++) {
-      if (pmapParams [t].fileName) {
-         rp -> pmapParams [t].fileName = 
-            (char*)malloc(strlen(pmapParams [t].fileName));           
-         strcpy(rp -> pmapParams [t].fileName, pmapParams [t].fileName);
-      }
+      if (pmapParams [t].fileName)
+         rp -> pmapParams [t].fileName = savqstr(pmapParams [t].fileName);
+        
       else rp -> pmapParams [t].fileName = NULL;
    
       rp -> pmapParams [t].minGather = pmapParams [t].minGather;

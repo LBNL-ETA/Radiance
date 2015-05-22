@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapio.h,v 2.2 2015/05/08 13:20:22 rschregle Exp $
+   $Id: pmapio.h,v 2.3 2015/05/22 14:09:01 greg Exp $
 */
 
 
@@ -20,7 +20,7 @@
    #define PMAP_FILEVER 160u              /* File format version */
    
    void savePhotonMap (const PhotonMap *pmap, const char *fname,
-                       PhotonMapType type, int argc, char **argv);
+                       int argc, char **argv);
    /* Save portable photon map of specified type to filename,
       along with the corresponding command line. */
 

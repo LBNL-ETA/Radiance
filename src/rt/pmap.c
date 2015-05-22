@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.c,v 2.6 2015/05/21 13:54:59 greg Exp $
+   $Id: pmap.c,v 2.7 2015/05/22 14:09:01 greg Exp $
 */
 
 
@@ -28,7 +28,7 @@
 
 extern char *octname;
 
-static char PmapRevision [] = "$Revision: 2.6 $";
+static char PmapRevision [] = "$Revision: 2.7 $";
 
 
 
@@ -101,7 +101,7 @@ void savePmaps (const PhotonMap **pmaps, int argc, char **argv)
    
    for (t = 0; t < NUM_PMAP_TYPES; t++) {
       if (pmaps [t])
-         savePhotonMap(pmaps [t], pmaps [t] -> fileName, t, argc, argv);
+         savePhotonMap(pmaps [t], pmaps [t] -> fileName, argc, argv);
    }
 }                   
 
