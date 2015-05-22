@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.c,v 2.4 2015/05/21 13:54:59 greg Exp $
+   $Id: pmapsrc.c,v 2.5 2015/05/22 11:38:26 greg Exp $
 */
 
 
@@ -671,7 +671,7 @@ void initPhotonEmission (EmissionMap *emap, float numPdfSamples)
          
       VCOPY(r.rorg, emap -> photonOrg);
       VCOPY(r.rop, emap -> photonOrg);
-      r.rmax = FHUGE;
+      r.rmax = 0;
       
       for (t = 0; t < emap -> numTheta; t++) {
          for (p = 0; p < emap -> numPhi; p++) {
@@ -746,8 +746,14 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
    /* Choose a new origin within current partition for every 
       emitted photon to break up clustering artifacts */
    photonOrigin [emap -> src -> so -> otype] ((EmissionMap*)emap);
+   /* If we have a local glow source with a maximum radius, then
+      restrict our photon to the specified distance (otherwise no limit) */
+   if (mod -> otype == MAT_GLOW && emap -> src -> so -> otype != OBJ_SOURCE
+		&& mod -> oargs.farg[3] > FTINY)
+      ray -> rmax = mod -> oargs.farg[3];
+   else
+      ray -> rmax = 0;
    rayorigin(ray, PRIMARY, NULL, NULL);
-   ray -> rmax = FHUGE;
    
    if (!emap -> numSamples) {
       /* Source is unmodified and has no port, and either local with 
