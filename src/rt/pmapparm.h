@@ -1,7 +1,7 @@
 /* 
    ==================================================================
-   Parameters common to all photon map modules. 
-   For inclusion in main program.
+   Parameters for photon map generation; used by MKPMAP
+   For inclusion in mkpmap.c
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com}
    (c) Fraunhofer Institute for Solar Energy Systems,
@@ -9,7 +9,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapparm.h,v 2.2 2015/05/08 13:20:22 rschregle Exp $
+   $Id: pmapparm.h,v 2.3 2015/05/26 12:32:21 rschregle Exp $
 */
 
 
