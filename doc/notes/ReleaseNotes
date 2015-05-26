@@ -2032,3 +2032,5 @@ and rmtxop.
 
 Added photon map support to rad.  Fixed some double-counting
 issues in photon-mapping spotted by David Geisler-Moroder.
+
+Added photon map support to trad.
