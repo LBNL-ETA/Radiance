@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.h,v 2.5 2015/05/26 13:21:07 greg Exp $
+   $Id: pmapmat.h,v 2.6 2015/05/26 15:58:34 greg Exp $
 */
 
 
@@ -29,7 +29,8 @@
                            contrib, or dedicated caustic photon map.
    */
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
-				(ambounce < 0 || causticPhotonMapping))
+				(ambounce < 0 || ((r) -> crtype & AMBIENT ? \
+					photonMapping : causticPhotonMapping)))
    
    /* Check if scattered ray spawns a caustic photon */
    #define PMAP_CAUSTICRAY(r) ((r) -> rtype & SPECULAR)

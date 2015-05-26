@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.h,v 2.3 2015/05/08 13:20:22 rschregle Exp $
+   $Id: pmap.h,v 2.4 2015/05/26 15:58:34 greg Exp $
 */
 
 
@@ -34,10 +34,10 @@
 
    /* Macros to test for enabled photon maps */
    #define photonMapping         (globalPmap || preCompPmap || \
-                                  causticPmap ||contribPmap)
-   #define causticPhotonMapping  (causticPmap)
-   #define directPhotonMapping   (directPmap)
-   #define volumePhotonMapping   (volumePmap)
+                                  causticPmap || contribPmap)
+   #define causticPhotonMapping  (causticPmap != NULL)
+   #define directPhotonMapping   (directPmap != NULL)
+   #define volumePhotonMapping   (volumePmap != NULL)
    #define contribPhotonMapping  (contribPmap && contribPmap -> srcContrib)
    
    
