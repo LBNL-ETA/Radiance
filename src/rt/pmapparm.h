@@ -9,7 +9,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapparm.h,v 2.3 2015/05/26 12:32:21 rschregle Exp $
+   $Id: pmapparm.h,v 2.4 2015/05/26 13:31:19 rschregle Exp $
 */
 
 
@@ -38,8 +38,8 @@
    #define contribPmapParams  (pmapParams [PMAP_TYPE_CONTRIB])
    
    
-   extern float pdfSamples, preDistrib, finalGather, gatherTolerance,
-                maxDistCoeff;
+   extern float pdfSamples, preDistrib, finalGather, gatherTolerance, 
+                maxDistFix;
    extern unsigned long photonHeapSizeInc, photonMaxBounce;
    extern unsigned photonRepTime, maxPreDistrib, defaultGather;
 #ifdef PMAP_ROI                

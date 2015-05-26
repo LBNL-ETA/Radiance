@@ -9,7 +9,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapparm.c,v 2.3 2015/05/26 12:32:21 rschregle Exp $
+   $Id: pmapparm.c,v 2.4 2015/05/26 13:31:19 rschregle Exp $
 */
 
 
@@ -29,8 +29,9 @@ float pdfSamples = 1000,                /* PDF samples per steradian */
                                            fraction of minGather/maxGather
                                            are restarted with a larger
                                            search radius */
-      maxDistCoeff = 100;               /* Coefficient for maximum photon
-                                           search radius  */
+      maxDistFix = 0;                   /* Static maximum photon search
+                                           radius (radius is adaptive if
+                                           this is zero) */
 
 #ifdef PMAP_ROI
    /* Region of interest bbox: {xmin, xmax, ymin, ymax, zmin, zmax} */

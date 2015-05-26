@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.4 2015/05/22 14:12:11 greg Exp $
+   $Id: pmapopt.c,v 2.5 2015/05/26 13:31:19 rschregle Exp $
 */
 
 
@@ -72,8 +72,8 @@ int getPmapRenderOpt (int ac, char *av [])
                }
                else return 2;
                
-            case 'm': /* max photon search radius coefficient */
-               if (check(3, "f") || (maxDistCoeff = atof(av [1])) <= 0)
+            case 'm': /* Fixed max photon search radius */
+               if (check(3, "f") || (maxDistFix = atof(av [1])) <= 0)
                   error(USER, "invalid max photon search radius coefficient");
 
                return 1;
@@ -90,5 +90,5 @@ int getPmapRenderOpt (int ac, char *av [])
 void printPmapDefaults ()
 /* Print defaults for photon map render options */
 {
-   printf("-am %.1f\t\t\t# max photon search radius coeff\n", maxDistCoeff);
+   printf("-am %.1f\t\t\t\t# max photon search radius\n", maxDistFix);
 }
