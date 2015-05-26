@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.73 2015/02/24 19:39:26 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.74 2015/05/26 13:21:07 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -293,7 +293,7 @@ rc3.o:	../common/selcall.h
 
 ambient.o: pmapparm.h pmaptype.h pmapamb.h pmapdata.h
 
-aniso.o dielectric.o glass.o m_mirror.o normal.o: \
+dielectric.o glass.o normal.o: \
    pmapparm.h pmaptype.h pmapmat.h pmap.h pmapdata.h
    
 raycalls.o rpmain.o rcmain.o rtmain.o rvmain.o: \

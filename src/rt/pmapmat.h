@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.h,v 2.4 2015/05/21 15:28:24 greg Exp $
+   $Id: pmapmat.h,v 2.5 2015/05/26 13:21:07 greg Exp $
 */
 
 
@@ -18,15 +18,9 @@
    #include "pmap.h"
 
    /* 
-      Checks for paths already accounted for in photon map to avoid
+      Check for paths already accounted for in photon map to avoid
       double-counting during backward raytracing.
     
-      ambRayInPmap():      Check for DIFFUSE -> (DIFFUSE|SPECULAR) -> *
-                           subpaths.  These occur during the backward pass
-                           when an ambient ray spawns an indirect diffuse or
-                           specular ray.  These subpaths are already
-                           accounted for in the global photon map.
-      
       shadowRayInPmap():   Check for DIFFUSE -> SPECULAR -> LIGHT
                            subpaths. These occur during the backward pass 
                            when a shadow ray is transferred through a
@@ -34,13 +28,6 @@
                            accounted for by caustic photons in the global,
                            contrib, or dedicated caustic photon map.
    */
-   /*
-   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && \
-                               ((photonMapping && \
-                                 (ambounce < 0 || (r) -> rlvl > 1)) || \
-                                 causticPhotonMapping || contribPhotonMapping))
-   */
-   #define ambRayInPmap(r)    0
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
 				(ambounce < 0 || causticPhotonMapping))
    
