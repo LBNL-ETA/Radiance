@@ -2029,3 +2029,6 @@ transmittance and reflectance.
 
 Added ability to read input from commands in dctimestep
 and rmtxop.
+
+Added photon map support to rad.  Fixed some double-counting
+issues in photon-mapping spotted by David Geisler-Moroder.

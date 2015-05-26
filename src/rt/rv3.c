@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.39 2015/05/20 09:36:48 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.40 2015/05/26 10:00:47 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -224,9 +224,9 @@ paint(			/* compute and paint a rectangle */
 		} else if (ambounce == 0)
 			flushintvl = ray_pnprocs*WFLUSH;
 		else if (niflush < WFLUSH)
-			flushintvl = ray_pnprocs*niflush/(ambounce+1);
+			flushintvl = ray_pnprocs*niflush/(ambounce*(ambounce>0)+1);
 		else
-			flushintvl = ray_pnprocs*WFLUSH/(ambounce+1);
+			flushintvl = ray_pnprocs*WFLUSH/(ambounce*(ambounce>0)+1);
 		if (lastflush > counter)
 			lastflush = 0;		/* counter wrapped */
 
