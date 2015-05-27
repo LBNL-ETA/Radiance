@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.17 2015/05/05 22:16:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.18 2015/05/27 11:39:37 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -207,6 +207,7 @@ eval_bsdf(const char *fname)
 	double		sum;
 	int		i, j, n;
 
+	initurand(npsamps);
 	SDclearBSDF(&bsd, fname);		/* load BSDF file */
 	if ((ec = SDloadFile(&bsd, fname)) != SDEnone)
 		goto err;
