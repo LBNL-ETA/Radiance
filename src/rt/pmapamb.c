@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapamb.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapamb.c,v 2.3 2015/05/27 16:23:41 greg Exp $
 */
 
 
@@ -59,7 +59,8 @@ int ambPmapCaustic (COLOR aval, RAY *r, int rdepth)
    PhotonMap *pmap = contribPhotonMapping ? contribPmap : causticPmap;
 
    /* Get caustic photon density estimate only at primary rays */
-   if (pmap && !rdepth) {
+   if (pmap && (!rdepth || (!globalPmap & !contribPmap & !preCompPmap
+				&& r->crtype & AMBIENT))) {
       /* Temporarily factor ambient value into ray coefficient
        * (required for contribution photon map) */
       copycolor(rcoef, r -> rcoef);      
