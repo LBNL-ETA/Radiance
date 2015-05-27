@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.114 2015/05/27 13:29:57 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.115 2015/05/27 14:12:09 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -672,9 +672,9 @@ mkpmap(void)			/* run mkpmap if indicated */
 		if (runcom(combuf)) {
 			fprintf(stderr, "%s: error running %s\n",
 					progname, c_mkpmap);
-			if (pgmapname != NULL)
+			if (pgmapname != NULL && pgmapdate < oct1date)
 				unlink(pgmapname);
-			if (pcmapname != NULL)
+			if (pcmapname != NULL && pcmapdate < oct1date)
 				unlink(pcmapname);
 			quit(1);
 		}
