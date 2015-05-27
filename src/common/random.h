@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.20 2015/05/27 08:37:26 greg Exp $ */
+/* RCSid $Id: random.h,v 2.21 2015/05/27 08:42:06 greg Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -22,9 +22,6 @@ extern "C" {
 #define frandom()	(rand()*(1./(RAND_MAX+.5)))
 
 #else
-
-extern long  lrand48();
-extern double  drand48();
 
 #define	 random()	lrand48()
 #define  srandom(s)	srand48((long)(s))
