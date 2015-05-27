@@ -889,6 +889,8 @@ The "Pgmap" specifies the file to hold the global photons computed
 by the "mkpmap" command, followed by the number of photons to generate
 (required).
 A typical photon count for a global map is on the order of 100-200K.
+(A 'K', 'M', or 'G' may follow the value to indicate 1000's, millions,
+or billions of photons.)
 By convention, photon map files are given a ".pmp" suffix.
 An optional third parameter specifies the bandwidth to use 
 for the global photons during rendering, and this value should be
@@ -906,11 +908,14 @@ as the file will be regenerated automatically after most scene changes.
 The "Pcmap" specifies the file to hold the caustic photons computed
 by the "mkpmap" command, followed by the number of photons to generate
 (required).
-A typical photon count for a global map is on the order of 1000K.
+A typical photon count for a global map is on the order of 1000K (1M).
+(A 'K', 'M', or 'G' may follow the value to indicate 1000's, millions,
+or billions of photons.)
 By convention, photon map files are given a ".pmp" suffix.
 An optional third parameter specifies the bandwidth to use 
 for the global photons during rendering, and this value should be
 around 50.
+(See the "Pgmap" topic under the current help category.)
 
 .Options.PcmDelete
 
