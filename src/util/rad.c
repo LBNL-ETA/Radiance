@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.113 2015/05/27 12:50:46 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.114 2015/05/27 13:29:57 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -401,9 +401,6 @@ checkfiles(void)			/* check for existence and modified times */
 		atos(fntemp, sizeof(fntemp), vval(PCMAP));
 		pcmapname = savqstr(fntemp);
 		pcmapdate = fdate(pcmapname);
-		if (pgmapname == NULL && !nowarn)
-			fprintf(stderr, "%s: warning - '%s' assigned without '%s'\n",
-					progname, vnam(PCMAP), vnam(PGMAP));
 	}
 	matdate = checklast(vval(MATERIAL));
 }	
