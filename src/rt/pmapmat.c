@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.c,v 2.6 2015/05/22 10:27:40 greg Exp $ 
+   $Id: pmapmat.c,v 2.7 2015/05/27 17:54:19 rschregle Exp $ 
 */
 
 
@@ -1374,286 +1374,12 @@ static int pattexPhotonScatter (OBJREC *mat, RAY *rayIn)
 
 
 
-#if 0
-   static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
-   /* Generate new photon ray for BSDF modifier and recurse. */
-   {
-      int      hitFront;
-      SDError  err;
-      FVECT	   upvec;
-      MFUNC	   *mf;
-      BSDFDAT	nd;
-      RAY      rayOut;
-
-      /* Following code adapted from m_bsdf() */
-      /* Check arguments */
-      if (mat -> oargs.nsargs < 6 || mat -> oargs.nfargs > 9 ||
-          mat -> oargs.nfargs % 3)
-         objerror(mat, USER, "bad # arguments");
-         
-      hitFront = (rayIn -> rod > 0);
-
-      /* Load cal file */
-      mf = getfunc(mat, 5, 0x1d, 1);
-      
-      /* Get thickness */
-      nd.thick = evalue(mf -> ep [0]);
-      if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
-         nd.thick = .0;
-         
-      if (nd.thick != .0 || (!hitFront && !backvis)) {
-         /* Proxy geometry present, so use it instead and transfer ray */
-         photonRay(rayIn, &rayOut, PMAP_XFER, NULL);
-         tracePhoton(&rayOut);
-         
-         return 0;
-      }
-
-      /* Get BSDF data */
-      nd.sd = loadBSDF(mat -> oargs.sarg [1]);
-      
-      /* Diffuse reflectance */
-      if (hitFront) {
-         if (mat -> oargs.nfargs < 3)
-            setcolor(nd.rdiff, .0, .0, .0);
-         else setcolor(nd.rdiff, mat -> oargs.farg [0], mat -> oargs.farg [1], 
-                       mat -> oargs.farg [2]);
-      }    
-      else if (mat -> oargs.nfargs < 6) {
-         /* Check for absorbing backside */
-         if (!backvis && !nd.sd -> rb && !nd.sd -> tf) {
-            SDfreeCache(nd.sd);   	      	   
-            return 0;
-         }
-         
-         setcolor(nd.rdiff, .0, .0, .0);
-      } 
-      else setcolor(nd.rdiff, mat -> oargs.farg [3], mat -> oargs.farg [4], 
-                    mat -> oargs.farg [5]);
-
-      /* Diffuse transmittance */
-      if (mat -> oargs.nfargs < 9)
-         setcolor(nd.tdiff, .0, .0, .0);
-      else setcolor(nd.tdiff, mat -> oargs.farg [6], mat -> oargs.farg [7], 
-                    mat -> oargs.farg [8]);
-                  
-      nd.mp = mat;
-      nd.pr = rayIn;
-      
-      /* Get modifiers */
-      raytexture(rayIn, mat -> omod);
-      
-      /* Modify diffuse values */
-      multcolor(nd.rdiff, rayIn -> pcol);
-      multcolor(nd.tdiff, rayIn -> pcol);
-         
-      /* Get up vector & xform to world coords */
-      upvec [0] = evalue(mf -> ep [1]);
-      upvec [1] = evalue(mf -> ep [2]);
-      upvec [2] = evalue(mf -> ep [3]);
-      
-      if (mf -> fxp != &unitxf) {
-         multv3(upvec, upvec, mf -> fxp -> xfm);
-         nd.thick *= mf -> fxp -> sca;
-      }
-      
-      if (rayIn -> rox) {
-         multv3(upvec, upvec, rayIn -> rox -> f.xfm);
-         nd.thick *= rayIn -> rox -> f.sca;
-      }
-      
-      /* Perturb normal */
-      raynormal(nd.pnorm, rayIn);
-      
-      /* Xform incident dir to local BSDF coords */
-      err = SDcompXform(nd.toloc, nd.pnorm, upvec);
-      
-      if (!err) {
-         nd.vray [0] = -rayIn -> rdir [0];
-         nd.vray [1] = -rayIn -> rdir [1];
-         nd.vray [2] = -rayIn -> rdir [2];
-         err = SDmapDir(nd.vray, nd.toloc, nd.vray);
-      }
-      
-      if (!err)
-         err = SDinvXform(nd.fromloc, nd.toloc);
-         
-      if (err) {
-         objerror(mat, WARNING, "Illegal orientation vector");
-         return 0;
-      }
-      
-      /* Determine BSDF resolution */
-      err = SDsizeBSDF(nd.sr_vpsa, nd.vray, NULL, SDqueryMin + SDqueryMax, nd.sd);
-      
-      if (err)
-         objerror(mat, USER, transSDError(err));
-         
-      nd.sr_vpsa [0] = sqrt(nd.sr_vpsa [0]);
-      nd.sr_vpsa [1] = sqrt(nd.sr_vpsa [1]);
-
-      /* Orient perturbed normal towards incident side */
-      if (!hitFront) {			
-         nd.pnorm [0] = -nd.pnorm [0];
-         nd.pnorm [1] = -nd.pnorm [1];
-         nd.pnorm [2] = -nd.pnorm [2];
-      }
-      
-      /* Following code adapted from SDsampBSDF() */
-      {
-         SDSpectralDF   *rdf, *tdf;
-         SDValue        bsdfVal;
-         double         xi, rhoDiff = 0;
-         float          coef [SDmaxCh];
-         int            i, j, n, nr;
-         SDComponent	   *sdc;
-         const SDCDst   **cdarr = NULL;
-         
-         /* Get diffuse albedo (?) */
-         if (hitFront) {
-            bsdfVal = nd.sd -> rLambFront;
-            rdf = nd.sd -> rf;
-            tdf = nd.sd -> tf ? nd.sd -> tf : nd.sd -> tb;
-         } 
-         else {
-            bsdfVal = nd.sd -> rLambBack;
-            rdf = nd.sd -> rb;
-            tdf = nd.sd -> tb ? nd.sd -> tb : nd.sd -> tf;
-         }
-         
-         rhoDiff = bsdfVal.cieY;
-         bsdfVal.cieY += nd.sd -> tLamb.cieY;
-         
-         /* Allocate non-diffuse sampling */
-         i = nr = rdf ? rdf -> ncomp : 0;
-         j = tdf ? tdf -> ncomp : 0;
-         n = i + j;
-         
-         if (n > 0 && !(cdarr = (const SDCDst**)malloc(n * sizeof(SDCDst*))))
-            objerror(mat, USER, transSDError(SDEmemory));
-            
-         while (j-- > 0) {
-            /* Sum up non-diffuse transmittance */
-            cdarr [i + j] = (*tdf -> comp [j].func -> getCDist)(nd.vray, &tdf -> comp [j]);
-            
-            if (!cdarr [i + j])
-               cdarr [i + j] = &SDemptyCD;
-            else bsdfVal.cieY += cdarr [i + j] -> cTotal;
-         }
-         
-         while (i-- > 0) {
-            /* Sum up non-diffuse reflectance */
-            cdarr [i] = (*rdf -> comp [i].func -> getCDist)(nd.vray, &rdf -> comp [i]);
-            
-            if (!cdarr [i])
-               cdarr [i] = &SDemptyCD;
-            else bsdfVal.cieY += cdarr [i] -> cTotal;
-         }
-         
-         if (bsdfVal.cieY <= FTINY) {
-            /* Don't bother sampling, just absorb photon */
-            if (cdarr)
-               free(cdarr);
-            return 0;
-         }      
-         
-         /* Insert direct and indirect photon hits if diffuse component */
-         if (rhoDiff > FTINY || nd.sd -> tLamb.cieY > FTINY)
-            addPhotons(rayIn);	
-            
-         xi = pmapRandom(rouletteState);
-         
-         if ((xi -= rhoDiff) <= 0) {
-            /* Diffuse reflection */
-            photonRay(rayIn, &rayOut, PMAP_DIFFREFL, nd.rdiff);
-            diffPhotonScatter(nd.pnorm, &rayOut);
-         }
-         else if ((xi -= nd.sd -> tLamb.cieY) <= 0) {
-            /* Diffuse transmission */
-            flipsurface(rayIn);
-            photonRay(rayIn, &rayOut, PMAP_DIFFTRANS, nd.tdiff);
-            bsdfVal.spec = nd.sd -> tLamb.spec;
-            diffPhotonScatter(nd.pnorm, &rayOut);
-         }
-         else {
-            int rayOutType;
-            COLOR bsdfRGB;
-               
-            /* Non-diffuse CDF inversion (?) */
-            for (i = 0; i < n && (xi -= cdarr [i] -> cTotal) > 0; i++);
-            
-            if (i >= n) {
-               /* Absorbed -- photon went Deer Hunter */
-               if (cdarr)
-                  free(cdarr);
-               return 0;
-            }
-
-            if (i < nr) {
-               /* Non-diffuse reflection */
-               sdc = &rdf -> comp [i];
-               rayOutType = PMAP_SPECREFL;
-            }
-            else {
-               /* Non-diffuse transmission */
-               sdc = &tdf -> comp [i - nr];
-               rayOutType = PMAP_SPECTRANS;
-            }
-            
-            /* Generate non-diff sample dir */
-            VCOPY(rayOut.rdir, nd.vray);
-            err = (*sdc -> func -> sampCDist)
-                  (rayOut.rdir, pmapRandom(scatterState), cdarr [i]);               
-            if (err)
-               objerror(mat, USER, transSDError(SDEinternal));
-
-            /* Get colour */
-            j = (*sdc -> func -> getBSDFs)(coef, rayOut.rdir, nd.vray, sdc);
-            
-            if (j <= 0) {
-               sprintf(SDerrorDetail, "BSDF \"%s\" sampling value error", 
-                       nd.sd -> name);
-               objerror(mat, USER, transSDError(SDEinternal));
-            }
-            
-            bsdfVal.spec = sdc -> cspec [0];
-            rhoDiff = coef [0];
-            
-            while (--j) {
-               c_cmix(&bsdfVal.spec, rhoDiff, &bsdfVal.spec, coef [j], 
-                      &sdc -> cspec [j]);
-               rhoDiff += coef [j];
-            }
-            
-            /* ? */
-            c_ccvt(&bsdfVal.spec, C_CSXY + C_CSSPEC);
-            ccy2rgb(&bsdfVal.spec, bsdfVal.cieY, bsdfRGB);
-            
-            /* Xform outgoing dir to world coords */
-            if ((err = SDmapDir(rayOut.rdir, nd.fromloc, rayOut.rdir))) {
-               objerror(mat, USER, transSDError(err));
-               return 0;
-            }
-            
-            photonRay(rayIn, &rayOut, rayOutType, bsdfRGB);
-         }
-         
-         if (cdarr)
-            free(cdarr);
-      }
-                           
-      /* Clean up BSDF */
-      SDfreeCache(nd.sd);
-
-      tracePhoton(&rayOut);
-      return 0;
-   }
-#else
-
 /* 
+   ==================================================================
    The following code is
    (c) Lucerne University of Applied Sciences and Arts,
    supported by the Swiss National Science Foundation (SNSF, #147053)
+   ==================================================================
 */   
 
 static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
@@ -1687,15 +1413,7 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 	nd.thick = evalue(mf -> ep [0]);
 	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
 		nd.thick = .0;
-#if 0	
-   if (nd.thick != .0 || (!hitFront && !backvis)) {
-      /* Proxy geometry present, so use it instead and transfer ray */
-      photonRay(rayIn, &rayOut, PMAP_XFER, NULL);
-      tracePhoton(&rayOut);
-      
-      return 0;
-   }
-#endif
+
    /* Get BSDF data */
    nd.sd = loadBSDF(mat -> oargs.sarg [1]);
    
@@ -1855,8 +1573,8 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
          multcolor(bsdfRGB, rayIn -> pcol);
          addcolor(bsdfRGB, nd.tdiff);      
          flipsurface(rayIn);  /* Necessary? */
-	 nd.thick = -nd.thick;
-	 photonRay(rayIn, &rayOut, PMAP_DIFFTRANS, bsdfRGB);
+         nd.thick = -nd.thick;
+         photonRay(rayIn, &rayOut, PMAP_DIFFTRANS, bsdfRGB);
          transmitted = 1;
       }
 
@@ -1880,7 +1598,7 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
          ccy2rgb(&bsdfVal.spec, bsdfVal.cieY, bsdfRGB);
          multcolor(bsdfRGB, rayIn -> pcol);
          flipsurface(rayIn);  /* Necessary? */
-	 nd.thick = -nd.thick;
+         nd.thick = -nd.thick;
          photonRay(rayIn, &rayOut, PMAP_SPECTRANS, bsdfRGB);
          transmitted = 1;
       }      
@@ -1897,12 +1615,11 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 
    /* Need to offset ray origin to get past detail geometry? */
    if (transmitted && nd.thick != 0)
-	VSUM(rayOut.rorg, rayOut.rorg, rayIn -> ron, -nd.thick);
+      VSUM(rayOut.rorg, rayOut.rorg, rayIn -> ron, -nd.thick);
 
    tracePhoton(&rayOut);
    return 0;
 }
-#endif
 
 
 
