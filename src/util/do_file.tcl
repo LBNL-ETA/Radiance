@@ -1,4 +1,4 @@
-# RCSid: $Id: do_file.tcl,v 2.20 2015/05/26 12:39:25 greg Exp $
+# RCSid: $Id: do_file.tcl,v 2.21 2015/05/28 10:23:06 greg Exp $
 #
 # Choose the Rad Input File to work on.
 #
@@ -83,7 +83,7 @@ proc setradvar stmt {		# assign a rad variable
 		mat* { eval lappend radvar(materials) $vval }
 		ill* { eval lappend radvar(illum) $vval }
 		mki* { eval lappend radvar(mkillum) $vval }
-		mkp* { eval lappend randvar(mkpmap) $vval }
+		mkp* { eval lappend radvar(mkpmap) $vval }
 		ren* { eval lappend radvar(render) $vval }
 		oco* { eval lappend radvar(oconv) $vval }
 		rvu { eval lappend radvar(rvu) $vval }
