@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.64 2015/02/24 19:39:27 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.65 2015/05/28 09:03:54 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -135,16 +135,15 @@ marksources(void)			/* find and mark source objects */
 				source[ns].sflags |= SSKIP;
 			}
 		}
-#if  SHADCACHE
-		initobscache(ns);
-#endif
 		foundsource += !(source[ns].sflags & SSKIP);
 	}
 	if (!foundsource) {
 		error(WARNING, "no light sources found");
 		return;
 	}
-	
+#if  SHADCACHE
+	initobscache(ns);
+#endif
 	/* PMAP: disable virtual sources */
 	if (!photonMapping)
 		markvirtuals();			/* find and add virtual sources */
