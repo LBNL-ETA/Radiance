@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.c,v 2.5 2015/05/22 11:38:26 greg Exp $
+   $Id: pmapsrc.c,v 2.6 2015/05/28 12:27:22 greg Exp $
 */
 
 
@@ -748,7 +748,7 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
    photonOrigin [emap -> src -> so -> otype] ((EmissionMap*)emap);
    /* If we have a local glow source with a maximum radius, then
       restrict our photon to the specified distance (otherwise no limit) */
-   if (mod -> otype == MAT_GLOW && emap -> src -> so -> otype != OBJ_SOURCE
+   if (mod -> otype == MAT_GLOW && !(emap -> src -> sflags & SDISTANT)
 		&& mod -> oargs.farg[3] > FTINY)
       ray -> rmax = mod -> oargs.farg[3];
    else

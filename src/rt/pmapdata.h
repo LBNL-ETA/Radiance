@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdata.h,v 2.5 2015/05/20 14:44:12 greg Exp $
+   $Id: pmapdata.h,v 2.6 2015/05/28 12:27:22 greg Exp $
 */
 
 
@@ -34,7 +34,7 @@
 
    /* Primary photon ray for light source contributions */
    typedef struct {
-      uint32 srcIdx;              /* Index of emitting light source */
+      int32 srcIdx;               /* Index of emitting light source */
       int32 dir;                  /* Encoded ray direction */
       float pos [3];              /* Hit point */
    } PhotonPrimary;
