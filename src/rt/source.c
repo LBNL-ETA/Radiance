@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.65 2015/05/28 09:03:54 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.66 2015/05/28 09:13:19 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -142,7 +142,8 @@ marksources(void)			/* find and mark source objects */
 		return;
 	}
 #if  SHADCACHE
-	initobscache(ns);
+	for (ns = 0; ns < nsources; ns++)	/* initialize obstructor cache */
+		initobscache(ns);
 #endif
 	/* PMAP: disable virtual sources */
 	if (!photonMapping)
