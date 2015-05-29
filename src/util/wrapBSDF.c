@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.14 2015/04/02 16:40:32 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.15 2015/05/29 07:16:49 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -585,6 +585,7 @@ writeBSDF(const char *caller, ezxml_t fl)
 		free(xml);
 		return 0;
 	}
+	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 	fflush(stdout);				/* write previous XML info. */
 	if (write(fileno(stdout), xml, ei) != ei) {
 		free(xml);
