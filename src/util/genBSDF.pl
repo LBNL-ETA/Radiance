@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.57 2015/04/02 17:42:46 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.58 2015/05/29 07:22:33 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -225,6 +225,7 @@ if ( $tensortree ) {
 my $old_fh = select(STDOUT);
 $| = 1;
 select($old_fh);
+print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 print "<!-- Created by: genBSDF @savedARGV -->\n";
 # print STDERR "Running: $wrapper\n";
 system $wrapper;
