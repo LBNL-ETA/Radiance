@@ -2037,3 +2037,6 @@ Added photon map support to trad.
 
 Fixed bug in antimatter source testing when antimatter
 definition follows potential obstructor in input.
+
+Fixed issue with missing character type identifier at head
+of genBSDF XML output.

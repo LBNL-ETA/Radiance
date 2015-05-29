@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.58 2015/05/29 07:22:33 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.59 2015/05/29 07:45:48 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -222,13 +222,8 @@ if ( $tensortree ) {
 	do_matrix_bsdf();
 }
 # Output XML
-my $old_fh = select(STDOUT);
-$| = 1;
-select($old_fh);
-print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-print "<!-- Created by: genBSDF @savedARGV -->\n";
 # print STDERR "Running: $wrapper\n";
-system $wrapper;
+system $wrapper -C "Created by: genBSDF @savedARGV";
 die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
 exec $rmtmp;

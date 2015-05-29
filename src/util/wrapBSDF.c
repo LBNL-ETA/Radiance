@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.15 2015/05/29 07:16:49 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.16 2015/05/29 07:45:48 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -25,7 +25,10 @@ const char	*attr_unit = "meter";
 const char	legal_units[] = "meter|foot|inch|centimeter|millimeter";
 					/* system materials & geometry */
 const char	*mgf_geometry = NULL;
-
+					/* comment list */
+#define MAXCOMM		30
+const char	*commlist[MAXCOMM];
+int		ncomm = 0;
 					/* angle bases */
 enum { ABdefault=-1, ABklemsFull=0, ABklemsHalf, ABklemsQuarter,
 		ABtensorTree3, ABtensorTree4, ABend };
@@ -586,6 +589,8 @@ writeBSDF(const char *caller, ezxml_t fl)
 		return 0;
 	}
 	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+	for (i = 0; i < ncomm; i++)
+		printf("<!-- %s -->\n", commlist[i]);
 	fflush(stdout);				/* write previous XML info. */
 	if (write(fileno(stdout), xml, ei) != ei) {
 		free(xml);
@@ -718,7 +723,7 @@ UsageExit(const char *pname)
 	fputs("Usage: ", stderr);
 	fputs(pname, stderr);
 	fputs(" [-W][-c][-a {kf|kh|kq|t3|t4}][-u unit][-g geom][-f 'x=string;y=string']", stderr);
-	fputs(" [-s spectr][-tb inp][-tf inp][-rb inp][-rf inp]", stderr);
+	fputs(" [-s spectr][-tb inp][-tf inp][-rb inp][-rf inp][-C comm]", stderr);
 	fputs(" [input.xml]\n", stderr);
 	exit(1);
 }
@@ -786,6 +791,19 @@ main(int argc, char *argv[])
 			continue;
 		case 'c':		/* correct solid angle */
 			correct_solid_angle = 1;
+			continue;
+		case 'C':		/* comment */
+			if (ncomm >= MAXCOMM) {
+				fprintf(stderr, "%s: too many comments\n",
+						argv[0]);
+				return 1;
+			}
+			if (strchr(argv[++i], '>') != NULL) {
+				fprintf(stderr, "%s: illegal character in comment\n",
+						argv[0]);
+				return 1;
+			}
+			commlist[ncomm++] = argv[i];
 			continue;
 		case 't':		/* transmission */
 			if (i >= argc-1)
