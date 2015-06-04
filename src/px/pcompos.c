@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.33 2009/08/10 04:26:38 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.34 2015/06/04 01:19:30 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -243,8 +243,8 @@ getfile:
 					input[nfile].name);
 			quit(1);
 		}
-		if (ncolumns > 0) {
-			if (curcol >= ncolumns) {
+		if (ncolumns) {
+			if (curcol >= abs(ncolumns)) {
 				cury = ymax + spacing;
 				curx = x0;
 				curcol = 0;
@@ -297,6 +297,11 @@ getfile:
 		ysiz = ymax;
 	else if (ysiz > ymax)
 		ymax = ysiz;
+	if (ncolumns < 0) {		/* reverse rows if requested */
+		int	i = nfile;
+		while (i--)
+			input[i].yloc = ymax - input[i].yres - input[i].yloc;
+	}
 					/* add new header info. */
 	printargs(argc, argv, stdout);
 	if (strcmp(ourfmt, PICFMT))

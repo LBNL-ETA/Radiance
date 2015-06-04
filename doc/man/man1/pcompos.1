@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcompos.1,v 1.6 2010/05/17 18:02:24 greg Exp $"
+.\" RCSid "$Id: pcompos.1,v 1.7 2015/06/04 01:19:30 greg Exp $"
 .TH PCOMPOS 1 12/18/97 RADIANCE
 .SH NAME
 pcompos - composite RADIANCE pictures.
@@ -143,6 +143,15 @@ option will cause each image to be separated by at least N pixels.
 The
 .I "\-o x0 y0"
 option specifies a nonzero anchor point for the bottom left image.
+If a negative value is given for ncols, then the rows are reversed,
+so they start from the top rather than the bottom.
+This gives a more natural ordering in most cases, but has the
+side-effect of moving any labels from the upper-left of each placed
+subimage to the lower-left.
+Also, the
+.I \-o
+option is interpreted differently, where the y0 value is number of
+pixels from the top (rather than the bottom).
 .PP
 The standard input can be specified with a hyphen ('-').
 A command that produces a RADIANCE picture can be given in place of a file 
@@ -152,9 +161,10 @@ To put a copyright label at the bottom of a picture:
 .IP "" .2i
 psign Copyright 1987 | pcompos inp.hdr 0 0 +t .5 - 384 64 > out.hdr
 .PP
-To make a catalog of images separated by white 10-pixel borders:
+To make a catalog of images separated by white 10-pixel borders and
+ordered four images per row starting from the top-left:
 .IP "" .2i
-pcompos \-la \-a 4 \-s 10 \-b 1 1 1 dog*.hdr > alldogs.hdr
+pcompos -la -a -4 -s 10 -b 1 1 1 dog*.hdr > alldogs.hdr
 .SH NOTES
 Since there is a limit to the number of open files and processes,
 large collections of images must be created in stages.

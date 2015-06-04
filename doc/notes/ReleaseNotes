@@ -2040,3 +2040,6 @@ definition follows potential obstructor in input.
 
 Fixed issue with missing character type identifier at head
 of genBSDF XML output.
+
+Prompted by Roland S., added option to have pcompos -a order
+rows from top rather than bottom of image.
