@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.1 2015/06/05 17:55:18 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.2 2015/06/05 18:58:37 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -82,6 +82,8 @@ main(int argc, char *argv[])
 				sprintf(path, "%s/%s", directory, cp2);
 			else
 				strcpy(path, cp2);
+			if (bsdf != NULL)
+				SDfreeCache(bsdf);
 			bsdf = SDcacheFile(path);
 			continue;
 		case 'q':
