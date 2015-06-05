@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.26 2015/02/24 19:39:26 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.27 2015/06/05 08:49:01 rschregle Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -404,14 +404,14 @@ Set the number of ambient bounces to
 This is the maximum number of diffuse bounces computed by the indirect
 calculation. A value of zero implies no indirect calculation. 
 .IP
-In photon mapping mode (see
+This value defaults to 1 in photon mapping mode (see
 .I -ap
-below), a positive value implies that global photon irradiance is
-always computed via
+below), implying that global photon irradiance is always computed via
 .I one
-ambient bounce. A negative value enables a preview mode that directly
-visualises the irradiance from the global photon map without any ambient
-bounces.
+ambient bounce; this behaviour applies to any positive number of ambient
+bounces, regardless of the actual value specified.  A negative value enables
+a preview mode that directly visualises the irradiance from the global
+photon map without any ambient bounces.
 .TP
 .BI -ar \ res
 Set the ambient resolution to
@@ -553,10 +553,20 @@ Using direct photons replaces the direct calculation with density estimates
 for debugging and validation of photon emission.       
 .TP
 .BI -am " frac"
-Coefficient for maximum search radius for photon map lookups. The search 
-radius is automatically determined based on the average photon distance to the
-distribution's centre of gravity, and scaled by this coefficient. Increase this
-value if multiple warnings about short photon lookups are issued.
+Maximum search radius for photon map lookups.  Without this option, an
+initial maximum search radius is estimated for each photon map from the
+average photon distance to the distribution's centre of gravity.  It is then
+adapted to the photon density in subsequent lookups.  This option imposes a
+global fixed maximum search radius for
+.I all
+photon maps, thus defeating the automatic adaptation.  It is useful when
+multiple warnings about short photon lookups are issued.  Note that this
+option does not conflict with the bandwidth specified with the
+.I \-ap
+option; the number of photons found will not exceed the latter, but may be
+lower if the maximum search radius contains fewer photons, thus resulting in
+short lookups.  Setting this radius too large, on the other hand, may
+degrade performance.
 .TP
 .BI -me " rext gext bext"
 Set the global medium extinction coefficient to the indicated color,
