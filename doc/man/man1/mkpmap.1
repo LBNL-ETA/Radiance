@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.1 2015/02/24 19:39:26 greg Exp $"
-.TH MKPMAP 1 "$Date: 2015/02/24 19:39:26 $ $Revision: 1.1 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.2 2015/06/05 08:48:09 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2015/06/05 08:48:09 $ $Revision: 1.2 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -142,7 +142,7 @@ different photon distributions for the same octree and photon map size.
 
 .IP "\fB\-aps \fImod\fR"
 Specifies a modifier \fImod\fR defined as \fIantimatter\fR material to act
-as a dummy (i.e.  invisible) sensor surface.  Photons will be deposited on
+as a virtual (i.e.  invisible) receiver surface.  Photons will be deposited on
 all surfaces using this modifier, just like regular materials, but will then
 be transferred through the surface without undergoing scattering; the
 surface therefore does not affect the light transport and simply acts as an
@@ -156,7 +156,7 @@ the front side of the sensor surface, i.e.  when entering the
 an error if the specified modifier is not an \fIantimatter\fR material.
 
 .IP "\fB\-apS \fImodfile\fR"
-Read dummy sensor surface modifiers from the file \fImodfile\fR as a more
+Read virtual receiver surface modifiers from the file \fImodfile\fR as a more
 convenient alternative to multiple instances of \fB\-aps\fR.
 
 .IP "\fB\-bv\fR[\fB+\fR|\fB-\fR]"
@@ -252,12 +252,12 @@ Virtual light sources (normally enabled with the \fImirror\fR material) are
 disabled with the photon map, as the resulting caustics are already accounted
 for.
 
-.SS Dummy Sensor Surfaces
+.SS Virtual Receiver Surfaces
 Since photons are surface bound, the density estimate is only asymptotically
 correct when performed at points which lie on the scene geometry.  The
 irradiance is underestimated for arbitrarily placed points when photons are
 collected from distant surfaces.  \fIMkpmap\fR offers a workaround with a
-dummy sensor surface using the \fIantimatter\fR material; see the \fB-aps\fR
+virtual receiver surface using the \fIantimatter\fR material; see the \fB-aps\fR
 and \fB-apS\fR options for details.
 
 .SH EXAMPLES
