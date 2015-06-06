@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.2 2015/06/05 18:58:37 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.3 2015/06/06 16:30:26 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -45,7 +45,7 @@ vec_from_deg(FVECT v, double theta, double phi)
 int
 main(int argc, char *argv[])
 {
-	const char	*directory = "";
+	const char	*directory = NULL;
 	char		inp[512], path[512];
 	const SDData	*bsdf = NULL;
 
@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 	if (argc == 2)
 		directory = argv[1];
 	
-	SDretainSet = SDretainBSDFs;		/* keep BSDFs loaded */
+	SDretainSet = SDretainBSDFs;		/* keep BSDFs in memory */
 
 						/* loop on command */
 	while (fgets(inp, sizeof(inp), stdin) != NULL) {
@@ -78,11 +78,11 @@ main(int argc, char *argv[])
 				break;
 			while (*cp) cp++;
 			while (isspace(*--cp)) *cp = '\0';
-			if (directory[0])
+			if (directory)
 				sprintf(path, "%s/%s", directory, cp2);
 			else
 				strcpy(path, cp2);
-			if (bsdf != NULL)
+			if (bsdf)
 				SDfreeCache(bsdf);
 			bsdf = SDcacheFile(path);
 			continue;
@@ -124,14 +124,14 @@ main(int argc, char *argv[])
 			if (!*sskip2(cp,2))
 				break;
 			if (tolower(*cp) == 'r')
-				sflags ^= SDsampT;
+				sflags &= ~SDsampT;
 			else if (tolower(*cp) == 't')
-				sflags ^= SDsampR;
+				sflags &= ~SDsampR;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			printf("%.4e\n", SDdirectHemi(vin, sflags, bsdf));
 			continue;
 		case 'a':
-		case 'A':			/* resolution in degrees */
+		case 'A':			/* resolution in proj. steradians */
 			if (bsdf == NULL)
 				goto noBSDFerr;
 			if (!*sskip2(cp,2))
