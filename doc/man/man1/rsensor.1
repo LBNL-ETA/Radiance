@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsensor.1,v 1.5 2012/06/14 22:42:21 greg Exp $"
+.\" RCSid "$Id: rsensor.1,v 1.6 2015/06/09 21:34:14 greg Exp $"
 .TH RSENSOR 1 4/11/2008 RADIANCE
 .SH NAME
 rsensor - compute sensor signal from a RADIANCE scene
@@ -89,8 +89,14 @@ The actual data contained in the sensor file corresponds to the
 tab-separated matrix specification, where the
 column header has "degrees" in the leftmost column, followed
 by evenly-spaced azimuthal angles.
+Azimuth angles must start at 0 and proceed to at least 270 degrees.
+No symmetry is applied to missing values.
 Each row begins with the polar angle, and is followed by the
 relative sensitivity values for each direction.
+Polar angles must start from 0 and continue to the edge of
+the sensor's view.
+Polar angles above the last row listed are assumed to have
+zero sensitivity.
 A low-resolution example of a sensor file is given below:
 .sp
 .nf

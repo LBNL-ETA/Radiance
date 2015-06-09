@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rsensor.c,v 2.17 2015/04/24 19:17:12 greg Exp $";
+static const char RCSid[] = "$Id: rsensor.c,v 2.18 2015/06/09 21:34:15 greg Exp $";
 #endif
 
 /*
@@ -237,7 +237,7 @@ load_sensor(
 		cp = fskip(cp);
 		if (cp == NULL)
 			break;
-		if (ntp[1] > 1 && sarr[ntp[1]+1] <= sarr[ntp[1]]) {
+		if (ntp[1] > 1 && sarr[ntp[1]+1] <= sarr[ntp[1]]+FTINY) {
 			sprintf(errmsg,
 		"Phi values not monotinically increasing in sensor file '%s'",
 					sfile);
@@ -303,9 +303,13 @@ load_sensor(
 	else if (fabs(sarr[1]) > FTINY)
 		sprintf(errmsg, "minimum phi must be 0 in sensor file '%s'",
 				sfile);
-	else if (sarr[ntp[1]] <= FTINY)
+	else if (sarr[ntp[1]] < 270.-FTINY)
 		sprintf(errmsg,
-			"maximum phi must be positive in sensor file '%s'",
+			"maximum phi must be 270 or greater in sensor file '%s'",
+				sfile);
+	else if (sarr[ntp[1]] >= 360.-FTINY)
+		sprintf(errmsg,
+			"maximum phi must be less than 360 in sensor file '%s'",
 				sfile);
 	if (errmsg[0])
 		error(USER, errmsg);
