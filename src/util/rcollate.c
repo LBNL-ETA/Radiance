@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.19 2014/09/18 00:12:42 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.20 2015/06/16 19:06:29 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -57,48 +57,6 @@ free_load(MEMLOAD *mp)
 	mp->len = 0;
 }
 
-/* load a file into memory */
-static int
-load_file(MEMLOAD *mp, FILE *fp)
-{
-	int	fd;
-	off_t	skip, flen;
-
-	if (mp == NULL)
-		return(-1);
-	mp->base = NULL;
-	mp->len = 0;
-	mp->mapped = 0;
-	if (fp == NULL)
-		return(-1);
-	fd = fileno(fp);
-	skip = ftello(fp);
-	flen = lseek(fd, 0, SEEK_END);
-	if (flen <= skip)
-		return((int)(flen - skip));
-	mp->len = (size_t)(flen - skip);
-#ifdef MAP_FILE
-	if (mp->len > 1L<<20) {		/* map file if > 1 MByte */
-		mp->base = mmap(NULL, mp->len, PROT_READ, MAP_PRIVATE, fd, skip);
-		if (mp->base != MAP_FAILED) {
-			mp->mapped = 1;
-			return(1);	/* mmap() success */
-		}
-		mp->base = NULL;	/* fall back to reading it in... */
-	}
-#endif
-	if (lseek(fd, skip, SEEK_SET) != skip ||
-			(mp->base = malloc(mp->len)) == NULL) {
-		mp->len = 0;
-		return(-1);
-	}
-	if (read(fd, (char *)mp->base, mp->len) != mp->len) {
-		free_load(mp);
-		return(-1);
-	}
-	return(1);
-}
-
 /* load memory from an input stream, starting from current position */
 static int
 load_stream(MEMLOAD *mp, FILE *fp)
@@ -132,6 +90,51 @@ load_stream(MEMLOAD *mp, FILE *fp)
 	if (alloced > mp->len*5/4)	/* don't waste too much space */
 		mp->base = realloc(mp->base, mp->len);
 	return(mp->len > 0);
+}
+
+/* load a file into memory */
+static int
+load_file(MEMLOAD *mp, FILE *fp)
+{
+	int	fd;
+	off_t	skip, flen;
+
+#ifdef _WIN32				/* too difficult to fix this */
+	return load_stream(mp, fp);
+#endif
+	if (mp == NULL)
+		return(-1);
+	mp->base = NULL;
+	mp->len = 0;
+	mp->mapped = 0;
+	if (fp == NULL)
+		return(-1);
+	fd = fileno(fp);
+	skip = ftello(fp);
+	flen = lseek(fd, 0, SEEK_END);
+	if (flen <= skip)
+		return((int)(flen - skip));
+	mp->len = (size_t)(flen - skip);
+#ifdef MAP_FILE
+	if (mp->len > 1L<<20) {		/* map file if > 1 MByte */
+		mp->base = mmap(NULL, mp->len, PROT_READ, MAP_PRIVATE, fd, skip);
+		if (mp->base != MAP_FAILED) {
+			mp->mapped = 1;
+			return(1);	/* mmap() success */
+		}
+		mp->base = NULL;	/* fall back to reading it in... */
+	}
+#endif
+	if (lseek(fd, skip, SEEK_SET) != skip ||
+			(mp->base = malloc(mp->len)) == NULL) {
+		mp->len = 0;
+		return(-1);
+	}
+	if (read(fd, (char *)mp->base, mp->len) != mp->len) {
+		free_load(mp);
+		return(-1);
+	}
+	return(1);
 }
 
 /* free a record index */
