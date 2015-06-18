@@ -1,4 +1,4 @@
-{ RCSid $Id: cieluv.cal,v 1.3 2015/06/18 00:11:39 greg Exp $ }
+{ RCSid $Id: cieluv.cal,v 1.4 2015/06/18 00:12:18 greg Exp $ }
 {
 	Compute Luv color space and color differences from XYZ primaries.
 
@@ -12,7 +12,7 @@ up_neu : up(1,1,1);
 vp_neu : vp(1,1,1);
 uw = up(Xw,Yw,Zw);
 vw = vp(Xw,Yw,Zw);
-Ls(Yi) : if(Yi/Yw - .01, 116*(Yi/Yw)^(1/3) - 16, 903.3*Yi/Yw);
+Ls(Yi) = if(Yi/Yw - .01, 116*(Yi/Yw)^(1/3) - 16, 903.3*Yi/Yw);
 us(Xi,Yi,Zi) = 13*Ls(Yi)*(up(Xi,Yi,Zi) - uw);
 vs(Xi,Yi,Zi) = 13*Ls(Yi)*(vp(Xi,Yi,Zi) - vw);
 hue_deg(Xi,Yi,Zi) = 180/PI*atan2(vs(Xi,Yi,Zi),us(Xi,Yi,Zi));
