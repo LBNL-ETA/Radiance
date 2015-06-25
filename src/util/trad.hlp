@@ -889,7 +889,7 @@ The "Pgmap" specifies the file to hold the global photons computed
 by the "mkpmap" command, followed by the number of photons to generate
 (required).
 A typical photon count for a global map is on the order of 100-200K.
-(A 'K', 'M', or 'G' may follow the value to indicate 1000's, millions,
+(A 'K', 'M', or 'G' may follow the value to indicate thousands, millions,
 or billions of photons.)
 By convention, photon map files are given a ".pmp" suffix.
 An optional third parameter specifies the bandwidth to use 
@@ -909,7 +909,7 @@ The "Pcmap" specifies the file to hold the caustic photons computed
 by the "mkpmap" command, followed by the number of photons to generate
 (required).
 A typical photon count for a global map is on the order of 1000K (1M).
-(A 'K', 'M', or 'G' may follow the value to indicate 1000's, millions,
+(A 'K', 'M', or 'G' may follow the value to indicate thousands, millions,
 or billions of photons.)
 By convention, photon map files are given a ".pmp" suffix.
 An optional third parameter specifies the bandwidth to use 
