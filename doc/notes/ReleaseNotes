@@ -2043,3 +2043,9 @@ of genBSDF XML output.
 
 Prompted by Roland S., added option to have pcompos -a order
 rows from top rather than bottom of image.
+
+Changed dctimestep to accept matrix as well as BTDF input
+in the VTDs invocation mode.  This permits the output of
+rmtxop to be used in a pinch when combining multiple BTDF
+layers, although interreflection between layers is not
+accounted for properly as it is in the WINDOW program.

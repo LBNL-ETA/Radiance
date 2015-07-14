@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.35 2014/09/26 23:33:09 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.36 2015/07/14 16:08:28 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -182,14 +182,20 @@ main(int argc, char *argv[])
 		goto userr;
 
 	if (argc-a > 2) {			/* VTDs expression */
-		CMATRIX	*smtx, *Dmat, *Tmat, *imtx;
+		CMATRIX		*smtx, *Dmat, *Tmat, *imtx;
+		const char	*ccp;
 						/* get sky vector/matrix */
 		smtx = cm_load(argv[a+3], 0, nsteps, skyfmt);
 		nsteps = smtx->ncols;
 						/* load BSDF */
-		Tmat = cm_loadBTDF(argv[a+1]);
+		if (argv[a+1][0] != '!' &&
+				(ccp = strrchr(argv[a+1], '.')) != NULL &&
+				!strcasecmp(ccp+1, "XML"))
+			Tmat = cm_loadBTDF(argv[a+1]);
+		else
+			Tmat = cm_load(argv[a+1], 0, 0, DTfromHeader);
 						/* load Daylight matrix */
-		Dmat = cm_load(argv[a+2], Tmat==NULL ? 0 : Tmat->ncols,
+		Dmat = cm_load(argv[a+2], Tmat->ncols,
 					smtx->nrows, DTfromHeader);
 						/* multiply vector through */
 		imtx = cm_multiply(Dmat, smtx);
@@ -319,7 +325,7 @@ main(int argc, char *argv[])
 userr:
 	fprintf(stderr, "Usage: %s [-n nsteps][-o ospec][-i{f|d|h}][-o{f|d}] DCspec [skyf]\n",
 				progname);
-	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d|h}][-o{f|d}] Vspec Tbsdf.xml Dmat.dat [skyf]\n",
+	fprintf(stderr, "   or: %s [-n nsteps][-o ospec][-i{f|d|h}][-o{f|d}] Vspec Tbsdf Dmat.dat [skyf]\n",
 				progname);
 	return(1);
 }
