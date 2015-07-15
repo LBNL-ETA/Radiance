@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.25 2015/05/20 13:16:20 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.26 2015/07/15 23:38:37 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -103,6 +103,10 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 	}
 	if (nmods >= MAXMODLIST)
 		error(INTERNAL, "too many modifiers");
+	if (!strcmp(modn, VOIDID)) {
+		sprintf(errmsg, "cannot track '%s' modifier", VOIDID);
+		error(USER, errmsg);
+	}
 	modname[nmods++] = modn;	/* XXX assumes static string */
 	lep->key = modn;		/* XXX assumes static string */
 	if (binv == NULL)
