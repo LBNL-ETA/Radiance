@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.71 2014/03/04 17:06:13 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.72 2015/07/16 05:08:57 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -85,7 +85,7 @@ cone.o:		cone.h
 
 face.o:		face.h
 
-fvect.o:	fvect.h
+fvect.o:	fvect.h random.h
 
 instance.o:	instance.h
 

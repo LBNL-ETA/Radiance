@@ -1,16 +1,17 @@
-/* RCSid $Id: random.h,v 2.21 2015/05/27 08:42:06 greg Exp $ */
+/* RCSid $Id: random.h,v 2.22 2015/07/16 05:08:57 greg Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
 #ifndef _RAD_RANDOM_H_
 #define _RAD_RANDOM_H_
+
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifdef	_WIN32
-
-#include <stdlib.h>
 
 #if (RAND_MAX <= 65536)
 #define random()	((long)rand()<<16^(long)rand()<<6^(long)rand()>>4)
