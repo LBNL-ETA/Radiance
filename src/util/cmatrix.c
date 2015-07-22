@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.10 2015/05/08 18:25:03 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.11 2015/07/22 04:23:27 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -400,9 +400,9 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 		for (i = 0; i < cm1->ncols; i++) {
 		    const COLORV	*cp1 = cm_lval(cm1,dr,i);
 		    const COLORV	*cp2 = cm_lval(cm2,i,dc);
-		    res[0] += cp1[0] * cp2[0];
-		    res[1] += cp1[1] * cp2[1];
-		    res[2] += cp1[2] * cp2[2];
+		    res[0] += (double)cp1[0] * (double)cp2[0];
+		    res[1] += (double)cp1[1] * (double)cp2[1];
+		    res[2] += (double)cp1[2] * (double)cp2[2];
 		}
 		copycolor(dp, res);
 	    }

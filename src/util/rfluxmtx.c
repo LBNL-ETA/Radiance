@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.29 2015/05/21 05:54:54 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.30 2015/07/22 04:23:27 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -142,30 +142,6 @@ surf_type(const char *otype)
 	return(ST_NONE);
 }
 
-/* Add arguments to oconv command */
-static char *
-oconv_command(int ac, char *av[])
-{
-	static char	oconvbuf[2048] = "!oconv -f ";
-	char		*cp = oconvbuf + 10;
-	char		*recv = *av++;
-	
-	if (ac-- <= 0)
-		return(NULL);
-	while (ac-- > 0) {
-		strcpy(cp, *av++);
-		while (*cp) cp++;
-		*cp++ = ' ';
-		if (cp >= oconvbuf+(sizeof(oconvbuf)-32)) {
-			fputs(progname, stderr);
-			fputs(": too many file arguments!\n", stderr);
-			exit(1);
-		}
-	}
-	strcpy(cp, recv);	/* receiver goes last */
-	return(oconvbuf);
-}
-
 /* Check if any of the characters in str2 are found in str1 */
 static int
 matchany(const char *str1, const char *str2)
@@ -180,6 +156,41 @@ matchany(const char *str1, const char *str2)
 	return(0);
 }
 
+/* Add arguments to oconv command */
+static char *
+oconv_command(int ac, char *av[])
+{
+	static char	oconvbuf[2048] = "!oconv -f ";
+	char		*cp = oconvbuf + 10;
+	char		*recv = *av++;
+	
+	if (ac-- <= 0)
+		return(NULL);
+	while (ac-- > 0) {
+		strcpy(cp, *av++);
+		while (*cp) cp++;
+		*cp++ = ' ';
+		if (cp >= oconvbuf+(sizeof(oconvbuf)-32))
+			goto overrun;
+	}
+				/* receiver goes last */
+	if (matchany(recv, SPECIALS)) {
+		*cp++ = QUOTCHAR;
+		while (*recv) {
+			if (cp >= oconvbuf+(sizeof(oconvbuf)-3))
+				goto overrun;
+			*cp++ = *recv++;
+		}
+		*cp++ = QUOTCHAR;
+		*cp = '\0';
+	} else
+		strcpy(cp, recv);
+	return(oconvbuf);
+overrun:
+	fputs(progname, stderr);
+	fputs(": too many file arguments!\n", stderr);
+	exit(1);
+}
 
 /* Convert a set of arguments into a command line for pipe() or system() */
 static char *
@@ -194,10 +205,10 @@ convert_commandline(char *cmd, const int len, char *av[])
 			fputs(progname, stderr);
 			return(NULL);
 		}
-		if ((match = matchany(*av, SPECIALS))) {
+		if (matchany(*av, SPECIALS)) {
 			const int	quote =
 #ifdef ALTQUOT
-				(match == QUOTCHAR) ? ALTQUOT :
+				strchr(*av, QUOTCHAR) ? ALTQUOT :
 #endif
 					QUOTCHAR;
 			*cp++ = quote;
