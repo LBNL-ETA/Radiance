@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.7 2015/01/23 01:03:17 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.8 2015/07/22 04:47:51 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -231,9 +231,6 @@ main(int argc, char *argv[])
 	if (mres == NULL)		/* check that we got something */
 		goto userr;
 					/* write result to stdout */
-#ifdef getc_unlocked
-	flockfile(stdout);
-#endif
 	if (outfmt == DTfromHeader)
 		outfmt = mres->dtype;
 #ifdef _WIN32
