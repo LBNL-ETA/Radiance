@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.h,v 2.6 2015/05/26 15:58:34 greg Exp $
+   $Id: pmapmat.h,v 2.7 2015/07/29 18:54:20 rschregle Exp $
 */
 
 
@@ -28,6 +28,13 @@
                            accounted for by caustic photons in the global,
                            contrib, or dedicated caustic photon map.
    */
+/*
+   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && \
+                               ((photonMapping && \
+                                 (ambounce < 0 || (r) -> rlvl > 1)) || \
+                                 causticPhotonMapping || contribPhotonMapping))
+*/
+   #define ambRayInPmap(r)    0
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
 				(ambounce < 0 || ((r) -> crtype & AMBIENT ? \
 					photonMapping : causticPhotonMapping)))

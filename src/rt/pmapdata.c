@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.9 2015/05/27 19:15:27 rschregle Exp $
+   $Id: pmapdata.c,v 2.10 2015/07/29 18:54:20 rschregle Exp $
 */
 
 
@@ -362,6 +362,12 @@ void findPhotons (PhotonMap* pmap, const RAY* ray)
          nearestNeighbours(pmap, pos, norm, 1);
       }
 
+      if (pmap -> maxDist < FTINY) {
+         sprintf(errmsg, "itsy bitsy teeny weeny photon search radius %e",
+                 sqrt(pmap -> maxDist));
+         error(WARNING, errmsg);
+      }
+
       if (pmap -> squeueEnd < pmap -> squeueSize * pmap -> gatherTolerance) {
          /* Short lookup; too few photons found */
          if (pmap -> squeueEnd > PMAP_SHORT_LOOKUP_THRESH) {
@@ -392,14 +398,14 @@ void findPhotons (PhotonMap* pmap, const RAY* ray)
                sprintf(errmsg, 
                        redo ? "restarting photon lookup with max radius %.1e"
                             : "max photon lookup radius adjusted to %.1e",
-                       pmap -> maxDist0);
+                       sqrt(pmap -> maxDist0));
                error(WARNING, errmsg);
 #endif
             }
 #ifdef PMAP_LOOKUP_REDO
             else {
                sprintf(errmsg, "max photon lookup radius clamped to %.1e",
-                       pmap -> maxDist0);
+                       sqrt(pmap -> maxDist0));
                error(WARNING, errmsg);
             }
 #endif

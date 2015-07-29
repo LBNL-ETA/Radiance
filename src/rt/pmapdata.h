@@ -8,7 +8,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdata.h,v 2.6 2015/05/28 12:27:22 greg Exp $
+   $Id: pmapdata.h,v 2.7 2015/07/29 18:54:20 rschregle Exp $
 */
 
 
