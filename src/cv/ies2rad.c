@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.26 2011/06/22 19:57:17 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.27 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  * Convert IES luminaire data to Radiance description
@@ -339,8 +339,8 @@ initlamps(void)				/* set up lamps */
 
 char *
 stradd(			/* add a string at dst */
-	register char	*dst,
-	register char	*src,
+	char	*dst,
+	char	*src,
 	int	sep
 )
 {
@@ -392,10 +392,10 @@ libname(		/* return library relative name */
 
 char *
 filename(			/* get final component of pathname */
-	register char	*path
+	char	*path
 )
 {
-	register char	*cp;
+	char	*cp;
 
 	for (cp = path; *path; path++)
 		if (ISDIRSEP(*path))
@@ -409,7 +409,7 @@ filetrunc(				/* truncate filename at end of path */
 	char	*path
 )
 {
-	register char	*p1, *p2;
+	char	*p1, *p2;
 
 	for (p1 = p2 = path; *p2; p2++)
 		if (ISDIRSEP(*p2))
@@ -426,7 +426,7 @@ tailtrunc(				/* truncate tail of filename */
 	char	*name
 )
 {
-	register char	*p1, *p2;
+	char	*p1, *p2;
 
 	for (p1 = filename(name); *p1 == '.'; p1++)
 		;
@@ -445,7 +445,7 @@ blanktrunc(				/* truncate spaces at end of line */
 	char	*s
 )
 {
-	register char	*cp;
+	char	*cp;
 
 	for (cp = s; *cp; cp++)
 		;
@@ -457,11 +457,11 @@ blanktrunc(				/* truncate spaces at end of line */
 
 int
 k_match(			/* header line matches keyword? */
-	register char	*kwd,
-	register char	*hdl
+	char	*kwd,
+	char	*hdl
 )
 {
-	if (!*hdl++ == '[')
+	if (*hdl++ != '[')
 		return(0);
 	while (islower(*hdl) ? toupper(*hdl) == *kwd++ : *hdl == *kwd++)
 		if (!*hdl++)
@@ -472,7 +472,7 @@ k_match(			/* header line matches keyword? */
 
 char *
 keyargs(				/* return keyword arguments */
-	register char	*hdl
+	char	*hdl
 )
 {
 	while (*hdl && *hdl++ != ']')
@@ -488,7 +488,7 @@ putheader(				/* print header */
 	FILE	*out
 )
 {
-	register int	i;
+	int	i;
 	
 	putc('#', out);
 	for (i = 0; i < gargc; i++) {
@@ -834,7 +834,7 @@ putsource( /* put out source */
 
 int
 makeshape(		/* make source shape */
-	register SRCINFO	*shp,
+	SRCINFO	*shp,
 	double	width,
 	double	length,
 	double	height
@@ -903,7 +903,7 @@ putrectsrc(		/* rectangular source */
 
 void
 putsides(			/* put out sides of box */
-	register SRCINFO	*shp,
+	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
 	char	*name
@@ -939,7 +939,7 @@ putrect(	/* put out a rectangle */
 
 void
 putpoint(				/* put out a point */
-	register SRCINFO	*shp,
+	SRCINFO	*shp,
 	FILE	*fp,
 	int	p
 )
@@ -955,7 +955,7 @@ putpoint(				/* put out a point */
 
 void
 putdisksrc(		/* put out a disk source */
-	register SRCINFO	*shp,
+	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
 	char	*name,
@@ -980,7 +980,7 @@ putdisksrc(		/* put out a disk source */
 
 void
 putcyl(			/* put out a cylinder */
-	register SRCINFO	*shp,
+	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
 	char	*name
@@ -1018,7 +1018,7 @@ cvdata(		/* convert data */
 )
 {
 	double	*pt[4];
-	register int	i, j;
+	int	i, j;
 	double	val;
 	int	total;
 
@@ -1076,12 +1076,12 @@ cvdata(		/* convert data */
 
 char *
 getword(			/* scan a word from fp */
-	register FILE	*fp
+	FILE	*fp
 )
 {
 	static char	wrd[RMAXWORD];
-	register char	*cp;
-	register int	c;
+	char	*cp;
+	int	c;
 
 	while (isspace(c=getc(fp)))
 		;
@@ -1129,13 +1129,13 @@ cvtflt(			/* convert a word to a double */
 int
 cvgeometry(
 	char	*inpname,
-	register SRCINFO	*sinf,
+	SRCINFO	*sinf,
 	char	*outname,
 	FILE	*outfp			/* close output file upon return */
 )
 {
 	char	buf[256];
-	register char	*cp;
+	char	*cp;
 
 	if (inpname == NULL || !inpname[0]) {	/* no geometry file */
 		fclose(outfp);

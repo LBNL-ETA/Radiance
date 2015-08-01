@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.35 2010/09/04 19:04:35 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.36 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -295,11 +295,12 @@ epow(
     errno = 0;
     d = pow(evalue(ep1), evalue(ep1->sibling));
 #ifdef  isnan
-    if (errno == 0)
+    if (errno == 0) {
 	if (isnan(d))
 	    errno = EDOM;
 	else if (isinf(d))
 	    errno = ERANGE;
+    }
 #endif
     if (errno == EDOM || errno == ERANGE) {
 	wputs("Illegal power\n");

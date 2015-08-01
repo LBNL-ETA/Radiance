@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genblinds.c,v 2.12 2005/12/28 19:42:13 greg Exp $";
+static const char	RCSid[] = "$Id: genblinds.c,v 2.13 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  *  genblind2.c - make some curved or flat venetian blinds.
@@ -116,14 +116,14 @@ main(
     height = atof(argv[5]);
     nslats  = atoi(argv[6]);
     angle = atof(argv[7]);
-    if (argc == 10)
+    if (argc == 10) {
 	if (!strcmp(argv[8], "-r"))
 	    rcurv = atof(argv[9]);
 	else if (!strcmp(argv[8], "+r"))
 	    rcurv = -atof(argv[9]);
 	else
 	    goto userr;
-
+    }
     /* CURVED BLIND CALCULATION */
 
     if (rcurv != 0.) {

@@ -1,4 +1,4 @@
-/* RCSid $Id: transportSimplex.h,v 2.1 2014/03/26 02:52:31 greg Exp $ */
+/* RCSid $Id: transportSimplex.h,v 2.2 2015/08/01 23:27:04 greg Exp $ */
 /*
 transportSimplex.h
 
@@ -160,12 +160,12 @@ double transportSimplex(TsSignature<TF> *signature1, TsSignature<TF> *signature2
 		snkSum += signature2->weights[j];
 	
 	diff = srcSum - snkSum;
-	if (fabs(diff) > TSEPSILON * srcSum)
+	if (fabs(diff) > TSEPSILON * srcSum) {
 		if (diff < 0.0)
 			n1++;
 		else 
 			n2++;
-	
+	}
 	_tsMaxW = srcSum > snkSum ? srcSum : snkSum;
 	w = srcSum < snkSum ? srcSum : snkSum;
     
@@ -408,7 +408,7 @@ double _pivot(TsBasic * basics, TsBasic ** srcBasics, TsBasic ** snkBasics, bool
 				lowVal = spitrb->node->val;
 			}
 			add = !add;
-		} while (spitrb = spitrb->prev);
+		} while ((spitrb = spitrb->prev));
 		
 		add = false;
 		spitrb = spitra;
@@ -418,7 +418,7 @@ double _pivot(TsBasic * basics, TsBasic ** srcBasics, TsBasic ** snkBasics, bool
 			if (add) spitrb->node->val += lowVal;
 			else spitrb->node->val -= lowVal;
 			add = !add;
-		} while (spitrb = spitrb->prev);
+		} while ((spitrb = spitrb->prev));
 
 		i = leaving->node->i;
 		j = leaving->node->j;

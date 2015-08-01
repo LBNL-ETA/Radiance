@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.28 2015/05/26 13:21:07 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.29 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -464,7 +464,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	}
 						/* check other rays to pass */
 	if (nd.thick != 0 && (!(r->crtype & (SPECULAR|AMBIENT)) ||
-				nd.thick > 0 ^ hitfront)) {
+				(nd.thick > 0) ^ hitfront)) {
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}

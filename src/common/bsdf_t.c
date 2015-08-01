@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.42 2015/04/25 19:08:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.43 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -924,7 +924,7 @@ next_token(char **spp)
 }
 
 /* Advance pointer past matching token (or any token if c==0) */
-#define eat_token(spp,c)	(next_token(spp)==(c) ^ !(c) ? *(*(spp))++ : 0)
+#define eat_token(spp,c)	((next_token(spp)==(c)) ^ !(c) ? *(*(spp))++ : 0)
 
 /* Count words from this point in string to '}' */
 static int

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.12 2015/07/22 04:29:56 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.13 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -221,12 +221,13 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			cm = cm_resize(cm, 2*cm->nrows);
 		    for (c = 0; c < ncols; c++) {
 		        COLORV	*cv = cm_lval(cm,r,c);
-			if (fscanf(fp, COLSPEC, cv, cv+1, cv+2) != 3)
+			if (fscanf(fp, COLSPEC, cv, cv+1, cv+2) != 3) {
 				if ((nrows <= 0) & (r > 0) & !c) {
 					cm = cm_resize(cm, maxrow=r);
 					break;
 				} else
 					goto EOFerror;
+			}
 		    }
 		}
 		while ((c = getc(fp)) != EOF)

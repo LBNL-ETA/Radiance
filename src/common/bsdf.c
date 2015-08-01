@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.50 2015/02/08 22:14:50 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.51 2015/08/01 23:27:04 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -595,11 +595,12 @@ SDsizeBSDF(double *projSA, const FVECT v1, const RREAL *v2,
 		rdf = sd->rb;
 		tdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
-	if (v2 != NULL)			/* bidirectional? */
+	if (v2 != NULL) {		/* bidirectional? */
 		if (v1[2] > 0 ^ v2[2] > 0)
 			rdf = NULL;
 		else
 			tdf = NULL;
+	}
 	ec = SDEdata;			/* run through components */
 	for (i = (rdf==NULL) ? 0 : rdf->ncomp; i--; ) {
 		ec = (*rdf->comp[i].func->queryProjSA)(projSA, v1, v2,
