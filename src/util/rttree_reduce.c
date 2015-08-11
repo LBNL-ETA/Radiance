@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.10 2014/03/18 01:33:07 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.11 2015/08/11 23:25:11 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -155,7 +155,7 @@ print_tree(const TNODE *tp, const int bmin[], int l2s)
 				bkmin[j] = bmin[j] + (i>>(ttrank-1-j) & 1);
 			val = (ttrank == 3) ? dval3(bkmin[0],bkmin[1],bkmin[2])
 				: dval4(bkmin[0],bkmin[1],bkmin[2],bkmin[3]);
-			printf(" %.4e", val);
+			printf((0.1<=val)&(val<10.) ? " %.7f" : " %.3e", val);
 		}
 		fputs(" }\n", stdout);
 		return;
