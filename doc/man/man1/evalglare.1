@@ -1,0 +1,252 @@
+.\" RCSid $Id: evalglare.1,v 1.1 2015/08/12 23:07:59 greg Exp $
+.TH EVALGLARE 1 7/30/15 RADIANCE
+.SH NAME
+.PP
+evalglare \- determines and evaluates glare sources within a 180 degree
+fish\-eye\-image, given in the RADIANCE RGBE (.hdr) image format.
+.SH SYNOPSIS
+.PP
+evalglare [\-s] [\-y] [\-Y value] [\-B angle] [\-b factor] [\-c checkfile]
+[\-t xpos ypos angle] [\-T xpos ypos angle] [\-d] [\-r angle] [\[en]i
+Ev] [\[en]I Ev yfill_max y_fill_min ] [\-v] [\-V] [\[en]g type] [\-G
+type] [\-u r g b ] [\-vf viewfile] [\-vtt ] [\-vv vertangle] [\-vh horzangle] hdrfile
+.PP
+or
+.PP
+hdr|evalglare [\-s] [\-y] [\-Y value] [\-B angle] [\-b factor] [\-c
+checkfile] [\-t xpos ypos angle][\-T xpos ypos angle] [\-d] [\-r angle]
+[\[en]i Ev] [\[en]I Ev yfill_max y_fill_min ] [\-v] [\-V] ] [\[en]g
+type] [\-G type] [\-u r g b ] [\-vf viewfile][\-vtt ] [\-vv vertangle] [\-vh
+horzangle]
+.SH DESCRIPTION
+.PP
+evalglare determines and evaluates glare sources within a 180 degree
+fish\-eye\-image, given in the RADIANCE image format (.pic or .hdr).
+The image should be rendered as fish eye (e.g.
+using the \-vta or \[en]vth option) using 180 degree for the horizontal and
+vertical view angle (\-vv =180, \-vh=180).
+Due to performance reasons of the evalglare code, the image should be
+smaller than 1200x1200 pixels. The recommended size is 800x800 pixels.
+In the first step, the program uses a given threshold to determine all
+glare sources.
+Three different threshold methods are implemented.
+The recommended method is to define a task area by \-t or \-T option.
+In this (task) area the average luminance is calculated Each pixel,
+exceeding this value multiplied by the \-b factor [default=5] is treated
+as a potential glare source.
+The other two methods are described below [see \-b].
+In the second step the program tries to merge glare source pixels to one
+glare source, when they are placed nearby each other.
+This merging is performed in\-between a search area, given by an opening
+angle (\-r, default =0.2 in radiant).
+If a check file is written (\-c fname), the detected glare sources will
+be colored to different colors where the rest of the image is set to
+gray.
+The luminance values of all pixels are kept to the initial value.
+The color is chosen by chance, no significance is given by the color.
+To enable a unform coloring for all glare sources, the \-u option can be used.
+Luminance peaks can be extracted to separate glare sources by using the
+\-y or \-Y value option (default since version v0.9c).
+Default value (\-y) is 50000 cd/m2, can be changed by using \-Y value.
+A smoothing option (\-s) counts initial non\-glare source pixels to
+glare sources, when they are surrounded by a glare source.
+.PP
+The program calculates the daylight glare probability (DGP) as well as
+other glare indexes (dgi,ugr,vcp,cgi) to the standard output.
+The DGP describes the fraction of persons disturbed, caused by glare from
+daylight (range 0...1).
+Values lower than 0.2 are out of the range of the user assessment tests,
+where the program is based on and should be interpreted carefully. 
+A low light correction is applied to the DGP when the vertical illumiance is lower than 500 lux.
+By the use of \-g or \-G the field of view is cut according the the definition of Guth.
+The option \-B angle (in rad) calculates the average luminance of a horizontal band. 
+In the case of non\-180 degree images, an external measured illuminance value
+can be provided by using the \[en]i or \[en]I option.
+The use of the \[en]I option enables the filling up of images, which are
+horizontally cut.
+The age correction is not supported any more and disabled.
+If the option \-d is used, all found glare sources and their position,
+size, and luminance values are printed to the standard output, too.
+The last line gives following values: 1.
+dgp, 2.
+average luminance of image,3.
+vertical eye illuminance, 4.
+background luminance, 5.
+direct vertical eye illuminance, 6.
+dgi, 7.
+ugr, 8.
+vcp, 9.
+cgi, 10.
+average luminance of all glare sources, 11.
+sum of solid angles of all glare sources 12.
+Veiling luminance (disability glare) 13.
+x\-direction of glare source 14.
+y\-direction of glare source 15.
+z\-direction of glare source 16.
+band luminance
+.PP
+The program is based on the studies from J.
+Christoffersen and J.
+Wienold (see \“Evaluation methods and development of a new glare
+prediction model for daylight environments with the use of CCD cameras
+and RADIANCE\“ , Energy and Buildings, 2006.
+More details can be also found in following issertation: J.
+Wienold, \“Daylight glare in offices\”, Fraunhofer IRB, 2010.
+URL for download:
+http://publica.fraunhofer.de/eprints/urn:nbn:de:0011\-n\-1414579.pdf
+.TP
+.B \-B \f[I]angle\f[],
+Calculate average luminance of a horizontal band. The angle is in rad. Output only when using the \-d option.
+.RS
+.RE
+.TP
+.B \-b \f[I]factor\f[],
+Threshold factor; if factor >100, it is used as constant threshold in
+cd/m2, regardless if a task position is given or not if factor is <= 100
+and a task position is given, this factor multiplied by the average task
+luminance will be used as threshold for detecting the glare sources if
+factor is <= 100 and no task position is given, this factor multiplied
+by the average luminance in the entire picture will be used as threshold
+for detecting the glare sources, default value=5.
+.RS
+.RE
+.TP
+.B \-c \f[I]fname\f[]
+writes a checkfile in the RADIANCE picture format
+.RS
+.RE
+.TP
+.B \-d
+enables detailed output (default: disabled)
+.RS
+.RE
+.TP
+.B \-g \f[I]type\f[]
+cut field of view according to Guth, write checkfile specified by \[en]c
+and exit without any glare evaluation.
+type=1: total field of view type=2: field of view seen by both eyes
+.RS
+.RE
+.TP
+.B \-G \f[I]type\f[]
+cut field of view according to Guth, perform glare evaluation.
+type=1: total field of view type=2: field of view seen by both eyes
+.RS
+.RE
+.TP
+.B \-i \f[I]Ev\f[]
+The vertical illuminance is measured externally.
+This value will be used for calculating the dgp.
+.RS
+.RE
+.TP
+.B \-I \f[I]Ev y_max y_min\f[]
+The vertical illuminance is measured externally.
+This value will be used for calculating the dgp.
+Below y_min and above y_max, the picture is filled up by the last known
+value.
+This option should be used, when the provided picture is cut
+horizontally.
+.RS
+.RE
+.TP
+.B \-r \f[I]angle\f[]
+search radius (angle in radiant) between pixels, where evalglare tries
+to merge glare source pixels to the same glare source (default value:
+0.2 radiant)
+.RS
+.RE
+.TP
+.B \-s
+enables smoothing function (default: disabled)
+.RS
+.RE
+.TP
+.B \-t \f[I]xpos ypos angle\f[]
+definition of task position in x and y coordinates, and its opening
+angle in radiant
+.RS
+.RE
+.TP
+.B \-T \f[I]xpos ypos angle\f[]
+same as \-t, except that the task area is colored bluish in the
+checkfile
+.RS
+.RE
+.TP
+.B \-u \f[I]r g b\f[]
+color glare sources unfiformly when writing check file (implies \-c option). Color given in r g b.
+.RS
+.RE
+.TP
+.B \-v
+show version of evalglare and exit
+.RS
+.RE
+.TP
+.B \-V
+Just calculate the vertical illuminance and exit
+.RS
+.RE
+.TP
+.B \-x
+disable peak extraction
+.RS
+.RE
+.TP
+.B \-y
+enables peak extraction (default: enabled)
+.RS
+.RE
+.TP
+.B \-Y \f[I]value\f[]
+enables peak extraction with value as threshold for extracted peaks
+.RS
+.RE
+.PP
+In case, the view settings within the image are missing or are not valid
+(e.g.
+after the use of pcompos or pcomb), the view options can be set by
+command line options.
+As soon as view options are set within the command line, view options
+within the image are ignored.
+The view options are implemented according to the RADIANCE definition
+(please read man page of rpict for details):
+.TP
+.B \-vtt
+Set view type to t (for fish\-eye views, please use \[en]vta or \[en]vth
+preferably)
+.RS
+.RE
+.TP
+.B \-vf \f[I]viewfile\f[]
+Get view parameters from file
+.RS
+.RE
+.TP
+.B \-vv \f[I]val\f[]
+Set the view vertical size to val
+.RS
+.RE
+.TP
+.B \-vh \f[I]val\f[]
+Set the view horizontal size to \f[I]val\f[]
+.RS
+.RE
+.SH ACKNOWLEDGEMENTS
+.PP
+The evalglare program was developped by Jan Wienold originally at the Fraunhofer
+Institute for Solar Energy Systems in Freiburg, Germany. It is further developped
+and maintained by the same author at EPFL, Lausanne, Switzerland.
+.PP
+The author would like to thank C.
+Reetz for his generous help and his support of providing libraries for
+the program.
+The EU Commission supported this work as part of the EU project “Energy
+and Comfort Control for Building management systems” (ECCO\-Build,
+Contract N°: ENK6\-CT\-2002\-00656).
+.PP
+The dfg\-foundation (contract WI 1304/7\-2 ) supported the research for
+the extension of evalglare for low\-light scenes.
+.SH AUTHORS
+Jan Wienold.

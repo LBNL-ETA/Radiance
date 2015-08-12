@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.72 2015/07/16 05:08:57 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.73 2015/08/12 23:07:59 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -35,6 +35,8 @@ SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
 MGFOBJ = mgf_parser.o mgf_object.o mgf_xf.o mgf_context.o
 
+REETZOBJ = g3affine.o g3flist.o g3sphere.o g3vector.o gbasic.o maxheap.o
+
 OGLOBJ = rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o
 
 LIBFILES = tmesh.cal
@@ -49,12 +51,17 @@ libmgf.a:	$(MGFOBJ)
 	ar rc libmgf.a $(MGFOBJ)
 	-ranlib libmgf.a
 
+libreetz.a:	$(REETZOBJ)
+	rm -f libreetz.a
+	ar rc libreetz.a $(REETZOBJ)
+	-ranlib libreetz.a
+
 install:	all
-	mv -f librtrad.a libmgf.a ../lib
+	mv -f librtrad.a libmgf.a libreetz.a ../lib
 	cd $(LIBDIR) && rm -f $(LIBFILES)
 	cp -f $(LIBFILES) $(LIBDIR)
 
-all:	librtrad.a libmgf.a $(SPECIAL)
+all:	librtrad.a libmgf.a libreetz.a $(SPECIAL)
 
 clean:
 	rm -f *.o librtrad.a libmgf.a
@@ -186,3 +193,15 @@ triangulate.o:	triangulate.h
 
 process.o readobj.o readoct.o rglfile.o \
 tmapcolrs.o unix_process.o win_process.o:	rtprocess.h
+
+gbasic.o:	gbasic.h
+
+g3flist.o g3affine.o g3sphere.o g3vector.o:	g3vector.h gbasic.h fvect.h
+
+g3affine.o:	g3affine.h
+
+g3affine.o g3sphere.o:	g3sphere.h
+
+g3flist.o:	g3flist.h
+
+maxheap.o:	maxheap.h

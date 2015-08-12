@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.80 2015/02/13 20:49:59 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.81 2015/08/12 23:07:59 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
-		eplus_adduvf rfluxmtx rmtxop wrapBSDF
+		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -134,6 +134,9 @@ rmtxop:	rmtxop.o rmatrix.o cmatrix.o cmbsdf.o
 wrapBSDF:	wrapBSDF.o
 	$(CC) $(CFLAGS) -o wrapBSDF wrapBSDF.o -lrtrad $(MLIB)
 
+evalglare:	evalglare.o pictool.o
+	$(CC) $(CFLAGS) -o evalglare evalglare.o pictool.o -lreetz -lrtrad $(MLIB)
+
 setscan.o:	setscan.h
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
@@ -237,3 +240,10 @@ rmtxop.o:	rmatrix.h cmatrix.h ../common/rtio.h ../common/resolu.h
 
 wrapBSDF.o:	../common/rtio.h ../common/rtprocess.h ../common/ezxml.h \
 ../common/bsdf.h ../common/bsdf_m.h ../common/fvect.h ../common/ccolor.h
+
+pictool.o evalglare.o:	pictool.h ../common/g3vector.h ../common/g3affine.h \
+../common/g3flist.h ../common/fvect.h ../common/gbasic.h
+
+evalglare.o:	../common/rtio.h
+
+pictool.o:	../common/view.h ../common/color.h
