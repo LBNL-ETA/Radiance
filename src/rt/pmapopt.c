@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapopt.c,v 2.6 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Photon map interface to RADIANCE render options
@@ -8,7 +11,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.5 2015/05/26 13:31:19 rschregle Exp $
+   $Id: pmapopt.c,v 2.6 2015/08/18 18:45:55 greg Exp $
 */
 
 

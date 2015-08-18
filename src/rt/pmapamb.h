@@ -1,3 +1,4 @@
+/* RCSid $Id: pmapamb.h,v 2.3 2015/08/18 18:45:55 greg Exp $ */
 /* 
    ==================================================================
    Photon map interface to RADIANCE ambient calculation
@@ -8,7 +9,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapamb.h,v 2.2 2015/05/08 13:20:22 rschregle Exp $
+   $Id: pmapamb.h,v 2.3 2015/08/18 18:45:55 greg Exp $
 */
 
 

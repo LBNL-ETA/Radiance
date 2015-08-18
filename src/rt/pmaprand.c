@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmaprand.c,v 2.3 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Random number generators for photon distribution
@@ -8,7 +11,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmaprand.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmaprand.c,v 2.3 2015/08/18 18:45:55 greg Exp $
 */
 
 

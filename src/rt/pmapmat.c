@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapmat.c,v 2.8 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Photon map support routines for scattering by materials. 
@@ -8,7 +11,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapmat.c,v 2.7 2015/05/27 17:54:19 rschregle Exp $ 
+   $Id: pmapmat.c,v 2.8 2015/08/18 18:45:55 greg Exp $ 
 */
 
 

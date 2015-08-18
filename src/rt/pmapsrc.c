@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.7 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Photon map support routines for emission from light sources
@@ -8,7 +11,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.c,v 2.6 2015/05/28 12:27:22 greg Exp $
+   $Id: pmapsrc.c,v 2.7 2015/08/18 18:45:55 greg Exp $
 */
 
 

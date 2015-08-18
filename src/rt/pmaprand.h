@@ -1,3 +1,4 @@
+/* RCSid $Id: pmaprand.h,v 2.4 2015/08/18 18:45:55 greg Exp $ */
 #ifndef PMAPRAND_H
 #define PMAPRAND_H
 
@@ -11,7 +12,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmaprand.h,v 2.3 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmaprand.h,v 2.4 2015/08/18 18:45:55 greg Exp $
 */
 
 

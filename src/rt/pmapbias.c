@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapbias.c,v 2.3 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Bias compensation for photon density estimates
@@ -10,7 +13,7 @@
    (c) Fraunhofer Institute for Solar Energy Systems
    ==================================================================
    
-   $Id: pmapbias.c,v 2.2 2015/05/08 13:20:23 rschregle Exp $    
+   $Id: pmapbias.c,v 2.3 2015/08/18 18:45:55 greg Exp $    
 */
 
 

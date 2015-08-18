@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.9 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Photon map support for light source contributions
@@ -7,7 +10,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapcontrib.c,v 2.8 2015/05/21 13:54:59 greg Exp $
+   $Id: pmapcontrib.c,v 2.9 2015/08/18 18:45:55 greg Exp $
 */
 
 

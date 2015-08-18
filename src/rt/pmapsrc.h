@@ -1,3 +1,4 @@
+/* RCSid $Id: pmapsrc.h,v 2.3 2015/08/18 18:45:55 greg Exp $ */
 /* 
    ==================================================================
    Photon map support routines for emission from light sources
@@ -8,7 +9,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.h,v 2.2 2015/05/08 13:20:23 rschregle Exp $
+   $Id: pmapsrc.h,v 2.3 2015/08/18 18:45:55 greg Exp $
 */
 
 

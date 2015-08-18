@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapparm.c,v 2.5 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Parameters for photon map generation; used by MKPMAP
@@ -9,7 +12,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapparm.c,v 2.4 2015/05/26 13:31:19 rschregle Exp $
+   $Id: pmapparm.c,v 2.5 2015/08/18 18:45:55 greg Exp $
 */
 
 

@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: pmapdata.c,v 2.11 2015/08/18 18:45:55 greg Exp $";
+#endif
 /* 
    ==================================================================
    Photon map data structures and kd-tree handling
@@ -8,7 +11,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapdata.c,v 2.10 2015/07/29 18:54:20 rschregle Exp $
+   $Id: pmapdata.c,v 2.11 2015/08/18 18:45:55 greg Exp $
 */
 
 
