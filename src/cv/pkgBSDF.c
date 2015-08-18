@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.6 2013/08/11 00:54:12 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.7 2015/08/18 15:23:38 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -90,7 +90,7 @@ cvtBSDF(char *fname)
 	char	*pname, *fnbeg;
 					/* find and load the XML file */
 	retOK = strlen(fname);
-	if (retOK < 5 || strcmp(fname+retOK-4, ".xml")) {
+	if (retOK < 5 || strcasecmp(fname+retOK-4, ".xml")) {
 		fprintf(stderr, "%s: input does not end in '.xml'\n", fname);
 		return(0);
 	}
