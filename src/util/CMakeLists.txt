@@ -59,6 +59,9 @@ target_link_libraries(eplus_adduvf rtrad)
 add_executable(rfluxmtx rfluxmtx.c)
 target_link_libraries(rfluxmtx rtrad)
 
+add_executable(evalglare evalglare.c pictool.c)
+target_link_libraries(evalglare rtrad libreetz)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c ${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c)
@@ -97,7 +100,7 @@ if(UNIX AND X11_FOUND)
 endif()
 install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
     vwrays vwright ranimove rsensor rttree_reduce rcollate
-		eplus_adduvf rfluxmtx rmtxop wrapBSDF
+		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare
     RUNTIME DESTINATION bin)
 
 install(FILES rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal 
