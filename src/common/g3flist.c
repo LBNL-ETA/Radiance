@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: g3flist.c,v 2.2 2015/08/18 15:02:53 greg Exp $";
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

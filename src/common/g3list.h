@@ -1,3 +1,4 @@
+/* RCSid $Id: g3list.h,v 2.2 2015/08/18 15:02:53 greg Exp $ */
 #ifndef __G3LIST_H
 #define __G3LIST_H
 
