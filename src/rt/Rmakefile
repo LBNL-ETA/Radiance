@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.74 2015/05/26 13:21:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.75 2015/08/21 01:57:56 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -63,7 +63,7 @@ RLSRC = raycalls.c raypcalls.c rayfifo.c
 ROBJS = $(RAYOBJS) $(SURFOBJS) $(MATOBJS) \
 	$(MODOBJS) $(SUPPOBJS) $(PMOBJS)
 RSRC = $(RAYSRC) $(SURFSRC) $(MATSRC) \
-	$(MODSRC) $(SUPPSRC)
+	$(MODSRC) $(SUPPSRC) $(PMSRC)
 
 RAYOBJS = ambcomp.o ambient.o ambio.o freeobjmem.o initotypes.o \
 	preload.o raytrace.o renderopts.o
