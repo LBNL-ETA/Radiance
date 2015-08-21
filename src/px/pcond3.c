@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.15 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.16 2015/08/21 05:48:28 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -29,7 +29,7 @@ static void mkcrfimage(void);
 
 
 
-extern void
+void
 getfixations(		/* load fixation history list */
 FILE	*fp
 )
@@ -37,7 +37,7 @@ FILE	*fp
 #define	FIXHUNK		128
 	RESOLU	fvres;
 	int	pos[2];
-	register int	px, py, i;
+	int	px, py, i;
 				/* initialize our resolution struct */
 	if ((fvres.rt=inpres.rt)&YMAJOR) {
 		fvres.xr = fvxr;
@@ -92,7 +92,7 @@ FILE	*fp
 }
 
 
-extern void
+void
 gethisto(			/* load precomputed luminance histogram */
 	FILE	*fp
 )
@@ -101,7 +101,7 @@ gethisto(			/* load precomputed luminance histogram */
 	double	histart, histep;
 	double	b, lastb, w;
 	int	n;
-	register int	i;
+	int	i;
 					/* load data */
 	for (i = 0; i < MAXPREHIST &&
 			fscanf(fp, "%lf %lf", &b, &histo[i]) == 2; i++) {
@@ -177,11 +177,11 @@ centprob(			/* center-weighting probability function */
 }
 
 
-extern void
+void
 comphist(void)			/* create foveal sampling histogram */
 {
 	double	l, b, w, lwmin, lwmax;
-	register int	x, y;
+	int	x, y;
 					/* check for precalculated histogram */
 	if (what2do&DO_PREHIST)
 		return;
@@ -190,8 +190,8 @@ comphist(void)			/* create foveal sampling histogram */
 	for (y = 0; y < fvyr; y++)
 		for (x = 0; x < fvxr; x++) {
 			l = plum(fovscan(y)[x]);
-			if (l < lwmin) lwmin = l;
-			if (l > lwmax) lwmax = l;
+			if ((l < lwmin) & (l > LMIN)) lwmin = l;
+			if ((l > lwmax) & (l < LMAX)) lwmax = l;
 		}
 	lwmax *= 1.01;
 	if (lwmax > LMAX)
@@ -249,8 +249,8 @@ comphist(void)			/* create foveal sampling histogram */
 static void
 mkcumf(void)			/* make cumulative distribution function */
 {
-	register int	i;
-	register double	sum;
+	int	i;
+	double	sum;
 
 	mhistot = 0.;		/* compute modified total */
 	for (i = 0; i < HISTRES; i++)
@@ -271,7 +271,7 @@ cf(				/* return cumulative function at b */
 )
 {
 	double	x;
-	register int	i;
+	int	i;
 
 	i = x = HISTRES*(b - bwmin)/(bwmax - bwmin);
 	x -= (double)i;
@@ -294,7 +294,7 @@ BLw(				/* map world luminance to display brightness */
 }
 
 
-extern double
+double
 htcontrs(		/* human threshold contrast sensitivity, dL(La) */
 	double	La
 )
@@ -317,7 +317,7 @@ htcontrs(		/* human threshold contrast sensitivity, dL(La) */
 }
 
 
-extern double
+double
 clampf(			/* histogram clamping function */
 	double	Lw
 )
@@ -329,7 +329,7 @@ clampf(			/* histogram clamping function */
 	return(ratio/(Lb1(bLw)*(Bldmax-Bldmin)*Bl1(Lw)));
 }
 
-extern double
+double
 crfactor(			/* contrast reduction factor */
 	double	Lw
 )
@@ -368,12 +368,12 @@ mkcrfimage(void)			/* compute contrast reduction factor image */
 #endif
 
 
-extern int
+int
 mkbrmap(void)			/* make dynamic range map */
 {
 	double	Tdb, b, s;
 	double	ceiling, trimmings;
-	register int	i;
+	int	i;
 					/* copy initial histogram */
 	memcpy((void *)modhist, (void *)bwhist, sizeof(modhist));
 	s = (bwmax - bwmin)/HISTRES;	/* s is delta b */
@@ -401,7 +401,7 @@ mkbrmap(void)			/* make dynamic range map */
 }
 
 
-extern void
+void
 scotscan(		/* apply scotopic color sensitivity loss */
 	COLOR	*scan,
 	int	xres
@@ -409,7 +409,7 @@ scotscan(		/* apply scotopic color sensitivity loss */
 {
 	COLOR	ctmp;
 	double	incolor, b, Lw;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < xres; i++) {
 		Lw = plum(scan[i]);
@@ -434,14 +434,14 @@ scotscan(		/* apply scotopic color sensitivity loss */
 }
 
 
-extern void
+void
 mapscan(		/* apply tone mapping operator to scanline */
 	COLOR	*scan,
 	int	xres
 )
 {
 	double	mult, Lw, b;
-	register int	x;
+	int	x;
 
 	for (x = 0; x < xres; x++) {
 		Lw = plum(scan[x]);
@@ -457,13 +457,13 @@ mapscan(		/* apply tone mapping operator to scanline */
 }
 
 
-extern void
+void
 putmapping(			/* put out mapping function */
 	FILE	*fp
 )
 {
 	double	b, s;
-	register int	i;
+	int	i;
 	double	wlum, sf, dlum;
 
 	sf = scalef*inpexp;

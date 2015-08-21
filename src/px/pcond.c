@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.25 2014/10/20 13:42:13 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.26 2015/08/21 05:48:28 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -199,7 +199,7 @@ userr:
 }
 
 
-extern void
+void
 syserror(				/* report system error and exit */
 	char	*s
 )
@@ -365,7 +365,7 @@ check2do(void)		/* check histogram to see what isn't worth doing */
 {
 	double	sum;
 	double	b, l;
-	register int	i;
+	int	i;
 
 					/* check for within display range */
 	if (bwmax - bwmin <= Bldmax - Bldmin)

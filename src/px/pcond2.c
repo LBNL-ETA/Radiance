@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond2.c,v 3.17 2005/09/08 22:29:47 greg Exp $";
+static const char	RCSid[] = "$Id: pcond2.c,v 3.18 2015/08/21 05:48:28 greg Exp $";
 #endif
 /*
  * Input and output conditioning routines for pcond.
@@ -38,7 +38,7 @@ static void cwscan(COLOR *sl, int len, WARP3D *wp);
 static void getmbcalfile(char *fn, struct mbc *mb);
 
 
-extern double
+double
 rgblum(		/* compute (scotopic) luminance of RGB color */
 	COLOR	clr,
 	int	scotopic
@@ -53,7 +53,7 @@ rgblum(		/* compute (scotopic) luminance of RGB color */
 }
 
 
-extern double
+double
 cielum(		/* compute (scotopic) luminance of CIE color */
 	COLOR	xyz,
 	int	scotopic
@@ -67,7 +67,7 @@ cielum(		/* compute (scotopic) luminance of CIE color */
 }
 
 
-extern COLOR *
+COLOR *
 nextscan(void)				/* read and condition next scanline */
 {
 	if (nread >= numscans(&inpres)) {
@@ -102,7 +102,7 @@ nextscan(void)				/* read and condition next scanline */
 }
 
 
-extern COLOR *
+COLOR *
 firstscan(void)				/* return first processed scanline */
 {
 	if (mbcalfile != NULL)		/* load macbethcal file */
@@ -127,7 +127,7 @@ firstscan(void)				/* return first processed scanline */
 
 static void
 sfscan(			/* apply scalefactor to scanline */
-	register COLOR	*sl,
+	COLOR	*sl,
 	int	len,
 	double	sf
 )
@@ -159,7 +159,7 @@ greypoint(			/* compute gamut mapping grey target */
 
 static void
 matscan(			/* apply color matrix to scaline */
-	register COLOR	*sl,
+	COLOR	*sl,
 	int	len,
 	COLORMAT	mat
 )
@@ -176,11 +176,11 @@ static void
 mbscan(			/* apply macbethcal adj. to scaline */
 	COLOR	*sl,
 	int	len,
-	register struct mbc	*mb
+	struct mbc	*mb
 )
 {
 	double	d;
-	register int	i, j;
+	int	i, j;
 
 	while (len--) {
 		colortrans(sl[0], mb->cmat, sl[0]);
@@ -225,13 +225,13 @@ cwscan(			/* apply color space warp to scaline */
 static void
 getmbcalfile(			/* load macbethcal file */
 	char	*fn,
-	register struct mbc	*mb
+	struct mbc	*mb
 )
 {
 	char	buf[128];
 	FILE	*fp;
 	int	inpflags = 0;
-	register int	i;
+	int	i;
 
 	if ((fp = fopen(fn, "r")) == NULL)
 		syserror(fn);
