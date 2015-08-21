@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.96 2015/07/29 18:57:03 rschregle Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.97 2015/08/21 18:21:05 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -196,7 +196,7 @@ setambient(void)				/* initialize calculation */
 		sprintf(errmsg, "cannot open ambient file \"%s\"", ambfile);
 		error(SYSTEM, errmsg);
 	}
-#ifdef getc_unlocked
+#if 0
 	flockfile(ambfp);			/* application-level lock */
 #endif
 #ifdef  F_SETLKW
