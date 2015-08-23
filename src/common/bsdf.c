@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.51 2015/08/01 23:27:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.52 2015/08/23 00:56:00 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -422,6 +422,7 @@ SDcacheFile(const char *fname)
 	if (fname == NULL || !*fname)
 		return NULL;
 	SDerrorDetail[0] = '\0';
+	/* PLACE MUTEX LOCK HERE FOR THREAD-SAFE */
 	if ((sd = SDgetCache(fname)) == NULL) {
 		SDreportError(SDEmemory, stderr);
 		return NULL;
@@ -429,8 +430,9 @@ SDcacheFile(const char *fname)
 	if (!SDisLoaded(sd) && (ec = SDloadFile(sd, fname))) {
 		SDreportError(ec, stderr);
 		SDfreeCache(sd);
-		return NULL;
+		sd = NULL;
 	}
+	/* END MUTEX LOCK */
 	return sd;
 }
 

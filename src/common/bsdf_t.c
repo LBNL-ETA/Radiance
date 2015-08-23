@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.43 2015/08/01 23:27:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.44 2015/08/23 00:56:00 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -789,6 +789,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 	for (i = sdt->stc[tt_Y]->ndim - 2; i--; )
 		inCoord[i] = floor(inCoord[i]/quantum)*quantum + .5*quantum;
 	cdlast = NULL;			/* check for direction in cache list */
+	/* PLACE MUTEX LOCK HERE FOR THREAD-SAFE */
 	for (cd = (SDTreCDst *)sdc->cdList; cd != NULL;
 					cdlast = cd, cd = cd->next) {
 		if (cd->sidef != mode)
@@ -807,6 +808,7 @@ SDgetTreCDist(const FVECT inVec, SDComponent *sdc)
 		cd->next = (SDTreCDst *)sdc->cdList;
 		sdc->cdList = (SDCDst *)cd;
 	}
+	/* END MUTEX LOCK */
 	return (SDCDst *)cd;		/* ready to go */
 }
 
