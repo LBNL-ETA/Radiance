@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.19 2015/08/21 18:21:05 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.20 2015/08/23 00:17:12 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -265,7 +265,7 @@ set_stdout(const LUENT *le, void *p)
 }
 
 
-/* Start child processes if we can */
+/* Start child processes if we can (call only once in parent!) */
 int
 in_rchild()
 {
@@ -303,11 +303,12 @@ in_rchild()
 		kida[nchild].infp = fdopen(kida[nchild].pr.r, "rb");
 		if (kida[nchild].infp == NULL)
 			error(SYSTEM, "out of memory in in_rchild()");
-#if 0
-		flockfile(kida[nchild].infp);	/* avoid mutex overhead */
-#endif
 		kida[nchild++].nr = 0;	/* mark as available */
 	}
+#ifdef getc_unlocked
+	for (rval = nchild; rval--; )	/* avoid mutex overhead */
+		flockfile(kida[rval].infp);
+#endif
 	return(0);			/* return "false" in parent */
 }
 

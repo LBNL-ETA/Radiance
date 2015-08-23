@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.14 2015/08/21 18:21:05 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.15 2015/08/23 00:17:12 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -161,7 +161,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			if (waitflush > 0)
 				fflush(stdout);
 			stdos.xr = xres; stdos.yr = yres;
-#if 0
+#ifdef getc_unlocked
 			flockfile(stdout);	/* avoid lock/unlock overhead */
 #endif
 			using_stdout = 1;
@@ -203,7 +203,7 @@ getostream(const char *ospec, const char *mname, int bn, int noopen)
 			goto openerr;
 		if (outfmt != 'a')
 			SET_FILE_BINARY(sop->ofp);
-#if 0
+#ifdef getc_unlocked
 		flockfile(sop->ofp);		/* avoid lock/unlock overhead */
 #endif
 		if (accumulate > 0) {		/* global resolution */
@@ -474,7 +474,7 @@ reload_output()
 					error(WARNING, errmsg);
 					break;
 				}
-#if 0
+#ifdef getc_unlocked
 				flockfile(sout.ofp);
 #endif
 				if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {

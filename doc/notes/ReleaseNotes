@@ -2051,3 +2051,5 @@ layers, although interreflection between layers is not
 accounted for properly as it is in the WINDOW program.
 
 Added Jan Wienold et al.'s evalglare to distribution.
+
+Hopeful fix to deadlock issue under Mac OS X 10.10.x (Yosemite).
