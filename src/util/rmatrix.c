@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.17 2015/07/22 04:47:51 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.18 2015/08/27 04:07:05 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -214,6 +214,7 @@ rmx_load(const char *inspec)
 				return(NULL);
 			dnew = rmx_from_cmatrix(cm);
 			cm_free(cm);
+			dnew->dtype = DTascii;
 			return(dnew);
 		}
 						/* else open it ourselves */
