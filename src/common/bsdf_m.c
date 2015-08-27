@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.34 2015/08/23 00:56:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.35 2015/08/27 04:33:31 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -298,7 +298,7 @@ mBSDF_color(float coef[], const SDMat *dp, int i, int o)
 	if (dp->chroma == NULL)
 		return 1;	/* grayscale */
 
-	c_decodeChroma(&cxy, dp->chroma[o*dp->ninc + i]);
+	c_decodeChroma(&cxy, mBSDF_chroma(dp,i,o));
 	c_toSharpRGB(&cxy, coef[0], coef);
 	coef[0] *= mtx_RGB_coef[0];
 	coef[1] *= mtx_RGB_coef[1];
@@ -622,7 +622,7 @@ subtract_min(C_COLOR *cs, SDMat *sm)
 				coef[c] = (coef[c] - min_coef[c]) /
 						mtx_RGB_coef[c];
 			if (c_fromSharpRGB(coef, &cxy) > 1e-5)
-				sm->chroma[o*sm->ninc + i] = c_encodeChroma(&cxy);
+				mBSDF_chroma(sm,i,o) = c_encodeChroma(&cxy);
 			mBSDF_value(sm,i,o) -= ymin;
 		}
 					/* return colored minimum */

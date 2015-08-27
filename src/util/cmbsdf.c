@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.3 2015/04/17 01:47:03 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.4 2015/08/27 04:33:31 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -36,8 +36,7 @@ cm_bsdf(const COLOR diffBSDF, const SDMat *bsdf)
 				setcolor(mp, .0f, .0f, .0f);
 			} else if (bsdf->chroma != NULL) {
 				C_COLOR	cxy;
-				c_decodeChroma(&cxy,
-					bsdf->chroma[r*bsdf->ninc + c]);
+				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,c,r));
 				ccy2rgb(&cxy, f, mp);
 			} else
 				setcolor(mp, f, f, f);
@@ -103,8 +102,7 @@ cm_bsdf_recip(const COLOR diffBSDF, const SDMat *bsdf)
 				setcolor(mp, .0f, .0f, .0f);
 			} else if (bsdf->chroma != NULL) {
 				C_COLOR	cxy;
-				c_decodeChroma(&cxy,
-					bsdf->chroma[ro*bsdf->ninc + ri]);
+				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,ri,ro));
 				ccy2rgb(&cxy, f, mp);
 			} else
 				setcolor(mp, f, f, f);
