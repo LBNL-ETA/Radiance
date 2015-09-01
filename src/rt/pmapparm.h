@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapparm.h,v 2.5 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.6 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Parameters for photon map generation; used by MKPMAP
@@ -9,8 +9,7 @@
    (c) Lucerne University of Applied Sciences and Arts,
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
-   
-   $Id: pmapparm.h,v 2.5 2015/08/18 18:45:55 greg Exp $
+
 */
 
 

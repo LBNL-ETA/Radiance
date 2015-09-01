@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapio.h,v 2.4 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmapio.h,v 2.5 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Photon map file I/O
@@ -9,7 +9,6 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapio.h,v 2.4 2015/08/18 18:45:55 greg Exp $
 */
 
 

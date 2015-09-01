@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.8 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.9 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Photon map data structures and kd-tree handling   
@@ -9,7 +9,6 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapdata.h,v 2.8 2015/08/18 18:45:55 greg Exp $
 */
 
 

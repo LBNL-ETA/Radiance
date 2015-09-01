@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapcontrib.h,v 2.3 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmapcontrib.h,v 2.4 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Photon map support for light source contributions
@@ -8,7 +8,6 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapcontrib.h,v 2.3 2015/08/18 18:45:55 greg Exp $
 */
 
 #ifndef PMAP_CONTRIB_H

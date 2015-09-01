@@ -1,4 +1,4 @@
-/* RCSid $Id: pmap.h,v 2.5 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmap.h,v 2.6 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Photon map main header
@@ -9,7 +9,6 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmap.h,v 2.5 2015/08/18 18:45:55 greg Exp $
 */
 
 

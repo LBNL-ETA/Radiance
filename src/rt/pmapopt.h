@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapopt.h,v 2.3 2015/08/18 18:45:55 greg Exp $ */
+/* RCSid $Id: pmapopt.h,v 2.4 2015/09/01 16:27:52 greg Exp $ */
 /* 
    ==================================================================
    Photon map interface to RADIANCE render options
@@ -9,7 +9,6 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.h,v 2.3 2015/08/18 18:45:55 greg Exp $
 */
 
 
