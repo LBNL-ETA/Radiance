@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.120 2015/08/02 01:32:15 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.121 2015/09/02 18:59:26 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -806,6 +806,12 @@ renderopts(			/* set rendering options */
 {
 	char	pmapf[256], *bw;
 
+	if (vdef(PGMAP)) {
+		bw = sskip2(vval(PGMAP), 2);
+		atos(pmapf, sizeof(pmapf), vval(PGMAP));
+		op = addarg(addarg(op, "-ap"), pmapf);
+		if (atoi(bw) > 0) op = addarg(op, bw);
+	}
 	switch(vscale(QUALITY)) {
 	case LOW:
 		lowqopts(op, po);
@@ -816,12 +822,6 @@ renderopts(			/* set rendering options */
 	case HIGH:
 		hiqopts(op, po);
 		break;
-	}
-	if (vdef(PGMAP)) {
-		bw = sskip2(vval(PGMAP), 2);
-		atos(pmapf, sizeof(pmapf), vval(PGMAP));
-		op = addarg(addarg(op, "-ap"), pmapf);
-		if (atoi(bw) > 0) op = addarg(op, bw);
 	}
 	if (vdef(PCMAP)) {
 		bw = sskip2(vval(PCMAP), 2);
