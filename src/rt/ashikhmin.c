@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ashikhmin.c,v 2.5 2015/05/21 05:54:54 greg Exp $";
+static const char RCSid[] = "$Id: ashikhmin.c,v 2.6 2015/09/02 18:59:01 greg Exp $";
 #endif
 /*
  *  Shading functions for Ashikhmin-Shirley anisotropic materials.
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: ashikhmin.c,v 2.5 2015/05/21 05:54:54 greg Exp
 #include  "source.h"
 #include  "func.h"
 #include  "random.h"
+#include  "pmapmat.h"
 
 #ifndef  MAXITER
 #define  MAXITER	10		/* maximum # specular ray attempts */
@@ -92,7 +93,7 @@ dirashik(		/* compute source contribution */
 	scalecolor(ctmp, dtmp);		
 	addcolor(cval, ctmp);
 
-	if (!(np->specfl & SPA_REFL))
+	if (!(np->specfl & SPA_REFL) || ambRayInPmap(np->rp))
 		return;
 	/*
 	 *  Compute specular reflection coefficient

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.32 2015/08/06 16:06:06 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.33 2015/09/02 18:59:01 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: m_brdf.c,v 2.32 2015/08/06 16:06:06 greg Exp $
 #include  "otypes.h"
 #include  "rtotypes.h"
 #include  "func.h"
+#include  "pmapmat.h"
 
 /*
  *	Arguments to this material include the color and specularity.
@@ -127,7 +128,8 @@ dirbrdf(		/* compute source contribution */
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	if (ldot > 0.0 ? np->rspec <= FTINY : np->tspec <= FTINY)
+	if ((ldot > 0.0 ? np->rspec <= FTINY : np->tspec <= FTINY) ||
+			ambRayInPmap(np->pr))
 		return;		/* diffuse only */
 					/* set up function */
 	setbrdfunc(np);

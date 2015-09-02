@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.71 2015/05/26 13:21:07 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.72 2015/09/02 18:59:01 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -112,7 +112,7 @@ dirnorm(		/* compute source contribution */
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	
+
 	if (ldot < -FTINY && ltdiff > FTINY) {
 		/*
 		 *  Compute diffuse transmission.
@@ -122,7 +122,10 @@ dirnorm(		/* compute source contribution */
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
-	
+
+	if (ambRayInPmap(np->rp))
+		return;		/* specular already in photon map */
+
 	if (ldot > FTINY && (np->specfl&(SP_REFL|SP_PURE)) == SP_REFL) {
 		/*
 		 *  Compute specular reflection coefficient using

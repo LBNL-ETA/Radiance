@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.29 2015/08/01 23:27:04 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.30 2015/09/02 18:59:01 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -13,6 +13,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.29 2015/08/01 23:27:04 greg Exp $
 #include  "func.h"
 #include  "bsdf.h"
 #include  "random.h"
+#include  "pmapmat.h"
 
 /*
  *	Arguments to this material include optional diffuse colors.
@@ -200,6 +201,8 @@ dir_bsdf(
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
+	if (ambRayInPmap(np->pr))
+		return;		/* specular already in photon map */
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */
@@ -255,6 +258,8 @@ dir_brdf(
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
+	if (ambRayInPmap(np->pr))
+		return;		/* specular already in photon map */
 	/*
 	 *  Compute reflection coefficient using BSDF.
 	 */
@@ -304,6 +309,8 @@ dir_btdf(
 		scalecolor(ctmp, dtmp);
 		addcolor(cval, ctmp);
 	}
+	if (ambRayInPmap(np->pr))
+		return;		/* specular already in photon map */
 	/*
 	 *  Compute scattering coefficient using BSDF.
 	 */

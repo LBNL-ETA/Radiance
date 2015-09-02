@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapmat.h,v 2.9 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.10 2015/09/02 18:59:01 greg Exp $ */
 /* 
    ==================================================================
    Photon map support routines for scattering by materials. 
@@ -17,7 +17,18 @@
 
    #include "pmap.h"
 
-   /* 
+  /* 
+    ambRayInPmap():      Check for DIFFUSE -> (DIFFUSE|SPECULAR) -> *	 
+                            subpaths.  These occur during the backward pass	 
+                            when an ambient ray spawns an indirect diffuse or	 
+                            specular ray.  These subpaths are already	 
+                            accounted for in the global photon map.
+   */
+   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && photonMapping && \
+                                 (ambounce < 0 || (r) -> rlvl > 1 || \
+                                 causticPhotonMapping || contribPhotonMapping))
+
+  /* 
       Check for paths already accounted for in photon map to avoid
       double-counting during backward raytracing.
     
@@ -28,13 +39,6 @@
                            accounted for by caustic photons in the global,
                            contrib, or dedicated caustic photon map.
    */
-/*
-   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && \
-                               ((photonMapping && \
-                                 (ambounce < 0 || (r) -> rlvl > 1)) || \
-                                 causticPhotonMapping || contribPhotonMapping))
-*/
-   #define ambRayInPmap(r)    0
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
 				(ambounce < 0 || ((r) -> crtype & AMBIENT ? \
 					photonMapping : causticPhotonMapping)))

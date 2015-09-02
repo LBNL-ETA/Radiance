@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: aniso.c,v 2.60 2015/05/26 13:21:07 greg Exp $";
+static const char RCSid[] = "$Id: aniso.c,v 2.61 2015/09/02 18:59:01 greg Exp $";
 #endif
 /*
  *  Shading functions for anisotropic materials.
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: aniso.c,v 2.60 2015/05/26 13:21:07 greg Exp $"
 #include  "source.h"
 #include  "func.h"
 #include  "random.h"
+#include  "pmapmat.h"
 
 #ifndef  MAXITER
 #define  MAXITER	10		/* maximum # specular ray attempts */
@@ -108,6 +109,9 @@ diraniso(		/* compute source contribution */
 		addcolor(cval, ctmp);
 	}
 	
+	if (ambRayInPmap(np->rp))
+		return;		/* specular accounted for in photon map */
+
 	if (ldot > FTINY && np->specfl&SP_REFL) {
 		/*
 		 *  Compute specular reflection coefficient using
