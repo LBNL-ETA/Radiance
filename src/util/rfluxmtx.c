@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.30 2015/07/22 04:23:27 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.31 2015/09/13 21:09:20 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -685,7 +685,7 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 					/* special case for lone surface */
 	if (p->nsurfs == 1) {
 		sp = p->slist;
-		if (DOT(sp->snrm, rdir) >= -FTINY) {
+		if (DOT(sp->snrm, rdir) >= FTINY) {
 			fprintf(stderr,
 				"%s: internal - sample behind sender '%s'\n",
 					progname, sp->sname);
