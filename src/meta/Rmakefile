@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.14 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.15 2015/10/12 20:10:50 greg Exp $
 #
 #  Compiles:
 #
@@ -23,11 +23,17 @@ PROGS = $(DESTDIR)/meta2tga $(DESTDIR)/pexpand $(DESTDIR)/psort \
 	$(DESTDIR)/dgraph $(DESTDIR)/gcomp $(DESTDIR)/plot4 \
 	$(DESTDIR)/meta2bmp
 
+LIBS = symbols.met vchars.met boxw.plt curve.plt line.plt scatter.plt \
+	cartesian.plt function.plt polar.plt standard.plt
+
 # global targets
 all: $(PROGS)
 
-install: $(PROGS)
+install: $(PROGS) $(LIBS)
 	cp $(PROGS) $(INSTDIR)
+	cp $(LIBS) $(MLIBDIR)
+	./cv symbols.met > $(MLIBDIR)/symbols.mta
+	./cv vchars.met > $(MLIBDIR)/vchars.mta
 
 clean:
 	set nonomatch; rm -f *.o $(PROGS)
