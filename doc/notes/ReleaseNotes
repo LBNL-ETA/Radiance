@@ -2059,3 +2059,6 @@ discovered by Rob G.
 
 =================================
 Version 5.1
+
+Fixed issue with vchars.mta and symbols.mta not being installed in
+the appropriate metafile library location, with help from Rob G.

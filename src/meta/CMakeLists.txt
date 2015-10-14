@@ -56,6 +56,23 @@ if(X11_FOUND)
   install(TARGETS x11meta RUNTIME DESTINATION bin)
 endif()
 
+add_custom_target(mta ALL
+  COMMAND cv "${CMAKE_CURRENT_SOURCE_DIR}/symbols.met" > "${CMAKE_CURRENT_BINARY_DIR}/symbols.mta"
+  COMMAND cv "${CMAKE_CURRENT_SOURCE_DIR}/vchars.met" > "${CMAKE_CURRENT_BINARY_DIR}/vchars.mta"
+  SOURCES symbols.met vchars.met
+)
+
+install(FILES 
+  "${CMAKE_CURRENT_BINARY_DIR}/symbols.mta"
+  "${CMAKE_CURRENT_BINARY_DIR}/vchars.mta"
+  DESTINATION lib
+)
+
+install(FILES symbols.met vchars.met boxw.plt curve.plt line.plt scatter.plt 
+				cartesian.plt function.plt polar.plt standard.plt
+				DESTINATION lib)
+
 install(TARGETS meta2tga pexpand psort cv psmeta plotin bgraph igraph dgraph
-                gcomp plot4 meta2bmp
+        gcomp plot4 meta2bmp
         RUNTIME DESTINATION bin)
+
