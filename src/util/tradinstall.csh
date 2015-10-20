@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: tradinstall.csh,v 2.8 2011/10/26 20:06:17 greg Exp $
+# RCSid: $Id: tradinstall.csh,v 2.9 2015/10/20 15:51:58 greg Exp $
 # Install correct version of trad for wish or wish4.0
 #
 set instdir = $1
@@ -9,7 +9,7 @@ set TLIBFILES = ( *[a-z].tcl *.hlp trad.icon tclIndex )
 
 set TDIFFS = (`ls | sed -n 's/3\.6\.tcl$//p'`)
 
-set WISHCOMS = ( wish4.{3,2,1,0} wish8.0 wish )
+set WISHCOMS = ( wish4.{3,2,1,0} wish8.{6,5,4,3,2,1,0} wish )
 
 foreach w ( $WISHCOMS )
 	foreach d ($path)
