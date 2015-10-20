@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.10 2015/09/29 18:16:34 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.11 2015/10/20 15:49:44 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -978,8 +978,11 @@ static int aliasPhotonScatter (OBJREC *mat, RAY *rayIn)
    
    /* Straight replacement? */
    if (!mat -> oargs.nsargs) {
-      mat = objptr(mat -> omod);
-      photonScatter [mat -> otype] (mat, rayIn);
+      /* Skip void modifier! */
+      if (mat -> omod != OVOID) {
+         mat = objptr(mat -> omod);
+         photonScatter [mat -> otype] (mat, rayIn);
+      }
       
       return 0;
    }
