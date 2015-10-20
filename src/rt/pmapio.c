@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapio.c,v 2.7 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapio.c,v 2.8 2015/10/20 15:51:54 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -171,7 +171,7 @@ PhotonMapType loadPhotonMap (PhotonMap *pmap, const char *fname)
    
    /* Identify photon map type from format string */
    for (ptype = 0; 
-        strcmp(pmapFormat [ptype], format) && ptype < NUM_PMAP_TYPES;
+        ptype < NUM_PMAP_TYPES && strcmp(pmapFormat [ptype], format);
         ptype++);
       
    if (!validPmapType(ptype)) {
