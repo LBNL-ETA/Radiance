@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.121 2015/09/02 18:59:26 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.122 2015/10/22 18:09:37 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -807,6 +807,7 @@ renderopts(			/* set rendering options */
 	char	pmapf[256], *bw;
 
 	if (vdef(PGMAP)) {
+		*op = '\0';
 		bw = sskip2(vval(PGMAP), 2);
 		atos(pmapf, sizeof(pmapf), vval(PGMAP));
 		op = addarg(addarg(op, "-ap"), pmapf);
