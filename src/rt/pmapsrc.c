@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.10 2015/09/29 18:16:34 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.11 2015/10/27 19:06:54 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -525,20 +525,21 @@ void getPhotonPorts ()
 /* Find geometry declared as photon ports */
 {
    OBJECT i;
-   OBJREC* obj;
+   OBJREC *obj, *mat;
    
    /* Check for missing port modifiers */
    if (!ambset [0])
-      error(USER, "no photon ports found");
+      error(USER, "no photon ports");
    
    for (i = 0; i < nobjects; i++) {
       obj = objptr(i);
+      mat = findmaterial(obj);
       
       /* Check if object is a surface and NOT a light source (duh) and
        * resolve its material via any aliases, then check for inclusion in
        * port modifier list */
-      if (issurface(obj -> otype) && !islight(obj -> otype) &&
-          inset(ambset, objndx(findmaterial(obj)))) {
+      if (issurface(obj -> otype) && !islight(mat -> otype) && 
+          inset(ambset, objndx(mat))) {
          /* Add photon port */
          photonPorts = (SRCREC*)realloc(photonPorts, 
                                         (numPhotonPorts + 1) * 
@@ -556,6 +557,9 @@ void getPhotonPorts ()
          numPhotonPorts++;
       }
    }
+   
+   if (!numPhotonPorts)
+      error(USER, "no valid photon ports found");
 }
 
 
