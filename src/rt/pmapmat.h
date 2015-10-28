@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapmat.h,v 2.10 2015/09/02 18:59:01 greg Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.11 2015/10/28 12:32:53 rschregle Exp $ */
 /* 
    ==================================================================
    Photon map support routines for scattering by materials. 
@@ -26,7 +26,8 @@
    */
    #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && photonMapping && \
                                  (ambounce < 0 || (r) -> rlvl > 1 || \
-                                 causticPhotonMapping || contribPhotonMapping))
+                                  causticPhotonMapping || \
+                                  contribPhotonMapping))
 
   /* 
       Check for paths already accounted for in photon map to avoid
@@ -40,9 +41,12 @@
                            contrib, or dedicated caustic photon map.
    */
    #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
-				(ambounce < 0 || ((r) -> crtype & AMBIENT ? \
-					photonMapping : causticPhotonMapping)))
-   
+                                 (ambounce < 0 || \
+                                    ((r) -> crtype & AMBIENT \
+                                       ? photonMapping \
+                                       : causticPhotonMapping || \
+                                         contribPhotonMapping)))
+
    /* Check if scattered ray spawns a caustic photon */
    #define PMAP_CAUSTICRAY(r) ((r) -> rtype & SPECULAR)
 
