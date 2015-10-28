@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.122 2015/10/22 18:09:37 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.123 2015/10/28 02:52:17 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -1345,7 +1345,7 @@ getview(				/* get view n, or NULL if none */
 	}
 numview:
 	mv = nvalue(VIEWS, n);		/* use view n */
-	if ((vn != NULL) & (mv != NULL))
+	if ((vn != NULL) & (mv != NULL)) {
 		if (*mv != '-') {
 			char	*mv2 = mv;
 			while (*mv2 && !isspace(*mv2))
@@ -1353,7 +1353,7 @@ numview:
 			*vn = '\0';
 		} else
 			sprintf(vn, "%d", n+1);
-
+	}
 	return(specview(mv));
 }
 
@@ -1521,6 +1521,7 @@ rpict(				/* run rpict and pfilt for each view */
 				fprintf(stderr, "%s: cannot create\n", pfile);
 				quit(1);
 			}
+			pfile[-5] = '\0';
 			pfile = NULL;
 		}
 	}
