@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.72 2015/09/02 18:59:01 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.73 2015/10/28 15:45:58 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -190,7 +190,7 @@ m_normal(			/* color a ray that hit something normal */
 	int  i;
 
 	/* PMAP: skip transmitted shadow ray if accounted for in photon map */
-	if (shadowRayInPmap(r))
+	if (shadowRayInPmap(r) || ambRayInPmap(r))
 		return(1);
 						/* easy shadow test */
 	if (r->crtype & SHADOW && m->otype != MAT_TRANS)
