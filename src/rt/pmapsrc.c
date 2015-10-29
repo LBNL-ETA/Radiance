@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.11 2015/10/27 19:06:54 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.12 2015/10/29 15:27:08 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -538,7 +538,7 @@ void getPhotonPorts ()
       /* Check if object is a surface and NOT a light source (duh) and
        * resolve its material via any aliases, then check for inclusion in
        * port modifier list */
-      if (issurface(obj -> otype) && !islight(mat -> otype) && 
+      if (issurface(obj -> otype) && mat && !islight(mat -> otype) && 
           inset(ambset, objndx(mat))) {
          /* Add photon port */
          photonPorts = (SRCREC*)realloc(photonPorts, 
