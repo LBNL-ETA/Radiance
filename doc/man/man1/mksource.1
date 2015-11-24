@@ -1,4 +1,4 @@
-.\" RCSid "$Id: mksource.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: mksource.1,v 1.6 2015/11/24 21:11:14 greg Exp $"
 .TH MKSOURCE 1 04/11/05 RADIANCE
 .SH NAME
 mksource - compute distant sources for RADIANCE image-based lighting
@@ -51,7 +51,7 @@ silently enforces a maximum of 180 degrees for this option.
 If no input octree is specified, the standard input is read.
 .SH EXAMPLE
 To add sources with a maximum size of 20 degrees
-to the enviornment described in environ.oct:
+to the environment described in environ.oct:
 .IP "" .2i
 mksource \-a 20 environ.oct > srcs.rad
 .br
