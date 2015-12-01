@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.21 2015/09/25 23:01:12 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.22 2015/12/01 16:58:16 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 5.1 Synthetic Imaging System
@@ -1415,6 +1415,7 @@ or:
 </h4>
 
 A mixture is a blend of one or more materials or textures and patterns.
+Blended materials should not be light source types or virtual source types.
 The basic types are given below.
 
 <p>
@@ -1487,7 +1488,6 @@ A mixfunc mixes  two  modifiers  procedurally.   It  is specified as follows:
 	arguments, the red, green and blue values
 	corresponding to the pixel at (u,v).
 
-</dl>
 <p>
 
 <dt>

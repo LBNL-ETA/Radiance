@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.27 2015/09/18 18:29:00 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.28 2015/12/01 16:58:16 greg Exp $"
 .\" Print using the -ms macro package
 .DA 09/18/2015
 .LP
@@ -1155,6 +1155,7 @@ between 0.1 (for tightly spaced characters) and 0.3 (for wide spacing).
 Mixtures
 .PP
 A mixture is a blend of one or more materials or textures and patterns.
+Blended materials should not be light source types or virtual source types.
 The basic types are given below.
 .LP
 .UL Mixfunc
