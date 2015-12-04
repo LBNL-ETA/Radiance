@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rfluxmtx.1,v 1.9 2015/09/23 22:36:28 greg Exp $"
+.\" RCSid "$Id: rfluxmtx.1,v 1.10 2015/12/04 22:16:18 greg Exp $"
 .TH RFLUXMTX 1 07/22/14 RADIANCE
 .SH NAME
 rfluxmtx - compute flux transfer matrix(es) for RADIANCE scene
@@ -121,8 +121,10 @@ grid over the square.
 Orient the "up" direction for the hemisphere using the indicated axis or direction
 vector.
 .TP
-.BI o =output.mtx
-Send the matrix data for this receiver to the indicated output file.
+.BI o =output_spec
+Send the matrix data for this receiver to the indicated file or command.
+Single or double quotes may be used to contain strings with spaces, and
+commands must begin with an exclamation mark ('!').
 The file format will be determined by the command-line
 .I \-fio
 option and will include an information header unless the
