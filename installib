@@ -1,5 +1,5 @@
 #!/bin/csh -f
-# RCSid $Id: installib,v 1.3 2003/10/30 15:41:23 greg Exp $
+# RCSid $Id: installib,v 1.4 2016/01/05 18:42:23 greg Exp $
 #
 # Install library files
 #
@@ -25,7 +25,7 @@ endif
 if (! -d lib) then
 	echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 	echo "You forgot to install the auxiliary files overlay."
-	echo "Download rad3R6supp.tar.gz from http://www.radiance-online.org"
+	echo "Download rad5R1supp.tar.gz from http://www.radiance-online.org"
 	echo "and run 'installib' later manually, or ^C now."
 	echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 	exit
