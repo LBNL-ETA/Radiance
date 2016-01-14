@@ -1,4 +1,4 @@
-{ RCSid $Id: klems_ang.cal,v 1.1 2010/06/18 00:56:15 greg Exp $ }
+{ RCSid $Id: klems_ang.cal,v 1.2 2016/01/14 18:12:27 greg Exp $ }
 {
 	Compute central Klems direction vector from kbin (1-145)
 
@@ -7,7 +7,7 @@
 
 DEGREE : PI/180;
 
-Kfull_theta(i) : select(i, 5, 15, 25, 35, 45, 55, 67, 75, 90);
+Kfull_theta(i) : select(i, 5, 15, 25, 35, 45, 55, 65, 75, 90);
 Kfull_nphis(i) : select(i, 1, 8, 16, 20, 24, 24, 24, 16, 12);
 Khalf_theta(i) : select(i, 6.5, 19.5, 32.5, 46.5, 61.5, 76.5, 90);
 Khalf_nphis(i) : select(i, 1, 8, 12, 16, 20, 12, 4);
