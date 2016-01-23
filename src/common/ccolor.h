@@ -1,4 +1,4 @@
-/* RCSid $Id: ccolor.h,v 3.7 2015/03/26 15:57:19 greg Exp $ */
+/* RCSid $Id: ccolor.h,v 3.8 2016/01/23 18:58:35 greg Exp $ */
 /*
  *  Header file for spectral colors.
  *
@@ -49,6 +49,7 @@ typedef unsigned short	C_CHROMA;	/* encoded (x,y) chromaticity */
 						/ (double)(c)->ssum)
 
 extern const C_COLOR	c_dfcolor;		/* default color */
+extern const C_CHROMA	c_dfchroma;		/* c_encodeChroma(&c_dfcolor) */
 
 extern const C_COLOR	c_x31, c_y31, c_z31;	/* 1931 standard observer */
 
