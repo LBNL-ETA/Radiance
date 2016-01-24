@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.18 2015/05/27 11:39:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.19 2016/01/24 14:28:51 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -446,7 +446,7 @@ main(int argc, char *argv[])
 			goto userr;
 		}
 	if (single_plane_incident >= 0) {	/* function-based BSDF? */
-		if (i != argc-1 || fundefined(argv[i]) != 6) {
+		if (i != argc-1 || fundefined(argv[i]) < 3) {
 			fprintf(stderr,
 	"%s: need single function with 6 arguments: bsdf(ix,iy,iz,ox,oy,oz)\n",
 					progname);
