@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfinterp.c,v 2.20 2014/10/26 17:35:53 greg Exp $";
+static const char RCSid[] = "$Id: bsdfinterp.c,v 2.21 2016/01/29 16:21:55 greg Exp $";
 #endif
 /*
  * Interpolate BSDF data from radial basis functions in advection mesh.
@@ -343,14 +343,19 @@ tryagain:
 	    const RBFVAL	*rbf0i = &miga[0]->rbfv[0]->rbfa[i];
 	    const float		w0i = rbf0i->peak;
 	    const double	rad0i = R2ANG(rbf0i->crad);
+	    C_COLOR		cc0;
 	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    c_decodeChroma(&cc0, rbf0i->chroma);
 	    for (j = 0; j < mtx_ncols(miga[0]); j++) {
 		const float	ma = mtx_coef(miga[0],i,j);
 		const RBFVAL	*rbf1j;
+		C_COLOR		ccs;
 		double		srad2;
 		if (ma <= cthresh)
 			continue;
 		rbf1j = &miga[0]->rbfv[1]->rbfa[j];
+		c_decodeChroma(&ccs, rbf1j->chroma);
+		c_cmix(&ccs, 1.-s, &cc0, s, &ccs);
 		srad2 = R2ANG(rbf1j->crad);
 		srad2 = (1.-s)*(1.-t)*rad0i*rad0i + s*(1.-t)*srad2*srad2;
 		ovec_from_pos(v1, rbf1j->gx, rbf1j->gy);
@@ -368,6 +373,13 @@ tryagain:
 		    rad2 = srad2 + t*rad2*rad2;
 		    rbf->rbfa[n].peak = w0i * ma * (mb*mbfact + mc*mcfact) *
 					rad0i*rad0i/rad2;
+		    if (rbf_colorimetry == RBCtristimulus) {
+			C_COLOR	cres;
+			c_decodeChroma(&cres, rbf2k->chroma);
+			c_cmix(&cres, 1.-t, &ccs, t, &cres);
+			rbf->rbfa[n].chroma = c_encodeChroma(&cres);
+		    } else
+			rbf->rbfa[n].chroma = c_dfchroma;
 		    rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
 		    ovec_from_pos(v2, rbf2k->gx, rbf2k->gy);
 		    geodesic(v2, v1, v2, t, GEOD_REL);

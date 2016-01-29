@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.27 2014/10/03 21:57:06 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.28 2016/01/29 16:21:56 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -25,6 +25,7 @@ typedef struct {
 	double		up_phi;		/* azimuth for "up" direction */
 	int		igp[2];		/* input grid position */
 	int		isDSF;		/* data is DSF (rather than BSDF)? */
+	int		nspec;		/* number of spectral samples */
 	long		dstart;		/* data start offset in file */
 } PGINPUT;
 
@@ -61,11 +62,12 @@ init_pabopto_inp(const int i, const char *fname)
 	}
 	inpfile[i].fname = fname;
 	inpfile[i].isDSF = -1;
+	inpfile[i].nspec = 0;
 	inpfile[i].up_phi = 0;
 	inpfile[i].theta = inpfile[i].phi = -10001.;
 				/* read header information */
 	while ((c = getc(fp)) == '#' || c == EOF) {
-		char	typ[32];
+		char	typ[64];
 		if (fgets(buf, sizeof(buf), fp) == NULL) {
 			fputs(fname, stderr);
 			fputs(": unexpected EOF\n", stderr);
@@ -74,17 +76,21 @@ init_pabopto_inp(const int i, const char *fname)
 		}
 		if (sscanf(buf, "sample_name \"%[^\"]\"", bsdf_name) == 1)
 			continue;
+		if (sscanf(buf, "colorimetry: %s", typ) == 1) {
+			if (!strcasecmp(typ, "CIE-XYZ"))
+				inpfile[i].nspec = 3;
+			else if (!strcasecmp(typ, "CIE-Y"))
+				inpfile[i].nspec = 1;
+			continue;
+		}
 		if (sscanf(buf, "format: theta phi %s", typ) == 1) {
-			if (!strcasecmp(typ, "DSF")) {
+			if (!strcasecmp(typ, "DSF"))
 				inpfile[i].isDSF = 1;
-				continue;
-			}
-			if (!strcasecmp(typ, "BSDF") ||
+			else if (!strcasecmp(typ, "BSDF") ||
 					!strcasecmp(typ, "BRDF") ||
-					!strcasecmp(typ, "BTDF")) {
+					!strcasecmp(typ, "BTDF"))
 				inpfile[i].isDSF = 0;
-				continue;
-			}
+			continue;
 		}
 		if (sscanf(buf, "upphi %lf", &inpfile[i].up_phi) == 1)
 			continue;
@@ -124,7 +130,7 @@ static int
 add_pabopto_inp(const int i)
 {
 	FILE		*fp = fopen(inpfile[i].fname, "r");
-	double		theta_out, phi_out, val;
+	double		theta_out, phi_out, val[3];
 	int		n, c;
 	
 	if (fp == NULL || fseek(fp, inpfile[i].dstart, 0) == EOF) {
@@ -140,15 +146,25 @@ add_pabopto_inp(const int i)
 		fprintf(stderr, "New incident (theta,phi)=(%.1f,%.1f)\n",
 					inpfile[i].theta, inpfile[i].phi);
 #endif
+		if (inpfile[i].nspec)
+			set_spectral_samples(inpfile[i].nspec);
 		new_bsdf_data(inpfile[i].theta, inpfile[i].phi);
 	}
 #ifdef DEBUG
 	fprintf(stderr, "Loading measurements from '%s'...\n", inpfile[i].fname);
 #endif
 					/* read scattering data */
-	while (fscanf(fp, "%lf %lf %lf\n", &theta_out, &phi_out, &val) == 3)
+	while (fscanf(fp, "%lf %lf %lf", &theta_out, &phi_out, val) == 3) {
+		for (n = 1; n < inpfile[i].nspec; n++)
+			if (fscanf(fp, "%lf", val+n) != 1) {
+				fprintf(stderr, "%s: warning: unexpected EOF\n",
+						inpfile[i].fname);
+				fclose(fp);
+				return(1);
+			}
 		add_bsdf_data(theta_out, phi_out+90.-inpfile[i].up_phi,
 				val, inpfile[i].isDSF);
+	}
 	n = 0;
 	while ((c = getc(fp)) != EOF)
 		n += !isspace(c);
@@ -240,8 +256,8 @@ main(int argc, char *argv[])
 #if 1						/* produce spheres at meas. */
 	puts("void plastic yellow\n0\n0\n5 .6 .4 .01 .04 .08\n");
 	n = 0;
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++)
+	for (i = 0; i < grid_res; i++)
+	    for (j = 0; j < grid_res; j++)
 		if (dsf_grid[i][j].sum.n > 0) {
 			ovec_from_pos(dir, i, j);
 			bsdf = dsf_grid[i][j].sum.v /
@@ -272,14 +288,14 @@ main(int argc, char *argv[])
 #if 1						/* output continuous surface */
 	puts("void trans tgreen\n0\n0\n7 .7 1 .7 .04 .04 .9 1\n");
 	fflush(stdout);
-	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", GRIDRES-1, GRIDRES-1);
+	sprintf(buf, "gensurf tgreen bsdf - - - %d %d", grid_res-1, grid_res-1);
 	pfp = popen(buf, "w");
 	if (pfp == NULL) {
 		fprintf(stderr, "%s: cannot open '| %s'\n", progname, buf);
 		return(1);
 	}
-	for (i = 0; i < GRIDRES; i++)
-	    for (j = 0; j < GRIDRES; j++) {
+	for (i = 0; i < grid_res; i++)
+	    for (j = 0; j < grid_res; j++) {
 		ovec_from_pos(dir, i, j);
 		bsdf = eval_rbfrep(dsf_list, dir);
 		bsdf = log(bsdf + 1e-5) - min_log;

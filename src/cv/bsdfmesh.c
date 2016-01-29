@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.33 2014/08/22 05:38:44 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.34 2016/01/29 16:21:55 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -99,6 +99,7 @@ est_DSFrad(const RBFNODE *rbf, const FVECT outvec)
 static void
 comp_bsdf_spec(void)
 {
+	const double	max_hemi = 0.9;
 	double		peak_sum = 0;
 	double		rad_sum = 0;
 	int		n = 0;
@@ -120,6 +121,8 @@ comp_bsdf_spec(void)
 	}
 	bsdf_spec_peak = peak_sum/(double)n;
 	bsdf_spec_rad = rad_sum/(double)n;
+	if ((2.*M_PI)*bsdf_spec_peak*bsdf_spec_rad*bsdf_spec_rad > max_hemi)
+		bsdf_spec_peak = max_hemi/((2.*M_PI)*bsdf_spec_rad*bsdf_spec_rad);
 }
 
 /* Create a new migration holder (sharing memory for multiprocessing) */

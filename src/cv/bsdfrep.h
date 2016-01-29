@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.22 2014/08/22 05:38:44 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.23 2016/01/29 16:21:56 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -34,8 +34,9 @@ typedef union {
 
 typedef struct {
 	float		peak;		/* lobe value at peak */
+	C_CHROMA	chroma;		/* encoded chromaticity */
 	unsigned short	crad;		/* radius (coded angle) */
-	unsigned char	gx, gy;		/* grid position */
+	unsigned short	gx, gy;		/* grid position */
 } RBFVAL;			/* radial basis function value */
 
 struct s_rbfnode;		/* forward declaration of RBF struct */
@@ -82,6 +83,13 @@ extern int		single_plane_incident;
 extern int		input_orient;
 extern int		output_orient;
 
+				/* represented colorimetry */
+typedef enum {RBCphotopic, RBCtristimulus, RBCspectral, RBCunknown} RBColor;
+
+extern RBColor		rbf_colorimetry;
+
+extern const char	*RBCident[];
+
 				/* log BSDF histogram */
 #define	HISTLEN		256
 #define BSDF2BIG	(1./M_PI)
@@ -114,6 +122,8 @@ extern MIGRATION	*mig_list;
 
 #define	BSDFREP_FMT	"BSDF_RBFmesh"
 
+#define BSDFREP_MAGIC	0x5a3c
+
 				/* global argv[0] */
 extern char		*progname;
 
@@ -125,6 +135,8 @@ extern char		*progname;
 				/* our loaded grid for this incident angle */
 extern double		theta_in_deg, phi_in_deg;
 extern GRIDVAL		dsf_grid[GRIDRES][GRIDRES];
+extern float		(*spec_grid)[GRIDRES][GRIDRES];
+extern int		nspec_grid;
 
 /* Register new input direction */
 extern int		new_input_direction(double new_theta, double new_phi);
@@ -156,6 +168,9 @@ extern void		pos_from_vec(int pos[2], const FVECT vec);
 /* Evaluate BSDF at the given normalized outgoing direction */
 extern double		eval_rbfrep(const RBFNODE *rp, const FVECT outvec);
 
+extern SDError		eval_rbfcol(SDValue *sv,
+					const RBFNODE *rp, const FVECT outvec);
+
 /* Insert a new directional scattering function in our global list */
 extern int		insert_dsf(RBFNODE *newrbf);
 
@@ -182,12 +197,15 @@ extern void		save_bsdf_rep(FILE *ofp);
 /* Read a BSDF mesh interpolant from the given binary stream */
 extern int		load_bsdf_rep(FILE *ifp);
 
+/* Set up visible spectrum sampling */
+extern void		set_spectral_samples(int nspec);
+
 /* Start new DSF input grid */
 extern void		new_bsdf_data(double new_theta, double new_phi);
 
 /* Add BSDF data point */
 extern void		add_bsdf_data(double theta_out, double phi_out,
-					double val, int isDSF);
+					const double val[], int isDSF);
 
 /* Count up filled nodes and build RBF representation from current grid */ 
 extern RBFNODE *	make_rbfrep(void);

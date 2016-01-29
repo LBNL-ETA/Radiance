@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.28 2015/05/28 15:46:28 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.29 2016/01/29 16:21:55 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.28 2015/05/28 15:46:28 greg Exp 
 #include "rtio.h"
 #include "resolu.h"
 #include "bsdfrep.h"
+#include "random.h"
 				/* name and manufacturer if known */
 char			bsdf_name[256];
 char			bsdf_manuf[256];
@@ -28,6 +29,13 @@ int			single_plane_incident = -1;
 				/* input/output orientations */
 int			input_orient = 0;
 int			output_orient = 0;
+
+				/* represented color space */
+RBColor			rbf_colorimetry = RBCunknown;
+
+const char		*RBCident[] = {
+				"CIE-Y", "CIE-XYZ", "Spectral", "Unknown"
+			};
 
 				/* BSDF histogram */
 unsigned long		bsdf_hist[HISTLEN];
@@ -260,23 +268,28 @@ rbf_volume(const RBFVAL *rbfp)
 	return(integ);
 }
 
-/* Evaluate BSDF at the given normalized outgoing direction */
-double
-eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
+/* Evaluate BSDF at the given normalized outgoing direction in color */
+SDError
+eval_rbfcol(SDValue *sv, const RBFNODE *rp, const FVECT outvec)
 {
 	const double	rfact2 = (38./M_PI/M_PI)*(grid_res*grid_res);
 	int		pos[2];
 	double		res = 0;
+	double		usum = 0, vsum = 0;
 	const RBFVAL	*rbfp;
 	FVECT		odir;
 	double		rad2;
 	int		n;
+				/* assign default value */
+	sv->spec = c_dfcolor;
+	sv->cieY = bsdf_min;
 				/* check for wrong side */
-	if (outvec[2] > 0 ^ output_orient > 0)
-		return(.0);
-				/* use minimum if no information avail. */
-	if (rp == NULL)
-		return(bsdf_min);
+	if (outvec[2] > 0 ^ output_orient > 0) {
+		strcpy(SDerrorDetail, "Wrong-side scattering query");
+		return(SDEargument);
+	}
+	if (rp == NULL)		/* return minimum if no information avail. */
+		return(SDEnone);
 				/* optimization for fast lobe culling */
 	pos_from_vec(pos, outvec);
 				/* sum radial basis function */
@@ -284,17 +297,40 @@ eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
 	for (n = rp->nrbf; n--; rbfp++) {
 		int	d2 = (pos[0]-rbfp->gx)*(pos[0]-rbfp->gx) +
 				(pos[1]-rbfp->gy)*(pos[1]-rbfp->gy);
+		double	val;
 		rad2 = R2ANG(rbfp->crad);
 		rad2 *= rad2;
 		if (d2 > rad2*rfact2)
 			continue;
 		ovec_from_pos(odir, rbfp->gx, rbfp->gy);
-		res += rbfp->peak * exp((DOT(odir,outvec) - 1.) / rad2);
+		val = rbfp->peak * exp((DOT(odir,outvec) - 1.) / rad2);
+		if (rbf_colorimetry == RBCtristimulus) {
+			usum += val * (rbfp->chroma & 0xff);
+			vsum += val * (rbfp->chroma>>8 & 0xff);
+		}
+		res += val;
 	}
-	res /= COSF(outvec[2]);
-	if (res < bsdf_min)	/* never return less than bsdf_min */
-		return(bsdf_min);
-	return(res);
+	if ((rbf_colorimetry == RBCtristimulus) & (res > 1e-6)) {
+		C_CHROMA	cres = (int)(usum/res + frandom());
+		cres |= (int)(vsum/res + frandom()) << 8;
+		c_decodeChroma(&sv->spec, cres);
+	}
+	sv->cieY = res / COSF(outvec[2]);
+	if (sv->cieY < bsdf_min)	/* never return less than bsdf_min */
+		sv->cieY = bsdf_min;
+	return(SDEnone);
+}
+
+/* Evaluate BSDF at the given normalized outgoing direction in Y */
+double
+eval_rbfrep(const RBFNODE *rp, const FVECT outvec)
+{
+	SDValue	sv;
+
+	if (eval_rbfcol(&sv, rp, outvec) == SDEnone)
+		return(sv.cieY);
+
+	return(0.0);
 }
 
 /* Insert a new directional scattering function in our global list */
@@ -422,6 +458,7 @@ def_rbf_spec(const FVECT invec)
 	VCOPY(rbf->invec, invec);
 	rbf->nrbf = 1;
 	rbf->rbfa[0].peak = bsdf_spec_peak * output_orient*ovec[2];
+	rbf->rbfa[0].chroma = c_dfchroma;
 	rbf->rbfa[0].crad = ANG2R(bsdf_spec_rad);
 	rbf->rbfa[0].gx = pos[0];
 	rbf->rbfa[0].gy = pos[1];
@@ -485,9 +522,11 @@ tryagain:
 	    const RBFVAL	*rbf0i = &mig->rbfv[0]->rbfa[i];
 	    const float		peak0 = rbf0i->peak;
 	    const double	rad0 = R2ANG(rbf0i->crad);
+	    C_COLOR		cc0;
 	    FVECT		v0;
 	    float		mv;
 	    ovec_from_pos(v0, rbf0i->gx, rbf0i->gy);
+	    c_decodeChroma(&cc0, rbf0i->chroma);
 	    for (j = 0; j < mtx_ncols(mig); j++)
 		if ((mv = mtx_coef(mig,i,j)) > cthresh) {
 			const RBFVAL	*rbf1j = &mig->rbfv[1]->rbfa[j];
@@ -498,6 +537,13 @@ tryagain:
 			rad2 = rad0*rad0*(1.-t) + rad2*rad2*t;
 			rbf->rbfa[n].peak = peak0 * mv * rbf->vtotal *
 						rad0*rad0/rad2;
+			if (rbf_colorimetry == RBCtristimulus) {
+				C_COLOR	cres;
+				c_decodeChroma(&cres, rbf1j->chroma);
+				c_cmix(&cres, 1.-t, &cc0, t, &cres);
+				rbf->rbfa[n].chroma = c_encodeChroma(&cres);
+			} else
+				rbf->rbfa[n].chroma = c_dfchroma;
 			rbf->rbfa[n].crad = ANG2R(sqrt(rad2));
 			ovec_from_pos(v, rbf1j->gx, rbf1j->gy);
 			geodesic(v, v0, v, t, GEOD_REL);
@@ -534,6 +580,7 @@ clear_bsdf_rep(void)
 	inp_coverage = 0;
 	single_plane_incident = -1;
 	input_orient = output_orient = 0;
+	rbf_colorimetry = RBCunknown;
 	grid_res = GRIDRES;
 	bsdf_min = 0;
 	bsdf_spec_peak = 0;
@@ -554,12 +601,14 @@ save_bsdf_rep(FILE *ofp)
 		fprintf(ofp, "MANUFACT=%s\n", bsdf_manuf);
 	fprintf(ofp, "SYMMETRY=%d\n", !single_plane_incident * inp_coverage);
 	fprintf(ofp, "IO_SIDES= %d %d\n", input_orient, output_orient);
+	fprintf(ofp, "COLORIMETRY=%s\n", RBCident[rbf_colorimetry]);
 	fprintf(ofp, "GRIDRES=%d\n", grid_res);
 	fprintf(ofp, "BSDFMIN=%g\n", bsdf_min);
 	if ((bsdf_spec_peak > bsdf_min) & (bsdf_spec_rad > 0))
 		fprintf(ofp, "BSDFSPEC= %f %f\n", bsdf_spec_peak, bsdf_spec_rad);
 	fputformat(BSDFREP_FMT, ofp);
 	fputc('\n', ofp);
+	putint(BSDFREP_MAGIC, 2, ofp);
 					/* write each DSF */
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
 		putint(rbf->ord, 4, ofp);
@@ -570,9 +619,10 @@ save_bsdf_rep(FILE *ofp)
 		putint(rbf->nrbf, 4, ofp);
 		for (i = 0; i < rbf->nrbf; i++) {
 			putflt(rbf->rbfa[i].peak, ofp);
+			putint(rbf->rbfa[i].chroma, 2, ofp);
 			putint(rbf->rbfa[i].crad, 2, ofp);
-			putint(rbf->rbfa[i].gx, 1, ofp);
-			putint(rbf->rbfa[i].gy, 1, ofp);
+			putint(rbf->rbfa[i].gx, 2, ofp);
+			putint(rbf->rbfa[i].gy, 2, ofp);
 		}
 	}
 	putint(-1, 4, ofp);		/* terminator */
@@ -608,7 +658,8 @@ save_bsdf_rep(FILE *ofp)
 static int
 headline(char *s, void *p)
 {
-	char	fmt[32];
+	char	fmt[64];
+	int	i;
 
 	if (!strncmp(s, "NAME=", 5)) {
 		strcpy(bsdf_name, s+5);
@@ -625,6 +676,17 @@ headline(char *s, void *p)
 	}
 	if (!strncmp(s, "IO_SIDES=", 9)) {
 		sscanf(s+9, "%d %d", &input_orient, &output_orient);
+		return(0);
+	}
+	if (!strncmp(s, "COLORIMETRY=", 12)) {
+		fmt[0] = '\0';
+		sscanf(s+12, "%s", fmt);
+		for (i = RBCunknown; i >= 0; i--)
+			if (!strcmp(fmt, RBCident[i]))
+				break;
+		if (i < 0)
+			return(-1);
+		rbf_colorimetry = i;
 		return(0);
 	}
 	if (!strncmp(s, "GRIDRES=", 8)) {
@@ -657,8 +719,13 @@ load_bsdf_rep(FILE *ifp)
 		return(0);
 	if (getheader(ifp, headline, NULL) < 0 || (single_plane_incident < 0) |
 			!input_orient | !output_orient |
-			(grid_res < 16) | (grid_res > 256)) {
+			(grid_res < 16) | (grid_res > 0xffff)) {
 		fprintf(stderr, "%s: missing/bad format for BSDF interpolant\n",
+				progname);
+		return(0);
+	}
+	if (getint(2, ifp) != BSDFREP_MAGIC) {
+		fprintf(stderr, "%s: bad magic number for BSDF interpolant\n",
 				progname);
 		return(0);
 	}
@@ -682,9 +749,10 @@ load_bsdf_rep(FILE *ifp)
 		*newrbf = rbfh;
 		for (i = 0; i < rbfh.nrbf; i++) {
 			newrbf->rbfa[i].peak = getflt(ifp);
+			newrbf->rbfa[i].chroma = getint(2, ifp) & 0xffff;
 			newrbf->rbfa[i].crad = getint(2, ifp) & 0xffff;
-			newrbf->rbfa[i].gx = getint(1, ifp) & 0xff;
-			newrbf->rbfa[i].gy = getint(1, ifp) & 0xff;
+			newrbf->rbfa[i].gx = getint(2, ifp) & 0xffff;
+			newrbf->rbfa[i].gy = getint(2, ifp) & 0xffff;
 		}
 		if (feof(ifp))
 			goto badEOF;

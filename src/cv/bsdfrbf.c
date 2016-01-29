@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.26 2014/08/22 05:38:44 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.27 2016/01/29 16:21:55 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -43,6 +43,50 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.26 2014/08/22 05:38:44 greg Exp 
 
 					/* loaded grid or comparison DSFs */
 GRIDVAL			dsf_grid[GRIDRES][GRIDRES];
+					/* allocated chrominance sums if any */
+float			(*spec_grid)[GRIDRES][GRIDRES];
+int			nspec_grid = 0;
+
+/* Set up visible spectrum sampling */
+void
+set_spectral_samples(int nspec)
+{
+	if (rbf_colorimetry == RBCunknown) {
+		if (nspec_grid > 0) {
+			free(spec_grid);
+			spec_grid = NULL;
+			nspec_grid = 0;
+		}
+		if (nspec == 1) {
+			rbf_colorimetry = RBCphotopic;
+			return;
+		}
+		if (nspec == 3) {
+			rbf_colorimetry = RBCtristimulus;
+			spec_grid = (float (*)[GRIDRES][GRIDRES])calloc(
+					2*GRIDRES*GRIDRES, sizeof(float) );
+			if (spec_grid == NULL)
+				goto mem_error;
+			nspec_grid = 2;
+			return;
+		}
+		fprintf(stderr,
+			"%s: only 1 or 3 spectral samples currently supported\n",
+				progname);
+		exit(1);
+	}
+	if (nspec != nspec_grid+1) {
+		fprintf(stderr,
+			"%s: number of spectral samples cannot be changed\n",
+				progname);
+		exit(1);
+	}
+	return;
+mem_error:
+	fprintf(stderr, "%s: out of memory in set_spectral_samples()\n",
+			progname);
+	exit(1);
+}
 
 /* Start new DSF input grid */
 void
@@ -51,38 +95,51 @@ new_bsdf_data(double new_theta, double new_phi)
 	if (!new_input_direction(new_theta, new_phi))
 		exit(1);
 	memset(dsf_grid, 0, sizeof(dsf_grid));
+	if (nspec_grid > 0)
+		memset(spec_grid, 0, sizeof(float)*GRIDRES*GRIDRES*nspec_grid);
 }
 
 /* Add BSDF data point */
 void
-add_bsdf_data(double theta_out, double phi_out, double val, int isDSF)
+add_bsdf_data(double theta_out, double phi_out, const double val[], int isDSF)
 {
 	FVECT	ovec;
+	double	cfact, Yval;
 	int	pos[2];
 
+	if (nspec_grid > 2) {
+		fprintf(stderr, "%s: unsupported color space\n", progname);
+		exit(1);
+	}
 	if (!output_orient)		/* check output orientation */
 		output_orient = 1 - 2*(theta_out > 90.);
 	else if (output_orient > 0 ^ theta_out < 90.) {
-		fputs("Cannot handle output angles on both sides of surface\n",
-				stderr);
+		fprintf(stderr,
+		"%s: cannot handle output angles on both sides of surface\n",
+				progname);
 		exit(1);
 	}
 	ovec[2] = sin((M_PI/180.)*theta_out);
 	ovec[0] = cos((M_PI/180.)*phi_out) * ovec[2];
 	ovec[1] = sin((M_PI/180.)*phi_out) * ovec[2];
 	ovec[2] = sqrt(1. - ovec[2]*ovec[2]);
+					/* BSDF to DSF correction */
+	cfact = isDSF ? 1. : ovec[2];
 
-	if (!isDSF)
-		val *= COSF(ovec[2]);	/* convert from BSDF to DSF */
-
+	Yval = cfact * val[rbf_colorimetry==RBCtristimulus];
 					/* update BSDF histogram */
-	if (val < BSDF2BIG*ovec[2] && val > BSDF2SML*ovec[2])
-		++bsdf_hist[histndx(val/ovec[2])];
+	if (BSDF2SML*ovec[2] < Yval && Yval < BSDF2BIG*ovec[2])
+		++bsdf_hist[histndx(Yval/ovec[2])];
 
 	pos_from_vec(pos, ovec);
 
-	dsf_grid[pos[0]][pos[1]].sum.v += val;
+	dsf_grid[pos[0]][pos[1]].sum.v += Yval;
 	dsf_grid[pos[0]][pos[1]].sum.n++;
+					/* add in X and Z values */
+	if (rbf_colorimetry == RBCtristimulus) {
+		spec_grid[0][pos[0]][pos[1]] += val[0];
+		spec_grid[1][pos[0]][pos[1]] += val[2];
+	}
 }
 
 /* Compute minimum BSDF from histogram (does not clear) */
@@ -171,6 +228,7 @@ static int
 create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 {
 	double	vtot = 0.0;
+	double	CIEXtot = 0.0, CIEZtot = 0.0;
 	int	nv = 0;
 	double	wxsum = 0.0, wysum = 0.0, wtsum = 0.0;
 	double	rad;
@@ -183,13 +241,17 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 		    const int		n = dsf_grid[x][y].sum.n;
 
 		    if (v > 0) {
-			double	wt = v / (double)n;
+			const double	wt = v / (double)n;
 			wxsum += wt * x;
 			wysum += wt * y;
 			wtsum += wt;
 		    }
 		    vtot += v;
 		    nv += n;
+		    if (rbf_colorimetry == RBCtristimulus) {
+			CIEXtot += spec_grid[0][x][y];
+			CIEZtot += spec_grid[1][x][y];
+		    }
 		}
 	if (!nv) {
 		fprintf(stderr, "%s: internal - missing samples in create_lobe\n",
@@ -198,6 +260,14 @@ create_lobe(RBFVAL *rvp, int x0, int x1, int y0, int y1)
 	}
 	if (vtot <= 0)			/* only create positive lobes */
 		return(0);
+					/* assign color */
+	if (rbf_colorimetry == RBCtristimulus) {
+		const double	df = 1.0 / (CIEXtot + vtot + CIEZtot);
+		C_COLOR		cclr;
+		c_cset(&cclr, CIEXtot*df, vtot*df);
+		rvp->chroma = c_encodeChroma(&cclr);
+	} else
+		rvp->chroma = c_dfchroma;
 					/* peak value based on integral */
 	vtot *= (x1-x0)*(y1-y0)*(2.*M_PI/GRIDRES/GRIDRES)/(double)nv;
 	rad = (RSCA/(double)GRIDRES)*(x1-x0);
