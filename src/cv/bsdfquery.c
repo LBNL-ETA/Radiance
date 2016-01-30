@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.5 2016/01/20 19:43:34 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.6 2016/01/30 17:34:17 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -55,6 +55,7 @@ readIOdir(FVECT idir, FVECT odir, FILE *fp, int fmt)
 int
 main(int argc, char *argv[])
 {
+	int	repXYZ = 0;
 	int	inpXML = -1;
 	int	inpfmt = 'a';
 	int	outfmt = 'a';
@@ -65,11 +66,21 @@ main(int argc, char *argv[])
 	int	n;
 						/* check arguments */
 	progname = argv[0];
-	if (argc > 2 && argv[1][0] == '-' && argv[1][1] == 'f' &&
-			argv[1][2] && strchr("afd", argv[1][2]) != NULL) {
-		inpfmt = outfmt = argv[1][2];
-		if (argv[1][3] && strchr("afd", argv[1][3]) != NULL)
-			outfmt = argv[1][3];
+	while (argc > 2 && argv[1][0] == '-') {
+		switch (argv[1][1]) {
+		case 'c':			/* color output */
+			repXYZ = 1;
+			break;
+		case 'f':			/* i/o format */
+			if (!argv[1][2] || strchr("afd", argv[1][2]) == NULL)
+				goto userr;
+			inpfmt = outfmt = argv[1][2];
+			if (argv[1][3] && strchr("afd", argv[1][3]) != NULL)
+				outfmt = argv[1][3];
+			break;
+		default:
+			goto userr;
+		}
 		++argv; --argc;
 	}
 	if (argc > 1 && (n = strlen(argv[1])-4) > 0) {
@@ -78,10 +89,8 @@ main(int argc, char *argv[])
 		else if (!strcasecmp(argv[1]+n, ".sir"))
 			inpXML = 0;
 	}
-	if ((argc != 2) | (inpXML < 0)) {
-		fprintf(stderr, "Usage: %s [-fio] bsdf.{sir|xml}\n", progname);
-		return(1);
-	}
+	if ((argc != 2) | (inpXML < 0))
+		goto userr;
 						/* load BSDF representation */
 	if (inpXML) {
 		SDclearBSDF(&myBSDF, argv[1]);
@@ -100,14 +109,11 @@ main(int argc, char *argv[])
 	}
 						/* query BSDF values */
 	while (readIOdir(idir, odir, stdin, inpfmt)) {
-		double	bsdf;
-		float	fval;
+		SDValue	sval;
 		if (inpXML) {
-			SDValue	sval;
 			if (SDreportError(SDevalBSDF(&sval, odir,
 						idir, &myBSDF), stderr))
 				return(1);
-			bsdf = sval.cieY;
 		} else {
 			int32	inpDir = encodedir(idir);
 			if (inpDir != prevInpDir) {
@@ -125,20 +131,51 @@ main(int argc, char *argv[])
 						progname);
 				return(1);
 			}
-			bsdf = eval_rbfrep(rbf, odir);
+			if (SDreportError(eval_rbfcol(&sval, rbf, odir), stderr))
+				return(1);
 		}
+		if (repXYZ)			/* ensure we have CIE (x,y) */
+			c_ccvt(&sval.spec, C_CSXY);
+
 		switch (outfmt) {		/* write to stdout */
 		case 'a':
-			printf("%.6e\n", bsdf);
+			if (repXYZ) {
+				double	cieX = sval.spec.cx/sval.spec.cy*sval.cieY;
+				double	cieZ = (1. - sval.spec.cx - sval.spec.cy) /
+						sval.spec.cy * sval.cieY;
+				printf("%.6e %.6e %.6e\n", cieX, sval.cieY, cieZ);
+			} else
+				printf("%.6e\n", sval.cieY);
 			break;
 		case 'd':
-			fwrite(&bsdf, sizeof(double), 1, stdout);
+			if (repXYZ) {
+				double	cieXYZ[3];
+				cieXYZ[0] = sval.spec.cx/sval.spec.cy*sval.cieY;
+				cieXYZ[1] = sval.cieY;
+				cieXYZ[2] = (1. - sval.spec.cx - sval.spec.cy) /
+						sval.spec.cy * sval.cieY;
+				fwrite(cieXYZ, sizeof(double), 3, stdout);
+			} else
+				fwrite(&sval.cieY, sizeof(double), 1, stdout);
 			break;
 		case 'f':
-			fval = bsdf;
-			fwrite(&fval, sizeof(float), 1, stdout);
+			if (repXYZ) {
+				float	cieXYZ[3];
+				cieXYZ[0] = sval.spec.cx/sval.spec.cy*sval.cieY;
+				cieXYZ[1] = sval.cieY;
+				cieXYZ[2] = (1. - sval.spec.cx - sval.spec.cy) /
+						sval.spec.cy * sval.cieY;
+				fwrite(cieXYZ, sizeof(float), 3, stdout);
+			} else {
+				float	cieY = sval.cieY;
+				fwrite(&cieY, sizeof(float), 1, stdout);
+			}
 			break;
 		}
 	}
+	/* if (rbf != NULL) free(rbf); */
 	return(0);
+userr:
+	fprintf(stderr, "Usage: %s [-c][-fio] bsdf.{sir|xml}\n", progname);
+	return(1);
 }
