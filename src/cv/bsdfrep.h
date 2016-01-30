@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdfrep.h,v 2.23 2016/01/29 16:21:56 greg Exp $ */
+/* RCSid $Id: bsdfrep.h,v 2.24 2016/01/30 01:31:57 greg Exp $ */
 /*
  * Definitions for BSDF representation used to interpolate measured data.
  *
@@ -101,7 +101,7 @@ extern unsigned long	bsdf_hist[HISTLEN];
 
 				/* BSDF value for boundary regions */
 extern double		bsdf_min;
-extern double		bsdf_spec_peak;
+extern double		bsdf_spec_val;
 extern double		bsdf_spec_rad;
 
 				/* processed incident DSF measurements */
