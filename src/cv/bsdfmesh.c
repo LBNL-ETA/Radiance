@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.35 2016/01/30 01:31:57 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.36 2016/01/30 17:34:00 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -106,7 +106,7 @@ dbl_cmp(const void *p1, const void *p2)
 	return(0);
 }
 
-/* Compute average BSDF peak from current DSF's */
+/* Conservative estimate of average BSDF value from current DSF's */
 static void
 comp_bsdf_spec(void)
 {
@@ -117,7 +117,7 @@ comp_bsdf_spec(void)
 	double		max_cost = 1.;
 	RBFNODE		*rbf;
 	FVECT		sdv;
-						/* grazing 25th percentile */
+						/* sort by incident altitude */
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
 		n++;
 	if (n >= 10)
@@ -131,7 +131,7 @@ comp_bsdf_spec(void)
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next)
 		cost_list[n++] = rbf->invec[2]*input_orient;
 	qsort(cost_list, n, sizeof(double), dbl_cmp);
-	max_cost = cost_list[(n+3)/4];
+	max_cost = cost_list[(n+3)/4];		/* accept 25% nearest grazing */
 	free(cost_list);
 	n = 0;
 	for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
@@ -141,13 +141,13 @@ comp_bsdf_spec(void)
 		sdv[0] = -rbf->invec[0];
 		sdv[1] = -rbf->invec[1];
 		sdv[2] = rbf->invec[2]*(2*(input_orient==output_orient) - 1);
-		this_rad = est_DSFrad(rbf, sdv);
 		cosfact = COSF(sdv[2]);
+		this_rad = est_DSFrad(rbf, sdv);
 		vest = eval_rbfrep(rbf, sdv) * cosfact *
-				(2*M_PI) * this_rad*this_rad;
-		if (vest > rbf->vtotal)
+				(2.*M_PI) * this_rad*this_rad;
+		if (vest > rbf->vtotal)		/* don't over-estimate energy */
 			vest = rbf->vtotal;
-		vmod_sum += vest / cosfact;
+		vmod_sum += vest / cosfact;	/* remove cosine factor */
 		rad_sum += this_rad;
 		++n;
 	}
