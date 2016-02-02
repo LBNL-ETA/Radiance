@@ -1,8 +1,9 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.28 2016/01/29 16:21:56 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.29 2016/02/02 00:42:11 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
+ * Assumes that surface-normal (Z-axis) faces into room unless -t option given.
  *
  *	G. Ward
  */
@@ -31,6 +32,8 @@ typedef struct {
 
 PGINPUT		*inpfile;	/* input files sorted by incidence */
 int		ninpfiles;	/* number of input files */
+
+int		rev_orient = 0;	/* shall we reverse surface orientation? */
 
 /* Compare incident angles */
 static int
@@ -114,6 +117,10 @@ init_pabopto_inp(const int i, const char *fname)
 		fputs(": unknown incident angle\n", stderr);
 		return(0);
 	}
+	if (rev_orient) {	/* reverse Z-axis to face outside */
+		inpfile[i].theta = 180. - inpfile[i].theta;
+		inpfile[i].phi = 360. - inpfile[i].phi;
+	}
 				/* convert to Y-up orientation */
 	inpfile[i].phi += 90.-inpfile[i].up_phi;
 				/* convert angle to grid position */
@@ -162,6 +169,10 @@ add_pabopto_inp(const int i)
 				fclose(fp);
 				return(1);
 			}
+		if (rev_orient) {	/* reverse Z-axis to face outside */
+			theta_out = 180. - theta_out;
+			phi_out = 360. - phi_out;
+		}
 		add_bsdf_data(theta_out, phi_out+90.-inpfile[i].up_phi,
 				val, inpfile[i].isDSF);
 	}
@@ -191,13 +202,17 @@ main(int argc, char *argv[])
 	progname = argv[0];			/* get options */
 	while (argc > 2 && argv[1][0] == '-') {
 		switch (argv[1][1]) {
+		case 't':
+			rev_orient = !rev_orient;
+			break;
 		case 'n':
 			nprocs = atoi(argv[2]);
+			argv++; argc--;
 			break;
 		default:
 			goto userr;
 		}
-		argv += 2; argc -= 2;
+		argv++; argc--;
 	}
 						/* initialize & sort inputs */
 	ninpfiles = argc - 1;
@@ -219,7 +234,7 @@ main(int argc, char *argv[])
 	save_bsdf_rep(stdout);			/* write it out */
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-n nproc] meas1.dat meas2.dat .. > bsdf.sir\n",
+	fprintf(stderr, "Usage: %s [-t][-n nproc] meas1.dat meas2.dat .. > bsdf.sir\n",
 					progname);
 	return(1);
 }
