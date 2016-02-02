@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.33 2016/02/02 01:43:24 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.34 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.33 2016/02/02 01:43:24 greg Exp
 #include <stdlib.h>
 #include "rtio.h"
 #include "rtmath.h"
-#include "rtprocess.h"
+#include "paths.h"
 #include "bsdf.h"
 #include "bsdf_m.h"
 #include "random.h"
@@ -21,15 +21,6 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.33 2016/02/02 01:43:24 greg Exp
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
 #undef getc
 #define getc    getc_unlocked
-#endif
-
-#ifdef _WIN32
-#define	SPECIALS	" \t\"$*?"
-#define QUOTCHAR	'"'
-#else
-#define SPECIALS	" \t\n'\"()${}*?[];|&"
-#define QUOTCHAR	'\''
-#define ALTQUOT		'"'
 #endif
 
 #define MAXRCARG	512
@@ -142,20 +133,6 @@ surf_type(const char *otype)
 	return(ST_NONE);
 }
 
-/* Check if any of the characters in str2 are found in str1 */
-static int
-matchany(const char *str1, const char *str2)
-{
-	while (*str1) {
-		const char	*cp = str2;
-		while (*cp)
-			if (*cp++ == *str1)
-				return(*str1);
-		++str1;
-	}
-	return(0);
-}
-
 /* Add arguments to oconv command */
 static char *
 oconv_command(int ac, char *av[])
@@ -190,39 +167,6 @@ overrun:
 	fputs(progname, stderr);
 	fputs(": too many file arguments!\n", stderr);
 	exit(1);
-}
-
-/* Convert a set of arguments into a command line for pipe() or system() */
-static char *
-convert_commandline(char *cmd, const int len, char *av[])
-{
-	int	match;
-	char	*cp;
-
-	for (cp = cmd; *av != NULL; av++) {
-		const int	n = strlen(*av);
-		if (cp+n >= cmd+(len-3))
-			return(NULL);
-		if (matchany(*av, SPECIALS)) {
-			const int	quote =
-#ifdef ALTQUOT
-				strchr(*av, QUOTCHAR) ? ALTQUOT :
-#endif
-					QUOTCHAR;
-			*cp++ = quote;
-			strcpy(cp, *av);
-			cp += n;
-			*cp++ = quote;
-		} else {
-			strcpy(cp, *av);
-			cp += n;
-		}
-		*cp++ = ' ';
-	}
-	if (cp <= cmd)
-		return(NULL);
-	*--cp = '\0';
-	return(cmd);
 }
 
 /* Open a pipe to/from a command given as an argument list */

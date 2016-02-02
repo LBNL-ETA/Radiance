@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.30 2011/06/28 21:11:04 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.31 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -16,7 +16,7 @@ static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.30 2011/06/28 21:11:04 greg Ex
 #include	<time.h>
 
 #ifdef PCOND
-#include	"rtprocess.h"
+#include	"paths.h"
 #endif
 #include	"tmprivat.h"
 #include	"resolu.h"

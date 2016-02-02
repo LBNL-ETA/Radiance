@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readobj2.c,v 2.10 2004/09/28 23:55:02 greg Exp $";
+static const char	RCSid[] = "$Id: readobj2.c,v 2.11 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  *  readobj2.c - routines for reading in object descriptions.
@@ -9,7 +9,7 @@ static const char	RCSid[] = "$Id: readobj2.c,v 2.10 2004/09/28 23:55:02 greg Exp
 #include  <stdio.h>
 
 #include  "platform.h"
-#include  "rtprocess.h"
+#include  "paths.h"
 #include  "rtmath.h"
 #include  "rtio.h"
 #include  "rterror.h"

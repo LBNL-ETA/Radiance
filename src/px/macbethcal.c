@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.26 2013/05/14 22:45:38 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.27 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -15,7 +15,7 @@ static const char	RCSid[] = "$Id: macbethcal.c,v 2.26 2013/05/14 22:45:38 greg E
 #include <time.h>
 
 #include "platform.h"
-#include "rtprocess.h"
+#include "paths.h"
 #include "rtio.h"
 #include "color.h"
 #include "resolu.h"

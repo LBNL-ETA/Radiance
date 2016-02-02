@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.24 2012/06/29 23:09:06 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.25 2016/02/02 18:02:32 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -16,25 +16,36 @@
   #include <io.h>
   #include <direct.h> /* getcwd(), chdir(), _mkdir(), etc. */
 
-  #define access _access
-  #define mkdir(dirname,perms) _mkdir(dirname)
-  #define PATH_MAX _MAX_PATH
-  #define NULL_DEVICE	"NUL"
+  #define access		_access
+  #define mkdir(dirname,perms)	_mkdir(dirname)
+  #ifdef _MSC_VER
+    #define popen(cmd,mode)	_popen(cmd,mode)
+    #define pclose(p)		_pclose(p)
+  #else
+    #define popen(cmd,mode)	win_popen(cmd,mode)
+    #define pclose(p)		win_pclose(p)
+  #endif
+  #define kill(pid,sig)		win_kill(pid,sig)
+  #define nice(inc)		win_nice(inc)
+  #define PATH_			MAX _MAX_PATH
+  #define NULL_DEVICE		"NUL"
   #define DIRSEP		'/'
-  #define ISDIRSEP(c)	(((c)=='/') | ((c)=='\\'))
-  #define ISABS(s)	( ISDIRSEP((s)[0]) \
+  #define ISDIRSEP(c)		(((c)=='/') | ((c)=='\\'))
+  #define ISABS(s)		( ISDIRSEP((s)[0]) \
 		|| ( isupper((s)[0]) | islower((s)[0]) \
 			&& (s)[1]==':' && ISDIRSEP((s)[2]) ) )
-  #define CASEDIRSEP	case '/': case '\\'
+  #define CASEDIRSEP		case '/': case '\\'
   #define PATHSEP		';'
   #define CURDIR		'.'
-  #define DEFAULT_TEMPDIRS {"C:/TMP", "C:/TEMP", ".", NULL}
-  #define TEMPLATE	"rtXXXXXX"
+  #define DEFAULT_TEMPDIRS	{"C:/TMP", "C:/TEMP", ".", NULL}
+  #define TEMPLATE		"rtXXXXXX"
   #define TEMPLEN		8
   #define ULIBVAR		"RAYPATH"
   #ifndef DEFPATH
     #define DEFPATH		";c:/ray/lib"
   #endif
+  #define SPECIALS		" \t\"$*?|"
+  #define QUOTCHAR		'"'
   /* <io.h> only does half the work for access() */
   #ifndef F_OK
     #define  F_OK 00
@@ -48,14 +59,6 @@
   #ifndef S_IRUSR
     #define S_IRUSR _S_IREAD
     #define S_IWUSR _S_IWRITE
-  #endif
-
-  #ifdef __cplusplus
-    extern "C" {
-  #endif
-  extern char  *fixargv0();
-  #ifdef __cplusplus
-    }
   #endif
 
 #else /* everything but Windows */
@@ -77,8 +80,8 @@
     #define ISABS(s)		ISDIRSEP((s)[0])
     #define PATHSEP		';'
 	#define CURDIR		'.'
-    #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
-    #define TEMPLATE	"/tmp/rtXXXXXX"
+    #define DEFAULT_TEMPDIRS	{"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
+    #define TEMPLATE		"/tmp/rtXXXXXX"
     #define TEMPLEN		13
     #define ULIBVAR		"RAYPATH"
     #ifndef DEFPATH
@@ -96,13 +99,16 @@
     #define ISABS(s)		ISDIRSEP((s)[0])
     #define PATHSEP		':'
 	#define CURDIR		'.'
-    #define DEFAULT_TEMPDIRS {"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
-    #define TEMPLATE	"/tmp/rtXXXXXX"
+    #define DEFAULT_TEMPDIRS	{"/var/tmp", "/usr/tmp", "/tmp", ".", NULL}
+    #define TEMPLATE		"/tmp/rtXXXXXX"
     #define TEMPLEN		17
     #define ULIBVAR		"RAYPATH"
     #ifndef DEFPATH
       #define DEFPATH		":/usr/local/lib/ray"
     #endif
+    #define SPECIALS		" \t\n'\"()${}*?[];|&"
+    #define QUOTCHAR		'\''
+    #define ALTQUOT		'"'
     #define	 fixargv0(a0)	(a0)
 
   #endif
@@ -118,6 +124,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if _WIN32
+  extern FILE *win_popen(char *command, char *type);
+  extern int win_pclose(FILE *p);
+  extern int win_kill(RT_PID pid, int sig /* ignored */);
+  extern char  *fixargv0();
+#endif
+
+/* Check if any of the characters in str2 are found in str1 */
+extern int matchany(const char *str1, const char *str2);
+
+/* Convert a set of arguments into a command line for pipe() or system() */
+extern char *convert_commandline(char *cmd, const int len, char *av[]);
 
 /* Find a writeable directory for temporary files */
 /* If s is NULL, we return a static string */

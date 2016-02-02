@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.16 2015/05/29 07:45:48 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.17 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -9,7 +9,7 @@ static const char RCSid[] = "$Id: wrapBSDF.c,v 2.16 2015/05/29 07:45:48 greg Exp
 
 #include <ctype.h>
 #include "rtio.h"
-#include "rtprocess.h"
+#include "paths.h"
 #include "ezxml.h"
 #include "bsdf.h"
 #include "bsdf_m.h"

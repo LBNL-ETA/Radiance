@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.31 2016/01/29 16:21:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.32 2016/02/02 18:02:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -32,6 +32,7 @@ const double		ssamp_thresh = 0.35;
 static int		lobe_lim = 15000;
 				/* progress bar length */
 static int		do_prog = 79;
+
 
 
 /* Start new progress bar */
@@ -71,76 +72,6 @@ prog_done(void)
 	while (n--)
 		fputc(' ', stderr);
 	fputc('\r', stderr);
-}
-
-/* Output XML prologue to stdout */
-static void
-xml_prologue(int ac, char *av[])
-{
-	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-	puts("<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">");
-	fputs("<!-- File produced by:", stdout);
-	while (ac-- > 0) {
-		fputc(' ', stdout);
-		fputs(*av++, stdout);
-	}
-	puts(" -->");
-	puts("<WindowElementType>System</WindowElementType>");
-	puts("<FileType>BSDF</FileType>");
-	puts("<Optical>");
-	puts("<Layer>");
-	puts("\t<Material>");
-	printf("\t\t<Name>%s</Name>\n", bsdf_name[0] ? bsdf_name : "Unknown");
-	printf("\t\t<Manufacturer>%s</Manufacturer>\n",
-			bsdf_manuf[0] ? bsdf_manuf : "Unknown");
-	puts("\t\t<DeviceType>Other</DeviceType>");
-	puts("\t</Material>");
-	puts("\t<DataDefinition>");
-	printf("\t\t<IncidentDataStructure>TensorTree%c</IncidentDataStructure>\n",
-			single_plane_incident ? '3' : '4');
-	puts("\t</DataDefinition>");
-}
-
-/* Output XML data prologue to stdout */
-static void
-data_prologue()
-{
-	static const char	*bsdf_type[4] = {
-					"Reflection Front",
-					"Transmission Front",
-					"Transmission Back",
-					"Reflection Back"
-				};
-
-	puts("\t<WavelengthData>");
-	puts("\t\t<LayerNumber>System</LayerNumber>");
-	puts("\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>");
-	puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
-	puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
-	puts("\t\t<WavelengthDataBlock>");
-	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
-			bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
-	puts("\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>");
-	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
-	puts("\t\t\t<ScatteringData>");
-}
-
-/* Output XML data epilogue to stdout */
-static void
-data_epilogue(void)
-{
-	puts("\t\t\t</ScatteringData>");
-	puts("\t\t</WavelengthDataBlock>");
-	puts("\t</WavelengthData>");
-}
-
-/* Output XML epilogue to stdout */
-static void
-xml_epilogue(void)
-{
-	puts("</Layer>");
-	puts("</Optical>");
-	puts("</WindowElement>");
 }
 
 /* Compute absolute relative difference */
