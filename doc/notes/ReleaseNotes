@@ -2070,3 +2070,5 @@ Added ability to digest color (CIE-XYZ) input in pabopto2bsdf.
 This change alters the .sir (interpolant) format, so these files
 will need to be regenerated.  Use the new "#colorimetry: CIE-XYZ" tag
 to enable on input.
+
+Rewrote bsdf2klems to support tristimulus color and call wrapBSDF.

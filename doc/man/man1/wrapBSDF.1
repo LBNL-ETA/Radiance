@@ -1,4 +1,4 @@
-.\" RCSid $Id: wrapBSDF.1,v 1.4 2015/08/18 20:59:42 greg Exp $
+.\" RCSid $Id: wrapBSDF.1,v 1.5 2016/02/02 22:34:00 greg Exp $
 .TH WRAPBSDF 1 2/20/2015 RADIANCE
 .SH NAME
 wrapBSDF - put XML wrapper around WINDOW6 BSDF data
@@ -26,6 +26,8 @@ wrapBSDF - put XML wrapper around WINDOW6 BSDF data
 .B "\-rb inp"
 ][
 .B "\-rf inp"
+][
+.B \-U
 ][
 .B "\-C comm"
 ][
@@ -125,6 +127,14 @@ option may be used to specify a comment to be inserted near the
 head of the output.
 Up to 30 comment strings may be given, and they will appear one
 after the other in the prologue surrounded by the XML comment syntax.
+.PP
+The
+.I \-U
+option tells
+.I wrapBSDF
+to unlink (remove) input data files following successful completion.
+These files are often temporary, existing solely for the purposes
+of data transfer.
 .SH EXAMPLE
 Create an WINDOW6 BSDF from computed transmission matrix:
 .IP "" .2i

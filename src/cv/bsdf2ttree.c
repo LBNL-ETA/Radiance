@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.33 2016/02/02 18:08:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.34 2016/02/02 22:34:00 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -13,7 +13,8 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.33 2016/02/02 18:08:32 greg E
 #include <math.h>
 #include "random.h"
 #include "platform.h"
-#include "rtprocess.h"
+#include "paths.h"
+#include "rtio.h"
 #include "calcomp.h"
 #include "bsdfrep.h"
 				/* global argv[0] */
@@ -33,6 +34,42 @@ static int		lobe_lim = 15000;
 				/* progress bar length */
 static int		do_prog = 79;
 
+#define MAXCARG		512	/* wrapBSDF command */
+static char		*wrapBSDF[MAXCARG] = {"wrapBSDF", "-U"};
+static int		wbsdfac = 2;
+
+/* Add argument to wrapBSDF, allocating space if isstatic */
+static void
+add_wbsdf(const char *arg, int isstatic)
+{
+	if (arg == NULL)
+		return;
+	if (wbsdfac >= MAXCARG-1) {
+		fputs(progname, stderr);
+		fputs(": too many command arguments to wrapBSDF\n", stderr);
+		exit(1);
+	}
+	if (!*arg)
+		arg = "";
+	else if (!isstatic)
+		arg = savqstr((char *)arg);
+
+	wrapBSDF[wbsdfac++] = (char *)arg;
+}
+
+/* Create Yuv component file and add appropriate arguments */
+static char *
+create_component_file(int c)
+{
+	static const char	sname[3][6] = {"CIE-Y", "CIE-u", "CIE-v"};
+	static const char	cname[4][4] = {"-rf", "-tf", "-tb", "-rb"};
+	char			*tfname = mktemp(savqstr(TEMPLATE));
+
+	add_wbsdf("-s", 1); add_wbsdf(sname[c], 1);
+	add_wbsdf(cname[(input_orient>0)<<1 | (output_orient>0)], 1);
+	add_wbsdf(tfname, 1);
+	return(tfname);
+}
 
 /* Start new progress bar */
 #define prog_start(s)	if (do_prog) fprintf(stderr, "%s: %s...\n", progname, s); else
@@ -73,76 +110,6 @@ prog_done(void)
 	fputc('\r', stderr);
 }
 
-/* Output XML prologue to stdout */
-static void
-xml_prologue(int ac, char *av[])
-{
-	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-	puts("<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">");
-	fputs("<!-- File produced by:", stdout);
-	while (ac-- > 0) {
-		fputc(' ', stdout);
-		fputs(*av++, stdout);
-	}
-	puts(" -->");
-	puts("<WindowElementType>System</WindowElementType>");
-	puts("<FileType>BSDF</FileType>");
-	puts("<Optical>");
-	puts("<Layer>");
-	puts("\t<Material>");
-	printf("\t\t<Name>%s</Name>\n", bsdf_name[0] ? bsdf_name : "Unknown");
-	printf("\t\t<Manufacturer>%s</Manufacturer>\n",
-			bsdf_manuf[0] ? bsdf_manuf : "Unknown");
-	puts("\t\t<DeviceType>Other</DeviceType>");
-	puts("\t</Material>");
-	puts("\t<DataDefinition>");
-	printf("\t\t<IncidentDataStructure>TensorTree%c</IncidentDataStructure>\n",
-			single_plane_incident ? '3' : '4');
-	puts("\t</DataDefinition>");
-}
-
-/* Output XML data prologue to stdout */
-static void
-data_prologue()
-{
-	static const char	*bsdf_type[4] = {
-					"Reflection Front",
-					"Transmission Front",
-					"Transmission Back",
-					"Reflection Back"
-				};
-
-	puts("\t<WavelengthData>");
-	puts("\t\t<LayerNumber>System</LayerNumber>");
-	puts("\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>");
-	puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
-	puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
-	puts("\t\t<WavelengthDataBlock>");
-	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
-			bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
-	puts("\t\t\t<AngleBasis>LBNL/Shirley-Chiu</AngleBasis>");
-	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
-	puts("\t\t\t<ScatteringData>");
-}
-
-/* Output XML data epilogue to stdout */
-static void
-data_epilogue(void)
-{
-	puts("\t\t\t</ScatteringData>");
-	puts("\t\t</WavelengthDataBlock>");
-	puts("\t</WavelengthData>");
-}
-
-/* Output XML epilogue to stdout */
-static void
-xml_epilogue(void)
-{
-	puts("</Layer>");
-	puts("</Optical>");
-	puts("</WindowElement>");
-}
-
 /* Compute absolute relative difference */
 static double
 abs_diff(double v1, double v0)
@@ -160,18 +127,16 @@ static void
 eval_isotropic(char *funame)
 {
 	const int	sqres = 1<<samp_order;
-	FILE		*ofp = NULL;
+	FILE		*ofp, *uvfp[2];
 	int		assignD = 0;
 	char		cmd[128];
 	int		ix, ox, oy;
 	double		iovec[6];
-	float		bsdf;
+	float		bsdf, uv[2];
 
-	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
-		sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d",
-				pctcull, samp_order);
-		fflush(stdout);
+		sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
+				pctcull, samp_order, create_component_file(0));
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
 			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
@@ -182,8 +147,44 @@ eval_isotropic(char *funame)
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 		flockfile(ofp);
 #endif
-	} else
-		fputs("{\n", stdout);
+		if (rbf_colorimetry == RBCtristimulus) {
+			double	uvcull = 100. - (100.-pctcull)*.25;
+			sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
+					uvcull, samp_order, create_component_file(1));
+			uvfp[0] = popen(cmd, "w");
+			sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
+					uvcull, samp_order, create_component_file(2));
+			uvfp[1] = popen(cmd, "w");
+			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
+				fprintf(stderr, "%s: cannot open pipes to uv output\n",
+						progname);
+				exit(1);
+			}
+			SET_FILE_BINARY(uvfp[0]); SET_FILE_BINARY(uvfp[1]);
+#ifdef getc_unlocked
+			flockfile(uvfp[0]); flockfile(uvfp[1]);
+#endif
+		}
+	} else {
+		ofp = fopen(create_component_file(0), "w");
+		if (ofp == NULL) {
+			fprintf(stderr, "%s: cannot create Y output file\n",
+					progname);
+			exit(1);
+		}
+		fputs("{\n", ofp);
+		if (rbf_colorimetry == RBCtristimulus) {
+			uvfp[0] = fopen(create_component_file(1), "w");
+			uvfp[1] = fopen(create_component_file(2), "w");
+			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
+				fprintf(stderr, "%s: cannot create uv output file(s)\n",
+						progname);
+				exit(1);
+			}
+			fputs("{\n", uvfp[0]);
+			fputs("{\n", uvfp[1]);
+		}
+	}
 						/* need to assign Dx, Dy, Dz? */
 	if (funame != NULL)
 		assignD = (fundefined(funame) < 6);
@@ -201,9 +202,18 @@ eval_isotropic(char *funame)
 			SDsquare2disk(iovec+3, (ox+.5)/sqres, (oy+.5)/sqres);
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
-			if (funame == NULL)
-			    bsdf = eval_rbfrep(rbf, iovec+3);
-			else {
+			if (funame == NULL) {
+			    SDValue	sdv;
+			    eval_rbfcol(&sdv, rbf, iovec+3);
+			    bsdf = sdv.cieY;
+			    if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				uv[0] = uv[1] = 1. /
+				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
+				uv[0] *= 4.*sdv.spec.cx;
+				uv[1] *= 9.*sdv.spec.cy;
+			    }
+			} else {
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);
 				varset("Dy", '=', -iovec[4]);
@@ -243,7 +253,17 @@ eval_isotropic(char *funame)
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
-				printf("\t%.3e\n", bsdf);
+				fprintf(ofp, "\t%.3e\n", bsdf);
+
+			if (rbf_colorimetry == RBCtristimulus) {
+				if (pctcull >= 0) {
+					fwrite(&uv[0], sizeof(*uv), 1, uvfp[0]);
+					fwrite(&uv[1], sizeof(*uv), 1, uvfp[1]);
+				} else {
+					fprintf(uvfp[0], "\t%.3e\n", uv[0]);
+					fprintf(uvfp[1], "\t%.3e\n", uv[1]);
+				}
+			}
 			last_bsdf = bsdf;
 		    }
 		}
@@ -253,16 +273,39 @@ eval_isotropic(char *funame)
 	}
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
-			fprintf(stderr, "%s: error running '%s'\n",
-					progname, cmd);
+			fprintf(stderr, "%s: error running rttree_reduce on Y\n",
+					progname);
+			exit(1);
+		}
+		if (rbf_colorimetry == RBCtristimulus &&
+				(pclose(uvfp[0]) || pclose(uvfp[1]))) {
+			fprintf(stderr, "%s: error running rttree_reduce on uv\n",
+					progname);
 			exit(1);
 		}
 	} else {
 		for (ix = sqres*sqres*sqres/2; ix--; )
-			fputs("\t0\n", stdout);
-		fputs("}\n", stdout);
+			fputs("\t0\n", ofp);
+		fputs("}\n", ofp);
+		if (fclose(ofp)) {
+			fprintf(stderr, "%s: error writing Y file\n",
+					progname);
+			exit(1);
+		}
+		if (rbf_colorimetry == RBCtristimulus) {
+			for (ix = sqres*sqres*sqres/2; ix--; ) {
+				fputs("\t0\n", uvfp[0]);
+				fputs("\t0\n", uvfp[1]);
+			}
+			fputs("}\n", uvfp[0]);
+			fputs("}\n", uvfp[1]);
+			if (fclose(uvfp[0]) || fclose(uvfp[1])) {
+				fprintf(stderr, "%s: error writing uv file(s)\n",
+						progname);
+				exit(1);
+			}
+		}
 	}
-	data_epilogue();
 	prog_done();
 }
 
@@ -271,19 +314,17 @@ static void
 eval_anisotropic(char *funame)
 {
 	const int	sqres = 1<<samp_order;
-	FILE		*ofp = NULL;
+	FILE		*ofp, *uvfp[2];
 	int		assignD = 0;
 	char		cmd[128];
 	int		ix, iy, ox, oy;
 	double		iovec[6];
-	float		bsdf;
+	float		bsdf, uv[2];
 
-	data_prologue();			/* begin output */
 	if (pctcull >= 0) {
-		sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d",
+		sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
 				(input_orient>0 ^ output_orient>0) ? "" : " -a",
-				pctcull, samp_order);
-		fflush(stdout);
+				pctcull, samp_order, create_component_file(0));
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
 			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
@@ -294,8 +335,46 @@ eval_anisotropic(char *funame)
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 		flockfile(ofp);
 #endif
-	} else
-		fputs("{\n", stdout);
+		if (rbf_colorimetry == RBCtristimulus) {
+			double	uvcull = 100. - (100.-pctcull)*.25;
+			sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
+					(input_orient>0 ^ output_orient>0) ? "" : " -a",
+					uvcull, samp_order, create_component_file(1));
+			uvfp[0] = popen(cmd, "w");
+			sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
+					(input_orient>0 ^ output_orient>0) ? "" : " -a",
+					uvcull, samp_order, create_component_file(2));
+			uvfp[1] = popen(cmd, "w");
+			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
+				fprintf(stderr, "%s: cannot open pipes to uv output\n",
+						progname);
+				exit(1);
+			}
+			SET_FILE_BINARY(uvfp[0]); SET_FILE_BINARY(uvfp[1]);
+#ifdef getc_unlocked
+			flockfile(uvfp[0]); flockfile(uvfp[1]);
+#endif
+		}
+	} else {
+		ofp = fopen(create_component_file(0), "w");
+		if (ofp == NULL) {
+			fprintf(stderr, "%s: cannot create Y output file\n",
+					progname);
+			exit(1);
+		}
+		fputs("{\n", ofp);
+		if (rbf_colorimetry == RBCtristimulus) {
+			uvfp[0] = fopen(create_component_file(1), "w");
+			uvfp[1] = fopen(create_component_file(2), "w");
+			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
+				fprintf(stderr, "%s: cannot create uv output file(s)\n",
+						progname);
+				exit(1);
+			}
+			fputs("{\n", uvfp[0]);
+			fputs("{\n", uvfp[1]);
+		}
+	}
 						/* need to assign Dx, Dy, Dz? */
 	if (funame != NULL)
 		assignD = (fundefined(funame) < 6);
@@ -314,9 +393,18 @@ eval_anisotropic(char *funame)
 			SDsquare2disk(iovec+3, (ox+.5)/sqres, (oy+.5)/sqres);
 			iovec[5] = output_orient *
 				sqrt(1. - iovec[3]*iovec[3] - iovec[4]*iovec[4]);
-			if (funame == NULL)
-			    bsdf = eval_rbfrep(rbf, iovec+3);
-			else {
+			if (funame == NULL) {
+			    SDValue	sdv;
+			    eval_rbfcol(&sdv, rbf, iovec+3);
+			    bsdf = sdv.cieY;
+			    if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				uv[0] = uv[1] = 1. /
+				    (-2.*sdv.spec.cx + 12.*sdv.spec.cy + 3.);
+				uv[0] *= 4.*sdv.spec.cx;
+				uv[1] *= 9.*sdv.spec.cy;
+			    }
+			} else {
 			    if (assignD) {
 				varset("Dx", '=', -iovec[3]);
 				varset("Dy", '=', -iovec[4]);
@@ -357,7 +445,17 @@ eval_anisotropic(char *funame)
 			if (pctcull >= 0)
 				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
 			else
-				printf("\t%.3e\n", bsdf);
+				fprintf(ofp, "\t%.3e\n", bsdf);
+
+			if (rbf_colorimetry == RBCtristimulus) {
+				if (pctcull >= 0) {
+					fwrite(&uv[0], sizeof(*uv), 1, uvfp[0]);
+					fwrite(&uv[1], sizeof(*uv), 1, uvfp[1]);
+				} else {
+					fprintf(uvfp[0], "\t%.3e\n", uv[0]);
+					fprintf(uvfp[1], "\t%.3e\n", uv[1]);
+				}
+			}
 			last_bsdf = bsdf;
 		    }
 		}
@@ -367,21 +465,99 @@ eval_anisotropic(char *funame)
 	    }
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
-			fprintf(stderr, "%s: error running '%s'\n",
-					progname, cmd);
+			fprintf(stderr, "%s: error running rttree_reduce on Y\n",
+					progname);
 			exit(1);
 		}
-	} else
-		fputs("}\n", stdout);
-	data_epilogue();
+		if (rbf_colorimetry == RBCtristimulus &&
+				(pclose(uvfp[0]) || pclose(uvfp[1]))) {
+			fprintf(stderr, "%s: error running rttree_reduce on uv\n",
+					progname);
+			exit(1);
+		}
+	} else {
+		fputs("}\n", ofp);
+		if (fclose(ofp)) {
+			fprintf(stderr, "%s: error writing Y file\n",
+					progname);
+			exit(1);
+		}
+		if (rbf_colorimetry == RBCtristimulus) {
+			fputs("}\n", uvfp[0]);
+			fputs("}\n", uvfp[1]);
+			if (fclose(uvfp[0]) || fclose(uvfp[1])) {
+				fprintf(stderr, "%s: error writing uv file(s)\n",
+						progname);
+				exit(1);
+			}
+		}
+	}
 	prog_done();
 }
+
+#ifdef _WIN32
+/* Execute wrapBSDF command (may never return) */
+static int
+wrap_up(void)
+{
+	char	cmd[8192];
+
+	if (bsdf_manuf[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(cmd, "m=");
+		strcpy(cmd+2, bsdf_manuf);
+		add_wbsdf(cmd, 0);
+	}
+	if (bsdf_name[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(cmd, "n=");
+		strcpy(cmd+2, bsdf_name);
+		add_wbsdf(cmd, 0);
+	}
+	if (!convert_commandline(cmd, sizeof(cmd), wrapBSDF)) {
+		fputs(progname, stderr);
+		fputs(": command line too long in wrap_up()\n", stderr);
+		return(1);
+	}
+	return(system(cmd));
+}
+#else
+/* Execute wrapBSDF command (may never return) */
+static int
+wrap_up(void)
+{
+	char	buf[256];
+	char	*compath = getpath((char *)wrapBSDF[0], getenv("PATH"), X_OK);
+
+	if (compath == NULL) {
+		fprintf(stderr, "%s: cannot locate %s\n", progname, wrapBSDF[0]);
+		return(1);
+	}
+	if (bsdf_manuf[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(buf, "m=");
+		strcpy(buf+2, bsdf_manuf);
+		add_wbsdf(buf, 0);
+	}
+	if (bsdf_name[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(buf, "n=");
+		strcpy(buf+2, bsdf_name);
+		add_wbsdf(buf, 0);
+	}
+	execv(compath, wrapBSDF);	/* successful call never returns */
+	perror(compath);
+	return(1);
+}
+#endif
 
 /* Read in BSDF and interpolate as tensor tree representation */
 int
 main(int argc, char *argv[])
 {
+	static char	tfmt[2][4] = {"t4", "t3"};
 	int	dofwd = 0, dobwd = 1;
+	char	buf[2048];
 	int	i, na;
 
 	progname = argv[0];
@@ -395,9 +571,13 @@ main(int argc, char *argv[])
 			scompile(argv[++i], NULL, 0);
 			break;
 		case 'f':
-			if (!argv[i][2])
-				fcompile(argv[++i]);
-			else
+			if (!argv[i][2]) {
+				if (strchr(argv[++i], '=') != NULL) {
+					add_wbsdf("-f", 1);
+					add_wbsdf(argv[i], 1);
+				} else
+					fcompile(argv[i]);
+			} else
 				dofwd = (argv[i][0] == '+');
 			break;
 		case 'b':
@@ -427,12 +607,24 @@ main(int argc, char *argv[])
 		case 'p':
 			do_prog = atoi(argv[i]+2);
 			break;
+		case 'W':
+			add_wbsdf(argv[i], 1);
+			break;
+		case 'u':
+		case 'C':
+			add_wbsdf(argv[i], 1);
+			add_wbsdf(argv[++i], 1);
+			break;
 		default:
 			goto userr;
 		}
+	strcpy(buf, "File produced by: ");
+	if (convert_commandline(buf+18, sizeof(buf)-18, argv) != NULL) {
+		add_wbsdf("-C", 1); add_wbsdf(buf, 0);
+	}
 	if (single_plane_incident >= 0) {	/* function-based BSDF? */
 		void	(*evf)(char *s) = single_plane_incident ?
-				&eval_isotropic : &eval_anisotropic;
+				eval_isotropic : eval_anisotropic;
 		if (i != argc-1 || fundefined(argv[i]) < 3) {
 			fprintf(stderr,
 	"%s: need single function with 6 arguments: bsdf(ix,iy,iz,ox,oy,oz)\n",
@@ -441,7 +633,8 @@ main(int argc, char *argv[])
 			goto userr;
 		}
 		++eclock;
-		xml_prologue(argc, argv);	/* start XML output */
+		add_wbsdf("-a", 1);
+		add_wbsdf(tfmt[single_plane_incident], 1);
 		if (dofwd) {
 			input_orient = -1;
 			output_orient = -1;
@@ -460,8 +653,7 @@ main(int argc, char *argv[])
 			prog_start("Evaluating inside->outside transmission");
 			(*evf)(argv[i]);
 		}
-		xml_epilogue();			/* finish XML output & exit */
-		return(0);
+		return(wrap_up());
 	}
 	if (i < argc) {				/* open input files if given */
 		int	nbsdf = 0;
@@ -476,29 +668,31 @@ main(int argc, char *argv[])
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
-			if (!nbsdf++)		/* start XML on first dist. */
-				xml_prologue(argc, argv);
 			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
 			prog_start(pbuf);
+			if (!nbsdf++) {
+				add_wbsdf("-a", 1);
+				add_wbsdf(tfmt[single_plane_incident], 1);
+			}
 			if (single_plane_incident)
 				eval_isotropic(NULL);
 			else
 				eval_anisotropic(NULL);
 		}
-		xml_epilogue();			/* finish XML output & exit */
-		return(0);
+		return(wrap_up());
 	}
 	SET_FILE_BINARY(stdin);			/* load from stdin */
 	if (!load_bsdf_rep(stdin))
 		return(1);
-	xml_prologue(argc, argv);		/* start XML output */
 	prog_start("Interpolating from standard input");
+	add_wbsdf("-a", 1);
+	add_wbsdf(tfmt[single_plane_incident], 1);
 	if (single_plane_incident)		/* resample dist. */
 		eval_isotropic(NULL);
 	else
 		eval_anisotropic(NULL);
-	xml_epilogue();				/* finish XML output & exit */
-	return(0);
+
+	return(wrap_up());
 userr:
 	fprintf(stderr,
 	"Usage: %s [-g Nlog2][-t pctcull][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
