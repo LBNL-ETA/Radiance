@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: cvtcmd.c,v 3.2 2016/02/02 18:05:31 greg Exp $";
+#endif
 /*
  *  Convert a set of arguments into a command line for pipe() or system()
  *
