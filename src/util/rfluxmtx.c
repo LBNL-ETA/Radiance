@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.32 2015/12/04 22:16:18 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.33 2016/02/02 01:43:24 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -201,10 +201,8 @@ convert_commandline(char *cmd, const int len, char *av[])
 
 	for (cp = cmd; *av != NULL; av++) {
 		const int	n = strlen(*av);
-		if (cp+n >= cmd+(len-3)) {
-			fputs(progname, stderr);
+		if (cp+n >= cmd+(len-3))
 			return(NULL);
-		}
 		if (matchany(*av, SPECIALS)) {
 			const int	quote =
 #ifdef ALTQUOT
