@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.4 2015/06/26 22:07:53 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.5 2016/02/03 18:33:18 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -20,8 +20,8 @@ Usage(const char *prog)
 {
 	printf("Usage: %s [bsdf_directory]\n", prog);
 	printf("Input commands:\n");
-	printf("  l bsdf.xml\t\t\t Load (make active) given BSDF input file\n");
-	printf("  q theta_i phi_i theta_o phi_o\t Query BSDF for given path\n");
+	printf("  L bsdf.xml\t\t\t Load (make active) given BSDF input file\n");
+	printf("  q theta_i phi_i theta_o phi_o\t Query BSDF for given path (CIE-XYZ)\n");
 	printf("  s N theta phi\t\t\t Generate N ray directions at given incidence\n");
 	printf("  h theta phi\t\t\t Report hemispherical total at given incidence\n");
 	printf("  r theta phi\t\t\t Report hemispherical reflection at given incidence\n");
@@ -92,8 +92,14 @@ main(int argc, char *argv[])
 				break;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			vec_from_deg(vout, atof(sskip2(cp,3)), atof(sskip2(cp,4)));
-			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr))
-				printf("%.3e\n", val.cieY);
+			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr)) {
+				c_ccvt(&val.spec, C_CSXY);
+				printf("%.3e %.3e %.3e\n",
+						val.spec.cx/val.spec.cy*val.cieY,
+						val.cieY,
+						(1.-val.spec.cx-val.spec.cy)/
+						val.spec.cy*val.cieY);
+			}
 			continue;
 		case 'S':			/* sample BSDF */
 			if (bsdf == NULL)
@@ -144,7 +150,7 @@ main(int argc, char *argv[])
 		Usage(argv[0]);
 		continue;
 noBSDFerr:
-		fprintf(stderr, "%s: need to use 'l' command to load BSDF\n", argv[0]);
+		fprintf(stderr, "%s: need to use 'L' command to load BSDF\n", argv[0]);
 	}
 	return 0;
 }

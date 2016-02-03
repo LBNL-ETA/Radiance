@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.74 2016/02/02 18:02:32 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.75 2016/02/03 18:33:18 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -86,6 +86,9 @@ getlibpath.o:	getlibpath.c
 
 tmapcolrs.o:	tmapcolrs.c
 	$(CC) $(CFLAGS) -DPCOND=\"pcond\" -c tmapcolrs.c
+
+testBSDF:	testBSDF.c bsdf.h rtio.h
+	$(CC) -L../lib $(CFLAGS) -o testBSDF testBSDF.c -lrtrad -lm
 
 color.o colrops.o lamps.o spec_rgb.o:	color.h
 
