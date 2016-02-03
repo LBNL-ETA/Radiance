@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.13 2016/02/02 18:02:32 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.14 2016/02/03 22:41:35 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -65,6 +65,7 @@ extern int writebuf(int fd, char *bpos, int siz);
 
 #ifdef _WIN32
 /* any non-negative increment will send the process to IDLE_PRIORITY_CLASS. */
+extern int win_kill(RT_PID pid, int sig /* ignored */);
 extern int win_nice(int inc);
 #endif
 

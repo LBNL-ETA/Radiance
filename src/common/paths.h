@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.25 2016/02/02 18:02:32 greg Exp $ */
+/* RCSid $Id: paths.h,v 2.26 2016/02/03 22:41:35 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -27,7 +27,7 @@
   #endif
   #define kill(pid,sig)		win_kill(pid,sig)
   #define nice(inc)		win_nice(inc)
-  #define PATH_			MAX _MAX_PATH
+  #define PATH_MAX		_MAX_PATH
   #define NULL_DEVICE		"NUL"
   #define DIRSEP		'/'
   #define ISDIRSEP(c)		(((c)=='/') | ((c)=='\\'))
@@ -128,7 +128,6 @@ extern "C" {
 #if _WIN32
   extern FILE *win_popen(char *command, char *type);
   extern int win_pclose(FILE *p);
-  extern int win_kill(RT_PID pid, int sig /* ignored */);
   extern char  *fixargv0();
 #endif
 
