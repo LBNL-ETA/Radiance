@@ -2072,3 +2072,4 @@ will need to be regenerated.  Use the new "#colorimetry: CIE-XYZ" tag
 to enable on input.
 
 Rewrote bsdf2klems to support tristimulus color and call wrapBSDF.
+Did the same for bsdf2ttree.  Function specifications still gray only.

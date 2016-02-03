@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.19 2016/01/24 14:28:51 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.20 2016/02/03 01:57:06 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -14,15 +14,22 @@ static const char RCSid[] = "$Id: bsdf2klems.c,v 2.19 2016/01/24 14:28:51 greg E
 #include <math.h>
 #include "random.h"
 #include "platform.h"
+#include "paths.h"
+#include "rtio.h"
 #include "calcomp.h"
 #include "bsdfrep.h"
 #include "bsdf_m.h"
+				/* tristimulus components */
+enum {CIE_X, CIE_Y, CIE_Z};
 				/* assumed maximum # Klems patches */
 #define MAXPATCHES	145
 				/* global argv[0] */
 char			*progname;
 				/* selected basis function name */
-static const char	*kbasis = "LBNL/Klems Full";
+static const char	klems_full[] = "LBNL/Klems Full";
+static const char	klems_half[] = "LBNL/Klems Half";
+static const char	klems_quarter[] = "LBNL/Klems Quarter";
+static const char	*kbasis = klems_full;
 				/* number of BSDF samples per patch */
 static int		npsamps = 256;
 				/* limit on number of RBF lobes */
@@ -30,6 +37,28 @@ static int		lobe_lim = 15000;
 				/* progress bar length */
 static int		do_prog = 79;
 
+#define MAXCARG		512	/* wrapBSDF command */
+static char		*wrapBSDF[MAXCARG] = {"wrapBSDF", "-W", "-UU"};
+static int		wbsdfac = 3;
+
+/* Add argument to wrapBSDF, allocating space if isstatic */
+static void
+add_wbsdf(const char *arg, int isstatic)
+{
+	if (arg == NULL)
+		return;
+	if (wbsdfac >= MAXCARG-1) {
+		fputs(progname, stderr);
+		fputs(": too many command arguments to wrapBSDF\n", stderr);
+		exit(1);
+	}
+	if (!*arg)
+		arg = "";
+	else if (!isstatic)
+		arg = savqstr((char *)arg);
+
+	wrapBSDF[wbsdfac++] = (char *)arg;
+}
 
 /* Start new progress bar */
 #define prog_start(s)	if (do_prog) fprintf(stderr, "%s: %s...\n", progname, s); else
@@ -82,117 +111,40 @@ get_basis(const char *bn)
 	return NULL;
 }
 
-/* Output XML header to stdout */
-static void
-xml_header(int ac, char *av[])
+/* Copy geometry string to file for wrapBSDF */
+static char *
+save_geom(const char *mgf)
 {
-	puts("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-	puts("<WindowElement xmlns=\"http://windows.lbl.gov\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://windows.lbl.gov/BSDF-v1.4.xsd\">");
-	fputs("<!-- File produced by:", stdout);
-	while (ac-- > 0) {
-		fputc(' ', stdout);
-		fputs(*av++, stdout);
-	}
-	puts(" -->");
+	char	*tfname = mktemp(savqstr(TEMPLATE));
+	int	fd = open(tfname, O_CREAT|O_WRONLY, 0600);
+
+	if (fd < 0)
+		return(NULL);
+	write(fd, mgf, strlen(mgf));
+	close(fd);
+	add_wbsdf("-g", 1);
+	add_wbsdf(tfname, 1);
+	return(tfname);
 }
 
-/* Output XML prologue to stdout */
-static void
-xml_prologue(const SDData *sd)
+/* Open XYZ component file for output and add appropriate arguments */
+static FILE *
+open_component_file(int c)
 {
-	const char	*matn = (sd && sd->matn[0]) ? sd->matn :
-				bsdf_name[0] ? bsdf_name : "Unknown";
-	const char	*makr = (sd && sd->makr[0]) ? sd->makr :
-				bsdf_manuf[0] ? bsdf_manuf : "Unknown";
-	ANGLE_BASIS	*abp = get_basis(kbasis);
-	int		i;
+	static const char	sname[3][6] = {"CIE-X", "CIE-Y", "CIE-Z"};
+	static const char	cname[4][4] = {"-rf", "-tf", "-tb", "-rb"};
+	char			*tfname = mktemp(savqstr(TEMPLATE));
+	FILE			*fp = fopen(tfname, "w");
 
-	if (abp == NULL) {
-		fprintf(stderr, "%s: unknown angle basis '%s'\n", progname, kbasis);
+	if (fp == NULL) {
+		fprintf(stderr, "%s: cannot open '%s' for writing\n",
+				progname, tfname);
 		exit(1);
 	}
-	puts("<WindowElementType>System</WindowElementType>");
-	puts("<FileType>BSDF</FileType>");
-	puts("<Optical>");
-	puts("<Layer>");
-	puts("\t<Material>");
-	printf("\t\t<Name>%s</Name>\n", matn);
-	printf("\t\t<Manufacturer>%s</Manufacturer>\n", makr);
-	if (sd && sd->dim[2] > .001) {
-		printf("\t\t<Thickness unit=\"meter\">%.3f</Thickness>\n", sd->dim[2]);
-		printf("\t\t<Width unit=\"meter\">%.3f</Width>\n", sd->dim[0]);
-		printf("\t\t<Height unit=\"meter\">%.3f</Height>\n", sd->dim[1]);
-	}
-	puts("\t\t<DeviceType>Other</DeviceType>");
-	puts("\t</Material>");
-	if (sd && sd->mgf != NULL) {
-		puts("\t<Geometry format=\"MGF\">");
-		puts("\t\t<MGFblock unit=\"meter\">");
-		fputs(sd->mgf, stdout);
-		puts("</MGFblock>");
-		puts("\t</Geometry>");
-	}
-	puts("\t<DataDefinition>");
-	puts("\t\t<IncidentDataStructure>Columns</IncidentDataStructure>");
-	puts("\t\t<AngleBasis>");
-	printf("\t\t\t<AngleBasisName>%s</AngleBasisName>\n", kbasis);
-	for (i = 0; abp->lat[i].nphis; i++) {
-		puts("\t\t\t<AngleBasisBlock>");
-		printf("\t\t\t<Theta>%g</Theta>\n", i ?
-				.5*(abp->lat[i].tmin + abp->lat[i+1].tmin) :
-				.0 );
-		printf("\t\t\t<nPhis>%d</nPhis>\n", abp->lat[i].nphis);
-		puts("\t\t\t<ThetaBounds>");
-		printf("\t\t\t\t<LowerTheta>%g</LowerTheta>\n", abp->lat[i].tmin);
-		printf("\t\t\t\t<UpperTheta>%g</UpperTheta>\n", abp->lat[i+1].tmin);
-		puts("\t\t\t</ThetaBounds>");
-		puts("\t\t\t</AngleBasisBlock>");
-	}
-	puts("\t\t</AngleBasis>");
-	puts("\t</DataDefinition>");
-}
-
-/* Output XML data prologue to stdout */
-static void
-data_prologue()
-{
-	static const char	*bsdf_type[4] = {
-					"Reflection Front",
-					"Transmission Front",
-					"Transmission Back",
-					"Reflection Back"
-				};
-
-	puts("\t<WavelengthData>");
-	puts("\t\t<LayerNumber>System</LayerNumber>");
-	puts("\t\t<Wavelength unit=\"Integral\">Visible</Wavelength>");
-	puts("\t\t<SourceSpectrum>CIE Illuminant D65 1nm.ssp</SourceSpectrum>");
-	puts("\t\t<DetectorSpectrum>ASTM E308 1931 Y.dsp</DetectorSpectrum>");
-	puts("\t\t<WavelengthDataBlock>");
-	printf("\t\t\t<WavelengthDataDirection>%s</WavelengthDataDirection>\n",
-			bsdf_type[(input_orient>0)<<1 | (output_orient>0)]);
-	printf("\t\t\t<ColumnAngleBasis>%s</ColumnAngleBasis>\n", kbasis);
-	printf("\t\t\t<RowAngleBasis>%s</RowAngleBasis>\n", kbasis);
-	puts("\t\t\t<ScatteringDataType>BTDF</ScatteringDataType>");
-	puts("\t\t\t<ScatteringData>");
-}
-
-/* Output XML data epilogue to stdout */
-static void
-data_epilogue(void)
-{
-	puts("\t\t\t</ScatteringData>");
-	puts("\t\t</WavelengthDataBlock>");
-	puts("\t</WavelengthData>");
-}
-
-/* Output XML epilogue to stdout */
-static void
-xml_epilogue(void)
-{
-	puts("</Layer>");
-	puts("</Optical>");
-	puts("</WindowElement>");
+	add_wbsdf("-s", 1); add_wbsdf(sname[c], 1);
+	add_wbsdf(cname[(input_orient>0)<<1 | (output_orient>0)], 1);
+	add_wbsdf(tfname, 1);
+	return(fp);
 }
 
 /* Load and resample XML BSDF description using Klems basis */
@@ -200,101 +152,230 @@ static void
 eval_bsdf(const char *fname)
 {
 	ANGLE_BASIS	*abp = get_basis(kbasis);
+	FILE		*cfp[3];
 	SDData		bsd;
 	SDError		ec;
 	FVECT		vin, vout;
-	SDValue		sv;
-	double		sum;
+	SDValue		sdv;
+	double		sum, xsum, ysum;
 	int		i, j, n;
 
 	initurand(npsamps);
 	SDclearBSDF(&bsd, fname);		/* load BSDF file */
 	if ((ec = SDloadFile(&bsd, fname)) != SDEnone)
 		goto err;
-	xml_prologue(&bsd);			/* pass geometry */
+	if (bsd.mgf != NULL)			/* save geometry */
+		save_geom(bsd.mgf);
+	if (bsd.matn[0])			/* save identifier(s) */
+		strcpy(bsdf_name, bsd.matn);
+	if (bsd.makr[0])
+		strcpy(bsdf_manuf, bsd.makr);
+	if (bsd.dim[2] > 0) {			/* save dimension(s) */
+		char	buf[64];
+		if ((bsd.dim[0] > 0) & (bsd.dim[1] > 0))
+			sprintf(buf, "w=%g;h=%g;t=%g",
+					bsd.dim[0], bsd.dim[1], bsd.dim[2]);
+		else
+			sprintf(buf, "t=%g", bsd.dim[2]);
+		add_wbsdf("-f", 1);
+		add_wbsdf(buf, 0);
+	}
 						/* front reflection */
 	if (bsd.rf != NULL || bsd.rLambFront.cieY > .002) {
 	    input_orient = 1; output_orient = 1;
-	    data_prologue();
+	    cfp[CIE_Y] = open_component_file(CIE_Y);
+	    if (bsd.rf != NULL && bsd.rf->comp[0].cspec[2].flags) {
+		rbf_colorimetry = RBCtristimulus;
+		cfp[CIE_X] = open_component_file(CIE_X);
+		cfp[CIE_Z] = open_component_file(CIE_Z);
+	    } else
+		rbf_colorimetry = RBCphotopic;
 	    for (j = 0; j < abp->nangles; j++) {
 	        for (i = 0; i < abp->nangles; i++) {
 		    sum = 0;			/* average over patches */
+		    xsum = ysum = 0;
 		    for (n = npsamps; n-- > 0; ) {
 			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			fi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
 			if (ec != SDEnone)
 				goto err;
-			sum += sv.cieY;
+			sum += sdv.cieY;
+			if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				xsum += sdv.cieY*sdv.spec.cx;
+				ysum += sdv.cieY*sdv.spec.cy;
+			}
 		    }
-		    printf("\t%.3e\n", sum/npsamps);
+		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
+		    if (rbf_colorimetry == RBCtristimulus) {
+			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%3e\n",
+				(sum - xsum - ysum)*sum/(npsamps*ysum));
+		    }
 		}
-		putchar('\n');			/* extra space between rows */
+		fputc('\n', cfp[CIE_Y]);	/* extra space between rows */
+		if (rbf_colorimetry == RBCtristimulus) {
+			fputc('\n', cfp[CIE_X]);
+			fputc('\n', cfp[CIE_Z]);
+		}
 	    }
-	    data_epilogue();
+	    if (fclose(cfp[CIE_Y])) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	    }
+	    if (rbf_colorimetry == RBCtristimulus &&
+			(fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z]))) {
+		fprintf(stderr, "%s: error writing X/Z output\n", progname);
+		exit(1);
+	    }
 	}
 						/* back reflection */
 	if (bsd.rb != NULL || bsd.rLambBack.cieY > .002) {
 	    input_orient = -1; output_orient = -1;
-	    data_prologue();
+	    cfp[CIE_Y] = open_component_file(CIE_Y);
+	    if (bsd.rb != NULL && bsd.rb->comp[0].cspec[2].flags) {
+		rbf_colorimetry = RBCtristimulus;
+		cfp[CIE_X] = open_component_file(CIE_X);
+		cfp[CIE_Z] = open_component_file(CIE_Z);
+	    } else
+		rbf_colorimetry = RBCphotopic;
 	    for (j = 0; j < abp->nangles; j++) {
 	        for (i = 0; i < abp->nangles; i++) {
 		    sum = 0;			/* average over patches */
+		    xsum = ysum = 0;
 		    for (n = npsamps; n-- > 0; ) {
 			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			bi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
 			if (ec != SDEnone)
 				goto err;
-			sum += sv.cieY;
+			sum += sdv.cieY;
+			if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				xsum += sdv.cieY*sdv.spec.cx;
+				ysum += sdv.cieY*sdv.spec.cy;
+			}
 		    }
-		    printf("\t%.3e\n", sum/npsamps);
+		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
+		    if (rbf_colorimetry == RBCtristimulus) {
+			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%3e\n",
+				(sum - xsum - ysum)*sum/(npsamps*ysum));
+		    }
 		}
-		putchar('\n');			/* extra space between rows */
+		if (rbf_colorimetry == RBCtristimulus) {
+			fputc('\n', cfp[CIE_X]);
+			fputc('\n', cfp[CIE_Z]);
+		}
 	    }
-	    data_epilogue();
+	    if (fclose(cfp[CIE_Y])) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	    }
+	    if (rbf_colorimetry == RBCtristimulus &&
+			(fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z]))) {
+		fprintf(stderr, "%s: error writing X/Z output\n", progname);
+		exit(1);
+	    }
 	}
 						/* front transmission */
 	if (bsd.tf != NULL || bsd.tLamb.cieY > .002) {
 	    input_orient = 1; output_orient = -1;
-	    data_prologue();
+	    cfp[CIE_Y] = open_component_file(CIE_Y);
+	    if (bsd.tf != NULL && bsd.tf->comp[0].cspec[2].flags) {
+		rbf_colorimetry = RBCtristimulus;
+		cfp[CIE_X] = open_component_file(CIE_X);
+		cfp[CIE_Z] = open_component_file(CIE_Z);
+	    } else
+		rbf_colorimetry = RBCphotopic;
 	    for (j = 0; j < abp->nangles; j++) {
 	        for (i = 0; i < abp->nangles; i++) {
 		    sum = 0;			/* average over patches */
+		    xsum = ysum = 0;
 		    for (n = npsamps; n-- > 0; ) {
 			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			fi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
 			if (ec != SDEnone)
 				goto err;
-			sum += sv.cieY;
+			sum += sdv.cieY;
+			if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				xsum += sdv.cieY*sdv.spec.cx;
+				ysum += sdv.cieY*sdv.spec.cy;
+			}
 		    }
-		    printf("\t%.3e\n", sum/npsamps);
+		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
+		    if (rbf_colorimetry == RBCtristimulus) {
+			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%3e\n",
+				(sum - xsum - ysum)*sum/(npsamps*ysum));
+		    }
 		}
-		putchar('\n');			/* extra space between rows */
+		if (rbf_colorimetry == RBCtristimulus) {
+			fputc('\n', cfp[CIE_X]);
+			fputc('\n', cfp[CIE_Z]);
+		}
 	    }
-	    data_epilogue();
+	    if (fclose(cfp[CIE_Y])) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	    }
+	    if (rbf_colorimetry == RBCtristimulus &&
+			(fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z]))) {
+		fprintf(stderr, "%s: error writing X/Z output\n", progname);
+		exit(1);
+	    }
 	}
 						/* back transmission */
 	if ((bsd.tb != NULL) | (bsd.tf != NULL)) {
 	    input_orient = -1; output_orient = 1;
-	    data_prologue();
+	    cfp[CIE_Y] = open_component_file(CIE_Y);
+	    if (bsd.tb != NULL && bsd.tb->comp[0].cspec[2].flags) {
+		rbf_colorimetry = RBCtristimulus;
+		cfp[CIE_X] = open_component_file(CIE_X);
+		cfp[CIE_Z] = open_component_file(CIE_Z);
+	    } else
+		rbf_colorimetry = RBCphotopic;
 	    for (j = 0; j < abp->nangles; j++) {
 	        for (i = 0; i < abp->nangles; i++) {
 		    sum = 0;		/* average over patches */
+		    xsum = ysum = 0;
 		    for (n = npsamps; n-- > 0; ) {
 			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
 			bi_getvec(vin, i+urand(n), abp);
-			ec = SDevalBSDF(&sv, vout, vin, &bsd);
+			ec = SDevalBSDF(&sdv, vout, vin, &bsd);
 			if (ec != SDEnone)
 				goto err;
-			sum += sv.cieY;
+			sum += sdv.cieY;
+			if (rbf_colorimetry == RBCtristimulus) {
+				c_ccvt(&sdv.spec, C_CSXY);
+				xsum += sdv.cieY*sdv.spec.cx;
+				ysum += sdv.cieY*sdv.spec.cy;
+			}
 		    }
-		    printf("\t%.3e\n", sum/npsamps);
+		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
+		    if (rbf_colorimetry == RBCtristimulus) {
+			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%3e\n",
+				(sum - xsum - ysum)*sum/(npsamps*ysum));
+		    }
 		}
-		putchar('\n');			/* extra space between rows */
+		if (rbf_colorimetry == RBCtristimulus) {
+			fputc('\n', cfp[CIE_X]);
+			fputc('\n', cfp[CIE_Z]);
+		}
 	    }
-	    data_epilogue();
+	    if (fclose(cfp[CIE_Y])) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	    }
+	    if (rbf_colorimetry == RBCtristimulus &&
+			(fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z]))) {
+		fprintf(stderr, "%s: error writing X/Z output\n", progname);
+		exit(1);
+	    }
 	}
 	SDfreeBSDF(&bsd);			/* all done */
 	return;
@@ -309,12 +390,12 @@ eval_function(char *funame)
 {
 	ANGLE_BASIS	*abp = get_basis(kbasis);
 	int		assignD = (fundefined(funame) < 6);
+	FILE		*ofp = open_component_file(CIE_Y);
 	double		iovec[6];
 	double		sum;
 	int		i, j, n;
 
 	initurand(npsamps);
-	data_prologue();			/* begin output */
 	for (j = 0; j < abp->nangles; j++) {	/* run through directions */
 	    for (i = 0; i < abp->nangles; i++) {
 		sum = 0;
@@ -337,13 +418,16 @@ eval_function(char *funame)
 		    }
 		    sum += funvalue(funame, 6, iovec);
 		}
-		printf("\t%.3e\n", sum/npsamps);
+		fprintf(ofp, "\t%.3e\n", sum/npsamps);
 	    }
-	    putchar('\n');
+	    fputc('\n', ofp);
 	    prog_show((j+1.)/abp->nangles);
 	}
-	data_epilogue();			/* finish output */
 	prog_done();
+	if (fclose(ofp)) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	}
 }
 
 /* Interpolate and output a radial basis function BSDF representation */
@@ -351,18 +435,21 @@ static void
 eval_rbf(void)
 {
 	ANGLE_BASIS	*abp = get_basis(kbasis);
+	float		(*XZarr)[2] = NULL;
 	float		bsdfarr[MAXPATCHES*MAXPATCHES];
+	FILE		*cfp[3];
 	FVECT		vin, vout;
-	RBFNODE		*rbf;
-	double		sum;
+	double		sum, xsum, ysum;
 	int		i, j, n;
 						/* sanity check */
 	if (abp->nangles > MAXPATCHES) {
 		fprintf(stderr, "%s: too many patches!\n", progname);
 		exit(1);
 	}
-	data_prologue();			/* begin output */
+	if (rbf_colorimetry == RBCtristimulus)
+		XZarr = (float (*)[2])malloc(sizeof(float)*2*abp->nangles*abp->nangles);
 	for (i = 0; i < abp->nangles; i++) {
+	    RBFNODE	*rbf;
 	    if (input_orient > 0)		/* use incident patch center */
 		fi_getvec(vin, i+.5*(i>0), abp);
 	    else
@@ -372,35 +459,128 @@ eval_rbf(void)
 
 	    for (j = 0; j < abp->nangles; j++) {
 	        sum = 0;			/* sample over exiting patch */
+		xsum = ysum = 0;
 		for (n = npsamps; n--; ) {
+		    SDValue	sdv;
 		    if (output_orient > 0)
 			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
 		    else
 			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
 
-		    sum += eval_rbfrep(rbf, vout);
+		    eval_rbfcol(&sdv, rbf, vout);
+		    sum += sdv.cieY;
+		    if (XZarr != NULL) {
+			c_ccvt(&sdv.spec, C_CSXY);
+			xsum += sdv.cieY*sdv.spec.cx;
+			ysum += sdv.cieY*sdv.spec.cy;
+		    }
 		}
-		bsdfarr[j*abp->nangles + i] = sum / (double)npsamps;
+		n = j*abp->nangles + i;
+		bsdfarr[n] = sum / (double)npsamps;
+		if (XZarr != NULL) {
+		    XZarr[n][0] = xsum*sum/(npsamps*ysum);
+		    XZarr[n][1] = (sum - xsum - ysum)*sum/(npsamps*ysum);
+		}
 	    }
 	    if (rbf != NULL)
 		free(rbf);
 	    prog_show((i+1.)/abp->nangles);
 	}
-	n = 0;					/* write out our matrix */
+						/* write out our matrix */
+	cfp[CIE_Y] = open_component_file(CIE_Y);
+	n = 0;
 	for (j = 0; j < abp->nangles; j++) {
-	    for (i = 0; i < abp->nangles; i++)
-		printf("\t%.3e\n", bsdfarr[n++]);
-	    putchar('\n');
+	    for (i = 0; i < abp->nangles; i++, n++)
+		fprintf(cfp[CIE_Y], "\t%.3e\n", bsdfarr[n]);
+	    fputc('\n', cfp[CIE_Y]);
 	}
-	data_epilogue();			/* finish output */
 	prog_done();
+	if (fclose(cfp[CIE_Y])) {
+		fprintf(stderr, "%s: error writing Y output\n", progname);
+		exit(1);
+	}
+	if (XZarr == NULL)			/* no color? */
+		return;
+	cfp[CIE_X] = open_component_file(CIE_X);
+	cfp[CIE_Z] = open_component_file(CIE_Z);
+	n = 0;
+	for (j = 0; j < abp->nangles; j++) {
+	    for (i = 0; i < abp->nangles; i++, n++) {
+		fprintf(cfp[CIE_X], "\t%.3e\n", XZarr[n][0]);
+		fprintf(cfp[CIE_Z], "\t%.3e\n", XZarr[n][1]);
+	    }
+	    fputc('\n', cfp[CIE_X]);
+	    fputc('\n', cfp[CIE_Z]);
+	}
+	free(XZarr);
+	if (fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z])) {
+		fprintf(stderr, "%s: error writing X/Z output\n", progname);
+		exit(1);
+	}
 }
+
+#ifdef _WIN32
+/* Execute wrapBSDF command (may never return) */
+static int
+wrap_up(void)
+{
+	char	cmd[8192];
+
+	if (bsdf_manuf[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(cmd, "m=");
+		strcpy(cmd+2, bsdf_manuf);
+		add_wbsdf(cmd, 0);
+	}
+	if (bsdf_name[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(cmd, "n=");
+		strcpy(cmd+2, bsdf_name);
+		add_wbsdf(cmd, 0);
+	}
+	if (!convert_commandline(cmd, sizeof(cmd), wrapBSDF)) {
+		fputs(progname, stderr);
+		fputs(": command line too long in wrap_up()\n", stderr);
+		return(1);
+	}
+	return(system(cmd));
+}
+#else
+/* Execute wrapBSDF command (may never return) */
+static int
+wrap_up(void)
+{
+	char	buf[256];
+	char	*compath = getpath((char *)wrapBSDF[0], getenv("PATH"), X_OK);
+
+	if (compath == NULL) {
+		fprintf(stderr, "%s: cannot locate %s\n", progname, wrapBSDF[0]);
+		return(1);
+	}
+	if (bsdf_manuf[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(buf, "m=");
+		strcpy(buf+2, bsdf_manuf);
+		add_wbsdf(buf, 0);
+	}
+	if (bsdf_name[0]) {
+		add_wbsdf("-f", 1);
+		strcpy(buf, "n=");
+		strcpy(buf+2, bsdf_name);
+		add_wbsdf(buf, 0);
+	}
+	execv(compath, wrapBSDF);	/* successful call never returns */
+	perror(compath);
+	return(1);
+}
+#endif
 
 /* Read in BSDF and interpolate as Klems matrix representation */
 int
 main(int argc, char *argv[])
 {
 	int	dofwd = 0, dobwd = 1;
+	char	buf[2048];
 	char	*cp;
 	int	i, na;
 
@@ -422,8 +602,13 @@ main(int argc, char *argv[])
 			break;
 		case 'f':
 			if (!argv[i][2]) {
-				fcompile(argv[++i]);
-				single_plane_incident = 0;
+				if (strchr(argv[++i], '=') != NULL) {
+					add_wbsdf("-f", 1);
+					add_wbsdf(argv[i], 1);
+				} else {
+					fcompile(argv[i]);
+					single_plane_incident = 0;
+				}
 			} else
 				dofwd = (argv[i][0] == '+');
 			break;
@@ -431,10 +616,14 @@ main(int argc, char *argv[])
 			dobwd = (argv[i][0] == '+');
 			break;
 		case 'h':
-			kbasis = "LBNL/Klems Half";
+			kbasis = klems_half;
+			add_wbsdf("-a", 1);
+			add_wbsdf("kh", 1);
 			break;
 		case 'q':
-			kbasis = "LBNL/Klems Quarter";
+			kbasis = klems_quarter;
+			add_wbsdf("-a", 1);
+			add_wbsdf("kq", 1);
 			break;
 		case 'l':
 			lobe_lim = atoi(argv[++i]);
@@ -442,9 +631,21 @@ main(int argc, char *argv[])
 		case 'p':
 			do_prog = atoi(argv[i]+2);
 			break;
+		case 'C':
+			add_wbsdf(argv[i], 1);
+			add_wbsdf(argv[++i], 1);
+			break;
 		default:
 			goto userr;
 		}
+	if (kbasis == klems_full) {		/* default (full) basis? */
+		add_wbsdf("-a", 1);
+		add_wbsdf("kf", 1);
+	}
+	strcpy(buf, "File produced by: ");
+	if (convert_commandline(buf+18, sizeof(buf)-18, argv) != NULL) {
+		add_wbsdf("-C", 1); add_wbsdf(buf, 0);
+	}
 	if (single_plane_incident >= 0) {	/* function-based BSDF? */
 		if (i != argc-1 || fundefined(argv[i]) < 3) {
 			fprintf(stderr,
@@ -454,8 +655,6 @@ main(int argc, char *argv[])
 			goto userr;
 		}
 		++eclock;
-		xml_header(argc, argv);			/* start XML output */
-		xml_prologue(NULL);
 		if (dofwd) {
 			input_orient = -1;
 			output_orient = -1;
@@ -474,16 +673,13 @@ main(int argc, char *argv[])
 			prog_start("Evaluating inside->outside transmission");
 			eval_function(argv[i]);
 		}
-		xml_epilogue();			/* finish XML output & exit */
-		return(0);
+		return(wrap_up());
 	}
 						/* XML input? */
 	if (i == argc-1 && (cp = argv[i]+strlen(argv[i])-4) > argv[i] &&
 				!strcasecmp(cp, ".xml")) {
-		xml_header(argc, argv);		/* start XML output */
 		eval_bsdf(argv[i]);		/* load & resample BSDF */
-		xml_epilogue();			/* finish XML output & exit */
-		return(0);
+		return(wrap_up());
 	}
 	if (i < argc) {				/* open input files if given */
 		int	nbsdf = 0;
@@ -498,26 +694,18 @@ main(int argc, char *argv[])
 			if (!load_bsdf_rep(fpin))
 				return(1);
 			fclose(fpin);
-			if (!nbsdf++) {		/* start XML on first dist. */
-				xml_header(argc, argv);
-				xml_prologue(NULL);
-			}
 			sprintf(pbuf, "Interpolating component '%s'", argv[i]);
 			prog_start(pbuf);
 			eval_rbf();
 		}
-		xml_epilogue();			/* finish XML output & exit */
-		return(0);
+		return(wrap_up());
 	}
 	SET_FILE_BINARY(stdin);			/* load from stdin */
 	if (!load_bsdf_rep(stdin))
 		return(1);
-	xml_header(argc, argv);			/* start XML output */
-	xml_prologue(NULL);
 	prog_start("Interpolating from standard input");
 	eval_rbf();				/* resample dist. */
-	xml_epilogue();				/* finish XML output & exit */
-	return(0);
+	return(wrap_up());
 userr:
 	fprintf(stderr,
 	"Usage: %s [-n spp][-h|-q][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n", progname);
