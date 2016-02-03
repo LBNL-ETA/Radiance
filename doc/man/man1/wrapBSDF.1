@@ -1,4 +1,4 @@
-.\" RCSid $Id: wrapBSDF.1,v 1.5 2016/02/02 22:34:00 greg Exp $
+.\" RCSid $Id: wrapBSDF.1,v 1.6 2016/02/03 00:22:55 greg Exp $
 .TH WRAPBSDF 1 2/20/2015 RADIANCE
 .SH NAME
 wrapBSDF - put XML wrapper around WINDOW6 BSDF data
@@ -135,6 +135,11 @@ option tells
 to unlink (remove) input data files following successful completion.
 These files are often temporary, existing solely for the purposes
 of data transfer.
+If given as
+.I \-UU,
+then the MGF geometry file given by the
+.I \-g
+option (if any) will also be unlinked.
 .SH EXAMPLE
 Create an WINDOW6 BSDF from computed transmission matrix:
 .IP "" .2i

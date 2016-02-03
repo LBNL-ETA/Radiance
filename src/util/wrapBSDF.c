@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.18 2016/02/02 22:34:00 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.19 2016/02/03 00:22:55 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -613,6 +613,10 @@ writeBSDF(const char *caller, ezxml_t fl)
 		if (data_file[i].fname != stdin_name &&
 				data_file[i].fname[0] != '!')
 			unlink(data_file[i].fname);
+	if (unlink_datafiles > 1 && mgf_geometry != NULL &&
+			mgf_geometry != stdin_name &&
+			mgf_geometry[0] != '!')
+		unlink(mgf_geometry);
 	return 1;
 }
 
@@ -778,7 +782,7 @@ main(int argc, char *argv[])
 			attr_unit = argv[i];
 			continue;
 		case 'U':		/* unlink data files when done */
-			unlink_datafiles = 1;
+			unlink_datafiles = 1 + (argv[i][2] == 'U');
 			continue;
 		case 'a':		/* angle basis */
 			if (++i >= argc)
