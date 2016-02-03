@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.22 2013/04/21 21:36:23 greg Exp $ */
+/* RCSid $Id: bsdf.h,v 2.23 2016/02/03 01:54:51 greg Exp $ */
 /*
  *  bsdf.h
  *  
@@ -126,7 +126,7 @@ typedef struct {
 	char		matn[SDnameLn];	/* material name */
 	char		makr[SDnameLn];	/* manufacturer */
 	char		*mgf;		/* geometric description (if any) */
-	float		dim[3];		/* width, height, thickness (meters) */
+	double		dim[3];		/* width, height, thickness (meters) */
 	SDValue		rLambFront;	/* diffuse front reflectance */
 	SDValue		rLambBack;	/* diffuse rear reflectance */
 	SDValue		tLamb;		/* diffuse transmission */
