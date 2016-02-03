@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.30 2016/01/30 01:31:57 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.31 2016/02/03 18:53:14 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -310,14 +310,14 @@ eval_rbfcol(SDValue *sv, const RBFNODE *rp, const FVECT outvec)
 		}
 		res += val;
 	}
-	if ((rbf_colorimetry == RBCtristimulus) & (res > 1e-6)) {
+	sv->cieY = res / COSF(outvec[2]);
+	if (sv->cieY < bsdf_min) {	/* never return less than bsdf_min */
+		sv->cieY = bsdf_min;
+	} else if (rbf_colorimetry == RBCtristimulus) {
 		C_CHROMA	cres = (int)(usum/res + frandom());
 		cres |= (int)(vsum/res + frandom()) << 8;
 		c_decodeChroma(&sv->spec, cres);
 	}
-	sv->cieY = res / COSF(outvec[2]);
-	if (sv->cieY < bsdf_min)	/* never return less than bsdf_min */
-		sv->cieY = bsdf_min;
 	return(SDEnone);
 }
 
@@ -582,6 +582,7 @@ clear_bsdf_rep(void)
 	input_orient = output_orient = 0;
 	rbf_colorimetry = RBCunknown;
 	grid_res = GRIDRES;
+	memset(bsdf_hist, 0, sizeof(bsdf_hist));
 	bsdf_min = 0;
 	bsdf_spec_val = 0;
 	bsdf_spec_rad = 0;
