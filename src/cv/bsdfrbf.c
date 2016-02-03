@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.27 2016/01/29 16:21:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.28 2016/02/03 18:42:13 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -137,8 +137,8 @@ add_bsdf_data(double theta_out, double phi_out, const double val[], int isDSF)
 	dsf_grid[pos[0]][pos[1]].sum.n++;
 					/* add in X and Z values */
 	if (rbf_colorimetry == RBCtristimulus) {
-		spec_grid[0][pos[0]][pos[1]] += val[0];
-		spec_grid[1][pos[0]][pos[1]] += val[2];
+		spec_grid[0][pos[0]][pos[1]] += cfact * val[0];
+		spec_grid[1][pos[0]][pos[1]] += cfact * val[2];
 	}
 }
 
