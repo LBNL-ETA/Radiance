@@ -1,7 +1,7 @@
 set(rtrad_SOURCES
   addobjnotify.c badarg.c biggerlib.c bmalloc.c bmpfile.c bsdf.c bsdf_m.c
   bsdf_t.c byteswap.c caldefn.c calexpr.c calfunc.c calprnt.c ccolor.c ccyrgb.c
-  chanvalue.c clip.c color.c colrops.c cone.c dircode.c disk2square.c ealloc.c
+  chanvalue.c clip.c color.c colrops.c cone.c cvtcmd.c dircode.c disk2square.c ealloc.c
   eputs.c erf.c error.c expandarg.c ezxml.c face.c falsecolor.c fdate.c
   fgetline.c fgetval.c fgetword.c fixargv0.c font.c fputword.c free_os.c
   fropen.c fvect.c gethomedir.c getlibpath.c getpath.c header.c hilbert.c
@@ -28,6 +28,11 @@ add_library(rgl rglfile.c rglmat.c rgldomat.c rglsurf.c rglinst.c rglsrc.c)
 add_library(mgf mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c)
 add_library(libreetz g3affine.c g3affine.h g3flist.c g3flist.h g3list.h g3nlist.h 
 	g3sphere.c g3sphere.h g3vector.c g3vector.h gbasic.c gbasic.h)
+
+if (BUILD_TESTING)
+  add_executable(testBSDF testBSDF.c bsdf.c rtio.h)
+  target_link_libraries(testBSDF radiance rtrad)
+endif()
 
 install(TARGETS rtrad mgf
   LIBRARY DESTINATION bin
