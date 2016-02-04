@@ -975,7 +975,7 @@ void MainWindow::saveCurrentImage()
 void MainWindow::loadView()
 {
  QString viewFileName = QFileDialog::getOpenFileName(this, tr("Open View File"),
-   "", tr("View Files (*.vp *.vf)"));
+   "", tr("View Files (*.vf *.vp *.vfh *.vfv)"));
  QString command = "last " + viewFileName;
  this->runCommand(command.toLatin1());
 }
