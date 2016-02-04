@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.34 2016/02/02 22:34:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.35 2016/02/04 00:45:47 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -185,8 +185,7 @@ eval_isotropic(char *funame)
 			fputs("{\n", uvfp[1]);
 		}
 	}
-						/* need to assign Dx, Dy, Dz? */
-	if (funame != NULL)
+	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
 						/* run through directions */
 	for (ix = 0; ix < sqres/2; ix++) {
@@ -271,6 +270,7 @@ eval_isotropic(char *funame)
 			free(rbf);
 		prog_show((ix+1.)*(2./sqres));
 	}
+	prog_done();
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
 			fprintf(stderr, "%s: error running rttree_reduce on Y\n",
@@ -306,7 +306,6 @@ eval_isotropic(char *funame)
 			}
 		}
 	}
-	prog_done();
 }
 
 /* Interpolate and output anisotropic BSDF data */
@@ -322,9 +321,11 @@ eval_anisotropic(char *funame)
 	float		bsdf, uv[2];
 
 	if (pctcull >= 0) {
+		const char	*avgopt = (input_orient>0 ^ output_orient>0)
+						? "" : " -a";
 		sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
-				(input_orient>0 ^ output_orient>0) ? "" : " -a",
-				pctcull, samp_order, create_component_file(0));
+				avgopt, pctcull, samp_order,
+				create_component_file(0));
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
 			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
@@ -338,12 +339,12 @@ eval_anisotropic(char *funame)
 		if (rbf_colorimetry == RBCtristimulus) {
 			double	uvcull = 100. - (100.-pctcull)*.25;
 			sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
-					(input_orient>0 ^ output_orient>0) ? "" : " -a",
-					uvcull, samp_order, create_component_file(1));
+					avgopt, uvcull, samp_order,
+					create_component_file(1));
 			uvfp[0] = popen(cmd, "w");
 			sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
-					(input_orient>0 ^ output_orient>0) ? "" : " -a",
-					uvcull, samp_order, create_component_file(2));
+					avgopt, uvcull, samp_order,
+					create_component_file(2));
 			uvfp[1] = popen(cmd, "w");
 			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
 				fprintf(stderr, "%s: cannot open pipes to uv output\n",
@@ -375,8 +376,7 @@ eval_anisotropic(char *funame)
 			fputs("{\n", uvfp[1]);
 		}
 	}
-						/* need to assign Dx, Dy, Dz? */
-	if (funame != NULL)
+	if (funame != NULL)			/* need to assign Dx, Dy, Dz? */
 		assignD = (fundefined(funame) < 6);
 						/* run through directions */
 	for (ix = 0; ix < sqres; ix++)
@@ -463,6 +463,7 @@ eval_anisotropic(char *funame)
 			free(rbf);
 		prog_show((ix*sqres+iy+1.)/(sqres*sqres));
 	    }
+	prog_done();
 	if (pctcull >= 0) {			/* finish output */
 		if (pclose(ofp)) {
 			fprintf(stderr, "%s: error running rttree_reduce on Y\n",
@@ -492,7 +493,6 @@ eval_anisotropic(char *funame)
 			}
 		}
 	}
-	prog_done();
 }
 
 #ifdef _WIN32

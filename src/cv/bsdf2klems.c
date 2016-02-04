@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.20 2016/02/03 01:57:06 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.21 2016/02/04 00:45:47 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -203,14 +203,14 @@ eval_bsdf(const char *fname)
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
 				c_ccvt(&sdv.spec, C_CSXY);
-				xsum += sdv.cieY*sdv.spec.cx;
-				ysum += sdv.cieY*sdv.spec.cy;
+				xsum += sdv.cieY * sdv.spec.cx;
+				ysum += sdv.cieY * sdv.spec.cy;
 			}
 		    }
 		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
 		    if (rbf_colorimetry == RBCtristimulus) {
-			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
-			fprintf(cfp[CIE_Z], "\t%3e\n",
+			fprintf(cfp[CIE_X], "\t%.3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%.3e\n",
 				(sum - xsum - ysum)*sum/(npsamps*ysum));
 		    }
 		}
@@ -253,14 +253,14 @@ eval_bsdf(const char *fname)
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
 				c_ccvt(&sdv.spec, C_CSXY);
-				xsum += sdv.cieY*sdv.spec.cx;
-				ysum += sdv.cieY*sdv.spec.cy;
+				xsum += sdv.cieY * sdv.spec.cx;
+				ysum += sdv.cieY * sdv.spec.cy;
 			}
 		    }
 		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
 		    if (rbf_colorimetry == RBCtristimulus) {
-			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
-			fprintf(cfp[CIE_Z], "\t%3e\n",
+			fprintf(cfp[CIE_X], "\t%.3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%.3e\n",
 				(sum - xsum - ysum)*sum/(npsamps*ysum));
 		    }
 		}
@@ -302,14 +302,14 @@ eval_bsdf(const char *fname)
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
 				c_ccvt(&sdv.spec, C_CSXY);
-				xsum += sdv.cieY*sdv.spec.cx;
-				ysum += sdv.cieY*sdv.spec.cy;
+				xsum += sdv.cieY * sdv.spec.cx;
+				ysum += sdv.cieY * sdv.spec.cy;
 			}
 		    }
 		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
 		    if (rbf_colorimetry == RBCtristimulus) {
-			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
-			fprintf(cfp[CIE_Z], "\t%3e\n",
+			fprintf(cfp[CIE_X], "\t%.3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%.3e\n",
 				(sum - xsum - ysum)*sum/(npsamps*ysum));
 		    }
 		}
@@ -332,12 +332,13 @@ eval_bsdf(const char *fname)
 	if ((bsd.tb != NULL) | (bsd.tf != NULL)) {
 	    input_orient = -1; output_orient = 1;
 	    cfp[CIE_Y] = open_component_file(CIE_Y);
-	    if (bsd.tb != NULL && bsd.tb->comp[0].cspec[2].flags) {
-		rbf_colorimetry = RBCtristimulus;
+	    if (bsd.tb != NULL)
+		rbf_colorimetry = bsd.tb->comp[0].cspec[2].flags
+					? RBCtristimulus : RBCphotopic ;
+	    if (rbf_colorimetry == RBCtristimulus) {
 		cfp[CIE_X] = open_component_file(CIE_X);
 		cfp[CIE_Z] = open_component_file(CIE_Z);
-	    } else
-		rbf_colorimetry = RBCphotopic;
+	    }
 	    for (j = 0; j < abp->nangles; j++) {
 	        for (i = 0; i < abp->nangles; i++) {
 		    sum = 0;		/* average over patches */
@@ -351,14 +352,14 @@ eval_bsdf(const char *fname)
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
 				c_ccvt(&sdv.spec, C_CSXY);
-				xsum += sdv.cieY*sdv.spec.cx;
-				ysum += sdv.cieY*sdv.spec.cy;
+				xsum += sdv.cieY * sdv.spec.cx;
+				ysum += sdv.cieY * sdv.spec.cy;
 			}
 		    }
 		    fprintf(cfp[CIE_Y], "\t%.3e\n", sum/npsamps);
 		    if (rbf_colorimetry == RBCtristimulus) {
-			fprintf(cfp[CIE_X], "\t%3e\n", xsum*sum/(npsamps*ysum));
-			fprintf(cfp[CIE_Z], "\t%3e\n",
+			fprintf(cfp[CIE_X], "\t%.3e\n", xsum*sum/(npsamps*ysum));
+			fprintf(cfp[CIE_Z], "\t%.3e\n",
 				(sum - xsum - ysum)*sum/(npsamps*ysum));
 		    }
 		}
@@ -471,12 +472,12 @@ eval_rbf(void)
 		    sum += sdv.cieY;
 		    if (XZarr != NULL) {
 			c_ccvt(&sdv.spec, C_CSXY);
-			xsum += sdv.cieY*sdv.spec.cx;
-			ysum += sdv.cieY*sdv.spec.cy;
+			xsum += sdv.cieY * sdv.spec.cx;
+			ysum += sdv.cieY * sdv.spec.cy;
 		    }
 		}
 		n = j*abp->nangles + i;
-		bsdfarr[n] = sum / (double)npsamps;
+		bsdfarr[n] = sum / npsamps;
 		if (XZarr != NULL) {
 		    XZarr[n][0] = xsum*sum/(npsamps*ysum);
 		    XZarr[n][1] = (sum - xsum - ysum)*sum/(npsamps*ysum);
