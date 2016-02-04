@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.10 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.11 2016/02/04 11:37:00 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -156,30 +156,30 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
       if (pmap -> srcContrib) {
          const PhotonPrimary *primary = pmap -> primary + 
                                         sq -> photon -> primary;
-	 const SRCREC *sp = &source[primary -> srcIdx];
+         const SRCREC *sp = &source[primary -> srcIdx];
          OBJREC *srcMod = findmaterial(sp -> so);
          MODCONT *srcContrib = (MODCONT*)lu_find(pmap -> srcContrib, 
                                                  srcMod -> oname) -> data;
          if (!srcContrib)
-	    continue;
+            continue;
 
-	 /* Photon's emitting light source has modifier whose
+         /* Photon's emitting light source has modifier whose
           * contributions are sought */
-	 double srcBinReal;
+         double srcBinReal;
          int srcBin;
          RAY srcRay;
 
          if (srcContrib -> binv -> type != NUM) {
             /* Use intersection function to set shadow ray parameters
-	     * if it's not simply a constant
-	     */
+             * if it's not simply a constant */
             rayorigin(&srcRay, SHADOW, NULL, NULL);
-	    srcRay.rsrc = primary -> srcIdx;
+            srcRay.rsrc = primary -> srcIdx;
             VCOPY(srcRay.rorg, primary -> pos);
-	    decodedir(srcRay.rdir, primary -> dir);
+            decodedir(srcRay.rdir, primary -> dir);
 
-            if (!(sp->sflags & SDISTANT ? sourcehit(&srcRay)
-			: (*ofun[sp -> so -> otype].funp)(sp -> so, &srcRay)))
+            if (!(sp->sflags & SDISTANT 
+                     ? sourcehit(&srcRay)
+                     : (*ofun[sp -> so -> otype].funp)(sp -> so, &srcRay)))
                 continue;		/* XXX shouldn't happen! */
 
             worldfunc(RCCONTEXT, &srcRay);
@@ -189,7 +189,7 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
          if ((srcBinReal = evalue(srcContrib -> binv)) < -.5)
              continue;		/* silently ignore negative bins */
   
-	 if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
+         if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
              error(WARNING, "bad bin number (ignored)");
              continue;
          }
@@ -198,14 +198,14 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
              /* Ray coefficient mode; normalise by light source radiance
               * after applying distrib pattern */
              int j;
+             
              raytexture(ray, srcMod -> omod);
              setcolor(ray -> rcol, srcMod -> oargs.farg [0], 
-                        srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
+                      srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
              multcolor(ray -> rcol, ray -> pcol);
              for (j = 0; j < 3; j++)
-                flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j]
-                                             : 0;
-	 }
+                flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j] : 0;
+         }
                      
          multcolor(flux, rayCoeff);
          addcolor(srcContrib -> cbin [srcBin], flux);

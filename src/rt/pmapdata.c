@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.13 2015/09/09 16:08:46 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.14 2016/02/04 11:36:59 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -231,8 +231,10 @@ static void nearestNeighbours (PhotonMap* pmap, const float pos [3],
          nearestNeighbours(pmap, pos, norm, node << 1);
    }
 
-   /* Reject photon if normal faces away (ignored for volume photons) */
-   if (norm && DOT(norm, p -> norm) <= 0.5 * frandom())
+   /* Reject photon if normal faces away (ignored for volume photons) with
+    * 50% tolerance to account for perturbation; note photon normal is coded
+    * in range [-127,127].  */
+   if (norm && DOT(norm, p -> norm) <= 63.5 * frandom())
       return;
       
    if (isContribPmap(pmap) && pmap -> srcContrib) {
@@ -471,8 +473,10 @@ static void nearest1Neighbour (PhotonMap *pmap, const float pos [3],
    dv [2] = pos [2] - p -> pos [2];
    d2 = DOT(dv, dv);
    
-   if (d2 < pmap -> maxDist && DOT(norm, p -> norm) > 0.5 * frandom()) {
-      /* Closest photon so far with similar normal */
+   if (d2 < pmap -> maxDist && DOT(norm, p -> norm) > 63.5 * frandom()) {
+      /* Closest photon so far with similar normal. We allow a 50% tolerance
+       * to account for perturbation in the latter; note the photon normal
+       * is coded in the range [-127,127].  */   
       pmap -> maxDist = d2;
       *photon = p;
    }
