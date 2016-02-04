@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.5 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.6 2016/02/04 19:39:10 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -39,7 +39,7 @@ typedef struct {
 } RadianceDef;
 
    
-static char header [] = "$Revision: 2.5 $";
+static char header [] = "$Revision: 2.6 $";
 
 
 /* Colour code is as follows:    global         = blue
@@ -127,7 +127,7 @@ int main (int argc, char** argv)
       
       /* Identify photon map type from format string */
       for (ptype = 0; 
-           strcmp(pmapFormat [ptype], format) && ptype < NUM_PMAP_TYPES; 
+           ptype < NUM_PMAP_TYPES && strcmp(pmapFormat [ptype], format);
            ptype++);
       
       if (!validPmapType(ptype)) {
