@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.62 2016/02/08 00:51:32 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.63 2016/02/09 23:05:26 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -39,7 +39,7 @@ if ($windoz) {
 	$tbz = "$td\\tbz.dat";
 	$rbz = "$td\\rbz.dat";
 	chomp $td;
-	$rmtmp = "rmdir /S /Q $td";
+	$rmtmp = "rd /S /Q $td";
 } else {
 	$td = mkdtemp("/tmp/genBSDF.XXXXXX");
 	chomp $td;
