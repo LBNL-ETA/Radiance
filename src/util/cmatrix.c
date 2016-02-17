@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.14 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.15 2016/02/17 23:26:06 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -148,8 +148,9 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 CMATRIX *
 cm_load(const char *inspec, int nrows, int ncols, int dtype)
 {
-	FILE	*fp = stdin;
-	CMATRIX	*cm;
+	const int	ROWINC = 2048;
+	FILE		*fp = stdin;
+	CMATRIX		*cm;
 
 	if (inspec == NULL)
 		inspec = "<stdin>";
@@ -218,7 +219,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		int	r, c;
 		for (r = 0; r < maxrow; r++) {
 		    if (r >= cm->nrows)			/* need more space? */
-			cm = cm_resize(cm, 2*cm->nrows);
+			cm = cm_resize(cm, cm->nrows+ROWINC);
 		    for (c = 0; c < ncols; c++) {
 		        COLORV	*cv = cm_lval(cm,r,c);
 			if (fscanf(fp, COLSPEC, cv, cv+1, cv+2) != 3) {
@@ -249,7 +250,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 				if (nrows <= 0) {	/* unknown length */
 					if (nread == cm->nrows*cm->ncols)
 							/* need more space? */
-						cm = cm_resize(cm, 2*cm->nrows);
+						cm = cm_resize(cm, cm->nrows+ROWINC);
 					else if (nread && !(nread % cm->ncols))
 							/* seem to be  done */
 						cm = cm_resize(cm, nread/cm->ncols);
