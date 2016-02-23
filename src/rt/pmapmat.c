@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.11 2015/10/20 15:49:44 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.12 2016/02/23 12:42:41 rschregle Exp $";
 #endif
 /* 
    ==================================================================

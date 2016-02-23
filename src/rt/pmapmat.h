@@ -1,13 +1,13 @@
-/* RCSid $Id: pmapmat.h,v 2.11 2015/10/28 12:32:53 rschregle Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.12 2016/02/23 12:42:41 rschregle Exp $ */
 /* 
-   ==================================================================
+   ======================================================================
    Photon map support routines for scattering by materials. 
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
 */
 
@@ -17,38 +17,53 @@
 
    #include "pmap.h"
 
-  /* 
-    ambRayInPmap():      Check for DIFFUSE -> (DIFFUSE|SPECULAR) -> *	 
-                            subpaths.  These occur during the backward pass	 
-                            when an ambient ray spawns an indirect diffuse or	 
-                            specular ray.  These subpaths are already	 
-                            accounted for in the global photon map.
-   */
-   #define ambRayInPmap(r)    ((r) -> crtype & AMBIENT && photonMapping && \
-                                 (ambounce < 0 || (r) -> rlvl > 1 || \
-                                  causticPhotonMapping || \
-                                  contribPhotonMapping))
-
-  /* 
+   /* 
       Check for paths already accounted for in photon map to avoid
       double-counting during backward raytracing.
-    
+      
+      ambRayInPmap():      Check for DIFFUSE -> (DIFFUSE|SPECULAR) -> *	 
+                           subpaths.  These occur during the backward pass	 
+                           when an ambient ray spawns an indirect diffuse or	 
+                           specular ray.  These subpaths are already	 
+                           accounted for in the global photon map.
+   */
+   #define ambRayInPmap(r) ((r) -> crtype & AMBIENT && photonMapping && \
+                              (ambounce < 0 || (r) -> rlvl > 1))
+
+   /* 
       shadowRayInPmap():   Check for DIFFUSE -> SPECULAR -> LIGHT
                            subpaths. These occur during the backward pass 
                            when a shadow ray is transferred through a
                            transparent material. These subpaths are already
                            accounted for by caustic photons in the global,
                            contrib, or dedicated caustic photon map.
+      
+      !!! DISABLED FOR TESTING PENDING REPLACEMENT BY srcRayInPmap() !!!                           
    */
-   #define shadowRayInPmap(r) ((r) -> crtype & SHADOW && \
-                                 (ambounce < 0 || \
-                                    ((r) -> crtype & AMBIENT \
-                                       ? photonMapping \
-                                       : causticPhotonMapping || \
-                                         contribPhotonMapping)))
+#if 1
+   #define shadowRayInPmap(r) 0
+#else   
+   #define shadowRayInPmap(r) (((globalPmap && ambounce < 0) || \
+                                 causticPmap || contribPmap) && \
+                                 (r) -> crtype & SHADOW)
+#endif
 
-   /* Check if scattered ray spawns a caustic photon */
-   #define PMAP_CAUSTICRAY(r) ((r) -> rtype & SPECULAR)
+   /* srcRayInPmap():      Check whether a source ray transferred through
+    *                      medium (e.g.  glass/dielectric) is already
+    *                      accounted for in the photon map.  This is used by
+    *                      badcomponent() in source.c when checking source
+    *                      hits (glows and lights, hence ambient and shadow
+    *                      rays).
+    */
+   #define srcRayInPmap(r)    (((globalPmap && ambounce < 0) || \
+                                 causticPmap || contribPmap) && \
+                                 (r) -> crtype & (AMBIENT | SHADOW) && \
+                                 (r) -> rtype & (TRANS | REFRACTED))
+				
+   /* Check if scattered ray spawns a caustic photon; 
+    * !!! NOTE this has to set bit 0 to properly handle caustic contrib
+    * !!! photons, so the explicit test against zero *IS* required!  */
+   #define PMAP_CAUSTICRAY(r)    (((r) -> rtype & SPECULAR) != 0) 
 
 
    /* Scattered photon ray types for photonRay() */
