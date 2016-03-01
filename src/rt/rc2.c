@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.15 2015/08/23 00:17:12 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.16 2016/03/01 00:58:31 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -482,7 +482,7 @@ reload_output()
 							oname);
 					error(USER, errmsg);
 				}
-				if ((sout.xr > 0) & (sout.yr > 0) &&
+				if ((sout.reclen == 1) & (sout.xr > 0) & (sout.yr > 0) &&
 						(!fscnresolu(&xr, &yr, sout.ofp) ||
 							(xr != sout.xr) |
 							(yr != sout.yr))) {
@@ -592,6 +592,8 @@ recover_output()
 			} else {
 				sout.reclen = 0;
 				sout.outpipe = 0;
+				sout.xr = xres;
+				sout.yr = yres;
 				sout.ofp = NULL;
 			}
 			if (sout.ofp != NULL) {	/* already open? */
@@ -632,8 +634,7 @@ recover_output()
 						oname);
 				error(USER, errmsg);
 			}
-			sout.xr = xres; sout.yr = yres;
-			if ((sout.xr > 0) & (sout.yr > 0) &&
+			if ((sout.reclen == 1) & (sout.xr > 0) & (sout.yr > 0) &&
 					(!fscnresolu(&xr, &yr, sout.ofp) ||
 						(xr != sout.xr) |
 						(yr != sout.yr))) {
