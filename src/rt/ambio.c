@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.9 2014/06/19 16:26:55 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.10 2016/03/02 22:03:49 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -55,16 +55,16 @@ writambval(			/* write ambient value to stream */
 	FILE  *fp
 )
 {
-	COLR  col;
+	COLR  clr;
 
 	putint(av->lvl, 1, fp);
 	putflt(av->weight, fp);
 	putpos(av->pos, fp);
 	putint(av->ndir, sizeof(av->ndir), fp);
 	putint(av->udir, sizeof(av->udir), fp);
-	setcolr(col, colval(av->val,RED),
+	setcolr(clr, colval(av->val,RED),
 			colval(av->val,GRN), colval(av->val,BLU));
-	fwrite((char *)col, sizeof(col), 1, fp);
+	fwrite((char *)clr, sizeof(clr), 1, fp);
 	putv2(av->rad, fp);
 	putv2(av->gpos, fp);
 	putv2(av->gdir, fp);
@@ -82,16 +82,15 @@ ambvalOK(			/* check consistency of ambient value */
 
 	if (badvec(av->pos)) return(0);
 	if (!av->ndir | !av->udir) return(0);
-	if ((av->lvl < 0) | (av->lvl > 100)) return(0);
 	if ((av->weight <= 0.) | (av->weight > 1.)) return(0);
 	if ((av->rad[0] <= 0.) | (av->rad[0] >= FHUGE)) return(0);
 	if ((av->rad[1] <= 0.) | (av->rad[1] >= FHUGE)) return(0);
 	if ((colval(av->val,RED) < 0.) |
-			(colval(av->val,RED) > FHUGE) |
+			(colval(av->val,RED) >= FHUGE) |
 			(colval(av->val,GRN) < 0.) |
-			(colval(av->val,GRN) > FHUGE) |
+			(colval(av->val,GRN) >= FHUGE) |
 			(colval(av->val,BLU) < 0.) |
-			(colval(av->val,BLU) > FHUGE)) return(0);
+			(colval(av->val,BLU) >= FHUGE)) return(0);
 	if (badflt(av->gpos[0]) || badflt(av->gpos[1])) return(0);
 	if (badflt(av->gdir[0]) || badflt(av->gdir[1])) return(0);
 	return(1);
@@ -104,18 +103,18 @@ readambval(			/* read ambient value from stream */
 	FILE  *fp
 )
 {
-	COLR  col;
+	COLR  clr;
 
-	av->lvl = getint(1, fp);
+	av->lvl = getint(1, fp) & 0xff;
 	if (feof(fp))
 		return(0);
 	av->weight = getflt(fp);
 	getpos(av->pos, fp);
 	av->ndir = getint(sizeof(av->ndir), fp);
 	av->udir = getint(sizeof(av->udir), fp);
-	if (fread((char *)col, sizeof(col), 1, fp) != 1)
+	if (fread((char *)clr, sizeof(clr), 1, fp) != 1)
 		return(0);
-	colr_color(av->val, col);
+	colr_color(av->val, clr);
 	getv2(av->rad, fp);
 	getv2(av->gpos, fp);
 	getv2(av->gdir, fp);
@@ -137,15 +136,15 @@ writambval(av, fp)		/* write ambient value to stream */
 AMBVAL  *av;
 FILE  *fp;
 {
-	COLR  col;
+	COLR  clr;
 
 	putint(av->lvl, 1, fp);
 	putflt(av->weight, fp);
 	putvec(av->pos, fp);
 	putvec(av->dir, fp);
-	setcolr(col, colval(av->val,RED),
+	setcolr(clr, colval(av->val,RED),
 			colval(av->val,GRN), colval(av->val,BLU));
-	fwrite((char *)col, sizeof(col), 1, fp);
+	fwrite((char *)clr, sizeof(clr), 1, fp);
 	putflt(av->rad, fp);
 	putvec(av->gpos, fp);
 	putvec(av->gdir, fp);
@@ -183,7 +182,7 @@ readambval(av, fp)		/* read ambient value from stream */
 AMBVAL  *av;
 FILE  *fp;
 {
-	COLR  col;
+	COLR  clr;
 
 	av->lvl = getint(1, fp);
 	if (feof(fp))
@@ -191,9 +190,9 @@ FILE  *fp;
 	av->weight = getflt(fp);
 	getvec(av->pos, fp);
 	getvec(av->dir, fp);
-	if (fread((char *)col, sizeof(col), 1, fp) != 1)
+	if (fread((char *)clr, sizeof(clr), 1, fp) != 1)
 		return(0);
-	colr_color(av->val, col);
+	colr_color(av->val, clr);
 	av->rad = getflt(fp);
 	getvec(av->gpos, fp);
 	getvec(av->gdir, fp);
