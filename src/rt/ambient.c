@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.98 2015/08/23 00:17:12 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.99 2016/03/03 22:44:10 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -216,7 +216,8 @@ ambdone(void)			/* close ambient file and free memory */
 		lastpos = -1;
 	}
 					/* free ambient tree */
-	unloadatree(&atrunk, &avfree);
+	unloadatree(&atrunk, avfree);
+	freeambtree(NULL);
 					/* reset state variables */
 	avsum = 0.;
 	navsum = 0;
@@ -1084,7 +1085,14 @@ freeambtree(			/* free 8 ambient tree structs */
 	AMBTREE  *atp
 )
 {
-	atp->kid = atfreelist;
+	if (atp == NULL) {	/* freeing free list? */
+		while ((atp = atfreelist) != NULL) {
+			atfreelist = atp->kid;
+			free(atp);
+		}
+		return;
+	}
+	atp->kid = atfreelist;	/* else push node onto free list */
 	atfreelist = atp;
 }
 
@@ -1226,7 +1234,7 @@ sortambvals(			/* resort ambient values */
 			oldatrunk = atrunk;
 			atrunk.alist = NULL;
 			atrunk.kid = NULL;
-			unloadatree(&oldatrunk, &avinsert);
+			unloadatree(&oldatrunk, avinsert);
 		}
 	} else {			/* sort memory by last access time */
 		/*
@@ -1243,7 +1251,7 @@ sortambvals(			/* resort ambient values */
 		eputs(errmsg);
 #endif
 		i_avlist = 0;
-		unloadatree(&atrunk, &av2list);	/* empty current tree */
+		unloadatree(&atrunk, av2list);	/* empty current tree */
 #ifdef DEBUG
 		if (i_avlist < nambvals)
 			error(CONSISTENCY, "missing ambient values in sortambvals");
