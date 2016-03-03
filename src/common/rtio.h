@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.10 2016/03/03 22:06:18 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.11 2016/03/03 22:09:59 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -10,6 +10,13 @@
 #include  <sys/types.h>
 #include  <fcntl.h>
 #include  <string.h>
+
+#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#undef putc
+#define getc    getc_unlocked
+#define putc    putc_unlocked
+#endif
 
 #ifdef __cplusplus
 extern "C" {
