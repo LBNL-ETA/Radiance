@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.99 2016/03/03 22:44:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.100 2016/03/03 22:47:21 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -217,7 +217,6 @@ ambdone(void)			/* close ambient file and free memory */
 	}
 					/* free ambient tree */
 	unloadatree(&atrunk, avfree);
-	freeambtree(NULL);
 					/* reset state variables */
 	avsum = 0.;
 	navsum = 0;
@@ -1085,14 +1084,7 @@ freeambtree(			/* free 8 ambient tree structs */
 	AMBTREE  *atp
 )
 {
-	if (atp == NULL) {	/* freeing free list? */
-		while ((atp = atfreelist) != NULL) {
-			atfreelist = atp->kid;
-			free(atp);
-		}
-		return;
-	}
-	atp->kid = atfreelist;	/* else push node onto free list */
+	atp->kid = atfreelist;
 	atfreelist = atp;
 }
 
