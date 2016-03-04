@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.11 2016/03/04 02:48:14 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.12 2016/03/04 19:16:49 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -28,7 +28,7 @@ char	*av[]
 	char	*compath;
 	int	p0[2], p1[2];
 
-	pd->pid = 0;
+	pd->pid = -1;
 	pd->running = 0;		/* not going yet */
 	
 	if (av == NULL)			/* cloning operation? */
@@ -92,14 +92,14 @@ int nproc
 	if (nproc == 1) {			/* await specific process? */
 		if (waitpid(pd->pid, &status, 0) != pd->pid)
 			return(-1);
-		pd->pid = 0;
+		pd->pid = -1;
 		return(status>>8 & 0xff);
 	}
 						/* else unordered wait */
 	while (togo > 0 && (pid = wait(&status)) >= 0) {
 		for (i = nproc; i-- > 0; )
 			if (pd[i].pid == pid) {
-				pd[i].pid = 0;
+				pd[i].pid = -1;
 				--togo;
 				break;
 			}
