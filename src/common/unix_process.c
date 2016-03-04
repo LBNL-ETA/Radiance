@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.10 2012/06/14 05:13:25 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.11 2016/03/04 02:48:14 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -28,6 +28,7 @@ char	*av[]
 	char	*compath;
 	int	p0[2], p1[2];
 
+	pd->pid = 0;
 	pd->running = 0;		/* not going yet */
 	
 	if (av == NULL)			/* cloning operation? */
@@ -71,23 +72,44 @@ char	*av[]
 }
 
 
-
 int
-close_process(		/* close pipes and wait for process */
-SUBPROC *pd
+close_processes(	/* close pipes and wait for processes to finish */
+SUBPROC pd[],
+int nproc
 )
 {
-	int	status;
+	int	togo = nproc;
+	int	status, rtn_status = 0;
+	RT_PID	pid;
+	int	i;
 
-	if (!pd->running)
-		return(0);
-	close(pd->w);
-	close(pd->r);
-	pd->running = 0;
-	if (waitpid(pd->pid, &status, 0) == pd->pid)
+	for (i = 0; i < nproc; i++)		/* close pipes, first */
+		if (pd[i].running) {
+			close(pd[i].w);
+			close(pd[i].r);
+			pd[i].running = 0;
+		}
+	if (nproc == 1) {			/* await specific process? */
+		if (waitpid(pd->pid, &status, 0) != pd->pid)
+			return(-1);
+		pd->pid = 0;
 		return(status>>8 & 0xff);
-
-	return(-1);		/* ? unknown status */
+	}
+						/* else unordered wait */
+	while (togo > 0 && (pid = wait(&status)) >= 0) {
+		for (i = nproc; i-- > 0; )
+			if (pd[i].pid == pid) {
+				pd[i].pid = 0;
+				--togo;
+				break;
+			}
+		if (i < 0)
+			continue;		/* child we don't know? */
+		status = status>>8 & 0xff;
+		if (status)			/* record non-zero status */
+			rtn_status = status;
+	}
+	if (togo)				/* child went missing? */
+		return(-1);
+	return(rtn_status);
 }
-
-

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.20 2015/08/23 00:17:12 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.21 2016/03/04 02:48:14 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -23,12 +23,13 @@ typedef struct s_binq {
 static BINQ	*out_bq = NULL;		/* output bin queue */
 static BINQ	*free_bq = NULL;	/* free queue entries */
 
+static SUBPROC	kidpr[MAXPROCESS];	/* our child processes */
+
 static struct {
 	RNUMBER	r1;			/* assigned ray starting index */
-	SUBPROC	pr;			/* PID, i/o descriptors */
 	FILE	*infp;			/* file pointer to read from process */
 	int	nr;			/* number of rays to sum (0 if free) */
-} kida[MAXPROCESS];		/* our child processes */
+} kida[MAXPROCESS];		/* our child process i/o */
 
 
 /* Get new bin queue entry */
@@ -273,14 +274,14 @@ in_rchild()
 
 	while (nchild < nproc) {	/* fork until target reached */
 		errno = 0;
-		rval = open_process(&kida[nchild].pr, NULL);
+		rval = open_process(&kidpr[nchild], NULL);
 		if (rval < 0)
 			error(SYSTEM, "open_process() call failed");
 		if (rval == 0) {	/* if in child, set up & return true */
 			lu_doall(&modconttab, &set_stdout, NULL);
 			lu_done(&ofiletab);
 			while (nchild--) {	/* don't share other pipes */
-				close(kida[nchild].pr.w);
+				close(kidpr[nchild].w);
 				fclose(kida[nchild].infp);
 			}
 			inpfmt = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
@@ -300,7 +301,7 @@ in_rchild()
 		if (rval != PIPE_BUF)
 			error(CONSISTENCY, "bad value from open_process()");
 					/* connect to child's output */
-		kida[nchild].infp = fdopen(kida[nchild].pr.r, "rb");
+		kida[nchild].infp = fdopen(kidpr[nchild].r, "rb");
 		if (kida[nchild].infp == NULL)
 			error(SYSTEM, "out of memory in in_rchild()");
 		kida[nchild++].nr = 0;	/* mark as available */
@@ -317,22 +318,19 @@ in_rchild()
 void
 end_children(int immed)
 {
-	int	status;
-	
-	while (nchild > 0) {
-		nchild--;
-#ifdef SIGKILL
-		if (immed)		/* error mode -- quick exit */
-			kill(kida[nchild].pr.pid, SIGKILL);
+	int	i;
+
+#ifdef SIGKILL				/* error mode -- quick exit */
+	for (i = nchild*immed; i-- > 0; )
+		kill(kidpr[nchild].pid, SIGKILL);
 #endif
-		if ((status = close_process(&kida[nchild].pr)) > 0 && !immed) {
-			sprintf(errmsg,
-				"rendering process returned bad status (%d)",
-					status);
+	if ((i = close_processes(kidpr, nchild)) > 0 && !immed) {
+		sprintf(errmsg, "rendering process returned bad status (%d)",
+					i);
 			error(WARNING, errmsg);
-		}
-		fclose(kida[nchild].infp);
 	}
+	while (nchild-- > 0)
+		fclose(kida[nchild].infp);
 }
 
 
@@ -366,12 +364,12 @@ tryagain:				/* catch up with output? */
 	n = nr = 0;
 	for (i = nchild; i--; ) {
 		if (kida[i].nr) {
-			FD_SET(kida[i].pr.r, &readset);
+			FD_SET(kidpr[i].r, &readset);
 			++nr;
 		}
-		FD_SET(kida[i].pr.r, &errset);
-		if (kida[i].pr.r >= n)
-			n = kida[i].pr.r + 1;
+		FD_SET(kidpr[i].r, &errset);
+		if (kidpr[i].r >= n)
+			n = kidpr[i].r + 1;
 	}
 	if (!nr)			/* nothing to wait for? */
 		return(-1);
@@ -388,9 +386,9 @@ tryagain:				/* catch up with output? */
 		FD_ZERO(&errset);
 	n = -1;				/* read results from child(ren) */
 	for (i = nchild; i--; ) {
-		if (FD_ISSET(kida[i].pr.r, &errset))
+		if (FD_ISSET(kidpr[i].r, &errset))
 			error(USER, "rendering process died");
-		if (FD_ISSET(kida[i].pr.r, &readset))
+		if (FD_ISSET(kidpr[i].r, &readset))
 			queue_results(n = i);
 	}
 	return(n);			/* first available child */
@@ -422,7 +420,7 @@ parental_loop()
 			if (accumulate > 1)		/* need terminator? */
 				memset(orgdir[2*n++], 0, sizeof(FVECT)*2);
 			n *= sizeof(FVECT)*2;		/* send assignment */
-			if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+			if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;	/* mark as busy */
@@ -475,12 +473,12 @@ next_child_ready()
 	FD_ZERO(&writeset); FD_ZERO(&errset);
 	n = 0;
 	for (i = nchild; i--; ) {
-		FD_SET(kida[i].pr.w, &writeset);
-		FD_SET(kida[i].pr.r, &errset);
-		if (kida[i].pr.w >= n)
-			n = kida[i].pr.w + 1;
-		if (kida[i].pr.r >= n)
-			n = kida[i].pr.r + 1;
+		FD_SET(kidpr[i].w, &writeset);
+		FD_SET(kidpr[i].r, &errset);
+		if (kidpr[i].w >= n)
+			n = kidpr[i].w + 1;
+		if (kidpr[i].r >= n)
+			n = kidpr[i].r + 1;
 	}
 	errno = 0;
 	n = select(n, NULL, &writeset, &errset, NULL);
@@ -488,9 +486,9 @@ next_child_ready()
 		error(SYSTEM, "select() error in next_child_ready()");
 	n = -1;				/* identify waiting child */
 	for (i = nchild; i--; ) {
-		if (FD_ISSET(kida[i].pr.r, &errset))
+		if (FD_ISSET(kidpr[i].r, &errset))
 			error(USER, "rendering process died");
-		if (FD_ISSET(kida[i].pr.w, &writeset))
+		if (FD_ISSET(kidpr[i].w, &writeset))
 			kida[n = i].nr = 0;
 	}
 	return(n);			/* first available child */
@@ -521,7 +519,7 @@ feeder_loop()
 		if (++ninq >= MAXIQ) {
 			i = next_child_ready();		/* get eager child */
 			n = sizeof(FVECT)*2 * ninq;	/* give assignment */
-			if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+			if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
 				error(SYSTEM, "pipe write error");
 			kida[i].r1 = lastray+1;
 			lastray += kida[i].nr = ninq;
@@ -535,7 +533,7 @@ feeder_loop()
 	if (ninq) {				/* polish off input */
 		i = next_child_ready();
 		n = sizeof(FVECT)*2 * ninq;
-		if (writebuf(kida[i].pr.w, (char *)orgdir, n) != n)
+		if (writebuf(kidpr[i].w, (char *)orgdir, n) != n)
 			error(SYSTEM, "pipe write error");
 		kida[i].r1 = lastray+1;
 		lastray += kida[i].nr = ninq;
@@ -543,7 +541,7 @@ feeder_loop()
 	}
 	memset(orgdir, 0, sizeof(FVECT)*2);	/* get results */
 	for (i = nchild; i--; ) {
-		writebuf(kida[i].pr.w, (char *)orgdir, sizeof(FVECT)*2);
+		writebuf(kidpr[i].w, (char *)orgdir, sizeof(FVECT)*2);
 		queue_results(i);
 	}
 	if (recover)				/* and from before? */

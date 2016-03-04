@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.16 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.17 2016/03/04 02:48:14 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -324,11 +324,8 @@ end_rtrace(void)			/* close rtrace process(es) */
 
 	if (nprocs > 1)
 		killpersist();
-	while (nprocs > 0) {
-		rv = close_process(&rtpd[--nprocs]);
-		if (rv > 0)
-			status = rv;
-	}
+	status = close_processes(rtpd, nprocs);
+	nprocs = 0;
 	free((void *)rtbuf);
 	rtbuf = NULL;
 	maxqlen = 0;

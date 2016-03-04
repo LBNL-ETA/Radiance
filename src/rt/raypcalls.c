@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raypcalls.c,v 2.28 2011/08/20 18:23:38 greg Exp $";
+static const char	RCSid[] = "$Id: raypcalls.c,v 2.29 2016/03/04 02:48:14 greg Exp $";
 #endif
 /*
  *  raypcalls.c - interface for parallel rendering using Radiance
@@ -164,7 +164,7 @@ int		ray_pnprocs = 0;	/* number of child processes */
 int		ray_pnidle = 0;		/* number of idle children */
 
 static struct child_proc {
-	int	pid;				/* child process id */
+	RT_PID	pid;				/* child process id */
 	int	fd_send;			/* write to child here */
 	int	fd_recv;			/* read from child here */
 	int	npending;			/* # rays in process */
@@ -508,7 +508,8 @@ ray_pclose(		/* close one or more child processes */
 )
 {
 	static int	inclose = 0;
-	RAY	res;
+	RAY		res;
+	int		i, status = 0;
 					/* check recursion */
 	if (inclose)
 		return;
@@ -524,21 +525,31 @@ ray_pclose(		/* close one or more child processes */
 		;
 	r_send_next = 0;		/* hard reset in case of error */
 	r_recv_first = r_recv_next = RAYQLEN;
-					/* clean up children */
-	while (nsub--) {
-		int	status;
-		ray_pnprocs--;
-		close(r_proc[ray_pnprocs].fd_send);
-		if (waitpid(r_proc[ray_pnprocs].pid, &status, 0) < 0)
+					/* close send pipes */
+	for (i = ray_pnprocs-nsub; i < ray_pnprocs; i++)
+		close(r_proc[i].fd_send);
+
+	if (nsub == 1) {		/* awaiting single process? */
+		if (waitpid(r_proc[ray_pnprocs-1].pid, &status, 0) < 0)
 			status = 127<<8;
-		close(r_proc[ray_pnprocs].fd_recv);
-		if (status) {
-			sprintf(errmsg,
-				"rendering process %d exited with code %d",
-					r_proc[ray_pnprocs].pid, status>>8);
-			error(WARNING, errmsg);
+		close(r_proc[ray_pnprocs-1].fd_recv);
+	} else				/* else unordered wait */
+		for (i = 0; i < nsub; ) {
+			int	j, mystatus;
+			RT_PID	pid = wait(&mystatus);
+			for (j = ray_pnprocs-nsub; j < ray_pnprocs; j++)
+				if (r_proc[j].pid == pid) {
+					if (mystatus)
+						status = mystatus;
+					close(r_proc[j].fd_recv);
+					++i;
+				}
 		}
-		ray_pnidle--;
+	ray_pnprocs -= nsub;
+	ray_pnidle -= nsub;
+	if (status) {
+		sprintf(errmsg, "rendering process exited with code %d", status>>8);
+		error(WARNING, errmsg);
 	}
 	inclose--;
 }

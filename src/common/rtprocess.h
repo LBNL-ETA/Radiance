@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.14 2016/02/03 22:41:35 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.15 2016/03/04 02:48:14 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -57,8 +57,10 @@ typedef struct {
 
 #define SP_INACTIVE {-1,-1,0,0} /* for static initializations */
 
+#define close_process(pd)	close_processes(pd,1)
+
 extern int open_process(SUBPROC *pd, char *av[]);
-extern int close_process(SUBPROC *pd);
+extern int close_processes(SUBPROC pd[], int nproc);
 extern int process(SUBPROC *pd, char *recvbuf, char *sendbuf, int nbr, int nbs);
 extern int readbuf(int fd, char *bpos, int siz);
 extern int writebuf(int fd, char *bpos, int siz);

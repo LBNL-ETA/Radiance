@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.9 2014/02/12 00:15:40 greg Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.10 2016/03/04 02:48:14 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -283,6 +283,7 @@ open_process(SUBPROC *proc, char *av[])
 		fputs("Illegal call to open_process()!\n", stderr);
 		return -1;
 	}
+	proc->pid = 0;
 	proc->running = 0;
 	if (av == NULL) { return -1; }
 	cmdpath = getpath(av[0], getenv("PATH"), X_OK);
@@ -319,21 +320,23 @@ int win_kill(RT_PID pid, int sig) /* we ignore sig... */
 
 
 int
-close_process(SUBPROC *proc) {
-	int icres, ocres;
+close_processes(SUBPROC pd[], int nproc) {
+	int i, icres, ocres;
 	DWORD pid;
 
-	ocres = close(proc->w);
-	icres = close(proc->r);
-	pid = proc->pid;
-	if(ocres != 0 || icres != 0) {
-		/* something went wrong: enforce infanticide */
-		/* other than that, it looks like we want to ignore errors here */
-		if (proc->running) {
-			win_kill(pid, 0);
+	for (i = 0; i < nproc; i++) {
+		if (pid[i].running) {
+			ocres = close(pd[i].w);
+			icres = close(pd[i].r);
+			pd[i].running = 0;
 		}
+		if(ocres != 0 || icres != 0) {
+			/* something went wrong: enforce infanticide */
+			/* other than that, it looks like we want to ignore errors here */
+			win_kill(pd[i].pid, 0);
+		}
+		pd[i].pid = 0;
 	}
-	proc->running = 0;
 	return 0; /* XXX we need to figure out more here... */
 }
 
