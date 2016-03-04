@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.10 2016/03/04 02:48:14 greg Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.11 2016/03/04 19:13:53 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -329,11 +329,11 @@ close_processes(SUBPROC pd[], int nproc) {
 			ocres = close(pd[i].w);
 			icres = close(pd[i].r);
 			pd[i].running = 0;
-		}
-		if(ocres != 0 || icres != 0) {
-			/* something went wrong: enforce infanticide */
-			/* other than that, it looks like we want to ignore errors here */
-			win_kill(pd[i].pid, 0);
+			if(ocres != 0 || icres != 0) {
+				/* something went wrong: enforce infanticide */
+				/* other than that, it looks like we want to ignore errors here */
+				win_kill(pd[i].pid, 0);
+			}
 		}
 		pd[i].pid = 0;
 	}
