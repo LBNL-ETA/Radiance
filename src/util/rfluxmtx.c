@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.34 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.35 2016/03/04 00:21:21 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -17,11 +17,6 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.34 2016/02/02 18:02:32 greg Exp
 #include "random.h"
 #include "triangulate.h"
 #include "platform.h"
-
-#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
-#undef getc
-#define getc    getc_unlocked
-#endif
 
 #define MAXRCARG	512
 

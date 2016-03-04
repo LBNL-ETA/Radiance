@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.49 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.50 2016/03/04 00:21:21 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -17,11 +17,6 @@ static const char RCSid[] = "$Id: xform.c,v 2.49 2016/02/02 18:02:32 greg Exp $"
 #include  "rtmath.h"
 #include  "object.h"
 #include  "otypes.h"
-
-#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
-#undef getc
-#define getc    getc_unlocked
-#endif
 
 int  xac;				/* global xform argument count */
 char  **xav;				/* global xform argument pointer */

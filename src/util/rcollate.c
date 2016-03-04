@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.21 2015/06/16 20:35:56 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.22 2016/03/04 00:21:21 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -18,13 +18,6 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.21 2015/06/16 20:35:56 greg Exp
 #define ssize_t	size_t
 #else
 #include <sys/mman.h>
-#endif
-
-#ifdef getc_unlocked            /* avoid horrendous overhead of flockfile */
-#undef getc
-#undef putc
-#define getc    getc_unlocked
-#define putc    putc_unlocked
 #endif
 
 typedef struct {

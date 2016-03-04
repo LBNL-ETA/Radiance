@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: readoct.c,v 2.29 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: readoct.c,v 2.30 2016/03/04 00:21:21 greg Exp $";
 #endif
 /*
  *  readoct.c - routines to read octree information.
@@ -17,11 +17,6 @@ static const char	RCSid[] = "$Id: readoct.c,v 2.29 2016/02/02 18:02:32 greg Exp 
 #include  "object.h"
 #include  "otypes.h"
 #include  "resolu.h"
-
-#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
-#undef getc
-#define getc    getc_unlocked
-#endif
 
 static double  ogetflt(void);
 static long  ogetint(int);

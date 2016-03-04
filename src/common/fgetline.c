@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetline.c,v 2.8 2014/07/09 22:46:51 greg Exp $";
+static const char	RCSid[] = "$Id: fgetline.c,v 2.9 2016/03/04 00:21:21 greg Exp $";
 #endif
 /*
  * fgetline.c - read line with escaped newlines.
@@ -10,11 +10,6 @@ static const char	RCSid[] = "$Id: fgetline.c,v 2.8 2014/07/09 22:46:51 greg Exp 
 #include "copyright.h"
 
 #include  "rtio.h"
-
-#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
-#undef getc
-#define getc    getc_unlocked
-#endif
 
 
 char *
