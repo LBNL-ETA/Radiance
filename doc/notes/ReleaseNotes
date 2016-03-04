@@ -2073,3 +2073,12 @@ to enable on input.
 
 Rewrote bsdf2klems to support tristimulus color and call wrapBSDF.
 Did the same for bsdf2ttree.  Function specifications still gray only.
+
+Reduced a problem where rvu or rholo would be slow to quit when
+run with many processes on a large model or one with a large
+ambient file (taking lots of memory).  We were waiting for
+processes to quit one-by-one, which takes some time for each
+process as it disentangles its shared memory.  We now
+wait for all the processes together, so they can disentangle
+in parallel.  It can still take up to a minute in some cases,
+but not 10 minutes like it was taking before the fix.
