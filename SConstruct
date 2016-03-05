@@ -43,14 +43,14 @@ def shareinstall_setup(env):
 		install.install_manfiles(env)
 
 # Set up build environment
-env = Environment(tools=['mingw'])
+env = Environment()
 env.Decider('timestamp-match')
 
 if os.name == 'posix':
 	from build_utils import install
-	csh_b = Builder(action = install.install_cshscript,
+	csh_b = Builder(action = install.install_script,
 			suffix = '', src_suffix = '.csh')
-	env.Append(BUILDERS={'InstallCsh': csh_b})
+	env.Append(BUILDERS={'InstallScript': csh_b})
 
 # configure platform-specific stuff
 from build_utils import load_plat
@@ -68,7 +68,6 @@ if ((not env['SKIP']
 
 # fill in generic config
 allplats_setup(env)
-
 
 # Bring in all the actual things to build
 Export('env')
