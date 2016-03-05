@@ -8,8 +8,10 @@ progs = []
 # compose paths
 def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
 def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
+def tclscr(name): return os.path.join('$RAD_BUILDRLIB', 'tcl', name)
 
-Version = env.Object(source='#src/rt/Version.c')
+cmatrix = env.Object(source='cmatrix.c')
+cmbsdf = env.Object(source='cmbsdf.c')
 
 # standard targets
 PROGS = [
@@ -20,35 +22,39 @@ PROGS = [
 ('vwrays',    Split('vwrays.c'),   ['rtpic','rtargs','rtio','rtmath']),
 ('rad',       Split('rad.c'),
 	['rtpic','rtproc','rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']),
-('rpiece',    Split('rpiece.c') + [Version],
+('rpiece',    Split('rpiece.c') + [env.version], # remote magic
 	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
 ('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'],
 	['rtpic','rtargs','rtio','rtproc','rtcont','rtmem','rtpath','rtmath',
 	'rtnet','rterror','$RAD_SOCKETLIB']),
-('dctimestep', Split('dctimestep.c cmbsdf.c cmatrix.c'),
-	['rtall'])
+('dctimestep', Split('dctimestep.c')+[cmatrix, cmbsdf], ['rtall']),
+('rttree_reduce', Split('rttree_reduce.c'), ['rtall']),
+('rcollate', Split('rcollate.c'), ['rtall']),
+('eplus_adduvf', Split('eplus_adduvf.c eplus_idf.c'), ['rtall']),
+('rfluxmtx', Split('rfluxmtx.c'), ['rtall']),
+('rmtxop', Split('rmtxop.c rmatrix.c')+[cmatrix, cmbsdf], ['rtall']),
+('wrapBSDF', Split('wrapBSDF.c'), ['rtall']),
+('evalglare', Split('evalglare.c pictool.c'), ['rtall', 'reetz']),
 ]
 
 for p in PROGS:
 	prog = env.Program(target=radbin(p[0]), source=p[1], LIBS=p[2]+mlib)
 	progs.append(prog)
 
-#if os.name != 'nt': # XXX pending Windows version of raypcalls.c
-if True: # experimental raypwin.c
-	# targets with different includes/libs
-	rs = Split('ranimove.c ranimove1.c ranimove2.c')
-	ranimove = env.Program(target=radbin('ranimove'), source=rs,
-			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
-			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
-			'rtnet','rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
-			+ mlib)
-	progs.append(ranimove)
-	rsensor = env.Program(target=radbin('rsensor'), source='rsensor.c',
-			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
- 			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
-			'rtcont','rtmem','rtargs','rtio','rtpath','rterror','rtproc',
-			'rtnet','rtlamps'] + mlib)
-	progs.append(rsensor)
+# targets with different includes/libs
+rs = Split('ranimove.c ranimove1.c ranimove2.c')
+ranimove = env.Program(target=radbin('ranimove'), source=rs,
+		CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
+		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
+		'rtnet','rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
+		+ mlib)
+progs.append(ranimove)
+rsensor = env.Program(target=radbin('rsensor'), source='rsensor.c',
+		CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
+		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
+		'rtcont','rtmem','rtargs','rtio','rtpath','rterror','rtproc',
+		'rtnet','rtlamps'] + mlib)
+progs.append(rsensor)
 
 getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
 		LIBS=['rtio'])
@@ -76,9 +82,18 @@ if env.has_key('X11LIB'):
 		progs.append(glrad)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
-	for s in Split('''objview objline objpict glare dayfact
-			debugcal rlux raddepend compamb vinfo genambpos fieldcomb'''):
+	for s in Split('''objline glare dayfact
+			debugcal rlux raddepend compamb vinfo fieldcomb'''):
 		Default(env.InstallScript(radbin(s), s + '.csh'))
+	for s in Split('''objview objpict
+			genambpos genklemsamp genskyvec genBSDF ltview ltpict'''):
+		Default(env.InstallScript(radbin(s), s + '.pl'))
+	for s in Split('''do_action.tcl do_file.tcl do_options.tcl do_results.tcl
+		do_scene.tcl do_views.tcl do_zone.tcl file.hlp getfile.tcl gethelp.tcl
+		help.hlp tclIndex trad.hlp trad.icon util.tcl'''):
+		Default(env.InstallScript(tclscr(s), s))
+	Default(env.InstallTCLScript(radbin('trad'), 'trad.wsh'))
+	
 # Those don't really work yet
 #else:
 #	for s in Split('''objview glare rlux '''):
@@ -88,3 +103,4 @@ if os.name == 'posix': # XXX ignoring trad.wsh
 Default('#src/util')
 env.Install('$RAD_BINDIR', progs)
 
+# vim: set syntax=python:

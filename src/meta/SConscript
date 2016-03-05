@@ -85,3 +85,4 @@ if env.has_key('X11LIB'):
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], x11meta)])
 
 
+# vim: set syntax=python:

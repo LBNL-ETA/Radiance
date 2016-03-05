@@ -7,7 +7,6 @@ progs = []
 
 # compose paths
 def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
-#def radbin(name): return name
 def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
 
 warp3d = env.Object(source="warp3d.c")
@@ -48,6 +47,7 @@ PROGS = (
 ('ra_pict',  ['ra_pict.c'],   ['rtpic','rtio','rtmem']),
 ('ra_hexbit',['ra_hexbit.c'], ['rtpic','rtio','rtmem']),
 ('ra_xyze',  ['ra_xyze.c'],   ['rtpic','rtio','rtmem']),
+('pmblur2',  ['pmblur2.c'],   ['rtpic','rtargs','rtio','rtargs','rtmath','rtmem','rtcont','rterror',mlib]),
 
 ('ttyimage', ['ttyimage.c'],  ['rtpic','rtio','rtmem']),
 )
@@ -124,8 +124,8 @@ if env.has_key('X11LIB'):
 	progs.append(xshowtrace)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
-	for s in Split('''normpat pdfblur pmblur pmdblur pbilat
-			xyzimage phisto pdelta pgblur ra_pfm ran2tiff'''):
+	for s in Split('''normpat pdfblur pmblur pmdblur
+			xyzimage phisto pdelta pgblur ra_pfm ran2tiff pbilat'''):
 		Default(env.InstallScript(radbin(s), s + '.csh'))
 	for s in Split('''falsecolor'''):
 		Default(env.InstallScript(radbin(s), s + '.pl'))
@@ -138,3 +138,4 @@ if os.name == 'posix': # XXX ignoring trad.wsh
 Default('#src/px')
 env.Install('$RAD_BINDIR', progs)
 
+# vim: set syntax=python:

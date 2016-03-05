@@ -48,9 +48,10 @@ env.Decider('timestamp-match')
 
 if os.name == 'posix':
 	from build_utils import install
-	csh_b = Builder(action = install.install_script,
-			suffix = '', src_suffix = '.csh')
-	env.Append(BUILDERS={'InstallScript': csh_b})
+	script_b = Builder(action = install.install_script, suffix = '')
+	env.Append(BUILDERS={'InstallScript': script_b})
+	tclscript_b = Builder(action = install.install_tclscript, suffix = '')
+	env.Append(BUILDERS={'InstallTCLScript': tclscript_b})
 
 # configure platform-specific stuff
 from build_utils import load_plat
@@ -95,3 +96,4 @@ env.Alias('build',   ['#bin'])
 env.Alias('test',    ['#test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 
+# vim: set syntax=python:

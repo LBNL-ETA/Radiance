@@ -5,20 +5,22 @@ Import('env')
 # math libs
 mlib = env['RAD_MLIB']
 
+# compose paths
+def radbin(name): return os.path.join('$RAD_BUILDBIN', name)
+def radlib(name): return os.path.join('$RAD_BUILDLIB', name)
+
 # common objects
 viewbeams = env.Object(source='viewbeams.c')
 holo = env.Object(source='holo.c')
 holofile = env.Object(source='holofile.c')
 clumpbeams = env.Object(source='clumpbeams.c')
-Version = env.Object(source='../rt/Version.c') # XXX ../rt/not_nice
-
 
 # standard targets
 PROGS = (
 ('rholo', Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c''')
-	 + [Version, holofile, holo, viewbeams],
+	 + [env.version, holofile, holo, viewbeams],
 	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtmem','rterror']),
-('rhpict', Split('rhpict.c rhpict2.c')+[Version, holofile, holo, viewbeams],
+('rhpict', Split('rhpict.c rhpict2.c')+[env.version, holofile, holo, viewbeams],
 	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
 ('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo],
 	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
@@ -31,7 +33,7 @@ PROGS = (
 )
 if os.name != 'nt': # pending some major work...
 	for p in PROGS:
-		prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
+		prog = env.Program(target=radbin(p[0]),
 				source=p[1], LIBS=p[2] + mlib)
 		Default(prog)
 		env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
@@ -56,12 +58,12 @@ if env.has_key('X11INCLUDE'):
 	dlibs = ['rtpic','rtmath','rtcont','rtmem','rtargs','rtio','rterror','rtdummy']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
-		prog = xenv.Program(target=os.path.join(devdir, p[0]),
+		prog = xenv.Program(target=radbin(p[0]),
 				source=[obj] + p[1] + xcommon, LIBS=p[2])
 		Default(prog)
 		inst = xenv.Install(idevdir, prog)
 		# XXX what are the alternative "<driver>h" names good for?
-		insth = xenv.InstallAs(target=os.path.join(idevdir,
+		insth = xenv.InstallAs(target=radbin(
 					p[0] + 'h' + xenv['PROGSUFFIX']), source=prog)
 		env.Append(RAD_BININSTALL=[inst, insth])
 
@@ -115,3 +117,4 @@ if env.has_key('X11INCLUDE'):
 
 
 
+# vim: set syntax=python:

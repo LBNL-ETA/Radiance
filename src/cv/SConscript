@@ -17,22 +17,32 @@ for p in MGFPROGS:
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 trans = env.Object(source="trans.c")
+bsdfrep = env.Object(source="bsdfrep.c")
+bsdfinterp = env.Object(source="bsdfinterp.c")
+
 
 # standard targets
 PROGS = [
 ('ies2rad',   ['ies2rad.c'],       ['rtlamps','rtcolor','rtio','rtpath']+ mlib),
-('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
+#('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
 ('nff2rad',   ['nff2rad.c'],       []),
 ('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtio','rtpath']),
 ('tmesh2rad', ['tmesh2rad.c'],     ['rtscene','rtmath'] + mlib),
-('mgf2inv',   ['mgf2inv.c'],       ['mgf','rtall'] + mlib),
 ('obj2rad',   ['obj2rad.c',trans], 
     ['rtscene','rtargs','rtio','rtcont','rtmem','rtmath','rterror'] + mlib),
 ('mgf2rad',   ['mgf2rad.c'],       ['mgf','rtall'] + mlib),
-('mgfilt',    ['mgfilt.c'],        ['mgf','rtall'] + mlib),
 ('rad2mgf',   ['rad2mgf.c'],
 	['rtproc', 'rtpath', # for win_popen()
     'rtscene','rtio','rtcolor','rtcont','rtmem','rterror'] + mlib),
+('mgfilt',    ['mgfilt.c'],        ['mgf','rtall'] + mlib),
+('mgf2inv',   ['mgf2inv.c'],       ['mgf','rtall'] + mlib),
+('pabopto2bsdf', 
+	['pabopto2bsdf.c',bsdfrep,'bsdfrbf.c', 'bsdfmesh.c', 'bsdftrans.cpp',], 
+	['rtall'] + mlib),
+('bsdf2klems',['bsdf2klems.c',bsdfrep,bsdfinterp, ], ['rtall'] + mlib),
+('bsdf2ttree',['bsdf2ttree.c',bsdfrep,bsdfinterp, ], ['rtall'] + mlib),
+('pkgBSDF',   ['pkgBSDF.c', ], ['rtall'] + mlib),
+('epw2wea',   ['epw2wea.c', ], ['rtall'] + mlib),
 ]
 for p in PROGS:
 	prog = env.Program(target=rbin(p[0]), source=p[1], LIBS=p[2])
@@ -51,3 +61,5 @@ env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
 if os.name == 'posix':
 	for s in Split('''optics2rad'''):
 		Default(env.InstallScript(rbin(s), s + '.csh'))
+
+# vim: set syntax=python:

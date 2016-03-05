@@ -12,6 +12,8 @@ sun = env.Object(source="sun.c")
 PROGS = (
 # name          sources           libs
 ('gendaylit',   Split('gendaylit.c',)+[sun], ['rtlamps']),
+('gendaymtx',   Split('gendaymtx.c',)+[sun],
+    ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror',mlib]),
 ('genbeads',    Split('genbeads.c hermite3.c'),  []),
 ('genbox',      ['genbox.c',],    []),
 ('genmarble',   ['genmarble.c',], []),
@@ -28,10 +30,6 @@ PROGS = (
 ('genbranch',   ['genbranch.c',], []),
 ('replmarks',   ['replmarks.c',],
 	['rtproc','rtpath','rtmath','rtio','rterror']),
-#('mkillum',     Split('mkillum.c mkillum2.c mkillum3.c'),
-#    ['rtproc','rtscene','rtpath','rtmath','rtio','rtcont','rterror']),
-#('mksource',    ['mksource.c'],
-#	['rtio','rtmath','rterror']),
 ('xform',       ['xform.c',],
     ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror']),
 )
@@ -62,7 +60,8 @@ Default('#src/gen')
 env.Install('$RAD_BINDIR', progs)
 
 #surf.cal clockface.hex
-LIBFILES = Split('illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal perezlum.cal coeff_perez.dat defangle.dat')
+LIBFILES = Split('''illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal
+		perezlum.cal coeff_perez.dat defangle.dat''')
 env.Append(RAD_RLIBINSTALL=env.Install('$RAD_RLIBDIR', LIBFILES))
 
-
+# vim: set syntax=python:

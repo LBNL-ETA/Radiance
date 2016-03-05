@@ -19,14 +19,16 @@ ambio = env.Object(source="ambio.c")
 rayfifo = env.Object(source="rayfifo.c")
 raypwin = env.Object(source="raypwin.c")
 raycalls = env.Object(source="raycalls.c")
+pmaptype = env.Object(source="pmaptype.c")
+pmapparm = env.Object(source="pmapparm.c")
 
 
 # source and object dependencies
 RAY = Split('''ambcomp.c ambient.c freeobjmem.c initotypes.c preload.c
 		raytrace.c renderopts.c''') + [ambio]
 PMAP = Split('''pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c
-        pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c
-        pmapdiag.c pmaptype.c''')
+        pmapbias.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c pmapdiag.c '''
+		) + [pmaptype, pmapparm]
 
 SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
 		o_face.c o_cone.c o_instance.c o_mesh.c''')
@@ -44,6 +46,7 @@ rsrc = RAY + PMAP + SURF + MAT + MOD + SUP
 env.Command('Version.c', 'VERSION', vstamp.build_version_c)
 env.Depends('Version.c', rsrc)
 Version = env.Object(source=['Version.c'])
+env.version = Version # make it remotely accessible
 rlib = env.Library(target=radlib('rttrace'), source=rsrc + [Version])
 
 #if os.name == 'nt': # XXX until we get around fork() and friends
@@ -56,6 +59,18 @@ Default(rclib)
 fullib=['rttrace', 'rtscene', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
 	'rtargs', 'rtpath', 'rtio', 'rtcont', 'rtmem', 'rterror']
 # build executables
+mkpmap = env.Program(target=radbin('mkpmap'),
+		source = Split('mkpmap.c') + [Version],
+		LIBS= fullib + ['rtnet', '$RAD_SOCKETLIB', mlib]),
+Default(mkpmap)
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', mkpmap)])
+
+pmapdump = env.Program(target=radbin('pmapdump'),
+		source = Split('pmapdump.c') + [pmaptype, pmapparm, Version],
+		LIBS= fullib + ['$RAD_SOCKETLIB', mlib]),
+Default(pmapdump)
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', pmapdump)])
+
 lasrc = ['lookamb.c', ambio]
 lookamb = env.Program(target=radbin('lookamb'), source=lasrc,
 	LIBS=['rtio', 'rtpic', 'rtmath', mlib])
@@ -64,9 +79,10 @@ env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', lookamb)])
 
 rcontrib = env.Program(target=radbin('rcontrib'),
 		source = Split('rcmain.c rcontrib.c rc2.c rc3.c') + [Version],
-		LIBS= ['rttrace','rtscene','rtpic','rtargs','rtfunc','rtio',
-		'rtproc','rtcont',
-		'rtmem', 'rtpath', 'rtmath','rtnet','rterror','$RAD_SOCKETLIB',mlib]),
+		LIBS= fullib + ['rtnet', '$RAD_SOCKETLIB', mlib]),
+#		LIBS= ['rttrace','rtscene','rtpic','rtargs','rtfunc','rtio',
+#		'rtproc','rtcont',
+#		'rtmem', 'rtpath', 'rtmath','rtnet','rterror','$RAD_SOCKETLIB',mlib]),
 Default(rcontrib)
 env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rcontrib)])
 
@@ -112,3 +128,4 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 LIBFILES = Split('rayinit.cal')
 env.Append(RAD_RLIBINSTALL=[env.Install('$RAD_RLIBDIR', LIBFILES)])
 
+# vim: set syntax=python:

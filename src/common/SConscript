@@ -32,10 +32,12 @@ RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 RTFUNC = Split('''biggerlib.c caldefn.c calexpr.c calfunc.c calprnt.c
 		chanvalue.c''')
 RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
-		portio.c wordfile.c words.c header.c timegm.c''')
+		portio.c wordfile.c words.c header.c timegm.c cvtcmd.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
 RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
 RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')+ [getlibpath]
+REETZ = Split('''g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c
+		maxheap.c''')
 
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 
@@ -62,6 +64,7 @@ rtfunc = env.StaticLibrary(target=radlib('rtfunc'), source=RTFUNC)
 rtproc = env.StaticLibrary(target=radlib('rtproc'), source=RTPROC)
 rtcolor = env.StaticLibrary(target=radlib('rtcolor'), source=RTCOLOR)
 rtlamps = env.StaticLibrary(target=radlib('rtlamps'), source=RTLAMPS)
+reetz = env.StaticLibrary(target=radlib('reetz'), source=REETZ)
 rtpic = env.StaticLibrary(target=radlib('rtpic'), source=RTPIC)
 rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
 # librtdummy is needed, because addobjnotify has different sizes depending
@@ -84,3 +87,4 @@ if env.has_key('OGL'):
 			CPPPATH=oglincl)
 	Default(librgl)
 
+# vim: set syntax=python:
