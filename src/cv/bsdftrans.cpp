@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdftrans.cpp,v 2.3 2014/03/29 21:51:59 greg Exp $";
+static const char RCSid[] = "$Id: bsdftrans.cpp,v 2.4 2016/03/05 19:21:12 schorsch Exp $";
 #endif
 /*
  * Compute mass transport plan for RBF lobes
@@ -18,11 +18,16 @@ using namespace std;
 extern "C" void
 plan_transport(MIGRATION *mig)
 {
-	double			src[mtx_nrows(mig)];
-	double			dst[mtx_ncols(mig)];
+	double			*src;
+	double			*dst;
+	TsFlow			*flow;
+
+	src = new double[mtx_nrows(mig)];
+	dst = new double[mtx_ncols(mig)];
+
 	TsSignature<RBFVAL>	srcSig(mtx_nrows(mig), mig->rbfv[0]->rbfa, src);
 	TsSignature<RBFVAL>	dstSig(mtx_ncols(mig), mig->rbfv[1]->rbfa, dst);
-	TsFlow			flow[mtx_nrows(mig)+mtx_ncols(mig)-1];
+	flow = new TsFlow[mtx_nrows(mig)+mtx_ncols(mig)-1];
 	int			n;
 						/* clear flow matrix */
 	memset(mig->mtx, 0, sizeof(float)*mtx_nrows(mig)*mtx_ncols(mig));
@@ -49,4 +54,8 @@ plan_transport(MIGRATION *mig)
 	}
 	while (n-- > 0)				/* assign sparse matrix */
 		mtx_coef(mig, flow[n].from, flow[n].to) = flow[n].amount;
+
+	delete[] src;
+	delete[] dst;
+	delete[] flow;
 }
