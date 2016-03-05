@@ -34,7 +34,7 @@ def install_manfiles(env):
 	env.Append(RAD_MANINSTALL=il)
 
 
-def install_cshscript(target, source, env):
+def install_script(target, source, env):
 	for t,s in map(None,target,source):
 		sf = open(str(s), 'r')
 		tf = open(str(t), 'w')

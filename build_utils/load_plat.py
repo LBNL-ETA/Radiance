@@ -8,7 +8,13 @@ _platdir = 'platform'
 
 
 def read_plat(env, args, fn):
-	cfig = ConfigParser.ConfigParser(env.Dictionary())
+	envdict = env.Dictionary().copy()
+	# can't feed ConfigParser the original dict, because it also
+	# contains non-string values.
+	for k,v in envdict.items():
+		if not isinstance(v, str):
+			del envdict[k]
+	cfig = ConfigParser.ConfigParser(envdict)
 	cfig.read(fn)
 	buildvars = [['CC',
 			'TIFFINCLUDE', # where to find preinstalled tifflib headers
