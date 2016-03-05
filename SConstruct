@@ -6,15 +6,15 @@ import string
 OPTFILE = 'rayopts.py'
 def set_opts(env):
 	# XXX add some caching
-	opts = Options(OPTFILE, ARGUMENTS)
-	opts.Add('SKIP', 'Skip Display of License terms', 0)
-	opts.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
-	opts.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
-	opts.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
-	opts.Add('RAD_DEBUG',   'Build a debug version',  0)
-	opts.Update(env) 
-	opts.Save(OPTFILE, env)
-	Help(opts.GenerateHelpText(env, sort=cmp))
+	vars = Variables(OPTFILE, ARGUMENTS)
+	vars.Add('SKIP', 'Skip Display of License terms', 0)
+	vars.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
+	vars.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
+	vars.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
+	vars.Add('RAD_DEBUG',   'Build a debug version',  0)
+	vars.Update(env) 
+	vars.Save(OPTFILE, env)
+	Help(vars.GenerateHelpText(env, sort=cmp))
 	# where stuff is located in the source tree
 	env['RAD_BUILDLIB']  = '#src/lib'
 	env['RAD_BUILDBIN']  = '#bin'
