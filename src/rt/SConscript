@@ -24,19 +24,23 @@ raycalls = env.Object(source="raycalls.c")
 # source and object dependencies
 RAY = Split('''ambcomp.c ambient.c freeobjmem.c initotypes.c preload.c
 		raytrace.c renderopts.c''') + [ambio]
+PMAP = Split('''pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c
+        pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c
+        pmapdiag.c pmaptype.c''')
 
 SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
 		o_face.c o_cone.c o_instance.c o_mesh.c''')
 
 MAT = Split('''aniso.c normal.c m_clip.c glass.c m_brdf.c m_mirror.c
-		m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c''') + [dielectric]
+		m_direct.c m_mist.c fprism.c m_alias.c m_bsdf.c ashikhmin.c '''
+		) + [dielectric]
 
 MOD = Split('p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c')
 
 SUP = Split('func.c noise3.c data.c')
 
 # build libraries
-rsrc = RAY + SURF + MAT + MOD + SUP
+rsrc = RAY + PMAP + SURF + MAT + MOD + SUP
 env.Command('Version.c', 'VERSION', vstamp.build_version_c)
 env.Depends('Version.c', rsrc)
 Version = env.Object(source=['Version.c'])
@@ -54,15 +58,24 @@ fullib=['rttrace', 'rtscene', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
 # build executables
 lasrc = ['lookamb.c', ambio]
 lookamb = env.Program(target=radbin('lookamb'), source=lasrc,
-	LIBS=['rtio', 'rtpic'])
+	LIBS=['rtio', 'rtpic', 'rtmath', mlib])
 Default(lookamb)
 env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', lookamb)])
+
+rcontrib = env.Program(target=radbin('rcontrib'),
+		source = Split('rcmain.c rcontrib.c rc2.c rc3.c') + [Version],
+		LIBS= ['rttrace','rtscene','rtpic','rtargs','rtfunc','rtio',
+		'rtproc','rtcont',
+		'rtmem', 'rtpath', 'rtmath','rtnet','rterror','$RAD_SOCKETLIB',mlib]),
+Default(rcontrib)
+env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rcontrib)])
+
 
 rtmain = env.Object(source=['rtmain.c'],
 		CCFLAGS=env.get('CCFLAGS',[]) + ['-DNICE=4'])
 rtsrc = ['rtrace.c', duphead, persist, rtmain, rayfifo, raypwin, raycalls]
 rtrace = env.Program(target=radbin('rtrace'), source=rtsrc,
-	LIBS=fullib + mlib
+	LIBS=fullib + ['rtnet'] +  mlib
 	)
 Default(rtrace)
 env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', rtrace)])
@@ -88,7 +101,7 @@ if env.has_key('X11LIB'): # lots of special requirements for rvu
 	rvsrc = Split('rview.c rv2.c') + devsrc + rvobjs
 	rvu = env.Program(target=radbin('rvu'), source=rvsrc,
 		LIBPATH=env['LIBPATH'] + [env['X11LIB']],
-		LIBS = (['rtscene', rclib, 'rttrace', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
+		LIBS = (['rtscene', rclib, 'rttrace', 'rtnet', 'rtpic', 'rtfunc', 'rtproc', 'rtmath',
 			'rtargs', 'rtpath', 'rtio', 'rtcont', 'rtmem', 'rterror',
 			'X11'] + mlib)
 		#LIBS=fullib + ['X11', rclib] + mlib

@@ -25,10 +25,7 @@ PROGS = [
 ('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'],
 	['rtpic','rtargs','rtio','rtproc','rtcont','rtmem','rtpath','rtmath',
 	'rtnet','rterror','$RAD_SOCKETLIB']),
-('rtcontrib', ['rtcontrib.c', Version],
-	['rtpic','rtargs','rtfunc','rtio','rtproc','rtcont','rtmem','rtpath',
-	'rtmath','rtnet','rterror','$RAD_SOCKETLIB']),
-('dctimestep', ['dctimestep.c'],
+('dctimestep', Split('dctimestep.c cmbsdf.c cmatrix.c'),
 	['rtall'])
 ]
 
@@ -43,14 +40,14 @@ if True: # experimental raypwin.c
 	ranimove = env.Program(target=radbin('ranimove'), source=rs,
 			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
 			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
-			'rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
+			'rtnet','rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
 			+ mlib)
 	progs.append(ranimove)
 	rsensor = env.Program(target=radbin('rsensor'), source='rsensor.c',
 			CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
  			LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
 			'rtcont','rtmem','rtargs','rtio','rtpath','rterror','rtproc',
-			'rtlamps'] + mlib)
+			'rtnet','rtlamps'] + mlib)
 	progs.append(rsensor)
 
 getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
@@ -75,13 +72,13 @@ if env.has_key('X11LIB'):
 			LIBPATH=xlibp, CPPPATH=xincl,
 			LIBS=['rgl','rtpic','rtscene','rtproc','rtpath','rtargs','rtio',
 			'rtmath','rtcont','rtmem','rterror','rtdummy',
-			'GL', 'GLU','X11'],)
+			'GL', 'GLU','X11'] + mlib,)
 		progs.append(glrad)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
 	for s in Split('''objview objline objpict glare dayfact
 			debugcal rlux raddepend compamb vinfo genambpos fieldcomb'''):
-		Default(env.InstallCsh(radbin(s), s + '.csh'))
+		Default(env.InstallScript(radbin(s), s + '.csh'))
 # Those don't really work yet
 #else:
 #	for s in Split('''objview glare rlux '''):
