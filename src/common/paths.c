@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: paths.c,v 2.4 2003/07/01 21:21:40 greg Exp $";
+static const char RCSid[] = "$Id: paths.c,v 2.5 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  * Find a writeable tempfile directory.
@@ -149,7 +149,7 @@ temp_fd(char *s, size_t len, char *templ)
 
 	ts = prepare_tmpname(s, len, templ);
 	if (ts == NULL) return -1;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	ts = mktemp(ts);
 	if (ts == NULL) return -1;
 	return open(ts, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);

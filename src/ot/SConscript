@@ -6,13 +6,13 @@ Import('env') # inherit from parent
 mlib = env['RAD_MLIB']
 
 # standard targets
-env.Object(source='bbox.c')
-env.Object(source='o_face.c')
+bbox = env.Object(source='bbox.c')
+o_face = env.Object(source='o_face.c')
 PROGS = (
-('oconv',    Split('''oconv.c writeoct.c bbox.o initotypes.c
-				   sphere.c o_face.o o_cone.c o_instance.c'''), []),
-('getbbox',  Split('getbbox.c readobj2.c bbox.o init2otypes.c'), []),
-('obj2mesh', Split('obj2mesh.c cvmesh.c wfconv.c o_face.o writemesh.c'),
+('oconv',    Split('''oconv.c writeoct.c initotypes.c sphere.c
+				   o_cone.c o_instance.c''') +[bbox, o_face], []),
+('getbbox',  Split('getbbox.c readobj2.c init2otypes.c') +[bbox], []),
+('obj2mesh', Split('obj2mesh.c cvmesh.c wfconv.c writemesh.c')+[o_face],
 	 ['rtdummy']),
 )
 for p in PROGS:

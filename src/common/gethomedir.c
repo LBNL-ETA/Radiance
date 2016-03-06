@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gethomedir.c,v 1.1 2003/10/27 10:20:58 schorsch Exp $";
+static const char RCSid[] = "$Id: gethomedir.c,v 1.2 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  *  gethomedir.c - search for a users home directory
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: gethomedir.c,v 1.1 2003/10/27 10:20:58 schorsc
 
 #include "rtio.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 
 char *
 gethomedir(char *uname, char *path, int plen)
@@ -41,7 +41,7 @@ gethomedir(char *uname, char *path, int plen)
 	return NULL;
 }
 	
-#else /* _WIN32 */
+#else /* _WIN32 || _WIN64 */
 
 
 #include <unistd.h>
@@ -77,5 +77,5 @@ gethomedir(char *uname, char *path, int plen)
 	return path;
 }
 
-#endif /* _WIN32 */
+#endif /* _WIN32 || _WIN64 */
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: rtmath.h,v 3.8 2013/08/03 17:53:46 greg Exp $ */
+/* RCSid $Id: rtmath.h,v 3.9 2016/03/06 01:13:17 schorsch Exp $ */
 /*
  * Header for Radiance vector and math routines
  */
@@ -46,7 +46,7 @@ extern double	atan2a(double y, double x);
 #define  ttan(x)		(tsin(x)/tcos(x))
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 extern double	erf(double x);
 extern double	erfc(double x);
 #endif

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.36 2016/01/30 17:34:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.37 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -7,7 +7,7 @@ static const char RCSid[] = "$Id: bsdfmesh.c,v 2.36 2016/01/30 17:34:00 greg Exp
  *	G. Ward
  */
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
@@ -162,7 +162,7 @@ new_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	size_t		memlen = sizeof(MIGRATION) +
 				sizeof(float)*(from_rbf->nrbf*to_rbf->nrbf - 1);
 	MIGRATION	*newmig;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	if (nprocs > 1)
 		fprintf(stderr, "%s: warning - multiprocessing not supported\n",
 				progname);
@@ -193,7 +193,7 @@ new_migration(RBFNODE *from_rbf, RBFNODE *to_rbf)
 	return(mig_list = newmig);
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #define await_children(n)	(void)(n)
 #define run_subprocess()	0
 #define end_subprocess()	(void)0

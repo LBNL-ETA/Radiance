@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.12 2014/09/08 18:21:39 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.13 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -20,7 +20,7 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.12 2014/09/08 18:21:39 greg Exp 
 #define putchar		putchar_unlocked
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #include <process.h>
 #define	execvp	_execvp
 #endif

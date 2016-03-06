@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.8 2015/07/22 04:47:51 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.9 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -233,7 +233,7 @@ main(int argc, char *argv[])
 					/* write result to stdout */
 	if (outfmt == DTfromHeader)
 		outfmt = mres->dtype;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	if (outfmt != DTascii)
 		_setmode(fileno(stdout), _O_BINARY);
 #endif

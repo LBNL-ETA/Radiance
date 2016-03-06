@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.12 2015/08/12 00:10:51 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.13 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -44,6 +44,7 @@ double	tthresh;		/* acceptance threshold (TBD) */
 static void
 new_kids(TNODE *pn)
 {
+	/* XXX VC warns about 32 bit shift coerced to 64 bit */
 	pn->kid = (TNODE *)calloc(1<<ttrank, sizeof(TNODE));
 	if (pn->kid == NULL)
 		error(SYSTEM, "out of memory in new_kids");
@@ -276,6 +277,7 @@ load_data(void)
 		error(COMMAND, "unsupported input format");
 		break;
 	}
+	/* XXX VC warns about 32 bit shift coerced to 64 bit */
 	datarr = (float *)calloc(1<<(log2g*ttrank), sizeof(float));
 	if (datarr == NULL)
 		error(SYSTEM, "out of memory in load_data");

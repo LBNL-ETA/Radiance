@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.15 2011/10/05 17:20:55 greg Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.16 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: ranimove.c,v 3.15 2011/10/05 17:20:55 greg Exp
 #include "copyright.h"
 
 #include <time.h>
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
   #include <winsock.h> /* struct timeval. XXX find a replacement? */
 #else
   #include <sys/time.h>
@@ -20,6 +20,7 @@ static const char RCSid[] = "$Id: ranimove.c,v 3.15 2011/10/05 17:20:55 greg Exp
 #include <ctype.h>
 #include <string.h>
 
+#include "platform.h"
 #include "paths.h"
 #include "ranimove.h"
 
@@ -852,7 +853,7 @@ obj_prio(			/* return priority for object */
 }
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 				/* replacement function for Windoze */
 static int
 gettimeofday(struct timeval *tp, void *dummy)

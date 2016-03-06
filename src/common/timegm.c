@@ -11,7 +11,7 @@
 
 extern time_t		timegm(struct tm *tm);
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 static char *
 setGMT()
 {

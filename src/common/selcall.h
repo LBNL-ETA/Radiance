@@ -1,4 +1,4 @@
-/* RCSid $Id: selcall.h,v 3.10 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: selcall.h,v 3.11 2016/03/06 01:13:17 schorsch Exp $ */
 /*
  * header file for select call compatibility
  */
@@ -7,7 +7,7 @@
 
 #include <string.h>
 #include <sys/types.h>
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
   /*#include <winsock2.h>*/
 #else
   #include <sys/time.h>
@@ -17,7 +17,7 @@
 #endif
 
 #ifndef FD_SETSIZE
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #else
   #include <sys/param.h>
 #endif

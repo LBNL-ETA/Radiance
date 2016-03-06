@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.17 2014/04/04 17:56:45 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.18 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.17 2014/04/04 17:56:45 greg
  */
 
 #include <stdlib.h>
+#include "platform.h"
 #include "rtio.h"
 #include "rtmath.h"
 #include "random.h"

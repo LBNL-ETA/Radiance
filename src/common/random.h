@@ -1,4 +1,4 @@
-/* RCSid $Id: random.h,v 2.22 2015/07/16 05:08:57 greg Exp $ */
+/* RCSid $Id: random.h,v 2.23 2016/03/06 01:13:17 schorsch Exp $ */
 /*
  *  random.h - header file for random(3) and urand() function.
  */
@@ -11,8 +11,7 @@
 extern "C" {
 #endif
 
-#ifdef	_WIN32
-
+#if defined(_WIN32) || defined(_WIN64)
 #if (RAND_MAX <= 65536)
 #define random()	((long)rand()<<16^(long)rand()<<6^(long)rand()>>4)
 #else

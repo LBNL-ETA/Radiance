@@ -1,6 +1,7 @@
 
 import os
 import sys
+import platform
 import ConfigParser
 
 
@@ -63,10 +64,12 @@ def read_plat(env, args, fn):
 			env[k] = os.path.join(env['RAD_BASEDIR'],env[k])
 
 
-def load_plat(env, args, platform=None):
-	if platform == None: # override
+def load_plat(env, args, ourplat=None):
+	if ourplat == None: # override
 		p = sys.platform
-	else: p = platform
+	else: p = ourplat
+#	if p == 'win32' and platform.architecture()[0] == '64bit':
+#		p = 'win64'
 	if p == 'win32' and 'gcc' in env['TOOLS']:
 		# we don't really want to know this here...
 		p = 'mingw'

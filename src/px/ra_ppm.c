@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.14 2008/05/26 17:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.15 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -103,7 +103,7 @@ main(
 		if (read(fileno(stdin), inpbuf, 2) != 2 || inpbuf[0] != 'P')
 			quiterr("input not a Poskanzer Pixmap");
 		ptype = inpbuf[1];
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 		if (ptype > 4)
 			SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
@@ -153,7 +153,7 @@ main(
 				quiterr("unsupported Pixmap type");
 			}
 	} else {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 		SET_FILE_BINARY(stdin);
 		if (binflag)
 			SET_FILE_BINARY(stdout);

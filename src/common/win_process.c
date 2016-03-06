@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.11 2016/03/04 19:13:53 greg Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.12 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -190,18 +190,18 @@ error: /* cleanup */
 }
 
 
-static int         /* copied size or -1 on error */
+static size_t         /* copied size or -1 on error */
 wordncopy(         /* copy (quoted) src to dest. */
 
 char * dest,
 char * src,
-int dlen,
+size_t dlen,
 int insert_space,  /* prepend a space  */
 int force_dq       /* turn 'src' into "dest" (for Win command line) */
 )
 {
-	int slen;
-	int pos = 0;
+	size_t slen;
+	size_t pos = 0;
 
 	slen = strlen(src);
 	if (insert_space) {
@@ -245,9 +245,9 @@ char *sl[]       /* list of arguments */
 )
 {
 	static char *cmdstr;
-	static int clen;
+	static size_t clen;
 	char *newcs;
-	int newlen, pos, res, i;
+	size_t newlen, pos, i, res;
 
 	newlen = strlen(cmdpath) + 3; /* allow two quotes plus the final \0 */
 	for (i = 0; sl[i] != NULL; i++) {
@@ -325,7 +325,7 @@ close_processes(SUBPROC pd[], int nproc) {
 	DWORD pid;
 
 	for (i = 0; i < nproc; i++) {
-		if (pid[i].running) {
+		if (pd[i].running) {
 			ocres = close(pd[i].w);
 			icres = close(pd[i].r);
 			pd[i].running = 0;

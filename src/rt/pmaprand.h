@@ -1,4 +1,4 @@
-/* RCSid $Id: pmaprand.h,v 2.5 2015/09/01 16:27:53 greg Exp $ */
+/* RCSid $Id: pmaprand.h,v 2.6 2016/03/06 01:13:18 schorsch Exp $ */
 #ifndef PMAPRAND_H
 #define PMAPRAND_H
 
@@ -22,7 +22,7 @@
    russian roulette. The pmapSeed() and pmapRandom() macros can be adapted
    to other (better?) RNGs. */   
 
-#if defined(_WIN32) || defined(BSD)
+#if defined(_WIN32) || defined(_WIN64) || defined(BSD)
    /* Assume no erand48(), so use standard RNG without explicit multistate 
       control; the resulting sequences will be suboptimal */      
    #include "random.h"

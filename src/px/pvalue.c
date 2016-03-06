@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.31 2011/05/20 02:06:39 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.32 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -296,7 +296,7 @@ unkopt:
 	}
 
 	if (reverse) {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 		SET_FILE_BINARY(stdout);
 		if (format != 'a' && format != 'i')
 			SET_FILE_BINARY(fin);
@@ -349,7 +349,7 @@ unkopt:
 		fputsresolu(&picres, stdout);	/* always put resolution */
 		valtopix();
 	} else {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 		SET_FILE_BINARY(fin);
 		if (format != 'a' && format != 'i')
 			SET_FILE_BINARY(stdout);

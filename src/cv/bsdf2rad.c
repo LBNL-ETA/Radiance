@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.14 2014/11/20 19:10:48 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.15 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -22,7 +22,7 @@ const float	colarr[6][3] = {
 		.5, 1., 1.
 	};
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 char	validf[] = "-e \"valid(s,t)=X`SYS(s,t)^2+Y`SYS(s,t)^2+Z`SYS(s,t)^2-1e-7\"";
 #else
 char	validf[] = "-e 'valid(s,t)=X`SYS(s,t)^2+Y`SYS(s,t)^2+Z`SYS(s,t)^2-1e-7'";

@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.100 2016/03/03 22:47:21 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.101 2016/03/06 01:13:17 schorsch Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -184,9 +184,7 @@ setambient(void)				/* initialize calculation */
 					(flen - lastpos)/AMBVALSIZ);
 			error(WARNING, errmsg);
 			fseek(ambfp, lastpos, SEEK_SET);
-#ifndef _WIN32 /* XXX we need a replacement for that one */
 			ftruncate(fileno(ambfp), (off_t)lastpos);
-#endif
 		}
 	} else if ((ambfp = fopen(ambfile, "w+")) != NULL) {
 		initambfile(1);			/* else create new file */

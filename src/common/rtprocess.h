@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.15 2016/03/04 02:48:14 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.16 2016/03/06 01:13:17 schorsch Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -10,10 +10,12 @@
 
 #include  <errno.h>
 #include <stdio.h>
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
   #include <windows.h> /* DWORD etc. */
   typedef DWORD RT_PID;
   #include <process.h> /* getpid() and others */
+  #define getpid _getpid
+  #define execv _execv
 #else
   #include <sys/param.h>
   #include <sys/types.h>
@@ -65,7 +67,7 @@ extern int process(SUBPROC *pd, char *recvbuf, char *sendbuf, int nbr, int nbs);
 extern int readbuf(int fd, char *bpos, int siz);
 extern int writebuf(int fd, char *bpos, int siz);
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 /* any non-negative increment will send the process to IDLE_PRIORITY_CLASS. */
 extern int win_kill(RT_PID pid, int sig /* ignored */);
 extern int win_nice(int inc);

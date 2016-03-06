@@ -55,7 +55,7 @@ if os.name == 'posix':
 
 # configure platform-specific stuff
 from build_utils import load_plat
-load_plat.load_plat(env, ARGUMENTS, platform=None)
+load_plat.load_plat(env, ARGUMENTS, ourplat=None)
 
 # override options
 set_opts(env)

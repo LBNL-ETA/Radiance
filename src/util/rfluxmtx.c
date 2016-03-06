@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.35 2016/03/04 00:21:21 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.36 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -181,7 +181,7 @@ popen_arglist(char *av[], char *mode)
 	return(popen(cmd, mode));
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 /* Execute system command (Windows version) */
 static int
 my_exec(char *av[])

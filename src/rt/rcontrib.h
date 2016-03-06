@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.12 2015/05/20 12:58:31 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.13 2016/03/06 01:13:18 schorsch Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -79,7 +79,7 @@ typedef struct {
 extern LUTAB		ofiletab;	/* output stream table */
 
 #ifndef MAXPROCESS
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #define MAXPROCESS	1
 #else
 #define MAXPROCESS	128

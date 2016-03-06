@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.17 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.18 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -10,7 +10,7 @@ static const char	RCSid[] = "$Id: devcomm.c,v 2.17 2014/07/08 18:25:00 greg Exp 
 #include "copyright.h"
 
 #include <sys/types.h>
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/wait.h>
 #endif
 
@@ -147,7 +147,7 @@ comm_close(void)			/* done with driver */
 	fclose(devin);
 	if (devchild < 0)
 		return;
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 	while ((pid = wait(0)) != -1 && pid != devchild)
 		;
 #endif

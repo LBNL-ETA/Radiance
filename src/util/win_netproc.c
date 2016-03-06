@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: win_netproc.c,v 2.4 2004/10/23 18:55:53 schorsch Exp $";
+static const char RCSid[] = "$Id: win_netproc.c,v 2.5 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 
 /*
@@ -49,7 +49,7 @@ addpserver(
 		register int	len;
 
 		strcpy(ourhost, myhostname());
-		getcwd(dirtmp, sizeof(dirtmp));
+		_getcwd(dirtmp, sizeof(dirtmp));
 		if ((cp = getenv("HOME")) != NULL) {
 			if (!strcmp(cp, dirtmp))
 				ourdir[0] = '\0';

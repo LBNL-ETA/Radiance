@@ -1,4 +1,4 @@
-/* RCSid: $Id: meta.h,v 1.10 2004/03/22 02:24:23 greg Exp $ */
+/* RCSid: $Id: meta.h,v 1.11 2016/03/06 01:13:17 schorsch Exp $ */
 /*
  *   Standard meta-file definitions and limits
  */
@@ -55,7 +55,7 @@ extern "C" {
 #define  SPAT3  07		/* set pattern 3 */
 
 
-#ifdef  _WIN32  /* XXX */
+#if defined(_WIN32) || defined(_WIN64) /* XXX */
 #define MDIR "C:\\tmp\\" /* XXX we just need something to compile for now */
 #define TTY "CON:"   /* XXX this probably doesn't work */
 #define TDIR "C:\\tmp\\" /* XXX we just need something to compile for now */

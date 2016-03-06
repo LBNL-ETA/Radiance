@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.21 2016/02/04 00:45:47 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.22 2016/03/06 01:13:17 schorsch Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -520,7 +520,7 @@ eval_rbf(void)
 	}
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 /* Execute wrapBSDF command (may never return) */
 static int
 wrap_up(void)

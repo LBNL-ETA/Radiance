@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimate.c,v 2.55 2013/06/08 02:49:19 greg Exp $";
+static const char RCSid[] = "$Id: ranimate.c,v 2.56 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Radiance animation control program
@@ -1412,7 +1412,7 @@ static int
 rmfile(char *fn)			/* remove a file */
 {
 	if (!silent)
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 		printf("\tdel %s\n", fn);
 #else
 		printf("\trm -f %s\n", fn);

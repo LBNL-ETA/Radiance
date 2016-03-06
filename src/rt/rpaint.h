@@ -1,4 +1,4 @@
-/* RCSid $Id: rpaint.h,v 2.11 2013/11/13 23:45:54 greg Exp $ */
+/* RCSid $Id: rpaint.h,v 2.12 2016/03/06 01:13:18 schorsch Exp $ */
 /*
  *  rpaint.h - header file for image painting.
  */
@@ -12,11 +12,12 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32		/* stupid Windows name collisions */
-#undef COORD
-#define COORD	radCOORD
-#undef RECT
-#define RECT	radRECT
+#if defined(_WIN32) || defined(_WIN64)
+  /* stupid Windows name collisions */
+  #undef COORD
+  #define COORD	radCOORD
+  #undef RECT
+  #define RECT	radRECT
 #endif
 
 typedef short  COORD;		/* an image coordinate */

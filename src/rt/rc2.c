@@ -1,14 +1,15 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.16 2016/03/01 00:58:31 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.17 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
  * File i/o and recovery
  */
 
+#include <ctype.h>
+#include "platform.h"
 #include "rcontrib.h"
 #include "resolu.h"
-#include <ctype.h>
 
 /* Close output stream and free record */
 static void

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.13 2015/04/23 17:42:04 greg Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.14 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -198,7 +198,7 @@ main(int argc, char *argv[])
 						/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 	sigdie(SIGTERM, "Terminate");
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 	sigdie(SIGHUP, "Hangup");
 	sigdie(SIGPIPE, "Broken pipe");
 	sigdie(SIGALRM, "Alarm clock");
@@ -291,7 +291,7 @@ onsig(				/* fatal signal */
 	if (gotsig++)			/* two signals and we're gone! */
 		_exit(signo);
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 	alarm(15);			/* allow 15 seconds to clean up */
 	signal(SIGALRM, SIG_DFL);	/* make certain we do die */
 #endif

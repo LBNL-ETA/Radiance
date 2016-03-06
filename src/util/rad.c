@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.123 2015/10/28 02:52:17 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.124 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -17,7 +17,7 @@ static const char	RCSid[] = "$Id: rad.c,v 2.123 2015/10/28 02:52:17 greg Exp $";
 #include "paths.h"
 #include "vars.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
   #define DELCMD "del"
   #define RENAMECMD "rename"
 #else
@@ -1074,7 +1074,7 @@ hiqopts(				/* high quality rendering options */
 }
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 static void
 setenv(			/* set an environment variable */
 	char	*vname,
@@ -1121,7 +1121,7 @@ xferopts(				/* transfer options if indicated */
 			syserr(vval(OPTFILE));
 		sprintf(ro, " @%s", vval(OPTFILE));
 	}
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	else if (n > 50) {
 		setenv("ROPT", ro+1);
 		strcpy(ro, " $ROPT");
@@ -1299,7 +1299,7 @@ specview(				/* get proper view spec from vs */
 	if (cp == viewopts)		/* append any additional options */
 		vs++;		/* skip prefixed space if unneeded */
 	strcpy(cp, vs);
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	if (strlen(viewopts) > 40) {
 		setenv("VIEW", viewopts);
 		return("$VIEW");
@@ -1367,14 +1367,14 @@ myprintview(			/* print out selected view */
 	VIEW	vwr;
 	char	buf[128];
 	char	*cp;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 /* XXX Should we allow something like this for all platforms? */
 /* XXX Or is it still required at all? */
 again:
 #endif
 	if (vopts == NULL)
 		return(-1);
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 	if (vopts[0] == '$') {
 		vopts = getenv(vopts+1);
 		goto again;

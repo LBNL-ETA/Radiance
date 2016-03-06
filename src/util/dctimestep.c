@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.36 2015/07/14 16:08:28 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.37 2016/03/06 01:13:18 schorsch Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: dctimestep.c,v 2.36 2015/07/14 16:08:28 greg E
  */
 
 #include <ctype.h>
+#include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"
 #include "platform.h"

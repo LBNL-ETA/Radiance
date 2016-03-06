@@ -39,8 +39,8 @@ PROGS = [
 ('pabopto2bsdf', 
 	['pabopto2bsdf.c',bsdfrep,'bsdfrbf.c', 'bsdfmesh.c', 'bsdftrans.cpp',], 
 	['rtall'] + mlib),
-('bsdf2klems',['bsdf2klems.c',bsdfrep,bsdfinterp, ], ['rtall'] + mlib),
-('bsdf2ttree',['bsdf2ttree.c',bsdfrep,bsdfinterp, ], ['rtall'] + mlib),
+('bsdf2klems',['bsdf2klems.c', bsdfrep, bsdfinterp,], ['rtall'] + mlib),
+('bsdf2ttree',['bsdf2ttree.c', bsdfrep, bsdfinterp,], ['rtall'] + mlib),
 ('pkgBSDF',   ['pkgBSDF.c', ], ['rtall'] + mlib),
 ('epw2wea',   ['epw2wea.c', ], ['rtall'] + mlib),
 ]
