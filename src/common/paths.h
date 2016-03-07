@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.27 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.28 2016/03/07 01:15:01 schorsch Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -20,7 +20,10 @@
 
   #define access		_access
   #define mkdir(dirname,perms)	_mkdir(dirname)
-  #ifdef _MSC_VER
+  /* The windows _popen with the native shell breaks '\\\n' escapes.
+   * RT_WINPROC (used by SCons) enables our replacement functions to fix that.
+   * XXX This should really not depend on the compiler used! */
+  #if defined(_MSC_VER) && !defined(RT_WINPROC)
     #define popen(cmd,mode)	_popen(cmd,mode)
     #define pclose(p)		_pclose(p)
   #else
