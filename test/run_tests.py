@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+from __future__ import print_function
 
 import sys
 
@@ -164,28 +165,28 @@ util_units = [
 ]
 
 
-def run_tests(unitgroup):
-	print '---- unit group %s ----' % unitgroup
+def run_tests(unitgroup, bindir=None):
+	print('---- unit group %s ----' % unitgroup)
 	for unit in globals()[unitgroup + '_units']:
 		try:
 			mod = __import__('py_tests.'+unit,globals(),locals(),['py_tests'])
-			print '%-18s' % unit,
+			print('%-18s' % unit, end='')
 			sys.stdout.flush()
-			mod.main()
+			mod.main(bindir=bindir)
 		except ImportError, e:
 			#raise
 			pass
 
-def main():
-	run_tests('cal')
-	run_tests('cv')
-	run_tests('gen')
-	run_tests('hd')
-	run_tests('meta')
-	run_tests('ot')
-	run_tests('px')
-	run_tests('rt')
-	run_tests('util')
+def main(bindir=None):
+	run_tests('cal', bindir=bindir)
+	run_tests('cv', bindir=bindir)
+	run_tests('gen', bindir=bindir)
+	run_tests('hd', bindir=bindir)
+	run_tests('meta', bindir=bindir)
+	run_tests('ot', bindir=bindir)
+	run_tests('px', bindir=bindir)
+	run_tests('rt', bindir=bindir)
+	run_tests('util', bindir=bindir)
 
 if __name__ == '__main__':
 	main()

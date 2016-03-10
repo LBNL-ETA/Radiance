@@ -61,14 +61,19 @@ def find_libtiff(env):
 	dl = [ (None,None), ] # standard search path
 	cfgi = env.get('TIFFINCLUDE')
 	cfgl = env.get('TIFFLIB')
+	#print('TIFFLIB:', cfgl)
 	if cfgi or cfgl:
 		dl.insert(0,(cfgi, cfgl))
 	for incdir, libdir in dl:
 		if incdir: env.Prepend(CPPPATH=[incdir]) # add temporarily
 		if libdir: env.Prepend(LIBPATH=[libdir])
 		conf = SConf(env)
-		if conf.CheckLib('tiff', 'TIFFInitSGILog',
-				header='void TIFFInitSGILog(void);', autoadd=0):
+		libname = 'tiff'
+		header = 'void TIFFInitSGILog(void);'
+		if os.name == 'nt':
+			libname = 'libtiff'
+		if conf.CheckLib(libname, 'TIFFInitSGILog',
+				header=header, autoadd=0):
 			env['TIFFLIB_INSTALLED'] = 1
 		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
 		if libdir: env['LIBPATH'].remove(libdir)

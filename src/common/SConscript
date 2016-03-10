@@ -7,7 +7,7 @@ def radlib(name): return os.path.join(env['RAD_BUILDLIB'], name)
 
 # custom flags
 getlibpath = env.StaticObject(source='getlibpath.c',
-        CPPFLAGS='-DDEFPATH=\\":%s\\"' % env['RAD_RLIBDIR'])
+        CPPFLAGS='-DDEFPATH="\\"%s\\""' % env['RAD_RLIBDIR'].replace('\\','/'))
 tmapcolrs = env.StaticObject(source='tmapcolrs.c',
         CPPFLAGS='-DPCOND=\\"pcond\\"')
 ezxml = env.Object('ezxml.c',

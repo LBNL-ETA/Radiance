@@ -8,8 +8,6 @@ even if they are slightly different, eg. as a consequence of
 binary rounding errors.
 '''
 
-import string
-import types
 
 class error(Exception): pass
 
@@ -72,7 +70,7 @@ def llcompare(lltest, llref, ignore_empty=0, recurse=[]):
 		lltest = filter(None, lltest)
 		llref = filter(None, llref)
 	if len(lltest) != len(llref):
-		raise error, 'Comparision failed: Different number of lines (%d,%d)' %(
+		raise error, 'Comparision failed: Different number of lines (%d, %d)' %(
 			len(lltest), len(llref))
 	for i in range(len(llref)):
 		if llref[i]:
@@ -90,24 +88,24 @@ def split_headers(s):
 	'''split Radiance file headers
 		return a list of lists of tokens suitable for llcompare()
 		this is useful to check the output of getinfo'''
-	ll = map(string.strip,string.split(s, '\n'))
+	ll = [ss.strip() for ss in s.split('\n')]
 	nll = []
 	for l in ll:
-		parts = string.split(l, '=', 1)
+		parts = l.split('=', 1)
 		if len(parts) == 2:
-			left = map(_typify_token, string.split(parts[0]))
-			right = map(_typify_token, string.split(parts[1]))
+			left = map(_typify_token, parts[0].split())
+			right = map(_typify_token, parts[1].split())
 			nll.append(left + ['='] + right)
-		else: nll.append(map(_typify_token, string.split(l)))
+		else: nll.append(map(_typify_token, l.split()))
 	return nll
 
 def split_rad(s):
 	'''Split the contents of a scene description string
 		return a list of list of tokens suitable for llcompare()'''
-	ll = map(string.strip,string.split(s, '\n'))
+	ll = [ss.strip() for ss in s.split('\n')]
 	nll = []
 	for l in ll:
-		nll.append(map(_typify_token, string.split(l)))
+		nll.append(map(_typify_token, l.split()))
 	return nll
 
 def split_radfile(fn):

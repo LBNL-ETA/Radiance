@@ -16,8 +16,7 @@ def set_opts(env):
 	vars.Save(OPTFILE, env)
 	Help(vars.GenerateHelpText(env, sort=cmp))
 	# where stuff is located in the source tree
-	env['RAD_BUILDLIB']  = '#src/lib'
-	env['RAD_BUILDBIN']  = '#bin'
+	# the binary target libs are configured by platform
 	env['RAD_BUILDRLIB'] = '#lib'
 	env['RAD_BUILDMAN']  = '#doc/man'
 
@@ -30,7 +29,7 @@ def allplats_setup(env):
 
 def post_common_setup(env):
 	env.Append(CPPPATH = [os.path.join('#src', 'common')])
-	env.Append(LIBPATH=['../lib']) # our own libs
+	env.Append(LIBPATH=[env['RAD_BUILDLIB']]) # our own libs
 	if not env.has_key('RAD_MLIB'):
 		env['RAD_MLIB'] = [] #['m'] # no seperate mlib on Win
 
@@ -42,8 +41,15 @@ def shareinstall_setup(env):
 	if 'install' in sys.argv or 'maninstall' in sys.argv:
 		install.install_manfiles(env)
 
+_arch = None
+for item in sys.argv[1:]:
+	if item.startswith('TARGET_ARCH'):
+		res = item.split('=')
+		if len(res) == 2:
+			_arch = res[1].strip()
+
 # Set up build environment
-env = Environment()
+env = Environment(TARGET_ARCH=_arch)
 env.Decider('timestamp-match')
 
 if os.name == 'posix':
@@ -55,7 +61,7 @@ if os.name == 'posix':
 
 # configure platform-specific stuff
 from build_utils import load_plat
-load_plat.load_plat(env, ARGUMENTS, ourplat=None)
+load_plat.load_plat(env, ARGUMENTS, arch=_arch)
 
 # override options
 set_opts(env)
@@ -76,11 +82,13 @@ if 'test' in sys.argv:
 	SConscript(os.path.join('test', 'SConscript'))
 	
 else:
-	SConscript(os.path.join('src', 'common', 'SConscript'))
+	SConscript(os.path.join('src', 'common', 'SConscript'),
+			variant_dir=os.path.join(env['RAD_BUILDOBJ'],'common'), duplicate=0)
 	post_common_setup(env)
 	for d in Split('meta cv gen ot rt px hd util cal'):
 		print d
-		SConscript(os.path.join('src', d, 'SConscript'))
+		SConscript(os.path.join('src', d, 'SConscript'),
+				variant_dir=os.path.join(env['RAD_BUILDOBJ'], d), duplicate=0)
 
 	if string.find(string.join(sys.argv[1:]), 'install') > -1:
 		shareinstall_setup(env)
@@ -92,7 +100,7 @@ env.Alias('bininstall',  '$RAD_BINDIR')
 env.Alias('rlibinstall', '$RAD_RLIBDIR')
 env.Alias('maninstall',  '$RAD_MANDIR')
 
-env.Alias('build',   ['#bin'])
+env.Alias('build',   ['$RAD_BUILDBIN'])
 env.Alias('test',    ['#test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 

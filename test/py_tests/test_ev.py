@@ -7,13 +7,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class EvTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	ltest = [
 		['2.3 + 5 * 21.7 / 1.43', [2.3 + 5 * 21.7 / 1.43]],
@@ -46,7 +50,9 @@ class EvTestCase(unittest.TestCase):
 	def test_multipleres(self):
 		pass # XXX implement
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(EvTestCase)
 
 if __name__ == '__main__':

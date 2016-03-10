@@ -8,13 +8,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class CntTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	def test_1(self):
 		cmd = 'cnt 5'
@@ -47,7 +51,9 @@ class CntTestCase(unittest.TestCase):
 		except lcompare.error, e: self.fail(str(e))
 
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(CntTestCase)
 
 if __name__ == '__main__':

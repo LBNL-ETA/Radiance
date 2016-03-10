@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import os
 import math
@@ -7,13 +8,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class GenbeadsTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	def test_genbeads(self):
 		cmd = 'genbeads mymat myname 0 0 0 1 1 1 2 0 0 0 2 0 .1 .4'
@@ -35,7 +40,9 @@ class GenbeadsTestCase(unittest.TestCase):
 			self.fail('%s [%s]' % (str(e),cmd))
 
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(GenbeadsTestCase)
 
 if __name__ == '__main__':

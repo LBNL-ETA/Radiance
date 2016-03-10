@@ -19,20 +19,22 @@ clumpbeams = env.Object(source='clumpbeams.c')
 PROGS = (
 ('rholo', Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c''')
 	 + [env.version, holofile, holo, viewbeams],
-	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtmem','rterror'],0),
 ('rhpict', Split('rhpict.c rhpict2.c')+[env.version, holofile, holo, viewbeams],
-	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror'],1),
 ('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo],
-	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror']),
+	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror'],1),
 ('rhinfo', Split('rhinfo.c') + [holofile, holo],
-	['rtio','rtproc', 'rtmath','rterror']),
+	['rtio','rtproc', 'rtmath','rterror'],1),
 ('rhoptimize', Split('rhoptimize.c') + [clumpbeams, holofile, holo],
-	['rtio','rtproc', 'rtmath','rterror']),
+	['rtio','rtproc', 'rtmath','rterror'],1),
 ('genrhgrid', Split('genrhgrid.c') + [holofile, holo],
- ['rtio','rtmath','rtproc','rterror']),
+ ['rtio','rtmath','rtproc','rterror'],1),
 )
-if os.name != 'nt': # pending some major work...
+if 1:
 	for p in PROGS:
+		print(p[0])
+		if not p[3] and os.name == 'nt': continue 
 		prog = env.Program(target=radbin(p[0]),
 				source=p[1], LIBS=p[2] + mlib)
 		Default(prog)

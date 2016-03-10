@@ -9,18 +9,18 @@ def run_tests(target=None,source=None,env=None):
 	try:
 		oldenv = env['ENV']
 		ray = os.getcwd()
-		up, cur = os.path.split(ray)
-		bin = os.path.join(up, 'bin')
-		lib = os.path.join(up, 'lib')
+		bin = Dir(env['RAD_BUILDBIN']).get_abspath()
+		lib = Dir(env['RAD_BUILDLIB']).get_abspath()
+
 		test = os.path.join(ray, 'test')
 		if not test in sys.path:
 			sys.path.append(test)
 		oldpath = oldenv.get('PATH')
-		print oldpath
+		#print oldpath
 		newpath = os.pathsep.join((bin, oldpath))
 		newenv = {'PATH' : newpath, 'RAYPATH':lib }
 		env['ENV'] = newenv
-		run_all.main()
+		run_all.main(bindir=bin)
 	finally:
 		env['ENV'] = oldenv
 

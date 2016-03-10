@@ -6,13 +6,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class HistoTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	def test_histo(self):
 		cmd = 'histo -0.5 8.5 9 < "%s"' % support.datafile('histo.dat')
@@ -92,7 +96,9 @@ class HistoTestCase(unittest.TestCase):
 		except lcompare.error, e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(HistoTestCase)
 
 if __name__ == '__main__':

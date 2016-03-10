@@ -1,7 +1,7 @@
+from __future__ import print_function
 
 import os
 import sys
-import string
 
 import unittest
 
@@ -34,15 +34,15 @@ def run_case(c):
 	s = unittest.makeSuite(c, 'test')
 	s.run(res)
 	if res.errors or res.failures:
-		print ' failed'
-		print '-----------------------------'
+		print(' failed')
+		print('-----------------------------')
 		for e in res.errors:
-			print e[1]
+			print(e[1])
 		for e in res.failures:
-			es = string.strip(e[1])
-			sl = string.split(es, '\n')
-			print sl[-1]
-		print '-----------------------------'
+			es = e[1].strip()
+			sl = '\n'.split(es)
+			print(sl[-1])
+		print('-----------------------------')
 	else:
-		print ' ok'
+		print(' ok')
 		

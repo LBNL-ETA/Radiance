@@ -51,8 +51,13 @@ def read_plat(env, args, fn):
 			for p in section[1]: # single items to replace
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
+				if section[0] == 'install' and '{' in v:
+					try:
+						vv = v.format(**os.environ)
+					except KeyError: vv = v
+					else: v = vv
 				env[p] = v
-				#print '%s: %s' % (p, env[p])
+				#print('%s: %s' % (p, env[p]))
 			for p in section[2]: # multiple items to append
 				try: v = cfig.get(section[0], p)
 				except ConfigParser.NoOptionError: continue
@@ -64,29 +69,27 @@ def read_plat(env, args, fn):
 			env[k] = os.path.join(env['RAD_BASEDIR'],env[k])
 
 
-def load_plat(env, args, ourplat=None):
-	if ourplat == None: # override
-		p = sys.platform
-	else: p = ourplat
-#	if p == 'win32' and platform.architecture()[0] == '64bit':
-#		p = 'win64'
-	if p == 'win32' and 'gcc' in env['TOOLS']:
-		# we don't really want to know this here...
-		p = 'mingw'
-	pl = []
-	print 'Detected platform "%s" (%s).' % (sys.platform, os.name)
-	for i in [len(p), -1, -2]:
-		pfn = os.path.join(_platdir, p[:i] + '_custom.cfg')
-		if os.path.isfile(pfn):
-			print 'Reading configuration "%s"' % pfn
-			read_plat(env, args, pfn)
-			return 1
-		pfn = os.path.join(_platdir, p[:i] + '.cfg')
-		if os.path.isfile(pfn):
-			print 'Reading configuration "%s"' % pfn
-			read_plat(env, args, pfn)
-			return 1
-		
+def load_plat(env, args, arch=None):
+	cfgname = 'posix'
+	memmodel, binformat = platform.architecture()
+	platsys = platform.system()
+	print 'Detected platform "%s" (%s).' % (platsys, memmodel)
+	cfgname = platsys + '_' + memmodel[:2]
+	env['RAD_BUILDBIN'] = os.path.join('#scbuild', cfgname, 'bin')
+	env['RAD_BUILDLIB']  = os.path.join('#scbuild', cfgname, 'lib')
+	env['RAD_BUILDOBJ']  = os.path.join('#scbuild', cfgname, 'obj')
+
+	pfn = os.path.join(_platdir, cfgname + '_custom.cfg')
+	if os.path.isfile(pfn):
+		print 'Reading configuration "%s"' % pfn
+		read_plat(env, args, pfn)
+		return 1
+	pfn = os.path.join(_platdir, cfgname + '.cfg')
+	if os.path.isfile(pfn):
+		print 'Reading configuration "%s"' % pfn
+		read_plat(env, args, pfn)
+		return 1
+
 	if os.name == 'posix':
 		pfn = os.path.join(_platdir, 'posix.cfg')
 		if os.path.isfile(pfn):
@@ -94,7 +97,7 @@ def load_plat(env, args, ourplat=None):
 			read_plat(env, args, pfn)
 			return 1
 
-	print 'Platform "%s/%s" not supported yet' % (os.name, sys.platform)
+	print 'Platform "%s", system "%s" not supported yet' % (os.name, sys.platform)
 	sys.exit(2)
 
 	

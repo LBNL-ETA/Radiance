@@ -8,13 +8,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class TtyimageTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	def test_ttyimage(self):
 		'''We just do a few spot checks here'''
@@ -43,7 +47,9 @@ class TtyimageTestCase(unittest.TestCase):
 			self.assertEqual(result[l[0]], l[1],
 			'%s : %s != %s [line %s]' % (cmd,result[l[0]],l[1], l[0]))
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(TtyimageTestCase)
 
 if __name__ == '__main__':

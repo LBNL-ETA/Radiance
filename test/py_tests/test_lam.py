@@ -7,13 +7,17 @@ import unittest
 from unit_tools import support
 from unit_tools import lcompare
 
+_bindir = None
+
 class LamTestCase(unittest.TestCase):
 	def setUp(self):
-		self.oldpath = os.environ['PATH']
-		os.environ['PATH'] = os.path.abspath(support.BINDIR)
+		if _bindir:
+			self.oldpath = os.environ['PATH']
+			os.environ['PATH'] = _bindir
 
 	def tearDown(self):
-		os.environ['PATH'] = self.oldpath
+		if _bindir:
+			os.environ['PATH'] = self.oldpath
 
 	def test_lam(self):
 		dat_de = support.datafile('lam_de.dat')
@@ -32,7 +36,9 @@ class LamTestCase(unittest.TestCase):
 		except lcompare.error, e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
-def main():
+def main(bindir=None):
+	global _bindir
+	_bindir=bindir
 	support.run_case(LamTestCase)
 
 if __name__ == '__main__':
