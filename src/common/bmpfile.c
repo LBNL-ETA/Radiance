@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.15 2005/05/10 01:08:43 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.16 2016/03/10 01:49:00 schorsch Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -548,6 +548,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 		n = 8;
 	else
 		return NULL;
+	/* XXX VC warns about 32 bit shift coerced to 64 bit */
 	hdr = (BMPHeader *)malloc(sizeof(BMPHeader) +
 					sizeof(RGBquad)*(1<<n) -
 					sizeof(hdr->palette) +
@@ -563,6 +564,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 	hdr->nColors = ncolors;
 	hdr->impColors = 0;			/* says all colors important */
 	hdr->infoSiz = infolen;
+	/* XXX VC warns about 32 bit shift coerced to 64 bit */
 	memset((void *)hdr->palette, 0, sizeof(RGBquad)*(1<<n) + infolen);
 	for (n = ncolors; n--; )
 		hdr->palette[n].r = hdr->palette[n].g =
