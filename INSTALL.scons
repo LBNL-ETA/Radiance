@@ -25,9 +25,9 @@ For many systems, precompiled packages are available, such as Installer
 files for Windows. Most Linux distributions already come with Python
 installed and ready to use.
 
-SCons *may* use a libtiff already installed on your system. However, if
-it doesn't find one, it will build its own from sources included with
-Radiance.
+SCons *may* use a libtiff already installed on your system. On posix
+systems it usually does. Otherwise the executables requiring it are
+not built.
 
 
 Building
@@ -55,7 +55,7 @@ files for various build environments. In this context, a "platform" is a
 specific combination of operating system and build tools (eg. compiler).
 On unix based systems, the compiler usually doesn't make much of a
 difference, but on Windows, there are seperate build environments for
-toolkits like Cygwin or MingW.
+toolkits like MingW.
 
 The file "ray/platform/README" explains the settings that can be
 configured in those files, and how to create a new one, if you use a
