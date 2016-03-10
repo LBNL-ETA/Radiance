@@ -3,17 +3,22 @@ import os
 import sys
 import string
 
+PATHFILE = 'raypaths.py'
 OPTFILE = 'rayopts.py'
-def set_opts(env):
-	# XXX add some caching
+def set_pre_opts(env):
 	vars = Variables(OPTFILE, ARGUMENTS)
 	vars.Add('SKIP', 'Skip Display of License terms', 0)
-	vars.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
-	vars.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
-	vars.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
 	vars.Add('RAD_DEBUG',   'Build a debug version',  0)
 	vars.Update(env) 
 	vars.Save(OPTFILE, env)
+
+def set_opts(env):
+	vars = Variables(PATHFILE, ARGUMENTS)
+	vars.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
+	vars.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
+	vars.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
+	vars.Update(env) 
+	vars.Save(PATHFILE, env)
 	Help(vars.GenerateHelpText(env, sort=cmp))
 	# where stuff is located in the source tree
 	# the binary target libs are configured by platform
@@ -59,16 +64,19 @@ if os.name == 'posix':
 	tclscript_b = Builder(action = install.install_tclscript, suffix = '')
 	env.Append(BUILDERS={'InstallTCLScript': tclscript_b})
 
+# set debug before loading platforms
+set_pre_opts(env)
+
 # configure platform-specific stuff
 from build_utils import load_plat
-load_plat.load_plat(env, ARGUMENTS, arch=_arch)
+load_plat.load_plat(env, vars, arch=_arch)
 
 # override options
 set_opts(env)
 
 # accept license
 if ((not env['SKIP']
-			or env['SKIP'].strip().lower() in (0,'0','no','false'))
+			or env['SKIP'].strip().lower() in (0,'0','n','no','false',None))
 		and not '-c' in sys.argv and not 'test' in sys.argv):
 	from build_utils import copyright
 	copyright.show_license()

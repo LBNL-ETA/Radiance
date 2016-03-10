@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 
 from SCons.SConf import SConf # aka Configure
@@ -5,10 +7,10 @@ from SCons.SConf import SConf # aka Configure
 def find_radlib(env):
 	v = env.FindFile('helvet.fnt', './lib')
 	if not v:
-		print '''
+		print('''
 	Radiance auxiliary support files not found.
 	-> Download from radiance-online.org and extract.
-	'''
+	''')
 		env.Exit()
 
 def find_x11(env):
@@ -61,23 +63,24 @@ def find_libtiff(env):
 	dl = [ (None,None), ] # standard search path
 	cfgi = env.get('TIFFINCLUDE')
 	cfgl = env.get('TIFFLIB')
-	#print('TIFFLIB:', cfgl)
 	if cfgi or cfgl:
 		dl.insert(0,(cfgi, cfgl))
 	for incdir, libdir in dl:
-		if incdir: env.Prepend(CPPPATH=[incdir]) # add temporarily
-		if libdir: env.Prepend(LIBPATH=[libdir])
-		conf = SConf(env)
+		xenv = env.Clone()
+		if incdir: xenv.Prepend(CPPPATH=[incdir]) # add temporarily
+		if libdir:
+			xenv.Prepend(LIBPATH=[libdir])
+			xenv.Prepend(PATH=[libdir])
+		conf = SConf(xenv)
 		libname = 'tiff'
-		header = 'void TIFFInitSGILog(void);'
 		if os.name == 'nt':
+			xenv['INCPREFIX'] = '/I ' # Bug in SCons (uses '/I')
 			libname = 'libtiff'
 		if conf.CheckLib(libname, 'TIFFInitSGILog',
-				header=header, autoadd=0):
+				header='''#include "tiff.h"''', autoadd=0):
 			env['TIFFLIB_INSTALLED'] = 1
-		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
-		if libdir: env['LIBPATH'].remove(libdir)
 		if env.has_key('TIFFLIB_INSTALLED'):
+			env.Replace(RAD_LIBTIFF=libname)
 			if incdir: env.Replace(RAD_TIFFINCLUDE=[incdir])
 			if libdir: env.Replace(RAD_TIFFLIB=[libdir])
 			conf.Finish()

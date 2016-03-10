@@ -105,7 +105,11 @@ CC: gcc
 CPPPATH: 
 
   # Symbols to define for the preprocessor (example for Mingw)
-CPPDEFINES: freebsd HDSUF=.exe
+  # The symbol "RT_WINPROC" enables the use of our custom popen
+  # routine, which allows for pipelining, backslash-newline
+  # escapes, and some more functionality without the need for
+  # a unix shell.
+CPPDEFINES: freebsd HDSUF=.exe RT_WINPROC
 
   # Flags for the C preprocessor (example for gcc)
 CPPFLAGS:  -O2 -Wall -Wno-uninitialized
@@ -117,7 +121,7 @@ CCFLAGS: -pg
 LIBPATH: 
 
   # Flags for the linker (example for debug build on Windows)
-LINKFLAGS: /Yd
+LINKFLAGS: /DEBUG /INCREMENTAL:NO
 
   # Flags specific to  ezxml.c (example for cygwin/mingw)
 EZXML_CPPDEFINES: EZXML_NOMMAP
@@ -125,7 +129,7 @@ EZXML_CPPDEFINES: EZXML_NOMMAP
   # Where to find an installed libtiff and its include files
   # (Not needed when on a standard search path)
   # If no libtiff is found here or on the standard paths, then
-  # Radiance will build its own.
+  # the executables "normtiff" and "ra_tiff" won't be built.
 TIFFLIB:
 TIFFINCLUDE:
 

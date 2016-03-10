@@ -86,6 +86,7 @@ if os.name == 'posix': # cleanup action for a previously built tifflib
 	Clean(libtiff_fn, [libtiff_fn, radlib(env['LIBPREFIX'] + 'tiff.la')])
 
 if env.get('TIFFLIB_INSTALLED'):
+	libtiff = env.get('RAD_LIBTIFF')
 	# tiff programs
 	tiffi = env.get('RAD_TIFFINCLUDE')
 	if tiffi: tiffincl = [tiffi] + env.get('CPPPATH', [])
@@ -96,12 +97,12 @@ if env.get('TIFFLIB_INSTALLED'):
 
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=['ra_tiff.c'],
 		CPPPATH = tiffincl, LIBPATH=tifflib,
-		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
+		LIBS=[libtiff,'rtpic','rtio','rtmem'] + mlib)
 	progs.append(ra_tiff)
 
 	normtiff = env.Program(target=radbin('normtiff'),source=['normtiff.c'],
 		CPPPATH = tiffincl, LIBPATH=tifflib,
-		LIBS=['tiff','rtpic','rtio','rtmem'] + mlib)
+		LIBS=[libtiff,'rtpic','rtio','rtmem', 'rtproc', 'rtpath', 'rterror'] + mlib)
 	progs.append(normtiff)
 
 
