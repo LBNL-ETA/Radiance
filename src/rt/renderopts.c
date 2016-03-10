@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.16 2015/02/24 19:39:27 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.17 2016/03/10 18:25:46 schorsch Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -23,7 +23,7 @@ getrenderopt(		/* get next render option */
 #define	 check(ol,al)		if (av[0][ol] || \
 				badarg(ac-1,av+1,al)) \
 				return(-1)
-#define	 bool(olen,var)		switch (av[0][olen]) { \
+#define	 check_bool(olen,var)		switch (av[0][olen]) { \
 				case '\0': var = !var; break; \
 				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
@@ -38,11 +38,11 @@ getrenderopt(		/* get next render option */
 					/* check if it's one we know */
 	switch (av[0][1]) {
 	case 'u':				/* uncorrelated sampling */
-		bool(2,rand_samp);
+		check_bool(2,rand_samp);
 		return(0);
 	case 'b':				/* back face vis. */
 		if (av[0][2] == 'v') {
-			bool(3,backvis);
+			check_bool(3,backvis);
 			return(0);
 		}
 		break;
@@ -69,7 +69,7 @@ getrenderopt(		/* get next render option */
 			vspretest = atoi(av[1]);
 			return(1);
 		case 'v':				/* visibility */
-			bool(3,directvis);
+			check_bool(3,directvis);
 			return(0);
 		case 's':				/* size */
 			check(3,"f");
@@ -102,7 +102,7 @@ getrenderopt(		/* get next render option */
 		}
 		break;
 	case 'i':				/* irradiance */
-		bool(2,do_irrad);
+		check_bool(2,do_irrad);
 		return(0);
 	case 'a':				/* ambient */
 		switch (av[0][2]) {
@@ -216,7 +216,7 @@ getrenderopt(		/* get next render option */
 /*	return(-1); */		/* unknown option */
 
 #undef	check
-#undef	bool
+#undef	check_bool
 }
 
 

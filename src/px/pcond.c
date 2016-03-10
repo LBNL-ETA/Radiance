@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.27 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.28 2016/03/10 18:25:46 schorsch Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -60,7 +60,7 @@ main(
 {
 	static RGBPRIMS	outprimS;
 	int	i;
-#define	bool(flg)		switch (argv[i][2]) { \
+#define	check_bool(flg)		switch (argv[i][2]) { \
 				case '\0': what2do ^= flg; break; \
 				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': what2do |= flg; break; \
@@ -73,22 +73,22 @@ main(
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'h':
-			bool(DO_HUMAN);
+			check_bool(DO_HUMAN);
 			break;
 		case 'a':
-			bool(DO_ACUITY);
+			check_bool(DO_ACUITY);
 			break;
 		case 'v':
-			bool(DO_VEIL);
+			check_bool(DO_VEIL);
 			break;
 		case 's':
-			bool(DO_HSENS);
+			check_bool(DO_HSENS);
 			break;
 		case 'c':
-			bool(DO_COLOR);
+			check_bool(DO_COLOR);
 			break;
 		case 'w':
-			bool(DO_CWEIGHT);
+			check_bool(DO_CWEIGHT);
 			break;
 		case 'i':
 			if (i+1 >= argc) goto userr;
@@ -97,10 +97,10 @@ main(
 			else what2do &= ~DO_FIXHIST;
 			break;
 		case 'I':
-			bool(DO_PREHIST);
+			check_bool(DO_PREHIST);
 			break;
 		case 'l':
-			bool(DO_LINEAR);
+			check_bool(DO_LINEAR);
 			break;
 		case 'p':
 			if (i+8 >= argc) goto userr;
@@ -195,7 +195,7 @@ userr:
 			progname);
 	exit(1);
 	return 1; /* pro forma return */
-#undef bool
+#undef check_bool
 }
 
 

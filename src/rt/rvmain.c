@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.14 2016/03/06 01:13:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.15 2016/03/10 18:25:46 schorsch Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -62,7 +62,7 @@ main(int argc, char *argv[])
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
 				goto badopt
-#define	 bool(olen,var)		switch (argv[i][olen]) { \
+#define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
 				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
@@ -148,7 +148,7 @@ main(int argc, char *argv[])
 			}
 			break;
 		case 'b':				/* grayscale */
-			bool(2,greyscale);
+			check_bool(2,greyscale);
 			break;
 		case 'p':				/* pixel */
 			switch (argv[i][2]) {
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 			break;
 		case 'w':				/* warnings */
 			rval = erract[WARNING].pf != NULL;
-			bool(2,rval);
+			check_bool(2,rval);
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
@@ -245,7 +245,7 @@ badopt:
 	return 1; /* pro forma return */
 
 #undef	check
-#undef	bool
+#undef	check_bool
 }
 
 

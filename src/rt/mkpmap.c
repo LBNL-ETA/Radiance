@@ -7,7 +7,7 @@
        Lucerne University of Applied Sciences & Arts
    ==================================================================
    
-   $Id: mkpmap.c,v 2.2 2015/05/21 05:54:54 greg Exp $    
+   $Id: mkpmap.c,v 2.3 2016/03/10 18:25:46 schorsch Exp $    
 */
 
 
@@ -119,7 +119,7 @@ int main (int argc, char* argv [])
                              badarg(argc - i - 1,argv + i + 1, al)) \
                             goto badopt
                             
-   #define bool(olen, var) switch (argv [i][olen]) { \
+   #define check_bool(olen, var) switch (argv [i][olen]) { \
                              case '\0': var = !var; break; \
                              case 'y': case 'Y': case 't': case 'T': \
                              case '+': case '1': var = 1; break; \
@@ -352,7 +352,7 @@ int main (int argc, char* argv [])
          case 'b': 
             if (argv [i][2] == 'v') {
                /* Back face visibility */
-               bool(3, backvis);
+               check_bool(3, backvis);
             }
                    
             else goto badopt;
@@ -382,7 +382,7 @@ int main (int argc, char* argv [])
          case 'f': 
             if (argv [i][2] == 'o') {
                /* Force overwrite */
-               bool(3, clobber);
+               check_bool(3, clobber);
             }
                    
             else goto badopt;
@@ -485,6 +485,6 @@ badopt:
    error(USER, errmsg);
 
    #undef check
-   #undef bool
+   #undef check_bool
    return 0;
 }

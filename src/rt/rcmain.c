@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.14 2015/02/24 19:39:27 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.15 2016/03/10 18:25:46 schorsch Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -163,7 +163,7 @@ main(int argc, char *argv[])
 #define	 check(ol,al)		if (argv[i][ol] || \
 				badarg(argc-i-1,argv+i+1,al)) \
 				goto badopt
-#define	 bool(olen,var)		switch (argv[i][olen]) { \
+#define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
 				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
@@ -217,7 +217,7 @@ main(int argc, char *argv[])
 				error(USER, "bad number of processes");
 			break;
 		case 'V':			/* output contributions */
-			bool(2,contrib);
+			check_bool(2,contrib);
 			break;
 		case 'x':			/* x resolution */
 			check(2,"i");
@@ -229,7 +229,7 @@ main(int argc, char *argv[])
 			break;
 		case 'w':			/* warnings */
 			rval = (erract[WARNING].pf != NULL);
-			bool(2,rval);
+			check_bool(2,rval);
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
@@ -240,10 +240,10 @@ main(int argc, char *argv[])
 		case 'l':			/* limit distance */
 			if (argv[i][2] != 'd')
 				goto badopt;
-			bool(3,lim_dist);
+			check_bool(3,lim_dist);
 			break;
 		case 'I':			/* immed. irradiance */
-			bool(2,imm_irrad);
+			check_bool(2,imm_irrad);
 			break;
 		case 'f':			/* file or force or format */
 			if (!argv[i][2]) {
@@ -252,7 +252,7 @@ main(int argc, char *argv[])
 				break;
 			}
 			if (argv[i][2] == 'o') {
-				bool(3,force_open);
+				check_bool(3,force_open);
 				break;
 			}
 			setformat(argv[i]+2);
@@ -266,10 +266,10 @@ main(int argc, char *argv[])
 			accumulate = atoi(argv[++i]);
 			break;
 		case 'r':			/* recover output */
-			bool(2,recover);
+			check_bool(2,recover);
 			break;
 		case 'h':			/* header output */
-			bool(2,header);
+			check_bool(2,header);
 			break;
 		case 'p':			/* parameter setting(s) */
 			check(2,"s");
@@ -370,7 +370,7 @@ badopt:
 	return(1);	/* pro forma return */
 
 #undef	check
-#undef	bool
+#undef	check_bool
 }
 
 
