@@ -1,10 +1,10 @@
 Platform configuration files for the SCons based build system
 -------------------------------------------------------------
 
-<platform>.cfg 
+<platform>_<##>.cfg 
 --------------
 
-The <platform>.cfg files in this directory are used to determine
+The <platform>_<##>.cfg files in this directory are used to determine
 the right settings, libraries, source files etc. on the platform
 where you are building Radiance. The build system will select the
 appropriate file automatically.
@@ -12,33 +12,37 @@ appropriate file automatically.
 If your platform isn't supported yet, then you can create a new
 file with an appropriat name (SCons should tell you what it
 expects). Usually, you will start by copying the file of the most
-similar suupported platform, and then make the necessary changes.
+similar supported platform, and then make the necessary changes.
 
 On unix based platforms without a specific config file, the file
-"posix.cfg" will be used (which may or may not work well enough).
+"posix_<##>.cfg" will be used (which may or may not work well enough).
 
-As of this writing, the following platforms are included
+As of this writing, the following platforms are included where the
+numbers 32 and 64 indicate 32 bit or 64 bit systems rspectively.
 (although not all of them have been tested very recently):
 
-* linux.cfg   Linux
-* freebsd.cfg FreeBSD unix
-* darwin.cfg  Macintosh OS-X
-* sunos.cfg   Sun Microsysems Solaris Unix
-* irix.cfg    sgi IRIX Unix release 5.x or later
-* irix4.cfg   sgi IRIX Unix release 4.x (obsolete)
-* irix3.cfg   sgi IRIX Unix release 3.x (obsolete)
-* hpux.cfg    Hewlett Packard HP-Unix
-* aix.cfg     IBM AIX Unix
-* posix.cfg   default for unknown Unix systems
-* win32.cfg   MS Windows (Visual C compilers)
-* cygwin.cfg  Cygwin on MS Windows  http://www.cygwin.com/
-* mingw.cfg   MingW on MS Windows  http://www.mingw.org/
+* Linux_32.cfg    Linux
+* Linux_63.cfg    Linux
+* FreeBSD_32.cfg  FreeBSD unix
+* FreeBSD_64.cfg  FreeBSD unix
+* Darwin_64.cfg   Macintosh OS-X
+* Darwin_32.cfg   Macintosh OS-X
+* posix_64.cfg    default for unknown Unix systems
+* posix_32.cfg    default for unknown Unix systems
+* Windows_64.cfg  Microsoft Windows with Visual C/C++
+* Windows_32.cfg  Microsoft Windows with Visual C/C++
+* mingw_64.cfg    MingW on MS Windows  http://www.mingw.org/
+* mingw_32.cfg    MingW on MS Windows  http://www.mingw.org/
+
+The configuration for 32 bit and 64 bit architecture of the
+same platform will typically be very similar, with just some
+compiler flags indicating the different target.
 
 
 <platform>_custom.cfg
 ---------------------
 
-If you want to experiment with changes to the shipped file, then
+If you want to experiment with changes to the downloaded file, then
 you can create a copy named <platform>_custom.cfg, and make your
 changes there. If such a file exists, then it will be used in
 place of the original.
@@ -68,8 +72,14 @@ Sections
 Install section
 ---------------
 
+Values in this section may refer to environment variables, in the
+form {VARNAME}. On Windows the variable names must be given in
+all uppercase.
+
   # The root directory of the Radiance installation
-RAD_BASEDIR: /opt/radiance3.6
+  # The second example reflects the installation standard on Windows.
+RAD_BASEDIR: /opt/radiance
+RAD_BASEDIR: {PROGRAMFILES}/radiance
 
   # The following are relative to RAD_BASEDIR!
   # The directory for executables 
@@ -85,8 +95,8 @@ RAD_MANDIR:  share/man
 Debug and Build sections
 ------------------------
 
-  # The same keywords can (and usually will) be used in both, but
-  # their assigned values will often differ.
+The same keywords can (and usually will) be used in both, but
+their assigned values will often differ.
 
   # The compiler to use (example: Gnu gcc)
 CC: gcc
@@ -94,10 +104,10 @@ CC: gcc
   # The directories for system header files (not normally needed).
 CPPPATH: 
 
-  # Symbols to define for the preprocessor (example for Cygwin)
+  # Symbols to define for the preprocessor (example for Mingw)
 CPPDEFINES: freebsd HDSUF=.exe
 
-  # Flags for the C preprocessor (example 
+  # Flags for the C preprocessor (example for gcc)
 CPPFLAGS:  -O2 -Wall -Wno-uninitialized
 
   # Flags for the C compiler (example for debug build with gcc)
@@ -107,7 +117,7 @@ CCFLAGS: -pg
 LIBPATH: 
 
   # Flags for the linker (example for debug build on Windows)
-LINKFLAGS: /debug
+LINKFLAGS: /Yd
 
   # Flags specific to  ezxml.c (example for cygwin/mingw)
 EZXML_CPPDEFINES: EZXML_NOMMAP
