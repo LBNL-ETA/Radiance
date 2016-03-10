@@ -11,27 +11,22 @@ sun = env.Object(source="sun.c")
 # standard targets
 PROGS = (
 # name          sources           libs
-('gendaylit',   Split('gendaylit.c',)+[sun], ['rtlamps']),
-('gendaymtx',   Split('gendaymtx.c',)+[sun],
-    ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror',mlib]),
+('gendaylit',   Split('gendaylit.c',)+[sun], ['rtrad']),
+('gendaymtx',   Split('gendaymtx.c',)+[sun], ['rtrad',mlib]),
 ('genbeads',    Split('genbeads.c hermite3.c'),  []),
 ('genbox',      ['genbox.c',],    []),
 ('genmarble',   ['genmarble.c',], []),
 ('gensky',      Split('gensky.c',)+[sun], []),
 ('genblinds',   ['genblinds.c',], []),
 ('genprism',    ['genprism.c',],  []),
-('genrev',      ['genrev.c',],    ['rtfunc','rtcont','rtmem','rtio','rterror']),
+('genrev',      ['genrev.c',],    ['rtrad',]),
 ('gencatenary', ['gencat.c',],    []),
-('genworm',     ['genworm.c',],
-	['rtfunc','rtmem','rtcont','rtmath','rtio','rterror']),
-('gensurf',     ['gensurf.c',],
-	['rtfunc','rtmem','rtcont','rtmath','rtio','rterror']),
+('genworm',     ['genworm.c',],   ['rtrad']),
+('gensurf',     ['gensurf.c',],   ['rtrad']),
 ('genclock',    ['genclock.c',],  []),
 ('genbranch',   ['genbranch.c',], []),
-('replmarks',   ['replmarks.c',],
-	['rtproc','rtpath','rtmath','rtio','rterror']),
-('xform',       ['xform.c',],
-    ['rtproc','rtscene','rtmath','rtargs','rtio','rtcont','rtpath','rterror']),
+('replmarks',   ['replmarks.c',], ['rtrad']),
+('xform',       ['xform.c',],     ['rtrad']),
 )
 progs = []
 for p in PROGS:
@@ -42,15 +37,12 @@ for p in PROGS:
 prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mkillum'),
 		source=Split('mkillum.c mkillum2.c mkillum3.c'),
 		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
-		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtproc',
-		'rtnet','rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']
-		+ mlib)
+		LIBS=['raycalls','rttrace','rtrad'] + mlib)
 progs.append(prog)
 prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mksource'),
 		source=['mksource.c'],
 		CPPPATH=env.get('CPPPATH', []) + ['#src/rt'],
-		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtproc','rtnet',
-		'rtmath','rtcont','rtmem','rtargs','rtio','rtpath','rterror'] + mlib)
+		LIBS=['raycalls','rttrace','rtrad'] + mlib)
 progs.append(prog)
 
 if os.name == 'posix':

@@ -16,40 +16,32 @@ neuclrtab = env.Object(source="neuclrtab.c")
 # standard targets
 PROGS = (
 # name       files            libs
-('macbethcal', Split('macbethcal.c pmapgen.c mx3.c')+[warp3d],
-	['rtpic','rtproc','rtpath','rtargs','rtio','rtcont','rtmem','rterror']),
-('pcond',    Split('pcond.c pcond2.c pcond3.c pcond4.c')+[warp3d],
-	['rtpic','rtproc','rtpath','rtargs','rtio','rtmath','rtcont','rtmem','rterror']),
-('pfilt',    Split('pfilt.c pf2.c pf3.c'),
-	['rtlamps','rtpic','rtpath','rtargs','rtio','rtmath']),
-('pcwarp',   ['pcwarp.c', warp3d], 	 
-	['rtpic','rtio','rtcont','rtmem','rterror']),
-('pvalue',   ['pvalue.c'],    ['rtpic','rtargs','rtio','rtmath']),
-('pcompos',  ['pcompos.c'],   ['rtpic','rtproc','rtpath','rtio','rterror']),
-('psign',    ['psign.c'],
-	['rtpic','rtscene','rtpath','rtargs','rtio','rtcont','rtmem','rterror']),
-('protate',  ['protate.c'],   ['rtpic','rtio']),
-('pextrem',  ['pextrem.c'],   ['rtpic','rtio']),
-('pflip',    ['pflip.c'],     ['rtpic','rtio']),
-('pcomb',    ['pcomb.c'],
-	['rtpic','rtproc','rtpath','rtfunc','rtargs','rtio','rtmath','rtcont','rtmem']),
-('pinterp',  ['pinterp.c'],
-	['rtproc','rtpic','rtpath','rtargs','rtio','rtmath','rtmem','rterror']),
+('macbethcal', Split('macbethcal.c pmapgen.c mx3.c')+[warp3d], ['rtrad']),
+('pcond',    Split('pcond.c pcond2.c pcond3.c pcond4.c')+[warp3d], ['rtrad']),
+('pfilt',    Split('pfilt.c pf2.c pf3.c'), ['rtrad']),
+('pcwarp',   ['pcwarp.c', warp3d], 	 ['rtrad']),
+('pvalue',   ['pvalue.c'],    ['rtrad']),
+('pcompos',  ['pcompos.c'],   ['rtrad']),
+('psign',    ['psign.c'],     ['rtrad']),
+('protate',  ['protate.c'],   ['rtrad']),
+('pextrem',  ['pextrem.c'],   ['rtrad']),
+('pflip',    ['pflip.c'],     ['rtrad']),
+('pcomb',    ['pcomb.c'],     ['rtrad']),
+('pinterp',  ['pinterp.c'],   ['rtrad']),
 
-('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
-('ra_ps',    ['ra_ps.c'],     ['rtpic','rtargs','rtio','rtmem']),
-('ra_ppm',   ['ra_ppm.c'],    ['rtpic','rtio','rtmem']),
-('ra_bmp',   ['ra_bmp.c'],
-	['rtpic','rtproc','rterror','rtpath','rtio','rtmem']),
-('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtpic','rtio','rtmem']),
-('ra_t16',   ['ra_t16.c'],    ['rtpic','rtio','rtmem']),
-('ra_rgbe', ['ra_rgbe.c'],['rtpic','rtproc','rtpath','rtio','rtmem','rterror']),
-('ra_pict',  ['ra_pict.c'],   ['rtpic','rtio','rtmem']),
-('ra_hexbit',['ra_hexbit.c'], ['rtpic','rtio','rtmem']),
-('ra_xyze',  ['ra_xyze.c'],   ['rtpic','rtio','rtmem']),
-('pmblur2',  ['pmblur2.c'],   ['rtpic','rtargs','rtio','rtargs','rtmath','rtmem','rtcont','rterror',mlib]),
+('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtrad']),
+('ra_ps',    ['ra_ps.c'],     ['rtrad']),
+('ra_ppm',   ['ra_ppm.c'],    ['rtrad']),
+('ra_bmp',   ['ra_bmp.c'],    ['rtrad']),
+('ra_t8',    ['ra_t8.c', clrtab, neuclrtab], ['rtrad']),
+('ra_t16',   ['ra_t16.c'],    ['rtrad']),
+('ra_rgbe',  ['ra_rgbe.c'],   ['rtrad']),
+('ra_pict',  ['ra_pict.c'],   ['rtrad']),
+('ra_hexbit',['ra_hexbit.c'], ['rtrad']),
+('ra_xyze',  ['ra_xyze.c'],   ['rtrad']),
+('pmblur2',  ['pmblur2.c'],   ['rtrad']),
 
-('ttyimage', ['ttyimage.c'],  ['rtpic','rtio','rtmem']),
+('ttyimage', ['ttyimage.c'],  ['rtrad']),
 )
 for p in PROGS:
     prog = env.Program(target=radbin(p[0]), source=p[1],
@@ -97,12 +89,12 @@ if env.get('TIFFLIB_INSTALLED'):
 
 	ra_tiff = env.Program(target=radbin('ra_tiff'), source=['ra_tiff.c'],
 		CPPPATH = tiffincl, LIBPATH=tifflib,
-		LIBS=[libtiff,'rtpic','rtio','rtmem'] + mlib)
+		LIBS=[libtiff,'rtrad'] + mlib)
 	progs.append(ra_tiff)
 
 	normtiff = env.Program(target=radbin('normtiff'),source=['normtiff.c'],
 		CPPPATH = tiffincl, LIBPATH=tifflib,
-		LIBS=[libtiff,'rtpic','rtio','rtmem', 'rtproc', 'rtpath', 'rterror'] + mlib)
+		LIBS=[libtiff,'rtrad'] + mlib)
 	progs.append(normtiff)
 
 
@@ -110,7 +102,7 @@ if env.get('TIFFLIB_INSTALLED'):
 if env.has_key('X11LIB'):
 	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
 	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
-	xlibs = ['X11','rtpic','rtargs','rtio','rtmath','rtmem']
+	xlibs = ['X11','rtrad']
 	env.x11findwind = env.Object(source='../common/x11findwind.c', # XXX remote magic
 		CPPPATH=xincl)
 

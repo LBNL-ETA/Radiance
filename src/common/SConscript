@@ -17,15 +17,12 @@ ezxml = env.Object('ezxml.c',
 RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
 		otypes.c objset.c octree.c readfargs.c modobject.c
 		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''') #addobjnotify.c
-
-RTMGFOBJ = Split('''mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c''')
-RTCOLOR = Split('''spec_rgb.c''')
-RTTMAP = Split('''tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
-RTPIC = Split('color.c colrops.c resolu.c image.c bmpfile.c falsecolor.c'
-		)+ RTCOLOR + RTTMAP
-
+RTPIC = Split('''color.c colrops.c resolu.c image.c bmpfile.c falsecolor.c
+		tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
-RTCONT = Split('''lookup.c savestr.c savqstr.c bsdf.c ccolor.c ccyrgb.c bsdf_m.c bsdf_t.c disk2square.c hilbert.c loadbsdf.c interp2d.c triangulate.c ezxml''')
+RTCONT = Split('''ezxml lookup.c savestr.c savqstr.c ccolor.c ccyrgb.c
+		spec_rgb.c bsdf.c bsdf_m.c bsdf_t.c loadbsdf.c
+		disk2square.c hilbert.c interp2d.c triangulate.c''')
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
 		zeroes.c dircode.c clip.c multisamp.c plocate.c byteswap.c'''
 		) + env.get('RAD_MATHCOMPAT', [])
@@ -35,47 +32,26 @@ RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
 		portio.c wordfile.c words.c header.c timegm.c cvtcmd.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
 RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
-RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')+ [getlibpath]
-REETZ = Split('''g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c
-		maxheap.c''')
-
+RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
-
 RTMEM = Split('ealloc.c bmalloc.c')
 RTNET = Split('myhostname.c')
-RTDUMMY = Split('addobjnotify.c')
+librtrad = env.StaticLibrary(target=radlib('rtrad'),
+		source=(RTERROR + RTPATH + RTARGS + RTIO + RTMATH + RTCONT + RTMEM
+			+ RTFUNC + RTPROC + RTLAMPS + RTSCENE + RTPIC + RTNET))
 
-STD = (RTERROR + RTPATH +  RTARGS + RTIO + RTMATH + RTCONT + RTMEM +
-		RTFUNC + RTPROC + RTLAMPS)
+MGF = Split('''mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c''')
+libmgf = env.StaticLibrary(target=radlib('mgf'), source=MGF)
 
-ALL = RTSCENE + RTPIC + STD + RTNET
+REETZ = Split('g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c maxheap.c')
+libreetz = env.StaticLibrary(target=radlib('reetz'), source=REETZ)
 
-# build libraries
-rtscene = env.StaticLibrary(target=radlib('rtscene'), source=RTSCENE)
-libmgf = env.StaticLibrary(target=radlib('mgf'), source=RTMGFOBJ)
-rterror = env.StaticLibrary(target=radlib('rterror'), source=RTERROR)
-rtpath = env.StaticLibrary(target=radlib('rtpath'), source=RTPATH)
-rtargs = env.StaticLibrary(target=radlib('rtargs'), source=RTARGS)
-rtio = env.StaticLibrary(target=radlib('rtio'), source=RTIO)
-rtmath = env.StaticLibrary(target=radlib('rtmath'), source=RTMATH)
-rtcont = env.StaticLibrary(target=radlib('rtcont'), source=RTCONT)
-rtmem = env.StaticLibrary(target=radlib('rtmem'), source=RTMEM)
-rtfunc = env.StaticLibrary(target=radlib('rtfunc'), source=RTFUNC)
-rtproc = env.StaticLibrary(target=radlib('rtproc'), source=RTPROC)
-rtcolor = env.StaticLibrary(target=radlib('rtcolor'), source=RTCOLOR)
-rtlamps = env.StaticLibrary(target=radlib('rtlamps'), source=RTLAMPS)
-reetz = env.StaticLibrary(target=radlib('reetz'), source=REETZ)
-rtpic = env.StaticLibrary(target=radlib('rtpic'), source=RTPIC)
-rtnet = env.StaticLibrary(target=radlib('rtnet'), source=RTNET)
 # librtdummy is needed, because addobjnotify has different sizes depending
 #   on the program, and in some cases isn't actually needed at all.
 #   It should really be a pointer, and its content allocated
 #   dynamically during program initialization.
+RTDUMMY = Split('addobjnotify.c')
 rtdummy = env.StaticLibrary(target=radlib('rtdummy'), source=RTDUMMY)
-
-rtall = env.StaticLibrary(target=radlib('rtall'), source=ALL)
-#librtrad = env.StaticLibrary(target=radlib('rtrad'), source=ALL)
-#Default(librtrad)
 
 LIBFILES = Split('tmesh.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

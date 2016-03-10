@@ -15,26 +15,21 @@ cmbsdf = env.Object(source='cmbsdf.c')
 
 # standard targets
 PROGS = [
-('findglare', Split('findglare.c glareval.c glaresrc.c setscan.c'),
-	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem','rterror']),
-('glarendx',  Split('glarendx.c'), ['rtpic','rtargs','rtio','rtmath']),
-('vwright',   Split('vwright.c'),  ['rtpic','rtargs','rtio','rtmath']),
-('vwrays',    Split('vwrays.c'),   ['rtpic','rtargs','rtio','rtmath']),
-('rad',       Split('rad.c'),
-	['rtpic','rtproc','rtpath','rtmath','rtargs','rtio','rtcont','rtmem','rterror']),
-('rpiece',    Split('rpiece.c') + [env.version], # remote magic
-	['rtpic','rtargs','rtio','rtproc','rtmath','rtpath','rtmem']),
-('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'],
-	['rtpic','rtargs','rtio','rtproc','rtcont','rtmem','rtpath','rtmath',
-	'rtnet','rterror','$RAD_SOCKETLIB']),
-('dctimestep', Split('dctimestep.c')+[cmatrix, cmbsdf], ['rtall']),
-('rttree_reduce', Split('rttree_reduce.c'), ['rtall']),
-('rcollate', Split('rcollate.c'), ['rtall']),
-('eplus_adduvf', Split('eplus_adduvf.c eplus_idf.c'), ['rtall']),
-('rfluxmtx', Split('rfluxmtx.c'), ['rtall']),
-('rmtxop', Split('rmtxop.c rmatrix.c')+[cmatrix, cmbsdf], ['rtall']),
-('wrapBSDF', Split('wrapBSDF.c'), ['rtall']),
-('evalglare', Split('evalglare.c pictool.c'), ['rtall', 'reetz']),
+('findglare', Split('findglare.c glareval.c glaresrc.c setscan.c'), ['rtrad']),
+('glarendx',  Split('glarendx.c'), ['rtrad']),
+('vwright',   Split('vwright.c'),  ['rtrad']),
+('vwrays',    Split('vwrays.c'),   ['rtrad']),
+('rad',       Split('rad.c'),      ['rtrad']),
+('rpiece',    Split('rpiece.c') + [env.version], ['rtrad']),
+('ranimate',  ['ranimate.c', '$RAD_NETCOMPAT'], ['rtrad', '$RAD_SOCKETLIB']),
+('dctimestep', Split('dctimestep.c')+[cmatrix, cmbsdf], ['rtrad']),
+('rttree_reduce', Split('rttree_reduce.c'), ['rtrad']),
+('rcollate', Split('rcollate.c'), ['rtrad']),
+('eplus_adduvf', Split('eplus_adduvf.c eplus_idf.c'), ['rtrad']),
+('rfluxmtx', Split('rfluxmtx.c'), ['rtrad']),
+('rmtxop', Split('rmtxop.c rmatrix.c')+[cmatrix, cmbsdf], ['rtrad']),
+('wrapBSDF', Split('wrapBSDF.c'), ['rtrad']),
+('evalglare', Split('evalglare.c pictool.c'), ['rtrad', 'reetz']),
 ]
 
 for p in PROGS:
@@ -45,19 +40,15 @@ for p in PROGS:
 rs = Split('ranimove.c ranimove1.c ranimove2.c')
 ranimove = env.Program(target=radbin('ranimove'), source=rs,
 		CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
-		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
-		'rtnet','rtcont','rtmem','rtargs','rtio','rtproc','rtpath','rterror']
-		+ mlib)
+		LIBS=['raycalls','rttrace','rtrad'] + mlib)
 progs.append(ranimove)
 rsensor = env.Program(target=radbin('rsensor'), source='rsensor.c',
 		CPPPATH=env.get('CPPPATH', [])+ ['#src/rt'],
-		LIBS=['raycalls','rttrace','rtscene','rtpic','rtfunc','rtmath',
-		'rtcont','rtmem','rtargs','rtio','rtpath','rterror','rtproc',
-		'rtnet','rtlamps'] + mlib)
+		LIBS=['raycalls','rttrace','rtrad'] + mlib)
 progs.append(rsensor)
 
 getinfo = env.Program(target=radbin('getinfo'), source='getinfo.c',
-		LIBS=['rtio'])
+		LIBS=['rtrad'])
 progs.append(getinfo)
 
 
@@ -68,7 +59,7 @@ if env.has_key('X11LIB'):
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
 			source=Split('xglaresrc.c') + [env.x11findwind], # XXX remote magic
 			LIBPATH=xlibp, CPPPATH=xincl,
-			LIBS=['rtpic','rtmath','rtargs','rtio','X11']+ mlib)
+			LIBS=['rtrad', 'X11']+ mlib)
 	progs.append(xglaresrc)
 
 	# OpenGL targets that also depend on X11
@@ -76,9 +67,7 @@ if env.has_key('X11LIB'):
 		glrad = env.Program(target=radbin('glrad'), source=Split('glrad.c'),
 			CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
 			LIBPATH=xlibp, CPPPATH=xincl,
-			LIBS=['rgl','rtpic','rtscene','rtproc','rtpath','rtargs','rtio',
-			'rtmath','rtcont','rtmem','rterror','rtdummy',
-			'GL', 'GLU','X11'] + mlib,)
+			LIBS=['rgl','rtrad','rtdummy', 'GL', 'GLU','X11'] + mlib,)
 		progs.append(glrad)
 
 if os.name == 'posix': # XXX ignoring trad.wsh

@@ -8,52 +8,39 @@ mlib = env['RAD_MLIB']
 # compose paths
 def rbin(name): return os.path.join(env['RAD_BUILDBIN'], name)
 
-MGFPROGS = (
-('3ds2mgf', Split('3ds2mgf.c rayopt3ds.c vect3ds.c')),
-)
-for p in MGFPROGS:
-	prog = env.Program(target=rbin(p[0]), source=p[1], LIBS=mlib+['mgf','rtcont'])
-	Default(prog)
-	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
-
 trans = env.Object(source="trans.c")
 bsdfrep = env.Object(source="bsdfrep.c")
 bsdfinterp = env.Object(source="bsdfinterp.c")
 
-
 # standard targets
 PROGS = [
-('ies2rad',   ['ies2rad.c'],       ['rtlamps','rtcolor','rtio','rtpath']+ mlib),
-#('arch2rad',  ['arch2rad.c',trans],['rtcont','rtmem'] + mlib),
+('3ds2mgf', Split('3ds2mgf.c rayopt3ds.c vect3ds.c'), ['mgf','rtrad'] + mlib),
+('ies2rad',   ['ies2rad.c'],       ['rtrad'] + mlib),
+#('arch2rad',  ['arch2rad.c',trans],['rtrad'] + mlib),
 ('nff2rad',   ['nff2rad.c'],       []),
-('lampcolor', ['lampcolor.c'],     ['rtlamps','rtcolor','rtio','rtpath']),
-('tmesh2rad', ['tmesh2rad.c'],     ['rtscene','rtmath'] + mlib),
-('obj2rad',   ['obj2rad.c',trans], 
-    ['rtscene','rtargs','rtio','rtcont','rtmem','rtmath','rterror'] + mlib),
-('mgf2rad',   ['mgf2rad.c'],       ['mgf','rtall'] + mlib),
-('rad2mgf',   ['rad2mgf.c'],
-	['rtproc', 'rtpath', # for win_popen()
-    'rtscene','rtio','rtcolor','rtcont','rtmem','rterror'] + mlib),
-('mgfilt',    ['mgfilt.c'],        ['mgf','rtall'] + mlib),
-('mgf2inv',   ['mgf2inv.c'],       ['mgf','rtall'] + mlib),
+('lampcolor', ['lampcolor.c'],     ['rtrad'] ),
+('tmesh2rad', ['tmesh2rad.c'],     ['rtrad']  + mlib),
+('obj2rad',   ['obj2rad.c',trans], ['rtrad']  + mlib),
+('mgf2rad',   ['mgf2rad.c'],       ['mgf','rtrad']  + mlib),
+('rad2mgf',   ['rad2mgf.c'],       ['rtrad'] + mlib),
+('mgfilt',    ['mgfilt.c'],        ['mgf','rtrad'] + mlib),
+('mgf2inv',   ['mgf2inv.c'],       ['mgf','rtrad'] + mlib),
 ('pabopto2bsdf', 
 	['pabopto2bsdf.c',bsdfrep,'bsdfrbf.c', 'bsdfmesh.c', 'bsdftrans.cpp',], 
-	['rtall'] + mlib),
-('bsdf2klems',['bsdf2klems.c', bsdfrep, bsdfinterp,], ['rtall'] + mlib),
-('bsdf2ttree',['bsdf2ttree.c', bsdfrep, bsdfinterp,], ['rtall'] + mlib),
-('pkgBSDF',   ['pkgBSDF.c', ], ['rtall'] + mlib),
-('epw2wea',   ['epw2wea.c', ], ['rtall'] + mlib),
+	['rtrad'] + mlib),
+('bsdf2klems',['bsdf2klems.c', bsdfrep, bsdfinterp,], ['rtrad'] + mlib),
+('bsdf2ttree',['bsdf2ttree.c', bsdfrep, bsdfinterp,], ['rtrad'] + mlib),
+('pkgBSDF',   ['pkgBSDF.c', ], ['rtrad'] + mlib),
+('epw2wea',   ['epw2wea.c', ], ['rtrad'] + mlib),
+('mgf2meta',  ['mgf2meta.c'],  ['meta', 'mgf','rtrad'] + mlib,
+	[os.path.join('#src','meta')]),
 ]
 for p in PROGS:
-	prog = env.Program(target=rbin(p[0]), source=p[1], LIBS=p[2])
+	if len(p) == 4: inclp = env.get('CPPPATH', []) + [os.path.join('#src','meta')],
+	else: inclp = env.get('CPPPATH', [])
+	prog = env.Program(target=rbin(p[0]), source=p[1], LIBS=p[2], CPPPATH=inclp)
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
-
-# meta targets
-prog = env.Program(target=rbin('mgf2meta'), source=['mgf2meta.c'],
-		CPPPATH=env.get('CPPPATH', []) + [os.path.join('#src','meta')],
-		LIBS=['meta','mgf','rtall'] + mlib)
-env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 LIBFILES = Split('source.cal tilt.cal window.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

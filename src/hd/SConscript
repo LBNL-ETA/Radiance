@@ -18,18 +18,13 @@ clumpbeams = env.Object(source='clumpbeams.c')
 # standard targets
 PROGS = (
 ('rholo', Split('''rholo.c rholo2.c rholo2l.c rholo3.c rholo4.c''')
-	 + [env.version, holofile, holo, viewbeams],
-	['rtpic','rtproc','rtpath','rtio','rtargs','rtmath','rtmem','rterror'],0),
+	 + [env.version, holofile, holo, viewbeams], ['rtrad'],0),
 ('rhpict', Split('rhpict.c rhpict2.c')+[env.version, holofile, holo, viewbeams],
-	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror'],1),
-('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo],
-	['rtpic','rtproc','rtargs','rtio','rtmath','rtmem','rterror'],1),
-('rhinfo', Split('rhinfo.c') + [holofile, holo],
-	['rtio','rtproc', 'rtmath','rterror'],1),
-('rhoptimize', Split('rhoptimize.c') + [clumpbeams, holofile, holo],
-	['rtio','rtproc', 'rtmath','rterror'],1),
-('genrhgrid', Split('genrhgrid.c') + [holofile, holo],
- ['rtio','rtmath','rtproc','rterror'],1),
+	['rtrad'],1),
+('rhcopy', Split('rhcopy.c') + [clumpbeams, holofile, holo], ['rtrad'],1),
+('rhinfo', Split('rhinfo.c') + [holofile, holo], ['rtrad'],1),
+('rhoptimize', Split('rhoptimize.c') + [clumpbeams,holofile,holo], ['rtrad'],1),
+('genrhgrid', Split('genrhgrid.c') + [holofile, holo], ['rtrad'],1),
 )
 if 1:
 	for p in PROGS:
@@ -57,7 +52,7 @@ if env.has_key('X11INCLUDE'):
 	# XXX the .hdi extension will cause problems on Windows
 	xenv['PROGSUFFIX'] = '.hdi'
 
-	dlibs = ['rtpic','rtmath','rtcont','rtmem','rtargs','rtio','rterror','rtdummy']
+	dlibs = ['rtrad', 'rtdummy']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
 		prog = xenv.Program(target=radbin(p[0]),
@@ -78,7 +73,7 @@ if env.has_key('X11INCLUDE'):
 		make_hdi(p)
 
 	if env.has_key('OGL'):
-		rgllibs = ['rgl','rtscene','rtpath']
+		rgllibs = ['rgl','rtrad']
 		ogl_common_s = Split('rhd_odraw.c rhd_geom.c')
 		ogl_common = map(lambda s:xenv.Object(source=s), ogl_common_s)
 		rhdobj = xenv.Object(source='rhdobj.c')
@@ -96,7 +91,7 @@ if env.has_key('X11INCLUDE'):
 
 			# ogloh
 			('oglo', [rhdobj] + ogl_common,
-			 rgllibs+['rtproc']+dlibs+['GLU','GL','X11'] + mlib,
+			 rgllibs+['rtrad']+dlibs+['GLU','GL','X11'] + mlib,
 			 'rhd_oglo', 'rhd_ogl.c', ['-DDOBJ', '-DNOSTEREO']),
 			)
 		for p in GLHDI:
