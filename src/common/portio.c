@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.17 2016/03/03 22:09:59 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.18 2016/03/15 13:57:09 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -33,8 +33,9 @@ putint(				/* write a siz-byte integer to fp */
 	FILE  *fp
 )
 {
-	while (siz--)
-		putc((int)(i>>(siz<<3) & 0xff), fp);
+	siz <<= 3;
+	while ((siz -= 8) >= 0)
+		putc((int)(i>>siz & 0xff), fp);
 }
 
 
