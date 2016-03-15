@@ -2082,3 +2082,6 @@ process as it disentangles its shared memory.  We now
 wait for all the processes together, so they can disentangle
 in parallel.  It can still take up to a minute in some cases,
 but not 10 minutes like it was taking before the fix.
+
+Enabled ambient cache value corral for all levels, not just final two.
+This may reduce errors in certain pathological scenes.
