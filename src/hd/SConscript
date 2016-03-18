@@ -28,7 +28,6 @@ PROGS = (
 )
 if 1:
 	for p in PROGS:
-		print(p[0])
 		if not p[3] and os.name == 'nt': continue 
 		prog = env.Program(target=radbin(p[0]),
 				source=p[1], LIBS=p[2] + mlib)
@@ -48,11 +47,11 @@ if env.has_key('X11INCLUDE'):
 	devdir = os.path.join(xenv['RAD_BUILDBIN'],'dev')
 	idevdir = os.path.join(xenv['RAD_BINDIR'],'dev')
 	ocppflags = xenv.get('CPPFLAGS', [])
+	addobj = xenv.get('ADDOBJNOTIFY')
 
 	# XXX the .hdi extension will cause problems on Windows
 	xenv['PROGSUFFIX'] = '.hdi'
 
-	dlibs = ['rtrad', 'rtdummy']
 	def make_hdi(p): # build them
 		obj = xenv.Object(target=p[3], source=p[4], CPPFLAGS=ocppflags + p[5])
 		prog = xenv.Program(target=radbin(p[0]),
@@ -66,7 +65,7 @@ if env.has_key('X11INCLUDE'):
 
 	# (name, sources,   libs,   obj, objsrc, objflags)
 	XHDI = (('x11',  Split('rhd_ctab.c rhd_qtree2r.c') + [rhd_qtree],
-				dlibs + ['X11'] + mlib,
+				['rtrad', 'X11'] + mlib,
 				'rhd_x11', 'rhd_x11.c', []),
 		   )
 	for p in XHDI:
@@ -81,17 +80,17 @@ if env.has_key('X11INCLUDE'):
 		GLHDI = (
 			# glx1h
 			('glx1', ['rhd_qtree2c.c', rhd_qtree],
-			 dlibs + ['GLU','GL','X11'] + mlib,
+			 ['rtrad', 'GLU','GL','X11'] + mlib,
 			 'rhd_glx1', 'rhd_glx1.c', ['-DNOSTEREO']),
 
 			# oglh
-			('ogl', ogl_common,
-			 rgllibs+dlibs+['GLU','GL','X11'] + mlib,
+			('ogl', ogl_common + [addobj],
+			 rgllibs+['rtrad', 'GLU','GL','X11'] + mlib,
 			 'rhd_ogl0', 'rhd_ogl.c', ['-DNOSTEREO']),
 
 			# ogloh
-			('oglo', [rhdobj] + ogl_common,
-			 rgllibs+['rtrad']+dlibs+['GLU','GL','X11'] + mlib,
+			('oglo', [rhdobj] + ogl_common + [addobj],
+			 rgllibs+['rtrad']+['rtrad', 'GLU','GL','X11'] + mlib,
 			 'rhd_oglo', 'rhd_ogl.c', ['-DDOBJ', '-DNOSTEREO']),
 			)
 		for p in GLHDI:
@@ -101,12 +100,12 @@ if env.has_key('X11INCLUDE'):
 			GLSHDI = (
 				# oglsh
 				('ogls', ogl_common,
-				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
+				 rgllibs+['rtrad', 'GLU','GL','X11','Xext'] + mlib,
 				 'rhd_ogls', 'rhd_ogl.c' ['-DSTEREO']),
 					
 				# oglsoh
 				('oglso', [rhdobj] + ogl_common,
-				 rgllibs+dlibs+['GLU','GL','X11','Xext'] + mlib,
+				 rgllibs+['rtrad', 'GLU','GL','X11','Xext'] + mlib,
 				 'rhd_oglso', 'rhd_ogl.c' ['-DDOBJ', '-DSTEREO']),
 					)
 			for p in GLHDI:

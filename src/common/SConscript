@@ -10,17 +10,24 @@ getlibpath = env.StaticObject(source='getlibpath.c',
         CPPFLAGS='-DDEFPATH="\\"%s\\""' % env['RAD_RLIBDIR'].replace('\\','/'))
 tmapcolrs = env.StaticObject(source='tmapcolrs.c',
         CPPFLAGS='-DPCOND=\\"pcond\\"')
-ezxml = env.Object('ezxml.c',
+ezxml = env.StaticObject('ezxml.c',
 		CPPDEFINES=env.get('CPPDEFINES',[]) + env.get('EZXML_CPPDEFINES',[]))
+objs = [getlibpath, tmapcolrs, ezxml]
+
+# the definition of addobjnotify conflicts with definitions in other files
+# that are more essential to the library.
+# We need to pass this one around and include it individually
+addobjn = env.StaticObject(source='addobjnotify.c')
+env['ADDOBJNOTIFY'] = addobjn
 
 # source and object dependencies
 RTSCENE = Split('''cone.c face.c free_os.c instance.c readobj.c readoct.c
 		otypes.c objset.c octree.c readfargs.c modobject.c
-		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''') #addobjnotify.c
+		font.c mesh.c readmesh.c tmesh.c sceneio.c xf.c''')
 RTPIC = Split('''color.c colrops.c resolu.c image.c bmpfile.c falsecolor.c
-		tonemap.c tmapluv.c tmaptiff.c tmap16bit.c''') + [tmapcolrs]
+		tonemap.c tmapluv.c tmap16bit.c tmaptiff.c''')
 RTERROR = Split('''error.c eputs.c wputs.c quit.c''')
-RTCONT = Split('''ezxml lookup.c savestr.c savqstr.c ccolor.c ccyrgb.c
+RTCONT = Split('''lookup.c savestr.c savqstr.c ccolor.c ccyrgb.c
 		spec_rgb.c bsdf.c bsdf_m.c bsdf_t.c loadbsdf.c
 		disk2square.c hilbert.c interp2d.c triangulate.c''')
 RTMATH = Split('''fvect.c invmat4.c linregr.c mat4.c tcos.c urand.c urind.c
@@ -31,27 +38,21 @@ RTFUNC = Split('''biggerlib.c caldefn.c calexpr.c calfunc.c calprnt.c
 RTIO = Split('''fdate.c fgetline.c fgetval.c fgetword.c fputword.c loadvars.c
 		portio.c wordfile.c words.c header.c timegm.c cvtcmd.c''')
 RTARGS = Split('''badarg.c expandarg.c''') + env.get('RAD_ARGSCOMPAT', [])
-RTPATH = Split('''getpath.c gethomedir.c paths.c''') + [getlibpath]
+RTPATH = Split('''getpath.c gethomedir.c paths.c''')
 RTLAMPS = Split('''fropen.c rexpr.c lamps.c''')
 RTPROC = Split('''process.c''') + env.get('RAD_PROCESS', [])
 RTMEM = Split('ealloc.c bmalloc.c')
 RTNET = Split('myhostname.c')
+
 librtrad = env.StaticLibrary(target=radlib('rtrad'),
-		source=(RTERROR + RTPATH + RTARGS + RTIO + RTMATH + RTCONT + RTMEM
-			+ RTFUNC + RTPROC + RTLAMPS + RTSCENE + RTPIC + RTNET))
+		source=RTERROR + RTPATH + RTARGS + RTIO + RTMATH + RTCONT + RTMEM
+			+ RTFUNC + RTPROC + RTLAMPS + RTSCENE + RTPIC + RTNET + objs)
 
 MGF = Split('''mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c''')
 libmgf = env.StaticLibrary(target=radlib('mgf'), source=MGF)
 
 REETZ = Split('g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c maxheap.c')
 libreetz = env.StaticLibrary(target=radlib('reetz'), source=REETZ)
-
-# librtdummy is needed, because addobjnotify has different sizes depending
-#   on the program, and in some cases isn't actually needed at all.
-#   It should really be a pointer, and its content allocated
-#   dynamically during program initialization.
-RTDUMMY = Split('addobjnotify.c')
-rtdummy = env.StaticLibrary(target=radlib('rtdummy'), source=RTDUMMY)
 
 LIBFILES = Split('tmesh.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))

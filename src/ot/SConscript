@@ -4,6 +4,7 @@ Import('env') # inherit from parent
 
 # math libs
 mlib = env['RAD_MLIB']
+addobj = env.get('ADDOBJNOTIFY')
 
 # standard targets
 bbox = env.Object(source='bbox.c')
@@ -12,8 +13,8 @@ PROGS = (
 ('oconv',    Split('''oconv.c writeoct.c initotypes.c sphere.c
 				   o_cone.c o_instance.c''') +[bbox, o_face], []),
 ('getbbox',  Split('getbbox.c readobj2.c init2otypes.c') +[bbox], []),
-('obj2mesh', Split('obj2mesh.c cvmesh.c wfconv.c writemesh.c')+[o_face],
-	 ['rtdummy']),
+('obj2mesh', Split('obj2mesh.c cvmesh.c wfconv.c writemesh.c')+[o_face,addobj],
+ []),
 )
 for p in PROGS:
     prog = env.Program(target=os.path.join(env['RAD_BUILDBIN'], p[0]),
