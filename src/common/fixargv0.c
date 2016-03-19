@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.5 2003/10/27 10:19:31 schorsch Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.6 2016/03/19 00:44:46 schorsch Exp $";
 #endif
 /*
  * Fix argv[0] for DOS environments
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: fixargv0.c,v 2.5 2003/10/27 10:19:31 schorsch 
 #include "copyright.h"
 
 #include <ctype.h>
+#include <string.h>
 
 extern char *
 fixargv0(av0)			/* extract command name from full path */
@@ -24,7 +25,8 @@ char  *av0;
 			*cp = '\0';
 			continue;
 		case '\\':			/* remove directory */
-			return(cp+1);
+			strcpy(av0, cp+1);
+			break;
 		default:			/* convert to lower case */
 			*cp = tolower(*cp);
 			continue;
