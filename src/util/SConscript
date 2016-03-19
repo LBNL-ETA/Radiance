@@ -54,6 +54,7 @@ progs.append(getinfo)
 
 # X11 targets
 if env.has_key('X11LIB'):
+	addobj = env.get('ADDOBJNOTIFY')
 	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
 	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
 	xglaresrc = env.Program(target=radbin('xglaresrc'),
@@ -64,10 +65,11 @@ if env.has_key('X11LIB'):
 
 	# OpenGL targets that also depend on X11
 	if env.has_key('OGL'):
-		glrad = env.Program(target=radbin('glrad'), source=Split('glrad.c'),
-			CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
-			LIBPATH=xlibp, CPPPATH=xincl,
-			LIBS=['rgl','rtrad','rtdummy', 'GL', 'GLU','X11'] + mlib,)
+		glrad = env.Program(target=radbin('glrad'),
+				source=['glrad.c', addobj],
+				CPPFLAGS=env.get('CPPFLAGS', []) + ['$RAD_STEREO'],
+				LIBPATH=xlibp, CPPPATH=xincl,
+				LIBS=['rgl','rtrad','GL', 'GLU','X11'] + mlib,)
 		progs.append(glrad)
 
 if os.name == 'posix': # XXX ignoring trad.wsh
