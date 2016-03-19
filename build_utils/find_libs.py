@@ -46,12 +46,22 @@ def find_gl(env):
 		if incdir: env.Prepend(CPPPATH=[incdir]) # add temporarily
 		if libdir: env.Prepend(LIBPATH=[libdir])
 		conf = SConf(env)
-		if conf.CheckLibWithHeader('GL', 'GL/gl.h', 'C', autoadd=0):
+		if (conf.CheckLib('GL')
+				or conf.CheckLib('opengl32')
+				or conf.CheckCHeader('OpenGL/gl.h')
+				or conf.CheckCHeader('GL/gl.h')):
 			env['OGL'] = 1
+		if os.name == 'nt':
+			if (conf.CheckLib('GLU') # for winrview
+					or conf.CheckLib('glu32')
+					or conf.CheckCHeader('OpenGL/glu.h')):
+				env['GLU'] = 1
 		if incdir: env['CPPPATH'].remove(incdir) # not needed for now
 		if libdir: env['LIBPATH'].remove(libdir)
 		if env.has_key('OGL'):
 			if incdir: env.Replace(OGLINCLUDE=[incdir])
+			if env.has_key('GLU'):
+				if incdir: env.Replace(GLUINCLUDE=[incdir])
 			#if libdir: env.Replace(OGLLIB=[libdir])
 			conf.Finish()
 			break
