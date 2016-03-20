@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.6 2016/03/19 00:44:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.7 2016/03/20 16:36:17 schorsch Exp $";
 #endif
 /*
  * Fix argv[0] for DOS environments
@@ -16,16 +16,19 @@ extern char *
 fixargv0(av0)			/* extract command name from full path */
 char  *av0;
 {
-	register char  *cp = av0;
+	register char  *cp = av0, *end = av0;
 
 	while (*cp) cp++;		/* start from end */
+	end = cp;
 	while (cp-- > av0)
 		switch (*cp) {		/* fix up command name */
 		case '.':			/* remove extension */
 			*cp = '\0';
+			end = cp;
 			continue;
 		case '\\':			/* remove directory */
-			strcpy(av0, cp+1);
+			/* make sure the original pointer remains the same */
+			memmove(av0, cp+1, end-cp);
 			break;
 		default:			/* convert to lower case */
 			*cp = tolower(*cp);
