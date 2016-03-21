@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.17 2016/03/10 18:25:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.18 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -144,7 +144,7 @@ getrenderopt(		/* get next render option */
 				amblp = amblist;
 			}
 			if (av[0][2] == 'I') {	/* file */
-				rval = wordfile(amblp,
+				rval = wordfile(amblp, AMBLLEN-(amblp-amblist),
 					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,
@@ -165,7 +165,7 @@ getrenderopt(		/* get next render option */
 				amblp = amblist;
 			}
 			if (av[0][2] == 'E') {	/* file */
-				rval = wordfile(amblp,
+				rval = wordfile(amblp, AMBLLEN-(amblp-amblist),
 					getpath(av[1],getrlibpath(),R_OK));
 				if (rval < 0) {
 					sprintf(errmsg,

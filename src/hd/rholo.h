@@ -1,4 +1,4 @@
-/* RCSid: $Id: rholo.h,v 3.25 2004/06/08 19:48:30 greg Exp $ */
+/* RCSid: $Id: rholo.h,v 3.26 2016/03/21 19:06:08 greg Exp $ */
 /*
  * Header file for rholo program
  */
@@ -115,6 +115,7 @@ extern time_t	reporttime;	/* time for next report */
 extern long	nraysdone;	/* number of rays done */
 extern long	npacksdone;	/* number of packets done */
 
+#define	MAXRTARGC	256
 extern int	rtargc;		/* rtrace command */
 extern char	*rtargv[];
 

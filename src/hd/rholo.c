@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.77 2016/03/04 02:48:14 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.78 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -55,7 +55,7 @@ time_t	reporttime;		/* time for next report */
 off_t	maxdisk;		/* maximum file space (bytes) */
 
 int	rtargc = 1;		/* rtrace command */
-char	*rtargv[128] = {"rtrace", NULL};
+char	*rtargv[MAXRTARGC] = {"rtrace", NULL};
 
 int	orig_mode = -1;		/* original file mode (-1 if unchanged) */
 
@@ -415,7 +415,7 @@ setdefaults(			/* set default values */
 	}
 				/* append rendering options */
 	if (vdef(RENDER))
-		rtargc += wordstring(rtargv+rtargc, vval(RENDER));
+		rtargc += wordstring(rtargv+rtargc, MAXRTARGC-rtargc, vval(RENDER));
 	
 	if (gp == NULL)		/* already initialized? */
 		return;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: expandarg.c,v 2.9 2008/05/17 02:49:41 greg Exp $";
+static const char	RCSid[] = "$Id: expandarg.c,v 2.10 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  * Get additional command arguments from file or environment.
@@ -24,10 +24,11 @@ int	filexpchr = '@';		/* file expansion character */
 
 
 int
-expandarg(acp, avp, n)		/* expand list at argument n */
-int	*acp;
-register char	***avp;
-int	n;
+expandarg(		/* expand list at argument n */
+	int	*acp,
+	char	***avp,
+	int	n
+)
 {
 	int	ace;
 	char	*ave[MAXARGEXP];
@@ -37,11 +38,11 @@ int	n;
 		return(0);
 	errno = 0;	
 	if ((*avp)[n][0] == filexpchr) {		/* file name */
-		ace = wordfile(ave, (*avp)[n]+1);
+		ace = wordfile(ave, MAXARGEXP, (*avp)[n]+1);
 		if (ace < 0)
 			return(-1);	/* no such file */
 	} else if ((*avp)[n][0] == envexpchr) {		/* env. variable */
-		ace = wordstring(ave, getenv((*avp)[n]+1));
+		ace = wordstring(ave, MAXARGEXP, getenv((*avp)[n]+1));
 		if (ace < 0)
 			return(-1);	/* no such variable */
 	} else						/* regular argument */

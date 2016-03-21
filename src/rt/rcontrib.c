@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.26 2015/07/15 23:38:37 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.27 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -101,8 +101,10 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		sprintf(errmsg, "duplicate modifier '%s'", modn);
 		error(USER, errmsg);
 	}
-	if (nmods >= MAXMODLIST)
-		error(INTERNAL, "too many modifiers");
+	if (nmods >= MAXMODLIST) {
+		sprintf(errmsg, "too many modifiers (%d limit)", MAXMODLIST);
+		error(INTERNAL, errmsg);
+	}
 	if (!strcmp(modn, VOIDID)) {
 		sprintf(errmsg, "cannot track '%s' modifier", VOIDID);
 		error(USER, errmsg);
@@ -150,9 +152,15 @@ addmodfile(char *fname, char *outf, char *prms, char *binv, int bincnt)
 	char	*mname[MAXMODLIST];
 	int	i;
 					/* find the file & store strings */
-	if (wordfile(mname, getpath(fname, getrlibpath(), R_OK)) < 0) {
+	i = wordfile(mname, MAXMODLIST, getpath(fname, getrlibpath(), R_OK));
+	if (i < 0) {
 		sprintf(errmsg, "cannot find modifier file '%s'", fname);
 		error(SYSTEM, errmsg);
+	}
+	if (i >= MAXMODLIST-1) {
+		sprintf(errmsg, "too many modifiers (%d limit) in file '%s'",
+				MAXMODLIST-1, fname);
+		error(INTERNAL, errmsg);
 	}
 	for (i = 0; mname[i]; i++)	/* add each one */
 		addmodifier(mname[i], outf, prms, binv, bincnt);

@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.13 2016/03/06 01:13:18 schorsch Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.14 2016/03/21 19:06:08 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -87,7 +87,7 @@ extern LUTAB		ofiletab;	/* output stream table */
 #endif
 
 #ifndef	MAXMODLIST
-#define	MAXMODLIST	2048		/* maximum modifiers we'll track */
+#define	MAXMODLIST	10000		/* maximum modifiers we'll track */
 #endif
 
 extern const char	*modname[MAXMODLIST];	/* ordered modifier name list */

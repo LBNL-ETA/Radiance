@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.11 2016/03/03 22:09:59 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.12 2016/03/21 19:06:08 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -70,8 +70,8 @@ extern int	shash(char *s);
 extern char	*savqstr(char *s);
 extern void	freeqstr(char *s);
 					/* defined in wordfile.c */
-extern int	wordfile(char **words, char *fname);
-extern int	wordstring(char **avl, char *str);
+extern int	wordfile(char **words, int nargs, char *fname);
+extern int	wordstring(char **avl, int nargs, char *str);
 					/* defined in words.c */
 extern char	*atos(char *rs, int nb, char *s);
 extern char	*nextword(char *cp, int nb, char *s);

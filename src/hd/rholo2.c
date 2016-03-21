@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.28 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.29 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -376,7 +376,8 @@ getradfile(void)			/* run rad and get needed variables */
 		loadvars(tf2);			/* load variables */
 		unlink(tf2);
 	}
-	rtargc += wordfile(rtargv+rtargc, tf1);	/* get rtrace options */
+						/* get rtrace options */
+	rtargc += wordfile(rtargv+rtargc, MAXRTARGC-rtargc, tf1);
 	unlink(tf1);			/* clean up */
 	return(1);
 }

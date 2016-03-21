@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.22 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.23 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -281,7 +281,7 @@ runrad(				/* run rad and load variables */
 		eyedist = atof(cp);
 						/* look for materials */
 	while ((cp = scan4var(buf, sizeof(buf), "materials", fp)) != NULL) {
-		nscenef += wordstring(scene+nscenef, cp);
+		nscenef += wordstring(scene+nscenef, MAXSCENE-nscenef, cp);
 		buf[0] = '\0';
 	}
 						/* look for octree */
@@ -289,7 +289,7 @@ runrad(				/* run rad and load variables */
 		octree = savqstr(cp);
 						/* look for scene files */
 	while ((cp = scan4var(buf, sizeof(buf), "scene", fp)) != NULL) {
-		nscenef += wordstring(scene+nscenef, cp);
+		nscenef += wordstring(scene+nscenef, MAXSCENE-nscenef, cp);
 		buf[0] = '\0';
 	}
 						/* load view names */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ranimove.c,v 3.16 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: ranimove.c,v 3.17 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  *  Radiance object animation program
@@ -350,7 +350,7 @@ setrendparams(	/* set global rendering parameters */
 	av[ac=0] = NULL;
 				/* load options from file, first */
 	if (optf != NULL && *optf) {
-		ac = wordfile(av, optf);
+		ac = wordfile(av, 1024, optf);
 		if (ac < 0) {
 			sprintf(errmsg, "cannot load options file \"%s\"",
 					optf);
@@ -359,7 +359,7 @@ setrendparams(	/* set global rendering parameters */
 	}
 				/* then from options string */
 	if (qval != NULL && qval[0] == '-')
-		ac += wordstring(av+ac, qval);
+		ac += wordstring(av+ac, 1024-ac, qval);
 
 				/* restore default parameters */
 	ray_restore(NULL);

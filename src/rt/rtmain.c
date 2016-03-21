@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.26 2016/03/10 18:25:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.27 2016/03/21 19:06:08 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -195,7 +195,7 @@ main(int  argc, char  *argv[])
 					tralp = tralist;
 				}
 				if (argv[i][2] == 'I') {	/* file */
-					rval = wordfile(tralp,
+					rval = wordfile(tralp, MAXMODLIST-(tralp-tralist),
 					getpath(argv[++i],getrlibpath(),R_OK));
 					if (rval < 0) {
 						sprintf(errmsg,
@@ -217,7 +217,7 @@ main(int  argc, char  *argv[])
 					tralp = tralist;
 				}
 				if (argv[i][2] == 'E') {	/* file */
-					rval = wordfile(tralp,
+					rval = wordfile(tralp, MAXMODLIST-(tralp-tralist),
 					getpath(argv[++i],getrlibpath(),R_OK));
 					if (rval < 0) {
 						sprintf(errmsg,
