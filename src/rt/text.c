@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: text.c,v 2.26 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: text.c,v 2.27 2016/03/22 03:56:17 greg Exp $";
 #endif
 /*
  *  text.c - functions for text patterns and mixtures.
@@ -204,7 +204,7 @@ gettext(			/* get text structure for material */
 				getrlibpath(), R_OK)) == NULL) {
 			sprintf(errmsg, "cannot find text file \"%s\"",
 					tm->oargs.sarg[tndx(tm)]);
-			error(USER, errmsg);
+			error(SYSTEM, errmsg);
 		}
 		if ((fp = fopen(s, "r")) == NULL) {
 			sprintf(errmsg, "cannot open text file \"%s\"", s);

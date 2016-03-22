@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: instance.c,v 2.11 2004/02/12 18:55:50 greg Exp $";
+static const char RCSid[] = "$Id: instance.c,v 2.12 2016/03/22 03:56:17 greg Exp $";
 #endif
 /*
  *  instance.c - routines for octree objects.
@@ -50,7 +50,7 @@ int  flags;
 	}
 	if ((pathname = getpath(sname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find octree file \"%s\"", sname);
-		error(USER, errmsg);
+		error(SYSTEM, errmsg);
 	}
 	flags &= ~sc->ldflags;		/* skip what's already loaded */
 	if (flags & IO_SCENE)

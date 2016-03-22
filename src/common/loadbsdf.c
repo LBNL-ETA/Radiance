@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: loadbsdf.c,v 3.10 2015/04/25 19:08:29 greg Exp $";
+static const char RCSid[] = "$Id: loadbsdf.c,v 3.11 2016/03/22 03:56:17 greg Exp $";
 #endif
 /*
  * Simple interface for loading BSDF, Radiance-specific search
@@ -50,7 +50,7 @@ loadBSDF(char *fname)
 	pname = getpath(fname, getrlibpath(), R_OK);
 	if (pname == NULL) {
 		sprintf(errmsg, "cannot find BSDF file \"%s\"", fname);
-		error(USER, errmsg);
+		error(SYSTEM, errmsg);
 	}
 	ec = SDloadFile(sd, pname);
 	if (ec)

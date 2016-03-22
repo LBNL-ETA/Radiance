@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.4 2015/08/27 04:33:31 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.5 2016/03/22 03:56:17 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -149,7 +149,7 @@ cm_loadBTDF(char *fname)
 	fpath = getpath(fname, getrlibpath(), R_OK);
 	if (fpath == NULL) {
 		sprintf(errmsg, "cannot find BSDF file '%s'", fname);
-		error(USER, errmsg);
+		error(SYSTEM, errmsg);
 	}
 	SDclearBSDF(&myBSDF, fname);	/* load XML and check type */
 	ec = SDloadFile(&myBSDF, fpath);

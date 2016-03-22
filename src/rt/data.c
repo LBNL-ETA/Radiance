@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.31 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.32 2016/03/22 03:56:17 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -74,7 +74,7 @@ getdata(				/* get data array dname */
 
 	if ((dfname = getpath(dname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find data file \"%s\"", dname);
-		error(USER, errmsg);
+		error(SYSTEM, errmsg);
 	}
 	if ((fp = fopen(dfname, "r")) == NULL) {
 		sprintf(errmsg, "cannot open data file \"%s\"", dfname);
@@ -181,7 +181,7 @@ getpict(				/* get picture pname */
 
 	if ((pfname = getpath(pname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find picture file \"%s\"", pname);
-		error(USER, errmsg);
+		error(SYSTEM, errmsg);
 	}
 	if ((pp = (DATARRAY *)malloc(3*sizeof(DATARRAY))) == NULL)
 		goto memerr;
