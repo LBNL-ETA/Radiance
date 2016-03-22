@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wordfile.c,v 2.16 2016/03/21 19:06:08 greg Exp $";
+static const char	RCSid[] = "$Id: wordfile.c,v 2.17 2016/03/22 15:14:39 greg Exp $";
 #endif
 /*
  * Load whitespace separated words from a file into an array.
@@ -21,9 +21,7 @@ static const char	RCSid[] = "$Id: wordfile.c,v 2.16 2016/03/21 19:06:08 greg Exp
 #include "standard.h"
 
 
-#ifndef MAXFLEN
-#define MAXFLEN		204800	/* file must be smaller than this */
-#endif
+#define MAXWLEN		4096	/* words must be shorter than this */
 
 
 int
@@ -33,24 +31,41 @@ wordfile(			/* get words from fname, put in words */
 	char	*fname
 )
 {
+	int	wrdcnt = 0;
+	int	n = 0;
 	int	fd;
-	char	buf[MAXFLEN];
-	int	n;
+	char	buf[MAXWLEN];
 					/* load file into buffer */
-	if (fname == NULL)
+	if (fname == NULL || !*fname)
 		return(-1);			/* no filename */
+	if (nargs <= 1)
+		return(-1);
 	if ((fd = open(fname, 0)) < 0)
 		return(-1);			/* open error */
-	n = read(fd, buf, MAXFLEN);
+	words[0] = NULL;
+	while (nargs > 1 && (n += read(fd, buf+n, MAXWLEN-n)) > 0) {
+		int	crem = 0;
+		if (n >= MAXWLEN)		/* still something left? */
+			while (!isspace(buf[--n])) {
+				if (n <= 0)	/* one long word! */
+					goto done;
+				++crem;
+			}
+		buf[n] = '\0';			/* terminate & parse */
+		n = wordstring(words, nargs, buf);
+		if (n < 0) {
+			wrdcnt = -1;		/* memory error */
+			break;
+		}
+		words += n;
+		nargs -= n;
+		wrdcnt += n;
+		if ((n = crem) > 0)		/* move remainder */
+			strncpy(buf, buf+MAXWLEN-crem, crem);
+	}
+done:
 	close(fd);
-	if (n < 0)				/* read error */
-		return(-1);
-	if (n == MAXFLEN)		/* file too big, take what we can */
-		while (!isspace(buf[--n]))
-			if (n <= 0)		/* one long word! */
-				return(-1);
-	buf[n] = '\0';				/* terminate */
-	return(wordstring(words, nargs, buf));	/* wordstring does the rest */
+	return(wrdcnt);
 }
 
 
@@ -79,6 +94,7 @@ wordstring(				/* allocate and load argument list */
 		while (*++cp && !isspace(*cp))
 			;
 	}
+	*cp = '\0';			/* terminates overflow */
 	*ap = NULL;
 	return(ap - avl);
 }
