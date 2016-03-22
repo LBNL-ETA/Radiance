@@ -48,16 +48,18 @@ if(Qt5Widgets_DIR)
   include_directories(${Qt5Widgets_INCLUDE_DIRS})
   add_definitions("-DHAS_QT")
 endif()
-if (X11_FOUND OR Qt5Widgets_DIR)
-  add_executable(rvu
-    rvmain.c rview.c rv2.c rv3.c devtable.c devcomm.c editline.c ${X11_SOURCES}
-    colortab.c)
-  target_link_libraries(rvu raycalls radiance rtrad ${X11_LIBRARIES})
-  list(APPEND targets_to_install rvu)
+if(NOT BUILD_HEADLESS)
+  if (X11_FOUND OR Qt5Widgets_DIR)
+    add_executable(rvu
+      rvmain.c rview.c rv2.c rv3.c devtable.c devcomm.c editline.c ${X11_SOURCES}
+      colortab.c)
+    target_link_libraries(rvu raycalls radiance rtrad ${X11_LIBRARIES})
+    list(APPEND targets_to_install rvu)
 
-  # only link to rvu-qt-lib if qt is found
-  if(Qt5Widgets_DIR)
-    target_link_libraries(rvu qtrvu)
+    # only link to rvu-qt-lib if qt is found
+    if(Qt5Widgets_DIR)
+      target_link_libraries(rvu qtrvu)
+    endif()
   endif()
 endif()
 

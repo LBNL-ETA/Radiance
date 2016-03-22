@@ -14,31 +14,32 @@ if(TIFF_LIBRARY)
   endif()
 endif()
 
-#plugins loaded by rvu at runtime
-get_target_property(GIF_PLUGIN Qt5::QGifPlugin LOCATION)
-get_target_property(ICO_PLUGIN Qt5::QICOPlugin LOCATION)
-get_target_property(JPEG_PLUGIN Qt5::QJpegPlugin LOCATION)
-get_target_property(MNG_PLUGIN Qt5::QMngPlugin LOCATION)
-get_target_property(TIFF_PLUGIN Qt5::QTiffPlugin LOCATION)
-get_filename_component(GIF_PLUGIN_NAME "${GIF_PLUGIN}" NAME)
-get_filename_component(ICO_PLUGIN_NAME "${ICO_PLUGIN}" NAME)
-get_filename_component(JPEG_PLUGIN_NAME "${JPEG_PLUGIN}" NAME)
-get_filename_component(MNG_PLUGIN_NAME "${MNG_PLUGIN}" NAME)
-get_filename_component(TIFF_PLUGIN_NAME "${TIFF_PLUGIN}" NAME)
+if(NOT BUILD_HEADLESS)
+  #plugins loaded by rvu at runtime
+  get_target_property(GIF_PLUGIN Qt5::QGifPlugin LOCATION)
+  get_target_property(ICO_PLUGIN Qt5::QICOPlugin LOCATION)
+  get_target_property(JPEG_PLUGIN Qt5::QJpegPlugin LOCATION)
+  get_target_property(MNG_PLUGIN Qt5::QMngPlugin LOCATION)
+  get_target_property(TIFF_PLUGIN Qt5::QTiffPlugin LOCATION)
+  get_filename_component(GIF_PLUGIN_NAME "${GIF_PLUGIN}" NAME)
+  get_filename_component(ICO_PLUGIN_NAME "${ICO_PLUGIN}" NAME)
+  get_filename_component(JPEG_PLUGIN_NAME "${JPEG_PLUGIN}" NAME)
+  get_filename_component(MNG_PLUGIN_NAME "${MNG_PLUGIN}" NAME)
+  get_filename_component(TIFF_PLUGIN_NAME "${TIFF_PLUGIN}" NAME)
 
-if(APPLE OR WIN32)
-  if(WIN32)
-    get_target_property(QPA_PLUGIN Qt5::QWindowsIntegrationPlugin LOCATION)
-  elseif(APPLE)
-    get_target_property(QPA_PLUGIN Qt5::QCocoaIntegrationPlugin LOCATION)
+  if(APPLE OR WIN32)
+    if(WIN32)
+      get_target_property(QPA_PLUGIN Qt5::QWindowsIntegrationPlugin LOCATION)
+    elseif(APPLE)
+      get_target_property(QPA_PLUGIN Qt5::QCocoaIntegrationPlugin LOCATION)
+    endif()
+    get_filename_component(QPA_PLUGIN_NAME "${QPA_PLUGIN}" NAME)
   endif()
-  get_filename_component(QPA_PLUGIN_NAME "${QPA_PLUGIN}" NAME)
+
+  configure_file(
+     "${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake.in"
+     "${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake"
+     @ONLY
+     )
+  install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake")
 endif()
-
-configure_file(
-   "${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake.in"
-   "${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake"
-   @ONLY
-   )
-install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake")
-
