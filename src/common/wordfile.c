@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wordfile.c,v 2.17 2016/03/22 15:14:39 greg Exp $";
+static const char	RCSid[] = "$Id: wordfile.c,v 2.18 2016/03/23 15:14:33 greg Exp $";
 #endif
 /*
  * Load whitespace separated words from a file into an array.
@@ -57,11 +57,10 @@ wordfile(			/* get words from fname, put in words */
 			wrdcnt = -1;		/* memory error */
 			break;
 		}
-		words += n;
-		nargs -= n;
+		words += n; nargs -= n;
 		wrdcnt += n;
 		if ((n = crem) > 0)		/* move remainder */
-			strncpy(buf, buf+MAXWLEN-crem, crem);
+			memmove(buf, buf+MAXWLEN-crem, crem);
 	}
 done:
 	close(fd);
