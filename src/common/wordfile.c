@@ -1,24 +1,20 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wordfile.c,v 2.18 2016/03/23 15:14:33 greg Exp $";
+static const char	RCSid[] = "$Id: wordfile.c,v 2.19 2016/03/23 18:17:46 greg Exp $";
 #endif
 /*
  * Load whitespace separated words from a file into an array.
- * Assume the passed pointer array is big enough to hold them all.
  *
- * External symbols declared in standard.h
+ * External symbols declared in rtio.h
  */
 
 #include "copyright.h"
 
 #include <ctype.h>
 #include <string.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 #include "platform.h"
-#include "standard.h"
+#include "rtio.h"
+#include "rtmisc.h"
 
 
 #define MAXWLEN		4096	/* words must be shorter than this */
