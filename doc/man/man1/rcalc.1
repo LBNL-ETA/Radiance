@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.11 2013/12/19 16:38:12 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.12 2016/03/24 18:48:28 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -22,6 +22,10 @@ rcalc - record calculator
 .B "\-i format"
 ][
 .B "\-o format"
+][
+.B "\-in M"
+][
+.B "\-on M"
 ][
 .B "\-f source"
 ][
@@ -91,6 +95,22 @@ is also given.
 With both input and output formats, the passive mode can
 effectively substitute information in the middle of a file
 or stream without affecting the rest of the data.
+.PP
+If a
+.I \-in
+option is given with a positive integer argument,
+.I rcalc
+will stop processing input once it has loaded this number of records.
+Similarly, if a
+.I \-on
+option is present,
+.I rcalc
+will stop after producing this many records, which may be a smaller
+number if the
+.I cond
+variable is used.
+If multiple input files are given, these counts are continuous over
+the input and do not reset on each file.
 .PP
 The variable and function definitions in each
 .I \-f source

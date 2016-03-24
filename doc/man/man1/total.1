@@ -1,4 +1,4 @@
-.\" RCSid "$Id: total.1,v 1.8 2013/09/05 17:53:22 greg Exp $"
+.\" RCSid "$Id: total.1,v 1.9 2016/03/24 18:48:28 greg Exp $"
 .TH TOTAL 1 2/3/95 RADIANCE
 .SH NAME
 total - sum up columns
@@ -18,6 +18,10 @@ total - sum up columns
 .B \-i{f|d}[N]
 ][
 .B \-o{f|d}
+][
+.B "\-in M"
+][
+.B "\-on M"
 ][
 .B \-tC
 ][
@@ -110,6 +114,14 @@ If the end of file is reached, the current total is printed
 and the calculation is reset before the next file (with or without the
 .I \-r
 option).
+.PP
+The
+.I \-in
+option if present, will limit the number of input records read
+(per input file).
+The
+.I \-on
+option may be used to limit the total number of outut records produced.
 .PP
 The
 .I \-tC

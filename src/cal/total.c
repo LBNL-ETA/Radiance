@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.10 2014/03/25 05:36:22 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.11 2016/03/24 18:48:28 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -22,6 +22,9 @@ static const char	RCSid[] = "$Id: total.c,v 1.10 2014/03/25 05:36:22 greg Exp $"
 
 double  init_val[] = {0., 1., -1e12, 1e12};	/* initial values */
 
+long  incnt = 0;			/* limit number of input records? */
+long  outcnt = 0;			/* limit number of output records? */
+
 int  func = ADD;			/* default function */
 double  power = 0.0;			/* power for sum */
 int  mean = 0;				/* compute mean */
@@ -30,6 +33,7 @@ int  nbicols = 0;			/* number of binary input columns */
 int  bocols = 0;			/* produce binary output columns */
 int  tabc = '\t';			/* default separator */
 int  subtotal = 0;			/* produce subtotals? */
+int  nrecsout = 0;			/* number of records produced */
 
 static int execute(char *fname);
 
@@ -72,6 +76,9 @@ char  *argv[]
 					break;
 				case 'i':
 					switch (argv[a][2]) {
+					case 'n':
+						incnt = atol(argv[++a]);
+						break;
 					case 'a':
 						nbicols = 0;
 						break;
@@ -105,6 +112,9 @@ char  *argv[]
 					break;
 				case 'o':
 					switch (argv[a][2]) {
+					case 'n':
+						outcnt = atol(argv[++a]);
+						break;
 					case 'a':
 						bocols = 0;
 						break;
@@ -143,7 +153,7 @@ char  *argv[]
 	if (a >= argc)
 		status = execute(NULL) == -1 ? 1 : status;
 	else
-		for ( ; a < argc; a++)
+		for ( ; a < argc && (outcnt <= 0 || nrecsout < outcnt); a++)
 			status = execute(argv[a]) == -1 ? 2 : status;
 	exit(status);
 }
@@ -261,6 +271,7 @@ char  *fname
 		}
 		ncol = 0;
 		for (nlin = 0; (count <= 0 || nlin < count) &&
+				(incnt <= 0 || nlin < incnt) &&
 				(nread = getrecord(inpval, fp)) > 0;
 				nlin++) {
 							/* compute */
@@ -311,6 +322,9 @@ char  *fname
 				result[n] = rsign[n] * exp(result[n]);
 		}
 		putrecord(result, ncol, stdout);
+		++nrecsout;
+		if (outcnt > 0 && nrecsout >= outcnt)
+			break;
 		if (!subtotal)
 			ltotal = 0;
 	}

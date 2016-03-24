@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.25 2014/05/10 01:48:14 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.26 2016/03/24 18:48:28 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -72,6 +72,9 @@ static double l_in(char *);
 struct field  *inpfmt = NULL;   /* input record format */
 struct field  *outfmt = NULL;   /* output record structure */
 struct strvar  *svhead = NULL;  /* string variables */
+
+long  incnt = 0;		/* limit number of input records? */
+long  outcnt = 0;		/* limit number of output records? */
 
 int  blnkeq = 1;                /* blanks compare equal? */
 int  igneol = 0;                /* ignore end of line? */
@@ -157,6 +160,9 @@ char  *argv[]
 				nbicols = 0;
 				readfmt(argv[++i], 0);
 				break;
+			case 'n':
+				incnt = atol(argv[++i]);
+				break;
 			case 'a':
 				itype = 'a';
 				nbicols = 0;
@@ -196,6 +202,9 @@ char  *argv[]
 			case '\0':
 				otype = 'a';
 				readfmt(argv[++i], 1);
+				break;
+			case 'n':
+				outcnt = atol(argv[++i]);
 				break;
 			case 'a':
 				otype = 'a';
@@ -323,6 +332,10 @@ char  *file
 			putout();
 			++nout;
 		}
+		if (incnt && nrecs >= incnt)
+			break;
+		if (outcnt && nout >= outcnt)
+			break;
 	}
 	fclose(fp);
 }

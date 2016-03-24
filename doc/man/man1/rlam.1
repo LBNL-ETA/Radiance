@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.7 2010/06/18 21:22:49 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.8 2016/03/24 18:48:28 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -20,6 +20,8 @@ rlam - laminate records from multiple files
 .B \-iwN
 |
 .B \-ibN
+][
+.B "\-in M"
 ]
 input1 input2 ..
 .SH DESCRIPTION
@@ -68,6 +70,12 @@ greater than zero indicate that many characters exactly per record.
 For binary input formts, no number implies one value per record.
 For anything other than EOL-separated input, the default tab separator
 is reset to the empty string.
+.PP
+If a
+.I \-in
+option is given with a positive integer argument, this will be the
+maximum number of records that will be read or produced by
+.I rlam.
 .PP
 A hyphen ('-') by itself can be used to indicate the standard
 input, and may appear multiple times.

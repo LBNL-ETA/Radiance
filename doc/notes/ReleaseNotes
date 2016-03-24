@@ -2085,3 +2085,7 @@ but not 10 minutes like it was taking before the fix.
 
 Enabled ambient cache value corral for all levels, not just final two.
 This may reduce errors in certain pathological scenes.
+
+Added -in option to rcalc, rlam, and total to limit the number of
+input records in hopes of circumventing Windows EOF issues on binary data.
+Also added -on option to rcalc and total for logical symmetry.
