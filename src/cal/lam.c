@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.15 2016/03/24 18:48:28 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.16 2016/03/24 19:00:54 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -149,7 +149,7 @@ char	*argv[];
 			puteol++;
 			break;
 		}
-	while (--incnt) {			/* main loop */
+	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
 			if (bytsiz[i]) {		/* binary file */
 				if (fread(buf, bytsiz[i], 1, input[i]) < 1)
@@ -172,6 +172,6 @@ char	*argv[];
 			putchar('\n');
 		if (unbuff)
 			fflush(stdout);
-	}
+	} while (--incnt);
 	return(0);
 }
