@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.12 2016/03/06 01:13:17 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.13 2016/03/28 16:59:38 schorsch Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -38,7 +38,6 @@ win_nice(int inc) /* simple nice(2) replacement for Windows */
     in the process that calls ExitProcess.
 	As presented by Andrew Tucker in Windows Developer Magazine.
 */
-#ifndef OBSOLETE_WINDOWS  /* won't work on Win 9X/ME/CE. */
 BOOL SafeTerminateProcess(HANDLE hProcess, UINT uExitCode)
 {
 	DWORD dwTID, dwCode, dwErr = 0;
@@ -78,7 +77,6 @@ BOOL SafeTerminateProcess(HANDLE hProcess, UINT uExitCode)
 	if ( !bSuccess ) SetLastError(dwErr);
 	return bSuccess;
 }
-#endif
 
 
 static int
@@ -300,19 +298,7 @@ int win_kill(RT_PID pid, int sig) /* we ignore sig... */
 	hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, pid);
 	/*  it looks like we want to ignore errors here */
 	if(hProc != NULL) {
-#ifdef OBSOLETE_WINDOWS
-#define KILL_TIMEOUT 10 * 1000 /* milliseconds */
-		/* it might have some windows open... */
-		EnumWindows((WNDENUMPROC)TerminateAppEnum, (LPARAM)pid);
-		if(WaitForSingleObject(hProc, KILL_TIMEOUT)!=WAIT_OBJECT_0) {
-			/* No way to avoid dangling DLLs here. */
-			TerminateProcess(hProc, 0);
-		}
-#else
 		SafeTerminateProcess(hProc, 0);
-#endif
-		/* WaitForSingleObject(hProc, 0); */
-		/* not much use to wait on Windows */
 		CloseHandle(hProc);
 	}
 	return 0; /* XXX we need to figure out more here... */
@@ -331,7 +317,7 @@ close_processes(SUBPROC pd[], int nproc) {
 			pd[i].running = 0;
 			if(ocres != 0 || icres != 0) {
 				/* something went wrong: enforce infanticide */
-				/* other than that, it looks like we want to ignore errors here */
+				/* other than that, it looks like we want to ignore errors */
 				win_kill(pd[i].pid, 0);
 			}
 		}
