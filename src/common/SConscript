@@ -64,4 +64,10 @@ if env.has_key('OGL'):
 			CPPPATH=oglincl)
 	Default(librgl)
 
+# Python support modules for test suite and other scripts
+for fn in Split('''__init__.py lcompare.py pyrad_proc.py'''):
+	Default(env.InstallScript(
+				os.path.join('$RAD_BUILDRLIB','pyradlib',fn),
+				os.path.join('pyradlib', fn)))
+
 # vim: set syntax=python:

@@ -1,193 +1,155 @@
-#!/usr/local/bin/python
-from __future__ import print_function
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+''' run_tests.py - Run Radiance test suite
+2013 - 2016 Georg Mischler
 
+Invocation:
+  As script, call with -H for instructions.
+  As module, see docstrings in class RadianceTests for instructions.
+'''
+from __future__ import division, print_function, unicode_literals
+__all__ = ['TESTCATS', 'RadianceTests', 'main']
+import os
 import sys
+import types
+import argparse
+import unittest
 
-cal_units = [
-	'test_calc',
-	'test_cnt',
-	'test_ev',
-	'test_histo',
-	'test_lam',
-	'test_neat',
-	'test_rcalc',
-	'test_tabfunc',
-	'test_total',
-]
+SHORTPROGN = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+TESTCATS = ('cal','cv','gen','hd','meta','ot','px', 'rt','util',)
 
-cv_units = [
-	'test_3ds2mgf',
-	'test_arch2rad',
-	'test_ies2rad',
-	'test_lampcolor',
-	'test_mgf2inv',
-	'test_mgf2rad',
-	'test_nff2rad',
-	'test_obj2rad',
-	'test_thf2rad',
-	'test_tmesh2rad',
-	'test_rad2mgf',
-	'test_mgf2meta',
-	'test_mgfilt',
-]
+class Error(Exception): pass
 
-gen_units = [
-	'test_genbeads',
-	'test_genblinds',
-	'test_genbox',
-	'test_genbranch',
-	'test_gencat',
-	'test_genclock',
-	'test_genmarble',
-	'test_genprism',
-	'test_genrev',
-	'test_gensky',
-	'test_gensurf',
-	'test_genworm',
-	'test_replmarks',
-	'test_mkillum',
-	'test_xform',
-]
+class RadianceTests():
+	'''Test Radiance programs below subdirectory "testcases" recursively.
 
-hd_units = [
-	'test_rhcopy',
-	'test_rhinfo',
-	'test_rholo',
-	'test_rhpict',
-	#'test_genrhenv',
-	'test_genrhgrid',
-	# XXX device drivers?
-]
+	This class will create a virtual module "testsupport" with constants
+	and functions for use in individual test cases.
 
-meta_units = [
-	'test_cv',
-	'test_meta2tga',
-	'test_pexpand',
-	'test_plot4',
-	'test_plotin',
-	'test_psort',
-	'test_psmeta',
-	'test_gcomp',
-	'test_bgraph',
-	'test_dgraph',
-	'test_igraph',
-	#'test_x11meta',
-]
-
-meta_special_units = [
-	'test_mt160',
-	'test_mt160l',
-	'test_mtext',
-	'test_okimate',
-	'test_mx80',
-	'test_imagew',
-	'test_impress',
-	'test_aed5',
-	'test_tcurve',
-	'test_tbar',
-	'test_tscat',
-	'test_plotout',
-]
-
-ot_units = [
-	'test_oconv',
-	'test_getbbox',
-	'test_obj2mesh',
-]
-
-px_units = [
-	'test_macbethcal',
-	'test_normtiff',
-	'test_oki20',
-	'test_oki20c',
-	'test_pcomb',
-	'test_pcompos',
-	'test_pcond',
-	'test_pcwarp',
-	'test_pextrem',
-	'test_pfilt',
-	'test_pflip',
-	'test_pinterp',
-	'test_protate',
-	'test_psign',
-	'test_pvalue',
-	'test_ra_avs',
-	'test_ra_bn',
-	'test_ra_gif',
-	'test_ra_hexbit',
-	'test_ra_pict',
-	'test_ra_ppm',
-	'test_ra_pr',
-	'test_ra_pr24',
-	'test_ra_ps',
-	'test_ra_rgbe',
-	'test_ra_t16',
-	'test_ra_t8',
-	'test_ra_xyze',
-	'test_ra_tiff',
-	'test_t4027',
-	'test_ttyimage',
-	#'test_ximage',
-	#'test_xshowtrace',
-]
-
-px_special_units = [
-	'test_ra_im',
-	'test_psum',
-	'test_t4014',
-	'test_paintjet',
-	'test_mt160r',
-	'test_greyscale',
-	'test_colorscale',
-	'test_d48c',
-]
-
-rt_units = [
-	'test_lookamb',
-	'test_rpict',
-	'test_rtrace',
-	#'test_rview',
-]
-
-util_units = [
-	'test_rad',
-	'test_findglare',
-	'test_glarendx',
-	'test_rpiece',
-	'test_vwrays',
-	'test_vwright',
-	'test_getinfo',
-	'test_makedist',
-	#'test_xglaresrc',
-	'test_glrad',
-	'test_ranimate',
-	'test_ranimove',
-]
-
-
-def run_tests(unitgroup, bindir=None):
-	print('---- unit group %s ----' % unitgroup)
-	for unit in globals()[unitgroup + '_units']:
+	testsupport.bindir   - list of paths added to PATH
+	testsupport.path     - complete list of paths currently in PATH
+	testsupport.radlib   - list of paths added to RAYPATH
+	testsupport.raypath  - complete list of paths currently in RAYPATH
+	testsupport.pyradlib - absolute path of python support library directory
+	testsupport.datadir  - absolute path of test data directory
+	testsupport.datafile([sub, [sub,]] fn) - return absolute file path in
+		data directory or in a subdirectory
+	'''
+	def __init__(self, **args):
+		'''Args are:
+		   bindir=[directory ...] - will be prepended to PATH for tests
+		   radlib=[directory ...] - will be prepended to RAYPATH for tests
+		   cat=[category ...]     - only test those categories (else TESTCATS)
+		   V=False                - if True, verbose listing of executed tests
+		'''
+		self.bindir = args.get('bindir')
+		self.radlib = args.get('radlib')
+		self.testcats = args.get('cat')
+		self.V = 2 if args.get('V') else 1
 		try:
-			mod = __import__('py_tests.'+unit,globals(),locals(),['py_tests'])
-			print('%-18s' % unit, end='')
-			sys.stdout.flush()
-			mod.main(bindir=bindir)
-		except ImportError, e:
-			#raise
-			pass
+			old_osenv = os.environ
 
-def main(bindir=None):
-	run_tests('cal', bindir=bindir)
-	run_tests('cv', bindir=bindir)
-	run_tests('gen', bindir=bindir)
-	run_tests('hd', bindir=bindir)
-	run_tests('meta', bindir=bindir)
-	run_tests('ot', bindir=bindir)
-	run_tests('px', bindir=bindir)
-	run_tests('rt', bindir=bindir)
-	run_tests('util', bindir=bindir)
+			thisfile = os.path.abspath(__file__)
+			self.thisdir = os.path.split(thisfile)[0]
+			self.testdir = os.path.join(self.thisdir, 'testcases')
+			old_syspath = sys.path
+			if self.testdir not in sys.path:
+				sys.path.insert(0, self.testdir)
+
+			oldpath = old_osenv.get('PATH', '')
+			pathlist = oldpath.split(os.pathsep)
+			if self.bindir:
+				for bdir in self.bindir:
+					if bdir not in pathlist:
+						pathlist.insert(0, bdir)
+				os.environ['PATH'] = os.pathsep.join(pathlist)
+
+			oldraypath = old_osenv.get('RAYPATH', '')
+			raypathlist = oldraypath.split(os.pathsep)
+			if self.radlib:
+				for rlib in self.radlib:
+					if rlib not in raypathlist:
+						raypathlist.insert(0, rlib)
+				os.environ['RAYPATH'] = os.pathsep.join(raypathlist)
+
+			pyradlib = None
+			for rp in raypathlist:
+				prd = os.path.join(rp, 'pyradlib')
+				#print(prd)
+				if os.path.isdir(prd) or os.path.islink(prd):
+					#print('--- found !!!')
+					if rp not in sys.path:
+						sys.path.insert(0, rp)
+					pyradlib = prd
+			if not pyradlib:
+				raise Error('Python support library directory "pyradlib" not found on RAYPATH')
+
+			# Since this here is the best place to figure out where
+			# everything is, we create an ad-hoc module to hold directory
+			# paths and functions for creating file paths.
+			# The individual test cases can then "import testsupport" to
+			# get access to the complete information.
+			supmod = types.ModuleType(str('testsupport'))
+			datadir = os.path.join(self.thisdir, 'test data')
+			supmod.bindir = self.bindir
+			supmod.datadir = datadir
+			supmod.datafile = lambda fn,*ffn: os.path.join(datadir, fn, *ffn)
+			supmod.path = pathlist
+			supmod.radlib = self.radlib
+			supmod.raypath = raypathlist
+			supmod.pyradlib = pyradlib
+			sys.modules['testsupport'] = supmod
+
+			self._run_all()
+		finally:
+			if hasattr(sys.modules, 'testsupport'):
+				del sys.modules['testsupport']
+			os.environ = old_osenv
+			sys.path = old_syspath
+
+	def _run_all(self):
+		runner = unittest.TextTestRunner(verbosity=self.V)
+		if self.testcats:
+			cats = self.testcats
+		else: cats = TESTCATS
+		for dir in cats:
+			loader = unittest.defaultTestLoader
+			fulldir = os.path.join(self.testdir, dir)
+			if not os.path.isdir(fulldir):
+				raise Error('No such directory: "%s"' % fulldir)
+			suite = loader.discover(fulldir, 'test*.py',
+					top_level_dir=self.thisdir)
+			count = suite.countTestCases()
+			if count:
+				print('\n--', dir, '----', file=sys.stderr)
+				runner.run(suite)
+
+
+def main():
+	'''Main function for invocation as script. See usage instructions with -H'''
+	parser = argparse.ArgumentParser(add_help=False,
+		description='Run Radiance test suite',)
+	parser.add_argument('-V', action='store_true',
+		help='Verbose: Print all executed test cases to stderr')
+	parser.add_argument('-H', action='help',
+		help='Help: print this text to stderr and exit')
+	parser.add_argument('-p', action='store', nargs=1,
+		dest='bindir', metavar='bindir', help='Path to Radiance binaries')
+	parser.add_argument('-l', action='store', nargs=1,
+		dest='radlib', metavar='radlib', help='Path to Radiance library')
+	parser.add_argument('-c', action='store', nargs=1,
+		dest='cat', metavar='cat', help='Category of tests to run (else all)')
+	args = parser.parse_args()
+	RadianceTests(**vars(args))
+
 
 if __name__ == '__main__':
-	main()
+	try: main()
+	except KeyboardInterrupt:
+		sys.stderr.write('*cancelled*\n')
+		exit(1)
+	except Error as e:
+		sys.stderr.write('%s: %s\n' % (SHORTPROGN, str(e)))
+		exit(-1)
 
+# vi: set ts=4 sw=4 :

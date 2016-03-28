@@ -57,10 +57,10 @@ for item in sys.argv[1:]:
 env = Environment(TARGET_ARCH=_arch)
 env.Decider('timestamp-match')
 
+from build_utils import install
+script_b = Builder(action = install.install_script, suffix = '')
+env.Append(BUILDERS={'InstallScript': script_b})
 if os.name == 'posix':
-	from build_utils import install
-	script_b = Builder(action = install.install_script, suffix = '')
-	env.Append(BUILDERS={'InstallScript': script_b})
 	tclscript_b = Builder(action = install.install_tclscript, suffix = '')
 	env.Append(BUILDERS={'InstallTCLScript': tclscript_b})
 
@@ -93,8 +93,13 @@ else:
 	SConscript(os.path.join('src', 'common', 'SConscript'),
 			variant_dir=os.path.join(env['RAD_BUILDOBJ'],'common'), duplicate=0)
 	post_common_setup(env)
-	for d in Split('meta cv gen ot rt px hd util cal'):
-		print d
+	dirs = Split('''meta cv gen ot rt px hd util cal''')
+	if os.path.isfile('src/winimage/SConscript'):
+		dirs.append('winimage')
+	if os.path.isfile('src/winrview/SConscript'):
+		dirs.append('winrview')
+	for d in dirs:
+		print(d)
 		SConscript(os.path.join('src', d, 'SConscript'),
 				variant_dir=os.path.join(env['RAD_BUILDOBJ'], d), duplicate=0)
 
@@ -108,7 +113,7 @@ env.Alias('bininstall',  '$RAD_BINDIR')
 env.Alias('rlibinstall', '$RAD_RLIBDIR')
 env.Alias('maninstall',  '$RAD_MANDIR')
 
-env.Alias('build',   ['$RAD_BUILDBIN'])
+env.Alias('build',   ['$RAD_BUILDBIN', '$RAD_BUILDRLIB'])
 env.Alias('test',    ['#test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 

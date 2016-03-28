@@ -1,27 +1,30 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, print_function, unicode_literals
 
-import os
-import string
 import unittest
 
-from unit_tools import support
-from unit_tools import lcompare
+import testsupport as ts
+from pyradlib import lcompare
+from pyradlib.pyrad_proc import PIPE, Error, ProcMixin
 
-_bindir = None
 
-class HistoTestCase(unittest.TestCase):
-	def setUp(self):
-		if _bindir:
-			self.oldpath = os.environ['PATH']
-			os.environ['PATH'] = _bindir
+class HistoTestCase(unittest.TestCase, ProcMixin):
 
-	def tearDown(self):
-		if _bindir:
-			os.environ['PATH'] = self.oldpath
+	def _runit(self, cmd, fn):
+		try:
+			proc = self.call_one(cmd, 'call histo', _in=fn, out=PIPE,
+					universal_newlines=True)
+			raw = proc.stdout.read()
+		except Error as e:
+			self.fail('%s [%s]' % (str(e), self.qjoin(cmd)))
+		finally:
+			proc.wait()
+		return lcompare.split_rad(raw)
 
 	def test_histo(self):
-		cmd = 'histo -0.5 8.5 9 < "%s"' % support.datafile('histo.dat')
-		raw = os.popen(cmd).read()
-		result = map(string.split,string.split(raw,'\n'))
+		infile = ts.datafile('histo.dat')
+		cmd = 'histo -0.5 8.5 9'.split()
+		result = self._runit(cmd, infile)
 		expect = [
 			[0, 720, 240, 432, 1080, 270],
 			[1, 720, 240, 432, 1080, 270],
@@ -34,13 +37,13 @@ class HistoTestCase(unittest.TestCase):
 			[8,   0, 240,   0,    0,   0],
 		]
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
-		except lcompare.error, e:
+		except lcompare.error as e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
 	def test_histo_c(self):
-		cmd = 'histo -c -0.5 8.5 9 < "%s"' % support.datafile('histo.dat')
-		raw = os.popen(cmd).read()
-		result = map(string.split,string.split(raw,'\n'))
+		infile = ts.datafile('histo.dat')
+		cmd = 'histo -c -0.5 8.5 9'.split()
+		result = self._runit(cmd, infile)
 		expect = [
 			[-0.5,   0,    0,    0,    0,    0],
 			[0.5,  720,  240,  432, 1080,  270],
@@ -54,13 +57,13 @@ class HistoTestCase(unittest.TestCase):
 			[8.5, 2160, 2160, 2160, 2160, 2160],
 		]
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
-		except lcompare.error, e:
+		except lcompare.error as e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
 	def test_histo_p(self):
-		cmd = 'histo -p -0.5 8.5 9 < "%s"' % support.datafile('histo.dat')
-		raw = os.popen(cmd).read()
-		result = map(string.split,string.split(raw,'\n'))
+		infile = ts.datafile('histo.dat')
+		cmd = 'histo -p -0.5 8.5 9'.split()
+		result = self._runit(cmd, infile)
 		expect = [
 			[0, 33.333333, 11.111111, 20.0, 50.0, 12.5],
 			[1, 33.333333, 11.111111, 20.0, 50.0, 12.5],
@@ -73,13 +76,13 @@ class HistoTestCase(unittest.TestCase):
 			[8,       0.0, 11.111111,  0.0,  0.0,  0.0],
 		]
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
-		except lcompare.error, e:
+		except lcompare.error as e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
 	def test_histo_pc(self):
-		cmd = 'histo -p -c -0.5 8.5 9 < "%s"' % support.datafile('histo.dat')
-		raw = os.popen(cmd).read()
-		result = map(string.split,string.split(raw,'\n'))
+		infile = ts.datafile('histo.dat')
+		cmd = 'histo -p -c -0.5 8.5 9'.split()
+		result = self._runit(cmd, infile)
 		expect = [
 			[-0.5,      0.0,       0.0,   0.0,   0.0,   0.0],
 			[0.5, 33.333333, 11.111111,  20.0,  50.0,  12.5],
@@ -93,15 +96,8 @@ class HistoTestCase(unittest.TestCase):
 			[8.5,     100.0,     100.0, 100.0, 100.0, 100.0],
 		]
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
-		except lcompare.error, e:
+		except lcompare.error as e:
 			self.fail('%s [%s]' % (str(e),cmd))
 
-def main(bindir=None):
-	global _bindir
-	_bindir=bindir
-	support.run_case(HistoTestCase)
-
-if __name__ == '__main__':
-	main()
 
 # vi: set ts=4 sw=4 :

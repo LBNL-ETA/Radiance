@@ -1,31 +1,31 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, print_function, unicode_literals
 
-
-import os
-import math
-import string
 import unittest
 
-from unit_tools import support
-from unit_tools import lcompare
+import testsupport as ts
+from pyradlib import lcompare
+from pyradlib.pyrad_proc import PIPE, Error, ProcMixin
 
-_bindir = None
 
-class TtyimageTestCase(unittest.TestCase):
-	def setUp(self):
-		if _bindir:
-			self.oldpath = os.environ['PATH']
-			os.environ['PATH'] = _bindir
+class TtyimageTestCase(unittest.TestCase, ProcMixin):
 
-	def tearDown(self):
-		if _bindir:
-			os.environ['PATH'] = self.oldpath
+	def _runit(self, cmd):
+		try:
+			proc = self.call_one(cmd, 'call ttyimage', out=PIPE,
+					universal_newlines=True)
+			raw = proc.stdout.read()
+		except Error as e:
+			self.fail('%s [%s]' % (str(e), self.qjoin(cmd)))
+		finally:
+			proc.wait()
+		return [s.split() for s in raw.split('\n')]
 
 	def test_ttyimage(self):
-		'''We just do a few spot checks here'''
-		picfile = support.datafile('Earth128.pic')
-		cmd = 'ttyimage "%s"' % picfile
-		res0 = os.popen(cmd).read()
-		result = map(string.split,string.split(res0, '\n'))
+		# We just do a few spot checks here
+		picfile = ts.datafile('Earth128.pic')
+		cmd = ['ttyimage', picfile]
+		result = self._runit(cmd)
 		expect = [[0,
 		['################################################################'
 		 '################################################################']],
@@ -47,12 +47,5 @@ class TtyimageTestCase(unittest.TestCase):
 			self.assertEqual(result[l[0]], l[1],
 			'%s : %s != %s [line %s]' % (cmd,result[l[0]],l[1], l[0]))
 
-def main(bindir=None):
-	global _bindir
-	_bindir=bindir
-	support.run_case(TtyimageTestCase)
-
-if __name__ == '__main__':
-	main()
 
 # vi: set ts=4 sw=4 :

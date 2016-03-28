@@ -1,23 +1,14 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, print_function, unicode_literals
 
-import os
 import math
-import string
 import unittest
 
-from unit_tools import support
-from unit_tools import lcompare
+from pyradlib import lcompare
+from pyradlib.pyrad_proc import PIPE, Error, ProcMixin
 
-_bindir = None
 
-class EvTestCase(unittest.TestCase):
-	def setUp(self):
-		if _bindir:
-			self.oldpath = os.environ['PATH']
-			os.environ['PATH'] = _bindir
-
-	def tearDown(self):
-		if _bindir:
-			os.environ['PATH'] = self.oldpath
+class EvTestCase(unittest.TestCase, ProcMixin):
 
 	ltest = [
 		['2.3 + 5 * 21.7 / 1.43', [2.3 + 5 * 21.7 / 1.43]],
@@ -39,23 +30,27 @@ class EvTestCase(unittest.TestCase):
 		['atan2(0.72, 0.54)', [math.atan2(0.72, 0.54)]],
 	]
 
-	def test_singleres(self):
+	def _runit(self, cmd):
+		try:
+			proc = self.call_one(cmd, 'call ev', out=PIPE,
+					universal_newlines=True)
+			raw = proc.stdout.read()
+		except Error as e:
+			self.fail('%s [%s]' % (str(e), self.qjoin(cmd)))
+		finally:
+			proc.wait()
+		return raw.strip()
+
+	def test_ev_singleres(self):
 		for expr, expect in self.ltest:
-			cmd = 'ev "%s"' % expr
-			result = [string.strip(os.popen(cmd).read())]
-			try: lcompare.lcompare(result, expect)
-			except lcompare.error, e:
+			cmd = ['ev', expr]
+			result = self._runit(cmd)
+			try: lcompare.lcompare([result], expect)
+			except lcompare.error as e:
 				self.fail('%s [%s]' % (str(e),cmd))
 
-	def test_multipleres(self):
+	def x_test_ev_multipleres(self):
 		pass # XXX implement
 
-def main(bindir=None):
-	global _bindir
-	_bindir=bindir
-	support.run_case(EvTestCase)
-
-if __name__ == '__main__':
-	main()
 
 # vi: set ts=4 sw=4 :

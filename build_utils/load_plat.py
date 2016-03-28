@@ -24,7 +24,7 @@ def read_plat(env, args, fn):
 			'TIFFLIB',     # where to find a preinstalled tifflib library
 			], # replace
 			['CPPPATH', 'CPPDEFINES', 'CPPFLAGS', 'CCFLAGS',
-			'LIBPATH', 'LINKFLAGS',
+			'LIBS', 'LIBPATH', 'LINKFLAGS',
 			'EZXML_CPPDEFINES', # build flags specific to ezxml.c
 			]] # append
 	vars = [

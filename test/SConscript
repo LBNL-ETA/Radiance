@@ -1,28 +1,16 @@
 # -*- coding: latin-1 -*-
+from __future__ import division, print_function, unicode_literals
+
 import os
 import sys
-import run_all
+
+import run_tests
 
 Import('env')
 
 def run_tests(target=None,source=None,env=None):
-	try:
-		oldenv = env['ENV']
-		ray = os.getcwd()
-		bin = Dir(env['RAD_BUILDBIN']).get_abspath()
-		lib = Dir(env['RAD_BUILDLIB']).get_abspath()
+	bindir = Dir(env['RAD_BUILDBIN']).get_abspath()
+	radlib = Dir(env['RAD_BUILDRLIB']).get_abspath()
+	run_tests.RadianceTests(bindir=[bindir], radlib=[radlib], V=True)
 
-		test = os.path.join(ray, 'test')
-		if not test in sys.path:
-			sys.path.append(test)
-		oldpath = oldenv.get('PATH')
-		#print oldpath
-		newpath = os.pathsep.join((bin, oldpath))
-		newenv = {'PATH' : newpath, 'RAYPATH':lib }
-		env['ENV'] = newenv
-		run_all.main(bindir=bin)
-	finally:
-		env['ENV'] = oldenv
-
-
-env.Command(None,'run_all.py',action=Action(run_tests))
+env.Command(None,'run_tests.py',action=Action(run_tests))
