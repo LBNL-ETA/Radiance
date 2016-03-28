@@ -8,9 +8,9 @@ import run_tests
 
 Import('env')
 
-def run_tests(target=None,source=None,env=None):
+def do_run_tests(target=None,source=None,env=None):
 	bindir = Dir(env['RAD_BUILDBIN']).get_abspath()
 	radlib = Dir(env['RAD_BUILDRLIB']).get_abspath()
 	run_tests.RadianceTests(bindir=[bindir], radlib=[radlib], V=True)
 
-env.Command(None,'run_tests.py',action=Action(run_tests))
+env.Command(None,'run_tests.py',action=Action(do_run_tests))
