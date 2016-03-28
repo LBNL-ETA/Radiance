@@ -101,12 +101,12 @@ if env.has_key('X11INCLUDE'):
 				# oglsh
 				('ogls', ogl_common,
 				 rgllibs+['rtrad', 'GLU','GL','X11','Xext'] + mlib,
-				 'rhd_ogls', 'rhd_ogl.c' ['-DSTEREO']),
+				 'rhd_ogls', 'rhd_ogl.c', ['-DSTEREO']),
 					
 				# oglsoh
 				('oglso', [rhdobj] + ogl_common,
 				 rgllibs+['rtrad', 'GLU','GL','X11','Xext'] + mlib,
-				 'rhd_oglso', 'rhd_ogl.c' ['-DDOBJ', '-DSTEREO']),
+				 'rhd_oglso', 'rhd_ogl.c', ['-DDOBJ', '-DSTEREO']),
 					)
 			for p in GLHDI:
 				make_hdi(p)
