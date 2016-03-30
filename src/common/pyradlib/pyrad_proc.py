@@ -27,7 +27,7 @@ class ProcMixin():
 	def __configure_subprocess(self):
 		'''Prevent subprocess module failure in frozen scripts on Windows.
 		   Prevent console windows from popping up when not console based.
-		   Make sure we use the version specific string types.
+		   Make sure we use the version-specific string types.
 		'''
 		# On Windows, sys.stdxxx may not be available when:
 		# - built as *.exe with "pyinstaller --noconsole"
@@ -66,6 +66,31 @@ class ProcMixin():
 			return s
 		return  ' '.join([_q(s) for s in sl])
 
+	def __parse_args(self, _in, out):
+		try: self.__proc_mixin_setup
+		except AttributeError: self.__configure_subprocess()
+		instr = ''
+		if _in == PIPE:
+			stdin = _in
+		elif isinstance(_in, self._strtypes):
+			stdin = open(_in, 'rb')
+			instr = ' < "%s"' % _in
+		elif hasattr(_in, 'read'):
+			stdin = _in
+			instr = ' < "%s"' % _in.name
+		else: stdin = self._stdin
+		outstr = ''
+		if out == PIPE:
+			stdout = out
+		elif isinstance(out, self._strtypes):
+			stdout = open(out, 'wb')
+			outstr = ' > "%s"' % out
+		elif hasattr(out, 'write'):
+			stdout = out
+			outstr = ' > "%s"' % out.name
+		else: stdout = self._stdout
+		return stdin, stdout, instr, outstr
+
 	def call_one(self, cmdl, actstr, _in=None, out=None,
 			universal_newlines=False):
 		'''Create a single subprocess, possibly with an incoming and outgoing
@@ -90,25 +115,13 @@ class ProcMixin():
 		If _in or out is a PIPE, the caller should call p.wait() on the
 		returned Popen instance after writing to and closing it.
 		'''
-		try: self.__proc_mixin_setup
-		except AttributeError: self.__configure_subprocess()
-		if _in == PIPE: stdin = _in
-		elif isinstance(_in, self._strtypes): stdin = open(_in, 'rb')
-		elif hasattr(_in, 'read'): stdin = _in
-		else: stdin = self._stdin
-		if out == PIPE: stdout = out
-		elif isinstance(out, self._strtypes): stdout = open(out, 'wb')
-		elif hasattr(out, 'write'): stdout = out
-		else: stdout = self._stdout
-		displ = cmdl[:]
-		if isinstance(_in, self._strtypes): displ[:0] = [_in, '>']
-		if isinstance(out, self._strtypes): displ.extend(['>', out])
+		stdin, stdout, instr, outstr = self.__parse_args(_in, out)
 		if getattr(self, 'verbose', None):
 			sys.stderr.write('### %s \n' % actstr)
-			sys.stderr.write(self.qjoin(displ) + '\n')
+			sys.stderr.write(self.qjoin(cmdl) + instr + outstr + '\n')
 		if not getattr(self, 'donothing', None):
-			try: p = subprocess.Popen(cmdl, stdin=stdin, stdout=stdout,
-					stderr=self._stderr,
+			try: p = subprocess.Popen(cmdl,
+					stdin=stdin, stdout=stdout, stderr=self._stderr,
 					universal_newlines=universal_newlines, **self._pipeargs)
 			except Exception as e:
 				self.raise_on_error(actstr, str(e))
@@ -118,7 +131,7 @@ class ProcMixin():
 				if res != 0:
 					self.raise_on_error(actstr,
 							'Nonzero exit (%d) from command [%s].'
-							% (res, self.qjoin(displ)))
+							% (res, self.qjoin(cmdl)+instr+outstr+'\n'))
 			return p
 
 	def call_two(self, cmdl_1, cmdl_2, actstr_1, actstr_2, _in=None, out=None,
@@ -131,37 +144,23 @@ class ProcMixin():
 		If _in or out is PIPE, the caller should call p.wait() on both
 		returned popen instances after writing to and closing the first on .
 		'''
-		try: self.__proc_mixin_setup
-		except AttributeError: self.__configure_subprocess()
-		if _in == PIPE: stdin = _in
-		elif isinstance(_in, self._strtypes): stdin = open(_in, 'rb')
-		elif hasattr(_in, 'read'): stdin = _in
-		else: stdin = self._stdin
-		outendstr = '\n'
-		if out == PIPE:
-			stdout = out
-		elif isinstance(out, self._strtypes):
-			stdout = open(out, 'wb')
-			outendstr = ' > "%s"\n' % out
-		elif hasattr(out, 'write'):
-			stdout = out
-			outendstr = ' > "%s"\n' % out.name
-		else: stdout = self._stdout
+		stdin, stdout, instr, outstr = self.__parse_args(_in, out)
 		if getattr(self, 'verbose', None):
 			sys.stderr.write('### %s \n' % actstr_1)
 			sys.stderr.write('### %s \n' % actstr_2)
-			sys.stderr.write(self.qjoin(cmdl_1) + ' | ')
+			sys.stderr.write(self.qjoin(cmdl_1) + instr + ' | ')
 		if not getattr(self, 'donothing', None):
-			try: p1 = subprocess.Popen(cmdl_1, stdin=stdin,
-					stdout=PIPE, stderr=self._stderr, **self._pipeargs)
+			try: p1 = subprocess.Popen(cmdl_1,
+					stdin=stdin, stdout=PIPE, stderr=self._stderr,
+					**self._pipeargs)
 			except Exception as e:
 				self.raise_on_error(actstr_1, str(e))
 		if getattr(self, 'verbose', None):
-			sys.stderr.write(self.qjoin(cmdl_2) + outendstr)
+			sys.stderr.write(self.qjoin(cmdl_2) + outstr + '\n')
 		if not getattr(self, 'donothing', None):
 			try:
-				p2 = subprocess.Popen(cmdl_2, stdin=p1.stdout, stdout=stdout,
-						stderr=self._stderr, 
+				p2 = subprocess.Popen(cmdl_2,
+						stdin=p1.stdout, stdout=stdout, stderr=self._stderr, 
 						universal_newlines=universal_newlines, **self._pipeargs)
 				p1.stdout.close()
 			except Exception as e:
@@ -179,7 +178,6 @@ class ProcMixin():
 							'Nonzero exit (%d) from command [%s].'
 							% (res, self.qjoin(cmdl_2)))
 			return p1, p2
-
 
 	def call_many(self, cmdlines, actstr, _in=None, out=None,
 			universal_newlines=False):
@@ -200,26 +198,11 @@ class ProcMixin():
 			# other than direct call_one(), this returns a one-item tuple!
 			return (self.call_one(cmdlines[0], actstr, _in=_in, out=out,
 					universal_newlines=universal_newlines),)
-		try: self.__proc_mixin_setup
-		except AttributeError: self.__configure_subprocess()
-		if _in == PIPE: stdin = _in
-		elif isinstance(_in, self._strtypes): stdin = open(_in, 'rb')
-		elif hasattr(_in, 'read'): stdin = _in
-		else: stdin = self._stdin
-		outendstr = '\n'
-		if out == PIPE:
-			stdout = out
-		elif isinstance(out, self._strtypes):
-			stdout = open(out, 'wb')
-			outendstr = ' > "%s"\n' % out
-		elif hasattr(out, 'write'):
-			stdout = out
-			outendstr = ' > "%s"\n' % out.name
-		else: stdout = self._stdout
+		stdin, stdout, instr, outstr = self.__parse_args(_in, out)
 		procs = []
 		if getattr(self, 'verbose', None):
 			sys.stderr.write('### %s \n' % actstr)
-			sys.stderr.write(self.qjoin(cmdlines[0]) + ' | ')
+			sys.stderr.write(self.qjoin(cmdlines[0]) + instr + ' | ')
 		if not getattr(self, 'donothing', None):
 			try:
 				prevproc = subprocess.Popen(cmdlines[0], stdin=stdin,
@@ -242,7 +225,7 @@ class ProcMixin():
 					self.raise_on_error(actstr, str(e))
 
 		if getattr(self, 'verbose', None):
-			sys.stderr.write(self.qjoin(cmdlines[-1]) + outendstr)
+			sys.stderr.write(self.qjoin(cmdlines[-1]) + outstr + '\n')
 		if not getattr(self, 'donothing', None):
 			try:
 				lastproc = subprocess.Popen(cmdlines[-1], stdin=prevproc.stdout,
