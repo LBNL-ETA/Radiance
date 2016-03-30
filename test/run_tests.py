@@ -16,7 +16,7 @@ import argparse
 import unittest
 
 SHORTPROGN = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-TESTCATS = ('cal','cv','gen','hd','meta','ot','px', 'rt','util',)
+TESTCATS = ('pyrad','cal','cv','gen','hd','meta','ot','px', 'rt','util',)
 
 class Error(Exception): pass
 
@@ -26,13 +26,13 @@ class RadianceTests():
 	This class will create a virtual module "testsupport" with constants
 	and functions for use in individual test cases.
 
-	testsupport.bindir   - list of paths added to PATH
-	testsupport.path     - complete list of paths currently in PATH
-	testsupport.radlib   - list of paths added to RAYPATH
-	testsupport.raypath  - complete list of paths currently in RAYPATH
-	testsupport.pyradlib - absolute path of python support library directory
-	testsupport.datadir  - absolute path of test data directory
-	testsupport.datafile([sub, [sub,]] fn) - return absolute file path in
+	  bindir   - list of paths added to PATH
+	  path     - complete list of paths currently in PATH
+	  radlib   - list of paths added to RAYPATH
+	  raypath  - complete list of paths currently in RAYPATH
+	  pyradlib - absolute path of python support library directory
+	  datadir  - absolute path of test data directory
+	  datafile([sub, [sub,]] fn) - return absolute file path in
 		data directory or in a subdirectory
 	'''
 	def __init__(self, **args):

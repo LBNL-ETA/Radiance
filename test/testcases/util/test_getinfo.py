@@ -26,16 +26,18 @@ class GetinfoTestCase(unittest.TestCase, ProcMixin):
 		cmd = ['getinfo', picfile]
 		result = self._runit(cmd)
 		exps = '''%s:
-        Xim format conversion by:
-        FORMAT=32-bit_rle_rgbe
-        pfilt -e 2 -x 512 -y 512 -p 1 -r .67
-        EXPOSURE=4.926198e+00
-        normpat
-        pfilt -1 -e .2
-        EXPOSURE=2.000000e-01
-        pfilt -x 128 -y 128
-        PIXASPECT=0.500000
-        EXPOSURE=2.571646e+00''' % picfile
+	Xim format conversion by:
+	FORMAT=32-bit_rle_rgbe
+	pfilt -e 2 -x 512 -y 512 -p 1 -r .67
+	EXPOSURE=4.926198e+00
+	normpat
+	pfilt -1 -e .2
+	EXPOSURE=2.000000e-01
+	pfilt -x 128 -y 128
+	PIXASPECT=0.500000
+	EXPOSURE=2.571646e+00
+	
+''' % picfile
 		expect = lcompare.split_headers(exps)
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
 		except lcompare.error as e:
@@ -45,7 +47,7 @@ class GetinfoTestCase(unittest.TestCase, ProcMixin):
 		picfile = ts.datafile('Earth128.pic')
 		cmd = ['getinfo', '-d', picfile]
 		result = self._runit(cmd)
-		exps = '''%s: -Y 128 +X 128''' % picfile
+		exps = '''%s: -Y 128 +X 128\n''' % picfile
 		expect = lcompare.split_headers(exps)
 		try: lcompare.llcompare(result, expect, ignore_empty=1)
 		except lcompare.error as e:
