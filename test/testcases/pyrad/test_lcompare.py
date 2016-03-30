@@ -80,7 +80,7 @@ class LcompareTestCase(unittest.TestCase, ProcMixin):
 				except lcompare.error as e:
 					self.fail(('call_one_text ') +str(e))
 
-	def xtest_lc_split_headers(self):
+	def test_lc_split_headers(self):
 		htxt = '''example.hdr:
 		Xim format conversion by:
 		FORMAT=32-bit_rle_rgbe
@@ -111,7 +111,7 @@ class LcompareTestCase(unittest.TestCase, ProcMixin):
 		except lcompare.error as e:
 				self.fail(('call_one_text ') +str(e))
 
-	def xtest_lc_split_radfile(self):
+	def test_lc_split_radfile(self):
 		df = ts.datafile('window_src.rad')
 		exp = ([['#'],
 				['#', 'A', 'plain', 'old', 'glass', 'window'],
@@ -127,7 +127,7 @@ class LcompareTestCase(unittest.TestCase, ProcMixin):
 			print(resl, exp)
 			self.fail(('call_one_text n=%d -- ' % n) +str(e))
 
-	def xtest_lc_split_rad(self):
+	def test_lc_split_rad(self):
 		df = ts.datafile('window_src.rad')
 		exp = ([['#'],
 				['#', 'A', 'plain', 'old', 'glass', 'window'],
