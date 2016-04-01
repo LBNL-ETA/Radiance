@@ -11,26 +11,30 @@ from pyradlib.pyrad_proc import PIPE, Error, ProcMixin
 class FalsecolorTestCase(unittest.TestCase, ProcMixin):
 
 	def _runit(self, cmd, _in):
+		failmsg = None
+		procs = []
 		try:
 			procs = self.call_many(cmd, 'test falsecolor',
 					_in=_in, out=PIPE, universal_newlines=True)
 			lines = procs[-1].stdout.readlines()
 		except Error as e:
-			self.fail('%s [%s]' % (str(e), self.qjoin(cmd)))
+			failmsg = str(e)
 		finally:
 			for proc in procs:
 				proc.wait()
+		if failmsg:
+			self.fail(failmsg)
 		return lines
 
 	def test_fc_hgradient(self):
 		# Best we can do without a hdr file parser:
 		# * We have a picture with a horizontal gradient.
-		# * Run falsecolor on it with all permutations of palettes
-		#   and regular/lines/bands/posterize.
-		# * Convert to text (ttyimage) and extract a horizontal line.
+		# * Run falsecolor on it with all permutations of palettes,
+		#   regular/lines/bands/posterize, and -i/-ip.
+		# * Convert to text (ttyimage) and extract one scanline.
 		# * Compare with expected text lines as stored here.
 		# We don't currently test the legend, users will notice errors there.
-		hgradpic = ts.datafile('falsecolor', 'h_gradient.hdr')
+		hgradpic = ts.datafile('gradients', 'h_gradient.hdr')
 		pals = ('def', 'eco', 'hot', 'pm3d', 'spec')
 		typeargs = (
 				(['-i'], {
@@ -184,7 +188,7 @@ class FalsecolorTestCase(unittest.TestCase, ProcMixin):
 					pa = []
 				else:
 					pa = ['-pal', pal]
-				hfccmd = ['falsecolor.py', '-lw', '0'] + pa + ta + [hgradpic]
+				hfccmd = ['falsecolor', '-lw', '0'] + pa + ta + [hgradpic]
 				ttycmd = ['ttyimage']
 				result = self._runit((hfccmd, ttycmd), hgradpic)
 				line = result[64]
