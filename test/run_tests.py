@@ -67,7 +67,7 @@ class RadianceTests():
 			oldraypath = old_osenv.get('RAYPATH', '')
 			raypathlist = oldraypath.split(os.pathsep)
 			if self.radlib:
-				for rlib in self.radlib:
+				for rlib in self.radlib + ['.']:
 					if rlib not in raypathlist:
 						raypathlist.insert(0, rlib)
 				os.environ['RAYPATH'] = os.pathsep.join(raypathlist)
@@ -75,9 +75,7 @@ class RadianceTests():
 			pyradlib = None
 			for rp in raypathlist:
 				prd = os.path.join(rp, 'pyradlib')
-				#print(prd)
 				if os.path.isdir(prd) or os.path.islink(prd):
-					#print('--- found !!!')
 					if rp not in sys.path:
 						sys.path.insert(0, rp)
 					pyradlib = prd
@@ -117,7 +115,7 @@ class RadianceTests():
 			fulldir = os.path.join(self.testdir, dir)
 			if not os.path.isdir(fulldir):
 				raise Error('No such directory: "%s"' % fulldir)
-			suite = loader.discover(fulldir, 'test*.py',
+			suite = loader.discover(fulldir, 'test_*.py',
 					top_level_dir=self.thisdir)
 			count = suite.countTestCases()
 			if count:

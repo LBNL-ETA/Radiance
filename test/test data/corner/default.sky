@@ -1,0 +1,32 @@
+# Sky Definition File: config/default.sky
+
+### Month:          03
+### Day:            20
+### Hour:           14.5
+### Longitude:      98.0
+### Latitude:       40.0
+### Timezone:       105.0
+
+!gensky 3 20 14.5 -a 40.0 -o 98.0 -m 105.0 +s
+
+skyfunc glow skyglow
+0
+0
+4 0.9 0.9 1.0 0.0
+
+skyfunc source sky
+0
+0
+4 0.0 0.0 1.0 180
+
+skyfunc glow groundglow
+0
+0
+4 1.0 0.8 0.5 0.0
+
+groundglow source ground
+0
+0
+4 0.0 0.0 -1.0 180
+
+

@@ -1,0 +1,57 @@
+# A cube with two side faces missing, in different materials.
+#
+# Can be used for checking if a ray hit a sunlit of shadowed 
+# area on a surface. First created for testing rlux.csh/py.
+# 
+
+void plastic white
+0
+0
+5 .7 .7 .7 0 0
+
+void plastic grey
+0
+0
+5 .2 .2 .2 0 0
+
+void plastic black
+0
+0
+5 .05 .05 .05 0 0
+
+grey polygon bottom
+0
+0
+12
+	0 0 0
+	1 0 0
+	1 1 0
+	0 1 0
+
+white polygon left
+0
+0
+12
+	0 0 0
+	0 1 0
+	0 1 1
+	0 0 1
+
+white polygon right
+0
+0
+12
+	0 1 0
+	1 1 0
+	1 1 1
+	0 1 1
+
+black polygon top
+0
+0
+12
+	0 0 1
+	1 0 1
+	1 1 1
+	0 1 1
+	
