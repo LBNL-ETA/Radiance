@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.36 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.37 2016/04/15 00:06:36 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -643,7 +643,11 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 	if (p->nsurfs > nall) {		/* (re)allocate surface area cache */
 		if (projsa) free(projsa);
 		projsa = (double *)malloc(sizeof(double)*p->nsurfs);
-		if (!projsa) return(0);
+		if (projsa == NULL) {
+			fputs(progname, stderr);
+			fputs(": out of memory in sample_origin!\n", stderr);
+			exit(1);
+		}
 		nall = p->nsurfs;
 	}
 					/* compute projected areas */
@@ -942,7 +946,7 @@ add_surface(int st, const char *oname, FILE *fp)
 	snew = (SURF *)malloc(sizeof(SURF) + sizeof(double)*(n-1));
 	if (snew == NULL) {
 		fputs(progname, stderr);
-		fputs(": out of memory!\n", stderr);
+		fputs(": out of memory in add_surface!\n", stderr);
 		exit(1);
 	}
 	strncpy(snew->sname, oname, sizeof(snew->sname)-1);
