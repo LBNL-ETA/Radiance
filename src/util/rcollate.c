@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.23 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.24 2016/04/16 00:42:16 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -138,6 +138,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 static RECINDEX *
 index_records(const MEMLOAD *mp, int nw_rec)
 {
+	int		nall = 0;
 	RECINDEX	*rp;
 	char		*cp, *mend;
 	int		n;
@@ -146,7 +147,8 @@ index_records(const MEMLOAD *mp, int nw_rec)
 		return(NULL);
 	if (nw_rec <= 0)
 		return(NULL);
-	rp = (RECINDEX *)malloc(sizeof(RECINDEX) + mp->len/(2*nw_rec)*sizeof(char *));
+	nall = 1000;
+	rp = (RECINDEX *)malloc(sizeof(RECINDEX) + nall*sizeof(char *));
 	if (rp == NULL)
 		return(NULL);
 	rp->nw_rec = nw_rec;
@@ -158,6 +160,13 @@ index_records(const MEMLOAD *mp, int nw_rec)
 			++cp;
 		if (cp >= mend)
 			break;
+		if (rp->nrecs >= nall) {
+			nall += nall>>1;	/* get more record space */
+			rp = (RECINDEX *)realloc(rp,
+					sizeof(RECINDEX) + nall*sizeof(char *));
+			if (rp == NULL)
+				return(NULL);
+		}
 		rp->rec[rp->nrecs++] = cp;	/* point to first non-white */
 		n = rp->nw_rec;
 		while (++cp < mend)		/* find end of record */
