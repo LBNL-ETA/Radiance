@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.9 2005/07/24 21:11:53 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.10 2016/04/18 22:39:13 greg Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -26,7 +26,7 @@ static int ray_refine(int	n);
 static long refine_rays(long	nrays);
 
 
-extern int
+int
 refine_first(void)			/* initial refinement pass */
 {
 	int	*esamp = (int *)zprev;	/* OK to reuse */
@@ -34,7 +34,7 @@ refine_first(void)			/* initial refinement pass */
 	int	nextra = 0;
 	int	x, y, xp, yp;
 	int	neigh;
-	register int	n, np;
+	int	n, np;
 
 	if (sizeof(int) < sizeof(*zprev))
 		error(CONSISTENCY, "code error in refine_first");
@@ -128,7 +128,7 @@ static void subconspicuity(int x0, int y0, int x1, int y1, struct ConspSum *cs);
 
 static void
 clr_consp(			/* initialize a conspicuity sum */
-	register struct ConspSum	*cs
+	struct ConspSum	*cs
 )
 {
 	if (cs == NULL)
@@ -143,8 +143,8 @@ clr_consp(			/* initialize a conspicuity sum */
 
 static void
 sum_consp(		/* sum in conspicuity result */
-	register struct ConspSum	*cdest,
-	register struct ConspSum	*cs
+	struct ConspSum	*cdest,
+	struct ConspSum	*cs
 )
 {
 	if ((cdest == NULL) | (cs == NULL))
@@ -165,7 +165,7 @@ est_consp(	/* estimate error conspicuity & update */
 	int	y0,
 	int	x1,
 	int	y1,
-	register struct ConspSum	*cs
+	struct ConspSum	*cs
 )
 {
 	double	rad2, mtn2, cpd, vm, vr, csf, eest;
@@ -236,7 +236,7 @@ est_consp(	/* estimate error conspicuity & update */
 						/* put into map */
 	for ( ; y0 < y1; y0++) {
 		float	*em0 = cerrmap + fndx(x0, y0);
-		register float	*emp = em0 + (x1-x0);
+		float	*emp = em0 + (x1-x0);
 		while (emp-- > em0)
 			if (eest > *emp)
 				*emp = eest;
@@ -263,7 +263,7 @@ subconspicuity(	/* compute subportion of conspicuity */
 
 	if ((x0 == x1-1) & (y0 == y1-1)) {	/* single pixel */
 		double	hls;
-		register int	n = fndx(x0, y0);
+		int	n = fndx(x0, y0);
 		if (sbuffer[n]) {
 			copycolor(mysum.vsum, cbuffer[n]);
 			copycolor(mysum.v2sum, val2map[n]);
@@ -310,7 +310,7 @@ subconspicuity(	/* compute subportion of conspicuity */
 	sum_consp(cs, &mysum);
 }
 
-extern void
+void
 conspicuity(void)			/* compute conspicuous error map */
 {
 	int	fhres, fvres;
@@ -375,7 +375,7 @@ ppri_cmp(		/* pixel priority comparison */
 
 static int
 ray_refine(			/* refine the given pixel by tracing a ray */
-	register int	n
+	int	n
 )
 {
 	RAY	ir;
@@ -486,7 +486,7 @@ refine_rays(		/* compute refinement rays */
 }
 
 
-extern int
+int
 refine_frame(		/* refine current frame */
 	int	pass
 )
@@ -499,7 +499,7 @@ refine_frame(		/* refine current frame */
 	double	time_start, rtime_start, time_done;
 	struct AmbSum	myAmbSum;
 	long	rays_todo, nr;
-	register int	n;
+	int	n;
 					/* IBR refinement? */
 	if ((pass == 0) & (fcur > fbeg))
 		return(refine_first());
