@@ -10,7 +10,7 @@ import ConfigParser
 _platdir = 'platform'
 
 
-def read_plat(env, args, fn):
+def read_plat(env, fn):
 	envdict = env.Dictionary().copy()
 	# can't feed ConfigParser the original dict, because it also
 	# contains non-string values.
@@ -94,8 +94,9 @@ def subst_sconsvars(s, env,
 		nl.append(ss)
 	return ''.join(nl)
 
-def load_plat(env, args, arch=None):
+def load_plat(env):
 	memmodel, binformat = platform.architecture()
+	# XXX env['TARGET_ARCH'] --> memmodel
 	platsys = platform.system()
 	print('Detected platform "%s" (%s).' % (platsys, memmodel))
 	cfgname = platsys + '_' + memmodel[:2]
@@ -107,12 +108,12 @@ def load_plat(env, args, arch=None):
 	cust_pfn = os.path.join(_platdir, cfgname + '_custom.cfg')
 	if os.path.isfile(cust_pfn):
 		print('Reading configuration "%s"' % cust_pfn)
-		read_plat(env, args, cust_pfn)
+		read_plat(env, cust_pfn)
 		return 1
 	pfn = os.path.join(_platdir, cfgname + '.cfg')
 	if os.path.isfile(pfn):
 		print('Reading configuration "%s"' % pfn)
-		read_plat(env, args, pfn)
+		read_plat(env, pfn)
 		return 1
 
 	if os.name == 'posix':
@@ -120,7 +121,7 @@ def load_plat(env, args, arch=None):
 		if os.path.isfile(pfn):
 			print('No platform specific configuration found.\n')
 			print('Reading generic configuration "%s".' % pfn)
-			read_plat(env, args, pfn)
+			read_plat(env, pfn)
 			return 1
 
 	print('Platform "%s", system "%s" not supported yet'

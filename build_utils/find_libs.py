@@ -13,6 +13,21 @@ def find_radlib(env):
 	''')
 		env.Exit()
 
+def find_pyinstaller(env):
+	if os.name != 'nt':
+		return
+	conf = SConf(env)
+	oldpath = (env['ENV'].get('PATH'))
+	try:
+		env['ENV']['PATH'] = os.environ['PATH']
+		pyinst = conf.CheckProg('pyinstaller.exe')
+		if pyinst:
+			env['PYINSTALLER'] = pyinst
+			env['PYSCRIPTS'] = []
+		env = conf.Finish()
+	finally:
+		env['ENV']['PATH'] = oldpath
+
 def find_x11(env):
 	# Search for libX11, remember the X11 library and include dirs
 	for d in ('/usr/X11R6', '/usr/X11', '/usr/openwin'):

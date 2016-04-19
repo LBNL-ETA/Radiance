@@ -3,14 +3,15 @@ import os
 import sys
 import string
 
-PATHFILE = 'raypaths.py'
-OPTFILE = 'rayopts.py'
-def set_pre_opts(env):
+PATHFILE = 'scbuild/raypaths.py'
+OPTFILE = 'scbuild/rayopts.py'
+def set_pre_opts():
 	vars = Variables(OPTFILE, ARGUMENTS)
 	vars.Add('SKIP', 'Skip Display of License terms', 0)
-	vars.Add('RAD_DEBUG',   'Build a debug version',  0)
-	vars.Update(env) 
-	vars.Save(OPTFILE, env)
+	vars.Add('RAD_DEBUG',  'Build a debug version',  0)
+	vars.Add('MSVC_VERSION', 'Microsoft VC Version',  '12.0')
+	vars.Add('TARGET_ARCH',  'Windows only: "x68" or "amd64"',  '')
+	return vars
 
 def set_opts(env):
 	vars = Variables(PATHFILE, ARGUMENTS)
@@ -31,6 +32,7 @@ def allplats_setup(env):
 	find_libs.find_x11(env)
 	find_libs.find_gl(env) # OpenGL
 	find_libs.find_libtiff(env)
+	find_libs.find_pyinstaller(env)
 
 def post_common_setup(env):
 	env.Append(CPPPATH = [os.path.join('#src', 'common')])
@@ -46,15 +48,12 @@ def shareinstall_setup(env):
 	if 'install' in sys.argv or 'maninstall' in sys.argv:
 		install.install_manfiles(env)
 
-_arch = None
-for item in sys.argv[1:]:
-	if item.startswith('TARGET_ARCH'):
-		res = item.split('=')
-		if len(res) == 2:
-			_arch = res[1].strip()
 
+# set stuff before loading platforms
+prevars = set_pre_opts()
 # Set up build environment
-env = Environment(TARGET_ARCH=_arch)
+env = Environment(variables=prevars)
+prevars.Save(OPTFILE, env)
 env.Decider('timestamp-match')
 
 from build_utils import install
@@ -64,12 +63,10 @@ if os.name == 'posix':
 	tclscript_b = Builder(action = install.install_tclscript, suffix = '')
 	env.Append(BUILDERS={'InstallTCLScript': tclscript_b})
 
-# set debug before loading platforms
-set_pre_opts(env)
 
 # configure platform-specific stuff
 from build_utils import load_plat
-load_plat.load_plat(env, vars, arch=_arch)
+load_plat.load_plat(env)
 
 # override options
 set_opts(env)

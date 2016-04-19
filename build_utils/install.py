@@ -59,3 +59,10 @@ def install_tclscript(target, source, env):
 				line = 'set radlib %s\n' % tcllibdir
 			tf.write(line)
 		os.chmod(str(t), 00755)
+
+def build_with_pyinstaller(targets, sources, env):
+	workpath = env.Dir('$RAD_BUILDOBJ', 'pybuild') # --workpath @
+	specpath = workpath # --specpath @
+	# -F   # one-file
+	# --noconsole
+	pass

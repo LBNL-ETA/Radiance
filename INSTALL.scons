@@ -29,6 +29,16 @@ SCons *may* use a libtiff already installed on your system. On posix
 systems it usually does. Otherwise the executables requiring it are
 not built.
 
+On Windows, Radiance gets built with MS Visual Studio if present, the
+community editions are sufficient.
+VS 2013 is currently the most recent version that does it correctly.
+VS 2015 also performs the build, but it uses the new "universal CRT"
+from Windows 10, which has a bug that corrupts data in text pipes.
+A fix is apparently ready and should be released via autoupdate,
+probably around the time of the "anniversary update" in summer 2016.
+Older versions of VS may work as well, but haven't been tested with
+the current sources.
+
 
 Building
 --------
@@ -88,6 +98,11 @@ RAD_DEBUG=1|0
 SKIP=1|0
 	1: Skip display of License terms
 	0: Don't skip (default)
+
+MSVC_VERSION=12.0|14.0
+	"12.0" is the default for Visual Studio 2013.
+	Once the text pipe bug in the universal CRT is fixed, the default
+	will be changed to "14.0" for Visual Studio 2015.
 
 SCons will remember the values given with those options. You don't need
 to supply them again each time when you run repeated builds and
