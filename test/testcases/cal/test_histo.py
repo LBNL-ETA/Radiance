@@ -18,7 +18,8 @@ class HistoTestCase(unittest.TestCase, ProcMixin):
 		except Error as e:
 			self.fail('%s [%s]' % (str(e), self.qjoin(cmd)))
 		finally:
-			proc.wait()
+			if 'proc' in locals():
+				proc.wait()
 		return lcompare.split_rad(raw)
 
 	def test_histo(self):
