@@ -79,8 +79,9 @@ class ProcMixin():
 		if _in == PIPE:
 			stdin = _in
 		elif isinstance(_in, self._strtypes):
-			if self.donothing: stdin = None
-			else: stdin = open(_in, 'rb')
+			if not getattr(self, 'donothing', None):
+				stdin = open(_in, 'rb')
+			else: stdin = None
 			instr = ' < "%s"' % _in
 		elif hasattr(_in, 'read'):
 			stdin = _in
@@ -90,8 +91,9 @@ class ProcMixin():
 		if out == PIPE:
 			stdout = out
 		elif isinstance(out, self._strtypes):
-			if self.donothing: stdout = None
-			else: stdout = open(out, 'wb')
+			if not getattr(self, 'donothing', None):
+				stdout = open(out, 'wb')
+			else: stdout = None
 			outstr = ' > "%s"' % out
 		elif hasattr(out, 'write'):
 			stdout = out
