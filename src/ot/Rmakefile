@@ -1,15 +1,16 @@
-# RCSid: $Id: Rmakefile,v 2.18 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.19 2016/04/21 00:40:35 greg Exp $
 #
 #  Compiles for octree conversion program
 #
 #     The compile define "STRICT" enforces strict intersection calculations
 #  so that no cube which does not intersect an object contains that object.
 #  Otherwise, a somewhat faster more lax approach is taken by certain routines.
+#  This is set to "1" by default, so -DSTRICT=0 now turns it off.
 #
 
 OPT = -O
 MACH = -DBSD
-CFLAGS = -DSTRICT -I../common -L../lib $(OPT) $(MACH)
+CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 CC = cc
 MLIB = -lm
 

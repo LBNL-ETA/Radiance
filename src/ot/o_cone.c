@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: o_cone.c,v 2.6 2007/11/21 18:51:04 greg Exp $";
+static const char	RCSid[] = "$Id: o_cone.c,v 2.7 2016/04/21 00:40:35 greg Exp $";
 #endif
 /*
  *  o_cone.c - routines for intersecting cubes with cones.
@@ -12,6 +12,10 @@ static const char	RCSid[] = "$Id: o_cone.c,v 2.6 2007/11/21 18:51:04 greg Exp $"
 #include  "object.h"
 #include  "cone.h"
 #include  "plocate.h"
+
+#ifndef STRICT
+#define STRICT	1
+#endif
 
 #define  ROOT3		1.732050808
 
@@ -37,21 +41,23 @@ static int findcseg(FVECT ep0, FVECT ep1, CONE *co, FVECT p);
 extern int
 o_cone(		/* determine if cone intersects cube */
 	OBJREC  *o,
-	register CUBE  *cu
+	CUBE  *cu
 )
 {
 	CONE  *co;
 	FVECT  ep0, ep1;
-#ifdef STRICT
+#if STRICT
 	FVECT  cumin, cumax;
 	CUBE  cukid;
-	register int  j;
+	int  j;
 #endif
 	double  r;
 	FVECT  p;
-	register int  i;
+	int  i;
 					/* get cone arguments */
 	co = getcone(o, 0);
+	if (co == NULL)			/* check for degenerate case */
+		return(O_MISS);
 					/* get cube center */
 	r = cu->cusize * 0.5;
 	for (i = 0; i < 3; i++)
@@ -62,7 +68,7 @@ o_cone(		/* determine if cone intersects cube */
 					/* check min. distance to cone */
 		if (dist2lseg(p, ep0, ep1) > (r+FTINY)*(r+FTINY))
 			return(O_MISS);
-#ifdef  STRICT
+#if  STRICT
 					/* get cube boundaries */
 		for (i = 0; i < 3; i++)
 			cumax[i] = (cumin[i] = cu->cuorg[i]) + cu->cusize;
@@ -97,13 +103,13 @@ static int
 findcseg(	/* find line segment from cone closest to p */
 	FVECT  ep0,
 	FVECT  ep1,
-	register CONE  *co,
+	CONE  *co,
 	FVECT  p
 )
 {
 	double  d;
 	FVECT  v;
-	register int  i;
+	int  i;
 					/* find direction from axis to point */
 	VSUB(v, p, CO_P0(co));
 	d = DOT(v, co->ad);

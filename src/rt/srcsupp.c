@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcsupp.c,v 2.22 2015/05/21 05:54:54 greg Exp $";
+static const char	RCSid[] = "$Id: srcsupp.c,v 2.23 2016/04/21 00:40:35 greg Exp $";
 #endif
 /*
  *  Support routines for source objects and materials
@@ -98,7 +98,7 @@ fsetsrc(			/* set a face as a source */
 	src->so = so;
 						/* get the face */
 	f = getface(so);
-	if (f->area == 0.0)
+	if (f->area == 0.)
 		objerror(so, USER, "zero source area");
 						/* find the center */
 	for (j = 0; j < 3; j++) {
@@ -196,6 +196,8 @@ rsetsrc(			/* set a ring (disk) as a source */
 	src->so = so;
 						/* get the ring */
 	co = getcone(so, 0);
+	if (co == NULL)
+		objerror(so, USER, "illegal source");
 	if (CO_R1(co) <= FTINY)
 		objerror(so, USER, "illegal source radius");
 	VCOPY(src->sloc, CO_P0(co));
@@ -222,6 +224,8 @@ cylsetsrc(			/* set a cylinder as a source */
 	src->so = so;
 						/* get the cylinder */
 	co = getcone(so, 0);
+	if (co == NULL)
+		objerror(so, USER, "illegal source");
 	if (CO_R0(co) <= FTINY)
 		objerror(so, USER, "illegal source radius");
 	if (CO_R0(co) > .2*co->al)		/* heuristic constraint */
@@ -336,6 +340,8 @@ rgetmaxdisk(		/* get center and squared radius of ring */
 	CONE  *co;
 	
 	co = getcone(op, 0);
+	if (co == NULL)
+		return(0.);
 	VCOPY(ocent, CO_P0(co));
 	return(CO_R1(co)*CO_R1(co));
 }
@@ -364,6 +370,10 @@ rgetplaneq(			/* get plane equation for ring */
 	CONE  *co;
 
 	co = getcone(op, 0);
+	if (co == NULL) {
+		memset(nvec, 0, sizeof(FVECT));
+		return(0.);
+	}
 	VCOPY(nvec, co->ad);
 	return(DOT(nvec, CO_P0(co)));
 }

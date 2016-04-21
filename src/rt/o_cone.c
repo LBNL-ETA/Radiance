@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_cone.c,v 2.8 2014/07/08 18:25:00 greg Exp $";
+static const char RCSid[] = "$Id: o_cone.c,v 2.9 2016/04/21 00:40:35 greg Exp $";
 #endif
 /*
  *  o_cone.c - routine to determine ray intersection with cones.
@@ -28,6 +28,8 @@ o_cone(			/* intersect ray with cone */
 
 						/* get cone structure */
 	co = getcone(o, 1);
+	if (co == NULL)
+		objerror(o, INTERNAL, "unexpected illegal");
 
 	/*
 	 *     To intersect a ray with a cone, we transform the
