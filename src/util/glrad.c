@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.24 2016/04/25 02:04:22 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.25 2016/04/25 20:06:22 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -29,9 +29,9 @@ static const char	RCSid[] = "$Id: glrad.c,v 3.24 2016/04/25 02:04:22 greg Exp $"
 
 #define ZOOMPCT		9		/* percent to zoom at a time */
 
-#define MOVPCT		7		/* percent distance to move /frame */
+#define MOVPCT		4		/* percent distance to move /frame */
 #define MOVDIR(b)	((b)==Button1 ? 1 : (b)==Button2 ? 0 : -1)
-#define MOVDEG		(-5)		/* degrees to orbit CW/down /frame */
+#define MOVDEG		(-1.5)		/* degrees to orbit CW/down /frame */
 #define MOVORB(s)	((s)&ShiftMask ? 1 : (s)&ControlMask ? -1 : 0)
 
 #define BORWIDTH	5		/* border width */
