@@ -22,6 +22,8 @@ class ProcMixin():
 	'''Process and pipeline management for Python Radiance scripts
 	'''
 	def raise_on_error(self, actstr, e):
+		try: self._strtypes
+		except AttributeError: self.__configure_subprocess()
 		if hasattr(e, 'strerror'): eb = e.strerror
 		elif isinstance(e, self._strtypes): eb = e
 		else: eb = e
@@ -58,8 +60,6 @@ class ProcMixin():
 		else: self._pipeargs = {}
 		# type names vary between Py2.7 and 3.x
 		self._strtypes = (type(b''), type(u''))
-		# private attribute to indicate established configuration
-		self.__proc_mixin_setup = True
 
 	def qjoin(self, sl):
 		'''Join a list with quotes around each element containing whitespace.
@@ -73,7 +73,7 @@ class ProcMixin():
 		return  ' '.join([_q(s) for s in sl])
 
 	def __parse_args(self, _in, out):
-		try: self.__proc_mixin_setup
+		try: self._strtypes
 		except AttributeError: self.__configure_subprocess()
 		instr = ''
 		if _in == PIPE:
