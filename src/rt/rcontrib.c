@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.27 2016/03/21 19:06:08 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.28 2016/04/27 21:11:32 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -133,7 +133,7 @@ addmodifier(char *modn, char *outf, char *prms, char *binv, int bincnt)
 		error(SYSTEM, "out of memory in addmodifier");
 	mp->outspec = outf;		/* XXX assumes static string */
 	mp->modname = modn;		/* XXX assumes static string */
-	mp->params = prms;
+	mp->params = prms;		/* XXX assumes static string */
 	mp->binv = ebinv;
 	mp->nbins = bincnt;
 	memset(mp->cbin, 0, sizeof(DCOLOR)*bincnt);
@@ -180,7 +180,7 @@ quit(			/* quit program */
 
 /* Initialize our process(es) */
 static void
-rcinit()
+rcinit(void)
 {
 	int	i;
 
@@ -301,7 +301,7 @@ eval_rad(FVECT org, FVECT dir, double dmax)
 
 /* Accumulate and/or output ray contributions (child or only process) */
 static void
-done_contrib()
+done_contrib(void)
 {
 	MODCONT	*mp;
 	int	i;
@@ -322,7 +322,7 @@ done_contrib()
 
 /* Principal calculation loop (called by main) */
 void
-rcontrib()
+rcontrib(void)
 {
 	static int	ignore_warning_given = 0;
 	FVECT		orig, direc;
