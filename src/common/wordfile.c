@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: wordfile.c,v 2.19 2016/03/23 18:17:46 greg Exp $";
+static const char	RCSid[] = "$Id: wordfile.c,v 2.20 2016/04/27 17:26:45 greg Exp $";
 #endif
 /*
  * Load whitespace separated words from a file into an array.
@@ -41,7 +41,7 @@ wordfile(			/* get words from fname, put in words */
 	words[0] = NULL;
 	while (nargs > 1 && (n += read(fd, buf+n, MAXWLEN-n)) > 0) {
 		int	crem = 0;
-		if (n >= MAXWLEN)		/* still something left? */
+		if (n > MAXWLEN/2)		/* check for mid-word end */
 			while (!isspace(buf[--n])) {
 				if (n <= 0)	/* one long word! */
 					goto done;
