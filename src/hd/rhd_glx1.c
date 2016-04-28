@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.8 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.9 2016/04/28 16:28:20 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -465,7 +465,14 @@ getevent(void)			/* get next event */
 		getkey(levptr(XKeyPressedEvent));
 		break;
 	case ButtonPress:
-		getmove(levptr(XButtonPressedEvent));
+		switch (levptr(XButtonPressedEvent)->button) {
+		case Button4:		/* wheel up */
+		case Button5:		/* wheel down */
+			break;
+		default:
+			getmove(levptr(XButtonPressedEvent));
+			break;
+		}
 		break;
 	}
 }

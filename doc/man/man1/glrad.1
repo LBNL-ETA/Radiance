@@ -1,4 +1,4 @@
-.\" RCSid "$Id: glrad.1,v 1.5 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: glrad.1,v 1.6 2016/04/28 16:28:20 greg Exp $"
 .TH GLRAD 1 6/10/98 RADIANCE
 .SH NAME
 glrad - render a RADIANCE scene using OpenGL
@@ -86,13 +86,15 @@ The mouse is used to control the current view in the following ways:
 .sp
 .nf
 CONTROL	MOUSE	ACTION
-(none)	left	Move forward towards cursor position
+(none)	left		Move forward towards cursor position
 (none)	right	Move backward away from cursor position
 (none)	middle	Rotate in place (usually safe)
-shift	left	Orbit left around cursor position
+(none)	wheel-up	Zoom in on current position
+(non)	wheel-dn	Zoom out around current position
+shift	left		Orbit left around cursor position
 shift	right	Orbit right around cursor position
 shift	middle	Orbit skyward
-cntl	middle	Orbit earthward
+cntl		middle	Orbit earthward
 .fi
 .sp
 For all movements but rotating in place, the cursor must be placed over some
@@ -105,7 +107,6 @@ And if you run into trouble, the 'l' command is very useful.
 .TP
 .BR '+'
 Zoom in on the current cursor position.
-(Beware of repeating keys that go faster than the display updates.)
 .TP
 .BR '-'
 Zoom out from the current cursor position.

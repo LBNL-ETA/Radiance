@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.44 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.45 2016/04/28 16:28:20 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -82,7 +82,7 @@ static int mytmflags(void);
 static void xnewcolr(int  ndx, int r, int g, int b);
 static int getpixels(void);
 static void freepixels(void);
-static unsigned long true_pixel(register uby8 rgb[3]);
+static unsigned long true_pixel(uby8 rgb[3]);
 static void getevent(void);
 static int ilclip(int dp[2][2], FVECT wp[2]);
 static void draw3dline(FVECT wp[2]);
@@ -91,16 +91,16 @@ static int moveview(int dx, int dy, int mov, int orb);
 static void getframe(XButtonPressedEvent *ebut);
 static void waitabit(void);
 static void getmove(XButtonPressedEvent *ebut);
-static void getkey(register XKeyPressedEvent *ekey);
-static void fixwindow(register XExposeEvent *eexp);
-static void resizewindow(register XConfigureEvent *ersz);
+static void getkey(XKeyPressedEvent *ekey);
+static void fixwindow(XExposeEvent *eexp);
+static void resizewindow(XConfigureEvent *ersz);
 
 
 static int
 mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
-	register char	*cp, *tail;
+	char	*cp, *tail;
 					/* find basic name */
 	for (cp = tail = progname; *cp; cp++)
 		if (*cp == '/')
@@ -399,7 +399,7 @@ static int
 getpixels(void)				/* get the color map */
 {
 	XColor  thiscolor;
-	register int  i, j;
+	int  i, j;
 
 	if (ncolors > 0)
 		return(ncolors);
@@ -464,10 +464,10 @@ freepixels(void)				/* free our pixels */
 
 static unsigned long
 true_pixel(			/* return true pixel value for color */
-	register uby8	rgb[3]
+	uby8	rgb[3]
 )
 {
-	register unsigned long  rval;
+	unsigned long  rval;
 
 	rval = ourvinfo.red_mask*rgb[RED]/255 & ourvinfo.red_mask;
 	rval |= ourvinfo.green_mask*rgb[GRN]/255 & ourvinfo.green_mask;
@@ -506,8 +506,15 @@ getevent(void)			/* get next event */
 	case ButtonPress:
 		if (FRAMESTATE(levptr(XButtonPressedEvent)->state))
 			getframe(levptr(XButtonPressedEvent));
-		else
-			getmove(levptr(XButtonPressedEvent));
+ 		else
+			switch (levptr(XButtonPressedEvent)->button) {
+			case Button4:		/* wheel up */
+			case Button5:		/* wheel down */
+				break;
+			default:
+				getmove(levptr(XButtonPressedEvent));
+				break;
+			}
 		break;
 	}
 }
@@ -594,7 +601,7 @@ moveview(	/* move our view */
 	VIEW	nv;
 	FVECT	odir, v1;
 	double	d;
-	register int	li;
+	int	li;
 				/* start with old view */
 	nv = odev.v;
 				/* change view direction */
@@ -657,8 +664,8 @@ getframe(				/* get focus frame */
 					/* set frame for rendering */
 	if ((endx == startx) | (endy == starty))
 		return;
-	if (endx < startx) {register int c = endx; endx = startx; startx = c;}
-	if (endy < starty) {register int c = endy; endy = starty; starty = c;}
+	if (endx < startx) {int c = endx; endx = startx; startx = c;}
+	if (endy < starty) {int c = endy; endy = starty; starty = c;}
 	sprintf(odev_args, "%.3f %.3f %.3f %.3f",
 			(startx+.5)/odev.hres, 1.-(endy+.5)/odev.vres,
 			(endx+.5)/odev.hres, 1.-(starty+.5)/odev.vres);
@@ -720,7 +727,7 @@ getmove(				/* get view change */
 
 static void
 getkey(				/* get input key */
-	register XKeyPressedEvent  *ekey
+	XKeyPressedEvent  *ekey
 )
 {
 	Window	rootw, childw;
@@ -802,7 +809,7 @@ getkey(				/* get input key */
 
 static void
 fixwindow(				/* repair damage to window */
-	register XExposeEvent  *eexp
+	XExposeEvent  *eexp
 )
 {
 	if (odev.hres == 0 || odev.vres == 0) {	/* first exposure */
@@ -816,7 +823,7 @@ fixwindow(				/* repair damage to window */
 
 static void
 resizewindow(			/* resize window */
-	register XConfigureEvent  *ersz
+	XConfigureEvent  *ersz
 )
 {
 	if (ersz->width == odev.hres && ersz->height == odev.vres)

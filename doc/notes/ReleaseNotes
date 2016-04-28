@@ -2089,3 +2089,7 @@ This may reduce errors in certain pathological scenes.
 Added -in option to rcalc, rlam, and total to limit the number of
 input records in hopes of circumventing Windows EOF issues on binary data.
 Also added -on option to rcalc and total for logical symmetry.
+
+Increased modifier limit to 10,000 in rcontrib.
+
+Fixed issues with glrad and added zoom response to mouse wheel input.

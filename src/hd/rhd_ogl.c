@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.31 2012/09/06 00:07:43 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.32 2016/04/28 16:28:20 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -129,14 +129,14 @@ static void freedepth(void);
 static double getdistance(int dx, int dy, FVECT direc);
 static int mytmflags(void);
 static void getevent(void);
-static void draw3dline(register FVECT wp[2]);
+static void draw3dline(FVECT wp[2]);
 static void draw_grids(int fore);
 static int moveview(int dx, int dy, int mov, int orb);
 static void getframe(XButtonPressedEvent *ebut);
 static void getmove(XButtonPressedEvent *ebut);
-static void getkey(register XKeyPressedEvent *ekey);
-static void fixwindow(register XExposeEvent *eexp);
-static void resizewindow(register XConfigureEvent *ersz);
+static void getkey(XKeyPressedEvent *ekey);
+static void fixwindow(XExposeEvent *eexp);
+static void resizewindow(XConfigureEvent *ersz);
 static void waitabit(void);
 static void setglpersp(void);
 static void setglortho(void);
@@ -321,7 +321,7 @@ dev_clear(void)			/* clear our representation */
 
 extern int
 dev_view(			/* assign new driver view */
-	register VIEW	*nv
+	VIEW	*nv
 )
 {
 #ifdef STEREO
@@ -527,7 +527,7 @@ checkglerr(		/* check for GL or GLU error */
 	char	*where
 )
 {
-	register GLenum	errcode;
+	GLenum	errcode;
 
 	while ((errcode = glGetError()) != GL_NO_ERROR) {
 		sprintf(errmsg, "OpenGL error %s: %s",
@@ -540,8 +540,8 @@ checkglerr(		/* check for GL or GLU error */
 static void
 xferdepth(void)			/* load and clear depth buffer */
 {
-	register GLfloat	*dbp;
-	register GLubyte	*pbuf;
+	GLfloat	*dbp;
+	GLubyte	*pbuf;
 
 	if (depthbuffer == NULL) {	/* allocate private depth buffer */
 #ifdef STEREO
@@ -677,7 +677,7 @@ static int
 mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
-	register char	*cp, *tail;
+	char	*cp, *tail;
 					/* find basic name */
 	for (cp = tail = progname; *cp; cp++)
 		if (*cp == '/')
@@ -720,10 +720,17 @@ getevent(void)			/* get next event */
 		getkey(levptr(XKeyPressedEvent));
 		break;
 	case ButtonPress:
- 		if (FRAMESTATE(levptr(XButtonPressedEvent)->state))
- 			getframe(levptr(XButtonPressedEvent));
+		if (FRAMESTATE(levptr(XButtonPressedEvent)->state))
+			getframe(levptr(XButtonPressedEvent));
  		else
- 			getmove(levptr(XButtonPressedEvent));
+			switch (levptr(XButtonPressedEvent)->button) {
+			case Button4:		/* wheel up */
+			case Button5:		/* wheel down */
+				break;
+			default:
+				getmove(levptr(XButtonPressedEvent));
+				break;
+			}
 		break;
 	}
 }
@@ -731,7 +738,7 @@ getevent(void)			/* get next event */
 
 static void
 draw3dline(			/* draw 3d line in world coordinates */
-	register FVECT	wp[2]
+	FVECT	wp[2]
 )
 {
 	glVertex3d(wp[0][0], wp[0][1], wp[0][2]);
@@ -851,8 +858,8 @@ getframe(				/* get focus frame */
 						/* set frame for rendering */
 	if ((endx == startx) | (endy == starty))
 		return;
-	if (endx < startx) {register int c = endx; endx = startx; startx = c;}
-	if (endy < starty) {register int c = endy; endy = starty; starty = c;}
+	if (endx < startx) {int c = endx; endx = startx; startx = c;}
+	if (endy < starty) {int c = endy; endy = starty; starty = c;}
 	sprintf(odev_args, "%.3f %.3f %.3f %.3f",
 			(startx+.5)/odev.hres, 1.-(endy+.5)/odev.vres,
 			(endx+.5)/odev.hres, 1.-(starty+.5)/odev.vres);
@@ -1032,7 +1039,7 @@ wipeclean(void)			/* prepare for redraw */
 
 static void
 getkey(				/* get input key */
-	register XKeyPressedEvent  *ekey
+	XKeyPressedEvent  *ekey
 )
 {
 	Window	rootw, childw;
@@ -1116,7 +1123,7 @@ getkey(				/* get input key */
 
 static void
 fixwindow(				/* repair damage to window */
-	register XExposeEvent  *eexp
+	XExposeEvent  *eexp
 )
 {
 	int	xmin, ymin, xmax, ymax;
@@ -1162,7 +1169,7 @@ fixwindow(				/* repair damage to window */
 
 static void
 resizewindow(			/* resize window */
-	register XConfigureEvent  *ersz
+	XConfigureEvent  *ersz
 )
 {
 	glViewport(0, 0, ersz->width, ersz->height);

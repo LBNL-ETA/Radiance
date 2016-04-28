@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.25 2016/04/25 20:06:22 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.26 2016/04/28 16:28:20 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -27,7 +27,8 @@ static const char	RCSid[] = "$Id: glrad.c,v 3.25 2016/04/25 20:06:22 greg Exp $"
 #define MAXSCENE	127		/* maximum number of scene files */
 #endif
 
-#define ZOOMPCT		9		/* percent to zoom at a time */
+#define ZOOMPCT		9		/* percent to zoom for +/- */
+#define WZOOMPCT	3		/* percent to zoom for mouse wheel */
 
 #define MOVPCT		4		/* percent distance to move /frame */
 #define MOVDIR(b)	((b)==Button1 ? 1 : (b)==Button2 ? 0 : -1)
@@ -584,7 +585,19 @@ dev_input(		/* get next input event */
 	case KeyPress:
 		return(getkey(levptr(XKeyPressedEvent)));
 	case ButtonPress:
-		getmove(levptr(XButtonPressedEvent));
+		switch (levptr(XButtonPressedEvent)->button) {
+		case Button4:			/* wheel up */
+			zoomview(100+WZOOMPCT, levptr(XButtonPressedEvent)->x,
+					vres-1-levptr(XButtonPressedEvent)->y);
+			break;
+		case Button5:			/* wheel down */
+			zoomview(100-WZOOMPCT, levptr(XButtonPressedEvent)->x,
+					vres-1-levptr(XButtonPressedEvent)->y);
+			break;
+		default:
+			getmove(levptr(XButtonPressedEvent));
+			break;
+		}
 		break;
 	}
 	return(1);
@@ -827,6 +840,7 @@ getkey(				/* get input key */
 	case 'V':			/* append view to rad file */
 		appendview(NULL, &thisview);
 		break;
+	case 'Q':
 	case 'q':			/* quit the program */
 		return(0);
 	default:
