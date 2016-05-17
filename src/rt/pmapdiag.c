@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdiag.c,v 2.6 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapdiag.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Photon map diagnostic output and progress reports
@@ -11,6 +12,7 @@ static const char RCSid[] = "$Id: pmapdiag.c,v 2.6 2015/09/01 16:27:52 greg Exp 
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
+   $Id: pmapdiag.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -23,8 +25,8 @@ static const char RCSid[] = "$Id: pmapdiag.c,v 2.6 2015/09/01 16:27:52 greg Exp 
 
 time_t repStartTime, repLastTime = 0;   /* Time at start & last report */
 unsigned long repProgress,              /* Report progress counter */
-              repComplete;              /* Report completion count */
-
+              repComplete,              /* Report completion count */
+              repEmitted;               /* Num emitted photons */
 
 
 static char* biasCompStats (const PhotonMap *pmap, PhotonMapType type, 
@@ -34,6 +36,8 @@ static char* biasCompStats (const PhotonMap *pmap, PhotonMapType type,
    unsigned avgBwidth;
    float avgErr;
    
+   stats [0] = '\0';
+   
    /* Check if photon map is valid and bias compensated */
    if (pmap && pmap -> maxGather > pmap -> minGather) {      
       avgBwidth = pmap -> numDensity 
@@ -41,7 +45,7 @@ static char* biasCompStats (const PhotonMap *pmap, PhotonMapType type,
       avgErr = pmap -> numDensity 
                ? sqrt(pmap -> rmsError / pmap -> numDensity) : 0;
                                               
-      sprintf(stats, "%d/%d/%d %s (%.1f/%.1f/%.1f%% error), ",
+      sprintf(stats, "%d/%d/%d %s photon bwidth (%.1f/%.1f/%.1f%% error), ",
               pmap -> minGathered, pmap -> maxGathered, avgBwidth, 
               pmapName [type],
               100 * pmap -> minError, 100 * pmap -> maxError, 100 * avgErr);
@@ -67,6 +71,50 @@ void pmapBiasCompReport (char *stats)
       if (biasCompStats(photonMaps [t], t, tmp))
          strcat(stats, tmp);
 }
+
+
+
+#ifdef PMAP_OOC
+   static char* oocCacheStats (const PhotonMap *pmap, PhotonMapType type, 
+                               char *stats)
+   /* Dump OOC I/O cache statistics */
+   {
+      const OOC_Cache   *cache;
+      stats [0] = '\0';
+
+      
+      /* Check for photon map is valid and caching enabled */
+      if (pmap && (cache = pmap -> store.cache) && cache -> numReads) {
+         sprintf(stats, "%ld %s photons cached in %d/%d pages "
+                 "(%.1f%% hit, %.1f%% rept, %.1f coll), ",
+                 (unsigned long)cache -> pageCnt * cache -> recPerPage,
+                 pmapName [type], cache -> pageCnt, cache -> numPages, 
+                 100.0 * cache -> numHits / cache -> numReads,
+                 100.0 * cache -> numRept / cache -> numReads,
+                 (float)cache -> numColl / cache -> numReads);
+                    
+         return stats;
+      }
+      
+      return NULL;
+   }
+
+
+
+   void pmapOOCCacheReport (char *stats)
+   /* Append full OOC I/O cache statistics to stats; interface to rpict's
+    * report() */
+   {
+      char tmp [512];
+      unsigned t;
+      
+      stats [0] = '\0';
+      
+      for (t = 0; t < NUM_PMAP_TYPES; t++)
+         if (oocCacheStats(photonMaps [t], t, tmp))
+            strcat(stats, tmp);
+   }
+#endif
 
 
 
@@ -165,12 +213,12 @@ void pmapBiasCompReport (char *stats)
          s = (tbuf.tms_stime + tbuf.tms_cstime) * period;
       #endif
 
-      sprintf(errmsg, "%lu emitted, ", repProgress);
+      sprintf(errmsg, "%lu emitted, ", repEmitted);
       
       for (t = 0; t < NUM_PMAP_TYPES; t++)
          if (photonMaps [t]) {
-            sprintf(tmp, "%lu %s, ", 
-                    photonMaps [t] -> heapEnd, pmapName [t]);
+            sprintf(tmp, "%lu %s, ", photonMaps [t] -> numPhotons, 
+                    pmapName [t]);
             strcat(errmsg, tmp);
          }
       
@@ -219,12 +267,12 @@ void pmapBiasCompReport (char *stats)
       unsigned t;
       
       repLastTime = time(NULL);
-      sprintf(errmsg, "%lu emitted, ", repProgress);
+      sprintf(errmsg, "%lu emitted, ", repEmitted);
 
       for (t = 0; t < NUM_PMAP_TYPES; t++)
          if (photonMaps [t]) {
-            sprintf(tmp, "%lu %s, ", 
-                    photonMaps [t] -> heapEnd, pmapName [t]);
+            sprintf(tmp, "%lu %s, ", photonMaps [t] -> numPhotons, 
+                    pmapName [t]);
             strcat(errmsg, tmp);
          }      
       

@@ -1,17 +1,19 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapparm.c,v 2.6 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapparm.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
-   ==================================================================
-   Parameters for photon map generation; used by MKPMAP
-   For inclusion in mkpmap.c
+   ======================================================================
+   Parameters for photon map generation and rendering; used by mkpmap
+   and rpict/rvu/rtrace.
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com}
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
+   $Id: pmapparm.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -21,31 +23,42 @@ static const char RCSid[] = "$Id: pmapparm.c,v 2.6 2015/09/01 16:27:52 greg Exp 
 #include <ctype.h>
 
 
-float pdfSamples = 1000,                /* PDF samples per steradian */
-      finalGather = 0.25,               /* fraction of global photons for
-                                           irradiance precomputation */
-      preDistrib = 0.25,                /* fraction of num photons for
-                                           distribution prepass */
-      gatherTolerance = 0.5,            /* Photon map lookup tolerance;
-                                           lookups returning fewer than this
-                                           fraction of minGather/maxGather
-                                           are restarted with a larger
-                                           search radius */
-      maxDistFix = 0;                   /* Static maximum photon search
-                                           radius (radius is adaptive if
-                                           this is zero) */
+float pdfSamples        = 1000,        /* PDF samples per steradian */
+
+      finalGather       = 0.25,        /* fraction of global photons for
+                                          irradiance precomputation */
+                                          
+      preDistrib        = 0.25,        /* fraction of num photons for
+                                          distribution prepass */
+                                          
+      gatherTolerance   = 0.5,         /* Photon map lookup tolerance;
+                                          lookups returning fewer than this
+                                          fraction of minGather/maxGather
+                                          are restarted with a larger
+                                          search radius */
+                                          
+      maxDistFix        = 0;           /* Static maximum photon search
+                                          radius (radius is adaptive if
+                                          this is zero) */
+                                          
+#ifdef PMAP_OOC
+float          pmapCachePageSize = 8;     /* OOC cache pagesize as multiple
+                                           * of maxGather */
+unsigned long  pmapCacheSize     = 1e6;   /* OOC cache size in photons */
+#endif
+
 
 #ifdef PMAP_ROI
-   /* Region of interest bbox: {xmin, xmax, ymin, ymax, zmin, zmax} */
-   float pmapROI [6] = {-FHUGE, FHUGE, -FHUGE, FHUGE, -FHUGE, FHUGE};                                        
+/* Region of interest bbox: {xmin, xmax, ymin, ymax, zmin, zmax} */
+float pmapROI [6] = {-FHUGE, FHUGE, -FHUGE, FHUGE, -FHUGE, FHUGE};                                        
 #endif                                        
 
-unsigned long photonHeapSizeInc = 1000, /* Photon heap size increment */
-              photonMaxBounce = 5000;   /* Runaway photon bounce limit */
-              
-unsigned photonRepTime = 0,             /* Seconds between reports */
-         maxPreDistrib = 4,             /* Max predistrib passes */
-         defaultGather = 40;            /* Default num photons for lookup */
+
+unsigned long photonMaxBounce = 5000;  /* Runaway photon bounce limit */
+unsigned photonRepTime        = 0,     /* Seconds between reports */
+         maxPreDistrib        = 4,     /* Max predistrib passes */
+         defaultGather        = 40;    /* Default num photons for lookup */
+
 
 /* Per photon map params */
 PhotonMapParams pmapParams [NUM_PMAP_TYPES] = {
@@ -64,7 +77,6 @@ int setPmapParam (PhotonMap** pm, const PhotonMapParams* parm)
       (*pm) -> minGather = parm -> minGather;
       (*pm) -> maxGather = parm -> maxGather;
       (*pm) -> distribTarget = parm -> distribTarget;
-      (*pm) -> heapSizeInc = photonHeapSizeInc;      
       (*pm) -> maxDist0 = FHUGE;
       (*pm) -> srcContrib = NULL;
 

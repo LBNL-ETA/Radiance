@@ -1,4 +1,5 @@
-/* RCSid $Id: pmap.h,v 2.6 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmap.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+
 /* 
    ==================================================================
    Photon map main header
@@ -9,6 +10,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
+   $Id: pmap.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -20,14 +22,14 @@
 
 
    #ifndef min
-      #define min(a, b) ((a) < (b) ? (a) : (b))
+      #define min(a, b)          ((a) < (b) ? (a) : (b))
    #endif
    
    #ifndef max
-      #define max(a, b) ((a) > (b) ? (a) : (b))
+      #define max(a, b)          ((a) > (b) ? (a) : (b))
    #endif
    
-   #define sqr(a)    ((a) * (a))
+   #define sqr(a)                ((a) * (a))
 
    /* Average over colour channels */
    #define colorAvg(col) ((col [0] + col [1] + col [2]) / 3)
@@ -55,7 +57,7 @@
    void cleanUpPmaps (PhotonMap **pmaps);
    /* Trash all photon maps after processing is complete */
 
-   void distribPhotons (PhotonMap **pmaps);
+   void distribPhotons (PhotonMap **pmaps, unsigned numProc);
    /* Emit photons from light sources and build photon maps for non-NULL
     * entries in photon map array */
 

@@ -1,15 +1,17 @@
-/* RCSid $Id: pmapparm.h,v 2.6 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+
 /* 
-   ==================================================================
-   Parameters for photon map generation; used by MKPMAP
-   For inclusion in mkpmap.c
+   ======================================================================
+   Parameters for photon map generation and rendering; used by mkpmap
+   and rpict/rvu/rtrace.   
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com}
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
-
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
+   
+   $Id: pmapparm.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -38,13 +40,20 @@
    #define contribPmapParams  (pmapParams [PMAP_TYPE_CONTRIB])
    
    
-   extern float pdfSamples, preDistrib, finalGather, gatherTolerance, 
-                maxDistFix;
-   extern unsigned long photonHeapSizeInc, photonMaxBounce;
-   extern unsigned photonRepTime, maxPreDistrib, defaultGather;
+   extern float         pdfSamples, preDistrib, finalGather,
+                        gatherTolerance, maxDistFix;
+   extern unsigned long photonHeapSizeInc, photonMaxBounce; 
+   extern unsigned      photonRepTime, maxPreDistrib, defaultGather;
+   
 #ifdef PMAP_ROI                
    extern float pmapROI [6];
 #endif   
+
+#ifdef PMAP_OOC
+   extern float         pmapCachePageSize;
+   extern unsigned long pmapCacheSize;
+#endif   
+
 
    struct PhotonMap;
    

@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmaprand.c,v 2.4 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmaprand.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Random number generators for photon distribution
@@ -11,6 +12,7 @@ static const char RCSid[] = "$Id: pmaprand.c,v 2.4 2015/09/01 16:27:52 greg Exp 
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
+   $Id: pmaprand.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $
 */
 
 

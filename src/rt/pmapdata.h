@@ -1,15 +1,28 @@
-/* RCSid $Id: pmapdata.h,v 2.9 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.10 2016/05/17 17:39:47 rschregle Exp $ */
+
 /* 
-   ==================================================================
-   Photon map data structures and kd-tree handling   
+   =========================================================================
+   Photon map types and interface to nearest neighbour lookups in underlying
+   point cloud data structure.
+
+   The default data structure is an in-core kd-tree (see pmapkdt.{h,c}).
+   This can be overriden with the PMAP_OOC compiletime switch, which enables
+   an out-of-core octree (see oococt.{h,c}).
+   
+   Defining PMAP_FLOAT_FLUX stores photon flux as floats rather than packed
+   RGBE for greater precision; this may be necessary when the flux differs
+   significantly in individual colour channels, e.g. with highly saturated
+   colours.
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   =========================================================================
    
+   $Id: pmapdata.h,v 2.10 2016/05/17 17:39:47 rschregle Exp $
 */
+
 
 
 #ifndef PMAPDATA_H
@@ -18,51 +31,203 @@
    #include "ray.h"   
    #include "pmaptype.h"
    #include "lookup.h"
+   #include <stdint.h>
 
 
+   
+   /* Primary photon ray for light source contributions */
+   typedef struct {
+      int16    srcIdx;              /* Index of emitting light source */
+                                    /* !!! REDUCED FROM 32 BITS !!! */
+      int32    dir;                 /* Encoded ray direction */
+#ifdef PMAP_PRIMARYPOS      
+      float    pos [3];             /* Hit point */
+#endif      
+   } PhotonPrimary;
+      
+   #define photonSrcIdx(pm, p)      ((pm)->primaries[(p)->primary].srcIdx)
+
+
+
+   /* Photon primary ray index type and limit */
+   typedef  uint32            PhotonPrimaryIdx;      
+   #define  PMAP_MAXPRIMARY   UINT32_MAX
+
+   /* Macros for photon's generating subprocess field */
+#ifdef PMAP_OOC         
+   #define  PMAP_PROCBITS  7
+#else            
+   #define  PMAP_PROCBITS  5   
+#endif
+   #define  PMAP_MAXPROC         (1 << PMAP_PROCBITS)
+   #define  PMAP_GETRAYPROC(r)   ((r) -> crtype >> 8)
+   #define  PMAP_SETRAYPROC(r,p) ((r) -> crtype |= p << 8)
+
+   /* Tolerance for photon normal check during lookups */
+   #define  PMAP_NORM_TOL  0.02
+   
+
+   
+   typedef struct {
+      float                pos [3];       /* Photon position */
+      signed char          norm [3];      /* Surface normal at pos (incident
+                                             direction for volume photons) */
+      union {
+         struct {
+#ifndef PMAP_OOC
+            unsigned char  discr    : 2;  /* kd-tree discriminator axis */
+#endif            
+            unsigned char  caustic  : 1;  /* Specularly scattered (=caustic) */
+            
+            /* Photon's generating subprocess index, used for primary ray
+             * index linearisation when building contrib pmaps; note this is
+             * reduced for kd-tree to accommodate the discriminator field */
+            unsigned char  proc  : PMAP_PROCBITS; 
+         };
+         
+         unsigned char     flags;
+      };
+      
+#ifdef PMAP_FLOAT_FLUX
+      COLOR                flux;          
+#else
+      COLR                 flux;          
+#endif
+      PhotonPrimaryIdx     primary;       /* Index to primary ray */
+   } Photon;
+
+
+   
    /* Define PMAP_FLOAT_FLUX to store photon flux as floats instead of
     * compact RGBE, which was found to improve accuracy in analytical
     * validation. */
-   #ifdef PMAP_FLOAT_FLUX
-      #define setPhotonFlux(p,f) copycolor((p) -> flux, f)
-      #define getPhotonFlux(p,f) copycolor(f, (p) -> flux)
-   #else
-      #define setPhotonFlux(p,f) setcolr((p)->flux, (f)[0], (f)[1], (f)[2])
-      #define getPhotonFlux(p,f) colr_color(f, (p) -> flux)
-   #endif
+#ifdef PMAP_FLOAT_FLUX
+   #define setPhotonFlux(p,f) copycolor((p) -> flux, f)
+   #define getPhotonFlux(p,f) copycolor(f, (p) -> flux)
+#else
+   #define setPhotonFlux(p,f) setcolr((p)->flux, (f)[0], (f)[1], (f)[2])
+   #define getPhotonFlux(p,f) colr_color(f, (p) -> flux)
+#endif
 
 
-   /* Primary photon ray for light source contributions */
-   typedef struct {
-      int32 srcIdx;               /* Index of emitting light source */
-      int32 dir;                  /* Encoded ray direction */
-      float pos [3];              /* Hit point */
-   } PhotonPrimary;
+   
+   /* Bias compensation history node */
+   typedef struct {                  
+      COLOR irrad;
+      float weight;
+   } PhotonBiasCompNode;
+
+
+   /* Forward declaration */
+   struct PhotonMap;
+   
+   
+   /* Define search queue and underlying data struct types */
+#ifdef PMAP_OOC
+   #include "pmapooc.h"
+#else
+   #include "pmapkdt.h"
+#endif
+
+
+   typedef struct PhotonMap {
+      PhotonMapType  type;             /* See pmaptype.h */
+      char           *fileName;        /* Photon map file */
       
-   #define photonSrcIdx(pm, p) ((pm) -> primary [(p) -> primary].srcIdx)
+      
+      /* ================================================================
+       * PRE/POST-BUILD STORAGE
+       * ================================================================ */
+      FILE           *heap;            /* Unsorted photon heap prior to
+                                          construction of store */
+      Photon         *heapBuf;         /* Write buffer for above */
+      unsigned long  heapBufLen,       /* Current & max size of heapBuf */
+                     heapBufSize;
+      PhotonStorage  store;            /* Photon storage in spacee
+                                          subdividing data struct */            
+       
+      /* ================================================================
+       * PHOTON DISTRIBUTION STUFF
+       * ================================================================ */
+      unsigned long  distribTarget,    /* Num stored specified by user */
+                     numPhotons;       /* Num actually stored */
+      float          distribRatio;     /* Probability of photon storage */
+      COLOR          photonFlux;       /* Average photon flux */
+      unsigned short randState [3];    /* Local RNG state */
 
-   
-   typedef struct {
-      float pos [3];                 /* Photon position */
-      signed char norm [3];          /* Surface normal at pos (incident
-                                        direction for volume photons) */
-      char flags;                    /* Bit 0-1: kd-tree discriminator axis,
-                                        Bit 2:   caustic photon */
-      #ifdef PMAP_FLOAT_FLUX
-         COLOR flux;
-      #else
-         COLR flux;                  /* Photon flux */
-      #endif
 
-      uint32 primary;              /* Index to primary ray */
-   } Photon;
-   
-   /* Photon flag bitmasks and manipulation macros */
-   #define PMAP_DISCR_BIT 3
-   #define PMAP_CAUST_BIT 4
-   #define photonDiscr(p)       ((p).flags & PMAP_DISCR_BIT)
-   #define setPhotonDiscr(p, d) ((p).flags = ((p).flags & ~PMAP_DISCR_BIT) | \
-                                              ((d) & PMAP_DISCR_BIT))
+      /* ================================================================
+       * PHOTON LOOKUP STUFF 
+       * ================================================================ */
+      union {                          /* Flags passed to findPhotons() */
+         char        lookupCaustic : 1;
+         char        lookupFlags;
+      };
+      
+      PhotonSearchQueue squeue;        /* Search queue for photon lookups */
+      unsigned       minGather,        /* Specified min/max photons per */
+                     maxGather;        /* density estimate */
+                                       
+                                       /* NOTE: All distances are SQUARED */
+      float          maxDist2,         /* Max search radius */
+                     maxDist0,         /* Initial value for above */
+                     maxDist2Limit,    /* Hard limit for above */
+                     gatherTolerance;  /* Fractional deviation from minGather/
+                                          maxGather for short lookup */
+      void (*lookup)(struct PhotonMap*, 
+                     RAY*, COLOR);     /* Callback for type-specific photon
+                                        * lookup (usually density estimate) */                                          
+
+                     
+      /* ================================================================
+       * BIAS COMPENSATION STUFF
+       * ================================================================ */      
+      PhotonBiasCompNode   *biasCompHist;    /* Bias compensation history */
+      
+
+      /* ================================================================
+       * STATISTIX
+       * ================================================================ */            
+      unsigned long  totalGathered,    /* Total photons gathered */
+                     numDensity,       /* Num density estimates */
+                     numLookups,       /* Counters for short photon lookups */
+                     numShortLookups;
+                     
+      unsigned       minGathered,      /* Min/max photons actually gathered */
+                     maxGathered,      /* per density estimate */
+                     shortLookupPct;   /* % of short lookups for stats */                                          
+                     
+      float          minError,         /* Min/max/rms density estimate error */
+                     maxError,
+                     rmsError,
+                     CoGdist,          /* Avg distance to centre of gravity */
+                     maxPos [3],       /* Max & min photon positions */
+                     minPos [3];
+                     
+      FVECT          CoG;              /* Centre of gravity (avg photon pos) */
+                     
+       
+      /* ================================================================
+       * PHOTON CONTRIB/COEFF STUFF
+       * ================================================================ */
+      PhotonPrimary  *primaries,    /* Photon primary array for rendering */
+                     lastPrimary;   /* Current primary for photon distrib */
+      PhotonPrimaryIdx  numPrimary;    /* Number of primary rays */
+      LUTAB             *srcContrib;   /* Lookup table for source contribs */
+   } PhotonMap;
+
+
+
+   /* Photon maps by type (see PhotonMapType) */
+   extern PhotonMap  *photonMaps [];
+
+   /* Macros for specific photon map types */
+   #define globalPmap         (photonMaps [PMAP_TYPE_GLOBAL])
+   #define preCompPmap        (photonMaps [PMAP_TYPE_PRECOMP])
+   #define causticPmap        (photonMaps [PMAP_TYPE_CAUSTIC])
+   #define volumePmap         (photonMaps [PMAP_TYPE_VOLUME])
+   #define directPmap         (photonMaps [PMAP_TYPE_DIRECT])
+   #define contribPmap        (photonMaps [PMAP_TYPE_CONTRIB])
 
    /* Photon map type tests */
    #define isGlobalPmap(p)    ((p) -> type == PMAP_TYPE_GLOBAL)
@@ -70,132 +235,80 @@
    #define isContribPmap(p)   ((p) -> type == PMAP_TYPE_CONTRIB)
    #define isVolumePmap(p)    ((p) -> type == PMAP_TYPE_VOLUME)
 
+   /* Mean size of heapfile write buffer, in number of photons */
+   #define PMAP_HEAPBUFSIZE   1e6
    
-   /* Queue node for photon lookups */
-   typedef struct {                  
-      Photon *photon;
-      float dist;
-   } PhotonSQNode;
-
-   /* Bias compensation history node */
-   typedef struct {                  
-      COLOR irrad;
-      float weight;
-   } PhotonBCNode;
-
-
-   struct PhotonMap;                 /* Forward declarations */
-
-   typedef struct PhotonMap {
-      PhotonMapType type;            /* See pmaptype.h */
-      char *fileName;                /* Photon map file */
-      Photon *heap;                  /* Photon k-d tree as linear array */
-      PhotonSQNode *squeue;          /* Search queue */
-      PhotonBCNode *biasCompHist;    /* Bias compensation history */      
-      char lookupFlags;              /* Flags passed to findPhotons() */
-      
-      unsigned long distribTarget,   /* Num stored specified by user */
-                    heapSize,
-                    heapSizeInc, 
-                    heapEnd,         /* Num actually stored in heap */
-                    numDensity,      /* Num density estimates */
-                    totalGathered,   /* Total photons gathered */
-                    numLookups,      /* Counters for short photon lookups */
-                    numShortLookups;
-                    
-      unsigned minGather,            /* Specified min/max photons per */
-               maxGather,            /* density estimate */
-               squeueSize,
-               squeueEnd,
-               minGathered,          /* Min/max photons actually gathered */
-               maxGathered,          /* per density estimate */
-               shortLookupPct;       /* Percentage of short lookups (for
-                                        statistics output */
-               
-                                     /* NOTE: All distances are SQUARED */
-      float maxDist,                 /* Max search radius during NN search */
-            maxDist0,                /* Initial value for above */
-            maxDistLimit,            /* Hard limit for above */
-            CoGdist,                 /* Avg distance to centre of gravity */
-            maxPos [3], minPos [3],  /* Max & min photon positions */
-            distribRatio,            /* Probability of photon storage */
-            gatherTolerance,         /* Fractional deviation from minGather/
-                                        maxGather for short lookup */
-            minError, maxError,      /* Min/max/rms density estimate error */
-            rmsError;
-            
-      FVECT CoG;                     /* Centre of gravity (avg photon pos) */
-      COLOR photonFlux;              /* Average photon flux */
-      unsigned short randState [3];  /* Local RNG state */
-      
-      void (*lookup)(struct PhotonMap*, RAY*, COLOR);   
-                                     /* Callback for type-specific photon
-                                      * lookup (usually density estimate) */
-
-      PhotonPrimary *primary;        /* Primary photon rays & associated
-                                        counters */
-      unsigned primarySize, primaryEnd;
-               
-      LUTAB *srcContrib;             /* lookup table for source contribs */
-   } PhotonMap;
-
-
-
-   /* Photon maps by type (see PhotonMapType) */
-   extern PhotonMap *photonMaps [];
-
-   /* Macros for specific photon map types */
-   #define globalPmap            (photonMaps [PMAP_TYPE_GLOBAL])
-   #define preCompPmap           (photonMaps [PMAP_TYPE_PRECOMP])
-   #define causticPmap           (photonMaps [PMAP_TYPE_CAUSTIC])
-   #define volumePmap            (photonMaps [PMAP_TYPE_VOLUME])
-   #define directPmap            (photonMaps [PMAP_TYPE_DIRECT])
-   #define contribPmap           (photonMaps [PMAP_TYPE_CONTRIB])
-
+   /* Mean idle time between heap locking attempts, in usec */
+   #define PMAP_HEAPBUFSLEEP  2e6
+   
+   /* Shared memory file for parallelised photon distribution */
+#if 0   
+   #define PMAP_SHMFNAME      "/mkpmap-%d"
+#else
+   #define PMAP_SHMFNAME      "mkpmapXXXXXX"
+#endif      
 
 
    void initPhotonMap (PhotonMap *pmap, PhotonMapType t);
    /* Initialise empty photon map of specified type */
 
-   const PhotonPrimary* addPhotonPrimary (PhotonMap *pmap, const RAY *ray);
-   /* Add primary ray for emitted photon and save light source index, origin
-    * on source, and emitted direction; used by contrib photons */
-
-   const Photon* addPhoton (PhotonMap *pmap, const RAY *ray);
+   int newPhoton (PhotonMap *pmap, const RAY *ray);
    /* Create new photon with ray's direction, intersection point, and flux,
-      and add to photon map subject to acceptance probability pmap ->
-      distribRatio for global density control; if the photon is rejected,
-      NULL is returned. The flux is scaled by ray -> rweight and
-      1 / pmap -> distribRatio. */
+      and append to unsorted photon heap pmap -> heap. The photon is
+      accepted with probability pmap -> distribRatio for global density
+      control; if the photon is rejected, -1 is returned, else 0.  The flux
+      is scaled by ray -> rweight and 1 / pmap -> distribRatio. */
 
-   void balancePhotons (PhotonMap *pmap, double *photonFlux);
-   /* Build a balanced kd-tree as heap to guarantee logarithmic search
-    * times. This must be called prior to performing photon search with
-    * findPhotons(). 
-    * PhotonFlux is the flux scaling factor per photon averaged over RGB. In
-    * the case of a contribution photon map, this is an array with a
-    * separate factor specific to each light source due to non-uniform
-    * photon emission; Otherwise it is referenced as a scalar value. Flux is
-    * not scaled if photonFlux == NULL. */
+   void initPhotonHeap (PhotonMap *pmap);
+   /* Open photon heap file */
 
-   void buildHeap (Photon *heap, unsigned long *heapIdx,
-                   unsigned long *heapXdi, const float min [3], 
-                   const float max [3], unsigned long left, 
-                   unsigned long right, unsigned long root);
-   /* Recursive part of balancePhotons(..); builds heap from subarray
-    * defined by indices left and right. */
-      
+   void flushPhotonHeap (PhotonMap *pmap);
+   /* Flush photon heap buffa pmap -> heapBuf to heap file pmap -> heap;
+    * used by newPhoton() and to finalise heap in distribPhotons(). */
+
+   void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
+                        PhotonPrimaryIdx *primaryOfs, unsigned nproc);
+   /* Postpress unsorted photon heap pmap -> heap and build underlying data
+    * structure pmap -> store.  This is prerequisite to photon lookups with
+    * findPhotons(). */
+    
+   /* PhotonFlux is the flux per photon averaged over RGB; this is
+    * multiplied with each photon's flux during the postprocess.  In the
+    * case of a contribution photon map, this is an array with a separate
+    * flux specific to each light source due to non-uniform photon emission;
+    * Otherwise it is referenced as a scalar value.  Flux is not scaled if
+    * photonFlux == NULL.  */
+
+   /* Photon map construction may be parallelised if nproc > 1, if
+    * supported. The heap is destroyed on return.  */
+    
+   /* PrimaryOfs is an array of index offsets for the primaries in pmap ->
+    * primaries generated by each of the nproc subprocesses during contrib
+    * photon distribution (see distribPhotonContrib()).  These offsets are
+    * used to linearise the photon primary indices in the postprocess.  This
+    * linearisation is skipped if primaryOfs == NULL.  */
+
    void findPhotons (PhotonMap* pmap, const RAY *ray);
-   /* Find pmap -> squeueSize closest photons to ray -> rop with similar 
+   /* Find pmap -> squeue.len closest photons to ray -> rop with similar 
       normal. For volume photons ray -> rorg is used and the normal is 
       ignored (being the incident direction in this case). Found photons 
-      are placed in pmap -> squeue, with pmap -> squeueEnd being the number
-      actually found. */
+      are placed search queue starting with the furthest photon at pmap ->
+      squeue.node, and pmap -> squeue.tail being the number actually found. */
 
-   Photon *find1Photon (PhotonMap *pmap, const RAY *ray);
+   void find1Photon (PhotonMap *pmap, const RAY *ray, Photon *photon);
    /* Finds single closest photon to ray -> rop with similar normal. 
       Returns NULL if none found. */
 
+   void getPhoton (PhotonMap *pmap, PhotonIdx idx, Photon *photon);
+   /* Retrieve photon referenced by idx from pmap -> store */
+
+   Photon *getNearestPhoton (const PhotonSearchQueue *squeue, PhotonIdx idx);
+   /* Retrieve photon from NN search queue after calling findPhotons() */
+   
+   PhotonIdx firstPhoton (const PhotonMap *pmap);
+   /* Index to first photon, to be passed to getPhoton(). Indices to
+    * subsequent photons can be optained via increment operator (++) */
+    
    void deletePhotons (PhotonMap*);
    /* Free dem mammaries... */
 

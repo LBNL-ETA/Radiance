@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmaptype.c,v 2.4 2015/09/01 16:27:53 greg Exp $";
+static const char RCSid[] = "$Id: pmaptype.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Photon map types and corresponding file format strings
@@ -10,18 +11,25 @@ static const char RCSid[] = "$Id: pmaptype.c,v 2.4 2015/09/01 16:27:53 greg Exp 
    (c) Lucerne University of Applied Sciences and Arts,
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
-
+   
+   $Id: pmaptype.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
 #include "pmaptype.h"
 
+#ifdef PMAP_OOC
+   #define PMAP_FMTSUFFIX  "OOC_Photon_Map"
+#else
+   #define PMAP_FMTSUFFIX  "kdT_Photon_Map"
+#endif
+
 
 /* Format strings for photon map files corresponding to PhotonMapType */
 const char *pmapFormat [NUM_PMAP_TYPES] = { 
-   "Radiance_Global_Photon_Map",    "Radiance_PreComp_Photon_Map",
-   "Radiance_Caustic_Photon_Map",   "Radiance_Volume_Photon_Map",
-   "Radiance_Direct_Photon_Map",    "Radiance_Contrib_Photon_Map"
+   "Radiance_Global_"   PMAP_FMTSUFFIX, "Radiance_PreComp_" PMAP_FMTSUFFIX,
+   "Radiance_Caustic_"  PMAP_FMTSUFFIX, "Radiance_Volume_"  PMAP_FMTSUFFIX,
+   "Radiance_Direct_"   PMAP_FMTSUFFIX, "Radiance_Contrib_" PMAP_FMTSUFFIX
 };
 
 /* Photon map names per type */

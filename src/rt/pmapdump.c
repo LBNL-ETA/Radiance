@@ -1,16 +1,18 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.6 2016/02/04 19:39:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
-   ==================================================================
+   ======================================================================
    Dump photon maps as RADIANCE scene description to stdout
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
+   $Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -22,6 +24,8 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.6 2016/02/04 19:39:10 rschregle
 #include "resolu.h"
 #include "random.h"
 #include "math.h"
+
+#define PMAPDUMP_REC "$Revision: 2.7 $"   
 
 
 /* Defaults */
@@ -39,8 +43,6 @@ typedef struct {
 } RadianceDef;
 
    
-static char header [] = "$Revision: 2.6 $";
-
 
 /* Colour code is as follows:    global         = blue
                                  precomp global = cyan
@@ -73,13 +75,17 @@ const RadianceDef radDefs [] = {
 
 int main (int argc, char** argv)
 {
-   char format [128];
-   RREAL rad, radScale = RADSCALE, vol, dumpRatio;
-   FVECT minPos, maxPos;
-   unsigned arg, j, ptype;
-   long numPhotons, numSpheres = NSPHERES;
-   FILE *pmapFile;
-   Photon p;
+   char           format [128];
+   RREAL          rad, radScale = RADSCALE, vol, dumpRatio;
+   unsigned       arg, j, ptype;
+   long           numSpheres = NSPHERES;
+   FILE           *pmapFile;
+   PhotonMap      pm;
+   PhotonPrimary  pri;
+   Photon         p;
+#ifdef PMAP_OOC
+   char           leafFname [1024];
+#endif
    
    if (argc < 2) {
       puts("Dump photon maps as RADIANCE scene description\n");
@@ -137,7 +143,7 @@ int main (int argc, char** argv)
       }
 
       /* Get file format version and check for compatibility */
-      if (getint(sizeof(PMAP_FILEVER), pmapFile) != PMAP_FILEVER)
+      if (strcmp(getstr(format, pmapFile), PMAP_FILEVER))      
          error(USER, "incompatible photon map file format");
          
       /* Dump command line as comment */
@@ -149,8 +155,8 @@ int main (int argc, char** argv)
       fputs(radDefs [ptype].mat, stdout);
       fputc('\n', stdout);
       
-      /* Get number of photons (is this sizeof() hack portable?) */
-      numPhotons = getint(sizeof(((PhotonMap*)NULL) -> heapSize), pmapFile);
+      /* Get number of photons */
+      pm.numPhotons = getint(sizeof(pm.numPhotons), pmapFile);
       
       /* Skip avg photon flux */ 
       for (j = 0; j < 3; j++) 
@@ -158,8 +164,8 @@ int main (int argc, char** argv)
       
       /* Get distribution extent (min & max photon positions) */
       for (j = 0; j < 3; j++) {
-         minPos [j] = getflt(pmapFile);
-         maxPos [j] = getflt(pmapFile);
+         pm.minPos [j] = getflt(pmapFile);
+         pm.maxPos [j] = getflt(pmapFile);
       }
       
       /* Skip centre of gravity, and avg photon dist to it */
@@ -168,44 +174,75 @@ int main (int argc, char** argv)
       
       /* Sphere radius based on avg intersphere dist 
          (= sphere distrib density ^-1/3) */
-      vol = (maxPos [0] - minPos [0]) * (maxPos [1] - minPos [1]) * 
-            (maxPos [2] - minPos [2]);
+      vol = (pm.maxPos [0] - pm.minPos [0]) * (pm.maxPos [1] - pm.minPos [1]) * 
+            (pm.maxPos [2] - pm.minPos [2]);
       rad = radScale * RADCOEFF * pow(vol / numSpheres, 1./3.);
       
       /* Photon dump probability to satisfy target sphere count */
-      dumpRatio = numSpheres < numPhotons ? (float)numSpheres / numPhotons
-                                          : 1;
+      dumpRatio = numSpheres < pm.numPhotons 
+                  ? (float)numSpheres / pm.numPhotons : 1;
       
-      while (numPhotons-- > 0) {
+      /* Skip primary rays */
+      pm.numPrimary = getint(sizeof(pm.numPrimary), pmapFile);
+      while (pm.numPrimary-- > 0) {
+         getint(sizeof(pri.srcIdx) + sizeof(pri.dir), pmapFile);
+         for (j = 0; j < 3; j++)
+            getflt(pmapFile);
+      }
+
+#ifdef PMAP_OOC
+      /* Open leaf file with filename derived from pmap, replace pmapFile
+       * (which is currently the node file) */
+      strncpy(leafFname, argv [arg], 1024);
+      strncat(leafFname, PMAP_OOC_LEAFSUFFIX, 1024);
+      fclose(pmapFile);
+      if (!(pmapFile = fopen(leafFname, "rb"))) {
+         sprintf(errmsg, "cannot open leaf file %s", leafFname);
+         error(SYSTEM, errmsg);
+      }
+#endif
+            
+      /* Load photons */      
+      while (pm.numPhotons-- > 0) {
+#ifdef PMAP_OOC
+         /* Get entire photon record 
+            !!! OOC PMAP FILES CURRENTLY DON'T USE PORTABLE I/O !!! */
+         if (!fread(&p, sizeof(p), 1, pmapFile)) {
+            sprintf(errmsg, "error reading OOC leaf file %s", leafFname);
+            error(SYSTEM, errmsg);
+         }
+#else         
          /* Get photon position */            
          for (j = 0; j < 3; j++) 
             p.pos [j] = getflt(pmapFile);
-
+#endif
          /* Dump photon probabilistically acc. to target sphere count */
          if (frandom() <= dumpRatio) {
             printf(radDefs [ptype].obj, p.pos [0], p.pos [1], p.pos [2], rad);
             fputc('\n', stdout);
          }
          
+#ifndef PMAP_OOC
          /* Skip photon normal and flux */
          for (j = 0; j < 3; j++) 
             getint(sizeof(p.norm [j]), pmapFile);
             
-         #ifdef PMAP_FLOAT_FLUX
-            for (j = 0; j < 3; j++) 
-               getflt(pmapFile);
-         #else      
-            for (j = 0; j < 4; j++) 
-               getint(1, pmapFile);
-         #endif
+#ifdef PMAP_FLOAT_FLUX
+         for (j = 0; j < 3; j++) 
+            getflt(pmapFile);
+#else      
+         for (j = 0; j < 4; j++) 
+            getint(1, pmapFile);
+#endif
 
          /* Skip primary ray index */
          getint(sizeof(p.primary), pmapFile);
 
          /* Skip flags */
          getint(sizeof(p.flags), pmapFile);
+#endif
          
-         if (feof(pmapFile)) {
+         if (ferror(pmapFile) || feof(pmapFile)) {
             sprintf(errmsg, "error reading %s", argv [arg]);
             error(USER, errmsg);
          }

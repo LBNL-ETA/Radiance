@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapamb.c,v 2.7 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapamb.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Photon map interface to RADIANCE ambient calculation
@@ -11,6 +12,7 @@ static const char RCSid[] = "$Id: pmapamb.c,v 2.7 2015/09/01 16:27:52 greg Exp $
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
+   $Id: pmapamb.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -28,7 +30,7 @@ int ambPmap (COLOR aval, RAY *r, int rdepth)
    PhotonMap *pmap = contribPhotonMapping ? contribPmap 
                                           : preCompPmap ? preCompPmap 
                                                         : globalPmap;
-        
+      
    /* Get photon irradiance either via 1 ambient bounce (final
     * gather) if ambounce > 0, or directly if ambounce < 0. */
    if (pmap && (rdepth || ambounce < 0)) {
@@ -69,7 +71,7 @@ int ambPmapCaustic (COLOR aval, RAY *r, int rdepth)
       multcolor(r -> rcoef, aval);
       
       /* Set caustic flag and get photon irradiance via callback */
-      pmap -> lookupFlags = PMAP_CAUST_BIT;
+      pmap -> lookupCaustic = 1;
       (pmap -> lookup)(pmap, r, photonIrrad);
       
       /* Factor irradiance into ambient value and restore ray coeficient */

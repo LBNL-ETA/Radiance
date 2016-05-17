@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.76 2015/09/02 18:59:01 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.77 2016/05/17 17:39:47 rschregle Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -63,7 +63,7 @@ RLSRC = raycalls.c raypcalls.c rayfifo.c
 ROBJS = $(RAYOBJS) $(SURFOBJS) $(MATOBJS) \
 	$(MODOBJS) $(SUPPOBJS) $(PMOBJS)
 RSRC = $(RAYSRC) $(SURFSRC) $(MATSRC) \
-	$(MODSRC) $(SUPPSRC) $(PMSRC)
+	$(MODSRC) $(SUPPSRC)
 
 RAYOBJS = ambcomp.o ambient.o ambio.o freeobjmem.o initotypes.o \
 	preload.o raytrace.o renderopts.o
@@ -90,10 +90,12 @@ SUPPSRC = func.c noise3.c data.c
 
 PMOBJS = pmap.o pmapsrc.o pmapmat.o pmaprand.o pmapio.o pmapdata.o \
          pmapbias.o pmapparm.o pmapcontrib.o pmapamb.o pmapray.o pmapopt.o \
-         pmapdiag.o pmaptype.o
+         pmapdiag.o pmaptype.o oocmorton.o oococt.o oocsort.o oocbuild.o \
+         oocnn.o ooccache.o
 PMSRC = pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c \
         pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c \
-        pmapdiag.c pmaptype.c
+        pmapdiag.c pmaptype.c pmapkdt.c pmapooc.c oocmorton.c oococt.c \
+        oocsort.c oocbuild.c oocnn.c ooccache.c
 
 HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
@@ -289,11 +291,9 @@ rc3.o:	../common/selcall.h
 #
 # Photon map include dependencies (via 'gcc -MM -I../common')
 #
-
-
 ambient.o: pmapparm.h pmaptype.h pmapamb.h pmapdata.h
 
-aniso.o ashikhmin.o dielectric.o glass.o m_brdf.o m_bsdf.o normal.o: \
+dielectric.o glass.o normal.o m_brdf.o m_bsdf.o ashikhmin.o aniso.o: \
    pmapparm.h pmaptype.h pmapmat.h pmap.h pmapdata.h
    
 raycalls.o rpmain.o rcmain.o rtmain.o rvmain.o: \
@@ -341,13 +341,14 @@ pmapcontrib.o: pmapcontrib.c pmapcontrib.h pmapdata.h ray.h \
  ../common/otypes.h
 
 pmapdata.o: pmapdata.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
+ pmapkdt.h pmapkdt.c pmapooc.h pmapooc.c oococt.h oocnn.h ooccache.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
  ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
  ../common/fvect.h ../common/rterror.h ../common/octree.h \
  ../common/object.h ../common/color.h ../common/lookup.h pmaprand.h \
  pmapmat.h ../common/otypes.h source.h rcontrib.h ../common/platform.h \
  ../common/paths.h ../common/rtprocess.h ../common/paths.h func.h \
- ../common/calcomp.h
+ ../common/calcomp.h 
 
 pmapdiag.o: pmapdiag.c pmapdiag.h ../common/platform.h pmapdata.h ray.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
@@ -403,3 +404,13 @@ pmapsrc.o: pmapsrc.c pmapsrc.h ray.h ../common/standard.h \
 
 pmaptype.o: pmaptype.c pmaptype.h
 
+oococt.o: oococt.c oococt.h oocsort.h ooccache.h \
+ ../common/rtio.h ../common/fvect.h
+
+ooccache.o: ooccache.c ooccache.h
+
+oocsort.o: oocsort.c oocsort.h ../common/fvect.h
+
+oocbuild.o: oocbuild.c oocbuild.h oocsort.h oococt.h
+
+oocnn.o: oocnn.c oocnn.h oococt.h oocsort.h

@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapray.c,v 2.5 2015/09/01 16:27:53 greg Exp $";
+static const char RCSid[] = "$Id: pmapray.c,v 2.6 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Photon map interface to RADIANCE raycalls
@@ -11,6 +12,7 @@ static const char RCSid[] = "$Id: pmapray.c,v 2.5 2015/09/01 16:27:53 greg Exp $
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
+   $Id: pmapray.c,v 2.6 2016/05/17 17:39:47 rschregle Exp $
 */
 
 

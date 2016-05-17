@@ -1,4 +1,5 @@
-/* RCSid $Id: pmapdiag.h,v 2.6 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmapdiag.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+
 /* 
    ==================================================================
    Photon map diagnostic output and progress reports
@@ -9,6 +10,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
+   $Id: pmapdiag.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
    
 
@@ -38,7 +40,7 @@
    /* Time at start & last report */
    extern time_t repStartTime, repLastTime;   
    /* Report progress & completion counters */
-   extern unsigned long repProgress, repComplete;              
+   extern unsigned long repProgress, repComplete, repEmitted;              
 
 
    void pmapDistribReport ();
@@ -50,5 +52,11 @@
    void pmapBiasCompReport (char *stats);   
    /* Append full bias compensation statistics to stats; interface to
     * rpict's report() */
+
+#ifdef PMAP_OOC    
+   void pmapOOCCacheReport (char *stats);
+   /* Append full OOC I/O cache statistics to stats; interface to rpict's
+    * report() */    
+#endif
    
 #endif

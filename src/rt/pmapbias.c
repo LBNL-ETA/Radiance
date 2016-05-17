@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapbias.c,v 2.4 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapbias.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Bias compensation for photon density estimates
@@ -13,6 +14,7 @@ static const char RCSid[] = "$Id: pmapbias.c,v 2.4 2015/09/01 16:27:52 greg Exp 
    (c) Fraunhofer Institute for Solar Energy Systems
    ==================================================================
    
+   $Id: pmapbias.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $    
 */
 
 
@@ -23,7 +25,7 @@ static const char RCSid[] = "$Id: pmapbias.c,v 2.4 2015/09/01 16:27:52 greg Exp 
 
 
 
-void squeuePartition (PhotonSQNode* squeue, unsigned lo, 
+void squeuePartition (PhotonSearchQueueNode* squeue, unsigned lo, 
                       unsigned mid, unsigned hi)
 /* REVERSE Partition squeue such that all photons in 
    squeue-hi+1..squeue-mid are farther than the median at squeue-mid+1, 
@@ -33,10 +35,9 @@ void squeuePartition (PhotonSQNode* squeue, unsigned lo,
    since the queue is initially a maxheap, so reverse sorting is expected 
    to be faster. */
 {
-   unsigned l, h, p;
-   PhotonSQNode *lp, *hp, *pp;
-   float pivot, dist;
-   Photon* photon;
+   unsigned                l, h, p;
+   PhotonSearchQueueNode   *lp, *hp, *pp, tmp;
+   float                   pivot;
 
    while (hi > lo) {
       /* Grab pivot node in middle as an educated guess, since our
@@ -47,44 +48,47 @@ void squeuePartition (PhotonSQNode* squeue, unsigned lo,
       lp = squeue - lo + 1;
       hp = squeue - hi + 1;
       pp = squeue - p + 1;
-      pivot = pp -> dist;
+      pivot = pp -> dist2;
       
       /* l & h converge, swapping elements out of order with respect to 
          pivot node. */
       while (l < h) {
-         while (lp -> dist <= pivot && l <= h && l < hi)
+         while (lp -> dist2 <= pivot && l <= h && l < hi)
             ++l, --lp;
-         while (hp -> dist >= pivot && h >= l && h > lo)
+            
+         while (hp -> dist2 >= pivot && h >= l && h > lo)
             --h, ++hp;
             
          if (l < h) {
             /* Swap */
-            photon = lp -> photon;
-            dist = lp -> dist;
-            lp -> photon = hp -> photon;
-            lp -> dist = hp -> dist;
-            hp -> photon = photon;
-            hp -> dist = dist;
+            tmp.idx = lp -> idx;
+            tmp.dist2 = lp -> dist2;
+            lp -> idx = hp -> idx;
+            lp -> dist2 = hp -> dist2;
+            hp -> idx = tmp.idx;
+            hp -> dist2 = tmp.dist2;
          }
       }
       
       /* Swap convergence and pivot node */
       if (p > h) {
          /* Need this otherwise shit happens! 
-            Since lp -> dist > hp -> dist, we swap either l or p depending 
+            Since lp -> dist2 > hp -> dist2, we swap either l or p depending 
             on whether we're above or below p */
          h = l;
          hp = lp;
       }
       
-      photon = hp -> photon;
-      dist = hp -> dist;
-      hp -> photon = pp -> photon;
-      hp -> dist = pivot;
-      pp -> photon = photon;
-      pp -> dist = dist; 
+      tmp.idx = hp -> idx;
+      tmp.dist2 = hp -> dist2;
+      hp -> idx = pp -> idx;
+      hp -> dist2 = pivot;
+      pp -> idx = tmp.idx;
+      pp -> dist2 = tmp.dist2; 
+      
       if (h >= mid) 
          hi = h - 1; 
+         
       if (h <= mid) 
          lo = h + 1; 
    }
@@ -97,42 +101,43 @@ void squeuePartition (PhotonSQNode* squeue, unsigned lo,
 void biasComp (PhotonMap* pmap, COLOR irrad)
 /* Photon density estimate with bias compensation -- czech dis shit out! */
 {
-   unsigned i, numLo, numHi, numMid;
-   PhotonSQNode *sq;
-   PhotonBCNode *hist;
-   float r, totalWeight = 0;
-   PhotonSQNode *squeueEnd;
-   PhotonBCNode *histEnd;
-   COLOR fluxLo, fluxMid, irradVar, irradAvg, p, d;
+   unsigned                i, numLo, numHi, numMid;
+   float                   r, totalWeight = 0;
+   COLOR                   fluxLo, fluxMid, irradVar, irradAvg, p, d;
+   Photon                  *photon;
+   PhotonSearchQueueNode   *sqn, *sqEnd;
+   PhotonBiasCompNode      *hist, *histEnd;
    
    if (!pmap -> biasCompHist) {
       /* Allocate bias compensation history */
-      numHi = pmap -> maxGather - pmap -> minGather; 
-      for (i = pmap -> minGather + 1; numHi > 1; numHi >>= 1, ++i);
-      pmap -> biasCompHist = (PhotonBCNode*)malloc(i * sizeof(PhotonBCNode));      
+      numHi = pmap -> maxGather - pmap -> minGather;
+      for (i = pmap -> minGather + 1; numHi > 1; numHi >>= 1, ++i);      
+      pmap -> biasCompHist = calloc(i, sizeof(PhotonBiasCompNode));      
+       
       if (!pmap -> biasCompHist)
          error(USER, "can't allocate bias compensation history");
    }
    
-   numLo = min(pmap -> minGather, pmap -> squeueEnd - 1);
-   numHi = min(pmap -> maxGather, pmap -> squeueEnd - 1);
-   sq = squeueEnd = pmap -> squeue + pmap -> squeueEnd - 1;
+   numLo = min(pmap -> minGather, pmap -> squeue.tail - 1);
+   numHi = min(pmap -> maxGather, pmap -> squeue.tail - 1);
+   sqn = sqEnd = pmap -> squeue.node + pmap -> squeue.tail - 1;
    histEnd = pmap -> biasCompHist;
    setcolor(fluxLo, 0, 0, 0);
    
    /* Partition to get numLo closest photons starting from END of queue */
-   squeuePartition(squeueEnd, 1, numLo + 1, numHi);
+   squeuePartition(sqEnd, 1, numLo + 1, numHi);
    
    /* Get irradiance estimates (ignoring 1 / PI) using 1..numLo photons 
       and chuck in history. Queue is traversed BACKWARDS. */
-   for (i = 1; i <= numLo; i++, sq--) {
-      /* Make sure furthest two photons are consecutive wrt distance */
-      squeuePartition(squeueEnd, i, i + 1, numLo + 1);
-      getPhotonFlux(sq -> photon, irrad);
+   for (i = 1; i <= numLo; i++, sqn--) {
+      /* Make sure furthest two photons are consecutive w.r.t. distance */
+      squeuePartition(sqEnd, i, i + 1, numLo + 1);
+      photon = getNearestPhoton(&pmap -> squeue, sqn -> idx);
+      getPhotonFlux(photon, irrad);
       addcolor(fluxLo, irrad);
       /* Average radius between furthest two photons to improve accuracy */
-      r = 0.25 * (sq -> dist + (sq - 1) -> dist +
-                  2 * sqrt(sq -> dist * (sq - 1) -> dist));
+      r = 0.25 * (sqn -> dist2 + (sqn - 1) -> dist2 +
+                  2 * sqrt(sqn -> dist2 * (sqn - 1) -> dist2));
       /* Add irradiance and weight to history. Weights should increase
          monotonically based on number of photons used for the estimate. */
       histEnd -> irrad [0] = fluxLo [0] / r;
@@ -163,21 +168,22 @@ void biasComp (PhotonMap* pmap, COLOR irrad)
       numMid = (numLo + numHi) >> 1;
       /* Split interval to get numMid closest photons starting from the 
          END of the queue */
-      squeuePartition(squeueEnd, numLo, numMid, numHi);
+      squeuePartition(sqEnd, numLo, numMid, numHi);
       /* Make sure furthest two photons are consecutive wrt distance */
-      squeuePartition(squeueEnd, numMid, numMid + 1, numHi);
+      squeuePartition(sqEnd, numMid, numMid + 1, numHi);
       copycolor(fluxMid, fluxLo);
-      sq = squeueEnd - numLo;
+      sqn = sqEnd - numLo;
       
       /* Get irradiance for numMid photons (ignoring 1 / PI) */
-      for (i = numLo; i < numMid; i++, sq--) {
-         getPhotonFlux(sq -> photon, irrad);
+      for (i = numLo; i < numMid; i++, sqn--) {
+         photon = getNearestPhoton(&pmap -> squeue, sqn -> idx);
+         getPhotonFlux(photon, irrad);
          addcolor(fluxMid, irrad);
       }
       
       /* Average radius between furthest two photons to improve accuracy */
-      r = 0.25 * (sq -> dist + (sq + 1) -> dist +
-                  2 * sqrt(sq -> dist * (sq + 1) -> dist));
+      r = 0.25 * (sqn -> dist2 + (sqn + 1) -> dist2 +
+                  2 * sqrt(sqn -> dist2 * (sqn + 1) -> dist2));
                   
       /* Get deviation from current average, and probability that it's due
          to noise from gaussian distribution based on current variance. Since
@@ -208,17 +214,18 @@ void biasComp (PhotonMap* pmap, COLOR irrad)
             irradVar [i] = irradVar [i] / totalWeight - r * r;
          }
          
-         /* Need more photons -- recurse on [numMid, numHi] */
+         /* Need more photons --> recurse on [numMid, numHi] */
          numLo = numMid;
          copycolor(fluxLo, fluxMid);
       }
       else 
-         /* Deviation is probably bias -- need fewer photons, 
+         /* Deviation is probably bias --> need fewer photons, 
             so recurse on [numLo, numMid] */
          numHi = numMid;
    }   
 
    --histEnd;
+   
    for (i = 0; i <= 2; i++) {
       /* Estimated relative error */
       d [i] = histEnd -> irrad [i] / irradAvg [i] - 1;
@@ -234,14 +241,17 @@ void biasComp (PhotonMap* pmap, COLOR irrad)
    
    /* Update statistix */
    r = colorAvg(d);
+   pmap -> rmsError += r * r;
+   
    if (r < pmap -> minError) 
       pmap -> minError = r;
+      
    if (r > pmap -> maxError) 
       pmap -> maxError = r;
-   pmap -> rmsError += r * r;
    
    if (numHi < pmap -> minGathered) 
       pmap -> minGathered = numHi;
+            
    if (numHi > pmap -> maxGathered) 
       pmap -> maxGathered = numHi;
       
@@ -251,6 +261,8 @@ void biasComp (PhotonMap* pmap, COLOR irrad)
 
 
 
+/* Volume bias compensation disabled (probably redundant) */
+#if 0
 void volumeBiasComp (PhotonMap* pmap, const RAY* ray, COLOR irrad)
 /* Photon volume density estimate with bias compensation -- czech dis 
    shit out! */
@@ -423,4 +435,4 @@ void volumeBiasComp (PhotonMap* pmap, const RAY* ray, COLOR irrad)
    pmap -> totalGathered += numMid;
    ++pmap -> numDensity;
 }
-                                 
+#endif

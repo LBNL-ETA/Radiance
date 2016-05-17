@@ -1,6 +1,4 @@
-/* RCSid $Id: pmaprand.h,v 2.6 2016/03/06 01:13:18 schorsch Exp $ */
-#ifndef PMAPRAND_H
-#define PMAPRAND_H
+/* RCSid $Id: pmaprand.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
 
 /* 
    ==================================================================
@@ -12,21 +10,25 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
+   $Id: pmaprand.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
 
-/* According to the analytical validation, skipping numbers in the sequence
-   introduces bias in scenes with high reflectance. We therefore use
-   erand48() with separate states for photon emission, scattering, and
-   russian roulette. The pmapSeed() and pmapRandom() macros can be adapted
-   to other (better?) RNGs. */   
+#ifndef PMAPRAND_H
+   #define PMAPRAND_H
 
-#if defined(_WIN32) || defined(_WIN64) || defined(BSD)
+   /* According to the analytical validation, skipping numbers in the sequence
+      introduces bias in scenes with high reflectance. We therefore use
+      erand48() with separate states for photon emission, scattering, and
+      russian roulette.  The pmapSeed() and pmapRandom() macros can be
+      adapted to other (better?) RNGs.  */
+
+#if defined(_WIN32) || defined(BSD)
    /* Assume no erand48(), so use standard RNG without explicit multistate 
       control; the resulting sequences will be suboptimal */      
    #include "random.h"
-   
+      
    #define pmapSeed(seed, state) (srandom(seed))
    #define pmapRandom(state)     (frandom())
 #else
@@ -35,10 +37,9 @@
    #define pmapRandom(state) erand48(state)
 #endif
 
-   
-extern unsigned short partState [3], emitState [3], cntState [3],
-                      mediumState [3], scatterState [3], rouletteState [3],
-                      randSeed;
-
+      
+   extern unsigned short partState [3], emitState [3], cntState [3],
+                         mediumState [3], scatterState [3], rouletteState [3],
+                         randSeed;
 #endif
 

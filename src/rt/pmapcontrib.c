@@ -1,20 +1,21 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.11 2016/02/04 11:37:00 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.12 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
-   ==================================================================
+   ======================================================================
    Photon map support for light source contributions
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
+   $Id: pmapcontrib.c,v 2.12 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
 #include "pmapcontrib.h"
-#include "pmap.h"
 #include "pmapmat.h"
 #include "pmapsrc.h"
 #include "pmaprand.h"
@@ -22,6 +23,8 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.11 2016/02/04 11:37:00 rschr
 #include "pmapdiag.h"
 #include "rcontrib.h"
 #include "otypes.h"
+#include <sys/mman.h>
+#include <sys/wait.h>
 
 
 
@@ -43,13 +46,13 @@ static void setPmapContribParams (PhotonMap *pmap, LUTAB *srcContrib)
 static void checkPmapContribs (const PhotonMap *pmap, LUTAB *srcContrib)
 /* Check modifiers for light source contributions */
 {
-   const PhotonPrimary *primary = pmap -> primary;
+   const PhotonPrimary  *primary = pmap -> primaries;
+   PhotonPrimaryIdx     i, found = 0;
    OBJREC *srcMod;
-   unsigned long i, found = 0;
    
    /* Make sure at least one of the modifiers is actually in the pmap,
     * otherwise findPhotons() winds up in an infinite loop! */
-   for (i = pmap -> primarySize; i; --i, ++primary) {
+   for (i = pmap -> numPrimary; i; --i, ++primary) {
       if (primary -> srcIdx < 0 || primary -> srcIdx >= nsources)
          error(INTERNAL, "invalid light source index in photon map");
          
@@ -94,165 +97,195 @@ void initPmapContrib (LUTAB *srcContrib, unsigned numSrcContrib)
 
 
 
-void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
-/* Sum up light source contributions from photons in pmap->srcContrib */
+static PhotonPrimaryIdx newPhotonPrimary (PhotonMap *pmap, 
+                                          const RAY *primRay, 
+                                          FILE *primHeap)
+/* Add primary ray for emitted photon and save light source index, origin on
+ * source, and emitted direction; used by contrib photons. The current
+ * primary is stored in pmap -> lastPrimary.  If the previous primary
+ * contributed photons (has srcIdx >= 0), it's appended to primHeap.  If
+ * primRay == NULL, the current primary is still flushed, but no new primary
+ * is set.  Returns updated primary counter pmap -> numPrimary.  */
 {
-   unsigned       i;
-   PhotonSQNode   *sq;
-   float          r, invArea;
-   RREAL          rayCoeff [3];
- 
-   setcolor(irrad, 0, 0, 0);
- 
-   if (!pmap -> maxGather) 
-      return;
+   if (!pmap || !primHeap)
+      return 0;
       
-   /* Ignore sources */
-   if (ray -> ro) 
-      if (islight(objptr(ray -> ro -> omod) -> otype)) 
-         return;
-
-   /* Get cumulative path
-    * coefficient up to photon lookup point */
-   raycontrib(rayCoeff, ray, PRIMARY);
-
-   /* Lookup photons */
-   pmap -> squeueEnd = 0;
-   findPhotons(pmap, ray);
-   
-   /* Need at least 2 photons */
-   if (pmap -> squeueEnd < 2) {
-      #ifdef PMAP_NONEFOUND
-         sprintf(errmsg, "no photons found on %s at (%.3f, %.3f, %.3f)", 
-                 ray -> ro ? ray -> ro -> oname : "<null>",
-                 ray -> rop [0], ray -> rop [1], ray -> rop [2]);
-         error(WARNING, errmsg);
-      #endif
-      
-      return;
+   /* Check if last primary ray has spawned photons (srcIdx >= 0, see
+    * newPhoton()), in which case we write it to the primary heap file
+    * before overwriting it */
+   if (pmap -> lastPrimary.srcIdx >= 0) {
+      if (!fwrite(&pmap -> lastPrimary, sizeof(PhotonPrimary), 1, primHeap))
+         error(SYSTEM, "failed writing photon primary in newPhotonPrimary");
+         
+      pmap -> numPrimary++;
+      if (pmap -> numPrimary > PMAP_MAXPRIMARY)
+         error(INTERNAL, "photon primary overflow in newPhotonPrimary");
    }
 
-   /* Average (squared) radius between furthest two photons to improve
-    * accuracy and get inverse search area 1 / (PI * r^2), with extra
-    * normalisation factor 1 / PI for ambient calculation */
-   sq = pmap -> squeue + 1;
-   r = max(sq -> dist, (sq + 1) -> dist);
-   r = 0.25 * (pmap -> maxDist + r + 2 * sqrt(pmap -> maxDist * r));   
-   invArea = 1 / (PI * PI * r);
-   
-   /* Skip the extra photon */
-   for (i = 1 ; i < pmap -> squeueEnd; i++, sq++) {         
-      COLOR flux;
+   /* Mark unused with negative source index until path spawns a photon (see
+    * newPhoton()) */
+   pmap -> lastPrimary.srcIdx = -1;
+     
+   if (primRay) { 
+      FVECT dvec;
       
-      /* Get photon's contribution to density estimate */
-      getPhotonFlux(sq -> photon, flux);
-      scalecolor(flux, invArea);
-#ifdef PMAP_EPANECHNIKOV
-      /* Apply Epanechnikov kernel to photon flux (dists are squared) */
-      scalecolor(flux, 2 * (1 - sq -> dist / r));
-#endif
-      addcolor(irrad, flux);
-      
-      if (pmap -> srcContrib) {
-         const PhotonPrimary *primary = pmap -> primary + 
-                                        sq -> photon -> primary;
-         const SRCREC *sp = &source[primary -> srcIdx];
-         OBJREC *srcMod = findmaterial(sp -> so);
-         MODCONT *srcContrib = (MODCONT*)lu_find(pmap -> srcContrib, 
-                                                 srcMod -> oname) -> data;
-         if (!srcContrib)
-            continue;
-
-         /* Photon's emitting light source has modifier whose
-          * contributions are sought */
-         double srcBinReal;
-         int srcBin;
-         RAY srcRay;
-
-         if (srcContrib -> binv -> type != NUM) {
-            /* Use intersection function to set shadow ray parameters
-             * if it's not simply a constant */
-            rayorigin(&srcRay, SHADOW, NULL, NULL);
-            srcRay.rsrc = primary -> srcIdx;
-            VCOPY(srcRay.rorg, primary -> pos);
-            decodedir(srcRay.rdir, primary -> dir);
-
-            if (!(sp->sflags & SDISTANT 
-                     ? sourcehit(&srcRay)
-                     : (*ofun[sp -> so -> otype].funp)(sp -> so, &srcRay)))
-                continue;		/* XXX shouldn't happen! */
-
-            worldfunc(RCCONTEXT, &srcRay);
-            set_eparams((char *)srcContrib -> params);
-         }
-
-         if ((srcBinReal = evalue(srcContrib -> binv)) < -.5)
-             continue;		/* silently ignore negative bins */
-  
-         if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
-             error(WARNING, "bad bin number (ignored)");
-             continue;
-         }
-            
-         if (!contrib) {
-             /* Ray coefficient mode; normalise by light source radiance
-              * after applying distrib pattern */
-             int j;
-             
-             raytexture(ray, srcMod -> omod);
-             setcolor(ray -> rcol, srcMod -> oargs.farg [0], 
-                      srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
-             multcolor(ray -> rcol, ray -> pcol);
-             for (j = 0; j < 3; j++)
-                flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j] : 0;
-         }
-                     
-         multcolor(flux, rayCoeff);
-         addcolor(srcContrib -> cbin [srcBin], flux);
-      }
+      /* Reverse incident direction to point to light source */
+      dvec [0] = -primRay -> rdir [0];
+      dvec [1] = -primRay -> rdir [1];
+      dvec [2] = -primRay -> rdir [2];
+      pmap -> lastPrimary.dir = encodedir(dvec);
+#ifdef PMAP_PRIMARYPOS      
+      VCOPY(pmap -> lastPrimary.pos, primRay -> rop);
+#endif      
    }
-        
-   return;
+   
+   return pmap -> numPrimary;
 }
 
 
 
-void distribPhotonContrib (PhotonMap* pm)
+#ifdef DEBUG_PMAP_CONTRIB
+static int checkPrimaryHeap (FILE *file)
+/* Check heap for ordered primaries */
 {
-   EmissionMap emap;
-   char errmsg2 [128];
-   unsigned srcIdx;
-   double *srcFlux;                 /* Emitted flux per light source */
-   const double srcDistribTarget =  /* Target photon count per source */
-      nsources ? (double)pm -> distribTarget / nsources : 0;   
+   Photon   p, lastp;
+   int      i, dup;
+   
+   rewind(file);
+   memset(&lastp, 0, sizeof(lastp));
+   
+   while (fread(&p, sizeof(p), 1, file)) {
+      dup = 1;
+      
+      for (i = 0; i <= 2; i++) {
+         if (p.pos [i] < thescene.cuorg [i] || 
+             p.pos [i] > thescene.cuorg [i] + thescene.cusize) { 
+             
+            sprintf(errmsg, "corrupt photon in heap at [%f, %f, %f]\n", 
+                    p.pos [0], p.pos [1], p.pos [2]);
+            error(WARNING, errmsg);
+         }
+         
+         dup &= p.pos [i] == lastp.pos [i];
+      }
+      
+      if (dup) {
+         sprintf(errmsg,
+                 "consecutive duplicate photon in heap at [%f, %f, %f]\n", 
+                 p.pos [0], p.pos [1], p.pos [2]);
+         error(WARNING, errmsg);
+      }
+   }
 
+   return 0;
+}
+#endif
+
+
+
+static PhotonPrimaryIdx buildPrimaries (PhotonMap *pmap, FILE **primaryHeap,
+                                        PhotonPrimaryIdx *primaryOfs, 
+                                        unsigned numHeaps)
+/* Consolidate per-subprocess photon primary heaps into the primary array
+ * pmap -> primaries. Returns offset for primary index linearisation in
+ * numPrimary. The heap files in primaryHeap are closed on return. */
+{
+   PhotonPrimaryIdx  heapLen;
+   unsigned          heap;
+   
+   if (!pmap || !primaryHeap || !primaryOfs || !numHeaps)
+      return 0;
+      
+   pmap -> numPrimary = 0;
+   
+   for (heap = 0; heap < numHeaps; heap++) {
+      primaryOfs [heap] = pmap -> numPrimary;
+      
+      if (fseek(primaryHeap [heap], 0, SEEK_END))
+         error(SYSTEM, "failed photon primary seek in buildPrimaries");
+      pmap -> numPrimary += heapLen = ftell(primaryHeap [heap]) / 
+                                      sizeof(PhotonPrimary);      
+
+      pmap -> primaries = realloc(pmap -> primaries, 
+                                  pmap -> numPrimary * 
+                                  sizeof(PhotonPrimary));  
+      if (!pmap -> primaries)
+         error(SYSTEM, "failed photon primary alloc in buildPrimaries");
+
+      rewind(primaryHeap [heap]);
+      if (fread(pmap -> primaries + primaryOfs [heap], sizeof(PhotonPrimary),
+                heapLen, primaryHeap [heap]) != heapLen)
+         error(SYSTEM, "failed reading photon primaries in buildPrimaries");
+      
+      fclose(primaryHeap [heap]);      
+   }
+   
+   return pmap -> numPrimary;
+}      
+
+
+
+/* Defs for photon emission counter array passed by sub-processes to parent
+ * via shared memory */
+typedef  unsigned long  PhotonContribCnt;
+
+/* Indices for photon emission counter array: num photons stored and num
+ * emitted per source */
+#define  PHOTONCNT_NUMPHOT    0
+#define  PHOTONCNT_NUMEMIT(n) (1 + n)
+
+
+
+void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
+{
+   EmissionMap       emap;
+   char              errmsg2 [128], shmFname [255];
+   unsigned          srcIdx, proc;
+   int               shmFile, stat, pid;
+   double            *srcFlux,         /* Emitted flux per light source */
+                     srcDistribTarget; /* Target photon count per source */
+   PhotonContribCnt  *photonCnt;       /* Photon emission counter array */
+   const unsigned    photonCntSize = sizeof(PhotonContribCnt) * 
+                                     PHOTONCNT_NUMEMIT(nsources);
+   FILE              *primaryHeap [numProc];
+   PhotonPrimaryIdx  primaryOfs [numProc];
+                                    
    if (!pm)
-      error(USER, "no photon map defined");
+      error(USER, "no photon map defined in distribPhotonContrib");
       
    if (!nsources)
-      error(USER, "no light sources");
-   
+      error(USER, "no light sources in distribPhotonContrib");
+
+   if (nsources > MAXMODLIST)
+      error(USER, "too many light sources in distribPhotonContrib");
+      
    /* Allocate photon flux per light source; this differs for every 
     * source as all sources contribute the same number of distributed
     * photons (srcDistribTarget), hence the number of photons emitted per
     * source does not correlate with its emitted flux. The resulting flux
     * per photon is therefore adjusted individually for each source. */
    if (!(srcFlux = calloc(nsources, sizeof(double))))
-      error(SYSTEM, "cannot allocate source flux");
+      error(SYSTEM, "can't allocate source flux in distribPhotonContrib");
 
-   /* ================================================================
-    * INITIALISASHUNN - Set up emisshunn and scattering funcs
-    * ================================================================ */
+   /* ===================================================================
+    * INITIALISATION - Set up emission and scattering funcs
+    * =================================================================== */
    emap.samples = NULL;
    emap.src = NULL;
    emap.maxPartitions = MAXSPART;
    emap.partitions = (unsigned char*)malloc(emap.maxPartitions >> 1);
    if (!emap.partitions)
-      error(USER, "can't allocate source partitions");
+      error(USER, "can't allocate source partitions in distribPhotonContrib");
 
+   /* Initialise contrib photon map */   
    initPhotonMap(pm, PMAP_TYPE_CONTRIB);
+   initPhotonHeap(pm);
    initPhotonEmissionFuncs();
    initPhotonScatterFuncs();
+   
+   /* Per-subprocess / per-source target counts */
+   pm -> distribTarget /= numProc;
+   srcDistribTarget = nsources ? (double)pm -> distribTarget / nsources : 0;
    
    /* Get photon ports if specified */
    if (ambincl == 1)
@@ -261,37 +294,39 @@ void distribPhotonContrib (PhotonMap* pm)
    /* Get photon sensor modifiers */
    getPhotonSensors(photonSensorList);      
    
-   /* Seed RNGs for photon distribution */
-   pmapSeed(randSeed, partState);
-   pmapSeed(randSeed, emitState);
-   pmapSeed(randSeed, cntState);
-   pmapSeed(randSeed, mediumState);
-   pmapSeed(randSeed, scatterState);
-   pmapSeed(randSeed, rouletteState);
-
-   /* Record start time and enable progress report signal handler */
-   repStartTime = time(NULL);
-   #ifdef SIGCONT   
-      signal(SIGCONT, pmapDistribReport);
-   #endif   
+   /* Set up shared mem for photon counters (zeroed by ftruncate) */
+#if 0   
+   snprintf(shmFname, 255, PMAP_SHMFNAME, getpid());
+   shmFile = shm_open(shmFname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+#else
+   strcpy(shmFname, PMAP_SHMFNAME);
+   shmFile = mkstemp(shmFname);
+#endif         
    
-   for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
-      unsigned portCnt = 0, passCnt = 0, prePassCnt = 0;
-      double srcNumEmit = 0;          /* # photons to emit from source */
-      unsigned long srcNumDistrib = pm -> heapEnd; /* # photons stored */
+   if (shmFile < 0 || ftruncate(shmFile, photonCntSize) < 0)
+      error(SYSTEM, "failed shared mem init in distribPhotonContrib");
 
-      srcFlux [srcIdx] = repProgress = 0;
+   photonCnt = mmap(NULL, photonCntSize, PROT_READ | PROT_WRITE, 
+                    MAP_SHARED, shmFile, 0);
+                     
+   if (photonCnt == MAP_FAILED)
+      error(SYSTEM, "failed shared mem mapping in distribPhotonContrib");
+
+   /* =============================================================
+    * FLUX INTEGRATION - Get total flux emitted from light source
+    * ============================================================= */   
+   for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
+      unsigned portCnt = 0;
+      
+      srcFlux [srcIdx] = 0;
       emap.src = source + srcIdx;
       
       if (photonRepTime) 
          eputs("\n");
-      
-      /* =============================================================
-       * FLUX INTEGRATION - Get total flux emitted from light source
-       * ============================================================= */
-      do {
-         emap.port = emap.src -> sflags & SDISTANT 
-                     ? photonPorts + portCnt : NULL;
+
+      do {  /* Need at least one iteration if no ports! */      
+         emap.port = emap.src -> sflags & SDISTANT ? photonPorts + portCnt 
+                                                   : NULL;
          photonPartition [emap.src -> so -> otype] (&emap);
          
          if (photonRepTime) {
@@ -305,194 +340,450 @@ void distribPhotonContrib (PhotonMap* pm)
                strcat(errmsg, errmsg2);
             }
             
-            sprintf(errmsg2, "(%lu partitions)...\n", 
-                    emap.numPartitions);
+            sprintf(errmsg2, "(%lu partitions)...\n", emap.numPartitions);
             strcat(errmsg, errmsg2);
             eputs(errmsg);
             fflush(stderr);
          }
          
-         for (emap.partitionCnt = 0; 
-              emap.partitionCnt < emap.numPartitions; 
+         for (emap.partitionCnt = 0; emap.partitionCnt < emap.numPartitions;
               emap.partitionCnt++) {
             initPhotonEmission(&emap, pdfSamples);
             srcFlux [srcIdx] += colorAvg(emap.partFlux);
          }
          
          portCnt++;
-      } while (portCnt < numPhotonPorts);
-
+      } while (portCnt < numPhotonPorts);         
+      
       if (srcFlux [srcIdx] < FTINY) {
          sprintf(errmsg, "source %s has zero emission", 
                  source [srcIdx].so -> oname);
          error(WARNING, errmsg);
       }
-      else {
-         /* ==========================================================
+   }   
+
+   if (photonRepTime) 
+      eputs("\n");
+
+   /* Init per-subprocess primary heap files */
+   for (proc = 0; proc < numProc; proc++)
+      if (!(primaryHeap [proc] = tmpfile()))
+         error(SYSTEM, "failed opening primary heap file in "
+               "distribPhotonContrib");
+               
+   /* MAIN LOOP */
+   for (proc = 0; proc < numProc; proc++) {
+      if (!(pid = fork())) {
+         /* SUBPROCESS ENTERS HERE; 
+          * all opened and memory mapped files are inherited */
+          
+         /* Local photon counters for this subprocess */
+         unsigned long  lastNumPhotons = 0, localNumEmitted = 0;
+         double         photonFluxSum = 0;   /* Running photon flux sum */
+
+         /* Seed RNGs from PID for decorellated photon distribution */
+         pmapSeed(randSeed + proc, partState);
+         pmapSeed(randSeed + proc, emitState);
+         pmapSeed(randSeed + proc, cntState);
+         pmapSeed(randSeed + proc, mediumState);
+         pmapSeed(randSeed + proc, scatterState);
+         pmapSeed(randSeed + proc, rouletteState);
+         
+         /* =============================================================
           * 2-PASS PHOTON DISTRIBUTION
           * Pass 1 (pre):  emit fraction of target photon count
-          * Pass 2 (main): based on outcome of pass 1, estimate
-          *                remaining number of photons to emit to
-          *                approximate target count
-          * ========================================================== */
-         do {
-            if (!passCnt) {   
-               /* INIT PASS 1 */
-               if (++prePassCnt > maxPreDistrib) {
-                  /* Warn if no photons contributed after sufficient
-                   * iterations */
-                  sprintf(errmsg, "too many prepasses, no photons "
-                          "from source %s", source [srcIdx].so -> oname);
-                  error(WARNING, errmsg);
-                  break;
+          * Pass 2 (main): based on outcome of pass 1, estimate remaining 
+          *                number of photons to emit to approximate target 
+          *                count
+          * ============================================================= */         
+         for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
+            unsigned       portCnt, passCnt = 0, prePassCnt = 0;
+            float          srcPreDistrib = preDistrib;
+            double         srcNumEmit = 0;       /* # to emit from source */
+            unsigned long  srcNumDistrib = pm -> numPhotons;  /* # stored */
+
+            if (srcFlux [srcIdx] < FTINY)
+               continue;
+                        
+            while (passCnt < 2) {
+               if (!passCnt) {   
+                  /* INIT PASS 1 */
+                  if (++prePassCnt > maxPreDistrib) {
+                     /* Warn if no photons contributed after sufficient
+                      * iterations */
+                     sprintf(errmsg, "proc %d, source %s: "
+                             "too many prepasses, skipped",
+                             proc, source [srcIdx].so -> oname);
+                     error(WARNING, errmsg);
+                     break;
+                  }
+                  
+                  /* Num to emit is fraction of target count */
+                  srcNumEmit = srcPreDistrib * srcDistribTarget;
+               }
+               else {
+                  /* INIT PASS 2 */
+                  double srcPhotonFlux, avgPhotonFlux;
+                  
+                  /* Based on the outcome of the predistribution we can now
+                   * figure out how many more photons we have to emit from
+                   * the current source to meet the target count,
+                   * srcDistribTarget. This value is clamped to 0 in case
+                   * the target has already been exceeded in pass 1.
+                   * srcNumEmit and srcNumDistrib is the number of photons
+                   * emitted and distributed (stored) from the current
+                   * source in pass 1, respectively. */
+                  srcNumDistrib = pm -> numPhotons - srcNumDistrib;
+                  srcNumEmit *= srcNumDistrib 
+                                ? max(srcDistribTarget/srcNumDistrib, 1) - 1
+                                : 0;
+
+                  if (!srcNumEmit)
+                     /* No photons left to distribute in main pass */
+                     break;
+                     
+                  srcPhotonFlux = srcFlux [srcIdx] / srcNumEmit;
+                  avgPhotonFlux = photonFluxSum / (srcIdx + 1);
+                  
+                  if (avgPhotonFlux > 0 && 
+                      srcPhotonFlux / avgPhotonFlux < FTINY) {
+                     /* Skip source if its photon flux is grossly below the
+                      * running average, indicating negligible contribs at
+                      * the expense of excessive distribution time */
+                     sprintf(errmsg, "proc %d, source %s: "
+                             "itsy bitsy photon flux, skipped",
+                             proc, source [srcIdx].so -> oname);
+                     error(WARNING, errmsg);
+                     srcNumEmit = 0;
+                  }
+                        
+                  /* Update sum of photon flux per light source */
+                  photonFluxSum += srcPhotonFlux;
                }
                
-               /* Num to emit is fraction of target count */
-               srcNumEmit = preDistrib * srcDistribTarget;
-            }
-
-            else {            
-               /* INIT PASS 2 */                           
-               /* Based on the outcome of the predistribution we can now
-                * figure out how many more photons we have to emit from
-                * the current source to meet the target count,
-                * srcDistribTarget. This value is clamped to 0 in case
-                * the target has already been exceeded in pass 1.
-                * srcNumEmit and srcNumDistrib is the number of photons
-                * emitted and distributed (stored) from the current
-                * source in pass 1, respectively. */
-               srcNumDistrib = pm -> heapEnd - srcNumDistrib;
-               srcNumEmit *= srcNumDistrib 
-                             ? max(srcDistribTarget/srcNumDistrib, 1) - 1
-                             : 0;
-
-               if (!srcNumEmit)
-                  /* No photons left to distribute in main pass */
-                  break;
-            }
-         
-            /* Set completion count for progress report */
-            repComplete = srcNumEmit + repProgress;
-            portCnt = 0;
+               portCnt = 0;
+               do {    /* Need at least one iteration if no ports! */
+                  emap.src = source + srcIdx;
+                  emap.port = emap.src -> sflags & SDISTANT 
+                              ? photonPorts + portCnt : NULL;
+                  photonPartition [emap.src -> so -> otype] (&emap);
+                  
+                  if (photonRepTime && !proc) {
+                     if (!passCnt)
+                        sprintf(errmsg, "PREPASS %d on source %s (mod %s) ",
+                                prePassCnt, source [srcIdx].so -> oname,
+                                objptr(source[srcIdx].so->omod) -> oname);
+                     else 
+                        sprintf(errmsg, "MAIN PASS on source %s (mod %s) ",
+                                source [srcIdx].so -> oname,
+                                objptr(source[srcIdx].so->omod) -> oname);
+                             
+                     if (emap.port) {
+                        sprintf(errmsg2, "via port %s ", 
+                                photonPorts [portCnt].so -> oname);
+                        strcat(errmsg, errmsg2);
+                     }
                      
-            do {
-               emap.port = emap.src -> sflags & SDISTANT 
-                           ? photonPorts + portCnt : NULL;
-               photonPartition [emap.src -> so -> otype] (&emap);
-               
-               if (photonRepTime) {
-                  if (!passCnt)
-                     sprintf(errmsg, "PREPASS %d on source %s (mod %s) ",
-                             prePassCnt, source [srcIdx].so -> oname,
-                             objptr(source[srcIdx].so->omod) -> oname);
-                  else 
-                     sprintf(errmsg, "MAIN PASS on source %s (mod %s) ",
-                             source [srcIdx].so -> oname,
-                             objptr(source[srcIdx].so->omod) -> oname);
-                          
-                  if (emap.port) {
-                     sprintf(errmsg2, "via port %s ", 
-                             photonPorts [portCnt].so -> oname);
+                     sprintf(errmsg2, "(%lu partitions)\n",
+                             emap.numPartitions);
                      strcat(errmsg, errmsg2);
+                     eputs(errmsg);
+                     fflush(stderr);
                   }
                   
-                  sprintf(errmsg2, "(%lu partitions)...\n",
-                          emap.numPartitions);
-                  strcat(errmsg, errmsg2);
-                  eputs(errmsg);
-                  fflush(stderr);
-               }
-               
-               for (emap.partitionCnt = 0; 
-                    emap.partitionCnt < emap.numPartitions; 
-                    emap.partitionCnt++) {
-                  double partNumEmit;
-                  unsigned long partEmitCnt;
-                  
-                  /* Get photon origin within current source partishunn
-                   * and build emission map */
-                  photonOrigin [emap.src -> so -> otype] (&emap);
-                  initPhotonEmission(&emap, pdfSamples);
-                  
-                  /* Number of photons to emit from ziss partishunn;
-                   * scale according to its normalised contribushunn to
-                   * the emitted source flux */
-                  partNumEmit = srcNumEmit * colorAvg(emap.partFlux) / 
-                                srcFlux [srcIdx];
-                  partEmitCnt = (unsigned long)partNumEmit;
-                                       
-                  /* Probabilistically account for fractional photons */
-                  if (pmapRandom(cntState) < partNumEmit - partEmitCnt)
-                     partEmitCnt++;
+                  for (emap.partitionCnt = 0; emap.partitionCnt < emap.numPartitions; 
+                       emap.partitionCnt++) {
+                     double partNumEmit;
+                     unsigned long partEmitCnt;
                      
-                  /* Integer counter avoids FP rounding errors */
-                  while (partEmitCnt--) {                   
-                     RAY photonRay;
-                  
-                     /* Emit photon according to PDF (if any), allocate
-                      * associated primary ray, and trace through scene
-                      * until absorbed/leaked */
-                     emitPhoton(&emap, &photonRay);
-                     addPhotonPrimary(pm, &photonRay);
-                     tracePhoton(&photonRay);
+                     /* Get photon origin within current source partishunn
+                      * and build emission map */
+                     photonOrigin [emap.src -> so -> otype] (&emap);
+                     initPhotonEmission(&emap, pdfSamples);
                      
-                     /* Record progress */
-                     repProgress++;
+                     /* Number of photons to emit from ziss partishunn;
+                      * scale according to its normalised contribushunn to
+                      * the emitted source flux */                     
+                     partNumEmit = srcNumEmit * colorAvg(emap.partFlux) /
+                                   srcFlux [srcIdx];                    
+                     partEmitCnt = (unsigned long)partNumEmit;
+                                                               
+                     /* Probabilistically account for fractional photons */
+                     if (pmapRandom(cntState) < partNumEmit - partEmitCnt)
+                        partEmitCnt++;
+                        
+                     /* Update local and shared global emission counter */
+                     localNumEmitted += partEmitCnt;                                    
+                     photonCnt [PHOTONCNT_NUMEMIT(srcIdx)] += partEmitCnt;
                      
-                     if (photonRepTime > 0 && 
-                         time(NULL) >= repLastTime + photonRepTime)
-                        pmapDistribReport();
-                     #ifdef SIGCONT
-                        else signal(SIGCONT, pmapDistribReport);
-                     #endif
+                     /* Integer counter avoids FP rounding errors */
+                     while (partEmitCnt--) {
+                        RAY photonRay;
+                     
+                        /* Emit photon according to PDF (if any), allocate
+                         * associated primary ray, and trace through scene
+                         * until absorbed/leaked; emitPhoton() sets the
+                         * emitting light source index in photonRay */
+                        emitPhoton(&emap, &photonRay);
+                        newPhotonPrimary(pm, &photonRay, primaryHeap[proc]);
+                        /* Set subprocess index in photonRay for post-
+                         * distrib primary index linearisation; this is
+                         * propagated with the primary index in photonRay
+                         * and set for photon hits by newPhoton() */
+                        PMAP_SETRAYPROC(&photonRay, proc);
+                        tracePhoton(&photonRay);
+                     }
+                     
+                     /* Update shared global photon count */                     
+                     photonCnt [PHOTONCNT_NUMPHOT] += pm -> numPhotons - 
+                                                      lastNumPhotons;
+                     lastNumPhotons = pm -> numPhotons;
                   }
-               }
-                           
-               portCnt++;
-            } while (portCnt < numPhotonPorts);
 
-            if (pm -> heapEnd == srcNumDistrib) 
-               /* Double preDistrib in case no photons were stored 
-                * for this source and redo pass 1 */
-               preDistrib *= 2;
-            else {
-               /* Now do pass 2 */
-               passCnt++;
-               if (photonRepTime)
-                  eputs("\n");
+                  portCnt++;
+               } while (portCnt < numPhotonPorts);                  
+
+               if (pm -> numPhotons == srcNumDistrib) 
+                  /* Double predistrib factor in case no photons were stored
+                   * for this source and redo pass 1 */
+                  srcPreDistrib *= 2;
+               else {
+                  /* Now do pass 2 */
+                  passCnt++;
+/*                if (photonRepTime)
+                     eputs("\n"); */
+               }
             }
-         } while (passCnt < 2);
+         }
+                        
+         /* Flush heap buffa one final time to prevent data corruption */
+         flushPhotonHeap(pm);
+         fclose(pm -> heap);
          
-         /* Flux per photon emitted from this source; repProgress is the
-          * number of emitted photons after both passes */
-         srcFlux [srcIdx] = repProgress ? srcFlux [srcIdx] / repProgress 
-                                        : 0;
+         /* Flush final photon primary to primary heap file */
+         newPhotonPrimary(pm, NULL, primaryHeap [proc]);
+         fclose(primaryHeap [proc]);
+                  
+#ifdef DEBUG_PMAP
+         sprintf(errmsg, "Proc %d exited with total %ld photons\n", proc, 
+                 pm -> numPhotons);
+         eputs(errmsg);
+#endif
+
+         exit(0);
       }
+      else if (pid < 0)
+         error(SYSTEM, "failed to fork subprocess in distribPhotonContrib");
+   }
+
+   /* PARENT PROCESS CONTINUES HERE */
+   /* Record start time and enable progress report signal handler */
+   repStartTime = time(NULL);
+#ifdef SIGCONT
+   signal(SIGCONT, pmapDistribReport);
+#endif
+/*
+   if (photonRepTime)
+      eputs("\n"); */
+   
+   /* Wait for subprocesses to complete while reporting progress */
+   proc = numProc;
+   while (proc) {
+      while (waitpid(-1, &stat, WNOHANG) > 0) {
+         /* Subprocess exited; check status */
+         if (!WIFEXITED(stat) || WEXITSTATUS(stat))
+            error(USER, "failed photon distribution");
+      
+         --proc;
+      }
+      
+      /* Nod off for a bit and update progress  */
+      sleep(1);
+      
+      /* Update progress report from shared subprocess counters */
+      repComplete = pm -> distribTarget * numProc;
+      repProgress = photonCnt [PHOTONCNT_NUMPHOT];
+      for (repEmitted = 0, srcIdx = 0; srcIdx < nsources; srcIdx++)
+         repEmitted += photonCnt [PHOTONCNT_NUMEMIT(srcIdx)];
+
+      /* Get global photon count from shmem updated by subprocs */
+      pm -> numPhotons = photonCnt [PHOTONCNT_NUMPHOT];
+
+      if (photonRepTime > 0 && time(NULL) >= repLastTime + photonRepTime)
+         pmapDistribReport();
+#ifdef SIGCONT
+      else signal(SIGCONT, pmapDistribReport);
+#endif
    }
 
    /* ================================================================
     * POST-DISTRIBUTION - Set photon flux and build kd-tree, etc.
     * ================================================================ */
-   #ifdef SIGCONT    
-      signal(SIGCONT, SIG_DFL);
-   #endif   
+#ifdef SIGCONT    
+   signal(SIGCONT, SIG_DFL);
+#endif   
    free(emap.samples);
 
-   if (!pm -> heapEnd)
+   if (!pm -> numPhotons)
       error(USER, "empty photon map");
 
-   /* Check for valid primary photon rays */
-   if (!pm -> primary)
+   /* Load per-subprocess primary rays into pm -> primary array */
+   pm -> numPrimary = buildPrimaries(pm, primaryHeap, primaryOfs, numProc);
+   if (!pm -> numPrimary)
       error(INTERNAL, "no primary rays in contribution photon map");
-      
-   if (pm -> primary [pm -> primaryEnd].srcIdx < 0)
-      /* Last primary ray is unused, so decrement counter */
-      pm -> primaryEnd--;
+   
+   /* Set photon flux per source */
+   for (srcIdx = 0; srcIdx < nsources; srcIdx++)
+      srcFlux [srcIdx] /= photonCnt [PHOTONCNT_NUMEMIT(srcIdx)];
+
+   /* Photon counters no longer needed, unmap shared memory */
+   munmap(photonCnt, sizeof(*photonCnt));
+   close(shmFile);
+#if 0   
+   shm_unlink(shmFname);
+#else
+   unlink(shmFname);
+#endif      
    
    if (photonRepTime) {
-      eputs("\nBuilding contrib photon heap...\n");
+      eputs("\nBuilding contrib photon map...\n");
       fflush(stderr);
    }
+   
+   /* Build underlying data structure; heap is destroyed */
+   buildPhotonMap(pm, srcFlux, primaryOfs, numProc);   
+}
+
+
+
+void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
+/* Sum up light source contributions from photons in pmap->srcContrib */
+{
+   unsigned                i;
+   PhotonSearchQueueNode   *sqn;
+   float                   r, invArea;
+   RREAL                   rayCoeff [3];
+   Photon                  *photon;
+   static char             warn = 1;
+ 
+   setcolor(irrad, 0, 0, 0);
+ 
+   if (!pmap -> maxGather) 
+      return;
       
-   balancePhotons(pm, srcFlux);
+   /* Ignore sources */
+   if (ray -> ro && islight(objptr(ray -> ro -> omod) -> otype)) 
+      return;
+
+   /* Get cumulative path coefficient up to photon lookup point */
+   raycontrib(rayCoeff, ray, PRIMARY);
+
+   /* Lookup photons */
+   pmap -> squeue.tail = 0;
+   findPhotons(pmap, ray);
+   
+   /* Need at least 2 photons */
+   if (pmap -> squeue.tail < 2) {
+#ifdef PMAP_NONEFOUND
+      sprintf(errmsg, "no photons found on %s at (%.3f, %.3f, %.3f)", 
+              ray -> ro ? ray -> ro -> oname : "<null>",
+              ray -> rop [0], ray -> rop [1], ray -> rop [2]);
+      error(WARNING, errmsg);
+#endif
+      
+      return;
+   }
+
+   /* Average (squared) radius between furthest two photons to improve
+    * accuracy and get inverse search area 1 / (PI * r^2), with extra
+    * normalisation factor 1 / PI for ambient calculation */
+   sqn = pmap -> squeue.node + 1;
+   r = max(sqn -> dist2, (sqn + 1) -> dist2);
+   r = 0.25 * (pmap -> maxDist2 + r + 2 * sqrt(pmap -> maxDist2 * r));   
+   invArea = 1 / (PI * PI * r);
+   
+   /* Skip the extra photon */
+   for (i = 1 ; i < pmap -> squeue.tail; i++, sqn++) {         
+      COLOR flux;
+      
+      /* Get photon's contribution to density estimate */
+      photon = getNearestPhoton(&pmap -> squeue, sqn -> idx);
+      getPhotonFlux(photon, flux);
+      scalecolor(flux, invArea);      
+#ifdef PMAP_EPANECHNIKOV
+      /* Apply Epanechnikov kernel to photon flux based on photon distance */
+      scalecolor(flux, 2 * (1 - sqn -> dist2 / r));
+#endif
+      addcolor(irrad, flux);
+      
+      if (pmap -> srcContrib) {      
+         const PhotonPrimary  *primary = pmap -> primaries + 
+                                         photon -> primary;
+         const SRCREC         *sp = &source [primary -> srcIdx];
+         OBJREC               *srcMod = findmaterial(sp -> so);
+         MODCONT *srcContrib = (MODCONT*)lu_find(pmap -> srcContrib, 
+                                                 srcMod -> oname) -> data;
+         double   srcBinReal;
+         int      srcBin;
+         RAY      srcRay;                                                 
+                                                 
+         if (!srcContrib)
+            continue;
+
+         /* Photon's emitting light source has modifier whose contributions
+          * are sought */
+         if (srcContrib -> binv -> type != NUM) {
+            /* Use intersection function to set shadow ray parameters if
+             * it's not simply a constant */
+            rayorigin(&srcRay, SHADOW, NULL, NULL);
+            srcRay.rsrc = primary -> srcIdx;
+#ifdef PMAP_PRIMARYPOS
+            VCOPY(srcRay.rorg, primary -> pos);
+#else
+            /* No primary hitpoints; set dummy ray origin and warn once */
+            srcRay.rorg [0] = srcRay.rorg [1] = srcRay.rorg [2] = 0;
+            if (warn) {
+               error(WARNING, "no photon primary hitpoints for bin evaluation;"
+                     " using dummy (0,0,0) !");
+               warn = 0;
+            }
+#endif           
+            decodedir(srcRay.rdir, primary -> dir);
+
+            if (!(sp->sflags & SDISTANT 
+                  ? sourcehit(&srcRay)
+                  : (*ofun[sp -> so -> otype].funp)(sp -> so, &srcRay)))
+               continue;		/* XXX shouldn't happen! */
+
+            worldfunc(RCCONTEXT, &srcRay);
+            set_eparams((char *)srcContrib -> params);
+         }
+
+         if ((srcBinReal = evalue(srcContrib -> binv)) < -.5)
+            continue;		/* silently ignore negative bins */
+  
+         if ((srcBin = srcBinReal + .5) >= srcContrib -> nbins) {
+            error(WARNING, "bad bin number (ignored)");
+            continue;
+         }
+            
+         if (!contrib) {
+            /* Ray coefficient mode; normalise by light source radiance
+             * after applying distrib pattern */
+            int j;
+            
+            raytexture(ray, srcMod -> omod);
+            setcolor(ray -> rcol, srcMod -> oargs.farg [0], 
+                     srcMod -> oargs.farg [1], srcMod -> oargs.farg [2]);
+            multcolor(ray -> rcol, ray -> pcol);
+            for (j = 0; j < 3; j++)
+               flux [j] = ray -> rcol [j] ? flux [j] / ray -> rcol [j] : 0;
+         }
+                     
+         multcolor(flux, rayCoeff);
+         addcolor(srcContrib -> cbin [srcBin], flux);
+      }
+   }
+        
+   return;
 }

@@ -1,4 +1,5 @@
-/* RCSid $Id: pmapbias.h,v 2.4 2015/09/01 16:27:52 greg Exp $ */
+/* RCSid $Id: pmapbias.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $ */
+
 /* 
    ==================================================================
    Bias compensation for photon density estimates
@@ -11,6 +12,7 @@
    (c) Fraunhofer Institute for Solar Energy Systems
    ==================================================================
       
+   $Id: pmapbias.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -18,7 +20,7 @@
    #define PMAPBIASCOMP_H
 
    #include "pmapdata.h"
-
+      
    /* Bias compensation weighting function */
    /* #define BIASCOMP_WGT(n) 1 */
    /* #define BIASCOMP_WGT(n) (n) */
@@ -28,7 +30,6 @@
 
    /* Dump photon bandwidth for bias compensated density estimates */
    /* #define BIASCOMP_BWIDTH */
-
 
    void biasComp (PhotonMap*, COLOR);
    /* Photon density estimate with bias compensation, returning irradiance. 

@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapopt.c,v 2.7 2015/09/01 16:27:52 greg Exp $";
+static const char RCSid[] = "$Id: pmapopt.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $";
 #endif
+
 /* 
    ==================================================================
    Photon map interface to RADIANCE render options
@@ -11,6 +12,7 @@ static const char RCSid[] = "$Id: pmapopt.c,v 2.7 2015/09/01 16:27:52 greg Exp $
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
+   $Id: pmapopt.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $
 */
 
 
@@ -35,8 +37,9 @@ int getPmapRenderOpt (int ac, char *av [])
       case 'a':
          switch (av [0][2]) {
             case 'p': /* photon map */
-	       /* Asking for photon map, ergo ambounce != 0 */
-	       ambounce += (ambounce == 0);
+               /* Asking for photon map, ergo ambounce != 0 */
+               ambounce += (ambounce == 0);
+               
                if (!check(3, "s")) {
                   /* File -> assume bwidth = 1 or precomputed pmap */
                   if (++t >= NUM_PMAP_TYPES)
@@ -79,6 +82,23 @@ int getPmapRenderOpt (int ac, char *av [])
                   error(USER, "invalid max photon search radius coefficient");
 
                return 1;
+
+#ifdef PMAP_OOC            
+            case 'c': /* OOC pmap cache page size ratio */
+               if (check(3, "f") || (pmapCachePageSize = atof(av [1])) <= 0)
+                  error(USER, "invalid photon cache page size ratio");
+                  
+               return 1;
+               
+            case 'C': /* OOC pmap cache size (in photons); 0 = no caching */
+               if (check(3, "s"))
+                  error(USER, "invalid number of cached photons");
+
+               /* Parsing failure sets to zero and disables caching */
+               pmapCacheSize = parseMultiplier(av [1]);
+
+               return 1;
+#endif               
          }      
    }
 #undef check
@@ -93,4 +113,9 @@ void printPmapDefaults ()
 /* Print defaults for photon map render options */
 {
    printf("-am %.1f\t\t\t\t# max photon search radius\n", maxDistFix);
+#ifdef PMAP_OOC
+   printf("-ac %.1f\t\t\t\t# photon cache page size ratio\n",
+          pmapCachePageSize);
+   printf("-aC %ld\t\t\t# num cached photons\n", pmapCacheSize);
+#endif   
 }
