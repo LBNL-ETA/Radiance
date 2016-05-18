@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.27 2015/06/05 08:49:01 rschregle Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.28 2016/05/18 12:45:55 rschregle Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -567,6 +567,33 @@ option; the number of photons found will not exceed the latter, but may be
 lower if the maximum search radius contains fewer photons, thus resulting in
 short lookups.  Setting this radius too large, on the other hand, may
 degrade performance.
+.TP
+.BI -ac " pagesize"
+Set the photon cache page size when using out-of-core photon mapping. The
+photon cache reduces disk I/O incurred by on-demand loading (paging) of
+photons, and thus increases performance. This
+is expressed as a (float) multiple of the density estimate bandwidth
+specified with
+.I \-ap
+under the assumption that photon lookups are local to a cache page. Cache
+performance is sensitive to this parameter: larger pagesizes will reduce the
+paging frequency at the expense of higher latency when paging does occur.
+Sensible values are in the range 4 (default) to 16.
+.TP
+.BI -aC " cachesize"
+Set the total number of photons cached when using out-of-core photon
+mapping, taking into account the pagesize specified by
+.I \-ac. 
+Note that this is approximate as the number of cache pages is rounded to
+the nearest prime. This allows adapting the cache to the available physical
+memory. In conjunction with the
+.I \-n
+option, this is the cache size
+.I per parallel process. 
+Cache performance is less sensitive to this parameter,
+and reasonable performance can obtained with as few as 10k photons. The
+default is 1M. This option recognises multiplier suffixes (k = 1e3, M =
+1e6), both in upper and lower case.
 .TP
 .BI -me " rext gext bext"
 Set the global medium extinction coefficient to the indicated color,
