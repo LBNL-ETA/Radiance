@@ -30,3 +30,58 @@ for specific machines and users:
 		of indirect irradiance calculations to R, where
 		R is a real number in the range (0,1.0).  The
 		default value is 0.50 (50%).
+
+-DPMAP_OOC	Builds the out-of-core photon map. The photon data resides
+		in a leaf file on disk with suffix ".leaf" and is loaded on
+		demand. This is intended for very large photon maps (up to
+		4.3 billion photons) particularly for annual simulations
+		with rcontrib. This switch is disabled by default, which
+		builds the in-core photon map used in previous releases;
+		this resides entirely in main memory. These options are
+		mutually exclusive, and the resulting photon map files are
+		incompatible.
+		
+-DPMAP_PRIMARYPOS	
+		Stores photon primary hitpoints for binning using the -f
+		option with rcontrib if the function file requires them.
+		This consumes an additional 3 floats and is disabled per
+		default to reduce the size of the resulting photon maps.
+		
+-DPMAP_FLOAT_FLUX
+		Stores photon flux as floats instead of more compact RGBE
+		(the default). In terms of accuracy, the difference would
+		only be noticeable with highly saturated colours.
+		
+-DPMAP_ROI	Enables the -api option to mkpmap. This constrains photon
+		deposition only to the specified region of interest (defined
+		as a bounding volume) for situations where it is known a
+		priori that photon map lookups will occur outside this
+		region. This is disabled per default as it can lead to
+		biased results outside the ROI, or near its boundaries. Ziss
+		option for ze eckspertz only!
+
+-DPMAP_RUNAWAY_WARN
+		Causes mkpmap to issue a warning if a photon reaches the
+		maximum number of bounces (as specified with -apm) and is
+		terminated.
+				
+-DPMAP_LOOKUP_WARN
+		Causes rtrace et al to issue warnings when short photon
+		lookups occur, i.e.  fewer photons are found than specified
+		as lookup bandwidth with -ap.  This is generally not fatal,
+		but can increase noise, and may indicate a higher bandwidth
+		is needed. This is disabled per default as it can result in
+		excessive console clutter.
+
+-DPMAP_LOOKUP_REDO
+		Causes rtrace et al to repeat short photon map
+		lookups with a progressively larger radius until the
+		target photon count specified with -ap is met. This switch
+		has no effect in conjunction with the -am option, since this
+		disables lookup radius adaptation.
+
+-DPMAP_EPANECHNIKOV
+		Causes rtrace et al to apply an Epanechnikov filter during 
+		photon density estimates. This weights photons according to
+		the inverse distance to the lookup point in order to reduce
+		bias. The default behaviour does not perform filtering.
