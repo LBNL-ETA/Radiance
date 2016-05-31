@@ -55,7 +55,7 @@ for specific machines and users:
 -DPMAP_ROI	Enables the -api option to mkpmap. This constrains photon
 		deposition only to the specified region of interest (defined
 		as a bounding volume) for situations where it is known a
-		priori that photon map lookups will occur outside this
+		priori that photon map lookups will only occur inside this
 		region. This is disabled per default as it can lead to
 		biased results outside the ROI, or near its boundaries. Ziss
 		option for ze eckspertz only!
