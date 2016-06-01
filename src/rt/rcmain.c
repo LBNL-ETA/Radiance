@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.15 2016/03/10 18:25:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.16 2016/06/01 03:00:06 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -363,7 +363,7 @@ main(int argc, char *argv[])
 
 badopt:
 	fprintf(stderr,
-"Usage: %s [-n nprocs][-V][-r][-e expr][-f source][-o ospec][-p p1=V1,p2=V2][-b binv][-bn N] {-m mod | -M file} [rtrace options] octree\n",
+"Usage: %s [-n nprocs][-V][-c count][-r][-e expr][-f source][-o ospec][-p p1=V1,p2=V2][-b binv][-bn N] {-m mod | -M file} [rtrace options] octree\n",
 			progname);
 	sprintf(errmsg, "command line error at '%s'", argv[i]);
 	error(USER, errmsg);
