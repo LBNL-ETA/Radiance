@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.124 2016/03/06 01:13:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.125 2016/06/07 16:53:19 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -752,7 +752,10 @@ mkpmapopts(				/* get mkpmap options */
 {
 	/* BEWARE:  This may be called via setdefaults(), so no assumptions */
 
-	*mo = '\0';
+	if (nprocs > 1)
+		sprintf(mo, " -n %d", nprocs);
+	else
+		*mo = '\0';
 	if (!vdef(MKPMAP))
 		return;
 	if (vval(MKPMAP)[0] != '-') {
