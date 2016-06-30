@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.17 2016/03/10 23:18:59 schorsch Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.18 2016/06/30 17:12:19 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -453,7 +453,7 @@ BMPdecodePixel(int i, const BMPReader *br)
 	case 8:
 		return br->hdr->palette[br->scanline[i]];
 	case 1:
-		return br->hdr->palette[br->scanline[i>>3]>>((7-i)&7) & 1];
+		return br->hdr->palette[br->scanline[i>>3]>>(7-(i&7)) & 1];
 	case 4:
 		return br->hdr->palette[br->scanline[i>>1]>>(i&1?4:0) & 0xf];
 	case 16:
