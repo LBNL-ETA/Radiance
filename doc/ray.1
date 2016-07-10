@@ -1,8 +1,8 @@
-.\" RCSid "$Id: ray.1,v 1.29 2016/05/25 18:52:45 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.30 2016/07/10 23:41:37 greg Exp $"
 .\" Print using the -ms macro package
-.DA 09/18/2015
+.DA 07/10/2016
 .LP
-.tl """Copyright \(co 2015 Regents, University of California
+.tl """Copyright \(co 2016 Regents, University of California
 .sp 2
 .TL
 The
@@ -620,6 +620,21 @@ mod trans2 id
 4+ ux uy uz funcfile transform
 0
 8 red green blue spec urough vrough trans tspec
+.DE
+.LP
+.UL Ashik2
+.PP
+Ashik2 is the anisotropic reflectance model by Ashikhmin & Shirley.
+The string arguments are the same as for plastic2, but the real
+arguments have additional flexibility to specify the specular color.
+Also, rather than roughness, specular power is used, which has no
+physical meaning other than larger numbers are equivalent to a smoother
+surface.
+.DS
+mod ashik2 id
+4+ ux uy uz funcfile transform
+0
+8 dred dgrn dblu sred sgrn sblu u-power v-power
 .DE
 .LP
 .UL Dielectric

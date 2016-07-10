@@ -2093,3 +2093,5 @@ Also added -on option to rcalc and total for logical symmetry.
 Increased modifier limit to 10,000 in rcontrib.
 
 Fixed issues with glrad and added zoom response to mouse wheel input.
+
+Added missing definition of "ashik2" material type to reference manual.

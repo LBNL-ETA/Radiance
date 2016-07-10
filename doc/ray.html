@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.22 2015/12/01 16:58:16 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.23 2016/07/10 23:41:37 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 5.1 Synthetic Imaging System
@@ -798,13 +798,35 @@ unless the line integrals consider enclosed geometry.
 
 <dd>
 	Trans2 is the anisotropic version of <a HREF="#Trans">trans</a>.  
-	The string arguments  are  the same as for plastic2, and the real arguments are the same as  for  trans  but  with  an  additional roughness value.
+	The string arguments  are  the same as for <a HREF="#Plastic2">plastic2</a>,
+	and the real arguments are the same as  for  trans  but  with  an  additional roughness value.
 
 <pre>
         mod trans2 id
         4+ ux uy uz funcfile transform
         0
         8 red green blue spec urough vrough trans tspec
+</pre>
+
+<p>
+
+<dt>
+	<a NAME="Ashik2">
+	<b>Ashik2</b>
+	</a>
+
+<dd>
+	Ashik2 is the anisotropic reflectance model by Ashikhmin & Shirley.
+	The string arguments are the same as for <a HREF="#Plastic2">plastic2</a>, but the real
+	arguments have additional flexibility to specify the specular color.
+	Also, rather than roughness, specular power is used, which has no
+	physical meaning other than larger numbers are equivalent to a smoother
+	surface.
+<pre>
+	mod ashik2 id
+	4+ ux uy uz funcfile transform
+	0
+	8 dred dgrn dblu sred sgrn sblu u-power v-power
 </pre>
 
 <p>
