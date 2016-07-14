@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.75 2016/02/03 18:33:18 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.76 2016/07/14 17:32:12 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -36,7 +36,7 @@ SYSOBJ = ealloc.o fdate.o portio.o myhostname.o $(COMPAT)
 
 MGFOBJ = mgf_parser.o mgf_object.o mgf_xf.o mgf_context.o
 
-REETZOBJ = g3affine.o g3flist.o g3sphere.o g3vector.o gbasic.o maxheap.o
+REETZOBJ = g3affine.o g3flist.o g3sphere.o g3vector.o gbasic.o maxheap.o muc_randvar.o
 
 OGLOBJ = rglfile.o rglmat.o rgldomat.o rglsurf.o rglinst.o rglsrc.o
 

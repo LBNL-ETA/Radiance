@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: g3flist.c,v 2.2 2015/08/18 15:02:53 greg Exp $";
+static const char RCSid[] = "$Id: g3flist.c,v 2.3 2016/07/14 17:32:12 greg Exp $";
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,22 +85,31 @@ void	g3fl_rewind(g3FList* fl)
 	fl->ipos = 0;
 }
 
-static int comp_sort(const g3Float* v1,const g3Float* v2)
-{
-	if (v1< v2)
+static int comp_sort(const void* __v1,const void* __v2) {
+	const g3Float *v1 = __v1;
+	const g3Float* v2 = __v2;
+	if (v1[0] < v2[0])
 		return -1;
-	if (v1 > v2)
+	if (v1[0] > v2[0])
 		return 1;
 	return 0;
 }
 
-int			g3fl_sort(g3FList* fl,int cnum)
+int         g3fl_sort(g3FList* fl,int cnum)
 {
-	if (cnum >= fl->comp_size)
-		return 0;
-	qsort((fl->list + cnum),fl->size,fl->comp_size*sizeof(g3Float),(int (*)(const void* v1,const void* v2)) comp_sort);
-	return 1;
+	g3Float* n;
+    if (cnum >= fl->comp_size)
+        return 0;
+	if (cnum > 0) /* brute force method to avoid using inline functions */
+		for(n=g3fl_begin(fl);n != NULL;n=g3fl_next(fl))
+			gb_swap(n[0], n[cnum]);
+    qsort(fl->list, fl->size, fl->comp_size*sizeof(g3Float), comp_sort);
+	if (cnum > 0) /* brute force method to avoid using inline functions */
+		for(n=g3fl_begin(fl);n != NULL;n=g3fl_next(fl))
+			gb_swap(n[0], n[cnum]);
+    return 1;
 }
+
 
 g3Float*	g3fl_next(g3FList* fl)
 {
@@ -150,8 +159,9 @@ int main(int argc,char** argv)
 	for(i=0;i<10;i++) {
 		n = g3fl_append_new(fl);
 		n[0] = i;
-		n[1] = i;
+		n[1] = 10-i;
 	}
+	g3fl_sort(fl, 1);
 	for(n=g3fl_begin(fl);n != NULL;n=g3fl_next(fl))
 		printf("%f %f\n",n[0],n[1]);
 	g3fl_free(fl);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pictool.c,v 2.2 2015/08/18 15:02:53 greg Exp $";
+static const char RCSid[] = "$Id: pictool.c,v 2.3 2016/07/14 17:32:12 greg Exp $";
 #endif
 #include "pictool.h"
 #include "g3sphere.h"
@@ -87,6 +87,9 @@ void	pict_free(pict* p)
 }
 static int	exp_headline(char* s,void* exparg) {
 	double* exposure;
+        if(strstr(s, EXPOSSTR) != NULL )  {
+                fprintf(stderr,"EXP AND tab\n");
+                }
 
 	exposure = (double*) exparg;
 	if (isexpos(s)) {
@@ -213,6 +216,12 @@ gethinfo(				/* get view from header */
 	void  *v
 )
 {
+        if(strstr(s, EXPOSSTR) != NULL && strstr(s, "\t") != NULL)  {
+                fprintf(stderr,"error: header contains invalid exposure !!!!\n");
+                fprintf(stderr,"check exposure and remove tab !\n");
+                fprintf(stderr,"stopping !!!!\n");
+                exit(1);
+                }
 	if (isview(s) && sscanview(((struct hinfo*)v)->hv, s) > 0) {
 		((struct hinfo*)v)->ok++;
 	} else if (isexpos(s)) {

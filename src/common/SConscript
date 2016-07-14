@@ -51,7 +51,7 @@ librtrad = env.StaticLibrary(target=radlib('rtrad'),
 MGF = Split('''mgf_parser.c mgf_object.c mgf_xf.c mgf_context.c''')
 libmgf = env.StaticLibrary(target=radlib('mgf'), source=MGF)
 
-REETZ = Split('g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c maxheap.c')
+REETZ = Split('g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c maxheap.c muc_randvar.c')
 libreetz = env.StaticLibrary(target=radlib('reetz'), source=REETZ)
 
 LIBFILES = Split('tmesh.cal')
@@ -63,11 +63,5 @@ if env.has_key('OGL'):
 	librgl = env.StaticLibrary(target=radlib('rgl'), source=RGL,
 			CPPPATH=oglincl)
 	Default(librgl)
-
-# Python support modules for test suite and other scripts
-for fn in Split('''__init__.py lcompare.py pyrad_proc.py'''):
-	Default(env.InstallScript(
-				os.path.join('$RAD_BUILDRLIB','pyradlib',fn),
-				os.path.join('pyradlib', fn)))
 
 # vim: set syntax=python:
