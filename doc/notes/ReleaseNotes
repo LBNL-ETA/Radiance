@@ -2098,3 +2098,6 @@ Added missing definition of "ashik2" material type to reference manual.
 
 Changed genBSDF to calculate device thickness assuming Zmax==0 so
 pkgBSDF will generate correct proxy geometry.
+
+Created pabopto2xyz tool to combine different sensor measurements
+into a single CIE-XYZ measurement file for color BSDF interpolation.
