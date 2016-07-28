@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.1 2016/07/27 18:05:53 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.2 2016/07/28 18:21:23 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -42,6 +42,9 @@ typedef struct {
 extern void		SDdisk2square(double sq[2], double diskx, double disky);
 
 char			*progname;	/* global argv[0] */
+
+int			incident_side = 0;	/* signum(intheta) */
+int			exiting_side = 0;	/* signum(outtheta) */
 
 int			nprocs = 1;	/* number of processes to run */
 
@@ -240,6 +243,13 @@ init_pabopto_inp(PGINPUT *pgi, const char *fname)
 		fputs(": unknown incident angle\n", stderr);
 		return(0);
 	}
+	if (!incident_side) {
+		incident_side = (pgi->theta < 90.) ? 1 : -1;
+	} else if ((incident_side > 0) ^ (pgi->theta < 90.)) {
+		fputs(fname, stderr);
+		fputs(": incident on opposite side of surface\n", stderr);
+		return(0);
+	}
 				/* convert angle to grid position */
 	pos_from_ang(pgi->igp, pgi->theta, pgi->phi);
 	return(1);
@@ -279,6 +289,13 @@ load_interp(PGINTERP *pgint, const int igp[2], const PGINPUT *pginp)
 				pgint->va = (float *)realloc(pgint->va, sizeof(float)*nv);
 				if ((pgint->ip2 == NULL) | (pgint->va == NULL))
 					goto memerr;
+			}
+			if (!exiting_side) {
+				exiting_side = (theta < 90.) ? 1 : -1;
+			} else if ((exiting_side > 0) ^ (theta < 90.)) {
+				fputs(pginp->fname, stderr);
+				fputs(": exiting measurement on wrong side\n", stderr);
+				return(0);
 			}
 			sq_from_ang(sq, theta, phi);
 			pgint->ip2->spt[nread][0] = sq[0]*ANGRES;
@@ -371,6 +388,13 @@ interp_xyz(const PGINPUT *inp0, int nf, const PGINTERP *int1, const PGINTERP *in
 				inp0->fname, outfname);
 #endif
 		while (fscanf(ifp, "%lf %lf %lf", &theta, &phi, &val[0]) == 3) {
+			if (!exiting_side) {
+				exiting_side = (theta < 90.) ? 1 : -1;
+			} else if ((exiting_side > 0) ^ (theta < 90.)) {
+				fputs(inp0->fname, stderr);
+				fputs(": exiting measurement on wrong side\n", stderr);
+				return(0);
+			}
 			sq_from_ang(sq, theta, phi);
 			val[1] = interp2val(int1, sq[0]*ANGRES, sq[1]*ANGRES);
 			val[2] = interp2val(int2, sq[0]*ANGRES, sq[1]*ANGRES);
