@@ -1,322 +1,193 @@
-.\" RCSid $Id: evalglare.1,v 1.2 2016/04/10 04:08:19 greg Exp $
-.TH EVALGLARE 1 7/30/15 RADIANCE
-.SH NAME
-evalglare \- determines and evaluates glare sources within a 180 degree fisheye HDR image
-.SH SYNOPSIS
-.PP
-.nh
-.B evalglare 
-[ 
-.BI \-s 
-] 
-[ 
-.BI \-y 
-] 
-[ 
-.BI \-Y \ value 
-] 
-[ 
-.BI \-B " angle"
-] 
-[ 
-.BI \-b " factor"
-] 
-[ 
-.BI \-c " checkfile"
-]
-[ 
-.BI \-t " xpos ypos angle"
-] 
-[ 
-.BI \-T " xpos ypos angle"
-] 
-[ \-d ] 
-[ 
-.BI \-r " angle"
-] 
-[ 
-.BI \-i " Ev"
-] 
-[
-.BI \-I " Ev yfill_max y_fill_min" 
-] 
-[ 
-.BI \-v 
-] 
-[ 
-.BI \-V 
-] 
-[ 
-.BI \-g " type"
-] 
-[ 
-.BI \-G " type"
-] 
-[ 
-.BI \-u " r g b"
-] 
-[ 
-.BI \-vf " viewfile"
-] 
-[ 
-.BI \-vt t  
-] 
-[ 
-.BI \-vv " vertangle"
-] 
-[ 
-.BI \-vh " horzangle"
-] 
-.RI [ hdrfile ]
-.hy
-.SH DESCRIPTION
-.PP
-.B Evalglare
-determines and evaluates glare sources within a 180 degree fisheye
-image, given in the RADIANCE image format (.pic or .hdr). If
-.I hdrfile
-is not given as an argument, the standard input is read.  The image
-should be rendered as fisheye (e.g.  using the
-.BI \-vt a 
-or 
-.BI \-vt h 
-option) using 180 degrees for the horizontal and vertical view angle
-.RB ( -vv
-.IR 180 ,
-.B -vh
-.IR 180 ).
-The recommended size of images input to 
-.B evalglare
-is 1000x1000 pixels; the computations become very long when the image
-is more than 1200x1200 pixels.
-.PP
-The calculation of glare proceeds in two steps:
-.IP 1. 3em
-In the first step, the program uses a given threshold
-to determine all glare sources.  Three different threshold methods are
-implemented.  The recommended method is to define a task area by
-.B \-t 
-or 
-.B \-T 
-option.  The average luminance of the task area is calculated.  Each
-pixel exceeding this value multiplied by the
-.B \-b 
-factor, default 5, is treated as a potential glare source.  The other
-two methods are described below, see
-.BR \-b .
-.IP 2.
-In the second step, the program tries to merge glare source pixels to
-one glare source, when they are placed nearby each other.  This
-merging is performed between search areas, given by an opening angle
-.BR \-r ,
-default 0.2 radians.  If a check file is written,
-.B \-c
-.IR fname ,
-the detected glare sources will be colored, each with a different
-color, and the rest of the image will be set to gray.  The luminance values
-of all pixels are kept to the initial value.  The color is chosen by
-chance, no significance is given by the color.  To enable unform
-coloring of all glare sources, the
-.B \-u 
-option can be used.  Luminance
-peaks can be extracted to separate glare sources by using the 
-.B \-y 
-or
-.BI \-Y " value"
-option.  The default value 
-.B \-y
-is 50,000 cd/m2, which can be changed by using the 
-.B \-Y 
-value.  A smoothing option,
-.BR \-s , 
-counts initial non-glare source pixels to glare sources, when they are
-surrounded by a glare source.
-.PP
-The program calculates the daylight glare probability (DGP) as well as
-other glare indices (DGI, UGR, VCP, CGI) and writes them to the
-standard output.  The DGP describes the fraction of persons disturbed
-caused by glare from daylight as a number from 0 to 1, where 0 is
-no-one disturbed and 1 is everyone.  Values lower than 0.2 are out of
-the range of the user assessment tests which the program is based on
-and should be interpreted carefully.  A low light correction is
-applied to the DGP when the vertical illumiance is lower than 500 lux.
-By the use of
-.B \-g
-or 
-.B \-G
-.\" Citation?
-the field of view is cut according the the definition of Guth.
-The option 
-.B \-B 
-angle (in radians) calculates the average luminance of a
-horizontal band.  In the case of non-180 degree images, an external
-measured illuminance value can be provided by using the 
-.B \-i 
-or
-.B \-I 
-option.  The use of the 
-.B \-I 
-option enables the filling up of images, which are horizontally cut.
-If the
-option
-.B \-d 
-is used, all found glare sources and their position, size, and
-luminance values are printed to the standard output, too.  The last
-line gives following values: (1) DGP, (2) average luminance of image,
-(3) vertical eye illuminance, (4) background luminance, (5) direct
-vertical eye illuminance, (6) DGI, (7) UGR, (8) VCP, (9) CGI, (10)
-average luminance of all glare sources, (11) sum of solid angles of
-all glare sources, (12) Veiling luminance (disability glare), (13)
-x-direction of glare source, (14) y-direction of glare source, (15)
-z-direction of glare source, and (16) band luminance.
-.SH OPTIONS
-.TP
-.BI \-B \ angle
-Calculate average luminance of a horizontal band. The angle is in
-radians. This calculation does not affect glare source detection.
-Output only when using the
-.B \-d 
-option.
-.TP
-.BI \-b \ factor
-Threshold factor; if factor is over 100, it is used as constant threshold in
-cd/m2, regardless if a task position is given or not if
-factor is less than or equal to 100 and a task position is given, this
-factor multiplied by the average task luminance will be used as
-threshold for detecting the glare sources if factor is less than or
-equal to 100 and no task position is given, this factor multiplied by
-the average luminance in the entire picture will be used as threshold
-for detecting the glare sources, default\ 5.
-.TP
-.BI \-c \ fname
-writes a checkfile in the RADIANCE picture format
-.TP
-.B \-d
-enables detailed output (default: disabled)
-.TP
-.BI \-g \ type
-cut field of view according to Guth, write checkfile specified by 
-.B \-c
-and exit without any glare evaluation.  Type 1: total field of view.
-Type 2: field of view seen by both eyes
-.TP
-.BI \-G \ type
-Cut the field of view according to Guth, perform glare evaluation.
-Type 1: total field of view. Type 2: field of view seen by both eyes
-.TP
-.BI \-i \ Ev
-The vertical illuminance is measured externally.  This value will be
-used for calculating the dgp.
-.TP
-.BI \-I \ Ev \  y_max \  y_min
-The vertical illuminance is measured externally.
-This value will be used for calculating the DGP.
-Below 
-.I y_min 
-and above 
-.IR y_max , 
-the picture is filled up by the last known value.  This option should
-be used, when the provided picture is cut horizontally.
-.TP
-.BI \-r \ angle
-search radius (angle in radians) between pixels, where 
-.B evalglare
-tries
-to merge glare source pixels to the same glare source (default value:
-0.2 radians)
-.TP
-.B \-s
-enables smoothing function (default: disabled)
-.TP
-.BI \-t \ xpos \  ypos \  angle
-definition of task position in x and y coordinates, and its opening
-angle in radians
-.TP
-.BI \-T \ xpos \  ypos \  angle
-same as 
-.BR \-t , 
-except that the task area is colored bluish in the checkfile
-.TP
-.BI \-u \ r \  g \  b
-color glare sources uniformly when writing check file (implies
-.B \-c
-option). Color given in r g b.
-.TP
-.B \-v
-show version of 
-.B evalglare
-and exit
-.TP
-.B \-V
-Just calculate the vertical illuminance and exit
-.TP
-.B \-x
-disable peak extraction
-.TP
-.B \-y
-enables peak extraction (default: enabled)
-.TP
-.BI \-Y \ value
-enables peak extraction with 
-.I value 
-as threshold for extracted peaks.
-.PP
-.I "If the view settings in the image file"
-are missing or are not valid (e.g.  after the use of
-.BR pcompos "(1) or " pcomb (1)), 
-the view options can be set by command line options.  If view options
-are set on the command line, view options in the image file header are
-ignored.  The view options are implemented according to the RADIANCE
-definition; please read the
-.BR rpict (1)
-man page for details.
-.sp
-.TP
-.BI \-vt t
-Set view type to t (for fisheye views, please use 
-.BI \-vt \ a 
-or 
-.BI \-vt \ h
-preferably)
-.TP
-.BI \-vf \ viewfile
-Get view parameters from file
-.TP
-.BI \-vv \ val
-Set the view vertical size to val
-.TP
-.BI \-vh \ val
-Set the view horizontal size to 
-.I val
-.SH AUTHOR
+.TH "EVALGLARE" "1" "2016-06-15" "RADIANCE" "Radiance Manual"
+.SH "NAME"
+evalglare (version v1.30) - determines and evaluates glare sources within a 180 degree fisheye HDR image
+.br
+
+.SH "SYNOPSIS"
+\fBevalglare \fR[ \fB-s \fR] [ \fB-y \fR] [ \fB-Y \fR\fIvalue\fR ] [ \fB-A \fR\fImaskfile\fR [ \fB-B \fR\fIangle\fR ] [ \fB-b \fR\fIfactor\fR ] [ \fB-c \fR\fIcheckfile\fR ] [ \fB-f\fR ] [ \fB-t \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ \fB-T \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ -d ] [ \fB-r \fR\fIangle\fR ] [ \fB-i \fR\fIEv\fR ] [ \fB-I \fR\fIEv\fR \fIyfill_max\fR \fIy_fill_min\fR ] [ \fB-v \fR] [ \fB-V \fR] [ \fB-g \fR\fItype\fR ] [ \fB-G \fR\fItype\fR ] [ \fB-u \fR\fIr\fR \fIg\fR \fIb\fR ] [ \fB-vf \fR\fIviewfile\fR ] [ \fB-vt\fR\fIt\fR ] [ \fB-vv \fR\fIvertangle\fR ] [ \fB-vh \fR\fIhorzangle\fR ] [\fIhdrfile\fR]
+.br
+
+.SH "DESCRIPTION"
+\fBEvalglare \fRdetermines and evaluates glare sources within a 180 degree fisheye image, given in the RADIANCE image format (.pic or .hdr). If \fIhdrfile\fR is not given as an argument, the standard input is read.  The image should be rendered as fisheye (e.g.  using the \fB-vt\fR\fIa\fR or \fB-vt\fR\fIh\fR option) using 180 degrees for the horizontal and vertical view angle (\fB-vv \fR\fI180\fR, \fB-vh \fR\fI180\fR.)  Due to runtime reasons of the \fBevalglare \fRcode, the image should be smaller than 1500x1500 pixels. The recommended size is 1000x1000 pixels, the minimum recommended size is 800x800 pixels.  In the first step, the program uses a given threshold to determine all glare sources.  Three different threshold methods are implemented.  The recommended method is to define a task area by \fB-t \fRor \fB-T \fRoption.  In this (task) area the average luminance is calculated. Each pixel, exceeding this value multiplied by the \fB-b \fRfactor, default 5, is treated as a potential glare source.  The other two methods are described below, see \fB-b\fR.  In the second step the program tries to merge glare source pixels to one glare source, when they are placed nearby each other.  This merging is performed between search areas, given by an opening angle \fB-r\fR, default 0.2 radians.  If a check file is written \fB-c \fRfname, the detected glare sources will be colored to different colors where the rest of the image is set to gray. The luminance values of all pixels are kept to the initial value. The color is chosen by chance, no significance is given by the color. Using the option \fB-u\fR \fIr\fR \fIg\fR \fIb\fR applies a uniform coloring of the glare sources.  Luminance peaks can be extracted to separate glare sources by using the \fB-y \fRor \fB-Y \fR\fIvalue\fR option (default since version v0.9c).  The default value \fB-y \fRis 50000 cd/m2, which can be changed by using the \fB-Y \fR\fIvalue\fR option.  A smoothing option, \fB-s\fR, counts initial non-glare source pixels to glare sources, when they are surrounded by a glare source.
+.br
+
+The program calculates the daylight glare probability (DGP) as well as other glare indexes (DGI, DGI_MOD, UGR, UGR_EXP, VCP, CGI, UDP) to the standard output.  The DGP describes the fraction of persons disturbed caused by glare from daylight as a number from 0 to 1, where 0 is no-one disturbed and 1 is everyone.  Values lower than 0.2 are out of the range of the user assessment tests, where the program is based on and should be interpreted carefully.  A low light correction is applied to the DGP when the vertical illumiance is lower than 500 lux.  By the use of \fB-g \fRor \fB-G \fRthe field of view is cut according the the definition of Guth. (***citation here)  The option \fB-B \fRangle (in radians) calculates the average luminance of a horizontal band.  In the case of non-180 degree images, an external measured illuminance value can be provided by using the \fB-i \fRor \fB-I \fRoption.  The use of the \fB-I \fRoption enables the filling up of images, which are horizontally cut.  The age correction is not supported any more and disabled.
+.br
+
+A masking option \fB-A \fRenables the user to specify an area to be statistically analysed (e.g. the window). Masking is applied after glare source detecting, therefore it has no influence on most of the metrics. The maskfile must be of the same size than the evaluated image. The maskfile simply defines the area to be statistically evaluated in the evaluation image. All pixels larger than 0 in the masking pic define the masking area. For the masked area in the evaluation image, the average luminance, median luminance, 75% and 95% percentile luminance, the min and max luminance as well as the PSGV are calculated. The PSGV can be only used, when the masking area is a window and the camera viewing direction is facing perpendicular to the facade (restriction of PSGV). Masking requires the \fB-d \fRoption and may not be combined with the zoning options \fB-l \fRor \fB-L\fR.
+.br
+
+Circular zone evaluation can be activated by \fB-l \fR(one zone) or \fB-L \fR(two zones). If two zones are selected they share the same center. The center of the zone(s) can be specified by the x and y coordinates. The size of the zone(s) is specified by the opening angle(s) in radians. If glare sources crosses the border of a zone, then this glare source will be split up into two or three glare sources, so that no glare source is crossing the border of a zone any more. For each glare source the zonal location is given in the glare source section of the detailed output. Glare sources outside zone 1 or zone 2 are labelled as zone 0. For each zone following values are calculated: The average luminance, median luminance, 75% and 95% percentile luminance, the min and max luminance. Zoning requires the \fB-d \fRoption.
+.br
+
+The luminance distribution of a horizontal band can be analysed by the \fB-B \fR\fIangle\fR option. Within the angle the average lumianance, median luminance, 75% and 95% percentile luminance, the min and max luminance are calculated and printed. It requires the \fB-d\fR option. In case to be combined with \fB-A\fR or \fB-L\fR or \fB-l\fR, the band properties will be calculated first. The band-option has no influence on glare source detection, masking areas or zones.
+.br
+
+If the option \fB-d \fRis used, all found glare sources and their position, size, luminance values, x,y and z-directions and zone belonging are printed to the standard output (first section), too.  The last line gives following values (in brackets the column, 1st column is explaining text) : DGP (2), average luminance of image (3), vertical illuminance  (4), background luminance (5), direct vertical illuminance (6), DGI (7), UGR (8), VCP (9), CGI (10), average luminance of all glare sources (11), sum of solid angles of glare sources (12), Veiling luminance (disability glare according Poynter)(13), Veiling luminance (sum of disability glare according Stiles-Holladay CIE) (14), DGR (15), UGP (16), UGR_EXP (17), DGI_MOD (18), average luminance weighted by position index (19), average luminance weighted by squared position index (20), median luminance of image (21), median of position index weighted luminance of image (22), median of squared position index weighted luminance of image (23)  
+.br
+
+The header of the image is checked for obvious mistakes (but not for all possible, the user should always check the image header in advance for validity!). Obvious mistakes are:
+.br
+   -using a -vtv view AND having black corners. This happens, when a fish eye lens is used and the view type is not set correctly. Evalglare is stopping, except the forcing option \fB-f\fR is activated.
+.br
+   -invalid exposure in the header. This might be caused by the use of pcomb or pcompos in advance. Evalglare is stopping in any case.
+.br
+   -invalid view specified. This might be caused by the use of pcomb or pcompos in advance. Evalglare is stopping. View can be overwritten by giving view options to the command line (see below)
+.br
+   
+.br
+
+‬
+.br
+\fB-A \fR\fImasking-file\fR
+.br
+	Use a masking file to enable statistical analysis on a certain area. Does not affect glare source detection. The masking threshold is 0.1 cd/m2 (all pixels exceeding 0.1 cd/m2 are treated as "inside" the mask.)
+.br
+	It requires the -d option. The result of the analysis of the masking area is given in the first line of the output. Should not be combined with \fI-l\fR or \fI-L\fR options.
+.br
+
+\fB-B \fR\fIangle\fR
+.br
+       Calculate average luminance of a horizontal band. The angle is in radians. This calculation does not affect glare source detection.  Output only when using the \fB-d \fRoption.
+.br
+       The result of the analysis of the band is given in the first line of the output. 
+.br
+
+\fB-b \fR\fIfactor\fR
+.br
+       Threshold factor; if factor is over 100, it is used as constant threshold in cd/m2, regardless if a task position is given or not if factor is less than or equal to 100 and a task position is given, this factor multiplied by the average task luminance will be used as threshold for detecting the glare sources if factor is less than or equal to 100 and no task position is given, this factor multiplied by the average luminance in the entire picture will be used as threshold for detecting the glare sources, default 5.
+.br
+
+\fB-c \fR\fIfname\fR
+.br
+       writes a checkfile in the RADIANCE picture format
+.br
+
+\fB-d     \fRenables detailed output (default: disabled)
+.br
+
+\fB-f \fR    forcing option to prevent from stopping when -vtv is used and black corners are detected (default: disabled)
+.br
+
+\fB-g \fR\fItype\fR
+.br
+       cut field of view according to Guth, write checkfile specified by \fB-c \fRand exit without any glare evaluation.  Type 1: total field of view.  Type 2: field of view seen by both eyes
+.br
+
+\fB-G \fR\fItype\fR
+.br
+       Cut the field of view according to Guth, perform glare evaluation.  Type 1: total field of view. Type 2: field of view seen by both eyes
+.br
+
+\fB-i \fR\fIEv\fR  The vertical illuminance \fIEv\fR in lux is measured externally.  This value will be used for calculating the DGP.
+.br
+
+\fB-I \fR\fIEv\fR \fIy_max\fR \fIy_min\fR
+.br
+       The vertical illuminance \fIEv\fR in lux is measured externally.  This value will be used for calculating the DGP.  Below \fIy_min\fR and above \fIy_max\fR, the picture is filled up by the last known value.  This option should be used, when the provided picture is cut horizontally.
+.br
+
+\fB-l \fR\fIxpos\fR \fIypos\fR \fIangle\fR
+.br
+       Activate circular one zone evaluation. The center of the zone is given by \fIxpos\fR and \fIypos\fR.  The opening angle of the zone is specified in radians.
+.br
+       The result of the analysis of zone1 is given in the first line of the output. 
+.br
+
+\fB-L\fR \fIxpos\fR \fIypos\fR \fI\fIangle\fR1\fR \fIangle2\fR 
+.br
+       Activate circular two zone evaluation. The center of the zone is given by xpos and ypos.  The opening angle of the inner zone1 is specified by \fIangle1\fR in radians, the opening angle of the outer zone2 by \fIangle2\fR.
+.br
+       The result of the analysis of the zones is given in the first two lines of the output.
+.br
+
+       
+.br
+\fB-N\fR \fIxpos\fR \fIypos\fR \fIangle\fR \fIEv\fR \fIfname\fR
+.br
+       Pixel replacement in case of pixel overflow in hdr image and measured \fIEv\fR (in lux) is available. Writes the modified image to \fIfname\fR and exists immediately (without glare evaluation). 
+.br
+       Replaces pixels in a circular zone to match \fIEv\fR. The center of the zone is given by \fIxpos\fR and \fIypos\fR. The opening \fIangle\fR of the zone is specified in radians.
+.br
+       \fBThis option should be applied very carefully and only exceptionally. Pixel overflow should be avoided from the beginning by applying shorter exposure times and/or neutral filters.\fR
+.br
+      
+.br
+\fB-r \fR\fIangle\fR
+.br
+       search radius (angle in radians) between pixels, where \fBevalglare \fRtries to merge glare source pixels to the same glare source (default value: 0.2 radians)
+.br
+
+\fB-s     \fRenables smoothing function (default: disabled)
+.br
+
+\fB-t \fR\fIxpos\fR \fIypos\fR \fIangle\fR
+.br
+       definition of task position in x and y coordinates, and its opening angle in radians
+.br
+
+\fB-T \fR\fIxpos\fR \fIypos\fR \fIangle\fR
+.br
+       same as \fB-t\fR, except that the task area is colored bluish in the checkfile
+.br
+
+\fB-u \fR\fIr\fR \fIg\fR \fIb\fR
+.br
+       color glare sources unfiformly when writing check file (implies -c option). Color given in r g b. (in any range, values are normalized)
+.br
+
+\fB-v     \fRshow version of \fBevalglare \fRand exit
+.br
+
+\fB-V     \fRcalculate the vertical illuminance and exit
+.br
+
+\fB-x     \fRdisable peak extraction
+.br
+
+\fB-y     \fRenables peak extraction (default: enabled)
+.br
+
+\fB-Y \fR\fIvalue\fR
+.br
+       enables peak extraction with \fIvalue\fR (in cd/m2) as threshold for extracted peaks
+.br
+
+In case, the view settings within the image are missing or are not valid (e.g.  after the use of pcompos or pcomb), the view options can be set by command line options.  As soon as view options are set within the command line, view options within the image are ignored.  The view options are implemented according to the RADIANCE definition (please read man page of rpict for details):
+.br
+
+\fB-vt\fR\fIt\fR   Set view type to t (for fisheye views, please use \fB-vt\fR\fIa\fR or \fB-vt\fR\fIh\fR preferably)
+.br
+
+\fB-vf \fR\fIviewfile\fR
+.br
+       Get view parameters from file
+.br
+
+\fB-vv \fR\fIval\fR
+.br
+       Set the view vertical size to val
+.br
+
+\fB-vh \fR\fIval\fR
+.br
+       Set the view horizontal size to \fIval\fR
+.br
+
+.SH "AUTHOR"
 Jan Wienold.
-.SH SEE ALSO
-.BR rpict (1)
-.SH REFERENCES
-.B Evalglare
-is based on the studies by J.  Christoffersen and J.
-Wienold (see \*(lqEvaluation methods and development of a new glare
-prediction model for daylight environments with the use of CCD cameras
-and RADIANCE,\*(rq
-.IR "Energy and Buildings 38" ,
-2006, pp. 743\-757, doi:10.1016/j.enbuild.2006.03.017.  More
-details can be also found in following dissertation: J.  Wienold,
-.IR "Daylight glare in offices" ,
-Fraunhofer IRB, 2010, available online at
-.nh
-<http://publica.fraunhofer.de/dokumente/N-141457.html>.
-.hy
-.SH ACKNOWLEDGEMENTS
-The evalglare program was originally developed by Jan Wienold at the
-Fraunhofer Institute for Solar Energy Systems in Freiburg, Germany. It
-is being further developed and maintained by the same author at EPFL,
-Lausanne, Switzerland.
-.PP
-The author would like to thank C.  Reetz for his generous help and his
-support of providing libraries for the program.  The EU Commission
-supported this work as part of the EU project \*(lqEnergy and Comfort
-Control for Building management systems\*(rq (ECCO-Build, Contract
-ENK6-CT-2002-00656).
-.PP
-German Research Foundation (DFG) contract WI 1304/7-2 supported the research
-for the extension of evalglare for low light scenes.
+.br
+
+.SH "SEE ALSO"
+The program is based on the studies by J.  Christoffersen and J.  Wienold (see "Evaluation methods and development of a new glare prediction model for daylight environments with the use of CCD cameras and RADIANCE," \fIEnergy\fR \fIand\fR \fIBuildings\fR \fI38\fR, 2006, pp. 743-757, doi:10.1016/j.enbuild.2006.03.017.  More details can be also found in following dissertation: J.  Wienold, \fIDaylight\fR \fIglare\fR \fIin\fR \fIoffices\fR, Fraunhofer IRB, 2010, available online at <http://publica.fraunhofer.de/dokumente/N-141457.html>.
+.br
+
+.SH "ACKNOWLEDGEMENTS"
+The evalglare program was originally developed by Jan Wienold at the Fraunhofer Institute for Solar Energy Systems in Freiburg, Germany. It is being further developed and maintained by the same author at EPFL, Lausanne, Switzerland.
+.br
+
+The author would like to thank C.  Reetz for his generous help and his support of providing libraries for the program.  The EU Commission supported this work as part of the EU project "Energy and Comfort Control for Building management systems" (ECCO-Build, Contract ENK6-CT-2002-00656).
+.br
+
+German Research Foundation (DFG) contract WI 1304/7-2 supported the research for the extension of evalglare for low light scenes.
+.br

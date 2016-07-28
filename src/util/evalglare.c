@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.3 2016/07/14 17:32:12 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.4 2016/07/28 16:46:10 greg Exp $";
 #endif
 /* EVALGLARE V1.29
  * Evalglare Software License, Version 2.0
@@ -308,9 +308,11 @@ changed masking threshold to 0.05 cd/m2
    */
 /* evalglare.c, v1.29 2016/07/12 change threshold for the black corner to 2cd/m2. 
    */
+/* evalglare.c, v1.30 2016/07/28 change zonal output: If just one zone is specified, only one zone shows up in the output (bug removal). 
+   */
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "1.29 release 12.07.2016 by EPFL, J.Wienold"
+#define VERSION "1.30 release 29.07.2016 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -2634,9 +2636,10 @@ if (calcfast == 1 || search_pix <= 1.0) {
  
  	        printf ("zoning:z1_omega,z1_av_lum,z1_median_lum,z1_std_lum,z1_perc_75,z1_perc_95,z1_lum_min,z1_lum_max: %f %f %f %f %f %f %f %f\n",omega_z1,lum_z1_av,lum_z1_median[0],sqrt(lum_z1_std[0]),per_75_z1,per_95_z1,bbox_z1[0],bbox_z1[1] );
 
+               if (zones == 2 ) {
 
    	        printf ("zoning:z2_omega,z2_av_lum,z2_median_lum,z2_std_lum,z2_perc_75,z2_perc_95,z2_lum_min,z2_lum_max:  %f %f %f %f %f %f %f %f\n",omega_z2,lum_z2_av,lum_z2_median[0],sqrt(lum_z2_std[0]),per_75_z2,per_95_z2,bbox_z2[0],bbox_z2[1] );
-              
+ }             
 		
 	}
 
