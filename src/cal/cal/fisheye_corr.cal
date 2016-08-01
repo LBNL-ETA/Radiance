@@ -1,0 +1,34 @@
+{ RCSid $Id: fisheye_corr.cal,v 1.1 2016/08/01 00:08:38 greg Exp $ }
+{
+	Correct fisheye image using a distortion function:
+
+		rad(r) =	function of r in [0,.5] range, returing same
+
+	This function takes the pixel distance from the image center, where
+	1.0 is the full width of the image constituting 180-degrees of view.
+	The output is the corrected distance from the center for the output.
+
+	pcomb -e 'rad(r)=my_function(r)' -f fisheye_corr.cal \
+		-o fisheye.hdr > corrected.hdr
+
+	We also clear the region outside the r=[0,.5] circle to black.
+
+	Note that you will need to add back the VIEW= line to the header, e.g.:
+
+		echo "VIEW= -vta -vh 180 -vv 180" > corrected.hdr
+		(above_command) >> corrected.hdr
+}
+xc : xres/2;
+yc : yres/2;
+sq(x) : x*x;
+r = sqrt(sq((x-xc)/xres) + sq((y-yc)/yres));
+mapped_r = rad(r);
+{ If your mapping goes the other way, invert the multiplier with:
+	rmult = r/(mapped_r+1e-7);
+}
+rmult = mapped_r/(r+1e-7);
+xoff = (x-xc)*(1-rmult);
+yoff = (y-yc)*(1-rmult);
+ro=if(.5-mapped_r, ri(1,xoff,yoff), 0);
+go=if(.5-mapped_r, gi(1,xoff,yoff), 0);
+bo=if(.5-mapped_r, bi(1,xoff,yoff), 0);
