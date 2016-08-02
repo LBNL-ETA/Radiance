@@ -1,7 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.4 2016/07/28 16:46:10 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.5 2016/08/02 16:35:01 greg Exp $";
 #endif
-/* EVALGLARE V1.29
+/* EVALGLARE V1.31
  * Evalglare Software License, Version 2.0
  *
  * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
@@ -310,9 +310,11 @@ changed masking threshold to 0.05 cd/m2
    */
 /* evalglare.c, v1.30 2016/07/28 change zonal output: If just one zone is specified, only one zone shows up in the output (bug removal). 
    */
+/* evalglare.c, v1.31 2016/08/02  bug removal: default output did not calculate the amout of glare sources before and therefore no_glaresources was set to zero causing dgi,ugr being set to zero as well. Now renumbering of the glare sources and calculation of the amount of glare sources is done for all output versions. 
+   */
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "1.30 release 29.07.2016 by EPFL, J.Wienold"
+#define VERSION "1.31 release 02.08.2016 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -2495,7 +2497,6 @@ if (calcfast == 1 || search_pix <= 1.0) {
 /* print detailed output */
 	
 	
-	if (detail_out == 1) {
 
 /* masking */
 
@@ -2540,9 +2541,12 @@ if (calcfast == 1 || search_pix <= 1.0) {
 /* PSGV only why masking of window is applied! */
                  pgsv = get_pgsv(E_v, E_v_mask, omega_mask, lum_mask_av);
                  pgsv_sat =get_pgsv_sat(E_v);
+
+	if (detail_out == 1) {
+
 	        printf ("masking:no_pixels,omega,av_lum,median_lum,std_lum,perc_75,perc_95,lum_min,lum_max,pgsv,pgsv_sat: %i %f %f %f %f %f %f %f %f %f %f\n",i_mask,omega_mask,lum_mask_av,lum_mask_median[0],sqrt(lum_mask_std[0]),per_75_mask,per_95_mask,bbox[0],bbox[1],pgsv,pgsv_sat );
 
-		
+	}	
 		
 	}
 
@@ -2633,13 +2637,14 @@ if (calcfast == 1 || search_pix <= 1.0) {
 		per_95_z1=lum_z1_median[0];
 	        muc_rvar_get_median(s_z1,lum_z1_median);
                 muc_rvar_get_bounding_box(s_z1,bbox_z1);
- 
+ 	if (detail_out == 1) {
+
  	        printf ("zoning:z1_omega,z1_av_lum,z1_median_lum,z1_std_lum,z1_perc_75,z1_perc_95,z1_lum_min,z1_lum_max: %f %f %f %f %f %f %f %f\n",omega_z1,lum_z1_av,lum_z1_median[0],sqrt(lum_z1_std[0]),per_75_z1,per_95_z1,bbox_z1[0],bbox_z1[1] );
 
                if (zones == 2 ) {
 
    	        printf ("zoning:z2_omega,z2_av_lum,z2_median_lum,z2_std_lum,z2_perc_75,z2_perc_95,z2_lum_min,z2_lum_max:  %f %f %f %f %f %f %f %f\n",omega_z2,lum_z2_av,lum_z2_median[0],sqrt(lum_z2_std[0]),per_75_z2,per_95_z2,bbox_z2[0],bbox_z2[1] );
- }             
+ } }            
 		
 	}
 
@@ -2653,6 +2658,8 @@ if (calcfast == 1 || search_pix <= 1.0) {
 		no_glaresources=i;
 
 /* glare sources */
+	if (detail_out == 1) {
+
 		printf
 			("%i No pixels x-pos y-pos L_s Omega_s Posindx L_b L_t E_vert Edir Max_Lum Sigma xdir ydir zdir Eglare_cie Lveil_cie teta glare_zone\n",
 			 i);
