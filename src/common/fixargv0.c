@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fixargv0.c,v 2.7 2016/03/20 16:36:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: fixargv0.c,v 2.8 2016/08/05 00:12:46 greg Exp $";
 #endif
 /*
  * Fix argv[0] for DOS environments
@@ -7,16 +7,13 @@ static const char	RCSid[] = "$Id: fixargv0.c,v 2.7 2016/03/20 16:36:17 schorsch 
  *  External symbols declared in paths.h
  */
 
-#include "copyright.h"
-
 #include <ctype.h>
 #include <string.h>
 
-extern char *
-fixargv0(av0)			/* extract command name from full path */
-char  *av0;
+char *
+fixargv0(char *av0)		/* extract command name from full path */
 {
-	register char  *cp = av0, *end = av0;
+	char  *cp = av0, *end;
 
 	while (*cp) cp++;		/* start from end */
 	end = cp;
@@ -29,12 +26,10 @@ char  *av0;
 		case '\\':			/* remove directory */
 			/* make sure the original pointer remains the same */
 			memmove(av0, cp+1, end-cp);
-			break;
+			return(av0);
 		default:			/* convert to lower case */
 			*cp = tolower(*cp);
 			continue;
 		}
 	return(av0);
 }
-
-

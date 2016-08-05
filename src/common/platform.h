@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.12 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid $Id: platform.h,v 3.13 2016/08/05 00:12:46 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -45,7 +45,7 @@
     #undef rad8
     #undef rad9
   #endif
-  #define sleep(s) Sleep(s*1000)
+  #define sleep(s) Sleep((DWORD)((s)*1000))
 
   #define NON_POSIX
 
