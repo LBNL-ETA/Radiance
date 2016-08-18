@@ -21,7 +21,7 @@ add_executable(tabfunc tabfunc.c)
 target_link_libraries(tabfunc rtrad)
 
 add_executable(total total.c)
-target_link_libraries(total ${LIB_M})
+target_link_libraries(total rtrad ${LIB_M})
 
 install(TARGETS cnt ev histo icalc neaten rcalc rlam tabfunc total
   RUNTIME DESTINATION bin)
