@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.20 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.21 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.20 2016/03/06 01:13:18 schorsch 
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include "rtio.h"
 #include "platform.h"
 #include "resolu.h"
 #include "paths.h"
@@ -133,7 +134,7 @@ rmx_load_float(RMATRIX *rm, FILE *fp)
 	}
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
-		if (fread(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
 	        for (k = rm->ncomp; k--; )
 		     rmx_lval(rm,i,j,k) = val[k];
@@ -153,7 +154,7 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 	}
 	for (i = 0; i < rm->nrows; i++)
 	    for (j = 0; j < rm->ncols; j++) {
-		if (fread(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
 	        for (k = rm->ncomp; k--; )
 		     rmx_lval(rm,i,j,k) = val[k];
@@ -329,7 +330,7 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 	    for (j = 0; j < rm->ncols; j++) {
 	        for (k = rm->ncomp; k--; )
 		    val[k] = (float)rmx_lval(rm,i,j,k);
-		if (fwrite(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+		if (putbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 			return(0);
 	    }
 	return(1);
@@ -349,7 +350,7 @@ rmx_write_double(const RMATRIX *rm, FILE *fp)
 	    for (j = 0; j < rm->ncols; j++) {
 	        for (k = rm->ncomp; k--; )
 		    val[k] = rmx_lval(rm,i,j,k);
-		if (fwrite(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+		if (putbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 			return(0);
 	    }
 	return(1);

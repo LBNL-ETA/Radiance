@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.10 2006/08/22 21:38:22 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.11 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: ra_xyze.c,v 2.10 2006/08/22 21:38:22 greg Exp 
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"
+#include  "rtio.h"
 
 int  rgbinp = -1;			/* input is RGBE? */
 int  rgbout = 0;			/* output should be RGBE? */
@@ -224,7 +225,7 @@ convert(void)				/* convert to XYZE or RGBE picture */
 				setcolr(scanout[x], colval(scanin[x],RED),
 						colval(scanin[x],GRN),
 						colval(scanin[x],BLU));
-			fwrite((char *)scanout, sizeof(COLR), xmax, stdout);
+			putbinary((char *)scanout, sizeof(COLR), xmax, stdout);
 		} else
 			fwritescan(scanin, xmax, stdout);
 		if (ferror(stdout))

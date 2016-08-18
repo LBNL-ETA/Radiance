@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.37 2016/04/15 00:06:36 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.38 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -690,7 +690,7 @@ sample_uniform(PARAMS *p, int b, FILE *fp)
 						duvw[2]*p->nrm[i] ;
 		if (!sample_origin(p, orig_dir[0], orig_dir[1], samp3[0]))
 			return(0);
-		if (fwrite(orig_dir, sizeof(FVECT), 2, fp) != 2)
+		if (putbinary(orig_dir, sizeof(FVECT), 2, fp) != 2)
 			return(0);
 	}
 	return(1);
@@ -720,7 +720,7 @@ sample_shirchiu(PARAMS *p, int b, FILE *fp)
 						duvw[2]*p->nrm[i] ;
 		if (!sample_origin(p, orig_dir[0], orig_dir[1], samp3[0]))
 			return(0);
-		if (fwrite(orig_dir, sizeof(FVECT), 2, fp) != 2)
+		if (putbinary(orig_dir, sizeof(FVECT), 2, fp) != 2)
 			return(0);
 	}
 	return(1);
@@ -768,7 +768,7 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 						duvw[2]*p->nrm[i] ;
 		if (!sample_origin(p, orig_dir[0], orig_dir[1], samp3[0]))
 			return(0);
-		if (fwrite(orig_dir, sizeof(FVECT), 2, fp) != 2)
+		if (putbinary(orig_dir, sizeof(FVECT), 2, fp) != 2)
 			return(0);
 	}
 	return(1);
@@ -819,7 +819,7 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 						duvw[2]*p->nrm[i] ;
 		if (!sample_origin(p, orig_dir[0], orig_dir[1], samp2[0]))
 			return(0);
-		if (fwrite(orig_dir, sizeof(FVECT), 2, fp) != 2)
+		if (putbinary(orig_dir, sizeof(FVECT), 2, fp) != 2)
 			return(0);
 	}
 	return(1);

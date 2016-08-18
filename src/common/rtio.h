@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.12 2016/03/21 19:06:08 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.13 2016/08/18 00:52:48 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -52,11 +52,11 @@ extern void	swap64(char *wp, int n);
 extern void	putstr(char *s, FILE *fp);
 extern void	putint(long i, int siz, FILE *fp);
 extern void	putflt(double f, FILE *fp);
-extern int	putbinary(char *s, int elsiz, int nel, FILE *fp);
+extern int	putbinary(const void *s, int elsiz, int nel, FILE *fp);
 extern char	*getstr(char *s, FILE *fp);
 extern long	getint(int siz, FILE *fp);
 extern double	getflt(FILE *fp);
-extern int	getbinary(char *s, int elsiz, int nel, FILE *fp);
+extern int	getbinary(void *s, int elsiz, int nel, FILE *fp);
 					/* defined in rexpr.c */
 extern int	ecompile(char *sp, int iflg, int wflag);
 extern char	*expsave(void);

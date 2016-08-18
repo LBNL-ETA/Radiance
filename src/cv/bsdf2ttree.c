@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.36 2016/03/06 01:13:17 schorsch Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.37 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -250,14 +250,14 @@ eval_isotropic(char *funame)
 #endif
 			}
 			if (pctcull >= 0)
-				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
+				putbinary(&bsdf, sizeof(bsdf), 1, ofp);
 			else
 				fprintf(ofp, "\t%.3e\n", bsdf);
 
 			if (rbf_colorimetry == RBCtristimulus) {
 				if (pctcull >= 0) {
-					fwrite(&uv[0], sizeof(*uv), 1, uvfp[0]);
-					fwrite(&uv[1], sizeof(*uv), 1, uvfp[1]);
+					putbinary(&uv[0], sizeof(*uv), 1, uvfp[0]);
+					putbinary(&uv[1], sizeof(*uv), 1, uvfp[1]);
 				} else {
 					fprintf(uvfp[0], "\t%.3e\n", uv[0]);
 					fprintf(uvfp[1], "\t%.3e\n", uv[1]);
@@ -443,14 +443,14 @@ eval_anisotropic(char *funame)
 #endif
 			}
 			if (pctcull >= 0)
-				fwrite(&bsdf, sizeof(bsdf), 1, ofp);
+				putbinary(&bsdf, sizeof(bsdf), 1, ofp);
 			else
 				fprintf(ofp, "\t%.3e\n", bsdf);
 
 			if (rbf_colorimetry == RBCtristimulus) {
 				if (pctcull >= 0) {
-					fwrite(&uv[0], sizeof(*uv), 1, uvfp[0]);
-					fwrite(&uv[1], sizeof(*uv), 1, uvfp[1]);
+					putbinary(&uv[0], sizeof(*uv), 1, uvfp[0]);
+					putbinary(&uv[1], sizeof(*uv), 1, uvfp[1]);
 				} else {
 					fprintf(uvfp[0], "\t%.3e\n", uv[0]);
 					fprintf(uvfp[1], "\t%.3e\n", uv[1]);

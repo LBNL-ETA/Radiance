@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.17 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.18 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -262,12 +262,12 @@ getvec(FVECT vec)
 		}
 		break;
 	case 'f':					/* binary float */
-		if (fread((char *)vf, sizeof(float), 3, stdin) != 3)
+		if (getbinary((char *)vf, sizeof(float), 3, stdin) != 3)
 			return(-1);
 		VCOPY(vec, vf);
 		break;
 	case 'd':					/* binary double */
-		if (fread((char *)vd, sizeof(double), 3, stdin) != 3)
+		if (getbinary((char *)vd, sizeof(double), 3, stdin) != 3)
 			return(-1);
 		VCOPY(vec, vd);
 		break;
@@ -303,23 +303,23 @@ put_contrib(const DCOLOR cnt, FILE *fout)
 			scalecolor(fv, sf);
 		} else
 			copycolor(fv, cnt);
-		fwrite(fv, sizeof(float), 3, fout);
+		putbinary(fv, sizeof(float), 3, fout);
 		break;
 	case 'd':
 		if (accumulate > 1) {
 			DCOLOR	dv;
 			copycolor(dv, cnt);
 			scalecolor(dv, sf);
-			fwrite(dv, sizeof(double), 3, fout);
+			putbinary(dv, sizeof(double), 3, fout);
 		} else
-			fwrite(cnt, sizeof(double), 3, fout);
+			putbinary(cnt, sizeof(double), 3, fout);
 		break;
 	case 'c':
 		if (accumulate > 1)
 			setcolr(cv, sf*cnt[0], sf*cnt[1], sf*cnt[2]);
 		else
 			setcolr(cv, cnt[0], cnt[1], cnt[2]);
-		fwrite(cv, sizeof(cv), 1, fout);
+		putbinary(cv, sizeof(cv), 1, fout);
 		break;
 	default:
 		error(INTERNAL, "botched output format");
@@ -394,14 +394,14 @@ get_contrib(DCOLOR cnt, FILE *finp)
 	case 'a':
 		return(fscanf(finp,"%lf %lf %lf",&cnt[0],&cnt[1],&cnt[2]) == 3);
 	case 'f':
-		if (fread(fv, sizeof(fv[0]), 3, finp) != 3)
+		if (getbinary(fv, sizeof(fv[0]), 3, finp) != 3)
 			return(0);
 		copycolor(cnt, fv);
 		return(1);
 	case 'd':
-		return(fread(cnt, sizeof(cnt[0]), 3, finp) == 3);
+		return(getbinary(cnt, sizeof(cnt[0]), 3, finp) == 3);
 	case 'c':
-		if (fread(cv, sizeof(cv), 1, finp) != 1)
+		if (getbinary(cv, sizeof(cv), 1, finp) != 1)
 			return(0);
 		colr_color(fv, cv);
 		copycolor(cnt, fv);

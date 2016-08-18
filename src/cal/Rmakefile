@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.7 2011/02/18 18:46:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.8 2016/08/18 00:52:47 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -46,7 +46,7 @@ neaten:	neat.o
 	$(CC) $(CFLAGS) -o neaten neat.o
 
 rlam:		lam.o
-	$(CC) $(CFLAGS) -o rlam lam.o
+	$(CC) $(CFLAGS) -o rlam lam.o -lrtrad
 
 tabfunc:	tabfunc.o
 	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrtrad $(MLIB)

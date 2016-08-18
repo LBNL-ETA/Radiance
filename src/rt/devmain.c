@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devmain.c,v 2.4 2003/02/25 02:47:22 greg Exp $";
+static const char	RCSid[] = "$Id: devmain.c,v 2.5 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  devmain.c - main for independent drivers.
@@ -91,7 +91,7 @@ r_paintr()				/* paint a rectangle */
 	COLOR	col;
 	int	xmin, ymin, xmax, ymax;
 
-	fread((char *)col, sizeof(COLOR), 1, devin);
+	getbinary((char *)col, sizeof(COLOR), 1, devin);
 	xmin = getw(devin); ymin = getw(devin);
 	xmax = getw(devin); ymax = getw(devin);
 	(*dev->paintr)(col, xmin, ymin, xmax, ymax);
@@ -200,7 +200,7 @@ register char  *s;
 
 sendstate()				/* send driver state variables */
 {
-	fwrite((char *)&dev->pixaspect, sizeof(dev->pixaspect), 1, devout);
+	putbinary(&dev->pixaspect, sizeof(dev->pixaspect), 1, devout);
 	putw(dev->xsiz, devout);
 	putw(dev->ysiz, devout);
 	putw(dev->inpready, devout);

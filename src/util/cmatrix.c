@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.16 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.17 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -244,7 +244,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		if (sizeof(COLOR) == cm_elem_size[dtype]) {
 			int	nread = 0;
 			do {				/* read all we can */
-				nread += fread(cm->cmem + 3*nread,
+				nread += getbinary(cm->cmem + 3*nread,
 						sizeof(COLOR),
 						cm->nrows*cm->ncols - nread,
 						fp);
@@ -269,7 +269,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			if (n <= 0)
 				goto not_handled;
 			while (n--) {
-				if (fread(dc, sizeof(double), 3, fp) != 3)
+				if (getbinary(dc, sizeof(double), 3, fp) != 3)
 					goto EOFerror;
 				copycolor(cvp, dc);
 				cvp += 3;
@@ -282,7 +282,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			if (n <= 0)
 				goto not_handled;
 			while (n--) {
-				if (fread(fc, sizeof(float), 3, fp) != 3)
+				if (getbinary(fc, sizeof(float), 3, fp) != 3)
 					goto EOFerror;
 				copycolor(cvp, fc);
 				cvp += 3;
@@ -435,7 +435,7 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 		if (sizeof(COLOR) == cm_elem_size[dtype]) {
 			r = cm->ncols*cm->nrows;
 			while (r > 0) {
-				c = fwrite(mp, sizeof(COLOR), r, fp);
+				c = putbinary(mp, sizeof(COLOR), r, fp);
 				if (c <= 0)
 					return(0);
 				mp += 3*c;
@@ -446,7 +446,7 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 			r = cm->ncols*cm->nrows;
 			while (r--) {
 				copycolor(dc, mp);
-				if (fwrite(dc, sizeof(double), 3, fp) != 3)
+				if (putbinary(dc, sizeof(double), 3, fp) != 3)
 					return(0);
 				mp += 3;
 			}
@@ -455,7 +455,7 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 			r = cm->ncols*cm->nrows;
 			while (r--) {
 				copycolor(fc, mp);
-				if (fwrite(fc, sizeof(float), 3, fp) != 3)
+				if (putbinary(fc, sizeof(float), 3, fp) != 3)
 					return(0);
 				mp += 3;
 			}

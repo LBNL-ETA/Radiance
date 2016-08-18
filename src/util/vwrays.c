@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.17 2012/06/14 05:19:05 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.18 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -304,7 +304,7 @@ putf(		/* put out ray in float format */
 
 	v[0] = ro[0]; v[1] = ro[1]; v[2] = ro[2];
 	v[3] = rd[0]; v[4] = rd[1]; v[5] = rd[2];
-	fwrite(v, sizeof(float), 6, stdout);
+	putbinary(v, sizeof(float), 6, stdout);
 }
 
 
@@ -318,5 +318,5 @@ putd(		/* put out ray in double format */
 
 	v[0] = ro[0]; v[1] = ro[1]; v[2] = ro[2];
 	v[3] = rd[0]; v[4] = rd[1]; v[5] = rd[2];
-	fwrite(v, sizeof(double), 6, stdout);
+	putbinary(v, sizeof(double), 6, stdout);
 }

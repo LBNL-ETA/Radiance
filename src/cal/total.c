@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: total.c,v 1.12 2016/03/24 19:00:54 greg Exp $";
+static const char	RCSid[] = "$Id: total.c,v 1.13 2016/08/18 00:52:47 greg Exp $";
 #endif
 /*
  *  total.c - program to reduce columns of data.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: total.c,v 1.12 2016/03/24 19:00:54 greg Exp $"
 #include  <ctype.h>
 #include  <math.h>
 #include  "platform.h"
+#include  "rtio.h"
 
 #define  MAXCOL		8192		/* maximum number of columns */
 
@@ -170,11 +171,11 @@ getrecord(			/* read next input record */
 	int   nf;
 						/* reading binary input? */
 	if (nbicols > 0)
-		return(fread(field, sizeof(double), nbicols, fp));
+		return(getbinary(field, sizeof(double), nbicols, fp));
 	if (nbicols < 0) {
 		float	*fbuf = (float *)buf;
 		int	i;
-		nf = fread(fbuf, sizeof(float), -nbicols, fp);
+		nf = getbinary(fbuf, sizeof(float), -nbicols, fp);
 		for (i = nf; i-- > 0; )
 			field[i] = fbuf[i];
 		return(nf);
@@ -211,14 +212,14 @@ putrecord(			/* write out results record */
 {
 						/* binary output? */
 	if (bocols > 0) {
-		fwrite(field, sizeof(double), n, fp);
+		putbinary(field, sizeof(double), n, fp);
 		return;
 	}
 	if (bocols < 0) {
 		float	fv;
 		while (n-- > 0) {
 			fv = *field++;
-			fwrite(&fv, sizeof(float), 1, fp);
+			putbinary(&fv, sizeof(float), 1, fp);
 		}
 		return;
 	}

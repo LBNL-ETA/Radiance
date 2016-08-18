@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.6 2016/01/30 17:34:17 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.7 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -14,6 +14,7 @@ static const char RCSid[] = "$Id: bsdfquery.c,v 2.6 2016/01/30 17:34:17 greg Exp
 #include <string.h>
 #include <stdlib.h>
 #include "rtmath.h"
+#include "rtio.h"
 #include "bsdfrep.h"
 
 char	*progname;
@@ -32,13 +33,13 @@ readIOdir(FVECT idir, FVECT odir, FILE *fp, int fmt)
 			return(0);
 		break;
 	case 'd':
-		if (fread(dvec, sizeof(double), 6, fp) != 6)
+		if (getbinary(dvec, sizeof(double), 6, fp) != 6)
 			return(0);
 		VCOPY(idir, dvec);
 		VCOPY(odir, dvec+3);
 		break;
 	case 'f':
-		if (fread(fvec, sizeof(float), 6, fp) != 6)
+		if (getbinary(fvec, sizeof(float), 6, fp) != 6)
 			return(0);
 		VCOPY(idir, fvec);
 		VCOPY(odir, fvec+3);
@@ -154,9 +155,9 @@ main(int argc, char *argv[])
 				cieXYZ[1] = sval.cieY;
 				cieXYZ[2] = (1. - sval.spec.cx - sval.spec.cy) /
 						sval.spec.cy * sval.cieY;
-				fwrite(cieXYZ, sizeof(double), 3, stdout);
+				putbinary(cieXYZ, sizeof(double), 3, stdout);
 			} else
-				fwrite(&sval.cieY, sizeof(double), 1, stdout);
+				putbinary(&sval.cieY, sizeof(double), 1, stdout);
 			break;
 		case 'f':
 			if (repXYZ) {
@@ -165,10 +166,10 @@ main(int argc, char *argv[])
 				cieXYZ[1] = sval.cieY;
 				cieXYZ[2] = (1. - sval.spec.cx - sval.spec.cy) /
 						sval.spec.cy * sval.cieY;
-				fwrite(cieXYZ, sizeof(float), 3, stdout);
+				putbinary(cieXYZ, sizeof(float), 3, stdout);
 			} else {
 				float	cieY = sval.cieY;
-				fwrite(&cieY, sizeof(float), 1, stdout);
+				putbinary(&cieY, sizeof(float), 1, stdout);
 			}
 			break;
 		}

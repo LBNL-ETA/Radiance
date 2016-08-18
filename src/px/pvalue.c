@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.32 2016/03/06 01:13:17 schorsch Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.33 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -572,12 +572,12 @@ getcdouble(		/* get a double color value from stream(s) */
 	double	vd[3];
 
 	if (fin2 == NULL) {
-		if (fread((char *)vd, sizeof(double), 3, fin) != 3)
+		if (getbinary(vd, sizeof(double), 3, fin) != 3)
 			return(-1);
 	} else {
-		if (fread((char *)vd, sizeof(double), 1, fin) != 1 ||
-			fread((char *)(vd+1), sizeof(double), 1, fin2) != 1 ||
-			fread((char *)(vd+2), sizeof(double), 1, fin3) != 1)
+		if (getbinary(vd, sizeof(double), 1, fin) != 1 ||
+			getbinary(vd+1, sizeof(double), 1, fin2) != 1 ||
+			getbinary(vd+2, sizeof(double), 1, fin3) != 1)
 			return(-1);
 	}
 	if (swapbytes)
@@ -595,12 +595,12 @@ getcfloat(		/* get a float color value from stream(s) */
 	float  vf[3];
 
 	if (fin2 == NULL) {
-		if (fread((char *)vf, sizeof(float), 3, fin) != 3)
+		if (getbinary(vf, sizeof(float), 3, fin) != 3)
 			return(-1);
 	} else {
-		if (fread((char *)vf, sizeof(float), 1, fin) != 1 ||
-			fread((char *)(vf+1), sizeof(float), 1, fin2) != 1 ||
-			fread((char *)(vf+2), sizeof(float), 1, fin3) != 1)
+		if (getbinary(vf, sizeof(float), 1, fin) != 1 ||
+			getbinary(vf+1, sizeof(float), 1, fin2) != 1 ||
+			getbinary(vf+2, sizeof(float), 1, fin3) != 1)
 			return(-1);
 	}
 	if (swapbytes)
@@ -640,12 +640,12 @@ getcbyte(		/* get a byte color value from stream(s) */
 	uby8  vb[3];
 
 	if (fin2 == NULL) {
-		if (fread((char *)vb, sizeof(uby8), 3, fin) != 3)
+		if (getbinary(vb, sizeof(uby8), 3, fin) != 3)
 			return(-1);
 	} else {
-		if (fread((char *)vb, sizeof(uby8), 1, fin) != 1 ||
-			fread((char *)(vb+1), sizeof(uby8), 1, fin2) != 1 ||
-			fread((char *)(vb+2), sizeof(uby8), 1, fin3) != 1)
+		if (getbinary(vb, sizeof(uby8), 1, fin) != 1 ||
+			getbinary(vb+1, sizeof(uby8), 1, fin2) != 1 ||
+			getbinary(vb+2, sizeof(uby8), 1, fin3) != 1)
 			return(-1);
 	}
 	setcolor(col, (vb[rord[RED]]+.5)/256.,
@@ -662,12 +662,12 @@ getcword(		/* get a 16-bit color value from stream(s) */
 	uint16  vw[3];
 
 	if (fin2 == NULL) {
-		if (fread((char *)vw, sizeof(uint16), 3, fin) != 3)
+		if (getbinary(vw, sizeof(uint16), 3, fin) != 3)
 			return(-1);
 	} else {
-		if (fread((char *)vw, sizeof(uint16), 1, fin) != 1 ||
-			fread((char *)(vw+1), sizeof(uint16), 1, fin2) != 1 ||
-			fread((char *)(vw+2), sizeof(uint16), 1, fin3) != 1)
+		if (getbinary(vw, sizeof(uint16), 1, fin) != 1 ||
+			getbinary(vw+1, sizeof(uint16), 1, fin2) != 1 ||
+			getbinary(vw+2, sizeof(uint16), 1, fin3) != 1)
 			return(-1);
 	}
 	if (swapbytes)
@@ -699,7 +699,7 @@ getbdouble(		/* get a double brightness value from fin */
 {
 	double	vd;
 
-	if (fread((char *)&vd, sizeof(double), 1, fin) != 1)
+	if (getbinary(&vd, sizeof(double), 1, fin) != 1)
 		return(-1);
 	if (swapbytes)
 		swap64((char *)&vd, 1);
@@ -715,7 +715,7 @@ getbfloat(		/* get a float brightness value from fin */
 {
 	float  vf;
 
-	if (fread((char *)&vf, sizeof(float), 1, fin) != 1)
+	if (getbinary(&vf, sizeof(float), 1, fin) != 1)
 		return(-1);
 	if (swapbytes)
 		swap32((char *)&vf, 1);
@@ -748,7 +748,7 @@ getbbyte(		/* get a byte brightness value from fin */
 	uby8  vb;
 	double	d;
 
-	if (fread((char *)&vb, sizeof(uby8), 1, fin) != 1)
+	if (getbinary(&vb, sizeof(uby8), 1, fin) != 1)
 		return(-1);
 	d = (vb+.5)/256.;
 	setcolor(col, d, d, d);
@@ -764,7 +764,7 @@ getbword(		/* get a 16-bit brightness value from fin */
 	uint16  vw;
 	double	d;
 
-	if (fread((char *)&vw, sizeof(uint16), 1, fin) != 1)
+	if (getbinary(&vw, sizeof(uint16), 1, fin) != 1)
 		return(-1);
 	if (swapbytes)
 		swap16((char *)&vw, 1);
@@ -800,7 +800,7 @@ putcfloat(			/* put a float color to stdout */
 	vf[2] = colval(col,ord[2]);
 	if (swapbytes)
 		swap32((char *)vf, 3);
-	fwrite((char *)vf, sizeof(float), 3, stdout);
+	putbinary(vf, sizeof(float), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -818,7 +818,7 @@ putcdouble(			/* put a double color to stdout */
 	vd[2] = colval(col,ord[2]);
 	if (swapbytes)
 		swap64((char *)vd, 3);
-	fwrite((char *)vd, sizeof(double), 3, stdout);
+	putbinary(vd, sizeof(double), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -852,7 +852,7 @@ putcbyte(			/* put a byte color to stdout */
 	vb[1] = min(i,255);
 	i = colval(col,ord[2])*256.;
 	vb[2] = min(i,255);
-	fwrite((char *)vb, sizeof(uby8), 3, stdout);
+	putbinary(vb, sizeof(uby8), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -874,7 +874,7 @@ putcword(			/* put a 16-bit color to stdout */
 	vw[2] = min(i,65535);
 	if (swapbytes)
 		swap16((char *)vw, 3);
-	fwrite((char *)vw, sizeof(uint16), 3, stdout);
+	putbinary(vw, sizeof(uint16), 3, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -901,7 +901,7 @@ putbfloat(			/* put a float brightness to stdout */
 	vf = (*mybright)(col);
 	if (swapbytes)
 		swap32((char *)&vf, 1);
-	fwrite((char *)&vf, sizeof(float), 1, stdout);
+	putbinary(&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -917,7 +917,7 @@ putbdouble(			/* put a double brightness to stdout */
 	vd = (*mybright)(col);
 	if (swapbytes)
 		swap64((char *)&vd, 1);
-	fwrite((char *)&vd, sizeof(double), 1, stdout);
+	putbinary(&vd, sizeof(double), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -944,7 +944,7 @@ putbbyte(			/* put a byte brightness to stdout */
 
 	i = (*mybright)(col)*256.;
 	vb = min(i,255);
-	fwrite((char *)&vb, sizeof(uby8), 1, stdout);
+	putbinary(&vb, sizeof(uby8), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -962,7 +962,7 @@ putbword(			/* put a 16-bit brightness to stdout */
 	vw = min(i,65535);
 	if (swapbytes)
 		swap16((char *)&vw, 1);
-	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
+	putbinary(&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -989,7 +989,7 @@ putpfloat(			/* put a float primary to stdout */
 	vf = colval(col,putprim);
 	if (swapbytes)
 		swap32((char *)&vf, 1);
-	fwrite((char *)&vf, sizeof(float), 1, stdout);
+	putbinary(&vf, sizeof(float), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -1005,7 +1005,7 @@ putpdouble(			/* put a double primary to stdout */
 	vd = colval(col,putprim);
 	if (swapbytes)
 		swap64((char *)&vd, 1);
-	fwrite((char *)&vd, sizeof(double), 1, stdout);
+	putbinary(&vd, sizeof(double), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -1032,7 +1032,7 @@ putpbyte(			/* put a byte primary to stdout */
 
 	i = colval(col,putprim)*256.;
 	vb = min(i,255);
-	fwrite((char *)&vb, sizeof(uby8), 1, stdout);
+	putbinary(&vb, sizeof(uby8), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }
@@ -1050,7 +1050,7 @@ putpword(			/* put a 16-bit primary to stdout */
 	vw = min(i,65535);
 	if (swapbytes)
 		swap16((char *)&vw, 1);
-	fwrite((char *)&vw, sizeof(uint16), 1, stdout);
+	putbinary(&vw, sizeof(uint16), 1, stdout);
 
 	return(ferror(stdout) ? -1 : 0);
 }

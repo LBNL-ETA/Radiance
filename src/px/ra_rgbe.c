@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.18 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.19 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -11,11 +11,12 @@ static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.18 2016/02/02 18:02:32 greg Exp 
 #include  <string.h>
 
 #include  "platform.h"
+#include  "rtio.h"
 #include  "paths.h"
 #include  "color.h"
 #include  "resolu.h"
 
-#define dumpheader(fp)	fwrite(headlines, 1, headlen, fp)
+#define dumpheader(fp)	putbinary(headlines, 1, headlen, fp)
 
 int  bradj = 0;				/* brightness adjustment */
 int  doflat = 1;			/* produce flat file */
@@ -173,7 +174,7 @@ transfer(			/* transfer a Radiance picture */
 		if (bradj)
 			shiftcolrs(scanin, xmax, bradj);
 		if (doflat)
-			fwrite((char *)scanin, sizeof(COLR), xmax, fp);
+			putbinary((char *)scanin, sizeof(COLR), xmax, fp);
 		else
 			fwritecolrs(scanin, xmax, fp);
 		if (ferror(fp)) {

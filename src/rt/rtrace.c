@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.69 2016/03/03 22:38:34 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.70 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -410,12 +410,12 @@ getvec(		/* get a vector from fp */
 		}
 		break;
 	case 'f':					/* binary float */
-		if (getbinary((char *)vf, sizeof(float), 3, fp) != 3)
+		if (getbinary(vf, sizeof(float), 3, fp) != 3)
 			return(-1);
 		VCOPY(vec, vf);
 		break;
 	case 'd':					/* binary double */
-		if (getbinary((char *)vd, sizeof(double), 3, fp) != 3)
+		if (getbinary(vd, sizeof(double), 3, fp) != 3)
 			return(-1);
 		VCOPY(vec, vd);
 		break;

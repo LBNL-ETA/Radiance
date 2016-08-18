@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.16 2016/03/24 19:00:54 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.17 2016/08/18 00:52:47 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -14,6 +14,7 @@ static const char	RCSid[] = "$Id: lam.c,v 1.16 2016/03/24 19:00:54 greg Exp $";
 
 #include "platform.h"
 #include "rtprocess.h"
+#include "rtio.h"
 
 #define MAXFILE		512		/* maximum number of files */
 
@@ -152,11 +153,11 @@ char	*argv[];
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
 			if (bytsiz[i]) {		/* binary file */
-				if (fread(buf, bytsiz[i], 1, input[i]) < 1)
+				if (getbinary(buf, bytsiz[i], 1, input[i]) < 1)
 					break;
 				if (i)
 					fputs(tabc[i], stdout);
-				fwrite(buf, bytsiz[i], 1, stdout);
+				putbinary(buf, bytsiz[i], 1, stdout);
 			} else {
 				if (fgets(buf, MAXLINE, input[i]) == NULL)
 					break;

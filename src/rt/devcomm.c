@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: devcomm.c,v 2.18 2016/03/06 01:13:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: devcomm.c,v 2.19 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  devcomm.c - communication routines for separate drivers.
@@ -177,7 +177,7 @@ comm_paintr(	/* paint a rectangle */
 )
 {
 	putc(COM_PAINTR, devout);
-	fwrite((char *)col, sizeof(COLOR), 1, devout);
+	putbinary(col, sizeof(COLOR), 1, devout);
 	putw(xmin, devout);
 	putw(ymin, devout);
 	putw(xmax, devout);
@@ -289,7 +289,7 @@ reply_error(			/* what should we do here? */
 static void
 getstate(void)				/* get driver state variables */
 {
-	fread((char *)&comm_driver.pixaspect,
+	getbinary((char *)&comm_driver.pixaspect,
 			sizeof(comm_driver.pixaspect), 1, devin);
 	comm_driver.xsiz = getw(devin);
 	comm_driver.ysiz = getw(devin);

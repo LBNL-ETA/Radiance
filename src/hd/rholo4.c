@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.36 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.37 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -282,9 +282,9 @@ disp_result(	/* queue result message to display process */
 		return;
 	msg.type = type;
 	msg.nbytes = nbytes;
-	fwrite((char *)&msg, sizeof(MSGHEAD), 1, dpout);
+	putbinary(&msg, sizeof(MSGHEAD), 1, dpout);
 	if (nbytes > 0)
-		fwrite(p, 1, nbytes, dpout);
+		putbinary(p, 1, nbytes, dpout);
 }
 
 

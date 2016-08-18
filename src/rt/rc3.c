@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.21 2016/03/04 02:48:14 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.22 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -248,7 +248,7 @@ queue_results(int k)
 	bq->nadded = kida[k].nr;
 					/* read from child */
 	for (j = 0; j < nmods; j++)
-		if (fread(bq->mca[j]->cbin, sizeof(DCOLOR), bq->mca[j]->nbins,
+		if (getbinary(bq->mca[j]->cbin, sizeof(DCOLOR), bq->mca[j]->nbins,
 					kida[k].infp) != bq->mca[j]->nbins)
 			error(SYSTEM, "read error from render process");
 			

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.26 2016/03/24 18:48:28 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.27 2016/08/18 00:52:47 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -281,14 +281,14 @@ FILE  *fp
 	if (inpfmt != NULL)
 		return(getrec());
 	if (tolower(itype) == 'd') {
-		if (fread(inpbuf, sizeof(double), nbicols, fp) != nbicols)
+		if (getbinary(inpbuf, sizeof(double), nbicols, fp) != nbicols)
 			return(0);
 		if (itype == 'D')
 			swap64(inpbuf, nbicols);
 		return(1);
 	}
 	if (tolower(itype) == 'f') {
-		if (fread(inpbuf, sizeof(float), nbicols, fp) != nbicols)
+		if (getbinary(inpbuf, sizeof(float), nbicols, fp) != nbicols)
 			return(0);
 		if (itype == 'F')
 			swap32(inpbuf, nbicols);
@@ -466,7 +466,7 @@ double  v
 	float	fval = v;
 
 	while (++colpos < n)
-		fwrite(zerobuf,
+		putbinary(zerobuf,
 			tolower(otype)=='d' ? sizeof(double) : sizeof(float),
 			1, stdout);
 	switch (otype) {
@@ -474,13 +474,13 @@ double  v
 		swap64((char *)&v, 1);
 		/* fall through */
 	case 'd':
-		fwrite(&v, sizeof(double), 1, stdout);
+		putbinary(&v, sizeof(double), 1, stdout);
 		break;
 	case 'F':
 		swap32((char *)&fval, 1);
 		/* fall through */
 	case 'f':
-		fwrite(&fval, sizeof(float), 1, stdout);
+		putbinary(&fval, sizeof(float), 1, stdout);
 		break;
 	}
 }

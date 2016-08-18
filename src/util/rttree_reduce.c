@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.15 2016/03/10 23:18:59 schorsch Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.16 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -201,7 +201,7 @@ read_float(float *rowp, int n)
 
 	if ((rowp == NULL) | (n <= 0))
 		return(0);
-	nread = fread(rowp, sizeof(float), n, stdin);
+	nread = getbinary(rowp, sizeof(float), n, stdin);
 	if (nread != n)
 		error(USER, "unexpected EOF on float input");
 	return(nread);
@@ -227,7 +227,7 @@ read_double(float *rowp, int n)
 		if (rowbuf == NULL)
 			error(SYSTEM, "out of memory in read_double");
 	}
-	nread = fread(rowbuf, sizeof(double), n, stdin);
+	nread = getbinary(rowbuf, sizeof(double), n, stdin);
 	if (nread != n)
 		error(USER, "unexpected EOF on double input");
 	for (i = 0; i < nread; i++)

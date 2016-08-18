@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.53 2011/08/16 18:09:53 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.54 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -506,7 +506,7 @@ serv_result(void)			/* get next server result and process it */
 	static int	bufsiz = 0;
 	MSGHEAD	msg;
 					/* read message header */
-	if (fread((char *)&msg, sizeof(MSGHEAD), 1, stdin) != 1)
+	if (getbinary(&msg, sizeof(MSGHEAD), 1, stdin) != 1)
 		goto readerr;
 	if (msg.nbytes > 0) {		/* get the message body */
 		if (msg.nbytes > bufsiz) {
@@ -518,7 +518,7 @@ serv_result(void)			/* get next server result and process it */
 			if (buf == NULL)
 				error(SYSTEM, "out of memory in serv_result");
 		}
-		if (fread(buf, 1, msg.nbytes, stdin) != msg.nbytes)
+		if (getbinary(buf, 1, msg.nbytes, stdin) != msg.nbytes)
 			goto readerr;
 	}
 	switch (msg.type) {		/* process results */
@@ -597,9 +597,9 @@ serv_request(	/* send a request to the server process */
 	}
 	msg.type = type;	/* write and flush the message */
 	msg.nbytes = nbytes;
-	fwrite((char *)&msg, sizeof(MSGHEAD), 1, stdout);
+	putbinary(&msg, sizeof(MSGHEAD), 1, stdout);
 	if (nbytes > 0)
-		fwrite(p, 1, nbytes, stdout);
+		putbinary(p, 1, nbytes, stdout);
 	if (fflush(stdout) < 0)
 		error(SYSTEM, "write error in serv_request");
 }

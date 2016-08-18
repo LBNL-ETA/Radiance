@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rvmain.c,v 2.16 2016/03/19 12:51:36 schorsch Exp $";
+static const char	RCSid[] = "$Id: rvmain.c,v 2.17 2016/08/18 00:52:48 greg Exp $";
 #endif
 /*
  *  rvmain.c - main for rview interactive viewer
@@ -55,6 +55,7 @@ static void onsig(int  signo);
 static void sigdie(int  signo, char  *msg);
 static void printdefaults(void);
 
+int
 main(int argc, char *argv[])
 {
 #define	 check(ol,al)		if (argv[i][ol] || \
