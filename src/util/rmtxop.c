@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.9 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.10 2016/08/18 17:57:57 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -10,6 +10,7 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.9 2016/03/06 01:13:18 schorsch Ex
 #include "rtio.h"
 #include "resolu.h"
 #include "rmatrix.h"
+#include "platform.h"
 
 #define MAXCOMP		50		/* #components we support */
 
@@ -233,10 +234,8 @@ main(int argc, char *argv[])
 					/* write result to stdout */
 	if (outfmt == DTfromHeader)
 		outfmt = mres->dtype;
-#if defined(_WIN32) || defined(_WIN64)
 	if (outfmt != DTascii)
-		_setmode(fileno(stdout), _O_BINARY);
-#endif
+		SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
 	printargs(argc, argv, stdout);
 	if (!rmx_write(mres, outfmt, stdout)) {

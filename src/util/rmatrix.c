@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.21 2016/08/18 00:52:48 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.22 2016/08/18 17:57:57 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -195,15 +195,11 @@ rmx_load(const char *inspec)
 
 	if (inspec == NULL) {			/* reading from stdin? */
 		inspec = "<stdin>";
-#if defined(_WIN32) || defined(_WIN64)
-		_setmode(fileno(stdin), _O_BINARY);
-#endif
+		SET_FILE_BINARY(stdin);
 	} else if (inspec[0] == '!') {
 		if ((fp = popen(inspec+1, "r")) == NULL)
 			return(NULL);
-#if defined(_WIN32) || defined(_WIN64)
-		_setmode(fileno(fp), _O_BINARY);
-#endif
+		SET_FILE_BINARY(stdin);
 	} else {
 		const char	*sp = inspec;	/* check suffix */
 		while (*sp)
@@ -254,9 +250,7 @@ rmx_load(const char *inspec)
 	dnew->info = dinfo.info;
 	switch (dinfo.dtype) {
 	case DTascii:
-#if defined(_WIN32) || defined(_WIN64)
-		_setmode(fileno(fp), _O_TEXT);
-#endif
+		SET_FILE_TEXT(stdin);
 		if (!rmx_load_ascii(dnew, fp))
 			goto loaderr;
 		dnew->dtype = DTascii;		/* should leave double? */

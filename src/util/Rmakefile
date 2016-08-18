@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.81 2015/08/12 23:07:59 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.82 2016/08/18 17:57:57 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -174,7 +174,7 @@ rfluxmtx.o:	../common/rtio.h ../common/random.h ../common/triangulate.h \
 ../common/rtmath.h ../common/fvect.h ../common/mat4.h ../common/tiff.h \
 ../common/platform.h ../common/bsdf.h ../common/bsdf_m.h ../common/rtprocess.h
 
-dctimestep.o cmatrix.o:	../common/platform.h
+rmtxop.o dctimestep.o cmatrix.o:	../common/platform.h
 
 rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \

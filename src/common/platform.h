@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.13 2016/08/05 00:12:46 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.14 2016/08/18 17:57:57 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -57,9 +57,12 @@
 
   #include <fcntl.h>  /* _O_BINARY, _O_TEXT */
   #include <stdlib.h> /* _fmode */
-  #define SET_DEFAULT_BINARY() _fmode = _O_BINARY
+  #define SET_DEFAULT_BINARY() (_fmode = _O_BINARY)
+  #define SET_DEFAULT_TEXT() (_fmode = _O_TEXT)
   #define SET_FILE_BINARY(fp) _setmode(_fileno(fp),_O_BINARY)
+  #define SET_FILE_TEXT(fp) _setmode(_fileno(fp),_O_TEXT)
   #define SET_FD_BINARY(fd) _setmode(fd,_O_BINARY)
+  #define SET_FD_TEXT(fd) _setmode(fd,_O_TEXT)
   #define putenv _putenv
 
 #else /* _WIN32 || _WIN64 */
@@ -79,6 +82,9 @@
   #define SET_DEFAULT_BINARY()
   #define SET_FILE_BINARY(fp)
   #define SET_FD_BINARY(fd)
+  #define SET_DEFAULT_TEXT()
+  #define SET_FILE_TEXT(fp)
+  #define SET_FD_TEXT(fd)
 
 #endif /* _WIN32 || _WIN64 */
 
