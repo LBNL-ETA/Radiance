@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.23 2016/08/18 00:52:48 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.24 2016/08/19 15:13:40 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -1129,8 +1129,6 @@ void CalcSkyPatchLumin( float *parr )
 	double sspa;			/* Sun-sky point angle */
 	double zsa;				/* Zenithal sun angle */
 
-fprintf(stderr, "Alt, azi: %f %f\n", altitude, azimuth);
-fprintf(stderr, "Perez parameters: %f %f %f %f %f\n",
 	perez_param[0], perez_param[1], perez_param[2], perez_param[3], perez_param[4]);
 
 	for (i = 1; i < nskypatch; i++)
@@ -1147,7 +1145,6 @@ fprintf(stderr, "Perez parameters: %f %f %f %f %f\n",
 
 		/* Calculate patch luminance */
 		parr[3*i] = CalcRelLuminance(sspa, zsa);
-fprintf(stderr, "CalcRelLuminance(%f, %f) = %f\n", sspa, zsa, parr[3*i]);
 		if (parr[3*i] < 0) parr[3*i] = 0;
 		parr[3*i+2] = parr[3*i+1] = parr[3*i];
 	}
