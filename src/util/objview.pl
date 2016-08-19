@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: objview.pl,v 2.1 2013/12/04 20:07:07 greg Exp $
+# RCSid $Id: objview.pl,v 2.2 2016/08/19 17:51:23 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
@@ -31,35 +31,35 @@ my $glradopt = 0;     # An option specific to glrad was passed (Boolean).
 
 while (@ARGV) {
 	$_ = $ARGV[0];
-	if (m/-g/) {   # OpenGL output
+	if (m/^-g\b/) {   # OpenGL output
 		if ( $^O =~ /MSWin32/ ) {
 			die("OpenGL view is not available under Windows.\n");
 		}
 		$usegl = 1;
-	} elsif (m/-u/) {   # up direction
+	} elsif (m/^-u\b/) {   # up direction
 		$up = $ARGV[1];
 		shift @ARGV;
-	} elsif ((m/-s/) or (m/-w/)) {   # silent, no warnings
+	} elsif ((m/^-s\b/) or (m/^-w/)) {   # silent, no warnings
 		$opts .= " $_";
-	} elsif (m/-b/) {   # back face visibility
+	} elsif (m/^-b/) {   # back face visibility
 		$rendopts .= ' -bv';
-	} elsif (m/-v/) {   # standard view "[Xx]?[Yy]?[Zz]?[vlcahs]?"
+	} elsif (m/^-v\b/) {   # standard view "[Xx]?[Yy]?[Zz]?[vlcahs]?"
 		# Let rad do any error handling...
 		$vw = $ARGV[1];
 		shift @ARGV;
-	} elsif (m/-N/) {   # No. of parallel processes
+	} elsif (m/^-N\b/) {   # No. of parallel processes
 		$opts .= ' -N ' . $ARGV[1];
 		$radopt = 1;
 		shift @ARGV;
-	} elsif (m/-o/) {   # output device (rvu -devices)
+	} elsif (m/^-o\b/) {   # output device (rvu -devices)
 		$raddev = $ARGV[1];
 		$radopt = 1;
 		shift @ARGV;
-	} elsif ((m/-V/) or (m/-e/)) {   # print view, explicate variables
+	} elsif ((m/^-V\b/) or (m/^-e\b/)) {   # print view, explicate variables
 		# Think of those two as '-verbose'.
 		$opts .= " $_";
 		$radopt = 1;
-	} elsif (m/-S/) {   # full-screen stereo
+	} elsif (m/^-S\b/) {   # full-screen stereo
 		$opts .= " $_";
 		$glradopt = 1;
 	} elsif (m/^-\w/) {
