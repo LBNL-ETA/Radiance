@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.38 2016/08/18 00:52:48 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.39 2016/08/19 18:31:26 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -558,7 +558,7 @@ ssamp_poly(FVECT orig, SURF *sp, double x)
 
 	if (ptp == NULL) {		/* need to triangulate */
 		ptp = (POLYTRIS *)malloc(sizeof(POLYTRIS) +
-				sizeof(struct ptri)*(sp->nfargs/3 - 3));
+				sizeof(struct ptri)*(sp->nfargs/3 - 1));
 		if (ptp == NULL)
 			goto memerr;
 		if (sp->nfargs == 3) {	/* simple case */
