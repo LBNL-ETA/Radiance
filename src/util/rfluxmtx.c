@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.40 2016/08/20 03:36:04 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.41 2016/08/20 03:43:24 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -64,7 +64,7 @@ typedef struct {
 	FVECT	uva[2];			/* tangent axes */
 	int	ntris;			/* number of triangles */
 	struct ptri {
-		float	afrac;			/* fraction of total area */
+		double	afrac;			/* fraction of total area */
 		short	vndx[3];		/* vertex indices */
 	}	tri[1];			/* triangle array (extends struct) */
 } POLYTRIS;			/* triangulated polygon */
