@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.39 2016/08/19 18:31:26 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.40 2016/08/20 03:36:04 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -558,7 +558,7 @@ ssamp_poly(FVECT orig, SURF *sp, double x)
 
 	if (ptp == NULL) {		/* need to triangulate */
 		ptp = (POLYTRIS *)malloc(sizeof(POLYTRIS) +
-				sizeof(struct ptri)*(sp->nfargs/3 - 1));
+				sizeof(struct ptri)*(sp->nfargs/3 - 3));
 		if (ptp == NULL)
 			goto memerr;
 		if (sp->nfargs == 3) {	/* simple case */
@@ -602,7 +602,7 @@ ssamp_poly(FVECT orig, SURF *sp, double x)
 		sp->priv = (void *)ptp;
 	}
 					/* pick triangle by partial area */
-	for (i = 0; i < ptp->ntris && x > ptp->tri[i].afrac; i++)
+	for (i = 0; i < ptp->ntris-1 && x > ptp->tri[i].afrac; i++)
 		x -= ptp->tri[i].afrac;
 	SDmultiSamp(samp2, 2, x/ptp->tri[i].afrac);
 	samp2[0] *= samp2[1] = sqrt(samp2[1]);
