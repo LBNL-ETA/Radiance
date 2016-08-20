@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.24 2016/08/19 15:13:40 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.25 2016/08/20 15:42:38 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -1128,8 +1128,6 @@ void CalcSkyPatchLumin( float *parr )
 	double aas;				/* Sun-sky point azimuthal angle */
 	double sspa;			/* Sun-sky point angle */
 	double zsa;				/* Zenithal sun angle */
-
-	perez_param[0], perez_param[1], perez_param[2], perez_param[3], perez_param[4]);
 
 	for (i = 1; i < nskypatch; i++)
 	{
