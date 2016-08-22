@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.2 2016/07/28 18:21:23 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.3 2016/08/22 21:03:00 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -322,7 +322,7 @@ memerr:
 static double
 interp2val(const PGINTERP *pgint, double px, double py)
 {
-#define	NSMP	12
+#define	NSMP	36
 	float	wt[NSMP];
 	int	si[NSMP];
 	int	n = interp2_topsamp(wt, si, NSMP, pgint->ip2, px, py);
