@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.23 2016/08/30 14:54:08 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.24 2016/08/30 15:11:22 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -516,8 +516,7 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	        for (k = mres->ncomp; k--; ) {
 		    long double	d = 0;
 		    for (h = m1->ncols; h--; )
-			d += (long double)rmx_lval(m1,i,h,k) *
-				(long double)rmx_lval(m2,h,j,k);
+			d += rmx_lval(m1,i,h,k) * rmx_lval(m2,h,j,k);
 		    rmx_lval(mres,i,j,k) = (double)d;
 		}
 	return(mres);
