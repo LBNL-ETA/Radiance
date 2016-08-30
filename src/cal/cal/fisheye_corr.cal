@@ -1,4 +1,4 @@
-{ RCSid $Id: fisheye_corr.cal,v 1.1 2016/08/01 00:08:38 greg Exp $ }
+{ RCSid $Id: fisheye_corr.cal,v 1.2 2016/08/30 12:11:29 greg Exp $ }
 {
 	Correct fisheye image using a distortion function:
 
@@ -32,3 +32,6 @@ yoff = (y-yc)*(1-rmult);
 ro=if(.5-mapped_r, ri(1,xoff,yoff), 0);
 go=if(.5-mapped_r, gi(1,xoff,yoff), 0);
 bo=if(.5-mapped_r, bi(1,xoff,yoff), 0);
+
+{ Radius adjustment for equisolid-angle projection to equidistant (-vta) }
+mapsolid(r):2/PI*asin(r*sqrt(2));
