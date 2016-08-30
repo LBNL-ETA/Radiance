@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.13 2016/03/06 01:13:18 schorsch Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.14 2016/08/30 06:10:12 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -71,6 +71,20 @@ main(
 		execvp(argv[2], argv+2);
 		perror(argv[2]);
 		return 1;
+	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
+		SET_FILE_BINARY(stdin);
+		SET_FILE_BINARY(stdout);
+		getheader(stdin, (gethfunc *)fputs, stdout);
+		for (i = 2; i < argc; i++) {
+			int	len = strlen(argv[i]);
+			if (!len) continue;
+			fputs(argv[i], stdout);
+			if (argv[i][len-1] != '\n')
+				fputc('\n', stdout);
+		}
+		fputc('\n', stdout);
+		copycat();
+		return 0;
 	} else if (argc == 2 && !strcmp(argv[1], "-")) {
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);

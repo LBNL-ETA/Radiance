@@ -1,4 +1,4 @@
-.\" RCSid "$Id: getinfo.1,v 1.6 2014/07/28 17:25:03 greg Exp $"
+.\" RCSid "$Id: getinfo.1,v 1.7 2016/08/30 06:10:12 greg Exp $"
 .TH GETINFO 1 1/15/99 RADIANCE
 .SH NAME
 getinfo - get header information from a RADIANCE file
@@ -12,6 +12,10 @@ getinfo - get header information from a RADIANCE file
 .br
 .B getinfo
 -
+.br
+.B getinfo
+.B -a
+.B "info_line1 .."
 .br
 .B getinfo
 .B -c
@@ -48,6 +52,13 @@ and copies the body of the file from the standard
 input to the standard output.
 .PP
 The third form of
+.I "getinfo \-a"
+adds one or more header lines to the standard input.
+These lines are given as arguments to
+.I getinfo,
+and must be quoted if they contain spaces.
+.PP
+The fourth form of
 .I "getinfo \-c"
 is followed by a command and its arguments, which is executed
 on the data segment of the standard input.
