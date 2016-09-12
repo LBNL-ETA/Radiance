@@ -2108,3 +2108,6 @@ Roland Schregle added out-of-core photon mapping routines, which
 may be compiled using the PMAP_OOC macro.
 
 Added -a option to getinfo for easy addition of header lines.
+
+Fixed issue with multiple records on picture output in rcontrib (and rfluxmtx).
+Credit to Sarith Subramaniam for pointing out the problem.

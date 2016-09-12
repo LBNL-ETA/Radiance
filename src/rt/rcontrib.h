@@ -1,4 +1,4 @@
-/* RCSid $Id: rcontrib.h,v 2.14 2016/03/21 19:06:08 greg Exp $ */
+/* RCSid $Id: rcontrib.h,v 2.15 2016/09/12 20:31:34 greg Exp $ */
 
 /*
  * Header file for rcontrib modules
@@ -59,6 +59,7 @@ typedef struct {
 	const char	*modname;	/* modifier name */
 	const char	*params;	/* parameter list */
 	EPNODE		*binv;		/* bin value expression */
+	int		bin0;		/* starting bin offset */
 	int		nbins;		/* number of contribution bins */
 	DCOLOR		cbin[1];	/* contribution bins (extends struct) */
 } MODCONT;			/* modifier contribution */
