@@ -1,4 +1,4 @@
-{ RCSid $Id: fisheye_corr.cal,v 1.3 2016/09/14 18:02:42 greg Exp $ }
+{ RCSid $Id: fisheye_corr.cal,v 1.4 2016/09/14 18:17:59 greg Exp $ }
 {
 	Correct fisheye image using a distortion function:
 
@@ -7,16 +7,16 @@
 	This function takes the pixel distance from the image center, where
 	1.0 is the full width of the image constituting 180-degrees of view.
 	The output is the corrected distance from the center for the output.
+	(If your function is the inverse of this, set map_inverse=1.)
 
-		pcomb -e 'rad(r)=my_function(r)' -f fisheye_corr.cal \
+		pcomb -f fisheye_corr.cal -e 'rad(r)=my_function(r)' \
 			-o fisheye.hdr > corrected.hdr
 
 	We also clear the region outside the r=[0,.5] circle to black.
+	If this is all you want to do, use "rad(r)=r".
 
-	If you know you have a solid-angle preserving distortion, use:
-
-		pcomb -e 'rad(r)=mapsolid(r)'  -f fisheye_corr.cal \
-			-o fisheye.hdr > corrected.hdr
+	If you know you have a solid-angle preserving distortion, use
+	"rad(r)=mapsolid(r)" or leave off definition, as this is the default.
 
 	Note that you will need to add back the VIEW= line to the header, e.g.:
 
@@ -31,17 +31,18 @@
 xc : xres/2;
 yc : yres/2;
 sq(x) : x*x;
+map_inverse = -1;		{ change to 1 if rad(r) is inverse mapping }
 r = sqrt(sq((x-xc)/xres) + sq((y-yc)/yres));
 mapped_r = rad(r);
-{ If your mapping goes the other way, invert the multiplier with:
-	rmult = r/(mapped_r+1e-7);
-}
-rmult = mapped_r/(r+1e-7);
+rmult = if(map_inverse, r/(mapped_r+1e-7), mapped_r/(r+1e-7));
 xoff = (x-xc)*(1-rmult);
 yoff = (y-yc)*(1-rmult);
-ro=if(.5-mapped_r, ri(1,xoff,yoff), 0);
-go=if(.5-mapped_r, gi(1,xoff,yoff), 0);
-bo=if(.5-mapped_r, bi(1,xoff,yoff), 0);
+ro = if(.5-mapped_r, ri(1,xoff,yoff), 0);
+go = if(.5-mapped_r, gi(1,xoff,yoff), 0);
+bo = if(.5-mapped_r, bi(1,xoff,yoff), 0);
 
 { Radius adjustment for equisolid-angle projection to equidistant (-vta) }
-mapsolid(r):2/PI*asin(r*sqrt(2));
+mapsolid(r) : 2/PI*asin(r*sqrt(2));
+
+{ Default correction function }
+rad(r) = mapsolid(r);
