@@ -1,4 +1,4 @@
-{ RCSid $Id: fisheye_corr.cal,v 1.4 2016/09/14 18:17:59 greg Exp $ }
+{ RCSid $Id: fisheye_corr.cal,v 1.5 2016/09/14 20:39:08 greg Exp $ }
 {
 	Correct fisheye image using a distortion function:
 
@@ -32,17 +32,17 @@ xc : xres/2;
 yc : yres/2;
 sq(x) : x*x;
 map_inverse = -1;		{ change to 1 if rad(r) is inverse mapping }
-r = sqrt(sq((x-xc)/xres) + sq((y-yc)/yres));
-mapped_r = rad(r);
-rmult = if(map_inverse, r/(mapped_r+1e-7), mapped_r/(r+1e-7));
+inp_r = sqrt(sq((x-xc)/xres) + sq((y-yc)/yres));
+mapped_r = rad(inp_r);
+rmult = if(map_inverse, inp_r/(mapped_r+1e-7), mapped_r/(inp_r+1e-7));
 xoff = (x-xc)*(1-rmult);
 yoff = (y-yc)*(1-rmult);
-ro = if(.5-mapped_r, ri(1,xoff,yoff), 0);
-go = if(.5-mapped_r, gi(1,xoff,yoff), 0);
-bo = if(.5-mapped_r, bi(1,xoff,yoff), 0);
+ro = if(.5-inp_r, ri(1,xoff,yoff), 0);
+go = if(.5-inp_r, gi(1,xoff,yoff), 0);
+bo = if(.5-inp_r, bi(1,xoff,yoff), 0);
 
 { Radius adjustment for equisolid-angle projection to equidistant (-vta) }
-mapsolid(r) : 2/PI*asin(r*sqrt(2));
+mapsolid(r) : 2/PI*asin(sqrt(2)*r);
 
 { Default correction function }
 rad(r) = mapsolid(r);
