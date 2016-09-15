@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum.c,v 2.41 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: mkillum.c,v 2.42 2016/09/15 22:34:41 greg Exp $";
 #endif
 /*
  * Make illum sources for optimizing rendering process
@@ -45,10 +45,10 @@ int	doneheader = 0;		/* printed header yet? */
 int	warnings = 1;		/* print warnings? */
 
 void init(char *octnm, int np);
-void filter(register FILE	*infp, char	*name);
+void filter(FILE	*infp, char	*name);
 void xoptions(char	*s, char	*nm);
 void printopts(void);
-void printhead(register int  ac, register char  **av);
+void printhead(int  ac, char  **av);
 void xobject(FILE  *fp, char  *nm);
 
 
@@ -61,7 +61,7 @@ main(		/* compute illum distributions using rtrace */
 	int	nprocs = 1;
 	FILE	*fp;
 	int	rval;
-	register int	i;
+	int	i;
 				/* set global arguments */
 	gargv = argv;
 	progname = gargv[0];
@@ -148,7 +148,7 @@ init(char *octnm, int np)		/* start rendering process(es) */
 
 void
 eputs(				/* put string to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;
@@ -184,13 +184,13 @@ int	ec;
 
 void
 filter(		/* process stream */
-	register FILE	*infp,
+	FILE	*infp,
 	char	*name
 )
 {
 	char	buf[512];
 	FILE	*pfp;
-	register int	c;
+	int	c;
 
 	while ((c = getc(infp)) != EOF) {
 		if (isspace(c))
@@ -222,11 +222,10 @@ xoptions(			/* process options in string s */
 	char	*nm
 )
 {
-	extern FILE	*freopen();
 	char	buf[64];
 	int	negax;
 	int	nerrs = 0;
-	register char	*cp;
+	char	*cp;
 
 	if (strncmp(s, "#@mkillum", 9) || !isspace(s[9])) {
 		fputs(s, stdout);		/* not for us */
@@ -409,8 +408,8 @@ printopts(void)			/* print out option default values */
 
 void
 printhead(			/* print out header */
-	register int  ac,
-	register char  **av
+	int  ac,
+	char  **av
 )
 {
 	putchar('#');

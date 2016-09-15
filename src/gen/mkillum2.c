@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.40 2015/05/21 05:54:54 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.41 2016/09/15 22:34:41 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -92,7 +92,7 @@ void
 srcsamps(			/* sample sources from this surface position */
 	struct illum_args *il,
 	FVECT org,
-	FVECT nrm,
+	double eps,
 	MAT4 ixfm
 )
 {
@@ -111,8 +111,6 @@ srcsamps(			/* sample sources from this surface position */
 	initsrcindex(&si);			/* loop over (sub)sources */
 	for ( ; ; ) {
 		VCOPY(sr.rorg, org);		/* pick side to shoot from */
-		d = 5.*FTINY;
-		VSUM(sr.rorg, sr.rorg, nrm, d);
 		samplendx++;			/* increment sample counter */
 		if (!srcray(&sr, NULL, &si))
 			break;			/* end of sources */
@@ -122,12 +120,13 @@ srcsamps(			/* sample sources from this surface position */
 		else
 			VCOPY(v, sr.rdir);
 		if (v[2] >= -FTINY)
-			continue;	/* only sample transmission */
+			continue;		/* only sample transmission */
 		v[0] = -v[0]; v[1] = -v[1]; v[2] = -v[2];
 		sr.rno = flatindex(v, nalt, nazi);
 		d = nalt*nazi*(1./PI) * v[2];
 		d *= si.dom;			/* solid angle correction */
 		scalecolor(sr.rcoef, d);
+		VSUM(sr.rorg, sr.rorg, sr.rdir, -eps);
 		process_ray(&sr, ray_pqueue(&sr));
 	}
 }
@@ -238,6 +237,7 @@ my_face(		/* make an illum face */
 	FVECT  dn, org, dir;
 	FVECT  u, v;
 	double  ur[2], vr[2];
+	double  epsilon;
 	MAT4  xfm;
 	char  xfrot[64];
 	int  nallow;
@@ -287,6 +287,7 @@ my_face(		/* make an illum face */
 	dim[0] = random();
 				/* sample polygon */
 	nallow = 5*n*il->nsamps;
+	epsilon = .005*sqrt(fa->area);
 	for (dim[1] = 0; dim[1] < n; dim[1]++)
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize direction */
@@ -314,9 +315,7 @@ my_face(		/* make an illum face */
 			freeface(ob);
 			return(my_default(ob, il, nm));
 		    }
-		    r1 = 5.*FTINY;
-		    for (j = 0; j < 3; j++)
-			org[j] += r1*fa->norm[j];
+		    VSUM(org, org, dir, -epsilon);
 					/* send sample */
 		    raysamp(dim[1], org, dir);
 		}
@@ -351,7 +350,7 @@ my_face(		/* make an illum face */
 			return(my_default(ob, il, nm));
 		    }
 					/* sample source rays */
-		    srcsamps(il, org, fa->norm, ixfm);
+		    srcsamps(il, org, epsilon, ixfm);
 		}
 	}
 				/* wait for all rays to finish */
@@ -518,7 +517,7 @@ my_ring(		/* make an illum ring */
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j];
 					/* sample source rays */
-		    srcsamps(il, org, co->ad, ixfm);
+		    srcsamps(il, org, 5.*FTINY, ixfm);
 		}
 	}
 				/* wait for all rays to finish */

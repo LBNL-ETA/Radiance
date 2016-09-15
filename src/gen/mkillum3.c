@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkillum3.c,v 2.13 2011/08/15 19:48:06 greg Exp $";
+static const char RCSid[] = "$Id: mkillum3.c,v 2.14 2016/09/15 22:34:41 greg Exp $";
 #endif
 /*
  * Routines to print mkillum objects
@@ -15,23 +15,23 @@ char	DATSUF[] = ".dat";		/* data file suffix */
 char	DSTSUF[] = ".dist";		/* distribution suffix */
 char	FNCFNM[] = "illum.cal";		/* function file name */
 
-void compinv(COLORV *rinv, COLORV *rp, int m);
-void colorout(int p, COLORV *da, int n, int m, double mult, FILE *fp);
-void fputnum(double d, FILE *fp);
-void brightout(COLORV *da, int n, int m, double mult, FILE *fp);
-void fputeol(FILE *fp);
-void compavg(COLOR col, COLORV *da, int n);
-char * dfname(struct illum_args *il, int c);
-FILE * dfopen(struct illum_args *il, int c);
+static void compinv(COLORV *rinv, COLORV *rp, int m);
+static void colorout(int p, COLORV *da, int n, int m, double mult, FILE *fp);
+static void fputnum(double d, FILE *fp);
+static void brightout(COLORV *da, int n, int m, double mult, FILE *fp);
+static void fputeol(FILE *fp);
+static void compavg(COLOR col, COLORV *da, int n);
+static char * dfname(struct illum_args *il, int c);
+static FILE * dfopen(struct illum_args *il, int c);
 
 
 void
 printobj(		/* print out an object */
 	char  *mod,
-	register OBJREC  *obj
+	OBJREC  *obj
 )
 {
-	register int  i;
+	int  i;
 
 	if (issurface(obj->otype) && !strcmp(mod, VOIDID))
 		return;		/* don't print void surfaces */
@@ -63,7 +63,7 @@ dfname(			/* return data file name */
 )
 {
 	char  fname[MAXSTR];
-	register char  *s;
+	char  *s;
 
 	s = strcpy(fname, il->datafile);
 	s += strlen(s);
@@ -77,9 +77,9 @@ dfname(			/* return data file name */
 }
 
 
-FILE *
+static FILE *
 dfopen(			/* open data file */
-	register struct illum_args  *il,
+	struct illum_args  *il,
 	int  c
 )
 {
@@ -99,7 +99,7 @@ dfopen(			/* open data file */
 }
 
 
-extern void
+void
 flatout(		/* write hemispherical distribution */
 	struct illum_args  *il,
 	COLORV  *da,
@@ -156,7 +156,7 @@ flatout(		/* write hemispherical distribution */
 }
 
 
-extern void
+void
 roundout(			/* write spherical distribution */
 	struct illum_args  *il,
 	COLORV  *da,
@@ -212,9 +212,9 @@ roundout(			/* write spherical distribution */
 }
 
 
-extern void
+void
 illumout(		/* print illum object */
-	register struct illum_args  *il,
+	struct illum_args  *il,
 	OBJREC  *ob
 )
 {
@@ -243,14 +243,14 @@ illumout(		/* print illum object */
 }
 
 
-void
+static void
 compavg(		/* compute average for set of data values */
 	COLOR  col,
-	register COLORV  *da,
+	COLORV  *da,
 	int  n
 )
 {
-	register int  i;
+	int  i;
 
 	setcolor(col, 0.0, 0.0, 0.0);
 	i = n;
@@ -262,10 +262,10 @@ compavg(		/* compute average for set of data values */
 }
 
 
-void
+static void
 compinv(		/* compute other side of row average */
-	register COLORV  *rinv,
-	register COLORV  *rp,
+	COLORV  *rinv,
+	COLORV  *rp,
 	int  m
 )
 {
@@ -280,9 +280,9 @@ compinv(		/* compute other side of row average */
 }
 
 
-extern int
+int
 average(		/* evaluate average value for distribution */
-	register struct illum_args  *il,
+	struct illum_args  *il,
 	COLORV  *da,
 	int  n
 )
@@ -300,7 +300,7 @@ average(		/* evaluate average value for distribution */
 
 static int	colmcnt = 0;	/* count of columns written */
 
-void
+static void
 fputnum(			/* put out a number to fp */
 	double  d,
 	FILE  *fp
@@ -312,9 +312,9 @@ fputnum(			/* put out a number to fp */
 }
 
 
-void
+static void
 fputeol(			/* write end of line to fp */
-	register FILE  *fp
+	FILE  *fp
 )
 {
 	putc('\n', fp);
@@ -322,17 +322,17 @@ fputeol(			/* write end of line to fp */
 }
 
 
-void
+static void
 colorout(	/* put out color distribution data */
 	int  p,
-	register COLORV  *da,
+	COLORV  *da,
 	int  n,
 	int  m,
 	double  mult,
 	FILE  *fp
 )
 {
-	register int  i, j;
+	int  i, j;
 
 	for (i = 0; i < n; i++) {
 		for (j = 0; j < m; j++) {
@@ -344,16 +344,16 @@ colorout(	/* put out color distribution data */
 }
 
 
-void
+static void
 brightout(	/* put out brightness distribution data */
-	register COLORV  *da,
+	COLORV  *da,
 	int  n,
 	int  m,
 	double  mult,
 	FILE  *fp
 )
 {
-	register int  i, j;
+	int  i, j;
 
 	for (i = 0; i < n; i++) {
 		for (j = 0; j < m; j++) {

@@ -2111,3 +2111,5 @@ Added -a option to getinfo for easy addition of header lines.
 
 Fixed issue with multiple records on picture output in rcontrib (and rfluxmtx).
 Credit to Sarith Subramaniam for pointing out the problem.
+
+Made mkillum more tolerant of non-planar polygons in its sampling routines.
