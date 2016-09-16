@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.67 2016/09/16 19:47:41 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.68 2016/09/16 20:01:29 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -13,7 +13,7 @@ sub userror {
 	exit 1;
 }
 my ($td,$radscn,$mgfscn,$octree,$fsender,$bsender,$receivers,$facedat,$behinddat,$rmtmp);
-my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz,$cph,$sav);
+my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz,$cph);
 my ($curphase, $recovery);
 if ($#ARGV == 1 && "$ARGV[0]" =~ /^-rec/) {
 	$td = $ARGV[1];
