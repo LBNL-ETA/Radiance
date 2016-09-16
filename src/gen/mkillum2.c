@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mkillum2.c,v 2.41 2016/09/15 22:34:41 greg Exp $";
+static const char	RCSid[] = "$Id: mkillum2.c,v 2.42 2016/09/16 15:08:38 greg Exp $";
 #endif
 /*
  * Routines to do the actual calculation for mkillum
@@ -13,8 +13,8 @@ static const char	RCSid[] = "$Id: mkillum2.c,v 2.41 2016/09/15 22:34:41 greg Exp
 #include  "source.h"
 #include  "paths.h"
 
-#ifndef NBSDFSAMPS
-#define NBSDFSAMPS	256		/* BSDF resampling count */
+#ifndef R_EPS
+#define R_EPS		0.005		/* relative epsilon for ray origin */
 #endif
 
 COLORV *	distarr = NULL;		/* distribution array */
@@ -287,7 +287,7 @@ my_face(		/* make an illum face */
 	dim[0] = random();
 				/* sample polygon */
 	nallow = 5*n*il->nsamps;
-	epsilon = .005*sqrt(fa->area);
+	epsilon = R_EPS*sqrt(fa->area);
 	for (dim[1] = 0; dim[1] < n; dim[1]++)
 		for (i = 0; i < il->nsamps; i++) {
 					/* randomize direction */
@@ -446,15 +446,18 @@ my_ring(		/* make an illum ring */
 	int  dim[2];
 	int  n, nalt, nazi, alti;
 	double  sp[2], r1, r2, r3;
+	double  epsilon;
 	int  h;
 	FVECT  dn, org, dir;
 	FVECT  u, v;
 	MAT4  xfm;
 	CONE  *co;
 	int  i, j;
-				/* get/check arguments */
+					/* get/check arguments */
 	co = getcone(ob, 0);
-				/* set up sampling */
+	if (co == NULL)
+		objerror(ob, USER, "cannot create illum");
+					/* set up sampling */
 	if (il->sampdens <= 0) {
 		nalt = nazi = 1;	/* diffuse assumption */
 	} else {
@@ -462,6 +465,7 @@ my_ring(		/* make an illum ring */
 		nalt = sqrt(n/PI) + .5;
 		nazi = PI*nalt + .5;
 	}
+	epsilon = R_EPS*CO_R1(co);
 	n = nazi*nalt;
 	newdist(n);
 	mkaxes(u, v, co->ad);
@@ -486,10 +490,9 @@ my_ring(		/* make an illum ring */
 		    r2 = 2.*PI*sp[1];
 		    r1 = r3*cos(r2);
 		    r2 = r3*sin(r2);
-		    r3 = 5.*FTINY;
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j] +
-						r3*co->ad[j];
+						epsilon*co->ad[j];
 					/* send sample */
 		    raysamp(dim[1], org, dir);
 		}
@@ -517,7 +520,7 @@ my_ring(		/* make an illum ring */
 		    for (j = 0; j < 3; j++)
 			org[j] = CO_P0(co)[j] + r1*u[j] + r2*v[j];
 					/* sample source rays */
-		    srcsamps(il, org, 5.*FTINY, ixfm);
+		    srcsamps(il, org, epsilon, ixfm);
 		}
 	}
 				/* wait for all rays to finish */
