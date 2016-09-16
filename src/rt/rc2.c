@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.20 2016/09/16 04:49:15 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.21 2016/09/16 05:06:07 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -588,6 +588,7 @@ recover_output()
 				sprintf(errmsg, "missing recover file '%s'",
 						oname);
 				error(WARNING, errmsg);
+				lastout = 0;
 				break;
 			}
 			nvals = lseek(fileno(sop->ofp), 0, SEEK_END);
@@ -620,7 +621,8 @@ recover_output()
 		}
 		if (!lastout) {			/* empty output */
 			error(WARNING, "no previous data to recover");
-			lu_done(&ofiletab);	/* reclose all outputs */
+						/* reclose all outputs */
+			lu_doall(&ofiletab, &myclose, NULL);
 			return;
 		}
 	}
