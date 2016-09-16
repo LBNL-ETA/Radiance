@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.65 2016/08/18 15:09:29 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.66 2016/09/16 17:54:56 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -13,11 +13,29 @@ sub userror {
 	exit 1;
 }
 my ($td,$radscn,$mgfscn,$octree,$fsender,$bsender,$receivers,$facedat,$behinddat,$rmtmp);
-my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz);
-if ($windoz) {
+my ($tf,$rf,$tb,$rb,$tfx,$rfx,$tbx,$rbx,$tfz,$rfz,$tbz,$rbz,$cph,$sav);
+my ($curphase, $recovery);
+if ($#ARGV == 1 && "$ARGV[0]" =~ /^-rec/) {
+	$td = $ARGV[1];
+	open(MYAVH, "< $td/savedARGV.txt") or die "$td: invalid path\n";
+	@ARGV = <MYAVH>;
+	close MYAVH;
+	chomp @ARGV;
+	if (open(MYPH, "< $td/phase.txt")) {
+		while (<MYPH>) {
+			chomp($recovery = $_);
+		}
+		close MYPH;
+	}
+} elsif ($windoz) {
 	my $tmploc = `echo \%TMP\%`;
-	chomp($tmploc);
+	chomp $tmploc;
 	$td = mkdtemp("$tmploc\\genBSDF.XXXXXX");
+} else {
+	$td = mkdtemp("/tmp/genBSDF.XXXXXX");
+	chomp $td;
+}
+if ($windoz) {
 	$radscn = "$td\\device.rad";
 	$mgfscn = "$td\\device.mgf";
 	$octree = "$td\\device.oct";
@@ -38,11 +56,9 @@ if ($windoz) {
 	$rfz = "$td\\rfz.dat";
 	$tbz = "$td\\tbz.dat";
 	$rbz = "$td\\rbz.dat";
-	chomp $td;
+	$cph = "$td\\phase.txt";
 	$rmtmp = "rd /S /Q $td";
 } else {
-	$td = mkdtemp("/tmp/genBSDF.XXXXXX");
-	chomp $td;
 	$radscn = "$td/device.rad";
 	$mgfscn = "$td/device.mgf";
 	$octree = "$td/device.oct";
@@ -63,6 +79,7 @@ if ($windoz) {
 	$rfz = "$td/rfz.dat";
 	$tbz = "$td/tbz.dat";
 	$rbz = "$td/rbz.dat";
+	$cph = "$td/phase.txt";
 	$rmtmp = "rm -rf $td";
 }
 my @savedARGV = @ARGV;
@@ -136,18 +153,20 @@ while ($#ARGV >= 0) {
 }
 # Check that we're actually being asked to do something
 die "Must have at least one of +forward or +backward\n" if (!$doforw && !$doback);
-# Issue warning for unhandled reciprocity case
-print STDERR "Warning: recommend both +forward and +backward with -t3\n" if
-		($tensortree==3 && !($doforw && $doback));
 $wrapper .= $tensortree ? " -a t$tensortree" : " -a kf -c";
 $wrapper .= " -u $gunit";
-# Get scene description and dimensions
-if ( $mgfin ) {
-	system "mgf2rad @ARGV > $radscn";
-	die "Could not load MGF input\n" if ( $? );
-} else {
-	system "xform -e @ARGV > $radscn";
-	die "Could not load Radiance input\n" if ( $? );
+if (!defined $recovery) {
+	# Issue warning for unhandled reciprocity case
+	print STDERR "Warning: recommend both +forward and +backward with -t3\n" if
+			($tensortree==3 && !($doforw && $doback));
+	# Get scene description and dimensions
+	if ( $mgfin ) {
+		system "mgf2rad @ARGV > $radscn";
+		die "Could not load MGF input\n" if ( $? );
+	} else {
+		system "xform -e @ARGV > $radscn";
+		die "Could not load Radiance input\n" if ( $? );
+	}
 }
 if ($#dim != 5) {
 	@dim = split ' ', `getbbox -h $radscn`;
@@ -161,66 +180,91 @@ if ($dim[5] > 1e-5) {
 # Assume Zmax==0 to derive thickness so pkgBSDF will work
 $wrapper .= ' -f "t=' . (-$dim[4]) . ';w=' . ($dim[1] - $dim[0]) .
 		';h=' . ($dim[3] - $dim[2]) . '"';
-# Generate octree
-system "oconv -w $radscn > $octree";
-die "Could not compile scene\n" if ( $? );
-# Add MGF description if requested
-if ( $geout ) {
-	open(MGFSCN, "> $mgfscn");
-	printf MGFSCN "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
-	close MGFSCN;
-	if ( $mgfin ) {
-		system qq{mgfilt "#,o,xf,c,cxy,cspec,cmix,m,sides,rd,td,rs,ts,ir,v,p,n,f,fh,sph,cyl,cone,prism,ring,torus" @ARGV >> $mgfscn};
-	} else {
-		system "rad2mgf $radscn >> $mgfscn";
-	}
-	open(MGFSCN, ">> $mgfscn");
-	print MGFSCN "xf\n";
-	close MGFSCN;
-	$wrapper .= " -g $mgfscn";
-}
-# Create receiver & sender surfaces (rectangular)
-my $FEPS = 1e-5;
-my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
-my $ny = int($nsamp/$nx + 1);
-$nsamp = $nx * $ny;
-my $ns = 2**$ttlog2;
-open(RADSCN, "> $receivers");
-print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=-sc$ns\n" : "h=-kf\n");
-print RADSCN '#@rfluxmtx ' . "u=-Y o=$facedat\n\n";
-print RADSCN "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n";
-print RADSCN "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n";
-print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=+sc$ns\n" : "h=+kf\n");
-print RADSCN '#@rfluxmtx ' . "u=-Y o=$behinddat\n\n";
-print RADSCN "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n";
-print RADSCN "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n";
-close RADSCN;
-# Finish rfluxmtx command and prepare sender surfaces
-$rfluxmtx .= " -n $nproc -c $nsamp";
-if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
-	open (RADSCN, "> $fsender");
-	print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=-sc$ns\n\n" : "h=-kf\n\n");
-	print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[4]-$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[4]-$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[4]-$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[4]-$FEPS;
-	close RADSCN;
-	open (RADSCN, "> $bsender");
-	print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=+sc$ns\n\n" : "h=+kf\n\n");
-	print RADSCN "void polygon bwd_sender\n0\n0\n12\n";
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[5]+$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[5]+$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[5]+$FEPS;
-	printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[5]+$FEPS;
-	close RADSCN;
-}
 # Calculate CIE (u',v') from Radiance RGB:
 my $CIEuv =	'Xi=.5141*Ri+.3239*Gi+.1620*Bi;' .
 		'Yi=.2651*Ri+.6701*Gi+.0648*Bi;' .
 		'Zi=.0241*Ri+.1229*Gi+.8530*Bi;' .
 		'den=Xi+15*Yi+3*Zi;' .
 		'uprime=4*Xi/den;vprime=9*Yi/den;' ;
+my $FEPS = 1e-5;
+my $ns = 2**$ttlog2;
+my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
+my $ny = int($nsamp/$nx + 1);
+$nsamp = $nx * $ny;
+$rfluxmtx .= " -n $nproc -c $nsamp";
+if (!defined $recovery) {
+	open(MYAVH, "> $td/savedARGV.txt");
+	foreach (@savedARGV) {
+		print MYAVH "$_\n";
+	}
+	close MYAVH;
+	# Generate octree
+	system "oconv -w $radscn > $octree";
+	die "Could not compile scene\n" if ( $? );
+	# Add MGF description if requested
+	if ( $geout ) {
+		open(MGFSCN, "> $mgfscn");
+		printf MGFSCN "xf -t %.6f %.6f 0\n", -($dim[0]+$dim[1])/2, -($dim[2]+$dim[3])/2;
+		close MGFSCN;
+		if ( $mgfin ) {
+			system qq{mgfilt "#,o,xf,c,cxy,cspec,cmix,m,sides,rd,td,rs,ts,ir,v,p,n,f,fh,sph,cyl,cone,prism,ring,torus" @ARGV >> $mgfscn};
+		} else {
+			system "rad2mgf $radscn >> $mgfscn";
+		}
+		open(MGFSCN, ">> $mgfscn");
+		print MGFSCN "xf\n";
+		close MGFSCN;
+		$wrapper .= " -g $mgfscn";
+	}
+	# Create receiver & sender surfaces (rectangular)
+	open(RADSCN, "> $receivers");
+	print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=-sc$ns\n" : "h=-kf\n");
+	print RADSCN '#@rfluxmtx ' . "u=-Y o=$facedat\n\n";
+	print RADSCN "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n";
+	print RADSCN "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n";
+	print RADSCN '#@rfluxmtx ' . ($tensortree ? "h=+sc$ns\n" : "h=+kf\n");
+	print RADSCN '#@rfluxmtx ' . "u=-Y o=$behinddat\n\n";
+	print RADSCN "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n";
+	print RADSCN "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n";
+	close RADSCN;
+	# Prepare sender surfaces
+	if ( $tensortree != 3 ) {	# Isotropic tensor tree is exception
+		open (RADSCN, "> $fsender");
+		print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=-sc$ns\n\n" : "h=-kf\n\n");
+		print RADSCN "void polygon fwd_sender\n0\n0\n12\n";
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[4]-$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[4]-$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[4]-$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[4]-$FEPS;
+		close RADSCN;
+		open (RADSCN, "> $bsender");
+		print RADSCN '#@rfluxmtx u=-Y ' . ($tensortree ? "h=+sc$ns\n\n" : "h=+kf\n\n");
+		print RADSCN "void polygon bwd_sender\n0\n0\n12\n";
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[2], $dim[5]+$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[2], $dim[5]+$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[1], $dim[3], $dim[5]+$FEPS;
+		printf RADSCN "\t%e\t%e\t%e\n", $dim[0], $dim[3], $dim[5]+$FEPS;
+		close RADSCN;
+	}
+	print STDERR "Recover using: $0 -recover $td\n";
+}
+open(MYPH, ">> $td/phase.txt");
+{		# unbuffer output to MYPH
+	my $ofh = select MYPH;
+	$| = 1;
+	select $ofh;
+}
+$curphase = 0;
+# Function to determine if next phase should be skipped or recovered
+sub do_phase {
+	$curphase++;
+	if (defined $recovery) {
+		if ($recovery == $curphase) { return -1; }
+		if ($recovery > $curphase) { return 0; }
+	}
+	print MYPH "$curphase\n";
+	return 1;
+}
 # Create data segments (all the work happens here)
 if ( $tensortree ) {
 	do_tree_bsdf();
@@ -228,7 +272,7 @@ if ( $tensortree ) {
 	do_matrix_bsdf();
 }
 # Output XML
-# print STDERR "Running: $wrapper\n";
+print STDERR "Running: $wrapper\n";
 system "$wrapper -C \"Created by: genBSDF @savedARGV\"";
 die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
@@ -248,6 +292,9 @@ sub do_tree_bsdf {
 # Call rfluxmtx and process tensor tree BSDF for the given direction
 sub do_ttree_dir {
 	my $forw = shift;
+	my $r = do_phase();
+	if (!$r) { return; }
+	$r = ($r < 0) ? " -r" : "";
 	my $cmd;
 	if ( $tensortree == 3 ) {
 		# Isotropic BSDF
@@ -263,7 +310,7 @@ sub do_ttree_dir {
 				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
 				qq{-e "\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz" } .
 				qq{-e "\$4=Dx;\$5=Dy;\$6=myDz" } .
-				"| $rfluxmtx -fa -y $ns2 - $receivers -i $octree";
+				"| $rfluxmtx$r -fa -y $ns2 - $receivers -i $octree";
 		} else {
 			$cmd = "cnt $ns2 $ny $nx " .
 				qq{| rcalc -e "r1=rand(.8681*recno-.673892)" } .
@@ -275,18 +322,18 @@ sub do_ttree_dir {
 				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
 				qq{-e '\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz' } .
 				qq{-e '\$4=Dx;\$5=Dy;\$6=myDz' -of } .
-				"| $rfluxmtx -h -ff -y $ns2 - $receivers -i $octree";
+				"| $rfluxmtx$r -h -ff -y $ns2 - $receivers -i $octree";
 		}
 	} else {
 		# Anisotropic BSDF
 		my $sender = ($bsender,$fsender)[$forw];
 		if ($windoz) {
-			$cmd = "$rfluxmtx -fa $sender $receivers -i $octree";
+			$cmd = "$rfluxmtx$r -fa $sender $receivers -i $octree";
 		} else {
-			$cmd = "$rfluxmtx -h -ff $sender $receivers -i $octree";
+			$cmd = "$rfluxmtx$r -h -ff $sender $receivers -i $octree";
 		}
 	}
-	# print STDERR "Starting: $cmd\n";
+	print STDERR "Starting: $cmd\n";
 	system $cmd;
 	die "Failure running rfluxmtx" if ( $? );
 	ttree_out($forw);
@@ -371,7 +418,7 @@ sub ttree_comp {
 			$cmd .= " -of $src " .
 					"| rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
 		}
-		# print STDERR "Running: $cmd\n";
+		print STDERR "Running: $cmd\n";
 		system "$cmd > $dest";
 		die "Failure running rttree_reduce" if ( $? );
 	} else {
@@ -383,7 +430,7 @@ sub ttree_comp {
 		open(DATOUT, "> $dest");
 		print DATOUT "{\n";
 		close DATOUT;
-		# print STDERR "Running: $cmd\n";
+		print STDERR "Running: $cmd\n";
 		system "$cmd >> $dest";
 		die "Failure running rcalc" if ( $? );
 		open(DATOUT, ">> $dest");
@@ -414,10 +461,13 @@ sub do_matrix_bsdf {
 # Call rfluxmtx and process tensor tree BSDF for the given direction
 sub do_matrix_dir {
 	my $forw = shift;
+	my $r = do_phase();
+	if (!$r) { return; }
+	$r = ($r < 0) ? " -r" : "";
 	my $cmd;
 	my $sender = ($bsender,$fsender)[$forw];
-	$cmd = "$rfluxmtx -fd $sender $receivers -i $octree";
-	# print STDERR "Starting: $cmd\n";
+	$cmd = "$rfluxmtx$r -fd $sender $receivers -i $octree";
+	print STDERR "Starting: $cmd\n";
 	system $cmd;
 	die "Failure running rfluxmtx" if ( $? );
 	matrix_out($forw);
@@ -464,7 +514,7 @@ sub matrix_comp {
 		$cmd .= " -c 0.0241 0.1229 0.8530";
 	}
 	$cmd .= " $src | rcollate -ho -oc 145";
-	# print STDERR "Running: $cmd\n";
+	print STDERR "Running: $cmd\n";
 	system "$cmd > $dest";
 	die "Failure running rmtxop" if ( $? );
 	if ( "$spec" ne "$curspec" ) {

@@ -1,4 +1,4 @@
-.\" RCSid $Id: genBSDF.1,v 1.18 2015/04/05 01:32:01 greg Exp $
+.\" RCSid $Id: genBSDF.1,v 1.19 2016/09/16 17:54:56 greg Exp $
 .TH GENBSDF 1 9/3/2010 RADIANCE
 .SH NAME
 genBSDF - generate BSDF description from Radiance or MGF input
@@ -32,6 +32,11 @@ genBSDF - generate BSDF description from Radiance or MGF input
 [
 .B "geom .."
 ]
+.br
+or
+.br
+.B genBSDF
+.B "\-recover tempdir"
 .SH DESCRIPTION
 .I GenBSDF
 computes a bidirectional scattering distribution function from
@@ -157,6 +162,13 @@ when you are certain that the system has a high degree of radial symmetry.
 Again, the parameter to this option sets the maximum resolution as
 a power of 2 in each dimension, but in this case there is one less
 dimension being sampled.
+.PP
+The
+.I \-recover
+option is available for continuing calculations that were killed by
+the system or the user.
+Unfortunately, genBSDF puts its temporary files in a directory
+that is often cleaned up after reboot, so this may not always work.
 .SH EXAMPLE
 To create a BSDF description including geometry from a set of venetian blinds:
 .IP "" .2i
