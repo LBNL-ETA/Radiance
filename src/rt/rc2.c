@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.19 2016/09/12 20:31:34 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.20 2016/09/16 04:49:15 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -445,7 +445,7 @@ reload_output()
 	char		*outvfmt;
 	LUENT		*oent;
 	int		xr, yr;
-	STREAMOUT	sout;
+	STREAMOUT	*sop;
 	DCOLOR		rgbv;
 
 	if (outfmt == 'a')
@@ -458,50 +458,43 @@ reload_output()
 			error(USER, "cannot reload from stdout");
 		if (mp->outspec[0] == '!')
 			error(USER, "cannot reload from command");
-		for (j = 0; ; j++) {		/* load each modifier bin */
-			ofl = ofname(oname, mp->outspec, mp->modname, j);
+		for (j = 0; j < mp->nbins; j++) { /* load each modifier bin */
+			ofl = ofname(oname, mp->outspec, mp->modname, mp->bin0+j);
 			if (ofl < 0)
 				error(USER, "bad output file specification");
 			oent = lu_find(&ofiletab, oname);
-			if (oent->data != NULL) {
-				sout = *(STREAMOUT *)oent->data;
-			} else {
-				sout.reclen = 0;
-				sout.outpipe = 0;
-				sout.xr = xres; sout.yr = yres;
-				sout.ofp = NULL;
-			}
-			if (sout.ofp == NULL) {	/* open output as input */
-				sout.ofp = fopen(oname, fmode);
-				if (sout.ofp == NULL) {
-					if (j == mp->nbins)
-						break;	/* assume end of modifier */
+			if (oent->data == NULL)
+				error(INTERNAL, "unallocated stream in reload_output()");
+			sop = (STREAMOUT *)oent->data;
+			if (sop->ofp == NULL) {	/* open output as input */
+				sop->ofp = fopen(oname, fmode);
+				if (sop->ofp == NULL) {
 					sprintf(errmsg, "missing reload file '%s'",
 							oname);
 					error(WARNING, errmsg);
 					break;
 				}
 #ifdef getc_unlocked
-				flockfile(sout.ofp);
+				flockfile(sop->ofp);
 #endif
-				if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {
+				if (header && checkheader(sop->ofp, outvfmt, NULL) != 1) {
 					sprintf(errmsg, "format mismatch for '%s'",
 							oname);
 					error(USER, errmsg);
 				}
-				if ((sout.reclen == 1) & (sout.xr > 0) & (sout.yr > 0) &&
-						(!fscnresolu(&xr, &yr, sout.ofp) ||
-							(xr != sout.xr) |
-							(yr != sout.yr))) {
+				if ((sop->reclen == 1) & (sop->xr > 0) & (sop->yr > 0) &&
+						(!fscnresolu(&xr, &yr, sop->ofp) ||
+							(xr != sop->xr) |
+							(yr != sop->yr))) {
 					sprintf(errmsg, "resolution mismatch for '%s'",
 							oname);
 					error(USER, errmsg);
 				}
 			}
 							/* read in RGB value */
-			if (!get_contrib(rgbv, sout.ofp)) {
+			if (!get_contrib(rgbv, sop->ofp)) {
 				if (!j) {
-					fclose(sout.ofp);
+					fclose(sop->ofp);
 					break;		/* ignore empty file */
 				}
 				if (j < mp->nbins) {
@@ -510,21 +503,8 @@ reload_output()
 					error(USER, errmsg);
 				}
 				break;
-			}
-			if (j >= mp->nbins) {		/* check modifier size */
-				sprintf(errmsg,
-				"mismatched -bn setting for reloading '%s'",
-						modname[i]);
-				error(USER, errmsg);
-			}
-				
+			}				
 			copycolor(mp->cbin[j], rgbv);
-			if (oent->key == NULL)		/* new file entry */
-				oent->key = strcpy((char *)
-						malloc(strlen(oname)+1), oname);
-			if (oent->data == NULL)
-				oent->data = (char *)malloc(sizeof(STREAMOUT));
-			*(STREAMOUT *)oent->data = sout;
 		}
 	}
 	lu_doall(&ofiletab, &myclose, NULL);	/* close all files */
@@ -560,7 +540,7 @@ recover_output()
 	int		ofl;
 	char		oname[1024];
 	LUENT		*oent;
-	STREAMOUT	sout;
+	STREAMOUT	*sop;
 	off_t		nvals;
 	int		xr, yr;
 
@@ -589,75 +569,52 @@ recover_output()
 			error(USER, "cannot recover from stdout");
 		if (mp->outspec[0] == '!')
 			error(USER, "cannot recover from command");
-		for (j = 0; ; j++) {		/* check each bin's file */
-			ofl = ofname(oname, mp->outspec, mp->modname, j);
+		for (j = 0; j < mp->nbins; j++) { /* check each bin's file */
+			ofl = ofname(oname, mp->outspec, mp->modname, mp->bin0+j);
 			if (ofl < 0)
 				error(USER, "bad output file specification");
 			oent = lu_find(&ofiletab, oname);
-			if (oent->data != NULL) {
-				sout = *(STREAMOUT *)oent->data;
-			} else {
-				sout.reclen = 0;
-				sout.outpipe = 0;
-				sout.xr = xres;
-				sout.yr = yres;
-				sout.ofp = NULL;
-			}
-			if (sout.ofp != NULL) {	/* already open? */
+			if (oent->data == NULL)
+				error(INTERNAL, "unallocated stream in recover_output()");
+			sop = (STREAMOUT *)oent->data;
+			if (sop->ofp != NULL) {	/* already open? */
 				if (ofl & OF_BIN)
 					continue;
 				break;
 			}
 						/* open output */
-			sout.ofp = fopen(oname, "rb+");
-			if (sout.ofp == NULL) {
-				if (j == mp->nbins)
-					break;	/* assume end of modifier */
+			sop->ofp = fopen(oname, "rb+");
+			if (sop->ofp == NULL) {
 				sprintf(errmsg, "missing recover file '%s'",
 						oname);
 				error(WARNING, errmsg);
 				break;
 			}
-			nvals = lseek(fileno(sout.ofp), 0, SEEK_END);
+			nvals = lseek(fileno(sop->ofp), 0, SEEK_END);
 			if (nvals <= 0) {
 				lastout = 0;	/* empty output, quit here */
-				fclose(sout.ofp);
+				fclose(sop->ofp);
 				break;
 			}
-			if (!sout.reclen) {
-				if (!(ofl & OF_BIN)) {
-					sprintf(errmsg,
-						"need -bn to recover file '%s'",
-							oname);
-					error(USER, errmsg);
-				}
-				recsiz = outvsiz;
-			} else
-				recsiz = outvsiz * sout.reclen;
+			recsiz = outvsiz * sop->reclen;
 
-			lseek(fileno(sout.ofp), 0, SEEK_SET);
-			if (header && checkheader(sout.ofp, outvfmt, NULL) != 1) {
+			lseek(fileno(sop->ofp), 0, SEEK_SET);
+			if (header && checkheader(sop->ofp, outvfmt, NULL) != 1) {
 				sprintf(errmsg, "format mismatch for '%s'",
 						oname);
 				error(USER, errmsg);
 			}
-			if ((sout.reclen == 1) & (sout.xr > 0) & (sout.yr > 0) &&
-					(!fscnresolu(&xr, &yr, sout.ofp) ||
-						(xr != sout.xr) |
-						(yr != sout.yr))) {
+			if ((sop->reclen == 1) & (sop->xr > 0) & (sop->yr > 0) &&
+					(!fscnresolu(&xr, &yr, sop->ofp) ||
+						(xr != sop->xr) |
+						(yr != sop->yr))) {
 				sprintf(errmsg, "resolution mismatch for '%s'",
 						oname);
 				error(USER, errmsg);
 			}
-			nvals = (nvals - (off_t)ftell(sout.ofp)) / recsiz;
+			nvals = (nvals - (off_t)ftell(sop->ofp)) / recsiz;
 			if ((lastout < 0) | (nvals < lastout))
 				lastout = nvals;
-			if (oent->key == NULL)	/* new entry */
-				oent->key = strcpy((char *)
-						malloc(strlen(oname)+1), oname);
-			if (oent->data == NULL)
-				oent->data = (char *)malloc(sizeof(STREAMOUT));
-			*(STREAMOUT *)oent->data = sout;
 			if (!(ofl & OF_BIN))
 				break;		/* no bin separation */
 		}
@@ -665,12 +622,6 @@ recover_output()
 			error(WARNING, "no previous data to recover");
 			lu_done(&ofiletab);	/* reclose all outputs */
 			return;
-		}
-		if (j > mp->nbins) {		/* check modifier size */
-			sprintf(errmsg,
-				"mismatched -bn setting for recovering '%s'",
-					modname[i]);
-			error(USER, errmsg);
 		}
 	}
 	if (lastout < 0) {
