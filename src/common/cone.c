@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: cone.c,v 2.10 2016/04/21 00:40:35 greg Exp $";
+static const char	RCSid[] = "$Id: cone.c,v 2.11 2016/09/16 15:09:21 greg Exp $";
 #endif
 /*
  *  cone.c - routines for making cones
@@ -81,8 +81,9 @@ getcone(				/* get cone structure */
 			if (sgn0+sgn1 == 0)
 				goto raderr;
 			if ((sgn0 < 0) | (sgn1 < 0)) {
-				objerror(o, o->otype==OBJ_RING?USER:WARNING,
-					"negative radii");
+				if (o->otype == OBJ_RING)
+					goto raderr;
+				objerror(o, WARNING, "negative radii");
 				o->otype = o->otype == OBJ_CONE ?
 						OBJ_CUP : OBJ_CONE;
 			}

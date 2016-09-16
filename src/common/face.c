@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: face.c,v 2.12 2006/03/02 16:51:54 greg Exp $";
+static const char RCSid[] = "$Id: face.c,v 2.13 2016/09/16 15:09:21 greg Exp $";
 #endif
 /*
  *  face.c - routines dealing with polygonal faces.
@@ -32,14 +32,15 @@ static const char RCSid[] = "$Id: face.c,v 2.12 2006/03/02 16:51:54 greg Exp $";
 
 
 FACE *
-getface(o)			/* get arguments for a face */
-OBJREC  *o;
+getface(				/* get arguments for a face */
+	OBJREC  *o
+)
 {
 	double  d1;
 	int  smalloff, badvert;
 	FVECT  v1, v2, v3;
-	register FACE  *f;
-	register int  i;
+	FACE  *f;
+	int  i;
 
 	if ((f = (FACE *)o->os) != NULL)
 		return(f);			/* already done */
@@ -106,8 +107,9 @@ OBJREC  *o;
 
 
 void
-freeface(o)			/* free memory associated with face */
-OBJREC  *o;
+freeface(			/* free memory associated with face */
+	OBJREC  *o
+)
 {
 	if (o->os == NULL)
 		return;
@@ -117,15 +119,16 @@ OBJREC  *o;
 
 
 int
-inface(p, f)			/* determine if point is in face */
-FVECT  p;
-FACE  *f;
+inface(				/* determine if point is in face */
+	FVECT  p,
+	FACE  *f
+)
 {
 	int  ncross, n;
 	double  x, y;
 	int  tst;
-	register int  xi, yi;
-	register RREAL  *p0, *p1;
+	int  xi, yi;
+	RREAL  *p0, *p1;
 
 	if ((xi = f->ax + 1) >= 3) xi -= 3;
 	if ((yi = xi + 1) >= 3) yi -= 3;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bbox.c,v 2.6 2005/06/14 17:10:06 greg Exp $";
+static const char RCSid[] = "$Id: bbox.c,v 2.7 2016/09/16 15:09:21 greg Exp $";
 #endif
 /*
  *  bbox.c - routines for bounding box computation.
@@ -61,6 +61,8 @@ add2bbox(		/* expand bounding box to fit object */
 	case OBJ_TUBE:
 	case OBJ_RING:
 		co = getcone(o, 0);
+		if (co == NULL)
+			break;
 		if (o->otype != OBJ_RING)
 			circle2bbox(CO_P0(co), co->ad, CO_R0(co), bbmin, bbmax);
 		circle2bbox(CO_P1(co), co->ad, CO_R1(co), bbmin, bbmax);
