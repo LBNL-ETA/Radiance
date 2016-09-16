@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.66 2016/09/16 17:54:56 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.67 2016/09/16 19:47:41 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -155,11 +155,11 @@ while ($#ARGV >= 0) {
 die "Must have at least one of +forward or +backward\n" if (!$doforw && !$doback);
 $wrapper .= $tensortree ? " -a t$tensortree" : " -a kf -c";
 $wrapper .= " -u $gunit";
-if (!defined $recovery) {
+if ( !defined $recovery ) {
 	# Issue warning for unhandled reciprocity case
 	print STDERR "Warning: recommend both +forward and +backward with -t3\n" if
 			($tensortree==3 && !($doforw && $doback));
-	# Get scene description and dimensions
+	# Get scene description
 	if ( $mgfin ) {
 		system "mgf2rad @ARGV > $radscn";
 		die "Could not load MGF input\n" if ( $? );
@@ -168,18 +168,19 @@ if (!defined $recovery) {
 		die "Could not load Radiance input\n" if ( $? );
 	}
 }
-if ($#dim != 5) {
+if ( $#dim != 5 ) {
 	@dim = split ' ', `getbbox -h $radscn`;
 }
-die "Device entirely inside room!\n" if ($dim[4] >= 0);
-if ($dim[5] > 1e-5) {
+die "Device entirely inside room!\n" if ( $dim[4] >= 0 );
+if ( $dim[5] > 1e-5 ) {
 	print STDERR "Warning: Device extends into room\n";
-} elsif ($dim[5]*$dim[5] > .01*($dim[1]-$dim[0])*($dim[3]-$dim[2])) {
+} elsif ( $dim[5]*$dim[5] > .01*($dim[1]-$dim[0])*($dim[3]-$dim[2]) ) {
 	print STDERR "Warning: Device far behind Z==0 plane\n";
 }
 # Assume Zmax==0 to derive thickness so pkgBSDF will work
 $wrapper .= ' -f "t=' . (-$dim[4]) . ';w=' . ($dim[1] - $dim[0]) .
 		';h=' . ($dim[3] - $dim[2]) . '"';
+$wrapper .= " -g $mgfscn" if ( $geout );
 # Calculate CIE (u',v') from Radiance RGB:
 my $CIEuv =	'Xi=.5141*Ri+.3239*Gi+.1620*Bi;' .
 		'Yi=.2651*Ri+.6701*Gi+.0648*Bi;' .
@@ -192,7 +193,7 @@ my $nx = int(sqrt($nsamp*($dim[1]-$dim[0])/($dim[3]-$dim[2])) + 1);
 my $ny = int($nsamp/$nx + 1);
 $nsamp = $nx * $ny;
 $rfluxmtx .= " -n $nproc -c $nsamp";
-if (!defined $recovery) {
+if ( !defined $recovery ) {
 	open(MYAVH, "> $td/savedARGV.txt");
 	foreach (@savedARGV) {
 		print MYAVH "$_\n";
@@ -214,7 +215,6 @@ if (!defined $recovery) {
 		open(MGFSCN, ">> $mgfscn");
 		print MGFSCN "xf\n";
 		close MGFSCN;
-		$wrapper .= " -g $mgfscn";
 	}
 	# Create receiver & sender surfaces (rectangular)
 	open(RADSCN, "> $receivers");
@@ -248,23 +248,14 @@ if (!defined $recovery) {
 	}
 	print STDERR "Recover using: $0 -recover $td\n";
 }
+# Open unbuffered progress file
 open(MYPH, ">> $td/phase.txt");
-{		# unbuffer output to MYPH
+{
 	my $ofh = select MYPH;
 	$| = 1;
 	select $ofh;
 }
 $curphase = 0;
-# Function to determine if next phase should be skipped or recovered
-sub do_phase {
-	$curphase++;
-	if (defined $recovery) {
-		if ($recovery == $curphase) { return -1; }
-		if ($recovery > $curphase) { return 0; }
-	}
-	print MYPH "$curphase\n";
-	return 1;
-}
 # Create data segments (all the work happens here)
 if ( $tensortree ) {
 	do_tree_bsdf();
@@ -272,13 +263,24 @@ if ( $tensortree ) {
 	do_matrix_bsdf();
 }
 # Output XML
-print STDERR "Running: $wrapper\n";
+# print STDERR "Running: $wrapper\n";
 system "$wrapper -C \"Created by: genBSDF @savedARGV\"";
 die "Could not wrap BSDF data\n" if ( $? );
 # Clean up temporary files and exit
 exec $rmtmp;
 
-#-------------- End of main program segment --------------#
+#============== End of main program segment ==============#
+
+# Function to determine if next phase should be skipped or recovered
+sub do_phase {
+	$curphase++;
+	if (defined $recovery) {
+		if ($recovery > $curphase) { return 0; }
+		if ($recovery == $curphase) { return -1; }
+	}
+	print MYPH "$curphase\n";
+	return 1;
+}
 
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
 sub do_tree_bsdf {
@@ -333,7 +335,7 @@ sub do_ttree_dir {
 			$cmd = "$rfluxmtx$r -h -ff $sender $receivers -i $octree";
 		}
 	}
-	print STDERR "Starting: $cmd\n";
+	# print STDERR "Starting: $cmd\n";
 	system $cmd;
 	die "Failure running rfluxmtx" if ( $? );
 	ttree_out($forw);
@@ -418,7 +420,7 @@ sub ttree_comp {
 			$cmd .= " -of $src " .
 					"| rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
 		}
-		print STDERR "Running: $cmd\n";
+		# print STDERR "Running: $cmd\n";
 		system "$cmd > $dest";
 		die "Failure running rttree_reduce" if ( $? );
 	} else {
@@ -430,7 +432,7 @@ sub ttree_comp {
 		open(DATOUT, "> $dest");
 		print DATOUT "{\n";
 		close DATOUT;
-		print STDERR "Running: $cmd\n";
+		# print STDERR "Running: $cmd\n";
 		system "$cmd >> $dest";
 		die "Failure running rcalc" if ( $? );
 		open(DATOUT, ">> $dest");
@@ -467,7 +469,7 @@ sub do_matrix_dir {
 	my $cmd;
 	my $sender = ($bsender,$fsender)[$forw];
 	$cmd = "$rfluxmtx$r -fd $sender $receivers -i $octree";
-	print STDERR "Starting: $cmd\n";
+	# print STDERR "Starting: $cmd\n";
 	system $cmd;
 	die "Failure running rfluxmtx" if ( $? );
 	matrix_out($forw);
@@ -514,7 +516,7 @@ sub matrix_comp {
 		$cmd .= " -c 0.0241 0.1229 0.8530";
 	}
 	$cmd .= " $src | rcollate -ho -oc 145";
-	print STDERR "Running: $cmd\n";
+	# print STDERR "Running: $cmd\n";
 	system "$cmd > $dest";
 	die "Failure running rmtxop" if ( $? );
 	if ( "$spec" ne "$curspec" ) {
