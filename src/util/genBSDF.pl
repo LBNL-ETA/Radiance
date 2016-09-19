@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.69 2016/09/16 22:42:42 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.70 2016/09/19 16:20:08 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -275,12 +275,30 @@ exec $rmtmp;
 # Function to determine if next phase should be skipped or recovered
 sub do_phase {
 	$curphase++;
-	if (defined $recovery) {
-		if ($recovery > $curphase) { return 0; }
-		if ($recovery == $curphase) { return -1; }
+	if ( defined $recovery ) {
+		if ( $recovery > $curphase ) { return 0; }
+		if ( $recovery == $curphase ) { return -1; }
 	}
 	print MYPH "$curphase\n";
 	return 1;
+}
+
+# Check if we are in active phase (not skipping parts)
+sub active_phase {
+	if ( defined $recovery ) {
+		if ( $recovery > $curphase ) { return 0; }
+		if ( $recovery == $curphase ) { return -1; }
+	}
+	return 1;
+}
+
+# Function to run program and check output if in active phase
+sub run_check {
+	if ( !active_phase() ) { return; }
+	my $cmd = shift;
+	# print STDERR "Running: $cmd\n";
+	system $cmd;
+	die "Failure running: $cmd\n" if ( $? );
 }
 
 #++++++++++++++ Tensor tree BSDF generation ++++++++++++++#
@@ -295,9 +313,8 @@ sub do_tree_bsdf {
 # Call rfluxmtx and process tensor tree BSDF for the given direction
 sub do_ttree_dir {
 	my $forw = shift;
-	my $r = do_phase();
-	if (!$r) { return; }
-	$r = ($r < 0) ? " -r" : "";
+	my $dop = do_phase();
+	my $r = ($dop < 0) ? " -r" : "";
 	my $cmd;
 	if ( $tensortree == 3 ) {
 		# Isotropic BSDF
@@ -336,9 +353,7 @@ sub do_ttree_dir {
 			$cmd = "$rfluxmtx$r -h -ff $sender $receivers -i $octree";
 		}
 	}
-	# print STDERR "Starting: $cmd\n";
-	system $cmd;
-	die "Failure running rfluxmtx" if ( $? );
+	run_check $cmd;
 	ttree_out($forw);
 }	# end of do_ttree_dir()
 
@@ -421,27 +436,27 @@ sub ttree_comp {
 			$cmd .= " -of $src " .
 					"| rttree_reduce$avg -h -ff -t $pcull -r $tensortree -g $ttlog2";
 		}
-		# print STDERR "Running: $cmd\n";
-		system "$cmd > $dest";
-		die "Failure running rttree_reduce" if ( $? );
+		run_check "$cmd > $dest";
 	} else {
 		if ($windoz) {
 			$cmd = "rcollate -ho -oc 1 $src | " . $cmd ;
 		} else {
 			$cmd .= " $src";
 		}
-		open(DATOUT, "> $dest");
-		print DATOUT "{\n";
-		close DATOUT;
-		# print STDERR "Running: $cmd\n";
-		system "$cmd >> $dest";
-		die "Failure running rcalc" if ( $? );
-		open(DATOUT, ">> $dest");
-		for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
-			print DATOUT "0\n";
+		if ( active_phase() ) {
+			open(DATOUT, "> $dest");
+			print DATOUT "{\n";
+			close DATOUT;
+			# print STDERR "Running: $cmd\n";
+			system "$cmd >> $dest";
+			die "Failure running rcalc" if ( $? );
+			open(DATOUT, ">> $dest");
+			for (my $i = ($tensortree==3)*$ns*$ns*$ns/2; $i-- > 0; ) {
+				print DATOUT "0\n";
+			}
+			print DATOUT "}\n";
+			close DATOUT;
 		}
-		print DATOUT "}\n";
-		close DATOUT;
 	}
 	if ( "$spec" ne "$curspec" ) {
 		$wrapper .= " -s $spec";
@@ -464,15 +479,10 @@ sub do_matrix_bsdf {
 # Call rfluxmtx and process tensor tree BSDF for the given direction
 sub do_matrix_dir {
 	my $forw = shift;
-	my $r = do_phase();
-	if (!$r) { return; }
-	$r = ($r < 0) ? " -r" : "";
-	my $cmd;
+	my $dop = do_phase();
+	my $r = ($dop < 0) ? " -r" : "";
 	my $sender = ($bsender,$fsender)[$forw];
-	$cmd = "$rfluxmtx$r -fd $sender $receivers -i $octree";
-	# print STDERR "Starting: $cmd\n";
-	system $cmd;
-	die "Failure running rfluxmtx" if ( $? );
+	run_check "$rfluxmtx$r -fd $sender $receivers -i $octree";
 	matrix_out($forw);
 }	# end of do_matrix_dir()
 
@@ -517,9 +527,7 @@ sub matrix_comp {
 		$cmd .= " -c 0.0241 0.1229 0.8530";
 	}
 	$cmd .= " $src | rcollate -ho -oc 145";
-	# print STDERR "Running: $cmd\n";
-	system "$cmd > $dest";
-	die "Failure running rmtxop" if ( $? );
+	run_check "$cmd > $dest";
 	if ( "$spec" ne "$curspec" ) {
 		$wrapper .= " -s $spec";
 		$curspec = $spec;
