@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.70 2016/09/19 16:20:08 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.71 2016/09/19 16:28:21 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -353,7 +353,11 @@ sub do_ttree_dir {
 			$cmd = "$rfluxmtx$r -h -ff $sender $receivers -i $octree";
 		}
 	}
-	run_check $cmd;
+	if ( $dop ) {
+		# print STDERR "Running: $cmd\n";
+		system $cmd;
+		die "Failure running rfluxmtx" if ( $? );
+	}
 	ttree_out($forw);
 }	# end of do_ttree_dir()
 
@@ -482,7 +486,12 @@ sub do_matrix_dir {
 	my $dop = do_phase();
 	my $r = ($dop < 0) ? " -r" : "";
 	my $sender = ($bsender,$fsender)[$forw];
-	run_check "$rfluxmtx$r -fd $sender $receivers -i $octree";
+	my $cmd = "$rfluxmtx$r -fd $sender $receivers -i $octree";
+	if ( $dop ) {
+		# print STDERR "Running: $cmd\n";
+		system $cmd;
+		die "Failure running rfluxmtx" if ( $? );
+	}
 	matrix_out($forw);
 }	# end of do_matrix_dir()
 
