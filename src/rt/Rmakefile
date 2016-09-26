@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.77 2016/05/17 17:39:47 rschregle Exp $
+# RCSid: $Id: Rmakefile,v 2.78 2016/09/26 20:19:30 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -91,11 +91,11 @@ SUPPSRC = func.c noise3.c data.c
 PMOBJS = pmap.o pmapsrc.o pmapmat.o pmaprand.o pmapio.o pmapdata.o \
          pmapbias.o pmapparm.o pmapcontrib.o pmapamb.o pmapray.o pmapopt.o \
          pmapdiag.o pmaptype.o oocmorton.o oococt.o oocsort.o oocbuild.o \
-         oocnn.o ooccache.o
+         oocnn.o ooccache.o pmutil.o
 PMSRC = pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c \
         pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c \
         pmapdiag.c pmaptype.c pmapkdt.c pmapooc.c oocmorton.c oococt.c \
-        oocsort.c oocbuild.c oocnn.c ooccache.c
+        oocsort.c oocbuild.c oocnn.c ooccache.c pmutil.c
 
 HEADERS = ambient.h ray.h data.h otspecial.h source.h
 
@@ -401,6 +401,9 @@ pmapsrc.o: pmapsrc.c pmapsrc.h ray.h ../common/standard.h \
  ../common/rterror.h ../common/octree.h ../common/object.h \
  ../common/color.h pmapparm.h pmaptype.h source.h pmap.h pmapdata.h \
  ../common/lookup.h pmaprand.h ../common/otypes.h
+
+pmutil.o:	pmap.h pmapio.h pmapdata.h pmapparm.h pmaptype.h pmapbias.h \
+../common/otypes.h
 
 pmaptype.o: pmaptype.c pmaptype.h
 
