@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.15 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.16 2016/09/28 22:19:18 greg Exp $";
 #endif
 
 /* 
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.15 2016/05/17 17:39:47 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.15 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapdata.c,v 2.16 2016/09/28 22:19:18 greg Exp $
 */
 
 
@@ -105,8 +105,10 @@ void initPhotonHeap (PhotonMap *pmap)
       /* Open heap file */
       if (!(pmap -> heap = tmpfile()))
          error(SYSTEM, "failed opening heap file in initPhotonHeap");
+#ifdef F_SETFL	/* XXX is there an alternate needed for Windows? */
       fdFlags = fcntl(fileno(pmap -> heap), F_GETFL);
       fcntl(fileno(pmap -> heap), F_SETFL, fdFlags | O_APPEND);
+#endif
 /*      ftruncate(fileno(pmap -> heap), 0); */
    }
 }
