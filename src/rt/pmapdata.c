@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.16 2016/09/28 22:19:18 greg Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.17 2016/09/29 20:51:07 greg Exp $";
 #endif
 
 /* 
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.16 2016/09/28 22:19:18 greg Exp
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.16 2016/09/28 22:19:18 greg Exp $
+   $Id: pmapdata.c,v 2.17 2016/09/29 20:51:07 greg Exp $
 */
 
 
@@ -141,10 +141,11 @@ void flushPhotonHeap (PhotonMap *pmap)
    /*if (pwrite(fd, pmap -> heapBuf, len, lseek(fd, 0, SEEK_END)) != len) */
    if (write(fd, pmap -> heapBuf, len) != len)
       error(SYSTEM, "failed append to heap file in flushPhotonHeap");
-   
+
+#if !defined(_WIN32) && !defined(_WIN64)
    if (fsync(fd))
       error(SYSTEM, "failed fsync in flushPhotonHeap");
-      
+#endif
    pmap -> heapBufLen = 0;
 }
 
