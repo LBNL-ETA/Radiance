@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmcontrib2.c,v 2.1 2016/09/29 21:51:58 greg Exp $";
+static const char RCSid[] = "$Id: pmcontrib2.c,v 2.2 2016/09/30 16:51:46 greg Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmcontrib2.c,v 2.1 2016/09/29 21:51:58 greg Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmcontrib2.c,v 2.1 2016/09/29 21:51:58 greg Exp $
+   $Id: pmcontrib2.c,v 2.2 2016/09/30 16:51:46 greg Exp $
 */
 
 
@@ -23,8 +23,6 @@ static const char RCSid[] = "$Id: pmcontrib2.c,v 2.1 2016/09/29 21:51:58 greg Ex
 #include "pmapdiag.h"
 #include "rcontrib.h"
 #include "otypes.h"
-#include <sys/mman.h>
-#include <sys/wait.h>
 
 
 
