@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.22 2016/03/06 01:13:17 schorsch Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.23 2016/10/13 16:59:29 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -41,7 +41,7 @@ static int		do_prog = 79;
 static char		*wrapBSDF[MAXCARG] = {"wrapBSDF", "-W", "-UU"};
 static int		wbsdfac = 3;
 
-/* Add argument to wrapBSDF, allocating space if isstatic */
+/* Add argument to wrapBSDF, allocating space if !isstatic */
 static void
 add_wbsdf(const char *arg, int isstatic)
 {
@@ -470,7 +470,7 @@ eval_rbf(void)
 
 		    eval_rbfcol(&sdv, rbf, vout);
 		    sum += sdv.cieY;
-		    if (XZarr != NULL) {
+		    if (rbf_colorimetry == RBCtristimulus) {
 			c_ccvt(&sdv.spec, C_CSXY);
 			xsum += sdv.cieY * sdv.spec.cx;
 			ysum += sdv.cieY * sdv.spec.cy;
@@ -478,7 +478,7 @@ eval_rbf(void)
 		}
 		n = j*abp->nangles + i;
 		bsdfarr[n] = sum / npsamps;
-		if (XZarr != NULL) {
+		if (rbf_colorimetry == RBCtristimulus) {
 		    XZarr[n][0] = xsum*sum/(npsamps*ysum);
 		    XZarr[n][1] = (sum - xsum - ysum)*sum/(npsamps*ysum);
 		}

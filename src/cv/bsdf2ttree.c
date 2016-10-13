@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.38 2016/10/12 17:36:11 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.39 2016/10/13 16:59:29 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -38,7 +38,7 @@ static int		do_prog = 79;
 static char		*wrapBSDF[MAXCARG] = {"wrapBSDF", "-U"};
 static int		wbsdfac = 2;
 
-/* Add argument to wrapBSDF, allocating space if isstatic */
+/* Add argument to wrapBSDF, allocating space if !isstatic */
 static void
 add_wbsdf(const char *arg, int isstatic)
 {
