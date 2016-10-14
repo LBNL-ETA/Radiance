@@ -2115,3 +2115,8 @@ Credit to Sarith Subramaniam for pointing out the problem.
 Made mkillum more tolerant of non-planar polygons in its sampling routines.
 
 Added "-recover" option to genBSDF to pick up where it left off.
+
+Fixed genBSDF issue that was created incorrect normalization of
+Klems output.  Thanks to David G-M and Christian Knoflach for
+discovering the error.  Also improved sampling of indirect irradiance
+that showed some slight bias due to poor sample collision avoidance.
