@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.73 2016/10/14 00:54:21 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.74 2016/10/14 19:15:34 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -58,9 +58,12 @@ ambcollision(				/* proposed direciton collides? */
 	FVECT	dv
 )
 {
-	const double	cos_thresh = 0.9999995;	/* about 3.44 arcminutes */
-	int		ii, jj;
-
+	double	cos_thresh;
+	int	ii, jj;
+					/* min. spacing = 1/10th division */
+	cos_thresh = (PI/10.)/(double)hp->ns;
+	cos_thresh = 1. - .5*cos_thresh*cos_thresh;
+					/* check existing neighbors */
 	for (ii = i-1; ii <= i+1; ii++) {
 		if (ii < 0) continue;
 		if (ii >= hp->ns) break;
@@ -72,14 +75,15 @@ ambcollision(				/* proposed direciton collides? */
 			if (jj >= hp->ns) break;
 			if ((ii==i) & (jj==j)) continue;
 			ap = &ambsam(hp,ii,jj);
-			if (ap->d <= .5/FHUGE) continue;
+			if (ap->d <= .5/FHUGE)
+				continue;	/* no one home */
 			VSUB(avec, ap->p, hp->rp->rop);
 			dprod = DOT(avec, dv);
 			if (dprod >= cos_thresh*VLEN(avec))
 				return(1);	/* collision */
 		}
 	}
-	return(0);
+	return(0);			/* nothing to worry about */
 }
 
 
