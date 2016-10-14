@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.71 2016/09/19 16:28:21 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.72 2016/10/14 00:54:22 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -535,7 +535,7 @@ sub matrix_comp {
 	} elsif ("$spec" eq "CIE-Z") {
 		$cmd .= " -c 0.0241 0.1229 0.8530";
 	}
-	$cmd .= " $src | rcollate -ho -oc 145";
+	$cmd .= " $src | getinfo -";
 	run_check "$cmd > $dest";
 	if ( "$spec" ne "$curspec" ) {
 		$wrapper .= " -s $spec";

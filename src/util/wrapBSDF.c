@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.20 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.21 2016/10/14 00:54:22 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -395,9 +395,7 @@ determine_angle_basis(const char *fn, ezxml_t wtl)
 static int
 filter_klems_matrix(FILE *fp)
 {
-#define MAX_COLUMNS	145
 	const char	*bn = klems_basis_name[angle_basis];
-	float		col_corr[MAX_COLUMNS];
 	int		i, j, n = nabases;
 					/* get angle basis */
 	while (n-- > 0)
@@ -405,15 +403,9 @@ filter_klems_matrix(FILE *fp)
 			break;
 	if (n < 0)
 		return 0;
-	if (abase_list[n].nangles > MAX_COLUMNS) {
-		fputs("Internal error - too many Klems columns!\n", stderr);
-		return 0;
-	}
-					/* get correction factors */
-	for (j = abase_list[n].nangles; j--; )
-		col_corr[j] = 1.f / io_getohm(j, &abase_list[n]);
 					/* read/correct/write matrix */
 	for (i = 0; i < abase_list[n].nangles; i++) {
+	    const double	corr = 1./io_getohm(i, &abase_list[n]);
 	    for (j = 0; j < abase_list[n].nangles; j++) {
 		double	d;
 		if (fscanf(fp, "%lf", &d) != 1)
@@ -422,7 +414,7 @@ filter_klems_matrix(FILE *fp)
 			fputs("Negative BSDF data!\n", stderr);
 			return 0;
 		}
-		printf(" %.3e", d*col_corr[j]*(d > 0));
+		printf(" %.3e", d*corr*(d > 0));
 	    }
 	    fputc('\n', stdout);
 	}
@@ -432,7 +424,6 @@ filter_klems_matrix(FILE *fp)
 			return 0;
 		}
 	return 1;			/* all is good */
-#undef MAX_COLUMNS
 }
 
 /* Write out BSDF data block with surrounding tags */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.72 2016/03/16 15:43:04 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.73 2016/10/14 00:54:21 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -51,6 +51,39 @@ typedef struct {
 
 
 static int
+ambcollision(				/* proposed direciton collides? */
+	AMBHEMI	*hp,
+	int	i,
+	int	j,
+	FVECT	dv
+)
+{
+	const double	cos_thresh = 0.9999995;	/* about 3.44 arcminutes */
+	int		ii, jj;
+
+	for (ii = i-1; ii <= i+1; ii++) {
+		if (ii < 0) continue;
+		if (ii >= hp->ns) break;
+		for (jj = j-1; jj <= j+1; jj++) {
+			AMBSAMP	*ap;
+			FVECT	avec;
+			double	dprod;
+			if (jj < 0) continue;
+			if (jj >= hp->ns) break;
+			if ((ii==i) & (jj==j)) continue;
+			ap = &ambsam(hp,ii,jj);
+			if (ap->d <= .5/FHUGE) continue;
+			VSUB(avec, ap->p, hp->rp->rop);
+			dprod = DOT(avec, dv);
+			if (dprod >= cos_thresh*VLEN(avec))
+				return(1);	/* collision */
+		}
+	}
+	return(0);
+}
+
+
+static int
 ambsample(				/* initial ambient division sample */
 	AMBHEMI	*hp,
 	int	i,
@@ -78,14 +111,7 @@ ambsample(				/* initial ambient division sample */
 	hlist[1] = j;
 	hlist[2] = i;
 	multisamp(spt, 2, urand(ilhash(hlist,3)+n));
-					/* avoid coincident samples */
-	if (!n && (0 < i) & (i < hp->ns-1) &&
-			(0 < j) & (j < hp->ns-1)) {
-		if ((spt[0] < 0.1) | (spt[0] >= 0.9))
-			spt[0] = 0.1 + 0.8*frandom();
-		if ((spt[1] < 0.1) | (spt[1] >= 0.9))
-			spt[1] = 0.1 + 0.8*frandom();
-	}
+resample:
 	SDsquare2disk(spt, (j+spt[1])/hp->ns, (i+spt[0])/hp->ns);
 	zd = sqrt(1. - spt[0]*spt[0] - spt[1]*spt[1]);
 	for (ii = 3; ii--; )
@@ -93,6 +119,11 @@ ambsample(				/* initial ambient division sample */
 				spt[1]*hp->uy[ii] +
 				zd*hp->rp->ron[ii];
 	checknorm(ar.rdir);
+					/* avoid coincident samples */
+	if (!n && ambcollision(hp, i, j, ar.rdir)) {
+		spt[0] = frandom(); spt[1] = frandom();
+		goto resample;
+	}
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
 	rayvalue(&ar);			/* evaluate ray */
 	ndims--;
