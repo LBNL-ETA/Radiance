@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.74 2016/10/14 19:15:34 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.75 2016/10/15 14:54:39 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -60,8 +60,8 @@ ambcollision(				/* proposed direciton collides? */
 {
 	double	cos_thresh;
 	int	ii, jj;
-					/* min. spacing = 1/10th division */
-	cos_thresh = (PI/10.)/(double)hp->ns;
+					/* min. spacing = 1/4th division */
+	cos_thresh = (PI/4.)/(double)hp->ns;
 	cos_thresh = 1. - .5*cos_thresh*cos_thresh;
 					/* check existing neighbors */
 	for (ii = i-1; ii <= i+1; ii++) {
@@ -126,7 +126,7 @@ resample:
 					/* avoid coincident samples */
 	if (!n && ambcollision(hp, i, j, ar.rdir)) {
 		spt[0] = frandom(); spt[1] = frandom();
-		goto resample;
+		goto resample;		/* reject this sample */
 	}
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
 	rayvalue(&ar);			/* evaluate ray */
