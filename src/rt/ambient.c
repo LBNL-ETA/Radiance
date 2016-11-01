@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.102 2016/04/24 16:21:32 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.103 2016/11/01 20:39:39 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -276,7 +276,7 @@ multambient(		/* compute ambient component & multiply by coef. */
 {
 	static int  rdepth = 0;			/* ambient recursion */
 	COLOR	acol, caustic;
-	int	ok;
+	int	i, ok;
 	double	d, l;
 
 	/* PMAP: Factor in ambient from photon map, if enabled and ray is
@@ -302,13 +302,27 @@ multambient(		/* compute ambient component & multiply by coef. */
 		goto dumbamb;
 
 	if (ambacc <= FTINY) {			/* no ambient storage */
+		FVECT	uvd[2];
+		float	dgrad[2], *dgp = NULL;
+
+		if (nrm != r->ron && DOT(nrm,r->ron) < 0.9999)
+			dgp = dgrad;		/* compute rotational grad. */
 		copycolor(acol, aval);
 		rdepth++;
 		ok = doambient(acol, r, r->rweight,
-				NULL, NULL, NULL, NULL, NULL);
+				uvd, NULL, NULL, dgp, NULL);
 		rdepth--;
 		if (!ok)
 			goto dumbamb;
+		if ((ok > 0) & (dgp != NULL)) {	/* apply texture */
+			FVECT	v1;
+			VCROSS(v1, r->ron, nrm);
+			d = 1.0;
+			for (i = 3; i--; )
+				d += v1[i] * (dgp[0]*uvd[0][i] + dgp[1]*uvd[1][i]);
+			if (d >= 0.05)
+				scalecolor(acol, d);
+		}
 		copycolor(aval, acol);
 
 		/* PMAP: add in caustic */

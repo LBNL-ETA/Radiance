@@ -2120,3 +2120,6 @@ Fixed genBSDF issue that was created incorrect normalization of
 Klems output.  Thanks to David G-M and Christian Knoflach for
 discovering the error.  Also improved sampling of indirect irradiance
 that showed some slight bias due to poor sample collision avoidance.
+
+Fixed long-standing issue with -aa 0 neglecting textures in calculating
+surface shading.
