@@ -2123,3 +2123,5 @@ that showed some slight bias due to poor sample collision avoidance.
 
 Fixed long-standing issue with -aa 0 neglecting textures in calculating
 surface shading.
+
+Fixed bug in ranimove introduced during photon map integration.

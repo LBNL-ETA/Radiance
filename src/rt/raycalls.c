@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.21 2015/02/24 19:39:27 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.22 2016/11/02 22:09:14 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -392,4 +392,7 @@ ray_defaults(		/* get default parameter values */
 	memset(rp->amblval, '\0', sizeof(rp->amblval));
 	for (i = AMBLLEN+1; i--; )
 		rp->amblndx[i] = -1;
+	
+	/* PMAP: restore photon mapping defaults */
+	ray_defaults_pmap(rp);
 }
