@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.28 2016/02/03 18:42:13 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.29 2016/12/06 23:19:50 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -30,6 +30,9 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.28 2016/02/03 18:42:13 greg Exp 
 
 #ifndef RSCA
 #define RSCA		2.0		/* radius scaling factor (empirical) */
+#endif
+#ifndef MAXSLOPE
+#define MAXSLOPE	1000.0		/* maximum slope for smooth region */
 #endif
 #ifndef SMOOTH_MSE
 #define SMOOTH_MSE	5e-5		/* acceptable mean squared error */
@@ -209,6 +212,8 @@ smooth_region(int x0, int x1, int y0, int y1)
 		return(1);		/* colinear values */
 	A = DOT(rMtx[0], xvec);
 	B = DOT(rMtx[1], xvec);
+	if (A*A + B*B > MAXSLOPE*MAXSLOPE)	/* too steep? */
+		return(0);
 	C = DOT(rMtx[2], xvec);
 	sqerr = 0.0;			/* compute mean squared error */
 	for (x = x0; x < x1; x++)

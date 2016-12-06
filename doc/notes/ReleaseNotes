@@ -2125,3 +2125,6 @@ Fixed long-standing issue with -aa 0 neglecting textures in calculating
 surface shading.
 
 Fixed bug in ranimove introduced during photon map integration.
+
+Added check for steep sections of BSDF in pabopto2bsdf, creating narrower
+peakes in those places and mitigating some normalization issues.
