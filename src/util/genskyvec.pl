@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.9 2014/09/17 22:40:49 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.10 2016/12/12 17:40:07 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -23,6 +23,8 @@ while ($#ARGV >= 0) {
 		$dosky = 0;
 	} elsif ("$ARGV[0]" eq "-h") {
 		$headout = 0;
+	} else {
+		die "Unexpected command-line argument: $ARGV[0]\n";
 	}
 	shift @ARGV;
 }
