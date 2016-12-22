@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.14 2016/08/18 17:57:57 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.15 2016/12/22 17:07:46 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -10,25 +10,42 @@
   #include <io.h>     /* _setmode() and stuff from unistd.h */
   #include <stdio.h>
   typedef long off_t;
+  #undef fdopen
   #define fdopen _fdopen
+  #undef read
   #define read _read
+  #undef open
   #define open _open
+  #undef close
   #define close _close
+  #undef write
   #define write _write
+  #undef ftruncate
   #define ftruncate _chsize_s
+  #undef unlink
   #define unlink _unlink
+  #undef fileno
   #define fileno _fileno
+  #undef snprintf
   #define snprintf _snprintf
+  #undef vsnprintf
   #define vsnprintf _vsnprintf
   /* XXX should we check first if size_t is 32 bit? */
+  #undef fseeko
   #define fseeko _fseeki64
+  #undef lseek
   #define lseek _lseek
+  #undef access
   #define access _access
+  #undef mktemp
   #define mktemp _mktemp
 
   #include <string.h>
+  #undef strcasecmp
   #define strcasecmp _stricmp
+  #undef strncasecmp
   #define strncasecmp _strnicmp
+  #undef strdup
   #define strdup _strdup
 
   #include <windows.h>
