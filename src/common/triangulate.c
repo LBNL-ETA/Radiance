@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: triangulate.c,v 2.3 2014/01/24 02:22:49 greg Exp $";
+static const char RCSid[] = "$Id: triangulate.c,v 2.4 2016/12/22 18:48:36 greg Exp $";
 #endif
 /*
  *  triangulate.c
@@ -38,7 +38,7 @@ static int
 polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
 {
   int p;
-  double Ax, Ay, Bx, By, Cx, Cy, Px, Py;
+  double Ax, Ay, Bx, By, Cx, Cy, Px, Py, cross;
 
   Ax = contour->v[V[u]].mX;
   Ay = contour->v[V[u]].mY;
@@ -49,13 +49,16 @@ polySnip(const Vert2_list *contour, int u, int v, int w, int n, int *V)
   Cx = contour->v[V[w]].mX;
   Cy = contour->v[V[w]].mY;
 
-  if ( EPSILON > (((Bx-Ax)*(Cy-Ay)) - ((By-Ay)*(Cx-Ax))) ) return false;
+  cross = ((Bx - Ax)*(Cy - Ay)) - ((By - Ay)*(Cx - Ax));
+  if (EPSILON > cross) return EPSILON > -cross ? -1 : false; /* Negative if colinear points */
 
   for (p=0;p<n;p++)
   {
     if( (p == u) | (p == v) | (p == w) ) continue;
     Px = contour->v[V[p]].mX;
     Py = contour->v[V[p]].mY;
+    if ((Px == Ax && Py == Ay) || (Px == Bx && Py == By) ||
+		(Px == Cx && Py == Cy)) continue; /* Handle donuts */
     if (insideTriangle(Ax,Ay,Bx,By,Cx,Cy,Px,Py)) return false;
   }
 
@@ -123,7 +126,7 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
 {
   /* allocate and initialize list of Vertices in polygon */
 
-  int nv, m, u, v, w, count;
+  int nv, m, u, v, w, count, result;
   int *V;
 
   if ( contour->nv < 3 ) return false;
@@ -157,9 +160,10 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
     v = u+1; if (nv <= v) v = 0;     /* new v    */
     w = v+1; if (nv <= w) w = 0;     /* next     */
 
-    if ( polySnip(contour,u,v,w,nv,V) )
+    result = polySnip(contour, u, v, w, nv, V);
+    if (result > 0) /* successfully found a triangle */
     {
-      int a,b,c,s,t;
+      int a,b,c;
 
       /* true names of the vertices */
       a = V[u]; b = V[v]; c = V[w];
@@ -168,6 +172,10 @@ polyTriangulate(const Vert2_list *contour, tri_out_t *cb)
       if (!(*cb)(contour, a, b, c)) return false;
  
       m++;
+    }
+    if (result) /* successfully found a triangle or three consecutive colinear points */
+    {
+      int s,t;
 
       /* remove v from remaining polygon */
       for(s=v,t=v+1;t<nv;s++,t++) V[s] = V[t]; nv--;
