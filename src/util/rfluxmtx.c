@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.41 2016/08/20 03:43:24 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.42 2016/12/22 17:28:06 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -1305,7 +1305,11 @@ main(int argc, char *argv[])
 			fputs(": -i, -I supported for pass-through only\n", stderr);
 			return(1);
 		}
-		fmtopt[2] = (sizeof(RREAL)==sizeof(double)) ? 'd' : 'f';
+#ifdef SMLFLT
+		fmtopt[2] = 'f';
+#else
+		fmtopt[2] = 'd';
+#endif
 		if (sampcnt <= 0) sampcnt = 10000;
 	}
 	sprintf(sampcntbuf, "%d", sampcnt);
