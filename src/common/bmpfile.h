@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.6 2008/05/31 19:38:36 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.7 2017/01/10 18:24:53 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -90,48 +90,48 @@ typedef struct {
 } BMPWriter;
 
 					/* open BMP stream for reading */
-BMPReader       *BMPopenReader(int (*cget)(void *),
+extern BMPReader       *BMPopenReader(int (*cget)(void *),
 				int (*seek)(uint32, void *), void *c_data);
 
 					/* determine if image is grayscale */
-int		BMPisGrayscale(const BMPHeader *hdr);
+extern int		BMPisGrayscale(const BMPHeader *hdr);
 
 					/* read next BMP scanline */
-int		BMPreadScanline(BMPReader *br);
+extern int		BMPreadScanline(BMPReader *br);
 
 					/* read a specific scanline */
-int		BMPseekScanline(int y, BMPReader *br);
+extern int		BMPseekScanline(int y, BMPReader *br);
 
 					/* get ith pixel from last scanline */
-RGBquad		BMPdecodePixel(int i, const BMPReader *br);
+extern RGBquad		BMPdecodePixel(int i, const BMPReader *br);
 
 					/* free BMP reader resources */
-void		BMPfreeReader(BMPReader *br);
+extern void		BMPfreeReader(BMPReader *br);
 
 					/* allocate uncompressed RGB header */
-BMPHeader       *BMPtruecolorHeader(int xr, int yr, int infolen);
+extern BMPHeader       *BMPtruecolorHeader(int xr, int yr, int infolen);
 
 					/* allocate color-mapped header */
-BMPHeader       *BMPmappedHeader(int xr, int yr, int infolen, int ncolors);
+extern BMPHeader       *BMPmappedHeader(int xr, int yr, int infolen, int ncolors);
 
 					/* open BMP stream for writing */
-BMPWriter	*BMPopenWriter(void (*cput)(int, void *),
+extern BMPWriter	*BMPopenWriter(void (*cput)(int, void *),
 				int (*seek)(uint32, void *), void *c_data,
 					BMPHeader *hdr);
 				
 					/* write the prepared scanline */
-int		BMPwriteScanline(BMPWriter *bw);
+extern int		BMPwriteScanline(BMPWriter *bw);
 
 					/* free BMP writer resources */
-void		BMPfreeWriter(BMPWriter *bw);
+extern void		BMPfreeWriter(BMPWriter *bw);
 
 					/* get corresponding error message */
-const char      *BMPerrorMessage(int ec);
+extern const char      *BMPerrorMessage(int ec);
 
 					/* stdio callback functions */
-int		stdio_getc(void *p);
-void		stdio_putc(int c, void *p);
-int		stdio_fseek(uint32 pos, void *p);
+extern int		stdio_getc(void *p);
+extern void		stdio_putc(int c, void *p);
+extern int		stdio_fseek(uint32 pos, void *p);
 
 					/* open stdio input stream */
 #define BMPopenInputStream(fp)  BMPopenReader(&stdio_getc, NULL, (void *)fp)
