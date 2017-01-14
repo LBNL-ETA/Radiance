@@ -1,0 +1,58 @@
+{ RCSid $Id: view360stereo.cal,v 1.1 2017/01/14 02:07:53 greg Exp $ }
+{
+  Definitions for full 360 over-under stereo equirectangular projection
+
+  (c)2014 Mark J. Stock
+  Modified 1/2017 by G.Ward
+
+  Use it like this:
+  X=2048; Y=2048; cnt $Y $X | rcalc -f 3d360.cal -e "XD=$X;YD=$Y;X=0;Y=0;Z=-0.1;IPD=0.06;EX=0;EZ=0" | rtrace [rpict options] -x $X -y $Y -fac scene.oct > out.hdr
+
+  Parameters defined externally:
+  X : neck rotation origin x
+  Y : neck rotation origin y
+  Z : neck rotation origin z
+  XD : horizontal picture dimension ( pixels )
+  YD : vertical picture dimension ( pixels )
+  IPD : inter-pupillary distance
+       this is between 0.055m and 0.07m on most humans
+  It's not a bad idea to leave these to their default, zero values:
+  EX : forward distance between neck rotation center and bridge of nose (between eyes)
+       this is between 0.05m and 0.07m on most humans
+  EZ : vertical distance between neck rotation center and eye elevation when altitude is 0 degrees
+       this is around 0.1m on most humans
+}
+
+{ Provide default settings }
+X = 0; Y = 0; Z = 0;
+IPD = 0.06;
+EX = 0;
+EZ = 0;
+{ Direction of the current pixel (both angles in radians) }
+px = $2 + .5;
+py = YD-.5 - $1;
+frac(x) : x - floor(x);
+altitude = (frac(py/(YD/2)) - 0.5) * PI;
+{ to do over-under stereo, azimuth is easy }
+azimut = 2*PI/XD * px;
+
+{ Save a little time below }
+sinazi = sin(azimut); cosazi = cos(azimut);
+sinalt = sin(altitude); cosalt = cos(altitude);
+
+{ Transformation into a direction vector }
+xdir = cosazi * cosalt;
+ydir = sinazi * cosalt;
+zdir = sinalt;
+
+{ Transform the viewpoint to account for the eye position }
+EY = if($1 - YD/2, 0.5*IPD, -0.5*IPD);
+xpos = X + xdir*EX - sinazi*EY - cosazi*sinalt*EZ;
+ypos = Y + ydir*EX + cosazi*EY - sinazi*sinalt*EZ;
+zpos = Z + zdir*EX +      0*EY + cosalt*EZ;
+
+{ Output line to rtrace; each ray needs: xorg yorg zorg xdir ydir zdir }
+$1 = xpos; $2 = ypos; $3 = zpos;
+$4 = xdir; $5 = ydir; $6 = zdir;
+
+{ EOF }

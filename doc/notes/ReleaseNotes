@@ -2128,3 +2128,6 @@ Fixed bug in ranimove introduced during photon map integration.
 
 Added check for steep sections of BSDF in pabopto2bsdf, creating narrower
 peakes in those places and mitigating some normalization issues.
+
+Added view360stereo.cal by Mark Stock to handle 360-degree over/under
+stereo views.
