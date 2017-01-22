@@ -1,4 +1,4 @@
-{ RCSid $Id: view360stereo.cal,v 1.1 2017/01/14 02:07:53 greg Exp $ }
+{ RCSid $Id: view360stereo.cal,v 1.2 2017/01/22 21:04:22 greg Exp $ }
 {
   Definitions for full 360 over-under stereo equirectangular projection
 
@@ -6,7 +6,7 @@
   Modified 1/2017 by G.Ward
 
   Use it like this:
-  X=2048; Y=2048; cnt $Y $X | rcalc -f 3d360.cal -e "XD=$X;YD=$Y;X=0;Y=0;Z=-0.1;IPD=0.06;EX=0;EZ=0" | rtrace [rpict options] -x $X -y $Y -fac scene.oct > out.hdr
+  X=2048; Y=2048; cnt $Y $X | rcalc -f view360stereo.cal -e "XD:$X;YD:$Y;X:0;Y:0;Z:-0.1;IPD:0.06;EX:0;EZ:0" | rtrace [rpict options] -x $X -y $Y -fac scene.oct > out.hdr
 
   Parameters defined externally:
   X : neck rotation origin x
@@ -29,12 +29,12 @@ IPD = 0.06;
 EX = 0;
 EZ = 0;
 { Direction of the current pixel (both angles in radians) }
-px = $2 + .5;
+px = (XD-1)/2 - $2;
 py = YD-.5 - $1;
 frac(x) : x - floor(x);
 altitude = (frac(py/(YD/2)) - 0.5) * PI;
 { to do over-under stereo, azimuth is easy }
-azimut = 2*PI/XD * px;
+azimut = 2*PI/XD*px;
 
 { Save a little time below }
 sinazi = sin(azimut); cosazi = cos(azimut);
