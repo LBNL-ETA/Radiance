@@ -1,4 +1,4 @@
-{ RCSid $Id: view360stereo.cal,v 1.2 2017/01/22 21:04:22 greg Exp $ }
+{ RCSid $Id: view360stereo.cal,v 1.3 2017/01/23 02:30:33 greg Exp $ }
 {
   Definitions for full 360 over-under stereo equirectangular projection
 
@@ -46,7 +46,7 @@ ydir = sinazi * cosalt;
 zdir = sinalt;
 
 { Transform the viewpoint to account for the eye position }
-EY = if($1 - YD/2, 0.5*IPD, -0.5*IPD);
+EY = if($1 - YD/2, -0.5*IPD, 0.5*IPD);
 xpos = X + xdir*EX - sinazi*EY - cosazi*sinalt*EZ;
 ypos = Y + ydir*EX + cosazi*EY - sinazi*sinalt*EZ;
 zpos = Z + zdir*EX +      0*EY + cosalt*EZ;
