@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.75 2016/10/15 14:54:39 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.76 2017/01/26 16:46:58 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -137,8 +137,8 @@ resample:
 	if (ar.rt*ap->d < 1.0)		/* new/closer distance? */
 		ap->d = 1.0/ar.rt;
 	if (!n) {			/* record first vertex & value */
-		if (ar.rt > 10.0*thescene.cusize)
-			ar.rt = 10.0*thescene.cusize;
+		if (ar.rt > 10.0*thescene.cusize + 1000.)
+			ar.rt = 10.0*thescene.cusize + 1000.;
 		VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
 		copycolor(ap->v, ar.rcol);
 	} else {			/* else update recorded value */
