@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambio.c,v 2.11 2016/03/03 22:13:51 greg Exp $";
+static const char	RCSid[] = "$Id: ambio.c,v 2.12 2017/01/27 22:00:49 greg Exp $";
 #endif
 /*
  * Read and write portable ambient values
@@ -13,7 +13,7 @@ static const char	RCSid[] = "$Id: ambio.c,v 2.11 2016/03/03 22:13:51 greg Exp $"
 #include "ambient.h"
 
 
-#define  badflt(x)	((x) < -FHUGE || (x) > FHUGE)
+#define  badflt(x)	(((x) < -FHUGE) | ((x) > FHUGE))
 
 #define  badvec(v)	(badflt((v)[0]) | badflt((v)[1]) | badflt((v)[2]))
 

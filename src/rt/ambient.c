@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.103 2016/11/01 20:39:39 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.104 2017/01/27 22:00:49 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -1327,10 +1327,10 @@ ambsync(void)			/* synchronize ambient file */
 	if ((flen = lseek(fileno(ambfp), (off_t)0, SEEK_END)) < 0)
 		goto seekerr;
 	if ((n = flen - lastpos) > 0) {		/* file has grown */
-		if (ambinp == NULL) {		/* use duplicate filedes */
-			ambinp = fdopen(dup(fileno(ambfp)), "r");
+		if (ambinp == NULL) {		/* get new file pointer */
+			ambinp = fopen(ambfile, "rb");
 			if (ambinp == NULL)
-				error(SYSTEM, "fdopen failed in ambsync");
+				error(SYSTEM, "fopen failed in ambsync");
 		}
 		if (fseek(ambinp, lastpos, SEEK_SET) < 0)
 			goto seekerr;
@@ -1345,24 +1345,18 @@ ambsync(void)			/* synchronize ambient file */
 			avstore(&avs);
 			n -= AMBVALSIZ;
 		}
-		lastpos = flen - n;
-		/*** seek always as safety measure
-		if (n) ***/			/* alignment */
-			if (lseek(fileno(ambfp), (off_t)lastpos, SEEK_SET) < 0)
-				goto seekerr;
+		lastpos = flen - n;		/* check alignment */
+		if (n && lseek(fileno(ambfp), (off_t)lastpos, SEEK_SET) < 0)
+			goto seekerr;
 	}
 	n = fflush(ambfp);			/* calls write() at last */
-	if (n != EOF)
-		lastpos += (long)nunflshed*AMBVALSIZ;
-	else if ((lastpos = lseek(fileno(ambfp), (off_t)0, SEEK_CUR)) < 0)
-		goto seekerr;
-		
+	lastpos += (long)nunflshed*AMBVALSIZ;
 	aflock(F_UNLCK);			/* release file */
 	nunflshed = 0;
 	return(n);
 seekerr:
 	error(SYSTEM, "seek failed in ambsync");
-	return -1; /* pro forma return */
+	return(EOF);	/* pro forma return */
 }
 
 #else	/* ! F_SETLKW */
