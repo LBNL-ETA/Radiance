@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.22 2013/12/09 22:08:13 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.23 2017/01/28 23:09:24 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -64,10 +64,13 @@ typedef struct {
 	RREAL  uv[2];	/* (u,v) position */
 } POINT;
 
+int  nverts = 0;		/* vertex output count */
+int  nnorms = 0;		/* normal output count */
 
 void loaddata(char *file, int m, int n, int pointsize);
 double l_dataval(char *nam);
 void putobjrow(POINT *rp, int n);
+void putobjvert(POINT *p);
 void putsquare(POINT *p0, POINT *p1, POINT *p2, POINT *p3);
 void comprow(double s, POINT *row, int siz);
 void compnorms(POINT *r0, POINT *r1, POINT *r2, int siz);
@@ -298,9 +301,6 @@ putobjrow(			/* output vertex row to .OBJ */
 	int  n
 )
 {
-	static int	nverts = 0;
-	static int	nnorms = 0;
-
 	for ( ; n-- >= 0; rp++) {
 		if (!rp->valid)
 			continue;
@@ -315,6 +315,18 @@ putobjrow(			/* output vertex row to .OBJ */
 		printf("\tvt %.9g %.9g\n", rp->uv[0], rp->uv[1]);
 		rp->valid = ++nverts;
 	}
+}
+
+
+void
+putobjvert(		/* put out OBJ vertex index triplet */
+	POINT *p
+)
+{
+	int	pti = p->valid ? p->valid-nverts-1 : 0;
+	int	ni = p->nvalid ? p->nvalid-nnorms-1 : 0;
+	
+	printf(" %d/%d/%d", pti, pti, ni);
 }
 
 
@@ -350,23 +362,22 @@ putsquare(		/* put out a square */
 		return;
 	if (objout) {			/* output .OBJ faces */
 		if (ok1 & ok2 && fdot(vc1,vc2) >= 1.0-FTINY*FTINY) {
-			printf("f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0->valid, p0->nvalid,
-					p1->valid, p1->valid, p1->nvalid,
-					p3->valid, p3->valid, p3->nvalid,
-					p2->valid, p2->valid, p2->nvalid);
+			putc('f', stdout);
+			putobjvert(p0); putobjvert(p1);
+			putobjvert(p3); putobjvert(p2);
+			putc('\n', stdout);
 			return;
 		}
-		if (ok1)
-			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p0->valid, p0->valid, p0->nvalid,
-					p1->valid, p1->valid, p1->nvalid,
-					p2->valid, p2->valid, p2->nvalid);
-		if (ok2)
-			printf("f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-					p2->valid, p2->valid, p2->nvalid,
-					p1->valid, p1->valid, p1->nvalid,
-					p3->valid, p3->valid, p3->nvalid);
+		if (ok1) {
+			putc('f', stdout);
+			putobjvert(p0); putobjvert(p1); putobjvert(p2);
+			putc('\n', stdout);
+		}
+		if (ok2) {
+			putc('f', stdout);
+			putobjvert(p2); putobjvert(p1); putobjvert(p3);
+			putc('\n', stdout);
+		}
 		return;
 	}
 					/* compute normal interpolation */
