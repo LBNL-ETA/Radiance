@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.9 2017/02/02 04:46:38 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.10 2017/02/02 04:52:46 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -24,10 +24,10 @@ Usage(const char *prog)
 	printf("  i\t\t\t\t Report general information (metadata)\n");
 	printf("  c\t\t\t\t Report diffuse and specular components\n");
 	printf("  q theta_i phi_i theta_o phi_o\t Query BSDF for given path (CIE-XYZ)\n");
-	printf("  s[r|t][s|d] N theta phi\t\t\t Generate N ray directions & colors at given incidence\n");
-	printf("  h[s|d] theta phi\t\t\t Report hemispherical scatteromg at given incidence\n");
-	printf("  r[s|d] theta phi\t\t\t Report hemispherical reflection at given incidence\n");
-	printf("  t[s|d] theta phi\t\t\t Report hemispherical transmission at given incidence\n");
+	printf("  s[r|t][s|d] N theta phi\t Generate N ray directions & colors at given incidence\n");
+	printf("  h[s|d] theta phi\t\t Report hemispherical scattering at given incidence\n");
+	printf("  r[s|d] theta phi\t\t Report hemispherical reflection at given incidence\n");
+	printf("  t[s|d] theta phi\t\t Report hemispherical transmission at given incidence\n");
 	printf("  a theta phi [t2 p2]\t\t Report resolution (in proj. steradians) for given direction(s)\n");
 	printf("  ^D\t\t\t\t Quit program\n");
 }
