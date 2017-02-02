@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.7 2017/02/02 00:30:16 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.8 2017/02/02 00:34:55 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 	SDretainSet = SDretainBSDFs;		/* keep BSDFs in memory */
 
 						/* loop on command */
-	while (fgets(inp, sizeof(inp), stdin) != NULL) {
+	while (fgets(inp, sizeof(inp), stdin)) {
 		int	sflags = SDsampAll;
 		char	*cp = inp;
 		char	*cp2;
@@ -98,29 +98,29 @@ main(int argc, char *argv[])
 			bsdf = SDcacheFile(path);
 			continue;
 		case 'I':			/* report general info. */
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
 			printf("Material: '%s'\n", bsdf->matn);
 			printf("Manufacturer: '%s'\n", bsdf->makr);
 			printf("Width, Height, Thickness (m): %.4e, %.4e, %.4e\n",
 					bsdf->dim[0], bsdf->dim[1], bsdf->dim[2]);
-			printf("Has geometry: %s\n", bsdf->mgf!=NULL ? "yes" : "no");
+			printf("Has geometry: %s\n", bsdf->mgf ? "yes" : "no");
 			continue;
 		case 'C':			/* report constant values */
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
-			if (bsdf->rf != NULL)
+			if (bsdf->rf)
 				printf("Peak front hemispherical reflectance: %.3e\n",
 						bsdf->rLambFront.cieY +
 						bsdf->rf->maxHemi);
-			if (bsdf->rb != NULL)
+			if (bsdf->rb)
 				printf("Peak back hemispherical reflectance: %.3e\n",
 						bsdf->rLambBack.cieY +
 						bsdf->rb->maxHemi);
-			if (bsdf->tf != NULL)
+			if (bsdf->tf)
 				printf("Peak front hemispherical transmittance: %.3e\n",
 						bsdf->tLamb.cieY + bsdf->tf->maxHemi);
-			if (bsdf->tb != NULL)
+			if (bsdf->tb)
 				printf("Peak back hemispherical transmittance: %.3e\n",
 						bsdf->tLamb.cieY + bsdf->tb->maxHemi);
 			printXYZ("Diffuse Front Reflectance: ", &bsdf->rLambFront);
@@ -128,7 +128,7 @@ main(int argc, char *argv[])
 			printXYZ("Diffuse Transmittance: ", &bsdf->tLamb);
 			continue;
 		case 'Q':			/* query BSDF value */
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
 			if (!*sskip2(cp,4))
 				break;
@@ -138,7 +138,7 @@ main(int argc, char *argv[])
 				printXYZ("", &val);
 			continue;
 		case 'S':			/* sample BSDF */
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
 			if (!*sskip2(cp,3))
 				break;
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
 		case 'H':			/* hemispherical totals */
 		case 'R':
 		case 'T':
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
 			if (!*sskip2(cp,2))
 				break;
@@ -167,7 +167,7 @@ main(int argc, char *argv[])
 			printf("%.4e\n", SDdirectHemi(vin, sflags, bsdf));
 			continue;
 		case 'A':			/* resolution in proj. steradians */
-			if (bsdf == NULL)
+			if (!bsdf)
 				goto noBSDFerr;
 			if (!*sskip2(cp,2))
 				break;
