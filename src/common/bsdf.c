@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.52 2015/08/23 00:56:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.53 2017/02/02 04:46:38 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -496,7 +496,7 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 		sv->cieY = cd->cTotal;
 	if (sv->cieY <= 1e-6) {		/* nothing to sample? */
 		sv->spec = c_dfcolor;
-		memset(ioVec, 0, 3*sizeof(double));
+		memset(ioVec, 0, sizeof(FVECT));
 		return SDEnone;
 	}
 					/* compute sample direction */
@@ -770,7 +770,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 	}
 	if (sv->cieY <= 1e-6) {		/* anything to sample? */
 		sv->cieY = .0;
-		memset(ioVec, 0, 3*sizeof(double));
+		memset(ioVec, 0, sizeof(FVECT));
 		return SDEnone;
 	}
 					/* scale random variable */

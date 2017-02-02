@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.8 2017/02/02 00:34:55 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.9 2017/02/02 04:46:38 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -24,10 +24,10 @@ Usage(const char *prog)
 	printf("  i\t\t\t\t Report general information (metadata)\n");
 	printf("  c\t\t\t\t Report diffuse and specular components\n");
 	printf("  q theta_i phi_i theta_o phi_o\t Query BSDF for given path (CIE-XYZ)\n");
-	printf("  s N theta phi\t\t\t Generate N ray directions at given incidence\n");
-	printf("  h theta phi\t\t\t Report hemispherical total at given incidence\n");
-	printf("  r theta phi\t\t\t Report hemispherical reflection at given incidence\n");
-	printf("  t theta phi\t\t\t Report hemispherical transmission at given incidence\n");
+	printf("  s[r|t][s|d] N theta phi\t\t\t Generate N ray directions & colors at given incidence\n");
+	printf("  h[s|d] theta phi\t\t\t Report hemispherical scatteromg at given incidence\n");
+	printf("  r[s|d] theta phi\t\t\t Report hemispherical reflection at given incidence\n");
+	printf("  t[s|d] theta phi\t\t\t Report hemispherical transmission at given incidence\n");
 	printf("  a theta phi [t2 p2]\t\t Report resolution (in proj. steradians) for given direction(s)\n");
 	printf("  ^D\t\t\t\t Quit program\n");
 }
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 		char	*cp2;
 		FVECT	vin, vout;
 		double	proja[2];
-		int	n;
+		int	n, i;
 		SDValue	val;
 		
 		while (isspace(*cp)) cp++;
@@ -142,27 +142,44 @@ main(int argc, char *argv[])
 				goto noBSDFerr;
 			if (!*sskip2(cp,3))
 				break;
-			n = atoi(sskip2(cp,1));
+			if (toupper(cp[1]) == 'R') {
+				sflags &= ~SDsampT;
+				++cp;
+			} else if (toupper(cp[1]) == 'T') {
+				sflags &= ~SDsampR;
+				++cp;
+			}
+			if (toupper(cp[1]) == 'S')
+				sflags &= ~SDsampDf;
+			else if (toupper(cp[1]) == 'D')
+				sflags &= ~SDsampSp;
+			i = n = atoi(sskip2(cp,1));
 			vec_from_deg(vin, atof(sskip2(cp,2)), atof(sskip2(cp,3)));
-			while (n-- > 0) {
-				if (SDreportError(SDsampBSDF(&val, vin,
-						rand()*(1./(RAND_MAX+.5)),
+			while (i-- > 0) {
+				VCOPY(vout, vin);
+				if (SDreportError(SDsampBSDF(&val, vout,
+						(i+rand()*(1./(RAND_MAX+.5)))/(double)n,
 						sflags, bsdf), stderr))
 					break;
-				printf("%.8f %.8f %.8f\n", vin[0], vin[1], vin[2]);
+				printf("%.8f %.8f %.8f ", vout[0], vout[1], vout[2]);
+				printXYZ("", &val);
 			}
 			continue;
-		case 'H':			/* hemispherical totals */
+		case 'H':			/* hemispherical values */
 		case 'R':
 		case 'T':
 			if (!bsdf)
 				goto noBSDFerr;
 			if (!*sskip2(cp,2))
 				break;
-			if (tolower(*cp) == 'r')
+			if (toupper(cp[0]) == 'R')
 				sflags &= ~SDsampT;
-			else if (tolower(*cp) == 't')
+			else if (toupper(cp[0]) == 'T')
 				sflags &= ~SDsampR;
+			if (toupper(cp[1]) == 'S')
+				sflags &= ~SDsampDf;
+			else if (toupper(cp[1]) == 'D')
+				sflags &= ~SDsampSp;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			printf("%.4e\n", SDdirectHemi(vin, sflags, bsdf));
 			continue;
