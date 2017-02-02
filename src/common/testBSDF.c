@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.5 2016/02/03 18:33:18 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.6 2017/02/02 00:27:55 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -21,6 +21,8 @@ Usage(const char *prog)
 	printf("Usage: %s [bsdf_directory]\n", prog);
 	printf("Input commands:\n");
 	printf("  L bsdf.xml\t\t\t Load (make active) given BSDF input file\n");
+	printf("  i\t\t\t\t Report general information (metadata)\n");
+	printf("  c\t\t\t\t Report diffuse and specular components\n");
 	printf("  q theta_i phi_i theta_o phi_o\t Query BSDF for given path (CIE-XYZ)\n");
 	printf("  s N theta phi\t\t\t Generate N ray directions at given incidence\n");
 	printf("  h theta phi\t\t\t Report hemispherical total at given incidence\n");
@@ -40,6 +42,16 @@ vec_from_deg(FVECT v, double theta, double phi)
 	v[0] *= cos(phi);
 	v[1] *= sin(phi);
 	v[2] = cos(theta);
+}
+
+static void
+printXYZ(const char *intro, const SDValue *vp)
+{
+	printf("%s%.3e %.3e %.3e\n", intro,
+			vp->spec.cx/vp->spec.cy*vp->cieY,
+			vp->cieY,
+			(1.-vp->spec.cx-vp->spec.cy)/
+			vp->spec.cy*vp->cieY);
 }
 
 int
@@ -85,6 +97,36 @@ main(int argc, char *argv[])
 				SDfreeCache(bsdf);
 			bsdf = SDcacheFile(path);
 			continue;
+		case 'I':			/* report general info. */
+			if (bsdf == NULL)
+				goto noBSDFerr;
+			printf("Material: '%s'\n", bsdf->matn);
+			printf("Manufacturer: '%s'\n", bsdf->makr);
+			printf("Has geometry: %s\n", bsdf->mgf!=NULL ? "yes" : "no");
+			printf("Width, Height, Thickness (m): %.4e, %.4e, %.4e\n",
+					bsdf->dim[0], bsdf->dim[1], bsdf->dim[2]);
+			continue;
+		case 'C':			/* report constant values */
+			if (bsdf == NULL)
+				goto noBSDFerr;
+			if (bsdf->rf != NULL)
+				printf("Peak front hemispherical reflectance: %.3e\n",
+						bsdf->rLambFront.cieY +
+						bsdf->rf->maxHemi);
+			if (bsdf->rb != NULL)
+				printf("Peak back hemispherical reflectance: %.3e\n",
+						bsdf->rLambBack.cieY +
+						bsdf->rb->maxHemi);
+			if (bsdf->tf != NULL)
+				printf("Peak front hemispherical transmittance: %.3e\n",
+						bsdf->tLamb.cieY + bsdf->tf->maxHemi);
+			if (bsdf->tb != NULL)
+				printf("Peak back hemispherical transmittance: %.3e\n",
+						bsdf->tLamb.cieY + bsdf->tb->maxHemi);
+			printXYZ("Diffuse Front Reflectance: ", &bsdf->rLambFront);
+			printXYZ("Diffuse Back Reflectance: ", &bsdf->rLambBack);
+			printXYZ("Diffuse Transmittance: ", &bsdf->tLamb);
+			continue;
 		case 'Q':			/* query BSDF value */
 			if (bsdf == NULL)
 				goto noBSDFerr;
@@ -92,14 +134,8 @@ main(int argc, char *argv[])
 				break;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			vec_from_deg(vout, atof(sskip2(cp,3)), atof(sskip2(cp,4)));
-			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr)) {
-				c_ccvt(&val.spec, C_CSXY);
-				printf("%.3e %.3e %.3e\n",
-						val.spec.cx/val.spec.cy*val.cieY,
-						val.cieY,
-						(1.-val.spec.cx-val.spec.cy)/
-						val.spec.cy*val.cieY);
-			}
+			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr))
+				printXYZ("", &val);
 			continue;
 		case 'S':			/* sample BSDF */
 			if (bsdf == NULL)
@@ -150,7 +186,7 @@ main(int argc, char *argv[])
 		Usage(argv[0]);
 		continue;
 noBSDFerr:
-		fprintf(stderr, "%s: need to use 'L' command to load BSDF\n", argv[0]);
+		fprintf(stderr, "%s: First, use 'L' command to load BSDF\n", argv[0]);
 	}
 	return 0;
 }
