@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.21 2016/09/16 05:06:07 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.22 2017/02/07 16:48:14 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -519,7 +519,7 @@ myseeko(const LUENT *e, void *p)
 	off_t		nbytes = *(off_t *)p;
 	
 	if (sop->reclen > 1)
-		nbytes = nbytes * sop->reclen;
+		nbytes *= (off_t)sop->reclen;
 	if (fseeko(sop->ofp, nbytes, SEEK_CUR) < 0) {
 		sprintf(errmsg, "seek error on file '%s'", e->key);
 		error(SYSTEM, errmsg);
