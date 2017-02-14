@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.74 2017/02/07 19:53:59 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.75 2017/02/14 07:06:55 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -328,13 +328,13 @@ sub do_ttree_dir {
 				"| $rfluxmtx$r -fa -y $ns2 - $receivers -i $octree";
 		} else {
 			$cmd = "cnt $ns2 $ny $nx " .
-				qq{| rcalc -e "r1=rand(.8681*recno-.673892)" } .
-				qq{-e "r2=rand(-5.37138*recno+67.1737811)" } .
-				qq{-e "r3=rand(+3.17603772*recno+83.766771)" } .
-				qq{-e "Dx=1-2*(\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)" } .
-				qq{-e "xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
-				qq{-e "yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
-				qq{-e "zp=$dim[5-$forw]" -e "myDz=Dz*($forw*2-1)" } .
+				qq{| rcalc -e 'r1=rand(.8681*recno-.673892)' } .
+				qq{-e 'r2=rand(-5.37138*recno+67.1737811)' } .
+				qq{-e 'r3=rand(+3.17603772*recno+83.766771)' } .
+				qq{-e 'Dx=1-2*(\$1+r1)/$ns;Dy:0;Dz=sqrt(1-Dx*Dx)' } .
+				qq{-e 'xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]' } .
+				qq{-e 'yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]' } .
+				qq{-e 'zp=$dim[5-$forw]' -e 'myDz=Dz*($forw*2-1)' } .
 				qq{-e '\$1=xp-Dx;\$2=yp-Dy;\$3=zp-myDz' } .
 				qq{-e '\$4=Dx;\$5=Dy;\$6=myDz' -of } .
 				"| $rfluxmtx$r -h -ff -y $ns2 - $receivers -i $octree";
