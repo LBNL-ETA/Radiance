@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.21 2016/10/14 00:54:22 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.22 2017/02/14 19:58:37 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -52,6 +52,7 @@ struct s_fieldID {
 } XMLfieldID[] = {
 	{"m", 0, 1, "Manufacturer"},
 	{"n", 0, 1, "Name"},
+	{"d", 0, 0, "DeviceType"},
 	{"c", 0, 0, "ThermalConductivity"},
 	{"ef", 0, 0, "EmissivityFront"},
 	{"eb", 0, 0, "EmissivityBack"},
@@ -63,7 +64,7 @@ struct s_fieldID {
 	{"\0", 0, 0, NULL}	/* terminator */
 };
 					/* field assignments */
-#define MAXASSIGN	12
+#define MAXASSIGN	16
 const char	*field_assignment[MAXASSIGN];
 int		nfield_assign = 0;
 #define FASEP	';'
