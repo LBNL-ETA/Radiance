@@ -12,13 +12,14 @@ Param   Description             Min     Fast    Accur   Max     Notes
 -pt     sampling threshold      1       .15     .05     0
 -pj     anti-aliasing jitter    0       .6      .9      1       A
 -pm	pixel motion		0	0	1	1	B
+-pd	pixel depth of field	0	0	depends	inf	B
 -dj     source jitter           0       0       .9      1       B
 -ds     source substructuring   0       .5      .15     .05
 -dt     direct thresholding     1       .5      .05     0	C
 -dc     direct certainty        0       .25     .5      1
 -dr	direct relays		0	1	3	6
 -dp	direct pretest density	32	64	512	0	C
--sj	specular jitter		0	.3	.7	1	A
+-ss	specular sampling	0	.3	32	inf	B
 -st	specular threshold	1	.85	.15	0	C
 -aw	ambient weight		0	100	10	inf	A
 -ab	ambient bounces		0	0	2	8
@@ -51,8 +52,8 @@ Param   Artifact				Solution
 -dc     inaccurate values with many sources	increase value to .75
 -dr	missing multiple mirror reflections	increment value
 -dp	incorrect mirror reflections		double value
--sj	specular reflections too fuzzy		decrease value to 0.2
--sj	specular reflections too sharp		increase value to 1
+-ss	specular reflections too fuzzy		decrease value to 0.2
+-ss	specular reflections too noisy		increase value to 16
 -st	some specular highlights missing	decrease value to 0.02
 -aw	shadows appear to glow			set value to 0
 -ab	lighting in shadows too flat		increment value
@@ -74,18 +75,21 @@ Param   Effect on Execution Time
 -ps     inverse, halving value increases rendering time up to four times
 -pt     minor, decreasing value causes modest increase in rendering time
 -pj     no effect
+-pm	no effect
+-pd	no effect
 -dj     indirect, increasing value requires -ps parameter to be reduced
 -ds     inverse, halving value causes rendering time to approximately double
 -dt     inverse, halving value causes rendering time to increase about 50%
 -dc     direct, affects rendering time up to 50% over its 0 to 1 range
 -dr	direct, depending on the scene each new reflection can double time
 -dp	minor, affects start-up time only, higher values take longer
--sj	no effect
+-ss	no effect until > 1, then linear increase for specular surfaces
 -st	minor, a value of zero may increase rendering by 50% over maximum of 1
 -ab	direct, doubling this value can double rendering time
--aa	direct, doubling this value approximately quadruples rendering time
+-aa	direct, halving this value approximately quadruples rendering time
 -ar	direct, effect depends on scene, can quadruple time for double value
 -ad	direct, doubling value may double rendering time
 -as	direct, effectively adds to -ad parameter and its cost
+-ms	direct, halving value increases time by a factor of two in mist regions
 -lr	minor, increase causes very slightly longer rendering time
 -lw	minor, decrease causes very slightly longer rendering time
