@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.23 2016/10/13 16:59:29 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.24 2017/02/17 22:31:49 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -202,7 +202,6 @@ eval_bsdf(const char *fname)
 				goto err;
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
-				c_ccvt(&sdv.spec, C_CSXY);
 				xsum += sdv.cieY * sdv.spec.cx;
 				ysum += sdv.cieY * sdv.spec.cy;
 			}
@@ -252,7 +251,6 @@ eval_bsdf(const char *fname)
 				goto err;
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
-				c_ccvt(&sdv.spec, C_CSXY);
 				xsum += sdv.cieY * sdv.spec.cx;
 				ysum += sdv.cieY * sdv.spec.cy;
 			}
@@ -301,7 +299,6 @@ eval_bsdf(const char *fname)
 				goto err;
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
-				c_ccvt(&sdv.spec, C_CSXY);
 				xsum += sdv.cieY * sdv.spec.cx;
 				ysum += sdv.cieY * sdv.spec.cy;
 			}
@@ -351,7 +348,6 @@ eval_bsdf(const char *fname)
 				goto err;
 			sum += sdv.cieY;
 			if (rbf_colorimetry == RBCtristimulus) {
-				c_ccvt(&sdv.spec, C_CSXY);
 				xsum += sdv.cieY * sdv.spec.cx;
 				ysum += sdv.cieY * sdv.spec.cy;
 			}
@@ -471,7 +467,6 @@ eval_rbf(void)
 		    eval_rbfcol(&sdv, rbf, vout);
 		    sum += sdv.cieY;
 		    if (rbf_colorimetry == RBCtristimulus) {
-			c_ccvt(&sdv.spec, C_CSXY);
 			xsum += sdv.cieY * sdv.spec.cx;
 			ysum += sdv.cieY * sdv.spec.cy;
 		    }
