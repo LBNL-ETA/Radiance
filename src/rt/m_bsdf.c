@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.30 2015/09/02 18:59:01 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.31 2017/02/17 23:24:56 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -73,10 +73,8 @@ typedef struct {
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
 	SDData	*sd;		/* loaded BSDF data */
-	COLOR	runsamp;	/* BSDF hemispherical reflection */
-	COLOR	rdiff;		/* added diffuse reflection */
-	COLOR	tunsamp;	/* BSDF hemispherical transmission */
-	COLOR	tdiff;		/* added diffuse transmission */
+	COLOR	rdiff;		/* diffuse reflection */
+	COLOR	tdiff;		/* diffuse transmission */
 }  BSDFDAT;		/* BSDF material data */
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
@@ -208,22 +206,11 @@ dir_bsdf(
 	 */
 	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
 		return;
-	if (ldot > 0) {		/* pattern only diffuse reflection */
-		COLOR	ctmp1, ctmp2;
-		dtmp = (np->pr->rod > 0) ? np->sd->rLambFront.cieY
-					: np->sd->rLambBack.cieY;
-					/* diffuse fraction */
-		dtmp /= PI * bright(ctmp);
-		copycolor(ctmp2, np->pr->pcol);
-		scalecolor(ctmp2, dtmp);
-		setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
-		addcolor(ctmp1, ctmp2);
-		multcolor(ctmp, ctmp1);	/* apply derated pattern */
-		dtmp = ldot * omega;
-	} else {			/* full pattern on transmission */
+	if (ldot < 0) {		/* pattern for specular transmission */
 		multcolor(ctmp, np->pr->pcol);
 		dtmp = -ldot * omega;
-	}
+	} else
+		dtmp = ldot * omega;
 	scalecolor(ctmp, dtmp);
 	addcolor(cval, ctmp);
 }
@@ -265,15 +252,6 @@ dir_brdf(
 	 */
 	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
 		return;
-					/* pattern only diffuse reflection */
-	dtmp = (np->pr->rod > 0) ? np->sd->rLambFront.cieY
-				: np->sd->rLambBack.cieY;
-	dtmp /= PI * bright(ctmp);	/* diffuse fraction */
-	copycolor(ctmp2, np->pr->pcol);
-	scalecolor(ctmp2, dtmp);
-	setcolor(ctmp1, 1.-dtmp, 1.-dtmp, 1.-dtmp);
-	addcolor(ctmp1, ctmp2);
-	multcolor(ctmp, ctmp1);		/* apply derated pattern */
 	dtmp = ldot * omega;
 	scalecolor(ctmp, dtmp);
 	addcolor(cval, ctmp);
@@ -388,23 +366,18 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 	COLORV		*unsc;
 
 	if (sflags == SDsampSpT) {
-		unsc = ndp->tunsamp;
+		unsc = ndp->tdiff;
 		if (ndp->pr->rod > 0)
 			dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
 		else
 			dfp = (ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf;
-		cvt_sdcolor(unsc, &ndp->sd->tLamb);
 	} else /* sflags == SDsampSpR */ {
-		unsc = ndp->runsamp;
-		if (ndp->pr->rod > 0) {
+		unsc = ndp->rdiff;
+		if (ndp->pr->rod > 0)
 			dfp = ndp->sd->rf;
-			cvt_sdcolor(unsc, &ndp->sd->rLambFront);
-		} else {
+		else
 			dfp = ndp->sd->rb;
-			cvt_sdcolor(unsc, &ndp->sd->rLambBack);
-		}
 	}
-	multcolor(unsc, ndp->pr->pcol);
 	if (dfp == NULL)			/* no specular component? */
 		return(0);
 						/* below sampling threshold? */
@@ -475,33 +448,36 @@ m_bsdf(OBJREC *m, RAY *r)
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
+	nd.mp = m;
+	nd.pr = r;
 						/* get BSDF data */
 	nd.sd = loadBSDF(m->oargs.sarg[1]);
 						/* diffuse reflectance */
 	if (hitfront) {
-		if (m->oargs.nfargs < 3)
-			setcolor(nd.rdiff, .0, .0, .0);
-		else
-			setcolor(nd.rdiff, m->oargs.farg[0],
+		cvt_sdcolor(nd.rdiff, &nd.sd->rLambFront);
+		if (m->oargs.nfargs >= 3) {
+			setcolor(ctmp, m->oargs.farg[0],
 					m->oargs.farg[1],
 					m->oargs.farg[2]);
+			addcolor(nd.rdiff, ctmp);
+		}
 	} else {
-		if (m->oargs.nfargs < 6)
-			setcolor(nd.rdiff, .0, .0, .0);
-		else
-			setcolor(nd.rdiff, m->oargs.farg[3],
+		cvt_sdcolor(nd.rdiff, &nd.sd->rLambBack);
+		if (m->oargs.nfargs >= 6) {
+			setcolor(ctmp, m->oargs.farg[3],
 					m->oargs.farg[4],
 					m->oargs.farg[5]);
+			addcolor(nd.rdiff, ctmp);
+		}
 	}
 						/* diffuse transmittance */
-	if (m->oargs.nfargs < 9)
-		setcolor(nd.tdiff, .0, .0, .0);
-	else
-		setcolor(nd.tdiff, m->oargs.farg[6],
+	cvt_sdcolor(nd.tdiff, &nd.sd->tLamb);
+	if (m->oargs.nfargs >= 9) {
+		setcolor(ctmp, m->oargs.farg[6],
 				m->oargs.farg[7],
 				m->oargs.farg[8]);
-	nd.mp = m;
-	nd.pr = r;
+		addcolor(nd.tdiff, ctmp);
+	}
 						/* get modifiers */
 	raytexture(r, m->omod);
 						/* modify diffuse values */
@@ -552,25 +528,23 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* sample transmission */
 	sample_sdf(&nd, SDsampSpT);
 						/* compute indirect diffuse */
-	copycolor(ctmp, nd.rdiff);
-	addcolor(ctmp, nd.runsamp);
-	if (bright(ctmp) > FTINY) {		/* ambient from reflection */
+	if (bright(nd.rdiff) > FTINY) {		/* ambient from reflection */
 		if (!hitfront)
 			flipsurface(r);
+		copycolor(ctmp, nd.rdiff);
 		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);
 		if (!hitfront)
 			flipsurface(r);
 	}
-	copycolor(ctmp, nd.tdiff);
-	addcolor(ctmp, nd.tunsamp);
-	if (bright(ctmp) > FTINY) {		/* ambient from other side */
+	if (bright(nd.tdiff) > FTINY) {		/* ambient from other side */
 		FVECT  bnorm;
 		if (hitfront)
 			flipsurface(r);
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
+		copycolor(ctmp, nd.tdiff);
 		if (nd.thick != 0) {		/* proxy with offset? */
 			VCOPY(vtmp, r->rop);
 			VSUM(r->rop, vtmp, r->ron, nd.thick);
