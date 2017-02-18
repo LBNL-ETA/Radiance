@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.31 2017/02/17 23:24:56 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.32 2017/02/18 19:12:49 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -101,20 +101,46 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	FVECT	vsrc, vsmp, vjit;
 	double	tomega;
 	double	sf, tsr, sd[2];
-	COLOR	csmp;
+	COLOR	csmp, cdiff;
+	double	diffY;
 	SDValue	sv;
 	SDError	ec;
 	int	i;
 					/* transform source direction */
 	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
 		return(0);
+					/* will discount diffuse portion */
+	switch ((vsrc[2] > 0)<<1 | (ndp->vray[2] > 0)) {
+	case 3:
+		if (ndp->sd->rf == NULL)
+			return(0);	/* all diffuse */
+		sv = ndp->sd->rLambFront;
+		break;
+	case 0:
+		if (ndp->sd->rb == NULL)
+			return(0);	/* all diffuse */
+		sv = ndp->sd->rLambBack;
+		break;
+	default:
+		if ((ndp->sd->tf == NULL) & (ndp->sd->tb == NULL))
+			return(0);	/* all diffuse */
+		sv = ndp->sd->tLamb;
+		break;
+	}
+	if ((sv.cieY *= 1./PI) > FTINY) {
+		diffY = sv.cieY;
+		cvt_sdcolor(cdiff, &sv);
+	} else {
+		diffY = .0;
+		setcolor(cdiff, .0, .0, .0);
+	}
 					/* assign number of samples */
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
 		goto baderror;
 					/* check indirect over-counting */
 	if (ndp->thick != 0 && ndp->pr->crtype & (SPECULAR|AMBIENT)
-				&& vsrc[2] > 0 ^ ndp->vray[2] > 0) {
+				&& (vsrc[2] > 0) ^ (ndp->vray[2] > 0)) {
 		double	dx = vsrc[0] + ndp->vray[0];
 		double	dy = vsrc[1] + ndp->vray[1];
 		if (dx*dx + dy*dy <= omega+tomega)
@@ -147,15 +173,25 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
 		if (ec)
 			goto baderror;
-		if (sv.cieY <= FTINY)	/* worth using? */
-			continue;
+		if (sv.cieY - diffY <= FTINY) {
+			addcolor(cval, cdiff);
+			continue;	/* no specular part */
+		}
 		cvt_sdcolor(csmp, &sv);
-		addcolor(cval, csmp);	/* average it in */
+		addcolor(cval, csmp);	/* else average it in */
 		++ok;
+	}
+	if (!ok) {
+		setcolor(cval, .0, .0, .0);
+		return(0);		/* no valid specular samples */
 	}
 	sf = 1./(double)nsamp;
 	scalecolor(cval, sf);
-	return(ok);
+					/* subtract diffuse contribution */
+	for (i = 3*(diffY > FTINY); i--; )
+		if ((colval(cval,i) -= colval(cdiff,i)) < .0)
+			colval(cval,i) = .0;
+	return(1);
 baderror:
 	objerror(ndp->mp, USER, transSDError(ec));
 	return(0);			/* gratis return */
@@ -348,7 +384,7 @@ sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int usepat)
 			continue;		/* Russian roulette victim */
 		}
 						/* need to offset origin? */
-		if (ndp->thick != 0 && ndp->pr->rod > 0 ^ vsmp[2] > 0)
+		if (ndp->thick != 0 && (ndp->pr->rod > 0) ^ (vsmp[2] > 0))
 			VSUM(sr.rorg, sr.rorg, ndp->pr->ron, -ndp->thick);
 		rayvalue(&sr);			/* send & evaluate sample */
 		multcolor(sr.rcol, sr.rcoef);
