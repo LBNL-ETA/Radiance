@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.32 2017/02/18 19:12:49 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.33 2017/02/19 17:22:18 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -93,9 +93,9 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, double sr_psa)
 	normalize(vres);
 }
 
-/* Evaluate BSDF for direct component, returning true if OK to proceed */
+/* Get BSDF specular for direct component, returning true if OK to proceed */
 static int
-direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
+direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
 	int	nsamp, ok = 0;
 	FVECT	vsrc, vsmp, vjit;
@@ -127,8 +127,8 @@ direct_bsdf_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		sv = ndp->sd->tLamb;
 		break;
 	}
-	if ((sv.cieY *= 1./PI) > FTINY) {
-		diffY = sv.cieY;
+	if (sv.cieY > FTINY) {
+		diffY = sv.cieY *= 1./PI;
 		cvt_sdcolor(cdiff, &sv);
 	} else {
 		diffY = .0;
@@ -238,9 +238,9 @@ dir_bsdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute scattering coefficient using BSDF.
+	 *  Compute specular scattering coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
+	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
 	if (ldot < 0) {		/* pattern for specular transmission */
 		multcolor(ctmp, np->pr->pcol);
@@ -284,9 +284,9 @@ dir_brdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute reflection coefficient using BSDF.
+	 *  Compute specular reflection coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
+	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
 	dtmp = ldot * omega;
 	scalecolor(ctmp, dtmp);
@@ -326,9 +326,9 @@ dir_btdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute scattering coefficient using BSDF.
+	 *  Compute specular scattering coefficient using BSDF.
 	 */
-	if (!direct_bsdf_OK(ctmp, ldir, omega, np))
+	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
 					/* full pattern on transmission */
 	multcolor(ctmp, np->pr->pcol);
