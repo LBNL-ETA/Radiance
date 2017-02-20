@@ -1,4 +1,4 @@
-{ RCSid $Id: cielab.cal,v 1.2 2005/05/25 04:44:25 greg Exp $ }
+{ RCSid $Id: cielab.cal,v 1.3 2017/02/20 23:16:31 greg Exp $ }
 {
 	Compute Lab color space and color differences from XYZ primaries.
 
@@ -6,9 +6,11 @@
 }
 Xw = 1; Yw = 1; Zw = 1;			{ default white }
 sq(x) : x*x;
-Ls(Yi) : if(Yi/Yw - .01, 116*(Yi/Yw)^(1/3) - 16, 903.3*Yi/Yw);
-as(Xi,Yi,Zi) : 500*((Xi/Xw)^(1/3) - (Yi/Yw)^(1/3));
-bs(Xi,Yi,Zi) : 200*((Yi/Yw)^(1/3) - (Zi/Zw)^(1/3));
+DEL : 6/29;
+bfunc(x) : if(x - DEL*DEL*DEL, x^(1/3), x/(3*DEL*DEL) + 2/3*DEL);
+Ls(Yi) : 116*bfunc(Yi/Yw) - 16;
+as(Xi,Yi,Zi) : 500*(bfunc(Xi/Xw) - bfunc(Yi/Yw));
+bs(Xi,Yi,Zi) : 200*(bfunc(Yi/Yw) - bfunc(Zi/Zw));
 
 					{ CIE 1976 Lab delta E formula }
 dE76(X1,Y1,Z1,X2,Y2,Z2) : sqrt( sq(Ls(Y1)-Ls(Y2))
