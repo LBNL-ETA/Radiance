@@ -2131,3 +2131,8 @@ peakes in those places and mitigating some normalization issues.
 
 Added view360stereo.cal by Mark Stock to handle 360-degree over/under
 stereo views.
+
+Added MAX2SHADE macro to place limit on number of light sources
+to precheck for obstructions.  (Currently set to 200.)  This
+avoids excessive start-up times for scenes with many light sources.
+Thanks to Axel Jacobs for pointing out the problem.
