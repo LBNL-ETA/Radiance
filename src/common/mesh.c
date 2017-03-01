@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.27 2016/03/22 03:56:17 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.28 2017/03/01 21:51:38 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -52,6 +52,7 @@ static int
 cvcmp(const char *vv1, const char *vv2)		/* compare encoded vertices */
 {
 	const MCVERT	*v1 = (const MCVERT *)vv1, *v2 = (const MCVERT *)vv2;
+
 	if (v1->fl != v2->fl)
 		return(1);
 	if (v1->xyz[0] != v2->xyz[0])
@@ -327,12 +328,12 @@ getmeshtri(			/* get triangle vertices */
 
 int32
 addmeshvert(			/* find/add a mesh vertex */
-	MESH	*mp,
+	MESH		*mp,
 	MESHVERT	*vp
 )
 {
-	LUENT		*lvp;
-	MCVERT		cv;
+	LUENT	*lvp;
+	MCVERT	cv;
 	int	i;
 
 	if (!(vp->fl & MT_V))
@@ -439,8 +440,8 @@ addmeshtri(			/* add a new mesh triangle */
 	OBJECT		mo
 )
 {
-	int32			vid[3], t;
-	int			pn[3], i;
+	int32		vid[3], t;
+	int		pn[3], i;
 	MESHPATCH	*pp;
 
 	if (!(tv[0].fl & tv[1].fl & tv[2].fl & MT_V))
@@ -459,7 +460,7 @@ addmeshtri(			/* add a new mesh triangle */
 			error(INTERNAL, "modifier range error in addmeshtri");
 	}
 				/* assign triangle */
-	if (pn[0] == pn[1] && pn[1] == pn[2]) {	/* local case */
+	if ((pn[0] == pn[1]) & (pn[1] == pn[2])) {	/* local case */
 		pp = &mp->patch[pn[0]];
 		if (pp->tri == NULL) {
 			pp->tri = (struct PTri *)malloc(
@@ -485,8 +486,7 @@ addmeshtri(			/* add a new mesh triangle */
 				pp->trimat[pp->ntris] = mo;
 			return(pn[0] << 10 | pp->ntris++);
 		}
-	}
-	if (pn[0] == pn[1]) {
+	} else if (pn[0] == pn[1]) {
 		t = vid[2]; vid[2] = vid[1]; vid[1] = vid[0]; vid[0] = t;
 		i = pn[2]; pn[2] = pn[1]; pn[1] = pn[0]; pn[0] = i;
 	} else if (pn[0] == pn[2]) {
@@ -535,7 +535,7 @@ checkmesh(MESH *mp)			/* validate mesh data */
 {
 	static char	embuf[128];
 	int		nouvbounds = 1;
-	int	i;
+	int		i;
 					/* basic checks */
 	if (mp == NULL)
 		return("NULL mesh pointer");
