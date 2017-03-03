@@ -2136,3 +2136,5 @@ Added MAX2SHADE macro to place limit on number of light sources
 to precheck for obstructions.  (Currently set to 200.)  This
 avoids excessive start-up times for scenes with many light sources.
 Thanks to Axel Jacobs for pointing out the problem.
+
+Added -v option to obj2mesh to print out mesh statistics.
