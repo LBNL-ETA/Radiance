@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.12 2016/03/04 19:16:49 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.13 2017/03/24 12:56:12 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -88,7 +88,8 @@ int nproc
 			close(pd[i].w);
 			close(pd[i].r);
 			pd[i].running = 0;
-		}
+		} else 
+			togo -= (pd[i].pid < 0);
 	if (nproc == 1) {			/* await specific process? */
 		if (waitpid(pd->pid, &status, 0) != pd->pid)
 			return(-1);
