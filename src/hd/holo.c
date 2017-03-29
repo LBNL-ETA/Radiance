@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holo.c,v 3.22 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: holo.c,v 3.23 2017/03/29 01:10:23 greg Exp $";
 #endif
 /*
  * Routines for converting holodeck coordinates, etc.
@@ -17,13 +17,13 @@ int	hdwg1[6] = {2,2,0,0,1,1};
 static double	logstep;
 
 
-extern void
+void
 hdcompgrid(			/* compute derived grid vector and index */
-	register HOLO	*hp
+	HOLO	*hp
 )
 {
 	double	d;
-	register int	i, j;
+	int	i, j;
 				/* initialize depth map */
 	if (hd_depthmap[0] < 1.) {
 		d = 1. + .5/DCLIN;
@@ -56,14 +56,14 @@ hdcompgrid(			/* compute derived grid vector and index */
 }
 
 
-extern int
+int
 hdbcoord(		/* compute beam coordinates from index */
 	GCOORD	gc[2],		/* returned */
-	register HOLO	*hp,
-	register int	i
+	HOLO	*hp,
+	int	i
 )
 {
-	register int	j, n;
+	int	j, n;
 	int	n2, reverse;
 	GCOORD	g2[2];
 					/* check range */
@@ -102,15 +102,15 @@ hdbcoord(		/* compute beam coordinates from index */
 }
 
 
-extern int
+int
 hdbindex(		/* compute index from beam coordinates */
-	register HOLO	*hp,
-	register GCOORD	gc[2]
+	HOLO	*hp,
+	GCOORD	gc[2]
 )
 {
 	GCOORD	g2[2];
 	int	reverse;
-	register int	i, j;
+	int	i, j;
 					/* check ordering and limits */
 	if ( (reverse = gc[0].w > gc[1].w) ) {
 		*g2 = *(gc+1);
@@ -134,14 +134,14 @@ hdbindex(		/* compute index from beam coordinates */
 }
 
 
-extern void
+void
 hdcell(		/* compute cell coordinates */
-	register FVECT	cp[4],	/* returned (may be passed as FVECT cp[2][2]) */
-	register HOLO	*hp,
-	register GCOORD	*gc
+	FVECT	cp[4],	/* returned (may be passed as FVECT cp[2][2]) */
+	HOLO	*hp,
+	GCOORD	*gc
 )
 {
-	register RREAL	*v;
+	RREAL	*v;
 	double	d;
 					/* compute common component */
 	VCOPY(cp[0], hp->orig);
@@ -168,14 +168,14 @@ hdcell(		/* compute cell coordinates */
 }
 
 
-extern int
+int
 hdlseg(			/* compute line segment for beam */
-	register int	lseg[2][3],
-	register HOLO	*hp,
+	int	lseg[2][3],
+	HOLO	*hp,
 	GCOORD	gc[2]
 )
 {
-	register int	k;
+	int	k;
 
 	for (k = 0; k < 2; k++) {		/* compute end points */
 		lseg[k][gc[k].w>>1] = gc[k].w&1	? hp->grid[gc[k].w>>1]-1 : 0 ;
@@ -186,14 +186,14 @@ hdlseg(			/* compute line segment for beam */
 }
 
 
-extern unsigned int
+unsigned int
 hdcode(			/* compute depth code for d */
 	HOLO	*hp,
 	double	d
 )
 {
 	double	tl = hp->tlin;
-	register long	c;
+	long	c;
 
 	if (d <= 0.)
 		return(0);
@@ -206,10 +206,10 @@ hdcode(			/* compute depth code for d */
 }
 
 
-extern void
+void
 hdgrid(		/* compute grid coordinates */
 	FVECT	gp,		/* returned */
-	register HOLO	*hp,
+	HOLO	*hp,
 	FVECT	wp
 )
 {
@@ -222,14 +222,14 @@ hdgrid(		/* compute grid coordinates */
 }
 
 
-extern void
+void
 hdworld(		/* compute world coordinates */
-	register FVECT	wp,
-	register HOLO	*hp,
+	FVECT	wp,
+	HOLO	*hp,
 	FVECT	gp
 )
 {
-	register double	d;
+	double	d;
 
 	d = gp[0]/hp->grid[0];
 	VSUM(wp, hp->orig, hp->xv[0], d);
@@ -242,7 +242,7 @@ hdworld(		/* compute world coordinates */
 }
 
 
-extern double
+double
 hdray(	/* compute ray within a beam */
 	FVECT	ro,
 	FVECT	rd,		/* returned */
@@ -252,7 +252,7 @@ hdray(	/* compute ray within a beam */
 )
 {
 	FVECT	cp[4], p[2];
-	register int	i, j;
+	int	i, j;
 	double	d0, d1;
 					/* compute entry and exit points */
 	for (i = 0; i < 2; i++) {
@@ -269,20 +269,20 @@ hdray(	/* compute ray within a beam */
 }
 
 
-extern double
+double
 hdinter(	/* compute ray intersection with section */
-	register GCOORD	gc[2],	/* returned */
+	GCOORD	gc[2],	/* returned */
 	uby8	r[2][2],	/* returned (optional) */
 	double	*ed,		/* returned (optional) */
-	register HOLO	*hp,
+	HOLO	*hp,
 	FVECT	ro,
 	FVECT	rd		/* normalization of rd affects distances */
 )
 {
 	FVECT	p[2], vt;
 	double	d, t0, t1, d0, d1;
-	register RREAL	*v;
-	register int	i;
+	RREAL	*v;
+	int	i;
 					/* first, intersect walls */
 	gc[0].w = gc[1].w = -1;
 	t0 = -FHUGE; t1 = FHUGE;
