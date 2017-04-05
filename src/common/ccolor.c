@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.9 2016/01/23 18:58:35 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.10 2017/04/05 00:54:50 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -409,11 +409,11 @@ c_encodeChroma(C_COLOR *clr)
 	c_ccvt(clr, C_CSXY);
 	df = UV_NORMF/(-2.*clr->cx + 12.*clr->cy + 3.);
 	ub = 4.*clr->cx*df + frand();
-	ub *= (ub > 0);
 	if (ub > 0xff) ub = 0xff;
+	else ub *= (ub > 0);
 	vb = 9.*clr->cy*df + frand();
-	vb *= (vb > 0);
 	if (vb > 0xff) vb = 0xff;
+	else vb *= (vb > 0);
 
 	return(vb<<8 | ub);
 }
