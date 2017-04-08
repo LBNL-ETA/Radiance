@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readobj.c,v 2.21 2016/02/02 18:02:32 greg Exp $";
+static const char RCSid[] = "$Id: readobj.c,v 2.22 2017/04/08 03:56:44 greg Exp $";
 #endif
 /*
  *  readobj.c - routines for reading in object descriptions.
@@ -25,13 +25,14 @@ OBJECT  nobjects = 0;			/* # of objects */
 
 
 void
-readobj(inpspec)		/* read in an object file or stream */
-char  *inpspec;
+readobj(				/* read in an object file or stream */
+	char  *inpspec
+)
 {
 	OBJECT  lastobj;
 	FILE  *infp;
 	char  buf[2048];
-	register int  c;
+	int  c;
 
 	lastobj = nobjects;
 	if (inpspec == NULL) {
@@ -72,15 +73,16 @@ char  *inpspec;
 
 
 void
-getobject(name, fp)			/* read the next object */
-char  *name;
-FILE  *fp;
+getobject(				/* read the next object */
+	char  *name,
+	FILE  *fp
+)
 {
 #define	OALIAS	-2
 	OBJECT  obj;
 	char  sbuf[MAXSTR];
 	int  rval;
-	register OBJREC  *objp;
+	OBJREC  *objp;
 
 	if ((obj = newobject()) == OVOID)
 		error(SYSTEM, "out of object space");
@@ -119,7 +121,7 @@ FILE  *fp;
 	objp->oname = savqstr(sbuf);
 					/* get arguments */
 	if (objp->otype == MOD_ALIAS) {
-		register OBJECT  alias;
+		OBJECT  alias;
 		strcpy(sbuf, "EOF");
 		fgetword(sbuf, MAXSTR, fp);
 		if ((alias = modifier(sbuf)) == OVOID) {
@@ -158,9 +160,9 @@ FILE  *fp;
 
 
 OBJECT
-newobject()				/* get a new object */
+newobject(void)				/* get a new object */
 {
-	register int  i;
+	int  i;
 
 	if ((nobjects & (OBJBLKSIZ-1)) == 0) {	/* new block */
 		errno = 0;
@@ -175,10 +177,12 @@ newobject()				/* get a new object */
 }
 
 void
-freeobjects(firstobj, nobjs)		/* free a range of objects */
-int  firstobj, nobjs;
+freeobjects(				/* free a range of objects */
+	int firstobj,
+	int nobjs
+)
 {
-	register int  obj;
+	int  obj;
 					/* check bounds */
 	if (firstobj < 0)
 		return;
@@ -188,7 +192,7 @@ int  firstobj, nobjs;
 		return;
 					/* clear objects */
 	for (obj = firstobj+nobjs; obj-- > firstobj; ) {
-		register OBJREC  *o = objptr(obj);
+		OBJREC  *o = objptr(obj);
 		free_os(o);		/* free client memory */
 		freeqstr(o->oname);
 		freefargs(&o->oargs);
