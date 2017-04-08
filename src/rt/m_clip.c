@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_clip.c,v 2.11 2013/08/20 21:37:46 greg Exp $";
+static const char	RCSid[] = "$Id: m_clip.c,v 2.12 2017/04/08 00:09:35 greg Exp $";
 #endif
 /*
  *  m_clip.c - routine for clipped (cut) objects.
@@ -12,10 +12,22 @@ static const char	RCSid[] = "$Id: m_clip.c,v 2.11 2013/08/20 21:37:46 greg Exp $
 
 /*
  *  Clipping objects permit holes and sections to be taken out
- *  of other objects.  The method is simple:  
+ *  of other objects. 
  *
  *  The argument is the clipped materials;
  *  the first is used to shade upon exit.
+ *
+ *  In the simple case of the first argument being "void", we
+ *  just add or subtract (depending on whether we're coming or going)
+ *  the list of modifiers to the ray's "newcset", which will then
+ *  take over for "clipset" on penetration.  Any surface modifier
+ *  names found in "clipset" will be treated as invisible in raycont().
+ *
+ *  In the more complicated case of a non-void material as the
+ *  first argument, we have to backtrack up the ray tree to count
+ *  the number of times we've penetrated the front side of one of
+ *  the surfaces we care about.  This relies on outward-facing
+ *  surface normals and closed objects, so is somewhat error-prone.
  */
 
 

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.30 2016/07/10 23:41:37 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.31 2017/04/08 00:09:35 greg Exp $"
 .\" Print using the -ms macro package
 .DA 07/10/2016
 .LP
@@ -961,8 +961,10 @@ N mod1 mod2 .. modN
 The first modifier will also be used to shade the area leaving the
 antimatter volume and entering the regular volume.
 If mod1 is void, the antimatter volume is completely invisible.
-Antimatter does not work properly with the material type "trans",
-and multiple antimatter surfaces should be disjoint.
+If shading is desired at antimatter surfaces, it is important
+that the related volumes are closed with outward-facing normals.
+Antimatter surfaces should not intersect with other antimatter boundaries,
+and it is unwise to use the same modifier in nested antimatter volumes.
 The viewpoint must be outside all volumes concerned for a correct
 rendering.
 .NH 3
