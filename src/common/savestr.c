@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: savestr.c,v 2.10 2004/03/04 16:34:34 greg Exp $";
+static const char	RCSid[] = "$Id: savestr.c,v 2.11 2017/04/09 21:33:24 greg Exp $";
 #endif
 /*
  *  savestr.c - routines for efficient string storage.
@@ -50,11 +50,13 @@ static S_HEAD  *stab[NHASH];
 char *
 savestr(char *str)				/* save a string */
 {
-	register int  hval;
-	register S_HEAD  *sp;
+	int  hval;
+	S_HEAD  *sp;
 
 	if (str == NULL)
 		return(NULL);
+	if (!*str)
+		return "";
 	hval = hash(str);
 	for (sp = stab[hval]; sp != NULL; sp = sp->next)
 		if (!strcmp(str, string(sp))) {
@@ -77,9 +79,9 @@ void
 freestr(char *s)				/* free a string */
 {
 	int  hval;
-	register S_HEAD  *spl, *sp;
+	S_HEAD  *spl, *sp;
 
-	if (s == NULL)
+	if (s == NULL || !*s)
 		return;
 	hval = hash(s);
 	for (spl = NULL, sp = stab[hval]; sp != NULL; spl = sp, sp = sp->next)
@@ -97,9 +99,9 @@ freestr(char *s)				/* free a string */
 
 
 int
-shash(register char  *s)
+shash(char *s)
 {
-	register int  h = 0;
+	int  h = 0;
 
 	while (*s)
 		h = (h<<1 & 0x7fff) ^ (*s++ & 0xff);
