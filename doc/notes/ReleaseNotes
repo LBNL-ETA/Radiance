@@ -2138,3 +2138,5 @@ avoids excessive start-up times for scenes with many light sources.
 Thanks to Axel Jacobs for pointing out the problem.
 
 Added -v option to obj2mesh to print out mesh statistics.
+
+Rewrote bsdf2rad from ground up and made it a standard part of build.

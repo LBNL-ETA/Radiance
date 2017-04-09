@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.52 2016/08/18 00:52:48 greg Exp $
+# RCSid $Id: Rmakefile,v 2.53 2017/04/09 21:39:26 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -22,9 +22,9 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf \
-pabopto2xyz pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF epw2wea
+pabopto2xyz pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF epw2wea bsdf2rad
 
-LIBFILES = source.cal tilt.cal lamp.tab window.cal
+LIBFILES = source.cal tilt.cal lamp.tab window.cal bsdf2rad.cal
 
 all:	$(PROGS)
 

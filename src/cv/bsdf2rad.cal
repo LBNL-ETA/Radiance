@@ -1,0 +1,44 @@
+{ RCSid $Id: bsdf2rad.cal,v 2.1 2017/04/09 21:39:26 greg Exp $ }
+{
+	Calculation of false color scale for bsdf2rad.
+
+	Greg Ward	April 2017
+}
+		{ Compute lines of latitude and longitude }
+LATSTEP : 15*DEGREE;
+LONGSTEP : 30*DEGREE;
+LWIDTH : 1*DEGREE;
+
+latlong = if(LWIDTH-mod(Acos(Nz)+LWIDTH/2,LATSTEP), .01,
+		if(LWIDTH-mod(atan2(Ny,Nx)+LWIDTH/2,LONGSTEP), .01, 1));
+
+interp_arr2`(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
+interp_arr`(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
+
+def_redp(i):select(i,0.18848,0.05468174,
+0.00103547,8.311144e-08,7.449763e-06,0.0004390987,0.001367254,
+0.003076,0.01376382,0.06170773,0.1739422,0.2881156,0.3299725,
+0.3552663,0.372552,0.3921184,0.4363976,0.6102754,0.7757267,
+0.9087369,1,1,0.9863);
+sca_red(x):interp_arr(x/0.0454545+1,def_redp);
+
+def_grnp(i):select(i,0.0009766,2.35501e-05,
+0.0008966244,0.0264977,0.1256843,0.2865799,0.4247083,0.4739468,
+0.4402732,0.3671876,0.2629843,0.1725325,0.1206819,0.07316644,
+0.03761026,0.01612362,0.004773749,6.830967e-06,0.00803605,
+0.1008085,0.3106831,0.6447838,0.9707);
+sca_grn(x):interp_arr(x/0.0454545+1,def_grnp);
+
+def_blup(i):select(i,0.2666,0.3638662,0.4770437,
+0.5131397,0.5363797,0.5193677,0.4085123,0.1702815,0.05314236,
+0.05194055,0.08564082,0.09881395,0.08324373,0.06072902,
+0.0391076,0.02315354,0.01284458,0.005184709,0.001691774,
+2.432735e-05,1.212949e-05,0.006659406,0.02539);
+sca_blu(x):interp_arr(x/0.0454545+1,def_blup);
+
+{ BSDF scale is based on distance from the origin }
+
+dist_orig = sqrt(Px*Px + Py*Py + Pz*Pz);
+bsdf_red = sca_red(dist_orig);
+bsdf_grn = sca_grn(dist_orig);
+bsdf_blu = sca_blu(dist_orig);

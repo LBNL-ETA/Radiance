@@ -73,7 +73,7 @@ install(TARGETS
 	bsdf2ttree bsdf2klems pkgBSDF epw2wea
   RUNTIME DESTINATION bin)
 
-INSTALL(FILES source.cal tilt.cal lamp.tab window.cal
+INSTALL(FILES source.cal tilt.cal lamp.tab window.cal bsdf2rad.cal
   DESTINATION lib)
 
 if (NOT WIN32)
