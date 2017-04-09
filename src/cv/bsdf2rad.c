@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.17 2017/04/09 22:06:07 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.18 2017/04/09 22:51:19 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: bsdf2rad.c,v 2.17 2017/04/09 22:06:07 greg Exp
 #include "resolu.h"
 #include "bsdfrep.h"
 
-#define NINCIDENT	25		/* number of samples/hemisphere */
+#define NINCIDENT	37		/* number of samples/hemisphere */
 
 #define	GRIDSTEP	2		/* our grid step size */
 #define SAMPRES		(GRIDRES/GRIDSTEP)
@@ -53,11 +53,10 @@ char	*progname;
 static void
 get_ivector(FVECT iv, int i)
 {
-	const double	zstep = 1./(2*NINCIDENT-1);
 	const double	phistep = PI*(3. - 2.236067978);
 	double		r;
 
-	iv[2] = 1. - (i+.5)*zstep;
+	iv[2] = 1. - (i+.5)*(1./NINCIDENT);
 	r = sqrt(1. - iv[2]*iv[2]);
 	iv[0] = r * cos((i+1.)*phistep);
 	iv[1] = r * sin((i+1.)*phistep);
@@ -544,15 +543,15 @@ put_hemispheres(void)
 				-1.01*sph_rad - sph_xoffset, -1.01*sph_rad, -1.01*sph_rad);
 		printf("\nvoid brighttext front_text\n3 helvet.fnt . FRONT\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
-				-.22*sph_rad - sph_xoffset, -1.2*sph_rad,
+				-.22*sph_rad - sph_xoffset, -1.4*sph_rad,
 				.35/5.*sph_rad, -1.6*.35/5.*sph_rad);
 		printf("\nfront_text alias front_label_mat vellum\n");
 		printf("\nfront_label_mat polygon front_label\n0\n0\n12");
 		printf("\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n",
-				-.25*sph_rad - sph_xoffset, -1.1*sph_rad,
-				-.25*sph_rad - sph_xoffset, (-1.2-1.6*.35/5.-.1)*sph_rad,
-				.25*sph_rad - sph_xoffset, (-1.2-1.6*.35/5.-.1)*sph_rad,
-				.25*sph_rad - sph_xoffset, -1.1*sph_rad );
+				-.25*sph_rad - sph_xoffset, -1.3*sph_rad,
+				-.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
+				.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
+				.25*sph_rad - sph_xoffset, -1.3*sph_rad );
 	}
 	if (back_comp) {
 		printf("\n%s bubble Back\n0\n0\n4 %f 0 0 %f\n",
@@ -562,15 +561,15 @@ put_hemispheres(void)
 				-1.01*sph_rad + sph_xoffset, -1.01*sph_rad, -1.01*sph_rad);
 		printf("\nvoid brighttext back_text\n3 helvet.fnt . BACK\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
-				-.22*sph_rad + sph_xoffset, -1.2*sph_rad,
+				-.22*sph_rad + sph_xoffset, -1.4*sph_rad,
 				.35/4.*sph_rad, -1.6*.35/4.*sph_rad);
 		printf("\nback_text alias back_label_mat vellum\n");
 		printf("\nback_label_mat polygon back_label\n0\n0\n12");
 		printf("\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n",
-				-.25*sph_rad + sph_xoffset, -1.1*sph_rad,
-				-.25*sph_rad + sph_xoffset, (-1.2-1.6*.35/4.-.1)*sph_rad,
-				.25*sph_rad + sph_xoffset, (-1.2-1.6*.35/4.-.1)*sph_rad,
-				.25*sph_rad + sph_xoffset, -1.1*sph_rad );
+				-.25*sph_rad + sph_xoffset, -1.3*sph_rad,
+				-.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
+				.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
+				.25*sph_rad + sph_xoffset, -1.3*sph_rad );
 	}
 }
 
@@ -623,7 +622,7 @@ put_scale(void)
 		return;
 	printf("\nvoid brighttext BSDFname\n3 helvet.fnt . \"%s\"\n0\n12\n", bsdf_name);
 	printf("\t%f %f 0\n", -.95*leg_width, -.6*leg_height);
-	printf("\t%f 0 0\n", .4/strlen(bsdf_name)*leg_width);
+	printf("\t%f 0 0\n", 1.8/strlen(bsdf_name)*leg_width);
 	printf("\t0 %f 0\n", -.1*leg_height);
 	printf("\t.01 1 -.1\n");
 	printf("\nBSDFname alias name_mat vellum\n");
