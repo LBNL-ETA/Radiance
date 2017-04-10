@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.18 2017/04/09 22:51:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.19 2017/04/10 01:31:37 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -50,7 +50,7 @@ const double	sph_xoffset = 15.;
 char	*progname;
 
 /* Get Fibonacci sphere vector (0 to NINCIDENT-1) */
-static void
+static RREAL *
 get_ivector(FVECT iv, int i)
 {
 	const double	phistep = PI*(3. - 2.236067978);
@@ -60,6 +60,19 @@ get_ivector(FVECT iv, int i)
 	r = sqrt(1. - iv[2]*iv[2]);
 	iv[0] = r * cos((i+1.)*phistep);
 	iv[1] = r * sin((i+1.)*phistep);
+
+	return(iv);
+}
+
+/* Convert incident vector into sphere position */
+static RREAL *
+cvt_sposition(FVECT sp, const FVECT iv, int inc_side)
+{
+	sp[0] = -iv[0]*sph_rad - inc_side*sph_xoffset;
+	sp[1] = -iv[1]*sph_rad;
+	sp[2] = iv[2]*sph_rad;
+
+	return(sp);
 }
 
 /* Get temporary file name */
@@ -248,7 +261,7 @@ build_wRBF(void)
 		RBFNODE	*rbf;
 		get_ivector(ivec, i);
 		if (input_orient < 0) {
-			ivec[0] = -ivec[0]; ivec[1] = -ivec[1]; ivec[2] = -ivec[2];
+			ivec[0] = -ivec[0]; ivec[2] = -ivec[2];
 		}
 		rbf = advect_rbf(ivec, 15000);
 		if (!plotRBF(tfile_name(pref, dsuffix, i), rbf))
@@ -267,11 +280,10 @@ put_mirror_arrow(const FVECT ivec, int inc_side)
 	FVECT		origin, refl;
 	int		i;
 
-	for (i = 3; i--; ) origin[i] = ivec[i]*sph_rad;
-	origin[0] -= inc_side*sph_xoffset;
+	cvt_sposition(origin, ivec, inc_side);
 
-	refl[0] = 2.*ivec[2]*ivec[0];
-	refl[1] = 2.*ivec[2]*ivec[1];
+	refl[0] = -2.*ivec[2]*ivec[0];
+	refl[1] = -2.*ivec[2]*ivec[1];
 	refl[2] = 2.*ivec[2]*ivec[2] - 1.;
 
 	printf("\n# Mirror arrow\n");
@@ -307,8 +319,7 @@ put_trans_arrow(const FVECT ivec, int inc_side)
 	FVECT		origin;
 	int		i;
 
-	for (i = 3; i--; ) origin[i] = ivec[i]*sph_rad;
-	origin[0] -= inc_side*sph_xoffset;
+	cvt_sposition(origin, ivec, inc_side);
 
 	printf("\n# Transmission arrow\n");
 	printf("\narrow_mat cylinder trans_dir\n0\n0\n7");
@@ -364,7 +375,7 @@ static int
 put_BSDFs(void)
 {
 	const double	scalef = bsdf_rad/(log10(overall_max) - min_log10);
-	FVECT		ivec;
+	FVECT		ivec, sorg;
 	RREAL		vMtx[3][3];
 	char		*fname;
 	char		cmdbuf[256];
@@ -378,13 +389,14 @@ put_BSDFs(void)
 	printf("\nvoid glow arrow_glow\n0\n0\n4 1 0 1 0\n");
 	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void .5 .\n0\n0\n");
 
-	if (front_comp & SDsampR)
+	if (front_comp & SDsampR)			/* front reflection */
 		for (i = 0; i < NINCIDENT; i++) {
 			get_ivector(ivec, i);
 			put_mirror_arrow(ivec, 1);
+			cvt_sposition(sorg, ivec, 1);
+			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					ivec[0]*sph_rad - sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
@@ -393,23 +405,23 @@ put_BSDFs(void)
 			SDcompXform(vMtx, ivec, Yaxis);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, ivec[0]*sph_rad - sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					scalef, sorg[0], sorg[1], sorg[2]);
 			nxfa += 6;
 			fname = tfile_name(frpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -mx -my %s",
+			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform %s",
 					frpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (front_comp & SDsampT)
+	if (front_comp & SDsampT)			/* front transmission */
 		for (i = 0; i < NINCIDENT; i++) {
 			get_ivector(ivec, i);
 			put_trans_arrow(ivec, 1);
+			cvt_sposition(sorg, ivec, 1);
+			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					ivec[0]*sph_rad - sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
@@ -418,24 +430,23 @@ put_BSDFs(void)
 			SDcompXform(vMtx, ivec, Yaxis);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, ivec[0]*sph_rad - sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					scalef, sorg[0], sorg[1], sorg[2]);
 			nxfa += 6;
 			fname = tfile_name(ftpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I -mx -my %s",
+			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I %s",
 					ftpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (back_comp & SDsampR)
+	if (back_comp & SDsampR)			/* rear reflection */
 		for (i = 0; i < NINCIDENT; i++) {
 			get_ivector(ivec, i);
 			put_mirror_arrow(ivec, -1);
-			fname = tfile_name(brpref, dsuffix, i);
+			cvt_sposition(sorg, ivec, -1);
+			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					ivec[0]*sph_rad + sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
@@ -444,24 +455,23 @@ put_BSDFs(void)
 			SDcompXform(vMtx, ivec, Yaxis);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, ivec[0]*sph_rad + sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					scalef, sorg[0], sorg[1], sorg[2]);
 			nxfa += 6;
 			fname = tfile_name(brpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I -ry 180 -mx -my %s",
+			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I -ry 180 %s",
 					brpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (back_comp & SDsampT)
+	if (back_comp & SDsampT)			/* rear transmission */
 		for (i = 0; i < NINCIDENT; i++) {
 			get_ivector(ivec, i);
 			put_trans_arrow(ivec, -1);
-			fname = tfile_name(btpref, dsuffix, i);
+			cvt_sposition(sorg, ivec, -1);
+			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					ivec[0]*sph_rad + sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
@@ -470,11 +480,10 @@ put_BSDFs(void)
 			SDcompXform(vMtx, ivec, Yaxis);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, ivec[0]*sph_rad + sph_xoffset,
-					ivec[1]*sph_rad, ivec[2]*sph_rad);
+					scalef, sorg[0], sorg[1], sorg[2]);
 			nxfa += 6;
 			fname = tfile_name(btpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -ry 180 -mx -my %s",
+			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -ry 180 %s",
 					btpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
