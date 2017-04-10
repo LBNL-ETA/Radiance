@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.19 2017/04/10 01:31:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.20 2017/04/10 06:09:14 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -26,9 +26,7 @@ double	overall_max = .0;		/* overall maximum BSDF value */
 
 char	ourTempDir[TEMPLEN] = "";	/* our temporary directory */
 
-const FVECT	Xaxis = {1., 0., 0.};
 const FVECT	Yaxis = {0., 1., 0.};
-const FVECT	Zaxis = {0., 0., 1.};
 
 const char	frpref[] = "frefl";
 const char	ftpref[] = "ftrans";
@@ -68,7 +66,7 @@ get_ivector(FVECT iv, int i)
 static RREAL *
 cvt_sposition(FVECT sp, const FVECT iv, int inc_side)
 {
-	sp[0] = -iv[0]*sph_rad - inc_side*sph_xoffset;
+	sp[0] = -iv[0]*sph_rad + inc_side*sph_xoffset;
 	sp[1] = -iv[1]*sph_rad;
 	sp[2] = iv[2]*sph_rad;
 
@@ -387,7 +385,7 @@ put_BSDFs(void)
 			NINCIDENT);
 
 	printf("\nvoid glow arrow_glow\n0\n0\n4 1 0 1 0\n");
-	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void .5 .\n0\n0\n");
+	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void 0.5 .\n0\n0\n");
 
 	if (front_comp & SDsampR)			/* front reflection */
 		for (i = 0; i < NINCIDENT; i++) {
@@ -409,7 +407,7 @@ put_BSDFs(void)
 			nxfa += 6;
 			fname = tfile_name(frpref, dsuffix, i);
 			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform %s",
-					frpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
+					frpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
@@ -434,7 +432,7 @@ put_BSDFs(void)
 			nxfa += 6;
 			fname = tfile_name(ftpref, dsuffix, i);
 			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I %s",
-					ftpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
+					ftpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
@@ -459,7 +457,7 @@ put_BSDFs(void)
 			nxfa += 6;
 			fname = tfile_name(brpref, dsuffix, i);
 			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I -ry 180 %s",
-					brpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
+					brpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
@@ -484,7 +482,7 @@ put_BSDFs(void)
 			nxfa += 6;
 			fname = tfile_name(btpref, dsuffix, i);
 			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -ry 180 %s",
-					btpref, i+1, fname, fname, fname, SAMPRES-1, SAMPRES-1,
+					btpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
 					xfargs);
 			if (!run_cmd(cmdbuf))
 				return(0);
@@ -502,7 +500,7 @@ put_matBSDF(const char *XMLfile)
 		printf("\n# Simplified material because we have no XML input\n");
 		printf("\nvoid brightfunc latlong\n2 latlong bsdf2rad.cal\n0\n0\n");
 		if ((front_comp|back_comp) & SDsampT)
-			printf("\nlatlong trans %s\n0\n0\n7 .75 .75 .75 0 0 .5 .8\n",
+			printf("\nlatlong trans %s\n0\n0\n7 .75 .75 .75 0 .04 .5 .8\n",
 					sph_mat);
 		else
 			printf("\nlatlong plastic %s\n0\n0\n5 .5 .5 .5 0 0\n",
@@ -532,7 +530,7 @@ static void
 put_source(void)
 {
 	printf("\n# Overhead parallel light source\n");
-	printf("\nvoid light bright\n0\n0\n3 2000 2000 2000\n");
+	printf("\nvoid light bright\n0\n0\n3 2500 2500 2500\n");
 	printf("\nbright source light\n0\n0\n4 0 0 1 2\n");
 	printf("\n# Material used for labels\n");
 	printf("\nvoid trans vellum\n0\n0\n7 1 1 1 0 0 .5 0\n");
@@ -546,39 +544,39 @@ put_hemispheres(void)
 	printf("\nvoid antimatter anti_sph\n2 void %s\n0\n0\n", sph_mat);
 	if (front_comp) {
 		printf("\n%s sphere Front\n0\n0\n4 %f 0 0 %f\n",
-				sph_mat, -sph_xoffset, sph_rad);
-		printf("\n!genbox anti_sph sph_eraser %f %f %f | xform -t %f %f %f\n",
-				2.02*sph_rad, 2.02*sph_rad, 1.02*sph_rad,
-				-1.01*sph_rad - sph_xoffset, -1.01*sph_rad, -1.01*sph_rad);
-		printf("\nvoid brighttext front_text\n3 helvet.fnt . FRONT\n0\n");
-		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
-				-.22*sph_rad - sph_xoffset, -1.4*sph_rad,
-				.35/5.*sph_rad, -1.6*.35/5.*sph_rad);
-		printf("\nfront_text alias front_label_mat vellum\n");
-		printf("\nfront_label_mat polygon front_label\n0\n0\n12");
-		printf("\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n",
-				-.25*sph_rad - sph_xoffset, -1.3*sph_rad,
-				-.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
-				.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
-				.25*sph_rad - sph_xoffset, -1.3*sph_rad );
-	}
-	if (back_comp) {
-		printf("\n%s bubble Back\n0\n0\n4 %f 0 0 %f\n",
 				sph_mat, sph_xoffset, sph_rad);
 		printf("\n!genbox anti_sph sph_eraser %f %f %f | xform -t %f %f %f\n",
 				2.02*sph_rad, 2.02*sph_rad, 1.02*sph_rad,
 				-1.01*sph_rad + sph_xoffset, -1.01*sph_rad, -1.01*sph_rad);
-		printf("\nvoid brighttext back_text\n3 helvet.fnt . BACK\n0\n");
+		printf("\nvoid brighttext front_text\n3 helvet.fnt . FRONT\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
 				-.22*sph_rad + sph_xoffset, -1.4*sph_rad,
+				.35/5.*sph_rad, -1.6*.35/5.*sph_rad);
+		printf("\nfront_text alias front_label_mat vellum\n");
+		printf("\nfront_label_mat polygon front_label\n0\n0\n12");
+		printf("\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n",
+				-.25*sph_rad + sph_xoffset, -1.3*sph_rad,
+				-.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
+				.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/5.-.1)*sph_rad,
+				.25*sph_rad + sph_xoffset, -1.3*sph_rad );
+	}
+	if (back_comp) {
+		printf("\n%s bubble Back\n0\n0\n4 %f 0 0 %f\n",
+				sph_mat, -sph_xoffset, sph_rad);
+		printf("\n!genbox anti_sph sph_eraser %f %f %f | xform -t %f %f %f\n",
+				2.02*sph_rad, 2.02*sph_rad, 1.02*sph_rad,
+				-1.01*sph_rad - sph_xoffset, -1.01*sph_rad, -1.01*sph_rad);
+		printf("\nvoid brighttext back_text\n3 helvet.fnt . BACK\n0\n");
+		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
+				-.22*sph_rad - sph_xoffset, -1.4*sph_rad,
 				.35/4.*sph_rad, -1.6*.35/4.*sph_rad);
 		printf("\nback_text alias back_label_mat vellum\n");
 		printf("\nback_label_mat polygon back_label\n0\n0\n12");
 		printf("\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n\t%f %f 0\n",
-				-.25*sph_rad + sph_xoffset, -1.3*sph_rad,
-				-.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
-				.25*sph_rad + sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
-				.25*sph_rad + sph_xoffset, -1.3*sph_rad );
+				-.25*sph_rad - sph_xoffset, -1.3*sph_rad,
+				-.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
+				.25*sph_rad - sph_xoffset, (-1.4-1.6*.35/4.-.1)*sph_rad,
+				.25*sph_rad - sph_xoffset, -1.3*sph_rad );
 	}
 }
 
@@ -587,7 +585,7 @@ static void
 put_scale(void)
 {
 	const double	max_log10 = log10(overall_max);
-	const double	leg_width = 2.*.75*(sph_xoffset - sph_rad);
+	const double	leg_width = 2.*.75*(fabs(sph_xoffset) - sph_rad);
 	const double	leg_height = 2.*sph_rad;
 	const int	text_lines = 6;
 	const int	text_digits = 8;
@@ -686,7 +684,7 @@ convert_mgf(const char *mgfdata)
 		sprintf(cmdbuf, "xform -t %f %f %f -s %f -t %f %f 0 %s",
 				-.5*(xmin+xmax), -.5*(ymin+ymax), -zmax,
 				1.5*sph_rad/max_dim,
-				-sph_xoffset, -2.5*sph_rad,
+				sph_xoffset, -2.5*sph_rad,
 				radfn);
 		if (!run_cmd(cmdbuf))
 			return;
@@ -696,7 +694,7 @@ convert_mgf(const char *mgfdata)
 		sprintf(cmdbuf, "xform -t %f %f %f -s %f -ry 180 -t %f %f 0 %s",
 				-.5*(xmin+xmax), -.5*(ymin+ymax), -zmin,
 				1.5*sph_rad/max_dim,
-				sph_xoffset, -2.5*sph_rad,
+				-sph_xoffset, -2.5*sph_rad,
 				radfn);
 		if (!run_cmd(cmdbuf))
 			return;
