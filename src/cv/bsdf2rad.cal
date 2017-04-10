@@ -1,4 +1,4 @@
-{ RCSid $Id: bsdf2rad.cal,v 2.2 2017/04/10 06:09:14 greg Exp $ }
+{ RCSid $Id: bsdf2rad.cal,v 2.3 2017/04/10 15:44:20 greg Exp $ }
 {
 	Calculation of false color scale for bsdf2rad.
 
@@ -14,7 +14,7 @@ mylong = atan2(Ny,Nx);
 
 latlong = if(LATWIDTH-mod(Acos(Nz)+ LATWIDTH/2,LATSTEP), .05,
 		if(LONGWIDTH-mod(mylong+LONGWIDTH/2,90*DEGREE), .01,
-		if(LONGWIDTH-mod(mylong+LONGWIDTH/2,LONGSTEP), .2, 1)));
+		if(LONGWIDTH-mod(mylong+LONGWIDTH/2,LONGSTEP), .3, 1)));
 
 interp_arr2`(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
 interp_arr`(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
