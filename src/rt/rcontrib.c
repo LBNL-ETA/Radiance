@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.29 2016/09/12 20:31:34 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.30 2017/04/11 17:52:40 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -41,7 +41,7 @@ COLOR	salbedo = BLKCOLOR;		/* global scattering albedo */
 double	seccg = 0.;			/* global scattering eccentricity */
 double	ssampdist = 0.;			/* scatter sampling distance */
 
-double	specthresh = .15;		/* specular sampling threshold */
+double	specthresh = .02;		/* specular sampling threshold */
 double	specjitter = 1.;		/* specular sampling jitter */
 
 int	backvis = 1;			/* back face visibility */
