@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.22 2017/04/11 02:21:37 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.23 2017/04/11 03:47:23 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -383,7 +383,7 @@ put_BSDFs(void)
 			NINCIDENT);
 
 	printf("\nvoid glow arrow_glow\n0\n0\n4 1 0 1 0\n");
-	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void 0.5 .\n0\n0\n");
+	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void 0.25 .\n0\n0\n");
 
 	if (front_comp & SDsampR)			/* front reflection */
 		for (i = 0; i < NINCIDENT; i++) {
@@ -401,7 +401,8 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, upv);
+			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
+				continue;
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -429,7 +430,8 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, upv);
+			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
+				continue;
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -457,7 +459,8 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, upv);
+			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
+				continue;
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -485,7 +488,8 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, upv);
+			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
+				continue;
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
