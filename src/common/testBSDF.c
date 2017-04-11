@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.10 2017/02/02 04:52:46 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.11 2017/04/11 16:14:05 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -47,6 +47,10 @@ vec_from_deg(FVECT v, double theta, double phi)
 static void
 printXYZ(const char *intro, const SDValue *vp)
 {
+	if (vp->cieY <= 1e-9) {
+		printf("%s0 0 0\n", intro);
+		return;
+	}
 	printf("%s%.3e %.3e %.3e\n", intro,
 			vp->spec.cx/vp->spec.cy*vp->cieY,
 			vp->cieY,
