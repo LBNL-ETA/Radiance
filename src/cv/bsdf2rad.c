@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.23 2017/04/11 03:47:23 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.24 2017/04/11 18:26:55 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -32,7 +32,8 @@ const char	brpref[] = "brefl";
 const char	btpref[] = "btrans";
 const char	dsuffix[] = ".txt";
 
-const char	sph_mat[] = "BSDFmat";
+const char	sph_fmat[] = "fBSDFmat";
+const char	sph_bmat[] = "bBSDFmat";
 const double	sph_rad = 10.;
 const double	sph_xoffset = 15.;
 
@@ -515,10 +516,11 @@ put_matBSDF(const char *XMLfile)
 		printf("\nvoid brightfunc latlong\n2 latlong bsdf2rad.cal\n0\n0\n");
 		if ((front_comp|back_comp) & SDsampT)
 			printf("\nlatlong trans %s\n0\n0\n7 .75 .75 .75 0 .04 .5 .8\n",
-					sph_mat);
+					sph_fmat);
 		else
 			printf("\nlatlong plastic %s\n0\n0\n5 .5 .5 .5 0 0\n",
-					sph_mat);
+					sph_fmat);
+		printf("\ninherit alias %s %s\n", sph_bmat, sph_fmat);
 		return;
 	}
 	switch (XMLfile[0]) {		/* avoid RAYPATH search */
@@ -531,12 +533,16 @@ put_matBSDF(const char *XMLfile)
 		exit(1);
 		break;
 	}
-	printf("\n# Actual BSDF material for rendering the hemispheres\n");
-	printf("\nvoid BSDF BSDFmat\n6 0 \"%s%s\" upx upy upz bsdf2rad.cal\n0\n0\n",
+	printf("\n# Actual BSDF materials for rendering the hemispheres\n");
+	printf("\nvoid BSDF BSDF_f\n6 0 \"%s%s\" upx upy upz bsdf2rad.cal\n0\n0\n",
 			curdir, XMLfile);
 	printf("\nvoid plastic black\n0\n0\n5 0 0 0 0 0\n");
-	printf("\nvoid mixfunc %s\n4 BSDFmat black latlong bsdf2rad.cal\n0\n0\n",
-			sph_mat);
+	printf("\nvoid mixfunc %s\n4 BSDF_f black latlong bsdf2rad.cal\n0\n0\n",
+			sph_fmat);
+	printf("\nvoid BSDF BSDF_b\n8 0 \"%s%s\" upx upy upz bsdf2rad.cal -ry 180\n0\n0\n",
+			curdir, XMLfile);
+	printf("\nvoid mixfunc %s\n4 BSDF_b black latlong bsdf2rad.cal\n0\n0\n",
+			sph_bmat);
 }
 
 /* Put out overhead parallel light source */
@@ -560,7 +566,7 @@ put_hemispheres(void)
 	if (front_comp) {
 		printf(
 "\n!genrev %s Front \"R*sin(A*t)\" \"R*cos(A*t)\" %d -e \"R:%g;A:%f\" -s | xform -t %g 0 0\n",
-				sph_mat, nsegs, sph_rad, 0.495*PI, sph_xoffset);
+				sph_fmat, nsegs, sph_rad, 0.495*PI, sph_xoffset);
 		printf("\nvoid brighttext front_text\n3 helvet.fnt . FRONT\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
 				-.22*sph_rad + sph_xoffset, -1.4*sph_rad,
@@ -576,7 +582,7 @@ put_hemispheres(void)
 	if (back_comp) {
 		printf(
 "\n!genrev %s Back \"R*cos(A*t)\" \"R*sin(A*t)\" %d -e \"R:%g;A:%f\" -s | xform -t %g 0 0\n",
-				sph_mat, nsegs, sph_rad, 0.495*PI, -sph_xoffset);
+				sph_bmat, nsegs, sph_rad, 0.495*PI, -sph_xoffset);
 		printf("\nvoid brighttext back_text\n3 helvet.fnt . BACK\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
 				-.22*sph_rad - sph_xoffset, -1.4*sph_rad,
