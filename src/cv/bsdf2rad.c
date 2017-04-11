@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.21 2017/04/10 15:44:19 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.22 2017/04/11 02:21:37 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -25,8 +25,6 @@ double	min_log10;			/* smallest log10 value for plotting */
 double	overall_max = .0;		/* overall maximum BSDF value */
 
 char	ourTempDir[TEMPLEN] = "";	/* our temporary directory */
-
-const FVECT	Yaxis = {0., 1., 0.};
 
 const char	frpref[] = "frefl";
 const char	ftpref[] = "ftrans";
@@ -373,7 +371,7 @@ static int
 put_BSDFs(void)
 {
 	const double	scalef = bsdf_rad/(log10(overall_max) - min_log10);
-	FVECT		ivec, sorg;
+	FVECT		ivec, sorg, upv;
 	RREAL		vMtx[3][3];
 	char		*fname;
 	char		cmdbuf[256];
@@ -393,6 +391,9 @@ put_BSDFs(void)
 			put_mirror_arrow(ivec, 1);
 			cvt_sposition(sorg, ivec, 1);
 			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
+			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
+			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
+			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
 					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
@@ -400,7 +401,7 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, Yaxis);
+			SDcompXform(vMtx, ivec, upv);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -418,6 +419,9 @@ put_BSDFs(void)
 			put_trans_arrow(ivec, 1);
 			cvt_sposition(sorg, ivec, 1);
 			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
+			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
+			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
+			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
 					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
@@ -425,7 +429,7 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, Yaxis);
+			SDcompXform(vMtx, ivec, upv);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -443,6 +447,9 @@ put_BSDFs(void)
 			put_mirror_arrow(ivec, -1);
 			cvt_sposition(sorg, ivec, -1);
 			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
+			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
+			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
+			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
 					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
@@ -450,7 +457,7 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, Yaxis);
+			SDcompXform(vMtx, ivec, upv);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -468,6 +475,9 @@ put_BSDFs(void)
 			put_trans_arrow(ivec, -1);
 			cvt_sposition(sorg, ivec, -1);
 			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
+			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
+			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
+			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
 			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
 					sorg[0], sorg[1], sorg[2]);
 			nxfa = 6;
@@ -475,7 +485,7 @@ put_BSDFs(void)
 			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
 					4+nxfa, xfargs);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			SDcompXform(vMtx, ivec, Yaxis);
+			SDcompXform(vMtx, ivec, upv);
 			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
 			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
 					scalef, sorg[0], sorg[1], sorg[2]);
@@ -518,7 +528,7 @@ put_matBSDF(const char *XMLfile)
 		break;
 	}
 	printf("\n# Actual BSDF material for rendering the hemispheres\n");
-	printf("\nvoid BSDF BSDFmat\n6 0 \"%s%s\" 0 1 0 .\n0\n0\n",
+	printf("\nvoid BSDF BSDFmat\n6 0 \"%s%s\" upx upy upz bsdf2rad.cal\n0\n0\n",
 			curdir, XMLfile);
 	printf("\nvoid plastic black\n0\n0\n5 0 0 0 0 0\n");
 	printf("\nvoid mixfunc %s\n4 BSDFmat black latlong bsdf2rad.cal\n0\n0\n",

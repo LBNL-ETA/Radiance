@@ -1,4 +1,4 @@
-{ RCSid $Id: bsdf2rad.cal,v 2.3 2017/04/10 15:44:20 greg Exp $ }
+{ RCSid $Id: bsdf2rad.cal,v 2.4 2017/04/11 02:21:37 greg Exp $ }
 {
 	Calculation of false color scale for bsdf2rad.
 
@@ -12,9 +12,14 @@ LONGWIDTH : 1.*DEGREE;
 
 mylong = atan2(Ny,Nx);
 
-latlong = if(LATWIDTH-mod(Acos(Nz)+ LATWIDTH/2,LATSTEP), .05,
+latlong = if(LATWIDTH-mod(Acos(Nz)+LATWIDTH/2,LATSTEP), .05,
 		if(LONGWIDTH-mod(mylong+LONGWIDTH/2,90*DEGREE), .01,
 		if(LONGWIDTH-mod(mylong+LONGWIDTH/2,LONGSTEP), .3, 1)));
+
+		{ Compute up vector corresponding to sphere position }
+upx = Nx*Ny*(Nz-1);
+upy = Nx*Nx + Ny*Ny*Nz;
+upz = -Ny*(Nx*Nx+Ny*Ny);
 
 interp_arr2`(i,x,f):(i+1-x)*f(i)+(x-i)*f(i+1);
 interp_arr`(x,f):if(x-1,if(f(0)-x,interp_arr2(floor(x),x,f),f(f(0))),f(1));
