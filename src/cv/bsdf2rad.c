@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.28 2017/04/12 04:27:04 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.29 2017/04/12 05:01:45 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -282,19 +282,19 @@ put_mirror_arrow(const FVECT origin, const FVECT nrm)
 	refl[2] = 2.*nrm[2]*nrm[2] - 1.;
 
 	printf("\n# Mirror arrow\n");
-	printf("\narrow_mat cylinder inc_dir\n0\n0\n7");
+	printf("\nshaft_mat cylinder inc_dir\n0\n0\n7");
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2]+arrow_len,
 			origin[0], origin[1], origin[2],
 			arrow_rad);
-	printf("\narrow_mat cylinder mir_dir\n0\n0\n7");
+	printf("\nshaft_mat cylinder mir_dir\n0\n0\n7");
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2],
 			origin[0] + arrow_len*refl[0],
 			origin[1] + arrow_len*refl[1],
 			origin[2] + arrow_len*refl[2],
 			arrow_rad);
-	printf("\narrow_mat cone mir_tip\n0\n0\n8");
+	printf("\ntip_mat cone mir_tip\n0\n0\n8");
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f 0\n",
 			origin[0] + (arrow_len-.5*tip_len)*refl[0],
 			origin[1] + (arrow_len-.5*tip_len)*refl[1],
@@ -314,12 +314,12 @@ put_trans_arrow(const FVECT origin)
 	int		i;
 
 	printf("\n# Transmission arrow\n");
-	printf("\narrow_mat cylinder trans_dir\n0\n0\n7");
+	printf("\nshaft_mat cylinder trans_dir\n0\n0\n7");
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2],
 			origin[0], origin[1], origin[2]-arrow_len,
 			arrow_rad);
-	printf("\narrow_mat cone trans_tip\n0\n0\n8");
+	printf("\ntip_mat cone trans_tip\n0\n0\n8");
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f 0\n",
 			origin[0], origin[1], origin[2]-arrow_len+.5*tip_len,
 			origin[0], origin[1], origin[2]-arrow_len-.5*tip_len,
@@ -378,8 +378,8 @@ put_BSDFs(void)
 	printf("\n# Gensurf output corresponding to %d incident directions\n",
 			NINCIDENT);
 
-	printf("\nvoid glow arrow_glow\n0\n0\n4 1 0 1 0\n");
-	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void 0.25 .\n0\n0\n");
+	printf("\nvoid glow tip_mat\n0\n0\n4 1 0 1 0\n");
+	printf("\nvoid mixfunc shaft_mat\n4 tip_mat void 0.25 .\n0\n0\n");
 
 	for (i = 0; i < NINCIDENT; i++) {
 		get_ivector(ivec, i);
