@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.24 2017/04/11 18:26:55 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.25 2017/04/12 00:31:40 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -270,18 +270,16 @@ build_wRBF(void)
 
 /* Put out mirror arrow for the given incident vector */
 static void
-put_mirror_arrow(const FVECT ivec, int inc_side)
+put_mirror_arrow(const FVECT origin, const FVECT nrm)
 {
 	const double	arrow_len = 1.2*bsdf_rad;
 	const double	tip_len = 0.2*bsdf_rad;
-	FVECT		origin, refl;
+	FVECT		refl;
 	int		i;
 
-	cvt_sposition(origin, ivec, inc_side);
-
-	refl[0] = -2.*ivec[2]*ivec[0];
-	refl[1] = -2.*ivec[2]*ivec[1];
-	refl[2] = 2.*ivec[2]*ivec[2] - 1.;
+	refl[0] = 2.*nrm[2]*nrm[0];
+	refl[1] = 2.*nrm[2]*nrm[1];
+	refl[2] = 2.*nrm[2]*nrm[2] - 1.;
 
 	printf("\n# Mirror arrow\n");
 	printf("\narrow_mat cylinder inc_dir\n0\n0\n7");
@@ -309,14 +307,11 @@ put_mirror_arrow(const FVECT ivec, int inc_side)
 
 /* Put out transmitted direction arrow for the given incident vector */
 static void
-put_trans_arrow(const FVECT ivec, int inc_side)
+put_trans_arrow(const FVECT origin)
 {
 	const double	arrow_len = 1.2*bsdf_rad;
 	const double	tip_len = 0.2*bsdf_rad;
-	FVECT		origin;
 	int		i;
-
-	cvt_sposition(origin, ivec, inc_side);
 
 	printf("\n# Transmission arrow\n");
 	printf("\narrow_mat cylinder trans_dir\n0\n0\n7");
@@ -372,12 +367,12 @@ static int
 put_BSDFs(void)
 {
 	const double	scalef = bsdf_rad/(log10(overall_max) - min_log10);
-	FVECT		ivec, sorg, upv;
+	FVECT		ivec, sorg, nrm, upv;
 	RREAL		vMtx[3][3];
 	char		*fname;
 	char		cmdbuf[256];
-	char		xfargs[128];
-	int		nxfa;
+	char		rotargs[64];
+	int		nrota;
 	int		i;
 
 	printf("\n# Gensurf output corresponding to %d incident directions\n",
@@ -387,121 +382,72 @@ put_BSDFs(void)
 	printf("\nvoid mixfunc arrow_mat\n4 arrow_glow void 0.25 .\n0\n0\n");
 
 	if (front_comp & SDsampR)			/* front reflection */
-		for (i = 0; i < NINCIDENT; i++) {
-			get_ivector(ivec, i);
-			put_mirror_arrow(ivec, 1);
+	for (i = 0; i < NINCIDENT; i++) {
+		get_ivector(ivec, i);
+		nrm[0] = -ivec[0]; nrm[1] = -ivec[1]; nrm[2] = ivec[2];
+		upv[0] = nrm[0]*nrm[1]*(nrm[2] - 1.);
+		upv[1] = nrm[0]*nrm[0] + nrm[1]*nrm[1]*nrm[2];
+		upv[2] = -nrm[1]*(nrm[0]*nrm[0] + nrm[1]*nrm[1]);
+		if (SDcompXform(vMtx, nrm, upv) != SDEnone)
+			continue;
+		nrota = addrot(rotargs, vMtx[0], vMtx[1], vMtx[2]);
+		if (front_comp) {
 			cvt_sposition(sorg, ivec, 1);
-			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
-			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
-			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
-			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
-			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					sorg[0], sorg[1], sorg[2]);
-			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
-			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
-					4+nxfa, xfargs);
+			printf("10 bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n");
+			printf("\t-s %f -t %f %f %f\n0\n0\n",
+					bsdf_rad, sorg[0], sorg[1], sorg[2]);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
-				continue;
-			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
-			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, sorg[0], sorg[1], sorg[2]);
-			nxfa += 6;
+		}
+		if (front_comp & SDsampR) {
+			put_mirror_arrow(sorg, nrm);
 			fname = tfile_name(frpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform %s",
+			sprintf(cmdbuf,
+		"gensurf scale_mat %s%d %s %s %s %d %d | xform %s -s %f -t %f %f %f",
 					frpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
-					xfargs);
+					rotargs, scalef, sorg[0], sorg[1], sorg[2]);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (front_comp & SDsampT)			/* front transmission */
-		for (i = 0; i < NINCIDENT; i++) {
-			get_ivector(ivec, i);
-			put_trans_arrow(ivec, 1);
-			cvt_sposition(sorg, ivec, 1);
-			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
-			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
-			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
-			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
-			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					sorg[0], sorg[1], sorg[2]);
-			nxfa = 6;
-			printf("\nvoid colorfunc scale_pat\n");
-			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
-					4+nxfa, xfargs);
-			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
-				continue;
-			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
-			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, sorg[0], sorg[1], sorg[2]);
-			nxfa += 6;
+		if (front_comp & SDsampT) {
+			put_trans_arrow(sorg);
 			fname = tfile_name(ftpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I %s",
+			sprintf(cmdbuf,
+		"gensurf scale_mat %s%d %s %s %s %d %d | xform -I %s -s %f -t %f %f %f",
 					ftpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
-					xfargs);
+					rotargs, scalef, sorg[0], sorg[1], sorg[2]);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (back_comp & SDsampR)			/* rear reflection */
-		for (i = 0; i < NINCIDENT; i++) {
-			get_ivector(ivec, i);
-			put_mirror_arrow(ivec, -1);
+		if (back_comp) {
 			cvt_sposition(sorg, ivec, -1);
-			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
-			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
-			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
-			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
-			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					sorg[0], sorg[1], sorg[2]);
-			nxfa = 6;
 			printf("\nvoid colorfunc scale_pat\n");
-			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
-					4+nxfa, xfargs);
+			printf("10 bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n");
+			printf("\t-s %f -t %f %f %f\n0\n0\n",
+					bsdf_rad, sorg[0], sorg[1], sorg[2]);
 			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
-				continue;
-			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
-			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, sorg[0], sorg[1], sorg[2]);
-			nxfa += 6;
+		}
+		if (back_comp & SDsampR) {
+			put_mirror_arrow(sorg, nrm);
 			fname = tfile_name(brpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -I -ry 180 %s",
+			sprintf(cmdbuf,
+		"gensurf scale_mat %s%d %s %s %s %d %d | xform -I -ry 180 %s -s %f -t %f %f %f",
 					brpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
-					xfargs);
+					rotargs, scalef, sorg[0], sorg[1], sorg[2]);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
-	if (back_comp & SDsampT)			/* rear transmission */
-		for (i = 0; i < NINCIDENT; i++) {
-			get_ivector(ivec, i);
-			put_trans_arrow(ivec, -1);
-			cvt_sposition(sorg, ivec, -1);
-			ivec[0] = -ivec[0]; ivec[1] = -ivec[1];	/* normal */
-			upv[0] = ivec[0]*ivec[1]*(ivec[2] - 1.);
-			upv[1] = ivec[0]*ivec[0] + ivec[1]*ivec[1]*ivec[2];
-			upv[2] = -ivec[1]*(ivec[0]*ivec[0] + ivec[1]*ivec[1]);
-			sprintf(xfargs, "-s %f -t %f %f %f", bsdf_rad,
-					sorg[0], sorg[1], sorg[2]);
-			nxfa = 6;
-			printf("\nvoid colorfunc scale_pat\n");
-			printf("%d bsdf_red bsdf_grn bsdf_blu bsdf2rad.cal\n\t%s\n0\n0\n",
-					4+nxfa, xfargs);
-			printf("\nscale_pat glow scale_mat\n0\n0\n4 1 1 1 0\n");
-			if (SDcompXform(vMtx, ivec, upv) != SDEnone)
-				continue;
-			nxfa = addrot(xfargs, vMtx[0], vMtx[1], vMtx[2]);
-			sprintf(xfargs+strlen(xfargs), " -s %f -t %f %f %f",
-					scalef, sorg[0], sorg[1], sorg[2]);
-			nxfa += 6;
+		if (back_comp & SDsampT) {
+			put_trans_arrow(sorg);
 			fname = tfile_name(btpref, dsuffix, i);
-			sprintf(cmdbuf, "gensurf scale_mat %s%d %s %s %s %d %d | xform -ry 180 %s",
+			sprintf(cmdbuf,
+		"gensurf scale_mat %s%d %s %s %s %d %d | xform -ry 180 %s -s %f -t %f %f %f",
 					btpref, i, fname, fname, fname, SAMPRES-1, SAMPRES-1,
-					xfargs);
+					rotargs, scalef, sorg[0], sorg[1], sorg[2]);
 			if (!run_cmd(cmdbuf))
 				return(0);
 		}
+	}
 	return(1);
 }
 
