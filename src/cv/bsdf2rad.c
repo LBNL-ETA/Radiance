@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.27 2017/04/12 04:15:08 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.28 2017/04/12 04:27:04 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -470,6 +470,7 @@ put_matBSDF(const char *XMLfile)
 	}
 	switch (XMLfile[0]) {		/* avoid RAYPATH search */
 	case '.':
+	case '~':
 	CASEDIRSEP:
 		curdir = "";
 		break;
@@ -751,7 +752,7 @@ main(int argc, char *argv[])
 	} else {
 		FILE	*fp[4];
 		if (argc > 5) {
-			fprintf(stderr, "%s: too many input files\n", progname);
+			fprintf(stderr, "%s: more than 4 hemispheres!\n", progname);
 			return(1);
 		}
 		for (n = 1; n < argc; n++) {
@@ -787,7 +788,7 @@ main(int argc, char *argv[])
 	put_scale();
 	if (inpXML && myBSDF.mgf)
 		convert_mgf(myBSDF.mgf);
-	if (!put_BSDFs())
+	if (!put_BSDFs())		/* most of the output happens here */
 		return(1);
 	cleanup_tmp();
 	return(0);
