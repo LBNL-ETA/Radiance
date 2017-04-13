@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.43 2017/02/07 19:53:59 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.44 2017/04/13 22:47:17 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -383,7 +383,7 @@ finish_receiver(void)
 			curparams.vup[1] = 1;
 	}
 					/* determine sample type/bin */
-	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1') {
+	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1')) {
 		sprintf(sbuf, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
 		binv = savqstr(sbuf);
@@ -871,7 +871,7 @@ prepare_sampler(void)
 		curparams.udir[1] *= -1.;
 		curparams.udir[2] *= -1.;
 	}
-	if (tolower(curparams.hemis[0]) == 'u' | curparams.hemis[0] == '1')
+	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1'))
 		curparams.sample_basis = sample_uniform;
 	else if (tolower(curparams.hemis[0]) == 's' &&
 				tolower(curparams.hemis[1]) == 'c')
