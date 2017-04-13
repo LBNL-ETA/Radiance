@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ccolor.c,v 3.10 2017/04/05 00:54:50 greg Exp $";
+static const char RCSid[] = "$Id: ccolor.c,v 3.11 2017/04/13 00:42:01 greg Exp $";
 #endif
 /*
  * Spectral color handling routines
@@ -238,8 +238,11 @@ c_ccvt(C_COLOR *clr, int fl)
 		y /= (double)c_y31.ssum;
 		z /= (double)c_z31.ssum;
 		z += x + y;
-		clr->cx = x / z;
-		clr->cy = y / z;
+		if (z > 1e-6) {
+			clr->cx = x / z;
+			clr->cy = y / z;
+		} else
+			clr->cx = clr->cy = 1./3.;
 		clr->flags |= C_CSXY;
 	}
 	if (fl & C_CSSPEC) {		/* cxy -> cspec */
@@ -262,7 +265,7 @@ c_ccvt(C_COLOR *clr, int fl)
 			y = 0.;
 			for (i = 0; i < C_CNSS; i++)
 				y += c_y31.ssamp[i] * clr->ssamp[i];
-			clr->eff = C_CLPWM * y / clr->ssum;
+			clr->eff = C_CLPWM * y / (clr->ssum + 0.0001);
 		} else /* clr->flags & C_CSXY */ {	/* from (x,y) */
 			clr->eff = clr->cx*c_x31.eff + clr->cy*c_y31.eff +
 					(1. - clr->cx - clr->cy)*c_z31.eff;
@@ -278,11 +281,23 @@ c_cmix(C_COLOR *cres, double w1, C_COLOR *c1, double w2, C_COLOR *c2)
 	double	scale;
 	int	i;
 
+	if (w1 == 0) {
+		*cres = *c2;
+		return;
+	}
+	if (w2 == 0) {
+		*cres = *c1;
+		return;
+	}
 	if ((c1->flags|c2->flags) & C_CDSPEC) {		/* spectral mixing */
 		float	cmix[C_CNSS];
 
 		c_ccvt(c1, C_CSSPEC|C_CSEFF);
 		c_ccvt(c2, C_CSSPEC|C_CSEFF);
+		if (c1->ssum*c2->ssum == 0) {
+			*cres = c_dfcolor;
+			return;
+		}
 		w1 /= c1->eff*c1->ssum;
 		w2 /= c2->eff*c2->ssum;
 		scale = 0.;
