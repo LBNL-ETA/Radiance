@@ -1,10 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.8 2017/02/06 23:21:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.9 2017/04/13 00:14:36 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
  *  Input query is incident and exiting vectors directed away from surface.
  *  We normalize.  Output is a BSDF value for the vector pair.
+ *  A zero length in or out vector is ignored, causing output to be flushed.
  *  It is wise to sort the input directions to keep identical ones together
  *  when using a scattering interpolant representation.
  */
@@ -25,7 +26,7 @@ readIOdir(FVECT idir, FVECT odir, FILE *fp, int fmt)
 {
 	double	dvec[6];
 	float	fvec[6];
-
+tryagain:
 	switch (fmt) {
 	case 'a':
 		if (fscanf(fp, FVFORMAT, &idir[0], &idir[1], &idir[2]) != 3 ||
@@ -46,8 +47,8 @@ readIOdir(FVECT idir, FVECT odir, FILE *fp, int fmt)
 		break;
 	}
 	if ((normalize(idir) == 0) | (normalize(odir) == 0)) {
-		fprintf(stderr, "%s: zero input vector!\n", progname);
-		return(0);
+		fflush(stdout);		/* desired side-effect? */
+		goto tryagain;
 	}
 	return(1);
 }
