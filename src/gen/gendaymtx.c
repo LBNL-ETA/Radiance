@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.25 2016/08/20 15:42:38 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.26 2017/04/28 16:07:34 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -953,7 +953,9 @@ int CalcSkyParamFromIllum()
 		/* Convert illuminance to irradiance */
 		index = GetCategoryIndex();
 		diff_irrad = diff_illum / CalcDiffuseIllumRatio(index);
-		dir_irrad = dir_illum / CalcDirectIllumRatio(index);
+		dir_irrad = CalcDirectIllumRatio(index);
+		if (dir_irrad > 0.1)
+			dir_irrad = dir_illum / dir_irrad;
 	
 		/* Calculate sky brightness and clearness */
 		sky_brightness = CalcSkyBrightness();
