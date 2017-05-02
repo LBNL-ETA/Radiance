@@ -1,4 +1,4 @@
-.\" RCSid "$Id: total.1,v 1.9 2016/03/24 18:48:28 greg Exp $"
+.\" RCSid "$Id: total.1,v 1.10 2017/05/02 02:51:01 greg Exp $"
 .TH TOTAL 1 2/3/95 RADIANCE
 .SH NAME
 total - sum up columns
@@ -68,6 +68,9 @@ The
 .I \-m
 option can be used to compute the mean rather than the total.
 For sums, the arithmetic mean is computed.
+If a power is also specified using the
+.I \-s
+option, the inverse power will be applied to the averaged result.
 For products, the geometric mean is computed.
 (A logarithmic sum of absolute values is used to avoid overflow, and 
 zero values are silently ignored.)
