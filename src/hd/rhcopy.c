@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.27 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.28 2017/05/03 18:05:15 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -359,7 +359,7 @@ addpicz(		/* add a picture + depth-buffer */
 		error(USER, errmsg);
 	}
 	if (phd.altprims) {
-		sprintf(errmsg, "ignoring primary values in picture \"%s\"",
+		sprintf(errmsg, "ignoring color primaries in picture \"%s\"",
 				pcf);
 		error(WARNING, errmsg);
 	}
