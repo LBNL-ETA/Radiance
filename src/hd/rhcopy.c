@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.28 2017/05/03 18:05:15 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.29 2017/05/03 21:15:06 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -398,6 +398,8 @@ addpicz(		/* add a picture + depth-buffer */
 			error(USER, errmsg);
 		}
 		for (i = scanlen(&prs); i--; ) {	/* do each pixel */
+			if (zscn[i] <= 0.0)
+				continue;		/* illegal depth */
 			pix2loc(vl, &prs, i, j);
 			aftd = viewray(ro, rd, &phd.vw, vl[0], vl[1]);
 			if (aftd < -FTINY)
