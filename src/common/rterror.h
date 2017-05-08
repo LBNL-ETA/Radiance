@@ -1,4 +1,4 @@
-/* RCSid $Id: rterror.h,v 3.2 2003/07/14 22:23:59 schorsch Exp $ */
+/* RCSid $Id: rterror.h,v 3.3 2017/05/08 16:58:52 greg Exp $ */
 /*
  * Header for Radiance error-handling routines
  */
@@ -23,7 +23,7 @@ extern "C" {
 				/* error struct */
 extern struct erract {
 	char	pre[16];		/* prefix message */
-	void	(*pf)();		/* put function (resettable) */
+	void	(*pf)(char *s);		/* put function (resettable) */
 	int	ec;			/* exit code (0 means non-fatal) */
 } erract[NERRS];	/* list of error actions */
 

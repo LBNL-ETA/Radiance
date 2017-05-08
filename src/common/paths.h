@@ -1,4 +1,4 @@
-/* RCSid $Id: paths.h,v 2.28 2016/03/07 01:15:01 schorsch Exp $ */
+/* RCSid $Id: paths.h,v 2.29 2017/05/08 16:58:52 greg Exp $ */
 /*
  * Definitions for paths on different machines
  */
@@ -133,7 +133,7 @@ extern "C" {
 #if defined(_WIN32) || defined(_WIN64)
   extern FILE *win_popen(char *command, char *type);
   extern int win_pclose(FILE *p);
-  extern char  *fixargv0();
+  extern char  *fixargv0(char *arg0);
 #endif
 
 /* Check if any of the characters in str2 are found in str1 */
