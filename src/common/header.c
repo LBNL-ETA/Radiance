@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.30 2017/05/07 16:14:19 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.31 2017/05/10 18:02:08 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -45,7 +45,7 @@ static gethfunc mycheck;
 
 void
 newheader(		/* identifying line of information header */
-	char  *s,
+	const char  *s,
 	FILE  *fp
 )
 {
@@ -58,7 +58,7 @@ newheader(		/* identifying line of information header */
 int
 headidval(			/* get header id (return true if is id) */
 	char  *r,
-	char	*s
+	const char	*s
 )
 {
 	const char  *cp = HDRSTR;
@@ -74,7 +74,7 @@ headidval(			/* get header id (return true if is id) */
 int
 dateval(		/* convert capture date line to UTC */
 	time_t	*tloc,
-	char	*s
+	const char	*s
 )
 {
 	struct tm	tms;
@@ -100,7 +100,7 @@ dateval(		/* convert capture date line to UTC */
 int
 gmtval(			/* convert GMT date line to UTC */
 	time_t	*tloc,
-	char	*s
+	const char	*s
 )
 {
 	struct tm	tms;
@@ -171,7 +171,7 @@ printargs(		/* print arguments to a file */
 int
 formatval(			/* get format value (return true if format) */
 	char  *r,
-	char  *s
+	const char  *s
 )
 {
 	const char  *cp = FMTSTR;
@@ -190,7 +190,7 @@ formatval(			/* get format value (return true if format) */
 
 void
 fputformat(		/* put out a format value */
-	char  *s,
+	const char  *s,
 	FILE  *fp
 )
 {
@@ -250,8 +250,8 @@ mycheck(			/* check a header line for format info. */
 
 int
 globmatch(			/* check for match of s against pattern p */
-	char	*p,
-	char	*s
+	const char	*p,
+	const char	*s
 )
 {
 	int	setmatch;

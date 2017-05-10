@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.11 2009/05/21 18:08:43 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.12 2017/05/10 18:02:08 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -74,18 +74,18 @@ extern int	fgetresolu(int *sl, int *ns, FILE *fp);
 extern char *	resolu2str(char *buf, RESOLU *rp);
 extern int	str2resolu(RESOLU *rp, char *buf);
 					/* defined in header.c */
-extern void	newheader(char *t, FILE *fp);
-extern int	headidval(char *r, char *s);
-extern int	dateval(time_t *t, char *s);
-extern int	gmtval(time_t *t, char *s);
+extern void	newheader(const char *t, FILE *fp);
+extern int	headidval(char *r, const char *s);
+extern int	dateval(time_t *t, const char *s);
+extern int	gmtval(time_t *t, const char *s);
 extern void	fputdate(time_t t, FILE *fp);
 extern void	fputnow(FILE *fp);
 extern void	printargs(int ac, char **av, FILE *fp);
-extern int	formatval(char *r, char *s);
-extern void	fputformat(char *s, FILE *fp);
+extern int	formatval(char *r, const char *s);
+extern void	fputformat(const char *s, FILE *fp);
 typedef int gethfunc(char *s, void *p); /* callback to process header lines */
 extern int	getheader(FILE *fp, gethfunc *f, void *p);
-extern int	globmatch(char *pat, char *str);
+extern int	globmatch(const char *pat, const char *str);
 extern int	checkheader(FILE *fin, char *fmt, FILE *fout);
 
 #ifdef __cplusplus
