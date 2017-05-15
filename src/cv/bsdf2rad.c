@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.29 2017/04/12 05:01:45 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.30 2017/05/15 19:17:27 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -42,7 +42,8 @@ const double	sph_xoffset = 15.;
 
 #define	FEQ(a,b)	((a)-(b) <= 1e-7 && (b)-(a) <= 1e-7)
 
-#define	set_minlog()	(min_log10 = log10(overall_min + 1e-5) - .1)
+#define	set_minlog()	overall_min = (overall_min < 1e-5) ? 1e-5 : overall_min; \
+				min_log10 = log10(overall_min) - .1
 
 char	*progname;
 
