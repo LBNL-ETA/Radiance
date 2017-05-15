@@ -2142,3 +2142,6 @@ Added -v option to obj2mesh to print out mesh statistics.
 Rewrote bsdf2rad from ground up and made it a standard part of build.
 
 Fixed bug in orientation of Reinhart/Tregenza sample generator in rfluxmtx.
+
+Added ability to perform shadow-testing through unproxied BSDFs with strong
+through (direct-direct) component.
