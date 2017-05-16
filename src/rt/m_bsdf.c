@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.35 2017/05/16 02:52:15 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.36 2017/05/16 20:06:40 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -134,8 +134,7 @@ compute_through(BSDFDAT *ndp)
 		tdir[0] = -ndp->vray[0] + dir2check[i][0]*srchrad;
 		tdir[1] = -ndp->vray[1] + dir2check[i][1]*srchrad;
 		tdir[2] = -ndp->vray[2];
-		if (normalize(tdir) == 0)
-			continue;
+		normalize(tdir);
 		ec = SDevalBSDF(&sv, tdir, ndp->vray, ndp->sd);
 		if (ec)
 			goto baderror;
@@ -188,7 +187,7 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
 	int	nsamp, ok = 0;
 	FVECT	vsrc, vsmp, vjit;
-	double	tomega;
+	double	tomega, tomega2;
 	double	sf, tsr, sd[2];
 	COLOR	csmp, cdiff;
 	double	diffY;
@@ -253,20 +252,21 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			multisamp(sd, 2, (i + frandom())/(double)nsamp);
 			vsmp[0] += (sd[0] - .5)*sf;
 			vsmp[1] += (sd[1] - .5)*sf;
-			if (normalize(vsmp) == 0) {
-				--nsamp;
-				continue;
-			}
+			normalize(vsmp);
 		}
 		bsdf_jitter(vjit, ndp, tsr);
-					/* compute BSDF */
+					/* check for variable resolution */
+		ec = SDsizeBSDF(&tomega2, vjit, vsmp, SDqueryMin, ndp->sd);
+		if (ec)
+			goto baderror;
+		if (tomega2 < .12*tomega)
+			continue;	/* not safe to include */
+					/* else compute BSDF */
 		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
 		if (ec)
 			goto baderror;
-		if (sv.cieY - diffY <= FTINY) {
-			addcolor(cval, cdiff);
+		if (sv.cieY - diffY <= FTINY)
 			continue;	/* no specular part */
-		}
 		cvt_sdcolor(csmp, &sv);
 		addcolor(cval, csmp);	/* else average it in */
 		++ok;
@@ -275,7 +275,7 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		setcolor(cval, .0, .0, .0);
 		return(0);		/* no valid specular samples */
 	}
-	sf = 1./(double)nsamp;
+	sf = 1./(double)ok;
 	scalecolor(cval, sf);
 					/* subtract diffuse contribution */
 	for (i = 3*(diffY > FTINY); i--; )
