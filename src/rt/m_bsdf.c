@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.34 2017/05/15 22:50:33 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.35 2017/05/16 02:52:15 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -23,11 +23,10 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.34 2017/05/15 22:50:33 greg Exp $
  *  (opposite the surface normal) to bypass any intervening geometry.
  *  Translation only affects scattered, non-source-directed samples.
  *  A non-zero thickness has the further side-effect that an unscattered
- *  (view) ray will pass right through our material if it has any
- *  non-diffuse transmission, making the BSDF surface invisible.  This
- *  shows the proxied geometry instead. Thickness has the further
- *  effect of turning off reflection on the hidden side so that rays
- *  heading in the opposite direction pass unimpeded through the BSDF
+ *  (view) ray will pass right through our material, making the BSDF
+ *  surface invisible and showing the proxied geometry instead. Thickness
+ *  has the further effect of turning off reflection on the reverse side so
+ *  rays heading in the opposite direction pass unimpeded through the BSDF
  *  surface.  A paired surface may be placed on the opposide side of
  *  the detail geometry, less than this thickness away, if a two-way
  *  proxy is desired.  Note that the sign of the thickness is important.
@@ -36,6 +35,11 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.34 2017/05/15 22:50:33 greg Exp $
  *  hides geometry in front of the surface when rays hit from behind,
  *  and applies only the transmission and backside reflectance properties.
  *  Reflection is ignored on the hidden side, as those rays pass through.
+ *	When thickness is set to zero, shadow rays will be blocked unless
+ *  a BTDF has a strong "through" component in the source direction.
+ *  A separate test prevents over-counting by dropping specular & ambient
+ *  samples that are too close to this "through" direction.  The same
+ *  restriction applies for the proxy case (thickness != 0).
  *	The "up" vector for the BSDF is given by three variables, defined
  *  (along with the thickness) by the named function file, or '.' if none.
  *  Together with the surface normal, this defines the local coordinate
@@ -43,7 +47,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.34 2017/05/15 22:50:33 greg Exp $
  *	We do not reorient the surface, so if the BSDF has no back-side
  *  reflectance and none is given in the real arguments, a BSDF surface
  *  with zero thickness will appear black when viewed from behind
- *  unless backface visibility is off.
+ *  unless backface visibility is on, when it becomes invisible.
  *	The diffuse arguments are added to components in the BSDF file,
  *  not multiplied.  However, patterns affect this material as a multiplier
  *  on everything except non-diffuse reflection.
@@ -59,7 +63,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.34 2017/05/15 22:50:33 greg Exp $
 /*
  * Note that our reverse ray-tracing process means that the positions
  * of incoming and outgoing vectors may be reversed in our calls
- * to the BSDF library.  This is fine, since the bidirectional nature
+ * to the BSDF library.  This is usually fine, since the bidirectional nature
  * of the BSDF (that's what the 'B' stands for) means it all works out.
  */
 
@@ -72,7 +76,7 @@ typedef struct {
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
-	COLOR	cthru;		/* through component multiplier */
+	COLOR	cthru;		/* "through" component multiplier */
 	SDData	*sd;		/* loaded BSDF data */
 	COLOR	rdiff;		/* diffuse reflection */
 	COLOR	tdiff;		/* diffuse transmission */
@@ -80,7 +84,7 @@ typedef struct {
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
 
-/* Compute through component color */
+/* Compute "through" component color */
 static void
 compute_through(BSDFDAT *ndp)
 {
@@ -148,8 +152,8 @@ compute_through(BSDFDAT *ndp)
 		goto baderror;
 	if (tomega > 1.5*dfp->minProjSA)
 		return;				/* not really a peak? */
-	if ((bright(vpeak) - ndp->sd->tLamb.cieY*(1./PI))*tomega <= .001)
-		return;				/* < 0.1% transmission */
+	if ((bright(vpeak) - ndp->sd->tLamb.cieY*(1./PI))*tomega <= .007)
+		return;				/* < 0.7% transmission */
 	for (i = 3; i--; )			/* remove peak from average */
 		colval(vsum,i) -= colval(vpeak,i);
 	--nsum;
