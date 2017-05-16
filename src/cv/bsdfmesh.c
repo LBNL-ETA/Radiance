@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.37 2016/03/06 01:13:17 schorsch Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.38 2017/05/16 20:41:03 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -491,7 +491,7 @@ check_normal_incidence(void)
 		default:
 			return;			/* else we can interpolate */
 		}
-		for (rbf = near_rbf->next; rbf != NULL; rbf = rbf->next) {
+		for (rbf = dsf_list; rbf != NULL; rbf = rbf->next) {
 			const double	d = input_orient*rbf->invec[2];
 			if (d >= 1.-2.*FTINY)
 				return;		/* seems we have normal */
