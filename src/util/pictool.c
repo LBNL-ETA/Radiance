@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pictool.c,v 2.3 2016/07/14 17:32:12 greg Exp $";
+static const char RCSid[] = "$Id: pictool.c,v 2.4 2017/05/18 02:25:27 greg Exp $";
 #endif
 #include "pictool.h"
 #include "g3sphere.h"
@@ -217,8 +217,11 @@ gethinfo(				/* get view from header */
 )
 {
         if(strstr(s, EXPOSSTR) != NULL && strstr(s, "\t") != NULL)  {
-                fprintf(stderr,"error: header contains invalid exposure !!!!\n");
-                fprintf(stderr,"check exposure and remove tab !\n");
+                
+                fprintf(stderr,"error: header contains invalid exposure entry!!!!\n");
+                fprintf(stderr,"check exposure and correct header setting !\n");
+                
+                
                 fprintf(stderr,"stopping !!!!\n");
                 exit(1);
                 }

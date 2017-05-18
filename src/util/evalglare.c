@@ -1,7 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.5 2016/08/02 16:35:01 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.6 2017/05/18 02:25:27 greg Exp $";
 #endif
-/* EVALGLARE V1.31
+/* EVALGLARE V2.00
  * Evalglare Software License, Version 2.0
  *
  * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
@@ -312,9 +312,15 @@ changed masking threshold to 0.05 cd/m2
    */
 /* evalglare.c, v1.31 2016/08/02  bug removal: default output did not calculate the amout of glare sources before and therefore no_glaresources was set to zero causing dgi,ugr being set to zero as well. Now renumbering of the glare sources and calculation of the amount of glare sources is done for all output versions. 
    */
+/* evalglare.c, v2.00 2016/11/15  add of a second fast calculation mode for annual calculations, activted by -2. Output: dgp,ugr 
+   */
+/* evalglare.c, v2.01 2016/11/16  change of -2 option (now -2 dir_illum). External provision of the direct illuminance necessary, since the sun interpolation of daysim is causing problems in calculation of the background luminance. 
+   */
+/* evalglare.c, v2.02 2017/02/28  change of warning message, when invalid exposure setting is found. Reason: tab removal is not in all cases the right measure - it depends which tool caused the invalid exposure entry   */
+   
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "1.31 release 02.08.2016 by EPFL, J.Wienold"
+#define VERSION "2.02 release 28.02.2017 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -1201,7 +1207,13 @@ float get_ugr(pict * p, double lum_backg, int igs, int posindex_2)
 		}
 	}
 	ugr = 8 * log10(0.25 / lum_backg * sum_glare);
-
+        if (sum_glare==0) {
+        ugr=0.0;
+        } 
+        if (lum_backg<=0) {
+        ugr=-99.0;
+        }
+        
 	return ugr;
 
 }
@@ -1378,7 +1390,7 @@ int main(int argc, char **argv)
 		detail_out, posindex_picture, non_cos_lb, rx, ry, rmx,rmy,apply_disability,band_calc,band_color,masking,i_mask,no_glaresources,force;
 	double  lum_total_max,age_corr_factor,age,dgp_ext,dgp,low_light_corr,omega_cos_contr, setvalue, lum_ideal, E_v_contr, sigma,om,delta_E,
 		E_vl_ext, lum_max, new_lum_max, r_center, ugp, ugr_exp, dgi_mod,lum_a, pgsv,E_v_mask,pgsv_sat,angle_disk,dist,n_corner_px,zero_corner_px,
-		search_pix, a1, a2, a3, a4, a5, c3, c1, c2, r_split, max_angle,r_actual,lum_actual,
+		search_pix, a1, a2, a3, a4, a5, c3, c1, c2, r_split, max_angle,r_actual,lum_actual,dir_ill,
 		omegat, sang, E_v, E_v2, E_v_dir, avlum, act_lum, ang, angle_z1, angle_z2,per_95_band,per_75_band,pos,
 		l_max, lum_backg, lum_backg_cos, omega_sources, lum_sources,per_75_mask,per_95_mask,per_75_z1,per_95_z1,per_75_z2,per_95_z2,
 		lum, lum_source,teta,Lveil_cie,Lveil_cie_sum,disability_thresh,u_r,u_g,u_b,band_angle,band_avlum,
@@ -1427,6 +1439,7 @@ int main(int argc, char **argv)
 	muc_rvar_clear(s_posweight2);
 
 	/*set required user view parameters to invalid values*/
+        dir_ill=0.0;
         delta_E=0.0;
         no_glaresources=0;
         n_corner_px=0;
@@ -1739,6 +1752,10 @@ int main(int argc, char **argv)
 		case '1':
 			output = 1;
 			break;
+		case '2':
+			output = 2;
+			dir_ill = atof(argv[++i]);
+			break;
 
 		case 'v':
 			if (argv[i][2] == '\0') {
@@ -1770,9 +1787,14 @@ int main(int argc, char **argv)
 
 /*fast calculation, if gendgp_profile is used: No Vertical illuminance calculation, only dgp is calculated*/
 
-if (output == 1 && ext_vill == 1) {
+if (output == 1 && ext_vill == 1 ) {
                        calcfast=1;
 		       }
+		       
+if (output == 2 && ext_vill == 1 ) {
+                       calcfast=2;
+		       }
+		       
 /*masking and zoning cannot be applied at the same time*/
 
 if (masking ==1 && zones >0) {
@@ -2223,9 +2245,12 @@ if (cut_view==1) {
 /* 	pict_write(p,"firstscan.pic");   */
 
 
-if (calcfast == 1 || search_pix <= 1.0) {
+
+
+if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
    skip_second_scan=1;
    }
+  
 
 /* second glare source scan: combine glare sources facing each other */
 	change = 1;
@@ -2400,7 +2425,7 @@ if (calcfast == 1 || search_pix <= 1.0) {
 
 /* calculation of direct vertical illuminance for CGI and for disability glare, coloring glare sources*/
 
-	if (calcfast == 0) {
+	if (calcfast == 0 || calcfast == 2) {
 	for (x = 0; x < pict_get_xsize(p); x++)
 		for (y = 0; y < pict_get_ysize(p); y++) {
 			if (pict_get_hangle(p, x, y, p->view.vdir, p->view.vup, &ang)) {
@@ -2824,8 +2849,15 @@ if (calcfast == 0) {
 				if (E_vl_ext < 1000) {
 				low_light_corr=1.0*exp(0.024*E_vl_ext-4)/(1+exp(0.024*E_vl_ext-4)); } else {low_light_corr=1.0 ;} 
 				dgp =low_light_corr*dgp;
-       				dgp =age_corr_factor*dgp;
-		printf("%f\n", dgp);
+
+                     if (calcfast == 2) {
+                     
+                         lum_backg_cos=(E_vl_ext-dir_ill)/3.1415927;
+  	                 ugr = get_ugr(p, lum_backg_cos, igs, posindex_2);
+ 		         printf("%f %f \n", dgp,ugr);
+                     }else{      
+		         printf("%f\n", dgp);
+		}
 	}
 
 
