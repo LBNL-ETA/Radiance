@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.36 2017/05/16 20:06:40 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.37 2017/05/18 17:59:37 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -194,6 +194,8 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	SDValue	sv;
 	SDError	ec;
 	int	i;
+					/* in case we fail */
+	setcolor(cval, .0, .0, .0);
 					/* transform source direction */
 	if (SDmapDir(vsrc, ndp->toloc, ldir) != SDEnone)
 		return(0);
@@ -222,7 +224,8 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		diffY = .0;
 		setcolor(cdiff, .0, .0, .0);
 	}
-					/* assign number of samples */
+					/* need projected solid angles */
+	omega *= fabs(vsrc[2]);
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
 		goto baderror;
@@ -232,9 +235,11 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 				&& (vsrc[2] > 0) ^ (ndp->vray[2] > 0)) {
 		double	dx = vsrc[0] + ndp->vray[0];
 		double	dy = vsrc[1] + ndp->vray[1];
-		if (dx*dx + dy*dy <= omega+tomega)
+		if (dx*dx + dy*dy <= (4./PI)*(omega + tomega +
+						2.*sqrt(omega*tomega)))
 			return(0);
 	}
+					/* assign number of samples */
 	sf = specjitter * ndp->pr->rweight;
 	if (tomega <= .0)
 		nsamp = 1;
@@ -243,8 +248,7 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	else
 		nsamp = 4.*sf*omega/tomega + .5;
 	nsamp += !nsamp;
-	setcolor(cval, .0, .0, .0);	/* sample our source area */
-	sf = sqrt(omega);
+	sf = sqrt(omega);		/* sample our source area */
 	tsr = sqrt(tomega);
 	for (i = nsamp; i--; ) {
 		VCOPY(vsmp, vsrc);	/* jitter query directions */
@@ -255,27 +259,26 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 			normalize(vsmp);
 		}
 		bsdf_jitter(vjit, ndp, tsr);
+					/* compute BSDF */
+		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
+		if (ec)
+			goto baderror;
+		if (sv.cieY - diffY <= FTINY)
+			continue;	/* no specular part */
 					/* check for variable resolution */
 		ec = SDsizeBSDF(&tomega2, vjit, vsmp, SDqueryMin, ndp->sd);
 		if (ec)
 			goto baderror;
 		if (tomega2 < .12*tomega)
 			continue;	/* not safe to include */
-					/* else compute BSDF */
-		ec = SDevalBSDF(&sv, vjit, vsmp, ndp->sd);
-		if (ec)
-			goto baderror;
-		if (sv.cieY - diffY <= FTINY)
-			continue;	/* no specular part */
 		cvt_sdcolor(csmp, &sv);
 		addcolor(cval, csmp);	/* else average it in */
 		++ok;
 	}
-	if (!ok) {
-		setcolor(cval, .0, .0, .0);
-		return(0);		/* no valid specular samples */
-	}
-	sf = 1./(double)ok;
+	if (!ok)			/* no valid specular samples? */
+		return(0);
+
+	sf = 1./(double)ok;		/* compute average BSDF */
 	scalecolor(cval, sf);
 					/* subtract diffuse contribution */
 	for (i = 3*(diffY > FTINY); i--; )
