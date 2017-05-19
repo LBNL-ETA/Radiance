@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.37 2017/05/18 17:59:37 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.38 2017/05/19 15:13:41 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -113,6 +113,9 @@ compute_through(BSDFDAT *ndp)
 	SDError		ec;
 
 	setcolor(ndp->cthru, .0, .0, .0);	/* starting assumption */
+
+	if (!(ndp->pr->crtype & (SPECULAR|AMBIENT|SHADOW)))
+		return;				/* simply don't need to know */
 
 	if (ndp->pr->rod > 0)
 		dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
@@ -230,9 +233,9 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	if (ec)
 		goto baderror;
 					/* check indirect over-counting */
-	if ((ndp->thick != 0 || bright(ndp->cthru) > FTINY)
-				&& ndp->pr->crtype & (SPECULAR|AMBIENT)
-				&& (vsrc[2] > 0) ^ (ndp->vray[2] > 0)) {
+	if (ndp->pr->crtype & (SPECULAR|AMBIENT)
+				&& (vsrc[2] > 0) ^ (ndp->vray[2] > 0)
+				&& bright(ndp->cthru) > FTINY) {
 		double	dx = vsrc[0] + ndp->vray[0];
 		double	dy = vsrc[1] + ndp->vray[1];
 		if (dx*dx + dy*dy <= (4./PI)*(omega + tomega +
