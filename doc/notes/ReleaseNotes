@@ -2145,3 +2145,5 @@ Fixed bug in orientation of Reinhart/Tregenza sample generator in rfluxmtx.
 
 Added ability to perform shadow-testing through unproxied BSDFs with strong
 through (direct-direct) component.
+
+Added {+|-}a options to genBSDF and bsdf2ttree for switching off reciprocity averaging.

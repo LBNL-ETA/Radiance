@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.40 2017/02/17 22:31:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.41 2017/05/31 17:25:21 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -19,6 +19,8 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.40 2017/02/17 22:31:49 greg E
 #include "bsdfrep.h"
 				/* global argv[0] */
 char			*progname;
+				/* reciprocity averaging option */
+static const char	*recip = " -a";
 				/* percentage to cull (<0 to turn off) */
 static double		pctcull = 90.;
 				/* sampling order */
@@ -135,8 +137,8 @@ eval_isotropic(char *funame)
 	float		bsdf, uv[2];
 
 	if (pctcull >= 0) {
-		sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
-				pctcull, samp_order, create_component_file(0));
+		sprintf(cmd, "rttree_reduce%s -h -ff -r 3 -t %f -g %d > %s",
+				recip, pctcull, samp_order, create_component_file(0));
 		ofp = popen(cmd, "w");
 		if (ofp == NULL) {
 			fprintf(stderr, "%s: cannot create pipe to rttree_reduce\n",
@@ -149,11 +151,11 @@ eval_isotropic(char *funame)
 #endif
 		if (rbf_colorimetry == RBCtristimulus) {
 			double	uvcull = 100. - (100.-pctcull)*.25;
-			sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
-					uvcull, samp_order, create_component_file(1));
+			sprintf(cmd, "rttree_reduce%s -h -ff -r 3 -t %f -g %d > %s",
+					recip, uvcull, samp_order, create_component_file(1));
 			uvfp[0] = popen(cmd, "w");
-			sprintf(cmd, "rttree_reduce -a -h -ff -r 3 -t %f -g %d > %s",
-					uvcull, samp_order, create_component_file(2));
+			sprintf(cmd, "rttree_reduce%s -h -ff -r 3 -t %f -g %d > %s",
+					recip, uvcull, samp_order, create_component_file(2));
 			uvfp[1] = popen(cmd, "w");
 			if ((uvfp[0] == NULL) | (uvfp[1] == NULL)) {
 				fprintf(stderr, "%s: cannot open pipes to uv output\n",
@@ -321,7 +323,7 @@ eval_anisotropic(char *funame)
 
 	if (pctcull >= 0) {
 		const char	*avgopt = (input_orient>0 ^ output_orient>0)
-						? "" : " -a";
+						? "" : recip;
 		sprintf(cmd, "rttree_reduce%s -h -ff -r 4 -t %f -g %d > %s",
 				avgopt, pctcull, samp_order,
 				create_component_file(0));
@@ -563,7 +565,7 @@ main(int argc, char *argv[])
 	esupport &= ~(E_INCHAN|E_OUTCHAN);
 	scompile("PI:3.14159265358979323846", NULL, 0);
 	biggerlib();
-	for (i = 1; i < argc-1 && (argv[i][0] == '-') | (argv[i][0] == '+'); i++)
+	for (i = 1; i < argc && (argv[i][0] == '-') | (argv[i][0] == '+'); i++)
 		switch (argv[i][1]) {		/* get options */
 		case 'e':
 			scompile(argv[++i], NULL, 0);
@@ -577,6 +579,9 @@ main(int argc, char *argv[])
 					fcompile(argv[i]);
 			} else
 				dofwd = (argv[i][0] == '+');
+			break;
+		case 'a':
+			recip = (argv[i][0] == '+') ? " -a" : "";
 			break;
 		case 'b':
 			dobwd = (argv[i][0] == '+');
@@ -693,10 +698,10 @@ main(int argc, char *argv[])
 	return(wrap_up());
 userr:
 	fprintf(stderr,
-	"Usage: %s [-g Nlog2][-t pctcull][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
+	"Usage: %s [{+|-}a][-g Nlog2][-t pctcull][-l maxlobes] [bsdf.sir ..] > bsdf.xml\n",
 				progname);
 	fprintf(stderr,
-	"   or: %s -t{3|4} [-g Nlog2][-t pctcull][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",
+	"   or: %s -t{3|4} [{+|-}a][-g Nlog2][-t pctcull][{+|-}for[ward]][{+|-}b[ackward]][-e expr][-f file] bsdf_func > bsdf.xml\n",
 				progname);
 	return(1);
 }

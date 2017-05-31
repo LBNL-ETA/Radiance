@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.5 2015/02/20 18:26:08 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.6 2017/05/31 17:25:21 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -6,6 +6,8 @@ bsdf2ttree - generate XML tensor tree description of a BSDF
 .B bsdf2ttree
 [
 .B "\-pC"
+][
+.B "{+|-}a"
 ][
 .B "\-g Nlog2"
 ][
@@ -23,6 +25,8 @@ or
 .B "\-t{3|4}"
 [
 .B "\-pC"
+][
+.B "{+|-}a"
 ][
 .B "\-g Nlog2"
 ][
@@ -51,6 +55,12 @@ The
 option by itself turns off the progress bar, whose length may be set
 by an immediately following integer argument.
 (The default progress bar length is 79 characters.)\0
+.PP
+The
+.I \-a
+option turns off reciprocity averaging for isotropic scattering or anisotropic reflection.
+Normally on (+a), this ensures that the tensor BRDF obeys Helmholtz reciprocity.
+However, in certain rare cases, reciprocity averaging can cause unwanted noise in the output.
 .PP
 The maximum resolution of the tensor tree may be controlled by the
 .I \-g

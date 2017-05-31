@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.75 2017/02/14 07:06:55 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.76 2017/05/31 17:25:21 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -9,7 +9,7 @@ use strict;
 my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 use File::Temp qw/ :mktemp  /;
 sub userror {
-	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-W][-t{3|4} Nlog2][-r \"ropts\"][-s \"x=string;y=string\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}C][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom units] [input ..]\n";
+	print STDERR "Usage: genBSDF [-n Nproc][-c Nsamp][-W][-t{3|4} Nlog2][-r \"ropts\"][-s \"x=string;y=string\"][-dim xmin xmax ymin ymax zmin zmax][{+|-}C][{+|-}a][{+|-}f][{+|-}b][{+|-}mgf][{+|-}geom units] [input ..]\n";
 	exit 1;
 }
 my ($td,$radscn,$mgfscn,$octree,$fsender,$bsender,$receivers,$facedat,$behinddat,$rmtmp);
@@ -88,6 +88,7 @@ my $rfluxmtx = "rfluxmtx -ab 5 -ad 700 -lw 3e-6 -w-";
 my $wrapper = "wrapBSDF";
 my $tensortree = 0;
 my $ttlog2 = 4;
+my $dorecip = 1;
 my $nsamp = 2000;
 my $mgfin = 0;
 my $geout = 1;
@@ -115,6 +116,8 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]C/) {
 		$docolor = ("$ARGV[0]" =~ /^\+/);
+	} elsif $("$ARGV[0" =~ /^[-+]a/) {
+		$dorecip = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
 		$doforw = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]b/) {
@@ -424,7 +427,7 @@ sub ttree_comp {
 		}
 	}
 	if ($pctcull >= 0) {
-		my $avg = ( "$typ" =~ /^r[fb]/ ) ? " -a" : "";
+		my $avg = ( $dorecip && "$typ" =~ /^r[fb]/ ) ? " -a" : "";
 		my $pcull = ("$spec" eq "Visible") ? $pctcull :
 						     (100 - (100-$pctcull)*.25) ;
 		if ($windoz) {
