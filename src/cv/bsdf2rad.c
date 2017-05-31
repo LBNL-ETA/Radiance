@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.30 2017/05/15 19:17:27 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.31 2017/05/31 02:41:52 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -513,7 +513,7 @@ put_hemispheres(void)
 	if (front_comp) {
 		printf(
 "\n!genrev %s Front \"R*sin(A*t)\" \"R*cos(A*t)\" %d -e \"R:%g;A:%f\" -s | xform -t %g 0 0\n",
-				sph_fmat, nsegs, sph_rad, 0.495*PI, sph_xoffset);
+				sph_fmat, nsegs, sph_rad, 0.5*PI, sph_xoffset);
 		printf("\nvoid brighttext front_text\n3 helvet.fnt . FRONT\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
 				-.22*sph_rad + sph_xoffset, -1.4*sph_rad,
@@ -529,7 +529,7 @@ put_hemispheres(void)
 	if (back_comp) {
 		printf(
 "\n!genrev %s Back \"R*cos(A*t)\" \"R*sin(A*t)\" %d -e \"R:%g;A:%f\" -s | xform -t %g 0 0\n",
-				sph_bmat, nsegs, sph_rad, 0.495*PI, -sph_xoffset);
+				sph_bmat, nsegs, sph_rad, 0.5*PI, -sph_xoffset);
 		printf("\nvoid brighttext back_text\n3 helvet.fnt . BACK\n0\n");
 		printf("12\n\t%f %f 0\n\t%f 0 0\n\t0 %f 0\n\t.01 1 -.1\n",
 				-.22*sph_rad - sph_xoffset, -1.4*sph_rad,
