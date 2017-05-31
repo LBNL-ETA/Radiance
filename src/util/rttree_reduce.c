@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.16 2016/08/18 00:52:48 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.17 2017/05/31 03:26:46 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -223,7 +223,8 @@ read_double(float *rowp, int n)
 		return(0);
 	}
 	if (rblen < n) {
-		rowbuf = (double *)realloc(rowbuf, sizeof(double)*(rblen=n));
+		if (rblen) free(rowbuf);
+		rowbuf = (double *)malloc(sizeof(double)*(rblen=n));
 		if (rowbuf == NULL)
 			error(SYSTEM, "out of memory in read_double");
 	}
@@ -283,16 +284,13 @@ load_data(void)
 		int	ix, ox;
 		for (ix = 0; ix < 1<<(log2g-1); ix++)
 			for (ox = 0; ox < 1<<log2g; ox++)
-				(*readf)(datarr+(((ix<<log2g)+ox)<<log2g),
-						1<<log2g);
+				(*readf)(&dval3(ix,ox,0), 1<<log2g);
 	} else /* ttrank == 4 */ {
 		int	ix, iy, ox;
 		for (ix = 0; ix < 1<<log2g; ix++)
 		    for (iy = 0; iy < 1<<log2g; iy++)
 			for (ox = 0; ox < 1<<log2g; ox++)
-				(*readf)(datarr +
-				(((((ix<<log2g)+iy)<<log2g)+ox)<<log2g),
-						1<<log2g);
+				(*readf)(&dval4(ix,iy,ox,0), 1<<log2g);
 	}
 	(*readf)(NULL, 0);	/* releases any buffers */
 	if (infmt == 'a') {
@@ -332,14 +330,18 @@ do_reciprocity(void)
 			}
 	} else /* ttrank == 4 */ {
 		int	ix, iy, ox, oy;
-		for (ix = 1; ix < siz; ix++)
-		    for (iy = 1; iy < siz; iy++)
-			for (ox = 0; ox < ix; ox++)
-			    for (oy = 0; oy < iy; oy++) {
+		for (ix = 0; ix < siz; ix++)
+		    for (iy = 0; iy < siz; iy++) {
+			int	cnt = ix*siz + iy;
+			for (ox = 0; cnt > 0; ox++)
+			    for (oy = 0; oy < siz; oy++) {
 				v1p = &dval4(siz-1-ix,siz-1-iy,ox,oy);
 				v2p = &dval4(siz-1-ox,siz-1-oy,ix,iy);
 				*v1p = *v2p = .5f*( *v1p + *v2p );
+				if (--cnt <= 0)
+					break;
 			    }
+		    }
 	}
 }
 
