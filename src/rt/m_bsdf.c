@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.38 2017/05/19 15:13:41 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.39 2017/06/02 18:10:11 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -79,7 +79,9 @@ typedef struct {
 	COLOR	cthru;		/* "through" component multiplier */
 	SDData	*sd;		/* loaded BSDF data */
 	COLOR	rdiff;		/* diffuse reflection */
+	COLOR	runsamp;	/* BSDF hemispherical reflection */
 	COLOR	tdiff;		/* diffuse transmission */
+	COLOR	tunsamp;	/* BSDF hemispherical transmission */
 }  BSDFDAT;		/* BSDF material data */
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
@@ -315,7 +317,7 @@ dir_bsdf(
 
 	if (ldot > 0 && bright(np->rdiff) > FTINY) {
 		/*
-		 *  Compute added diffuse reflected component.
+		 *  Compute diffuse reflected component
 		 */
 		copycolor(ctmp, np->rdiff);
 		dtmp = ldot * omega * (1./PI);
@@ -324,7 +326,7 @@ dir_bsdf(
 	}
 	if (ldot < 0 && bright(np->tdiff) > FTINY) {
 		/*
-		 *  Compute added diffuse transmission.
+		 *  Compute diffuse transmission
 		 */
 		copycolor(ctmp, np->tdiff);
 		dtmp = -ldot * omega * (1.0/PI);
@@ -334,7 +336,7 @@ dir_bsdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute specular scattering coefficient using BSDF.
+	 *  Compute specular scattering coefficient using BSDF
 	 */
 	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
@@ -370,7 +372,7 @@ dir_brdf(
 
 	if (bright(np->rdiff) > FTINY) {
 		/*
-		 *  Compute added diffuse reflected component.
+		 *  Compute diffuse reflected component
 		 */
 		copycolor(ctmp, np->rdiff);
 		dtmp = ldot * omega * (1./PI);
@@ -380,7 +382,7 @@ dir_brdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute specular reflection coefficient using BSDF.
+	 *  Compute specular reflection coefficient using BSDF
 	 */
 	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
@@ -412,7 +414,7 @@ dir_btdf(
 
 	if (bright(np->tdiff) > FTINY) {
 		/*
-		 *  Compute added diffuse transmission.
+		 *  Compute diffuse transmission
 		 */
 		copycolor(ctmp, np->tdiff);
 		dtmp = -ldot * omega * (1.0/PI);
@@ -422,7 +424,7 @@ dir_btdf(
 	if (ambRayInPmap(np->pr))
 		return;		/* specular already in photon map */
 	/*
-	 *  Compute specular scattering coefficient using BSDF.
+	 *  Compute specular scattering coefficient using BSDF
 	 */
 	if (!direct_specular_OK(ctmp, ldir, omega, np))
 		return;
@@ -498,18 +500,19 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 	COLORV		*unsc;
 
 	if (sflags == SDsampSpT) {
-		unsc = ndp->tdiff;
+		unsc = ndp->tunsamp;
 		if (ndp->pr->rod > 0)
 			dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
 		else
 			dfp = (ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf;
 	} else /* sflags == SDsampSpR */ {
-		unsc = ndp->rdiff;
+		unsc = ndp->runsamp;
 		if (ndp->pr->rod > 0)
 			dfp = ndp->sd->rf;
 		else
 			dfp = ndp->sd->rb;
 	}
+	setcolor(unsc, 0., 0., 0.);
 	if (dfp == NULL)			/* no specular component? */
 		return(0);
 						/* below sampling threshold? */
@@ -517,15 +520,13 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		if (dfp->maxHemi > FTINY) {	/* XXX no color from BSDF */
 			FVECT	vjit;
 			double	d;
-			COLOR	ctmp;
 			bsdf_jitter(vjit, ndp, ndp->sr_vpsa[1]);
 			d = SDdirectHemi(vjit, sflags, ndp->sd);
 			if (sflags == SDsampSpT) {
-				copycolor(ctmp, ndp->pr->pcol);
-				scalecolor(ctmp, d);
+				copycolor(unsc, ndp->pr->pcol);
+				scalecolor(unsc, d);
 			} else			/* no pattern on reflection */
-				setcolor(ctmp, d, d, d);
-			addcolor(unsc, ctmp);
+				setcolor(unsc, d, d, d);
 		}
 		return(0);
 	}
@@ -669,23 +670,25 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* sample transmission */
 	sample_sdf(&nd, SDsampSpT);
 						/* compute indirect diffuse */
-	if (bright(nd.rdiff) > FTINY) {		/* ambient from reflection */
+	copycolor(ctmp, nd.rdiff);
+	addcolor(ctmp, nd.runsamp);
+	if (bright(ctmp) > FTINY) {		/* ambient from reflection */
 		if (!hitfront)
 			flipsurface(r);
-		copycolor(ctmp, nd.rdiff);
 		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);
 		if (!hitfront)
 			flipsurface(r);
 	}
-	if (bright(nd.tdiff) > FTINY) {		/* ambient from other side */
+	copycolor(ctmp, nd.tdiff);
+	addcolor(ctmp, nd.tunsamp);
+	if (bright(ctmp) > FTINY) {		/* ambient from other side */
 		FVECT  bnorm;
 		if (hitfront)
 			flipsurface(r);
 		bnorm[0] = -nd.pnorm[0];
 		bnorm[1] = -nd.pnorm[1];
 		bnorm[2] = -nd.pnorm[2];
-		copycolor(ctmp, nd.tdiff);
 		if (nd.thick != 0) {		/* proxy with offset? */
 			VCOPY(vtmp, r->rop);
 			VSUM(r->rop, vtmp, r->ron, nd.thick);
