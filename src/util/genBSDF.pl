@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.77 2017/06/08 15:37:15 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.78 2017/06/19 03:45:57 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -116,7 +116,7 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" =~ /^[-+]C/) {
 		$docolor = ("$ARGV[0]" =~ /^\+/);
-	} elsif ("$ARGV[0" =~ /^[-+]a/) {
+	} elsif ("$ARGV[0]" =~ /^[-+]a/) {
 		$dorecip = ("$ARGV[0]" =~ /^\+/);
 	} elsif ("$ARGV[0]" =~ /^[-+]f/) {
 		$doforw = ("$ARGV[0]" =~ /^\+/);
