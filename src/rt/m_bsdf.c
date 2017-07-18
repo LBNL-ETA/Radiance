@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.40 2017/07/17 00:14:28 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.41 2017/07/18 21:33:14 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -431,16 +431,17 @@ dir_btdf(
 static int
 sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int xmit)
 {
-	int	hasthru = (xmit && !(ndp->pr->crtype & (SPECULAR|AMBIENT))
-				&& bright(ndp->cthru) > FTINY);
-	int	nstarget = 1;
-	int	nsent = 0;
-	int	n;
-	SDError	ec;
-	SDValue bsv;
-	double	xrand;
-	FVECT	vsmp, vinc;
-	RAY	sr;
+	const int	hasthru = (xmit &&
+				!(ndp->pr->crtype & (SPECULAR|AMBIENT)) &&
+				bright(ndp->cthru) > FTINY);
+	int		nstarget = 1;
+	int		nsent = 0;
+	int		n;
+	SDError		ec;
+	SDValue		bsv;
+	double		xrand;
+	FVECT		vsmp, vinc;
+	RAY		sr;
 						/* multiple samples? */
 	if (specjitter > 1.5) {
 		nstarget = specjitter*ndp->pr->rweight + .5;
@@ -522,7 +523,6 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 	if (dfp == NULL)			/* no specular component? */
 		return(0);
 
-	dimlist[ndims++] = (int)(size_t)ndp->mp;
 	if (hasthru) {				/* separate view sample? */
 		RAY	tr;
 		if (rayorigin(&tr, TRANS, ndp->pr, ndp->cthru) == 0) {
@@ -535,7 +535,6 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		} else
 			hasthru = 0;
 	}
-	ndims--;
 	if (dfp->maxHemi - b <= FTINY) {	/* how specular to sample? */
 		b = 0;
 	} else {
@@ -554,7 +553,8 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		}
 		return(ntotal);
 	}
-	ndims += 2;				/* else sample specular */
+	dimlist[ndims] = (int)(size_t)ndp->mp;	/* else sample specular */
+	ndims += 2;
 	for (n = dfp->ncomp; n--; ) {		/* loop over components */
 		dimlist[ndims-1] = n + 9438;
 		ntotal += sample_sdcomp(ndp, &dfp->comp[n], sflags==SDsampSpT);
