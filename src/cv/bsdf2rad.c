@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.31 2017/05/31 02:41:52 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.32 2017/08/03 19:50:12 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -275,6 +275,7 @@ put_mirror_arrow(const FVECT origin, const FVECT nrm)
 {
 	const double	arrow_len = 1.2*bsdf_rad;
 	const double	tip_len = 0.2*bsdf_rad;
+	static int	cnt = 1;
 	FVECT		refl;
 	int		i;
 
@@ -282,20 +283,20 @@ put_mirror_arrow(const FVECT origin, const FVECT nrm)
 	refl[1] = 2.*nrm[2]*nrm[1];
 	refl[2] = 2.*nrm[2]*nrm[2] - 1.;
 
-	printf("\n# Mirror arrow\n");
-	printf("\nshaft_mat cylinder inc_dir\n0\n0\n7");
+	printf("\n# Mirror arrow #%d\n", cnt);
+	printf("\nshaft_mat cylinder inc_dir%d\n0\n0\n7", cnt);
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2]+arrow_len,
 			origin[0], origin[1], origin[2],
 			arrow_rad);
-	printf("\nshaft_mat cylinder mir_dir\n0\n0\n7");
+	printf("\nshaft_mat cylinder mir_dir%d\n0\n0\n7", cnt);
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2],
 			origin[0] + arrow_len*refl[0],
 			origin[1] + arrow_len*refl[1],
 			origin[2] + arrow_len*refl[2],
 			arrow_rad);
-	printf("\ntip_mat cone mir_tip\n0\n0\n8");
+	printf("\ntip_mat cone mir_tip%d\n0\n0\n8", cnt);
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f 0\n",
 			origin[0] + (arrow_len-.5*tip_len)*refl[0],
 			origin[1] + (arrow_len-.5*tip_len)*refl[1],
@@ -304,6 +305,7 @@ put_mirror_arrow(const FVECT origin, const FVECT nrm)
 			origin[1] + (arrow_len+.5*tip_len)*refl[1],
 			origin[2] + (arrow_len+.5*tip_len)*refl[2],
 			2.*arrow_rad);
+	++cnt;
 }
 
 /* Put out transmitted direction arrow for the given incident vector */
@@ -312,19 +314,21 @@ put_trans_arrow(const FVECT origin)
 {
 	const double	arrow_len = 1.2*bsdf_rad;
 	const double	tip_len = 0.2*bsdf_rad;
+	static int	cnt = 1;
 	int		i;
 
-	printf("\n# Transmission arrow\n");
-	printf("\nshaft_mat cylinder trans_dir\n0\n0\n7");
+	printf("\n# Transmission arrow #%d\n", cnt);
+	printf("\nshaft_mat cylinder trans_dir%d\n0\n0\n7", cnt);
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f\n",
 			origin[0], origin[1], origin[2],
 			origin[0], origin[1], origin[2]-arrow_len,
 			arrow_rad);
-	printf("\ntip_mat cone trans_tip\n0\n0\n8");
+	printf("\ntip_mat cone trans_tip%d\n0\n0\n8", cnt);
 	printf("\n\t%f %f %f\n\t%f %f %f\n\t%f 0\n",
 			origin[0], origin[1], origin[2]-arrow_len+.5*tip_len,
 			origin[0], origin[1], origin[2]-arrow_len-.5*tip_len,
-			2.*arrow_rad);	
+			2.*arrow_rad);
+	++cnt;
 }
 
 /* Compute rotation (x,y,z) => (xp,yp,zp) */
