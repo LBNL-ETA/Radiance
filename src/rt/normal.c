@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.74 2016/02/23 12:42:41 rschregle Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.75 2017/08/03 16:41:52 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -331,9 +331,13 @@ m_normal(			/* color a ray that hit something normal */
 						/* diffuse reflection */
 	nd.rdiff = 1.0 - nd.trans - nd.rspec;
 
-	if (nd.specfl & SP_PURE && nd.rdiff <= FTINY && nd.tdiff <= FTINY)
+	if (nd.specfl & SP_PURE && nd.rdiff <= FTINY && nd.tdiff <= FTINY) {
+		if (mirtest > transtest+FTINY)
+			r->rt = mirdist;
+		else if (transtest > FTINY)
+			r->rt = transdist;
 		return(1);			/* 100% pure specular */
-
+	}
 	if (!(nd.specfl & SP_PURE))
 		gaussamp(&nd);			/* checks *BLT flags */
 
