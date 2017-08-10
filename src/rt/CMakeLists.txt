@@ -1,33 +1,17 @@
 set(VERSION_FILE "${radiance_BINARY_DIR}/src/rt/Version.c")
 create_version_file("${VERSION_FILE}")
 
-if(WIN32)
-
-  add_library(radiance
-    ambcomp.c ambient.c ambio.c aniso.c ashikhmin.c data.c dielectric.c fprism.c freeobjmem.c 
-    func.c glass.c initotypes.c m_alias.c m_brdf.c m_bsdf.c m_clip.c m_direct.c
-    m_mirror.c m_mist.c mx_func.c mx_data.c noise3.c normal.c o_face.c o_cone.c
-    o_instance.c o_mesh.c p_data.c p_func.c preload.c raytrace.c renderopts.c
-    source.c sphere.c srcobstr.c srcsupp.c srcsamp.c t_data.c t_func.c text.c
-    pmapsrc.c pmapmat.c pmaprand.c pmapio.c 
-    pmapbias.c pmapparm.c pmapamb.c pmapray.c pmapopt.c 
-    pmapdata.c pmapdiag.c pmaptype.c pmutil.c pmcontrib2.c
-    "${VERSION_FILE}" virtuals.c)
-
-else()
-
-  add_library(radiance
-      ambcomp.c ambient.c ambio.c aniso.c ashikhmin.c data.c dielectric.c fprism.c freeobjmem.c 
-      func.c glass.c initotypes.c m_alias.c m_brdf.c m_bsdf.c m_clip.c m_direct.c
-      m_mirror.c m_mist.c mx_func.c mx_data.c noise3.c normal.c o_face.c o_cone.c
-      o_instance.c o_mesh.c p_data.c p_func.c preload.c raytrace.c renderopts.c
-      source.c sphere.c srcobstr.c srcsupp.c srcsamp.c t_data.c t_func.c text.c
-      pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c 
-      pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c 
-      pmapdata.c pmapdiag.c pmaptype.c pmutil.c pmcontrib2.c
-      "${VERSION_FILE}" virtuals.c)
-
-endif()
+add_library(radiance
+	ambcomp.c ambient.c ambio.c aniso.c ashikhmin.c data.c dielectric.c fprism.c freeobjmem.c 
+      	func.c glass.c initotypes.c m_alias.c m_brdf.c m_bsdf.c m_clip.c m_direct.c
+      	m_mirror.c m_mist.c mx_func.c mx_data.c noise3.c normal.c o_face.c o_cone.c
+      	o_instance.c o_mesh.c p_data.c p_func.c preload.c raytrace.c renderopts.c
+      	source.c sphere.c srcobstr.c srcsupp.c srcsamp.c t_data.c t_func.c text.c
+      	pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c 
+      	pmapbias.c pmapparm.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c 
+      	pmapdata.c pmapdiag.c pmaptype.c pmutil.c pmcontrib2.c
+		../common/random.h ../common/platform.h func.c
+      	"${VERSION_FILE}" virtuals.c ../common/paths.c)
 
 if(WIN32)
   set(rayp_SOURCES raypwin.c)
@@ -49,17 +33,12 @@ target_link_libraries(lookamb rtrad)
 add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
 target_link_libraries(rcontrib radiance rtrad)
 
-if(NOT WIN32)
-  add_executable(mkpmap mkpmap.c)
-  target_link_libraries(mkpmap radiance rtrad)
-  add_executable(pmapdump pmapdump.c pmaptype.c pmapparm.c)
-  target_link_libraries(pmapdump radiance rtrad)
-endif()
+add_executable(mkpmap mkpmap.c)
+target_link_libraries(mkpmap radiance rtrad)
+add_executable(pmapdump pmapdump.c pmaptype.c pmapparm.c)
+target_link_libraries(pmapdump raycalls radiance rtrad)
 
-set(targets_to_install lookamb radiance raycalls rtrace rpict rcontrib)
-if(NOT WIN32)
-  set(targets_to_install ${targets_to_install} mkpmap pmapdump)
-endif()
+set(targets_to_install lookamb radiance raycalls rtrace rpict rcontrib mkpmap pmapdump)
 
 if(X11_FOUND)
   set(X11_SOURCES x11.c x11twind.c)
