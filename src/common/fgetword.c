@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fgetword.c,v 2.7 2017/04/09 21:33:24 greg Exp $";
+static const char	RCSid[] = "$Id: fgetword.c,v 2.8 2017/08/10 19:10:44 greg Exp $";
 #endif
 /*
  * Read white space separated words from stream
@@ -45,7 +45,10 @@ fgetword(			/* get (quoted) word up to n-1 characters */
 		c = getc(fp);
 	}
 	*cp = '\0';
-	if ((c != EOF) & !quote)	/* replace space */
+	if (c == EOF) {			/* hit end-of-file? */
+		if (cp == s)		/* and got nothing? */
+			return(NULL);
+	} else if (!quote)		/* replace white character */
 		ungetc(c, fp);
 	return(s);
 }
