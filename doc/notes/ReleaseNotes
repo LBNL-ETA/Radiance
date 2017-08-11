@@ -2152,3 +2152,6 @@ averaging.
 Added bias to see through BTDFs with a strong "through" component
 rather than scattering view rays.  This is in lieu of peak extraction,
 which looked to be too difficult from an implementation standpoint.
+
+Added bsdfview tool analogous to objview but for BSDF files (XML and SIR),
+which calls bsdf2rad then rad with a few useful default views.

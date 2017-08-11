@@ -1,0 +1,80 @@
+.\" RCSid "$Id: bsdfview.1,v 1.1 2017/08/11 21:39:52 greg Exp $"
+.TH BSDFVIEW 1 8/11/2017 RADIANCE
+.SH NAME
+bsdfview - view a BSDF representation
+.SH SYNOPSIS
+.B bsdfview
+[
+.B "\-q {Hi|Med|Lo}"
+][
+rad options
+]
+input ..
+.br
+.SH DESCRIPTION
+.I Bsdfview
+renders a BSDF description interactively.
+This program is a script that creates a rad input file (RIF) 
+then calls
+.I rad(1)
+to make an octree by calling
+.I bsdf2rad(1)
+and view the scene interactively.
+.PP
+The input is either a single XML file, such as might be produced by
+.I genBSDF(1),
+.I bsdf2klems(1),
+or
+.I bsdf2ttree(1),
+or one to four scattering interpolation representation (SIR) files, as
+might be produced by
+pabopto2bsdf(1).
+.PP
+A rad input file will be produced, whose name matches the root of
+the first input file but with any leading path removed (i.e., in
+the current directory).
+This RIF may be reused for subsequent viewing and rendering via
+.I rad
+without incurring the cost of another call to
+.I bsdf2rad.
+.PP
+The quality preference may be set via the
+.I \-q
+option.
+The number of processors to use may be specified with the 
+.I \-n
+option.
+.PP
+The program creates a number of views accessible via the
+.I rvu(1)
+"L" command:
+.TP 10n
+.BR def
+The default view, showing the back and front BRDFs.
+.TP
+.BR fr
+A view of the front reflection hemisphere.
+.TP
+.BR br
+A view of the back reflection hemisphere.
+.TP
+.BR ft
+A fisheye view of the front transmission hemisphere (from underneath).
+.TP
+.BR bt
+A fisheye view of the back transmission hemisphere.
+.TP
+.BR pr
+A parallel view of both reflection hemispheres from directly overhead.
+.TP
+.BR pt
+A parallel view of both transmission hemispheres from directly underneath.
+.PP
+Additionally, all the standard views that
+.I rvu
+defines will be available (e.g., "xZ", "zl", etc.).
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bsdf2klems(1), bsdf2rad(1), bsdf2ttree(1), genBSDF(1),
+objview(1), oconv(1), pabopto2bsdf(1), rad(1), rvu(1)

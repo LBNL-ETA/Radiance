@@ -1,0 +1,88 @@
+.\" RCSid "$Id: bsdf2rad.1,v 1.1 2017/08/11 21:39:52 greg Exp $"
+.TH BSDF2RAD 1 8/11/2017 RADIANCE
+.SH NAME
+bsdf2rad - create a RADIANCE visualization of a BSDF representation
+.SH SYNOPSIS
+.B bsdf2rad
+bsdf.xml
+.br
+or
+.br
+.B bsdf2rad
+hemi1.sir
+[
+hemi2.sir ..
+]
+.br
+.SH DESCRIPTION
+.I Bsdf2rad
+takes a bidirectional scattering distribution function (BSDF)
+and plots it as a RADIANCE scene file.
+In the first form,
+.I bsdf2rad
+takes a single XML file representing a Klems or tensor tree, plotting
+as many scattering hemispheres as are present in the file.
+In the second form,
+.I bsdf2rad
+takes up to four scattering interpolation representation (SIR) files,
+each depicting the BSDF from one side of one incident hemisphere,
+and plots them together.
+An XML BSDF description may be imported from outside RADIANCE, or
+produced by
+.I genBSDF(1),
+.I bsdf2klems(1),
+or
+.I bsdf2ttree(1).
+(A program that produces SIR files is
+.I pabopto2bsdf(1).)\0
+.PP
+The output of
+.I bsdf2rad
+is a RADIANCE scene that contains a selection of 3-D plots showing
+the given material's reflection and transmission scattering.
+This description is normally sent to
+.I oconv(1)
+to create an octree for rendering using
+.I rad(1),
+.I rvu(1),
+or
+.I rpict(1).
+.PP
+To the right (+X) of the scene, the front incident hemisphere will be plotted.
+To the left (-X) of the scene, the back incident hemisphere will be plotted.
+Depending on the input, only one or the other hemisphere may be present.
+In the case of an XML input, the hemispheres will be made of the specified
+BSDF material, and the scene
+will include a single (distant) light source shining straight
+down from overhead (+Z direction).
+.PP
+Pink arrows will indicate the "through" (view) and "mirror"
+(specular reflection) directions for each scatter plot.
+The logarithmic scale of the BSDF plots themselves will be determined
+automatically by the data and shown in a legend that lies between the
+two hemisphere, or to the side if there is only one.
+The incident direction may be read from the position of
+each plot, where hemisphere grid lines are separated by
+15 degree increments in the polar (theta, latitude) angle, and by
+30 degree increments in the azimuthal (phi, longitude) angle.
+The center (+Z) of each hemisphere corresponds to normal incidence,
+and the right (+X) direction corresponds to a zero phi angle.
+Positive phi is read counter-clockwise from above,
+and a phi of 90 degrees (+Y) typically corresponds
+to a material's "up" orientation.
+.SH EXAMPLE
+To view a BSDF XML representation:
+.IP "" .2i
+bsdf2rad cloth.xml | oconv - > cloth.oct
+.br
+rvu -vp 0 -50 50 -vd 0 50 -50 -vh 45 -vv 30 cloth.oct
+.PP
+To render an SIR description of a BRDF:
+.IP "" .2i
+bsdf2rad front_refl.sir back_refl.sir > refl.rad
+oconv -f refl.rad | rpict -vf good.vf > refl_good.hdr
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+bsdf2klems(1), bsdf2ttree(1), genBSDF(1),
+bsdfview(1), oconv(1), pabopto2bsdf(1), rad(1), rpict(1), rvu(1)

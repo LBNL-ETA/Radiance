@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: objview.pl,v 2.2 2016/08/19 17:51:23 greg Exp $
+# RCSid $Id: objview.pl,v 2.3 2017/08/11 21:39:52 greg Exp $
 #
 # Make a nice view of an object
 # Arguments are scene input files
@@ -47,7 +47,7 @@ while (@ARGV) {
 		# Let rad do any error handling...
 		$vw = $ARGV[1];
 		shift @ARGV;
-	} elsif (m/^-N\b/) {   # No. of parallel processes
+	} elsif (m/^-[nN]\b/) {   # No. of parallel processes
 		$opts .= ' -N ' . $ARGV[1];
 		$radopt = 1;
 		shift @ARGV;

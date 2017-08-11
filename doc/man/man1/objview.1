@@ -1,4 +1,4 @@
-.\" RCSid "$Id: objview.1,v 1.5 2014/04/16 20:48:07 greg Exp $"
+.\" RCSid "$Id: objview.1,v 1.6 2017/08/11 21:39:52 greg Exp $"
 .TH OBJVIEW 1 6/10/98 RADIANCE
 .SH NAME
 objview - view RADIANCE object(s)
@@ -32,7 +32,7 @@ renders a RADIANCE object interactively using
 .I rad(1)
 or
 .I glrad(1).
-This program is merely a shell script that adds some light
+This program is merely a Perl script that adds some light
 sources to a scene then calls
 .I rad(1)
 or
@@ -46,11 +46,14 @@ option to
 .I objview.
 .PP
 Any number of material and scene files may be given,
-but no in-line commands or standard input.
+with no inputs causing
+.I objview
+to read a scene from its standard input.
 .PP
 The number of processors to use may be specified with the 
--n option.
+.I \-n
+option.
 .SH AUTHOR(s)
-Greg Ward Larson
+Greg Ward (original), Axel Jacobs (Perl)
 .SH "SEE ALSO"
 glrad(1), oconv(1), rad(1), rvu(1)
