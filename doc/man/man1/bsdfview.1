@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bsdfview.1,v 1.1 2017/08/11 21:39:52 greg Exp $"
+.\" RCSid "$Id: bsdfview.1,v 1.2 2017/08/11 23:00:10 greg Exp $"
 .TH BSDFVIEW 1 8/11/2017 RADIANCE
 .SH NAME
 bsdfview - view a BSDF representation
@@ -14,19 +14,19 @@ input ..
 .SH DESCRIPTION
 .I Bsdfview
 renders a BSDF description interactively.
-This program is a script that creates a rad input file (RIF) 
+This is a script that creates a rad input file (RIF) 
 then calls
 .I rad(1)
-to make an octree by calling
-.I bsdf2rad(1)
-and view the scene interactively.
+to make an octree via
+.I bsdf2rad(1),
+then views the scene interactively.
 .PP
 The input is either a single XML file, such as might be produced by
 .I genBSDF(1),
 .I bsdf2klems(1),
 or
 .I bsdf2ttree(1),
-or one to four scattering interpolation representation (SIR) files, as
+or up to four scattering interpolation representation (SIR) files, as
 might be produced by
 pabopto2bsdf(1).
 .PP
