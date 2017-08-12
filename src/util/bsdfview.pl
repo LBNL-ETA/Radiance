@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.1 2017/08/11 21:39:52 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.2 2017/08/12 01:31:29 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -70,7 +70,12 @@ $name =~ s{\.[^.]+$}{};		# remove file extension
 
 my $rif = "$name.rif";
 
-die("bsdfview: will not overwrite existing file '$rif'\n") if (-e $rif);
+if (-e $rif) {			# RIF already exists?
+	print "Attempting to run with existing rad input file '$rif'\n";
+	system "rad -o $raddev -w -v $vw $opts $rif QUA=$qual";
+	die("\nTry removing '$rif' and starting again\n\n") if $?;
+	exit;
+}
 
 print "bsdfview: creating rad input file '$rif'\n";
 
