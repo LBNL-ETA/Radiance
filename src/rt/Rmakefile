@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.79 2016/09/29 21:51:58 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.80 2017/08/14 21:03:24 rschregle Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -326,29 +326,29 @@ pmap.o: pmap.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
  ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
  ../common/fvect.h ../common/rterror.h ../common/octree.h \
- ../common/object.h ../common/color.h ../common/lookup.h pmapmat.h \
- pmapsrc.h source.h pmaprand.h pmapio.h pmapbias.h pmapdiag.h \
- ../common/platform.h ../common/otypes.h
+ ../common/object.h ../common/color.h ../common/paths.h \
+ ../common/lookup.h pmapkdt.h pmapooc.h pmapmat.h pmapsrc.h source.h pmaprand.h \
+ pmapio.h pmapbias.h pmapdiag.h ../common/platform.h ../common/otypes.h
 
-pmapcontrib.o pmcontrib2.o: pmapcontrib.c pmapcontrib.h pmapdata.h ray.h \
+pmapcontrib.o: pmapcontrib.c pmapcontrib.h pmapdata.h ray.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
  ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
  ../common/fvect.h ../common/rterror.h ../common/octree.h \
  ../common/object.h ../common/color.h pmapparm.h pmaptype.h \
- ../common/lookup.h pmap.h pmapmat.h pmapsrc.h source.h pmaprand.h \
- pmapio.h pmapdiag.h ../common/platform.h rcontrib.h ../common/paths.h \
- ../common/rtprocess.h ../common/paths.h func.h ../common/calcomp.h \
- ../common/otypes.h
+ ../common/paths.h ../common/lookup.h pmapkdt.h pmapooc.h pmapmat.h pmap.h \
+ pmapsrc.h source.h pmaprand.h pmapio.h pmapdiag.h ../common/platform.h \
+ rcontrib.h ../common/rtprocess.h ../common/paths.h func.h \
+ ../common/calcomp.h ../common/otypes.h
 
-pmapdata.o: pmapdata.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
- pmapkdt.h pmapkdt.c pmapooc.h pmapooc.c oococt.h oocnn.h ooccache.h \
- ../common/standard.h ../common/copyright.h ../common/rtio.h \
- ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
- ../common/fvect.h ../common/rterror.h ../common/octree.h \
- ../common/object.h ../common/color.h ../common/lookup.h pmaprand.h \
- pmapmat.h ../common/otypes.h source.h rcontrib.h ../common/platform.h \
- ../common/paths.h ../common/rtprocess.h ../common/paths.h func.h \
- ../common/calcomp.h 
+pmapdata.o: pmapdata.c pmapdata.h ray.h ../common/standard.h \
+ ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
+ ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
+ ../common/rterror.h ../common/octree.h ../common/object.h \
+ ../common/color.h pmapparm.h pmaptype.h ../common/paths.h \
+ ../common/lookup.h pmapkdt.h pmapooc.h pmaprand.h pmapmat.h pmap.h \
+ ../common/otypes.h source.h rcontrib.h ../common/platform.h \
+ ../common/rtprocess.h ../common/paths.h func.h ../common/calcomp.h \
+ ../common/random.h pmapkdt.c pmapooc.c
 
 pmapdiag.o: pmapdiag.c pmapdiag.h ../common/platform.h pmapdata.h ray.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
@@ -368,8 +368,9 @@ pmapio.o: pmapio.c pmapio.h pmapdata.h ray.h ../common/standard.h \
  ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
  ../common/rtmath.h ../common/tiff.h ../common/mat4.h ../common/fvect.h \
  ../common/rterror.h ../common/octree.h ../common/object.h \
- ../common/color.h pmapparm.h pmaptype.h ../common/lookup.h pmapdiag.h \
- ../common/platform.h ../common/resolu.h
+ ../common/color.h pmapparm.h pmaptype.h ../common/paths.h \
+ ../common/lookup.h pmapkdt.h pmapooc.h pmapdiag.h ../common/platform.h \
+ ../common/resolu.h
 
 pmapmat.o: pmapmat.c pmapmat.h pmap.h pmapparm.h pmaptype.h pmapdata.h \
  ray.h ../common/standard.h ../common/copyright.h ../common/rtio.h \
@@ -386,7 +387,8 @@ pmapparm.o: pmapparm.c pmapparm.h pmaptype.h pmapdata.h ray.h \
  ../common/standard.h ../common/copyright.h ../common/rtio.h \
  ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
  ../common/fvect.h ../common/rterror.h ../common/octree.h \
- ../common/object.h ../common/color.h ../common/lookup.h
+ ../common/object.h ../common/color.h ../common/paths.h \
+ ../common/lookup.h pmapkdt.h pmapooc.h
 
 pmapray.o: pmapray.c pmapray.h ray.h ../common/standard.h \
  ../common/copyright.h ../common/rtio.h ../common/rtmisc.h \
@@ -403,10 +405,18 @@ pmapsrc.o: pmapsrc.c pmapsrc.h ray.h ../common/standard.h \
  ../common/lookup.h pmaprand.h ../common/otypes.h
 
 pmutil.o:	pmap.h pmapio.h pmapdata.h pmapparm.h pmaptype.h pmapbias.h \
-../common/otypes.h
+  ../common/otypes.h
 
 pmaptype.o: pmaptype.c pmaptype.h
 
+mkpmap.o: mkpmap.c pmap.h pmapparm.h pmaptype.h pmapdata.h ray.h \
+ ../common/standard.h ../common/copyright.h ../common/rtio.h \
+ ../common/rtmisc.h ../common/rtmath.h ../common/tiff.h ../common/mat4.h \
+ ../common/fvect.h ../common/rterror.h ../common/octree.h \
+ ../common/object.h ../common/color.h ../common/paths.h \
+ ../common/lookup.h pmapkdt.h pmapooc.h pmapmat.h pmapcontrib.h pmaprand.h \
+ ambient.h ../common/resolu.h source.h
+      
 oococt.o: oococt.c oococt.h oocsort.h ooccache.h \
  ../common/rtio.h ../common/fvect.h
 
