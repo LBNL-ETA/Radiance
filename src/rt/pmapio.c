@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapio.c,v 2.9 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapio.c,v 2.10 2017/08/14 21:12:10 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapio.c,v 2.9 2016/05/17 17:39:47 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapio.c,v 2.9 2016/05/17 17:39:47 rschregle Exp $    
+   $Id: pmapio.c,v 2.10 2017/08/14 21:12:10 rschregle Exp $    
 */
 
 
@@ -34,11 +34,11 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
       return;
    }
       
-   if (photonRepTime) {
+   if (verbose) {
       if (pmap -> numPrimary)
-         sprintf(errmsg, "Saving %s (%ld photons, %d primaries)...\n", 
+         sprintf(errmsg, "Saving %s (%ld photons, %d primaries)\n", 
                  fname, pmap -> numPhotons, pmap -> numPrimary);
-      else sprintf(errmsg, "Saving %s (%ld photons)...\n", fname, 
+      else sprintf(errmsg, "Saving %s (%ld photons)\n", fname, 
                    pmap -> numPhotons);
                    
       eputs(errmsg);

@@ -1,3 +1,8 @@
+#ifndef lint
+static const char RCSid[] = "$Id: oocbuild.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $";
+#endif
+
+
 /* 
    =======================================================================
    Routines for building out-of-core octree data structure
@@ -8,12 +13,15 @@
    
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
+       supported by the Swiss National Science Foundation (SNSF, #147053)
    =======================================================================
    
-   $Id: oocbuild.c,v 2.3 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocbuild.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $
 */
 
+
+#if !defined(_WIN32) && !defined(_WIN64) || defined(PMAP_OOC)
+/* No Windoze support for now */
 
 #include "oococt.h"
 #include "oocsort.h"
@@ -347,3 +355,5 @@ OOC_Octree *OOC_Build (OOC_Octree *oct, unsigned leafMax, unsigned maxDepth)
    
    return oct;
 }
+
+#endif /* NIX / PMAP_OOC */

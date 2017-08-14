@@ -1,3 +1,8 @@
+#ifndef lint
+static const char RCSid[] = "$Id: oocmorton.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $";
+#endif
+
+
 /* 
    =========================================================================
    Routines to generate and compare Morton Codes, i.e. indices on space
@@ -8,10 +13,12 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: oocmorton.c,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocmorton.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
+#if !defined(_WIN32) && !defined(_WIN64) || defined(PMAP_OOC)
+/* No Windoze support for now */
 
 #include "oocmorton.h"
 
@@ -33,3 +40,5 @@ OOC_MortonIdx OOC_Key2Morton (const FVECT key, const FVECT org, RREAL scale)
    return OOC_BitInterleave(k [0]) | OOC_BitInterleave(k [1]) << 1 |
           OOC_BitInterleave(k [2]) << 2;
 }
+
+#endif /* NIX / PMAP_OOC */

@@ -1,21 +1,18 @@
 /* 
-   ==================================================================
+   ======================================================================
    In-core kd-tree for photon map
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
-   $Id: pmapkdt.c,v 1.1 2016/05/18 08:22:45 rschregle Exp $
+   $Id: pmapkdt.c,v 1.2 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
-#ifdef PMAP_OOC
-   /* Checked in pmapdata.h */
-   #undef PMAP_OOC
-#endif
+
 #include "pmapdata.h"   /* Includes pmapkdt.h */
 #include "source.h"
 
@@ -201,7 +198,8 @@ void kdT_BuildPhotonMap (struct PhotonMap *pmap)
       error(SYSTEM, "failed in-core heap allocation in kdT_BuildPhotonMap");
      
    rewind(pmap -> heap);
-   if (fread(nodes, sizeof(Photon), pmap -> numPhotons, pmap -> heap) !=
+   i = fread(nodes, sizeof(Photon), pmap -> numPhotons, pmap -> heap);
+   if (i !=
        pmap -> numPhotons)
       error(SYSTEM, "failed loading photon heap in kdT_BuildPhotonMap");
       

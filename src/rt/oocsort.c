@@ -1,3 +1,8 @@
+#ifndef lint
+static const char RCSid[] = "$Id: oocsort.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $";
+#endif
+
+
 /* 
    =========================================================================
    N-way out-of-core merge sort for records with 3D keys.  Recursively
@@ -10,10 +15,12 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: oocsort.c,v 2.3 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocsort.c,v 2.4 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
+#if !defined(_WIN32) && !defined(_WIN64) || defined(PMAP_OOC)
+/* No Windoze support for now */
 
 #include "oocsort.h"
 #include "oocmorton.h"
@@ -22,7 +29,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
-
 
 
 /* Priority queue node */
@@ -571,3 +577,5 @@ int OOC_Sort (FILE *in, FILE *out, unsigned numBlk,
    
    return stat;           
 }
+
+#endif /* NIX / PMAP_OOC */

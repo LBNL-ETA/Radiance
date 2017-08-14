@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.10 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.11 2017/08/14 21:12:10 rschregle Exp $ */
 
 /* 
    =========================================================================
@@ -20,7 +20,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: pmapdata.h,v 2.10 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapdata.h,v 2.11 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
@@ -28,8 +28,22 @@
 #ifndef PMAPDATA_H
    #define PMAPDATA_H
 
+   #ifndef NIX
+      #if defined(_WIN32) || defined(_WIN64)
+         #define NIX 0
+      #else
+         #define NIX 1
+      #endif
+   #endif   
+
+   #if (defined(PMAP_OOC) && !NIX)
+      #error "OOC currently only supported on NIX -- tuff luck."
+   #endif
+
+
    #include "ray.h"   
    #include "pmaptype.h"
+   #include "paths.h"
    #include "lookup.h"
    #include <stdint.h>
 
@@ -54,7 +68,7 @@
    #define  PMAP_MAXPRIMARY   UINT32_MAX
 
    /* Macros for photon's generating subprocess field */
-#ifdef PMAP_OOC         
+#ifdef PMAP_OOC
    #define  PMAP_PROCBITS  7
 #else            
    #define  PMAP_PROCBITS  5   
@@ -109,7 +123,6 @@
    #define getPhotonFlux(p,f) colr_color(f, (p) -> flux)
 #endif
 
-
    
    /* Bias compensation history node */
    typedef struct {                  
@@ -130,6 +143,17 @@
 #endif
 
 
+   /* Mean size of heapfile write buffer, in number of photons */
+   #define PMAP_HEAPBUFSIZE   1e6
+   
+   /* Mean idle time between heap locking attempts, in usec */
+   #define PMAP_HEAPBUFSLEEP  2e6
+   
+   /* Temporary filename for photon heaps */
+   #define PMAP_TMPFNAME      TEMPLATE
+   #define PMAP_TMPFNLEN      (TEMPLEN + 1)
+
+
    typedef struct PhotonMap {
       PhotonMapType  type;             /* See pmaptype.h */
       char           *fileName;        /* Photon map file */
@@ -140,10 +164,11 @@
        * ================================================================ */
       FILE           *heap;            /* Unsorted photon heap prior to
                                           construction of store */
+      char           heapFname [sizeof(PMAP_TMPFNAME)];       
       Photon         *heapBuf;         /* Write buffer for above */
       unsigned long  heapBufLen,       /* Current & max size of heapBuf */
                      heapBufSize;
-      PhotonStorage  store;            /* Photon storage in spacee
+      PhotonStorage  store;            /* Photon storage in space
                                           subdividing data struct */            
        
       /* ================================================================
@@ -235,18 +260,6 @@
    #define isContribPmap(p)   ((p) -> type == PMAP_TYPE_CONTRIB)
    #define isVolumePmap(p)    ((p) -> type == PMAP_TYPE_VOLUME)
 
-   /* Mean size of heapfile write buffer, in number of photons */
-   #define PMAP_HEAPBUFSIZE   1e6
-   
-   /* Mean idle time between heap locking attempts, in usec */
-   #define PMAP_HEAPBUFSLEEP  2e6
-   
-   /* Shared memory file for parallelised photon distribution */
-#if 0   
-   #define PMAP_SHMFNAME      "/mkpmap-%d"
-#else
-   #define PMAP_SHMFNAME      "mkpmapXXXXXX"
-#endif      
 
 
    void initPhotonMap (PhotonMap *pmap, PhotonMapType t);

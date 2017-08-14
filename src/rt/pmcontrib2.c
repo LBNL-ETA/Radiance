@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmcontrib2.c,v 2.2 2016/09/30 16:51:46 greg Exp $";
+static const char RCSid[] = "$Id: pmcontrib2.c,v 2.3 2017/08/14 21:12:10 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmcontrib2.c,v 2.2 2016/09/30 16:51:46 greg Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmcontrib2.c,v 2.2 2016/09/30 16:51:46 greg Exp $
+   $Id: pmcontrib2.c,v 2.3 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
@@ -81,11 +81,18 @@ void initPmapContrib (LUTAB *srcContrib, unsigned numSrcContrib)
    
    if (contribPhotonMapping) {
       if (contribPmap -> maxGather < numSrcContrib) {
+#if 0          
          /* Adjust density estimate bandwidth if lower than modifier
           * count, otherwise contributions are missing */
          error(WARNING, "contrib density estimate bandwidth too low, "
                         "adjusting to modifier count");
          contribPmap -> maxGather = numSrcContrib;
+#else
+         /* Warn if density estimate bandwidth is lower than modifier
+          * count, since some contributions will be missing */
+         error(WARNING, "photon density estimate bandwidth too low,"
+                        " contributions may be underestimated");
+#endif
       }
       
       /* Sanity check */

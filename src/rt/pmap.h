@@ -1,21 +1,29 @@
-/* RCSid $Id: pmap.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmap.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $ */
 
 /* 
-   ==================================================================
+   ======================================================================
    Photon map main header
 
    Roland Schregle (roland.schregle@{hslu.ch, gmail.com})
    (c) Fraunhofer Institute for Solar Energy Systems,
    (c) Lucerne University of Applied Sciences and Arts,
-   supported by the Swiss National Science Foundation (SNSF, #147053)
-   ==================================================================
+       supported by the Swiss National Science Foundation (SNSF, #147053)
+   ======================================================================
    
-   $Id: pmap.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmap.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
 #ifndef PMAP_H
    #define PMAP_H
+
+   #ifndef NIX
+      #if defined(_WIN32) || defined(_WIN64)
+         #define NIX 0
+      #else
+         #define NIX 1
+      #endif
+   #endif
 
    #include "pmapparm.h"
    #include "pmapdata.h"

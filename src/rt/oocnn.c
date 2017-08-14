@@ -1,3 +1,8 @@
+#ifndef lint
+static const char RCSid[] = "$Id: oocnn.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $";
+#endif
+
+
 /* 
    =========================================================================
    k-nearest neighbour lookup routines for out-of-core octree data structure
@@ -7,10 +12,12 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: oocnn.c,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: oocnn.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
+#if !defined(_WIN32) && !defined(_WIN64) || defined(PMAP_OOC)
+/* No Windoze support for now */
 
 #include "oocnn.h"
 #include "oocsort.h"
@@ -318,3 +325,4 @@ float OOC_Find1Nearest (OOC_Octree *oct, OOC_Node *node, OOC_DataIdx dataIdx,
    return maxDist2;
 }
 
+#endif /* NIX / PMAP_OOC */

@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmap.c,v 2.12 2016/09/26 20:19:30 greg Exp $";
+static const char RCSid[] = "$Id: pmap.c,v 2.13 2017/08/14 21:12:10 rschregle Exp $";
 #endif
+
 
 /* 
    ======================================================================
@@ -12,9 +13,8 @@ static const char RCSid[] = "$Id: pmap.c,v 2.12 2016/09/26 20:19:30 greg Exp $";
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmap.c,v 2.12 2016/09/26 20:19:30 greg Exp $
+   $Id: pmap.c,v 2.13 2017/08/14 21:12:10 rschregle Exp $
 */
-
 
 
 #include "pmap.h"
@@ -26,10 +26,11 @@ static const char RCSid[] = "$Id: pmap.c,v 2.12 2016/09/26 20:19:30 greg Exp $";
 #include "pmapdiag.h"
 #include "otypes.h"
 #include <time.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <sys/wait.h>
-
+#if NIX
+   #include <sys/stat.h>
+   #include <sys/mman.h>
+   #include <sys/wait.h>
+#endif
 
 
 void savePmaps (const PhotonMap **pmaps, int argc, char **argv)
@@ -127,7 +128,15 @@ void tracePhoton (RAY *ray)
 /* Follow photon as it bounces around... */
 {
    long mod;
-   OBJREC* mat;
+   OBJREC *mat, *port = NULL;
+   
+   if (!ray -> parent) {
+      /* !!!  PHOTON PORT REJECTION SAMPLING HACK: get photon port for
+       * !!!  primary ray from ray -> ro, then reset the latter to NULL so
+       * !!!  as not to interfere with localhit() */
+      port = ray -> ro;
+      ray -> ro = NULL;
+   }
  
    if (ray -> rlvl > photonMaxBounce) {
 #ifdef PMAP_RUNAWAY_WARN   
@@ -138,10 +147,26 @@ void tracePhoton (RAY *ray)
   
    if (colorAvg(ray -> cext) > FTINY && !photonParticipate(ray)) 
       return;
-      
+
    if (localhit(ray, &thescene)) {
       mod = ray -> ro -> omod;
-      
+
+      if (port && ray -> ro != port) {
+         /* !!! PHOTON PORT REJECTION SAMPLING HACK !!!
+          * Terminate photon if emitted from port without intersecting it;
+          * this can happen when the port's partitions extend beyond its
+          * actual geometry, e.g.  with polygons.  Since the total flux
+          * relayed by the port is based on the (in this case) larger
+          * partition area, it is overestimated; terminating these photons
+          * constitutes rejection sampling and thereby compensates any bias
+          * incurred by the overestimated flux.  */
+#ifdef PMAP_PORTREJECT_WARN
+         sprintf(errmsg, "photon outside port %s", ray -> ro -> oname);
+         error(WARNING, errmsg);
+#endif         
+         return;
+      }
+
       if ((ray -> clipset && inset(ray -> clipset, mod)) || mod == OVOID) {
          /* Transfer ray if modifier is VOID or clipped within antimatta */
          RAY tray;
@@ -173,11 +198,14 @@ static void preComputeGlobal (PhotonMap *pmap)
 
    repComplete = numPreComp = finalGather * pmap -> numPhotons;
    
-   if (photonRepTime) {
-      sprintf(errmsg, "Precomputing irradiance for %ld global photons...\n", 
+   if (verbose) {
+      sprintf(errmsg, 
+              "\nPrecomputing irradiance for %ld global photons\n", 
               numPreComp);
       eputs(errmsg);
+#if NIX      
       fflush(stderr);
+#endif      
    }
    
    /* Copy photon map for precomputed photons */
@@ -204,7 +232,7 @@ static void preComputeGlobal (PhotonMap *pmap)
    
    for (i = 0; i < numPreComp; i++) {
       /* Get random photon from stratified distribution in source heap to
-       * avoid duplicates and clutering */
+       * avoid duplicates and clustering */
       pIdx = firstPhoton(pmap) + 
              (unsigned long)((i + pmapRandom(pmap -> randState)) / 
                              finalGather);
@@ -242,9 +270,11 @@ static void preComputeGlobal (PhotonMap *pmap)
    deletePhotons(pmap);
    memcpy(pmap, &nuPmap, sizeof(PhotonMap));
    
-   if (photonRepTime) {
-      eputs("Rebuilding precomputed photon map...\n");
+   if (verbose) {
+      eputs("\nRebuilding precomputed photon map\n");
+#if NIX      
       fflush(stderr);
+#endif      
    }
 
    /* Rebuild underlying data structure, destroying heap */   
@@ -263,7 +293,7 @@ typedef struct {
 void distribPhotons (PhotonMap **pmaps, unsigned numProc)
 {
    EmissionMap    emap;
-   char           errmsg2 [128], shmFname [255];
+   char           errmsg2 [128], shmFname [PMAP_TMPFNLEN];
    unsigned       t, srcIdx, proc;
    double         totalFlux = 0;
    int            shmFile, stat, pid;
@@ -295,6 +325,9 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
          initPhotonHeap(pmaps [t]);
          /* Per-subprocess target count */
          pmaps [t] -> distribTarget /= numProc;
+         
+         if (!pmaps [t] -> distribTarget)
+            error(INTERNAL, "no photons to distribute in distribPhotons");
       }
 
    initPhotonEmissionFuncs();
@@ -307,29 +340,37 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
    /* Get photon sensor modifiers */
    getPhotonSensors(photonSensorList);
    
+#if NIX
    /* Set up shared mem for photon counters (zeroed by ftruncate) */
-#if 0   
-   snprintf(shmFname, 255, PMAP_SHMFNAME, getpid());
-   shmFile = shm_open(shmFname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-#else
-   strcpy(shmFname, PMAP_SHMFNAME);
+   strcpy(shmFname, PMAP_TMPFNAME);
    shmFile = mkstemp(shmFname);
-#endif      
 
-   if (shmFile < 0)
-      error(SYSTEM, "failed opening shared memory file in distribPhotons");
-
-   if (ftruncate(shmFile, sizeof(*photonCnt)) < 0)
-      error(SYSTEM, "failed setting shared memory size in distribPhotons");
+   if (shmFile < 0 || ftruncate(shmFile, sizeof(*photonCnt)) < 0)
+      error(SYSTEM, "failed shared mem init in distribPhotons");
 
    photonCnt = mmap(NULL, sizeof(*photonCnt), PROT_READ | PROT_WRITE, 
                     MAP_SHARED, shmFile, 0);
                      
    if (photonCnt == MAP_FAILED)
-      error(SYSTEM, "failed mapping shared memory in distribPhotons");
+      error(SYSTEM, "failed mapping shared memory in distribPhotons"); 
+#else
+   /* Allocate photon counters statically on Windoze */
+   if (!(photonCnt = malloc(sizeof(PhotonCnt))))
+      error(SYSTEM, "failed trivial malloc in distribPhotons");
+   photonCnt -> numEmitted = photonCnt -> numComplete = 0;      
+#endif /* NIX */
 
-   if (photonRepTime)
-      eputs("\n");
+   if (verbose) {
+      sprintf(errmsg, "\nIntegrating flux from %d sources", nsources);
+      
+      if (photonPorts) {
+         sprintf(errmsg2, " via %d ports", numPhotonPorts);
+         strcat(errmsg, errmsg2);
+      }
+      
+      strcat(errmsg, "\n");
+      eputs(errmsg);
+   }   
    
    /* ===================================================================
     * FLUX INTEGRATION - Get total photon flux from light sources
@@ -343,20 +384,22 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                                                    : NULL;
          photonPartition [emap.src -> so -> otype] (&emap);
          
-         if (photonRepTime) {
-            sprintf(errmsg, "Integrating flux from source %s ", 
+         if (verbose) {
+            sprintf(errmsg, "\tIntegrating flux from source %s ", 
                     source [srcIdx].so -> oname);
-                    
+
             if (emap.port) {
                sprintf(errmsg2, "via port %s ", 
                        photonPorts [portCnt].so -> oname);
                strcat(errmsg, errmsg2);
             }
-            
-            sprintf(errmsg2, "(%lu partitions)...\n", emap.numPartitions);
+
+            sprintf(errmsg2, "(%lu partitions)\n", emap.numPartitions);
             strcat(errmsg, errmsg2);
             eputs(errmsg);
+#if NIX            
             fflush(stderr);
+#endif            
          }
          
          for (emap.partitionCnt = 0; emap.partitionCnt < emap.numPartitions;
@@ -371,12 +414,25 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
 
    if (totalFlux < FTINY)
       error(USER, "zero flux from light sources");
+      
+   /* Record start time for progress reports */
+   repStartTime = time(NULL);
+
+   if (verbose) {
+      sprintf(errmsg, "\nPhoton distribution @ %d procs\n", numProc);
+      eputs(errmsg);
+   }
 
    /* MAIN LOOP */   
    for (proc = 0; proc < numProc; proc++) {
+#if NIX          
       if (!(pid = fork())) {
-         /* SUBPROCESS ENTERS HERE.
-            All opened and memory mapped files are inherited */
+         /* SUBPROCESS ENTERS HERE; open and mmapped files inherited */
+#else
+      if (1) {
+         /* No subprocess under Windoze */
+#endif
+         /* Local photon counters for this subprocess */
          unsigned       passCnt = 0, prePassCnt = 0;
          unsigned long  lastNumPhotons [NUM_PMAP_TYPES];
          unsigned long  localNumEmitted = 0; /* Num photons emitted by this
@@ -384,11 +440,11 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
          
          /* Seed RNGs from PID for decorellated photon distribution */
          pmapSeed(randSeed + proc, partState);
-         pmapSeed(randSeed + proc, emitState);
-         pmapSeed(randSeed + proc, cntState);
-         pmapSeed(randSeed + proc, mediumState);
-         pmapSeed(randSeed + proc, scatterState);
-         pmapSeed(randSeed + proc, rouletteState);
+         pmapSeed(randSeed + (proc + 1) % numProc, emitState);
+         pmapSeed(randSeed + (proc + 2) % numProc, cntState);
+         pmapSeed(randSeed + (proc + 3) % numProc, mediumState);
+         pmapSeed(randSeed + (proc + 4) % numProc, scatterState);
+         pmapSeed(randSeed + (proc + 5) % numProc, rouletteState);
                   
          for (t = 0; t < NUM_PMAP_TYPES; t++)
             lastNumPhotons [t] = 0;
@@ -409,9 +465,7 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                 * iterations; make it clear to user which photon maps are
                 * missing so (s)he can check geometry and materials */
                if (++prePassCnt > maxPreDistrib) {
-                  sprintf(errmsg, 
-                          "proc %d, source %s: too many prepasses",
-                          proc, source [srcIdx].so -> oname);               
+                  sprintf(errmsg, "proc %d: too many prepasses", proc);
 
                   for (t = 0; t < NUM_PMAP_TYPES; t++)
                      if (pmaps [t] && !pmaps [t] -> numPhotons) {
@@ -483,7 +537,7 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                   break;
             }
 
-            /* Update shared completion counter for prog.report by parent */
+            /* Update shared completion counter for progreport by parent */
             photonCnt -> numComplete += numEmit;                             
 
             /* PHOTON DISTRIBUTION LOOP */
@@ -496,25 +550,29 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                               ? photonPorts + portCnt : NULL;
                   photonPartition [emap.src -> so -> otype] (&emap);
 
-                  if (photonRepTime && !proc) {
+                  if (verbose && !proc) {
+                     /* Output from subproc 0 only to avoid race condition
+                      * on console I/O */
                      if (!passCnt)
-                        sprintf(errmsg, "PREPASS %d on source %s ",
+                        sprintf(errmsg, "\tPREPASS %d on source %s ",
                                 prePassCnt, source [srcIdx].so -> oname);
                      else 
-                        sprintf(errmsg, "MAIN PASS on source %s ",
+                        sprintf(errmsg, "\tMAIN PASS on source %s ",
                                 source [srcIdx].so -> oname);
-                             
+
                      if (emap.port) {
                         sprintf(errmsg2, "via port %s ", 
                                 photonPorts [portCnt].so -> oname);
                         strcat(errmsg, errmsg2);
                      }
-                     
+
                      sprintf(errmsg2, "(%lu partitions)\n",
                              emap.numPartitions);
                      strcat(errmsg, errmsg2);
                      eputs(errmsg);
+#if NIX                     
                      fflush(stderr);
+#endif                     
                   }
                   
                   for (emap.partitionCnt = 0; emap.partitionCnt < emap.numPartitions;
@@ -529,8 +587,7 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                      
                      /* Number of photons to emit from ziss partishunn --
                       * proportional to flux; photon ray weight and scalar
-                      * flux are uniform (the latter only varying in RGB).
-                      * */ 
+                      * flux are uniform (latter only varying in RGB). */
                      partNumEmit = numEmit * colorAvg(emap.partFlux) / 
                                    totalFlux;
                      partEmitCnt = (unsigned long)partNumEmit;
@@ -551,9 +608,17 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                         /* Emit photon based on PDF and trace through scene
                          * until absorbed/leaked */
                         emitPhoton(&emap, &photonRay);
+#if 1
+                        if (emap.port)
+                           /* !!!  PHOTON PORT REJECTION SAMPLING HACK: set
+                            * !!!  photon port as fake hit object for
+                            * !!!  primary ray to check for intersection in
+                            * !!!  tracePhoton() */
+                           photonRay.ro = emap.port -> so;
+#endif
                         tracePhoton(&photonRay);
                      }                                          
-                     
+
                      /* Update shared global photon count for each pmap */
                      for (t = 0; t < NUM_PMAP_TYPES; t++)
                         if (pmaps [t]) {
@@ -561,6 +626,15 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                               pmaps [t] -> numPhotons - lastNumPhotons [t];
                            lastNumPhotons [t] = pmaps [t] -> numPhotons;
                         }
+#if !NIX
+                     /* Synchronous progress report on Windoze */
+                     if (!proc && photonRepTime > 0 && 
+                           time(NULL) >= repLastTime + photonRepTime) {
+                        repEmitted = repProgress = photonCnt -> numEmitted;
+                        repComplete = photonCnt -> numComplete;                           
+                        pmapDistribReport();
+                     }
+#endif
                   }
                   
                   portCnt++;
@@ -576,55 +650,40 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
                   break;
                }
             
-            if (t >= NUM_PMAP_TYPES) {
+            if (t >= NUM_PMAP_TYPES)
                /* No empty photon maps found; now do pass 2 */
                passCnt++;
-#if 0
-               if (photonRepTime)
-                  eputs("\n");
-#endif
-            }
          } while (passCnt < 2);
          
-         /* Unmap shared photon counters */
-#if 0         
-         munmap(photonCnt, sizeof(*photonCnt));
-         close(shmFile);
-#endif
-         
-         /* Flush heap buffa for every pmap one final time; this is required
-          * to prevent data corruption! */
+         /* Flush heap buffa for every pmap one final time; 
+          * avoids potential data corruption! */
          for (t = 0; t < NUM_PMAP_TYPES; t++)
             if (pmaps [t]) {
-#if 0            
-               eputs("Final flush\n");
-#endif               
                flushPhotonHeap(pmaps [t]);
-               fclose(pmaps [t] -> heap);
+               /* Heap file closed automatically on exit 
+                  fclose(pmaps [t] -> heap); */
 #ifdef DEBUG_PMAP               
-               sprintf(errmsg, "Proc %d: total %ld photons\n", getpid(),
+               sprintf(errmsg, "Proc %d: total %ld photons\n", proc,
                        pmaps [t] -> numPhotons);
                eputs(errmsg);
 #endif               
             }
-
+#if NIX
+         /* Terminate subprocess */
          exit(0);
+#endif
       }
       else if (pid < 0)
          error(SYSTEM, "failed to fork subprocess in distribPhotons");         
    }
 
+#if NIX
    /* PARENT PROCESS CONTINUES HERE */
-   /* Record start time and enable progress report signal handler */
-   repStartTime = time(NULL);
 #ifdef SIGCONT
+   /* Enable progress report signal handler */
    signal(SIGCONT, pmapDistribReport);
-#endif
-   
-   if (photonRepTime)
-      eputs("\n");
-   
-   /* Wait for subprocesses to complete while reporting progress */
+#endif   
+   /* Wait for subprocesses complete while reporting progress */
    proc = numProc;
    while (proc) {
       while (waitpid(-1, &stat, WNOHANG) > 0) {
@@ -637,21 +696,19 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
       
       /* Nod off for a bit and update progress  */
       sleep(1);
-      /* Update progress report from shared subprocess counters */
-      repEmitted = repProgress = photonCnt -> numEmitted;
-      repComplete = photonCnt -> numComplete;
 
+      /* Asynchronous progress report from shared subprocess counters */  
+      repEmitted = repProgress = photonCnt -> numEmitted;
+      repComplete = photonCnt -> numComplete;      
+
+      repProgress = repComplete = 0;
       for (t = 0; t < NUM_PMAP_TYPES; t++)
          if ((pm = pmaps [t])) {
-#if 0         
-            /* Get photon count from heapfile size for progress update */
-            fseek(pm -> heap, 0, SEEK_END);
-            pm -> numPhotons = ftell(pm -> heap) / sizeof(Photon); */
-#else            
             /* Get global photon count from shmem updated by subprocs */
-            pm -> numPhotons = photonCnt -> numPhotons [t];
-#endif            
+            repProgress += pm -> numPhotons = photonCnt -> numPhotons [t];
+            repComplete += pm -> distribTarget;
          }
+      repComplete *= numProc;
 
       if (photonRepTime > 0 && time(NULL) >= repLastTime + photonRepTime)
          pmapDistribReport();
@@ -659,41 +716,52 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
       else signal(SIGCONT, pmapDistribReport);
 #endif
    }
+#endif /* NIX */
 
    /* ===================================================================
     * POST-DISTRIBUTION - Set photon flux and build data struct for photon
     * storage, etc.
     * =================================================================== */
 #ifdef SIGCONT    
+   /* Reset signal handler */
    signal(SIGCONT, SIG_DFL);
 #endif
    free(emap.samples);
    
-   /* Set photon flux (repProgress is total num emitted) */
+   /* Set photon flux */
    totalFlux /= photonCnt -> numEmitted;
-   
+#if NIX   
    /* Photon counters no longer needed, unmap shared memory */
    munmap(photonCnt, sizeof(*photonCnt));
    close(shmFile);
-#if 0   
-   shm_unlink(shmFname);
-#else
    unlink(shmFname);
+#else
+   free(photonCnt);   
 #endif      
-   
+   if (verbose)
+      eputs("\n");
+      
    for (t = 0; t < NUM_PMAP_TYPES; t++)
       if (pmaps [t]) {
-         if (photonRepTime) {
-            sprintf(errmsg, "\nBuilding %s photon map...\n", pmapName [t]);
+         if (verbose) {
+            sprintf(errmsg, "Building %s photon map\n", pmapName [t]);
             eputs(errmsg);
+#if NIX            
             fflush(stderr);
+#endif            
          }
          
          /* Build underlying data structure; heap is destroyed */
          buildPhotonMap(pmaps [t], &totalFlux, NULL, numProc);
       }
-
+      
    /* Precompute photon irradiance if necessary */
-   if (preCompPmap)
+   if (preCompPmap) {
+      if (verbose)
+         eputs("\n");
       preComputeGlobal(preCompPmap);
+   }      
+   
+   if (verbose)
+      eputs("\n");
 }

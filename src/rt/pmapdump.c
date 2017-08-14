@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.7 2016/05/17 17:39:47 rschregle
 #include "random.h"
 #include "math.h"
 
-#define PMAPDUMP_REC "$Revision: 2.7 $"   
+#define PMAPDUMP_REC "$Revision: 2.8 $"   
 
 
 /* Defaults */
@@ -185,9 +185,13 @@ int main (int argc, char** argv)
       /* Skip primary rays */
       pm.numPrimary = getint(sizeof(pm.numPrimary), pmapFile);
       while (pm.numPrimary-- > 0) {
+         /* Skip source index & incident dir */
          getint(sizeof(pri.srcIdx) + sizeof(pri.dir), pmapFile);
+#ifdef PMAP_PRIMARYPOS         
+         /* Skip primary hitpoint */
          for (j = 0; j < 3; j++)
             getflt(pmapFile);
+#endif
       }
 
 #ifdef PMAP_OOC

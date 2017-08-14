@@ -1,6 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.6 2017/08/14 21:12:10 rschregle Exp $";
 #endif
+
 
 /* 
    ======================================================================
@@ -13,9 +14,8 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.5 2016/05/17 17:39:47 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: mkpmap.c,v 2.5 2016/05/17 17:39:47 rschregle Exp $    
+   $Id: mkpmap.c,v 2.6 2017/08/14 21:12:10 rschregle Exp $    
 */
-
 
 
 #include "pmap.h"
@@ -30,9 +30,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.5 2016/05/17 17:39:47 rschregle E
 #include <sys/stat.h>
 
 
-
 extern char VersionID [];
-
 
 
 char*    progname;                  /* argv[0] */
@@ -57,7 +55,6 @@ unsigned nproc = 1;                 /* number of parallel processes */
 #endif
 
 
-
 /* Dummies for linkage */
 
 COLOR ambval = BLKCOLOR;
@@ -70,7 +67,6 @@ int ambvwt = 0, ambssamp = 0, ambres = 32, ambounce = 0, directrelay = 1,
 char *shm_boundary = NULL, *ambfile = NULL, *RCCONTEXT = NULL;
 void (*trace)() = NULL, (*addobjnotify [])() = {ambnotify, NULL};
 
-
   
 void printdefaults()
 /* print default values to stdout */
@@ -79,10 +75,6 @@ void printdefaults()
    puts("-apc file nPhotons\t\t# caustic photon map");          
    puts("-apd file nPhotons\t\t# direct photon map");
    puts("-app file nPhotons bwidth\t# precomputed global photon map");
-#if 0
-   /* Hide this option as most likely useless and confusing to user */
-   puts("-appb file nPhotons minBw maxBw\t# precomp bias comp global pmap");
-#endif
    puts("-apv file nPhotons\t\t# volume photon map");
    puts("-apC file nPhotons\t\t# contribution photon map");
    
@@ -101,36 +93,30 @@ void printdefaults()
    printf("-dp  %.1f\t\t\t# PDF samples / sr\n", pdfSamples);
    printf("-ds  %f\t\t\t# source partition size ratio\n", srcsizerat);
    printf("-e   %s\t\t\t# diagnostics output file\n", diagFile);
-   printf(clobber ? "-fo+\t\t\t\t# force overwrite"
+   printf(clobber ? "-fo+\t\t\t\t# force overwrite\n"
                   : "-fo-\t\t\t\t# do not overwrite\n");
-#if 0
-   /* Heap size increment now fixed & defined by macro in pmapkdt.c */
-   printf("-i   %-9ld\t\t\t# photon heap size increment\n", 
-          photonHeapSizeInc);
-#endif          
    printf("-ma  %.2f %.2f %.2f\t\t# scattering albedo\n", 
           colval(salbedo,RED), colval(salbedo,GRN), colval(salbedo,BLU));
    printf("-me  %.2e %.2e %.2e\t# extinction coefficient\n", 
           colval(cextinction,RED), colval(cextinction,GRN), 
           colval(cextinction,BLU));          
    printf("-mg  %.2f\t\t\t# scattering eccentricity\n", seccg);
+#if NIX   
+   /* Multiprocessing on NIX only */
    printf("-n   %d\t\t\t\t# number of parallel processes\n", nproc);
+#endif   
    printf("-t   %-9d\t\t\t# time between reports\n", photonRepTime);
-
+   printf(verbose ? "-v+\t\t\t\t# verbose console output\n"
+                  : "-v-\t\t\t\t# terse console output\n");
 #ifdef PMAP_ROI
    /* Ziss option for ze egg-spurtz only! */
-   printf("-api \t%.0e %.0e %.0e\n\t%.0e %.0e %.0e\t# region of interest\n", 
-          pmapROI [0], pmapROI [1], pmapROI [2], pmapROI [3], 
-          pmapROI [4], pmapROI [5]);
+   puts("-api xmin ymin zmin\n     xmax ymax zmax\t\t# region of interest");
 #endif   
-
 #ifdef EVALDRC_HACK
    /* ... and ziss one... */
    puts("-A\t\t\t\t# angular source file");
 #endif
 }
-
-
 
 
 int main (int argc, char* argv [])
@@ -200,10 +186,10 @@ int main (int argc, char* argv [])
                               
             else if (!strcmp(argv [i] + 2, "pm")) {
                /* Max photon bounces */
-               check(4, "i");
+               check(4, "i");               
                photonMaxBounce = atol(argv [++i]);
-               if (!photonMaxBounce) 
-                  goto badopt;
+               if (photonMaxBounce <= 0) 
+                  error(USER, "max photon bounces must be > 0");
             }
             
             else if (!strcmp(argv [i] + 2, "pp")) {
@@ -219,24 +205,6 @@ int main (int argc, char* argv [])
                if (!preCompPmapParams.maxGather) 
                   goto badopt;
             }
-            
-#if 0
-            else if (!strcmp(argv [i] + 2, "ppb")) {
-               /* Precomputed global photon map + bias comp. */
-               check(5, "ssii");
-               preCompPmapParams.fileName = argv [++i];
-               preCompPmapParams.distribTarget = 
-                  parseMultiplier(argv [++i]);
-               if (!preCompPmapParams.distribTarget) 
-                  goto badopt;                      
-               preCompPmapParams.minGather = atoi(argv [++i]);
-               preCompPmapParams.maxGather = atoi(argv [++i]);
-               if (!preCompPmapParams.minGather ||
-                   preCompPmapParams.minGather >= 
-                   preCompPmapParams.maxGather) 
-                  goto badopt;
-            }
-#endif
             
             else if (!strcmp(argv [i] + 2, "pc")) {
                /* Caustic photon map */
@@ -284,16 +252,39 @@ int main (int argc, char* argv [])
                preDistrib = atof(argv [++i]);
                if (preDistrib <= 0)
                   error(USER, "predistribution factor must be > 0");
-            }   
+            }
+            
+            else if (!strcmp(argv [i] + 2, "pM")) {
+               /* Max predistribution passes */
+               check(4, "i");
+               maxPreDistrib = atoi(argv [++i]);
+               if (maxPreDistrib <= 0)
+                  error(USER, "max predistribution passes must be > 0");
+            }
 
 #ifdef PMAP_ROI
-            /* Region of interest; ziss option for ze egg-spurtz only! */
+            /* Add region of interest; for ze egg-spurtz only! */
             else if (!strcmp(argv [i] + 2, "pi")) {
-               int j;
+               unsigned j, n = pmapNumROI;
                check(4, "ffffff");
-               for (j = 0; j < 6; j++)
-                  pmapROI [j] = atof(argv [++i]);
-            }               
+               
+               pmapROI = realloc(pmapROI,
+                                 ++pmapNumROI * sizeof(PhotonMapROI));
+               if (!pmapROI)
+1                  error(SYSTEM, "failed to allocate ROI");
+                  
+               pmapROI [n].min [0] = atof(argv [++i]);
+               pmapROI [n].min [1] = atof(argv [++i]);
+               pmapROI [n].min [2] = atof(argv [++i]);
+               pmapROI [n].max [0] = atof(argv [++i]);
+               pmapROI [n].max [1] = atof(argv [++i]);
+               pmapROI [n].max [2] = atof(argv [++i]);
+               
+               for (j = 0; j < 3; j++)
+                  if (pmapROI [n].min [j] >= pmapROI [n].max [j])
+                     error(USER, 
+                           "invalid region of interest (swapped min/max?)");
+            }
 #endif
              
             else if (!strcmp(argv [i] + 2, "pP")) {
@@ -316,7 +307,7 @@ int main (int argc, char* argv [])
                }
                
                if (argv[i][3] == 'O') {	
-                  /* Get port modifiers file */
+                  /* Get port modifiers from file */
                   rval = wordfile(portLp, AMBLLEN-(portLp-amblist),
                                   getpath(argv [++i], getrlibpath(), R_OK));
                                   
@@ -410,14 +401,6 @@ int main (int argc, char* argv [])
             else goto badopt;
             break; 
 
-#if 0
-         /* Heap size increment now fixed & defined by macro in pmapkdt.c */            
-         case 'i': /* Photon heap size increment */
-            check(2, "i");
-            photonHeapSizeInc = atol(argv [++i]);
-            break;
-#endif            
-                   
          case 'm': /* Medium */
             switch (argv[i][2]) {
                case 'e':	/* Eggs-tinction coefficient */
@@ -442,8 +425,8 @@ int main (int argc, char* argv [])
                default: goto badopt;
             }                   
             break;
-
-         case 'n': /* Num parallel processes */
+#if NIX
+         case 'n': /* Num parallel processes (NIX only) */
             check(2, "i");
             nproc = atoi(argv [++i]);
             
@@ -452,22 +435,23 @@ int main (int argc, char* argv [])
                sprintf(errmsg, "too many parallel processes, clamping to "
                        "%d\n", nproc);
                error(WARNING, errmsg);
-            }
-            
+            }            
             break;                   
-            
+#endif                        
          case 't': /* Timer */
             check(2, "i");
             photonRepTime = atoi(argv [++i]);
             break;
-
+            
+         case 'v':   /* Verbosity */
+            check_bool(2, verbose);
+            break;            
 #ifdef EVALDRC_HACK
          case 'A':   /* Angular source file */
             check(2,"s");
             angsrcfile = argv[++i];
             break;                   
-#endif
-                   
+#endif                               
          default: goto badopt;
       }
    }
@@ -507,12 +491,10 @@ int main (int argc, char* argv [])
       error(USER, "no photon maps specified");
    
    readoct(octname, loadflags, &thescene, NULL);
-
 #ifdef EVALDRC_HACK   
    if (angsrcfile)
       readobj(angsrcfile);    /* load angular sources */
-#endif      
-      
+#endif         
    nsceneobjs = nobjects;
    
    /* Get sources */

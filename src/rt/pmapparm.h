@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapparm.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $ */
 
 /* 
    ======================================================================
@@ -11,7 +11,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapparm.h,v 2.7 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapparm.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
@@ -27,6 +27,11 @@
       unsigned minGather, maxGather; /* Num photons to gather */
       unsigned long distribTarget;   /* Num photons to store */
    } PhotonMapParams;
+   
+   /* Bounding box for region of interest */
+      typedef struct {
+      float min [3], max [3];
+   } PhotonMapROI;
 
 
    extern PhotonMapParams pmapParams [NUM_PMAP_TYPES];
@@ -43,11 +48,11 @@
    extern float         pdfSamples, preDistrib, finalGather,
                         gatherTolerance, maxDistFix;
    extern unsigned long photonHeapSizeInc, photonMaxBounce; 
-   extern unsigned      photonRepTime, maxPreDistrib, defaultGather;
-   
-#ifdef PMAP_ROI                
-   extern float pmapROI [6];
-#endif   
+   extern unsigned      photonRepTime, maxPreDistrib, defaultGather,
+                        verbose;
+
+   extern unsigned      pmapNumROI;
+   extern PhotonMapROI  *pmapROI;
 
 #ifdef PMAP_OOC
    extern float         pmapCachePageSize;

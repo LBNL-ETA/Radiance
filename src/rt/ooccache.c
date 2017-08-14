@@ -1,3 +1,8 @@
+#ifndef lint
+static const char RCSid[] = "$Id: ooccache.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $";
+#endif
+
+
 /* 
    =======================================================================
    Cache for out-of-core octree.
@@ -17,9 +22,12 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =======================================================================
    
-   $Id: ooccache.c,v 2.1 2016/05/17 17:39:47 rschregle Exp $
+   $Id: ooccache.c,v 2.2 2017/08/14 21:12:10 rschregle Exp $
 */
 
+
+#if !defined(_WIN32) && !defined(_WIN64) || defined(PMAP_OOC)
+/* No Windoze support for now */
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -420,3 +428,5 @@ void OOC_DeleteCache (OOC_Cache *cache)
    cache -> pageCnt = 0;
    cache -> mru = cache -> lru = OOC_CACHEIDX_NULL;
 }
+
+#endif /* NIX / PMAP_OOC */

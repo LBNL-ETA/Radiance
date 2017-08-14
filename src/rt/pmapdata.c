@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.17 2016/09/29 20:51:07 greg Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.18 2017/08/14 21:12:10 rschregle Exp $";
 #endif
 
 /* 
@@ -17,12 +17,12 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.17 2016/09/29 20:51:07 greg Exp
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.17 2016/09/29 20:51:07 greg Exp $
+   $Id: pmapdata.c,v 2.18 2017/08/14 21:12:10 rschregle Exp $
 */
 
 
 
-#include "pmap.h"
+#include "pmapdata.h"
 #include "pmaprand.h"
 #include "pmapmat.h"
 #include "otypes.h"
@@ -70,7 +70,6 @@ void initPhotonMap (PhotonMap *pmap, PhotonMapType t)
    pmap -> randState [0] = 10243;
    pmap -> randState [1] = 39829;
    pmap -> randState [2] = 9433;
-   /* pmapSeed(25999, pmap -> randState); */
    pmapSeed(randSeed, pmap -> randState);
    
    /* Set up type-specific photon lookup callback */
@@ -103,13 +102,14 @@ void initPhotonHeap (PhotonMap *pmap)
       
    if (!pmap -> heap) {
       /* Open heap file */
-      if (!(pmap -> heap = tmpfile()))
+      mktemp(strcpy(pmap -> heapFname, PMAP_TMPFNAME));
+      if (!(pmap -> heap = fopen(pmap -> heapFname, "w+b")))
          error(SYSTEM, "failed opening heap file in initPhotonHeap");
+
 #ifdef F_SETFL	/* XXX is there an alternate needed for Windows? */
       fdFlags = fcntl(fileno(pmap -> heap), F_GETFL);
       fcntl(fileno(pmap -> heap), F_SETFL, fdFlags | O_APPEND);
-#endif
-/*      ftruncate(fileno(pmap -> heap), 0); */
+#endif/*      ftruncate(fileno(pmap -> heap), 0); */
    }
 }
 
@@ -123,8 +123,11 @@ void flushPhotonHeap (PhotonMap *pmap)
    if (!pmap)
       error(INTERNAL, "undefined photon map in flushPhotonHeap");
 
-   if (!pmap -> heap || !pmap -> heapBuf)
-      error(INTERNAL, "undefined heap in flushPhotonHeap");
+   if (!pmap -> heap || !pmap -> heapBuf) {
+      /* Silently ignore undefined heap 
+      error(INTERNAL, "undefined heap in flushPhotonHeap"); */
+      return;
+   }
 
    /* Atomically seek and write block to heap */
    /* !!! Unbuffered I/O via pwrite() avoids potential race conditions
@@ -142,16 +145,17 @@ void flushPhotonHeap (PhotonMap *pmap)
    if (write(fd, pmap -> heapBuf, len) != len)
       error(SYSTEM, "failed append to heap file in flushPhotonHeap");
 
-#if !defined(_WIN32) && !defined(_WIN64)
+#if NIX
    if (fsync(fd))
       error(SYSTEM, "failed fsync in flushPhotonHeap");
 #endif
+
    pmap -> heapBufLen = 0;
 }
 
 
 
-#ifdef DEBUG_OOC
+#ifdef DEBUG_PMAP
 static int checkPhotonHeap (FILE *file)
 /* Check heap for nonsensical or duplicate photons */
 {
@@ -192,7 +196,7 @@ static int checkPhotonHeap (FILE *file)
 
 int newPhoton (PhotonMap* pmap, const RAY* ray)
 {
-   unsigned i;
+   unsigned i, inROI = 0;
    Photon photon;
    COLOR photonFlux;
    
@@ -204,13 +208,20 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
    if (ray -> robj > -1 && islight(objptr(ray -> ro -> omod) -> otype)) 
       return -1;
 
-#ifdef PMAP_ROI
-   /* Store photon if within region of interest -- for Ze Eckspertz only! */
-   if (ray -> rop [0] >= pmapROI [0] && ray -> rop [0] <= pmapROI [1] &&
-       ray -> rop [1] >= pmapROI [2] && ray -> rop [1] <= pmapROI [3] &&
-       ray -> rop [2] >= pmapROI [4] && ray -> rop [2] <= pmapROI [5])
-#endif
-   {       
+   /* Store photon if within a region of interest (for ze Ecksperts!) */
+   if (!pmapNumROI || !pmapROI) 
+      inROI = 1;
+   else {
+      for (i = 0; !inROI && i < pmapNumROI; i++)
+         inROI = (ray -> rop [0] >= pmapROI [i].min [0] && 
+                  ray -> rop [0] <= pmapROI [i].max [0] &&
+                  ray -> rop [1] >= pmapROI [i].min [1] && 
+                  ray -> rop [1] <= pmapROI [i].max [1] &&
+                  ray -> rop [2] >= pmapROI [i].min [2] && 
+                  ray -> rop [2] <= pmapROI [i].max [2]);
+   }
+    
+   if (inROI) {       
       /* Adjust flux according to distribution ratio and ray weight */
       copycolor(photonFlux, ray -> rcol);   
       scalecolor(photonFlux, 
@@ -241,12 +252,14 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
 
       if (!pmap -> heapBuf) {
          /* Lazily allocate heap buffa */
-#if 1         
-         /* Randomise buffa size to temporally decorellate buffa flushes */         
+#if NIX
+         /* Randomise buffa size to temporally decorellate flushes in
+          * multiprocessing mode */
          srandom(randSeed + getpid());
          pmap -> heapBufSize = PMAP_HEAPBUFSIZE * (0.5 + frandom());
 #else
-         /* Randomisation disabled for reproducability during debugging */         
+         /* Randomisation disabled for single processes on WIN; also useful
+          * for reproducability during debugging */         
          pmap -> heapBufSize = PMAP_HEAPBUFSIZE;
 #endif         
          if (!(pmap -> heapBuf = calloc(pmap -> heapBufSize, sizeof(Photon))))
@@ -276,6 +289,7 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
    unsigned       i;
    Photon         *p;
    COLOR          flux;
+   char           nuHeapFname [sizeof(PMAP_TMPFNAME)];
    FILE           *nuHeap;
    /* Need double here to reduce summation errors */
    double         avgFlux [3] = {0, 0, 0}, CoG [3] = {0, 0, 0}, CoGdist = 0;
@@ -285,7 +299,8 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
       error(INTERNAL, "undefined photon map in buildPhotonMap");
       
    /* Get number of photons from heapfile size */
-   fseek(pmap -> heap, 0, SEEK_END);      
+   if (fseek(pmap -> heap, 0, SEEK_END) < 0)
+      error(SYSTEM, "failed seek to end of photon heap in buildPhotonMap");
    pmap -> numPhotons = ftell(pmap -> heap) / sizeof(Photon);
    
    if (!pmap -> numPhotons)
@@ -301,7 +316,7 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
    sprintf(errmsg, "Heap contains %ld photons\n", pmap -> numPhotons);
    eputs(errmsg);
 #endif
-     
+
    /* Allocate heap buffa */
    if (!pmap -> heapBuf) {
       pmap -> heapBufSize = PMAP_HEAPBUFSIZE;
@@ -313,7 +328,8 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
 
    /* We REALLY don't need yet another @%&*! heap just to hold the scaled
     * photons, but can't think of a quicker fix... */
-   if (!(nuHeap = tmpfile()))
+   mktemp(strcpy(nuHeapFname, PMAP_TMPFNAME));
+   if (!(nuHeap = fopen(nuHeapFname, "w+b")))
       error(SYSTEM, "failed to open postprocessed photon heap in "
             "buildPhotonMap");
             
@@ -323,50 +339,57 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
    eputs("Postprocessing photons...\n");
 #endif
    
-   while (!feof(pmap -> heap)) {
+   while (!feof(pmap -> heap)) {   
+#ifdef DEBUG_PMAP 
+      printf("Reading %lu at %lu... ", pmap -> heapBufSize, ftell(pmap->heap));
+#endif      
       pmap -> heapBufLen = fread(pmap -> heapBuf, sizeof(Photon), 
-                                 PMAP_HEAPBUFSIZE, pmap -> heap);
-      
-      if (pmap -> heapBufLen) {
-         for (n = pmap -> heapBufLen, p = pmap -> heapBuf; n; n--, p++) {
-            /* Update min and max pos and set photon flux */
-            for (i = 0; i <= 2; i++) {
-               if (p -> pos [i] < pmap -> minPos [i]) 
-                  pmap -> minPos [i] = p -> pos [i];
-               else if (p -> pos [i] > pmap -> maxPos [i]) 
-                  pmap -> maxPos [i] = p -> pos [i];   
+                                 pmap -> heapBufSize, pmap -> heap);
+#ifdef DEBUG_PMAP                                 
+      printf("Got %lu\n", pmap -> heapBufLen);
+#endif      
 
-               /* Update centre of gravity with photon position */                 
-               CoG [i] += p -> pos [i];                  
-            }  
-            
-            if (primaryOfs)
-               /* Linearise photon primary index from subprocess index using the
-                * per-subprocess offsets in primaryOfs */
-               p -> primary += primaryOfs [p -> proc];
-            
-            /* Scale photon's flux (hitherto normalised to 1 over RGB); in
-             * case of a contrib photon map, this is done per light source,
-             * and photonFlux is assumed to be an array */
-            getPhotonFlux(p, flux);            
+      if (ferror(pmap -> heap))
+         error(SYSTEM, "failed to read photon heap in buildPhotonMap");
 
-            if (photonFlux) {
-               scalecolor(flux, photonFlux [isContribPmap(pmap) ? 
-                                               photonSrcIdx(pmap, p) : 0]);
-               setPhotonFlux(p, flux);
-            }
+      for (n = pmap -> heapBufLen, p = pmap -> heapBuf; n; n--, p++) {
+         /* Update min and max pos and set photon flux */
+         for (i = 0; i <= 2; i++) {
+            if (p -> pos [i] < pmap -> minPos [i]) 
+               pmap -> minPos [i] = p -> pos [i];
+            else if (p -> pos [i] > pmap -> maxPos [i]) 
+               pmap -> maxPos [i] = p -> pos [i];   
 
-            /* Update average photon flux; need a double here */
-            addcolor(avgFlux, flux);
-         }
+            /* Update centre of gravity with photon position */                 
+            CoG [i] += p -> pos [i];                  
+         }  
          
-         /* Write modified photons to new heap */
-         fwrite(pmap -> heapBuf, sizeof(Photon), pmap -> heapBufLen, nuHeap);
-                
-         if (ferror(nuHeap))
-            error(SYSTEM, "failed postprocessing photon flux in "
-                  "buildPhotonMap");
+         if (primaryOfs)
+            /* Linearise photon primary index from subprocess index using the
+             * per-subprocess offsets in primaryOfs */
+            p -> primary += primaryOfs [p -> proc];
+         
+         /* Scale photon's flux (hitherto normalised to 1 over RGB); in
+          * case of a contrib photon map, this is done per light source,
+          * and photonFlux is assumed to be an array */
+         getPhotonFlux(p, flux);            
+
+         if (photonFlux) {
+            scalecolor(flux, photonFlux [isContribPmap(pmap) ? 
+                                            photonSrcIdx(pmap, p) : 0]);
+            setPhotonFlux(p, flux);
+         }
+
+         /* Update average photon flux; need a double here */
+         addcolor(avgFlux, flux);
       }
+         
+      /* Write modified photons to new heap */
+      fwrite(pmap -> heapBuf, sizeof(Photon), pmap -> heapBufLen, nuHeap);
+                
+      if (ferror(nuHeap))
+         error(SYSTEM, "failed postprocessing photon flux in "
+               "buildPhotonMap");
       
       nCheck += pmap -> heapBufLen;
    }
@@ -389,31 +412,32 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
    /* Compute average photon distance to centre of gravity */
    while (!feof(pmap -> heap)) {
       pmap -> heapBufLen = fread(pmap -> heapBuf, sizeof(Photon), 
-                                 PMAP_HEAPBUFSIZE, pmap -> heap);
+                                 pmap -> heapBufSize, pmap -> heap);
       
-      if (pmap -> heapBufLen)
-         for (n = pmap -> heapBufLen, p = pmap -> heapBuf; n; n--, p++) {
-            VSUB(d, p -> pos, CoG);
-            CoGdist += DOT(d, d);
-         }
+      for (n = pmap -> heapBufLen, p = pmap -> heapBuf; n; n--, p++) {
+         VSUB(d, p -> pos, CoG);
+         CoGdist += DOT(d, d);
+      }
    }   
 
    pmap -> CoGdist = CoGdist /= pmap -> numPhotons;
 
-   /* Swap heaps */
+   /* Swap heaps, discarding unscaled photons */
    fclose(pmap -> heap);
+   unlink(pmap -> heapFname);
    pmap -> heap = nuHeap;
+   strcpy(pmap -> heapFname, nuHeapFname);
    
 #ifdef PMAP_OOC
    OOC_BuildPhotonMap(pmap, nproc);
 #else
-   /* kd-tree not parallelised */
    kdT_BuildPhotonMap(pmap);
 #endif
 
    /* Trash heap and its buffa */
    free(pmap -> heapBuf);
    fclose(pmap -> heap);
+   unlink(pmap -> heapFname);
    pmap -> heap = NULL;
    pmap -> heapBuf = NULL;
 }
@@ -572,8 +596,7 @@ void find1Photon (PhotonMap *pmap, const RAY* ray, Photon *photon)
 void getPhoton (PhotonMap *pmap, PhotonIdx idx, Photon *photon)
 {
 #ifdef PMAP_OOC
-   if (OOC_GetPhoton(pmap, idx, photon))
-      
+   if (OOC_GetPhoton(pmap, idx, photon))      
 #else
    if (kdT_GetPhoton(pmap, idx, photon))
 #endif
