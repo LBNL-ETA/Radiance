@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.2 2017/08/12 01:31:29 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.3 2017/08/17 21:32:29 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -13,7 +13,7 @@ my $octree = "$td/bv$$.oct";
 my $ambf = "$td/af$$.amb";
 my $raddev = "x11";	# default output device. Overwrite with -o
 my $qual = "Low";
-my $vw = "def";
+my $usetrad = 0;
 
 my $opts = "";	# Options common to rad
 my $rendopts = "-w-";	# For render= line in rif file
@@ -24,7 +24,7 @@ while (@ARGV) {
 		$opts .= " $_";
 	} elsif (m/^-v\b/) {	# standard view
 		# Let rad do any error handling...
-		$vw = $ARGV[1];
+		$opts .= qq( -v "$ARGV[1]");
 		shift @ARGV;
 	} elsif (m/^-[nN]\b/) {	# No. of parallel processes
 		$opts .= ' -N ' . $ARGV[1];
@@ -38,6 +38,8 @@ while (@ARGV) {
 	} elsif ((m/^-V\b/) or (m/^-e\b/)) {   # print view, explicate variables
 		# Think of those two as '-verbose'.
 		$opts .= " $_";
+	} elsif (m/^-t\b/) {	# start trad instead of rad
+		$usetrad = 1;
 	} elsif (m/^-\w/) {
 		die("bsdfview: Bad option: $_\n");
 	} else {
@@ -48,7 +50,11 @@ while (@ARGV) {
 
 # We need at least one XML or SIR file
 if ($#ARGV < 0) {
-	die("Missing input XML or SIR file(s)\n");
+	die("bsdfview: missing input XML or SIR file(s)\n");
+}
+
+if (length($opts) and $usetrad) {
+	die("bsdfview: rad options not supported when calling trad (-t)\n");
 }
 
 my @objects = @ARGV;
@@ -72,7 +78,11 @@ my $rif = "$name.rif";
 
 if (-e $rif) {			# RIF already exists?
 	print "Attempting to run with existing rad input file '$rif'\n";
-	system "rad -o $raddev -w -v $vw $opts $rif QUA=$qual";
+	if ($usetrad) {
+		system "trad $rif";
+	} else {
+		system "rad -o $raddev -w $opts $rif QUA=$qual";
+	}
 	die("\nTry removing '$rif' and starting again\n\n") if $?;
 	exit;
 }
@@ -107,6 +117,9 @@ view= pt -vtl -vp 0 0 -10 -vd 0 0 1 -vu 0 1 0 -vv 35 -vh 65
 EndOfRif
 close(FH);
 
-system "rad -o $raddev -v $vw $opts $rif";
-
+if ($usetrad) {
+	system "trad $rif";
+} else {
+	system "rad -o $raddev $opts $rif";
+}
 #EOF

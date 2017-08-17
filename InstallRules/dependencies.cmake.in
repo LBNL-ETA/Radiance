@@ -13,7 +13,7 @@ set(plugins "")
 list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@GIF_PLUGIN_NAME@")
 list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@ICO_PLUGIN_NAME@")
 list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@JPEG_PLUGIN_NAME@")
-list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@MNG_PLUGIN_NAME@")
+#list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@MNG_PLUGIN_NAME@")
 list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/imageformats/@TIFF_PLUGIN_NAME@")
 list(APPEND plugins "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/plugins/platforms/@QPA_PLUGIN_NAME@")
 

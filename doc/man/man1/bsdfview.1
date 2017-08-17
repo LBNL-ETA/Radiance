@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bsdfview.1,v 1.3 2017/08/13 20:11:04 greg Exp $"
+.\" RCSid "$Id: bsdfview.1,v 1.4 2017/08/17 21:32:29 greg Exp $"
 .TH BSDFVIEW 1 8/11/2017 RADIANCE
 .SH NAME
 bsdfview - view a BSDF representation
@@ -7,6 +7,8 @@ bsdfview - view a BSDF representation
 [
 .B "\-q {Hi|Med|Lo}"
 ][
+.B \-t
+|
 rad options
 ]
 input ..
@@ -19,7 +21,11 @@ This is a script that creates a
 input file (RIF),
 which builds an octree via
 .I bsdf2rad(1),
-then views the scene interactively.
+then renders the scene interactively or calls the
+.I trad(1)
+graphical user interface if the
+.I \-t
+option is given.
 .PP
 The input is either a single XML file, such as might be produced by
 .I genBSDF(1),
@@ -92,9 +98,10 @@ been removed.
 In this case, the script may exit with an error indicating that the
 .I rad
 input file needs to be removed.
-.I Rad
-may also be run using the input file directly from the command line
-or via
+.PP
+This input file may also be re-used directly from the command line using
+.I rad
+or
 .I trad(1).
 This may be useful for generating RADIANCE pictures corresponding
 to the above standard views.
