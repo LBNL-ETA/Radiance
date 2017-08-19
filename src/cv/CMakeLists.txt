@@ -30,13 +30,13 @@ target_link_libraries(mgf2inv mgf rtrad)
 add_executable(3ds2mgf 3ds2mgf.c rayopt3ds.c vect3ds.c)
 target_link_libraries(3ds2mgf rtrad) 
 
-if (NOT WIN32)
+if (BUILD_PABOPTO_UTILS)
 
   add_executable(pabopto2bsdf pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c bsdftrans.cpp)
   target_link_libraries(pabopto2bsdf rtrad) 
 
-  add_executable(pabopto2xyz pabopto2xyz.c)
-  target_link_libraries(pabopto2xyz rtrad)
+  #add_executable(pabopto2xyz pabopto2xyz.c)
+  #target_link_libraries(pabopto2xyz rtrad)
 
   add_executable(pabopto2rad	pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c bsdftrans.cpp)
   target_link_libraries(pabopto2rad rtrad)
@@ -44,7 +44,7 @@ if (NOT WIN32)
 
 endif()
 
-add_executable(bsdf2rad	bsdf2rad.c bsdfrep.c bsdfinterp.c)
+add_executable(bsdf2rad bsdf2rad.c bsdfrep.c bsdfinterp.c)
 target_link_libraries(bsdf2rad rtrad)
 
 add_executable(bsdfquery bsdfquery.c bsdfrep.c bsdfinterp.c)
@@ -76,5 +76,8 @@ INSTALL(FILES source.cal tilt.cal lamp.tab window.cal bsdf2rad.cal
 
 if (NOT WIN32)
   INSTALL(PROGRAMS optics2rad.csh DESTINATION bin RENAME optics2rad)
+  endif()
+
+if (BUILD_PABOPTO_UTILS)
   INSTALL(TARGETS pabopto2rad pabopto2bsdf DESTINATION bin)
 endif()

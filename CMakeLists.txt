@@ -16,6 +16,7 @@ include(CTest)
 
 option(BUILD_SHARED_LIBS "Build radiance using shared libraries?" OFF)
 option(BUILD_HEADLESS "Build radiance without any GUI components?" OFF)
+option(BUILD_PABOPTO_UTILS "Build PABOpto Utilities?" OFF)
 
 option(CPACK_NREL_SUPPORT "Include OpenStudio ToolFinder Help?" OFF)
 
@@ -76,8 +77,8 @@ IF( BUILD_PACKAGE )
 ENDIF( BUILD_PACKAGE )
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
-set(CPACK_PACKAGE_VERSION_MINOR 0)
-set(CPACK_PACKAGE_VERSION_PATCH a.8)
+set(CPACK_PACKAGE_VERSION_MINOR 1)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Radiance")
 SET(CPACK_RESOURCE_FILE_WELCOME "${radiance_SOURCE_DIR}/Welcome.txt")
 SET(CPACK_RESOURCE_FILE_README "${radiance_SOURCE_DIR}/README.txt")
