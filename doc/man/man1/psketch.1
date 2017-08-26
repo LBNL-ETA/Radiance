@@ -1,0 +1,46 @@
+.\" RCSid "$Id: psketch.1,v 1.1 2017/08/26 16:10:19 greg Exp $"
+.TH PSKETCH 1 8/26/2017 RADIANCE
+.SH NAME
+psketch - apply non-photorealistic rendering to select objects in picture
+.SH SYNOPSIS
+.B psketch
+[
+.B "-m modname"
+][
+.B "-M modfile"
+]
+.B octree
+.B input.hdr
+[
+.B output.hdr
+]
+.SH DESCRIPTION
+.I Psketch
+takes a RADIANCE octree and a picture file
+and at least one modifier name given by one or more
+.I \-m
+and
+.I \-M
+options,
+which may be intermingled.
+The
+.I \-m
+option names a modifier for objects that will be sketched out
+by the program.
+The
+.I \-M
+option indicates a file of such modifier names that
+will be read in and included in the operation.
+The picture should have been created from a previous
+.I rpict(1)
+or
+.I rvu(1)
+calculation using the given octree.
+.SH AUTHOR
+Greg Ward
+.SH BUGS
+If the pointer is moved between the time 't' is pressed and
+.I xshowtrace
+starts drawing rays, the rays will be displaced.
+.SH "SEE ALSO"
+oconv(1), rpict(1), rtrace(1), rvu(1), ximage(1)

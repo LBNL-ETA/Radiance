@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.70 2014/04/26 15:59:38 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.71 2017/08/26 16:07:22 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -18,7 +18,8 @@ LIBDIR = /usr/local/lib/ray
 PROGS = pfilt ttyimage psign ra_tiff normtiff \
 pvalue pcompos protate ra_hexbit ra_bmp \
 ra_t8 ra_t16 pcomb pinterp pflip ra_ppm ximage xshowtrace \
-ra_rgbe ra_pict ra_ps pextrem ra_gif ra_xyze macbethcal pcond pcwarp pmblur2
+ra_rgbe ra_pict ra_ps pextrem ra_gif ra_xyze macbethcal pcond \
+pcwarp pmblur2 psketch
 
 all:	$(PROGS) $(SPECIAL)
 
@@ -123,6 +124,9 @@ pmblur2:	pmblur2.o
 ra_xyze:	ra_xyze.o
 	$(CC) $(CFLAGS) -o ra_xyze ra_xyze.o -lrtrad $(MLIB)
 
+psketch:	psketch.o
+	$(CC) $(CFLAGS) -o psketch psketch.o -lrtrad $(MLIB)
+
 ra_tiff:	ra_tiff.o ../lib/libtiff.a
 	$(CC) $(CFLAGS) -o ra_tiff ra_tiff.o -lrtrad -ltiff $(MLIB)
 
@@ -165,14 +169,14 @@ nclrtab.o:	neuclrtab.o
 
 pcomb.o:	../common/calcomp.h
 
-pf2.o ra_ps.o ra_t16.o:	../common/random.h
+psketch.o pf2.o ra_ps.o ra_t16.o:	../common/random.h
 
 neuclrtab.o clrtab.o pfilt.o pf2.o pf3.o ttyimage.o \
 psign.o protate.o ra_hexbit.o pextrem.o pcompos.o \
 pflip.o ra_t8.o ra_t16.o ra_tiff.o ra_pict.o pmblur2.o \
 ra_ps.o pvalue.o pcomb.o pinterp.o:	../common/color.h
 
-neuclrtab.o pvalue.o protate.o pinterp.o psign.o pmblur2.o \
+neuclrtab.o pvalue.o protate.o pinterp.o psign.o pmblur2.o psketch.o \
 xshowtrace.o clrtab.o pcomb.o pfilt.o pf3.o image.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
@@ -198,6 +202,8 @@ pinterp.o protate.o pvalue.o ra_pict.o ra_hexbit.o \
 ra_ppm.o ra_rgbe.o ra_t16.o ra_t8.o \
 ra_tiff.o ttyimage.o:	../common/resolu.h
 
+psketch.o:	../common/resolu.h ../common/color.h
+
 pfilt.o:	../common/paths.h
 
 psign.o:	../common/font.h
@@ -218,4 +224,4 @@ x11findwind.c:	../common/x11findwind.c
 macbethcal.o normtiff.o pcomb.o pcompos.o pcond.o pextrem.o pfilt.o \
 pflip.o psign.o pvalue.o ra_bmp.o ra_gif.o ra_pict.o ra_ppm.o ra_ps.o \
 ra_rgbe.o ra_skel.o ra_t16.o ra_t8.o ra_tiff.o ra_xyze.o pmblur2.o \
-ttyimage.o:	../common/platform.h
+psketch.o ttyimage.o:	../common/platform.h

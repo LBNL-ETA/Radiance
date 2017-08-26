@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.3 2017/08/17 21:32:29 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.4 2017/08/26 16:07:22 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -105,7 +105,7 @@ UP= +Z
 OCTREE= $octree
 oconv= -w -f
 AMBF= $ambf
-QUAL = $qual
+QUAL= $qual
 render= $rendopts
 view= def -vp 0 -50 50 -vd 0 50 -50 -vh 45 -vv 30
 view= fr -vp 15 -30 30 -vd 0 30 -30
