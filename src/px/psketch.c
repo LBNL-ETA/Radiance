@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psketch.c,v 2.1 2017/08/26 16:07:22 greg Exp $";
+static const char	RCSid[] = "$Id: psketch.c,v 2.2 2017/08/26 18:26:56 greg Exp $";
 #endif
 /*
  *  psketch.c - modify picture to sketch objects with named modifiers
@@ -15,28 +15,23 @@ static const char	RCSid[] = "$Id: psketch.c,v 2.1 2017/08/26 16:07:22 greg Exp $
 #include  "platform.h"
 #include  "resolu.h"
 #include  "color.h"
-#include  "random.h"
-					/* our probabilities */
-#define PROB_LEFT1	0.1
-#define PROB_RIGHT1	0.1
-#define PROB_LEFT2	0.2
-#define PROB_RIGHT2	0.2
-#define PROB_LEFT3	0.07
-#define PROB_RIGHT3	0.07
-#define PROB_DOWN1	0.1
 
 #define	MAXMOD		2048		/* maximum number of modifiers */
 #define USESORT		12		/* switch to sorted search */
 
+double	smoothing = 0.8;		/* weight for moving average filter */
+double	mixfact = 0.3;			/* amount to mix above/below */
+
 char	*modlist[MAXMOD];		/* (sorted) modifier list */
 int	nmods = 0;			/* number of modifiers */
 
-unsigned char  *hasmod, *moved[2];	/* scanline bitmaps */
-COLR	*scan[2];			/* i/o scanlines */
+unsigned char  *hasmod;			/* scanline bitmap */
+unsigned char  *hasmod1;
+COLOR	*scan[2];			/* i/o scanlines */
 RESOLU	pres;				/* input resolution */
 int	bmwidth;			/* bytes per bitmap */
-					/* conflicting def's in param.h */
-#undef	tstbit
+
+#undef	tstbit				/* conflicting def's in param.h */
 #undef	setbit
 #undef	clrbit
 #undef	tglbit
@@ -82,43 +77,49 @@ find_mod(const char *s)
 static int
 read_scan(void)
 {
+	const int	spread = (int)(smoothing*10);
 	int		x, width = scanlen(&pres);
 	unsigned char	*tbmp;
-	COLR		*tscn;
+	COLOR		*tscn;
 	char		modbuf[516];
-					/* advance buffers */
-	tbmp = moved[0];
-	moved[0] = moved[1];
-	moved[1] = tbmp;
+					/* advance buffer */
 	tscn = scan[0];
 	scan[0] = scan[1];
 	scan[1] = tscn;
 					/* check if we are at the end */
 	if (linesread >= numscans(&pres))
 		return(0);
-					/* clear bitmaps */
-	if (linesread)
-		memset(hasmod, 0, bmwidth);
-	memset(moved[1], 0, bmwidth);
+					/* set scanline bitmap */
+	if (linesread) {
 					/* load & check materials */
-	for (x = 0; x < width*(linesread>0); x++) {
-		int	len;
-		if (fgets(modbuf, sizeof(modbuf), mafp) == NULL) {
-			fprintf(stderr, "Error reading from rtrace!\n");
-			return(-1);
+		memset(hasmod1, 0, bmwidth);
+		for (x = 0; x < width; x++) {
+			int	len;
+			if (fgets(modbuf, sizeof(modbuf), mafp) == NULL) {
+				fprintf(stderr, "Error reading from rtrace!\n");
+				return(-1);
+			}
+			len = strlen(modbuf);
+			if (len < 3 || (modbuf[len-1] != '\n') |
+						(modbuf[len-2] != '\t')) {
+				fprintf(stderr, "Garbled rtrace output: %s", modbuf);
+				return(-1);
+			}
+			modbuf[len-2] = '\0';
+			if (find_mod(modbuf) >= 0)
+				setbit(hasmod1, x);
 		}
-		len = strlen(modbuf);
-		if (len < 3 || (modbuf[len-1] != '\n') |
-					(modbuf[len-2] != '\t')) {
-			fprintf(stderr, "Garbled rtrace output: %s", modbuf);
-			return(-1);
+					/* smear to cover around object */
+		memset(hasmod, 0, bmwidth);
+		for (x = spread; x < width-spread; x++) {
+			int	ox;
+			if (!tstbit(hasmod1,x)) continue;
+			for (ox = -spread; ox <= spread; ox++)
+				setbit(hasmod,x+ox);
 		}
-		modbuf[len-2] = '\0';
-		if (find_mod(modbuf) >= 0)
-			setbit(hasmod, x);
 	}
 					/* read next picture scanline */
-	if (freadcolrs(scan[1], width, infp) < 0) {
+	if (freadscan(scan[1], width, infp) < 0) {
 		fprintf(stderr, "%s: error reading scanline %d\n",
 					infname, linesread);
 		return(-1);
@@ -150,11 +151,10 @@ get_started(void)
 					/* allocate bitmaps & buffers */
 	bmwidth = (scanlen(&pres)+7) >> 3;
 	hasmod = (unsigned char *)malloc(bmwidth);
-	moved[0] = (unsigned char *)malloc(bmwidth);
-	moved[1] = (unsigned char *)malloc(bmwidth);
-	scan[0] = (COLR *)malloc(scanlen(&pres)*sizeof(COLR));
-	scan[1] = (COLR *)malloc(scanlen(&pres)*sizeof(COLR));
-	if (!hasmod | !moved[0] | !moved[1] | !scan[0] | !scan[1]) {
+	hasmod1 = (unsigned char *)malloc(bmwidth);
+	scan[0] = (COLOR *)malloc(scanlen(&pres)*sizeof(COLOR));
+	scan[1] = (COLOR *)malloc(scanlen(&pres)*sizeof(COLOR));
+	if (!hasmod | !hasmod1 | !scan[0] | !scan[1]) {
 		perror("malloc");
 		return(0);
 	}
@@ -170,12 +170,7 @@ advance_scanline(void)
 	int		width = scanlen(&pres);
 	int		height = numscans(&pres);
 	int		x, xstart = 0, xstop = width, xstep = 1;
-	COLR		tclr;
-
-#define CSWAP(y0,x0,y1,x1) { copycolr(tclr,scan[y0][x0]); \
-		copycolr(scan[y1][x1],scan[y0][x0]); \
-		copycolr(scan[y0][x0],tclr); \
-		setbit(moved[y0],x0); setbit(moved[y1],x1); }
+	COLOR		cmavg;
 
 	if (alldone)			/* finished last scanline? */
 		return(0);
@@ -187,61 +182,28 @@ advance_scanline(void)
 		xstart = width-1;
 		xstop = -1;
 		xstep = -1;
-	}				/* process this scanline */
-	for (x = xstart; x != xstop; x += xstep) {
-		double	runif = frandom();
-		if (tstbit(moved[0],x) || !tstbit(hasmod,x))
-			continue;
-		if (runif < PROB_LEFT1) {
-			if (x > 0 && !tstbit(moved[0],x-1))
-				CSWAP(0,x,0,x-1);
-			continue;
-		}
-		runif -= PROB_LEFT1;
-		if (runif < PROB_RIGHT1) {
-			if (x < width-1 && !tstbit(moved[0],x+1))
-				CSWAP(0,x,0,x+1);
-			continue;
-		}
-		runif -= PROB_RIGHT1;
-		if (runif < PROB_LEFT2) {
-			if (x > 1 && !tstbit(moved[0],x-2))
-				CSWAP(0,x,0,x-2);
-			continue;
-		}
-		runif -= PROB_LEFT2;
-		if (runif < PROB_RIGHT2) {
-			if (x < width-2 && !tstbit(moved[0],x+2))
-				CSWAP(0,x,0,x+2);
-			continue;
-		}
-		runif -= PROB_RIGHT2;
-		if (runif < PROB_LEFT3) {
-			if (x > 2 && !tstbit(moved[0],x-3))
-				CSWAP(0,x,0,x-3);
-			continue;
-		}
-		runif -= PROB_LEFT3;
-		if (runif < PROB_RIGHT3) {
-			if (x < width-3 && !tstbit(moved[0],x+3))
-				CSWAP(0,x,0,x+3);
-			continue;
-		}
-		runif -= PROB_RIGHT3;
-		if (runif < PROB_DOWN1) {
-			if (linesread < height-1)
-				CSWAP(0,x,1,x);
-			continue;
-		}
-		runif -= PROB_DOWN1;
 	}
-					/* write it out */
-	if (fwritecolrs(scan[0], width, stdout) < 0) {
+	setcolor(cmavg, .0f, .0f, .0f);	/* process this scanline */
+	for (x = xstart; x != xstop; x += xstep) {
+		COLOR	cmix;
+		if (!tstbit(hasmod,x)) continue;
+					/* apply moving average */
+		scalecolor(scan[0][x], 1.-smoothing);
+		scalecolor(cmavg, smoothing);
+		addcolor(cmavg, scan[0][x]);
+		copycolor(scan[0][x], cmavg);
+					/* mix pixel into next scanline */
+		copycolor(cmix, scan[0][x]);
+		scalecolor(cmix, mixfact);
+		scalecolor(scan[1][x], 1.-mixfact);
+		addcolor(scan[1][x], cmix);
+	}
+					/* write out result */
+	if (fwritescan(scan[0], width, stdout) < 0) {
 		perror("write error");
 		return(-1);
 	}
 	return(1);
-#undef CSWAP
 }
 
 static int
@@ -257,8 +219,7 @@ clean_up(void)
 	}
 	fclose(infp);
 	free(hasmod);
-	free(moved[0]);
-	free(moved[1]);
+	free(hasmod1);
 	free(scan[0]);
 	free(scan[1]);
 	return(1);
@@ -288,13 +249,21 @@ main(int argc, char *argv[])
 			}
 			nmods += rval;
 			break;
+		case 's':		/* filter smoothing amount */
+			smoothing = atof(argv[++i]);
+			if ((smoothing <= FTINY) | (smoothing >= 1.-FTINY)) {
+				fprintf(stderr, "%s: smoothing factor must be in (0,1) range\n",
+						argv[0]);
+				return(1);
+			}
+			break;
 		default:
 			fprintf(stderr, "%s: unknown option '%s'\n",
 							argv[0], argv[i]);
 			return(1);
 		}
 	if ((argc-i < 2) | (argc-i > 3)) {
-		fprintf(stderr, "Usage: %s [-m modname][-M modfile] octree input.hdr [output.hdr]\n",
+		fprintf(stderr, "Usage: %s [-m modname][-M modfile][-s smoothing] octree input.hdr [output.hdr]\n",
 						argv[0]);
 		return(1);
 	}

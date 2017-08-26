@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.71 2017/08/26 16:07:22 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.72 2017/08/26 18:26:56 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -169,7 +169,7 @@ nclrtab.o:	neuclrtab.o
 
 pcomb.o:	../common/calcomp.h
 
-psketch.o pf2.o ra_ps.o ra_t16.o:	../common/random.h
+pf2.o ra_ps.o ra_t16.o:	../common/random.h
 
 neuclrtab.o clrtab.o pfilt.o pf2.o pf3.o ttyimage.o \
 psign.o protate.o ra_hexbit.o pextrem.o pcompos.o \
