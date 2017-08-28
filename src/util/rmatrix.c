@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.24 2016/08/30 15:11:22 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.25 2017/08/28 15:59:46 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -9,6 +9,7 @@ static const char RCSid[] = "$Id: rmatrix.c,v 2.24 2016/08/30 15:11:22 greg Exp 
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "rtio.h"
 #include "platform.h"
 #include "resolu.h"
@@ -520,6 +521,63 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 		    rmx_lval(mres,i,j,k) = (double)d;
 		}
 	return(mres);
+}
+
+/* Element-wise multiplication (or division) of m2 into m1 */
+int
+rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
+{
+	int	zeroDivides = 0;
+	int	i, j, k;
+
+	if ((m1 == NULL) | (m2 == NULL) ||
+			(m1->ncols != m2->ncols) | (m1->nrows != m2->nrows))
+		return(0);
+	if ((m2->ncomp > 1) & (m2->ncomp != m1->ncomp))
+		return(0);
+	i = rmx_newtype(m1->dtype, m2->dtype);
+	if (i)
+		m1->dtype = i;
+	else
+		rmx_addinfo(m1, rmx_mismatch_warn);
+	for (i = m1->nrows; i--; )
+	    for (j = m1->ncols; j--; )
+		if (divide) {
+		    double	d;
+		    if (m2->ncomp == 1) {
+			d = rmx_lval(m2,i,j,0);
+			if (d == 0) {
+			    ++zeroDivides;
+			    for (k = m1->ncomp; k--; )
+				rmx_lval(m1,i,j,k) = 0;
+			} else {
+			    d = 1./d;
+			    for (k = m1->ncomp; k--; )
+				rmx_lval(m1,i,j,k) *= d;
+			}
+		    } else
+		        for (k = m1->ncomp; k--; ) {
+			    d = rmx_lval(m2,i,j,k);
+			    if (d == 0) {
+			        ++zeroDivides;
+				rmx_lval(m1,i,j,k) = 0;
+			    } else
+				rmx_lval(m1,i,j,k) /= d;
+			}
+		} else {
+		    if (m2->ncomp == 1) {
+			const double	d = rmx_lval(m2,i,j,0);
+		        for (k = m1->ncomp; k--; )
+			    rmx_lval(m1,i,j,k) *= d;
+		    } else
+		        for (k = m1->ncomp; k--; )
+			    rmx_lval(m1,i,j,k) *= rmx_lval(m2,i,j,k);
+		}
+	if (zeroDivides) {
+		fputs("Divide by zero in rmx_elemult()\n", stderr);
+		errno = ERANGE;
+	}
+	return(1);
 }
 
 /* Sum second matrix into first, applying scale factor beforehand */

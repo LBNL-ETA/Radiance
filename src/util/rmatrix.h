@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.7 2015/05/04 20:53:21 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.8 2017/08/28 15:59:46 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -51,6 +51,9 @@ extern RMATRIX	*rmx_transpose(const RMATRIX *rm);
 
 /* Multiply (concatenate) two matrices and allocate the result */
 extern RMATRIX	*rmx_multiply(const RMATRIX *m1, const RMATRIX *m2);
+
+/* Element-wise multiplication (or division) of m2 into m1 */
+extern int	rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide);
 
 /* Sum second matrix into first, applying scale factor beforehand */
 extern int	rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[]);

@@ -1,7 +1,7 @@
-.\" RCSid "$Id: rmtxop.1,v 1.9 2015/05/04 20:53:21 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.10 2017/08/28 15:59:46 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
-rmtxop - concatenate, add, transpose, scale, and convert matrices
+rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
 .SH SYNOPSIS
 .B rmtxop
 [
@@ -17,13 +17,13 @@ rmtxop - concatenate, add, transpose, scale, and convert matrices
 ]
 .B m1
 [
-.B +
+.B "+*/"
 ]
 .B ".."
 .SH DESCRIPTION
 .I Rmtxop
-loads and concatenates (multiplies) or adds together component matrix files
-given on the command line.
+loads and concatenates or adds/multiplies/divides
+together component matrix files given on the command line.
 Each file must have a header containing the following variables:
 .sp
 .nf
@@ -96,8 +96,20 @@ options are mutually exclusive, insofar as they cannot be applied together
 to the same input matrix.
 .PP
 If present, the second and subsequent matrices on the command
-line are concatenated to the result unless separated by a plus ('+') symbol,
-in which case the elements are added together.
+line are concatenated to the result unless separated by a plus ('+'),
+asterisk ('*'), or forward slash ('/') symbol,
+in which case the matrix elements are added, multiplied, or divided together,
+respectively.
+(Note that the asterisk must be quoted or escaped in most shells.)\0
+In the case of addition, the two matrices involved must have the same number
+of components.
+For element-wise multiplication and division, the second matrix may have
+only a single component per element, which will be applied equally to all
+components of the first matrix.
+If element-wise division is specified, any zero elements in the second
+matrix will result in a warning and the corresponding component(s) in the
+first matrix will be set to zero.
+.PP
 The number of components in the new matrix after applying any
 .I -c
 transform must agree with the prior result.
@@ -105,9 +117,9 @@ For concatenation (matrix multiplication), the number of columns
 in the prior result must equal the number of rows in the new matrix, and
 the result will have the number of rows of the previous and the number
 of columns of the new matrix.
-In the case of addition, the number of rows and columns of the prior
-result and the new matrix must match, and will not be changed by the
-operation.
+In the case of addition, multiplication, and division,
+the number of rows and columns of the prior result and the
+new matrix must match, and will not be changed by the operation.
 .PP
 Results are sent to the standard output.
 By default, the values will be written in the lowest resolution format

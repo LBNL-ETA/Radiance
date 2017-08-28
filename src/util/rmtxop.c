@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.10 2016/08/18 17:57:57 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.11 2017/08/28 15:59:46 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -7,6 +7,7 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.10 2016/08/18 17:57:57 greg Exp $
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "rtio.h"
 #include "resolu.h"
 #include "rmatrix.h"
@@ -29,7 +30,7 @@ static void
 op_default(ROPERAT *op)
 {
 	memset(op, 0, sizeof(ROPERAT));
-	op->op = '*';
+	op->op = '.';
 }
 
 static RMATRIX *
@@ -112,7 +113,7 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 	}
 	if (mleft == NULL)		/* just one matrix */
 		return(mright);
-	if (op->op == '*') {		/* concatenate */
+	if (op->op == '.') {		/* concatenate */
 		RMATRIX	*mres = rmx_multiply(mleft, mright);
 		if (mres == NULL) {
 			fputs(fname, stderr);
@@ -142,6 +143,23 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 			fputs(fname, stderr);
 			fputs(": added in matrix\n", stderr);
 		}
+		rmx_free(mright);
+	} else if ((op->op == '*') | (op->op == '/')) {
+		const char *	tnam = (op->op == '/') ?
+					"division" : "multiplication";
+		errno = 0;
+		if (!rmx_elemult(mleft, mright, (op->op == '/'))) {
+			fprintf(stderr, "%s: element-wise %s failed\n",
+					fname, tnam);
+			rmx_free(mright);
+			return(NULL);
+		}
+		if (errno)
+			fprintf(stderr,
+				"%s: warning - error during element-wise %s\n",
+					fname, tnam);
+		else if (verbose)
+			fprintf(stderr, "%s: element-wise %s\n", fname, tnam);
 		rmx_free(mright);
 	} else {
 		fprintf(stderr, "%s: unknown operation '%c'\n", fname, op->op);
@@ -173,8 +191,9 @@ main(int argc, char *argv[])
 	op_default(&op);
 					/* get options and arguments */
 	for (i = 1; i < argc; i++)
-		if (argv[i][0] == '+' && !argv[i][1]) {
-			op.op = '+';
+		if (argv[i][0] && !argv[i][1] &&
+				strchr("+*/", argv[i][0]) != NULL) {
+			op.op = argv[i][0];
 		} else if (argv[i][0] != '-' || !argv[i][1]) {
 			char	*fname = NULL;	/* load matrix */
 			if (argv[i][0] != '-')
@@ -246,7 +265,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..] m1 [+] .. > mres\n",
+	"Usage: %s [-v][-f[adfc][-t][-s sf .. | -c ce ..] m1 [+*/] .. > mres\n",
 			argv[0]);
 	return(1);
 }
