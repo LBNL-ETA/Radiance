@@ -74,6 +74,9 @@ target_link_libraries(ra_xyze rtrad)
 add_executable(macbethcal macbethcal.c pmapgen.c mx3.c warp3d.c)
 target_link_libraries(macbethcal rtrad)
 
+add_executable(pmblur2 pmblur2.c)
+target_link_libraries(pmblur2 rtrad)
+
 add_executable(psketch psketch.c)
 target_link_libraries(psketch rtrad)
 
@@ -134,7 +137,7 @@ endif()
 
 install(TARGETS pfilt pflip ttyimage psign pvalue pcompos protate
   ra_hexbit ra_bmp ra_t8 ra_t16 pcomb pinterp ra_ppm ra_rgbe ra_pict ra_ps
-  pextrem ra_gif ra_xyze macbethcal pcond pcwarp psketch
+  pextrem ra_gif ra_xyze macbethcal pcond pcwarp psketch pmblur2
   RUNTIME DESTINATION bin)
 
 if(WIN32)
