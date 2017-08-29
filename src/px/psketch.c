@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psketch.c,v 2.2 2017/08/26 18:26:56 greg Exp $";
+static const char	RCSid[] = "$Id: psketch.c,v 2.3 2017/08/29 16:31:32 greg Exp $";
 #endif
 /*
  *  psketch.c - modify picture to sketch objects with named modifiers
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: psketch.c,v 2.2 2017/08/26 18:26:56 greg Exp $
 
 #include  "standard.h"
 #include  "platform.h"
+#include  "paths.h"
 #include  "resolu.h"
 #include  "color.h"
 

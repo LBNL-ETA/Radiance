@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.72 2017/08/26 18:26:56 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.73 2017/08/29 16:31:32 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -204,7 +204,7 @@ ra_tiff.o ttyimage.o:	../common/resolu.h
 
 psketch.o:	../common/resolu.h ../common/color.h
 
-pfilt.o:	../common/paths.h
+psketch.o pfilt.o:	../common/paths.h
 
 psign.o:	../common/font.h
 
