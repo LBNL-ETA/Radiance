@@ -1,4 +1,4 @@
-/* RCSid $Id: bmpfile.h,v 2.7 2017/01/10 18:24:53 greg Exp $ */
+/* RCSid $Id: bmpfile.h,v 2.8 2017/09/05 18:41:22 greg Exp $ */
 /*
  *  Windows and OS/2 BMP file support
  */
@@ -31,7 +31,7 @@ typedef struct {
 	int32		hRes;		/* horizontal resolution pixels/meter */
 	int32		vRes;		/* vertical resolution pixels/meter */
 	int		nColors;	/* total color palette size */
-	int		impColors;      /* number of colors actually used */
+	int		impColors;	/* number of colors actually used */
 	int		compr;		/* compression */
 	int32		width;		/* bitmap width (pixels) */
 	int32		height;		/* bitmap height (pixels) */
@@ -39,14 +39,14 @@ typedef struct {
 	int		bpp;		/* bits per sample (1,4,8,16,24,32) */
 	uint32		infoSiz;	/* info buffer size (bytes) */
 	/* but the color table should be filled by writer before open call */
-	RGBquad		palette[3];     /* color palette (extends struct) */
+	RGBquad		palette[3];	/* color palette (extends struct) */
 } BMPHeader;
 				
 					/* access to bit field triple */
-#define BMPbitField(h)  ((uint32 *)(h)->palette)
+#define BMPbitField(h)	((uint32 *)(h)->palette)
 
 					/* info buffer access */
-#define BMPinfo(h)      ((char *)((h)->palette + (h)->nColors))
+#define BMPinfo(h)	((char *)((h)->palette + (h)->nColors))
 
 					/* function return values */
 #define BIR_OK			0		/* all is well */
@@ -59,26 +59,26 @@ typedef struct {
 /* A BMP reader structure */
 typedef struct BMPReader {
 	/* members in this structure should be considered read-only */
-	uint8		*scanline;      /* unpacked scanline data */
+	uint8		*scanline;	/* unpacked scanline data */
 	int		yscan;		/* last scanline read */
-	BMPHeader       *hdr;		/* pointer to allocated header */
+	BMPHeader	*hdr;		/* pointer to allocated header */
 	uint32		fpos;		/* current file position */
 					/* get character callback */
 	int		(*cget)(void *);
 					/* absolute seek callback (or NULL) */
 	int		(*seek)(uint32, void *);
 	void		*c_data;	/* client's opaque data */
-	uint32		scanpos[1];     /* recorded scanline position(s) */
+	uint32		scanpos[1];	/* recorded scanline position(s) */
 } BMPReader;
 
 /* A BMP writer structure */
 typedef struct {
 	/* the scanline data is filled in by caller before each write */
-	uint8		*scanline;      /* caller-prepared scanline data */
+	uint8		*scanline;	/* caller-prepared scanline data */
 	/* modify yscan only if seek is defined & data is uncompressed */
 	int		yscan;		/* scanline for next write */
 	/* the following fields should not be altered directly */
-	BMPHeader       *hdr;		/* allocated header */
+	BMPHeader	*hdr;		/* allocated header */
 	uint32		fbmp;		/* beginning of bitmap data */
 	uint32		fpos;		/* current file position */
 	uint32		flen;		/* last character written */
@@ -90,7 +90,7 @@ typedef struct {
 } BMPWriter;
 
 					/* open BMP stream for reading */
-extern BMPReader       *BMPopenReader(int (*cget)(void *),
+extern BMPReader	*BMPopenReader(int (*cget)(void *),
 				int (*seek)(uint32, void *), void *c_data);
 
 					/* determine if image is grayscale */
@@ -109,10 +109,10 @@ extern RGBquad		BMPdecodePixel(int i, const BMPReader *br);
 extern void		BMPfreeReader(BMPReader *br);
 
 					/* allocate uncompressed RGB header */
-extern BMPHeader       *BMPtruecolorHeader(int xr, int yr, int infolen);
+extern BMPHeader	*BMPtruecolorHeader(int xr, int yr, int infolen);
 
 					/* allocate color-mapped header */
-extern BMPHeader       *BMPmappedHeader(int xr, int yr, int infolen, int ncolors);
+extern BMPHeader	*BMPmappedHeader(int xr, int yr, int infolen, int ncolors);
 
 					/* open BMP stream for writing */
 extern BMPWriter	*BMPopenWriter(void (*cput)(int, void *),
@@ -126,7 +126,7 @@ extern int		BMPwriteScanline(BMPWriter *bw);
 extern void		BMPfreeWriter(BMPWriter *bw);
 
 					/* get corresponding error message */
-extern const char      *BMPerrorMessage(int ec);
+extern const char	*BMPerrorMessage(int ec);
 
 					/* stdio callback functions */
 extern int		stdio_getc(void *p);
@@ -134,14 +134,14 @@ extern void		stdio_putc(int c, void *p);
 extern int		stdio_fseek(uint32 pos, void *p);
 
 					/* open stdio input stream */
-#define BMPopenInputStream(fp)  BMPopenReader(&stdio_getc, NULL, (void *)fp)
+#define BMPopenInputStream(fp)	BMPopenReader(&stdio_getc, NULL, (void *)fp)
 
 					/* open input file */
-#define BMPopenInputFile(fn)    BMPopenReader(&stdio_getc, &stdio_fseek, \
+#define BMPopenInputFile(fn)	BMPopenReader(&stdio_getc, &stdio_fseek, \
 					(void *)fopen(fn, "rb"))
 
 					/* close stdio input file or stream */
-#define BMPcloseInput(br)       ( fclose((FILE *)(br)->c_data), \
+#define BMPcloseInput(br)	( fclose((FILE *)(br)->c_data), \
 					BMPfreeReader(br) )
 
 					/* open stdio output stream */
@@ -154,7 +154,7 @@ extern int		stdio_fseek(uint32 pos, void *p);
 					(void *)fopen(fn, "wb"), hdr)
 
 					/* close stdio output file or stream */
-#define BMPcloseOutput(bw)      ( fclose((FILE *)(bw)->c_data), \
+#define BMPcloseOutput(bw)	( fclose((FILE *)(bw)->c_data), \
 					BMPfreeWriter(bw) )
 
 #ifdef __cplusplus
