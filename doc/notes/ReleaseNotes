@@ -2164,3 +2164,5 @@ objects, identified by modifier name(s).
 
 Added '*' and '/' operations to rmtxop for element-wise multiplication and
 division of same-sized matrices.
+
+Changed falsecolor so "-s" option is adjusted to match legend if one.

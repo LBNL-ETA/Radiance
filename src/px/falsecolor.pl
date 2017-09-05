@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.10 2014/04/15 21:34:31 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.11 2017/09/05 22:42:52 greg Exp $
 
 use warnings;
 use strict;
@@ -11,6 +11,7 @@ my @palettes = ('def', 'spec', 'pm3d', 'hot', 'eco');
 my $mult = 179.0;              # Multiplier. Default W/sr/m2 -> cd/m2
 my $label = 'cd/m2';           # Units shown in legend
 my $scale = 1000;              # Top of the scale
+my $matchscale = 1;            # Adjust top of scale to match given label
 my $decades = 0;               # Default is linear mapping
 my $pal = 'def';               # Palette
 my $redv = "${pal}_red(v)";    # Mapping functions for R,G,B
@@ -42,8 +43,11 @@ while ($#ARGV >= 0) {
     } elsif (m/-s/) {          # Scale
         $scale = shift;
         if ($scale =~ m/[aA].*/) {
+ 	    $matchscale = 0;
             $needfile = 1;
-        }
+       } else {
+	    $matchscale = 1;
+	}
     } elsif (m/-l$/) {         # Label
         $label = shift;
     } elsif (m/-log/) {        # Logarithmic mapping
@@ -94,6 +98,14 @@ while ($#ARGV >= 0) {
     }
 }
 
+if (($legwidth <= 20) || ($legheight <= 40)) {
+    # Legend is too small to be legible. Don't bother doing one.
+    $legwidth = 0;
+    $legheight = 0;
+    $loff = 0;
+    $matchscale = 0;
+}
+
 # Temporary directory. Will be removed upon successful program exit.
 my $td = tempdir( CLEANUP => 1 );
 
@@ -121,6 +133,13 @@ if ($scale =~ m/[aA].*/) {
     # 3.94282	6
     my $LogLmax = $histo[0];
     $scale = $mult / 179 * 10**$LogLmax;
+} elsif ($matchscale) {
+    # Adjust scale so legend reflects -s setting
+    if ($decades > 0) {
+	$scale *= 10**($decades/(2.*$ndivs));
+    } else {
+	$scale *= $ndivs/($ndivs - .5);
+    }
 }
 
 my $pc0 = "$td/pc0.cal";
@@ -264,7 +283,7 @@ my $scolpic = "$td/scol.hdr";
 my $slabpic = "$td/slab.hdr";
 my $cmd;
 
-if (($legwidth > 20) && ($legheight > 40)) {
+if ($legwidth > 0) {
     # Legend: Create the text labels
     my $sheight = floor($legheight / $ndivs + 0.5);
     $legheight = $sheight * $ndivs;
@@ -294,11 +313,6 @@ if (($legwidth > 20) && ($legheight > 40)) {
     $cmd .= qq[ -x $legwidth -y $legheight > $scolpic];
     system $cmd;
 } else {
-    # Legend is too small to be legible. Don't bother doing one.
-    $legwidth = 0;
-    $legheight = 0;
-    $loff = 0;
-
     # Create dummy colour scale and legend labels so we don't
     # need to change the final command line.
     open(FHscolpic, ">$scolpic");
