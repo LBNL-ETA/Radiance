@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.18 2016/06/30 17:12:19 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.19 2017/09/05 17:19:42 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -753,9 +753,9 @@ BMPwriteScanline(BMPWriter *bw)
 		}
 		if (n <= 0)			/* was that it? */
 			break;
-		val = *sp;			/* output run */
-		for (cnt = 1; --n && cnt < 255; cnt++)
-			if (*++sp != val)
+		val = *sp++;			/* output run */
+		for (cnt = 1; --n && cnt < 255; cnt++, sp++)
+			if (*sp != val)
 				break;
 		wrbyte(cnt, bw);
 		wrbyte(val, bw);
