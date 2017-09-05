@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.10 2017/08/28 15:59:46 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.11 2017/09/05 22:48:04 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -103,9 +103,9 @@ respectively.
 (Note that the asterisk must be quoted or escaped in most shells.)\0
 In the case of addition, the two matrices involved must have the same number
 of components.
-For element-wise multiplication and division, the second matrix may have
-only a single component per element, which will be applied equally to all
-components of the first matrix.
+For element-wise multiplication and division, the second matrix is
+permitted instead to have a single component per element, which will be
+applied equally to all components of the first matrix.
 If element-wise division is specified, any zero elements in the second
 matrix will result in a warning and the corresponding component(s) in the
 first matrix will be set to zero.
