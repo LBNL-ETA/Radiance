@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.4 2017/08/26 16:07:22 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.5 2017/09/06 23:57:56 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -12,7 +12,7 @@ my $td = tempdir( CLEANUP => 0 );
 my $octree = "$td/bv$$.oct";
 my $ambf = "$td/af$$.amb";
 my $raddev = "x11";	# default output device. Overwrite with -o
-my $qual = "Low";
+my $qual = "Med";
 my $usetrad = 0;
 
 my $opts = "";	# Options common to rad
