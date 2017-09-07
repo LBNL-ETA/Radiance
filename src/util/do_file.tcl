@@ -1,4 +1,4 @@
-# RCSid: $Id: do_file.tcl,v 2.23 2017/09/06 23:57:56 greg Exp $
+# RCSid: $Id: do_file.tcl,v 2.24 2017/09/07 00:02:07 greg Exp $
 #
 # Choose the Rad Input File to work on.
 #
@@ -128,7 +128,8 @@ proc putradvar {fi vn} {	# print out a rad variable
 	}
 	if {[lsearch -exact {ZONE QUALITY OCTREE PICTURE AMBFILE OPTFILE
 			EXPOSURE RESOLUTION UP INDIRECT DETAIL PENUMBRAS
-			EYESEP RAWFILE ZFILE VARIABILITY REPORT} $vn] >= 0} {
+			EYESEP RAWFILE ZFILE VARIABILITY REPORT
+			PGMAP PCMAP} $vn] >= 0} {
 		puts $fi "$vn= $radvar($vn)"
 		return
 	}
