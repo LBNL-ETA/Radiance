@@ -1,4 +1,4 @@
-.\" RCSid "$Id: falsecolor.1,v 1.11 2013/04/04 15:13:42 greg Exp $"
+.\" RCSid "$Id: falsecolor.1,v 1.12 2017/09/07 22:13:55 greg Exp $"
 .TH "FALSECOLOR" "1" "12/12/11" "RADIANCE" ""
 .SH "NAME"
 falsecolor \- make a false color RADIANCE picture
@@ -96,6 +96,11 @@ The
 .I \-n
 option can be used to change the number of contours (and corresponding
 legend entries) from the default value of 8.
+To ensure even divisions on a linear scale, set this value in consort with
+.I \-s
+such that the maximum is evenly divisible by twice the
+.I \-n
+setting minus one.
 The
 .I \-lw
 and
