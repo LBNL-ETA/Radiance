@@ -2166,3 +2166,5 @@ Added '*' and '/' operations to rmtxop for element-wise multiplication and
 division of same-sized matrices.
 
 Changed falsecolor so "-s" option is adjusted to match legend if one.
+
+Legend changes and improvements by David G-M and Stephen W.

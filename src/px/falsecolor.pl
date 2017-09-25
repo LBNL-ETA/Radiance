@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.11 2017/09/05 22:42:52 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.12 2017/09/25 18:48:11 greg Exp $
 
 use warnings;
 use strict;
@@ -11,7 +11,7 @@ my @palettes = ('def', 'spec', 'pm3d', 'hot', 'eco');
 my $mult = 179.0;              # Multiplier. Default W/sr/m2 -> cd/m2
 my $label = 'cd/m2';           # Units shown in legend
 my $scale = 1000;              # Top of the scale
-my $matchscale = 1;            # Adjust top of scale to match given label
+my $scaledigits = 3;           # Number of maximum digits for numbers in legend
 my $decades = 0;               # Default is linear mapping
 my $pal = 'def';               # Palette
 my $redv = "${pal}_red(v)";    # Mapping functions for R,G,B
@@ -22,9 +22,9 @@ my $picture = '-';
 my $cpict = '';
 my $legwidth = 100;            # Legend width and height
 my $legheight = 200;
+my $haszero = 1;               # print 0 in scale for falsecolor images only
 my $docont = '';               # Contours: -cl and -cb
 my $doposter = 0;              # Posterization: -cp
-my $loff = 0;                  # Offset to align with values
 my $doextrem = 0;              # Don't mark extrema
 my $needfile = 0;
 my $showpal = 0;               # Show availabel colour palettes
@@ -43,11 +43,10 @@ while ($#ARGV >= 0) {
     } elsif (m/-s/) {          # Scale
         $scale = shift;
         if ($scale =~ m/[aA].*/) {
- 	    $matchscale = 0;
             $needfile = 1;
-       } else {
-	    $matchscale = 1;
-	}
+       }
+    } elsif (m/-d/) {          # Number of maximum digits for numbers in legend
+        $scaledigits = shift;
     } elsif (m/-l$/) {         # Label
         $label = shift;
     } elsif (m/-log/) {        # Logarithmic mapping
@@ -79,19 +78,19 @@ while ($#ARGV >= 0) {
     # Switches
     } elsif (m/-cl/) {         # Contour lines
         $docont = 'a';
-        $loff = 0.48;
+        $haszero = 0;
     } elsif (m/-cb/) {         # Contour bands
         $docont = 'b';
-        $loff = 0.52;
+        $haszero = 0;
     } elsif (m/-cp/) {              # Posterize
         $doposter = 1;
+        $haszero = 0;
     } elsif (m/-palettes/) {        # Show all available palettes
         $scale   = 45824;           # 256 * 179
         $showpal = 1;
     } elsif (m/-e/) {
         $doextrem = 1;
         $needfile = 1;
-
     # Oops! Illegal option
     } else {
         die("bad option \"$_\"\n");
@@ -102,8 +101,6 @@ if (($legwidth <= 20) || ($legheight <= 40)) {
     # Legend is too small to be legible. Don't bother doing one.
     $legwidth = 0;
     $legheight = 0;
-    $loff = 0;
-    $matchscale = 0;
 }
 
 # Temporary directory. Will be removed upon successful program exit.
@@ -133,13 +130,25 @@ if ($scale =~ m/[aA].*/) {
     # 3.94282	6
     my $LogLmax = $histo[0];
     $scale = $mult / 179 * 10**$LogLmax;
-} elsif ($matchscale) {
-    # Adjust scale so legend reflects -s setting
-    if ($decades > 0) {
-	$scale *= 10**($decades/(2.*$ndivs));
-    } else {
-	$scale *= $ndivs/($ndivs - .5);
-    }
+}  
+
+if ($docont ne '') {
+    # -cl -> $docont = a
+    # -cb -> $docont = b
+    my $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $redv) );
+    $redv = $newv;
+    $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $bluv) );
+    $bluv = $newv;
+    $newv = join( "(v-1/ndivs)*ndivs/(ndivs-1)", split("v", $grnv) );
+    $grnv = $newv;
+} elsif ($doposter == 1) {
+    # -cp -> $doposter = 1
+    my $newv = join( "seg2(v)", split("v", $redv) );
+    $redv = $newv;
+    $newv = join( "seg2(v)", split("v", $bluv) );
+    $bluv = $newv;
+    $newv = join( "seg2(v)", split("v", $grnv) );
+    $grnv = $newv;
 }
 
 my $pc0 = "$td/pc0.cal";
@@ -157,14 +166,14 @@ neq(a,b) : if(a-b-EPS,1,b-a-EPS);
 btwn(a,x,b) : if(a-x,-1,b-x);
 clip(x) : if(x-1,1,if(x,x,0));
 frac(x) : x - floor(x);
-boundary(a,b) : neq(floor(ndivs*a+.5),floor(ndivs*b+.5));
+boundary(a,b) : neq(floor(ndivs*a),floor(ndivs*b));
 
 spec_red(x) = 1.6*x - .6;
 spec_grn(x) = if(x-.375, 1.6-1.6*x, 8/3*x);
 spec_blu(x) = 1 - 8/3*x;
 
-pm3d_red(x) = sqrt(x) ^ gamma;
-pm3d_grn(x) = (x*x*x) ^ gamma;
+pm3d_red(x) = sqrt(clip(x)) ^ gamma;
+pm3d_grn(x) = clip(x*x*x) ^ gamma;
 pm3d_blu(x) = clip(sin(2*PI*clip(x))) ^ gamma;
 
 hot_red(x) = clip(3*x) ^ gamma;
@@ -199,8 +208,11 @@ def_blup(i):select(i,0.2666,0.3638662,0.4770437,
 2.432735e-05,1.212949e-05,0.006659406,0.02539);
 def_blu(x):interp_arr(x/0.0454545+1,def_blup);
 
-isconta = if(btwn(0,v,1),or(boundary(vleft,vright),boundary(vabove,vbelow)),-1);
-iscontb = if(btwn(0,v,1),btwn(.4,frac(ndivs*v),.6),-1);
+isconta = if(btwn(1/ndivs/2,v,1+1/ndivs/2),or(boundary(vleft,vright),boundary(vabove,vbelow)),-1);
+iscontb = if(btwn(1/ndivs/2,v,1+1/ndivs/2),-btwn(.1,frac(ndivs*v),.9),-1);
+
+seg(x)=(floor(v*ndivs)+.5)/ndivs;
+seg2(x)=(seg(x)-1/ndivs)*ndivs/(ndivs-1);
 
 ra = 0;
 ga = 0;
@@ -227,6 +239,7 @@ vabove = map(li(1,0,1)*norm);
 vbelow = map(li(1,0,-1)*norm);
 
 map(x) = x;
+
 
 ra = ri(nfiles);
 ga = gi(nfiles);
@@ -259,10 +272,6 @@ if ($docont ne '') {
     # -cl -> $docont = a
     # -cb -> $docont = b
     $pc0args .= qq[ -e "in=iscont$docont"];
-} elsif ($doposter == 1) {
-    # -cp -> $doposter = 1
-    $pc0args .= qq[ -e "ro=${pal}_red(seg(v));go=${pal}_grn(seg(v));bo=${pal}_blu(seg(v))"];
-    $pc0args .= q[ -e "seg(x)=(floor(v*ndivs)+.5)/ndivs"];
 }
 
 if ($cpict eq '') {
@@ -282,35 +291,47 @@ my $scolpic = "$td/scol.hdr";
 # Labels in the legend
 my $slabpic = "$td/slab.hdr";
 my $cmd;
-
 if ($legwidth > 0) {
     # Legend: Create the text labels
-    my $sheight = floor($legheight / $ndivs + 0.5);
-    $legheight = $sheight * $ndivs;
-    $loff = floor($loff * $sheight + 0.5);
-    my $text = "$label";
-    for (my $i=0; $i<$ndivs; $i++) {
-        my $imap = ($ndivs - 0.5 - $i) / $ndivs;
+    my $sheight = floor($legheight / $ndivs );
+    my $theight = floor($legwidth/(8/1.67));
+    my $stheight = $sheight <= $theight ? $sheight : $theight;
+    my $vlegheight = $sheight * $ndivs * (1+1.5/$ndivs);
+    my $text = "$label\n";
+    my $tslabpic = "$td/slabT.hdr";
+    open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight > $tslabpic";
+    print PSIGN "$text";
+    close PSIGN;
+    my $loop = $ndivs+$haszero;
+    my $hlegheight = $sheight * ($loop) + $sheight * .5;
+    my $pcompost = qq[pcompos -b 0 0 0 =-0 $tslabpic 0 $hlegheight ];
+    for (my $i=0; $i<$loop; $i++) {
+        my $imap = ($ndivs - $i) / $ndivs;
         my $value = $scale;
         if ($decades > 0) {
             $value *= 10**(($imap - 1) * $decades);
         } else {
             $value *= $imap;
         }
-
         # Have no more than 3 decimal places
-        $value =~ s/(\.[0-9]{3})[0-9]*/$1/;
-        $text .= "\n$value";
+        $value =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
+        $text = "$value\n";
+        $tslabpic = "$td/slab$i.hdr";
+        open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $stheight > $tslabpic";
+        print PSIGN "$text";
+        close PSIGN;
+        $hlegheight = $sheight * ($loop - $i - 1) + $sheight * .5;
+        $pcompost .= qq[=-0 $tslabpic 0 $hlegheight ];
     }
-    open PSIGN, "| psign -s -.15 -cf 1 1 1 -cb 0 0 0 -h $sheight > $slabpic";
-    print PSIGN "$text\n";
-    close PSIGN;
+    $pcompost .= qq[ > $slabpic];
+    system $pcompost;
 
     # Legend: Create the background colours
     $cmd = qq[pcomb $pc0args];
-    $cmd .= q[ -e "v=(y+.5)/yres;vleft=v;vright=v"];
-    $cmd .= q[ -e "vbelow=(y-.5)/yres;vabove=(y+1.5)/yres"];
-    $cmd .= qq[ -x $legwidth -y $legheight > $scolpic];
+    $cmd .= qq[ -e "v=(y+.5-$sheight)/(yres/(1+1.5/$ndivs));;vleft=v;vright=v"];
+    $cmd .= qq[ -e "vbelow=(y-.5-$sheight)/(yres/(1+1.5/$ndivs));vabove=(y+1.5-$sheight)/(yres/(1+1.5/$ndivs))"];
+    $cmd .= qq[ -e "ra=0;ga=0;ba=0;"];
+    $cmd .= qq[ -x $legwidth -y $vlegheight > $scolpic];
     system $cmd;
 } else {
     # Create dummy colour scale and legend labels so we don't
@@ -328,13 +349,18 @@ my $slabinvpic = "$td/slabinv.hdr";
 $cmd = qq[pcomb -e "lo=1-gi(1)" $slabpic > $slabinvpic];
 system $cmd;
 
-my $loff1 = $loff - 1;
+
+my $sh0 = -floor($legheight / $ndivs / 2);
+if ($haszero < 1) {
+    $sh0 = -floor($legheight / ($ndivs)*1.5);
+}
 
 # Command line without extrema
-$cmd = qq[pcomb $pc0args $pc1args "$picture"];
-$cmd .= qq[ "$cpict"] if ($cpict);
-$cmd .= qq[ | pcompos $scolpic 0 0 +t .1 $slabinvpic 2 $loff1];
-$cmd .= qq[ -t .5 $slabpic 0 $loff - $legwidth 0];
+
+    $cmd = qq[pcomb $pc0args $pc1args "$picture"];
+    $cmd .= qq[ "$cpict"] if ($cpict);
+    $cmd .= qq[ | pcompos -b 0 0 0 $scolpic 0 $sh0 +t .1 $slabinvpic 2 -1 ];
+    $cmd .= qq[ -t .5 $slabpic 0 0 - $legwidth 0];
 
 if ($doextrem == 1) {
     # Get min/max image luminance
@@ -353,9 +379,9 @@ if ($doextrem == 1) {
     # Weighted average of R,G,B
     my $minpos = "$lxmin $ymin";
     my $minval = ($rmin * .27 + $gmin * .67 + $bmin * .06) * $mult;
-    $minval =~ s/(\.[0-9]{3})[0-9]*/$1/;
+    $minval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
     my $maxval = ($rmax * .27 + $gmax * .67 + $bmax * .06) * $mult;
-    $maxval =~ s/(\.[0-9]{3})[0-9]*/$1/;
+    $maxval =~ s/(\.[0-9]{$scaledigits})[0-9]*/$1/;
 
     # Create the labels for min/max intensity
     my $minvpic = "$td/minv.hdr";
@@ -366,6 +392,9 @@ if ($doextrem == 1) {
     # Add extrema labels to command line
     $cmd .= qq[ $minvpic $minpos $maxvpic $lxmax $ymax];
 }
+
+
+
 
 # Process image and combine with legend
 system "$cmd";
