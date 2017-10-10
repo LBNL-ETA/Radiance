@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.5 2017/03/30 11:58:17 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2017/03/30 11:58:17 $ $Revision: 1.5 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.6 2017/10/10 16:10:14 greg Exp $"
+.TH MKPMAP 1 "$Date: 2017/10/10 16:10:14 $ $Revision: 1.6 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -148,7 +148,7 @@ be transferred through the surface without undergoing scattering; the
 surface therefore does not affect the light transport and simply acts as an
 invisible photon receiver.  This is useful when photon irradiance is to be
 evaluated at points which do not lie on regular geometry, e.g.  at workplane
-height with \firtrace\fR's \fB-I\fR option.  Without this workaround,
+height with \fIrtrace\fR's \fB-I\fR option.  Without this workaround,
 photons would be collected from parallel but distant planes, leading to
 underestimation.  Note that photons are only deposited when incident from
 the front side of the sensor surface, i.e.  when entering the
