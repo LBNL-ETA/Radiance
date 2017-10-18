@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.5 2017/09/06 23:57:56 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.6 2017/10/18 19:30:48 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -118,7 +118,7 @@ EndOfRif
 close(FH);
 
 if ($usetrad) {
-	system "trad $rif";
+	system "rad -v 0 $rif ; trad $rif";
 } else {
 	system "rad -o $raddev $opts $rif";
 }
