@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.41 2017/07/18 21:33:14 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.42 2017/11/28 22:17:00 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -128,6 +128,7 @@ compute_through(BSDFDAT *ndp)
 	srchrad = sqrt(dfp->minProjSA);		/* else search for peak */
 	setcolor(vpeak, 0, 0, 0);
 	setcolor(vsum, 0, 0, 0);
+	pdir[2] = 0.0;
 	for (i = 0; i < NDIR2CHECK; i++) {
 		FVECT	tdir;
 		SDValue	sv;
@@ -146,6 +147,8 @@ compute_through(BSDFDAT *ndp)
 			VCOPY(pdir, tdir);
 		}
 	}
+	if (pdir[2] == 0.0)
+		return;				/* zero neighborhood */
 	ec = SDsizeBSDF(&tomega, pdir, ndp->vray, SDqueryMin, ndp->sd);
 	if (ec)
 		goto baderror;
