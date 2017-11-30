@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond3.c,v 3.16 2015/08/21 05:48:28 greg Exp $";
+static const char	RCSid[] = "$Id: pcond3.c,v 3.17 2017/11/30 18:43:05 greg Exp $";
 #endif
 /*
  * Routines for computing and applying brightness mapping.
@@ -190,8 +190,8 @@ comphist(void)			/* create foveal sampling histogram */
 	for (y = 0; y < fvyr; y++)
 		for (x = 0; x < fvxr; x++) {
 			l = plum(fovscan(y)[x]);
-			if ((l < lwmin) & (l > LMIN)) lwmin = l;
-			if ((l > lwmax) & (l < LMAX)) lwmax = l;
+			if (l < lwmin) lwmin = l;
+			if (l > lwmax) lwmax = l;
 		}
 	lwmax *= 1.01;
 	if (lwmax > LMAX)

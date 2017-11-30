@@ -1,4 +1,4 @@
-/* RCSid: $Id: pcond.h,v 3.14 2004/11/14 16:57:18 greg Exp $ */
+/* RCSid: $Id: pcond.h,v 3.15 2017/11/30 18:43:05 greg Exp $ */
 /*
  * Header file for picture file conditioning.
  */
@@ -29,7 +29,7 @@ extern "C" {
 #define MAXPREHIST	1024		/* maximum precomputed histogram */
 
 #define LMIN		1e-7		/* minimum visible world luminance */
-#define LMAX		1e5		/* maximum visible world luminance */
+#define LMAX		1e7		/* maximum visible world luminance */
 
 #define Bl(Lw)		log(Lw)		/* brightness function */
 #define Bl1(Lw)		(1.0/(Lw))	/* first derivative of Bl(Lw) */

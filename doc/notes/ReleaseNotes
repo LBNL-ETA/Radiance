@@ -2171,3 +2171,7 @@ Legend changes and improvements by David G-M and Stephen W.
 
 Fixed bug in peak extraction code that generated
 "Bad call to SDqueryTreProjSA" error, reported by Lars Grobe.
+
+Increased maximum luminance to 10^7 in pcond to fix issue noticed
+by Axel Jacobs where veiling glare not added for the sun under
+some conditions.
