@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.16 2016/06/01 03:00:06 greg Exp $";
+static const char	RCSid[] = "$Id: rcmain.c,v 2.17 2017/11/30 23:31:34 greg Exp $";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -180,6 +180,9 @@ main(int argc, char *argv[])
 	progname = argv[0] = fixargv0(argv[0]);
 	gargv = argv;
 	gargc = argc;
+#if defined(_WIN32) || defined(_WIN64)
+	_setmaxstdio(2048);		/* increase file limit to maximum */
+#endif
 					/* initialize calcomp routines early */
 	initfunc();
 	setcontext(RCCONTEXT);
