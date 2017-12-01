@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.42 2017/11/28 22:17:00 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.43 2017/12/01 02:45:14 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -154,6 +154,7 @@ compute_through(BSDFDAT *ndp)
 		goto baderror;
 	if (tomega > 1.5*dfp->minProjSA)
 		return;				/* not really a peak? */
+	tomega /= fabs(pdir[2]);		/* remove cosine factor */
 	if ((bright(vpeak) - ndp->sd->tLamb.cieY*(1./PI))*tomega <= .001)
 		return;				/* < 0.1% transmission */
 	for (i = 3; i--; )			/* remove peak from average */
@@ -187,7 +188,8 @@ bsdf_jitter(FVECT vres, BSDFDAT *ndp, double sr_psa)
 static int
 direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 {
-	int	nsamp, ok = 0;
+	int	nsamp;
+	double	wtot = 0;
 	FVECT	vsrc, vsmp, vjit;
 	double	tomega, tomega2;
 	double	sf, tsr, sd[2];
@@ -272,13 +274,15 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		if (tomega2 < .12*tomega)
 			continue;	/* not safe to include */
 		cvt_sdcolor(csmp, &sv);
-		addcolor(cval, csmp);	/* else average it in */
-		++ok;
+					/* weight average by Y */
+		scalecolor(csmp, sv.cieY);
+		addcolor(cval, csmp);
+		wtot += sv.cieY;
 	}
-	if (!ok)			/* no valid specular samples? */
+	if (wtot <= FTINY)		/* no valid specular samples? */
 		return(0);
 
-	sf = 1./(double)ok;		/* compute average BSDF */
+	sf = 1./wtot;			/* weighted average BSDF */
 	scalecolor(cval, sf);
 					/* subtract diffuse contribution */
 	for (i = 3*(diffY > FTINY); i--; )
@@ -538,7 +542,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 		} else
 			hasthru = 0;
 	}
-	if (dfp->maxHemi - b <= FTINY) {	/* how specular to sample? */
+	if (dfp->maxHemi - b <= FTINY) {	/* have specular to sample? */
 		b = 0;
 	} else {
 		FVECT	vjit;
