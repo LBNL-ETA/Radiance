@@ -1,0 +1,135 @@
+void BSDF mat.bsdf
+0
+0
+3 100.0 100.0 100.0
+
+
+void light mat.light
+0
+0
+3 100.0 100.0 100.0
+
+void light mat.light.dim
+0
+0
+3 1.0 1.0 1.0
+
+mat.light.dim polygon obj.source
+0
+0
+12 -0.1 -0.1 0.45 -0.1 0.1 0.45 0.1 0.1 0.45 0.1 -0.1 0.45
+
+void dielectric mat.sphere
+0
+0
+5 0.002 0.002 0.08 1.5 0
+
+void glass mat.sphere2
+0
+0
+3 0.2 0.2 0.8
+
+mat.sphere sphere obj.sphere
+0
+0
+4 -0.2 0.1 -0.3 0.1
+
+void plastic mat.white_wall
+0
+0
+5 .7 .7 .7 0 .1
+  
+void plastic mat.red_wall
+0
+0
+5 .7 .2 .2 0 .1
+
+void plastic mat.blue_wall
+0
+0
+5 .2 .2 .7 0 .1
+
+# xform -t -0.5 -0.5 -0.5
+# genbox mat.wall obj.box 1 1 1 -i
+
+mat.red_wall polygon obj.box.1540
+0
+0
+12
+               -0.5               -0.5               -0.5
+               -0.5               -0.5                0.5
+                0.5               -0.5                0.5
+                0.5               -0.5               -0.5
+
+mat.white_wall polygon obj.box.4620
+0
+0
+12
+               -0.5               -0.5               -0.5
+               -0.5                0.5               -0.5
+               -0.5                0.5                0.5
+               -0.5               -0.5                0.5
+
+mat.white_wall polygon obj.box.2310
+0
+0
+12
+               -0.5               -0.5               -0.5
+                0.5               -0.5               -0.5
+                0.5                0.5               -0.5
+               -0.5                0.5               -0.5
+
+mat.blue_wall polygon obj.box.3267.top
+0
+0
+12
+                0.5                0.5                0.5
+               -0.5                0.5                0.5
+               -0.5                0.5                0.25
+                0.5                0.5                0.25
+                
+mat.blue_wall polygon obj.box.3267.bottom
+0
+0
+12
+                0.5                0.5               -0.25
+               -0.5                0.5               -0.25
+               -0.5                0.5               -0.5
+                0.5                0.5               -0.5
+                         
+mat.blue_wall polygon obj.box.3267.1
+0
+0
+12
+                0.5                0.5               0.25
+                0.25               0.5               0.25
+                0.25               0.5               -0.25
+                0.5                0.5               -0.25                
+                
+mat.blue_wall polygon obj.box.3267.2
+0
+0
+12
+                -0.25              0.5               0.25
+                -0.5               0.5               0.25
+                -0.5               0.5              -0.25
+                -0.25              0.5              -0.25                
+                
+
+mat.white_wall polygon obj.box.5137
+0
+0
+12
+                0.5                0.5                0.5
+                0.5                0.5               -0.5
+                0.5               -0.5               -0.5
+                0.5               -0.5                0.5
+
+mat.white_wall polygon obj.box.6457
+0
+0
+12
+                0.5                0.5                0.5
+                0.5               -0.5                0.5
+               -0.5               -0.5                0.5
+               -0.5                0.5                0.5

@@ -2178,3 +2178,5 @@ some conditions.
 
 Increased maximum number of open files in rcontrib to the system upper
 limit of 2048 rather than the default 512.
+
+Added top-level resources directory with files from Rob Guglielmetti.
