@@ -2167,7 +2167,7 @@ division of same-sized matrices.
 
 Changed falsecolor so "-s" option is adjusted to match legend if one.
 
-Legend changes and improvements by David G-M and Stephen W.
+Falsecolor legend changes and improvements by David G-M and Stephen W.
 
 Fixed bug in peak extraction code that generated
 "Bad call to SDqueryTreProjSA" error, reported by Lars Grobe.
@@ -2177,6 +2177,10 @@ by Axel Jacobs where veiling glare not added for the sun under
 some conditions.
 
 Increased maximum number of open files in rcontrib to the system upper
-limit of 2048 rather than the default 512.
+limit of 2048 rather than the default 512 under Windows.
 
 Added top-level resources directory with files from Rob Guglielmetti.
+
+Improved accuracy for peaky BSDFs and small light sources.
+
+Fixed issue with pmapdump noted by Axel Jacobs.
