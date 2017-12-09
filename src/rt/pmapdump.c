@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.9 2017/12/09 18:40:43 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapdump.c,v 2.9 2017/12/09 18:40:43 rschregle Exp $
 */
 
 
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.8 2017/08/14 21:12:10 rschregle
 #include "random.h"
 #include "math.h"
 
-#define PMAPDUMP_REC "$Revision: 2.8 $"   
+#define PMAPDUMP_REC "$Revision: 2.9 $"   
 
 
 /* Defaults */
@@ -76,8 +76,8 @@ const RadianceDef radDefs [] = {
 int main (int argc, char** argv)
 {
    char           format [128];
-   RREAL          rad, radScale = RADSCALE, vol, dumpRatio;
-   unsigned       arg, j, ptype;
+   RREAL          rad, radScale = RADSCALE, extent, dumpRatio;
+   unsigned       arg, j, ptype, dim;
    long           numSpheres = NSPHERES;
    FILE           *pmapFile;
    PhotonMap      pm;
@@ -172,11 +172,20 @@ int main (int argc, char** argv)
       for (j = 0; j < 4; j++)
          getflt(pmapFile);
       
-      /* Sphere radius based on avg intersphere dist 
-         (= sphere distrib density ^-1/3) */
-      vol = (pm.maxPos [0] - pm.minPos [0]) * (pm.maxPos [1] - pm.minPos [1]) * 
-            (pm.maxPos [2] - pm.minPos [2]);
-      rad = radScale * RADCOEFF * pow(vol / numSpheres, 1./3.);
+      /* Sphere radius based on avg intersphere dist depending on
+         whether the distribution occupies a 1D line (!), a 2D plane, 
+         or 3D volume (= sphere distrib density ^-1/d, where d is the
+         dimensionality of the distribution) */
+      for (j = 0, extent = 1.0, dim = 0; j < 3; j++) {
+         rad = pm.maxPos [j] - pm.minPos [j];
+         
+         if (rad > FTINY) {
+            dim++;
+            extent *= rad;
+         }
+      }
+
+      rad = radScale * RADCOEFF * pow(extent / numSpheres, 1./dim);
       
       /* Photon dump probability to satisfy target sphere count */
       dumpRatio = numSpheres < pm.numPhotons 
