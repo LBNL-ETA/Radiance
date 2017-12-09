@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.6 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle Exp $";
 #endif
 
 
@@ -14,7 +14,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.6 2017/08/14 21:12:10 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: mkpmap.c,v 2.6 2017/08/14 21:12:10 rschregle Exp $    
+   $Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle Exp $    
 */
 
 
@@ -271,7 +271,7 @@ int main (int argc, char* argv [])
                pmapROI = realloc(pmapROI,
                                  ++pmapNumROI * sizeof(PhotonMapROI));
                if (!pmapROI)
-1                  error(SYSTEM, "failed to allocate ROI");
+                  error(SYSTEM, "failed to allocate ROI");
                   
                pmapROI [n].min [0] = atof(argv [++i]);
                pmapROI [n].min [1] = atof(argv [++i]);
