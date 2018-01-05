@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf.h,v 2.24 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid $Id: bsdf.h,v 2.25 2018/01/05 20:15:50 schorsch Exp $ */
 /*
  *  bsdf.h
  *  
@@ -84,7 +84,14 @@ extern const SDCDst	SDemptyCD;	/* empty distribution */
 typedef struct SDComp_s	SDComponent;
 
 /* Methods needed to handle BSDF components (nothing is optional) */
+#ifdef __cplusplus
+/* in C++, the const puts the type into the local anonymous namespace,
+   making it a private (and different) type for each file using this header.
+*/
+typedef struct {
+#else
 typedef const struct {
+#endif
 					/* return non-diffuse BSDF */
 	int		(*getBSDFs)(float coef[SDmaxCh], const FVECT outVec,
 				    const FVECT inVec, SDComponent *sdc);
