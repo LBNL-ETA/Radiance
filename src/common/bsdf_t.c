@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.44 2015/08/23 00:56:00 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.45 2018/01/05 21:00:24 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1421,7 +1421,7 @@ SDloadTre(SDData *sd, ezxml_t wtl)
 }
 
 /* Variable resolution BSDF methods */
-SDFunc SDhandleTre = {
+const SDFunc SDhandleTre = {
 	&SDgetTreBSDF,
 	&SDqueryTreProjSA,
 	&SDgetTreCDist,

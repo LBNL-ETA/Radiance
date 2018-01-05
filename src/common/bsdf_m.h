@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_m.h,v 3.8 2015/08/27 04:33:31 greg Exp $ */
+/* RCSid $Id: bsdf_m.h,v 3.9 2018/01/05 21:00:24 greg Exp $ */
 /*
  *  bsdf_m.h
  *  
@@ -63,7 +63,7 @@ extern SDError		SDloadMtx(SDData *sd, ezxml_t wtl);
 #endif
 
 /* Our matrix handling routines */
-extern SDFunc		SDhandleMtx;
+extern const SDFunc	SDhandleMtx;
 
 /******** Klems basis declarations for more intimate access ********/
 

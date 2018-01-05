@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.36 2016/10/14 00:54:21 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.37 2018/01/05 21:00:24 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -908,7 +908,7 @@ SDsampMtxCDist(FVECT ioVec, double randX, const SDCDst *cdp)
 }
 
 /* Fixed resolution BSDF methods */
-SDFunc			SDhandleMtx = {
+const SDFunc		SDhandleMtx = {
 				&SDgetMtxBSDF,
 				&SDqueryMtxProjSA,
 				&SDgetMtxCDist,

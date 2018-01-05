@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_t.h,v 3.12 2015/04/05 01:32:01 greg Exp $ */
+/* RCSid $Id: bsdf_t.h,v 3.13 2018/01/05 21:00:24 greg Exp $ */
 /*
  *  bsdf_t.h
  *  
@@ -61,7 +61,7 @@ extern SDError		SDloadTre(SDData *sd, ezxml_t wtl);
 #endif
 
 /* Our matrix handling routines */
-extern SDFunc	SDhandleTre;
+extern const SDFunc	SDhandleTre;
 
 #ifdef __cplusplus
 }
