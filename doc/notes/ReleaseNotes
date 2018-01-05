@@ -2184,3 +2184,8 @@ Added top-level resources directory with files from Rob Guglielmetti.
 Improved accuracy for peaky BSDFs and small light sources.
 
 Fixed issue with pmapdump noted by Axel Jacobs.
+
+Improved accuracy of bsdf2ttree when converting scattering interpolation
+representatons with strong peaks.
+
+Tweaked peak-extraction code to work more reliably.

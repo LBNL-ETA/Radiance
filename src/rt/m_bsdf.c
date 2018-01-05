@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.44 2017/12/02 16:13:04 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.45 2018/01/05 02:47:46 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -106,7 +106,7 @@ compute_through(BSDFDAT *ndp)
 					{0, -1.6},
 					{1.6, 0},
 				};
-	const double	peak_over = 2.0;
+	const double	peak_over = 1.5;
 	SDSpectralDF	*dfp;
 	FVECT		pdir;
 	double		tomega, srchrad;
@@ -142,7 +142,7 @@ compute_through(BSDFDAT *ndp)
 			goto baderror;
 		cvt_sdcolor(vcol, &sv);
 		addcolor(vsum, vcol);
-		if (bright(vcol) > bright(vpeak)) {
+		if (sv.cieY > bright(vpeak)) {
 			copycolor(vpeak, vcol);
 			VCOPY(pdir, tdir);
 		}
