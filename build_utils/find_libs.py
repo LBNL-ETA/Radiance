@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import division, print_function, unicode_literals
 
 import os
 
@@ -111,4 +111,6 @@ def find_libtiff(env):
 			conf.Finish()
 			break
 		conf.Finish()
+
+# vi: set ts=4 sw=4 :
 

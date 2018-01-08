@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import ('env')
@@ -42,7 +44,7 @@ for p in PROGS:
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
-LIBFILES = Split('source.cal tilt.cal window.cal')
+LIBFILES = Split('bsdf2rad.cal source.cal tilt.cal window.cal')
 env.Append(RAD_RLIBINSTALL=env.Install(env['RAD_RLIBDIR'], LIBFILES))
 
 if os.name == 'posix':
@@ -50,3 +52,4 @@ if os.name == 'posix':
 		Default(env.InstallScript(rbin(s), s + '.csh'))
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

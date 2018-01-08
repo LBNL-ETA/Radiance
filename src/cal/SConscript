@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import('env') # inherit from parent
@@ -10,7 +12,7 @@ PROGS = (
 ('icalc',  Split('calc.c'),    ['rtrad'] + mlib),
 ('ev',     Split('ev.c'),      ['rtrad'] + mlib),
 ('rcalc',  Split('rcalc.c'),   ['rtrad'] + mlib),
-('total',  Split('total.c'),   mlib),
+('total',  Split('total.c'),   ['rtrad'] + mlib),
 ('cnt',    Split('cnt.c'),     []),
 ('neaten', Split('neat.c'),    []),
 ('rlam',   Split('lam.c'),     ['rtrad']),
@@ -24,3 +26,4 @@ for p in PROGS:
     env.Append(RAD_BININSTALL=[env.Install(env['RAD_BINDIR'], prog)])
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

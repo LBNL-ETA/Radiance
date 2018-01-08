@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import('env') # inherit from parent
@@ -46,7 +48,13 @@ prog = env.Program(target=os.path.join('$RAD_BUILDBIN', 'mksource'),
 progs.append(prog)
 
 if os.name == 'posix':
-	Default(env.InstallScript(os.path.join('$RAD_BUILDBIN', 'glaze'), 'glaze.csh'))
+	Default(env.InstallScript(os.path.join('$RAD_BUILDBIN', 'glaze.csh'),
+				'glaze.csh'))
+	Default(env.InstallScript(os.path.join('$RAD_BUILDBIN', 'glaze'),
+				'glaze.py'))
+else:
+	Default(env.InstallScript(os.path.join('$RAD_BUILDBIN', 'glaze.py'),
+				'glaze.py'))
 
 Default('#src/gen')
 env.Install('$RAD_BINDIR', progs)
@@ -57,3 +65,4 @@ LIBFILES = Split('''illum.cal rev.cal skybright.cal glaze1.cal glaze2.cal
 env.Append(RAD_RLIBINSTALL=env.Install('$RAD_RLIBDIR', LIBFILES))
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

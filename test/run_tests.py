@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from __future__ import division, print_function, unicode_literals
+
 ''' run_tests.py - Run Radiance test suite
-2013 - 2016 Georg Mischler
+2013 - 2018 Georg Mischler
 
 Invocation:
   As script, call with -H for instructions.

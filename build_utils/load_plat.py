@@ -1,23 +1,24 @@
-from __future__ import print_function
+from __future__ import division, print_function, unicode_literals
 
 import os
 import sys
 import re
 import platform
-import ConfigParser
-
+try: import configparser # Py3
+except ImportError:
+	import ConfigParser as configparser # Py2
 
 _platdir = 'platform'
 
 
 def read_plat(env, fn):
 	envdict = env.Dictionary().copy()
-	# can't feed ConfigParser the original dict, because it also
+	# can't feed configparser the original dict, because it also
 	# contains non-string values.
-	for k,v in envdict.items():
+	for k,v in list(envdict.items()): # make a list, so we can change the dict.
 		if not isinstance(v, str):
 			del envdict[k]
-	cfig = ConfigParser.ConfigParser(envdict)
+	cfig = configparser.ConfigParser(envdict)
 	cfig.read(fn)
 	buildvars = [['CC',
 			'TIFFINCLUDE', # where to find preinstalled tifflib headers
@@ -55,9 +56,10 @@ def read_plat(env, fn):
 		if cfig.has_section(section[0]):
 			for p in section[1]: # single items to replace
 				try: v = cfig.get(section[0], p)
-				except ConfigParser.NoOptionError: continue
-				if section[0] in ('install','build','debug') and '{' in v:
-					v = subst_osenvvars(v)
+				except configparser.NoOptionError: continue
+				if section[0] in ('install','build','debug'):
+					if '{' in v:
+						v = subst_sysenvvars(v, env)
 				env[p] = v
 				#print('%s: %s' % (p, env[p]))
 			for p in section[2]: # multiple items to append
@@ -66,15 +68,20 @@ def read_plat(env, fn):
 					if section[0] in ('build','debug') and '{' in v:
 						v = subst_sconsvars(v, env)
 					#print('%s: %s - %s' % (section[0], p, v))
-				except ConfigParser.NoOptionError: continue
-				apply(env.Append,[],{p:env.Split(v)})
-	# XXX Check that basedir exists.
+				except configparser.NoOptionError: continue
+				env.Append(*[], **{p:env.Split(v)})
+				#apply(env.Append,[],{p:env.Split(v)})
+
+def combine_instpaths(env):
+	# XXX Check that basedir exists?
 	for k in ['RAD_BINDIR', 'RAD_RLIBDIR', 'RAD_MANDIR']:
 		if (env.has_key('RAD_BASEDIR') and env.has_key(k)
 				and not os.path.isabs(env[k])):
 			env[k] = os.path.join(env['RAD_BASEDIR'],env[k])
 
-def subst_osenvvars(s):
+
+
+def subst_sysenvvars(s, env):
 	try: return s.format(**os.environ)
 	except KeyError: return s
 
@@ -94,16 +101,26 @@ def subst_sconsvars(s, env,
 		nl.append(ss)
 	return ''.join(nl)
 
-def load_plat(env):
+
+def identify_plat(env):
 	memmodel, binformat = platform.architecture()
-	# XXX env['TARGET_ARCH'] --> memmodel
 	platsys = platform.system()
 	print('Detected platform "%s" (%s).' % (platsys, memmodel))
 	cfgname = platsys + '_' + memmodel[:2]
+	env['CFG_PLATSYS'] = platsys
+	env['CFG_MEMMODEL'] = memmodel[:2]
+	env['CFG_PATHFILE'] = os.path.join('#scbuild', cfgname, 'install_paths.py')
+	env['CFG_OPTFILE']  = os.path.join('#scbuild', cfgname, 'build_opts.py')
+
+
+def load_plat(env, testenv):
+	platsys = testenv['CFG_PLATSYS']
+	memmodel = testenv['CFG_MEMMODEL']
+	cfgname = platsys + '_' + memmodel[:2]
 
 	env['RAD_BUILDBIN'] = os.path.join('#scbuild', cfgname, 'bin')
-	env['RAD_BUILDLIB']  = os.path.join('#scbuild', cfgname, 'lib')
-	env['RAD_BUILDOBJ']  = os.path.join('#scbuild', cfgname, 'obj')
+	env['RAD_BUILDLIB'] = os.path.join('#scbuild', cfgname, 'lib')
+	env['RAD_BUILDOBJ'] = os.path.join('#scbuild', cfgname, 'obj')
 
 	cust_pfn = os.path.join(_platdir, cfgname + '_custom.cfg')
 	if os.path.isfile(cust_pfn):
@@ -128,5 +145,4 @@ def load_plat(env):
 			% (os.name, sys.platform))
 	sys.exit(2)
 
-	
-	
+# vi: set ts=4 sw=4 :

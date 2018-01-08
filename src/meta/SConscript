@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import ('env')
@@ -65,3 +67,4 @@ if env.has_key('X11LIB'):
 
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

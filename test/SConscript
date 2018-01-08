@@ -1,4 +1,3 @@
-# -*- coding: latin-1 -*-
 from __future__ import division, print_function, unicode_literals
 
 import os
@@ -10,7 +9,14 @@ Import('env')
 
 def do_run_tests(target=None,source=None,env=None):
 	bindir = Dir(env['RAD_BUILDBIN']).get_abspath()
-	radlib = Dir(env['RAD_BUILDRLIB']).get_abspath()
-	run_tests.RadianceTests(bindir=[bindir], radlib=[radlib], V=True)
+	radlib = [Dir(env['RAD_BUILDRLIB']).get_abspath(),
+		Dir('#/src/gen').get_abspath(),
+		Dir('#/src/rt').get_abspath(),
+	]
+	run_tests.RadianceTests(bindir=[bindir], radlib=radlib, V=True)
 
 env.Command(None,'run_tests.py',action=Action(do_run_tests))
+
+# vim: set syntax=python:
+# vi: set ts=4 sw=4 :
+

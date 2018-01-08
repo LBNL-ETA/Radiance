@@ -1,7 +1,10 @@
+from __future__ import division, print_function, unicode_literals
 
 import os
 import sys
-import string
+import builtins
+if hasattr(builtins, 'raw_input'): # < Py3
+	input = builtins.raw_input
 
 
 def _get_ltextl():
@@ -25,7 +28,7 @@ def _show_ltextl(ltextl, lines=23):
 	for i in range(0, llen, lines):
 		sys.stderr.write('\n'.join(ltextl[i:i+lines]))
 		if i+lines < llen:
-			raw_input('\n[press <return> to continue] ')
+			input('\n[press <return> to continue] ')
 
 def show_license():
 	try:
@@ -37,7 +40,7 @@ def show_license():
 		s =  'Please enter "yes" or "no", or use ^C to exit: '
 		while answer not in ['y', 'ye', 'yes', 'n', 'no']:
 			if answer: sys.stderr.write('invalid input "%s"\n' % answer)
-			answer = string.lower(raw_input(s))
+			answer = input(s).lower()
 
 		if answer[0] == 'y':
 			return
@@ -47,4 +50,6 @@ def show_license():
 	except KeyboardInterrupt:
 		sys.stderr.write('\n*** Installation cancelled ***\n')
 		sys.exit(1)
+
+# vi: set ts=4 sw=4 :
 

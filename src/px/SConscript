@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import('env') # inherit from parent
@@ -28,6 +30,7 @@ PROGS = (
 ('pflip',    ['pflip.c'],     ['rtrad']),
 ('pcomb',    ['pcomb.c'],     ['rtrad']),
 ('pinterp',  ['pinterp.c'],   ['rtrad']),
+('psketch',  ['psketch.c'],   ['rtrad']),
 
 ('ra_gif',   ['ra_gif.c', clrtab, neuclrtab], ['rtrad']),
 ('ra_ps',    ['ra_ps.c'],     ['rtrad']),
@@ -103,7 +106,7 @@ if env.has_key('X11LIB'):
 	xincl = env.get('CPPPATH', []) + ['$X11INCLUDE']
 	xlibp = env.get('LIBPATH', []) + ['$X11LIB']
 	xlibs = ['X11','rtrad']
-	env.x11findwind = env.Object(source='../common/x11findwind.c', # XXX remote magic
+	env.x11findwind = env.Object(source='../common/x11findwind.c',
 		CPPPATH=xincl)
 
 	ximage = env.Program(target=radbin('ximage'),
@@ -112,23 +115,26 @@ if env.has_key('X11LIB'):
 	progs.append(ximage)
 
 	xshowtrace = env.Program(target=radbin('xshowtrace'),
-		source=Split('xshowtrace.c') + [env.x11findwind], # XXX remote magic
+		source=Split('xshowtrace.c') + [env.x11findwind],
 		CPPPATH=xincl, LIBPATH=xlibp, LIBS=xlibs + mlib)
 	progs.append(xshowtrace)
 
+pyscripts = Split('''falsecolor phisto''')
 if os.name == 'posix': # XXX ignoring trad.wsh
 	for s in Split('''normpat pdfblur pmblur pmdblur
-			xyzimage phisto pdelta pgblur ra_pfm ran2tiff pbilat'''):
+			xyzimage pgblur ra_pfm ran2tiff pbilat'''):
 		Default(env.InstallScript(radbin(s), s + '.csh'))
-	for s in Split('''falsecolor'''):
-		Default(env.InstallScript(radbin(s), s + '.pl'))
-# XXX probably needs fixing
-#else:
-#	for s in Split('''falsecolor'''):
-#		Default(env.InstallScript(radbin(s), s + '.pl'))
+	for s in pyscripts:
+		Default(env.InstallScript(radbin(s), s + '.py'))
+else:
+	for s in pyscripts:
+		Default(env.InstallScript(radbin(s + '.py'), s + '.py'))
+	
+
 # ignored by Rmakefile: pacuity phisteq psquish pveil vlpic
 
 Default('#src/px')
 env.Install('$RAD_BINDIR', progs)
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

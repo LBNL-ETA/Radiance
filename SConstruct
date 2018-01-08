@@ -1,26 +1,28 @@
+from __future__ import division, print_function, unicode_literals
 
 import os
 import sys
-import string
 
-PATHFILE = 'scbuild/raypaths.py'
-OPTFILE = 'scbuild/rayopts.py'
-def set_pre_opts():
-	vars = Variables(OPTFILE, ARGUMENTS)
+def set_pre_opts(testenv):
+	optfile = File(testenv['CFG_OPTFILE']).abspath
+	vars = Variables(optfile, ARGUMENTS)
 	vars.Add('SKIP', 'Skip Display of License terms', 0)
 	vars.Add('RAD_DEBUG',  'Build a debug version',  0)
-	vars.Add('MSVC_VERSION', 'Microsoft VC Version',  '12.0')
-	vars.Add('TARGET_ARCH',  'Windows only: "x68" or "amd64"',  '')
+	if testenv['CFG_PLATSYS'] == 'Windows':
+		# no default, will select the most recent one when empty
+		vars.Add('MSVC_VERSION', 'Microsoft VC Version',  )
+	vars.Update(testenv)
 	return vars
 
-def set_opts(env):
-	vars = Variables(PATHFILE, ARGUMENTS)
+def set_opts(env, pathfile):
+	vars = Variables(pathfile, ARGUMENTS)
+	vars.Add('RAD_BASEDIR', 'Installation base directory', env['RAD_BASEDIR'])
 	vars.Add('RAD_BINDIR',  'Install executables here',   env['RAD_BINDIR'])
 	vars.Add('RAD_RLIBDIR', 'Install support files here', env['RAD_RLIBDIR'])
 	vars.Add('RAD_MANDIR',  'Install man pages here',     env['RAD_MANDIR'])
 	vars.Update(env) 
-	vars.Save(PATHFILE, env)
-	Help(vars.GenerateHelpText(env, sort=cmp))
+	vars.Save(pathfile, env)
+	Help(vars.GenerateHelpText(env))
 	# where stuff is located in the source tree
 	# the binary target libs are configured by platform
 	env['RAD_BUILDRLIB'] = '#lib'
@@ -48,12 +50,16 @@ def shareinstall_setup(env):
 	if 'install' in sys.argv or 'maninstall' in sys.argv:
 		install.install_manfiles(env)
 
+# first figure out the platform
+from build_utils import load_plat
+testenv = Environment()
+load_plat.identify_plat(testenv)
 
 # set stuff before loading platforms
-prevars = set_pre_opts()
+prevars = set_pre_opts(testenv)
+
 # Set up build environment
 env = Environment(variables=prevars)
-prevars.Save(OPTFILE, env)
 env.Decider('timestamp-match')
 
 from build_utils import install
@@ -63,13 +69,14 @@ if os.name == 'posix':
 	tclscript_b = Builder(action = install.install_tclscript, suffix = '')
 	env.Append(BUILDERS={'InstallTCLScript': tclscript_b})
 
-
 # configure platform-specific stuff
-from build_utils import load_plat
-load_plat.load_plat(env)
+load_plat.load_plat(env, testenv)
 
 # override options
-set_opts(env)
+cfg_pathfile = File(testenv['CFG_PATHFILE']).abspath
+set_opts(env, cfg_pathfile)
+
+load_plat.combine_instpaths(env)
 
 # accept license
 if ((not env['SKIP']
@@ -77,9 +84,20 @@ if ((not env['SKIP']
 		and not '-c' in sys.argv and not 'test' in sys.argv):
 	from build_utils import copyright
 	copyright.show_license()
+	testenv['SKIP'] = '1'
+
+# We waited to save this, so that we can add the SKIP
+prevars.Save(File(testenv['CFG_OPTFILE']).abspath, testenv)
 
 # fill in generic config
 allplats_setup(env)
+
+print('Installation directories:')
+print('Base:     ', env.subst('$RAD_BASEDIR'))
+print('Binaries: ', env.subst('$RAD_BINDIR'))
+print('Library:  ', env.subst('$RAD_RLIBDIR'))
+print('Manpages: ', env.subst('$RAD_MANDIR'))
+print()
 
 # Bring in all the actual things to build
 Export('env')
@@ -100,7 +118,7 @@ else:
 		SConscript(os.path.join('src', d, 'SConscript'),
 				variant_dir=os.path.join(env['RAD_BUILDOBJ'], d), duplicate=0)
 
-	if string.find(string.join(sys.argv[1:]), 'install') > -1:
+	if ' '.join(sys.argv[1:]).find('install') > -1:
 		shareinstall_setup(env)
 
 Default('.')
@@ -110,8 +128,8 @@ env.Alias('bininstall',  '$RAD_BINDIR')
 env.Alias('rlibinstall', '$RAD_RLIBDIR')
 env.Alias('maninstall',  '$RAD_MANDIR')
 
-env.Alias('build',   ['$RAD_BUILDBIN', '$RAD_BUILDRLIB'])
+env.Alias('build',   ['$RAD_BUILDBIN']) #, '$RAD_BUILDRLIB'])
 env.Alias('test',    ['#test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 
-# vim: set syntax=python:
+# vi: set ts=4 sw=4 :

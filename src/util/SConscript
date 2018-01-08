@@ -1,3 +1,5 @@
+from __future__ import division, print_function, unicode_literals
+
 import os
 
 Import('env') # inherit from parent
@@ -72,26 +74,28 @@ if env.has_key('X11LIB'):
 				LIBS=['rgl','rtrad','GL', 'GLU','X11'] + mlib,)
 		progs.append(glrad)
 
-if os.name == 'posix': # XXX ignoring trad.wsh
+pyscripts = Split('''rlux''')
+if os.name == 'posix':
 	for s in Split('''objline glare dayfact
-			debugcal rlux raddepend compamb vinfo fieldcomb'''):
+			debugcal raddepend compamb vinfo fieldcomb'''):
 		Default(env.InstallScript(radbin(s), s + '.csh'))
 	for s in Split('''objview objpict
-			genambpos genklemsamp genskyvec genBSDF ltview ltpict'''):
+			genambpos genklemsamp genskyvec genBSDF bsdfview ltview ltpict'''):
 		Default(env.InstallScript(radbin(s), s + '.pl'))
 	for s in Split('''do_action.tcl do_file.tcl do_options.tcl do_results.tcl
 		do_scene.tcl do_views.tcl do_zone.tcl file.hlp getfile.tcl gethelp.tcl
 		help.hlp tclIndex trad.hlp trad.icon util.tcl'''):
 		Default(env.InstallScript(tclscr(s), s))
 	Default(env.InstallTCLScript(radbin('trad'), 'trad.wsh'))
+	for s in pyscripts:
+		Default(env.InstallScript(radbin(s), s + '.py'))
+else:
+	for s in pyscripts:
+		Default(env.InstallScript(radbin(s + '.py'), s + '.py'))
 	
-# Those don't really work yet
-#else:
-#	for s in Split('''objview glare rlux '''):
-#		prog = env.Program(target=radbin(s), source=s+'.c')
-#		progs.append(prog)
 
 Default('#src/util')
 env.Install('$RAD_BINDIR', progs)
 
 # vim: set syntax=python:
+# vi: set ts=4 sw=4 :

@@ -2,8 +2,8 @@ Building and Installing Radiance with SCons
 -------------------------------------------
 
 This file describes how to build and install Radiance using the SCons
-based build system (an alternative to the traditional makeall script
-explained in the README file).
+based build system, an alternative to the traditional makeall script
+explained in the README file.
 
 
 Requirements
@@ -17,6 +17,9 @@ them, and SCons will be unable to build the software.
 SCons is a platform-independent software configuration and build system
 written in Python. If SCons and Python are not already installed on your
 system, then you need to download and install them first.
+At the time of this writing, all versions of SCons work with Python 2.7.
+SCons versions from 3.0 up also work with Python 3.x, even if the
+documentation may still say otherwise.
 
   Python:  http://www.python.org/
   SCons:   http://www.scons.org/
@@ -30,14 +33,12 @@ systems it usually does. Otherwise the executables requiring it are
 not built.
 
 On Windows, Radiance gets built with MS Visual Studio if present, the
-community editions are sufficient.
-VS 2013 is currently the most recent version that does it correctly.
-VS 2015 also performs the build, but it uses the new "universal CRT"
-from Windows 10, which has a bug that corrupts data in text pipes.
-A fix is apparently ready and should be released via autoupdate,
-probably around the time of the "anniversary update" in summer 2016.
-Older versions of VS may work as well, but haven't been tested with
-the current sources.
+free (of cost) community editions are sufficient.
+Warning: when VS 2015 came out, the new "universal CRT" from Windows 10,
+which was used at the time, had a bug that corrupts data in text pipes.
+(Technically, the UCRT is now part of the OS instead of the compiler, 
+so you need to make sure you have a fixed version of the CRT SDK.)
+Since VS 2017, the "universal CRT" bug is fixed and everyting works fine.
 
 
 Building
@@ -53,16 +54,24 @@ or just
  $> scons
 
 The Scons program will find the necessary information, display a
-copyright message for you to acknowledge, and proceed to build the
-software.
+copyright message for you to acknowledge (once), and proceed to build
+the software.
+
+On Windows, the distribution includes a file named "scons.bat", in
+case the SCons script is not on the system execution path. You may
+need to change this file to point to your actual Python installation.
+
+All build products are stored under "ray/scbuild/<platform>/", where
+they are then available for testing and installation.
 
 
-Configuring
------------
+Configuration
+-------------
 
 In the subdirectory "ray/platform/" there are a number of configuration
 files for various build environments. In this context, a "platform" is a
-specific combination of operating system and build tools (eg. compiler).
+specific combination of operating system, Memory model (32 or 64 bit),
+and build tools (eg. compiler).
 On unix based systems, the compiler usually doesn't make much of a
 difference, but on Windows, there are seperate build environments for
 toolkits like MingW.
@@ -79,34 +88,44 @@ You can add the following command line options when invoking Scons.
 The directories given here will override those specified in the
 configuration file.
 
+RAD_BASEDIR=<directory>
+   The base directory for the installation
+   (Default read from config file, depending on platform)
+
 RAD_BINDIR=<directory>
-	Install executables here
-	(Default read from config file)
+   Install executables here
+   (Default read from config file, usually relative to RAD_BASEDIR)
 
 RAD_MANDIR=<directory>
-	Install man pages here
-	(Default read from config file)
+   Install man pages here
+   (Default read from config file, usually relative to RAD_BASEDIR)
 
 RAD_RLIBDIR=<directory>
-	Install support files here
-	(Default read from config file)
+   Install support files here
+   (Default read from config file, usually relative to RAD_BASEDIR)
 
 RAD_DEBUG=1|0
-	1: Build a debug version
-	0: Build a production version (default)
+   1: Build a debug version
+   0: Build a production version (default)
 
 SKIP=1|0
-	1: Skip display of License terms
-	0: Don't skip (default)
+   1: Skip display of License terms
+   0: Don't skip (default)
 
-MSVC_VERSION=12.0|14.0
-	"12.0" is the default for Visual Studio 2013.
-	Once the text pipe bug in the universal CRT is fixed, the default
-	will be changed to "14.0" for Visual Studio 2015.
+MSVC_VERSION=12.0|13.0|14.1
+   This is only relevant for building with VC on Windows.
+   "12.0" for Visual C/C++ 2013.
+   "13.0" for Visual C/C++ 2015 (watch out for CRT bug).
+   "14.1" for Visual C/C++ 2017 with up-to-date service packs as of
+          this writing.
+   By default, SCons will select the C/C++ toolset from the most recent
+   installed VC version. If it doesn't select the one you want, you can
+   supply an invalid value (eg. 'xxx') and it will print out a list
+   of the versions that it found to be available.
 
-SCons will remember the values given with those options. You don't need
-to supply them again each time when you run repeated builds and
-installs, but only when something changes.
+SCons will remember the values given with those options, for each
+platform seperately. You don't need to supply them again each time when
+you run repeated builds and installs, but only when something changes.
 
 Invoking SCons with the -H flag will display informtion about many other
 options, but you won't normally need any of those.
@@ -121,12 +140,15 @@ run by invoking
  $> scons test
 
 This executes a series of tests, each indicating success or failure.
-Testing will use the Radiance binaries in the "ray/bin/" directory, and the
-support files in "ray/lib/", where they are located after building but
-before installing. However, it will not trigger a (re-)build if any of
-those files are out of date or missing (instead, it will complain about
-failed tests because of missing executables etc.). You need to manually
-invoke building and testing after each other to ensure that everything
+
+Testing via SCons will use the Radiance binaries in the
+"ray/scbuild/<platform>/bin" directory, where they are located after
+building but before installing, and the support files in "ray/lib/"
+or elsewhere in the source tree.
+However, it will not trigger a (re-)build if any of those files are out
+of date or missing. Instead, it will complain about failed tests because
+of missing executables and other files. You need to manually invoke
+building and testing runs one after the other to ensure that everything
 is where it should be.
 
 Users (that means you!) are invited to contribute more test cases.
@@ -139,6 +161,23 @@ and instructions on how to contribute test cases.
 
 Installation
 ------------
+
+At the begin of each run, SCons will print the currently configured
+installations directories to the console, even when it won't actually
+install anything. You can use this to verify that you're about to
+install in the right location. If uncertain, just start another build
+run (possibly resulting just in a "`build' is up to date." message) while
+supplying eg. a new "RAD_BASEDIR=..." parameter to verify the output.
+If the path configuration seems botched up, just remove the file
+"ray/scbuild/<platform>/install_paths.py" and start from scratch.
+
+The default installation directory structure is as follows:
+  Base:      <>       # default depending on platform
+  Binaries:  <>/bin
+  Library:   <>/share/lib
+  Manpages:  <>/share/man
+If you keep this structure, make sure to set the PATH, RAYPATH, and
+MANPATH environment variables accordingly.
 
 The software will be installed into the directories given either in the
 configuration file or through command options, by invoking
@@ -166,6 +205,6 @@ with different settings, you can clean up the source tree by invoking
  $> scons -c
 
 This will delete all the generated object files, libraries, and
-executables in and below the "ray/src/" subdirectory.
+executables below the respective "ray/scbuild/<platform>/" subdirectory.
 
 
