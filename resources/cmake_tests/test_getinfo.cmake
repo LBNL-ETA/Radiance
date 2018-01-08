@@ -1,17 +1,15 @@
 include(setup_paths.cmake)
 
-
 execute_process(
-  WORKING_DIRECTORY ${office_dir}
-  COMMAND getinfo${CMAKE_EXECUTABLE_SUFFIX} test/raytest_rpict.hdr
-  OUTPUT_FILE test/raytest_falsecolor.hdr
+  COMMAND getinfo${CMAKE_EXECUTABLE_SUFFIX} ${resources_dir}/evalglare/testimage.hdr
+  OUTPUT_FILE test_output
   RESULT_VARIABLE res
 )
 if(NOT ${res} EQUAL 0)
   message(FATAL_ERROR "Bad return value from getinfo, res = ${res}")
 endif()
 
-file(READ ${office_dir}/test/raytest_falsecolor.hdr test_output)
+file(READ ${resources_dir}/evalglare/testimage.hdr test_output)
 if(test_output MATCHES "RADIANCE")
   message(STATUS "passed")
 else()

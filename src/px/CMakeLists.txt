@@ -1,4 +1,4 @@
-add_executable(pfilt pfilt.c pf2.c pf3.c)
+add_executable(pfilt pf2.c pf3.c pfilt.c)
 target_link_libraries(pfilt rtrad)
 
 add_executable(pcond pcond.c pcond2.c pcond3.c pcond4.c warp3d.c)
@@ -45,14 +45,20 @@ target_link_libraries(ra_pict rtrad)
 
 add_executable(ra_hexbit ra_hexbit.c)
 target_link_libraries(ra_hexbit rtrad)
+
 if(X11_FOUND)
   add_executable(ximage x11image.c x11raster.c clrtab.c)
   target_link_libraries(ximage rtrad ${X11_LIBRARIES})
-  add_executable(xshowtrace xshowtrace.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c)
+  add_executable(xshowtrace
+    xshowtrace.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c"
+  )
   target_link_libraries(xshowtrace rtrad ${X11_LIBRARIES})
-  install(TARGETS ximage xshowtrace RUNTIME DESTINATION bin)
+  install(TARGETS ximage xshowtrace
+    RUNTIME DESTINATION "bin"
+  )
 endif()
+
 add_executable(pflip pflip.c)
 target_link_libraries(pflip rtrad)
 
@@ -85,12 +91,13 @@ if(NOT TIFF_LIBRARY)
 endif()
 mark_as_advanced(CLEAR TIFF_INCLUDE_DIR TIFF_LIBRARY)
 
-#special case for manually built libtiff where find_package fails
+#special case for manually-built libtiff where find_package fails
 if(NOT TIFF_FOUND)
-  find_library(TIFF_LIBRARY NAMES libtiff.a tiff tiff3 libtiff
+  find_library(TIFF_LIBRARY
+    NAMES libtiff.a tiff tiff3 libtiff
     PATHS
-      ${CMAKE_CURRENT_SOURCE_DIR}/tiff/libtiff/.libs
-      ${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff/.libs
+      "${CMAKE_CURRENT_SOURCE_DIR}/tiff/libtiff/.libs"
+      "${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff/.libs"
       "C:/Program Files/GnuWin32/lib"
       "C:/Program Files (x86)/GnuWin32/lib"
   )
@@ -106,15 +113,11 @@ if(NOT TIFF_FOUND)
       set(TIFF_INCLUDE_DIR "${TIFF_INCLUDE_DIR}" CACHE PATH "Directory containing tiff.h" FORCE)
     endif()
   endif()
-  #if tiff.h couldn't be found, default to the version in the support tarball
-  if(NOT TIFF_INCLUDE_DIR)
-    set(TIFF_INCLUDE_DIR "${radiance_BINARY_DIR}/Downloads/Source/radiance_support/src/px/tiff/libtiff" CACHE PATH "Directory containing tiff.h" FORCE)
-  endif()
-    
+
   find_library(Z_LIBRARY z)
   if(TIFF_LIBRARY AND Z_LIBRARY)
     set(TIFF_FOUND TRUE)
-    get_filename_component(Z_LIBRARY_RESOLVED ${Z_LIBRARY} REALPATH) 
+    get_filename_component(Z_LIBRARY_RESOLVED ${Z_LIBRARY} REALPATH)
     set(TIFF_LIBRARIES ${TIFF_LIBRARY} ${Z_LIBRARY_RESOLVED})
   else()
     #try find_package again
@@ -129,28 +132,68 @@ if(TIFF_FOUND)
   target_link_libraries(ra_tiff rtrad ${TIFF_LIBRARIES})
   add_executable(normtiff normtiff.c)
   target_link_libraries(normtiff rtrad ${TIFF_LIBRARIES})
-  install(TARGETS ra_tiff normtiff RUNTIME DESTINATION bin)
-  install(FILES ${TIFF_LIBRARIES} DESTINATION bin)
-  install(PROGRAMS ran2tiff.csh DESTINATION bin RENAME ran2tiff)
+  if(BUILD_LIBTIFF)
+    add_dependencies(ra_tiff libtiff)
+    add_dependencies(normtiff libtiff)
+  endif()
+  install(TARGETS ra_tiff normtiff
+    RUNTIME DESTINATION "bin"
+  )
+  # install(FILES ${TIFF_LIBRARIES} DESTINATION "bin")
+  install(PROGRAMS ran2tiff.csh
+    DESTINATION "bin"
+    RENAME ran2tiff
+  )
 #TODO: else case
 endif()
 
-install(TARGETS pfilt pflip ttyimage psign pvalue pcompos protate
-  ra_hexbit ra_bmp ra_t8 ra_t16 pcomb pinterp ra_ppm ra_rgbe ra_pict ra_ps
-  pextrem ra_gif ra_xyze macbethcal pcond pcwarp psketch pmblur2
-  RUNTIME DESTINATION bin)
+install(TARGETS
+  macbethcal
+  pcomb
+  pcompos
+  pcond
+  pcwarp
+  pextrem
+  pfilt
+  pflip
+  pinterp
+  pmblur2
+  protate
+  psign
+  psketch
+  pvalue
+  ra_bmp
+  ra_gif
+  ra_hexbit
+  ra_pict
+  ra_ppm
+  ra_ps
+  ra_rgbe
+  ra_t16
+  ra_t8
+  ra_xyze
+  ttyimage
+  RUNTIME DESTINATION "bin"
+)
 
 if(WIN32)
-  install(PROGRAMS falsecolor.pl DESTINATION bin)
+  install(PROGRAMS falsecolor.pl
+    DESTINATION "bin"
+  )
+  file(COPY falsecolor.pl
+    DESTINATION "${CMAKE_BINARY_DIR}/bin/Release"
+  )
 else()
-  install(PROGRAMS falsecolor.pl DESTINATION bin RENAME falsecolor)
-  install(PROGRAMS normpat.csh DESTINATION bin RENAME normpat)
-  install(PROGRAMS pdfblur.csh DESTINATION bin RENAME pdfblur)
-  install(PROGRAMS pmblur.csh DESTINATION bin RENAME pmblur)
-  install(PROGRAMS pmdblur.csh DESTINATION bin RENAME pmdblur)
-  install(PROGRAMS xyzimage.csh DESTINATION bin RENAME xyzimage)
-  install(PROGRAMS pgblur.csh DESTINATION bin RENAME pgblur)
-  install(PROGRAMS ra_pfm.csh DESTINATION bin RENAME ra_pfm)
-  install(PROGRAMS pbilat.csh DESTINATION bin RENAME pbilat)
-  install(PROGRAMS phisto.csh DESTINATION bin RENAME phisto)
+  install_and_copy_without_extension(
+    falsecolor.pl
+    normpat.csh
+    pbilat.csh
+    pdfblur.csh
+    pgblur.csh
+    phisto.csh
+    pmblur.csh
+    pmdblur.csh
+    ra_pfm.csh
+    xyzimage.csh
+  )
 endif()

@@ -23,7 +23,20 @@ target_link_libraries(tabfunc rtrad)
 add_executable(total total.c)
 target_link_libraries(total rtrad ${LIB_M})
 
-install(TARGETS cnt ev histo icalc neaten rcalc rlam tabfunc total
-  RUNTIME DESTINATION bin)
+install(TARGETS
+  cnt
+  ev
+  histo
+  icalc
+  neaten
+  rcalc
+  rlam
+  tabfunc
+  total
+  RUNTIME DESTINATION "bin"
+)
 
-add_subdirectory(cal)
+file(GLOB_RECURSE cal_files "cal/*.*")
+file(COPY ${cal_files}
+  DESTINATION "${CMAKE_BINARY_DIR}/lib"
+)

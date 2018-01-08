@@ -1,4 +1,4 @@
-set(common_src mfio.c syscalls.c misc.c)
+set(common_src mfio.c misc.c syscalls.c)
 
 add_executable(bgraph bgraph.c mgvars.c mgraph.c)
 target_link_libraries(bgraph meta rtrad)
@@ -51,28 +51,52 @@ target_link_libraries(psort rtrad)
 #target_link_libraries(tscat rtrad)
 
 if(X11_FOUND)
-  add_executable(x11meta xmeta.c x11plot.c plot.c palloc.c ${common_src})
+  add_executable(x11meta
+    palloc.c
+    plot.c
+    x11plot.c
+    xmeta.c
+    ${common_src}
+  )
   target_link_libraries(x11meta rtrad ${X11_LIBRARIES})
-  install(TARGETS x11meta RUNTIME DESTINATION bin)
+  install(TARGETS x11meta
+    RUNTIME DESTINATION "bin"
+  )
 endif()
 
 add_custom_target(mta ALL
   COMMAND cv "${CMAKE_CURRENT_SOURCE_DIR}/symbols.met" > "${CMAKE_CURRENT_BINARY_DIR}/symbols.mta"
   COMMAND cv "${CMAKE_CURRENT_SOURCE_DIR}/vchars.met" > "${CMAKE_CURRENT_BINARY_DIR}/vchars.mta"
+  COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_BINARY_DIR}/symbols.mta" "${CMAKE_CURRENT_BINARY_DIR}/vchars.mta" "${CMAKE_BINARY_DIR}/lib"
   SOURCES symbols.met vchars.met
 )
 
-install(FILES 
-  "${CMAKE_CURRENT_BINARY_DIR}/symbols.mta"
-  "${CMAKE_CURRENT_BINARY_DIR}/vchars.mta"
-  DESTINATION lib
+file(COPY
+  boxw.plt
+  cartesian.plt
+  curve.plt
+  function.plt
+  line.plt
+  polar.plt
+  scatter.plt
+  standard.plt
+  symbols.met
+  vchars.met
+  DESTINATION "${CMAKE_BINARY_DIR}/lib"
 )
 
-install(FILES symbols.met vchars.met boxw.plt curve.plt line.plt scatter.plt 
-				cartesian.plt function.plt polar.plt standard.plt
-				DESTINATION lib)
-
-install(TARGETS meta2tga pexpand psort cv psmeta plotin bgraph igraph dgraph
-        gcomp plot4 meta2bmp
-        RUNTIME DESTINATION bin)
-
+install(TARGETS
+  bgraph
+  cv
+  dgraph
+  gcomp
+  igraph
+  meta2bmp
+  meta2tga
+  pexpand
+  plot4
+  plotin
+  psmeta
+  psort
+  RUNTIME DESTINATION "bin"
+)

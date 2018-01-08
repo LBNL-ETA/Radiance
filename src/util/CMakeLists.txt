@@ -15,11 +15,13 @@ target_link_libraries(glarendx rtrad)
 
 add_executable(rad rad.c)
 target_link_libraries(rad rtrad)
+
 if(WIN32)
   set(netproc_SOURCES win_netproc.c)
 else()
   set(netproc_SOURCES netproc.c)
 endif()
+
 add_executable(ranimate ranimate.c ${netproc_SOURCES})
 target_link_libraries(ranimate rtrad)
 
@@ -33,7 +35,7 @@ add_executable(vwright vwright.c)
 target_link_libraries(vwright rtrad)
 
 #the next few libraries all need to include header files from the rt directory
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../rt)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../rt")
 
 add_executable(ranimove ranimove.c ranimove1.c ranimove2.c)
 target_link_libraries(ranimove raycalls radiance rtrad)
@@ -64,9 +66,13 @@ target_link_libraries(evalglare rtrad libreetz)
 
 if(X11_FOUND)
   add_executable(xglaresrc
-    xglaresrc.c ${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c)
+    xglaresrc.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/x11findwind.c"
+  )
   target_link_libraries(xglaresrc rtrad ${X11_LIBRARIES})
-  install(TARGETS xglaresrc RUNTIME DESTINATION bin)
+  install(TARGETS xglaresrc
+    RUNTIME DESTINATION "bin"
+  )
 endif()
 
 #glrad needs to link against OpenGL libraries
@@ -85,60 +91,94 @@ else()
   include_directories(${OPENGL_INCLUDE_DIR})
 endif()
 
-#check if	we have	SGIStereo.h
+#check if we have SGIStereo.h
 find_file(HAVE_SGISTEREO_H "SGIStereo.h" ${OPENGL_INCLUDE_DIR})
 if(NOT HAVE_SGISTEREO_H)
-	add_definitions(-DNOSTEREO)
+  add_definitions(-DNOSTEREO)
 endif()
 if(UNIX AND X11_FOUND)
-	add_executable(glrad glrad.c)
-	target_link_libraries(glrad rgl rtrad ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
-	install(TARGETS glrad RUNTIME DESTINATION bin)
+  add_executable(glrad glrad.c)
+  target_link_libraries(glrad rgl rtrad ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
+  install(TARGETS glrad
+    RUNTIME DESTINATION "bin"
+  )
   if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
     target_link_libraries(glrad rt)
   endif()
 endif()
 
 if(UNIX)
-  install (TARGETS rpiece RUNTIME DESTINATION bin)
+  install(TARGETS rpiece
+    RUNTIME DESTINATION "bin"
+  )
 endif()
 
-install(TARGETS dctimestep findglare getinfo glarendx rad ranimate
-    vwrays vwright ranimove rsensor rttree_reduce rcollate
-		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare
-    RUNTIME DESTINATION bin)
+install(TARGETS
+  dctimestep
+  eplus_adduvf
+  evalglare
+  findglare
+  getinfo
+  glarendx
+  rad
+  ranimate
+  ranimove
+  rcollate
+  rfluxmtx
+  rmtxop
+  rsensor
+  rttree_reduce
+  vwrays
+  vwright
+  wrapBSDF
+  RUNTIME DESTINATION "bin"
+)
 
-install(FILES rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal 
-    klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal
-    WINDOW6BSDFt.xml minimalBSDFt.xml
-    DESTINATION lib)
+file(COPY
+  ambpos.cal
+  disk2square.cal
+  klems_full.cal
+  klems_half.cal
+  klems_quarter.cal
+  minimalBSDFt.xml
+  rambpos.cal
+  reinhartb.cal
+  tregsamp.dat
+  WINDOW6BSDFt.xml
+  DESTINATION "${CMAKE_BINARY_DIR}/lib"
+)
 
 if(WIN32)
-  install(PROGRAMS genBSDF.pl DESTINATION bin)
-  install(PROGRAMS genklemsamp.pl DESTINATION bin)
-  install(PROGRAMS genskyvec.pl DESTINATION bin)
-  install(PROGRAMS ltview.pl DESTINATION bin)
-  install(PROGRAMS ltpict.pl DESTINATION bin)
-  install(PROGRAMS objview.pl DESTINATION bin)
-  install(PROGRAMS objpict.pl DESTINATION bin)
-  install(PROGRAMS bsdfview.pl DESTINATION bin)
+  install(PROGRAMS
+    bsdfview.pl
+    genBSDF.pl
+    genklemsamp.pl
+    genskyvec.pl
+    ltpict.pl
+    ltview.pl
+    objpict.pl
+    objview.pl
+    DESTINATION "bin"
+  )
 else()
-  install(PROGRAMS genBSDF.pl DESTINATION bin RENAME genBSDF)
-  install(PROGRAMS genklemsamp.pl DESTINATION bin RENAME genklemsamp)
-  install(PROGRAMS genskyvec.pl DESTINATION bin RENAME genskyvec)
-  install(PROGRAMS genambpos.csh DESTINATION bin RENAME genambpos)
-  install(PROGRAMS ltview.pl DESTINATION bin)
-  install(PROGRAMS ltpict.pl DESTINATION bin)
-  install(PROGRAMS objview.pl DESTINATION bin RENAME objview)
-  install(PROGRAMS objpict.pl DESTINATION bin RENAME objpict)
-  install(PROGRAMS glare.csh DESTINATION bin RENAME glare)
-  install(PROGRAMS dayfact.csh DESTINATION bin RENAME dayfact)
-  install(PROGRAMS rlux.csh DESTINATION bin RENAME rlux)
-  install(PROGRAMS raddepend.csh DESTINATION bin RENAME raddepend)
-  install(PROGRAMS trad.wsh DESTINATION bin RENAME trad)
-  install(PROGRAMS objline.csh DESTINATION bin RENAME objline)
-  install(PROGRAMS compamb.csh DESTINATION bin RENAME compamb)
-  install(PROGRAMS vinfo.csh DESTINATION bin RENAME vinfo)
-  install(PROGRAMS fieldcomb.csh DESTINATION bin RENAME fieldcomb)
-  install(PROGRAMS bsdfview.pl DESTINATION bin RENAME bsdfview)
+  install_without_extension(
+    bsdfview.pl
+    compamb.csh
+    dayfact.csh
+    fieldcomb.csh
+    genBSDF.pl
+    genambpos.csh
+    genklemsamp.pl
+    genskyvec.pl
+    glare.csh
+    ltpict.pl
+    ltview.pl
+    objline.csh
+    objpict.pl
+    objview.pl
+    raddepend.csh
+    rlux.csh
+    trad.wsh
+    vinfo.csh
+  )
 endif()

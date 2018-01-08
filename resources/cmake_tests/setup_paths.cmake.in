@@ -5,34 +5,21 @@ else()
   set(rtcontrib_threads "-n;2;")
 endif()
 
-
-file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/gen" gen_dir)
-file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/cal/cal" cal_dir)
-file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/rt" rt_dir)
-file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/util" util_dir)
-file(TO_NATIVE_PATH "@radiance_SOURCE_DIR@/src/px" px_dir)
-file(TO_NATIVE_PATH
-  "@radiance_BINARY_DIR@/Downloads/Source/radiance_support/lib" lib_dir)
 file(TO_NATIVE_PATH "@PERL_EXECUTABLE@" perl)
-set(office_dir @office_dir@)
-#office_dir is defined in CMakeLists.txt
-
-if(NOT EXISTS ${lib_dir}/pine.pic)
-  configure_file(${lib_dir}/pine.hdr ${lib_dir}/pine.pic COPYONLY)
-endif()
-
+set(resources_dir "@CMAKE_SOURCE_DIR@/resources")
 
 if(WIN32)
-  file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin/Release" rpath)
+  set(CMAKE_PERL_SUFFIX ".pl")
+  file(TO_NATIVE_PATH "@CMAKE_BINARY_DIR@/bin/Release" rpath)
 else()
-  file(TO_NATIVE_PATH "@radiance_BINARY_DIR@/bin" rpath)
+  file(TO_NATIVE_PATH "@CMAKE_BINARY_DIR@/bin" rpath)
 endif()
-set(ENV{RAYPATH}
-"${gen_dir}${sep}${cal_dir}${sep}${rt_dir}${sep}${lib_dir}${sep}@office_dir@")
-#set(ENV{PATH} "$ENV{PATH}${sep}${rpath}")
-#look in dashboard tree ONLY
+file(TO_NATIVE_PATH "@CMAKE_BINARY_DIR@/lib" rlibpath)
+
 set(ENV{PATH} "${rpath}")
-set(test_output_dir
-  @radiance_BINARY_DIR@/Downloads/Source/radiance_support/obj/office/test)
+set(ENV{RAYPATH} "${rlibpath}")
+set(test_output_dir "@CMAKE_BINARY_DIR@/testfiles")
 set(CMAKE_EXECUTABLE_SUFFIX @CMAKE_EXECUTABLE_SUFFIX@)
+
+message(STATUS "path: $ENV{PATH}")
 message(STATUS "raypath: $ENV{RAYPATH}")

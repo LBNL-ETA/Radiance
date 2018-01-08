@@ -2189,3 +2189,7 @@ Improved accuracy of bsdf2ttree when converting scattering interpolation
 representatons with strong peaks.
 
 Tweaked peak-extraction code to work more reliably.
+
+Georg Mischler updated SCons build system.
+
+Rob Guglielmetti and Alex Swindler updated CMake build system.

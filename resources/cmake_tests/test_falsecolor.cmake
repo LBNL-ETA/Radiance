@@ -1,16 +1,15 @@
 include(setup_paths.cmake)
 
 execute_process(
-  WORKING_DIRECTORY ${office_dir}
-  COMMAND ${perl} ${px_dir}/falsecolor.pl -e -i test/raytest_rpict.hdr
-  OUTPUT_FILE test/raytest_falsecolor.hdr
+  COMMAND ${perl} ${rpath}/falsecolor${CMAKE_PERL_SUFFIX} -e -i ${resources_dir}/evalglare/testimage.hdr
+  OUTPUT_FILE ${test_output_dir}/falsecolor_out.hdr
   RESULT_VARIABLE res
 )
 if(NOT ${res} EQUAL 0)
   message(FATAL_ERROR "Bad return value from falsecolor, res = ${res}")
 endif()
 
-file(READ ${office_dir}/test/raytest_falsecolor.hdr test_output)
+file(READ ${test_output_dir}/falsecolor_out.hdr test_output)
 if(test_output MATCHES "pcomb")
   message(STATUS "passed")
 else()

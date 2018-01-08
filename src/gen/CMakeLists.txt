@@ -35,7 +35,7 @@ target_link_libraries(mkillum raycalls radiance rtrad)
 add_executable(mksource mksource.c)
 target_link_libraries(mksource raycalls radiance rtrad)
 
-add_executable(genrev genrev.c )
+add_executable(genrev genrev.c)
 target_link_libraries(genrev rtrad)
 
 add_executable(gencatenary gencat.c)
@@ -53,14 +53,39 @@ target_link_libraries(genclock ${LIB_M})
 add_executable(genbranch genbranch.c)
 target_link_libraries(genbranch ${LIB_M})
 
-install(TARGETS genbox gensky xform genblinds genrev genworm gendaylit gensurf
-                genprism replmarks mkillum mksource genclock gendaymtx
-        DESTINATION bin)
+install(TARGETS
+  genblinds
+  genbox
+  genclock
+  gendaylit
+  gendaymtx
+  genprism
+  genrev
+  gensky
+  gensurf
+  genworm
+  mkillum
+  mksource
+  replmarks
+  xform
+  DESTINATION "bin"
+)
 
-install(FILES illum.cal rev.cal skybright.cal surf.cal clockface.hex glaze1.cal
-              glaze2.cal perezlum.cal
-        DESTINATION lib)
+file(COPY
+  clockface.hex
+  glaze1.cal
+  glaze2.cal
+  illum.cal
+  perezlum.cal
+  rev.cal
+  skybright.cal
+  surf.cal
+  DESTINATION "${CMAKE_BINARY_DIR}/lib"
+)
 
-if (NOT WIN32)
-  install(PROGRAMS glaze.csh DESTINATION bin RENAME glaze)
+if(NOT WIN32)
+  install(PROGRAMS glaze.csh
+    DESTINATION "bin"
+    RENAME glaze
+  )
 endif()
