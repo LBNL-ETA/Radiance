@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.77 2017/04/21 16:07:29 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.78 2018/01/09 00:51:51 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -20,6 +20,9 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.77 2017/04/21 16:07:29 greg Exp 
 #include  "ray.h"
 #include  "ambient.h"
 #include  "random.h"
+#include  "source.h"
+#include  "otypes.h"
+#include  "otspecial.h"
 
 #ifndef OLDAMB
 
@@ -646,6 +649,7 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	FVECT		vec;
 	double		u, v;
 	double		ang, a1;
+	OBJREC		*m;
 	int		i, j;
 					/* don't bother for a few samples */
 	if (hp->ns < 8)
@@ -675,7 +679,9 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 			flgs |= 1L<<(int)(16/PI*(a1 + 2.*PI*(a1 < 0)));
 	    }
 					/* add low-angle incident (< 20deg) */
-	if (fabs(hp->rp->rod) <= 0.342) {
+	if (fabs(hp->rp->rod) <= 0.342 && hp->rp->parent != NULL &&
+			(m = findmaterial(hp->rp->parent->ro)) != NULL &&
+			isopaque(m->otype)) {
 		u = -DOT(hp->rp->rdir, uv[0]);
 		v = -DOT(hp->rp->rdir, uv[1]);
 		if ((r0*r0*u*u + r1*r1*v*v) > hp->rp->rot*hp->rp->rot) {
