@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.78 2018/01/09 00:51:51 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.79 2018/01/09 00:52:35 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -20,9 +20,6 @@ static const char	RCSid[] = "$Id: ambcomp.c,v 2.78 2018/01/09 00:51:51 greg Exp 
 #include  "ray.h"
 #include  "ambient.h"
 #include  "random.h"
-#include  "source.h"
-#include  "otypes.h"
-#include  "otspecial.h"
 
 #ifndef OLDAMB
 
@@ -678,22 +675,6 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 		for (a1 = ang-ang_res; a1 <= ang+ang_res; a1 += ang_step)
 			flgs |= 1L<<(int)(16/PI*(a1 + 2.*PI*(a1 < 0)));
 	    }
-					/* add low-angle incident (< 20deg) */
-	if (fabs(hp->rp->rod) <= 0.342 && hp->rp->parent != NULL &&
-			(m = findmaterial(hp->rp->parent->ro)) != NULL &&
-			isopaque(m->otype)) {
-		u = -DOT(hp->rp->rdir, uv[0]);
-		v = -DOT(hp->rp->rdir, uv[1]);
-		if ((r0*r0*u*u + r1*r1*v*v) > hp->rp->rot*hp->rp->rot) {
-			ang = atan2a(v, u);
-			ang += 2.*PI*(ang < 0);
-			ang *= 16/PI;
-			if ((ang < .5) | (ang >= 31.5))
-				flgs |= 0x80000001;
-			else
-				flgs |= 3L<<(int)(ang-.5);
-		}
-	}
 	return(flgs);
 }
 
