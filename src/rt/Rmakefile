@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.80 2017/08/14 21:03:24 rschregle Exp $
+# RCSid: $Id: Rmakefile,v 2.81 2018/01/09 05:01:15 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -233,7 +233,7 @@ duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
 
 ambio.o:	../common/fvect.h
 
-initotypes.o srcobstr.o raytrace.o:	otspecial.h
+ambient.o initotypes.o srcobstr.o raytrace.o:	otspecial.h
 
 rpmain.o rtmain.o rvmain.o rpict.o \
 srcdraw.o:	../common/view.h ../common/resolu.h
@@ -280,7 +280,7 @@ rcmain.o rcontrib.o rc2.o rc3.o:	rcontrib.h \
 ../common/platform.h ../common/paths.h ../common/lookup.h \
 func.h ../common/calcomp.h ../common/rtprocess.h
 
-rcmain.o:	source.h ambient.h
+ambient.o rcmain.o:	source.h ambient.h
 
 rcontrib.o:	source.h ../common/otypes.h
 

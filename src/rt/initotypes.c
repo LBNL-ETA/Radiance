@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.19 2014/07/08 18:25:00 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.20 2018/01/09 05:01:15 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -41,23 +41,23 @@ initotypes(void)			/* initialize ofun array */
 	ofun[MAT_TRANS].funp = m_normal;
 	ofun[MAT_PLASTIC].flags |= T_OPAQUE;
 	ofun[MAT_METAL].flags |= T_OPAQUE;
-	ofun[MAT_TRANS].flags |= T_IRR_IGN;
+	ofun[MAT_TRANS].flags |= T_TRANSP;
 	ofun[MAT_PLASTIC2].funp =
 	ofun[MAT_METAL2].funp =
 	ofun[MAT_TRANS2].funp = m_aniso;
 	ofun[MAT_PLASTIC2].flags |= T_OPAQUE;
 	ofun[MAT_METAL2].flags |= T_OPAQUE;
-	ofun[MAT_TRANS2].flags |= T_IRR_IGN;
+	ofun[MAT_TRANS2].flags |= T_TRANSP;
 	ofun[MAT_ASHIKHMIN].funp = m_ashikhmin;
 	ofun[MAT_ASHIKHMIN].flags |= T_OPAQUE;
 	ofun[MAT_DIELECTRIC].funp =
 	ofun[MAT_INTERFACE].funp = m_dielectric;
-	ofun[MAT_DIELECTRIC].flags |= T_IRR_IGN;
-	ofun[MAT_INTERFACE].flags |= T_IRR_IGN;
+	ofun[MAT_DIELECTRIC].flags |= T_TRANSP;
+	ofun[MAT_INTERFACE].flags |= T_TRANSP;
 	ofun[MAT_MIST].funp = m_mist;
-	ofun[MAT_MIST].flags |= T_IRR_IGN;
+	ofun[MAT_MIST].flags |= T_TRANSP;
 	ofun[MAT_GLASS].funp = m_glass;
-	ofun[MAT_GLASS].flags |= T_IRR_IGN;
+	ofun[MAT_GLASS].flags |= T_TRANSP;
 	ofun[MAT_MIRROR].funp = m_mirror;
 	ofun[MAT_DIRECT1].funp =
 	ofun[MAT_DIRECT2].funp = m_direct;

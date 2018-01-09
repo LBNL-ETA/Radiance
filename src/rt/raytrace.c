@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.71 2016/05/16 17:32:10 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.72 2018/01/09 05:01:15 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -199,11 +199,6 @@ raytrans(			/* transmit ray as is */
 }
 
 
-/* Macro for test to see if BSDF material uses proxy */
-#define isBSDFproxy(m)	((m)->otype == MAT_BSDF && (m)->oargs.nsargs && \
-				strcmp((m)->oargs.sarg[0], "0"))
-
-
 int
 rayshade(		/* shade ray r with material mod */
 	RAY  *r,
@@ -224,9 +219,8 @@ rayshade(		/* shade ray r with material mod */
 					/* hack for irradiance calculation */
 		if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
 				(ofun[m->otype].flags & (T_M|T_X)) &&
-				m->otype != MAT_CLIP &&
-				!isBSDFproxy(m)) {
-			if (irr_ignore(m->otype)) {
+				m->otype != MAT_CLIP) {
+			if (istransp(m->otype) || isBSDFproxy(m)) {
 				raytrans(r);
 				return(1);
 			}
