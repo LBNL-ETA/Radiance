@@ -112,6 +112,11 @@ SKIP=1|0
    1: Skip display of License terms
    0: Don't skip (default)
 
+PMAP_OOC=1|0
+   This is not yet available on Windows
+   1: Build Photon-Maps with Out-of-core Octree (default on unix)
+   0: Build Photon-Maps with In-core KD-Tree (hard set on Windows)
+
 MSVC_VERSION=12.0|13.0|14.1
    This is only relevant for building with VC on Windows.
    "12.0" for Visual C/C++ 2013.

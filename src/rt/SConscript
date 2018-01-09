@@ -21,19 +21,29 @@ ambio = env.Object(source="ambio.c")
 rayfifo = env.Object(source="rayfifo.c")
 raypwin = env.Object(source="raypwin.c")
 raycalls = env.Object(source="raycalls.c")
-pmaptype = env.Object(source="pmaptype.c")
-pmapparm = env.Object(source="pmapparm.c")
 
+CCFLAGS = env.get('CCFLAGS',[])
+if env.get('PMAP_OOC', 0) not in (0,'0','','n','no','false',False,None):
+	PMD = Split('ooccache.c oocnn.c oocmorton.c oococt.c oocsort.c oocbuild.c')
+	OOC_CCFLAGS = env.get('CCFLAGS',[]) + ['-DPMAP_OOC']
+	for src in Split('''pmapdata.c pmapio.c pmapopt.c '''):
+		obj = env.Object(source=src, CCFLAGS=OOC_CCFLAGS)
+		PMD.append(obj)
+	pmaptype = env.Object(source="pmaptype.c", CCFLAGS=OOC_CCFLAGS)
+	pmapparm = env.Object(source="pmapparm.c", CCFLAGS=OOC_CCFLAGS)
+else:
+	PMD = Split('''pmapdata.c pmapio.c pmapopt.c ''')
+	OOC_CCFLAGS = env.get('CCFLAGS',[])
+	pmaptype = env.Object(source="pmaptype.c")
+	pmapparm = env.Object(source="pmapparm.c")
 
 # source and object dependencies
 RAY = Split('''ambcomp.c ambient.c freeobjmem.c initotypes.c preload.c
 		raytrace.c renderopts.c''') + [ambio]
-PMAP = Split('''pmap.c pmapsrc.c pmapmat.c pmaprand.c pmapio.c pmapdata.c
-        pmapbias.c pmapcontrib.c pmapamb.c pmapray.c pmapopt.c pmapdiag.c
-		oocbuild.c ooccache.c oocnn.c oocmorton.c oococt.c oocsort.c
-		pmcontrib2.c pmapkdt.c pmutil.c
+PMAP = Split('''pmap.c pmapsrc.c pmapmat.c pmaprand.c
+        pmapbias.c pmapcontrib.c pmapamb.c pmapray.c pmapdiag.c
+		pmcontrib2.c pmutil.c
 		''') + [pmaptype, pmapparm]
-# not ready yet: pmapooc.c 
 SURF = Split('''srcsamp.c srcsupp.c srcobstr.c source.c virtuals.c sphere.c
 		o_face.c o_cone.c o_instance.c o_mesh.c''')
 MAT = Split('''aniso.c normal.c m_clip.c glass.c m_brdf.c m_mirror.c
@@ -43,7 +53,7 @@ MOD = Split('p_func.c t_func.c p_data.c t_data.c text.c mx_func.c mx_data.c')
 SUP = Split('func.c noise3.c data.c')
 
 # build libraries
-rsrc = RAY + PMAP + SURF + MAT + MOD + SUP
+rsrc = RAY + PMAP + PMD + SURF + MAT + MOD + SUP
 env.Command('Version.c', 'VERSION', vstamp.build_version_c)
 env.Depends('Version.c', rsrc)
 Version = env.Object(source=['Version.c'])
@@ -59,20 +69,21 @@ rtmain = env.Object(source=['rtmain.c'],
 
 # build executables
 PROGS = [
-('mkpmap',   ['mkpmap.c', Version],
+('mkpmap',   ['mkpmap.c', Version], CCFLAGS,
 	 ['rttrace', 'rtrad', '$RAD_SOCKETLIB', mlib]),
-('pmapdump', ['pmapdump.c', pmaptype, pmapparm, Version],
+('pmapdump', ['pmapdump.c', pmaptype, pmapparm, Version], OOC_CCFLAGS,
 	 ['rtrad', '$RAD_SOCKETLIB', mlib]),
-('lookamb',  ['lookamb.c', ambio], ['rtrad', mlib]),
-('rcontrib', Split('rcmain.c rcontrib.c rc2.c rc3.c') + [Version],
+('lookamb',  ['lookamb.c', ambio], CCFLAGS, ['rtrad', mlib]),
+('rcontrib', Split('rcmain.c rcontrib.c rc2.c rc3.c') + [Version], CCFLAGS,
 	 ['rttrace', 'rtrad', '$RAD_SOCKETLIB', mlib]),
 ('rtrace',   ['rtrace.c', duphead, persist, rtmain, rayfifo, raypwin, raycalls],
-	 ['rttrace', 'rtrad'] +  mlib),
-('rpict',    Split('rpmain.c rpict.c srcdraw.c') + [duphead, persist],
+	 CCFLAGS, ['rttrace', 'rtrad'] +  mlib),
+('rpict',    Split('rpmain.c rpict.c srcdraw.c') + [duphead, persist], CCFLAGS,
 	 ['rttrace', 'rtrad', '$RAD_SOCKETLIB']+mlib),
 ]
 for p in PROGS:
-	prog = env.Program(target=radbin(p[0]), source = p[1], LIBS = p[2]),
+	prog = env.Program(target=radbin(p[0]), source = p[1],
+			CCFLAGS = p[2], LIBS = p[3]),
 	Default(prog)
 	env.Append(RAD_BININSTALL=[env.Install('$RAD_BINDIR', prog)])
 

@@ -46,7 +46,7 @@ def read_plat(env, fn):
 			'RAD_PCALLS',     # more custom process abstraction
 			]],
 	]
-	if env.get('RAD_DEBUG',0) not in(0,'0','','n','no','false',None):
+	if env.get('RAD_DEBUG',0) not in(0,'0','','n','no','false',False,None):
 		vars.insert(0, ['debug'] + buildvars)
 		print('Processing DEBUG version')
 	else:

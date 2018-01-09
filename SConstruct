@@ -11,6 +11,8 @@ def set_pre_opts(testenv):
 	if testenv['CFG_PLATSYS'] == 'Windows':
 		# no default, will select the most recent one when empty
 		vars.Add('MSVC_VERSION', 'Microsoft VC Version',  )
+	else: # not yet supported on Windows
+		vars.Add('PMAP_OOC',  'Build Pmap with Out-of-core Data',  1)
 	vars.Update(testenv)
 	return vars
 
@@ -61,6 +63,11 @@ prevars = set_pre_opts(testenv)
 # Set up build environment
 env = Environment(variables=prevars)
 env.Decider('timestamp-match')
+
+if env.get('PMAP_OOC', 0) in (0,'0','','n','no','false',False,None):
+	print('Building Photon-Maps with In-core KD-Tree')
+else:
+	print('Building Photon-Maps with Out-of-core Octree')
 
 from build_utils import install
 script_b = Builder(action = install.install_script, suffix = '')
@@ -133,3 +140,4 @@ env.Alias('test',    ['#test'])
 env.Alias('install', ['bininstall', 'rlibinstall', 'maninstall'])
 
 # vi: set ts=4 sw=4 :
+# vim: set syntax=python :
