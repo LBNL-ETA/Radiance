@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.33 2015/09/02 18:59:01 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.34 2018/01/10 04:08:50 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -210,7 +210,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	BRDFDAT  nd;
 	RAY  sr;
 	double  mirtest=0, mirdist=0;
-	double  transtest=0, transdist=0;
+	double  transtest, transdist;
 	int  hasrefl, hastrans;
 	int  hastexture;
 	COLOR  ctmp;
@@ -241,7 +241,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			m->oargs.farg[8]);
 						/* get modifiers */
 	raytexture(r, m->omod);
-	hastexture = DOT(r->pert,r->pert) > FTINY*FTINY;
+	hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY);
 	if (hastexture) {			/* perturb normal */
 		nd.pdot = raynormal(nd.pnorm, r);
 	} else {
@@ -259,8 +259,9 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	copycolor(nd.mcolor, r->pcol);		/* get pattern color */
 	multcolor(nd.rdiff, nd.mcolor);		/* modify diffuse values */
 	multcolor(nd.tdiff, nd.mcolor);
-	hasrefl = bright(nd.rdiff) > FTINY;
-	hastrans = bright(nd.tdiff) > FTINY;
+	hasrefl = (bright(nd.rdiff) > FTINY);
+	hastrans = (bright(nd.tdiff) > FTINY);
+	mirdist = transdist = r->rot;
 						/* load cal file */
 	nd.dp = NULL;
 	mf = getfunc(m, 9, 0x3f, 0);
@@ -273,9 +274,9 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	if ((errno == EDOM) | (errno == ERANGE))
 		objerror(m, WARNING, "compute error");
 	else if (rayorigin(&sr, TRANS, r, ctmp) == 0) {
-		if (!(r->crtype & SHADOW) && hastexture) {
+		if (hastexture && !(r->crtype & (SHADOW|AMBIENT))) {
 						/* perturb direction */
-			VSUM(sr.rdir, r->rdir, r->pert, -.75);
+			VSUB(sr.rdir, r->rdir, r->pert);
 			if (normalize(sr.rdir) == 0.0) {
 				objerror(m, WARNING, "illegal perturbation");
 				VCOPY(sr.rdir, r->rdir);
@@ -286,13 +287,15 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
 		addcolor(r->rcol, sr.rcol);
-		if (!hastexture) {
+		if (!hastexture || r->crtype & (SHADOW|AMBIENT)) {
 			transtest = 2.0*bright(sr.rcol);
 			transdist = r->rot + sr.rt;
 		}
 	}
-	if (r->crtype & SHADOW)			/* the rest is shadow */
+	if (r->crtype & SHADOW) {		/* the rest is shadow */
+		r->rt = transdist;
 		return(1);
+	}
 						/* compute reflected ray */
 	setbrdfunc(&nd);
 	errno = 0;
