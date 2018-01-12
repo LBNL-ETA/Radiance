@@ -1,4 +1,4 @@
-{ RCSid $Id: perezlum.cal,v 1.1 2009/06/06 20:20:04 greg Exp $ }
+{ RCSid $Id: perezlum.cal,v 1.2 2018/01/12 23:48:09 greg Exp $ }
 
 {
      All-weather Angular Sky Luminance Distribution .
@@ -19,8 +19,8 @@ skybright = wmean((Dz+1.01)^10, intersky, (Dz+1.01)^-10, A2 );
 wmean(a, x, b, y) = (a*x+b*y)/(a+b);
 
 intersky = if( (Dz-0.01),  
-		A1 * (1 + A3*Exp(A4/Dz) ) * ( 1 + A5*Exp(A6*gamma) + A7*cos(gamma)*cos(gamma) ),
-		A1 * (1 + A3*Exp(A4/0.01) ) * ( 1 + A5*Exp(A6*gamma) + A7*cos(gamma)*cos(gamma) ) );
+		A1 * (1 + A3*Exp(A4/Dz) ) * ( 1 + A5*Exp(A6*gamma) + A7*cosgamma*cosgamma ),
+		A1 * (1 + A3*Exp(A4/0.01) ) * ( 1 + A5*Exp(A6*gamma) + A7*cosgamma*cosgamma ) );
 
 		 	 
 
