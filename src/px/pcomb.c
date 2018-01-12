@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.46 2016/08/01 00:08:53 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.47 2018/01/12 00:50:17 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -96,10 +96,13 @@ main(
 	int	original;
 	double	f;
 	int	a;
+
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
 	progname = argv[0];
+	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
+	esupport &= ~(E_OUTCHAN|E_INCHAN);
 						/* scan options */
 	for (a = 1; a < argc; a++) {
 		if (argv[a][0] == '-')
@@ -282,7 +285,7 @@ headline(			/* check header line & echo if requested */
 static void
 checkfile(void)			/* ready a file */
 {
-	register int	i;
+	int	i;
 					/* process header */
 	gotview = 0;
 	if (echoheader) {
@@ -345,7 +348,7 @@ double	(*ourbright)() = rgb_bright;
 static void
 init(void)					/* perform final setup */
 {
-	register int	i;
+	int	i;
 						/* define constants */
 	varset("PI", ':', PI);
 	varset(vnfiles, ':', (double)nfiles);
@@ -377,7 +380,7 @@ combine(void)			/* combine pictures */
 	EPNODE	*coldef[3], *brtdef;
 	COLOR	*scanout;
 	double	d;
-	register int	i, j;
+	int	i, j;
 						/* check defined variables */
 	for (j = 0; j < 3; j++) {
 		if (vardefined(vcolout[j]))
@@ -434,8 +437,8 @@ static void
 advance(void)			/* read in data for next scanline */
 {
 	int	ytarget;
-	register COLOR	*st;
-	register int	i, j;
+	COLOR	*st;
+	int	i, j;
 
 	for (ytarget = (ypos+.5)*ymax/yres; yscan > ytarget; yscan--)
 		for (i = 0; i < nfiles; i++) {
@@ -504,11 +507,11 @@ l_pixaspect(char *nm)		/* return pixel aspect ratio */
 
 static double
 l_colin(			/* return color value for picture */
-	register char	*nam
+	char	*nam
 )
 {
 	int	fn;
-	register int	n, xoff, yoff;
+	int	n, xoff, yoff;
 	double	d;
 
 	d = argument(1);
@@ -563,7 +566,7 @@ l_colin(			/* return color value for picture */
 
 static double
 l_ray(		/* return ray origin or direction */
-	register char	*nam
+	char	*nam
 )
 {
 	static unsigned long	ltick[MAXINP];
@@ -572,7 +575,7 @@ l_ray(		/* return ray origin or direction */
 	RREAL	loc[2];
 	double	d;
 	int	fn;
-	register int	i;
+	int	i;
 
 	d = argument(1);
 	if (d <= -0.5 || d >= nfiles+0.5) {
@@ -615,7 +618,7 @@ l_psize(char *nm)		/* compute pixel size in steradians */
 	RREAL	locx[2], locy[2];
 	double	d;
 	int	fn;
-	register int	i;
+	int	i;
 
 	d = argument(1);
 	if (d <= -0.5 || d >= nfiles+0.5) {
@@ -672,7 +675,7 @@ eputs(char *msg)
 extern void
 quit(int code)		/* exit gracefully */
 {
-	register int  i;
+	int  i;
 				/* close input files */
 	for (i = 0; i < nfiles; i++)
 		if (input[i].name == Command)

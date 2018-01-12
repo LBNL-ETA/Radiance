@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.23 2017/01/28 23:09:24 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.24 2018/01/12 00:50:17 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -86,6 +86,8 @@ char  *argv[];
 	int  i, j, m, n;
 	char  stmp[256];
 
+	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
+	esupport &= ~(E_OUTCHAN|E_INCHAN);
 	varset("PI", ':', PI);
 	funset("hermite", 5, ':', l_hermite);
 	funset("bezier", 5, ':', l_bezier);

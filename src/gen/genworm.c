@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.8 2004/08/21 11:54:06 greg Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.9 2018/01/12 00:50:17 greg Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -45,6 +45,8 @@ char  *argv[];
 	FVECT  lastp, p;
 	int  i, nseg;
 
+	esupport |= E_VARIABLE|E_FUNCTION|E_RCONST;
+	esupport &= ~(E_OUTCHAN|E_INCHAN);
 	varset("PI", ':', PI);
 	funset("hermite", 5, ':', l_hermite);
 	funset("bezier", 5, ':', l_bezier);
