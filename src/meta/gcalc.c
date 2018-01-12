@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gcalc.c,v 1.4 2011/12/01 18:47:35 greg Exp $";
+static const char	RCSid[] = "$Id: gcalc.c,v 1.5 2018/01/12 00:58:45 greg Exp $";
 #endif
 /*
  *  gcalc.c - routines to do calculations on graph files.
@@ -113,7 +113,7 @@ gcvalue(		/* print the values for the curve */
 			d1 = (xysum - xsum*ysum/npts)/d3;
 			d2 = (ysum - d1*xsum)/npts;
 			d3 = d1*sqrt(d3/(yysum - ysum*ysum/npts));
-			printf(" %10.6f %11.4f %7.3f", d1, d2, d3);
+			printf(" %11.4e %11.4e %6.3f", d1, d2, d3);
 			break;
 		default:
 			break;
