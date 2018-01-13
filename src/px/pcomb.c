@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.47 2018/01/12 00:50:17 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.48 2018/01/13 00:35:55 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -212,11 +212,7 @@ main(
 			}
 		break;
 	}
-						/* set/get output resolution */
-	if (!vardefined(vxres))
-		varset(vxres, ':', (double)xmax);
-	if (!vardefined(vyres))
-		varset(vyres, ':', (double)ymax);
+						/* get output resolution */
 	xres = varvalue(vxres) + .5;
 	yres = varvalue(vyres) + .5;
 	if (xres <= 0 || yres <= 0) {
@@ -371,6 +367,9 @@ init(void)					/* perform final setup */
 		ourbright = xyz_bright;
 	} else
 		varset(vwhteff, ':', WHTEFFICACY);
+						/* these may be overridden */
+	varset(vxres, ':', (double)xmax);
+	varset(vyres, ':', (double)ymax);
 }
 
 
