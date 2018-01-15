@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.12 2017/09/25 18:48:11 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.13 2018/01/15 22:35:34 greg Exp $
 
 use warnings;
 use strict;
@@ -328,10 +328,11 @@ if ($legwidth > 0) {
 
     # Legend: Create the background colours
     $cmd = qq[pcomb $pc0args];
-    $cmd .= qq[ -e "v=(y+.5-$sheight)/(yres/(1+1.5/$ndivs));;vleft=v;vright=v"];
+    $cmd .= qq[ -x $legwidth -y $vlegheight];
+    $cmd .= qq[ -e "v=(y+.5-$sheight)/(yres/(1+1.5/$ndivs));vleft=v;vright=v"];
     $cmd .= qq[ -e "vbelow=(y-.5-$sheight)/(yres/(1+1.5/$ndivs));vabove=(y+1.5-$sheight)/(yres/(1+1.5/$ndivs))"];
     $cmd .= qq[ -e "ra=0;ga=0;ba=0;"];
-    $cmd .= qq[ -x $legwidth -y $vlegheight > $scolpic];
+    $cmd .= qq[ > $scolpic];
     system $cmd;
 } else {
     # Create dummy colour scale and legend labels so we don't
