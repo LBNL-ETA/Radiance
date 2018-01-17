@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: psplot.c,v 1.4 2018/01/17 21:58:23 greg Exp $";
 #endif
 /*
  *  psplot.c - routines for generating PostScript output.
@@ -99,10 +99,10 @@ init(			/* initialize */
 {
 	printf("%%!PS-Adobe-2.0 EPSF-2.0\n");
 	printf("%%%%BoundingBox: %.0f %.0f %.0f %.0f\n",
-			HMARGIN+(PWIDTH-PSQUARE)/2.,
-			VMARGIN+(PHEIGHT-PSQUARE)/2.,
-			HMARGIN+(PWIDTH-PSQUARE)/2.+PSQUARE,
-			VMARGIN+(PHEIGHT-PSQUARE)/2.+PSQUARE);
+			HMARGIN+(PWIDTH-PSQUARE*1.05)/2.,
+			VMARGIN+(PHEIGHT-PSQUARE*1.05)/2.,
+			HMARGIN+(PWIDTH+PSQUARE*1.05)/2.,
+			VMARGIN+(PHEIGHT+PSQUARE*1.05)/2.);
 	printf("%%%%DocumentFonts: Helvetica Courier\n");
 	if (id != NULL)
 		printf("%%%%Creator: %s\n", id);
