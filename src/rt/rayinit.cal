@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.16 2013/10/08 18:59:44 greg Exp $ }
+{ RCSid $Id: rayinit.cal,v 2.17 2018/01/18 19:43:43 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -150,21 +150,21 @@ turbulencez(x,y,z,s) : if( s-1.01, 0,
 
 			{ Normal distribution from uniform range (0,1) }
 
-un2`P(t) : t - (2.515517+t*(.802853+t*.010328))/
+un2`P.(t) : t - (2.515517+t*(.802853+t*.010328))/
 		(1+t*(1.432788+t*(.189269+t*.001308))) ;
-un1`P(p) : un2`P(sqrt(-2*log(p))) ;
+un1`P.(p) : un2`P.(sqrt(-2*log(p))) ;
 
-unif2norm(p) : if( .5-p, -un1`P(p), un1`P(1-p) ) ;
+unif2norm(p) : if( .5-p, -un1`P.(p), un1`P.(1-p) ) ;
 
 nrand(x) = unif2norm(rand(x));
 
 			{ Local (u,v) coordinates for planar surfaces }
-crosslen`P = Nx*Nx + Ny*Ny;
+crosslen`P. = Nx*Nx + Ny*Ny;
 			{ U is distance from projected Z-axis }
-U = if( crosslen`P - FTINY,
-		(Py*Nx - Px*Ny)/crosslen`P,
+U = if( crosslen`P. - FTINY,
+		(Py*Nx - Px*Ny)/crosslen`P.,
 		Px);
 			{ V is defined so that N = U x V }
-V = if( crosslen`P - FTINY,
-		Pz - Nz*(Px*Nx + Py*Ny)/crosslen`P,
+V = if( crosslen`P. - FTINY,
+		Pz - Nz*(Px*Nx + Py*Ny)/crosslen`P.,
 		Py);
