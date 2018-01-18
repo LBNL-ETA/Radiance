@@ -96,9 +96,9 @@ set(rtrad_SOURCES
 )
 
 if(UNIX)
-  list(APPEND rtrad_SOURCES unix_process.c strcmp.c)
+  list(APPEND rtrad_SOURCES unix_process.c)
 else()
-  list(APPEND rtrad_SOURCES win_process.c win_popen.c)
+  list(APPEND rtrad_SOURCES win_process.c win_popen.c strlcpy.c)
 endif()
 
 add_library(rtrad ${rtrad_SOURCES})
