@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.22 2016/11/02 22:09:14 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.23 2018/01/23 23:37:11 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -272,6 +272,7 @@ ray_save(			/* save current parameter settings */
 		if (ndx+len >= sizeof(rp->amblval))
 			break;
 		strcpy(rp->amblval+ndx, amblist[i]);
+		rp->amblndx[i] = ndx;
 		ndx += len+1;
 	}
 	while (i <= AMBLLEN)
