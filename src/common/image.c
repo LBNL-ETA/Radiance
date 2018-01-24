@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.40 2013/04/03 00:35:09 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.41 2018/01/24 03:34:15 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -226,7 +226,7 @@ double  y
 }
 
 
-void
+int
 viewloc(			/* find image location for point */
 FVECT  ip,
 VIEW  *v,
@@ -249,12 +249,12 @@ FVECT  p
 			ip[2] = -ip[2];
 			d = -d;
 		}
-		if (d > FTINY) {
-			d = 1.0/d;
-			disp[0] *= d;
-			disp[1] *= d;
-			disp[2] *= d;
-		}
+		if (d <= FTINY)
+			return(0);	/* at infinite edge */
+		d = 1.0/d;
+		disp[0] *= d;
+		disp[1] *= d;
+		disp[2] *= d;
 		ip[2] *= (1.0 - v->vfore*d);
 		break;
 	case VT_HEM:			/* hemispherical fisheye */
@@ -269,41 +269,45 @@ FVECT  p
 		d = DOT(disp,v->hvec);
 		d2 = DOT(disp,v->vdir);
 		ip[0] = 180.0/PI * atan2(d,d2) / v->horiz + 0.5 - v->hoff;
-		d = 1.0/sqrt(d*d + d2*d2);
+		d = d*d + d2*d2;
+		if (d <= FTINY*FTINY)
+			return(0);	/* at pole */
+		d = 1.0/sqrt(d);
 		ip[1] = DOT(disp,v->vvec)*d/v->vn2 + 0.5 - v->voff;
 		ip[2] = VLEN(disp);
 		ip[2] *= (1.0 - v->vfore*d);
-		return;
+		return(1);
 	case VT_ANG:			/* angular fisheye */
 		ip[0] = 0.5 - v->hoff;
 		ip[1] = 0.5 - v->voff;
 		ip[2] = normalize(disp) - v->vfore;
 		d = DOT(disp,v->vdir);
 		if (d >= 1.0-FTINY)
-			return;
+			return(1);
 		if (d <= -(1.0-FTINY)) {
 			ip[0] += 180.0/v->horiz;
-			return;
+			return(1);
 		}
 		d = (180.0/PI)*acos(d) / sqrt(1.0 - d*d);
 		ip[0] += DOT(disp,v->hvec)*d/v->horiz;
 		ip[1] += DOT(disp,v->vvec)*d/v->vert;
-		return;
+		return(1);
 	case VT_PLS:			/* planispheric fisheye */
 		ip[0] = 0.5 - v->hoff;
 		ip[1] = 0.5 - v->voff;
 		ip[2] = normalize(disp) - v->vfore;
 		d = DOT(disp,v->vdir);
 		if (d >= 1.0-FTINY)
-			return;
+			return(1);
 		if (d <= -(1.0-FTINY))
-			return;		/* really an error */
+			return(0);
 		ip[0] += DOT(disp,v->hvec)/((1. + d)*sqrt(v->hn2));
 		ip[1] += DOT(disp,v->vvec)/((1. + d)*sqrt(v->vn2));
-		return;
+		return(1);
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
+	return(1);
 }
 
 
