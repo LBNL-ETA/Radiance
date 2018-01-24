@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.27 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.28 2018/01/24 04:39:52 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -268,9 +268,7 @@ putleaf(		/* put a leaf in our tree */
 		return(0);
 					/* compute leaf location in view */
 	VCOPY(wp, qtL.wp[li]);
-	viewloc(ip, &odev.v, wp);
-	if (ip[2] <= 0. || ip[0] < 0. || ip[0] >= 1.
-			|| ip[1] < 0. || ip[1] >= 1.)
+	if (viewloc(ip, &odev.v, wp) != 1)
 		goto dropit;			/* behind or outside view */
 #ifdef DEBUG
 	if (odev.v.type == VT_PAR | odev.v.vfore > FTINY)

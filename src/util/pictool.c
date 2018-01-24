@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pictool.c,v 2.4 2017/05/18 02:25:27 greg Exp $";
+static const char RCSid[] = "$Id: pictool.c,v 2.5 2018/01/24 04:39:52 greg Exp $";
 #endif
 #include "pictool.h"
 #include "g3sphere.h"
@@ -689,8 +689,7 @@ int		pict_locate(pict* p,FVECT pt,int* x,int* y)
 		return 0;
 	}
 
-	viewloc(pp,&(p->view),pt);
-	if (pp[2] < 0)
+	if (viewloc(pp,&(p->view),pt) <= 0)
 		return 0;
 	loc2pix(res,&(p->resol),pp[0],pp[1]);
 	*x = res[0];

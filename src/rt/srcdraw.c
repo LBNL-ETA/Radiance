@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.17 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.18 2018/01/24 04:39:52 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -324,8 +324,8 @@ sourcepoly(			/* compute image polygon for source */
 					ap[i] += ourview.vp[i];
 				}
 			}
-			viewloc(ip, &ourview, ap);	/* find image point */
-			if (ip[2] <= 0.)
+							/* find image point */
+			if (viewloc(ip, &ourview, ap) <= 0)
 				return(0);		/* in front of view */
 			sp[j][0] = ip[0]; sp[j][1] = ip[1];
 		}
@@ -348,8 +348,8 @@ sourcepoly(			/* compute image polygon for source */
 			if (cubeord[dir][j] & 4) ap[i] += s->ss[SW][i];
 			else ap[i] -= s->ss[SW][i];
 		}
-		viewloc(ip, &ourview, ap);	/* find image point */
-		if (ip[2] <= 0.)
+						/* find image point */
+		if (viewloc(ip, &ourview, ap) <= 0)
 			return(0);		/* in front of view */
 		pt[j][0] = ip[0]; pt[j][1] = ip[1];
 	}

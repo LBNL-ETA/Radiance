@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.16 2004/06/08 19:48:30 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.17 2018/01/24 04:39:52 greg Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -37,8 +37,7 @@ int	bi;
 		pf[i] = 0.5*(cp[0][i] + cp[2][i]);
 	sf2 = 0.25*dist2(cp[0], cp[2]);	/* compute half diagonal length */
 	for (i = 0; i < 4; i++) {	/* compute visible quad */
-		viewloc(ip[i], vp, cp[i]);
-		if (ip[i][2] < 0.) {
+		if (viewloc(ip[i], vp, cp[i]) <= 0) {
 			af = 0;
 			goto getback;
 		}
@@ -64,8 +63,7 @@ getback:
 		pb[i] = 0.5*(cp[0][i] + cp[2][i]);
 	sb2 = 0.25*dist2(cp[0], cp[2]);	/* compute half diagonal length */
 	for (i = 0; i < 4; i++) {	/* compute visible quad */
-		viewloc(ip[i], &vrev, cp[i]);
-		if (ip[i][2] < 0.) {
+		if (viewloc(ip[i], &vrev, cp[i]) <= 0) {
 			ab = 0;
 			goto finish;
 		}
