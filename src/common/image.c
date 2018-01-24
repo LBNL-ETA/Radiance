@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.43 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.44 2018/01/24 17:22:24 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -231,9 +231,8 @@ viewloc(			/* find image location for point */
 FVECT  ip,
 VIEW  *v,
 FVECT  p
-)
+)	/* returns: Good=1, Bad=0, Behind=-1, OutOfFrame=2, Behind+OOF=-2 */
 {
-	int	rval;
 	double  d, d2;
 	FVECT  disp;
 
@@ -308,11 +307,9 @@ FVECT  p
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
-gotall:					/* return negative if behind */
-	rval = 1 - 2*(ip[2] <= 0.0);
-	if ((0.0 > ip[0]) | (ip[0] > 1.0) || (0.0 > ip[1]) | (ip[1] > 1.0))
-		return 2*rval;		/* +/-2 if outside frame */
-	return rval;
+gotall:					/* compute return value */
+	return( (1 - 2*(ip[2] <= 0.0)) * (1 +
+	((0.0 >= ip[0]) | (ip[0] >= 1.0) | (0.0 >= ip[1]) | (ip[1] >= 1.0))) );
 }
 
 
