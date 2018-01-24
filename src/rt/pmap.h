@@ -1,4 +1,4 @@
-/* RCSid $Id: pmap.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $ */
+/* RCSid $Id: pmap.h,v 2.9 2018/01/24 19:39:05 rschregle Exp $ */
 
 /* 
    ======================================================================
@@ -10,7 +10,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmap.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmap.h,v 2.9 2018/01/24 19:39:05 rschregle Exp $
 */
 
 
@@ -48,9 +48,10 @@
    #define causticPhotonMapping  (causticPmap != NULL)
    #define directPhotonMapping   (directPmap != NULL)
    #define volumePhotonMapping   (volumePmap != NULL)
-   #define contribPhotonMapping  (contribPmap && contribPmap -> srcContrib)
-   
-   
+   /* #define contribPhotonMapping  (contribPmap && contribPmap -> srcContrib)
+    */
+   #define contribPhotonMapping  (contribPmap)
+      
 
    extern void (*pmapLookup [])(PhotonMap*, RAY*, COLOR);
    /* Photon map lookup functions per type */

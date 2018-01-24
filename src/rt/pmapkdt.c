@@ -8,7 +8,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapkdt.c,v 1.2 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapkdt.c,v 1.3 2018/01/24 19:39:05 rschregle Exp $
 */
 
 
@@ -346,20 +346,24 @@ static void kdT_FindNearest (PhotonMap *pmap, const float pos [3],
    if (norm && DOT(norm, p -> norm) <= PMAP_NORM_TOL * 127 * frandom())
       return;
       
-   if (isContribPmap(pmap) && pmap -> srcContrib) {
-      /* Lookup in contribution photon map */
-      OBJREC *srcMod; 
-      const int srcIdx = photonSrcIdx(pmap, p);
-      
-      if (srcIdx < 0 || srcIdx >= nsources)
-         error(INTERNAL, "invalid light source index in photon map");
-      
-      srcMod = findmaterial(source [srcIdx].so);
+   if (isContribPmap(pmap)) {
+      /* Lookup in contribution photon map; filter according to emitting
+       * light source if contrib list set, else accept all */
+       
+      if (pmap -> srcContrib) {
+         OBJREC *srcMod; 
+         const int srcIdx = photonSrcIdx(pmap, p);
+         
+         if (srcIdx < 0 || srcIdx >= nsources)
+            error(INTERNAL, "invalid light source index in photon map");
+         
+         srcMod = findmaterial(source [srcIdx].so);
 
-      /* Reject photon if contributions from light source which emitted it
-       * are not sought */
-      if (!lu_find(pmap -> srcContrib, srcMod -> oname) -> data)
-         return;
+         /* Reject photon if contributions from light source which emitted it
+          * are not sought */
+         if (!lu_find(pmap -> srcContrib, srcMod -> oname) -> data)
+            return;
+      }
 
       /* Reject non-caustic photon if lookup for caustic contribs */
       if (pmap -> lookupCaustic & !p -> caustic)

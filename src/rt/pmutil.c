@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.1 2016/09/26 20:19:30 greg Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.2 2018/01/24 19:39:05 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.1 2016/09/26 20:19:30 greg Exp $"
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.1 2016/09/26 20:19:30 greg Exp $
+   $Id: pmutil.c,v 2.2 2018/01/24 19:39:05 rschregle Exp $
 */
 
 #include "pmap.h"
@@ -28,7 +28,7 @@ extern char *octname;
 /* Photon map lookup functions per type */
 void (*pmapLookup [NUM_PMAP_TYPES])(PhotonMap*, RAY*, COLOR) = {
    photonDensity, photonPreCompDensity, photonDensity, volumePhotonDensity,
-   photonDensity, NULL
+   photonDensity, photonDensity
 };
 
 
