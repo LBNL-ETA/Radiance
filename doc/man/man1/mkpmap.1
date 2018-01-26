@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.6 2017/10/10 16:10:14 greg Exp $"
-.TH MKPMAP 1 "$Date: 2017/10/10 16:10:14 $ $Revision: 1.6 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.7 2018/01/26 18:36:04 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2018/01/26 18:36:04 $ $Revision: 1.7 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -189,11 +189,6 @@ Toggles overwriting of output files. By default, \fImkpmap\fR will not
 overwrite an already existing photon map file. This is to prevent
 inadvertently destroying the results of potentially lengthy photon
 mapping runs.
-
-.IP "\fB\-i \fIinc\fR"
-Photon heap size increment; the photon heap is enlarged by this amount
-when storage overflows during photon distribution. No need to fiddle
-with this under ordinary circumstances.
 
 .IP "\fB\-ma \fIralb galb balb\fR"
 Set the global scattering albedo for participating media in conjunction
