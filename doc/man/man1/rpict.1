@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.21 2016/05/18 12:45:55 rschregle Exp $"
+.\" RCSid "$Id: rpict.1,v 1.22 2018/01/26 18:30:27 rschregle Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -540,7 +540,9 @@ Global photon irradiance is evaluated as part of the ambient calculation (see
 above), caustic photon irradiance is evaluated at primary rays, and 
 indirect inscattering in 
 .I mist
-is accounted for by volume photons.
+is accounted for by volume photons. Contribution photons are treated as
+global photons by
+.I rpict.
 .IP
 Additionally specifying 
 .I bwidth2
@@ -557,7 +559,7 @@ in which case the bandwidth, if specified, is ignored, as the nearest photon
 is invariably looked up.
 .IP
 Using direct photons replaces the direct calculation with density estimates
-for debugging and validation of photon emission.       
+for debugging and validation of photon emission.
 .TP
 .BI -am " frac"
 Maximum search radius for photon map lookups.  Without this option, an

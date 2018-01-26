@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.28 2016/05/18 12:45:55 rschregle Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.29 2018/01/26 18:30:27 rschregle Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -533,7 +533,9 @@ Global photon irradiance is evaluated as part of the ambient calculation (see
 above), caustic photon irradiance is evaluated at primary rays, and 
 indirect inscattering in 
 .I mist
-is accounted for by volume photons.
+is accounted for by volume photons. Contribution photons are treated as
+global photons by
+.I rtrace.
 .IP
 Additionally specifying 
 .I bwidth2
