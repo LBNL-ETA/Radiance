@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.13 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.14 2018/02/02 19:47:55 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -124,6 +124,9 @@ void photonRay (const RAY *rayIn, RAY *rayOut,
 
       /* Propagate index of emitting light source */
       rayOut -> rsrc = rayIn -> rsrc;
+      
+      /* Update maximum photon path distance */
+      rayOut -> rmax = rayIn -> rmax - rayIn -> rot;
    }
 }
 

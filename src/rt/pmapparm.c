@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapparm.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapparm.c,v 2.9 2018/02/02 19:47:55 rschregle Exp $";
 #endif
 
 /* 
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: pmapparm.c,v 2.8 2017/08/14 21:12:10 rschregle
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapparm.c,v 2.8 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapparm.c,v 2.9 2018/02/02 19:47:55 rschregle Exp $
 */
 
 
@@ -36,9 +36,12 @@ float pdfSamples        = 1000,        /* PDF samples per steradian */
                                           are restarted with a larger
                                           search radius */
                                           
-      maxDistFix        = 0;           /* Static maximum photon search
+      maxDistFix        = 0,           /* Static maximum photon search
                                           radius (radius is adaptive if
                                           this is zero) */
+      
+      photonMaxDist     = 0;           /* Maximum cumulative distance of
+                                          photon path */
                                           
 #ifdef PMAP_OOC
 float          pmapCachePageSize = 8;     /* OOC cache pagesize as multiple

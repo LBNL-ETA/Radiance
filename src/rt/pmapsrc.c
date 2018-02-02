@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.13 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.14 2018/02/02 19:47:55 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -757,12 +757,13 @@ void emitPhoton (const EmissionMap* emap, RAY* ray)
       emitted photon to break up clustering artifacts */
    photonOrigin [emap -> src -> so -> otype] ((EmissionMap*)emap);
    /* If we have a local glow source with a maximum radius, then
-      restrict our photon to the specified distance (otherwise no limit) */
+      restrict our photon to the specified distance, otherwise we set
+      the limit imposed by photonMaxDist (or no limit if 0) */
    if (mod -> otype == MAT_GLOW && !(emap -> src -> sflags & SDISTANT)
 		&& mod -> oargs.farg[3] > FTINY)
       ray -> rmax = mod -> oargs.farg[3];
    else
-      ray -> rmax = 0;
+      ray -> rmax = photonMaxDist;
    rayorigin(ray, PRIMARY, NULL, NULL);
    
    if (!emap -> numSamples) {

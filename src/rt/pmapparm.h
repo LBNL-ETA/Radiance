@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapparm.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $ */
+/* RCSid $Id: pmapparm.h,v 2.9 2018/02/02 19:47:55 rschregle Exp $ */
 
 /* 
    ======================================================================
@@ -11,7 +11,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapparm.h,v 2.8 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapparm.h,v 2.9 2018/02/02 19:47:55 rschregle Exp $
 */
 
 
@@ -46,7 +46,8 @@
    
    
    extern float         pdfSamples, preDistrib, finalGather,
-                        gatherTolerance, maxDistFix;
+                        gatherTolerance, maxDistFix, pmapMaxDist,
+                        photonMaxDist;
    extern unsigned long photonHeapSizeInc, photonMaxBounce; 
    extern unsigned      photonRepTime, maxPreDistrib, defaultGather,
                         verbose;

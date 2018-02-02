@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle Exp $";
+static const char RCSid[] = "$Id: mkpmap.c,v 2.8 2018/02/02 19:47:55 rschregle Exp $";
 #endif
 
 
@@ -14,7 +14,7 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle Exp $    
+   $Id: mkpmap.c,v 2.8 2018/02/02 19:47:55 rschregle Exp $    
 */
 
 
@@ -28,6 +28,10 @@ static const char RCSid[] = "$Id: mkpmap.c,v 2.7 2017/12/09 18:38:57 rschregle E
 #include "source.h"
 #include <string.h>
 #include <sys/stat.h>
+
+
+/* Enable options for Ze Ekspertz only! */
+#define PMAP_EKSPERTZ
 
 
 extern char VersionID [];
@@ -71,51 +75,58 @@ void (*trace)() = NULL, (*addobjnotify [])() = {ambnotify, NULL};
 void printdefaults()
 /* print default values to stdout */
 {
-   puts("-apg file nPhotons\t\t# global photon map");
-   puts("-apc file nPhotons\t\t# caustic photon map");          
-   puts("-apd file nPhotons\t\t# direct photon map");
-   puts("-app file nPhotons bwidth\t# precomputed global photon map");
-   puts("-apv file nPhotons\t\t# volume photon map");
-   puts("-apC file nPhotons\t\t# contribution photon map");
-   
-   printf("-apD %f\t\t\t# predistribution factor\n", preDistrib);
-   printf("-apM %d\t\t\t\t# max predistrib passes\n", maxPreDistrib);
-   printf("-apm %ld\t\t\t# max photon bounces\n", photonMaxBounce);                            
-   puts("-apo mod\t\t\t# photon port modifier");
-   puts("-apO file\t\t\t# photon port file");
-   printf("-apP %f\t\t\t# precomputation factor\n", finalGather);
-   printf("-apr %d\t\t\t\t# random seed\n", randSeed);
-   puts("-aps mod\t\t\t# antimatter sensor modifier");
-   puts("-apS file\t\t\t# antimatter sensor file");
 
-   printf(backvis ? "-bv+\t\t\t\t# back face visibility on\n"
-                  : "-bv-\t\t\t\t# back face visibility off\n");
-   printf("-dp  %.1f\t\t\t# PDF samples / sr\n", pdfSamples);
-   printf("-ds  %f\t\t\t# source partition size ratio\n", srcsizerat);
-   printf("-e   %s\t\t\t# diagnostics output file\n", diagFile);
-   printf(clobber ? "-fo+\t\t\t\t# force overwrite\n"
-                  : "-fo-\t\t\t\t# do not overwrite\n");
-   printf("-ma  %.2f %.2f %.2f\t\t# scattering albedo\n", 
+#ifdef EVALDRC_HACK
+   /* EvalDRC support */
+   puts("-A\t\t\t\t# angular source file");
+#endif    
+#ifdef PMAP_EKSPERTZ
+   puts("-api xmin ymin zmin xmax ymax zmax\t# region of interest");
+#endif
+   puts("-apg file nPhotons\t\t\t# global photon map");
+   puts("-apc file nPhotons\t\t\t# caustic photon map");          
+   puts("-apd file nPhotons\t\t\t# direct photon map");
+   puts("-app file nPhotons bwidth\t\t# precomputed global photon map");
+   puts("-apv file nPhotons\t\t\t# volume photon map");
+   puts("-apC file nPhotons\t\t\t# contribution photon map");   
+   printf("-apD %f\t\t\t\t# predistribution factor\n", preDistrib);
+   printf("-apM %d\t\t\t\t\t# max predistrib passes\n", maxPreDistrib);
+#if 1
+   /* Kept for backwards compat, will be gradually phased out by -lD, -lr */
+   printf("-apm %ld\t\t\t\t# limit photon bounces\n", photonMaxBounce);
+#endif
+   puts("-apo mod\t\t\t\t# photon port modifier");
+   puts("-apO file\t\t\t\t# photon port file");
+   printf("-apP %f\t\t\t\t# precomputation factor\n", finalGather);
+   printf("-apr %d\t\t\t\t\t# random seed\n", randSeed);
+   puts("-aps mod\t\t\t\t# antimatter sensor modifier");
+   puts("-apS file\t\t\t\t# antimatter sensor file");
+
+   printf(backvis ? "-bv+\t\t\t\t\t# back face visibility on\n"
+                  : "-bv-\t\t\t\t\t# back face visibility off\n");
+   printf("-dp  %.1f\t\t\t\t# PDF samples / sr\n", pdfSamples);
+   printf("-ds  %f\t\t\t\t# source partition size ratio\n", srcsizerat);
+   printf("-e   %s\t\t\t\t# diagnostics output file\n", diagFile);
+   printf(clobber ? "-fo+\t\t\t\t\t# force overwrite\n"
+                  : "-fo-\t\t\t\t\t# do not overwrite\n");
+#ifdef PMAP_EKSPERTZ
+   /* NU STUFF for Ze Exspertz! */      
+   printf("-ld %.1f\t\t\t\t\t# limit photon distance\n", photonMaxDist);
+   printf("-lr %ld\t\t\t\t# limit photon bounces\n", photonMaxBounce);   
+#endif   
+   printf("-ma  %.2f %.2f %.2f\t\t\t# scattering albedo\n", 
           colval(salbedo,RED), colval(salbedo,GRN), colval(salbedo,BLU));
-   printf("-me  %.2e %.2e %.2e\t# extinction coefficient\n", 
+   printf("-me  %.2e %.2e %.2e\t\t# extinction coefficient\n", 
           colval(cextinction,RED), colval(cextinction,GRN), 
           colval(cextinction,BLU));          
-   printf("-mg  %.2f\t\t\t# scattering eccentricity\n", seccg);
+   printf("-mg  %.2f\t\t\t\t# scattering eccentricity\n", seccg);
 #if NIX   
    /* Multiprocessing on NIX only */
-   printf("-n   %d\t\t\t\t# number of parallel processes\n", nproc);
+   printf("-n   %d\t\t\t\t\t# number of parallel processes\n", nproc);
 #endif   
-   printf("-t   %-9d\t\t\t# time between reports\n", photonRepTime);
-   printf(verbose ? "-v+\t\t\t\t# verbose console output\n"
-                  : "-v-\t\t\t\t# terse console output\n");
-#ifdef PMAP_ROI
-   /* Ziss option for ze egg-spurtz only! */
-   puts("-api xmin ymin zmin\n     xmax ymax zmax\t\t# region of interest");
-#endif   
-#ifdef EVALDRC_HACK
-   /* ... and ziss one... */
-   puts("-A\t\t\t\t# angular source file");
-#endif
+   printf("-t   %-9d\t\t\t\t# time between reports\n", photonRepTime);
+   printf(verbose ? "-v+\t\t\t\t\t# verbose console output\n"
+                  : "-v-\t\t\t\t\t# terse console output\n");
 }
 
 
@@ -182,15 +193,7 @@ int main (int argc, char* argv [])
                if (!globalPmapParams.distribTarget) 
                   goto badopt;                         
                globalPmapParams.minGather = globalPmapParams.maxGather = 0;
-            }
-                              
-            else if (!strcmp(argv [i] + 2, "pm")) {
-               /* Max photon bounces */
-               check(4, "i");               
-               photonMaxBounce = atol(argv [++i]);
-               if (photonMaxBounce <= 0) 
-                  error(USER, "max photon bounces must be > 0");
-            }
+            }                              
             
             else if (!strcmp(argv [i] + 2, "pp")) {
                /* Precomputed global photon map */
@@ -245,7 +248,7 @@ int main (int argc, char* argv [])
                if (!contribPmapParams.distribTarget)
                   goto badopt;
             }
-            
+
             else if (!strcmp(argv [i] + 2, "pD")) {
                /* Predistribution factor */
                check(4, "f");
@@ -253,7 +256,7 @@ int main (int argc, char* argv [])
                if (preDistrib <= 0)
                   error(USER, "predistribution factor must be > 0");
             }
-            
+
             else if (!strcmp(argv [i] + 2, "pM")) {
                /* Max predistribution passes */
                check(4, "i");
@@ -261,9 +264,18 @@ int main (int argc, char* argv [])
                if (maxPreDistrib <= 0)
                   error(USER, "max predistribution passes must be > 0");
             }
-
-#ifdef PMAP_ROI
-            /* Add region of interest; for ze egg-spurtz only! */
+#if 1
+            /* Kept for backwards compat, to be phased out by -lr */
+            else if (!strcmp(argv [i] + 2, "pm")) {
+               /* Max photon bounces */
+               check(4, "i");               
+               photonMaxBounce = atol(argv [++i]);
+               if (photonMaxBounce <= 0) 
+                  error(USER, "max photon bounces must be > 0");
+            }            
+#endif
+#ifdef PMAP_EKSPERTZ
+            /* Add region of interest; for Ze Ekspertz only! */
             else if (!strcmp(argv [i] + 2, "pi")) {
                unsigned j, n = pmapNumROI;
                check(4, "ffffff");
@@ -285,8 +297,7 @@ int main (int argc, char* argv [])
                      error(USER, 
                            "invalid region of interest (swapped min/max?)");
             }
-#endif
-             
+#endif             
             else if (!strcmp(argv [i] + 2, "pP")) {
                /* Global photon precomputation factor */
                check(4, "f");
@@ -400,7 +411,27 @@ int main (int argc, char* argv [])
                    
             else goto badopt;
             break; 
-
+#ifdef PMAP_EKSPERTZ
+         case 'l': /* Limits */
+            switch (argv [i][2]) {
+               case 'd': /* Limit photon path distance */
+                  check(3, "f");
+                  photonMaxDist = atof(argv [++i]);
+                  if (photonMaxDist <= 0)
+                     error(USER, "max photon distance must be > 0");
+                  break;
+                 
+               case 'r': /* Limit photon bounces */               
+                  check(3, "i");               
+                  photonMaxBounce = atol(argv [++i]);
+                  if (photonMaxBounce <= 0) 
+                     error(USER, "max photon bounces must be > 0");
+                  break;
+               
+               default: goto badopt;
+            }
+            break;
+#endif
          case 'm': /* Medium */
             switch (argv[i][2]) {
                case 'e':	/* Eggs-tinction coefficient */
