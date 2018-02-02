@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.7 2018/01/26 18:36:04 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2018/01/26 18:36:04 $ $Revision: 1.7 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.8 2018/02/02 19:49:02 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2018/02/02 19:49:02 $ $Revision: 1.8 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -60,7 +60,10 @@ from the light sources, as the quality is too low for actual rendering.
 .IP "\fB\-apC \fIfile nphotons\fR" 
 Generate a contribution photon map containing approximately
 \fInphotons\fR photons, and output to file \fIfile\fR. This may then be
-used by \fIrcontrib(1)\fR to compute light source contributions.
+used by \fIrcontrib(1)\fR to compute light source contributions. When used
+with \fIrtrace(1)\fR or \fIrpict(1)\fR, contribution photon maps behave as
+regular global photon maps and yield cumulative contributions from all light
+sources.
 .IP
 With this option, \fImkpmap\fR uses a modified photon distribution
 algorithm that ensures all light sources contribute approximately the
@@ -81,11 +84,10 @@ the photon positions using \fIbwidth\fR nearest photons, and stored as
 photon flux; the remaining photons are discarded as their contributions
 have been accounted for. 
 .IP 
-This obviates the explicit irradiance
-evaluation by \fIrpict(1), rtrace(1)\fR and \fIrvu(1)\fR, thus providing
-a speedup at the expense of accuracy. The resulting error is tolerable
-if the indirect illumination has a low gradient, as is usually the case
-with diffuse illumination.
+This obviates the explicit irradiance evaluation by \fIrpict(1),
+rtrace(1)\fR and \fIrvu(1)\fR, thus providing a speedup at the expense of
+accuracy.  The resulting error is tolerable if the indirect illumination has
+a low gradient, as is usually the case with diffuse illumination.
 
 .IP "\fB\-apD \fIpredistrib\fR"
 Photon predistribution factor; this is the fraction of \fInphotons\fR
@@ -93,22 +95,26 @@ which are emitted in a distribution prepass in order to estimate the
 remaining number of photons to emit in the main pass to approximately
 yield a photon map of size \fInphotons\fR. 
 .IP
-Setting this too high may
-yield more than \fInphotons\fR in the initial pass with highly
-reflective geometry. Note that this value may exceed 1, which may be
-useful if the resulting photon map size greatly deviates from
+Setting this too high may yield more than \fInphotons\fR in the initial pass
+with highly reflective geometry.  Note that this value may exceed 1, which
+may be useful if the resulting photon map size greatly deviates from
 \fInphotons\fR with a very low average reflectance.
 
-.IP "\fB\-apP \fIprecomp\fR"
-Fraction of global photons to precompute in the range ]0,1] when using the
-\fB\-app\fR option.
+.IP "\fB\-api \fIxmin ymin zmin xmax ymax zmax\fR"
+Define a region of interested within which to store photons exclusively;
+photons will only be stored within the volume bounded by the given minimum
+and maximum coordinates.  Multiple instances of this option may be specified
+with cumulative effect to define compound regions of interest.  This is
+useful for constraining photons to only the relevant regions of a scene, but
+may increase the photon distribution time.
+.IP
+\fBWARNING: this is an optimisation option for advanced users (an elite
+group collectively known as \fIZe Ekspertz\fB) and may yield biased results. 
+Use with caution!\fR
 
 .IP "\fB\-apm \fImaxbounce\fR"
-Maximum number of bounces (scattering events) along a photon path before
-being considered "runaway" and terminated. Photons paths are normally
-terminated via \fIRussian Roulette\fR, depending on their albedo. With
-unrealistically high albedos, this is not guaranteed, and this options
-imposes a hard limit to avoid an infinite loop.
+Synonymous with \fB\-lr\fR for backwards compatibility. May be removed in
+future releases.
 
 .IP "\fB\-apM \fImaxprepass\fR"
 Maximum number of iterations of the distribution prepass before terminating
@@ -124,10 +130,9 @@ accelerates photon distribution in scenes where photons have to enter a
 space which separates them from the emitting light source via an
 opening, or port. 
 .IP
-A typical application is daylight simulation, where a
-fenestration acts as port to admit photons into an interior after
-emission from an external light source. Multiple instances of this
-option may be specified.
+A typical application is daylight simulation, where a fenestration acts as
+port to admit photons into an interior after emission from an external light
+source.  Multiple instances of this option may be specified.
 .IP
 Note that port objects must be defined with their surface normals
 pointing \fIinside\fR as per \fImkillum\fR convention.
@@ -135,6 +140,10 @@ pointing \fIinside\fR as per \fImkillum\fR convention.
 .IP "\fB\-apO \fImodfile\fR"
 Read photon port modifiers from the file \fImodfile\fR as a more convenient
 alternative to multiple instances of \fB\-apo\fR.
+
+.IP "\fB\-apP \fIprecomp\fR"
+Fraction of global photons to precompute in the range ]0,1] when using the
+\fB\-app\fR option.
 
 .IP "\fB\-apr \fIseed\fR"
 Seed for the random number generator. This is necessary for generating 
@@ -189,6 +198,28 @@ Toggles overwriting of output files. By default, \fImkpmap\fR will not
 overwrite an already existing photon map file. This is to prevent
 inadvertently destroying the results of potentially lengthy photon
 mapping runs.
+
+.IP "\fB\-ld \fImaxdist\fR"
+Limit cumulative distance travelled by a photon along its path to
+\fImaxdist\fR.  Photon hits within this distance will be stored, and the
+photon is terminated once its path length exceeds this limit.  This is
+useful for setting radial regions of interest around emitting/reflecting
+geometry, but may increase the photon distribution time.  
+.IP
+\fBWARNING: this is an optimisation option for advanced users (an elite
+group collectively known as \fIZe Ekspertz\fB) and may yield biased results. 
+Use with caution!\fR
+
+.IP "\fB\-lr \fImaxbounce\fR"
+Limit number of bounces (scattering events) along a photon path to
+\fImaxbounce\fR before being considered "runaway" and terminated.  Photons
+paths are normally terminated via \fIRussian Roulette\fR, depending on their
+albedo.  With unrealistically high albedos, this is not guaranteed, and this
+option imposes a hard limit to avoid an infinite loop.
+.IP
+\fBWARNING: this is an optimisation option for advanced users (an elite
+group collectively known as \fIZe Ekspertz\fB) and may yield biased results. 
+Use with caution!\fR
 
 .IP "\fB\-ma \fIralb galb balb\fR"
 Set the global scattering albedo for participating media in conjunction
@@ -304,6 +335,6 @@ German Research Foundation (DFG) and the Swiss National Science Foundation
 (SNF). 
 
 .SH "SEE ALSO"
-rpict(1), rtrace(1), rvu(1), rcontrib(1), 
-\fIThe RADIANCE Photon Map Manual\fR
-
+rpict(1), rtrace(1), rvu(1), rcontrib(1), \fIThe RADIANCE Photon Map
+Manual\fR, \fIDevelopment and Integration of the RADIANCE Photon Map
+Extension: Technical Report\fR
