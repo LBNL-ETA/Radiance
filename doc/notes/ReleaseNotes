@@ -2193,3 +2193,5 @@ Tweaked peak-extraction code to work more reliably.
 Georg Mischler updated SCons build system.
 
 Rob Guglielmetti and Alex Swindler updated CMake build system.
+
+Modified pcomb so the first view seen in the inputs is written into header.

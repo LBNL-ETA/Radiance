@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.48 2018/01/13 00:35:55 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.49 2018/02/05 20:07:17 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -30,6 +30,8 @@ struct {
 }	input[MAXINP];			/* input pictures */
 
 int	nfiles;				/* number of input files */
+
+VIEW	commvw;				/* common view parameters */
 
 char	ourfmt[LPICFMT+1] = PICFMT;	/* input picture format */
 
@@ -222,6 +224,11 @@ main(
 	}
 						/* complete header */
 	printargs(argc, argv, stdout);
+	if (commvw.type) {
+		fputs(VIEWSTR, stdout);
+		fprintview(&commvw, stdout);
+		fputc('\n', stdout);
+	}
 	if (strcmp(ourfmt, PICFMT))
 		fputformat(ourfmt, stdout);	/* print format if known */
 	putchar('\n');
@@ -300,6 +307,8 @@ checkfile(void)			/* ready a file */
 	}
 	if (!gotview || setview(&input[nfiles].vw) != NULL)
 		input[nfiles].vw.type = 0;
+	else if (!commvw.type)
+		commvw = input[nfiles].vw;
 	if (!fgetsresolu(&input[nfiles].rs, input[nfiles].fp)) {
 		eputs(input[nfiles].name);
 		eputs(": bad picture size\n");

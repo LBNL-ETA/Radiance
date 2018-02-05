@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.9 2008/11/10 19:08:17 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.10 2018/02/05 20:07:17 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -140,6 +140,8 @@ If the current pixel is outside the view region,
 will return a negative value, and
 .I S(n)
 will return zero.
+The first input picture with a view is assumed to correspond to the
+view of the output picture, which is written into the header.
 .PP
 The
 .I \-h
