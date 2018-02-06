@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.8 2018/02/02 19:49:02 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2018/02/02 19:49:02 $ $Revision: 1.8 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.9 2018/02/06 16:02:22 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2018/02/06 16:02:22 $ $Revision: 1.9 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -146,8 +146,9 @@ Fraction of global photons to precompute in the range ]0,1] when using the
 \fB\-app\fR option.
 
 .IP "\fB\-apr \fIseed\fR"
-Seed for the random number generator. This is necessary for generating 
-different photon distributions for the same octree and photon map size.
+Seed for the random number generator. This is useful for generating 
+different photon distributions for the same octree and photon map size,
+notably in progressive applications.
 
 .IP "\fB\-aps \fImod\fR"
 Specifies a modifier \fImod\fR defined as \fIantimatter\fR material to act
