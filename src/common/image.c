@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.44 2018/01/24 17:22:24 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.45 2018/02/06 02:08:12 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -304,6 +304,8 @@ FVECT  p
 		ip[0] += DOT(disp,v->hvec)/((1. + d)*sqrt(v->hn2));
 		ip[1] += DOT(disp,v->vvec)/((1. + d)*sqrt(v->vn2));
 		goto gotall;
+	default:
+		return(0);
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
