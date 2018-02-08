@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.11 2017/08/14 21:12:10 rschregle Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.12 2018/02/08 19:55:02 rschregle Exp $ */
 
 /* 
    =========================================================================
@@ -20,7 +20,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: pmapdata.h,v 2.11 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapdata.h,v 2.12 2018/02/08 19:55:02 rschregle Exp $
 */
 
 
@@ -53,7 +53,9 @@
    typedef struct {
       int16    srcIdx;              /* Index of emitting light source */
                                     /* !!! REDUCED FROM 32 BITS !!! */
+#ifdef PMAP_PRIMARYDIR                                    
       int32    dir;                 /* Encoded ray direction */
+#endif      
 #ifdef PMAP_PRIMARYPOS      
       float    pos [3];             /* Hit point */
 #endif      

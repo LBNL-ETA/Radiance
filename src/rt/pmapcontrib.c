@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.14 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.15 2018/02/08 19:55:02 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.14 2017/08/14 21:12:10 rschr
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapcontrib.c,v 2.14 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmapcontrib.c,v 2.15 2018/02/08 19:55:02 rschregle Exp $
 */
 
 
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.14 2017/08/14 21:12:10 rschr
 #include "otypes.h"
 #if NIX
    #include <sys/mman.h>
-   #include <sys/wait.h>
+   #include <sys/wait.h>   
 #endif
 
 
@@ -60,12 +60,14 @@ static PhotonPrimaryIdx newPhotonPrimary (PhotonMap *pmap,
      
    if (primRay) { 
       FVECT dvec;
-      
+
+#ifdef PMAP_PRIMARYDIR            
       /* Reverse incident direction to point to light source */
       dvec [0] = -primRay -> rdir [0];
       dvec [1] = -primRay -> rdir [1];
       dvec [2] = -primRay -> rdir [2];
       pmap -> lastPrimary.dir = encodedir(dvec);
+#endif      
 #ifdef PMAP_PRIMARYPOS      
       VCOPY(pmap -> lastPrimary.pos, primRay -> rop);
 #endif      
