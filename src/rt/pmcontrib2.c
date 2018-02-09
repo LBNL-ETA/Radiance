@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmcontrib2.c,v 2.3 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmcontrib2.c,v 2.4 2018/02/09 14:59:08 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmcontrib2.c,v 2.3 2017/08/14 21:12:10 rschreg
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmcontrib2.c,v 2.3 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmcontrib2.c,v 2.4 2018/02/09 14:59:08 rschregle Exp $
 */
 
 
@@ -107,10 +107,10 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
 {
    unsigned                i;
    PhotonSearchQueueNode   *sqn;
-   float                   r, invArea;
+   float                   r2, invArea;
    RREAL                   rayCoeff [3];
    Photon                  *photon;
-   static char             warn = 1;
+   static char             warnPos = 1, warnDir = 1;
  
    setcolor(irrad, 0, 0, 0);
  
@@ -140,13 +140,13 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
       return;
    }
 
-   /* Average (squared) radius between furthest two photons to improve
-    * accuracy and get inverse search area 1 / (PI * r^2), with extra
-    * normalisation factor 1 / PI for ambient calculation */
+   /* Average radius^2 between furthest two photons to improve accuracy and
+    * get inverse search area 1 / (PI * r^2), with extra normalisation
+    * factor 1 / PI for ambient calculation */
    sqn = pmap -> squeue.node + 1;
-   r = max(sqn -> dist2, (sqn + 1) -> dist2);
-   r = 0.25 * (pmap -> maxDist2 + r + 2 * sqrt(pmap -> maxDist2 * r));   
-   invArea = 1 / (PI * PI * r);
+   r2 = max(sqn -> dist2, (sqn + 1) -> dist2);
+   r2 = 0.25 * (pmap -> maxDist2 + r2 + 2 * sqrt(pmap -> maxDist2 * r2));
+   invArea = 1 / (PI * PI * r2);
    
    /* Skip the extra photon */
    for (i = 1 ; i < pmap -> squeue.tail; i++, sqn++) {         
@@ -158,7 +158,7 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
       scalecolor(flux, invArea);      
 #ifdef PMAP_EPANECHNIKOV
       /* Apply Epanechnikov kernel to photon flux based on photon distance */
-      scalecolor(flux, 2 * (1 - sqn -> dist2 / r));
+      scalecolor(flux, 2 * (1 - sqn -> dist2 / r2));
 #endif
       addcolor(irrad, flux);
       
@@ -188,13 +188,25 @@ void photonContrib (PhotonMap *pmap, RAY *ray, COLOR irrad)
 #else
             /* No primary hitpoints; set dummy ray origin and warn once */
             srcRay.rorg [0] = srcRay.rorg [1] = srcRay.rorg [2] = 0;
-            if (warn) {
-               error(WARNING, "no photon primary hitpoints for bin evaluation;"
-                     " using dummy (0,0,0) !");
-               warn = 0;
+            if (warnPos) {
+               error(WARNING, 
+                     "no photon primary hitpoints for bin evaluation; "
+                     "using dummy (0,0,0)! Recompile with -DPMAP_CBDM.");
+               warnPos = 0;
             }
 #endif           
+#ifdef PMAP_PRIMARYDIR
             decodedir(srcRay.rdir, primary -> dir);
+#else
+            /* No primary incident direction; set dummy and warn once */
+            if (warnDir) {
+               error(WARNING, 
+                     "no photon primary directions for bin evaluation; "
+                     "using dummy (0,0,0)! Recompile with -DPMAP_CBDM.");
+               warnDir = 0;
+            }
+            srcRay.rdir [0] = srcRay.rdir [1] = srcRay.rdir [2] = 0;
+#endif
 
             if (!(sp->sflags & SDISTANT 
                   ? sourcehit(&srcRay)
