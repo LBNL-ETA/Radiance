@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.2 2018/01/24 19:39:05 rschregle Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.3 2018/02/09 14:57:42 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.2 2018/01/24 19:39:05 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.2 2018/01/24 19:39:05 rschregle Exp $
+   $Id: pmutil.c,v 2.3 2018/02/09 14:57:42 rschregle Exp $
 */
 
 #include "pmap.h"
@@ -109,7 +109,7 @@ void photonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
 /* Photon density estimate. Returns irradiance at ray -> rop. */
 {
    unsigned                      i;
-   float                         r;
+   float                         r2;
    COLOR                         flux;
    Photon                        *photon;
    const PhotonSearchQueueNode   *sqn;
@@ -141,9 +141,9 @@ void photonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
       /* No bias compensation. Just do a plain vanilla estimate */
       sqn = pmap -> squeue.node + 1;
       
-      /* Average radius between furthest two photons to improve accuracy */      
-      r = max(sqn -> dist2, (sqn + 1) -> dist2);
-      r = 0.25 * (pmap -> maxDist2 + r + 2 * sqrt(pmap -> maxDist2 * r));   
+      /* Average radius^2 between furthest two photons to improve accuracy */
+      r2 = max(sqn -> dist2, (sqn + 1) -> dist2);
+      r2 = 0.25 * (pmap -> maxDist2 + r2 + 2 * sqrt(pmap -> maxDist2 * r2));
       
       /* Skip the extra photon */
       for (i = 1 ; i < pmap -> squeue.tail; i++, sqn++) {
@@ -151,14 +151,14 @@ void photonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
          getPhotonFlux(photon, flux);         
 #ifdef PMAP_EPANECHNIKOV
          /* Apply Epanechnikov kernel to photon flux based on photon dist */
-         scalecolor(flux, 2 * (1 - sqn -> dist2 / r));
+         scalecolor(flux, 2 * (1 - sqn -> dist2 / r2));
 #endif   
          addcolor(irrad, flux);
       }
       
       /* Divide by search area PI * r^2, 1 / PI required as ambient 
          normalisation factor */         
-      scalecolor(irrad, 1 / (PI * PI * r)); 
+      scalecolor(irrad, 1 / (PI * PI * r2)); 
       
       return;
    }
@@ -192,7 +192,7 @@ void volumePhotonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
 /* Photon volume density estimate. Returns irradiance at ray -> rop. */
 {
    unsigned                      i;
-   float                         r, gecc2, ph;
+   float                         r2, gecc2, ph;
    COLOR                         flux;
    Photon                        *photon;
    const PhotonSearchQueueNode   *sqn;
@@ -217,9 +217,9 @@ void volumePhotonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
       gecc2 = ray -> gecc * ray -> gecc;
       sqn = pmap -> squeue.node + 1;
       
-      /* Average radius between furthest two photons to improve accuracy */      
-      r = max(sqn -> dist2, (sqn + 1) -> dist2);
-      r = 0.25 * (pmap -> maxDist2 + r + 2 * sqrt(pmap -> maxDist2 * r));   
+      /* Average radius^2 between furthest two photons to improve accuracy */      
+      r2 = max(sqn -> dist2, (sqn + 1) -> dist2);
+      r2 = 0.25 * (pmap -> maxDist2 + r2 + 2 * sqrt(pmap -> maxDist2 * r2));
       
       /* Skip the extra photon */
       for (i = 1; i < pmap -> squeue.tail; i++, sqn++) {
@@ -241,7 +241,7 @@ void volumePhotonDensity (PhotonMap *pmap, RAY *ray, COLOR irrad)
       
       /* Divide by search volume 4 / 3 * PI * r^3 and phase function
          normalization factor 1 / (4 * PI) */
-      scalecolor(irrad, 3 / (16 * PI * PI * r * sqrt(r)));
+      scalecolor(irrad, 3 / (16 * PI * PI * r2 * sqrt(r2)));
       return;
    }
 #if 0
