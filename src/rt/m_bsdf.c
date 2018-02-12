@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.46 2018/02/12 18:46:29 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.47 2018/02/12 23:20:31 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -115,9 +115,6 @@ compute_through(BSDFDAT *ndp)
 	SDError		ec;
 
 	setcolor(ndp->cthru, 0, 0, 0);		/* starting assumption */
-
-	if (ndp->pr->crtype & (SPECULAR|AMBIENT) && !(ndp->pr->crtype & SHADOW))
-		return;				/* no need for through comp. */
 
 	if (ndp->pr->rod > 0)
 		dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
@@ -240,7 +237,7 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
 		double	dx = vsrc[0] + ndp->vray[0];
 		double	dy = vsrc[1] + ndp->vray[1];
-		if (dx*dx + dy*dy <= (4./PI)*(omega + tomega +
+		if (dx*dx + dy*dy <= (1.5*4./PI)*(omega + tomega +
 						2.*sqrt(omega*tomega)))
 			return(0);
 	}
@@ -444,7 +441,9 @@ dir_btdf(
 static int
 sample_sdcomp(BSDFDAT *ndp, SDComponent *dcp, int xmit)
 {
-	const int	hasthru = (xmit && bright(ndp->cthru) > FTINY);
+	const int	hasthru = (xmit &&
+					!(ndp->pr->crtype & (SPECULAR|AMBIENT))
+					&& bright(ndp->cthru) > FTINY);
 	int		nstarget = 1;
 	int		nsent = 0;
 	int		n;
@@ -510,7 +509,8 @@ static int
 sample_sdf(BSDFDAT *ndp, int sflags)
 {
 	int		hasthru = (sflags == SDsampSpT &&
-					bright(ndp->cthru) > FTINY);
+					!(ndp->pr->crtype & (SPECULAR|AMBIENT))
+					&& bright(ndp->cthru) > FTINY);
 	int		n, ntotal = 0;
 	double		b = 0;
 	SDSpectralDF	*dfp;
