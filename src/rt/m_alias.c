@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.8 2018/01/09 05:01:15 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.9 2018/02/16 18:37:51 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -54,9 +54,9 @@ m_alias(			/* transfer shading to alias target */
 	arec = *aop;
 					/* irradiance hack */
 	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
-			m->otype != MAT_CLIP &&
-			(ofun[arec.otype].flags & (T_M|T_X))) {
-		if (istransp(arec.otype) || isBSDFproxy(m)) {
+			(ofun[arec.otype].flags & (T_M|T_X)) &&
+			arec.otype != MAT_CLIP) {
+		if (istransp(arec.otype) || isBSDFproxy(&arec)) {
 			raytrans(r);
 			return(1);
 		}
