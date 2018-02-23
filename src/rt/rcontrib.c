@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.30 2017/04/11 17:52:40 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.31 2018/02/23 03:21:24 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -29,7 +29,7 @@ int	do_irrad = 0;			/* compute irradiance? */
 int	rand_samp = 1;			/* pure Monte Carlo sampling? */
 
 double	dstrsrc = 0.9;			/* square source distribution */
-double	shadthresh = .03;		/* shadow threshold */
+double	shadthresh = 0.;		/* shadow threshold */
 double	shadcert = .75;			/* shadow certainty */
 int	directrelay = 3;		/* number of source relays */
 int	vspretest = 512;		/* virtual source pretest density */
@@ -52,7 +52,7 @@ double	minweight = 2e-3;		/* minimum ray weight */
 char	*ambfile = NULL;		/* ambient file name */
 COLOR	ambval = BLKCOLOR;		/* ambient value */
 int	ambvwt = 0;			/* initial weight for ambient value */
-double	ambacc = 0;			/* ambient accuracy */
+double	ambacc = 0.;			/* ambient accuracy */
 int	ambres = 256;			/* ambient resolution */
 int	ambdiv = 350;			/* ambient divisions */
 int	ambssamp = 0;			/* ambient super-samples */
