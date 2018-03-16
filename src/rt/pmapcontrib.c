@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.15 2018/02/08 19:55:02 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.16 2018/03/16 21:00:09 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.15 2018/02/08 19:55:02 rschr
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapcontrib.c,v 2.15 2018/02/08 19:55:02 rschregle Exp $
+   $Id: pmapcontrib.c,v 2.16 2018/03/16 21:00:09 rschregle Exp $
 */
 
 
@@ -169,6 +169,9 @@ typedef  unsigned long  PhotonContribCnt;
  * emitted per source */
 #define  PHOTONCNT_NUMPHOT    0
 #define  PHOTONCNT_NUMEMIT(n) (1 + n)
+
+
+
 
 
 
@@ -358,12 +361,49 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
 
          /* Seed RNGs from PID for decorellated photon distribution */
          pmapSeed(randSeed + proc, partState);
-         pmapSeed(randSeed + proc, emitState);
-         pmapSeed(randSeed + proc, cntState);
-         pmapSeed(randSeed + proc, mediumState);
-         pmapSeed(randSeed + proc, scatterState);
-         pmapSeed(randSeed + proc, rouletteState);
+         pmapSeed(randSeed + (proc + 1) % numProc, emitState);
+         pmapSeed(randSeed + (proc + 2) % numProc, cntState);
+         pmapSeed(randSeed + (proc + 3) % numProc, mediumState);
+         pmapSeed(randSeed + (proc + 4) % numProc, scatterState);
+         pmapSeed(randSeed + (proc + 5) % numProc, rouletteState);
+
+#ifdef PMAP_SIGUSR                       
+   double partNumEmit;
+   unsigned long partEmitCnt;
+   double srcPhotonFlux, avgPhotonFlux;
+   unsigned       portCnt, passCnt, prePassCnt;
+   float          srcPreDistrib;
+   double         srcNumEmit;     /* # to emit from source */
+   unsigned long  srcNumDistrib;  /* # stored */
+
+   void sigUsrDiags()
+   /* Loop diags via SIGUSR1 */
+   {
+      sprintf(errmsg, 
+              "********************* Proc %d Diags *********************\n"
+              "srcIdx = %d (%s)\nportCnt = %d (%s)\npassCnt = %d\n"
+              "srcFlux = %f\nsrcPhotonFlux = %f\navgPhotonFlux = %f\n"
+              "partNumEmit = %f\npartEmitCnt = %lu\n\n",
+              proc, srcIdx, findmaterial(source [srcIdx].so) -> oname, 
+              portCnt, photonPorts [portCnt].so -> oname,
+              passCnt, srcFlux [srcIdx], srcPhotonFlux, avgPhotonFlux,
+              partNumEmit, partEmitCnt);
+      eputs(errmsg);
+      fflush(stderr);
+   }
+#endif
          
+#if PMAP_SIGUSR
+         signal(SIGUSR1, sigUsrDiags);
+#endif         
+         
+         /* Output child process PID after random delay to prevent corrupted
+          * console output due to race condition */
+         usleep(1e6 * pmapRandom(rouletteState));
+         fprintf(stderr, "Proc %d: PID = %d\n", proc, getpid());
+         /* Allow time for debugger to attach to child process */
+         sleep(10);
+
          /* =============================================================
           * 2-PASS PHOTON DISTRIBUTION
           * Pass 1 (pre):  emit fraction of target photon count
@@ -372,10 +412,17 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
           *                count
           * ============================================================= */         
          for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
+#ifndef PMAP_SIGUSR         
             unsigned       portCnt, passCnt = 0, prePassCnt = 0;
             float          srcPreDistrib = preDistrib;
             double         srcNumEmit = 0;       /* # to emit from source */
             unsigned long  srcNumDistrib = pm -> numPhotons;  /* # stored */
+#else
+            passCnt = prePassCnt = 0;
+            srcPreDistrib = preDistrib;
+            srcNumEmit = 0;       /* # to emit from source */
+            srcNumDistrib = pm -> numPhotons;  /* # stored */
+#endif            
 
             if (srcFlux [srcIdx] < FTINY)
                continue;
@@ -383,14 +430,17 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
             while (passCnt < 2) {
                if (!passCnt) {   
                   /* INIT PASS 1 */
-                  if (++prePassCnt > maxPreDistrib && !proc) {
+                  if (++prePassCnt > maxPreDistrib) {
                      /* Warn if no photons contributed after sufficient
                       * iterations; only output from subprocess 0 to reduce
                       * console clutter */
-                     sprintf(errmsg, 
-                             "source %s: too many prepasses, skipped",
-                             source [srcIdx].so -> oname);
-                     error(WARNING, errmsg);
+                     if (!proc) {
+                        sprintf(errmsg, 
+                                "source %s: too many prepasses, skipped",
+                                source [srcIdx].so -> oname);
+                        error(WARNING, errmsg);
+                     }
+
                      break;
                   }
                   
@@ -399,7 +449,9 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
                }
                else {
                   /* INIT PASS 2 */
+#ifndef PMAP_SIGUSR
                   double srcPhotonFlux, avgPhotonFlux;
+#endif
                   
                   /* Based on the outcome of the predistribution we can now
                    * figure out how many more photons we have to emit from
@@ -421,17 +473,20 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
                   srcPhotonFlux = srcFlux [srcIdx] / srcNumEmit;
                   avgPhotonFlux = photonFluxSum / (srcIdx + 1);
                   
-                  if (avgPhotonFlux > 0 && 
+                  if (avgPhotonFlux > FTINY && 
                       srcPhotonFlux / avgPhotonFlux < FTINY) {
                      /* Skip source if its photon flux is grossly below the
                       * running average, indicating negligible contributions
                       * at the expense of excessive distribution time; only
                       * output from subproc 0 to reduce console clutter */
-                     sprintf(errmsg, 
-                             "source %s: itsy bitsy photon flux, skipped",
-                             source [srcIdx].so -> oname);
-                     error(WARNING, errmsg);
-                     srcNumEmit = 0;
+                     if (!proc) {
+                        sprintf(errmsg, 
+                                "source %s: itsy bitsy photon flux, skipped",
+                                source [srcIdx].so -> oname);                     
+                        error(WARNING, errmsg);
+                     }
+
+                     srcNumEmit = 0;   /* Or just break??? */
                   }
                         
                   /* Update sum of photon flux per light source */
@@ -472,8 +527,10 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
                   
                   for (emap.partitionCnt = 0; emap.partitionCnt < emap.numPartitions; 
                        emap.partitionCnt++) {
+#ifndef PMAP_SIGUSR                       
                      double partNumEmit;
                      unsigned long partEmitCnt;
+#endif
                      
                      /* Get photon origin within current source partishunn
                       * and build emission map */
@@ -570,6 +627,10 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
                  pm -> numPhotons);
          eputs(errmsg);
          fflush(stderr);
+#endif
+
+#ifdef PMAP_SIGUSR
+         signal(SIGUSR1, SIG_DFL);
 #endif
 
 #if NIX
