@@ -2195,3 +2195,5 @@ Georg Mischler updated SCons build system.
 Rob Guglielmetti and Alex Swindler updated CMake build system.
 
 Modified pcomb so the first view seen in the inputs is written into header.
+
+Wrote rtpict script to run rtrace in parallel mode and simulate rpict with -n option.
