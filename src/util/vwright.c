@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwright.c,v 2.9 2011/08/21 14:45:25 greg Exp $";
+static const char	RCSid[] = "$Id: vwright.c,v 2.10 2018/03/19 16:35:19 greg Exp $";
 #endif
 /*
  * Move a viewpoint the given distance to the right
@@ -113,6 +113,6 @@ main(
 	fputc('\n', stdout);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s {offset|name}\n", progname);
+	fprintf(stderr, "Usage: %s [view options] {offset|name}\n", progname);
 	exit(1);
 }
