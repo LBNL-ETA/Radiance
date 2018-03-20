@@ -1,4 +1,4 @@
-/* RCSid $Id: platform.h,v 3.15 2016/12/22 17:07:46 greg Exp $ */
+/* RCSid $Id: platform.h,v 3.16 2018/03/20 22:45:29 greg Exp $ */
 /*
  *  platform.h - header file for platform specific definitions
  */
@@ -109,7 +109,11 @@
 extern "C" {
 #endif
 
-/* nothing to protect yet */
+#if defined(_WIN32) || defined(_WIN64)
+
+extern	int	usleep(__int64 usec);
+
+#endif /* _WIN32 || _WIN64 */
 
 #ifdef __cplusplus
 }
