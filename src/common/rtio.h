@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.14 2016/12/13 18:38:35 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.15 2018/03/20 18:45:04 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -13,9 +13,13 @@
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
 #undef getc
+#undef getchar
 #undef putc
+#undef putchar
 #define getc    getc_unlocked
+#define getchar	getchar_unlocked
 #define putc    putc_unlocked
+#define putchar	putchar_unlocked
 #endif
 
 #ifdef __cplusplus
