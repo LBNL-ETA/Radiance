@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.14 2016/08/30 06:10:12 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.15 2018/03/20 17:48:16 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -11,6 +11,7 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.14 2016/08/30 06:10:12 greg Exp 
 #include  <string.h>
 
 #include  "platform.h"
+#include  "rtprocess.h"
 #include  "resolu.h"
 
 #ifdef getc_unlocked		/* avoid nasty file-locking overhead */
@@ -18,11 +19,6 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.14 2016/08/30 06:10:12 greg Exp 
 #undef putchar
 #define getchar		getchar_unlocked
 #define putchar		putchar_unlocked
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-#include <process.h>
-#define	execvp	_execvp
 #endif
 
 static gethfunc tabstr;
@@ -165,6 +161,6 @@ copycat(void)			/* copy input to output */
 
 	fflush(stdout);
 	while ((n = fread(buf, 1, sizeof(buf), stdin)) > 0)
-		if (write(fileno(stdout), buf, n) != n)
+		if (writebuf(fileno(stdout), buf, n) != n)
 			break;
 }

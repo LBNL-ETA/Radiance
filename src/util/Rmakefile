@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.84 2018/03/19 23:40:33 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.85 2018/03/20 17:48:16 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -249,3 +249,5 @@ pictool.o evalglare.o:	pictool.h ../common/g3vector.h ../common/g3affine.h \
 evalglare.o:	../common/rtio.h
 
 pictool.o:	../common/view.h ../common/color.h
+
+getinfo.o:	../common/process.h ../common/platform.h ../common/resolu.h
