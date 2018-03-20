@@ -158,7 +158,6 @@ if(WIN32)
     ltview.pl
     objpict.pl
     objview.pl
-    rtpict.pl
     DESTINATION "bin"
   )
 else()

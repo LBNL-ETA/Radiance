@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.2 2018/03/20 01:38:27 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.3 2018/03/20 22:48:10 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 #
@@ -103,4 +103,4 @@ chomp $rtraceA[-1];
 push @rtraceA, ("-n", "$nprocs");
 push @rtraceA, $ARGV[0];
 my @view = (`@vwrightA 0`);
-exec "@vwraysA | @rtraceA | getinfo -a 'VIEW=@view'";
+exec qq{@vwraysA | @rtraceA | getinfo -a "VIEW=@view"};
