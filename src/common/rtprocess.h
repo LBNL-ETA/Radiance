@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.16 2016/03/06 01:13:17 schorsch Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.17 2018/03/20 17:45:07 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -16,6 +16,7 @@
   #include <process.h> /* getpid() and others */
   #define getpid _getpid
   #define execv _execv
+  #define execvp _execvp
 #else
   #include <sys/param.h>
   #include <sys/types.h>
