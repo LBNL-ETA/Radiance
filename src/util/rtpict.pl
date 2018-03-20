@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.3 2018/03/20 22:48:10 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.4 2018/03/20 23:05:48 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 #
@@ -90,7 +90,8 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 }
 die "Number of processes must be positive" if ($nprocs <= 0);
-if ($outpic) {			# redirect output?
+if (defined $outpic) {		# redirect output?
+	die "File '$outpic' already exists\n" if (-e $outpic);
 	open STDOUT, '>', "$outpic";
 }
 if ($nprocs == 1) {		# may as well run rpict?
