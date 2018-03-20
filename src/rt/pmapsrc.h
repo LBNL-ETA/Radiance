@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapsrc.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $ */
+/* RCSid $Id: pmapsrc.h,v 2.6 2018/03/20 19:55:33 rschregle Exp $ */
 
 /* 
    ==================================================================
@@ -10,7 +10,7 @@
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================
    
-   $Id: pmapsrc.h,v 2.5 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapsrc.h,v 2.6 2018/03/20 19:55:33 rschregle Exp $
 */
 
 
@@ -55,7 +55,8 @@
 
 
 
-   /* Photon port list for emission from geometry en lieu of light sources */
+   /* Photon ports for emission from geometry en lieu of light sources */
+   extern char *photonPortList [MAXSET + 1];
    extern SRCREC *photonPorts;
    extern unsigned numPhotonPorts;
 
@@ -66,8 +67,8 @@
 
 
 
-   void getPhotonPorts ();
-   /* Find geometry declared as photon ports */
+   void getPhotonPorts (char **portList);
+   /* Find geometry declared as photon ports from modifiers in portList */
 
    void initPhotonEmissionFuncs ();
    /* Init photonPartition[] and photonOrigin[] dispatch tables with source

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.14 2018/02/02 19:47:55 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.15 2018/03/20 19:55:33 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -20,15 +20,14 @@ static const char RCSid[] = "$Id: pmapsrc.c,v 2.14 2018/02/02 19:47:55 rschregle
 #include "pmaprand.h"
 #include "otypes.h"
 
-
-
-SRCREC *photonPorts = NULL;             /* Photon port list */
+/* List of photon port modifier names */
+char *photonPortList [MAXSET + 1] = {NULL};
+/* Photon port objects (with modifiers in photonPortMods) */
+SRCREC *photonPorts = NULL;
 unsigned numPhotonPorts = 0;
 
 void (*photonPartition [NUMOTYPE]) (EmissionMap*);
 void (*photonOrigin [NUMOTYPE]) (EmissionMap*);
-
-extern OBJECT ambset [];
 
    
 
@@ -521,14 +520,15 @@ static void cylPhotonOrigin (EmissionMap* emap)
 
 
 
-void getPhotonPorts ()
-/* Find geometry declared as photon ports */
+void getPhotonPorts (char **portList)
+/* Find geometry declared as photon ports from modifiers in portList */
 {
    OBJECT i;
    OBJREC *obj, *mat;
+   char **lp;   
    
    /* Check for missing port modifiers */
-   if (!ambset [0])
+   if (!portList [0])
       error(USER, "no photon ports");
    
    for (i = 0; i < nobjects; i++) {
@@ -537,24 +537,27 @@ void getPhotonPorts ()
       
       /* Check if object is a surface and NOT a light source (duh) and
        * resolve its material via any aliases, then check for inclusion in
-       * port modifier list */
-      if (issurface(obj -> otype) && mat && !islight(mat -> otype) && 
-          inset(ambset, objndx(mat))) {
-         /* Add photon port */
-         photonPorts = (SRCREC*)realloc(photonPorts, 
-                                        (numPhotonPorts + 1) * 
-                                        sizeof(SRCREC));
-         if (!photonPorts) 
-            error(USER, "can't allocate photon ports");
-            
-         photonPorts [numPhotonPorts].so = obj;
-         photonPorts [numPhotonPorts].sflags = 0;
+       * modifier list */
+      if (issurface(obj -> otype) && mat && !islight(mat -> otype)) {
+         for (lp = portList; *lp && strcmp(mat -> oname, *lp); lp++);
          
-         if (!sfun [obj -> otype].of || !sfun[obj -> otype].of -> setsrc)
-            objerror(obj, USER, "illegal photon port");
+         if (*lp) {
+            /* Add photon port */
+            photonPorts = (SRCREC*)realloc(photonPorts, 
+                                           (numPhotonPorts + 1) * 
+                                           sizeof(SRCREC));
+            if (!photonPorts) 
+               error(USER, "can't allocate photon ports");
             
-         setsource(photonPorts + numPhotonPorts, obj);
-         numPhotonPorts++;
+            photonPorts [numPhotonPorts].so = obj;
+            photonPorts [numPhotonPorts].sflags = 0;
+         
+            if (!sfun [obj -> otype].of || !sfun[obj -> otype].of -> setsrc)
+               objerror(obj, USER, "illegal photon port");
+         
+            setsource(photonPorts + numPhotonPorts, obj);
+            numPhotonPorts++;
+         }
       }
    }
    

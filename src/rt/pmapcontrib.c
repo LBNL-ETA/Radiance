@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.16 2018/03/16 21:00:09 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.17 2018/03/20 19:55:33 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.16 2018/03/16 21:00:09 rschr
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapcontrib.c,v 2.16 2018/03/16 21:00:09 rschregle Exp $
+   $Id: pmapcontrib.c,v 2.17 2018/03/20 19:55:33 rschregle Exp $
 */
 
 
@@ -230,9 +230,8 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
    if (!pm -> distribTarget)
       error(INTERNAL, "no photons to distribute in distribPhotonContrib");
    
-   /* Get photon ports if specified */
-   if (ambincl == 1)
-      getPhotonPorts();
+   /* Get photon ports from modifier list */
+   getPhotonPorts(photonPortList);
       
    /* Get photon sensor modifiers */
    getPhotonSensors(photonSensorList);      

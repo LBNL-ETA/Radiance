@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmap.c,v 2.13 2017/08/14 21:12:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmap.c,v 2.14 2018/03/20 19:55:33 rschregle Exp $";
 #endif
 
 
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: pmap.c,v 2.13 2017/08/14 21:12:10 rschregle Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmap.c,v 2.13 2017/08/14 21:12:10 rschregle Exp $
+   $Id: pmap.c,v 2.14 2018/03/20 19:55:33 rschregle Exp $
 */
 
 
@@ -333,9 +333,8 @@ void distribPhotons (PhotonMap **pmaps, unsigned numProc)
    initPhotonEmissionFuncs();
    initPhotonScatterFuncs();
    
-   /* Get photon ports if specified */
-   if (ambincl == 1) 
-      getPhotonPorts();
+   /* Get photon ports from modifier list */
+   getPhotonPorts(photonPortList);
 
    /* Get photon sensor modifiers */
    getPhotonSensors(photonSensorList);

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.14 2018/02/02 19:47:55 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.15 2018/03/20 19:55:33 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -1667,7 +1667,7 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 
 
 static int lightPhotonScatter (OBJREC* mat, RAY* ray)
-/* Light sources doan' reflect */
+/* Light sources doan' reflect, mang */
 {
    return 0;
 }
