@@ -1,0 +1,55 @@
+.\" RCSid "$Id: rtpict.1,v 1.1 2018/03/20 02:40:38 greg Exp $"
+.TH RTPICT 1 3/19/2018 RADIANCE
+.SH NAME
+rtpict - generate a RADIANCE picture using rtrace
+.SH SYNOPSIS
+.B rtpict
+.B "-n N"
+[
+.B "rpict options"
+]
+[
+.B @file
+]
+.B octree
+.SH DESCRIPTION
+.I Rtpict
+is a script that generates a picture from the RADIANCE scene given in
+.I octree
+and sends it to the standard output, or to a file specified with the
+.I \-o
+option.
+Most options and defaults are the same as
+.I rpict(1),
+although a few switches are silently ignored.
+Options incompatible with multi-processing can generate an error.
+.PP
+The
+.I rtrace(1)
+tool is called with
+.I vwrays(1)
+to perform the actual work.
+This enables the
+.I \-n
+option for multiprocessing on platforms that support it.
+If the
+.I \-n
+option is not specified or is set to 1, then
+.I rpict
+is called directly.
+There is no benefit in setting the number of processes to anything
+greater than the number of virtual cores available on your machine.
+Also, it is very important to set the
+.I \-af
+option if an irradiance cache is being generated;
+otherwise, your speed-up will be far from linear.
+.SH EXAMPLE
+To render a scene with four processes:
+.IP "" .2i
+rtpict -n 4 -vf mypers.vf -ab 1 -af scene.amb scene.oct > scene_pers.hdr
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+getinfo(1), lookamb(1), mkpmap(1), oconv(1), pdfblur(1), pfilt(1), 
+pinterp(1), pmblur(1), printf(3), ra_rgbe(1), rad(1), rpiece(1),
+rpict(1), rtrace(1), rvu(1) vwrays(1),
