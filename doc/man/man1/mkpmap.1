@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.9 2018/02/06 16:02:22 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2018/02/06 16:02:22 $ $Revision: 1.9 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.10 2018/03/20 19:53:09 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2018/03/20 19:53:09 $ $Revision: 1.10 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -101,7 +101,7 @@ may be useful if the resulting photon map size greatly deviates from
 \fInphotons\fR with a very low average reflectance.
 
 .IP "\fB\-api \fIxmin ymin zmin xmax ymax zmax\fR"
-Define a region of interested within which to store photons exclusively;
+Define a region of interest within which to store photons exclusively;
 photons will only be stored within the volume bounded by the given minimum
 and maximum coordinates.  Multiple instances of this option may be specified
 with cumulative effect to define compound regions of interest.  This is
@@ -168,6 +168,37 @@ an error if the specified modifier is not an \fIantimatter\fR material.
 .IP "\fB\-apS \fImodfile\fR"
 Read virtual receiver surface modifiers from the file \fImodfile\fR as a more
 convenient alternative to multiple instances of \fB\-aps\fR.
+
+.IP "\fB\-ae \fImod\fR"
+Add \fImod\fR to the ambient exclude list, so that it will be ignored by the
+photon map.  Objects having \fImod\fR as their modifier will not have
+photons deposited on them.  Multiple modifiers may be given, each as separate
+instances of this option.
+.IP
+\fBWARNING: this is an optimisation option for advanced users and may yield
+biased results. It may also significantly increase photon distribution
+times. Use with caution!\fR
+
+.IP "\fB\-aE \fIfile\fR"
+Same as \fI-ae\fR, except modifiers to be exluded are read from \fIfile\fR,
+separated by whitespace.  The RAYPATH environment variable determines which
+directories are searched for this file.
+
+.IP "\fB\-ai \fImod\fR"
+Add \fImod\fR to the ambient include list, so that it will contribute to the
+photon map. Only objects having \fImod\fR as their modifier will have
+photons deposited on them. Multiple modifiers may be given, each as separate
+instances of this option. Note that the ambient include and exclude options
+are mutually exclusive. 
+.IP
+\fBWARNING: this is an optimisation option for advanced users and may yield
+biased results. It may also significantly increase photon distribution
+times. Use with caution!\fR
+
+.IP "\fB\-aI \fIfile\fR"
+Same as \fI-ai\fR, except modifiers to be included are read from \fIfile\fR,
+separated by whitespace. The RAYPATH environment variable determines which
+directories are searched for this file.
 
 .IP "\fB\-bv\fR[\fB+\fR|\fB-\fR]"
 Toggles backface visibility; enabling this causes photons to be stored and
