@@ -158,6 +158,7 @@ if(WIN32)
     ltview.pl
     objpict.pl
     objview.pl
+    rtpict.pl
     DESTINATION "bin"
   )
 else()
@@ -178,6 +179,7 @@ else()
     objview.pl
     raddepend.csh
     rlux.csh
+    rtpict.pl
     trad.wsh
     vinfo.csh
   )
