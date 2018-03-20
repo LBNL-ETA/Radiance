@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.15 2018/03/20 17:48:16 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.16 2018/03/20 18:18:39 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -15,8 +15,10 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.15 2018/03/20 17:48:16 greg Exp 
 #include  "resolu.h"
 
 #ifdef getc_unlocked		/* avoid nasty file-locking overhead */
+#undef getc
 #undef getchar
 #undef putchar
+#define getc		getc_unlocked
 #define getchar		getchar_unlocked
 #define putchar		putchar_unlocked
 #endif
