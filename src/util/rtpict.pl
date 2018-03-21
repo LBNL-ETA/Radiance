@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.4 2018/03/20 23:05:48 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.5 2018/03/21 17:56:08 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 #
@@ -23,11 +23,13 @@ my %vwraysC = ("-vf",1, "-vtv",0, "-vtl",0, "-vth",0, "-vta",0, "-vts",0, "-vtc"
 # options we need to silently ignore
 my %ignoreC = ("-t",1, "-ps",1, "-pt",1, "-pm",1);
 # Starting options for rtrace (rpict values)
-my @rtraceA = split(' ', "rtrace -ffc -u- -dt .05 -dc .5 -ds .25 -dr 1 -aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03");
+my @rtraceA = split(' ', "rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 " .
+				"-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03");
 my @vwraysA = ("vwrays", "-ff", "-pj", ".67");
 my @vwrightA = ("vwright", "-vtv");
 my @rpictA = ("rpict");
 my $outpic;
+my $outzbf;
 OPTION:				# sort through options
 while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	# Check for file inclusion
@@ -82,6 +84,10 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	if ("$ARGV[0]" eq "-o") {
 		shift @ARGV;
 		$outpic = shift(@ARGV);
+	} elsif ("$ARGV[0]" eq "-z") {
+		push @rpictA, shift(@ARGV);
+		$outzbf = $ARGV[0];
+		push @rpictA, shift(@ARGV);
 	} elsif ("$ARGV[0]" eq "-n") {
 		shift @ARGV;
 		$nprocs = shift(@ARGV);
@@ -98,10 +104,20 @@ if ($nprocs == 1) {		# may as well run rpict?
 	push(@rpictA, $ARGV[0]) if ($#ARGV == 0);
 	exec @rpictA ;
 }
-die "Need single octree argument\n" if ($#ARGV != 0);
-push @rtraceA, (`@vwraysA -d`);
-chomp $rtraceA[-1];
 push @rtraceA, ("-n", "$nprocs");
-push @rtraceA, $ARGV[0];
-my @view = (`@vwrightA 0`);
-exec qq{@vwraysA | @rtraceA | getinfo -a "VIEW=@view"};
+die "Need single octree argument\n" if ($#ARGV != 0);
+my $oct = $ARGV[0];
+my $view = `@vwrightA 0`;
+my @res = split(/\s/, `@vwraysA -d`);
+if (defined $outzbf) {		# generating depth buffer?
+	my $tres = "/tmp/rtp$$";
+	system "@vwraysA | @rtraceA -fff -ovl $res[4] $oct > $tres" || exit 1;
+	system( q{getinfo -c rcalc -if4 -of -e '$1=$1;$2=$2;$3=$3' < } .
+		"$tres | pvalue -r -df -Y $res[3] +X $res[1] | " .
+		"getinfo -a 'VIEW=$view'" );
+	system( "getinfo - < $tres | rcalc -if4 -of > $outzbf" . q{ -e '$1=$4'} );
+	unlink $tres;
+	exit;
+}
+				# no depth buffer, so simpler
+exec "@vwraysA | @rtraceA -ffc @res $oct | getinfo -a 'VIEW=$view'";
