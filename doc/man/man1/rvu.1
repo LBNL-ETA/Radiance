@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rvu.1,v 1.12 2018/03/20 02:40:38 greg Exp $"
+.\" RCSid "$Id: rvu.1,v 1.13 2018/03/30 23:14:07 greg Exp $"
 .TH RVU 1 1/1/04 RADIANCE
 .SH NAME
 rvu - generate RADIANCE images interactively
@@ -232,13 +232,17 @@ Care must be taken to avoid moving behind or inside other objects.
 Restart the image, using the specified number of rendering processes.
 Usually used after the "set" command.
 .TP
-.BI origin " [ xo yo zo [ xd yd zd ] ]"
-Change view origin to the indicated world position
+.BI origin " [ d | xo yo zo [ xd yd zd ] ]"
+Move the view forward or backwards the distance specified by a single
+.I d
+argument along the view direction vector.
+If 3 or more arguments are given, move the
+view origin to the indicated world position
 .I "xo yo zo"
 looking in the direction
 .I "xd yd zd."
-If the direction is missing, the current view direction is used.
-If the origin is missing, the cursor is used to select the
+If the direction is unspecified, the current view direction is used.
+Without arguments, the cursor is used to select the
 view origin, and the direction will be determined by the
 (reoriented) surface normal.
 The view type and size will not be altered, but the up vector

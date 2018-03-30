@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.65 2014/04/11 20:27:23 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.66 2018/03/30 23:14:07 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -376,8 +376,11 @@ getorigin(				/* origin viewpoint */
 	VIEW	nv = ourview;
 	double	d;
 					/* get new view origin */
-	if (!sscanvec(s, nv.vp)) {
-		int	x, y;
+	if (sscanf(s, "%lf %lf", &d, &d) == 1) {
+					/* just moving some distance */
+		VSUM(nv.vp, nv.vp, nv.vdir, d);
+	} else if (!sscanvec(s, nv.vp)) {
+		int	x, y;		/* need to pick origin */
 		RAY	thisray;
 		if (dev->getcur == NULL)
 			return;

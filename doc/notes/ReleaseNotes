@@ -2197,3 +2197,7 @@ Rob Guglielmetti and Alex Swindler updated CMake build system.
 Modified pcomb so the first view seen in the inputs is written into header.
 
 Wrote rtpict script to run rtrace in parallel mode and simulate rpict with -n option.
+
+Added ability to move forwards/backwards specified distance in rvu "origin" command.
+Feature requested by John Mardaljevic, who essentially owns this command, now.
+
