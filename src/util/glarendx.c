@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.11 2014/04/11 20:27:23 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.12 2018/04/02 16:45:41 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -207,7 +207,7 @@ read_input(void)			/* read glare sources from stdin */
 				goto memerr;
 			if (sscanf(buf, FVFORMAT, &gs->dir[0], &gs->dir[1],
 						&gs->dir[2]) != 3 ||
-					sscanf(buf, "%lf %lf",
+					sscanf(sskip2(buf, 3), "%lf %lf",
 						&gs->dom, &gs->lum) != 2)
 				goto readerr;
 			normalize(gs->dir);
