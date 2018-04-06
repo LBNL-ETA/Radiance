@@ -28,17 +28,8 @@ src/rt subdirectory:
 > DLIBS = 
 
 ============= rt/devtable.c =============
-15c15
-< char  dev_default[] = "x11";
----
-> char  dev_default[] = "sun";		/* or "news" for SGI */
-17,18d16
-< extern struct driver  *x11_init();
-< 
-23c21
-< 	{"x11", "X11 color or greyscale display", x11_init},
----
-> 	{"x11", "X11 color or greyscale display", comm_init},
+11i
+> #define X11 0
 
 These changes may be applied to the Rmakefile's in the src/util and
 src/px subdirectories for cleaner compilation:
