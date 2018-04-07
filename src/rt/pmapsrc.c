@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.15 2018/03/20 19:55:33 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.16 2018/04/07 20:25:10 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -527,9 +527,11 @@ void getPhotonPorts (char **portList)
    OBJREC *obj, *mat;
    char **lp;   
    
-   /* Check for missing port modifiers */
+   /* Init photon port objects */
+   photonPorts = NULL;
+   
    if (!portList [0])
-      error(USER, "no photon ports");
+      return;
    
    for (i = 0; i < nobjects; i++) {
       obj = objptr(i);
