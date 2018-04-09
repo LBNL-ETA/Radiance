@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.26 2018/04/09 21:30:07 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.27 2018/04/09 21:36:45 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -338,17 +338,17 @@ rmx_write_double(const RMATRIX *rm, FILE *fp)
 static int
 rmx_write_rgbe(const RMATRIX *rm, FILE *fp)
 {
-	COLOR	*scan = (COLOR *)malloc(sizeof(COLOR)*rm->ncols);
+	COLR	*scan = (COLR *)malloc(sizeof(COLR)*rm->ncols);
 	int	i, j;
 
 	if (scan == NULL)
 		return(0);
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = rm->ncols; j--; )
-	        setcolor(scan[j],	rmx_lval(rm,i,j,0),
+	        setcolr(scan[j],	rmx_lval(rm,i,j,0),
 					rmx_lval(rm,i,j,1),
 					rmx_lval(rm,i,j,2)	);
-	    if (fwritescan(scan, rm->ncols, fp) < 0) {
+	    if (fwritecolrs(scan, rm->ncols, fp) < 0) {
 		free(scan);
 		return(0);
 	    }
