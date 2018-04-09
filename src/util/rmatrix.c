@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.25 2017/08/28 15:59:46 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.26 2018/04/09 21:30:07 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -146,20 +146,12 @@ rmx_load_float(RMATRIX *rm, FILE *fp)
 static int
 rmx_load_double(RMATRIX *rm, FILE *fp)
 {
-	int	i, j, k;
-	double	val[100];
+	int	i, j;
 
-	if (rm->ncomp > 100) {
-		fputs("Unsupported # components in rmx_load_double()\n", stderr);
-		exit(1);
-	}
 	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++) {
-		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+	    for (j = 0; j < rm->ncols; j++)
+		if (getbinary(&rmx_lval(rm,i,j,0), sizeof(double), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
-	        for (k = rm->ncomp; k--; )
-		     rmx_lval(rm,i,j,k) = val[k];
-	    }
 	return(1);
 }
 
@@ -334,20 +326,12 @@ rmx_write_float(const RMATRIX *rm, FILE *fp)
 static int
 rmx_write_double(const RMATRIX *rm, FILE *fp)
 {
-	int	i, j, k;
-	double	val[100];
+	int	i, j;
 
-	if (rm->ncomp > 100) {
-		fputs("Unsupported # components in rmx_write_double()\n", stderr);
-		exit(1);
-	}
 	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++) {
-	        for (k = rm->ncomp; k--; )
-		    val[k] = rmx_lval(rm,i,j,k);
-		if (putbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+	    for (j = 0; j < rm->ncols; j++)
+		if (putbinary(&rmx_lval(rm,i,j,0), sizeof(double), rm->ncomp, fp) != rm->ncomp)
 			return(0);
-	    }
 	return(1);
 }
 
