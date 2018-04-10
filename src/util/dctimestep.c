@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.37 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.38 2018/04/10 23:22:42 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -21,7 +21,7 @@ static int
 sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 {
 	int	myDT = DTfromHeader;
-	COLOR	*scanline = NULL;
+	COLR	*scanline = NULL;
 	CMATRIX	*pmat = NULL;
 	int	myXR=0, myYR=0;
 	int	i, y;
@@ -56,7 +56,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		if (myDT == DTfromHeader) {		/* on first one */
 			myDT = dt;
 			myXR = xr; myYR = yr;
-			scanline = (COLOR *)malloc(sizeof(COLOR)*myXR);
+			scanline = (COLR *)malloc(sizeof(COLR)*myXR);
 			if (scanline == NULL)
 				error(SYSTEM, "out of memory in sum_images()");
 			pmat = cm_alloc(myYR, myXR);
@@ -72,16 +72,20 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		}
 		psp = pmat->cmem;
 		for (y = 0; y < yr; y++) {		/* read it in */
+			COLOR	col;
 			int	x;
-			if (freadscan(scanline, xr, fp) < 0) {
+			if (freadcolrs(scanline, xr, fp) < 0) {
 				sprintf(errmsg, "error reading picture '%s'",
 						fname);
 				error(SYSTEM, errmsg);
 			}
 							/* sum in scanline */
 			for (x = 0; x < xr; x++, psp += 3) {
-				multcolor(scanline[x], scv);
-				addcolor(psp, scanline[x]);
+				if (!scanline[x][EXP])
+					continue;	/* skip zeroes */
+				colr_color(col, scanline[x]);
+				multcolor(col, scv);
+				addcolor(psp, col);
 			}
 		}
 		fclose(fp);				/* done this picture */
