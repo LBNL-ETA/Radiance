@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: color.c,v 2.18 2018/04/10 23:38:40 greg Exp $";
+static const char	RCSid[] = "$Id: color.c,v 2.19 2018/04/10 23:42:52 greg Exp $";
 #endif
 /*
  *  color.c - routines for color calculations.
@@ -17,6 +17,7 @@ static const char	RCSid[] = "$Id: color.c,v 2.18 2018/04/10 23:38:40 greg Exp $"
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
 #undef getc
 #undef putc
+#undef ferror
 #define getc    getc_unlocked
 #define putc    putc_unlocked
 #define ferror	ferror_unlocked
@@ -101,7 +102,7 @@ fwritecolrs(			/* write out a colr scanline */
 
 
 static int
-oldreadcolrs(			/* read in an old colr scanline */
+oldreadcolrs(			/* read in an old-style colr scanline */
 	COLR  *scanline,
 	int  len,
 	FILE  *fp
