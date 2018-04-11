@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.79 2018/01/09 00:52:35 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.80 2018/04/11 17:05:59 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -646,7 +646,6 @@ ambcorral(AMBHEMI *hp, FVECT uv[2], const double r0, const double r1)
 	FVECT		vec;
 	double		u, v;
 	double		ang, a1;
-	OBJREC		*m;
 	int		i, j;
 					/* don't bother for a few samples */
 	if (hp->ns < 8)
