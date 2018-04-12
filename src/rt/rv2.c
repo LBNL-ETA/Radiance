@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.66 2018/03/30 23:14:07 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.67 2018/04/12 16:21:53 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -399,7 +399,7 @@ getorigin(				/* origin viewpoint */
 		}
 		if (thisray.rod < 0.0)	/* don't look through other side */
 			flipsurface(&thisray);
-		VSUM(nv.vp, thisray.rop, thisray.ron, 2.0*FTINY);
+		VSUM(nv.vp, thisray.rop, thisray.ron, 20.0*FTINY);
 		VCOPY(nv.vdir, thisray.ron);
 	} else if (!sscanvec(sskip2(s,3), nv.vdir) || normalize(nv.vdir) == 0.0)
 		VCOPY(nv.vdir, ourview.vdir);
