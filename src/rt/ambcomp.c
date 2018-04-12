@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.81 2018/04/12 18:02:45 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.82 2018/04/12 20:07:09 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -156,7 +156,7 @@ resample:
 }
 
 
-/* Estimate variance based on relative ambient division differences */
+/* Estimate variance based on ambient division differences */
 static float *
 getambdiffs(AMBHEMI *hp)
 {
@@ -175,23 +175,23 @@ getambdiffs(AMBHEMI *hp)
 		b = bright(ap[0].v);
 		if (i) {		/* from above */
 			b1 = bright(ap[-hp->ns].v);
-			d2 = (b - b1)/(b + b1);
-			d2 *= d2*normf;
+			d2 = b - b1;
+			d2 *= d2*normf/(b + b1);
 			ep[0] += d2;
 			ep[-hp->ns] += d2;
 		}
 		if (!j) continue;
 					/* from behind */
 		b1 = bright(ap[-1].v);
-		d2 = (b - b1)/(b + b1);
-		d2 *= d2*normf;
+		d2 = b - b1;
+		d2 *= d2*normf/(b + b1);
 		ep[0] += d2;
 		ep[-1] += d2;
 		if (!i) continue;
 					/* diagonal */
 		b1 = bright(ap[-hp->ns-1].v);
-		d2 = (b - b1)/(b + b1);
-		d2 *= d2*normf;
+		d2 = b - b1;
+		d2 *= d2*normf/(b + b1);
 		ep[0] += d2;
 		ep[-hp->ns-1] += d2;
 	    }
