@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.35 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.36 2018/04/16 19:40:37 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -19,6 +19,11 @@ static const char	RCSid[] = "$Id: pcompos.c,v 2.35 2016/02/02 18:02:32 greg Exp 
 #include  "rterror.h"
 #include  "color.h"
 #include  "resolu.h"
+
+#ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
+#undef getc
+#define getc    getc_unlocked
+#endif
 
 #define	 MAXFILE	1024
 
@@ -86,7 +91,7 @@ headline(			/* print line preceded by a tab */
 		} else
 			wrongformat = 1;
 	} else if (echoheader) {
-		putc('\t', stdout);
+		fputc('\t', stdout);
 		fputs(s, stdout);
 	}
 	return(0);
