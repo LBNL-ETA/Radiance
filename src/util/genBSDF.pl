@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.78 2017/06/19 03:45:57 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.79 2018/04/17 18:11:17 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -189,7 +189,7 @@ $wrapper .= " -g $mgfscn" if ( $geout );
 my $CIEuv =	'Xi=.5141*Ri+.3239*Gi+.1620*Bi;' .
 		'Yi=.2651*Ri+.6701*Gi+.0648*Bi;' .
 		'Zi=.0241*Ri+.1229*Gi+.8530*Bi;' .
-		'den=Xi+15*Yi+3*Zi;' .
+		'den=Xi+15*Yi+3*Zi+1e-9;' .
 		'uprime=4*Xi/den;vprime=9*Yi/den;' ;
 my $FEPS = 1e-5;
 my $ns = 2**$ttlog2;

@@ -2205,3 +2205,5 @@ command, now.
 
 Reduced bias in ambient super-sampling method.
 
+Fixed bugs associated with zero transmission in chromatic tensor trees.
+Thanks to Lars Grobe for pointing out issues.

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.45 2018/01/05 21:00:24 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.46 2018/04/17 18:11:16 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1176,11 +1176,12 @@ SDsubtractTreVal(SDNode *st, float val)
 static double
 subtract_min_Y(SDNode *st)
 {
-	float	vmin;
+	const float	vmaxmin = 1.5/M_PI;
+	float		vmin;
 					/* be sure to skip unused portion */
 	if (st->ndim == 3) {
 		int	n;
-		vmin = 1./M_PI;
+		vmin = vmaxmin;
 		if (st->log2GR < 0) {
 			for (n = 0; n < 8; n += 2) {
 				float	v = SDgetTreMin(st->u.t[n]);
@@ -1196,7 +1197,7 @@ subtract_min_Y(SDNode *st)
 	} else				/* anisotropic covers entire tree */
 		vmin = SDgetTreMin(st);
 
-	if (vmin <= .01/M_PI)
+	if ((vmin >= vmaxmin) | (vmin <= .01/M_PI))
 		return .0;		/* not worth bothering about */
 
 	SDsubtractTreVal(st, vmin);
@@ -1318,8 +1319,8 @@ subtract_min_RGB(C_COLOR *cs, SDNode *stc[])
 	SDtraverseTre(stc[tt_Y], NULL, 0, get_min_RGB, &my_min);
 					/* convert to C_COLOR */
 	ymin = 	c_fromSharpRGB(my_min.rgb, cs);
-	if (ymin <= .01/M_PI)		/* not worth bothering about? */
-		return .0;
+	if ((ymin >= .5*FHUGE) | (ymin <= .01/M_PI))
+		return .0;		/* close to zero or no tree */
 					/* adjust u' & v' trees */
 	SDtraverseTre(stc[tt_u], NULL, 0, adjust_utree, &my_min);
 	SDtraverseTre(stc[tt_v], NULL, 0, adjust_vtree, &my_min);
