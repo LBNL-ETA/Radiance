@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: maxheap.c,v 2.2 2015/08/18 15:02:53 greg Exp $";
+static const char RCSid[] = "$Id: maxheap.c,v 2.3 2018/04/19 15:31:27 greg Exp $";
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +18,7 @@ static	int	resize_heap(maxHeap* hp,int sz)
 		return 0;
 	for(i=hp->size;i<sz;i++) {
 		hp->heap[i].entity = NULL;
-		hp->heap[i].key = -HUGE;
+		hp->heap[i].key = -FHUGE;
 	}
 	hp->cap = sz;
 	if (sz < hp->size) {
@@ -119,7 +119,7 @@ heapElem	mheap_remove_max(maxHeap* hp)
 {
 	heapElem res;
 	if (hp->size < 1) {
-		res.key = -HUGE;
+		res.key = -FHUGE;
 		res.entity = NULL;
 		return res;
 	}	
@@ -154,7 +154,7 @@ int		mheap_insert(maxHeap* hp,g3Float key,void* entity)
 		}
 	}
 	hp->heap[hp->size].entity = entity;
-	hp->heap[hp->size].key = -HUGE;
+	hp->heap[hp->size].key = -FHUGE;
 	hp->size++;
 	return inc_key(hp,(hp->size - 1),key);
 }

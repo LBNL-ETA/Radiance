@@ -136,8 +136,6 @@ add_library(libreetz
   g3vector.h
   gbasic.c
   gbasic.h
-  maxheap.c
-  maxheap.h
   muc_randvar.c
   muc_randvar.h
 )
