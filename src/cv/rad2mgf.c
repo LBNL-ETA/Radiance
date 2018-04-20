@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad2mgf.c,v 2.26 2011/10/25 23:23:17 greg Exp $";
+static const char	RCSid[] = "$Id: rad2mgf.c,v 2.27 2018/04/20 15:53:22 greg Exp $";
 #endif
 /*
  * Convert Radiance scene description to MGF
@@ -690,11 +690,11 @@ o_plastic(	/* convert a plastic material */
 	puts("\tc");				/* put diffuse component */
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\trd %.4f\n", cxyz[1]*(1. - fa->farg[3]));
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\trd %.6f\n", cxyz[1]*(1. - fa->farg[3]));
 	if (fa->farg[3] > FTINY) {		/* put specular component */
 		puts("\tc");
-		printf("\trs %.4f %.4f\n", fa->farg[3],
+		printf("\trs %.6f %.6f\n", fa->farg[3],
 				typ[7]=='2' ? .5*(fa->farg[4] + fa->farg[5]) :
 						fa->farg[4]);
 	}
@@ -721,10 +721,10 @@ o_metal(	/* convert a metal material */
 	puts("\tc");				/* put diffuse component */
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\trd %.4f\n", cxyz[1]*(1. - fa->farg[3]));
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\trd %.6f\n", cxyz[1]*(1. - fa->farg[3]));
 						/* put specular component */
-	printf("\trs %.4f %.4f\n", cxyz[1]*fa->farg[3],
+	printf("\trs %.6f %.6f\n", cxyz[1]*fa->farg[3],
 			typ[5]=='2' ? .5*(fa->farg[4] + fa->farg[5]) :
 					fa->farg[4]);
 	return(0);
@@ -761,14 +761,14 @@ o_glass(	/* convert a glass material */
 	puts("\tc");
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\trs %.4f 0\n", cxyz[1]);
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\trs %.6f 0\n", cxyz[1]);
 	rgb_cie(cxyz, trgb);			/* put transmitted component */
 	puts("\tc");
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\tts %.4f 0\n", cxyz[1]);
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\tts %.6f 0\n", cxyz[1]);
 	return(0);
 }
 
@@ -795,13 +795,13 @@ o_dielectric(	/* convert a dielectric material */
 	printf("\tir %f 0\n", fa->farg[3]);	/* put index of refraction */
 	printf("\tsides 1\n");
 	puts("\tc");				/* put reflected component */
-	printf("\trs %.4f 0\n", F);
+	printf("\trs %.6f 0\n", F);
 	rgb_cie(cxyz, trgb);			/* put transmitted component */
 	puts("\tc");
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\tts %.4f 0\n", cxyz[1]);
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\tts %.6f 0\n", cxyz[1]);
 	return(0);
 }
 
@@ -829,8 +829,8 @@ o_mirror(	/* convert a mirror material */
 	puts("\tc");				/* put specular component */
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\trs %.4f 0\n", cxyz[1]);
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\trs %.6f 0\n", cxyz[1]);
 	return(0);
 }
 
@@ -865,14 +865,14 @@ o_trans(	/* convert a trans material */
 	puts("\tc");				/* put transmitted diffuse */
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
-	printf("\ttd %.4f\n", cxyz[1]*trans*(1. - fa->farg[3])*(1. - tspec));
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
+	printf("\ttd %.6f\n", cxyz[1]*trans*(1. - fa->farg[3])*(1. - tspec));
 						/* put transmitted specular */
-	printf("\tts %.4f %.4f\n", cxyz[1]*trans*tspec*(1. - fa->farg[3]), rough);
+	printf("\tts %.6f %.6f\n", cxyz[1]*trans*tspec*(1. - fa->farg[3]), rough);
 						/* put reflected diffuse */
-	printf("\trd %.4f\n", cxyz[1]*(1. - fa->farg[3])*(1. - trans));
+	printf("\trd %.6f\n", cxyz[1]*(1. - fa->farg[3])*(1. - trans));
 	puts("\tc");				/* put reflected specular */
-	printf("\trs %.4f %.4f\n", fa->farg[3], rough);
+	printf("\trs %.6f %.6f\n", fa->farg[3], rough);
 	return(0);
 }
 
@@ -896,7 +896,7 @@ o_light(		/* convert a light type */
 	d = cxyz[0] + cxyz[1] + cxyz[2];
 	puts("\tc");
 	if (d > FTINY)
-		printf("\t\tcxy %.4f %.4f\n", cxyz[0]/d, cxyz[1]/d);
+		printf("\t\tcxy %.6f %.6f\n", cxyz[0]/d, cxyz[1]/d);
 	printf("\ted %.4g\n", cxyz[1]*(PI*WHTEFFICACY));
 	return(0);
 }
