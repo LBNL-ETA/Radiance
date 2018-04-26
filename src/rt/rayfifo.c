@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rayfifo.c,v 2.4 2009/12/13 19:13:04 greg Exp $";
+static const char RCSid[] = "$Id: rayfifo.c,v 2.5 2018/04/26 18:09:55 greg Exp $";
 #endif
 /*
  *  rayfifo.c - parallelize ray queue that respects order
@@ -36,6 +36,10 @@ static const char RCSid[] = "$Id: rayfifo.c,v 2.4 2009/12/13 19:13:04 greg Exp $
 #include  "ray.h"
 #include  <string.h>
 
+#ifndef	MAXFIFO
+#define MAXFIFO		4096			/* clear FIFO past this */
+#endif
+
 int		(*ray_fifo_out)(RAY *r) = NULL;	/* ray output callback */
 
 static RAY	*r_fifo_buf = NULL;		/* circular FIFO out buffer */
@@ -55,9 +59,9 @@ ray_fifo_growbuf(void)	/* double buffer size (or set to minimum if NULL) */
 	int	i;
 
 	if (r_fifo_buf == NULL)
-		r_fifo_len = 1<<5;
+		r_fifo_len = 32;
 	else
-		r_fifo_len <<= 1;
+		r_fifo_len = r_fifo_len*3/2;
 						/* allocate new */
 	r_fifo_buf = (RAY *)calloc(r_fifo_len, sizeof(RAY));
 	if (r_fifo_buf == NULL)
@@ -120,7 +124,8 @@ ray_fifo_in(		/* add ray to FIFO */
 	if (incall++)
 		error(INTERNAL, "recursive call to ray_fifo_in()");
 
-	if (r_fifo_start >= 1L<<30) {		/* reset our counters */
+						/* need to reset our FIFO? */
+	if ((r_fifo_start >= 1L<<30) | (r_fifo_len > MAXFIFO)) {
 		if ((rv = ray_fifo_flush()) < 0)
 			{--incall; return(-1);}
 		rval += rv;
