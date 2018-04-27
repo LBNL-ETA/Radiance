@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.47 2018/04/27 17:36:01 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.48 2018/04/27 18:09:26 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -315,10 +315,11 @@ FVECT  p
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
 gotall:					/* add appropriate return flags */
-	if (!(rflags & (VL_BEHIND|VL_BEYOND)))
-		rflags |= (ip[2] <= 0.0) ? VL_BEHIND :
-					  VL_BEYOND * ((v->vaft > FTINY) &
-						(ip[2] >= v->vaft - v->vfore));
+	if (ip[2] <= 0.0)
+		rflags |= VL_BEHIND;
+	else if ((v->type != VT_PER) & (v->type != VT_CYL))
+		rflags |= VL_BEYOND*((v->vaft > FTINY) &
+					(ip[2] >= v->vaft - v->vfore));
 	rflags |= VL_OUTSIDE*((0.0 >= ip[0]) | (ip[0] >= 1.0) |
 				(0.0 >= ip[1]) | (ip[1] >= 1.0));
 	return(rflags);
