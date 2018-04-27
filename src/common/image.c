@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.46 2018/04/27 05:00:29 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.47 2018/04/27 17:36:01 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -245,7 +245,7 @@ FVECT  p
 		break;
 	case VT_PER:			/* perspective view */
 		d = DOT(disp,v->vdir);
-		if ((v->vaft > FTINY) & (d > v->vaft))
+		if ((v->vaft > FTINY) & (d >= v->vaft))
 			rflags |= VL_BEYOND;
 		ip[2] = VLEN(disp);
 		if (d < -FTINY) {	/* fold pyramid */
@@ -275,7 +275,7 @@ FVECT  p
 		d = d*d + d2*d2;
 		if (d <= FTINY*FTINY)
 			return(VL_BAD);	/* at pole */
-		if ((v->vaft > FTINY) & (d > v->vaft*v->vaft))
+		if ((v->vaft > FTINY) & (d >= v->vaft*v->vaft))
 			rflags |= VL_BEYOND;
 		d = 1.0/sqrt(d);
 		ip[1] = DOT(disp,v->vvec)*d/v->vn2 + 0.5 - v->voff;
@@ -315,11 +315,12 @@ FVECT  p
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
 gotall:					/* add appropriate return flags */
-	rflags |= VL_BEHIND*(ip[2] <= 0.0);
+	if (!(rflags & (VL_BEHIND|VL_BEYOND)))
+		rflags |= (ip[2] <= 0.0) ? VL_BEHIND :
+					  VL_BEYOND * ((v->vaft > FTINY) &
+						(ip[2] >= v->vaft - v->vfore));
 	rflags |= VL_OUTSIDE*((0.0 >= ip[0]) | (ip[0] >= 1.0) |
 				(0.0 >= ip[1]) | (ip[1] >= 1.0));
-	if ((v->vaft > FTINY) & !(rflags & (VL_BEHIND|VL_BEYOND)))
-		rflags |= VL_BEYOND*(ip[2] > v->vaft - v->vfore);
 	return(rflags);
 }
 
