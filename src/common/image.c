@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.45 2018/02/06 02:08:12 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.46 2018/04/27 05:00:29 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -231,8 +231,9 @@ viewloc(			/* find image location for point */
 FVECT  ip,
 VIEW  *v,
 FVECT  p
-)	/* returns: Good=1, Bad=0, Behind=-1, OutOfFrame=2, Behind+OOF=-2 */
+)	/* Use VL_* flags to interpret return value */
 {
+	int	rflags = VL_GOOD;
 	double  d, d2;
 	FVECT  disp;
 
@@ -244,12 +245,14 @@ FVECT  p
 		break;
 	case VT_PER:			/* perspective view */
 		d = DOT(disp,v->vdir);
+		if ((v->vaft > FTINY) & (d > v->vaft))
+			rflags |= VL_BEYOND;
 		ip[2] = VLEN(disp);
 		if (d < -FTINY) {	/* fold pyramid */
 			ip[2] = -ip[2];
 			d = -d;
 		} else if (d <= FTINY)
-			return(0);	/* at infinite edge */
+			return(VL_BAD);	/* at infinite edge */
 		d = 1.0/d;
 		disp[0] *= d;
 		disp[1] *= d;
@@ -271,7 +274,9 @@ FVECT  p
 		ip[0] = 180.0/PI * atan2(d,d2) / v->horiz + 0.5 - v->hoff;
 		d = d*d + d2*d2;
 		if (d <= FTINY*FTINY)
-			return(0);	/* at pole */
+			return(VL_BAD);	/* at pole */
+		if ((v->vaft > FTINY) & (d > v->vaft*v->vaft))
+			rflags |= VL_BEYOND;
 		d = 1.0/sqrt(d);
 		ip[1] = DOT(disp,v->vvec)*d/v->vn2 + 0.5 - v->voff;
 		ip[2] = VLEN(disp);
@@ -300,18 +305,22 @@ FVECT  p
 		if (d >= 1.0-FTINY)
 			goto gotall;
 		if (d <= -(1.0-FTINY))
-			return(0);
+			return(VL_BAD);
 		ip[0] += DOT(disp,v->hvec)/((1. + d)*sqrt(v->hn2));
 		ip[1] += DOT(disp,v->vvec)/((1. + d)*sqrt(v->vn2));
 		goto gotall;
 	default:
-		return(0);
+		return(VL_BAD);
 	}
 	ip[0] = DOT(disp,v->hvec)/v->hn2 + 0.5 - v->hoff;
 	ip[1] = DOT(disp,v->vvec)/v->vn2 + 0.5 - v->voff;
-gotall:					/* compute return value */
-	return( (1 - 2*(ip[2] <= 0.0)) * (1 +
-	((0.0 >= ip[0]) | (ip[0] >= 1.0) | (0.0 >= ip[1]) | (ip[1] >= 1.0))) );
+gotall:					/* add appropriate return flags */
+	rflags |= VL_BEHIND*(ip[2] <= 0.0);
+	rflags |= VL_OUTSIDE*((0.0 >= ip[0]) | (ip[0] >= 1.0) |
+				(0.0 >= ip[1]) | (ip[1] >= 1.0));
+	if ((v->vaft > FTINY) & !(rflags & (VL_BEHIND|VL_BEYOND)))
+		rflags |= VL_BEYOND*(ip[2] > v->vaft - v->vfore);
+	return(rflags);
 }
 
 

@@ -1,4 +1,4 @@
-/* RCSid $Id: view.h,v 2.19 2018/01/24 03:34:15 greg Exp $ */
+/* RCSid $Id: view.h,v 2.20 2018/04/27 05:00:29 greg Exp $ */
 /*
  *  view.h - header file for image generation.
  *
@@ -51,6 +51,12 @@ extern VIEW  stdview;
 #define  VIEWSTR	"VIEW="
 #define  VIEWSTRL	5
 
+				/* return values/flags for viewloc() */
+#define VL_BAD		0		/* illegal position (i.e. origin) */
+#define	VL_GOOD		0x1		/* result is valid */
+#define VL_BEHIND	0x2		/* world point is behind fore plane */
+#define VL_OUTSIDE	0x4		/* world point is outside frustum */
+#define VL_BEYOND	0x8		/* point is beyond aft clipping plane */
 
 extern char	*setview(VIEW *v);
 extern void	normaspect(double va, double *ap, int *xp, int *yp);
