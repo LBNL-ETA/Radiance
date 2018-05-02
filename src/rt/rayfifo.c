@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rayfifo.c,v 2.5 2018/04/26 18:09:55 greg Exp $";
+static const char RCSid[] = "$Id: rayfifo.c,v 2.6 2018/05/02 20:42:21 greg Exp $";
 #endif
 /*
  *  rayfifo.c - parallelize ray queue that respects order
@@ -59,9 +59,9 @@ ray_fifo_growbuf(void)	/* double buffer size (or set to minimum if NULL) */
 	int	i;
 
 	if (r_fifo_buf == NULL)
-		r_fifo_len = 32;
+		r_fifo_len = 1<<5;		/* must be power of two */
 	else
-		r_fifo_len = r_fifo_len*3/2;
+		r_fifo_len <<= 1;
 						/* allocate new */
 	r_fifo_buf = (RAY *)calloc(r_fifo_len, sizeof(RAY));
 	if (r_fifo_buf == NULL)
