@@ -2207,3 +2207,7 @@ Reduced bias in ambient super-sampling method.
 
 Fixed bugs associated with zero transmission in chromatic tensor trees.
 Thanks to Lars Grobe for pointing out issues.
+
+Added RAYPATH searching for -f options to genrev, gensurf, genworm,
+bsdf2klems, bsdf2ttree, and pcomb.  This makes behavior consistent
+with rcalc, calc, and rendering tools.

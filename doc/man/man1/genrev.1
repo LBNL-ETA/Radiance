@@ -1,4 +1,4 @@
-.\" RCSid "$Id: genrev.1,v 1.6 2017/04/10 14:48:08 greg Exp $"
+.\" RCSid "$Id: genrev.1,v 1.7 2018/05/04 23:56:49 greg Exp $"
 .TH GENREV 1 11/15/93 RADIANCE
 .SH NAME
 genrev - generate a RADIANCE description of surface of revolution
@@ -43,6 +43,9 @@ in any number of
 and
 .I \-f
 options.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 The
 .I \-s
 option smooths the surfaces using Phong normal interpolation.
@@ -51,6 +54,8 @@ To generate a torus with an inner radius of 1 and an outer radius
 of 3:
 .IP "" .2i
 genrev steel torus 'sin(2*PI*t)' '2+cos(2*PI*t)' 32
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

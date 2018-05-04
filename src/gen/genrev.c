@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.11 2018/01/12 00:50:17 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.12 2018/05/04 23:56:49 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -16,6 +16,7 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.11 2018/01/12 00:50:17 greg Exp $
 #include  <string.h>
 #include  <math.h>
 
+#include  "rtio.h"
 #include  "rterror.h"
 #include  "resolu.h"
 #include  "calcomp.h"
@@ -112,9 +113,15 @@ char  *argv[];
 	for (i = 6; i < argc; i++)
 		if (!strcmp(argv[i], "-e"))
 			scompile(argv[++i], NULL, 0);
-		else if (!strcmp(argv[i], "-f"))
-			fcompile(argv[++i]);
-		else if (!strcmp(argv[i], "-s"))
+		else if (!strcmp(argv[i], "-f")) {
+			char  *fpath = getpath(argv[++i], getrlibpath(), 0);
+			if (fpath == NULL) {
+				fprintf(stderr, "%s: cannot find file '%s'\n",
+						argv[0], argv[i]);
+				quit(1);
+			}
+			fcompile(fpath);
+		} else if (!strcmp(argv[i], "-s"))
 			smooth = 1;
 		else
 			goto userror;

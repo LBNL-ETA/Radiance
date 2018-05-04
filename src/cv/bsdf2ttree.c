@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.42 2018/01/04 23:28:54 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.43 2018/05/04 23:56:49 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -633,8 +633,18 @@ main(int argc, char *argv[])
 				if (strchr(argv[++i], '=') != NULL) {
 					add_wbsdf("-f", 1);
 					add_wbsdf(argv[i], 1);
-				} else
-					fcompile(argv[i]);
+				} else {
+					char	*fpath = getpath(argv[i],
+							    getrlibpath(), 0);
+					if (fpath == NULL) {
+						fprintf(stderr,
+						"%s: cannot find file '%s'\n",
+							argv[0], argv[i]);
+						return(1);
+					}
+					fcompile(fpath);
+					single_plane_incident = 0;
+				}
 			} else
 				dofwd = (argv[i][0] == '+');
 			break;

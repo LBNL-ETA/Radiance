@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2klems.1,v 1.5 2015/02/20 18:26:08 greg Exp $
+.\" RCSid $Id: bsdf2klems.1,v 1.6 2018/05/04 23:56:49 greg Exp $
 .TH BSDF2KLEMS 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2klems - generate XML Klems matrix description of a BSDF
@@ -133,6 +133,9 @@ and
 options, and should obey both Helmholtz reciprocity and
 integrate to less than 1 over each projected incident hemisphere
 for energy conservation.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 .PP
 Similar to the
 .I genBSDF(1)
@@ -163,6 +166,8 @@ To create a low-res BSDF corresponding to a one-sided,
 isotropic Phong distribution:
 .IP "" .2i
 bsdf2klems -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+oy)^2+(iz+oz)^2))^50, 0)' phong > phong.xml
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

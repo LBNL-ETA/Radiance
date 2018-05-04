@@ -1,4 +1,4 @@
-.\" RCSid "$Id: genworm.1,v 1.3 2004/01/01 19:31:45 greg Exp $"
+.\" RCSid "$Id: genworm.1,v 1.4 2018/05/04 23:56:49 greg Exp $"
 .TH GENWORM 1 11/15/93 RADIANCE
 .SH NAME
 genworm - generate a RADIANCE description of a functional worm
@@ -35,10 +35,15 @@ in any number of
 and
 .I \-f
 options.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 .SH EXAMPLE
 To generate a banana:
 .IP "" .2i
 genworm yellow banana '0' '5*sin(t)' '5*cos(t)' '.4-(.5-t)*(.5-t)' 20
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH BUGS

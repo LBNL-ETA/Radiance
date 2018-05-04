@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pcomb.1,v 1.10 2018/02/05 20:07:17 greg Exp $"
+.\" RCSid "$Id: pcomb.1,v 1.11 2018/05/04 23:56:49 greg Exp $"
 .TH PCOMB 1 8/31/96 RADIANCE
 .SH NAME
 pcomb - combine RADIANCE pictures
@@ -42,6 +42,9 @@ but an arbitrary mapping can be assigned with the
 and
 .I \-f
 options.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 Negative coefficients and functions are allowed, and
 .I pcomb
 will produce color values of zero where they would be negative.
@@ -217,6 +220,8 @@ pcomb \-f myfilt.cal \-x xmax/2 \-y ymax/2 input.hdr > filtered.hdr
 To make a picture of a dot:
 .IP "" .2i
 pcomb \-x 100 \-y 100 \-e 'ro=b;go=b;bo=b;b=if((x-50)^2+(y-50)^2\-25^2,0,1)' > dot
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2ttree.1,v 1.6 2017/05/31 17:25:21 greg Exp $
+.\" RCSid $Id: bsdf2ttree.1,v 1.7 2018/05/04 23:56:49 greg Exp $
 .TH BSDF2TTREE 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2ttree - generate XML tensor tree description of a BSDF
@@ -118,6 +118,9 @@ and
 options, and should obey both Helmholtz reciprocity and
 integrate to less than 1 over each projected incident hemisphere
 for energy conservation.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 If the
 .I \-t3
 option is specified, the defined function is assumed to be isotropic.
@@ -150,6 +153,8 @@ To create a low-res BSDF corresponding to a one-sided,
 isotropic Phong distribution:
 .IP "" .2i
 bsdf2ttree -g 5 -t3 -e 'phong(ix,iy,iz,ox,oy,oz) = if(iz, .1+((iz+oz)/sqrt((ix+ox)^2+(iy+oy)^2+(iz+oz)^2))^50, 0)' phong > phong.xml
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: gensurf.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: gensurf.1,v 1.7 2018/05/04 23:56:49 greg Exp $"
 .TH GENSURF 1 11/15/93 RADIANCE
 .SH NAME
 gensurf - generate a RADIANCE or Wavefront description of a curved surface
@@ -60,6 +60,9 @@ in any number of
 and
 .I \-f
 options.
+The variable and function definitions in each
+.I \-f source
+file are read and compiled from the RADIANCE library where it is found.
 The
 .I \-s
 option adds smoothing (surface normal interpolation) to the surface.
@@ -109,6 +112,8 @@ To generate a 10x20 smoothed height field from 12 recorded vertex
 z values:
 .IP "" .2i
 gensurf dirt ground '10*s' '20*t' height.dat 2 3 \-s
+.SH ENVIRONMENT
+RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
 Greg Ward
 .SH BUGS

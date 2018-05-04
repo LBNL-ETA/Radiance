@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.49 2018/02/05 20:07:17 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.50 2018/05/04 23:56:49 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -193,6 +193,7 @@ main(
 	init();				/* set constants */
 					/* go back and get expressions */
 	for (a = 1; a < argc; a++) {
+		char	*fpath;
 		if (argv[a][0] == '-')
 			switch (argv[a][1]) {
 			case 'x':
@@ -206,7 +207,15 @@ main(
 			case 'h':
 				continue;
 			case 'f':
-				fcompile(argv[++a]);
+				fpath = getpath(argv[++a], getrlibpath(), 0);
+				if (fpath == NULL) {
+					eputs(argv[0]);
+					eputs(": cannot find file '");
+					eputs(argv[a]);
+					eputs("'\n");
+					quit(1);
+				}
+				fcompile(fpath);
 				continue;
 			case 'e':
 				scompile(argv[++a], NULL, 0);
