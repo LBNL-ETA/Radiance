@@ -1,16 +1,17 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: strlcpy.c,v 2.1 2018/01/17 22:36:44 greg Exp $";
+static const char	RCSid[] = "$Id: strlcpy.c,v 2.2 2018/05/04 21:22:44 greg Exp $";
 #endif
 /*
  * String copy routines similar to strncpy
  */
 
 #include "copyright.h"
+#include "rtio.h"
 
-int
-strlcpy(char *dst, const char *src, int siz)
+size_t
+strlcpy(char *dst, const char *src, size_t siz)
 {
-	int	n = siz;
+	size_t	n = siz;
 
 	while (--n > 0)
 		if (!(*dst++ = *src++))
@@ -19,10 +20,10 @@ strlcpy(char *dst, const char *src, int siz)
 	return(siz-1);
 }
 
-int
-strlcat(char *dst, const char *src, int siz)
+size_t
+strlcat(char *dst, const char *src, size_t siz)
 {
-	int	n = siz;
+	size_t	n = siz;
 
 	while (*dst && --n > 0)
 		++dst;
