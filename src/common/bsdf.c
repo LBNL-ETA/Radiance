@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.54 2017/05/15 22:44:10 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.55 2018/05/10 22:55:35 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -515,8 +515,7 @@ SDsampComponent(SDValue *sv, FVECT ioVec, double randX, SDComponent *sdc)
 		c_cmix(&sv->spec, d, &sv->spec, coef[n], &sdc->cspec[n]);
 		d += coef[n];
 	}
-					/* make sure everything is set */
-	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	c_ccvt(&sv->spec, C_CSXY);	/* make sure (x,y) is set */
 	return SDEnone;
 }
 
@@ -665,8 +664,7 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 			sv->cieY += coef[nch];
 		}
 	}
-					/* make sure everything is set */
-	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	c_ccvt(&sv->spec, C_CSXY);	/* make sure (x,y) is set */
 	return SDEnone;
 }
 
@@ -816,8 +814,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 done:
 	if (cdarr != NULL)
 		free(cdarr);
-					/* make sure everything is set */
-	c_ccvt(&sv->spec, C_CSXY+C_CSSPEC);
+	c_ccvt(&sv->spec, C_CSXY);	/* make sure (x,y) is set */
 	return SDEnone;
 }
 

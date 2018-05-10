@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_t.c,v 3.46 2018/04/17 18:11:16 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_t.c,v 3.47 2018/05/10 22:55:35 greg Exp $";
 #endif
 /*
  *  bsdf_t.c
@@ -1361,8 +1361,8 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 		dv->cieY = subtract_min_Y(sdt->stc[tt_Y]);
 	}
 	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
-					/* make sure everything is set */
-	c_ccvt(&dv->spec, C_CSXY+C_CSSPEC);
+				
+	c_ccvt(&dv->spec, C_CSXY);	/* make sure (x,y) is set */
 }
 
 /* Load a variable-resolution BSDF tree from an open XML file */

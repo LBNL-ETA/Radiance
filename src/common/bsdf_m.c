@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.37 2018/01/05 21:00:24 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.38 2018/05/10 22:55:35 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -649,8 +649,8 @@ extract_diffuse(SDValue *dv, SDSpectralDF *df)
 					/* subtract minimum value */
 	dv->cieY = subtract_min(&dv->spec, (SDMat *)df->comp[0].dist);
 	df->maxHemi -= dv->cieY;	/* adjust maximum hemispherical */
-					/* make sure everything is set */
-	c_ccvt(&dv->spec, C_CSXY+C_CSSPEC);
+				
+	c_ccvt(&dv->spec, C_CSXY);	/* make sure (x,y) is set */
 	return df;
 }
 
