@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.12 2017/05/15 22:15:40 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.13 2018/05/10 01:41:33 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -108,7 +108,11 @@ main(int argc, char *argv[])
 			printf("Manufacturer: '%s'\n", bsdf->makr);
 			printf("Width, Height, Thickness (m): %.4e, %.4e, %.4e\n",
 					bsdf->dim[0], bsdf->dim[1], bsdf->dim[2]);
-			printf("Has geometry: %s\n", bsdf->mgf ? "yes" : "no");
+			if (bsdf->mgf)
+				printf("Has geometry: %lu bytes\n",
+						(unsigned long)strlen(bsdf->mgf));
+			else
+				printf("Has geometry: no\n");
 			continue;
 		case 'C':			/* report constant values */
 			if (!bsdf)
