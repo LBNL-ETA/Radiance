@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.5 2018/03/21 17:56:08 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.6 2018/05/22 15:16:53 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 #
@@ -43,7 +43,7 @@ while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	}
 	# Check booleans
 	for my $boopt (@boolO) {
-		if ("$ARGV[0]" =~ ('^' . $boopt . '[-+01tfynTFYN]$')) {
+		if ("$ARGV[0]" =~ ('^' . $boopt . '[-+01tfynTFYN]?$')) {
 			push @rtraceA, $ARGV[0];
 			push @rpictA, shift(@ARGV);
 			next OPTION;
