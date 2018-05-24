@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.7 2014/06/17 18:03:48 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.8 2018/05/24 15:21:15 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -71,6 +71,10 @@ option may be used to produce a sun-only matrix, with no sky contributions.
 Alternatively, the
 .I \-s
 option may be used to exclude any direct solar component from the output.
+If there is a sun in the description,
+.I gendaymtx
+will include its contribution in the four nearest sky patches,
+distributing energy according to centroid proximity.
 .PP
 By default,
 .I gendaymtx
