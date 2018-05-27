@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc3.c,v 2.22 2016/08/18 00:52:48 greg Exp $";
+static const char RCSid[] = "$Id: rc3.c,v 2.23 2018/05/27 18:35:57 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -89,6 +89,8 @@ free_binq(BINQ *bp)
 /*	for (i = nmods; i--; )
 		memset(bp->mca[i]->cbin, 0, sizeof(DCOLOR)*bp->mca[i]->nbins);
 */
+	if (bp->next != NULL)
+		error(CONSISTENCY, "free_binq() handed list");
 	bp->ndx = 0;
 	bp->next = free_bq;		/* push onto free list */
 	free_bq = bp;
