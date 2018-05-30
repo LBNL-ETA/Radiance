@@ -1,12 +1,73 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.27 2015/08/01 23:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.28 2018/05/30 22:12:17 greg Exp $";
 #endif
 /*
- * Convert IES luminaire data to Radiance description
+ * ies2rad -- Convert IES luminaire data to Radiance description
+ *
+ * ies2rad converts an IES LM-63 luminare description to a Radiance
+ * luminaire description.  In addition, ies2rad manages a local
+ * database of Radiance luminaire files.
+ *
+ * Ies2rad generates two or three files for each luminaire. For a
+ * luminaire named LUM, ies2rad will generate LUM.rad, a Radiance
+ * scene description file which describes the light source, LUM.dat,
+ * which contains the photometric data from the IES LM-63 file, and
+ * (if tilt data is provided) LUM%.dat, which contains the tilt data
+ * from the IES file.
+ *
+ * Ies2rad is supported by the Radiance function files source.cal and
+ * tilt.cal, which transform the coordinates in the IES data into
+ * Radiance (θ,φ) luminaire coordinates and then apply photometric and
+ * tilt data to generate Radiance light. θ is altitude from the
+ * negative z-axis and φ is azimuth from the positive x-axis,
+ * increasing towards the positive y-axis. [??? Greg, is there a
+ * source for this convention?] This system matches none of the usual
+ * goniophotometric conventions, but it is closest to IES type C; V in
+ * type C photometry is θ in Radiance and L is -φ.
+ *
+ * The ies2rad scene description for a luminaire LUM, with tilt data,
+ * uses the following Radiance scene description primitives:
+ *
+ *     void brightdata LUM_tilt
+ *     …
+ *     LUM_tilt brightdata LUM_dist
+ *     …
+ *     LUM_dist light LUM_light
+ *     …
+ *     LUM_light surface1 name1
+ *     …
+ *     LUM_light surface2 name2
+ *     …
+ *     LUM_light surface_n name_n
+ *
+ * Without tilt data, the primitives are:
+ *
+ *     void brightdata LUM_dist
+ *     …
+ *     LUM_dist light LUM_light
+ *     …
+ *     LUM_light surface1 name1
+ *     …
+ *     LUM_light surface2 name2
+ *     …
+ *     LUM_light surface_n name_n
+ *
+ * As many surfaces are given as required to describe the light
+ * source. Illum may be used rather than light so that a visible form
+ * (impostor) may be given to the luminaire, rather than a simple
+ * glowing shape. If an impostor is provided, it must be wholly
+ * contained within the illum and if it provides impostor light
+ * sources, those must be given with glow, so that they do not
+ * themselves illuminate the scene, providing incorrect results.
+ *
+ * The ies2rad code uses the "bsd" style. For emacs, this is set up
+ * automatically in the "Local Variables" section at the end of the
+ * file. For vim, use ":set tabstop=8 shiftwidth=8".
  *
  *	07Apr90		Greg Ward
  *
  *  Fixed correction factor for flat sources 29Oct2001 GW
+ *  Extensive comments added by Randolph Fritz May2018
  */
 
 #include <stdio.h>
@@ -20,16 +81,49 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.27 2015/08/01 23:27:04 greg Exp 
 #include "paths.h"
 
 #define PI		3.14159265358979323846
-					/* floating comparisons */
+
+/* floating comparisons -- floating point numbers within FTINY of each
+ * other are considered equal */
 #define FTINY		1e-6
 #define FEQ(a,b)	((a)<=(b)+FTINY&&(a)>=(b)-FTINY)
-					/* keywords */
+
+
+/* IESNA LM-63 keywords and constants */
+/* Since 1991, LM-63 files have begun with the magic keyword IESNA */
 #define MAGICID		"IESNA"
 #define LMAGICID	5
+/* ies2rad supports the 1986, 1991, and 1995 versions of
+ * LM-63. FIRSTREV describes the first version; LASTREV describes the
+ * 1995 version. */
 #define FIRSTREV	86
 #define LASTREV		95
 
-#define D86		0		/* keywords defined in LM-63-1986 */
+/* The following definitions support LM-63 file keyword reading and
+ * analysis.
+ *
+ * This section defines two function-like macros: keymatch(i,s), which
+ * checks to see if keyword i matches string s, and checklamp(s),
+ * which checks to see if a string matches the keywords "LAMP" or
+ * "LAMPCAT".
+ *
+ * LM-63-1986 files begin with a list of free-form label lines.
+ * LM-63-1991 files begin with the identifying line "IESNA91" followed
+ * by a list of formatted keywords.  LM-63-1995 files begin with the
+ * identifying line "IESNA:LM-63-1995" followed by a list of formatted
+ * keywords.
+ *
+ * The K_* #defines enumerate the keywords used in the different
+ * versions of the file and give them symbolic names.
+ *
+ * The D86, D91, and D95 #defines validate the keywords in the 1986,
+ * 1991, and 1995 versions of the standard, one bit per keyword.
+ * Since the 1986 standard does not use keywords, D86 is zero.  The
+ * 1991 standard has 13 keywords, and D91 has the lower 13 bits set.
+ * The 1995 standard has 14 keywords, and D95 has the lower 14 bits
+ * set.
+ *
+ */
+#define D86		0
 
 #define K_TST		0
 #define K_MAN		1
@@ -45,11 +139,13 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.27 2015/08/01 23:27:04 greg Exp 
 #define K_BLK		11
 #define K_EBK		12
 
-#define D91		((1L<<13)-1)	/* keywords defined in LM-63-1991 */
+/* keywords defined in LM-63-1991 */
+#define D91		((1L<<13)-1)
 
 #define K_LMG		13
 
-#define D95		((1L<<14)-1)	/* keywords defined in LM-63-1995 */
+/* keywords defined in LM-63-1995 */
+#define D95		((1L<<14)-1)
 
 char	k_kwd[][20] = {"TEST", "MANUFAC", "LUMCAT", "LUMINAIRE", "LAMPCAT",
 			"LAMP", "BALLAST", "MAINTCAT", "OTHER", "SEARCH",
@@ -65,7 +161,15 @@ int	filerev = FIRSTREV;
 #define checklamp(s)	(!(k_defined[filerev-FIRSTREV]&(1<<K_LMP|1<<K_LPC)) ||\
 				keymatch(K_LMP,s) || keymatch(K_LPC,s))
 
-					/* tilt specs */
+/* tilt specs
+ *
+ * This next series of definitions address metal-halide lamps, which
+ * change their brightness depending on the angle at which they are
+ * mounted. The section begins with "TILT=".  The constants in this
+ * section are all defined in LM-63.
+ *
+ */
+
 #define TLTSTR		"TILT="
 #define TLTSTRLEN	5
 #define TLTNONE		"NONE"
@@ -73,32 +177,71 @@ int	filerev = FIRSTREV;
 #define TLT_VERT	1
 #define TLT_H0		2
 #define TLT_H90		3
-					/* photometric types */
+
+/* Constants from LM-63 files */
+
+/* photometric types
+ *
+ * This enumeration reflects three different methods of measuring the
+ * distribution of light from a luminaire -- "goniophotometry" -- and
+ * the different coordinate systems related to these
+ * goniophotometers.  All are described in IES standard LM-75-01.
+ * Earlier and shorter descriptions may be found the LM-63 standards
+ * from 1986, 1991, and 1995.
+ *
+ * ies2rad does not support type A photometry.
+ *
+ * In the 1986 file format, LM-63-86, 1 is used for type C and type A
+ * photometric data.
+ *
+ */
 #define PM_C		1
 #define PM_B		2
 #define PM_A		3
-					/* unit types */
+
+/* unit types */
 #define U_FEET		1
 #define U_METERS	2
-					/* string lengths */
-#define MAXLINE		132
+
+/* string lengths */
+/* Maximum input line is 132 characters including CR LF at end. */
+#define MAXLINE		133
 #define RMAXWORD	76
-					/* file types */
+
+/* End of LM-63-related #defines */
+
+/* file extensions */
 #define T_RAD		".rad"
 #define T_DST		".dat"
 #define T_TLT		"%.dat"
 #define T_OCT		".oct"
-					/* shape types */
+
+/* shape types
+ * These #defines enumerate the shapes of the Radiance objects which
+ * emit the light.
+ */
 #define RECT		1
 #define DISK		2
 #define SPHERE		3
 
-#define MINDIM		.001		/* minimum dimension (point source) */
+/* The diameter of a point source luminaire model. Also the minimum
+ * size (in meters) that the luminous opening of a luminaire must have
+ * to be treated as other than a point source. */
+#define MINDIM		.001
 
-#define F_M		.3048		/* feet to meters */
+/* feet to meters */
+/* length_in_meters = length_in_feet * F_M */
+#define F_M		.3048
 
+/* abspath - return true if a path begins with a directory separator
+ * or a '.' (current directory) */
 #define abspath(p)	(ISDIRSEP((p)[0]) || (p)[0] == '.')
 
+/* Global variables.
+ *
+ * Mostly, these are a way of communicating command line parameters to
+ * the rest of the program.
+ */
 static char	default_name[] = "default";
 
 char	*libdir = NULL;			/* library directory location */
@@ -116,6 +259,7 @@ int	out2stdout = 0;			/* put out to stdout r.t. file */
 int	instantiate = 0;		/* instantiate geometry */
 double	illumrad = 0.0;			/* radius for illum sphere */
 
+/* This struct describes the Radiance source object */
 typedef struct {
 	int	isillum;			/* do as illum */
 	int	type;				/* RECT, DISK, SPHERE */
@@ -124,15 +268,27 @@ typedef struct {
 	double	area;				/* max. projected area */
 } SRCINFO;				/* a source shape (units=meters) */
 
-int	gargc;				/* global argc (minus filenames) */
+/* A count and pointer to the list of input file names */
+int	gargc;				/* global argc */
 char	**gargv;			/* global argv */
 
-
+/* macros to scan numbers out of IES files
+ *
+ * fp is a file pointer.  scnint() places the number in the integer
+ * indicated by ip; scnflt() places the number in the double indicated
+ * by rp. The macros return 1 if successful, 0 if not.
+ *
+ */
 #define scnint(fp,ip)	cvtint(ip,getword(fp))
 #define scnflt(fp,rp)	cvtflt(rp,getword(fp))
-#define isint		isflt			/* IES allows real as integer */
 
+/* The original (1986) version of LM-63 allows decimals points in
+ * integers, so that, for instance, the number of lamps may be written
+ * 3.0 (the number, obviously, must still be an integer.) This
+ * confusing define accommodates that.  */
+#define isint		isflt
 
+/* Function declarations */
 static int ies2rad(char *inpname, char *outname);
 static void initlamps(void);
 static int dosource(SRCINFO *sinf, FILE *in, FILE *out, char *mod, char *name);
@@ -160,7 +316,30 @@ static char * libname(char *path, char *fname, char *suffix);
 static char * getword(FILE *fp);
 static char * fullnam(char *path, char *fname, char *suffix);
 
-
+/* main - process arguments and run the conversion
+ *
+ * Refer to the man page for details of the arguments.
+ *
+ * Following Unix environment conventions, main() exits with 0 on
+ * success and 1 on failure.
+ *
+ * ies2rad outputs either two or three files for a given IES
+ * file. There is always a .rad file containing Radiance scene
+ * description primitives and a .dat file for the photometric data. If
+ * tilt data is given, that is placed in a separate .dat file.  So
+ * ies2rad must have a filename to operate. Sometimes this name is the
+ * input file name, shorn of its extension; sometimes it is given in
+ * the -o option. But an output file name is required for ies2rad to
+ * do its work.
+ *
+ * Older versions of the LM-63 standard allowed inclusion of multiple
+ * luminaires in one IES file; this is not supported by ies2rad.
+ *
+ * This code sometimes does not check to make sure it has not run out
+ * of arguments; this can lead to segmentation faults and perhaps
+ * other errors.
+ *
+ */
 int
 main(
 	int	argc,
@@ -172,7 +351,8 @@ main(
 	char	outname[RMAXWORD];
 	double	d1;
 	int	i;
-	
+
+	/* Scan the options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
 		case 'd':		/* dimensions */
@@ -243,7 +423,7 @@ main(
 		case 'i':		/* illum */
 			illumrad = atof(argv[++i]);
 			break;
-		case 'g':		/* instatiate geometry? */
+		case 'g':		/* instantiate geometry? */
 			instantiate = !instantiate;
 			break;
 		case 't':		/* override lamp type */
@@ -266,24 +446,35 @@ main(
 					argv[0], argv[i]);
 			exit(1);
 		}
+	/* Save pointers to the list of input file names */
 	gargc = i;
 	gargv = argv;
-	initlamps();			/* get lamp data (if needed) */
-					/* convert ies file(s) */
+
+	/* get lamp data (if needed) */
+	initlamps();
+
+        /* convert ies file(s) */
+	/* If an output file name is specified */
 	if (outfile != NULL) {
 		if (i == argc)
+			/* If no input filename is given, use stdin as
+			 * the source for the IES file */
 			exit(ies2rad(NULL, outfile) == 0 ? 0 : 1);
 		else if (i == argc-1)
+			/* If exactly one input file name is given, use it. */
 			exit(ies2rad(argv[i], outfile) == 0 ? 0 : 1);
 		else
-			goto needsingle;
+			goto needsingle; /* Otherwise, error. */
 	} else if (i >= argc) {
+		/* If an output file and an input file are not give, error. */
 		fprintf(stderr, "%s: missing output file specification\n",
 				argv[0]);
 		exit(1);
 	}
+	/* If no input or output file is given, error. */
 	if (out2stdout && i != argc-1)
 		goto needsingle;
+	/* Otherwise, process each input file in turn. */
 	status = 0;
 	for ( ; i < argc; i++) {
 		tailtrunc(strcpy(outname,filename(argv[i])));
@@ -296,32 +487,42 @@ needsingle:
 	exit(1);
 }
 
+/* Initlamps -- If necessary, read lamp data table */
 void
 initlamps(void)				/* set up lamps */
 {
 	float	*lcol;
 	int	status;
 
+	/* If the lamp name is set to default, don't bother to read
+	 * the lamp data table. */
 	if (lamptype != NULL && !strcmp(lamptype, default_name) &&
 			deflamp == NULL)
-		return;				/* no need for data */
-						/* else load file */
-	if ((status = loadlamps(lampdat)) < 0)
-		exit(1);
+		return;
+
+	if ((status = loadlamps(lampdat)) < 0) /* Load the lamp data table */
+		exit(1);		       /* Exit if problems
+						* with the file. */
 	if (status == 0) {
+                /* If can't open the file, just use the standard default lamp */
 		fprintf(stderr, "%s: warning - no lamp data\n", lampdat);
 		lamptype = default_name;
 		return;
 	}
-	if (deflamp != NULL) {			/* match default type */
+	if (deflamp != NULL) {
+                /* Look up the specified default lamp type */
 		if ((lcol = matchlamp(deflamp)) == NULL)
+			/* If it can't be found, use the default */
 			fprintf(stderr,
 				"%s: warning - unknown default lamp type\n",
 					deflamp);
 		else
+			/* Use the selected default lamp color */
 			copycolor(defcolor, lcol);
 	}
-	if (lamptype != NULL) {			/* match selected type */
+	/* If a lamp type is specified and can be found, use it, and
+	 * release the lamp data table memory; it won't be needed any more. */
+	if (lamptype != NULL) {
 		if (strcmp(lamptype, default_name)) {
 			if ((lcol = matchlamp(lamptype)) == NULL) {
 				fprintf(stderr,
@@ -333,10 +534,27 @@ initlamps(void)				/* set up lamps */
 		}
 		freelamps();			/* all done with data */
 	}
-						/* else keep lamp data */
+	/* else keep lamp data */
 }
 
+/*
+ * File path operations
+ *
+ * These provide file path operations that operate on both MS-Windows
+ * and *nix. They will ignore and pass, but will not necessarily
+ * process correctly, Windows drive letters. Paths including Windows
+ * UNC network names (\\server\folder\file) may also cause problems.
+ *
+ */
 
+/*
+ * stradd()
+ *
+ * Add a string to the end of a string, optionally concatenating a
+ * file path separator character.  If the path already ends with a
+ * path separator, no additional separator is appended.
+ *
+ */
 char *
 stradd(			/* add a string at dst */
 	char	*dst,
@@ -355,43 +573,73 @@ stradd(			/* add a string at dst */
 	return(dst);
 }
 
-
+/*
+ * fullnam () - return a usable path name for an output file
+ */
 char *
-fullnam(		/* return full path name */
-	char	*path,
-	char	*fname,
-	char	*suffix
+fullnam(
+	char	*path,		/* The base directory path */
+	char	*fname,		/* The file name */
+	char	*suffix		/* A suffix, which usually contains
+				 * a file name extension. */
 )
 {
+	extern char *prefdir;
+	extern char *libdir;
+
 	if (prefdir != NULL && abspath(prefdir))
+		/* If the subdirectory path is absolute or '.', just
+		 * concatenate the names together */
 		libname(path, fname, suffix);
 	else if (abspath(fname))
+		/* If there is no subdirectory, and the file name is
+		 * an absolute path or '.', concatenate the path,
+		 * filename, and suffix. */
 		strcpy(stradd(path, fname, 0), suffix);
 	else
+		/* If the file name is relative, concatenate path,
+		 * library directory, directory separator, file name,
+		 * and suffix.  */
 		libname(stradd(path, libdir, DIRSEP), fname, suffix);
 
 	return(path);
 }
 
 
+/*
+ * libname - convert a file name to a path
+ */
 char *
-libname(		/* return library relative name */
-	char	*path,
-	char	*fname,
-	char	*suffix
+libname(
+	char	*path,		/* The base directory path */
+	char	*fname,		/* The file name */
+	char	*suffix		/* A suffix, which usually contains
+				 * a file name extension. */
 )
 {
+	extern char *prefdir;	/* The subdirectory where the file
+				 * name is stored. */
+
 	if (abspath(fname))
+		/* If the file name begins with '/' or '.', combine
+		 * it with the path and attach the suffix */
 		strcpy(stradd(path, fname, 0), suffix);
 	else
+		/* If the file name is relative, attach it to the
+		 * path, include the subdirectory, and append the suffix. */
 		strcpy(stradd(stradd(path, prefdir, DIRSEP), fname, 0), suffix);
 
 	return(path);
 }
 
-
+/* filename - find the base file name in a buffer containing a path
+ *
+ * The pointer is to a character within the buffer, not a string in itself;
+ * it will become invalid when the buffer is freed.
+ *
+ */
 char *
-filename(			/* get final component of pathname */
+filename(
 	char	*path
 )
 {
@@ -404,8 +652,14 @@ filename(			/* get final component of pathname */
 }
 
 
+/* filetrunc() - return the directory portion of a path
+ *
+ * The path is passed in in a pointer to a buffer; a null character is
+ * inserted in the buffer after the last directory separator
+ *
+ */
 char *
-filetrunc(				/* truncate filename at end of path */
+filetrunc(
 	char	*path
 )
 {
@@ -420,28 +674,38 @@ filetrunc(				/* truncate filename at end of path */
 	return(path);
 }
 
-
+/* tailtrunc() - trim a file name extension, if any.
+ *
+ * The file name is passed in in a buffer indicated by *name; the
+ * period which begins the extension is replaced with a 0 byte.
+ */
 char *
-tailtrunc(				/* truncate tail of filename */
+tailtrunc(
 	char	*name
 )
 {
 	char	*p1, *p2;
 
+	/* Skip leading periods */
 	for (p1 = filename(name); *p1 == '.'; p1++)
 		;
+	/* Find the last period in a file name */
 	p2 = NULL;
 	for ( ; *p1; p1++)
 		if (*p1 == '.')
 			p2 = p1;
+	/* If present, trim the filename at that period */
 	if (p2 != NULL)
 		*p2 = '\0';
 	return(name);
 }
 
-
+/* blanktrunc() - trim spaces at the end of a string
+ *
+ * the string is passed in a character array, which is modified
+ */
 void
-blanktrunc(				/* truncate spaces at end of line */
+blanktrunc(
 	char	*s
 )
 {
@@ -454,25 +718,35 @@ blanktrunc(				/* truncate spaces at end of line */
 	*++cp = '\0';
 }
 
-
+/* k_match - return true if keyword matches header line */
 int
-k_match(			/* header line matches keyword? */
-	char	*kwd,
-	char	*hdl
+k_match(
+	char	*kwd,		/* keyword */
+	char	*hdl		/* header line */
 )
 {
+	/* The line has to begin with '[' */
 	if (*hdl++ != '[')
 		return(0);
-	while (islower(*hdl) ? toupper(*hdl) == *kwd++ : *hdl == *kwd++)
+	/* case-independent keyword match */
+	while (toupper(*hdl) == *kwd++)
 		if (!*hdl++)
 			return(0);
+	/* If we have come to the end of the keyword, and the keyword
+	 * at the beginning of the matched line is terminated with
+	 * ']', return 1 */
 	return((!*kwd) & (*hdl == ']'));
 }
 
-
+/* keyargs - return the argument of a keyword, without leading spaces
+ *
+ * keyargs is passed a pointer to a buffer; it returns a pointer to
+ * where the argument starts in the buffer
+ *
+ */
 char *
-keyargs(				/* return keyword arguments */
-	char	*hdl
+keyargs(
+	char	*hdl /* header line */
 )
 {
 	while (*hdl && *hdl++ != ']')
@@ -483,13 +757,23 @@ keyargs(				/* return keyword arguments */
 }
 
 
+/* putheader - output the header of the .rad file
+ *
+ * Header is:
+ *   # <file> <file> <file> (all files from input line)
+ *   # Dimensions in [feet,meters,etc.]
+ *
+ * ??? Is listing all the input file names correct behavior?
+ *
+ */
 void
-putheader(				/* print header */
+
+putheader(
 	FILE	*out
 )
 {
 	int	i;
-	
+
 	putc('#', out);
 	for (i = 0; i < gargc; i++) {
 		putc(' ', out);
@@ -500,7 +784,14 @@ putheader(				/* print header */
 	putc('\n', out);
 }
 
-
+/* ies2rad - convert an IES LM-63 file to a Radiance light source desc.
+ *
+ * Return -1 in case of failure, 0 in case of success.
+ *
+ * The file version recognition is confused and will treat 1995 and
+ * 2002 version files as 1986 version files.
+ *
+ */
 int
 ies2rad(		/* convert IES file */
 	char	*inpname,
@@ -513,6 +804,7 @@ ies2rad(		/* convert IES file */
 	FILE	*inpfp, *outfp;
 	int	lineno = 0;
 
+	/* Open input and output files */
 	geomfile[0] = '\0';
 	srcinfo.isillum = 0;
 	if (inpname == NULL) {
@@ -529,33 +821,59 @@ ies2rad(		/* convert IES file */
 		fclose(inpfp);
 		return(-1);
 	}
+
+	/* Output the output file header */
 	putheader(outfp);
+
+	/* If the lamp type wasn't given on the command line, mark
+	 * the lamp color as missing */
 	if (lamptype == NULL)
 		lampcolor = NULL;
+
+	/* Read the input file header, copying lines to the .rad file
+	 * and looking for a lamp type. Stop at EOF or a line
+	 * beginning with "TILT=". */
 	while (fgets(buf,sizeof(buf),inpfp) != NULL
 			&& strncmp(buf,TLTSTR,TLTSTRLEN)) {
-		blanktrunc(buf);
-		if (!buf[0])
+		blanktrunc(buf); /* Trim trailing spaces, CR, LF. */
+		if (!buf[0])	 /* Skip blank lines */
 			continue;
-		if (!lineno++ && !strncmp(buf, MAGICID, LMAGICID)) {
+		/* increment the header line count, and check for the
+		 * "TILT=" line that terminates the header */
+		if (!lineno++ && strncmp(buf, MAGICID, LMAGICID) == 0) {
+			/* This code doesn't work for LM-63-95 and
+			 * LM-63-02 files and will instead default to
+			 * LM-63-86. */
 			filerev = atoi(buf+LMAGICID);
 			if (filerev < FIRSTREV)
 				filerev = FIRSTREV;
 			else if (filerev > LASTREV)
 				filerev = LASTREV;
 		}
+		/* Output the header line as a comment in the .rad file. */
 		fputs("#<", outfp);
 		fputs(buf, outfp);
 		putc('\n', outfp);
+
+		/* If the header line is a keyword line (file version
+		 * later than 1986 and begins with '['), check a lamp
+		 * in the "[LAMP]" and "[LAMPCAT]" keyword lines;
+		 * otherwise check all lines.  */
 		if (lampcolor == NULL && checklamp(buf))
 			lampcolor = matchlamp( buf[0] == '[' ?
 						keyargs(buf) : buf );
-		if (keymatch(K_LMG, buf)) {		/* geometry file */
+		/* Look for a materials and geometry file in the keywords. */
+		if (keymatch(K_LMG, buf)) {
 			strcpy(geomfile, inpname);
 			strcpy(filename(geomfile), keyargs(buf));
 			srcinfo.isillum = 1;
 		}
 	}
+
+	/* Done reading header information. If a lamp color still
+	 * hasn't been found, print a warning and use the default
+	 * color; if a lamp type hasn't been found, but a color has
+	 * been specified, used the specified color. */
 	if (lampcolor == NULL) {
 		fprintf(stderr, "%s: warning - no lamp type\n", inpname);
 		fputs("# Unknown lamp type (used default)\n", outfp);
@@ -563,40 +881,64 @@ ies2rad(		/* convert IES file */
 	} else if (lamptype == NULL)
 		fprintf(outfp,"# CIE(x,y) = (%f,%f)\n# Depreciation = %.1f%%\n",
 				lampcolor[3], lampcolor[4], 100.*lampcolor[5]);
+	/* If the file ended before a "TILT=" line, that's an error. */
 	if (feof(inpfp)) {
 		fprintf(stderr, "%s: not in IES format\n", inpname);
 		goto readerr;
 	}
+
+	/* Process the tilt section of the file. */
+	/* Get the tilt file name, or the keyword "INCLUDE". */
 	atos(tltid, RMAXWORD, buf+TLTSTRLEN);
 	if (inpfp == stdin)
 		buf[0] = '\0';
 	else
 		filetrunc(strcpy(buf, inpname));
+	/* Process the tilt data. */
 	if (dotilt(inpfp, outfp, buf, tltid, outname, tltid) != 0) {
 		fprintf(stderr, "%s: bad tilt data\n", inpname);
 		goto readerr;
 	}
+
+	/* Process the luminaire data. */
 	if (dosource(&srcinfo, inpfp, outfp, tltid, outname) != 0) {
 		fprintf(stderr, "%s: bad luminaire data\n", inpname);
 		goto readerr;
 	}
+
+	/* Close the input file */
 	fclose(inpfp);
-					/* cvgeometry closes outfp */
+
+	/* Process an MGF file, if present. cvgeometry() closes outfp. */
 	if (cvgeometry(geomfile, &srcinfo, outname, outfp) != 0) {
 		fprintf(stderr, "%s: bad geometry file\n", geomfile);
 		return(-1);
 	}
 	return(0);
+
 readerr:
+	/* If there is an error reading the file, close the input and
+	 * .rad output files, and delete the .rad file, returning -1. */
 	fclose(inpfp);
 	fclose(outfp);
 	unlink(fullnam(buf,outname,T_RAD));
 	return(-1);
 }
 
-
+/* dotilt -- process tilt data
+ *
+ * Generate a brightdata primitive which describes the effect of
+ * luminaire tilt on luminaire output and return its identifier in tltid.
+ *
+ * Tilt data (if present) is given as a number 1, 2, or 3, which
+ * specifies the orientation of the lamp within the luminaire, a
+ * number, n, of (angle, multiplier) pairs, followed by n angles and n
+ * multipliers.
+ *
+ * returns 0 for success, -1 for error
+ */
 int
-dotilt(	/* convert tilt data */
+dotilt(
 	FILE	*in,
 	FILE	*out,
 	char	*dir,
@@ -610,13 +952,21 @@ dotilt(	/* convert tilt data */
 	char	buf[PATH_MAX], tltname[RMAXWORD];
 	FILE	*datin, *datout;
 
+	/* Decide where the tilt data is; if the luminaire description
+	 * doesn't have a tilt section, set the identifier to "void". */
 	if (!strcmp(tltspec, TLTNONE)) {
+		/* If the line is "TILT=NONE", set the input file
+		 * pointer to NULL and the identifier to "void". */
 		datin = NULL;
 		strcpy(tltid, "void");
 	} else if (!strcmp(tltspec, TLTINCL)) {
+		/* If the line is "TILT=INCLUDE" use the main IES
+		 * file as the source of tilt data. */
 		datin = in;
 		strcpy(tltname, dfltname);
 	} else {
+		/* If the line is "TILE=<filename>", use that file
+		 * name as the source of tilt data. */
 		if (ISDIRSEP(tltspec[0]))
 			strcpy(buf, tltspec);
 		else
@@ -627,13 +977,16 @@ dotilt(	/* convert tilt data */
 		}
 		tailtrunc(strcpy(tltname,filename(tltspec)));
 	}
+	/* If tilt data is present, read, process, and output it. */
 	if (datin != NULL) {
+		/* Try to open the output file */
 		if ((datout = fopen(fullnam(buf,tltname,T_TLT),"w")) == NULL) {
 			perror(buf);
 			if (datin != in)
 				fclose(datin);
 			return(-1);
 		}
+		/* Try to copy the tilt data to the tilt data file */
 		if (!scnint(datin,&tlt_type) || !scnint(datin,&nangles)
 			|| cvdata(datin,datout,1,&nangles,1.,minmax) != 0) {
 			fprintf(stderr, "%s: data format error\n", tltspec);
@@ -646,36 +999,51 @@ dotilt(	/* convert tilt data */
 		fclose(datout);
 		if (datin != in)
 			fclose(datin);
+
+		/* Generate the identifier of the brightdata; the filename
+		 * with "_tilt" appended. */
 		strcat(strcpy(tltid, filename(tltname)), "_tilt");
+		/* Write out the brightdata primitive */
 		fprintf(out, "\nvoid brightdata %s\n", tltid);
 		libname(buf,tltname,T_TLT);
+		/* Generate the tilt description */
 		switch (tlt_type) {
-		case TLT_VERT:			/* vertical */
+		case TLT_VERT:
+			/* The lamp is mounted vertically; either
+			 * base up or base down. */
 			fprintf(out, "4 noop %s tilt.cal %s\n", buf,
 				minmax[0][1]>90.+FTINY ? "tilt_ang" : "tilt_ang2");
 			break;
-		case TLT_H0:			/* horiz. in 0 deg. plane */
+		case TLT_H0:
+			/* The lamp is mounted horizontally and
+			 * rotates but does not tilt when the
+			 * luminaire is tilted. */
 			fprintf(out, "6 noop %s tilt.cal %s -rz 90\n", buf,
 			minmax[0][1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
 			break;
 		case TLT_H90:
+			/* The lamp is mounted horizontally, and
+			 * tilts when the luminaire is tilted. */
 			fprintf(out, "4 noop %s tilt.cal %s\n", buf,
 			minmax[0][1]>90.+FTINY ? "tilt_xang" : "tilt_xang2");
 			break;
 		default:
+			/* otherwise, this is a bad IES file */
 			fprintf(stderr,
 				"%s: illegal lamp to luminaire geometry (%d)\n",
 				tltspec, tlt_type);
 			return(-1);
 		}
+		/* And finally output the numbers of integer and real
+		 * arguments, of which there are none. */
 		fprintf(out, "0\n0\n");
 	}
 	return(0);
 }
 
-
+/* dosource -- create the source and distribution primitives */
 int
-dosource(	/* create source and distribution */
+dosource(
 	SRCINFO	*sinf,
 	FILE	*in,
 	FILE	*out,
@@ -689,8 +1057,9 @@ dosource(	/* create source and distribution */
 	double	bounds[2][2];
 	int	nangles[2], pmtype, unitype;
 	double	d1;
-	int	doupper, dolower, dosides; 
+	int	doupper, dolower, dosides;
 
+	/* Read in the luminaire description header */
 	if (!isint(getword(in)) || !isflt(getword(in)) || !scnflt(in,&mult)
 			|| !scnint(in,&nangles[0]) || !scnint(in,&nangles[1])
 			|| !scnint(in,&pmtype) || !scnint(in,&unitype)
@@ -700,25 +1069,41 @@ dosource(	/* create source and distribution */
 		fprintf(stderr, "dosource: bad lamp specification\n");
 		return(-1);
 	}
+	/* Type A photometry is not supported */
 	if (pmtype != PM_C && pmtype != PM_B) {
 		fprintf(stderr, "dosource: unsupported photometric type (%d)\n",
 				pmtype);
 		return(-1);
 	}
+
+	/* Multiplier = the multiplier from the -m option, times the
+	 * multiplier from the IES file, times the ballast factor,
+	 * times the "ballast lamp photometric factor," which was part
+	 * of the 1986 and 1991 standards. In the 1995 standard, it is
+	 * always supposed to be 1. */
 	sinf->mult = multiplier*mult*bfactor*pfactor;
+
+	/* If the count of angles is wrong, raise an error and quit. */
 	if (nangles[0] < 2 || nangles[1] < 1) {
 		fprintf(stderr, "dosource: too few measured angles\n");
 		return(-1);
 	}
+
+	/* For internal computation, convert units to meters. */
 	if (unitype == U_FEET) {
 		width *= F_M;
 		length *= F_M;
 		height *= F_M;
 	}
+
+	/* Make decisions about the shape of the light source
+	 * geometry, and store them in sinf. */
 	if (makeshape(sinf, width, length, height) != 0) {
 		fprintf(stderr, "dosource: illegal source dimensions");
 		return(-1);
 	}
+
+	/* Copy the candela values into a Radiance data file. */
 	if ((datout = fopen(fullnam(buf,name,T_DST), "w")) == NULL) {
 		perror(buf);
 		return(-1);
@@ -730,8 +1115,12 @@ dosource(	/* create source and distribution */
 		return(-1);
 	}
 	fclose(datout);
+
+	/* Output explanatory comment */
 	fprintf(out, "# %g watt luminaire, lamp*ballast factor = %g\n",
 			wattage, bfactor*pfactor);
+	/* Output distribution "brightdata" primitive. Start handling
+	   the various cases of symmetry of the distribution. */
 	strcat(strcpy(id, filename(name)), "_dist");
 	fprintf(out, "\n%s brightdata %s\n", mod, id);
 	if (nangles[1] < 2)
@@ -742,9 +1131,15 @@ dosource(	/* create source and distribution */
 		fprintf(out, "7 ");
 	else
 		fprintf(out, "5 ");
-	dolower = (bounds[0][0] < 90.-FTINY);
-	doupper = (bounds[0][1] > 90.+FTINY);
-	dosides = (doupper & dolower && sinf->h > MINDIM);
+
+	/* If the generated source geometry will be a box, a flat
+	 * rectangle, or a disk figure out if it needs a top, a
+	 * bottom, and/or sides. */
+	dolower = (bounds[0][0] < 90.-FTINY); /* Bottom */
+	doupper = (bounds[0][1] > 90.+FTINY); /* Top */
+	dosides = (doupper & dolower && sinf->h > MINDIM); /* Sides */
+
+	/* Select the appropriate function and parameters from source.cal */
 	fprintf(out, "%s %s source.cal ",
 			sinf->type==SPHERE ? "corr" :
 			!dosides ? "flatcorr" :
@@ -774,6 +1169,7 @@ dosource(	/* create source and distribution */
 		} else
 			fprintf(out, "src_theta ");
 	}
+	/* finish the brightdata primitive with appropriate data */
 	if (!dosides || sinf->type == SPHERE)
 		fprintf(out, "\n0\n1 %g\n", sinf->mult/sinf->area);
 	else if (sinf->type == DISK)
@@ -782,26 +1178,37 @@ dosource(	/* create source and distribution */
 	else
 		fprintf(out, "\n0\n4 %g %g %g %g\n", sinf->mult,
 				sinf->l, sinf->w, sinf->h);
+	/* Brightdata primitive written out. */
+
+	/* Finally, output the descriptions of the actual radiant
+	 * surfaces. */
 	if (putsource(sinf, out, id, filename(name),
 			dolower, doupper, dosides) != 0)
 		return(-1);
 	return(0);
 }
 
-
+/* putsource - output the actual light emitting geometry
+ *
+ * Three kinds of geometry are produced: rectangles and boxes, disks
+ * ("ring" primitive, but the radius of the hole is always zero) and
+ * cylinders, and spheres.
+ */
 int
-putsource( /* put out source */
+putsource(
 	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
 	char	*name,
 	int	dolower,
 	int	doupper,
-	int dosides
+	int	dosides
 )
 {
 	char	lname[RMAXWORD];
-	
+
+	/* First, describe the light. If a materials and geometry
+	 * file is given, generate an illum instead. */
 	strcat(strcpy(lname, name), "_light");
 	fprintf(fp, "\n%s %s %s\n", mod,
 			shp->isillum ? "illum" : "light", lname);
@@ -809,6 +1216,9 @@ putsource( /* put out source */
 			lampcolor[0], lampcolor[1], lampcolor[2]);
 	switch (shp->type) {
 	case RECT:
+		/* Output at least one rectangle. If light is radiated
+		 * from the sides of the luminaire, output rectangular
+		 * sides as well. */
 		if (dolower)
 			putrectsrc(shp, fp, lname, name, 0);
 		if (doupper)
@@ -817,6 +1227,8 @@ putsource( /* put out source */
 			putsides(shp, fp, lname, name);
 		break;
 	case DISK:
+		/* Output at least one disk. If light is radiated from
+		 * the sides of luminaire, output a cylinder as well. */
 		if (dolower)
 			putdisksrc(shp, fp, lname, name, 0);
 		if (doupper)
@@ -825,31 +1237,46 @@ putsource( /* put out source */
 			putcyl(shp, fp, lname, name);
 		break;
 	case SPHERE:
+		/* Output a sphere. */
 		putspheresrc(shp, fp, lname, name);
 		break;
 	}
 	return(0);
 }
 
-
+/* makeshape -- decide what shape will be used
+ *
+ * makeshape decides what Radiance geometry will be used to represent
+ * the light source and stores information about it in shp.
+ */
 int
-makeshape(		/* make source shape */
+makeshape(
 	SRCINFO	*shp,
 	double	width,
 	double	length,
 	double	height
 )
 {
+	/* Categorize the shape */
 	if (illumrad/meters2out >= MINDIM/2.) {
+		/* If the -i command line option is used, and the
+		 * object is not a point source, output an "illum"
+		 * sphere */
 		shp->isillum = 1;
 		shp->type = SPHERE;
 		shp->w = shp->l = shp->h = 2.*illumrad / meters2out;
 	} else if (width < MINDIM) {
+		/* The width is either zero or negative. */
 		width = -width;
 		if (width < MINDIM) {
+			/* The width is zero. Use a tiny sphere to
+			 * represent a point source. */
 			shp->type = SPHERE;
 			shp->w = shp->l = shp->h = MINDIM;
 		} else if (height < .5*width) {
+			/* The width is negative and the height is
+			 * modest; output either a disk or a thin
+			 * vertical cylinder. */
 			shp->type = DISK;
 			shp->w = shp->l = width;
 			if (height >= MINDIM)
@@ -857,10 +1284,14 @@ makeshape(		/* make source shape */
 			else
 				shp->h = .5*MINDIM;
 		} else {
+			/* The width is negative and the object is
+			 * tall; output a sphere. */
 			shp->type = SPHERE;
 			shp->w = shp->l = shp->h = width;
 		}
 	} else {
+		/* The width is positive. Output a box, possibly very
+		 * thin. */
 		shp->type = RECT;
 		shp->w = width;
 		if (length >= MINDIM)
@@ -872,6 +1303,8 @@ makeshape(		/* make source shape */
 		else
 			shp->h = .5*MINDIM;
 	}
+
+	/* Done choosing the shape; calculate its area in the x-y plane. */
 	switch (shp->type) {
 	case RECT:
 		shp->area = shp->w * shp->l;
@@ -884,9 +1317,48 @@ makeshape(		/* make source shape */
 	return(0);
 }
 
+/* Rectangular or box-shaped light source.
+ *
+ * putrectsrc, putsides, putrect, and putpoint are used to output the
+ * Radiance description of a box.  The box is centered on the origin
+ * and has the dimensions given in the IES file.  The coordinates
+ * range from [-1/2*length, -1/2*width, -1/2*height] to [1/2*length,
+ * 1/2*width, 1/2*height].
+ *
+ * The location of the point is encoded in the low-order three bits of
+ * an integer. If the integer is p, then: bit 0 is (p & 1),
+ * representing length (x), bit 1 is (p & 2) representing width (y),
+ * and bit 2 is (p & 4), representing height (z).
+ *
+ * Looking down from above (towards -z), the vertices of the box or
+ * rectangle are numbered so:
+ *
+ *     2,6					  3,7
+ *        +--------------------------------------+
+ *        |					 |
+ *        |					 |
+ *        |					 |
+ *        |					 |
+ *        +--------------------------------------+
+ *     0,4					  1,5
+ *
+ * The higher number of each pair is above the x-y plane (positive z),
+ * the lower number is below the x-y plane (negative z.)
+ *
+ */
 
+/* putrecsrc - output a rectangle parallel to the x-y plane 
+ *
+ * Putrecsrc calls out the vertices of a rectangle parallel to the x-y
+ * plane.  The order of the vertices is different for the upper and
+ * lower rectangles of a box, since a right-hand rule based on the
+ * order of the vertices is used to determine the surface normal of
+ * the rectangle, and the surface normal determines the direction the
+ * light radiated by the rectangle.
+ *
+ */
 void
-putrectsrc(		/* rectangular source */
+putrectsrc(
 	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
@@ -900,9 +1372,9 @@ putrectsrc(		/* rectangular source */
 		putrect(shp, fp, mod, name, ".d", 0, 2, 3, 1);
 }
 
-
+/* putsides - put out sides of box */
 void
-putsides(			/* put out sides of box */
+putsides(
 	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
@@ -914,10 +1386,14 @@ putsides(			/* put out sides of box */
 	putrect(shp, fp, mod, name, ".3", 3, 2, 6, 7);
 	putrect(shp, fp, mod, name, ".4", 2, 0, 4, 6);
 }
-	
 
+/* putrect - put out a rectangle 
+ *
+ * putrect generates the "polygon" primitive which describes a
+ * rectangle.
+ */
 void
-putrect(	/* put out a rectangle */
+putrect(
 	SRCINFO	*shp,
 	FILE	*fp,
 	char	*mod,
@@ -936,9 +1412,13 @@ putrect(	/* put out a rectangle */
 	putpoint(shp, fp, d);
 }
 
-
+/* putpoint -- output a the coordinates of a vertex
+ *
+ * putpoint maps vertex numbers to coordinates and outputs the
+ * coordinates.
+ */
 void
-putpoint(				/* put out a point */
+putpoint(
 	SRCINFO	*shp,
 	FILE	*fp,
 	int	p
@@ -952,7 +1432,14 @@ putpoint(				/* put out a point */
 			mult[p>>2]*shp->h*meters2out);
 }
 
+/* End of routines to output a box-shaped light source */
 
+/* Routines to output a cylindrical or disk shaped light source 
+ * 
+ * As with other shapes, the light source is centered on the origin.
+ * The "ring" and "cylinder" primitives are used.
+ *
+ */
 void
 putdisksrc(		/* put out a disk source */
 	SRCINFO	*shp,
@@ -993,6 +1480,7 @@ putcyl(			/* put out a cylinder */
 	fprintf(fp, "\t%g\n", .5*shp->w*meters2out);
 }
 
+/* end of of routines to output cylinders and disks */
 
 void
 putspheresrc(		/* put out a sphere source */
@@ -1006,22 +1494,38 @@ putspheresrc(		/* put out a sphere source */
 	fprintf(fp, "0\n0\n4 0 0 0 %g\n", .5*shp->w*meters2out);
 }
 
-
+/* cvdata - convert LM-63 tilt and candela data to Radiance brightdata format
+ *
+ * The files created by this routine are intended for use with the Radiance
+ * "brightdata" material type.
+ *
+ * Two types of data are converted; one-dimensional tilt data, which
+ * is given in polar coordinates, and two-dimensional candela data,
+ * which is given in spherical co-ordinates.
+ *
+ * Return 0 for success, -1 for failure.
+ *
+ */
 int
-cvdata(		/* convert data */
-	FILE	*in,
-	FILE	*out,
-	int	ndim,
-	int	npts[],
-	double	mult,
-	double	lim[][2]
+cvdata(
+	FILE	*in,		/* Input file */
+	FILE	*out,		/* Output file */
+	int	ndim,		/* Number of dimensions; 1 for
+				 * tilt data, 2 for photometric data. */
+	int	npts[],		/* Number of points in each dimension */
+	double	mult,		/* Multiple each value by this
+				 * number. For tilt data, always
+				 * 1. For candela values, the
+				 * efficacy of white Radiance light.  */
+	double	lim[][2]	/* The range of angles in each dimension. */
 )
 {
-	double	*pt[4];
+	double	*pt[4];		/* Four is the expected maximum of ndim. */
 	int	i, j;
 	double	val;
 	int	total;
 
+	/* Calculate and output the number of data values */
 	total = 1; j = 0;
 	for (i = 0; i < ndim; i++)
 		if (npts[i] > 1) {
@@ -1029,8 +1533,14 @@ cvdata(		/* convert data */
 			j++;
 		}
 	fprintf(out, "%d\n", j);
-					/* get coordinates */
+
+	/* Read in the angle values, and note the first and last in
+	 * each dimension, if there is a place to store them. In the
+	 * case of tilt data, there is only one list of angles. In the
+	 * case of candela values, vertical angles appear first, and
+	 * horizontal angles occur second. */
 	for (i = 0; i < ndim; i++) {
+		/* Allocate space for the angle values. */
 		pt[i] = (double *)malloc(npts[i]*sizeof(double));
 		for (j = 0; j < npts[i]; j++)
 			if (!scnflt(in, &pt[i][j]))
@@ -1040,17 +1550,34 @@ cvdata(		/* convert data */
 			lim[i][1] = pt[i][npts[i]-1];
 		}
 	}
-					/* write out in reverse */
+
+	/* Output the angles. If this is candela data, horizontal
+	 * angles output first. There are two cases: the first where
+	 * the angles are evenly spaced, the second where they are
+	 * not.
+	 *
+	 * When the angles are evenly spaced, three numbers are
+	 * output: the first angle, the last angle, and the number of
+	 * angles.  When the angles are not evenly spaced, instead
+	 * zero, zero, and the count of angles is given, followed by a
+	 * list of angles.  In this case, angles are output four to a line.
+	 */
 	for (i = ndim-1; i >= 0; i--) {
 		if (npts[i] > 1) {
+			/* Determine if the angles are evenly spaces */
 			for (j = 1; j < npts[i]-1; j++)
 				if (!FEQ(pt[i][j]-pt[i][j-1],
 						pt[i][j+1]-pt[i][j]))
 					break;
+			/* If they are, output the first angle, the
+			 * last angle, and a count */
 			if (j == npts[i]-1)
 				fprintf(out, "%g %g %d\n", pt[i][0], pt[i][j],
 						npts[i]);
 			else {
+				/* otherwise, output 0, 0, and a
+				 * count, followed by the list of
+				 * angles, one to a line. */
 				fprintf(out, "0 0 %d", npts[i]);
 				for (j = 0; j < npts[i]; j++) {
 					if (j%4 == 0)
@@ -1060,8 +1587,13 @@ cvdata(		/* convert data */
 				putc('\n', out);
 			}
 		}
+		/* Free the storage containing the angle values. */
 		free((void *)pt[i]);
 	}
+
+	/* Finally, read in the data values (candela or multiplier values,
+	 * depending on the part of the file) and output them four to
+	 * a line. */
 	for (i = 0; i < total; i++) {
 		if (i%4 == 0)
 			putc('\n', out);
@@ -1073,7 +1605,14 @@ cvdata(		/* convert data */
 	return(0);
 }
 
-
+/* getword - get an LM-63 delimited word from fp
+ *
+ * Getword gets a word from an IES file delimited by either white
+ * space or a comma surrounded by white space. A pointer to the word
+ * is returned, which will persist only until getword is called again.
+ * At EOF, return NULL instead.
+ *
+ */
 char *
 getword(			/* scan a word from fp */
 	FILE	*fp
@@ -1083,25 +1622,42 @@ getword(			/* scan a word from fp */
 	char	*cp;
 	int	c;
 
+	/* Skip initial spaces */
 	while (isspace(c=getc(fp)))
 		;
+	/* Get characters to a delimiter or until wrd is full */
 	for (cp = wrd; c != EOF && cp < wrd+RMAXWORD-1;
 			*cp++ = c, c = getc(fp))
 		if (isspace(c) || c == ',') {
+			/* If we find a delimiter */
+			/* Gobble up whitespace */
 			while (isspace(c))
 				c = getc(fp);
+			/* If it's not a comma, put the first
+			 * character of the next data item back */
 			if ((c != EOF) & (c != ','))
 				ungetc(c, fp);
+			/* Close out the strimg */
 			*cp = '\0';
+			/* return it */
 			return(wrd);
 		}
+	/* If we ran out of space or are at the end of the file,
+	 * return either the word or NULL, as appropriate. */
 	*cp = '\0';
 	return(cp > wrd ? wrd : NULL);
 }
 
-
+/* cvtint - convert an IES word to an integer
+ *
+ * A pointer to the word is passed in wrd; ip is expected to point to
+ * an integer.  cvtint() will silently truncate a floating point value
+ * to an integer; "1", "1.0", and "1.5" will all return 1.
+ *
+ * cvtint() returns 0 if it fails, 1 if it succeeds.
+ */
 int
-cvtint(			/* convert a word to an integer */
+cvtint(
 	int	*ip,
 	char	*wrd
 )
@@ -1113,8 +1669,15 @@ cvtint(			/* convert a word to an integer */
 }
 
 
+/* cvtflt - convert an IES word to a double precision floating-point number
+ *
+ * A pointer to the word is passed in wrd; rp is expected to point to
+ * a double.
+ *
+ * cvtflt returns 0 if it fails, 1 if it succeeds.
+ */
 int
-cvtflt(			/* convert a word to a double */
+cvtflt(
 	double	*rp,
 	char	*wrd
 )
@@ -1125,7 +1688,26 @@ cvtflt(			/* convert a word to a double */
 	return(1);
 }
 
-
+/* cvgeometry - process materials and geometry format luminaire data
+ *
+ * The materials and geometry format (MGF) for describing luminaires
+ * was a part of Radiance that was first adopted and then retracted by
+ * the IES as part of LM-63.  It provides a way of describing
+ * luminaire geometry similar to the Radiance scene description
+ * format.
+ *
+ * cvgeometry() generates an mgf2rad command and then, if "-g" is given
+ * on the command line, an oconv command, both of which are then
+ * executed with the system() function.
+ *
+ * The generated commands are:
+ *   mgf2rad -e <multiplier> -g <size> <mgf_filename> \
+ *     | xform -s <scale_factor> \
+ *     >> <luminare_scene_description_file
+ * or:
+ *   mgf2rad -e <multiplier> -g <size> <mgf_filename> \
+ *     oconv - > <instance_filename>
+ */
 int
 cvgeometry(
 	char	*inpname,
@@ -1145,30 +1727,41 @@ cvgeometry(
 	strcpy(buf, "mgf2rad ");		/* build mgf2rad command */
 	cp = buf+8;
 	if (!FEQ(sinf->mult, 1.0)) {
+                /* if there's an output multiplier, include in the
+		 * mgf2rad command */
 		sprintf(cp, "-e %f ", sinf->mult);
 		cp += strlen(cp);
 	}
+	/* Include the glow distance for the geometry */
 	sprintf(cp, "-g %f %s ",
 		sqrt(sinf->w*sinf->w + sinf->h*sinf->h + sinf->l*sinf->l),
 			inpname);
 	cp += strlen(cp);
 	if (instantiate) {		/* instantiate octree */
+		/* If "-g" is given on the command line, include an
+		 * "oconv" command in the pipe. */
 		strcpy(cp, "| oconv - > ");
 		cp += 12;
 		fullnam(cp,outname,T_OCT);
+		/* Only update if the input file is newer than the
+		 * output file */
 		if (fdate(inpname) > fdate(outname) &&
 				system(buf)) {		/* create octree */
 			fclose(outfp);
 			return(-1);
 		}
+		/* Reference the instance file in the scene description */
 		fprintf(outfp, "void instance %s_inst\n", outname);
+		/* If the geometry isn't in meters, scale it appropriately. */
 		if (!FEQ(meters2out, 1.0))
 			fprintf(outfp, "3 %s -s %f\n",
 					libname(buf,outname,T_OCT),
 					meters2out);
 		else
 			fprintf(outfp, "1 %s\n", libname(buf,outname,T_OCT));
+		/* Close off the "instance" primitive. */
 		fprintf(outfp, "0\n0\n");
+		/* And the Radiance scene description. */
 		fclose(outfp);
 	} else {			/* else append to luminaire file */
 		if (!FEQ(meters2out, 1.0)) {	/* apply scalefactor */
@@ -1186,3 +1779,10 @@ cvgeometry(
 	}
 	return(0);
 }
+
+/* Set up emacs indentation */
+/* Local Variables: */
+/*   c-file-style: "bsd" */
+/* End: */
+
+/* For vim, use ":set tabstop=8 shiftwidth=8" */
