@@ -7,7 +7,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapooc.c,v 1.3 2018/01/24 19:39:05 rschregle Exp $
+   $Id: pmapooc.c,v 1.4 2018/05/31 12:34:16 rschregle Exp $
 */
 
 
@@ -256,8 +256,9 @@ void OOC_FindPhotons (struct PhotonMap *pmap, const FVECT pos, const FVECT norm)
          
    /* Set up filter callback */
    filtData.pmap = pmap;
-   VCOPY(n, norm);
-   filtData.norm = n;
+   if (norm)
+      VCOPY(n, norm);
+   filtData.norm = norm ? n : NULL;
    filt.data = &filtData;
    filt.func = OOC_FilterPhoton;
 
@@ -286,8 +287,9 @@ void OOC_Find1Photon (struct PhotonMap* pmap, const FVECT pos,
    
    /* Set up filter callback */
    filtData.pmap = pmap;
-   VCOPY(n, norm);
-   filtData.norm = n;
+   if (norm)
+      VCOPY(n, norm);
+   filtData.norm = norm ? n : NULL;   
    filt.data = &filtData;
    filt.func = OOC_FilterPhoton;
    
