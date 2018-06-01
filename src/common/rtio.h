@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.18 2018/05/30 14:14:56 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.19 2018/06/01 16:38:37 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -97,7 +97,7 @@ extern float *	matchlamp(char *s);
 extern int	loadlamps(char *file);
 extern void	freelamps(void);
 
-#ifdef __GNUC__			/* defined in option strlcpy.c */
+#ifndef strlcpy				/* defined in option strlcpy.c */
 extern size_t	strlcpy(char *dst, const char *src, size_t siz);
 extern size_t	strlcat(char *dst, const char *src, size_t siz);
 #endif
