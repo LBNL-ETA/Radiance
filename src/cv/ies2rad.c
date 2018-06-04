@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.29 2018/06/04 18:53:09 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.30 2018/06/04 23:05:34 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -92,6 +92,9 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.29 2018/06/04 18:53:09 greg Exp 
 /* Since 1991, LM-63 files have begun with the magic keyword IESNA */
 #define MAGICID		"IESNA"
 #define LMAGICID	5
+/* But newer files start with IESNA:LM-63- */
+#define MAGICID2	"IESNA:LM-63-"
+#define LMAGICID2	12
 /* ies2rad supports the 1986, 1991, and 1995 versions of
  * LM-63. FIRSTREV describes the first version; LASTREV describes the
  * 1995 version. */
@@ -840,11 +843,11 @@ ies2rad(		/* convert IES file */
 			continue;
 		/* increment the header line count, and check for the
 		 * "TILT=" line that terminates the header */
-		if (!lineno++ && strncmp(buf, MAGICID, LMAGICID) == 0) {
-			/* This code doesn't work for LM-63-95 and
-			 * LM-63-02 files and will instead default to
-			 * LM-63-86. */
-			filerev = atoi(buf+LMAGICID);
+		if (!lineno++) {	/* first line may be magic */
+			if (!strncmp(buf, MAGICID2, LMAGICID2))
+				filerev = atoi(buf+LMAGICID2) - 1900;
+			else if (!strncmp(buf, MAGICID, LMAGICID))
+				filerev = atoi(buf+LMAGICID);
 			if (filerev < FIRSTREV)
 				filerev = FIRSTREV;
 			else if (filerev > LASTREV)
