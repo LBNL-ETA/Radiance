@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.28 2018/05/30 22:12:17 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.29 2018/06/04 18:53:09 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -735,7 +735,7 @@ k_match(
 	/* If we have come to the end of the keyword, and the keyword
 	 * at the beginning of the matched line is terminated with
 	 * ']', return 1 */
-	return((!*kwd) & (*hdl == ']'));
+	return(!kwd[-1] & (*hdl == ']'));
 }
 
 /* keyargs - return the argument of a keyword, without leading spaces
