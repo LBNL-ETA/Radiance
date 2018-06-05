@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genskyvec.pl,v 2.10 2016/12/12 17:40:07 greg Exp $
+# RCSid $Id: genskyvec.pl,v 2.11 2018/06/05 01:25:11 greg Exp $
 #
 # Generate Reinhart vector for a given sky description
 #
@@ -10,6 +10,7 @@ my $windoz = ($^O eq "MSWin32" or $^O eq "MSWin64");
 my @skycolor = (0.960, 1.004, 1.118);
 my $mf = 4;
 my $dosky = 1;
+my $dofive = 0;
 my $headout = 1;
 my @origARGV = @ARGV;
 while ($#ARGV >= 0) {
@@ -21,6 +22,8 @@ while ($#ARGV >= 0) {
 		shift @ARGV;
 	} elsif ("$ARGV[0]" eq "-d") {
 		$dosky = 0;
+	} elsif ("$ARGV[0]" eq "-5") {
+		$dofive = 1;
 	} elsif ("$ARGV[0]" eq "-h") {
 		$headout = 0;
 	} else {
@@ -127,27 +130,33 @@ if ($dosky) {
 } else {
 	push @tregval, "0\t0\t0\n" for (1..$nbins);
 }
-# Find closest 3 patches to sun and divvy up direct solar contribution
+# Find closest patch(es) to sun and divvy up direct solar contribution
 sub numSort1 {
 	my @a1 = split("\t", $a);
 	my @b1 = split("\t", $b);
 	return ($a1[0] <=> $b1[0]);
 }
 if (@sundir) {
-	my $somega = ($sundir[3]/360)**2 * 3.141592654**3;
 	my @bestdir = `$suncmd`;
 	@bestdir = sort numSort1 @bestdir;
-	my (@ang, @dom, @ndx);
-	my $wtot = 0;
-	for my $i (0..2) {
-		($ang[$i], $dom[$i], $ndx[$i]) = split(' ', $bestdir[$i]);
-		$wtot += 1./($ang[$i]+.02);
-	}
-	for my $i (0..2) {
-		my $wt = 1./($ang[$i]+.02)/$wtot * $somega / $dom[$i];
-		my @scolor = split(' ', $tregval[$ndx[$i]]);
-		for my $j (0..2) { $scolor[$j] += $wt * $sunval[$j]; }
-		$tregval[$ndx[$i]] = "$scolor[0]\t$scolor[1]\t$scolor[2]\n";
+	if ($dofive) {
+		my ($ang, $dom, $ndx);
+		($ang, $dom, $ndx) = split(' ', $bestdir[0]);
+		$tregval[$ndx] = "$sunval[0]\t$sunval[1]\t$sunval[2]\n";
+	} else {
+		my (@ang, @dom, @ndx);
+		my $somega = ($sundir[3]/360)**2 * 3.141592654**3;
+		my $wtot = 0;
+		for my $i (0..2) {
+			($ang[$i], $dom[$i], $ndx[$i]) = split(' ', $bestdir[$i]);
+			$wtot += 1./($ang[$i]+.02);
+		}
+		for my $i (0..2) {
+			my $wt = 1./($ang[$i]+.02)/$wtot * $somega / $dom[$i];
+			my @scolor = split(' ', $tregval[$ndx[$i]]);
+			for my $j (0..2) { $scolor[$j] += $wt * $sunval[$j]; }
+			$tregval[$ndx[$i]] = "$scolor[0]\t$scolor[1]\t$scolor[2]\n";
+		}
 	}
 }
 # Output header if requested
