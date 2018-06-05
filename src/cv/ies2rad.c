@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.30 2018/06/04 23:05:34 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.31 2018/06/05 16:04:00 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -20,10 +20,9 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.30 2018/06/04 23:05:34 greg Exp 
  * Radiance (θ,φ) luminaire coordinates and then apply photometric and
  * tilt data to generate Radiance light. θ is altitude from the
  * negative z-axis and φ is azimuth from the positive x-axis,
- * increasing towards the positive y-axis. [??? Greg, is there a
- * source for this convention?] This system matches none of the usual
- * goniophotometric conventions, but it is closest to IES type C; V in
- * type C photometry is θ in Radiance and L is -φ.
+ * increasing towards the positive y-axis. This system matches none of
+ * the usual goniophotometric conventions, but it is closest to IES
+ * type C; V in type C photometry is θ in Radiance and L is -φ.
  *
  * The ies2rad scene description for a luminaire LUM, with tilt data,
  * uses the following Radiance scene description primitives:
@@ -207,8 +206,8 @@ int	filerev = FIRSTREV;
 #define U_METERS	2
 
 /* string lengths */
-/* Maximum input line is 132 characters including CR LF at end. */
-#define MAXLINE		133
+/* Maximum input line is 256 characters including CR LF at end. */
+#define MAXLINE		257
 #define RMAXWORD	76
 
 /* End of LM-63-related #defines */
@@ -728,6 +727,9 @@ k_match(
 	char	*hdl		/* header line */
 )
 {
+	/* Skip leading spaces */
+	while (isspace(*hdl))
+		hdl++;
 	/* The line has to begin with '[' */
 	if (*hdl++ != '[')
 		return(0);
@@ -863,7 +865,7 @@ ies2rad(		/* convert IES file */
 		 * in the "[LAMP]" and "[LAMPCAT]" keyword lines;
 		 * otherwise check all lines.  */
 		if (lampcolor == NULL && checklamp(buf))
-			lampcolor = matchlamp( buf[0] == '[' ?
+			lampcolor = matchlamp(*sskip2(buf,0) == '[' ?
 						keyargs(buf) : buf );
 		/* Look for a materials and geometry file in the keywords. */
 		if (keymatch(K_LMG, buf)) {
@@ -884,6 +886,7 @@ ies2rad(		/* convert IES file */
 	} else if (lamptype == NULL)
 		fprintf(outfp,"# CIE(x,y) = (%f,%f)\n# Depreciation = %.1f%%\n",
 				lampcolor[3], lampcolor[4], 100.*lampcolor[5]);
+
 	/* If the file ended before a "TILT=" line, that's an error. */
 	if (feof(inpfp)) {
 		fprintf(stderr, "%s: not in IES format\n", inpname);
