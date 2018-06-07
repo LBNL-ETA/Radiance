@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapcontrib.c,v 2.17 2018/03/20 19:55:33 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapcontrib.c,v 2.18 2018/06/07 19:26:04 rschregle Exp $";
 #endif
 
 /* 
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: pmapcontrib.c,v 2.17 2018/03/20 19:55:33 rschr
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapcontrib.c,v 2.17 2018/03/20 19:55:33 rschregle Exp $
+   $Id: pmapcontrib.c,v 2.18 2018/06/07 19:26:04 rschregle Exp $
 */
 
 
@@ -392,16 +392,20 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
    }
 #endif
          
-#if PMAP_SIGUSR
+#ifdef PMAP_SIGUSR
          signal(SIGUSR1, sigUsrDiags);
 #endif         
-         
+
+#ifdef DEBUG_PMAP          
          /* Output child process PID after random delay to prevent corrupted
           * console output due to race condition */
          usleep(1e6 * pmapRandom(rouletteState));
-         fprintf(stderr, "Proc %d: PID = %d\n", proc, getpid());
+         fprintf(stderr, "Proc %d: PID = %d "
+                 "(waiting 10 sec to attach debugger...)\n", 
+                 proc, getpid());
          /* Allow time for debugger to attach to child process */
          sleep(10);
+#endif
 
          /* =============================================================
           * 2-PASS PHOTON DISTRIBUTION
@@ -409,7 +413,7 @@ void distribPhotonContrib (PhotonMap* pm, unsigned numProc)
           * Pass 2 (main): based on outcome of pass 1, estimate remaining 
           *                number of photons to emit to approximate target 
           *                count
-          * ============================================================= */         
+          * ============================================================= */
          for (srcIdx = 0; srcIdx < nsources; srcIdx++) {
 #ifndef PMAP_SIGUSR         
             unsigned       portCnt, passCnt = 0, prePassCnt = 0;
