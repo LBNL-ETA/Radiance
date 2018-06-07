@@ -2211,3 +2211,9 @@ Thanks to Lars Grobe for pointing out issues.
 Added RAYPATH searching for -f options to genrev, gensurf, genworm,
 bsdf2klems, bsdf2ttree, and pcomb.  This makes behavior consistent
 with rcalc, calc, and rendering tools.
+
+Worked with Randolph Fritz to fix some issues with ies2rad and newer
+IESNA63 standards.
+
+Resurrected original bsdf2rad test program, renaming it bsdf2rado. Still an
+optional build in src/cv/.

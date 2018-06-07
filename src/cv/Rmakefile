@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.54 2017/04/13 00:14:36 greg Exp $
+# RCSid $Id: Rmakefile,v 2.55 2018/06/07 15:39:36 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -92,6 +92,10 @@ pabopto2rad.o:	pabopto2bsdf.c bsdfrep.h
 
 bsdf2rad:	bsdf2rad.o bsdfrep.o bsdfinterp.o
 	$(CC) $(CFLAGS) -o bsdf2rad bsdf2rad.o bsdfrep.o bsdfinterp.o \
+-lrtrad $(MLIB)
+
+bsdf2rado:	bsdf2rado.o bsdfrep.o bsdfinterp.o
+	$(CC) $(CFLAGS) -o bsdf2rado bsdf2rado.o bsdfrep.o bsdfinterp.o \
 -lrtrad $(MLIB)
 
 bsdfquery:	bsdfquery.o bsdfrep.o bsdfinterp.o
