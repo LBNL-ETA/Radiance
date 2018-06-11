@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.67 2016/02/23 12:42:41 rschregle Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.68 2018/06/11 15:10:49 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -543,13 +543,13 @@ srcscatter(			/* compute source scattering into ray */
 	SRCINDEX  si;
 	double  t, d;
 	double  re, ge, be;
-	COLOR  cvext, pmapInscatter;
+	COLOR  cvext;
 	int  i, j;
 
-	/* PMAP: do unconditional inscattering for volume photons ? */
-	/* if (!volumePhotonMapping) */
-	if (r->slights == NULL || r->slights[0] == 0
-			|| r->gecc >= 1.-FTINY || r->rot >= FHUGE)
+	if (r->rot >= FHUGE || r->gecc >= 1.-FTINY)
+		return;		/* this can never work */
+	/* PMAP: do unconditional inscattering for volume photons */
+	if (!volumePhotonMapping && (r->slights == NULL || r->slights[0] == 0))
 		return;
 		
 	if (ssampdist <= FTINY || (nsamps = r->rot/ssampdist + .5) < 1)
@@ -560,7 +560,8 @@ srcscatter(			/* compute source scattering into ray */
 #endif
 	oldsampndx = samplendx;
 	samplendx = random()&0x7fff;		/* randomize */
-	for (i = r->slights[0]; i > 0; i--) {	/* for each source */
+	for (i = volumePhotonMapping ? 1 : r->slights[0]; i > 0; i--) {
+		/* for each source OR once if volume photon map enabled */
 		for (j = 0; j < nsamps; j++) {	/* for each sample position */
 			samplendx++;
 			t = r->rot * (j+frandom())/nsamps;
@@ -576,45 +577,51 @@ srcscatter(			/* compute source scattering into ray */
 			sr.rorg[0] = r->rorg[0] + r->rdir[0]*t;
 			sr.rorg[1] = r->rorg[1] + r->rdir[1]*t;
 			sr.rorg[2] = r->rorg[2] + r->rdir[2]*t;
-			initsrcindex(&si);	/* sample ray to this source */
-			si.sn = r->slights[i];
-			nopart(&si, &sr);
-			if (!srcray(&sr, NULL, &si) ||
-					sr.rsrc != r->slights[i])
-				continue;		/* no path */
+			
+			if (!volumePhotonMapping) {
+				initsrcindex(&si);	/* sample ray to this source */
+				si.sn = r->slights[i];
+				nopart(&si, &sr);
+				if (!srcray(&sr, NULL, &si) ||
+						sr.rsrc != r->slights[i])
+					continue;	/* no path */
 #if SHADCACHE
-			if (srcblocked(&sr))		/* check shadow cache */
-				continue;
+				if (srcblocked(&sr))	/* check shadow cache */
+					continue;
 #endif
-			copycolor(sr.cext, r->cext);
-			copycolor(sr.albedo, r->albedo);
-			sr.gecc = r->gecc;
-			sr.slights = r->slights;
-			rayvalue(&sr);			/* eval. source ray */
-			if (bright(sr.rcol) <= FTINY) {
+				copycolor(sr.cext, r->cext);
+				copycolor(sr.albedo, r->albedo);
+				sr.gecc = r->gecc;
+				sr.slights = r->slights;
+				rayvalue(&sr);		/* eval. source ray */
+				if (bright(sr.rcol) <= FTINY) {
 #if SHADCACHE
-				srcblocker(&sr);	/* add blocker to cache */
+					srcblocker(&sr); /* add blocker to cache */
 #endif
-				continue;
-			}
-			if (r->gecc <= FTINY)		/* compute P(theta) */
-				d = 1.;
-			else {
-				d = DOT(r->rdir, sr.rdir);
-				d = 1. + r->gecc*r->gecc - 2.*r->gecc*d;
-				d = (1. - r->gecc*r->gecc) / (d*sqrt(d));
-			}
+					continue;
+				}
+				if (r->gecc <= FTINY)	/* compute P(theta) */
+					d = 1.;
+				else {
+					d = DOT(r->rdir, sr.rdir);
+					d = 1. + r->gecc*r->gecc - 2.*r->gecc*d;
+					d = (1. - r->gecc*r->gecc) / (d*sqrt(d));
+				}
 							/* other factors */
-			d *= si.dom * r->rot / (4.*PI*nsamps);
-			scalecolor(sr.rcol, d);
-			
-			/* PMAP: Add ambient inscattering from volume photons once only */
-			if (volumePhotonMapping && i == 1) {
-			   inscatterVolumePmap(&sr, pmapInscatter);
-            scalecolor(pmapInscatter, r -> rot / nsamps);
-            addcolor(sr.rcol, pmapInscatter);
-         }
-			
+				d *= si.dom * r->rot / (4.*PI*nsamps);
+				scalecolor(sr.rcol, d);
+			} else {
+				/* PMAP: Add ambient inscattering from
+				 * volume photons; note we reverse the 
+				 * incident ray direction since we're
+				 * now in *backward* raytracing mode! */
+				sr.rdir [0] = -r -> rdir [0];
+				sr.rdir [1] = -r -> rdir [1];
+				sr.rdir [2] = -r -> rdir [2];
+				sr.gecc = r -> gecc;
+				inscatterVolumePmap(&sr, sr.rcol);
+				scalecolor(sr.rcol, r -> rot / nsamps);
+			}
 			multcolor(sr.rcol, r->cext);
 			multcolor(sr.rcol, r->albedo);
 			multcolor(sr.rcol, cvext);
