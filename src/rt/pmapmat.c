@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.15 2018/03/20 19:55:33 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.16 2018/06/11 12:46:51 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -1447,15 +1447,15 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
        mat -> oargs.nfargs % 3)
       objerror(mat, USER, "bad # arguments");
       
-	hitFront = (rayIn -> rod > 0);
+   hitFront = (rayIn -> rod > 0);
 
-	/* Load cal file */
-	mf = getfunc(mat, 5, 0x1d, 1);
-	
-	/* Get thickness */
-	nd.thick = evalue(mf -> ep [0]);
-	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
-		nd.thick = .0;
+   /* Load cal file */
+   mf = getfunc(mat, 5, 0x1d, 1);
+
+   /* Get thickness */
+   nd.thick = evalue(mf -> ep [0]);
+   if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
+      nd.thick = .0;
 
    /* Get BSDF data */
    nd.sd = loadBSDF(mat -> oargs.sarg [1]);
@@ -1479,22 +1479,22 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    else setcolor(nd.rdiff, mat -> oargs.farg [3], mat -> oargs.farg [4], 
                  mat -> oargs.farg [5]);
 
-	/* Extra diffuse transmittance from material def */
-	if (mat -> oargs.nfargs < 9)
-	   setcolor(nd.tdiff, .0, .0, .0);
+   /* Extra diffuse transmittance from material def */
+   if (mat -> oargs.nfargs < 9)
+      setcolor(nd.tdiff, .0, .0, .0);
    else setcolor(nd.tdiff, mat -> oargs.farg [6], mat -> oargs.farg [7], 
                  mat -> oargs.farg [8]);
                
    nd.mp = mat;
    nd.pr = rayIn;
-	
+
    /* Get modifiers */
    raytexture(rayIn, mat -> omod);
    
    /* Modify diffuse values */
    multcolor(nd.rdiff, rayIn -> pcol);
    multcolor(nd.tdiff, rayIn -> pcol);
-		
+
    /* Get up vector & xform to world coords */
    upvec [0] = evalue(mf -> ep [1]);
    upvec [1] = evalue(mf -> ep [2]);
@@ -1541,7 +1541,7 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    nd.sr_vpsa [1] = sqrt(nd.sr_vpsa [1]);
 
    /* Orient perturbed normal towards incident side */
-   if (!hitFront) {			
+   if (!hitFront) {
       nd.pnorm [0] = -nd.pnorm [0];
       nd.pnorm [1] = -nd.pnorm [1];
       nd.pnorm [2] = -nd.pnorm [2];
@@ -1585,8 +1585,6 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    
    else if ((xi -= ptDiff) <= 0) {
       /* Diffuse transmission (extra component in material def) */
-      flipsurface(rayIn);
-      nd.thick = -nd.thick;
       photonRay(rayIn, &rayOut, PMAP_DIFFTRANS, nd.tdiff);
       diffPhotonScatter(nd.pnorm, &rayOut);
       transmitted = 1;
@@ -1615,8 +1613,6 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
          ccy2rgb(&bsdfVal.spec, bsdfVal.cieY, bsdfRGB);
          multcolor(bsdfRGB, rayIn -> pcol);
          addcolor(bsdfRGB, nd.tdiff);      
-         flipsurface(rayIn);  /* Necessary? */
-         nd.thick = -nd.thick;
          photonRay(rayIn, &rayOut, PMAP_DIFFTRANS, bsdfRGB);
          transmitted = 1;
       }
@@ -1640,8 +1636,6 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
          /* Apply pattern to spectral component */
          ccy2rgb(&bsdfVal.spec, bsdfVal.cieY, bsdfRGB);
          multcolor(bsdfRGB, rayIn -> pcol);
-         flipsurface(rayIn);  /* Necessary? */
-         nd.thick = -nd.thick;
          photonRay(rayIn, &rayOut, PMAP_SPECTRANS, bsdfRGB);
          transmitted = 1;
       }      
@@ -1656,7 +1650,7 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* Clean up */
    SDfreeCache(nd.sd);
 
-   /* Need to offset ray origin to get past detail geometry? */
+   /* Offset outgoing photon origin by thickness to bypass proxy geometry */
    if (transmitted && nd.thick != 0)
       VSUM(rayOut.rorg, rayOut.rorg, rayIn -> ron, -nd.thick);
 
