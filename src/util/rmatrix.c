@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.27 2018/04/09 21:36:45 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.28 2018/06/13 18:36:38 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -611,6 +611,8 @@ rmx_scale(RMATRIX *rm, const double sf[])
 		for (k = rm->ncomp; k--; )
 		    rmx_lval(rm,i,j,k) *= sf[k];
 
+	if (rm->info)
+		rmx_addinfo(rm, "Applied scalar\n");
 	return(1);
 }
 
@@ -626,6 +628,13 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	dnew = rmx_alloc(msrc->nrows, msrc->ncols, n);
 	if (dnew == NULL)
 		return(NULL);
+	if (msrc->info) {
+		char	buf[128];
+		sprintf(buf, "Applied %dx%d matrix transform\n",
+				dnew->ncomp, msrc->ncomp);
+		rmx_addinfo(dnew, msrc->info);
+		rmx_addinfo(dnew, buf);
+	}
 	dnew->dtype = msrc->dtype;
 	for (i = dnew->nrows; i--; )
 	    for (j = dnew->ncols; j--; )
