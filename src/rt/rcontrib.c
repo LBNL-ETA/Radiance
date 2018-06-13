@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.31 2018/02/23 03:21:24 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.32 2018/06/13 21:23:45 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -21,8 +21,7 @@ int	dimlist[MAXDIM];		/* sampling dimensions */
 int	ndims = 0;			/* number of sampling dimensions */
 int	samplendx = 0;			/* index for this sample */
 
-static void	trace_contrib(RAY *r);	/* our trace callback */
-void	(*trace)() = trace_contrib;
+void	(*trace)();
 
 int	do_irrad = 0;			/* compute irradiance? */
 
@@ -66,6 +65,8 @@ long	waitflush;			/* how long until next flush */
 
 RNUMBER	lastray = 0;			/* last ray number sent */
 RNUMBER	lastdone = 0;			/* last ray output */
+
+static void	trace_contrib(RAY *r);	/* our trace callback */
 
 static void mcfree(void *p) { epfree((*(MODCONT *)p).binv); free(p); }
 
@@ -196,6 +197,7 @@ rcinit(void)
 					/* set shared memory boundary */
 		shm_boundary = strcpy((char *)malloc(16), "SHM_BOUNDARY");
 	}
+	trace = trace_contrib;		/* set up trace call-back */
 	for (i = 0; i < nsources; i++)	/* tracing to sources as well */
 		source[i].sflags |= SFOLLOW;
 	if (yres > 0) {			/* set up flushing & ray counts */

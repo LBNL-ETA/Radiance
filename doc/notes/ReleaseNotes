@@ -2217,3 +2217,6 @@ IESNA63 standards.
 
 Resurrected original bsdf2rad test program, renaming it bsdf2rado. Still an
 optional build in src/cv/.
+
+Fixed bug in rcontrib with virtual sources, where pretest was adding
+to modifier accumulation buffers.  Reported by Mostapha.
