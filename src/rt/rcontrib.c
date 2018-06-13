@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.32 2018/06/13 21:23:45 greg Exp $";
+static const char RCSid[] = "$Id: rcontrib.c,v 2.33 2018/06/13 21:32:15 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -21,7 +21,7 @@ int	dimlist[MAXDIM];		/* sampling dimensions */
 int	ndims = 0;			/* number of sampling dimensions */
 int	samplendx = 0;			/* index for this sample */
 
-void	(*trace)();
+void	(*trace)() = NULL;		/* trace call (NULL before rcinit) */
 
 int	do_irrad = 0;			/* compute irradiance? */
 
