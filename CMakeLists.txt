@@ -64,7 +64,7 @@ set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PR
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c11 -std=c++11 -stdlib=libc++")
   add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
-  include_directories(/usr/X11R6/include)
+  #include_directories(/usr/X11R6/include)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.7")
 endif()
 
@@ -123,6 +123,9 @@ if(NOT BUILD_HEADLESS)
   get_filename_component(QT_LIBRARY_DIR ${QT_LIBRARY_DIR} PATH)
   get_filename_component(QT_LIBRARY_DIR "${QT_LIBRARY_DIR}/.." ABSOLUTE)
   find_package(X11)
+  if(APPLE)
+     include_directories(${X11_INCLUDE_DIR})
+  endif()
 endif()
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
