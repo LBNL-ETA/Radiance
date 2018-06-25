@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.49 2018/05/12 02:32:10 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.50 2018/06/25 20:49:10 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.49 2018/05/12 02:32:10 greg Exp $
 #include "copyright.h"
 
 #include  "ray.h"
+#include  "otypes.h"
 #include  "ambient.h"
 #include  "source.h"
 #include  "func.h"
@@ -16,9 +17,9 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.49 2018/05/12 02:32:10 greg Exp $
 #include  "pmapmat.h"
 
 /*
- *	Arguments to this material include optional diffuse colors.
+  *	Arguments to this material include optional diffuse colors.
  *  String arguments include the BSDF and function files.
- *	A non-zero thickness causes the strange but useful behavior
+ *	For the MAT_BSDF type, a non-zero thickness causes the useful behavior
  *  of translating transmitted rays this distance beneath the surface
  *  (opposite the surface normal) to bypass any intervening geometry.
  *  Translation only affects scattered, non-source-directed samples.
@@ -35,11 +36,13 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.49 2018/05/12 02:32:10 greg Exp $
  *  hides geometry in front of the surface when rays hit from behind,
  *  and applies only the transmission and backside reflectance properties.
  *  Reflection is ignored on the hidden side, as those rays pass through.
- *	When thickness is set to zero, shadow rays will be blocked unless
- *  a BTDF has a strong "through" component in the source direction.
+ *	For the MAT_SBSDF type, we check for a strong "through" component.
+ *  Such a component will cause direct rays to pass through unscattered.
  *  A separate test prevents over-counting by dropping samples that are
  *  too close to this "through" direction.  BSDFs with such a through direction
  *  will also have a view component, meaning they are somewhat see-through.
+ *  A MAT_BSDF type with zero thickness behaves the same as a MAT_SBSDF
+ *  type with no strong through component.
  *	The "up" vector for the BSDF is given by three variables, defined
  *  (along with the thickness) by the named function file, or '.' if none.
  *  Together with the surface normal, this defines the local coordinate
@@ -51,6 +54,13 @@ static const char RCSid[] = "$Id: m_bsdf.c,v 2.49 2018/05/12 02:32:10 greg Exp $
  *	The diffuse arguments are added to components in the BSDF file,
  *  not multiplied.  However, patterns affect this material as a multiplier
  *  on everything except non-diffuse reflection.
+ *
+ *  Arguments for MAT_SBSDF are:
+ *	5+	BSDFfile	ux uy uz	funcfile	transform
+ *	0
+ *	0|3|6|9	rdf	gdf	bdf
+ *		rdb	gdb	bdb
+ *		rdt	gdt	bdt
  *
  *  Arguments for MAT_BSDF are:
  *	6+	thick	BSDFfile	ux uy uz	funcfile	transform
@@ -76,7 +86,7 @@ typedef struct {
 	RREAL	toloc[3][3];	/* world to local BSDF coords */
 	RREAL	fromloc[3][3];	/* local BSDF coords to world */
 	double	thick;		/* surface thickness */
-	COLOR	cthru;		/* "through" component multiplier */
+	COLOR	cthru;		/* "through" component for MAT_SBSDF */
 	SDData	*sd;		/* loaded BSDF data */
 	COLOR	rdiff;		/* diffuse reflection */
 	COLOR	runsamp;	/* BSDF hemispherical reflection */
@@ -86,7 +96,7 @@ typedef struct {
 
 #define	cvt_sdcolor(cv, svp)	ccy2rgb(&(svp)->spec, (svp)->cieY, cv)
 
-/* Compute "through" component color */
+/* Compute "through" component color for MAT_SBSDF */
 static void
 compute_through(BSDFDAT *ndp)
 {
@@ -113,8 +123,6 @@ compute_through(BSDFDAT *ndp)
 	COLOR		vpeak, vsum;
 	int		i;
 	SDError		ec;
-
-	setcolor(ndp->cthru, 0, 0, 0);		/* starting assumption */
 
 	if (ndp->pr->rod > 0)
 		dfp = (ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb;
@@ -237,7 +245,7 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
 		double	dx = vsrc[0] + ndp->vray[0];
 		double	dy = vsrc[1] + ndp->vray[1];
-		if (dx*dx + dy*dy <= (1.5*4./PI)*(omega + tomega +
+		if (dx*dx + dy*dy <= (2.5*4./PI)*(omega + tomega +
 						2.*sqrt(omega*tomega)))
 			return(0);
 	}
@@ -581,6 +589,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 int
 m_bsdf(OBJREC *m, RAY *r)
 {
+	int	hasthick = (m->otype == MAT_BSDF);
 	int	hitfront;
 	COLOR	ctmp;
 	SDError	ec;
@@ -588,18 +597,21 @@ m_bsdf(OBJREC *m, RAY *r)
 	MFUNC	*mf;
 	BSDFDAT	nd;
 						/* check arguments */
-	if ((m->oargs.nsargs < 6) | (m->oargs.nfargs > 9) |
+	if ((m->oargs.nsargs < hasthick+5) | (m->oargs.nfargs > 9) |
 				(m->oargs.nfargs % 3))
 		objerror(m, USER, "bad # arguments");
 						/* record surface struck */
 	hitfront = (r->rod > 0);
 						/* load cal file */
-	mf = getfunc(m, 5, 0x1d, 1);
+	mf = hasthick	? getfunc(m, 5, 0x1d, 1)
+			: getfunc(m, 4, 0xe, 1) ;
 	setfunc(m, r);
-						/* get thickness */
-	nd.thick = evalue(mf->ep[0]);
-	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
-		nd.thick = 0;
+	nd.thick = 0;				/* set thickness */
+	if (hasthick) {
+		nd.thick = evalue(mf->ep[0]);
+		if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
+			nd.thick = 0;
+	}
 						/* check backface visibility */
 	if (!hitfront & !backvis) {
 		raytrans(r);
@@ -615,7 +627,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	nd.mp = m;
 	nd.pr = r;
 						/* get BSDF data */
-	nd.sd = loadBSDF(m->oargs.sarg[1]);
+	nd.sd = loadBSDF(m->oargs.sarg[hasthick]);
 						/* early shadow check */
 	if (r->crtype & SHADOW && (nd.sd->tf == NULL) & (nd.sd->tb == NULL))
 		return(1);
@@ -651,9 +663,9 @@ m_bsdf(OBJREC *m, RAY *r)
 	multcolor(nd.rdiff, r->pcol);
 	multcolor(nd.tdiff, r->pcol);
 						/* get up vector */
-	upvec[0] = evalue(mf->ep[1]);
-	upvec[1] = evalue(mf->ep[2]);
-	upvec[2] = evalue(mf->ep[3]);
+	upvec[0] = evalue(mf->ep[hasthick+0]);
+	upvec[1] = evalue(mf->ep[hasthick+1]);
+	upvec[2] = evalue(mf->ep[hasthick+2]);
 						/* return to world coords */
 	if (mf->fxp != &unitxf) {
 		multv3(upvec, upvec, mf->fxp->xfm);
@@ -676,16 +688,19 @@ m_bsdf(OBJREC *m, RAY *r)
 		objerror(m, WARNING, "Illegal orientation vector");
 		return(1);
 	}
-	compute_through(&nd);			/* compute through component */
-	if (r->crtype & SHADOW) {
-		RAY	tr;			/* attempt to pass shadow ray */
-		if (rayorigin(&tr, TRANS, r, nd.cthru) < 0)
-			return(1);		/* no through component */
-		VCOPY(tr.rdir, r->rdir);
-		rayvalue(&tr);			/* transmit with scaling */
-		multcolor(tr.rcol, tr.rcoef);
-		copycolor(r->rcol, tr.rcol);
-		return(1);			/* we're done */
+	setcolor(nd.cthru, 0, 0, 0);		/* consider through component */
+	if (m->otype == MAT_SBSDF) {
+		compute_through(&nd);
+		if (r->crtype & SHADOW) {
+			RAY	tr;		/* attempt to pass shadow ray */
+			if (rayorigin(&tr, TRANS, r, nd.cthru) < 0)
+				return(1);	/* no through component */
+			VCOPY(tr.rdir, r->rdir);
+			rayvalue(&tr);		/* transmit with scaling */
+			multcolor(tr.rcol, tr.rcoef);
+			copycolor(r->rcol, tr.rcol);
+			return(1);		/* we're done */
+		}
 	}
 	ec = SDinvXform(nd.fromloc, nd.toloc);
 	if (!ec)				/* determine BSDF resolution */

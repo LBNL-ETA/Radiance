@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.17 2012/07/29 19:01:39 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.18 2018/06/25 20:49:10 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -62,23 +62,24 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MAT_TFUNC	34		/* trans brdf function */
 #define  MAT_BRTDF	35		/* BRTD function */
 #define  MAT_BSDF	36		/* BSDF data file */
-#define  MAT_PDATA	37		/* plastic brdf data */
-#define  MAT_MDATA	38		/* metal brdf data */
-#define  MAT_TDATA	39		/* trans brdf data */
-#define  PAT_CFUNC	40		/* color function */
-#define  MAT_CLIP	41		/* clipping surface */
-#define  PAT_CDATA	42		/* color data */
-#define  PAT_CTEXT	43		/* colored text */
-#define  TEX_DATA	44		/* surface texture data */
-#define  MIX_FUNC	45		/* mixing function */
-#define  MIX_DATA	46		/* mixing data */
-#define  MIX_TEXT	47		/* mixing text */
-#define  MIX_PICT	48		/* mixing picture */
-#define  MAT_DIRECT1	49		/* unidirecting material */
-#define  MAT_DIRECT2	50		/* bidirecting material */
-#define  MAT_ASHIKHMIN	51		/* Ashikhmin-Shirley BRDF material */
+#define  MAT_SBSDF	37		/* specular BSDF data file */
+#define  MAT_PDATA	38		/* plastic brdf data */
+#define  MAT_MDATA	39		/* metal brdf data */
+#define  MAT_TDATA	40		/* trans brdf data */
+#define  PAT_CFUNC	41		/* color function */
+#define  MAT_CLIP	42		/* clipping surface */
+#define  PAT_CDATA	43		/* color data */
+#define  PAT_CTEXT	44		/* colored text */
+#define  TEX_DATA	45		/* surface texture data */
+#define  MIX_FUNC	46		/* mixing function */
+#define  MIX_DATA	47		/* mixing data */
+#define  MIX_TEXT	48		/* mixing text */
+#define  MIX_PICT	49		/* mixing picture */
+#define  MAT_DIRECT1	50		/* unidirecting material */
+#define  MAT_DIRECT2	51		/* bidirecting material */
+#define  MAT_ASHIKHMIN	52		/* Ashikhmin-Shirley BRDF material */
 				/* number of object types */
-#define  NUMOTYPE	52
+#define  NUMOTYPE	53
 				/* type flags */
 #define  T_S		01		/* surface (object) */
 #define  T_M		02		/* material */
@@ -154,6 +155,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "transfunc",	T_M|T_F,	o_default }, \
 				{ "BRTDfunc",	T_M|T_F,	o_default }, \
 				{ "BSDF",	T_M|T_D,	o_default }, \
+				{ "sBSDF",	T_M|T_D,	o_default }, \
 				{ "plasdata",	T_M|T_D,	o_default }, \
 				{ "metdata",	T_M|T_D,	o_default }, \
 				{ "transdata",	T_M|T_D,	o_default }, \

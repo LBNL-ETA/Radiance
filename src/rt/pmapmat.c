@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.16 2018/06/11 12:46:51 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.17 2018/06/25 20:49:10 greg Exp $";
 #endif
 /* 
    ==================================================================
@@ -1428,6 +1428,7 @@ static int pattexPhotonScatter (OBJREC *mat, RAY *rayIn)
 static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
 /* Generate new photon ray for BSDF modifier and recurse. */
 {
+   int      hasthick = (mat->otype == MAT_BSDF);
    int      hitFront;
    SDError  err;
    SDValue  bsdfVal;
@@ -1443,22 +1444,25 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    
    /* Following code adapted from m_bsdf() */
    /* Check arguments */
-   if (mat -> oargs.nsargs < 6 || mat -> oargs.nfargs > 9 ||
+   if (mat -> oargs.nsargs < hasthick+5 || mat -> oargs.nfargs > 9 ||
        mat -> oargs.nfargs % 3)
       objerror(mat, USER, "bad # arguments");
       
    hitFront = (rayIn -> rod > 0);
 
    /* Load cal file */
-   mf = getfunc(mat, 5, 0x1d, 1);
+   mf = hasthick ? getfunc(mat, 5, 0x1d, 1) : getfunc(mat, 4, 0xe, 1);
 
    /* Get thickness */
-   nd.thick = evalue(mf -> ep [0]);
-   if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
-      nd.thick = .0;
+   nd.thick = 0;
+   if (hasthick) {
+	nd.thick = evalue(mf -> ep [0]);
+	if ((-FTINY <= nd.thick) & (nd.thick <= FTINY))
+		nd.thick = .0;
+   }
 
    /* Get BSDF data */
-   nd.sd = loadBSDF(mat -> oargs.sarg [1]);
+   nd.sd = loadBSDF(mat -> oargs.sarg [hasthick]);
    
    /* Extra diffuse reflectance from material def */
    if (hitFront) {
@@ -1496,9 +1500,9 @@ static int bsdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    multcolor(nd.tdiff, rayIn -> pcol);
 
    /* Get up vector & xform to world coords */
-   upvec [0] = evalue(mf -> ep [1]);
-   upvec [1] = evalue(mf -> ep [2]);
-   upvec [2] = evalue(mf -> ep [3]);
+   upvec [0] = evalue(mf -> ep [hasthick+0]);
+   upvec [1] = evalue(mf -> ep [hasthick+1]);
+   upvec [2] = evalue(mf -> ep [hasthick+2]);
    
    if (mf -> fxp != &unitxf) {
       multv3(upvec, upvec, mf -> fxp -> xfm);
@@ -1703,5 +1707,6 @@ void initPhotonScatterFuncs ()
             photonScatter [TEX_DATA] = pattexPhotonScatter;
             
    photonScatter [MOD_ALIAS] = aliasPhotonScatter;
-   photonScatter [MAT_BSDF] = bsdfPhotonScatter;
+   photonScatter [MAT_BSDF] = 
+      photonScatter [MAT_SBSDF] = bsdfPhotonScatter;
 }

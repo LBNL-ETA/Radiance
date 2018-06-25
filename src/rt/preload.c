@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: preload.c,v 2.14 2017/07/14 23:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: preload.c,v 2.15 2018/06/25 20:49:10 greg Exp $";
 #endif
 /*
  * Preload associated object structures to maximize memory sharing.
@@ -108,6 +108,13 @@ load_os(			/* load associated data for object */
 			goto sargerr;
 		getfunc(op, 5, 0x1d, 1);
 		sd = loadBSDF(op->oargs.sarg[1]);
+		if (sd != NULL) SDfreeCache(sd);
+		return(1);
+	case MAT_SBSDF:		/* sBSDF material */
+		if (op->oargs.nsargs < 5)
+			goto sargerr;
+		getfunc(op, 4, 0xe, 1);
+		sd = loadBSDF(op->oargs.sarg[0]);
 		if (sd != NULL) SDfreeCache(sd);
 		return(1);
 	case MAT_PDATA:		/* plastic BRDF data */
