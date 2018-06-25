@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.50 2018/06/25 20:49:10 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.51 2018/06/25 23:04:06 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -624,11 +624,13 @@ m_bsdf(OBJREC *m, RAY *r)
 		raytrans(r);			/* hide our proxy */
 		return(1);
 	}
+	if (hasthick && r->crtype & SHADOW)	/* early shadow check #1 */
+		return(1);
 	nd.mp = m;
 	nd.pr = r;
 						/* get BSDF data */
 	nd.sd = loadBSDF(m->oargs.sarg[hasthick]);
-						/* early shadow check */
+						/* early shadow check #2 */
 	if (r->crtype & SHADOW && (nd.sd->tf == NULL) & (nd.sd->tb == NULL))
 		return(1);
 						/* diffuse reflectance */
