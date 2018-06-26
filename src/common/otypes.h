@@ -1,4 +1,4 @@
-/* RCSid $Id: otypes.h,v 2.18 2018/06/25 20:49:10 greg Exp $ */
+/* RCSid $Id: otypes.h,v 2.19 2018/06/26 14:42:18 greg Exp $ */
 /*
  *  otypes.h - defines for object types.
  */
@@ -62,7 +62,7 @@ extern int  o_default(); /* XXX conflict with radogl.h */
 #define  MAT_TFUNC	34		/* trans brdf function */
 #define  MAT_BRTDF	35		/* BRTD function */
 #define  MAT_BSDF	36		/* BSDF data file */
-#define  MAT_SBSDF	37		/* specular BSDF data file */
+#define  MAT_ABSDF	37		/* aperture BSDF data file */
 #define  MAT_PDATA	38		/* plastic brdf data */
 #define  MAT_MDATA	39		/* metal brdf data */
 #define  MAT_TDATA	40		/* trans brdf data */
@@ -155,7 +155,7 @@ extern FUN  ofun[];			/* our type list */
 				{ "transfunc",	T_M|T_F,	o_default }, \
 				{ "BRTDfunc",	T_M|T_F,	o_default }, \
 				{ "BSDF",	T_M|T_D,	o_default }, \
-				{ "sBSDF",	T_M|T_D,	o_default }, \
+				{ "aBSDF",	T_M|T_D,	o_default }, \
 				{ "plasdata",	T_M|T_D,	o_default }, \
 				{ "metdata",	T_M|T_D,	o_default }, \
 				{ "transdata",	T_M|T_D,	o_default }, \

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.17 2018/06/25 20:49:10 greg Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.18 2018/06/26 14:42:18 greg Exp $";
 #endif
 /* 
    ==================================================================
@@ -1708,5 +1708,5 @@ void initPhotonScatterFuncs ()
             
    photonScatter [MOD_ALIAS] = aliasPhotonScatter;
    photonScatter [MAT_BSDF] = 
-      photonScatter [MAT_SBSDF] = bsdfPhotonScatter;
+      photonScatter [MAT_ABSDF] = bsdfPhotonScatter;
 }

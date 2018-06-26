@@ -1,4 +1,4 @@
-.\" RCSid "$Id: ray.1,v 1.34 2018/06/25 20:49:10 greg Exp $"
+.\" RCSid "$Id: ray.1,v 1.35 2018/06/26 14:42:18 greg Exp $"
 .\" Print using the -ms macro package
 .DA 07/10/2016
 .LP
@@ -947,18 +947,19 @@ invisible from behind.
 Unlike other data-driven material types, the BSDF type is fully
 supported and all parts of the distribution are properly sampled.
 .LP
-.UL sBSDF
+.UL aBSDF
 .PP
-The sBSDF material is identical to the BSDF type with two important
+The aBSDF material is identical to the BSDF type with two important
 differences.
 First, proxy geometry is not supported, so there is no thickness parameter.
-Second, an sBSDF is assumed to have some specular through component, which
+Second, an aBSDF is assumed to have some specular through component
+(the 'a' stands for "aperture"), which
 is treated specially during the direct calculation and when viewing the
 material.
 Based on the BSDF data, the coefficient of specular transmission is
 determined and used for modifying unscattered shadow and view rays.
 .DS
-mod sBSDF id
+mod aBSDF id
 5+ BSDFfile ux uy uz funcfile transform
 0
 0|3|6|9
@@ -968,7 +969,7 @@ mod sBSDF id
 .DE
 .LP
 If a material has no specular transmitted component, it is much better
-to use the BSDF type with a zero thickness than to use sBSDF.
+to use the BSDF type with a zero thickness than to use aBSDF.
 .LP
 .UL Antimatter
 .PP

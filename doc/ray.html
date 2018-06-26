@@ -1,5 +1,5 @@
 <html>
-<!-- RCSid $Id: ray.html,v 1.25 2018/06/25 20:49:10 greg Exp $ -->
+<!-- RCSid $Id: ray.html,v 1.26 2018/06/26 14:42:18 greg Exp $ -->
 <head>
 <title>
 The RADIANCE 5.2 Synthetic Imaging System
@@ -1154,22 +1154,23 @@ unless the line integrals consider enclosed geometry.
 <p>
 
 <dt>
-	<a NAME="sBSDF">
-	<b>sBSDF</b>
+	<a NAME="aBSDF">
+	<b>aBSDF</b>
 	</a>
 
 <dd>
-	The sBSDF material is identical to the BSDF type with two
+	The aBSDF material is identical to the BSDF type with two
 	important differences.  First, proxy geometry is not
 	supported, so there is no thickness parameter.  Second, an
-	sBSDF is assumed to have some specular through component,
+	aBSDF is assumed to have some specular through component
+	(the &rsquo;a&rsquo; stands for &quot;aperture&quot;),
 	which is treated specially during the direct calculation
 	and when viewing the material.  Based on the BSDF data, the
 	coefficient of specular transmission is determined and used
 	for modifying unscattered shadow and view rays.
 
 <pre>
-	mod sBSDF id
+	mod aBSDF id
 	5+ BSDFfile ux uy uz funcfile transform
 	0
 	0|3|6|9
@@ -1181,7 +1182,7 @@ unless the line integrals consider enclosed geometry.
 <p>
 	If a material has no specular transmitted component, it is
 	much better to use the BSDF type with a zero thickness
-	than to use sBSDF.
+	than to use aBSDF.
 <p>
 
 <dt>

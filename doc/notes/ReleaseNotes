@@ -2221,7 +2221,7 @@ optional build in src/cv/.
 Fixed bug in rcontrib with virtual sources, where pretest was adding
 to modifier accumulation buffers.  Reported by Mostapha.
 
-Added an "sBSDF" material type that explicitly checks for peak extraction.
+Added an "aBSDF" material type that explicitly checks for peak extraction.
 Its arguments are the same as the original "BSDF" type, but without the
 thickness parameter, as proxy geometry is not supported by this new type.
 The old "BSDF" type no longer does peak extraction under any circumstances,
