@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.79 2018/04/19 15:31:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.80 2018/07/03 22:29:01 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -7,6 +7,7 @@ OPT = -O
 MACH = -DBSD
 CFLAGS = $(MACH) $(OPT)
 CC = cc
+AR = ar
 SPECIAL =
 
 COMPAT = erf.o strcmp.o strlcpy.o
@@ -44,17 +45,17 @@ LIBFILES = tmesh.cal
 
 librtrad.a:	$(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	rm -f librtrad.a
-	ar rc librtrad.a $(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
+	$(AR) rc librtrad.a $(RTOBJ) $(PICOBJ) $(UTLOBJ) $(STDOBJ) $(SYSOBJ)
 	-ranlib librtrad.a
 
 libmgf.a:	$(MGFOBJ)
 	rm -f libmgf.a
-	ar rc libmgf.a $(MGFOBJ)
+	$(AR) rc libmgf.a $(MGFOBJ)
 	-ranlib libmgf.a
 
 libreetz.a:	$(REETZOBJ)
 	rm -f libreetz.a
-	ar rc libreetz.a $(REETZOBJ)
+	$(AR) rc libreetz.a $(REETZOBJ)
 	-ranlib libreetz.a
 
 install:	all
@@ -69,7 +70,7 @@ clean:
 
 ogl:	$(OGLOBJ)
 	rm -f librgl.a
-	ar rc librgl.a $(OGLOBJ)
+	$(AR) rc librgl.a $(OGLOBJ)
 	-ranlib librgl.a
 	mv -f librgl.a ../lib
 

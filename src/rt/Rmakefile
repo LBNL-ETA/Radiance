@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.82 2018/06/25 20:49:10 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.83 2018/07/03 22:29:01 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -8,6 +8,7 @@ MACH = -DBSD
 CFLAGS = -I../common -L../lib $(OPT) $(MACH)
 SPECIAL = 
 CC = cc
+AR = ar
 MLIB = -lm
 LINT = lint
 LINTFLAGS = -DBSD
@@ -151,12 +152,12 @@ $(DESTDIR)/pmapdump: pmapdump.o pmaptype.o pmapparm.o
 
 $(RLIB):	$(ROBJS) Version.o
 	rm -f $(RLIB)
-	ar rc $(RLIB) $(ROBJS) Version.o
+	$(AR) rc $(RLIB) $(ROBJS) Version.o
 	-ranlib $(RLIB)
 
 $(RCLIB):	$(RLOBJS)
 	rm -f $(RCLIB)
-	ar rc $(RCLIB) $(RLOBJS)
+	$(AR) rc $(RCLIB) $(RLOBJS)
 	-ranlib $(RCLIB)
 
 #
