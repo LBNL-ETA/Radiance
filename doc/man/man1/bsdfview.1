@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bsdfview.1,v 1.5 2017/10/18 19:30:48 greg Exp $"
+.\" RCSid "$Id: bsdfview.1,v 1.6 2018/07/20 00:50:40 greg Exp $"
 .TH BSDFVIEW 1 8/11/2017 RADIANCE
 .SH NAME
 bsdfview - view a BSDF representation
@@ -10,6 +10,8 @@ bsdfview - view a BSDF representation
 .B \-t
 |
 rad options
+][
+.B "\-r min max"
 ]
 input ..
 .br
@@ -110,6 +112,11 @@ If no interactive run is desired, start
 with the
 .I "-v 0"
 option.
+.PP
+If an optional plotting range is given with the
+.I \-r
+option, this will override automatic settings from the BSDF input.
+This may be useful for comparing different BSDF sources.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

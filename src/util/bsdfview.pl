@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: bsdfview.pl,v 2.6 2017/10/18 19:30:48 greg Exp $
+# RCSid $Id: bsdfview.pl,v 2.7 2018/07/20 00:50:40 greg Exp $
 #
 # Call bsdf2rad to render BSDF and start viewing it.
 # Arguments are BSDF XML or SIR file(s)
@@ -15,7 +15,8 @@ my $raddev = "x11";	# default output device. Overwrite with -o
 my $qual = "Med";
 my $usetrad = 0;
 
-my $opts = "";	# Options common to rad
+my @range;		# BSDF min and max range
+my $opts = "";		# Options common to rad
 my $rendopts = "-w-";	# For render= line in rif file
 
 while (@ARGV) {
@@ -40,6 +41,9 @@ while (@ARGV) {
 		$opts .= " $_";
 	} elsif (m/^-t\b/) {	# start trad instead of rad
 		$usetrad = 1;
+	} elsif (m/^-r/) {	# specified range for BSDF
+		@range = ("-r", $ARGV[1], $ARGV[2]);
+		shift @ARGV; shift @ARGV;
 	} elsif (m/^-\w/) {
 		die("bsdfview: Bad option: $_\n");
 	} else {
@@ -89,7 +93,7 @@ if (-e $rif) {			# RIF already exists?
 
 print "bsdfview: creating rad input file '$rif'\n";
 
-my $scene = qq("!bsdf2rad @objects");		# let bsdf2rad do complaining
+my $scene = qq("!bsdf2rad @range @objects");	# let bsdf2rad do complaining
 
 my $objects = join(' ', @objects);
 open(FH, ">$rif") or

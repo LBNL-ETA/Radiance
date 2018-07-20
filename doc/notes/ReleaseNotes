@@ -2226,3 +2226,6 @@ Its arguments are the same as the original "BSDF" type, but without the
 thickness parameter, as proxy geometry is not supported by this new type.
 The old "BSDF" type no longer does peak extraction under any circumstances,
 since this behavior is superfluous for proxied geometry.
+
+Added -r option to bsdf2rad (and bsdfview) to fix BSDF min and max range
+for comparing BSDFs.

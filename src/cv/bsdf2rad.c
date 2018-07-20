@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.33 2017/10/02 22:11:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.34 2018/07/20 00:50:40 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
@@ -710,27 +710,35 @@ int
 main(int argc, char *argv[])
 {
 	int	inpXML = -1;
+	double	myLim[2];
 	SDData	myBSDF;
-	int	n;
+	int	a, n;
 						/* check arguments */
 	progname = argv[0];
-	if (argc > 1 && (n = strlen(argv[1])-4) > 0) {
-		if (!strcasecmp(argv[1]+n, ".xml"))
+	a = 1;
+	myLim[0] = -1; myLim[1] = -2;		/* specified BSDF range? */
+	if (argc > a+3 && argv[a][0] == '-' && argv[a][1] == 'r') {
+		myLim[0] = atof(argv[++a]);
+		myLim[1] = atof(argv[++a]);
+		++a;
+	}
+	if (argc > a && (n = strlen(argv[a])-4) > 0) {
+		if (!strcasecmp(argv[a]+n, ".xml"))
 			inpXML = 1;
-		else if (!strcasecmp(argv[1]+n, ".sir"))
+		else if (!strcasecmp(argv[a]+n, ".sir"))
 			inpXML = 0;
 	}
-	if (inpXML < 0 || inpXML & (argc > 2)) {
-		fprintf(stderr, "Usage: %s bsdf.xml > output.rad\n", progname);
-		fprintf(stderr, "   Or: %s hemi1.sir hemi2.sir .. > output.rad\n", progname);
+	if (inpXML < 0 || inpXML & (argc > a+1)) {
+		fprintf(stderr, "Usage: %s [-r min max] bsdf.xml > output.rad\n", progname);
+		fprintf(stderr, "   Or: %s [-r min max] hemi1.sir hemi2.sir .. > output.rad\n", progname);
 		return(1);
 	}
 	fputs("# ", stdout);			/* copy our command */
 	printargs(argc, argv, stdout);
 						/* evaluate BSDF */
 	if (inpXML) {
-		SDclearBSDF(&myBSDF, argv[1]);
-		if (SDreportError(SDloadFile(&myBSDF, argv[1]), stderr))
+		SDclearBSDF(&myBSDF, argv[a]);
+		if (SDreportError(SDloadFile(&myBSDF, argv[a]), stderr))
 			return(1);
 		if (myBSDF.rf != NULL) front_comp |= SDsampR;
 		if (myBSDF.tf != NULL) front_comp |= SDsampT;
@@ -738,16 +746,20 @@ main(int argc, char *argv[])
 		if (myBSDF.tb != NULL) back_comp |= SDsampT;
 		if (!front_comp & !back_comp) {
 			fprintf(stderr, "%s: nothing to plot in '%s'\n",
-					progname, argv[1]);
+					progname, argv[a]);
 			return(1);
 		}
-		if (front_comp & SDsampR && myBSDF.rLambFront.cieY < overall_min*PI)
-			overall_min = myBSDF.rLambFront.cieY/PI;
-		if (back_comp & SDsampR && myBSDF.rLambBack.cieY < overall_min*PI)
-			overall_min = myBSDF.rLambBack.cieY/PI;
-		if ((front_comp|back_comp) & SDsampT &&
-				myBSDF.tLamb.cieY < overall_min*PI)
-			overall_min = myBSDF.tLamb.cieY/PI;
+		if (myLim[0] >= 0)
+			overall_min = myLim[0];
+		else {
+			if (front_comp & SDsampR && myBSDF.rLambFront.cieY < overall_min*PI)
+				overall_min = myBSDF.rLambFront.cieY/PI;
+			if (back_comp & SDsampR && myBSDF.rLambBack.cieY < overall_min*PI)
+				overall_min = myBSDF.rLambBack.cieY/PI;
+			if ((front_comp|back_comp) & SDsampT &&
+					myBSDF.tLamb.cieY < overall_min*PI)
+				overall_min = myBSDF.tLamb.cieY/PI;
+		}
 		set_minlog();
 		if (!build_wBSDF(&myBSDF))
 			return(1);
@@ -756,41 +768,45 @@ main(int argc, char *argv[])
 		else
 			strcpy(bsdf_name, myBSDF.name);
 		strcpy(bsdf_manuf, myBSDF.makr);
-		put_matBSDF(argv[1]);
+		put_matBSDF(argv[a]);
 	} else {
 		FILE	*fp[4];
-		if (argc > 5) {
+		if (argc > a+4) {
 			fprintf(stderr, "%s: more than 4 hemispheres!\n", progname);
 			return(1);
 		}
-		for (n = 1; n < argc; n++) {
-			fp[n-1] = fopen(argv[n], "rb");
-			if (fp[n-1] == NULL) {
+		for (n = a; n < argc; n++) {
+			fp[n-a] = fopen(argv[n], "rb");
+			if (fp[n-a] == NULL) {
 				fprintf(stderr, "%s: cannot open BSDF interpolant '%s'\n",
 						progname, argv[n]);
 				return(1);
 			}
-			if (getheader(fp[n-1], rbf_headline, NULL) < 0) {
+			if (getheader(fp[n-a], rbf_headline, NULL) < 0) {
 				fprintf(stderr, "%s: bad BSDF interpolant '%s'\n",
 						progname, argv[n]);
 				return(1);
 			}
 		}
+		if (myLim[0] >= 0)
+			overall_min = myLim[0];
 		set_minlog();
-		for (n = 1; n < argc; n++) {
-			if (fseek(fp[n-1], 0L, SEEK_SET) < 0) {
+		for (n = a; n < argc; n++) {
+			if (fseek(fp[n-a], 0L, SEEK_SET) < 0) {
 				fprintf(stderr, "%s: cannot seek on '%s'\n",
 						progname, argv[n]);
 				return(1);
 			}
-			if (!load_bsdf_rep(fp[n-1]))
+			if (!load_bsdf_rep(fp[n-a]))
 				return(1);
-			fclose(fp[n-1]);
+			fclose(fp[n-a]);
 			if (!build_wRBF())
 				return(1);
 		}
 		put_matBSDF(NULL);
 	}
+	if (myLim[1] > myLim[0])	/* override maximum BSDF? */
+		overall_max = myLim[1];
 	put_source();			/* before hemispheres & labels */
 	put_hemispheres();
 	put_scale();

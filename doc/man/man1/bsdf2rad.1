@@ -1,14 +1,20 @@
-.\" RCSid "$Id: bsdf2rad.1,v 1.1 2017/08/11 21:39:52 greg Exp $"
+.\" RCSid "$Id: bsdf2rad.1,v 1.2 2018/07/20 00:50:40 greg Exp $"
 .TH BSDF2RAD 1 8/11/2017 RADIANCE
 .SH NAME
 bsdf2rad - create a RADIANCE visualization of a BSDF representation
 .SH SYNOPSIS
 .B bsdf2rad
+[
+.B "\-r min max"
+]
 bsdf.xml
 .br
 or
 .br
 .B bsdf2rad
+[
+.B "\-r min max"
+]
 hemi1.sir
 [
 hemi2.sir ..
@@ -70,6 +76,11 @@ and the right (+X) direction corresponds to a zero phi angle.
 Positive phi is read counter-clockwise from above,
 and a phi of 90 degrees (+Y) typically corresponds
 to a material's "up" orientation.
+.PP
+If an optional plotting range is given with the
+.I \-r
+option, this will override automatic settings from the BSDF input.
+This may be useful for comparing different BSDF sources.
 .SH EXAMPLE
 To view a BSDF XML representation:
 .IP "" .2i
