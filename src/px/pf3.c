@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pf3.c,v 2.18 2004/03/28 20:33:14 schorsch Exp $";
+static const char RCSid[] = "$Id: pf3.c,v 2.19 2018/07/26 23:50:40 greg Exp $";
 #endif
 /*
  *  pf3.c - routines for gaussian and box filtering
@@ -25,31 +25,31 @@ short  *ringwt;			/* weight (count) of ring values */
 short  *ringndx;		/* ring index table */
 float  *warr;			/* array of pixel weights */
 
-#define	 lookgauss(x)		gausstable[(int)(10.*(x)+.5)]
+#define	 lookgauss(x)		gausstable[(int)(20.*(x)+.5)]
 
 static double pickfilt(double  p0);
 static void sumans(int  px, int  py, int  rcent, int  ccent, double  m);
 
 
-extern void
+void
 initmask(void)			/* initialize gaussian lookup table */
 {
 	int  gtabsiz;
 	double  gaussN;
 	double  d;
-	register int  x;
+	int  x;
 
-	gtabsiz = 111*CHECKRAD*CHECKRAD;
+	gtabsiz = 444*CHECKRAD*CHECKRAD;
 	gausstable = (float *)malloc(gtabsiz*sizeof(float));
 	if (gausstable == NULL)
 		goto memerr;
 	d = x_c*y_r*0.25/(rad*rad);
 	gausstable[0] = exp(-d);
 	for (x = 1; x < gtabsiz; x++)
-		if (x*0.1 <= d)
+		if (x*0.05 <= d)
 			gausstable[x] = gausstable[0];
 		else
-			gausstable[x] = exp(-x*0.1);
+			gausstable[x] = exp(-x*0.05);
 	if (obarsize == 0)
 		return;
 					/* compute integral of filter */
@@ -81,7 +81,7 @@ memerr:
 }
 
 
-extern void
+void
 dobox(			/* simple box filter */
 	COLOR  csum,
 	int  xcent,
@@ -93,8 +93,8 @@ dobox(			/* simple box filter */
 	int  wsum;
 	double  d;
 	int  y;
-	register int  x, offs;
-	register COLOR	*scan;
+	int  x, offs;
+	COLOR	*scan;
 	
 	wsum = 0;
 	setcolor(csum, 0.0, 0.0, 0.0);
@@ -123,7 +123,7 @@ dobox(			/* simple box filter */
 }
 
 
-extern void
+void
 dogauss(		/* gaussian filter */
 	COLOR  csum,
 	int  xcent,
@@ -135,8 +135,8 @@ dogauss(		/* gaussian filter */
 	double  dy, dx, weight, wsum;
 	COLOR  ctmp;
 	int  y;
-	register int  x, offs;
-	register COLOR	*scan;
+	int  x, offs;
+	COLOR	*scan;
 
 	wsum = FTINY;
 	setcolor(csum, 0.0, 0.0, 0.0);
@@ -162,7 +162,7 @@ dogauss(		/* gaussian filter */
 }
 
 
-extern void
+void
 dothresh(	/* gaussian threshold filter */
 	int  xcent,
 	int  ycent,
@@ -172,8 +172,8 @@ dothresh(	/* gaussian threshold filter */
 {
 	double  d;
 	int  r, y, offs;
-	register int  c, x;
-	register float  *gscan;
+	int  c, x;
+	float  *gscan;
 					/* compute ring sums */
 	memset((char *)ringsum, '\0', (orad+1)*sizeof(float));
 	memset((char *)ringwt, '\0', (orad+1)*sizeof(short));
@@ -222,7 +222,7 @@ pickfilt(			/* find filter multiplier for p0 */
 	double  t, num, denom, avg, wsum;
 	double  mlimit[2];
 	int  ilimit = 4.0/TEPS;
-	register int  i;
+	int  i;
 				/* iterative search for m */
 	mlimit[0] = 1.0; mlimit[1] = orad/rad/CHECKRAD;
 	do {
@@ -287,8 +287,8 @@ sumans(		/* sum input pixel to output */
 	COLOR  pval, ctmp;
 	int  ksiz, r, offs;
 	double  pc, pr, norm;
-	register int  i, c;
-	register COLOR	*scan;
+	int  i, c;
+	COLOR	*scan;
 	/*
 	 * This normalization method fails at the picture borders because
 	 * a different number of input pixels contribute there.
@@ -327,7 +327,7 @@ sumans(		/* sum input pixel to output */
 		scan = scoutbar[r%obarsize];
 		for (c = ccent-ksiz; c <= ccent+ksiz; c++) {
 			offs = c < 0 ? ncols : c >= ncols ? -ncols : 0;
-			if (offs && !wrapfilt)
+			if ((offs != 0) & !wrapfilt)
 				continue;
 			copycolor(ctmp, pval);
 			dx = norm*warr[i++];

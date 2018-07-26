@@ -2229,3 +2229,6 @@ since this behavior is superfluous for proxied geometry.
 
 Added -r option to bsdf2rad (and bsdfview) to fix BSDF min and max range
 for comparing BSDFs.
+
+Fixed issue with pfilt -m option and uneven image size changes pointed
+out by Rob Shakespeare.

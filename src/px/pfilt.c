@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.31 2010/09/03 21:18:15 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.32 2018/07/26 23:50:40 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -371,11 +371,11 @@ headline(				/* process line from header */
 
 static void
 copyfile(			/* copy a file */
-	register FILE  *in,
-	register FILE  *out
+	FILE  *in,
+	FILE  *out
 )
 {
-	register int  c;
+	int  c;
 
 	while ((c = getc(in)) != EOF)
 		putc(c, out);
@@ -480,7 +480,7 @@ scan2init(void)			/* prepare scanline arrays */
 {
 	COLOR	ctmp;
 	double	d;
-	register int  i;
+	int  i;
 
 	xbrad = xres/ncols/2 + 1;
 	ybrad = yres/nrows/2 + 1;
@@ -561,7 +561,7 @@ scan2sync(			/* synchronize grey averages and output scan */
 	static int  nextrow = 0;
 	COLOR  ctmp;
 	int  ybot;
-	register int  c;
+	int  c;
 					/* average input scanlines */
 	while (nextrow <= r+orad && nextrow < nrows) {
 		ybot = (nextrow+.5)*yres/nrows;
@@ -584,7 +584,7 @@ scan2sync(			/* synchronize grey averages and output scan */
 static void
 scan2flush(void)			/* flush output buffer */
 {
-	register int  r;
+	int  r;
 
 	for (r = nrows-orad; r < nrows; r++)
 		if (fwritescan(scoutbar[r%obarsize], ncols, stdout) < 0)

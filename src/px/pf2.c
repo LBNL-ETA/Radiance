@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pf2.c,v 2.7 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: pf2.c,v 2.8 2018/07/26 23:50:40 greg Exp $";
 #endif
 /*
  *  pf2.c - routines used by pfilt.
@@ -36,7 +36,7 @@ double	sprdfact;		/* computed spread factor */
 static void starpoint(COLOR  fcol, int  x, int  y, HOTPIX	 *hp);
 
 
-extern void
+void
 pass1init(void)			/* prepare for first pass */
 {
 	avgbrt = 0.0;
@@ -45,7 +45,7 @@ pass1init(void)			/* prepare for first pass */
 }
 
 
-extern void
+void
 pass1default(void)			/* for single pass */
 {
 	avgbrt = AVGLVL;
@@ -54,15 +54,15 @@ pass1default(void)			/* for single pass */
 }
 
 
-extern void
+void
 pass1scan(		/* process first pass scanline */
-	register COLOR	*scan,
+	COLOR	*scan,
 	int  y
 )
 {
 	double	cbrt;
-	register int  x;
-	register HOTPIX	 *hp;
+	int  x;
+	HOTPIX	 *hp;
 
 	for (x = 0; x < xres; x++) {
 	
@@ -93,7 +93,7 @@ pass1scan(		/* process first pass scanline */
 }
 
 
-extern void
+void
 pass2init(void)			/* prepare for final pass */
 {
 	if (!npix) {
@@ -110,15 +110,15 @@ pass2init(void)			/* prepare for final pass */
 }
 
 
-extern void
+void
 pass2scan(		/* process final pass scanline */
-	register COLOR	*scan,
+	COLOR	*scan,
 	int  y
 )
 {
 	int  xmin, xmax;
-	register int  x;
-	register HOTPIX	 *hp;
+	int  x;
+	HOTPIX	 *hp;
 	
 	for (hp = head; hp != NULL; hp = hp->next) {
 		if (hp->slope > FTINY) {
@@ -151,7 +151,7 @@ starpoint(		/* pixel is on the star's point */
 	COLOR  fcol,
 	int  x,
 	int  y,
-	register HOTPIX	 *hp
+	HOTPIX	 *hp
 )
 {
 	COLOR  ctmp;
