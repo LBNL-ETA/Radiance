@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.19 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: ra_rgbe.c,v 2.20 2018/08/02 18:33:47 greg Exp $";
 #endif
 /*
  *  program to convert from RADIANCE RLE to flat format
@@ -198,7 +198,7 @@ addhline(			/* add a line to our info. header */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 	int	n;
 
 	if (formatval(fmt, s))

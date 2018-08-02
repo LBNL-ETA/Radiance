@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.5 2012/10/13 05:18:18 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.6 2018/08/02 18:33:45 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -52,7 +52,7 @@ static int
 headline(char *s, void *p)
 {
 	IMGHEAD	*ip = (IMGHEAD *)p;
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (isview(s)) {
 		ip->gotview += (sscanview(ip->vp, s) > 0);

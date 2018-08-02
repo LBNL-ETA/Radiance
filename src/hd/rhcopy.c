@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.29 2017/05/03 21:15:06 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.30 2018/08/02 18:33:42 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -101,7 +101,7 @@ holheadline(		/* check holodeck header line */
 	void	*vhf
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 	int	*hf = vhf;
 
 	if (formatval(fmt, s)) {

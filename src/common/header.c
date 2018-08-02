@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.31 2017/05/10 18:02:08 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.32 2018/08/02 18:33:42 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -170,11 +170,12 @@ printargs(		/* print arguments to a file */
 
 int
 formatval(			/* get format value (return true if format) */
-	char  *r,
+	char  fmt[MAXFMTLEN],
 	const char  *s
 )
 {
 	const char  *cp = FMTSTR;
+	char  *r = fmt;
 
 	while (*cp) if (*cp++ != *s++) return(0);
 	while (isspace(*s)) s++;
@@ -182,7 +183,7 @@ formatval(			/* get format value (return true if format) */
 	if (r == NULL) return(1);
 	do
 		*r++ = *s++;
-	while (*s && !isspace(*s));
+	while (*s && !isspace(*s) && r-fmt < MAXFMTLEN-1);
 	*r = '\0';
 	return(1);
 }
@@ -230,7 +231,7 @@ getheader(		/* get header from file */
 
 struct check {
 	FILE	*fp;
-	char	fs[64];
+	char	fs[MAXFMTLEN];
 };
 
 
@@ -319,7 +320,7 @@ globmatch(			/* check for match of s against pattern p */
 int
 checkheader(
 	FILE  *fin,
-	char  *fmt,
+	char  fmt[MAXFMTLEN],
 	FILE  *fout
 )
 {

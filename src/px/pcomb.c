@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcomb.c,v 2.50 2018/05/04 23:56:49 greg Exp $";
+static const char	RCSid[] = "$Id: pcomb.c,v 2.51 2018/08/02 18:33:43 greg Exp $";
 #endif
 /*
  *  Combine picture files according to calcomp functions.
@@ -261,7 +261,7 @@ headline(			/* check header line & echo if requested */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
 

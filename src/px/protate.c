@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: protate.c,v 2.11 2012/02/08 04:18:13 greg Exp $";
+static const char	RCSid[] = "$Id: protate.c,v 2.12 2018/08/02 18:33:46 greg Exp $";
 #endif
 /*
  * prot.c - program to rotate picture file 90 degrees clockwise.
@@ -78,7 +78,7 @@ main(
 	char	*argv[]
 )
 {
-	static char	picfmt[LPICFMT+1] = PICFMT;
+	static char	picfmt[MAXFMTLEN] = PICFMT;
 	int	rval;
 	FILE	*fin;
 

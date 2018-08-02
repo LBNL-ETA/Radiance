@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.12 2017/05/10 18:02:08 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.13 2018/08/02 18:33:42 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -56,6 +56,7 @@ extern char  resolu_buf[RESOLU_BUFLEN];
 #define  fscnresolu(sl,ns,fp)	(fscanf(fp,PIXSTDFMT,ns,sl)==2)
 
 			/* identify header lines */
+#define  MAXFMTLEN	64
 #define  isheadid(s)	headidval(NULL,s)
 #define  isformat(s)	formatval(NULL,s)
 #define  isdate(s)	dateval(NULL,s)
@@ -81,12 +82,12 @@ extern int	gmtval(time_t *t, const char *s);
 extern void	fputdate(time_t t, FILE *fp);
 extern void	fputnow(FILE *fp);
 extern void	printargs(int ac, char **av, FILE *fp);
-extern int	formatval(char *r, const char *s);
+extern int	formatval(char fmt[MAXFMTLEN], const char *s);
 extern void	fputformat(const char *s, FILE *fp);
 typedef int gethfunc(char *s, void *p); /* callback to process header lines */
 extern int	getheader(FILE *fp, gethfunc *f, void *p);
 extern int	globmatch(const char *pat, const char *str);
-extern int	checkheader(FILE *fin, char *fmt, FILE *fout);
+extern int	checkheader(FILE *fin, char fmt[MAXFMTLEN], FILE *fout);
 
 #ifdef __cplusplus
 }

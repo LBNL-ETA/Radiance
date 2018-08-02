@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.12 2018/04/02 16:45:41 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.13 2018/08/02 18:33:50 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -147,7 +147,7 @@ headline(			/* get line from header */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (print_header)		/* copy to output */
 		fputs(s, stdout);

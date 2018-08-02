@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.10 2012/05/17 17:36:14 greg Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.11 2018/08/02 18:33:44 greg Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
@@ -55,7 +55,7 @@ main(
 	char	*argv[]
 )
 {
-	static char	picfmt[LPICFMT+1] = PICFMT;
+	static char	picfmt[MAXFMTLEN] = PICFMT;
 	int	i, rval;
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdout);

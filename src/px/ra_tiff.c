@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.34 2010/12/04 00:24:43 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.35 2018/08/02 18:33:47 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -442,7 +442,7 @@ headline(			/* process Radiance input header line */
 {
 	static int	tmstrlen = 0;
 	static int	ownstrlen = 0;
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (!tmstrlen)
 		tmstrlen = strlen(TMSTR);

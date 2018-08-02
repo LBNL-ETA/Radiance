@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapio.c,v 2.11 2018/02/08 19:55:02 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapio.c,v 2.12 2018/08/02 18:33:49 greg Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapio.c,v 2.11 2018/02/08 19:55:02 rschregle 
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapio.c,v 2.11 2018/02/08 19:55:02 rschregle Exp $    
+   $Id: pmapio.c,v 2.12 2018/08/02 18:33:49 greg Exp $    
 */
 
 
@@ -141,7 +141,7 @@ void savePhotonMap (const PhotonMap *pmap, const char *fname,
 PhotonMapType loadPhotonMap (PhotonMap *pmap, const char *fname)
 {
    PhotonMapType  ptype = PMAP_TYPE_NONE;
-   char           format [128];
+   char           format [MAXFMTLEN];
    unsigned long  i, j;
    FILE           *file;
 

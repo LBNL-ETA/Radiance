@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcompos.c,v 2.36 2018/04/16 19:40:37 greg Exp $";
+static const char	RCSid[] = "$Id: pcompos.c,v 2.37 2018/08/02 18:33:43 greg Exp $";
 #endif
 /*
  *  pcompos.c - program to composite pictures.
@@ -80,7 +80,7 @@ headline(			/* print line preceded by a tab */
 	void	*p
 )
 {
-	char  fmt[32];
+	char  fmt[MAXFMTLEN];
 
 	if (isheadid(s))
 		return(0);

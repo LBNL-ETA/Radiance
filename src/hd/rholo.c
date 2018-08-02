@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.78 2016/03/21 19:06:08 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.79 2018/08/02 18:33:43 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -496,7 +496,7 @@ headline(			/* process information header line */
 {
 	extern char	FMTSTR[];
 	register char	*cp;
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {
 		if (strcmp(fmt, HOLOFMT)) {

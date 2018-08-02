@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: psketch.c,v 2.3 2017/08/29 16:31:32 greg Exp $";
+static const char	RCSid[] = "$Id: psketch.c,v 2.4 2018/08/02 18:33:46 greg Exp $";
 #endif
 /*
  *  psketch.c - modify picture to sketch objects with named modifiers
@@ -230,7 +230,7 @@ int
 main(int argc, char *argv[])
 {
 	int		i, rval;
-	char		pfmt[LPICFMT+1];
+	char		pfmt[MAXFMTLEN];
 					/* process options */
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {

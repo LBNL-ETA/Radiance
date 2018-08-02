@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.28 2018/06/13 18:36:38 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.29 2018/08/02 18:33:50 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -81,7 +81,7 @@ static int
 get_dminfo(char *s, void *p)
 {
 	RMATRIX	*ip = (RMATRIX *)p;
-	char	fmt[64];
+	char	fmt[MAXFMTLEN];
 	int	i;
 
 	if (headidval(fmt, s))

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pfilt.c,v 2.32 2018/07/26 23:50:40 greg Exp $";
+static const char RCSid[] = "$Id: pfilt.c,v 2.33 2018/08/02 18:33:44 greg Exp $";
 #endif
 /*
  *  pfilt.c - program to post-process picture file.
@@ -348,7 +348,7 @@ headline(				/* process line from header */
 	void	*p
 )
 {
-	char  fmt[32];
+	char  fmt[MAXFMTLEN];
 
 	fputs(s, stdout);		/* copy to output */
 	if (isaspect(s))		/* get aspect ratio */

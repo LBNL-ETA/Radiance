@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: data.c,v 2.32 2016/03/22 03:56:17 greg Exp $";
+static const char	RCSid[] = "$Id: data.c,v 2.33 2018/08/02 18:33:48 greg Exp $";
 #endif
 /*
  *  data.c - routines dealing with interpolated data.
@@ -149,7 +149,7 @@ headaspect(			/* check string for aspect ratio */
 	void  *iap
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (isaspect(s))
 		*(double*)iap *= aspectval(s);

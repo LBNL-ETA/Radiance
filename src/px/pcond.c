@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.28 2016/03/10 18:25:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.29 2018/08/02 18:33:44 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -217,7 +217,7 @@ headline(				/* process header line */
 )
 {
 	static RGBPRIMS	inprimS;
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {	/* check if format string */
 		if (!strcmp(fmt,COLRFMT)) lumf = rgblum;

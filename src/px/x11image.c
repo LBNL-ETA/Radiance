@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: x11image.c,v 2.75 2011/08/16 18:09:53 greg Exp $";
+static const char RCSid[] = "$Id: x11image.c,v 2.76 2018/08/02 18:33:48 greg Exp $";
 #endif
 /*
  *  x11image.c - driver for X-windows
@@ -283,7 +283,7 @@ headline(		/* get relevant info from header */
 	void	*p
 )
 {
-	char  fmt[32];
+	char  fmt[MAXFMTLEN];
 
 	if (isexpos(s))
 		exposure *= exposval(s);

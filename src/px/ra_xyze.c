@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.11 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.12 2018/08/02 18:33:48 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
@@ -37,7 +37,7 @@ headline(				/* process header line */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {	/* check if format string */
 		if (!strcmp(fmt,COLRFMT))

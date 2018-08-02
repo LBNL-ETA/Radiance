@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcwarp.c,v 3.5 2008/11/10 19:08:19 greg Exp $";
+static const char	RCSid[] = "$Id: pcwarp.c,v 3.6 2018/08/02 18:33:44 greg Exp $";
 #endif
 /*
  * Warp colors in Radiance picture to correct for input/output changes.
@@ -30,7 +30,7 @@ main(
 	char	*argv[]
 )
 {
-	static char	picfmt[LPICFMT+1] = PICFMT;
+	static char	picfmt[MAXFMTLEN] = PICFMT;
 	int	cwflags = 0;
 	int	rval;
 	int	i;

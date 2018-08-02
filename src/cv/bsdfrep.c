@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.31 2016/02/03 18:53:14 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.32 2018/08/02 18:33:42 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -659,7 +659,7 @@ save_bsdf_rep(FILE *ofp)
 static int
 headline(char *s, void *p)
 {
-	char	fmt[64];
+	char	fmt[MAXFMTLEN];
 	int	i;
 
 	if (!strncmp(s, "NAME=", 5)) {

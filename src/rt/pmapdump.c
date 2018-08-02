@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.10 2018/02/08 19:55:02 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.10 2018/02/08 19:55:02 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.10 2018/02/08 19:55:02 rschregle Exp $
+   $Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp $
 */
 
 
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.10 2018/02/08 19:55:02 rschregl
 #include "random.h"
 #include "math.h"
 
-#define PMAPDUMP_REC "$Revision: 2.10 $"   
+#define PMAPDUMP_REC "$Revision: 2.11 $"   
 
 
 /* Defaults */
@@ -75,7 +75,7 @@ const RadianceDef radDefs [] = {
 
 int main (int argc, char** argv)
 {
-   char           format [128];
+   char           format [MAXFMTLEN];
    RREAL          rad, radScale = RADSCALE, extent, dumpRatio;
    unsigned       arg, j, ptype, dim;
    long           numSpheres = NSPHERES;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.46 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.47 2018/08/02 18:33:45 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -361,7 +361,7 @@ headline(				/* process header string */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (isheadid(s))
 		return(0);

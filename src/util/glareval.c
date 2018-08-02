@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.15 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.16 2018/08/02 18:33:50 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -299,7 +299,7 @@ getexpos(			/* get exposure from header line */
 	void	*p
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (isexpos(s))
 		exposure *= exposval(s);

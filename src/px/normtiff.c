@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.13 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.14 2018/08/02 18:33:43 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
@@ -39,7 +39,7 @@ short	ortab[8] = {		/* orientation conversion table */
 
 typedef struct {
 	FILE	*fp;		/* file pointer */
-	char	fmt[32];	/* picture format */
+	char	fmt[MAXFMTLEN];	/* picture format */
 	double	pa;		/* pixel aspect ratio */
 	RESOLU	rs;		/* picture resolution */
 } PICTURE;

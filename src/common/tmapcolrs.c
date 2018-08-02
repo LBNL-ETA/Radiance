@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.31 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: tmapcolrs.c,v 3.32 2018/08/02 18:33:42 greg Exp $";
 #endif
 /*
  * Routines for tone mapping on Radiance RGBE and XYZE pictures.
@@ -151,7 +151,7 @@ headline(			/* grok a header line */
 	void	*vrh
 )
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 	struct radhead	*rh = vrh;
 
 	if (formatval(fmt, s)) {

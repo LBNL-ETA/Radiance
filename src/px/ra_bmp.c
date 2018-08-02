@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.11 2011/05/20 02:06:39 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.12 2018/08/02 18:33:46 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -211,7 +211,7 @@ quiterr(const char *err)
 static int
 headline(char *s, void *p)
 {
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {	/* check if format string */
 		if (!strcmp(fmt,COLRFMT))

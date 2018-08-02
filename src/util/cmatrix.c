@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.19 2018/04/10 22:11:30 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.20 2018/08/02 18:33:49 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -87,7 +87,7 @@ static int
 get_cminfo(char *s, void *p)
 {
 	CMINFO	*ip = (CMINFO *)p;
-	char	fmt[32];
+	char	fmt[MAXFMTLEN];
 	int	i;
 
 	if (!strncmp(s, "NCOMP=", 6) && atoi(s+6) != 3) {
