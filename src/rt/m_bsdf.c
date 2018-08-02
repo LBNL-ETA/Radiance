@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.52 2018/06/26 14:42:18 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.53 2018/08/02 22:44:35 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -236,19 +236,23 @@ direct_specular_OK(COLOR cval, FVECT ldir, double omega, BSDFDAT *ndp)
 		diffY = 0;
 		setcolor(cdiff,  0, 0, 0);
 	}
-					/* need projected solid angles */
+					/* need projected solid angle */
 	omega *= fabs(vsrc[2]);
+					/* check indirect over-counting */
+	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
+		double		dx = vsrc[0] + ndp->vray[0];
+		double		dy = vsrc[1] + ndp->vray[1];
+		SDSpectralDF	*dfp = (ndp->pr->rod > 0) ?
+			((ndp->sd->tf != NULL) ? ndp->sd->tf : ndp->sd->tb) :
+			((ndp->sd->tb != NULL) ? ndp->sd->tb : ndp->sd->tf) ;
+
+		if (dx*dx + dy*dy <= (2.5*4./PI)*(omega + dfp->minProjSA +
+						2.*sqrt(omega*dfp->minProjSA)))
+			return(0);
+	}
 	ec = SDsizeBSDF(&tomega, ndp->vray, vsrc, SDqueryMin, ndp->sd);
 	if (ec)
 		goto baderror;
-					/* check indirect over-counting */
-	if ((vsrc[2] > 0) ^ (ndp->vray[2] > 0) && bright(ndp->cthru) > FTINY) {
-		double	dx = vsrc[0] + ndp->vray[0];
-		double	dy = vsrc[1] + ndp->vray[1];
-		if (dx*dx + dy*dy <= (2.5*4./PI)*(omega + tomega +
-						2.*sqrt(omega*tomega)))
-			return(0);
-	}
 					/* assign number of samples */
 	sf = specjitter * ndp->pr->rweight;
 	if (tomega <= 0)
