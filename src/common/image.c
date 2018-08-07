@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.48 2018/04/27 18:09:26 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.49 2018/08/07 23:17:06 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -386,14 +386,14 @@ int  ac,
 char  *av[]
 )
 {
-#define check(c,l)	if ((av[0][c]&&av[0][c]!=' ') || \
+#define check(c,l)	if ((av[0][c]&&!isspace(av[0][c])) || \
 			badarg(ac-1,av+1,l)) return(-1)
 
 	if (ac <= 0 || av[0][0] != '-' || av[0][1] != 'v')
 		return(-1);
 	switch (av[0][2]) {
 	case 't':			/* type */
-		if (!av[0][3] || av[0][3]==' ')
+		if (!av[0][3] || isspace(av[0][3]))
 			return(-1);
 		check(4,"");
 		v->type = av[0][3];
@@ -578,7 +578,7 @@ char  *s
 	}
 					/* skip leading path */
 	cp = s;
-	while (*cp && *cp != ' ')
+	while (*cp && !isspace(*cp))
 		cp++;
 	while (cp > s && !ISDIRSEP(cp[-1]))
 		cp--;
