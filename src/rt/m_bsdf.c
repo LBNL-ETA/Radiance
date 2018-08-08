@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.53 2018/08/02 22:44:35 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.54 2018/08/08 04:15:18 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -162,7 +162,6 @@ compute_through(BSDFDAT *ndp)
 		goto baderror;
 	if (tomega > 1.5*dfp->minProjSA)
 		return;				/* not really a peak? */
-	tomega /= fabs(pdir[2]);		/* remove cosine factor */
 	if ((bright(vpeak) - ndp->sd->tLamb.cieY*(1./PI))*tomega <= .001)
 		return;				/* < 0.1% transmission */
 	for (i = 3; i--; )			/* remove peak from average */
