@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.56 2013/12/05 03:02:56 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.57 2018/08/21 17:46:09 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -279,7 +279,7 @@ init(			/* set up output file and start rpict */
 	normaspect(viewaspect(&ourview)*hmult/vmult, &pixaspect, &hres, &vres);
 	if (!nowarn && (hr != hres*hmult) | (vr != vres*vmult))
 		fprintf(stderr,
-		"%s: warning - resolution changed from %dx%d to %dx%d\n",
+		"%s: warning - changed resolution from %dx%d to %dx%d\n",
 				progname, hr, vr, hres*hmult, vres*vmult);
 	sprintf(hrbuf, "%d", hres);
 	rpargv[rpargc++] = "-x"; rpargv[rpargc++] = hrbuf;
