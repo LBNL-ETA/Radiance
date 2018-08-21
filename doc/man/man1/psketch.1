@@ -1,4 +1,4 @@
-.\" RCSid "$Id: psketch.1,v 1.2 2018/08/21 17:22:44 greg Exp $"
+.\" RCSid "$Id: psketch.1,v 1.3 2018/08/21 17:30:31 greg Exp $"
 .TH PSKETCH 1 8/26/2017 RADIANCE
 .SH NAME
 psketch - apply non-photorealistic rendering to select objects in picture
@@ -8,6 +8,8 @@ psketch - apply non-photorealistic rendering to select objects in picture
 .B "-m modname"
 ][
 .B "-M modfile"
+][
+.B "-s smoothing"
 ]
 .B octree
 .B input.hdr
@@ -31,6 +33,12 @@ The
 .I \-M
 option indicates a file of such modifier names that
 will be read in and included in the operation.
+The
+.I \-s
+option is a smoothing parameter to determine the amount of blur
+applied to the selected objects.
+The default value is 0.8, and the setting must be between 0 and 1.
+.PP
 The picture should have been created from a previous
 .I rpict(1)
 or
