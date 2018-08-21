@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.54 2018/08/08 04:15:18 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.55 2018/08/21 23:31:01 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -634,8 +634,10 @@ m_bsdf(OBJREC *m, RAY *r)
 						/* get BSDF data */
 	nd.sd = loadBSDF(m->oargs.sarg[hasthick]);
 						/* early shadow check #2 */
-	if (r->crtype & SHADOW && (nd.sd->tf == NULL) & (nd.sd->tb == NULL))
+	if (r->crtype & SHADOW && (nd.sd->tf == NULL) & (nd.sd->tb == NULL)) {
+		SDfreeCache(nd.sd);
 		return(1);
+	}
 						/* diffuse reflectance */
 	if (hitfront) {
 		cvt_sdcolor(nd.rdiff, &nd.sd->rLambFront);
@@ -691,6 +693,7 @@ m_bsdf(OBJREC *m, RAY *r)
 	}
 	if (ec) {
 		objerror(m, WARNING, "Illegal orientation vector");
+		SDfreeCache(nd.sd);
 		return(1);
 	}
 	setcolor(nd.cthru, 0, 0, 0);		/* consider through component */
@@ -698,6 +701,7 @@ m_bsdf(OBJREC *m, RAY *r)
 		compute_through(&nd);
 		if (r->crtype & SHADOW) {
 			RAY	tr;		/* attempt to pass shadow ray */
+			SDfreeCache(nd.sd);
 			if (rayorigin(&tr, TRANS, r, nd.cthru) < 0)
 				return(1);	/* no through component */
 			VCOPY(tr.rdir, r->rdir);
