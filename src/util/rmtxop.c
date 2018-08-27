@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.11 2017/08/28 15:59:46 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.12 2018/08/27 23:03:05 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -47,21 +47,6 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 		fputs(": cannot load matrix\n", stderr);
 		return(NULL);
 	}
-	if (op->transpose) {		/* transpose matrix? */
-		mtmp = rmx_transpose(mright);
-		if (mtmp == NULL) {
-			fputs(fname, stderr);
-			fputs(": transpose failed\n", stderr);
-			rmx_free(mright);
-			return(NULL);
-		}
-		if (verbose) {
-			fputs(fname, stderr);
-			fputs(": transposed rows and columns\n", stderr);
-		}
-		rmx_free(mright);
-		mright = mtmp;
-	}
 	if (op->nsf > 0) {		/* apply scalar(s) */
 		if (op->clen > 0) {
 			fputs("Options -s and -c are exclusive\n", stderr);
@@ -108,6 +93,21 @@ operate(RMATRIX *mleft, ROPERAT *op, const char *fname)
 		if (verbose)
 			fprintf(stderr, "%s: applied %d x %d transform\n",
 					fname, mtmp->ncomp, mright->ncomp);
+		rmx_free(mright);
+		mright = mtmp;
+	}
+	if (op->transpose) {		/* transpose matrix? */
+		mtmp = rmx_transpose(mright);
+		if (mtmp == NULL) {
+			fputs(fname, stderr);
+			fputs(": transpose failed\n", stderr);
+			rmx_free(mright);
+			return(NULL);
+		}
+		if (verbose) {
+			fputs(fname, stderr);
+			fputs(": transposed rows and columns\n", stderr);
+		}
 		rmx_free(mright);
 		mright = mtmp;
 	}
