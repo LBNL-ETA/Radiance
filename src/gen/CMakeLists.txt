@@ -77,6 +77,7 @@ file(COPY
   glaze2.cal
   illum.cal
   perezlum.cal
+  perezlum_c.cal
   rev.cal
   skybright.cal
   surf.cal

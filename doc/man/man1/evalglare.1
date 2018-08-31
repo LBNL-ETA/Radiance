@@ -1,10 +1,10 @@
 .TH "EVALGLARE" "1" "2016-06-15" "RADIANCE" "Radiance Manual"
 .SH "NAME"
-evalglare (version v1.30) - determines and evaluates glare sources within a 180 degree fisheye HDR image
+evalglare (version v2.05) - determines and evaluates glare sources within a 180 degree fisheye HDR image
 .br
 
 .SH "SYNOPSIS"
-\fBevalglare \fR[ \fB-s \fR] [ \fB-y \fR] [ \fB-Y \fR\fIvalue\fR ] [ \fB-A \fR\fImaskfile\fR [ \fB-B \fR\fIangle\fR ] [ \fB-b \fR\fIfactor\fR ] [ \fB-c \fR\fIcheckfile\fR ] [ \fB-f\fR ] [ \fB-t \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ \fB-T \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ -d ] [ \fB-r \fR\fIangle\fR ] [ \fB-i \fR\fIEv\fR ] [ \fB-I \fR\fIEv\fR \fIyfill_max\fR \fIy_fill_min\fR ] [ \fB-v \fR] [ \fB-V \fR] [ \fB-g \fR\fItype\fR ] [ \fB-G \fR\fItype\fR ] [ \fB-u \fR\fIr\fR \fIg\fR \fIb\fR ] [ \fB-vf \fR\fIviewfile\fR ] [ \fB-vt\fR\fIt\fR ] [ \fB-vv \fR\fIvertangle\fR ] [ \fB-vh \fR\fIhorzangle\fR ] [\fIhdrfile\fR]
+\fBevalglare \fR[ \fB-s \fR] [ \fB-y \fR] [ \fB-Y \fR\fIvalue\fR ] [ \fB-A \fR\fImaskfile\fR ][ \fB-B \fR\fIangle\fR ] [ \fB-b \fR\fIfactor\fR ] [ \fB-c \fR\fIcheckfile\fR ] [ \fB-f\fR ] [ \fB-t \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ \fB-T \fR\fIxpos\fR \fIypos\fR \fIangle\fR ] [ -d ] [ \fB-r \fR\fIangle\fR ] [ \fB-i \fR\fIEv\fR ] [ \fB-I \fR\fIEv\fR \fIyfill_max\fR \fIy_fill_min\fR ] [ \fB-v \fR] [ \fB-V \fR] [ \fB-g \fR\fItype\fR ] [ \fB-G \fR\fItype\fR ] [\fB-q\fR \fImode\fR ][ \fB-u \fR\fIr\fR \fIg\fR \fIb\fR ] [ \fB-vf \fR\fIviewfile\fR ] [ \fB-vt\fR\fIt\fR ] [ \fB-vv \fR\fIvertangle\fR ] [ \fB-vh \fR\fIhorzangle\fR ] [\fIhdrfile\fR]
 .br
 
 .SH "DESCRIPTION"
@@ -34,10 +34,7 @@ The header of the image is checked for obvious mistakes (but not for all possibl
 .br
    -invalid view specified. This might be caused by the use of pcomb or pcompos in advance. Evalglare is stopping. View can be overwritten by giving view options to the command line (see below)
 .br
-   
-.br
 
-‬
 .br
 \fB-A \fR\fImasking-file\fR
 .br
@@ -55,7 +52,7 @@ The header of the image is checked for obvious mistakes (but not for all possibl
 
 \fB-b \fR\fIfactor\fR
 .br
-       Threshold factor; if factor is over 100, it is used as constant threshold in cd/m2, regardless if a task position is given or not if factor is less than or equal to 100 and a task position is given, this factor multiplied by the average task luminance will be used as threshold for detecting the glare sources if factor is less than or equal to 100 and no task position is given, this factor multiplied by the average luminance in the entire picture will be used as threshold for detecting the glare sources, default 5.
+       Threshold factor; if \fIfactor\fR is larger than 100, it is used as constant threshold in cd/m2, regardless if a task position is given or not. If \fIfactor\fR is less or equal than 100 and a task position is given, this \fIfactor\fR multiplied by the average task luminance will be used as threshold for detecting the glare sources. If \fIfactor\fR is less than or equal to 100 and no task position is given, this factor multiplied by the average luminance in the entire picture will be used as threshold for detecting the glare sources (not recommended). Default value of \fIfactor\fR is 2000 (fixed threshold method).
 .br
 
 \fB-c \fR\fIfname\fR
@@ -113,6 +110,9 @@ The header of the image is checked for obvious mistakes (but not for all possibl
 .br
       
 .br
+\fB-q\fR \fImode\fR toggle modes for the background luminance calculation: 0 (default): CIE-mode Lb=(Ev-Edir)/pi; 1: Lb= mathematical average luminance without glare sources; 2(not recommended): Lb=Ev/pi
+.br
+
 \fB-r \fR\fIangle\fR
 .br
        search radius (angle in radians) between pixels, where \fBevalglare \fRtries to merge glare source pixels to the same glare source (default value: 0.2 radians)

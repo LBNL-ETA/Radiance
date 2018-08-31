@@ -4,6 +4,7 @@
  *      			Centre de Valbonne, 500 route des Lucioles, 06565 Sophia Antipolis Cedex, France
  * 				*BOUYGUES 
  *				1 Avenue Eugene Freyssinet, Saint-Quentin-Yvelines, France
+*  print colored output if activated in command line (-C). Based on model from A. Diakite, TU-Berlin. Implemented by J. Wienold, August 26 2018
 */
 
 #define  _USE_MATH_DEFINES
@@ -20,7 +21,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.16 2014/07/30 17:30:27 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.17 2018/08/31 16:01:45 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -53,6 +54,9 @@ float defangle_phi[] = {
 	90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 0, 20, 40, 60,
 	80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 0, 30, 60, 90, 120, 150, 180, 210,
 	240, 270, 300, 330, 0, 60, 120, 180, 240, 300, 0};
+/* default values for Berlin */
+float	locus[] = {
+-4.843e9,2.5568e6,0.24282e3,0.23258,-4.843e9,2.5568e6,0.24282e3,0.23258,-1.2848,1.7519,-0.093786};
 
 
 
@@ -140,7 +144,7 @@ double 	*c_perez;
 int	output=0;	/* define the unit of the output (sky luminance or radiance): */
 			/* visible watt=0, solar watt=1, lumen=2 */
 int	input=0;	/* define the input for the calulation */
-
+int 	color_output=0;
 int	suppress_warnings=0;
 
 	/* default values */
@@ -150,6 +154,7 @@ double  zenithbr = -1.0;
 double  betaturbidity = 0.1;
 double  gprefl = 0.2;
 int	S_INTER=0;
+
 
 	/* computed values */
 double  sundir[3];
@@ -207,6 +212,36 @@ int main(int argc, char** argv)
 				cloudy = argv[i][0] == '+' ? 2 : 1;
 				dosun = 0;
 				break;
+                        case 'C':
+                                if (argv[i][2] == 'I' && argv[i][3] == 'E' ) {
+                                locus[0] = -4.607e9;
+				locus[1] = 2.9678e6;
+				locus[2] = 0.09911e3;
+				locus[3] = 0.244063;
+				locus[4] = -2.0064e9;
+				locus[5] = 1.9018e6;
+				locus[6] = 0.24748e3;
+				locus[7] = 0.23704;
+				locus[8] = -3.0;
+				locus[9] = 2.87;
+				locus[10] = -0.275;
+                                 }else{ color_output = 1;
+                                 }
+                                break;
+			case 'l':
+				locus[0] = atof(argv[++i]);
+				locus[1] = atof(argv[++i]);
+				locus[2] = atof(argv[++i]);
+				locus[3] = atof(argv[++i]);
+				locus[4] = locus[0];
+				locus[5] = locus[1];
+				locus[6] = locus[2];
+				locus[7] = locus[3];
+				locus[8] = atof(argv[++i]);
+				locus[9] = atof(argv[++i]);
+				locus[10] = atof(argv[++i]);
+				break;
+
 			case 't':
 				betaturbidity = atof(argv[++i]);
 				break;
@@ -676,14 +711,31 @@ void printsky()
 		printf("0\n0\n");
 		printf("4 %f %f %f %f\n", sundir[0], sundir[1], sundir[2], 2*half_sun_angle);
 	}
-	
-
-	printf("\nvoid brightfunc skyfunc\n");
-	printf("2 skybright perezlum.cal\n");
+/* print colored output if activated in command line (-C). Based on model from A. Diakite, TU-Berlin. Implemented by J. Wienold, August 26 2018 */	
+	if  (color_output==1 && skyclearness < 4.5 && skyclearness >1.065 )  
+	{
+	fprintf(stderr, "	warning: sky clearness(epsilon)= %f \n",skyclearness);
+	fprintf(stderr, "	warning: intermediate sky!! \n");
+	fprintf(stderr, "	warning: color model for intermediate sky pending  \n");
+	fprintf(stderr, "	warning: no color output ! \n");
+	color_output=0;
+	}
+	if (color_output==1)
+	{
+	printf("\nvoid colorfunc skyfunc\n");
+	printf("4 skybright_r skybright_g skybright_b perezlum_c.cal\n");
 	printf("0\n");
-	printf("10 %.3e %.3e %lf %lf %lf %lf %lf %f %f %f \n", diffnormalization, groundbr,
+	printf("22 %.3e %.3e %lf %lf %lf %lf %lf %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", diffnormalization, groundbr,
 	    	*(c_perez+0),*(c_perez+1),*(c_perez+2),*(c_perez+3),*(c_perez+4), 
-	    	sundir[0], sundir[1], sundir[2]);
+	    	sundir[0], sundir[1], sundir[2],skyclearness,locus[0],locus[1],locus[2],locus[3],locus[4],locus[5],locus[6],locus[7],locus[8],locus[9],locus[10]);
+	}else{
+        printf("\nvoid brightfunc skyfunc\n");
+        printf("2 skybright perezlum.cal\n");
+        printf("0\n");
+        printf("10 %.3e %.3e %lf %lf %lf %lf %lf %f %f %f \n", diffnormalization, groundbr,
+                *(c_perez+0),*(c_perez+1),*(c_perez+2),*(c_perez+3),*(c_perez+4),
+                sundir[0], sundir[1], sundir[2]);
+	 }
 	
 }
 
@@ -742,7 +794,7 @@ void usage_error(char* msg)			/* print usage error and quit */
 	fprintf(stderr, "	-E global-horizontal-irradiance (W/m^2)\n\n");
 	fprintf(stderr, "	Output specification with option:\n");
 	fprintf(stderr, "	-O [0|1|2]  (0=output in W/m^2/sr visible, 1=output in W/m^2/sr solar, 2=output in candela/m^2), default is 0 \n");
-	fprintf(stderr, "	gendaylit version 2.4 (2013/09/04)  \n\n");
+	fprintf(stderr, "	gendaylit version 2.5 (2018/04/18)  \n\n");
 	exit(1);
 }
 

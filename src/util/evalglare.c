@@ -1,7 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.7 2017/08/12 15:11:09 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.8 2018/08/31 16:01:45 greg Exp $";
 #endif
-/* EVALGLARE V2.00
+/* EVALGLARE V2.06
  * Evalglare Software License, Version 2.0
  *
  * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
@@ -318,17 +318,26 @@ changed masking threshold to 0.05 cd/m2
    */
 /* evalglare.c, v2.02 2017/02/28  change of warning message, when invalid exposure setting is found. Reason: tab removal is not in all cases the right measure - it depends which tool caused the invalid exposure entry   */
 
-/* evalglare.c, v2.03 2017/08/12  ad of -O option - disk replacement by providing luminance, not documented
-remove some minor memory leakages, clean up initialization by C. Reetz
+/* evalglare.c, v2.03 2017/08/04  ad of -O option - disk replacement by providing luminance, not documented
   */
 
+/* evalglare.c, v2.04 2017/08/04  adding -q option: use of Ev/pi as background luminance. not documented. no combination with -n option!!!
+  */
 
- 
-#ifndef EVALGLARE  
+/* evalglare.c, v2.05 2018/08/28  change of the -q option for the choice of the background luminance calculation mode: 0: CIE method (Ev-Edir)/pi, 1: mathematical correct average background luminance, 2: Ev/pi. 
+change of default options: 
+- cosinus weighted calculation of the background luminance (according to CIE) is now default.
+- absolute threshold for the glare source detection is now default (2000cd/m2), based on study of C. Pierson 
+  */
+
+/* evalglare.c, v2.06 2018/08/29  
+change of default value of multiplier b to 5.0, if task options (-t or -T ) are activated AND -b NOT used. To be downward compatible when using the task method.
+  */
+
+   
 #define EVALGLARE
-#endif
 #define PROGNAME "evalglare"
-#define VERSION "2.03 release 12.08.2017 by EPFL, J.Wienold"
+#define VERSION "2.06 release 29.08.2018 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -1393,7 +1402,7 @@ int main(int argc, char **argv)
         pict *pm = pict_create();
 	int     skip_second_scan,calcfast,age_corr,cut_view,cut_view_type,calc_vill, output, detail_out2, x1,y1, fill, yfillmax, yfillmin,
 		ext_vill, set_lum_max, set_lum_max2, img_corr,x_disk,y_disk,task_color, i_splitstart,zones,act_gsn,splitgs,
-		i_split, posindex_2, task_lum, checkfile, rval, i, i_max, x, y,x2,y2,x_zone,y_zone, i_z1, i_z2,
+		i_split, posindex_2, task_lum, checkfile, rval, i, i_max, x, y,x2,y2,x_zone,y_zone, i_z1, i_z2, thres_activate,
 		igs, actual_igs, lastpixelwas_gs, icol, xt, yt, change,checkpixels, before_igs, sgs, splithigh,uniform_gs,x_max, y_max,y_mid,
 		detail_out, posindex_picture, non_cos_lb, rx, ry, rmx,rmy,apply_disability,band_calc,band_color,masking,i_mask,no_glaresources,force;
 	double  LUM_replace,lum_total_max,age_corr_factor,age,dgp_ext,dgp,low_light_corr,omega_cos_contr, setvalue, lum_ideal, E_v_contr, sigma,om,delta_E,
@@ -1410,45 +1419,40 @@ int main(int argc, char **argv)
 	float lum_task, lum_thres, dgi,  vcp, cgi, ugr, limit, dgr, 
 		abs_max, Lveil;
 	char maskfile[500],file_out[500], file_out2[500], version[500];
-	char *cline = NULL;
+	char *cline;
 	VIEW userview = STDVIEW;
 	int gotuserview = 0;
-	struct muc_rvar* s_mask = NULL;
-	struct muc_rvar* s_band = NULL;
-	struct muc_rvar* s_z1 = NULL;
-	struct muc_rvar* s_z2 = NULL;
-	struct muc_rvar* s_noposweight = NULL;
-	struct muc_rvar* s_posweight = NULL;
-	struct muc_rvar* s_posweight2 = NULL;
-
-	// initializing variables ....
-	Lveil = lum_backg_cos = 0;
-	dgi = ugr = ugp = ugr_exp = dgi_mod = cgi = dgr = vcp = 0.0;
-	lum_task = lum_thres = limit = 0;
+	struct muc_rvar* s_mask;
 	s_mask = muc_rvar_create();
-	muc_rvar_set_dim(s_mask, 1);
+        muc_rvar_set_dim(s_mask, 1);
 	muc_rvar_clear(s_mask);
+	struct muc_rvar* s_band;
 	s_band = muc_rvar_create();
-	muc_rvar_set_dim(s_band, 1);
+        muc_rvar_set_dim(s_band, 1);
 	muc_rvar_clear(s_band);
+	struct muc_rvar* s_z1;
 	s_z1 = muc_rvar_create();
-	muc_rvar_set_dim(s_z1, 1);
+        muc_rvar_set_dim(s_z1, 1);
 	muc_rvar_clear(s_z1);
 
+	struct muc_rvar* s_z2;
 	s_z2 = muc_rvar_create();
-	muc_rvar_set_dim(s_z2, 1);
+        muc_rvar_set_dim(s_z2, 1);
 	muc_rvar_clear(s_z2);
 
+	struct muc_rvar* s_noposweight;
 	s_noposweight = muc_rvar_create();
-	muc_rvar_set_dim(s_noposweight, 1);
+        muc_rvar_set_dim(s_noposweight, 1);
 	muc_rvar_clear(s_noposweight);
  
+	struct muc_rvar* s_posweight;
 	s_posweight = muc_rvar_create();
-	muc_rvar_set_dim(s_posweight, 1);
+        muc_rvar_set_dim(s_posweight, 1);
 	muc_rvar_clear(s_posweight);
 
+	struct muc_rvar* s_posweight2;
 	s_posweight2 = muc_rvar_create();
-	muc_rvar_set_dim(s_posweight2, 1);
+        muc_rvar_set_dim(s_posweight2, 1);
 	muc_rvar_clear(s_posweight2);
 
 	/*set required user view parameters to invalid values*/
@@ -1515,7 +1519,7 @@ int main(int argc, char **argv)
 	omega_cos_contr = 0.0;
 	lum_ideal = 0.0;
 	max_angle = 0.2;
-	lum_thres = 5.0;
+	lum_thres = 2000.0;
 	task_lum = 0;
 	sgs = 0;
 	splithigh = 1;
@@ -1533,7 +1537,7 @@ int main(int argc, char **argv)
 	c1 = 5.87e-05;
 	c2 = 0.092;
 	c3 = 0.159;
-	non_cos_lb = 1;
+	non_cos_lb = 0;
 	posindex_2 = 0;
 	task_color = 0;
 	limit = 50000.0;
@@ -1556,6 +1560,7 @@ int main(int argc, char **argv)
 	i_mask=0;
         actual_igs=0;
 	LUM_replace=0;
+	thres_activate=0;
 /* command line for output picture*/
 
 	cline = (char *) malloc(CLINEMAX+1);
@@ -1606,6 +1611,7 @@ int main(int argc, char **argv)
 			break;
 		case 'b':
 			lum_thres = atof(argv[++i]);
+			thres_activate = 1;
 			break;
 		case 'c':
 			checkfile = 1;
@@ -1706,8 +1712,12 @@ int main(int argc, char **argv)
 			break;
 
 
-		case 'n':
+/* deactivated		case 'n':
 			non_cos_lb = 0;
+			break;
+*/
+		case 'q':
+			non_cos_lb = atoi(argv[++i]);
 			break;
 
 		case 't':
@@ -1810,6 +1820,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+/* set multiplier for task method to 5, if not specified */
+
+if ( task_lum == 1 && thres_activate == 0){
+		lum_thres = 5.0;
+}
 /*fast calculation, if gendgp_profile is used: No Vertical illuminance calculation, only dgp is calculated*/
 
 if (output == 1 && ext_vill == 1 ) {
@@ -2108,8 +2123,7 @@ if (cut_view==2) {
  	lum_pos_mean= lum_pos_mean/sang;
  	lum_pos2_mean= lum_pos2_mean/sang;
 
-	// XXX: sure this works? I'd suggest parenthesis.
-	if ((set_lum_max2 >= 1 && E_v_contr > 0 && (E_vl_ext - E_v) > 0) || set_lum_max2==3) {
+	if ((set_lum_max2 >= 1 && E_v_contr > 0 && (E_vl_ext - E_v) > 0 ) || set_lum_max2==3) {
 
 		if (set_lum_max2<3){
 		lum_ideal = (E_vl_ext - E_v + E_v_contr) / omega_cos_contr;
@@ -2540,6 +2554,11 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 			lum_backg = lum_backg_cos;
 	}
 
+	if (non_cos_lb == 2) {
+			lum_backg = E_v / 3.1415927;
+	}
+
+
 /* file writing NOT here 
 	if (checkfile == 1) {
 		pict_write(p, file_out);
@@ -2921,33 +2940,15 @@ has to be re-written from scratch....
 	}
 
 
-	pict_free(p);
-	pict_free(pm);
-	muc_rvar_free(s_mask);
-	muc_rvar_free(s_band);
-	muc_rvar_free(s_z1);
-	muc_rvar_free(s_z2);
-	muc_rvar_free(s_noposweight);
-	muc_rvar_free(s_posweight);
-	muc_rvar_free(s_posweight2);
-	free(cline);
+
 	return EXIT_SUCCESS;
+	exit(0);
 
   userr:
 	fprintf(stderr,
 			"Usage: %s [-s][-d][-c picture][-t xpos ypos angle] [-T xpos ypos angle] [-b fact] [-r angle] [-y] [-Y lum] [-i Ev] [-I Ev ymax ymin] [-v] picfile\n",
 			progname);
-	pict_free(p);
-	pict_free(pm);
-	muc_rvar_free(s_mask);
-	muc_rvar_free(s_band);
-	muc_rvar_free(s_z1);
-	muc_rvar_free(s_z2);
-	muc_rvar_free(s_noposweight);
-	muc_rvar_free(s_posweight);
-	muc_rvar_free(s_posweight2);
-	free(cline);
-	return 1;
+	exit(1);
 }
 
 

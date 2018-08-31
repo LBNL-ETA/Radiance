@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.35 2014/07/30 17:30:27 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.36 2018/08/31 16:01:45 greg Exp $
 #
 # Makefile for object generation programs
 #
@@ -17,7 +17,7 @@ PROGS = genbox gensky xform genblinds genrev genworm gendaylit gendaymtx \
 		gensurf genprism replmarks mkillum mksource genclock
 
 LIBFILES = illum.cal rev.cal skybright.cal surf.cal clockface.hex \
-		glaze1.cal glaze2.cal perezlum.cal
+		glaze1.cal glaze2.cal perezlum.cal perezlum_c.cal
 
 all:	$(PROGS)
 
