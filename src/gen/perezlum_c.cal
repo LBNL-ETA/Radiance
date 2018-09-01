@@ -1,0 +1,77 @@
+{ RCSid $Id: perezlum_c.cal,v 1.1 2018/09/01 16:42:39 greg Exp $ }
+
+{
+     All-weather Angular Sky Luminance Distribution . Modiefied for colored sky. Model by Aicha Diakite (TU-Berlin), implementation by J. Wienold (EPFL)
+
+     Additional arguments required for calculation of skybright:
+
+	A1			- diffus normalization
+	A2			- ground brightness
+	A3,A4,A5,A6,A7		- coefficients for the Perez model
+	A8,A9,A10		- sun direction
+	A11			- perez parameter epsilon
+	A12-A22			- locus values
+}
+
+A11 = arg(11);
+A12 = arg(12);
+A13 = arg(13);
+A14 = arg(14);
+A15 = arg(15);
+A16 = arg(16);
+A17 = arg(17);
+A18 = arg(18);
+A19 = arg(19);
+A20 = arg(20);
+A21 = arg(21);
+A22 = arg(22);
+
+al= -180.956;
+be= 78.648;
+
+
+
+
+skybright_r = 2.5693*X_CIE-1.1668*lum-0.3984*Z_CIE;
+skybright_g = -1.0221*X_CIE+1.9783*lum+0.0438*Z_CIE;
+skybright_b =-0.0747*X_CIE-0.2519*lum+1.1772*Z_CIE;
+
+
+
+X_CIE=lum*xd/yd;
+Z_CIE=lum*(1-xd-yd)/yd;
+
+
+yd=A20*xd*xd+A21*xd+A22;
+
+xd = if((cct-7000),xd2,xd1);
+
+xd1 = A12/(cct*cct*cct) +A13/(cct*cct) +A14/cct + A15;
+
+xd2 = A16/(cct*cct*cct) +A17/(cct*cct) +A18/cct + A19;
+
+cct = if((1.065-A11),6191,1000000/(al+be*(log10(lum))));
+
+
+
+
+lum = skybright ;
+
+skybright = wmean((Dz+1.01)^10, intersky, (Dz+1.01)^-10, A2 );
+
+wmean(a, x, b, y) = (a*x+b*y)/(a+b);
+
+intersky = if( (Dz-0.01),  
+		A1 * (1 + A3*Exp(A4/Dz) ) * ( 1 + A5*Exp(A6*gamma) + A7*cosgamma*cosgamma ),
+		A1 * (1 + A3*Exp(A4/0.01) ) * ( 1 + A5*Exp(A6*gamma) + A7*cosgamma*cosgamma ) );
+
+		 	 
+
+
+cosgamma = Dx*A8 + Dy*A9 + Dz*A10;
+
+gamma = Acos(cosgamma);		{ angle from sun to this point in sky }
+
+zt = Acos(A10);			{ angle from zenith to sun }
+
+eta = Acos(Dz);			{ angle from zenith to this point in sky }

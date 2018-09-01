@@ -2232,3 +2232,6 @@ for comparing BSDFs.
 
 Fixed issue with pfilt -m option and uneven image size changes pointed
 out by Rob Shakespeare.
+
+Updates to evalglare and gendaylit from Jan Wienold, including new
+colored sky option.
