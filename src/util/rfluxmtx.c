@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.45 2017/05/13 01:50:54 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.46 2018/10/01 15:51:48 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -18,7 +18,9 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.45 2017/05/13 01:50:54 greg Exp
 #include "triangulate.h"
 #include "platform.h"
 
-#define MAXRCARG	512
+#ifndef MAXRCARG
+#define MAXRCARG	10000
+#endif
 
 char		*progname;		/* global argv[0] */
 
