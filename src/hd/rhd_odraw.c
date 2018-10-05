@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.18 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_odraw.c,v 3.19 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Routines for drawing samples using depth buffer checks.
@@ -60,7 +60,7 @@ static int blockedge(struct ODview *vp, int bi0, int bi1);
 static void odDrawSamp(int vn, int id);
 
 
-extern int
+int
 odInit(				/* initialize drawing routines */
 	int	n
 )
@@ -174,7 +174,7 @@ sampcmp(			/* sample order, descending proximity */
 	const void	*s1
 )
 {
-	register double	diff = odS.closeness(*(int*)s1) - odS.closeness(*(int*)s0);
+	double	diff = odS.closeness(*(int*)s1) - odS.closeness(*(int*)s0);
 
 	return (diff > FTINY ? 1 : diff < -FTINY ? -1 : 0);
 }
@@ -192,8 +192,8 @@ odAllocBlockSamp(	/* allocate sample from block */
 	int	hl, vl;
 	VIEW	*vw;
 	int	res[2];
-	register struct ODblock	*bp;
-	register int	i, j;
+	struct ODblock	*bp;
+	int	i, j;
 					/* get block */
 	hl = hh*odView[vn].hlow/odView[vn].hhi;
 	vl = vh*odView[vn].vlow/odView[vn].vhi;
@@ -261,7 +261,7 @@ gotit:
 }
 
 
-extern void
+void
 odSample(			/* add a sample value */
 	COLR	c,
 	FVECT	d,
@@ -270,10 +270,10 @@ odSample(			/* add a sample value */
 {
 	FVECT	disp;
 	double	d0, d1, h, v, prox;
-	register VIEW	*vw;
+	VIEW	*vw;
 	int	hh, vh;
 	int	res[2];
-	register int	i, id;
+	int	i, id;
 
 	DCHECK(odS.nsamp<=0, CONSISTENCY, "no samples allocated in odSample");
 						/* add value to each view */
@@ -328,7 +328,7 @@ odSample(			/* add a sample value */
 }
 
 
-extern void
+void
 odRemap(			/* recompute tone mapping */
 	int	newhist
 )
@@ -339,10 +339,10 @@ odRemap(			/* recompute tone mapping */
 }
 
 
-extern void
+void
 odRedrawAll(void)				/* mark all samples for redraw */
 {
-	register int	i;
+	int	i;
 
 	if ((needmapping&(NEWMAP|NEWRGB)) == (NEWMAP|NEWRGB))
 		return;			/* will be called later, anyway */
@@ -355,7 +355,7 @@ odRedrawAll(void)				/* mark all samples for redraw */
 }
 
 
-extern void
+void
 odRedraw(	/* redraw view region */
 	int	vn,
 	int	hmin,
@@ -365,8 +365,8 @@ odRedraw(	/* redraw view region */
 )
 {
 	int	i, j;
-	register struct ODblock	*bp;
-	register int	k;
+	struct ODblock	*bp;
+	int	k;
 
 	if ((vn<0) | (vn>=odNViews))
 		return;
@@ -395,7 +395,7 @@ odRedraw(	/* redraw view region */
 }
 
 
-extern void
+void
 odDepthMap(			/* assign depth map for view */
 	int	vn,
 	GLfloat	*dm
@@ -403,7 +403,7 @@ odDepthMap(			/* assign depth map for view */
 {
 	double	d0, d1;
 	int	i, j, hmin, hmax, vmin, vmax;
-	register int	k, l;
+	int	k, l;
 
 	if (dm == NULL) {			/* free edge map */
 		if ((vn<0) | (vn>=odNViews))
@@ -470,14 +470,14 @@ odDepthMap(			/* assign depth map for view */
 }
 
 
-extern void
+void
 odUpdate(				/* update this view */
 	int	vn
 )
 {
 	static short	primes[] = {9431,6803,4177,2659,1609,887,587,251,47,1};
 	int	myprime;
-	register int	i, n;
+	int	i, n;
 
 	DCHECK(vn<0 | vn>=odNViews, CONSISTENCY,
 			"bad view number in odUpdate");
@@ -553,7 +553,7 @@ static
 clip_end(p, o, vp)			/* clip line segment to view */
 GLshort	p[3];
 short	o[2];
-register struct ODview	*vp;
+struct ODview	*vp;
 {
 	if (p[0] < 0) {
 		p[1] = -o[0]*(p[1]-o[1])/(p[0]-o[0]) + o[1];
@@ -581,13 +581,13 @@ static int
 make_arms(		/* make arms for triangle fan */
 	GLshort	ar[MAXFAN][3],
 	short	cp[2],
-	register struct ODview	*vp,
+	struct ODview	*vp,
 	double	sz
 )
 {
 	int	na, dv;
 	double	hrad, vrad, phi;
-	register int	i;
+	int	i;
 
 	DCHECK(sz > 1, CONSISTENCY, "super-unary size in make_arms");
 	na = MAXFAN*sz + 0.5;			/* keep arc length constant */
@@ -610,14 +610,14 @@ make_arms(		/* make arms for triangle fan */
 
 static int
 depthchange(		/* check depth discontinuity */
-	register struct ODview	*vp,
+	struct ODview	*vp,
 	int	x0,
 	int	y0,
 	int	x1,
 	int	y1
 )
 {
-	register double	d0, d1;
+	double	d0, d1;
 
 	DCHECK(x0<0 | x0>=vp->hhi | y0<0 | y0>=vp->vhi,
 			CONSISTENCY, "coordinates off view in depthchange");
@@ -636,7 +636,7 @@ static void
 clip_edge(			/* clip line segment to depth edge */
 	GLshort	p[3],
 	short	o[2],
-	register struct ODview	*vp
+	struct ODview	*vp
 )
 {
 	int	x, y, xstep, ystep, rise, rise2, run, run2, n;
@@ -679,9 +679,9 @@ clip_edge(			/* clip line segment to depth edge */
 
 static int
 getblock(			/* get block index */
-	register struct ODview	*vp,
-	register int	h,
-	register int	v
+	struct ODview	*vp,
+	int	h,
+	int	v
 )
 {
 	if ((h<0) | (h>=vp->hhi) | (v<0) | (v>=vp->vhi))
@@ -692,9 +692,9 @@ getblock(			/* get block index */
 
 static int
 blockedge(			/* check for edge between blocks? */
-	register struct ODview	*vp,
-	register int	bi0,
-	register int	bi1
+	struct ODview	*vp,
+	int	bi0,
+	int	bi1
 )
 {
 	if (bi1 == bi0)
@@ -713,15 +713,15 @@ blockedge(			/* check for edge between blocks? */
 static void
 odDrawSamp(			/* draw view sample */
 	int	vn,
-	register int	id
+	int	id
 )
 {
 	GLshort	arm[MAXFAN][3];
 	int	narms, blockindex;
-	register struct ODview	*vp;
+	struct ODview	*vp;
 	double	size;
 	int	home_edges;
-	register int	i;
+	int	i;
 
 	vp = odView + vn;
 	blockindex = getblock(vp, odS.ip[id][0], odS.ip[id][1]);

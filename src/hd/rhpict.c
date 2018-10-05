@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.19 2017/03/29 01:10:23 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.20 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -182,12 +182,12 @@ dopicture(			/* render view from holodeck */
 
 static void
 render_frame(		/* render frame from beam values */
-	register PACKHEAD	*bl,
+	PACKHEAD	*bl,
 	int	nb
 )
 {
-	register HDBEAMI	*bil;
-	register int	i;
+	HDBEAMI	*bil;
+	int	i;
 
 	if (nb <= 0) return;
 	if ((bil = (HDBEAMI *)malloc(nb*sizeof(HDBEAMI))) == NULL)
@@ -250,8 +250,8 @@ endpicture(void)			/* finish and write out pixels */
 {
 	int	lastr = -1, nunrend = 0;
 	int32	lastp, lastrp;
-	register int32	p;
-	register double	d;
+	int32	p;
+	double	d;
 				/* compute final pixel values */
 	for (p = hres*vres; p--; ) {
 		if (myweight[p] <= FTINY) {
@@ -318,7 +318,7 @@ initialize(void)			/* initialize holodeck and buffers */
 
 void
 eputs(s)			/* put error message to stderr */
-register char  *s;
+char  *s;
 {
 	static int  midline = 0;
 

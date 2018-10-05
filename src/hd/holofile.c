@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: holofile.c,v 3.60 2016/03/06 01:13:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: holofile.c,v 3.61 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Routines for managing holodeck files
@@ -90,7 +90,7 @@ hdalloc(		/* allocate and set holodeck section based on grid */
 )
 {
 	HOLO	hdhead;
-	register HOLO	*hp;
+	HOLO	*hp;
 	int	n;
 				/* copy grid to temporary header */
 	memcpy((void *)&hdhead, (void *)hproto, sizeof(HDGRID));
@@ -126,7 +126,7 @@ hdrealloc(	/* (re)allocate memory, retry then error */
 	char	*rout
 )
 {
-	register char	*newp;
+	char	*newp;
 					/* call malloc/realloc */
 	if (ptr == NULL) newp = (char *)malloc(siz);
 	else newp = (char *)realloc((void *)ptr, siz);
@@ -146,7 +146,7 @@ hdrealloc(	/* (re)allocate memory, retry then error */
 
 void
 hdattach(	/* start tracking file fragments for some section */
-	register int	fd,
+	int	fd,
 	int	wr
 )
 {
@@ -169,7 +169,7 @@ hdattach(	/* start tracking file fragments for some section */
 
 void
 hdrelease(		/* stop tracking file fragments for some section */
-	register int	fd
+	int	fd
 )
 {
 	if ((fd < 0) | (fd >= nhdfragls) || !hdfragl[fd].nlinks)
@@ -182,7 +182,7 @@ hdrelease(		/* stop tracking file fragments for some section */
 }
 
 
-extern HOLO *
+HOLO *
 hdinit(	/* initialize a holodeck section in a file */
 	int	fd,			/* corresponding file descriptor */
 	HDGRID	*hproto		/* holodeck section grid */
@@ -191,8 +191,8 @@ hdinit(	/* initialize a holodeck section in a file */
 	off_t	rtrunc;
 	off_t	fpos;
 	int	writable;
-	register HOLO	*hp;
-	register int	n;
+	HOLO	*hp;
+	int	n;
 					/* prepare for system errors */
 	errno = 0;
 	if ((fpos = lseek(fd, (off_t)0, SEEK_CUR)) < 0)
@@ -272,13 +272,13 @@ memerr:
 
 void
 hdmarkdirty(		/* mark holodeck directory position dirty */
-	register HOLO	*hp,
+	HOLO	*hp,
 	int	i
 )
 {
 	static BEAMI	smudge = {0, -1};
 	int	mindist, minpos;
-	register int	j;
+	int	j;
 
 	if (!hp->dirty++) {			/* write smudge first time */
 		if (lseek(hp->fd, biglob(hp)->fo+(i-1)*sizeof(BEAMI),
@@ -324,13 +324,13 @@ hdmarkdirty(		/* mark holodeck directory position dirty */
 }
 
 
-extern int
+int
 hdsync(			/* update beams and directory on disk */
-	register HOLO	*hp,
+	HOLO	*hp,
 	int	all
 )
 {
-	register int	j, n;
+	int	j, n;
 
 	if (hp == NULL) {		/* do all holodecks */
 		n = 0;
@@ -364,7 +364,7 @@ hdmemuse(		/* return memory usage (in bytes) */
 )
 {
 	long	total = 0;
-	register int	i, j;
+	int	i, j;
 
 	for (j = 0; hdlist[j] != NULL; j++) {
 		total += blglob(hdlist[j])->nrm * sizeof(RAYVAL);
@@ -388,7 +388,7 @@ hdmemuse(		/* return memory usage (in bytes) */
 }
 
 
-extern off_t
+off_t
 hdfilen(		/* return file length for fd */
 	int	fd
 )
@@ -408,13 +408,13 @@ hdfilen(		/* return file length for fd */
 }
 
 
-extern off_t
+off_t
 hdfiluse(	/* compute file usage (in bytes) */
 	int	fd			/* open file descriptor to check */
 )
 {
 	off_t	total = 0;
-	register int	j;
+	int	j;
 
 	for (j = 0; hdlist[j] != NULL; j++) {
 		if (hdlist[j]->fd != fd)
@@ -433,10 +433,10 @@ hdfiluse(	/* compute file usage (in bytes) */
 }
 
 
-extern RAYVAL *
+RAYVAL *
 hdnewrays(	/* allocate space for add'l rays and return pointer */
-	register HOLO	*hp,
-	register int	i,
+	HOLO	*hp,
+	int	i,
 	int	nr			/* number of new rays desired */
 )
 {
@@ -478,13 +478,13 @@ hdnewrays(	/* allocate space for add'l rays and return pointer */
 }
 
 
-extern BEAM *
+BEAM *
 hdgetbeam(	/* get beam (from file if necessary) */
-	register HOLO	*hp,
-	register int	i
+	HOLO	*hp,
+	int	i
 )
 {
-	register int	n;
+	int	n;
 
 	CHECK((i < 1) | (i > nbeams(hp)),
 			CONSISTENCY, "bad beam index given to hdgetbeam");
@@ -511,11 +511,11 @@ hdgetbeam(	/* get beam (from file if necessary) */
 
 int
 hdfilord(	/* order beams for quick loading */
-	register const void	*hb1,
-	register const void	*hb2
+	const void	*hb1,
+	const void	*hb2
 )
 {
-	register off_t	c;
+	off_t	c;
 				/* residents go first */
 	if (((HDBEAMI*)hb2)->h->bl[((HDBEAMI*)hb2)->b] != NULL)
 		return(((HDBEAMI*)hb1)->h->bl[((HDBEAMI*)hb1)->b] == NULL);
@@ -531,17 +531,17 @@ hdfilord(	/* order beams for quick loading */
 }
 
 
-extern void
+void
 hdloadbeams(	/* load a list of beams in optimal order */
-	register HDBEAMI	*hb,	/* list gets sorted by hdfilord() */
+	HDBEAMI	*hb,	/* list gets sorted by hdfilord() */
 	int	n,			/* list length */
 	void	(*bf)(BEAM *bp, HDBEAMI *hb)	/* callback function (optional) */
 )
 {
 	unsigned	origcachesize, memuse;
 	int	bytesloaded, needbytes, bytes2free;
-	register BEAM	*bp;
-	register int	i;
+	BEAM	*bp;
+	int	i;
 					/* precheck consistency */
 	if (n <= 0) return;
 	for (i = n; i--; )
@@ -578,15 +578,15 @@ hdloadbeams(	/* load a list of beams in optimal order */
 }
 
 
-extern int
+int
 hdfreefrag(			/* free a file fragment */
 	HOLO	*hp,
 	int	i
 )
 {
-	register BEAMI	*bi = &hp->bi[i];
-	register struct fraglist	*f;
-	register int	j, k;
+	BEAMI	*bi = &hp->bi[i];
+	struct fraglist	*f;
+	int	j, k;
 
 	if (bi->nrd <= 0)
 		return(0);
@@ -615,7 +615,7 @@ hdfreefrag(			/* free a file fragment */
 	}
 #endif
 	if (j % FRAGBLK == 0) {		/* more (or less) free list space */
-		register BEAMI	*newp;
+		BEAMI	*newp;
 		if (f->fi == NULL)
 			newp = (BEAMI *)malloc((j+FRAGBLK)*sizeof(BEAMI));
 		else
@@ -658,15 +658,15 @@ hdfreefrag(			/* free a file fragment */
 }
 
 
-extern int
+int
 hdfragOK(	/* get fragment list status for file */
 	int	fd,
 	int	*listlen,
-	register int32	*listsiz
+	int32	*listsiz
 )
 {
-	register struct fraglist	*f;
-	register int	i;
+	struct fraglist	*f;
+	int	i;
 
 	if ((fd < 0) | (fd >= nhdfragls) || !(f = &hdfragl[fd])->nlinks)
 		return(0);		/* listless */
@@ -689,8 +689,8 @@ hdallocfrag(		/* allocate a file fragment */
 	uint32	nrays
 )
 {
-	register struct fraglist	*f;
-	register int	j;
+	struct fraglist	*f;
+	int	j;
 	off_t	nfo;
 
 	if (nrays == 0)
@@ -715,8 +715,8 @@ hdallocfrag(		/* allocate a file fragment */
 
 int
 hdsyncbeam(		/* sync beam in memory with beam on disk */
-	register HOLO	*hp,
-	register int	i
+	HOLO	*hp,
+	int	i
 )
 {
 	int	fragfreed;
@@ -755,10 +755,10 @@ hdsyncbeam(		/* sync beam in memory with beam on disk */
 }
 
 
-extern int
+int
 hdfreebeam(		/* free beam, writing if dirty */
-	register HOLO	*hp,
-	register int	i
+	HOLO	*hp,
+	int	i
 )
 {
 	int	nchanged;
@@ -797,10 +797,10 @@ hdfreebeam(		/* free beam, writing if dirty */
 }
 
 
-extern int
+int
 hdkillbeam(		/* delete beam from holodeck */
-	register HOLO	*hp,
-	register int	i
+	HOLO	*hp,
+	int	i
 )
 {
 	int	nchanged;
@@ -845,13 +845,13 @@ hdkillbeam(		/* delete beam from holodeck */
 
 int
 hdlrulist(	/* add beams from holodeck to LRU list */
-	register HDBEAMI	*hb,		/* beam list */
+	HDBEAMI	*hb,		/* beam list */
 	int	nents,				/* current list length */
 	int	n,				/* maximum list length */
-	register HOLO	*hp			/* section we're adding from */
+	HOLO	*hp			/* section we're adding from */
 )
 {
-	register int	i, j;
+	int	i, j;
 					/* insert each beam from hp */
 	for (i = 1; i <= nbeams(hp); i++) {
 		if (hp->bl[i] == NULL)		/* check if loaded */
@@ -879,13 +879,13 @@ hdlrulist(	/* add beams from holodeck to LRU list */
 int
 hdfreecache(		/* free up cache space, writing changes */
 	int	pct,				/* maximum percentage to free */
-	register HOLO	*honly			/* NULL means check all */
+	HOLO	*honly			/* NULL means check all */
 )
 {
 	HDBEAMI	hb[FREEBEAMS];
 	int	freetarget;
 	int	n;
-	register int	i;
+	int	i;
 #ifdef DEBUG
 	unsigned	membefore;
 
@@ -921,12 +921,12 @@ hdfreecache(		/* free up cache space, writing changes */
 }
 
 
-extern void
+void
 hddone(		/* clean up holodeck section and free */
-	register HOLO	*hp		/* NULL means clean up all */
+	HOLO	*hp		/* NULL means clean up all */
 )
 {
-	register int	i;
+	int	i;
 
 	if (hp == NULL) {		/* NULL means clean up everything */
 		while (hdlist[0] != NULL)

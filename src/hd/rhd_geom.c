@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_geom.c,v 3.14 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhd_geom.c,v 3.15 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Geometry drawing operations for OpenGL driver.
@@ -39,12 +39,12 @@ static struct gmEntry {
 
 
 
-extern void
+void
 gmNewGeom(			/* add new geometry to next list */
 	char	*file
 )
 {
-	register int	i, j;
+	int	i, j;
 					/* check if already in next list */
 	FORALLGEOM(gmNext, i)
 		if (!strcmp(file, gmNext[i].gfile))
@@ -73,10 +73,10 @@ gmNewGeom(			/* add new geometry to next list */
 }
 
 
-extern void
+void
 gmEndGeom(void)			/* make next list current */
 {
-	register int	i, j;
+	int	i, j;
 
 	FORALLGEOM(gmCurrent, i) {
 		FORALLGEOM(gmNext, j)
@@ -93,10 +93,10 @@ gmEndGeom(void)			/* make next list current */
 }
 
 
-extern int
+int
 gmDrawGeom(void)			/* draw current list of octrees */
 {
-	register int	n;
+	int	n;
 
 	FORALLGEOM(gmCurrent, n)
 		glCallList(gmCurrent[n].listid);
@@ -104,7 +104,7 @@ gmDrawGeom(void)			/* draw current list of octrees */
 }
 
 
-extern void
+void
 gmDrawPortals(	/* draw portals with specific RGBA value */
 	int	r,
 	int	g,
@@ -130,7 +130,7 @@ gmDrawPortals(	/* draw portals with specific RGBA value */
 }
 
 
-extern void
+void
 gmDepthLimit(	/* compute approximate depth limits for view */
 	double	dl[2],
 	FVECT	vorg,
@@ -139,7 +139,7 @@ gmDepthLimit(	/* compute approximate depth limits for view */
 {
 	FVECT	v;
 	double	dcent;
-	register int	i;
+	int	i;
 
 	dl[0] = FHUGE; dl[1] = 0.;
 	FORALLGEOM(gmCurrent, i) {
@@ -155,12 +155,12 @@ gmDepthLimit(	/* compute approximate depth limits for view */
 }
 
 
-extern void
+void
 gmNewPortal(		/* add portal file(s) to our new list */
 	char	*pflist
 )
 {
-	register int	i;
+	int	i;
 	char	newfile[128];
 
 	if (pflist == NULL)
@@ -187,10 +187,10 @@ char	**ss0, **ss1;
 }
 
 
-extern int
+int
 gmEndPortal(void)			/* close portal list and return GL list */
 {
-	register int	n;
+	int	n;
 
 	FORALLPORT(newportlist, n);
 	if (!n) {			/* free old GL list */

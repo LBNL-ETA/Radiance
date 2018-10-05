@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.9 2016/04/28 16:28:20 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_glx1.c,v 3.10 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * OpenGL GLX driver for holodeck display.
@@ -104,7 +104,7 @@ static void fixwindow(XExposeEvent  *eexp);
 static void resizewindow(XConfigureEvent  *ersz);
 
 
-extern void
+void
 dev_open(
 	char  *id
 )
@@ -204,7 +204,7 @@ dev_open(
 }
 
 
-extern void
+void
 dev_close(void)			/* close our display and free resources */
 {
 	glXMakeCurrent(ourdisplay, None, NULL);
@@ -222,7 +222,7 @@ dev_close(void)			/* close our display and free resources */
 }
 
 
-extern void
+void
 dev_clear(void)			/* clear our quadtree */
 {
 	qtCompost(100);
@@ -231,9 +231,9 @@ dev_clear(void)			/* clear our quadtree */
 }
 
 
-extern int
+int
 dev_view(			/* assign new driver view */
-	register VIEW	*nv
+	VIEW	*nv
 )
 {
 	if (nv->type == VT_PAR ||		/* check view legality */
@@ -284,7 +284,7 @@ dev_view(			/* assign new driver view */
 }
 
 
-extern void
+void
 dev_section(		/* add octree for geometry rendering */
 	char	*gfn,
 	char	*pfn
@@ -294,7 +294,7 @@ dev_section(		/* add octree for geometry rendering */
 }
 
 
-extern void
+void
 dev_auxcom(		/* process an auxiliary command */
 	char	*cmd,
 	char	*args
@@ -305,7 +305,7 @@ dev_auxcom(		/* process an auxiliary command */
 }
 
 
-extern VIEW *
+VIEW *
 dev_auxview(		/* return nth auxiliary view */
 	int	n,
 	int	hvres[2]
@@ -318,7 +318,7 @@ dev_auxview(		/* return nth auxiliary view */
 }
 
 
-extern int
+int
 dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
@@ -332,7 +332,7 @@ dev_input(void)			/* get X11 input */
 }
 
 
-extern int
+int
 dev_flush(void)			/* flush output */
 {
 	qtUpdate();
@@ -342,14 +342,14 @@ dev_flush(void)			/* flush output */
 }
 
 
-extern void
+void
 dev_cone(		/* render a cone in view coordinates */
 	uby8	rgb[3],
 	FVECT	ip,
 	double	rad
 )
 {
-	register int	ci, j;
+	int	ci, j;
 	double	apexh, basez;
 					/* is window mapped? */
 	if (!mapped)
@@ -387,7 +387,7 @@ static int
 mytmflags(void)			/* figure out tone mapping flags */
 {
 	extern char	*progname;
-	register char	*cp, *tail;
+	char	*cp, *tail;
 					/* find basic name */
 	for (cp = tail = progname; *cp; cp++)
 		if (*cp == '/')
@@ -406,7 +406,7 @@ mytmflags(void)			/* figure out tone mapping flags */
 static void
 initcones(void)			/* initialize cone vertices */
 {
-	register int	i, j;
+	int	i, j;
 	double	minrad, d;
 
 	if (cone[0].nverts)
@@ -433,7 +433,7 @@ initcones(void)			/* initialize cone vertices */
 static void
 freecones(void)			/* free cone vertices */
 {
-	register int	i;
+	int	i;
 
 	for (i = MAXCONE; i--; )
 		if (cone[i].nverts) {
@@ -480,7 +480,7 @@ getevent(void)			/* get next event */
 
 static void
 draw3dline(			/* draw 3d line in world coordinates */
-	register FVECT	wp[2]
+	FVECT	wp[2]
 )
 {
 	glVertex3d(wp[0][0], wp[0][1], wp[0][2]);
@@ -545,7 +545,7 @@ moveview(	/* move our view */
 	VIEW	nv;
 	FVECT	odir, v1;
 	double	d;
-	register int	li;
+	int	li;
 				/* start with old view */
 	nv = odev.v;
 				/* change view direction */
@@ -630,7 +630,7 @@ getmove(				/* get view change */
 
 static void
 getkey(				/* get input key */
-	register XKeyPressedEvent  *ekey
+	XKeyPressedEvent  *ekey
 )
 {
 	int  n;
@@ -702,7 +702,7 @@ getkey(				/* get input key */
 
 static void
 fixwindow(				/* repair damage to window */
-	register XExposeEvent  *eexp
+	XExposeEvent  *eexp
 )
 {
 	int	xmin, xmax, ymin, ymax;
@@ -728,7 +728,7 @@ fixwindow(				/* repair damage to window */
 
 static void
 resizewindow(			/* resize window */
-	register XConfigureEvent  *ersz
+	XConfigureEvent  *ersz
 )
 {
 	glViewport(0, 0, ersz->width, ersz->height);

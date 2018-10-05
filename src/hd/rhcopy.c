@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.30 2018/08/02 18:33:42 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.31 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -97,7 +97,7 @@ userr:
 
 static int
 holheadline(		/* check holodeck header line */
-	register char	*s,
+	char	*s,
 	void	*vhf
 )
 {
@@ -174,13 +174,13 @@ addray(		/* add a ray to our output holodeck */
 )
 {
 	int	sn, bi, n;
-	register HOLO	*hp;
+	HOLO	*hp;
 	GCOORD	gc[2];
 	uby8	rr[2][2];
 	BEAM	*bp;
 	double	d0, d1;
 	unsigned	dc;
-	register RAYVAL	*rv;
+	RAYVAL	*rv;
 				/* check each output section */
 	for (sn = noutsects; sn--; ) {
 		hp = hdlist[sn];
@@ -223,7 +223,7 @@ bpcmp(			/* compare beam positions on disk */
 	const void	*b2p
 )
 {
-	register off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
+	off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
 
 	if (pdif > 0L) return(1);
 	if (pdif < 0L) return(-1);
@@ -241,8 +241,8 @@ addclump(		/* transfer the given clump and free */
 	FVECT	ro, rd;
 	double	d;
 	int	i;
-	register int	k;
-	register BEAM	*bp;
+	int	k;
+	BEAM	*bp;
 					/* sort based on file position */
 	beamdir = hp->bi;
 	qsort((char *)bq, nb, sizeof(*bq), bpcmp);
@@ -334,7 +334,7 @@ addpicz(		/* add a picture + depth-buffer */
 	double	aftd;
 	COLOR	ctmp;
 	int	j;
-	register int	i;
+	int	i;
 				/* open files */
 	if ((pfp = fopen(pcf, "r")) == NULL) {
 		sprintf(errmsg, "cannot open picture file \"%s\"", pcf);
@@ -427,7 +427,7 @@ addpicz(		/* add a picture + depth-buffer */
 
 void
 eputs(			/* put error message to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;

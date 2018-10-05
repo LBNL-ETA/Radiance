@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo3.c,v 3.43 2010/09/30 14:10:19 greg Exp $";
+static const char	RCSid[] = "$Id: rholo3.c,v 3.44 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Routines for tracking beam compuatations
@@ -42,10 +42,10 @@ static void dispbeam(BEAM	*b, HDBEAMI	*hb);
 
 static int
 beamcmp(b0, b1)				/* comparison for compute order */
-register PACKHEAD	*b0, *b1;
+PACKHEAD	*b0, *b1;
 {
 	BEAMI	*bip0, *bip1;
-	register long	c;
+	long	c;
 					/* first check desired quantities */
 	if (chunkycmp)
 		c = rchunk(b1->nr)*(rchunk(b0->nc)+1L) -
@@ -75,9 +75,9 @@ register PACKHEAD	*b0, *b1;
 
 int
 beamidcmp(b0, b1)			/* comparison for beam searching */
-register PACKHEAD	*b0, *b1;
+PACKHEAD	*b0, *b1;
 {
-	register int	c = b0->hd - b1->hd;
+	int	c = b0->hd - b1->hd;
 
 	if (c) return(c);
 	return(b0->bi - b1->bi);
@@ -86,8 +86,8 @@ register PACKHEAD	*b0, *b1;
 
 static void
 dispbeam(				/* display a holodeck beam */
-	register BEAM	*b,
-	register HDBEAMI	*hb
+	BEAM	*b,
+	HDBEAMI	*hb
 )
 {
 	static int	n = 0;
@@ -116,7 +116,7 @@ dispbeam(				/* display a holodeck beam */
 }
 
 
-extern void
+void
 bundle_set(	/* bundle set operation */
 	int	op,
 	PACKHEAD	*clist,
@@ -125,8 +125,8 @@ bundle_set(	/* bundle set operation */
 {
 	int	oldnr, n;
 	HDBEAMI	*hbarr;
-	register PACKHEAD	*csm;
-	register int	i;
+	PACKHEAD	*csm;
+	int	i;
 					/* search for common members */
 	for (csm = clist+nents; csm-- > clist; )
 		csm->nc = -1;
@@ -247,7 +247,7 @@ beamvolume(	/* compute approximate volume of a beam */
 	FVECT	cp[4], edgeA, edgeB, cent[2];
 	FVECT	crossp[2], diffv;
 	double	vol[2];
-	register int	i;
+	int	i;
 					/* get grid coordinates */
 	if (!hdbcoord(gc, hp, bi))
 		error(CONSISTENCY, "bad beam index in beamvolume");
@@ -277,7 +277,7 @@ ambient_list(void)			/* compute ambient beam list */
 	int32	wtotal, minrt;
 	double	frac;
 	int	i;
-	register int	j, k;
+	int	j, k;
 
 	complen = 0;
 	for (j = 0; hdlist[j] != NULL; j++)
@@ -340,7 +340,7 @@ view_list(			/* assign beam priority from view list */
 }
 
 
-extern void
+void
 init_global(void)			/* initialize global ray computation */
 {
 					/* free old list and empty queue */
@@ -362,14 +362,14 @@ init_global(void)			/* initialize global ray computation */
 
 static void
 mergeclists(	/* merge two sorted lists */
-	register PACKHEAD	*cdest,
-	register PACKHEAD	*cl1,
+	PACKHEAD	*cdest,
+	PACKHEAD	*cl1,
 	int	n1,
-	register PACKHEAD	*cl2,
+	PACKHEAD	*cl2,
 	int	n2
 )
 {
-	register int	cmp;
+	int	cmp;
 
 	while (n1 | n2) {
 		if (!n1) cmp = 1;
@@ -392,7 +392,7 @@ sortcomplist(void)			/* fix our list order */
 {
 	PACKHEAD	*list2;
 	int	listlen;
-	register int	i;
+	int	i;
 
 	if (complen <= 0)	/* check to see if there is even a list */
 		return;
@@ -446,9 +446,9 @@ sortcomplist(void)			/* fix our list order */
  * list and start again from the beginning.  Since
  * a merge sort is used, the sorting costs are minimal.
  */
-extern int
+int
 next_packet(		/* prepare packet for computation */
-	register PACKET	*p,
+	PACKET	*p,
 	int	n
 )
 {

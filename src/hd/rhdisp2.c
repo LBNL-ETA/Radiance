@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp2.c,v 3.37 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhdisp2.c,v 3.38 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Holodeck beam tracking for display process
@@ -56,7 +56,7 @@ cbeamcmp(	/* compare two cbeam entries for sort: keep orphans */
 	const void	*cb2
 )
 {
-	register int	c;
+	int	c;
 
 	if ((c = ((PACKHEAD*)cb1)->bi - ((PACKHEAD*)cb2)->bi))	/* sort on beam index first */
 		return(c);
@@ -70,7 +70,7 @@ cbeamcmp2(	/* compare two cbeam entries for sort: no orphans */
 	const void	*cb2
 )
 {
-	register int	c;
+	int	c;
 
 	if (!((PACKHEAD*)cb1)->nr)			/* put orphans at the end, unsorted */
 		return(((PACKHEAD*)cb2)->nr);
@@ -89,7 +89,7 @@ findcbeam(	/* find the specified beam in our sorted list */
 )
 {
 	PACKHEAD	cb;
-	register PACKHEAD	*p;
+	PACKHEAD	*p;
 
 	if (ncbeams <= 0)
 		return(-1);
@@ -104,11 +104,11 @@ findcbeam(	/* find the specified beam in our sorted list */
 
 static int
 getcbeam(	/* get the specified beam, allocating as necessary */
-	register int	hd,
+	int	hd,
 	int	bi
 )
 {
-	register int	n;
+	int	n;
 				/* first, look in sorted list */
 	if ((n = findcbeam(hd, bi)) >= 0)
 		return(n);
@@ -132,7 +132,7 @@ cbeamsort(	/* sort our beam list, possibly turning out orphans */
 	int	adopt
 )
 {
-	register int	i;
+	int	i;
 
 	if (!(ncbeams += xcbeams))
 		return;
@@ -149,12 +149,12 @@ cbeamsort(	/* sort our beam list, possibly turning out orphans */
 }
 
 
-extern void
+void
 beam_init(		/* clear beam list for new view(s) */
 	int	fresh
 )
 {
-	register int	i;
+	int	i;
 
 	if (fresh)			/* discard old beams? */
 		ncbeams = xcbeams = 0;
@@ -165,7 +165,7 @@ beam_init(		/* clear beam list for new view(s) */
 }
 
 
-extern int16 *
+int16 *
 beam_view(		/* add beam view (if advisable) */
 	VIEW	*vn,
 	int	hr,
@@ -175,8 +175,8 @@ beam_view(		/* add beam view (if advisable) */
 	int16	*slist;
 	BEAMLIST	blist;
 	double	eravg, d;
-	register HOLO	*hp;
-	register int	i, n;
+	HOLO	*hp;
+	int	i, n;
 					/* compute beams for view */
 	slist = viewbeams(vn, hr, vr, &blist);
 	if (*slist < 0) {
@@ -216,7 +216,7 @@ beam_view(		/* add beam view (if advisable) */
 }
 
 
-extern int
+int
 beam_sync(			/* update beam list on server */
 	int	all
 )
@@ -240,12 +240,12 @@ beam_sync(			/* update beam list on server */
 }
 
 
-extern void
+void
 gridlines(			/* run through holodeck section grid lines */
 	void	(*f)(FVECT wp[2])
 )
 {
-	register int	hd, w, i;
+	int	hd, w, i;
 	int	g0, g1;
 	FVECT	wp[2], mov;
 	double	d;

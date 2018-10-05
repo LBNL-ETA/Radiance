@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.28 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree.c,v 3.29 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Quadtree driver support routines.
@@ -50,7 +50,7 @@ static int putleaf(int li, int drop);
 static RTREE *
 newtwig(void)			/* allocate a twig */
 {
-	register int	bi;
+	int	bi;
 
 	if (twigbundle == NULL) {	/* initialize */
 		twigbundle = (RTREE **)malloc(sizeof(RTREE *));
@@ -82,7 +82,7 @@ qtFreeTree(		/* free allocated twigs */
 	int	really
 )
 {
-	register int	i;
+	int	i;
 
 	qtrunk.flgs = CH_ANY;	/* chop down tree */
 	if (twigbundle == NULL)
@@ -105,13 +105,13 @@ qtFreeTree(		/* free allocated twigs */
 #define	LEAFSIZ		(3*sizeof(float)+sizeof(int32)+\
 			sizeof(TMbright)+6*sizeof(uby8))
 
-extern int
+int
 qtAllocLeaves(		/* allocate space for n leaves */
-	register int	n
+	int	n
 )
 {
 	unsigned	nbytes;
-	register unsigned	i;
+	unsigned	i;
 
 	qtFreeTree(0);		/* make sure tree is empty */
 	if (n <= 0)
@@ -143,7 +143,7 @@ qtAllocLeaves(		/* allocate space for n leaves */
 #undef	LEAFSIZ
 
 
-extern void
+void
 qtFreeLeaves(void)			/* free our allocated leaves and twigs */
 {
 	qtFreeTree(1);		/* free tree also */
@@ -157,10 +157,10 @@ qtFreeLeaves(void)			/* free our allocated leaves and twigs */
 
 static void
 shaketree(			/* shake dead leaves from tree */
-	register RTREE	*tp
+	RTREE	*tp
 )
 {
-	register int	i, li;
+	int	i, li;
 
 	for (i = 0; i < 4; i++)
 		if (tp->flgs & BRF(i)) {
@@ -175,12 +175,12 @@ shaketree(			/* shake dead leaves from tree */
 }
 
 
-extern int
+int
 qtCompost(			/* free up some leaves */
 	int	pct
 )
 {
-	register int32	*fl;
+	int32	*fl;
 	int	nused, nclear, nmapped;
 				/* figure out how many leaves to clear */
 	nclear = qtL.nl * pct / 100;
@@ -210,17 +210,17 @@ qtCompost(			/* free up some leaves */
 }
 
 
-extern int
+int
 qtFindLeaf(		/* find closest leaf to (x,y) */
 	int	x,
 	int	y
 )
 {
-	register RTREE	*tp = &qtrunk;
+	RTREE	*tp = &qtrunk;
 	int	li = -1;
 	int	x0=0, y0=0, x1=odev.hres, y1=odev.vres;
 	int	mx, my;
-	register int	q;
+	int	q;
 					/* check limits */
 	if (x < 0 || x >= odev.hres || y < 0 || y >= odev.vres)
 		return(-1);
@@ -251,18 +251,18 @@ qtFindLeaf(		/* find closest leaf to (x,y) */
 
 static int
 putleaf(		/* put a leaf in our tree */
-	register int	li,
+	int	li,
 	int	drop
 )
 {
-	register RTREE	*tp = &qtrunk;
+	RTREE	*tp = &qtrunk;
 	int	x0=0, y0=0, x1=odev.hres, y1=odev.vres;
-	register int	lo = -1;
+	int	lo = -1;
 	double	d2;
 	int	x, y, mx, my;
 	double	z;
 	FVECT	ip, wp, vd;
-	register int	q;
+	int	q;
 					/* check for dead leaf */
 	if (!qtL.chr[li][1] && !(qtL.chr[li][0] | qtL.chr[li][2]))
 		return(0);
@@ -345,14 +345,14 @@ dropit:
 }
 
 
-extern void
+void
 dev_value(		/* add a pixel value to our quadtree */
 	COLR	c,
 	FVECT	d,
 	FVECT	p
 )
 {
-	register int	li;
+	int	li;
 	int	mapit;
 				/* grab a leaf */
 	if (!imm_mode && falleaves >= 0) {	/* check for fallen leaves */
@@ -385,10 +385,10 @@ dev_value(		/* add a pixel value to our quadtree */
 }
 
 
-extern void
+void
 qtReplant(void)			/* replant our tree using new view */
 {
-	register int	i;
+	int	i;
 					/* anything to replant? */
 	if (qtL.bl == qtL.tl)
 		return;
@@ -401,7 +401,7 @@ qtReplant(void)			/* replant our tree using new view */
 }
 
 
-extern int
+int
 qtMapLeaves(		/* map our leaves to RGB */
 	int	redo
 )

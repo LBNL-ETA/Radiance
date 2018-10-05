@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.32 2016/04/28 16:28:20 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ogl.c,v 3.33 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * OpenGL driver for holodeck display.
@@ -153,7 +153,7 @@ extern int	gmPortals;	/* GL portal list id */
 extern time_t	time();
 
 
-extern void
+void
 dev_open(id)			/* initialize GLX driver */
 char  *id;
 {
@@ -286,7 +286,7 @@ char  *id;
 }
 
 
-extern void
+void
 dev_close(void)			/* close our display and free resources */
 {
 #ifdef DOBJ
@@ -309,7 +309,7 @@ dev_close(void)			/* close our display and free resources */
 }
 
 
-extern void
+void
 dev_clear(void)			/* clear our representation */
 {
 	viewflags |= VWCHANGE;		/* pretend our view has changed */
@@ -319,7 +319,7 @@ dev_clear(void)			/* clear our representation */
 }
 
 
-extern int
+int
 dev_view(			/* assign new driver view */
 	VIEW	*nv
 )
@@ -376,7 +376,7 @@ dev_view(			/* assign new driver view */
 }
 
 
-extern void
+void
 dev_section(		/* add octree for geometry rendering */
 	char	*gfn,
 	char	*pfn
@@ -401,7 +401,7 @@ dev_section(		/* add octree for geometry rendering */
 }
 
 
-extern void
+void
 dev_auxcom(		/* process an auxiliary command */
 	char	*cmd,
 	char	*args
@@ -423,7 +423,7 @@ dev_auxcom(		/* process an auxiliary command */
 }
 
 
-extern VIEW *
+VIEW *
 dev_auxview(		/* return nth auxiliary view */
 	int	n,
 	int	hvres[2]
@@ -440,7 +440,7 @@ dev_auxview(		/* return nth auxiliary view */
 }
 
 
-extern int
+int
 dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
@@ -456,7 +456,7 @@ dev_input(void)			/* get X11 input */
 }
 
 
-extern void
+void
 dev_value(		/* add a pixel value to our texture */
 	COLR	c,
 	FVECT	d,
@@ -475,7 +475,7 @@ dev_value(		/* add a pixel value to our texture */
 }
 
 
-extern int
+int
 dev_flush(void)			/* flush output as appropriate */
 {
 	int	ndrawn;

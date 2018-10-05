@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict2.c,v 3.16 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict2.c,v 3.17 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Rendering routines for rhpict.
@@ -64,22 +64,22 @@ static void meet_neighbors(int occ, sampfunc *nf, double *dp);
 static void reset_flags(void);
 static void init_wfunc(void);
 static int findneigh(short nl[NNEIGH][2], int nd[NNEIGH], int h, int v,
-		register short (*rnl)[NNEIGH]);
+		short (*rnl)[NNEIGH]);
 
 
-extern void
+void
 pixBeam(			/* render a particular beam */
 	BEAM	*bp,
-	register HDBEAMI	*hb
+	HDBEAMI	*hb
 )
 {
 	GCOORD	gc[2];
-	register RAYVAL	*rv;
+	RAYVAL	*rv;
 	FVECT	rorg, rdir, wp, ip;
 	double	d, prox;
 	COLOR	col;
 	int	n;
-	register int32	p;
+	int32	p;
 
 	if (!hdbcoord(gc, hb->h, hb->b))
 		error(CONSISTENCY, "bad beam in render_beam");
@@ -125,7 +125,7 @@ static int
 kill_occl(		/* check for occlusion errors */
 	int	h,
 	int	v,
-	register short	nl[NNEIGH][2],
+	short	nl[NNEIGH][2],
 	int	nd[NNEIGH],
 	int	n,
 	double *rf
@@ -133,8 +133,8 @@ kill_occl(		/* check for occlusion errors */
 {
 	short	forequad[2][2];
 	int	d;
-	register int	i;
-	register int32	p;
+	int	i;
+	int32	p;
 
 	if (n <= 0) {
 #ifdef DEBUG
@@ -161,7 +161,7 @@ static int
 smooth_samp(	/* grow sample point smoothly */
 	int	h,
 	int	v,
-	register short	nl[NNEIGH][2],
+	short	nl[NNEIGH][2],
 	int	nd[NNEIGH],
 	int	n,
 	double *rf
@@ -171,8 +171,8 @@ smooth_samp(	/* grow sample point smoothly */
 	COLOR	mykern[MAXRAD2];
 	int	maxr2;
 	double	d;
-	register int32	p;
-	register int	r2;
+	int32	p;
+	int	r2;
 	int	i, r, maxr, h2, v2;
 
 	if (n <= 0)
@@ -226,7 +226,7 @@ static int
 random_samp(	/* gather samples randomly */
 	int	h,
 	int	v,
-	register short	nl[NNEIGH][2],
+	short	nl[NNEIGH][2],
 	int	nd[NNEIGH],
 	int	n,
 	double	*rf
@@ -234,8 +234,8 @@ random_samp(	/* gather samples randomly */
 {
 	float	rnt[NNEIGH];
 	double	rvar;
-	register int32	p, pn;
-	register int	ni;
+	int32	p, pn;
+	int	ni;
 
 	if (n <= 0)
 		return(1);
@@ -258,7 +258,7 @@ random_samp(	/* gather samples randomly */
 }
 
 
-extern void
+void
 pixFinish(		/* done with beams -- compute pixel values */
 	double	ransamp
 )
@@ -280,7 +280,7 @@ pixFinish(		/* done with beams -- compute pixel values */
 static void
 reset_flags(void)			/* allocate/set/reset occupancy flags */
 {
-	register int32	p;
+	int32	p;
 
 	if (pixFlags == NULL) {
 		pixFlags = (int32 *)calloc(FL4NELS(hres*vres), sizeof(int32));
@@ -296,8 +296,8 @@ reset_flags(void)			/* allocate/set/reset occupancy flags */
 static void
 init_wfunc(void)			/* initialize weighting function */
 {
-	register int	r2;
-	register double	d;
+	int	r2;
+	double	d;
 
 	for (r2 = MAXRAD2; --r2; ) {
 		d = sqrt((double)r2);
@@ -315,12 +315,12 @@ findneigh(	/* find NNEIGH neighbors for pixel */
 	int	nd[NNEIGH],
 	int	h,
 	int	v,
-	register short	(*rnl)[NNEIGH]
+	short	(*rnl)[NNEIGH]
 )
 {
 	int	nn = 0;
 	int	d, n, hoff;
-	register int	h2, n2;
+	int	h2, n2;
 
 	nd[NNEIGH-1] = MAXRAD2;
 	for (hoff = 0; hoff < hres; hoff = (hoff<=0) - hoff) {
@@ -362,7 +362,7 @@ meet_neighbors(	/* run through samples and their neighbors */
 	short	ln[NNEIGH][2];
 	int	nd[NNEIGH];
 	int	h, v, n, v2;
-	register short	(*rnl)[NNEIGH];
+	short	(*rnl)[NNEIGH];
 					/* initialize bottom row list */
 	rnl = (short (*)[NNEIGH])malloc(NNEIGH*sizeof(short)*hres);
 	CHECK(rnl==NULL, SYSTEM, "out of memory in meet_neighbors");

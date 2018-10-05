@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.79 2018/08/02 18:33:43 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.80 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -230,7 +230,7 @@ static void
 initrholo(void)			/* get our holodeck running */
 {
 	extern int	global_packet();
-	register int	i;
+	int	i;
 						/* close holodeck on exec() */
 	fcntl(hdlist[0]->fd, F_SETFD, FD_CLOEXEC);
 
@@ -250,7 +250,7 @@ initrholo(void)			/* get our holodeck running */
 		hdcachesize = 1024.*1024.*vflt(CACHE);
 						/* open report file */
 	if (vdef(REPORT)) {
-		register char	*s = sskip2(vval(REPORT), 1);
+		char	*s = sskip2(vval(REPORT), 1);
 		if (*s && freopen(s, "a", stderr) == NULL)
 			quit(2);
 	}
@@ -324,7 +324,7 @@ rholo(void)				/* holodeck main loop */
 	PACKET	*pl = NULL, *plend;
 	off_t	fsiz;
 	int	pksiz;
-	register PACKET	*p;
+	PACKET	*p;
 	time_t	t;
 					/* check display */
 	if (nprocs <= 0)
@@ -391,11 +391,11 @@ rholo(void)				/* holodeck main loop */
 
 static void
 setdefaults(			/* set default values */
-	register HDGRID	*gp
+	HDGRID	*gp
 )
 {
 	extern char	*atos();
-	register int	i;
+	int	i;
 	int	n;
 	double	len[3], d;
 
@@ -495,7 +495,7 @@ headline(			/* process information header line */
 )
 {
 	extern char	FMTSTR[];
-	register char	*cp;
+	char	*cp;
 	char	fmt[MAXFMTLEN];
 
 	if (formatval(fmt, s)) {
@@ -566,13 +566,13 @@ loadholo(void)			/* start loading a holodeck from fname */
 }
 
 
-extern void
+void
 done_packets(		/* handle finished packets */
 	PACKET	*pl
 )
 {
 	static int	n2flush = 0;
-	register PACKET	*p;
+	PACKET	*p;
 
 	while (pl != NULL) {
 		p = pl; pl = p->next; p->next = NULL;
@@ -603,8 +603,8 @@ done_packets(		/* handle finished packets */
 
 static void
 rootname(		/* remove tail from end of fn */
-	register char	*rn,
-	register char	*fn
+	char	*rn,
+	char	*fn
 )
 {
 	char	*tp, *dp;
@@ -632,7 +632,7 @@ badvalue(			/* report bad variable value and exit */
 
 void
 eputs(s)			/* put error message to stderr */
-register char  *s;
+char  *s;
 {
 	static int  midline = 0;
 

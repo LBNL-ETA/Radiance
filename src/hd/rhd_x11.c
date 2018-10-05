@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_x11.c,v 3.45 2016/04/28 16:28:20 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_x11.c,v 3.46 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * X11 driver for holodeck display.
@@ -116,7 +116,7 @@ mytmflags(void)			/* figure out tone mapping flags */
 }
 
 
-extern void
+void
 dev_open(			/* initialize X11 driver */
 	char  *id
 )
@@ -217,7 +217,7 @@ dev_open(			/* initialize X11 driver */
 }
 
 
-extern void
+void
 dev_close(void)			/* close our display */
 {
 	freepixels();
@@ -235,7 +235,7 @@ dev_close(void)			/* close our display */
 }
 
 
-extern void
+void
 dev_clear(void)			/* clear our quadtree */
 {
 	qtCompost(100);
@@ -245,7 +245,7 @@ dev_clear(void)			/* clear our quadtree */
 }
 
 
-extern int
+int
 dev_view(			/* assign new driver view */
 	VIEW	*nv
 )
@@ -293,7 +293,7 @@ dev_view(			/* assign new driver view */
 }
 
 
-extern void
+void
 dev_section(		/* add octree for geometry rendering */
 	char	*gfn,
 	char	*pfn
@@ -303,7 +303,7 @@ dev_section(		/* add octree for geometry rendering */
 }
 
 
-extern void
+void
 dev_auxcom(		/* process an auxiliary command */
 	char	*cmd,
 	char	*args
@@ -314,7 +314,7 @@ dev_auxcom(		/* process an auxiliary command */
 }
 
 
-extern VIEW *
+VIEW *
 dev_auxview(		/* return nth auxiliary view */
 	int	n,
 	int	hvres[2]
@@ -327,7 +327,7 @@ dev_auxview(		/* return nth auxiliary view */
 }
 
 
-extern int
+int
 dev_input(void)			/* get X11 input */
 {
 	inpresflags = 0;
@@ -343,7 +343,7 @@ dev_input(void)			/* get X11 input */
 }
 
 
-extern void
+void
 dev_paintr(		/* fill a rectangle */
 	uby8	rgb[3],
 	int  xmin,
@@ -366,7 +366,7 @@ dev_paintr(		/* fill a rectangle */
 }
 
 
-extern int
+int
 dev_flush(void)			/* flush output */
 {
 	qtUpdate();

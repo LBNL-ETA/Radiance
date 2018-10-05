@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: clumpbeams.c,v 3.8 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: clumpbeams.c,v 3.9 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Bundle holodeck beams together into clumps.
@@ -25,10 +25,10 @@ static int firstneigh(HOLO	*hp, int	b);
 
 static void
 gcshifti(	/* shift cell row or column */
-	register GCOORD	*gc,
+	GCOORD	*gc,
 	int	ia,
 	int	di,
-	register HOLO	*hp
+	HOLO	*hp
 )
 {
 	int	nw;
@@ -59,7 +59,7 @@ mkneighgrid(		/* compute neighborhood for grid cell */
 )
 {
 	GCOORD	gci0;
-	register int	i, j;
+	int	i, j;
 
 	for (i = 3; i--; ) {
 		gci0 = *gc;
@@ -103,9 +103,9 @@ firstneigh(		/* initialize neighbor list and return first */
 }
 
 
-extern void
+void
 clumpbeams(	/* clump beams from hinp */
-	register HOLO	*hp,
+	HOLO	*hp,
 	int	maxcnt,
 	int	maxsiz,
 	int	(*cf)(HOLO *hp, int *bqueue, int bqlen)
@@ -117,7 +117,7 @@ clumpbeams(	/* clump beams from hinp */
 	int	bqlen;
 	int32	bqtotal;
 	int	bc, bci, bqc, myprime;
-	register int	i;
+	int	i;
 					/* get clump size */
 	if (maxcnt <= 1)
 		maxcnt = nbeams(hp);

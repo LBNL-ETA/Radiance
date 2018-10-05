@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: viewbeams.c,v 3.7 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: viewbeams.c,v 3.8 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Convert view to beam list.
@@ -33,7 +33,7 @@ add2blist(			/* add to beam sample list */
 	int	nr
 )
 {
-	register int	i;
+	int	i;
 
 	for (i = blist.nb; i--; )
 		if (blist.bl[i].bi == bi && blist.bl[i].hd == hd) {
@@ -51,7 +51,7 @@ add2blist(			/* add to beam sample list */
 }
 
 
-extern int16 *
+int16 *
 viewbeams(		/* convert view into sections/beams */
 	VIEW	*vp,
 	int	hr,
@@ -66,7 +66,7 @@ viewbeams(		/* convert view into sections/beams */
 	FVECT	rorg, rdir;
 	int	shr, svr, sampquant;
 	int	v;
-	register int	h, hd;
+	int	h, hd;
 						/* clear section flags */
 	memset((char *)sectlist, '\0', sizeof(sectlist));
 						/* identify view sections */
@@ -150,7 +150,7 @@ loopexit:
 }
 
 
-extern int
+int
 nextview(			/* get next view from fp */
 	VIEW	*vp,
 	FILE	*fp

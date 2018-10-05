@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp.c,v 3.54 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp.c,v 3.55 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Holodeck display process.
@@ -61,7 +61,7 @@ static long	nimmrays, naddrays;
 static int disp_wait(void);
 static void add_holo(HDGRID *hdg, char *gfn, char *pfn);
 static void disp_bundle(PACKHEAD *p);
-static void new_view(register VIEW *v);
+static void new_view(VIEW *v);
 static void set_focus(char *args);
 static int usr_input(void);
 static void printview(void);
@@ -215,7 +215,7 @@ disp_wait(void)			/* wait for more input */
 
 
 static void
-add_holo(		/* register a new holodeck section */
+add_holo(		/* a new holodeck section */
 	HDGRID	*hdg,
 	char	*gfn,
 	char	*pfn
@@ -223,7 +223,7 @@ add_holo(		/* register a new holodeck section */
 {
 	VIEW	nv;
 	double	d;
-	register int	hd;
+	int	hd;
 
 	for (hd = 0; hd < HDMAX && hdlist[hd] != NULL; hd++)
 		;
@@ -257,13 +257,13 @@ add_holo(		/* register a new holodeck section */
 
 static void
 disp_bundle(			/* display a ray bundle */
-	register PACKHEAD	*p
+	PACKHEAD	*p
 )
 {
 	GCOORD	gc[2];
 	FVECT	ro, rd, wp;
 	double	d;
-	register int	i;
+	int	i;
 					/* get beam coordinates */
 	if ((p->hd < 0) | (p->hd >= HDMAX) || hdlist[p->hd] == NULL)
 		error(INTERNAL, "bad holodeck number in disp_bundle");
@@ -288,7 +288,7 @@ disp_bundle(			/* display a ray bundle */
 
 static void
 new_view(			/* change view parameters */
-	register VIEW	*v
+	VIEW	*v
 )
 {
 	static VIEW	viewhist[VIEWHISTLEN];
@@ -422,8 +422,8 @@ usr_input(void)			/* get user input and process it */
 {
 	VIEW	vparams;
 	char	cmd[256];
-	register char	*args;
-	register int	i;
+	char	*args;
+	int	i;
 
 	if (fgets(cmd, sizeof(cmd), sstdin) == NULL) {
 		fclose(sstdin);
@@ -499,7 +499,7 @@ printview(void)			/* print our current view to server stdout */
 }
 
 
-extern int
+int
 serv_result(void)			/* get next server result and process it */
 {
 	static char	*buf = NULL;
@@ -576,7 +576,7 @@ readerr:
 }
 
 
-extern void
+void
 serv_request(	/* send a request to the server process */
 	int	type,
 	int	nbytes,
@@ -607,7 +607,7 @@ serv_request(	/* send a request to the server process */
 
 void
 eputs(			/* put error message to stderr */
-	register char  *s
+	char  *s
 )
 {
 	static int  midline = 0;

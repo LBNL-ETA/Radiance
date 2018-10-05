@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.7 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_qtree2r.c,v 3.8 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Quadtree display support routines for rectangle output.
@@ -15,7 +15,7 @@ static void update( uby8 ca[3], RTREE *tp, int x0, int y0, int x1, int y1);
 
 static void
 redraw(	/* mark portion of a tree for redraw */
-	register RTREE	*tp,
+	RTREE	*tp,
 	int	x0,
 	int	y0,
 	int	x1,
@@ -25,7 +25,7 @@ redraw(	/* mark portion of a tree for redraw */
 {
 	int	quads = CH_ANY;
 	int	mx, my;
-	register int	i;
+	int	i;
 					/* compute midpoint */
 	mx = (x0 + x1) >> 1;
 	my = (y0 + y1) >> 1;
@@ -50,7 +50,7 @@ redraw(	/* mark portion of a tree for redraw */
 static void
 update(	/* update tree display as needed */
 	uby8	ca[3],		/* returned average color */
-	register RTREE	*tp,
+	RTREE	*tp,
 	int	x0,
 	int	y0,
 	int	x1,
@@ -58,18 +58,18 @@ update(	/* update tree display as needed */
 )
 {
 	int	csm[3], nc;
-	register uby8	*cp;
+	uby8	*cp;
 	uby8	rgb[3];
 	double	dpth2[4], d2;
 	int	gaps = 0;
 	int	mx, my;
-	register int	i;
+	int	i;
 					/* compute leaf depths */
 	d2 = FHUGE*FHUGE;
 	for (i = 0; i < 4; i++)
 		if (tp->flgs & LFF(i)) {
 			FVECT	dv;
-			register float	*wp = qtL.wp[tp->k[i].li];
+			float	*wp = qtL.wp[tp->k[i].li];
 
 			dv[0] = wp[0] - odev.v.vp[0];
 			dv[1] = wp[1] - odev.v.vp[1];
@@ -117,7 +117,7 @@ update(	/* update tree display as needed */
 }
 
 
-extern void
+void
 qtRedraw(	/* redraw part or all of our screen */
 	int	x0,
 	int	y0,
@@ -136,7 +136,7 @@ qtRedraw(	/* redraw part or all of our screen */
 }
 
 
-extern void
+void
 qtUpdate(void)			/* update our tree display */
 {
 	uby8	ca[3];

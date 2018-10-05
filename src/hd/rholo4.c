@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.37 2016/08/18 00:52:48 greg Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.38 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -30,7 +30,7 @@ static void disp_flush(void);
 static void disp_result(int type, int nbytes, char *p);
 
 
-extern void
+void
 disp_open(		/* open the named display driver */
 	char	*dname
 )
@@ -98,16 +98,16 @@ disp_open(		/* open the named display driver */
 }
 
 
-extern void
+void
 disp_packet(			/* display a packet */
-	register PACKHEAD	*p
+	PACKHEAD	*p
 )
 {
 	disp_result(DS_BUNDLE, packsiz(p->nr), (char *)p);
 }
 
 
-extern int
+int
 disp_check(		/* check display process */
 	int	block
 )
@@ -251,7 +251,7 @@ readerr:
 }
 
 
-extern int
+int
 disp_close(void)			/* close our display process */
 {
 	if (dpout == NULL)

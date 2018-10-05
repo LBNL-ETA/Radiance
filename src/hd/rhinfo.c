@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.13 2010/09/30 17:02:00 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.14 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -88,7 +88,7 @@ gethdinfo(		/* get information on holodeck */
 
 static void
 psectstats(		/* print statistical information for section */
-	register HOLO	*hp,
+	HOLO	*hp,
 	FILE	*fp
 )
 {
@@ -97,7 +97,7 @@ psectstats(		/* print statistical information for section */
 	FVECT	vt;
 	double	sqrtmaxp;
 	int	bmin, bmax, cnt;
-	register int	i;
+	int	i;
 
 	fcross(vt, hp->xv[0], hp->xv[1]);
 	fprintf(fp, "\tWorld volume:            %g\n", fabs(DOT(vt,hp->xv[2])));

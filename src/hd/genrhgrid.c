@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.8 2004/01/01 11:21:55 schorsch Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.9 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
@@ -85,10 +85,10 @@ gridsect(		/* get specified section(s) and print grids */
 
 void
 putgrid(			/* run through holodeck section grid lines */
-	register HOLO	*hp
+	HOLO	*hp
 )
 {
-	register int	w, i;
+	int	w, i;
 	int	g0, g1;
 	FVECT	wp[2], mov;
 	double	d;
@@ -135,7 +135,7 @@ putgrid(			/* run through holodeck section grid lines */
 
 void
 putline(		/* put out a line */
-	register FVECT	wp[2]
+	FVECT	wp[2]
 )
 {
 	static int	cnt = 0;

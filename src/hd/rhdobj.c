@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.20 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.21 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -102,7 +102,7 @@ getdobj(			/* get object from list by name */
 	char	*nm
 )
 {
-	register DOBJECT	*op;
+	DOBJECT	*op;
 
 	if (nm == NULL)
 		return(NULL);
@@ -117,12 +117,12 @@ getdobj(			/* get object from list by name */
 
 static int
 freedobj(			/* free resources and memory assoc. with op */
-	register DOBJECT	*op
+	DOBJECT	*op
 )
 {
 	int	foundlink = 0;
 	DOBJECT	ohead;
-	register DOBJECT	*opl;
+	DOBJECT	*opl;
 
 	if (op == NULL)
 		return(0);
@@ -146,7 +146,7 @@ freedobj(			/* free resources and memory assoc. with op */
 
 static int
 savedxf(			/* save transform for display object */
-	register DOBJECT	*op
+	DOBJECT	*op
 )
 {
 					/* free old */
@@ -174,7 +174,7 @@ ssph_sample(	/* add sample to current source sphere */
 {
 	COLOR	col;
 	double	d;
-	register int	alt, azi;
+	int	alt, azi;
 
 	if (dlightsets == NULL)
 		return;
@@ -213,13 +213,13 @@ ssph_direc(	/* compute sphere sampling direction */
 
 static int
 ssph_neigh(		/* neighbor counter on sphere */
-	register int	sp[2],
+	int	sp[2],
 	int	next
 )
 {
 	static short	nneigh = 0;		/* neighbor count */
 	static short	neighlist[NAZI+6][2];	/* neighbor list (0 is home) */
-	register int	i;
+	int	i;
 
 	if (next) {
 		if (nneigh <= 0)
@@ -286,8 +286,8 @@ ssph_compute(void)			/* compute source set from sphere samples */
 	FVECT	v;
 	double	d, thresh, maxbr;
 	int	maxalt, maxazi, spos[2];
-	register int	alt, azi;
-	register struct lsource	*ls;
+	int	alt, azi;
+	struct lsource	*ls;
 					/* count & average sampled cells */
 	setcolor(csum, 0., 0., 0.);
 	ncells = nsamps = 0;
@@ -368,14 +368,14 @@ done:					/* clear sphere sample array */
 
 static int
 getdlights(		/* get lights for display object */
-	register DOBJECT	*op,
+	DOBJECT	*op,
 	int	force
 )
 {
 	double	d2, mind2 = FHUGE*FHUGE;
 	FVECT	ocent;
 	VIEW	cvw;
-	register DLIGHTS	*dl;
+	DLIGHTS	*dl;
 
 	op->ol = NULL;
 	if (op->drawcode != DO_LIGHT)
@@ -451,15 +451,15 @@ cmderror(		/* report command error */
 }
 
 
-extern int
+int
 dobj_command(		/* run object display command */
 	char	*cmd,
-	register char	*args
+	char	*args
 )
 {
 	int	somechange = 0;
 	int	cn, na;
-	register int	nn;
+	int	nn;
 	char	*alist[MAXAC+1], *nm;
 					/* find command */
 	for (cn = 0; cn < DO_NCMDS; cn++)
@@ -561,14 +561,14 @@ toomany:
 }
 
 
-extern int
+int
 dobj_load(		/* create/load an octree object */
 	char	*oct,
 	char	*nam
 )
 {
 	char	*fpp, fpath[128];
-	register DOBJECT	*op;
+	DOBJECT	*op;
 					/* check arguments */
 	if (oct == NULL) {
 		error(COMMAND, "missing octree");
@@ -619,12 +619,12 @@ dobj_load(		/* create/load an octree object */
 }
 
 
-extern int
+int
 dobj_unload(			/* free the named object */
 	char	*nam
 )
 {
-	register DOBJECT	*op;
+	DOBJECT	*op;
 
 	if ((op = getdobj(nam)) == NULL) {
 		error(COMMAND, "no object");
@@ -636,10 +636,10 @@ dobj_unload(			/* free the named object */
 }
 
 
-extern int
+int
 dobj_cleanup(void)				/* free all resources */
 {
-	register DLIGHTS	*lp;
+	DLIGHTS	*lp;
 
 	while (dobjects != NULL)
 		freedobj(dobjects);
@@ -652,7 +652,7 @@ dobj_cleanup(void)				/* free all resources */
 }
 
 
-extern int
+int
 dobj_xform(		/* set/add transform for nam */
 	char	*nam,
 	int	rel,
@@ -660,7 +660,7 @@ dobj_xform(		/* set/add transform for nam */
 	char	**av
 )
 {
-	register DOBJECT	*op;
+	DOBJECT	*op;
 	FVECT	cent;
 	double	rad;
 	char	scoord[16];
@@ -717,15 +717,15 @@ dobj_xform(		/* set/add transform for nam */
 }
 
 
-extern int
+int
 dobj_putstats(			/* put out statistics for nam */
 	char	*nam,
 	FILE	*fp
 )
 {
 	FVECT	ocent;
-	register DOBJECT	*op;
-	register int	i;
+	DOBJECT	*op;
+	int	i;
 
 	if (nam == NULL) {
 		error(COMMAND, "no current object");
@@ -760,7 +760,7 @@ dobj_putstats(			/* put out statistics for nam */
 }
 
 
-extern int
+int
 dobj_unmove(void)				/* undo last transform change */
 {
 	int	txfac;
@@ -787,13 +787,13 @@ dobj_unmove(void)				/* undo last transform change */
 }
 
 
-extern int
+int
 dobj_dup(			/* duplicate object oldnm as nam */
 	char	*oldnm,
 	char	*nam
 )
 {
-	register DOBJECT	*op, *opdup;
+	DOBJECT	*op, *opdup;
 					/* check arguments */
 	if ((op = getdobj(oldnm)) == NULL) {
 		error(COMMAND, "no object");
@@ -829,7 +829,7 @@ dobj_dup(			/* duplicate object oldnm as nam */
 }
 
 
-extern int
+int
 dobj_lighting(		/* set up lighting for display object */
 	char	*nam,
 	int	cn
@@ -837,7 +837,7 @@ dobj_lighting(		/* set up lighting for display object */
 {
 	int	i, res[2];
 	VIEW	*dv;
-	register DOBJECT	*op;
+	DOBJECT	*op;
 
 	if (nam == NULL) {
 		error(COMMAND, "no current object");
@@ -869,14 +869,14 @@ dobj_lighting(		/* set up lighting for display object */
 }
 
 
-extern double
+double
 dobj_trace(	/* check for ray intersection with object(s) */
 	char	nm[],
 	FVECT  rorg,
 	FVECT  rdir
 )
 {
-	register DOBJECT	*op;
+	DOBJECT	*op;
 	FVECT	xorg, xdir;
 	double	darr[6];
 					/* check each visible object? */
@@ -918,15 +918,15 @@ dobj_trace(	/* check for ray intersection with object(s) */
 }
 
 
-extern int
+int
 dobj_render(void)			/* render our objects in OpenGL */
 {
 	int	nrendered = 0;
 	GLboolean	normalizing;
 	GLfloat	vec[4];
 	FVECT	v1;
-	register DOBJECT	*op;
-	register int	i;
+	DOBJECT	*op;
+	int	i;
 					/* anything to render? */
 	for (op = dobjects; op != NULL; op = op->next)
 		if (op->drawcode != DO_HIDE)

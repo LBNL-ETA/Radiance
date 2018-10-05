@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.21 2016/03/07 01:15:01 schorsch Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.22 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -98,7 +98,7 @@ main(
 				outname, inpname);
 		error(SYSTEM, errmsg);
 	}
-	return 0;
+	return(0);
 }
 
 
@@ -162,11 +162,11 @@ rhinitcopy(	/* open files and copy header */
 
 static int
 nuniq(			/* sort unique rays to front of beam list */
-	register RAYVAL	*rva,
+	RAYVAL	*rva,
 	int	n
 )
 {
-	register int	i, j;
+	int	i, j;
 	RAYVAL	rtmp;
 
 	for (j = 0; j < n; j++)
@@ -194,7 +194,7 @@ bpcmp(			/* compare beam positions on disk */
 	const void	*b2p
 )
 {
-	register off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
+	off_t	pdif = beamdir[*(int*)b1p].fo - beamdir[*(int*)b2p].fo;
 
 	if (pdif < 0L) return(-1);
 	return(pdif > 0L);
@@ -209,8 +209,8 @@ xferclump(		/* transfer the given clump to hout and free */
 	int	nb
 )
 {
-	register int	i;
-	register BEAM	*bp;
+	int	i;
+	BEAM	*bp;
 	int	n;
 
 	beamdir = hp->bi;		/* sort based on file position */
@@ -249,7 +249,7 @@ copysect(		/* copy holodeck section from ifd to ofd */
 
 void
 eputs(s)			/* put error message to stderr */
-register char  *s;
+char  *s;
 {
 	static int  midline = 0;
 

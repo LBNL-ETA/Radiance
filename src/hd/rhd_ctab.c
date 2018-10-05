@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.6 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: rhd_ctab.c,v 3.7 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Allocate and control dynamic color table.
@@ -57,7 +57,7 @@ static int split(int box[3][2]);
 
 
 
-extern int
+int
 new_ctab(		/* start new color table with max ncolors */
 	int	ncolors
 )
@@ -88,7 +88,7 @@ new_ctab(		/* start new color table with max ncolors */
 }
 
 
-extern int
+int
 get_pixel(	/* get pixel for color */
 	uby8	rgb[3],
 	void	(*set_pixel)(int h, int r, int g, int b)
@@ -96,8 +96,8 @@ get_pixel(	/* get pixel for color */
 {
 	int	r, g, b;
 	int	cv[3];
-	register CNODE	*tp;
-	register int	h;
+	CNODE	*tp;
+	int	h;
 						/* get desired color */
 	r = rgb[RED];
 	g = rgb[GRN];
@@ -148,9 +148,9 @@ get_pixel(	/* get pixel for color */
 
 static void
 cut(		/* partition color space */
-	register CNODE	*tree,
+	CNODE	*tree,
 	int	level,
-	register int	box[3][2],
+	int	box[3][2],
 	int	c0,
 	int	c1
 )
@@ -176,11 +176,11 @@ cut(		/* partition color space */
 
 static int
 split(				/* find median cut for box */
-	register int	box[3][2]
+	int	box[3][2]
 )
 {
 #define c0	r
-	register int	r, g, b;
+	int	r, g, b;
 	int	pri;
 	long	t[HMAX], med;
 					/* find dominant axis */

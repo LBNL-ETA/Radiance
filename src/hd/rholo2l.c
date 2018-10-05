@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2l.c,v 3.17 2016/03/04 02:48:14 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2l.c,v 3.18 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Routines for local rtrace execution
@@ -37,7 +37,7 @@ static PACKET * get_packets(int poll);
 static void killpersist(void);
 
 
-extern int
+int
 start_rtrace(void)			/* start rtrace process */
 {
 	static char	buf1[8];
@@ -99,7 +99,7 @@ static int
 bestout(void)			/* get best process to process packet */
 {
 	int	cnt;
-	register int	pn, i;
+	int	pn, i;
 
 	pn = 0;			/* find shortest queue */
 	for (i = 1; i < nprocs; i++)
@@ -124,8 +124,8 @@ bestout(void)			/* get best process to process packet */
 static int
 slots_avail(void)			/* count packet slots available */
 {
-	register int	nslots = 0;
-	register int	i;
+	int	nslots = 0;
+	int	i;
 
 	for (i = nprocs; i--; )
 		nslots += maxqlen - pqlen[i];
@@ -135,7 +135,7 @@ slots_avail(void)			/* count packet slots available */
 
 static void
 queue_packet(			/* queue up a beam packet */
-	register PACKET	*p
+	PACKET	*p
 )
 {
 	int	pn, n;
@@ -152,7 +152,7 @@ queue_packet(			/* queue up a beam packet */
 	if (!pqlen[pn]++)	/* add it to the end of the queue */
 		pqueue[pn] = p;
 	else {
-		register PACKET	*rpl = pqueue[pn];
+		PACKET	*rpl = pqueue[pn];
 		while (rpl->next != NULL)
 			rpl = rpl->next;
 		rpl->next = p;
@@ -168,9 +168,9 @@ get_packets(		/* read packets from rtrace processes */
 	static struct timeval	tpoll;	/* zero timeval struct */
 	fd_set	readset, errset;
 	PACKET	*pldone = NULL, *plend;
-	register PACKET	*p;
+	PACKET	*p;
 	int	n, nr;
-	register int	pn;
+	int	pn;
 	float	*bp;
 					/* prepare select call */
 	FD_ZERO(&readset); FD_ZERO(&errset); n = 0;
@@ -240,12 +240,12 @@ eoferr:
 }
 
 
-extern PACKET *
+PACKET *
 do_packets(			/* queue a packet list, return finished */
-	register PACKET	*pl
+	PACKET	*pl
 )
 {
-	register PACKET	*p;
+	PACKET	*p;
 					/* consistency check */
 	if (nprocs < 1)
 		error(CONSISTENCY, "do_packets called with no active process");
@@ -258,13 +258,13 @@ do_packets(			/* queue a packet list, return finished */
 }
 
 
-extern PACKET *
+PACKET *
 flush_queue(void)			/* empty all rtrace queues */
 {
 	PACKET	*rpdone = NULL;
-	register PACKET	*rpl = NULL;
+	PACKET	*rpl = NULL;
 	float	*bp;
-	register PACKET	*p;
+	PACKET	*p;
 	int	i, n, nr;
 
 	for (i = 0; i < nprocs; i++)
@@ -317,7 +317,7 @@ killpersist(void)			/* kill persistent process */
 }
 
 
-extern int
+int
 end_rtrace(void)			/* close rtrace process(es) */
 {
 	int	status = 0, rv;

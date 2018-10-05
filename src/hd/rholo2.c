@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo2.c,v 3.29 2016/03/21 19:06:08 greg Exp $";
+static const char	RCSid[] = "$Id: rholo2.c,v 3.30 2018/10/05 19:19:16 greg Exp $";
 #endif
 /*
  * Rtrace support routines for holodeck rendering
@@ -30,13 +30,13 @@ static int clipeyelim(short	rrng[2][2], struct gclim	*gcl);
 
 static void
 initeyelim(		/* initialize grid coordinate limits */
-	register struct gclim	*gcl,
-	register HOLO	*hp,
+	struct gclim	*gcl,
+	HOLO	*hp,
 	GCOORD	*gc
 )
 {
-	register RREAL	*v;
-	register int	i;
+	RREAL	*v;
+	int	i;
 
 	if (hp != NULL) {
 		hdgrid(gcl->egp, gcl->hp = hp, myeye.vpt);
@@ -54,7 +54,7 @@ initeyelim(		/* initialize grid coordinate limits */
 
 static void
 groweyelim(	/* grow grid limits about eye point */
-	register struct gclim	*gcl,
+	struct gclim	*gcl,
 	GCOORD	*gc,
 	double	r0,
 	double	r1,
@@ -107,7 +107,7 @@ groweyelim(	/* grow grid limits about eye point */
 	f = wallpos*(wallpos*sqcoef[gw] + licoef[gw]) + cnst;
 	for (i = 0; i < 2; i++) {
 		if (i) {		/* swap x and y coefficients */
-			register double	t;
+			double	t;
 			t = a; a = c; c = t;
 			t = d; d = e; e = t;
 		}
@@ -156,12 +156,12 @@ groweyelim(	/* grow grid limits about eye point */
 
 static int
 clipeyelim(		/* clip eye limits to grid cell */
-	register short	rrng[2][2],
-	register struct gclim	*gcl
+	short	rrng[2][2],
+	struct gclim	*gcl
 )
 {
 	int	incell = 1;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < 2; i++) {
 		if (gcl->gmin[i] < gcl->gc.i[i])
@@ -181,10 +181,10 @@ clipeyelim(		/* clip eye limits to grid cell */
 }
 
 
-extern void
+void
 packrays(		/* pack ray origins and directions */
-	register float	*rod,
-	register PACKET	*p
+	float	*rod,
+	PACKET	*p
 )
 {
 #if 0
@@ -198,7 +198,7 @@ packrays(		/* pack ray origins and directions */
 	GCOORD	gc[2];
 	FVECT	ro, rd;
 	double	d;
-	register int	i;
+	int	i;
 
 	if (!hdbcoord(gc, hdlist[p->hd], p->bi))
 		error(CONSISTENCY, "bad beam index in packrays");
@@ -265,14 +265,14 @@ packrays(		/* pack ray origins and directions */
 }
 
 
-extern void
+void
 donerays(		/* encode finished ray computations */
-	register PACKET	*p,
-	register float	*rvl
+	PACKET	*p,
+	float	*rvl
 )
 {
 	double	d;
-	register int	i;
+	int	i;
 
 	for (i = 0; i < p->nr; i++) {
 		setcolr(p->ra[i].v, rvl[0], rvl[1], rvl[2]);
@@ -286,7 +286,7 @@ donerays(		/* encode finished ray computations */
 }
 
 
-extern int
+int
 done_rtrace(void)			/* clean up and close rtrace calculation */
 {
 	int	status;
@@ -308,7 +308,7 @@ done_rtrace(void)			/* clean up and close rtrace calculation */
 }
 
 
-extern void
+void
 new_rtrace(void)			/* restart rtrace calculation */
 {
 	char	combuf[128];
@@ -333,7 +333,7 @@ new_rtrace(void)			/* restart rtrace calculation */
 }
 
 
-extern int
+int
 getradfile(void)			/* run rad and get needed variables */
 {
 	static short	mvar[] = {OCTREE,EYESEP,-1};
@@ -341,8 +341,8 @@ getradfile(void)			/* run rad and get needed variables */
 	char	tf2[64];
 	char	combuf[256];
 	char	*pippt = NULL;
-	register int	i;
-	register char	*cp;
+	int	i;
+	char	*cp;
 					/* check if rad file specified */
 	if (!vdef(RIF))
 		return(0);
@@ -383,7 +383,7 @@ getradfile(void)			/* run rad and get needed variables */
 }
 
 
-extern void
+void
 report(			/* report progress so far */
 	time_t	t
 )
