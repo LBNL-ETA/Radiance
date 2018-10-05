@@ -1,4 +1,4 @@
-/* RCSid: $Id: holo.h,v 3.28 2011/05/20 02:06:39 greg Exp $ */
+/* RCSid: $Id: holo.h,v 3.29 2018/10/05 19:46:26 greg Exp $ */
 /*
  * Header file for holodeck programs
  *
@@ -98,17 +98,6 @@ typedef struct {
 #define hdflush(hp)	(hdfreebeam(hp,0), hdsync(hp,0))
 #define hdclobber(hp)	(hdkillbeam(hp,0), hdsync(hp,0))
 
-/*
-extern HOLO	*hdinit(), *hdalloc();
-extern BEAM	*hdgetbeam();
-extern RAYVAL	*hdnewrays();
-extern unsigned	hdmemuse();
-extern off_t	hdfiluse(), hdfilen(), hdallocfrag();
-extern double	hdray(), hdinter();
-extern unsigned	hdcode();
-extern int	hdfilord();
-*/
-
 #define FF_NEVER	0		/* never free fragments */
 #define FF_WRITE	01		/* free fragment on write */
 #define FF_ALLOC	02		/* free fragment on ray alloc */
@@ -155,7 +144,7 @@ extern int	hdwg1[6];		/* wall grid 1 index */
 
 	/* clumpbeams.c */
 extern void clumpbeams(HOLO *hp, int maxcnt, int maxsiz,
-int (*cf)(HOLO *hp, int *bqueue, int bqlen));
+			int (*cf)(HOLO *hp, int *bqueue, int bqlen));
 	/* holo.c */
 extern void hdcompgrid(HOLO *hp);
 extern int hdbcoord(GCOORD gc[2], HOLO *hp, int i);
@@ -167,7 +156,7 @@ extern void hdgrid( FVECT gp, HOLO *hp, FVECT wp);
 extern void hdworld(FVECT wp, HOLO *hp, FVECT gp);
 extern double hdray(FVECT ro, FVECT rd, HOLO *hp, GCOORD gc[2], uby8 r[2][2]);
 extern double hdinter(GCOORD gc[2], uby8 r[2][2], double *ed, HOLO *hp,
-		FVECT ro, FVECT rd);
+			FVECT ro, FVECT rd);
 	/* holofile.c */
 extern HOLO * hdinit(int fd, HDGRID *hproto);
 extern void hddone(HOLO *hp);
