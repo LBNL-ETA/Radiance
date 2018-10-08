@@ -1,8 +1,8 @@
-/* RCSid: $Id: copyright.h,v 3.2 2008/12/06 01:08:53 greg Exp $ */
+/* RCSid: $Id: copyright.h,v 3.3 2018/10/08 20:05:38 greg Exp $ */
 /* ====================================================================
  * The Radiance Software License, Version 1.0
  *
- * Copyright (c) 1990 - 2009 The Regents of the University of California,
+ * Copyright (c) 1990 - 2018 The Regents of the University of California,
  * through Lawrence Berkeley National Laboratory.   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
