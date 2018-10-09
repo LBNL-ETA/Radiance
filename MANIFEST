@@ -8,7 +8,6 @@ newuser				Script for getting user information
 doc/man				UNIX man pages
 doc/materials.1			Description of material reflectance models
 doc/notes			Miscellaneous notes
-doc/ps				PostScript versions of manuals
 doc/pdf				Adobe PDF versions of manuals
 doc/ray.1			Reference manual (groff -ms format)
 doc/ray.html			Reference manual (HTML format)
