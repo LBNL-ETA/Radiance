@@ -64,6 +64,9 @@ target_link_libraries(rfluxmtx rtrad)
 add_executable(evalglare evalglare.c pictool.c)
 target_link_libraries(evalglare rtrad libreetz)
 
+add_executable(radcompare radcompare.c)
+target_link_libraries(radcompare rtrad)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c
@@ -121,6 +124,7 @@ install(TARGETS
   getinfo
   glarendx
   rad
+  radcompare
   ranimate
   ranimove
   rcollate
