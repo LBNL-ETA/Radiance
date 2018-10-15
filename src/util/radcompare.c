@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.4 2018/10/15 21:47:52 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.5 2018/10/15 22:21:45 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -118,10 +118,10 @@ real_check(double r1, double r2)
 	if (max_lim >= 0 && diff2 > max_lim*max_lim) {
 		if (report != REP_QUIET)
 			printf(
-			"%s: %sdifference between %.8g and %.8g exceeds epsilon\n",
+			"%s: %sdifference between %.8g and %.8g exceeds epsilon of %.8g\n",
 					progname,
 					(rel_min > 0) ? "relative " : "",
-					r1, r2);
+					r1, r2, max_lim);
 		return(0);
 	}
 	diff2sum += diff2;
@@ -248,13 +248,13 @@ match_val(const LUENT *ep1, void *p2)
 	const LUENT	*ep2 = lu_find((LUTAB *)p2, ep1->key);
 	if (!ep2 || !ep2->data) {
 		if (report != REP_QUIET)
-			printf("%s: Variable '%s' missing in '%s'\n",
+			printf("%s: variable '%s' missing in '%s'\n",
 					progname, ep1->key, f2name);
 		return(-1);
 	}
 	if (!equiv_string((char *)ep1->data, (char *)ep2->data)) {
 		if (report != REP_QUIET) {
-			printf("%s: Header variable '%s' has different values\n",
+			printf("%s: header variable '%s' has different values\n",
 					progname, ep1->key);
 			if (report >= REP_VERBOSE) {
 				printf("%s: %s=%s\n", f1name,
@@ -277,7 +277,7 @@ headers_match(LUTAB *hp1, LUTAB *hp2)
 		return(0);	/* something didn't match! */
 				/* non-fatal if second header has extra */
 	if (report >= REP_WARN && (ne = lu_doall(hp2, NULL, NULL) - ne))
-		printf("%s: '%s' has %d extra header setting(s)\n",
+		printf("%s: warning - '%s' has %d extra header setting(s)\n",
 					progname, f2name, ne);
 	return(1);		/* good match */
 }
@@ -290,9 +290,10 @@ input_is_binary(FILE *fin)
 	int	c = 0;
 
 	while ((c = getc(fin)) != EOF) {
+		++n;
 		if (!c | (c > 127))
 			break;			/* non-ascii character */
-		if (++n >= 10240)
+		if (n >= 10240)
 			break;			/* enough to be confident */
 	}
 	if (!n)
@@ -363,11 +364,11 @@ good_RMS()
 	if (diff2sum/(double)nsum > rms_lim*rms_lim) {
 		if (report != REP_QUIET)
 			printf(
-	"%s: %sRMS difference between '%s' and '%s' of %.5g exceeds limit\n",
+	"%s: %sRMS difference between '%s' and '%s' of %.5g exceeds limit of %.5g\n",
 					progname,
 					(rel_min > 0) ? "relative " : "",
 					f1name, f2name,
-					sqrt(diff2sum/(double)nsum));
+					sqrt(diff2sum/(double)nsum), rms_lim);
 		return(0);
 	}
 	if (report >= REP_VERBOSE)
@@ -381,13 +382,15 @@ good_RMS()
 static int
 compare_binary()
 {
+	int	c1=0, c2=0;
+
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
 		fputs(": comparing inputs as binary\n", stdout);
 	}
 	for ( ; ; ) {				/* exact byte matching */
-		int	c1 = getc(f1in);
-		int	c2 = getc(f2in);
+		c1 = getc(f1in);
+		c2 = getc(f2in);
 		if (c1 == EOF) {
 			if (c2 == EOF)
 				return(1);	/* success! */
@@ -409,8 +412,11 @@ compare_binary()
 	}
 	if (report == REP_QUIET)
 		return(0);
-	printf("%s: binary files '%s' and '%s' differ at offset %ld|%ld\n",
+	printf("%s: binary files '%s' and '%s' differ at byte offset %ld|%ld\n",
 			progname, f1name, f2name, ftell(f1in), ftell(f2in));
+	if (report >= REP_VERBOSE)
+		printf("%s: byte in '%s' is 0x%X, byte in '%s' is 0x%X\n",
+				progname, f1name, c1, f2name, c2);
 	return(0);
 }
 
@@ -449,9 +455,9 @@ compare_text()
 						lin1cnt, lin2cnt);
 				if (report >= REP_VERBOSE) {
 					fputs("------------- Mismatch -------------\n", stdout);
-					printf("%s(%d):\t%s", f1name,
+					printf("%s@%d:\t%s", f1name,
 							lin1cnt, l1buf);
-					printf("%s(%d):\t%s", f2name,
+					printf("%s@%d:\t%s", f2name,
 							lin2cnt, l2buf);
 				}
 			}
@@ -511,7 +517,7 @@ compare_hdr()
 			free(scan2);
 			return(0);
 		}
-		for (x = scanlen(&rs1); x--; ) {
+		for (x = 0; x < scanlen(&rs1); x++) {
 			if (real_check(colval(scan1[x],RED),
 						colval(scan2[x],RED)) &
 					real_check(colval(scan1[x],GRN),
