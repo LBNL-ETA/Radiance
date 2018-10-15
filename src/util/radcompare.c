@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.1 2018/10/15 17:52:52 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.2 2018/10/15 18:21:01 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -138,10 +138,11 @@ equiv_string(char *s1, char *s2)
 				/* skip whitespace at beginning */
 	while (isspace(*s1)) s1++;
 	while (isspace(*s2)) s2++;
-	if (!strcmp(s1, s2))	/* quick check */
-		return(1);
 	while (*s1) {		/* check each word */
-		int	inquote = *s1;
+		int	inquote;
+		if (!*s2)	/* unexpected EOL in s2? */
+			return(0);
+		inquote = *s1;
 		if ((inquote != '\'') & (inquote != '"'))
 			inquote = 0;
 		if (inquote) {	/* quoted text must match exactly */
