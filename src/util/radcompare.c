@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.5 2018/10/15 22:21:45 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.6 2018/10/15 22:38:31 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -33,6 +33,11 @@ double	max_lim = 0.25;		/* difference limit if non-negative */
 
 int	lin1cnt=0, lin2cnt=0;	/* file line position */
 
+const char	nsuffix[10][3] = {		/* 1st, 2nd, 3rd, etc. */
+			"th","st","nd","rd","th","th","th","th","th","th"
+		};
+#define	num_sfx(n)	nsuffix[(n)%10]
+
 				/* file types */
 const char	*file_type[] = {
 			"Unrecognized",
@@ -48,7 +53,7 @@ const char	*file_type[] = {
 			"BINARY_unknown",
 			NULL	/* terminator */
 		};
-
+				/* keep consistent with above */
 enum {TYP_UNKNOWN, TYP_TEXT, TYP_ASCII, TYP_RGBE, TYP_XYZE, TYP_FLOAT,
 		TYP_DOUBLE, TYP_RBFMESH, TYP_OCTREE, TYP_TMESH, TYP_BINARY};
 		
@@ -223,14 +228,14 @@ setheadvar(char *val, void *p)
 		val++;
 	if (!*val)		/* nothing set? */
 		return(0);
-	vln = strlen(val);	/* eliminate space and newline at end */
-	while (--vln > 0 && isspace(val[vln]))
-		;
-	val[++vln] = '\0';
 				/* check if key to ignore */
 	for (n = 0; hdr_ignkey[n]; n++)
 		if (!strcmp(key, hdr_ignkey[n]))
 			return(0);
+	vln = strlen(val);	/* eliminate space and newline at end */
+	while (isspace(val[--vln]))
+		;
+	val[++vln] = '\0';
 	if (!(tep = lu_find(htp, key)))
 		return(-1);	/* memory allocation error */
 	if (!tep->key)
@@ -331,7 +336,7 @@ identify_type(const char *name, FILE *fin, LUTAB *htp)
 		}
 		if (getheader(fin, setheadvar, htp) < 0) {
 			fputs(name, stderr);
-			fputs(": Unknown error reading header\n", stderr);
+			fputs(": unknown error reading header\n", stderr);
 			return(-1);
 		}
 		adv_linecnt(htp);		/* for trailing emtpy line */
@@ -350,7 +355,7 @@ identify_type(const char *name, FILE *fin, LUTAB *htp)
 badeof:
 	if (report != REP_QUIET) {
 		fputs(name, stdout);
-		fputs(": Unexpected end-of-file\n", stdout);
+		fputs(": unexpected end-of-file\n", stdout);
 	}
 	return(-1);
 }
@@ -396,14 +401,14 @@ compare_binary()
 				return(1);	/* success! */
 			if (report != REP_QUIET) {
 				fputs(f1name, stdout);
-				fputs(": Unexpected end-of-file\n", stdout);
+				fputs(": unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
 		if (c2 == EOF) {
 			if (report != REP_QUIET) {
 				fputs(f2name, stdout);
-				fputs(": Unexpected end-of-file\n", stdout);
+				fputs(": unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
@@ -443,7 +448,7 @@ compare_text()
 		if (feof(f2in)) {
 			if (report != REP_QUIET) {
 				fputs(f2name, stdout);
-				fputs(": Unexpected end-of-file\n", stdout);
+				fputs(": unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
@@ -470,7 +475,7 @@ compare_text()
 			continue;
 		if (report != REP_QUIET) {
 			fputs(f1name, stdout);
-			fputs(": Unexpected end-of-file\n", stdout);
+			fputs(": unexpected end-of-file\n", stdout);
 		}
 		return(0);
 	}
@@ -485,6 +490,10 @@ compare_hdr()
 	COLOR	*scan1, *scan2;
 	int	x, y;
 
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as HDR images\n", stdout);
+	}
 	fgetsresolu(&rs1, f1in);
 	fgetsresolu(&rs2, f2in);
 	if (rs1.rt != rs2.rt) {
@@ -511,7 +520,7 @@ compare_hdr()
 		if ((freadscan(scan1, scanlen(&rs1), f1in) < 0) |
 				(freadscan(scan2, scanlen(&rs2), f2in) < 0)) {
 			if (report != REP_QUIET)
-				printf("%s: Unexpected end-of-file\n",
+				printf("%s: unexpected end-of-file\n",
 						progname);
 			free(scan1);
 			free(scan2);
@@ -550,10 +559,6 @@ compare_hdr()
 	return(good_RMS());			/* final check of RMS */
 }
 
-const char	nsuffix[10][3] = {		/* 1st, 2nd, 3rd, etc. */
-			"th","st","nd","rd","th","th","th","th","th","th"
-		};
-
 /* Compare two inputs that are known to be 32-bit floating-point data */
 static int
 compare_float()
@@ -561,6 +566,10 @@ compare_float()
 	long	nread = 0;
 	float	f1, f2;
 
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as 32-bit IEEE float\n", stdout);
+	}
 	while (getbinary(&f1, sizeof(f1), 1, f1in)) {
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
 			goto badeof;
@@ -569,14 +578,14 @@ compare_float()
 			continue;
 		if (report != REP_QUIET)
 			printf("%s: %ld%s float values differ\n",
-					progname, nread, nsuffix[nread%10]);
+					progname, nread, num_sfx(nread));
 		return(0);
 	}
 	if (!getbinary(&f2, sizeof(f2), 1, f2in))
 		return(good_RMS());		/* final check of RMS */
 badeof:
 	if (report != REP_QUIET)
-		printf("%s: Unexpected end-of-file\n", progname);
+		printf("%s: unexpected end-of-file\n", progname);
 	return(0);
 }
 
@@ -587,6 +596,10 @@ compare_double()
 	long	nread = 0;
 	double	f1, f2;
 
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as 64-bit IEEE double\n", stdout);
+	}
 	while (getbinary(&f1, sizeof(f1), 1, f1in)) {
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
 			goto badeof;
@@ -594,15 +607,15 @@ compare_double()
 		if (real_check(f1, f2))
 			continue;
 		if (report != REP_QUIET)
-			printf("%s: %ld%s float values differ\n",
-					progname, nread, nsuffix[nread%10]);
+			printf("%s: %ld%s double values differ\n",
+					progname, nread, num_sfx(nread));
 		return(0);
 	}
 	if (!getbinary(&f2, sizeof(f2), 1, f2in))
 		return(good_RMS());		/* final check of RMS */
 badeof:
 	if (report != REP_QUIET)
-		printf("%s: Unexpected end-of-file\n", progname);
+		printf("%s: unexpected end-of-file\n", progname);
 	return(0);
 }
 
