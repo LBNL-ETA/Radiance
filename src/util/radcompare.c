@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.3 2018/10/15 18:31:15 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.4 2018/10/15 21:47:52 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -40,8 +40,8 @@ const char	*file_type[] = {
 			"ascii",
 			COLRFMT,
 			CIEFMT,
-			"BINARY_float",
-			"BINARY_double",
+			"float",
+			"double",
 			"BSDF_RBFmesh",
 			"Radiance_octree",
 			"Radiance_tmesh",
@@ -85,7 +85,7 @@ usage()
 {
 	fputs("Usage: ", stderr);
 	fputs(progname, stderr);
-	fputs(" [-h][-s|-w|-v][-rel min_test][-rms epsilon][-max epsilon] file1 file2\n",
+	fputs(" [-h][-s|-w|-v][-rel min_test][-rms epsilon][-max epsilon] reference test\n",
 			stderr);
 	exit(1);
 }
@@ -117,7 +117,7 @@ real_check(double r1, double r2)
 	}
 	if (max_lim >= 0 && diff2 > max_lim*max_lim) {
 		if (report != REP_QUIET)
-			fprintf(stderr,
+			printf(
 			"%s: %sdifference between %.8g and %.8g exceeds epsilon\n",
 					progname,
 					(rel_min > 0) ? "relative " : "",
@@ -232,7 +232,7 @@ setheadvar(char *val, void *p)
 		if (!strcmp(key, hdr_ignkey[n]))
 			return(0);
 	if (!(tep = lu_find(htp, key)))
-		return(-1);
+		return(-1);	/* memory allocation error */
 	if (!tep->key)
 		tep->key = strcpy(malloc(kln+1), key);
 	if (tep->data)
@@ -248,14 +248,21 @@ match_val(const LUENT *ep1, void *p2)
 	const LUENT	*ep2 = lu_find((LUTAB *)p2, ep1->key);
 	if (!ep2 || !ep2->data) {
 		if (report != REP_QUIET)
-			fprintf(stderr, "%s: Variable '%s' missing in '%s'\n",
+			printf("%s: Variable '%s' missing in '%s'\n",
 					progname, ep1->key, f2name);
 		return(-1);
 	}
 	if (!equiv_string((char *)ep1->data, (char *)ep2->data)) {
-		if (report != REP_QUIET)
-			fprintf(stderr, "%s: Header variables '%s' have different values\n",
+		if (report != REP_QUIET) {
+			printf("%s: Header variable '%s' has different values\n",
 					progname, ep1->key);
+			if (report >= REP_VERBOSE) {
+				printf("%s: %s=%s\n", f1name,
+						ep1->key, (char *)ep1->data);
+				printf("%s: %s=%s\n", f2name,
+						ep2->key, (char *)ep2->data);
+			}
+		}
 		return(-1);
 	}
 	return(1);		/* good match */
@@ -268,13 +275,10 @@ headers_match(LUTAB *hp1, LUTAB *hp2)
 	int	ne = lu_doall(hp1, match_val, hp2);
 	if (ne < 0)
 		return(0);	/* something didn't match! */
-	ne = lu_doall(hp2, NULL, NULL) - ne;
-	if (ne) {
-		if (report != REP_QUIET)
-			fprintf(stderr, "%s: '%s' has %d extra header variable(s)\n",
+				/* non-fatal if second header has extra */
+	if (report >= REP_WARN && (ne = lu_doall(hp2, NULL, NULL) - ne))
+		printf("%s: '%s' has %d extra header setting(s)\n",
 					progname, f2name, ne);
-		return(0);
-	}
 	return(1);		/* good match */
 }
 
@@ -320,9 +324,9 @@ identify_type(const char *name, FILE *fin, LUTAB *htp)
 			goto badeof;
 		adv_linecnt(htp);		/* for #?ID string */
 		if (report >= REP_WARN && strncmp(sbuf, "RADIANCE", 8)) {
-			fputs(name, stderr);
-			fputs(": warning - unexpected header ID: ", stderr);
-			fputs(sbuf, stderr);
+			fputs(name, stdout);
+			fputs(": warning - unexpected header ID: ", stdout);
+			fputs(sbuf, stdout);
 		}
 		if (getheader(fin, setheadvar, htp) < 0) {
 			fputs(name, stderr);
@@ -344,8 +348,8 @@ identify_type(const char *name, FILE *fin, LUTAB *htp)
 	return(TYP_TEXT);
 badeof:
 	if (report != REP_QUIET) {
-		fputs(name, stderr);
-		fputs(": Unexpected end-of-file\n", stderr);
+		fputs(name, stdout);
+		fputs(": Unexpected end-of-file\n", stdout);
 	}
 	return(-1);
 }
@@ -358,7 +362,7 @@ good_RMS()
 		return(1);
 	if (diff2sum/(double)nsum > rms_lim*rms_lim) {
 		if (report != REP_QUIET)
-			fprintf(stderr,
+			printf(
 	"%s: %sRMS difference between '%s' and '%s' of %.5g exceeds limit\n",
 					progname,
 					(rel_min > 0) ? "relative " : "",
@@ -367,8 +371,7 @@ good_RMS()
 		return(0);
 	}
 	if (report >= REP_VERBOSE)
-		fprintf(stderr,
-			"%s: %sRMS difference of reals in '%s' and '%s' is %.5g\n",
+		printf("%s: %sRMS difference of reals in '%s' and '%s' is %.5g\n",
 				progname, (rel_min > 0) ? "relative " : "",
 				f1name, f2name, sqrt(diff2sum/(double)nsum));
 	return(1);
@@ -379,8 +382,8 @@ static int
 compare_binary()
 {
 	if (report >= REP_VERBOSE) {
-		fputs(progname, stderr);
-		fputs(": comparing inputs as binary\n", stderr);
+		fputs(progname, stdout);
+		fputs(": comparing inputs as binary\n", stdout);
 	}
 	for ( ; ; ) {				/* exact byte matching */
 		int	c1 = getc(f1in);
@@ -389,15 +392,15 @@ compare_binary()
 			if (c2 == EOF)
 				return(1);	/* success! */
 			if (report != REP_QUIET) {
-				fputs(f1name, stderr);
-				fputs(": Unexpected end-of-file\n", stderr);
+				fputs(f1name, stdout);
+				fputs(": Unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
 		if (c2 == EOF) {
 			if (report != REP_QUIET) {
-				fputs(f2name, stderr);
-				fputs(": Unexpected end-of-file\n", stderr);
+				fputs(f2name, stdout);
+				fputs(": Unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
@@ -406,7 +409,7 @@ compare_binary()
 	}
 	if (report == REP_QUIET)
 		return(0);
-	fprintf(stderr, "%s: binary files '%s' and '%s' differ at offset %ld|%ld\n",
+	printf("%s: binary files '%s' and '%s' differ at offset %ld|%ld\n",
 			progname, f1name, f2name, ftell(f1in), ftell(f2in));
 	return(0);
 }
@@ -418,8 +421,8 @@ compare_text()
 	char	l1buf[4096], l2buf[4096];
 
 	if (report >= REP_VERBOSE) {
-		fputs(progname, stderr);
-		fputs(": comparing inputs as ASCII text\n", stderr);
+		fputs(progname, stdout);
+		fputs(": comparing inputs as ASCII text\n", stdout);
 	}
 						/* compare a line at a time */
 	while (fgets(l1buf, sizeof(l1buf), f1in)) {
@@ -433,22 +436,22 @@ compare_text()
 		}
 		if (feof(f2in)) {
 			if (report != REP_QUIET) {
-				fputs(f2name, stderr);
-				fputs(": Unexpected end-of-file\n", stderr);
+				fputs(f2name, stdout);
+				fputs(": Unexpected end-of-file\n", stdout);
 			}
 			return(0);
 		}
 						/* compare non-empty lines */
 		if (!equiv_string(l1buf, l2buf)) {
 			if (report != REP_QUIET) {
-				fprintf(stderr, "%s: inputs '%s' and '%s' differ at line %d|%d\n",
+				printf("%s: inputs '%s' and '%s' differ at line %d|%d\n",
 						progname, f1name, f2name,
 						lin1cnt, lin2cnt);
 				if (report >= REP_VERBOSE) {
-					fputs("------------- Mismatch -------------\n", stderr);
-					fprintf(stderr, "%s(%d):\t%s", f1name,
+					fputs("------------- Mismatch -------------\n", stdout);
+					printf("%s(%d):\t%s", f1name,
 							lin1cnt, l1buf);
-					fprintf(stderr, "%s(%d):\t%s", f2name,
+					printf("%s(%d):\t%s", f2name,
 							lin2cnt, l2buf);
 				}
 			}
@@ -460,8 +463,8 @@ compare_text()
 		if (!*sskip2(l2buf,0))
 			continue;
 		if (report != REP_QUIET) {
-			fputs(f1name, stderr);
-			fputs(": Unexpected end-of-file\n", stderr);
+			fputs(f1name, stdout);
+			fputs(": Unexpected end-of-file\n", stdout);
 		}
 		return(0);
 	}
@@ -480,14 +483,14 @@ compare_hdr()
 	fgetsresolu(&rs2, f2in);
 	if (rs1.rt != rs2.rt) {
 		if (report != REP_QUIET)
-			fprintf(stderr,
+			printf(
 			"%s: Images '%s' and '%s' have different pixel ordering\n",
 					progname, f1name, f2name);
 		return(0);
 	}
 	if ((rs1.xr != rs2.xr) | (rs1.yr != rs2.yr)) {
 		if (report != REP_QUIET)
-			fprintf(stderr,
+			printf(
 			"%s: Images '%s' and '%s' are different sizes\n",
 					progname, f1name, f2name);
 		return(0);
@@ -502,7 +505,7 @@ compare_hdr()
 		if ((freadscan(scan1, scanlen(&rs1), f1in) < 0) |
 				(freadscan(scan2, scanlen(&rs2), f2in) < 0)) {
 			if (report != REP_QUIET)
-				fprintf(stderr, "%s: Unexpected end-of-file\n",
+				printf("%s: Unexpected end-of-file\n",
 						progname);
 			free(scan1);
 			free(scan2);
@@ -517,15 +520,15 @@ compare_hdr()
 						colval(scan2[x],BLU)))
 				continue;
 			if (report != REP_QUIET) {
-				fprintf(stderr,
+				printf(
 				"%s: pixels at scanline %d offset %d differ\n",
 					progname, y, x);
 				if (report >= REP_VERBOSE) {
-					fprintf(stderr, "%s: (R,G,B)=(%g,%g,%g)\n",
+					printf("%s: (R,G,B)=(%g,%g,%g)\n",
 						f1name, colval(scan1[x],RED),
 						colval(scan1[x],GRN),
 						colval(scan1[x],BLU));
-					fprintf(stderr, "%s: (R,G,B)=(%g,%g,%g)\n",
+					printf("%s: (R,G,B)=(%g,%g,%g)\n",
 						f2name, colval(scan2[x],RED),
 						colval(scan2[x],GRN),
 						colval(scan2[x],BLU));
@@ -559,7 +562,7 @@ compare_float()
 		if (real_check(f1, f2))
 			continue;
 		if (report != REP_QUIET)
-			fprintf(stderr, "%s: %ld%s float values differ\n",
+			printf("%s: %ld%s float values differ\n",
 					progname, nread, nsuffix[nread%10]);
 		return(0);
 	}
@@ -567,7 +570,7 @@ compare_float()
 		return(good_RMS());		/* final check of RMS */
 badeof:
 	if (report != REP_QUIET)
-		fprintf(stderr, "%s: Unexpected end-of-file\n", progname);
+		printf("%s: Unexpected end-of-file\n", progname);
 	return(0);
 }
 
@@ -585,7 +588,7 @@ compare_double()
 		if (real_check(f1, f2))
 			continue;
 		if (report != REP_QUIET)
-			fprintf(stderr, "%s: %ld%s float values differ\n",
+			printf("%s: %ld%s float values differ\n",
 					progname, nread, nsuffix[nread%10]);
 		return(0);
 	}
@@ -593,7 +596,7 @@ compare_double()
 		return(good_RMS());		/* final check of RMS */
 badeof:
 	if (report != REP_QUIET)
-		fprintf(stderr, "%s: Unexpected end-of-file\n", progname);
+		printf("%s: Unexpected end-of-file\n", progname);
 	return(0);
 }
 
@@ -647,7 +650,7 @@ main(int argc, char *argv[])
 
 	if (!strcmp(f1name, f2name)) {		/* inputs are same? */
 		if (report >= REP_WARN)
-			fprintf(stderr, "%s: warning - identical inputs given\n",
+			printf("%s: warning - identical inputs given\n",
 					progname);
 		return(0);
 	}
@@ -671,7 +674,7 @@ main(int argc, char *argv[])
 		return(1);
 	if (typ1 != typ2) {
 		if (report != REP_QUIET)
-			fprintf(stderr, "%s: '%s' is %s and '%s' is %s\n",
+			printf("%s: '%s' is %s and '%s' is %s\n",
 					progname, f1name, file_type[typ1],
 					f2name, file_type[typ2]);
 		return(1);
@@ -682,14 +685,14 @@ main(int argc, char *argv[])
 	lu_done(&hdr1); lu_done(&hdr2);
 	if (!ign_header & (report >= REP_WARN)) {
 		if (typ1 == TYP_UNKNOWN)
-			fprintf(stderr, "%s: warning - unrecognized format, comparing as binary\n",
+			printf("%s: warning - unrecognized format, comparing as binary\n",
 					progname);
 		if (lin1cnt != lin2cnt)
-			fprintf(stderr, "%s: warning - headers are different lengths\n",
+			printf("%s: warning - headers are different lengths\n",
 					progname);
 	}
 	if (report >= REP_VERBOSE)
-		fprintf(stderr, "%s: input file type is %s\n",
+		printf("%s: input file type is %s\n",
 				progname, file_type[typ1]);
 
 	switch (typ1) {				/* compare based on type */
