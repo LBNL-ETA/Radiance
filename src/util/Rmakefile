@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.86 2018/03/20 17:50:16 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.87 2018/10/15 17:52:52 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -21,7 +21,7 @@ LIBDIR = /usr/local/lib/ray
 
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
-		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare
+		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare radcompare
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -139,6 +139,9 @@ wrapBSDF:	wrapBSDF.o
 evalglare:	evalglare.o pictool.o
 	$(CC) $(CFLAGS) -o evalglare evalglare.o pictool.o -lreetz -lrtrad $(MLIB)
 
+radcompare:	radcompare.o
+	$(CC) $(CFLAGS) -o radcompare radcompare.o -lrtrad $(MLIB)
+
 setscan.o:	setscan.h
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
@@ -226,7 +229,8 @@ rsensor.o:	../rt/ray.h ../common/octree.h \
 
 rsensor.o:	../common/view.h ../common/resolu.h ../rt/source.h
 
-rcollate.o:	../common/platform.h ../common/rtio.h ../common/resolu.h
+radcompare.o rcollate.o:	../common/platform.h \
+../common/rtio.h ../common/resolu.h
 
 Version.c:	../rt/Version.c
 	cp ../rt/Version.c .
@@ -247,6 +251,8 @@ pictool.o evalglare.o:	pictool.h ../common/g3vector.h ../common/g3affine.h \
 ../common/g3flist.h ../common/fvect.h ../common/gbasic.h
 
 evalglare.o:	../common/rtio.h
+
+radcompare.o:	../common/rtio.h ../common/color.h ../common/lookup.h
 
 pictool.o:	../common/view.h ../common/color.h
 

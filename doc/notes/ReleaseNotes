@@ -2238,3 +2238,6 @@ colored sky option.
 
 =========================
 Version 5.3
+
+Created radcompare program to compare Radiance tool output to reference outputs
+during unit-testing.
