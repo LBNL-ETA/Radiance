@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.7 2018/10/16 00:20:52 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.8 2018/10/16 16:23:17 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -82,7 +82,7 @@ FILE		*f1in=NULL, *f2in=NULL;
 
 				/* running real differences */
 double	diff2sum = 0;
-int	nsum = 0;
+long	nsum = 0;
 
 /* Report usage and exit */
 static void
@@ -132,6 +132,22 @@ real_check(double r1, double r2)
 	diff2sum += diff2;
 	nsum++;
 	return(1);
+}
+
+/* Compare two color values for equivalence */
+static int
+color_check(COLOR c1, COLOR c2)
+{
+	int	p;
+
+	if (!real_check(colval(c1,RED)+colval(c1,GRN)+colval(c1,BLU)*(1./3.),
+			colval(c2,RED)+colval(c2,GRN)+colval(c2,BLU))*(1./3.))
+		return(0);
+
+	p = (colval(c1,GRN) > colval(c1,RED)) ? GRN : RED;
+	if (colval(c1,BLU) > colval(c1,p)) p = BLU;
+	
+	return(real_check(colval(c1,p), colval(c2,p)));
 }
 
 /* Compare two strings for equivalence */
@@ -527,12 +543,7 @@ compare_hdr()
 			return(0);
 		}
 		for (x = 0; x < scanlen(&rs1); x++) {
-			if (real_check(colval(scan1[x],RED),
-						colval(scan2[x],RED)) &
-					real_check(colval(scan1[x],GRN),
-						colval(scan2[x],GRN)) &
-					real_check(colval(scan1[x],BLU),
-						colval(scan2[x],BLU)))
+			if (color_check(scan1[x], scan2[x]))
 				continue;
 			if (report != REP_QUIET) {
 				printf(
