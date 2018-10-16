@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.8 2018/10/16 16:23:17 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.9 2018/10/16 16:52:05 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -92,7 +92,7 @@ usage()
 	fputs(progname, stderr);
 	fputs(" [-h][-s|-w|-v][-rel min_test][-rms epsilon][-max epsilon] reference test\n",
 			stderr);
-	exit(1);
+	exit(2);
 }
 
 /* Get type ID from name (or 0 if not found) */
@@ -687,20 +687,20 @@ main(int argc, char *argv[])
 	SET_FILE_BINARY(stdin);			/* in case we're using it */
 	if (!f1in && !(f1in = fopen(f1name, "rb"))) {
 		fprintf(stderr, "%s: cannot open for reading\n", f1name);
-		return(1);
+		return(2);
 	}
 	if (!strcmp(f2name, "-")) {
 		f2in = stdin;
 		f2name = stdin_name;
 	} else if (!(f2in = fopen(f2name, "rb"))) {
 		fprintf(stderr, "%s: cannot open for reading\n", f2name);
-		return(1);
+		return(2);
 	}
 						/* load headers */
 	if ((typ1 = identify_type(f1name, f1in, &hdr1)) < 0)
-		return(1);
+		return(2);
 	if ((typ2 = identify_type(f2name, f2in, &hdr2)) < 0)
-		return(1);
+		return(2);
 	if (typ1 != typ2) {
 		if (report != REP_QUIET)
 			printf("%s: '%s' is %s and '%s' is %s\n",
