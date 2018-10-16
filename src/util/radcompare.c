@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.6 2018/10/15 22:38:31 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.7 2018/10/16 00:20:52 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -568,7 +568,7 @@ compare_float()
 
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
-		fputs(": comparing inputs as 32-bit IEEE float\n", stdout);
+		fputs(": comparing inputs as 32-bit IEEE floats\n", stdout);
 	}
 	while (getbinary(&f1, sizeof(f1), 1, f1in)) {
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
@@ -598,7 +598,7 @@ compare_double()
 
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
-		fputs(": comparing inputs as 64-bit IEEE double\n", stdout);
+		fputs(": comparing inputs as 64-bit IEEE doubles\n", stdout);
 	}
 	while (getbinary(&f1, sizeof(f1), 1, f1in)) {
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
@@ -662,17 +662,16 @@ main(int argc, char *argv[])
 		}
 		break;
 	}
-	if (a != argc-2)
+	if (a != argc-2)			/* make sure of two inputs */
 		usage();
-	if (!f1name) f1name = argv[a];
-	if (!f2name) f2name = argv[a+1];
-
-	if (!strcmp(f1name, f2name)) {		/* inputs are same? */
+	if (!strcmp(argv[a], argv[a+1])) {	/* inputs are same? */
 		if (report >= REP_WARN)
 			printf("%s: warning - identical inputs given\n",
 					progname);
 		return(0);
 	}
+	if (!f1name) f1name = argv[a];
+	if (!f2name) f2name = argv[a+1];
 						/* open inputs */
 	SET_FILE_BINARY(stdin);			/* in case we're using it */
 	if (!f1in && !(f1in = fopen(f1name, "rb"))) {
