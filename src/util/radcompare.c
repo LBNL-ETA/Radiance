@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.9 2018/10/16 16:52:05 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.10 2018/10/17 17:39:23 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -291,13 +291,13 @@ match_val(const LUENT *ep1, void *p2)
 
 /* Compare two sets of header variables */
 static int
-headers_match(LUTAB *hp1, LUTAB *hp2)
+headers_match()
 {
-	int	ne = lu_doall(hp1, match_val, hp2);
+	int	ne = lu_doall(&hdr1, match_val, &hdr2);
 	if (ne < 0)
 		return(0);	/* something didn't match! */
 				/* non-fatal if second header has extra */
-	if (report >= REP_WARN && (ne = lu_doall(hp2, NULL, NULL) - ne))
+	if (report >= REP_WARN && (ne = lu_doall(&hdr2, NULL, NULL) - ne))
 		printf("%s: warning - '%s' has %d extra header setting(s)\n",
 					progname, f2name, ne);
 	return(1);		/* good match */
@@ -709,7 +709,7 @@ main(int argc, char *argv[])
 		return(1);
 	}
 	ign_header |= !has_header(typ1);	/* check headers if indicated */
-	if (!ign_header && !headers_match(&hdr1, &hdr2))
+	if (!ign_header && !headers_match())
 		return(1);
 	lu_done(&hdr1); lu_done(&hdr2);
 	if (!ign_header & (report >= REP_WARN)) {
