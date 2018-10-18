@@ -2241,3 +2241,5 @@ Version 5.3
 
 Created radcompare program to compare Radiance tool output to reference outputs
 during unit-testing.
+
+Fixed issue reading very large files (> 2 GBytes) in rcollate.
