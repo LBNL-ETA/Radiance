@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.11 2018/10/19 20:32:16 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.12 2018/10/19 22:15:30 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -74,6 +74,16 @@ LUTAB	hdr2 = LU_SINIT(free,free);
 #define adv_linecnt(htp)	(lin1cnt += (htp == &hdr1), \
 					lin2cnt += (htp == &hdr2))
 
+typedef struct {		/* dynamic line buffer */
+	char	*ptr;
+	int	len;
+	int	siz;
+} LINEBUF;
+
+#define init_line(bp)	((bp)->ptr = NULL, (bp)->siz = 0)
+				/* 100 MByte limit on line buffer */
+#define MAXBUF		(100L<<20)
+
 				/* input files */
 char		*progname = NULL;
 const char	stdin_name[] = "<stdin>";
@@ -93,6 +103,48 @@ usage()
 	fputs(" [-h][-s|-w|-v][-rel min_test][-rms epsilon][-max epsilon] reference test\n",
 			stderr);
 	exit(2);
+}
+
+/* Read a text line, increasing buffer size as necessary */
+static int
+read_line(LINEBUF *bp, FILE *fp)
+{
+	bp->len = 0;
+	if (!bp->ptr) {
+		bp->ptr = (char *)malloc(bp->siz = 512);
+		if (!bp->ptr)
+			goto memerr;
+	}
+	while (fgets(bp->ptr + bp->len, bp->siz - bp->len, fp)) {
+		bp->len += strlen(bp->ptr + bp->len);
+		if (bp->ptr[bp->len-1] == '\n')
+			break;		/* found EOL */
+		if (bp->len < bp->siz - 4)
+			continue;	/* at EOF? */
+		if (bp->siz >= MAXBUF)
+			break;		/* don't go to extremes */
+		if ((bp->siz += bp->siz/2) > MAXBUF)
+			bp->siz = MAXBUF;
+		bp->ptr = (char *)realloc(bp->ptr, bp->siz);
+		if (!bp->ptr)
+			goto memerr;
+	}
+	return(bp->len);
+memerr:
+	fprintf(stderr,
+		"%s: out of memory in read_line() allocating %d byte buffer\n",
+			progname, bp->siz);
+	exit(2);
+}
+
+/* Free line buffer */
+static void
+free_line(LINEBUF *bp)
+{
+	bp->len = 0;
+	if (!bp->ptr) return;
+	free(bp->ptr);
+	bp->ptr = NULL;
 }
 
 /* Get type ID from name (or 0 if not found) */
@@ -441,86 +493,67 @@ compare_binary()
 	return(0);
 }
 
-/* If line is continued (no newline), then back up to word boundary if one */
-static int
-leftover(char *buf)
-{
-	int	minlen = strlen(buf);
-	char	*bend = buf + minlen;
-	char	*cp = bend-1;
-
-	if (*cp == '\r') *cp = '\n';		/* AARG Windoze! */
-	if (*cp == '\n')			/* complete line? */
-		return(0);
-
-	minlen >>= 2;				/* back over partial word */
-	while (!isspace(*cp))
-		if (--cp <= buf+minlen)
-			return(0);
-	*cp++ = '\0';				/* break line here */
-	return(bend - cp);
-}
-
 /* Compare two inputs as generic text files */
 static int
 compare_text()
 {
-	char	l1buf[4096], l2buf[4096];
-	int	l1over=0, l2over=0;
+	LINEBUF	l1buf, l2buf;
 
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
 		fputs(": comparing inputs as ASCII text\n", stdout);
 	}
-						/* compare a line at a time */
-	while (fgets(l1buf+l1over, sizeof(l1buf)-l1over, f1in)) {
-		lin1cnt += !(l1over = leftover(l1buf));
-		if (!*sskip2(l1buf,0)) {
-			memmove(l1buf, l1buf+sizeof(l1buf)-l1over, l1over);
+	init_line(&l1buf); init_line(&l2buf);	/* compare a line at a time */
+	while (read_line(&l1buf, f1in)) {
+		lin1cnt++;
+		if (!*sskip2(l1buf.ptr,0))
 			continue;		/* ignore empty lines */
-		}
-		while (fgets(l2buf+l2over, sizeof(l2buf)-l2over, f2in)) {
-			lin2cnt += !(l2over = leftover(l2buf));
-			if (*sskip2(l2buf,0))
+
+		while (read_line(&l2buf, f2in)) {
+			lin2cnt++;
+			if (*sskip2(l2buf.ptr,0))
 				break;		/* found other non-empty line */
-			memmove(l2buf, l2buf+sizeof(l2buf)-l2over, l2over);
 		}
 		if (feof(f2in)) {
 			if (report != REP_QUIET) {
 				fputs(f2name, stdout);
 				fputs(": unexpected end-of-file\n", stdout);
 			}
+			free_line(&l1buf); free_line(&l2buf);
 			return(0);
 		}
 						/* compare non-empty lines */
-		if (!equiv_string(l1buf, l2buf)) {
+		if (!equiv_string(l1buf.ptr, l2buf.ptr)) {
 			if (report != REP_QUIET) {
 				printf("%s: inputs '%s' and '%s' differ at line %d|%d\n",
 						progname, f1name, f2name,
 						lin1cnt, lin2cnt);
-				if (report >= REP_VERBOSE) {
+				if ( report >= REP_VERBOSE &&
+						(l1buf.len < 256) &
+						(l2buf.len < 256) ) {
 					fputs("------------- Mismatch -------------\n", stdout);
 					printf("%s@%d:\t%s", f1name,
-							lin1cnt, l1buf);
+							lin1cnt, l1buf.ptr);
 					printf("%s@%d:\t%s", f2name,
-							lin2cnt, l2buf);
+							lin2cnt, l2buf.ptr);
 				}
 			}
+			free_line(&l1buf); free_line(&l2buf);
 			return(0);
 		}
-		if (l1over) memmove(l1buf, l1buf+sizeof(l1buf)-l1over, l1over);
-		if (l2over) memmove(l2buf, l2buf+sizeof(l2buf)-l2over, l2over);
 	}
 						/* check for EOF on input 2 */
-	while (fgets(l2buf, sizeof(l2buf), f2in)) {
-		if (!*sskip2(l2buf,0))
+	while (read_line(&l2buf, f2in)) {
+		if (!*sskip2(l2buf.ptr,0))
 			continue;
 		if (report != REP_QUIET) {
 			fputs(f1name, stdout);
 			fputs(": unexpected end-of-file\n", stdout);
 		}
+		free_line(&l1buf); free_line(&l2buf);
 		return(0);
 	}
+	free_line(&l1buf); free_line(&l2buf);
 	return(good_RMS());			/* final check for reals */
 }
 
