@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.12 2018/10/19 22:15:30 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.13 2018/10/19 23:50:32 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -141,10 +141,8 @@ memerr:
 static void
 free_line(LINEBUF *bp)
 {
-	bp->len = 0;
-	if (!bp->ptr) return;
-	free(bp->ptr);
-	bp->ptr = NULL;
+	if (bp->ptr) free(bp->ptr);
+	init_line(bp);
 }
 
 /* Get type ID from name (or 0 if not found) */
@@ -514,7 +512,7 @@ compare_text()
 			if (*sskip2(l2buf.ptr,0))
 				break;		/* found other non-empty line */
 		}
-		if (feof(f2in)) {
+		if (!l2buf.len) {		/* input 2 EOF? */
 			if (report != REP_QUIET) {
 				fputs(f2name, stdout);
 				fputs(": unexpected end-of-file\n", stdout);
@@ -542,7 +540,7 @@ compare_text()
 			return(0);
 		}
 	}
-						/* check for EOF on input 2 */
+	free_line(&l1buf);			/* check for EOF on input 2 */
 	while (read_line(&l2buf, f2in)) {
 		if (!*sskip2(l2buf.ptr,0))
 			continue;
@@ -550,10 +548,10 @@ compare_text()
 			fputs(f1name, stdout);
 			fputs(": unexpected end-of-file\n", stdout);
 		}
-		free_line(&l1buf); free_line(&l2buf);
+		free_line(&l2buf);
 		return(0);
 	}
-	free_line(&l1buf); free_line(&l2buf);
+	free_line(&l2buf);
 	return(good_RMS());			/* final check for reals */
 }
 
