@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.27 2018/10/18 22:59:48 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.28 2018/10/19 16:53:37 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -90,7 +90,7 @@ static int
 load_file(MEMLOAD *mp, FILE *fp)
 {
 	int	fd;
-	off_t	skip, flen, skipped;
+	off_t	skip, flen, fpos;
 
 #if defined(_WIN32) || defined(_WIN64)
 				/* too difficult to fix this */
@@ -117,7 +117,7 @@ load_file(MEMLOAD *mp, FILE *fp)
 			mp->mapped = 1;
 			return(1);	/* mmap() success */
 		}
-		mp->base = NULL;	/* fall back to reading it in... */
+		mp->base = NULL;	/* else fall back to reading it in... */
 	}
 #endif
 	if (lseek(fd, skip, SEEK_SET) != skip ||
@@ -125,15 +125,15 @@ load_file(MEMLOAD *mp, FILE *fp)
 		mp->len = 0;
 		return(-1);
 	}
-	skipped = skip;			/* read() fails on really big buffers */
-	while (skipped < flen) {
-		ssize_t	nread = read(fd, (char *)mp->base+(skipped-skip),
-				(flen-skipped <= 1L<<30) ? flen-skipped : 1L<<30);
+	fpos = skip;
+	while (fpos < flen) {		/* read() fails if n > 2 GBytes */
+		ssize_t	nread = read(fd, (char *)mp->base+(fpos-skip),
+				(flen-fpos < 1L<<24) ? flen-fpos : 1L<<24);
 		if (nread <= 0) {
 			free_load(mp);
 			return(-1);
 		}
-		skipped += nread;
+		fpos += nread;
 	}
 	return(1);
 }
@@ -370,7 +370,7 @@ do_transpose(const MEMLOAD *mp)
 			putc(tabEOL[j >= no_columns-1], stdout);
 		} else {			/* binary output */
 			putbinary((char *)mp->base +
-			    (unsigned long)(n_comp*comp_size)*(j*ni_columns + i),
+				(size_t)(n_comp*comp_size)*(j*ni_columns + i),
 					comp_size, n_comp, stdout);
 		}
 	    if (ferror(stdout)) {
