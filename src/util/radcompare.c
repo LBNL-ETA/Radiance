@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.10 2018/10/17 17:39:23 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.11 2018/10/19 20:32:16 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -441,25 +441,49 @@ compare_binary()
 	return(0);
 }
 
+/* If line is continued (no newline), then back up to word boundary if one */
+static int
+leftover(char *buf)
+{
+	int	minlen = strlen(buf);
+	char	*bend = buf + minlen;
+	char	*cp = bend-1;
+
+	if (*cp == '\r') *cp = '\n';		/* AARG Windoze! */
+	if (*cp == '\n')			/* complete line? */
+		return(0);
+
+	minlen >>= 2;				/* back over partial word */
+	while (!isspace(*cp))
+		if (--cp <= buf+minlen)
+			return(0);
+	*cp++ = '\0';				/* break line here */
+	return(bend - cp);
+}
+
 /* Compare two inputs as generic text files */
 static int
 compare_text()
 {
 	char	l1buf[4096], l2buf[4096];
+	int	l1over=0, l2over=0;
 
 	if (report >= REP_VERBOSE) {
 		fputs(progname, stdout);
 		fputs(": comparing inputs as ASCII text\n", stdout);
 	}
 						/* compare a line at a time */
-	while (fgets(l1buf, sizeof(l1buf), f1in)) {
-		lin1cnt++;
-		if (!*sskip2(l1buf,0))
+	while (fgets(l1buf+l1over, sizeof(l1buf)-l1over, f1in)) {
+		lin1cnt += !(l1over = leftover(l1buf));
+		if (!*sskip2(l1buf,0)) {
+			memmove(l1buf, l1buf+sizeof(l1buf)-l1over, l1over);
 			continue;		/* ignore empty lines */
-		while (fgets(l2buf, sizeof(l2buf), f2in)) {
-			lin2cnt++;
+		}
+		while (fgets(l2buf+l2over, sizeof(l2buf)-l2over, f2in)) {
+			lin2cnt += !(l2over = leftover(l2buf));
 			if (*sskip2(l2buf,0))
 				break;		/* found other non-empty line */
+			memmove(l2buf, l2buf+sizeof(l2buf)-l2over, l2over);
 		}
 		if (feof(f2in)) {
 			if (report != REP_QUIET) {
@@ -484,6 +508,8 @@ compare_text()
 			}
 			return(0);
 		}
+		if (l1over) memmove(l1buf, l1buf+sizeof(l1buf)-l1over, l1over);
+		if (l2over) memmove(l2buf, l2buf+sizeof(l2buf)-l2over, l2over);
 	}
 						/* check for EOF on input 2 */
 	while (fgets(l2buf, sizeof(l2buf), f2in)) {
