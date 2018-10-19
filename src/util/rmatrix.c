@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.29 2018/08/02 18:33:50 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.30 2018/10/19 00:21:31 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -290,12 +290,15 @@ loaderr:					/* should report error? */
 static int
 rmx_write_ascii(const RMATRIX *rm, FILE *fp)
 {
+	const char	*fmt = (rm->dtype == DTfloat) ? " %.7e" :
+			(rm->dtype == DTrgbe) | (rm->dtype == DTxyze) ? " %.3e" :
+				" %.15e" ;
 	int	i, j, k;
 
 	for (i = 0; i < rm->nrows; i++) {
 	    for (j = 0; j < rm->ncols; j++) {
 	        for (k = 0; k < rm->ncomp; k++)
-		    fprintf(fp, " %.15e", rmx_lval(rm,i,j,k));
+		    fprintf(fp, fmt, rmx_lval(rm,i,j,k));
 		fputc('\t', fp);
 	    }
 	    fputc('\n', fp);
