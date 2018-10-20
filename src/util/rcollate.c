@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.28 2018/10/19 16:53:37 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.29 2018/10/20 15:02:51 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -21,9 +21,9 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.28 2018/10/19 16:53:37 greg Exp
 #endif
 
 typedef struct {
+	void	*mapped;	/* memory-mapped pointer */
 	void	*base;		/* pointer to base memory */
 	size_t	len;		/* allocated memory length */
-	int	mapped;		/* memory-mapped file? */
 } MEMLOAD;		/* file loaded/mapped into memory */
 
 typedef struct {
@@ -42,10 +42,11 @@ free_load(MEMLOAD *mp)
 		return;
 #ifdef MAP_FILE
 	if (mp->mapped)
-		munmap(mp->base, mp->len);
+		munmap(mp->mapped, mp->len);
 	else
 #endif
 		free(mp->base);
+	mp->mapped = NULL;
 	mp->base = NULL;
 	mp->len = 0;
 }
@@ -60,9 +61,9 @@ load_stream(MEMLOAD *mp, FILE *fp)
 
 	if (mp == NULL)
 		return(-1);
+	mp->mapped = NULL;
 	mp->base = NULL;
 	mp->len = 0;
-	mp->mapped = 0;
 	if (fp == NULL)
 		return(-1);
 	while ((nr = fread(buf, 1, sizeof(buf), fp)) > 0) {
@@ -98,9 +99,9 @@ load_file(MEMLOAD *mp, FILE *fp)
 #endif
 	if (mp == NULL)
 		return(-1);
+	mp->mapped = NULL;
 	mp->base = NULL;
 	mp->len = 0;
-	mp->mapped = 0;
 	if (fp == NULL)
 		return(-1);
 	fd = fileno(fp);
@@ -111,13 +112,12 @@ load_file(MEMLOAD *mp, FILE *fp)
 	mp->len = (size_t)(flen - skip);
 #ifdef MAP_FILE
 	if (mp->len > 1L<<20) {		/* map file if > 1 MByte */
-		mp->base = mmap(NULL, flen, PROT_READ, MAP_PRIVATE, fd, 0);
-		if (mp->base != MAP_FAILED) {
-			mp->base = (char *)mp->base + skip;
-			mp->mapped = 1;
+		mp->mapped = mmap(NULL, flen, PROT_READ, MAP_PRIVATE, fd, 0);
+		if (mp->mapped != MAP_FAILED) {
+			mp->base = (char *)mp->mapped + skip;
 			return(1);	/* mmap() success */
 		}
-		mp->base = NULL;	/* else fall back to reading it in... */
+		mp->mapped = NULL;	/* else fall back to reading it in... */
 	}
 #endif
 	if (lseek(fd, skip, SEEK_SET) != skip ||
