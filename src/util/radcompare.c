@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.14 2018/10/19 23:56:15 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.15 2018/10/20 15:17:27 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -109,6 +109,8 @@ usage()
 static int
 read_line(LINEBUF *bp, FILE *fp)
 {
+	static int	doneWarn = 0;
+
 	bp->len = 0;
 	if (!bp->str) {
 		bp->str = (char *)malloc(bp->siz = 512);
@@ -121,8 +123,15 @@ read_line(LINEBUF *bp, FILE *fp)
 			break;		/* found EOL */
 		if (bp->len < bp->siz - 4)
 			continue;	/* at EOF? */
-		if (bp->siz >= MAXBUF)
-			break;		/* don't go to extremes */
+		if (bp->siz >= MAXBUF) {
+			if ((report >= REP_WARN) & !doneWarn) {
+				fprintf(stderr,
+			"%s: warning - input line(s) past %ld MByte limit\n",
+					progname, MAXBUF>>20);
+				doneWarn++;
+			}
+			break;		/* return MAXBUF partial line */
+		}
 		if ((bp->siz += bp->siz/2) > MAXBUF)
 			bp->siz = MAXBUF;
 		bp->str = (char *)realloc(bp->str, bp->siz);
