@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.15 2018/10/20 15:17:27 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.16 2018/10/26 23:45:56 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -777,13 +777,13 @@ main(int argc, char *argv[])
 	ign_header |= !has_header(typ1);	/* check headers if indicated */
 	if (!ign_header && !headers_match())
 		return(1);
-	lu_done(&hdr1); lu_done(&hdr2);
+	lu_done(&hdr1); lu_done(&hdr2);		/* done with header info. */
 	if (!ign_header & (report >= REP_WARN)) {
-		if (typ1 == TYP_UNKNOWN)
-			printf("%s: warning - unrecognized format, comparing as binary\n",
-					progname);
 		if (lin1cnt != lin2cnt)
 			printf("%s: warning - headers are different lengths\n",
+					progname);
+		if (typ1 == TYP_UNKNOWN)
+			printf("%s: warning - unrecognized format\n",
 					progname);
 	}
 	if (report >= REP_VERBOSE)
