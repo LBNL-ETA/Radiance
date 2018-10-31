@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.7 2015/05/04 20:53:21 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.8 2018/10/31 22:19:57 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -8,6 +8,7 @@
 #ifndef _RAD_CMATRIX_H_
 #define _RAD_CMATRIX_H_
 
+#include  <sys/types.h>
 #include "color.h"
 
 #ifdef __cplusplus
@@ -28,7 +29,7 @@ typedef struct {
 
 #define COLSPEC	(sizeof(COLORV)==sizeof(float) ? "%f %f %f" : "%lf %lf %lf")
 
-#define cm_lval(cm,r,c)	((cm)->cmem + 3*((r)*(cm)->ncols + (c)))
+#define cm_lval(cm,r,c)	((cm)->cmem + 3*((size_t)(r)*(cm)->ncols + (c)))
 
 #define cv_lval(cm,i)	((cm)->cmem + 3*(i))
 

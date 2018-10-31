@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.8 2017/08/28 15:59:46 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.9 2018/10/31 22:19:57 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -20,7 +20,7 @@ typedef struct {
 	double	mtx[1];			/* extends struct */
 } RMATRIX;
 
-#define rmx_lval(rm,r,c,i)	(rm)->mtx[(i)+(rm)->ncomp*((c)+(rm)->ncols*(r))]
+#define rmx_lval(rm,r,c,i)	(rm)->mtx[(i)+(rm)->ncomp*((c)+(size_t)(rm)->ncols*(r))]
 
 /* Allocate a nr x nc matrix with n components */
 extern RMATRIX	*rmx_alloc(int nr, int nc, int n);
