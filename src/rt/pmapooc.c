@@ -7,13 +7,14 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapooc.c,v 1.4 2018/05/31 12:34:16 rschregle Exp $
+   $Id: pmapooc.c,v 1.5 2018/11/08 00:54:07 greg Exp $
 */
 
 
 
 #include "pmapdata.h"   /* Includes pmapooc.h */
 #include "source.h"
+#include "otspecial.h"
 #include "oocsort.h"
 #include "oocbuild.h"
 

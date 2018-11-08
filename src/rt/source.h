@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.19 2014/09/15 00:54:39 greg Exp $ */
+/* RCSid $Id: source.h,v 2.20 2018/11/08 00:54:07 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -146,7 +146,6 @@ extern int  nsources;			/* the number of sources */
 #define  setsource(s,o)		(*sfun[(o)->otype].of->setsrc)(s,o)
 
 					/* defined in source.c */
-extern OBJREC   *findmaterial(OBJREC *o);
 extern void	marksources(void);
 extern void	freesources(void);
 extern int	srcray(RAY *sr, RAY *r, SRCINDEX *si);

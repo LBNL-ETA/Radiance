@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapsrc.c,v 2.16 2018/04/07 20:25:10 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapsrc.c,v 2.17 2018/11/08 00:54:07 greg Exp $";
 #endif
 /* 
    ==================================================================
@@ -19,6 +19,7 @@ static const char RCSid[] = "$Id: pmapsrc.c,v 2.16 2018/04/07 20:25:10 rschregle
 #include "pmap.h"
 #include "pmaprand.h"
 #include "otypes.h"
+#include "otspecial.h"
 
 /* List of photon port modifier names */
 char *photonPortList [MAXSET + 1] = {NULL};

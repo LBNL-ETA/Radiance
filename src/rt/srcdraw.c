@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: srcdraw.c,v 2.18 2018/01/24 04:39:52 greg Exp $";
+static const char	RCSid[] = "$Id: srcdraw.c,v 2.19 2018/11/08 00:54:07 greg Exp $";
 #endif
 /*
  * Draw small sources into image in case we missed them.
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: srcdraw.c,v 2.18 2018/01/24 04:39:52 greg Exp 
 #include  "ray.h"
 #include  "view.h"
 #include  "otypes.h"
+#include  "otspecial.h"
 #include  "source.h"
 
 

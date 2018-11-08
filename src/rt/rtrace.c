@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.71 2018/02/13 20:27:19 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.72 2018/11/08 00:54:07 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -28,6 +28,7 @@ static const char	RCSid[] = "$Id: rtrace.c,v 2.71 2018/02/13 20:27:19 greg Exp $
 #include  "ambient.h"
 #include  "source.h"
 #include  "otypes.h"
+#include  "otspecial.h"
 #include  "resolu.h"
 #include  "random.h"
 

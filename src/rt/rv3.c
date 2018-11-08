@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.41 2018/11/07 18:34:58 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.42 2018/11/08 00:54:07 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -15,7 +15,6 @@ static const char	RCSid[] = "$Id: rv3.c,v 2.41 2018/11/07 18:34:58 greg Exp $";
 #include  "rpaint.h"
 #include  "otypes.h"
 #include  "otspecial.h"
-#include  "source.h"
 #include  "random.h"
 
 #ifndef WFLUSH
@@ -128,7 +127,7 @@ getinterest(		/* get area of interest */
 				VCOPY(thisray.rorg, thisray.rop);
 				rayclear(&thisray);	/* skip invisible */
 			}
-			if (thisray.ro == NULL) {
+			if ((thisray.ro == NULL) | (thisray.ro == &Aftplane)) {
 				error(COMMAND, "not a local object");
 				return(-1);
 			}

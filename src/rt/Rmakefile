@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.84 2018/11/07 18:34:58 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.85 2018/11/08 00:54:07 greg Exp $
 #
 # Compiles for ray tracing programs.
 #
@@ -224,7 +224,7 @@ rcontrib.o rc2.o rc3.o:	ray.h \
 rv2.o rv3.o rview.o:	rpaint.h driver.h ../common/view.h ../common/resolu.h
 
 m_direct.o m_mirror.o m_mist.o dielectric.o raycalls.o \
-rpict.o rpmain.o rtmain.o rvmain.o rv2.o source.o srcdraw.o \
+rpict.o rpmain.o rtmain.o rvmain.o source.o srcdraw.o \
 srcobstr.o srcsamp.o srcsupp.o virtuals.o:	source.h
 
 cone.o data.o devcomm.o initotypes.o fprism.o preload.o \
@@ -234,7 +234,10 @@ duphead.o octree.o:	../common/standard.h ../common/rtmisc.h \
 
 ambio.o:	../common/fvect.h
 
-ambient.o initotypes.o srcobstr.o raytrace.o rv3.o:	otspecial.h
+ambient.o initotypes.o m_alias.o pmapcontrib.o pmapkdt.o \
+pmapooc.o pmapsrc.o pmcontrib2.o \
+raytrace.o rtrace.o rv2.o rv3.o source.o \
+srcdraw.o srcobstr.o virtuals.o:	otspecial.h
 
 rpmain.o rtmain.o rvmain.o rpict.o \
 srcdraw.o:	../common/view.h ../common/resolu.h
@@ -281,9 +284,11 @@ rcmain.o rcontrib.o rc2.o rc3.o:	rcontrib.h \
 ../common/platform.h ../common/paths.h ../common/lookup.h \
 func.h ../common/calcomp.h ../common/rtprocess.h
 
-ambient.o rcmain.o:	source.h ambient.h
+ambient.o rcmain.o:	ambient.h
 
-rcontrib.o rv3.o:	source.h ../common/otypes.h
+rcmain.o:	source.h
+
+rcontrib.o:	source.h ../common/otypes.h
 
 rc2.o:	../common/resolu.h
 

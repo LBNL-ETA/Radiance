@@ -8,13 +8,15 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapkdt.c,v 1.4 2018/05/31 12:34:16 rschregle Exp $
+   $Id: pmapkdt.c,v 1.5 2018/11/08 00:54:07 greg Exp $
 */
 
 
 
 #include "pmapdata.h"   /* Includes pmapkdt.h */
 #include "source.h"
+#include "otspecial.h"
+#include "random.h"
 
 
 

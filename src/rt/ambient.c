@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.105 2018/01/09 05:01:15 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.106 2018/11/08 00:54:07 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -15,7 +15,6 @@ static const char	RCSid[] = "$Id: ambient.c,v 2.105 2018/01/09 05:01:15 greg Exp
 #include  "otspecial.h"
 #include  "resolu.h"
 #include  "ambient.h"
-#include  "source.h"
 #include  "random.h"
 #include  "pmapamb.h"
 

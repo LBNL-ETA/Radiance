@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.22 2018/06/26 14:42:18 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.23 2018/11/08 00:54:07 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -74,8 +74,10 @@ initotypes(void)			/* initialize ofun array */
 	ofun[MAT_TDATA].funp = m_brdf2;
 	ofun[MAT_PFUNC].flags |= T_OPAQUE;
 	ofun[MAT_MFUNC].flags |= T_OPAQUE;
+	ofun[MAT_TFUNC].flags |= T_OPAQUE;
 	ofun[MAT_PDATA].flags |= T_OPAQUE;
 	ofun[MAT_MDATA].flags |= T_OPAQUE;
+	ofun[MAT_TDATA].flags |= T_OPAQUE;
 	ofun[TEX_FUNC].funp = t_func;
 	ofun[TEX_DATA].funp = t_data;
 	ofun[PAT_CFUNC].funp = p_cfunc;
@@ -99,4 +101,27 @@ o_default(OBJREC *o, RAY *r)			/* default action is error */
 				/* unused call to load freeobjmem.o */
 	free_objs(0, 0);
 	return(0);
+}
+
+
+
+OBJREC *			/* find an object's actual material */
+findmaterial(OBJREC *o)
+{
+	while (!ismaterial(o->otype)) {
+		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
+			OBJECT  aobj;
+			OBJREC  *ao;
+			aobj = lastmod(objndx(o), o->oargs.sarg[0]);
+			if (aobj < 0)
+				objerror(o, USER, "bad reference");
+				/* recursive check on alias branch */
+			if ((ao = findmaterial(objptr(aobj))) != NULL)
+				return(ao);
+		}
+		if (o->omod == OVOID)
+			return(NULL);
+		o = objptr(o->omod);
+	}
+	return(o);		/* XXX: material mixtures will return NULL */
 }

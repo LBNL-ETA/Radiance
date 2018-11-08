@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: virtuals.c,v 2.22 2015/05/22 11:20:43 greg Exp $";
+static const char	RCSid[] = "$Id: virtuals.c,v 2.23 2018/11/08 00:54:07 greg Exp $";
 #endif
 /*
  * Routines for simulating virtual light sources
@@ -11,11 +11,9 @@ static const char	RCSid[] = "$Id: virtuals.c,v 2.22 2015/05/22 11:20:43 greg Exp
 #include "copyright.h"
 
 #include  "ray.h"
-
 #include  "otypes.h"
-
+#include  "otspecial.h"
 #include  "source.h"
-
 #include  "random.h"
 
 #define  MINSAMPLES	16		/* minimum number of pretest samples */

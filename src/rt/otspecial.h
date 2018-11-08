@@ -1,4 +1,4 @@
-/* RCSid $Id: otspecial.h,v 2.8 2018/01/09 05:01:15 greg Exp $ */
+/* RCSid $Id: otspecial.h,v 2.9 2018/11/08 00:54:07 greg Exp $ */
 /*
  * Special type flags for objects used in rendering.
  * Depends on definitions in otypes.h
@@ -22,6 +22,9 @@ extern "C" {
 		/* test if we have a BSDF proxy surface */
 #define isBSDFproxy(m)	((m)->otype == MAT_BSDF && (m)->oargs.nsargs && \
 				strcmp((m)->oargs.sarg[0], "0"))
+
+		/* defined in initotypes.c */
+extern OBJREC   *findmaterial(OBJREC *o);
 
 #ifdef __cplusplus
 }
