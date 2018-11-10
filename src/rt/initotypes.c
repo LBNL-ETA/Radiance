@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.24 2018/11/10 15:37:20 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.25 2018/11/10 16:12:26 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -119,10 +119,13 @@ findmaterial(OBJREC *o)
 			if ((ao = findmaterial(objptr(aobj))) != NULL)
 				return(ao);
 		}
+		if (o->omod == OVOID) {
 				/* assume unmodified mixture is material */
-		if (o->omod == OVOID)
-			return(ismixture(o->otype) ? o : (OBJREC *)NULL);
+			if (ismixture(o->otype))
+				break;
+			return(NULL);
+		}
 		o = objptr(o->omod);
 	}
-	return(o);		/* XXX: material mixtures will return NULL */
+	return(o);
 }
