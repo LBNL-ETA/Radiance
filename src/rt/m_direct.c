@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_direct.c,v 2.15 2014/07/08 18:25:00 greg Exp $";
+static const char	RCSid[] = "$Id: m_direct.c,v 2.16 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  * Routines for light-redirecting materials and
@@ -124,7 +124,7 @@ redirect(		/* compute n'th ray redirection */
 	multcolor(nr.rcol, nr.rcoef);
 	addcolor(r->rcol, nr.rcol);
 	if (r->ro != NULL && isflat(r->ro->otype))
-		r->rt = r->rot + nr.rt;
+		r->rxt = r->rot + raydistance(&nr);
 	return(1);
 computerr:
 	objerror(m, WARNING, "compute error");

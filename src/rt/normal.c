@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.76 2018/01/10 04:08:50 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.77 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -182,8 +182,6 @@ m_normal(			/* color a ray that hit something normal */
 {
 	NORMDAT  nd;
 	double  fest;
-	double  transtest, transdist;
-	double	mirtest, mirdist;
 	int	hastexture;
 	double	d;
 	COLOR  ctmp;
@@ -233,8 +231,6 @@ m_normal(			/* color a ray that hit something normal */
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for dirnorm() */
 	multcolor(nd.mcolor, r->pcol);		/* modify material color */
-	mirtest = transtest = 0;
-	mirdist = transdist = r->rot;
 	nd.rspec = m->oargs.farg[3];
 						/* compute Fresnel approx. */
 	if (nd.specfl & SP_PURE && nd.rspec >= FRESTHRESH) {
@@ -255,7 +251,6 @@ m_normal(			/* color a ray that hit something normal */
 				nd.specfl |= SP_TBLT;
 			if (!hastexture || r->crtype & (SHADOW|AMBIENT)) {
 				VCOPY(nd.prdir, r->rdir);
-				transtest = 2;
 			} else {
 							/* perturb */
 				VSUB(nd.prdir, r->rdir, r->pert);
@@ -278,16 +273,12 @@ m_normal(			/* color a ray that hit something normal */
 			rayvalue(&lr);
 			multcolor(lr.rcol, lr.rcoef);
 			addcolor(r->rcol, lr.rcol);
-			transtest *= bright(lr.rcol);
-			transdist = r->rot + lr.rt;
+			r->rxt = r->rot + raydistance(&lr);
 		}
-	} else
-		transtest = 0;
-
-	if (r->crtype & SHADOW) {		/* the rest is shadow */
-		r->rt = transdist;
-		return(1);
 	}
+
+	if (r->crtype & SHADOW)			/* the rest is shadow */
+		return(1);
 						/* get specular reflection */
 	if (nd.rspec > FTINY) {
 		nd.specfl |= SP_REFL;
@@ -320,24 +311,19 @@ m_normal(			/* color a ray that hit something normal */
 			VCOPY(lr.rdir, nd.vrefl);
 			rayvalue(&lr);
 			multcolor(lr.rcol, lr.rcoef);
+			copycolor(r->mcol, lr.rcol);
 			addcolor(r->rcol, lr.rcol);
 			if (nd.specfl & SP_FLAT &&
-					!hastexture | (r->crtype & AMBIENT)) {
-				mirtest = 2.*bright(lr.rcol);
-				mirdist = r->rot + lr.rt;
-			}
+					!hastexture | (r->crtype & AMBIENT))
+				r->rmt = r->rot + raydistance(&lr);
 		}
 	}
 						/* diffuse reflection */
 	nd.rdiff = 1.0 - nd.trans - nd.rspec;
 
-	if (nd.specfl & SP_PURE && nd.rdiff <= FTINY && nd.tdiff <= FTINY) {
-		if (mirtest > transtest+FTINY)
-			r->rt = mirdist;
-		else if (transtest > FTINY)
-			r->rt = transdist;
+	if (nd.specfl & SP_PURE && nd.rdiff <= FTINY && nd.tdiff <= FTINY)
 		return(1);			/* 100% pure specular */
-	}
+
 	if (!(nd.specfl & SP_PURE))
 		gaussamp(&nd);			/* checks *BLT flags */
 
@@ -369,12 +355,6 @@ m_normal(			/* color a ray that hit something normal */
 	}
 					/* add direct component */
 	direct(r, dirnorm, &nd);
-					/* check distance */
-	d = bright(r->rcol);
-	if (transtest > d)
-		r->rt = transdist;
-	else if (mirtest > d)
-		r->rt = mirdist;
 
 	return(1);
 }

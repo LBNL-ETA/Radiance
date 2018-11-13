@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.38 2015/02/24 19:39:27 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.39 2018/11/13 19:58:33 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -46,7 +46,8 @@ typedef struct ray {
 	RREAL	rod;		/* -DOT(rdir, ron) */
 	RREAL	uv[2];		/* local coordinates */
 	FVECT	pert;		/* surface normal perturbation */
-	RREAL	rt;		/* returned effective ray length */
+	RREAL	rmt;		/* returned mirrored ray length */
+	RREAL	rxt;		/* returned unmirrored ray length */
 	const struct ray  *parent;	/* ray this originated from */
 	OBJECT	*clipset;	/* set of objects currently clipped */
 	OBJECT	*newcset;	/* next clipset, used for transmission */
@@ -61,6 +62,7 @@ typedef struct ray {
 	float	rweight;	/* cumulative weight (for termination) */
 	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
 	COLOR	pcol;		/* pattern color */
+	COLOR	mcol;		/* mirrored color contribution */
 	COLOR	rcol;		/* returned radiance value */
 	COLOR	cext;		/* medium extinction coefficient */
 	COLOR	albedo;		/* medium scattering albedo */
@@ -71,6 +73,9 @@ typedef struct ray {
 }  RAY;
 
 #define  rayvalue(r)	(*(r)->revf)(r)
+
+#define  raydistance(r)	(bright((r)->mcol) > 0.5*bright((r)->rcol) ? \
+				(r)->rmt : (r)->rxt)
 
 extern char  VersionID[];	/* Radiance version ID string */
 

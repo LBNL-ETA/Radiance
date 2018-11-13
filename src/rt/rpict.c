@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.90 2015/04/22 20:28:16 rschregle Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.91 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -746,7 +746,7 @@ pixvalue(		/* compute pixel value */
 
 	copycolor(col, thisray.rcol);		/* return color */
 
-	return(thisray.rt);			/* return distance */
+	return(raydistance(&thisray));		/* return distance */
 }
 
 

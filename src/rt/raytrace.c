@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.72 2018/01/09 05:01:15 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.73 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -145,10 +145,11 @@ rayclear(			/* clear a ray for (re)evaluation */
 	r->robj = OVOID;
 	r->ro = NULL;
 	r->rox = NULL;
-	r->rt = r->rot = FHUGE;
+	r->rxt = r->rmt = r->rot = FHUGE;
 	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
 	r->uv[0] = r->uv[1] = 0.0;
 	setcolor(r->pcol, 1.0, 1.0, 1.0);
+	setcolor(r->mcol, 0.0, 0.0, 0.0);
 	setcolor(r->rcol, 0.0, 0.0, 0.0);
 }
 
@@ -195,7 +196,8 @@ raytrans(			/* transmit ray as is */
 	VCOPY(tr.rdir, r->rdir);
 	rayvalue(&tr);
 	copycolor(r->rcol, tr.rcol);
-	r->rt = r->rot + tr.rt;
+	r->rmt = r->rot + tr.rmt;
+	r->rxt = r->rot + tr.rxt;
 }
 
 
@@ -207,7 +209,7 @@ rayshade(		/* shade ray r with material mod */
 {
 	OBJREC  *m;
 
-	r->rt = r->rot;			/* preset effective ray length */
+	r->rxt = r->rmt = r->rot;	/* preset effective ray length */
 	for ( ; mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
 		/****** unnecessary test since modifier() is always called
@@ -306,6 +308,7 @@ raymixture(		/* mix modifiers */
 )
 {
 	RAY  fr, br;
+	double  mfore, mback;
 	int  foremat, backmat;
 	int  i;
 					/* bound coefficient */
@@ -352,7 +355,10 @@ raymixture(		/* mix modifiers */
 	scalecolor(br.rcol, 1.0-coef);
 	copycolor(r->rcol, fr.rcol);
 	addcolor(r->rcol, br.rcol);
-	r->rt = bright(fr.rcol) > bright(br.rcol) ? fr.rt : br.rt;
+	mfore = bright(fr.mcol); mback = bright(br.mcol);
+	r->rmt = mfore > mback ? fr.rmt : br.rmt;
+	r->rxt = bright(fr.rcol)-mfore > bright(br.rcol)-mback ?
+			fr.rxt : br.rxt;
 	return(1);
 }
 

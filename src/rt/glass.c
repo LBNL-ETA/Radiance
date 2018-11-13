@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: glass.c,v 2.26 2015/10/28 15:45:58 greg Exp $";
+static const char RCSid[] = "$Id: glass.c,v 2.27 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  glass.c - simpler shading function for thin glass surfaces.
@@ -55,8 +55,6 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	COLOR  trans, refl;
 	int  hastexture, hastrans;
 	double  d, r1e, r1m;
-	double  transtest, transdist;
-	double  mirtest, mirdist;
 	RAY  p;
 	int  i;
 
@@ -88,8 +86,6 @@ m_glass(		/* color a ray which hit a thin glass surface */
 	raytexture(r, m->omod);
 	if (r->rod < 0.0)			/* reorient if necessary */
 		flipsurface(r);
-	mirtest = transtest = 0;
-	mirdist = transdist = r->rot;
 						/* perturb normal */
 	if ( (hastexture = (DOT(r->pert,r->pert) > FTINY*FTINY)) ) {
 		pdot = raynormal(pnorm, r);
@@ -130,19 +126,16 @@ m_glass(		/* color a ray which hit a thin glass surface */
 				}
 			} else {
 				VCOPY(p.rdir, r->rdir);
-				transtest = 2;
 			}
 			rayvalue(&p);
 			multcolor(p.rcol, p.rcoef);
 			addcolor(r->rcol, p.rcol);
-			transtest *= bright(p.rcol);
-			transdist = r->rot + p.rt;
+			if (!hastexture || r->crtype & (SHADOW|AMBIENT))
+				r->rxt = r->rot + raydistance(&p);
 		}
 	}
-	if (r->crtype & SHADOW) {		/* skip reflected ray */
-		r->rt = transdist;
+	if (r->crtype & SHADOW)			/* skip reflected ray */
 		return(1);
-	}
 						/* compute reflectance */
 	for (i = 0; i < 3; i++) {
 		d = colval(mcolor, i);
@@ -156,18 +149,11 @@ m_glass(		/* color a ray which hit a thin glass surface */
 		checknorm(p.rdir);
 		rayvalue(&p);
 		multcolor(p.rcol, p.rcoef);
+		copycolor(r->mcol, p.rcol);
 		addcolor(r->rcol, p.rcol);
 		if (r->ro != NULL && isflat(r->ro->otype) &&
-				!hastexture | (r->crtype & AMBIENT)) {
-			mirtest = 2.0*bright(p.rcol);
-			mirdist = r->rot + p.rt;
-		}
+				!hastexture | (r->crtype & AMBIENT))
+			r->rmt = r->rot + raydistance(&p);
 	}
-                                        /* check distance */
-	d = bright(r->rcol);
-	if (transtest > d)
-		r->rt = transdist;
-	else if (mirtest > d)
-		r->rt = mirdist;
 	return(1);
 }

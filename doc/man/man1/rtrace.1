@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.30 2018/03/20 02:40:38 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.31 2018/11/13 19:58:33 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -110,6 +110,14 @@ s	surface name
 m	modifier name
 .IP
 M	material name
+.IP
+r	mirrored value contribution
+.IP
+x	unmirrored value contribution
+.IP
+R	mirrored ray length
+.IP
+X	unmirrored ray length
 .IP
 ~	tilde (end of trace marker)
 .IP

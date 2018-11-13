@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.72 2018/11/08 00:54:07 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.73 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -59,7 +59,8 @@ static putf_t puta, putd, putf;
 
 typedef void oputf_t(RAY *r);
 static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
-		oputn, oputN, oputs, oputw, oputW, oputm, oputM, oputtilde;
+		oputr, oputR, oputx, oputX, oputn, oputN, oputs,
+		oputw, oputW, oputm, oputM, oputtilde;
 
 static void setoutput(char *vs);
 extern void tranotify(OBJECT obj);
@@ -72,7 +73,7 @@ static int getvec(FVECT vec, int fmt, FILE *fp);
 static void tabin(RAY *r);
 static void ourtrace(RAY *r);
 
-static oputf_t *ray_out[16], *every_out[16];
+static oputf_t *ray_out[32], *every_out[32];
 static putf_t *putreal;
 
 
@@ -236,12 +237,29 @@ setoutput(				/* set up output tables */
 		case 'd':				/* direction */
 			*table++ = oputd;
 			break;
+		case 'r':				/* reflected contrib. */
+			*table++ = oputr;
+			castonly = 0;
+			break;
+		case 'R':				/* reflected distance */
+			*table++ = oputR;
+			castonly = 0;
+			break;
+		case 'x':				/* xmit contrib. */
+			*table++ = oputx;
+			castonly = 0;
+			break;
+		case 'X':				/* xmit distance */
+			*table++ = oputX;
+			castonly = 0;
+			break;
 		case 'v':				/* value */
 			*table++ = oputv;
 			castonly = 0;
 			break;
 		case 'V':				/* contribution */
 			*table++ = oputV;
+			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
 					"-otV accuracy depends on -aa 0 -as 0");
@@ -274,6 +292,7 @@ setoutput(				/* set up output tables */
 			break;
 		case 'W':				/* coefficient */
 			*table++ = oputW;
+			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
 					"-otW accuracy depends on -aa 0 -as 0");
@@ -509,6 +528,53 @@ oputd(				/* print direction */
 
 
 static void
+oputr(				/* print mirrored contribution */
+	RAY  *r
+)
+{
+	RREAL	cval[3];
+
+	cval[0] = colval(r->mcol,RED);
+	cval[1] = colval(r->mcol,GRN);
+	cval[2] = colval(r->mcol,BLU);
+	(*putreal)(cval, 3);
+}
+
+
+
+static void
+oputR(				/* print mirrored distance */
+	RAY  *r
+)
+{
+	(*putreal)(&r->rmt, 1);
+}
+
+
+static void
+oputx(				/* print unmirrored contribution */
+	RAY  *r
+)
+{
+	RREAL	cval[3];
+
+	cval[0] = colval(r->rcol,RED) - colval(r->mcol,RED);
+	cval[1] = colval(r->rcol,GRN) - colval(r->mcol,GRN);
+	cval[2] = colval(r->rcol,BLU) - colval(r->mcol,BLU);
+	(*putreal)(cval, 3);
+}
+
+
+static void
+oputX(				/* print unmirrored distance */
+	RAY  *r
+)
+{
+	(*putreal)(&r->rxt, 1);
+}
+
+
+static void
 oputv(				/* print value */
 	RAY  *r
 )
@@ -548,7 +614,9 @@ oputl(				/* print effective distance */
 	RAY  *r
 )
 {
-	(*putreal)(&r->rt, 1);
+	RREAL	d = raydistance(r);
+
+	(*putreal)(&d, 1);
 }
 
 

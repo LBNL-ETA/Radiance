@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.55 2018/08/21 23:31:01 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.56 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -555,6 +555,7 @@ sample_sdf(BSDFDAT *ndp, int sflags)
 			rayvalue(&tr);
 			multcolor(tr.rcol, tr.rcoef);
 			addcolor(ndp->pr->rcol, tr.rcol);
+			ndp->pr->rxt = ndp->pr->rot + raydistance(&tr);
 			++ntotal;
 			b = bright(ndp->cthru);
 		} else

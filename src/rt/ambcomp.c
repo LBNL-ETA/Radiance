@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.82 2018/04/12 20:07:09 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.83 2018/11/13 19:58:33 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -27,7 +27,7 @@ extern void		SDsquare2disk(double ds[2], double seedx, double seedy);
 
 typedef struct {
 	COLOR	v;		/* hemisphere sample value */
-	float	d;		/* reciprocal distance (1/rt) */
+	float	d;		/* reciprocal distance */
 	FVECT	p;		/* intersection point */
 } AMBSAMP;		/* sample value */
 
@@ -131,15 +131,16 @@ resample:
 	dimlist[ndims++] = AI(hp,i,j) + 90171;
 	rayvalue(&ar);			/* evaluate ray */
 	ndims--;
-	if (ar.rt <= FTINY)
+	zd = raydistance(&ar);
+	if (zd <= FTINY)
 		return(0);		/* should never happen */
 	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
-	if (ar.rt*ap->d < 1.0)		/* new/closer distance? */
-		ap->d = 1.0/ar.rt;
+	if (zd*ap->d < 1.0)		/* new/closer distance? */
+		ap->d = 1.0/zd;
 	if (!n) {			/* record first vertex & value */
-		if (ar.rt > 10.0*thescene.cusize + 1000.)
-			ar.rt = 10.0*thescene.cusize + 1000.;
-		VSUM(ap->p, ar.rorg, ar.rdir, ar.rt);
+		if (zd > 10.0*thescene.cusize + 1000.)
+			zd = 10.0*thescene.cusize + 1000.;
+		VSUM(ap->p, ar.rorg, ar.rdir, zd);
 		copycolor(ap->v, ar.rcol);
 	} else {			/* else update recorded value */
 		hp->acol[RED] -= colval(ap->v,RED);
@@ -863,9 +864,9 @@ divsample(				/* sample a division */
 	ndims--;
 	multcolor(ar.rcol, ar.rcoef);	/* apply coefficient */
 	addcolor(dp->v, ar.rcol);
-					/* use rt to improve gradient calc */
-	if (ar.rt > FTINY && ar.rt < FHUGE)
-		dp->r += 1.0/ar.rt;
+					/* use rxt to improve gradient calc */
+	if (ar.rxt > FTINY && ar.rxt < FHUGE)
+		dp->r += 1.0/ar.rxt;
 					/* (re)initialize error */
 	if (dp->n++) {
 		b2 = bright(dp->v)/dp->n - bright(ar.rcol);

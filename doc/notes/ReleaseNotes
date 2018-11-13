@@ -2245,3 +2245,7 @@ during unit-testing.
 Fixed issue reading very large files (> 2 GBytes) in rcollate.
 
 Made picking function in rvu ignore transparent and void surfaces.
+
+Added -orRxX options to rtrace to enable output of mirrored and unmirrored
+contributions and distances to enable new types of reprojections.  This also
+cleaned up and unified handling of effective ray lengths throughout code.
