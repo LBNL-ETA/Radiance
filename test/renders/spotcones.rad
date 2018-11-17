@@ -1,0 +1,60 @@
+# RCSid $Id: spotcones.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Mist cones to accompany spotlights
+
+void mist blue_spot_mist
+1 bspot
+0
+0
+
+blue_spot_mist ring blue_spot_start
+0
+0
+8
+	-1.95 4.03 2.54
+	2.5 1.5 2
+	0 .3
+
+blue_spot_mist cone blue_spot_beam
+0
+0
+8
+	-1.95 4.03 2.54
+	-6.95 1.03 -1.46
+	.3 2.13
+
+blue_spot_mist ring blue_spot_end
+0
+0
+8
+	-6.95 1.03 -1.46
+	-2.5 -1.5 -2
+	0 2.13
+
+void mist pink_spot_mist
+1 pspot
+0
+0
+
+pink_spot_mist ring pink_spot_start
+0
+0
+8
+              -1.95               0.97               2.54
+                2.5               -1.5                  2
+                  0                0.3
+
+pink_spot_mist cone pink_spot_beam
+0
+0
+8
+              -1.95               0.97               2.54
+              -6.95               3.97              -1.46
+                0.3               2.13
+
+pink_spot_mist ring pink_spot_end
+0
+0
+8
+              -6.95               3.97              -1.46
+               -2.5                1.5                 -2
+                  0               2.13

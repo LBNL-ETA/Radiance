@@ -1,0 +1,16 @@
+# RCSid $Id: glass_pane.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A bluish glass pane to fit any opening in end wall
+
+void glass glass_blue
+0
+0
+4 .7 .9 .98 1.5
+
+glass_blue polygon blue_glazing
+0
+0
+12
+	-8.1	0	0
+	-8.1	5	0
+	-8.1	5	3
+	-8.1	0	3

@@ -1,0 +1,29 @@
+# RCSid $Id: mist.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Test of participating medium with spotlights
+#
+
+OCTREE = mist.oct
+
+materials = basic.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = ball_in_cube.rad
+scene = mist.rad
+scene = spotlights.rad spotcones.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +3
+
+RES = 1024
+QUAL = Med
+AMB = mist.amb
+IND = 1
+VAR = Hi
+DET = Low
+PEN = False
+
+render = @render.opt
+render = -bv-
+
+view = def -vp 0.1 3.2 2.8 -vd -2.7336 -0.482008 -1.02483 -vh 45 -vv 45

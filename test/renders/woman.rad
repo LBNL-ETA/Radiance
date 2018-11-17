@@ -1,0 +1,9 @@
+# RCSid $Id: woman.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh woman
+1 woman.rtm
+0
+0

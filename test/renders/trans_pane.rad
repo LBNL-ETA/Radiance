@@ -1,0 +1,16 @@
+# RCSid $Id: trans_pane.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A yellowish trans material in our window
+
+void trans yellow_trans
+0
+0
+7 .9 .9 .5 .05 0 .5 .7
+
+yellow_trans polygon yellow_diffuser
+0
+0
+12
+	-8.1	0	0
+	-8.1	5	0
+	-8.1	5	3
+	-8.1	0	3

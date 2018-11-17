@@ -1,0 +1,16 @@
+# RCSid $Id: prism2.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A dual-direction prism
+
+void prism2 prism2mat
+11 coef1 dx1 dy1 dz1 coef2 dx2 dy2 dz2 prism.cal -rz 90
+0
+4 1.52 .2 .1 .2
+
+prism2mat polygon prism2_window
+0
+0
+12
+	-8.1	1	1
+	-8.1	4	1
+	-8.1	4	2
+	-8.1	1	2

@@ -1,0 +1,29 @@
+# RCSid $Id: mirror.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Test of mirror type and virtual light sources
+#
+
+OCTREE = mirror.oct
+
+materials = basic.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = glass_pane.rad antimatter_portal.rad
+scene = bubble_in_cube.rad
+scene = mirror.rad
+scene = sunset_sky.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +3
+
+RES = 1024
+QUAL = Med
+AMB = mirror.amb
+IND = 1
+VAR = Hi
+DET = Low
+PEN = False
+
+render = @render.opt
+
+view = fish -vf fish.vf

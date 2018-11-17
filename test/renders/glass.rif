@@ -1,0 +1,32 @@
+# RCSid $Id: glass.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Simple version of space using glass illum for window
+#
+
+OCTREE = glass.oct
+
+materials = basic.mat
+scene = diorama_walls.rad rect_opening.rad front_cap.rad
+scene = torus.rad
+scene = sunset_sky.rad
+illum = illum_glass.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +3
+
+RES = 1024
+QUAL = Med
+AMB = glass.amb
+IND = 1
+VAR = Hi
+DET = Low
+PEN = True
+
+mkillum = -ab 0
+
+render = @render.opt
+
+view = def -vf inside.vf
+view = fish -vf fish.vf -vts -vh 150 -vv 150
+view = up -vtl -vp -4 2.5 .2 -vu 1 0 0 -vd 0 0 1 -vh 2 -vv 2

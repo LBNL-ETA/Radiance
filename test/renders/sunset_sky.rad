@@ -1,0 +1,28 @@
+# RCSid $Id: sunset_sky.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A photographed sunset taken on Nov. 6 2018, Berkeley CA
+# Artificial sun source scaled to cover circumsolar
+
+void colorpict sunset_pat
+9 red green blue sunset.hdr fisheye.cal fish_u fish_v -rz 90
+0
+0
+
+sunset_pat glow sky_glow
+0
+0
+4 37 37 37 0
+
+sky_glow source west_sky
+0
+0
+4 -1 0 0 180
+
+void light sol_light
+0
+0
+3 2.5e4 2.5e4 2.5e4
+
+sol_light source bigsun
+0
+0
+4 -9.338e-01 -3.5e-01 1e-03 1

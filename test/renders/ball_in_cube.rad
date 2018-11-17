@@ -1,0 +1,19 @@
+# RCSid $Id: ball_in_cube.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Red ball inside water cube, test for interface
+
+void dielectric clear_water
+0
+0
+5 .98 .98 .98 1.33 0
+
+void interface red_interface
+0
+0
+8 .98 .05 .02 1.6 .98 .98 .98 1.33
+
+!genbox clear_water watery 1 1 1 | xform -t -.5 -.5 -.5 -rz 17 -t -4 2.5 1.5
+
+red_interface sphere red_ruby
+0
+0
+4 -4 2.5 1.5 .25

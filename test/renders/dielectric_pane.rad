@@ -1,0 +1,25 @@
+# RCSid $Id: dielectric_pane.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Pink glass pane made of two dieletric faces to fit any opening in end wall
+
+void dielectric dielectric_pink
+0
+0
+5 .99 .1 .02 1.5 0
+
+dielectric_pink polygon blue_glazing
+0
+0
+12
+	-8.05	0	0
+	-8.05	5	0
+	-8.05	5	3
+	-8.05	0	3
+
+dielectric_pink polygon blue_glazing
+0
+0
+12
+              -8.15                  0                  3
+              -8.15                  5                  3
+              -8.15                  5                  0
+              -8.15                  0                  0

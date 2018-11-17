@@ -1,0 +1,38 @@
+# RCSid $Id: gymbal.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Test of cylinders, tubes, and BRTDfunc material
+
+void BRTDfunc brtd_mat
+10
+	.1 .1 .1+if(Rdot-.8,0,.7)
+	.1+if(RdotP-.8,.7,0) .1 .1
+	0 0 0
+	.
+0
+9
+	.01 .01 .01
+	.01 .1 .01
+	.05 .05 .05
+
+brtd_mat cylinder cyl1
+0
+0
+7
+	-4.2	2.5	1.5
+	-3.8	2.5	1.5
+	.5
+
+brtd_mat tube tube2
+0
+0
+7
+	-4	2.3	1.5
+	-4	2.7	1.5
+	.45
+
+brtd_mat cylinder cyl3
+0
+0
+7
+	-4	2.5	1.3
+	-4	2.5	1.7
+	.4

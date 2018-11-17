@@ -1,0 +1,22 @@
+# RCSid $Id: basic.mat,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Basic materials used for walls, etc.
+
+void plastic wall_mat
+0
+0
+5 .5 .5 .5 0 0
+
+void plastic ceil_mat
+0
+0
+5 .7 .7 .7 0 0
+
+void plastic floor_mat
+0
+0
+5 .3 .2 .1 .02 .04
+
+void plastic black_outside
+0
+0
+5 .05 .05 .05 0 0

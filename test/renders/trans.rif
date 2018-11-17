@@ -1,0 +1,31 @@
+# RCSid $Id: trans.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Space with trans for window
+#
+
+OCTREE = trans.oct
+
+materials = basic.mat
+scene = diorama_walls.rad rect_opening.rad front_cap.rad
+scene = ballcompare.rad
+scene = spotlights.rad
+scene = rect_fixture.rad
+scene = trans_pane.rad
+scene = sunset_sky.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +1
+
+RES = 1024
+QUAL = Med
+AMB = trans.amb
+IND = 1
+VAR = Hi
+DET = Low
+PEN = True
+
+render = @render.opt
+
+view = def -vf inside.vf
+view = fish -vf fish.vf

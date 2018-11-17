@@ -1,0 +1,16 @@
+# RCSid $Id: prism1.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A singe-direction prism
+
+void prism1 prism1mat
+7 coef1 dx1 dy1 dz1 prism.cal -rz 90
+0
+4 1.52 .2 .1 .2
+
+prism1mat polygon prism1_window
+0
+0
+12
+	-8.1	1	1
+	-8.1	4	1
+	-8.1	4	2
+	-8.1	1	2

@@ -1,0 +1,6 @@
+# RCSid $Id: rect_opening.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Rectangular opening cut in end wall
+
+!genprism wall_mat end_wall 10  -.1 -.1  -.1 5.1  3.1 5.1  3.1 -.1  -.1 -.1 \
+		1 1  2 1  2 4  1 4  1 1  -l 0 0 .2 -c \
+	| xform -ry -90 -t -8 0 0

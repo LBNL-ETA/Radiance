@@ -1,0 +1,127 @@
+# RCSid $Id: ballcompare.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Four balls made of plastic2, metal2, plasfunc, and metfunc
+# Mixtext used to label each
+#
+
+void plastic white_mat
+0
+0
+5 .9 .9 .9 0 0
+
+void plastic black_shiny
+0
+0
+5 .01 .01 .01 .04 .05
+
+void plastic2 plas2_mat
+4 0 0 1 .
+0
+6 .7 .2 .8 .08 .2 .08
+
+void plasfunc plasfunc_mat
+2 absdf aniso.cal
+0
+9 .7 .2 .8 .08 .2 .08 0 0 1
+
+void metal2 met2_mat
+4 0 1 0 .
+0
+6 .1 .7 .3 .9 .1 .03
+
+void metfunc metfunc_mat
+2 absdf aniso.cal
+0
+9 .1 .7 .3 .9 .1 .03 0 1 0
+
+plas2_mat sphere plas2_ball
+0
+0
+4 -4 2 2 .4
+
+void mixtext plas2_text
+5 black_shiny void helvet.fnt . plastic2
+0
+10
+	-4	1.05	2.05
+	0	.05	0
+	0	0	-.1
+	-.2
+
+plas2_text polygon plas2_label
+0
+0
+12
+	-4	1.5	2.1
+	-4	1.5	1.9
+	-4	1	1.9
+	-4	1	2.1
+	
+plasfunc_mat sphere plasfunc_ball
+0
+0
+4 -4 3 2 .4
+
+void mixtext plasf_text
+5 void white_mat helvet.fnt . plasfunc
+0
+10
+	-4	3.55	2.05
+	0	.05	0
+	0	0	-.1
+	-.2
+
+plasf_text polygon plasf_label
+0
+0
+12
+	-4	4	2.1
+	-4	4	1.9
+	-4	3.5	1.9
+	-4	3.5	2.1
+
+met2_mat sphere met2_ball
+0
+0
+4 -4 2 1 .4
+
+void mixtext met2_text
+5 white_mat black_shiny helvet.fnt . metal2
+0
+10
+                 -4               1.05               1.05
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+met2_text polygon met2_label
+0
+0
+12
+                 -4                1.5                1.1
+                 -4                1.5                0.9
+                 -4                  1                0.9
+                 -4                  1                1.1
+
+metfunc_mat sphere metfunc_ball
+0
+0
+4 -4 3 1 .4
+
+void mixtext metf_text
+5 black_shiny white_mat helvet.fnt . metfunc
+0
+10
+                 -4               3.55               1.05
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+metf_text polygon metf_label
+0
+0
+12
+                 -4                  4                1.1
+                 -4                  4                0.9
+                 -4                3.5                0.9
+                 -4                3.5                1.1

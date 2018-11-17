@@ -1,0 +1,18 @@
+# RCSid $Id: illum_trans2.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A trans2 window to turn into an llum with mkillum
+
+#@mkillum l- f=trans2_ill c=a d=100 s=128
+
+void trans2 trans2_mat
+4 0 0 1 .
+0
+8 .9 .9 .9 .05 .1 .02 .8 .9
+
+trans2_mat polygon tfunc_window
+0
+0
+12
+	-8.1	1	1
+	-8.1	4	1
+	-8.1	4	2
+	-8.1	1	2

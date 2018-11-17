@@ -1,0 +1,35 @@
+# RCSid $Id: mesh.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# A small circle of women
+#
+
+OCTREE = mesh.oct
+
+materials = basic.mat
+material = chrome.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = "!xform -n plainclothes -s 1.5 -rx 90 -rz -80 -t 1 0 0 \
+-a 9 -rz 40 -i 1 -t -5 2.5 0 ./woman.rad"
+scene = "!xform -m chrome -n shiny -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 \
+-a 9 -rz 40 -i 1 -t -5 2.5 0 ./woman.rad"
+scene = rect_fixture.rad
+
+object = woman.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = 1.5
+
+RES = 1024
+QUAL = Med
+AMB = mesh.amb
+IND = 1
+VAR = Hi
+DET = Med
+PEN = True
+
+render = @render.opt
+
+view = def -vf inside.vf
+view = cyl -vtc -vp -5 2.5 .5 -vd 1 0 0 -vh 360 -vv 65
+view= cyl2 -vtc -vp -6 2.5 2.1 -vd 1 0 -1.7 -vh 120 -vv 70

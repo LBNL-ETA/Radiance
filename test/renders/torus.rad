@@ -1,0 +1,20 @@
+# RCSid $Id: torus.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A green metal torus with glowing red stripes
+
+void metal green_metal
+0
+0
+5 .1 .8 .1 .6 .08
+
+void glow red_glow
+0
+0
+4 .8 .02 .01 0
+
+void mixfunc striped
+4 green_metal red_glow "if(mod(atan2(Py-A2,Px-A1),PI/10) - PI/20, 1, 0)" .
+0
+3 -4 2.5 1.5
+
+!genrev striped torus 'sin(2*PI*t)' '2+cos(2*PI*t)' 32 -s \
+	| xform -ry 52 -s .2 -t -4 2.5 1.5

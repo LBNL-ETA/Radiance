@@ -1,0 +1,9 @@
+# RCSid $Id: mist.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Bluish mist suffusing space
+
+void mist blue_mist
+0
+0
+7 .1 .1 .4 .9 .9 .9 .3
+
+!genbox blue_mist smoke 7.98 4.98 2.98 | xform -t -7.99 .01 .01

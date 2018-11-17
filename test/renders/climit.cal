@@ -1,0 +1,5 @@
+{ RCSid $Id: climit.cal,v 1.1 2018/11/17 22:09:12 greg Exp $ }
+{ Avoid zero pixel values }
+lim_r(r,g,b) = if(grey(r,g,b)-.01, min(r,1), A1);
+lim_g(r,g,b) = if(grey(r,g,b)-.01, min(g,1), A2);
+lim_b(r,g,b) = if(grey(r,g,b)-.01, min(b,1), A3);

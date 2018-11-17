@@ -1,0 +1,28 @@
+# RCSid $Id: spotlights.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A pair of spotlights, one pink and one bluish
+
+void spotlight pink_spotlight
+0
+0
+7 1000 400 200 30 -2.5 1.5 -2
+
+pink_spotlight ring pspot
+0
+0
+8
+	-2 1 2.5
+	-2.5 1.5 -2
+	0 .2
+
+void spotlight blue_spotlight
+0
+0
+7 200 400 1000 30 -2.5 -1.5 -2
+
+blue_spotlight ring bspot
+0
+0
+8
+	-2 4 2.5
+	-2.5 -1.5 -2
+	0 .2

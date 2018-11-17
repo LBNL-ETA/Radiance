@@ -1,0 +1,29 @@
+# RCSid $Id: prism2.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Simple version of space using prism2 for window
+#
+
+OCTREE = prism2.oct
+
+materials = basic.mat
+mat = gold.mat
+scene = diorama_walls.rad rect_opening.rad front_cap.rad
+scene = "!xform -m gold ./vase.rad"
+scene = sunset_sky.rad
+scene = prism2.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = 1.5
+
+RES = 1024
+QUAL = Med
+AMB = prism2.amb
+IND = 1
+VAR = Hi
+DET = Med
+PEN = False
+
+render = @render.opt
+
+view= fish -vts -vp -4.25514 3.89431 1.97742 -vd -0.700687 -1.28443 -0.21925 -vh 140 -vv 140

@@ -1,0 +1,19 @@
+# RCSid $Id: porsches.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Test of instance primitive and spaces in names and modifiers
+#
+
+void instance "porsche #1"
+9 porsche.octf -rx 90 -s .15 -t -4 2 1
+0
+0
+
+void ashik2 "ashik mat"
+4 1 0 0 .
+0
+8 .3 .1 .05 .05 .05 .08 5 30
+
+"ashik mat" instance porsche2
+9 porsche.octf -rx 90 -s .15 -t -4 3 1
+0
+0

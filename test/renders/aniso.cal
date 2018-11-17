@@ -1,0 +1,40 @@
+{ RCSid $Id: aniso.cal,v 1.1 2018/11/17 22:09:12 greg Exp $ }
+{ Ward-Geisler-Moroder-Duer anisotropic BSDF model }
+
+{ Final 5 real arguments are alpha_x and alpha_y roughnesses and Up vector }
+
+ax = arg(AC-4);		{ ax is roughness in Up orientation }
+ay = arg(AC-3);
+
+Up(i) = arg(AC-3+i);	{ up vector does not need to be normalized }
+Vux = cross(1,Up,N);
+Vuy = cross(2,Up,N);
+Vuz = cross(3,Up,N);
+vnorm = 1/sqrt(Vux*Vux + Vuy*Vuy + Vuz*Vuz);
+Vnx = Vux*vnorm;
+Vny = Vuy*vnorm;
+Vnz = Vuz*vnorm;
+Vn(i) = select(i, Vnx, Vny, Vnz);
+Unx = cross(1,N,Vn);
+Uny = cross(2,N,Vn);
+Unz = cross(3,N,Vn);
+			{ Transform vectors, normalized (dx,dy,dz) away from surf }
+surf_dx(dx,dy,dz) = dx*Unx + dy*Uny + dz*Unz;
+surf_dy(dx,dy,dz) = dx*Vnx + dy*Vny + dz*Vnz;
+surf_dz(dx,dy,dz) = dx*Nx + dy*Ny + dz*Nz;
+
+inc_dx = surf_dx(-Dx,-Dy,-Dz);
+inc_dy = surf_dy(-Dx,-Dy,-Dz);
+inc_dz = Rdot;
+
+arefl(hx,hy,hz) = exp(-(hx*hx/(ax*ax) + hy*hy/(ay*ay))/(hz*hz)) *
+			(hx*hx + hy*hy + hz*hz) /
+			(PI*ax*ay*hz*hz*hz*hz);
+
+axmit(hx,hy,hz) = exp(-(hx*hx/(ax*ax) + hy*hy/(ay*ay))/(hz*hz)) /
+			(4*PI*ax*ay);
+
+dobsdf(sdx,sdy,sdz) = if(sdz, arefl(inc_dx+sdx, inc_dy+sdy, inc_dz+sdz),
+			axmit(inc_dx+sdx, inc_dy+sdy, inc_dz-sdz) / sqrt(-sdz*inc_dz) );
+
+absdf(ox,oy,oz) = dobsdf(surf_dx(ox,oy,oz), surf_dy(ox,oy,oz), surf_dz(ox,oy,oz));

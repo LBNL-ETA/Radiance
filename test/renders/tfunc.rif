@@ -1,0 +1,31 @@
+# RCSid $Id: tfunc.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+#
+# Simple version of space using transfunc illum for window
+#
+
+OCTREE = tfunc.oct
+
+materials = basic.mat
+scene = diorama_walls.rad rect_opening.rad front_cap.rad
+scene = gymbal.rad
+scene = sunset_sky.rad
+illum = illum_tfunc.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = +3
+
+RES = 1024
+QUAL = Med
+AMB = tfunc.amb
+IND = 1
+VAR = Hi
+DET = Low
+PEN = True
+
+mkillum = -ab 1
+
+render = @render.opt
+
+view = def -vf inside.vf
+view = fish -vf fish.vf

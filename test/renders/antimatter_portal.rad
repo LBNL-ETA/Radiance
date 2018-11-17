@@ -1,0 +1,32 @@
+# RCSid $Id: antimatter_portal.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# Antimatter to cut through window wall with round, bevelled portal
+# Couple with closed_end.rad
+
+void antimatter wall_eraser
+1 wall_mat
+0
+0
+
+wall_eraser ring outer_portal
+0
+0
+8
+	-8.201 2.5 1.5
+	-1 0 0
+	0 1
+
+wall_eraser cone side_portal
+0
+0
+8
+	-8.201 2.5 1.5
+	-7.999 2.5 1.5
+	1 1.1
+
+wall_eraser ring inner_portal
+0
+0
+8
+	-7.999 2.5 1.5
+	1 0 0
+	0 1.1

@@ -1,0 +1,14 @@
+
+### Reference and test for $(base) view $(vw) ###
+
+test-$(base)-$(vw):	ref/$(base)_$(vw).hdr $(base)_$(vw).hdr
+	$$(RDU_PFILT) $(base)_$(vw).hdr | $$(IMG_CMP) ref/$(base)_$(vw).hdr -
+
+ref/$(base)_$(vw).hdr:
+	make -s $(base)_$(vw).hdr
+	$$(RDU_PFILT) $(base)_$(vw).hdr > ref/$(base)_$(vw).hdr
+
+$(base)_$(vw).hdr:	$(base).rif
+	rad -v $(vw) $(base).rif
+
+### End $(base)-$(vw) tests

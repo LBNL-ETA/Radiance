@@ -1,0 +1,4 @@
+# RCSid $Id: closed_end.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# A closed wall for the end cap of our diorama
+
+!genbox wall_mat end_wall .2 5.2 3.2 | xform -t -8.2 -.1 -.1
