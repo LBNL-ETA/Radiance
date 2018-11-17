@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.16 2018/10/26 23:45:56 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.17 2018/11/17 20:22:17 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -199,8 +199,8 @@ color_check(COLOR c1, COLOR c2)
 {
 	int	p;
 
-	if (!real_check(colval(c1,RED)+colval(c1,GRN)+colval(c1,BLU)*(1./3.),
-			colval(c2,RED)+colval(c2,GRN)+colval(c2,BLU))*(1./3.))
+	if (!real_check((colval(c1,RED)+colval(c1,GRN)+colval(c1,BLU))*(1./3.),
+			(colval(c2,RED)+colval(c2,GRN)+colval(c2,BLU))*(1./3.)))
 		return(0);
 
 	p = (colval(c1,GRN) > colval(c1,RED)) ? GRN : RED;
