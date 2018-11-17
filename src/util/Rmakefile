@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.87 2018/10/15 17:52:52 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.88 2018/11/17 20:15:51 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -200,7 +200,7 @@ rad.o:	../common/paths.h
 
 ranimate.o netproc.o:	netproc.h
 
-ranimove1.o:	../common/otypes.h
+ranimove1.o:	../common/otypes.h ../rt/otspecial.h ../rt/source.h
 
 netproc.o:	../common/paths.h
 
