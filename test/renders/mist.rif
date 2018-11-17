@@ -1,4 +1,4 @@
-# RCSid $Id: mist.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: mist.rif,v 1.2 2018/11/17 23:22:43 greg Exp $
 #
 # Test of participating medium with spotlights
 #
@@ -25,5 +25,7 @@ PEN = False
 
 render = @render.opt
 render = -bv-
+
+rpict = -ps 1 -pj 0
 
 view = def -vp 0.1 3.2 2.8 -vd -2.7336 -0.482008 -1.02483 -vh 45 -vv 45
