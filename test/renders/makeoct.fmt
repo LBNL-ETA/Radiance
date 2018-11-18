@@ -1,0 +1,5 @@
+
+### Octree for $(base) ###
+
+$(base).oct:	$(base).rif
+	rad -v 0 $(base).rif

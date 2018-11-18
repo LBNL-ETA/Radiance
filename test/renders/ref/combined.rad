@@ -1,0 +1,3933 @@
+# xform -n i0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Basic materials used for walls, etc.
+
+void plastic wall_mat
+0
+0
+5                0.5                0.5                0.5                  0                  0
+
+void plastic ceil_mat
+0
+0
+5                0.7                0.7                0.7                  0                  0
+
+void plastic floor_mat
+0
+0
+5                0.3                0.2                0.1               0.02               0.04
+
+void plastic black_outside
+0
+0
+5               0.05               0.05               0.05                  0                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+
+void metal chrome
+0
+0
+5                0.6                0.6               0.75                  1                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+
+void metal gold
+0
+0
+5            0.99717           0.781957           0.334172                  1                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A photographed sunset taken on Nov. 6 2018, Berkeley CA
+# Artificial sun source scaled to cover circumsolar
+
+void colorpict sunset_pat
+9 red green blue sunset.hdr fisheye.cal fish_u fish_v -rz 90
+0
+0
+
+sunset_pat glow sky_glow
+0
+0
+4                 37                 37                 37                  0
+
+sky_glow source i0.west_sky
+0
+0
+4                 -1                  0                  0                180
+
+void light sol_light
+0
+0
+3              25000              25000              25000
+
+sol_light source i0.bigsun
+0
+0
+4            -0.9338              -0.35              0.001                  1
+# xform -n dielectric.1 -t 0 0 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon dielectric.1.wall.b
+0
+0
+30
+ -6.12323399574e-18               -0.1               -0.1
+ -6.12323399574e-18                5.1               -0.1
+  1.89820253868e-16                5.1                3.1
+  1.89820253868e-16               -0.1                3.1
+ -6.12323399574e-18               -0.1               -0.1
+                  0                  0                  0
+  1.83697019872e-16                  0                  3
+  1.83697019872e-16                  5                  3
+                  0                  5                  0
+                  0                  0                  0
+
+black_outside polygon dielectric.1.wall.t
+0
+0
+30
+                 -8                  0  4.89858719659e-16
+                 -8                  5  4.89858719659e-16
+                 -8                  5                  3
+                 -8                  0                  3
+                 -8                  0  4.89858719659e-16
+                 -8               -0.1               -0.1
+                 -8               -0.1                3.1
+                 -8                5.1                3.1
+                 -8                5.1               -0.1
+                 -8               -0.1               -0.1
+
+black_outside polygon dielectric.1.wall.1
+0
+0
+12
+ -6.12323399574e-18               -0.1               -0.1
+                 -8               -0.1               -0.1
+                 -8                5.1               -0.1
+ -6.12323399574e-18                5.1               -0.1
+
+black_outside polygon dielectric.1.wall.2
+0
+0
+12
+ -6.12323399574e-18                5.1               -0.1
+                 -8                5.1               -0.1
+                 -8                5.1                3.1
+  1.89820253868e-16                5.1                3.1
+
+black_outside polygon dielectric.1.wall.3
+0
+0
+12
+  1.89820253868e-16                5.1                3.1
+                 -8                5.1                3.1
+                 -8               -0.1                3.1
+  1.89820253868e-16               -0.1                3.1
+
+black_outside polygon dielectric.1.wall.4
+0
+0
+12
+  1.89820253868e-16               -0.1                3.1
+                 -8               -0.1                3.1
+                 -8               -0.1               -0.1
+ -6.12323399574e-18               -0.1               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon dielectric.1.wall.6
+0
+0
+12
+                  0                  0                  0
+                 -8                  0  4.89858719659e-16
+                 -8                  0                  3
+  1.83697019872e-16                  0                  3
+
+ceil_mat polygon dielectric.1.wall.7
+0
+0
+12
+  1.83697019872e-16                  0                  3
+                 -8                  0                  3
+                 -8                  5                  3
+  1.83697019872e-16                  5                  3
+
+wall_mat polygon dielectric.1.wall.8
+0
+0
+12
+  1.83697019872e-16                  5                  3
+                 -8                  5                  3
+                 -8                  5  4.89858719659e-16
+                  0                  5                  0
+
+floor_mat polygon dielectric.1.wall.9
+0
+0
+12
+                  0                  5                  0
+                 -8                  5  4.89858719659e-16
+                 -8                  0  4.89858719659e-16
+                  0                  0                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon dielectric.1.end_wall.b
+0
+0
+30
+                 -8               -0.1               -0.1
+                 -8                5.1               -0.1
+                 -8                5.1                3.1
+                 -8               -0.1                3.1
+                 -8               -0.1               -0.1
+                 -8                  1                  1
+                 -8                  1                  2
+                 -8                  4                  2
+                 -8                  4                  1
+                 -8                  1                  1
+
+wall_mat polygon dielectric.1.end_wall.t
+0
+0
+30
+               -8.2                  1                  1
+               -8.2                  4                  1
+               -8.2                  4                  2
+               -8.2                  1                  2
+               -8.2                  1                  1
+               -8.2               -0.1               -0.1
+               -8.2               -0.1                3.1
+               -8.2                5.1                3.1
+               -8.2                5.1               -0.1
+               -8.2               -0.1               -0.1
+
+wall_mat polygon dielectric.1.end_wall.1
+0
+0
+12
+                 -8               -0.1               -0.1
+               -8.2               -0.1               -0.1
+               -8.2                5.1               -0.1
+                 -8                5.1               -0.1
+
+wall_mat polygon dielectric.1.end_wall.2
+0
+0
+12
+                 -8                5.1               -0.1
+               -8.2                5.1               -0.1
+               -8.2                5.1                3.1
+                 -8                5.1                3.1
+
+wall_mat polygon dielectric.1.end_wall.3
+0
+0
+12
+                 -8                5.1                3.1
+               -8.2                5.1                3.1
+               -8.2               -0.1                3.1
+                 -8               -0.1                3.1
+
+wall_mat polygon dielectric.1.end_wall.4
+0
+0
+12
+                 -8               -0.1                3.1
+               -8.2               -0.1                3.1
+               -8.2               -0.1               -0.1
+                 -8               -0.1               -0.1
+
+wall_mat polygon dielectric.1.end_wall.5
+0
+0
+12
+                 -8               -0.1               -0.1
+               -8.2               -0.1               -0.1
+               -8.2                  1                  1
+                 -8                  1                  1
+
+wall_mat polygon dielectric.1.end_wall.6
+0
+0
+12
+                 -8                  1                  1
+               -8.2                  1                  1
+               -8.2                  1                  2
+                 -8                  1                  2
+
+wall_mat polygon dielectric.1.end_wall.7
+0
+0
+12
+                 -8                  1                  2
+               -8.2                  1                  2
+               -8.2                  4                  2
+                 -8                  4                  2
+
+wall_mat polygon dielectric.1.end_wall.8
+0
+0
+12
+                 -8                  4                  2
+               -8.2                  4                  2
+               -8.2                  4                  1
+                 -8                  4                  1
+
+wall_mat polygon dielectric.1.end_wall.9
+0
+0
+12
+                 -8                  4                  1
+               -8.2                  4                  1
+               -8.2                  1                  1
+                 -8                  1                  1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 0 0
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+vase_clay mesh dielectric.1.vase
+17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 0 0
+0
+0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
+
+void brightdata lum_dist
+21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 0 0
+0
+0
+# this is scaled by 1/area (SI)
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+# 3               1.55               1.55               1.55
+
+lum_bright polygon dielectric.1.luminaire
+0
+0
+12
+     -3.42215031167      2.22695014727              2.999
+     -4.57784968833      2.22695014728              2.999
+     -4.57784968833      2.77304985273              2.999
+     -3.42215031167      2.77304985272              2.999
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Pink glass pane made of two dieletric faces to fit any opening in end wall
+
+void dielectric dielectric_pink
+0
+0
+5         0.99          0.1         0.02          1.5            0
+
+dielectric_pink polygon dielectric.1.blue_glazing
+0
+0
+12
+              -8.05                  0                  0
+              -8.05                  5                  0
+              -8.05                  5                  3
+              -8.05                  0                  3
+
+dielectric_pink polygon dielectric.1.blue_glazing
+0
+0
+12
+              -8.15                  0                  3
+              -8.15                  5                  3
+              -8.15                  5                  0
+              -8.15                  0                  0
+# xform -n glass.2 -t 0 5.1 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon glass.2.wall.b
+0
+0
+30
+ -6.12323399574e-18                  5               -0.1
+ -6.12323399574e-18               10.2               -0.1
+  1.89820253868e-16               10.2                3.1
+  1.89820253868e-16                  5                3.1
+ -6.12323399574e-18                  5               -0.1
+                  0                5.1                  0
+  1.83697019872e-16                5.1                  3
+  1.83697019872e-16               10.1                  3
+                  0               10.1                  0
+                  0                5.1                  0
+
+black_outside polygon glass.2.wall.t
+0
+0
+30
+                 -8                5.1  4.89858719659e-16
+                 -8               10.1  4.89858719659e-16
+                 -8               10.1                  3
+                 -8                5.1                  3
+                 -8                5.1  4.89858719659e-16
+                 -8                  5               -0.1
+                 -8                  5                3.1
+                 -8               10.2                3.1
+                 -8               10.2               -0.1
+                 -8                  5               -0.1
+
+black_outside polygon glass.2.wall.1
+0
+0
+12
+ -6.12323399574e-18                  5               -0.1
+                 -8                  5               -0.1
+                 -8               10.2               -0.1
+ -6.12323399574e-18               10.2               -0.1
+
+black_outside polygon glass.2.wall.2
+0
+0
+12
+ -6.12323399574e-18               10.2               -0.1
+                 -8               10.2               -0.1
+                 -8               10.2                3.1
+  1.89820253868e-16               10.2                3.1
+
+black_outside polygon glass.2.wall.3
+0
+0
+12
+  1.89820253868e-16               10.2                3.1
+                 -8               10.2                3.1
+                 -8                  5                3.1
+  1.89820253868e-16                  5                3.1
+
+black_outside polygon glass.2.wall.4
+0
+0
+12
+  1.89820253868e-16                  5                3.1
+                 -8                  5                3.1
+                 -8                  5               -0.1
+ -6.12323399574e-18                  5               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon glass.2.wall.6
+0
+0
+12
+                  0                5.1                  0
+                 -8                5.1  4.89858719659e-16
+                 -8                5.1                  3
+  1.83697019872e-16                5.1                  3
+
+ceil_mat polygon glass.2.wall.7
+0
+0
+12
+  1.83697019872e-16                5.1                  3
+                 -8                5.1                  3
+                 -8               10.1                  3
+  1.83697019872e-16               10.1                  3
+
+wall_mat polygon glass.2.wall.8
+0
+0
+12
+  1.83697019872e-16               10.1                  3
+                 -8               10.1                  3
+                 -8               10.1  4.89858719659e-16
+                  0               10.1                  0
+
+floor_mat polygon glass.2.wall.9
+0
+0
+12
+                  0               10.1                  0
+                 -8               10.1  4.89858719659e-16
+                 -8                5.1  4.89858719659e-16
+                  0                5.1                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon glass.2.end_wall.b
+0
+0
+30
+                 -8                  5               -0.1
+                 -8               10.2               -0.1
+                 -8               10.2                3.1
+                 -8                  5                3.1
+                 -8                  5               -0.1
+                 -8                6.1                  1
+                 -8                6.1                  2
+                 -8                9.1                  2
+                 -8                9.1                  1
+                 -8                6.1                  1
+
+wall_mat polygon glass.2.end_wall.t
+0
+0
+30
+               -8.2                6.1                  1
+               -8.2                9.1                  1
+               -8.2                9.1                  2
+               -8.2                6.1                  2
+               -8.2                6.1                  1
+               -8.2                  5               -0.1
+               -8.2                  5                3.1
+               -8.2               10.2                3.1
+               -8.2               10.2               -0.1
+               -8.2                  5               -0.1
+
+wall_mat polygon glass.2.end_wall.1
+0
+0
+12
+                 -8                  5               -0.1
+               -8.2                  5               -0.1
+               -8.2               10.2               -0.1
+                 -8               10.2               -0.1
+
+wall_mat polygon glass.2.end_wall.2
+0
+0
+12
+                 -8               10.2               -0.1
+               -8.2               10.2               -0.1
+               -8.2               10.2                3.1
+                 -8               10.2                3.1
+
+wall_mat polygon glass.2.end_wall.3
+0
+0
+12
+                 -8               10.2                3.1
+               -8.2               10.2                3.1
+               -8.2                  5                3.1
+                 -8                  5                3.1
+
+wall_mat polygon glass.2.end_wall.4
+0
+0
+12
+                 -8                  5                3.1
+               -8.2                  5                3.1
+               -8.2                  5               -0.1
+                 -8                  5               -0.1
+
+wall_mat polygon glass.2.end_wall.5
+0
+0
+12
+                 -8                  5               -0.1
+               -8.2                  5               -0.1
+               -8.2                6.1                  1
+                 -8                6.1                  1
+
+wall_mat polygon glass.2.end_wall.6
+0
+0
+12
+                 -8                6.1                  1
+               -8.2                6.1                  1
+               -8.2                6.1                  2
+                 -8                6.1                  2
+
+wall_mat polygon glass.2.end_wall.7
+0
+0
+12
+                 -8                6.1                  2
+               -8.2                6.1                  2
+               -8.2                9.1                  2
+                 -8                9.1                  2
+
+wall_mat polygon glass.2.end_wall.8
+0
+0
+12
+                 -8                9.1                  2
+               -8.2                9.1                  2
+               -8.2                9.1                  1
+                 -8                9.1                  1
+
+wall_mat polygon glass.2.end_wall.9
+0
+0
+12
+                 -8                9.1                  1
+               -8.2                9.1                  1
+               -8.2                6.1                  1
+                 -8                6.1                  1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A green metal torus with glowing red stripes
+
+void metal green_metal
+0
+0
+5                0.1                0.8                0.1                0.6               0.08
+
+void glow red_glow
+0
+0
+4                0.8               0.02               0.01                  0
+
+void mixfunc striped
+10 green_metal red_glow "if(mod(atan2(Py-A2,Px-A1),PI/10) - PI/20, 1, 0)" . -i 1 -t 0 5.1 0
+0
+3                 -4                2.5                1.5
+# xform -ry 52 -s .2 -t -4 2.5 1.5
+# genrev striped torus sin(2*PI*t) 2+cos(2*PI*t) 32 -s
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.48795016716                  0     -49.8024616447      149.407384934
+
+Phong cone glass.2.torus.1
+0
+0
+8
+                 -4                7.6                1.5
+     -3.96925334567                7.6      1.52402191909
+                0.6      0.59615705608
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.290284677254      1.99036945334     -4.93767924242
+
+Phong cone glass.2.torus.2
+0
+0
+8
+     -3.96925334567                7.6      1.52402191909
+     -3.93968826801                7.6      1.54712068931
+      0.59615705608     0.584775906502
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.471396736826      1.99036945334     -4.86266017104
+
+Phong cone glass.2.torus.3
+0
+0
+8
+     -3.93968826801                7.6      1.54712068931
+      -3.9124409364                7.6      1.56840863786
+     0.584775906502      0.56629392246
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.634393284164      1.99036945334     -4.75374936005
+
+Phong cone glass.2.torus.4
+0
+0
+8
+      -3.9124409364                7.6      1.56840863786
+      -3.8885584505                7.6      1.58706768082
+      0.56629392246     0.541421356238
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.773010453363      1.99036945334     -4.61513219085
+
+Phong cone glass.2.torus.5
+0
+0
+8
+      -3.8885584505                7.6      1.58706768082
+     -3.86895860084                7.6      1.60238076164
+     0.541421356238     0.511114046604
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.881921264348      1.99036945334     -4.45213564351
+
+Phong cone glass.2.torus.6
+0
+0
+8
+     -3.86895860084                7.6      1.60238076164
+     -3.85439459867                7.6       1.6137594072
+     0.511114046604     0.476536686474
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.956940335732      1.99036945334     -4.27102358394
+
+Phong cone glass.2.torus.7
+0
+0
+8
+     -3.85439459867                7.6       1.6137594072
+     -3.84542613041                7.6      1.62076634254
+     0.476536686474     0.439018064404
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.995184726672      1.99036945334     -4.07875604702
+
+Phong cone glass.2.torus.8
+0
+0
+8
+     -3.84542613041                7.6      1.62076634254
+     -3.84239784928                7.6      1.62313229507
+     0.439018064404                0.4
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.995184726672      1.99036945334     -3.88272176636
+
+Phong cup glass.2.torus.9
+0
+0
+8
+     -3.84239784928                7.6      1.62313229507
+     -3.84542613041                7.6      1.62076634254
+                0.4     0.360981935596
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.956940335732      1.99036945334     -3.69045422943
+
+Phong cup glass.2.torus.10
+0
+0
+8
+     -3.84542613041                7.6      1.62076634254
+     -3.85439459867                7.6       1.6137594072
+     0.360981935596     0.323463313526
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.881921264348      1.99036945334     -3.50934216986
+
+Phong cup glass.2.torus.11
+0
+0
+8
+     -3.85439459867                7.6       1.6137594072
+     -3.86895860084                7.6      1.60238076164
+     0.323463313526     0.288885953396
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.773010453363      1.99036945334     -3.34634562253
+
+Phong cup glass.2.torus.12
+0
+0
+8
+     -3.86895860084                7.6      1.60238076164
+      -3.8885584505                7.6      1.58706768082
+     0.288885953396     0.258578643762
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.634393284164      1.99036945334     -3.20772845333
+
+Phong cup glass.2.torus.13
+0
+0
+8
+      -3.8885584505                7.6      1.58706768082
+      -3.9124409364                7.6      1.56840863786
+     0.258578643762      0.23370607754
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.471396736826      1.99036945334     -3.09881764234
+
+Phong cup glass.2.torus.14
+0
+0
+8
+      -3.9124409364                7.6      1.56840863786
+     -3.93968826801                7.6      1.54712068931
+      0.23370607754     0.215224093498
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    -0.290284677254      1.99036945334     -3.02379857096
+
+Phong cup glass.2.torus.15
+0
+0
+8
+     -3.93968826801                7.6      1.54712068931
+     -3.96925334567                7.6      1.52402191909
+     0.215224093498      0.20384294392
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334   -0.0980171403296      1.99036945334     -2.98555418002
+
+Phong cup glass.2.torus.16
+0
+0
+8
+     -3.96925334567                7.6      1.52402191909
+                 -4                7.6                1.5
+      0.20384294392                0.2
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334    0.0980171403296      1.99036945334     -2.98555418002
+
+Phong cup glass.2.torus.17
+0
+0
+8
+                 -4                7.6                1.5
+     -4.03074665433                7.6      1.47597808091
+                0.2      0.20384294392
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.290284677254      1.99036945334     -3.02379857096
+
+Phong cup glass.2.torus.18
+0
+0
+8
+     -4.03074665433                7.6      1.47597808091
+     -4.06031173199                7.6      1.45287931069
+      0.20384294392     0.215224093498
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.471396736826      1.99036945334     -3.09881764234
+
+Phong cup glass.2.torus.19
+0
+0
+8
+     -4.06031173199                7.6      1.45287931069
+      -4.0875590636                7.6      1.43159136214
+     0.215224093498      0.23370607754
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.634393284164      1.99036945334     -3.20772845333
+
+Phong cup glass.2.torus.20
+0
+0
+8
+      -4.0875590636                7.6      1.43159136214
+      -4.1114415495                7.6      1.41293231918
+      0.23370607754     0.258578643762
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.773010453363      1.99036945334     -3.34634562253
+
+Phong cup glass.2.torus.21
+0
+0
+8
+      -4.1114415495                7.6      1.41293231918
+     -4.13104139916                7.6      1.39761923836
+     0.258578643762     0.288885953396
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.881921264348      1.99036945334     -3.50934216986
+
+Phong cup glass.2.torus.22
+0
+0
+8
+     -4.13104139916                7.6      1.39761923836
+     -4.14560540133                7.6       1.3862405928
+     0.288885953396     0.323463313526
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.956940335732      1.99036945334     -3.69045422943
+
+Phong cup glass.2.torus.23
+0
+0
+8
+     -4.14560540133                7.6       1.3862405928
+     -4.15457386959                7.6      1.37923365746
+     0.323463313526     0.360981935596
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.995184726672      1.99036945334     -3.88272176636
+
+Phong cup glass.2.torus.24
+0
+0
+8
+     -4.15457386959                7.6      1.37923365746
+     -4.15760215072                7.6      1.37686770493
+     0.360981935596                0.4
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.995184726672      1.99036945334     -4.07875604702
+
+Phong cone glass.2.torus.25
+0
+0
+8
+     -4.15760215072                7.6      1.37686770493
+     -4.15457386959                7.6      1.37923365746
+                0.4     0.439018064404
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.956940335732      1.99036945334     -4.27102358394
+
+Phong cone glass.2.torus.26
+0
+0
+8
+     -4.15457386959                7.6      1.37923365746
+     -4.14560540133                7.6       1.3862405928
+     0.439018064404     0.476536686474
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.881921264348      1.99036945334     -4.45213564351
+
+Phong cone glass.2.torus.27
+0
+0
+8
+     -4.14560540133                7.6       1.3862405928
+     -4.13104139916                7.6      1.39761923836
+     0.476536686474     0.511114046604
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.773010453363      1.99036945334     -4.61513219085
+
+Phong cone glass.2.torus.28
+0
+0
+8
+     -4.13104139916                7.6      1.39761923836
+      -4.1114415495                7.6      1.41293231918
+     0.511114046604     0.541421356238
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.634393284164      1.99036945334     -4.75374936005
+
+Phong cone glass.2.torus.29
+0
+0
+8
+      -4.1114415495                7.6      1.41293231918
+      -4.0875590636                7.6      1.43159136214
+     0.541421356238      0.56629392246
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.471396736826      1.99036945334     -4.86266017104
+
+Phong cone glass.2.torus.30
+0
+0
+8
+      -4.0875590636                7.6      1.43159136214
+     -4.06031173199                7.6      1.45287931069
+      0.56629392246     0.584775906502
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.99036945334     0.290284677254      1.99036945334     -4.93767924242
+
+Phong cone glass.2.torus.31
+0
+0
+8
+     -4.06031173199                7.6      1.45287931069
+     -4.03074665433                7.6      1.47597808091
+     0.584775906502      0.59615705608
+
+striped texfunc Phong
+20 rev_dx rev_dy rev_dz rev.cal -i 1 -ry 52 -s .2 -t -4 2.5 1.5 -i 1 -t 0 5.1 0
+0
+4      1.48795016716  3.33066907388e-16     -49.8024616447      149.407384934
+
+Phong cone glass.2.torus.32
+0
+0
+8
+     -4.03074665433                7.6      1.47597808091
+                 -4                7.6                1.5
+      0.59615705608                0.6
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A clear glazing used to create rectangular illum at window
+#@mkillum f=glass_ill c=d d=50 s=64
+
+void glass glass_clear
+0
+0
+3               0.92               0.92               0.92
+
+glass_clear polygon glass.2.clear_glazing
+0
+0
+12
+               -8.1                6.1                  1
+               -8.1                9.1                  1
+               -8.1                9.1                  2
+               -8.1                6.1                  2
+# xform -n inst.3 -t 0 10.2 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon inst.3.wall.b
+0
+0
+30
+ -6.12323399574e-18               10.1               -0.1
+ -6.12323399574e-18               15.3               -0.1
+  1.89820253868e-16               15.3                3.1
+  1.89820253868e-16               10.1                3.1
+ -6.12323399574e-18               10.1               -0.1
+                  0               10.2                  0
+  1.83697019872e-16               10.2                  3
+  1.83697019872e-16               15.2                  3
+                  0               15.2                  0
+                  0               10.2                  0
+
+black_outside polygon inst.3.wall.t
+0
+0
+30
+                 -8               10.2  4.89858719659e-16
+                 -8               15.2  4.89858719659e-16
+                 -8               15.2                  3
+                 -8               10.2                  3
+                 -8               10.2  4.89858719659e-16
+                 -8               10.1               -0.1
+                 -8               10.1                3.1
+                 -8               15.3                3.1
+                 -8               15.3               -0.1
+                 -8               10.1               -0.1
+
+black_outside polygon inst.3.wall.1
+0
+0
+12
+ -6.12323399574e-18               10.1               -0.1
+                 -8               10.1               -0.1
+                 -8               15.3               -0.1
+ -6.12323399574e-18               15.3               -0.1
+
+black_outside polygon inst.3.wall.2
+0
+0
+12
+ -6.12323399574e-18               15.3               -0.1
+                 -8               15.3               -0.1
+                 -8               15.3                3.1
+  1.89820253868e-16               15.3                3.1
+
+black_outside polygon inst.3.wall.3
+0
+0
+12
+  1.89820253868e-16               15.3                3.1
+                 -8               15.3                3.1
+                 -8               10.1                3.1
+  1.89820253868e-16               10.1                3.1
+
+black_outside polygon inst.3.wall.4
+0
+0
+12
+  1.89820253868e-16               10.1                3.1
+                 -8               10.1                3.1
+                 -8               10.1               -0.1
+ -6.12323399574e-18               10.1               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon inst.3.wall.6
+0
+0
+12
+                  0               10.2                  0
+                 -8               10.2  4.89858719659e-16
+                 -8               10.2                  3
+  1.83697019872e-16               10.2                  3
+
+ceil_mat polygon inst.3.wall.7
+0
+0
+12
+  1.83697019872e-16               10.2                  3
+                 -8               10.2                  3
+                 -8               15.2                  3
+  1.83697019872e-16               15.2                  3
+
+wall_mat polygon inst.3.wall.8
+0
+0
+12
+  1.83697019872e-16               15.2                  3
+                 -8               15.2                  3
+                 -8               15.2  4.89858719659e-16
+                  0               15.2                  0
+
+floor_mat polygon inst.3.wall.9
+0
+0
+12
+                  0               15.2                  0
+                 -8               15.2  4.89858719659e-16
+                 -8               10.2  4.89858719659e-16
+                  0               10.2                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
+
+wall_mat polygon inst.3.end_wall.1540
+0
+0
+12
+                 -8               10.1               -0.1
+                 -8               10.1                3.1
+               -8.2               10.1                3.1
+               -8.2               10.1               -0.1
+
+wall_mat polygon inst.3.end_wall.4620
+0
+0
+12
+               -8.2               10.1                3.1
+               -8.2               15.3                3.1
+               -8.2               15.3               -0.1
+               -8.2               10.1               -0.1
+
+wall_mat polygon inst.3.end_wall.2310
+0
+0
+12
+               -8.2               15.3               -0.1
+                 -8               15.3               -0.1
+                 -8               10.1               -0.1
+               -8.2               10.1               -0.1
+
+wall_mat polygon inst.3.end_wall.3267
+0
+0
+12
+                 -8               15.3               -0.1
+               -8.2               15.3               -0.1
+               -8.2               15.3                3.1
+                 -8               15.3                3.1
+
+wall_mat polygon inst.3.end_wall.5137
+0
+0
+12
+                 -8               10.1                3.1
+                 -8               10.1               -0.1
+                 -8               15.3               -0.1
+                 -8               15.3                3.1
+
+wall_mat polygon inst.3.end_wall.6457
+0
+0
+12
+               -8.2               15.3                3.1
+               -8.2               10.1                3.1
+                 -8               10.1                3.1
+                 -8               15.3                3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Test of instance primitive and spaces in names and modifiers
+#
+
+void instance "inst.3.porsche #1"
+15 porsche.octf -rx 90 -s .15 -t -4 2 1 -i 1 -t 0 10.2 0
+0
+0
+
+void ashik2 "ashik mat"
+10 1 0 0 . -i 1 -t 0 10.2 0
+0
+8                0.3                0.1               0.05               0.05               0.05               0.08                  5                 30
+
+"ashik mat" instance inst.3.porsche2
+15 porsche.octf -rx 90 -s .15 -t -4 3 1 -i 1 -t 0 10.2 0
+0
+0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A pair of spotlights, one pink and one bluish
+
+void spotlight pink_spotlight
+0
+0
+7               1000                400                200                 30
+	              -2.5                1.5                 -2
+
+pink_spotlight ring inst.3.pspot
+0
+0
+8
+                 -2               11.2                2.5
+               -2.5                1.5                 -2
+                  0                0.2
+
+void spotlight blue_spotlight
+0
+0
+7                200                400               1000                 30
+	              -2.5               -1.5                 -2
+
+blue_spotlight ring inst.3.bspot
+0
+0
+8
+                 -2               14.2                2.5
+               -2.5               -1.5                 -2
+                  0                0.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
+
+void brightdata lum_dist
+21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 10.2 0
+0
+0
+# this is scaled by 1/area (SI)
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+# 3               1.55               1.55               1.55
+
+lum_bright polygon inst.3.luminaire
+0
+0
+12
+     -3.42215031167      12.4269501473              2.999
+     -4.57784968833      12.4269501473              2.999
+     -4.57784968833      12.9730498527              2.999
+     -3.42215031167      12.9730498527              2.999
+# xform -n mesh.4 -t 0 15.3 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon mesh.4.wall.b
+0
+0
+30
+ -6.12323399574e-18               15.2               -0.1
+ -6.12323399574e-18               20.4               -0.1
+  1.89820253868e-16               20.4                3.1
+  1.89820253868e-16               15.2                3.1
+ -6.12323399574e-18               15.2               -0.1
+                  0               15.3                  0
+  1.83697019872e-16               15.3                  3
+  1.83697019872e-16               20.3                  3
+                  0               20.3                  0
+                  0               15.3                  0
+
+black_outside polygon mesh.4.wall.t
+0
+0
+30
+                 -8               15.3  4.89858719659e-16
+                 -8               20.3  4.89858719659e-16
+                 -8               20.3                  3
+                 -8               15.3                  3
+                 -8               15.3  4.89858719659e-16
+                 -8               15.2               -0.1
+                 -8               15.2                3.1
+                 -8               20.4                3.1
+                 -8               20.4               -0.1
+                 -8               15.2               -0.1
+
+black_outside polygon mesh.4.wall.1
+0
+0
+12
+ -6.12323399574e-18               15.2               -0.1
+                 -8               15.2               -0.1
+                 -8               20.4               -0.1
+ -6.12323399574e-18               20.4               -0.1
+
+black_outside polygon mesh.4.wall.2
+0
+0
+12
+ -6.12323399574e-18               20.4               -0.1
+                 -8               20.4               -0.1
+                 -8               20.4                3.1
+  1.89820253868e-16               20.4                3.1
+
+black_outside polygon mesh.4.wall.3
+0
+0
+12
+  1.89820253868e-16               20.4                3.1
+                 -8               20.4                3.1
+                 -8               15.2                3.1
+  1.89820253868e-16               15.2                3.1
+
+black_outside polygon mesh.4.wall.4
+0
+0
+12
+  1.89820253868e-16               15.2                3.1
+                 -8               15.2                3.1
+                 -8               15.2               -0.1
+ -6.12323399574e-18               15.2               -0.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon mesh.4.wall.6
+0
+0
+12
+                  0               15.3                  0
+                 -8               15.3  4.89858719659e-16
+                 -8               15.3                  3
+  1.83697019872e-16               15.3                  3
+
+ceil_mat polygon mesh.4.wall.7
+0
+0
+12
+  1.83697019872e-16               15.3                  3
+                 -8               15.3                  3
+                 -8               20.3                  3
+  1.83697019872e-16               20.3                  3
+
+wall_mat polygon mesh.4.wall.8
+0
+0
+12
+  1.83697019872e-16               20.3                  3
+                 -8               20.3                  3
+                 -8               20.3  4.89858719659e-16
+                  0               20.3                  0
+
+floor_mat polygon mesh.4.wall.9
+0
+0
+12
+                  0               20.3                  0
+                 -8               20.3  4.89858719659e-16
+                 -8               15.3  4.89858719659e-16
+                  0               15.3                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
+
+wall_mat polygon mesh.4.end_wall.1540
+0
+0
+12
+                 -8               15.2               -0.1
+                 -8               15.2                3.1
+               -8.2               15.2                3.1
+               -8.2               15.2               -0.1
+
+wall_mat polygon mesh.4.end_wall.4620
+0
+0
+12
+               -8.2               15.2                3.1
+               -8.2               20.4                3.1
+               -8.2               20.4               -0.1
+               -8.2               15.2               -0.1
+
+wall_mat polygon mesh.4.end_wall.2310
+0
+0
+12
+               -8.2               20.4               -0.1
+                 -8               20.4               -0.1
+                 -8               15.2               -0.1
+               -8.2               15.2               -0.1
+
+wall_mat polygon mesh.4.end_wall.3267
+0
+0
+12
+                 -8               20.4               -0.1
+               -8.2               20.4               -0.1
+               -8.2               20.4                3.1
+                 -8               20.4                3.1
+
+wall_mat polygon mesh.4.end_wall.5137
+0
+0
+12
+                 -8               15.2                3.1
+                 -8               15.2               -0.1
+                 -8               20.4               -0.1
+                 -8               20.4                3.1
+
+wall_mat polygon mesh.4.end_wall.6457
+0
+0
+12
+               -8.2               20.4                3.1
+               -8.2               15.2                3.1
+                 -8               15.2                3.1
+                 -8               20.4                3.1
+# xform -n mesh.plainclothes.5.0 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.0.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.1.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.2 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.2.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.3 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.3.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.4 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.4.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.5 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.5.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.6 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.6.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.7 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.7.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mesh.plainclothes.5.8 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+void mesh mesh.plainclothes.5.8.woman
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.0 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.0.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.1.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.2 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.2.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.3 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.3.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.4 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.4.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.5 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.5.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.6 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.6.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.7 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.7.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -m chrome -n mesh.shiny.6.8 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Mesh test with a woman model
+#
+
+chrome mesh mesh.shiny.6.8.woman
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+0
+0
+# xform -n mirror.7 -t 0 0 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon mirror.7.wall.b
+0
+0
+30
+ -6.12323399574e-18               -0.1                  3
+ -6.12323399574e-18                5.1                  3
+  1.89820253868e-16                5.1                6.2
+  1.89820253868e-16               -0.1                6.2
+ -6.12323399574e-18               -0.1                  3
+                  0                  0                3.1
+  1.83697019872e-16                  0                6.1
+  1.83697019872e-16                  5                6.1
+                  0                  5                3.1
+                  0                  0                3.1
+
+black_outside polygon mirror.7.wall.t
+0
+0
+30
+                 -8                  0                3.1
+                 -8                  5                3.1
+                 -8                  5                6.1
+                 -8                  0                6.1
+                 -8                  0                3.1
+                 -8               -0.1                  3
+                 -8               -0.1                6.2
+                 -8                5.1                6.2
+                 -8                5.1                  3
+                 -8               -0.1                  3
+
+black_outside polygon mirror.7.wall.1
+0
+0
+12
+ -6.12323399574e-18               -0.1                  3
+                 -8               -0.1                  3
+                 -8                5.1                  3
+ -6.12323399574e-18                5.1                  3
+
+black_outside polygon mirror.7.wall.2
+0
+0
+12
+ -6.12323399574e-18                5.1                  3
+                 -8                5.1                  3
+                 -8                5.1                6.2
+  1.89820253868e-16                5.1                6.2
+
+black_outside polygon mirror.7.wall.3
+0
+0
+12
+  1.89820253868e-16                5.1                6.2
+                 -8                5.1                6.2
+                 -8               -0.1                6.2
+  1.89820253868e-16               -0.1                6.2
+
+black_outside polygon mirror.7.wall.4
+0
+0
+12
+  1.89820253868e-16               -0.1                6.2
+                 -8               -0.1                6.2
+                 -8               -0.1                  3
+ -6.12323399574e-18               -0.1                  3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon mirror.7.wall.6
+0
+0
+12
+                  0                  0                3.1
+                 -8                  0                3.1
+                 -8                  0                6.1
+  1.83697019872e-16                  0                6.1
+
+ceil_mat polygon mirror.7.wall.7
+0
+0
+12
+  1.83697019872e-16                  0                6.1
+                 -8                  0                6.1
+                 -8                  5                6.1
+  1.83697019872e-16                  5                6.1
+
+wall_mat polygon mirror.7.wall.8
+0
+0
+12
+  1.83697019872e-16                  5                6.1
+                 -8                  5                6.1
+                 -8                  5                3.1
+                  0                  5                3.1
+
+floor_mat polygon mirror.7.wall.9
+0
+0
+12
+                  0                  5                3.1
+                 -8                  5                3.1
+                 -8                  0                3.1
+                  0                  0                3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
+
+wall_mat polygon mirror.7.end_wall.1540
+0
+0
+12
+                 -8               -0.1                  3
+                 -8               -0.1                6.2
+               -8.2               -0.1                6.2
+               -8.2               -0.1                  3
+
+wall_mat polygon mirror.7.end_wall.4620
+0
+0
+12
+               -8.2               -0.1                6.2
+               -8.2                5.1                6.2
+               -8.2                5.1                  3
+               -8.2               -0.1                  3
+
+wall_mat polygon mirror.7.end_wall.2310
+0
+0
+12
+               -8.2                5.1                  3
+                 -8                5.1                  3
+                 -8               -0.1                  3
+               -8.2               -0.1                  3
+
+wall_mat polygon mirror.7.end_wall.3267
+0
+0
+12
+                 -8                5.1                  3
+               -8.2                5.1                  3
+               -8.2                5.1                6.2
+                 -8                5.1                6.2
+
+wall_mat polygon mirror.7.end_wall.5137
+0
+0
+12
+                 -8               -0.1                6.2
+                 -8               -0.1                  3
+                 -8                5.1                  3
+                 -8                5.1                6.2
+
+wall_mat polygon mirror.7.end_wall.6457
+0
+0
+12
+               -8.2                5.1                6.2
+               -8.2               -0.1                6.2
+                 -8               -0.1                6.2
+                 -8                5.1                6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A bluish glass pane to fit any opening in end wall
+
+void glass glass_blue
+0
+0
+4                0.7                0.9               0.98                1.5
+
+glass_blue polygon mirror.7.blue_glazing
+0
+0
+12
+               -8.1                  0                3.1
+               -8.1                  5                3.1
+               -8.1                  5                6.1
+               -8.1                  0                6.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Antimatter to cut through window wall with round, bevelled portal
+# Couple with closed_end.rad
+
+void antimatter wall_eraser
+1 wall_mat
+0
+0
+
+wall_eraser ring mirror.7.outer_portal
+0
+0
+8
+             -8.201                2.5                4.6
+                 -1                  0                  0
+                  0                  1
+
+wall_eraser cone mirror.7.side_portal
+0
+0
+8
+             -8.201                2.5                4.6
+             -7.999                2.5                4.6
+                  1                1.1
+
+wall_eraser ring mirror.7.inner_portal
+0
+0
+8
+             -7.999                2.5                4.6
+                  1                  0                  0
+                  0                1.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Red ball inside water cube, test for interface
+# Should match ball_in_cube.rad, but using bubble to invert normal
+
+void dielectric clear_water
+0
+0
+5         0.98         0.98         0.98         1.33            0
+
+void interface red_interface
+0
+0
+8
+        0.98         0.98         0.98         1.33
+        0.98         0.05         0.02          1.6
+# xform -t -.5 -.5 -.5 -rz 17 -t -4 2.5 1.5
+# genbox clear_water watery 1 1 1
+
+clear_water polygon mirror.7.watery.1540
+0
+0
+12
+     -3.37566176966      2.16803347438                4.1
+     -3.37566176966      2.16803347438                5.1
+     -4.33196652562      1.87566176966                5.1
+     -4.33196652562      1.87566176966                4.1
+
+clear_water polygon mirror.7.watery.4620
+0
+0
+12
+     -4.33196652562      1.87566176966                5.1
+     -4.62433823034      2.83196652562                5.1
+     -4.62433823034      2.83196652562                4.1
+     -4.33196652562      1.87566176966                4.1
+
+clear_water polygon mirror.7.watery.2310
+0
+0
+12
+     -4.62433823034      2.83196652562                4.1
+     -3.66803347438      3.12433823034                4.1
+     -3.37566176966      2.16803347438                4.1
+     -4.33196652562      1.87566176966                4.1
+
+clear_water polygon mirror.7.watery.3267
+0
+0
+12
+     -3.66803347438      3.12433823034                4.1
+     -4.62433823034      2.83196652562                4.1
+     -4.62433823034      2.83196652562                5.1
+     -3.66803347438      3.12433823034                5.1
+
+clear_water polygon mirror.7.watery.5137
+0
+0
+12
+     -3.37566176966      2.16803347438                5.1
+     -3.37566176966      2.16803347438                4.1
+     -3.66803347438      3.12433823034                4.1
+     -3.66803347438      3.12433823034                5.1
+
+clear_water polygon mirror.7.watery.6457
+0
+0
+12
+     -4.62433823034      2.83196652562                5.1
+     -4.33196652562      1.87566176966                5.1
+     -3.37566176966      2.16803347438                5.1
+     -3.66803347438      3.12433823034                5.1
+
+red_interface bubble mirror.7.red_ruby
+0
+0
+4                 -4                2.5                4.6               0.25
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# A mirror on the Y=5 wall with an alternate material having some pink diffuse
+#
+
+void plastic pink_mirror_mat
+0
+0
+5                0.9                0.5                0.6                0.8              0.015
+
+void mirror wall_mirror
+1 pink_mirror_mat
+0
+3                0.8                0.8                0.8
+
+wall_mirror polygon mirror.7.mirror
+0
+0
+12
+                 -5               4.99                4.1
+                 -2               4.99                4.1
+                 -2               4.99                5.1
+                 -5               4.99                5.1
+# xform -n mist.8 -t 0 5.1 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon mist.8.wall.b
+0
+0
+30
+ -6.12323399574e-18                  5                  3
+ -6.12323399574e-18               10.2                  3
+  1.89820253868e-16               10.2                6.2
+  1.89820253868e-16                  5                6.2
+ -6.12323399574e-18                  5                  3
+                  0                5.1                3.1
+  1.83697019872e-16                5.1                6.1
+  1.83697019872e-16               10.1                6.1
+                  0               10.1                3.1
+                  0                5.1                3.1
+
+black_outside polygon mist.8.wall.t
+0
+0
+30
+                 -8                5.1                3.1
+                 -8               10.1                3.1
+                 -8               10.1                6.1
+                 -8                5.1                6.1
+                 -8                5.1                3.1
+                 -8                  5                  3
+                 -8                  5                6.2
+                 -8               10.2                6.2
+                 -8               10.2                  3
+                 -8                  5                  3
+
+black_outside polygon mist.8.wall.1
+0
+0
+12
+ -6.12323399574e-18                  5                  3
+                 -8                  5                  3
+                 -8               10.2                  3
+ -6.12323399574e-18               10.2                  3
+
+black_outside polygon mist.8.wall.2
+0
+0
+12
+ -6.12323399574e-18               10.2                  3
+                 -8               10.2                  3
+                 -8               10.2                6.2
+  1.89820253868e-16               10.2                6.2
+
+black_outside polygon mist.8.wall.3
+0
+0
+12
+  1.89820253868e-16               10.2                6.2
+                 -8               10.2                6.2
+                 -8                  5                6.2
+  1.89820253868e-16                  5                6.2
+
+black_outside polygon mist.8.wall.4
+0
+0
+12
+  1.89820253868e-16                  5                6.2
+                 -8                  5                6.2
+                 -8                  5                  3
+ -6.12323399574e-18                  5                  3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon mist.8.wall.6
+0
+0
+12
+                  0                5.1                3.1
+                 -8                5.1                3.1
+                 -8                5.1                6.1
+  1.83697019872e-16                5.1                6.1
+
+ceil_mat polygon mist.8.wall.7
+0
+0
+12
+  1.83697019872e-16                5.1                6.1
+                 -8                5.1                6.1
+                 -8               10.1                6.1
+  1.83697019872e-16               10.1                6.1
+
+wall_mat polygon mist.8.wall.8
+0
+0
+12
+  1.83697019872e-16               10.1                6.1
+                 -8               10.1                6.1
+                 -8               10.1                3.1
+                  0               10.1                3.1
+
+floor_mat polygon mist.8.wall.9
+0
+0
+12
+                  0               10.1                3.1
+                 -8               10.1                3.1
+                 -8                5.1                3.1
+                  0                5.1                3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A closed wall for the end cap of our diorama
+# xform -t -8.2 -.1 -.1
+# genbox wall_mat end_wall .2 5.2 3.2
+
+wall_mat polygon mist.8.end_wall.1540
+0
+0
+12
+                 -8                  5                  3
+                 -8                  5                6.2
+               -8.2                  5                6.2
+               -8.2                  5                  3
+
+wall_mat polygon mist.8.end_wall.4620
+0
+0
+12
+               -8.2                  5                6.2
+               -8.2               10.2                6.2
+               -8.2               10.2                  3
+               -8.2                  5                  3
+
+wall_mat polygon mist.8.end_wall.2310
+0
+0
+12
+               -8.2               10.2                  3
+                 -8               10.2                  3
+                 -8                  5                  3
+               -8.2                  5                  3
+
+wall_mat polygon mist.8.end_wall.3267
+0
+0
+12
+                 -8               10.2                  3
+               -8.2               10.2                  3
+               -8.2               10.2                6.2
+                 -8               10.2                6.2
+
+wall_mat polygon mist.8.end_wall.5137
+0
+0
+12
+                 -8                  5                6.2
+                 -8                  5                  3
+                 -8               10.2                  3
+                 -8               10.2                6.2
+
+wall_mat polygon mist.8.end_wall.6457
+0
+0
+12
+               -8.2               10.2                6.2
+               -8.2                  5                6.2
+                 -8                  5                6.2
+                 -8               10.2                6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Red ball inside water cube, test for interface
+
+void dielectric clear_water
+0
+0
+5         0.98         0.98         0.98         1.33            0
+
+void interface red_interface
+0
+0
+8
+        0.98         0.05         0.02          1.6
+        0.98         0.98         0.98         1.33
+# xform -t -.5 -.5 -.5 -rz 17 -t -4 2.5 1.5
+# genbox clear_water watery 1 1 1
+
+clear_water polygon mist.8.watery.1540
+0
+0
+12
+     -3.37566176966      7.26803347438                4.1
+     -3.37566176966      7.26803347438                5.1
+     -4.33196652562      6.97566176966                5.1
+     -4.33196652562      6.97566176966                4.1
+
+clear_water polygon mist.8.watery.4620
+0
+0
+12
+     -4.33196652562      6.97566176966                5.1
+     -4.62433823034      7.93196652562                5.1
+     -4.62433823034      7.93196652562                4.1
+     -4.33196652562      6.97566176966                4.1
+
+clear_water polygon mist.8.watery.2310
+0
+0
+12
+     -4.62433823034      7.93196652562                4.1
+     -3.66803347438      8.22433823034                4.1
+     -3.37566176966      7.26803347438                4.1
+     -4.33196652562      6.97566176966                4.1
+
+clear_water polygon mist.8.watery.3267
+0
+0
+12
+     -3.66803347438      8.22433823034                4.1
+     -4.62433823034      7.93196652562                4.1
+     -4.62433823034      7.93196652562                5.1
+     -3.66803347438      8.22433823034                5.1
+
+clear_water polygon mist.8.watery.5137
+0
+0
+12
+     -3.37566176966      7.26803347438                5.1
+     -3.37566176966      7.26803347438                4.1
+     -3.66803347438      8.22433823034                4.1
+     -3.66803347438      8.22433823034                5.1
+
+clear_water polygon mist.8.watery.6457
+0
+0
+12
+     -4.62433823034      7.93196652562                5.1
+     -4.33196652562      6.97566176966                5.1
+     -3.37566176966      7.26803347438                5.1
+     -3.66803347438      8.22433823034                5.1
+
+red_interface sphere mist.8.red_ruby
+0
+0
+4                 -4                7.6                4.6               0.25
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Bluish mist suffusing space
+
+void mist blue_mist
+0
+0
+7          0.1          0.1          0.4          0.9          0.9          0.9          0.3
+# xform -t -7.99 .01 .01
+# genbox blue_mist smoke 7.98 4.98 2.98
+
+blue_mist polygon mist.8.smoke.1540
+0
+0
+12
+              -0.01               5.11               3.11
+              -0.01               5.11               6.09
+              -7.99               5.11               6.09
+              -7.99               5.11               3.11
+
+blue_mist polygon mist.8.smoke.4620
+0
+0
+12
+              -7.99               5.11               6.09
+              -7.99              10.09               6.09
+              -7.99              10.09               3.11
+              -7.99               5.11               3.11
+
+blue_mist polygon mist.8.smoke.2310
+0
+0
+12
+              -7.99              10.09               3.11
+              -0.01              10.09               3.11
+              -0.01               5.11               3.11
+              -7.99               5.11               3.11
+
+blue_mist polygon mist.8.smoke.3267
+0
+0
+12
+              -0.01              10.09               3.11
+              -7.99              10.09               3.11
+              -7.99              10.09               6.09
+              -0.01              10.09               6.09
+
+blue_mist polygon mist.8.smoke.5137
+0
+0
+12
+              -0.01               5.11               6.09
+              -0.01               5.11               3.11
+              -0.01              10.09               3.11
+              -0.01              10.09               6.09
+
+blue_mist polygon mist.8.smoke.6457
+0
+0
+12
+              -7.99              10.09               6.09
+              -7.99               5.11               6.09
+              -0.01               5.11               6.09
+              -0.01              10.09               6.09
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A pair of spotlights, one pink and one bluish
+
+void spotlight pink_spotlight
+0
+0
+7               1000                400                200                 30
+	              -2.5                1.5                 -2
+
+pink_spotlight ring mist.8.pspot
+0
+0
+8
+                 -2                6.1                5.6
+               -2.5                1.5                 -2
+                  0                0.2
+
+void spotlight blue_spotlight
+0
+0
+7                200                400               1000                 30
+	              -2.5               -1.5                 -2
+
+blue_spotlight ring mist.8.bspot
+0
+0
+8
+                 -2                9.1                5.6
+               -2.5               -1.5                 -2
+                  0                0.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Mist cones to accompany spotlights
+
+void mist blue_spot_mist
+1 mist.8.bspot
+0
+0
+
+blue_spot_mist ring mist.8.blue_spot_start
+0
+0
+8
+              -1.95               9.13               5.64
+                2.5                1.5                  2
+                  0                0.3
+
+blue_spot_mist cone mist.8.blue_spot_beam
+0
+0
+8
+              -1.95               9.13               5.64
+              -6.95               6.13               1.64
+                0.3               2.13
+
+blue_spot_mist ring mist.8.blue_spot_end
+0
+0
+8
+              -6.95               6.13               1.64
+               -2.5               -1.5                 -2
+                  0               2.13
+
+void mist pink_spot_mist
+1 mist.8.pspot
+0
+0
+
+pink_spot_mist ring mist.8.pink_spot_start
+0
+0
+8
+              -1.95               6.07               5.64
+                2.5               -1.5                  2
+                  0                0.3
+
+pink_spot_mist cone mist.8.pink_spot_beam
+0
+0
+8
+              -1.95               6.07               5.64
+              -6.95               9.07               1.64
+                0.3               2.13
+
+pink_spot_mist ring mist.8.pink_spot_end
+0
+0
+8
+              -6.95               9.07               1.64
+               -2.5                1.5                 -2
+                  0               2.13
+# xform -n prism1.9 -t 0 10.2 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon prism1.9.wall.b
+0
+0
+30
+ -6.12323399574e-18               10.1                  3
+ -6.12323399574e-18               15.3                  3
+  1.89820253868e-16               15.3                6.2
+  1.89820253868e-16               10.1                6.2
+ -6.12323399574e-18               10.1                  3
+                  0               10.2                3.1
+  1.83697019872e-16               10.2                6.1
+  1.83697019872e-16               15.2                6.1
+                  0               15.2                3.1
+                  0               10.2                3.1
+
+black_outside polygon prism1.9.wall.t
+0
+0
+30
+                 -8               10.2                3.1
+                 -8               15.2                3.1
+                 -8               15.2                6.1
+                 -8               10.2                6.1
+                 -8               10.2                3.1
+                 -8               10.1                  3
+                 -8               10.1                6.2
+                 -8               15.3                6.2
+                 -8               15.3                  3
+                 -8               10.1                  3
+
+black_outside polygon prism1.9.wall.1
+0
+0
+12
+ -6.12323399574e-18               10.1                  3
+                 -8               10.1                  3
+                 -8               15.3                  3
+ -6.12323399574e-18               15.3                  3
+
+black_outside polygon prism1.9.wall.2
+0
+0
+12
+ -6.12323399574e-18               15.3                  3
+                 -8               15.3                  3
+                 -8               15.3                6.2
+  1.89820253868e-16               15.3                6.2
+
+black_outside polygon prism1.9.wall.3
+0
+0
+12
+  1.89820253868e-16               15.3                6.2
+                 -8               15.3                6.2
+                 -8               10.1                6.2
+  1.89820253868e-16               10.1                6.2
+
+black_outside polygon prism1.9.wall.4
+0
+0
+12
+  1.89820253868e-16               10.1                6.2
+                 -8               10.1                6.2
+                 -8               10.1                  3
+ -6.12323399574e-18               10.1                  3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon prism1.9.wall.6
+0
+0
+12
+                  0               10.2                3.1
+                 -8               10.2                3.1
+                 -8               10.2                6.1
+  1.83697019872e-16               10.2                6.1
+
+ceil_mat polygon prism1.9.wall.7
+0
+0
+12
+  1.83697019872e-16               10.2                6.1
+                 -8               10.2                6.1
+                 -8               15.2                6.1
+  1.83697019872e-16               15.2                6.1
+
+wall_mat polygon prism1.9.wall.8
+0
+0
+12
+  1.83697019872e-16               15.2                6.1
+                 -8               15.2                6.1
+                 -8               15.2                3.1
+                  0               15.2                3.1
+
+floor_mat polygon prism1.9.wall.9
+0
+0
+12
+                  0               15.2                3.1
+                 -8               15.2                3.1
+                 -8               10.2                3.1
+                  0               10.2                3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon prism1.9.end_wall.b
+0
+0
+30
+                 -8               10.1                  3
+                 -8               15.3                  3
+                 -8               15.3                6.2
+                 -8               10.1                6.2
+                 -8               10.1                  3
+                 -8               11.2                4.1
+                 -8               11.2                5.1
+                 -8               14.2                5.1
+                 -8               14.2                4.1
+                 -8               11.2                4.1
+
+wall_mat polygon prism1.9.end_wall.t
+0
+0
+30
+               -8.2               11.2                4.1
+               -8.2               14.2                4.1
+               -8.2               14.2                5.1
+               -8.2               11.2                5.1
+               -8.2               11.2                4.1
+               -8.2               10.1                  3
+               -8.2               10.1                6.2
+               -8.2               15.3                6.2
+               -8.2               15.3                  3
+               -8.2               10.1                  3
+
+wall_mat polygon prism1.9.end_wall.1
+0
+0
+12
+                 -8               10.1                  3
+               -8.2               10.1                  3
+               -8.2               15.3                  3
+                 -8               15.3                  3
+
+wall_mat polygon prism1.9.end_wall.2
+0
+0
+12
+                 -8               15.3                  3
+               -8.2               15.3                  3
+               -8.2               15.3                6.2
+                 -8               15.3                6.2
+
+wall_mat polygon prism1.9.end_wall.3
+0
+0
+12
+                 -8               15.3                6.2
+               -8.2               15.3                6.2
+               -8.2               10.1                6.2
+                 -8               10.1                6.2
+
+wall_mat polygon prism1.9.end_wall.4
+0
+0
+12
+                 -8               10.1                6.2
+               -8.2               10.1                6.2
+               -8.2               10.1                  3
+                 -8               10.1                  3
+
+wall_mat polygon prism1.9.end_wall.5
+0
+0
+12
+                 -8               10.1                  3
+               -8.2               10.1                  3
+               -8.2               11.2                4.1
+                 -8               11.2                4.1
+
+wall_mat polygon prism1.9.end_wall.6
+0
+0
+12
+                 -8               11.2                4.1
+               -8.2               11.2                4.1
+               -8.2               11.2                5.1
+                 -8               11.2                5.1
+
+wall_mat polygon prism1.9.end_wall.7
+0
+0
+12
+                 -8               11.2                5.1
+               -8.2               11.2                5.1
+               -8.2               14.2                5.1
+                 -8               14.2                5.1
+
+wall_mat polygon prism1.9.end_wall.8
+0
+0
+12
+                 -8               14.2                5.1
+               -8.2               14.2                5.1
+               -8.2               14.2                4.1
+                 -8               14.2                4.1
+
+wall_mat polygon prism1.9.end_wall.9
+0
+0
+12
+                 -8               14.2                4.1
+               -8.2               14.2                4.1
+               -8.2               11.2                4.1
+                 -8               11.2                4.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A singe-direction prism
+
+void prism1 prism1mat
+13 coef1 dx1 dy1 dz1 prism.cal -rz 90 -i 1 -t 0 10.2 3.1
+0
+4               1.52                0.2                0.1                0.2
+
+prism1mat polygon prism1.9.prism1_window
+0
+0
+12
+               -8.1               11.2                4.1
+               -8.1               14.2                4.1
+               -8.1               14.2                5.1
+               -8.1               11.2                5.1
+# xform -m gold -n prism1.10 -t 0 10.2 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 10.2 3.1
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+gold mesh prism1.10.vase
+17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 10.2 3.1
+0
+0
+# xform -n prism2.11 -t 0 15.3 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon prism2.11.wall.b
+0
+0
+30
+ -6.12323399574e-18               15.2                  3
+ -6.12323399574e-18               20.4                  3
+  1.89820253868e-16               20.4                6.2
+  1.89820253868e-16               15.2                6.2
+ -6.12323399574e-18               15.2                  3
+                  0               15.3                3.1
+  1.83697019872e-16               15.3                6.1
+  1.83697019872e-16               20.3                6.1
+                  0               20.3                3.1
+                  0               15.3                3.1
+
+black_outside polygon prism2.11.wall.t
+0
+0
+30
+                 -8               15.3                3.1
+                 -8               20.3                3.1
+                 -8               20.3                6.1
+                 -8               15.3                6.1
+                 -8               15.3                3.1
+                 -8               15.2                  3
+                 -8               15.2                6.2
+                 -8               20.4                6.2
+                 -8               20.4                  3
+                 -8               15.2                  3
+
+black_outside polygon prism2.11.wall.1
+0
+0
+12
+ -6.12323399574e-18               15.2                  3
+                 -8               15.2                  3
+                 -8               20.4                  3
+ -6.12323399574e-18               20.4                  3
+
+black_outside polygon prism2.11.wall.2
+0
+0
+12
+ -6.12323399574e-18               20.4                  3
+                 -8               20.4                  3
+                 -8               20.4                6.2
+  1.89820253868e-16               20.4                6.2
+
+black_outside polygon prism2.11.wall.3
+0
+0
+12
+  1.89820253868e-16               20.4                6.2
+                 -8               20.4                6.2
+                 -8               15.2                6.2
+  1.89820253868e-16               15.2                6.2
+
+black_outside polygon prism2.11.wall.4
+0
+0
+12
+  1.89820253868e-16               15.2                6.2
+                 -8               15.2                6.2
+                 -8               15.2                  3
+ -6.12323399574e-18               15.2                  3
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon prism2.11.wall.6
+0
+0
+12
+                  0               15.3                3.1
+                 -8               15.3                3.1
+                 -8               15.3                6.1
+  1.83697019872e-16               15.3                6.1
+
+ceil_mat polygon prism2.11.wall.7
+0
+0
+12
+  1.83697019872e-16               15.3                6.1
+                 -8               15.3                6.1
+                 -8               20.3                6.1
+  1.83697019872e-16               20.3                6.1
+
+wall_mat polygon prism2.11.wall.8
+0
+0
+12
+  1.83697019872e-16               20.3                6.1
+                 -8               20.3                6.1
+                 -8               20.3                3.1
+                  0               20.3                3.1
+
+floor_mat polygon prism2.11.wall.9
+0
+0
+12
+                  0               20.3                3.1
+                 -8               20.3                3.1
+                 -8               15.3                3.1
+                  0               15.3                3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon prism2.11.end_wall.b
+0
+0
+30
+                 -8               15.2                  3
+                 -8               20.4                  3
+                 -8               20.4                6.2
+                 -8               15.2                6.2
+                 -8               15.2                  3
+                 -8               16.3                4.1
+                 -8               16.3                5.1
+                 -8               19.3                5.1
+                 -8               19.3                4.1
+                 -8               16.3                4.1
+
+wall_mat polygon prism2.11.end_wall.t
+0
+0
+30
+               -8.2               16.3                4.1
+               -8.2               19.3                4.1
+               -8.2               19.3                5.1
+               -8.2               16.3                5.1
+               -8.2               16.3                4.1
+               -8.2               15.2                  3
+               -8.2               15.2                6.2
+               -8.2               20.4                6.2
+               -8.2               20.4                  3
+               -8.2               15.2                  3
+
+wall_mat polygon prism2.11.end_wall.1
+0
+0
+12
+                 -8               15.2                  3
+               -8.2               15.2                  3
+               -8.2               20.4                  3
+                 -8               20.4                  3
+
+wall_mat polygon prism2.11.end_wall.2
+0
+0
+12
+                 -8               20.4                  3
+               -8.2               20.4                  3
+               -8.2               20.4                6.2
+                 -8               20.4                6.2
+
+wall_mat polygon prism2.11.end_wall.3
+0
+0
+12
+                 -8               20.4                6.2
+               -8.2               20.4                6.2
+               -8.2               15.2                6.2
+                 -8               15.2                6.2
+
+wall_mat polygon prism2.11.end_wall.4
+0
+0
+12
+                 -8               15.2                6.2
+               -8.2               15.2                6.2
+               -8.2               15.2                  3
+                 -8               15.2                  3
+
+wall_mat polygon prism2.11.end_wall.5
+0
+0
+12
+                 -8               15.2                  3
+               -8.2               15.2                  3
+               -8.2               16.3                4.1
+                 -8               16.3                4.1
+
+wall_mat polygon prism2.11.end_wall.6
+0
+0
+12
+                 -8               16.3                4.1
+               -8.2               16.3                4.1
+               -8.2               16.3                5.1
+                 -8               16.3                5.1
+
+wall_mat polygon prism2.11.end_wall.7
+0
+0
+12
+                 -8               16.3                5.1
+               -8.2               16.3                5.1
+               -8.2               19.3                5.1
+                 -8               19.3                5.1
+
+wall_mat polygon prism2.11.end_wall.8
+0
+0
+12
+                 -8               19.3                5.1
+               -8.2               19.3                5.1
+               -8.2               19.3                4.1
+                 -8               19.3                4.1
+
+wall_mat polygon prism2.11.end_wall.9
+0
+0
+12
+                 -8               19.3                4.1
+               -8.2               19.3                4.1
+               -8.2               16.3                4.1
+                 -8               16.3                4.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A dual-direction prism
+
+void prism2 prism2mat
+17 coef1 dx1 dy1 dz1 coef2 dx2 dy2 dz2 prism.cal -rz 90 -i 1 -t 0 15.3 3.1
+0
+4               1.52                0.2                0.1                0.2
+
+prism2mat polygon prism2.11.prism2_window
+0
+0
+12
+               -8.1               16.3                4.1
+               -8.1               19.3                4.1
+               -8.1               19.3                5.1
+               -8.1               16.3                5.1
+# xform -m gold -n prism2.12 -t 0 15.3 3.1
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Vase model courtesy Tom Mertens from web page:
+#	http://people.csail.mit.edu/tmertens/textransfer/data
+# Include acknowledgment in any published work:
+#	"textured 3D model from the MIT CSAIL database"
+#
+# Origin is at center of base; Z-axis is up.
+# Vase is approx. 23cm tall
+# Moved into middle of room for testing
+#
+
+void colorpict vase_pat
+13 lim_r lim_g lim_b vase.hdr climit.cal Lu Lv -i 1 -t 0 15.3 3.1
+0
+3        0.318558228        0.196044229       0.0860372415
+
+vase_pat plastic vase_clay
+0
+0
+5                  1                  1                  1                  0                  0
+
+gold mesh prism2.12.vase
+17 vase.rtm -t 25 5 130 -s .005 -t -4 2.5 1 -i 1 -t 0 15.3 3.1
+0
+0
+# xform -n tfunc.13 -t 0 0 6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Basic materials used for walls, etc.
+
+void plastic wall_mat
+0
+0
+5                0.5                0.5                0.5                  0                  0
+
+void plastic ceil_mat
+0
+0
+5                0.7                0.7                0.7                  0                  0
+
+void plastic floor_mat
+0
+0
+5                0.3                0.2                0.1               0.02               0.04
+
+void plastic black_outside
+0
+0
+5               0.05               0.05               0.05                  0                  0
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon tfunc.13.wall.b
+0
+0
+30
+ -6.12323399574e-18               -0.1                6.1
+ -6.12323399574e-18                5.1                6.1
+  1.89820253868e-16                5.1                9.3
+  1.89820253868e-16               -0.1                9.3
+ -6.12323399574e-18               -0.1                6.1
+                  0                  0                6.2
+  1.83697019872e-16                  0                9.2
+  1.83697019872e-16                  5                9.2
+                  0                  5                6.2
+                  0                  0                6.2
+
+black_outside polygon tfunc.13.wall.t
+0
+0
+30
+                 -8                  0                6.2
+                 -8                  5                6.2
+                 -8                  5                9.2
+                 -8                  0                9.2
+                 -8                  0                6.2
+                 -8               -0.1                6.1
+                 -8               -0.1                9.3
+                 -8                5.1                9.3
+                 -8                5.1                6.1
+                 -8               -0.1                6.1
+
+black_outside polygon tfunc.13.wall.1
+0
+0
+12
+ -6.12323399574e-18               -0.1                6.1
+                 -8               -0.1                6.1
+                 -8                5.1                6.1
+ -6.12323399574e-18                5.1                6.1
+
+black_outside polygon tfunc.13.wall.2
+0
+0
+12
+ -6.12323399574e-18                5.1                6.1
+                 -8                5.1                6.1
+                 -8                5.1                9.3
+  1.89820253868e-16                5.1                9.3
+
+black_outside polygon tfunc.13.wall.3
+0
+0
+12
+  1.89820253868e-16                5.1                9.3
+                 -8                5.1                9.3
+                 -8               -0.1                9.3
+  1.89820253868e-16               -0.1                9.3
+
+black_outside polygon tfunc.13.wall.4
+0
+0
+12
+  1.89820253868e-16               -0.1                9.3
+                 -8               -0.1                9.3
+                 -8               -0.1                6.1
+ -6.12323399574e-18               -0.1                6.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon tfunc.13.wall.6
+0
+0
+12
+                  0                  0                6.2
+                 -8                  0                6.2
+                 -8                  0                9.2
+  1.83697019872e-16                  0                9.2
+
+ceil_mat polygon tfunc.13.wall.7
+0
+0
+12
+  1.83697019872e-16                  0                9.2
+                 -8                  0                9.2
+                 -8                  5                9.2
+  1.83697019872e-16                  5                9.2
+
+wall_mat polygon tfunc.13.wall.8
+0
+0
+12
+  1.83697019872e-16                  5                9.2
+                 -8                  5                9.2
+                 -8                  5                6.2
+                  0                  5                6.2
+
+floor_mat polygon tfunc.13.wall.9
+0
+0
+12
+                  0                  5                6.2
+                 -8                  5                6.2
+                 -8                  0                6.2
+                  0                  0                6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon tfunc.13.end_wall.b
+0
+0
+30
+                 -8               -0.1                6.1
+                 -8                5.1                6.1
+                 -8                5.1                9.3
+                 -8               -0.1                9.3
+                 -8               -0.1                6.1
+                 -8                  1                7.2
+                 -8                  1                8.2
+                 -8                  4                8.2
+                 -8                  4                7.2
+                 -8                  1                7.2
+
+wall_mat polygon tfunc.13.end_wall.t
+0
+0
+30
+               -8.2                  1                7.2
+               -8.2                  4                7.2
+               -8.2                  4                8.2
+               -8.2                  1                8.2
+               -8.2                  1                7.2
+               -8.2               -0.1                6.1
+               -8.2               -0.1                9.3
+               -8.2                5.1                9.3
+               -8.2                5.1                6.1
+               -8.2               -0.1                6.1
+
+wall_mat polygon tfunc.13.end_wall.1
+0
+0
+12
+                 -8               -0.1                6.1
+               -8.2               -0.1                6.1
+               -8.2                5.1                6.1
+                 -8                5.1                6.1
+
+wall_mat polygon tfunc.13.end_wall.2
+0
+0
+12
+                 -8                5.1                6.1
+               -8.2                5.1                6.1
+               -8.2                5.1                9.3
+                 -8                5.1                9.3
+
+wall_mat polygon tfunc.13.end_wall.3
+0
+0
+12
+                 -8                5.1                9.3
+               -8.2                5.1                9.3
+               -8.2               -0.1                9.3
+                 -8               -0.1                9.3
+
+wall_mat polygon tfunc.13.end_wall.4
+0
+0
+12
+                 -8               -0.1                9.3
+               -8.2               -0.1                9.3
+               -8.2               -0.1                6.1
+                 -8               -0.1                6.1
+
+wall_mat polygon tfunc.13.end_wall.5
+0
+0
+12
+                 -8               -0.1                6.1
+               -8.2               -0.1                6.1
+               -8.2                  1                7.2
+                 -8                  1                7.2
+
+wall_mat polygon tfunc.13.end_wall.6
+0
+0
+12
+                 -8                  1                7.2
+               -8.2                  1                7.2
+               -8.2                  1                8.2
+                 -8                  1                8.2
+
+wall_mat polygon tfunc.13.end_wall.7
+0
+0
+12
+                 -8                  1                8.2
+               -8.2                  1                8.2
+               -8.2                  4                8.2
+                 -8                  4                8.2
+
+wall_mat polygon tfunc.13.end_wall.8
+0
+0
+12
+                 -8                  4                8.2
+               -8.2                  4                8.2
+               -8.2                  4                7.2
+                 -8                  4                7.2
+
+wall_mat polygon tfunc.13.end_wall.9
+0
+0
+12
+                 -8                  4                7.2
+               -8.2                  4                7.2
+               -8.2                  1                7.2
+                 -8                  1                7.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Test of cylinders, tubes, and BRTDfunc material
+
+void BRTDfunc brtd_mat
+16 .1 .1 .1+if(Rdot-.8,0,.7) .1+if(RdotP-.8,.7,0) .1 .1 0 0 0 . -i 1 -t 0 0 6.2
+0
+9               0.01               0.01               0.01               0.01                0.1               0.01               0.05               0.05               0.05
+
+brtd_mat cylinder tfunc.13.cyl1
+0
+0
+7
+               -4.2                2.5                7.7
+               -3.8                2.5                7.7
+                0.5
+
+brtd_mat tube tfunc.13.tube2
+0
+0
+7
+                 -4                2.3                7.7
+                 -4                2.7                7.7
+               0.45
+
+brtd_mat cylinder tfunc.13.cyl3
+0
+0
+7
+                 -4                2.5                7.5
+                 -4                2.5                7.9
+                0.4
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A transfunc window to turn into a light source with mkillum
+#@mkillum l+ f=tfunc_ill c=a d=100 s=128
+
+void transfunc tfunc_mat
+8 absdf aniso.cal -i 1 -t 0 0 6.2
+0
+11                0.9                0.9                0.9               0.05                0.8                0.9                0.1               0.02                  0                  0                  1
+
+tfunc_mat polygon tfunc.13.tfunc_window
+0
+0
+12
+               -8.1                  1                7.2
+               -8.1                  4                7.2
+               -8.1                  4                8.2
+               -8.1                  1                8.2
+# xform -n trans.14 -t 0 5.1 6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon trans.14.wall.b
+0
+0
+30
+ -6.12323399574e-18                  5                6.1
+ -6.12323399574e-18               10.2                6.1
+  1.89820253868e-16               10.2                9.3
+  1.89820253868e-16                  5                9.3
+ -6.12323399574e-18                  5                6.1
+                  0                5.1                6.2
+  1.83697019872e-16                5.1                9.2
+  1.83697019872e-16               10.1                9.2
+                  0               10.1                6.2
+                  0                5.1                6.2
+
+black_outside polygon trans.14.wall.t
+0
+0
+30
+                 -8                5.1                6.2
+                 -8               10.1                6.2
+                 -8               10.1                9.2
+                 -8                5.1                9.2
+                 -8                5.1                6.2
+                 -8                  5                6.1
+                 -8                  5                9.3
+                 -8               10.2                9.3
+                 -8               10.2                6.1
+                 -8                  5                6.1
+
+black_outside polygon trans.14.wall.1
+0
+0
+12
+ -6.12323399574e-18                  5                6.1
+                 -8                  5                6.1
+                 -8               10.2                6.1
+ -6.12323399574e-18               10.2                6.1
+
+black_outside polygon trans.14.wall.2
+0
+0
+12
+ -6.12323399574e-18               10.2                6.1
+                 -8               10.2                6.1
+                 -8               10.2                9.3
+  1.89820253868e-16               10.2                9.3
+
+black_outside polygon trans.14.wall.3
+0
+0
+12
+  1.89820253868e-16               10.2                9.3
+                 -8               10.2                9.3
+                 -8                  5                9.3
+  1.89820253868e-16                  5                9.3
+
+black_outside polygon trans.14.wall.4
+0
+0
+12
+  1.89820253868e-16                  5                9.3
+                 -8                  5                9.3
+                 -8                  5                6.1
+ -6.12323399574e-18                  5                6.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon trans.14.wall.6
+0
+0
+12
+                  0                5.1                6.2
+                 -8                5.1                6.2
+                 -8                5.1                9.2
+  1.83697019872e-16                5.1                9.2
+
+ceil_mat polygon trans.14.wall.7
+0
+0
+12
+  1.83697019872e-16                5.1                9.2
+                 -8                5.1                9.2
+                 -8               10.1                9.2
+  1.83697019872e-16               10.1                9.2
+
+wall_mat polygon trans.14.wall.8
+0
+0
+12
+  1.83697019872e-16               10.1                9.2
+                 -8               10.1                9.2
+                 -8               10.1                6.2
+                  0               10.1                6.2
+
+floor_mat polygon trans.14.wall.9
+0
+0
+12
+                  0               10.1                6.2
+                 -8               10.1                6.2
+                 -8                5.1                6.2
+                  0                5.1                6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon trans.14.end_wall.b
+0
+0
+30
+                 -8                  5                6.1
+                 -8               10.2                6.1
+                 -8               10.2                9.3
+                 -8                  5                9.3
+                 -8                  5                6.1
+                 -8                6.1                7.2
+                 -8                6.1                8.2
+                 -8                9.1                8.2
+                 -8                9.1                7.2
+                 -8                6.1                7.2
+
+wall_mat polygon trans.14.end_wall.t
+0
+0
+30
+               -8.2                6.1                7.2
+               -8.2                9.1                7.2
+               -8.2                9.1                8.2
+               -8.2                6.1                8.2
+               -8.2                6.1                7.2
+               -8.2                  5                6.1
+               -8.2                  5                9.3
+               -8.2               10.2                9.3
+               -8.2               10.2                6.1
+               -8.2                  5                6.1
+
+wall_mat polygon trans.14.end_wall.1
+0
+0
+12
+                 -8                  5                6.1
+               -8.2                  5                6.1
+               -8.2               10.2                6.1
+                 -8               10.2                6.1
+
+wall_mat polygon trans.14.end_wall.2
+0
+0
+12
+                 -8               10.2                6.1
+               -8.2               10.2                6.1
+               -8.2               10.2                9.3
+                 -8               10.2                9.3
+
+wall_mat polygon trans.14.end_wall.3
+0
+0
+12
+                 -8               10.2                9.3
+               -8.2               10.2                9.3
+               -8.2                  5                9.3
+                 -8                  5                9.3
+
+wall_mat polygon trans.14.end_wall.4
+0
+0
+12
+                 -8                  5                9.3
+               -8.2                  5                9.3
+               -8.2                  5                6.1
+                 -8                  5                6.1
+
+wall_mat polygon trans.14.end_wall.5
+0
+0
+12
+                 -8                  5                6.1
+               -8.2                  5                6.1
+               -8.2                6.1                7.2
+                 -8                6.1                7.2
+
+wall_mat polygon trans.14.end_wall.6
+0
+0
+12
+                 -8                6.1                7.2
+               -8.2                6.1                7.2
+               -8.2                6.1                8.2
+                 -8                6.1                8.2
+
+wall_mat polygon trans.14.end_wall.7
+0
+0
+12
+                 -8                6.1                8.2
+               -8.2                6.1                8.2
+               -8.2                9.1                8.2
+                 -8                9.1                8.2
+
+wall_mat polygon trans.14.end_wall.8
+0
+0
+12
+                 -8                9.1                8.2
+               -8.2                9.1                8.2
+               -8.2                9.1                7.2
+                 -8                9.1                7.2
+
+wall_mat polygon trans.14.end_wall.9
+0
+0
+12
+                 -8                9.1                7.2
+               -8.2                9.1                7.2
+               -8.2                6.1                7.2
+                 -8                6.1                7.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+#
+# Four balls made of plastic2, metal2, plasfunc, and metfunc
+# Mixtext used to label each
+#
+
+void plastic white_mat
+0
+0
+5                0.9                0.9                0.9                  0                  0
+
+void plastic black_shiny
+0
+0
+5               0.01               0.01               0.01               0.04               0.05
+
+void plastic2 plas2_mat
+10 0 0 1 . -i 1 -t 0 5.1 6.2
+0
+6                0.7                0.2                0.8               0.08                0.2               0.08
+
+void plasfunc plasfunc_mat
+8 absdf aniso.cal -i 1 -t 0 5.1 6.2
+0
+9                0.7                0.2                0.8               0.08                0.2               0.08                  0                  0                  1
+
+void metal2 met2_mat
+10 0 1 0 . -i 1 -t 0 5.1 6.2
+0
+6                0.1                0.7                0.3                0.9                0.1               0.03
+
+void metfunc metfunc_mat
+8 absdf aniso.cal -i 1 -t 0 5.1 6.2
+0
+9                0.1                0.7                0.3                0.9                0.1               0.03                  0                  1                  0
+
+plas2_mat sphere trans.14.plas2_ball
+0
+0
+4                 -4                7.1                8.2                0.4
+
+void mixtext plas2_text
+5 black_shiny void helvet.fnt . plastic2
+0
+10
+                 -4               6.15               8.25
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+plas2_text polygon trans.14.plas2_label
+0
+0
+12
+                 -4                6.6                8.3
+                 -4                6.6                8.1
+                 -4                6.1                8.1
+                 -4                6.1                8.3
+
+plasfunc_mat sphere trans.14.plasfunc_ball
+0
+0
+4                 -4                8.1                8.2                0.4
+
+void mixtext plasf_text
+5 void white_mat helvet.fnt . plasfunc
+0
+10
+                 -4               8.65               8.25
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+plasf_text polygon trans.14.plasf_label
+0
+0
+12
+                 -4                9.1                8.3
+                 -4                9.1                8.1
+                 -4                8.6                8.1
+                 -4                8.6                8.3
+
+met2_mat sphere trans.14.met2_ball
+0
+0
+4                 -4                7.1                7.2                0.4
+
+void mixtext met2_text
+5 white_mat black_shiny helvet.fnt . metal2
+0
+10
+                 -4               6.15               7.25
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+met2_text polygon trans.14.met2_label
+0
+0
+12
+                 -4                6.6                7.3
+                 -4                6.6                7.1
+                 -4                6.1                7.1
+                 -4                6.1                7.3
+
+metfunc_mat sphere trans.14.metfunc_ball
+0
+0
+4                 -4                8.1                7.2                0.4
+
+void mixtext metf_text
+5 black_shiny white_mat helvet.fnt . metfunc
+0
+10
+                 -4               8.65               7.25
+                  0               0.05                  0
+                  0                  0               -0.1
+               -0.2
+
+metf_text polygon trans.14.metf_label
+0
+0
+12
+                 -4                9.1                7.3
+                 -4                9.1                7.1
+                 -4                8.6                7.1
+                 -4                8.6                7.3
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A pair of spotlights, one pink and one bluish
+
+void spotlight pink_spotlight
+0
+0
+7               1000                400                200                 30
+	              -2.5                1.5                 -2
+
+pink_spotlight ring trans.14.pspot
+0
+0
+8
+                 -2                6.1                8.7
+               -2.5                1.5                 -2
+                  0                0.2
+
+void spotlight blue_spotlight
+0
+0
+7                200                400               1000                 30
+	              -2.5               -1.5                 -2
+
+blue_spotlight ring trans.14.bspot
+0
+0
+8
+                 -2                9.1                8.7
+               -2.5               -1.5                 -2
+                  0                0.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# xform -s 0.0253999863 -rz 90 -t -4 2.5 2.999
+#
+# Wellmade 2 lamp fixture, model 395-12A-248RS
+#
+# Dimensions in inches, fixture parallel to y axis, center at origin
+#
+
+void brightdata lum_dist
+21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 5.1 6.2
+0
+0
+# this is scaled by 1/area (SI)
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+# 3               1.55               1.55               1.55
+
+lum_bright polygon trans.14.luminaire
+0
+0
+12
+     -3.42215031167      7.32695014727              9.199
+     -4.57784968833      7.32695014728              9.199
+     -4.57784968833      7.87304985273              9.199
+     -3.42215031167      7.87304985272              9.199
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A yellowish trans material in our window
+
+void trans yellow_trans
+0
+0
+7                0.9                0.9                0.5               0.05                  0                0.5                0.7
+
+yellow_trans polygon trans.14.yellow_diffuser
+0
+0
+12
+               -8.1                5.1                6.2
+               -8.1               10.1                6.2
+               -8.1               10.1                9.2
+               -8.1                5.1                9.2
+# xform -n trans2.15 -t 0 10.2 6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Walls of our diorama
+# xform -ry -90
+# genprism black_outside wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 0 0 3 0 3 5 0 5 0 0 -l 0 0 8 -c
+
+black_outside polygon trans2.15.wall.b
+0
+0
+30
+ -6.12323399574e-18               10.1                6.1
+ -6.12323399574e-18               15.3                6.1
+  1.89820253868e-16               15.3                9.3
+  1.89820253868e-16               10.1                9.3
+ -6.12323399574e-18               10.1                6.1
+                  0               10.2                6.2
+  1.83697019872e-16               10.2                9.2
+  1.83697019872e-16               15.2                9.2
+                  0               15.2                6.2
+                  0               10.2                6.2
+
+black_outside polygon trans2.15.wall.t
+0
+0
+30
+                 -8               10.2                6.2
+                 -8               15.2                6.2
+                 -8               15.2                9.2
+                 -8               10.2                9.2
+                 -8               10.2                6.2
+                 -8               10.1                6.1
+                 -8               10.1                9.3
+                 -8               15.3                9.3
+                 -8               15.3                6.1
+                 -8               10.1                6.1
+
+black_outside polygon trans2.15.wall.1
+0
+0
+12
+ -6.12323399574e-18               10.1                6.1
+                 -8               10.1                6.1
+                 -8               15.3                6.1
+ -6.12323399574e-18               15.3                6.1
+
+black_outside polygon trans2.15.wall.2
+0
+0
+12
+ -6.12323399574e-18               15.3                6.1
+                 -8               15.3                6.1
+                 -8               15.3                9.3
+  1.89820253868e-16               15.3                9.3
+
+black_outside polygon trans2.15.wall.3
+0
+0
+12
+  1.89820253868e-16               15.3                9.3
+                 -8               15.3                9.3
+                 -8               10.1                9.3
+  1.89820253868e-16               10.1                9.3
+
+black_outside polygon trans2.15.wall.4
+0
+0
+12
+  1.89820253868e-16               10.1                9.3
+                 -8               10.1                9.3
+                 -8               10.1                6.1
+ -6.12323399574e-18               10.1                6.1
+# black_outside polygon wall.5
+# 0
+# 0
+# 12
+# -6.12323399574e-18               -0.1               -0.1
+#                 -8               -0.1               -0.1
+#                 -8                  0  4.89858719659e-16
+#                  0                  0                  0
+
+wall_mat polygon trans2.15.wall.6
+0
+0
+12
+                  0               10.2                6.2
+                 -8               10.2                6.2
+                 -8               10.2                9.2
+  1.83697019872e-16               10.2                9.2
+
+ceil_mat polygon trans2.15.wall.7
+0
+0
+12
+  1.83697019872e-16               10.2                9.2
+                 -8               10.2                9.2
+                 -8               15.2                9.2
+  1.83697019872e-16               15.2                9.2
+
+wall_mat polygon trans2.15.wall.8
+0
+0
+12
+  1.83697019872e-16               15.2                9.2
+                 -8               15.2                9.2
+                 -8               15.2                6.2
+                  0               15.2                6.2
+
+floor_mat polygon trans2.15.wall.9
+0
+0
+12
+                  0               15.2                6.2
+                 -8               15.2                6.2
+                 -8               10.2                6.2
+                  0               10.2                6.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Rectangular opening cut in end wall
+# xform -ry -90 -t -8 0 0
+# genprism wall_mat end_wall 10 -.1 -.1 -.1 5.1 3.1 5.1 3.1 -.1 -.1 -.1 1 1 2 1 2 4 1 4 1 1 -l 0 0 .2 -c
+
+wall_mat polygon trans2.15.end_wall.b
+0
+0
+30
+                 -8               10.1                6.1
+                 -8               15.3                6.1
+                 -8               15.3                9.3
+                 -8               10.1                9.3
+                 -8               10.1                6.1
+                 -8               11.2                7.2
+                 -8               11.2                8.2
+                 -8               14.2                8.2
+                 -8               14.2                7.2
+                 -8               11.2                7.2
+
+wall_mat polygon trans2.15.end_wall.t
+0
+0
+30
+               -8.2               11.2                7.2
+               -8.2               14.2                7.2
+               -8.2               14.2                8.2
+               -8.2               11.2                8.2
+               -8.2               11.2                7.2
+               -8.2               10.1                6.1
+               -8.2               10.1                9.3
+               -8.2               15.3                9.3
+               -8.2               15.3                6.1
+               -8.2               10.1                6.1
+
+wall_mat polygon trans2.15.end_wall.1
+0
+0
+12
+                 -8               10.1                6.1
+               -8.2               10.1                6.1
+               -8.2               15.3                6.1
+                 -8               15.3                6.1
+
+wall_mat polygon trans2.15.end_wall.2
+0
+0
+12
+                 -8               15.3                6.1
+               -8.2               15.3                6.1
+               -8.2               15.3                9.3
+                 -8               15.3                9.3
+
+wall_mat polygon trans2.15.end_wall.3
+0
+0
+12
+                 -8               15.3                9.3
+               -8.2               15.3                9.3
+               -8.2               10.1                9.3
+                 -8               10.1                9.3
+
+wall_mat polygon trans2.15.end_wall.4
+0
+0
+12
+                 -8               10.1                9.3
+               -8.2               10.1                9.3
+               -8.2               10.1                6.1
+                 -8               10.1                6.1
+
+wall_mat polygon trans2.15.end_wall.5
+0
+0
+12
+                 -8               10.1                6.1
+               -8.2               10.1                6.1
+               -8.2               11.2                7.2
+                 -8               11.2                7.2
+
+wall_mat polygon trans2.15.end_wall.6
+0
+0
+12
+                 -8               11.2                7.2
+               -8.2               11.2                7.2
+               -8.2               11.2                8.2
+                 -8               11.2                8.2
+
+wall_mat polygon trans2.15.end_wall.7
+0
+0
+12
+                 -8               11.2                8.2
+               -8.2               11.2                8.2
+               -8.2               14.2                8.2
+                 -8               14.2                8.2
+
+wall_mat polygon trans2.15.end_wall.8
+0
+0
+12
+                 -8               14.2                8.2
+               -8.2               14.2                8.2
+               -8.2               14.2                7.2
+                 -8               14.2                7.2
+
+wall_mat polygon trans2.15.end_wall.9
+0
+0
+12
+                 -8               14.2                7.2
+               -8.2               14.2                7.2
+               -8.2               11.2                7.2
+                 -8               11.2                7.2
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# Test of cylinders, tubes, and BRTDfunc material
+
+void BRTDfunc brtd_mat
+16 .1 .1 .1+if(Rdot-.8,0,.7) .1+if(RdotP-.8,.7,0) .1 .1 0 0 0 . -i 1 -t 0 10.2 6.2
+0
+9               0.01               0.01               0.01               0.01                0.1               0.01               0.05               0.05               0.05
+
+brtd_mat cylinder trans2.15.cyl1
+0
+0
+7
+               -4.2               12.7                7.7
+               -3.8               12.7                7.7
+                0.5
+
+brtd_mat tube trans2.15.tube2
+0
+0
+7
+                 -4               12.5                7.7
+                 -4               12.9                7.7
+               0.45
+
+brtd_mat cylinder trans2.15.cyl3
+0
+0
+7
+                 -4               12.7                7.5
+                 -4               12.7                7.9
+                0.4
+# RCSid $Id: combined.rad,v 1.1 2018/11/18 16:37:32 greg Exp $
+# A trans2 window to turn into an llum with mkillum
+#@mkillum l- f=trans2_ill c=a d=100 s=128
+
+void trans2 trans2_mat
+10 0 0 1 . -i 1 -t 0 10.2 6.2
+0
+8                0.9                0.9                0.9               0.05                0.1               0.02                0.8                0.9
+
+trans2_mat polygon trans2.15.tfunc_window
+0
+0
+12
+               -8.1               11.2                7.2
+               -8.1               14.2                7.2
+               -8.1               14.2                8.2
+               -8.1               11.2                8.2

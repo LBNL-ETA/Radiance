@@ -8,7 +8,7 @@ ref/$(base)_$(vw).hdr:
 	make $(base)_$(vw).hdr
 	$$(RDU_PFILT) $(base)_$(vw).hdr > ref/$(base)_$(vw).hdr
 
-$(base)_$(vw).hdr:	$(base).rif
+$(base)_$(vw).hdr:	$(base).oct
 	rad -v $(vw) $(base).rif
 
 ### End $(base)-$(vw) tests
