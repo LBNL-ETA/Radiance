@@ -1,4 +1,4 @@
-# RCSid $Id: glass.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: glass.rif,v 1.2 2018/11/20 17:12:41 greg Exp $
 #
 # Simple version of space using glass illum for window
 #
@@ -9,7 +9,7 @@ materials = basic.mat
 scene = diorama_walls.rad rect_opening.rad front_cap.rad
 scene = torus.rad
 scene = sunset_sky.rad
-illum = illum_glass.rad
+scene = glass_ill.rad
 
 ZONE = I -8 0 0 5 0 3
 
@@ -22,8 +22,6 @@ IND = 1
 VAR = Hi
 DET = Low
 PEN = True
-
-mkillum = -ab 0
 
 render = @render.opt
 

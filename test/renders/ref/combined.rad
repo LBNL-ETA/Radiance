@@ -973,7 +973,17 @@ void glass glass_clear
 0
 3               0.92               0.92               0.92
 
-glass_clear polygon glass.2.clear_glazing
+void colordata illum_mat.dist
+15 red green blue glass_illR.dat glass_illG.dat glass_illB.dat illum.cal il_alth il_azih -i 1 -t 0 5.1 0
+0
+9                  0                  1                  0                  0                  0                  1                  1                  0                  0
+
+illum_mat.dist illum illum_mat
+1 glass_clear
+0
+3           0.946982           0.577398           0.452005
+
+illum_mat polygon glass.2.clear_glazing
 0
 0
 12
