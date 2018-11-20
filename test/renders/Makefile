@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.4 2018/11/18 17:11:54 greg Exp $
+# RCSid $Id: Makefile,v 1.5 2018/11/20 01:49:16 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -17,7 +17,7 @@ test-tfunc-def test-tfunc-fish test-trans-def test-trans-fish \
 test-trans2-def test-trans2-fish
 
 clean:
-	rm -f *.oct *.amb *.dat *_*.hdr *.unf combined.rad
+	rm -f *.oct *.amb *_ill.dat *_*.hdr *.unf combined.rad
 
 # Special test of xform
 

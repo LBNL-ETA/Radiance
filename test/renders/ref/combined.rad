@@ -283,7 +283,7 @@ vase_clay mesh dielectric.1.vase
 0
 
 void brightdata lum_dist
-21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 0 0
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 0 0
 0
 0
 
@@ -1182,7 +1182,7 @@ blue_spotlight ring inst.3.bspot
                   0                0.2
 
 void brightdata lum_dist
-21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 10.2 0
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 10.2 0
 0
 0
 
@@ -3231,7 +3231,7 @@ blue_spotlight ring trans.14.bspot
                   0                0.2
 
 void brightdata lum_dist
-21 flatcorr source/wellmade/395-12A-248RS.dat source.cal src_phi4 src_theta -i 1 -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 5.1 6.2
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 5.1 6.2
 0
 0
 
