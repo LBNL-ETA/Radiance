@@ -1,20 +1,19 @@
-frac(x)=x-floor(x);
+{ RCSid $Id: noise3.cal,v 1.2 2018/11/21 17:45:45 greg Exp $ }
+{ 3-D Perlin Noise function }
 
-hermite(p0,p1,r0,r1,t) =	p0 * ((2*t-3)*t*t+1) +
+frac(x):x-floor(x);
+
+hermite(p0,p1,r0,r1,t) :	p0 * ((2*t-3)*t*t+1) +
 				p1 * (-2*t+3)*t*t +
 				r0 * (((t-2)*t+1)*t) +
 				r1 * ((t-1)*t*t);
 
-rand3a(x,y,z) = 1-2*rand(.69692*x+.35084*y+.26765*z);
-rand3b(x,y,z) = 1-2*rand(.05393*x+.96196*y+.28617*z);
-rand3c(x,y,z) = 1-2*rand(.04234*x+.46180*y+.54550*z);
-rand3d(x,y,z) = 1-2*rand(.07211*x+.76411*y+.95567*z);
+rand3a(x,y,z) : 1-2*rand(.69692*x+.35084*y+.26765*z);
+rand3b(x,y,z) : 1-2*rand(.05393*x+.96196*y+.28617*z);
+rand3c(x,y,z) : 1-2*rand(.04234*x+.46180*y+.54550*z);
+rand3d(x,y,z) : 1-2*rand(.07211*x+.76411*y+.95567*z);
 
-noise3(x,y,z) = noise_3(	floor(x),frac(x),ceil(x),
-				floor(y),frac(y),ceil(y),
-				floor(z),frac(z),ceil(z) );
-
-noise_3(xl,xd,xu,yl,yd,yu,zl,zd,zu) =
+noise_3(xl,xd,xu,yl,yd,yu,zl,zd,zu) :
 		hermite(
 			hermite(
 				hermite(rand3d(xl,yl,zl),
@@ -57,3 +56,8 @@ noise_3(xl,xd,xu,yl,yd,yu,zl,zd,zu) =
 				yd*((1-xd)*rand3c(xl,yu,zu) +
 					xd*rand3c(xu,yu,zu)),
 			zd);
+
+
+noise3(x,y,z) : noise_3(	floor(x),frac(x),ceil(x),
+				floor(y),frac(y),ceil(y),
+				floor(z),frac(z),ceil(z) );
