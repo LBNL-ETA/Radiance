@@ -1366,93 +1366,112 @@ wall_mat polygon mesh.4.end_wall.6457
                  -8               15.2                3.1
                  -8               20.4                3.1
 
+void brightdata lum_dist
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 15.3 0
+0
+0
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+
+lum_bright polygon mesh.4.luminaire
+0
+0
+12
+     -3.42215031167      17.5269501473              2.999
+     -4.57784968833      17.5269501473              2.999
+     -4.57784968833      18.0730498527              2.999
+     -3.42215031167      18.0730498527              2.999
+
 void mesh mesh.plainclothes.5.0.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.1.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.2.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.3.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.4.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.5.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.6.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.7.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 void mesh mesh.plainclothes.5.8.woman
-27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+27 woman.rtm -i 1 -s 1.5 -rx 90 -rz -80 -t 1 0 0 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.0.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 0 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.1.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 1 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.2.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 2 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.3.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 3 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.4.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 4 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.5.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 5 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.6.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 6 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.7.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 7 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
 chrome mesh mesh.shiny.6.8.woman
-29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15 0
+29 woman.rtm -i 1 -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -i 8 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.3 0
 0
 0
 
