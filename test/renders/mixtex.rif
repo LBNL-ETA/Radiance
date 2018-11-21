@@ -1,0 +1,28 @@
+# RCSid $Id: mixtex.rif,v 1.1 2018/11/21 22:59:04 greg Exp $
+#
+# A test of different mixtures and textures on disks
+#
+
+OCTREE = mixtex.oct
+
+materials = basic.mat
+materials = mixtex.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = disks.rad
+scene = rect_fixture.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = 1.5
+
+RES = 1024
+QUAL = Med
+AMB = mixtex.amb
+IND = 1
+VAR = Hi
+DET = Med
+PEN = True
+
+render = @render.opt
+
+view= def -vta -vp -0.2 3.0728 2.77765 -vd -2.39272 -0.24212 -1.72379 -vh 66.6667 -vv 37.5 

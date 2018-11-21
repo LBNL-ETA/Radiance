@@ -1,0 +1,45 @@
+#
+# A set of mixtures and textures applied to 9 materials
+#
+
+void metal2 brushed_gold
+4 0 1 0 .
+0
+6 0.997170 0.781957 0.334172 1.000000 .01 .04
+
+void plastic white
+0
+0
+5 .8 .8 .8 0 0
+
+void alias mat2 white
+void alias mat3 white
+void alias mat4 white
+void alias mat5 white
+void alias mat6 white
+void alias mat1 white
+void alias mat9 white
+
+void mixdata mat7
+7 white brushed_gold noneg flower.dat . (Py-.7)/.6 (-Px-2.2)/.6
+0
+0
+
+void mixpict mat8
+7 white brushed_gold grey flower.hdr . (Py-2.2)/.6 (-Px-2.2)/.6
+0
+0
+
+void texfunc bumpy_func
+6 A1*noise3x(Px,Py,Pz) A1*noise3y(Px,Py,Pz) 0 . -s .02
+0
+1 .15
+
+bumpy_func alias mat5 brushed_gold
+
+void texdata bumpy_pat
+9 tdxf tdyf tdzf flower.dat flower.dat flower.dat bumpypat.cal (Py-3.7)/.6 (-Px-3.7)/.6
+0
+1 .15
+
+bumpy_pat alias mat6 brushed_gold

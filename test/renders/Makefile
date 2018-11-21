@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.7 2018/11/21 20:42:58 greg Exp $
+# RCSid $Id: Makefile,v 1.8 2018/11/21 22:59:04 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -14,7 +14,7 @@ all:	test-xform test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
 test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
-test-trans-def test-trans-fish test-patterns-def
+test-trans-def test-trans-fish test-patterns-def test-mixtex-def
 
 clean:
 	rm -f *.oct *.amb *_ill.dat *_*.hdr *.unf combined.rad
@@ -392,3 +392,22 @@ patterns_def.hdr:	patterns.oct
 	rad -v   def patterns.rif
 
 ### End patterns-def   tests
+
+### Octree for  mixtex ###
+
+mixtex.oct:	mixtex.rif
+	rad -v 0  mixtex.rif
+
+### Reference and test for  mixtex view   def ###
+
+test-mixtex-def:	ref/mixtex_def.hdr  mixtex_def.hdr
+	$(RDU_PFILT)  mixtex_def.hdr | $(IMG_CMP) ref/mixtex_def.hdr -
+
+ref/mixtex_def.hdr:
+	make  mixtex_def.hdr
+	$(RDU_PFILT)  mixtex_def.hdr > ref/mixtex_def.hdr
+
+mixtex_def.hdr:	mixtex.oct
+	rad -v   def  mixtex.rif
+
+### End  mixtex-def   tests

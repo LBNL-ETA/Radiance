@@ -1,0 +1,7 @@
+{ RCSid $Id: bumpypat.cal,v 1.1 2018/11/21 22:59:04 greg Exp $ }
+{
+	Modify noise texture with scalar from data file
+}
+tdxf(v) = A1*noise3x(Px*50,Py*50,Pz*50) * v;
+tdyf(v) = A1*noise3y(Px*50,Py*50,Pz*50) * v;
+tdzf(v) = 0;

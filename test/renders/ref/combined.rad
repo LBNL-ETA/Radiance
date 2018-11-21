@@ -3886,3 +3886,307 @@ lum_bright polygon patterns.16.luminaire
      -4.57784968833      17.5269501473              9.199
      -4.57784968833      18.0730498527              9.199
      -3.42215031167      18.0730498527              9.199
+
+void metal2 brushed_gold
+10 0 1 0 . -i 1 -t 0 0 9.3
+0
+6            0.99717           0.781957           0.334172                  1               0.01               0.04
+
+void plastic white
+0
+0
+5                0.8                0.8                0.8                  0                  0
+
+void alias mat2
+	white
+
+void alias mat3
+	white
+
+void alias mat4
+	white
+
+void alias mat5
+	white
+
+void alias mat6
+	white
+
+void alias mat1
+	white
+
+void alias mat9
+	white
+
+void mixdata mat7
+13 white brushed_gold noneg flower.dat . (Py-.7)/.6 (-Px-2.2)/.6 -i 1 -t 0 0 9.3
+0
+0
+
+void mixpict mat8
+13 white brushed_gold grey flower.hdr . (Py-2.2)/.6 (-Px-2.2)/.6 -i 1 -t 0 0 9.3
+0
+0
+
+void texfunc bumpy_func
+12 A1*noise3x(Px,Py,Pz) A1*noise3y(Px,Py,Pz) 0 . -s .02 -i 1 -t 0 0 9.3
+0
+1               0.15
+
+bumpy_func alias mat5
+	brushed_gold
+
+void texdata bumpy_pat
+15 tdxf tdyf tdzf flower.dat flower.dat flower.dat bumpypat.cal (Py-3.7)/.6 (-Px-3.7)/.6 -i 1 -t 0 0 9.3
+0
+1               0.15
+
+bumpy_pat alias mat6
+	brushed_gold
+
+black_outside polygon mixtex.17.wall.b
+0
+0
+30
+ -6.12323399574e-18               -0.1                9.2
+ -6.12323399574e-18                5.1                9.2
+  1.89820253868e-16                5.1               12.4
+  1.89820253868e-16               -0.1               12.4
+ -6.12323399574e-18               -0.1                9.2
+                  0                  0                9.3
+  1.83697019872e-16                  0               12.3
+  1.83697019872e-16                  5               12.3
+                  0                  5                9.3
+                  0                  0                9.3
+
+black_outside polygon mixtex.17.wall.t
+0
+0
+30
+                 -8                  0                9.3
+                 -8                  5                9.3
+                 -8                  5               12.3
+                 -8                  0               12.3
+                 -8                  0                9.3
+                 -8               -0.1                9.2
+                 -8               -0.1               12.4
+                 -8                5.1               12.4
+                 -8                5.1                9.2
+                 -8               -0.1                9.2
+
+black_outside polygon mixtex.17.wall.1
+0
+0
+12
+ -6.12323399574e-18               -0.1                9.2
+                 -8               -0.1                9.2
+                 -8                5.1                9.2
+ -6.12323399574e-18                5.1                9.2
+
+black_outside polygon mixtex.17.wall.2
+0
+0
+12
+ -6.12323399574e-18                5.1                9.2
+                 -8                5.1                9.2
+                 -8                5.1               12.4
+  1.89820253868e-16                5.1               12.4
+
+black_outside polygon mixtex.17.wall.3
+0
+0
+12
+  1.89820253868e-16                5.1               12.4
+                 -8                5.1               12.4
+                 -8               -0.1               12.4
+  1.89820253868e-16               -0.1               12.4
+
+black_outside polygon mixtex.17.wall.4
+0
+0
+12
+  1.89820253868e-16               -0.1               12.4
+                 -8               -0.1               12.4
+                 -8               -0.1                9.2
+ -6.12323399574e-18               -0.1                9.2
+
+wall_mat polygon mixtex.17.wall.6
+0
+0
+12
+                  0                  0                9.3
+                 -8                  0                9.3
+                 -8                  0               12.3
+  1.83697019872e-16                  0               12.3
+
+ceil_mat polygon mixtex.17.wall.7
+0
+0
+12
+  1.83697019872e-16                  0               12.3
+                 -8                  0               12.3
+                 -8                  5               12.3
+  1.83697019872e-16                  5               12.3
+
+wall_mat polygon mixtex.17.wall.8
+0
+0
+12
+  1.83697019872e-16                  5               12.3
+                 -8                  5               12.3
+                 -8                  5                9.3
+                  0                  5                9.3
+
+floor_mat polygon mixtex.17.wall.9
+0
+0
+12
+                  0                  5                9.3
+                 -8                  5                9.3
+                 -8                  0                9.3
+                  0                  0                9.3
+
+wall_mat polygon mixtex.17.end_wall.1540
+0
+0
+12
+                 -8               -0.1                9.2
+                 -8               -0.1               12.4
+               -8.2               -0.1               12.4
+               -8.2               -0.1                9.2
+
+wall_mat polygon mixtex.17.end_wall.4620
+0
+0
+12
+               -8.2               -0.1               12.4
+               -8.2                5.1               12.4
+               -8.2                5.1                9.2
+               -8.2               -0.1                9.2
+
+wall_mat polygon mixtex.17.end_wall.2310
+0
+0
+12
+               -8.2                5.1                9.2
+                 -8                5.1                9.2
+                 -8               -0.1                9.2
+               -8.2               -0.1                9.2
+
+wall_mat polygon mixtex.17.end_wall.3267
+0
+0
+12
+                 -8                5.1                9.2
+               -8.2                5.1                9.2
+               -8.2                5.1               12.4
+                 -8                5.1               12.4
+
+wall_mat polygon mixtex.17.end_wall.5137
+0
+0
+12
+                 -8               -0.1               12.4
+                 -8               -0.1                9.2
+                 -8                5.1                9.2
+                 -8                5.1               12.4
+
+wall_mat polygon mixtex.17.end_wall.6457
+0
+0
+12
+               -8.2                5.1               12.4
+               -8.2               -0.1               12.4
+                 -8               -0.1               12.4
+                 -8                5.1               12.4
+
+mat1 ring mixtex.17.disk1
+0
+0
+8
+               -5.5                  1                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat2 ring mixtex.17.disk2
+0
+0
+8
+               -5.5                2.5                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat3 ring mixtex.17.disk3
+0
+0
+8
+               -5.5                  4                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat4 ring mixtex.17.disk4
+0
+0
+8
+                 -4                  1                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat5 ring mixtex.17.disk5
+0
+0
+8
+                 -4                2.5                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat6 ring mixtex.17.disk6
+0
+0
+8
+                 -4                  4                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat7 ring mixtex.17.disk7
+0
+0
+8
+               -2.5                  1                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat8 ring mixtex.17.disk8
+0
+0
+8
+               -2.5                2.5                9.8
+                  0                  0                  1
+                  0                0.3
+
+mat9 ring mixtex.17.disk9
+0
+0
+8
+               -2.5                  4                9.8
+                  0                  0                  1
+                  0                0.3
+
+void brightdata lum_dist
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 0 9.3
+0
+0
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+
+lum_bright polygon mixtex.17.luminaire
+0
+0
+12
+     -3.42215031167      2.22695014727             12.299
+     -4.57784968833      2.22695014728             12.299
+     -4.57784968833      2.77304985273             12.299
+     -3.42215031167      2.77304985272             12.299
