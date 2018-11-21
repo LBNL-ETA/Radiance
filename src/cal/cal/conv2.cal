@@ -1,3 +1,4 @@
+{ RCSid $Id: conv2.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Rcalc run to compute CRI and other factors from light source SPD
 	convolved with standard curves.

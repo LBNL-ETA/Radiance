@@ -1,3 +1,4 @@
+{ RCSid $Id: trans2.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	These formulas compute the index of refraction and
 	normal transmission for a pane of glass given the

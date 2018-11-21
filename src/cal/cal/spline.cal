@@ -1,3 +1,4 @@
+{ RCSid $Id: spline.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Calculation of view parameters for walk-throughs.
 	Uses Catmull-Rom spline.

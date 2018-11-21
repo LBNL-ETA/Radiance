@@ -1,3 +1,4 @@
+{ RCSid $Id: landscape.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	A set of randomly located points at known positions to be
 	interpolated by gensurf.

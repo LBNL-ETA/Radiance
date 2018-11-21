@@ -1,3 +1,4 @@
+{ RCSid $Id: graypatch.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Generate script of 11x8 sample set of gray patches
 	on 2000x1600 pixel canvas.

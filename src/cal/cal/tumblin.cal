@@ -1,3 +1,4 @@
+{ RCSid $Id: tumblin.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Mapping of Luminance to Brightness for CRT display.
 	Hand this file to pcomb(1) with the -f option.

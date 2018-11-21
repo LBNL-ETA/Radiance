@@ -1,3 +1,4 @@
+{ RCSid $Id: ferwerda.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Tone Mapping Operator due to Ferwerda, Pattanaik, Shirley and Greenberg
 	(Siggraph 1996, pp. 249-258).  Equilibrium adaptation version.

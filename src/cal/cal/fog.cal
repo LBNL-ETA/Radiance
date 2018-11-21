@@ -1,3 +1,4 @@
+{ RCSid $Id: fog.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	BAD fog simulation effect using a converted z-file, eg:
 

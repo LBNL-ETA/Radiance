@@ -1,3 +1,4 @@
+{ RCSid $Id: normcomp.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
 {
 	Compute overlap between two normal distribution functions,
 	defined by mean1, mean2, stdev1 and stdev2.
