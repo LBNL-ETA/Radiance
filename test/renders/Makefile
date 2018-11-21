@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.6 2018/11/20 02:58:24 greg Exp $
+# RCSid $Id: Makefile,v 1.7 2018/11/21 20:42:58 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -14,7 +14,7 @@ all:	test-xform test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
 test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
-test-trans-def test-trans-fish
+test-trans-def test-trans-fish test-patterns-def
 
 clean:
 	rm -f *.oct *.amb *_ill.dat *_*.hdr *.unf combined.rad
@@ -373,3 +373,22 @@ trans2_win.hdr:	trans2.oct
 	rad -v   win  trans2.rif
 
 ### End  trans2-win   tests
+
+### Octree for patterns ###
+
+patterns.oct:	patterns.rif
+	rad -v 0 patterns.rif
+
+### Reference and test for patterns view   def ###
+
+test-patterns-def:	ref/patterns_def.hdr patterns_def.hdr
+	$(RDU_PFILT) patterns_def.hdr | $(IMG_CMP) ref/patterns_def.hdr -
+
+ref/patterns_def.hdr:
+	make patterns_def.hdr
+	$(RDU_PFILT) patterns_def.hdr > ref/patterns_def.hdr
+
+patterns_def.hdr:	patterns.oct
+	rad -v   def patterns.rif
+
+### End patterns-def   tests

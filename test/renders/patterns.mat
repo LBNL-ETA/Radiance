@@ -1,0 +1,89 @@
+# RCSid $Id: patterns.mat,v 1.1 2018/11/21 20:42:58 greg Exp $
+#
+# A set of 9 patterned materials
+#
+
+void brightfunc noisepat
+2 '1 - .4*(1+fnoise3(3*Px,3*Py,3*Pz))' .
+0
+0
+
+noisepat plastic base_mat
+0
+0
+5 .8 .8 .8 .03 .08
+
+inherit alias base_mat1 base_mat
+
+void colortext textpat
+3 helvet.fnt . Color
+0
+16
+	-5.6	.75	.5
+	0	.08	0
+	.2	0	0
+	1	.1	.1
+	.1	.1	1
+	-.2
+
+textpat alias mat1 base_mat
+
+void alias mat3 base_mat
+
+# Intentionally redefining base_mat
+void plastic base_mat
+0
+0
+5 .8 .7 .6 0 0
+
+void brighttext textpat
+3 helvet.fnt . Black
+0
+11
+	-4.1	.75	.5
+	0	.08	0
+	.2	0	0
+	.01	1
+
+textpat alias mat4 base_mat
+
+void brighttext textpat
+2 helvet.fnt test.txt
+0
+12
+	-4.2	2.3	.5
+	0	.025	0
+	.07	0	0
+	1	.01
+	.15
+
+textpat alias tempmat base_mat
+
+inherit alias mat5 tempmat
+
+void colortext textpat2
+2 helvet.fnt test.txt
+0
+15
+	-4.2	3.8	.5
+	0	.025	0
+	.07	0	0
+	.1	.7	.5
+	1	1	1
+
+
+textpat2 alias mat6 base_mat1
+
+void colorfunc cfpat
+4 .5+.2*noise3x(5*Px,5*Py,5*Pz) .5+.2*noise3y(5*Px,5*Py,5*Pz)
+	.5+.2*noise3z(5*Px,5*Py,5*Pz) .
+0
+0
+
+cfpat alias mat7 base_mat1
+
+noisepat alias mat8 base_mat
+
+cfpat alias mat9 base_mat
+
+inherit alias mat2 base_mat1

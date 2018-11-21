@@ -1,0 +1,76 @@
+# RCSid $Id: disks.rad,v 1.1 2018/11/21 20:42:58 greg Exp $
+#
+# A set of 9 disks to be painted in various modes
+#
+
+mat1 ring disk1
+0
+0
+8
+	-5.5	1	.5
+	0	0	1
+	0	.3
+
+mat2 ring disk2
+0
+0
+8
+	-5.5	2.5 .5
+	0	0	1
+	0	.3
+
+mat3 ring disk3
+0
+0
+8
+	-5.5	4 .5
+	0	0	1
+	0	.3
+
+mat4 ring disk4
+0
+0
+8
+	-4	1 .5
+	0	0	1
+	0	.3
+
+mat5 ring disk5
+0
+0
+8
+	-4	2.5 .5
+	0	0	1
+	0	.3
+
+mat6 ring disk6
+0
+0
+8
+	-4	4 .5
+	0	0	1
+	0	.3
+
+mat7 ring disk7
+0
+0
+8
+	-2.5	1 .5
+	0	0	1
+	0	.3
+
+mat8 ring disk8
+0
+0
+8
+	-2.5	2.5 .5
+	0	0	1
+	0	.3
+
+mat9 ring disk9
+0
+0
+8
+	-2.5	4 .5
+	0	0	1
+	0	.3

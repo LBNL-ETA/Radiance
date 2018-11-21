@@ -3547,3 +3547,342 @@ trans2_mat polygon trans2.15.tfunc_window
                -8.1               14.2                7.2
                -8.1               14.2                8.2
                -8.1               11.2                8.2
+
+void brightfunc noisepat
+8 "1 - .4*(1+fnoise3(3*Px,3*Py,3*Pz))" . -i 1 -t 0 15.3 6.2
+0
+0
+
+noisepat plastic base_mat
+0
+0
+5                0.8                0.8                0.8               0.03               0.08
+
+inherit alias base_mat1
+	base_mat
+
+void colortext textpat
+3 helvet.fnt . Color
+0
+16
+               -5.6              16.05                6.7
+                  0               0.08                  0
+                0.2                  0                  0
+                  1                0.1                0.1
+                0.1                0.1                  1
+               -0.2
+
+textpat alias mat1
+	base_mat
+
+void alias mat3
+	base_mat
+
+void plastic base_mat
+0
+0
+5                0.8                0.7                0.6                  0                  0
+
+void brighttext textpat
+3 helvet.fnt . Black
+0
+11
+               -4.1              16.05                6.7
+                  0               0.08                  0
+                0.2                  0                  0
+               0.01                  1
+
+textpat alias mat4
+	base_mat
+
+void brighttext textpat
+2 helvet.fnt test.txt
+0
+12
+               -4.2               17.6                6.7
+                  0              0.025                  0
+               0.07                  0                  0
+                  1               0.01               0.15
+
+textpat alias tempmat
+	base_mat
+
+inherit alias mat5
+	tempmat
+
+void colortext textpat2
+2 helvet.fnt test.txt
+0
+15
+               -4.2               19.1                6.7
+                  0              0.025                  0
+               0.07                  0                  0
+                0.1                0.7                0.5
+                  1                  1                  1
+
+textpat2 alias mat6
+	base_mat1
+
+void colorfunc cfpat
+10 .5+.2*noise3x(5*Px,5*Py,5*Pz) .5+.2*noise3y(5*Px,5*Py,5*Pz) .5+.2*noise3z(5*Px,5*Py,5*Pz) . -i 1 -t 0 15.3 6.2
+0
+0
+
+cfpat alias mat7
+	base_mat1
+
+noisepat alias mat8
+	base_mat
+
+cfpat alias mat9
+	base_mat
+
+inherit alias mat2
+	base_mat1
+
+black_outside polygon patterns.16.wall.b
+0
+0
+30
+ -6.12323399574e-18               15.2                6.1
+ -6.12323399574e-18               20.4                6.1
+  1.89820253868e-16               20.4                9.3
+  1.89820253868e-16               15.2                9.3
+ -6.12323399574e-18               15.2                6.1
+                  0               15.3                6.2
+  1.83697019872e-16               15.3                9.2
+  1.83697019872e-16               20.3                9.2
+                  0               20.3                6.2
+                  0               15.3                6.2
+
+black_outside polygon patterns.16.wall.t
+0
+0
+30
+                 -8               15.3                6.2
+                 -8               20.3                6.2
+                 -8               20.3                9.2
+                 -8               15.3                9.2
+                 -8               15.3                6.2
+                 -8               15.2                6.1
+                 -8               15.2                9.3
+                 -8               20.4                9.3
+                 -8               20.4                6.1
+                 -8               15.2                6.1
+
+black_outside polygon patterns.16.wall.1
+0
+0
+12
+ -6.12323399574e-18               15.2                6.1
+                 -8               15.2                6.1
+                 -8               20.4                6.1
+ -6.12323399574e-18               20.4                6.1
+
+black_outside polygon patterns.16.wall.2
+0
+0
+12
+ -6.12323399574e-18               20.4                6.1
+                 -8               20.4                6.1
+                 -8               20.4                9.3
+  1.89820253868e-16               20.4                9.3
+
+black_outside polygon patterns.16.wall.3
+0
+0
+12
+  1.89820253868e-16               20.4                9.3
+                 -8               20.4                9.3
+                 -8               15.2                9.3
+  1.89820253868e-16               15.2                9.3
+
+black_outside polygon patterns.16.wall.4
+0
+0
+12
+  1.89820253868e-16               15.2                9.3
+                 -8               15.2                9.3
+                 -8               15.2                6.1
+ -6.12323399574e-18               15.2                6.1
+
+wall_mat polygon patterns.16.wall.6
+0
+0
+12
+                  0               15.3                6.2
+                 -8               15.3                6.2
+                 -8               15.3                9.2
+  1.83697019872e-16               15.3                9.2
+
+ceil_mat polygon patterns.16.wall.7
+0
+0
+12
+  1.83697019872e-16               15.3                9.2
+                 -8               15.3                9.2
+                 -8               20.3                9.2
+  1.83697019872e-16               20.3                9.2
+
+wall_mat polygon patterns.16.wall.8
+0
+0
+12
+  1.83697019872e-16               20.3                9.2
+                 -8               20.3                9.2
+                 -8               20.3                6.2
+                  0               20.3                6.2
+
+floor_mat polygon patterns.16.wall.9
+0
+0
+12
+                  0               20.3                6.2
+                 -8               20.3                6.2
+                 -8               15.3                6.2
+                  0               15.3                6.2
+
+wall_mat polygon patterns.16.end_wall.1540
+0
+0
+12
+                 -8               15.2                6.1
+                 -8               15.2                9.3
+               -8.2               15.2                9.3
+               -8.2               15.2                6.1
+
+wall_mat polygon patterns.16.end_wall.4620
+0
+0
+12
+               -8.2               15.2                9.3
+               -8.2               20.4                9.3
+               -8.2               20.4                6.1
+               -8.2               15.2                6.1
+
+wall_mat polygon patterns.16.end_wall.2310
+0
+0
+12
+               -8.2               20.4                6.1
+                 -8               20.4                6.1
+                 -8               15.2                6.1
+               -8.2               15.2                6.1
+
+wall_mat polygon patterns.16.end_wall.3267
+0
+0
+12
+                 -8               20.4                6.1
+               -8.2               20.4                6.1
+               -8.2               20.4                9.3
+                 -8               20.4                9.3
+
+wall_mat polygon patterns.16.end_wall.5137
+0
+0
+12
+                 -8               15.2                9.3
+                 -8               15.2                6.1
+                 -8               20.4                6.1
+                 -8               20.4                9.3
+
+wall_mat polygon patterns.16.end_wall.6457
+0
+0
+12
+               -8.2               20.4                9.3
+               -8.2               15.2                9.3
+                 -8               15.2                9.3
+                 -8               20.4                9.3
+
+mat1 ring patterns.16.disk1
+0
+0
+8
+               -5.5               16.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat2 ring patterns.16.disk2
+0
+0
+8
+               -5.5               17.8                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat3 ring patterns.16.disk3
+0
+0
+8
+               -5.5               19.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat4 ring patterns.16.disk4
+0
+0
+8
+                 -4               16.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat5 ring patterns.16.disk5
+0
+0
+8
+                 -4               17.8                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat6 ring patterns.16.disk6
+0
+0
+8
+                 -4               19.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat7 ring patterns.16.disk7
+0
+0
+8
+               -2.5               16.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat8 ring patterns.16.disk8
+0
+0
+8
+               -2.5               17.8                6.7
+                  0                  0                  1
+                  0                0.3
+
+mat9 ring patterns.16.disk9
+0
+0
+8
+               -2.5               19.3                6.7
+                  0                  0                  1
+                  0                0.3
+
+void brightdata lum_dist
+19 flatcorr rect_fixture.dat source.cal src_phi4 src_theta -s 0.0253999863 -rz 90 -t -4 2.5 2.999 -i 1 -t 0 15.3 6.2
+0
+0
+
+lum_dist light lum_bright
+0
+0
+3                 20                 20                 20
+
+lum_bright polygon patterns.16.luminaire
+0
+0
+12
+     -3.42215031167      17.5269501473              9.199
+     -4.57784968833      17.5269501473              9.199
+     -4.57784968833      18.0730498527              9.199
+     -3.42215031167      18.0730498527              9.199

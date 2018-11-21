@@ -1,0 +1,30 @@
+# RCSid $Id: patterns.rif,v 1.1 2018/11/21 20:42:58 greg Exp $
+#
+# A test of different patterns on disks
+#
+
+OCTREE = patterns.oct
+
+materials = basic.mat
+materials = patterns.mat
+scene = diorama_walls.rad closed_end.rad front_cap.rad
+scene = disks.rad
+scene = rect_fixture.rad
+
+ZONE = I -8 0 0 5 0 3
+
+EXP = 1.5
+
+RES = 1024
+QUAL = Med
+AMB = patterns.amb
+IND = 1
+VAR = Hi
+DET = Med
+PEN = True
+
+render = @render.opt
+
+rpict = -ps 1
+
+view= def -vta -vp -0.2 3.0728 2.77765 -vd -2.39272 -0.24212 -1.72379 -vh 66.6667 -vv 37.5 
