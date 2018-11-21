@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp $
+   $Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregle Exp $
 */
 
 
@@ -25,7 +25,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.11 2018/08/02 18:33:49 greg Exp
 #include "random.h"
 #include "math.h"
 
-#define PMAPDUMP_REC "$Revision: 2.11 $"   
+#define PMAPDUMP_REC "$Revision: 2.12 $"   
 
 
 /* Defaults */
@@ -42,35 +42,37 @@ typedef struct {
    char *mat, *obj;
 } RadianceDef;
 
-   
 
-/* Colour code is as follows:    global         = blue
-                                 precomp global = cyan
-                                 caustic        = red
-                                 volume         = green
-                                 direct         = magenta 
-                                 contrib        = yellow */   
 const RadianceDef radDefs [] = {
-   {  "void plastic mat.global\n0\n0\n5 0 0 1 0 0\n",
+   {  "void plastic mat.global\n0\n0\n5 %f %f %f 0 0\n",
       "mat.global sphere obj.global\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.pglobal\n0\n0\n5 0 1 1 0 0\n",
+   {  "void plastic mat.pglobal\n0\n0\n5 %f %f %f 0 0\n",
       "mat.pglobal sphere obj.global\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.caustic\n0\n0\n5 1 0 0 0 0\n",
+   {  "void plastic mat.caustic\n0\n0\n5 %f %f %f 0 0\n",
       "mat.caustic sphere obj.caustic\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.volume\n0\n0\n5 0 1 0 0 0\n",
+   {  "void plastic mat.volume\n0\n0\n5 %f %f %f 0 0\n",
       "mat.volume sphere obj.volume\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.direct\n0\n0\n5 1 0 1 0 0\n",
+   {  "void plastic mat.direct\n0\n0\n5 %f %f %f 0 0\n",
       "mat.direct sphere obj.direct\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.contrib\n0\n0\n5 1 1 0 0 0\n",
+   {  "void plastic mat.contrib\n0\n0\n5 %f %f %f 0 0\n",
       "mat.contrib sphere obj.contrib\n0\n0\n4 %g %g %g %g\n"
    }
 };
 
+/* Default colour codes are as follows:   global         = blue
+                                          precomp global = cyan
+                                          caustic        = red
+                                          volume         = green
+                                          direct         = magenta 
+                                          contrib        = yellow */
+const COLOR colDefs [] = {
+   {0, 0, 1}, {0, 1, 1}, {1, 0, 0}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}
+};
 
 
 int main (int argc, char** argv)
@@ -79,6 +81,7 @@ int main (int argc, char** argv)
    RREAL          rad, radScale = RADSCALE, extent, dumpRatio;
    unsigned       arg, j, ptype, dim;
    long           numSpheres = NSPHERES;
+   COLOR          customCol = {0, 0, 0};
    FILE           *pmapFile;
    PhotonMap      pm;
    PhotonPrimary  pri;
@@ -89,8 +92,10 @@ int main (int argc, char** argv)
    
    if (argc < 2) {
       puts("Dump photon maps as RADIANCE scene description\n");
-      printf("Usage: %s [-r radscale1] [-n nspheres1] pmap1 "
-             "[-r radscale2] [-n nspheres2] pmap2 ...\n", argv [0]);
+      printf("Usage: %s "
+             "[-r radscale1] [-n nspheres1] [-c rcol1 gcol1 bcol1] pmap1 "
+             "[-r radscale2] [-n nspheres2] [-c rcol2 gcol2 bcol2] pmap2 "
+             "...\n", argv [0]);
       return 1;
    }
    
@@ -106,6 +111,12 @@ int main (int argc, char** argv)
             case 'n':
                if ((numSpheres = parseMultiplier(argv [++arg])) <= 0)
                   error(USER, "invalid number of spheres");
+               break;
+               
+            case 'c':
+               for (j = 0; j < 3; j++)
+                  if ((customCol [j] = atof(argv [++arg])) <= 0)
+                     error(USER, "invalid RGB colour");
                break;
                
             default:
@@ -151,8 +162,13 @@ int main (int argc, char** argv)
       printargs(argc, argv, stdout);
       fputc('\n', stdout);
       
-      /* Dump material def */   
-      fputs(radDefs [ptype].mat, stdout);
+      /* Dump material def */
+      if (intens(customCol) > 0)
+         printf(radDefs [ptype].mat, 
+                customCol [0], customCol [1], customCol [2]);
+      else
+         printf(radDefs [ptype].mat, 
+                colDefs [ptype][0], colDefs [ptype][1], colDefs [ptype][2]);
       fputc('\n', stdout);
       
       /* Get number of photons */
@@ -270,6 +286,7 @@ int main (int argc, char** argv)
       /* Reset defaults for next dump */
       radScale = RADSCALE;
       numSpheres = NSPHERES;
+      customCol [0] = customCol [1] = customCol [2] = 0;
    }
    
    return 0;
