@@ -1,12 +1,14 @@
-.\" RCSid "$Id: pmapdump.1,v 1.1 2015/02/24 19:39:26 greg Exp $"
-.TH PMAPDUMP 1 "$Date: 2015/02/24 19:39:26 $ $Revision: 1.1 $" RADIANCE
+.\" RCSid "$Id: pmapdump.1,v 1.2 2018/11/21 19:31:40 rschregle Exp $"
+.TH PMAPDUMP 1 "$Date: 2018/11/21 19:31:40 $ $Revision: 1.2 $" RADIANCE
 
 .SH NAME
 pmapdump - generate RADIANCE scene description of photon map distribution
 
 .SH SYNOPSIS
-pmapdump [\fB-n\fR \fInspheres1\fR] [\fB-r\fR \fIradscale1\fR] \fIpmap1\fR 
-[\fB-n\fR \fInspheres2\fR] [\fB-r\fR \fIradscale2\fR] \fIpmap2\fR ... 
+pmapdump [\fB-n\fR \fInspheres1\fR] [\fB-r\fR \fIradscale1\fR] 
+[\fB-c\fR \fIrcol1\fR \fIgcol1\fR \fIbcol1\fR] \fIpmap1\fR 
+[\fB-n\fR \fInspheres2\fR] [\fB-r\fR \fIradscale2\fR] 
+[\fB-c\fR \fIrcol2\fR \fIgcol2\fR \fIbcol2\fR] \fIpmap2\fR ... 
 
 .SH DESCRIPTION
 \fIpmapdump\fR takes one or more photon map files generated with
@@ -16,9 +18,9 @@ e.g. \fIobjview(1)\fR, \fIrpict(1)\fR, or \fIrvu(1)\fR to assess the
 location and local density of photons in relation to the scene geometry.
 .PP
 An arbitrary number of photon maps can be specified on the command line and
-the respective photon type is determined automagically.  The different
+the respective photon type is determined automagically. The different
 photon types are visualised as colour coded spheres according to the
-following schema:
+following default schema:
 .IP
 \fIBlue\fR: global photons 
 .br
@@ -31,6 +33,9 @@ following schema:
 \fIMagenta\fR: direct photons
 .br
 \fIYellow\fR: contribution photons
+.PP
+These colours can be overridden for individual photon maps with the \fB-c\fR
+option (see below).
 
 .SH OPTIONS
 Options are effective for the photon map file immediately following on the
@@ -53,6 +58,12 @@ In cases where the distribution is substantially nonuniform (e.g.  highly
 localised caustics) the radius can be manually corrected with this option. 
 The default value is 1.0.
 
+.IP "\fB-c\fR \fIrcol\fR \fIgcol\fR \fIbcol\fR"
+Specifies a custom sphere colour for the next photon map. The colours is
+specified as an RGB triplet, with each component in the range (0..1].
+Without this option, the default colour for the corresponding photon type 
+is used.
+
 .SH NOTES
 The output may contain many overlapping spheres in areas with high photon
 density, particularly in caustics.  This results in inefficient and slow
@@ -61,9 +72,10 @@ reducing \fInspheres\fR and/or \fIradscale\fR.
 
 .SH EXAMPLES
 To visualise the distribution of global and caustic photons superimposed
-on the scene geometry with 5000 and 10000 spheres, respectively:
+on the scene geometry with 5000 pale red and 10000 pale blue spheres, 
+respectively:
 .IP
-pmapdump -n 5k global.pm -n 10k caustic.pm | 
+pmapdump -n 5k -c 1 0.4 0.4 global.pm -n 10k -c 0.4 0.4 1 caustic.pm | 
 oconv - scene.rad > scene_pmdump.oct
 .PP
 Alternatively, the dump may be viewed on its own by piping the output of
