@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: noise3.c,v 2.13 2013/10/08 18:59:44 greg Exp $";
+static const char	RCSid[] = "$Id: noise3.c,v 2.14 2018/11/21 20:23:15 greg Exp $";
 #endif
 /*
  *  noise3.c - noise functions for random textures.
@@ -166,15 +166,15 @@ noise3(			/* compute the revised Perlin noise function */
 	static double  x[3];
 	static double  f[4];
 
-	if (gotV && x[0]==xnew[0] && (x[1]==xnew[1]) & (x[2]==xnew[2])) {
-		if (!(gotV>>i & 1)) {
-			f[i] = noise3partial(f[3], x, i);
-			gotV |= 1<<i;
-		}
-		return(f[i]);
+	if (!gotV || xnew[0] != x[0] || (xnew[1] != x[1]) | (xnew[2] != x[2])) {
+		f[3] = perlin_noise(x[0]=xnew[0], x[1]=xnew[1], x[2]=xnew[2]);
+		gotV = 0x8;
 	}
-	gotV = 0x8;
-	return(f[3] = perlin_noise(x[0]=xnew[0], x[1]=xnew[1], x[2]=xnew[2]));
+	if (!(gotV>>i & 1)) {
+		f[i] = noise3partial(f[3], x, i);
+		gotV |= 1<<i;
+	}
+	return(f[i]);
 }
 
 static double
