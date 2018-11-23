@@ -2249,3 +2249,5 @@ Made picking function in rvu ignore transparent and void surfaces.
 Added -orRxX options to rtrace to enable output of mirrored and unmirrored
 contributions and distances to enable new types of reprojections.  This also
 cleaned up and unified handling of effective ray lengths throughout code.
+
+Bug fixes from Jan Wienold for evalglare.

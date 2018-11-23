@@ -1,7 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.8 2018/08/31 16:01:45 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.9 2018/11/23 19:32:17 greg Exp $";
 #endif
-/* EVALGLARE V2.06
+/* EVALGLARE V2.07
  * Evalglare Software License, Version 2.0
  *
  * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
@@ -334,10 +334,16 @@ change of default options:
 change of default value of multiplier b to 5.0, if task options (-t or -T ) are activated AND -b NOT used. To be downward compatible when using the task method.
   */
 
+/* evalglare.c, v2.07 2018/11/06  
+bugfix: correction of error in the equations of PGSV_con and PGSV_sat
+all three PGSV equations are calculated now 
+illuminance from the masking area (E_v_mask) is also printed
+bugfix: in VCPs error fuction equation, value of 6.347 replaced by 6.374
+  */
    
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "2.06 release 29.08.2018 by EPFL, J.Wienold"
+#define VERSION "2.07 release 17.11.2018 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -1189,7 +1195,7 @@ float get_vcp(float dgr )
 {
 	float vcp;
 
-	vcp = 50 * erf((6.347 - 1.3227 * log(dgr)) / 1.414213562373) + 50;
+	vcp = 50 * erf((6.374 - 1.3227 * log(dgr)) / 1.414213562373) + 50;
 	if (dgr > 750) {
 		vcp = 0;
 	}
@@ -1360,18 +1366,23 @@ float get_cgi(pict * p, double E_v, double E_v_dir, int igs, int posindex_2)
 	return cgi;
 }	
 
-/* subroutine for the calculation of the PGSV; is only applied, when masking is done, since it refers only to the window. Important: masking area must be the window! */
-float get_pgsv(double E_v, double E_mask,double omega_mask,double lum_mask_av)
+
+
+/* subroutine for the calculation of the PGSV_con; is only applied, when masking is done, since it refers only to the window. Important: masking area must be the window! */
+float get_pgsv_con(double E_v, double E_mask,double omega_mask,double lum_mask_av, double Lavg)
 {
-	float pgsv;
+	float pgsv_con;
 	double Lb;
 
-        Lb = (E_v-E_mask)/1.414213562373;
+/*        Lb = (E_v-E_mask)/3.14159265359;  */
+/*        Lb = (2*E_v-lum_mask_av*omega_mask)/(2*3.14159265359-omega_mask); */
+	  Lb = (2*3.14159265359*Lavg-lum_mask_av*omega_mask)/(2*3.14159265359-omega_mask); 
 
-	pgsv =3.2*log10(lum_mask_av)-0.64*log10(omega_mask)+(0.79*log10(omega_mask)-0.61)*log10(Lb)-8.2 ;
+
+	pgsv_con =3.2*log10(lum_mask_av)-0.64*log10(omega_mask)+(0.79*log10(omega_mask)-0.61)*log10(Lb)-8.2 ;
 
 
-	return pgsv;
+	return pgsv_con;
 }
 
 /* subroutine for the calculation of the PGSV_saturation; is only applied, when masking is done, since it refers only to the window. Important: masking area must be the window! */
@@ -1379,12 +1390,35 @@ float get_pgsv_sat(double E_v)
 {
 	float pgsv_sat;
 
-	pgsv_sat =3.3-(0.57+3.3)/pow((1+E_v/1.414213562373/1250),1.7);
+	pgsv_sat =3.3-(0.57+3.3)/(1+pow(E_v/3.14159265359/1250,1.7));
 
 
 	return pgsv_sat;
 }
 
+/* subroutine for the calculation of the PGSV; is only applied, when masking is done, since it refers only to the window. Important: masking area must be the window! */
+
+float get_pgsv(double E_v, double E_mask,double omega_mask,double lum_mask_av,double Ltask, double Lavg)
+{
+	float pgsv;
+	double Lb;
+
+/*        Lb = (E_v-E_mask)/3.14159265359;  */
+/*        Lb = (2*E_v-lum_mask_av*omega_mask)/(2*3.14159265359-omega_mask); */
+	  Lb = (2*3.14159265359*Lavg-lum_mask_av*omega_mask)/(2*3.14159265359-omega_mask); 
+	
+	if (Lb==0.0 ) {
+	       fprintf(stderr,	" warning: Background luminance is 0 or masking area = full image! pgsv cannot be calculated (set to -99)!!\n");
+		pgsv=-99;
+			}else{
+		if ( (lum_mask_av/Lb) > (E_v/(3.14159265359*Ltask))) {
+			pgsv=get_pgsv_con(E_v,E_mask,omega_mask,lum_mask_av, Lavg);
+		}else{
+			pgsv=get_pgsv_sat(E_v)	;
+			}}
+	return pgsv;
+
+}
 
 
 
@@ -1406,7 +1440,7 @@ int main(int argc, char **argv)
 		igs, actual_igs, lastpixelwas_gs, icol, xt, yt, change,checkpixels, before_igs, sgs, splithigh,uniform_gs,x_max, y_max,y_mid,
 		detail_out, posindex_picture, non_cos_lb, rx, ry, rmx,rmy,apply_disability,band_calc,band_color,masking,i_mask,no_glaresources,force;
 	double  LUM_replace,lum_total_max,age_corr_factor,age,dgp_ext,dgp,low_light_corr,omega_cos_contr, setvalue, lum_ideal, E_v_contr, sigma,om,delta_E,
-		E_vl_ext, lum_max, new_lum_max, r_center, ugp, ugr_exp, dgi_mod,lum_a, pgsv,E_v_mask,pgsv_sat,angle_disk,dist,n_corner_px,zero_corner_px,
+		E_vl_ext, lum_max, new_lum_max, r_center, ugp, ugr_exp, dgi_mod,lum_a, E_v_mask,angle_disk,dist,n_corner_px,zero_corner_px,
 		search_pix, a1, a2, a3, a4, a5, c3, c1, c2, r_split, max_angle,r_actual,lum_actual,dir_ill,
 		omegat, sang, E_v, E_v2, E_v_dir, avlum, act_lum, ang, angle_z1, angle_z2,per_95_band,per_75_band,pos,
 		l_max, lum_backg, lum_backg_cos, omega_sources, lum_sources,per_75_mask,per_95_mask,per_75_z1,per_95_z1,per_75_z2,per_95_z2,
@@ -1416,7 +1450,7 @@ int main(int argc, char **argv)
 		lum_z1[1],lum_z1_av,lum_z1_std[1],lum_z1_median[1],omega_z1,bbox_z1[2],
 		lum_z2[1],lum_z2_av,lum_z2_std[1],lum_z2_median[1],omega_z2,bbox_z2[2],
 		lum_pos[1],lum_nopos_median[1],lum_pos_median[1],lum_pos2_median[1],lum_pos_mean,lum_pos2_mean;
-	float lum_task, lum_thres, dgi,  vcp, cgi, ugr, limit, dgr, 
+	float lum_task, lum_thres, dgi,  vcp, cgi, ugr, limit, dgr,pgsv ,pgsv_sat,pgsv_con,
 		abs_max, Lveil;
 	char maskfile[500],file_out[500], file_out2[500], version[500];
 	char *cline;
@@ -1478,6 +1512,7 @@ int main(int argc, char **argv)
 	lum_band_av = 0.0;
 	omega_band = 0.0;
 	pgsv = 0.0 ;
+	pgsv_con = 0.0 ;
 	pgsv_sat = 0.0 ;
 	E_v_mask = 0.0;
 	lum_z1_av = 0.0;
@@ -1520,6 +1555,7 @@ int main(int argc, char **argv)
 	lum_ideal = 0.0;
 	max_angle = 0.2;
 	lum_thres = 2000.0;
+	lum_task = 0.0;
 	task_lum = 0;
 	sgs = 0;
 	splithigh = 1;
@@ -2610,12 +2646,21 @@ if (calcfast ==1 || search_pix <= 1.0 || calcfast == 2 ) {
 	        muc_rvar_get_median(s_mask,lum_mask_median);
                 muc_rvar_get_bounding_box(s_mask,bbox);
 /* PSGV only why masking of window is applied! */
-                 pgsv = get_pgsv(E_v, E_v_mask, omega_mask, lum_mask_av);
+
+	
+	if (task_lum == 0 || lum_task == 0.0 ) {
+	       		fprintf(stderr,	" warning: Task area not set or task luminance=0 ! pgsv cannot be calculated (set to -99)!!\n");
+			pgsv = -99; 
+		} else {
+                 	pgsv = get_pgsv(E_v, E_v_mask, omega_mask, lum_mask_av,lum_task,avlum);
+                	}
+
+                 pgsv_con = get_pgsv_con(E_v, E_v_mask, omega_mask, lum_mask_av,avlum);
                  pgsv_sat =get_pgsv_sat(E_v);
 
 	if (detail_out == 1) {
 
-	        printf ("masking:no_pixels,omega,av_lum,median_lum,std_lum,perc_75,perc_95,lum_min,lum_max,pgsv,pgsv_sat: %i %f %f %f %f %f %f %f %f %f %f\n",i_mask,omega_mask,lum_mask_av,lum_mask_median[0],sqrt(lum_mask_std[0]),per_75_mask,per_95_mask,bbox[0],bbox[1],pgsv,pgsv_sat );
+	        printf ("masking:no_pixels,omega,av_lum,median_lum,std_lum,perc_75,perc_95,lum_min,lum_max,pgsv_con,pgsv_sat,pgsv,Ev_mask: %i %f %f %f %f %f %f %f %f %f %f %f %f\n",i_mask,omega_mask,lum_mask_av,lum_mask_median[0],sqrt(lum_mask_std[0]),per_75_mask,per_95_mask,bbox[0],bbox[1],pgsv_con,pgsv_sat,pgsv,E_v_mask );
 
 	}	
 		
