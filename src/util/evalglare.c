@@ -1,7 +1,7 @@
 #ifndef lint
-static const char RCSid[] = "$Id: evalglare.c,v 2.9 2018/11/23 19:32:17 greg Exp $";
+static const char RCSid[] = "$Id: evalglare.c,v 2.10 2018/11/27 18:08:24 greg Exp $";
 #endif
-/* EVALGLARE V2.07
+/* EVALGLARE V2.08
  * Evalglare Software License, Version 2.0
  *
  * Copyright (c) 1995 - 2016 Fraunhofer ISE, EPFL.
@@ -334,16 +334,22 @@ change of default options:
 change of default value of multiplier b to 5.0, if task options (-t or -T ) are activated AND -b NOT used. To be downward compatible when using the task method.
   */
 
-/* evalglare.c, v2.07 2018/11/06  
+/* evalglare.c, v2.07 2018/11/17  
 bugfix: correction of error in the equations of PGSV_con and PGSV_sat
 all three PGSV equations are calculated now 
 illuminance from the masking area (E_v_mask) is also printed
 bugfix: in VCPs error fuction equation, value of 6.347 replaced by 6.374
   */
+
+/* evalglare.c, v2.08 2018/11/27 
+bugfix: checkroutine for same image size for the masking corrected 
+  */
+
+
    
 #define EVALGLARE
 #define PROGNAME "evalglare"
-#define VERSION "2.07 release 17.11.2018 by EPFL, J.Wienold"
+#define VERSION "2.08 release 27.11.2018 by EPFL, J.Wienold"
 #define RELEASENAME PROGNAME " " VERSION
 
 
@@ -1931,7 +1937,7 @@ if (masking ==1 && zones >0) {
 
 	if (masking == 1) {
 
-		if (!pict_get_xsize(p)==pict_get_xsize(pm) || !pict_get_ysize(p)==pict_get_ysize(pm)) {
+		if (pict_get_xsize(p)!=pict_get_xsize(pm) || pict_get_ysize(p)!=pict_get_ysize(pm)) {
 		fprintf(stderr, "error: masking image has other resolution than main image ! \n");
 		fprintf(stderr, "size must be identical \n");
 	        printf("resolution main image : %dx%d\n",pict_get_xsize(p),pict_get_ysize(p)); 
