@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.15 2016/03/04 00:21:21 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.16 2018/11/27 06:30:05 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -35,7 +35,7 @@ static long
 mgetint(siz)				/* get a siz-byte integer */
 int  siz;
 {
-	register long  r;
+	long  r;
 
 	r = getint(siz, meshfp);
 	if (feof(meshfp))
@@ -60,7 +60,7 @@ static OCTREE
 getfullnode()				/* get a set, return fullnode */
 {
 	OBJECT	set[MAXSET+1];
-	register int  i;
+	int  i;
 
 	if ((set[0] = mgetint(objsize)) > MAXSET)
 		mesherror(USER, "bad set in getfullnode");
@@ -73,8 +73,8 @@ getfullnode()				/* get a set, return fullnode */
 static OCTREE
 gettree()				/* get a pre-ordered octree */
 {
-	register OCTREE	 ot;
-	register int  i;
+	OCTREE	 ot;
+	int  i;
 	
 	switch (getc(meshfp)) {
 		case OT_EMPTY:
@@ -99,7 +99,7 @@ gettree()				/* get a pre-ordered octree */
 static void
 skiptree()				/* skip octree on input */
 {
-	register int  i;
+	int  i;
 	
 	switch (getc(meshfp)) {
 	case OT_EMPTY:
@@ -123,7 +123,7 @@ skiptree()				/* skip octree on input */
 
 static void
 getpatch(pp)				/* load a mesh patch */
-register MESHPATCH	*pp;
+MESHPATCH	*pp;
 {
 	int	flags;
 	int	i, j;
@@ -133,7 +133,7 @@ register MESHPATCH	*pp;
 		mesherror(USER, "bad patch flags");
 					/* allocate vertices */
 	pp->nverts = mgetint(2);
-	if (pp->nverts <= 0 || pp->nverts > 256)
+	if ((pp->nverts <= 0) | (pp->nverts > 256))
 		mesherror(USER, "bad number of patch vertices");
 	pp->xyz = (uint32 (*)[3])malloc(pp->nverts*3*sizeof(uint32));
 	if (pp->xyz == NULL)
@@ -165,7 +165,7 @@ register MESHPATCH	*pp;
 				pp->uv[i][j] = mgetint(4);
 					/* local triangles */
 	pp->ntris = mgetint(2);
-	if (pp->ntris < 0 || pp->ntris > 512)
+	if ((pp->ntris < 0) | (pp->ntris > 512))
 		mesherror(USER, "bad number of local triangles");
 	if (pp->ntris) {
 		pp->tri = (struct PTri *)malloc(pp->ntris *
@@ -192,7 +192,7 @@ register MESHPATCH	*pp;
 	}
 					/* joiner triangles */
 	pp->nj1tris = mgetint(2);
-	if (pp->nj1tris < 0 || pp->nj1tris > 512)
+	if ((pp->nj1tris < 0) | (pp->nj1tris > 256))
 		mesherror(USER, "bad number of joiner triangles");
 	if (pp->nj1tris) {
 		pp->j1tri = (struct PJoin1 *)malloc(pp->nj1tris *
@@ -209,7 +209,7 @@ register MESHPATCH	*pp;
 		pp->j1tri = NULL;
 					/* double joiner triangles */
 	pp->nj2tris = mgetint(2);
-	if (pp->nj2tris < 0 || pp->nj2tris > 256)
+	if ((pp->nj2tris < 0) | (pp->nj2tris > 256))
 		mesherror(USER, "bad number of double joiner triangles");
 	if (pp->nj2tris) {
 		pp->j2tri = (struct PJoin2 *)malloc(pp->nj2tris *
@@ -254,7 +254,7 @@ int	flags;
 	checkheader(meshfp, MESHFMT, flags&IO_INFO ? stdout : (FILE *)NULL);
 					/* read format number */
 	objsize = getint(2, meshfp) - MESHMAGIC;
-	if (objsize <= 0 || objsize > MAXOBJSIZ || objsize > sizeof(long))
+	if ((objsize <= 0) | (objsize > MAXOBJSIZ) | (objsize > sizeof(long)))
 		mesherror(USER, "incompatible mesh format");
 					/* read boundaries */
 	if (flags & IO_BOUNDS) {
