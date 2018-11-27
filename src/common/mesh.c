@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.30 2018/11/27 01:04:33 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.31 2018/11/27 06:20:37 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -287,7 +287,7 @@ getmeshpseudo(			/* get mesh pseudo object for material */
 	OBJECT	mo
 )
 {
-	if (mo < mp->mat0 || mo >= mp->mat0 + mp->nmats)
+	if ((mo < mp->mat0) | (mo >= mp->mat0 + mp->nmats))
 		error(INTERNAL, "modifier out of range in getmeshpseudo");
 	if (mp->pseudo == NULL) {
 		int	i;
@@ -374,7 +374,7 @@ addmeshvert(			/* find/add a mesh vertex */
 		goto nomem;
 	if (lvp->key == NULL) {
 		lvp->key = (char *)malloc(sizeof(MCVERT)+sizeof(int32));
-		memcpy((void *)lvp->key, (void *)&cv, sizeof(MCVERT));
+		memcpy(lvp->key, &cv, sizeof(MCVERT));
 	}
 	if (lvp->data == NULL) {	/* new vertex */
 		MESHPATCH	*pp;
@@ -385,16 +385,16 @@ addmeshvert(			/* find/add a mesh vertex */
 				goto nomem;
 			mp->npatches = 1;
 		} else if (mp->patch[mp->npatches-1].nverts >= 256) {
+			if (mp->npatches >= 1L<<22)
+				error(INTERNAL, "too many mesh patches");
 			if (mp->npatches % MPATCHBLKSIZ == 0) {
-				mp->patch = (MESHPATCH *)realloc(
-						(void *)mp->patch,
-					(mp->npatches + MPATCHBLKSIZ)*
-						sizeof(MESHPATCH));
-				memset((void *)(mp->patch + mp->npatches), '\0',
+				mp->patch = (MESHPATCH *)realloc(mp->patch,
+						(mp->npatches + MPATCHBLKSIZ)*
+							sizeof(MESHPATCH));
+				memset((mp->patch + mp->npatches), '\0',
 					MPATCHBLKSIZ*sizeof(MESHPATCH));
 			}
-			if (mp->npatches++ >= 1L<<22)
-				error(INTERNAL, "too many mesh patches");
+			mp->npatches++;
 		}
 		pp = &mp->patch[mp->npatches-1];
 		if (pp->xyz == NULL) {
@@ -726,23 +726,25 @@ freemesh(MESH *ms)		/* free mesh data */
 		MESHPATCH	*pp = ms->patch + ms->npatches;
 		while (pp-- > ms->patch) {
 			if (pp->j2tri != NULL)
-				free((void *)pp->j2tri);
+				free(pp->j2tri);
 			if (pp->j1tri != NULL)
-				free((void *)pp->j1tri);
+				free(pp->j1tri);
 			if (pp->tri != NULL)
-				free((void *)pp->tri);
+				free(pp->tri);
 			if (pp->uv != NULL)
-				free((void *)pp->uv);
+				free(pp->uv);
 			if (pp->norm != NULL)
-				free((void *)pp->norm);
+				free(pp->norm);
 			if (pp->xyz != NULL)
-				free((void *)pp->xyz);
+				free(pp->xyz);
+			if (pp->trimat != NULL)
+				free(pp->trimat);
 		}
-		free((void *)ms->patch);
+		free(ms->patch);
 	}
 	if (ms->pseudo != NULL)
-		free((void *)ms->pseudo);
-	free((void *)ms);
+		free(ms->pseudo);
+	free(ms);
 }
 
 
@@ -752,6 +754,6 @@ freemeshinst(OBJREC *o)		/* free mesh instance */
 	if (o->os == NULL)
 		return;
 	freemesh((*(MESHINST *)o->os).msh);
-	free((void *)o->os);
+	free(o->os);
 	o->os = NULL;
 }
