@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.28 2017/03/01 21:51:38 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.29 2018/11/27 00:42:26 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -510,20 +510,37 @@ addmeshtri(			/* add a new mesh triangle */
 		}
 	}
 						/* double link */
-	pp = &mp->patch[pn[2]];
+	pp = &mp->patch[pn[i=0]];
+	if (mp->patch[pn[1]].nj2tris < pp->nj2tris)
+		pp = &mp->patch[pn[i=1]];
+	if (mp->patch[pn[2]].nj2tris < pp->nj2tris)
+		pp = &mp->patch[pn[i=2]];
+	if (pp->nj2tris >= 256)
+		error(INTERNAL, "too many patch triangles in addmeshtri");
 	if (pp->j2tri == NULL) {
 		pp->j2tri = (struct PJoin2 *)malloc(
 					256*sizeof(struct PJoin2));
 		if (pp->j2tri == NULL)
 			goto nomem;
 	}
-	if (pp->nj2tris >= 256)
-		error(INTERNAL, "too many patch triangles in addmeshtri");
-	pp->j2tri[pp->nj2tris].v1j = vid[0];
-	pp->j2tri[pp->nj2tris].v2j = vid[1];
-	pp->j2tri[pp->nj2tris].v3 = vid[2] & 0xff;
 	pp->j2tri[pp->nj2tris].mat = mo;
-	return(pn[2] << 10 | 0x300 | pp->nj2tris++);
+	switch (i) {
+	case 0:
+		pp->j2tri[pp->nj2tris].v3 = vid[0] & 0xff;
+		pp->j2tri[pp->nj2tris].v1j = vid[1];
+		pp->j2tri[pp->nj2tris].v2j = vid[2];
+		return(pn[0] << 10 | 0x300 | pp->nj2tris++);
+	case 1:
+		pp->j2tri[pp->nj2tris].v2j = vid[0];
+		pp->j2tri[pp->nj2tris].v3 = vid[1] & 0xff;
+		pp->j2tri[pp->nj2tris].v1j = vid[2];
+		return(pn[1] << 10 | 0x300 | pp->nj2tris++);
+	case 2:
+		pp->j2tri[pp->nj2tris].v1j = vid[0];
+		pp->j2tri[pp->nj2tris].v2j = vid[1];
+		pp->j2tri[pp->nj2tris].v3 = vid[2] & 0xff;
+		return(pn[2] << 10 | 0x300 | pp->nj2tris++);
+	}
 nomem:
 	error(SYSTEM, "out of memory in addmeshtri");
 	return(OVOID);
