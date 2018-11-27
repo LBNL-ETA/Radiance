@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.29 2018/11/27 00:42:26 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.30 2018/11/27 01:04:33 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -511,9 +511,9 @@ addmeshtri(			/* add a new mesh triangle */
 	}
 						/* double link */
 	pp = &mp->patch[pn[i=0]];
-	if (mp->patch[pn[1]].nj2tris < pp->nj2tris)
+	if (pp->nj2tris >= 256)
 		pp = &mp->patch[pn[i=1]];
-	if (mp->patch[pn[2]].nj2tris < pp->nj2tris)
+	if (pp->nj2tris >= 256)
 		pp = &mp->patch[pn[i=2]];
 	if (pp->nj2tris >= 256)
 		error(INTERNAL, "too many patch triangles in addmeshtri");
