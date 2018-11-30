@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.80 2018/04/19 17:02:13 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.81 2018/11/30 19:51:30 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -205,7 +205,7 @@ if ( !defined $recovery ) {
 	}
 	close MYAVH;
 	# Generate octree
-	system "oconv -w -f $radscn > $octree";
+	system "oconv -w $radscn > $octree";
 	die "Could not compile scene\n" if ( $? );
 	# Add MGF description if requested
 	if ( $geout ) {
