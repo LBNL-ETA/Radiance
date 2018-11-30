@@ -1,0 +1,56 @@
+{ RCSid $Id: diskcoords.cal,v 1.1 2018/11/30 17:49:59 greg Exp $ }
+{
+	Shirley-Chiu coordinate calculation for BRDF data types (plasdata, metdata)
+
+	Assumes material in X-Y plane with Y axis "up" and surface normal is Z-axis
+}
+Up(i) = arg(AC-3+i);	{ up vector does not need to be normalized }
+Vux = cross(1,Up,N);
+Vuy = cross(2,Up,N);
+Vuz = cross(3,Up,N);
+vnorm = 1/sqrt(Vux*Vux + Vuy*Vuy + Vuz*Vuz);
+Vnx = Vux*vnorm;
+Vny = Vuy*vnorm;
+Vnz = Vuz*vnorm;
+Vn(i) = select(i, Vnx, Vny, Vnz);
+Unx = cross(1,N,Vn);
+Uny = cross(2,N,Vn);
+Unz = cross(3,N,Vn);
+			{ Transform vectors, normalized (dx,dy,dz) away from surf }
+surf_dx(dx,dy,dz) = dx*Unx + dy*Uny + dz*Unz;
+surf_dy(dx,dy,dz) = dx*Vnx + dy*Vny + dz*Vnz;
+surf_dz(dx,dy,dz) = dx*Nx + dy*Ny + dz*Nz;
+
+inc_dx = surf_dx(-Dx,-Dy,-Dz);
+inc_dy = surf_dy(-Dx,-Dy,-Dz);
+inc_dz = Rdot;
+			{ Compute square position from disk coordinates }
+norm_radians(p) : if(-p - PI/4, p + 2*PI, p);
+idr(idx,idy) = sqrt(idx*idx + idy*idy);
+idp(idx,idy) = norm_radians(atan2(idy, idx));
+
+idrgn(idp) = floor((idp + PI/4)/(PI/2)) + 1;
+
+square_a(idr,idp) = select(idrgn(idp),
+			idr,
+			(PI/2 - idp)*idr/(PI/4),
+			-idr,
+			(idp - 3*PI/2)*idr/(PI/4));
+
+square_b(idr,idp) = select(idrgn(idp),
+			idp*idr/(PI/4),
+			idr,
+			(PI - idp)*idr/(PI/4),
+			-idr);
+
+square_x(idx,idy) = (square_a(idr(idx,idy),idp(idx,idy)) + 1)/2;
+square_y(idx,idy) = (square_b(idr(idx,idy),idp(idx,idy)) + 1)/2;
+
+inc_sqx = square_x(-inc_dx,-inc_dy);	{ Negative because of Klems reversal }
+inc_sqy = square_y(-inc_dx,-inc_dy);
+
+sqx_in(sx,sy,sz) = inc_sqx;		{ Only a function of incident ray direction }
+sqy_in(sx,sy,sz) = inc_sqy;
+
+sqx_out(sx,sy,sz) = square_x(surf_dx(sx,sy,sz),surf_dy(sx,sy,sz));
+sqy_out(sx,sy,sz) = square_y(surf_dx(sx,sy,sz),surf_dy(sx,sy,sz));
