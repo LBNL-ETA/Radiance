@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.17 2018/01/18 19:43:43 greg Exp $ }
+{ RCSid $Id: rayinit.cal,v 2.18 2018/11/30 18:43:57 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -168,3 +168,24 @@ U = if( crosslen`P. - FTINY,
 V = if( crosslen`P. - FTINY,
 		Pz - Nz*(Px*Nx + Py*Ny)/crosslen`P.,
 		Py);
+
+			{ Local hemisphere direction for *func & *data types }
+			{ last 3 real args = unnormalized up-vector }
+Vux`P. = arg(AC-1)*NzP - arg(AC)*NyP;
+Vuy`P. = arg(AC)*NxP - arg(AC-2)*NzP;
+Vuz`P. = arg(AC-2)*NyP - arg(AC-1)*NxP;
+vnorm`P. = 1/sqrt(Vux`P.*Vux`P. + Vuy`P.*Vuy`P. + Vuz`P.*Vuz`P.);
+Vnx`P. = Vux`P.*vnorm`P.;
+Vny`P. = Vuy`P.*vnorm`P.;
+Vnz`P. = Vuz`P.*vnorm`P.;
+Unx`P. = NyP*Vnz`P. - NzP*Vny`P.;
+Uny`P. = NzP*Vnx`P. - NxP*Vnz`P.;
+Unz`P. = NxP*Vny`P. - NyP*Vnx`P.;
+			{ Transform vectors, normalized (dx,dy,dz) away from surf }
+Ldx(dx,dy,dz) = dx*Unx`P. + dy*Uny`P. + dz*Unz`P.;
+Ldy(dx,dy,dz) = dx*Vnx`P. + dy*Vny`P. + dz*Vnz`P.;
+Ldz(dx,dy,dz) = dx*NxP + dy*NyP + dz*NzP;
+			{ Incident vector transformed to our coords }
+Idx = Ldx(-Dx,-Dy,-Dz);
+Idy = Ldy(-Dx,-Dy,-Dz);
+Idz = RdotP;

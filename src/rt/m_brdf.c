@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.36 2018/11/13 19:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.37 2018/11/30 18:43:57 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -407,7 +407,7 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		multambient(ctmp, r, nd.pnorm);
 		addcolor(r->rcol, ctmp);	/* add to returned color */
 	}
-	if (nd.trans > FTINY) {		/* from other side */
+	if (nd.trans > FTINY) {			/* from other side */
 		flipsurface(r);
 		vtmp[0] = -nd.pnorm[0];
 		vtmp[1] = -nd.pnorm[1];
@@ -436,10 +436,10 @@ setbrdfunc(			/* set up brdf function and variables */
 		return(0);	/* it's OK, setfunc says we're done */
 				/* else (re)assign special variables */
 	multv3(vec, np->pnorm, funcxf.xfm);
-	varset("NxP", '=', vec[0]/funcxf.sca);
-	varset("NyP", '=', vec[1]/funcxf.sca);
-	varset("NzP", '=', vec[2]/funcxf.sca);
-	varset("RdotP", '=', np->pdot <= -1.0 ? -1.0 :
+	varset("NxP`", '=', vec[0]/funcxf.sca);
+	varset("NyP`", '=', vec[1]/funcxf.sca);
+	varset("NzP`", '=', vec[2]/funcxf.sca);
+	varset("RdotP`", '=', np->pdot <= -1.0 ? -1.0 :
 			np->pdot >= 1.0 ? 1.0 : np->pdot);
 	varset("CrP", '=', colval(np->mcolor,RED));
 	varset("CgP", '=', colval(np->mcolor,GRN));
