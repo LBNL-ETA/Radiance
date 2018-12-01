@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pkgBSDF.c,v 2.7 2015/08/18 15:23:38 greg Exp $";
+static const char RCSid[] = "$Id: pkgBSDF.c,v 2.8 2018/12/01 19:45:43 greg Exp $";
 #endif
 /*
  * Take BSDF XML file and generate a referencing Radiance object
@@ -12,6 +12,7 @@ static const char RCSid[] = "$Id: pkgBSDF.c,v 2.7 2015/08/18 15:23:38 greg Exp $
 int	do_stdout = 0;			/* send Radiance object to stdout? */
 int	do_instance = 0;		/* produce instance/octree pairs? */
 
+char	*progname;			/* global argv[0] */
 
 /* Return appropriate suffix for Z offset */
 static const char *
@@ -116,6 +117,7 @@ cvtBSDF(char *fname)
 			retOK = (freopen(rname, "w", stdout) != NULL);
 		}
 		if (retOK) {
+			printf("# Produced by: %s %s\n", progname, fname);
 			if (myBSDF.matn[0] && myBSDF.makr[0])
 				printf("# Material '%s' by '%s'\n\n",
 						myBSDF.matn, myBSDF.makr);
@@ -140,6 +142,8 @@ main(int argc, char *argv[])
 {
 	int	status = 0;
 	int	i;
+
+	progname = argv[0];
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++)
 		switch (argv[i][1]) {
