@@ -1,0 +1,42 @@
+# Y-axis points "up", Z-axis into room, right-handed coordinates
+m MagentaPlastic =
+	c
+		cxy .45 .3
+        rd .7
+	c
+        rs .02 .05
+        sides 2
+m SpecularGreen =
+	c
+		cxy .3 .5
+	rd .05
+	rs .6 .03
+	sides 2
+o VenetianBlinds
+xf -rx -20 -a 33 -t 0 .03 0
+    o mSlat
+        m MagentaPlastic
+        v v1 =
+                p -1.5 0 -.04
+        v v2 =
+                p 1.5 0 -.04
+        v v3 =
+                p 1.5 0 0
+        v v4 =
+                p -1.5 0 0
+        f v1 v2 v3 v4
+    o
+    o gSlat
+        m SpecularGreen
+        v v1 =
+                p -1.5 1e-5 -.04
+        v v2 =
+                p 1.5 1e-5 -.04
+        v v3 =
+                p 1.5 1e-5 0
+        v v4 =
+                p -1.5 1e-5 0
+        f v1 v2 v3 v4
+    o
+xf
+o

@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.8 2018/11/21 22:59:04 greg Exp $
+# RCSid $Id: Makefile,v 1.9 2018/12/01 02:06:04 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -10,14 +10,16 @@ RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 IMG_CMP = radcompare -rms 0.08 -max 1.5
 
 # Default target is to test everything
-all:	test-xform test-trans2-def test-trans2-fish test-dielectric-def \
+all:	test-xform \
+test-mixtex-def test-mixtex-fish test-mixtex-plan tex-mixtex-rplan \
+test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
 test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
-test-trans-def test-trans-fish test-patterns-def test-mixtex-def
+test-trans-def test-trans-fish test-patterns-def test-patterns-plan
 
 clean:
-	rm -f *.oct *.amb *_ill.dat *_*.hdr *.unf combined.rad
+	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf combined.rad
 
 # Special test of xform
 
@@ -393,6 +395,20 @@ patterns_def.hdr:	patterns.oct
 
 ### End patterns-def   tests
 
+### Reference and test for patterns view   plan ###
+
+test-patterns-plan:	ref/patterns_plan.hdr patterns_plan.hdr
+	$(RDU_PFILT) patterns_plan.hdr | $(IMG_CMP) ref/patterns_plan.hdr -
+
+ref/patterns_plan.hdr:
+	make patterns_plan.hdr
+	$(RDU_PFILT) patterns_plan.hdr > ref/patterns_plan.hdr
+
+patterns_plan.hdr:	patterns.oct
+	rad -v   plan patterns.rif
+
+### End patterns-plan   tests
+
 ### Octree for  mixtex ###
 
 mixtex.oct:	mixtex.rif
@@ -411,3 +427,45 @@ mixtex_def.hdr:	mixtex.oct
 	rad -v   def  mixtex.rif
 
 ### End  mixtex-def   tests
+
+### Reference and test for  mixtex view  fish ###
+
+test-mixtex-fish:	ref/mixtex_fish.hdr  mixtex_fish.hdr
+	$(RDU_PFILT)  mixtex_fish.hdr | $(IMG_CMP) ref/mixtex_fish.hdr -
+
+ref/mixtex_fish.hdr:
+	make  mixtex_fish.hdr
+	$(RDU_PFILT)  mixtex_fish.hdr > ref/mixtex_fish.hdr
+
+mixtex_fish.hdr:	mixtex.oct
+	rad -v  fish  mixtex.rif
+
+### End  mixtex-fish  tests
+
+### Reference and test for  mixtex view  plan ###
+
+test-mixtex-plan:	ref/mixtex_plan.hdr  mixtex_plan.hdr
+	$(RDU_PFILT)  mixtex_plan.hdr | $(IMG_CMP) ref/mixtex_plan.hdr -
+
+ref/mixtex_plan.hdr:
+	make  mixtex_plan.hdr
+	$(RDU_PFILT)  mixtex_plan.hdr > ref/mixtex_plan.hdr
+
+mixtex_plan.hdr:	mixtex.oct
+	rad -v  plan  mixtex.rif
+
+### End  mixtex-plan  tests
+
+### Reference and test for  mixtex view rplan ###
+
+test-mixtex-rplan:	ref/mixtex_rplan.hdr  mixtex_rplan.hdr
+	$(RDU_PFILT)  mixtex_rplan.hdr | $(IMG_CMP) ref/mixtex_rplan.hdr -
+
+ref/mixtex_rplan.hdr:
+	make  mixtex_rplan.hdr
+	$(RDU_PFILT)  mixtex_rplan.hdr > ref/mixtex_rplan.hdr
+
+mixtex_rplan.hdr:	mixtex.oct
+	rad -v rplan  mixtex.rif
+
+### End  mixtex-rplan tests

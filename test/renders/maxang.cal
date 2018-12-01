@@ -1,0 +1,4 @@
+{ RCSid $Id: maxang.cal,v 1.1 2018/12/01 02:06:05 greg Exp $ }
+{ Simple function to get maximum angle in degrees for incident/source }
+
+maxang(sx,sy,sz) = Acos(min(RdotP,abs(sx*NxP+sy*NyP+sz*NzP)))/DEGREE;

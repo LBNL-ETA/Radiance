@@ -1,10 +1,10 @@
-# RCSid $Id: patterns.mat,v 1.1 2018/11/21 20:42:58 greg Exp $
+# RCSid $Id: patterns.mat,v 1.2 2018/12/01 02:06:05 greg Exp $
 #
 # A set of 9 patterned materials
 #
 
 void brightfunc noisepat
-2 '1 - .4*(1+fnoise3(3*Px,3*Py,3*Pz))' .
+2 '1 - .35*(1+fnoise3(3*Px,3*Py,3*Pz))' .
 0
 0
 
@@ -34,7 +34,7 @@ void alias mat3 base_mat
 void plastic base_mat
 0
 0
-5 .8 .7 .6 0 0
+5 .8 .7 .3 0 0
 
 void brighttext textpat
 3 helvet.fnt . Black

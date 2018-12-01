@@ -12,14 +12,6 @@ void plastic white
 0
 5 .8 .8 .8 0 0
 
-void alias mat2 white
-void alias mat3 white
-void alias mat4 white
-void alias mat5 white
-void alias mat6 white
-void alias mat1 white
-void alias mat9 white
-
 void mixdata mat7
 7 white brushed_gold noneg flower.dat . (Py-.7)/.6 (-Px-2.2)/.6
 0
@@ -43,3 +35,28 @@ void texdata bumpy_pat
 1 .15
 
 bumpy_pat alias mat6 brushed_gold
+
+void plasdata mat9
+7 noop sawtooth.dat diskcoords.cal sqx_in sqy_in sqx_out sqy_out
+0
+7 .5 .5 .5 .05 -1 0 0
+
+void metdata mat3
+7 noop sawtooth.dat diskcoords.cal sqx_in sqy_in sqx_out sqy_out
+0
+7 .9 .5 .8 .95 -1 0 0
+
+void BSDF mat2
+6 0 sawtooth.xml -1 0 0 .
+0
+0
+
+void aBSDF mat1
+5 blinds20c.xml -1 0 0 .
+0
+0
+
+void transdata mat4
+4 noop tcutoff.dat maxang.cal maxang
+0
+6 .9 .9 .9 .07 .9 1

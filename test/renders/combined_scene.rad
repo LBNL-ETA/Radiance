@@ -1,4 +1,4 @@
-# RCSid $Id: combined_scene.rad,v 1.6 2018/11/21 22:59:04 greg Exp $
+# RCSid $Id: combined_scene.rad,v 1.7 2018/12/01 02:06:05 greg Exp $
 #
 # A collection of all our scene bits without the front caps
 #
@@ -19,4 +19,4 @@
 !xform -n trans -t 0 5.1 6.2 diorama_walls.rad rect_opening.rad ballcompare.rad spotlights.rad rect_fixture.rad trans_pane.rad
 !xform -n trans2 -t 0 10.2 6.2 diorama_walls.rad rect_opening.rad gymbal.rad illum_trans2.rad
 !xform -n patterns -t 0 15.3 6.2 patterns.mat diorama_walls.rad closed_end.rad disks.rad rect_fixture.rad
-!xform -n mixtex -t 0 0 9.3 mixtex.mat diorama_walls.rad closed_end.rad disks.rad rect_fixture.rad
+!xform -n mixtex -t 0 0 9.3 mixtex.mat diorama_walls.rad glass_pane.rad blinds.rad rect_opening.rad disks.rad constellation.rad

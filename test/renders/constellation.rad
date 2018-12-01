@@ -1,0 +1,59 @@
+# RCSid $Id: constellation.rad,v 1.1 2018/12/01 02:06:05 greg Exp $
+#
+# Multiple light sources for material models
+#
+
+void light bright
+0
+0
+3                100                100                100
+
+bright sphere bulb0
+0
+0
+4               -1.9                2.5                2.8               0.03
+
+bright sphere bulb1
+0
+0
+4     -2.30106431181      3.73434902981                2.8               0.03
+
+bright sphere bulb2
+0
+0
+4     -3.35106431181      4.49721868422                2.8               0.03
+
+bright sphere bulb3
+0
+0
+4     -4.64893568819      4.49721868422                2.8               0.03
+
+bright sphere bulb4
+0
+0
+4     -5.69893568819      3.73434902981                2.8               0.03
+
+bright sphere bulb5
+0
+0
+4               -6.1                2.5                2.8               0.03
+
+bright sphere bulb6
+0
+0
+4     -5.69893568819      1.26565097019                2.8               0.03
+
+bright sphere bulb7
+0
+0
+4     -4.64893568819      0.50278131578                2.8               0.03
+
+bright sphere bulb8
+0
+0
+4     -3.35106431181      0.50278131578                2.8               0.03
+
+bright sphere bulb9
+0
+0
+4     -2.30106431181      1.26565097019                2.8               0.03

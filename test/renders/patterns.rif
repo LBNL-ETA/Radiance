@@ -1,4 +1,4 @@
-# RCSid $Id: patterns.rif,v 1.1 2018/11/21 20:42:58 greg Exp $
+# RCSid $Id: patterns.rif,v 1.2 2018/12/01 02:06:05 greg Exp $
 #
 # A test of different patterns on disks
 #
@@ -10,6 +10,8 @@ materials = patterns.mat
 scene = diorama_walls.rad closed_end.rad front_cap.rad
 scene = disks.rad
 scene = rect_fixture.rad
+
+object = saucer.rad
 
 ZONE = I -8 0 0 5 0 3
 
@@ -27,4 +29,5 @@ render = @render.opt
 
 rpict = -ps 1
 
-view= def -vta -vp -0.2 3.0728 2.77765 -vd -2.39272 -0.24212 -1.72379 -vh 66.6667 -vv 37.5 
+view= def -vta -vp -0.2 3.07 2.78 -vd -2.64 -0.48 -1.25 -vh 66.6667 -vv 37.5
+view= plan -vtl -vp -4 2.5 2.5 -vd 0 0 -1 -vu -1 0 0 -vh 5 -vv 5
