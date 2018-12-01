@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.17 2018/11/17 20:22:17 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.18 2018/12/01 21:09:53 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -64,6 +64,7 @@ const char	*hdr_ignkey[] = {
 			"SOFTWARE",
 			"CAPDATE",
 			"GMT",
+			"FRAME",
 			NULL	/* terminator */
 		};
 				/* header variable settings */
