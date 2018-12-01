@@ -1,7 +1,7 @@
-# RCSid $Id: blinds.rad,v 1.1 2018/12/01 02:06:04 greg Exp $
+# RCSid $Id: blinds.rad,v 1.2 2018/12/01 05:40:35 greg Exp $
 # Venetian blinds with BSDF in rectangular window
 
-#@mkillum f=blinds_ill c=d d=200 s=512 i=m_blinds20c_f
+#@mkillum f=blinds_ill c=d d=200 s=100 i=m_blinds20c_f
 
 # xform -rz 90 -ry 90 -t -8.04 2.5 1.5
 # Material 'Green specular venetian blinds at 20 degree angle' by 'Greg Ward'

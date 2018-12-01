@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.9 2018/12/01 02:06:04 greg Exp $
+# RCSid $Id: Makefile,v 1.10 2018/12/01 05:40:35 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -7,7 +7,7 @@
 RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 
 # Image comparison command
-IMG_CMP = radcompare -rms 0.08 -max 1.5
+IMG_CMP = radcompare -rms 0.07 -max 1.5
 
 # Default target is to test everything
 all:	test-xform \

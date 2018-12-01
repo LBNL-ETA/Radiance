@@ -3549,7 +3549,7 @@ trans2_mat polygon trans2.15.tfunc_window
                -8.1               11.2                8.2
 
 void brightfunc noisepat
-8 "1 - .4*(1+fnoise3(3*Px,3*Py,3*Pz))" . -i 1 -t 0 15.3 6.2
+8 "1 - .35*(1+fnoise3(3*Px,3*Py,3*Pz))" . -i 1 -t 0 15.3 6.2
 0
 0
 
@@ -3581,7 +3581,7 @@ void alias mat3
 void plastic base_mat
 0
 0
-5                0.8                0.7                0.6                  0                  0
+5                0.8                0.7                0.3                  0                  0
 
 void brighttext textpat
 3 helvet.fnt . Black
