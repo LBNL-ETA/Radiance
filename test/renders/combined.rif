@@ -1,0 +1,27 @@
+# RCSid $Id: combined.rif,v 1.1 2018/12/01 22:58:43 greg Exp $
+#
+# All the scenes combined into one to test every primitive
+#
+
+OCTREE = combined.oct
+
+scene = combined_scene.rad
+
+oconv = -f
+
+ZONE = E -8.5 0 -.1 20.4 -.1 12.4
+
+EXP = +3
+
+RES = 1024
+QUAL = Med
+IND = 1
+VAR = Hi
+DET = Hi
+PEN = True
+
+render = @render.opt -ss 16 -aa 0 -ad 64 -ab 1 -lr -6 -lw 1e-5
+
+rpict = -ps 1
+
+view = all -vp 23.5757 8.58098 5.24274 -vd -12.2856 0.909548 0.48623 -vh 50 -vv 32
