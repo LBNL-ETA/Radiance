@@ -1,4 +1,4 @@
-.\" RCSid "$Id: xform.1,v 1.5 2015/06/29 00:32:51 greg Exp $"
+.\" RCSid "$Id: xform.1,v 1.6 2018/12/02 16:54:29 greg Exp $"
 .TH XFORM 1 6/4/99 RADIANCE
 .SH NAME
 xform - transform a RADIANCE scene description
@@ -84,7 +84,7 @@ Note that
 cannot simultaneously take its scene information from the standard input
 if the option is used in this way.
 Competely empty lines and lines beginning with a pound sign ('#') will be
-silently ignored.
+passed through to the output.
 Beginning "!xform" or "xform" command names will also be ignored.
 .PP
 If one or more scene files are given on the command line,
