@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: xform.c,v 2.50 2016/03/04 00:21:21 greg Exp $";
+static const char RCSid[] = "$Id: xform.c,v 2.51 2018/12/02 16:30:30 greg Exp $";
 #endif
 /*
  *  xform.c - program to transform object files.
@@ -209,19 +209,21 @@ doargf(			/* take argument list from file */
 		}
 		n = 0;			/* count number of lines in file */
 		while (fgetline(argbuf,sizeof(argbuf),argfp) != NULL)
-			n += argbuf[0] && argbuf[0] != '#';
+			n += (argbuf[0] != '\0') & (argbuf[0] != '#');
 		if (!n) {
 			fprintf(stderr, "%s: empty argument file \"%s\"\n",
 					av[0], av[fi+1]);
 			exit(1);
 		}
-		nrept *= n;
 		rewind(argfp);
 	}
+	nrept *= n;
 	err = 0; k = 0;			/* read each arg list and call main */
 	while (fgetline(argbuf,sizeof(argbuf),argfp) != NULL) {
-		if (!argbuf[0] || argbuf[0] == '#')
+		if (!argbuf[0] | (argbuf[0] == '#')) {
+			printf("%s\n", argbuf);
 			continue;
+		}
 		avp = newav+2;
 		avp[0] = av[0];
 		for (i = 1; i < fi; i++)
@@ -552,7 +554,7 @@ m_glow(			/* transform arguments for proximity light */
 
 	if (readfargs(&fa, fin) != 1)
 		return(-1);
-	if (fa.nsargs != 0  || fa.nfargs != 4)
+	if ((fa.nsargs != 0) | (fa.nfargs != 4))
 		return(-1);
 	printf("0\n0\n4");
 	printf(" %18.12g %18.12g %18.12g",
@@ -573,7 +575,7 @@ m_spot(			/* transform arguments for spotlight */
 
 	if (readfargs(&fa, fin) != 1)
 		return(-1);
-	if (fa.nsargs != 0  || fa.nfargs != 7)
+	if ((fa.nsargs != 0) | ( fa.nfargs != 7))
 		return(-1);
 	printf("0\n0\n7");
 	printf(" %18.12g %18.12g %18.12g %18.12g\n",
