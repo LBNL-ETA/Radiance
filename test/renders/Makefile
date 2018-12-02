@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.10 2018/12/01 05:40:35 greg Exp $
+# RCSid $Id: Makefile,v 1.11 2018/12/02 18:57:05 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -25,7 +25,7 @@ clean:
 
 test-xform:	combined_scene.rad
 	xform -f combined_scene.rad | grep -v '^[ 	]*#' > combined.rad
-	radcompare ref/combined.rad combined.rad
+	radcompare -max 0.04 ref/combined.rad combined.rad
 
 ### Octree for dielectric ###
 
