@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.1 2018/12/01 22:58:43 greg Exp $
+# RCSid $Id: combined.rif,v 1.2 2018/12/03 19:49:11 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -6,6 +6,17 @@
 OCTREE = combined.oct
 
 scene = combined_scene.rad
+
+objects = antimatter_portal.rad ball_in_cube.rad ballcompare.rad
+objects = blinds.rad bubble_in_cube.rad closed_end.rad combined_scene.rad
+objects = constellation.rad dielectric_pane.rad diorama_walls.rad
+objects = disks.rad front_cap.rad glass_ill.rad glass_pane.rad
+objects = gymbal.rad illum_glass.rad illum_tfunc.rad illum_trans2.rad
+objects = mirror.rad mist.rad porsches.rad prism1.rad
+objects = prism2.rad rect_fixture.rad rect_opening.rad saucer.rad
+objects = spotcones.rad spotlights.rad sunset_sky.rad
+objects = torus.rad trans_pane.rad vase.rad woman.rad
+objects = vase.rtm woman.rtm porsche.octf
 
 oconv = -f
 

@@ -1,4 +1,4 @@
-# RCSid $Id: mesh.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: mesh.rif,v 1.2 2018/12/03 19:49:11 greg Exp $
 #
 # A small circle of women
 #
@@ -14,7 +14,7 @@ scene = "!xform -m chrome -n shiny -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 \
 -a 9 -rz 40 -i 1 -t -5 2.5 0 ./woman.rad"
 scene = rect_fixture.rad
 
-object = woman.rad
+object = woman.rad woman.rtm
 
 ZONE = I -8 0 0 5 0 3
 

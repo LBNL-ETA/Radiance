@@ -1,4 +1,4 @@
-# RCSid $Id: inst.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: inst.rif,v 1.2 2018/12/03 19:49:11 greg Exp $
 #
 # Test of instances
 #
@@ -9,6 +9,8 @@ materials = basic.mat
 scene = diorama_walls.rad closed_end.rad front_cap.rad
 scene = porsches.rad
 scene = spotlights.rad rect_fixture.rad
+
+objects = porsche.octf
 
 ZONE = I -8 0 0 5 0 3
 
