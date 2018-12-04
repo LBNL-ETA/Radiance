@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.2 2018/12/03 19:49:11 greg Exp $
+# RCSid $Id: combined.rif,v 1.3 2018/12/04 01:01:49 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -31,7 +31,7 @@ VAR = Hi
 DET = Hi
 PEN = True
 
-render = @render.opt -ss 16 -aa 0 -ad 64 -ab 1 -lr -6 -lw 1e-5
+render = @render.opt -ss 16 -aa 0 -ad 64 -as 0 -ab 1 -lr -6 -lw 1e-5
 
 rpict = -ps 1
 
