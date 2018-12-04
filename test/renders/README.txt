@@ -1,4 +1,4 @@
-# RCSid $Id: README.txt,v 1.1 2018/12/03 19:49:11 greg Exp $
+# RCSid $Id: README.txt,v 1.2 2018/12/04 00:32:20 greg Exp $
 
 ref/	Subdirectory containing reference outputs for comparison
 
@@ -9,8 +9,8 @@ test.txt	Some text for use in *text primitives
 
 render.opt	A few global rendering options used by most rad input files
 
-fish.vf	view parameters for standard fisheye view away from window
-inside.vf	view parameters for default interior view towards window
+fish.vf	View parameters for standard fisheye view away from window
+inside.vf	View parameters for default interior view towards window
 
 combined.rif	A combined scene file including every primitive
 dielectric.rif	Test of dielectric material in window and mesh instance
@@ -47,6 +47,7 @@ disks.rad	A generic set of nine disks for material testing
 front_cap.rad	Wall away from window (used except in combined scene)
 glass_ill.rad	Recorded output from mkillum run of glass window
 glass_pane.rad	Bluish glass pane for window
+glowbulb.rad	Test of glow material with non-zero influence radius
 gymbal.rad	Example of BRTDfunc type, cylinders and tubes
 illum_glass.rad	Input used to create glass_ill.rad
 illum_tfunc.rad	Mkillum input used in tfunc model

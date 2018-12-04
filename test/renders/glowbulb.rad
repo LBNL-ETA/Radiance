@@ -1,0 +1,26 @@
+# RCSid $Id: glowbulb.rad,v 1.1 2018/12/04 00:32:20 greg Exp $
+#
+# Test of glow source with limited effect
+#
+
+void glow red_glow
+0
+0
+4 5 .05 .05 1.5
+
+red_glow sphere red_bulb
+0
+0
+4 -7 1 2 .25
+
+# Negative influence radius means no illumination cast
+
+void glow green_glow
+0
+0
+4 .05 5 .05 -1
+
+green_glow sphere green_bulb
+0
+0
+4 -7 2 2 .25

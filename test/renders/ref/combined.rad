@@ -1210,6 +1210,26 @@ lum_bright polygon inst.3.luminaire
      -4.57784968833      13.1730498527              2.999
      -3.42215031167      13.1730498527              2.999
 
+void glow red_glow
+0
+0
+4                  5               0.05               0.05                1.5
+
+red_glow sphere inst.3.red_bulb
+0
+0
+4                 -7               11.4                  2               0.25
+
+void glow green_glow
+0
+0
+4               0.05                  5               0.05                 -1
+
+green_glow sphere inst.3.green_bulb
+0
+0
+4                 -7               12.4                  2               0.25
+
 black_outside polygon mesh.4.wall.b
 0
 0

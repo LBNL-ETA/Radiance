@@ -1,4 +1,4 @@
-# RCSid $Id: inst.rif,v 1.2 2018/12/03 19:49:11 greg Exp $
+# RCSid $Id: inst.rif,v 1.3 2018/12/04 00:32:20 greg Exp $
 #
 # Test of instances
 #
@@ -8,7 +8,7 @@ OCTREE = inst.oct
 materials = basic.mat
 scene = diorama_walls.rad closed_end.rad front_cap.rad
 scene = porsches.rad
-scene = spotlights.rad rect_fixture.rad
+scene = spotlights.rad rect_fixture.rad glowbulb.rad
 
 objects = porsche.octf
 

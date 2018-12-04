@@ -1,11 +1,11 @@
-# RCSid $Id: combined_scene.rad,v 1.8 2018/12/01 22:58:43 greg Exp $
+# RCSid $Id: combined_scene.rad,v 1.9 2018/12/04 00:32:20 greg Exp $
 #
 # A collection of all our scene bits without the front caps
 #
 !xform basic.mat chrome.mat gold.mat sunset_sky.rad
 !xform -n dielectric -t 0 0 0 diorama_walls.rad rect_opening.rad vase.rad rect_fixture.rad dielectric_pane.rad
 !xform -n glass -t 0 5.2 0 diorama_walls.rad rect_opening.rad torus.rad glass_ill.rad 
-!xform -n inst -t 0 10.4 0 diorama_walls.rad closed_end.rad porsches.rad spotlights.rad rect_fixture.rad
+!xform -n inst -t 0 10.4 0 diorama_walls.rad closed_end.rad porsches.rad spotlights.rad rect_fixture.rad glowbulb.rad
 !xform -n mesh -t 0 15.6 0 diorama_walls.rad closed_end.rad rect_fixture.rad
 !xform -n mesh.plainclothes -s 1.5 -rx 90 -rz -80 -t 1 0 0 -a 9 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0 ./woman.rad
 !xform -m chrome -n mesh.shiny -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -a 9 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0 ./woman.rad
