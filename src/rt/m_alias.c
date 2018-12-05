@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_alias.c,v 2.9 2018/02/16 18:37:51 greg Exp $";
+static const char RCSid[] = "$Id: m_alias.c,v 2.10 2018/12/05 02:12:23 greg Exp $";
 #endif
 /*
  * Handler for modifier alias
@@ -36,35 +36,27 @@ m_alias(			/* transfer shading to alias target */
 					/* straight replacement? */
 	if (!m->oargs.nsargs)
 		return(rayshade(r, m->omod));
-					/* else replace alias */
-	if (m->oargs.nsargs != 1)
-		objerror(m, INTERNAL, "bad # string arguments");
-	aop = m;
+
+	aop = m;			/* else look it up */
 	aobj = objndx(aop);
-	do {				/* follow alias trail */
-		if (aop->oargs.nsargs == 1)
+	do {				/* follow entire alias trail */
+		if (!aop->oargs.nsargs)
+			aobj = aop->omod;
+		else if (aop->oargs.nsargs == 1)
 			aobj = lastmod(aobj, aop->oargs.sarg[0]);
 		else
-			aobj = aop->omod;
+			objerror(aop, INTERNAL, "bad # string arguments");
 		if (aobj < 0)
 			objerror(aop, USER, "bad reference");
 		aop = objptr(aobj);
 	} while (aop->otype == MOD_ALIAS);
 					/* copy struct */
 	arec = *aop;
-					/* irradiance hack */
-	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
-			(ofun[arec.otype].flags & (T_M|T_X)) &&
-			arec.otype != MAT_CLIP) {
-		if (istransp(arec.otype) || isBSDFproxy(&arec)) {
-			raytrans(r);
-			return(1);
-		}
-		if (!islight(arec.otype))
-			return((*ofun[Lamb.otype].funp)(&Lamb, r));
-	}
 					/* substitute modifier */
 	arec.omod = m->omod;
+					/* irradiance hack */
+	if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) && raytirrad(&arec, r))
+		return(1);
 					/* replacement shader */
 	rval = (*ofun[arec.otype].funp)(&arec, r);
 					/* save allocated struct */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.73 2018/11/13 19:58:33 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.74 2018/12/05 02:12:23 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -202,11 +202,30 @@ raytrans(			/* transmit ray as is */
 
 
 int
+raytirrad(			/* irradiance hack */
+	OBJREC	*m,
+	RAY	*r
+)
+{
+	if ((ofun[m->otype].flags & (T_M|T_X)) && m->otype != MAT_CLIP) {
+		if (istransp(m->otype) || isBSDFproxy(m)) {
+			raytrans(r);
+			return(1);
+		}
+		if (!islight(m->otype))
+			return((*ofun[Lamb.otype].funp)(&Lamb, r));
+	}
+	return(0);		/* not a qualifying surface */
+}
+
+
+int
 rayshade(		/* shade ray r with material mod */
 	RAY  *r,
 	int  mod
 )
 {
+	int	tst_irrad = do_irrad && !(r->crtype & ~(PRIMARY|TRANS));
 	OBJREC  *m;
 
 	r->rxt = r->rmt = r->rot;	/* preset effective ray length */
@@ -219,16 +238,9 @@ rayshade(		/* shade ray r with material mod */
 		}
 		******/
 					/* hack for irradiance calculation */
-		if (do_irrad && !(r->crtype & ~(PRIMARY|TRANS)) &&
-				(ofun[m->otype].flags & (T_M|T_X)) &&
-				m->otype != MAT_CLIP) {
-			if (istransp(m->otype) || isBSDFproxy(m)) {
-				raytrans(r);
-				return(1);
-			}
-			if (!islight(m->otype))
-				m = &Lamb;
-		}
+		if (tst_irrad && raytirrad(m, r))
+			return(1);
+
 		if ((*ofun[m->otype].funp)(m, r))
 			return(1);	/* materials call raytexture() */
 	}

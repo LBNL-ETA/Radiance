@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.39 2018/11/13 19:58:33 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.40 2018/12/05 02:12:23 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -221,6 +221,7 @@ extern void	raytrace(RAY *r);
 extern void	rayhit(OBJECT *oset, RAY *r);
 extern void	raycont(RAY *r);
 extern void	raytrans(RAY *r);
+extern int	raytirrad(OBJREC *m, RAY *r);
 extern int	rayshade(RAY *r, int mod);
 extern void	rayparticipate(RAY *r);
 extern void	raytexture(RAY *r, OBJECT mod);
