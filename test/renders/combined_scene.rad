@@ -1,4 +1,4 @@
-# RCSid $Id: combined_scene.rad,v 1.9 2018/12/04 00:32:20 greg Exp $
+# RCSid $Id: combined_scene.rad,v 1.10 2018/12/05 02:11:55 greg Exp $
 #
 # A collection of all our scene bits without the front caps
 #
@@ -10,12 +10,12 @@
 !xform -n mesh.plainclothes -s 1.5 -rx 90 -rz -80 -t 1 0 0 -a 9 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0 ./woman.rad
 !xform -m chrome -n mesh.shiny -s 1.5 -rx 90 -rz -105 -t 1 0 0 -rz 20 -a 9 -rz 40 -i 1 -t -5 2.5 0 -t 0 15.6 0 ./woman.rad
 !xform -n mirror -t 0 0 3.2 diorama_walls.rad closed_end.rad glass_pane.rad antimatter_portal.rad bubble_in_cube.rad mirror.rad
-!xform -n mist -t 0 5.2 3.2 diorama_walls.rad closed_end.rad ball_in_cube.rad mist.rad spotlights.rad spotcones.rad
+!xform -n mist -t 0 5.2 3.2 diorama_walls.rad closed_end.rad gymbal.rad mist.rad spotlights.rad spotcones.rad
 !xform -n prism1 -t 0 10.4 3.2 diorama_walls.rad rect_opening.rad prism1.rad
 !xform -m gold -n prism1 -t 0 10.2 3.2 ./vase.rad
 !xform -n prism2 -t 0 15.6 3.2 diorama_walls.rad rect_opening.rad prism2.rad
 !xform -m gold -n prism2 -t 0 15.3 3.2 ./vase.rad
-!xform -n tfunc -t 0 0 6.4 basic.mat diorama_walls.rad rect_opening.rad gymbal.rad illum_tfunc.rad
+!xform -n tfunc -t 0 0 6.4 basic.mat diorama_walls.rad rect_opening.rad ball_in_cube.rad illum_tfunc.rad
 !xform -n trans -t 0 5.2 6.4 diorama_walls.rad rect_opening.rad ballcompare.rad spotlights.rad rect_fixture.rad trans_pane.rad
 !xform -n trans2 -t 0 10.4 6.4 diorama_walls.rad rect_opening.rad gymbal.rad illum_trans2.rad
 !xform -n patterns -t 0 15.6 6.4 patterns.mat diorama_walls.rad closed_end.rad disks.rad rect_fixture.rad

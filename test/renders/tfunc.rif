@@ -1,4 +1,4 @@
-# RCSid $Id: tfunc.rif,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: tfunc.rif,v 1.2 2018/12/05 02:11:55 greg Exp $
 #
 # Simple version of space using transfunc illum for window
 #
@@ -7,7 +7,7 @@ OCTREE = tfunc.oct
 
 materials = basic.mat
 scene = diorama_walls.rad rect_opening.rad front_cap.rad
-scene = gymbal.rad
+scene = ball_in_cube.rad
 scene = sunset_sky.rad
 illum = illum_tfunc.rad
 
