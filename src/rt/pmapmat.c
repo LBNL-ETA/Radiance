@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.20 2018/12/06 12:21:38 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.21 2018/12/06 20:00:35 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -319,6 +319,7 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
       }
    else raytexture(rayIn, mat -> omod);
    
+   nd.mp = mat;
    nd.rp = rayIn;
    
    /* Get material color */
@@ -480,37 +481,36 @@ static int normalPhotonScatter (OBJREC *mat, RAY *rayIn)
 
 
 
-static void getacoords (ANISODAT *np)
+static void getacoords (ANISODAT *nd)
 /* Set up coordinate system for anisotropic sampling; cloned from aniso.c */
 {
-   MFUNC  *mf;
-   int  i;
+   MFUNC *mf;
+   int   i;
 
-   mf = getfunc(np->mp, 3, 0x7, 1);
-   setfunc(np->mp, np->rp);
+   mf = getfunc(nd -> mp, 3, 0x7, 1);
+   setfunc(nd -> mp, nd -> rp);
    errno = 0;
 
    for (i = 0; i < 3; i++)
-      np->u[i] = evalue(mf->ep[i]);
+      nd -> u [i] = evalue(mf -> ep [i]);
    
-   if ((errno == EDOM) | (errno == ERANGE)) {
-      objerror(np->mp, WARNING, "compute error");
-      np->specfl |= SP_BADU;
-      return;
-   }
-   
-   if (mf->fxp != &unitxf)
-      multv3(np->u, np->u, mf->fxp->xfm);
+   if (errno == EDOM || errno == ERANGE)
+      nd -> u [0] = nd -> u [1] = nd -> u [2] = 0.0;
       
-   fcross(np->v, np->pnorm, np->u);
+   if (mf -> fxp != &unitxf)
+      multv3(nd -> u, nd -> u, mf -> fxp -> xfm);
 
-   if (normalize(np->v) == 0.0) {
-      objerror(np->mp, WARNING, "illegal orientation vector");
-      np->specfl |= SP_BADU;
-      return;
-   }
+   fcross(nd -> v, nd -> pnorm, nd -> u);
    
-   fcross(np->u, np->v, np->pnorm);
+   if (normalize(nd -> v) == 0.0) {
+      if (fabs(nd -> u_alpha - nd -> v_alpha) > 0.001)
+         objerror(nd -> mp, WARNING, "illegal orientation vector");
+      getperpendicular(nd -> u, nd -> pnorm, 1);
+      fcross(nd -> v, nd -> pnorm, nd -> u);
+      nd -> u_alpha = nd -> v_alpha = 
+         sqrt(0.5 * (sqr(nd -> u_alpha) + sqr(nd -> v_alpha)));
+   } 
+   else fcross(nd -> u, nd -> v, nd -> pnorm);
 }
 
 
@@ -616,8 +616,8 @@ static int anisoPhotonScatter (OBJREC *mat, RAY *rayIn)
    if (mat -> oargs.nfargs != (mat -> otype == MAT_TRANS2 ? 8 : 6))
       objerror(mat, USER, "bad number of real arguments");
       
+   nd.mp = mat;
    nd.rp = rayIn;
-   nd.mp = objptr(rayIn -> ro -> omod);
    
    /* get material color */
    copycolor(nd.mcolor, mat -> oargs.farg);
@@ -661,7 +661,7 @@ static int anisoPhotonScatter (OBJREC *mat, RAY *rayIn)
    if (nd.rspec > FTINY) {
       nd.specfl |= SP_REFL;
       
-      /* comput   e specular color */
+      /* compute specular color */
       if (mat -> otype == MAT_METAL2) 
          copycolor(nd.scolor, nd.mcolor);
       else setcolor(nd.scolor, 1, 1, 1);
@@ -1033,14 +1033,12 @@ static int aliasPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* Replacement scattering routine */
    photonScatter [aliasRec.otype] (&aliasRec, rayIn);
 
-#if 0
    /* Avoid potential memory leak? */
    if (aliasRec.os != aliasPtr -> os) {
-      if (aliasObj -> os)
-         free_os(aliasObj);
+      if (aliasPtr -> os)
+         free_os(aliasPtr);
       aliasPtr -> os = aliasRec.os;
    }
-#endif
 
    return 0;
 }
@@ -1490,6 +1488,7 @@ static int brdfPhotonScatter (OBJREC *mat, RAY *rayIn)
    /* Check argz */
    if (mat -> oargs.nsargs < 10 || mat -> oargs.nfargs < 9)
       objerror(mat, USER, "bad # arguments");
+      
    nd.mp = mat;
    nd.pr = rayIn;
    /* Dummiez */
@@ -1638,6 +1637,7 @@ int brdf2PhotonScatter (OBJREC *mat, RAY *rayIn)
 
    nd.mp = mat;
    nd.pr = rayIn;
+   
    /* Material kolour */
    setcolor(nd.mcolor, mat -> oargs.farg [0], mat -> oargs.farg [1], 
             mat -> oargs.farg [2]);
