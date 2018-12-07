@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.11 2018/12/02 18:57:05 greg Exp $
+# RCSid $Id: Makefile,v 1.12 2018/12/07 17:44:58 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -19,7 +19,8 @@ test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
 test-trans-def test-trans-fish test-patterns-def test-patterns-plan
 
 clean:
-	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf combined.rad
+	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
+*.[cg]pm combined.rad
 
 # Special test of xform
 
