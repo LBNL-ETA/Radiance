@@ -1,4 +1,4 @@
-# RCSid $Id: mixtex.rif,v 1.4 2018/12/07 17:44:58 greg Exp $
+# RCSid $Id: mixtex.rif,v 1.5 2018/12/07 23:07:37 greg Exp $
 #
 # A test of different mixtures and textures on disks
 #
@@ -24,7 +24,7 @@ PGMAP = mixtex.gpm 1M 40
 PCMAP = mixtex.cpm 10M 40
 
 RES = 1024
-QUAL = Hi
+QUAL = Med
 AMB = mixtex.amb
 IND = 1
 VAR = Hi
@@ -34,6 +34,8 @@ PEN = True
 mkpmap = -apo m_blinds20c_f
 
 render = @render.opt -ss 16
+
+rpict = -ps 1
 
 view= def -vta -vp -0.2 3.07 2.78 -vd -2.64 -0.48 -1.25 -vh 66.6667 -vv 37.5
 view = fish -vf fish.vf
