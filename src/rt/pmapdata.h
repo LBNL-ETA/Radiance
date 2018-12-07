@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapdata.h,v 2.12 2018/02/08 19:55:02 rschregle Exp $ */
+/* RCSid $Id: pmapdata.h,v 2.13 2018/12/07 20:02:40 rschregle Exp $ */
 
 /* 
    =========================================================================
@@ -20,7 +20,7 @@
        supported by the Swiss National Science Foundation (SNSF, #147053)
    =========================================================================
    
-   $Id: pmapdata.h,v 2.12 2018/02/08 19:55:02 rschregle Exp $
+   $Id: pmapdata.h,v 2.13 2018/12/07 20:02:40 rschregle Exp $
 */
 
 
@@ -34,14 +34,21 @@
       #else
          #define NIX 1
       #endif
-   #endif   
+   #endif
 
    #if (defined(PMAP_OOC) && !NIX)
       #error "OOC currently only supported on NIX -- tuff luck."
    #endif
 
+   #ifdef PMAP_CBDM
+      /* Enable photon primary hitpoints and incident directions (see struct
+       * PhotonPrimary below).  Note this will increase the size of photon
+       * primaries 9-fold (10-fold after alignment)!!! */
+      #define  PMAP_PRIMARYPOS
+      #define  PMAP_PRIMARYDIR
+   #endif
 
-   #include "ray.h"   
+   #include "ray.h"
    #include "pmaptype.h"
    #include "paths.h"
    #include "lookup.h"
@@ -53,12 +60,12 @@
    typedef struct {
       int16    srcIdx;              /* Index of emitting light source */
                                     /* !!! REDUCED FROM 32 BITS !!! */
-#ifdef PMAP_PRIMARYDIR                                    
+#ifdef PMAP_PRIMARYDIR
       int32    dir;                 /* Encoded ray direction */
-#endif      
-#ifdef PMAP_PRIMARYPOS      
+#endif
+#ifdef PMAP_PRIMARYPOS
       float    pos [3];             /* Hit point */
-#endif      
+#endif
    } PhotonPrimary;
       
    #define photonSrcIdx(pm, p)      ((pm)->primaries[(p)->primary].srcIdx)
@@ -66,14 +73,14 @@
 
 
    /* Photon primary ray index type and limit */
-   typedef  uint32            PhotonPrimaryIdx;      
+   typedef  uint32            PhotonPrimaryIdx;
    #define  PMAP_MAXPRIMARY   UINT32_MAX
 
    /* Macros for photon's generating subprocess field */
 #ifdef PMAP_OOC
    #define  PMAP_PROCBITS  7
-#else            
-   #define  PMAP_PROCBITS  5   
+#else
+   #define  PMAP_PROCBITS  5
 #endif
    #define  PMAP_MAXPROC         (1 << PMAP_PROCBITS)
    #define  PMAP_GETRAYPROC(r)   ((r) -> crtype >> 8)
@@ -105,9 +112,9 @@
       };
       
 #ifdef PMAP_FLOAT_FLUX
-      COLOR                flux;          
+      COLOR                flux;
 #else
-      COLR                 flux;          
+      COLR                 flux;
 #endif
       PhotonPrimaryIdx     primary;       /* Index to primary ray */
    } Photon;
@@ -127,7 +134,7 @@
 
    
    /* Bias compensation history node */
-   typedef struct {                  
+   typedef struct {
       COLOR irrad;
       float weight;
    } PhotonBiasCompNode;
@@ -171,7 +178,7 @@
       unsigned long  heapBufLen,       /* Current & max size of heapBuf */
                      heapBufSize;
       PhotonStorage  store;            /* Photon storage in space
-                                          subdividing data struct */            
+                                          subdividing data struct */
        
       /* ================================================================
        * PHOTON DISTRIBUTION STUFF
@@ -208,13 +215,13 @@
                      
       /* ================================================================
        * BIAS COMPENSATION STUFF
-       * ================================================================ */      
+       * ================================================================ */
       PhotonBiasCompNode   *biasCompHist;    /* Bias compensation history */
       
 
       /* ================================================================
        * STATISTIX
-       * ================================================================ */            
+       * ================================================================ */
       unsigned long  totalGathered,    /* Total photons gathered */
                      numDensity,       /* Num density estimates */
                      numLookups,       /* Counters for short photon lookups */
