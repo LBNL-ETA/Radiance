@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.55 2018/05/10 22:55:35 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.56 2018/12/07 07:38:15 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -789,7 +789,7 @@ SDsampBSDF(SDValue *sv, FVECT ioVec, double randX, int sflags, const SDData *sd)
 		randX -= sd->tLamb.cieY;
 	}
 					/* else one of cumulative dist. */
-	for (i = 0; i < n && randX > cdarr[i]->cTotal; i++)
+	for (i = 0; i < n && randX >= cdarr[i]->cTotal; i++)
 		randX -= cdarr[i]->cTotal;
 	if (i >= n)
 		return SDEinternal;
