@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmap.c,v 2.16 2018/11/21 19:33:30 rschregle Exp $";
+static const char RCSid[] = "$Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Exp $";
 #endif
 
 
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: pmap.c,v 2.16 2018/11/21 19:33:30 rschregle Ex
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmap.c,v 2.16 2018/11/21 19:33:30 rschregle Exp $
+   $Id: pmap.c,v 2.17 2018/12/18 22:14:04 rschregle Exp $
 */
 
 
@@ -50,10 +50,10 @@ static int photonParticipate (RAY *ray)
    or 0 if absorbed and $*%&ed. Analogon to rayparticipate(). */
 {
    int i;
-   RREAL cosTheta, cosPhi, du, dv;
+   RREAL xi1, cosTheta, phi, du, dv;
    const float cext = colorAvg(ray -> cext),
                albedo = colorAvg(ray -> albedo),
-               gecc2 = ray -> gecc * ray -> gecc;
+               gecc = ray -> gecc, gecc2 = sqr(gecc);
    FVECT u, v;
    COLOR cvext;
 
@@ -86,7 +86,7 @@ static int photonParticipate (RAY *ray)
       /* Store volume photons unconditionally in mist to also account for
          direct inscattering from sources */
       if (albedo > FTINY)
-#endif      
+#endif
          /* Add to volume photon map */
          newPhoton(volumePmap, ray);
          
@@ -99,16 +99,17 @@ static int photonParticipate (RAY *ray)
       scalecolor(ray -> rcol, 1 / albedo);    
       
       /* Scatter photon */
+      xi1 = pmapRandom(scatterState);
       cosTheta = ray -> gecc <= FTINY 
-                    ? 2 * pmapRandom(scatterState) - 1
-                    : 0.5 * (1 + gecc2 - 
-                         (1 - gecc2) / (1 - ray -> gecc + 2 * ray -> gecc * 
-                         pmapRandom(scatterState))) / ray -> gecc;
-                                                  
-      cosPhi = cos(2 * PI * pmapRandom(scatterState));
-      du = dv = sqrt(1 - cosTheta * cosTheta);   /* sin(theta) */
-      du *= cosPhi;
-      dv *= sqrt(1 - cosPhi * cosPhi);           /* sin(phi) */
+                    ? 2 * xi1 - 1
+                    : 0.5 / gecc * 
+                      (1 + gecc2 - sqr((1 - gecc2) / 
+                                       (1 + gecc * (2 * xi1 - 1))));
+
+      phi = 2 * PI * pmapRandom(scatterState);
+      du = dv = sqrt(1 - sqr(cosTheta));     /* sin(theta) */
+      du *= cos(phi);
+      dv *= sin(phi);
       
       /* Get axes u & v perpendicular to photon direction */
       i = 0;
@@ -122,6 +123,7 @@ static int photonParticipate (RAY *ray)
       for (i = 0; i < 3; i++)
          ray -> rdir [i] = du * u [i] + dv * v [i] + 
                            cosTheta * ray -> rdir [i];
+
       ray -> rlvl++;
       ray -> rmax = -log(pmapRandom(mediumState)) / cext;
    }  
