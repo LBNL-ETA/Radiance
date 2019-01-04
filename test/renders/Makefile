@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.13 2018/12/25 18:21:30 greg Exp $
+# RCSid $Id: Makefile,v 1.14 2019/01/04 18:52:06 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -11,7 +11,7 @@ IMG_CMP = radcompare -rms 0.07 -max 1.5
 
 # Default target is to test everything
 all:	test-xform \
-test-mixtex-def test-mixtex-fish test-mixtex-plan tex-mixtex-rplan \
+test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
