@@ -1,0 +1,28 @@
+# RCSid $Id: dummysky.rad,v 1.1 2019/01/04 22:45:37 greg Exp $
+#
+# Sky receiver used by rfluxmtx
+#
+
+#@rfluxmtx h=u
+
+void glow groundglow
+0
+0
+4 1 1 1 0
+
+groundglow source ground
+0
+0
+4 0 0 -1 180
+
+#@rfluxmtx h=t u=+Y
+
+void glow skyglow
+0
+0
+4 1 1 1 0
+
+skyglow source sky
+0
+0
+4 0 0 1 180

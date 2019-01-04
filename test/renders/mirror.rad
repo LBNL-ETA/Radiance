@@ -1,7 +1,11 @@
-# RCSid $Id: mirror.rad,v 1.1 2018/11/17 22:09:12 greg Exp $
+# RCSid $Id: mirror.rad,v 1.2 2019/01/04 22:45:37 greg Exp $
 #
 # A mirror on the Y=5 wall with an alternate material having some pink diffuse
 #
+# Also used for testing rfluxmtx
+#
+
+#@rfluxmtx h=kf u=+Z
 
 void plastic pink_mirror_mat
 0

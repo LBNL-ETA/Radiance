@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.14 2019/01/04 18:52:06 greg Exp $
+# RCSid $Id: Makefile,v 1.15 2019/01/04 22:45:37 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -10,23 +10,47 @@ RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 IMG_CMP = radcompare -rms 0.07 -max 1.5
 
 # Default target is to test everything
-all:	test-xform \
+all:	test-xform test-rfluxmtx \
 test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
 test-tfunc-def test-tfunc-fish test-inst-def test-inst-fish \
 test-mesh-def test-mesh-cyl test-mirror-fish test-mist-def \
-test-trans-def test-trans-fish test-patterns-def test-patterns-plan
+test-trans-def test-trans-fish test-patterns-def test-patterns-plan \
+test-rtrace
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
-*.[cg]pm{,.leaf} combined.rad
+*.[cg]pm{,.leaf} combined.rad rfmirror.mtx
 
-# Special test of xform
+### Special test of xform ###
 
 test-xform:	combined_scene.rad
 	xform -f combined_scene.rad | grep -v '^[ 	]*#' > combined.rad
 	radcompare -max 0.04 ref/combined.rad combined.rad
+
+### Special test of rtrace ###
+
+test-rtrace:	ref/mirror_fish.hdr  rtmirror_fish.hdr
+	$(RDU_PFILT) rtmirror_fish.hdr | $(IMG_CMP) -h ref/mirror_fish.hdr -
+
+rtmirror_fish.hdr:	mirror.oct
+	rad -v 0 mirror.rif OPT=mirror.opt 
+	vwrays -ff -vf fish.vf -x 2048 -y 2048 | rtrace -n 2 @mirror.opt \
+-ffc -x 2048 -y 2048 mirror.oct | pfilt -1 -e +3 -r .6 -x /2 -y /2 \
+> rtmirror_fish.hdr
+	rm -f mirror.opt
+
+### Special test for rfluxmtx (and rcontrib) ###
+
+test-rfluxmtx:	ref/rfmirror.mtx rfmirror.mtx
+	radcompare -max .4 -rms .05 ref/rfmirror.mtx rfmirror.mtx
+
+rfmirror.mtx:	mirror.rad dummysky.rad basic.mat diorama_walls.rad \
+closed_end.rad front_cap.rad glass_pane.rad antimatter_portal.rad
+	rfluxmtx -ab 2 -lw 1e-4 mirror.rad dummysky.rad basic.mat \
+diorama_walls.rad closed_end.rad front_cap.rad glass_pane.rad \
+antimatter_portal.rad > rfmirror.mtx
 
 ### Octree for dielectric ###
 
