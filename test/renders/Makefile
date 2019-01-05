@@ -1,7 +1,10 @@
-# RCSid $Id: Makefile,v 1.15 2019/01/04 22:45:37 greg Exp $
+# RCSid $Id: Makefile,v 1.16 2019/01/05 00:34:21 greg Exp $
 #
 # Render and primitive type testing
 #
+
+# Number of processes to use on tests that test multi-core
+NPROC = 2
 
 # Image reduction for comparisons
 RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
@@ -36,7 +39,7 @@ test-rtrace:	ref/mirror_fish.hdr  rtmirror_fish.hdr
 
 rtmirror_fish.hdr:	mirror.oct
 	rad -v 0 mirror.rif OPT=mirror.opt 
-	vwrays -ff -vf fish.vf -x 2048 -y 2048 | rtrace -n 2 @mirror.opt \
+	vwrays -ff -vf fish.vf -x 2048 -y 2048 | rtrace -n $(NPROC) @mirror.opt \
 -ffc -x 2048 -y 2048 mirror.oct | pfilt -1 -e +3 -r .6 -x /2 -y /2 \
 > rtmirror_fish.hdr
 	rm -f mirror.opt
@@ -48,9 +51,9 @@ test-rfluxmtx:	ref/rfmirror.mtx rfmirror.mtx
 
 rfmirror.mtx:	mirror.rad dummysky.rad basic.mat diorama_walls.rad \
 closed_end.rad front_cap.rad glass_pane.rad antimatter_portal.rad
-	rfluxmtx -ab 2 -lw 1e-4 mirror.rad dummysky.rad basic.mat \
-diorama_walls.rad closed_end.rad front_cap.rad glass_pane.rad \
-antimatter_portal.rad > rfmirror.mtx
+	rfluxmtx -n $(NPROC) -ab 2 -lw 1e-4 mirror.rad dummysky.rad \
+basic.mat diorama_walls.rad closed_end.rad front_cap.rad \
+glass_pane.rad antimatter_portal.rad > rfmirror.mtx
 
 ### Octree for dielectric ###
 
