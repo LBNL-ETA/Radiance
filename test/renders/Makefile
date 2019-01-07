@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.16 2019/01/05 00:34:21 greg Exp $
+# RCSid $Id: Makefile,v 1.17 2019/01/07 21:11:24 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -13,7 +13,7 @@ RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 IMG_CMP = radcompare -rms 0.07 -max 1.5
 
 # Default target is to test everything
-all:	test-xform test-rfluxmtx \
+all:	test-xform test-oconv test-rad test-rfluxmtx \
 test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
@@ -24,13 +24,24 @@ test-rtrace
 
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
-*.[cg]pm{,.leaf} combined.rad rfmirror.mtx
+*.[cg]pm{,.leaf} inst_rad.txt combined.rad rfmirror.mtx
 
 ### Special test of xform ###
 
 test-xform:	combined_scene.rad
 	xform -f combined_scene.rad | grep -v '^[ 	]*#' > combined.rad
 	radcompare -max 0.04 ref/combined.rad combined.rad
+
+### Special test of rad ###
+
+test-rad:	inst.rif
+	rad -n -s -e inst.rif > inst_rad.txt
+	radcompare ref/inst_rad.txt inst_rad.txt
+
+### Special test of oconv ###
+
+test-oconv:	inst.oct
+	radcompare ref/inst.oct inst.oct
 
 ### Special test of rtrace ###
 
