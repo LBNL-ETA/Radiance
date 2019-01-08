@@ -1,9 +1,9 @@
-# RCSid $Id: Makefile,v 1.17 2019/01/07 21:11:24 greg Exp $
+# RCSid $Id: Makefile,v 1.18 2019/01/08 00:21:52 greg Exp $
 #
 # Render and primitive type testing
 #
 
-# Number of processes to use on tests that test multi-core
+# Number of processes to use on tests that run multi-core
 NPROC = 2
 
 # Image reduction for comparisons
@@ -13,7 +13,8 @@ RDU_PFILT = pfilt -1 -r 1 -x 128 -y 128 -pa 1
 IMG_CMP = radcompare -rms 0.07 -max 1.5
 
 # Default target is to test everything
-all:	test-xform test-oconv test-rad test-rfluxmtx \
+all:	test-xform test-oconv test-rad test-rfluxmtx test-rpiece \
+test-rpict test-mkpmap \
 test-mixtex-def test-mixtex-fish test-mixtex-plan test-mixtex-rplan \
 test-trans2-def test-trans2-fish test-dielectric-def \
 test-dielectric-fish test-glass-def test-glass-fish test-glass-up \
@@ -25,6 +26,12 @@ test-rtrace
 clean:
 	rm -f *.oct *.amb *_ill.dat blinds_ill?.dat *_*.hdr *.unf \
 *.[cg]pm{,.leaf} inst_rad.txt combined.rad rfmirror.mtx
+
+### Test Aliases ###
+
+test-rpict:	test-mirror-def
+
+test-rpiece test-mkpmap:	test-mixtex-def
 
 ### Special test of xform ###
 
@@ -245,11 +252,6 @@ mirror_fish.hdr:	mirror.oct
 
 ### End  mirror-fish  tests
 
-### Octree for    mist ###
-
-mist.oct:	mist.rif
-	rad -v 0    mist.rif
-
 ### Reference and test for    mist view   def ###
 
 test-mist-def:	ref/mist_def.hdr    mist_def.hdr
@@ -259,8 +261,8 @@ ref/mist_def.hdr:
 	make    mist_def.hdr
 	$(RDU_PFILT)    mist_def.hdr > ref/mist_def.hdr
 
-mist_def.hdr:	mist.oct
-	rad -v   def    mist.rif
+mist_def.hdr:	mist.rif
+	rad -N $(NPROC) mist.rif
 
 ### End    mist-def   tests
 
@@ -451,7 +453,7 @@ patterns_plan.hdr:	patterns.oct
 ### Octree for  mixtex ###
 
 mixtex.oct:	mixtex.rif
-	rad -v 0  mixtex.rif
+	rad -v 0 -N $(NPROC) mixtex.rif
 
 ### Reference and test for  mixtex view   def ###
 
@@ -463,7 +465,7 @@ ref/mixtex_def.hdr:
 	$(RDU_PFILT)  mixtex_def.hdr > ref/mixtex_def.hdr
 
 mixtex_def.hdr:	mixtex.oct
-	rad -v   def  mixtex.rif
+	rad -v def -N $(NPROC) mixtex.rif
 
 ### End  mixtex-def   tests
 
