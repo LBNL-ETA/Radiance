@@ -1,0 +1,15 @@
+{ RCSid $Id: basin.cal,v 1.1 2019/01/08 23:53:04 greg Exp $ }
+{
+	basin.cal - calculate coordinates for basin sink.
+}
+
+sq(x) : x*x;
+
+R(t,p) : 5 + (3.25*sq(cos(p))+1.75*sq(sin(p))+1*sin(p)*sq(cos(t)))*sq(sin(t));
+
+x(t,p) : R(t,p)*sin(t)*cos(p);
+y(t,p) : R(t,p)*sin(t)*sin(p);
+z(t,p) : R(t,p)*cos(t);
+
+theta(s) : PI*(.5+.5*s);
+phi(t) : 2*PI*t;
