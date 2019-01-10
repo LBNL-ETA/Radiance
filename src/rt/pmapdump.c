@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.13 2019/01/10 17:32:39 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregle Exp $
+   $Id: pmapdump.c,v 2.13 2019/01/10 17:32:39 rschregle Exp $
 */
 
 
@@ -24,8 +24,6 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.12 2018/11/21 19:30:59 rschregl
 #include "resolu.h"
 #include "random.h"
 #include "math.h"
-
-#define PMAPDUMP_REC "$Revision: 2.12 $"   
 
 
 /* Defaults */
@@ -43,23 +41,25 @@ typedef struct {
 } RadianceDef;
 
 
+/* We use %e for the material def to preserve precision when outputting
+   photon flux */
 const RadianceDef radDefs [] = {
-   {  "void plastic mat.global\n0\n0\n5 %f %f %f 0 0\n",
+   {  "void glow mat.global\n0\n0\n4 %e %e %e 0\n",
       "mat.global sphere obj.global\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.pglobal\n0\n0\n5 %f %f %f 0 0\n",
-      "mat.pglobal sphere obj.global\n0\n0\n4 %g %g %g %g\n"
+   {  "void glow mat.pglobal\n0\n0\n4 %e %e %e 0\n",
+      "mat.pglobal sphere obj.pglobal\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.caustic\n0\n0\n5 %f %f %f 0 0\n",
+   {  "void glow mat.caustic\n0\n0\n4 %e %e %e 0\n",
       "mat.caustic sphere obj.caustic\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.volume\n0\n0\n5 %f %f %f 0 0\n",
+   {  "void glow mat.volume\n0\n0\n4 %e %e %e 0\n",
       "mat.volume sphere obj.volume\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.direct\n0\n0\n5 %f %f %f 0 0\n",
+   {  "void glow mat.direct\n0\n0\n4 %e %e %e 0\n",
       "mat.direct sphere obj.direct\n0\n0\n4 %g %g %g %g\n"
    },
-   {  "void plastic mat.contrib\n0\n0\n5 %f %f %f 0 0\n",
+   {  "void glow mat.contrib\n0\n0\n4 %e %e %e 0\n",
       "mat.contrib sphere obj.contrib\n0\n0\n4 %g %g %g %g\n"
    }
 };
@@ -71,7 +71,8 @@ const RadianceDef radDefs [] = {
                                           direct         = magenta 
                                           contrib        = yellow */
 const COLOR colDefs [] = {
-   {0, 0, 1}, {0, 1, 1}, {1, 0, 0}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}
+   {0.25, 0.25, 2}, {0.1, 1, 1}, {1, 0.1, 0.1}, 
+   {0.1, 1, 0.1}, {1, 0.1, 1}, {1, 1, 0.1}
 };
 
 
@@ -79,7 +80,7 @@ int main (int argc, char** argv)
 {
    char           format [MAXFMTLEN];
    RREAL          rad, radScale = RADSCALE, extent, dumpRatio;
-   unsigned       arg, j, ptype, dim;
+   unsigned       arg, j, ptype, dim, fluxCol = 0;
    long           numSpheres = NSPHERES;
    COLOR          customCol = {0, 0, 0};
    FILE           *pmapFile;
@@ -89,12 +90,31 @@ int main (int argc, char** argv)
 #ifdef PMAP_OOC
    char           leafFname [1024];
 #endif
-   
+
+   int setBool(char *str, int pos, int *var)
+   {
+      switch ((str) [pos]) {
+         case '\0': 
+            *var = !*var; 
+            break;
+         case 'y': case 'Y': case 't': case 'T': case '+': case '1': 
+            *var = 1; 
+            break;
+         case 'n': case 'N': case 'f': case 'F': case '-': case '0': 
+            *var = 0; 
+            break;
+         default: 
+            return 0;
+      }
+      
+      return 1;
+   }
+
    if (argc < 2) {
       puts("Dump photon maps as RADIANCE scene description\n");
       printf("Usage: %s "
-             "[-r radscale1] [-n nspheres1] [-c rcol1 gcol1 bcol1] pmap1 "
-             "[-r radscale2] [-n nspheres2] [-c rcol2 gcol2 bcol2] pmap2 "
+             "[-r radscale1] [-n nspheres1] [-f | -c rcol1 gcol1 bcol1] pmap1 "
+             "[-r radscale2] [-n nspheres2] [-f | -c rcol2 gcol2 bcol2] pmap2 "
              "...\n", argv [0]);
       return 1;
    }
@@ -114,9 +134,22 @@ int main (int argc, char** argv)
                break;
                
             case 'c':
+               if (fluxCol)
+                  error(USER, "-f and -c are mutually exclusive");
+               
+               if (badarg(argc - arg - 1, &argv [arg + 1], "fff"))
+                  error(USER, "invalid RGB colour");
+                                 
                for (j = 0; j < 3; j++)
-                  if ((customCol [j] = atof(argv [++arg])) <= 0)
-                     error(USER, "invalid RGB colour");
+                  customCol [j] = atof(argv [++arg]);
+               break;
+               
+            case 'f':
+               if (intens(customCol) > 0)
+                  error(USER, "-f and -c are mutually exclusive");
+                  
+               if (!setBool(argv [arg], 2, &fluxCol))
+                  error(USER, "invalid option syntax at -f");
                break;
                
             default:
@@ -127,13 +160,13 @@ int main (int argc, char** argv)
          
          continue;
       }
-      
+
       /* Dump photon map */
       if (!(pmapFile = fopen(argv [arg], "rb"))) {
          sprintf(errmsg, "can't open %s", argv [arg]);
          error(SYSTEM, errmsg);
       }
-         
+
       /* Get format string */
       strcpy(format, PMAP_FORMAT_GLOB);
       if (checkheader(pmapFile, format, NULL) != 1) {
@@ -141,12 +174,12 @@ int main (int argc, char** argv)
                  argv [arg], format);
          error(USER, errmsg);
       }
-      
+
       /* Identify photon map type from format string */
       for (ptype = 0; 
            ptype < NUM_PMAP_TYPES && strcmp(pmapFormat [ptype], format);
            ptype++);
-      
+
       if (!validPmapType(ptype)) {
          sprintf(errmsg, "file %s contains an unknown photon map type", 
                 argv [arg]);
@@ -156,28 +189,31 @@ int main (int argc, char** argv)
       /* Get file format version and check for compatibility */
       if (strcmp(getstr(format, pmapFile), PMAP_FILEVER))      
          error(USER, "incompatible photon map file format");
-         
+
       /* Dump command line as comment */
       fputs("# ", stdout);
       printargs(argc, argv, stdout);
       fputc('\n', stdout);
-      
-      /* Dump material def */
-      if (intens(customCol) > 0)
-         printf(radDefs [ptype].mat, 
-                customCol [0], customCol [1], customCol [2]);
-      else
-         printf(radDefs [ptype].mat, 
-                colDefs [ptype][0], colDefs [ptype][1], colDefs [ptype][2]);
-      fputc('\n', stdout);
+
+      /* Dump common material def if constant for all photons, 
+         i.e. independent of individual flux */
+      if (!fluxCol) {
+         if (intens(customCol) > 0)
+            printf(radDefs [ptype].mat, 
+                   customCol [0], customCol [1], customCol [2]);
+         else
+            printf(radDefs [ptype].mat, colDefs [ptype][0], 
+                   colDefs [ptype][1], colDefs [ptype][2]);
+         fputc('\n', stdout);
+      }
       
       /* Get number of photons */
       pm.numPhotons = getint(sizeof(pm.numPhotons), pmapFile);
-      
+
       /* Skip avg photon flux */ 
       for (j = 0; j < 3; j++) 
          getflt(pmapFile);
-      
+
       /* Get distribution extent (min & max photon positions) */
       for (j = 0; j < 3; j++) {
          pm.minPos [j] = getflt(pmapFile);
@@ -215,8 +251,8 @@ int main (int argc, char** argv)
 #ifdef PMAP_PRIMARYDIR
          /* Skip primary incident dir */
          getint(sizeof(pri.dir), pmapFile);         
-#endif         
-#ifdef PMAP_PRIMARYPOS         
+#endif
+#ifdef PMAP_PRIMARYPOS
          /* Skip primary hitpoint */
          for (j = 0; j < 3; j++)
             getflt(pmapFile);
@@ -238,35 +274,29 @@ int main (int argc, char** argv)
       /* Load photons */      
       while (pm.numPhotons-- > 0) {
 #ifdef PMAP_OOC
-         /* Get entire photon record 
+         /* Get entire photon record from ooC octree leaf file
             !!! OOC PMAP FILES CURRENTLY DON'T USE PORTABLE I/O !!! */
          if (!fread(&p, sizeof(p), 1, pmapFile)) {
             sprintf(errmsg, "error reading OOC leaf file %s", leafFname);
             error(SYSTEM, errmsg);
          }
-#else         
-         /* Get photon position */            
+#else /* kd-tree */
+         /* Get photon position */
          for (j = 0; j < 3; j++) 
             p.pos [j] = getflt(pmapFile);
-#endif
-         /* Dump photon probabilistically acc. to target sphere count */
-         if (frandom() <= dumpRatio) {
-            printf(radDefs [ptype].obj, p.pos [0], p.pos [1], p.pos [2], rad);
-            fputc('\n', stdout);
-         }
-         
-#ifndef PMAP_OOC
-         /* Skip photon normal and flux */
+
+         /* Get photon normal (currently not used) */
          for (j = 0; j < 3; j++) 
-            getint(sizeof(p.norm [j]), pmapFile);
-            
-#ifdef PMAP_FLOAT_FLUX
+            p.norm [j] = getint(1, pmapFile);
+
+         /* Get photon flux */
+   #ifdef PMAP_FLOAT_FLUX
          for (j = 0; j < 3; j++) 
-            getflt(pmapFile);
-#else      
+            p.flux [j] = getflt(pmapFile);
+   #else
          for (j = 0; j < 4; j++) 
-            getint(1, pmapFile);
-#endif
+            p.flux [j] = getint(1, pmapFile);
+   #endif
 
          /* Skip primary ray index */
          getint(sizeof(p.primary), pmapFile);
@@ -274,7 +304,21 @@ int main (int argc, char** argv)
          /* Skip flags */
          getint(sizeof(p.flags), pmapFile);
 #endif
-         
+
+         /* Dump photon probabilistically acc. to target sphere count */
+         if (frandom() <= dumpRatio) {
+            if (fluxCol) {
+               /* Dump individual material def per photon acc. to flux */
+               getPhotonFlux(&p, customCol);
+               printf(radDefs [ptype].mat, 
+                      customCol [0], customCol [1], customCol [2]);
+               fputc('\n', stdout);
+            }
+            
+            printf(radDefs [ptype].obj, p.pos [0], p.pos [1], p.pos [2], rad);
+            fputc('\n', stdout);
+         }
+               
          if (ferror(pmapFile) || feof(pmapFile)) {
             sprintf(errmsg, "error reading %s", argv [arg]);
             error(USER, errmsg);
@@ -287,6 +331,7 @@ int main (int argc, char** argv)
       radScale = RADSCALE;
       numSpheres = NSPHERES;
       customCol [0] = customCol [1] = customCol [2] = 0;
+      fluxCol = 0;
    }
    
    return 0;
