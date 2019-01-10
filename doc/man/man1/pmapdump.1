@@ -1,26 +1,30 @@
-.\" RCSid "$Id: pmapdump.1,v 1.3 2018/11/21 19:42:20 rschregle Exp $"
-.TH PMAPDUMP 1 "$Date: 2018/11/21 19:42:20 $ $Revision: 1.3 $" RADIANCE
+.\" RCSid "$Id: pmapdump.1,v 1.4 2019/01/10 18:29:34 rschregle Exp $"
+.TH PMAPDUMP 1 "$Date: 2019/01/10 18:29:34 $ $Revision: 1.4 $" RADIANCE
 
 .SH NAME
 pmapdump - generate RADIANCE scene description of photon map distribution
 
 .SH SYNOPSIS
 pmapdump [\fB-n\fR \fInspheres1\fR] [\fB-r\fR \fIradscale1\fR] 
-[\fB-c\fR \fIrcol1\fR \fIgcol1\fR \fIbcol1\fR] \fIpmap1\fR 
-[\fB-n\fR \fInspheres2\fR] [\fB-r\fR \fIradscale2\fR] 
-[\fB-c\fR \fIrcol2\fR \fIgcol2\fR \fIbcol2\fR] \fIpmap2\fR ... 
+         [\fB-f\fR | \fB-c\fR \fIrcol1\fR \fIgcol1\fR \fIbcol1\fR] \fIpmap1\fR 
+         [\fB-n\fR \fInspheres2\fR] [\fB-r\fR \fIradscale2\fR] 
+         [\fB-f\fR | \fB-c\fR \fIrcol2\fR \fIgcol2\fR \fIbcol2\fR] \fIpmap2\fR 
+         ...
 
 .SH DESCRIPTION
 \fIpmapdump\fR takes one or more photon map files generated with
 \fImkpmap(1)\fR as input and sends a RADIANCE scene description of their
-photon distributions to the standard output. This can be visualised with
+photon distributions to the standard output. Photons are represented as
+spheres of material type \fIglow\fR. These can be visualised with
 e.g. \fIobjview(1)\fR, \fIrpict(1)\fR, or \fIrvu(1)\fR to assess the
-location and local density of photons in relation to the scene geometry.
+location and local density of photons in relation to the scene geometry. No
+additional light sources are necessary, as the spheres representing the
+photons are self-luminous.
 .PP
 An arbitrary number of photon maps can be specified on the command line and
-the respective photon type is determined automagically. The different
-photon types are visualised as colour coded spheres according to the
-following default schema:
+the respective photon type is determined automagically.  Per default, the
+different photon types are visualised as colour coded spheres according to
+the following default schema:
 .IP
 \fIBlue\fR: global photons 
 .br
@@ -35,7 +39,10 @@ following default schema:
 \fIYellow\fR: contribution photons
 .PP
 These colours can be overridden for individual photon maps with the \fB-c\fR
-option (see below).
+option (see below).  Alternatively, photons can be individually coloured
+according to their actual RGB flux with the \fB-f\fR option (see below);
+while this makes it difficult to discern photon types, it can be used to
+quantitatively analyse colour bleeding effects.
 
 .SH OPTIONS
 Options are effective for the photon map file immediately following on the
@@ -62,7 +69,14 @@ The default value is 1.0.
 Specifies a custom sphere colour for the next photon map. The colour is
 specified as an RGB triplet, with each component in the range (0..1].
 Without this option, the default colour for the corresponding photon type 
-is used.
+is used. This option is mutually exclusive with \fB-f\fR.
+
+.IP "\fB-f\fR"
+Boolean switch to colour each sphere according to the corresponding photon's
+RGB flux instead of a constant colour. Note that the resulting colours can
+span several orders of magnitude and may require tone mapping with
+\fIpcond(1)\fR for visualisation.  This option is mutually exclusive with
+\fB-c\fR.
 
 .SH NOTES
 The output may contain many overlapping spheres in areas with high photon
@@ -71,16 +85,21 @@ octree generation with \fIoconv(1)\fR.  Generally this can be improved by
 reducing \fInspheres\fR and/or \fIradscale\fR.
 
 .SH EXAMPLES
-To visualise the distribution of global and caustic photons superimposed
+Visualise the distribution of global and caustic photons superimposed
 on the scene geometry with 5000 pale red and 10000 pale blue spheres, 
 respectively:
 .IP
 pmapdump -n 5k -c 1 0.4 0.4 global.pm -n 10k -c 0.4 0.4 1 caustic.pm | 
 oconv - scene.rad > scene_pmdump.oct
 .PP
-Alternatively, the dump may be viewed on its own by piping the output of
-\fIpmapdump\fR directly into \fIobjview(1)\fR (using the default number of
-spheres in this example):
+Visualise the caustic photon distribution superimposed on the scene geometry
+with 10000 spheres coloured according to the photons' respective RGB flux:
+.IP
+pmapdump -n 10k -f caustic.pm | oconv - scene.rad > scene_pmdump.oct
+.PP
+Dumps may also be viewed on their own by piping the output of \fIpmapdump\fR
+directly into \fIobjview(1)\fR (using the default number of spheres in this
+example):
 .IP
 pmapdump zombo.pm | objview
 
