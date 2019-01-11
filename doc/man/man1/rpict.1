@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.23 2018/03/20 02:40:38 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.24 2019/01/11 21:12:24 greg Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -666,8 +666,8 @@ is zero, then Russian roulette is used for ray
 termination, and the
 .I -lw
 setting (below) must be positive.
-If N is a negative integer, then this sets the upper limit
-of reflections past which Russian roulette will be used.
+If N is a negative integer, then this limits the maximum
+number of reflections even with Russian roulette.
 In scenes with dielectrics and total internal reflection,
 a setting of 0 (no limit) may cause a stack overflow.
 .TP

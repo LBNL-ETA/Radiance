@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.31 2018/11/13 19:58:33 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.32 2019/01/11 21:12:24 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -651,8 +651,8 @@ is zero or negative, then Russian roulette is used for ray
 termination, and the
 .I -lw
 setting (below) must be positive.
-If N is a negative integer, then this sets the upper limit
-of reflections past which Russian roulette will be used.
+If N is a negative integer, then this limits the maximum
+number of reflections even with Russian roulette.
 In scenes with dielectrics and total internal reflection,
 a setting of 0 (no limit) may cause a stack overflow.
 .TP
