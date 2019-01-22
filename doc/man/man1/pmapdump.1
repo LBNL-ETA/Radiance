@@ -1,5 +1,5 @@
-.\" RCSid "$Id: pmapdump.1,v 1.6 2019/01/22 18:31:28 rschregle Exp $"
-.TH PMAPDUMP 1 "$Date: 2019/01/22 18:31:28 $ $Revision: 1.6 $" RADIANCE
+.\" RCSid "$Id: pmapdump.1,v 1.7 2019/01/22 19:50:09 rschregle Exp $"
+.TH PMAPDUMP 1 "$Date: 2019/01/22 19:50:09 $ $Revision: 1.7 $" RADIANCE
 
 .SH NAME
 pmapdump - generate RADIANCE scene description or point list representing
@@ -29,7 +29,7 @@ This point list can be imported in a 3D point cloud processor/viewer
 to interactively explore the photon map.
 .PP
 An arbitrary number of photon maps can be specified on the command line and
-the respective photon type is determined automagically.Per default, the
+the respective photon type is determined automagically. Per default, the
 different photon types are visualised as colour coded spheres/points 
 according to the following default schema:
 .IP
@@ -54,15 +54,27 @@ quantitatively analyse colour bleeding effects, for example.
 .SH OPTIONS
 Options are effective for the photon map file immediately following on the
 command line, and are reset to their defaults after completion of each dump. 
-As such they may be set individually for each photon map.
+As such they must be set individually for each photon map.
 
 .IP "\fB-a\fR"
 Boolean switch to output photons as a point list in ASCII (text) format
 instead of a RADIANCE scene.
 Each output line consists of 6 tab-separated floating point values: the
 X, Y, Z coordinates of the photon's position, and the R, G, B colour 
-channels of its flux. These values. notably the flux, may be expressed
-in scientific notation to accommodate their high dynamic range.
+channels of its flux. These values. notably the flux, are expressed in
+scientific notation if necessary to accommodate their high dynamic range. 
+
+.IP
+As \fIpmapdump\fR groups its options per photon map, this option must be
+specified per photon map for consistent output. This prevents erroneously
+dumping RADIANCE scene descriptions along with point lists, which will
+fail to load in the 3D point cloud viewer.
+
+.IP "\fB-c\fR \fIrcol\fR \fIgcol\fR \fIbcol\fR"
+Specifies a custom sphere/point colour for the next photon map. The colour
+is specified as an RGB triplet, with each component in the range (0..1].
+Without this option, the default colour for the corresponding photon type 
+is used. This option is mutually exclusive with \fB-f\fR.
 
 .IP "\fB-f\fR"
 Boolean switch to colour each sphere/point according to the corresponding 
@@ -70,12 +82,6 @@ photon's RGB flux instead of a constant colour. Note that no exposure is
 applied, and as such the resulting colours can span several orders of 
 magnitude and may require tone mapping with \fIpcond(1)\fR for 
 visualisation. This option is mutually exclusive with \fB-c\fR.
-
-.IP "\fB-c\fR \fIrcol\fR \fIgcol\fR \fIbcol\fR"
-Specifies a custom sphere/point colour for the next photon map. The colour
-is specified as an RGB triplet, with each component in the range (0..1].
-Without this option, the default colour for the corresponding photon type 
-is used. This option is mutually exclusive with \fB-f\fR.
 
 .IP "\fB-n \fInum\fR"
 Specifies the number of spheres or points to dump for the next photon map.  
@@ -114,20 +120,20 @@ with 10000 spheres coloured according to the photons' respective RGB flux:
 .IP
 pmapdump -n 10k -f caustic.pm | oconv - scene.rad > scene_pm.oct
 .PP
+But Capt. B wants 'em bigger:
+.IP
+pmapdump -r 4.0 bonzo.pm > bonzo_bigballz.rad
+.PP
 RADIANCE scene dumps may also be viewed on their own by simply piping the
 output of \fIpmapdump\fR directly into \fIobjview(1)\fR (using the default
 number of spheres in this example):
 .IP
 pmapdump zombo.pm | objview
 .PP
-Dump photons as a (really long) point list to an ASCII file for import in
-a 3D point cloud viewer:
+Instead of a RADIANCE scene, dump photons as a (really long) point list to
+an ASCII file for import into a 3D point cloud viewer:
 .IP
-pmapdump -a -f -n 1m lotsa.pm > lotsa-pointz.txt
-.PP
-Capt. B wants 'em bigger:
-.IP
-pmapdump -r 4.0 bonzo.pm > bigbonzo-pm.rad
+pmapdump -a -f -n 1m lotsa.pm > lotsa_pointz.txt
 
 .SH AUTHOR
 Roland Schregle (roland.schregle@{hslu.ch,gmail.com})
