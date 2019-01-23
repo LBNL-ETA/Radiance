@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bmpfile.c,v 2.19 2017/09/05 17:19:42 greg Exp $";
+static const char RCSid[] = "$Id: bmpfile.c,v 2.20 2019/01/23 19:13:55 greg Exp $";
 #endif
 /*
  *  Windows and OS/2 BMP file support
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: bmpfile.c,v 2.19 2017/09/05 17:19:42 greg Exp 
 #define putc    putc_unlocked
 #endif
 
-/* get corresponding error message */
+/* Get corresponding error message */
 const char *
 BMPerrorMessage(int ec)
 {
@@ -38,7 +38,7 @@ BMPerrorMessage(int ec)
 	return "Unknown BMP error";
 }
 
-/* check than header is sensible */
+/* Check that header is sensible */
 static int
 BMPheaderOK(const BMPHeader *hdr)
 {
@@ -89,7 +89,7 @@ BMPheaderOK(const BMPHeader *hdr)
 					/* get next byte from reader */
 #define rdbyte(c,br)    ((br)->fpos += (c=(*(br)->cget)((br)->c_data))!=EOF, c)
 
-/* read n bytes */
+/* Read n bytes */
 static int
 rdbytes(char *bp, uint32 n, BMPReader *br)
 {
@@ -103,7 +103,7 @@ rdbytes(char *bp, uint32 n, BMPReader *br)
 	return BIR_OK;
 }
 
-/* read 32-bit integer in littlendian order */
+/* Read 32-bit integer in littlendian order */
 static int32
 rdint32(BMPReader *br)
 {
@@ -117,7 +117,7 @@ rdint32(BMPReader *br)
 	return i;			/* -1 on EOF */
 }
 
-/* read 16-bit unsigned integer in littlendian order */
+/* Read 16-bit unsigned integer in littlendian order */
 static int
 rduint16(BMPReader *br)
 {
@@ -129,7 +129,7 @@ rduint16(BMPReader *br)
 	return i;			/* -1 on EOF */
 }
 
-/* seek on reader or return 0 (BIR_OK) on success */
+/* Seek on reader or return 0 (BIR_OK) on success */
 static int
 rdseek(uint32 pos, BMPReader *br)
 {
@@ -141,7 +141,7 @@ rdseek(uint32 pos, BMPReader *br)
 	return BIR_OK;
 }
 
-/* open BMP stream for reading and get first scanline */
+/* Open BMP stream for reading and get first scanline */
 BMPReader *
 BMPopenReader(int (*cget)(void *), int (*seek)(uint32, void *), void *c_data)
 {
@@ -248,7 +248,7 @@ err:
 	return NULL;
 }
 
-/* determine if image is grayscale */
+/* Determine if image is grayscale */
 int
 BMPisGrayscale(const BMPHeader *hdr)
 {
@@ -265,7 +265,7 @@ BMPisGrayscale(const BMPHeader *hdr)
 	return 1;			/* all colors neutral in map */
 }
 
-/* read and decode next BMP scanline */
+/* Read and decode next BMP scanline */
 int
 BMPreadScanline(BMPReader *br)
 {
@@ -364,7 +364,7 @@ BMPreadScanline(BMPReader *br)
 	return BIR_OK;
 }
 
-/* read a specific scanline */
+/* Read a specific scanline */
 int
 BMPseekScanline(int y, BMPReader *br)
 {
@@ -407,7 +407,7 @@ BMPseekScanline(int y, BMPReader *br)
 	return BIR_OK;
 }
 
-/* get ith pixel from last scanline */
+/* Get ith pixel from last scanline */
 RGBquad
 BMPdecodePixel(int i, const BMPReader *br)
 {
@@ -471,7 +471,7 @@ BMPdecodePixel(int i, const BMPReader *br)
 	return black;				/* should never happen */
 }
 
-/* free BMP reader resources */
+/* Free BMP reader resources */
 void
 BMPfreeReader(BMPReader *br)
 {
@@ -508,7 +508,7 @@ stdio_fseek(uint32 pos, void *p)
 	return fseek((FILE *)p, (long)pos, 0);
 }
 
-/* allocate uncompressed (24-bit) RGB header */
+/* Allocate uncompressed (24-bit) RGB header */
 BMPHeader *
 BMPtruecolorHeader(int xr, int yr, int infolen)
 {
@@ -531,7 +531,7 @@ BMPtruecolorHeader(int xr, int yr, int infolen)
 	return hdr;
 }
 
-/* allocate color-mapped header (defaults to minimal grayscale) */
+/* Allocate color-mapped header (defaults to minimal grayscale) */
 BMPHeader *
 BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 {
@@ -576,7 +576,7 @@ BMPmappedHeader(int xr, int yr, int infolen, int ncolors)
 					((bw)->flen = (bw)->fpos) : \
 					(bw)->fpos )
 
-/* write out a string of bytes */
+/* Write out a string of bytes */
 static void
 wrbytes(char *bp, uint32 n, BMPWriter *bw)
 {
@@ -584,7 +584,7 @@ wrbytes(char *bp, uint32 n, BMPWriter *bw)
 		wrbyte(*bp++, bw);
 }
 
-/* write 32-bit integer in littlendian order */
+/* Write 32-bit integer in littlendian order */
 static void
 wrint32(int32 i, BMPWriter *bw)
 {
@@ -594,7 +594,7 @@ wrint32(int32 i, BMPWriter *bw)
 	wrbyte(i>>24 & 0xff, bw);
 }
 
-/* write 16-bit unsigned integer in littlendian order */
+/* Write 16-bit unsigned integer in littlendian order */
 static void
 wruint16(uint16 ui, BMPWriter *bw)
 {
@@ -602,7 +602,7 @@ wruint16(uint16 ui, BMPWriter *bw)
 	wrbyte(ui>>8 & 0xff, bw);
 }
 
-/* seek to the specified file position, returning 0 (BIR_OK) on success */
+/* Seek to the specified file position, returning 0 (BIR_OK) on success */
 static int
 wrseek(uint32 pos, BMPWriter *bw)
 {
@@ -618,7 +618,7 @@ wrseek(uint32 pos, BMPWriter *bw)
 	return BIR_OK;
 }
 
-/* open BMP stream for writing */
+/* Open BMP stream for writing */
 BMPWriter *
 BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 			void *c_data, BMPHeader *hdr)
@@ -691,7 +691,7 @@ BMPopenWriter(void (*cput)(int, void *), int (*seek)(uint32, void *),
 	return bw;
 }
 
-/* find position of next run of 5 or more identical bytes, or 255 if none */
+/* Find position of next run of 5 or more identical bytes, or 255 if none */
 static int
 findNextRun(const int8 *bp, int len)
 {
@@ -708,7 +708,7 @@ findNextRun(const int8 *bp, int len)
 	return pos;				/* didn't find any */
 }
 				
-/* write the current scanline */
+/* Write the current scanline */
 int
 BMPwriteScanline(BMPWriter *bw)
 {
@@ -775,7 +775,7 @@ BMPwriteScanline(BMPWriter *bw)
 	return BIR_OK;
 }
 
-/* free BMP writer resources */
+/* Free BMP writer resources */
 void
 BMPfreeWriter(BMPWriter *bw)
 {
