@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.18 2019/01/08 00:21:52 greg Exp $
+# RCSid $Id: Makefile,v 1.19 2019/01/25 23:49:41 greg Exp $
 #
 # Render and primitive type testing
 #
@@ -29,7 +29,7 @@ clean:
 
 ### Test Aliases ###
 
-test-rpict:	test-mirror-def
+test-rpict:	test-mirror-fish
 
 test-rpiece test-mkpmap:	test-mixtex-def
 
