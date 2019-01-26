@@ -1,0 +1,14 @@
+#?RADIANCE
+oconv -f basic.mat diorama_walls.rad closed_end.rad front_cap.rad glass_pane.rad antimatter_portal.rad dummysky.rad
+rcontrib -fo+ -n 12 -ab 2 -lw 1e-4 -fda -c 10000 -bn 1 -b if(-Dx*0-Dy*0-Dz*1,0,-1) -m groundglow -f reinhartb.cal -p MF=1,rNx=0,rNy=0,rNz=-1,Ux=0,Uy=1,Uz=0,RHS=+1 -bn Nrbins -b rbin -m skyglow -y 145
+SOFTWARE= RADIANCE 5.3a lastmod Tue Dec  4 18:12:31 PST 2018 by gward on Behemouth
+CAPDATE= 2019:01:04 14:34:07
+GMT= 2019:01:04 22:34:07
+rcollate -t
+NROWS=146
+NCOLS=145
+NCOMP=3
+FORMAT=ascii
+Guppies
+Fredo the Frog
+
