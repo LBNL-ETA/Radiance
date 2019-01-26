@@ -1,8 +1,10 @@
+# RCSid $Id: Makefile,v 1.2 2019/01/26 00:55:50 greg Exp $
 #
 # Unit tests for tools built in src/util but not covered by test/renders
 #
 
-all:	test-vwright test-getinfo test-rcollate test-rmtxop test-dctimestep
+all:	test-vwright test-getinfo test-rcollate test-rmtxop test-dctimestep \
+test-genskyvec
 
 clean:
 	rm -f test.mtx
@@ -27,6 +29,8 @@ test-rcollate:	test.mtx
 
 test.mtx:	../renders/ref/rfmirror.mtx
 	rcollate -t ../renders/ref/rfmirror.mtx > test.mtx
+
+test-genskyvec:	test-dctimestep
 
 test-dctimestep:	test.mtx
 	gensky 3 21 10:15PST +s -g .3 -g 2.5 -a 36 -o 124 \
