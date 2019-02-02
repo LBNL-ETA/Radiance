@@ -1,13 +1,19 @@
-# RCSid $Id: Makefile,v 1.3 2019/01/08 23:53:04 greg Exp $
+# RCSid $Id: Makefile,v 1.4 2019/02/02 00:09:43 greg Exp $
 #
 # Unit tests for tools built in src/gen but not covered by test/renders
 #
 
 all:	test-gensky test-gendaymtx test-genbox test-genrev test-genworm \
-test-genprism test-gensurf
+test-genprism test-gensurf test-replmarks
 
 clean:
-	rm -f gen*.rad
+	rm -f gen*.rad replmarks.rad
+
+test-replmarks:
+	replmarks -s 1 -x dummy.rad rmod markers.rad \
+| grep -v '^[ 	]*#' > replmarks.rad
+	radcompare ref/replmarks.rad replmarks.rad
+	rm -f replmarks.rad
 
 test-gensky:
 	gensky 11 15 14:21EST +s -g .25 -t 3.5 \
@@ -46,4 +52,3 @@ test-gensurf:
 '30.75+z(theta(s),phi(t))' 4 15 -f basin.cal -s > gensurf.rad
 	radcompare ref/gensurf.rad gensurf.rad
 	rm -f gensurf.rad
-
