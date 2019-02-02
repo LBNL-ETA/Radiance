@@ -1,4 +1,4 @@
-# RCSid $Id: Makefile,v 1.4 2019/02/02 00:09:43 greg Exp $
+# RCSid $Id: Makefile,v 1.5 2019/02/02 00:18:38 greg Exp $
 #
 # Unit tests for tools built in src/gen but not covered by test/renders
 #
@@ -9,7 +9,7 @@ test-genprism test-gensurf test-replmarks
 clean:
 	rm -f gen*.rad replmarks.rad
 
-test-replmarks:
+test-replmarks:	markers.rad
 	replmarks -s 1 -x dummy.rad rmod markers.rad \
 | grep -v '^[ 	]*#' > replmarks.rad
 	radcompare ref/replmarks.rad replmarks.rad
