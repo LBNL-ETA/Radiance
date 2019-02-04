@@ -1,4 +1,4 @@
-/* RCSid $Id: pmapmat.h,v 2.12 2016/02/23 12:42:41 rschregle Exp $ */
+/* RCSid $Id: pmapmat.h,v 2.13 2019/02/04 18:20:27 rschregle Exp $ */
 /* 
    ======================================================================
    Photon map support routines for scattering by materials. 
@@ -59,10 +59,12 @@
                                  causticPmap || contribPmap) && \
                                  (r) -> crtype & (AMBIENT | SHADOW) && \
                                  (r) -> rtype & (TRANS | REFRACTED))
-				
+
    /* Check if scattered ray spawns a caustic photon; 
-    * !!! NOTE this has to set bit 0 to properly handle caustic contrib
-    * !!! photons, so the explicit test against zero *IS* required!  */
+    * !!! NOTE this returns a single bit as boolean value (0|1), rather
+    * !!! than the original short int, hence the explicit test against zero.
+    * !!! This allows the macro the be used in a conditional statement
+    * !!! and when setting a photon's caustic flag in newPhoton(). */
    #define PMAP_CAUSTICRAY(r)    (((r) -> rtype & SPECULAR) != 0) 
 
 
