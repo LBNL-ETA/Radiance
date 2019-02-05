@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.29 2018/10/20 15:02:51 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.30 2019/02/05 17:13:00 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -605,7 +605,9 @@ main(int argc, char *argv[])
 		}
 	} else if (!check_sizes())
 		return(1);
-	if (o_header) {				/* write header */
+	if (o_header) {				/* write/add to header */
+		if (!i_header)
+			newheader("RADIANCE", stdout);
 		printargs(a, argv, stdout);
 		if (no_rows > 0)
 			printf("NROWS=%d\n", no_rows);
