@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.37 2018/11/30 18:43:57 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.38 2019/02/13 02:38:26 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -284,7 +284,8 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 		rayvalue(&sr);
 		multcolor(sr.rcol, sr.rcoef);
 		addcolor(r->rcol, sr.rcol);
-		if (!hastexture || r->crtype & (SHADOW|AMBIENT))
+		if ((!hastexture || r->crtype & (SHADOW|AMBIENT)) &&
+				nd.tspec > bright(nd.tdiff) + bright(nd.rdiff))
 			r->rxt = r->rot + raydistance(&sr);
 	}
 	if (r->crtype & SHADOW)			/* the rest is shadow */
