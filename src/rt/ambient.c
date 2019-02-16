@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.106 2018/11/08 00:54:07 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.107 2019/02/16 00:09:53 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -132,7 +132,7 @@ setambacc(				/* set ambient accuracy */
 	newa *= (newa > 0);
 	if (fabs(newa - olda) >= .05*(newa + olda)) {
 		ambacc = newa;
-		if (nambvals > 0)
+		if (ambacc > FTINY && nambvals > 0)
 			sortambvals(1);		/* rebuild tree */
 	}
 }
