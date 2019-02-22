@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.75 2019/02/13 01:00:31 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.76 2019/02/22 17:12:58 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -403,22 +403,14 @@ raycontrib(		/* compute (cumulative) ray contribution */
 	int  flags
 )
 {
-	double	eext[3];
-	int	i;
-
-	eext[0] = eext[1] = eext[2] = 0.;
 	rc[0] = rc[1] = rc[2] = 1.;
 
 	while (r != NULL && r->crtype&flags) {
-		for (i = 3; i--; ) {
+		int	i = 3;
+		while (i--)
 			rc[i] *= colval(r->rcoef,i);
-			eext[i] += r->rot * colval(r->cext,i);
-		}
 		r = r->parent;
 	}
-	for (i = 3; i--; )
-		rc[i] *= (eext[i] <= FTINY) ? 1. :
-				(eext[i] > 92.) ? 0. : exp(-eext[i]);
 }
 
 
