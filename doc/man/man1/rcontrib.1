@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.15 2018/01/26 18:31:23 rschregle Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.16 2019/02/22 19:42:27 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -330,6 +330,11 @@ rcontrib \-I+ \-h \-V \-fo \-o c_%s.dat \-M lights \-ap contrib.pm 365
 scene.oct < test.dat,
 .SH ENVIRONMENT
 RAYPATH		path to search for \-f and \-M files
+.SH BUGS
+We do not currently compute contributions or coefficients properly
+in scenes with participating media.
+A single warning will be issued if a scattering or absorbing medium
+is detected.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.76 2019/02/22 17:12:58 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.77 2019/02/22 19:42:27 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -116,10 +116,10 @@ rayorigin(		/* start new ray from old one */
 		if (photonMapping && rt != TRANS)
 			return(-1);
 	}
-	if (maxdepth <= 0 && rc != NULL) {	/* Russian roulette */
+	if ((maxdepth <= 0) & (rc != NULL)) {	/* Russian roulette */
 		if (minweight <= 0.0)
 			error(USER, "zero ray weight in Russian roulette");
-		if (maxdepth < 0 && r->rlvl > -maxdepth)
+		if ((maxdepth < 0) & (r->rlvl > -maxdepth))
 			return(-1);		/* upper reflection limit */
 		if (r->rweight >= minweight)
 			return(0);
@@ -130,7 +130,7 @@ rayorigin(		/* start new ray from old one */
 		r->rweight = minweight;
 		return(0);
 	}
-	return(r->rweight >= minweight && r->rlvl <= abs(maxdepth) ? 0 : -1);
+	return((r->rweight >= minweight) & (r->rlvl <= abs(maxdepth)) ? 0 : -1);
 }
 
 
@@ -403,12 +403,21 @@ raycontrib(		/* compute (cumulative) ray contribution */
 	int  flags
 )
 {
+	static int	warnedPM = 0;
+
 	rc[0] = rc[1] = rc[2] = 1.;
 
 	while (r != NULL && r->crtype&flags) {
 		int	i = 3;
 		while (i--)
 			rc[i] *= colval(r->rcoef,i);
+					/* check for participating medium */
+		if (!warnedPM && (bright(r->cext) > FTINY) |
+				(bright(r->albedo) > FTINY)) {
+			error(WARNING,
+	"ray contribution calculation does not support participating media");
+			warnedPM++;
+		}
 		r = r->parent;
 	}
 }
