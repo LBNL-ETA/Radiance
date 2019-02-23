@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.38 2018/04/10 23:22:42 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.39 2019/02/23 18:25:12 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -30,8 +30,10 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		error(INTERNAL, "expected vector in sum_images()");
 	for (i = 0; i < cv->nrows; i++) {
 		const COLORV	*scv = cv_lval(cv,i);
+		int		flat_file = 0;
 		char		fname[1024];
 		FILE		*fp;
+		long		data_start;
 		int		dt, xr, yr;
 		COLORV		*psp;
 		char		*err;
@@ -70,11 +72,20 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 					fname);
 			error(USER, errmsg);
 		}
+							/* flat file check */
+		if ((data_start = ftell(fp)) > 0 && fseek(fp, 0L, SEEK_END) == 0) {
+			flat_file = (ftell(fp) == data_start + sizeof(COLR)*xr*yr);
+			if (fseek(fp, data_start, SEEK_SET) < 0) {
+				sprintf(errmsg, "cannot seek on picture '%s'", fname);
+				error(SYSTEM, errmsg);
+			}
+		}
 		psp = pmat->cmem;
 		for (y = 0; y < yr; y++) {		/* read it in */
 			COLOR	col;
 			int	x;
-			if (freadcolrs(scanline, xr, fp) < 0) {
+			if (flat_file ? getbinary(scanline, sizeof(COLR), xr, fp) != xr :
+					freadcolrs(scanline, xr, fp) < 0) {
 				sprintf(errmsg, "error reading picture '%s'",
 						fname);
 				error(SYSTEM, errmsg);
