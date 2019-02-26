@@ -1,4 +1,4 @@
-{ RCSid $Id: veil.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
+{ RCSid $Id: veil.cal,v 1.3 2019/02/26 01:19:52 greg Exp $ }
 {
 	Add veiling glare caused by bright sources to an image.
 	Input is direction and illuminances of sources as may
@@ -23,6 +23,10 @@
 	pcomb or as an additional line in glrsrc.cal, i.e.:
 
 		pcomb -f glrsrc.cal -e 'N:I(0)' -f veil.cal orig.pic > veil.pic
+
+	WARNING: Do not use the 'N:I(0)' setting if there is only a single
+	glare source.  Use 'N:1' instead, as tabfunc outputs a constant
+	value for a single input line, and the trick does not work then.
 }
 
 bound(a,x,b) : if(a-x, a, if(x-b, b, x));
