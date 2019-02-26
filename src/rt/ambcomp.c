@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ambcomp.c,v 2.83 2018/11/13 19:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: ambcomp.c,v 2.84 2019/02/26 00:37:54 greg Exp $";
 #endif
 /*
  * Routines to compute "ambient" values using Monte Carlo
@@ -293,6 +293,8 @@ samp_hemi(				/* sample indirect hemisphere */
 		hp->sampOK *= -1;	/* soft failure */
 		return(hp);
 	}
+	if (hp->sampOK < 64)
+		return(hp);		/* insufficient for super-sampling */
 	n = ambssamp*wt + 0.5;
 	if (n > 8) {			/* perform super-sampling? */
 		ambsupersamp(hp, n);
