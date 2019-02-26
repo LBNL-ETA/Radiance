@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rad.c,v 2.125 2016/06/07 16:53:19 greg Exp $";
+static const char	RCSid[] = "$Id: rad.c,v 2.126 2019/02/26 23:31:11 greg Exp $";
 #endif
 /*
  * Executive program for oconv, rpict and pfilt
@@ -556,9 +556,10 @@ oconv(void)				/* run oconv and mkillum if necessary */
 		return;
 						/* make octree0 */
 	if ((oct0date < scenedate) | (oct0date < illumdate)) {
-		if (touchonly && oct0date)
-			touch(oct0name);
-		else {				/* build command */
+		if (touchonly && (oct0date || oct1date)) {
+			if (oct0date)
+				touch(oct0name);
+		} else {			/* build command */
 			if (octreedate)
 				sprintf(combuf, "%s%s -i %s %s > %s", c_oconv,
 					ocopts, vval(OCTREE),
@@ -583,7 +584,7 @@ oconv(void)				/* run oconv and mkillum if necessary */
 			oct0date = octreedate;
 		if (oct0date < illumdate)	/* ditto */
 			oct0date = illumdate;
-		}
+	}
 	if (touchonly && oct1date)
 		touch(oct1name);
 	else {
