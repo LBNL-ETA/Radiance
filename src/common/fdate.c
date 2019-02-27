@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: fdate.c,v 2.9 2016/03/06 01:13:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: fdate.c,v 2.10 2019/02/27 21:30:01 greg Exp $";
 #endif
 /*
  * Return file date (UNIX seconds as returned by time(2) call)
@@ -12,15 +12,16 @@ static const char	RCSid[] = "$Id: fdate.c,v 2.9 2016/03/06 01:13:17 schorsch Exp
 #include  "rtio.h"
 #include  <sys/stat.h>
 #if defined(_WIN32) || defined(_WIN64)
-  #include  <sys/utime.h>
+#include  <sys/utime.h>
 #else
-  #include  <utime.h>
+#include  <utime.h>
 #endif
 
 
 time_t
-fdate(fname)				/* get file date */
-char  *fname;
+fdate(				/* get file date */
+char  *fname
+)
 {
 	struct stat  sbuf;
 
@@ -32,19 +33,14 @@ char  *fname;
 
 
 int
-setfdate(fname, ftim)			/* set file date */
-char  *fname;
-long  ftim;
+setfdate(			/* set file date */
+char  *fname,
+long  ftim
+)
 {
 	struct utimbuf utb;
 
 	utb.actime = utb.modtime = ftim;
+
 	return(utime(fname, &utb));
-
-#ifdef NOTHING /* XXX does this work anywhere? */
-	time_t  ftm[2];
-
-	ftm[0] = ftm[1] = ftim;
-	return(utime(fname, ftm));
-#endif
 }
