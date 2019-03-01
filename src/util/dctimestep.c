@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.39 2019/02/23 18:25:12 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.40 2019/03/01 01:00:03 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -247,7 +247,7 @@ main(int argc, char *argv[])
 			for (i = 0; i < nsteps; i++) {
 				CMATRIX	*cvec = cm_column(cmtx, i);
 				if (ofspec != NULL) {
-					sprintf(fnbuf, ofspec, i+1);
+					sprintf(fnbuf, ofspec, i);
 					if ((ofp = fopen(fnbuf, "wb")) == NULL) {
 						fprintf(stderr,
 					"%s: cannot open '%s' for output\n",
@@ -258,7 +258,7 @@ main(int argc, char *argv[])
 					printargs(argc, argv, ofp);
 					fputnow(ofp);
 				}
-				fprintf(ofp, "FRAME=%d\n", i+1);
+				fprintf(ofp, "FRAME=%d\n", i);
 				if (!sum_images(argv[a], cvec, ofp))
 					return(1);
 				if (ofspec != NULL) {
@@ -282,7 +282,7 @@ main(int argc, char *argv[])
 			const char	*wtype = (outfmt==DTascii) ? "w" : "wb";
 			for (i = 0; i < nsteps; i++) {
 				CMATRIX	*rvec = cm_column(rmtx, i);
-				sprintf(fnbuf, ofspec, i+1);
+				sprintf(fnbuf, ofspec, i);
 				if ((ofp = fopen(fnbuf, wtype)) == NULL) {
 					fprintf(stderr,
 					"%s: cannot open '%s' for output\n",
@@ -296,7 +296,7 @@ main(int argc, char *argv[])
 					newheader("RADIANCE", ofp);
 					printargs(argc, argv, ofp);
 					fputnow(ofp);
-					fprintf(ofp, "FRAME=%d\n", i+1);
+					fprintf(ofp, "FRAME=%d\n", i);
 					fprintf(ofp, "NROWS=%d\n", rvec->nrows);
 					fputs("NCOLS=1\nNCOMP=3\n", ofp);
 					fputformat((char *)cm_fmt_id[outfmt], ofp);

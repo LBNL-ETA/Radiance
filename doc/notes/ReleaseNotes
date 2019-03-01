@@ -2251,3 +2251,6 @@ contributions and distances to enable new types of reprojections.  This also
 cleaned up and unified handling of effective ray lengths throughout code.
 
 Bug fixes from Jan Wienold for evalglare.
+
+Changed indexed (numbered) output from dctimestep to start from 0 rather
+than 1, to make it more consistent with expected input naming.
