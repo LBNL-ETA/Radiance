@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: o_mesh.c,v 2.14 2014/07/08 18:25:00 greg Exp $";
+static const char RCSid[] = "$Id: o_mesh.c,v 2.15 2019/03/01 02:03:33 greg Exp $";
 #endif
 /*
  *  Routines for computing ray intersections with meshes.
@@ -130,7 +130,7 @@ RAY	*r;
 			continue;		/* ray is tangent */
 		VSUB(va, tv[0].v, r->rorg);
 		d = DOT(va, nrm) / d;
-		if (d <= FTINY || d >= r->rot)
+		if ((d <= FTINY) | (d >= r->rot))
 			continue;		/* not good enough */
 		r->robj = oset[i];		/* else record hit */
 		r->ro = edge_cache.o;
@@ -181,7 +181,7 @@ o_mesh(			/* compute ray intersection with a mesh */
 	if (!(flags & MT_V))
 		objerror(o, INTERNAL, "missing mesh vertices in o_mesh");
 	r->robj = objndx(o);		/* set object and material */
-	if (o->omod == OVOID && tmod != OVOID) {
+	if ((o->omod == OVOID) & (tmod != OVOID)) {
 		r->ro = getmeshpseudo(curmsh, tmod);
 		r->rox = &curmi->x;
 	} else
@@ -210,7 +210,6 @@ o_mesh(			/* compute ray intersection with a mesh */
 					wt[2]*tv[2].uv[i];
 	else
 		r->uv[0] = r->uv[1] = .0;
-
-					/* return hit */
-	return(1);
+		
+	return(1);			/* return hit */
 }
