@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rttree_reduce.c,v 2.17 2017/05/31 03:26:46 greg Exp $";
+static const char RCSid[] = "$Id: rttree_reduce.c,v 2.18 2019/03/02 17:05:45 greg Exp $";
 #endif
 /*
  *  A utility called by genBSDF.pl to reduce tensor tree samples and output
@@ -30,13 +30,13 @@ typedef struct ttree_s {
 } TNODE;
 
 #define HISTLEN		300	/* histogram resolution */
-#define HISTMAX		10.	/* maximum recorded measure in histogram */
+#define HISTMAX		4.	/* maximum recorded measure in histogram */
 
 int	histo[HISTLEN];		/* histogram freq. of variance measure */
 
 double	tthresh;		/* acceptance threshold (TBD) */
 
-#define var_measure(tp)		( ((tp)->vmax - (tp)->vmin) / \
+#define var_measure(tp)		sqrt( ((tp)->vmax - (tp)->vmin) / \
 					(sqrt((tp)->vavg) + .03) )
 #define above_threshold(tp)	(var_measure(tp) > tthresh)
 
