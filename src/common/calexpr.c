@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.36 2015/08/01 23:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.37 2019/03/04 18:16:18 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -105,7 +105,7 @@ eval(			/* evaluate an expression string */
     char  *expr
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
     double  rval;
 
     ep = eparse(expr);
@@ -117,8 +117,8 @@ eval(			/* evaluate an expression string */
 
 int
 epcmp(			/* compare two expressions for equivalence */
-    register EPNODE  *ep1,
-    register EPNODE  *ep2
+    EPNODE  *ep1,
+    EPNODE  *ep2
 )
 {
 	double  d;
@@ -167,10 +167,10 @@ epcmp(			/* compare two expressions for equivalence */
 
 void
 epfree(			/* free a parse tree */
-    register EPNODE	 *epar
+    EPNODE	 *epar
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
 
     switch (epar->type) {
 
@@ -222,7 +222,7 @@ euminus(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
 
     return(-evalue(ep1));
 }
@@ -240,7 +240,7 @@ eadd(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
 
     return(evalue(ep1) + evalue(ep1->sibling));
 }
@@ -250,7 +250,7 @@ esubtr(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
 
     return(evalue(ep1) - evalue(ep1->sibling));
 }
@@ -260,7 +260,7 @@ emult(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
 
     return(evalue(ep1) * evalue(ep1->sibling));
 }
@@ -270,7 +270,7 @@ edivi(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
     double  d;
 
     d = evalue(ep1->sibling);
@@ -287,7 +287,7 @@ epow(
     EPNODE	*ep
 )
 {
-    register EPNODE  *ep1 = ep->v.kid;
+    EPNODE  *ep1 = ep->v.kid;
     double  d;
     int	 lasterrno;
 
@@ -323,8 +323,8 @@ ebotch(
 
 EPNODE *
 ekid(			/* return pointer to a node's nth kid */
-    register EPNODE	 *ep,
-    register int  n
+    EPNODE	 *ep,
+    int  n
 )
 {
 
@@ -338,10 +338,10 @@ ekid(			/* return pointer to a node's nth kid */
 
 int
 nekids(			/* return # of kids for node ep */
-    register EPNODE	 *ep
+    EPNODE	 *ep
 )
 {
-    register int  n = 0;
+    int  n = 0;
 
     for (ep = ep->v.kid; ep != NULL; ep = ep->sibling)
 	n++;
@@ -403,7 +403,7 @@ getscanpos(	/* return current scan position */
 int
 scan(void)		/* scan next character, return literal next */
 {
-    register int  lnext = 0;
+    int  lnext = 0;
 
     do {
 	if (linbuf[linepos] == '\0')
@@ -442,7 +442,7 @@ long2ascii(			      /* convert long to ascii */
 )
 {
     static char	 buf[16];
-    register char  *cp;
+    char  *cp;
     int	 neg = 0;
 
     if (l == 0)
@@ -468,7 +468,7 @@ syntax(			/* report syntax error and quit */
     char  *err
 )
 {
-    register int  i;
+    int  i;
 
     if (infile != NULL || lineno != 0) {
 	if (infile != NULL) eputs(infile);
@@ -492,7 +492,7 @@ syntax(			/* report syntax error and quit */
 
 void
 addekid(			/* add a child to ep */
-    register EPNODE	 *ep,
+    EPNODE	 *ep,
     EPNODE	*ekid
 )
 {
@@ -511,7 +511,7 @@ char *
 getname(void)			/* scan an identifier */
 {
     static char	 str[RMAXWORD+1];
-    register int  i, lnext;
+    int  i, lnext;
 
     lnext = nextc;
     for (i = 0; i < RMAXWORD && isid(lnext); i++, lnext = scan())
@@ -527,7 +527,7 @@ getname(void)			/* scan an identifier */
 int
 getinum(void)			/* scan a positive integer */
 {
-    register int  n, lnext;
+    int  n, lnext;
 
     n = 0;
     lnext = nextc;
@@ -542,7 +542,7 @@ getinum(void)			/* scan a positive integer */
 double
 getnum(void)			/* scan a positive float */
 {
-    register int  i, lnext;
+    int  i, lnext;
     char  str[RMAXWORD+1];
 
     i = 0;
@@ -585,7 +585,7 @@ EPNODE *
 getE1(void)			/* E1 -> E1 ADDOP E2 */
 				/*	 E2 */
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 
     ep1 = getE2();
     while (nextc == '+' || nextc == '-') {
@@ -607,7 +607,7 @@ EPNODE *
 getE2(void)			/* E2 -> E2 MULOP E3 */
 				/*	 E3 */
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 
     ep1 = getE3();
     while (nextc == '*' || nextc == '/') {
@@ -648,7 +648,7 @@ EPNODE *
 getE3(void)			/* E3 -> E4 ^ E3 */
 				/*	 E4 */
 {
-	register EPNODE  *ep1, *ep2;
+	EPNODE  *ep1, *ep2;
 
 	ep1 = getE4();
 	if (nextc != '^')
@@ -683,7 +683,7 @@ EPNODE *
 getE4(void)			/* E4 -> ADDOP E5 */
 				/*	 E5 */
 {
-    register EPNODE  *ep1, *ep2;
+    EPNODE  *ep1, *ep2;
 
     if (nextc == '-') {
 	scan();
@@ -718,7 +718,7 @@ getE5(void)			/* E5 -> (E1) */
 {
 	int	 i;
 	char  *nam;
-	register EPNODE  *ep1, *ep2;
+	EPNODE  *ep1, *ep2;
 
 	if (nextc == '(') {
 		scan();
@@ -788,10 +788,10 @@ getE5(void)			/* E5 -> (E1) */
 
 EPNODE *
 rconst(			/* reduce a constant expression */
-    register EPNODE	 *epar
+    EPNODE	 *epar
 )
 {
-    register EPNODE  *ep;
+    EPNODE  *ep;
 
     ep = newnode();
     ep->type = NUM;
@@ -807,10 +807,10 @@ rconst(			/* reduce a constant expression */
 
 int
 isconstvar(			/* is ep linked to a constant expression? */
-    register EPNODE	 *ep
+    EPNODE	 *ep
 )
 {
-    register EPNODE  *ep1;
+    EPNODE  *ep1;
 
     if (esupport&E_FUNCTION && ep->type == FUNC) {
 	if (!isconstfun(ep->v.kid))
@@ -833,11 +833,11 @@ isconstvar(			/* is ep linked to a constant expression? */
 
 int
 isconstfun(			/* is ep linked to a constant function? */
-    register EPNODE	 *ep
+    EPNODE	 *ep
 )
 {
-    register EPNODE  *dp;
-    register LIBR  *lp;
+    EPNODE  *dp;
+    LIBR  *lp;
 
     if (ep->type != VAR)
 	return(0);

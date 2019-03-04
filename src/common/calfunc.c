@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.18 2015/08/01 23:27:04 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.19 2019/03/04 18:16:18 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -22,7 +22,7 @@ static const char	RCSid[] = "$Id: calfunc.c,v 2.18 2015/08/01 23:27:04 greg Exp 
 
 				/* bits in argument flag (better be right!) */
 #define  AFLAGSIZ	(8*sizeof(unsigned long))
-#define  ALISTSIZ	6	/* maximum saved argument list */
+#define  ALISTSIZ	8	/* maximum saved argument list */
 
 typedef struct activation {
     char  *name;		/* function name */
@@ -104,10 +104,13 @@ funvalue(			/* return a function value to the user */
     act.name = fname;
     act.prev = curact;
     act.ap = a;
-    if (n >= AFLAGSIZ)
-	act.an = ~0;
-    else
+    if (n < AFLAGSIZ)
 	act.an = (1L<<n)-1;
+    else {
+	act.an = ~0;
+	if (n > AFLAGSIZ)
+	    wputs("Excess arguments in funvalue()\n");
+    }
     act.fun = NULL;
     curact = &act;
 
@@ -192,23 +195,22 @@ argument(int n)			/* return nth argument for active function */
     EPNODE  *ep = NULL;
     double  aval;
 
-    if (actp == NULL || --n < 0) {
+    if (!actp | (--n < 0)) {
 	eputs("Bad call to argument!\n");
 	quit(1);
     }
-						/* already computed? */
-    if (n < AFLAGSIZ && 1L<<n & actp->an)
+    if ((n < AFLAGSIZ) & (actp->an >> n))	/* already computed? */
 	return(actp->ap[n]);
 
-    if (actp->fun == NULL || (ep = ekid(actp->fun, n+1)) == NULL) {
+    if (!actp->fun || !(ep = ekid(actp->fun, n+1))) {
 	eputs(actp->name);
 	eputs(": too few arguments\n");
 	quit(1);
     }
-    curact = actp->prev;			/* pop environment */
+    curact = actp->prev;			/* previous context */
     aval = evalue(ep);				/* compute argument */
-    curact = actp;				/* push back environment */
-    if (n < ALISTSIZ) {				/* save value */
+    curact = actp;				/* push back context */
+    if (n < ALISTSIZ) {				/* save value if we can */
 	actp->ap[n] = aval;
 	actp->an |= 1L<<n;
     }
