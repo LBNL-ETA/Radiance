@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.19 2019/03/04 18:16:18 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.20 2019/03/04 20:34:13 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -199,7 +199,7 @@ argument(int n)			/* return nth argument for active function */
 	eputs("Bad call to argument!\n");
 	quit(1);
     }
-    if ((n < AFLAGSIZ) & (actp->an >> n))	/* already computed? */
+    if ((n < AFLAGSIZ) & actp->an >> n)		/* already computed? */
 	return(actp->ap[n]);
 
     if (!actp->fun || !(ep = ekid(actp->fun, n+1))) {
@@ -209,8 +209,8 @@ argument(int n)			/* return nth argument for active function */
     }
     curact = actp->prev;			/* previous context */
     aval = evalue(ep);				/* compute argument */
-    curact = actp;				/* push back context */
-    if (n < ALISTSIZ) {				/* save value if we can */
+    curact = actp;				/* put back calling context */
+    if (n < ALISTSIZ) {				/* save value if room */
 	actp->ap[n] = aval;
 	actp->an |= 1L<<n;
     }
