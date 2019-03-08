@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf.c,v 2.56 2018/12/07 07:38:15 greg Exp $";
+static const char RCSid[] = "$Id: bsdf.c,v 2.57 2019/03/08 03:42:12 greg Exp $";
 #endif
 /*
  *  bsdf.c
@@ -645,10 +645,10 @@ SDevalBSDF(SDValue *sv, const FVECT outVec, const FVECT inVec, const SDData *sd)
 	} else if (!(inFront | outFront)) {
 		*sv = sd->rLambBack;
 		sdf = sd->rb;
-	} else if (outFront) {
+	} else if (inFront) {
 		*sv = sd->tLamb;
 		sdf = (sd->tf != NULL) ? sd->tf : sd->tb;
-	} else /* inFront & !outFront */ {
+	} else /* outFront & !inFront */ {
 		*sv = sd->tLamb;
 		sdf = (sd->tb != NULL) ? sd->tb : sd->tf;
 	}
