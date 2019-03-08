@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.19 2018/03/20 19:55:33 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.20 2019/03/08 17:25:17 rschregle Exp $";
 #endif
 
 /* 
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.19 2018/03/20 19:55:33 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.19 2018/03/20 19:55:33 rschregle Exp $
+   $Id: pmapdata.c,v 2.20 2019/03/08 17:25:17 rschregle Exp $
 */
 
 
@@ -214,7 +214,7 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
    if (ray -> robj > -1 && islight(objptr(ray -> ro -> omod) -> otype)) 
       return -1;
 
-   /*  if modifier in include/exclude set */
+   /* Ignore photon if modifier in/outside exclude/include set */
    if (ambincl != -1 && ray -> ro && 
        ambincl != inset(ambset, ray -> ro -> omod))
       return -1;
@@ -233,14 +233,14 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
       if (!inROI)
          return -1;
    }
-    
+   
    /* Adjust flux according to distribution ratio and ray weight */
    copycolor(photonFlux, ray -> rcol);   
    scalecolor(photonFlux, 
               ray -> rweight / (pmap -> distribRatio ? pmap -> distribRatio
                                                      : 1));
    setPhotonFlux(&photon, photonFlux);
-            
+
    /* Set photon position and flags */
    VCOPY(photon.pos, ray -> rop);
    photon.flags = 0;
@@ -383,7 +383,7 @@ void buildPhotonMap (PhotonMap *pmap, double *photonFlux,
          /* Scale photon's flux (hitherto normalised to 1 over RGB); in
           * case of a contrib photon map, this is done per light source,
           * and photonFlux is assumed to be an array */
-         getPhotonFlux(p, flux);            
+         getPhotonFlux(p, flux);
 
          if (photonFlux) {
             scalecolor(flux, photonFlux [isContribPmap(pmap) ? 
