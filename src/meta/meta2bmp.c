@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: meta2bmp.c,v 1.2 2005/09/19 12:48:09 schorsch Exp $";
+static const char RCSid[] = "$Id: meta2bmp.c,v 1.3 2019/03/19 19:34:41 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to BMP 8-bit color-mapped format
@@ -14,7 +14,7 @@ static const char RCSid[] = "$Id: meta2bmp.c,v 1.2 2005/09/19 12:48:09 schorsch 
 #include  "bmpfile.h"
 #include  "targa.h"
 
-#define  MAXALLOC  30000
+#define  MAXALLOC  100000
 #define  DXSIZE  400		/* default x resolution */
 #define  DYSIZE  400		/* default y resolution */
 #define  XCOM  "pexpand +vOCImsp -DP %s | psort +y"
