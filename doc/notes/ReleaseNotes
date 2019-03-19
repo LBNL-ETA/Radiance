@@ -2254,3 +2254,5 @@ Bug fixes from Jan Wienold for evalglare.
 
 Changed indexed (numbered) output from dctimestep to start from 0 rather
 than 1, to make it more consistent with expected input naming.
+
+Increased default sampling in bsdf2klems (-n option) to 1024.

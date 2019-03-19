@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.25 2018/05/04 23:56:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.26 2019/03/19 22:03:24 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -31,7 +31,7 @@ static const char	klems_half[] = "LBNL/Klems Half";
 static const char	klems_quarter[] = "LBNL/Klems Quarter";
 static const char	*kbasis = klems_full;
 				/* number of BSDF samples per patch */
-static int		npsamps = 256;
+static int		npsamps = 1024;
 				/* limit on number of RBF lobes */
 static int		lobe_lim = 15000;
 				/* progress bar length */

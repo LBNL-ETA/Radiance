@@ -1,4 +1,4 @@
-.\" RCSid $Id: bsdf2klems.1,v 1.6 2018/05/04 23:56:49 greg Exp $
+.\" RCSid $Id: bsdf2klems.1,v 1.7 2019/03/19 22:03:24 greg Exp $
 .TH BSDF2KLEMS 1 4/24/2013 RADIANCE
 .SH NAME
 bsdf2klems - generate XML Klems matrix description of a BSDF
@@ -87,7 +87,7 @@ and output patch to improve accuracy.
 The number of samples to take for each input-output patch pair may
 be controlled using the
 .I \-n
-option, which defaults to 256.
+option, which defaults to 1024.
 .PP
 The first invocation form takes a intermediate scattering representation
 as produced by
