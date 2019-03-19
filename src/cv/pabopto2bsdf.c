@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.30 2017/05/16 20:41:03 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.31 2019/03/19 20:27:33 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -269,6 +269,7 @@ main(int argc, char *argv[])
 	}
 #ifdef DEBUG
 	fprintf(stderr, "Minimum BSDF = %.4f\n", bsdf_min);
+	fprintf(stderr, "Integrated hemispherical value = %.4f\n", dsf_list->vtotal);
 #endif
 	min_log = log(bsdf_min*.5 + 1e-5);
 #if 1						/* produce spheres at meas. */
