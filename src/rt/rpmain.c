@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.18 2016/03/10 18:25:46 schorsch Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.19 2019/03/21 16:52:40 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -286,11 +286,9 @@ main(int  argc, char  *argv[])
 #endif
 	if (outfile != NULL)
 		openheader();
-#if defined(_WIN32) || defined(_WIN64)
 	SET_FILE_BINARY(stdout);
 	if (octname == NULL)
 		SET_FILE_BINARY(stdin);
-#endif
 	readoct(octname, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;
 
