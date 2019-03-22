@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.3 2018/12/04 01:01:49 greg Exp $
+# RCSid $Id: combined.rif,v 1.4 2019/03/22 18:32:53 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -27,6 +27,7 @@ EXP = +3
 RES = 1024
 QUAL = Med
 IND = 1
+AMB = combined.amb
 VAR = Hi
 DET = Hi
 PEN = True
