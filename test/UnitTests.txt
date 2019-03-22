@@ -53,6 +53,7 @@ dctimestep
 Missing:
 ++++++++
 findglare
+genBSDF
 glarendx
 ranimate
 ranimove
@@ -68,6 +69,7 @@ Missing:
 ++++++++
 ies2rad
 obj2rad
+optics2rad
 mgf2rad
 rad2mgf
 mgf2meta
@@ -84,6 +86,7 @@ Tools tested in "px":
 ++++++++
 Missing:
 ++++++++
+falsecolor
 psign
 ra_tiff
 normtiff
