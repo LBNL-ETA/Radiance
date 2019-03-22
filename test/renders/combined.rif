@@ -1,4 +1,4 @@
-# RCSid $Id: combined.rif,v 1.4 2019/03/22 18:32:53 greg Exp $
+# RCSid $Id: combined.rif,v 1.5 2019/03/22 18:35:01 greg Exp $
 #
 # All the scenes combined into one to test every primitive
 #
@@ -27,10 +27,10 @@ EXP = +3
 RES = 1024
 QUAL = Med
 IND = 1
-AMB = combined.amb
 VAR = Hi
 DET = Hi
 PEN = True
+# Using -aa 0 so no ambient file
 
 render = @render.opt -ss 16 -aa 0 -ad 64 -as 0 -ab 1 -lr -6 -lw 1e-5
 
