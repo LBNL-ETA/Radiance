@@ -21,5 +21,7 @@ set(ENV{RAYPATH} "${rlibpath}")
 set(test_output_dir "@CMAKE_BINARY_DIR@/testfiles")
 set(CMAKE_EXECUTABLE_SUFFIX @CMAKE_EXECUTABLE_SUFFIX@)
 
+set(ltn_test "@CMAKE_BINARY_DIR@/test")
+
 message(STATUS "path: $ENV{PATH}")
 message(STATUS "raypath: $ENV{RAYPATH}")
