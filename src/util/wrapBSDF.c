@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wrapBSDF.c,v 2.22 2017/02/14 19:58:37 greg Exp $";
+static const char RCSid[] = "$Id: wrapBSDF.c,v 2.23 2019/04/03 23:50:25 greg Exp $";
 #endif
 /*
  * Wrap BSDF data in valid WINDOW XML file
@@ -121,6 +121,23 @@ static char	basis_definition[][256] = {
 	"\t\t<IncidentDataStructure>TensorTree4</IncidentDataStructure>\n"
 	"\t</DataDefinition>\n",
 };
+
+/* Check that the last-added data file is unique */
+static int
+check_new_data_file()
+{
+	int	i = ndataf;
+
+	while (i-- > 0)
+		if ((data_file[i].spectrum == data_file[ndataf].spectrum) &
+				(data_file[i].type == data_file[ndataf].type)) {
+			fprintf(stderr,
+				"%s: warning - ignoring duplicate component\n",
+					data_file[ndataf].fname);
+			return 0;
+		}
+	return 1;
+}
 
 /* Copy data from file descriptor to stdout and close */
 static int
@@ -835,7 +852,7 @@ main(int argc, char *argv[])
 			}
 			data_file[ndataf].fname = argv[i];
 			data_file[ndataf].spectrum = cur_spectrum;
-			ndataf++;
+			ndataf += check_new_data_file();
 			continue;
 		case 'r':		/* reflection */
 			if (i >= argc-1)
