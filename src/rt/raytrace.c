@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.77 2019/02/22 19:42:27 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.78 2019/04/03 16:04:33 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -229,7 +229,7 @@ rayshade(		/* shade ray r with material mod */
 	int	tst_irrad = do_irrad && !(r->crtype & ~(PRIMARY|TRANS));
 	OBJREC  *m;
 
-	r->rxt = r->rmt = r->rot;	/* preset effective ray length */
+	r->rxt = r->rot;		/* preset effective ray length */
 	for ( ; mod != OVOID; mod = m->omod) {
 		m = objptr(mod);
 		/****** unnecessary test since modifier() is always called
