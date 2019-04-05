@@ -1,4 +1,4 @@
-{ RCSid $Id: fovsample.cal,v 1.2 2019/04/05 17:17:53 greg Exp $ }
+{ RCSid $Id: fovsample.cal,v 1.3 2019/04/05 23:49:59 greg Exp $ }
 {
 	Foveated sampling based on central direction vector,
 	magnification factor at center, and central field of view.
@@ -25,6 +25,7 @@ r : PI/360 * D;		{ half-angle of foveal region in radians }
 rp : M * r;		{ half-angle of mapped boundary }
 
 len(x,y,z) : sqrt(x*x + y*y + z*z);
+sq(x) : x*x;
 			{ normalize central vector }
 Clen : len(Cx,Cy,Cz);
 nCx : Cx/Clen;
@@ -41,12 +42,9 @@ degen = iDot - cos(.05*PI/180);
 
 iTheta = acos(iDot);
 
-gacc : 2;		{ gamma acceleration needed for C1 continuity }
+gamma = 1 + sq((iTheta-rp)/(PI-rp)) * (log(M)/(log(PI/(PI-r)) - log(M)));
 
-gamma = 1 + ((iTheta-rp)/(PI-rp))^gacc * (log(M)/(log(PI/(PI-r)) - log(M)));
-
-oTheta = if(rp-iTheta, iTheta/M,
-		r + (PI-r)*((iTheta/(M*(PI-r)))^gamma - r/(PI-r)));
+oTheta = if(rp-iTheta, iTheta/M, (PI-r)*(iTheta/(M*(PI-r)))^gamma);
 
 			{ normalized "up" vector for rotation }
 Unf = 1/sqrt(1 - iDot*iDot);
@@ -56,13 +54,10 @@ nUz = (nCx*niDy - nCy*niDx)*Unf;
 			{ rotate central vector by oTheta to get new output }
 rcos = cos(oTheta);
 rsin = sqrt(1 - rcos*rcos);
-vPx = nUy*nCz - nUz*nCy;
-vPy = nUz*nCx - nUx*nCz;
-vPz = nUx*nCy - nUy*nCx;
 			{ foveated sample direction }
-rDx = nCx*rcos + vPx*rsin;
-rDy = nCy*rcos + vPy*rsin;
-rDz = nCz*rcos + vPz*rsin;
+rDx = nCx*rcos + (nUy*nCz - nUz*nCy)*rsin;
+rDy = nCy*rcos + (nUz*nCx - nUx*nCz)*rsin;
+rDz = nCz*rcos + (nUx*nCy - nUy*nCx)*rsin;
 			{ substitute approximation in degenerate case }
 oDx = if(degen, nCx+(niDx-nCx)/M, rDx);
 oDy = if(degen, nCy+(niDy-nCy)/M, rDy);
