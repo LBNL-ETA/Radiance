@@ -1,4 +1,4 @@
-{ RCSid $Id: fovsample.cal,v 1.3 2019/04/05 23:49:59 greg Exp $ }
+{ RCSid $Id: fovsample.cal,v 1.4 2019/04/07 15:38:35 greg Exp $ }
 {
 	Foveated sampling based on central direction vector,
 	magnification factor at center, and central field of view.
@@ -11,14 +11,15 @@
 		D :		field of view (full angle in degrees)
 
 	Inputs:
-		iDx, iDy, iDz =	uniformly generated sampling vector
+		forward =	1 if forward conversion, -1 if reverse
+		iDx, iDy, iDz =	input sampling vector
 	
 	Outputs:
-		oDx, oDy, oDz =	foveated sample direction (normalized)
+		oDx, oDy, oDz =	output sample direction (normalized)
 	
 	Other variables computed:
-		iTheta =	original angle to center (radians)
-		oTheta =	new angle to center (radians)
+		iTheta =	input angle to center (radians)
+		oTheta =	output angle to center (radians)
 }
 
 r : PI/360 * D;		{ half-angle of foveal region in radians }
@@ -41,11 +42,15 @@ iDot = nCx*niDx + nCy*niDy + nCz*niDz;
 degen = iDot - cos(.05*PI/180);
 
 iTheta = acos(iDot);
+			{ quadratic function coefficients mate to linear ramp }
+qa : (PI - PI/M)/sq(PI - rp);
+qb : 1/M - 2*PI*r*(M - 1)/sq(PI - rp);
+qc : (PI - PI/M)/sq(PI/rp - 1);
 
-gamma = 1 + sq((iTheta-rp)/(PI-rp)) * (log(M)/(log(PI/(PI-r)) - log(M)));
-
-oTheta = if(rp-iTheta, iTheta/M, (PI-r)*(iTheta/(M*(PI-r)))^gamma);
-
+oTheta = if (forward,
+		if(rp-iTheta, iTheta/M, qa*iTheta*iTheta + qb*iTheta + qc),
+		if(r-iTheta, iTheta*M, (sqrt(qb*qb - 4*qa*(qc - iTheta)) - qb)/(2*qa))
+	);
 			{ normalized "up" vector for rotation }
 Unf = 1/sqrt(1 - iDot*iDot);
 nUx = (nCy*niDz - nCz*niDy)*Unf;
@@ -59,6 +64,6 @@ rDx = nCx*rcos + (nUy*nCz - nUz*nCy)*rsin;
 rDy = nCy*rcos + (nUz*nCx - nUx*nCz)*rsin;
 rDz = nCz*rcos + (nUx*nCy - nUy*nCx)*rsin;
 			{ substitute approximation in degenerate case }
-oDx = if(degen, nCx+(niDx-nCx)/M, rDx);
-oDy = if(degen, nCy+(niDy-nCy)/M, rDy);
-oDz = if(degen, nCz+(niDz-nCz)/M, rDz);
+oDx = if(degen, nCx+(niDx-nCx)*if(forward,1/M,M), rDx);
+oDy = if(degen, nCy+(niDy-nCy)*if(forward,1/M,M), rDy);
+oDz = if(degen, nCz+(niDz-nCz)*if(forward,1/M,M), rDz);
