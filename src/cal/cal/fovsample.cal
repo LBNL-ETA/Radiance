@@ -1,4 +1,4 @@
-{ RCSid $Id: fovsample.cal,v 1.4 2019/04/07 15:38:35 greg Exp $ }
+{ RCSid $Id: fovsample.cal,v 1.5 2019/04/09 00:52:55 greg Exp $ }
 {
 	Foveated sampling based on central direction vector,
 	magnification factor at center, and central field of view.
@@ -37,9 +37,10 @@ iDnf = 1/len(iDx,iDy,iDz);
 niDx = iDx*iDnf;
 niDy = iDy*iDnf;
 niDz = iDz*iDnf;
-			{ check for degenerate case (center of fovea) }
+			{ check for degenerate case (center of fovea or opposite) }
 iDot = nCx*niDx + nCy*niDy + nCz*niDz;
-degen = iDot - cos(.05*PI/180);
+degen0 = iDot - cos(.05*PI/180);
+degen1 = cos(179.95*PI/180) - iDot;
 
 iTheta = acos(iDot);
 			{ quadratic function coefficients mate to linear ramp }
@@ -64,6 +65,6 @@ rDx = nCx*rcos + (nUy*nCz - nUz*nCy)*rsin;
 rDy = nCy*rcos + (nUz*nCx - nUx*nCz)*rsin;
 rDz = nCz*rcos + (nUx*nCy - nUy*nCx)*rsin;
 			{ substitute approximation in degenerate case }
-oDx = if(degen, nCx+(niDx-nCx)*if(forward,1/M,M), rDx);
-oDy = if(degen, nCy+(niDy-nCy)*if(forward,1/M,M), rDy);
-oDz = if(degen, nCz+(niDz-nCz)*if(forward,1/M,M), rDz);
+oDx = if(degen0, nCx+(niDx-nCx)*if(forward,1/M,M), if(degen1, niDx, rDx));
+oDy = if(degen0, nCy+(niDy-nCy)*if(forward,1/M,M), if(degen1, niDy, rDy));
+oDz = if(degen0, nCz+(niDz-nCz)*if(forward,1/M,M), if(degen1, niDz, rDz));
