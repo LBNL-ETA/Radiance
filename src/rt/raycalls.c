@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.23 2018/01/23 23:37:11 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.24 2019/04/18 23:58:22 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -121,7 +121,7 @@ void	(*addobjnotify[8])() = {ambnotify, NULL};
 
 int	do_irrad = 0;			/* compute irradiance? */
 
-int	rand_samp = 0;			/* pure Monte Carlo sampling? */
+int	rand_samp = 1;			/* pure Monte Carlo sampling? */
 
 double	dstrsrc = 0.0;			/* square source distribution */
 double	shadthresh = .03;		/* shadow threshold */
@@ -141,8 +141,8 @@ double	specjitter = 1.;		/* specular sampling jitter */
 
 int	backvis = 1;			/* back face visibility */
 
-int	maxdepth = 8;			/* maximum recursion depth */
-double	minweight = 5e-4;		/* minimum ray weight */
+int	maxdepth = -10;			/* maximum recursion depth */
+double	minweight = 2e-3;		/* minimum ray weight */
 
 char	*ambfile = NULL;		/* ambient file name */
 COLOR	ambval = BLKCOLOR;		/* ambient value */
@@ -238,6 +238,7 @@ ray_save(			/* save current parameter settings */
 	if (rp == NULL)
 		return;
 	rp->do_irrad = do_irrad;
+	rp->rand_samp = rand_samp;
 	rp->dstrsrc = dstrsrc;
 	rp->shadthresh = shadthresh;
 	rp->shadcert = shadcert;
@@ -254,10 +255,11 @@ ray_save(			/* save current parameter settings */
 	rp->backvis = backvis;
 	rp->maxdepth = maxdepth;
 	rp->minweight = minweight;
-	copycolor(rp->ambval, ambval);
-	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
 	if (ambfile != NULL)
 		strncpy(rp->ambfile, ambfile, sizeof(rp->ambfile)-1);
+	else
+		memset(rp->ambfile, '\0', sizeof(rp->ambfile));
+	copycolor(rp->ambval, ambval);
 	rp->ambvwt = ambvwt;
 	rp->ambacc = ambacc;
 	rp->ambres = ambres;
@@ -298,6 +300,7 @@ ray_restore(			/* restore parameter settings */
 	}
 					/* restore saved settings */
 	do_irrad = rp->do_irrad;
+	rand_samp = rp->rand_samp;
 	dstrsrc = rp->dstrsrc;
 	shadthresh = rp->shadthresh;
 	shadcert = rp->shadcert;
@@ -365,6 +368,7 @@ ray_defaults(		/* get default parameter values */
 		return;
 
 	rp->do_irrad = 0;
+	rp->rand_samp = 1;
 	rp->dstrsrc = 0.0;
 	rp->shadthresh = .03;
 	rp->shadcert = .75;
@@ -379,10 +383,10 @@ ray_defaults(		/* get default parameter values */
 	rp->specthresh = .15;
 	rp->specjitter = 1.;
 	rp->backvis = 1;
-	rp->maxdepth = 8;
+	rp->maxdepth = -10;
 	rp->minweight = 2e-3;
-	setcolor(rp->ambval, 0., 0., 0.);
 	memset(rp->ambfile, '\0', sizeof(rp->ambfile));
+	setcolor(rp->ambval, 0., 0., 0.);
 	rp->ambvwt = 0;
 	rp->ambres = 256;
 	rp->ambacc = 0.15;

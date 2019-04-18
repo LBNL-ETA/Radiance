@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.28 2018/11/13 19:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.29 2019/04/18 23:58:22 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -89,10 +89,6 @@ main(int  argc, char  *argv[])
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;
 	addobjnotify[i] = tranotify;
-					/* set our defaults */
-	rand_samp = 1;
-	maxdepth = -10;
-	minweight = 2e-3;
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
