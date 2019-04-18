@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: initotypes.c,v 2.25 2018/11/10 16:12:26 greg Exp $";
+static const char RCSid[] = "$Id: initotypes.c,v 2.26 2019/04/18 22:58:03 greg Exp $";
 #endif
 /*
  * Initialize ofun[] list for renderers
@@ -95,18 +95,17 @@ initotypes(void)			/* initialize ofun array */
 
 
 int
-o_default(OBJREC *o, RAY *r)			/* default action is error */
+o_default(OBJREC *o, RAY *r)		/* default action is error */
 {
 	objerror(o, CONSISTENCY, "unexpected object call");
-				/* unused call to load freeobjmem.o */
+					/* unused call to load freeobjmem.o */
 	free_objs(0, 0);
 	return(0);
 }
 
 
-
-OBJREC *			/* find an object's actual material */
-findmaterial(OBJREC *o)
+OBJREC *	
+findmaterial(OBJREC *o)			/* find an object's actual material */
 {
 	while (!ismaterial(o->otype)) {
 		if (o->otype == MOD_ALIAS && o->oargs.nsargs) {
@@ -115,15 +114,15 @@ findmaterial(OBJREC *o)
 			aobj = lastmod(objndx(o), o->oargs.sarg[0]);
 			if (aobj < 0)
 				objerror(o, USER, "bad reference");
-				/* recursive check on alias branch */
+					/* recursive check on alias branch */
 			if ((ao = findmaterial(objptr(aobj))) != NULL)
 				return(ao);
 		}
 		if (o->omod == OVOID) {
-				/* assume unmodified mixture is material */
+					/* void mixture de facto material? */
 			if (ismixture(o->otype))
 				break;
-			return(NULL);
+			return(NULL);	/* else no material found */
 		}
 		o = objptr(o->omod);
 	}
