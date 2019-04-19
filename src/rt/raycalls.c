@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: raycalls.c,v 2.24 2019/04/18 23:58:22 greg Exp $";
+static const char	RCSid[] = "$Id: raycalls.c,v 2.25 2019/04/19 16:29:10 greg Exp $";
 #endif
 /*
  *  raycalls.c - interface for running Radiance rendering as a library
@@ -156,6 +156,19 @@ char	*amblist[AMBLLEN+1];		/* ambient include/exclude list */
 int	ambincl = -1;			/* include == 1, exclude == 0 */
 
 
+static void
+reset_random(void)		/* re-initialize random number generator */
+{
+	if (rand_samp) {
+		srandom((long)time(0));
+		initurand(0);
+	} else {
+		srandom(0L);
+		initurand(2048);
+	}
+}
+
+
 void
 ray_init(			/* initialize ray-tracing calculation */
 	char	*otnm
@@ -167,13 +180,7 @@ ray_init(			/* initialize ray-tracing calculation */
 	if (ofun[OBJ_SPHERE].funp == o_default)
 		initotypes();
 					/* initialize urand */
-	if (rand_samp) {
-		srandom((long)time(0));
-		initurand(0);
-	} else {
-		srandom(0L);
-		initurand(2048);
-	}
+	reset_random();
 					/* read scene octree */
 	readoct(octname = otnm, ~(IO_FILES|IO_INFO), &thescene, NULL);
 	nsceneobjs = nobjects;
@@ -185,6 +192,7 @@ ray_init(			/* initialize ray-tracing calculation */
 	setambient();
 					/* ready to go... (almost) */
 }
+
 
 void
 ray_trace(			/* trace a primary ray */
@@ -290,7 +298,7 @@ ray_restore(			/* restore parameter settings */
 	RAYPARAMS	*rp
 )
 {
-	register int	i;
+	int	i;
 
 	if (rp == NULL) {		/* restore defaults */
 		RAYPARAMS	dflt;
@@ -300,7 +308,10 @@ ray_restore(			/* restore parameter settings */
 	}
 					/* restore saved settings */
 	do_irrad = rp->do_irrad;
-	rand_samp = rp->rand_samp;
+	if (!rand_samp != !rp->rand_samp) {
+		rand_samp = rp->rand_samp;
+		reset_random();
+	}
 	dstrsrc = rp->dstrsrc;
 	shadthresh = rp->shadthresh;
 	shadcert = rp->shadcert;
@@ -322,6 +333,7 @@ ray_restore(			/* restore parameter settings */
 	ambdiv = rp->ambdiv;
 	ambssamp = rp->ambssamp;
 	ambounce = rp->ambounce;
+					/* a bit dangerous if not static */
 	for (i = 0; rp->amblndx[i] >= 0; i++)
 		amblist[i] = rp->amblval + rp->amblndx[i];
 	while (i <= AMBLLEN)
