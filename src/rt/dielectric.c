@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: dielectric.c,v 2.29 2018/11/13 19:58:33 greg Exp $";
+static const char	RCSid[] = "$Id: dielectric.c,v 2.30 2019/04/19 19:01:32 greg Exp $";
 #endif
 /*
  *  dielectric.c - shading function for transparent materials.
@@ -226,8 +226,9 @@ m_dielectric(	/* color a ray which hit a dielectric interface */
 		copycolor(r->mcol, p.rcol);
 		addcolor(r->rcol, p.rcol);
 						/* virtual distance */
+		r->rmt = r->rot;
 		if (flatsurface)
-			r->rmt = r->rot + raydistance(&p);
+			r->rmt += raydistance(&p);
 	}
 				/* rayvalue() computes absorption */
 	return(1);
