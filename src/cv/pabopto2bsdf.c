@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.33 2019/04/23 17:00:40 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.34 2019/04/23 17:18:18 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -249,9 +249,12 @@ main(int argc, char *argv[])
 	switch (toupper(symmetry[0])) {
 	case 'U':				/* unknown symmetry */
 		if ((inp_coverage == (INP_QUAD1|INP_QUAD3)) |
-				(inp_coverage == (INP_QUAD2|INP_QUAD4))) {
-			fprintf(stderr,
-				"%s: unsupported bowtie (%s) input symmetry\n",
+				(inp_coverage == (INP_QUAD2|INP_QUAD4)) |
+				(inp_coverage == (INP_QUAD1|INP_QUAD2|INP_QUAD3)) |
+				(inp_coverage == (INP_QUAD2|INP_QUAD3|INP_QUAD4)) |
+				(inp_coverage == (INP_QUAD4|INP_QUAD1|INP_QUAD2)) |
+				(inp_coverage == (INP_QUAD1|INP_QUAD3|INP_QUAD4))) {
+			fprintf(stderr, "%s: unsupported phi coverage (%s)\n",
 					progname, quadrant_rep[inp_coverage]);
 			return(1);
 		}
