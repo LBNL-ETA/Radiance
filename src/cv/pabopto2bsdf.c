@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.34 2019/04/23 17:18:18 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.35 2019/04/23 23:48:33 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -191,20 +191,34 @@ add_pabopto_inp(const int i)
 }
 
 #ifndef TEST_MAIN
+
+#define	SYM_ILL		'?'		/* illegal symmetry value */
+#define	SYM_ISO		'I'		/* isotropic */
+#define	SYM_QUAD	'Q'		/* quadrilateral symmetry */
+#define	SYM_BILAT	'B'		/* bilateral symmetry */
+#define	SYM_ANISO	'A'		/* anisotropic */
+
+static const char	quadrant_rep[16][16] = {
+				"in-plane","0-90","90-180","0-180",
+				"180-270","0-90+180-270","90-270",
+				"0-270","270-360","270-90",
+				"90-180+270-360","270-180","180-360",
+				"180-90","90-360","0-360"
+			};
+static const char	quadrant_sym[16] = {
+				SYM_ISO, SYM_QUAD, SYM_QUAD, SYM_BILAT,
+				SYM_QUAD, SYM_ILL, SYM_BILAT, SYM_ILL,
+				SYM_QUAD, SYM_BILAT, SYM_ILL, SYM_ILL,
+				SYM_BILAT, SYM_ILL, SYM_ILL, SYM_ANISO
+			};
+
 /* Read in PAB-Opto BSDF files and output RBF interpolant */
 int
 main(int argc, char *argv[])
 {
-	extern int		nprocs;
-	static const char	quadrant_rep[16][16] = {
-					"iso","0-90","90-180","0-180",
-					"180-270","0-90+180-270","90-270",
-					"0-270","270-360","270-90",
-					"90-180+270-360","270-180","180-360",
-					"0-90+180-360","90-360","0-360"
-				};
-	const char *		symmetry = "Unknown";
-	int			i;
+	extern int	nprocs;
+	const char	*symmetry = "U";
+	int		i;
 						/* start header */
 	SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
@@ -247,40 +261,22 @@ main(int argc, char *argv[])
 	make_rbfrep();				/* process last data set */
 						/* check input symmetry */
 	switch (toupper(symmetry[0])) {
-	case 'U':				/* unknown symmetry */
-		if ((inp_coverage == (INP_QUAD1|INP_QUAD3)) |
-				(inp_coverage == (INP_QUAD2|INP_QUAD4)) |
-				(inp_coverage == (INP_QUAD1|INP_QUAD2|INP_QUAD3)) |
-				(inp_coverage == (INP_QUAD2|INP_QUAD3|INP_QUAD4)) |
-				(inp_coverage == (INP_QUAD4|INP_QUAD1|INP_QUAD2)) |
-				(inp_coverage == (INP_QUAD1|INP_QUAD3|INP_QUAD4))) {
-			fprintf(stderr, "%s: unsupported phi coverage (%s)\n",
-					progname, quadrant_rep[inp_coverage]);
-			return(1);
-		}
-		break;
-	case 'I':				/* isotropic */
-		if (inp_coverage)
-			goto badsymmetry;
-		break;
-	case 'Q':				/* quadrilateral symmetry */
-		if ((inp_coverage != INP_QUAD1) &
-				(inp_coverage != INP_QUAD2) &
-				(inp_coverage != INP_QUAD3) &
-				(inp_coverage != INP_QUAD4))
-			goto badsymmetry;
-		break;
-	case 'B':				/* bilateral symmetry */
-		if ((inp_coverage != (INP_QUAD1|INP_QUAD2)) &
-				(inp_coverage != (INP_QUAD2|INP_QUAD3)) &
-				(inp_coverage != (INP_QUAD3|INP_QUAD4)) &
-				(inp_coverage != (INP_QUAD4|INP_QUAD1)))
-			goto badsymmetry;
-		break;
-	case 'A':				/* anisotropic */
-		if (inp_coverage != (INP_QUAD1|INP_QUAD2|INP_QUAD3|INP_QUAD4))
-			goto badsymmetry;
-		break;
+	case 'U':				/* unspecified symmetry */
+		if (quadrant_sym[inp_coverage] != SYM_ILL)
+			break;			/* anything legal goes */
+		fprintf(stderr, "%s: unsupported phi coverage (%s)\n",
+				progname, quadrant_rep[inp_coverage]);
+		return(1);
+	case SYM_ISO:				/* legal symmetry types */
+	case SYM_QUAD:
+	case SYM_BILAT:
+	case SYM_ANISO:
+		if (quadrant_sym[inp_coverage] == toupper(symmetry[0]))
+			break;			/* matches spec */
+		fprintf(stderr,
+		"%s: phi coverage (%s) does not match requested '%s' symmetry\n",
+				progname, quadrant_rep[inp_coverage], symmetry);
+		return(1);
 	default:
 		fprintf(stderr,
   "%s: -s option must be Isotropic, Quadrilateral, Bilateral, or Anisotropic\n",
@@ -288,20 +284,21 @@ main(int argc, char *argv[])
 		return(1);
 	}
 #ifdef DEBUG
-	fprintf(stderr, "Input phi coverage: %s\n", quadrant_rep[inp_coverage]);
+	fprintf(stderr, "Input phi coverage (%s) has '%c' symmetry\n",
+				quadrant_rep[inp_coverage],
+				quadrant_sym[inp_coverage]);
 #endif
 	build_mesh();				/* create interpolation */
 	save_bsdf_rep(stdout);			/* write it out */
 	return(0);
-badsymmetry:
-	fprintf(stderr, "%s: phi coverage (%s) does not match requested '%s' symmetry\n",
-			progname, quadrant_rep[inp_coverage], symmetry);
 userr:
 	fprintf(stderr, "Usage: %s [-t][-n nproc][-s symmetry] meas1.dat meas2.dat .. > bsdf.sir\n",
 					progname);
 	return(1);
 }
-#else
+
+#else		/* TEST_MAIN */
+
 /* Test main produces a Radiance model from the given input file */
 int
 main(int argc, char *argv[])
@@ -385,4 +382,5 @@ main(int argc, char *argv[])
 #endif
 	return(0);
 }
-#endif
+
+#endif		/* TEST_MAIN */
