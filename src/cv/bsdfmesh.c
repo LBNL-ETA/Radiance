@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfmesh.c,v 2.39 2017/10/06 00:23:09 greg Exp $";
+static const char RCSid[] = "$Id: bsdfmesh.c,v 2.40 2019/04/23 14:30:36 greg Exp $";
 #endif
 /*
  * Create BSDF advection mesh from radial basis functions.
@@ -538,9 +538,11 @@ memerr:
 void
 build_mesh(void)
 {
+	int		nrbfs = 0, nmigs = 0;
 	double		best2 = M_PI*M_PI;
 	RBFNODE		*shrt_edj[2];
 	RBFNODE		*rbf0, *rbf1;
+	const MIGRATION	*ej;
 						/* average specular peak */
 	comp_bsdf_spec();
 						/* add normal if needed */
@@ -554,7 +556,7 @@ build_mesh(void)
 		return;
 	}
 	shrt_edj[0] = shrt_edj[1] = NULL;	/* start w/ shortest edge */
-	for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next)
+	for (rbf0 = dsf_list; rbf0 != NULL; rbf0 = rbf0->next) {
 	    for (rbf1 = rbf0->next; rbf1 != NULL; rbf1 = rbf1->next) {
 		double	dist2 = 2. - 2.*DOT(rbf0->invec,rbf1->invec);
 		if (dist2 < best2) {
@@ -562,6 +564,8 @@ build_mesh(void)
 			shrt_edj[1] = rbf1;
 			best2 = dist2;
 		}
+	    }
+	    ++nrbfs;
 	}
 	if (shrt_edj[0] == NULL) {
 		fprintf(stderr, "%s: Cannot find shortest edge\n", progname);
@@ -572,6 +576,13 @@ build_mesh(void)
 		mesh_from_edge(create_migration(shrt_edj[0], shrt_edj[1]));
 	else
 		mesh_from_edge(create_migration(shrt_edj[1], shrt_edj[0]));
+						/* count up edges */
+	for (ej = mig_list; ej != NULL; ej = ej->next)
+		++nmigs;
+	if (nmigs < nrbfs-1)			/* did meshing fail? */
+		fprintf(stderr,
+	    "%s: warning - %d incident directions but only %d interpolant(s)\n",
+				progname, nrbfs, nmigs);
 						/* complete migrations */
 	await_children(nchild);
 }
