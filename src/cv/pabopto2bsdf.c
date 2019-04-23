@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.32 2019/04/09 22:15:51 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.33 2019/04/23 17:00:40 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -195,8 +195,16 @@ add_pabopto_inp(const int i)
 int
 main(int argc, char *argv[])
 {
-	extern int	nprocs;
-	int		i;
+	extern int		nprocs;
+	static const char	quadrant_rep[16][16] = {
+					"iso","0-90","90-180","0-180",
+					"180-270","0-90+180-270","90-270",
+					"0-270","270-360","270-90",
+					"90-180+270-360","270-180","180-360",
+					"0-90+180-360","90-360","0-360"
+				};
+	const char *		symmetry = "Unknown";
+	int			i;
 						/* start header */
 	SET_FILE_BINARY(stdout);
 	newheader("RADIANCE", stdout);
@@ -210,6 +218,10 @@ main(int argc, char *argv[])
 			break;
 		case 'n':
 			nprocs = atoi(argv[2]);
+			argv++; argc--;
+			break;
+		case 's':
+			symmetry = argv[2];
 			argv++; argc--;
 			break;
 		default:
@@ -233,11 +245,56 @@ main(int argc, char *argv[])
 		if (!add_pabopto_inp(i))
 			return(1);
 	make_rbfrep();				/* process last data set */
+						/* check input symmetry */
+	switch (toupper(symmetry[0])) {
+	case 'U':				/* unknown symmetry */
+		if ((inp_coverage == (INP_QUAD1|INP_QUAD3)) |
+				(inp_coverage == (INP_QUAD2|INP_QUAD4))) {
+			fprintf(stderr,
+				"%s: unsupported bowtie (%s) input symmetry\n",
+					progname, quadrant_rep[inp_coverage]);
+			return(1);
+		}
+		break;
+	case 'I':				/* isotropic */
+		if (inp_coverage)
+			goto badsymmetry;
+		break;
+	case 'Q':				/* quadrilateral symmetry */
+		if ((inp_coverage != INP_QUAD1) &
+				(inp_coverage != INP_QUAD2) &
+				(inp_coverage != INP_QUAD3) &
+				(inp_coverage != INP_QUAD4))
+			goto badsymmetry;
+		break;
+	case 'B':				/* bilateral symmetry */
+		if ((inp_coverage != (INP_QUAD1|INP_QUAD2)) &
+				(inp_coverage != (INP_QUAD2|INP_QUAD3)) &
+				(inp_coverage != (INP_QUAD3|INP_QUAD4)) &
+				(inp_coverage != (INP_QUAD4|INP_QUAD1)))
+			goto badsymmetry;
+		break;
+	case 'A':				/* anisotropic */
+		if (inp_coverage != (INP_QUAD1|INP_QUAD2|INP_QUAD3|INP_QUAD4))
+			goto badsymmetry;
+		break;
+	default:
+		fprintf(stderr,
+  "%s: -s option must be Isotropic, Quadrilateral, Bilateral, or Anisotropic\n",
+				progname);
+		return(1);
+	}
+#ifdef DEBUG
+	fprintf(stderr, "Input phi coverage: %s\n", quadrant_rep[inp_coverage]);
+#endif
 	build_mesh();				/* create interpolation */
 	save_bsdf_rep(stdout);			/* write it out */
 	return(0);
+badsymmetry:
+	fprintf(stderr, "%s: phi coverage (%s) does not match requested '%s' symmetry\n",
+			progname, quadrant_rep[inp_coverage], symmetry);
 userr:
-	fprintf(stderr, "Usage: %s [-t][-n nproc] meas1.dat meas2.dat .. > bsdf.sir\n",
+	fprintf(stderr, "Usage: %s [-t][-n nproc][-s symmetry] meas1.dat meas2.dat .. > bsdf.sir\n",
 					progname);
 	return(1);
 }
