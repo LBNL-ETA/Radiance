@@ -1,5 +1,5 @@
-#!/usr/local/bin/wish4.0
-# RCSid: $Id: trad.wsh,v 2.16 2011/10/26 20:06:17 greg Exp $
+#!/usr/bin/wish
+# RCSid: $Id: trad.wsh,v 2.17 2019/05/01 16:47:54 greg Exp $
 # the next line restarts using wish in case of shell execution \
 exec wish "$0" "$@"
 #

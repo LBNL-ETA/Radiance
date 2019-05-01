@@ -1,5 +1,5 @@
 #!/bin/csh -fe
-# RCSid: $Id: tradinstall.csh,v 2.9 2015/10/20 15:51:58 greg Exp $
+# RCSid: $Id: tradinstall.csh,v 2.10 2019/05/01 16:47:54 greg Exp $
 # Install correct version of trad for wish or wish4.0
 #
 set instdir = $1
@@ -30,7 +30,7 @@ endif
 
 echo "Installing trad using $wishcom"
 
-sed -e "1s|/usr/local/bin/wish4\.0|$wishcom|" \
+sed -e "1s|/usr/bin/wish|$wishcom|" \
 	-e "s|^set radlib .*|set radlib $libdir|" trad.wsh > $instdir/trad
 chmod 755 $instdir/trad
 if (! -d $libdir) then
