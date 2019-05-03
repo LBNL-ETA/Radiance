@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: wfconv.c,v 2.14 2014/06/11 00:08:30 greg Exp $";
+static const char RCSid[] = "$Id: wfconv.c,v 2.15 2019/05/03 18:00:50 greg Exp $";
 #endif
 /*
  *  Load Wavefront .OBJ file and convert to triangles with mesh info.
@@ -468,7 +468,7 @@ syntax(			/* report syntax error and exit */
 	char	*er
 )
 {
-	sprintf(errmsg, "%s: Wavefront syntax error near line %d: %s\n",
+	sprintf(errmsg, "%s: Wavefront syntax error near line %d: %s",
 			inpfile, lineno, er);
 	error(USER, errmsg);
 }
