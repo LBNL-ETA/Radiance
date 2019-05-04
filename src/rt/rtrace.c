@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.77 2019/05/04 13:48:06 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.78 2019/05/04 23:10:32 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -118,6 +118,7 @@ rtrace(				/* trace rays from file */
 	unsigned long  vcount = (hresolu > 1) ? (unsigned long)hresolu*vresolu
 					      : (unsigned long)vresolu;
 	long  nextflush = (vresolu > 0) & (hresolu > 1) ? 0 : hresolu;
+	int  bogusflushed = 0;
 	FILE  *fp;
 	double	d;
 	FVECT  orig, direc;
@@ -154,7 +155,8 @@ rtrace(				/* trace rays from file */
 	if (hresolu > 0) {
 		if (vresolu > 0)
 			fprtresolu(hresolu, vresolu, stdout);
-		fflush(stdout);
+		else
+			fflush(stdout);
 	}
 					/* process file */
 	while (getvec(orig, inform, fp) == 0 &&
@@ -162,11 +164,12 @@ rtrace(				/* trace rays from file */
 
 		d = normalize(direc);
 		if (d == 0.0) {				/* zero ==> flush */
-			if ((--nextflush <= 0) | !vcount) {
+			if ((--nextflush <= 0) | !vcount && !bogusflushed) {
 				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
 					error(USER, "child(ren) died");
 				bogusray();
 				fflush(stdout);
+				bogusflushed = 1;
 				nextflush = (vresolu > 0) & (hresolu > 1) ? 0 :
 								hresolu;
 			} else
@@ -179,7 +182,8 @@ rtrace(				/* trace rays from file */
 					error(USER, "child(ren) died");
 				fflush(stdout);
 				nextflush = hresolu;
-			}
+			} else
+				bogusflushed = 0;
 		}
 		if (ferror(stdout))
 			error(SYSTEM, "write error");
@@ -314,7 +318,6 @@ setoutput(				/* set up output tables */
 static void
 bogusray(void)			/* print out empty record */
 {
-	memset(&thisray, 0, sizeof(thisray));
 	rayorigin(&thisray, PRIMARY, NULL, NULL);
 	printvals(&thisray);
 }
