@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.92 2019/03/21 16:52:40 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.93 2019/05/04 00:32:47 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -288,10 +288,12 @@ rpict(			/* generate image(s) */
 			break;
 		pctdone = 0.0;
 		if (pout != NULL) {
+			int	myfd;
 			close(1);			/* reassign stdout */
 			sprintf(fbuf, pout, seq);
+		tryagain:
 			errno = 0;			/* exclusive open */
-			if (open(fbuf, O_WRONLY|O_CREAT|O_EXCL, 0666) != 1) {
+			if ((myfd = open(fbuf, O_WRONLY|O_CREAT|O_EXCL, 0666)) < 0) {
 				if ((errno != EEXIST) | (prvr != NULL) ||
 						!strcmp(fbuf, pout)) {
 					sprintf(errmsg,
@@ -301,6 +303,10 @@ rpict(			/* generate image(s) */
 				}
 				setview(&ourview);
 				continue;		/* don't clobber */
+			}
+			if (myfd != 1) {
+				unlink(fbuf);
+				goto tryagain;		/* leave it open */
 			}
 			SET_FD_BINARY(1);
 			dupheader();
