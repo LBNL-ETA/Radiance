@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rglfile.c,v 3.11 2004/03/28 20:33:12 schorsch Exp $";
+static const char	RCSid[] = "$Id: rglfile.c,v 3.12 2019/05/04 00:36:58 greg Exp $";
 #endif
 /*
  * Load Radiance object(s) and create OpenGL display lists
@@ -184,7 +184,7 @@ char	*inpspec;
 	}
 	if (inpspec[0] == '!')
 		pclose(infp);
-	else
+	else if (infp != stdin)
 		fclose(infp);
 }
 

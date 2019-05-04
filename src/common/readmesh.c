@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: readmesh.c,v 2.16 2018/11/27 06:30:05 greg Exp $";
+static const char RCSid[] = "$Id: readmesh.c,v 2.17 2019/05/04 00:36:58 greg Exp $";
 #endif
 /*
  *  Routines for reading a compiled mesh from a file
@@ -290,7 +290,8 @@ int	flags;
 			getpatch(&mp->patch[i]);
 	}
 					/* clean up */
-	fclose(meshfp);
+	if (meshfp != stdin)
+		fclose(meshfp);
 	mp->ldflags |= flags;
 					/* verify data */
 	if ((err = checkmesh(mp)) != NULL)

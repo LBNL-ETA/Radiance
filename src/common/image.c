@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: image.c,v 2.49 2018/08/07 23:17:06 greg Exp $";
+static const char	RCSid[] = "$Id: image.c,v 2.50 2019/05/04 00:36:58 greg Exp $";
 #endif
 /*
  *  image.c - routines for image generation.
@@ -630,7 +630,8 @@ RESOLU  *rp
 	if (rp != NULL && !fgetsresolu(rp, fp))
 		mvs.ok = 0;
 
-	fclose(fp);
+	if (fp != stdin)
+		fclose(fp);
 
 	return(mvs.ok);
 }
