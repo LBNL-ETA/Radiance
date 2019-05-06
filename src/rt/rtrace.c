@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.78 2019/05/04 23:10:32 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.79 2019/05/06 16:49:38 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -118,7 +118,7 @@ rtrace(				/* trace rays from file */
 	unsigned long  vcount = (hresolu > 1) ? (unsigned long)hresolu*vresolu
 					      : (unsigned long)vresolu;
 	long  nextflush = (vresolu > 0) & (hresolu > 1) ? 0 : hresolu;
-	int  bogusflushed = 0;
+	int  something2flush = 0;
 	FILE  *fp;
 	double	d;
 	FVECT  orig, direc;
@@ -137,6 +137,10 @@ rtrace(				/* trace rays from file */
 		castonly = 0;
 	else if (castonly)
 		nproc = 1;		/* don't bother multiprocessing */
+	if ((nextflush > 0) & (nproc > nextflush)) {
+		error(WARNING, "reducing number of processes to match flush interval");
+		nproc = nextflush;
+	}
 	switch (outform) {
 	case 'a': putreal = puta; break;
 	case 'f': putreal = putf; break;
@@ -164,12 +168,12 @@ rtrace(				/* trace rays from file */
 
 		d = normalize(direc);
 		if (d == 0.0) {				/* zero ==> flush */
-			if ((--nextflush <= 0) | !vcount && !bogusflushed) {
+			if ((--nextflush <= 0) | !vcount && something2flush) {
 				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
 					error(USER, "child(ren) died");
 				bogusray();
 				fflush(stdout);
-				bogusflushed = 1;
+				something2flush = 0;
 				nextflush = (vresolu > 0) & (hresolu > 1) ? 0 :
 								hresolu;
 			} else
@@ -183,7 +187,7 @@ rtrace(				/* trace rays from file */
 				fflush(stdout);
 				nextflush = hresolu;
 			} else
-				bogusflushed = 0;
+				something2flush = 1;
 		}
 		if (ferror(stdout))
 			error(SYSTEM, "write error");
