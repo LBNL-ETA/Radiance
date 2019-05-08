@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrbf.c,v 2.32 2019/04/09 22:39:33 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrbf.c,v 2.33 2019/05/08 16:38:19 greg Exp $";
 #endif
 /*
  * Radial basis function representation for BSDF data.
@@ -38,7 +38,7 @@ static const char RCSid[] = "$Id: bsdfrbf.c,v 2.32 2019/04/09 22:39:33 greg Exp 
 #define SMOOTH_MSE	5e-5		/* acceptable mean squared error */
 #endif
 #ifndef SMOOTH_MSER
-#define SMOOTH_MSER	0.0025		/* acceptable relative MSE */
+#define SMOOTH_MSER	0.0016		/* acceptable relative MSE */
 #endif
 #define MAX_RAD		(GRIDRES/8)	/* maximum lobe radius */
 
