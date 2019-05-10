@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdata.c,v 2.20 2019/03/08 17:25:17 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdata.c,v 2.21 2019/05/10 17:43:22 rschregle Exp $";
 #endif
 
 /* 
@@ -17,7 +17,7 @@ static const char RCSid[] = "$Id: pmapdata.c,v 2.20 2019/03/08 17:25:17 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ==========================================================================
    
-   $Id: pmapdata.c,v 2.20 2019/03/08 17:25:17 rschregle Exp $
+   $Id: pmapdata.c,v 2.21 2019/05/10 17:43:22 rschregle Exp $
 */
 
 
@@ -50,6 +50,9 @@ PhotonMap *photonMaps [NUM_PMAP_TYPES] = {
    #define MAXASET  4095
 #endif
 extern OBJECT ambset [MAXASET+1];
+
+/* Callback to print photon attributes acc. to user defined format */
+int (*printPhoton)(RAY *r, Photon *p, PhotonMap *pm);
 
 
 
@@ -235,10 +238,18 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
    }
    
    /* Adjust flux according to distribution ratio and ray weight */
-   copycolor(photonFlux, ray -> rcol);   
+   copycolor(photonFlux, ray -> rcol);         
+#if 0
+   /* Factored out ray -> rweight as deprecated (?) for pmap, and infact
+      erroneously attenuates volume photon flux based on extinction,
+      which is already factored in by photonParticipate() */
    scalecolor(photonFlux, 
               ray -> rweight / (pmap -> distribRatio ? pmap -> distribRatio
                                                      : 1));
+#else
+   scalecolor(photonFlux, 
+              1.0 / (pmap -> distribRatio ? pmap -> distribRatio : 1));
+#endif
    setPhotonFlux(&photon, photonFlux);
 
    /* Set photon position and flags */
@@ -287,6 +298,11 @@ int newPhoton (PhotonMap* pmap, const RAY* ray)
       flushPhotonHeap(pmap);
 
    pmap -> numPhotons++;
+         
+   /* Print photon attributes */
+   if (printPhoton)
+      /* Non-const kludge */
+      printPhoton((RAY*)ray, &photon, pmap);
             
    return 0;
 }
