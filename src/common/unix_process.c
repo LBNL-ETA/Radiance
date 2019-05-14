@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.13 2017/03/24 12:56:12 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.14 2019/05/14 18:37:36 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -37,7 +37,13 @@ char	*av[]
 		return(0);
 	if (pipe(p0) < 0 || pipe(p1) < 0)
 		return(-1);
-	if ((pd->pid = fork()) == 0) {	/* if child... */
+#ifdef BSD
+	if (compath != NULL)
+		pd->pid = vfork();	/* more efficient with exec() */
+	else
+#endif
+	pd->pid = fork();
+	if (pd->pid == 0) {		/* if child... */
 		close(p0[1]);
 		close(p1[0]);
 		if (p0[0] != 0) {	/* connect p0 to stdin */
