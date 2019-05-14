@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.8 2012/11/09 01:35:00 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.9 2019/05/14 17:21:50 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -50,6 +50,7 @@ encodedir(FVECT dv)		/* encode a normalized direction vector */
 	return(dc);
 }
 
+#if 0		/* original version for reference */
 
 void
 decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
@@ -77,6 +78,34 @@ decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
 	if (dc & FZNEG) dv[2] = -dv[2];
 }
 
+#else	
+
+void
+decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
+{
+	static const short	itab[4][3] = {
+					{1,0,2},{0,1,2},{1,2,0},{0,2,1}
+				};
+	static const RREAL	neg[2] = {1., -1.};
+	const int		ndx = ((dc & F2Z) != 0)<<1 | ((dc & F1X) != 0);
+	double			d1, d2, der;
+
+	if (!dc) {		/* special code for zero normal */
+		dv[0] = dv[1] = dv[2] = 0.;
+		return;
+	}
+	d1 = ((dc>>F1SFT & FMASK)+.5)*(1./DCSCALE);
+	d2 = ((dc>>F2SFT & FMASK)+.5)*(1./DCSCALE);
+	der = sqrt(1. - d1*d1 - d2*d2);
+	dv[itab[ndx][0]] = d1;
+	dv[itab[ndx][1]] = d2;
+	dv[itab[ndx][2]] = der;
+	dv[0] *= neg[(dc&FXNEG)!=0];
+	dv[1] *= neg[(dc&FYNEG)!=0];
+	dv[2] *= neg[(dc&FZNEG)!=0];
+}
+
+#endif
 
 double
 dir2diff(int32 dc1, int32 dc2)	/* approx. radians^2 between directions */
@@ -88,7 +117,6 @@ dir2diff(int32 dc1, int32 dc2)	/* approx. radians^2 between directions */
 
 	return(2. - 2.*DOT(v1,v2));
 }
-
 
 double
 fdir2diff(int32 dc1, FVECT v2)	/* approx. radians^2 between directions */
