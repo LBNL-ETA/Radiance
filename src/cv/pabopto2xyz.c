@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.3 2016/08/22 21:03:00 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.4 2019/05/16 16:38:37 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -491,7 +491,7 @@ main(int argc, char *argv[])
 		default:
 			goto userr;
 		}
-	if (i > argc-3)
+	if (i != argc-3)
 		goto userr;
 	for (j = 0; j < 3; j++) {		/* prep input channels */
 		int	k, n;
