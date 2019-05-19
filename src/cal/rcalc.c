@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.27 2016/08/18 00:52:47 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.28 2019/05/19 20:02:27 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -303,7 +303,9 @@ execute(           /* process a file */
 char  *file
 )
 {
-	int  conditional = vardefined("cond");
+	const int  conditional = vardefined("cond");
+	const int  set_recno = (varlookup("recno") != NULL);
+	const int  set_outno = (varlookup("outno") != NULL);
 	long  nrecs = 0;
 	long  nout = 0;
 	FILE  *fp;
@@ -324,8 +326,11 @@ char  *file
 		initinp(fp);
 	
 	while (getinputrec(fp)) {
-		varset("recno", '=', (double)++nrecs);
-		varset("outno", '=', (double)(nout+1));
+		++nrecs;
+		if (set_recno)
+			varset("recno", '=', (double)nrecs);
+		if (set_outno)
+			varset("outno", '=', (double)(nout+1));
 		colflg = 0;
 		eclock++;
 		if (!conditional || varvalue("cond") > 0.0) {
