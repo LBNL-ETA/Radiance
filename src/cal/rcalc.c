@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.28 2019/05/19 20:02:27 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.29 2019/05/19 21:15:25 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -17,10 +17,10 @@ static const char RCSid[] = "$Id: rcalc.c,v 1.28 2019/05/19 20:02:27 greg Exp $"
 #include  "rtio.h"
 #include  "calcomp.h"
 
-#define  isnum(c)       (isdigit(c) || (c)=='-' || (c)=='.' \
-				|| (c)=='+' || (c)=='e' || (c)=='E')
+#define  isnum(c)       (isdigit(c) || ((c)=='-') | ((c)=='.') \
+				| ((c)=='+') | ((c)=='e') | ((c)=='E'))
 
-#define  isblnk(c)      (igneol ? isspace(c) : (c)==' '||(c)=='\t')
+#define  isblnk(c)      (igneol ? isspace(c) : ((c)==' ')|((c)=='\t'))
 
 #define  INBSIZ         16384	/* longest record */
 #define  MAXCOL         32      /* number of columns recorded */
@@ -280,14 +280,14 @@ FILE  *fp
 {
 	if (inpfmt != NULL)
 		return(getrec());
-	if (tolower(itype) == 'd') {
+	if ((itype == 'd') | (itype == 'D')) {
 		if (getbinary(inpbuf, sizeof(double), nbicols, fp) != nbicols)
 			return(0);
 		if (itype == 'D')
 			swap64(inpbuf, nbicols);
 		return(1);
 	}
-	if (tolower(itype) == 'f') {
+	if ((itype == 'f') | (itype == 'F')) {
 		if (getbinary(inpbuf, sizeof(float), nbicols, fp) != nbicols)
 			return(0);
 		if (itype == 'F')
@@ -413,7 +413,7 @@ int  n
 	if (nbicols) {
 		if (n > nbicols)
 			return(0.0);
-		if (tolower(itype) == 'd') {
+		if ((itype == 'd') | (itype == 'D')) {
 			cp = inpbuf + (n-1)*sizeof(double);
 			return(*(double *)cp);
 		}
@@ -468,12 +468,12 @@ double  v
 )
 {
 	static char	zerobuf[sizeof(double)];
+	const int	otlen = ((otype == 'd') | (otype == 'D')) ?
+					sizeof(double) : sizeof(float);
 	float	fval = v;
 
 	while (++colpos < n)
-		putbinary(zerobuf,
-			tolower(otype)=='d' ? sizeof(double) : sizeof(float),
-			1, stdout);
+		putbinary(zerobuf, otlen, 1, stdout);
 	switch (otype) {
 	case 'D':
 		swap64((char *)&v, 1);
@@ -700,7 +700,7 @@ getrec(void)				/* get next record from file */
 			if (ipb.chr == EOF)
 				return(0);
 		}
-		eatline = (!igneol && ipb.chr != '\n');
+		eatline = !igneol & (ipb.chr != '\n');
 		clearrec();		/* start with fresh record */
 		for (f = inpfmt; f != NULL; f = f->next)
 			if (getfield(f) == -1)
@@ -761,7 +761,7 @@ struct field  *f
 			delim = f->next->f.sl[0];
 		cp = buf;
 		do {
-			if (ipb.chr == EOF || ipb.chr == '\n')
+			if ((ipb.chr == EOF) | (ipb.chr == '\n'))
 				inword = 0;
 			else if (blnkeq && delim != EOF)
 				inword = isblnk(delim) ?
