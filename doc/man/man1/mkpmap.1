@@ -1,5 +1,5 @@
-.\" RCSid "$Id: mkpmap.1,v 1.11 2018/12/06 20:13:13 rschregle Exp $"
-.TH MKPMAP 1 "$Date: 2018/12/06 20:13:13 $ $Revision: 1.11 $" RADIANCE
+.\" RCSid "$Id: mkpmap.1,v 1.12 2019/06/03 17:08:23 rschregle Exp $"
+.TH MKPMAP 1 "$Date: 2019/06/03 17:08:23 $ $Revision: 1.12 $" RADIANCE
 
 .SH NAME
 mkpmap - generate RADIANCE photon map
@@ -118,8 +118,8 @@ future releases.
 
 .IP "\fB\-apM \fImaxprepass\fR"
 Maximum number of iterations of the distribution prepass before terminating
-if some photon maps are still empty. This option is rarely needed as a
-an aborted prepass indicates an anomaly in the geometry or an
+if some photon maps are still empty. This option is rarely needed as
+an aborted prepass may indicate an anomaly in the geometry or an
 incompatibility with the specified photon map types (see \fBNOTES\fR below).
 
 .IP "\fB\-apo \fImod\fR"
