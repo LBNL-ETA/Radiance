@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rpict.1,v 1.24 2019/01/11 21:12:24 greg Exp $"
+.\" RCSid "$Id: rpict.1,v 1.25 2019/06/09 17:48:13 rschregle Exp $"
 .TH RPICT 1 2/26/99 RADIANCE
 .SH NAME
 rpict - generate a RADIANCE picture
@@ -595,14 +595,10 @@ mapping, taking into account the pagesize specified by
 .I \-ac. 
 Note that this is approximate as the number of cache pages is rounded to
 the nearest prime. This allows adapting the cache to the available physical
-memory. In conjunction with the
-.I \-n
-option, this is the cache size
-.I per parallel process. 
-Cache performance is less sensitive to this parameter,
-and reasonable performance can obtained with as few as 10k photons. The
-default is 1M. This option recognises multiplier suffixes (k = 1e3, M =
-1e6), both in upper and lower case.
+memory. Cache performance is less sensitive to this parameter, and reasonable 
+performance can obtained with as few as 10k photons. The default is 1M. This 
+option recognises multiplier suffixes (k = 1e3, M = 1e6), both in upper and 
+lower case.
 .TP
 .BI -me " rext gext bext"
 Set the global medium extinction coefficient to the indicated color,
