@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.16 2018/03/20 18:18:39 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.17 2019/06/09 18:22:44 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -62,7 +62,8 @@ main(
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
 		setvbuf(stdin, NULL, _IONBF, 2);
-		getheader(stdin, (gethfunc *)fputs, stdout);
+		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+			return 1;
 		printargs(argc-2, argv+2, stdout);
 		fputc('\n', stdout);
 		fflush(stdout);
@@ -72,7 +73,8 @@ main(
 	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
-		getheader(stdin, (gethfunc *)fputs, stdout);
+		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+			return 1;
 		for (i = 2; i < argc; i++) {
 			int	len = strlen(argv[i]);
 			if (!len) continue;
@@ -86,7 +88,8 @@ main(
 	} else if (argc == 2 && !strcmp(argv[1], "-")) {
 		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
-		getheader(stdin, NULL, NULL);
+		if (getheader(stdin, NULL, NULL) < 0)
+			return 1;
 		copycat();
 		return 0;
 	}
@@ -110,7 +113,8 @@ main(
 		if (dim) {
 			getdim(stdin);
 		} else {
-			getheader(stdin, (gethfunc *)fputs, stdout);
+			if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+				return 1;
 			fputc('\n', stdout);
 		}
 	}
@@ -125,9 +129,11 @@ getdim(				/* get dimensions from file */
 {
 	int  j;
 	int  c;
-
-	getheader(fp, NULL, NULL);	/* skip header */
-
+				/* skip header */
+	if (getheader(fp, NULL, NULL) < 0) {
+		fputs("bad header\n", stdout);
+		return;	
+	}
 	switch (c = getc(fp)) {
 	case '+':		/* picture */
 	case '-':
