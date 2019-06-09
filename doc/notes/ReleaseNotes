@@ -2256,3 +2256,7 @@ Changed indexed (numbered) output from dctimestep to start from 0 rather
 than 1, to make it more consistent with expected input naming.
 
 Increased default sampling in bsdf2klems (-n option) to 1024.
+
+Fixed an issue noticed by David G-M that was causing genBSDF to bias
+isotropic tensor tree samples resulting in subsequent failure of
+peak extraction with "aBSDF" type.
