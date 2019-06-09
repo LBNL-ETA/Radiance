@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.33 2019/05/25 04:00:54 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.34 2019/06/09 18:22:20 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -210,13 +210,17 @@ getheader(		/* get header from file */
 {
 	int   rtotal = 0;
 	char  buf[MAXLINE];
+	int   firstc = fgetc(fp);
 
+	if (!isprint(firstc))
+		return(-1);				/* messed up */
+	ungetc(firstc, fp);
 	for ( ; ; ) {
 		int	rval = 0;
 		buf[MAXLINE-2] = '\n';
 		if (fgets(buf, MAXLINE, fp) == NULL)
 			return(-1);
-		if (buf[buf[0]=='\r'] == '\n')
+		if (buf[buf[0]=='\r'] == '\n')		/* end of header? */
 			return(rtotal);
 		if (buf[MAXLINE-2] != '\n') {
 			ungetc(buf[MAXLINE-2], fp);	/* prevent false end */
