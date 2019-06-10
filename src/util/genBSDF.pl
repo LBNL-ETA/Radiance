@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: genBSDF.pl,v 2.82 2019/06/09 20:52:13 greg Exp $
+# RCSid $Id: genBSDF.pl,v 2.83 2019/06/10 13:58:49 greg Exp $
 #
 # Compute BSDF based on geometry and material description
 #
@@ -325,7 +325,7 @@ sub do_ttree_dir {
 				qq{-e "r3=rand(+3.17603772*recno+83.766771)" } .
 				qq{-e "r4=rand(-1.5839226*recno-59.82712)" } .
 				qq{-e "Dx=1-2*(\$1+r1)/$ns" } .
-				qq{-e "Dy=if(\$1-.5,1/$ns,sqrt(1-Dx*Dx))*(2*r2-1)" } .
+				qq{-e "Dy=min(1/$ns,sqrt(1-Dx*Dx))*(2*r2-1)" } .
 				qq{-e "Dz=sqrt(1-Dx*Dx-Dy*Dy)" } .
 				qq{-e "xp=(\$3+r2)*(($dim[1]-$dim[0])/$nx)+$dim[0]" } .
 				qq{-e "yp=(\$2+r3)*(($dim[3]-$dim[2])/$ny)+$dim[2]" } .
@@ -340,7 +340,7 @@ sub do_ttree_dir {
 				qq{-e 'r3=rand(+3.17603772*recno+83.766771)' } .
 				qq{-e 'r4=rand(-1.5839226*recno-59.82712)' } .
 				qq{-e 'Dx=1-2*(\$1+r1)/$ns' } .
-				qq{-e 'Dy=if(\$1-.5,1/$ns,sqrt(1-Dx*Dx))*(2*r2-1)' } .
+				qq{-e 'Dy=min(1/$ns,sqrt(1-Dx*Dx))*(2*r2-1)' } .
 				qq{-e 'Dz=sqrt(1-Dx*Dx-Dy*Dy)' } .
 				qq{-e 'xp=(\$3+r3)*(($dim[1]-$dim[0])/$nx)+$dim[0]' } .
 				qq{-e 'yp=(\$2+r4)*(($dim[3]-$dim[2])/$ny)+$dim[2]' } .
