@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.21 2019/06/10 13:56:52 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.22 2019/06/10 16:52:27 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -71,7 +71,7 @@ static LIBR  library[MAXLIB] = {
     { "tan", 1, ':', l_tan },
 };
 
-static int  libsize = 16;
+static int  libsize = 18;
 
 #define  resolve(ep)	((ep)->type==VAR?(ep)->v.ln:argf((ep)->v.chan))
 
