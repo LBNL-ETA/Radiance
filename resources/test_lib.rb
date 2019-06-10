@@ -4,7 +4,7 @@
 
 # Use with cmake build system deployed by NREL
 # Run from [build]/resources
-# usage: [ruby]test_lib[.rb] (runs all tests with all available cores passed to radiance MP tools)
+# usage: [ruby]test_lib[.rb] (runs all tests)
 # usage: [ruby]test_lib[.rb] -n [n] -t ['testname', 'all']
 
 
@@ -13,24 +13,85 @@ require 'optparse'
 require 'etc'
 # default options
 flag    = false
+
 tst  = "all"
+
 
 tproc = Etc.nprocessors
 nproc = tproc / 2 # half cores by default, override with -n 
 list    = ["x", "y", "z"]
+
+clean = false
 
 # parse arguments
 file = __FILE__
 ARGV.options do |opts|
   opts.on("-t", "--test=val", String)   { |val| tst = val }
   opts.on("-n", "--nproc=val", Integer)  { |val| nproc = val }
+
+  opts.on("-c", "--clean") { |val| clean = val} 
   opts.parse!
 end
 
+# print banner
+warn "Radiance Test Library"
+
+### Cleanup ###
+
+if clean == true
+
+    puts "cleaning up"
+
+    clean_list = []
+
+    globs = [
+        '../test/renders/*.oct',
+        '../test/renders/*.amb',
+        '../test/renders/*_ill.dat',
+        '../test/renders/blinds_ill?.dat',
+        '../test/renders/*_*.hdr',
+        '../test/renders/*.unf',
+        './test/gen/gen*.rad'
+    ]
+
+    globs.each do |glob|
+        add_list = Dir.glob(glob)
+        (clean_list << add_list).flatten!
+    end
+
+    #*.[cg]pm{,.leaf}
+
+    add_files = [
+ 
+        '../test/renders/inst_rad.txt',
+        '../test/renders/combined.rad', 
+        '../test/renders/fmirror.mtx',
+        '../test/gen/replmarks.rad',
+        '../test/util/test.mtx',
+        '../test/cal/cnt.txt',
+        '../test/cal/rcalc.txt',
+        '../test/cal/total.txt',
+        '../test/cal/histo.txt',
+        '../test/cal/rlam.txt'
+
+    ]
+    (clean_list << add_files).flatten!
+
+    clean_list.each do |rmfile| 
+        if File.exist?(rmfile)
+            File.delete(rmfile)
+            puts "deleted #{rmfile}"
+        end
+    end
+    exit
+
+end
+
+## END Cleanup ##
+
 # print opts
-warn "ARGV:     #{ARGV.inspect}"
-warn "test:   #{tst.inspect}"
-warn "cores:  #{nproc.inspect} (of #{tproc} total)"
+warn "test: #{tst.inspect}"
+warn "using #{nproc.inspect} cores (of #{tproc} total)"
 
 test_in = tst
 
@@ -46,14 +107,18 @@ all_tests = [
     'test_total', 'test_histo', 'test_rlam'
 ]
 
+
+# report pass/fail status
+
 def rcpf
     if $?.exitstatus == 0
         @test_pass +=1
 
-        puts "test: PASS"
+        puts "result: PASS"
     else
         @test_fail +=1        
-        puts "test: FAIL"
+        puts "result: FAIL"
+
     end
 end
 
@@ -574,6 +639,7 @@ end
 
 ### END test methods ###
 
+
 # call the test already
 
 if test_in == "all"
@@ -592,6 +658,3 @@ end
 
 puts "### Total tests: #{test_total} (Passed: #{@test_pass} Failed: #{@test_fail}) ###"
 
-# do some cleanup
-# rm...
-# or not
