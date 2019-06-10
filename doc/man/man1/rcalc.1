@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.13 2017/10/10 16:10:14 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.14 2019/06/10 13:56:52 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -284,6 +284,12 @@ is zero, the number of available arguments is returned.
 .TP
 .BR "rand(x)"
 compute a random number between 0 and 1 based on x.
+.TP
+.BR "min(a1, a2, ..)"
+return the minimum value from a list of arguments.
+.TP
+.BR "max(a1, a2, ..)"
+return the maximum value from a list of arguments.
 .TP
 .BR "floor(x)"
 return largest integer not greater than x.

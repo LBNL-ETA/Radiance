@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: m_bsdf.c,v 2.56 2018/11/13 19:58:33 greg Exp $";
+static const char RCSid[] = "$Id: m_bsdf.c,v 2.57 2019/06/10 13:56:52 greg Exp $";
 #endif
 /*
  *  Shading for materials with BSDFs taken from XML data files
@@ -116,7 +116,7 @@ compute_through(BSDFDAT *ndp)
 					{0, -1.6},
 					{1.6, 0},
 				};
-	const double	peak_over = 1.5;
+	const double	peak_over = 1.3 + .4*frandom();	/* jitter threshold */
 	SDSpectralDF	*dfp;
 	FVECT		pdir;
 	double		tomega, srchrad;

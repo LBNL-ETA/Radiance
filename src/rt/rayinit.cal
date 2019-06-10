@@ -1,4 +1,4 @@
-{ RCSid $Id: rayinit.cal,v 2.18 2018/11/30 18:43:57 greg Exp $ }
+{ RCSid $Id: rayinit.cal,v 2.19 2019/06/10 13:56:52 greg Exp $ }
 {
 	Initialization file for Radiance.
 
@@ -36,6 +36,9 @@
 	if(a, b, c)			- if a positive, return b, else c
 
 	select(N, a1, a2, ..)		- return aN
+
+	min(a1, a2, ..)			- return minimum argument
+	max(a1, a2, ..)			- return maximum argument
 
 	sqrt(x)				- square root function
 
@@ -93,8 +96,6 @@ xor(a,b) : if( a, not(b), b );
 abs(x) : if( x, x, -x );
 sgn(x) : if( x, 1, if(-x, -1, 0) );
 sq(x) : x*x;
-max(a,b) : if( a-b, a, b );
-min(a,b) : if( a-b, b, a );
 inside(a,x,b) : and(x-a,b-x);
 frac(x) : x - floor(x);
 mod(n,d) : n - floor(n/d)*d;

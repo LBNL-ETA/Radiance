@@ -1,4 +1,4 @@
-{ RCSid $Id: uniq_rgb.cal,v 1.1 2014/08/28 16:37:04 greg Exp $ }
+{ RCSid $Id: uniq_rgb.cal,v 1.2 2019/06/10 13:56:52 greg Exp $ }
 {
 	Generate unique (distinguishable) RGB colors.
 
@@ -27,7 +27,6 @@ y_uv(u,v) : 4*v/(6*u - 16*v + 12);
 
 btwn(a,x,b) : if(x-a,b-x,-1);
 and(a,b) : if(a, b, -1);
-max(a,b) : if(a-b, a, b);
 
 NeuMargin : 2*NDstep;
 
@@ -50,7 +49,7 @@ dist2neu = (utst-uneu)*(utst-uneu) + (vtst-vneu)*(vtst-vneu);
 cond = and(btwn(0,Rtst,1), and(btwn(0,Gtst,1), and(btwn(0,Btst,1),
 		dist2neu-NeuMargin*NeuMargin)));
 
-sca = 1/max(Rtst,max(Gtst,Btst));
+sca = 1/max(Rtst,Gtst,Btst);
 Runq = sca*Rtst;
 Gunq = sca*Gtst;
 Bunq = sca*Btst;

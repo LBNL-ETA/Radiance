@@ -1,4 +1,4 @@
-{ RCSid $Id: LaFortune.cal,v 1.2 2014/03/18 19:03:41 greg Exp $ }
+{ RCSid $Id: LaFortune.cal,v 1.3 2019/06/10 13:56:52 greg Exp $ }
 { LaFortune reflectance model with N lobes }
 
 	{ Sample parameters (change these) }
@@ -11,7 +11,6 @@ n(i) : select(i, 30, 15);
 NL : n(0);
 
 			{ Useful functions }
-max(a,b) : if(a-b, a, b);
 abs(x) : if(x, x, -x);
 noneg(x) : if(x, x, 0);
 

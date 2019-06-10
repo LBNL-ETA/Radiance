@@ -1,4 +1,4 @@
-{ RCSid $Id: Ashikhmin.cal,v 1.1 2014/03/24 20:51:16 greg Exp $ }
+{ RCSid $Id: Ashikhmin.cal,v 1.2 2019/06/10 13:56:52 greg Exp $ }
 {
 	Ashikhmin-Shirley BRDF model
 
@@ -16,7 +16,6 @@ nu : 962.839595;
 nv : 72.3236783;
 		{ Lobe calculation }
 abs(x) : if(x, x, -x);
-max(a,b) : if(a-b, a, b);
 Schlick(odoth) : f0 + (1-f0)*(1-odoth)^5;
 lobe2(iz,oz,hx,hy,hz,odoth) : Schlick(odoth)*sqrt((nu+1)*(nv+1)) /
 			(8*PI*max(abs(iz),abs(oz))*odoth) *

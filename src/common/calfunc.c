@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.20 2019/03/04 20:34:13 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.21 2019/06/10 13:56:52 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -40,7 +40,9 @@ static double  libfunc(char *fname, VARDEF *vp);
 #define  MAXLIB		64	/* maximum number of library functions */
 #endif
 
-static double  l_if(char *), l_select(char *), l_rand(char *);
+static double  l_if(char *), l_select(char *);
+static double  l_min(char *), l_max(char *);
+static double  l_rand(char *);
 static double  l_floor(char *), l_ceil(char *);
 static double  l_sqrt(char *);
 static double  l_sin(char *), l_cos(char *), l_tan(char *);
@@ -60,6 +62,8 @@ static LIBR  library[MAXLIB] = {
     { "if", 3, ':', l_if },
     { "log", 1, ':', l_log },
     { "log10", 1, ':', l_log10 },
+    { "max", 1, ':', l_max },
+    { "min", 1, ':', l_min },
     { "rand", 1, ':', l_rand },
     { "select", 1, ':', l_select },
     { "sin", 1, ':', l_sin },
@@ -73,7 +77,7 @@ static int  libsize = 16;
 
 
 int
-fundefined(			/* return # of arguments for function */
+fundefined(			/* return # of req'd arguments for function */
 	char  *fname
 )
 {
@@ -141,8 +145,10 @@ funset(				/* set a library function */
 	;
     if (cp == fname)
 	return;
-    if (cp[-1] == CNTXMARK)
+    while (cp[-1] == CNTXMARK) {
 	*--cp = '\0';
+	if (cp == fname) return;
+    }
     if ((lp = liblookup(fname)) == NULL) {	/* insert */
 	if (libsize >= MAXLIB) {
 	    eputs("Too many library functons!\n");
@@ -194,6 +200,9 @@ argument(int n)			/* return nth argument for active function */
     ACTIVATION  *actp = curact;
     EPNODE  *ep = NULL;
     double  aval;
+
+    if (!n)					/* asking for # arguments? */
+	return((double)nargum());
 
     if (!actp | (--n < 0)) {
 	eputs("Bad call to argument!\n");
@@ -391,6 +400,38 @@ l_select(char *nm)	/* return argument #(A1+1) */
 		return(0.0);
 	}
 	return(argument(n+1));
+}
+
+
+static double
+l_max(char *nm)		/* general maximum function */
+{
+	int  n = nargum();
+	int  i = 1;
+	int  vmax = argument(1);
+
+	while (i++ < n) {
+		double  v = argument(i);
+		if (vmax < v)
+			vmax = v;
+	}
+	return(vmax);
+}
+
+
+static double
+l_min(char *nm)		/* general minimum function */
+{
+	int  n = nargum();
+	int  i = 1;
+	int  vmin = argument(1);
+
+	while (i++ < n) {
+		double  v = argument(i);
+		if (vmin > v)
+			vmin = v;
+	}
+	return(vmin);
 }
 
 
