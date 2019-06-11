@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.22 2019/06/10 16:52:27 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.23 2019/06/11 22:13:50 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -390,15 +390,16 @@ l_if(char *nm)		/* if(cond, then, else) conditional expression */
 static double
 l_select(char *nm)	/* return argument #(A1+1) */
 {
-	int  n;
+	int	narg = nargum();
+	double	a1 = argument(1);
+	int  n = (int)(a1 + .5);
 
-	n = (int)(argument(1) + .5);
-	if (n == 0)
-		return(nargum()-1);
-	if (n < 1 || n > nargum()-1) {
+	if (a1 < -.5 || n >= narg) {
 		errno = EDOM;
 		return(0.0);
 	}
+	if (!n)		/* asking max index? */
+		return(narg-1);
 	return(argument(n+1));
 }
 
