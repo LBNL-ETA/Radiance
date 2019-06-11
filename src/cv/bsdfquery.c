@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.9 2017/04/13 00:14:36 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.10 2019/06/11 16:09:40 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -57,6 +57,7 @@ tryagain:
 int
 main(int argc, char *argv[])
 {
+	int	unbuffered = 0;
 	int	repXYZ = 0;
 	int	inpXML = -1;
 	int	inpfmt = 'a';
@@ -70,6 +71,9 @@ main(int argc, char *argv[])
 	progname = argv[0];
 	while (argc > 2 && argv[1][0] == '-') {
 		switch (argv[1][1]) {
+		case 'u':			/* unbuffered output */\
+			unbuffered = 1;
+			break;
 		case 'c':			/* color output */
 			repXYZ = 1;
 			break;
@@ -172,10 +176,12 @@ main(int argc, char *argv[])
 			}
 			break;
 		}
+		if (unbuffered)
+			fflush(stdout);
 	}
 	/* if (rbf != NULL) free(rbf); */
 	return(0);
 userr:
-	fprintf(stderr, "Usage: %s [-c][-fio] bsdf.{sir|xml}\n", progname);
+	fprintf(stderr, "Usage: %s [-u][-c][-fio] bsdf.{sir|xml}\n", progname);
 	return(1);
 }
