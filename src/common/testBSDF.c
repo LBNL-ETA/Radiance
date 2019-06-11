@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.13 2018/05/10 01:41:33 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.14 2019/06/11 14:26:29 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -113,7 +113,7 @@ main(int argc, char *argv[])
 						(unsigned long)strlen(bsdf->mgf));
 			else
 				printf("Has geometry: no\n");
-			continue;
+			break;
 		case 'C':			/* report constant values */
 			if (!bsdf)
 				goto noBSDFerr;
@@ -134,7 +134,7 @@ main(int argc, char *argv[])
 			printXYZ("Diffuse Front Reflectance: ", &bsdf->rLambFront);
 			printXYZ("Diffuse Back Reflectance: ", &bsdf->rLambBack);
 			printXYZ("Diffuse Transmittance: ", &bsdf->tLamb);
-			continue;
+			break;
 		case 'Q':			/* query BSDF value */
 			if (!bsdf)
 				goto noBSDFerr;
@@ -144,7 +144,7 @@ main(int argc, char *argv[])
 			vec_from_deg(vout, atof(sskip2(cp,3)), atof(sskip2(cp,4)));
 			if (!SDreportError(SDevalBSDF(&val, vout, vin, bsdf), stderr))
 				printXYZ("", &val);
-			continue;
+			break;
 		case 'S':			/* sample BSDF */
 			if (!bsdf)
 				goto noBSDFerr;
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 				printf("%.8f %.8f %.8f ", vout[0], vout[1], vout[2]);
 				printXYZ("", &val);
 			}
-			continue;
+			break;
 		case 'H':			/* hemispherical values */
 		case 'R':
 		case 'T':
@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 				sflags &= ~SDsampSp;
 			vec_from_deg(vin, atof(sskip2(cp,1)), atof(sskip2(cp,2)));
 			printf("%.4e\n", SDdirectHemi(vin, sflags, bsdf));
-			continue;
+			break;
 		case 'A':			/* resolution in proj. steradians */
 			if (!bsdf)
 				goto noBSDFerr;
@@ -206,9 +206,12 @@ main(int argc, char *argv[])
 						SDqueryMin+SDqueryMax, bsdf), stderr))
 					continue;
 			printf("%.4e %.4e\n", proja[0], proja[1]);
-			continue;
+			break;
+		default:
+			Usage(argv[0]);
+			break;
 		}
-		Usage(argv[0]);
+		fflush(stdout);			/* in case we're on remote */
 		continue;
 noBSDFerr:
 		fprintf(stderr, "%s: First, use 'L' command to load BSDF\n", argv[0]);
