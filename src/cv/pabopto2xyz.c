@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.4 2019/05/16 16:38:37 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2xyz.c,v 2.5 2019/06/12 00:09:18 greg Exp $";
 #endif
 /*
  * Combine PAB-Opto data files for color (CIE-XYZ) interpolation.
@@ -465,7 +465,6 @@ advance_incidence(PGINPUT *slist[3], int ndx[3])
 int
 main(int argc, char *argv[])
 {
-	char	*flist[MAX_INPUTS];
 	PGINPUT	*slist[3];
 	int	i, j;
 	int	ndx[3];
@@ -494,6 +493,7 @@ main(int argc, char *argv[])
 	if (i != argc-3)
 		goto userr;
 	for (j = 0; j < 3; j++) {		/* prep input channels */
+		char	*flist[MAX_INPUTS];
 		int	k, n;
 		n = wordfile(flist, MAX_INPUTS, argv[i+j]);
 		if (n <= 0) {
