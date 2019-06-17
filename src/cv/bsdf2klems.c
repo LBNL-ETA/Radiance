@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.26 2019/03/19 22:03:24 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.27 2019/06/17 23:58:32 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -431,88 +431,94 @@ eval_function(char *funame)
 static void
 eval_rbf(void)
 {
-	ANGLE_BASIS	*abp = get_basis(kbasis);
-	float		(*XZarr)[2] = NULL;
-	float		bsdfarr[MAXPATCHES*MAXPATCHES];
-	FILE		*cfp[3];
-	FVECT		vin, vout;
-	double		sum, xsum, ysum;
-	int		i, j, n;
-						/* sanity check */
-	if (abp->nangles > MAXPATCHES) {
-		fprintf(stderr, "%s: too many patches!\n", progname);
-		exit(1);
-	}
-	if (rbf_colorimetry == RBCtristimulus)
-		XZarr = (float (*)[2])malloc(sizeof(float)*2*abp->nangles*abp->nangles);
-	for (i = 0; i < abp->nangles; i++) {
-	    RBFNODE	*rbf;
-	    if (input_orient > 0)		/* use incident patch center */
-		fi_getvec(vin, i+.5*(i>0), abp);
-	    else
-		bi_getvec(vin, i+.5*(i>0), abp);
+    ANGLE_BASIS	*abp = get_basis(kbasis);
+    float	(*XZarr)[2] = NULL;
+    float	bsdfarr[MAXPATCHES*MAXPATCHES];
+    FILE	*cfp[3];
+    FVECT	vin, vout;
+    double	sum, xsum, ysum, normf;
+    int		i, j, ni, no, nisamps, nosamps;
+    					/* sanity check */
+    if (abp->nangles > MAXPATCHES) {
+    	fprintf(stderr, "%s: too many patches!\n", progname);
+    	exit(1);
+    }
+    memset(bsdfarr, 0, sizeof(bsdfarr));
+    if (rbf_colorimetry == RBCtristimulus)
+    	XZarr = (float (*)[2])calloc(abp->nangles*abp->nangles, 2*sizeof(float));
+    nosamps = (int)(pow((double)npsamps, 0.67) + .5);
+    nisamps = (npsamps + (nosamps>>1)) / nosamps;
+    normf = 1./(double)(nisamps*nosamps);
+    for (i = 0; i < abp->nangles; i++) {
+	for (ni = nisamps; ni--; ) {		/* sample over incident patch */
+            RBFNODE	*rbf;
+            if (input_orient > 0)		/* vary incident patch loc. */
+		fi_getvec(vin, i+urand(ni), abp);
+            else
+		bi_getvec(vin, i+urand(ni), abp);
 
-	    rbf = advect_rbf(vin, lobe_lim);	/* compute radial basis func */
+            rbf = advect_rbf(vin, lobe_lim);	/* compute radial basis func */
 
-	    for (j = 0; j < abp->nangles; j++) {
-	        sum = 0;			/* sample over exiting patch */
+            for (j = 0; j < abp->nangles; j++) {
+		sum = 0;			/* sample over exiting patch */
 		xsum = ysum = 0;
-		for (n = npsamps; n--; ) {
+		for (no = nosamps; no--; ) {
 		    SDValue	sdv;
 		    if (output_orient > 0)
-			fo_getvec(vout, j+(n+frandom())/npsamps, abp);
+			fo_getvec(vout, j+(no+frandom())/nosamps, abp);
 		    else
-			bo_getvec(vout, j+(n+frandom())/npsamps, abp);
+			bo_getvec(vout, j+(no+frandom())/nosamps, abp);
 
 		    eval_rbfcol(&sdv, rbf, vout);
 		    sum += sdv.cieY;
 		    if (rbf_colorimetry == RBCtristimulus) {
 			xsum += sdv.cieY * sdv.spec.cx;
 			ysum += sdv.cieY * sdv.spec.cy;
-		    }
+    	            }
 		}
-		n = j*abp->nangles + i;
-		bsdfarr[n] = sum / npsamps;
+		no = j*abp->nangles + i;
+		bsdfarr[no] += sum * normf;
 		if (rbf_colorimetry == RBCtristimulus) {
-		    XZarr[n][0] = xsum*sum/(npsamps*ysum);
-		    XZarr[n][1] = (sum - xsum - ysum)*sum/(npsamps*ysum);
+		    XZarr[no][0] += xsum*sum*normf/ysum;
+		    XZarr[no][1] += (sum - xsum - ysum)*sum*normf/ysum;
 		}
 	    }
-	    if (rbf != NULL)
+ 	    if (rbf != NULL)
 		free(rbf);
-	    prog_show((i+1.)/abp->nangles);
 	}
-						/* write out our matrix */
-	cfp[CIE_Y] = open_component_file(CIE_Y);
-	n = 0;
-	for (j = 0; j < abp->nangles; j++) {
-	    for (i = 0; i < abp->nangles; i++, n++)
-		fprintf(cfp[CIE_Y], "\t%.3e\n", bsdfarr[n]);
-	    fputc('\n', cfp[CIE_Y]);
-	}
-	prog_done();
-	if (fclose(cfp[CIE_Y])) {
-		fprintf(stderr, "%s: error writing Y output\n", progname);
-		exit(1);
-	}
-	if (XZarr == NULL)			/* no color? */
-		return;
-	cfp[CIE_X] = open_component_file(CIE_X);
-	cfp[CIE_Z] = open_component_file(CIE_Z);
-	n = 0;
-	for (j = 0; j < abp->nangles; j++) {
-	    for (i = 0; i < abp->nangles; i++, n++) {
-		fprintf(cfp[CIE_X], "\t%.3e\n", XZarr[n][0]);
-		fprintf(cfp[CIE_Z], "\t%.3e\n", XZarr[n][1]);
-	    }
-	    fputc('\n', cfp[CIE_X]);
-	    fputc('\n', cfp[CIE_Z]);
-	}
-	free(XZarr);
-	if (fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z])) {
-		fprintf(stderr, "%s: error writing X/Z output\n", progname);
-		exit(1);
-	}
+        prog_show((i+1.)/abp->nangles);
+    }
+    					/* write out our matrix */
+    cfp[CIE_Y] = open_component_file(CIE_Y);
+    no = 0;
+    for (j = 0; j < abp->nangles; j++) {
+        for (i = 0; i < abp->nangles; i++, no++)
+    	fprintf(cfp[CIE_Y], "\t%.3e\n", bsdfarr[no]);
+        fputc('\n', cfp[CIE_Y]);
+    }
+    prog_done();
+    if (fclose(cfp[CIE_Y])) {
+    	fprintf(stderr, "%s: error writing Y output\n", progname);
+    	exit(1);
+    }
+    if (XZarr == NULL)			/* no color? */
+    	return;
+    cfp[CIE_X] = open_component_file(CIE_X);
+    cfp[CIE_Z] = open_component_file(CIE_Z);
+    no = 0;
+    for (j = 0; j < abp->nangles; j++) {
+        for (i = 0; i < abp->nangles; i++, no++) {
+    	fprintf(cfp[CIE_X], "\t%.3e\n", XZarr[no][0]);
+    	fprintf(cfp[CIE_Z], "\t%.3e\n", XZarr[no][1]);
+        }
+        fputc('\n', cfp[CIE_X]);
+        fputc('\n', cfp[CIE_Z]);
+    }
+    free(XZarr);
+    if (fclose(cfp[CIE_X]) || fclose(cfp[CIE_Z])) {
+    	fprintf(stderr, "%s: error writing X/Z output\n", progname);
+    	exit(1);
+    }
 }
 
 #if defined(_WIN32) || defined(_WIN64)
