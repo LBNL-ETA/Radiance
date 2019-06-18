@@ -2262,3 +2262,7 @@ isotropic tensor tree samples resulting in subsequent failure of
 peak extraction with "aBSDF" type.
 
 Introduced max() and min() functions to .cal library.
+
+Added random incident patch sampling to bsdf2klems to improve accuracy
+with scattering interpolation representation input (e.g., from
+pabopto2bsdf).  The other input types already sampled incident patch area.
