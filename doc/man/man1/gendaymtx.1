@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.9 2019/05/28 15:19:17 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.10 2019/06/25 00:09:45 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -8,6 +8,8 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 .B "\-v"
 ][
 .B "\-h"
+][
+.B "\-A"
 ][
 .B "\-d|\-s"
 ][
@@ -51,6 +53,14 @@ Each matrix entry is in fact three values, corresponding to
 red green and blue radiance channels (watts/sr/meter^2).
 Thus, an hourly weather tape for an entire year would
 yield 8760x3 (26280) values per output line (row).
+.PP
+The
+.I \-A
+option tells
+.I gendaymtx
+to generate a single column corresponding to an average sky
+computed over all the input time steps, rather than one
+column per time step.
 .PP
 The
 .I \-c
