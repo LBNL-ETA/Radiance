@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.27 2019/06/25 00:09:45 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.28 2019/06/25 17:06:36 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -321,10 +321,10 @@ main(int argc, char *argv[])
 	double	elevation;		/* site elevation (meters) */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
 	float	*mtx_data = NULL;	/* our matrix data */
-	int	ntsteps = 0;		/* number of time steps */
 	int	avgSky = 0;		/* compute average sky r.t. matrix? */
-	int	nrows = 0;		/* number of rows in matrix */
-	int	rows_alloc = 0;		/* number of allocated rows */
+	int	ntsteps = 0;		/* number of time steps */
+	int	tstorage = 0;		/* number of allocated time steps */
+	int	nstored = 0;		/* number of time steps in matrix */
 	int	last_monthly = 0;	/* month of last report */
 	int	inconsistent = 0;	/* inconsistent options set? */
 	int	mo, da;			/* month (1-12) and day (1-31) */
@@ -480,21 +480,21 @@ main(int argc, char *argv[])
 	s_longitude = DegToRad(s_longitude);
 	s_meridian = DegToRad(s_meridian);
 					/* initial allocation */
-	mtx_data = resize_dmatrix(mtx_data, rows_alloc=2, nskypatch);
+	mtx_data = resize_dmatrix(mtx_data, tstorage=2, nskypatch);
 					/* process each time step in tape */
 	while (scanf("%d %d %lf %lf %lf\n", &mo, &da, &hr, &dir, &dif) == 5) {
 		double		sda, sta;
 
-		mtx_offset = 3*nskypatch*nrows;
-		nrows += !avgSky | !nrows;
+		mtx_offset = 3*nskypatch*nstored;
+		nstored += !avgSky | !nstored;
 					/* make space for next row */
-		if (nrows > rows_alloc) {
-			rows_alloc += (rows_alloc>>1) + nrows + 7;
-			mtx_data = resize_dmatrix(mtx_data, rows_alloc, nskypatch);
+		if (nstored > tstorage) {
+			tstorage += (tstorage>>1) + nstored + 7;
+			mtx_data = resize_dmatrix(mtx_data, tstorage, nskypatch);
 		}
 		ntsteps++;		/* keep count of time steps */
 		if (dif <= 1e-4) {
-			if (!avgSky | !nrows)
+			if (!avgSky | !mtx_offset)
 				memset(mtx_data+mtx_offset, 0, sizeof(float)*3*nskypatch);
 			continue;
 		}
@@ -549,14 +549,14 @@ main(int argc, char *argv[])
 #endif
 	if (verbose)
 		fprintf(stderr, "%s: writing %smatrix with %d time steps...\n",
-				progname, outfmt=='a' ? "" : "binary ", nrows);
+				progname, outfmt=='a' ? "" : "binary ", nstored);
 	if (doheader) {
 		newheader("RADIANCE", stdout);
 		printargs(argc, argv, stdout);
 		printf("LATLONG= %.8f %.8f\n", RadToDeg(s_latitude),
 					-RadToDeg(s_longitude));
 		printf("NROWS=%d\n", nskypatch);
-		printf("NCOLS=%d\n", nrows);
+		printf("NCOLS=%d\n", nstored);
 		printf("NCOMP=3\n");
 		fputformat((char *)getfmtname(outfmt), stdout);
 		putchar('\n');
@@ -566,24 +566,24 @@ main(int argc, char *argv[])
 		mtx_offset = 3*i;
 		switch (outfmt) {
 		case 'a':
-			for (j = 0; j < nrows; j++) {
+			for (j = 0; j < nstored; j++) {
 				printf("%.3g %.3g %.3g\n", mtx_data[mtx_offset],
 						mtx_data[mtx_offset+1],
 						mtx_data[mtx_offset+2]);
 				mtx_offset += 3*nskypatch;
 			}
-			if (nrows > 1)
+			if (nstored > 1)
 				fputc('\n', stdout);
 			break;
 		case 'f':
-			for (j = 0; j < nrows; j++) {
+			for (j = 0; j < nstored; j++) {
 				putbinary(mtx_data+mtx_offset, sizeof(float), 3,
 						stdout);
 				mtx_offset += 3*nskypatch;
 			}
 			break;
 		case 'd':
-			for (j = 0; j < nrows; j++) {
+			for (j = 0; j < nstored; j++) {
 				double	ment[3];
 				ment[0] = mtx_data[mtx_offset];
 				ment[1] = mtx_data[mtx_offset+1];
