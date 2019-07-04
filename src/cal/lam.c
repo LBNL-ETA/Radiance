@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.17 2016/08/18 00:52:47 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.18 2019/07/04 16:51:03 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -20,8 +20,6 @@ static const char	RCSid[] = "$Id: lam.c,v 1.17 2016/08/18 00:52:47 greg Exp $";
 
 #define MAXLINE		65536		/* maximum input line */
 
-long	incnt = 0;			/* limit number of records? */
-
 FILE	*input[MAXFILE];
 int	bytsiz[MAXFILE];
 char	*tabc[MAXFILE];
@@ -34,15 +32,14 @@ main(argc, argv)
 int	argc;
 char	*argv[];
 {
+	long	incnt = 0;
 	int	unbuff = 0;
 	int	binout = 0;
-	int	i;
-	char	*curtab;
-	int	curbytes;
+	char	*curtab = "\t";
+	int	curbytes = 0;
 	int	puteol;
+	int	i;
 
-	curtab = "\t";
-	curbytes = 0;
 	nfiles = 0;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -88,7 +85,7 @@ char	*argv[];
 				}
 				if (curbytes) {
 					curtab = "";
-					++binout;
+					binout += (curbytes > 0);
 				}
 				break;
 			case '\0':
@@ -152,7 +149,7 @@ char	*argv[];
 		}
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
-			if (bytsiz[i]) {		/* binary file */
+			if (bytsiz[i]) {		/* binary/fixed width */
 				if (getbinary(buf, bytsiz[i], 1, input[i]) < 1)
 					break;
 				if (i)
