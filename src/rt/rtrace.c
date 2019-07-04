@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.79 2019/05/06 16:49:38 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.80 2019/07/04 01:06:35 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -55,7 +55,7 @@ OBJECT	traset[MAXTSET+1]={0};		/* trace include/exclude set */
 static RAY  thisray;			/* for our convenience */
 
 typedef void putf_t(RREAL *v, int n);
-static putf_t puta, putd, putf;
+static putf_t puta, putd, putf, putrgbe;
 
 typedef void oputf_t(RAY *r);
 static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
@@ -146,9 +146,9 @@ rtrace(				/* trace rays from file */
 	case 'f': putreal = putf; break;
 	case 'd': putreal = putd; break;
 	case 'c': 
-		if (strcmp(outvals, "v"))
-			error(USER, "color format with value output only");
-		break;
+		if (outvals[0] && (outvals[1] || !strchr("vVWrx", outvals[0])))
+			error(USER, "color format only with one of 'vVWrx'");
+		putreal = putrgbe; break;
 	default:
 		error(CONSISTENCY, "botched output format");
 	}
@@ -301,7 +301,7 @@ setoutput(				/* set up output tables */
 		case 'W':				/* coefficient */
 			*table++ = oputW;
 			castonly = 0;
-			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
+			if (ambounce > 0 && (ambacc > FTINY) | (ambssamp > 0))
 				error(WARNING,
 					"-otW accuracy depends on -aa 0 -as 0");
 			break;
@@ -316,6 +316,13 @@ setoutput(				/* set up output tables */
 			break;
 		}
 	*table = NULL;
+	if (do_irrad | imm_irrad)			/* compatibile? */
+		for (table = ray_out; *table != NULL; table++)
+			if ((*table == oputr) | (*table == oputR) |
+					(*table == oputx) | (*table == oputX)) {
+				error(WARNING, "-orRxX options incompatible with -I+ and -i+");
+				break;
+			}
 }
 
 
@@ -586,14 +593,6 @@ oputv(				/* print value */
 {
 	RREAL	cval[3];
 
-	if (outform == 'c') {
-		COLR  cout;
-		setcolr(cout,	colval(r->rcol,RED),
-				colval(r->rcol,GRN),
-				colval(r->rcol,BLU));
-		putbinary(cout, sizeof(cout), 1, stdout);
-		return;
-	}
 	cval[0] = colval(r->rcol,RED);
 	cval[1] = colval(r->rcol,GRN);
 	cval[2] = colval(r->rcol,BLU);
@@ -784,7 +783,7 @@ puta(				/* print ascii value(s) */
 
 
 static void
-putd(RREAL *v, int n)		/* print binary double(s) */
+putd(RREAL *v, int n)		/* output binary double(s) */
 {
 #ifdef	SMLFLT
 	double	da[3];
@@ -802,7 +801,7 @@ putd(RREAL *v, int n)		/* print binary double(s) */
 
 
 static void
-putf(RREAL *v, int n)		/* print binary float(s) */
+putf(RREAL *v, int n)		/* output binary float(s) */
 {
 #ifndef	SMLFLT
 	float	fa[3];
@@ -816,4 +815,16 @@ putf(RREAL *v, int n)		/* print binary float(s) */
 #else
 	putbinary(v, sizeof(RREAL), n, stdout);
 #endif
+}
+
+
+static void
+putrgbe(RREAL *v, int n)	/* output RGBE color */
+{
+	COLR  cout;
+
+	if (n != 3)
+		error(INTERNAL, "putrgbe() not called with 3 components");
+	setcolr(cout, v[0], v[1], v[2]);
+	putbinary(cout, sizeof(cout), 1, stdout);
 }

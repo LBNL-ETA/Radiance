@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rtrace.1,v 1.32 2019/01/11 21:12:24 greg Exp $"
+.\" RCSid "$Id: rtrace.1,v 1.33 2019/07/04 01:07:25 greg Exp $"
 .TH RTRACE 1 10/17/97 RADIANCE
 .SH NAME
 rtrace - trace rays in RADIANCE scene
@@ -68,10 +68,12 @@ understands the following input and output formats:  'a' for
 ascii, 'f' for single-precision floating point,
 and 'd' for double-precision floating point.
 In addition to these three choices, the character 'c' may be used
-to denote 4-byte floating point (Radiance) color format
-for the output of values only
-.I (\-ov
-option, below).
+to denote 4-byte RGBE (Radiance) color format
+for the output of individual color values only, and the
+.I \-x
+and
+.I \-y
+options should also be specified to create a valid output picture.
 If the output character is missing, the input format is used.
 .IP
 Note that there is no space between this option and its argument.
