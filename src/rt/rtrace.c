@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.80 2019/07/04 01:06:35 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.81 2019/07/04 01:25:07 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -146,8 +146,8 @@ rtrace(				/* trace rays from file */
 	case 'f': putreal = putf; break;
 	case 'd': putreal = putd; break;
 	case 'c': 
-		if (outvals[0] && (outvals[1] || !strchr("vVWrx", outvals[0])))
-			error(USER, "color format only with one of 'vVWrx'");
+		if (outvals[0] && (outvals[1] || !strchr("vrx", outvals[0])))
+			error(USER, "color format only with -ov, -or, -ox");
 		putreal = putrgbe; break;
 	default:
 		error(CONSISTENCY, "botched output format");
@@ -316,13 +316,15 @@ setoutput(				/* set up output tables */
 			break;
 		}
 	*table = NULL;
-	if (do_irrad | imm_irrad)			/* compatibile? */
-		for (table = ray_out; *table != NULL; table++)
-			if ((*table == oputr) | (*table == oputR) |
-					(*table == oputx) | (*table == oputX)) {
-				error(WARNING, "-orRxX options incompatible with -I+ and -i+");
-				break;
-			}
+							/* compatibility */
+	for (table = ray_out; *table != NULL; table++) {
+		if ((*table == oputV) | (*table == oputW))
+			error(WARNING, "-oVW options require trace mode");
+		if ((do_irrad | imm_irrad) &&
+				(*table == oputr) | (*table == oputR) |
+				(*table == oputx) | (*table == oputX))
+			error(WARNING, "-orRxX options incompatible with -I+ and -i+");
+	}
 }
 
 
