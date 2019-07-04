@@ -2271,3 +2271,7 @@ Added gendaymtx -A option to compute average sky over all the input
 time steps.
 
 Added ability to output color image from rtrace with any of -ovrx options.
+
+Changed rlam behavior so -iaN reads N lines from a stream rather than N
+characters.  This seems more useful, since -ibN is somewhat redundant with
+the old behavior.

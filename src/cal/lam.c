@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.18 2019/07/04 16:51:03 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.19 2019/07/04 17:36:04 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -78,14 +78,15 @@ char	*argv[];
 				}
 				if (isdigit(argv[i][3]))
 					curbytes *= atoi(argv[i]+3);
-				if (abs(curbytes) > MAXLINE) {
+				curbytes += (curbytes == -1);
+				if (curbytes > MAXLINE) {
 					fputs(argv[0], stderr);
 					fputs(": input size too big\n", stderr);
-					exit(1);
+					return(1);
 				}
-				if (curbytes) {
+				if (curbytes > 0) {
 					curtab = "";
-					binout += (curbytes > 0);
+					++binout;
 				}
 				break;
 			case '\0':
@@ -93,46 +94,45 @@ char	*argv[];
 				input[nfiles] = stdin;
 				if (curbytes > 0)
 					SET_FILE_BINARY(input[nfiles]);
-				else
-					curbytes = -curbytes;
 				bytsiz[nfiles++] = curbytes;
 				break;
 			badopt:;
 			default:
 				fputs(argv[0], stderr);
 				fputs(": bad option\n", stderr);
-				exit(1);
+				return(1);
 			}
 		} else if (argv[i][0] == '!') {
 			tabc[nfiles] = curtab;
 			if ((input[nfiles] = popen(argv[i]+1, "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
-				exit(1);
+				return(1);
 			}
 			if (curbytes > 0)
 				SET_FILE_BINARY(input[nfiles]);
-			else
-				curbytes = -curbytes;
 			bytsiz[nfiles++] = curbytes;
 		} else {
 			tabc[nfiles] = curtab;
 			if ((input[nfiles] = fopen(argv[i], "r")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot open file\n", stderr);
-				exit(1);
+				return(1);
 			}
 			if (curbytes > 0)
 				SET_FILE_BINARY(input[nfiles]);
-			else
-				curbytes = -curbytes;
 			bytsiz[nfiles++] = curbytes;
 		}
 		if (nfiles >= MAXFILE) {
 			fputs(argv[0], stderr);
 			fputs(": too many input streams\n", stderr);
-			exit(1);
+			return(1);
 		}
+	}
+	if (!nfiles) {
+		fputs(argv[0], stderr);
+		fputs(": no input streams\n", stderr);
+		return(1);
 	}
 	if (binout)				/* binary output? */
 		SET_FILE_BINARY(stdout);
@@ -143,19 +143,28 @@ char	*argv[];
 #endif
 	puteol = 0;				/* any ASCII output at all? */
 	for (i = nfiles; i--; )
-		if (!bytsiz[i] || isprint(tabc[i][0]) || tabc[i][0] == '\t') {
-			puteol++;
-			break;
-		}
+		puteol += (bytsiz[i] <= 0);
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
-			if (bytsiz[i]) {		/* binary/fixed width */
+			if (bytsiz[i] > 0) {		/* binary input */
 				if (getbinary(buf, bytsiz[i], 1, input[i]) < 1)
 					break;
 				if (i)
 					fputs(tabc[i], stdout);
 				putbinary(buf, bytsiz[i], 1, stdout);
-			} else {
+			} else if (bytsiz[i] < 0) {	/* multi-line input */
+				int	n = -bytsiz[i];
+				while (n--) {
+					if (fgets(buf, MAXLINE, input[i]) == NULL)
+						break;
+					if ((i > 0) | (n < -bytsiz[i]-1))
+						fputs(tabc[i], stdout);
+					buf[strlen(buf)-1] = '\0';
+					fputs(buf, stdout);
+				}
+				if (n >= 0)		/* fell short? */
+					break;
+			} else {			/* single-line input */
 				if (fgets(buf, MAXLINE, input[i]) == NULL)
 					break;
 				if (i)

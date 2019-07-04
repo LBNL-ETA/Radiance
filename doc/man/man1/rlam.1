@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.8 2016/03/24 18:48:28 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.9 2019/07/04 17:36:04 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -23,7 +23,7 @@ rlam - laminate records from multiple files
 ][
 .B "\-in M"
 ]
-input1 input2 ..
+input1 [options] input2 ..
 .SH DESCRIPTION
 .I Rlam
 simply joins records (or lines) from multiple inputs, separating them with
@@ -38,7 +38,7 @@ character will be printed, either.
 .PP
 An input is either a stream or a command.
 Commands are given in quotes, and begin with an exclamantion point ('!').
-If the inputs do not have the same number of lines, then
+If the inputs do not have the same number of records, then
 shorter files will stop contributing to the output as they
 run out.
 .PP
@@ -65,11 +65,14 @@ For example,
 indicates three floats per input record for the next named input.
 In the case of the
 .I \-ia
-option, no number indicates one line per input record, and numbers
-greater than zero indicate that many characters exactly per record.
+option, no number reads one line per record, and numbers
+greater than zero take multiple lines at a time from the same stream.
 For binary input formts, no number implies one value per record.
 For anything other than EOL-separated input, the default tab separator
 is reset to the empty string.
+.PP
+These options may be interspersed with input specifications,
+indicating different data to draw from the different files.
 .PP
 If a
 .I \-in
@@ -94,7 +97,12 @@ cnt `wc \-l < lam.c` | rlam \- \-t: lam.c \-t\| '!tail \-r lam.c'
 To join four data files, each having three doubles per record:
 .IP "" .2i
 rlam \-id3 file1.dbl file2.dbl file3.dbl file4.dbl > combined.dbl
+.PP
+To join two data files, the first having two words per
+record and the second having one:
+.IP "" .2i
+rlam \-iw2 file1.hi2 \-iw file2.hi1 > combined.hi3
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), histo(1), neaten(1), rcalc(1), tabfunc(1), total(1)
+cnt(1), histo(1), neaten(1), rcalc(1), rsplit(1), tabfunc(1), total(1)
