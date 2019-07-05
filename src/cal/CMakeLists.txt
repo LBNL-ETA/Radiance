@@ -17,6 +17,9 @@ target_link_libraries(rcalc rtrad)
 add_executable(rlam lam.c)
 target_link_libraries(rlam rtrad)
 
+add_executable(rsplit rsplit.c)
+target_link_libraries(rsplit rtrad)
+
 add_executable(tabfunc tabfunc.c)
 target_link_libraries(tabfunc rtrad)
 

@@ -2275,3 +2275,6 @@ Added ability to output color image from rtrace with any of -ovrx options.
 Changed rlam behavior so -iaN reads N lines from a stream rather than N
 characters.  This seems more useful, since -ibN is somewhat redundant with
 the old behavior.
+
+Created rsplit program as compliment to rlam and to handle more complex
+rtrace output into separate files or streams.

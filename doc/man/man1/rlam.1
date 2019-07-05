@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rlam.1,v 1.9 2019/07/04 17:36:04 greg Exp $"
+.\" RCSid "$Id: rlam.1,v 1.10 2019/07/05 00:20:57 greg Exp $"
 .TH RLAM 1 7/8/97 RADIANCE
 .SH NAME
 rlam - laminate records from multiple files
@@ -36,7 +36,7 @@ Note that there is no space between this option and its argument.
 If none of the input files uses an ASCII separator, then no end-of-line
 character will be printed, either.
 .PP
-An input is either a stream or a command.
+An input is either a file or a command.
 Commands are given in quotes, and begin with an exclamantion point ('!').
 If the inputs do not have the same number of records, then
 shorter files will stop contributing to the output as they
@@ -58,7 +58,7 @@ The
 option specifies 2-byte short words, and the
 .I \-ib
 option specifies bytes.
-If a number is immediately follows any of these options, then it
+If a number immediately follows any of these options, then it
 indicates that multiple such values are expected for each record.
 For example,
 .I \-if3

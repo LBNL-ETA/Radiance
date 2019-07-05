@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.6 2018/05/22 15:16:53 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.7 2019/07/05 00:20:57 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 #
@@ -110,14 +110,11 @@ my $oct = $ARGV[0];
 my $view = `@vwrightA 0`;
 my @res = split(/\s/, `@vwraysA -d`);
 if (defined $outzbf) {		# generating depth buffer?
-	my $tres = "/tmp/rtp$$";
-	system "@vwraysA | @rtraceA -fff -ovl $res[4] $oct > $tres" || exit 1;
-	system( q{getinfo -c rcalc -if4 -of -e '$1=$1;$2=$2;$3=$3' < } .
-		"$tres | pvalue -r -df -Y $res[3] +X $res[1] | " .
-		"getinfo -a 'VIEW=$view'" );
-	system( "getinfo - < $tres | rcalc -if4 -of > $outzbf" . q{ -e '$1=$4'} );
-	unlink $tres;
-	exit;
+	exec "@vwraysA | @rtraceA -fff -olv @res $oct | " .
+		"rsplit -ih -iH -f " .
+			"-of $outzbf " .
+			"-oh -oH -of3 '!pvalue -r -df' | " .
+		"getinfo -a 'VIEW=$view'";
 }
 				# no depth buffer, so simpler
 exec "@vwraysA | @rtraceA -ffc @res $oct | getinfo -a 'VIEW=$view'";

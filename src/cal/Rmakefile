@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 1.9 2016/08/18 00:55:14 greg Exp $
+# RCSid: $Id: Rmakefile,v 1.10 2019/07/05 00:20:57 greg Exp $
 #
 #  Compiles for icalc, rcalc, ev, and utilities
 #
@@ -17,7 +17,7 @@ MLIB = -lm
 
 INSTDIR = /usr/local/bin
 
-PROGS = icalc ev rcalc total cnt neaten rlam tabfunc histo
+PROGS = icalc ev rcalc total cnt neaten rlam rsplit tabfunc histo
 
 all:	$(PROGS)
 
@@ -47,6 +47,9 @@ neaten:	neat.o
 
 rlam:		lam.o
 	$(CC) $(CFLAGS) -o rlam lam.o -lrtrad
+
+rsplit:	rsplit.o
+	$(CC) $(CFLAGS) -o rsplit rsplit.c -lrtrad
 
 tabfunc:	tabfunc.o
 	$(CC) $(CFLAGS) -o tabfunc tabfunc.o -lrtrad $(MLIB)

@@ -1,0 +1,153 @@
+.\" RCSid "$Id: rsplit.1,v 1.1 2019/07/05 00:20:57 greg Exp $"
+.TH RSPLIT 1 7/8/97 RADIANCE
+.SH NAME
+rsplit - splits standard input into multiple output files or streams
+.SH SYNOPSIS
+.B rsplit
+[
+.B \-tS
+][
+.B \-ih
+][
+.B \-iH
+][
+.B \-oh
+][
+.B \-oH
+][
+.B \-oaN
+|
+.B \-ofN
+|
+.B \-odN
+|
+.B \-ocN
+|
+.B \-oiN
+|
+.B \-owN
+|
+.B \-obN
+][
+.B \-f
+][
+.B \-a
+][
+.B "\-on M"
+]
+output1 [options] output2 ..
+.SH DESCRIPTION
+.I Rsplit
+writes lines or fields from the standard input to one or more output
+streams.
+By default, fields are separated by a
+newline character, but the terminator can be changed using the
+.I \-t
+option.
+Different separators may be given for different fields by specifying
+additional
+.I \-t
+options in between each output.
+Note that there is no space between this option and its argument.
+.PP
+An output is either a file or a command.
+If an output file exists, it will not be overwritten unless the
+.I \-f
+option is given, or it is being appended using the
+.I \-a
+option.
+Commands are given in quotes, and begin with an exclamantion point ('!').
+.PP
+The
+.I \-oa
+option may be used to specify ASCII data (the default), or the
+.I \-of
+option may be used to indicated binary IEEE 32-bit floats.
+Similarly, the
+.I \-od
+and
+.I \-oi
+options may be used to indicate binary 64-bit doubles or integer words,
+respectively.
+The
+.I \-ow
+option specifies 2-byte short words, and the
+.I \-ob
+option specifies bytes.
+If a number immediately follows any of these options, then it
+indicates that multiple such values are expected for each record.
+For example,
+.I \-of3
+indicates three floats per output record for the next named output.
+In the case of the
+.I \-oa
+option, no number writes one line or field per stream, and numbers
+greater than zero write multiple fields at a time to the same stream.
+For binary output formts, no number implies one value per output.
+The default tab separator
+is set to the empty string for binary output streams.
+.PP
+These options may be interspersed with output specifications,
+indicating different data to draw from the different files.
+.PP
+If a
+.I \-on
+option is given with a positive integer argument, this will be the
+maximum number of records that will be written by
+.I rsplit.
+.PP
+A hyphen ('-') by itself can be used to indicate the standard
+output, and may appear multiple times.
+Results will be unpredictable if the standard output is specified
+in this way
+and any of the command outputs also writes to their standard output.
+At most, one command may reliably write to its standard output.
+.PP
+The
+.I \-ih
+option tells
+.I rsplit
+to expect a Radiance header on its input.
+The
+.I \-iH
+option says to expect a resolution string for an image or similar.
+The
+.I \-x
+and
+.I \-y
+options may alternatively be used to specify the input dimensions.
+The
+.I \-oh
+option tells
+.I rsplit
+to produce a Radiance header on the next output stream.
+The
+.I \-oH
+option will write a resolution string.
+These options toggle the associated mode on and off,
+so it is possible to have one output include a header or
+resolution string and not the next by specifying the option(s) again.
+Neither
+.I \-oh
+nor
+.I \-oH
+may be used with the append mode ('-a').
+.SH EXAMPLE
+To alternate 5 lines between two output files:
+.IP "" .2i
+rsplit -ia5 output1.txt output2.txt < input.txt
+.PP
+To send the first of each double precision triplet to one file, and the second
+and third to a second file, stopping after 500 triplets:
+.IP "" .2i
+rsplit -on 500 -id firstvals.dbl -id2 secondpairs.dbl < input.dbl
+.PP
+To convey material, color and distance information from rtrace to
+separate files:
+.IP "" .2i
+vwrays [viewspec] | rtrace [options] -x 1024 -y 768 -h+ -oMlv octree | rsplit -ih -iH -t^I mats.txt -of depth.zbf -oh -oH -of3 '!pvalue -r -df > image.hdr'
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), rtrace(1),
+split(1), tabfunc(1), total(1)
