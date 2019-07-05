@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.1 2019/07/05 00:20:57 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.2 2019/07/05 00:42:56 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -135,12 +135,12 @@ may be used with the append mode ('-a').
 .SH EXAMPLE
 To alternate 5 lines between two output files:
 .IP "" .2i
-rsplit -ia5 output1.txt output2.txt < input.txt
+rsplit -oa5 output1.txt output2.txt < input.txt
 .PP
 To send the first of each double precision triplet to one file, and the second
 and third to a second file, stopping after 500 triplets:
 .IP "" .2i
-rsplit -on 500 -id firstvals.dbl -id2 secondpairs.dbl < input.dbl
+rsplit -on 500 -od firstvals.dbl -od2 followingpairs.dbl < triplets.dbl
 .PP
 To convey material, color and distance information from rtrace to
 separate files:
