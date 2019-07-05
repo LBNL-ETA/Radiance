@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.1 2019/07/05 00:20:57 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.2 2019/07/05 00:46:23 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -315,5 +315,10 @@ main(int argc, char *argv[])
 		if (i < nfiles)
 			break;
 	} while (--outcnt);
+							/* check ending */
+	if (outcnt > 0) {
+		fputs(argv[0], stderr);
+		fputs(": warning: premature EOD\n", stderr);
+	}
 	return(0);
 }
