@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.20 2019/07/04 02:06:32 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.21 2019/07/05 03:04:22 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -75,7 +75,8 @@ putbinary(			/* fwrite() replacement for small objects */
 		return(fwrite(p, elsiz, nel, fp));
 	
 	while (nbytes-- > 0)
-		putc(*s++, fp);
+		if (putc(*s++, fp) == EOF)
+			return((elsiz*nel - nbytes)/elsiz);
 
 	return(nel);
 }
