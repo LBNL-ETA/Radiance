@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lam.c,v 1.21 2019/07/05 00:46:23 greg Exp $";
+static const char	RCSid[] = "$Id: lam.c,v 1.22 2019/07/05 15:04:20 greg Exp $";
 #endif
 /*
  *  lam.c - simple program to laminate files.
@@ -145,7 +145,8 @@ main(int argc, char *argv[])
 			if (bytsiz[i] > 0) {		/* binary input */
 				if (getbinary(buf, bytsiz[i], 1, input[i]) < 1)
 					break;
-				putbinary(buf, bytsiz[i], 1, stdout);
+				if (putbinary(buf, bytsiz[i], 1, stdout) != 1)
+					break;
 			} else if (bytsiz[i] < 0) {	/* multi-line input */
 				int	n = -bytsiz[i];
 				while (n--) {
@@ -154,7 +155,8 @@ main(int argc, char *argv[])
 					if ((i > 0) | (n < -bytsiz[i]-1))
 						fputs(tabc[i], stdout);
 					buf[strlen(buf)-1] = '\0';
-					fputs(buf, stdout);
+					if (fputs(buf, stdout) == EOF)
+						break;
 				}
 				if (n >= 0)		/* fell short? */
 					break;
@@ -164,7 +166,8 @@ main(int argc, char *argv[])
 				if (i)
 					fputs(tabc[i], stdout);
 				buf[strlen(buf)-1] = '\0';
-				fputs(buf, stdout);
+				if (fputs(buf, stdout) == EOF)
+					break;
 			}
 		}
 		if (i < nfiles)
@@ -175,6 +178,11 @@ main(int argc, char *argv[])
 			fflush(stdout);
 	} while (--incnt);
 							/* check ending */
+	if (fflush(stdout) == EOF) {
+		fputs(argv[0], stderr);
+		fputs(": write error on standard output\n", stderr);
+		return(1);
+	}
 	if (incnt > 0) {
 		fputs(argv[0], stderr);
 		fputs(": warning: premature EOD\n", stderr);

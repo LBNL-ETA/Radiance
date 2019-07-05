@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.2 2019/07/05 00:42:56 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.3 2019/07/05 15:04:20 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -14,6 +14,8 @@ rsplit - splits standard input into multiple output files or streams
 .B \-oh
 ][
 .B \-oH
+][
+.B "\-x xres \-y yres"
 ][
 .B \-oaN
 |
@@ -41,13 +43,14 @@ output1 [options] output2 ..
 writes lines or fields from the standard input to one or more output
 streams.
 By default, fields are separated by a
-newline character, but the terminator can be changed using the
+newline character (i.e., input is distributed by lines),
+but the terminator can be changed using the
 .I \-t
 option.
-Different separators may be given for different fields by specifying
+Different terminators may be given for different fields by specifying
 additional
 .I \-t
-options in between each output.
+options between each output specification.
 Note that there is no space between this option and its argument.
 .PP
 An output is either a file or a command.
@@ -82,10 +85,11 @@ indicates three floats per output record for the next named output.
 In the case of the
 .I \-oa
 option, no number writes one line or field per stream, and numbers
-greater than zero write multiple fields at a time to the same stream.
+greater than zero write multiple fields per record to the same stream.
+If the terminating character is set to something other than newline ('\\n'),
+a newline is added after each record (in addition to the terminator).
 For binary output formts, no number implies one value per output.
-The default tab separator
-is set to the empty string for binary output streams.
+The terminator is not used for binary output streams.
 .PP
 These options may be interspersed with output specifications,
 indicating different data to draw from the different files.

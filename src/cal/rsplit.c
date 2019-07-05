@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.3 2019/07/05 02:26:16 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.4 2019/07/05 15:04:20 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -296,34 +296,41 @@ main(int argc, char *argv[])
 			if (bytsiz[i] > 0) {		/* binary output */
 				if (getbinary(buf, bytsiz[i], 1, stdin) < 1)
 					break;
-				putbinary(buf, bytsiz[i], 1, output[i]);
+				if (putbinary(buf, bytsiz[i], 1, output[i]) != 1)
+					break;
 			} else if (bytsiz[i] < 0) {	/* N-field output */
 				int	n = -bytsiz[i];
 				while (n--) {
 					if (!scanOK(termc[i]))
 						break;
-					fputs(buf, output[i]);
+					if (fputs(buf, output[i]) == EOF)
+						break;
 				}
 				if (n >= 0)		/* fell short? */
 					break;
+				if (termc[i] != '\n')	/* add EOL if none */
+					fputc('\n', output[i]);
 			} else {			/* 1-field output */
 				if (!scanOK(termc[i]))
 					break;
-				fputs(buf, output[i]);
+				if (fputs(buf, output[i]) == EOF)
+					break;
+				if (termc[i] != '\n')	/* add EOL if none */
+					fputc('\n', output[i]);
 			}
 		}
 		if (i < nfiles)
 			break;
 	} while (--outcnt);
 							/* check ending */
-	if (outcnt > 0) {
-		fputs(argv[0], stderr);
-		fputs(": warning: premature EOD\n", stderr);
-	}
 	if (fflush(NULL) == EOF) {
 		fputs(argv[0], stderr);
 		fputs(": write error on one or more outputs\n", stderr);
 		return(1);
+	}
+	if (outcnt > 0) {
+		fputs(argv[0], stderr);
+		fputs(": warning: premature EOD\n", stderr);
 	}
 	return(0);
 }
