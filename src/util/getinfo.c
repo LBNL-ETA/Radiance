@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.17 2019/06/09 18:22:44 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.18 2019/07/06 14:08:07 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -57,21 +57,31 @@ main(
 	if (argc > 1 && !strcmp(argv[1], "-d")) {
 		argc--; argv++;
 		dim = 1;
-		SET_FILE_BINARY(stdin);
-	} else if (argc > 2 && !strcmp(argv[1], "-c")) {
-		SET_FILE_BINARY(stdin);
+	}
+#ifdef getc_unlocked				/* avoid lock/unlock overhead */
+	flockfile(stdin);
+#endif
+	SET_FILE_BINARY(stdin);
+	if (argc > 2 && !strcmp(argv[1], "-c")) {
 		SET_FILE_BINARY(stdout);
 		setvbuf(stdin, NULL, _IONBF, 2);
 		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
 			return 1;
 		printargs(argc-2, argv+2, stdout);
 		fputc('\n', stdout);
+		if (dim) {			/* copy resolution string? */
+			RESOLU	rs;
+			if (!fgetsresolu(&rs, stdin)) {
+				fputs("No resolution string\n", stderr);
+				return 1;
+			}
+			fputsresolu(&rs, stdout);
+		}
 		fflush(stdout);
 		execvp(argv[2], argv+2);
 		perror(argv[2]);
 		return 1;
 	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
-		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
 		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
 			return 1;
@@ -86,10 +96,16 @@ main(
 		copycat();
 		return 0;
 	} else if (argc == 2 && !strcmp(argv[1], "-")) {
-		SET_FILE_BINARY(stdin);
 		SET_FILE_BINARY(stdout);
 		if (getheader(stdin, NULL, NULL) < 0)
 			return 1;
+		if (dim) {			/* skip resolution string? */
+			RESOLU	rs;
+			if (!fgetsresolu(&rs, stdin)) {
+				fputs("No resolution string\n", stderr);
+				return 1;
+			}
+		}
 		copycat();
 		return 0;
 	}

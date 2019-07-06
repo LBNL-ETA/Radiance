@@ -2278,3 +2278,6 @@ the old behavior.
 
 Created rsplit program as compliment to rlam and to handle more complex
 rtrace output into separate files or streams.
+
+Improved getinfo so that it can also hop over resolution string with -c
+and header elide mode.
