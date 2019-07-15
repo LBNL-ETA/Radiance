@@ -2282,4 +2282,5 @@ rtrace output into separate files or streams.
 Improved getinfo so that it can also hop over resolution string with -c
 and header elide mode.
 
-Made pvalue -u option mean "uncompressed" with -r.
+Made pvalue -u option mean "uncompressed" with -r.  Also, allow skipping
+bytes on standard input.
