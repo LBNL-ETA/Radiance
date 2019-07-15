@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: portio.c,v 2.21 2019/07/05 03:04:22 greg Exp $";
+static const char	RCSid[] = "$Id: portio.c,v 2.22 2019/07/15 21:27:25 greg Exp $";
 #endif
 /*
  * Portable i/o for binary files
@@ -34,8 +34,9 @@ putint(				/* write a siz-byte integer to fp */
 )
 {
 	siz <<= 3;
-	while ((siz -= 8) >= 0)
+	while ((siz -= 8) > 0)
 		putc((int)(i>>siz & 0xff), fp);
+	putc((int)(i & 0xff), fp);
 }
 
 
@@ -57,7 +58,7 @@ putflt(				/* put out floating point number */
 		e = 0;
 	}
 	putint(m, 4, fp);
-	putint((long)e, 1, fp);
+	putint(e, 1, fp);
 }
 
 
@@ -71,7 +72,7 @@ putbinary(			/* fwrite() replacement for small objects */
 	const char	*s = (const char *)p;
 	int		nbytes = elsiz*nel;
 
-	if (nbytes > 256)
+	if (nbytes > 128)
 		return(fwrite(p, elsiz, nel, fp));
 	
 	while (nbytes-- > 0)
@@ -153,7 +154,7 @@ getbinary(			/* fread() replacement for small objects */
 	int	nbytes = elsiz*nel;
 	int	c;
 
-	if (nbytes > 256)
+	if (nbytes > 128)
 		return(fread(p, elsiz, nel, fp));
 	
 	while (nbytes-- > 0) {
