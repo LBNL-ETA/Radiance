@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.34 2018/08/02 18:33:46 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.35 2019/07/15 22:39:50 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -419,14 +419,13 @@ checkhead(				/* deal with line from header */
 static void
 pixtoval(void)				/* convert picture to values */
 {
-	register COLOR	*scanln;
+	COLOR	*scanln;
 	int  dogamma;
 	COLOR  lastc;
 	RREAL  hv[2];
 	int  startprim, endprim;
 	long  startpos;
-	int  y;
-	register int  x;
+	int  x, y;
 
 	scanln = (COLOR *)malloc(scanlen(&picres)*sizeof(COLOR));
 	if (scanln == NULL) {
@@ -493,10 +492,10 @@ pixtoval(void)				/* convert picture to values */
 static void
 valtopix(void)			/* convert values to a pixel file */
 {
-	int  dogamma;
-	register COLOR	*scanln;
-	int  y;
-	register int  x;
+	int	dogamma;
+	COLOR	*scanln;
+	COLR	rgbe;
+	int	x, y;
 
 	scanln = (COLOR *)malloc(scanlen(&picres)*sizeof(COLOR));
 	if (scanln == NULL) {
@@ -525,13 +524,23 @@ valtopix(void)			/* convert values to a pixel file */
 					pow(colval(scanln[x],BLU), gamcor));
 			if (doexposure)
 				multcolor(scanln[x], exposure);
+			if (uniq) {		/* uncompressed? */
+				setcolr(rgbe,	scanln[x][RED],
+						scanln[x][GRN],
+						scanln[x][BLU]);
+				if (putbinary(rgbe, sizeof(COLR), 1, stdout) != 1)
+					goto writerr;
+			}
 		}
-		if (fwritescan(scanln, scanlen(&picres), stdout) < 0) {
-			fprintf(stderr, "%s: write error\n", progname);
-			quit(1);
-		}
+						/* write scan if compressed */
+		if (!uniq && fwritescan(scanln, scanlen(&picres), stdout) < 0)
+			goto writerr;
 	}
 	free((void *)scanln);
+	return;
+writerr:
+	fprintf(stderr, "%s: write error\n", progname);
+	quit(1);
 }
 
 
@@ -939,7 +948,7 @@ putbbyte(			/* put a byte brightness to stdout */
 	COLOR  col
 )
 {
-	register int  i;
+	int  i;
 	uby8  vb;
 
 	i = (*mybright)(col)*256.;
