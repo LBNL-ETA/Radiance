@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.18 2019/07/06 14:08:07 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.19 2019/07/16 17:07:35 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -54,9 +54,10 @@ main(
 	FILE  *fp;
 	int  i;
 
-	if (argc > 1 && !strcmp(argv[1], "-d")) {
+	if (argc > 1 && (argv[1][0] == '-') | (argv[1][0] == '+') &&
+			argv[1][1] == 'd') {
+		dim = 1 - 2*(argv[1][0] == '-');
 		argc--; argv++;
-		dim = 1;
 	}
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 	flockfile(stdin);
@@ -75,7 +76,8 @@ main(
 				fputs("No resolution string\n", stderr);
 				return 1;
 			}
-			fputsresolu(&rs, stdout);
+			if (dim > 0)
+				fputsresolu(&rs, stdout);
 		}
 		fflush(stdout);
 		execvp(argv[2], argv+2);
@@ -99,7 +101,7 @@ main(
 		SET_FILE_BINARY(stdout);
 		if (getheader(stdin, NULL, NULL) < 0)
 			return 1;
-		if (dim) {			/* skip resolution string? */
+		if (dim < 0) {			/* skip resolution string? */
 			RESOLU	rs;
 			if (!fgetsresolu(&rs, stdin)) {
 				fputs("No resolution string\n", stderr);
@@ -114,24 +116,37 @@ main(
 		if ((fp = fopen(argv[i], "r")) == NULL)
 			fputs(": cannot open\n", stdout);
 		else {
-			if (dim) {
+			if (dim < 0) {			/* dimensions only */
+				if (getheader(fp, NULL, NULL) < 0) {
+					fputs("bad header\n", stdout);
+					continue;	
+				}
 				fputs(": ", stdout);
 				getdim(fp);
 			} else {
 				tabstr(":\n", NULL);
-				getheader(fp, tabstr, NULL);
+				if (getheader(fp, tabstr, NULL) < 0)
+					return 1;
 				fputc('\n', stdout);
+				if (dim > 0) {
+					fputc('\t', stdout);
+					getdim(fp);
+				}
 			}
 			fclose(fp);
 		}
 	}
 	if (argc == 1) {
-		if (dim) {
+		if (dim < 0) {
+			if (getheader(stdin, NULL, NULL) < 0)
+				return 1;	
 			getdim(stdin);
 		} else {
 			if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
 				return 1;
 			fputc('\n', stdout);
+			if (dim > 0)
+				getdim(stdin);
 		}
 	}
 	return 0;
@@ -145,11 +160,7 @@ getdim(				/* get dimensions from file */
 {
 	int  j;
 	int  c;
-				/* skip header */
-	if (getheader(fp, NULL, NULL) < 0) {
-		fputs("bad header\n", stdout);
-		return;	
-	}
+
 	switch (c = getc(fp)) {
 	case '+':		/* picture */
 	case '-':

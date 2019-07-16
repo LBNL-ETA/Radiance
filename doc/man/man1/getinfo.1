@@ -1,4 +1,4 @@
-.\" RCSid "$Id: getinfo.1,v 1.8 2019/07/06 14:08:07 greg Exp $"
+.\" RCSid "$Id: getinfo.1,v 1.9 2019/07/16 17:07:35 greg Exp $"
 .TH GETINFO 1 1/15/99 RADIANCE
 .SH NAME
 getinfo - get header information from a RADIANCE file
@@ -6,6 +6,8 @@ getinfo - get header information from a RADIANCE file
 .B getinfo
 [
 .B -d
+|
+.B +d
 ][
 .B "file .."
 ]
@@ -23,6 +25,8 @@ getinfo - get header information from a RADIANCE file
 .B getinfo
 [
 .B -d
+|
+.B +d
 ]
 .B -c
 .B "command .."
@@ -47,6 +51,9 @@ prints the bounding cube (xmin ymin zmin size).
 For a picture,
 .I "getinfo \-d"
 prints the y and x resolution (\-Y yres +X xres).
+The
+.I \+d
+option prints the header followed by a newline and the dimensions.
 If no
 .I file
 is given, the standard input is read.
@@ -58,7 +65,7 @@ and copies the body of the file from the standard
 input to the standard output.
 If the
 .I \-d
-option is included, then the resolution string will be elided as well.
+option is given, then the resolution string will be elided as well.
 .PP
 The third form of
 .I "getinfo \-a"
@@ -79,13 +86,30 @@ require the input to be in a file:
 ( getinfo < input ; getinfo - < input | command .. )
 .PP
 If the
+.I \+d
+option is given with
+.I \-c,
+then the resolution string will be copied before the command is called.
+If the
 .I \-d
-option is included, then the resolution string will be copied
-before the command is called.
-.SH EXAMPLE
+option is given, then the resolution string is read in but not copied.
+.SH EXAMPLES
 To print the header information from scene1.oct and scene2.hdr:
 .IP "" .2i
 getinfo scene1.oct scene2.hdr
+.PP
+To print the dimensions of a set of pictures:
+.IP "" .2i
+getinfo -d *.hdr
+.PP
+To add two header lines modifying the view
+and exposure calibration of a picture:
+.IP "" .2i
+getinfo -a "VIEW= -vta -vh 180 -vv 180" "EXPOSURE=1.5" < orig.hdr > modified.hdr
+.PP
+To raise floating-point matrix elements to a power of 2.7:
+.IP "" .2i
+getinfo -c rcalc -if -of -e '$1=$1^2.7' < input.fmx > output.fmx
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
