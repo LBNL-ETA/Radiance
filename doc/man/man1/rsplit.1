@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.3 2019/07/05 15:04:20 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.4 2019/07/16 15:59:49 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -52,6 +52,7 @@ additional
 .I \-t
 options between each output specification.
 Note that there is no space between this option and its argument.
+If no character is specified, the default (newline) is used.
 .PP
 An output is either a file or a command.
 If an output file exists, it will not be overwritten unless the

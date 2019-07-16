@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.4 2019/07/05 15:04:20 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.5 2019/07/16 15:59:49 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -98,6 +98,7 @@ main(int argc, char *argv[])
 			switch (argv[i][1]) {
 			case 't':
 				curterm = argv[i][2];
+				if (!curterm) curterm = '\n';
 				break;
 			case 'i':
 				switch (argv[i][2]) {
