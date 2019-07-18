@@ -2284,3 +2284,8 @@ and header elide mode.
 
 Made pvalue -u option mean "uncompressed" with -r.  Also, allow skipping
 bytes on standard input.
+
+Created rcode_depth tool to convert to and from a 16-bit/pixel portable
+depth image encoding that uses a mix of linear and reciprocal distance
+with explicit representations of 0 and infinity.  Code for loading these
+depth maps is in src/util/depthcodec.{h,c}.
