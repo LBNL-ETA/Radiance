@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.1 2019/07/18 18:51:56 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.2 2019/07/18 22:33:34 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -18,31 +18,36 @@ static const char RCSid[] = "$Id: depthcodec.c,v 2.1 2019/07/18 18:51:56 greg Ex
 char		*progname = "depth_codec";
 
 
+#if 0			/* defined as macro in depthcodec.h */
 /* Encode depth as 16-bit signed integer */
-short
+int
 depth2code(double d, double dref)
 {
 	if (d <= .0)
 		return -32768;
 
 	if (d > dref)
-		return 32767 - 32768*dref/d;
+		return (int)(32768 - 32768*dref/d) - 1;
 
-	return 32767*d/dref - 32768;
+	return (int)(32767*d/dref - 32768);
 }
+#endif
 
 
 /* Decode depth from 16-bit signed integer */
 double
-code2depth(short c, double dref)
+code2depth(int c, double dref)
 {
-	if (c < 0)
-		return dref*(32768 + c)*(1./32767.);
-		
-	if (c == 32767)
+	if (c <= -32768)
+		return .0;
+
+	if (c >= 32767)
 		return FHUGE;
+		
+	if (c < 0)
+		return dref*(32767.5 + c)*(1./32767.);
 	
-	return dref*32768./(32767 - c);
+	return dref*32768./(32766.5 - c);
 }
 
 

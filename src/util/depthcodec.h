@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.1 2019/07/18 18:51:56 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.2 2019/07/18 22:33:34 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -43,10 +43,12 @@ typedef struct {
 } DEPTHCODEC;
 
 /* Encode depth as 16-bit signed integer */
-extern short	depth2code(double d, double dref);
+#define	depth2code(d, dref) \
+		( (d) > (dref) ? (int)(32768 - 32768*(dref)/(d))-1 : \
+		  (d) > .0 ? (int)(32767*(d)/(dref) - 32768) : -32768 )
 
 /* Decode depth from 16-bit signed integer */
-extern double	code2depth(short c, double dref);
+extern double	code2depth(int c, double dref);
 
 /* Set codec defaults */
 extern void	set_dc_defaults(DEPTHCODEC *dcp);
