@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.1 2019/07/18 18:51:56 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.2 2019/07/18 19:13:44 greg Exp $";
 #endif
 /*
  * Encode and decode depth values using 16-bit integers
@@ -403,7 +403,7 @@ main(int argc, char *argv[])
 	flockfile(stdout);
 #endif
 					/* read/copy header */
-	if (!process_dc_header(&dc, argc, argv))
+	if (!process_dc_header(&dc, a, argv))
 		return 1;
 					/* process data */
 	switch (conversion) {
