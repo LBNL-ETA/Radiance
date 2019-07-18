@@ -1,4 +1,4 @@
-.\" RCSid "$Id: pvalue.1,v 1.10 2019/07/15 23:42:44 greg Exp $"
+.\" RCSid "$Id: pvalue.1,v 1.11 2019/07/18 14:45:59 greg Exp $"
 .TH PVALUE 1 1/15/99 RADIANCE
 .SH NAME
 pvalue - convert RADIANCE picture to/from alternate formats
@@ -242,12 +242,7 @@ pflip \-v flipped.hdr > final.hdr
 .SH AUTHOR
 Greg Ward
 .SH BUGS
-The
-.I \-r
-option does not work with the
-.I \-u
-option.
-Also, input pixel locations are ignored during a reverse
+Input pixel locations are ignored during a reverse
 conversion, so this information is not used in determining
 the scanline ordering or picture size.
 .SH "SEE ALSO"
