@@ -73,6 +73,9 @@ target_link_libraries(rcode_depth rtrad)
 add_executable(rcode_norm rcode_norm.c normcodec.c)
 target_link_libraries(rcode_norm rtrad)
 
+add executable(rcode_ident rcode_ident.c idmap.c)
+target_link_libraries(rcode_ident rtrad)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c

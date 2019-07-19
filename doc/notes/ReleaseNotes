@@ -2290,6 +2290,9 @@ depth image encoding that uses a mix of linear and reciprocal distance
 with explicit representations of 0 and infinity.  Code for loading these
 depth maps is in src/util/depthcodec.{h,c}.
 
-Created rcode_norm tool to conver to and from 32-bit/pixel portable
+Created rcode_norm tool to convert to and from 32-bit/pixel portable
 surface normal representation, matching the one in src/common/dircode.c.
 Code for loading normal maps is in src/util/normcodec.{h,c}.
+
+Created rcode_ident tool to create indexed identifier files.
+Code for loading these files is in src/util/idmap.{h,c}.
