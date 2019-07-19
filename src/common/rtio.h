@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.19 2018/06/01 16:38:37 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.20 2019/07/19 17:37:56 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -10,6 +10,7 @@
 #include  <sys/types.h>
 #include  <fcntl.h>
 #include  <string.h>
+#include  <time.h>
 
 #ifdef getc_unlocked		/* avoid horrendous overhead of flockfile */
 #undef getc
@@ -29,6 +30,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+					/* identify header lines */
+#define  MAXFMTLEN	64
+#define  isheadid(s)	headidval(NULL,s)
+#define  isformat(s)	formatval(NULL,s)
+#define  isdate(s)	dateval(NULL,s)
+#define  isgmt(s)	gmtval(NULL,s)
+
+#define  LATLONSTR	"LATLONG="
+#define  LLATLONSTR	8
+#define  islatlon(hl)		(!strncmp(hl,LATLONSTR,LLATLONSTR))
+#define  latlonval(ll,hl)	sscanf((hl)+LLATLONSTR, "%f %f", \
+						&(ll)[0],&(ll)[1])
+#define  fputlatlon(lat,lon,fp)	fprintf(fp,"%s %.6f %.6f\n",LATLONSTR,lat,lon)
+					/* defined in header.c */
+extern void	newheader(const char *t, FILE *fp);
+extern int	headidval(char *r, const char *s);
+extern int	dateval(time_t *t, const char *s);
+extern int	gmtval(time_t *t, const char *s);
+extern void	fputdate(time_t t, FILE *fp);
+extern void	fputnow(FILE *fp);
+extern void	printargs(int ac, char **av, FILE *fp);
+extern int	formatval(char fmt[MAXFMTLEN], const char *s);
+extern void	fputformat(const char *s, FILE *fp);
+typedef int gethfunc(char *s, void *p); /* callback to process header lines */
+extern int	getheader(FILE *fp, gethfunc *f, void *p);
+extern int	globmatch(const char *pat, const char *str);
+extern int	checkheader(FILE *fin, char fmt[MAXFMTLEN], FILE *fout);
 					/* defined in badarg.c */
 extern int	badarg(int ac, char **av, char *fl);
 					/* defined in expandarg.c */

@@ -1,12 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcwarp.c,v 3.6 2018/08/02 18:33:44 greg Exp $";
+static const char	RCSid[] = "$Id: pcwarp.c,v 3.7 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * Warp colors in Radiance picture to correct for input/output changes.
  */
 
-#include <stdio.h>
-
+#include "rtio.h"
 #include "resolu.h"
 #include "color.h"
 #include "warp3d.h"

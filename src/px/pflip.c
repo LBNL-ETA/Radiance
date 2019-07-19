@@ -1,14 +1,11 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.11 2018/08/02 18:33:44 greg Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.12 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
  */
 
-#include <stdio.h>
-#include  <time.h>
-#include  <string.h>
-
+#include "rtio.h"
 #include "platform.h"
 #include "color.h"
 #include "resolu.h"

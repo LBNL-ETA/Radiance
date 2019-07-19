@@ -1,10 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.34 2019/06/09 18:22:20 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.35 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
  *
- *  Externals declared in resolu.h
+ *  Externals declared in rtio.h
  *
  *  newheader(t,fp)	start new information header identified by string t
  *  headidval(r,s)	copy header identifier value in s to r

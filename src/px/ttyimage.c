@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ttyimage.c,v 2.5 2004/03/28 20:33:14 schorsch Exp $";
+static const char	RCSid[] = "$Id: ttyimage.c,v 2.6 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  *  ttyimage.c - program to dump pixel file to dumb terminal.
@@ -7,9 +7,7 @@ static const char	RCSid[] = "$Id: ttyimage.c,v 2.5 2004/03/28 20:33:14 schorsch 
  *     8/15/85
  */
 
-#include  <stdio.h>
-#include  <time.h>
-
+#include  "rtio.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"

@@ -1,4 +1,4 @@
-/* RCSid $Id: resolu.h,v 2.13 2018/08/02 18:33:42 greg Exp $ */
+/* RCSid $Id: resolu.h,v 2.14 2019/07/19 17:37:56 greg Exp $ */
 /*
  * Definitions for resolution line in image file.
  *
@@ -15,9 +15,6 @@
  */
 #ifndef _RAD_RESOLU_H_
 #define _RAD_RESOLU_H_
-
-#include <time.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,39 +52,11 @@ extern char  resolu_buf[RESOLU_BUFLEN];
 #define  fprtresolu(sl,ns,fp)	fprintf(fp,PIXSTDFMT,ns,sl)
 #define  fscnresolu(sl,ns,fp)	(fscanf(fp,PIXSTDFMT,ns,sl)==2)
 
-			/* identify header lines */
-#define  MAXFMTLEN	64
-#define  isheadid(s)	headidval(NULL,s)
-#define  isformat(s)	formatval(NULL,s)
-#define  isdate(s)	dateval(NULL,s)
-#define  isgmt(s)	gmtval(NULL,s)
-
-#define  LATLONSTR	"LATLONG="
-#define  LLATLONSTR	8
-#define  islatlon(hl)		(!strncmp(hl,LATLONSTR,LLATLONSTR))
-#define  latlonval(ll,hl)	sscanf((hl)+LLATLONSTR, "%f %f", \
-						&(ll)[0],&(ll)[1])
-#define  fputlatlon(lat,lon,fp)	fprintf(fp,"%s %.6f %.6f\n",LATLONSTR,lat,lon)
-
-					/* defined in resolu.c */
+			/* defined in resolu.c */
 extern void	fputresolu(int ord, int sl, int ns, FILE *fp);
 extern int	fgetresolu(int *sl, int *ns, FILE *fp);
 extern char *	resolu2str(char *buf, RESOLU *rp);
 extern int	str2resolu(RESOLU *rp, char *buf);
-					/* defined in header.c */
-extern void	newheader(const char *t, FILE *fp);
-extern int	headidval(char *r, const char *s);
-extern int	dateval(time_t *t, const char *s);
-extern int	gmtval(time_t *t, const char *s);
-extern void	fputdate(time_t t, FILE *fp);
-extern void	fputnow(FILE *fp);
-extern void	printargs(int ac, char **av, FILE *fp);
-extern int	formatval(char fmt[MAXFMTLEN], const char *s);
-extern void	fputformat(const char *s, FILE *fp);
-typedef int gethfunc(char *s, void *p); /* callback to process header lines */
-extern int	getheader(FILE *fp, gethfunc *f, void *p);
-extern int	globmatch(const char *pat, const char *str);
-extern int	checkheader(FILE *fin, char fmt[MAXFMTLEN], FILE *fout);
 
 #ifdef __cplusplus
 }

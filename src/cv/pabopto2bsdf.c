@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.35 2019/04/23 23:48:33 greg Exp $";
+static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * Load measured BSDF data in PAB-Opto format.
@@ -9,14 +9,12 @@ static const char RCSid[] = "$Id: pabopto2bsdf.c,v 2.35 2019/04/23 23:48:33 greg
  */
 
 #define _USE_MATH_DEFINES
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include "rtio.h"
 #include "platform.h"
 #include "bsdfrep.h"
-#include "resolu.h"
 				/* global argv[0] */
 char			*progname;
 

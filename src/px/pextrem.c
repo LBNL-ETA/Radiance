@@ -1,14 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pextrem.c,v 2.13 2018/08/02 18:33:44 greg Exp $";
+static const char	RCSid[] = "$Id: pextrem.c,v 2.14 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * Find extrema points in a Radiance picture.
  */
 
-#include  <stdio.h>
 #include  <math.h>
-#include  <string.h>
 
+#include  "rtio.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"

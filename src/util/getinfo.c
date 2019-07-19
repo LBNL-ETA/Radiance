@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.19 2019/07/16 17:07:35 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.20 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -7,9 +7,7 @@ static const char	RCSid[] = "$Id: getinfo.c,v 2.19 2019/07/16 17:07:35 greg Exp 
  *     1/3/86
  */
 
-#include  <stdio.h>
-#include  <string.h>
-
+#include  "rtio.h"
 #include  "platform.h"
 #include  "rtprocess.h"
 #include  "resolu.h"

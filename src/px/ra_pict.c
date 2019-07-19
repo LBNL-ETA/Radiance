@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_pict.c,v 2.11 2018/03/20 18:45:04 greg Exp $";
+static const char	RCSid[] = "$Id: ra_pict.c,v 2.12 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*		Convert an Radiance image to APPLE pict format.
  *
@@ -16,12 +16,10 @@ static const char	RCSid[] = "$Id: ra_pict.c,v 2.11 2018/03/20 18:45:04 greg Exp 
  *				-- Added exposure level adjustment
  */
 
-#include <stdio.h>
 #include <math.h>
-#include  <time.h>
 
-#include "platform.h"
 #include "rtio.h"
+#include "platform.h"
 #include "pict.h"
 #include "color.h"
 #include "resolu.h"

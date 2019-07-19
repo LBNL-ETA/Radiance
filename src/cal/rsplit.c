@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.5 2019/07/16 15:59:49 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.6 2019/07/19 17:37:55 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -8,13 +8,11 @@ static const char	RCSid[] = "$Id: rsplit.c,v 1.5 2019/07/16 15:59:49 greg Exp $"
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 #include <ctype.h>
 
+#include "rtio.h"
 #include "platform.h"
 #include "resolu.h"
-#include "rtio.h"
 
 #define	DOHEADER	1
 #define DORESOLU	2

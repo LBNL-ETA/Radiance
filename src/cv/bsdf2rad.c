@@ -1,16 +1,14 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2rad.c,v 2.35 2018/08/02 18:33:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2rad.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  *  Plot 3-D BSDF output based on scattering interpolant or XML representation
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include "rtio.h"
 #include "paths.h"
 #include "rtmath.h"
-#include "resolu.h"
 #include "bsdfrep.h"
 
 #ifndef NINCIDENT

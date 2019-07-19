@@ -1,15 +1,14 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_gif.c,v 2.12 2011/05/20 02:06:39 greg Exp $";
+static const char	RCSid[] = "$Id: ra_gif.c,v 2.13 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * Convert from Radiance picture file to Compuserve GIF.
  * Currently, we don't know how to get back.
  */
 
-#include  <stdio.h>
-#include  <time.h>
 #include  <math.h>
 
+#include  "rtio.h"
 #include  "platform.h"
 #include  "color.h"
 #include  "resolu.h"

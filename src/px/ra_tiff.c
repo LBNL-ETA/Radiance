@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_tiff.c,v 2.35 2018/08/02 18:33:47 greg Exp $";
+static const char	RCSid[] = "$Id: ra_tiff.c,v 2.36 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE and TIFF files.
@@ -7,12 +7,10 @@ static const char	RCSid[] = "$Id: ra_tiff.c,v 2.35 2018/08/02 18:33:47 greg Exp 
  *  Added white-balance adjustment 10/01 (GW).
  */
 
-#include  <stdio.h>
 #include  <math.h>
 #include  <ctype.h>
-#include  <time.h>
-#include  <string.h>
 
+#include  "rtio.h"
 #include  "platform.h"
 #include  "tiffio.h"
 #include  "color.h"

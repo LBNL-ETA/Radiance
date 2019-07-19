@@ -1,15 +1,13 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: normtiff.c,v 3.14 2018/08/02 18:33:43 greg Exp $";
+static const char	RCSid[] = "$Id: normtiff.c,v 3.15 2019/07/19 17:37:56 greg Exp $";
 #endif
 /*
  * Tone map SGILOG TIFF or Radiance picture and output 24-bit RGB TIFF
  */
 
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <string.h>
 
+#include "rtio.h"
 #include "platform.h"
 #include "tiffio.h"
 #include "color.h"
