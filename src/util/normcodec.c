@@ -1,8 +1,8 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.1 2019/07/19 02:18:44 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.2 2019/07/19 02:25:02 greg Exp $";
 #endif
 /*
- * Routines to encode/decoded 16-bit depths
+ * Routines to encode/decode 32-bit normals
  */
 
 #include "copyright.h"
@@ -85,7 +85,7 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 }
 
 
-/* Check that we have what we need to decode depths */
+/* Check that we have what we need to decode normals */
 int
 check_decode_normals(NORMCODEC *ncp)
 {
@@ -152,7 +152,7 @@ seek_nc_pix(NORMCODEC *ncp, int x, int y)
 }
 
 
-/* Read and decode depth for the given pixel */
+/* Read and decode normal for the given pixel */
 int
 decode_normal_pix(FVECT nrm, NORMCODEC *ncp, int x, int y)
 {
