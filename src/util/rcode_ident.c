@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.1 2019/07/19 22:25:03 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.2 2019/07/19 22:57:12 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -92,7 +92,9 @@ create_index(const char *fname, int hdrflags, int ndxbytes, int xres, int yres)
 	long	n;
 	int	ndx;
 					/* open file if not stdin */
-	if (fname && !(fp = fopen(fname, "r"))) {
+	if (!fname)
+		fname = "<stdin>";
+	else if (!(fp = fopen(fname, "r"))) {
 		fputs(fname, stderr);
 		fputs(": cannot open for input\n", stderr);
 		return 0;
@@ -188,7 +190,8 @@ create_index(const char *fname, int hdrflags, int ndxbytes, int xres, int yres)
 					stderr);
 			break;
 		}
-	fclose(fp);				/* done with input */
+	if (fp != stdin)			/* done with input */
+		fclose(fp);
 	for (ndx = 0; ndx < nextID; ndx++) {	/* append string table */
 		fputs(idmap[ndx], stdout);
 		putchar('\0');			/* nul-terminated IDs */
@@ -339,6 +342,8 @@ main(int argc, char *argv[])
 		default:
 			usage_exit(1);
 		}
+	if ((xres > 0) & (yres > 0))	/* user specified resolution? */
+		hdrflags &= ~HF_RESOUT;
 	if (reverse && a >= argc) {
 		fputs(progname, stderr);
 		fputs(": -r option requires named input file\n", stderr);
