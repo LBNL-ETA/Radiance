@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.2 2019/07/18 22:33:34 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.3 2019/07/19 00:01:49 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -44,8 +44,8 @@ typedef struct {
 
 /* Encode depth as 16-bit signed integer */
 #define	depth2code(d, dref) \
-		( (d) > (dref) ? (int)(32768 - 32768*(dref)/(d))-1 : \
-		  (d) > .0 ? (int)(32767*(d)/(dref) - 32768) : -32768 )
+		( (d) > (dref) ? (int)(32768. - 32768.*(dref)/(d))-1 : \
+		  (d) > .0 ? (int)(32767.*(d)/(dref) - 32768.) : -32768 )
 
 /* Decode depth from 16-bit signed integer */
 extern double	code2depth(int c, double dref);
@@ -59,7 +59,7 @@ extern int	process_dc_header(DEPTHCODEC *dcp, int ac, char *av[]);
 /* Check that we have what we need to decode depths */
 extern int	check_decode_depths(DEPTHCODEC *dcp);
 
-/* Decode next depth pixel */
+/* Decode next depth pixel from input */
 extern double	decode_depth_next(DEPTHCODEC *dcp);
 
 /* Seek to the indicated pixel position */
@@ -71,14 +71,14 @@ extern double	decode_depth_pix(DEPTHCODEC *dcp, int x, int y);
 /* Check that we have what we need to decode world positions */
 extern int	check_decode_worldpos(DEPTHCODEC *dcp);
 
-/* Compute world position from depth */
+/* Compute world position from pixel position and depth */
 extern int	compute_worldpos(FVECT wpos, DEPTHCODEC *dcp,
 					int x, int y, double d);
 
-/* Decode the next world position */
+/* Decode the next world position from input */
 int		decode_worldpos_next(FVECT wpos, DEPTHCODEC *dcp);
 
-/* Read and decode the world position at the given pixel */
+/* Decode depth and compute world position for the given pixel */
 extern int	get_worldpos_pix(FVECT wpos, DEPTHCODEC *dcp, int x, int y);
 
 extern char	*progname;	/* global argv[0] (set by main) */
