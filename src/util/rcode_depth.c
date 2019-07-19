@@ -1,8 +1,8 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.2 2019/07/18 19:13:44 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.3 2019/07/19 01:24:33 greg Exp $";
 #endif
 /*
- * Encode and decode depth values using 16-bit integers
+ * Encode and decode depth map using 16-bit integers
  */
 
 #include "copyright.h"
@@ -14,6 +14,8 @@ static const char RCSid[] = "$Id: rcode_depth.c,v 2.2 2019/07/18 19:13:44 greg E
 #include "rtio.h"
 #include "fvect.h"
 #include "depthcodec.h"
+
+char		*progname;		/* set in main() */
 
 enum {CV_FWD, CV_REV, CV_PTS};
 
@@ -40,7 +42,7 @@ usage_exit(int code)
 static int
 encode_depths(DEPTHCODEC *dcp)
 {
-	long	nexpected = 0;
+	long	nexpected = (long)dcp->res.xr * dcp->res.yr;
 
 	if (dcp->inpfmt[0]) {
 		if (strcasestr(dcp->inpfmt, "ascii") != NULL)
@@ -57,8 +59,7 @@ encode_depths(DEPTHCODEC *dcp)
 			return 0;
 		}
 	}
-	if (dcp->hdrflags & HF_RESIN)
-		nexpected = (long)dcp->res.xr * dcp->res.yr;
+
 	do {
 		int	ok = 0;
 		float	f;
@@ -78,7 +79,9 @@ encode_depths(DEPTHCODEC *dcp)
 		}
 		if (!ok)
 			break;
+
 		putint(depth2code(d, dcp->refdepth), 2, stdout);
+
 	} while (--nexpected);
 
 	if (nexpected > 0) {
@@ -90,7 +93,7 @@ encode_depths(DEPTHCODEC *dcp)
 }
 
 
-/* Convert and output the given depth code to stdout */
+/* Convert and output the given depth to stdout */
 static void
 output_depth(DEPTHCODEC *dcp, double d)
 {
@@ -115,15 +118,13 @@ output_depth(DEPTHCODEC *dcp, double d)
 static int
 decode_depths(DEPTHCODEC *dcp)
 {
-	long	nexpected = 0;
+	long	nexpected = (long)dcp->res.xr * dcp->res.yr;
 
 	if (!check_decode_depths(dcp))
 		return 0;
 
-	if (dcp->hdrflags & HF_RESIN)
-		nexpected = (long)dcp->res.xr * dcp->res.yr;
 	do {
-		double	d = decode_depth_next(dcp);		
+		double	d = decode_depth_next(dcp);
 		if (d < -FTINY)
 			break;
 		output_depth(dcp, d);
@@ -155,12 +156,16 @@ pixel_depths(DEPTHCODEC *dcp, int unbuf)
 		return 0;
 
 	while (scanf("%d %d", &xy[0], &xy[1]) == 2) {
+
 		loc2pix(xy, &dcp->res,
 			(xy[0]+.5)/dcp->res.xr, (xy[1]+.5)/dcp->res.yr);
+
 		d = decode_depth_pix(dcp, xy[0], xy[1]);
 		if (d < -FTINY)
 			return 0;
+
 		output_depth(dcp, d);
+
 		if (unbuf && fflush(stdout) == EOF) {
 			fputs(progname, stderr);
 			fputs(": write error on output\n", stderr);
@@ -176,14 +181,13 @@ pixel_depths(DEPTHCODEC *dcp, int unbuf)
 }
 
 
-/* Output the given world position */
+/* Output the given world position to stdout */
 static void
 output_worldpos(DEPTHCODEC *dcp, FVECT wpos)
 {
 	switch (dcp->format) {
 	case 'a':
-		fprintf(stdout, "%.5e %.5e %.5e\n",
-				wpos[0], wpos[1], wpos[2]);
+		printf("%.5e %.5e %.5e\n", wpos[0], wpos[1], wpos[2]);
 		break;
 #ifdef SMLFLT
 	case 'f':
@@ -397,7 +401,8 @@ main(int argc, char *argv[])
 		return 1;
 	}
 	SET_FILE_BINARY(dc.finp);
-	SET_FILE_BINARY(stdout);
+	if ((conversion != CV_FWD) | (dc.format != 'a'))
+		SET_FILE_BINARY(stdout);
 #ifdef getc_unlocked			/* avoid stupid semaphores */
 	flockfile(dc.finp);
 	flockfile(stdout);

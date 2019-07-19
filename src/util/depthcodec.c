@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.2 2019/07/18 22:33:34 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.3 2019/07/19 01:24:33 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -14,8 +14,6 @@ static const char RCSid[] = "$Id: depthcodec.c,v 2.2 2019/07/18 22:33:34 greg Ex
 #include "rtio.h"
 #include "fvect.h"
 #include "depthcodec.h"
-
-char		*progname = "depth_codec";
 
 
 #if 0			/* defined as macro in depthcodec.h */
@@ -63,6 +61,7 @@ set_dc_defaults(DEPTHCODEC *dcp)
 	dcp->depth_unit[0] = '1';
 	dcp->vw = stdview;
 	dcp->res.rt = PIXSTANDARD;
+	if (!progname) progname = "depth_codec";
 }
 
 
@@ -174,7 +173,7 @@ check_decode_worldpos(DEPTHCODEC *dcp)
 		return 0;
 	if ((dcp->res.xr <= 0) | (dcp->res.yr <= 0)) {
 		fputs(progname, stderr);
-		fputs(": missing image resolution\n", stderr);
+		fputs(": missing map resolution\n", stderr);
 		return 0;
 	}
 	if (!dcp->gotview) {
@@ -254,16 +253,17 @@ seek_dc_pix(DEPTHCODEC *dcp, int x, int y)
 
 	if ((dcp->res.xr <= 0) | (dcp->res.yr <= 0)) {
 		fputs(progname, stderr);
-		fputs(": need image resolution to seek\n", stderr);
+		fputs(": need map resolution to seek\n", stderr);
 		return -1;
 	}
 	if ((x < 0) | (y < 0) ||
 			(x >= scanlen(&dcp->res)) | (y >= numscans(&dcp->res))) {
 		fputs(dcp->inpname, stderr);
-		fputs(": warning - pixel index off image\n", stderr);
+		fputs(": warning - pixel index off map\n", stderr);
 		return 0;
 	}
 	seekpos = dcp->dstart + 2*((long)y*scanlen(&dcp->res) + x);
+
 	if (seekpos != dcp->curpos &&
 			fseek(dcp->finp, seekpos, SEEK_SET) == EOF) {
 		fputs(dcp->inpname, stderr);
