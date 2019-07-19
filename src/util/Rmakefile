@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.89 2019/07/18 18:51:56 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.90 2019/07/19 02:18:44 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -22,7 +22,7 @@ LIBDIR = /usr/local/lib/ray
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare radcompare \
-		rcode_depth
+		rcode_depth rcode_norm
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -149,6 +149,10 @@ rcode_depth:	rcode_depth.o depthcodec.o
 	$(CC) $(CFLAGS) -o rcode_depth rcode_depth.o depthcodec.o \
 -lrtrad $(MLIB)
 
+rcode_norm:	rcode_norm.o normcodec.o
+	$(CC) $(CFLAGS) -o rcode_norm rcode_norm.o normcodec.o \
+-lrtrad $(MLIB)
+
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
 ../common/paths.h ../common/rtio.h ../common/random.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h
@@ -268,3 +272,9 @@ rcode_depth.o depthcodec.o:	depthcodec.h \
 		../common/rtio.h
 
 rcode_depth.o:	../common/platform.h
+
+rcode_norm.o normcodec.o:	normcodec.h \
+		../common/rtmath.h ../common/mat4.h ../common/fvect.h \
+		../common/resolu.h ../common/rtio.h
+
+rcode_norm.o:	../common/platform.h

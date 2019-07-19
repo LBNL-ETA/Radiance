@@ -70,6 +70,9 @@ target_link_libraries(radcompare rtrad)
 add_executable(rcode_depth rcode_depth.c depthcodec.c)
 target_link_libraries(rcode_depth rtrad)
 
+add_executable(rcode_norm rcode_norm.c normcodec.c)
+target_link_libraries(rcode_norm rtrad)
+
 if(X11_FOUND)
   add_executable(xglaresrc
     xglaresrc.c
