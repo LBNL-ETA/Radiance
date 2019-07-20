@@ -1,4 +1,4 @@
-.\" RCSid "$Id: histo.1,v 1.8 2013/09/05 17:53:22 greg Exp $"
+.\" RCSid "$Id: histo.1,v 1.9 2019/07/20 00:57:43 greg Exp $"
 .TH HISTO 1 9/6/96 RADIANCE
 .SH NAME
 histo - compute 1-dimensional histogram of N data columns
@@ -48,7 +48,7 @@ If any value is less than the minimum or greater than the maximum,
 it will be ignored unless the
 .I \-c
 option is specified.
-.SH EXAMPLE
+.SH EXAMPLES
 To count data values between \-1 and 1 in 50 bins:
 .IP "" .2i
 histo \-1 1 50 < input.dat
@@ -59,4 +59,5 @@ histo 0 255 < input.dat
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), neaten(1), rcalc(1), rcollate(1), rlam(1), tabfunc(1), total(1)
+cnt(1), neaten(1), rcalc(1), rcollate(1), rlam(1),
+rsplit(1), tabfunc(1), total(1)

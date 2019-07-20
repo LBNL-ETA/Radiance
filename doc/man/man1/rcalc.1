@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcalc.1,v 1.14 2019/06/10 13:56:52 greg Exp $"
+.\" RCSid "$Id: rcalc.1,v 1.15 2019/07/20 00:57:43 greg Exp $"
 .TH RCALC 1 4/6/99 RADIANCE
 .SH NAME
 rcalc - record calculator
@@ -330,7 +330,7 @@ inverse tangent of y/x (range \-pi to pi).
 To print the square root of column two in column one,
 and column one times column three in column two:
 .IP "" .2i
-rcalc \-e '$1=sqrt($2);$2=$1*$3' inputfile > outputfile
+rcalc -e '$1=sqrt($2);$2=$1*$3' inputfile > outputfile
 .SH ENVIRONMENT
 RAYPATH		the directories to check for auxiliary files.
 .SH AUTHOR
@@ -342,4 +342,5 @@ options, not in definitions.
 .PP
 Tabs count as single spaces inside fields.
 .SH "SEE ALSO"
-cnt(1), ev(1), getinfo(1), icalc(1), rcollate(1), rlam(1), tabfunc(1), total(1)
+cnt(1), ev(1), getinfo(1), icalc(1), rcollate(1), rlam(1),
+rsplit(1), tabfunc(1), total(1)
