@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.1 2019/07/19 02:18:44 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.2 2019/07/20 02:07:23 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -22,10 +22,10 @@ usage_exit(int code)
 {
 	fputs("Usage: ", stderr);
 	fputs(progname, stderr);
-	fputs(" [-h[io]][-H[io]][-f[afd]] [input [output]]\n", stderr);
+	fputs(" [-h[io]][-H[io]][-f[afd]] [input [output.nrm]]\n", stderr);
 	fputs("   Or: ", stderr);
 	fputs(progname, stderr);
-	fputs(" -r [-i][-u][-h[io]][-H[io]][-f[afd]] [input [output]]\n",
+	fputs(" -r [-i][-u][-h[io]][-H[io]][-f[afd]] [input.nrm [output]]\n",
 			stderr);
 	exit(code);
 }
@@ -304,7 +304,7 @@ main(int argc, char *argv[])
 			fputs(": -i option requires input resolution\n", stderr);
 			usage_exit(1);
 		}
-		nc.hdrflags &= ~(HF_HEADOUT|HF_RESOUT);
+		nc.hdrflags &= ~HF_RESOUT;
 	}
 	if (a < argc-2) {
 		fputs(progname, stderr);

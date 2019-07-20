@@ -1,0 +1,143 @@
+.\" RCSid "$Id: rcode_depth.1,v 1.1 2019/07/20 02:07:23 greg Exp $"
+.TH RCODE_DEPTH 1 7/19/2019 RADIANCE
+.SH NAME
+rcode_depth - encode/decode 16-bit depth map
+.SH SYNOPSIS
+.B rcode_depth
+[
+.B "-d ref_depth/unit"
+][
+.B \-h[io]
+][
+.B \-H[io]
+][
+.B \-f[afd]
+]
+[
+input
+[output.dpt]
+]
+.br
+.B rcode_depth
+{
+.B \-r
+|
+.B \-p
+}
+[
+.B \-i
+][
+.B \-u
+][
+.B \-h[io]
+][
+.B \-H[io]
+][
+.B \-f[afd]
+]
+[
+input.dpt
+[output]
+]
+.SH DESCRIPTION
+.I Rcode_depth
+reads a map of depth values from 0 to infinity
+and encodes them in an efficient 16-bit/pixel format for storage.
+Input is taken from the first named file, or standard input if no
+files are given.
+Output is sent to the second named file, or standard output if none.
+.PP
+The
+.I \-d
+option specifies a reference distance with an optional unit
+after a slash separator ('/').
+(E.g., "1/meter" for diopters.)\0
+This distance should roughly correspond to the average
+depths on the input, as it sets the threshold between a linear
+near-field and a reciprocal far-field range.
+The default value is 1.0, with no specified units.
+.PP
+The
+.I \-hi
+option tells
+.I rcode_depth
+not to expect an information header on its input.
+The
+.I \-ho
+option tells
+.I rcode_depth
+not to produce an information header on its output.
+Specifying
+.I \-h
+turns both input and output headers off.
+Similarly, the
+.I \-Hi
+option says not to expect an image resolution string on input, the
+.I \-Ho
+option says not to produce one on output, and
+.I \-H
+applies both.
+.PP
+The default input format is ASCII (user-readable) real values,
+corresponding to the
+.I \-fa
+option.
+The
+.I \-ff
+option tells
+.I rcode_depth
+to expect binary, 32-bit floating-point values per
+depth on its input, instead.
+The
+.I \-fd
+option tells it to expect 64-bit/pixel binary input.
+.PP
+The second form applies either the
+.I \-r
+option to decode from 16-bit depths to the desired format, or the
+.I \-p
+option to compute world intersection points from
+view parameters in the encoded depth file header.
+The output format is specified with the
+.I \-f
+option as described above.
+The 
+.I \-h
+and
+.I \-H
+options have the same behavior as before.
+.PP
+When decoding, the
+.I \-i
+option further tells
+.I rcode_depth
+to produce one depth or world point
+for each integer input pair specifying
+the horizontal and vertical coordinates of a particular pixel,
+where x is measured from 0 on the left and y from 0 at the bottom
+in the standard orientation.
+Note that
+.I \-i
+implies that an encoded normal file is explicitly given on the command
+line, since the pixel coordinates are read from the standard input.
+Also, the
+.I \-H
+option is not supported with
+.I \-i,
+since the map dimensions are required on the
+input and not copied to the output.
+If the
+.I \-u
+option is also given, output will be flushed after each coordinate pair.
+.SH EXAMPLES
+To store first surface intersection distances out of rtrace:
+.IP "" .2i
+rtrace -ff < rays.flt -x 512 -y 400 -oL octree | rcode_depth -ff > first.dpt
+.PP
+To query world intersection points using ximage with the 't' command:
+.IP "" .2i
+ximage -op render.hdr | rcode_depth -i -p first.dpt
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+rcalc(1), rcode_ident(1), rcode_norm(1), rlam(1), rsplit(1), rtpict(1)

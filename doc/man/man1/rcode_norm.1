@@ -1,0 +1,121 @@
+.\" RCSid "$Id: rcode_norm.1,v 1.1 2019/07/20 02:07:23 greg Exp $"
+.TH RCODE_NORM 1 7/19/2019 RADIANCE
+.SH NAME
+rcode_norm - encode/decode 32-bit surface normal map
+.SH SYNOPSIS
+.B rcode_norm
+[
+.B \-h[io]
+][
+.B \-H[io]
+][
+.B \-f[afd]
+]
+[
+input
+[output.nrm]
+]
+.br
+.B "rcode_norm -r"
+[
+.B \-i
+][
+.B \-u
+][
+.B \-h[io]
+][
+.B \-H[io]
+][
+.B \-f[afd]
+]
+[
+input.nrm
+[output]
+]
+.SH DESCRIPTION
+.I Rcode_norm
+reads a map of normaled direction vectors
+and encodes them in an efficient 32-bit/pixel format for storage.
+Input is taken from the first named file, or standard input if no
+files are given.
+Output is sent to the second named file, or standard output if none.
+.PP
+The
+.I \-hi
+option tells
+.I rcode_norm
+not to expect an information header on its input.
+The
+.I \-ho
+option tells
+.I rcode_norm
+not to produce an information header on its output.
+Specifying
+.I \-h
+turns both input and output headers off.
+Similarly, the
+.I \-Hi
+option says not to expect an image resolution string on input, the
+.I \-Ho
+option says not to produce one on output, and
+.I \-H
+applies both.
+.PP
+The default input format is ASCII (user-readable) real triplets,
+corresponding to the
+.I \-fa
+option.
+The
+.I \-ff
+option tells
+.I rcode_norm
+to expect three binary, 32-bit floating-point values per
+normal on its input, instead.
+The
+.I \-fd
+option tells it to expect 64-bit/component vectors.
+.PP
+The second form applies the
+.I \-r
+option to perform a reverse conversion, decoding 32-bit normal directions
+on the input and producing one of the above formats on output.
+The 
+.I \-h
+and
+.I \-H
+options have the same behavior as before.
+.PP
+When decoding, the
+.I \-i
+option tells
+.I rcode_norm
+to produce one depth or world point
+for each integer input pair specifying
+the horizontal and vertical coordinates of a particular pixel,
+where x is measured from 0 on the left and y from 0 at the bottom
+in the standard orientation.
+Note that
+.I \-i
+implies that an encoded normal file is explicitly given on the command
+line, since the pixel coordinates are read from the standard input.
+Also, the
+.I \-H
+option is not supported with
+.I \-i,
+since the map dimensions are required on the
+input and not copied to the output.
+If the
+.I \-u
+option is also given, output will be flushed after each normal.
+.SH EXAMPLES
+To store float surface normals out of rtrace:
+.IP "" .2i
+rtrace -ff < rays.flt -x 512 -y 400 -oN octree | rcode_norm -ff > norms.nrm
+.PP
+To query specific normals using ximage with the 't' command:
+.IP "" .2i
+ximage -op render.hdr | rcode_norm -i -r norms.nrm
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+rcalc(1), rcode_depth(1), rcode_ident(1), rlam(1), rsplit(1), rtpict(1)

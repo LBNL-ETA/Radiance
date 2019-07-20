@@ -1,0 +1,119 @@
+.\" RCSid "$Id: rcode_ident.1,v 1.1 2019/07/20 02:07:23 greg Exp $"
+.TH RCODE_IDENT 1 7/19/2019 RADIANCE
+.SH NAME
+rcode_ident - store identifiers in an indexed map and retrieve from same
+.SH SYNOPSIS
+.B rcode_ident
+[
+.I "-8 | -16 | -24"
+][
+.B \-h
+][
+.B \-tS
+][
+.B "-x xr -y yr"
+]
+[
+input.txt
+[output.idx]
+]
+.br
+.B "rcode_ident -r"
+[
+.B \-i
+][
+.B \-u
+][
+.B \-h
+][
+.B \-H
+][
+.B \-tS
+]
+[
+input.idx
+[output.txt]
+]
+.SH DESCRIPTION
+.I Rcode_ident
+Takes a list of ASCII identifiers on the input and encodes them
+as a 16-bit index to a table appended to the output.
+This default index size can hold up to 65 thousand unique IDs,
+which is suitable for most applications.
+The
+.I \-8
+option may be used to specify an 8-bit index, which saves space
+if 256 or fewer unique identifiers appear on the input.
+The
+.I \-24
+option creates a 24-bit index can record over 16 million
+unique identifiers.
+.PP
+Identifiers are separated by newlines by default, but any single-character
+separator may be given with the
+.I \-tS
+option.
+Note there is no space between this option and its argument.
+Leading and trailing white space is eliminated from each identifier,
+and the maximum ID length is 255 characters.
+.PP
+Input is taken from the first named file, or standard input if no
+files are given.
+Output is sent to the second named file, or standard output if none.
+.PP
+The
+.I \-h
+option tells
+.I rcode_ident
+not to expect an information header on its input.
+The
+.I \-x
+and
+.I \-y
+options give the horizontal and vertical map dimensions, respectively.
+If these are not specified, then a resolution string must be
+included on the header, as produced by
+.I rtrace(1)
+when both resolutions are specified.
+.PP
+The second form applies the
+.I \-r
+option to read an indexed id file and produce the original
+identifiers for each pixel position on the output.
+The 
+.I \-h
+and
+.I \-H
+options may be used to leave off the header and resolution
+string, respectively.
+The
+.I \-tS
+option specifies an alternate ID separator instead of the default newline.
+.PP
+When decoding, the
+.I \-i
+option tells
+.I rcode_ident
+to produce an identifier for each integer input pair specifying
+the horizontal and vertical coordinates of a particular pixel,
+where x is measured from 0 on the left and y from 0 at the bottom
+in the standard orientation.
+Note that
+.I \-i
+implies that an indexed ID file is explicitly given on the command
+line, since the pixel coordinates are read from the standard input.
+If the
+.I \-u
+option is also given, output will be flushed after each identifier
+.SH EXAMPLES
+To store modifier IDs out of rtrace:
+.IP "" .2i
+rtrace -ffa < rays.flt -x 512 -y 400 -om octree | rcode_ident > mods.idx
+.PP
+To query specific modifiers using ximage with the 't' command:
+.IP "" .2i
+ximage -op render.hdr | rcode_ident -i -r mods.idx
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+rcalc(1), rcode_depth(1), rcode_norm(1), rlam(1), rsplit(1), rtpict(1)

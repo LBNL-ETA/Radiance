@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.3 2019/07/19 01:24:33 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.4 2019/07/20 02:07:23 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -27,12 +27,12 @@ usage_exit(int code)
 	fputs("Usage: ", stderr);
 	fputs(progname, stderr);
 	fputs(
-	" [-d ref_depth/unit][-h[io]][-H[io]][-f[afd]] [input [output]]\n",
+	" [-d ref_depth/unit][-h[io]][-H[io]][-f[afd]] [input [output.dpt]]\n",
 			stderr);
 	fputs("   Or: ", stderr);
 	fputs(progname, stderr);
 	fputs(
-	" {-r|-p} [-i][-u][-h[io]][-H[io]][-f[afd]] [input [output]]\n",
+	" {-r|-p} [-i][-u][-h[io]][-H[io]][-f[afd]] [input.dpt [output]]\n",
 			stderr);
 	exit(code);
 }
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
 			fputs(": -i option requires input resolution\n", stderr);
 			usage_exit(1);
 		}
-		dc.hdrflags &= ~(HF_HEADOUT|HF_RESOUT);
+		dc.hdrflags &= ~HF_RESOUT;
 	}
 	if (a < argc-2) {
 		fputs(progname, stderr);
