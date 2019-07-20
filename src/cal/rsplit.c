@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.6 2019/07/19 17:37:55 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.7 2019/07/20 23:12:53 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -19,18 +19,18 @@ static const char	RCSid[] = "$Id: rsplit.c,v 1.6 2019/07/19 17:37:55 greg Exp $"
 
 #define MAXFILE		512		/* maximum number of files */
 
-FILE		*output[MAXFILE];
-int		bytsiz[MAXFILE];
-short		hdrflags[MAXFILE];
-const char	*format[MAXFILE];
-int		termc[MAXFILE];
-int		nfiles = 0;
+static FILE		*output[MAXFILE];
+static int		bytsiz[MAXFILE];
+static short		hdrflags[MAXFILE];
+static const char	*format[MAXFILE];
+static int		termc[MAXFILE];
+static int		nfiles = 0;
 
-int		outheader = 0;		/* output header to each stream? */
+static int	outheader = 0;		/* output header to each stream? */
 
-RESOLU		ourres = {PIXSTANDARD, 0, 0};
+static RESOLU	ourres = {PIXSTANDARD, 0, 0};
 
-char		buf[16384];
+static char	buf[16384];		/* input buffer used in scanOK() */
 
 
 /* process header line */
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 					break;
 				case 'a':
 					curfmt = "ascii";
-					curbytes = argv[i][3] ? -1 : 0;
+					curbytes = -1;
 					break;
 				default:
 					goto badopt;
@@ -177,10 +177,7 @@ main(int argc, char *argv[])
 					fputs(": output size too big\n", stderr);
 					return(1);
 				}
-				if (curbytes > 0) {
-					curterm = '\0';
-					++bininp;
-				}
+				bininp += (curbytes > 0);
 				break;
 			case '\0':
 				outres |= (curflags & DORESOLU);
@@ -295,7 +292,7 @@ main(int argc, char *argv[])
 			if (bytsiz[i] > 0) {		/* binary output */
 				if (getbinary(buf, bytsiz[i], 1, stdin) < 1)
 					break;
-				if (putbinary(buf, bytsiz[i], 1, output[i]) != 1)
+				if (putbinary(buf, bytsiz[i], 1, output[i]) < 1)
 					break;
 			} else if (bytsiz[i] < 0) {	/* N-field output */
 				int	n = -bytsiz[i];
@@ -316,6 +313,12 @@ main(int argc, char *argv[])
 					break;
 				if (termc[i] != '\n')	/* add EOL if none */
 					fputc('\n', output[i]);
+			}
+							/* skip input EOL? */
+			if (!bininp && termc[nfiles-1] != '\n') {
+				int	c = getchar();
+				if ((c != '\n') & (c != EOF))
+					ungetc(c, stdin);
 			}
 		}
 		if (i < nfiles)
