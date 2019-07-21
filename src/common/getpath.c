@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getpath.c,v 2.19 2016/03/06 01:13:17 schorsch Exp $";
+static const char	RCSid[] = "$Id: getpath.c,v 2.20 2019/07/21 16:48:34 greg Exp $";
 #endif
 /*
  *  getpath.c - function to search for file in a list of directories
@@ -39,41 +39,41 @@ getpath	/* expand fname, return full path */
 	pname[0] = '\0';		/* check for full specification */
 
 	if (ISABS(fname)) { /* absolute path */
-		strncpy(pname, fname, sizeof(pname)-1);
+		strlcpy(pname, fname, sizeof(pname));
 	} else {
 		switch (*fname) {
-			case '.':				/* relative to cwd */
-				strncpy(pname, fname, sizeof(pname)-1);
+			case '.':		/* relative to cwd */
+				strlcpy(pname, fname, sizeof(pname));
 				break;
-			case '~':				/* relative to home directory */
+			case '~':		/* relative to home directory */
 				fname++;
 				cp = uname;
-				for (i=0;i<sizeof(uname)&&*fname!='\0'&&!ISDIRSEP(*fname);i++)
+				for (i = 0; i < sizeof(uname) && *fname
+						&& !ISDIRSEP(*fname); i++)
 					*cp++ = *fname++;
 				*cp = '\0';
 				cp = gethomedir(uname, pname, sizeof(pname));
 				if(cp == NULL) return NULL;
-				strncat(pname, fname, sizeof(pname)-strlen(pname)-1);
+				strlcat(pname, fname, sizeof(pname));
 				break;
 		}
 	}
 	if (pname[0])		/* got it, check access if search requested */
-		return(searchpath==NULL||access(pname,mode)==0 ? pname : NULL);
+		return(!searchpath || access(pname,mode)==0 ? pname : NULL);
 
-	if (searchpath == NULL) {			/* don't search */
-		strncpy(pname, fname, sizeof(pname)-1);
+	if (!searchpath) {			/* no search */
+		strlcpy(pname, fname, sizeof(pname));
 		return(pname);
 	}
 	/* check search path */
 	do {
 		cp = pname;
-		while (*searchpath && (*cp = *searchpath++) != PATHSEP) {
-			cp++;
-		}
-		if (cp > pname && !ISDIRSEP(cp[-1])) {
+		while (*searchpath && (*cp = *searchpath++) != PATHSEP)
+			cp += (cp-pname < sizeof(pname)-2);
+		if (cp > pname && !ISDIRSEP(cp[-1]))
 			*cp++ = DIRSEP;
-		}
-		strncpy(cp, fname, sizeof(pname)-strlen(pname)-1);
+		*cp = '\0';
+		strlcat(pname, fname, sizeof(pname));
 		if (access(pname, mode) == 0)		/* file accessable? */
 			return(pname);
 	} while (*searchpath);

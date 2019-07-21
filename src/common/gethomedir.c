@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gethomedir.c,v 1.2 2016/03/06 01:13:17 schorsch Exp $";
+static const char RCSid[] = "$Id: gethomedir.c,v 1.3 2019/07/21 16:48:34 greg Exp $";
 #endif
 /*
  *  gethomedir.c - search for a users home directory
@@ -23,16 +23,14 @@ gethomedir(char *uname, char *path, int plen)
 	if (uname == NULL || *uname == '\0') {	/* ours */
 		/* pretend we're on unix first (eg. for Cygwin) */
 		if ((cp = getenv("HOME")) != NULL) {
-			strncpy(path, cp, plen);
-			path[plen-1] = '\0';
+			strlcpy(path, cp, plen);
 			return path;
 		}
 		/* now let's see what Windows thinks */
 		if ((cd = getenv("HOMEDRIVE")) != NULL
 				&& (cp = getenv("HOMEPATH")) != NULL) {
-			strncpy(path, cd, plen);
-			strncat(path, cp, plen-2);
-			path[plen-1] = '\0';
+			strlcpy(path, cd, plen);
+			strlcat(path, cp, plen);
 			return path;
 		}
 		return NULL;
@@ -57,23 +55,20 @@ gethomedir(char *uname, char *path, int plen)
 
 	if (uname == NULL || *uname == '\0') {	/* ours */
 		if ((cp = getenv("HOME")) != NULL) {
-			strncpy(path, cp, plen);
-			path[plen-1] = '\0';
+			strlcpy(path, cp, plen);
 			return path;
 		}
 		uid = getuid();
 		if ((pwent = getpwuid(uid)) == NULL)
 			return(NULL); /* we don't exist ?!? */
-		strncpy(path, pwent->pw_dir, plen);
-		path[plen-1] = '\0';
+		strlcpy(path, pwent->pw_dir, plen);
 		return path;
 	}
 	/* someone else */
 	if ((pwent = getpwnam(uname)) == NULL)
 		return(NULL); /* no such user */
 
-	strncpy(path, pwent->pw_dir, plen);
-	path[plen-1] = '\0';
+	strlcpy(path, pwent->pw_dir, plen);
 	return path;
 }
 
