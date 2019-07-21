@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cvtcmd.c,v 3.2 2016/02/02 18:05:31 greg Exp $";
+static const char RCSid[] = "$Id: cvtcmd.c,v 3.3 2019/07/21 16:14:52 greg Exp $";
 #endif
 /*
  *  Convert a set of arguments into a command line for pipe() or system()
@@ -27,7 +27,6 @@ matchany(const char *str1, const char *str2)
 char *
 convert_commandline(char *cmd, const int len, char *av[])
 {
-	int	match;
 	char	*cp;
 
 	for (cp = cmd; *av != NULL; av++) {
