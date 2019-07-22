@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.7 2019/07/20 23:12:53 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.8 2019/07/22 18:01:03 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -25,8 +25,6 @@ static short		hdrflags[MAXFILE];
 static const char	*format[MAXFILE];
 static int		termc[MAXFILE];
 static int		nfiles = 0;
-
-static int	outheader = 0;		/* output header to each stream? */
 
 static RESOLU	ourres = {PIXSTANDARD, 0, 0};
 
@@ -78,9 +76,8 @@ scanOK(int termc)
 int
 main(int argc, char *argv[])
 {
-	int		inpheader = 0;
-	int		inpres = 0;
-	int		outres = 0;
+	int		inpflags = 0;
+	int		needres = 0;
 	int		force = 0;
 	int		append = 0;
 	long		outcnt = 0;
@@ -101,35 +98,26 @@ main(int argc, char *argv[])
 			case 'i':
 				switch (argv[i][2]) {
 				case 'h':
-					inpheader = !inpheader;
+					inpflags ^= DOHEADER;
 					break;
 				case 'H':
-					inpres = !inpres;
+					inpflags ^= DORESOLU;
 					break;
 				default:
 					goto badopt;
 				}
 				break;
 			case 'f':
-				++force;
-				append = 0;
+				force = !force;
 				break;
 			case 'a':
-				if (outheader | outres) {
-					fputs(argv[0], stderr);
-					fputs(": -a option incompatible with -oh and -oH\n",
-							stderr);
-					return(1);
-				}
-				append = 1;
+				append = !append;
 				break;
 			case 'x':
 				ourres.xr = atoi(argv[++i]);
-				outres = 1;
 				break;
 			case 'y':
 				ourres.yr = atoi(argv[++i]);
-				outres = 1;
 				break;
 			case 'o':
 				switch (argv[i][2]) {
@@ -180,7 +168,7 @@ main(int argc, char *argv[])
 				bininp += (curbytes > 0);
 				break;
 			case '\0':
-				outres |= (curflags & DORESOLU);
+				needres |= (curflags & DORESOLU);
 				termc[nfiles] = curterm;
 				hdrflags[nfiles] = curflags;
 				output[nfiles] = stdout;
@@ -196,7 +184,7 @@ main(int argc, char *argv[])
 				return(1);
 			}
 		} else if (argv[i][0] == '!') {
-			outres |= (curflags & DORESOLU);
+			needres |= (curflags & DORESOLU);
 			termc[nfiles] = curterm;
 			hdrflags[nfiles] = curflags;
 			if ((output[nfiles] = popen(argv[i]+1, "w")) == NULL) {
@@ -209,7 +197,13 @@ main(int argc, char *argv[])
 			format[nfiles] = curfmt;
 			bytsiz[nfiles++] = curbytes;
 		} else {
-			outres |= (curflags & DORESOLU);
+			if (append & (curflags != 0)) {
+				fputs(argv[0], stderr);
+				fputs(": -a option incompatible with -oh and -oH\n",
+						stderr);
+				return(1);
+			}
+			needres |= (curflags & DORESOLU);
 			termc[nfiles] = curterm;
 			hdrflags[nfiles] = curflags;
 			if (!append & !force && access(argv[i], F_OK) == 0) {
@@ -248,20 +242,20 @@ main(int argc, char *argv[])
 		flockfile(output[i]);
 #endif
 						/* load/copy header */
-	if (inpheader && getheader(stdin, headline, NULL) < 0) {
+	if (inpflags & DOHEADER && getheader(stdin, headline, NULL) < 0) {
 		fputs(argv[0], stderr);
 		fputs(": cannot get header from standard input\n",
 				stderr);
 		return(1);
 	}
 						/* handle resolution string */
-	if (inpres && !fgetsresolu(&ourres, stdin)) {
+	if (inpflags & DORESOLU && !fgetsresolu(&ourres, stdin)) {
 		fputs(argv[0], stderr);
 		fputs(": cannot get resolution string from standard input\n",
 				stderr);
 		return(1);
 	}
-	if (outres && (ourres.xr <= 0) | (ourres.yr <= 0)) {
+	if (needres && (ourres.xr <= 0) | (ourres.yr <= 0)) {
 		fputs(argv[0], stderr);
 		fputs(": -oH option requires -iH or -x and -y options\n", stderr);
 		return(1);
@@ -277,7 +271,7 @@ main(int argc, char *argv[])
 	}
 	for (i = 0; i < nfiles; i++) {		/* complete headers */
 		if (hdrflags[i] & DOHEADER) {
-			if (!inpheader)
+			if (!(inpflags & DOHEADER))
 				newheader("RADIANCE", output[i]);
 			printargs(argc, argv, output[i]);
 			if (format[i] != NULL)

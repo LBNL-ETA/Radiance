@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.5 2019/07/20 00:57:43 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.6 2019/07/22 18:01:03 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -136,7 +136,7 @@ Neither
 .I \-oh
 nor
 .I \-oH
-may be used with the append mode ('-a').
+may be used with the append mode ('-a'), which may also be toggled.
 .SH EXAMPLES
 To alternate 5 lines between two output files:
 .IP "" .2i
@@ -154,5 +154,6 @@ vwrays [viewspec] | rtrace [options] -x 1024 -y 768 -h+ -oMlv octree | rsplit -i
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), histo(1), neaten(1), rcalc(1), rlam(1), rtrace(1),
+cnt(1), histo(1), neaten(1), rcalc(1), rcode_depth(1),
+rcode_ident(1), rcode_norm(1), rlam(1), rtrace(1),
 split(1), tabfunc(1), total(1)
