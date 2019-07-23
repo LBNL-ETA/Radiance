@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: idmap.c,v 2.1 2019/07/19 22:25:03 greg Exp $";
+static const char RCSid[] = "$Id: idmap.c,v 2.2 2019/07/23 17:20:20 greg Exp $";
 #endif
 /*
  * Routines for loading identifier maps
@@ -134,18 +134,31 @@ seekerr:
 }
 
 
-/* Read the next ID from input */
-const char *
-idmap_next(IDMAP *idmp)
+/* Read the next ID index from input */
+int
+idmap_next_i(IDMAP *idmp)
 {
 	int	ndx = getint(idmp->bytespi, idmp->finp);
 
 	if (ndx == EOF && feof(idmp->finp))
-		return NULL;
+		return -1;
 
 	idmp->curpos += idmp->bytespi;
 
 	ndx &= (1<<(idmp->bytespi<<3)) - 1;	/* undo sign extension */
+
+	return ndx;
+}
+
+
+/* Read the next ID from input */
+const char *
+idmap_next(IDMAP *idmp)
+{
+	int	ndx = idmap_next_i(idmp);
+
+	if (ndx < 0)
+		return NULL;
 
 	return mapID(idmp, ndx);
 }

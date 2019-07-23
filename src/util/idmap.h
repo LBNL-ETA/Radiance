@@ -1,4 +1,4 @@
-/* RCSid $Id: idmap.h,v 2.1 2019/07/19 22:25:03 greg Exp $ */
+/* RCSid $Id: idmap.h,v 2.2 2019/07/23 17:20:20 greg Exp $ */
 /*
  * Definitions and delcarations for loading identifier maps
  *
@@ -41,6 +41,9 @@ typedef struct {
 
 /* Open ID map file for reading, copying info to stdout based on hflags */
 extern IDMAP		*idmap_ropen(const char *fname, int hflags);
+
+/* Read the next ID index from input */
+extern int		idmap_next_i(IDMAP *idmp);
 
 /* Read the next ID from input */
 extern const char	*idmap_next(IDMAP *idmp);

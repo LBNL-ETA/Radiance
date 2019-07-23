@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcode_ident.1,v 1.1 2019/07/20 02:07:23 greg Exp $"
+.\" RCSid "$Id: rcode_ident.1,v 1.2 2019/07/23 17:20:20 greg Exp $"
 .TH RCODE_IDENT 1 7/19/2019 RADIANCE
 .SH NAME
 rcode_ident - store identifiers in an indexed map and retrieve from same
@@ -27,6 +27,10 @@ input.txt
 .B \-h
 ][
 .B \-H
+][
+.B \-l
+][
+.B \-n
 ][
 .B \-tS
 ]
@@ -89,6 +93,15 @@ string, respectively.
 The
 .I \-tS
 option specifies an alternate ID separator instead of the default newline.
+The
+.I \-l
+option tells
+.I rcode_ident
+to list identifiers following the header information (if present).
+The
+.I \-n
+option prints identifier table indexes rather than the strings themselves.
+Indexing starts from 0 for the first table entry.
 .PP
 When decoding, the
 .I \-i
@@ -113,6 +126,10 @@ rtrace -ffa < rays.flt -x 512 -y 400 -om octree | rcode_ident > mods.idx
 To query specific modifiers using ximage with the 't' command:
 .IP "" .2i
 ximage -op render.hdr | rcode_ident -i -r mods.idx
+.PP
+To only print out the list of unique identifiers:
+.IP "" .2i
+rcode_ident -r -h -H -i -l mods.idx < /dev/null
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

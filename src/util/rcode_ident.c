@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.2 2019/07/19 22:57:12 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.3 2019/07/23 17:20:20 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -17,9 +17,12 @@ static const char RCSid[] = "$Id: rcode_ident.c,v 2.2 2019/07/19 22:57:12 greg E
 #define	MAXIDLEN	256		/* longest ID length supported */
 #endif
 
+#define HF_TABLOUT	0x100		/* output ID table after header */
+
 char		*progname;		/* global argv[0] */
 
 static int	unbuffered = 0;
+static int	numeric = 0;
 static int	sepc = '\n';
 
 
@@ -33,7 +36,8 @@ usage_exit(int code)
 			stderr);
 	fputs("   Or: ", stderr);
 	fputs(progname, stderr);
-	fputs(" -r [-i][-u][-h][-H][-tS] input.idx [output.txt]\n", stderr);
+	fputs(" -r [-i][-u][-h][-H][-l][-n][-tS] input.idx [output.txt]\n",
+			stderr);
 	exit(code);
 }
 
@@ -206,6 +210,21 @@ memerr:
 }
 
 
+/* print out table IDs */
+void
+print_IDs(IDMAP *idmp)
+{
+	int	i;
+
+	printf("============ %d IDs ============\n", idmp->nids);
+
+	for (i = 0; i < idmp->nids; i++)
+		puts(mapID(idmp, i));
+
+	puts("============= END =============");
+}
+
+
 /* Load selected pixels from identifier index file */
 int
 decode_select(const char *fname, int hdrflags)
@@ -216,6 +235,9 @@ decode_select(const char *fname, int hdrflags)
 	if (!idmp)
 		return 0;
 
+	if (hdrflags & HF_TABLOUT)
+		print_IDs(idmp);
+
 	if (idmp->res.rt != PIXSTANDARD) {
 		fputs(progname, stderr);
 		fputs(": can only handle standard pixel ordering\n", stderr);
@@ -223,21 +245,32 @@ decode_select(const char *fname, int hdrflags)
 		return 0;
 	}
 	while (scanf("%d %d", &x, &y) == 2) {
-		const char	*id;
-
-		if ((x < 0) | (y < 0) |
-				(x >= idmp->res.xr) | (y >= idmp->res.yr)) {
+		x = idmap_seek(idmp, x, idmp->res.yr-1 - y);
+		if (!x) {
 			fputs(progname, stderr);
 			fputs(": warning - pixel index is off map\n", stderr);
 			continue;
 		}
-		y = idmp->res.yr-1 - y;
-
-		if (!(id = idmap_pix(idmp, x, y))) {
+		if (x > 0)
+			x = idmap_next_i(idmp);
+		if (x < 0) {
+			fputs(fname, stderr);
+			fputs(": read/seek error in decode_select()\n", stderr);
 			idmap_close(idmp);
 			return 0;
 		}
-		fputs(id, stdout);
+		if (numeric) {
+			printf("%d", x);
+		} else {
+			const char	*id = mapID(idmp, x);
+			if (!id) {
+				fputs(fname, stderr);
+				fputs(": bad ID index in file\n", stderr);
+				idmap_close(idmp);
+				return 0;
+			}
+			fputs(id, stdout);
+		}
 		putchar(sepc);
 		if (unbuffered && fflush(stdout) == EOF) {
 			fputs(progname, stderr);
@@ -267,15 +300,29 @@ decode_all(const char *fname, int hdrflags)
 	if (!idmp)
 		return 0;
 
+	if (hdrflags & HF_TABLOUT)
+		print_IDs(idmp);
+
 	for (n = idmp->res.xr*idmp->res.yr; n-- > 0; ) {
-		const char	*id = idmap_next(idmp);
-		if (!id) {
+		int	ndx = idmap_next_i(idmp);
+		if (ndx < 0) {
 			fputs(fname, stderr);
 			fputs(": unexpected EOF\n", stderr);
 			idmap_close(idmp);
 			return 0;
 		}
-		fputs(id, stdout);
+		if (numeric) {
+			printf("%d", ndx);
+		} else {
+			const char	*id = idmap_next(idmp);
+			if (!id) {
+				fputs(fname, stderr);
+				fputs(": bad ID index in file\n", stderr);
+				idmap_close(idmp);
+				return 0;
+			}
+			fputs(id, stdout);
+		}
 		putchar(sepc);
 	}
 	idmap_close(idmp);
@@ -305,6 +352,12 @@ main(int argc, char *argv[])
 			break;
 		case 'u':
 			unbuffered++;
+			break;
+		case 'n':
+			numeric++;
+			break;
+		case 'l':
+			hdrflags |= HF_TABLOUT;
 			break;
 		case 'h':
 			hdrflags &= ~HF_HEADOUT;
