@@ -2296,3 +2296,6 @@ Code for loading normal maps is in src/util/normcodec.{h,c}.
 
 Created rcode_ident tool to create indexed identifier files.
 Code for loading these files is in src/util/idmap.{h,c}.
+
+Added -o* option to rtpict to produce layered images that handle most
+output types from rtrace (colors, surface normals, distances, IDs).

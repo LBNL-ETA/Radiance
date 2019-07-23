@@ -1,10 +1,15 @@
-.\" RCSid "$Id: rtpict.1,v 1.2 2018/03/20 18:03:52 greg Exp $"
+.\" RCSid "$Id: rtpict.1,v 1.3 2019/07/23 18:17:54 greg Exp $"
 .TH RTPICT 1 3/19/2018 RADIANCE
 .SH NAME
-rtpict - generate a RADIANCE picture using rtrace
+rtpict - generate a RADIANCE picture or layerd image using rtrace
 .SH SYNOPSIS
 .B rtpict
 .B "-n nproc"
+[
+.B "-o[vrxlLRXnNsmM] out_dir"
+][
+.B "-d ref_depth/unit"
+]
 [
 .B "rpict options"
 ]
@@ -43,13 +48,69 @@ Also, it is very important to set the
 .I \-af
 option if an irradiance cache is being generated;
 otherwise, your speed-up will be far from linear.
-.SH EXAMPLE
+.PP
+If the
+.I \-o
+option has additional characters corresponding to output types from
+.I rtrace,
+it must be followed by the name of a directory that either exists or
+will be created to contain image layers, one per output type.
+The supported types are listed below, and do not include types that
+are useless or have no convenient representation.
+The table below shows the correspondence between output type and file name
+in the specified directory:
+.sp
+.nf
+v	radiance.hdr
+r	mirrored.hdr
+x	unmirrored.hdr
+l	effective.dpt
+L	firstsurface.dpt
+R	mirrored.dpt
+X	unmirrored.dpt
+n	perturbed.nrm
+N	unperturbed.nrm
+s	surface.idx
+m	modifier.idx
+M	material.idx
+.fi
+.sp
+Different encodings are associated with different data types.
+Color data (from the 'v', 'r', and 'x' types) will be converted to
+a flat RGBE picture by
+.I pvalue(1).
+Distances (from the 'l', 'L', 'R', and 'X' types) will be
+converted to a 16-bit representation by
+.I rcode_depth(1),
+and the
+.I \-d
+option should be used to assign the reference (median) depth and units.
+Surface normals (from the 'n' and 'N' types) will be converted
+to a 32-bit representation by
+.I rcode_normal(1).
+Finally, identifiers (from the 's', 'm', and 'M' types) will be
+converted to a 16-bit index format by
+.I rcode_ident(1).
+.PP
+If the
+.I \-i
+option is used to turn on irradiane output, then the picture associated
+with the 'v' type will be renamed
+.I "irradiance.hdr"
+and some other output types become irrelevant (i.e., 'r', 'x', 'R', and 'X').
+If one or more of the associated output files already exists in the
+destination directory, it will be overwritten with the new data.
+.SH EXAMPLES
 To render a scene with four processes:
 .IP "" .2i
 rtpict -n 4 -vf mypers.vf -ab 1 -af scene.amb scene.oct > scene_pers.hdr
+.PP
+To render radiance, first surface distance, and normals in a layered image:
+.IP "" .2i
+rtpict -n 8 -vf fish.vf @render.opt -ovLn fisholay scene.oct
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-getinfo(1), lookamb(1), mkpmap(1), oconv(1), pdfblur(1), pfilt(1), 
-pinterp(1), pmblur(1), printf(3), ra_rgbe(1), rad(1), rpiece(1),
-rpict(1), rtrace(1), rvu(1) vwrays(1),
+getinfo(1), mkpmap(1), oconv(1), pfilt(1), 
+pvalue(1), rad(1), rcode_depth(1), rcode_normal(1), rcode_ident(1),
+rpiece(1), rpict(1), rsplit(1), rtrace(1), rvu(1), vwrays(1),
