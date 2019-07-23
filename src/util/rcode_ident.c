@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.3 2019/07/23 17:20:20 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.4 2019/07/23 17:23:25 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -314,7 +314,7 @@ decode_all(const char *fname, int hdrflags)
 		if (numeric) {
 			printf("%d", ndx);
 		} else {
-			const char	*id = idmap_next(idmp);
+			const char	*id = mapID(idmp, ndx);
 			if (!id) {
 				fputs(fname, stderr);
 				fputs(": bad ID index in file\n", stderr);
