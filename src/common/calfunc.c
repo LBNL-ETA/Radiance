@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.23 2019/06/11 22:13:50 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.24 2019/07/24 21:20:28 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -409,7 +409,7 @@ l_max(char *nm)		/* general maximum function */
 {
 	int  n = nargum();
 	int  i = 1;
-	int  vmax = argument(1);
+	double  vmax = argument(1);
 
 	while (i++ < n) {
 		double  v = argument(i);
@@ -425,7 +425,7 @@ l_min(char *nm)		/* general minimum function */
 {
 	int  n = nargum();
 	int  i = 1;
-	int  vmin = argument(1);
+	double  vmin = argument(1);
 
 	while (i++ < n) {
 		double  v = argument(i);
