@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.6 2019/07/24 00:25:51 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.7 2019/07/24 17:50:32 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -222,9 +222,12 @@ print_IDs(IDMAP *idmp)
 
 	printf("============ %d IDs ============\n", idmp->nids);
 
-	for (i = 0; i < idmp->nids; i++)
-		puts(mapID(idmp, i));
-
+	for (i = 0; i < idmp->nids; i++) {
+		fputs(mapID(idmp, i), stdout);
+		putchar(sepc);
+	}
+	if (sepc != '\n')
+		fputc('\n', stdout);
 	puts("============= END =============");
 }
 
