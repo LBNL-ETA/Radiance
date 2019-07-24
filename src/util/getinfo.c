@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: getinfo.c,v 2.20 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: getinfo.c,v 2.21 2019/07/24 17:27:54 greg Exp $";
 #endif
 /*
  *  getinfo.c - program to read info. header from file.
@@ -64,14 +64,16 @@ main(
 	if (argc > 2 && !strcmp(argv[1], "-c")) {
 		SET_FILE_BINARY(stdout);
 		setvbuf(stdin, NULL, _IONBF, 2);
-		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0) {
+			fputs("Bad header!\n", stderr);
 			return 1;
+		}
 		printargs(argc-2, argv+2, stdout);
 		fputc('\n', stdout);
 		if (dim) {			/* copy resolution string? */
 			RESOLU	rs;
 			if (!fgetsresolu(&rs, stdin)) {
-				fputs("No resolution string\n", stderr);
+				fputs("No resolution string!\n", stderr);
 				return 1;
 			}
 			if (dim > 0)
@@ -83,8 +85,10 @@ main(
 		return 1;
 	} else if (argc > 2 && !strcmp(argv[1], "-a")) {
 		SET_FILE_BINARY(stdout);
-		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+		if (getheader(stdin, (gethfunc *)fputs, stdout) < 0) {
+			fputs("Bad header!\n", stderr);
 			return 1;
+		}
 		for (i = 2; i < argc; i++) {
 			int	len = strlen(argv[i]);
 			if (!len) continue;
@@ -97,12 +101,14 @@ main(
 		return 0;
 	} else if (argc == 2 && !strcmp(argv[1], "-")) {
 		SET_FILE_BINARY(stdout);
-		if (getheader(stdin, NULL, NULL) < 0)
+		if (getheader(stdin, NULL, NULL) < 0) {
+			fputs("Bad header!\n", stderr);
 			return 1;
+		}
 		if (dim < 0) {			/* skip resolution string? */
 			RESOLU	rs;
 			if (!fgetsresolu(&rs, stdin)) {
-				fputs("No resolution string\n", stderr);
+				fputs("No resolution string!\n", stderr);
 				return 1;
 			}
 		}
@@ -116,15 +122,18 @@ main(
 		else {
 			if (dim < 0) {			/* dimensions only */
 				if (getheader(fp, NULL, NULL) < 0) {
-					fputs("bad header\n", stdout);
+					fputs("bad header!\n", stdout);
 					continue;	
 				}
 				fputs(": ", stdout);
 				getdim(fp);
 			} else {
 				tabstr(":\n", NULL);
-				if (getheader(fp, tabstr, NULL) < 0)
+				if (getheader(fp, tabstr, NULL) < 0) {
+					fputs(argv[i], stderr);
+					fputs(": bad header!\n", stderr);
 					return 1;
+				}
 				fputc('\n', stdout);
 				if (dim > 0) {
 					fputc('\t', stdout);
@@ -136,12 +145,16 @@ main(
 	}
 	if (argc == 1) {
 		if (dim < 0) {
-			if (getheader(stdin, NULL, NULL) < 0)
+			if (getheader(stdin, NULL, NULL) < 0) {
+				fputs("Bad header!\n", stderr);
 				return 1;	
+			}
 			getdim(stdin);
 		} else {
-			if (getheader(stdin, (gethfunc *)fputs, stdout) < 0)
+			if (getheader(stdin, (gethfunc *)fputs, stdout) < 0) {
+				fputs("Bad header!\n", stderr);
 				return 1;
+			}
 			fputc('\n', stdout);
 			if (dim > 0)
 				getdim(stdin);
