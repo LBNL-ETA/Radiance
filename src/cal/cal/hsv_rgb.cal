@@ -1,0 +1,28 @@
+{ RCSid $Id: hsv_rgb.cal,v 1.1 2019/07/24 21:36:28 greg Exp $ }
+{
+	Convert between HSV (hue, saturation, value) and RGB
+	Hue angles are in degrees, from 0 to 360.
+
+	From Wikipedia July 2019
+}
+
+eq(a,b) : if(a-b+1e-6, b-a+1e-6, -1);
+mod(n,d) : n - floor(n/d)*d;
+
+Hprime(M,m, R,G,B) : if(m-M+.001, 0,
+			if(eq(M,R), mod((G-B)/(M-m),6),
+			if(eq(M,G), (B-R)/(M-m) + 2,
+					(R-G)/(M-m) + 4)));
+
+Sprime(M,m) : if(M-1e-4, (M-m)/M, 0);
+
+H(R,G,B) : 60*Hprime(max(R,G,B),min(R,G,B), R,G,B);
+S(R,G,B) : Sprime(max(R,G,B),min(R,G,B));
+V(R,G,B) : max(R,G,B);
+
+frevprime(S,V,k) : V - V*S*max(min(k,4-k,1),0);
+frev(H,S,V, n) : frevprime(S,V, mod(n+H/60,6));
+
+R(H,S,V) : frev(H,S,V,5);
+G(H,S,V) : frev(H,S,V,3);
+B(H,S,V) : frev(H,S,V,1);
