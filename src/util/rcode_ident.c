@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.4 2019/07/23 17:23:25 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.5 2019/07/24 00:17:22 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -91,7 +91,7 @@ create_index(const char *fname, int hdrflags, int ndxbytes, int xres, int yres)
 	char	**idmap;
 	int	idmlen;
 	int	nextID = 0;
-	LUTAB	hashtab = LU_SINIT(free,NULL);
+	LUTAB	hashtab;
 	RESOLU	rs;
 	long	n;
 	int	ndx;
@@ -134,6 +134,10 @@ create_index(const char *fname, int hdrflags, int ndxbytes, int xres, int yres)
 		fputs(": unsupported bits/pixel\n", stderr);
 		return 0;
 	}
+	memset(&hashtab, 0, sizeof(hashtab));
+	hashtab.hashf = lu_shash;
+	hashtab.keycmp = strcmp;
+	hashtab.freek = free;
 	if (!idmap || !lu_init(&hashtab, idmlen))
 		goto memerr;
 	fputc('\n', stdout);		/* end of info header */
