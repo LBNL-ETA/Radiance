@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.78 2019/04/03 16:04:33 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.79 2019/07/25 16:50:54 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -147,6 +147,7 @@ rayclear(			/* clear a ray for (re)evaluation */
 	r->rox = NULL;
 	r->rxt = r->rmt = r->rot = FHUGE;
 	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
+	r->rflips = 0;
 	r->uv[0] = r->uv[1] = 0.0;
 	setcolor(r->pcol, 1.0, 1.0, 1.0);
 	setcolor(r->mcol, 0.0, 0.0, 0.0);
@@ -509,6 +510,7 @@ flipsurface(			/* reverse surface orientation */
 	r->pert[0] = -r->pert[0];
 	r->pert[1] = -r->pert[1];
 	r->pert[2] = -r->pert[2];
+	r->rflips++;
 }
 
 

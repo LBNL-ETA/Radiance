@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.40 2018/12/05 02:12:23 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.41 2019/07/25 16:50:54 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -57,7 +57,8 @@ typedef struct ray {
 	FULLXF	*rox;		/* object transformation */
 	int	*slights;	/* list of lights to test for scattering */
 	RNUMBER	rno;		/* unique ray number */
-	int	rlvl;		/* number of reflections for this ray */
+	short	rflips;		/* surface orientation has been reversed */
+	short	rlvl;		/* number of reflections for this ray */
 	int	rsrc;		/* source we're aiming for */
 	float	rweight;	/* cumulative weight (for termination) */
 	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
@@ -76,6 +77,8 @@ typedef struct ray {
 
 #define  raydistance(r)	(bright((r)->mcol) > 0.5*bright((r)->rcol) ? \
 				(r)->rmt : (r)->rxt)
+
+#define  rayreorient(r)	if ((r)->rflips & 1) flipsurface(r); else
 
 extern char  VersionID[];	/* Radiance version ID string */
 
