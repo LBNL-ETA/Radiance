@@ -1,0 +1,58 @@
+.TH RCODE2BMP 1 7/25/2019 RADIANCE
+.SH NAME
+rcode2bmp - convert identifier, depth, and normal maps to BMP images
+.SH SYNOPSIS
+.B rcode2bmp
+[
+.B "\-x xres \-y yres"
+]
+.B input1.typ
+[
+.B "input2.typ .."
+]
+.SH DESCRIPTION
+.I Ra_bmp
+converts each input map to a suitable visualization as a BMP image.
+Supported types include Radiance pictures, depth maps produced by
+.I rcode_depth(1),
+identifier maps from
+.I rcode_ident(1),
+and surface normal maps from
+.I rcode_norm(1).
+Each input file is identified by the FORMAT string it its header,
+and if it belongs to one of the supported types, a new file with the
+same name will be created with its suffix replaced by ".bmp".
+If a previous BMP file exists with the same name, it will be overwritten.
+.PP
+Radiance pictures are tone-mapped as if calling:
+.IP "" .2i
+ra_bmp -e auto file.hdr file.bmp
+.PP
+If the
+.I \-x
+and
+.I \-y
+options are given, these will be used as the maximum output image dimensions,
+and this holds for all input types.
+.PP
+Depth maps from
+.I rcode_depth
+are processed using
+.I falsecolor(1)
+with an appropriate scale and label.
+.PP
+Identifier maps from
+.I rcode_ident
+are assigned a random color for each identifier.
+.PP
+Surface normal maps are processed using an HSV (hue, saturation, value)
+color space that assigns normal orientation
+to a hue angle, and saturation runs from 0 when the normal is aligned to
+the view origin, to maximum saturation at tangential edges.
+Back-facing normals will be darker -- a normal in the direction opposite
+to the viewer being pure black.
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+falsecolor(1), ra_bmp(1), rcode_depth(1), rcode_ident(1), rcode_norm(1),
+rtpict(1)
