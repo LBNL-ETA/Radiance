@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.80 2018/07/03 22:29:01 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.81 2019/07/26 16:18:06 greg Exp $
 #
 # Makefile for ray tracing library routines
 #
@@ -20,7 +20,8 @@ RTOBJ = cone.o face.o free_os.o instance.o readobj.o readoct.o otypes.o \
 
 PICOBJ = color.o header.o image.o lamps.o resolu.o rexpr.o spec_rgb.o \
 	colrops.o font.o tonemap.o tmapcolrs.o tmapluv.o tmaptiff.o \
-	tmap16bit.o bmpfile.o falsecolor.o
+	tmap16bit.o bmpfile.o falsecolor.o depthcodec.o normcodec.o \
+	idmap.o
 
 UTLOBJ = ezxml.o ccolor.o ccyrgb.o bsdf.o bsdf_m.o bsdf_t.o loadbsdf.o \
 	disk2square.o hilbert.o interp2d.o triangulate.o
@@ -212,3 +213,11 @@ g3flist.o:	g3flist.h
 maxheap.o:	maxheap.h
 
 ezxml.o readmesh.o readobj.o readoct.o rglinst.o wordfile.o:	platform.h
+
+depthcodec.o:	depthcodec.h view.h fvect.h resolu.h rtio.h
+
+normcodec.o:	normcodec.h rtmath.h mat4.h fvect.h resolu.h rtio.h
+
+idmap.o:	idmap.h resolu.h platform.h rtio.h
+
+rcode_ident.o:	lookup.h

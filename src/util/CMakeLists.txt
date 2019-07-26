@@ -67,13 +67,13 @@ target_link_libraries(evalglare rtrad libreetz)
 add_executable(radcompare radcompare.c)
 target_link_libraries(radcompare rtrad)
 
-add_executable(rcode_depth rcode_depth.c depthcodec.c)
+add_executable(rcode_depth rcode_depth.c)
 target_link_libraries(rcode_depth rtrad)
 
-add_executable(rcode_norm rcode_norm.c normcodec.c)
+add_executable(rcode_norm rcode_norm.c)
 target_link_libraries(rcode_norm rtrad)
 
-add executable(rcode_ident rcode_ident.c idmap.c)
+add executable(rcode_ident rcode_ident.c)
 target_link_libraries(rcode_ident rtrad)
 
 if(X11_FOUND)

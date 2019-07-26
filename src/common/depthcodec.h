@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.4 2019/07/23 05:03:07 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.1 2019/07/26 16:18:06 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *

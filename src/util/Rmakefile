@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.92 2019/07/26 00:34:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.93 2019/07/26 16:18:07 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -146,16 +146,16 @@ radcompare:	radcompare.o
 
 setscan.o:	setscan.h
 
-rcode_depth:	rcode_depth.o depthcodec.o
-	$(CC) $(CFLAGS) -o rcode_depth rcode_depth.o depthcodec.o \
+rcode_depth:	rcode_depth.o
+	$(CC) $(CFLAGS) -o rcode_depth rcode_depth.o \
 -lrtrad $(MLIB)
 
-rcode_norm:	rcode_norm.o normcodec.o
-	$(CC) $(CFLAGS) -o rcode_norm rcode_norm.o normcodec.o \
+rcode_norm:	rcode_norm.o
+	$(CC) $(CFLAGS) -o rcode_norm rcode_norm.o \
 -lrtrad $(MLIB)
 
-rcode_ident:	rcode_ident.o idmap.o
-	$(CC) $(CFLAGS) -o rcode_ident rcode_ident.o idmap.o -lrtrad
+rcode_ident:	rcode_ident.o
+	$(CC) $(CFLAGS) -o rcode_ident rcode_ident.o -lrtrad
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
 ../common/paths.h ../common/rtio.h ../common/random.h \
@@ -271,18 +271,13 @@ pictool.o:	../common/view.h ../common/color.h
 
 getinfo.o:	../common/rtprocess.h ../common/platform.h ../common/resolu.h
 
-rcode_depth.o depthcodec.o:	depthcodec.h \
-../common/view.h ../common/fvect.h ../common/resolu.h ../common/rtio.h
+rcode_depth.o:	../common/depthcodec.h \
+../common/view.h ../common/fvect.h ../common/resolu.h ../common/rtio.h \
+../common/platform.h
 
-rcode_depth.o:	../common/platform.h
-
-rcode_norm.o normcodec.o:	normcodec.h \
+rcode_norm.o:	../common/normcodec.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
-../common/resolu.h ../common/rtio.h
+../common/resolu.h ../common/rtio.h ../common/platform.h
 
-rcode_norm.o:	../common/platform.h
-
-rcode_ident.o idmap.o:	idmap.h ../common/resolu.h \
-../common/platform.h ../common/rtio.h
-
-rcode_ident.o:	../common/lookup.h
+rcode_ident.o:	../common/idmap.h ../common/resolu.h \
+../common/platform.h ../common/rtio.h ../common/lookup.h

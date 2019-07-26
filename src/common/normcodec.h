@@ -1,4 +1,4 @@
-/* RCSid $Id: normcodec.h,v 2.2 2019/07/19 02:25:02 greg Exp $ */
+/* RCSid $Id: normcodec.h,v 2.1 2019/07/26 16:18:06 greg Exp $ */
 /*
  * Definitions and declarations for 32-bit vector normal encode/decode
  *

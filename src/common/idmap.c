@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: idmap.c,v 2.2 2019/07/23 17:20:20 greg Exp $";
+static const char RCSid[] = "$Id: idmap.c,v 2.1 2019/07/26 16:18:06 greg Exp $";
 #endif
 /*
  * Routines for loading identifier maps
