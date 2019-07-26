@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.7 2019/07/24 17:50:32 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.8 2019/07/26 17:45:23 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -73,9 +73,7 @@ scan_ident(char ident[MAXIDLEN], FILE *fp)
 static int
 headline(char *s, void *p)
 {
-	extern const char	FMTSTR[];
-
-	if (strstr(s, FMTSTR) == s)
+	if (isformat(s))
 		return 0;
 
 	fputs(s, stdout);
