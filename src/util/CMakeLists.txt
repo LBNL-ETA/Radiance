@@ -190,6 +190,7 @@ else()
     objpict.pl
     objview.pl
     raddepend.csh
+    rcode2bmp.pl
     rlux.csh
     rtpict.pl
     trad.wsh

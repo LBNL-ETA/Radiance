@@ -2299,3 +2299,5 @@ Code for loading these files is in src/util/idmap.{h,c}.
 
 Added -o* option to rtpict to produce layered images that handle most
 output types from rtrace (colors, surface normals, distances, IDs).
+
+Created rcode2bmp script to create images from new rcode_* output maps.
