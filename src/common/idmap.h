@@ -1,4 +1,4 @@
-/* RCSid $Id: idmap.h,v 2.1 2019/07/26 16:18:06 greg Exp $ */
+/* RCSid $Id: idmap.h,v 2.2 2019/07/26 18:37:21 greg Exp $ */
 /*
  * Definitions and delcarations for loading identifier maps
  *
@@ -20,8 +20,9 @@ extern "C" {
 #define IDMAP24FMT	"24-bit_indexed_name"
 #define	IDMAPFMT	"*-bit_indexed_name"
 
-#define HF_HEADOUT	0x2
-#define HF_RESOUT	0x8
+#define HF_HEADOUT	0x2			/* copy header to stdout */
+#define HF_RESOUT	0x8			/* copy resolution */
+#define HF_STDERR	0x10			/* report errors to stderr */
 
 /* Structure for reading identifier maps */
 typedef struct {

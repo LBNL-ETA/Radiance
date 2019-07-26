@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: idmap.c,v 2.1 2019/07/26 16:18:06 greg Exp $";
+static const char RCSid[] = "$Id: idmap.c,v 2.2 2019/07/26 18:37:21 greg Exp $";
 #endif
 /*
  * Routines for loading identifier maps
@@ -30,8 +30,10 @@ idmap_ropen(const char *fname, int hflags)
 	idinit.finp = fopen(fname, "rb");
 
 	if (!idinit.finp) {
-		fputs(fname, stderr);
-		fputs(": cannot open for reading\n", stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": cannot open for reading\n", stderr);
+		}
 		return NULL;
 	}
 	SET_FILE_BINARY(idinit.finp);
@@ -42,8 +44,10 @@ idmap_ropen(const char *fname, int hflags)
 	gotfmt = checkheader(idinit.finp, infmt,
 			(hflags & HF_HEADOUT) ? stdout : (FILE *)NULL);
 	if (gotfmt <= 0) {
-		fputs(fname, stderr);
-		fputs(": bad or missing header format\n", stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": bad or missing header format\n", stderr);
+		}
 		fclose(idinit.finp);
 		return NULL;
 	}
@@ -62,17 +66,21 @@ idmap_ropen(const char *fname, int hflags)
 		idinit.bytespi = 3;
 		break;
 	default:
-		fputs(fname, stderr);
-		fputs(": unsupported index size: ", stderr);
-		fputs(infmt, stderr);
-		fputc('\n', stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": unsupported index size: ", stderr);
+			fputs(infmt, stderr);
+			fputc('\n', stderr);
+		}
 		fclose(idinit.finp);
 		return NULL;
 	}
 					/* get/copy resolution string */
 	if (!fgetsresolu(&idinit.res, idinit.finp)) {
-		fputs(fname, stderr);
-		fputs(": missing map resolution\n", stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": missing map resolution\n", stderr);
+		}
 		fclose(idinit.finp);
 		return NULL;
 	}
@@ -85,15 +93,18 @@ idmap_ropen(const char *fname, int hflags)
 	tablength = ftell(idinit.finp) - idinit.dstart -
 			(long)idinit.res.xr*idinit.res.yr*idinit.bytespi;
 	if (tablength < 2) {
-		fputs(fname, stderr);
-		fputs(": truncated file\n", stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": truncated file\n", stderr);
+		}
 		fclose(idinit.finp);
 		return NULL;
 	}
 					/* allocate and load table */
 	idmp = (IDMAP *)malloc(sizeof(IDMAP)+tablength);
 	if (idmp == NULL) {
-		fputs("Out of memory allocating ID table!\n", stderr);
+		if (hflags & HF_STDERR)
+			fputs("Out of memory allocating ID table!\n", stderr);
 		fclose(idinit.finp);
 		return NULL;
 	}
@@ -102,8 +113,10 @@ idmap_ropen(const char *fname, int hflags)
 	if (fseek(idmp->finp, -tablength, SEEK_END) < 0)
 		goto seekerr;
 	if (fread(idmp->idtable, 1, tablength, idmp->finp) != tablength) {
-		fputs(fname, stderr);
-		fputs(": error reading identifier table\n", stderr);
+		if (hflags & HF_STDERR) {
+			fputs(fname, stderr);
+			fputs(": error reading identifier table\n", stderr);
+		}
 		fclose(idmp->finp);
 		free(idmp);
 		return NULL;
@@ -114,7 +127,8 @@ idmap_ropen(const char *fname, int hflags)
 		idmp->nids += !idmp->idtable[--tablength];
 	idmp->idoffset = (int *)malloc(sizeof(int)*idmp->nids);
 	if (!idmp->idoffset) {
-		fputs("Out of memory in idmap_ropen!\n", stderr);
+		if (hflags & HF_STDERR)
+			fputs("Out of memory in idmap_ropen!\n", stderr);
 		fclose(idmp->finp);
 		free(idmp);
 		return NULL;
@@ -126,8 +140,10 @@ idmap_ropen(const char *fname, int hflags)
 	}
 	return idmp;
 seekerr:
-	fputs(fname, stderr);
-	fputs(": cannot seek on file\n", stderr);
+	if (hflags & HF_STDERR) {
+		fputs(fname, stderr);
+		fputs(": cannot seek on file\n", stderr);
+	}
 	fclose(idinit.finp);
 	if (idmp) free(idmp);
 	return NULL;
