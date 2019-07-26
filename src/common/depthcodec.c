@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.1 2019/07/26 16:18:06 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.2 2019/07/26 17:04:12 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -83,8 +83,11 @@ headline(char *s, void *p)
 		*cp = '\0';
 		dcp->refdepth = atof(dcp->depth_unit);
 		if (dcp->refdepth <= .0) {
-			fputs(dcp->inpname, stderr);
-			fputs(": bad reference depth in input header\n", stderr);
+			if (dcp->hdrflags & HF_STDERR) {
+				fputs(dcp->inpname, stderr);
+				fputs(": bad reference depth in input header\n",
+						stderr);
+			}
 			return -1;
 		}
 	} else if (isview(s))		/* get view params */
@@ -101,9 +104,11 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 {
 	if (dcp->hdrflags & HF_HEADIN &&
 			getheader(dcp->finp, headline, dcp) < 0) {
-		fputs(dcp->inpname, stderr);
-		fputs(": bad header\n", stderr);
-		return 1;
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": bad header\n", stderr);
+		}
+		return 0;
 	}
 	if (dcp->hdrflags & HF_HEADOUT) {	/* finish header */
 		if (!(dcp->hdrflags & HF_HEADIN))
@@ -131,9 +136,11 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 	}
 					/* get/put resolution string */
 	if (dcp->hdrflags & HF_RESIN && !fgetsresolu(&dcp->res, dcp->finp)) {
-		fputs(dcp->inpname, stderr);
-		fputs(": bad resolution string\n", stderr);
-		return 1;
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": bad resolution string\n", stderr);
+		}
+		return 0;
 	}
 	if (dcp->hdrflags & HF_RESOUT)
 		fputsresolu(&dcp->res, stdout);
@@ -148,15 +155,19 @@ int
 check_decode_depths(DEPTHCODEC *dcp)
 {
 	if (dcp->hdrflags & HF_ENCODE) {
-		fputs(progname, stderr);
-		fputs(": wrong header mode for decode\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(progname, stderr);
+			fputs(": wrong header mode for decode\n", stderr);
+		}
 		return 0;
 	}
 	if (dcp->inpfmt[0] && strcmp(dcp->inpfmt, DEPTH16FMT)) {
-		fputs(dcp->inpname, stderr);
-		fputs(": unexpected input format: ", stderr);
-		fputs(dcp->inpfmt, stderr);
-		fputc('\n', stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": unexpected input format: ", stderr);
+			fputs(dcp->inpfmt, stderr);
+			fputc('\n', stderr);
+		}
 		return 0;
 	}
 	return 1;
@@ -172,20 +183,26 @@ check_decode_worldpos(DEPTHCODEC *dcp)
 	if (!check_decode_depths(dcp))
 		return 0;
 	if ((dcp->res.xr <= 0) | (dcp->res.yr <= 0)) {
-		fputs(progname, stderr);
-		fputs(": missing map resolution\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(progname, stderr);
+			fputs(": missing map resolution\n", stderr);
+		}
 		return 0;
 	}
 	if (!dcp->gotview) {
-		fputs(dcp->inpname, stderr);
-		fputs(": missing view\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": missing view\n", stderr);
+		}
 		return 0;
 	}
 	if ((err = setview(&dcp->vw)) != NULL) {
-		fputs(dcp->inpname, stderr);
-		fputs(": input view error: ", stderr);
-		fputs(err, stderr);
-		fputc('\n', stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": input view error: ", stderr);
+			fputs(err, stderr);
+			fputc('\n', stderr);
+		}
 		return 0;
 	}
 	return 1;	
@@ -252,22 +269,28 @@ seek_dc_pix(DEPTHCODEC *dcp, int x, int y)
 	long	seekpos;
 
 	if ((dcp->res.xr <= 0) | (dcp->res.yr <= 0)) {
-		fputs(progname, stderr);
-		fputs(": need map resolution to seek\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(progname, stderr);
+			fputs(": need map resolution to seek\n", stderr);
+		}
 		return -1;
 	}
 	if ((x < 0) | (y < 0) ||
 			(x >= scanlen(&dcp->res)) | (y >= numscans(&dcp->res))) {
-		fputs(dcp->inpname, stderr);
-		fputs(": warning - pixel index off map\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": warning - pixel index off map\n", stderr);
+		}
 		return 0;
 	}
 	seekpos = dcp->dstart + 2*((long)y*scanlen(&dcp->res) + x);
 
 	if (seekpos != dcp->curpos &&
 			fseek(dcp->finp, seekpos, SEEK_SET) == EOF) {
-		fputs(dcp->inpname, stderr);
-		fputs(": seek error\n", stderr);
+		if (dcp->hdrflags & HF_STDERR) {
+			fputs(dcp->inpname, stderr);
+			fputs(": seek error\n", stderr);
+		}
 		return -1;
 	}
 	dcp->curpos = seekpos;

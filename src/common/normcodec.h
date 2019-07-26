@@ -1,4 +1,4 @@
-/* RCSid $Id: normcodec.h,v 2.1 2019/07/26 16:18:06 greg Exp $ */
+/* RCSid $Id: normcodec.h,v 2.2 2019/07/26 17:04:12 greg Exp $ */
 /*
  * Definitions and declarations for 32-bit vector normal encode/decode
  *
@@ -17,12 +17,13 @@ extern "C" {
 
 #define NORMAL32FMT	"32-bit_encoded_normal"
 
-#define	HF_HEADIN	0x1
-#define HF_HEADOUT	0x2
-#define HF_RESIN	0x4
-#define HF_RESOUT	0x8
-#define HF_ALL		0xf
-#define HF_ENCODE	0x10
+#define	HF_HEADIN	0x1			/* expect input header */
+#define HF_HEADOUT	0x2			/* write header to stdout */
+#define HF_RESIN	0x4			/* expect resolution string */
+#define HF_RESOUT	0x8			/* write resolution to stdout */
+#define HF_STDERR	0x10			/* report errors to stderr */
+#define HF_ALL		0x1f			/* all flags above */
+#define HF_ENCODE	0x20			/* we are encoding */
 
 /* Structure for encoding/decoding normals */
 typedef struct {

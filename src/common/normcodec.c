@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.1 2019/07/26 16:18:06 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.2 2019/07/26 17:04:12 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -46,9 +46,11 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 {
 	if (ncp->hdrflags & HF_HEADIN &&
 			getheader(ncp->finp, headline, ncp) < 0) {
-		fputs(ncp->inpname, stderr);
-		fputs(": bad header\n", stderr);
-		return 1;
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": bad header\n", stderr);
+		}
+		return 0;
 	}
 	if (ncp->hdrflags & HF_HEADOUT) {	/* finish header */
 		if (!(ncp->hdrflags & HF_HEADIN))
@@ -73,9 +75,11 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 	}
 					/* get/put resolution string */
 	if (ncp->hdrflags & HF_RESIN && !fgetsresolu(&ncp->res, ncp->finp)) {
-		fputs(ncp->inpname, stderr);
-		fputs(": bad resolution string\n", stderr);
-		return 1;
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": bad resolution string\n", stderr);
+		}
+		return 0;
 	}
 	if (ncp->hdrflags & HF_RESOUT)
 		fputsresolu(&ncp->res, stdout);
@@ -90,15 +94,19 @@ int
 check_decode_normals(NORMCODEC *ncp)
 {
 	if (ncp->hdrflags & HF_ENCODE) {
-		fputs(progname, stderr);
-		fputs(": wrong header mode for decode\n", stderr);
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(progname, stderr);
+			fputs(": wrong header mode for decode\n", stderr);
+		}
 		return 0;
 	}
 	if (ncp->inpfmt[0] && strcmp(ncp->inpfmt, NORMAL32FMT)) {
-		fputs(ncp->inpname, stderr);
-		fputs(": unexpected input format: ", stderr);
-		fputs(ncp->inpfmt, stderr);
-		fputc('\n', stderr);
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": unexpected input format: ", stderr);
+			fputs(ncp->inpfmt, stderr);
+			fputc('\n', stderr);
+		}
 		return 0;
 	}
 	return 1;
@@ -129,22 +137,28 @@ seek_nc_pix(NORMCODEC *ncp, int x, int y)
 	long	seekpos;
 
 	if ((ncp->res.xr <= 0) | (ncp->res.yr <= 0)) {
-		fputs(progname, stderr);
-		fputs(": need map resolution to seek\n", stderr);
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(progname, stderr);
+			fputs(": need map resolution to seek\n", stderr);
+		}
 		return -1;
 	}
 	if ((x < 0) | (y < 0) ||
 			(x >= scanlen(&ncp->res)) | (y >= numscans(&ncp->res))) {
-		fputs(ncp->inpname, stderr);
-		fputs(": warning - pixel index off map\n", stderr);
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": warning - pixel index off map\n", stderr);
+		}
 		return 0;
 	}
 	seekpos = ncp->dstart + 4*((long)y*scanlen(&ncp->res) + x);
 
 	if (seekpos != ncp->curpos &&
 			fseek(ncp->finp, seekpos, SEEK_SET) == EOF) {
-		fputs(ncp->inpname, stderr);
-		fputs(": seek error\n", stderr);
+		if (ncp->hdrflags & HF_STDERR) {
+			fputs(ncp->inpname, stderr);
+			fputs(": seek error\n", stderr);
+		}
 		return -1;
 	}
 	ncp->curpos = seekpos;
