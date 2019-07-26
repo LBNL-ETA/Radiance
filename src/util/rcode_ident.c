@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_ident.c,v 2.8 2019/07/26 17:45:23 greg Exp $";
+static const char RCSid[] = "$Id: rcode_ident.c,v 2.9 2019/07/26 18:38:39 greg Exp $";
 #endif
 /*
  * Create or read identifier index map
@@ -341,7 +341,7 @@ main(int argc, char *argv[])
 	char	*inpfname = NULL;
 	int	reverse = 0;
 	int	bypixel = 0;
-	int	hdrflags = HF_HEADOUT|HF_RESOUT;
+	int	hdrflags = HF_HEADOUT|HF_RESOUT|HF_STDERR;
 	int	xres=0, yres=0;
 	int	ndxbytes = 2;
 	int	a;
