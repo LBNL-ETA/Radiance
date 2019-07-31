@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.5 2016/03/22 03:56:17 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.6 2019/07/31 22:00:08 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -139,20 +139,14 @@ CMATRIX *
 cm_loadBTDF(char *fname)
 {
 	CMATRIX		*Tmat;
-	char		*fpath;
 	int		recip;
 	SDError		ec;
 	SDData		myBSDF;
 	SDSpectralDF	*tdf;
 	COLOR		diffBSDF;
-					/* find path to BSDF file */
-	fpath = getpath(fname, getrlibpath(), R_OK);
-	if (fpath == NULL) {
-		sprintf(errmsg, "cannot find BSDF file '%s'", fname);
-		error(SYSTEM, errmsg);
-	}
+
 	SDclearBSDF(&myBSDF, fname);	/* load XML and check type */
-	ec = SDloadFile(&myBSDF, fpath);
+	ec = SDloadFile(&myBSDF, fname);
 	if (ec)
 		error(USER, transSDError(ec));
 	ccy2rgb(&myBSDF.tLamb.spec, myBSDF.tLamb.cieY/PI, diffBSDF);
@@ -163,7 +157,7 @@ cm_loadBTDF(char *fname)
 		return(cm_bsdf_Lamb(diffBSDF));
 	}
 	if (tdf->ncomp != 1 || tdf->comp[0].func != &SDhandleMtx) {
-		sprintf(errmsg, "unsupported BSDF '%s'", fpath);
+		sprintf(errmsg, "unsupported BSDF '%s'", fname);
 		error(USER, errmsg);
 	}
 					/* convert BTDF to matrix */
