@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.34 2017/05/13 00:26:27 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.35 2019/08/10 00:45:21 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -67,29 +67,17 @@ initfunc(void)	/* initialize function evaluation */
 void
 set_eparams(char *prms)
 {
-	static char	*last_params;
-	static int	lplen = 0;
-	int		len;
+	static char	*last_params = NULL;
 	char		vname[RMAXWORD];
 	double		value;
 	char		*cpd;
 					/* check if already set */
 	if (prms == NULL || !*prms)
 		return;
-	if (lplen && !strcmp(prms, last_params))
+	if (prms == last_params || (last_params != NULL &&
+					!strcmp(prms, last_params)))
 		return;
-	len = strlen(prms);		/* record new settings */
-	if ((lplen != 0) & (lplen <= len)) {
-		free(last_params);
-		lplen = 0;
-	}
-	if (!lplen) {
-		lplen = len + 100;
-		last_params = (char *)malloc(lplen);
-		if (last_params == NULL)
-			error(SYSTEM, "out of memory in set_eparams()");
-	}
-	strcpy(last_params, prms);
+	last_params = prms;		/* XXX assumes static string */
 					/* assign each variable */
 	while (*prms) {
 		if (isspace(*prms)) {
