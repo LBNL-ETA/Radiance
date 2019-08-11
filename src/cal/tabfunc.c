@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: tabfunc.c,v 1.6 2005/11/12 06:14:51 greg Exp $";
+static const char	RCSid[] = "$Id: tabfunc.c,v 1.7 2019/08/11 17:04:09 greg Exp $";
 #endif
 /*
  * Put tabular data into functions suitable for cal programs.
@@ -20,8 +20,8 @@ static const char	RCSid[] = "$Id: tabfunc.c,v 1.6 2005/11/12 06:14:51 greg Exp $
 
 #define  isdelim(c)	(isspace(c) || (c)==',')
 
-#define  MAXTAB		1024		/* maximum number of data rows */
-#define  MAXLINE	4096		/* maximum line width (characters) */
+#define  MAXTAB		8192		/* maximum number of data rows */
+#define  MAXLINE	16384		/* maximum line width (characters) */
 #define  OUTFMT		"%.7g"		/* output format conversion string */
 
 int	interpolate = 0;
