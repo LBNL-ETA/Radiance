@@ -2271,6 +2271,9 @@ Added gendaymtx -A option to compute average sky over all the input
 time steps.
 
 Added ability to output color image from rtrace with any of -ovrx options.
+Also fixed inconsistency of -oN output when ray casting versus full trace.
+Before, it would flip normal to front side unless ray casting.  Now, -oN
+always reports the unflipped normal.
 
 Changed rlam behavior so -iaN reads N lines from a stream rather than N
 characters.  This seems more useful, since -ibN is somewhat redundant with
@@ -2280,7 +2283,8 @@ Created rsplit program as compliment to rlam and to handle more complex
 rtrace output into separate files or streams.
 
 Improved getinfo so that it can also hop over resolution string with -c
-and header elide mode.
+and header elide mode.  Use +d to include resolution string in output,
+and -d to elide with - and -c options.
 
 Made pvalue -u option mean "uncompressed" with -r.  Also, allow skipping
 bytes on standard input.
@@ -2288,14 +2292,14 @@ bytes on standard input.
 Created rcode_depth tool to convert to and from a 16-bit/pixel portable
 depth image encoding that uses a mix of linear and reciprocal distance
 with explicit representations of 0 and infinity.  Code for loading these
-depth maps is in src/util/depthcodec.{h,c}.
+depth maps is in src/common/depthcodec.{h,c}.
 
 Created rcode_norm tool to convert to and from 32-bit/pixel portable
 surface normal representation, matching the one in src/common/dircode.c.
-Code for loading normal maps is in src/util/normcodec.{h,c}.
+Code for loading normal maps is in src/common/normcodec.{h,c}.
 
 Created rcode_ident tool to create indexed identifier files.
-Code for loading these files is in src/util/idmap.{h,c}.
+Code for loading these files is in src/common/idmap.{h,c}.
 
 Added -o* option to rtpict to produce layered images that handle most
 output types from rtrace (colors, surface normals, distances, IDs).
