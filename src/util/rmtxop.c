@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.15 2019/08/12 16:55:24 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.16 2019/08/12 20:38:19 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -140,19 +140,22 @@ binaryop(const char *inspec, RMATRIX *mleft, int op, RMATRIX *mright)
 
 	if ((mleft == NULL) | (mright == NULL))
 		return(NULL);
-
 	switch (op) {
 	case '.':			/* concatenate */
-		mres = rmx_multiply(mleft, mright);
+		if (mleft->ncomp != mright->ncomp) {
+			fputs(inspec, stderr);
+			fputs(": # components do not match\n", stderr);
+		} else if (mleft->ncols != mright->nrows) {
+			fputs(inspec, stderr);
+			fputs(": mismatched dimensions\n",
+					stderr);
+		} else
+			mres = rmx_multiply(mleft, mright);
 		rmx_free(mleft);
 		rmx_free(mright);
 		if (mres == NULL) {
 			fputs(inspec, stderr);
-			if (mleft->ncols != mright->nrows)
-				fputs(": mismatched dimensions for multiply\n",
-						stderr);
-			else
-				fputs(": concatenation failed\n", stderr);
+			fputs(": concatenation failed\n", stderr);
 			return(NULL);
 		}
 		if (verbose) {

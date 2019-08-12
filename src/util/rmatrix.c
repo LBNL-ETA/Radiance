@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.33 2019/08/12 18:15:44 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.34 2019/08/12 20:38:19 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -568,7 +568,7 @@ rmx_elemult(RMATRIX *m1, const RMATRIX *m2, int divide)
 			    rmx_lval(m1,i,j,k) *= rmx_lval(m2,i,j,k);
 		}
 	if (zeroDivides) {
-		fputs("Divide by zero in rmx_elemult()\n", stderr);
+		rmx_addinfo(m1, "WARNING: zero divide(s) corrupted results\n");
 		errno = ERANGE;
 	}
 	return(1);
