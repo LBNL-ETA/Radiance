@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.31 2019/08/12 04:12:57 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.32 2019/08/12 04:46:34 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -468,6 +468,8 @@ rmx_transpose(const RMATRIX *rm)
 		return(0);
 	if ((rm->nrows == 1) | (rm->ncols == 1)) {
 		dnew = rmx_copy(rm);
+		if (dnew == NULL)
+			return(NULL);
 		dnew->nrows = rm->ncols;
 		dnew->ncols = rm->nrows;
 		return(dnew);
