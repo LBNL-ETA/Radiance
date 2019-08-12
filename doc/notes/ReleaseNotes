@@ -2304,4 +2304,5 @@ Created rcode2bmp script to create images from new rcode_* output maps.
 
 Improved efficiency of rmtxop in cases where matrix multiplication is
 faster evaluated right-to-left, as when the final component is a
-column vector.
+column vector.  Also added ability to apply trailing unary operators
+(-t, and -s or -c) to resulting matrix.

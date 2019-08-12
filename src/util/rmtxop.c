@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.13 2019/08/12 01:20:26 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.14 2019/08/12 02:26:46 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -229,7 +229,12 @@ op_right2left(ROPMAT *mop)
 	int	rpos = 0;
 					/* find end of list */
 	while (mop[rpos].binop)
-		rpos++;
+		if (mop[rpos++].binop != '.') {
+			fputs(
+		"Right-to-left evaluation only for matrix multiplication!\n",
+					stderr);
+			return(NULL);
+		}
 	mright = loadop(mop+rpos);
 	while (rpos-- > 0) {
 		if (mright == NULL)
@@ -313,13 +318,12 @@ main(int argc, char *argv[])
 	int	i;
 					/* get options and arguments */
 	for (i = 1; i < argc; i++) {
-		if (nmats >= nall)
-			mop = grow_moparray(mop, nall += 2);
 		if (argv[i][0] && !argv[i][1] &&
 				strchr(".+*/", argv[i][0]) != NULL) {
 			if (mop[nmats].inspec == NULL || mop[nmats].binop) {
-				fprintf(stderr, "%s: missing matrix argument\n",
-						argv[0]);
+				fprintf(stderr,
+			"%s: missing matrix argument for '%c' operation\n",
+						argv[0], argv[i][0]);
 				return(1);
 			}
 			mop[nmats++].binop = argv[i][0];
@@ -341,7 +345,7 @@ main(int argc, char *argv[])
 			int	n = argc-1 - i;
 			switch (argv[i][1]) {	/* get option */
 			case 'v':
-				verbose = !verbose;
+				verbose++;
 				break;
 			case 'f':
 				switch (argv[i][2]) {
@@ -382,12 +386,20 @@ main(int argc, char *argv[])
 				goto userr;
 			}
 		}
+		if (nmats >= nall)
+			mop = grow_moparray(mop, nall += 2);
 	}
 	if (mop[0].inspec == NULL)	/* nothing to do? */
 		goto userr;
 					/* favor quicker concatenation */
-	mres = prefer_right2left(mop) ? op_right2left(mop) : op_left2right(mop);
-	if (!mres)
+	mop[nmats].mtx = prefer_right2left(mop) ? op_right2left(mop)
+						: op_left2right(mop);
+	if (mop[nmats].mtx == NULL)
+		return(1);
+					/* apply trailing unary operations */
+	mop[nmats].inspec = "trailing_ops";
+	mres = loadop(mop+nmats);
+	if (mres == NULL)
 		return(1);
 					/* write result to stdout */
 	if (outfmt == DTfromHeader)
