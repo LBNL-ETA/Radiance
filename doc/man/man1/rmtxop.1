@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.14 2019/08/12 02:26:46 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.15 2019/08/12 16:55:24 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -96,15 +96,19 @@ options are mutually exclusive, insofar as they cannot be applied together
 to the same input matrix.
 .PP
 If present, the second and subsequent matrices on the command
-line are concatenated to the result unless separated by a plus ('+'),
+line are concatenated to the result, unless separated by a plus ('+'),
 asterisk ('*'), or forward slash ('/') symbol,
-in which case the matrix elements are added, multiplied, or divided together,
-respectively.
+in which case the individual matrix elements are added,
+multiplied, or divided together, respectively.
 (Note that the asterisk must be quoted or escaped in most shells.)\0
 In the case of addition, the two matrices involved must have the same number
 of components.
+If subtraction is desired, use addition ('+') with a scaling parameter of -1
+for the second matrix (the
+.I \-s
+option).
 For element-wise multiplication and division, the second matrix is
-permitted instead to have a single component per element, which will be
+permitted to have a single component per element, which will be
 applied equally to all components of the first matrix.
 If element-wise division is specified, any zero elements in the second
 matrix will result in a warning and the corresponding component(s) in the
@@ -158,6 +162,10 @@ rmtxop -fc blinds.xml > blinds.hdr
 To scale a matrix by 4 and add it to the transpose of another matrix:
 .IP "" .2i
 rmtxop -s 4 left.mtx + -t right.mtx > result.mtx
+.PP
+To left-multiply the element-wise division of two matrices:
+.IP "" .2i
+rmtxop -fd numerator.mtx / denominator.mtx | rmtxop left.mtx - > result.mtx
 .PP
 To send the elements of a binary matrix to 
 .I rcalc(1)

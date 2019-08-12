@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.14 2019/08/12 02:26:46 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.15 2019/08/12 16:55:24 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -320,13 +320,13 @@ main(int argc, char *argv[])
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] && !argv[i][1] &&
 				strchr(".+*/", argv[i][0]) != NULL) {
-			if (mop[nmats].inspec == NULL || mop[nmats].binop) {
+			if (!nmats || mop[nmats-1].binop) {
 				fprintf(stderr,
-			"%s: missing matrix argument for '%c' operation\n",
+			"%s: missing matrix argument before '%c' operation\n",
 						argv[0], argv[i][0]);
 				return(1);
 			}
-			mop[nmats++].binop = argv[i][0];
+			mop[nmats-1].binop = argv[i][0];
 		} else if (argv[i][0] != '-' || !argv[i][1]) {
 			if (argv[i][0] == '-') {
 				if (stdin_used++) {
@@ -391,6 +391,12 @@ main(int argc, char *argv[])
 	}
 	if (mop[0].inspec == NULL)	/* nothing to do? */
 		goto userr;
+	if (mop[nmats-1].binop) {
+		fprintf(stderr,
+			"%s: missing matrix argument after '%c' operation\n",
+				argv[0], mop[nmats-1].binop);
+		return(1);
+	}
 					/* favor quicker concatenation */
 	mop[nmats].mtx = prefer_right2left(mop) ? op_right2left(mop)
 						: op_left2right(mop);
