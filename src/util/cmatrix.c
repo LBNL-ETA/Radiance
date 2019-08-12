@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.20 2018/08/02 18:33:49 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.21 2019/08/12 18:28:37 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -34,7 +34,7 @@ cm_alloc(int nrows, int ncols)
 		error(USER, "attempt to create empty matrix");
 	cm = (CMATRIX *)malloc(sizeof(CMATRIX) +
 				sizeof(COLOR)*(nrows*ncols - 1));
-	if (cm == NULL)
+	if (!cm)
 		error(SYSTEM, "out of memory in cm_alloc()");
 	cm->nrows = nrows;
 	cm->ncols = ncols;
@@ -57,6 +57,8 @@ cm_resize(CMATRIX *cm, int nrows)
 {
 	size_t	old_size, new_size, ra_bounds[2];
 
+	if (!cm)
+		return(NULL);
 	if (nrows == cm->nrows)
 		return(cm);
 	if (nrows <= 0) {
@@ -70,7 +72,7 @@ cm_resize(CMATRIX *cm, int nrows)
 				new_size > ra_bounds[1]) {
 		adjacent_ra_sizes(ra_bounds, new_size);
 		cm = (CMATRIX *)realloc(cm, ra_bounds[1]);
-		if (cm == NULL)
+		if (!cm)
 			error(SYSTEM, "out of memory in cm_resize()");
 	}
 	cm->nrows = nrows;
@@ -121,7 +123,7 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 	cmi.err = "unexpected EOF in header";
 	if (getheader(fp, get_cminfo, &cmi) < 0)
 		return(cmi.err);
-	if (dt != NULL) {			/* get/check data type? */
+	if (dt) {				/* get/check data type? */
 		if (cmi.dtype == DTfromHeader) {
 			if (*dt == DTfromHeader)
 				return("missing/unknown data format in header");
@@ -130,13 +132,13 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 		else if (*dt != cmi.dtype)
 			return("unexpected data format in header");
 	}
-	if (nr != NULL) {			/* get/check #rows? */
+	if (nr) {				/* get/check #rows? */
 		if (*nr <= 0)
 			*nr = cmi.nrows;
 		else if ((cmi.nrows > 0) & (*nr != cmi.nrows))
 			return("unexpected row count in header");
 	}
-	if (nc != NULL) {			/* get/check #columns? */
+	if (nc) {				/* get/check #columns? */
 		if (*nc <= 0)
 			*nc = cmi.ncols;
 		else if ((cmi.ncols > 0) & (*nc != cmi.ncols))
@@ -153,15 +155,15 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	FILE		*fp = stdin;
 	CMATRIX		*cm;
 
-	if (inspec == NULL)
+	if (!inspec)
 		inspec = "<stdin>";
 	else if (inspec[0] == '!') {
 		fp = popen(inspec+1, "r");
-		if (fp == NULL) {
+		if (!fp) {
 			sprintf(errmsg, "cannot start command '%s'", inspec);
 			error(SYSTEM, errmsg);
 		}
-	} else if ((fp = fopen(inspec, "r")) == NULL) {
+	} else if (!(fp = fopen(inspec, "r"))) {
 		sprintf(errmsg, "cannot open file '%s'", inspec);
 		error(SYSTEM, errmsg);
 	}
@@ -172,7 +174,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
 	if (!dtype | !ncols) {			/* expecting header? */
 		char	*err = cm_getheader(&dtype, &nrows, &ncols, fp);
-		if (err != NULL)
+		if (err)
 			error(USER, err);
 		if (ncols <= 0)
 			error(USER, "unspecified number of columns");
@@ -213,7 +215,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		cm = cm_alloc(guessrows, ncols);
 	} else
 		cm = cm_alloc(nrows, ncols);
-	if (cm == NULL)					/* XXX never happens */
+	if (!cm)					/* XXX never happens */
 		return(NULL);
 	if (dtype == DTascii) {				/* read text file */
 		int	maxrow = (nrows > 0 ? nrows : 32000);
@@ -323,10 +325,12 @@ cm_column(const CMATRIX *cm, int c)
 	CMATRIX	*cvr;
 	int	dr;
 
+	if (!cm)
+		return(NULL);
 	if ((c < 0) | (c >= cm->ncols))
 		error(INTERNAL, "column requested outside matrix");
 	cvr = cm_alloc(cm->nrows, 1);
-	if (cvr == NULL)
+	if (!cvr)
 		return(NULL);
 	for (dr = 0; dr < cm->nrows; dr++) {
 		const COLORV	*sp = cm_lval(cm,dr,c);
@@ -338,27 +342,6 @@ cm_column(const CMATRIX *cm, int c)
 	return(cvr);
 }
 
-/* Scale a matrix by a single value */
-CMATRIX *
-cm_scale(const CMATRIX *cm1, const COLOR sca)
-{
-	CMATRIX	*cmr;
-	int	dr, dc;
-
-	cmr = cm_alloc(cm1->nrows, cm1->ncols);
-	if (cmr == NULL)
-		return(NULL);
-	for (dr = 0; dr < cmr->nrows; dr++)
-	    for (dc = 0; dc < cmr->ncols; dc++) {
-	        const COLORV	*sp = cm_lval(cm1,dr,dc);
-		COLORV		*dp = cm_lval(cmr,dr,dc);
-		dp[0] = sp[0] * sca[0];
-		dp[1] = sp[1] * sca[1];
-		dp[2] = sp[2] * sca[2];
-	    }
-	return(cmr);
-}
-
 /* Multiply two matrices (or a matrix and a vector) and allocate the result */
 CMATRIX *
 cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
@@ -367,10 +350,12 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 	CMATRIX	*cmr;
 	int	dr, dc, i;
 
+	if (!cm1 | !cm2)
+		return(NULL);
 	if ((cm1->ncols <= 0) | (cm1->ncols != cm2->nrows))
 		error(INTERNAL, "matrix dimension mismatch in cm_multiply()");
 	cmr = cm_alloc(cm1->nrows, cm2->ncols);
-	if (cmr == NULL)
+	if (!cmr)
 		return(NULL);
 				/* optimization: check for zero rows & cols */
 	if (((cm1->nrows > 5) | (cm2->ncols > 5)) & (cm1->ncols > 5)) {
@@ -395,9 +380,9 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 		COLORV	*dp = cm_lval(cmr,dr,dc);
 		double	res[3];
 		dp[0] = dp[1] = dp[2] = 0;
-		if (rowcheck != NULL && !rowcheck[dr])
+		if (rowcheck && !rowcheck[dr])
 			continue;
-		if (colcheck != NULL && !colcheck[dc])
+		if (colcheck && !colcheck[dc])
 			continue;
 		res[0] = res[1] = res[2] = 0;
 		for (i = 0; i < cm1->ncols; i++) {
@@ -409,8 +394,8 @@ cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2)
 		}
 		copycolor(dp, res);
 	    }
-	if (rowcheck != NULL) free(rowcheck);
-	if (colcheck != NULL) free(colcheck);
+	if (rowcheck) free(rowcheck);
+	if (colcheck) free(colcheck);
 	return(cmr);
 }
 
@@ -419,9 +404,12 @@ int
 cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 {
 	static const char	tabEOL[2] = {'\t','\n'};
-	const COLORV		*mp = cm->cmem;
+	const COLORV		*mp;
 	int			r, c;
 
+	if (!cm)
+		return(0);
+	mp = cm->cmem;
 	switch (dtype) {
 	case DTascii:
 		for (r = 0; r < cm->nrows; r++)

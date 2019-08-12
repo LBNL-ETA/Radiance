@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.8 2018/10/31 22:19:57 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.9 2019/08/12 18:28:37 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -49,9 +49,6 @@ extern CMATRIX	*cm_load(const char *inspec, int nrows, int ncols, int dtype);
 
 /* Extract a column vector from a matrix */
 extern CMATRIX	*cm_column(const CMATRIX *cm, int c);
-
-/* Scale a matrix by a single value */
-extern CMATRIX	*cm_scale(const CMATRIX *cm1, const COLOR sca);
 
 /* Multiply two matrices (or a matrix and a vector) and allocate the result */
 extern CMATRIX	*cm_multiply(const CMATRIX *cm1, const CMATRIX *cm2);
