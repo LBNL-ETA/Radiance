@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.15 2019/08/12 16:55:24 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.16 2019/08/12 17:14:40 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -96,11 +96,12 @@ options are mutually exclusive, insofar as they cannot be applied together
 to the same input matrix.
 .PP
 If present, the second and subsequent matrices on the command
-line are concatenated to the result, unless separated by a plus ('+'),
+line are concatenated together, unless separated by a plus ('+'),
 asterisk ('*'), or forward slash ('/') symbol,
 in which case the individual matrix elements are added,
-multiplied, or divided together, respectively.
-(Note that the asterisk must be quoted or escaped in most shells.)\0
+multiplied, or divided, respectively.
+The concatenation operator ('.') is the default and need not be specified.
+Note also that the asterisk must be quoted or escaped in most shells.
 In the case of addition, the two matrices involved must have the same number
 of components.
 If subtraction is desired, use addition ('+') with a scaling parameter of -1
@@ -113,6 +114,12 @@ applied equally to all components of the first matrix.
 If element-wise division is specified, any zero elements in the second
 matrix will result in a warning and the corresponding component(s) in the
 first matrix will be set to zero.
+.PP
+Evaluation proceeds from left to right, and all operations have
+the same precedence.
+If a different evaluation order is desired, pipe the result of one
+.I rmtxop
+command into another, as shown in one of the examples below.
 .PP
 The number of components in the new matrix after applying any
 .I -c
@@ -159,9 +166,18 @@ To convert a BTDF matrix into a Radiance picture:
 .IP "" .2i
 rmtxop -fc blinds.xml > blinds.hdr
 .PP
+To extract the luminance values from a picture as an ASCII matrix:
+.IP "" .2i
+rmtxop -fa -c .265 .670 .065 image.hdr > image_lum.mtx
+.PP
 To scale a matrix by 4 and add it to the transpose of another matrix:
 .IP "" .2i
-rmtxop -s 4 left.mtx + -t right.mtx > result.mtx
+rmtxop -s 4 first.mtx + -t second.mtx > result.mtx
+.PP
+To multiply elements of two matrices, then concatenate with a third,
+applying a final transpose to the result:
+.IP "" .2i
+rmtxop first.mtx \\* second.mtx . third.mtx -t > result.mtx
 .PP
 To left-multiply the element-wise division of two matrices:
 .IP "" .2i
@@ -173,17 +189,16 @@ for further processing:
 .IP "" .2i
 rmtxop -fa orig.mtx | rcollate -ho -oc 1 | rcalc [operations]
 .SH NOTES
-Matrix multiplication is associative but not commutative, so order
+Matrix concatenation is associative but not commutative, so order
 matters to the result.
 .I Rmtxop
-takes advantage of the associative property to evaluate the
-implicit equation from right to left when this reduces the
-number of basic operations.
+takes advantage of this associative property to concatenate
+from right to left when it reduces the number of basic operations.
 If the rightmost matrix is a column vector for example, it is
-much faster to concatenate from the right, and the result should
+much faster to concatenate from the right, and the result will
 be the same.
-This only applies to matrix multiplication.
-Element-wise addition, multiplication, and division are still
+Note that this only applies to concatenation;
+element-wise addition, multiplication, and division are always
 evaluated from left to right.
 .SH AUTHOR
 Greg Ward
