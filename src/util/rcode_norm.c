@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.2 2019/07/20 02:07:23 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.3 2019/08/13 16:31:35 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -38,11 +38,11 @@ encode_normals(NORMCODEC *ncp)
 	long	nexpected = (long)ncp->res.xr * ncp->res.yr;
 
 	if (ncp->inpfmt[0]) {
-		if (strcasestr(ncp->inpfmt, "ascii") != NULL)
+		if (strstr(ncp->inpfmt, "ascii") != NULL)
 			ncp->format = 'a';
-		else if (strcasestr(ncp->inpfmt, "float") != NULL)
+		else if (strstr(ncp->inpfmt, "float") != NULL)
 			ncp->format = 'f';
-		else if (strcasestr(ncp->inpfmt, "double") != NULL)
+		else if (strstr(ncp->inpfmt, "double") != NULL)
 			ncp->format = 'd';
 		else {
 			fputs(ncp->inpname, stderr);

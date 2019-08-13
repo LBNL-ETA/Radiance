@@ -73,7 +73,7 @@ target_link_libraries(rcode_depth rtrad)
 add_executable(rcode_norm rcode_norm.c)
 target_link_libraries(rcode_norm rtrad)
 
-add executable(rcode_ident rcode_ident.c)
+add_executable(rcode_ident rcode_ident.c)
 target_link_libraries(rcode_ident rtrad)
 
 if(X11_FOUND)
