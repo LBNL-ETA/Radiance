@@ -1,4 +1,4 @@
-{ RCSid $Id: disk2square.cal,v 2.4 2015/03/27 18:58:06 greg Exp $ }
+{ RCSid $Id: disk2square.cal,v 2.5 2019/08/13 18:29:23 greg Exp $ }
 {
 	Convert between unit square and disk, using Shirley-Chiu mapping
 
@@ -51,13 +51,14 @@ out_square_a = select(in_disk_rgn,
 			in_disk_r,
 			(PI/2 - in_disk_phi)*in_disk_r/(PI/4),
 			-in_disk_r,
-			(in_disk_phi - 3*PI/2)*in_disk_r/(PI/4));
+			(in_disk_phi - 3*PI/2)*in_disk_r/(PI/4),
+			in_disk_r);
 
 out_square_b = select(in_disk_rgn,
 			in_disk_phi*in_disk_r/(PI/4),
 			in_disk_r,
 			(PI - in_disk_phi)*in_disk_r/(PI/4),
-			-in_disk_r);
+			-in_disk_r, -in_disk_r);
 
 out_square_x = (out_square_a + 1)/2;
 out_square_y = (out_square_b + 1)/2;
