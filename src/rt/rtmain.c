@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.29 2019/04/18 23:58:22 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.30 2019/08/14 20:07:20 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -319,6 +319,8 @@ main(int  argc, char  *argv[])
 		printargs(i, argv, stdout);
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
+		if ((outform == 'f') | (outform == 'd'))
+			fputendian(stdout);
 		fputformat(formstr(outform), stdout);
 		putchar('\n');
 	}

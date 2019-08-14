@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rc2.c,v 2.22 2017/02/07 16:48:14 greg Exp $";
+static const char RCSid[] = "$Id: rc2.c,v 2.23 2019/08/14 20:07:20 greg Exp $";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -116,6 +116,8 @@ printheader(FILE *fout, const char *info)
 	fputs("NCOMP=3\n", fout);		/* always RGB */
 	if (info != NULL)			/* add extra info if given */
 		fputs(info, fout);
+	if ((outfmt == 'f') | (outfmt == 'd'))
+		fputendian(fout);
 	fputformat(formstr(outfmt), fout);
 	fputc('\n', fout);			/* empty line ends header */
 }
