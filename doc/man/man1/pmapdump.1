@@ -1,5 +1,5 @@
-.\" RCSid "$Id: pmapdump.1,v 1.7 2019/01/22 19:50:09 rschregle Exp $"
-.TH PMAPDUMP 1 "$Date: 2019/01/22 19:50:09 $ $Revision: 1.7 $" RADIANCE
+.\" RCSid "$Id: pmapdump.1,v 1.8 2019/08/14 18:03:23 rschregle Exp $"
+.TH PMAPDUMP 1 "$Date: 2019/08/14 18:03:23 $ $Revision: 1.8 $" RADIANCE
 
 .SH NAME
 pmapdump - generate RADIANCE scene description or point list representing
@@ -77,11 +77,13 @@ Without this option, the default colour for the corresponding photon type
 is used. This option is mutually exclusive with \fB-f\fR.
 
 .IP "\fB-f\fR"
-Boolean switch to colour each sphere/point according to the corresponding 
-photon's RGB flux instead of a constant colour. Note that no exposure is 
-applied, and as such the resulting colours can span several orders of 
-magnitude and may require tone mapping with \fIpcond(1)\fR for 
-visualisation. This option is mutually exclusive with \fB-c\fR.
+Boolean switch to colour each sphere/point according to the corresponding
+photon's RGB flux instead of a constant colour.  The flux is adjusted for
+the fraction of dumped photons to maintain the total flux contained in the
+dumped photon map.  Note that no exposure is applied, and as such the
+resulting colours can span several orders of magnitude and may require tone
+mapping with \fIpcond(1)\fR for visualisation.  This option is mutually
+exclusive with \fB-c\fR.
 
 .IP "\fB-n \fInum\fR"
 Specifies the number of spheres or points to dump for the next photon map.  
