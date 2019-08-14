@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.83 2019/07/25 16:59:19 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.84 2019/08/14 22:33:02 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -267,7 +267,6 @@ setoutput(				/* set up output tables */
 			break;
 		case 'V':				/* contribution */
 			*table++ = oputV;
-			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
 					"-otV accuracy depends on -aa 0 -as 0");
