@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.93 2019/07/26 16:18:07 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.94 2019/08/14 04:18:12 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -242,7 +242,7 @@ rsensor.o:	../rt/ray.h ../common/octree.h \
 
 rsensor.o:	../common/view.h ../common/resolu.h ../rt/source.h
 
-radcompare.o rcollate.o:	../common/platform.h \
+ rcollate.o:	../common/platform.h \
 ../common/rtio.h ../common/resolu.h
 
 Version.c:	../rt/Version.c
@@ -265,7 +265,9 @@ pictool.o evalglare.o:	pictool.h ../common/g3vector.h ../common/g3affine.h \
 
 evalglare.o:	../common/rtio.h
 
-radcompare.o:	../common/rtio.h ../common/color.h ../common/lookup.h
+radcompare.o:	../common/rtio.h ../common/color.h ../common/lookup.h \
+../common/platform.h ../common/normcodec.h ../common/depthcodec.h \
+../common/rtmath.h ../common/view.h
 
 pictool.o:	../common/view.h ../common/color.h
 

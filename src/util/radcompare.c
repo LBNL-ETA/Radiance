@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.18 2018/12/01 21:09:53 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.19 2019/08/14 04:18:12 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -8,12 +8,14 @@ static const char RCSid[] = "$Id: radcompare.c,v 2.18 2018/12/01 21:09:53 greg E
  */
 
 #include <stdlib.h>
-#include <math.h>
 #include <ctype.h>
+#include "rtmath.h"
 #include "platform.h"
 #include "rtio.h"
 #include "resolu.h"
 #include "color.h"
+#include "depthcodec.h"
+#include "normcodec.h"
 #include "lookup.h"
 			/* Reporting levels */
 #define REP_QUIET	0	/* no reporting */
@@ -45,17 +47,24 @@ const char	*file_type[] = {
 			"ascii",
 			COLRFMT,
 			CIEFMT,
+			DEPTH16FMT,
+			NORMAL32FMT,
 			"float",
 			"double",
 			"BSDF_RBFmesh",
 			"Radiance_octree",
 			"Radiance_tmesh",
+			"8-bit_indexed_name",
+			"16-bit_indexed_name",
+			"24-bit_indexed_name",
 			"BINARY_unknown",
 			NULL	/* terminator */
 		};
 				/* keep consistent with above */
-enum {TYP_UNKNOWN, TYP_TEXT, TYP_ASCII, TYP_RGBE, TYP_XYZE, TYP_FLOAT,
-		TYP_DOUBLE, TYP_RBFMESH, TYP_OCTREE, TYP_TMESH, TYP_BINARY};
+enum {TYP_UNKNOWN, TYP_TEXT, TYP_ASCII, TYP_RGBE, TYP_XYZE,
+		TYP_DEPTH, TYP_NORM, TYP_FLOAT, TYP_DOUBLE,
+		TYP_RBFMESH, TYP_OCTREE, TYP_TMESH,
+		TYP_ID8, TYP_ID16, TYP_ID24, TYP_BINARY};
 		
 #define has_header(t)	(!( 1L<<(t) & (1L<<TYP_TEXT | 1L<<TYP_BINARY) ))
 
@@ -208,6 +217,31 @@ color_check(COLOR c1, COLOR c2)
 	if (colval(c1,BLU) > colval(c1,p)) p = BLU;
 	
 	return(real_check(colval(c1,p), colval(c2,p)));
+}
+
+/* Compare two normal directions for equivalence */
+static int
+norm_check(FVECT nv1, FVECT nv2)
+{
+	double	max2 = nv1[2]*nv1[2];
+	int	imax = 2;
+	int	i = 2;
+					/* identify largest component */
+	while (i--) {
+		double	tm2 = nv1[i]*nv1[i];
+		if (tm2 > max2) {
+			imax = i;
+			max2 = tm2;
+		}
+	}
+	i = 3;				/* compare smaller components */
+	while (i--) {
+		if (i == imax)
+			continue;
+		if (!real_check(nv1[i], nv2[i]))
+			return(0);
+	}
+	return(1);
 }
 
 /* Compare two strings for equivalence */
@@ -565,6 +599,27 @@ compare_text()
 	return(good_RMS());			/* final check for reals */
 }
 
+/* Check image/map resolutions */
+static int
+check_resolu(const char *class, RESOLU *r1p, RESOLU *r2p)
+{
+	if (r1p->rt != r2p->rt) {
+		if (report != REP_QUIET)
+			printf(
+			"%s: %ss '%s' and '%s' have different pixel ordering\n",
+					progname, class, f1name, f2name);
+		return(0);
+	}
+	if ((r1p->xr != r2p->xr) | (r1p->yr != r2p->yr)) {
+		if (report != REP_QUIET)
+			printf(
+			"%s: %ss '%s' and '%s' are different sizes\n",
+					progname, class, f1name, f2name);
+		return(0);
+	}
+	return(1);
+}
+
 /* Compare two inputs that are known to be RGBE or XYZE images */
 static int
 compare_hdr()
@@ -579,20 +634,8 @@ compare_hdr()
 	}
 	fgetsresolu(&rs1, f1in);
 	fgetsresolu(&rs2, f2in);
-	if (rs1.rt != rs2.rt) {
-		if (report != REP_QUIET)
-			printf(
-			"%s: Images '%s' and '%s' have different pixel ordering\n",
-					progname, f1name, f2name);
+	if (!check_resolu("HDR image", &rs1, &rs2))
 		return(0);
-	}
-	if ((rs1.xr != rs2.xr) | (rs1.yr != rs2.yr)) {
-		if (report != REP_QUIET)
-			printf(
-			"%s: Images '%s' and '%s' are different sizes\n",
-					progname, f1name, f2name);
-		return(0);
-	}
 	scan1 = (COLOR *)malloc(scanlen(&rs1)*sizeof(COLOR));
 	scan2 = (COLOR *)malloc(scanlen(&rs2)*sizeof(COLOR));
 	if (!scan1 | !scan2) {
@@ -635,6 +678,133 @@ compare_hdr()
 	free(scan1);
 	free(scan2);
 	return(good_RMS());			/* final check of RMS */
+}
+
+/* Set reference depth based on header variable */
+static int
+set_refdepth(DEPTHCODEC *dcp, LUTAB *htp)
+{
+	static char	depthvar[] = DEPTHSTR;
+	const char	*drval;
+
+	depthvar[LDEPTHSTR] = '\0';
+	drval = (const char *)lu_find(htp, depthvar)->data;
+	if (!drval)
+		return(0);
+	dcp->refdepth = atof(drval);
+	if (dcp->refdepth <= 0) {
+		if (report != REP_QUIET) {
+			fputs(dcp->inpname, stderr);
+			fputs(": bad reference depth '", stderr);
+			fputs(drval, stderr);
+			fputs("'\n", stderr);
+		}
+		return(-1);
+	}
+	return(1);
+}
+
+/* Compare two encoded depth maps */
+static int
+compare_depth()
+{
+	long		nread = 0;
+	DEPTHCODEC	dc1, dc2;
+
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as depth maps\n", stdout);
+	}
+	set_dc_defaults(&dc1);
+	dc1.hdrflags = HF_RESIN;
+	dc1.finp = f1in;
+	dc1.inpname = f1name;
+	set_dc_defaults(&dc2);
+	dc2.hdrflags = HF_RESIN;
+	dc2.finp = f2in;
+	dc2.inpname = f2name;
+	if (report != REP_QUIET) {
+		dc1.hdrflags |= HF_STDERR;
+		dc2.hdrflags |= HF_STDERR;
+	}
+	if (!process_dc_header(&dc1, 0, NULL))
+		return(0);
+	if (!process_dc_header(&dc2, 0, NULL))
+		return(0);
+	if (!check_resolu("Depth map", &dc1.res, &dc2.res))
+		return(0);
+	if (set_refdepth(&dc1, &hdr1) < 0)
+		return(0);
+	if (set_refdepth(&dc2, &hdr2) < 0)
+		return(0);
+	while (nread < dc1.res.xr*dc1.res.yr) {
+		double	d1 = decode_depth_next(&dc1);
+		double	d2 = decode_depth_next(&dc2);
+		if ((d1 < 0) | (d2 < 0)) {
+			if (report != REP_QUIET)
+				printf("%s: unexpected end-of-file\n",
+						progname);
+			return(0);
+		}
+		++nread;
+		if (real_check(d1, d2))
+			continue;
+		if (report != REP_QUIET)
+			printf("%s: %ld%s depth values differ\n",
+					progname, nread, num_sfx(nread));
+		return(0);
+	}
+	return(good_RMS());		/* final check of RMS */
+}
+
+/* Compare two encoded normal maps */
+static int
+compare_norm()
+{
+	long		nread = 0;
+	NORMCODEC	nc1, nc2;
+
+	if (report >= REP_VERBOSE) {
+		fputs(progname, stdout);
+		fputs(": comparing inputs as normal maps\n", stdout);
+	}
+	set_nc_defaults(&nc1);
+	nc1.hdrflags = HF_RESIN;
+	nc1.finp = f1in;
+	nc1.inpname = f1name;
+	set_nc_defaults(&nc2);
+	nc2.hdrflags = HF_RESIN;
+	nc2.finp = f2in;
+	nc2.inpname = f2name;
+	if (report != REP_QUIET) {
+		nc1.hdrflags |= HF_STDERR;
+		nc2.hdrflags |= HF_STDERR;
+	}
+	if (!process_nc_header(&nc1, 0, NULL))
+		return(0);
+	if (!process_nc_header(&nc2, 0, NULL))
+		return(0);
+	if (!check_resolu("Normal map", &nc1.res, &nc2.res))
+		return(0);
+	while (nread < nc1.res.xr*nc1.res.yr) {
+		FVECT	nv1, nv2;
+		int	rv1 = decode_normal_next(nv1, &nc1);
+		int	rv2 = decode_normal_next(nv2, &nc2);
+		if ((rv1 < 0) | (rv2 < 0)) {
+			if (report != REP_QUIET)
+				printf("%s: unexpected end-of-file\n",
+						progname);
+			return(0);
+		}
+		++nread;
+		if (rv1 == rv2 && (!rv1 || norm_check(nv1, nv2)))
+			continue;
+		if (report != REP_QUIET)
+			printf("%s: %ld%s normal vectors differ\n",
+					progname, nread, num_sfx(nread));
+		return(0);
+	}
+	return(good_RMS());		/* final check of RMS */
 }
 
 /* Compare two inputs that are known to be 32-bit floating-point data */
@@ -778,7 +948,6 @@ main(int argc, char *argv[])
 	ign_header |= !has_header(typ1);	/* check headers if indicated */
 	if (!ign_header && !headers_match())
 		return(1);
-	lu_done(&hdr1); lu_done(&hdr2);		/* done with header info. */
 	if (!ign_header & (report >= REP_WARN)) {
 		if (lin1cnt != lin2cnt)
 			printf("%s: warning - headers are different lengths\n",
@@ -796,6 +965,9 @@ main(int argc, char *argv[])
 	case TYP_TMESH:
 	case TYP_OCTREE:
 	case TYP_RBFMESH:
+	case TYP_ID8:
+	case TYP_ID16:
+	case TYP_ID24:
 	case TYP_UNKNOWN:
 		return( !compare_binary() );
 	case TYP_TEXT:
@@ -804,6 +976,10 @@ main(int argc, char *argv[])
 	case TYP_RGBE:
 	case TYP_XYZE:
 		return( !compare_hdr() );
+	case TYP_DEPTH:
+		return( !compare_depth() );
+	case TYP_NORM:
+		return( !compare_norm() );
 	case TYP_FLOAT:
 		return( !compare_float() );
 	case TYP_DOUBLE:

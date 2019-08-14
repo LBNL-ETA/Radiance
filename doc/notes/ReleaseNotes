@@ -2310,3 +2310,5 @@ Improved efficiency of rmtxop in cases where matrix multiplication is
 faster evaluated right-to-left, as when the final component is a
 column vector.  Also added ability to apply trailing unary operators
 (-t, and -s or -c) to resulting matrix.
+
+Added new depth, normal, and ID file types to radcompare.
