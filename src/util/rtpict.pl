@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.10 2019/08/14 22:18:03 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.11 2019/08/14 22:57:24 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -139,10 +139,8 @@ my @res = split(/\s/, `@vwraysA -d`);
 ##### Generating picture with depth buffer?
 if (defined $outzbf) {
 	exec "@vwraysA | @rtraceA -fff -olv @res $oct | " .
-		"rsplit -ih -iH -f " .
-			"-of $outzbf " .
-			"-oh -oH -of3 '!pvalue -r -df' | " .
-		"getinfo -a 'VIEW=$view'";
+		"rsplit -ih -iH -f -of $outzbf -oh -oH -of3 - | " .
+		"pvalue -r -df | getinfo -a 'VIEW=$view'";
 }
 #####################################################################
 ##### Base case with output picture only?
