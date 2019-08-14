@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.36 2019/08/14 18:20:02 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.37 2019/08/14 19:52:39 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -225,7 +225,7 @@ isbigendian(		/* header line says "BigEndian=1" (-1 if irrelevant) */
 {
 	const char	*be = BIGEND;
 
-	while (*s & (*be != '=') && *s++ == *be)
+	while ((*s != '\0') & (*be != '=') && *s++ == *be)
 		++be;
 	if (*be != '=')
 		return(-1);	/* irrelevant */
