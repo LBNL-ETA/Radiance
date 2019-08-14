@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.9 2019/07/23 18:17:55 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.10 2019/08/14 22:18:03 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -155,12 +155,12 @@ my @rsplitA = ("rsplit", "'-t	'", "-ih", "-iH", "-oh", "-oH");
 # Supported rtrace -o* options and output file name.typ
 my %rtoutC = (
 	v =>	'radiance.hdr',
-	r =>	'mirrored.hdr',
-	x =>	'unmirrored.hdr',
-	l =>	'effective.dpt',
-	L =>	'firstsurface.dpt',
-	R =>	'mirrored.dpt',
-	X =>	'unmirrored.dpt',
+	r =>	'r_refl.hdr',
+	x =>	'r_unrefl.hdr',
+	l =>	'd_effective.dpt',
+	L =>	'd_firstsurf.dpt',
+	R =>	'd_refl.dpt',
+	X =>	'd_unrefl.dpt',
 	n =>	'perturbed.nrm',
 	N =>	'unperturbed.nrm',
 	s =>	'surface.idx',
