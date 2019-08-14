@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapdump.c,v 2.14 2019/01/22 18:28:23 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapdump.c,v 2.15 2019/08/14 18:02:11 rschregle Exp $";
 #endif
 
 /* 
@@ -13,7 +13,7 @@ static const char RCSid[] = "$Id: pmapdump.c,v 2.14 2019/01/22 18:28:23 rschregl
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmapdump.c,v 2.14 2019/01/22 18:28:23 rschregle Exp $
+   $Id: pmapdump.c,v 2.15 2019/08/14 18:02:11 rschregle Exp $
 */
 
 
@@ -305,6 +305,8 @@ int main (int argc, char** argv)
          for (j = 0; j < 4; j++) 
             p.flux [j] = getint(1, pmapFile);
    #endif
+   
+         
 
          /* Skip primary ray index */
          getint(sizeof(p.primary), pmapFile);
@@ -315,9 +317,12 @@ int main (int argc, char** argv)
 
          /* Dump photon probabilistically acc. to target sphere count */
          if (frandom() <= dumpRatio) {
-            if (fluxCol)
+            if (fluxCol) {
                /* Get photon flux */
                getPhotonFlux(&p, col);
+               /* Scale by dumpRatio for energy conservation */
+               scalecolor(col, 1.0 / dumpRatio);
+            }
             
             if (!points) {
                if (fluxCol) {
