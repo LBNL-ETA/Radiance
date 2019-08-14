@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.3 2019/07/26 18:52:32 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.4 2019/08/14 21:00:14 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -31,7 +31,8 @@ extern "C" {
 typedef struct {
 	FILE		*finp;			/* input stream */
 	const char	*inpname;		/* input name */
-	int		format;			/* decoded format */
+	short		format;			/* decoded format */
+	short		swapped;		/* byte-swapped input */
 	long		dstart;			/* start of data */
 	long		curpos;			/* current input position */
 	double		refdepth;		/* reference depth */

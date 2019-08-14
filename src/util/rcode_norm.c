@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.3 2019/08/13 16:31:35 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.4 2019/08/14 21:00:14 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -65,24 +65,30 @@ encode_normals(NORMCODEC *ncp)
 #ifdef SMLFLT
 		case 'f':
 			ok = (getbinary(nrm, sizeof(*nrm), 3, ncp->finp) == 3);
+			if (ncp->swapped)
+				swap32((char *)nrm, 3);
 			break;
 		case 'd': {
-				double	nrmd[3];
-				ok = (getbinary(nrmd, sizeof(*nrmd),
-						3, ncp->finp) == 3);
-				if (ok) VCOPY(nrm, nrmd);
-			}
-			break;
+			double	nrmd[3];
+			ok = (getbinary(nrmd, sizeof(*nrmd),
+					3, ncp->finp) == 3);
+			if (ncp->swapped)
+				swap64((char *)nrmd, 3);
+			if (ok) VCOPY(nrm, nrmd);
+			} break;
 #else
 		case 'f': {
-				float	nrmf[3];
-				ok = (getbinary(nrmf, sizeof(*nrmf),
-						3, ncp->finp) == 3);
-				if (ok) VCOPY(nrm, nrmf);
-			}
-			break;
+			float	nrmf[3];
+			ok = (getbinary(nrmf, sizeof(*nrmf),
+					3, ncp->finp) == 3);
+			if (ncp->swapped)
+				swap32((char *)nrmf, 3);
+			if (ok) VCOPY(nrm, nrmf);
+			} break;
 		case 'd':
 			ok = (getbinary(nrm, sizeof(*nrm), 3, ncp->finp) == 3);
+			if (ncp->swapped)
+				swap64((char *)nrm, 3);
 			break;
 #endif
 		}

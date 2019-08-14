@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.28 2019/06/25 17:06:36 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.29 2019/08/14 21:00:14 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -558,6 +558,8 @@ main(int argc, char *argv[])
 		printf("NROWS=%d\n", nskypatch);
 		printf("NCOLS=%d\n", nstored);
 		printf("NCOMP=3\n");
+		if ((outfmt == 'f') | (outfmt == 'd'))
+			fputendian(stdout);
 		fputformat((char *)getfmtname(outfmt), stdout);
 		putchar('\n');
 	}

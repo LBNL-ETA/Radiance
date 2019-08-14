@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.3 2019/07/26 18:52:32 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.4 2019/08/14 21:00:14 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -59,6 +59,7 @@ set_dc_defaults(DEPTHCODEC *dcp)
 	dcp->finp = stdin;
 	dcp->inpname = "<stdin>";
 	dcp->format = 'a';
+	dcp->swapped = 0;
 	dcp->refdepth = 1.;
 	dcp->depth_unit[0] = '1';
 	dcp->vw = stdview;
@@ -72,9 +73,15 @@ static int
 headline(char *s, void *p)
 {
 	DEPTHCODEC	*dcp = (DEPTHCODEC *)p;
+	int		rv;
 
 	if (formatval(dcp->inpfmt, s))	/* don't pass format */
 		return 0;
+
+	if ((rv = isbigendian(s)) >= 0) {
+		dcp->swapped = (nativebigendian() != rv);
+		return 0;
+	}
 					/* check for reference depth */
 	if (!strncmp(s, DEPTHSTR, LDEPTHSTR)) {
 		char	*cp;
@@ -128,9 +135,11 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 				fputformat("ascii", stdout);
 				break;
 			case 'f':
+				fputendian(stdout);
 				fputformat("float", stdout);
 				break;
 			case 'd':
+				fputendian(stdout);
 				fputformat("double", stdout);
 				break;
 			}

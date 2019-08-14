@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.2 2019/07/26 17:04:12 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.3 2019/08/14 21:00:14 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -20,6 +20,7 @@ set_nc_defaults(NORMCODEC *ncp)
 	ncp->finp = stdin;
 	ncp->inpname = "<stdin>";
 	ncp->format = 'a';
+	ncp->swapped = 0;
 	ncp->res.rt = PIXSTANDARD;
 	if (!progname) progname = "norm_codec";
 }
@@ -30,10 +31,15 @@ static int
 headline(char *s, void *p)
 {
 	NORMCODEC	*ncp = (NORMCODEC *)p;
+	int		rv;
 
 	if (formatval(ncp->inpfmt, s))	/* don't pass format */
 		return 0;
 
+	if ((rv = isbigendian(s)) >= 0) {
+		ncp->swapped = (nativebigendian() != rv);
+		return 0;
+	}
 	if (ncp->hdrflags & HF_HEADOUT)
 		fputs(s, stdout);	/* copy to standard output */
 	return 1;
@@ -65,9 +71,11 @@ process_nc_header(NORMCODEC *ncp, int ac, char *av[])
 				fputformat("ascii", stdout);
 				break;
 			case 'f':
+				fputendian(stdout);
 				fputformat("float", stdout);
 				break;
 			case 'd':
+				fputendian(stdout);
 				fputformat("double", stdout);
 				break;
 			}
