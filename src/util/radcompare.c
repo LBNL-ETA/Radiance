@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.19 2019/08/14 04:18:12 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.20 2019/08/14 18:20:02 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -99,6 +99,7 @@ char		*progname = NULL;
 const char	stdin_name[] = "<stdin>";
 const char	*f1name=NULL, *f2name=NULL;
 FILE		*f1in=NULL, *f2in=NULL;
+int		f1swap=0, f2swap=0;
 
 				/* running real differences */
 double	diff2sum = 0;
@@ -325,6 +326,14 @@ setheadvar(char *val, void *p)
 	adv_linecnt(htp);	/* side-effect is to count lines */
 	if (!isalpha(*val))	/* key must start line */
 		return(0);
+				/* check if we need to swap binary data */
+	if ((n = isbigendian(val)) >= 0) {
+		if (nativebigendian() == n)
+			return(0);
+		f1swap += (htp == &hdr1);
+		f2swap += (htp == &hdr2);
+		return(0);
+	}
 	key = val++;
 	while (*val && !isspace(*val) & (*val != '='))
 		val++;
@@ -822,6 +831,8 @@ compare_float()
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
 			goto badeof;
 		++nread;
+		if (f1swap) swap32((char *)&f1, 1);
+		if (f2swap) swap32((char *)&f2, 1);
 		if (real_check(f1, f2))
 			continue;
 		if (report != REP_QUIET)
@@ -852,6 +863,8 @@ compare_double()
 		if (!getbinary(&f2, sizeof(f2), 1, f2in))
 			goto badeof;
 		++nread;
+		if (f1swap) swap64((char *)&f1, 1);
+		if (f2swap) swap64((char *)&f2, 1);
 		if (real_check(f1, f2))
 			continue;
 		if (report != REP_QUIET)

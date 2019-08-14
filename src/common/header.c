@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.35 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.36 2019/08/14 18:20:02 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -15,6 +15,9 @@ static const char	RCSid[] = "$Id: header.c,v 2.35 2019/07/19 17:37:56 greg Exp $
  *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
  *  formatval(r,s)	copy the format value in s to r
  *  fputformat(s,fp)	write "FORMAT=%s" to fp
+ *  nativebigendian()	are we native on big-endian machine?
+ *  isbigendian(s)	header line matches "BigEndian=1" (-1 if irrelevant)
+ *  fputendian(fp)	write native endianness in BigEndian= line
  *  getheader(fp,f,p)	read header from fp, calling f(s,p) on each line
  *  globmatch(pat, str)	check for glob match of str against pat
  *  checkheader(i,p,o)	check header format from i against p and copy to o
@@ -26,6 +29,7 @@ static const char	RCSid[] = "$Id: header.c,v 2.35 2019/07/19 17:37:56 greg Exp $
 
 #include  <ctype.h>
 
+#include  "tiff.h"	/* for int32 */
 #include  "rtio.h"
 #include  "resolu.h"
 
@@ -39,6 +43,8 @@ const char  FMTSTR[] = "FORMAT=";	/* format identifier */
 
 const char  TMSTR[] = "CAPDATE=";	/* capture date identifier */
 const char  GMTSTR[] = "GMT=";		/* GMT identifier */
+
+const char  BIGEND[] = "BigEndian=";	/* big-endian variable */
 
 static gethfunc mycheck;
 
@@ -198,6 +204,51 @@ fputformat(		/* put out a format value */
 	fputs(FMTSTR, fp);
 	fputs(s, fp);
 	putc('\n', fp);
+}
+
+
+int
+nativebigendian()	/* are we native on a big-endian machine? */
+{
+	union { int32 i; char c[4]; } u;
+
+	u.i = 1;
+
+	return(u.c[0] == 0);
+}
+
+
+int
+isbigendian(		/* header line says "BigEndian=1" (-1 if irrelevant) */
+	const char *s
+)
+{
+	const char	*be = BIGEND;
+
+	while (*s & (*be != '=') && *s++ == *be)
+		++be;
+	if (*be != '=')
+		return(-1);	/* irrelevant */
+	while (isspace(*s))
+		s++;
+	if (*s++ != '=')
+		return(-1);
+	while (isspace(*s))
+		s++;
+	return(*s == '1');
+}
+
+
+void
+fputendian(		/* write native endianness in BigEndian= line */
+	FILE *fp
+)
+{
+	fputs(BIGEND, fp);
+	if (nativebigendian())
+		fputs("1\n", fp);
+	else
+		fputs("0\n", fp);
 }
 
 

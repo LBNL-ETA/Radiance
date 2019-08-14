@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.34 2019/08/12 20:38:19 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.35 2019/08/14 18:20:02 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -98,6 +98,10 @@ get_dminfo(char *s, void *p)
 		ip->ncols = atoi(s+6);
 		return(0);
 	}
+	if ((i = isbigendian(s)) >= 0) {
+		ip->swapin = (nativebigendian() != i);
+		return(0);
+	}
 	if (!formatval(fmt, s)) {
 		rmx_addinfo(ip, s);
 		return(0);
@@ -137,6 +141,8 @@ rmx_load_float(RMATRIX *rm, FILE *fp)
 	    for (j = 0; j < rm->ncols; j++) {
 		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
+		if (rm->swapin)
+		    swap32((char *)val, rm->ncomp);
 	        for (k = rm->ncomp; k--; )
 		     rmx_lval(rm,i,j,k) = val[k];
 	    }
@@ -149,9 +155,12 @@ rmx_load_double(RMATRIX *rm, FILE *fp)
 	int	i, j;
 
 	for (i = 0; i < rm->nrows; i++)
-	    for (j = 0; j < rm->ncols; j++)
+	    for (j = 0; j < rm->ncols; j++) {
 		if (getbinary(&rmx_lval(rm,i,j,0), sizeof(double), rm->ncomp, fp) != rm->ncomp)
 		    return(0);
+		if (rm->swapin)
+		    swap64((char *)&rmx_lval(rm,i,j,0), rm->ncomp);
+	    }
 	return(1);
 }
 
@@ -217,6 +226,7 @@ rmx_load(const char *inspec)
 #endif
 	dinfo.nrows = dinfo.ncols = dinfo.ncomp = 0;
 	dinfo.dtype = DTascii;			/* assumed w/o FORMAT */
+	dinfo.swapin = 0;
 	dinfo.info = NULL;
 	if (getheader(fp, get_dminfo, &dinfo) < 0) {
 		fclose(fp);
@@ -249,11 +259,13 @@ rmx_load(const char *inspec)
 		dnew->dtype = DTascii;		/* should leave double? */
 		break;
 	case DTfloat:
+		dnew->swapin = dinfo.swapin;
 		if (!rmx_load_float(dnew, fp))
 			goto loaderr;
 		dnew->dtype = DTfloat;
 		break;
 	case DTdouble:
+		dnew->swapin = dinfo.swapin;
 		if (!rmx_load_double(dnew, fp))
 			goto loaderr;
 		dnew->dtype = DTdouble;
@@ -395,6 +407,8 @@ rmx_write(const RMATRIX *rm, int dtype, FILE *fp)
 			return(0);
 		rm = mydm;
 	}
+	if ((dtype == DTfloat) | (dtype == DTdouble))
+		fputendian(fp);			/* important to record */
 	fputformat((char *)cm_fmt_id[dtype], fp);
 	fputc('\n', fp);
 	switch (dtype) {			/* write data */

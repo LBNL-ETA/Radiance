@@ -2312,3 +2312,7 @@ column vector.  Also added ability to apply trailing unary operators
 (-t, and -s or -c) to resulting matrix.
 
 Added new depth, normal, and ID file types to radcompare.
+
+Added BigEndian= header line for automatic byte-swapping in rmtxop
+and radcompare.  Doesn't work quite as automatically as it should
+for pvalue -r, currently.

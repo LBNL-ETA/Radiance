@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.36 2019/07/15 23:42:44 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.37 2019/08/14 18:20:02 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -376,6 +376,13 @@ unkopt:
 			printargs(i, argv, stdout);
 			if (expval < .99 || expval > 1.01)
 				fputexpos(expval, stdout);
+			if (swapbytes) {
+				if (nativebigendian())
+					puts("BigEndian=0");
+				else
+					puts("BigEndian=1");
+			} else if ((format != 'a') & (format != 'i'))
+				fputendian(stdout);
 			fputformat(fmtid, stdout);
 			putchar('\n');
 		}
@@ -398,6 +405,7 @@ checkhead(				/* deal with line from header */
 	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
+	int	rv;
 
 	if (formatval(fmt, line)) {
 		if (!strcmp(fmt, CIEFMT))
@@ -416,6 +424,8 @@ checkhead(				/* deal with line from header */
 				colval(exposure,GRN)/colval(ctmp,GRN),
 				colval(exposure,BLU)/colval(ctmp,BLU));
 		doexposure++;
+	} else if (reverse && (rv = isbigendian(line)) >= 0) {
+		swapbytes = (nativebigendian() != rv);
 	} else if (header)
 		fputs(line, stdout);
 	return(0);

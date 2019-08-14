@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.21 2019/08/09 23:34:39 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.22 2019/08/14 18:20:02 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -55,6 +55,9 @@ extern void	fputnow(FILE *fp);
 extern void	printargs(int ac, char **av, FILE *fp);
 extern int	formatval(char fmt[MAXFMTLEN], const char *s);
 extern void	fputformat(const char *s, FILE *fp);
+extern int	nativebigendian(void);
+extern int	isbigendian(const char *s);
+extern void	fputendian(FILE *fp);
 typedef int gethfunc(char *s, void *p); /* callback to process header lines */
 extern int	getheader(FILE *fp, gethfunc *f, void *p);
 extern int	globmatch(const char *pat, const char *str);

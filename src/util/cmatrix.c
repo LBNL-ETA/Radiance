@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.21 2019/08/12 18:28:37 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.22 2019/08/14 18:20:02 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -81,6 +81,7 @@ cm_resize(CMATRIX *cm, int nrows)
 
 typedef struct {
 	int	dtype;		/* data type */
+	int	need2swap;	/* need byte swap? */
 	int	nrows, ncols;	/* matrix size */
 	char	*err;		/* error message */
 } CMINFO;		/* header info record */
@@ -104,6 +105,10 @@ get_cminfo(char *s, void *p)
 		ip->ncols = atoi(s+6);
 		return(0);
 	}
+	if ((i = isbigendian(s)) >= 0) {
+		ip->need2swap = (nativebigendian() != i);
+		return(0);
+	}
 	if (!formatval(fmt, s))
 		return(0);
 	for (i = 1; i < DTend; i++)
@@ -114,11 +119,12 @@ get_cminfo(char *s, void *p)
 
 /* Load header to obtain/check data type and number of columns */
 char *
-cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
+cm_getheader(int *dt, int *nr, int *nc, int *swp, FILE *fp)
 {
 	CMINFO	cmi;
 						/* read header */
 	cmi.dtype = DTfromHeader;
+	cmi.need2swap = 0;
 	cmi.nrows = cmi.ncols = 0;
 	cmi.err = "unexpected EOF in header";
 	if (getheader(fp, get_cminfo, &cmi) < 0)
@@ -144,6 +150,8 @@ cm_getheader(int *dt, int *nr, int *nc, FILE *fp)
 		else if ((cmi.ncols > 0) & (*nc != cmi.ncols))
 			return("unexpected column count in header");
 	}
+	if (swp)				/* get/check swap? */
+		*swp = cmi.need2swap;
 	return(NULL);
 }
 
@@ -153,6 +161,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 {
 	const int	ROWINC = 2048;
 	FILE		*fp = stdin;
+	int		swap = 0;
 	CMATRIX		*cm;
 
 	if (!inspec)
@@ -173,7 +182,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
 	if (!dtype | !ncols) {			/* expecting header? */
-		char	*err = cm_getheader(&dtype, &nrows, &ncols, fp);
+		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, fp);
 		if (err)
 			error(USER, err);
 		if (ncols <= 0)
@@ -296,6 +305,12 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 						inspec);
 				error(WARNING, errmsg);
 		}
+	}
+	if (swap) {
+		if (dtype == DTfloat)
+			swap32((char *)cm->cmem, 3*cm->nrows*cm->ncols);
+		else if (dtype == DTdouble)
+			swap64((char *)cm->cmem, 3*cm->nrows*cm->ncols);
 	}
 	if (fp != stdin) {
 		if (inspec[0] != '!')

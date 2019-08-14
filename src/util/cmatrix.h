@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.9 2019/08/12 18:28:37 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.10 2019/08/14 18:20:02 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -42,7 +42,7 @@ extern CMATRIX	*cm_resize(CMATRIX *cm, int nrows);
 #define cm_free(cm)	free(cm)
 
 /* Load header to obtain/check data type and matrix dimensions */
-extern char	*cm_getheader(int *dt, int *nr, int *nc, FILE *fp);
+extern char	*cm_getheader(int *dt, int *nr, int *nc, int *swp, FILE *fp);
 
 /* Allocate and load a matrix from the given input (or stdin if NULL) */
 extern CMATRIX	*cm_load(const char *inspec, int nrows, int ncols, int dtype);
