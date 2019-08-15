@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.20 2019/08/14 18:20:02 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.21 2019/08/15 17:28:45 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -953,7 +953,7 @@ main(int argc, char *argv[])
 		return(2);
 	if (typ1 != typ2) {
 		if (report != REP_QUIET)
-			printf("%s: '%s' is %s and '%s' is %s\n",
+			printf("%s: '%s' format is %s and '%s' is %s\n",
 					progname, f1name, file_type[typ1],
 					f2name, file_type[typ2]);
 		return(1);
@@ -969,10 +969,17 @@ main(int argc, char *argv[])
 			printf("%s: warning - unrecognized format\n",
 					progname);
 	}
-	if (report >= REP_VERBOSE)
-		printf("%s: input file type is %s\n",
-				progname, file_type[typ1]);
-
+	if (report >= REP_VERBOSE) {
+		printf("%s: data format is %s\n", progname, file_type[typ1]);
+		if ((typ1 == TYP_FLOAT) | (typ1 == TYP_DOUBLE)) {
+			if (f1swap)
+				printf("%s: input '%s' is byte-swapped\n",
+						progname, f1name);
+			if (f2swap)
+				printf("%s: input '%s' is byte-swapped\n",
+						progname, f2name);
+		}
+	}
 	switch (typ1) {				/* compare based on type */
 	case TYP_BINARY:
 	case TYP_TMESH:
