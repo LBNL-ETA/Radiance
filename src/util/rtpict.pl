@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.11 2019/08/14 22:57:24 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.12 2019/08/16 04:32:46 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -20,9 +20,9 @@ my @boolO = ('-w', '-bv', '-dv', '-i', '-u');
 # view options and the associated number of arguments
 my %vwraysC = ('-vf',1, '-vtv',0, '-vtl',0, '-vth',0, '-vta',0, '-vts',0, '-vtc',0,
 		'-x',1, '-y',1, '-vp',3, '-vd',3, '-vu',3, '-vh',1, '-vv',1,
-		'-vo',1, '-va',1, '-vs',1, '-vl',1, '-pa',1, '-pj',1, '-pd',1);
+		'-vo',1, '-va',1, '-vs',1, '-vl',1, '-pa',1, '-pj',1);
 # options we need to silently ignore
-my %ignoreC = ('-t',1, '-ps',1, '-pt',1, '-pm',1);
+my %ignoreC = ('-t',1, '-ps',1, '-pt',1, '-pm',1, '-pd',1);
 # Starting options for rtrace (rpict values)
 my @rtraceA = split(' ', 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 ' .
 				'-aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-03');
