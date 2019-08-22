@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.6 2019/07/22 18:01:03 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.7 2019/08/22 21:54:46 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -52,7 +52,6 @@ additional
 .I \-t
 options between each output specification.
 Note that there is no space between this option and its argument.
-If no character is specified, the default (newline) is used.
 .PP
 An output is either a file or a command.
 If an output file exists, it will not be overwritten unless the
@@ -90,10 +89,7 @@ greater than zero write multiple fields per record to the same stream.
 If the terminating character is set to something other than newline ('\\n'),
 a newline is added after each record (in addition to the terminator).
 For binary output formts, no number implies one value per output.
-The terminator is not used for binary output streams.
-.PP
-These options may be interspersed with output specifications,
-indicating different data to draw from the different files.
+No terminator characters are expected or written for binary outputs.
 .PP
 If a
 .I \-on
