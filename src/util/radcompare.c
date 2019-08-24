@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: radcompare.c,v 2.21 2019/08/15 17:28:45 greg Exp $";
+static const char RCSid[] = "$Id: radcompare.c,v 2.22 2019/08/24 02:22:02 greg Exp $";
 #endif
 /*
  * Compare Radiance files for significant differences
@@ -224,12 +224,12 @@ color_check(COLOR c1, COLOR c2)
 static int
 norm_check(FVECT nv1, FVECT nv2)
 {
-	double	max2 = nv1[2]*nv1[2];
+	double	max2 = nv1[2]*nv2[2];
 	int	imax = 2;
 	int	i = 2;
 					/* identify largest component */
 	while (i--) {
-		double	tm2 = nv1[i]*nv1[i];
+		double	tm2 = nv1[i]*nv2[i];
 		if (tm2 > max2) {
 			imax = i;
 			max2 = tm2;
