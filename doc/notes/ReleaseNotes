@@ -2316,3 +2316,5 @@ Added new depth, normal, and ID file types to radcompare.
 Added BigEndian= header line for automatic byte-swapping in rmtxop
 and radcompare.  Doesn't work quite as automatically as it should
 for pvalue -r, currently.
+
+Added new "turbo" palette to falsecolor (thanks to Taoning).
