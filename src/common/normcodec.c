@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.3 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.4 2019/08/26 23:33:24 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -125,6 +125,8 @@ check_decode_normals(NORMCODEC *ncp)
 int
 decode_normal_next(FVECT nrm, NORMCODEC *ncp)
 {
+	int32	lastc;
+	FVECT	lastv;
 	int32	c = getint(4, ncp->finp);
 
 	if (c == EOF && feof(ncp->finp))
@@ -132,8 +134,15 @@ decode_normal_next(FVECT nrm, NORMCODEC *ncp)
 
 	ncp->curpos += 4;
 
-	decodedir(nrm, c);
-
+	if (c == lastc) {			/* optimization */
+		VCOPY(nrm, lastv);
+	} else {
+		decodedir(nrm, c);
+		if (c) {
+			lastc = c;
+			VCOPY(lastv, nrm);
+		}
+	}
 	return (c != 0);
 }
 
