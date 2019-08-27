@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.9 2019/05/14 17:21:50 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.10 2019/08/27 23:51:23 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -111,6 +111,9 @@ double
 dir2diff(int32 dc1, int32 dc2)	/* approx. radians^2 between directions */
 {
 	FVECT	v1, v2;
+
+	if (dc1 == dc2)
+		return 0.;
 
 	decodedir(v1, dc1);
 	decodedir(v2, dc2);
