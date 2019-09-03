@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.35 2019/08/14 18:20:02 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.36 2019/09/03 23:43:07 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -32,6 +32,7 @@ rmx_alloc(int nr, int nc, int n)
 		return(NULL);
 	dnew->nrows = nr; dnew->ncols = nc; dnew->ncomp = n;
 	dnew->dtype = DTdouble;
+	dnew->swapin = 0;
 	dnew->info = NULL;
 	return(dnew);
 }

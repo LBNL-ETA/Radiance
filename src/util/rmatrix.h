@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.10 2019/08/14 18:20:02 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.11 2019/09/03 23:43:07 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -14,9 +14,10 @@ extern "C" {
 
 /* General plane-ordered component matrix */
 typedef struct {
-	int	nrows, ncols, ncomp;
-	short	dtype;
-	short	swapin;
+	int	nrows, ncols;
+	short	ncomp;
+	uby8	dtype;
+	uby8	swapin;
 	char	*info;
 	double	mtx[1];			/* extends struct */
 } RMATRIX;
