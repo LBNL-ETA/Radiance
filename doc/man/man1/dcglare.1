@@ -1,0 +1,299 @@
+.TH DCGLARE
+.SH NAME
+dcglare - compute glare in annual simulation time-step(s) via matrix
+multiplication
+.SH SYNOPSIS
+.B dcglare
+[
+.B "\-n nsteps"
+][
+.B "\-h"
+][
+.B "\-i{f|d}
+][
+.B "\-o{f|d}
+][
+.B "\-l
+.I val
+][
+.B "\-b
+.I val
+][{
+.B "\-sf
+.I file
+|
+.B "\-ss
+.I h
+.B "\-so
+.I h
+}][
+.B "\-vu
+.I dx dy dz
+]{
+.B "\-vd
+.I dx dy dz
+|
+.B "\-vf
+.I file
+[
+.B "\-vi{f|d}
+]}
+.B DCdirect
+.B DCtotal
+[
+.B skyf
+]
+.br
+.B dcglare
+[
+.B "\-n nsteps"
+][
+.B "\-h"
+][
+.B "\-i{f|d}
+][
+.B "\-o{f|d}
+][
+.B "\-l
+.I val
+][
+.B "\-b
+.I val
+][{
+.B "\-sf
+.I file
+|
+.B "\-ss
+.I h
+.B "\-so
+.I h
+}][
+.B "\-vu
+.I dx dy dz
+]{
+.B "\-vd
+.I dx dy dz
+|
+.B "\-vf
+.I file
+[
+.B "\-vi{f|d}
+]}
+.B DCdirect
+.B Vspec
+.B Tbsdf
+.B Dmat.dat
+[
+.B skyf
+]
+.SH DESCRIPTION
+.I Dcglare
+generates daylight glare probability (DGP) predictions for multiple points in a
+space under a variety of daylit conditions. Usually, it is used to produce
+hourly DGP values for an entire year, or if the
+.I \-l
+option is provided, it calculates glare autonomy based on an annual occupancy
+schedule.
+.PP
+As input,
+.I dcglare
+requires daylight coefficient matrices relating the illuminance at each view
+point to the brightness of each sky patch. Two such matrices are required.
+The first,
+.I DCdirect
+, consists of direct views to the sky only and is calculated by
+.I rcontrib(1)
+using a single ambient bounce. The second,
+.I DCtotal
+, includes the total direct and diffuse contribution of each sky patch.
+The latter can be calculated directly by
+.I rcontrib(1)
+as in the two-phase method, or internally as in the three-phase method if given
+view, BSDF, and daylight matrices. In this respect,
+.I dcglare
+is similar to
+.I dctimestep(1)
+except that it calculates DGP instead of irradiance. 
+The final input is the sky contribution matrix, usually computed by
+.I gendaymtx(1)
+, which may be passed on the standard input.
+For efficiency, matrices stored in files can be represented as binary float data
+if machine byte-order is not an issue.
+.PP
+In the imageless method for calculating DGP, each visible sky patch acts
+as a glare source if it's brightness is above a threshold set by the
+.I \-b
+option. This option behaves similarly to the option in
+.I evalglare(1)
+as described below. 
+Imageless DGP calculation also requires that the view direction must be
+specified for each view to orient it relative to the given sky patches.
+If all views are oriented in the same direction,
+.I \-vd
+can be used to specify the view direction vector.
+Alternatively, a view file can be specified by the
+.I \-vf
+option. The format for this file is the same as the input format expected by
+.I rcontrib(1)
+, and for simplicity, the same file can be provided as input to both programs.
+The
+.I \-vif
+or
+.I \-vid
+option may be used to specify that view data is in float or double format,
+respectively.
+The up vector
+.I \-vu
+is used together with the direction vector to calculate the Guth index for each
+sky patch relative to each view.
+While each entry in the view file may have a unique view direction, a single up
+vector is used for all views. The default up vector is in the positive
+.I z
+direction.
+.PP
+Glare autonomy refers to the fraction of occupied hours in which a view is free
+of glare. When a glare limit is specified with the
+.I \-l
+option,
+.I dcglare
+will calculate the fraction of sky conditions from the sky matrix in which DGP
+is less than this limit. In this case, individual DGP values are not recorded.
+By default, all entries in the sky matrix are included in the glare autonomy
+calculation, unless limitted by the
+.I \-n
+option.
+However, you may exclude certain entries by creating an occupancy schedule.
+This is useful if the sky matrix built with
+.I gendaymtx(1)
+contains all hours of a year, but the space will only be occupied at certain
+times. You may specify an occupancy schedule file with the
+.I \-sf
+option. This file should be in comma-separated value format with the same number
+of rows as in the sky matrix. The last entry of each line is read as a numeric
+value that should be greater than zero for occupied times. Lines may be
+commented with a '#' character.
+This format is compatible with DIVA schedule files.
+Alternatively, if the sky matrix contains 24 entries per day corresponding to
+one per hour, uniform daily start and end hours for occupancy can be specified
+with the
+.I \-ss
+and
+.I \-se
+options. No adjustment is made for daylight savings time.
+.PP
+In addition to these, you may specify options from
+.I dctimestep(1)
+with the exception of
+.I \-o
+because image rendering is not supported.
+.TP 12n
+.BI -l \ val
+Set the limit for glare occurrence to
+.I val
+\&. When this option is provided, the program calculates glare autonomy,
+where any DGP value at or above the limit
+.I val
+indicates the presence of glare. If the option is not provided, the program
+calculates DGP under each sky condition in the sky matrix instead.
+.TP
+.BI -b \ val
+Set the threshold factor to
+.I val
+\&. If
+.I val
+is larger than 100, it is used as constant threshold in cd/m2. If
+.I val
+is less or equal than 100, this factor multiplied by the average luminance in
+each view will be used as threshold for detecting the glare sources (not
+recommended). The default value is 2000 (fixed threshold method).
+.TP
+.BI -vf \ file
+Get the list of views for DGP calculation from
+.I file
+\&. Each line in
+.I file
+contains six numeric values corresponding to the position and direction
+of a view. Generally, this is the same file that is used as input to
+.I rcontrib(1)
+to create the daylight coefficient matrices
+.TP
+.BI -vd " xd yd zd"
+Set the view forward vector (vertical direction) for DGP calculation to
+.I xd yd zd
+\&. This option is ignored when the
+.I \-vf
+option is provided.
+.TP
+.BI -vu " xd yd zd"
+Set the view up vector (vertical direction) for DGP calculation to
+.I xd yd zd
+\&. The default up vector is the positive
+.I z
+direction.
+.TP
+.BI -vi t
+Set the format of the view file to
+.I t
+\&. Available options are 'f' for single and 'd' for double precison IEEE float.
+The default when no value is provided is to use ASCII.
+.TP
+.BI -sf \ file
+Set the occupancy schedule file to
+.I file
+\&. In the event that the sky matrix includes unoccupied hours that should not
+contribute to the glare autonomy calculation,
+.I file
+will be read to determine which entries from the sky file matrix will be
+included in this calculation. Each line of
+.I file
+is expected to contain a numeric value at the end of a comma-delimited list,
+with zero corresponding to unoccupied.
+This argument is used only if
+.I -l
+is specified.
+.TP
+.BI -ss \ h
+Set the occupancy start hour to
+.I h
+\&. This option is provided for expediency when no occupancy schedule file is
+available. It is assumed that the sky matrix includes 24 entries per day,
+corresponding to one per hour. This argument is used only if
+.I -l
+is specified.
+.TP
+.BI -se \ h
+Set the occupancy end hour to
+.I h
+\&. This option is provided for expediency when no occupancy schedule file is
+available. It is assumed that the sky matrix includes 24 entries per day,
+corresponding to one per hour. This argument is used only if
+.I -l
+is specified.
+.SH EXAMPLES
+To generate an hourly matrix of DGP where output columns are time steps and rows
+correspond to views in the file views.vf:
+.IP "" .2i
+gendaymtx -of Tampa.wea > sky.smx
+.IP "" .2i
+rcontrib -e MF:1 -f reinhartb.cal -b rbin -bn Nrbins -m sky_mat -I+ -ab 1
+-ad 50000 -lw .00002 -lr -10 -faf scene.oct < views.vf > dc1.mtx
+.IP "" .2i
+rcontrib -e MF:1 -f reinhartb.cal -b rbin -bn Nrbins -m sky_mat -I+ -ab 8
+-ad 50000 -lw .00002 -lr -10 -faf scene.oct < views.vf > dc8.mtx
+.IP "" .2i
+dcglare -vf views.vf dc1.mtx dc8.mtx sky.smx > dgp.txt
+.PP
+To calculate glare autonomy based on a 40% DGP limit using the same matrices:
+.IP "" .2i
+dcglare -vf views.vf -sf 8to6withDST.60min.occ.csv -l .4 dc1.mtx dc8.mtx
+sky.smx > ga.txt
+.PP
+To generate an hourly matrix of DGP values from Skylight3 using a 3-phase
+calculation, where output columns are time steps:
+.IP "" .2i
+gendaymtx NYCity.wea | dcglare dc1.mtx WPpts.vmx shade3.xml Skylight3.dmx
+> wp_win3.dat
+.SH AUTHOR
+Nathaniel Jones
+.SH SEE ALSO
+dctimestep(1), gendaymtx(1), rcontrib(1), evalglare(1)

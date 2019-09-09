@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.95 2019/09/05 17:35:44 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.96 2019/09/09 17:19:51 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -22,7 +22,7 @@ LIBDIR = /usr/local/lib/ray
 PROGS = findglare glarendx rpiece rad ranimate ranimove vwright getinfo \
 		vwrays xglaresrc rsensor dctimestep rttree_reduce rcollate \
 		eplus_adduvf rfluxmtx rmtxop wrapBSDF evalglare radcompare \
-		rcode_depth rcode_norm rcode_ident
+		rcode_depth rcode_norm rcode_ident dcglare
 
 LIBFILES = rambpos.cal ambpos.cal tregsamp.dat reinhartb.cal \
 klems_full.cal klems_half.cal klems_quarter.cal disk2square.cal \
@@ -156,6 +156,10 @@ rcode_norm:	rcode_norm.o
 
 rcode_ident:	rcode_ident.o
 	$(CC) $(CFLAGS) -o rcode_ident rcode_ident.o -lrtrad
+
+dcglare:	dcglare.o cmbsdf.o cmatrix.o cmglare.o
+	$(CC) $(CFLAGS) -o dcglare dcglare.o cmbsdf.o cmatrix.o cmglare.o \
+-lrtrad $(MLIB)
 
 eplus_adduvf.o:	../common/triangulate.h ../common/rtprocess.h \
 ../common/paths.h ../common/rtio.h ../common/random.h \

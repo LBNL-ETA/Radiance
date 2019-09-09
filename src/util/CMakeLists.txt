@@ -34,6 +34,9 @@ target_link_libraries(vwrays rtrad)
 add_executable(vwright vwright.c)
 target_link_libraries(vwright rtrad)
 
+add_executable(dcglare dcglare.c cmbsdf.c cmatrix.c cmglare.c)
+target_link_libraries(dcglare rtrad)
+
 #the next few libraries all need to include header files from the rt directory
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../rt")
 
