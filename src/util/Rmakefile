@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.96 2019/09/09 17:19:51 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.97 2019/09/10 17:25:02 greg Exp $
 #
 # Radiance makefile for utility programs
 #
@@ -198,7 +198,7 @@ rfluxmtx.o:	../common/rtio.h ../common/random.h ../common/triangulate.h \
 
 rmtxop.o dctimestep.o cmatrix.o:	../common/platform.h
 
-rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
+dcglare.o rad.o ranimate.o rpiece.o xglaresrc.o:	../common/standard.h \
 ../common/rtmisc.h ../common/rtio.h \
 ../common/rtmath.h ../common/mat4.h ../common/fvect.h \
 ../common/rterror.h
@@ -287,3 +287,5 @@ rcode_norm.o:	../common/normcodec.h \
 
 rcode_ident.o:	../common/idmap.h ../common/resolu.h \
 ../common/platform.h ../common/rtio.h ../common/lookup.h
+
+dcglare.o:	../common/platform.h ../common/resolu.h cmglare.h

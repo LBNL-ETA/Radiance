@@ -30,7 +30,6 @@
 #include "platform.h"
 #include "standard.h"
 #include "cmatrix.h"
-#include "platform.h"
 #include "resolu.h"
 #include "cmglare.h"
 
