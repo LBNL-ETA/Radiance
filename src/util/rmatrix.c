@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.37 2019/09/04 00:03:05 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.38 2019/09/10 17:22:55 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -655,7 +655,7 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 		return(NULL);
 	if (msrc->info) {
 		char	buf[128];
-		sprintf(buf, "Applied %dx%d matrix transform\n",
+		sprintf(buf, "Applied %dx%d component transform\n",
 				dnew->ncomp, msrc->ncomp);
 		rmx_addinfo(dnew, msrc->info);
 		rmx_addinfo(dnew, buf);
