@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.16 2019/08/12 17:14:40 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.17 2019/09/10 17:58:20 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -121,16 +121,16 @@ If a different evaluation order is desired, pipe the result of one
 .I rmtxop
 command into another, as shown in one of the examples below.
 .PP
-The number of components in the new matrix after applying any
+The number of components in the next matrix after applying any
 .I -c
 transform must agree with the prior result.
 For concatenation (matrix multiplication), the number of columns
-in the prior result must equal the number of rows in the new matrix, and
+in the prior result must equal the number of rows in the next matrix, and
 the result will have the number of rows of the previous and the number
-of columns of the new matrix.
+of columns of the next matrix.
 In the case of addition, multiplication, and division,
 the number of rows and columns of the prior result and the
-new matrix must match, and will not be changed by the operation.
+next matrix must match, and will not be changed by the operation.
 .PP
 A final transpose or scaling/transform operation may be applied to
 the results by appending the
