@@ -1,4 +1,4 @@
-/* RCSid $Id: bsdf_m.h,v 3.9 2018/01/05 21:00:24 greg Exp $ */
+/* RCSid $Id: bsdf_m.h,v 3.10 2019/09/11 00:24:03 greg Exp $ */
 /*
  *  bsdf_m.h
  *  
@@ -44,8 +44,8 @@ typedef struct {
 #define mBSDF_outvec(v,b,ox)	(*(b)->ob_vec)(v,ox,(b)->ob_priv)
 #define mBSDF_outndx(b,v)	(*(b)->ob_ndx)(v,(b)->ob_priv)
 #define mBSDF_outohm(b,o)	(*(b)->ob_ohm)(o,(b)->ob_priv)
-#define mBSDF_value(b,i,o)	(b)->bsdf[(o)*(b)->ninc + (i)]
-#define mBSDF_chroma(b,i,o)	(b)->chroma[(o)*(b)->ninc + (i)]
+#define mBSDF_value(b,o,i)	(b)->bsdf[(o)*(b)->ninc + (i)]
+#define mBSDF_chroma(b,o,i)	(b)->chroma[(o)*(b)->ninc + (i)]
 
 /* Holder for cumulative distribution (sum of BSDF * projSA) */
 typedef struct SDMatCDst_s {

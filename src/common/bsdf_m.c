@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf_m.c,v 3.38 2018/05/10 22:55:35 greg Exp $";
+static const char RCSid[] = "$Id: bsdf_m.c,v 3.39 2019/09/11 00:24:03 greg Exp $";
 #endif
 /*
  *  bsdf_m.c
@@ -296,11 +296,11 @@ mBSDF_color(float coef[], const SDMat *dp, int i, int o)
 {
 	C_COLOR	cxy;
 
-	coef[0] = mBSDF_value(dp, i, o);
+	coef[0] = mBSDF_value(dp, o, i);
 	if (dp->chroma == NULL)
 		return 1;	/* grayscale */
 
-	c_decodeChroma(&cxy, mBSDF_chroma(dp,i,o));
+	c_decodeChroma(&cxy, mBSDF_chroma(dp,o,i));
 	c_toSharpRGB(&cxy, coef[0], coef);
 	coef[0] *= mtx_RGB_coef[0];
 	coef[1] *= mtx_RGB_coef[1];
@@ -383,7 +383,7 @@ get_extrema(SDSpectralDF *df)
 	for (i = dp->ninc; i--; ) {
 		double	hemi = .0;
 		for (o = dp->nout; o--; )
-			hemi += ohma[o] * mBSDF_value(dp, i, o);
+			hemi += ohma[o] * mBSDF_value(dp, o, i);
 		if (hemi > df->maxHemi)
 			df->maxHemi = hemi;
 	}
@@ -519,7 +519,7 @@ load_bsdf_data(SDData *sd, ezxml_t wdb, int ct, int rowinc)
 		if (rowinc) {
 			int	r = i/dp->nout;
 			int	c = i - r*dp->nout;
-			mBSDF_value(dp,r,c) = val;
+			mBSDF_value(dp,c,r) = val;
 		} else
 			dp->bsdf[i] = val;
 		sdata = sdnext;
@@ -624,8 +624,8 @@ subtract_min(C_COLOR *cs, SDMat *sm)
 				coef[c] = (coef[c] - min_coef[c]) /
 						mtx_RGB_coef[c];
 			if (c_fromSharpRGB(coef, &cxy) > 1e-5)
-				mBSDF_chroma(sm,i,o) = c_encodeChroma(&cxy);
-			mBSDF_value(sm,i,o) -= ymin;
+				mBSDF_chroma(sm,o,i) = c_encodeChroma(&cxy);
+			mBSDF_value(sm,o,i) -= ymin;
 		}
 					/* return colored minimum */
 	for (i = 3; i--; )
@@ -805,10 +805,10 @@ make_cdist(SDMatCDst *cd, const FVECT inVec, SDMat *dp, int rev)
 	cmtab[0] = .0;
 	for (o = 0; o < cd->calen; o++) {
 		if (rev)
-			cmtab[o+1] = mBSDF_value(dp, o, cd->indx) *
+			cmtab[o+1] = mBSDF_value(dp, cd->indx, o) *
 					(*dp->ib_ohm)(o, dp->ib_priv);
 		else
-			cmtab[o+1] = mBSDF_value(dp, cd->indx, o) *
+			cmtab[o+1] = mBSDF_value(dp, o, cd->indx) *
 					(*dp->ob_ohm)(o, dp->ob_priv);
 		cmtab[o+1] += cmtab[o];
 	}

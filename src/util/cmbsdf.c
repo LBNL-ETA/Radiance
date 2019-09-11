@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.6 2019/07/31 22:00:08 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.7 2019/09/11 00:24:03 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -28,7 +28,7 @@ cm_bsdf(const COLOR diffBSDF, const SDMat *bsdf)
 		nbadohm += (dom <= 0);
 
 		for (r = 0; r < cm->nrows; r++) {
-			float	f = mBSDF_value(bsdf,c,r);
+			float	f = mBSDF_value(bsdf,r,c);
 			COLORV	*mp = cm_lval(cm,r,c);
 					/* check BSDF value */
 			if ((f <= 0) | (dom <= 0)) {
@@ -36,7 +36,7 @@ cm_bsdf(const COLOR diffBSDF, const SDMat *bsdf)
 				setcolor(mp, .0f, .0f, .0f);
 			} else if (bsdf->chroma != NULL) {
 				C_COLOR	cxy;
-				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,c,r));
+				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,r,c));
 				ccy2rgb(&cxy, f, mp);
 			} else
 				setcolor(mp, f, f, f);
@@ -94,7 +94,7 @@ cm_bsdf_recip(const COLOR diffBSDF, const SDMat *bsdf)
 
 		for (r = 0; r < cm->nrows; r++) {
 			const int	ri = recip_in_from_out(bsdf,r);
-			float		f = mBSDF_value(bsdf,ri,ro);
+			float		f = mBSDF_value(bsdf,ro,ri);
 			COLORV		*mp = cm_lval(cm,r,c);
 					/* check BSDF value */
 			if ((f <= 0) | (dom <= 0)) {
@@ -102,7 +102,7 @@ cm_bsdf_recip(const COLOR diffBSDF, const SDMat *bsdf)
 				setcolor(mp, .0f, .0f, .0f);
 			} else if (bsdf->chroma != NULL) {
 				C_COLOR	cxy;
-				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,ri,ro));
+				c_decodeChroma(&cxy, mBSDF_chroma(bsdf,ro,ri));
 				ccy2rgb(&cxy, f, mp);
 			} else
 				setcolor(mp, f, f, f);
