@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.37 2019/08/14 19:52:39 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.38 2019/09/24 21:25:59 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -299,7 +299,7 @@ mycheck(			/* check a header line for format info. */
 	struct check	*scp = (struct check *)cp;
 
 	if (!formatval(scp->fs, s) && scp->fp != NULL)
-		fputs(s, scp->fp);
+		return(fputs(s, scp->fp));
 
 	return(0);
 }
