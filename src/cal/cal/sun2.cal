@@ -1,0 +1,59 @@
+{ RCSid $Id: sun2.cal,v 1.1 2019/10/17 03:53:10 greg Exp $ }
+{
+	Improved solar angle calculations based on "The Astronomical Almanac's
+	Algorithm for Approximate Solar Position (1950-2050)" by Joseph J. Michalsky,
+	published in 1988 in Solar Energy, Vol. 40, No. 3
+
+	Translated by G.Ward, October 2019
+
+	Inputs:
+		LAT =		Site latitude (degrees north of Equator)
+		LON =		Site longitude (degrees west of Greenwich)
+		SM =		Standard meridian (degrees west of Greenwich)
+		TIME =		Standard time (fractional hours 0-24)
+		DAY =		Day of the month
+		MONTH =		Month (January == 1)
+		YEAR =		Calendar year
+
+	Outputs:
+		SAZI =		Solar altitude (degrees above horizon)
+		SALT =		Solar azimuth (degrees west of south)
+}
+DEG : PI/180;
+normcir(a,c) : if(-a, normcir(a+c, c), if(c-a, a, normcir(a-c, c)));
+and(a,b) : if(a, b, a);
+mod(n,d) : n - floor(n/d)*d;
+leap(yr) : .2 - mod(yr+.1, 4);
+
+LAT = 37.8152145;		{ Defaults for San Francisco, CA }
+LON = 122.04;
+SM = 120;
+				{ Julian date }
+delta = YEAR - 1949;
+subjd = DAY + select(MONTH,0,31,59,90,120,151,181,212,243,273,304,334) +
+		if(and(MONTH-2.5,leap(YEAR)), 1, 0);
+UTIME = TIME + SM/15;
+jd = 2432916.5 + delta*365 + floor(delta/4) + subjd + UTIME/24;
+				{ Ecliptic coordinates }
+n = jd - 2451545;
+L = normcir(280.460 + 0.9856474*n, 360);
+g = normcir(357.528 + 0.9856003*n, 360);
+l = normcir(L + 1.915*sin(g*DEG) + 0.020*sin(2*DEG*g), 360);
+ep = 23.439 - 4e-7*n;
+				{ Reused values }
+sin_l = sin(l*DEG);
+sin_LAT = sin(LAT*DEG);
+cos_dec = cos(dec*DEG);
+				{ Right ascension and declination angles }
+ra = normcir(atan2(sin_l*cos(ep*DEG), cos(l*DEG))/DEG, 360);
+dec = asin(sin(ep*DEG)*sin_l) / DEG;
+				{ Greenwich mean sidereal time }
+gmst = normcir(6.697375 + 0.0657098242*n + UTIME, 24);
+lmst = normcir(gmst - LON/15, 24);
+ha = 15*(normcir(lmst - ra/15 + 12, 24) - 12);
+				{ Final solar angles }
+SALT = asin(sin(dec*DEG)*sin_LAT +
+		cos_dec*cos(LAT*DEG)*cos(ha*DEG)) / DEG;
+elc = asin(sin(dec*DEG)/sin_LAT) / DEG;
+az = asin(-cos_dec*sin(ha*DEG)/cos(SALT*DEG)) / DEG;
+SAZI = normcir(if(SALT-elc, 180-az, az), 360) - 180;
