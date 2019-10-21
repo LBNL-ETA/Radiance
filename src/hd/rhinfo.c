@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhinfo.c,v 3.14 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhinfo.c,v 3.15 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Get general information on holodeck file
@@ -52,7 +52,7 @@ gethdinfo(		/* get information on holodeck */
 	off_t	nextloc, fsiz;
 	int	n;
 					/* open holodeck file */
-	if ((fp = fopen(fname, "r")) == NULL) {
+	if ((fp = fopen(fname, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}

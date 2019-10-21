@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.80 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.81 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -458,7 +458,7 @@ creatholo(			/* create a holodeck output file */
 	int	fd;
 	FILE	*fp;
 					/* open & truncate file */
-	if ((fp = fopen(hdkfile, "w+")) == NULL) {
+	if ((fp = fopen(hdkfile, "wb+")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for writing", hdkfile);
 		error(SYSTEM, errmsg);
 	}
@@ -525,11 +525,11 @@ loadholo(void)			/* start loading a holodeck from fname */
 	off_t	nextloc;
 	
 	if ((ncprocs > 0) & (force >= 0))
-		fp = fopen(hdkfile, "r+");
+		fp = fopen(hdkfile, "rb+");
 	else
 		fp = NULL;
 	if (fp == NULL) {
-		if ((fp = fopen(hdkfile, "r")) == NULL) {
+		if ((fp = fopen(hdkfile, "rb")) == NULL) {
 			sprintf(errmsg, "cannot open \"%s\"", hdkfile);
 			error(SYSTEM, errmsg);
 		}

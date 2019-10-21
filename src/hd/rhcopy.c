@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.31 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.32 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -137,7 +137,7 @@ openholo(		/* open existing holodeck file for i/o */
 	off_t	nextloc;
 	int	n;
 					/* open holodeck file */
-	if ((fp = fopen(fname, append ? "r+" : "r")) == NULL) {
+	if ((fp = fopen(fname, append ? "rb+" : "rb")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for %s", fname,
 				append ? "appending" : "reading");
 		error(SYSTEM, errmsg);
@@ -336,7 +336,7 @@ addpicz(		/* add a picture + depth-buffer */
 	int	j;
 	int	i;
 				/* open files */
-	if ((pfp = fopen(pcf, "r")) == NULL) {
+	if ((pfp = fopen(pcf, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open picture file \"%s\"", pcf);
 		error(SYSTEM, pcf);
 	}
@@ -344,6 +344,7 @@ addpicz(		/* add a picture + depth-buffer */
 		sprintf(errmsg, "cannot open depth file \"%s\"", zbf);
 		error(SYSTEM, pcf);
 	}
+	SET_FD_BINARY(zfd);
 				/* load picture header */
 	phd.vw = stdview;
 	phd.expos = 1.0;
@@ -392,12 +393,12 @@ addpicz(		/* add a picture + depth-buffer */
 		}
 		if (eshft)				/* shift exposure */
 			shiftcolrs(cscn, i, eshft);
-		i *= sizeof(float);			/* read depth */
-		if (read(zfd, (char *)zscn, i) != i) {
+							/* read depth */
+		if (read(zfd, zscn, i*sizeof(float)) != i*sizeof(float)) {
 			sprintf(errmsg, "error reading depth file \"%s\"", zbf);
 			error(USER, errmsg);
 		}
-		for (i = scanlen(&prs); i--; ) {	/* do each pixel */
+		while (i--) {				/* process each pixel */
 			if (zscn[i] <= 0.0)
 				continue;		/* illegal depth */
 			pix2loc(vl, &prs, i, j);

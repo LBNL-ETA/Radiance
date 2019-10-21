@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrhgrid.c,v 3.9 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: genrhgrid.c,v 3.10 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Generate renderable grids from a holodeck file
@@ -59,7 +59,7 @@ gridsect(		/* get specified section(s) and print grids */
 	int32	nextloc;
 	int	n;
 					/* open holodeck file */
-	if ((fp = fopen(fname, "r")) == NULL) {
+	if ((fp = fopen(fname, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhoptimize.c,v 3.22 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhoptimize.c,v 3.23 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Optimize holodeck for quick access.
@@ -112,7 +112,7 @@ rhinitcopy(	/* open files and copy header */
 	FILE	*infp, *outfp;
 	long	ifpos;
 					/* open files for i/o */
-	if ((infp = fopen(infn, "r")) == NULL) {
+	if ((infp = fopen(infn, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for reading", infn);
 		error(SYSTEM, errmsg);
 	}
@@ -120,7 +120,7 @@ rhinitcopy(	/* open files and copy header */
 		sprintf(errmsg, "output file \"%s\" already exists!", outfn);
 		error(USER, errmsg);
 	}
-	if ((outfp = fopen(outfn, "w+")) == NULL) {
+	if ((outfp = fopen(outfn, "wb+")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for writing", outfn);
 		error(SYSTEM, errmsg);
 	}

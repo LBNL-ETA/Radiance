@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhpict.c,v 3.20 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhpict.c,v 3.21 2019/10/21 18:19:32 greg Exp $";
 #endif
 /*
  * Radiance holodeck picture generator
@@ -216,7 +216,7 @@ startpicture(		/* initialize picture for rendering & output */
 				/* prepare output */
 	if (outspec != NULL) {
 		sprintf(fname, outspec, fn);
-		if (freopen(fname, "w", stdout) == NULL) {
+		if (freopen(fname, "wb", stdout) == NULL) {
 			sprintf(errmsg, "cannot open output \"%s\"", fname);
 			error(SYSTEM, errmsg);
 		}
@@ -287,7 +287,7 @@ initialize(void)			/* initialize holodeck and buffers */
 	int	n;
 	off_t	nextloc;
 					/* open holodeck file */
-	if ((fp = fopen(hdkfile, "r")) == NULL) {
+	if ((fp = fopen(hdkfile, "rb")) == NULL) {
 		sprintf(errmsg, "cannot open \"%s\" for reading", hdkfile);
 		error(SYSTEM, errmsg);
 	}
