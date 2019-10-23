@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.22 2019/08/14 18:20:02 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.23 2019/10/23 17:00:14 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -155,6 +155,32 @@ cm_getheader(int *dt, int *nr, int *nc, int *swp, FILE *fp)
 	return(NULL);
 }
 
+/* Allocate and load image data into matrix */
+static CMATRIX *
+cm_load_rgbe(FILE *fp, int nrows, int ncols)
+{
+	CMATRIX	*cm;
+	COLORV	*mp;
+						/* header already loaded */
+	if ((nrows <= 0) | (ncols <= 0) && !fscnresolu(&ncols, &nrows, fp)) {
+		error(USER, "bad picture resolution string");
+		return(NULL);
+	}
+	cm = cm_alloc(nrows, ncols);
+	if (!cm)
+		return(NULL);
+	mp = cm->cmem;
+	while (nrows--) {
+		if (freadscan((COLOR *)mp, ncols, fp) < 0) {
+			error(USER, "error reading color picture as matrix");
+			cm_free(cm);
+			return(NULL);
+		}
+		mp += 3*ncols;
+	}					/* caller closes stream */
+	return(cm);
+}
+
 /* Allocate and load a matrix from the given input (or stdin if NULL) */
 CMATRIX *
 cm_load(const char *inspec, int nrows, int ncols, int dtype)
@@ -193,6 +219,10 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	case DTfloat:
 	case DTdouble:
 		break;
+	case DTrgbe:
+	case DTxyze:
+		cm = cm_load_rgbe(fp, nrows, ncols);
+		goto cleanup;
 	default:
 		error(USER, "unexpected data type in cm_load()");
 	}
@@ -312,6 +342,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		else if (dtype == DTdouble)
 			swap64((char *)cm->cmem, 3*cm->nrows*cm->ncols);
 	}
+cleanup:
 	if (fp != stdin) {
 		if (inspec[0] != '!')
 			fclose(fp);
@@ -328,6 +359,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 EOFerror:
 	sprintf(errmsg, "unexpected EOF reading %s", inspec);
 	error(USER, errmsg);
+	return(NULL);
 not_handled:
 	error(INTERNAL, "unhandled data size or length in cm_load()");
 	return(NULL);	/* gratis return */

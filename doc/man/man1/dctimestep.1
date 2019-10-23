@@ -1,4 +1,4 @@
-.\" RCSid $Id: dctimestep.1,v 1.15 2019/03/01 01:00:03 greg Exp $"
+.\" RCSid $Id: dctimestep.1,v 1.16 2019/10/23 17:00:14 greg Exp $"
 .TH DCTIMESTEP 1 12/09/09 RADIANCE
 .SH NAME
 dctimestep - compute annual simulation time-step(s) via matrix multiplication
@@ -13,7 +13,7 @@ dctimestep - compute annual simulation time-step(s) via matrix multiplication
 ][
 .B "\-i{f|d}
 ][
-.B "\-o{f|d}
+.B "\-o{f|d|c}
 ]
 .B DCspec
 [
@@ -127,10 +127,11 @@ A header will normally be produced on the output, unless the
 .I \-h
 option is specified.
 The
-.I \-of
+.I \-of,
+.I \-od,
 or
-.I \-od
-option may be used to specify IEEE float or double binary output
+.I \-oc
+option may be used to specify IEEE float, double, or RGBE (picture) output
 data, respectively.
 .SH EXAMPLES
 To compute workplane illuminances at 3:30pm on Feb 10th:

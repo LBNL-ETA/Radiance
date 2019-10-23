@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.42 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.43 2019/10/23 17:00:14 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -186,6 +186,9 @@ main(int argc, char *argv[])
 				break;
 			case 'a':
 				outfmt = DTascii;
+				break;
+			case 'c':
+				outfmt = DTrgbe;
 				break;
 			default:
 				goto userr;

@@ -2321,4 +2321,7 @@ Added new "turbo" palette to falsecolor (thanks to Taoning).
 
 Nathaniel Jones created the "dcglare" program for annual glare
 simulations when the sun and sky are visible through the window.
-Tutorial is posted at "https://github.com/nljones/Accelerad/wiki/The-Imageless-Method-for-Spatial-and-Annual-Glare-Analysis".
+Tutorial is posted at
+"https://github.com/nljones/Accelerad/wiki/The-Imageless-Method-for-Spatial-and-Annual-Glare-Analysis".
+
+Added support for loading RGBE images into matrices in dctimestep.
