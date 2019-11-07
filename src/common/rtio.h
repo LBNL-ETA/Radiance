@@ -1,4 +1,4 @@
-/* RCSid $Id: rtio.h,v 3.22 2019/08/14 18:20:02 greg Exp $ */
+/* RCSid $Id: rtio.h,v 3.23 2019/11/07 23:20:28 greg Exp $ */
 /*
  *	Radiance i/o and string routines
  */
@@ -62,6 +62,8 @@ typedef int gethfunc(char *s, void *p); /* callback to process header lines */
 extern int	getheader(FILE *fp, gethfunc *f, void *p);
 extern int	globmatch(const char *pat, const char *str);
 extern int	checkheader(FILE *fin, char fmt[MAXFMTLEN], FILE *fout);
+					/* defined in fltdepth.c */
+extern int	open_float_depth(const char *fname, long expected_length);
 					/* defined in badarg.c */
 extern int	badarg(int ac, char **av, char *fl);
 					/* defined in expandarg.c */

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.4 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.5 2019/11/07 23:20:28 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: depthcodec.c,v 2.4 2019/08/14 21:00:14 greg Ex
 #include "copyright.h"
 
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include <ctype.h>
 #include "rtio.h"
@@ -42,11 +41,11 @@ code2depth(int c, double dref)
 
 	if (c >= 32767)
 		return FHUGE;
-		
-	if (c < 0)
-		return dref*(32767.5 + c)*(1./32767.);
-	
-	return dref*32768./(32766.5 - c);
+
+	if (c >= 0)
+		return dref*32768./(32766.5 - c);
+
+	return dref*(32767.5 + c)*(1./32767.);
 }
 #endif
 
@@ -59,7 +58,6 @@ set_dc_defaults(DEPTHCODEC *dcp)
 	dcp->finp = stdin;
 	dcp->inpname = "<stdin>";
 	dcp->format = 'a';
-	dcp->swapped = 0;
 	dcp->refdepth = 1.;
 	dcp->depth_unit[0] = '1';
 	dcp->vw = stdview;
@@ -224,11 +222,18 @@ check_decode_worldpos(DEPTHCODEC *dcp)
 double
 decode_depth_next(DEPTHCODEC *dcp)
 {
-	int	c = getint(2, dcp->finp);
+	int	c;
+
+	if (dcp->use_last) {
+		dcp->use_last = 0;
+		return code2depth(dcp->last_dc, dcp->refdepth);
+	}
+	c = getint(2, dcp->finp);
 
 	if (c == EOF && feof(dcp->finp))
 		return -1.;
 
+	dcp->last_dc = c;
 	dcp->curpos += 2;
 
 	return code2depth(c, dcp->refdepth);
@@ -296,6 +301,10 @@ seek_dc_pix(DEPTHCODEC *dcp, int x, int y)
 	}
 	seekpos = dcp->dstart + 2*((long)y*scanlen(&dcp->res) + x);
 
+	if (seekpos == dcp->curpos-2) {
+		dcp->use_last++;	/* avoids seek/read */
+		return 1;
+	}
 	if (seekpos != dcp->curpos &&
 			fseek(dcp->finp, seekpos, SEEK_SET) == EOF) {
 		if (dcp->hdrflags & HF_STDERR) {

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.47 2018/08/02 18:33:45 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.48 2019/11/07 23:20:28 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -497,7 +497,7 @@ addpicture(		/* add picture to output */
 	zin = (float *)malloc(scanlen(&tresolu)*sizeof(float));
 	if (zin == NULL)
 		syserror(progname);
-	if ((zfd = open(zspec, O_RDONLY)) == -1) {
+	if ((zfd = open_float_depth(zspec, (long)tresolu.xr*tresolu.yr)) < 0) {
 		double	zvalue;
 		int	x;
 		if (!isflt(zspec) || (zvalue = atof(zspec)) <= 0.0)

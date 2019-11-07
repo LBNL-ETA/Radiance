@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.6 2018/08/02 18:33:45 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.7 2019/11/07 23:20:29 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -132,7 +132,7 @@ loadprev(int fno)
 			goto readerr;
 	fclose(fp);
 	sprintf(fname, zbfspec, fno);	/* load depth buffer */
-	if ((fd = open(fname, O_RDONLY)) < 0) {
+	if ((fd = open_float_depth(fname, (long)rs.xr*rs.yr)) < 0) {
 		sprintf(errmsg, "cannot open depth buffer \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}

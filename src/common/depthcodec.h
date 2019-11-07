@@ -1,8 +1,8 @@
-/* RCSid $Id: depthcodec.h,v 2.4 2019/08/14 21:00:14 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.5 2019/11/07 23:20:28 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
- *  Include after stdio.h and fvect.h
+ *  Include after rtio.h and fvect.h
  *  Includes view.h
  */
 
@@ -33,14 +33,16 @@ typedef struct {
 	const char	*inpname;		/* input name */
 	short		format;			/* decoded format */
 	short		swapped;		/* byte-swapped input */
+	short		last_dc;		/* last depth-code read */
+	short		use_last;		/* use last depth-code next */
 	long		dstart;			/* start of data */
 	long		curpos;			/* current input position */
 	double		refdepth;		/* reference depth */
 	char		depth_unit[32];		/* string including units */
-	int		hdrflags;		/* header i/o flags */
+	short		hdrflags;		/* header i/o flags */
 	char		inpfmt[MAXFMTLEN];	/* format from header */
+	short		gotview;		/* got input view? */
 	VIEW		vw;			/* input view parameters */
-	int		gotview;		/* got input view? */
 	RESOLU		res;			/* input resolution */
 } DEPTHCODEC;
 

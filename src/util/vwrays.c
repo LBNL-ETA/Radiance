@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: vwrays.c,v 3.19 2019/03/04 22:41:20 greg Exp $";
+static const char	RCSid[] = "$Id: vwrays.c,v 3.20 2019/11/07 23:20:29 greg Exp $";
 #endif
 /*
  * Compute rays corresponding to a given picture or view.
@@ -134,13 +134,9 @@ main(
 			exit(1);
 		}
 		if (i+1 < argc) {
-			zfd = open(argv[i+1], O_RDONLY);
-			if (zfd < 0) {
-				fprintf(stderr,
-					"%s: cannot open depth buffer\n",
-						argv[i+1]);
+			zfd = open_float_depth(argv[i+1], (long)rs.xr*rs.yr);
+			if (zfd < 0)
 				exit(1);
-			}
 		}
 	}
 	if ((err = setview(&vw)) != NULL) {

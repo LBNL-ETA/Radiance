@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normcodec.c,v 2.4 2019/08/26 23:33:24 greg Exp $";
+static const char RCSid[] = "$Id: normcodec.c,v 2.5 2019/11/07 23:20:28 greg Exp $";
 #endif
 /*
  * Routines to encode/decode 32-bit normals
@@ -20,7 +20,6 @@ set_nc_defaults(NORMCODEC *ncp)
 	ncp->finp = stdin;
 	ncp->inpname = "<stdin>";
 	ncp->format = 'a';
-	ncp->swapped = 0;
 	ncp->res.rt = PIXSTANDARD;
 	if (!progname) progname = "norm_codec";
 }
@@ -125,9 +124,9 @@ check_decode_normals(NORMCODEC *ncp)
 int
 decode_normal_next(FVECT nrm, NORMCODEC *ncp)
 {
-	int32	lastc;
-	FVECT	lastv;
-	int32	c = getint(4, ncp->finp);
+	static int32	lastc;
+	static FVECT	lastv;
+	int32		c = getint(4, ncp->finp);
 
 	if (c == EOF && feof(ncp->finp))
 		return -1;

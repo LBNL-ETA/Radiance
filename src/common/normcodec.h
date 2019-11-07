@@ -1,8 +1,8 @@
-/* RCSid $Id: normcodec.h,v 2.3 2019/08/14 21:00:14 greg Exp $ */
+/* RCSid $Id: normcodec.h,v 2.4 2019/11/07 23:20:28 greg Exp $ */
 /*
  * Definitions and declarations for 32-bit vector normal encode/decode
  *
- *  Include after stdio.h and fvect.h
+ *  Include after rtio.h and fvect.h
  *  Includes resolu.h
  */
 
@@ -33,7 +33,7 @@ typedef struct {
 	short		swapped;		/* byte-swapped input */
 	long		dstart;			/* start of data */
 	long		curpos;			/* current input position */
-	int		hdrflags;		/* header i/o flags */
+	short		hdrflags;		/* header i/o flags */
 	char		inpfmt[MAXFMTLEN];	/* format from header */
 	RESOLU		res;			/* input resolution */
 } NORMCODEC;

@@ -36,6 +36,7 @@ set(rtrad_SOURCES
   fgetval.c
   fgetword.c
   fixargv0.c
+  fltdepth.c
   font.c
   fputword.c
   free_os.c
