@@ -1,3 +1,6 @@
+#ifndef lint
+static const char RCSid[] = "$Id: fltdepth.c,v 3.2 2019/11/07 23:33:45 greg Exp $";
+#endif
 /*
  * Function to open floating-point depth file, making sure it's
  * the correct length, and converting from encoded 16-bit
