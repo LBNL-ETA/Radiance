@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhcopy.c,v 3.32 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: rhcopy.c,v 3.33 2019/11/07 23:17:58 greg Exp $";
 #endif
 /*
  * Copy data into a holodeck file
@@ -94,6 +94,7 @@ userr:
 #define H_BADF	01
 #define H_OBST	02
 #define H_OBSF	04
+#define H_SWAP	010
 
 static int
 holheadline(		/* check holodeck header line */
@@ -101,6 +102,7 @@ holheadline(		/* check holodeck header line */
 	void	*vhf
 )
 {
+	int	be;
 	char	fmt[MAXFMTLEN];
 	int	*hf = vhf;
 
@@ -121,6 +123,10 @@ holheadline(		/* check holodeck header line */
 		else
 			error(WARNING, "bad OBSTRUCTIONS value in holodeck");
 		return(0);
+	}
+	if ((be = isbigendian(s)) >= 0) {
+		if (be != nativebigendian())
+			*hf |= H_SWAP;
 	}
 	return(0);
 }
@@ -144,8 +150,8 @@ openholo(		/* open existing holodeck file for i/o */
 	}
 					/* check header and magic number */
 	if (getheader(fp, holheadline, &hflags) < 0 ||
-			hflags&H_BADF || getw(fp) != HOLOMAGIC) {
-		sprintf(errmsg, "file \"%s\" not in holodeck format", fname);
+			hflags&(H_BADF|H_SWAP) || getw(fp) != HOLOMAGIC) {
+		sprintf(errmsg, "holodeck \"%s\" not in expected format", fname);
 		error(USER, errmsg);
 	}
 	fd = dup(fileno(fp));			/* dup file handle */

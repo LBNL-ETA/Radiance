@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo.c,v 3.81 2019/10/21 18:19:32 greg Exp $";
+static const char	RCSid[] = "$Id: rholo.c,v 3.82 2019/11/07 23:17:58 greg Exp $";
 #endif
 /*
  * Radiance holodeck generation controller
@@ -466,6 +466,7 @@ creatholo(			/* create a holodeck output file */
 	newheader("RADIANCE", fp);
 	fprintf(fp, "SOFTWARE= %s\n", VersionID);
 	printvars(fp);
+	fputendian(fp);
 	fputformat(HOLOFMT, fp);
 	fputc('\n', fp);
 	putw(HOLOMAGIC, fp);		/* put magic number */
