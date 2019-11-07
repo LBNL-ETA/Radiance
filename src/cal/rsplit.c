@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.10 2019/08/14 21:00:14 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.11 2019/11/07 23:13:12 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -64,14 +64,20 @@ headline(char *s, void *p)
 static int
 scanOK(int termc)
 {
+	int	skip_white = (termc == ' ');
 	char	*cp = buf;
 	int	c;
 
 	while ((c = getchar()) != EOF) {
+		if (skip_white && isspace(c))
+			continue;
+		skip_white = 0;
+		if (c == '\n' && isspace(termc))
+			c = termc;	/* forgiving assumption */
 		*cp++ = c;
 		if (cp-buf >= sizeof(buf))
 			break;
-		if (c == termc) {
+		if ((termc == ' ') ? isspace(c) : (c == termc)) {
 			*cp = '\0';
 			return(cp-buf);
 		}

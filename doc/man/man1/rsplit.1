@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.7 2019/08/22 21:54:46 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.8 2019/11/07 23:13:12 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -47,11 +47,16 @@ newline character (i.e., input is distributed by lines),
 but the terminator can be changed using the
 .I \-t
 option.
+If a space is specified as the terminator, then fields are separated by
+any number of white spaces, including tabs, returns, and newlines.
 Different terminators may be given for different fields by specifying
 additional
 .I \-t
 options between each output specification.
-Note that there is no space between this option and its argument.
+Note that there is no space between this option and its argument, and
+certain arguments, such as a space or a tab, must be quoted or escaped
+with a backslash in most shells.
+If no argument is given, the default newline terminator is re-established.
 .PP
 An output is either a file or a command.
 If an output file exists, it will not be overwritten unless the
