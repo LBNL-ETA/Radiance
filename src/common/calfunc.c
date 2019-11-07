@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calfunc.c,v 2.24 2019/07/24 21:20:28 greg Exp $";
+static const char	RCSid[] = "$Id: calfunc.c,v 2.25 2019/11/07 23:19:54 greg Exp $";
 #endif
 /*
  *  calfunc.c - routines for calcomp using functions.
@@ -150,6 +150,8 @@ funset(				/* set a library function */
 	if (cp == fname) return;
     }
     if ((lp = liblookup(fname)) == NULL) {	/* insert */
+	if (fptr == NULL)
+		return;				/* nothing! */
 	if (libsize >= MAXLIB) {
 	    eputs("Too many library functons!\n");
 	    quit(1);
