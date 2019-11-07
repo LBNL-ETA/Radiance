@@ -1,4 +1,4 @@
-.\" RCSid "$Id: gensky.1,v 1.6 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: gensky.1,v 1.7 2019/11/07 23:16:17 greg Exp $"
 .TH GENSKY 1 4/24/98 RADIANCE
 .SH NAME
 gensky - generate a RADIANCE description of the sky
@@ -104,6 +104,11 @@ watts/steradian/meter2.
 .I Gensky
 supports the following options.
 .TP 10n
+.BR \-y \ year
+If the year is specified, a more accurate solar position algorithm
+[Michalsky 1988] will be used in place of the formula in the IES
+Lighting Handbook.
+.TP
 .BR \-s
 Sunny sky without sun.
 The sky distribution will correspond to a standard CIE clear day.
