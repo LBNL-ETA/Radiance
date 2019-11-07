@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: strlcpy.c,v 2.2 2018/05/04 21:22:44 greg Exp $";
+static const char	RCSid[] = "$Id: strlcpy.c,v 2.3 2019/11/07 23:19:12 greg Exp $";
 #endif
 /*
  * String copy routines similar to strncpy
@@ -17,6 +17,8 @@ strlcpy(char *dst, const char *src, size_t siz)
 		if (!(*dst++ = *src++))
 			return(siz-1-n);
 	*dst = '\0';
+	while (*src++)
+		++siz;
 	return(siz-1);
 }
 
@@ -28,6 +30,6 @@ strlcat(char *dst, const char *src, size_t siz)
 	while (*dst && --n > 0)
 		++dst;
 	if (n <= 0)
-		return(siz);
+		return(siz+strlen(src));
 	return(siz-n + strlcpy(dst, src, n));
 }
