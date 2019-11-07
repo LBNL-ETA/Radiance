@@ -1,4 +1,4 @@
-{ RCSid $Id: sun.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
+{ RCSid $Id: sun.cal,v 1.3 2019/11/07 23:15:06 greg Exp $ }
 {*
  *           SOLAR CALCULATIONS
  *
@@ -26,7 +26,7 @@ stadj(jd)		{* solar time adjustment (hours) *}
 sdec(jd)		{* solar declination angle (radians) *}
 { jd is days into year }
 =
-  0.4093 * sin( 2*PI/368 * (jd - 81) )
+  0.4093 * sin( 2*PI/365 * (jd - 81) )
 ;
 
 

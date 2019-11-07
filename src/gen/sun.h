@@ -1,4 +1,4 @@
-/* RCSid $Id: sun.h,v 2.2 2014/07/30 17:30:27 greg Exp $ */
+/* RCSid $Id: sun.h,v 2.3 2019/11/07 23:15:07 greg Exp $ */
 /*
  * Header file for solar position calculations
  */
@@ -19,6 +19,9 @@ extern double stadj(int  jd);
 extern double sdec(int  jd);
 extern double salt(double sd, double st);
 extern double sazi(double sd, double st);
+
+extern double mjdate(int year, int month, int day, double hour);
+extern double msdec(double mjd, double *stp);
 
 #ifdef __cplusplus
 }

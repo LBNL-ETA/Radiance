@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.29 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.30 2019/11/07 23:15:07 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -85,12 +85,11 @@ static const char RCSid[] = "$Id: gendaymtx.c,v 2.29 2019/08/14 21:00:14 greg Ex
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "platform.h"
 #include "rtmath.h"
 #include "rtio.h"
-#include "resolu.h"
-#include "platform.h"
 #include "color.h"
-#include "resolu.h"
+#include "sun.h"
 
 char *progname;								/* Program name */
 char errmsg[128];							/* Error message buffer */
@@ -254,16 +253,6 @@ static const ModelCoeff DirectLumEff[8] =
 #ifndef NSUNPATCH
 #define	NSUNPATCH	4		/* max. # patches to spread sun into */
 #endif
-
-extern int jdate(int month, int day);
-extern double stadj(int  jd);
-extern double sdec(int  jd);
-extern double salt(double sd, double st);
-extern double sazi(double sd, double st);
-					/* sun calculation constants */
-extern double  s_latitude;
-extern double  s_longitude;
-extern double  s_meridian;
 
 int		nsuns = NSUNPATCH;	/* number of sun patches to use */
 double		fixed_sun_sa = -1;	/* fixed solid angle per sun? */

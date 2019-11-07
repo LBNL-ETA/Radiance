@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: gensky.c,v 2.26 2014/07/30 17:30:27 greg Exp $";
+static const char	RCSid[] = "$Id: gensky.c,v 2.27 2019/11/07 23:15:07 greg Exp $";
 #endif
 /*
  *  gensky.c - program to generate sky functions.
@@ -59,6 +59,7 @@ struct {
 	{"", 0}
 };
 					/* required values */
+int  year = 0;					/* year (optional) */
 int  month, day;				/* date */
 double  hour;					/* time */
 int  tsolar;					/* 0=standard, 1=solar */
@@ -125,6 +126,9 @@ main(
 				skytype = S_CLEAR;
 				dosun = argv[i][0] == '+';
 				break;
+			case 'y':
+				year = atoi(argv[++i]);
+				break;
 			case 'r':
 			case 'R':
 				u_solar = argv[i][1]=='R' ? -1 : 1;
@@ -171,6 +175,10 @@ main(
 		else
 			userror("bad option");
 
+	if (year && (year < 1950) | (year > 2050))
+		fprintf(stderr,
+			"%s: warning - year should be in range 1950-2050\n",
+			progname);
 	if (month && !tsolar && fabs(s_meridian-s_longitude) > 45*PI/180)
 		fprintf(stderr,
 	"%s: warning - %.1f hours btwn. standard meridian and longitude\n",
@@ -191,15 +199,20 @@ computesky(void)			/* compute sky parameters */
 	double	normfactor;
 					/* compute solar direction */
 	if (month) {			/* from date and time */
-		int  jd;
-		double  sd, st;
+		double  sd, st = hour;
 
-		jd = jdate(month, day);		/* Julian date */
-		sd = sdec(jd);			/* solar declination */
-		if (tsolar)			/* solar time */
-			st = hour;
-		else
-			st = hour + stadj(jd);
+		if (year) {			/* Michalsky algorithm? */
+			double  mjd = mjdate(year, month, day, hour);
+			if (tsolar)
+				sd = msdec(mjd, NULL);
+			else
+				sd = msdec(mjd, &st);
+		} else {
+			int  jd = jdate(month, day);	/* Julian date */
+			sd = sdec(jd);			/* solar declination */
+			if (!tsolar)			/* get solar time? */
+				st = hour + stadj(jd);
+		}
 		altitude = salt(sd, st);
 		azimuth = sazi(sd, st);
 		printf("# Local solar time: %.2f\n", st);

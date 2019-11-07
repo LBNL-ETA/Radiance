@@ -21,7 +21,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.17 2018/08/31 16:01:45 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.18 2019/11/07 23:15:06 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -104,8 +104,6 @@ double 	air_mass();
 
 double  solar_sunset(int month, int day);
 double  solar_sunrise(int month, int day);
-double  stadj();
-int     jdate(int month, int day);
 
 const double	AU = 149597890E3;
 const double 	solar_constant_e = 1367;    /* solar constant W/m^2 */
@@ -122,6 +120,7 @@ const double	skybrigsup = 0.6;
 
 
 /* required values */
+int  year = 0;					/* year (optional) */
 int  	month, day;				/* date */
 double  hour;					/* time */
 int  	tsolar;					/* 0=standard, 1=solar */
@@ -203,6 +202,9 @@ int main(int argc, char** argv)
 			case 's':
 				cloudy = 0;
 				dosun = argv[i][0] == '+';
+				break;
+			case 'y':
+				year = atoi(argv[++i]);
 				break;
 			case 'R':
 				u_solar = argv[i][1] == 'R' ? -1 : 1;
@@ -347,17 +349,22 @@ void computesky()
 	/* compute solar direction */
 		
 	if (month) {			/* from date and time */
-		int  jd;
 		double  sd;
 
-		jd = jdate(month, day);		/* Julian date */
-		sd = sdec(jd);			/* solar declination */
-		if (tsolar)			/* solar time */
-			st = hour;
-		else
-			st = hour + stadj(jd);
-		
-					
+		st = hour;
+		if (year) {			/* Michalsky algorithm? */
+			double  mjd = mjdate(year, month, day, hour);
+			if (tsolar)
+				sd = msdec(mjd, NULL);
+			else
+				sd = msdec(mjd, &st);
+		} else {
+			int  jd = jdate(month, day);	/* Julian date */
+			sd = sdec(jd);			/* solar declination */
+			if (!tsolar)			/* get solar time? */
+				st = hour + stadj(jd);
+		}
+							
 		if(timeinterval) {
 			
 			if(timeinterval<0) {
