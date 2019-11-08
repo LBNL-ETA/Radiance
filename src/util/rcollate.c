@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.33 2019/11/08 16:36:36 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.34 2019/11/08 22:12:33 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -387,9 +387,9 @@ get_input_pos(int r, int c)
 	if (outLevels > 1) {		/* block reordering */
 		n = get_block_pos(r, c, outArray, outLevels);
 		if (transpose) {
-			r = n/no_columns;
-			c = n - r*no_columns;
-			n = (long)r*ni_columns + c;
+			r = n/ni_rows;
+			c = n - r*ni_rows;
+			n = (long)c*ni_columns + r;
 		}
 	} else if (transpose)		/* transpose only */
 		n = (long)c*ni_columns + r;
@@ -439,7 +439,8 @@ do_reorder(const MEMLOAD *mp)
 			no_columns = ni_rows;
 		if (no_rows <= 0)
 			no_rows = ni_columns;
-		if ((no_rows != ni_columns) | (no_columns != ni_rows))
+		if (outLevels <= 1 &&
+				(no_rows != ni_columns) | (no_columns != ni_rows))
 			goto badspec;
 	} else {
 		if (no_columns <= 0)
