@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.32 2019/11/08 05:39:05 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.33 2019/11/08 16:36:36 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -421,8 +421,8 @@ do_reorder(const MEMLOAD *mp)
 	} else if ((ni_rows > 0) & (ni_columns > 0)) {
 		nrecords = ni_rows*ni_columns;
 		if (nrecords > mp->len/(n_comp*comp_size)) {
-			fprintf(stderr,
-			    "Input too small for specified size and type\n");
+			fputs("Input too small for specified size and type\n",
+					stderr);
 			return(0);
 		}
 	} else
@@ -441,11 +441,25 @@ do_reorder(const MEMLOAD *mp)
 			no_rows = ni_columns;
 		if ((no_rows != ni_columns) | (no_columns != ni_rows))
 			goto badspec;
+	} else {
+		if (no_columns <= 0)
+			no_columns = ni_columns;
+		if (no_rows <= 0)
+			no_rows = ni_rows;
+	}
+	if (ni_rows*ni_columns != no_rows*no_columns) {
+		fputs("Number of input and output records do not match\n",
+				stderr);
+		return(0);
 	}
 						/* reorder records */
 	for (i = 0; i < no_rows; i++) {
 	    for (j = 0; j < no_columns; j++) {
 		long	n = get_input_pos(i, j);
+		if (n >= nrecords) {
+			fputs("Index past end-of-file\n", stderr);
+			return(0);
+		}
 		if (rp != NULL) {		/* ASCII output */
 			print_record(rp, n);
 			putc(tabEOL[j >= no_columns-1], stdout);
