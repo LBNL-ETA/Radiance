@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.10 2019/11/08 05:39:05 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.11 2019/11/08 22:19:23 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -124,7 +124,8 @@ can map the file directly into virtual memory.
 If the
 .I \-o
 option is also given with multiple block levels, the transpose operation
-will logically precede the reblocking operation.
+will logically precede the reblocking operation, regardless of the order
+they are given on the command line.
 .SH EXAMPLES
 To change put 8760 color triplets per row in a matrix with no header:
 .IP "" .2i
