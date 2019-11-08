@@ -2333,3 +2333,5 @@ Changed rsplit so specifying a space as the separator parses words
 between whitespace.
 
 Added ability of vwrays, pinterp, and pmblur2 to read encoded depth files.
+
+Added -o RxCxR1xC1 facility to perform blocking in rcollate.

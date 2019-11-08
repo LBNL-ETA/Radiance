@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.30 2019/02/05 17:13:00 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.31 2019/11/08 02:10:38 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
@@ -20,6 +20,8 @@ static const char RCSid[] = "$Id: rcollate.c,v 2.30 2019/02/05 17:13:00 greg Exp
   #include <sys/mman.h>
 #endif
 
+#define MAXLEVELS	16	/* max RxC.. block pairs */
+
 typedef struct {
 	void	*mapped;	/* memory-mapped pointer */
 	void	*base;		/* pointer to base memory */
@@ -28,7 +30,7 @@ typedef struct {
 
 typedef struct {
 	int	nw_rec;		/* number of words per record */
-	int	nrecs;		/* number of records we found */
+	long	nrecs;		/* number of records we found */
 	char	*rec[1];	/* record array (extends struct) */
 } RECINDEX;
 
@@ -217,7 +219,7 @@ count_columns(const RECINDEX *rp)
 
 /* copy nth record from index to stdout */
 static int
-print_record(const RECINDEX *rp, int n)
+print_record(const RECINDEX *rp, long n)
 {
 	int	words2go = rp->nw_rec;
 	char	*scp;
@@ -290,6 +292,43 @@ int		no_rows = 0;			/* number of output rows */
 int		transpose = 0;			/* transpose rows & cols? */
 int		i_header = 1;			/* input header? */
 int		o_header = 1;			/* output header? */
+int		outArray[MAXLEVELS][2];		/* output block nesting */
+int		outLevels = 0;			/* number of blocking levels */
+
+/* parse RxCx... string */
+static int
+get_array(const char *spec, int blklvl[][2], int nlvls)
+{
+	int	n;
+
+	if (nlvls <= 0) {
+		fputs("Too many block levels!\n", stderr);
+		exit(1);
+	}
+	if (sscanf(spec, "%dx%d", &blklvl[0][0], &blklvl[0][1]) != 2) {
+		fputs("Bad block specification!\n", stderr);
+		exit(1);
+	}
+	while (isdigit(*spec))
+		spec++;
+	spec++;		/* 'x' */
+	while (isdigit(*spec))
+		spec++;
+	if ((*spec != 'x') & (*spec != 'X')) {
+		if (*spec) {
+			fputs("Blocks must be separated by 'x' or 'X'\n", stderr);
+			exit(1);
+		}
+		return(1);
+	}
+	spec++;
+	n = get_array(spec, blklvl+1, nlvls-1);
+	if (!n)
+		return(0);
+	blklvl[0][0] *= blklvl[1][0];
+	blklvl[0][1] *= blklvl[1][1];
+	return(n+1);
+}
 
 /* check settings and assign defaults */
 static int
@@ -320,9 +359,48 @@ check_sizes()
 	return(1);
 }
 
-/* output transposed ASCII or binary data from memory */
+/* call to compute block input position */
+static long
+get_block_pos(int r, int c, int blklvl[][2], int nlvls)
+{
+	long	n = 0;
+
+	while (nlvls > 1) {
+		int	sr = r/blklvl[1][0];
+		int	sc = c/blklvl[1][1];
+		r -= sr*blklvl[1][0];
+		c -= sc*blklvl[1][1];
+		n += sr*blklvl[1][0]*blklvl[0][1] + sc*blklvl[1][0]*blklvl[1][1];
+		blklvl++;
+		nlvls--;
+	}
+	n += r*blklvl[0][1] + c;
+	return(n);
+}
+
+/* return input offset based on array ordering and transpose option */
+static long
+get_input_pos(int r, int c)
+{
+	long	n;
+
+	if (outLevels > 1) {		/* block reordering */
+		n = get_block_pos(r, c, outArray, outLevels);
+		if (transpose) {
+			r = n/no_columns;
+			c = n - r*no_columns;
+			n = (long)r*ni_columns + c;
+		}
+	} else if (transpose)		/* transpose only */
+		n = (long)c*ni_columns + r;
+	else				/* XXX should never happen! */
+		n = (long)r*ni_columns + c;
+	return(n);
+}
+
+/* output reordered ASCII or binary data from memory */
 static int
-do_transpose(const MEMLOAD *mp)
+do_reorder(const MEMLOAD *mp)
 {
 	static const char	tabEOL[2] = {'\t','\n'};
 	RECINDEX		*rp = NULL;
@@ -356,23 +434,33 @@ do_transpose(const MEMLOAD *mp)
 		ni_columns = nrecords/ni_rows;
 	if (nrecords != ni_rows*ni_columns)
 		goto badspec;
-	if (no_columns <= 0)
-		no_columns = ni_rows;
-	if (no_rows <= 0)
-		no_rows = ni_columns;
-	if ((no_rows != ni_columns) | (no_columns != ni_rows))
-		goto badspec;
-						/* transpose records */
+	if (transpose) {
+		if (no_columns <= 0)
+			no_columns = ni_rows;
+		if (no_rows <= 0)
+			no_rows = ni_columns;
+		if ((no_rows != ni_columns) | (no_columns != ni_rows))
+			goto badspec;
+	} else {
+		if (no_columns <= 0)
+			no_columns = ni_columns;
+		if (no_rows <= 0)
+			no_rows = ni_rows;
+		if ((no_rows != ni_rows) | (no_columns != ni_columns))
+			goto badspec;
+	}
+						/* reorder records */
 	for (i = 0; i < no_rows; i++) {
-	    for (j = 0; j < no_columns; j++)
+	    for (j = 0; j < no_columns; j++) {
+		long	n = get_input_pos(i, j);
 		if (rp != NULL) {		/* ASCII output */
-			print_record(rp, j*ni_columns + i);
+			print_record(rp, n);
 			putc(tabEOL[j >= no_columns-1], stdout);
 		} else {			/* binary output */
-			putbinary((char *)mp->base +
-				(size_t)(n_comp*comp_size)*(j*ni_columns + i),
+			putbinary((char *)mp->base + (n_comp*comp_size)*n,
 					comp_size, n_comp, stdout);
 		}
+	    }
 	    if (ferror(stdout)) {
 		fprintf(stderr, "Error writing to stdout\n");
 		return(0);
@@ -382,7 +470,7 @@ do_transpose(const MEMLOAD *mp)
 		free_records(rp);
 	return(1);
 badspec:
-	fprintf(stderr, "Bad transpose specification -- check dimension(s)\n");
+	fprintf(stderr, "Bad dimension(s)\n");
 	return(0);
 }
 
@@ -514,7 +602,8 @@ main(int argc, char *argv[])
 				no_columns = atoi(argv[++a]);
 			else if (argv[a][2] == 'r')
 				no_rows = atoi(argv[++a]);
-			else
+			else if (argv[a][2] ||
+			  !(outLevels=get_array(argv[++a], outArray, MAXLEVELS)))
 				goto userr;
 			break;
 		case 'h':			/* turn off header */
@@ -575,6 +664,10 @@ main(int argc, char *argv[])
 		}
 	if (a < argc-1)				/* arg count OK? */
 		goto userr;
+	if (outLevels) {			/* should check consistency? */
+		no_rows = outArray[0][0];
+		no_columns = outArray[0][1];
+	}
 						/* open input file? */
 	if (a == argc-1 && freopen(argv[a], "r", stdin) == NULL) {
 		fprintf(stderr, "%s: cannot open for reading\n", argv[a]);
@@ -585,7 +678,7 @@ main(int argc, char *argv[])
 		SET_FILE_BINARY(stdout);
 	}
 						/* check for no-op */
-	if (!transpose & (i_header == o_header) &&
+	if (!transpose & (outLevels <= 1) & (i_header == o_header) &&
 			(no_columns == ni_columns) & (no_rows == ni_rows)) {
 		if (warnings)
 			fprintf(stderr, "%s: no-op -- copying input verbatim\n",
@@ -617,7 +710,7 @@ main(int argc, char *argv[])
 		fputformat(fmtid, stdout);
 		fputc('\n', stdout);		/* finish new header */
 	}
-	if (transpose) {			/* transposing rows & columns? */
+	if (transpose | (outLevels > 1)) {	/* moving stuff around? */
 		MEMLOAD	myMem;			/* need to map into memory */
 		if (a == argc-1) {
 			if (load_file(&myMem, stdin) <= 0) {
@@ -630,7 +723,7 @@ main(int argc, char *argv[])
 						argv[0]);
 			return(1);
 		}
-		if (!do_transpose(&myMem))
+		if (!do_reorder(&myMem))
 			return(1);
 		/* free_load(&myMem);	about to exit, so don't bother */
 	} else if (!do_resize(stdin))		/* reshaping input */
@@ -638,7 +731,7 @@ main(int argc, char *argv[])
 	return(0);
 userr:
 	fprintf(stderr,
-"Usage: %s [-h[io]][-w][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row] [input.dat]\n",
+"Usage: %s [-h[io]][-w][-f[afdb][N]][-t][-ic in_col][-ir in_row][-oc out_col][-or out_row][-o RxC[xR1xC1..]] [input.dat]\n",
 			argv[0]);
 	return(1);
 }

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.8 2019/07/20 00:57:43 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.9 2019/11/08 02:10:38 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -20,6 +20,8 @@ rcollate - resize or transpose matrix data
 .B "\-oc out_col"
 ][
 .B "\-or out_row"
+][
+.B "\-o RxC[xR1xC2..]"
 ]
 [
 .B input.dat
@@ -30,6 +32,20 @@ reads in a single matrix file (table) and reshapes it to have
 the number of columns specified by the
 .I \-oc
 option.
+The number of rows may be specified with a
+.I \-or
+option, or may be determined automatically from the size of the input if
+it is an even multiple of the number of columns (as it should be).
+Alternatively, both may be specified using a
+.I \-o
+option with the number of rows and columns separated by an 'x', as in "30x14"
+for 30 rows by 14 columns.
+.I Rcollate
+can also reorder the input into nested blocks by continuing the output size
+string, "3x10X7x2" would order output data with a 3x10 super-array of 7x2
+subblocks.
+This is a convenient way to visualize tensor data.
+.PP
 By default, the file is assumed to include an information header, which
 is copied to the standard output along with the command name.
 The
@@ -118,6 +134,11 @@ To create an appropriate header for a binary float matrix as required by
 .I rmtxop(1)\:
 .IP "" .2i
 rcollate -hi -ff3 -or 145 -oc 8760 input.smx | rmtxop dcoef.dmx - > res.txt
+.PP
+To visualize a Shirley-Chiu BTDF matrix where the interior resolution is
+64x64 and the exterior resolution is 32x32:
+.IP "" .2i
+rcollate -o 64x64X32x32 s-c_bsdf.mtx | rmtxop -fc - > s-c_bsdf.hdr
 .SH AUTHOR
 Greg Ward
 .SH NOTES
