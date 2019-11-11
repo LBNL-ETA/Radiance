@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcollate.1,v 1.11 2019/11/08 22:19:23 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.12 2019/11/11 18:38:41 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
 rcollate - resize or transpose matrix data
@@ -42,9 +42,10 @@ option with the number of rows and columns separated by an 'x', as in "30x14"
 for 30 rows by 14 columns.
 .I Rcollate
 can also reorder the input into nested blocks by continuing the output size
-string, "3x10X7x2" would order output data with a 3x10 super-array of 7x2
-subblocks.
-This is a convenient way to visualize tensor data.
+string.
+For example, "3x10X7x2" would order output data with a 3x10 super-array of
+7x2 subblocks.
+This type of block hierarchy is convenient for visualizing tensor data.
 .PP
 By default, the file is assumed to include an information header, which
 is copied to the standard output along with the command name.
