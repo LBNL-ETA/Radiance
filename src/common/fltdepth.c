@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: fltdepth.c,v 3.3 2019/11/08 17:08:21 greg Exp $";
+static const char RCSid[] = "$Id: fltdepth.c,v 3.4 2019/11/11 16:45:30 greg Exp $";
 #endif
 /*
  * Function to open floating-point depth file, making sure it's
@@ -22,8 +22,10 @@ open_float_depth(const char *fname, long expected_length)
 {
 	int	fd = open(fname, O_RDONLY|O_BINARY);
 
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "%s: cannot open for reading\n", fname);
 		return(-1);
+	}
 	if (expected_length > 0) {
 		off_t	flen = lseek(fd, 0, SEEK_END);
 		if (flen != expected_length*sizeof(float)) {
@@ -55,14 +57,16 @@ open_float_depth(const char *fname, long expected_length)
 	ssize_t		n, nleft;
 	int		fd = open(fname, O_RDONLY);
 
-	if (fd < 0)
+	if (fd < 0) {
+		perror(fname);
 		return(-1);
+	}
 	dc.finp = NULL;
 	if (expected_length <= 0) {	/* need to sniff file? */
 		extern const char	HDRSTR[];
 		const int		len = strlen(HDRSTR);
 		if (read(fd, buf, len+1) < len+1)
-			goto gotEOF;
+			goto badEOF;
 		if (lseek(fd, 0, SEEK_SET) != 0)
 			goto seek_error;
 		for (n = 0; n < len; n++)
@@ -111,7 +115,7 @@ open_float_depth(const char *fname, long expected_length)
 			double	d = decode_depth_next(&dc);
 			if (d < 0) {
 				if (n < nleft)
-					goto gotEOF;
+					goto badEOF;
 				break;
 			}
 			((float *)buf)[n] = d;
@@ -128,7 +132,7 @@ open_float_depth(const char *fname, long expected_length)
 	if (lseek(fd, 0, SEEK_SET) != 0)
 		goto seek_error;
 	return(fd);
-gotEOF:
+badEOF:
 	fputs(fname, stderr);
 	fputs(": unexpected end-of-file\n", stderr);
 	if (dc.finp) fclose(dc.finp);
