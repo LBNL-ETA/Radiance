@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pcond.c,v 3.29 2018/08/02 18:33:44 greg Exp $";
+static const char	RCSid[] = "$Id: pcond.c,v 3.30 2019/11/11 21:19:41 greg Exp $";
 #endif
 /*
  * Condition Radiance picture for display/output
@@ -225,9 +225,9 @@ headline(				/* process header line */
 		else lumf = NULL;
 		return(0);		/* don't echo */
 	}
-	if (isprims(s)) {		/* get input primaries */
-		primsval(inprimS, s);
-		inprims= inprimS;
+					/* get input primaries */
+	if (isprims(s) && primsval(inprimS, s)) {
+		inprims = inprimS;
 		return(0);		/* don't echo */
 	}
 	if (isexpos(s)) {		/* picture exposure */
