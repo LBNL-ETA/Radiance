@@ -1,7 +1,7 @@
-.\" RCSid "$Id: rcollate.1,v 1.12 2019/11/11 18:38:41 greg Exp $"
+.\" RCSid "$Id: rcollate.1,v 1.13 2019/11/11 18:50:07 greg Exp $"
 .TH RCOLLATE 1 7/8/97 RADIANCE
 .SH NAME
-rcollate - resize or transpose matrix data
+rcollate - resize or re-order matrix data
 .SH SYNOPSIS
 .B rcollate
 [
@@ -89,8 +89,8 @@ and
 would all be equivalent.
 Note that the lack of row separators in binary files means that
 .I rcollate
-does not actually do anything for binary files unless the transpose
-option is given, also.
+does not actually do anything for binary files unless the data is being
+re-ordered.
 .PP
 If an input header is present, it may contain the format, number of components
 and matrix dimensions.
@@ -105,28 +105,23 @@ information if provided.
 The transpose option,
 .I \-t
 swaps rows and columns on the input.
-For binary files, the user must specify at least one input or output
-dimension to define the matrix size.
+For binary files with no header information, the user must
+specify at least one input or output dimension to define the matrix size.
 For ASCII files,
 .I rcollate
 will automatically determine the number of columns based on the
 position of the first EOL (end-of-line) character, and the number
 of rows based on the total count of records in the file.
 The user may override these determinations, allowing the matrix to
-be resized as well as transposed.
-If input and output dimensions are given, the number of input rows
-must equal the number of output columns,
+be resized or re-ordered as well as transposed.
+If input and output dimensions are given and there is no block re-ordering,
+the number of input rows must equal the number of output columns,
 and the number of input columns must equal the number of output rows.
-For large transpose operations on Unix systems, it is most efficient
-to specify the input file on the command line, rather than reading
-from the standard input, since
-.I rcollate
-can map the file directly into virtual memory.
 If the
 .I \-o
 option is also given with multiple block levels, the transpose operation
-will logically precede the reblocking operation, regardless of the order
-they are given on the command line.
+will logically precede the re-ordering operation, regardless of their
+position on the command line.
 .SH EXAMPLES
 To change put 8760 color triplets per row in a matrix with no header:
 .IP "" .2i
@@ -148,6 +143,12 @@ rcollate -o 64x64X32x32 s-c_bsdf.mtx | rmtxop -fc - > s-c_bsdf.hdr
 .SH AUTHOR
 Greg Ward
 .SH NOTES
+For large transpose or re-ordering operations on Unix systems,
+it is most efficient to specify the input file on the command line,
+rather than reading from the standard input, since
+.I rcollate
+can map the file directly into virtual memory.
+.PP
 The
 .I rcollate
 command is rather inflexible when it comes to output field and record
@@ -158,7 +159,7 @@ between words and tabs as record separators on output.
 Output row separtors will always be an EOL, which may differ between systems.
 .PP
 If no options are given on the command line, or a binary file is specified
-without a transpose,
+without a transpose or re-ordering,
 .I rcollate
 issues a warning and simply copies its input to its standard output.
 .SH "SEE ALSO"
