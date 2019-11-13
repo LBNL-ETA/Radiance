@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.5 2019/11/13 18:17:05 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.6 2019/11/13 18:20:47 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -22,7 +22,7 @@ usage_exit(int code)
 {
 	fputs("Usage: ", stderr);
 	fputs(progname, stderr);
-	fputs(" [-h[io]][-H[io]][-f[afd]] [input [output.nrm]]\n", stderr);
+	fputs(" [-h[io]][-H[io]][-f[afd]][-x xr -y yr] [input [output.nrm]]\n", stderr);
 	fputs("   Or: ", stderr);
 	fputs(progname, stderr);
 	fputs(" -r [-i][-u][-h[io]][-H[io]][-f[afd]] [input.nrm [output]]\n",
