@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcode_depth.1,v 1.2 2019/07/26 01:32:32 greg Exp $"
+.\" RCSid "$Id: rcode_depth.1,v 1.3 2019/11/13 18:17:05 greg Exp $"
 .TH RCODE_DEPTH 1 7/19/2019 RADIANCE
 .SH NAME
 rcode_depth - encode/decode 16-bit depth map
@@ -12,6 +12,8 @@ rcode_depth - encode/decode 16-bit depth map
 .B \-H[io]
 ][
 .B \-f[afd]
+][
+.B "-x xr -y yr"
 ]
 [
 input
@@ -77,6 +79,12 @@ option says not to expect an image resolution string on input, the
 option says not to produce one on output, and
 .I \-H
 applies both.
+The
+.I \-x
+and
+.I \-y
+options give the horizontal and vertical map dimensions, respectively.
+If provided, then an input resolution string will not be expected.
 .PP
 The default input format is ASCII (user-readable) real values,
 corresponding to the

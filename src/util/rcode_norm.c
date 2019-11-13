@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_norm.c,v 2.4 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: rcode_norm.c,v 2.5 2019/11/13 18:17:05 greg Exp $";
 #endif
 /*
  * Encode and decode surface normal map using 32-bit integers
@@ -216,6 +216,7 @@ pixel_normals(NORMCODEC *ncp, int unbuf)
 int
 main(int argc, char *argv[])
 {
+	int		xres=0, yres=0;
 	int		reverse = 0;
 	int		bypixel = 0;
 	int		unbuffered = 0;
@@ -277,6 +278,12 @@ main(int argc, char *argv[])
 				usage_exit(1);
 			}
 			break;
+		case 'x':
+			xres = atoi(argv[++a]);
+			break;
+		case 'y':
+			yres = atoi(argv[++a]);
+			break;
 		case 'i':
 			bypixel++;
 			break;
@@ -288,7 +295,12 @@ main(int argc, char *argv[])
 		}
 	nc.hdrflags |= !reverse * HF_ENCODE;
 
-	if ((nc.hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESOUT) {
+	if ((xres > 0) & (yres > 0)) {
+		nc.hdrflags &= ~HF_RESIN;
+		nc.res.rt = PIXSTANDARD;
+		nc.res.xr = xres;
+		nc.res.yr = yres;
+	} else if ((nc.hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESOUT) {
 		fputs(progname, stderr);
 		fputs(": unknown resolution for output\n", stderr);
 		return 1;

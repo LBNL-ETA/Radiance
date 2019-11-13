@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.6 2019/08/14 21:00:14 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.7 2019/11/13 18:17:05 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -281,6 +281,7 @@ pixel_points(DEPTHCODEC *dcp, int unbuf)
 int
 main(int argc, char *argv[])
 {
+	int		xres=0, yres=0;
 	int		conversion = CV_FWD;
 	int		bypixel = 0;
 	int		unbuffered = 0;
@@ -354,6 +355,12 @@ main(int argc, char *argv[])
 				usage_exit(1);
 			}
 			break;
+		case 'x':
+			xres = atoi(argv[++a]);
+			break;
+		case 'y':
+			yres = atoi(argv[++a]);
+			break;
 		case 'i':
 			bypixel++;
 			break;
@@ -365,7 +372,12 @@ main(int argc, char *argv[])
 		}
 	dc.hdrflags |= (conversion == CV_FWD) * HF_ENCODE;
 
-	if ((dc.hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESOUT) {
+	if ((xres > 0) & (yres > 0)) {
+		dc.hdrflags &= ~HF_RESIN;
+		dc.res.rt = PIXSTANDARD;
+		dc.res.xr = xres;
+		dc.res.yr = yres;
+	} else if ((dc.hdrflags & (HF_RESIN|HF_RESOUT)) == HF_RESOUT) {
 		fputs(progname, stderr);
 		fputs(": unknown resolution for output\n", stderr);
 		return 1;
