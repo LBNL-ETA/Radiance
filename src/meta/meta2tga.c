@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: meta2tga.c,v 1.7 2019/03/19 19:34:41 greg Exp $";
+static const char	RCSid[] = "$Id: meta2tga.c,v 1.8 2019/11/18 22:12:32 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to Targa 8-bit color-mapped format
@@ -23,7 +23,7 @@ char  *progname;
 
 SCANBLOCK	outblock;
 
-int  dxsize = DXSIZE, dysize = DYSIZE;
+int  dxsiz = DXSIZE, dysiz = DYSIZE;
 
 int  maxalloc = MAXALLOC;
 
@@ -83,11 +83,11 @@ main(
 	  argc--;
 	  break;
        case 'x':
-	  dxsize = atoi(*++argv);
+	  dxsiz = atoi(*++argv);
 	  argc--;
 	  break;
        case 'y':
-	  dysize = atoi(*++argv);
+	  dysiz = atoi(*++argv);
 	  argc--;
 	  break;
        case 'o':
@@ -176,8 +176,8 @@ initfile(void)		/* initialize this file */
     thead.CMapBits = 24;
     thead.XOffset = 0;
     thead.YOffset = 0;
-    thead.x = dxsize;
-    thead.y = dysize;
+    thead.x = dxsiz;
+    thead.y = dysiz;
     thead.dataBits = 8;
     thead.imType = 0;
     putthead(&thead, NULL, fout);
@@ -197,7 +197,7 @@ nextpage(void)		/* advance to next page */
     if (lineno == 0)
 	return;
     if (fout != NULL) {
-	while (lineno < dysize) {
+	while (lineno < dysiz) {
 	    nextblock();
 	    outputblock();
 	}
@@ -222,7 +222,7 @@ printblock(void)		/* output scanline block to file */
 
     if (lineno == 0)
 	initfile();
-    for (i = outblock.ybot; i <= outblock.ytop && i < dysize; i++) {
+    for (i = outblock.ybot; i <= outblock.ytop && i < dysiz; i++) {
 	scanline = outblock.cols[i-outblock.ybot];
 	for (j = outblock.xleft; j <= outblock.xright; j += cnt) {
 	    for (beg = j; beg <= outblock.xright; beg += cnt) {

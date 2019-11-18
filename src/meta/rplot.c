@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: rplot.c,v 1.4 2019/11/18 22:12:32 greg Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to raster files
@@ -53,14 +53,14 @@ initplot(void)			/* initialize this plot */
 					/* allocate block */
     if (outblock.xright <= 0) {
 	for (i = 0; i < NUMSCANS; i++)
-	    if ((outblock.cols[i] = (unsigned char *)malloc(dxsize)) == NULL)
+	    if ((outblock.cols[i] = (unsigned char *)malloc(dxsiz)) == NULL)
 		error(SYSTEM, "out of memory in initplot");
     }
     outblock.xleft = 0;
-    outblock.xright = dxsize-1;
+    outblock.xright = dxsiz-1;
     if (ydown) {
-	outblock.ytop = dysize+NUMSCANS-1;
-	outblock.ybot = dysize;
+	outblock.ytop = dysiz+NUMSCANS-1;
+	outblock.ybot = dysiz;
     } else {
 	outblock.ytop = -1;
 	outblock.ybot = -NUMSCANS;
@@ -146,7 +146,7 @@ nextblock(void)		/* prepare next block */
 						/* clear block */
     for (i = 0; i < NUMSCANS; i++) {
 	colp = outblock.cols[i];
-	n = dxsize;
+	n = dxsiz;
 	while (n--)
 	    *colp++ = IWHT<<3 | IWHT;
     }
@@ -196,9 +196,9 @@ doprim(		/* plot primitive */
 
 	case PRFILL:
 	    fill((p->arg0&0103) | (pati[(p->arg0>>2)&03]<<2),
-			CONV(p->xy[XMN],dxsize),CONV(p->xy[YMN],dysize),
-			CONV(p->xy[XMX],dxsize)+(p->arg0&0100?-1:0),
-			CONV(p->xy[YMX],dysize)+(p->arg0&0100?-1:0));
+			CONV(p->xy[XMN],dxsiz),CONV(p->xy[YMN],dysiz),
+			CONV(p->xy[XMX],dxsiz)+(p->arg0&0100?-1:0),
+			CONV(p->xy[YMX],dysiz)+(p->arg0&0100?-1:0));
 	    break;
 
 	case PTFILL:
@@ -238,17 +238,17 @@ plotlseg(		/* plot a line segment */
 
     ti = (p->arg0 >> 2) & 03;			/* compute line radius */
     ti = WIDTH(ti) / 2;
-    hrad = CONV(ti, dxsize);
-    vrad = CONV(ti, dysize);
+    hrad = CONV(ti, dxsiz);
+    vrad = CONV(ti, dysiz);
     if (hrad < minwidth)
 	hrad = minwidth;
     if (vrad < minwidth)
 	vrad = minwidth;
 
-    x = CONV(p->xy[XMX], dxsize);		/* start at top */
-    y = CONV(p->xy[YMX], dysize);
-    run = CONV(p->xy[XMN], dxsize) - x;
-    rise = CONV(p->xy[YMN], dysize) - y;
+    x = CONV(p->xy[XMX], dxsiz);		/* start at top */
+    y = CONV(p->xy[YMX], dysiz);
+    run = CONV(p->xy[XMN], dxsiz) - x;
+    rise = CONV(p->xy[YMN], dysiz) - y;
 
     if (p->arg0 & 0100)				/* slope < 0; reverse x */
 	x -= (run = -run);
@@ -348,10 +348,10 @@ tfill(			/* fill a triangle */
     int  xmn, ymn, tpat;
     long  xsz, ysz;
 
-    xmn = CONV(p->xy[XMN], dxsize);
-    xsz = CONV(p->xy[XMX], dxsize) - xmn;
-    ymn = CONV(p->xy[YMN], dysize);
-    ysz = CONV(p->xy[YMX], dysize) - ymn;
+    xmn = CONV(p->xy[XMN], dxsiz);
+    xsz = CONV(p->xy[XMX], dxsiz) - xmn;
+    ymn = CONV(p->xy[YMN], dysiz);
+    ysz = CONV(p->xy[YMX], dysiz) - ymn;
     if (xsz <= 0 || ysz <= 0)
 	return;	
     txmin = (outblock.ybot - ymn)*xsz/ysz;

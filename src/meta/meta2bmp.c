@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: meta2bmp.c,v 1.3 2019/03/19 19:34:41 greg Exp $";
+static const char RCSid[] = "$Id: meta2bmp.c,v 1.4 2019/11/18 22:12:32 greg Exp $";
 #endif
 /*
  *  Program to convert meta-files to BMP 8-bit color-mapped format
@@ -24,7 +24,7 @@ char  *progname;
 
 SCANBLOCK	outblock;
 
-int  dxsize = DXSIZE, dysize = DYSIZE;
+int  dxsiz = DXSIZE, dysiz = DYSIZE;
 
 int  maxalloc = MAXALLOC;
 
@@ -82,11 +82,11 @@ main(
 	  argc--;
 	  break;
        case 'x':
-	  dxsize = atoi(*++argv);
+	  dxsiz = atoi(*++argv);
 	  argc--;
 	  break;
        case 'y':
-	  dysize = atoi(*++argv);
+	  dysiz = atoi(*++argv);
 	  argc--;
 	  break;
        case 'o':
@@ -162,7 +162,7 @@ initfile(void)		/* initialize this file */
     BMPHeader  *hp;
     register int  i;
 
-    hp = BMPmappedHeader(dxsize, dysize, 0, 256);
+    hp = BMPmappedHeader(dxsiz, dysiz, 0, 256);
     hp->compr = BI_RLE8;
     if (hp == NULL)
 	error(USER, "Illegal image parameter(s)");
@@ -192,7 +192,7 @@ nextpage(void)		/* advance to next page */
     if (lineno == 0)
 	return;
     if (bmpw != NULL) {
-	while (lineno < dysize) {
+	while (lineno < dysiz) {
 	    nextblock();
 	    outputblock();
 	}
@@ -216,7 +216,7 @@ printblock(void)		/* output scanline block to file */
 
     if (lineno == 0)
 	initfile();
-    for (i = outblock.ybot; i <= outblock.ytop && i < dysize; i++) {
+    for (i = outblock.ybot; i <= outblock.ytop && i < dysiz; i++) {
 	scanline = outblock.cols[i-outblock.ybot] + outblock.xleft;
 	memcpy((void *)bmpw->scanline, (void *)scanline,
 			sizeof(uint8)*(outblock.xright-outblock.xleft+1));

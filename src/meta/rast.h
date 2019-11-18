@@ -1,4 +1,4 @@
-/* RCSid: $Id: rast.h,v 1.2 2003/07/14 22:24:00 schorsch Exp $ */
+/* RCSid: $Id: rast.h,v 1.3 2019/11/18 22:12:32 greg Exp $ */
 /*
  *   Structures for line segment output to raster files
  */
@@ -39,8 +39,8 @@ extern SCANBLOCK  outblock;		/* output span */
 
 #define  pixmix(x,y,c)	(outblock.cols[(y)-outblock.ybot][x] &= 070|(c))
 
-#define  someabove(p,y)	(CONV((p)->xy[YMX],dysize) > (y))
-#define  somebelow(p,y)	(CONV((p)->xy[YMN],dysize) < (y))
+#define  someabove(p,y)	(CONV((p)->xy[YMX],dysiz) > (y))
+#define  somebelow(p,y)	(CONV((p)->xy[YMN],dysiz) < (y))
 
 #define  inthis(p)	(ydown ? someabove(p,outblock.ybot-1) : \
 				somebelow(p,outblock.ytop+1))

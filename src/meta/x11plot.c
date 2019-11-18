@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: x11plot.c,v 1.4 2007/11/21 18:51:05 greg Exp $";
+static const char	RCSid[] = "$Id: x11plot.c,v 1.5 2019/11/18 22:12:32 greg Exp $";
 #endif
 /*
  *   X window plotting functions
@@ -27,8 +27,8 @@ extern void	replay(int xmin, int ymin, int xmax, int ymax);
 #define  BlackPix BlackPixel(dpy,0 )
 #define  WhitePix WhitePixel(dpy,0 )
 
-#define  mapx(x)  CONV(x,dxsize)
-#define  mapy(y)  CONV((XYSIZE-1)-(y),dysize)
+#define  mapx(x)  CONV(x,dxsiz)
+#define  mapy(y)  CONV((XYSIZE-1)-(y),dysiz)
 
 #define  MAXVERT  128
 
@@ -82,16 +82,16 @@ int	curcol;			/* current color */
 int	curlinetype;		/* current line style */
 XGCValues gcval;
 int	pixel[4];
-int	dxsize, dysize;		/* window size */
+int	dxsiz, dysiz;		/* window size */
 int	debug = False;		/* use XSynchronize if true */
 
 static void
 adjustsize()
 {
-	if (dxsize > dysize)
-		dxsize = dysize;
+	if (dxsiz > dysiz)
+		dxsiz = dysiz;
 	else
-		dysize = dxsize;
+		dysiz = dxsiz;
 }
 
 
@@ -114,17 +114,17 @@ char  *geom;
     if (debug) 
 	(void) XSynchronize(dpy, True);
 
-    dxsize = DisplayWidth(dpy,0) - 2*BORWIDTH-4;
-    dysize = DisplayHeight(dpy,0) - 2*BORWIDTH-100;
+    dxsiz = DisplayWidth(dpy,0) - 2*BORWIDTH-4;
+    dysiz = DisplayHeight(dpy,0) - 2*BORWIDTH-100;
     adjustsize();
 
-    sprintf(defgeom, "=%dx%d+2+25", dxsize, dysize);
+    sprintf(defgeom, "=%dx%d+2+25", dxsiz, dysiz);
     /* XUseGeometry(dpy,0,geom,defgeom,BORWIDTH,100,100,100,100,
-		&xoff,&yoff,&dxsize,&dysize); */
+		&xoff,&yoff,&dxsiz,&dysiz); */
     gc = DefaultGC(dpy,0);			/* get default gc */
     cmap = DefaultColormap(dpy,0);		/* and colormap */
 
-    wind = XCreateSimpleWindow(dpy,DefaultRootWindow(dpy),0,0,dxsize,dysize,
+    wind = XCreateSimpleWindow(dpy,DefaultRootWindow(dpy),0,0,dxsiz,dysiz,
 		BORWIDTH,BlackPix,WhitePix);
     if (wind == 0)
 	error(SYSTEM, "can't create window");
@@ -163,8 +163,8 @@ char  *geom;
 	if (evnt.type == ConfigureNotify) /* wait for first ConfigureNotify */
 		break;
 	}
-    dxsize = evnt.xconfigure.width;
-    dysize = evnt.xconfigure.height;
+    dxsiz = evnt.xconfigure.width;
+    dysiz = evnt.xconfigure.height;
     adjustsize();
     while (1)
 	{
@@ -187,15 +187,15 @@ endpage()		/* end of this graph */
 	XNextEvent(dpy, &evnt);
 	switch (evnt.type) {
 	  case ConfigureNotify:
-		dxsize = evnt.xconfigure.width;
-		dysize = evnt.xconfigure.height;
+		dxsiz = evnt.xconfigure.width;
+		dysiz = evnt.xconfigure.height;
 		adjustsize();
 		break;
 	  case Expose:
-		replay((int)((long)XYSIZE*evnt.xexpose.x/dxsize),
-		   (int)((long)XYSIZE*(dysize-evnt.xexpose.y-evnt.xexpose.height)/dysize),
-		   (int)((long)XYSIZE*(evnt.xexpose.x+evnt.xexpose.width)/dxsize),
-		   (int)((long)XYSIZE*(dysize-evnt.xexpose.y)/dysize));
+		replay((int)((long)XYSIZE*evnt.xexpose.x/dxsiz),
+		   (int)((long)XYSIZE*(dysiz-evnt.xexpose.y-evnt.xexpose.height)/dysiz),
+		   (int)((long)XYSIZE*(evnt.xexpose.x+evnt.xexpose.width)/dxsiz),
+		   (int)((long)XYSIZE*(dysiz-evnt.xexpose.y)/dysiz));
 		break;
 	  case ButtonPress:
 		quit = True;
@@ -263,7 +263,7 @@ register PRIMITIVE  *p;
     col = p->arg0 & 03;			/* color */
 
     ps = WIDTH((p->arg0 >> 2) & 03);
-    pw = CONV((ps)/2, dxsize);
+    pw = CONV((ps)/2, dxsiz);
 
     x1 = mapx(p->xy[XMN]);
     x2 = mapx(p->xy[XMX]);

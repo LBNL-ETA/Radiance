@@ -1,4 +1,4 @@
-/* RCSid: $Id: plot.h,v 1.4 2003/11/15 02:13:37 schorsch Exp $ */
+/* RCSid: $Id: plot.h,v 1.5 2019/11/18 22:12:32 greg Exp $ */
 /*
  *   Definitions for plotting routines
  */
@@ -14,7 +14,7 @@ extern "C" {
 #define  PATSIZE  16		/* pattern size (square) */
 
 
-extern int  dxsize, dysize;	/* device size */
+extern int  dxsiz, dysiz;	/* device size */
 
 extern int  pati[];
 

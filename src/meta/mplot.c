@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mplot.c,v 1.3 2003/11/15 02:13:37 schorsch Exp $";
+static const char	RCSid[] = "$Id: mplot.c,v 1.4 2019/11/18 22:12:32 greg Exp $";
 #endif
 /*
  *   Plotting routines for meta-files to line-at-a-time printers
@@ -58,9 +58,9 @@ initplot(void)			/* initialize this plot */
 {
     thispage();
     outspan.xleft = 0;
-    outspan.xright = dxsize - 1;
-    outspan.ytop = dysize + linhite - 1;
-    outspan.ybot = dysize;
+    outspan.xright = dxsiz - 1;
+    outspan.ytop = dysiz + linhite - 1;
+    outspan.ybot = dysiz;
 
 }
 
@@ -148,7 +148,7 @@ plotspan(			/* plot next span */
 	pfree(p);
     }
 					/* plot from file */
-    while (isprim(nextp.com) && CONV(nextp.xy[YMX],dysize) >= outspan.ybot) {
+    while (isprim(nextp.com) && CONV(nextp.xy[YMX],dysiz) >= outspan.ybot) {
         doprim(&nextp);
 	fargs(&nextp);
 	readp(&nextp, infp);
@@ -167,7 +167,7 @@ nextspan(void)		/* prepare next span */
 	
     if (spanmin <= spanmax) {			/* clear span */
 
-	i = nrows*dxsize;
+	i = nrows*dxsiz;
 	colp = outspan.cols;
 	tcolp = outspan.tcols;
 	while (i--)
@@ -176,7 +176,7 @@ nextspan(void)		/* prepare next span */
             
     outspan.ytop -= linhite;			/* advance to next */
     outspan.ybot -= linhite;
-    spanmin = dxsize;
+    spanmin = dxsiz;
     spanmax = 0;
 
 }
@@ -190,7 +190,7 @@ outputspan(void)		/* output span to printer */
 
     if (spanmin <= spanmax) {			/* overlay spans */
 
-	i = nrows*dxsize;
+	i = nrows*dxsiz;
 	colp = outspan.cols;
 	tcolp = outspan.tcols;
 	while (i--)
@@ -215,9 +215,9 @@ register PRIMITIVE  *p
 
 	case PRFILL:
 	    fill((p->arg0&0103) | (pati[(p->arg0>>2)&03]<<2),
-			CONV(p->xy[XMN],dxsize),CONV(p->xy[YMN],dysize),
-			CONV(p->xy[XMX],dxsize)+(p->arg0&0100?-1:0),
-			CONV(p->xy[YMX],dysize)+(p->arg0&0100?-1:0));
+			CONV(p->xy[XMN],dxsiz),CONV(p->xy[YMN],dysiz),
+			CONV(p->xy[XMX],dxsiz)+(p->arg0&0100?-1:0),
+			CONV(p->xy[YMX],dysiz)+(p->arg0&0100?-1:0));
 	    break;
 
 	case PTFILL:
@@ -234,7 +234,7 @@ register PRIMITIVE  *p
 	    return;
     }
 
-    if (CONV(p->xy[YMN],dysize) < outspan.ybot) {	/* save for next time */
+    if (CONV(p->xy[YMN],dysiz) < outspan.ybot) {	/* save for next time */
         if ((newp = palloc()) == NULL)
             error(SYSTEM, "memory limit exceeded in doprim");
     	mcopy((char *)newp, (char *)p, sizeof(PRIMITIVE));
@@ -263,17 +263,17 @@ plotlseg(		/* plot a line segment */
 
     ti = (p->arg0 >> 2) & 03;			/* compute line radius */
     ti = WIDTH(ti) / 2;
-    hrad = CONV(ti, dxsize);
-    vrad = CONV(ti, dysize);
+    hrad = CONV(ti, dxsiz);
+    vrad = CONV(ti, dysiz);
     if (hrad < minwidth)
 	hrad = minwidth;
     if (vrad < minwidth)
 	vrad = minwidth;
 
-    x = CONV(p->xy[XMX], dxsize);		/* start at top */
-    y = CONV(p->xy[YMX], dysize);
-    run = CONV(p->xy[XMN], dxsize) - x;
-    rise = CONV(p->xy[YMN], dysize) - y;
+    x = CONV(p->xy[XMX], dxsiz);		/* start at top */
+    y = CONV(p->xy[YMX], dysiz);
+    run = CONV(p->xy[XMN], dxsiz) - x;
+    rise = CONV(p->xy[YMN], dysiz) - y;
 
     if (p->arg0 & 0100)				/* slope < 0; reverse x */
 	x -= (run = -run);
@@ -373,10 +373,10 @@ tfill(			/* fill a triangle */
     int  xmn, ymn, tpat;
     long  xsz, ysz;
 
-    xmn = CONV(p->xy[XMN], dxsize);
-    xsz = CONV(p->xy[XMX], dxsize) - xmn;
-    ymn = CONV(p->xy[YMN], dysize);
-    ysz = CONV(p->xy[YMX], dysize) - ymn;
+    xmn = CONV(p->xy[XMN], dxsiz);
+    xsz = CONV(p->xy[XMX], dxsiz) - xmn;
+    ymn = CONV(p->xy[YMN], dysiz);
+    ysz = CONV(p->xy[YMX], dysiz) - ymn;
     if (xsz <= 0 || ysz <= 0)
 	return;	
     txmin = (outspan.ybot - ymn)*xsz/ysz;
@@ -449,11 +449,11 @@ fill(	/* fill rectangle with attribute */
 				[((outspan.ybot>>3)+rpos)%(PATSIZE>>3)];
 
 	    if (attrib & 0100) {
-		colp = &outspan.tcols[rpos*dxsize + xmin];
+		colp = &outspan.tcols[rpos*dxsiz + xmin];
 		for (i = xmin; i <= xmax; i++)
 		    *colp++ ^= filpat & pattr[i%PATSIZE];
 	    } else {
-		colp = &outspan.cols[rpos*dxsize + xmin];
+		colp = &outspan.cols[rpos*dxsiz + xmin];
 		for (i = xmin; i <= xmax; i++)
 		    *colp++ |= filpat & pattr[i%PATSIZE];
 	    }
