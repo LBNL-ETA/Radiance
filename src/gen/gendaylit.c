@@ -21,7 +21,7 @@
 
 double  normsc();
 
-/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.18 2019/11/07 23:15:06 greg Exp $";*/
+/*static	char *rcsid="$Header: /home/cvsd/radiance/ray/src/gen/gendaylit.c,v 2.19 2019/12/04 18:11:57 greg Exp $";*/
 
 float coeff_perez[] = {
 	1.3525,-0.2576,-0.2690,-1.4366,-0.7670,0.0007,1.2734,-0.1233,2.8000,0.6004,1.2375,1.000,1.8734,0.6297,
@@ -788,12 +788,12 @@ void usage_error(char* msg)			/* print usage error and quit */
 {
 	if (msg != NULL)
 		fprintf(stderr, "%s: Use error - %s\n\n", progname, msg);
-	fprintf(stderr, "Usage: %s      month day hour 	  [...]\n", progname);
-	fprintf(stderr, "   or: %s -ang altitude azimuth  [...]\n", progname);
+	fprintf(stderr, "Usage: %s      month day hour [-y year]	[...]\n", progname);
+	fprintf(stderr, "   or: %s -ang altitude azimuth		[...]\n", progname);
 	fprintf(stderr, "		followed by:	  -P          epsilon delta [options]\n");
 	fprintf(stderr, "			 or:	  [-W|-L|-G]  direct_value diffuse_value [options]\n");
-	fprintf(stderr, "			 or:      -E          global_irradiance [options]\n\n");
-	fprintf(stderr, "	Description:\n");
+	fprintf(stderr, "			 or:	  -E          global_irradiance [options]\n\n");
+	fprintf(stderr, "    Description:\n");
 	fprintf(stderr, "	-P epsilon delta  (these are the Perez parameters) \n");
 	fprintf(stderr, "	-W direct-normal-irradiance diffuse-horizontal-irradiance (W/m^2)\n");
 	fprintf(stderr, "	-L direct-normal-illuminance diffuse-horizontal-illuminance (lux)\n");
