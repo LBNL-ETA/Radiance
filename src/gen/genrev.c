@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.12 2018/05/04 23:56:49 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.13 2019/12/07 02:21:42 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -130,7 +130,7 @@ char  *argv[];
 	scompile(stmp, NULL, 0);
 	sprintf(stmp, "%s(t)=%s;", RNAME, argv[4]);
 	scompile(stmp, NULL, 0);
-	nseg = atoi(argv[5]);
+	nseg = eval(argv[5]) + .5;
 	if (nseg <= 0)
 		goto userror;
 	modname = smooth ? "Phong" : argv[1];

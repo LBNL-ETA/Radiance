@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.10 2018/05/04 23:56:49 greg Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.11 2019/12/07 02:21:42 greg Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -78,7 +78,7 @@ char  *argv[];
 	scompile(stmp, NULL, 0);
 	sprintf(stmp, "%s(t)=%s;", RNAME, argv[6]);
 	scompile(stmp, NULL, 0);
-	nseg = atoi(argv[7]);
+	nseg = eval(argv[7]) + .5;
 	if (nseg <= 0)
 		goto userror;
 

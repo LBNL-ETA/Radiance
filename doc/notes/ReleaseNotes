@@ -2335,3 +2335,6 @@ between whitespace.
 Added ability of vwrays, pinterp, and pmblur2 to read encoded depth files.
 
 Added -o RxCxR1xC1 facility to perform blocking in rcollate.
+
+Made it so number of segments in genworm, genrev, and gensurf can be
+given as expressions of previously defined variables, etc.
