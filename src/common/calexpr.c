@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.37 2019/03/04 18:16:18 greg Exp $";
+static const char	RCSid[] = "$Id: calexpr.c,v 2.38 2019/12/07 16:38:08 greg Exp $";
 #endif
 /*
  *  Compute data values using expression parser
@@ -105,10 +105,13 @@ eval(			/* evaluate an expression string */
     char  *expr
 )
 {
+    int  prev_support = esupport;
     EPNODE  *ep;
     double  rval;
 
+    esupport &= ~E_RCONST;	/* don't bother reducing constant expr */
     ep = eparse(expr);
+    esupport = prev_support;	/* as you were */
     rval = evalue(ep);
     epfree(ep);
     return(rval);
