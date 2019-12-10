@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.48 2019/07/29 22:52:39 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.49 2019/12/10 19:15:54 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -141,7 +141,7 @@ oconv_command(int ac, char *av[])
 	if (ac-- <= 0)
 		return(NULL);
 	if (verbose < 0) {	/* turn off warnings */
-		strcpy(cp, "-w- ");
+		strcpy(cp, "-w ");
 		cp += 4;
 	}
 	while (ac-- > 0) {	/* copy each argument */
@@ -1244,7 +1244,9 @@ main(int argc, char *argv[])
 			na = 0;
 			continue;
 		case 'w':		/* options without arguments */
-			if (argv[a][2] != '+') verbose = -1;
+			if (!argv[a][2] || strchr("+1tTyY", argv[a][2]) == NULL)
+				verbose = -1;
+			break;
 		case 'V':
 		case 'u':
 		case 'h':
