@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcalc.c,v 1.29 2019/05/19 21:15:25 greg Exp $";
+static const char RCSid[] = "$Id: rcalc.c,v 1.30 2019/12/10 19:00:26 greg Exp $";
 #endif
 /*
  *  rcalc.c - record calculator program.
@@ -703,7 +703,7 @@ getrec(void)				/* get next record from file */
 		eatline = !igneol & (ipb.chr != '\n');
 		clearrec();		/* start with fresh record */
 		for (f = inpfmt; f != NULL; f = f->next)
-			if (getfield(f) == -1)
+			if (!getfield(f))
 				break;
 		if (f == NULL) {
 			advinp();       /* got one! */
@@ -740,7 +740,7 @@ struct field  *f
 		do {
 			if (blnkeq && isblnk(*cp)) {
 				if (!isblnk(ipb.chr))
-					return(-1);
+					return(0);
 				do
 					cp++;
 				while (isblnk(*cp));
@@ -751,9 +751,9 @@ struct field  *f
 				cp++;
 				scaninp();
 			} else
-				return(-1);
+				return(0);
 		} while (*cp);
-		return(0);
+		break;
 	case T_STR:
 		if (f->next == NULL || (f->next->type & F_TYP) != T_LIT)
 			delim = EOF;
@@ -778,8 +778,8 @@ struct field  *f
 		if (f->f.sv->val == NULL)
 			f->f.sv->val = savqstr(buf);	/* first setting */
 		else if (strcmp(f->f.sv->val, buf))
-			return(-1);			/* doesn't match! */
-		return(0);
+			return(0);			/* doesn't match! */
+		break;
 	case T_NUM:
 		if (f->next == NULL || (f->next->type & F_TYP) != T_LIT)
 			delim = EOF;
@@ -809,10 +809,10 @@ struct field  *f
 			varset(f->f.nv, '=', d);	/* first setting */
 		else if ((d = (varvalue(f->f.nv)-d)/(d==0.?1.:d)) > .001
 				|| d < -.001)
-			return(-1);			/* doesn't match! */
-		return(0);
+			return(0);			/* doesn't match! */
+		break;
 	}
-	return -1; /* pro forma return */
+	return(1);	/* success! */
 }
 
 
