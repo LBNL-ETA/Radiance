@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.18 2016/03/06 01:13:18 schorsch Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.19 2019/12/13 16:00:33 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -717,7 +717,7 @@ main(int argc, char *argv[])
 		do {
 			pnext = pptr->pnext;
 			idf_delobject(our_idf, pptr);
-		} while (pnext != NULL);
+		} while ((pptr = pnext) != NULL);
 	}
 						/* add to header */
 	if (our_idf->hrem == NULL ||
