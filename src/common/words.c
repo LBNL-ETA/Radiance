@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: words.c,v 2.11 2011/04/28 17:46:25 greg Exp $";
+static const char RCSid[] = "$Id: words.c,v 2.12 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Routines for recognizing and moving about words in strings.
@@ -10,7 +10,6 @@ static const char RCSid[] = "$Id: words.c,v 2.11 2011/04/28 17:46:25 greg Exp $"
 #include "copyright.h"
 
 #include  <ctype.h>
-#include  <string.h>
 
 #include  "rtio.h"
 

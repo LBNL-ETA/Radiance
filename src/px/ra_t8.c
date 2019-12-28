@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t8.c,v 2.15 2018/03/20 18:45:04 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t8.c,v 2.16 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  ra_t8.c - program to convert between RADIANCE and
@@ -8,9 +8,6 @@ static const char	RCSid[] = "$Id: ra_t8.c,v 2.15 2018/03/20 18:45:04 greg Exp $"
  *	8/22/88		Adapted from ra_pr.c
  */
 
-#include  <stdio.h>
-#include  <string.h>
-#include  <time.h>
 #include  <math.h>
 
 #include  "platform.h"

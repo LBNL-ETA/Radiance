@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.26 2014/07/24 15:41:13 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.27 2019/12/28 18:05:13 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -27,8 +27,6 @@ static const char	RCSid[] = "$Id: caldefn.c,v 2.26 2014/07/24 15:41:13 greg Exp 
 
 #include "copyright.h"
 
-#include  <stdio.h>
-#include  <string.h>
 #include  <ctype.h>
 
 #include  "rterror.h"

@@ -1,12 +1,9 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.5 2018/04/17 17:42:28 greg Exp $";
+static const char	RCSid[] = "$Id: ra_hexbit.c,v 3.6 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Create a 4x1 hex bitmap from a Radiance picture.
  */
-
-#include  <stdio.h>
-#include  <time.h>
 
 #include  "platform.h"
 #include  "color.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.43 2018/05/04 23:56:49 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.44 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with tensor tree.
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: bsdf2ttree.c,v 2.43 2018/05/04 23:56:49 greg E
  */
 
 #define _USE_MATH_DEFINES
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "random.h"

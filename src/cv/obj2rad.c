@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: obj2rad.c,v 2.29 2013/11/08 16:49:04 greg Exp $";
+static const char	RCSid[] = "$Id: obj2rad.c,v 2.30 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Convert a Wavefront .OBJ file to Radiance format.
@@ -11,7 +11,6 @@ static const char	RCSid[] = "$Id: obj2rad.c,v 2.29 2013/11/08 16:49:04 greg Exp 
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 
 #include "rtmath.h"

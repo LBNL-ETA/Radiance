@@ -1,11 +1,10 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.16 2019/08/12 20:38:19 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.17 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * General component matrix operations.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "rtio.h"

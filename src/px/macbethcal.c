@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: macbethcal.c,v 2.27 2016/02/02 18:02:32 greg Exp $";
+static const char	RCSid[] = "$Id: macbethcal.c,v 2.28 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Calibrate a scanned MacBeth Color Checker Chart
@@ -10,9 +10,7 @@ static const char	RCSid[] = "$Id: macbethcal.c,v 2.27 2016/02/02 18:02:32 greg E
  * Warping code depends on conformance of COLOR and W3VEC types.
  */
 
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
 
 #include "platform.h"
 #include "paths.h"

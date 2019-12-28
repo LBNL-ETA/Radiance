@@ -1,12 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: lampcolor.c,v 2.10 2004/03/18 05:22:00 greg Exp $";
+static const char	RCSid[] = "$Id: lampcolor.c,v 2.11 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Program to convert lamp color from table and compute radiance.
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "rtmath.h"

@@ -1,12 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ps.c,v 2.30 2018/08/02 18:33:47 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ps.c,v 2.31 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  Radiance picture to PostScript file translator -- one way!
  */
 
-#include  <stdio.h>
-#include  <string.h>
 #include  <math.h>
 #include  <ctype.h>
 

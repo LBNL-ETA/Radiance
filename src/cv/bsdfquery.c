@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfquery.c,v 2.10 2019/06/11 16:09:40 greg Exp $";
+static const char RCSid[] = "$Id: bsdfquery.c,v 2.11 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  Query values from the given BSDF (scattering interpolant or XML repres.)
@@ -11,8 +11,6 @@ static const char RCSid[] = "$Id: bsdfquery.c,v 2.10 2019/06/11 16:09:40 greg Ex
  */
 
 #define _USE_MATH_DEFINES
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include "rtmath.h"
 #include "rtio.h"

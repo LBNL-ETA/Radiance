@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ies2rad.c,v 2.31 2018/06/05 16:04:00 greg Exp $";
+static const char	RCSid[] = "$Id: ies2rad.c,v 2.32 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * ies2rad -- Convert IES luminaire data to Radiance description
@@ -69,10 +69,7 @@ static const char	RCSid[] = "$Id: ies2rad.c,v 2.31 2018/06/05 16:04:00 greg Exp 
  *  Extensive comments added by Randolph Fritz May2018
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
-#include <sys/types.h>
 #include <ctype.h>
 
 #include "rtio.h"

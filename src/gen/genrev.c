@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.13 2019/12/07 02:21:42 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.14 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -12,8 +12,6 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.13 2019/12/07 02:21:42 greg Exp $
  */
 
 #include  <stdlib.h>
-#include  <stdio.h>
-#include  <string.h>
 #include  <math.h>
 
 #include  "rtio.h"

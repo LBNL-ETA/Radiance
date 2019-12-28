@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: arch2rad.c,v 2.3 2003/11/15 17:54:06 schorsch Exp $";
+static const char	RCSid[] = "$Id: arch2rad.c,v 2.4 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Convert Architrion file to Radiance
@@ -8,8 +8,6 @@ static const char	RCSid[] = "$Id: arch2rad.c,v 2.3 2003/11/15 17:54:06 schorsch 
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "rtio.h"
 #include "trans.h"

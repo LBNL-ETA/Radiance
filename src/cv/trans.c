@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: trans.c,v 2.6 2018/03/20 18:45:04 greg Exp $";
+static const char	RCSid[] = "$Id: trans.c,v 2.7 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Translator utilities
@@ -7,9 +7,7 @@ static const char	RCSid[] = "$Id: trans.c,v 2.6 2018/03/20 18:45:04 greg Exp $";
  *	Greg Ward
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "rterror.h"
 #include "rtio.h"

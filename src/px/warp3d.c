@@ -1,11 +1,10 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: warp3d.c,v 3.10 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: warp3d.c,v 3.11 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * 3D warping routines.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 

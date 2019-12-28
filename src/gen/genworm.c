@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genworm.c,v 2.11 2019/12/07 02:21:42 greg Exp $";
+static const char	RCSid[] = "$Id: genworm.c,v 2.12 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  genworm.c - program to generate worms (strings with varying thickness).
@@ -12,9 +12,7 @@ static const char	RCSid[] = "$Id: genworm.c,v 2.11 2019/12/07 02:21:42 greg Exp 
  */
 
 #include  <stdlib.h>
-#include  <stdio.h>
 #include  <math.h>
-#include  <string.h>
 
 #include  "calcomp.h"
 #include  "rtio.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rexpr.c,v 2.9 2003/07/17 09:21:29 schorsch Exp $";
+static const char	RCSid[] = "$Id: rexpr.c,v 2.10 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Regular expression parsing routines.
@@ -9,10 +9,8 @@ static const char	RCSid[] = "$Id: rexpr.c,v 2.9 2003/07/17 09:21:29 schorsch Exp
 
 #include "copyright.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
 
 #include "rtio.h"
 

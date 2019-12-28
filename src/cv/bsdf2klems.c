@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdf2klems.c,v 2.27 2019/06/17 23:58:32 greg Exp $";
+static const char RCSid[] = "$Id: bsdf2klems.c,v 2.28 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Load measured BSDF interpolant and write out as XML file with Klems matrix.
@@ -8,9 +8,7 @@ static const char RCSid[] = "$Id: bsdf2klems.c,v 2.27 2019/06/17 23:58:32 greg E
  */
 
 #define _USE_MATH_DEFINES
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include "random.h"
 #include "platform.h"

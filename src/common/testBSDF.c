@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: testBSDF.c,v 1.14 2019/06/11 14:26:29 greg Exp $";
+static const char RCSid[] = "$Id: testBSDF.c,v 1.15 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Simple test program to demonstrate BSDF operation.
@@ -8,7 +8,6 @@ static const char RCSid[] = "$Id: testBSDF.c,v 1.14 2019/06/11 14:26:29 greg Exp
  */
 
 #define	_USE_MATH_DEFINES
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>

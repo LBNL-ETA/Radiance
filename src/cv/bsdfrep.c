@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: bsdfrep.c,v 2.32 2018/08/02 18:33:42 greg Exp $";
+static const char RCSid[] = "$Id: bsdfrep.c,v 2.33 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Support BSDF representation as radial basis functions.
@@ -9,7 +9,6 @@ static const char RCSid[] = "$Id: bsdfrep.c,v 2.32 2018/08/02 18:33:42 greg Exp 
 
 #define _USE_MATH_DEFINES
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include "rtio.h"
 #include "resolu.h"

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.14 2019/05/14 18:37:36 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.15 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -10,9 +10,7 @@ static const char	RCSid[] = "$Id: unix_process.c,v 3.14 2019/05/14 18:37:36 greg
 
 #include "copyright.h"
 
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <fcntl.h>
 #include <stdlib.h>
 
 #include "rtprocess.h"

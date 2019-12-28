@@ -1,15 +1,12 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_xyze.c,v 2.12 2018/08/02 18:33:48 greg Exp $";
+static const char	RCSid[] = "$Id: ra_xyze.c,v 2.13 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  *  Program to convert between RADIANCE RGBE and XYZE formats
  *  Added white-balance adjustment 10/01 (GW).
  */
 
-#include  <stdio.h>
-#include  <string.h>
 #include  <math.h>
-#include  <time.h>
 
 #include  "platform.h"
 #include  "color.h"

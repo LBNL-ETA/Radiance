@@ -1,12 +1,11 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcollate.c,v 2.34 2019/11/08 22:12:33 greg Exp $";
+static const char RCSid[] = "$Id: rcollate.c,v 2.35 2019/12/28 18:05:14 greg Exp $";
 #endif
 /*
  * Utility to re-order records in a binary or ASCII data file (matrix)
  */
 
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include "platform.h"
 #include "rtio.h"
