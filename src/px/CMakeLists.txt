@@ -190,7 +190,7 @@ else()
     pbilat.csh
     pdfblur.csh
     pgblur.csh
-    phisto.csh
+    phisto.pl
     pmblur.csh
     pmdblur.csh
     ra_pfm.csh

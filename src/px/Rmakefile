@@ -1,4 +1,4 @@
-# RCSid: $Id: Rmakefile,v 2.73 2017/08/29 16:31:32 greg Exp $
+# RCSid: $Id: Rmakefile,v 2.74 2020/01/03 20:05:14 greg Exp $
 #
 # Compiles for image processing and display programs
 #
@@ -37,7 +37,7 @@ pbilat.csh
 	cp pmblur.csh $(INSTDIR)/pmblur
 	cp pmdblur.csh $(INSTDIR)/pmdblur
 	cp xyzimage.csh $(INSTDIR)/xyzimage
-	cp phisto.csh $(INSTDIR)/phisto
+	cp phisto.pl $(INSTDIR)/phisto
 	cp pdelta.csh $(INSTDIR)/pdelta
 	cp pgblur.csh $(INSTDIR)/pgblur
 	cp ra_pfm.csh $(INSTDIR)/ra_pfm
