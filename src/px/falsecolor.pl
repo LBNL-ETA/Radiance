@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: falsecolor.pl,v 2.14 2019/08/25 22:24:01 greg Exp $
+# RCSid $Id: falsecolor.pl,v 2.15 2020/01/04 16:39:10 greg Exp $
 
 use warnings;
 use strict;
@@ -124,11 +124,11 @@ if ($needfile == 1 && $picture eq '-') {
 
 # Find a good scale for auto mode.
 if ($scale =~ m/[aA].*/) {
-    my @histo = split(/\s/, `phisto $picture| tail -2`);
+    my @histo = split(/\s/, `phisto $picture|`);
     # e.g. $ phisto tests/richmond.hdr| tail -2
     # 3.91267	14
     # 3.94282	6
-    my $LogLmax = $histo[0];
+    my $LogLmax = $histo[-4];
     $scale = $mult / 179 * 10**$LogLmax;
 }
 
