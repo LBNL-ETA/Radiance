@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.32 2020/01/06 21:02:57 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.33 2020/01/06 21:22:46 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -313,7 +313,6 @@ main(int argc, char *argv[])
 	int	tstorage = 0;		/* number of allocated time steps */
 	int	nstored = 0;		/* number of time steps in matrix */
 	int	last_monthly = 0;	/* month of last report */
-	int	inconsistent = 0;	/* inconsistent options set? */
 	int	mo, da;			/* month (1-12) and day (1-31) */
 	double	hr;			/* hour (local standard time) */
 	double	dir, dif;		/* direct and diffuse values */
@@ -364,24 +363,16 @@ main(int argc, char *argv[])
 			rhsubdiv = atoi(argv[++i]);
 			break;
 		case 'c':			/* sky color */
-			inconsistent |= (skycolor[1] <= 1e-4);
 			skycolor[0] = atof(argv[++i]);
 			skycolor[1] = atof(argv[++i]);
 			skycolor[2] = atof(argv[++i]);
 			break;
 		case 'd':			/* solar (direct) only */
 			skycolor[0] = skycolor[1] = skycolor[2] = 0;
-			if (suncolor[1] <= 1e-4) {
-				inconsistent = 1;
-				suncolor[0] = suncolor[1] = suncolor[2] = 1;
-			}
+			grefl[0] = grefl[1] = grefl[2] = 0;
 			break;
 		case 's':			/* sky only (no direct) */
 			suncolor[0] = suncolor[1] = suncolor[2] = 0;
-			if (skycolor[1] <= 1e-4) {
-				inconsistent = 1;
-				skycolor[0] = skycolor[1] = skycolor[2] = 1;
-			}
 			break;
 		case 'r':			/* rotate distribution */
 			if (argv[i][2] && argv[i][2] != 'z')
@@ -406,9 +397,6 @@ main(int argc, char *argv[])
 		}
 	if (i < argc-1)
 		goto userr;
-	if (inconsistent)
-		fprintf(stderr, "%s: WARNING: inconsistent -s, -d, -c options!\n",
-				progname);
 	if (i == argc-1 && freopen(argv[i], "r", stdin) == NULL) {
 		fprintf(stderr, "%s: cannot open '%s' for input\n",
 				progname, argv[i]);
