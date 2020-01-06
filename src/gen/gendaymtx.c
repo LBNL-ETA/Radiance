@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.31 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.32 2020/01/06 21:02:57 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -667,11 +667,6 @@ ComputeSky(float *parr)
 		diff_illum = diff_irrad * WHTEFFICACY;
 		dir_illum = dir_irrad * WHTEFFICACY;
 	}
-
-	if (bright(skycolor) <= 1e-4) {			/* 0 sky component? */
-		memset(parr, 0, sizeof(float)*3*nskypatch);
-		return;
-	}
 	/* Compute ground radiance (include solar contribution if any) */
 	parr[0] = diff_illum;
 	if (altitude > 0)
@@ -679,6 +674,10 @@ ComputeSky(float *parr)
 	parr[2] = parr[1] = parr[0] *= (1./PI/WHTEFFICACY);
 	multcolor(parr, grefl);
 
+	if (bright(skycolor) <= 1e-4) {			/* 0 sky component? */
+		memset(parr+3, 0, sizeof(float)*3*(nskypatch-1));
+		return;
+	}
 	/* Calculate Perez sky model parameters */
 	CalcPerezParam(sun_zenith, sky_clearness, sky_brightness, index);
 
