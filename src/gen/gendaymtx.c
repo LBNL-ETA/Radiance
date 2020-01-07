@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.34 2020/01/07 01:42:30 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.35 2020/01/07 18:26:55 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -252,6 +252,8 @@ static const ModelCoeff DirectLumEff[8] =
 #define	NSUNPATCH	4		/* max. # patches to spread sun into */
 #endif
 
+#define	SUN_ANG_DEG	0.533		/* sun full-angle in degrees */
+
 int		nsuns = NSUNPATCH;	/* number of sun patches to use */
 double		fixed_sun_sa = -1;	/* fixed solid angle per sun? */
 
@@ -281,6 +283,7 @@ float		*rh_dom;		/* sky patch solid angle (sr) */
 
 extern int	rh_init(void);
 extern float *	resize_dmatrix(float *mtx_data, int nsteps, int npatch);
+extern void	OutputSun(int id, FILE *fp);
 extern void	AddDirect(float *parr);
 
 
@@ -380,11 +383,9 @@ main(int argc, char *argv[])
 			sunsfp = fopen(argv[++i], "w");
 			if (!sunsfp) {
 				fprintf(stderr, "%s: cannot open '%s' for output\n",
-						argv[0], argv[i]);
+						progname, argv[i]);
 				exit(1);
 			}
-			fixed_sun_sa = PI/360.*0.533;
-			fixed_sun_sa *= PI*fixed_sun_sa;
 			break;
 		case 's':			/* sky only (no direct) */
 			suncolor[0] = suncolor[1] = suncolor[2] = 0;
@@ -399,7 +400,7 @@ main(int argc, char *argv[])
 			fixed_sun_sa = PI/360.*atof(argv[++i]);
 			if (fixed_sun_sa <= 0) {
 				fprintf(stderr, "%s: missing solar disk size argument for '-5' option\n",
-						argv[0]);
+						progname);
 				exit(1);
 			}
 			fixed_sun_sa *= fixed_sun_sa*PI;
@@ -459,8 +460,12 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: location '%s'\n", progname, buf);
 		fprintf(stderr, "%s: (lat,long)=(%.1f,%.1f) degrees north, west\n",
 				progname, s_latitude, s_longitude);
-		fprintf(stderr, "%s: %d sky patches per time step\n",
-				progname, nskypatch);
+		if (avgSky >= 0)
+			fprintf(stderr, "%s: %d sky patches\n",
+					progname, nskypatch);
+		if (sunsfp)
+			fprintf(stderr, "%s: outputting suns to file\n",
+					progname);
 		if (rotation != 0)
 			fprintf(stderr, "%s: rotating output %.0f degrees\n",
 					progname, rotation);
@@ -506,17 +511,10 @@ main(int argc, char *argv[])
 		}
 					/* compute sky patch values */
 		ComputeSky(mtx_data+mtx_offset);
-					/* output sun if indicated */
-		if (sunsfp && (altitude > 0) & (dir_illum > 1e-4)) {
-			double	srad = dir_illum/(WHTEFFICACY * fixed_sun_sa);
-			FVECT	sv;
-			vector(sv, altitude, azimuth);
-			fprintf(sunsfp, "\nvoid light solar%d\n0\n0\n", ntsteps);
-			fprintf(sunsfp, "3 %.3e %.3e %.3e\n", srad*suncolor[0],
-					srad*suncolor[1], srad*suncolor[2]);
-			fprintf(sunsfp, "\nsolar%d source sun%d\n0\n0\n", ntsteps, ntsteps);
-			fprintf(sunsfp, "4 %.6f %.6f %.6f 0.533\n", sv[0], sv[1], sv[2]);
-		}
+
+		if (sunsfp)		/* output sun if indicated */
+			OutputSun(ntsteps, sunsfp);
+
 		if (avgSky < 0)		/* no matrix? */
 			continue;
 
@@ -776,6 +774,26 @@ AddDirect(float *parr)
 		*pdest++ += val_add*suncolor[1];
 		*pdest++ += val_add*suncolor[2];
 	}
+}
+
+/* Output a sun to indicated file if appropriate for this time step */
+void
+OutputSun(int id, FILE *fp)
+{
+	double	srad;
+	FVECT	sv;
+
+	if ((altitude <= 0) | (dir_illum <= 1e-4))
+		return;
+
+	srad = DegToRad(SUN_ANG_DEG/2.);
+	srad = dir_illum/(WHTEFFICACY * PI*srad*srad);
+	vector(sv, altitude, azimuth);
+	fprintf(fp, "\nvoid light solar%d\n0\n0\n", id);
+	fprintf(fp, "3 %.3e %.3e %.3e\n", srad*suncolor[0],
+			srad*suncolor[1], srad*suncolor[2]);
+	fprintf(fp, "\nsolar%d source sun%d\n0\n0\n", id, id);
+	fprintf(fp, "4 %.6f %.6f %.6f %.4f\n", sv[0], sv[1], sv[2], SUN_ANG_DEG);
 }
 
 /* Initialize Reinhart sky patch positions (GW) */
