@@ -2338,3 +2338,6 @@ Added -o RxCxR1xC1 facility to perform blocking in rcollate.
 
 Made it so number of segments in genworm, genrev, and gensurf can be
 given as expressions of previously defined variables, etc.
+
+Added -D and -n option to gendaymtx to output sun description and skip
+matrix output on request.

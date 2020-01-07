@@ -1,4 +1,4 @@
-.\" RCSid $Id: gendaymtx.1,v 1.10 2019/06/25 00:09:45 greg Exp $
+.\" RCSid $Id: gendaymtx.1,v 1.11 2020/01/07 01:42:30 greg Exp $
 .TH GENDAYMTX 1 01/19/13 RADIANCE
 .SH NAME
 gendaymtx - generate an annual Perez sky matrix from a weather tape
@@ -11,7 +11,9 @@ gendaymtx - generate an annual Perez sky matrix from a weather tape
 ][
 .B "\-A"
 ][
-.B "\-d|\-s"
+.B "\-d|\-s|\-n"
+][
+.B "\-D sunfile"
 ][
 .B "\-r deg"
 ][
@@ -44,7 +46,7 @@ parameter setting.
 .PP
 Increasing the
 .I \-m
-parameter, typically by factors of two, yields a higher resolution
+parameter yields a higher resolution
 sky using the Reinhart patch subdivision.
 For example, setting
 .I "\-m 4"
@@ -87,6 +89,19 @@ If there is a sun in the description,
 .I gendaymtx
 will include its contribution in the four nearest sky patches,
 distributing energy according to centroid proximity.
+.PP
+The
+.I \-n
+option may be used if no matrix output is desired.
+This may be used to merely check the input, or in combination with the
+.I \-D
+option, below.
+.PP
+The
+.I \-D
+option may be used to specify an output file to contain a list of
+solar positions and intensities corresponding to time steps in the
+weather tape where the sun is visible above the horizion.
 .PP
 By default,
 .I gendaymtx

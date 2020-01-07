@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gendaymtx.c,v 2.33 2020/01/06 21:22:46 greg Exp $";
+static const char RCSid[] = "$Id: gendaymtx.c,v 2.34 2020/01/07 01:42:30 greg Exp $";
 #endif
 /*
  *  gendaymtx.c
@@ -307,6 +307,7 @@ main(int argc, char *argv[])
 	double	rotation = 0;		/* site rotation (degrees) */
 	double	elevation;		/* site elevation (meters) */
 	int	dir_is_horiz;		/* direct is meas. on horizontal? */
+	FILE	*sunsfp = NULL;		/* output file for individual suns */
 	float	*mtx_data = NULL;	/* our matrix data */
 	int	avgSky = 0;		/* compute average sky r.t. matrix? */
 	int	ntsteps = 0;		/* number of time steps */
@@ -367,9 +368,23 @@ main(int argc, char *argv[])
 			skycolor[1] = atof(argv[++i]);
 			skycolor[2] = atof(argv[++i]);
 			break;
+		case 'n':			/* no matrix output */
+			avgSky = -1;
+			rhsubdiv = 1;
+			/* fall through */
 		case 'd':			/* solar (direct) only */
 			skycolor[0] = skycolor[1] = skycolor[2] = 0;
 			grefl[0] = grefl[1] = grefl[2] = 0;
+			break;
+		case 'D':			/* output suns to file */
+			sunsfp = fopen(argv[++i], "w");
+			if (!sunsfp) {
+				fprintf(stderr, "%s: cannot open '%s' for output\n",
+						argv[0], argv[i]);
+				exit(1);
+			}
+			fixed_sun_sa = PI/360.*0.533;
+			fixed_sun_sa *= PI*fixed_sun_sa;
 			break;
 		case 's':			/* sky only (no direct) */
 			suncolor[0] = suncolor[1] = suncolor[2] = 0;
@@ -473,9 +488,6 @@ main(int argc, char *argv[])
 				memset(mtx_data+mtx_offset, 0, sizeof(float)*3*nskypatch);
 			continue;
 		}
-		if (verbose && mo != last_monthly)
-			fprintf(stderr, "%s: stepping through month %d...\n",
-						progname, last_monthly=mo);
 					/* compute solar position */
 		julian_date = jdate(mo, da);
 		sda = sdec(julian_date);
@@ -494,10 +506,32 @@ main(int argc, char *argv[])
 		}
 					/* compute sky patch values */
 		ComputeSky(mtx_data+mtx_offset);
+					/* output sun if indicated */
+		if (sunsfp && (altitude > 0) & (dir_illum > 1e-4)) {
+			double	srad = dir_illum/(WHTEFFICACY * fixed_sun_sa);
+			FVECT	sv;
+			vector(sv, altitude, azimuth);
+			fprintf(sunsfp, "\nvoid light solar%d\n0\n0\n", ntsteps);
+			fprintf(sunsfp, "3 %.3e %.3e %.3e\n", srad*suncolor[0],
+					srad*suncolor[1], srad*suncolor[2]);
+			fprintf(sunsfp, "\nsolar%d source sun%d\n0\n0\n", ntsteps, ntsteps);
+			fprintf(sunsfp, "4 %.6f %.6f %.6f 0.533\n", sv[0], sv[1], sv[2]);
+		}
+		if (avgSky < 0)		/* no matrix? */
+			continue;
+
 		AddDirect(mtx_data+mtx_offset);
 					/* update cumulative sky? */
 		for (i = 3*nskypatch*(avgSky&(ntsteps>1)); i--; )
 			mtx_data[i] += mtx_data[mtx_offset+i];
+					/* monthly reporting */
+		if (verbose && mo != last_monthly)
+			fprintf(stderr, "%s: stepping through month %d...\n",
+						progname, last_monthly=mo);
+	}
+	if (!ntsteps) {
+		fprintf(stderr, "%s: no valid time steps on input\n", progname);
+		exit(1);
 	}
 					/* check for junk at end */
 	while ((i = fgetc(stdin)) != EOF)
@@ -509,10 +543,10 @@ main(int argc, char *argv[])
 			fputs(buf, stderr); fputc('\n', stderr);
 			break;
 		}
-	if (!ntsteps) {
-		fprintf(stderr, "%s: no valid time steps on input\n", progname);
-		exit(1);
-	}
+
+	if (avgSky < 0)			/* no matrix output? */
+		goto alldone;
+
 	dif = 1./(double)ntsteps;	/* average sky? */
 	for (i = 3*nskypatch*(avgSky&(ntsteps>1)); i--; )
 		mtx_data[i] *= dif;
@@ -573,17 +607,18 @@ main(int argc, char *argv[])
 		if (ferror(stdout))
 			goto writerr;
 	}
-	if (fflush(stdout) == EOF)
+alldone:
+	if (fflush(NULL) == EOF)
 		goto writerr;
 	if (verbose)
 		fprintf(stderr, "%s: done.\n", progname);
 	exit(0);
 userr:
-	fprintf(stderr, "Usage: %s [-v][-h][-A][-d|-s][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
+	fprintf(stderr, "Usage: %s [-v][-h][-A][-d|-s|-n][-D file][-r deg][-m N][-g r g b][-c r g b][-o{f|d}][-O{0|1}] [tape.wea]\n",
 			progname);
 	exit(1);
 fmterr:
-	fprintf(stderr, "%s: input weather tape format error\n", progname);
+	fprintf(stderr, "%s: weather tape format error in header\n", progname);
 	exit(1);
 writerr:
 	fprintf(stderr, "%s: write error on output\n", progname);
