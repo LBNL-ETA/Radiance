@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.5 2019/11/07 23:20:28 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.6 2020/01/10 01:02:14 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -97,7 +97,9 @@ headline(char *s, void *p)
 			}
 			return -1;
 		}
-	} else if (isview(s))		/* get view params */
+	} else if (!strncmp(s, "SAMP360=", 8))
+		dcp->gotview--;
+	else if (isview(s))		/* get view params */
 		dcp->gotview += (sscanview(&dcp->vw, s) > 0);
 	if (dcp->hdrflags & HF_HEADOUT)
 		fputs(s, stdout);	/* copy to standard output */
@@ -117,6 +119,7 @@ process_dc_header(DEPTHCODEC *dcp, int ac, char *av[])
 		}
 		return 0;
 	}
+	dcp->gotview *= (dcp->gotview > 0);
 	if (dcp->hdrflags & HF_HEADOUT) {	/* finish header */
 		if (!(dcp->hdrflags & HF_HEADIN))
 			newheader("RADIANCE", stdout);
