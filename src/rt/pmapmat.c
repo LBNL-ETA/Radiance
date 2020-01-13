@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapmat.c,v 2.21 2018/12/06 20:00:35 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapmat.c,v 2.22 2020/01/13 17:12:19 rschregle Exp $";
 #endif
 /* 
    ==================================================================
@@ -145,15 +145,14 @@ void photonRay (const RAY *rayIn, RAY *rayOut,
 }
 
 
-
 static void addPhotons (const RAY *r)
 /* Insert photon hits, where applicable */
 {
    if (!r -> rlvl)
-      /* Add direct photon map at primary hitpoint */
+      /* Add direct photon at primary hitpoint */
       newPhoton(directPmap, r);
    else {
-      /* Add global or precomputed photon map at indirect hitpoint */
+      /* Add global or precomputed photon at indirect hitpoint */
       newPhoton(preCompPmap ? preCompPmap : globalPmap, r);
 
       /* Store caustic photon if specular flag set */
