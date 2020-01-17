@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.19 2019/12/13 16:00:33 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.20 2020/01/17 17:33:48 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -708,6 +708,15 @@ main(int argc, char *argv[])
 		fputs(origIDF, stderr);
 		fputs("'\n", stderr);
 		return(1);
+	}
+						/* check version (warning) */
+	if ((pptr = idf_getobject(our_idf, "Version")) != NULL &&
+			pptr->flist != NULL && atoi(pptr->flist->val) != 7) {
+		fputs(progname, stderr);
+		fputs(": warning - written for IDF version 7.x, not ",
+				stderr);
+		fputs(pptr->flist->val, stderr);
+		fputc('\n', stderr);
 	}
 						/* remove existing UVFs */
 	if ((pptr = idf_getobject(our_idf, UVF_PNAME)) != NULL) {
