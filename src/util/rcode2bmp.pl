@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# RCSid $Id: rcode2bmp.pl,v 2.1 2019/07/26 00:34:07 greg Exp $
+# RCSid $Id: rcode2bmp.pl,v 2.2 2020/01/21 18:00:17 greg Exp $
 #
 # Convert one or more rtpict outputs into BMP for convenient viewing
 #
@@ -52,7 +52,7 @@ while ($#ARGV >= 0) {
 		$cmd .= q{| rcalc -if -of -e 'cond=9e9-$1;$1=$1' | total -if -u};
 		my $dmax=`$cmd`;
 		$dmax = 2**(int(log($dmax)/log(2))+1);
-		my $unit=`getinfo < '$ARGV[0]' | sed -n 's/^REFDEPTH= *[0-9.]*[^0-9.]//p'`;
+		my $unit=`getinfo < '$ARGV[0]' | sed -n 's/^REFDEPTH= *[0-9.]*[^a-zA-Z]*//p'`;
 		chomp $unit;
 		$unit="Depth" if ( ! $unit );
 		$cmd = "rcode_depth -r -ff '$ARGV[0]' | pvalue -r -df -b ";
