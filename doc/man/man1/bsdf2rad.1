@@ -1,4 +1,4 @@
-.\" RCSid "$Id: bsdf2rad.1,v 1.2 2018/07/20 00:50:40 greg Exp $"
+.\" RCSid "$Id: bsdf2rad.1,v 1.3 2020/01/22 21:50:56 greg Exp $"
 .TH BSDF2RAD 1 8/11/2017 RADIANCE
 .SH NAME
 bsdf2rad - create a RADIANCE visualization of a BSDF representation
@@ -91,6 +91,7 @@ rvu -vp 0 -50 50 -vd 0 50 -50 -vh 45 -vv 30 cloth.oct
 To render an SIR description of a BRDF:
 .IP "" .2i
 bsdf2rad front_refl.sir back_refl.sir > refl.rad
+.br
 oconv -f refl.rad | rpict -vf good.vf > refl_good.hdr
 .SH AUTHOR
 Greg Ward
