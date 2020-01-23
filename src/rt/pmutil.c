@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmutil.c,v 2.3 2018/02/09 14:57:42 rschregle Exp $";
+static const char RCSid[] = "$Id: pmutil.c,v 2.4 2020/01/23 18:27:02 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmutil.c,v 2.3 2018/02/09 14:57:42 rschregle E
        supported by the Swiss National Science Foundation (SNSF, #147053)
    ======================================================================
    
-   $Id: pmutil.c,v 2.3 2018/02/09 14:57:42 rschregle Exp $
+   $Id: pmutil.c,v 2.4 2020/01/23 18:27:02 rschregle Exp $
 */
 
 #include "pmap.h"
@@ -75,16 +75,38 @@ void loadPmaps (PhotonMap **pmaps, const PhotonMapParams *parm)
          /* Assign to appropriate photon map type (deleting previously
           * loaded photon map of same type if necessary) */
          if (pmaps [type]) {
+            sprintf(errmsg, "multiple %s photon maps, dropping previous",
+                    pmapName [type]);
+            error(WARNING, errmsg);
             deletePhotons(pmaps [type]);
             free(pmaps [type]);
          }
          pmaps [type] = pm;
          
-         /* Check for invalid density estimate bandwidth */                            
+         /* Check for valid density estimate bandwidths */
+         if ((pm -> minGather > 1 || pm -> maxGather > 1) &&
+             (type == PMAP_TYPE_PRECOMP)) {
+            /* Force bwidth to 1 for precomputed pmap */
+            error(WARNING, "ignoring bandwidth for precomp photon map");
+            pm -> minGather = pm -> maxGather = 1;
+         }
+                     
+         if ((pm -> maxGather > pm -> minGather) && 
+             (type == PMAP_TYPE_VOLUME)) {            
+            /* Biascomp for volume pmaps (see volumePhotonDensity() below) 
+               is considered redundant, and there's probably no point in 
+               recovering by using the lower bandwidth, since it's probably
+               not what the user wants, so bail out. */
+            sprintf(errmsg, 
+                    "bias compensation is not available with %s photon maps",
+                    pmapName [type]);
+            error(USER, errmsg);
+         }
+         
          if (pm -> maxGather > pm -> numPhotons) {
             error(WARNING, "adjusting density estimate bandwidth");
             pm -> minGather = pm -> maxGather = pm -> numPhotons;
-         }
+         }            
       }
 }
 
