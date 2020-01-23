@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.42 2018/11/08 00:54:07 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.43 2020/01/23 19:20:54 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -91,10 +91,6 @@ getinterest(		/* get area of interest */
 	double  *mp
 )
 {
-	int  x, y;
-	RAY  thisray;
-	int  i;
-
 	if (sscanf(s, "%lf", mp) != 1)
 		*mp = 1.0;
 	else if (*mp < -FTINY)		/* negative zoom is reduction */
@@ -104,6 +100,8 @@ getinterest(		/* get area of interest */
 		return(-1);
 	}
 	if (!sscanvec(sskip(s), vec)) {
+		RAY  thisray;
+		int  x, y;
 		if (dev->getcur == NULL)
 			return(-1);
 		(*dev->comout)("Pick view center\n");
@@ -115,34 +113,43 @@ getinterest(		/* get area of interest */
 			return(-1);
 		}
 		if (!direc || ourview.type == VT_PAR) {
+			int	weakhit = 0;
+			FVECT	weakpt;
 			rayorigin(&thisray, PRIMARY, NULL, NULL);
 			while (localhit(&thisray, &thescene)) {
-				OBJREC	*m = findmaterial(thisray.ro);
-				if (m != NULL && !istransp(m->otype) &&
-						!isBSDFproxy(m) &&
-						(thisray.clipset == NULL ||
-							!inset(thisray.clipset,
-							    thisray.ro->omod)))
-					break;		/* found something */
+				OBJREC	*m = NULL;
+				if (thisray.clipset == NULL ||
+						!inset(thisray.clipset,
+							    thisray.ro->omod))
+					m = findmaterial(thisray.ro);
+				if ((m != NULL) & !weakhit &&
+						istransp(m->otype) &&
+						m->otype != MAT_MIST) {
+					weakhit = 1;
+					VCOPY(weakpt, thisray.rop);
+				} else if (m != NULL && !istransp(m->otype) &&
+						!isBSDFproxy(m))
+					break;		/* something solid */
 				VCOPY(thisray.rorg, thisray.rop);
 				rayclear(&thisray);	/* skip invisible */
 			}
 			if ((thisray.ro == NULL) | (thisray.ro == &Aftplane)) {
-				error(COMMAND, "not a local object");
-				return(-1);
+				if (!weakhit) {
+					error(COMMAND, "not a local object");
+					return(-1);
+				}			/* else use weak obj. */
+				VCOPY(thisray.rop, weakpt);
 			}
 		}
 		if (direc)
 			if (ourview.type == VT_PAR)
-				for (i = 0; i < 3; i++)
-					vec[i] = thisray.rop[i] - ourview.vp[i];
+				VSUB(vec, thisray.rop, ourview.vp);
 			else
 				VCOPY(vec, thisray.rdir);
 		else
 			VCOPY(vec, thisray.rop);
 	} else if (direc) {
-		for (i = 0; i < 3; i++)
-			vec[i] -= ourview.vp[i];
+		VSUB(vec, vec, ourview.vp);
 		if (normalize(vec) == 0.0) {
 			error(COMMAND, "point at view origin");
 			return(-1);
