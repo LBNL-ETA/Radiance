@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmapopt.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $";
+static const char RCSid[] = "$Id: pmapopt.c,v 2.9 2020/01/23 18:24:47 rschregle Exp $";
 #endif
 
 /* 
@@ -12,7 +12,7 @@ static const char RCSid[] = "$Id: pmapopt.c,v 2.8 2016/05/17 17:39:47 rschregle 
    supported by the Swiss National Science Foundation (SNSF, #147053)
    ==================================================================   
    
-   $Id: pmapopt.c,v 2.8 2016/05/17 17:39:47 rschregle Exp $
+   $Id: pmapopt.c,v 2.9 2020/01/23 18:24:47 rschregle Exp $
 */
 
 
@@ -60,8 +60,8 @@ int getPmapRenderOpt (int ac, char *av [])
                      return -1;
                }
                else {
-                  sprintf(errmsg, "no photon lookup bandwidth specified, "
-                          "using default %d", defaultGather);
+                  sprintf(errmsg, "missing photon lookup bandwidth, "
+                          "defaulting to %d", defaultGather);
                   error(WARNING, errmsg);
                   return 1;
                }
