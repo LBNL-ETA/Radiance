@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.6 2020/01/25 02:36:25 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.7 2020/01/25 05:35:34 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -50,7 +50,7 @@ typedef struct {
 #if 1
 #define	depth2code(d, dref) \
 		( (d) > (dref) ? (int)(32768.001 - 32768.*(dref)/(d))-1 : \
-		  (d) > .0 ? (int)(32767.*(d)/(dref) - 32768.) : -32768 )
+		  (d) > .0 ? (int)(32767.*(d)/(dref) - 32768.999) : -32768 )
 #else
 extern int	depth2code(double d, double dref);
 #endif

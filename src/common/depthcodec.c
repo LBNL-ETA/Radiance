@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.7 2020/01/25 02:36:25 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.8 2020/01/25 05:35:34 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -26,7 +26,7 @@ depth2code(double d, double dref)
 	if (d > dref)
 		return (int)(32768.001 - 32768.*dref/d) - 1;
 
-	return (int)(32767.*d/dref - 32768.);
+	return (int)(32767.*d/dref - 32768.999);
 }
 #endif
 
