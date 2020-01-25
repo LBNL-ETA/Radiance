@@ -1,4 +1,4 @@
-/* RCSid $Id: depthcodec.h,v 2.5 2019/11/07 23:20:28 greg Exp $ */
+/* RCSid $Id: depthcodec.h,v 2.6 2020/01/25 02:36:25 greg Exp $ */
 /*
  * Definitions and declarations for 16-bit depth encode/decode
  *
@@ -59,7 +59,7 @@ extern int	depth2code(double d, double dref);
 #if 1
 #define code2depth(c, dref) \
 		( (c) <= -32768 ? .0 : (c) >= 32767 ? FHUGE : \
-		  (c) < 0 ? (dref)*(32767.5 + (c))*(1./32767.) : \
+		  (c) < -1 ? (dref)*(32768.5 + (c))*(1./32767.) : \
 				(dref)*32768./(32766.5 - (c)) )
 #else
 extern double	code2depth(int c, double dref);
