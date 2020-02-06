@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.37 2019/08/14 18:20:02 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.38 2020/02/06 19:33:32 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -312,9 +312,10 @@ unkopt:
 		SET_FILE_BINARY(stdout);
 					/* get header */
 		if (header) {
-			if (checkheader(fin, fmtid, stdout) < 0) {
-				fprintf(stderr, "%s: wrong input format\n",
-						progname);
+			getheader(fin, checkhead, stdout);
+			if (wrongformat) {
+				fprintf(stderr, "%s: wrong input format (expected %s)\n",
+						progname, fmtid);
 				quit(1);
 			}
 			if (fin2 != NULL) {
@@ -361,7 +362,7 @@ unkopt:
 		if ((format != 'a') & (format != 'i'))
 			SET_FILE_BINARY(stdout);
 						/* get header */
-		getheader(fin, checkhead, NULL);
+		getheader(fin, checkhead, header ? stdout : (FILE *)NULL);
 		if (wrongformat) {
 			fprintf(stderr,
 				"%s: input not a Radiance RGBE picture\n",
@@ -402,13 +403,16 @@ checkhead(				/* deal with line from header */
 	void	*p
 )
 {
+	FILE	*fout = (FILE *)p;
 	char	fmt[MAXFMTLEN];
 	double	d;
 	COLOR	ctmp;
 	int	rv;
 
 	if (formatval(fmt, line)) {
-		if (!strcmp(fmt, CIEFMT))
+		if (reverse)
+			wrongformat = strcmp(fmt, fmtid);
+		else if (!strcmp(fmt, CIEFMT))
 			mybright = &xyz_bright;
 		else if (!strcmp(fmt, COLRFMT))
 			mybright = &rgb_bright;
@@ -424,10 +428,11 @@ checkhead(				/* deal with line from header */
 				colval(exposure,GRN)/colval(ctmp,GRN),
 				colval(exposure,BLU)/colval(ctmp,BLU));
 		doexposure++;
-	} else if (reverse && (rv = isbigendian(line)) >= 0) {
-		swapbytes = (nativebigendian() != rv);
-	} else if (header)
-		fputs(line, stdout);
+	} else if ((rv = isbigendian(line)) >= 0) {
+		if (reverse)
+			swapbytes = (nativebigendian() != rv);
+	} else if (fout != NULL)
+		fputs(line, fout);
 	return(0);
 }
 
