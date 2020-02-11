@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.8 2019/11/13 18:20:47 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.9 2020/02/11 18:15:23 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -429,6 +429,11 @@ main(int argc, char *argv[])
 					/* process data */
 	switch (conversion) {
 	case CV_FWD:			/* distance -> depth code */
+		if (!strcmp(dc.depth_unit, "1")) {
+			fputs(progname, stderr);
+			fputs(": warning - using reference depth of 1.0\n",
+					stderr);
+		}
 		if (!encode_depths(&dc))
 			return 1;
 		break;
