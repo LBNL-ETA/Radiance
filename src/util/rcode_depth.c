@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcode_depth.c,v 2.9 2020/02/11 18:15:23 greg Exp $";
+static const char RCSid[] = "$Id: rcode_depth.c,v 2.10 2020/02/12 01:13:01 greg Exp $";
 #endif
 /*
  * Encode and decode depth map using 16-bit integers
@@ -45,11 +45,11 @@ encode_depths(DEPTHCODEC *dcp)
 	long	nexpected = (long)dcp->res.xr * dcp->res.yr;
 
 	if (dcp->inpfmt[0]) {
-		if (strstr(dcp->inpfmt, "ascii") != NULL)
+		if (!strcmp(dcp->inpfmt, "ascii"))
 			dcp->format = 'a';
-		else if (strstr(dcp->inpfmt, "float") != NULL)
+		else if (!strcmp(dcp->inpfmt, "float"))
 			dcp->format = 'f';
-		else if (strstr(dcp->inpfmt, "double") != NULL)
+		else if (!strcmp(dcp->inpfmt, "double"))
 			dcp->format = 'd';
 		else {
 			fputs(dcp->inpname, stderr);
