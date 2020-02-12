@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.8 2020/01/25 05:35:34 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.9 2020/02/12 01:11:39 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -97,6 +97,8 @@ headline(char *s, void *p)
 			}
 			return -1;
 		}
+		if (dcp->hdrflags & HF_ENCODE)
+			return 0;	/* will add this later */
 	} else if (!strncmp(s, "SAMP360=", 8))
 		dcp->gotview--;
 	else if (isview(s))		/* get view params */
