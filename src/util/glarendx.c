@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.13 2018/08/02 18:33:50 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.14 2020/02/17 19:19:45 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -164,6 +164,7 @@ headline(			/* get line from header */
 static void
 init(void)				/* initialize calculation */
 {
+	char	*err;
 					/* read header */
 	getheader(stdin, headline, NULL);
 	if (wrongformat) {
@@ -171,8 +172,14 @@ init(void)				/* initialize calculation */
 		exit(1);
 	}
 					/* set view */
-	if (setview(&midview) != NULL) {
-		fprintf(stderr, "%s: bad view information in input\n",
+	if ((err = setview(&midview)) != NULL) {
+		fprintf(stderr, "%s: %s\n",
+				progname, err);
+		exit(1);
+	}
+	if (fabs(DOT(midview.vdir, midview.vup)) > 1e-4) {
+		fprintf(stderr,
+		"%s: Input view direction not perpendicular to up vector\n",
 				progname);
 		exit(1);
 	}
@@ -319,14 +326,11 @@ posindex(			/* compute position index */
 	d = DOT(sd,vd);
 	if (d <= 0.0)
 		return(-1.0);
-	if (d >= 1.0)
+	if (d >= 1.0-FTINY)
 		return(1.0);
 	sigma = acos(d) * (180./PI);
 	d = fabs(DOT(sd,vu)/sqrt(1.0-d*d));
-	if (d >= 1.0)
-		tau = 0.0;
-	else
-		tau = acos(d) * (180./PI);
+	tau = Acos(d) * (180./PI);
 	return( exp( sigma*( (35.2 - tau*.31889 - 1.22*exp(-.22222*tau))*1e-3
 			+ sigma*(21. + tau*(.26667 + tau*-.002963))*1e-5 )
 		) );
@@ -341,16 +345,18 @@ dgi(		/* compute Daylight Glare Index */
 	struct glare_src	*gs;
 	FVECT	mydir,testdir[7],vhor;
 	double	r,posn,omega,p[7],sum;
-	int	i,n;
+	int	i;
 
 	spinvector(mydir, midview.vdir, midview.vup, gd->ang);
-	sum = 0.0; n = 0;
+	sum = 0.0;
 	for (gs = all_srcs; gs != NULL; gs = gs->next) {
 
 		/* compute 1/p^2 weighted solid angle of the source */
-		r = sqrt(1 - pow(1.-gs->dom/2./PI,2.));
+		r = 1. - gs->dom*(.5/PI);
+		r = sqrt(1. - r*r);
 		fcross(vhor,gs->dir,midview.vup);
-		normalize(vhor);
+		if (normalize(vhor) == 0.)
+			continue;
 		VCOPY(testdir[0],gs->dir);
 		fvsum(testdir[1],gs->dir,vhor,r);
 		fvsum(testdir[2],gs->dir,vhor,0.5*r);
@@ -361,26 +367,26 @@ dgi(		/* compute Daylight Glare Index */
 		fvsum(testdir[6],testdir[4],midview.vup,0.866*r);
 		fvsum(testdir[4],testdir[4],midview.vup,-0.866*r);
 		for (i = 0; i < 7; i++) {
-			normalize(testdir[i]);
+			p[i] = 0.0;
+			if (normalize(testdir[i]) == 0.)
+				continue;
 			posn = posindex(testdir[i],mydir,midview.vup);
-			if (posn <= FTINY)
-				p[i] = 0.0;
-			else
+			if (posn > FTINY)
 				p[i] = 1./(posn*posn);
 		}
-		r = 1-gs->dom/2./PI;
+		r = 1. - gs->dom*(.5/PI);
 		omega = gs->dom*p[0];
-		omega += (r*PI*(1+1/r/r)-2*PI)*(-p[0]+(p[1]+p[2])*0.5);
-		omega += (2*PI-r*PI*(1+1/r/r))*(-p[0]-0.1667*(p[1]+p[3])
+		omega += (r*PI*(1.+1./(r*r))-2.*PI)*(-p[0]+(p[1]+p[2])*0.5);
+		omega += (2.*PI-r*PI*(1.+1./(r*r)))*(-p[0]-0.1667*(p[1]+p[3])
 			  +0.3334*(p[2]+p[4]+p[5]+p[6]));
-
+		if (omega <= 0.)
+			omega = 0.;
 		sum += pow(gs->lum,1.6) * pow(omega,0.8) /
-		       (gd->indirect/PI + 0.07*sqrt(gs->dom)*gs->lum);
-		n++;
+		       (gd->indirect*(1./PI) + 0.07*sqrt(gs->dom)*gs->lum);
 	}
-	if (n == 0)
+	if (sum <= FTINY)
 		return(0.0);
-	return( 10*log10(0.478*sum) );
+	return( 10.*log10(0.478*sum) );
 }
 
 
@@ -404,7 +410,7 @@ brs_gi(		/* compute BRS Glare Index */
 	}
 	if (sum <= FTINY)
 		return(0.0);
-	sum /= gd->indirect/PI;
+	sum *= PI/gd->indirect;
 	return(10*log10(0.478*sum));
 }
 
