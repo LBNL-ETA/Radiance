@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glarendx.c,v 2.14 2020/02/17 19:19:45 greg Exp $";
+static const char	RCSid[] = "$Id: glarendx.c,v 2.15 2020/02/17 19:35:24 greg Exp $";
 #endif
 /*
  * Compute Glare Index given by program name or -t option:
@@ -380,7 +380,7 @@ dgi(		/* compute Daylight Glare Index */
 		omega += (2.*PI-r*PI*(1.+1./(r*r)))*(-p[0]-0.1667*(p[1]+p[3])
 			  +0.3334*(p[2]+p[4]+p[5]+p[6]));
 		if (omega <= 0.)
-			omega = 0.;
+			continue;
 		sum += pow(gs->lum,1.6) * pow(omega,0.8) /
 		       (gd->indirect*(1./PI) + 0.07*sqrt(gs->dom)*gs->lum);
 	}
