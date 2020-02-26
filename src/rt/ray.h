@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.41 2019/07/25 16:50:54 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.42 2020/02/26 17:58:06 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -57,18 +57,18 @@ typedef struct ray {
 	FULLXF	*rox;		/* object transformation */
 	int	*slights;	/* list of lights to test for scattering */
 	RNUMBER	rno;		/* unique ray number */
-	short	rflips;		/* surface orientation has been reversed */
-	short	rlvl;		/* number of reflections for this ray */
+	OBJECT	robj;		/* intersected object number */
 	int	rsrc;		/* source we're aiming for */
 	float	rweight;	/* cumulative weight (for termination) */
+	float	gecc;		/* scattering eccentricity coefficient */
 	COLOR	rcoef;		/* contribution coefficient w.r.t. parent */
 	COLOR	pcol;		/* pattern color */
 	COLOR	mcol;		/* mirrored color contribution */
 	COLOR	rcol;		/* returned radiance value */
 	COLOR	cext;		/* medium extinction coefficient */
 	COLOR	albedo;		/* medium scattering albedo */
-	float	gecc;		/* scattering eccentricity coefficient */
-	OBJECT	robj;		/* intersected object number */
+	short	rflips;		/* surface orientation has been reversed */
+	short	rlvl;		/* number of reflections for this ray */
 	short	rtype;		/* ray type */
 	short	crtype;		/* cumulative ray type */
 }  RAY;
