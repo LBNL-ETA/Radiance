@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdobj.c,v 3.21 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhdobj.c,v 3.22 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Routines for loading and displaying Radiance objects in rholo with GLX.
@@ -135,7 +135,7 @@ freedobj(			/* free resources and memory assoc. with op */
 	dobjects = ohead.next;
 	if (!foundlink) {
 		glDeleteLists(op->listid, op->nlists);
-		close_process(&(op->rtp));
+		close_process(&op->rtp);
 	}
 	while (op->xfac)
 		freestr(op->xfav[--op->xfac]);
@@ -610,7 +610,8 @@ dobj_load(		/* create/load an octree object */
 					/* start rtrace */
 	rtargv[RTARGC-1] = fpath;
 	rtargv[RTARGC] = NULL;
-	open_process(&(op->rtp), rtargv);
+	op->rtp = sp_inactive;
+	open_process(&op->rtp, rtargv);
 					/* insert into main list */
 	op->next = dobjects;
 	curobj = dobjects = op;
@@ -908,7 +909,7 @@ dobj_trace(	/* check for ray intersection with object(s) */
 		VCOPY(darr, rorg); VCOPY(darr+3, rdir);
 	}
 				/* trace it */
-	if (process(&(op->rtp), (char *)darr, (char *)darr, sizeof(double),
+	if (process(&op->rtp, (char *)darr, (char *)darr, sizeof(double),
 			6*sizeof(double)) != sizeof(double))
 		error(SYSTEM, "rtrace communication error");
 				/* return distance */

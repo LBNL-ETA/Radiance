@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pinterp.c,v 2.48 2019/11/07 23:20:28 greg Exp $";
+static const char	RCSid[] = "$Id: pinterp.c,v 2.49 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Interpolate and extrapolate pictures with different view parameters.
@@ -1162,7 +1162,7 @@ calstart(                    /* start fill calculation */
 	int	rval;
 	char	**wp, *cp;
 
-	if (PDesc.running) {
+	if (PDesc.flags & PF_RUNNING) {
 		fprintf(stderr, "%s: too many calculations\n", progname);
 		exit(1);
 	}
@@ -1197,7 +1197,7 @@ calstart(                    /* start fill calculation */
 static void
 caldone(void)                               /* done with calculation */
 {
-	if (!PDesc.running)
+	if (!(PDesc.flags & PF_RUNNING))
 		return;
 	clearqueue();
 	close_process(&PDesc);

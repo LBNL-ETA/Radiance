@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.21 2020/01/20 17:53:40 greg Exp $";
+static const char RCSid[] = "$Id: eplus_adduvf.c,v 2.22 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Add User View Factors to EnergyPlus Input Data File
@@ -655,6 +655,7 @@ compute_zones(void)
 	for (zptr = zone_list; zptr != NULL; zptr = zptr->next) {
 		SUBPROC	rcproc;
 						/* start rcontrib process */
+		rcproc = sp_inactive;
 		if (!start_rcontrib(&rcproc, zptr))
 			return(0);
 						/* compute+add view factors */

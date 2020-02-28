@@ -1,5 +1,5 @@
 #ifndef lint
-static char RCSid[]="$Id: win_process.c,v 3.13 2016/03/28 16:59:38 schorsch Exp $";
+static char RCSid[]="$Id: win_process.c,v 3.14 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes.
@@ -19,6 +19,9 @@ static char RCSid[]="$Id: win_process.c,v 3.13 2016/03/28 16:59:38 schorsch Exp 
 #include "rterror.h"
 #include "rtio.h"
 #include "rtprocess.h"
+
+
+SUBPROC		sp_inactive;	/* zero initialization is fine */
 
 
 int
@@ -168,7 +171,7 @@ start_process(SUBPROC *proc, char *cmdstr)
 	proc->r = _open_osfhandle((long)hRead, _O_RDONLY|_O_BINARY);
 	proc->w = _open_osfhandle((long)hWrite, _O_APPEND|_O_BINARY);
 	proc->pid = PInfo.dwProcessId;
-	proc->running = 1;
+	proc->flags = PF_RUNNING;
 	CloseHandle(hCurProc);
 	/* Windows doesn't tell us the actual buffer size */
 	return PIPE_BUF;
@@ -182,7 +185,7 @@ error: /* cleanup */
 	if(hRead) CloseHandle(hRead);
 	if(hWrite) CloseHandle(hWrite);
 	if(hCurProc) CloseHandle(hCurProc);
-	proc->running = 0;
+	proc->flags = 0;
 	return -1;
 	/* There... Are we happy now? */
 }
@@ -277,12 +280,11 @@ open_process(SUBPROC *proc, char *av[])
 	char *cmdpath;
 	char *cmdstr;
 
-	if (av == NULL || av[0] == NULL) {
+	if (av == NULL || av[0] == NULL || proc->flags) {
 		fputs("Illegal call to open_process()!\n", stderr);
 		return -1;
 	}
 	proc->pid = 0;
-	proc->running = 0;
 	if (av == NULL) { return -1; }
 	cmdpath = getpath(av[0], getenv("PATH"), X_OK);
 	cmdstr = quoted_cmdline(cmdpath, av+1);
@@ -311,10 +313,10 @@ close_processes(SUBPROC pd[], int nproc) {
 	DWORD pid;
 
 	for (i = 0; i < nproc; i++) {
-		if (pd[i].running) {
+		if (pd[i].flags & PF_RUNNING) {
 			ocres = close(pd[i].w);
 			icres = close(pd[i].r);
-			pd[i].running = 0;
+			pd[i].flags = 0;
 			if(ocres != 0 || icres != 0) {
 				/* something went wrong: enforce infanticide */
 				/* other than that, it looks like we want to ignore errors */
@@ -337,7 +339,9 @@ main( int argc, char **argv )
 	char ret[1024];
 	char *command[]= {"word", "gappy word", "\"quoted words\"", "'squoted words'", NULL};
 
-    res = open_process(&proc, command)
+	proc.flags = 0;
+	proc.pid = 0;
+	res = open_process(&proc, command)
 	if (res == 0) {
 		printf("open_process() failed with return value 0\n");
 		return -1;

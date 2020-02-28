@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpiece.c,v 2.57 2018/08/21 17:46:09 greg Exp $";
+static const char	RCSid[] = "$Id: rpiece.c,v 2.58 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Generate sections of a picture.
@@ -326,6 +326,7 @@ init(			/* set up output file and start rpict */
 		goto filerr;
 	dolock(outfd, F_UNLCK);
 					/* start rpict process */
+	rpd = sp_inactive;
 	if (open_process(&rpd, rpargv) <= 0) {
 		fprintf(stderr, "%s: cannot start %s\n", progname, rpargv[0]);
 		exit(1);

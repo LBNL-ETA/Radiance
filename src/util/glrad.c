@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glrad.c,v 3.26 2016/04/28 16:28:20 greg Exp $";
+static const char	RCSid[] = "$Id: glrad.c,v 3.27 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Program to display Radiance scene using OpenGL.
@@ -76,7 +76,7 @@ char	*scene[MAXSCENE+1];		/* material and scene file list */
 int	nscenef = 0;			/* number of scene files */
 char	*octree;			/* octree name (NULL if unnec.) */
 
-SUBPROC	rtpd;			/* rtrace process descriptors */
+SUBPROC	rtpd = SP_INACTIVE;		/* rtrace process descriptors */
 
 int	silent = 0;			/* run rad silently? */
 int	backvis = 1;			/* back faces visible? */
@@ -211,7 +211,7 @@ quit(				/* exit gracefully */
 	if (ourdisplay != NULL)
 		dev_close();
 	/* if (rtpd.pid > 0) { */
-	if (rtpd.running) {
+	if (rtpd.flags & PF_RUNNING) {
 		if (close_process(&rtpd) > 0)
 			wputs("bad exit status from rtrace\n");
 		/* rtpd.pid = 0; */
@@ -741,7 +741,7 @@ getintersect(		/* intersect ray with scene geometry */
 	float	fbuf[6];
 				/* check to see if rtrace is running */
 	/* if (rtpd.pid <= 0) */
-	if (!rtpd.running)
+	if (!(rtpd.flags & PF_RUNNING))
 		return(0);
 				/* assign origin */
 	fbuf[0] = org[0]; fbuf[1] = org[1]; fbuf[2] = org[2];

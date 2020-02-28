@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rholo4.c,v 3.38 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rholo4.c,v 3.39 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Holodeck display process communication
@@ -23,7 +23,7 @@ static const char	RCSid[] = "$Id: rholo4.c,v 3.38 2018/10/05 19:19:16 greg Exp $
 #endif
 
 static int	inp_flags;
-static SUBPROC	dpd;
+static SUBPROC	dpd = SP_INACTIVE;
 static FILE	*dpout;
 
 static void disp_flush(void);
@@ -41,7 +41,7 @@ disp_open(		/* open the named display driver */
 	if (!strcmp(dname, SLAVENAME)) {
 		dpd.r = 0;		/* read from stdin */
 		dpout = stdout;		/* write to stdout */
-		dpd.running = 0; /* we're the slave procees */
+		dpd.flags = 0;		/* we're the slave procees */
 	} else {
 					/* get full display program name */
 #ifdef DEVPATH
@@ -260,7 +260,7 @@ disp_close(void)			/* close our display process */
 	disp_result(DS_SHUTDOWN, 0, NULL);
 	fclose(dpout);
 	dpout = NULL;
-	return(dpd.running ? close_process(&dpd) : 0);
+	return(dpd.flags&PF_RUNNING ? close_process(&dpd) : 0);
 
 }
 

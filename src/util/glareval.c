@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: glareval.c,v 2.16 2018/08/02 18:33:50 greg Exp $";
+static const char	RCSid[] = "$Id: glareval.c,v 2.17 2020/02/28 05:18:49 greg Exp $";
 #endif
 /*
  * Compute pixels for glare calculation
@@ -199,7 +199,7 @@ getviewpix(		/* compute single view pixel */
 	npixinvw++;
 	if ((res = pict_val(dir)) >= 0.0)
 		return(res);
-	if (rt_pd.r == -1) {
+	if (!(rt_pd.flags & PF_RUNNING)) {
 		npixmiss++;
 		return(-1.0);
 	}
@@ -240,7 +240,7 @@ getviewspan(		/* compute a span of view pixels */
 		npixinvw++;
 		if ((vb[vh+hsize] = pict_val(dir)) >= 0.0)
 			continue;
-		if (rt_pd.r == -1) {		/* missing information */
+		if (!(rt_pd.flags & PF_RUNNING)) {	/* missing information */
 			npixmiss++;
 			continue;
 		}
@@ -376,7 +376,6 @@ done_rtrace(void)			/* wait for rtrace to finish */
 				progname, status);
 		exit(1);
 	}
-	rt_pd.r = -1;
 }
 
 
