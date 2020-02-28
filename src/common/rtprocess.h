@@ -1,4 +1,4 @@
-/* RCSid $Id: rtprocess.h,v 3.18 2020/02/28 05:18:49 greg Exp $ */
+/* RCSid $Id: rtprocess.h,v 3.19 2020/02/28 16:23:47 greg Exp $ */
 /*
  *   rtprocess.h 
  *   Routines to communicate with separate process via dual pipes
@@ -58,6 +58,49 @@ extern "C" {
    on the output of the parent.  Make sure to call fflush(stdout) first
    if any data was buffered.  It is illegal to set both PF_FILT_INP and
    PF_FILT_OUT, as a circular process is guaranteed to hang.
+   
+   If you want behavior similar to popen(cmd, "w") (again Unix-only),
+   keeping stdout open in parent, use a duplicate descriptor like so:
+   {
+	SUBPROC	rtp = sp_inactive;
+	FILE	*fout;
+	fflush(stdout);
+	rtp.w = dup(fileno(stdout));
+	rtp.flags |= PF_FILT_OUT;
+	if (open_process(&rtp, cmd_argv) <= 0) {
+		perror(cmd_argv[0]); exit(1);
+	}
+	fout = fdopen(rtp.w, "w");
+	...write data to filter using fout until finished...
+	fclose(fout);
+	if (close_process(&rtp)) {
+		perror(cmd_argv[0]); exit(1);
+	}
+	...can continue sending data directly to stdout...
+    }
+    We could also have called open_process() after fdopen() above, or after
+    using fopen() on a file if we wanted to insert our filter before it.
+    A similar sequence may be used to filter from stdin without closing
+    it, though process termination becomes more difficult with two readers.
+    Filtering input from a file works better, since the file is then read by
+    the child only, as in:
+    {
+	SUBPROC rtp = sp_inactive;
+	FILE	*fin = fopen(fname, "r");
+	if (fin == NULL) {
+		open_error(fname); exit(1);
+	}
+	rtp.r = fileno(fin);
+	rtp.flags |= PF_FILT_INP;
+	if (open_process(&rtp, cmd_argv) <= 0) {
+		perror(cmd_argv[0]); fclose(fin); exit(1);
+	}
+	...read filtered file data from fin until EOF...
+	fclose(fin);
+	if (close_process(&rtp)) {
+		perror(cmd_argv[0]); exit(1);
+	}
+    }
 */
 
 
