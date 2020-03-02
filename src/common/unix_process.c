@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: unix_process.c,v 3.16 2020/02/28 05:18:49 greg Exp $";
+static const char	RCSid[] = "$Id: unix_process.c,v 3.17 2020/03/02 19:06:48 greg Exp $";
 #endif
 /*
  * Routines to communicate with separate process via dual pipes
@@ -32,7 +32,7 @@ open_process(		/* open communication to separate process */
 	if (pd->pid > 0)
 		return(-1);		/* need to close, first */
 	
-	if ((pd->flags & (PF_FILT_INP|PF_FILT_OUT)) == (PF_FILT_INP|PF_FILT_OUT))
+	if ((pd->flags&(PF_FILT_INP|PF_FILT_OUT)) == (PF_FILT_INP|PF_FILT_OUT))
 		return(-1);		/* circular process not supported */
 
 	pd->flags &= ~PF_RUNNING;	/* not running for sure */
@@ -112,9 +112,9 @@ open_process(		/* open communication to separate process */
 	 * No use in read stream without it, so set flag there as well.
 	 * GW: This bug took me two days to figure out!!
 	 */
-	if (pd->r >= 0)
+	if (pd->r > 0)
 		fcntl(pd->r, F_SETFD, FD_CLOEXEC);
-	if (pd->w >= 0)
+	if (pd->w > 1)
 		fcntl(pd->w, F_SETFD, FD_CLOEXEC);
 	pd->flags |= PF_RUNNING;
 	return(PIPE_BUF);
