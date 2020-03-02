@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.50 2019/12/10 19:18:43 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.51 2020/03/02 22:00:05 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -11,7 +11,7 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.50 2019/12/10 19:18:43 greg Exp
 #include <stdlib.h>
 #include "rtio.h"
 #include "rtmath.h"
-#include "paths.h"
+#include "rtprocess.h"
 #include "bsdf.h"
 #include "bsdf_m.h"
 #include "random.h"
@@ -178,6 +178,8 @@ overrun:
 	exit(1);
 }
 
+#if defined(_WIN32) || defined(_WIN64)
+
 /* Open a pipe to/from a command given as an argument list */
 static FILE *
 popen_arglist(char *av[], char *mode)
@@ -195,7 +197,8 @@ popen_arglist(char *av[], char *mode)
 	return(popen(cmd, mode));
 }
 
-#if defined(_WIN32) || defined(_WIN64)
+#define	pclose_al	pclose
+
 /* Execute system command (Windows version) */
 static int
 my_exec(char *av[])
@@ -211,7 +214,56 @@ my_exec(char *av[])
 		fprintf(stderr, "%s: running: %s\n", progname, cmd);
 	return(system(cmd));
 }
-#else
+
+#else	/* UNIX */
+
+static SUBPROC	rt_proc = SP_INACTIVE;	/* we only support one of these */
+
+/* Open a pipe to a command using an argument list */
+static FILE *
+popen_arglist(char *av[], char *mode)
+{
+	int	fd;
+
+	if (rt_proc.pid > 0) {
+		fprintf(stderr, "%s: only one i/o pipe at a time!\n", progname);
+		return(NULL);
+	}
+	if (verbose > 0) {
+		char	cmd[4096];
+		if (!convert_commandline(cmd, sizeof(cmd), av))
+			strcpy(cmd, "COMMAND TOO LONG TO SHOW");
+		fprintf(stderr, "%s: opening pipe %s: %s\n",
+				progname, (*mode=='w') ? "to" : "from", cmd);
+	}
+	if (*mode == 'w') {
+		fd = rt_proc.w = dup(fileno(stdout));
+		rt_proc.flags |= PF_FILT_OUT;
+	} else if (*mode == 'r') {
+		fd = rt_proc.r = dup(fileno(stdin));
+		rt_proc.flags |= PF_FILT_INP;
+	}
+	if (fd < 0 || open_process(&rt_proc, av) <= 0) {
+		perror(av[0]);
+		return(NULL);
+	}
+	return(fdopen(fd, mode));
+}
+
+/* Close command pipe (returns -1 on error to match pclose) */
+static int
+pclose_al(FILE *fp)
+{
+	int	prob = (fclose(fp) == EOF);
+
+	if (rt_proc.pid <= 0)
+		return(-1);
+
+	prob |= (close_process(&rt_proc) != 0);
+
+	return(-prob);
+}
+
 /* Execute system command in our stead (Unix version) */
 static int
 my_exec(char *av[])
@@ -232,6 +284,7 @@ my_exec(char *av[])
 	perror(compath);
 	return(1);
 }
+
 #endif
 
 /* Get normalized direction vector from string specification */
@@ -1374,7 +1427,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < nsbins; i++)	/* send rcontrib ray samples */
 		if (!(*curparams.sample_basis)(&curparams, i, rcfp))
 			return(1);
-	return(pclose(rcfp) < 0);	/* all finished! */
+	return(pclose_al(rcfp) < 0);	/* all finished! */
 userr:
 	if (a < argc-2)
 		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
