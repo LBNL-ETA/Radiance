@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.85 2020/03/01 05:38:22 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.86 2020/03/03 19:39:32 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -167,16 +167,16 @@ rtrace(				/* trace rays from file */
 			getvec(direc, inform, fp) == 0) {
 
 		d = normalize(direc);
-		if (d == 0.0) {				/* zero ==> flush */
+		if (d == 0.0) {				/* bogus ray */
+			bogusray();
+							/* flush request? */
 			if (something2flush) {
 				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
 					error(USER, "child(ren) died");
-				bogusray();
 				fflush(stdout);
-				something2flush = 0;
 				nextflush = (!vresolu | (hresolu <= 1)) * hresolu;
-			} else
-				bogusray();
+				something2flush = 0;
+			}
 		} else {				/* compute and print */
 			rtcompute(orig, direc, lim_dist ? d : 0.0);
 							/* flush if time */
