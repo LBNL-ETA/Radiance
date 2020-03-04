@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.10 2019/08/27 23:51:23 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.11 2020/03/04 02:55:43 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -9,7 +9,7 @@ static const char RCSid[] = "$Id: dircode.c,v 2.10 2019/08/27 23:51:23 greg Exp 
 
 #include "rtmath.h"
 
-#define	DCSCALE		11585.2		/* (1<<13)*sqrt(2) */
+#define	DCSCALE		11584.7		/* (1<<13)*sqrt(2) - .5 */
 #define FXNEG		01
 #define FYNEG		02
 #define FZNEG		04
@@ -28,10 +28,10 @@ encodedir(FVECT dv)		/* encode a normalized direction vector */
 
 	for (i = 0; i < 3; i++)
 		if (dv[i] < 0.) {
-			cd[i] = (int)(dv[i] * -DCSCALE);
+			cd[i] = (int)(dv[i] * -DCSCALE + .5);
 			dc |= FXNEG<<i;
 		} else
-			cd[i] = (int)(dv[i] * DCSCALE);
+			cd[i] = (int)(dv[i] * DCSCALE + .5);
 	if (!(cd[0] | cd[1] | cd[2]))
 		return(0);		/* zero normal */
 	if (cd[0] <= cd[1]) {
@@ -94,8 +94,8 @@ decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
 		dv[0] = dv[1] = dv[2] = 0.;
 		return;
 	}
-	d1 = ((dc>>F1SFT & FMASK)+.5)*(1./DCSCALE);
-	d2 = ((dc>>F2SFT & FMASK)+.5)*(1./DCSCALE);
+	d1 = (dc>>F1SFT & FMASK)*(1./DCSCALE);
+	d2 = (dc>>F2SFT & FMASK)*(1./DCSCALE);
 	der = sqrt(1. - d1*d1 - d2*d2);
 	dv[itab[ndx][0]] = d1;
 	dv[itab[ndx][1]] = d2;
