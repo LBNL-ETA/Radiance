@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: fltdepth.c,v 3.4 2019/11/11 16:45:30 greg Exp $";
+static const char RCSid[] = "$Id: fltdepth.c,v 3.5 2020/03/05 17:37:09 greg Exp $";
 #endif
 /*
  * Function to open floating-point depth file, making sure it's
@@ -113,7 +113,7 @@ open_float_depth(const char *fname, long expected_length)
 	for (nleft = (ssize_t)dc.res.xr*dc.res.yr; nleft > 0; nleft -= FBUFLEN) {
 		for (n = 0; n < FBUFLEN; n++) {
 			double	d = decode_depth_next(&dc);
-			if (d < 0) {
+			if (d < -FTINY) {
 				if (n < nleft)
 					goto badEOF;
 				break;
@@ -129,17 +129,16 @@ open_float_depth(const char *fname, long expected_length)
 		}
 	}
 	fclose(dc.finp);		/* all done -- clean up */
-	if (lseek(fd, 0, SEEK_SET) != 0)
-		goto seek_error;
-	return(fd);
+	if (lseek(fd, 0, SEEK_SET) == 0)
+		return(fd);
+seek_error:
+	perror("lseek");
+	close(fd);
+	return(-1);
 badEOF:
 	fputs(fname, stderr);
 	fputs(": unexpected end-of-file\n", stderr);
 	if (dc.finp) fclose(dc.finp);
-	close(fd);
-	return(-1);
-seek_error:
-	perror("lseek");
 	close(fd);
 	return(-1);
 }
