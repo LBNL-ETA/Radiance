@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: depthcodec.c,v 2.9 2020/02/12 01:11:39 greg Exp $";
+static const char RCSid[] = "$Id: depthcodec.c,v 2.10 2020/03/05 17:43:22 greg Exp $";
 #endif
 /*
  * Routines to encode/decoded 16-bit depths
@@ -319,6 +319,7 @@ seek_dc_pix(DEPTHCODEC *dcp, int x, int y)
 		return -1;
 	}
 	dcp->curpos = seekpos;
+	dcp->use_last = 0;
 	return 1;
 }
 
