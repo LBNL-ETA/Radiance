@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dircode.c,v 2.11 2020/03/04 02:55:43 greg Exp $";
+static const char RCSid[] = "$Id: dircode.c,v 2.12 2020/03/06 19:05:19 greg Exp $";
 #endif
 /*
  * Compute a 4-byte direction code (externals defined in rtmath.h).
@@ -61,8 +61,8 @@ decodedir(FVECT dv, int32 dc)	/* decode a normalized direction vector */
 		dv[0] = dv[1] = dv[2] = 0.;
 		return;
 	}
-	d1 = ((dc>>F1SFT & FMASK)+.5)*(1./DCSCALE);
-	d2 = ((dc>>F2SFT & FMASK)+.5)*(1./DCSCALE);
+	d1 = (dc>>F1SFT & FMASK)*(1./DCSCALE);
+	d2 = (dc>>F2SFT & FMASK)*(1./DCSCALE);
 	der = sqrt(1. - d1*d1 - d2*d2);
 	if (dc & F1X) {
 		dv[0] = d1;
