@@ -1,4 +1,4 @@
-static const char	RCSid[] = "$Id: ambient.c,v 2.108 2019/05/14 17:39:10 greg Exp $";
+static const char	RCSid[] = "$Id: ambient.c,v 2.109 2020/03/10 15:57:52 greg Exp $";
 /*
  *  ambient.c - routines dealing with ambient (inter-reflected) component.
  *
@@ -975,9 +975,14 @@ aflock(			/* lock/unlock ambient file */
 
 	if (typ == fls.l_type)		/* already called? */
 		return;
+
 	fls.l_type = typ;
-	if (fcntl(fileno(ambfp), F_SETLKW, &fls) < 0)
-		error(SYSTEM, "cannot (un)lock ambient file");
+	do
+		if (fcntl(fileno(ambfp), F_SETLKW, &fls) != -1)
+			return;
+	while (errno == EINTR);
+	
+	error(SYSTEM, "cannot (un)lock ambient file");
 }
 
 
