@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rhdisp3.c,v 3.18 2018/10/05 19:19:16 greg Exp $";
+static const char	RCSid[] = "$Id: rhdisp3.c,v 3.19 2020/03/12 17:19:18 greg Exp $";
 #endif
 /*
  * Holodeck beam support for display process
@@ -172,7 +172,7 @@ char	*dp;
 		return(0);
 #endif
 	d = hdinter(gc2, NULL, &t, hp, orig, ld);
-	if (d >= FHUGE || t <= 0.)
+	if (d >= FHUGE*.99 || t <= 0.)
 		return(0);
 	return((*vf)(gc2+1, dp));	/* visit it */
 }

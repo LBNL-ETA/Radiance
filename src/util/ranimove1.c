@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove1.c,v 3.24 2018/11/17 20:15:51 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove1.c,v 3.25 2020/03/12 17:19:18 greg Exp $";
 #endif
 /*
  *  ranimove1.c
@@ -421,7 +421,7 @@ init_frame_sample(void)		/* sample our initial frame */
 			zbuffer[n] = ir.rot;
 			obuffer[n] = ir.robj;
 			sbuffer[n] = 1;
-			if (ir.rot >= FHUGE)
+			if (ir.rot >= 0.99*FHUGE)
 				abuffer[n] = ADISTANT;
 			else {
 				abuffer[n] = ALOWQ;
