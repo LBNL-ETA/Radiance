@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: mgf_parser.c,v 3.1 2011/02/18 00:40:25 greg Exp $";
+static const char	RCSid[] = "$Id: mgf_parser.c,v 3.2 2020/03/12 17:22:33 greg Exp $";
 #endif
 /*
  * Parse an MGF file, converting or discarding unsupported entities
@@ -858,7 +858,7 @@ e_cone(			/* turn a cone into polygons */
 	make_axes(u, v, w);
 	for (j = 0; j < 3; j++) {
 		sprintf(p3[j], FLTFMT, cv2->p[j] + rad2*u[j]);
-		if (n2off <= -FHUGE)
+		if (n2off <= -FHUGE*.99)
 			sprintf(n3[j], FLTFMT, -w[j]);
 		else
 			sprintf(n3[j], FLTFMT, u[j] + w[j]*n2off);
@@ -884,14 +884,14 @@ e_cone(			/* turn a cone into polygons */
 			for (j = 0; j < 3; j++) {
 				d = u[j]*cos(theta) + v[j]*sin(theta);
 				sprintf(p3[j], FLTFMT, cv2->p[j] + rad2*d);
-				if (n2off > -FHUGE)
+				if (n2off > -FHUGE*.99)
 					sprintf(n3[j], FLTFMT, d + w[j]*n2off);
 			}
 			if ((rv = mg_handle(MG_E_VERTEX, 2, v3ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_POINT, 4, p3ent)) != MG_OK)
 				return(rv);
-			if (n2off > -FHUGE &&
+			if (n2off > -FHUGE*.99 &&
 			(rv = mg_handle(MG_E_NORMAL, 4, n3ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_FACE, 4, fent)) != MG_OK)
@@ -908,7 +908,7 @@ e_cone(			/* turn a cone into polygons */
 		}
 		for (j = 0; j < 3; j++) {
 			sprintf(p4[j], FLTFMT, cv1->p[j] + rad1*u[j]);
-			if (n1off >= FHUGE)
+			if (n1off >= FHUGE*.99)
 				sprintf(n4[j], FLTFMT, w[j]);
 			else
 				sprintf(n4[j], FLTFMT, u[j] + w[j]*n1off);
@@ -928,24 +928,24 @@ e_cone(			/* turn a cone into polygons */
 			for (j = 0; j < 3; j++) {
 				d = u[j]*cos(theta) + v[j]*sin(theta);
 				sprintf(p3[j], FLTFMT, cv2->p[j] + rad2*d);
-				if (n2off > -FHUGE)
+				if (n2off > -FHUGE*.99)
 					sprintf(n3[j], FLTFMT, d + w[j]*n2off);
 				sprintf(p4[j], FLTFMT, cv1->p[j] + rad1*d);
-				if (n1off < FHUGE)
+				if (n1off < FHUGE*.99)
 					sprintf(n4[j], FLTFMT, d + w[j]*n1off);
 			}
 			if ((rv = mg_handle(MG_E_VERTEX, 2, v3ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_POINT, 4, p3ent)) != MG_OK)
 				return(rv);
-			if (n2off > -FHUGE &&
+			if (n2off > -FHUGE*.99 &&
 			(rv = mg_handle(MG_E_NORMAL, 4, n3ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_VERTEX, 2, v4ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_POINT, 4, p4ent)) != MG_OK)
 				return(rv);
-			if (n1off < FHUGE &&
+			if (n1off < FHUGE*.99 &&
 			(rv = mg_handle(MG_E_NORMAL, 4, n4ent)) != MG_OK)
 				return(rv);
 			if ((rv = mg_handle(MG_E_FACE, 5, fent)) != MG_OK)
