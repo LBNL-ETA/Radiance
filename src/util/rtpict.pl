@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.13 2019/12/13 21:43:47 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.14 2020/03/14 20:09:55 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -40,7 +40,7 @@ OPTION:				# sort through options
 while ($#ARGV >= 0 && "$ARGV[0]" =~ /^[-\@]/) {
 	# Check for file inclusion
 	if ("$ARGV[0]" =~ /^\@/) {
-		open my $handle, '<', substr($ARGV[0], 1);
+		open my $handle, '<', substr($ARGV[0], 1) or die "No file for $ARGV[0]\n";
 		shift @ARGV;
 		chomp(my @args = <$handle>);
 		close $handle;
