@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.36 2020/03/12 17:19:18 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.37 2020/03/14 16:25:46 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -99,7 +99,7 @@ set_eparams(char *prms)
 		if ((prms = fskip(prms)) == NULL)
 			goto bad_params;
 		while (isspace(*prms)) prms++;
-		prms += (*prms == ',') | (*prms == ';');
+		prms += (*prms == ',') | (*prms == ';') | (*prms == ':');
 		varset(vname, '=', value);
 	}
 	eclock++;		/* notify expression evaluator */

@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rcontrib.1,v 1.16 2019/02/22 19:42:27 greg Exp $"
+.\" RCSid "$Id: rcontrib.1,v 1.17 2020/03/14 16:25:46 greg Exp $"
 .TH RCONTRIB 1 5/25/05 RADIANCE
 .SH NAME
 rcontrib - compute contribution coefficients in a RADIANCE scene
@@ -211,7 +211,7 @@ Additional parameter values that apply only to this modifier may be specified
 with a
 .I \-p
 option, which contains a list of variable names and assigned values, separated
-by commas or semicolons.
+by commas, colons, or semicolons.
 The computed bin value will be
 rounded to the nearest whole number.
 (Negative bin values will be silently ignored.)\0
