@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# RCSid $Id: rtpict.pl,v 2.14 2020/03/14 20:09:55 greg Exp $
+# RCSid $Id: rtpict.pl,v 2.15 2020/03/15 16:54:19 greg Exp $
 #
 # Run rtrace in parallel mode to simulate rpict -n option
 # May also be used to render layered images with -o* option
@@ -186,9 +186,11 @@ if (! -d $outdir) {
 foreach my $oval (split //, $outlyr) {
 	die "Duplicate or unsupported type '$oval' in -o$outlyr\n"
 					if (!defined $rtoutC{$oval});
+	my $outfile = "$outdir/$rtoutC{$oval}";
+	die "File '$outfile' already exists\n" if (-e $outfile);
 	my ($otyp) = ($rtoutC{$oval} =~ /(\.[^.]+)$/);
 	push @rsplitA, $rcodeC{$otyp}[0];
-	push @rsplitA, qq{'$rcodeC{$otyp}[1] > "$outdir/$rtoutC{$oval}"'};
+	push @rsplitA, qq{'$rcodeC{$otyp}[1] > "$outfile"'};
 	delete $rtoutC{$oval};
 }
 			# call rtrace + rsplit
