@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmbsdf.c,v 2.7 2019/09/11 00:24:03 greg Exp $";
+static const char RCSid[] = "$Id: cmbsdf.c,v 2.8 2020/03/17 23:24:05 greg Exp $";
 #endif
 /*
  * Load and convert BSDF into color coefficient matrix representation.
@@ -123,14 +123,22 @@ cm_bsdf_recip(const COLOR diffBSDF, const SDMat *bsdf)
 static CMATRIX *
 cm_bsdf_Lamb(const COLOR diffBSDF)
 {
-	CMATRIX	*cm = cm_alloc(145, 145);	/* this is a hack */
-	int	r, c;
+	CMATRIX		*cm = cm_alloc(145, 145);	/* this is a hack */
+	ANGLE_BASIS	*abase = abase_list;
+	int		r, c;
 
-	for (c = 0; c < cm->ncols; c++)
+	while (abase->nangles != cm->nrows)
+		if (++abase >= abase_list+nabases)
+			error(INTERNAL, "Code error in cm_bsdf_Lamb()");
+
+	for (c = 0; c < cm->ncols; c++) {
+		const double	dom = io_getohm(c,abase);
 		for (r = 0; r < cm->nrows; r++) {
 			COLORV	*mp = cm_lval(cm,r,c);
 			copycolor(mp, diffBSDF);
+			scalecolor(mp, dom);
 		}
+	}
 	return(cm);
 }
 
