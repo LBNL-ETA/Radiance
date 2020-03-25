@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.24 2019/11/07 23:10:18 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.25 2020/03/25 01:51:09 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -83,6 +83,7 @@ typedef struct {
 	int	dtype;		/* data type */
 	int	need2swap;	/* need byte swap? */
 	int	nrows, ncols;	/* matrix size */
+	COLOR	expos;		/* exposure value */
 	char	*err;		/* error message */
 } CMINFO;		/* header info record */
 
@@ -109,6 +110,17 @@ get_cminfo(char *s, void *p)
 		ip->need2swap = (nativebigendian() != i);
 		return(0);
 	}
+	if (isexpos(s)) {
+		double	d = exposval(s);
+		scalecolor(ip->expos, d);
+		return(0);
+	}
+	if (iscolcor(s)) {
+		COLOR	ctmp;
+		colcorval(ctmp, s);
+		multcolor(ip->expos, ctmp);
+		return(0);
+	}
 	if (!formatval(fmt, s))
 		return(0);
 	for (i = 1; i < DTend; i++)
@@ -119,12 +131,13 @@ get_cminfo(char *s, void *p)
 
 /* Load header to obtain/check data type and number of columns */
 char *
-cm_getheader(int *dt, int *nr, int *nc, int *swp, FILE *fp)
+cm_getheader(int *dt, int *nr, int *nc, int *swp, COLOR scale, FILE *fp)
 {
 	CMINFO	cmi;
 						/* read header */
 	cmi.dtype = DTfromHeader;
 	cmi.need2swap = 0;
+	cmi.expos[0] = cmi.expos[1] = cmi.expos[2] = 1.f;
 	cmi.nrows = cmi.ncols = 0;
 	cmi.err = "unexpected EOF in header";
 	if (getheader(fp, get_cminfo, &cmi) < 0)
@@ -152,13 +165,19 @@ cm_getheader(int *dt, int *nr, int *nc, int *swp, FILE *fp)
 	}
 	if (swp)				/* get/check swap? */
 		*swp = cmi.need2swap;
+	if (scale) {				/* transfer exposure comp. */
+		scale[0] = 1.f/cmi.expos[0];
+		scale[1] = 1.f/cmi.expos[1];
+		scale[2] = 1.f/cmi.expos[2];
+	}
 	return(NULL);
 }
 
 /* Allocate and load image data into matrix */
 static CMATRIX *
-cm_load_rgbe(FILE *fp, int nrows, int ncols)
+cm_load_rgbe(FILE *fp, int nrows, int ncols, COLOR scale)
 {
+	int	doscale;
 	CMATRIX	*cm;
 	COLORV	*mp;
 						/* header already loaded */
@@ -169,6 +188,9 @@ cm_load_rgbe(FILE *fp, int nrows, int ncols)
 	cm = cm_alloc(nrows, ncols);
 	if (!cm)
 		return(NULL);
+	doscale = (scale[0] < .99) | (scale[0] > 1.01) |
+			(scale[1] < .99) | (scale[1] > 1.01) |
+			(scale[2] < .99) | (scale[2] > 1.01) ;
 	mp = cm->cmem;
 	while (nrows--) {
 		if (freadscan((COLOR *)mp, ncols, fp) < 0) {
@@ -176,7 +198,15 @@ cm_load_rgbe(FILE *fp, int nrows, int ncols)
 			cm_free(cm);
 			return(NULL);
 		}
-		mp += 3*ncols;
+		if (doscale) {
+			int	i = ncols;
+			while (i--) {
+				*mp++ *= scale[0];
+				*mp++ *= scale[1];
+				*mp++ *= scale[2];
+			}
+		} else
+			mp += 3*ncols;
 	}					/* caller closes stream */
 	return(cm);
 }
@@ -188,6 +218,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	const int	ROWINC = 2048;
 	FILE		*fp = stdin;
 	int		swap = 0;
+	COLOR		scale;
 	CMATRIX		*cm;
 
 	if (!inspec)
@@ -208,7 +239,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	if (dtype != DTascii)
 		SET_FILE_BINARY(fp);		/* doesn't really work */
 	if (!dtype | !ncols) {			/* expecting header? */
-		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, fp);
+		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, scale, fp);
 		if (err)
 			error(USER, err);
 		if (ncols <= 0)
@@ -221,7 +252,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		break;
 	case DTrgbe:
 	case DTxyze:
-		cm = cm_load_rgbe(fp, nrows, ncols);
+		cm = cm_load_rgbe(fp, nrows, ncols, scale);
 		goto cleanup;
 	default:
 		error(USER, "unexpected data type in cm_load()");

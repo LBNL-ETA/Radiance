@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rmtxop.1,v 1.17 2019/09/10 17:58:20 greg Exp $"
+.\" RCSid "$Id: rmtxop.1,v 1.18 2020/03/25 01:51:09 greg Exp $"
 .TH RMTXOP 1 7/8/97 RADIANCE
 .SH NAME
 rmtxop - concatenate, add, multiply, divide, transpose, scale, and convert matrices
@@ -56,6 +56,12 @@ matrix where the number of columns match the X-dimension of the picture, and
 the number of rows match the Y-dimension.
 The picture must be in standard pixel ordering, and the first row
 is at the top with the first column on the left.
+Any exposure changes applied to the pictures beforehand
+.I rmtxop
+will be undone, similar to the
+.I pcomb\(1)
+.I \-o
+option.
 .PP
 Before each file, the
 .I \-t
@@ -203,6 +209,6 @@ evaluated from left to right.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-cnt(1), getinfo(1), histo(1), neaten(1), rcalc(1), rcollate(1),
-rcontrib(1), rfluxmtx(1), rlam(1), 
+cnt(1), getinfo(1), histo(1), neaten(1), pcomb(1), rcalc(1),
+rcollate(1), rcontrib(1), rfluxmtx(1), rlam(1), 
 rsplit(1), tabfunc(1), total(1), wrapBSDF(1)

@@ -2345,3 +2345,6 @@ matrix output on request.
 Updated eplus_uvf to work with IDF version 9.x, checking version number.
 
 Fix to glarendx issues with dgi calculation.
+
+Made it so rmtxop and dctimestep undo any exposure applied to Radiance
+pictures they may load.

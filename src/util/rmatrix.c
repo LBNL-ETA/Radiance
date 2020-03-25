@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.39 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.40 2020/03/25 01:51:09 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -98,6 +98,17 @@ get_dminfo(char *s, void *p)
 	}
 	if ((i = isbigendian(s)) >= 0) {
 		ip->swapin = (nativebigendian() != i);
+		return(0);
+	}
+	if (isexpos(s)) {
+		double	d = exposval(s);
+		scalecolor(ip->mtx, d);
+		return(0);
+	}
+	if (iscolcor(s)) {
+		COLOR	ctmp;
+		colcorval(ctmp, s);
+		multcolor(ip->mtx, ctmp);
 		return(0);
 	}
 	if (!formatval(fmt, s)) {
@@ -226,6 +237,7 @@ rmx_load(const char *inspec)
 	dinfo.dtype = DTascii;			/* assumed w/o FORMAT */
 	dinfo.swapin = 0;
 	dinfo.info = NULL;
+	dinfo.mtx[0] = dinfo.mtx[1] = dinfo.mtx[2] = 1.;
 	if (getheader(fp, get_dminfo, &dinfo) < 0) {
 		fclose(fp);
 		return(NULL);
@@ -272,7 +284,14 @@ rmx_load(const char *inspec)
 	case DTxyze:
 		if (!rmx_load_rgbe(dnew, fp))
 			goto loaderr;
-		dnew->dtype = dinfo.dtype;
+		dnew->dtype = dinfo.dtype;	/* undo exposure? */
+		if ((dinfo.mtx[0] != 1.) | (dinfo.mtx[1] != 1.) |
+				(dinfo.mtx[2] != 1.)) {
+			dinfo.mtx[0] = 1./dinfo.mtx[0];
+			dinfo.mtx[1] = 1./dinfo.mtx[1];
+			dinfo.mtx[2] = 1./dinfo.mtx[2];
+			rmx_scale(dnew, dinfo.mtx);
+		}
 		break;
 	default:
 		goto loaderr;

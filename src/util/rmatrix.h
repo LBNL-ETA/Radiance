@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.11 2019/09/03 23:43:07 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.12 2020/03/25 01:51:09 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -19,7 +19,7 @@ typedef struct {
 	uby8	dtype;
 	uby8	swapin;
 	char	*info;
-	double	mtx[1];			/* extends struct */
+	double	mtx[3];			/* extends struct */
 } RMATRIX;
 
 #define rmx_lval(rm,r,c,i)	(rm)->mtx[(i)+(rm)->ncomp*((c)+(size_t)(rm)->ncols*(r))]

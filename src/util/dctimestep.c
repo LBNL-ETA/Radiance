@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.44 2019/10/23 17:16:26 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.45 2020/03/25 01:51:09 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -48,7 +48,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 			error(SYSTEM, errmsg);
 		}
 		dt = DTfromHeader;
-		if ((err = cm_getheader(&dt, NULL, NULL, NULL, fp)) != NULL)
+		if ((err = cm_getheader(&dt, NULL, NULL, NULL, NULL, fp)) != NULL)
 			error(USER, err);
 		if ((dt != DTrgbe) & (dt != DTxyze) ||
 				!fscnresolu(&xr, &yr, fp)) {
