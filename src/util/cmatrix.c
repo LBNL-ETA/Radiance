@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.25 2020/03/25 01:51:09 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.26 2020/03/26 02:48:31 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -21,7 +21,7 @@ const char	*cm_fmt_id[] = {
 		};
 
 const int	cm_elem_size[] = {
-			0, 0, 4, 4, 3*sizeof(float), 3*sizeof(double)
+			0, 4, 4, 3*sizeof(float), 0, 3*sizeof(double)
 		};
 
 /* Allocate a color coefficient matrix */
@@ -333,6 +333,14 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 					goto EOFerror;
 			} while (nread < cm->nrows*cm->ncols);
 
+			if (swap) {
+				if (sizeof(COLORV) == 4)
+					swap32((char *)cm->cmem,
+							3*cm->nrows*cm->ncols);
+				else /* sizeof(COLORV) == 8 */
+					swap64((char *)cm->cmem,
+							3*cm->nrows*cm->ncols);
+			}
 		} else if (dtype == DTdouble) {
 			double	dc[3];			/* load from double */
 			COLORV	*cvp = cm->cmem;
@@ -343,6 +351,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			while (n--) {
 				if (getbinary(dc, sizeof(double), 3, fp) != 3)
 					goto EOFerror;
+				if (swap) swap64((char *)dc, 3);
 				copycolor(cvp, dc);
 				cvp += 3;
 			}
@@ -356,6 +365,7 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 			while (n--) {
 				if (getbinary(fc, sizeof(float), 3, fp) != 3)
 					goto EOFerror;
+				if (swap) swap32((char *)fc, 3);
 				copycolor(cvp, fc);
 				cvp += 3;
 			}
@@ -366,12 +376,6 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 						inspec);
 				error(WARNING, errmsg);
 		}
-	}
-	if (swap) {
-		if (dtype == DTfloat)
-			swap32((char *)cm->cmem, 3*cm->nrows*cm->ncols);
-		else if (dtype == DTdouble)
-			swap64((char *)cm->cmem, 3*cm->nrows*cm->ncols);
 	}
 cleanup:
 	if (fp != stdin) {
