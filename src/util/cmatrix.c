@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.26 2020/03/26 02:48:31 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.27 2020/03/26 16:56:10 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -259,20 +259,19 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 	}
 	if (nrows <= 0) {			/* don't know length? */
 		int	guessrows = 147;	/* usually big enough */
-		if ((dtype != DTascii) & (fp != stdin) & (inspec[0] != '!')) {
+		if (cm_elem_size[dtype] && (fp != stdin) & (inspec[0] != '!')) {
 			long	startpos = ftell(fp);
 			if (fseek(fp, 0L, SEEK_END) == 0) {
+				long	rowsiz = (long)ncols*cm_elem_size[dtype];
 				long	endpos = ftell(fp);
-				long	elemsiz = 3*(dtype==DTfloat ?
-					    sizeof(float) : sizeof(double));
 
-				if ((endpos - startpos) % (ncols*elemsiz)) {
+				if ((endpos - startpos) % rowsiz) {
 					sprintf(errmsg,
 					"improper length for binary file '%s'",
 							inspec);
 					error(USER, errmsg);
 				}
-				guessrows = (endpos - startpos)/(ncols*elemsiz);
+				guessrows = (endpos - startpos)/rowsiz;
 				if (fseek(fp, startpos, SEEK_SET) < 0) {
 					sprintf(errmsg,
 						"fseek() error on file '%s'",
