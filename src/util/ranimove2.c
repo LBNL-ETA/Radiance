@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ranimove2.c,v 3.10 2016/04/18 22:39:13 greg Exp $";
+static const char	RCSid[] = "$Id: ranimove2.c,v 3.11 2020/03/29 02:55:01 greg Exp $";
 #endif
 /*
  *  ranimove2.c
@@ -463,7 +463,8 @@ refine_rays(		/* compute refinement rays */
 	i = 0;
 					/* trace rays in list */
 	for (rdone = 0; rdone < nrays; rdone++) {
-		if (ndtset && i >= 1000 && cerrmap[pord[i]] <= FTINY)
+		if (ndtset && (i >= 1000) & (i < ntodo) &&
+				cerrmap[pord[i]] <= FTINY)
 			ntodo = i;
 		if (i >= ntodo) {	/* redo conspicuity & priority */
 			while (ray_refine(-1) >= 0)
