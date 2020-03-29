@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.80 2020/03/12 17:19:18 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.81 2020/03/29 18:21:57 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -146,6 +146,7 @@ rayclear(			/* clear a ray for (re)evaluation */
 	r->ro = NULL;
 	r->rox = NULL;
 	r->rxt = r->rmt = r->rot = FHUGE;
+	VCOPY(r->rop, r->rorg);
 	r->pert[0] = r->pert[1] = r->pert[2] = 0.0;
 	r->rflips = 0;
 	r->uv[0] = r->uv[1] = 0.0;
