@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.27 2020/03/26 16:56:10 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.28 2020/03/30 20:41:47 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -181,10 +181,6 @@ cm_load_rgbe(FILE *fp, int nrows, int ncols, COLOR scale)
 	CMATRIX	*cm;
 	COLORV	*mp;
 						/* header already loaded */
-	if ((nrows <= 0) | (ncols <= 0) && !fscnresolu(&ncols, &nrows, fp)) {
-		error(USER, "bad picture resolution string");
-		return(NULL);
-	}
 	cm = cm_alloc(nrows, ncols);
 	if (!cm)
 		return(NULL);
@@ -242,9 +238,9 @@ cm_load(const char *inspec, int nrows, int ncols, int dtype)
 		char	*err = cm_getheader(&dtype, &nrows, &ncols, &swap, scale, fp);
 		if (err)
 			error(USER, err);
-		if (ncols <= 0)
-			error(USER, "unspecified number of columns");
 	}
+	if (ncols <= 0 && !fscnresolu(&ncols, &nrows, fp))
+		error(USER, "unspecified number of columns");
 	switch (dtype) {
 	case DTascii:
 	case DTfloat:
