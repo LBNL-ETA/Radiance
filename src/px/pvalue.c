@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pvalue.c,v 2.38 2020/02/06 19:33:32 greg Exp $";
+static const char RCSid[] = "$Id: pvalue.c,v 2.39 2020/03/30 19:02:26 greg Exp $";
 #endif
 /*
  *  pvalue.c - program to print pixel values.
@@ -173,7 +173,7 @@ main(
 				}
 				break;
 			case 'd':		/* data only (no indices) */
-				dataonly = argv[i][0] == '-';
+				dataonly = (argv[i][0] == '-');
 				switch (argv[i][2]) {
 				case '\0':
 				case 'a':		/* ascii */
@@ -375,6 +375,10 @@ unkopt:
 		}
 		if (header) {
 			printargs(i, argv, stdout);
+			printf("NCOMP=%d\n", putprim==ALL ? 3 : 1);
+			if (!resolution && dataonly && !uniq)
+				printf("NCOLS=%d\nNROWS=%d\n", scanlen(&picres),
+						numscans(&picres));
 			if (expval < .99 || expval > 1.01)
 				fputexpos(expval, stdout);
 			if (swapbytes) {
@@ -418,20 +422,28 @@ checkhead(				/* deal with line from header */
 			mybright = &rgb_bright;
 		else
 			wrongformat++;
-	} else if (original && isexpos(line)) {
+		return(1);
+	}
+	if (original && isexpos(line)) {
 		d = 1.0/exposval(line);
 		scalecolor(exposure, d);
 		doexposure++;
-	} else if (original && iscolcor(line)) {
+		return(1);
+	}
+	if (original && iscolcor(line)) {
 		colcorval(ctmp, line);
 		setcolor(exposure, colval(exposure,RED)/colval(ctmp,RED),
 				colval(exposure,GRN)/colval(ctmp,GRN),
 				colval(exposure,BLU)/colval(ctmp,BLU));
 		doexposure++;
-	} else if ((rv = isbigendian(line)) >= 0) {
+		return(1);
+	}
+	if ((rv = isbigendian(line)) >= 0) {
 		if (reverse)
 			swapbytes = (nativebigendian() != rv);
-	} else if (fout != NULL)
+		return(1);
+	}
+	if (fout != NULL)
 		fputs(line, fout);
 	return(0);
 }
