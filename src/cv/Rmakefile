@@ -1,4 +1,4 @@
-# RCSid $Id: Rmakefile,v 2.55 2018/06/07 15:39:36 greg Exp $
+# RCSid $Id: Rmakefile,v 2.56 2020/03/30 18:28:35 greg Exp $
 #
 # Makefile for conversion programs
 #
@@ -20,7 +20,7 @@ INSTDIR = /usr/local/bin
 
 LIBDIR = /usr/local/lib/ray
 
-PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad \
+PROGS = ies2rad nff2rad lampcolor tmesh2rad obj2rad robjutil \
 mgf2rad rad2mgf mgf2meta mgfilt mgf2inv 3ds2mgf bsdfquery \
 pabopto2xyz pabopto2bsdf bsdf2ttree bsdf2klems pkgBSDF epw2wea bsdf2rad
 
@@ -116,6 +116,10 @@ pkgBSDF:	pkgBSDF.o
 epw2wea:	epw2wea.o
 	$(CC) $(CFLAGS) -o epw2wea epw2wea.o
 
+robjutil:	robjutil.o
+	$(CC) $(CFLAGS) -o robjutil robjutil.o \
+-lwfobj -lrtrad $(MLIB)
+
 mgf2rad.o:	mgf2rad.c ../common/mgf_parser.h ../common/tmesh.h \
 ../common/color.h
 	$(CC) $(CFLAGS) -c mgf2rad.c
@@ -166,3 +170,5 @@ bsdf2klems.o bsdf2ttree.o mgf2meta.o:	../common/random.h
 bsdftrans.o:	transportSimplex.h
 
 bsdfquery.o:	../common/rtmath.h ../common/rtio.h bsdfrep.h
+
+robjutil.o:	../common/objutil.h

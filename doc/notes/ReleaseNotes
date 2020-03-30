@@ -2348,3 +2348,5 @@ Fix to glarendx issues with dgi calculation.
 
 Made it so rmtxop and dctimestep undo any exposure applied to Radiance
 pictures they may load.
+
+Added objutil utility to manipulate Wavefront .OBJ files.

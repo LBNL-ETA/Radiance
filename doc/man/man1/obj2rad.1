@@ -1,7 +1,7 @@
-.\" RCSid "$Id: obj2rad.1,v 1.4 2007/09/04 17:36:40 greg Exp $"
+.\" RCSid "$Id: obj2rad.1,v 1.5 2020/03/30 18:28:35 greg Exp $"
 .TH OBJ2RAD 1 6/14/94 RADIANCE
 .SH NAME
-obj2rad - convert Wavefront .obj file to RADIANCE description
+obj2rad - convert Wavefront .OBJ file to RADIANCE description
 .SH SYNOPSIS
 .B obj2rad
 [
@@ -18,7 +18,7 @@ obj2rad - convert Wavefront .obj file to RADIANCE description
 ]
 .SH DESCRIPTION
 .I Obj2rad
-converts a Wavefront .obj file to a RADIANCE scene description.
+converts a Wavefront .OBJ file to a RADIANCE scene description.
 The material names for the surfaces will assigned based on the
 mapping rules file given in the
 .I \-m
@@ -101,7 +101,7 @@ would be "tacky":
 The
 .I \-n
 option may be used to produce a list of qualifiers from which to construct
-a mapping for the given .obj file.
+a mapping for the given .OBJ file.
 This is also useful for determining which materials must be defined
 when no mapping is used.
 .PP
@@ -187,7 +187,7 @@ indication of how successful the translation was, since
 it will mention the number of statements
 .I obj2rad
 did not recognize.
-.SH EXAMPLE
+.SH EXAMPLES
 To create a qualifier list for triceratops.obj:
 .IP "" .2i
 obj2rad \-n triceratops.obj > triceratops.qual
@@ -196,10 +196,6 @@ To translate triceratops.obj into a RADIANCE file using the mapping
 triceratops.map:
 .IP "" .2i
 obj2rad \-m triceratops.map triceratops.obj > triceratops.rad
-.SH NOTES
-Many good and useful Wavefront object files are available by
-anonymous ftp from "avalon.chinalake.navy.mil" in the
-/pub/objects/obj directory.
 .SH FILES
 tmesh.cal		- used for triangle normal interpolation
 .br
@@ -207,4 +203,4 @@ surf.cal		- used for quadrilateral normal interpolation
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-arch2rad(1), ies2rad(1), obj2mesh(1), oconv(1), thf2rad(1), xform(1)
+arch2rad(1), ies2rad(1), obj2mesh(1), objutil(1) oconv(1), thf2rad(1), xform(1)

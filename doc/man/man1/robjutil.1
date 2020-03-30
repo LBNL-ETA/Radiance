@@ -1,0 +1,117 @@
+.\" RCSid "$Id: robjutil.1,v 1.1 2020/03/30 18:28:35 greg Exp $"
+.TH ROBJUTIL 1 3/31/20 RADIANCE
+.SH NAME
+robjutil - operate on Wavefront .OBJ file
+.SH SYNOPSIS
+.B robjutil
+[
+.B +/-r
+][
+.B +/-v
+][
+.B +/-t
+][
+.B +/-n
+][
+.B "+/-m mname"
+][
+.B "+/-g gname"
+][
+.B "-c epsilon"
+]
+[
+.B input.obj ..
+]
+.SH DESCRIPTION
+.I Robjutil
+reads and manipulates a Wavefront .OBJ file, removing degenerate and
+duplicate faces.
+If the
+.I +r
+option is specified, a Radiance scene description
+will be produced on the standard output.
+If
+.I -r
+is given, a modified .OBJ file will be sent to the standard output.
+This is the default, and is
+typically more useful, since surface normals are better handled by the
+.I obj2rad(1)
+and
+.I obj2mesh(1)
+converters.
+The latter also preserves local texture coordinates for mapping materials.
+The
+.I +v
+option turns on verbose progress reports.
+.PP
+The
+.I \-t
+option tells
+.I robjutil
+to remove texture coordinates from the input.
+The
+.I \-n
+option will cause all surface normals to be removed.
+.PP
+The
+.I "\-m mname"
+option tells
+.I robjutil
+to remove all faces that use the material
+.I mname.
+Multiple
+.I \-m
+options may be given, each with a single (unique) material name.
+Alternatively, the
+.I "+m mname"
+option may be used to specify a material one wishes to keep, discarding the rest.
+Multiple
+.I +m
+options will keep all the named materials.
+The
+.I \-m
+and
+.I \+m
+options are mutually exclusive.
+Similarly, the
+.I "\-g gname"
+option says to remove all faces belonging to the group
+.I gname,
+and multiple
+.I \-g
+options may be given.
+There is also a
+.I +g
+option to save just the named group(s).
+.PP
+Finally, a
+.I "\-c epsilon"
+parameter may be given to coalesce vertices that are within the given epsilon.
+This is useful to improve the connectivity of models that were produced
+in a sloppy conversion process from independent polygons.
+When producing a Radiance file via the
+.I +r
+option, there will be no savings in the output size, but there can be
+a benefit in reducing the number of "cracks" in the resulting geometry,
+at least for triangle mesh input.
+.I Robjutil
+does not attempt to break up non-planar polygons into triangles,
+which is usually not a problem for .OBJ output, but may be for Radiance
+scene descriptions (+r).
+.SH EXAMPLES
+To remove degenerate and duplicate faces from "orig.obj" and write to "final.rad":
+.IP "" .2i
+robjutil +r orig.obj > final.rad
+.PP
+To convert the same file, preserving surface normal interpolation:
+.IP "" .2i
+robjutil orig.obj | obj2rad > withnormals.rad
+.PP
+To extract only the groups "cat" and "bell" from the file "kitty.obj" and
+write to a Radiance triangle mesh using materials from "kitty.mat":
+.IP "" .2i
+robjutil +g cat +g bell kitty.obj | obj2mesh -a kitty.mat > kitty.rtm
+.SH AUTHOR
+Greg Ward
+.SH "SEE ALSO"
+obj2mesh(1), obj2rad(1) oconv(1), xform(1)

@@ -127,6 +127,13 @@ add_library(mgf
   mgf_xf.c
 )
 
+add_library(wfobj
+  objutil.c
+  readwfobj.c
+  convertobj.c
+  writewfobj.c
+)
+
 add_library(libreetz
   g3affine.c
   g3affine.h

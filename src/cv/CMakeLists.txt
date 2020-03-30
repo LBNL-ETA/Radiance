@@ -15,6 +15,9 @@ target_link_libraries(tmesh2rad rtrad)
 add_executable(obj2rad obj2rad.c trans.c)
 target_link_libraries(obj2rad rtrad)
 
+add_executable(robjutil robjutil.c)
+target_link_libraries(robjutil wfobj rtrad)
+
 add_executable(mgf2rad mgf2rad.c)
 target_link_libraries(mgf2rad mgf rtrad)
 
