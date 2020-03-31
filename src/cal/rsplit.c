@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.11 2019/11/07 23:13:12 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.12 2020/03/31 16:39:01 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -22,8 +22,9 @@ static const char	RCSid[] = "$Id: rsplit.c,v 1.11 2019/11/07 23:13:12 greg Exp $
 static int		swapped = 0;	/* input is byte-swapped */
 
 static FILE		*output[MAXFILE];
+static int		ncomp[MAXFILE];
 static int		bytsiz[MAXFILE];
-static short		hdrflags[MAXFILE];
+static int		hdrflags[MAXFILE];
 static const char	*format[MAXFILE];
 static int		termc[MAXFILE];
 static int		nfiles = 0;
@@ -96,6 +97,7 @@ main(int argc, char *argv[])
 	long		outcnt = 0;
 	int		bininp = 0;
 	int		curterm = '\n';
+	int		curncomp = 1;
 	int		curbytes = 0;
 	int		curflags = 0;
 	const char	*curfmt = "ascii";
@@ -165,15 +167,14 @@ main(int argc, char *argv[])
 					break;
 				case 'a':
 					curfmt = "ascii";
-					curbytes = -1;
+					curbytes = 0;
 					break;
 				default:
 					goto badopt;
 				}
-				if (isdigit(argv[i][3]))
-					curbytes *= atoi(argv[i]+3);
-				curbytes += (curbytes == -1);
-				if (curbytes > (int)sizeof(buf)) {
+				curncomp = isdigit(argv[i][3]) ?
+							atoi(argv[i]+3) : 1 ;
+				if (curbytes*curncomp > (int)sizeof(buf)) {
 					fputs(argv[0], stderr);
 					fputs(": output size too big\n", stderr);
 					return(1);
@@ -188,6 +189,7 @@ main(int argc, char *argv[])
 				if (curbytes > 0)
 					SET_FILE_BINARY(output[nfiles]);
 				format[nfiles] = curfmt;
+				ncomp[nfiles] = curncomp;
 				bytsiz[nfiles++] = curbytes;
 				break;
 			badopt:;
@@ -208,6 +210,7 @@ main(int argc, char *argv[])
 			if (curbytes > 0)
 				SET_FILE_BINARY(output[nfiles]);
 			format[nfiles] = curfmt;
+			ncomp[nfiles] = curncomp;
 			bytsiz[nfiles++] = curbytes;
 		} else {
 			if (append & (curflags != 0)) {
@@ -234,6 +237,7 @@ main(int argc, char *argv[])
 			if (curbytes > 0)
 				SET_FILE_BINARY(output[nfiles]);
 			format[nfiles] = curfmt;
+			ncomp[nfiles] = curncomp;
 			bytsiz[nfiles++] = curbytes;
 		}
 		if (nfiles >= MAXFILE) {
@@ -287,6 +291,7 @@ main(int argc, char *argv[])
 			if (!(inpflags & DOHEADER))
 				newheader("RADIANCE", output[i]);
 			printargs(argc, argv, output[i]);
+			fprintf(output[i], "NCOMP=%d\n", ncomp[i]);
 			if (format[i] != NULL) {
 				extern const char  BIGEND[];
 				if ((format[i][0] == 'f') |
@@ -305,12 +310,14 @@ main(int argc, char *argv[])
 	do {					/* main loop */
 		for (i = 0; i < nfiles; i++) {
 			if (bytsiz[i] > 0) {		/* binary output */
-				if (getbinary(buf, bytsiz[i], 1, stdin) < 1)
+				if (getbinary(buf, bytsiz[i], ncomp[i],
+							stdin) < ncomp[i])
 					break;
-				if (putbinary(buf, bytsiz[i], 1, output[i]) < 1)
+				if (putbinary(buf, bytsiz[i], ncomp[i],
+							output[i]) < ncomp[i])
 					break;
-			} else if (bytsiz[i] < 0) {	/* N-field output */
-				int	n = -bytsiz[i];
+			} else if (ncomp[i] > 1) {	/* N-field output */
+				int	n = ncomp[i];
 				while (n--) {
 					if (!scanOK(termc[i]))
 						break;
