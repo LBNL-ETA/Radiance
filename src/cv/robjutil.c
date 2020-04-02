@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: robjutil.c,v 2.1 2020/03/30 18:28:35 greg Exp $";
+static const char RCSid[] = "$Id: robjutil.c,v 2.2 2020/04/02 20:44:15 greg Exp $";
 #endif
 /*
  * Utility program for fixing up Wavefront .OBJ files.
@@ -28,6 +28,7 @@ main(int argc, char *argv[])
 	int		save_mats = 1;
 	int		do_tex = 0;
 	int		do_norm = 0;
+	char		*xfm = NULL;
 	char		cbuf[256];
 	double		verteps = -1.;
 	int     i, n;
@@ -84,6 +85,14 @@ main(int argc, char *argv[])
 			break;
 		case 'r':			/* output to Radiance file? */
 			radout = (argv[i][0] == '+');
+			break;
+		case 'x':			/* apply a transform */
+			if (xfm != NULL) {
+				fprintf(stderr, "%s: only one '-x' option allowed\n",
+						argv[0]);
+				exit(1);
+			}
+			xfm = argv[++i];
 			break;
 		default:
 			fprintf(stderr, "%s: unknown option: %s\n",
@@ -178,6 +187,16 @@ main(int argc, char *argv[])
 		sprintf(cbuf, "Removed %d duplicate faces", n);
 		addComment(myScene, cbuf);
 	}
+	if (xfm != NULL) {
+		if (verbose)
+			fputs("Applying transform...\n", stderr);
+		if (!xfmScene(myScene, xfm)) {
+			fprintf(stderr, "%s: transform error\n", argv[0]);
+			exit(1);
+		}
+		sprintf(cbuf, "Applied transform: %s", xfm);
+		addComment(myScene, cbuf);
+	}
 	if (verbose)
 		fputs("Writing out scene...\n", stderr);
 
@@ -201,6 +220,7 @@ userr:
 	fprintf(stderr, "\t+/-t\t\t\t# keep/remove texture coordinates\n");
 	fprintf(stderr, "\t+/-n\t\t\t# keep/remove vertex normals\n");
 	fprintf(stderr, "\t-c epsilon\t\t# coalesce vertices within epsilon\n");
+	fprintf(stderr, "\t-x 'xf spec'\t# apply the quoted transform\n");
 	return(1);
 }
 

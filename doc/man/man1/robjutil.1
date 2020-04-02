@@ -1,4 +1,4 @@
-.\" RCSid "$Id: robjutil.1,v 1.1 2020/03/30 18:28:35 greg Exp $"
+.\" RCSid "$Id: robjutil.1,v 1.2 2020/04/02 20:44:15 greg Exp $"
 .TH ROBJUTIL 1 3/31/20 RADIANCE
 .SH NAME
 robjutil - operate on Wavefront .OBJ file
@@ -18,6 +18,8 @@ robjutil - operate on Wavefront .OBJ file
 .B "+/-g gname"
 ][
 .B "-c epsilon"
+][
+.B "-x 'xf spec'"
 ]
 [
 .B input.obj ..
@@ -84,7 +86,7 @@ There is also a
 .I +g
 option to save just the named group(s).
 .PP
-Finally, a
+A
 .I "\-c epsilon"
 parameter may be given to coalesce vertices that are within the given epsilon.
 This is useful to improve the connectivity of models that were produced
@@ -98,6 +100,22 @@ at least for triangle mesh input.
 does not attempt to break up non-planar polygons into triangles,
 which is usually not a problem for .OBJ output, but may be for Radiance
 scene descriptions (+r).
+.PP
+The
+.I \-x
+option may be used to specify a final transform to apply to all
+coordinates in the file before output.
+This specification must be contained in a single quoted word and
+match the standard arguments used by
+.I xform(1),
+except that the
+.I \-a
+option is not supported for creating arrays of objects.
+Also, any scaling applied does not affect the epsilon value given for
+coalescing vertices, as this operation is applied prior to the transform,
+even if
+.I \-c
+appears later in the command line.
 .SH EXAMPLES
 To remove degenerate and duplicate faces from "orig.obj" and write to "final.rad":
 .IP "" .2i
@@ -111,6 +129,10 @@ To extract only the groups "cat" and "bell" from the file "kitty.obj" and
 write to a Radiance triangle mesh using materials from "kitty.mat":
 .IP "" .2i
 robjutil +g cat +g bell kitty.obj | obj2mesh -a kitty.mat > kitty.rtm
+.PP
+To rotate the scene 90 degrees about the Y-axis and scale by 10:
+.IP "" .2i
+robjutil -x "-ry 90 -s 10" orig.obj > transformed.obj
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"

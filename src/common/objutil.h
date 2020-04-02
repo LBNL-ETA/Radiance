@@ -1,4 +1,4 @@
-/* RCSid $Id: objutil.h,v 2.1 2020/03/30 18:28:35 greg Exp $ */
+/* RCSid $Id: objutil.h,v 2.2 2020/04/02 20:44:15 greg Exp $ */
 /*
  *  Declarations for .OBJ file utility
  *
@@ -87,6 +87,9 @@ Scene *		loadOBJ(Scene *sc, const char *fspec);
 
 /* Duplicate a scene */
 Scene *		dupScene(const Scene *sc);
+
+/* Transform entire scene */
+int		xfmScene(Scene *sc, const char *xfm);
 
 /* Add a descriptive comment */
 void		addComment(Scene *sc, const char *comment);

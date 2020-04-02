@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.1 2020/03/30 18:28:35 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.2 2020/04/02 20:44:15 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -8,6 +8,7 @@ static const char RCSid[] = "$Id: objutil.c,v 2.1 2020/03/30 18:28:35 greg Exp $
  */
 
 #include <stdlib.h>
+#include <ctype.h>
 #include "rtio.h"
 #include "rtmath.h"
 #include "rterror.h"
@@ -662,6 +663,61 @@ dupScene(const Scene *osc)
 	}
 	return(sc);
 }
+
+/* Transform entire scene */
+#define MAXAC	100
+int
+xfmScene(Scene *sc, const char *xfm)
+{
+	char	*xav[MAXAC+1];
+	int	xac, i;
+	XF	myxf;
+	FVECT	vec;
+
+	if ((sc == NULL) | (xfm == NULL))
+		return(0);
+	while (isspace(*xfm))		/* find first word */
+		xfm++;
+	if (!*xfm)
+		return(0);
+					/* break into words for xf() */
+	xav[0] = strcpy((char *)malloc(strlen(xfm)+1), xfm);
+	xac = 1; i = 0;
+	for ( ; ; ) {
+		while (!isspace(xfm[++i]))
+			if (!xfm[i])
+				break;
+		while (isspace(xfm[i]))
+			xav[0][i++] = '\0';
+		if (!xfm[i])
+			break;
+		if (xac >= MAXAC-1)
+			goto bad_xform;
+		xav[xac++] = xav[0] + i;
+	}
+	xav[xac] = NULL;
+	if (xf(&myxf, xac, xav) < xac)
+		goto bad_xform;
+	free(xav[0]);
+					/* transform vertices */
+	for (i = 0; i < sc->nverts; i++) {
+		VCOPY(vec, sc->vert[i].p);
+		multp3(vec, vec, myxf.xfm);
+		VCOPY(sc->vert[i].p, vec);
+	}
+					/* transform normals */
+	for (i = 0; i < sc->nnorms; i++) {
+		VCOPY(vec, sc->norm[i]);
+		multv3(vec, vec, myxf.xfm);
+		vec[0] /= myxf.sca; vec[1] /= myxf.sca; vec[2] /= myxf.sca;
+		VCOPY(sc->norm[i], vec);
+	}
+	return xac;			/* finito */
+bad_xform:
+	free(xav[0]);
+	return(0);
+}
+#undef MAXAC
 
 /* Free a scene */
 void

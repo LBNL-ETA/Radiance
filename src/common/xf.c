@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: xf.c,v 2.7 2003/06/27 22:27:45 greg Exp $";
+static const char	RCSid[] = "$Id: xf.c,v 2.8 2020/04/02 20:44:15 greg Exp $";
 #endif
 /*
  *  xf.c - routines to convert transform arguments into 4X4 matrix.
@@ -17,10 +17,7 @@ static const char	RCSid[] = "$Id: xf.c,v 2.7 2003/06/27 22:27:45 greg Exp $";
 
 
 int
-xf(ret, ac, av)			/* get transform specification */
-register XF  *ret;
-int  ac;
-char  *av[];
+xf(XF *ret, int ac, char *av[])		/* get transform specification */
 {
 	MAT4  xfmat, m4;
 	double  xfsca, dtmp;
@@ -131,10 +128,7 @@ done:
 
 
 int
-invxf(ret, ac, av)		/* invert transform specification */
-register XF  *ret;
-int  ac;
-char  *av[];
+invxf(XF *ret, int ac, char *av[])	/* invert transform specification */
 {
 	MAT4  xfmat, m4;
 	double  xfsca, dtmp;
@@ -245,10 +239,7 @@ done:
 
 
 int
-fullxf(fx, ac, av)			/* compute both forward and inverse */
-FULLXF  *fx;
-int  ac;
-char  *av[];
+fullxf(FULLXF *fx, int ac, char *av[])	/* compute both forward and inverse */
 {
 	xf(&fx->f, ac, av);
 	return(invxf(&fx->b, ac, av));
