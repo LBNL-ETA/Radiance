@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: func.c,v 2.37 2020/03/14 16:25:46 greg Exp $";
+static const char	RCSid[] = "$Id: func.c,v 2.38 2020/04/02 18:00:34 greg Exp $";
 #endif
 /*
  *  func.c - interface to calcomp functions.
@@ -299,7 +299,8 @@ l_arg(char *nm)			/* return nth real argument */
 	int  n;
 
 	if (fobj == NULL)
-		error(INTERNAL, "arg(n) called without a modifier context");
+		error(USER,
+			"bad call to arg(n) - illegal constant in .cal file?");
 
 	n = argument(1) + .5;		/* round to integer */
 

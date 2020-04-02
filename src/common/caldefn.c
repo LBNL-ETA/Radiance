@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: caldefn.c,v 2.27 2019/12/28 18:05:13 greg Exp $";
+static const char	RCSid[] = "$Id: caldefn.c,v 2.28 2020/04/02 18:00:34 greg Exp $";
 #endif
 /*
  *  Store variable definitions.
@@ -702,7 +702,7 @@ getchan(void)			/* A -> $N = E1 */
 
 
 static double			/* evaluate a variable */
-dvalue(char  *name, EPNODE	*d)
+dvalue(char *name, EPNODE *d)
 {
     EPNODE  *ep1, *ep2;
     
@@ -714,6 +714,10 @@ dvalue(char  *name, EPNODE	*d)
     ep1 = d->v.kid->sibling;			/* get expression */
     if (ep1->type == NUM)
 	return(ep1->v.num);			/* return if number */
+    if (esupport&E_RCONST && d->type == ':') {
+	wputs(name);
+	wputs(": assigned non-constant value\n");
+    }
     ep2 = ep1->sibling;				/* check time */
     if (eclock >= MAXCLOCK)
 	eclock = 1;				/* wrap clock counter */
