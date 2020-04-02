@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: objutil.c,v 2.2 2020/04/02 20:44:15 greg Exp $";
+static const char RCSid[] = "$Id: objutil.c,v 2.3 2020/04/02 22:14:01 greg Exp $";
 #endif
 /*
  *  Basic .OBJ scene handling routines.
@@ -665,40 +665,18 @@ dupScene(const Scene *osc)
 }
 
 /* Transform entire scene */
-#define MAXAC	100
 int
-xfmScene(Scene *sc, const char *xfm)
+xfScene(Scene *sc, int xac, char *xav[])
 {
-	char	*xav[MAXAC+1];
-	int	xac, i;
 	XF	myxf;
 	FVECT	vec;
+	int	i;
 
-	if ((sc == NULL) | (xfm == NULL))
+	if ((sc == NULL) | (xac <= 0) | (xav == NULL))
 		return(0);
-	while (isspace(*xfm))		/* find first word */
-		xfm++;
-	if (!*xfm)
-		return(0);
-					/* break into words for xf() */
-	xav[0] = strcpy((char *)malloc(strlen(xfm)+1), xfm);
-	xac = 1; i = 0;
-	for ( ; ; ) {
-		while (!isspace(xfm[++i]))
-			if (!xfm[i])
-				break;
-		while (isspace(xfm[i]))
-			xav[0][i++] = '\0';
-		if (!xfm[i])
-			break;
-		if (xac >= MAXAC-1)
-			goto bad_xform;
-		xav[xac++] = xav[0] + i;
-	}
-	xav[xac] = NULL;
+					/* compute matrix */
 	if (xf(&myxf, xac, xav) < xac)
-		goto bad_xform;
-	free(xav[0]);
+		return(0);
 					/* transform vertices */
 	for (i = 0; i < sc->nverts; i++) {
 		VCOPY(vec, sc->vert[i].p);
@@ -712,10 +690,45 @@ xfmScene(Scene *sc, const char *xfm)
 		vec[0] /= myxf.sca; vec[1] /= myxf.sca; vec[2] /= myxf.sca;
 		VCOPY(sc->norm[i], vec);
 	}
-	return xac;			/* finito */
-bad_xform:
+	return(xac);			/* all done */
+}
+
+/* Ditto, using transform string rather than pre-parsed words */
+#define MAXAC	100
+int
+xfmScene(Scene *sc, const char *xfm)
+{
+	char	*xav[MAXAC+1];
+	int	xac, i;
+
+	if ((sc == NULL) | (xfm == NULL))
+		return(0);
+					/* skip spaces at beginning */
+	while (isspace(*xfm))
+		xfm++;
+	if (!*xfm)
+		return(0);
+					/* parse string into words */
+	xav[0] = strcpy((char *)malloc(strlen(xfm)+1), xfm);
+	xac = 1; i = 0;
+	for ( ; ; ) {
+		while (!isspace(xfm[++i]))
+			if (!xfm[i])
+				break;
+		while (isspace(xfm[i]))
+			xav[0][i++] = '\0';
+		if (!xfm[i])
+			break;
+		if (xac >= MAXAC-1) {
+			free(xav[0]);
+			return(0);
+		}
+		xav[xac++] = xav[0] + i;
+	}
+	xav[xac] = NULL;
+	i = xfScene(sc, xac, xav);
 	free(xav[0]);
-	return(0);
+	return(i);
 }
 #undef MAXAC
 
