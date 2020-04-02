@@ -1,4 +1,4 @@
-.\" RCSid "$Id: robjutil.1,v 1.2 2020/04/02 20:44:15 greg Exp $"
+.\" RCSid "$Id: robjutil.1,v 1.3 2020/04/02 20:50:59 greg Exp $"
 .TH ROBJUTIL 1 3/31/20 RADIANCE
 .SH NAME
 robjutil - operate on Wavefront .OBJ file
@@ -86,9 +86,11 @@ There is also a
 .I +g
 option to save just the named group(s).
 .PP
-A
+The
 .I "\-c epsilon"
-parameter may be given to coalesce vertices that are within the given epsilon.
+option tells
+.I robjutil
+to coalesce vertices that are within the given epsilon.
 This is useful to improve the connectivity of models that were produced
 in a sloppy conversion process from independent polygons.
 When producing a Radiance file via the
@@ -111,7 +113,7 @@ match the standard arguments used by
 except that the
 .I \-a
 option is not supported for creating arrays of objects.
-Also, any scaling applied does not affect the epsilon value given for
+Also, any scaling factors do not affect the epsilon value given for
 coalescing vertices, as this operation is applied prior to the transform,
 even if
 .I \-c
