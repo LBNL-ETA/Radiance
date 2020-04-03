@@ -1,4 +1,4 @@
-.\" RCSid "$Id: robjutil.1,v 1.3 2020/04/02 20:50:59 greg Exp $"
+.\" RCSid "$Id: robjutil.1,v 1.4 2020/04/03 02:32:58 greg Exp $"
 .TH ROBJUTIL 1 3/31/20 RADIANCE
 .SH NAME
 robjutil - operate on Wavefront .OBJ file
@@ -135,7 +135,37 @@ robjutil +g cat +g bell kitty.obj | obj2mesh -a kitty.mat > kitty.rtm
 To rotate the scene 90 degrees about the Y-axis and scale by 10:
 .IP "" .2i
 robjutil -x "-ry 90 -s 10" orig.obj > transformed.obj
+.SH NOTES
+The .OBJ output of
+.I robjutil
+uses relative indices, so files it produces may be concatenated
+on the input of other tools such as
+.I obj2rad
+and
+.I obj2mesh
+by piping from
+.I cat(1)
+or similar.
+This offers a convenient way to separate geometry from a single .OBJ
+input, manipulate it in some way, then recombine during conversion.
+.PP
+Unlike
+.I obj2rad
+and
+.I obj2mesh,
+.I robjutil
+with the
+.I +r
+option will not substitute the group name for a material id if no
+.I usemtl
+statements are found on the input.
+Instead, it will assign each surface the material
+.I DEFAULT_MATERIAL.
+Since it is possible to use the
+.I +/-g
+option to select groups to include or exclude on output, it is
+still possible to assign materials by group manually.
 .SH AUTHOR
 Greg Ward
 .SH "SEE ALSO"
-obj2mesh(1), obj2rad(1) oconv(1), xform(1)
+cat(1), obj2mesh(1), obj2rad(1) oconv(1), xform(1)
