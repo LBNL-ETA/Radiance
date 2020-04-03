@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.88 2020/03/12 17:19:18 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.89 2020/04/03 17:06:16 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -54,6 +54,12 @@ OBJECT	traset[MAXTSET+1]={0};		/* trace include/exclude set */
 
 static RAY  thisray;			/* for our convenience */
 
+static FILE  *inpfp = NULL;		/* input stream pointer */
+
+static FVECT	*inp_queue = NULL;	/* ray input queue if flushing */
+static int	inp_qpos = 0;		/* next ray to return */
+static int	inp_qend = 0;		/* number of rays in this work group */
+
 typedef void putf_t(RREAL *v, int n);
 static putf_t puta, putd, putf, putrgbe;
 
@@ -70,6 +76,8 @@ static void rayirrad(RAY *r);
 static void rtcompute(FVECT org, FVECT dir, double dmax);
 static int printvals(RAY *r);
 static int getvec(FVECT vec, int fmt, FILE *fp);
+static int iszerovec(const FVECT vec);
+static double nextray(FVECT org, FVECT dir);
 static void tabin(RAY *r);
 static void ourtrace(RAY *r);
 
@@ -124,13 +132,17 @@ rtrace(				/* trace rays from file */
 	FVECT  orig, direc;
 					/* set up input */
 	if (fname == NULL)
-		fp = stdin;
-	else if ((fp = fopen(fname, "r")) == NULL) {
+		inpfp = stdin;
+	else if ((inpfp = fopen(fname, "r")) == NULL) {
 		sprintf(errmsg, "cannot open input file \"%s\"", fname);
 		error(SYSTEM, errmsg);
 	}
+#ifdef getc_unlocked
+	flockfile(inpfp);		/* avoid lock/unlock overhead */
+	flockfile(stdout);
+#endif
 	if (inform != 'a')
-		SET_FILE_BINARY(fp);
+		SET_FILE_BINARY(inpfp);
 					/* set up output */
 	setoutput(outvals);
 	if (imm_irrad)
@@ -162,11 +174,8 @@ rtrace(				/* trace rays from file */
 		else
 			fflush(stdout);
 	}
-					/* process file */
-	while (getvec(orig, inform, fp) == 0 &&
-			getvec(direc, inform, fp) == 0) {
-
-		d = normalize(direc);
+					/* process input rays */
+	while ((d = nextray(orig, direc)) >= 0.0) {
 		if (d == 0.0) {				/* flush request? */
 			if (something2flush) {
 				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
@@ -179,8 +188,7 @@ rtrace(				/* trace rays from file */
 				bogusray();
 		} else {				/* compute and print */
 			rtcompute(orig, direc, lim_dist ? d : 0.0);
-							/* flush if time */
-			if (!--nextflush) {
+			if (!--nextflush) {		/* flush if time */
 				if (ray_pnprocs > 1 && ray_fifo_flush() < 0)
 					error(USER, "child(ren) died");
 				fflush(stdout);
@@ -198,12 +206,15 @@ rtrace(				/* trace rays from file */
 			error(USER, "unable to complete processing");
 		ray_pclose(0);
 	}
+	if (vcount)
+		error(WARNING, "unexpected EOF on input");
 	if (fflush(stdout) < 0)
 		error(SYSTEM, "write error");
-	if (vcount)
-		error(USER, "unexpected EOF on input");
-	if (fname != NULL)
-		fclose(fp);
+	if (fname != NULL) {
+		fclose(inpfp);
+		inpfp = NULL;
+	}
+	nextray(NULL, NULL);
 }
 
 
@@ -421,7 +432,7 @@ printvals(			/* print requested ray values */
 
 
 static int
-getvec(		/* get a vector from fp */
+getvec(			/* get a vector from fp */
 	FVECT  vec,
 	int  fmt,
 	FILE  *fp
@@ -455,6 +466,64 @@ getvec(		/* get a vector from fp */
 		error(CONSISTENCY, "botched input format");
 	}
 	return(0);
+}
+
+
+static int
+iszerovec(const FVECT vec)
+{
+	return (vec[0] == 0.0) & (vec[1] == 0.0) & (vec[2] == 0.0);
+}
+
+
+static double
+nextray(		/* return next ray in work group (-1.0 if EOF) */
+	FVECT org,
+	FVECT dir
+)
+{
+	const size_t	qlength = !vresolu * hresolu;
+
+	if ((org == NULL) | (dir == NULL)) {
+		if (inp_queue != NULL)	/* asking to free queue */
+			free(inp_queue);
+		inp_queue = NULL;
+		inp_qpos = inp_qend = 0;
+		return(-1.);
+	}
+	if (!inp_qend) {		/* initialize FIFO queue */
+		int	rsiz = 6*20;	/* conservative ascii ray size */
+		if (inform == 'f') rsiz = 6*sizeof(float);
+		else if (inform == 'd') rsiz = 6*sizeof(double);
+		if ((inpfp == stdin) & (qlength*rsiz > 512))	/* pipe limit */
+			inp_queue = (FVECT *)malloc(sizeof(FVECT)*2*qlength);
+		inp_qend = -(inp_queue == NULL);	/* flag for no queue */
+	}
+	if (inp_qend < 0) {		/* not queuing? */
+		if (getvec(org, inform, inpfp) < 0 ||
+				getvec(dir, inform, inpfp) < 0)
+			return(-1.);
+		return normalize(dir);
+	}
+	if (inp_qpos >= inp_qend) {	/* need to refill input queue? */
+		for (inp_qend = 0; inp_qend < qlength; inp_qend++) {
+			if (getvec(inp_queue[2*inp_qend], inform, inpfp) < 0
+					|| getvec(inp_queue[2*inp_qend+1],
+							inform, inpfp) < 0)
+				break;		/* hit EOF */
+			if (iszerovec(inp_queue[2*inp_qend+1])) {
+				++inp_qend;	/* flush request */
+				break;
+			}
+		}
+		inp_qpos = 0;
+	}
+	if (inp_qpos >= inp_qend)	/* unexpected EOF? */
+		return(-1.);
+	VCOPY(org, inp_queue[2*inp_qpos]);
+	VCOPY(dir, inp_queue[2*inp_qpos+1]);
+	++inp_qpos;
+	return normalize(dir);
 }
 
 
