@@ -1,4 +1,4 @@
-.\" RCSid "$Id: robjutil.1,v 1.4 2020/04/03 02:32:58 greg Exp $"
+.\" RCSid "$Id: robjutil.1,v 1.5 2020/04/03 02:45:13 greg Exp $"
 .TH ROBJUTIL 1 3/31/20 RADIANCE
 .SH NAME
 robjutil - operate on Wavefront .OBJ file
@@ -42,6 +42,7 @@ and
 .I obj2mesh(1)
 converters.
 The latter also preserves local texture coordinates for mapping materials.
+.PP
 The
 .I +v
 option turns on verbose progress reports.
@@ -75,6 +76,7 @@ The
 and
 .I \+m
 options are mutually exclusive.
+.PP
 Similarly, the
 .I "\-g gname"
 option says to remove all faces belonging to the group
@@ -85,6 +87,11 @@ options may be given.
 There is also a
 .I +g
 option to save just the named group(s).
+Object statements are treated the same as group statements in the input, so
+.I +/-g
+option can also be applied to object names.
+Note that an object name will be overridden by a group name that follows
+it in the input, and vice versa.
 .PP
 The
 .I "\-c epsilon"
