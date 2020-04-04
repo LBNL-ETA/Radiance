@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.89 2020/04/03 17:06:16 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.90 2020/04/04 15:38:52 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -147,7 +147,7 @@ rtrace(				/* trace rays from file */
 	setoutput(outvals);
 	if (imm_irrad)
 		castonly = 0;
-	else if (castonly)
+	else if (castonly || every_out[0] != NULL)
 		nproc = 1;		/* don't bother multiprocessing */
 	if ((nextflush > 0) & (nproc > nextflush)) {
 		error(WARNING, "reducing number of processes to match flush interval");
