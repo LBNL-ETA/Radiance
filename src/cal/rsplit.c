@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.12 2020/03/31 16:39:01 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.13 2020/04/04 16:23:00 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -198,6 +198,12 @@ main(int argc, char *argv[])
 				fputs(": bad option\n", stderr);
 				return(1);
 			}
+		} else if (argv[i][0] == '.' && !argv[i][1]) {
+			output[nfiles] = NULL;		/* discard data */
+			termc[nfiles] = curterm;
+			format[nfiles] = curfmt;
+			ncomp[nfiles] = curncomp;
+			bytsiz[nfiles++] = curbytes;
 		} else if (argv[i][0] == '!') {
 			needres |= (curflags & DORESOLU);
 			termc[nfiles] = curterm;
@@ -256,7 +262,8 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked				/* avoid lock/unlock overhead */
 	flockfile(stdin);
 	for (i = nfiles; i--; )
-		flockfile(output[i]);
+		if (output[i] != NULL)
+			flockfile(output[i]);
 #endif
 						/* load/copy header */
 	if (inpflags & DOHEADER && getheader(stdin, headline, NULL) < 0) {
@@ -313,7 +320,8 @@ main(int argc, char *argv[])
 				if (getbinary(buf, bytsiz[i], ncomp[i],
 							stdin) < ncomp[i])
 					break;
-				if (putbinary(buf, bytsiz[i], ncomp[i],
+				if (output[i] != NULL &&
+					    putbinary(buf, bytsiz[i], ncomp[i],
 							output[i]) < ncomp[i])
 					break;
 			} else if (ncomp[i] > 1) {	/* N-field output */
@@ -321,20 +329,24 @@ main(int argc, char *argv[])
 				while (n--) {
 					if (!scanOK(termc[i]))
 						break;
-					if (fputs(buf, output[i]) == EOF)
+					if (output[i] != NULL &&
+						    fputs(buf, output[i]) == EOF)
 						break;
 				}
 				if (n >= 0)		/* fell short? */
 					break;
-				if (termc[i] != '\n')	/* add EOL if none */
+				if ((output[i] != NULL) &  /* add EOL if none */
+						(termc[i] != '\n'))
 					fputc('\n', output[i]);
 			} else {			/* 1-field output */
 				if (!scanOK(termc[i]))
 					break;
-				if (fputs(buf, output[i]) == EOF)
-					break;
-				if (termc[i] != '\n')	/* add EOL if none */
-					fputc('\n', output[i]);
+				if (output[i] != NULL) {
+					if (fputs(buf, output[i]) == EOF)
+						break;
+					if (termc[i] != '\n')	/* add EOL? */
+						fputc('\n', output[i]);
+				}
 			}
 							/* skip input EOL? */
 			if (!bininp && termc[nfiles-1] != '\n') {

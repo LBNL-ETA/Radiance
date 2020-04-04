@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.8 2019/11/07 23:13:12 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.9 2020/04/04 16:23:00 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -65,6 +65,9 @@ option is given, or it is being appended using the
 .I \-a
 option.
 Commands are given in quotes, and begin with an exclamantion point ('!').
+A period ('.') may also be specified as output,
+which indicates that no output is desired for this field.
+The corresponding data will be skipped on the input.
 .PP
 The
 .I \-oa
