@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.32 2019/12/28 18:05:14 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.33 2020/04/04 04:34:08 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -578,6 +578,8 @@ checkmesh(MESH *mp)			/* validate mesh data */
 			return("unbounded scene in mesh");
 		if (mp->mat0 < 0 || mp->mat0+mp->nmats > nobjects)
 			return("bad mesh modifier range");
+		if (mp->nmats > 0)	/* allocate during preload_objs()! */
+			getmeshpseudo(mp, mp->mat0);
 		for (i = mp->mat0+mp->nmats; i-- > mp->mat0; ) {
 			int	otyp = objptr(i)->otype;
 			if (!ismodifier(otyp)) {
