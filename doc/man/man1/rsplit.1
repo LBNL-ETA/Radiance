@@ -1,4 +1,4 @@
-.\" RCSid "$Id: rsplit.1,v 1.10 2020/04/05 02:25:22 greg Exp $"
+.\" RCSid "$Id: rsplit.1,v 1.11 2020/04/05 15:07:09 greg Exp $"
 .TH RSPLIT 1 7/8/97 RADIANCE
 .SH NAME
 rsplit - splits standard input into multiple output files or streams
@@ -58,16 +58,26 @@ certain arguments, such as a space or a tab, must be quoted or escaped
 with a backslash in most shells.
 If no argument is given, the default newline terminator is re-established.
 .PP
-An output is either a file or a command.
-If an output file exists, it will not be overwritten unless the
+Output is either to a file, to a command, to the standard output, or to discard.
+If a named output file exists, it will not be overwritten unless the
 .I \-f
 option is given, or it is being appended using the
 .I \-a
 option.
+The same output file may not appear more than once.
 Commands are given in quotes, and begin with an exclamantion point ('!').
-A period ('.') may also be specified as output,
-which indicates that no output is desired for this field.
-The corresponding data will be skipped on the input.
+At most, one command may reliably write to its standard output, and
+doing so is incompatible with
+.I rsplit
+also writing to standard output.
+A hyphen ('-') by itself tells
+.I rsplit
+to write directly to its standard output, and may appear multiple times.
+The options before the first appearance determine the
+standard output header parameters.
+A period ('.') tells
+.I rsplit
+to discard the corresponding data, and also may appear multiple times.
 .PP
 The
 .I \-oa
@@ -104,15 +114,6 @@ If a
 option is given with a positive integer argument, this will be the
 maximum number of records that will be written by
 .I rsplit.
-.PP
-A hyphen ('-') by itself can be used to indicate the standard
-output, and may appear multiple times.
-The options before the first appearance determine the
-header parameters, if any.
-Results will be unpredictable if the standard output is specified
-in this way
-and any of the command outputs also writes to their standard output.
-At most, one command may reliably write to its standard output.
 .PP
 The
 .I \-ih

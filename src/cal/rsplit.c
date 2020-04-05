@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.14 2020/04/05 02:25:22 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.15 2020/04/05 15:07:09 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -102,8 +102,10 @@ main(int argc, char *argv[])
 	int		curbytes = 0;
 	int		curflags = 0;
 	const char	*curfmt = "ascii";
-	int	i;
+	short		outndx[MAXFILE];
+	int		i;
 
+	memset(outndx, 0, sizeof(outndx));
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
@@ -194,7 +196,8 @@ main(int argc, char *argv[])
 				format[nfiles] = curfmt;
 				nstdoutcomp +=
 					ncomp[nfiles] = curncomp;
-				bytsiz[nfiles++] = curbytes;
+				bytsiz[nfiles] = curbytes;
+				outndx[nfiles++] = i;
 				break;
 			badopt:;
 			default:
@@ -207,7 +210,8 @@ main(int argc, char *argv[])
 			termc[nfiles] = curterm;
 			format[nfiles] = curfmt;
 			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles++] = curbytes;
+			bytsiz[nfiles] = curbytes;
+			outndx[nfiles++] = i;
 		} else if (argv[i][0] == '!') {
 			needres |= (curflags & DORESOLU);
 			hdrflags[nfiles] = curflags;
@@ -221,8 +225,18 @@ main(int argc, char *argv[])
 				SET_FILE_BINARY(output[nfiles]);
 			format[nfiles] = curfmt;
 			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles++] = curbytes;
+			bytsiz[nfiles] = curbytes;
+			outndx[nfiles++] = i;
 		} else {
+			int	j = nfiles;
+			while (j--)			/* check duplicates */
+				if (!strcmp(argv[i], argv[outndx[j]])) {
+					fputs(argv[0], stderr);
+					fputs(": duplicate output: ", stderr);
+					fputs(argv[i], stderr);
+					fputc('\n', stderr);
+					return(1);
+				}
 			if (append & (curflags != 0)) {
 				fputs(argv[0], stderr);
 				fputs(": -a option incompatible with -oh and -oH\n",
@@ -248,7 +262,8 @@ main(int argc, char *argv[])
 				SET_FILE_BINARY(output[nfiles]);
 			format[nfiles] = curfmt;
 			ncomp[nfiles] = curncomp;
-			bytsiz[nfiles++] = curbytes;
+			bytsiz[nfiles] = curbytes;
+			outndx[nfiles++] = i;
 		}
 		if (nfiles >= MAXFILE) {
 			fputs(argv[0], stderr);
@@ -305,7 +320,7 @@ main(int argc, char *argv[])
 						nstdoutcomp : ncomp[i]);
 			if (format[i] != NULL) {
 				extern const char  BIGEND[];
-				if (format[i][0] != 'a') {
+				if (bytsiz[i] > 1) {
 					fputs(BIGEND, output[i]);
 					fputs(nativebigendian() ^ swapped ?
 						"1\n" : "0\n", output[i]);
