@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.91 2020/04/05 15:47:02 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.92 2020/04/05 23:01:34 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -68,8 +68,9 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 		oputr, oputR, oputx, oputX, oputn, oputN, oputs,
 		oputw, oputW, oputm, oputM, oputtilde;
 
-static void setoutput(char *vs);
 extern void tranotify(OBJECT obj);
+static void setoutput(char *vs);
+static int is_fifo(FILE *fp);
 static void bogusray(void);
 static void raycast(RAY *r);
 static void rayirrad(RAY *r);
@@ -117,7 +118,7 @@ formstr(				/* return format identifier */
 }
 
 
-extern void
+void
 rtrace(				/* trace rays from file */
 	char  *fname,
 	int  nproc
@@ -461,6 +462,23 @@ printvals(			/* print requested ray values */
 
 
 static int
+is_fifo(		/* check if file pointer connected to pipe */
+	FILE *fp
+)
+{
+#ifdef S_ISFIFO
+	struct stat  sbuf;
+
+	if (fstat(fileno(fp), &sbuf) < 0)
+		error(SYSTEM, "fstat() failed on input stream");
+	return(S_ISFIFO(sbuf.st_mode));
+#else
+	return (fp == stdin);		/* just a guess, really */
+#endif
+}
+
+
+static int
 getvec(			/* get a vector from fp */
 	FVECT  vec,
 	int  fmt,
@@ -524,7 +542,8 @@ nextray(		/* return next ray in work group (-1.0 if EOF) */
 		int	rsiz = 6*20;	/* conservative ascii ray size */
 		if (inform == 'f') rsiz = 6*sizeof(float);
 		else if (inform == 'd') rsiz = 6*sizeof(double);
-		if ((inpfp == stdin) & (qlength*rsiz > 512))	/* pipe limit */
+					/* check against pipe limit */
+		if (qlength*rsiz > 512 && is_fifo(inpfp))
 			inp_queue = (FVECT *)malloc(sizeof(FVECT)*2*qlength);
 		inp_qend = -(inp_queue == NULL);	/* flag for no queue */
 	}
