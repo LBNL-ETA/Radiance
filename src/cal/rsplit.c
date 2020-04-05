@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rsplit.c,v 1.13 2020/04/04 16:23:00 greg Exp $";
+static const char	RCSid[] = "$Id: rsplit.c,v 1.14 2020/04/05 02:25:22 greg Exp $";
 #endif
 /*
  *  rsplit.c - split input into multiple output streams
@@ -96,6 +96,7 @@ main(int argc, char *argv[])
 	int		append = 0;
 	long		outcnt = 0;
 	int		bininp = 0;
+	int		nstdoutcomp = 0;
 	int		curterm = '\n';
 	int		curncomp = 1;
 	int		curbytes = 0;
@@ -181,15 +182,18 @@ main(int argc, char *argv[])
 				}
 				bininp += (curbytes > 0);
 				break;
-			case '\0':
-				needres |= (curflags & DORESOLU);
-				termc[nfiles] = curterm;
-				hdrflags[nfiles] = curflags;
+			case '\0':			/* stdout */
+				if (!nstdoutcomp) {	/* first use? */
+					needres |= (curflags & DORESOLU);
+					hdrflags[nfiles] = curflags;
+				}
 				output[nfiles] = stdout;
 				if (curbytes > 0)
 					SET_FILE_BINARY(output[nfiles]);
+				termc[nfiles] = curterm;
 				format[nfiles] = curfmt;
-				ncomp[nfiles] = curncomp;
+				nstdoutcomp +=
+					ncomp[nfiles] = curncomp;
 				bytsiz[nfiles++] = curbytes;
 				break;
 			badopt:;
@@ -206,8 +210,8 @@ main(int argc, char *argv[])
 			bytsiz[nfiles++] = curbytes;
 		} else if (argv[i][0] == '!') {
 			needres |= (curflags & DORESOLU);
-			termc[nfiles] = curterm;
 			hdrflags[nfiles] = curflags;
+			termc[nfiles] = curterm;
 			if ((output[nfiles] = popen(argv[i]+1, "w")) == NULL) {
 				fputs(argv[i], stderr);
 				fputs(": cannot start command\n", stderr);
@@ -226,8 +230,8 @@ main(int argc, char *argv[])
 				return(1);
 			}
 			needres |= (curflags & DORESOLU);
-			termc[nfiles] = curterm;
 			hdrflags[nfiles] = curflags;
+			termc[nfiles] = curterm;
 			if (!append & !force && access(argv[i], F_OK) == 0) {
 				fputs(argv[i], stderr);
 				fputs(": file exists -- use -f to overwrite\n",
@@ -263,20 +267,19 @@ main(int argc, char *argv[])
 	flockfile(stdin);
 	for (i = nfiles; i--; )
 		if (output[i] != NULL)
-			flockfile(output[i]);
+			ftrylockfile(output[i]);
 #endif
 						/* load/copy header */
 	if (inpflags & DOHEADER && getheader(stdin, headline, NULL) < 0) {
 		fputs(argv[0], stderr);
-		fputs(": cannot get header from standard input\n",
+		fputs(": cannot read header from standard input\n",
 				stderr);
 		return(1);
 	}
 						/* handle resolution string */
 	if (inpflags & DORESOLU && !fgetsresolu(&ourres, stdin)) {
 		fputs(argv[0], stderr);
-		fputs(": cannot get resolution string from standard input\n",
-				stderr);
+		fputs(": bad resolution string on standard input\n", stderr);
 		return(1);
 	}
 	if (needres && (ourres.xr <= 0) | (ourres.yr <= 0)) {
@@ -298,11 +301,11 @@ main(int argc, char *argv[])
 			if (!(inpflags & DOHEADER))
 				newheader("RADIANCE", output[i]);
 			printargs(argc, argv, output[i]);
-			fprintf(output[i], "NCOMP=%d\n", ncomp[i]);
+			fprintf(output[i], "NCOMP=%d\n", output[i]==stdout ?
+						nstdoutcomp : ncomp[i]);
 			if (format[i] != NULL) {
 				extern const char  BIGEND[];
-				if ((format[i][0] == 'f') |
-						(format[i][0] == 'd')) {
+				if (format[i][0] != 'a') {
 					fputs(BIGEND, output[i]);
 					fputs(nativebigendian() ^ swapped ?
 						"1\n" : "0\n", output[i]);
