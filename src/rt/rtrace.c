@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtrace.c,v 2.90 2020/04/04 15:38:52 greg Exp $";
+static const char	RCSid[] = "$Id: rtrace.c,v 2.91 2020/04/05 15:47:02 greg Exp $";
 #endif
 /*
  *  rtrace.c - program and variables for individual ray tracing.
@@ -144,7 +144,6 @@ rtrace(				/* trace rays from file */
 	if (inform != 'a')
 		SET_FILE_BINARY(inpfp);
 					/* set up output */
-	setoutput(outvals);
 	if (imm_irrad)
 		castonly = 0;
 	else if (castonly || every_out[0] != NULL)
@@ -158,7 +157,7 @@ rtrace(				/* trace rays from file */
 	case 'f': putreal = putf; break;
 	case 'd': putreal = putd; break;
 	case 'c': 
-		if (outvals[0] && (outvals[1] || !strchr("vrx", outvals[0])))
+		if (outvals[1] || !strchr("vrx", outvals[0]))
 			error(USER, "color format only with -ov, -or, -ox");
 		putreal = putrgbe; break;
 	default:
@@ -228,22 +227,25 @@ trace_sources(void)			/* trace rays to light sources, also */
 }
 
 
-static void
-setoutput(				/* set up output tables */
-	char  *vs
-)
+int
+setrtoutput(void)			/* set up output tables, return #comp */
 {
+	char  *vs = outvals;
 	oputf_t **table = ray_out;
+	int  ncomp = 0;
+
+	if (!*vs)
+		error(USER, "empty output specification");
 
 	castonly = 1;
-	while (*vs)
-		switch (*vs++) {
+	do
+		switch (*vs) {
 		case 'T':				/* trace sources */
-			if (!*vs) break;
+			if (!vs[1]) break;
 			trace_sources();
 			/* fall through */
 		case 't':				/* trace */
-			if (!*vs) break;
+			if (!vs[1]) break;
 			*table = NULL;
 			table = every_out;
 			trace = ourtrace;
@@ -251,64 +253,81 @@ setoutput(				/* set up output tables */
 			break;
 		case 'o':				/* origin */
 			*table++ = oputo;
+			ncomp += 3;
 			break;
 		case 'd':				/* direction */
 			*table++ = oputd;
+			ncomp += 3;
 			break;
 		case 'r':				/* reflected contrib. */
 			*table++ = oputr;
+			ncomp += 3;
 			castonly = 0;
 			break;
 		case 'R':				/* reflected distance */
 			*table++ = oputR;
+			ncomp++;
 			castonly = 0;
 			break;
 		case 'x':				/* xmit contrib. */
 			*table++ = oputx;
+			ncomp += 3;
 			castonly = 0;
 			break;
 		case 'X':				/* xmit distance */
 			*table++ = oputX;
+			ncomp++;
 			castonly = 0;
 			break;
 		case 'v':				/* value */
 			*table++ = oputv;
+			ncomp += 3;
 			castonly = 0;
 			break;
 		case 'V':				/* contribution */
 			*table++ = oputV;
+			ncomp += 3;
 			if (ambounce > 0 && (ambacc > FTINY || ambssamp > 0))
 				error(WARNING,
 					"-otV accuracy depends on -aa 0 -as 0");
 			break;
 		case 'l':				/* effective distance */
 			*table++ = oputl;
+			ncomp++;
 			castonly = 0;
 			break;
 		case 'c':				/* local coordinates */
 			*table++ = oputc;
+			ncomp += 2;
 			break;
 		case 'L':				/* single ray length */
 			*table++ = oputL;
+			ncomp++;
 			break;
 		case 'p':				/* point */
 			*table++ = oputp;
+			ncomp += 3;
 			break;
 		case 'n':				/* perturbed normal */
 			*table++ = oputn;
+			ncomp += 3;
 			castonly = 0;
 			break;
 		case 'N':				/* unperturbed normal */
 			*table++ = oputN;
+			ncomp += 3;
 			break;
 		case 's':				/* surface */
 			*table++ = oputs;
+			ncomp++;
 			break;
 		case 'w':				/* weight */
 			*table++ = oputw;
+			ncomp++;
 			break;
 		case 'W':				/* coefficient */
 			*table++ = oputW;
+			ncomp += 3;
 			castonly = 0;
 			if (ambounce > 0 && (ambacc > FTINY) | (ambssamp > 0))
 				error(WARNING,
@@ -316,15 +335,24 @@ setoutput(				/* set up output tables */
 			break;
 		case 'm':				/* modifier */
 			*table++ = oputm;
+			ncomp++;
 			break;
 		case 'M':				/* material */
 			*table++ = oputM;
+			ncomp++;
 			break;
 		case '~':				/* tilde */
 			*table++ = oputtilde;
 			break;
+		default:
+			sprintf(errmsg, "unrecognized output option '%c'", *vs);
+			error(USER, errmsg);
 		}
+	while (*++vs);
+
 	*table = NULL;
+	if (*every_out != NULL)
+		ncomp = 0;
 							/* compatibility */
 	for (table = ray_out; *table != NULL; table++) {
 		if ((*table == oputV) | (*table == oputW))
@@ -334,6 +362,7 @@ setoutput(				/* set up output tables */
 				(*table == oputx) | (*table == oputX))
 			error(WARNING, "-orRxX options incompatible with -I+ and -i+");
 	}
+	return(ncomp);
 }
 
 

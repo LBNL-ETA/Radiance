@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.30 2019/08/14 20:07:20 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.31 2020/04/05 15:47:02 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -35,7 +35,8 @@ char  *errfile = NULL;			/* error output file */
 
 int  nproc = 1;				/* number of processes */
 
-extern char  *formstr();		/* string from format */
+extern char  *formstr(int f);		/* string from format */
+extern int  setrtoutput(void);		/* set output values */
 int  inform = 'a';			/* input format */
 int  outform = 'a';			/* output format */
 char  *outvals = "v";			/* output specification */
@@ -312,6 +313,7 @@ main(int  argc, char  *argv[])
 #endif
 	if (outform != 'a')
 		SET_FILE_BINARY(stdout);
+	rval = setrtoutput();
 	readoct(octname = octnm, loadflags, &thescene, NULL);
 	nsceneobjs = nobjects;
 
@@ -319,6 +321,8 @@ main(int  argc, char  *argv[])
 		printargs(i, argv, stdout);
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
+		if (rval > 0)		/* saved from setrtoutput() call */
+			printf("NCOMP=%d\n", rval);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
 		fputformat(formstr(outform), stdout);
