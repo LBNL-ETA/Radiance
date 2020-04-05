@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: ra_bmp.c,v 2.13 2019/07/19 17:37:56 greg Exp $";
+static const char RCSid[] = "$Id: ra_bmp.c,v 2.14 2020/04/05 19:10:51 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Windows BMP file
@@ -249,11 +249,12 @@ rad2bmp(FILE *rfp, BMPWriter *bwr, int inv, RGBPRIMP monpri)
 	usexfm = (monpri != NULL ? rgbinp != monpri :
 			rgbinp != TM_XYZPRIM && rgbinp != stdprims);
 	if (usexfm) {
-		double	expcomp = pow(2.0, (double)bradj);
+		RGBPRIMP	destpri = monpri != NULL ? monpri : stdprims;
+		double		expcomp = pow(2.0, (double)bradj);
 		if (rgbinp == TM_XYZPRIM)
-			compxyz2rgbWBmat(xfm, monpri);
+			compxyz2rgbWBmat(xfm, destpri);
 		else
-			comprgb2rgbWBmat(xfm, rgbinp, monpri);
+			comprgb2rgbWBmat(xfm, rgbinp, destpri);
 		for (y = 0; y < 3; y++)
 			for (x = 0; x < 3; x++)
 				xfm[y][x] *= expcomp;
