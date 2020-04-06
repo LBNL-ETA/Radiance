@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.31 2020/04/05 15:47:02 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.32 2020/04/06 04:10:44 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -37,12 +37,15 @@ int  nproc = 1;				/* number of processes */
 
 extern char  *formstr(int f);		/* string from format */
 extern int  setrtoutput(void);		/* set output values */
+
 int  inform = 'a';			/* input format */
 int  outform = 'a';			/* output format */
 char  *outvals = "v";			/* output specification */
 
 int  hresolu = 0;			/* horizontal (scan) size */
 int  vresolu = 0;			/* vertical resolution */
+
+int  castonly = 0;			/* only doing ray-casting? */
 
 int  imm_irrad = 0;			/* compute immediate irradiance? */
 int  lim_dist = 0;			/* limit distance? */
@@ -328,13 +331,15 @@ main(int  argc, char  *argv[])
 		fputformat(formstr(outform), stdout);
 		putchar('\n');
 	}
-	
-	ray_init_pmap();     /* PMAP: set up & load photon maps */
-	
-	marksources();			/* find and mark sources */
 
-	setambient();			/* initialize ambient calculation */
-	
+	if (!castonly) {	/* any actual ray traversal to do? */
+
+		ray_init_pmap();	/* PMAP: set up & load photon maps */
+		
+		marksources();		/* find and mark sources */
+
+		setambient();		/* initialize ambient calculation */
+	}
 #ifdef  PERSIST
 	if (persist) {
 		fflush(stdout);
