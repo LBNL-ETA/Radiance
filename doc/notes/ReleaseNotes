@@ -2350,3 +2350,12 @@ Made it so rmtxop and dctimestep undo any exposure applied to Radiance
 pictures they may load.
 
 Added objutil utility to manipulate Wavefront .OBJ files.
+
+Fixed a crash related to rtrace -om or -oM with mesh instances containing
+materials.
+
+Improved rtrace flushing function to handle any value for -x without
+deadlock on controlling process.
+
+Eliminated unnecessary start-up procedures for rtrace when only ray-casting
+is needed (i.e., no tracing or value output).
